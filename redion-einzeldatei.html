@@ -1259,6 +1259,22 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
   flex:0 0 20px; display:inline-flex; align-items:center; justify-content:center;
 }
 .mb-knopf svg{ width:19px; height:19px }
+/* DIE PROBE: ein Farbtupfer oder ein Strich in seiner wirklichen Stärke.
+   Gleich gross wie ein Symbol (19 px), damit die Reihe nicht tanzt — dieselbe
+   Regel wie bei `.mb-glyph`, und aus demselben Grund. */
+.mb-knopf > .mb-probe{
+  flex:0 0 19px; width:19px; height:19px;
+  display:inline-flex; align-items:center; justify-content:center;
+}
+.mb-knopf > .mb-probe.ist-farbe{
+  width:17px; height:17px; flex-basis:17px; border-radius:50%;
+  /* Ein Rand, sonst verschwindet Schwarz im dunklen und Gelb im hellen
+     Hintergrund — der Tupfer wäre da und nicht zu sehen. */
+  box-shadow:0 0 0 1px var(--line);
+}
+.mb-knopf > .mb-probe.ist-strich i{
+  display:block; width:17px; border-radius:2px; background:var(--text);
+}
 .mb-knopf .mb-name{
   /* Zwei Zeilen, dann Punkte.
 
@@ -17025,6 +17041,74 @@ Register.menueband = (() => {
             return false;
         }
     };
+    /* ────────────────────────────────────────────────────────────────────── *
+     * FARBE UND STRICHSTÄRKE
+     *
+     * Beim Zeichnen sind sie kein Nebenwerkzeug: welchen Stift man nimmt und
+     * in welcher Farbe, gehört zusammen. In der Leiste an der Fläche stehen
+     * sie deshalb direkt neben den Werkzeugen, und hier stehen sie es auch.
+     *
+     * DIE WERTE STEHEN NICHT HIER. `Marken.FARBEN` und `Marken.BREITEN` sind
+     * die Quelle — eine zweite Liste wäre ein zweiter Katalog (CLAUDE.md §8),
+     * und sie liefe irgendwann von der ersten weg. Genau das ist der Grund,
+     * warum die Blockarten oben auch aus `Register.bloecke` kommen.
+     * ────────────────────────────────────────────────────────────────────── */
+    /** Deutsche Namen zu den fünf Farbwerten. Unbekannte behalten ihren Code. */
+    const FARBWORT = {
+        '#111111': 'Schwarz', '#d64545': 'Rot', '#2f7ed8': 'Blau',
+        '#3aa757': 'Grün', '#e0a419': 'Gelb'
+    };
+    const STRICHWORT = ['Dünn', 'Mittel', 'Dick'];
+    const farbEintraege = () => {
+        let werte = [];
+        try {
+            werte = [...(Marken.FARBEN ?? [])];
+        }
+        catch {
+            werte = [];
+        }
+        return werte.map((wert, i) => ({
+            reiter: 'zeichnen', gruppe: 'Farbe', id: 'zf-' + i,
+            name: FARBWORT[wert] ?? wert,
+            /* Der Name steht darunter, das Zeichen ist die Farbe selbst. Ohne den
+               Namen wäre die Auswahl nur über Farbe zu treffen — §38. */
+            zeichen: '', probe: { farbe: wert },
+            hinweis: `Mit ${FARBWORT[wert] ?? wert} weiterzeichnen`,
+            an: () => { try {
+                return Zeichenziel.jetztFarbe() === wert;
+            }
+            catch {
+                return false;
+            } },
+            tun: () => { if (!Zeichenziel.setzeFarbe(wert))
+                UI.toast('Erst eine Zeichenfläche öffnen'); },
+            zeigen: flaecheDa
+        }));
+    };
+    const strichEintraege = () => {
+        let werte = [];
+        try {
+            werte = [...(Marken.BREITEN ?? [])];
+        }
+        catch {
+            werte = [];
+        }
+        return werte.map((wert, i) => ({
+            reiter: 'zeichnen', gruppe: 'Strich', id: 'zs-' + i,
+            name: STRICHWORT[i] ?? String(wert),
+            zeichen: '', probe: { dicke: wert },
+            hinweis: `Strichstärke ${String(wert).replace('.', ',')}`,
+            an: () => { try {
+                return Zeichenziel.jetztDicke() === wert;
+            }
+            catch {
+                return false;
+            } },
+            tun: () => { if (!Zeichenziel.setzeStrich(wert))
+                UI.toast('Erst eine Zeichenfläche öffnen'); },
+            zeigen: flaecheDa
+        }));
+    };
     const WERKZEUGE = [
         ['schreiben', 'Schreiben', '✎', 'Die Zeichenschicht ist durchlässig — Text bleibt anfassbar'],
         ['stift', 'Stift', '🖍', 'Freihand mit geglätteter Linie'],
@@ -17096,7 +17180,8 @@ Register.menueband = (() => {
         { reiter: 'zeichnen', gruppe: 'Aufnehmen', id: 'z-erkennen', name: 'Text erkennen',
             zeichen: 'search', hinweis: 'Aus einem Bild den Text herauslesen',
             tun: () => Recognition.scan(),
-            zeigen: () => kann(() => Recognition.scan) }
+            zeigen: () => kann(() => Recognition.scan) },
+        ...farbEintraege(), ...strichEintraege()
     ];
     /* ======================================================================== *
      * WERKZEUGE — die sieben Zeilen, die bis E210 links standen
@@ -33668,6 +33753,13 @@ const Marken = (() => {
         if (typeof Zeichenziel !== 'undefined') {
             try {
                 Zeichenziel.melde(controls, 'Zeichenfläche');
+                /* WELCHE FARBE UND WELCHE STÄRKE STEHEN GERADE AN.
+                   Die Leiste malt sie sich gleich selbst mit `.on` an (siehe
+                   `index === 0` bzw. `index === 1` unten). Sagt sie es dem Kern
+                   nicht, zeigt das Menüband fünf Farbknöpfe und markiert keinen —
+                   obwohl hier einer markiert ist. Zwei Anzeigen, ein Zustand. */
+                Zeichenziel.uebernehmeFarbe(controls, FARBEN[0]);
+                Zeichenziel.uebernehmeStrich(controls, BREITEN[1]);
             }
             catch { /* ohne Kern geht es wie bisher */ }
         }
@@ -33697,8 +33789,12 @@ const Marken = (() => {
                 FARBEN.map((value, index) => `<button class="blatt-farbe${index === 0 ? ' on' : ''}" ` +
                     `data-c="${value}" style="background:${value}" title="Farbe"></button>`).join('') +
                 '<span class="blatt-trenn"></span>' +
+                /* Doppelter Massstab wie im Menüband: mit der wahren Stärke sahen
+                   „dünn" (1,2 px) und „mittel" (2,4 px) gleich aus, weil der Boden
+                   von 2 px den ersten hochzog. Das Verhältnis 1 : 2 : 4 bleibt. */
                 BREITEN.map((value, index) => `<button class="blatt-strich${index === 1 ? ' on' : ''}" ` +
-                    `data-b="${value}" title="Strichbreite"><i style="height:${Math.max(2, value)}px"></i></button>`).join('');
+                    `data-b="${value}" title="Strichbreite ${String(value).replace('.', ',')}">` +
+                    `<i style="height:${Math.max(2, value * 2)}px"></i></button>`).join('');
         /* SICHTBAR MACHEN, DASS DIE LEISTE ROLLT (E140, §55.1).
            Bei 390 px ist die Leiste 310 px breit und ihr Inhalt 1059 — von 21
            Knöpfen stehen 15 draussen, alle rechts. Gerollt werden kann sie
@@ -33749,11 +33845,20 @@ const Marken = (() => {
                 return;
             }
             const wz = Zeichenziel.werkzeugVon(controls);
-            if (!wz)
-                return;
-            tools.querySelectorAll('[data-wz]').forEach(node => {
-                node.classList.toggle('on', node.dataset.wz === wz);
-            });
+            if (wz)
+                tools.querySelectorAll('[data-wz]').forEach(node => {
+                    node.classList.toggle('on', node.dataset.wz === wz);
+                });
+            const farbe = Zeichenziel.farbeVon(controls);
+            if (farbe)
+                tools.querySelectorAll('.blatt-farbe').forEach(node => {
+                    node.classList.toggle('on', node.dataset.c === farbe);
+                });
+            const dicke = Zeichenziel.dickeVon(controls);
+            if (dicke)
+                tools.querySelectorAll('.blatt-strich').forEach(node => {
+                    node.classList.toggle('on', Number(node.dataset.b) === dicke);
+                });
         };
         if (typeof Zeichenziel !== 'undefined' && typeof Zeichenziel.horche === 'function') {
             try {
@@ -33801,12 +33906,26 @@ const Marken = (() => {
             }
             if (target.dataset.c) {
                 controls.setzeFarbe(target.dataset.c);
+                /* Dieselbe Gegenrichtung wie beim Werkzeug: sonst stünde oben eine
+                   Farbe markiert, die niemand mehr benutzt. */
+                if (typeof Zeichenziel !== 'undefined') {
+                    try {
+                        Zeichenziel.uebernehmeFarbe(controls, target.dataset.c);
+                    }
+                    catch { /* egal */ }
+                }
                 tools.querySelectorAll('.blatt-farbe').forEach(node => node.classList.remove('on'));
                 target.classList.add('on');
                 return;
             }
             if (target.dataset.b) {
                 controls.setzeStrich(Number(target.dataset.b));
+                if (typeof Zeichenziel !== 'undefined') {
+                    try {
+                        Zeichenziel.uebernehmeStrich(controls, Number(target.dataset.b));
+                    }
+                    catch { /* egal */ }
+                }
                 tools.querySelectorAll('.blatt-strich').forEach(node => node.classList.remove('on'));
                 target.classList.add('on');
             }
@@ -84645,6 +84764,9 @@ window.Sicherung = Sicherung;
  *     setze(werkzeug)          das Werkzeug an der gemeinten Fläche
  *     jetzt()                  welches Werkzeug dort gerade an ist
  *     werkzeugVon(steuerung)   welches Werkzeug an EINER bestimmten Fläche
+ *     setzeFarbe / setzeStrich       dasselbe für Farbe und Strichstärke
+ *     jetztFarbe / jetztDicke        was dort gewählt ist
+ *     farbeVon / dickeVon            was an einer bestimmten Fläche
  *     horche(fn) / vergiss(fn) wenn sich Fläche oder Werkzeug ändern
  *
  * Wer weg ist, wird beim nächsten Nachfragen von selbst entfernt: jede
@@ -84783,6 +84905,7 @@ const Zeichenziel = (() => {
         if (finde(steuerung) >= 0)
             return;
         flaechen.push({ steuerung, name: String(name), werkzeug: 'schreiben',
+            farbe: '', dicke: 0,
             gesehen: steuerung.flaeche?.isConnected === true });
         /* Eine neue Fläche wird die gemeinte, wenn keine mehr da ist. Ohne das
            zeigte der Zeiger nach einem Seitenwechsel ins Leere, obwohl gerade
@@ -84894,30 +85017,78 @@ const Zeichenziel = (() => {
             zuletzt = i;
         melden();
     };
-    /** Farbe und Strichstärke gehen denselben Weg. */
+    /**
+     * Farbe und Strichstärke gehen denselben Weg wie das Werkzeug — beide
+     * Richtungen, und beide werden gemerkt.
+     *
+     * Der erste Entwurf reichte nur weiter, ohne zu merken. Damit hätte das
+     * Menüband fünf Farbknöpfe gezeigt und keinen davon markiert, während
+     * die Leiste an der Fläche sehr wohl einen markiert — genau der Fehler,
+     * der beim Werkzeug schon einmal auf dem Bildschirmfoto stand.
+     */
     const setzeFarbe = (wert) => {
-        const s = aktive();
-        if (!s || typeof s.setzeFarbe !== 'function')
+        const e = zuletzt >= 0 && zuletzt < flaechen.length ? flaechen[zuletzt] : null;
+        if (!e || typeof e.steuerung.setzeFarbe !== 'function')
             return false;
         try {
-            s.setzeFarbe(wert);
-            return true;
+            e.steuerung.setzeFarbe(wert);
         }
         catch {
             return false;
         }
+        e.farbe = String(wert);
+        melden();
+        return true;
     };
     const setzeStrich = (wert) => {
-        const s = aktive();
-        if (!s || typeof s.setzeStrich !== 'function')
+        const e = zuletzt >= 0 && zuletzt < flaechen.length ? flaechen[zuletzt] : null;
+        if (!e || typeof e.steuerung.setzeStrich !== 'function')
             return false;
         try {
-            s.setzeStrich(wert);
-            return true;
+            e.steuerung.setzeStrich(wert);
         }
         catch {
             return false;
         }
+        e.dicke = Number(wert);
+        melden();
+        return true;
+    };
+    /** Die Leiste hat selbst umgeschaltet — nur mitschreiben (wie `uebernehme`). */
+    const uebernehmeFarbe = (steuerung, wert) => {
+        const i = finde(steuerung);
+        if (i < 0)
+            return;
+        flaechen[i].farbe = String(wert);
+        if (zuletzt !== i)
+            zuletzt = i;
+        melden();
+    };
+    const uebernehmeStrich = (steuerung, wert) => {
+        const i = finde(steuerung);
+        if (i < 0)
+            return;
+        flaechen[i].dicke = Number(wert);
+        if (zuletzt !== i)
+            zuletzt = i;
+        melden();
+    };
+    /** Was ist an — an der gemeinten Fläche, und an einer bestimmten. */
+    const jetztFarbe = () => {
+        aufraeumen();
+        return zuletzt >= 0 && zuletzt < flaechen.length ? flaechen[zuletzt].farbe : '';
+    };
+    const jetztDicke = () => {
+        aufraeumen();
+        return zuletzt >= 0 && zuletzt < flaechen.length ? flaechen[zuletzt].dicke : 0;
+    };
+    const farbeVon = (steuerung) => {
+        const i = finde(steuerung);
+        return i < 0 ? '' : flaechen[i].farbe;
+    };
+    const dickeVon = (steuerung) => {
+        const i = finde(steuerung);
+        return i < 0 ? 0 : flaechen[i].dicke;
     };
     /** Zurück, Vor, Löschen — dieselben drei wie an der Leiste. */
     const ruf = (was) => {
@@ -84952,7 +85123,9 @@ const Zeichenziel = (() => {
             horcher.splice(i, 1);
     };
     return { melde, beruehrt, abmelden, leeren, aktive, da, anzahl, namen,
-        jetzt, werkzeugVon, setze, uebernehme, setzeFarbe, setzeStrich,
+        jetzt, werkzeugVon, setze, uebernehme,
+        setzeFarbe, setzeStrich, uebernehmeFarbe, uebernehmeStrich,
+        jetztFarbe, jetztDicke, farbeVon, dickeVon,
         ruf, horche, vergiss };
 })();
 window.Zeichenziel = Zeichenziel;
@@ -106140,7 +106313,49 @@ const Menueband = (() => {
         /* `textContent` und nie `innerHTML`: die Namen kommen aus Registern, aber
            ein Bereich darf über `melde()` eigene beisteuern, und dann stünde hier
            fremder Text (§19). */
-        zeichenIn(b, String(e.zeichen || '▫'));
+        /* EINE PROBE STATT EINES ZEICHENS.
+           Farbe und Strichstärke lassen sich nicht als Symbolname sagen. Ein
+           graues Zeichen mit dem Wort „Blau" darunter wäre die Farbe nur
+           behauptet — und ein Strich, der überall gleich dick aussieht, sagt
+           über die Stärke gar nichts.
+    
+           Der NAME bleibt trotzdem darunter stehen (§38): wer Farben nicht
+           unterscheiden kann, liest „Rot" und „Blau". */
+        if (e.probe && (e.probe.farbe || e.probe.dicke)) {
+            const pr = document.createElement('span');
+            pr.className = 'mb-probe';
+            if (e.probe.farbe) {
+                pr.classList.add('ist-farbe');
+                pr.style.background = String(e.probe.farbe);
+            }
+            else {
+                pr.classList.add('ist-strich');
+                const bar = document.createElement('i');
+                /* DOPPELT SO DICK WIE DER ECHTE STRICH — UND WARUM DAS EHRLICH IST.
+        
+                   Erst stand hier die wahre Stärke mit `Math.max(2, …)` als Boden,
+                   wie an der Leiste unter der Fläche. Gemessen wurden daraus
+                   2,0 / 2,5 / 6,5 px: der Boden zog 1,2 auf 2 hoch und liess
+                   zwischen „Dünn" und „Mittel" einen halben Pixel übrig. Auf dem
+                   dreifach vergrösserten Bild waren beide noch immer kaum
+                   auseinanderzuhalten — bei 100 % gar nicht.
+        
+                   Der Boden weg reichte nicht: 1,2 gegen 2,4 px sind gemessen 6,4
+                   gegen 8,0 Bildpunkte Tinte, ein Viertel Unterschied. Zwei Proben,
+                   die gleich aussehen, helfen bei der Wahl nicht.
+        
+                   Also der doppelte Massstab. Das VERHÄLTNIS bleibt genau erhalten
+                   (1 : 2 : 4), nur die absolute Grösse ist nicht mehr wörtlich —
+                   eine Probe ist eine Probe und kein Lineal. Wer den echten Strich
+                   sehen will, zieht ihn: dort steht er in seiner wahren Stärke. */
+                bar.style.height = Math.max(2, Number(e.probe.dicke) * 2) + 'px';
+                pr.appendChild(bar);
+            }
+            b.appendChild(pr);
+        }
+        else {
+            zeichenIn(b, String(e.zeichen || '▫'));
+        }
         const t = document.createElement('span');
         t.className = 'mb-name';
         t.textContent = String(e.name || '');

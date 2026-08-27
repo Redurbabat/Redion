@@ -667,6 +667,13 @@ const Marken = (() => {
         if (typeof Zeichenziel !== 'undefined') {
             try {
                 Zeichenziel.melde(controls, 'Zeichenfläche');
+                /* WELCHE FARBE UND WELCHE STÄRKE STEHEN GERADE AN.
+                   Die Leiste malt sie sich gleich selbst mit `.on` an (siehe
+                   `index === 0` bzw. `index === 1` unten). Sagt sie es dem Kern
+                   nicht, zeigt das Menüband fünf Farbknöpfe und markiert keinen —
+                   obwohl hier einer markiert ist. Zwei Anzeigen, ein Zustand. */
+                Zeichenziel.uebernehmeFarbe(controls, FARBEN[0]);
+                Zeichenziel.uebernehmeStrich(controls, BREITEN[1]);
             }
             catch { /* ohne Kern geht es wie bisher */ }
         }
@@ -696,8 +703,12 @@ const Marken = (() => {
                 FARBEN.map((value, index) => `<button class="blatt-farbe${index === 0 ? ' on' : ''}" ` +
                     `data-c="${value}" style="background:${value}" title="Farbe"></button>`).join('') +
                 '<span class="blatt-trenn"></span>' +
+                /* Doppelter Massstab wie im Menüband: mit der wahren Stärke sahen
+                   „dünn" (1,2 px) und „mittel" (2,4 px) gleich aus, weil der Boden
+                   von 2 px den ersten hochzog. Das Verhältnis 1 : 2 : 4 bleibt. */
                 BREITEN.map((value, index) => `<button class="blatt-strich${index === 1 ? ' on' : ''}" ` +
-                    `data-b="${value}" title="Strichbreite"><i style="height:${Math.max(2, value)}px"></i></button>`).join('');
+                    `data-b="${value}" title="Strichbreite ${String(value).replace('.', ',')}">` +
+                    `<i style="height:${Math.max(2, value * 2)}px"></i></button>`).join('');
         /* SICHTBAR MACHEN, DASS DIE LEISTE ROLLT (E140, §55.1).
            Bei 390 px ist die Leiste 310 px breit und ihr Inhalt 1059 — von 21
            Knöpfen stehen 15 draussen, alle rechts. Gerollt werden kann sie
@@ -748,11 +759,20 @@ const Marken = (() => {
                 return;
             }
             const wz = Zeichenziel.werkzeugVon(controls);
-            if (!wz)
-                return;
-            tools.querySelectorAll('[data-wz]').forEach(node => {
-                node.classList.toggle('on', node.dataset.wz === wz);
-            });
+            if (wz)
+                tools.querySelectorAll('[data-wz]').forEach(node => {
+                    node.classList.toggle('on', node.dataset.wz === wz);
+                });
+            const farbe = Zeichenziel.farbeVon(controls);
+            if (farbe)
+                tools.querySelectorAll('.blatt-farbe').forEach(node => {
+                    node.classList.toggle('on', node.dataset.c === farbe);
+                });
+            const dicke = Zeichenziel.dickeVon(controls);
+            if (dicke)
+                tools.querySelectorAll('.blatt-strich').forEach(node => {
+                    node.classList.toggle('on', Number(node.dataset.b) === dicke);
+                });
         };
         if (typeof Zeichenziel !== 'undefined' && typeof Zeichenziel.horche === 'function') {
             try {
@@ -800,12 +820,26 @@ const Marken = (() => {
             }
             if (target.dataset.c) {
                 controls.setzeFarbe(target.dataset.c);
+                /* Dieselbe Gegenrichtung wie beim Werkzeug: sonst stünde oben eine
+                   Farbe markiert, die niemand mehr benutzt. */
+                if (typeof Zeichenziel !== 'undefined') {
+                    try {
+                        Zeichenziel.uebernehmeFarbe(controls, target.dataset.c);
+                    }
+                    catch { /* egal */ }
+                }
                 tools.querySelectorAll('.blatt-farbe').forEach(node => node.classList.remove('on'));
                 target.classList.add('on');
                 return;
             }
             if (target.dataset.b) {
                 controls.setzeStrich(Number(target.dataset.b));
+                if (typeof Zeichenziel !== 'undefined') {
+                    try {
+                        Zeichenziel.uebernehmeStrich(controls, Number(target.dataset.b));
+                    }
+                    catch { /* egal */ }
+                }
                 tools.querySelectorAll('.blatt-strich').forEach(node => node.classList.remove('on'));
                 target.classList.add('on');
             }

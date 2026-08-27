@@ -183,7 +183,47 @@ const Menueband = (() => {
     /* `textContent` und nie `innerHTML`: die Namen kommen aus Registern, aber
        ein Bereich darf über `melde()` eigene beisteuern, und dann stünde hier
        fremder Text (§19). */
-    zeichenIn(b, String(e.zeichen || '▫'));
+    /* EINE PROBE STATT EINES ZEICHENS.
+       Farbe und Strichstärke lassen sich nicht als Symbolname sagen. Ein
+       graues Zeichen mit dem Wort „Blau" darunter wäre die Farbe nur
+       behauptet — und ein Strich, der überall gleich dick aussieht, sagt
+       über die Stärke gar nichts.
+
+       Der NAME bleibt trotzdem darunter stehen (§38): wer Farben nicht
+       unterscheiden kann, liest „Rot" und „Blau". */
+    if (e.probe && (e.probe.farbe || e.probe.dicke)) {
+      const pr = document.createElement('span');
+      pr.className = 'mb-probe';
+      if (e.probe.farbe) {
+        pr.classList.add('ist-farbe');
+        pr.style.background = String(e.probe.farbe);
+      } else {
+        pr.classList.add('ist-strich');
+        const bar = document.createElement('i');
+        /* DOPPELT SO DICK WIE DER ECHTE STRICH — UND WARUM DAS EHRLICH IST.
+
+           Erst stand hier die wahre Stärke mit `Math.max(2, …)` als Boden,
+           wie an der Leiste unter der Fläche. Gemessen wurden daraus
+           2,0 / 2,5 / 6,5 px: der Boden zog 1,2 auf 2 hoch und liess
+           zwischen „Dünn" und „Mittel" einen halben Pixel übrig. Auf dem
+           dreifach vergrösserten Bild waren beide noch immer kaum
+           auseinanderzuhalten — bei 100 % gar nicht.
+
+           Der Boden weg reichte nicht: 1,2 gegen 2,4 px sind gemessen 6,4
+           gegen 8,0 Bildpunkte Tinte, ein Viertel Unterschied. Zwei Proben,
+           die gleich aussehen, helfen bei der Wahl nicht.
+
+           Also der doppelte Massstab. Das VERHÄLTNIS bleibt genau erhalten
+           (1 : 2 : 4), nur die absolute Grösse ist nicht mehr wörtlich —
+           eine Probe ist eine Probe und kein Lineal. Wer den echten Strich
+           sehen will, zieht ihn: dort steht er in seiner wahren Stärke. */
+        bar.style.height = Math.max(2, Number(e.probe.dicke) * 2) + 'px';
+        pr.appendChild(bar);
+      }
+      b.appendChild(pr);
+    } else {
+      zeichenIn(b, String(e.zeichen || '▫'));
+    }
     const t = document.createElement('span');
     t.className = 'mb-name';
     t.textContent = String(e.name || '');

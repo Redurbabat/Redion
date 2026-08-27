@@ -507,6 +507,22 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
   flex:0 0 20px; display:inline-flex; align-items:center; justify-content:center;
 }
 .mb-knopf svg{ width:19px; height:19px }
+/* DIE PROBE: ein Farbtupfer oder ein Strich in seiner wirklichen Stärke.
+   Gleich gross wie ein Symbol (19 px), damit die Reihe nicht tanzt — dieselbe
+   Regel wie bei `.mb-glyph`, und aus demselben Grund. */
+.mb-knopf > .mb-probe{
+  flex:0 0 19px; width:19px; height:19px;
+  display:inline-flex; align-items:center; justify-content:center;
+}
+.mb-knopf > .mb-probe.ist-farbe{
+  width:17px; height:17px; flex-basis:17px; border-radius:50%;
+  /* Ein Rand, sonst verschwindet Schwarz im dunklen und Gelb im hellen
+     Hintergrund — der Tupfer wäre da und nicht zu sehen. */
+  box-shadow:0 0 0 1px var(--line);
+}
+.mb-knopf > .mb-probe.ist-strich i{
+  display:block; width:17px; border-radius:2px; background:var(--text);
+}
 .mb-knopf .mb-name{
   /* Zwei Zeilen, dann Punkte.
 

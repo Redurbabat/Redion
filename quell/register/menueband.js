@@ -222,6 +222,74 @@ Register.menueband = (() => {
             return false;
         }
     };
+    /* ────────────────────────────────────────────────────────────────────── *
+     * FARBE UND STRICHSTÄRKE
+     *
+     * Beim Zeichnen sind sie kein Nebenwerkzeug: welchen Stift man nimmt und
+     * in welcher Farbe, gehört zusammen. In der Leiste an der Fläche stehen
+     * sie deshalb direkt neben den Werkzeugen, und hier stehen sie es auch.
+     *
+     * DIE WERTE STEHEN NICHT HIER. `Marken.FARBEN` und `Marken.BREITEN` sind
+     * die Quelle — eine zweite Liste wäre ein zweiter Katalog (CLAUDE.md §8),
+     * und sie liefe irgendwann von der ersten weg. Genau das ist der Grund,
+     * warum die Blockarten oben auch aus `Register.bloecke` kommen.
+     * ────────────────────────────────────────────────────────────────────── */
+    /** Deutsche Namen zu den fünf Farbwerten. Unbekannte behalten ihren Code. */
+    const FARBWORT = {
+        '#111111': 'Schwarz', '#d64545': 'Rot', '#2f7ed8': 'Blau',
+        '#3aa757': 'Grün', '#e0a419': 'Gelb'
+    };
+    const STRICHWORT = ['Dünn', 'Mittel', 'Dick'];
+    const farbEintraege = () => {
+        let werte = [];
+        try {
+            werte = [...(Marken.FARBEN ?? [])];
+        }
+        catch {
+            werte = [];
+        }
+        return werte.map((wert, i) => ({
+            reiter: 'zeichnen', gruppe: 'Farbe', id: 'zf-' + i,
+            name: FARBWORT[wert] ?? wert,
+            /* Der Name steht darunter, das Zeichen ist die Farbe selbst. Ohne den
+               Namen wäre die Auswahl nur über Farbe zu treffen — §38. */
+            zeichen: '', probe: { farbe: wert },
+            hinweis: `Mit ${FARBWORT[wert] ?? wert} weiterzeichnen`,
+            an: () => { try {
+                return Zeichenziel.jetztFarbe() === wert;
+            }
+            catch {
+                return false;
+            } },
+            tun: () => { if (!Zeichenziel.setzeFarbe(wert))
+                UI.toast('Erst eine Zeichenfläche öffnen'); },
+            zeigen: flaecheDa
+        }));
+    };
+    const strichEintraege = () => {
+        let werte = [];
+        try {
+            werte = [...(Marken.BREITEN ?? [])];
+        }
+        catch {
+            werte = [];
+        }
+        return werte.map((wert, i) => ({
+            reiter: 'zeichnen', gruppe: 'Strich', id: 'zs-' + i,
+            name: STRICHWORT[i] ?? String(wert),
+            zeichen: '', probe: { dicke: wert },
+            hinweis: `Strichstärke ${String(wert).replace('.', ',')}`,
+            an: () => { try {
+                return Zeichenziel.jetztDicke() === wert;
+            }
+            catch {
+                return false;
+            } },
+            tun: () => { if (!Zeichenziel.setzeStrich(wert))
+                UI.toast('Erst eine Zeichenfläche öffnen'); },
+            zeigen: flaecheDa
+        }));
+    };
     const WERKZEUGE = [
         ['schreiben', 'Schreiben', '✎', 'Die Zeichenschicht ist durchlässig — Text bleibt anfassbar'],
         ['stift', 'Stift', '🖍', 'Freihand mit geglätteter Linie'],
@@ -293,7 +361,8 @@ Register.menueband = (() => {
         { reiter: 'zeichnen', gruppe: 'Aufnehmen', id: 'z-erkennen', name: 'Text erkennen',
             zeichen: 'search', hinweis: 'Aus einem Bild den Text herauslesen',
             tun: () => Recognition.scan(),
-            zeigen: () => kann(() => Recognition.scan) }
+            zeigen: () => kann(() => Recognition.scan) },
+        ...farbEintraege(), ...strichEintraege()
     ];
     /* ======================================================================== *
      * WERKZEUGE — die sieben Zeilen, die bis E210 links standen

@@ -68,6 +68,7 @@ declare const App: any;
 declare const Register: any;
 declare const Seitenleiste: any;
 declare const Zeichenziel: any;
+declare const Marken: any;
 
 const WURZEL = path.resolve(import.meta.dirname, '../..');
 const PORT = 8967;
@@ -628,8 +629,15 @@ await seite.waitForTimeout(500);
 const nachStift = await seite.evaluate(() => ({
   amSvg: document.querySelector('svg[data-tool]')?.getAttribute('data-tool') || '',
   imKern: Zeichenziel.jetzt(),
+  /* NUR DIE WERKZEUGGRUPPE.
+     Erst stand hier „genau ein Knopf im Band ist markiert". Das stimmte,
+     solange das Werkzeug das Einzige war, was markiert werden konnte —
+     seit Farbe und Stärke dazugekommen sind (E213), sind es drei, und der
+     Punkt wurde rot, obwohl genau das Richtige geschah. Gemeint war immer:
+     genau EIN WERKZEUG. Also wird auch danach gefragt. */
   imBand: [...document.querySelectorAll('#menueband .mb-knopf.ist-an')]
-    .map(b => (b as HTMLElement).dataset['band'] || ''),
+    .map(b => (b as HTMLElement).dataset['band'] || '')
+    .filter(x => x.startsWith('wz-')),
   gedrueckt: document.querySelector('#menueband [data-band="wz-stift"]')
     ?.getAttribute('aria-pressed') || '',
   anDerLeiste: [...document.querySelectorAll('[data-wz].on')]
@@ -660,11 +668,144 @@ const nachMarker = await seite.evaluate(() => ({
   imKern: Zeichenziel.jetzt(),
   imBand: [...document.querySelectorAll('#menueband .mb-knopf.ist-an')]
     .map(b => (b as HTMLElement).dataset['band'] || '')
+    .filter(x => x.startsWith('wz-'))
 }));
 p('Umschalten an der Leiste kommt im Band an',
   nachMarker.imKern === 'marker'
     && nachMarker.imBand.length === 1 && nachMarker.imBand[0] === 'wz-marker',
   JSON.stringify(nachMarker));
+
+/* FARBE UND STRICHSTÄRKE (E213).
+   Beim Zeichnen gehören sie zum Werkzeug. Sie standen nur an der Leiste
+   unter der Fläche; im Band fehlten sie, und ein Reiter „Zeichnen" ohne
+   Farbe ist kein Zeichenreiter. */
+const farbStand = await seite.evaluate(() => ({
+  farben: [...document.querySelectorAll('#menueband [data-band^="zf-"]')].map(b => ({
+    name: (b.querySelector('.mb-name')?.textContent || '').trim(),
+    tupfer: (b.querySelector('.mb-probe') as HTMLElement)?.style.background || '',
+    an: b.classList.contains('ist-an')
+  })),
+  striche: [...document.querySelectorAll('#menueband [data-band^="zs-"]')].map(b => ({
+    name: (b.querySelector('.mb-name')?.textContent || '').trim(),
+    hoch: +((b.querySelector('.mb-probe i') as HTMLElement)?.getBoundingClientRect().height || 0).toFixed(2),
+    an: b.classList.contains('ist-an')
+  })),
+  ausRegister: (() => { try { return (Marken.FARBEN || []).length; } catch { return -1; } })(),
+  leisteFarbe: [...document.querySelectorAll('.blatt-farbe.on')].map(b => (b as HTMLElement).dataset['c']),
+  leisteStrich: [...document.querySelectorAll('.blatt-strich.on')].map(b => (b as HTMLElement).dataset['b'])
+}));
+/* Aus DEMSELBEN Katalog wie die Leiste — nicht aus einer zweiten Liste. */
+p('Die Farben im Band kommen aus `Marken.FARBEN`',
+  farbStand.ausRegister > 0 && farbStand.farben.length === farbStand.ausRegister,
+  `${farbStand.farben.length} Knöpfe, ${farbStand.ausRegister} im Katalog`);
+p('Jeder Farbknopf trägt einen Tupfer UND einen Namen (§38)',
+  farbStand.farben.length > 0 && farbStand.farben.every(f => f.tupfer && f.name),
+  JSON.stringify(farbStand.farben));
+
+/* DIE DREI STÄRKEN MÜSSEN AUSEINANDERZUHALTEN SEIN.
+   Mit der wahren Stärke und `Math.max(2, …)` wurden aus 1,2 / 2,4 / 5 px
+   gemessene 2,0 / 2,5 / 6,5 — „Dünn" und „Mittel" trennte ein halber
+   Pixel, und auf dem dreifach vergrösserten Bild sahen sie gleich aus.
+   Geprüft wird auf ein Verhältnis, nicht auf feste Zahlen: jede Probe muss
+   spürbar dicker sein als die davor. */
+const stufen = farbStand.striche.map(x => x.hoch);
+const waechst = stufen.length >= 2 &&
+  stufen.every((h, i) => i === 0 || h >= (stufen[i - 1] ?? 0) * 1.5);
+p('Die Strichproben wachsen sichtbar — jede mindestens anderthalbfach',
+  stufen.length > 0 && waechst, JSON.stringify(farbStand.striche));
+
+/* SCHON VOR DEM ERSTEN KLICK MÜSSEN SICH BEIDE EINIG SEIN.
+   Die Leiste malt sich ihre Vorgabe selbst an (Schwarz, mittlere Stärke).
+   Sagt sie das dem Kern nicht, zeigt das Band fünf Farbknöpfe und markiert
+   keinen — während unten einer markiert ist. Die Gegenprobe zu diesem
+   Punkt (`uebernehmeFarbe` bei der Anmeldung entfernt) liess ALLE anderen
+   Punkte grün: sie prüfen erst, nachdem geklickt wurde, und danach stimmt
+   es wieder. Der Anfangszustand hatte niemanden. */
+const anfangsFarbe = farbStand.farben.filter(f => f.an);
+const anfangsStrich = farbStand.striche.filter(x => x.an);
+p('Band und Leiste sind schon vor dem ersten Klick derselben Meinung',
+  anfangsFarbe.length === 1 && anfangsStrich.length === 1
+    && farbStand.leisteFarbe.length === 1 && farbStand.leisteStrich.length === 1,
+  `Band: ${JSON.stringify(anfangsFarbe.map(f => f.name))} / ` +
+  `${JSON.stringify(anfangsStrich.map(x => x.name))}  ·  ` +
+  `Leiste: ${JSON.stringify(farbStand.leisteFarbe)} / ${JSON.stringify(farbStand.leisteStrich)}`);
+
+/* Und beide Richtungen, wie beim Werkzeug. */
+await klick(seite, '#menueband [data-band="zf-2"]');
+await seite.waitForTimeout(400);
+await klick(seite, '#menueband [data-band="zs-2"]');
+await seite.waitForTimeout(400);
+const nachFarbe = await seite.evaluate(() => ({
+  kernFarbe: Zeichenziel.jetztFarbe(), kernDicke: Zeichenziel.jetztDicke(),
+  leisteFarbe: [...document.querySelectorAll('.blatt-farbe.on')].map(b => (b as HTMLElement).dataset['c']),
+  leisteStrich: [...document.querySelectorAll('.blatt-strich.on')].map(b => (b as HTMLElement).dataset['b']),
+  bandAn: [...document.querySelectorAll('#menueband .mb-knopf.ist-an')]
+    .map(b => (b as HTMLElement).dataset['band'])
+}));
+p('Farbe und Stärke aus dem Band kommen an der Leiste an',
+  nachFarbe.leisteFarbe.length === 1 && nachFarbe.leisteFarbe[0] === '#2f7ed8'
+    && nachFarbe.leisteStrich.length === 1 && nachFarbe.leisteStrich[0] === '5',
+  JSON.stringify(nachFarbe));
+
+/* UND JETZT WIRKLICH ZEICHNEN.
+   Der Punkt darüber vergleicht zwei ANZEIGEN. Die Gegenprobe hat gezeigt,
+   dass das zu wenig ist: mit ausgebautem `steuerung.setzeFarbe` blieb er
+   grün — beide Anzeigen waren sich einig, und die Fläche hätte trotzdem
+   schwarz gezeichnet.
+
+   Beim Werkzeug gibt es `data-tool` am SVG, an dem sich die Wirkung ablesen
+   lässt. Für Farbe und Stärke gibt es nichts dergleichen: `setzeFarbe` setzt
+   eine Variable, die niemand von aussen sehen kann. Die einzige ehrliche
+   Frage ist deshalb die, auf die es ankommt — MALT der Stift blau? Also
+   wird ein Strich gezogen und nachgesehen, was dabei herauskommt. */
+const ziehe = async (): Promise<{ stroke: string; breite: number; anzahl: number } | null> => {
+  const flaeche = await seite.$('svg[data-tool]');
+  if (!flaeche) return null;
+  const box = await flaeche.boundingBox();
+  if (!box) return null;
+  const x = box.x + box.width / 2, y = box.y + 80;
+  await seite.mouse.move(x, y);
+  await seite.mouse.down();
+  for (let i = 1; i <= 8; i++) { await seite.mouse.move(x + i * 12, y + i * 5); await seite.waitForTimeout(25); }
+  await seite.mouse.up();
+  await seite.waitForTimeout(700);
+  return seite.evaluate(() => {
+    const f = document.querySelector('svg[data-tool]');
+    if (!f) return null;
+    const wege = [...f.querySelectorAll('path, polyline')];
+    const letzt = wege[wege.length - 1] as SVGElement | undefined;
+    return { anzahl: wege.length, stroke: letzt?.getAttribute('stroke') || '',
+             breite: Number(letzt?.getAttribute('stroke-width') || 0) };
+  });
+};
+const dick = await ziehe();
+await klick(seite, '#menueband [data-band="zs-0"]');
+await seite.waitForTimeout(400);
+const duenn = await ziehe();
+
+p('Der gezogene Strich ist wirklich blau',
+  dick !== null && dick.anzahl > 0 && dick.stroke === '#2f7ed8',
+  dick === null ? 'kein Strich zustande gekommen — so kann der Punkt nie rot werden'
+                : JSON.stringify(dick));
+
+/* DIE STÄRKE NUR IM VERHÄLTNIS, NICHT ALS ZAHL.
+   Der erste Entwurf verlangte `stroke-width === 5`. In meiner Handmessung
+   stand da 5, im Prüflauf 20 — die Fläche rechnet die Stärke auf ihre
+   Zoomstufe um, und die hängt davon ab, wie breit das Blatt gerade steht.
+   Eine feste Zahl prüft damit die Fensterbreite und nicht die Stärke.
+
+   Das Verhältnis ist dagegen unabhängig davon: dick zu dünn ist 5 : 1,2,
+   also gut das Vierfache, egal wie gross das Blatt gezeichnet wird. */
+const verhaeltnis = dick && duenn && duenn.breite > 0 ? dick.breite / duenn.breite : 0;
+p('Und „Dick" zieht wirklich rund viermal so breit wie „Dünn"',
+  dick !== null && duenn !== null && verhaeltnis > 3.5 && verhaeltnis < 5,
+  `dick ${dick?.breite} : dünn ${duenn?.breite} = ${verhaeltnis.toFixed(2)}` +
+  ` (erwartet ${(5 / 1.2).toFixed(2)})`);
+p('Und das Band markiert genau die gewählte Farbe und Stärke',
+  nachFarbe.bandAn.includes('zf-2') && nachFarbe.bandAn.includes('zs-2')
+    && nachFarbe.bandAn.filter(x => (x || '').startsWith('zf-')).length === 1
+    && nachFarbe.bandAn.filter(x => (x || '').startsWith('zs-')).length === 1,
+  JSON.stringify(nachFarbe.bandAn));
 
 /* TOTE FLÄCHEN DÜRFEN SICH NICHT SAMMELN.
    Niemand meldet eine Fläche ab. Gemessen wuchs die Liste bei jedem

@@ -36,6 +36,9 @@
  *     setze(werkzeug)          das Werkzeug an der gemeinten Fläche
  *     jetzt()                  welches Werkzeug dort gerade an ist
  *     werkzeugVon(steuerung)   welches Werkzeug an EINER bestimmten Fläche
+ *     setzeFarbe / setzeStrich       dasselbe für Farbe und Strichstärke
+ *     jetztFarbe / jetztDicke        was dort gewählt ist
+ *     farbeVon / dickeVon            was an einer bestimmten Fläche
  *     horche(fn) / vergiss(fn) wenn sich Fläche oder Werkzeug ändern
  *
  * Wer weg ist, wird beim nächsten Nachfragen von selbst entfernt: jede
@@ -174,6 +177,7 @@ const Zeichenziel = (() => {
         if (finde(steuerung) >= 0)
             return;
         flaechen.push({ steuerung, name: String(name), werkzeug: 'schreiben',
+            farbe: '', dicke: 0,
             gesehen: steuerung.flaeche?.isConnected === true });
         /* Eine neue Fläche wird die gemeinte, wenn keine mehr da ist. Ohne das
            zeigte der Zeiger nach einem Seitenwechsel ins Leere, obwohl gerade
@@ -285,30 +289,78 @@ const Zeichenziel = (() => {
             zuletzt = i;
         melden();
     };
-    /** Farbe und Strichstärke gehen denselben Weg. */
+    /**
+     * Farbe und Strichstärke gehen denselben Weg wie das Werkzeug — beide
+     * Richtungen, und beide werden gemerkt.
+     *
+     * Der erste Entwurf reichte nur weiter, ohne zu merken. Damit hätte das
+     * Menüband fünf Farbknöpfe gezeigt und keinen davon markiert, während
+     * die Leiste an der Fläche sehr wohl einen markiert — genau der Fehler,
+     * der beim Werkzeug schon einmal auf dem Bildschirmfoto stand.
+     */
     const setzeFarbe = (wert) => {
-        const s = aktive();
-        if (!s || typeof s.setzeFarbe !== 'function')
+        const e = zuletzt >= 0 && zuletzt < flaechen.length ? flaechen[zuletzt] : null;
+        if (!e || typeof e.steuerung.setzeFarbe !== 'function')
             return false;
         try {
-            s.setzeFarbe(wert);
-            return true;
+            e.steuerung.setzeFarbe(wert);
         }
         catch {
             return false;
         }
+        e.farbe = String(wert);
+        melden();
+        return true;
     };
     const setzeStrich = (wert) => {
-        const s = aktive();
-        if (!s || typeof s.setzeStrich !== 'function')
+        const e = zuletzt >= 0 && zuletzt < flaechen.length ? flaechen[zuletzt] : null;
+        if (!e || typeof e.steuerung.setzeStrich !== 'function')
             return false;
         try {
-            s.setzeStrich(wert);
-            return true;
+            e.steuerung.setzeStrich(wert);
         }
         catch {
             return false;
         }
+        e.dicke = Number(wert);
+        melden();
+        return true;
+    };
+    /** Die Leiste hat selbst umgeschaltet — nur mitschreiben (wie `uebernehme`). */
+    const uebernehmeFarbe = (steuerung, wert) => {
+        const i = finde(steuerung);
+        if (i < 0)
+            return;
+        flaechen[i].farbe = String(wert);
+        if (zuletzt !== i)
+            zuletzt = i;
+        melden();
+    };
+    const uebernehmeStrich = (steuerung, wert) => {
+        const i = finde(steuerung);
+        if (i < 0)
+            return;
+        flaechen[i].dicke = Number(wert);
+        if (zuletzt !== i)
+            zuletzt = i;
+        melden();
+    };
+    /** Was ist an — an der gemeinten Fläche, und an einer bestimmten. */
+    const jetztFarbe = () => {
+        aufraeumen();
+        return zuletzt >= 0 && zuletzt < flaechen.length ? flaechen[zuletzt].farbe : '';
+    };
+    const jetztDicke = () => {
+        aufraeumen();
+        return zuletzt >= 0 && zuletzt < flaechen.length ? flaechen[zuletzt].dicke : 0;
+    };
+    const farbeVon = (steuerung) => {
+        const i = finde(steuerung);
+        return i < 0 ? '' : flaechen[i].farbe;
+    };
+    const dickeVon = (steuerung) => {
+        const i = finde(steuerung);
+        return i < 0 ? 0 : flaechen[i].dicke;
     };
     /** Zurück, Vor, Löschen — dieselben drei wie an der Leiste. */
     const ruf = (was) => {
@@ -343,7 +395,9 @@ const Zeichenziel = (() => {
             horcher.splice(i, 1);
     };
     return { melde, beruehrt, abmelden, leeren, aktive, da, anzahl, namen,
-        jetzt, werkzeugVon, setze, uebernehme, setzeFarbe, setzeStrich,
+        jetzt, werkzeugVon, setze, uebernehme,
+        setzeFarbe, setzeStrich, uebernehmeFarbe, uebernehmeStrich,
+        jetztFarbe, jetztDicke, farbeVon, dickeVon,
         ruf, horche, vergiss };
 })();
 window.Zeichenziel = Zeichenziel;

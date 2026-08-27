@@ -35,6 +35,9 @@
  *     setze(werkzeug)          das Werkzeug an der gemeinten Fläche
  *     jetzt()                  welches Werkzeug dort gerade an ist
  *     werkzeugVon(steuerung)   welches Werkzeug an EINER bestimmten Fläche
+ *     setzeFarbe / setzeStrich       dasselbe für Farbe und Strichstärke
+ *     jetztFarbe / jetztDicke        was dort gewählt ist
+ *     farbeVon / dickeVon            was an einer bestimmten Fläche
  *     horche(fn) / vergiss(fn) wenn sich Fläche oder Werkzeug ändern
  *
  * Wer weg ist, wird beim nächsten Nachfragen von selbst entfernt: jede
@@ -96,8 +99,21 @@ const Zeichenziel = (() => {
     deleteSelection?: () => void;
   };
 
-  /** `gesehen` heisst: dieses Element hing schon einmal in der Seite. */
-  type Eintrag = { steuerung: Steuerung; name: string; werkzeug: string; gesehen: boolean };
+  /**
+   * `gesehen` heisst: dieses Element hing schon einmal in der Seite.
+   *
+   * `farbe` und `dicke` stehen neben `werkzeug`, weil dieselbe Frage für
+   * sie gilt: das Menüband will anzeigen, WAS gerade gewählt ist, und die
+   * Leiste an der Fläche will es auch. Zwei Anzeigen, ein Zustand — sonst
+   * läuft die eine der anderen hinterher, wie es beim Werkzeug schon
+   * einmal passiert ist.
+   *
+   * Die WERTE stehen nicht hier. Welche fünf Farben und welche drei
+   * Strichstärken es gibt, sagt `Marken.FARBEN` und `Marken.BREITEN` —
+   * eine zweite Liste im Kern wäre ein zweiter Katalog (CLAUDE.md §8).
+   */
+  type Eintrag = { steuerung: Steuerung; name: string; gesehen: boolean;
+                   werkzeug: string; farbe: string; dicke: number };
 
   /* Alle Flächen, die es gerade gibt — in der Reihenfolge ihres Auftauchens.
      Mehrere sind der Normalfall: eine Seite kann drei Blätter tragen. */
@@ -193,6 +209,7 @@ const Zeichenziel = (() => {
     aufraeumen();
     if (finde(steuerung) >= 0) return;
     flaechen.push({ steuerung, name: String(name), werkzeug: 'schreiben',
+                    farbe: '', dicke: 0,
                     gesehen: steuerung.flaeche?.isConnected === true });
     /* Eine neue Fläche wird die gemeinte, wenn keine mehr da ist. Ohne das
        zeigte der Zeiger nach einem Seitenwechsel ins Leere, obwohl gerade
@@ -300,16 +317,60 @@ const Zeichenziel = (() => {
     melden();
   };
 
-  /** Farbe und Strichstärke gehen denselben Weg. */
+  /**
+   * Farbe und Strichstärke gehen denselben Weg wie das Werkzeug — beide
+   * Richtungen, und beide werden gemerkt.
+   *
+   * Der erste Entwurf reichte nur weiter, ohne zu merken. Damit hätte das
+   * Menüband fünf Farbknöpfe gezeigt und keinen davon markiert, während
+   * die Leiste an der Fläche sehr wohl einen markiert — genau der Fehler,
+   * der beim Werkzeug schon einmal auf dem Bildschirmfoto stand.
+   */
   const setzeFarbe = (wert: string): boolean => {
-    const s = aktive();
-    if (!s || typeof s.setzeFarbe !== 'function') return false;
-    try { s.setzeFarbe(wert); return true; } catch { return false; }
+    const e = zuletzt >= 0 && zuletzt < flaechen.length ? flaechen[zuletzt] as Eintrag : null;
+    if (!e || typeof e.steuerung.setzeFarbe !== 'function') return false;
+    try { e.steuerung.setzeFarbe(wert); } catch { return false; }
+    e.farbe = String(wert);
+    melden();
+    return true;
   };
   const setzeStrich = (wert: number): boolean => {
-    const s = aktive();
-    if (!s || typeof s.setzeStrich !== 'function') return false;
-    try { s.setzeStrich(wert); return true; } catch { return false; }
+    const e = zuletzt >= 0 && zuletzt < flaechen.length ? flaechen[zuletzt] as Eintrag : null;
+    if (!e || typeof e.steuerung.setzeStrich !== 'function') return false;
+    try { e.steuerung.setzeStrich(wert); } catch { return false; }
+    e.dicke = Number(wert);
+    melden();
+    return true;
+  };
+
+  /** Die Leiste hat selbst umgeschaltet — nur mitschreiben (wie `uebernehme`). */
+  const uebernehmeFarbe = (steuerung: Steuerung, wert: string): void => {
+    const i = finde(steuerung);
+    if (i < 0) return;
+    (flaechen[i] as Eintrag).farbe = String(wert);
+    if (zuletzt !== i) zuletzt = i;
+    melden();
+  };
+  const uebernehmeStrich = (steuerung: Steuerung, wert: number): void => {
+    const i = finde(steuerung);
+    if (i < 0) return;
+    (flaechen[i] as Eintrag).dicke = Number(wert);
+    if (zuletzt !== i) zuletzt = i;
+    melden();
+  };
+
+  /** Was ist an — an der gemeinten Fläche, und an einer bestimmten. */
+  const jetztFarbe = (): string => { aufraeumen();
+    return zuletzt >= 0 && zuletzt < flaechen.length ? (flaechen[zuletzt] as Eintrag).farbe : ''; };
+  const jetztDicke = (): number => { aufraeumen();
+    return zuletzt >= 0 && zuletzt < flaechen.length ? (flaechen[zuletzt] as Eintrag).dicke : 0; };
+  const farbeVon = (steuerung: Steuerung): string => {
+    const i = finde(steuerung);
+    return i < 0 ? '' : (flaechen[i] as Eintrag).farbe;
+  };
+  const dickeVon = (steuerung: Steuerung): number => {
+    const i = finde(steuerung);
+    return i < 0 ? 0 : (flaechen[i] as Eintrag).dicke;
   };
 
   /** Zurück, Vor, Löschen — dieselben drei wie an der Leiste. */
@@ -339,7 +400,9 @@ const Zeichenziel = (() => {
   };
 
   return { melde, beruehrt, abmelden, leeren, aktive, da, anzahl, namen,
-           jetzt, werkzeugVon, setze, uebernehme, setzeFarbe, setzeStrich,
+           jetzt, werkzeugVon, setze, uebernehme,
+           setzeFarbe, setzeStrich, uebernehmeFarbe, uebernehmeStrich,
+           jetztFarbe, jetztDicke, farbeVon, dickeVon,
            ruf, horche, vergiss };
 })();
 

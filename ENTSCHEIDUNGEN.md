@@ -15510,3 +15510,123 @@ Zwei Punkte waren beim ersten Schreiben wertlos und wurden ersetzt:
 Grün: test247 68/68, test34 77/77, test33 96/96, test192 25, test173 11,
 test217 27/27, test222 50/50, test215 44/44, test128 50, test202 84,
 test105 55, test109 20.
+
+
+================================================================================
+E213 — Farbe und Strichstärke gehören ins Menüband
+================================================================================
+
+Der Reiter „Zeichnen" hatte nach E212 elf Werkzeuge, aber keine Farbe. In
+Word und in jedem Zeichenprogramm steht der Farbtopf neben dem Stift, weil
+beides zusammen eine Entscheidung ist: WOMIT und IN WELCHER FARBE. Beides nur
+in der Leiste unter der Fläche zu haben, während oben ein Reiter „Zeichnen"
+steht, war eine halbe Antwort.
+
+    Fläche · Werkzeug · Zurücknehmen · Aufnehmen · FARBE · STRICH
+
+
+WOHER DIE WERTE KOMMEN
+--------------------------------------------------------------------------------
+
+Aus `Marken.FARBEN` und `Marken.BREITEN` — denselben Listen, aus denen die
+Leiste unter der Fläche ihre Knöpfe baut. Eine zweite Liste im Register wäre
+ein zweiter Katalog (CLAUDE.md §8), und sie liefe irgendwann von der ersten
+weg: jemand fügt eine Farbe hinzu, und die Hälfte der App kennt sie nicht.
+
+Deutsch heissen sie über eine kleine Zuordnung (`FARBWORT`), und ein
+unbekannter Wert behält seinen Code. Damit bricht das Band nicht, wenn die
+Palette wächst — es zeigt dann eben „#a3c4f0" statt „Hellblau", und das ist
+besser als ein fehlender Knopf.
+
+
+DER KERN MERKT SICH JETZT DREI DINGE STATT EINEM
+--------------------------------------------------------------------------------
+
+`zeichenziel.ts` hielt `werkzeug`. Farbe und Stärke gingen nur durch. Das
+hätte gereicht, um zu WIRKEN, aber nicht, um zu ZEIGEN: das Band hätte fünf
+Farbknöpfe gehabt und keinen markiert, während die Leiste sehr wohl einen
+markiert — derselbe Fehler, der bei E212 auf dem Bildschirmfoto stand.
+
+Also `farbe` und `dicke` neben `werkzeug`, mit denselben zwei Richtungen:
+`setzeFarbe` (von aussen an die Fläche) und `uebernehmeFarbe` (die Leiste hat
+selbst geschaltet, nur merken). Die WERTE stehen weiterhin nicht im Kern.
+
+
+EINE PROBE STATT EINES ZEICHENS
+--------------------------------------------------------------------------------
+
+Ein Symbolname kann keine Farbe tragen und keine Dicke. `BandEintrag` hat
+deshalb ein `probe?: { farbe?, dicke? }`, und der Zeichner malt daraus einen
+Tupfer oder einen Balken. Der NAME steht trotzdem darunter — „Rot", „Blau",
+„Dünn": wer Farben nicht unterscheidet, muss die Wahl trotzdem treffen können
+(§38).
+
+
+DIE DREI STÄRKEN SAHEN GLEICH AUS
+--------------------------------------------------------------------------------
+
+Die Leiste zeichnet ihre Proben in der wahren Stärke, mit `Math.max(2, wert)`
+als Boden. Aus 1,2 / 2,4 / 5 px wurden damit gemessene 2,0 / 2,5 / 6,5 — der
+Boden zog den dünnsten hoch, und zwischen „Dünn" und „Mittel" blieb ein
+halber Pixel. Auf dem dreifach vergrösserten Bild waren sie kaum
+auseinanderzuhalten; bei 100 % gar nicht.
+
+Den Boden zu entfernen reichte nicht: 1,2 gegen 2,4 px sind gemessen 6,4
+gegen 8,0 Bildpunkte Tinte, ein Viertel Unterschied.
+
+Jetzt gilt der doppelte Massstab, im Band und in der Leiste. Gemessen:
+2,39 / 4,80 / 10,00 px — genau 1 : 2 : 4. Das VERHÄLTNIS stimmt auf den
+Punkt, die absolute Grösse ist nicht mehr wörtlich. Eine Probe ist eine
+Probe und kein Lineal; wer den echten Strich sehen will, zieht ihn.
+
+
+WAS DIE GEGENPROBEN GELEHRT HABEN
+--------------------------------------------------------------------------------
+
+DREI PUNKTE WAREN WERTLOS, UND ZWAR AUF DREI VERSCHIEDENE ARTEN.
+
+1. „Farbe und Stärke aus dem Band kommen an der Leiste an" blieb GRÜN, als
+   `steuerung.setzeFarbe` ausgebaut wurde. Er verglich zwei ANZEIGEN, und
+   die waren sich einig — während die Fläche schwarz gezeichnet hätte.
+
+   Beim Werkzeug gibt es `data-tool` am SVG. Für Farbe und Stärke gibt es
+   nichts dergleichen: `setzeFarbe` setzt eine Variable, die von aussen
+   niemand sehen kann. Die einzige ehrliche Frage ist deshalb die, auf die
+   es ankommt — MALT der Stift blau? Der Prüflauf zieht jetzt einen Strich
+   mit der Maus und liest sein `stroke`. Mit ausgebautem `setzeFarbe` kommt
+   `#e0a419` heraus statt `#2f7ed8`.
+
+2. Derselbe Punkt verlangte zuerst `stroke-width === 5`. In der Handmessung
+   stand da 5, im Prüflauf 20: die Fläche rechnet die Stärke auf ihre
+   Zoomstufe um, und die hängt von der Fensterbreite ab. Eine feste Zahl
+   prüft damit das Fenster. Jetzt wird das VERHÄLTNIS geprüft — dick zu
+   dünn ist 5 : 1,2, egal wie gross das Blatt gezeichnet wird.
+
+3. Die Gegenprobe „die Leiste meldet ihre Vorgaben nicht" liess ALLE Punkte
+   grün. Sie prüfen erst, nachdem geklickt wurde, und danach stimmt es
+   wieder. Der ANFANGSZUSTAND — Leiste markiert Schwarz, Band markiert
+   nichts — hatte niemanden. Dafür gibt es jetzt einen eigenen Punkt.
+
+UND ZWEI ALTE PUNKTE WURDEN ZU RECHT ROT. Sie verlangten „genau ein Knopf im
+Band ist markiert". Das stimmte, solange das Werkzeug das Einzige war, was
+markiert werden konnte. Gemeint war immer „genau EIN WERKZEUG"; jetzt steht
+es auch so da.
+
+
+PRÜFUNG
+--------------------------------------------------------------------------------
+
+test247 §11 wuchs von neun auf vierzehn Punkte. Die fünf neuen, jeder
+einzeln als rot-fähig belegt:
+
+    Farben kommen aus `Marken.FARBEN`   feste Dreierliste eingesetzt
+    Tupfer UND Name (§38)               `name: ''`
+    Proben wachsen anderthalbfach       alter Massstab `max(2, dicke)`
+    Der Strich ist wirklich blau        `steuerung.setzeFarbe` entfernt
+    Dick : dünn ist rund 4 : 1          `steuerung.setzeStrich` entfernt
+    Band markiert die gewählte Farbe    `an:` gibt immer false
+    Einigkeit vor dem ersten Klick      `uebernehmeFarbe` bei Anmeldung weg
+
+Grün: test247 76/76, test87 129, test34 77/77, test33 96/96, test128 50,
+test192 25, test173 11, test217 27/27, test222 50/50, test215 44/44,
+test105 55, test109 20.
