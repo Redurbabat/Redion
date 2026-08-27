@@ -171,7 +171,24 @@ const Menueband = (() => {
     const knopf = (e) => {
         const b = document.createElement('button');
         b.type = 'button';
-        b.className = 'mb-knopf' + (e.gross ? ' ist-gross' : '');
+        /* `an()` markiert den Knopf als GEWÄHLT — beim Zeichnen ist das das
+           aktive Werkzeug. Ein Werkzeugkasten, in dem nichts markiert ist,
+           zwingt zum Ausprobieren; einer, in dem das Falsche markiert ist, ist
+           schlimmer. Beides war da, bis E212 den Zustand in den Kern gelegt hat. */
+        let gewaehlt = false;
+        if (typeof e.an === 'function') {
+            try {
+                gewaehlt = e.an() === true;
+            }
+            catch {
+                gewaehlt = false;
+            }
+        }
+        b.className = 'mb-knopf' + (e.gross ? ' ist-gross' : '') + (gewaehlt ? ' ist-an' : '');
+        if (gewaehlt)
+            b.setAttribute('aria-pressed', 'true');
+        else if (typeof e.an === 'function')
+            b.setAttribute('aria-pressed', 'false');
         b.dataset['band'] = String(e.id);
         /* `textContent` und nie `innerHTML`: die Namen kommen aus Registern, aber
            ein Bereich darf über `melde()` eigene beisteuern, und dann stünde hier
@@ -351,6 +368,22 @@ const Menueband = (() => {
             binde(wurzel);
             gebunden = true;
         }
+        /* WIE HOCH IST DER FESTE KOPF? — für alle, die darunter mittig stehen.
+    
+           Die Randleiste mit dem Inhaltsverzeichnis (`#rand-toc`) hängt an
+           `main` und steht dort auf `top:50%`. Solange über dem Text nur die
+           54 px hohe Kopfzeile standen, ging das auf. Jetzt stehen 138 px
+           Menüband dazwischen, und bei vierzehn Überschriften ragte die
+           Randleiste bis y=156 hinauf — 36 px INS BAND HINEIN. Auf dem Bild
+           liefen die Striche über die Knopfreihe (§55.1).
+    
+           Die Höhe ist nicht auszurechnen: das Band hat eine oder zwei Zeilen,
+           ist zugeklappt oder offen, und am Telefon ganz anders. Wer sie
+           braucht, soll sie erfragen können — deshalb steht sie hier als
+           Zahl an `main`, gesetzt von dem, der sie kennt. */
+        const heim = wurzel.parentElement;
+        if (heim)
+            heim.style.setProperty('--inhalt-oben', (wurzel.offsetTop + wurzel.offsetHeight) + 'px');
     };
     /* ======================================================================== *
      * ANFASSEN
@@ -471,6 +504,19 @@ const Menueband = (() => {
     const start = () => {
         zeichne();
         beobachte();
+        /* NEU ZEICHNEN, WENN EINE ZEICHENFLÄCHE AUFTAUCHT ODER GEHT (E212).
+    
+           Die Werkzeuge im Reiter „Zeichnen" hängen an `Zeichenziel.da()`.
+           Ohne diesen Horcher wären sie beim ersten Öffnen einer Seite mit
+           Blatt unsichtbar und kämen erst beim nächsten Reiterwechsel — ein
+           Knopf, der da ist und nicht erscheint, ist derselbe Fehler wie einer,
+           der erscheint und nichts tut. */
+        if (typeof Zeichenziel !== 'undefined' && typeof Zeichenziel.horche === 'function') {
+            try {
+                Zeichenziel.horche(() => zeichne());
+            }
+            catch { /* dann eben nicht */ }
+        }
         /* Nach dem Laden der Ablage noch einmal.
     
            GEMESSEN GREIFT DAS NICHT: `Menueband.start()` steht in `App.start()`

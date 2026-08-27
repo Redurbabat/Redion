@@ -511,8 +511,30 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 .side-leer{padding:6px 14px; font-size:12.5px; color:var(--text-faint)}
 
 /* Inhalts-Streifen am rechten Rand */
-#rand-toc{position:absolute; right:14px; top:50%; transform:translateY(-50%);
+/* MITTIG IM TEXT, NICHT MITTIG IN `main`.
+   `top:50%` mass die ganze Spalte samt Kopfzeile und Menüband. Bei vierzehn
+   Überschriften begann die Leiste dadurch bei y=156, während das Band bis
+   y=192 reicht — die Striche lagen über den Knöpfen. `--inhalt-oben` setzt
+   das Menüband selbst (schale/aufbau/menueband.ts); ohne Band bleibt es bei
+   der Kopfzeile. Die Rechnung ist die Mitte des Rests: Anfang plus halbe
+   verbleibende Höhe. */
+/* UND SIE MUSS INS FENSTER PASSEN.
+   Mittig allein genügt nicht. Gemessen lief die Leiste auf einer Seite mit
+   39 Überschriften von y=-3 bis y=1175 in einem 980 px hohen Fenster: oben
+   im Menüband, unten unter dem Bildrand. Bei 53 Überschriften begann sie
+   bei y=-213. Die Striche fehlten dann einfach, ohne dass etwas darauf
+   hinwies. `max-height` plus `overflow-y:auto` bindet sie an den Textteil —
+   sichtbar gerollt statt still abgeschnitten (§55.2). */
+#rand-toc{position:absolute; right:14px;
+  top:calc(var(--inhalt-oben, 54px) + (100% - var(--inhalt-oben, 54px)) / 2);
+  transform:translateY(-50%);
+  max-height:calc(100% - var(--inhalt-oben, 54px) - 24px);
+  overflow-y:auto; scrollbar-width:thin; overscroll-behavior:contain;
   display:flex; flex-direction:column; gap:8px; z-index:20; padding:8px 0}
+/* Ohne das schrumpfen die Knöpfe im Flex-Kasten, sobald gerollt werden
+   muss — aus 22 px Strichen würden 14, und die Stufen h1/h2/h3 wären nicht
+   mehr auseinanderzuhalten. */
+#rand-toc button{flex:0 0 auto}
 #rand-toc button{display:flex; align-items:center; justify-content:flex-end; gap:9px;
   background:none; padding:2px 0}
 #rand-toc i{display:block; height:2px; border-radius:2px; background:var(--text-faint);

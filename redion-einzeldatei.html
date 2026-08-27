@@ -1183,21 +1183,53 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
 /* ── ein Knopf ──────────────────────────────────────────────────────────── */
 
 .mb-knopf{
-  /* FESTE BREITE, KEIN INHALTSMASS.
-     Gemessen schwankten die Knöpfe zwischen 58 px („Text") und 106 px
-     („Nummerierte Liste") — die Reihe wirkte unruhig, und die drei
-     Start-Gruppen kamen zusammen auf 1222 px in einem 1200 px breiten Band,
-     brachen also um. Ein festes Raster löst beides auf einmal: die Reihe
-     steht ruhig, und die Breite ist vorher ausrechenbar statt vom längsten
-     Namen abhängig. 68 px fassen zwei Zeilen à etwa zehn Zeichen. */
+  /* BREITE ZWISCHEN 68 UND 96 — nicht fest, aber auch nicht frei.
+
+     Erst stand hier `width:68px` fest. Der Grund war gut: frei gemessen
+     schwankten die Knöpfe zwischen 58 px („Text") und 106 px („Nummerierte
+     Liste"), die Reihe wirkte unruhig, und die drei Start-Gruppen kamen auf
+     1222 px in einem 1200 px breiten Band.
+
+     Der Preis war aber grösser als gedacht. Nachgemessen über alle sechs
+     Reiter (`mitten.mts`): 22 von 113 Namen brachen MITTEN IM WORT —
+     „Whiteboar/d", „Fachzeich/en", „Aufzählung/sliste". Ein Wort, das ohne
+     Trennstrich zerfällt, liest sich nicht als Wort; das ist derselbe
+     Befund wie die abgeschnittene Zahl in §55.1, nur mit Buchstaben.
+
+     `hyphens:auto` half nicht — die Trennmuster fehlen (siehe `.mb-name`).
+     Also wurden vier Regeln nebeneinander gemessen:
+
+         fest 68 px       22/113 Brüche   Gruppensumme 4796 px
+         auto 68–88        9/113          5209 px
+         auto 68–96        4/113          5317 px
+         fest 80 px       12/113          5600 px
+
+     `auto 68–96` gewinnt auf BEIDEN Achsen: weniger Brüche als „fest 80"
+     UND schmaler. Der Grund ist, dass ein festes Raster jeden Knopf so
+     breit macht wie den breitesten Bedarf, während ein Mindestmass nur die
+     wenigen wachsen lässt, die es brauchen.
+
+     Und die Unruhe von damals kam vom SCHMALEN Ende: ein 58 px schmales
+     „Text" neben einem 106 px breiten Nachbarn. `min-width:68px` nimmt
+     genau diese Hälfte der Schwankung weg. Übrig bleiben 68 bis 96 statt
+     58 bis 106 — halb so viel Spanne. */
   display:inline-flex; flex-direction:column; align-items:center; justify-content:center;
-  gap:3px; width:68px; flex:0 0 68px; padding:var(--space-2) var(--space-1);
+  gap:3px; width:auto; flex:0 0 auto; min-width:68px; max-width:96px;
+  padding:var(--space-2) var(--space-1);
   border:1px solid transparent; border-radius:var(--radius-md);
   background:none; cursor:pointer; color:var(--text);
   font-size:11.5px; line-height:1.25; text-align:center;
   transition:background .12s var(--ease), border-color .12s var(--ease);
 }
 .mb-knopf:hover{ background:var(--bg-hover); border-color:var(--line-soft) }
+/* DER GEWÄHLTE KNOPF — beim Zeichnen das aktive Werkzeug.
+   Nicht nur Farbe (§38): er trägt auch `aria-pressed="true"`, und der
+   Rahmen ist deutlich genug, um ihn ohne Farbwahrnehmung zu finden. */
+.mb-knopf.ist-an{
+  background:var(--accent-schwach); border-color:var(--accent);
+  color:var(--accent-text); font-weight:600;
+}
+.mb-knopf.ist-an:hover{ background:var(--accent-schwach) }
 .mb-knopf:active{ background:var(--bg-active, var(--bg-hover)) }
 .mb-knopf:focus-visible{ outline:2px solid var(--accent); outline-offset:1px }
 /* DIE ZEICHEN STEHEN IN EINER SPALTE.
@@ -1245,8 +1277,12 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
                                 „Kalkulati/onstab…"     kürzt nur das Längste
 
      Die letzte gewinnt: fast jeder Name steht vollständig da, und nur die
-     wirklich langen bekommen Punkte. Der Bruch mitten im Wort bleibt ihr
-     Preis; der ganze Name steht im `title` und im `aria-label`.
+     wirklich langen bekommen Punkte.
+
+     Der Bruch mitten im Wort war ihr Preis — 22 von 113 Namen. Bezahlt
+     wird er heute nicht mehr hier, sondern an `.mb-knopf`: eine Breite
+     zwischen 68 und 96 px statt fester 68 px lässt vier davon übrig. Der
+     ganze Name steht ohnehin im `title` und im `aria-label`.
 
      Ein weicher Trennstrich an bekannten Wortfugen („…liste", „…tabelle")
      wurde probiert und wieder verworfen: er machte „Inhalts-/verzeichnis"
@@ -1272,8 +1308,17 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
    ganze Zeile mitziehen. */
 .mb-knopf.ist-gross{
   /* Die grosse Kachel richtet sich nach ihrem Inhalt — sie ist die Ausnahme
-     vom Raster und darf es sein, weil es pro Gruppe höchstens zwei gibt. */
+     vom Raster und darf es sein, weil es pro Gruppe höchstens zwei gibt.
+
+     `max-width:none` gehört dazu und wurde beim Einbau der Spanne 68–96 px
+     zunächst vergessen. Die Messung war mit `:not(.ist-gross)` gefahren,
+     die Regel wurde ohne geschrieben — und dann klemmte die 96-px-Grenze
+     die grossen Kacheln ein, deren Name ja NEBEN dem Zeichen steht und
+     dort noch weniger Platz hat: „Formelh/eft", „Schaltpla/n". Aus vier
+     Brüchen wurden neun. Wer eine Regel misst und eine andere einbaut,
+     misst nichts. */
   flex-direction:row; gap:var(--space-2); width:auto; flex:0 0 auto;
+  min-width:0; max-width:none;
   padding:var(--space-2) var(--space-3); font-size:12.5px;
 }
 .mb-knopf.ist-gross .mb-name{ -webkit-line-clamp:1; max-width:none; text-align:left }
@@ -1313,6 +1358,13 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
   .mb-knopf, .mb-knopf.ist-gross{
     flex-direction:row; justify-content:flex-start; text-align:left;
     width:auto; flex:auto; gap:var(--space-3);
+    /* Die Spanne 68–96 px von oben MUSS hier weg. Am Rechner hält sie
+       Kacheln zusammen; hier ist der Knopf eine Zeile, die ihre halbe
+       Rasterspalte (rund 185 px) füllen soll. `max-width:96px` hätte sie
+       auf halber Strecke abgeschnitten — und da beide Regeln nur eine
+       Klasse tief sind, gewinnt nicht die spätere, sondern nur die, die es
+       ausdrücklich sagt. */
+    min-width:0; max-width:none;
     min-height:46px; padding:0 var(--space-3);
     border-radius:var(--radius-md); font-size:13.5px;
   }
@@ -6287,8 +6339,30 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 .side-leer{padding:6px 14px; font-size:12.5px; color:var(--text-faint)}
 
 /* Inhalts-Streifen am rechten Rand */
-#rand-toc{position:absolute; right:14px; top:50%; transform:translateY(-50%);
+/* MITTIG IM TEXT, NICHT MITTIG IN `main`.
+   `top:50%` mass die ganze Spalte samt Kopfzeile und Menüband. Bei vierzehn
+   Überschriften begann die Leiste dadurch bei y=156, während das Band bis
+   y=192 reicht — die Striche lagen über den Knöpfen. `--inhalt-oben` setzt
+   das Menüband selbst (schale/aufbau/menueband.ts); ohne Band bleibt es bei
+   der Kopfzeile. Die Rechnung ist die Mitte des Rests: Anfang plus halbe
+   verbleibende Höhe. */
+/* UND SIE MUSS INS FENSTER PASSEN.
+   Mittig allein genügt nicht. Gemessen lief die Leiste auf einer Seite mit
+   39 Überschriften von y=-3 bis y=1175 in einem 980 px hohen Fenster: oben
+   im Menüband, unten unter dem Bildrand. Bei 53 Überschriften begann sie
+   bei y=-213. Die Striche fehlten dann einfach, ohne dass etwas darauf
+   hinwies. `max-height` plus `overflow-y:auto` bindet sie an den Textteil —
+   sichtbar gerollt statt still abgeschnitten (§55.2). */
+#rand-toc{position:absolute; right:14px;
+  top:calc(var(--inhalt-oben, 54px) + (100% - var(--inhalt-oben, 54px)) / 2);
+  transform:translateY(-50%);
+  max-height:calc(100% - var(--inhalt-oben, 54px) - 24px);
+  overflow-y:auto; scrollbar-width:thin; overscroll-behavior:contain;
   display:flex; flex-direction:column; gap:8px; z-index:20; padding:8px 0}
+/* Ohne das schrumpfen die Knöpfe im Flex-Kasten, sobald gerollt werden
+   muss — aus 22 px Strichen würden 14, und die Stufen h1/h2/h3 wären nicht
+   mehr auseinanderzuhalten. */
+#rand-toc button{flex:0 0 auto}
 #rand-toc button{display:flex; align-items:center; justify-content:flex-end; gap:9px;
   background:none; padding:2px 0}
 #rand-toc i{display:block; height:2px; border-radius:2px; background:var(--text-faint);
@@ -16923,19 +16997,88 @@ Register.menueband = (() => {
     /* ======================================================================== *
      * ZEICHNEN — Blatt, Whiteboard, Plan, Kamera
      * ======================================================================== */
+    /* DIE ECHTEN ZEICHENWERKZEUGE (E212, L64).
+  
+       Sie standen nicht hier, und das war kein Versehen: ein Knopf oben muss
+       wissen, AUF WELCHE Fläche er wirkt, und auf einer Seite können mehrere
+       Blätter liegen. `Zeichenziel` im Kern beantwortet das jetzt — die
+       Fläche, die zuletzt berührt wurde.
+  
+       `zeigen: flaecheDa` heisst: gibt es keine, steht der Knopf gar nicht
+       erst da. Ein Stift, der beim Klick sagt „hier geht das nicht", ist
+       schlimmer als einer, den es nicht gibt (die Regel aus `befehle.ts`).
+  
+       Die Namen und Zeichen sind dieselben wie in `Marken.leiste` — sie
+       stammen aus derselben Vorstellung, und wer eines ändert, sieht das
+       andere daneben. */
+    const flaecheDa = () => {
+        try {
+            return Zeichenziel.da() === true;
+        }
+        catch {
+            return false;
+        }
+    };
+    const WERKZEUGE = [
+        ['schreiben', 'Schreiben', '✎', 'Die Zeichenschicht ist durchlässig — Text bleibt anfassbar'],
+        ['stift', 'Stift', '🖍', 'Freihand mit geglätteter Linie'],
+        ['marker', 'Marker', '▰', 'Transparenter Marker zum Hervorheben'],
+        ['line', 'Linie', '╱', 'Gerade Linie'],
+        ['arrow', 'Pfeil', '→', 'Pfeil'],
+        ['rectangle', 'Rechteck', '□', 'Rechteck'],
+        ['ellipse', 'Ellipse', '○', 'Ellipse'],
+        ['text', 'Text', 'T', 'Textanmerkung auf der Fläche'],
+        ['zeichen', 'Fachzeichen', '⚡', 'Ein elektrotechnisches Zeichen setzen'],
+        ['select', 'Auswahl', '⌖', 'Marken auswählen, gemeinsam bewegen oder löschen'],
+        ['radierer', 'Radieren', '⌫', 'Eine Marke entfernen']
+    ];
+    /* DIE FLÄCHENKNÖPFE SIND NUR GROSS, SOLANGE KEINE FLÄCHE DA IST.
+  
+       „Blatt einfügen" ist das Wichtigste, bevor man eines hat — danach sind
+       es die Werkzeuge. Gemessen: mit drei grossen Kacheln kam der Reiter auf
+       19 Knöpfe und 1292 px und brach auf zwei Zeilen um; ohne sie auf
+       1166 px und eine. */
+    const flaecheGross = () => !flaecheDa();
     const zeichnenEintraege = () => [
         { reiter: 'zeichnen', gruppe: 'Fläche', id: 'z-blatt', name: 'Blatt',
-            zeichen: 'page', gross: true, hinweis: 'Ein A4-Blatt zum Schreiben mit der Hand',
+            zeichen: 'page', gross: flaecheGross(), hinweis: 'Ein A4-Blatt zum Schreiben mit der Hand',
             tun: () => Blocks.einfuegenAmEnde('blatt'),
             zeigen: () => kann(() => Blocks.einfuegenAmEnde) },
         { reiter: 'zeichnen', gruppe: 'Fläche', id: 'z-white', name: 'Whiteboard',
-            zeichen: 'graph', gross: true, hinweis: 'Freie Fläche ohne Ränder',
+            zeichen: 'graph', gross: flaecheGross(), hinweis: 'Freie Fläche ohne Ränder',
             tun: () => Blocks.einfuegenAmEnde('whiteboard'),
             zeigen: () => kann(() => Blocks.einfuegenAmEnde) },
         { reiter: 'zeichnen', gruppe: 'Fläche', id: 'z-plan', name: 'Schaltplan',
-            zeichen: 'bolt', gross: true, hinweis: 'Fläche mit Fachzeichen und Stromsimulation',
+            zeichen: 'bolt', gross: flaecheGross(), hinweis: 'Fläche mit Fachzeichen und Stromsimulation',
             tun: () => Blocks.einfuegenAmEnde('schaltplan'),
             zeigen: () => kann(() => Blocks.einfuegenAmEnde) },
+        /* Die Werkzeuge selbst — nur, wenn eine Fläche da ist. */
+        ...WERKZEUGE.map(([id, name, zeichen, hinweis]) => ({
+            reiter: 'zeichnen', gruppe: 'Werkzeug', id: 'wz-' + id, name, zeichen, hinweis,
+            tun: () => { if (!Zeichenziel.setze(id))
+                UI.toast('Erst eine Zeichenfläche öffnen'); },
+            /* WELCHES WERKZEUG IST AN? Ohne diese Zeile stand im Band nichts
+               markiert, und der graue Kasten um den zuletzt geklickten Knopf war
+               nur der Fokus — er blieb auch dann, wenn man in der Leiste unten
+               etwas anderes wählte (§38: nicht nur Farbe, aber auch nicht gar
+               nichts). */
+            an: () => { try {
+                return Zeichenziel.jetzt() === id;
+            }
+            catch {
+                return false;
+            } },
+            zeigen: flaecheDa
+        })),
+        { reiter: 'zeichnen', gruppe: 'Zurücknehmen', id: 'wz-undo', name: 'Zurück',
+            zeichen: '↶', hinweis: 'Den letzten Strich zurücknehmen',
+            tun: () => { Zeichenziel.ruf('undo'); }, zeigen: flaecheDa },
+        { reiter: 'zeichnen', gruppe: 'Zurücknehmen', id: 'wz-redo', name: 'Vor',
+            zeichen: '↷', hinweis: 'Wiederholen',
+            tun: () => { Zeichenziel.ruf('redo'); }, zeigen: flaecheDa },
+        { reiter: 'zeichnen', gruppe: 'Zurücknehmen', id: 'wz-weg', name: 'Löschen',
+            zeichen: 'trash', hinweis: 'Das Ausgewählte löschen',
+            tun: () => { Zeichenziel.ruf('deleteSelection'); }, zeigen: flaecheDa },
         { reiter: 'zeichnen', gruppe: 'Aufnehmen', id: 'z-scan', name: 'Seite abfotografieren',
             zeichen: 'camera', hinweis: 'Ein Blatt mit der Kamera aufnehmen und den Text erkennen',
             tun: () => Recognition.capturePage(),
@@ -33337,6 +33480,15 @@ const Marken = (() => {
         });
         flaeche.addEventListener('pointerdown', (event) => {
             const e = event;
+            /* Wer hier zeichnet, meint DIESE Fläche — und zwar auch dann, wenn er
+               gleich wieder abbricht. Das steht vor dem `return` unten, weil auch
+               ein Griff im Modus „Schreiben" eine Berührung ist. */
+            if (typeof Zeichenziel !== 'undefined') {
+                try {
+                    Zeichenziel.beruehrt(steuerung);
+                }
+                catch { /* egal */ }
+            }
             if (tool === 'schreiben' || !e.isPrimary || e.button !== 0)
                 return;
             const point = R.zuBlatt(flaeche, e);
@@ -33487,10 +33639,32 @@ const Marken = (() => {
             listener(state());
             return () => stateListeners.delete(listener);
         };
-        return { flaeche, setzeWerkzeug, setzeFarbe, setzeStrich, marken: marks,
+        /* DAS RÜCKGABEOBJEKT BEKOMMT EINEN NAMEN.
+           Es stand als Literal im `return` am Ende — und der Lauscher weiter
+           oben braucht genau dieses Objekt, um sich beim Kern zu melden. Zwei
+           verschiedene Objekte für dieselbe Fläche wären der sichere Weg zu
+           einem Knopf, der auf nichts wirkt. */
+        const steuerung = { flaeche, setzeWerkzeug, setzeFarbe, setzeStrich, marken: marks,
             undo, redo, deleteSelection, beiAenderung, state };
+        return steuerung;
     };
     const leiste = (controls, extra = '') => {
+        /* DIE FLÄCHE MELDET SICH IM KERN AN (E212).
+    
+           Bis hierher wusste nur diese Leiste, welche Fläche sie steuert. Der
+           Reiter „Zeichnen" im Menüband konnte deshalb nichts — er hätte nicht
+           gewusst, worauf er wirkt (L64).
+    
+           `Zeichenziel` im Kern hält jetzt den Zeiger. Diese Datei gibt ihn
+           ab und behält alles andere: kein Strich, keine Farbe, keine Marke
+           wandert dorthin. Wo die Zeichenlogik an zwei Stellen stünde, liefe
+           die zweite irgendwann von der ersten weg. */
+        if (typeof Zeichenziel !== 'undefined') {
+            try {
+                Zeichenziel.melde(controls, 'Zeichenfläche');
+            }
+            catch { /* ohne Kern geht es wie bisher */ }
+        }
         const row = document.createElement('div');
         row.className = 'blatt-reihe';
         const tools = document.createElement('div');
@@ -33548,12 +33722,64 @@ const Marken = (() => {
                 remove.disabled = !next.selected;
         };
         controls.beiAenderung?.(updateState);
+        /* ZWEI ANSICHTEN DESSELBEN ZUSTANDS (E212, §55.1).
+    
+           Diese Leiste markiert ihr Werkzeug selbst, wenn man sie drückt. Wird
+           das Werkzeug oben im Menüband gewählt, passiert hier nichts — auf dem
+           Bildschirmfoto stand die Fläche längst auf `data-tool="stift"`, das
+           Band zeigte „Stift" markiert, und diese Leiste zeigte „Schreiben".
+           Gemessen: `[data-wz].on` = schreiben, `.mb-knopf.ist-an` = Stift.
+    
+           Wer zwei Anzeigen für einen Zustand baut, muss beide an denselben
+           Zustand hängen. Sonst läuft die eine der anderen hinterher, und der
+           Nutzer glaubt der falschen.
+    
+           `werkzeugVon(controls)` und nicht `jetzt()`: gemeint ist DIESE
+           Fläche. Bei zwei Blättern auf einer Seite zeigte `jetzt()` beiden
+           Leisten das Werkzeug des zuletzt berührten. */
+        const markiere = () => {
+            if (!tools.isConnected) {
+                Zeichenziel.vergiss(markiere);
+                return;
+            }
+            const wz = Zeichenziel.werkzeugVon(controls);
+            if (!wz)
+                return;
+            tools.querySelectorAll('[data-wz]').forEach(node => {
+                node.classList.toggle('on', node.dataset.wz === wz);
+            });
+        };
+        if (typeof Zeichenziel !== 'undefined' && typeof Zeichenziel.horche === 'function') {
+            try {
+                Zeichenziel.horche(markiere);
+            }
+            catch { /* dann eben nur die Leiste */ }
+        }
+        /* Ein Klick auf die Leiste heisst: DIESE Fläche ist gemeint. Bei einer
+           einzigen ist das gleichgültig, bei drei Blättern auf einer Seite ist
+           es die ganze Frage. */
+        tools.addEventListener('pointerdown', () => {
+            if (typeof Zeichenziel !== 'undefined') {
+                try {
+                    Zeichenziel.beruehrt(controls);
+                }
+                catch { /* egal */ }
+            }
+        }, true);
         tools.addEventListener('click', event => {
             const target = event.target?.closest?.('button');
             if (!target || target.disabled)
                 return;
             if (target.dataset.wz) {
                 controls.setzeWerkzeug(target.dataset.wz);
+                /* Auch der Kern muss es wissen — sonst zeigt das Menüband weiter
+                   das alte Werkzeug an. Derselbe Fehler wie oben, nur andersherum. */
+                if (typeof Zeichenziel !== 'undefined') {
+                    try {
+                        Zeichenziel.uebernehme(controls, target.dataset.wz);
+                    }
+                    catch { /* egal */ }
+                }
                 tools.querySelectorAll('[data-wz]').forEach(node => node.classList.remove('on'));
                 target.classList.add('on');
                 return;
@@ -84374,6 +84600,359 @@ window.Sicherung = Sicherung;
 
 </script>
 <script>
+/* ===== quell/kern/helfer/zeichenziel.js ===== */
+"use strict";
+/* ============================================================================
+ * zeichenziel.js — welche Zeichenfläche ist gerade gemeint?
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/kern/helfer/zeichenziel.ts`. `npm run bauen:ts`
+ * schreibt daraus `quell/kern/helfer/zeichenziel.js`. Wer das .js
+ * bearbeitet, verliert die Änderung beim nächsten Bauen;
+ * `pruefungen/lauf/test105.mts` meldet es vorher.
+ * ----------------------------------------------------------------------------
+ * DER GRUND, WARUM ES DIESE DATEI GIBT
+ *
+ * Redion hat Zeichenwerkzeuge — Stift, Marker, Linie, Pfeil, Rechteck,
+ * Ellipse, Text, Fachzeichen, Radierer — und sie funktionieren. Sie stehen
+ * in einer Leiste, die `Marken.leiste()` baut, und diese Leiste hängt AN der
+ * Fläche: an einer PDF-Seite, an einem A4-Blatt.
+ *
+ * Das Menüband (E210) hat einen Reiter „Zeichnen", und der kannte davon
+ * nichts. Dort standen nur Blatt, Whiteboard und Schaltplan — also, WOMIT
+ * man anfängt, nicht, WOMIT man zeichnet (L64).
+ *
+ * Der Grund war nicht Faulheit, sondern eine echte Frage: ein Knopf oben
+ * müsste wissen, AUF WELCHE Fläche er wirkt. Auf einer Seite können mehrere
+ * Blätter liegen. Ohne eine Antwort darauf wäre der Knopf entweder tot oder
+ * er träfe die falsche Fläche — und beides ist schlimmer als kein Knopf.
+ *
+ * DIE ANTWORT
+ *
+ * Die Fläche, die zuletzt berührt wurde. Jede Fläche meldet sich hier an,
+ * wenn sie gezeichnet wird, und meldet sich, wenn jemand sie anfasst.
+ *
+ *     melde(steuerung, name)   eine Fläche gibt es jetzt
+ *     beruehrt(steuerung)      jemand hat sie angefasst — sie ist gemeint
+ *     abmelden(steuerung)      sie ist weg (Block gelöscht, Seite gewechselt)
+ *     aktive()                 die gemeinte Fläche, oder null
+ *     setze(werkzeug)          das Werkzeug an der gemeinten Fläche
+ *     jetzt()                  welches Werkzeug dort gerade an ist
+ *     werkzeugVon(steuerung)   welches Werkzeug an EINER bestimmten Fläche
+ *     horche(fn) / vergiss(fn) wenn sich Fläche oder Werkzeug ändern
+ *
+ * Wer weg ist, wird beim nächsten Nachfragen von selbst entfernt: jede
+ * Fläche kennt ihr Element, und ein Element weiss über `isConnected`, ob es
+ * noch in der Seite hängt. Deshalb steht `abmelden` da, aber niemand muss
+ * daran denken.
+ *
+ * WARUM ES „ZIEL" HEISST UND NICHT „FLÄCHE"
+ *
+ * Weil es die FRAGE benennt und nicht die Sache: worauf wirkt der Knopf, den
+ * ich gerade drücke? Die Fläche selbst liegt weiterhin in
+ * `bereiche/bloecke/arten/zeichenflaeche.ts` — und zwei Dateien desselben
+ * Namens in verschiedenen Ordnern hätte der Nächste verwechselt.
+ *
+ * WARUM IM KERN UND NICHT IN EINEM BEREICH
+ *
+ * `bereiche/pdf/` und `bereiche/bloecke/arten/blatt` brauchen beide dasselbe,
+ * und ein Bereich darf nicht aus einem anderen importieren (CLAUDE.md §5,
+ * Regel 1). Es handelt ohnehin von keinem der beiden, sondern von der Frage
+ * „was ist gerade gemeint" — und die gehört niemandem allein.
+ *
+ * WAS HIER NICHT STEHT
+ *
+ * Nichts vom Zeichnen selbst. Kein Strich, keine Farbe, keine Marke. Das
+ * alles bleibt in `bereiche/pdf/marken.ts`, wo es geprüft ist. Diese Datei
+ * hält einen Zeiger und ein Wort, mehr nicht — sonst hätte Redion die
+ * Zeichenlogik an zwei Stellen, und die zweite liefe irgendwann von der
+ * ersten weg.
+ * ==========================================================================*/
+const Zeichenziel = (() => {
+    /* Alle Flächen, die es gerade gibt — in der Reihenfolge ihres Auftauchens.
+       Mehrere sind der Normalfall: eine Seite kann drei Blätter tragen. */
+    const flaechen = [];
+    /** Wer zuletzt berührt wurde. `-1` heisst „noch keine". */
+    let zuletzt = -1;
+    const horcher = [];
+    const melden = () => {
+        for (const h of horcher) {
+            try {
+                h();
+            }
+            catch { /* ein Horcher reisst nicht alles mit */ }
+        }
+    };
+    const finde = (steuerung) => flaechen.findIndex(f => f.steuerung === steuerung);
+    /**
+     * TOTE FLÄCHEN WEGRÄUMEN.
+     *
+     * Niemand meldet eine Fläche ab. `abmelden` gibt es, aber der Aufrufer
+     * fehlt: eine Seite wird neu gezeichnet, das alte Blatt fällt aus dem
+     * Baum, und keine Zeile Code merkt das. Gemessen wuchs die Liste bei
+     * jedem Seitenwechsel um eins — und `zuletzt` blieb auf der ERSTEN, weil
+     * `melde` den Zeiger nur setzt, wenn es noch keinen gab. Nach fünf
+     * Wechseln hätte der Stift im Menüband auf ein Blatt gewirkt, das seit
+     * vier Wechseln nicht mehr auf dem Bildschirm steht.
+     *
+     * Statt einen Abmelde-Aufruf an jede Stelle zu setzen, die eine Seite neu
+     * zeichnet — und die nächste zu vergessen — fragt es das Element selbst.
+     * `isConnected` ist die einzige Quelle, die nicht vergessen werden kann.
+     *
+     * WANN EINE FLÄCHE ALS TOT GILT — DREI WEGE ZUR SELBEN ANTWORT
+     *
+     * Nicht jede unverbundene Fläche ist tot. `Marken.leiste()` meldet die
+     * Fläche, WÄHREND das Blatt noch ausserhalb des Dokuments zusammengebaut
+     * wird (blatt.ts baut in eine lose Hülle und hängt sie erst danach ein).
+     * In diesem Moment ist `isConnected` falsch, und wer da wegräumt, wirft
+     * die frische Fläche weg, bevor sie jemand gesehen hat.
+     *
+     * Drei Merkmale, von denen jedes für sich genügt:
+     *
+     *   `gesehen`      sie hing schon einmal drin, also kann sie herausfallen
+     *   `jemandLebt`   eine ANDERE Fläche hängt gerade drin — dann ist der
+     *                  Aufbau fertig, und wer jetzt draussen ist, ist alt
+     *   nicht die letzte   nur die zuletzt gemeldete kann mitten im Aufbau
+     *                  stecken; alle davor sind es sicher nicht
+     *
+     * Der erste allein reichte NICHT, und das kostete einen falschen grünen
+     * Punkt. `gesehen` wird nur gesetzt, wenn jemand nachfragt, solange die
+     * Fläche hängt. Beim Wechsel von Seite zu Seite fragt niemand: das
+     * Menüband zeichnet nur neu, wenn sich ändert, OB eine Seite offen ist,
+     * und das bleibt gleich. In meiner Handmessung fragte das Messgerät nach
+     * jedem Wechsel — und setzte damit selbst, was es zu prüfen glaubte. Erst
+     * test247 §11 ohne diese Zwischenfrage zeigte drei Flächen bei einem
+     * Blatt.
+     */
+    const lebt = (e) => e.steuerung.flaeche?.isConnected === true;
+    let raeumt = false;
+    const aufraeumen = () => {
+        if (raeumt || !flaechen.length)
+            return;
+        raeumt = true;
+        try {
+            const gemeint = zuletzt >= 0 && zuletzt < flaechen.length ? flaechen[zuletzt] : null;
+            let jemandLebt = false;
+            for (const e of flaechen) {
+                if (lebt(e)) {
+                    e.gesehen = true;
+                    jemandLebt = true;
+                }
+            }
+            const letzte = flaechen[flaechen.length - 1];
+            let weg = 0;
+            for (let i = flaechen.length - 1; i >= 0; i--) {
+                const e = flaechen[i];
+                if (!e.steuerung.flaeche)
+                    continue; /* ohne Element nicht prüfbar */
+                if (lebt(e))
+                    continue;
+                if (!e.gesehen && !jemandLebt && e === letzte)
+                    continue;
+                flaechen.splice(i, 1);
+                weg++;
+            }
+            if (!weg)
+                return;
+            const wieder = gemeint ? flaechen.indexOf(gemeint) : -1;
+            zuletzt = wieder >= 0 ? wieder : (flaechen.length ? flaechen.length - 1 : -1);
+            melden();
+        }
+        finally {
+            raeumt = false;
+        }
+    };
+    /**
+     * Eine Fläche gibt es jetzt.
+     *
+     * Wird beim Zeichnen gerufen, nicht beim Anfassen. Die erste Fläche einer
+     * Seite wird gleich die gemeinte — bei genau einer ist die Frage „welche"
+     * ohnehin beantwortet, und ohne das müsste man erst hineinklicken, bevor
+     * das Menüband etwas kann.
+     */
+    const melde = (steuerung, name = 'Fläche') => {
+        if (!steuerung || typeof steuerung.setzeWerkzeug !== 'function')
+            return;
+        aufraeumen();
+        if (finde(steuerung) >= 0)
+            return;
+        flaechen.push({ steuerung, name: String(name), werkzeug: 'schreiben',
+            gesehen: steuerung.flaeche?.isConnected === true });
+        /* Eine neue Fläche wird die gemeinte, wenn keine mehr da ist. Ohne das
+           zeigte der Zeiger nach einem Seitenwechsel ins Leere, obwohl gerade
+           ein frisches Blatt vor einem liegt. */
+        if (zuletzt < 0 || zuletzt >= flaechen.length)
+            zuletzt = flaechen.length - 1;
+        melden();
+    };
+    /** Jemand hat sie angefasst — ab jetzt ist sie gemeint. */
+    const beruehrt = (steuerung) => {
+        const i = finde(steuerung);
+        if (i < 0 || i === zuletzt)
+            return;
+        zuletzt = i;
+        melden();
+    };
+    /**
+     * Sie ist weg.
+     *
+     * Wichtig für den Fall, dass die gemeinte Fläche verschwindet: dann rückt
+     * die nächste nach, statt dass ein Zeiger auf etwas Gelöschtes stehen
+     * bleibt. Ein Knopf, der auf eine entfernte Fläche zeigt, tut still nichts
+     * — und das ist genau die Sorte Fehler, die diese Datei verhindern soll.
+     */
+    const abmelden = (steuerung) => {
+        const i = finde(steuerung);
+        if (i < 0)
+            return;
+        flaechen.splice(i, 1);
+        if (flaechen.length === 0)
+            zuletzt = -1;
+        else if (zuletzt >= flaechen.length)
+            zuletzt = flaechen.length - 1;
+        else if (i < zuletzt)
+            zuletzt--;
+        melden();
+    };
+    /** Alle abmelden — beim Seitenwechsel. */
+    const leeren = () => {
+        if (!flaechen.length)
+            return;
+        flaechen.length = 0;
+        zuletzt = -1;
+        melden();
+    };
+    /** Die gemeinte Fläche, oder `null`. */
+    const aktive = () => {
+        aufraeumen();
+        return zuletzt >= 0 && zuletzt < flaechen.length ? flaechen[zuletzt].steuerung : null;
+    };
+    /** Gibt es überhaupt eine? */
+    const da = () => aktive() !== null;
+    /** Wie viele, und wie heissen sie — für einen ehrlichen Hinweis. */
+    const anzahl = () => { aufraeumen(); return flaechen.length; };
+    const namen = () => { aufraeumen(); return flaechen.map(f => f.name); };
+    /** Welches Werkzeug ist an der gemeinten Fläche gerade an? */
+    const jetzt = () => {
+        aufraeumen();
+        return zuletzt >= 0 && zuletzt < flaechen.length ? flaechen[zuletzt].werkzeug : '';
+    };
+    /**
+     * Welches Werkzeug ist an DIESER Fläche an — nicht an der gemeinten.
+     *
+     * Die Leiste an einem Blatt braucht ihren eigenen Stand. Läge auf einer
+     * Seite ein zweites Blatt, würde sie mit `jetzt()` das Werkzeug des
+     * anderen anzeigen: eine Leiste, die etwas anderes behauptet als das
+     * Blatt darunter tut.
+     */
+    const werkzeugVon = (steuerung) => {
+        const i = finde(steuerung);
+        return i < 0 ? '' : flaechen[i].werkzeug;
+    };
+    /**
+     * Ein Werkzeug wählen.
+     *
+     * Gibt `false` zurück, wenn es keine Fläche gibt — der Aufrufer soll das
+     * sagen können, statt so zu tun, als sei etwas passiert.
+     */
+    const setze = (werkzeug) => {
+        const e = zuletzt >= 0 && zuletzt < flaechen.length ? flaechen[zuletzt] : null;
+        if (!e || typeof e.steuerung.setzeWerkzeug !== 'function')
+            return false;
+        try {
+            e.steuerung.setzeWerkzeug(werkzeug);
+        }
+        catch {
+            return false;
+        }
+        e.werkzeug = String(werkzeug);
+        melden();
+        return true;
+    };
+    /**
+     * Die Leiste hat selbst umgeschaltet — nur mitschreiben, nicht nochmal
+     * setzen.
+     *
+     * Der Unterschied zu `setze` ist die Richtung: dort kommt der Befehl von
+     * aussen und geht an die Fläche, hier ist er an der Fläche schon
+     * passiert. Wer hier `setzeWerkzeug` nochmal riefe, würde die Auswahl
+     * löschen (das tut sie bei jedem Wechsel) — bei einem Wechsel, den es gar
+     * nicht gab.
+     */
+    const uebernehme = (steuerung, werkzeug) => {
+        const i = finde(steuerung);
+        if (i < 0)
+            return;
+        flaechen[i].werkzeug = String(werkzeug);
+        if (zuletzt !== i)
+            zuletzt = i;
+        melden();
+    };
+    /** Farbe und Strichstärke gehen denselben Weg. */
+    const setzeFarbe = (wert) => {
+        const s = aktive();
+        if (!s || typeof s.setzeFarbe !== 'function')
+            return false;
+        try {
+            s.setzeFarbe(wert);
+            return true;
+        }
+        catch {
+            return false;
+        }
+    };
+    const setzeStrich = (wert) => {
+        const s = aktive();
+        if (!s || typeof s.setzeStrich !== 'function')
+            return false;
+        try {
+            s.setzeStrich(wert);
+            return true;
+        }
+        catch {
+            return false;
+        }
+    };
+    /** Zurück, Vor, Löschen — dieselben drei wie an der Leiste. */
+    const ruf = (was) => {
+        const s = aktive();
+        const fn = s && s[was];
+        if (typeof fn !== 'function')
+            return false;
+        try {
+            fn.call(s);
+            return true;
+        }
+        catch {
+            return false;
+        }
+    };
+    /** Bescheid, wenn sich Fläche oder Werkzeug ändern. */
+    const horche = (fn) => {
+        if (typeof fn === 'function' && !horcher.includes(fn))
+            horcher.push(fn);
+    };
+    /**
+     * Nicht mehr zuhören.
+     *
+     * Jede Leiste hängt einen Horcher ein, und jede Leiste hält damit ihre
+     * Knöpfe fest. Ohne diesen Weg zurück bliebe von jedem Blatt, das je
+     * gezeichnet wurde, ein Stück Seite im Speicher liegen — dieselbe
+     * Rechnung wie bei den toten Flächen oben, nur eine Ebene höher.
+     */
+    const vergiss = (fn) => {
+        const i = horcher.indexOf(fn);
+        if (i >= 0)
+            horcher.splice(i, 1);
+    };
+    return { melde, beruehrt, abmelden, leeren, aktive, da, anzahl, namen,
+        jetzt, werkzeugVon, setze, uebernehme, setzeFarbe, setzeStrich,
+        ruf, horche, vergiss };
+})();
+window.Zeichenziel = Zeichenziel;
+
+</script>
+<script>
 /* ===== quell/bereiche/planen/dienst.js ===== */
 "use strict";
 /* ============================================================================
@@ -105533,7 +106112,24 @@ const Menueband = (() => {
     const knopf = (e) => {
         const b = document.createElement('button');
         b.type = 'button';
-        b.className = 'mb-knopf' + (e.gross ? ' ist-gross' : '');
+        /* `an()` markiert den Knopf als GEWÄHLT — beim Zeichnen ist das das
+           aktive Werkzeug. Ein Werkzeugkasten, in dem nichts markiert ist,
+           zwingt zum Ausprobieren; einer, in dem das Falsche markiert ist, ist
+           schlimmer. Beides war da, bis E212 den Zustand in den Kern gelegt hat. */
+        let gewaehlt = false;
+        if (typeof e.an === 'function') {
+            try {
+                gewaehlt = e.an() === true;
+            }
+            catch {
+                gewaehlt = false;
+            }
+        }
+        b.className = 'mb-knopf' + (e.gross ? ' ist-gross' : '') + (gewaehlt ? ' ist-an' : '');
+        if (gewaehlt)
+            b.setAttribute('aria-pressed', 'true');
+        else if (typeof e.an === 'function')
+            b.setAttribute('aria-pressed', 'false');
         b.dataset['band'] = String(e.id);
         /* `textContent` und nie `innerHTML`: die Namen kommen aus Registern, aber
            ein Bereich darf über `melde()` eigene beisteuern, und dann stünde hier
@@ -105713,6 +106309,22 @@ const Menueband = (() => {
             binde(wurzel);
             gebunden = true;
         }
+        /* WIE HOCH IST DER FESTE KOPF? — für alle, die darunter mittig stehen.
+    
+           Die Randleiste mit dem Inhaltsverzeichnis (`#rand-toc`) hängt an
+           `main` und steht dort auf `top:50%`. Solange über dem Text nur die
+           54 px hohe Kopfzeile standen, ging das auf. Jetzt stehen 138 px
+           Menüband dazwischen, und bei vierzehn Überschriften ragte die
+           Randleiste bis y=156 hinauf — 36 px INS BAND HINEIN. Auf dem Bild
+           liefen die Striche über die Knopfreihe (§55.1).
+    
+           Die Höhe ist nicht auszurechnen: das Band hat eine oder zwei Zeilen,
+           ist zugeklappt oder offen, und am Telefon ganz anders. Wer sie
+           braucht, soll sie erfragen können — deshalb steht sie hier als
+           Zahl an `main`, gesetzt von dem, der sie kennt. */
+        const heim = wurzel.parentElement;
+        if (heim)
+            heim.style.setProperty('--inhalt-oben', (wurzel.offsetTop + wurzel.offsetHeight) + 'px');
     };
     /* ======================================================================== *
      * ANFASSEN
@@ -105833,6 +106445,19 @@ const Menueband = (() => {
     const start = () => {
         zeichne();
         beobachte();
+        /* NEU ZEICHNEN, WENN EINE ZEICHENFLÄCHE AUFTAUCHT ODER GEHT (E212).
+    
+           Die Werkzeuge im Reiter „Zeichnen" hängen an `Zeichenziel.da()`.
+           Ohne diesen Horcher wären sie beim ersten Öffnen einer Seite mit
+           Blatt unsichtbar und kämen erst beim nächsten Reiterwechsel — ein
+           Knopf, der da ist und nicht erscheint, ist derselbe Fehler wie einer,
+           der erscheint und nichts tut. */
+        if (typeof Zeichenziel !== 'undefined' && typeof Zeichenziel.horche === 'function') {
+            try {
+                Zeichenziel.horche(() => zeichne());
+            }
+            catch { /* dann eben nicht */ }
+        }
         /* Nach dem Laden der Ablage noch einmal.
     
            GEMESSEN GREIFT DAS NICHT: `Menueband.start()` steht in `App.start()`

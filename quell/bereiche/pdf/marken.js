@@ -485,6 +485,15 @@ const Marken = (() => {
         });
         flaeche.addEventListener('pointerdown', (event) => {
             const e = event;
+            /* Wer hier zeichnet, meint DIESE Fläche — und zwar auch dann, wenn er
+               gleich wieder abbricht. Das steht vor dem `return` unten, weil auch
+               ein Griff im Modus „Schreiben" eine Berührung ist. */
+            if (typeof Zeichenziel !== 'undefined') {
+                try {
+                    Zeichenziel.beruehrt(steuerung);
+                }
+                catch { /* egal */ }
+            }
             if (tool === 'schreiben' || !e.isPrimary || e.button !== 0)
                 return;
             const point = R.zuBlatt(flaeche, e);
@@ -635,10 +644,32 @@ const Marken = (() => {
             listener(state());
             return () => stateListeners.delete(listener);
         };
-        return { flaeche, setzeWerkzeug, setzeFarbe, setzeStrich, marken: marks,
+        /* DAS RÜCKGABEOBJEKT BEKOMMT EINEN NAMEN.
+           Es stand als Literal im `return` am Ende — und der Lauscher weiter
+           oben braucht genau dieses Objekt, um sich beim Kern zu melden. Zwei
+           verschiedene Objekte für dieselbe Fläche wären der sichere Weg zu
+           einem Knopf, der auf nichts wirkt. */
+        const steuerung = { flaeche, setzeWerkzeug, setzeFarbe, setzeStrich, marken: marks,
             undo, redo, deleteSelection, beiAenderung, state };
+        return steuerung;
     };
     const leiste = (controls, extra = '') => {
+        /* DIE FLÄCHE MELDET SICH IM KERN AN (E212).
+    
+           Bis hierher wusste nur diese Leiste, welche Fläche sie steuert. Der
+           Reiter „Zeichnen" im Menüband konnte deshalb nichts — er hätte nicht
+           gewusst, worauf er wirkt (L64).
+    
+           `Zeichenziel` im Kern hält jetzt den Zeiger. Diese Datei gibt ihn
+           ab und behält alles andere: kein Strich, keine Farbe, keine Marke
+           wandert dorthin. Wo die Zeichenlogik an zwei Stellen stünde, liefe
+           die zweite irgendwann von der ersten weg. */
+        if (typeof Zeichenziel !== 'undefined') {
+            try {
+                Zeichenziel.melde(controls, 'Zeichenfläche');
+            }
+            catch { /* ohne Kern geht es wie bisher */ }
+        }
         const row = document.createElement('div');
         row.className = 'blatt-reihe';
         const tools = document.createElement('div');
@@ -696,12 +727,64 @@ const Marken = (() => {
                 remove.disabled = !next.selected;
         };
         controls.beiAenderung?.(updateState);
+        /* ZWEI ANSICHTEN DESSELBEN ZUSTANDS (E212, §55.1).
+    
+           Diese Leiste markiert ihr Werkzeug selbst, wenn man sie drückt. Wird
+           das Werkzeug oben im Menüband gewählt, passiert hier nichts — auf dem
+           Bildschirmfoto stand die Fläche längst auf `data-tool="stift"`, das
+           Band zeigte „Stift" markiert, und diese Leiste zeigte „Schreiben".
+           Gemessen: `[data-wz].on` = schreiben, `.mb-knopf.ist-an` = Stift.
+    
+           Wer zwei Anzeigen für einen Zustand baut, muss beide an denselben
+           Zustand hängen. Sonst läuft die eine der anderen hinterher, und der
+           Nutzer glaubt der falschen.
+    
+           `werkzeugVon(controls)` und nicht `jetzt()`: gemeint ist DIESE
+           Fläche. Bei zwei Blättern auf einer Seite zeigte `jetzt()` beiden
+           Leisten das Werkzeug des zuletzt berührten. */
+        const markiere = () => {
+            if (!tools.isConnected) {
+                Zeichenziel.vergiss(markiere);
+                return;
+            }
+            const wz = Zeichenziel.werkzeugVon(controls);
+            if (!wz)
+                return;
+            tools.querySelectorAll('[data-wz]').forEach(node => {
+                node.classList.toggle('on', node.dataset.wz === wz);
+            });
+        };
+        if (typeof Zeichenziel !== 'undefined' && typeof Zeichenziel.horche === 'function') {
+            try {
+                Zeichenziel.horche(markiere);
+            }
+            catch { /* dann eben nur die Leiste */ }
+        }
+        /* Ein Klick auf die Leiste heisst: DIESE Fläche ist gemeint. Bei einer
+           einzigen ist das gleichgültig, bei drei Blättern auf einer Seite ist
+           es die ganze Frage. */
+        tools.addEventListener('pointerdown', () => {
+            if (typeof Zeichenziel !== 'undefined') {
+                try {
+                    Zeichenziel.beruehrt(controls);
+                }
+                catch { /* egal */ }
+            }
+        }, true);
         tools.addEventListener('click', event => {
             const target = event.target?.closest?.('button');
             if (!target || target.disabled)
                 return;
             if (target.dataset.wz) {
                 controls.setzeWerkzeug(target.dataset.wz);
+                /* Auch der Kern muss es wissen — sonst zeigt das Menüband weiter
+                   das alte Werkzeug an. Derselbe Fehler wie oben, nur andersherum. */
+                if (typeof Zeichenziel !== 'undefined') {
+                    try {
+                        Zeichenziel.uebernehme(controls, target.dataset.wz);
+                    }
+                    catch { /* egal */ }
+                }
                 tools.querySelectorAll('[data-wz]').forEach(node => node.classList.remove('on'));
                 target.classList.add('on');
                 return;

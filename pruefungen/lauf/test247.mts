@@ -36,6 +36,14 @@
  *
  * §9 TASTATUR (§38): Pfeiltasten wechseln den Reiter.
  *
+ * §10 DAS BAND RICHTET SICH NACH DEM ORT. Auf „Heute" oder in der
+ *    Bibliothek ist es zu — dort gibt es nichts einzufügen.
+ *
+ * §11 DIE ZEICHENWERKZEUGE (E212). Der Reiter „Zeichnen" muss auf die
+ *    Fläche wirken, die gerade gemeint ist. Geprüft wird am `data-tool` der
+ *    Fläche selbst, in BEIDE Richtungen (Band → Leiste und Leiste → Band),
+ *    und dass sich keine toten Flächen sammeln.
+ *
  * Starten:
  *
  *   node pruefungen/lauf/test247.mts
@@ -55,6 +63,7 @@ declare const Store: any;
 declare const App: any;
 declare const Register: any;
 declare const Seitenleiste: any;
+declare const Zeichenziel: any;
 
 const WURZEL = path.resolve(import.meta.dirname, '../..');
 const PORT = 8967;
@@ -562,6 +571,174 @@ for (const [name, wie, sollZu] of ORTE) {
 }
 p('Das Band ist genau dort offen, wo eine Seite offen ist',
   falscherOrt.length === 0, falscherOrt.join(' | '));
+
+/* ==========================================================================
+ * §11 Die Zeichenwerkzeuge (E212)
+ * ========================================================================*/
+console.log('\n11 · Der Reiter „Zeichnen" wirkt auf die Fläche (E212)');
+
+/* Zurück auf eine echte Seite — §10 hat zuletzt die Lernwelt geöffnet. */
+await seite.evaluate(() => {
+  const s2 = Object.values(Store.cache.blocks)
+    .find((b: any) => b?.type === 'page' && b.alive) as any;
+  if (s2) App.oeffne(s2.id);
+});
+await seite.waitForTimeout(1000);
+await klick(seite, '#menueband [data-mb-reiter="zeichnen"]');
+await seite.waitForTimeout(400);
+
+/* OHNE FLÄCHE KEIN WERKZEUG.
+   Ein Stift-Knopf ohne Blatt darunter hätte nichts zu tun. Er soll nicht
+   ausgegraut dastehen, sondern gar nicht — das ist der Unterschied zwischen
+   „geht gerade nicht" und „gibt es hier nicht". */
+const ohneFlaeche = await seite.evaluate(() => ({
+  da: Zeichenziel.da(),
+  knoepfe: document.querySelectorAll('#menueband .mb-knopf').length,
+  werkzeug: document.querySelectorAll('#menueband [data-band^="wz-"]').length
+}));
+p('Ohne Zeichenfläche stehen keine Werkzeuge im Band',
+  ohneFlaeche.da === false && ohneFlaeche.werkzeug === 0 && ohneFlaeche.knoepfe > 0,
+  JSON.stringify(ohneFlaeche));
+
+/* Ein Blatt über den Band-Knopf selbst einfügen — nicht über einen
+   Umweg. Wenn der Knopf nicht tut, was er verspricht, soll es hier
+   auffallen und nicht später. */
+await klick(seite, '#menueband [data-band="z-blatt"]');
+await seite.waitForTimeout(1800);
+const mitFlaeche = await seite.evaluate(() => ({
+  da: Zeichenziel.da(), anzahl: Zeichenziel.anzahl(),
+  werkzeug: document.querySelectorAll('#menueband [data-band^="wz-"]').length,
+  svg: document.querySelectorAll('svg[data-tool]').length
+}));
+p('Mit Blatt erscheinen die Werkzeuge',
+  mitFlaeche.da === true && mitFlaeche.werkzeug >= 10 && mitFlaeche.svg >= 1,
+  JSON.stringify(mitFlaeche));
+
+/* DER KNOPF MUSS WIRKEN, NICHT NUR AUSSEHEN.
+   Das ist der ganze Grund für `kern/helfer/zeichenziel.ts`: ein Knopf oben
+   muss wissen, auf welche Fläche er zielt. Gemessen wird am `data-tool` der
+   Fläche selbst, nicht an einer Zustandsvariablen — die könnte stimmen,
+   während die Fläche etwas anderes tut. */
+await klick(seite, '#menueband [data-band="wz-stift"]');
+await seite.waitForTimeout(500);
+const nachStift = await seite.evaluate(() => ({
+  amSvg: document.querySelector('svg[data-tool]')?.getAttribute('data-tool') || '',
+  imKern: Zeichenziel.jetzt(),
+  imBand: [...document.querySelectorAll('#menueband .mb-knopf.ist-an')]
+    .map(b => (b as HTMLElement).dataset['band'] || ''),
+  gedrueckt: document.querySelector('#menueband [data-band="wz-stift"]')
+    ?.getAttribute('aria-pressed') || '',
+  anDerLeiste: [...document.querySelectorAll('[data-wz].on')]
+    .filter(b => !b.closest('#menueband'))
+    .map(b => (b as HTMLElement).dataset['wz'] || '')
+}));
+p('„Stift" im Band stellt die Fläche wirklich um',
+  nachStift.amSvg === 'stift' && nachStift.imKern === 'stift', JSON.stringify(nachStift));
+p('Und das Band zeigt es an — nicht nur farbig, auch aria-pressed (§38)',
+  nachStift.imBand.length === 1 && nachStift.imBand[0] === 'wz-stift'
+    && nachStift.gedrueckt === 'true', JSON.stringify(nachStift));
+
+/* ZWEI ANSICHTEN DESSELBEN ZUSTANDS.
+   Die Leiste am Blatt zeigte „Schreiben", während das Band „Stift" zeigte
+   und die Fläche längst auf Stift stand. Auf dem Bildschirmfoto sofort zu
+   sehen (§55.1) — von der ersten Fassung dieser Prüfung nicht gemeldet,
+   weil sie nur das Band ansah. */
+p('Die Leiste am Blatt zeigt dasselbe wie das Band',
+  nachStift.anDerLeiste.length === 1 && nachStift.anDerLeiste[0] === 'stift',
+  'Leiste: ' + JSON.stringify(nachStift.anDerLeiste));
+
+/* UND DIE GEGENRICHTUNG.
+   Wer an der Leiste umschaltet, muss es im Band sehen. Sonst stünde dort
+   ein Werkzeug markiert, das niemand mehr benutzt. */
+await klick(seite, '.blatt-werk [data-wz="marker"]');
+await seite.waitForTimeout(450);
+const nachMarker = await seite.evaluate(() => ({
+  imKern: Zeichenziel.jetzt(),
+  imBand: [...document.querySelectorAll('#menueband .mb-knopf.ist-an')]
+    .map(b => (b as HTMLElement).dataset['band'] || '')
+}));
+p('Umschalten an der Leiste kommt im Band an',
+  nachMarker.imKern === 'marker'
+    && nachMarker.imBand.length === 1 && nachMarker.imBand[0] === 'wz-marker',
+  JSON.stringify(nachMarker));
+
+/* TOTE FLÄCHEN DÜRFEN SICH NICHT SAMMELN.
+   Niemand meldet eine Fläche ab. Gemessen wuchs die Liste bei jedem
+   Seitenwechsel um eins, und der Zeiger blieb auf der ERSTEN stehen — nach
+   fünf Wechseln hätte der Stift auf ein längst verschwundenes Blatt
+   gewirkt. Sichtbar wäre davon nichts gewesen: der Knopf hätte einfach
+   nichts getan. */
+const seitenIds = await seite.evaluate(() =>
+  (Object.values(Store.cache.blocks) as any[])
+    .filter(b => b?.type === 'page' && b.alive).slice(0, 2).map(b => b.id));
+for (let i = 0; i < 3 && seitenIds.length > 1; i++) {
+  await seite.evaluate((ids: string[]) => { App.oeffne(ids[1]); }, seitenIds);
+  await seite.waitForTimeout(450);
+  await seite.evaluate((ids: string[]) => { App.oeffne(ids[0]); }, seitenIds);
+  await seite.waitForTimeout(650);
+}
+const nachWechseln = await seite.evaluate(() => ({
+  anzahl: Zeichenziel.anzahl(),
+  svg: document.querySelectorAll('svg[data-tool]').length
+}));
+p('Nach drei Seitenwechseln steht nur die lebende Fläche in der Liste',
+  seitenIds.length < 2 || nachWechseln.anzahl === nachWechseln.svg,
+  `${nachWechseln.anzahl} gemeldet, ${nachWechseln.svg} wirklich da`);
+
+/* DIE RANDLEISTE DARF NICHT INS BAND RAGEN.
+   `#rand-toc` stand auf `top:50%` von `main` — und `main` enthält seit E210
+   auch das Menüband. Bei vierzehn Überschriften begann die Leiste bei
+   y=156, das Band reicht bis y=192. Die Striche lagen über den Knöpfen. */
+/* EINE SEITE SUCHEN, DIE ÜBERSCHRIFTEN HAT — NICHT WELCHE ERFINDEN.
+   Der erste Versuch legte vierzehn `h1` mit `Store.addBlock({parentId})` an
+   und öffnete die Seite. Gemessen ging `Store.childrenOf(id)` dabei von 1
+   auf 1: `addBlock` hängt den Block nicht in die `content`-Liste des
+   Elternblocks, und der Streifen zählt genau die. Es entstand also keine
+   Randleiste, und der Punkt meldete „keine gefunden" statt eines Masses.
+   Der Arbeitsbereich bringt vier solche Seiten mit; eine davon genügt. */
+const mitKoepfen = await seite.evaluate(() => {
+  /* DIE SEITE MIT DEN MEISTEN ÜBERSCHRIFTEN, NICHT DIE ERSTBESTE.
+     `find` nahm, was zuerst kam — und ob das eine Seite mit vier oder mit
+     39 Überschriften war, entschied die Reihenfolge im Zwischenspeicher.
+     Beim Gegenbeweis kam eine andere heraus als im Durchlauf davor, und
+     der Punkt war einmal grün und einmal rot, ohne dass sich am Programm
+     etwas geändert hätte. Ein Punkt, der von der Reihenfolge abhängt,
+     prüft die Reihenfolge. */
+  const s2 = (Object.values(Store.cache.blocks) as any[])
+    .filter(b => b?.type === 'page' && b.alive)
+    .map(b => ({ b, k: Store.childrenOf(b.id)
+      .filter((k: any) => ['h1', 'h2', 'h3'].includes(k.type) && (k.text || '').trim()).length }))
+    .sort((x, y) => y.k - x.k)[0];
+  if (!s2 || s2.k < 3) return null;
+  App.oeffne(s2.b.id);
+  return `${s2.b.text || s2.b.id} (${s2.k} Überschriften)`;
+});
+await seite.waitForTimeout(1800);
+const raender = await seite.evaluate(() => {
+  const t = document.getElementById('rand-toc');
+  const b = document.getElementById('menueband');
+  if (!t || !b) return null;
+  const tr = t.getBoundingClientRect(), br2 = b.getBoundingClientRect();
+  return { tocOben: Math.round(tr.top), tocHoch: Math.round(tr.height),
+           tocUnten: Math.round(tr.bottom), fenster: window.innerHeight,
+           striche: t.querySelectorAll('button').length,
+           rollt: t.scrollHeight > t.clientHeight + 1,
+           bandUnten: Math.round(br2.bottom), ueberlappt: tr.top < br2.bottom,
+           raus: tr.top < 0 || tr.bottom > window.innerHeight };
+});
+/* Ohne Randleiste ist hier nichts zu prüfen, und „grün" wäre gelogen. */
+/* Und sie darf auch unten nicht hinausragen: was dort steht, ist genauso
+   weg wie das, was oben unter dem Band liegt. */
+p('Die Randleiste bleibt im Fenster, oben wie unten',
+  mitKoepfen !== null && raender !== null && raender.tocHoch > 0 && !raender.raus,
+  mitKoepfen === null ? 'keine Seite mit >=3 Überschriften gefunden — so kann der Punkt nie rot werden'
+    : raender === null ? `Seite „${mitKoepfen}" offen, aber keine Randleiste gezeichnet`
+    : JSON.stringify(raender));
+p('Die Randleiste beginnt unter dem Band, nicht darin',
+  mitKoepfen !== null && raender !== null && raender.tocHoch > 0 && !raender.ueberlappt,
+  mitKoepfen === null ? 'keine Seite mit >=3 Überschriften gefunden — so kann der Punkt nie rot werden'
+    : raender === null ? `Seite „${mitKoepfen}" offen, aber keine Randleiste gezeichnet`
+    : JSON.stringify(raender));
 
 console.log('\nFehler auf der Seite:', fehler.length ? fehler.join(' | ') : 'keine');
 p('Keine Fehler auf der Seite', !fehler.length, fehler.join(' | '));

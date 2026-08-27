@@ -2369,3 +2369,9 @@ tot oder er wirkt auf die falsche.
 Was fehlt: ein gemeinsamer Weg, über den eine Zeichenfläche ihr aktuelles
 Werkzeug meldet und entgegennimmt. Dann kann das Band sie aufführen, ohne
 selbst etwas zu tun (die Regel aus `register/menueband.ts`).
+
+ERLEDIGT mit E212. `src/kern/helfer/zeichenziel.ts` ist dieser Weg: die
+zuletzt berührte Fläche ist die gemeinte. Elf Werkzeuge plus Zurück, Vor und
+Löschen stehen im Reiter „Zeichnen" und erscheinen nur, wenn es eine Fläche
+gibt. Beide Richtungen sind geprüft (test247 §11) — Band → Leiste und Leiste
+→ Band, jeder Punkt einzeln als rot-fähig belegt.

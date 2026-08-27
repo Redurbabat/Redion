@@ -431,21 +431,53 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
 /* ── ein Knopf ──────────────────────────────────────────────────────────── */
 
 .mb-knopf{
-  /* FESTE BREITE, KEIN INHALTSMASS.
-     Gemessen schwankten die Knöpfe zwischen 58 px („Text") und 106 px
-     („Nummerierte Liste") — die Reihe wirkte unruhig, und die drei
-     Start-Gruppen kamen zusammen auf 1222 px in einem 1200 px breiten Band,
-     brachen also um. Ein festes Raster löst beides auf einmal: die Reihe
-     steht ruhig, und die Breite ist vorher ausrechenbar statt vom längsten
-     Namen abhängig. 68 px fassen zwei Zeilen à etwa zehn Zeichen. */
+  /* BREITE ZWISCHEN 68 UND 96 — nicht fest, aber auch nicht frei.
+
+     Erst stand hier `width:68px` fest. Der Grund war gut: frei gemessen
+     schwankten die Knöpfe zwischen 58 px („Text") und 106 px („Nummerierte
+     Liste"), die Reihe wirkte unruhig, und die drei Start-Gruppen kamen auf
+     1222 px in einem 1200 px breiten Band.
+
+     Der Preis war aber grösser als gedacht. Nachgemessen über alle sechs
+     Reiter (`mitten.mts`): 22 von 113 Namen brachen MITTEN IM WORT —
+     „Whiteboar/d", „Fachzeich/en", „Aufzählung/sliste". Ein Wort, das ohne
+     Trennstrich zerfällt, liest sich nicht als Wort; das ist derselbe
+     Befund wie die abgeschnittene Zahl in §55.1, nur mit Buchstaben.
+
+     `hyphens:auto` half nicht — die Trennmuster fehlen (siehe `.mb-name`).
+     Also wurden vier Regeln nebeneinander gemessen:
+
+         fest 68 px       22/113 Brüche   Gruppensumme 4796 px
+         auto 68–88        9/113          5209 px
+         auto 68–96        4/113          5317 px
+         fest 80 px       12/113          5600 px
+
+     `auto 68–96` gewinnt auf BEIDEN Achsen: weniger Brüche als „fest 80"
+     UND schmaler. Der Grund ist, dass ein festes Raster jeden Knopf so
+     breit macht wie den breitesten Bedarf, während ein Mindestmass nur die
+     wenigen wachsen lässt, die es brauchen.
+
+     Und die Unruhe von damals kam vom SCHMALEN Ende: ein 58 px schmales
+     „Text" neben einem 106 px breiten Nachbarn. `min-width:68px` nimmt
+     genau diese Hälfte der Schwankung weg. Übrig bleiben 68 bis 96 statt
+     58 bis 106 — halb so viel Spanne. */
   display:inline-flex; flex-direction:column; align-items:center; justify-content:center;
-  gap:3px; width:68px; flex:0 0 68px; padding:var(--space-2) var(--space-1);
+  gap:3px; width:auto; flex:0 0 auto; min-width:68px; max-width:96px;
+  padding:var(--space-2) var(--space-1);
   border:1px solid transparent; border-radius:var(--radius-md);
   background:none; cursor:pointer; color:var(--text);
   font-size:11.5px; line-height:1.25; text-align:center;
   transition:background .12s var(--ease), border-color .12s var(--ease);
 }
 .mb-knopf:hover{ background:var(--bg-hover); border-color:var(--line-soft) }
+/* DER GEWÄHLTE KNOPF — beim Zeichnen das aktive Werkzeug.
+   Nicht nur Farbe (§38): er trägt auch `aria-pressed="true"`, und der
+   Rahmen ist deutlich genug, um ihn ohne Farbwahrnehmung zu finden. */
+.mb-knopf.ist-an{
+  background:var(--accent-schwach); border-color:var(--accent);
+  color:var(--accent-text); font-weight:600;
+}
+.mb-knopf.ist-an:hover{ background:var(--accent-schwach) }
 .mb-knopf:active{ background:var(--bg-active, var(--bg-hover)) }
 .mb-knopf:focus-visible{ outline:2px solid var(--accent); outline-offset:1px }
 /* DIE ZEICHEN STEHEN IN EINER SPALTE.
@@ -493,8 +525,12 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
                                 „Kalkulati/onstab…"     kürzt nur das Längste
 
      Die letzte gewinnt: fast jeder Name steht vollständig da, und nur die
-     wirklich langen bekommen Punkte. Der Bruch mitten im Wort bleibt ihr
-     Preis; der ganze Name steht im `title` und im `aria-label`.
+     wirklich langen bekommen Punkte.
+
+     Der Bruch mitten im Wort war ihr Preis — 22 von 113 Namen. Bezahlt
+     wird er heute nicht mehr hier, sondern an `.mb-knopf`: eine Breite
+     zwischen 68 und 96 px statt fester 68 px lässt vier davon übrig. Der
+     ganze Name steht ohnehin im `title` und im `aria-label`.
 
      Ein weicher Trennstrich an bekannten Wortfugen („…liste", „…tabelle")
      wurde probiert und wieder verworfen: er machte „Inhalts-/verzeichnis"
@@ -520,8 +556,17 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
    ganze Zeile mitziehen. */
 .mb-knopf.ist-gross{
   /* Die grosse Kachel richtet sich nach ihrem Inhalt — sie ist die Ausnahme
-     vom Raster und darf es sein, weil es pro Gruppe höchstens zwei gibt. */
+     vom Raster und darf es sein, weil es pro Gruppe höchstens zwei gibt.
+
+     `max-width:none` gehört dazu und wurde beim Einbau der Spanne 68–96 px
+     zunächst vergessen. Die Messung war mit `:not(.ist-gross)` gefahren,
+     die Regel wurde ohne geschrieben — und dann klemmte die 96-px-Grenze
+     die grossen Kacheln ein, deren Name ja NEBEN dem Zeichen steht und
+     dort noch weniger Platz hat: „Formelh/eft", „Schaltpla/n". Aus vier
+     Brüchen wurden neun. Wer eine Regel misst und eine andere einbaut,
+     misst nichts. */
   flex-direction:row; gap:var(--space-2); width:auto; flex:0 0 auto;
+  min-width:0; max-width:none;
   padding:var(--space-2) var(--space-3); font-size:12.5px;
 }
 .mb-knopf.ist-gross .mb-name{ -webkit-line-clamp:1; max-width:none; text-align:left }
@@ -561,6 +606,13 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
   .mb-knopf, .mb-knopf.ist-gross{
     flex-direction:row; justify-content:flex-start; text-align:left;
     width:auto; flex:auto; gap:var(--space-3);
+    /* Die Spanne 68–96 px von oben MUSS hier weg. Am Rechner hält sie
+       Kacheln zusammen; hier ist der Knopf eine Zeile, die ihre halbe
+       Rasterspalte (rund 185 px) füllen soll. `max-width:96px` hätte sie
+       auf halber Strecke abgeschnitten — und da beide Regeln nur eine
+       Klasse tief sind, gewinnt nicht die spätere, sondern nur die, die es
+       ausdrücklich sagt. */
+    min-width:0; max-width:none;
     min-height:46px; padding:0 var(--space-3);
     border-radius:var(--radius-md); font-size:13.5px;
   }

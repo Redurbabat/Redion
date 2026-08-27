@@ -200,19 +200,88 @@ Register.menueband = (() => {
     /* ======================================================================== *
      * ZEICHNEN — Blatt, Whiteboard, Plan, Kamera
      * ======================================================================== */
+    /* DIE ECHTEN ZEICHENWERKZEUGE (E212, L64).
+  
+       Sie standen nicht hier, und das war kein Versehen: ein Knopf oben muss
+       wissen, AUF WELCHE Fläche er wirkt, und auf einer Seite können mehrere
+       Blätter liegen. `Zeichenziel` im Kern beantwortet das jetzt — die
+       Fläche, die zuletzt berührt wurde.
+  
+       `zeigen: flaecheDa` heisst: gibt es keine, steht der Knopf gar nicht
+       erst da. Ein Stift, der beim Klick sagt „hier geht das nicht", ist
+       schlimmer als einer, den es nicht gibt (die Regel aus `befehle.ts`).
+  
+       Die Namen und Zeichen sind dieselben wie in `Marken.leiste` — sie
+       stammen aus derselben Vorstellung, und wer eines ändert, sieht das
+       andere daneben. */
+    const flaecheDa = () => {
+        try {
+            return Zeichenziel.da() === true;
+        }
+        catch {
+            return false;
+        }
+    };
+    const WERKZEUGE = [
+        ['schreiben', 'Schreiben', '✎', 'Die Zeichenschicht ist durchlässig — Text bleibt anfassbar'],
+        ['stift', 'Stift', '🖍', 'Freihand mit geglätteter Linie'],
+        ['marker', 'Marker', '▰', 'Transparenter Marker zum Hervorheben'],
+        ['line', 'Linie', '╱', 'Gerade Linie'],
+        ['arrow', 'Pfeil', '→', 'Pfeil'],
+        ['rectangle', 'Rechteck', '□', 'Rechteck'],
+        ['ellipse', 'Ellipse', '○', 'Ellipse'],
+        ['text', 'Text', 'T', 'Textanmerkung auf der Fläche'],
+        ['zeichen', 'Fachzeichen', '⚡', 'Ein elektrotechnisches Zeichen setzen'],
+        ['select', 'Auswahl', '⌖', 'Marken auswählen, gemeinsam bewegen oder löschen'],
+        ['radierer', 'Radieren', '⌫', 'Eine Marke entfernen']
+    ];
+    /* DIE FLÄCHENKNÖPFE SIND NUR GROSS, SOLANGE KEINE FLÄCHE DA IST.
+  
+       „Blatt einfügen" ist das Wichtigste, bevor man eines hat — danach sind
+       es die Werkzeuge. Gemessen: mit drei grossen Kacheln kam der Reiter auf
+       19 Knöpfe und 1292 px und brach auf zwei Zeilen um; ohne sie auf
+       1166 px und eine. */
+    const flaecheGross = () => !flaecheDa();
     const zeichnenEintraege = () => [
         { reiter: 'zeichnen', gruppe: 'Fläche', id: 'z-blatt', name: 'Blatt',
-            zeichen: 'page', gross: true, hinweis: 'Ein A4-Blatt zum Schreiben mit der Hand',
+            zeichen: 'page', gross: flaecheGross(), hinweis: 'Ein A4-Blatt zum Schreiben mit der Hand',
             tun: () => Blocks.einfuegenAmEnde('blatt'),
             zeigen: () => kann(() => Blocks.einfuegenAmEnde) },
         { reiter: 'zeichnen', gruppe: 'Fläche', id: 'z-white', name: 'Whiteboard',
-            zeichen: 'graph', gross: true, hinweis: 'Freie Fläche ohne Ränder',
+            zeichen: 'graph', gross: flaecheGross(), hinweis: 'Freie Fläche ohne Ränder',
             tun: () => Blocks.einfuegenAmEnde('whiteboard'),
             zeigen: () => kann(() => Blocks.einfuegenAmEnde) },
         { reiter: 'zeichnen', gruppe: 'Fläche', id: 'z-plan', name: 'Schaltplan',
-            zeichen: 'bolt', gross: true, hinweis: 'Fläche mit Fachzeichen und Stromsimulation',
+            zeichen: 'bolt', gross: flaecheGross(), hinweis: 'Fläche mit Fachzeichen und Stromsimulation',
             tun: () => Blocks.einfuegenAmEnde('schaltplan'),
             zeigen: () => kann(() => Blocks.einfuegenAmEnde) },
+        /* Die Werkzeuge selbst — nur, wenn eine Fläche da ist. */
+        ...WERKZEUGE.map(([id, name, zeichen, hinweis]) => ({
+            reiter: 'zeichnen', gruppe: 'Werkzeug', id: 'wz-' + id, name, zeichen, hinweis,
+            tun: () => { if (!Zeichenziel.setze(id))
+                UI.toast('Erst eine Zeichenfläche öffnen'); },
+            /* WELCHES WERKZEUG IST AN? Ohne diese Zeile stand im Band nichts
+               markiert, und der graue Kasten um den zuletzt geklickten Knopf war
+               nur der Fokus — er blieb auch dann, wenn man in der Leiste unten
+               etwas anderes wählte (§38: nicht nur Farbe, aber auch nicht gar
+               nichts). */
+            an: () => { try {
+                return Zeichenziel.jetzt() === id;
+            }
+            catch {
+                return false;
+            } },
+            zeigen: flaecheDa
+        })),
+        { reiter: 'zeichnen', gruppe: 'Zurücknehmen', id: 'wz-undo', name: 'Zurück',
+            zeichen: '↶', hinweis: 'Den letzten Strich zurücknehmen',
+            tun: () => { Zeichenziel.ruf('undo'); }, zeigen: flaecheDa },
+        { reiter: 'zeichnen', gruppe: 'Zurücknehmen', id: 'wz-redo', name: 'Vor',
+            zeichen: '↷', hinweis: 'Wiederholen',
+            tun: () => { Zeichenziel.ruf('redo'); }, zeigen: flaecheDa },
+        { reiter: 'zeichnen', gruppe: 'Zurücknehmen', id: 'wz-weg', name: 'Löschen',
+            zeichen: 'trash', hinweis: 'Das Ausgewählte löschen',
+            tun: () => { Zeichenziel.ruf('deleteSelection'); }, zeigen: flaecheDa },
         { reiter: 'zeichnen', gruppe: 'Aufnehmen', id: 'z-scan', name: 'Seite abfotografieren',
             zeichen: 'camera', hinweis: 'Ein Blatt mit der Kamera aufnehmen und den Text erkennen',
             tun: () => Recognition.capturePage(),

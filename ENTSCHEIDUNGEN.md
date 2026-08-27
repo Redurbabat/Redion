@@ -15314,3 +15314,176 @@ steht, weil beide aus derselben Quelle lesen.
 Er fragt jetzt das Register statt einer Zahl. Eine feste Zahl in einer
 Prüfung, die eine Liste bewacht, schlägt bei jedem neuen Eintrag an und sagt
 dabei nichts über den Fehler, den sie finden sollte.
+
+
+================================================================================
+E212 — Zeichnen im Menüband: eine Frage, drei Fehler
+================================================================================
+
+L64 stand offen: der Reiter „Zeichnen" hatte Blatt, Whiteboard und Schaltplan
+— also, WOMIT man anfängt, nicht, WOMIT man zeichnet. Stift, Marker, Linie,
+Pfeil, Radierer standen nur an der Leiste unter der jeweiligen Fläche.
+
+Der Grund dafür war kein Versäumnis, sondern eine echte Frage:
+
+    Ein Knopf oben muss wissen, AUF WELCHE Fläche er wirkt.
+
+Auf einer Seite können drei Blätter liegen. Ohne Antwort darauf ist der Knopf
+entweder tot oder er trifft die falsche Fläche, und beides ist schlimmer als
+kein Knopf.
+
+
+DIE ANTWORT: DIE ZULETZT BERÜHRTE
+--------------------------------------------------------------------------------
+
+    src/kern/helfer/zeichenziel.ts
+
+    melde(steuerung, name)   eine Fläche gibt es jetzt
+    beruehrt(steuerung)      jemand hat sie angefasst — sie ist gemeint
+    aktive() / da()          welche ist gemeint, gibt es überhaupt eine
+    setze(werkzeug)          von aussen an die Fläche
+    uebernehme(st., wz)      die Leiste hat selbst geschaltet — nur merken
+    jetzt() / werkzeugVon()  was ist an, an der gemeinten / an dieser
+    horche(fn) / vergiss(fn) Bescheid bei Änderung
+
+Warum im Kern: `bereiche/pdf/` und `bereiche/bloecke/arten/blatt` brauchen
+beide dasselbe, und ein Bereich darf nicht aus einem anderen importieren
+(CLAUDE.md §5, Regel 1).
+
+Warum „Ziel" und nicht „Fläche": es benennt die FRAGE, nicht die Sache — und
+`bereiche/bloecke/arten/zeichenflaeche.ts` gibt es schon.
+
+Was NICHT dorthin gewandert ist: kein Strich, keine Farbe, keine Marke. Das
+bleibt in `bereiche/pdf/marken.ts`, wo es geprüft ist. Die Datei hält einen
+Zeiger und ein Wort. Wäre die Zeichenlogik an zwei Stellen, liefe die zweite
+irgendwann von der ersten weg.
+
+`setze` und `uebernehme` sind zwei Richtungen, nicht eine mit Schalter. Wer
+bei `uebernehme` nochmal `setzeWerkzeug` riefe, löschte die Auswahl — das tut
+sie bei jedem Wechsel — bei einem Wechsel, den es gar nicht gab.
+
+
+DREI FEHLER, ALLE DREI AUF DEM BILDSCHIRMFOTO (§55.1)
+--------------------------------------------------------------------------------
+
+Die Knöpfe wirkten beim ersten Versuch. Was danach kam, fand kein Prüflauf,
+sondern das Hinsehen:
+
+1. ZWEI ANSICHTEN, EINE HINTERHER. Die Leiste am Blatt zeigte „Schreiben"
+   markiert, während oben „Stift" gedrückt war und die Fläche längst
+   `data-tool="stift"` trug. Gemessen: `[data-wz].on` = schreiben,
+   `.mb-knopf.ist-an` = Stift. Die Leiste markiert sich beim eigenen Klick
+   selbst und erfuhr von fremden Klicks nichts.
+
+   Gelöst mit `Zeichenziel.horche` in `marken.ts`, und ausdrücklich über
+   `werkzeugVon(controls)` statt `jetzt()`: gemeint ist DIESE Fläche. Bei
+   zwei Blättern auf einer Seite zeigte `jetzt()` beiden Leisten das
+   Werkzeug der zuletzt berührten.
+
+2. DAS BAND MARKIERTE NICHTS. `BandEintrag` hat jetzt ein `an?: () => boolean`,
+   der Zeichner setzt daraus `.ist-an` UND `aria-pressed` — nicht nur Farbe,
+   §38.
+
+3. NEUNZEHN KNÖPFE IN ZWEI ZEILEN. Sobald eine Fläche da ist, werden Blatt,
+   Whiteboard und Schaltplan zu kleinen Kacheln (`gross: flaecheGross()`).
+
+
+UND EIN VIERTER, DEN ERST DER PRÜFLAUF FAND
+--------------------------------------------------------------------------------
+
+Niemand meldet eine Fläche ab. Gemessen wuchs die Liste bei jedem
+Seitenwechsel um eins, und `zuletzt` blieb auf der ERSTEN stehen — nach fünf
+Wechseln hätte der Stift auf ein Blatt gewirkt, das seit vier Wechseln nicht
+mehr auf dem Bildschirm steht. Sichtbar wäre nichts gewesen: der Knopf hätte
+einfach nichts getan.
+
+Statt einen Abmelde-Aufruf an jede Stelle zu setzen, die eine Seite neu
+zeichnet — und die nächste zu vergessen — fragt es das Element selbst:
+`isConnected`. Das ist die einzige Quelle, die nicht vergessen werden kann.
+
+DAS MESSGERÄT HAT DABEI EINMAL SEIN EIGENES ERGEBNIS ERZEUGT. Der erste
+Entwurf räumte nur weg, was schon einmal in der Seite hing (`gesehen`), und
+`gesehen` wurde nur beim Nachfragen gesetzt. Meine Handmessung fragte nach
+jedem Seitenwechsel — und setzte damit selbst, was sie zu prüfen glaubte.
+Sie zeigte 1. test247 §11 ohne diese Zwischenfrage zeigte 3.
+
+Es gelten deshalb drei Merkmale, von denen jedes für sich genügt: sie hing
+schon einmal drin, ODER eine andere Fläche hängt gerade drin (dann ist der
+Aufbau fertig), ODER sie ist nicht die zuletzt gemeldete.
+
+
+WAS SICH BEIM HINSEHEN NOCH ZEIGTE
+--------------------------------------------------------------------------------
+
+BUCHSTABEN, DIE MITTEN IM WORT BRECHEN. „Whiteboar/d", „Fachzeich/en". Über
+alle sechs Reiter gemessen: 22 von 113 Namen. `hyphens:auto` steht in der
+CSS und tut nichts — `lang="de"` ist gesetzt, die Trennmuster fehlen.
+
+Vier Breiten-Regeln nebeneinander gemessen:
+
+    fest 68 px       22/113 Brüche   Gruppensumme 4796 px
+    auto 68–88        9/113          5209 px
+    auto 68–96        4/113          5317 px
+    fest 80 px       12/113          5600 px
+
+`auto 68–96` gewinnt auf BEIDEN Achsen: weniger Brüche als „fest 80" UND
+schmaler. Ein festes Raster macht jeden Knopf so breit wie den breitesten
+Bedarf; ein Mindestmass lässt nur die wenigen wachsen, die es brauchen.
+
+Die Unruhe, die 2026-08 zum festen Raster führte, kam vom SCHMALEN Ende — ein
+58 px schmales „Text" neben einem 106 px breiten Nachbarn. `min-width:68px`
+nimmt genau diese Hälfte weg.
+
+Dabei ist mir ein Fehler unterlaufen, der es wert ist, festgehalten zu
+werden: gemessen wurde mit `:not(.ist-gross)`, eingebaut ohne. Die grosse
+Kachel, deren Name NEBEN dem Zeichen steht, bekam damit die 96-px-Grenze ab
+— aus vier Brüchen wurden neun. Wer eine Regel misst und eine andere einbaut,
+misst nichts.
+
+DIE RANDLEISTE LAG ÜBER DEM BAND. `#rand-toc` stand auf `top:50%` von `main`,
+und `main` enthält seit E210 auch das Menüband. Bei 39 Überschriften lief die
+Leiste von y=-3 bis y=1175 in einem 980 px hohen Fenster: oben im Band, unten
+unter dem Bildrand. Bei 53 Überschriften begann sie bei y=-213.
+
+Das Menüband schreibt jetzt seine eigene Unterkante als `--inhalt-oben` an
+`main` — es ist der Einzige, der sie kennt (eine oder zwei Zeilen, offen oder
+zu, Telefon oder Rechner). Die Randleiste zentriert darauf und bekommt dazu
+ein `max-height` mit `overflow-y:auto`: sichtbar gerollt statt still
+abgeschnitten.
+
+
+PRÜFUNG
+--------------------------------------------------------------------------------
+
+test247 §11, neun Punkte, jeder einzeln als rot-fähig belegt:
+
+    1 ohne Fläche keine Werkzeuge   `zeigen: () => true`
+    2 mit Blatt erscheinen sie      `flaecheDa` immer falsch
+    3 Stift stellt die Fläche um    `setzeWerkzeug` entfernt
+    4 das Band zeigt es an          `.ist-an` entfernt
+    5 die Leiste zeigt dasselbe     `horche(markiere)` entfernt
+    6 Leiste → Band                 `uebernehme` entfernt
+    7 keine toten Flächen           `aufraeumen` ausgeschaltet
+    8 Randleiste im Fenster         `max-height` entfernt
+    9 Randleiste unter dem Band     `--inhalt-oben` entfernt
+
+Punkt 3 misst am `data-tool` der Fläche selbst, nicht an einer Variablen. Die
+Gegenprobe zeigt, warum: mit ausgebautem `setzeWerkzeug` sagten Band, Kern
+UND Leiste übereinstimmend „stift", während die Fläche auf „schreiben" stand.
+Drei Ansichten, alle einig, alle falsch.
+
+Zwei Punkte waren beim ersten Schreiben wertlos und wurden ersetzt:
+
+  · Die Randleisten-Prüfung legte sich vierzehn `h1` mit `Store.addBlock`
+    an. Gemessen ging `childrenOf` dabei von 1 auf 1 — `addBlock` hängt den
+    Block nicht in die `content`-Liste. Es entstand keine Leiste, und der
+    Punkt meldete „keine gefunden" statt eines Masses.
+  · Danach nahm sie mit `find` die erstbeste Seite mit drei Überschriften.
+    Ob das eine mit vier oder eine mit 39 war, entschied die Reihenfolge im
+    Zwischenspeicher — der Punkt war einmal grün und einmal rot, ohne dass
+    sich am Programm etwas geändert hätte. Jetzt nimmt sie die Seite mit den
+    MEISTEN, also den schwersten Fall.
+
+Grün: test247 67/67, test34 77/77, test33 96/96, test192 25, test173 11,
+test217 27/27, test222 50/50, test215 44/44, test128 50, test202 84,
+test105 55, test109 20.
