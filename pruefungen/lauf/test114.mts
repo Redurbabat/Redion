@@ -1359,6 +1359,61 @@ p('Nichts liegt über den Einstellungen',
 
 await seite.evaluate(() => document.querySelectorAll('.overlay').forEach(x => x.remove()));
 
+/* ==========================================================================
+ * 22 · Der Durchgang über ALLE Produktwelten (E232)
+ * --------------------------------------------------------------------------
+ * Die Abschnitte oben prüfen einzelne Orte, die je einmal auffällig waren.
+ * Dieser hier fragt dieselbe Frage für jede Welt auf einmal — und hat damit
+ * neunzehn Ziele gefunden, die keiner der einzelnen Punkte abdeckte:
+ *
+ *     30 × 44  „Zurück"          in JEDER Ansicht
+ *     30 × 44  „Seitenoptionen"  in JEDER Ansicht
+ *     40 hoch  die zweite Reiterzeile (Schule / Uni / Arbeit)
+ *     37 breit „Uni" — drei Buchstaben, und der Nachbar klebt daneben
+ *
+ * DIE ERSTEN BEIDEN WAREN EINE BEWUSSTE ENTSCHEIDUNG, und die stand mit
+ * Begründung in der CSS: „eine Kopfleiste ohne Titel ist schlimmer als eine
+ * mit etwas schmaleren Knöpfen". Richtig gedacht — nur nie ausgerechnet.
+ * Gemessen auf 390 px: die Krume hat 312 px, und 18 stehen frei. Beide
+ * Knöpfe auf 44 kosten sie 28. Sie behält 284, ein Seitentitel braucht
+ * selten mehr als 200.
+ *
+ * Eine Abwägung ohne Zahlen ist eine Vermutung. Mit Zahlen war sie in
+ * zwei Minuten entschieden.
+ * ========================================================================*/
+console.log('\n22 · Jede Produktwelt am Telefon: nichts unter 44 px');
+
+const WELTEN: [string, string, string?][] = [
+  ['Lernzentrale', 'lernen'], ['Workspace', 'workspace'], ['Bibliothek', 'bibliothek'],
+  ['Aufgaben', 'aufgaben'], ['Whiteboards', 'whiteboards'], ['Planung', 'planung'],
+  ['Arbeit', 'lernen', 'arbeit'], ['Prüfungen', 'lernen', 'pruefungen']
+];
+
+for (const [wname, ruf, arg] of WELTEN) {
+  try { await seite.evaluate(async (x: any) => {
+    await (globalThis as any).Produktwelten[x.r]?.(x.a);
+  }, { r: ruf, a: arg }); } catch { /* meldet der Punkt selbst */ }
+  await seite.waitForTimeout(900);
+  const klein = await seite.evaluate(() => {
+    const raus: string[] = [];
+    for (const e of document.querySelectorAll<HTMLElement>(
+        '#main button, #main a[href], #main [role="button"], #main select, #main input')) {
+      const r = e.getBoundingClientRect();
+      if (r.width < 2 || r.height < 2) continue;
+      const st = getComputedStyle(e);
+      if (st.visibility === 'hidden' || st.display === 'none') continue;
+      if (r.top > innerHeight || r.bottom < 0) continue;
+      if (Math.round(r.height) >= 44 && Math.round(r.width) >= 44) continue;
+      const name = (e.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 18)
+        || e.getAttribute('aria-label') || e.tagName;
+      raus.push(`${Math.round(r.width)}×${Math.round(r.height)} „${name}"`);
+    }
+    return [...new Set(raus)];
+  });
+  p(`${wname}: jedes Ziel ist mindestens 44 × 44`, klein.length === 0, klein.join('  |  '));
+}
+
+
 await browser.close();
 server.close();
 

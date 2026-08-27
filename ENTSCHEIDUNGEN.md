@@ -16823,3 +16823,57 @@ Zahl vor einem Wort steht, ohne Einzahl-Verzweigung. Die meisten sind
 Meldungen nach einer Massenaktion („17 Zeilen eingefügt"), wo die Eins kaum
 vorkommt und niemanden stört. Die fünf hier stehen in LISTEN, die bei jedem
 Öffnen zu sehen sind. Der Rest steht in LUECKEN.md, statt still zu bleiben.
+
+
+================================================================================
+E232 — Eine Abwägung ohne Zahlen ist eine Vermutung
+================================================================================
+
+Ein Durchgang über alle acht Produktwelten am Telefon (390 × 844) fand
+neunzehn Tippziele unter 44 px — die Grenze aus §37:
+
+    30 × 44   „Zurück"          in JEDER Ansicht
+    30 × 44   „Seitenoptionen"  in JEDER Ansicht
+    40 hoch   die zweite Reiterzeile (Schule / Ausbildung · Uni · Arbeit)
+    37 breit  „Uni" — drei Buchstaben, und der Nachbar klebt daneben
+
+DIE ERSTEN BEIDEN WAREN EINE BEWUSSTE ENTSCHEIDUNG. Sie stand mit
+Begründung in `bausteine.css`:
+
+    „Eine Kopfleiste ohne Titel ist schlimmer als eine mit etwas schmaleren
+     Knöpfen: man weiss dann nicht mehr, wo man ist. 44 px Höhe trifft der
+     Daumen ohnehin — die Breite ist in einer waagerechten Leiste die
+     weniger wichtige Hälfte."
+
+Der Gedanke ist richtig. Er wurde nur nie ausgerechnet. Nachgemessen, 390 px:
+
+    Leiste 390 — btn-back 30 — Krume 312 — btn-page-menu 30
+                                    ^^^ und 18 px stehen frei
+
+Beide Knöpfe auf 44 kosten die Krume 28 Punkte. Sie behält 284, und ein
+Seitentitel braucht selten mehr als 200. Der Titel verschwindet also nicht —
+er wird um neun Prozent kürzer. Nachgesehen im Bild: „← Lernen & Alltag ⋯"
+steht unverändert vollständig da.
+
+DAS IST DIE EIGENTLICHE LEHRE. Die Abwägung war nicht falsch gedacht,
+sondern ungerechnet. Mit den Zahlen daneben war sie in zwei Minuten
+entschieden — und zwar anders. Wer eine Regel des Projekts bewusst bricht,
+schreibt die Zahl dazu, gegen die er sie abgewogen hat; sonst steht dort ein
+Gefühl, das niemand nachprüfen kann.
+
+DIE ZWEITE REIHE HATTE GAR KEINE BEGRÜNDUNG: `min-height:40px` unter
+`pointer:coarse`, während der Kommentar darüber nur das Nicht-Umbrechen
+erklärt. Jetzt 44, und dazu `min-width:44px` — „Uni" war 37 breit, und in
+einer Reiterreihe landet ein Fehltipp beim Nachbarn, nicht im Leeren.
+
+Geprüft wird es jetzt für jede Welt einzeln (test114, Abschnitt 22).
+
+    Gegenbeweis, alte Masse wieder eingesetzt:
+      8 von 8 Welten rot, mit genau diesen vier Zielen benannt
+      146 ok → 138 ok, 8 offen
+
+test114: 146 ok, 0 offen.
+
+NEBENBEI GEPRÜFT UND SAUBER: derselbe Durchgang fragte auch, ob jeder Knopf
+einen Namen für das Vorleseprogramm hat (§38). Über alle acht Welten:
+null ohne Namen. Ein geprüfter Nullbefund ist auch ein Ergebnis.

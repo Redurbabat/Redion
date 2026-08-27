@@ -1621,8 +1621,20 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
      Daumen ohnehin — die Breite ist in einer waagerechten Leiste die
      weniger wichtige Hälfte. */
   #topbar{ align-items:stretch; }
+  /* NACHGEMESSEN — DER GRUND OBEN GILT NICHT MEHR (E232).
+     Der Absatz darüber wägt Breite gegen Titel ab: „eine Kopfleiste ohne
+     Titel ist schlimmer als eine mit etwas schmaleren Knöpfen". Richtig
+     gedacht, nur nie ausgerechnet. Auf 390 px:
+
+         Leiste 390 — btn-back 30 — Krume 312 — btn-page-menu 30
+                                         ^^^ und 18 px stehen frei
+
+     Beide Knöpfe auf 44 kosten 28 Punkte. Die Krume behält 284 — und ein
+     Seitentitel braucht selten mehr als 200. Der Titel verschwindet also
+     nicht, er wird um neun Prozent kürzer. Dafür sind zwei Knöpfe, die man
+     in JEDER Ansicht braucht, endlich 44 × 44 (§37). */
   #topbar .icon-btn,
-  #topbar .top-btn{ min-height:44px; }
+  #topbar .top-btn{ min-height:44px; min-width:44px; justify-content:center }
 
   /* AUSSERHALB der Kopfleiste wächst beides. Zwei Symbolknöpfe sassen in
      der Seitenleiste und blieben bei 28 × 28 — gefunden hat das die

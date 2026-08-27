@@ -172,7 +172,14 @@
   }
   .lernwelt .lw-subnav button{ flex:0 0 auto; min-height:36px }
 }
-@media(pointer:coarse){ .lernwelt .lw-subnav button{ min-height:40px } }
+/* 44 UND NICHT 40 (E232). Hier stand 40, ohne Begründung — die Erklärung
+   darüber betrifft nur das Nicht-Umbrechen, nicht die Höhe. §37 nennt 44 px
+   für alles, was mit dem Finger getroffen wird, und diese Zeile ist die
+   zweite Navigation: man tippt sie oft. Vier Punkte kosten nichts. */
+/* Auch in der BREITE: „Uni" ist drei Buchstaben und war 37 px breit. In
+   einer Reihe von Reitern sitzt der Nachbar direkt daneben — ein Fehltipp
+   landet dort, nicht im Leeren. Genau dann zählt die Breite. */
+@media(pointer:coarse){ .lernwelt .lw-subnav button{ min-height:44px; min-width:44px } }
 
 /* Eine Kante, hinter der es weitergeht. Kein Knopf und kein Pfeil: beides
    wäre etwas, woneben man tippen kann. Das Merkmal setzt `reiterRollstand`

@@ -5067,7 +5067,14 @@ body[data-ruhig="an"] .arbeitswelt .aw-kopf::after{ display:none }
   }
   .lernwelt .lw-subnav button{ flex:0 0 auto; min-height:36px }
 }
-@media(pointer:coarse){ .lernwelt .lw-subnav button{ min-height:40px } }
+/* 44 UND NICHT 40 (E232). Hier stand 40, ohne Begründung — die Erklärung
+   darüber betrifft nur das Nicht-Umbrechen, nicht die Höhe. §37 nennt 44 px
+   für alles, was mit dem Finger getroffen wird, und diese Zeile ist die
+   zweite Navigation: man tippt sie oft. Vier Punkte kosten nichts. */
+/* Auch in der BREITE: „Uni" ist drei Buchstaben und war 37 px breit. In
+   einer Reihe von Reitern sitzt der Nachbar direkt daneben — ein Fehltipp
+   landet dort, nicht im Leeren. Genau dann zählt die Breite. */
+@media(pointer:coarse){ .lernwelt .lw-subnav button{ min-height:44px; min-width:44px } }
 
 /* Eine Kante, hinter der es weitergeht. Kein Knopf und kein Pfeil: beides
    wäre etwas, woneben man tippen kann. Das Merkmal setzt `reiterRollstand`
@@ -7773,8 +7780,20 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
      Daumen ohnehin — die Breite ist in einer waagerechten Leiste die
      weniger wichtige Hälfte. */
   #topbar{ align-items:stretch; }
+  /* NACHGEMESSEN — DER GRUND OBEN GILT NICHT MEHR (E232).
+     Der Absatz darüber wägt Breite gegen Titel ab: „eine Kopfleiste ohne
+     Titel ist schlimmer als eine mit etwas schmaleren Knöpfen". Richtig
+     gedacht, nur nie ausgerechnet. Auf 390 px:
+
+         Leiste 390 — btn-back 30 — Krume 312 — btn-page-menu 30
+                                         ^^^ und 18 px stehen frei
+
+     Beide Knöpfe auf 44 kosten 28 Punkte. Die Krume behält 284 — und ein
+     Seitentitel braucht selten mehr als 200. Der Titel verschwindet also
+     nicht, er wird um neun Prozent kürzer. Dafür sind zwei Knöpfe, die man
+     in JEDER Ansicht braucht, endlich 44 × 44 (§37). */
   #topbar .icon-btn,
-  #topbar .top-btn{ min-height:44px; }
+  #topbar .top-btn{ min-height:44px; min-width:44px; justify-content:center }
 
   /* AUSSERHALB der Kopfleiste wächst beides. Zwei Symbolknöpfe sassen in
      der Seitenleiste und blieben bei 28 × 28 — gefunden hat das die
