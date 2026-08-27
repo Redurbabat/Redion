@@ -35,7 +35,44 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
-**27. August 2026 · 214 Prüfläufe · die ruhige Fassung ist gebaut**
+**27. August 2026 · 215 Prüfläufe · acht Fehler aus dem Bilderdurchgang**
+
+> ### Was 92 Bildschirmfotos gefunden haben (E224–E231)
+>
+> Redur wollte alle Ansichten sehen — Rechner und Telefon, hell und dunkel —
+> und wissen, was zu voll ist. Aus dem Hinsehen wurden acht Behebungen, und
+> keine davon hätte eine bestehende Prüfung gefunden.
+>
+> | | was zu sehen war | was dahinter steckte |
+> |---|---|---|
+> | **E224** | „📕 Elek…" | der Sucher lag über dem Seitentitel, 55 px |
+> | **E225** | test67 rot | die Prüfung mass die Überschrift statt den Inhalt |
+> | **E226** | test40 rot | `offsetParent` ist keine Sichtbarkeit — dreimal |
+> | **E227** | Karte „1’450" | die Kartenansicht las nie ein Zellformat |
+> | **E228** | „Whit…" „Scan…" | 7 von 8 Kacheln hatten 45 px für den Text |
+> | **E229** | „00:00" | Ganztagstermine verschwanden westlich von Greenwich |
+> | **E230** | blasse Zeilen | 11 Texte unter AA, 7 davon trugen Bedeutung |
+> | **E231** | „1 Einträge" | die Mehrzahl-Regel stand 146 Zeilen tiefer |
+>
+> **Der rote Faden, dreimal derselbe:** bei E228, E229 und E231 stand die
+> richtige Regel bereits im Projekt — vierzehn Zeilen tiefer, in der
+> Kalenderansicht, hundertsechsundvierzig Zeilen tiefer. Eine Entscheidung,
+> die an vier Stellen einzeln getroffen werden muss, wird irgendwann an einer
+> vergessen. Deshalb steht sie jetzt jeweils an EINER.
+>
+> **Und dreimal habe ich mich geirrt** und es berichtigt: `634.216667` ist die
+> richtige Kürzung und kein abgeschnittener Wert; der doppelte Aufgabeneintrag
+> war ein Fehler im Bild-Beispiel, nicht in der App; die beiden Namen des
+> Simulationsknopfes sind Absicht und stehen so im Code begründet.
+>
+> **Neu:** test249 misst den Kontrast in acht Produktwelten × zwei Themen mit
+> der WCAG-Formel und einer namentlich begründeten Ausnahmeliste.
+>
+> **Offen:** welche Ansicht Redur gebaut haben will. Der Befund dazu steht
+> unten unter „Was zu voll ist" — die zwei Reiterzeilen sind der grösste
+> Einzelposten, am Telefon 40 % des Bildschirms.
+
+**27. August 2026 · die ruhige Fassung ist gebaut**
 
 > ### Ruhig: 52 Rahmenknöpfe werden 15 (E218–E222)
 >
