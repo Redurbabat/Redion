@@ -93,6 +93,17 @@ const messen = async (seite: any, ansicht: string): Promise<any> => {
       .filter(l => l.scrollWidth > l.clientWidth + 1)
       .map(l => (l.textContent || '').trim());
 
+    /* DIESELBE FRAGE FÜR DIE HANDLUNGSKACHELN (E228). Die Zählerkarten
+       bekamen im August ihre Breite nach der eigenen Spalte; die Kacheln
+       „Schnell starten" behielten `repeat(4, 1fr)` und standen sieben von
+       acht abgeschnitten da — „Whit…", „Scan…", „Sich…".
+       Sie umbrechen (`white-space:normal`), abgeschnitten wird also immer
+       ein einzelnes WORT, das in keine Zeile passt. `scrollWidth` sieht
+       genau das. */
+    const engeAktion = [...document.querySelectorAll<HTMLElement>('.aw-aktion-text')]
+      .filter(l => l.scrollWidth > l.clientWidth + 1)
+      .map(l => (l.textContent || '').trim());
+
     return {
       ansicht: a,
       fenster: document.documentElement.clientWidth,
@@ -102,6 +113,8 @@ const messen = async (seite: any, ansicht: string): Promise<any> => {
       feldBreite: feld ? Math.round(feld.clientWidth) : 0,
       platzNoetig,
       engeLabel,
+      engeAktion,
+      aktionen: document.querySelectorAll('.aw-aktion').length,
       zaehler: document.querySelectorAll('.aw-zaehler').length,
       randToc: !!document.getElementById('rand-toc')
     };
@@ -158,6 +171,13 @@ for (const [name, breite, hoehe, mindestens] of
     JSON.stringify(stand.map(s => [s.ansicht, s.zaehler])));
   const enge = stand.flatMap(s => s.engeLabel.map((t: string) => `${s.ansicht}: ${t}`));
   gleich('Keine Zähler-Beschriftung ist abgeschnitten', enge, []);
+
+  /* ── §2b · Und keine Handlungskachel (E228) ───────────────────────────── */
+  const mitAktionen = stand.filter(s => s.aktionen > 0);
+  p('Es gibt überhaupt Kacheln zu prüfen', mitAktionen.length > 0,
+    JSON.stringify(stand.map(s => [s.ansicht, s.aktionen])));
+  const engeK = stand.flatMap(s => s.engeAktion.map((t: string) => `${s.ansicht}: ${t}`));
+  gleich('Keine Kachel-Beschriftung ist abgeschnitten', engeK, []);
 
   /* ── §3 · Jeder Platzhalter steht ganz da ─────────────────────────────── */
   const mitFeld = stand.filter(s => s.platzhalter);

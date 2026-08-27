@@ -136,8 +136,37 @@
   border-color:var(--line-stark,var(--line));
   background:linear-gradient(135deg,var(--aw-accent-soft),var(--bg-card) 64%)
 }
+/* VIER FESTE SPALTEN WAREN ZU VIEL — DIESELBE LEHRE WIE UNTEN, NUR HIER
+   NICHT GEZOGEN (E228).
+   Vierzehn Zeilen tiefer steht sie schon, für die Zählerkarten: „nach der
+   eigenen Breite, nicht nach der des Fensters". Die Handlungskacheln
+   behielten `repeat(4, 1fr)` — und die Mittelspalte des Workspace ist bei
+   1280 px nur 459 px breit, weil rechts das Reiterfeld steht.
+
+       459 px ÷ 4 Spalten (mit 9 px Spalt)   = 108 px je Kachel
+       − Zeichen 30 − Spalt 9 − Rand 24      =  45 px für den Text
+
+   GEMESSEN mit der echten Schrift (620 13px system-ui), längstes WORT:
+
+       Whiteboard   72 px        Datenbank   67 px
+       Sicherung    64 px        Scannen     55 px
+
+   Sieben der acht Kacheln standen damit abgeschnitten da: „Whit…",
+   „Neue Date…", „Date… einle…", „Scan…", „Vorla…", „Glob… Suche",
+   „Sich…". Nur „Neue Seite" war ganz zu lesen.
+
+   Das WORT zählt, nicht die ganze Beschriftung: „Dateien einlesen" darf
+   umbrechen, die Kachel wächst mit (`min-height`, keine feste Höhe).
+   Abgeschnitten wird nur, was in keine Zeile passt — und das ist immer ein
+   einzelnes Wort.
+
+       72 (Whiteboard) + 63 (Zeichen, Spalt, Rand) = 135 px
+
+   `auto-fit` statt einer festen Zahl, damit breitere Fenster wieder vier
+   Spalten bekommen und ein Media Query auf die FENSTERbreite gar nicht
+   erst nötig ist — die Mittelspalte kennt ihre eigene Breite. */
 .arbeitswelt .aw-aktionen{
-  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:9px
 }
 .arbeitswelt .aw-aktion{
   display:flex;align-items:center;gap:9px;min-height:var(--aw-touch);padding:9px 11px;

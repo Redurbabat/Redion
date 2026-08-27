@@ -16594,3 +16594,58 @@ Zahl aus §55.1. Nachgesehen: es ist die RICHTIGE Fassung. `passendMachen`
 kürzt bewusst über die Stufen 6-4-2-1-0, hängt den vollen Wert an den
 Tooltip und schreibt `###`, wenn nicht einmal die Vorkommastellen passen.
 Der Block macht dort genau das, was er soll — der Fehler lag daneben.
+
+
+================================================================================
+E228 — Sieben von acht Kacheln standen abgeschnitten da
+================================================================================
+
+Im Workspace, Abschnitt „Schnell starten", waren zu lesen:
+
+    Neue Seite      Neue Date…      Whit…       Date… einle…
+    Scan…           Vorla…          Glob… Suche  Sich…
+
+Sieben der acht Kacheln. Nur „Neue Seite" stand ganz da.
+
+DIE RECHNUNG. Die Kacheln hatten `repeat(4, minmax(0,1fr))` — vier feste
+Spalten. Die Mittelspalte des Workspace ist bei 1280 px aber nur 459 px
+breit, weil rechts das Reiterfeld steht:
+
+    459 px ÷ 4 Spalten (mit 9 px Spalt)   = 108 px je Kachel
+    − Zeichen 30 − Spalt 9 − Rand 24      =  45 px für den Text
+
+Fünfundvierzig Punkte. Gemessen mit der echten Schrift (620 13px system-ui)
+brauchen die längsten WÖRTER:
+
+    Whiteboard   72 px        Datenbank   67 px
+    Sicherung    64 px        Scannen     55 px
+
+DAS WORT ZÄHLT, NICHT DIE BESCHRIFTUNG. „Dateien einlesen" darf umbrechen —
+die Kachel hat `min-height`, keine feste Höhe, und wächst mit. Abgeschnitten
+wird nur, was in keine Zeile passt, und das ist immer ein einzelnes Wort.
+
+    72 (Whiteboard) + 63 (Zeichen, Spalt, Rand) = 135 px
+
+    grid-template-columns: repeat(auto-fit, minmax(135px, 1fr))
+
+`auto-fit` und keine feste Spaltenzahl, aus demselben Grund, der vierzehn
+Zeilen tiefer in derselben Datei schon steht: die Mittelspalte kennt ihre
+eigene Breite, ein Media Query auf die FENSTERbreite kann sie gar nicht
+sehen. Bei 1280 werden daraus drei Spalten, bei mehr Platz wieder vier.
+
+DAS ÄRGERLICHE DARAN: die Lehre stand seit dem 25. August vierzehn Zeilen
+weiter unten, für die Zählerkarten der Bibliothek — mit derselben Rechnung
+und derselben Zahl („braucht 67 px und bekam 46"). Die Handlungskacheln
+daneben hat damals niemand nachgemessen. Eine Regel, die nur dort angewendet
+wird, wo sie gefunden wurde, ist eine halbe Regel.
+
+test214 stellte die Frage bereits für `.aw-zaehler-label`; sie steht jetzt
+auch für `.aw-aktion-text`.
+
+    Gegenbeweis, `repeat(4, 1fr)` wieder eingesetzt:
+      ✗ Keine Kachel-Beschriftung ist abgeschnitten
+        — ["Neue Datenbank", "Whiteboard", "Dateien einlesen", "Scannen",
+           "Vorlage", "Globale Suche", "Sicherung"]
+
+Genau die sieben. Und nur am Rechner: am Telefon standen ohnehin zwei
+Spalten, dort war nie etwas abgeschnitten. test214: 20/20.
