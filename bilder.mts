@@ -648,7 +648,14 @@ const ANSICHTEN: Record<string, { titel: string; bauen: () => void | Promise<voi
         });
       const notiz = Store.addPage(null, { text: 'Notizen', icon: '📝' });
       Store.addBlock(notiz.id, 'todo', { text: 'Aufgabenblatt Elektrotechnik abgeben' });
-      Store.addBlock(notiz.id, 'todo', { text: 'Ollama installieren', erledigt: true });
+      /* `checked`, NICHT `erledigt`. Redion hält den Haken eines Todo-Blocks
+         in `checked` (Editor, Markdown-Ausgang, Arbeitswelt lesen alle das).
+         Mit `erledigt` entstand ein Block mit einer Eigenschaft, die niemand
+         liest — und das Bild zeigte die Aufgabe als OFFEN, obwohl das
+         Beispiel sie als erledigt meinte. Ein Bild, das etwas anderes zeigt
+         als gemeint, ist schlimmer als kein Bild (§52.8: nachsehen, nicht
+         raten). */
+      Store.addBlock(notiz.id, 'todo', { text: 'Ollama installieren', checked: true });
       await Store.flush();
       w.Produktwelten.aufgaben();
       await new Promise(r => setTimeout(r, 1100));
