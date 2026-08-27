@@ -16248,3 +16248,70 @@ UND DIE LEHRE, die grösser ist als dieser Fall: ein Entwurf ist eine
 Behauptung über Masse. Wer aus einem Bild eine Zahl abliest und sie für die
 App hält, baut auf eine Zeichnung. Das Blatt „Ruhig — eine Seite" zeigt die
 Leiste jetzt an ihrem echten Ort und nennt die gemessenen 150 px darunter.
+
+
+================================================================================
+E221 — Wer wenig zeigt, muss das Wenige richtig zeigen
+================================================================================
+
+Nach E219 alle fünf Wege durchgeklickt und hingesehen. Dabei fiel auf: ein
+Klick auf „Bibliothek" liess „Workspace" aufleuchten. Ein Klick auf
+„Aufgaben" ebenso. Und in der ruhigen Fassung, wo „Workspace" hinter „Mehr"
+steht, markierte danach überhaupt nichts mehr etwas.
+
+
+DER GRUND, UND WARUM ER VORHER NICHT WEH TAT
+
+Die ganze Ortsangabe der Seitenleiste bestand aus zwei Zeilen:
+
+    body[data-produktwelt="lernen"]    #btn-learning,
+    body[data-produktwelt="workspace"] #btn-workspace { … }
+
+Zwei Knöpfe, fest verdrahtet. Sie sagen, in welcher WELT man ist, nicht, wo
+man hingegangen ist. Mit 32 sichtbaren Zeilen war das eine grobe Auskunft
+neben vielen anderen Anhaltspunkten. Mit fünf ist die Markierung der einzige
+Anhaltspunkt — und dann ist eine grobe Auskunft eine falsche.
+
+Das ist die allgemeine Form: **Weglassen macht das Verbliebene wichtiger.**
+Was bei dreissig Dingen ungenau sein durfte, muss bei fünf stimmen.
+
+
+DIE LÖSUNG
+
+`schale.ts` setzt beim Klick `aria-current="page"` auf den Eintrag, der
+wirklich benutzt wurde — an der einen Stelle, an der ohnehin jeder
+Registereintrag durchkommt. Keine zweite Liste, keine Sonderfälle.
+
+Der Fuss ist ausgenommen: „Importieren" und „Papierkorb" sind Handlungen,
+keine Orte, und ein Ort, an dem man nicht bleibt, soll auch nicht markiert
+bleiben.
+
+Die Weltregel bleibt als Rückfall für das erste Bild nach dem Start und
+schaltet sich mit `:not(:has(…))` ab, sobald es eine echte Markierung gibt.
+Ohne das stünden zwei Markierungen gleichzeitig da — und zwei sind schlimmer
+als eine falsche, weil man dann nicht einmal mehr weiss, welcher zu glauben
+ist.
+
+`aria-current` ist dabei nicht nur ein Aufhänger für das Stilblatt:
+Vorleseprogramme nennen damit den aktuellen Ort. Die Farbe ist die zweite
+Auskunft daneben, dazu mehr Schriftgewicht — keine Information allein über
+Farbe (§38).
+
+
+DER UMWEG, DER MEHR GEKOSTET HAT ALS DIE SACHE
+
+Im vollen Durchlauf brach test181 ab: „Execution context was destroyed".
+Auf einem Stand vor E219 lief es grün, im Arbeitsverzeichnis rot. Also
+eingegrenzt, Datei für Datei — und die Eingrenzung zeigte auf `aufbau.css`,
+deren einzige Änderung eine Farbregel ist.
+
+Eine Farbregel kann keine Navigation auslösen. Statt das ernst zu nehmen,
+hätte ich fast weitergesucht. Dreimal auf demselben Stand gelaufen: grün,
+grün, rot. Der volle Durchlauf lief die ganze Zeit im Hintergrund und teilte
+sich die Kerne — es war nie eine Datei, es war die Last.
+
+    Eine Eingrenzung, deren einzelne Durchgänge zufällig ausgehen können,
+    grenzt nichts ein.
+
+Wer bisektiert, prüft zuerst, ob der Lauf überhaupt wiederholbar ist. Drei
+Wiederholungen hätten das in zwei Minuten geklärt. Steht als L66.

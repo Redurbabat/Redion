@@ -1516,6 +1516,16 @@ body[data-ruhig="offen"] .side-nav .side-item:not([data-ruhig]){
    muss das andere sehen; deshalb steht der Grund an beiden Stellen. */
 body[data-ruhig="an"] #topbar [data-ruhig="mehr"]{ display:none }
 
+
+/* WO BIN ICH — DIE MARKIERUNG (E221)
+   `aria-current="page"` ist nicht bloss Zierde: Vorleseprogramme nennen
+   damit den aktuellen Ort, und die Farbe ist die zweite Auskunft daneben —
+   keine Information allein über Farbe (§38). Deshalb trägt der aktive
+   Eintrag zusätzlich mehr Schriftgewicht. */
+#sidebar .side-item[aria-current="page"]{
+  background:var(--bg-hover); color:var(--text); font-weight:600;
+}
+
 </style>
 <style>
 /* ===== quell/schale/stil/datenbanken.css ===== */
@@ -4013,8 +4023,21 @@ tr.mail-jetzt > td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
    bleiben die zwei Zeilen unten: sie sagen weiterhin, in welcher Welt man
    gerade ist — und zwar dort, wo man hinklickt, statt an einer dritten
    Stelle darüber. */
-body[data-produktwelt="lernen"] #btn-learning,
-body[data-produktwelt="workspace"] #btn-workspace{background:var(--bg-hover);color:var(--text)}
+/* DIE WELT ALS RÜCKFALL, NICHT ALS WAHRHEIT (E221).
+   Diese zwei Zeilen waren bis dahin die EINZIGE Ortsangabe der
+   Seitenleiste — und sie können nur zwei Knöpfe: „Lernzentrum" und
+   „Workspace". Ein Klick auf „Bibliothek" liess deshalb „Workspace"
+   aufleuchten, ein Klick auf „Aufgaben" ebenso.
+
+   Seit E221 setzt `schale.ts` beim Klick `aria-current="page"` auf den
+   Eintrag, der wirklich benutzt wurde. Diese Regel gilt nur noch, solange
+   es keinen solchen gibt — also beim ersten Bild nach dem Start. Sonst
+   stünden zwei Markierungen gleichzeitig da, und zwei sind schlimmer als
+   eine falsche. */
+body[data-produktwelt="lernen"]:not(:has(#sidebar .side-item[aria-current="page"])) #btn-learning,
+body[data-produktwelt="workspace"]:not(:has(#sidebar .side-item[aria-current="page"])) #btn-workspace{
+  background:var(--bg-hover); color:var(--text);
+}
 
 .produkt-bereiche-dialog{width:min(460px,calc(100vw - 24px));max-height:min(720px,90dvh);overflow:auto}
 .produkt-bereiche-hinweis{margin:0;padding:12px 16px;color:var(--text-dim);font-size:13px;line-height:1.5}
@@ -110546,6 +110569,27 @@ const App = (() => {
                     an(e.knopfId, () => {
                         try {
                             e.tun();
+                            /* WO BIN ICH? (E221)
+                             *
+                             * Bis hierher markierte nur `produktwelten.css` — zwei fest
+                             * verdrahtete Zeilen für „Lernzentrum" und „Workspace", und
+                             * sonst nichts. Ein Klick auf „Bibliothek" liess also
+                             * „Workspace" aufleuchten; ein Klick auf „Aufgaben" ebenso.
+                             *
+                             * Mit 32 Zeilen war das eine grobe Auskunft. Mit fünf (E219)
+                             * ist es falsch: „Workspace" steht dann gar nicht mehr da, und
+                             * die Leiste sagt überhaupt nichts mehr. Wer wenig zeigt, muss
+                             * das Wenige richtig zeigen.
+                             *
+                             * Deshalb hier, an der einen Stelle, an der ohnehin jeder
+                             * Eintrag durchkommt — kein zweiter Katalog, keine Liste von
+                             * Sonderfällen. Der Fuss („Importieren", „Papierkorb") wird
+                             * ausgenommen: das sind Handlungen, keine Orte. */
+                            if (e.platz === 'oben') {
+                                document.querySelectorAll('#sidebar .side-item[aria-current]')
+                                    .forEach(k => k.removeAttribute('aria-current'));
+                                document.getElementById(e.knopfId)?.setAttribute('aria-current', 'page');
+                            }
                         }
                         catch (fehler) {
                             if (typeof Reporter !== 'undefined')
