@@ -15892,3 +15892,37 @@ Karte blind.
 Die erste Gegenprobe stellt den alten Zustand Zeichen für Zeichen wieder her.
 
 Grün: test33 99/99.
+
+
+================================================================================
+E217 — Zwei rote Punkte, die niemand gesehen hat
+================================================================================
+
+Nach E216 ein vollständiger `npm run pruefen` über alle 213 Suiten. Acht
+waren rot. Fünf davon waren Folgen von E211 und eine eine echte Folge des
+Menübands — die stehen in den Commits davor.
+
+ZWEI WAREN ALT.
+
+    test40   „Seitenleiste ist 260 px breit"   → seit E201 sind es 240
+    test206  „Sie hat neun Reiter"             → seit E164 sind es vier
+
+Beide sind nachgemessen auch auf dem Stand VOR dem Menüband rot. Sie standen
+also seit Wochen so da, und niemand hat es bemerkt.
+
+Der Grund ist keine Nachlässigkeit, sondern eine Gewohnheit, die für sich
+genommen richtig ist: nach einer Änderung startet man die Suiten, die davon
+handeln. Wer an der Seitenleiste arbeitet, nimmt test34 und test222 — nicht
+test40, das von der Handy-Ansicht handelt und die Breite nur nebenbei misst.
+Genau dort sammelt sich, was niemand ansieht.
+
+DIE LEHRE: ein einzelner Suitenlauf beantwortet „habe ich das kaputt
+gemacht". Er beantwortet NICHT „ist alles grün". Dafür gibt es nur den
+vollen Durchlauf, und der gehört ans Ende einer Arbeit, nicht in ihre Mitte.
+
+Zweiter Befund aus demselben Lauf, an anderer Stelle festgehalten: eine
+Prüfung, die eine Maus über den Bildschirm zieht, muss vorher hinsehen, ob
+der Zug überhaupt im Bild liegt. test201 meldete „Rechteck nicht
+gespeichert" und meinte „ich habe nach ausserhalb des Fensters gezogen".
+
+Stand danach: alle 213 Läufe bestanden.
