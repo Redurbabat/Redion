@@ -287,7 +287,16 @@ import { chromium } from 'playwright';
   /* ================================================================== *
    * 5) ABSCHNITTE ZUKLAPPEN
    * ================================================================== */
-  await p.evaluate(() => { PWA.schubladeAuf && PWA.schubladeAuf(); });
+  await p.evaluate(() => {
+    PWA.schubladeAuf && PWA.schubladeAuf();
+    /* SEIT E211 SIND VIER ABSCHNITTE AB WERK AUS — links die Bereiche,
+       oben die Werkzeuge. Weg sind sie nicht; dieser Punkt handelt davon,
+       dass sich ein Abschnitt ZUKLAPPEN lässt, und dafür muss er da sein.
+       Es muss VOR der Messung stehen: `vorher` zählt die Pfeile, und die
+       erste Fassung schaltete erst danach ein — vier statt fünf. */
+    Store.setMeta('sidebarAn', ['werkzeuge', 'agenten', 'bespr', 'kuerzlich']);
+    App.zeichneBaum();
+  });
   await p.waitForTimeout(500);
   const vorher = await p.evaluate(() => ({
     pfeile: document.querySelectorAll('.ss-pfeil').length,

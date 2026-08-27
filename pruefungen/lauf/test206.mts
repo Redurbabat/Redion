@@ -292,7 +292,17 @@ const reiter = await seite.evaluate(() => {
 
 p('Die Reiterleiste ist da', !!reiter, 'keine .lw-nav gefunden');
 if (reiter) {
-  gleich('Sie hat neun Reiter', reiter.anzahl, 9);
+  /* VIER UND NICHT NEUN. Seit die Leiste gruppiert ist (E164 — „Lernen"
+     fasst Lernen, Lernweg, Fehler und Fortschritt zusammen, „Wo du lernst"
+     fasst Schule, Uni und Arbeit zusammen), sind es vier Reiter mit einer
+     zweiten Reihe darunter. Die Neun stammt aus der Zeit davor, und der
+     Punkt war seither rot: er steckt in keiner der Suiten, die man nach
+     einer Änderung einzeln startet, und fiel erst beim vollen Durchlauf
+     auf. Nachgemessen ist er auch auf dem Stand vor dem Menüband rot.
+
+     Die Zahl bleibt ausgeschrieben und wird nicht aus `REITER` gelesen:
+     dieser Punkt soll ja gerade merken, wenn ein Reiter verschwindet. */
+  gleich('Sie hat vier Reiter mit zweiter Reihe darunter', reiter.anzahl, 4);
   gleich('Und keiner steht ausserhalb', reiter.draussen, []);
 }
 
