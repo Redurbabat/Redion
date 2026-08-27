@@ -16877,3 +16877,52 @@ test114: 146 ok, 0 offen.
 NEBENBEI GEPRÜFT UND SAUBER: derselbe Durchgang fragte auch, ob jeder Knopf
 einen Namen für das Vorleseprogramm hat (§38). Über alle acht Welten:
 null ohne Namen. Ein geprüfter Nullbefund ist auch ein Ergebnis.
+
+
+================================================================================
+E233 — Redion startet leise
+================================================================================
+
+Beim Nachsehen, ob die Einzeldatei sauber startet, fiel eine Netzanfrage auf:
+
+    GET http://localhost:11434/api/tags   →  ERR_CONNECTION_REFUSED
+
+Ollama, die lokale KI. Bei JEDEM Start — auch bei jemandem, der KI nie
+geöffnet und Ollama nie installiert hat. Und in beiden Startarten, index.html
+wie Einzeldatei.
+
+§21 IST DAMIT NICHT VERLETZT. `localhost` ist der eigene Rechner, und
+geschickt wird nichts als eine Modellabfrage. Zwei Dinge stören trotzdem:
+
+  · Jeder Start ohne Ollama hinterlässt einen Fehler in der Konsole. Eine
+    Konsole, in der IMMER ein Fehler steht, ist eine, in der man den nächsten
+    übersieht. Die eigenen Prüfläufe fragen an vielen Stellen „Keine Fehler
+    auf der Seite" — dieser hier wurde nur deshalb nie rot, weil er als
+    Netzfehler zählt und nicht als Skriptfehler.
+  · Hört ein anderes Programm auf 11434, redet Redion mit ihm.
+
+Gesucht wird jetzt, wenn es einen Grund gibt:
+
+    Ollama war schon einmal die Quelle          →  beim Start suchen
+    der Mensch öffnet die Modellauswahl         →  dort wird ohnehin gesucht
+    er drückt „Suche nach Ollama"               →  gibt es schon
+
+    gemessen, Anfragen an 11434 beim Start
+      frisch, KI nie benutzt        0
+      zuletzt WebLLM                0
+      zuletzt Ollama                1
+      Klick auf die Modellauswahl   1
+
+Wer Ollama benutzt, merkt nichts. Wer es nicht benutzt, startet leise.
+
+DIE PRÜFUNG HÄLT BEIDE SEITEN FEST (test231 §6). Eine, die nur das Schweigen
+misst, wäre auch dann grün, wenn die Suche ganz kaputt wäre.
+
+    Gegenbeweis 1, immer suchen (die alte Fassung):
+      ✗ Ein frischer Start fragt niemanden — http://localhost:11434/api/tags
+      ✗ … und mit WebLLM als letzter Wahl auch nicht
+
+    Gegenbeweis 2, nie suchen:
+      ✗ Wer Ollama benutzt hat, bei dem sucht Redion weiter — gar nichts
+
+Jede Richtung wird aus ihrem eigenen Grund rot. test231: 32 bestanden.

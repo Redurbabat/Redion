@@ -218,6 +218,58 @@ const echtNachher = await echt.evaluate(async () => {
 p('Die eigene Seite steht noch da', echtNachher.seiteDa);
 p('Und im eigenen Fenster ist kein Vorführbalken', !echtNachher.balken);
 
+/* ==========================================================================
+ * §6 · Redion startet leise (E233, §21)
+ * --------------------------------------------------------------------------
+ * §21 sagt: „Kein Text verlässt ungefragt den Rechner." Beim Nachsehen fiel
+ * auf, dass Redion beim Start eine Anfrage an `localhost:11434` schickte —
+ * Ollama, die lokale KI. Es verliess also nichts den Rechner, und §21 war
+ * gewahrt. Zwei Dinge störten trotzdem:
+ *
+ *   · Jeder Start ohne Ollama hinterliess `ERR_CONNECTION_REFUSED` in der
+ *     Konsole. Eine Konsole, in der immer ein Fehler steht, ist eine, in der
+ *     man den nächsten übersieht.
+ *   · Hört ein anderes Programm auf 11434, redet Redion mit ihm.
+ *
+ * Gesucht wird jetzt nur, wenn es einen Grund gibt: Ollama war schon einmal
+ * die Quelle, oder der Mensch öffnet die Modellauswahl.
+ *
+ * GEPRÜFT WIRD DIE WIRKUNG, NICHT DIE ABSICHT: mitgezählt wird jede Anfrage,
+ * die den Browser verlässt — egal wohin und egal von welchem Modul.
+ * ========================================================================*/
+console.log('\n6 · Redion startet leise');
+
+const zaehleFremd = async (vorher: unknown): Promise<string[]> => {
+  const s2 = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  const fremd: string[] = [];
+  s2.on('request', (r: any) => {
+    const u = String(r.url());
+    if (!u.startsWith(`http://localhost:${PORT}/`) && !u.startsWith('data:') && !u.startsWith('blob:'))
+      fremd.push(u.slice(0, 70));
+  });
+  await s2.goto(`http://localhost:${PORT}/index.html`);
+  await s2.waitForTimeout(1200);
+  if (vorher !== null) await s2.evaluate((v: any) => Store.setMeta('ki', v), vorher);
+  await s2.reload();
+  await s2.waitForTimeout(3200);
+  await s2.close();
+  return [...new Set(fremd)];
+};
+
+const frisch = await zaehleFremd(null);
+p('Ein frischer Start fragt niemanden', frisch.length === 0, frisch.join(' | '));
+
+const nachWebllm = await zaehleFremd({ quelle: 'webllm', modell: 'x' });
+p('… und mit WebLLM als letzter Wahl auch nicht',
+  nachWebllm.length === 0, nachWebllm.join(' | '));
+
+/* DIE GEGENRICHTUNG, und sie ist genauso wichtig: wer Ollama benutzt, muss
+   sein Modell weiterhin ohne Zutun wiederfinden. Eine Prüfung, die nur das
+   Schweigen misst, wäre auch dann grün, wenn die Suche ganz kaputt wäre. */
+const nachOllama = await zaehleFremd({ quelle: 'ollama', modell: 'llama3:latest' });
+p('Wer Ollama benutzt hat, bei dem sucht Redion weiter',
+  nachOllama.some(u => u.includes('11434')), nachOllama.join(' | ') || 'gar nichts');
+
 p('Keine Fehler auf der Seite', fehler.length === 0, fehler.join(' | '));
 
 await browser.close();
