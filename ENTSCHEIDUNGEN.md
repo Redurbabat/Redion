@@ -15821,3 +15821,74 @@ den ersten Eintrag jeder Gruppe weg (61 gezeichnet, 69 im Register).
 Grün: test247 85/85, test87 129, test34 77/77, test33 96/96, test128 50,
 test192 25, test173 11, test217 27/27, test222 50/50, test215 44/44,
 test105 55, test109 20, test119 19.
+
+
+================================================================================
+E216 — Eine Seite ohne Text ist nicht leer (L61, Teil 1)
+================================================================================
+
+Die Miniatur einer Seite (E205) baut sich aus dem TEXT ihrer Blöcke. Wer eine
+Seite aus einem Schaltplan, drei PDF-Seiten und einem A4-Blatt hat, bekam
+deshalb eine vollkommen weisse Karte.
+
+Gemessen, an einer eigens gebauten Seite mit sechs solchen Blöcken:
+
+    Kinder            6
+    davon mit Text    0
+    umfang()          6      → die Karte fiel NICHT heraus
+    miniatur()        0 Zeichen
+
+Das ist der schlimmere von zwei möglichen Fehlern. Fiele die Seite ganz
+heraus, würde man es merken; so stand sie da und behauptete, leer zu sein.
+Und es trifft ausgerechnet die Seiten, die man am Bild am schnellsten
+wiedererkennt.
+
+Jetzt bekommt jeder Block, der seinen Inhalt nicht im `text` trägt, einen
+Streifen mit Zeichen und Namen: „📄 A4-Blatt", „⚡ Schaltplan", „🖼 Bild",
+„⊞ Einfache Tabelle".
+
+
+DER NAME KOMMT AUS `Register.bloecke` — UND WAS DORT NICHT STEHT
+--------------------------------------------------------------------------------
+
+Kein zweiter Katalog (§8). `pdfseite` und `zeichenflaeche` stehen nicht im
+Blockregister, weil sie nicht einfügbar sind — sie entstehen beim Einlesen
+einer PDF beziehungsweise als Teil eines Blattes. Sie haben deshalb NIRGENDS
+einen deutschen Namen.
+
+Einen hier zu erfinden hiesse, ihn an einer zweiten Stelle zu pflegen. Sie ins
+Blockregister aufzunehmen hiesse, sie im Slash-Menü und im Reiter „Einfügen"
+anzubieten — der Editor liest `Register.bloecke.alle()` als `TYPEN` und sucht
+darin. Eine leere PDF-Seite einzufügen ergibt keinen Sinn.
+
+Also bekommen sie einen leeren Streifen. Er sagt „hier steht etwas" statt gar
+nichts, und er verspricht nichts, was er nicht weiss. Der Rest steht in
+LUECKEN.md.
+
+
+WAS DAS NICHT IST
+--------------------------------------------------------------------------------
+
+Kein Vorschaubild. Ein echtes Abbild des Schaltplans wäre eine
+Speicheränderung mit eigenem Plan und eigenem Prüflauf (§9, §30) — L61 bleibt
+dafür offen und ist jetzt genauer beschrieben: was fehlt, ist das BILD, nicht
+mehr die Sichtbarkeit.
+
+
+PRÜFUNG
+--------------------------------------------------------------------------------
+
+test33, drei Punkte. Sie fragen den KERN und nicht die Karte: hat die Karte
+einen Rückfall — bei den Heften ist es `inhaltsListe`, und genau daran ist
+eine frühere Gegenprobe schon einmal gescheitert —, wäre ein Punkt an der
+Karte blind.
+
+    Seite ohne Text ist wirklich ohne Text   (sonst prüft der Rest nichts)
+    Ihre Miniatur bleibt nicht leer          Gegenprobe: Streifen abgeschaltet
+                                             → wieder 0 Zeichen, 0 Streifen
+    Die Namen stammen aus dem Register       Gegenprobe: `eines()` gibt null
+                                             → 6 Streifen, 0 Namen
+
+Die erste Gegenprobe stellt den alten Zustand Zeichen für Zeichen wieder her.
+
+Grün: test33 99/99.

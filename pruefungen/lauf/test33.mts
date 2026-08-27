@@ -181,6 +181,49 @@ import { chromium } from 'playwright';
   ok('Es gibt überhaupt Seiten mit Inhalt zu prüfen', vorschauKern.gepruefte >= 3);
   ok('Keine Seite mit Text liefert eine stumme Miniatur', vorschauKern.stumm === 0);
   ok('Und auch keinen leeren Anriss', vorschauKern.ohneAnriss === 0);
+
+  /* ------------------------------------------------------------------ *
+   * EINE SEITE GANZ OHNE TEXT (E216/L61)
+   * ------------------------------------------------------------------ *
+   * Alle Punkte oben fragen nach Seiten, deren Kinder TEXT haben. Eine
+   * Seite aus einem Schaltplan, PDF-Seiten und einem A4-Blatt hat keinen —
+   * und stand bis E216 als vollkommen weisse Karte da. Gemessen: sechs
+   * Blöcke, `umfang` 6, Miniatur 0 Zeichen. Sie fiel also nicht heraus,
+   * sie war nur leer.
+   *
+   * Geprüft wird der Kern selbst, nicht die Karte: hätte die Karte einen
+   * Rückfall (bei den Heften ist es `inhaltsListe`), wäre der Punkt blind.
+   * ------------------------------------------------------------------ */
+  const ohneText = await p.evaluate(() => {
+    const s2 = Store.addBlock(null, 'page');
+    Store.updateBlock(s2.id, { text: 'Nur Bilder' });
+    const arten = ['blatt', 'schaltplan', 'pdfseite', 'image', 'zeichenflaeche', 'table'];
+    for (const t of arten) Store.addBlock(s2.id, t);
+    const kinder = Store.childrenOf(s2.id);
+    const html = Vorschau.miniatur(s2.id, 6);
+    const hilfs = document.createElement('div');
+    hilfs.innerHTML = html;
+    return {
+      kinder: kinder.length,
+      hatText: kinder.filter((k: any) => (k.text || '').trim()).length,
+      zeichen: html.length,
+      streifen: hilfs.querySelectorAll('.mini-obj').length,
+      benannt: [...hilfs.querySelectorAll('.mini-obj')]
+        .map(x => (x.textContent || '').trim()).filter(Boolean)
+    };
+  });
+  console.log('   Ohne Text:', JSON.stringify(ohneText));
+  ok('Eine Seite ganz ohne Text ist wirklich ohne Text', ohneText.hatText === 0);
+  ok('Und ihre Miniatur bleibt trotzdem nicht leer',
+     ohneText.streifen === ohneText.kinder && ohneText.zeichen > 0);
+  /* Die Namen kommen aus `Register.bloecke`. Vier der sechs Arten stehen
+     dort; `pdfseite` und `zeichenflaeche` sind nicht einfügbar und haben
+     nirgends einen deutschen Namen — sie bekommen einen leeren Streifen.
+     Steht am Ende gar kein Name da, kommt der Name nicht aus dem Register. */
+  ok('Und die Namen stammen aus dem Blockregister',
+     ohneText.benannt.length === 4 &&
+     ohneText.benannt.some(x => x.includes('Schaltplan')) &&
+     ohneText.benannt.some(x => x.includes('A4-Blatt')));
   ok('Und sagt, wie viele Hefte und Seiten es sind', /Hefte? · \d+ Seiten?/.test(regal.zahlen));
   ok('Jedes Heft zeigt echten Inhalt, keinen leeren Kasten',
      regal.mitInhalt === regal.hefte);

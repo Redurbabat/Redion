@@ -165,6 +165,48 @@ const Vorschau = (() => {
      * Absätze enthalten. Ein `<hr>` wäre schon zu viel — deshalb ist die
      * Trennlinie ein `<span>` mit Rand.
      */
+    /**
+     * Ein Block OHNE TEXT — und trotzdem etwas zu sehen (L61).
+     *
+     * Eine Seite aus einem Schaltplan, drei PDF-Seiten und einem A4-Blatt
+     * hatte bis hierher eine vollkommen leere Miniatur. Gemessen: sechs
+     * Blöcke, `umfang` 6, Miniatur 0 Zeichen. Die Karte fiel also nicht
+     * heraus — sie stand nur weiss da. Genau die Seiten, die man am Bild am
+     * schnellsten wiedererkennt, zeigten am wenigsten.
+     *
+     * Der Name kommt aus `Register.bloecke` — kein zweiter Katalog (§8).
+     * Was dort NICHT steht, bekommt einen neutralen Streifen: `pdfseite` und
+     * `zeichenflaeche` sind keine einfügbaren Arten und haben deshalb
+     * nirgends einen deutschen Namen. Einen hier zu erfinden hiesse, ihn an
+     * einer zweiten Stelle zu pflegen; ein Streifen sagt immerhin „hier steht
+     * etwas" statt gar nichts. Der Rest steht in LUECKEN.md.
+     *
+     * DAS IST KEIN VORSCHAUBILD. Ein echtes Abbild des Schaltplans wäre eine
+     * Speicheränderung mit eigenem Plan (§9, §30); L61 bleibt dafür offen.
+     */
+    const OHNE_TEXT = (art) => {
+        const reg = globalThis.Register;
+        let name = '', icon = '';
+        try {
+            const t = reg?.bloecke?.eines ? reg.bloecke.eines(art) : null;
+            if (t) {
+                name = String(t.name || '');
+                icon = String(t.icon || '');
+            }
+        }
+        catch { /* ohne Register bleibt der Streifen */ }
+        if (!name)
+            return '<span class="mini-obj mini-obj-leer"></span>';
+        return '<span class="mini-obj">' + esc(icon) + ' ' + esc(name) + '</span>';
+    };
+    /* Welche Arten hier gemeint sind: die, die ihren Inhalt NICHT im `text`
+       tragen. Ein leerer Absatz bleibt leer und soll es auch — sonst stünde
+       in jeder Miniatur ein Streifen für jede Leerzeile. */
+    const TRAEGT_KEINEN_TEXT = new Set([
+        'blatt', 'schaltplan', 'pdfseite', 'zeichenflaeche', 'whiteboard',
+        'image', 'video', 'audio', 'file', 'pdf', 'table', 'spreadsheet',
+        'database', 'chart', 'dashboard', 'embed', 'simulation'
+    ]);
     const miniatur = (seiteId, zeilen = 5) => {
         const raus = [];
         for (const block of kinder(seiteId)) {
@@ -176,6 +218,10 @@ const Vorschau = (() => {
                 continue;
             }
             const text = klartext(String(block?.text || ''));
+            if (!text && TRAEGT_KEINEN_TEXT.has(art)) {
+                raus.push(OHNE_TEXT(art));
+                continue;
+            }
             if (!text)
                 continue;
             const kurz = esc(text.length > 120 ? text.slice(0, 119) + '…' : text);

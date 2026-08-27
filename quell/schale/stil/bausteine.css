@@ -975,6 +975,18 @@ tr.unterzeile .tt-ein{color:var(--text-faint); margin-right:2px}
 .mini-todo{ display:flex; align-items:center; gap:var(--space-2) }
 .mini-todo > svg{ flex:none; width:12px; height:12px }
 .mini-hr{ height:1px; background:var(--line) }
+/* EIN BLOCK OHNE TEXT (L61). Schaltplan, Blatt, Bild, Tabelle — sie tragen
+   ihren Inhalt nicht im Text, und die Miniatur stand für sie leer da. Der
+   Streifen sieht bewusst nicht wie eine Textzeile aus: leicht hinterlegt,
+   damit man auf einen Blick sieht, dass dort etwas ANDERES steht. */
+.mini-obj{
+  display:block; padding:1px var(--space-2); border-radius:var(--radius-sm);
+  background:var(--bg-hover); color:var(--text-dim); font-size:10.5px;
+}
+/* Was das Blockregister nicht kennt (`pdfseite`, `zeichenflaeche`) hat
+   keinen deutschen Namen — dann steht hier ein leerer Streifen. Er braucht
+   eine Höhe, sonst wäre er gar nicht da. */
+.mini-obj-leer{ height:9px; opacity:.75 }
 
 /* ============================================================================
  * DIE SCHUBLADEN IN „MEINE APPS" (E206)

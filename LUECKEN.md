@@ -2326,6 +2326,23 @@ kleines Bild mitzuschreiben — stückweise und in die Dateiablage, nicht als
 Data-URL (§14). Das ist eine Speicheränderung und braucht deshalb einen
 eigenen Plan mit Prüflauf (§9, §30).
 
+TEILWEISE ERLEDIGT mit E216 — die SICHTBARKEIT, nicht das Bild.
+
+Gemessen war die Miniatur einer Seite aus sechs textlosen Blöcken 0 Zeichen
+lang, und `umfang` meldete 6: die Karte fiel nicht heraus, sie stand weiss da.
+Jetzt bekommt jeder Block, der seinen Inhalt nicht im `text` trägt, einen
+Streifen mit Zeichen und Namen aus `Register.bloecke`.
+
+WAS OFFEN BLEIBT, und zwar zweierlei:
+
+1. Das eigentliche Vorschau-BILD. Unverändert eine Speicheränderung mit
+   eigenem Plan.
+2. `pdfseite` und `zeichenflaeche` haben nirgends einen deutschen Namen. Sie
+   stehen nicht im Blockregister, weil sie nicht einfügbar sind — und der
+   Editor liest genau dieses Register als `TYPEN` für Slash-Menü und Suche.
+   Sie bekommen deshalb einen leeren Streifen. Wer ihnen einen Namen geben
+   will, braucht dafür einen Weg, der sie NICHT einfügbar macht.
+
 L62 — „PDF einlesen" fehlt im Menüband
 --------------------------------------------------------------------------------
 `PdfEinlesen.alsSeiten(datei, elternId)` braucht eine `File`. Das Menüband ist
