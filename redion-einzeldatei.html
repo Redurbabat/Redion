@@ -1202,19 +1202,25 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
          fest 68 px       22/113 Brüche   Gruppensumme 4796 px
          auto 68–88        9/113          5209 px
          auto 68–96        4/113          5317 px
+         auto 68–104       1/113          5407 px
+         auto 68–112       0/113          5463 px
+         auto 68–124       0/113          5491 px
          fest 80 px       12/113          5600 px
 
-     `auto 68–96` gewinnt auf BEIDEN Achsen: weniger Brüche als „fest 80"
-     UND schmaler. Der Grund ist, dass ein festes Raster jeden Knopf so
-     breit macht wie den breitesten Bedarf, während ein Mindestmass nur die
-     wenigen wachsen lässt, die es brauchen.
+     `auto 68–112` ist die erste Zeile ohne einen einzigen Bruch, und sie
+     ist IMMER NOCH schmaler als ein festes 80-px-Raster. Weiter zu gehen
+     bringt nichts mehr: 124 px kostet Breite und findet keinen Namen mehr,
+     der davon lebt.
+
+     Der Grund für den Vorsprung: ein festes Raster macht JEDEN Knopf so
+     breit wie den breitesten Bedarf, ein Mindestmass nur die wenigen, die
+     es brauchen. Von 113 Namen gehen 6 über 96 px hinaus.
 
      Und die Unruhe von damals kam vom SCHMALEN Ende: ein 58 px schmales
      „Text" neben einem 106 px breiten Nachbarn. `min-width:68px` nimmt
-     genau diese Hälfte der Schwankung weg. Übrig bleiben 68 bis 96 statt
-     58 bis 106 — halb so viel Spanne. */
+     genau diese Hälfte der Schwankung weg. */
   display:inline-flex; flex-direction:column; align-items:center; justify-content:center;
-  gap:3px; width:auto; flex:0 0 auto; min-width:68px; max-width:96px;
+  gap:3px; width:auto; flex:0 0 auto; min-width:68px; max-width:112px;
   padding:var(--space-2) var(--space-1);
   border:1px solid transparent; border-radius:var(--radius-md);
   background:none; cursor:pointer; color:var(--text);

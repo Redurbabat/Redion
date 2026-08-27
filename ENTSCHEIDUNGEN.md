@@ -15424,11 +15424,17 @@ Vier Breiten-Regeln nebeneinander gemessen:
     fest 68 px       22/113 Brüche   Gruppensumme 4796 px
     auto 68–88        9/113          5209 px
     auto 68–96        4/113          5317 px
+    auto 68–104       1/113          5407 px
+    auto 68–112       0/113          5463 px
+    auto 68–124       0/113          5491 px
     fest 80 px       12/113          5600 px
 
-`auto 68–96` gewinnt auf BEIDEN Achsen: weniger Brüche als „fest 80" UND
-schmaler. Ein festes Raster macht jeden Knopf so breit wie den breitesten
-Bedarf; ein Mindestmass lässt nur die wenigen wachsen, die es brauchen.
+`auto 68–112` ist die erste Zeile ohne einen einzigen Bruch — und immer noch
+schmaler als ein festes 80-px-Raster, das zwölf Brüche behielte. Weiter zu
+gehen bringt nichts: 124 px kostet Breite und findet keinen Namen mehr, der
+davon lebt. Ein festes Raster macht jeden Knopf so breit wie den breitesten
+Bedarf; ein Mindestmass lässt nur die wenigen wachsen, die es brauchen — von
+113 Namen sind das sechs.
 
 Die Unruhe, die 2026-08 zum festen Raster führte, kam vom SCHMALEN Ende — ein
 58 px schmales „Text" neben einem 106 px breiten Nachbarn. `min-width:68px`
@@ -15454,6 +15460,23 @@ abgeschnitten.
 
 PRÜFUNG
 --------------------------------------------------------------------------------
+
+UND EINE PRÜFUNG FÜR DAS, WAS NUR DAS AUGE SAH
+--------------------------------------------------------------------------------
+
+Die 22 Brüche fand kein Punkt in test247, obwohl elf davon handelten: die
+Knöpfe waren da, hatten Zeichen, Namen und `aria-label` — nur lesen liess
+sich die Beschriftung nicht. §12 prüft es jetzt über alle sechs Reiter,
+Zeichen für Zeichen: zu welcher Zeile gehört es, und endet eine Zeile auf
+einem Buchstaben, während die nächste mit einem beginnt?
+
+Nicht `scrollWidth > clientWidth` — das misst im Flex-Kasten immer gleich,
+weil der Text GESTAUCHT wird statt überzustehen. Genau die Falle aus
+CLAUDE.md §55.2 über die Tabellenzelle.
+
+Gegenprobe: `max-width` zurück auf 68 px, und der Punkt meldet 22 von 113
+mit Namen.
+
 
 test247 §11, neun Punkte, jeder einzeln als rot-fähig belegt:
 
@@ -15484,6 +15507,6 @@ Zwei Punkte waren beim ersten Schreiben wertlos und wurden ersetzt:
     sich am Programm etwas geändert hätte. Jetzt nimmt sie die Seite mit den
     MEISTEN, also den schwersten Fall.
 
-Grün: test247 67/67, test34 77/77, test33 96/96, test192 25, test173 11,
+Grün: test247 68/68, test34 77/77, test33 96/96, test192 25, test173 11,
 test217 27/27, test222 50/50, test215 44/44, test128 50, test202 84,
 test105 55, test109 20.

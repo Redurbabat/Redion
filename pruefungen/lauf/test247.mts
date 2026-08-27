@@ -44,6 +44,10 @@
  *    Fläche selbst, in BEIDE Richtungen (Band → Leiste und Leiste → Band),
  *    und dass sich keine toten Flächen sammeln.
  *
+ * §12 KEIN NAME BRICHT MITTEN IM WORT. „Whiteboar/d", „Fachzeich/en" — 22
+ *    von 113, gefunden mit Augen, von keinem Punkt hier gemeldet, weil die
+ *    Knöpfe ja alle da waren.
+ *
  * Starten:
  *
  *   node pruefungen/lauf/test247.mts
@@ -739,6 +743,69 @@ p('Die Randleiste beginnt unter dem Band, nicht darin',
   mitKoepfen === null ? 'keine Seite mit >=3 Überschriften gefunden — so kann der Punkt nie rot werden'
     : raender === null ? `Seite „${mitKoepfen}" offen, aber keine Randleiste gezeichnet`
     : JSON.stringify(raender));
+
+/* ==========================================================================
+ * §12 Kein Name bricht mitten im Wort
+ * ========================================================================*/
+console.log('\n12 · Namen brechen an Fugen, nicht in Wörtern');
+
+/* GEFUNDEN MIT AUGEN, NICHT MIT EINER PRÜFUNG (§55.1).
+   Auf dem Bildschirmfoto stand „Whiteboar/d" und „Fachzeich/en". Über alle
+   sechs Reiter gemessen waren es 22 von 113 Namen. Kein Punkt hier meldete
+   das: die Knöpfe waren da, hatten Zeichen, Namen und `aria-label` — nur
+   lesen liess sich die Beschriftung nicht.
+
+   Gemessen wird Zeichen für Zeichen: zu welcher Zeile gehört es? Wo eine
+   Zeile auf einem Buchstaben endet und die nächste mit einem beginnt, ist
+   mitten im Wort gebrochen worden. Ein Bruch an einem Leerzeichen ist
+   dagegen richtig und wird nicht gezählt.
+
+   Warum nicht einfach `scrollWidth > clientWidth`: weil das im Flex-Kasten
+   immer gleich misst — der Text wird GESTAUCHT statt überzustehen. Genau
+   diese Falle steht in CLAUDE.md §55.2 über die Tabellenzelle. */
+const brueche: string[] = [];
+let namenGeprueft = 0;
+for (const r of ['start', 'einfuegen', 'zeichnen', 'werkzeuge', 'elektro', 'ansicht']) {
+  await klick(seite, `#menueband [data-mb-reiter="${r}"]`);
+  await seite.waitForTimeout(300);
+  const fund = await seite.evaluate(() => {
+    const raus: Array<{ name: string; zeilen: string[] }> = [];
+    document.querySelectorAll('#menueband .mb-knopf .mb-name').forEach(el => {
+      const knoten = el.firstChild;
+      if (!knoten || knoten.nodeType !== 3) return;
+      const text = knoten.textContent || '';
+      const bereich = document.createRange();
+      const zeilen: string[] = [];
+      let letztesY: number | null = null;
+      for (let i = 0; i < text.length; i++) {
+        bereich.setStart(knoten, i); bereich.setEnd(knoten, i + 1);
+        const k = bereich.getClientRects()[0];
+        if (!k) continue;
+        const y = Math.round(k.top);
+        if (letztesY === null || Math.abs(y - letztesY) > 3) { zeilen.push(''); letztesY = y; }
+        /* `noUncheckedIndexedAccess`: beides ist hier belegt — die Zeile
+           wurde eben angelegt, und `i` läuft über die Länge. */
+        zeilen[zeilen.length - 1] = (zeilen[zeilen.length - 1] ?? '') + (text[i] ?? '');
+      }
+      raus.push({ name: text, zeilen });
+    });
+    return raus;
+  });
+  for (const f of fund) {
+    namenGeprueft++;
+    for (let i = 0; i < f.zeilen.length - 1; i++) {
+      const a = f.zeilen[i] ?? '', b = f.zeilen[i + 1] ?? '';
+      if (/[A-Za-zÄÖÜäöüß]$/.test(a) && /^[A-Za-zÄÖÜäöüß]/.test(b)) {
+        brueche.push(`${r}: „${f.name}" → ${f.zeilen.map(z => `„${z}"`).join(' + ')}`);
+        break;
+      }
+    }
+  }
+}
+p('Über alle sechs Reiter bricht kein Name mitten im Wort',
+  namenGeprueft > 100 && brueche.length === 0,
+  brueche.length ? `${brueche.length} von ${namenGeprueft}: ${brueche.slice(0, 4).join(' | ')}`
+                 : `${namenGeprueft} Namen geprüft`);
 
 console.log('\nFehler auf der Seite:', fehler.length ? fehler.join(' | ') : 'keine');
 p('Keine Fehler auf der Seite', !fehler.length, fehler.join(' | '));
