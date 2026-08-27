@@ -48,6 +48,10 @@
  *    von 113, gefunden mit Augen, von keinem Punkt hier gemeldet, weil die
  *    Knöpfe ja alle da waren.
  *
+ * §13 „PDF EINLESEN" ÖFFNET WIRKLICH EINEN WÄHLER (L62). §4 prüft nur, ob
+ *    die Funktion dahinter existiert — sie kann existieren und trotzdem
+ *    nichts öffnen.
+ *
  * Starten:
  *
  *   node pruefungen/lauf/test247.mts
@@ -196,6 +200,7 @@ console.log('\n2 · Kein Knopf ohne sichtbares Zeichen');
    mit Glück. */
 const ohneZeichen: Array<{ reiter: string; name: string }> = [];
 const ohneName: Array<{ reiter: string; id: string }> = [];
+const wortStattZeichen: string[] = [];
 for (const r of ['start', 'einfuegen', 'zeichnen', 'werkzeuge', 'elektro', 'ansicht']) {
   await klick(seite, `#menueband [data-mb-reiter="${r}"]`);
   await seite.waitForTimeout(240);
@@ -208,8 +213,20 @@ for (const r of ['start', 'einfuegen', 'zeichnen', 'werkzeuge', 'elektro', 'ansi
       const svgDa = !!svg && svg.getBoundingClientRect().width > 4;
       const glyphDa = !!glyph && (glyph.textContent || '').trim().length > 0
         && glyph.getBoundingClientRect().width > 4;
+      /* EIN ZEICHEN, DAS SEINEN EIGENEN NAMEN ZEIGT, IST KEINES.
+         `zeichen: 'file'` gibt es im Symbolregister nicht — der Zeichner
+         fällt dann auf das Textzeichen zurück und malt das WORT „file" in
+         einen 19-px-Kasten. §2 liess das durch: ein Textzeichen war ja da
+         und hatte Fläche.
+
+         Gemessen sind von 93 Textzeichen im Band alle ein oder zwei
+         Zeichen lang (`H₁`, `•`, `1.`, `T`, Emoji), das längste ist `</>`
+         mit drei — und keines besteht aus Kleinbuchstaben. Genau das ist
+         die Form eines Symbolnamens, der nicht gefunden wurde. */
+      const wort = /^[a-z][a-z-]{2,}$/.test((glyph?.textContent || '').trim());
       return { reiter, id: (b as HTMLElement).dataset['band'] || '',
                name: (b.querySelector('.mb-name')?.textContent || '').trim(),
+               wort, glyphText: (glyph?.textContent || '').trim(),
                zeichen: svgDa || glyphDa,
                beschriftung: (b.getAttribute('aria-label') || '').trim(),
                titel: (b as HTMLElement).title };
@@ -217,10 +234,13 @@ for (const r of ['start', 'einfuegen', 'zeichnen', 'werkzeuge', 'elektro', 'ansi
   fund.forEach(k => {
     if (!k.zeichen) ohneZeichen.push({ reiter: k.reiter, name: k.name || k.id });
     if (!k.beschriftung || !k.titel) ohneName.push({ reiter: k.reiter, id: k.id });
+    if (k.wort) wortStattZeichen.push(`${k.reiter}/${k.id}: „${k.glyphText}"`);
   });
 }
 p('Jeder Knopf zeigt ein Zeichen', ohneZeichen.length === 0,
   ohneZeichen.map(x => `${x.reiter}/${x.name}`).join(', '));
+p('Und keiner zeigt statt eines Zeichens seinen Symbolnamen',
+  wortStattZeichen.length === 0, wortStattZeichen.slice(0, 5).join(' | '));
 
 /* ==========================================================================
  * §3 Der ganze Name kommt beim Ohr an
@@ -947,6 +967,49 @@ p('Über alle sechs Reiter bricht kein Name mitten im Wort',
   namenGeprueft > 100 && brueche.length === 0,
   brueche.length ? `${brueche.length} von ${namenGeprueft}: ${brueche.slice(0, 4).join(' | ')}`
                  : `${namenGeprueft} Namen geprüft`);
+
+/* ==========================================================================
+ * §13 „PDF einlesen" öffnet wirklich einen Dateiwähler (L62)
+ * ========================================================================*/
+console.log('\n13 · Der Weg zur PDF (L62)');
+
+/* WARUM DAS EIN EIGENER PUNKT IST.
+   §4 fragt nur, ob die Funktion hinter dem Knopf EXISTIERT. `waehlen` gibt
+   es — und hätte trotzdem nichts tun können, wenn der `<input>` nicht im
+   Dokument hängt: in manchen Browsern öffnet sich dann kein Wähler, und
+   zwar ohne Fehlermeldung. Ein Knopf, der still nichts tut, sieht aus wie
+   einer, den man falsch bedient hat. */
+await klick(seite, '#menueband [data-mb-reiter="zeichnen"]');
+await seite.waitForTimeout(350);
+let waehlerKam = false;
+let waehlerTypen = '';
+const aufWaehler = seite.waitForEvent('filechooser', { timeout: 4000 })
+  .then(async (chooser: any) => {
+    waehlerKam = true;
+    /* AM WÄHLER SELBST ABLESEN, NICHT ÜBER DAS DOKUMENT SUCHEN.
+       Der erste Entwurf fragte `document.querySelector('input[type=file]
+       [accept*=pdf]')`. Das ist im Kreis gemessen: gesucht wurde nach
+       genau der Eigenschaft, die geprüft werden sollte — findet er nichts,
+       kommt '' heraus und der Punkt wird rot, egal warum. In der
+       Gegenprobe „der input hängt nicht im Dokument" wurde er dadurch rot,
+       obwohl `accept` völlig in Ordnung war.
+       `chooser.element()` ist der Wähler, den der Browser wirklich
+       geöffnet hat — unabhängig davon, wo er hängt. */
+    try {
+      const el = await chooser.element();
+      waehlerTypen = (await el.getAttribute('accept')) || '';
+    } catch { waehlerTypen = ''; }
+    /* Wieder zumachen, sonst bleibt der Wähler offen und die nächsten
+       Klicks laufen ins Leere. */
+    try { await chooser.setFiles([]); } catch { /* dann eben so */ }
+  })
+  .catch(() => { /* kein Wähler — das meldet der Punkt gleich */ });
+await klick(seite, '#menueband [data-band="z-pdf"]');
+await aufWaehler;
+p('„PDF einlesen" öffnet einen Dateiwähler', waehlerKam,
+  'kein filechooser-Ereignis innerhalb von 4 Sekunden');
+p('Und er fragt nach PDF, nicht nach allem', waehlerKam && waehlerTypen.includes('pdf'),
+  `accept="${waehlerTypen}"`);
 
 console.log('\nFehler auf der Seite:', fehler.length ? fehler.join(' | ') : 'keine');
 p('Keine Fehler auf der Seite', !fehler.length, fehler.join(' | '));

@@ -375,10 +375,15 @@ Register.menueband = (() => {
       zeichen: 'camera', hinweis: 'Ein Blatt mit der Kamera aufnehmen und den Text erkennen',
       tun: () => Recognition.capturePage(),
       zeigen: () => kann(() => Recognition.capturePage) },
-    /* „PDF einlesen" stand hier und ist wieder raus. `PdfEinlesen.alsSeiten`
-       braucht eine `File` — einen Dateiwähler in einem KATALOG zu bauen wäre
-       genau das neue Verhalten, das oben verboten ist. Der Weg dahin bleibt
-       das Ziehen einer PDF auf die Seite. Steht als Lücke in LUECKEN.md. */
+    /* „PDF einlesen" stand hier einmal, flog wieder raus und ist jetzt
+       wieder da — aber richtig herum. `alsSeiten` braucht eine `File`, und
+       einen Dateiwähler in einem KATALOG zu bauen wäre genau das Verhalten,
+       das hier verboten ist. Der Wähler steht deshalb im Bereich selbst
+       (`PdfEinlesen.waehlen`, L62), und hier steht nur der Eintrag. */
+    { reiter: 'zeichnen', gruppe: 'Aufnehmen', id: 'z-pdf', name: 'PDF einlesen',
+      zeichen: 'upload', hinweis: 'Eine PDF aussuchen und ihre Seiten in die Seite legen',
+      tun: () => { void PdfEinlesen.waehlen(); },
+      zeigen: () => kann(() => PdfEinlesen.waehlen) },
     { reiter: 'zeichnen', gruppe: 'Aufnehmen', id: 'z-erkennen', name: 'Text erkennen',
       zeichen: 'search', hinweis: 'Aus einem Bild den Text herauslesen',
       tun: () => Recognition.scan(),

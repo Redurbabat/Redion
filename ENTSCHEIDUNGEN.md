@@ -15630,3 +15630,76 @@ einzeln als rot-fähig belegt:
 Grün: test247 76/76, test87 129, test34 77/77, test33 96/96, test128 50,
 test192 25, test173 11, test217 27/27, test222 50/50, test215 44/44,
 test105 55, test109 20.
+
+
+================================================================================
+E214 — „PDF einlesen" im Band: der Wähler gehört in den Bereich (L62)
+================================================================================
+
+L62 stand offen, und der Grund dafür war richtig: `PdfEinlesen.alsSeiten`
+braucht eine `File`, und einen Dateiwähler in `register/menueband.ts` zu
+bauen wäre neues Verhalten in einem KATALOG. Ein Katalog führt auf, was es
+gibt; er tut nichts (E210).
+
+Die Antwort ist dieselbe wie bei den Zeichenwerkzeugen (E212): der Bereich,
+dem die Sache gehört, bekommt den Einstieg, und das Band führt ihn auf.
+
+    PdfEinlesen.waehlen(elternId?)   Wähler öffnen, dann `alsSeiten` rufen
+
+Für einen Berufsschüler mit Vorlesungs-PDFs ist das Band genau die Stelle,
+an der er zuerst sucht. Der alte Weg — eine PDF auf die Seite ziehen —
+bleibt daneben bestehen.
+
+Ohne offene Seite passiert nichts ausser einem Satz: `alsSeiten` legt die
+Seitenblöcke unter einem Elternblock an, und ohne den wüsste niemand wohin.
+Ein Knopf, der still nichts tut, ist schlimmer als einer, der sagt warum.
+
+
+EIN ZEICHEN, DAS SEINEN EIGENEN NAMEN ZEIGT
+--------------------------------------------------------------------------------
+
+Der erste Entwurf schrieb `zeichen: 'file'`. Das Symbol gibt es nicht — der
+Zeichner fällt dann auf das Textzeichen zurück und malt das WORT „file" in
+einen 19-px-Kasten.
+
+test247 §2 liess das durch. Sie fragt „hat der Knopf ein Zeichen, und hat es
+Fläche?", und beides stimmte. Ein Wort ist ein Zeichen mit Fläche.
+
+Gemessen sind von 93 Textzeichen im Band alle ein oder zwei Zeichen lang
+(`H₁`, `•`, `1.`, `T`, Emoji), das längste ist `</>` mit drei — und keines
+besteht aus Kleinbuchstaben. Genau das ist die Form eines Symbolnamens, der
+nicht gefunden wurde, und danach fragt §2 jetzt zusätzlich. Gegenprobe:
+`zeichen: 'file'` zurückgesetzt, alter Punkt bleibt grün, neuer wird rot.
+
+Der Knopf trägt jetzt `upload`.
+
+
+ZWEI GEGENPROBEN, DIE MEINE EIGENE MESSUNG WIDERLEGT HABEN
+--------------------------------------------------------------------------------
+
+§13 fragt, ob der Knopf wirklich einen Wähler öffnet — §4 prüft nur, ob die
+Funktion dahinter EXISTIERT, und sie kann existieren und trotzdem nichts
+öffnen.
+
+Der erste Entwurf las `accept` über
+`document.querySelector('input[type=file][accept*=pdf]')`. Das ist im Kreis
+gemessen: gesucht wurde nach genau der Eigenschaft, die geprüft werden
+sollte. In der Gegenprobe „der `input` hängt nicht im Dokument" wurde der
+Punkt rot, obwohl `accept` völlig in Ordnung war — er meldete einen Fehler,
+den es nicht gab, an einer Stelle, an der er nichts zu suchen hatte.
+
+Jetzt wird `chooser.element()` gefragt: der Wähler, den der Browser wirklich
+geöffnet hat, unabhängig davon, wo er hängt. Danach reagiert jeder Punkt nur
+noch auf seine eigene Ursache:
+
+    input nicht im Dokument   beide Punkte bleiben grün (Chromium öffnet ihn
+                              trotzdem — der `appendChild` ist Vorsorge für
+                              andere Browser, und dass er DORT nötig ist,
+                              steht hier nicht als Messung, weil es keine ist)
+    accept auf `*/*`          nur der accept-Punkt wird rot
+    `input.click()` entfernt  beide werden rot, und das ist richtig: ohne
+                              Wähler gibt es auch kein `accept`
+
+Grün: test247 79/79, test87 129, test34 77/77, test33 96/96, test128 50,
+test192 25, test173 11, test217 27/27, test222 50/50, test215 44/44,
+test105 55, test109 20.

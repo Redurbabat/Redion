@@ -2340,6 +2340,12 @@ Was fehlt: ein `PdfEinlesen.waehlen()` im Bereich selbst, das den Wähler öffne
 und dann `alsSeiten` ruft. Dann kann das Band es aufführen, ohne selbst etwas
 zu tun.
 
+ERLEDIGT mit E214. Genau so gebaut: `PdfEinlesen.waehlen(elternId?)` öffnet den
+Wähler und ruft `alsSeiten`; im Band steht nur der Eintrag `z-pdf` unter
+„Aufnehmen". Ohne offene Seite kommt ein Satz statt eines stillen Nichts.
+Geprüft in test247 §13 — nicht daran, ob die Funktion existiert, sondern daran,
+ob wirklich ein Dateiwähler aufgeht und wonach er fragt.
+
 L63 — Die Slash-Aktionen fehlen im Menüband
 --------------------------------------------------------------------------------
 `Register.bloecke` führt elf Einträge mit `aktion` — „Umwandeln in …",

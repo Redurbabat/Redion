@@ -475,7 +475,69 @@ const PdfEinlesen = (() => {
     }
   };
 
-  return { alsSeiten, neuBerechnen, ohneBild, schaerfer, BREITE_MAX, OHNE_FRAGE };
+  /**
+   * EINE PDF AUSSUCHEN UND EINLESEN (L62).
+   *
+   * `alsSeiten` braucht eine `File`. Der Weg dahin war bisher nur das Ziehen
+   * einer PDF auf die Seite — und für jemanden mit Vorlesungs-PDFs ist das
+   * Menüband genau die Stelle, an der er zuerst sucht.
+   *
+   * WARUM DER WÄHLER HIER STEHT UND NICHT IM BAND. `register/menueband.ts`
+   * ist ein KATALOG: er führt auf, was es gibt, und tut selbst nichts (E210).
+   * Ein `<input type="file">` dort wäre neues Verhalten in einer Datei, die
+   * keines haben darf. Also bekommt der Bereich, dem die Sache gehört, den
+   * Einstieg, und das Band führt ihn nur auf — dieselbe Antwort wie bei den
+   * Zeichenwerkzeugen (E212).
+   *
+   * OHNE ZIELSEITE PASSIERT NICHTS. `alsSeiten` legt die Seitenblöcke unter
+   * einem Elternblock an; ohne den wüsste niemand, wohin. Ein Knopf, der
+   * still nichts tut, ist schlimmer als einer, der sagt warum.
+   */
+  const waehlen = async (elternId?: string): Promise<any> => {
+    const ziel = elternId || (typeof App !== 'undefined' ? App.aktuelleSeite() : '');
+    if (!ziel) { UI.toast('Erst eine Seite öffnen — dorthin kommen die PDF-Seiten.'); return null; }
+
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'application/pdf,.pdf';
+    /* Der Wähler hängt im Dokument. In Chromium öffnet er sich auch ohne
+       das — nachgemessen mit der Gegenprobe zu test247 §13. Es bleibt
+       trotzdem stehen, weil andere Browser hier bekanntermassen
+       empfindlich sind und es nichts kostet; dass ES DORT NÖTIG ist, ist
+       hier aber nicht nachgemessen und wird deshalb auch nicht behauptet.
+       Danach wieder weg. */
+    input.style.display = 'none';
+    document.body.appendChild(input);
+
+    return new Promise(fertig => {
+      let entschieden = false;
+      const auf = async (): Promise<void> => {
+        if (entschieden) return;
+        entschieden = true;
+        const datei = input.files?.[0];
+        input.remove();
+        if (!datei) { fertig(null); return; }
+        try {
+          fertig(await alsSeiten(datei, ziel));
+        } catch (e) {
+          UI.toast('Die PDF liess sich nicht einlesen: ' +
+                   (e instanceof Error ? e.message : String(e)));
+          fertig(null);
+        }
+      };
+      input.addEventListener('change', () => { void auf(); });
+      /* Abbrechen meldet in den meisten Browsern `cancel`. Wo nicht, bleibt
+         das Versprechen offen — es hängt dann an nichts weiter als an sich
+         selbst, und der nächste Klick legt einen neuen Wähler an. */
+      input.addEventListener('cancel', () => {
+        if (entschieden) return;
+        entschieden = true; input.remove(); fertig(null);
+      });
+      input.click();
+    });
+  };
+
+  return { alsSeiten, waehlen, neuBerechnen, ohneBild, schaerfer, BREITE_MAX, OHNE_FRAGE };
 })();
 
 (window as any).PdfEinlesen = PdfEinlesen;
