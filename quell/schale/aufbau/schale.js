@@ -2127,6 +2127,14 @@ const App = (() => {
         const an = auf === undefined ? !p.classList.contains('open') : auf;
         p.classList.toggle('open', an);
         document.getElementById('btn-ai')?.classList.toggle('on', an);
+        /* BEIM ÖFFNEN NACH OLLAMA SEHEN, NICHT BEIM START (E233).
+           Seit E233 fragt `KI.start()` nur noch, wenn Ollama schon einmal die
+           Quelle war — sonst schweigt der Start. Damit hätte jemand, der Ollama
+           installiert hat und Redion zum ERSTEN Mal öffnet, „Modell wählen"
+           gesehen statt seines Modells. Hier ist der richtige Ort: er will
+           gerade die KI, also darf jetzt gesucht werden. */
+        if (an && typeof KI !== 'undefined' && KI.sucheOllamaJetzt)
+            KI.sucheOllamaJetzt();
         if (an)
             setTimeout(() => document.getElementById('ai-input')?.focus(), 60);
     };

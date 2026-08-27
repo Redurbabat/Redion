@@ -16925,4 +16925,20 @@ misst, wäre auch dann grün, wenn die Suche ganz kaputt wäre.
     Gegenbeweis 2, nie suchen:
       ✗ Wer Ollama benutzt hat, bei dem sucht Redion weiter — gar nichts
 
-Jede Richtung wird aus ihrem eigenen Grund rot. test231: 32 bestanden.
+Jede Richtung wird aus ihrem eigenen Grund rot.
+
+UND DER FALL, DEN DAS FAST VERSCHLECHTERT HÄTTE. Jemand hat Ollama
+installiert und öffnet Redion zum ERSTEN Mal: `gemerkt` ist leer, also
+schweigt der Start — und dieser Mensch sähe „Modell wählen" statt seines
+Modells. Er hat Ollama ja gerade deshalb installiert.
+
+Also sucht das KI-Fenster beim ÖFFNEN, wenn noch keine Quelle steht. Das
+ist auch der richtigere Ort: dort will jemand gerade die KI.
+
+    gemessen
+      nach dem Start          0 Anfragen
+      nach Öffnen der KI      1
+      nochmal zu und auf      2   (Ollama läuft hier nicht; steht es einmal,
+                                   hört das Fragen auf)
+
+test231: 34 bestanden, 0 durchgefallen.

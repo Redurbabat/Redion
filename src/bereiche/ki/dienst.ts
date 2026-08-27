@@ -1928,7 +1928,20 @@ const KI = (() => {
     melde('Alles läuft lokal. Kein Text verlässt deinen Rechner.');
   };
 
-  return { start, bindePanel, senden, blockAktion, frageMitAuswahl, wikipedia, nachschlagen,
+  /* Der Weg für die Schale (E233): beim ÖFFNEN des KI-Fensters einmal nach
+     Ollama sehen — aber nur, wenn noch keine Quelle steht. Zweimal fragen
+     wäre so unnötig wie gar nicht fragen. */
+  const sucheOllamaJetzt = async (): Promise<void> => {
+    if (zustand.bereit || zustand.quelle === 'ollama') return;
+    if (!(await ollamaPruefen())) return;
+    zustand.quelle = 'ollama';
+    zustand.modell = zustand.ollamaModelle[0]?.id ?? '';
+    zustand.bereit = !!zustand.modell;
+    if (zustand.bereit) status('ok', kurzName(zustand.modell));
+    zeichneModellKnopf();
+  };
+
+  return { start, bindePanel, sucheOllamaJetzt, senden, blockAktion, frageMitAuswahl, wikipedia, nachschlagen,
            datenbankBauen, datenbankBauenAus, seiteBauen, protokollZeigen, protokoll,
            quellenKarte, quellenLeiste, seitenKontext, SYSTEM,
            SCHREIB_BEFEHLE, schreibMenue, schreibLauf, alsBloeckeEinfuegen,

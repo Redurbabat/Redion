@@ -270,6 +270,28 @@ const nachOllama = await zaehleFremd({ quelle: 'ollama', modell: 'llama3:latest'
 p('Wer Ollama benutzt hat, bei dem sucht Redion weiter',
   nachOllama.some(u => u.includes('11434')), nachOllama.join(' | ') || 'gar nichts');
 
+/* UND DER FALL, DEN E233 FAST VERSCHLECHTERT HÄTTE: jemand hat Ollama
+   installiert und öffnet Redion zum ERSTEN Mal. Am Start schweigt Redion
+   jetzt — also muss es beim ÖFFNEN der KI suchen, sonst sähe dieser Mensch
+   „Modell wählen" statt seines Modells. Gemessen, nicht angenommen. */
+const beimOeffnen = await (async () => {
+  const s3 = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  const treffer: string[] = [];
+  s3.on('request', (r: any) => { if (String(r.url()).includes('11434')) treffer.push('x'); });
+  await s3.goto(`http://localhost:${PORT}/index.html`);
+  await s3.waitForTimeout(2800);
+  const vorher = treffer.length;
+  await s3.evaluate(() => document.getElementById('btn-ai')?.click());
+  await s3.waitForTimeout(2000);
+  const nachher = treffer.length;
+  await s3.close();
+  return { vorher, nachher };
+})();
+p('Vor dem Öffnen der KI fragt niemand', beimOeffnen.vorher === 0, String(beimOeffnen.vorher));
+p('… und beim Öffnen sieht Redion nach Ollama',
+  beimOeffnen.nachher > beimOeffnen.vorher,
+  `${beimOeffnen.vorher} → ${beimOeffnen.nachher}`);
+
 p('Keine Fehler auf der Seite', fehler.length === 0, fehler.join(' | '));
 
 await browser.close();
