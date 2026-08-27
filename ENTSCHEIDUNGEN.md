@@ -16942,3 +16942,58 @@ ist auch der richtigere Ort: dort will jemand gerade die KI.
                                    hört das Fragen auf)
 
 test231: 34 bestanden, 0 durchgefallen.
+
+
+================================================================================
+E234 — Ein Wettlauf zwischen Prüfung und App, den beide nicht verschuldet haben
+================================================================================
+
+test181 scheiterte in etwa jedem zweiten Lauf:
+
+    page.evaluate: Execution context was destroyed, most likely because of
+    a navigation.
+
+L66 schrieb es der Rechnerlast zu. NACHGEMESSEN STIMMT DAS NICHT. Auf einem
+Abzug des Standes von E228, ohne jede Nebenlast, in einem eigenen
+Arbeitsbaum:
+
+    drei von drei Läufen rot
+
+Damit war zugleich beantwortet, ob meine Änderungen von heute schuld sind:
+nein — der alte Stand scheitert häufiger als der neue.
+
+WAS CHROMIUM SELBST SAGT. Über eine CDP-Sitzung mitgehört, meldet es
+während des Aufrufs `Runtime.executionContextsCleared`. Gleichzeitig, in
+derselben Seite gemessen:
+
+    kein `beforeunload`, kein `pagehide`, kein `hashchange`, kein `popstate`
+    eine vor dem Aufruf gesetzte Fenstervariable lebt danach weiter
+    `document.readyState` = complete
+    die Adresse unterscheidet sich nur am ANKER
+
+Die Seite wird also nicht neu geladen — sonst wäre die Variable weg. Chromium
+meldet `executionContextsCleared` auch bei einer reinen Anker-Navigation, und
+Playwright hält den gebundenen Kontext danach für tot.
+
+Der ersetzende Import zeichnet die Seite neu, dabei wandert `location.hash`.
+Wer in diesem Moment in einem langen `evaluate` steckt, verliert es.
+
+Es ist also kein Fehler in Redion und keiner in der Prüfung, sondern ein
+Wettlauf zwischen beiden. Der lange Aufruf tat vier Dinge auf einmal:
+exportieren, alle Dateien löschen, ersetzend importieren, ablesen.
+
+    vorher   ein Aufruf     2 von 5 grün
+    nachher  vier Aufrufe   5 von 5, dann 8 von 8
+
+Jeder Schritt dauert einzeln 3 bis 350 ms — gemessen, bevor geteilt wurde.
+
+DIE LEHRE, und sie gilt über diese Prüfung hinaus: ein `evaluate`, das lange
+läuft UND dabei die App etwas neu zeichnen lässt, ist ein Wettlauf. Wer so
+etwas schreibt, teilt es besser gleich.
+
+UND EINE ÜBER DAS EINGRENZEN. L66 hielt bereits fest: „Wer bisektiert, muss
+zuerst wissen, ob der Lauf überhaupt wiederholbar ist. Drei Wiederholungen
+hätten das in zwei Minuten geklärt." Genau das war richtig aufgeschrieben —
+und dann kam man trotzdem zum falschen Schluss, weil die drei Wiederholungen
+auf dem BELASTETEN Rechner liefen statt auf einem ruhigen Abzug. Eine Lehre
+aufzuschreiben ist leichter, als sie beim nächsten Mal anzuwenden.

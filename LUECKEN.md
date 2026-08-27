@@ -2448,7 +2448,8 @@ Bis dahin ist es ehrlicher, es hier stehen zu haben, als so zu tun, als
 wären die fünf Wege gleichartig.
 
 
-L66 — test181 ist unter Last unzuverlässig
+L66 — test181 war unzuverlässig (behoben, E234 — und die Ursache war
+      eine andere als hier zuerst vermutet)
 --------------------------------------------------------------------------------
 Im vollen Durchlauf am 27. August brach test181 ab:
 
@@ -2473,10 +2474,48 @@ für sich zufällig ausgehen kann, grenzt nichts ein. Wer bisektiert, muss
 zuerst wissen, ob der Lauf überhaupt wiederholbar ist. Drei Wiederholungen
 hätten das in zwei Minuten geklärt und den ganzen Umweg gespart.
 
-WAS FEHLT: der Schritt braucht entweder mehr Zeit oder eine Absicherung
-gegen den Kontextverlust. Solange das offen ist, kann ein voller Durchlauf
-hier zufällig rot werden, ohne dass etwas kaputt ist — und genau das macht
-ihn als Aussage schwächer.
+────────────────────────────────────────────────────────────────────────────
+ERLEDIGT AM 27. AUGUST (E234) — UND DIE ERKLÄRUNG OBEN WAR FALSCH
+────────────────────────────────────────────────────────────────────────────
+
+Die Last war es nicht. Nachgemessen auf einem Abzug des Standes von E228,
+ganz ohne Nebenlast:
+
+    drei von drei Läufen rot
+
+Und im Arbeitsverzeichnis zwei von drei. Die Lehre über die Wiederholbarkeit
+oben stimmt also — nur ihr Ergebnis nicht: „drei Wiederholungen hätten es in
+zwei Minuten geklärt" war richtig gesagt und dann trotzdem nicht getan, denn
+DREI Wiederholungen auf einem lastfreien Abzug hätten sofort gezeigt, dass
+es die Last nicht ist.
+
+WAS ES WIRKLICH IST. Über CDP mitgehört meldet Chromium während des Aufrufs
+
+    Runtime.executionContextsCleared
+
+und gleichzeitig:
+
+    kein `beforeunload`, kein `pagehide`, kein `hashchange`
+    eine vorher gesetzte Fenstervariable lebt weiter
+    `document.readyState` = complete, die Adresse nur am ANKER anders
+
+Die Seite wird also nicht neu geladen. Chromium meldet
+`executionContextsCleared` auch bei einer reinen Anker-Navigation, und
+Playwright hält den gebundenen Kontext danach für tot. Der ersetzende Import
+zeichnet die Seite neu, dabei wandert `location.hash` — und wer gerade in
+einem langen `evaluate` steckt, verliert es.
+
+Kein Fehler in Redion, keiner in der Prüfung: ein Wettlauf zwischen beiden.
+
+BEHOBEN durch vier kurze Aufrufe statt eines langen (jeder Schritt dauert
+einzeln 3 bis 350 ms).
+
+    vorher    2 von 5 grün
+    nachher   8 von 8, davor 5 von 5 auf der Messkopie
+
+DIE LEHRE FÜR ANDERE PRÜFUNGEN: ein `evaluate`, das lange läuft UND dabei
+die App etwas neu zeichnen lässt, ist ein Wettlauf. Wer so etwas schreibt,
+teilt es besser gleich.
 
 
 ================================================================================
