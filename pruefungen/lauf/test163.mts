@@ -108,7 +108,6 @@ console.log('\n1b · Karte und Raster schreiben dieselbe Zahl gleich');
  * Damit fällt jede Richtung auf — ein Format, das die Karte verliert, und
  * eines, das nur die Karte erfindet. */
 const gleichGeschrieben = await handy.evaluate(async (x: any) => {
-  const w = window as any;
   const blk = Store.getBlock(x.tabId);
   const bl = blk.mappe.blaetter[0];
   const zelle = bl.zellen['B2'];
