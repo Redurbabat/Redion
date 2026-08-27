@@ -622,7 +622,13 @@ const Seitenleiste = (() => {
         /* Meine Apps — bei Notion steht hier „Notion-Apps" ganz unten */
         if (!abschnittAn('apps'))
             return;
-        baum.appendChild(abschnitt('Meine Apps', null, () => abschnitteAnpassen()));
+        /* `data-ruhig="chrome"` heisst: das hier ist Gerüst, keine eigene Seite.
+           Die ruhige Fassung blendet Gerüst aus und lässt Eigenes stehen (E219).
+           Der Unterschied ist nicht kosmetisch: „Privat" und „Kürzlich" tragen,
+           was Redur selbst geschrieben hat — das versteckt man nicht. */
+        const appKopf = abschnitt('Meine Apps', null, () => abschnitteAnpassen());
+        appKopf.dataset['ruhig'] = 'chrome';
+        baum.appendChild(appKopf);
         /* AUS DEM REGISTER, NICHT AUS ZWEI LISTEN (L58, E166).
            Hier standen die zwanzig Apps als Datentabelle und darunter eine Kette
            aus zwanzig `if (a === '…')`. Zwei Listen für dieselben zwanzig Dinge:
@@ -634,6 +640,7 @@ const Seitenleiste = (() => {
            Nutzertext (CLAUDE.md §19). */
         const apps = document.createElement('div');
         apps.className = 'wz-block apps-block';
+        apps.dataset['ruhig'] = 'chrome';
         const appliste = (typeof Register !== 'undefined' && Register.navigation)
             ? Register.navigation.anPlatz('apps') : [];
         /* VIER GRUPPEN STATT ZWANZIG ZEILEN (E206).

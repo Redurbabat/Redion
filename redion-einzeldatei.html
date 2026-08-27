@@ -1415,6 +1415,102 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
   .mb-reiter-knopf, .mb-knopf{ transition:none }
 }
 
+/* ============================================================================
+ * DIE RUHIGE FASSUNG (E219)
+ * ----------------------------------------------------------------------------
+ * Zweiundfünfzig anklickbare Dinge standen auf dem Startbild, bevor ein Wort
+ * geschrieben war — 32 davon in der Seitenleiste (gemessen, E218). Hier
+ * stehen die Regeln, die davon fünf Wege übrig lassen.
+ *
+ * ES WIRD NICHTS ENTFERNT. Jeder Knopf bleibt im Baum, mit seiner Handlung
+ * daran. `display:none` ist der ganze Unterschied, und `data-ruhig="offen"`
+ * nimmt ihn zurück — an derselben Stelle, in derselben Reihenfolge. Deshalb
+ * gibt es hier auch keine zweite Liste zu pflegen: das ausgeklappte „Mehr"
+ * IST die alte Leiste (§8).
+ *
+ * Warum `body[data-ruhig]` und nicht eine Klasse: drei Zustände (an, offen,
+ * aus) lesen sich als drei Werte besser als als zwei Klassen, von denen man
+ * die Kombination im Kopf behalten muss.
+ * ==========================================================================*/
+
+/* Was ohne „Mehr" wegbleibt: alles in der Leiste, was nicht als `bleibt`
+   oder `schalter` markiert ist. Der Seitenbaum gehört NICHT dazu — dort
+   stehen die eigenen Seiten, und eigene Seiten versteckt man nicht. */
+body[data-ruhig="an"] .side-nav .side-item:not([data-ruhig]),
+body[data-ruhig="an"] .side-reiter,
+body[data-ruhig="an"] .side-fuss > .side-item,
+body[data-ruhig="an"] .side-top .icon-btn,
+body[data-ruhig="an"] .side-chat,
+body[data-ruhig="an"] [data-ruhig="chrome"]{ display:none }
+
+/* WAS BLEIBT, UND WARUM. Der erste Versuch versteckte `#tree .side-section`
+   — also jede Abschnittsüberschrift. Nachgemessen blieben trotzdem 17 statt
+   8 Zeilen stehen, und schlimmer: mitgetroffen war „Privat", die Überschrift
+   über Redurs eigenen Seiten.
+   Die Grenze läuft nicht zwischen Überschrift und Zeile, sondern zwischen
+   Gerüst und Inhalt. `seitenleiste.ts` markiert das Gerüst mit
+   `data-ruhig="chrome"`; alles ohne diese Marke ist Eigenes und bleibt. */
+body[data-ruhig="an"] #tree{ padding-top:0 }
+
+/* SECHS KNÖPFE, DIE IMMER DASTANDEN.
+   Nach dem Ausblenden des Gerüsts blieben 14 statt 8 Zeilen — sechs davon
+   waren die `+` und `⋯` an den Abschnitten und Seiten des Baums. Sie tun
+   erst etwas, wenn man bei der Zeile ist, zu der sie gehören; dauerhaft
+   sichtbar sind sie Rauschen mit Klickfläche.
+
+   Drei Bedingungen, nicht eine: `:hover` für die Maus, `:focus-visible` für
+   die Tastatur (sonst wäre ein Knopf fokussierbar und unsichtbar — §38),
+   und `@media (hover: none)` für den Finger, der nicht zeigen kann.
+
+   UND NICHT `visibility:hidden`, so nahe das läge. Ein unsichtbar
+   geschaltetes Element ist gar nicht erst fokussierbar — die Tastatur
+   kommt nie hin, und die Regel, die es sichtbar machen soll, kann nie
+   greifen. test248 §7 hat genau das gemeldet: der Knopf blieb nach
+   `focus()` „hidden". `opacity:0` mit `pointer-events:none` lässt ihn im
+   Tabulator-Weg und trotzdem unklickbar, bis er da ist. */
+body[data-ruhig="an"] #tree .side-section > button,
+body[data-ruhig="an"] #tree .act > button,
+body[data-ruhig="offen"] #tree .side-section > button,
+body[data-ruhig="offen"] #tree .act > button{ opacity:0; pointer-events:none }
+body[data-ruhig="an"] #tree .side-section:hover > button,
+body[data-ruhig="an"] #tree .side-section:focus-within > button,
+body[data-ruhig="an"] #tree .act:hover > button,
+body[data-ruhig="an"] #tree .act > button:focus-visible,
+body[data-ruhig="an"] #tree .sb-zeile:hover .act > button,
+body[data-ruhig="offen"] #tree .side-section:hover > button,
+body[data-ruhig="offen"] #tree .side-section:focus-within > button,
+body[data-ruhig="offen"] #tree .act:hover > button,
+body[data-ruhig="offen"] #tree .act > button:focus-visible,
+body[data-ruhig="offen"] #tree .sb-zeile:hover .act > button{ opacity:1; pointer-events:auto }
+/* Der Finger kann nicht zeigen. Wo es kein Zeigen gibt, stehen sie immer da. */
+@media (hover: none){
+  body[data-ruhig] #tree .side-section > button,
+  body[data-ruhig] #tree .act > button{ opacity:1; pointer-events:auto }
+}
+
+/* „Mehr" ist der einzige neue Knopf. Ohne ruhige Fassung ist er sinnlos
+   und deshalb weg — nicht ausgegraut: ein Knopf, der nichts tun kann,
+   soll auch nicht dastehen. */
+body[data-ruhig="aus"] #btn-mehr{ display:none }
+.sl-mehr{ color:var(--text-faint) }
+.sl-mehr[aria-expanded="true"]{ color:var(--text) }
+
+/* Aufgeklappt bekommt die Leiste eine Trennlinie über dem Schalter, damit
+   man sieht, wo das Zusätzliche anfängt. */
+body[data-ruhig="offen"] .side-nav .side-item:not([data-ruhig]){
+  animation:sl-auf .16s ease both;
+}
+@keyframes sl-auf{ from{ opacity:0; transform:translateY(-3px) } to{ opacity:1; transform:none } }
+@media(prefers-reduced-motion:reduce){
+  body[data-ruhig="offen"] .side-nav .side-item:not([data-ruhig]){ animation:none }
+}
+
+/* Die Kopfzeile: sechs Zeichen wandern ins ⋯-Menü. Sie sind dort nicht neu —
+   der Block stand schon für das Telefon da, und `schale.ts` schaltet ihn
+   jetzt auch für die ruhige Fassung frei. Wer eines von beidem ändert,
+   muss das andere sehen; deshalb steht der Grund an beiden Stellen. */
+body[data-ruhig="an"] #topbar [data-ruhig="mehr"]{ display:none }
+
 </style>
 <style>
 /* ===== quell/schale/stil/datenbanken.css ===== */
@@ -5843,6 +5939,42 @@ body.kontrast .lernwelt :where(.lw-hero,.lw-page-head,.lw-metrik,.lw-focus-card,
   }
   .lernwelt :where(button,.lw-path li>button):active,
   .lernwelt .lw-path li>button:hover{transform:none}
+}
+
+/* ============================================================================
+ * DIE RUHIGE FASSUNG (E219)
+ * ----------------------------------------------------------------------------
+ * Gemessen: der Gruß „Guten Abend" begann bei y=322 in einem 900 px hohen
+ * Fenster. Darüber lagen die Kopfzeile (72), eine Zeile „REDION / Lernen &
+ * Alltag" mit dem Bereichsfilter (60) und die Reiterzeile (50) — mehr als ein
+ * Drittel des Bildes, bevor irgendetwas steht, das der Tag gebracht hat.
+ *
+ * Der Titel ist dabei die ärgerlichste Zeile: die Pfadnavigation oben sagt
+ * bereits „Lernen & Alltag". Zweimal dasselbe, direkt übereinander — genau
+ * die Sorte Doppelung, um die es in E218 geht.
+ *
+ * Also wandert der Bereichsfilter in die Reiterzeile (er gehört ohnehin zu
+ * ihr: beide entscheiden, WAS man sieht), und die Titelzeile fällt weg.
+ * Nichts wird unerreichbar — der Filter steht danach rechts in derselben
+ * Zeile, das Symbol trägt der Reiter „Heute" weiter.
+ * ==========================================================================*/
+body[data-ruhig="an"] .lernwelt .lw-brand{ display:none }
+body[data-ruhig="an"] .lernwelt .lw-head{
+  margin-bottom:0; padding:0;
+  /* Ohne Marke bleibt nur der Filter — der gehört nach rechts, auf die
+     Höhe der Reiter darunter. `margin-bottom:-52px` zieht ihn dorthin;
+     `justify-content:flex-end` hält ihn am rechten Rand. */
+  justify-content:flex-end; margin-bottom:-46px; position:relative; z-index:2;
+  pointer-events:none;
+}
+body[data-ruhig="an"] .lernwelt .lw-area{ pointer-events:auto }
+body[data-ruhig="an"] .lernwelt .lw-nav{ padding-right:264px }
+/* Am Telefon ist daneben kein Platz — dort bleiben es zwei Zeilen. */
+@media(max-width:780px){
+  body[data-ruhig="an"] .lernwelt .lw-head{
+    margin-bottom:var(--space-3); justify-content:stretch; position:static;
+  }
+  body[data-ruhig="an"] .lernwelt .lw-nav{ padding-right:var(--space-2) }
 }
 
 </style>
@@ -10588,19 +10720,22 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
     <button class="side-item" id="btn-cmd">
       <span data-sym="command"></span><span>Befehle</span><span class="k">Strg ⇧ P</span>
     </button>
-    <button class="side-item" id="btn-home">
+    <button class="side-item" id="btn-home" data-ruhig="bleibt">
       <span data-sym="today"></span><span>Heute</span>
     </button>
-    <button class="side-item" id="btn-learning">
+    <button class="side-item" id="btn-learning" data-ruhig="bleibt">
       <span data-sym="learn"></span><span>Lernzentrum</span>
+    </button>
+    <button class="side-item" id="btn-elektro" data-ruhig="bleibt">
+      <span data-sym="bolt"></span><span>Elektro</span>
     </button>
     <button class="side-item" id="btn-workspace">
       <span data-sym="workspace"></span><span>Workspace</span>
     </button>
-    <button class="side-item" id="btn-library">
+    <button class="side-item" id="btn-library" data-ruhig="bleibt">
       <span data-sym="library"></span><span>Bibliothek</span>
     </button>
-    <button class="side-item" id="btn-tasks">
+    <button class="side-item" id="btn-tasks" data-ruhig="bleibt">
       <span data-sym="tasks"></span><span>Aufgaben</span>
     </button>
     <button class="side-item" id="btn-inbox">
@@ -10608,6 +10743,10 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
     </button>
     <button class="side-item" id="btn-new">
       <span data-sym="plus"></span><span>Neue Seite</span><span class="k">Strg N</span>
+    </button>
+    <button class="side-item sl-mehr" id="btn-mehr" data-ruhig="schalter"
+            aria-expanded="false" aria-controls="sidebar">
+      <span data-sym="dots"></span><span class="sl-mehr-text">Mehr</span><span class="k">Strg M</span>
     </button>
   </nav>
 
@@ -10717,13 +10856,13 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
       <kbd>Strg P</kbd>
     </button>
     <div class="spacer"></div>
-    <button class="top-btn" id="btn-teilen" title="Teilen und ausgeben"><span data-sym="share"></span><span>Teilen</span></button>
+    <button class="top-btn" id="btn-teilen" data-ruhig="mehr" title="Teilen und ausgeben"><span data-sym="share"></span><span>Teilen</span></button>
     <button class="top-btn" id="btn-ai" title="Lokale KI (Strg + J)"><span data-sym="sparkle"></span><span>KI</span></button>
-    <button class="top-btn schmal" id="btn-komm"    title="Kommentare" aria-label="Kommentare"><span data-sym="chat"></span></button>
-    <button class="top-btn schmal" id="btn-verlauf" title="Aktualisierungen und Versionsverlauf" aria-label="Versionsverlauf"><span data-sym="history"></span></button>
-    <button class="top-btn schmal" id="btn-auto"    title="Automationen der Datenbank" aria-label="Automationen"><span data-sym="bolt"></span></button>
-    <button class="top-btn schmal" id="btn-link"    title="Link zur Seite kopieren" aria-label="Link kopieren"><span data-sym="link"></span></button>
-    <button class="top-btn schmal" id="btn-lock"    title="Seite gegen Bearbeiten sperren" aria-label="Seite sperren"><span data-sym="lockOpen"></span></button>
+    <button class="top-btn schmal" id="btn-komm" data-ruhig="mehr"    title="Kommentare" aria-label="Kommentare"><span data-sym="chat"></span></button>
+    <button class="top-btn schmal" id="btn-verlauf" data-ruhig="mehr" title="Aktualisierungen und Versionsverlauf" aria-label="Versionsverlauf"><span data-sym="history"></span></button>
+    <button class="top-btn schmal" id="btn-auto" data-ruhig="mehr"    title="Automationen der Datenbank" aria-label="Automationen"><span data-sym="bolt"></span></button>
+    <button class="top-btn schmal" id="btn-link" data-ruhig="mehr"    title="Link zur Seite kopieren" aria-label="Link kopieren"><span data-sym="link"></span></button>
+    <button class="top-btn schmal" id="btn-lock" data-ruhig="mehr"    title="Seite gegen Bearbeiten sperren" aria-label="Seite sperren"><span data-sym="lockOpen"></span></button>
     <button class="top-btn schmal" id="btn-fav"     title="Zu Favoriten" aria-label="Zu Favoriten"><span data-sym="star"></span></button>
     <button class="top-btn schmal" id="btn-page-menu" title="Seitenoptionen" aria-label="Seitenoptionen"><span data-sym="dots"></span></button>
   </header>
@@ -16065,6 +16204,15 @@ Register.navigation = (() => {
             knopfId: 'btn-home', tun: () => Produktwelten.lernen('heute') },
         { id: 'lernzentrum', name: 'Lernzentrum', icon: '🎓', platz: 'oben', rang: 40,
             knopfId: 'btn-learning', tun: () => Produktwelten.lernen('lernen') },
+        /* ELEKTRO HATTE KEINE EIGENE ZEILE. Es ist eines der 14 Module, und
+           zwar das grösste — Fachzeichen, Schaltplan, Simulation, Rechner,
+           Formelheft, Prüfung. Wer hin wollte, musste über den Workspace oder
+           das Lernzentrum. Beim Nachzählen für E218 fiel das auf: die
+           Seitenleiste führte 37 Wege, und der meistbenutzte war keiner davon. */
+        { id: 'elektro', name: 'Elektro', icon: '⚡', platz: 'oben', rang: 45,
+            knopfId: 'btn-elektro',
+            tun: () => { if (typeof Electrical !== 'undefined')
+                Electrical.open(); } },
         { id: 'workspace', name: 'Workspace', icon: '🧱', platz: 'oben', rang: 50,
             knopfId: 'btn-workspace', tun: () => Produktwelten.workspace('start') },
         { id: 'bibliothekOben', name: 'Bibliothek', icon: '📚', platz: 'oben', rang: 60,
@@ -81195,6 +81343,11 @@ const Aussehen = (() => {
         ['mono', 'Monospace', '"SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace'],
         ['lesbar', 'Gut lesbar', '"Atkinson Hyperlegible", "Verdana", "Segoe UI", sans-serif']
     ];
+    /* Die ruhige Fassung liegt NICHT in `aussehen`, sondern unter dem eigenen
+       Schlüssel `ruhig` — dort, wo `schale/aufbau/ruhig.ts` sie liest. Zwei
+       Speicherplätze für dieselbe Sache wären genau die Doppelung, gegen die
+       E219 antritt. Hier steht nur die Bedienung. */
+    const ruhigAn = () => typeof Ruhig !== 'undefined' ? Ruhig.an() : Store.getMeta('ruhig', true) !== false;
     const einstellung = () => Object.assign({
         schema: 'standard', akzent: '', schrift: 'system', groesse: 100,
         abstand: 'normal', breite: 'normal'
@@ -81400,7 +81553,24 @@ const Aussehen = (() => {
                         .map(([i, n]) => `<button data-br="${i}" class="${s.breite === i ? 'an' : ''}">${n}</button>`).join('') +
                         '</div>' +
                         '<div class="au-hinweis">Die Schriftwahl je Seite (Standard, Serif, Mono) bleibt daneben ' +
-                        'bestehen — sie sticht diese Einstellung für die eine Seite.</div>';
+                        'bestehen — sie sticht diese Einstellung für die eine Seite.</div>' +
+                        /* RUHIGE OBERFLÄCHE (E219). Der Schalter steht hier, weil er
+                           dasselbe entscheidet wie Zeilenabstand und Seitenbreite: wie
+                           viel Platz die Oberfläche für sich selbst nimmt. Der Hinweis
+                           nennt den Weg zurück ausdrücklich — ein Schalter, nach dem man
+                           die halbe Seitenleiste sucht, ist ein schlechter Schalter. */
+                        '<div class="au-titel">Ruhige Oberfläche</div>' +
+                        '<div class="au-liste">' +
+                        ['<button data-ruhig-schalter="an" class="' + (ruhigAn() ? 'an' : '') +
+                                '">Fünf Wege</button>',
+                            '<button data-ruhig-schalter="aus" class="' + (ruhigAn() ? '' : 'an') +
+                                '">Alles zeigen</button>'].join('') +
+                        '</div>' +
+                        '<div class="au-hinweis">Mit „Fünf Wege" zeigt die Seitenleiste Heute, ' +
+                        'Lernzentrum, Elektro, Bibliothek und Aufgaben; alles Übrige steht hinter ' +
+                        '„Mehr" ganz unten (Strg + M). Die Kopfzeile gibt fünf Zeichen an das ' +
+                        '⋯-Menü ab, und das Menüband erscheint, sobald eine Seite offen ist. ' +
+                        'Entfernt wird nichts.</div>';
             }
             if (reiter === 'tasten') {
                 const e = eigene();
@@ -81503,6 +81673,18 @@ const Aussehen = (() => {
             const br = elVon(e)?.closest('[data-br]');
             if (br) {
                 setzen({ breite: br.dataset['br'] });
+                zeichne();
+                return;
+            }
+            const ru = elVon(e)?.closest('[data-ruhig-schalter]');
+            if (ru) {
+                if (typeof Ruhig !== 'undefined')
+                    Ruhig.setzen(ru.dataset['ruhigSchalter'] === 'an');
+                /* Das Menüband entscheidet beim Zeichnen, ob es dasteht — es muss
+                   also neu zeichnen, sonst bleibt es weg (oder da), bis irgendetwas
+                   anderes es anfasst. */
+                if (typeof Menueband !== 'undefined')
+                    Menueband.zeichne();
                 zeichne();
                 return;
             }
@@ -104943,6 +105125,106 @@ const KI = (() => {
 
 </script>
 <script>
+/* ===== quell/schale/aufbau/ruhig.js ===== */
+"use strict";
+/* ============================================================================
+ * ruhig.js — die Schale zeigt fünf Wege statt zweiunddreissig
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/schale/aufbau/ruhig.ts`. `npm run bauen:ts` schreibt daraus
+ * `quell/schale/aufbau/ruhig.js`. Wer das .js bearbeitet, verliert die Änderung beim
+ * nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es vorher.
+ * ----------------------------------------------------------------------------
+ * WARUM ES DAS GIBT. Nachgemessen an der laufenden App bei 1440 × 900,
+ * gezählt wurde alles Anklickbare in Seitenleiste, Kopfzeile und Menüband:
+ *
+ *     Startbild        Seitenleiste 32 + Kopfzeile 13 + Menüband  7  =  52
+ *     offene Seite     Seitenleiste 34 + Kopfzeile 12 + Menüband 21  =  67
+ *
+ * Zweiundfünfzig Knöpfe, bevor ein Wort geschrieben ist. Der Bestand selbst
+ * ist in Ordnung — 37 Bereiche, 108 Befehle, 78 Blockarten, 14 Module. Das
+ * Problem ist, dass drei Leisten übereinander versuchen, alles gleichzeitig
+ * anzubieten (E218).
+ *
+ * WIE ES ARBEITET, UND WAS ES AUSDRÜCKLICH NICHT TUT. Es entfernt nichts.
+ * Kein Knopf wird aus dem Baum genommen, keine Handlung abgemeldet, keine
+ * zweite Liste angelegt. Ein Datenattribut am `body` sagt, was gerade zu
+ * sehen ist:
+ *
+ *     data-ruhig="an"     die fünf Wege plus „Mehr"
+ *     data-ruhig="offen"  alles, an genau derselben Stelle wie vorher
+ *     data-ruhig="aus"    die Leiste, wie sie vor E219 war
+ *
+ * Zwischen „an" und „offen" liegt nur eine CSS-Regel. Das ist Absicht:
+ * ein aufklappendes „Mehr", das eine EIGENE Liste zeichnete, wäre ein
+ * zweiter Katalog neben dem Register (Paragraph 8) — und der erste, der
+ * still auseinanderläuft, sobald jemand einen Eintrag ergänzt.
+ *
+ * WER ENTSCHEIDET. `Store.getMeta('ruhig', true)`. Von Haus aus an; wer die
+ * alte Leiste will, schaltet in den Einstellungen zurück, und der Zustand
+ * überlebt den Neustart wie jede andere Einstellung auch.
+ * ==========================================================================*/
+const Ruhig = (() => {
+    /** Ist die ruhige Fassung eingeschaltet? Ohne gespeicherten Wert: ja. */
+    const an = () => Store.getMeta('ruhig', true) !== false;
+    /* Ob „Mehr" gerade offen ist, gehört NICHT in den Speicher: es ist keine
+       Einstellung, sondern ein Zustand dieses Augenblicks. Wer die App neu
+       öffnet, will die ruhige Leiste sehen, nicht die von vorhin ausgeklappte. */
+    let offen = false;
+    /** Setzt das Attribut, an dem das Stilblatt hängt. Sonst nichts. */
+    const anwenden = () => {
+        const b = document.body;
+        if (!b)
+            return;
+        b.dataset['ruhig'] = an() ? (offen ? 'offen' : 'an') : 'aus';
+        const knopf = document.getElementById('btn-mehr');
+        if (knopf) {
+            knopf.setAttribute('aria-expanded', String(an() && offen));
+            /* Der Name sagt, was der Klick TUT, nicht wo man ist. „Mehr" und
+               „Weniger" sind beides Handlungen; ein Knopf, der „Offen" hiesse,
+               wäre eine Zustandsanzeige mit Klickfläche. */
+            const text = knopf.querySelector('.sl-mehr-text');
+            if (text)
+                text.textContent = (an() && offen) ? 'Weniger' : 'Mehr';
+        }
+    };
+    /** „Mehr" auf und zu. Ohne ruhige Fassung gibt es nichts umzuschalten. */
+    const schalten = () => {
+        if (!an())
+            return;
+        offen = !offen;
+        anwenden();
+    };
+    /** Ruhige Fassung ein oder aus. `undefined` heisst umschalten. */
+    const setzen = (wert) => {
+        const neu = wert === undefined ? !an() : wert;
+        Store.setMeta('ruhig', neu);
+        /* Beim Abschalten das aufgeklappte „Mehr" mit zurücknehmen — sonst
+           stünde nach dem nächsten Einschalten alles offen da. */
+        if (!neu)
+            offen = false;
+        anwenden();
+        return neu;
+    };
+    /**
+     * Einmal beim Start. `binde` hängt den Schalter an und setzt das Attribut;
+     * beides ist gutmütig, wenn es den Knopf noch nicht gibt (Einzeldatei,
+     * Prüfläufe, ein halb aufgebautes Fenster).
+     */
+    const binde = () => {
+        const knopf = document.getElementById('btn-mehr');
+        if (knopf && !knopf.dataset['gebunden']) {
+            knopf.dataset['gebunden'] = 'ja';
+            knopf.addEventListener('click', schalten);
+        }
+        anwenden();
+    };
+    return { an, offen: () => offen, anwenden, schalten, setzen, binde };
+})();
+window.Ruhig = Ruhig;
+
+</script>
+<script>
 /* ===== quell/schale/aufbau/seitenleiste.js ===== */
 "use strict";
 /* ============================================================================
@@ -105568,7 +105850,13 @@ const Seitenleiste = (() => {
         /* Meine Apps — bei Notion steht hier „Notion-Apps" ganz unten */
         if (!abschnittAn('apps'))
             return;
-        baum.appendChild(abschnitt('Meine Apps', null, () => abschnitteAnpassen()));
+        /* `data-ruhig="chrome"` heisst: das hier ist Gerüst, keine eigene Seite.
+           Die ruhige Fassung blendet Gerüst aus und lässt Eigenes stehen (E219).
+           Der Unterschied ist nicht kosmetisch: „Privat" und „Kürzlich" tragen,
+           was Redur selbst geschrieben hat — das versteckt man nicht. */
+        const appKopf = abschnitt('Meine Apps', null, () => abschnitteAnpassen());
+        appKopf.dataset['ruhig'] = 'chrome';
+        baum.appendChild(appKopf);
         /* AUS DEM REGISTER, NICHT AUS ZWEI LISTEN (L58, E166).
            Hier standen die zwanzig Apps als Datentabelle und darunter eine Kette
            aus zwanzig `if (a === '…')`. Zwei Listen für dieselben zwanzig Dinge:
@@ -105580,6 +105868,7 @@ const Seitenleiste = (() => {
            Nutzertext (CLAUDE.md §19). */
         const apps = document.createElement('div');
         apps.className = 'wz-block apps-block';
+        apps.dataset['ruhig'] = 'chrome';
         const appliste = (typeof Register !== 'undefined' && Register.navigation)
             ? Register.navigation.anPlatz('apps') : [];
         /* VIER GRUPPEN STATT ZWANZIG ZEILEN (E206).
@@ -106758,6 +107047,19 @@ const Menueband = (() => {
             wurzel.replaceChildren();
             return;
         }
+        /* ÜBER EINER STARTANSICHT GANZ WEG (E219).
+           Der Grund steht schon zwei Absätze weiter oben, bei `zugeklappt`:
+           „Ein Menüband über einer Startansicht kann ohnehin fast nichts —
+           Einfügen und Zeichnen brauchen eine Seite, in die geschrieben wird."
+           Zugeklappt bleiben davon trotzdem sechs Reiter und ein Pfeil stehen,
+           also sieben anklickbare Dinge, die alle dasselbe sagen: nicht jetzt.
+           Die ruhige Fassung nimmt den Gedanken zu Ende. Sobald eine Seite
+           offen ist, ist das Band wieder da — zugeklappt, wie bisher. */
+        if (typeof Ruhig !== 'undefined' && Ruhig.an() && !seiteOffen()) {
+            wurzel.hidden = true;
+            wurzel.replaceChildren();
+            return;
+        }
         wurzel.hidden = false;
         let gewaehlt = reiterJetzt();
         if (!reiter.some((r) => r.id === gewaehlt))
@@ -107613,8 +107915,13 @@ const App = (() => {
             '<button data-a="mitki"><span class="mi">✨</span>Mit KI verwenden<span class="ms">▸</span></button>' +
             '<hr>' +
             /* Auf dem Telefon ist die Kopfzeile schmal wie in Notion: nur ☰, ‹,
-               Titel und ⋯. Alles andere steht hier, sonst wäre es unerreichbar. */
-            (UI.amTelefon()
+               Titel und ⋯. Alles andere steht hier, sonst wäre es unerreichbar.
+               In der ruhigen Fassung (E219) gilt derselbe Grund am Rechner: die
+               fünf Zeichen sind aus der Kopfzeile heraus, und der EINZIGE Weg,
+               den sie dann noch haben, ist dieser hier. Deshalb steht die
+               Bedingung an genau der Stelle, an der auch das Verstecken hängt —
+               wer eines ändert, sieht das andere. */
+            ((UI.amTelefon() || (typeof Ruhig !== 'undefined' && Ruhig.an()))
                 ? '<button data-a="teilen"><span class="mi">↗</span>Teilen und ausgeben</button>' +
                     '<button data-a="verlauf"><span class="mi">🕘</span>Versionsverlauf</button>' +
                     '<button data-a="kopf-komm"><span class="mi">💬</span>Kommentare</button>' +
@@ -109492,6 +109799,14 @@ const App = (() => {
                 document.getElementById('sidebar')?.classList.toggle('collapsed');
                 return;
             }
+            /* Strg+M: „Mehr" in der Seitenleiste auf und zu (E219). Ohne ruhige
+               Fassung tut `schalten` nichts — dann soll die Taste auch nicht
+               `preventDefault` rufen und das Kürzel dem Browser wegnehmen. */
+            if (k === 'm' && !e.shiftKey && typeof Ruhig !== 'undefined' && Ruhig.an()) {
+                e.preventDefault();
+                Ruhig.schalten();
+                return;
+            }
             if (k === 'j' && !e.shiftKey) {
                 e.preventDefault();
                 kiPanel();
@@ -109806,6 +110121,18 @@ const App = (() => {
         Seitenleiste.binde({
             oeffne, aktuelleSeite, kuerzlich, kommendeTermine, seitenMenue, suche, papierkorb
         });
+        /* Die ruhige Fassung setzt nur ein Attribut am `body` (E219). Hier steht
+           sie, damit der Schalter hängt und die Leiste nicht erst voll aufblitzt
+           — aber `Store.getMeta` kann an dieser Stelle NOCH NICHTS wissen:
+           `Store.load()` läuft erst 135 Zeilen weiter unten, in
+           `starteWirklich`. Bis dahin gewinnt immer die Vorgabe.
+    
+           Genau das hat test248 §6 gemeldet: „ausgeschaltet" überlebte den
+           Neustart nicht, obwohl der Wert richtig gespeichert war. Es ist
+           dieselbe Falle wie beim Bibliotheks-Regal (E207) — gelesen, bevor
+           die Ablage offen war. Deshalb steht unten ein zweites `anwenden`. */
+        if (typeof Ruhig !== 'undefined')
+            Ruhig.binde();
         Kopfleiste.binde({
             zeichneSeite, zeichneBaum, kiPanel, oeffne, aktuelleSeite,
             /* Ein Leser, keine Weiterreichung: die Sonderansicht ist ein Zustand
@@ -109937,6 +110264,11 @@ const App = (() => {
     };
     const starteWirklich = async () => {
         await Store.load();
+        /* JETZT erst steht in `Store.cache.meta`, was der Nutzer wollte. Ohne
+           diese Zeile gewinnt oben immer die Vorgabe, und der Schalter in den
+           Einstellungen wäre wirkungslos, ohne dass es jemand merkt (E219). */
+        if (typeof Ruhig !== 'undefined')
+            Ruhig.anwenden();
         /* Ist eine Sperre eingerichtet, geht ohne Passwort nichts weiter. */
         await Krypto.startPruefen();
         /* Die App hiess früher „Notizen" und heisst jetzt Redion. Wer den Namen

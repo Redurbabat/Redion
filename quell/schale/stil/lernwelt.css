@@ -1214,3 +1214,39 @@ body.kontrast .lernwelt :where(.lw-hero,.lw-page-head,.lw-metrik,.lw-focus-card,
   .lernwelt :where(button,.lw-path li>button):active,
   .lernwelt .lw-path li>button:hover{transform:none}
 }
+
+/* ============================================================================
+ * DIE RUHIGE FASSUNG (E219)
+ * ----------------------------------------------------------------------------
+ * Gemessen: der Gruß „Guten Abend" begann bei y=322 in einem 900 px hohen
+ * Fenster. Darüber lagen die Kopfzeile (72), eine Zeile „REDION / Lernen &
+ * Alltag" mit dem Bereichsfilter (60) und die Reiterzeile (50) — mehr als ein
+ * Drittel des Bildes, bevor irgendetwas steht, das der Tag gebracht hat.
+ *
+ * Der Titel ist dabei die ärgerlichste Zeile: die Pfadnavigation oben sagt
+ * bereits „Lernen & Alltag". Zweimal dasselbe, direkt übereinander — genau
+ * die Sorte Doppelung, um die es in E218 geht.
+ *
+ * Also wandert der Bereichsfilter in die Reiterzeile (er gehört ohnehin zu
+ * ihr: beide entscheiden, WAS man sieht), und die Titelzeile fällt weg.
+ * Nichts wird unerreichbar — der Filter steht danach rechts in derselben
+ * Zeile, das Symbol trägt der Reiter „Heute" weiter.
+ * ==========================================================================*/
+body[data-ruhig="an"] .lernwelt .lw-brand{ display:none }
+body[data-ruhig="an"] .lernwelt .lw-head{
+  margin-bottom:0; padding:0;
+  /* Ohne Marke bleibt nur der Filter — der gehört nach rechts, auf die
+     Höhe der Reiter darunter. `margin-bottom:-52px` zieht ihn dorthin;
+     `justify-content:flex-end` hält ihn am rechten Rand. */
+  justify-content:flex-end; margin-bottom:-46px; position:relative; z-index:2;
+  pointer-events:none;
+}
+body[data-ruhig="an"] .lernwelt .lw-area{ pointer-events:auto }
+body[data-ruhig="an"] .lernwelt .lw-nav{ padding-right:264px }
+/* Am Telefon ist daneben kein Platz — dort bleiben es zwei Zeilen. */
+@media(max-width:780px){
+  body[data-ruhig="an"] .lernwelt .lw-head{
+    margin-bottom:var(--space-3); justify-content:stretch; position:static;
+  }
+  body[data-ruhig="an"] .lernwelt .lw-nav{ padding-right:var(--space-2) }
+}

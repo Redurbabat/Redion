@@ -193,6 +193,7 @@ const GRUNDSTOCK = [
   './quell/bereiche/wissen/produkt_onboarding.js',
   './quell/bereiche/wissen/produktwelten.js',
   './quell/bereiche/ki/dienst.js',
+  './quell/schale/aufbau/ruhig.js',
   './quell/schale/aufbau/seitenleiste.js',
   './quell/schale/aufbau/kopfleiste.js',
   './quell/schale/aufbau/menueband.js',

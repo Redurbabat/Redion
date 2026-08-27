@@ -420,8 +420,13 @@ const App = (() => {
             '<button data-a="mitki"><span class="mi">✨</span>Mit KI verwenden<span class="ms">▸</span></button>' +
             '<hr>' +
             /* Auf dem Telefon ist die Kopfzeile schmal wie in Notion: nur ☰, ‹,
-               Titel und ⋯. Alles andere steht hier, sonst wäre es unerreichbar. */
-            (UI.amTelefon()
+               Titel und ⋯. Alles andere steht hier, sonst wäre es unerreichbar.
+               In der ruhigen Fassung (E219) gilt derselbe Grund am Rechner: die
+               fünf Zeichen sind aus der Kopfzeile heraus, und der EINZIGE Weg,
+               den sie dann noch haben, ist dieser hier. Deshalb steht die
+               Bedingung an genau der Stelle, an der auch das Verstecken hängt —
+               wer eines ändert, sieht das andere. */
+            ((UI.amTelefon() || (typeof Ruhig !== 'undefined' && Ruhig.an()))
                 ? '<button data-a="teilen"><span class="mi">↗</span>Teilen und ausgeben</button>' +
                     '<button data-a="verlauf"><span class="mi">🕘</span>Versionsverlauf</button>' +
                     '<button data-a="kopf-komm"><span class="mi">💬</span>Kommentare</button>' +
@@ -2299,6 +2304,14 @@ const App = (() => {
                 document.getElementById('sidebar')?.classList.toggle('collapsed');
                 return;
             }
+            /* Strg+M: „Mehr" in der Seitenleiste auf und zu (E219). Ohne ruhige
+               Fassung tut `schalten` nichts — dann soll die Taste auch nicht
+               `preventDefault` rufen und das Kürzel dem Browser wegnehmen. */
+            if (k === 'm' && !e.shiftKey && typeof Ruhig !== 'undefined' && Ruhig.an()) {
+                e.preventDefault();
+                Ruhig.schalten();
+                return;
+            }
             if (k === 'j' && !e.shiftKey) {
                 e.preventDefault();
                 kiPanel();
@@ -2613,6 +2626,18 @@ const App = (() => {
         Seitenleiste.binde({
             oeffne, aktuelleSeite, kuerzlich, kommendeTermine, seitenMenue, suche, papierkorb
         });
+        /* Die ruhige Fassung setzt nur ein Attribut am `body` (E219). Hier steht
+           sie, damit der Schalter hängt und die Leiste nicht erst voll aufblitzt
+           — aber `Store.getMeta` kann an dieser Stelle NOCH NICHTS wissen:
+           `Store.load()` läuft erst 135 Zeilen weiter unten, in
+           `starteWirklich`. Bis dahin gewinnt immer die Vorgabe.
+    
+           Genau das hat test248 §6 gemeldet: „ausgeschaltet" überlebte den
+           Neustart nicht, obwohl der Wert richtig gespeichert war. Es ist
+           dieselbe Falle wie beim Bibliotheks-Regal (E207) — gelesen, bevor
+           die Ablage offen war. Deshalb steht unten ein zweites `anwenden`. */
+        if (typeof Ruhig !== 'undefined')
+            Ruhig.binde();
         Kopfleiste.binde({
             zeichneSeite, zeichneBaum, kiPanel, oeffne, aktuelleSeite,
             /* Ein Leser, keine Weiterreichung: die Sonderansicht ist ein Zustand
@@ -2744,6 +2769,11 @@ const App = (() => {
     };
     const starteWirklich = async () => {
         await Store.load();
+        /* JETZT erst steht in `Store.cache.meta`, was der Nutzer wollte. Ohne
+           diese Zeile gewinnt oben immer die Vorgabe, und der Schalter in den
+           Einstellungen wäre wirkungslos, ohne dass es jemand merkt (E219). */
+        if (typeof Ruhig !== 'undefined')
+            Ruhig.anwenden();
         /* Ist eine Sperre eingerichtet, geht ohne Passwort nichts weiter. */
         await Krypto.startPruefen();
         /* Die App hiess früher „Notizen" und heisst jetzt Redion. Wer den Namen

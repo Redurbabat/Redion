@@ -662,3 +662,99 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
 @media(prefers-reduced-motion:reduce){
   .mb-reiter-knopf, .mb-knopf{ transition:none }
 }
+
+/* ============================================================================
+ * DIE RUHIGE FASSUNG (E219)
+ * ----------------------------------------------------------------------------
+ * Zweiundfünfzig anklickbare Dinge standen auf dem Startbild, bevor ein Wort
+ * geschrieben war — 32 davon in der Seitenleiste (gemessen, E218). Hier
+ * stehen die Regeln, die davon fünf Wege übrig lassen.
+ *
+ * ES WIRD NICHTS ENTFERNT. Jeder Knopf bleibt im Baum, mit seiner Handlung
+ * daran. `display:none` ist der ganze Unterschied, und `data-ruhig="offen"`
+ * nimmt ihn zurück — an derselben Stelle, in derselben Reihenfolge. Deshalb
+ * gibt es hier auch keine zweite Liste zu pflegen: das ausgeklappte „Mehr"
+ * IST die alte Leiste (§8).
+ *
+ * Warum `body[data-ruhig]` und nicht eine Klasse: drei Zustände (an, offen,
+ * aus) lesen sich als drei Werte besser als als zwei Klassen, von denen man
+ * die Kombination im Kopf behalten muss.
+ * ==========================================================================*/
+
+/* Was ohne „Mehr" wegbleibt: alles in der Leiste, was nicht als `bleibt`
+   oder `schalter` markiert ist. Der Seitenbaum gehört NICHT dazu — dort
+   stehen die eigenen Seiten, und eigene Seiten versteckt man nicht. */
+body[data-ruhig="an"] .side-nav .side-item:not([data-ruhig]),
+body[data-ruhig="an"] .side-reiter,
+body[data-ruhig="an"] .side-fuss > .side-item,
+body[data-ruhig="an"] .side-top .icon-btn,
+body[data-ruhig="an"] .side-chat,
+body[data-ruhig="an"] [data-ruhig="chrome"]{ display:none }
+
+/* WAS BLEIBT, UND WARUM. Der erste Versuch versteckte `#tree .side-section`
+   — also jede Abschnittsüberschrift. Nachgemessen blieben trotzdem 17 statt
+   8 Zeilen stehen, und schlimmer: mitgetroffen war „Privat", die Überschrift
+   über Redurs eigenen Seiten.
+   Die Grenze läuft nicht zwischen Überschrift und Zeile, sondern zwischen
+   Gerüst und Inhalt. `seitenleiste.ts` markiert das Gerüst mit
+   `data-ruhig="chrome"`; alles ohne diese Marke ist Eigenes und bleibt. */
+body[data-ruhig="an"] #tree{ padding-top:0 }
+
+/* SECHS KNÖPFE, DIE IMMER DASTANDEN.
+   Nach dem Ausblenden des Gerüsts blieben 14 statt 8 Zeilen — sechs davon
+   waren die `+` und `⋯` an den Abschnitten und Seiten des Baums. Sie tun
+   erst etwas, wenn man bei der Zeile ist, zu der sie gehören; dauerhaft
+   sichtbar sind sie Rauschen mit Klickfläche.
+
+   Drei Bedingungen, nicht eine: `:hover` für die Maus, `:focus-visible` für
+   die Tastatur (sonst wäre ein Knopf fokussierbar und unsichtbar — §38),
+   und `@media (hover: none)` für den Finger, der nicht zeigen kann.
+
+   UND NICHT `visibility:hidden`, so nahe das läge. Ein unsichtbar
+   geschaltetes Element ist gar nicht erst fokussierbar — die Tastatur
+   kommt nie hin, und die Regel, die es sichtbar machen soll, kann nie
+   greifen. test248 §7 hat genau das gemeldet: der Knopf blieb nach
+   `focus()` „hidden". `opacity:0` mit `pointer-events:none` lässt ihn im
+   Tabulator-Weg und trotzdem unklickbar, bis er da ist. */
+body[data-ruhig="an"] #tree .side-section > button,
+body[data-ruhig="an"] #tree .act > button,
+body[data-ruhig="offen"] #tree .side-section > button,
+body[data-ruhig="offen"] #tree .act > button{ opacity:0; pointer-events:none }
+body[data-ruhig="an"] #tree .side-section:hover > button,
+body[data-ruhig="an"] #tree .side-section:focus-within > button,
+body[data-ruhig="an"] #tree .act:hover > button,
+body[data-ruhig="an"] #tree .act > button:focus-visible,
+body[data-ruhig="an"] #tree .sb-zeile:hover .act > button,
+body[data-ruhig="offen"] #tree .side-section:hover > button,
+body[data-ruhig="offen"] #tree .side-section:focus-within > button,
+body[data-ruhig="offen"] #tree .act:hover > button,
+body[data-ruhig="offen"] #tree .act > button:focus-visible,
+body[data-ruhig="offen"] #tree .sb-zeile:hover .act > button{ opacity:1; pointer-events:auto }
+/* Der Finger kann nicht zeigen. Wo es kein Zeigen gibt, stehen sie immer da. */
+@media (hover: none){
+  body[data-ruhig] #tree .side-section > button,
+  body[data-ruhig] #tree .act > button{ opacity:1; pointer-events:auto }
+}
+
+/* „Mehr" ist der einzige neue Knopf. Ohne ruhige Fassung ist er sinnlos
+   und deshalb weg — nicht ausgegraut: ein Knopf, der nichts tun kann,
+   soll auch nicht dastehen. */
+body[data-ruhig="aus"] #btn-mehr{ display:none }
+.sl-mehr{ color:var(--text-faint) }
+.sl-mehr[aria-expanded="true"]{ color:var(--text) }
+
+/* Aufgeklappt bekommt die Leiste eine Trennlinie über dem Schalter, damit
+   man sieht, wo das Zusätzliche anfängt. */
+body[data-ruhig="offen"] .side-nav .side-item:not([data-ruhig]){
+  animation:sl-auf .16s ease both;
+}
+@keyframes sl-auf{ from{ opacity:0; transform:translateY(-3px) } to{ opacity:1; transform:none } }
+@media(prefers-reduced-motion:reduce){
+  body[data-ruhig="offen"] .side-nav .side-item:not([data-ruhig]){ animation:none }
+}
+
+/* Die Kopfzeile: sechs Zeichen wandern ins ⋯-Menü. Sie sind dort nicht neu —
+   der Block stand schon für das Telefon da, und `schale.ts` schaltet ihn
+   jetzt auch für die ruhige Fassung frei. Wer eines von beidem ändert,
+   muss das andere sehen; deshalb steht der Grund an beiden Stellen. */
+body[data-ruhig="an"] #topbar [data-ruhig="mehr"]{ display:none }

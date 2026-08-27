@@ -226,7 +226,13 @@ p('Mit einem Dokument schaltet er um', mitDokument);
 console.log('\n5 · Seitenleiste und Register sagen dasselbe');
 
 const leiste = await seite.evaluate(() => {
+  /* `[data-ruhig="schalter"]` ist KEIN Ziel. „Mehr" (E219) geht nirgends hin,
+     es ändert nur, wie viel die Leiste zeigt — und gehört deshalb nicht ins
+     Navigationsregister, sonst stünde im Katalog ein Weg, den es nicht gibt.
+     Die Prüfung bleibt scharf: jeder ANDERE neue Knopf ohne Registereintrag
+     macht sie weiterhin rot. */
   const zeilen = [...document.querySelectorAll<HTMLElement>('.side-nav .side-item')]
+    .filter(b => b.dataset['ruhig'] !== 'schalter')
     .map(b => {
       const teile = [...b.children] as HTMLElement[];
       return { knopfId: b.id,
@@ -273,7 +279,8 @@ p('„Befehle" öffnet die Befehle', zwei.befehle.befehlsfeld && !zwei.befehle.s
 /* Und keine Zeile ist tot. */
 const tot = await seite.evaluate(async () => {
   const raus: string[] = [];
-  for (const b of [...document.querySelectorAll<HTMLElement>('.side-nav .side-item')]) {
+  for (const b of [...document.querySelectorAll<HTMLElement>('.side-nav .side-item')]
+         .filter(b => b.dataset['ruhig'] !== 'schalter')) {
     document.querySelectorAll<HTMLElement>('.overlay, .menu').forEach(o => o.remove());
     const vorher = document.body.innerHTML.length + ':' + String(App.aktuelleSeite() || '');
     b.click();

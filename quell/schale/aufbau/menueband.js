@@ -314,6 +314,19 @@ const Menueband = (() => {
             wurzel.replaceChildren();
             return;
         }
+        /* ÜBER EINER STARTANSICHT GANZ WEG (E219).
+           Der Grund steht schon zwei Absätze weiter oben, bei `zugeklappt`:
+           „Ein Menüband über einer Startansicht kann ohnehin fast nichts —
+           Einfügen und Zeichnen brauchen eine Seite, in die geschrieben wird."
+           Zugeklappt bleiben davon trotzdem sechs Reiter und ein Pfeil stehen,
+           also sieben anklickbare Dinge, die alle dasselbe sagen: nicht jetzt.
+           Die ruhige Fassung nimmt den Gedanken zu Ende. Sobald eine Seite
+           offen ist, ist das Band wieder da — zugeklappt, wie bisher. */
+        if (typeof Ruhig !== 'undefined' && Ruhig.an() && !seiteOffen()) {
+            wurzel.hidden = true;
+            wurzel.replaceChildren();
+            return;
+        }
         wurzel.hidden = false;
         let gewaehlt = reiterJetzt();
         if (!reiter.some((r) => r.id === gewaehlt))

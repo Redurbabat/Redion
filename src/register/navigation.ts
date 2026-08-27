@@ -81,6 +81,14 @@ Register.navigation = (() => {
       knopfId: 'btn-home',      tun: () => Produktwelten.lernen('heute') },
     { id: 'lernzentrum',name: 'Lernzentrum',       icon: '🎓', platz: 'oben',  rang: 40,
       knopfId: 'btn-learning',  tun: () => Produktwelten.lernen('lernen') },
+    /* ELEKTRO HATTE KEINE EIGENE ZEILE. Es ist eines der 14 Module, und
+       zwar das grösste — Fachzeichen, Schaltplan, Simulation, Rechner,
+       Formelheft, Prüfung. Wer hin wollte, musste über den Workspace oder
+       das Lernzentrum. Beim Nachzählen für E218 fiel das auf: die
+       Seitenleiste führte 37 Wege, und der meistbenutzte war keiner davon. */
+    { id: 'elektro',    name: 'Elektro',           icon: '⚡', platz: 'oben',  rang: 45,
+      knopfId: 'btn-elektro',
+      tun: () => { if (typeof Electrical !== 'undefined') Electrical.open(); } },
     { id: 'workspace',  name: 'Workspace',         icon: '🧱', platz: 'oben',  rang: 50,
       knopfId: 'btn-workspace', tun: () => Produktwelten.workspace('start') },
     { id: 'bibliothekOben', name: 'Bibliothek',    icon: '📚', platz: 'oben',  rang: 60,

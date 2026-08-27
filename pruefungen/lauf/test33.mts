@@ -100,6 +100,10 @@ import { chromium } from 'playwright';
        Prüfung, die nebenbei etwas anderes mitprüft, ist bei einem Fehler
        schwerer zu lesen, nicht leichter. */
     await p.evaluate(() => {
+      /* Seit E219 steht „Meine Apps" hinter „Mehr". Das ist kein Umweg der
+         Prüfung, sondern der Weg, den auch Redur geht — deshalb wird hier
+         geklickt und nicht die ruhige Fassung abgeschaltet. */
+      if (typeof Ruhig !== 'undefined' && Ruhig.an() && !Ruhig.offen()) Ruhig.schalten();
       const alle = [...document.querySelectorAll<HTMLElement>('[data-app-gruppe]')]
         .map(b => b.dataset['appGruppe'] || '').filter(Boolean);
       Store.setMeta('appGruppenAuf', alle);

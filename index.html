@@ -151,19 +151,22 @@
     <button class="side-item" id="btn-cmd">
       <span data-sym="command"></span><span>Befehle</span><span class="k">Strg ⇧ P</span>
     </button>
-    <button class="side-item" id="btn-home">
+    <button class="side-item" id="btn-home" data-ruhig="bleibt">
       <span data-sym="today"></span><span>Heute</span>
     </button>
-    <button class="side-item" id="btn-learning">
+    <button class="side-item" id="btn-learning" data-ruhig="bleibt">
       <span data-sym="learn"></span><span>Lernzentrum</span>
+    </button>
+    <button class="side-item" id="btn-elektro" data-ruhig="bleibt">
+      <span data-sym="bolt"></span><span>Elektro</span>
     </button>
     <button class="side-item" id="btn-workspace">
       <span data-sym="workspace"></span><span>Workspace</span>
     </button>
-    <button class="side-item" id="btn-library">
+    <button class="side-item" id="btn-library" data-ruhig="bleibt">
       <span data-sym="library"></span><span>Bibliothek</span>
     </button>
-    <button class="side-item" id="btn-tasks">
+    <button class="side-item" id="btn-tasks" data-ruhig="bleibt">
       <span data-sym="tasks"></span><span>Aufgaben</span>
     </button>
     <button class="side-item" id="btn-inbox">
@@ -171,6 +174,10 @@
     </button>
     <button class="side-item" id="btn-new">
       <span data-sym="plus"></span><span>Neue Seite</span><span class="k">Strg N</span>
+    </button>
+    <button class="side-item sl-mehr" id="btn-mehr" data-ruhig="schalter"
+            aria-expanded="false" aria-controls="sidebar">
+      <span data-sym="dots"></span><span class="sl-mehr-text">Mehr</span><span class="k">Strg M</span>
     </button>
   </nav>
 
@@ -280,13 +287,13 @@
       <kbd>Strg P</kbd>
     </button>
     <div class="spacer"></div>
-    <button class="top-btn" id="btn-teilen" title="Teilen und ausgeben"><span data-sym="share"></span><span>Teilen</span></button>
+    <button class="top-btn" id="btn-teilen" data-ruhig="mehr" title="Teilen und ausgeben"><span data-sym="share"></span><span>Teilen</span></button>
     <button class="top-btn" id="btn-ai" title="Lokale KI (Strg + J)"><span data-sym="sparkle"></span><span>KI</span></button>
-    <button class="top-btn schmal" id="btn-komm"    title="Kommentare" aria-label="Kommentare"><span data-sym="chat"></span></button>
-    <button class="top-btn schmal" id="btn-verlauf" title="Aktualisierungen und Versionsverlauf" aria-label="Versionsverlauf"><span data-sym="history"></span></button>
-    <button class="top-btn schmal" id="btn-auto"    title="Automationen der Datenbank" aria-label="Automationen"><span data-sym="bolt"></span></button>
-    <button class="top-btn schmal" id="btn-link"    title="Link zur Seite kopieren" aria-label="Link kopieren"><span data-sym="link"></span></button>
-    <button class="top-btn schmal" id="btn-lock"    title="Seite gegen Bearbeiten sperren" aria-label="Seite sperren"><span data-sym="lockOpen"></span></button>
+    <button class="top-btn schmal" id="btn-komm" data-ruhig="mehr"    title="Kommentare" aria-label="Kommentare"><span data-sym="chat"></span></button>
+    <button class="top-btn schmal" id="btn-verlauf" data-ruhig="mehr" title="Aktualisierungen und Versionsverlauf" aria-label="Versionsverlauf"><span data-sym="history"></span></button>
+    <button class="top-btn schmal" id="btn-auto" data-ruhig="mehr"    title="Automationen der Datenbank" aria-label="Automationen"><span data-sym="bolt"></span></button>
+    <button class="top-btn schmal" id="btn-link" data-ruhig="mehr"    title="Link zur Seite kopieren" aria-label="Link kopieren"><span data-sym="link"></span></button>
+    <button class="top-btn schmal" id="btn-lock" data-ruhig="mehr"    title="Seite gegen Bearbeiten sperren" aria-label="Seite sperren"><span data-sym="lockOpen"></span></button>
     <button class="top-btn schmal" id="btn-fav"     title="Zu Favoriten" aria-label="Zu Favoriten"><span data-sym="star"></span></button>
     <button class="top-btn schmal" id="btn-page-menu" title="Seitenoptionen" aria-label="Seitenoptionen"><span data-sym="dots"></span></button>
   </header>
@@ -513,6 +520,7 @@
 <script src="quell/bereiche/wissen/produkt_onboarding.js"></script>
 <script src="quell/bereiche/wissen/produktwelten.js"></script>
 <script src="quell/bereiche/ki/dienst.js"></script>
+<script src="quell/schale/aufbau/ruhig.js"></script>
 <script src="quell/schale/aufbau/seitenleiste.js"></script>
 <script src="quell/schale/aufbau/kopfleiste.js"></script>
 <script src="quell/schale/aufbau/menueband.js"></script>

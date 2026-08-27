@@ -16049,3 +16049,158 @@ und Masse einmal beschrieben sind statt dreimal.
 
 NOCH NICHT GEBAUT. Das ist ein Entwurf, keine Änderung an der App. Wenn er
 gebaut wird, gilt weiter §46: erst die Daten, dann das Aussehen.
+
+
+================================================================================
+E219 — Die ruhige Fassung ist gebaut: 52 Rahmenknöpfe werden 15
+================================================================================
+
+E218 war ein Entwurf. Redur nach dem ersten Einbau: „Warte, es ist so gleich
+wie Redion, es sollte nicht wie es ist."
+
+Er hatte recht. Der erste Anlauf machte nur die Seitenleiste ruhig — oben
+standen weiter 13 Knöpfe und das Menüband mit sechs Reitern, und deshalb sah
+es aus wie vorher. Ruhig wird eine Oberfläche nicht dadurch, dass eine von
+drei Leisten schrumpft.
+
+
+WAS JETZT WIRKLICH GESCHIEHT
+
+Gemessen an der laufenden App bei 1440 × 900, gezählt wird alles, was ein
+Mensch anklicken kann:
+
+                        vorher              ruhig
+    Seitenleiste          32                   8
+    Kopfzeile             13                   7
+    Menüband               7                   0   (über einer Startansicht)
+                        ─────               ─────
+                          52                  15
+
+Auf einer offenen Seite waren es 67; das Menüband kommt dort zurück,
+zugeklappt wie bisher — dort kann es ja auch etwas.
+
+
+DREI EINGRIFFE, UND KEINER LÖSCHT ETWAS
+
+1. DIE SEITENLEISTE zeigt fünf Wege: Heute, Lernzentrum, Elektro, Bibliothek,
+   Aufgaben — dazu „Mehr" und der Schreibknopf. Ein Klick auf „Mehr" (oder
+   Strg+M) blendet ALLES wieder ein, an derselben Stelle, in derselben
+   Reihenfolge, mit denselben Knöpfen. Kein neues Fenster, keine zweite
+   Liste. Der Unterschied zwischen „an" und „offen" ist genau eine
+   CSS-Regel.
+
+   Das ist keine Sparsamkeit, sondern §8: ein „Mehr", das eine eigene Liste
+   zeichnete, wäre ein zweiter Katalog neben dem Register — und der erste,
+   der still auseinanderläuft, sobald jemand einen Eintrag ergänzt.
+
+2. DIE KOPFZEILE gibt fünf Zeichen ab: Teilen, Kommentare, Versionsverlauf,
+   Automationen, Link kopieren. Sie stehen im ⋯-Menü — und zwar nicht in
+   einem neuen Block, sondern in dem, der dort schon für das Telefon stand.
+   Aus `UI.amTelefon()` wurde `UI.amTelefon() || Ruhig.an()`. Eine Zeile,
+   dieselbe Begründung, dieselbe Stelle.
+
+3. DAS MENÜBAND bleibt über einer Startansicht ganz weg. Der Grund stand
+   schon im Code, bei `zugeklappt`: „Ein Menüband über einer Startansicht
+   kann ohnehin fast nichts — Einfügen und Zeichnen brauchen eine Seite, in
+   die geschrieben wird." Zugeklappt blieben davon trotzdem sechs Reiter und
+   ein Pfeil stehen, also sieben Dinge, die alle dasselbe sagen: nicht jetzt.
+
+Dazu zwei kleinere Sachen, die beim Messen auffielen:
+
+  · ELEKTRO BEKOMMT EINE ZEILE. Es ist eines der 14 Module und hatte keine —
+    man kam nur über den Workspace oder das Lernzentrum hin. Beim Zählen für
+    E218 fiel auf: die Seitenleiste führte 37 Wege, und der meistbenutzte war
+    keiner davon.
+
+  · DIE TITELZEILE DER LERNWELT ist weg. „REDION / Lernen & Alltag" stand
+    direkt unter der Pfadnavigation, die „Lernen & Alltag" schon sagt.
+    Zweimal dasselbe übereinander. Der Bereichsfilter wandert in die
+    Reiterzeile — er gehört ohnehin dorthin, beide entscheiden, WAS man
+    sieht. Der Gruß begann bei y=322, jetzt bei y=248.
+
+
+DER SCHALTER
+
+`Store.getMeta('ruhig', true)`. Von Haus aus an; wer die alte Leiste will,
+schaltet zurück, und der Wunsch überlebt den Neustart.
+
+
+VIER FEHLER, DIE DIE EIGENE PRÜFUNG GEFUNDEN HAT
+
+test248 hat nicht bestätigt, was schon lief — es hat vier Dinge gefunden,
+die nicht liefen.
+
+  · DER SCHALTER SCHALTETE NICHT ZURÜCK. `Ruhig.binde()` stand in `start()`,
+    `await Store.load()` 135 Zeilen weiter unten in `starteWirklich`. Also
+    las `getMeta` aus einem leeren Zwischenspeicher, und die Vorgabe gewann
+    immer. Der Wert war korrekt gespeichert — man sah es nur nie.
+    Dieselbe Falle wie beim Bibliotheks-Regal (E207). Jetzt steht nach
+    `Store.load()` ein zweites `anwenden`.
+
+  · `visibility:hidden` MACHT EINEN KNOPF NICHT FOKUSSIERBAR. Die `+` und `⋯`
+    am Baum sollten erst beim Zeigen kommen und bei Tastaturfokus trotzdem
+    sichtbar werden. Mit `visibility:hidden` kommt die Tastatur nie hin, und
+    die Regel, die sie sichtbar machen soll, kann nie greifen. Jetzt
+    `opacity:0` mit `pointer-events:none`: im Tabulator-Weg, aber unklickbar,
+    bis sie da sind.
+
+  · DER SELEKTOR TRAF DIE FALSCHE KLASSE. Gemessen wurde `.wz-zeile`,
+    im Baum heisst es `.act`. Acht Knöpfe blieben stehen, und die Zahl las
+    sich wie ein Erfolg: 14 statt 32.
+
+  · DIE ERSTE VERSTECK-REGEL TRAF „PRIVAT" MIT. Sie hiess
+    `#tree .side-section` — jede Abschnittsüberschrift, also auch die über
+    Redurs eigenen Seiten. Die Grenze läuft nicht zwischen Überschrift und
+    Zeile, sondern zwischen GERÜST und INHALT. `seitenleiste.ts` markiert
+    das Gerüst jetzt mit `data-ruhig="chrome"`; alles ohne diese Marke
+    bleibt stehen.
+
+
+UND DER WÄCHTER SELBST BRAUCHTE DREI ANLÄUFE
+
+§3 soll das eine beweisen, worauf es ankommt: es ist nichts weg.
+
+    Anlauf 1   zählte die Knöpfe IM BAUM und verglich die Zahl.
+               Gegenprobe: `btn-inbox` ein `display:none` verpasst — GRÜN.
+               Ob etwas im Dokument steht, sagt nichts darüber, ob man
+               hinkommt.
+
+    Anlauf 2   verglich die sichtbaren NAMEN zwischen „aus" und „Mehr offen".
+               Gegenprobe: dieselbe Zeile — wieder GRÜN. Dasselbe
+               `display:none` versteckt den Posteingang in BEIDEN Fassungen,
+               und wer zwei gleich blinde Bilder vergleicht, sieht nichts.
+
+    Anlauf 3   fragt das REGISTER: jeder Eintrag mit Knopf, der sich nicht
+               selbst per `zeigen()` abmeldet, muss bei offenem „Mehr"
+               wirklich zu sehen sein.
+               Gegenprobe: ROT, mit dem Satz „unsichtbar: Posteingang
+               (btn-inbox)". Zweite Gegenprobe, `knopfId` verdreht: ROT,
+               „unsichtbar: Elektro (btn-elektroXX)".
+
+    Eine Prüfung, die zwei Zustände miteinander vergleicht, prüft nur, dass
+    sie gleich sind. Was sie behaupten soll, ist etwas anderes: dass der
+    Katalog mit dem Bildschirm übereinstimmt.
+
+
+UND EIN FEHLER, DEN ICH SELBST GEMACHT HABE
+
+Beim Zurücksetzen einer Gegenprobe `git checkout index.html` — und damit
+alle vier Änderungen an der Datei mit weggeworfen, nicht nur die eine Zeile
+der Gegenprobe. Gemerkt hat es `grep -c data-ruhig`: 0 statt 12.
+
+Für eine Gegenprobe wird eine KOPIE angelegt und zurückkopiert, nicht die
+Datei auf den letzten Stand des Verzeichnisses gesetzt. Der Unterschied
+fällt nur auf, wenn man vorher etwas anderes an derselben Datei getan hat —
+also genau dann, wenn er weh tut.
+
+
+STAND
+
+test248 mit 35 Punkten, davon vier mit eigener Gegenprobe. test33 und
+test222 mussten mitwachsen:
+
+    test33   klickt jetzt zuerst „Mehr" — den Weg, den Redur auch geht,
+             statt die ruhige Fassung abzuschalten.
+    test222  unterscheidet Ziel von Schalter. „Mehr" geht nirgends hin und
+             gehört deshalb nicht ins Navigationsregister; jeder ANDERE neue
+             Knopf ohne Registereintrag macht die Prüfung weiterhin rot.
