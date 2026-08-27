@@ -16989,15 +16989,72 @@ Register.menueband = (() => {
        kennt, hängt sich hinten an — eine neue Gruppe verschwindet also nicht,
        sie steht nur nicht vorne. */
     const GRUPPEN_FOLGE = ['Grundlegend', 'Medien', 'Datenbank', 'Wissen', 'Erweitert', 'KI'];
+    /**
+     * DIE DREI SLASH-AKTIONEN, DIE OHNE SCHREIBZEIGER GEHEN (E215/L63).
+     *
+     * Welche das sind, entscheidet der Editor über `Blocks.AM_ENDE` — hier
+     * steht keine zweite Liste. Wer dort eine vierte einträgt, bekommt sie
+     * hier ohne Zutun; wer eine streicht, verliert auch den Knopf. Genau das
+     * ist der Zweck eines Katalogs.
+     *
+     * Namen und Zeichen kommen aus `Register.bloecke`, wo die Slash-Einträge
+     * ohnehin stehen. „Person oder Seite erwähnen" ist für eine Kachel zu
+     * lang; das Register kennt es unter diesem Namen, und für den Knopf wird
+     * daraus „Erwähnung" — der ganze Name bleibt im Hinweis.
+     */
+    const KURZNAME = {
+        mention: 'Erwähnung', emoji: 'Emoji'
+    };
+    /* Der Registername „Person oder Seite erwähnen" verschweigt, dass dasselbe
+       Menü auch „heute", „morgen" und „Datum wählen …" führt. Wer ein Datum
+       sucht, findet den Knopf sonst nicht. */
+    const LANGNAME = {
+        mention: 'Seite, Person oder Datum einfügen'
+    };
+    const imTextEintraege = () => {
+        let welche = [];
+        try {
+            welche = [...(Blocks.AM_ENDE ?? [])];
+        }
+        catch {
+            welche = [];
+        }
+        if (!welche.length || !Register?.bloecke?.alle)
+            return [];
+        const nachAktion = new Map();
+        for (const b of Register.bloecke.alle())
+            if (b && b.aktion)
+                nachAktion.set(String(b.aktion), b);
+        return welche
+            .map(was => {
+            const b = nachAktion.get(was);
+            if (!b)
+                return null;
+            return {
+                reiter: 'einfuegen', gruppe: 'Im Text', id: 'akt-' + was,
+                name: KURZNAME[was] ?? String(b.name || was),
+                zeichen: String(b.icon || '▫'),
+                hinweis: (LANGNAME[was] ?? String(b.name || was)) + ' — hängt sich ans Ende der Seite',
+                tun: () => { Blocks.aktionAmEnde(was); },
+                zeigen: () => kann(() => Blocks.aktionAmEnde) && !!seiteJetzt()
+            };
+        })
+            .filter((x) => x !== null);
+    };
     const einfuegenEintraege = () => {
         if (!Register?.bloecke?.alle)
             return [];
         /* `aktion` trennt die echten Blockarten von den Slash-BEFEHLEN
-           („Umwandeln in …", „Duplizieren", „Erwähnen"). Die brauchen den
-           Schreibzeiger und den Block darunter — `Editor.slashAktion(ct, block,
-           was)` — und beides hat ein Knopf im Band nicht. Sie stehen deshalb
-           nicht hier, sondern weiterhin im Slash-Menü. Das ist eine bekannte
-           Lücke und keine vergessene Zeile; sie steht in LUECKEN.md. */
+           („Umwandeln in …", „Duplizieren", „Erwähnen"). Die meisten brauchen
+           den Schreibzeiger und den Block darunter — `Blocks.slashAktion(ct,
+           block, was)` — und beides hat ein Knopf im Band nicht. Sie stehen
+           deshalb nicht hier, sondern weiterhin im Slash-Menü.
+    
+           Drei von ihnen gehen inzwischen doch: „Erwähnung", „Datum" und
+           „Emoji" fügen etwas EIN, statt an einem bestimmten Block zu drehen.
+           Für sie hängt `Blocks.aktionAmEnde` einen leeren Textblock ans Ende
+           und schreibt dort das Auslösezeichen (E215/L63). Welche das sind,
+           sagt `Blocks.AM_ENDE` — nicht eine Liste hier. */
         const bloecke = Register.bloecke.alle().filter(b => b && b.id && !b.aktion);
         const rang = (g) => {
             const i = GRUPPEN_FOLGE.indexOf(g);
@@ -17006,7 +17063,11 @@ Register.menueband = (() => {
         return bloecke
             .slice()
             .sort((a, b) => rang(a.gruppe) - rang(b.gruppe))
-            .map(b => ({
+            /* Der Rückgabetyp steht ausdrücklich da: ohne ihn schliesst der
+               Typprüfer aus dem Literal einen engeren Typ (`hinweis` als PFLICHT,
+               weil es hier immer gesetzt wird) und lehnt danach das `concat` mit
+               echten `BandEintrag` ab, bei denen es freiwillig ist. */
+            .map((b) => ({
             reiter: 'einfuegen', gruppe: String(b.gruppe || 'Weiteres'),
             id: 'blk-' + b.id, name: String(b.name || b.id),
             zeichen: String(b.icon || '▫'),
@@ -17014,7 +17075,8 @@ Register.menueband = (() => {
             hinweis: String(b.name || b.id) + ' einfügen',
             tun: () => Blocks.einfuegenAmEnde(b.id),
             zeigen: () => kann(() => Blocks.einfuegenAmEnde)
-        }));
+        }))
+            .concat(imTextEintraege());
     };
     /* ======================================================================== *
      * ZEICHNEN — Blatt, Whiteboard, Plan, Kamera
@@ -48832,12 +48894,34 @@ const Blocks = (() => {
         }
         /* Erwähnung, Datum, Erinnerung und Emoji schreiben ihr Zeichen und
            lassen dann das Menü aufgehen, das ohnehin daran hängt. */
-        const ZEICHEN = { mention: '@', date: '@', remind: '@remind ', emoji: ':' };
-        const zeichen = ZEICHEN[was];
+        zeichenAusloesen(b.id, was);
+    };
+    /* ------------------------------------------------------------------------
+     * DAS AUSLÖSEZEICHEN SCHREIBEN — EINMAL, FÜR ZWEI WEGE
+     *
+     * „@" öffnet die Erwähnung, „:" das Emoji-Menü. Beide hängen ohnehin am
+     * Tippen; die Aktion tut nichts weiter, als das Zeichen zu setzen und so
+     * zu tun, als sei es getippt worden.
+     *
+     * Das stand als Schwanz in `slashAktion` und wird seit E215 auch vom
+     * Menüband gebraucht (L63). Zwei Kopien desselben Schwanzes wären zwei
+     * Stellen, an denen jemand später ein Zeichen ändert — und eine, an der
+     * er es vergisst.
+     *
+     * GELESEN WIRD AUS DEM SPEICHER, NICHT AUS DEM DOM. `slashAktion` hatte
+     * `ct.textContent`; an der Stelle des Aufrufs ist beides gleich, aber der
+     * Speicher gilt auch dann, wenn kein Feld im Bild steht — und genau das
+     * ist beim Weg über das Menüband der Normalfall.
+     * ----------------------------------------------------------------------*/
+    const AUSLOESER = { mention: '@', date: '@', remind: '@remind ', emoji: ':' };
+    const zeichenAusloesen = (blockId, was) => {
+        const zeichen = AUSLOESER[was];
         if (!zeichen)
-            return;
-        ct.textContent = (ct.textContent || '') + zeichen;
-        Store.updateBlock(b.id, { text: ct.textContent });
+            return false;
+        const b = Store.getBlock(blockId);
+        if (!b)
+            return false;
+        Store.updateBlock(b.id, { text: (b.text || '') + zeichen });
         App.zeichneSeite(b.id, 'ende');
         setTimeout(() => {
             const feld = document.querySelector(`.blk[data-bid="${b.id}"] [contenteditable]`);
@@ -48847,6 +48931,73 @@ const Blocks = (() => {
                 feld.dispatchEvent(new InputEvent('input', { bubbles: true }));
             }
         }, 30);
+        return true;
+    };
+    /**
+     * DIESELBE AKTION, ABER OHNE SCHREIBZEIGER (L63).
+     *
+     * `slashAktion` braucht das Feld, in dem gerade getippt wird, und den
+     * Block darunter. Ein Knopf im Menüband hat weder das eine noch das
+     * andere — deshalb standen „Erwähnung", „Datum" und „Emoji" bisher nur im
+     * Slash-Menü, obwohl sie inhaltlich unter „Einfügen" gehören.
+     *
+     * Hier wird stattdessen ein leerer Textblock ans Ende der Seite gehängt
+     * und das Auslösezeichen dort geschrieben. Ab da ist es derselbe Weg wie
+     * beim Tippen — dasselbe `zeichenAusloesen`, dasselbe Menü.
+     *
+     * NUR DIESE DREI. Die anderen acht Aktionen (Umwandeln, Farbe,
+     * Duplizieren, Verschieben, Löschen, Kommentar …) handeln von EINEM
+     * bestimmten Block. Ohne Schreibzeiger gibt es keinen, und einer, der
+     * sich den letzten Block greift, würde irgendwann den falschen erwischen.
+     * Ein Knopf, der manchmal das Richtige trifft, ist schlimmer als keiner.
+     */
+    /* ZWEI UND NICHT DREI — „Datum" IST DASSELBE MENÜ.
+       Nachgemessen: `mention` und `date` schreiben beide „@" und öffnen damit
+       dasselbe Menü. Das ist kein Fehler — dieses Menü führt Seiten, Personen
+       UND Datumsangaben („heute", „morgen", „Datum wählen …"). Aber ein Knopf
+       „Datum", der ein Menü mit der Überschrift „Seiten" aufmacht, führt in
+       die Irre. Ein Einstieg, dessen Hinweis alle drei nennt, tut das nicht. */
+    const AM_ENDE = ['mention', 'emoji'];
+    const aktionAmEnde = (was) => {
+        if (!AM_ENDE.includes(was))
+            return false;
+        const seite = App.aktuelleSeite();
+        if (!seite) {
+            UI.toast('Erst eine Seite öffnen');
+            return false;
+        }
+        const b = Store.addBlock(seite, 'text');
+        if (!b)
+            return false;
+        /* EMOJI GEHT NICHT ÜBER DAS AUSLÖSEZEICHEN.
+    
+           Gemessen: „:" allein öffnet nichts. Das Emoji-Menü hängt an
+           `/(?:^|\s):([a-zäöü]{2,})$/` — es braucht MINDESTENS ZWEI
+           Buchstaben nach dem Doppelpunkt, damit ein gewöhnlicher Doppelpunkt
+           im Satz kein Menü aufklappt. Das ist beim Tippen richtig und beim
+           Knopfdruck falsch: dort steht am Ende nur ein Doppelpunkt und sonst
+           nichts. (Derselbe Weg über `slashAktion` hat dasselbe Problem.)
+    
+           Die volle Auswahl mit Suchfeld gibt es — `Erwaehnungen.emojiWaehler`.
+           Sie liegt aber in einem ANDEREN Bereich, und ein Bereich darf keinen
+           anderen aufrufen (CLAUDE.md §5, Regel 1). Der vorgesehene Weg dafür
+           ist der Ereignisbus, und genau der wird hier benutzt.
+    
+           Hört niemand zu, bleibt es beim Doppelpunkt — dann ist es so gut wie
+           vorher und nicht schlechter. */
+        if (was === 'emoji' && typeof Ereignisse !== 'undefined') {
+            try {
+                /* ERST ZEICHNEN, DANN RUFEN. Der Block ist gerade erst im Speicher
+                   entstanden; auf der Seite steht er noch nicht. Wer daran ein Menü
+                   aufhängen will, findet nichts — gemessen kam beim ersten Versuch
+                   kein einziges Menü, obwohl der Zuhörer lief. */
+                App.zeichneSeite(b.id, 'ende');
+                if (Ereignisse.melde('emojiWaehlen', { blockId: b.id }) > 0)
+                    return true;
+            }
+            catch { /* dann eben das Zeichen */ }
+        }
+        return zeichenAusloesen(b.id, was);
     };
     /* ========================================================================
      * BLOCK-HANDLE-MENÜ
@@ -49494,7 +49645,7 @@ const Blocks = (() => {
     };
     return {
         TYPEN, typ, render, bindeEditor, umwandeln, umwandelnMenue, inline, esc,
-        cursorAnsEnde, slashMenue, slashAktion, alleToggles, einfuegenAmEnde, dupliziere, verschiebe, lege,
+        cursorAnsEnde, slashMenue, slashAktion, aktionAmEnde, AM_ENDE, alleToggles, einfuegenAmEnde, dupliziere, verschiebe, lege,
         blockVerschiebenNach, seitenPicker, blockMenue, datenbankWaehlen,
         knopfAusfuehren, eineAktion, AKTIONS_NAMEN,
         DIENSTE, einbettungsAdresse,
@@ -65332,6 +65483,46 @@ const Erwaehnung = (() => {
             else
                 zu();
         });
+        /* DIE EMOJI-AUSWAHL AUF ZURUF (E215/L63).
+    
+           Das Menüband kann nicht tippen. „:" allein öffnet hier nichts —
+           `emojiMenue` verlangt zwei Buchstaben danach, damit ein gewöhnlicher
+           Doppelpunkt im Satz kein Menü aufklappt.
+    
+           Der Editor meldet deshalb ein Ereignis, statt uns aufzurufen: ein
+           Bereich darf keinen anderen aufrufen (CLAUDE.md §5, Regel 1). Wer
+           zuhört, ist der Bereich, dem die Emojis gehören — also dieser.
+    
+           Eingesetzt wird über `Store`, nicht über das Feld: der Block ist
+           gerade erst entstanden, und sein `.ct` kann beim Zeichnen ein anderes
+           Element geworden sein. Der Speicher ist in beiden Fällen richtig. */
+        if (typeof Ereignisse !== 'undefined') {
+            Ereignisse.horche('emojiWaehlen', (daten) => {
+                const id = daten && daten.blockId;
+                if (!id)
+                    return;
+                /* Einen Wimpernschlag warten. Der Rufer zeichnet die Seite neu,
+                   bevor er meldet — aber ob der Block dann schon im Baum hängt,
+                   hängt daran, wie gezeichnet wird. Dieselben 30 ms wie überall,
+                   wo im Editor auf ein frisches Feld gewartet wird. */
+                setTimeout(() => oeffneAuswahl(id), 30);
+            });
+        }
+        const oeffneAuswahl = (id) => {
+            const feld = document.querySelector(`.blk[data-bid="${id}"] .ct`)
+                || document.querySelector(`.blk[data-bid="${id}"]`);
+            if (!feld)
+                return;
+            emojiWaehler(feld, (zeichen) => {
+                if (!zeichen)
+                    return;
+                const b = Store.getBlock(id);
+                if (!b)
+                    return;
+                Store.updateBlock(id, { text: (b.text || '') + zeichen });
+                App.zeichneSeite(id, 'ende');
+            });
+        };
         document.addEventListener('keydown', e => {
             const m = menue;
             if (!m)

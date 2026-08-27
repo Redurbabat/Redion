@@ -52,6 +52,10 @@
  *    die Funktion dahinter existiert — sie kann existieren und trotzdem
  *    nichts öffnen.
  *
+ * §14 „IM TEXT" (L63). Erwähnung und Emoji brauchten den Schreibzeiger.
+ *    Jetzt hängen sie einen Block ans Ende. Beim Emoji war der Weg über das
+ *    Auslösezeichen „:" tot — es braucht zwei Buchstaben dahinter.
+ *
  * Starten:
  *
  *   node pruefungen/lauf/test247.mts
@@ -73,6 +77,7 @@ declare const Register: any;
 declare const Seitenleiste: any;
 declare const Zeichenziel: any;
 declare const Marken: any;
+declare const Blocks: any;
 
 const WURZEL = path.resolve(import.meta.dirname, '../..');
 const PORT = 8967;
@@ -431,12 +436,20 @@ p('Beide Listen sind Zeichen für Zeichen dieselbe',
 await seite.evaluate(() => Seitenleiste.abschnittSchalten('werkzeuge'));
 await seite.waitForTimeout(300);
 
-/* Und „Einfügen" ist kein zweiter Blockkatalog. */
+/* Und „Einfügen" ist kein zweiter Blockkatalog.
+
+   NUR DIE BLOCKARTEN, NICHT DER GANZE REITER. Seit E215 steht dort auch
+   die Gruppe „Im Text" mit zwei Aktionen (`akt-…`), und die sind keine
+   Blockarten — der Punkt wurde dadurch rot, obwohl genau das Richtige
+   geschah: 67 Blockarten gegen 69 Einträge. Gemeint war immer „kein
+   zweiter BLOCKKATALOG", und danach wird jetzt auch gefragt. */
 const einfuegenQuell = await seite.evaluate(() => {
   const bloecke = (Register.bloecke.alle() as any[])
     .filter(b => b && b.id && !b.aktion).map(b => b.name).sort();
   const imBand = (Register.menueband.inReiter('einfuegen') || [])
-    .flatMap((g: any) => g.eintraege).map((e: any) => e.name).sort();
+    .flatMap((g: any) => g.eintraege)
+    .filter((e: any) => String(e.id || '').startsWith('blk-'))
+    .map((e: any) => e.name).sort();
   return { bloecke, imBand };
 });
 p('„Einfügen" zeigt genau die Blockarten aus dem Blockregister',
@@ -1011,6 +1024,95 @@ p('„PDF einlesen" öffnet einen Dateiwähler', waehlerKam,
 p('Und er fragt nach PDF, nicht nach allem', waehlerKam && waehlerTypen.includes('pdf'),
   `accept="${waehlerTypen}"`);
 
+/* ==========================================================================
+ * §14 Die Slash-Aktionen, die ohne Schreibzeiger gehen (L63)
+ * ========================================================================*/
+console.log('\n14 · „Im Text": Erwähnung und Emoji ohne Schreibzeiger (L63)');
+
+await klick(seite, '#menueband [data-mb-reiter="einfuegen"]');
+await seite.waitForTimeout(420);
+const imText = await seite.evaluate(() => ({
+  ausEditor: (() => { try { return [...(Blocks.AM_ENDE || [])]; } catch { return []; } })(),
+  knoepfe: [...document.querySelectorAll('#menueband [data-band^="akt-"]')]
+    .map(b => (b as HTMLElement).dataset['band'] || ''),
+  /* KLEINGESCHRIEBEN VERGLEICHEN. Auf dem Bildschirm steht „IM TEXT", aber
+     die Grossbuchstaben macht `text-transform:uppercase` — im `textContent`
+     steht „Im Text". Der erste Entwurf verglich gegen die Grossschreibung
+     und war damit IMMER falsch; aufgefallen ist es nur, weil das Feld in
+     einer Gegenprobe mit ausgegeben wurde und dort `false` stand, wo es
+     `true` hätte sein müssen. */
+  gruppe: [...document.querySelectorAll('#menueband .mb-gruppe-titel')]
+    .map(g => (g.textContent || '').trim().toLowerCase()).includes('im text')
+}));
+/* Welche es sind, sagt der Editor — nicht eine zweite Liste im Register. */
+p('Die Gruppe „Im Text" führt genau das, was `Blocks.AM_ENDE` nennt',
+  imText.ausEditor.length > 0 && imText.knoepfe.length === imText.ausEditor.length
+    && imText.ausEditor.every(w => imText.knoepfe.includes('akt-' + w)),
+  JSON.stringify(imText));
+/* Ohne Überschrift steht die Gruppe am Telefon ohne Trennung neben der
+   vorigen — dort ist sie das Einzige, was Gruppen auseinanderhält. */
+p('Und sie trägt ihre Überschrift', imText.gruppe, JSON.stringify(imText));
+
+/* „Erwähnung" hängt einen Block an und öffnet das Menü, das am „@" hängt. */
+const vorMention = await seite.evaluate(() => Store.childrenOf(App.aktuelleSeite()).length);
+await klick(seite, '#menueband [data-band="akt-mention"]');
+await seite.waitForTimeout(1200);
+const nachMention = await seite.evaluate(() => {
+  const kinder = Store.childrenOf(App.aktuelleSeite());
+  const letzt = kinder[kinder.length - 1];
+  return { anzahl: kinder.length, text: letzt?.text ?? '',
+           menues: document.querySelectorAll('.menu').length };
+});
+p('„Erwähnung" hängt einen Block an und öffnet das Menü',
+  nachMention.anzahl === vorMention + 1 && nachMention.text === '@' && nachMention.menues === 1,
+  JSON.stringify(nachMention));
+await seite.keyboard.press('Escape').catch(() => {});
+await seite.waitForTimeout(300);
+
+/* EMOJI: DER DOPPELPUNKT ALLEIN TUT NICHTS.
+   Gemessen: das Emoji-Menü hängt an `:` PLUS mindestens zwei Buchstaben —
+   sonst klappte im Satz bei jedem Doppelpunkt etwas auf. Beim Knopfdruck
+   steht am Ende aber nur der Doppelpunkt, und es passierte nichts: ein
+   Knopf, der einen einsamen Doppelpunkt hinterlässt.
+
+   Deshalb geht der Weg jetzt über den Ereignisbus zur vollen Auswahl. Der
+   Punkt prüft beides: dass die Auswahl AUFGEHT und dass KEIN Doppelpunkt
+   stehen bleibt. */
+await seite.evaluate(() => { document.querySelectorAll('.menu').forEach(m => m.remove()); });
+const vorEmoji = await seite.evaluate(() => Store.childrenOf(App.aktuelleSeite()).length);
+await klick(seite, '#menueband [data-band="akt-emoji"]');
+await seite.waitForTimeout(1200);
+const nachEmoji = await seite.evaluate(() => {
+  const kinder = Store.childrenOf(App.aktuelleSeite());
+  const letzt = kinder[kinder.length - 1];
+  return { anzahl: kinder.length, text: letzt?.text ?? '', id: letzt?.id ?? '',
+           auswahl: document.querySelectorAll('.swatches.emojis').length,
+           suchfeld: document.querySelectorAll('.emoji-suche').length,
+           knoepfe: document.querySelectorAll('.swatches.emojis button[data-e]').length };
+});
+p('„Emoji" öffnet die volle Auswahl mit Suchfeld',
+  nachEmoji.anzahl === vorEmoji + 1 && nachEmoji.auswahl === 1
+    && nachEmoji.suchfeld === 1 && nachEmoji.knoepfe > 20,
+  JSON.stringify(nachEmoji));
+p('Und lässt keinen einsamen Doppelpunkt stehen',
+  nachEmoji.text === '', `Blocktext „${nachEmoji.text}"`);
+
+/* Und die Wahl muss ankommen — sonst wäre die Auswahl auch nur Zierde. */
+const gewaehlt = await seite.evaluate(() => {
+  const knopf = document.querySelector<HTMLElement>('.swatches.emojis button[data-e]');
+  if (!knopf) return null;
+  const zeichen = knopf.dataset['e'] || '';
+  knopf.click();
+  return zeichen;
+});
+await seite.waitForTimeout(900);
+const imBlock = await seite.evaluate((id: string) => Store.getBlock(id)?.text ?? '(weg)',
+  nachEmoji.id);
+p('Ein angeklicktes Emoji steht danach im Block',
+  !!gewaehlt && imBlock === gewaehlt,
+  gewaehlt === null ? 'kein Emoji-Knopf zum Anklicken — so kann der Punkt nie rot werden'
+                    : `gewählt „${gewaehlt}", im Block „${imBlock}"`);
+
 console.log('\nFehler auf der Seite:', fehler.length ? fehler.join(' | ') : 'keine');
 p('Keine Fehler auf der Seite', !fehler.length, fehler.join(' | '));
 await seite.close();
@@ -1089,13 +1191,25 @@ const handyAuf = await handy.evaluate(() => {
   const band = document.querySelector('.mb-band') as HTMLElement;
   return {
     knoepfe: kn.length,
+    /* Wie viele es SEIN sollen, sagt das Register — nicht die Zahl 67.
+       Sie stand hier fest, und die zwei Einträge aus E215 machten den Punkt
+       rot, obwohl nichts fehlte. Eine feste Zahl in einem Punkt, der eine
+       Liste bewacht, schlägt bei jedem neuen Eintrag an und sagt dabei
+       nichts über den Fehler, den sie finden sollte — derselbe Befund wie
+       bei den Werkzeug-Zeilen in E211. */
+    sollen: (() => { try {
+      return (Register.menueband.inReiter('einfuegen') || [])
+        .reduce((n: number, g: any) => n + g.eintraege.length, 0);
+    } catch { return -1; } })(),
     zuKlein: kn.filter(b => b.getBoundingClientRect().height < 44).length,
     rolltSenkrecht: band.scrollHeight > band.clientHeight + 4,
     rolltWaagerecht: band.scrollWidth > band.clientWidth + 4,
     bandHoch: Math.round(band.getBoundingClientRect().height)
   };
 });
-p('Aufgeklappt stehen alle 67 Blockarten da', handyAuf.knoepfe === 67, String(handyAuf.knoepfe));
+p('Aufgeklappt steht jeder Eintrag des Reiters da',
+  handyAuf.sollen > 60 && handyAuf.knoepfe === handyAuf.sollen,
+  `${handyAuf.knoepfe} gezeichnet, ${handyAuf.sollen} im Register`);
 p('Jeder Knopf ist mindestens 44 px hoch', handyAuf.zuKlein === 0, String(handyAuf.zuKlein));
 /* Waagerechtes Rollen findet niemand von selbst — deshalb bricht das Band um
    und rollt senkrecht. Das ist der Unterschied zwischen „vierzehn von 67

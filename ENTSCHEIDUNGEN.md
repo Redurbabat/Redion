@@ -15703,3 +15703,121 @@ noch auf seine eigene Ursache:
 Grün: test247 79/79, test87 129, test34 77/77, test33 96/96, test128 50,
 test192 25, test173 11, test217 27/27, test222 50/50, test215 44/44,
 test105 55, test109 20.
+
+
+================================================================================
+E215 — „Im Text": zwei Slash-Aktionen ohne Schreibzeiger (L63)
+================================================================================
+
+`Register.bloecke` führt elf Einträge mit `aktion` — Slash-BEFEHLE statt
+Blockarten. Sie brauchen `Blocks.slashAktion(ct, block, was)`, also das Feld,
+in dem gerade getippt wird, und den Block darunter. Ein Knopf im Menüband hat
+weder das eine noch das andere.
+
+Drei davon fügen aber etwas EIN, statt an einem bestimmten Block zu drehen.
+Für sie hängt `Blocks.aktionAmEnde(was)` einen leeren Textblock ans Ende der
+Seite und macht dort weiter — ab da ist es derselbe Weg wie beim Tippen.
+
+Die anderen acht bleiben, wo sie sind. „Umwandeln in", „Farbe", „Duplizieren",
+„Verschieben", „Löschen", „Kommentar" handeln von EINEM bestimmten Block; ohne
+Schreibzeiger gibt es keinen, und einer, der sich den letzten greift, würde
+irgendwann den falschen erwischen. Ein Knopf, der manchmal das Richtige trifft,
+ist schlimmer als keiner.
+
+
+AUS DREI WURDEN ZWEI, UND DAS WAR EINE MESSUNG
+--------------------------------------------------------------------------------
+
+Der erste Entwurf nahm `mention`, `date` und `emoji`. Nachgemessen:
+
+    mention  schreibt „@"  →  Menü geht auf     ✓
+    date     schreibt „@"  →  DASSELBE Menü     ✓ aber doppelt
+    emoji    schreibt „:"  →  nichts            ✗
+
+`date` ist kein Fehler im Programm: dieses Menü führt Seiten, Personen UND
+Datumsangaben („heute", „morgen", „Datum wählen …"). Aber zwei Kacheln
+nebeneinander, die dasselbe Menü aufmachen, und die eine heisst „Datum",
+während die Überschrift darin „Seiten" lautet — das führt in die Irre. Es
+bleibt bei einem Einstieg, und sein Hinweis nennt alle drei: „Seite, Person
+oder Datum einfügen".
+
+
+DER DOPPELPUNKT, DER NICHTS TUT
+--------------------------------------------------------------------------------
+
+`emoji` schrieb „:" und verliess sich darauf, dass das Emoji-Menü daran
+hängt. Tut es — aber erst ab
+
+    /(?:^|\s):([a-zäöü]{2,})$/
+
+also MIT mindestens zwei Buchstaben dahinter. Das ist beim Tippen genau
+richtig: sonst klappte im Satz bei jedem Doppelpunkt etwas auf. Beim
+Knopfdruck steht am Ende aber nur der Doppelpunkt, und es passierte nichts.
+
+DASSELBE GILT FÜR DEN SLASH-BEFEHL. `/emoji` geht denselben Weg und
+hinterlässt denselben einsamen Doppelpunkt — der Fehler ist älter als das
+Menüband und wurde erst hier sichtbar, weil ihn zum ersten Mal jemand
+gemessen hat.
+
+Die volle Auswahl mit Suchfeld gibt es längst: `Erwaehnungen.emojiWaehler`.
+Sie liegt in einem ANDEREN Bereich, und ein Bereich darf keinen anderen
+aufrufen (CLAUDE.md §5, Regel 1). Der dafür vorgesehene Weg ist der
+Ereignisbus, und genau der wird benutzt:
+
+    Editor         Ereignisse.melde('emojiWaehlen', { blockId })
+    Erwähnungen    Ereignisse.horche('emojiWaehlen', …) → emojiWaehler(…)
+
+Hört niemand zu, bleibt es beim Doppelpunkt — dann ist es so gut wie vorher
+und nicht schlechter.
+
+ERST ZEICHNEN, DANN RUFEN. Der erste Versuch meldete sofort, und es ging kein
+einziges Menü auf, obwohl der Zuhörer lief: der Block war gerade erst im
+Speicher entstanden und stand auf der Seite noch nicht. Wer daran ein Menü
+aufhängen will, findet nichts. Jetzt zeichnet der Rufer die Seite neu, und
+der Zuhörer wartet zusätzlich 30 ms — dieselbe Spanne, mit der der Editor
+überall auf ein frisches Feld wartet.
+
+
+DREI ALTE PRÜFPUNKTE HABEN ZU RECHT ANGESCHLAGEN
+--------------------------------------------------------------------------------
+
+Und alle drei aus demselben Grund: sie hatten eine Annahme eingebaut, die
+sich rechtmässig geändert hat.
+
+  · „Einfügen zeigt genau die Blockarten aus dem Blockregister" — 67 gegen
+    69. Die zwei neuen sind keine Blockarten. Gefragt wird jetzt nur nach
+    denen mit `blk-`.
+  · „Aufgeklappt stehen alle 67 Blockarten da" — eine feste Zahl in einem
+    Punkt, der eine Liste bewacht. Er fragt jetzt das Register.
+  · „Genau ein Knopf im Band ist markiert" (E213) — gemeint war „genau ein
+    WERKZEUG".
+
+Eine Prüfung, die bei jedem neuen Eintrag anschlägt, sagt nichts über den
+Fehler, den sie finden sollte.
+
+Und ein neuer Punkt war von Anfang an blind: er verglich die Überschrift
+gegen „IM TEXT". Auf dem Bildschirm steht das so, aber die Grossbuchstaben
+macht `text-transform:uppercase` — im `textContent` steht „Im Text". Der
+Punkt war IMMER falsch und wäre nie aufgefallen, wäre das Feld nicht in
+einer Gegenprobe mit ausgegeben worden.
+
+
+PRÜFUNG
+--------------------------------------------------------------------------------
+
+test247 §14, sechs Punkte, jeder einzeln als rot-fähig belegt:
+
+    Gruppe führt genau `Blocks.AM_ENDE`   Register mit eigener Liste
+    Sie trägt ihre Überschrift            `mb-gruppe-titel` entfernt
+    „Erwähnung" hängt an und öffnet       Auslösezeichen `mention` geleert
+    „Emoji" öffnet die volle Auswahl      Bus-Aufruf entfernt / Zuhörer weg
+    Kein einsamer Doppelpunkt             dieselben zwei
+    Angeklicktes Emoji steht im Block     dieselben zwei
+
+Dazu die beiden berichtigten: eine Blockart bekommt im Band einen anderen
+Namen (67 gegen 67, und der Punkt merkt es trotzdem), und der Zeichner lässt
+den ersten Eintrag jeder Gruppe weg (61 gezeichnet, 69 im Register).
+
+Grün: test247 85/85, test87 129, test34 77/77, test33 96/96, test128 50,
+test192 25, test173 11, test217 27/27, test222 50/50, test215 44/44,
+test105 55, test109 20, test119 19.

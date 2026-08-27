@@ -2357,6 +2357,23 @@ Sie stehen deshalb weiterhin nur im Slash-Menü. „Erwähnung", „Datum" und
 „Emoji" gehören inhaltlich sehr wohl unter „Einfügen"; was fehlt, ist ein
 Einstieg, der ohne Schreibzeiger auskommt und am Ende der Seite anfügt.
 
+ERLEDIGT mit E215 — aber als ZWEI und nicht als drei. `Blocks.aktionAmEnde`
+hängt einen leeren Textblock ans Ende; die Gruppe „Im Text" im Reiter
+„Einfügen" führt auf, was `Blocks.AM_ENDE` nennt.
+
+„Datum" ist bewusst NICHT dabei: nachgemessen öffnet es dasselbe Menü wie
+„Erwähnung" (das Seiten, Personen und Datumsangaben führt). Zwei Kacheln für
+dasselbe Menü, davon eine mit einer Überschrift, die nicht dazu passt, führen
+in die Irre. Der eine Einstieg nennt im Hinweis alle drei.
+
+Beim Emoji kam dabei ein ÄLTERER Fehler heraus: „:" allein öffnet nichts, das
+Menü verlangt zwei Buchstaben dahinter. Der Slash-Befehl `/emoji` hinterliess
+also seit jeher einen einsamen Doppelpunkt. Der Weg geht jetzt über den
+Ereignisbus zur vollen Auswahl mit Suchfeld.
+
+Die anderen acht Aktionen bleiben im Slash-Menü — sie handeln von EINEM
+bestimmten Block, und ohne Schreibzeiger gibt es keinen.
+
 L64 — Die echten Zeichenwerkzeuge fehlen im Reiter „Zeichnen"
 --------------------------------------------------------------------------------
 Auf einem Bildschirmfoto der PDF-Seite steht eine vollständige Zeichenleiste:

@@ -170,15 +170,72 @@ Register.menueband = (() => {
        kennt, hängt sich hinten an — eine neue Gruppe verschwindet also nicht,
        sie steht nur nicht vorne. */
     const GRUPPEN_FOLGE = ['Grundlegend', 'Medien', 'Datenbank', 'Wissen', 'Erweitert', 'KI'];
+    /**
+     * DIE DREI SLASH-AKTIONEN, DIE OHNE SCHREIBZEIGER GEHEN (E215/L63).
+     *
+     * Welche das sind, entscheidet der Editor über `Blocks.AM_ENDE` — hier
+     * steht keine zweite Liste. Wer dort eine vierte einträgt, bekommt sie
+     * hier ohne Zutun; wer eine streicht, verliert auch den Knopf. Genau das
+     * ist der Zweck eines Katalogs.
+     *
+     * Namen und Zeichen kommen aus `Register.bloecke`, wo die Slash-Einträge
+     * ohnehin stehen. „Person oder Seite erwähnen" ist für eine Kachel zu
+     * lang; das Register kennt es unter diesem Namen, und für den Knopf wird
+     * daraus „Erwähnung" — der ganze Name bleibt im Hinweis.
+     */
+    const KURZNAME = {
+        mention: 'Erwähnung', emoji: 'Emoji'
+    };
+    /* Der Registername „Person oder Seite erwähnen" verschweigt, dass dasselbe
+       Menü auch „heute", „morgen" und „Datum wählen …" führt. Wer ein Datum
+       sucht, findet den Knopf sonst nicht. */
+    const LANGNAME = {
+        mention: 'Seite, Person oder Datum einfügen'
+    };
+    const imTextEintraege = () => {
+        let welche = [];
+        try {
+            welche = [...(Blocks.AM_ENDE ?? [])];
+        }
+        catch {
+            welche = [];
+        }
+        if (!welche.length || !Register?.bloecke?.alle)
+            return [];
+        const nachAktion = new Map();
+        for (const b of Register.bloecke.alle())
+            if (b && b.aktion)
+                nachAktion.set(String(b.aktion), b);
+        return welche
+            .map(was => {
+            const b = nachAktion.get(was);
+            if (!b)
+                return null;
+            return {
+                reiter: 'einfuegen', gruppe: 'Im Text', id: 'akt-' + was,
+                name: KURZNAME[was] ?? String(b.name || was),
+                zeichen: String(b.icon || '▫'),
+                hinweis: (LANGNAME[was] ?? String(b.name || was)) + ' — hängt sich ans Ende der Seite',
+                tun: () => { Blocks.aktionAmEnde(was); },
+                zeigen: () => kann(() => Blocks.aktionAmEnde) && !!seiteJetzt()
+            };
+        })
+            .filter((x) => x !== null);
+    };
     const einfuegenEintraege = () => {
         if (!Register?.bloecke?.alle)
             return [];
         /* `aktion` trennt die echten Blockarten von den Slash-BEFEHLEN
-           („Umwandeln in …", „Duplizieren", „Erwähnen"). Die brauchen den
-           Schreibzeiger und den Block darunter — `Editor.slashAktion(ct, block,
-           was)` — und beides hat ein Knopf im Band nicht. Sie stehen deshalb
-           nicht hier, sondern weiterhin im Slash-Menü. Das ist eine bekannte
-           Lücke und keine vergessene Zeile; sie steht in LUECKEN.md. */
+           („Umwandeln in …", „Duplizieren", „Erwähnen"). Die meisten brauchen
+           den Schreibzeiger und den Block darunter — `Blocks.slashAktion(ct,
+           block, was)` — und beides hat ein Knopf im Band nicht. Sie stehen
+           deshalb nicht hier, sondern weiterhin im Slash-Menü.
+    
+           Drei von ihnen gehen inzwischen doch: „Erwähnung", „Datum" und
+           „Emoji" fügen etwas EIN, statt an einem bestimmten Block zu drehen.
+           Für sie hängt `Blocks.aktionAmEnde` einen leeren Textblock ans Ende
+           und schreibt dort das Auslösezeichen (E215/L63). Welche das sind,
+           sagt `Blocks.AM_ENDE` — nicht eine Liste hier. */
         const bloecke = Register.bloecke.alle().filter(b => b && b.id && !b.aktion);
         const rang = (g) => {
             const i = GRUPPEN_FOLGE.indexOf(g);
@@ -187,7 +244,11 @@ Register.menueband = (() => {
         return bloecke
             .slice()
             .sort((a, b) => rang(a.gruppe) - rang(b.gruppe))
-            .map(b => ({
+            /* Der Rückgabetyp steht ausdrücklich da: ohne ihn schliesst der
+               Typprüfer aus dem Literal einen engeren Typ (`hinweis` als PFLICHT,
+               weil es hier immer gesetzt wird) und lehnt danach das `concat` mit
+               echten `BandEintrag` ab, bei denen es freiwillig ist. */
+            .map((b) => ({
             reiter: 'einfuegen', gruppe: String(b.gruppe || 'Weiteres'),
             id: 'blk-' + b.id, name: String(b.name || b.id),
             zeichen: String(b.icon || '▫'),
@@ -195,7 +256,8 @@ Register.menueband = (() => {
             hinweis: String(b.name || b.id) + ' einfügen',
             tun: () => Blocks.einfuegenAmEnde(b.id),
             zeigen: () => kann(() => Blocks.einfuegenAmEnde)
-        }));
+        }))
+            .concat(imTextEintraege());
     };
     /* ======================================================================== *
      * ZEICHNEN — Blatt, Whiteboard, Plan, Kamera
