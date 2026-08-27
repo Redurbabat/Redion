@@ -140,7 +140,11 @@ const Seitenleiste = (() => {
   /* Welche Abschnitte sind von Haus aus an? Alle ausser diesem einen — die
      Werkzeuge stehen seit E210 im Menüband. Wächst die Liste, wächst sie
      hier und nicht verstreut an drei Stellen. */
-  const VORGABE_AUS = ['werkzeuge'];
+  /* E211: drei weitere. Bei „agenten" und „bespr" war der Abschnitt im Baum
+     ohnehin eine Doppelung — die Seitenleiste hat oben schon Reiter dafür.
+     „kuerzlich" führt jetzt über das Menüband in die Bibliothek, wo es
+     Vorschauen statt einer Namensliste gibt. */
+  const VORGABE_AUS = ['werkzeuge', 'agenten', 'bespr', 'kuerzlich'];
   const VORGABE_AN = (id: string) => !VORGABE_AUS.includes(id);
 
   const abschnittAn = (id: string, vorgabe = true) => {
@@ -483,7 +487,7 @@ const Seitenleiste = (() => {
     }
 
     /* Agenten — wie in Notions Seitenleiste */
-    if (abschnittAn('agenten')) {
+    if (abschnittAn('agenten', VORGABE_AN('agenten'))) {
     const agenten = Agent.eigene();
     baum.appendChild(abschnitt('Agenten', () => Agent.eigenerDialog()));
     const ag = document.createElement('div');
@@ -502,7 +506,7 @@ const Seitenleiste = (() => {
     }
 
     /* Besprechungen */
-    if (abschnittAn('bespr')) {
+    if (abschnittAn('bespr', VORGABE_AN('bespr'))) {
     const bes = document.createElement('div');
     bes.className = 'wz-block';
     const naechste = kommendeTermine(3);
@@ -523,7 +527,7 @@ const Seitenleiste = (() => {
     }
 
     /* Kürzlich verwendet */
-    const letzte = abschnittAn('kuerzlich') ? kuerzlich() : [];
+    const letzte = abschnittAn('kuerzlich', VORGABE_AN('kuerzlich')) ? kuerzlich() : [];
     if (letzte.length) {
       baum.appendChild(abschnitt('Kürzlich verwendet'));
       const kv = document.createElement('div');

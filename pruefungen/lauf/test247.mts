@@ -310,14 +310,69 @@ const zurueck = await seite.evaluate(() => {
 await seite.waitForTimeout(500);
 const nachRueckkehr = await seite.evaluate(() =>
   [...document.querySelectorAll('#sidebar [data-abschnitt="werkzeuge"] button')].map(b => (b.textContent || '').trim()));
-p('Über „Abschnitte anpassen" kommen sie zurück',
-  zurueck.geht && nachRueckkehr.length === SOLL.length,
-  zurueck.grund || `${nachRueckkehr.length} Zeilen`);
+/* GEGEN DAS REGISTER, NICHT GEGEN EINE ZAHL.
+   Hier stand `=== SOLL.length`, also sieben. Mit E211 kamen drei Einträge
+   dazu (Agenten, Besprechungen, Zuletzt), und der Punkt wurde rot — obwohl
+   genau das Richtige passierte: die Seitenleiste zeichnet ALLES, was im
+   Band unter „Werkzeuge" steht, weil beide aus derselben Quelle lesen.
+   Eine feste Zahl hätte bei jedem neuen Eintrag wieder angeschlagen. */
+const imBandJetzt = await seite.evaluate(() =>
+  (Register?.menueband?.inReiter?.('werkzeuge') || [])
+    .flatMap((g: any) => g.eintraege).length);
+p('Über „Abschnitte anpassen" kommen sie zurück — vollständig',
+  zurueck.geht && nachRueckkehr.length === imBandJetzt,
+  zurueck.grund || `${nachRueckkehr.length} Zeilen gegen ${imBandJetzt} im Band`);
 
 /* Und wieder weg — sonst stünde die Prüfung mit eingeschalteten Werkzeugen
    da und die nächsten Punkte messen einen anderen Zustand. */
 await seite.evaluate(() => Seitenleiste.abschnittSchalten('werkzeuge'));
 await seite.waitForTimeout(400);
+
+/* ==========================================================================
+ * §5b Agenten, Besprechungen, Zuletzt — auch umgezogen (E211)
+ * ========================================================================*/
+console.log('\n5b · Drei weitere Abschnitte sind oben statt links');
+
+/* Redur: „links habe ich sehr viele Bereiche … dort oben kommt nur, was man
+   nicht so viel braucht." Bei Agenten und Besprechungen war es sogar eine
+   Doppelung: die Seitenleiste hat OBEN schon Reiter dafür. */
+const dreiOben = await seite.evaluate(() => {
+  const R = Register?.menueband;
+  const namen = (R?.inReiter?.('werkzeuge') || [])
+    .flatMap((g: any) => g.eintraege).map((e: any) => e.name);
+  const linksTitel = [...document.querySelectorAll('#sidebar .side-section span')]
+    .map(x => (x.textContent || '').replace(/[⌄›]/g, '').trim());
+  return { namen, linksTitel };
+});
+for (const n of ['Agenten', 'Besprechungen', 'Zuletzt verwendet'])
+  p(`„${n}" steht im Band`, dreiOben.namen.includes(n), dreiOben.namen.join(', '));
+for (const t of ['Agenten', 'Besprechungen', 'Kürzlich verwendet'])
+  p(`„${t}" steht nicht mehr links`, !dreiOben.linksTitel.includes(t),
+    dreiOben.linksTitel.join(', '));
+
+/* Und sie tun wirklich etwas. „Agenten" schaltet die Seitenleiste auf ihren
+   Reiter — messbar daran, welcher Reiter danach `on` trägt. */
+await klick(seite, '#menueband [data-mb-reiter="werkzeuge"]');
+await seite.waitForTimeout(300);
+const vorReiter = await seite.evaluate(() =>
+  document.querySelector('#side-reiter .sr.on')?.getAttribute('data-reiter') || '');
+await klick(seite, '#menueband [data-band="w-agenten"]');
+await seite.waitForTimeout(700);
+const nachAgenten = await seite.evaluate(() =>
+  document.querySelector('#side-reiter .sr.on')?.getAttribute('data-reiter') || '');
+p('„Agenten" schaltet die Seitenleiste auf ihren Reiter',
+  vorReiter !== 'chat' && nachAgenten === 'chat', `${vorReiter} → ${nachAgenten}`);
+
+await klick(seite, '#menueband [data-band="w-bespr"]');
+await seite.waitForTimeout(700);
+const nachBespr = await seite.evaluate(() =>
+  document.querySelector('#side-reiter .sr.on')?.getAttribute('data-reiter') || '');
+p('„Besprechungen" ebenso', nachBespr === 'bespr', `${nachAgenten} → ${nachBespr}`);
+
+/* Zurück auf den Seitenbaum, sonst messen die nächsten Punkte einen
+   anderen Zustand. */
+await seite.evaluate(() => App.reiterWechseln('start'));
+await seite.waitForTimeout(500);
 
 /* ==========================================================================
  * §6 Eine Quelle, nicht zwei

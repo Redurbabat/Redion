@@ -15247,3 +15247,70 @@ hat null davon und ist trotzdem eine Seite.
 
 Die Prüfung fragt jetzt jede Ansicht einzeln, und die Bibliothek ist
 ausdrücklich dabei: sie ist die, die den ersten Test überlistet hat.
+
+
+================================================================================
+E211 — Links die Bereiche, oben die Werkzeuge
+================================================================================
+
+Redur, mit einem Bildschirmfoto der Seitenleiste: „hier links habe ich sehr
+viele Bereiche, und du kannst Agenten, Besprechungen, Kürzlich verwendet auch
+oben bei den Menüs sein — und dort sollten nicht die Bereiche sein, alle
+Bereiche sollten links sein, und dort oben kommt nur, was man nicht so viel
+braucht: Agenten, Werkzeuge, Formelheft usw."
+
+Daraus wird eine Regel, die für beide Seiten gilt und die es vorher nicht gab:
+
+    LINKS   die BEREICHE — wohin man geht
+    OBEN    die WERKZEUGE — womit man arbeitet
+
+E210 hatte den ersten Schritt gemacht (die sieben Werkzeuge). Hier folgen
+drei weitere Abschnitte: Agenten, Besprechungen, Kürzlich verwendet.
+
+
+BEI ZWEIEN WAR ES SOGAR EINE DOPPELUNG
+--------------------------------------------------------------------------------
+
+Die Seitenleiste hat OBEN drei Reiter: `start`, `chat`, `bespr`. „chat" zeigt
+die Agentenliste, „bespr" die Besprechungen — beide vollständig. Der
+Abschnitt im Seitenbaum darunter zeigte dieselben Dinge ein zweites Mal, nur
+gekürzt auf sechs beziehungsweise drei Einträge.
+
+Die Knöpfe im Band schalten deshalb auf den Reiter, der ohnehin da ist
+(`App.reiterWechseln('chat')`). Sie bauen keine dritte Ansicht — es gab schon
+zwei zu viel.
+
+„Kürzlich verwendet" führt in die Bibliothek: dort ist es der erste Filter,
+und man sieht Vorschauen statt einer Namensliste.
+
+
+WAS DIE SEITENLEISTE JETZT ZEIGT
+--------------------------------------------------------------------------------
+
+Vorher acht Abschnitte, jetzt vier — und von denen sind zwei meist leer:
+
+    Werkzeuge            → Menüband (E210)
+    Agenten              → Menüband, Reiter `chat`
+    Besprechungen        → Menüband, Reiter `bespr`
+    Kürzlich verwendet   → Menüband, Bibliothek
+    Favoriten            bleibt
+    Bereiche             bleibt
+    Privat               bleibt
+    Meine Apps           bleibt
+
+Nichts ist gelöscht. Jeder der vier lässt sich über „Abschnitte anpassen"
+wieder einschalten, und die Seitenleiste zeichnet ihn dann aus DEMSELBEN
+Register wie das Band.
+
+
+WAS DER PRÜFLAUF DABEI GELERNT HAT
+--------------------------------------------------------------------------------
+
+Ein Punkt verglich die zurückgeholten Werkzeug-Zeilen gegen die feste Zahl
+sieben. Mit den drei neuen Einträgen wurde er rot — obwohl genau das Richtige
+passierte: die Seitenleiste zeichnet ALLES, was im Band unter „Werkzeuge"
+steht, weil beide aus derselben Quelle lesen.
+
+Er fragt jetzt das Register statt einer Zahl. Eine feste Zahl in einer
+Prüfung, die eine Liste bewacht, schlägt bei jedem neuen Eintrag an und sagt
+dabei nichts über den Fehler, den sie finden sollte.

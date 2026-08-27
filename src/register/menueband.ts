@@ -291,7 +291,39 @@ Register.menueband = (() => {
       tun: () => Werkzeuge.lernen(), zeigen: () => kann(() => Werkzeuge.lernen) },
     { reiter: 'werkzeuge', gruppe: 'Lernen', id: 'w-stand', name: 'Umsetzungsstand',
       zeichen: 'checkCircle', hinweis: 'Alle 16 Teile der Notion-Doku, Punkt für Punkt',
-      tun: () => Status.seiteAnlegen(), zeigen: () => kann(() => Status.seiteAnlegen) }
+      tun: () => Status.seiteAnlegen(), zeigen: () => kann(() => Status.seiteAnlegen) },
+
+    /* DREI ABSCHNITTE, DIE LINKS ZU VIEL WAREN (E211).
+
+       Redur: „links habe ich sehr viele Bereiche … Agenten, Besprechungen,
+       Kürzlich verwendet können auch oben bei den Menüs sein. Dort oben
+       kommt nur, was man nicht so viel braucht."
+
+       Die Regel dahinter ist gut und gilt jetzt für beide Seiten:
+
+           LINKS  die Bereiche — wohin man geht
+           OBEN   die Werkzeuge — womit man arbeitet
+
+       Bei zweien davon war es sogar eine echte Doppelung: die Seitenleiste
+       hat OBEN schon Reiter für Agenten und Besprechungen (`chat`, `bespr`).
+       Der Abschnitt im Baum darunter zeigte dieselben Dinge ein zweites Mal.
+       Diese Knöpfe schalten deshalb auf den Reiter, der ohnehin da ist —
+       sie bauen keine dritte Ansicht.
+
+       „Kürzlich verwendet" führt in die Bibliothek: dort ist es der erste
+       Filter, und man sieht Vorschauen statt einer Namensliste. */
+    { reiter: 'werkzeuge', gruppe: 'Weiteres', id: 'w-agenten', name: 'Agenten',
+      zeichen: 'robot', hinweis: 'Deine Agenten und der Chatverlauf',
+      tun: () => App.reiterWechseln('chat'),
+      zeigen: () => kann(() => App.reiterWechseln) },
+    { reiter: 'werkzeuge', gruppe: 'Weiteres', id: 'w-bespr', name: 'Besprechungen',
+      zeichen: 'mic', hinweis: 'Termine und Besprechungsnotizen',
+      tun: () => App.reiterWechseln('bespr'),
+      zeigen: () => kann(() => App.reiterWechseln) },
+    { reiter: 'werkzeuge', gruppe: 'Weiteres', id: 'w-zuletzt', name: 'Zuletzt verwendet',
+      zeichen: 'history', hinweis: 'Die Bibliothek, gefiltert auf zuletzt Verwendetes',
+      tun: () => Bibliothek.oeffne(),
+      zeigen: () => kann(() => Bibliothek.oeffne) }
   ];
 
   /* ======================================================================== *

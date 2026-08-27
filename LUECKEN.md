@@ -2350,3 +2350,22 @@ brauchen den Schreibzeiger und den Block darunter
 Sie stehen deshalb weiterhin nur im Slash-Menü. „Erwähnung", „Datum" und
 „Emoji" gehören inhaltlich sehr wohl unter „Einfügen"; was fehlt, ist ein
 Einstieg, der ohne Schreibzeiger auskommt und am Ende der Seite anfügt.
+
+L64 — Die echten Zeichenwerkzeuge fehlen im Reiter „Zeichnen"
+--------------------------------------------------------------------------------
+Auf einem Bildschirmfoto der PDF-Seite steht eine vollständige Zeichenleiste:
+Schreiben, Auswahl, Stift, Marker, Linie, Pfeil, Rechteck, Ellipse, Text,
+Fachzeichen, Radieren, Zurück, Vor, Löschen, vier Farben, drei Strichstärken.
+
+Der Reiter „Zeichnen" im Menüband (E210) kennt davon nichts. Dort stehen nur
+Blatt, Whiteboard, Schaltplan und Kamera — also, WOMIT man anfängt, nicht,
+WOMIT man zeichnet.
+
+Warum es noch nicht drin ist: die Werkzeuge gehören zur jeweiligen Fläche
+(PDF-Seite, Blatt, Whiteboard, Planfläche) und wirken auf deren Zustand. Ein
+Knopf im Band bräuchte den Bezug zur offenen Fläche — sonst ist er entweder
+tot oder er wirkt auf die falsche.
+
+Was fehlt: ein gemeinsamer Weg, über den eine Zeichenfläche ihr aktuelles
+Werkzeug meldet und entgegennimmt. Dann kann das Band sie aufführen, ohne
+selbst etwas zu tun (die Regel aus `register/menueband.ts`).

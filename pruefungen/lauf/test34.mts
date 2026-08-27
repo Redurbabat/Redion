@@ -69,27 +69,54 @@ import { chromium } from 'playwright';
   ok('Erledigt-Knopf ist da', anpass.fertig);
   ok('Überschrift stimmt', anpass.ueber);
 
-  /* Einen Abschnitt ausschalten */
-  await p.evaluate(() => App.abschnittSchalten('agenten'));
-  await p.waitForTimeout(400);
-  await p.evaluate(() => { App.abschnitteAnpassen(); });
-  await p.waitForTimeout(500);
-  const ohneAgenten = await p.evaluate(() =>
-    [...document.querySelectorAll<HTMLElement>('.side-section span')].map(x => (x.textContent ?? '').replace(/[⌄›]/g, '')));
-  console.log('   Abschnitte jetzt:', JSON.stringify(ohneAgenten));
-  ok('Ausgeschalteter Abschnitt verschwindet', !(ohneAgenten ?? '').includes('Agenten'));
-  /* Das Beispiel hiess „Werkzeuge" und musste getauscht werden: seit E210
-     stehen die sieben Werkzeuge im Menüband, und der Seitenleisten-Abschnitt
-     ist von Haus aus AUS. Die Aussage bleibt dieselbe — ein ausgeschalteter
-     Abschnitt nimmt die anderen nicht mit —, nur der Zeuge dafür ist jetzt
-     einer, der wirklich da ist. */
-  ok('Die anderen bleiben', (ohneAgenten ?? '').includes('Kürzlich verwendet')
-    && (ohneAgenten ?? '').includes('Meine Apps'));
+  /* Einen Abschnitt ausschalten.
 
-  await p.evaluate(() => App.abschnittSchalten('agenten'));
+     KEIN FESTER NAME MEHR. Hier stand zuerst „agenten", dann „Werkzeuge",
+     dann „Kürzlich verwendet" — und jedes Mal, wenn ein Abschnitt ins
+     Menüband umzog (E210, E211), wurde die Prüfung rot, ohne dass etwas
+     kaputt war. Sie prüft ja nicht diesen einen Abschnitt, sondern die
+     Regel: ein ausgeschalteter verschwindet, die anderen bleiben, und
+     wieder einschalten holt ihn zurück.
+
+     Also wird genommen, was GERADE dasteht — der erste sichtbare Abschnitt.
+     Damit hält der Punkt jede künftige Umsortierung aus und misst weiter
+     das, was er messen soll. */
+  /* ERST DEN ANPASSMODUS VERLASSEN. Darin zeichnet die Seitenleiste ihre
+     Abschnitte als `.side-item.anpass` und nicht als `.side-section` — die
+     Messung kam sonst leer zurück und meldete „kein Abschnitt da", obwohl
+     vier dastanden. */
+  await p.evaluate(() => App.abschnitteAnpassen());
   await p.waitForTimeout(400);
-  ok('Wieder einschalten bringt ihn zurück', await p.evaluate(() =>
-    [...document.querySelectorAll<HTMLElement>('.side-section span')].some(x => (x.textContent ?? '').startsWith('Agenten'))));
+  const sichtbareAbschnitte = await p.evaluate(() =>
+    [...document.querySelectorAll<HTMLElement>('.side-section span')]
+      .map(x => (x.textContent ?? '').replace(/[⌄›]/g, '').trim())
+      .filter(t => t && !t.startsWith('Abschnitte anpassen')));
+  const kennungVon: Record<string, string> = {
+    'Werkzeuge': 'werkzeuge', 'Agenten': 'agenten', 'Besprechungen': 'bespr',
+    'Kürzlich verwendet': 'kuerzlich', 'Favoriten': 'favoriten',
+    'Bereiche': 'bereiche', 'Privat': 'privat', 'Meine Apps': 'apps'
+  };
+  const opfer = sichtbareAbschnitte.find(t => kennungVon[t]) ?? '';
+  const opferId = kennungVon[opfer] ?? '';
+  console.log('   Sichtbare Abschnitte:', JSON.stringify(sichtbareAbschnitte), '→ schalte aus:', opfer);
+  ok('Es gibt einen sichtbaren Abschnitt zum Ausschalten', !!opferId);
+
+  await p.evaluate((id: string) => App.abschnittSchalten(id), opferId);
+  await p.waitForTimeout(500);
+  const nachSchalten = await p.evaluate(() =>
+    [...document.querySelectorAll<HTMLElement>('.side-section span')].map(x => (x.textContent ?? '').replace(/[⌄›]/g, '')));
+  console.log('   Abschnitte jetzt:', JSON.stringify(nachSchalten));
+  ok('Ausgeschalteter Abschnitt verschwindet', !nachSchalten.some(t => t.trim() === opfer));
+  /* Die anderen bleiben — geprüft an ihrer ANZAHL und nicht an einem Namen:
+     genau einer weniger, nicht zwei und nicht null. */
+  const nochDa = nachSchalten.map(t => t.trim()).filter(t => t && kennungVon[t]);
+  ok('Die anderen bleiben', nochDa.length === sichtbareAbschnitte.length - 1);
+
+  await p.evaluate((id: string) => App.abschnittSchalten(id), opferId);
+  await p.waitForTimeout(400);
+  ok('Wieder einschalten bringt ihn zurück', await p.evaluate((n: string) =>
+    [...document.querySelectorAll<HTMLElement>('.side-section span')]
+      .some(x => (x.textContent ?? '').startsWith(n)), opfer));
 
   /* Tab-Namen ausblenden */
   await p.evaluate(() => { Store.setMeta('tabNamen', false); App.zeichneBaum(); });
