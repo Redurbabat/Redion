@@ -41,6 +41,9 @@ type LernweltTermin = {
   id: string;
   titel: string;
   datum: Date;
+  /* Ein Kalendertag ohne Uhrzeit (E229). Ein `Date` kann das nicht sagen —
+     es ist immer ein Zeitpunkt, auch wenn niemand einen gemeint hat. */
+  ganztags: boolean;
   quelle: string;
   bereichIds: string[];
 };
@@ -664,6 +667,7 @@ const Lernwelt = (() => {
       id: String(item.id || item.ref?.id || ''),
       titel: String(item.text || item.titel || 'Termin'),
       datum: datum(item.d || item.datum || item.zeit) || new Date(),
+      ganztags: item.ganztags !== false,
       quelle: String(item.quelle || 'Kalender'),
       bereichIds: direkteBereichIds(Store.getBlock(item.id) || item)
     })).filter(item => item.id && imBereich(Store.getBlock(item.id) || item))
@@ -893,6 +897,9 @@ const Lernwelt = (() => {
       id: externeId(item),
       titel: String(item?.titel || item?.text || 'Termin'),
       datum: datum(item?.datum || item?.zeit || item?.start) || new Date(),
+      /* Fremdquellen sagen es selten. Zehn Zeichen sind ein Tag. */
+      ganztags: item?.ganztags === true ||
+        /^\d{4}-\d{2}-\d{2}$/.test(String(item?.datum || item?.zeit || item?.start || '').trim()),
       quelle: String(item?.quelle || 'Kalender'),
       bereichIds: textListe(item?.bereichIds)
     })).filter(item => item.id);
@@ -1173,10 +1180,19 @@ const Lernwelt = (() => {
 
   const terminListe = (werte: LernweltTermin[], leerText: string): string => werte.length
     ? '<ul class="lw-event-list">' + werte.map(item =>
+        /* KEINE ERFUNDENE UHRZEIT (E229). Ein Ganztagstermin bekam hier
+           `00:00` — und das war noch der harmlose Fall: in Zürich stand
+           `02:00`, in Auckland `12:00`. Eine Uhrzeit, die niemand eingegeben
+           hat, sieht aus wie eine, die jemand eingegeben hat.
+           Statt ihrer steht der Wochentag: dieselbe Spalte, dieselbe Breite,
+           und er ist wahr. */
         '<li><button type="button" data-lw-open="' + esc(item.id) + '"><time datetime="' +
-          esc(item.datum.toISOString()) + '">' + esc(item.datum.toLocaleTimeString('de-CH', {
-            hour: '2-digit', minute: '2-digit'
-          })) + '</time><span><strong>' + esc(item.titel) + '</strong><small>' + esc(item.quelle) +
+          esc(item.ganztags ? item.datum.toISOString().slice(0, 10) : item.datum.toISOString()) +
+          '"' + (item.ganztags ? ' class="lw-ganztags"' : '') + '>' +
+          esc(item.ganztags
+            ? item.datum.toLocaleDateString('de-CH', { weekday: 'short' })
+            : item.datum.toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit' })) +
+          '</time><span><strong>' + esc(item.titel) + '</strong><small>' + esc(item.quelle) +
           ' · ' + esc(datumText(item.datum)) + '</small></span></button></li>').join('') + '</ul>'
     : '<p class="lw-none">' + esc(leerText) + '</p>';
 

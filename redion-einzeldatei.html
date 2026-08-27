@@ -98813,6 +98813,7 @@ const Lernwelt = (() => {
             id: String(item.id || item.ref?.id || ''),
             titel: String(item.text || item.titel || 'Termin'),
             datum: datum(item.d || item.datum || item.zeit) || new Date(),
+            ganztags: item.ganztags !== false,
             quelle: String(item.quelle || 'Kalender'),
             bereichIds: direkteBereichIds(Store.getBlock(item.id) || item)
         })).filter(item => item.id && imBereich(Store.getBlock(item.id) || item))
@@ -99043,6 +99044,9 @@ const Lernwelt = (() => {
             id: externeId(item),
             titel: String(item?.titel || item?.text || 'Termin'),
             datum: datum(item?.datum || item?.zeit || item?.start) || new Date(),
+            /* Fremdquellen sagen es selten. Zehn Zeichen sind ein Tag. */
+            ganztags: item?.ganztags === true ||
+                /^\d{4}-\d{2}-\d{2}$/.test(String(item?.datum || item?.zeit || item?.start || '').trim()),
             quelle: String(item?.quelle || 'Kalender'),
             bereichIds: textListe(item?.bereichIds)
         })).filter(item => item.id);
@@ -99296,10 +99300,20 @@ const Lernwelt = (() => {
             '</small></span></button></li>').join('') + '</ul>'
         : '<p class="lw-none">' + esc(leerText) + '</p>';
     const terminListe = (werte, leerText) => werte.length
-        ? '<ul class="lw-event-list">' + werte.map(item => '<li><button type="button" data-lw-open="' + esc(item.id) + '"><time datetime="' +
-            esc(item.datum.toISOString()) + '">' + esc(item.datum.toLocaleTimeString('de-CH', {
-            hour: '2-digit', minute: '2-digit'
-        })) + '</time><span><strong>' + esc(item.titel) + '</strong><small>' + esc(item.quelle) +
+        ? '<ul class="lw-event-list">' + werte.map(item => 
+        /* KEINE ERFUNDENE UHRZEIT (E229). Ein Ganztagstermin bekam hier
+           `00:00` — und das war noch der harmlose Fall: in Zürich stand
+           `02:00`, in Auckland `12:00`. Eine Uhrzeit, die niemand eingegeben
+           hat, sieht aus wie eine, die jemand eingegeben hat.
+           Statt ihrer steht der Wochentag: dieselbe Spalte, dieselbe Breite,
+           und er ist wahr. */
+        '<li><button type="button" data-lw-open="' + esc(item.id) + '"><time datetime="' +
+            esc(item.ganztags ? item.datum.toISOString().slice(0, 10) : item.datum.toISOString()) +
+            '"' + (item.ganztags ? ' class="lw-ganztags"' : '') + '>' +
+            esc(item.ganztags
+                ? item.datum.toLocaleDateString('de-CH', { weekday: 'short' })
+                : item.datum.toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit' })) +
+            '</time><span><strong>' + esc(item.titel) + '</strong><small>' + esc(item.quelle) +
             ' · ' + esc(datumText(item.datum)) + '</small></span></button></li>').join('') + '</ul>'
         : '<p class="lw-none">' + esc(leerText) + '</p>';
     const themenListe = (themen, limit = 8) => themen.length
@@ -107760,6 +107774,35 @@ const App = (() => {
         .map((id) => Store.getBlock(id))
         .filter((b) => b && b.alive && b.type === 'page' && b.parentTable !== 'collection')
         .slice(0, 6);
+    /* ------------------------------------------------------------------------
+     * EIN TAG IST KEIN ZEITPUNKT (E229)
+     * ------------------------------------------------------------------------
+     * `new Date('2026-08-27')` ist nach ECMAScript-Regel UTC-Mitternacht, nicht
+     * Mitternacht hier. Verglichen wurde danach mit LOKALER Mitternacht, und
+     * angezeigt wurde eine Ortszeit. Gemessen an derselben Aufgabe, die kein
+     * einziges Mal eine Uhrzeit hat:
+     *
+     *     UTC                 00:00  00:00  00:00
+     *     Europe/Zurich       02:00  02:00  02:00
+     *     Pacific/Auckland    12:00  12:00          ← nur noch ZWEI
+     *
+     * Die dritte fehlte. Die Verschiebung hatte sie über die Tagesgrenze aus
+     * dem Fenster geschoben. Eine erfundene Uhrzeit ist ärgerlich; ein Termin,
+     * der auf manchen Geräten gar nicht mehr dasteht, ist ein Datenfehler.
+     *
+     * Die Unterscheidung gibt es in Redion schon — die Kalenderansicht fragt
+     * `String(v).length > 10`: zehn Zeichen sind ein Tag, mehr ist ein
+     * Zeitpunkt. Sie stand nur nicht hier. Ein Wert, zwei Antworten, und die
+     * zweite war falsch.
+     * ----------------------------------------------------------------------*/
+    /** Zehn Zeichen sind ein Kalendertag, alles Längere trägt eine Uhrzeit. */
+    const nurTag = (wert) => /^\d{4}-\d{2}-\d{2}$/.test(String(wert).trim());
+    /** Ein Kalendertag wird zu Mitternacht HIER, nicht zu Mitternacht in UTC. */
+    const alsDatum = (wert) => {
+        const t = String(wert).trim();
+        const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(t);
+        return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : new Date(t);
+    };
     /** Die nächsten Termine aus allen Termin-Datenbanken. */
     const kommendeTermine = (wieViele = 3) => {
         const raus = [];
@@ -107775,10 +107818,10 @@ const App = (() => {
                 const v = Datenbank.wert(r, dk, c);
                 if (!v)
                     return;
-                const d = new Date(v);
+                const d = alsDatum(v);
                 if (isNaN(d.getTime()) || d < heute || d > grenze)
                     return;
-                raus.push({ id: r.id, text: r.text || 'Ohne Titel', d,
+                raus.push({ id: r.id, text: r.text || 'Ohne Titel', d, ganztags: nurTag(v),
                     wann: d.toLocaleDateString('de-DE', { day: 'numeric', month: 'short' }) });
             });
         });

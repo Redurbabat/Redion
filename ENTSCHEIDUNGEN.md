@@ -16649,3 +16649,62 @@ auch für `.aw-aktion-text`.
 
 Genau die sieben. Und nur am Rechner: am Telefon standen ohnehin zwei
 Spalten, dort war nie etwas abgeschnitten. test214: 20/20.
+
+
+================================================================================
+E229 — Ein Tag ist kein Zeitpunkt
+================================================================================
+
+Im Bild der Arbeitssicht stand unter „Termine":
+
+    00:00   App ausprobieren
+            Kalender · 27. Aug. 2026
+
+Niemand hatte je eine Uhrzeit eingegeben. Das Datumsfeld hält einen
+KALENDERTAG, zehn Zeichen: `2026-08-27`.
+
+`new Date('2026-08-27')` ist nach ECMAScript-Regel UTC-Mitternacht. Gerechnet
+und angezeigt wurde danach aber ORTSZEIT. Gemessen an derselben Aufgabe:
+
+    UTC                 00:00  00:00  00:00
+    Europe/Zurich       02:00  02:00  02:00
+    Pacific/Auckland    12:00  12:00          ← nur noch ZWEI
+
+Die erfundene Uhrzeit war dabei noch der harmlose Teil. Der ernste steht in
+der dritten Zeile: WESTLICH VON GREENWICH VERSCHWAND DER TERMIN.
+
+    Honolulu ist UTC−10. Lokale Mitternacht des 27. liegt bei 10:00 UTC.
+    Die als UTC gelesene Angabe (00:00 UTC) liegt DAVOR.
+    Also `d < heute` — aus dem Fenster, weg von der Seite.
+
+    gemessen, alte Lesart   Wed Aug 26 2026 14:00:00 GMT-1000   → fällt raus
+    gemessen, neue Lesart   Thu Aug 27 2026 00:00:00 GMT-1000   → bleibt
+
+Ein Termin von heute, der auf der halben Erdkugel nicht angezeigt wird, ist
+kein Schönheitsfehler.
+
+DIE REGEL GAB ES SCHON. Die Kalenderansicht fragt seit langem
+`String(v).length > 10`: zehn Zeichen sind ein Tag, mehr ist ein Zeitpunkt.
+Sie stand nur nicht in `kommendeTermine`. Ein Wert, zwei Antworten — und die
+zweite war falsch. Genau das Muster, das L34 beschreibt.
+
+Zwei Änderungen:
+
+  · `kommendeTermine` liest einen reinen Kalendertag als Mitternacht HIER
+    (`new Date(jjjj, mm-1, tt)`) und reicht `ganztags` mit.
+  · Die Terminliste zeigt bei `ganztags` den WOCHENTAG statt einer Uhr —
+    dieselbe Spalte, dieselbe Breite, und er ist wahr. `<time datetime>`
+    trägt dann auch nur den Tag, nicht den erfundenen Zeitpunkt.
+
+GEPRÜFT WIRD IN EINER ZEITZONE, IN DER ES WEHTUT. Eine Prüfung, die nur in
+UTC läuft, kann diesen Fehler nicht sehen — und genau deshalb hat ihn
+jahrelang keine gesehen. test215 §8 läuft in Honolulu UND in Zürich.
+
+    Gegenbeweis, alte Lesart wieder eingesetzt:
+      ✗ Honolulu: der heutige Ganztagstermin steht auf der Seite — FEHLT
+      ✗ Honolulu: er ist als Ganztagstermin erkannt — false
+      ✗ Honolulu: und keine Zeitangabe ist erfunden — ["14:00","14:00"]
+      ✗ Zürich:   er ist als Ganztagstermin erkannt — false
+      ✗ Zürich:   und keine Zeitangabe ist erfunden — ["02:00", …]
+
+Fünf von sechs Zeilen. test215: 50/50.

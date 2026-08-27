@@ -68,6 +68,35 @@ const App = (() => {
         .map((id) => Store.getBlock(id))
         .filter((b) => b && b.alive && b.type === 'page' && b.parentTable !== 'collection')
         .slice(0, 6);
+    /* ------------------------------------------------------------------------
+     * EIN TAG IST KEIN ZEITPUNKT (E229)
+     * ------------------------------------------------------------------------
+     * `new Date('2026-08-27')` ist nach ECMAScript-Regel UTC-Mitternacht, nicht
+     * Mitternacht hier. Verglichen wurde danach mit LOKALER Mitternacht, und
+     * angezeigt wurde eine Ortszeit. Gemessen an derselben Aufgabe, die kein
+     * einziges Mal eine Uhrzeit hat:
+     *
+     *     UTC                 00:00  00:00  00:00
+     *     Europe/Zurich       02:00  02:00  02:00
+     *     Pacific/Auckland    12:00  12:00          ← nur noch ZWEI
+     *
+     * Die dritte fehlte. Die Verschiebung hatte sie über die Tagesgrenze aus
+     * dem Fenster geschoben. Eine erfundene Uhrzeit ist ärgerlich; ein Termin,
+     * der auf manchen Geräten gar nicht mehr dasteht, ist ein Datenfehler.
+     *
+     * Die Unterscheidung gibt es in Redion schon — die Kalenderansicht fragt
+     * `String(v).length > 10`: zehn Zeichen sind ein Tag, mehr ist ein
+     * Zeitpunkt. Sie stand nur nicht hier. Ein Wert, zwei Antworten, und die
+     * zweite war falsch.
+     * ----------------------------------------------------------------------*/
+    /** Zehn Zeichen sind ein Kalendertag, alles Längere trägt eine Uhrzeit. */
+    const nurTag = (wert) => /^\d{4}-\d{2}-\d{2}$/.test(String(wert).trim());
+    /** Ein Kalendertag wird zu Mitternacht HIER, nicht zu Mitternacht in UTC. */
+    const alsDatum = (wert) => {
+        const t = String(wert).trim();
+        const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(t);
+        return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : new Date(t);
+    };
     /** Die nächsten Termine aus allen Termin-Datenbanken. */
     const kommendeTermine = (wieViele = 3) => {
         const raus = [];
@@ -83,10 +112,10 @@ const App = (() => {
                 const v = Datenbank.wert(r, dk, c);
                 if (!v)
                     return;
-                const d = new Date(v);
+                const d = alsDatum(v);
                 if (isNaN(d.getTime()) || d < heute || d > grenze)
                     return;
-                raus.push({ id: r.id, text: r.text || 'Ohne Titel', d,
+                raus.push({ id: r.id, text: r.text || 'Ohne Titel', d, ganztags: nurTag(v),
                     wann: d.toLocaleDateString('de-DE', { day: 'numeric', month: 'short' }) });
             });
         });

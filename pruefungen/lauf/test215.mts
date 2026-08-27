@@ -416,6 +416,62 @@ p('Und nennt die alphabetische Folge beim Namen',
 p('Und erklärt, warum nicht geraten wird',
   /errät keine Abhängigkeiten/.test(fremd.warum), fremd.warum.slice(-140));
 
+/* ==========================================================================
+ * §8 · Ein Tag ist kein Zeitpunkt (E229)
+ * --------------------------------------------------------------------------
+ * Ein Datumsfeld hält einen KALENDERTAG: zehn Zeichen, `2026-08-27`. Daraus
+ * machte `new Date(v)` UTC-Mitternacht — nach ECMAScript-Regel richtig und
+ * hier trotzdem falsch, denn verglichen und angezeigt wurde ORTSZEIT.
+ *
+ * Gemessen an derselben Aufgabe, die nie eine Uhrzeit hatte:
+ *
+ *     UTC                 00:00
+ *     Europe/Zurich       02:00
+ *     Pacific/Auckland    12:00
+ *
+ * Und westlich von Greenwich verschwand sie ganz: in Honolulu (UTC−10)
+ * liegt die lokale Mitternacht des Tages bei 10:00 UTC, die als UTC gelesene
+ * Angabe also DAVOR — `d < heute`, aus dem Fenster, weg von der Seite.
+ *
+ * GEPRÜFT WIRD IN EINER ZEITZONE, IN DER ES WEHTUT. Eine Prüfung, die nur in
+ * UTC läuft, kann diesen Fehler nicht sehen — und genau deshalb hat ihn
+ * jahrelang keine gesehen.
+ * ========================================================================*/
+console.log('\n8 · Ein Tag ist kein Zeitpunkt');
+
+for (const zone of ['Pacific/Honolulu', 'Europe/Zurich']) {
+  const west = await browser.newPage({ viewport: { width: 1280, height: 900 }, timezoneId: zone });
+  await west.goto(`http://localhost:${PORT}/index.html`);
+  await west.waitForTimeout(2600);
+  const mess = await west.evaluate(async () => {
+    const heute = new Date();
+    const tag = heute.getFullYear() + '-' +
+      String(heute.getMonth() + 1).padStart(2, '0') + '-' +
+      String(heute.getDate()).padStart(2, '0');
+    const seite = Object.values<any>(Store.cache.blocks)
+      .find((b: any) => b.type === 'page' && b.alive);
+    const db = Store.addDatabase(seite.id, 'Ganztags', {
+      title: { name: 'Was', type: 'title' }, wann: { name: 'Wann', type: 'date' } });
+    const z = Store.addRow(db.collectionId, { title: 'Heute ganztags' });
+    Store.setProp(z.id, 'wann', tag);
+    await Store.flush();
+    const termine = App.kommendeTermine(20) || [];
+    const meiner = termine.find((t: any) => t.text === 'Heute ganztags');
+    (globalThis as any).Produktwelten.lernen('arbeit');
+    await new Promise(r => setTimeout(r, 1000));
+    const uhren = [...document.querySelectorAll<HTMLElement>('.lw-event-list time')]
+      .map(e => (e.textContent || '').trim());
+    return { tag, dabei: !!meiner, ganztags: meiner?.ganztags === true, uhren };
+  });
+  p(`${zone}: der heutige Ganztagstermin steht auf der Seite`, mess.dabei,
+    `${mess.tag} — ${mess.dabei ? 'da' : 'FEHLT'}`);
+  p(`${zone}: er ist als Ganztagstermin erkannt`, mess.ganztags, String(mess.ganztags));
+  p(`${zone}: und keine Zeitangabe ist erfunden`,
+    !mess.uhren.some(u => /^\d{1,2}:\d{2}$/.test(u)),
+    JSON.stringify(mess.uhren));
+  await west.close();
+}
+
 /* ========================================================================*/
 console.log(`\n${ok}/${ok + weg} bestanden`);
 if (fehler.length) console.log('Browserfehler:\n  ' + fehler.join('\n  '));
