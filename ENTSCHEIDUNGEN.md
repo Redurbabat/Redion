@@ -15175,3 +15175,48 @@ Und der Gegenbeweis zu §7 brauchte drei Anläufe:
   · den Merk-Schlüssel pro Seitenladung neu würfeln → §7 wird rot
 
 Nur der dritte ist ein Gegenbeweis. Die ersten beiden sahen wie einer aus.
+
+
+NACHTRAG ZU E210 — WAS DAS TELEFON NOCH GEÄNDERT HAT
+--------------------------------------------------------------------------------
+
+Am Rechner stand das Band; am Telefon fielen vier Dinge auf, die keine
+Prüfung gemeldet hätte.
+
+ERSTENS: Kacheln und Zeilen in derselben Reihe. Die grossen Einträge sind
+quer (Zeichen links, Name rechts), die kleinen hoch (Name unter dem Zeichen)
+— nebeneinander sah das aus wie zwei verschiedene Menüs übereinander. Dazu
+„Schlagwör/ter" und „Umsetzun/gsstand" mitten im Wort gebrochen und rechts
+eine halbe Bildschirmbreite leer: 321 px für sieben Einträge.
+
+Am Telefon sind es jetzt zweispaltige ZEILEN, gruppiert in Kästen mit runden
+Ecken — die Form aus Redurs Bild. Gleiche Form für jeden Knopf, 185 px für
+den Namen (kein Bruch mehr), und aus vier Reihen werden zwei. Am Rechner
+bleibt es bei Kacheln: dort ist die Breite da, und Kacheln sind das, was man
+aus Textprogrammen kennt.
+
+ZWEITENS: die Namen fluchteten nicht. Hier stand zuerst eine FALSCHE
+Begründung im CSS — „der Span um das Zeichen hat keine feste Breite". Der
+Gegenbeweis blieb grün: die 15 px kamen von der Kachelform, in der die Namen
+zentriert unter verschieden breiten Zeichen standen. Die Zeilenform hat es
+gelöst, nicht die Regel. Die Regel bleibt trotzdem, aber als das, was sie
+ist: eine Zusicherung für später.
+
+Und der Prüfpunkt dazu war blind. Er mass nur den offenen Reiter; ein
+absichtlich zu breites Zeichen am Knopf „Karteikarten" liess ihn grün, weil
+dieser Knopf im Reiter „Einfügen" nicht vorkommt. Über alle sechs Reiter
+gemessen fand er sofort 1 px Streuung im Reiter „Start" — die
+Auszeichnungsknöpfe tragen ein Textzeichen (`.mb-glyph`), und die Regel griff
+nur bei `[data-sym]`.
+
+DRITTENS: der gewählte Reiter stand ausserhalb. Vier von sechs passen auf
+390 px; wählt man „Elektro", zeigte das Band dessen Knöpfe, während in der
+Zeile „Zeichnen" wie der aktive aussah. `scrollIntoView` löst es — aber erst
+NACH `symbole.fuelle`: davor sind die Zeichen noch nicht da, die Knöpfe
+schmaler, und gemessen blieb der Reiter bei x=379 von 390 stehen.
+
+VIERTENS: danach lag er unter dem klebenden Klapp-Knopf. `scroll-padding-
+inline-end` hilft, aber die Zahl ist eine Rechnung: der Knopf klebt an der
+PADDING-Kante (`right:0` in einem Kasten mit `padding-inline`) und ragt um
+genau dieses Padding hinein. Mit nur der Knopfbreite blieben 6 px Überlappung
+— gemessen, nicht geschätzt.

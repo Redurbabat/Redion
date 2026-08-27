@@ -321,6 +321,28 @@ const Menueband = (() => {
       try { Register.symbole.fuelle(wurzel); } catch { /* ohne Zeichen bleibt der Name */ }
     }
 
+    /* DER GEWÄHLTE REITER MUSS IM BILD SEIN.
+
+       Am Telefon passen vier von sechs Reitern nebeneinander. Wählt man
+       „Elektro", zeigt das Band dessen Knöpfe — aber der Reiter selbst stand
+       ausserhalb, und man sah nicht, wo man ist. Auf dem Bild wirkte
+       „Zeichnen" wie der aktive.
+
+       ES STEHT HIER UNTEN UND NICHT WEITER OBEN. Der erste Versuch rollte
+       direkt nach dem Bauen der Zeile — da sind die Zeichen noch nicht
+       eingesetzt, die Knöpfe also schmaler, und gemessen blieb der Reiter
+       bei x=379 von 390 stehen. Erst nach `symbole.fuelle` hat die Zeile
+       ihre wirkliche Breite.
+
+       `inline:'nearest'` und nicht `'center'`: rollt nur, wenn nötig.
+       `block:'nearest'` verhindert, dass die SEITE mitrollt — ohne das
+       springt der Text darunter, was hier niemand will. */
+    const an = wurzel.querySelector<HTMLElement>('.mb-reiter-knopf.ist-an');
+    if (an) {
+      try { an.scrollIntoView({ inline: 'nearest', block: 'nearest' }); }
+      catch { /* alte Browser rollen eben nicht */ }
+    }
+
     if (!gebunden) { binde(wurzel); gebunden = true; }
   };
 

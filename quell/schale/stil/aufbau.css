@@ -308,6 +308,12 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
   /* Am Telefon passen sechs Reiter nicht nebeneinander. Sie rollen dann
      seitwärts — und zwar NUR sie: das Band darunter bleibt, wo es ist. */
   overflow-x:auto; overflow-y:hidden; scrollbar-width:none;
+  /* PLATZ FÜR DEN KLEBENDEN KLAPP-KNOPF.
+     `scrollIntoView` rollt bis an den Rand des Kastens — und der Knopf klebt
+     davor. Gemessen: „Elektro" stand danach vollständig im Kasten und
+     trotzdem zur Hälfte unter dem Knopf. `scroll-padding` sagt dem Rollen,
+     dass die letzten 44 px nicht zählen. */
+  scroll-padding-inline-end:44px;
 }
 .mb-reiter::-webkit-scrollbar{ display:none }
 
@@ -442,6 +448,26 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
 .mb-knopf:hover{ background:var(--bg-hover); border-color:var(--line-soft) }
 .mb-knopf:active{ background:var(--bg-active, var(--bg-hover)) }
 .mb-knopf:focus-visible{ outline:2px solid var(--accent); outline-offset:1px }
+/* DIE ZEICHEN STEHEN IN EINER SPALTE.
+
+   ACHTUNG, HIER STAND EINE FALSCHE BEGRÜNDUNG. „Der Span hat keine feste
+   Breite, deshalb standen die Namen 15 px auseinander" — das war es nicht.
+   Der Gegenbeweis (feste Breite wieder weg) blieb grün: die 15 px kamen von
+   der KACHELFORM, in der die Namen zentriert unter dem Zeichen standen und
+   jeder Name anders breit ist. Die Zeilenform hat das gelöst, nicht diese
+   Regel.
+
+   Sie bleibt trotzdem stehen, aber als das, was sie ist: eine Zusicherung
+   für später. Wer einmal ein Zeichen mit anderer Breite einträgt, würde die
+   Flucht sonst wieder verlieren. */
+/* BEIDE ARTEN VON ZEICHEN, nicht nur die Symbole. Der erweiterte Prüfpunkt
+   fand im Reiter „Start" 1 px Streuung: die Auszeichnungsknöpfe tragen ein
+   TEXTZEICHEN (`.mb-glyph` mit „B", „I", „S"), und die Regel griff nur bei
+   `[data-sym]`. Ein Pixel ist wenig — aber es ist genau die Art Schlamperei,
+   die sich beim nächsten Zeichen verzehnfacht. */
+.mb-knopf > [data-sym], .mb-knopf > .mb-glyph{
+  flex:0 0 20px; display:inline-flex; align-items:center; justify-content:center;
+}
 .mb-knopf svg{ width:19px; height:19px }
 .mb-knopf .mb-name{
   /* Zwei Zeilen, dann Punkte.
@@ -508,17 +534,48 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
 @media(max-width:760px){
   /* 44 px Tippfläche, nicht 38. Das ist die Fingerregel und keine
      Mausregel — sie gilt auch, wenn dadurch die Zeile höher wird. */
-  .mb-reiter{ min-height:44px; padding:0 var(--space-2) }
+  .mb-reiter{ min-height:44px; padding:0 var(--space-2); scroll-padding-inline-end:52px }
   .mb-reiter-knopf{ min-height:44px; padding:0 var(--space-3) }
   .mb-klapp{ min-height:44px; width:44px }
   .mb-band{ padding:var(--space-2); max-height:44dvh }
-  /* Auf 390 px passt keine Gruppe in eine Zeile. Sie bricht dann selbst um;
-     zusammengehalten wird sie durch die Überschrift, nicht durch die Zeile. */
-  .mb-reihe{ flex-wrap:wrap; min-height:0 }
-  .mb-gruppe{ width:100% }
-  .mb-trenner{ width:100%; height:1px; flex:0 0 1px; margin:var(--space-1) 0 }
-  .mb-knopf{ min-height:44px; width:64px; flex:0 0 64px }
-  .mb-knopf.ist-gross{ min-height:44px }
+  /* AM TELEFON SIND ES ZEILEN, KEINE KACHELN.
+
+     Gemessen und angesehen: im Reiter „Werkzeuge" standen drei grosse
+     Kacheln (Zeichen links, Name rechts) neben vier kleinen (Name unter dem
+     Zeichen) in derselben Reihe. Das sah aus wie zwei verschiedene Menüs
+     übereinander. Dazu „Schlagwör/ter" und „Umsetzun/gsstand" mitten im
+     Wort gebrochen und rechts eine halbe Bildschirmbreite leer — 321 px
+     für sieben Einträge.
+
+     Zwei Spalten volle Zeilen lösen alles auf einmal: gleiche Form für
+     jeden Knopf, 185 px Platz für den Namen (kein Bruch mehr), und aus vier
+     Reihen werden zwei. Es ist auch die Form, die Redur im Bild gezeigt
+     hat — Zeichen links, Name rechts, gruppiert in einem Kasten.
+
+     Am Rechner bleibt es bei Kacheln: dort ist die Breite da, und ein
+     Menüband mit Kacheln ist das, was jeder aus Textprogrammen kennt. */
+  .mb-reihe{ display:grid; grid-template-columns:1fr 1fr; gap:2px; min-height:0 }
+  .mb-gruppe{ width:100%; background:var(--bg-card); border-radius:var(--radius-lg);
+              padding:var(--space-1); gap:0 }
+  .mb-trenner{ display:none }
+  .mb-knopf, .mb-knopf.ist-gross{
+    flex-direction:row; justify-content:flex-start; text-align:left;
+    width:auto; flex:auto; gap:var(--space-3);
+    min-height:46px; padding:0 var(--space-3);
+    border-radius:var(--radius-md); font-size:13.5px;
+  }
+  /* Eine Zeile für den Namen: bei 185 px Breite passt jeder Name, den
+     Redion kennt — der längste ist „Synchronisierter Block" mit 22 Zeichen.
+     Was doch nicht passt, bekommt Punkte statt eines Bruchs im Wort. */
+  /* `:not(.ist-gross)` in der Regel am Rechner wiegt schwerer als eine
+     Klasse hier — die `min-height:2.5em` blieb deshalb stehen, und der Name
+     sass in einem 34 px hohen Kasten bei 17 px Zeilenhöhe. Gemessen stimmten
+     die MITTEN von Zeichen und Kasten, aber der Text sass oben im Kasten und
+     damit acht Pixel über dem Zeichen. Auf dem Bild sofort zu sehen.
+     Dieselbe Spezifität hier stellt es richtig. */
+  .mb-knopf:not(.ist-gross) .mb-name, .mb-knopf.ist-gross .mb-name{
+    -webkit-line-clamp:1; min-height:0; max-width:none; text-align:left;
+  }
   /* Am Telefon steht die Überschrift ÜBER der Gruppe und linksbündig — sie
      ist dort der einzige Weg, die Gruppen auseinanderzuhalten, seit jede
      eine eigene Zeile belegt. Sie war hier zuerst ausgeblendet; das war

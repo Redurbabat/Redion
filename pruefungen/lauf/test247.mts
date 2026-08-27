@@ -500,6 +500,32 @@ const klappLage = await handy.evaluate(() => {
   return { links: Math.round(r.left), rechts: Math.round(r.right),
            breit: Math.round(r.width), hoch: Math.round(r.height) };
 });
+/* DER GEWÄHLTE REITER MUSS IM BILD SEIN.
+   Vier von sechs passen auf 390 px. Wählt man den fünften, zeigte das Band
+   dessen Knöpfe, während der Reiter selbst ausserhalb stand — auf dem Bild
+   sah „Zeichnen" aus wie der aktive, obwohl „Elektro" gewählt war. */
+await klick(handy, '#menueband [data-mb-reiter="elektro"]');
+await handy.waitForTimeout(400);
+const aktivImBild = await handy.evaluate(() => {
+  const an = document.querySelector('#menueband .mb-reiter-knopf.ist-an');
+  const zeile = document.querySelector('#menueband .mb-reiter');
+  if (!an || !zeile) return null;
+  const a = an.getBoundingClientRect(), z = zeile.getBoundingClientRect();
+  /* „Im Kasten" reicht nicht: der Klapp-Knopf KLEBT am rechten Rand. Beim
+     ersten Anlauf stand „Elektro" vollständig im Kasten und trotzdem zur
+     Hälfte darunter. Gemessen wird gegen die Kante des Knopfes. */
+  const k = document.querySelector('#menueband .mb-klapp')?.getBoundingClientRect();
+  return { name: (an.textContent || '').trim(),
+           links: Math.round(a.left - z.left), rechts: Math.round(a.right - z.left),
+           zeileBreit: Math.round(z.width),
+           verdeckt: !!k && a.right > k.left + 1 };
+});
+p('Der gewählte Reiter rollt von selbst ins Bild',
+  !!aktivImBild && aktivImBild.links >= -1 && aktivImBild.rechts <= aktivImBild.zeileBreit + 1,
+  JSON.stringify(aktivImBild));
+p('Und liegt nicht unter dem Klapp-Knopf',
+  !!aktivImBild && aktivImBild.verdeckt === false, JSON.stringify(aktivImBild));
+
 p('Der Klapp-Knopf steht im sichtbaren Bereich',
   !!klappLage && klappLage.rechts <= 390 && klappLage.links >= 0,
   JSON.stringify(klappLage));
@@ -530,6 +556,60 @@ p('Es rollt senkrecht und nicht seitwärts',
   `senkrecht ${handyAuf.rolltSenkrecht}, waagerecht ${handyAuf.rolltWaagerecht}`);
 p('Und nimmt höchstens die halbe Höhe', handyAuf.bandHoch <= 844 / 2,
   `${handyAuf.bandHoch} px`);
+
+/* AM TELEFON SIND ES ZEILEN, UND SIE STEHEN AUF EINER LINIE.
+
+   Erst standen dort Kacheln: die grossen (Zeichen links, Name rechts) neben
+   den kleinen (Name unter dem Zeichen), in derselben Reihe — es sah aus wie
+   zwei Menüs übereinander. Jetzt sind es zweispaltige Zeilen.
+
+   Und die Namen müssen fluchten. Der `<span data-sym>` hatte keine feste
+   Breite, also begannen sie zwischen x=79 und x=94 — 15 px Versatz, in
+   einer Zeilenliste sofort zu sehen und von keiner Prüfung gemeldet. */
+/* ÜBER ALLE REITER, NICHT NUR ÜBER EINEN.
+   Die erste Fassung mass nur den offenen Reiter („Einfügen"). Beim
+   Gegenbeweis flog das auf: ein absichtlich zu breites Zeichen am Knopf
+   „Karteikarten" liess den Punkt grün, weil dieser Knopf im Reiter
+   „Einfügen" gar nicht vorkommt. Ein Punkt, der fünf von sechs Reitern
+   nicht ansieht, prüft fünf Sechstel nicht. */
+const zeilenMessen = () => handy.evaluate(() => {
+  const kn = [...document.querySelectorAll('#menueband .mb-knopf')];
+  if (!kn.length) return null;
+  const spalten: Record<number, number[]> = {};
+  let quer = 0;
+  for (const b of kn) {
+    const k = b.getBoundingClientRect();
+    const n = b.querySelector('.mb-name');
+    if (!n) continue;
+    /* Zeile heisst: das Zeichen steht LINKS vom Namen, nicht darüber. */
+    const z = b.querySelector('svg, .mb-glyph');
+    if (z && z.getBoundingClientRect().left < n.getBoundingClientRect().left) quer++;
+    (spalten[Math.round(k.left / 100)] ||= []).push(Math.round(n.getBoundingClientRect().left));
+  }
+  const streu = Object.values(spalten).map(xs => Math.max(...xs) - Math.min(...xs));
+  return { gesamt: kn.length, quer, spalten: Object.keys(spalten).length,
+           groessteStreuung: streu.length ? Math.max(...streu) : -1 };
+});
+
+let zeilenForm = { gesamt: 0, quer: 0, groessteStreuung: 0 };
+const schief: string[] = [];
+for (const r of ['start', 'einfuegen', 'zeichnen', 'werkzeuge', 'elektro', 'ansicht']) {
+  await klick(handy, `#menueband [data-mb-reiter="${r}"]`);
+  await handy.waitForTimeout(320);
+  const m = await zeilenMessen();
+  if (!m) continue;
+  zeilenForm.gesamt += m.gesamt;
+  zeilenForm.quer += m.quer;
+  zeilenForm.groessteStreuung = Math.max(zeilenForm.groessteStreuung, m.groessteStreuung);
+  if (m.groessteStreuung > 0 || m.quer !== m.gesamt)
+    schief.push(`${r}: ${m.quer}/${m.gesamt} quer, ${m.groessteStreuung} px Streuung`);
+}
+p('Am Telefon steht das Zeichen links vom Namen — in jedem Reiter',
+  zeilenForm.gesamt > 0 && zeilenForm.quer === zeilenForm.gesamt,
+  schief.join(' | ') || JSON.stringify(zeilenForm));
+p('Und alle Namen einer Spalte fluchten — in jedem Reiter',
+  zeilenForm.gesamt > 0 && zeilenForm.groessteStreuung === 0,
+  schief.join(' | ') || `${zeilenForm.gesamt} Knöpfe geprüft`);
 
 console.log('\nFehler am Telefon:', handyFehler.length ? handyFehler.join(' | ') : 'keine');
 p('Keine Fehler am Telefon', !handyFehler.length, handyFehler.join(' | '));
