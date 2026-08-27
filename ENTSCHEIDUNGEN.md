@@ -16315,3 +16315,86 @@ sich die Kerne — es war nie eine Datei, es war die Last.
 
 Wer bisektiert, prüft zuerst, ob der Lauf überhaupt wiederholbar ist. Drei
 Wiederholungen hätten das in zwei Minuten geklärt. Steht als L66.
+
+
+================================================================================
+E223 — Was das Weglassen kaputt gemacht hat
+================================================================================
+
+Der volle Durchlauf nach E219–E222: 6 von 214 rot. Einer davon ist der
+Lastflatterer aus L66. Die anderen fünf gehören zur ruhigen Fassung, und die
+Aufteilung ist die interessante Auskunft:
+
+    drei echte Fehler          — Dinge, die wirklich nicht mehr gingen
+    zwei alte Verträge         — Prüfungen, die das Vorher festhielten
+
+Wer nur die zweite Sorte findet, hat nicht genau genug hingesehen. Wer nur
+die erste vermutet, ändert Prüfungen, die recht haben.
+
+
+DIE DREI ECHTEN
+
+1. DER FOKUS LANDETE AUF `<body>`.
+
+   Strg+P öffnet die Suche auch mit zugeklappter Leiste. Der Auslöser ist
+   dann `display:none` — und ein unsichtbares Element nimmt keinen Fokus
+   an. `focus()` tut in dem Fall schlicht nichts, ohne Fehler, ohne
+   Rückmeldung. Von `<body>` fängt das nächste Tab wieder ganz oben an,
+   also genau der Fehler, gegen den `fokus.ts` überhaupt geschrieben wurde.
+
+   `fokus.ts` sieht jetzt nach, OB es geklappt hat, und fällt sonst auf
+   `#page` zurück. Nicht irgendein Ersatz: dort hat man gearbeitet, bevor
+   der Dialog kam, und von dort läuft Tab weiter statt neu anzufangen.
+
+   Und noch etwas an dieser Stelle: die Prüfung fragte zuerst nach
+   `tabIndex >= 0`. `#page` trägt `tabindex="-1"` — programmatisch
+   fokussierbar, aber nicht im Tab-Weg, genau richtig für einen
+   Inhaltsbereich. Die Eigenschaft war die falsche Frage; die richtige ist
+   die WIRKUNG: geht das nächste Tab weiter, oder fängt es oben an? So
+   steht es jetzt da.
+
+2. DIE SUCHE STAND NICHT MEHR MITTIG.
+
+   Rechts fielen fünf Zeichen weg, also verschob die Waage aus Krume und
+   Knöpfen den Sucher um 91 px. Der Kommentar im Stilblatt sagte schon
+   immer, was gemeint ist: „mittig zum FENSTER, nicht mittig zwischen zwei
+   Nachbarn, die je nach Seitentitel verschieden breit sind." Die Waage war
+   nur die Annäherung daran, und sie hielt, solange rechts gleich viel
+   stand.
+
+   Jetzt steht es wörtlich da. Erster Versuch: `position:absolute` — und
+   plötzlich 120 px daneben statt 91. Die Kopfzeile beginnt erst hinter der
+   Seitenleiste; mittig zu IHR ist nicht mittig zum Fenster. `fixed` misst
+   am Fenster und hält auch, wenn jemand die Seitenleiste breiter zieht.
+
+3. Der Umweg über `absolute` steht als Kommentar dort, damit der nächste
+   nicht denselben Weg geht.
+
+
+DIE ZWEI ALTEN VERTRÄGE
+
+test128 und test222 klicken jetzt zuerst „Mehr" — den Weg, den auch ein
+Mensch geht. Ein verstecktes Element nimmt weder Fokus noch Klick an; das
+ist keine Nachgiebigkeit der Prüfung, sondern dieselbe Lage wie beim
+Benutzen.
+
+test247 ist der lehrreichere Fall. „Zugeklappt" heisst über einer
+Startansicht seit E219 „gar nicht da" — und ein fehlendes Band trägt keine
+Klasse `ist-zu`. Die Prüfung fragte nur die Klasse ab, hielt „weg" für
+„offen" und meldete damit das GEGENTEIL der Wahrheit. Jetzt zählt zuerst die
+Höhe. Dazu ein neuer Punkt: ausgeschaltet steht die Reiterzeile weiter da —
+sonst wäre nirgends geprüft, dass der Schalter wirklich zurückschaltet, und
+die ruhige Fassung wäre keine Fassung, sondern ein Umbau ohne Weg zurück.
+
+test40 fragte „zeigt die Kopfzeile alle Knöpfe?". Das ist nach E219 die
+falsche Frage. Die richtige: sind es die fünf, die bleiben sollen, und kommen
+die anderen zurück, wenn man abschaltet?
+
+
+DIE LEHRE
+
+Weglassen ist nie nur weniger. Jede versteckte Sache war irgendwo das Ziel
+von etwas — eines Fokus, einer Messung, eines Klicks in einer Prüfung. Der
+volle Durchlauf ist die einzige Stelle, an der das vollständig auffällt, und
+er gehört deshalb ans Ende einer solchen Arbeit, nicht in ihre Mitte (die
+Lehre aus E217, hier noch einmal bestätigt).
