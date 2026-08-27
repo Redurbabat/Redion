@@ -95,6 +95,47 @@ p('Die Formel steht AUSGERECHNET da (3.5·2 = 7)',
   ((karten as any).werte || []).includes('7'), JSON.stringify((karten as any).werte));
 gleich('Der ⊞-Umschalter ist da', (karten as any).umschalter, true);
 
+console.log('\n1b · Karte und Raster schreiben dieselbe Zahl gleich');
+
+/* WARUM DIESE ZEILE. Die Karte las das Zellformat aus `zelle.format`,
+ * gespeichert wird es aber unter `zelle.stil.format`. Sie hat also NIE ein
+ * Format angewendet — dieselbe Zelle stand im Raster als „1’450.00 CHF" und
+ * in der Karte als „1’450" (E227). Am Telefon ist die Karte das Erste, was
+ * man sieht, und der Betrag verlor dort seine Währung.
+ *
+ * GEFRAGT WIRD NICHT „steht CHF da". Das wäre wieder eine Eigenschaft. Die
+ * Frage ist die Wirkung: schreiben Karte und Raster DIESELBE Zahl gleich?
+ * Damit fällt jede Richtung auf — ein Format, das die Karte verliert, und
+ * eines, das nur die Karte erfindet. */
+const gleichGeschrieben = await handy.evaluate(async (x: any) => {
+  const w = window as any;
+  const blk = Store.getBlock(x.tabId);
+  const bl = blk.mappe.blaetter[0];
+  const zelle = bl.zellen['B2'];
+  zelle.stil = Object.assign({}, zelle.stil || {},
+    { format: { art: 'waehrung', stellen: 2, waehrung: 'CHF' } });
+  App.zeichneSeite();
+  await new Promise(r => setTimeout(r, 500));
+  const inKarte = [...document.querySelectorAll<HTMLElement>('.tblk-karte')][0]
+    ?.querySelector('.tblk-wert')?.textContent ?? '';
+  /* Dasselbe Blatt im Raster — über den ⊞-Umschalter, den es ohnehin gibt. */
+  (document.querySelector('.tblk-kopf button') as HTMLElement)?.click();
+  await new Promise(r => setTimeout(r, 500));
+  const inRaster = (document.querySelector('.tbl-zelle[data-a="B2"]')
+    || document.querySelector('[data-a="B2"]'))?.textContent ?? '';
+  (document.querySelector('.tblk-zurueck') as HTMLElement)?.click();
+  await new Promise(r => setTimeout(r, 400));
+  return { inKarte, inRaster };
+}, ids);
+p('Dieselbe Zelle steht in Karte und Raster gleich da',
+  (gleichGeschrieben as any).inKarte !== ''
+  && (gleichGeschrieben as any).inKarte === (gleichGeschrieben as any).inRaster,
+  'Karte „' + (gleichGeschrieben as any).inKarte + '" / Raster „'
+  + (gleichGeschrieben as any).inRaster + '"');
+p('… und das Format ist wirklich angekommen',
+  /CHF/.test((gleichGeschrieben as any).inKarte),
+  (gleichGeschrieben as any).inKarte);
+
 console.log('\n2 · ⊞ öffnet das Raster, ☰ führt zurück — je Block gemerkt');
 
 const hinUndZurueck = await handy.evaluate(async (x: any) => {

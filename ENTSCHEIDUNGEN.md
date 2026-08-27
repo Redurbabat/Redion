@@ -16542,3 +16542,55 @@ Beide Male sah die Eigenschaft jahrelang aus wie die Wirkung, weil nichts sie
 auseinandergezogen hat. §55.2 sagt: wer eine Prüfung schreibt, prüft zuerst,
 ob sie rot werden KANN. Hier kommt eine zweite Frage dazu: kann sie aus dem
 RICHTIGEN Grund rot werden?
+
+
+================================================================================
+E227 — Die Kartenansicht hat nie ein Zellformat angewendet
+================================================================================
+
+Beim Durchsehen der 92 Bildschirmfotos fiel am Telefon auf: der Tabellenblock
+zeigte in den Karten
+
+    Miete   Jan 1’450    Feb 1’450    Mär 1’450
+
+und im Raster daneben
+
+    1’450.00 CHF
+
+Dieselbe Zelle, zwei Zahlen. Der Grund war eine Zeichenkette:
+
+    zeigeWert(K.wert(blatt, adr), zelle && zelle.format)          falsch
+    zeigeWert(K.wert(blatt, adr), zelle && zelle.stil && zelle.stil.format)
+
+Geschrieben wird das Format nach `zelle.stil.format` — so steht es im
+Zellmenü, und so lesen es alle anderen sechs Stellen. Nur die Kartenansicht
+las `zelle.format`, eine Eigenschaft, die es nicht gibt. `undefined` ist ein
+gültiges zweites Argument für `zeigeWert`, also gab es keinen Fehler, keine
+Warnung und nichts zu sehen — ausser der fehlenden Währung.
+
+    gemessen, vorher     Karte „1’450"          Raster „1’450.00 CHF"
+    gemessen, nachher    Karte „1’450.00 CHF"   Raster „1’450.00 CHF"
+
+Und das trifft nicht nur die Währung: Prozent, feste Nachkommastellen, alles,
+was das Zellmenü setzt, war am Telefon unsichtbar. Am Telefon ist die Karte
+das Erste, was man sieht — der Betrag verlor seine Währung genau dort, wo
+niemand die andere Fassung danebenlegen kann, um es zu merken.
+
+DIE PRÜFUNG FRAGT NICHT „STEHT CHF DA". Das wäre wieder eine Eigenschaft
+(E225, E226). Gefragt ist die Wirkung: schreiben Karte und Raster DIESELBE
+Zahl gleich? Damit fällt jede Richtung auf — ein Format, das die Karte
+verliert, und eines, das nur die Karte erfindet.
+
+    Gegenbeweis, alte Zeile wieder eingesetzt:
+      ✗ Dieselbe Zelle steht in Karte und Raster gleich da
+        — Karte „3.5" / Raster „3.50 CHF"
+      ✗ … und das Format ist wirklich angekommen — 3.5
+
+test163: 18 ok, 0 offen.
+
+WAS DABEI SONST NOCH GEPRÜFT WURDE. Der Verdacht war zuerst ein anderer: die
+Bilder zeigten `634.216667` im Raster, und das sah nach der abgeschnittenen
+Zahl aus §55.1. Nachgesehen: es ist die RICHTIGE Fassung. `passendMachen`
+kürzt bewusst über die Stufen 6-4-2-1-0, hängt den vollen Wert an den
+Tooltip und schreibt `###`, wenn nicht einmal die Vorkommastellen passen.
+Der Block macht dort genau das, was er soll — der Fehler lag daneben.

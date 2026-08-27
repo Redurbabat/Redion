@@ -43638,7 +43638,22 @@ const SpreadsheetView = (() => {
             for (let s = 0; s < hochS; s++) {
                 const adr = R.schreibe(z, s);
                 const zelle = blatt.zellen[adr];
-                const anzeige = zeigeWert(K.wert(blatt, adr), zelle && zelle.format);
+                /* `zelle.stil.format`, NICHT `zelle.format` (E227).
+                 *
+                 * Geschrieben wird das Format nach `zelle.stil.format` (siehe das
+                 * Zellmenü weiter unten), und überall sonst wird es auch von dort
+                 * gelesen. Nur hier stand `zelle.format` — eine Eigenschaft, die es
+                 * nicht gibt. Die Kartenansicht hat also NIE ein Zellformat
+                 * angewendet.
+                 *
+                 * GEMESSEN, dieselbe Zelle, Format Währung/CHF/2 Stellen:
+                 *     Gitter   1’450.00 CHF
+                 *     Karte    1’450
+                 *
+                 * Dieselbe Zahl, zwei Schreibweisen — und die Karte ist das, was am
+                 * Telefon zuerst zu sehen ist. Der Betrag verlor seine Währung genau
+                 * dort, wo niemand danebenlegen kann, um es zu merken. */
+                const anzeige = zeigeWert(K.wert(blatt, adr), zelle && zelle.stil && zelle.stil.format);
                 if (anzeige === '')
                     continue;
                 if (!titelDa) {
