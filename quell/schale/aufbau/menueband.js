@@ -100,13 +100,25 @@ const Menueband = (() => {
      * stehen. Ein Zustand, der veralten kann, ist als Grundlage für „was zeige
      * ich" schlechter als das, was wirklich auf dem Schirm steht.
      *
-     * Die Sonderansichten — Heute, Bibliothek, Lernzentrum, Aufgaben — tragen
-     * alle `produkt-welt` am `#page`. Eine echte Seite trägt sie nicht.
+     * DER TEST WAR ZUERST FALSCH. Er fragte, ob `#page` die Klasse
+     * `produkt-welt` trägt — und die Bibliothek trägt sie nicht, sondern
+     * `wide`. Das Band stand dort also offen, mit einem Reiter „Einfügen", der
+     * nichts einzufügen hatte. Gesehen auf einem Bildschirmfoto, gemessen
+     * danach über vier Ansichten:
+     *
+     *     Start (Heute)   produkt-welt lernwelt     kein #title
+     *     echte Seite     (keine Klasse)            #title, Symbol, Werkzeuge
+     *     Bibliothek      wide                      kein #title
+     *     Arbeitswelt     wide produkt-welt …       kein #title
+     *
+     * `#title` ist das einzige, das genau bei der echten Seite steht — und es
+     * ist auch der richtige BEGRIFF: eine Seite hat einen Titel, in den man
+     * schreibt. Eine Übersicht hat keinen.
+     *
+     * Nicht die Blöcke zählen: eine frisch angelegte Seite hat null davon und
+     * ist trotzdem eine Seite.
      */
-    const seiteOffen = () => {
-        const p = document.getElementById('page');
-        return !!p && !p.classList.contains('produkt-welt');
-    };
+    const seiteOffen = () => !!document.getElementById('title');
     /**
      * Zugeklappt oder nicht.
      *
@@ -445,13 +457,16 @@ const Menueband = (() => {
         if (!wo || typeof MutationObserver === 'undefined')
             return;
         warOffen = seiteOffen();
+        /* `subtree` ist nötig, seit der Test am `#title` hängt: der liegt IN
+           `#page`, und ein Wechsel der Kindliste allein sieht ihn nicht immer. */
         new MutationObserver(() => {
             const jetzt = seiteOffen();
             if (jetzt === warOffen)
                 return;
             warOffen = jetzt;
             zeichne();
-        }).observe(wo, { attributes: true, attributeFilter: ['class'], childList: true });
+        }).observe(wo, { attributes: true, attributeFilter: ['class'],
+            childList: true, subtree: true });
     };
     const start = () => {
         zeichne();

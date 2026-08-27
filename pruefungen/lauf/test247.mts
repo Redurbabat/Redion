@@ -462,6 +462,52 @@ p('Zurück auf „Heute" klappt es von selbst zu',
 p('Die Reiterzeile bleibt dort stehen', aufHeute.reiter === 6 && aufHeute.hoch > 25,
   `${aufHeute.reiter} Reiter, ${aufHeute.hoch} px`);
 
+/* VIER ANSICHTEN, NICHT EINE.
+   Der erste Test fragte, ob `#page` die Klasse `produkt-welt` trägt. „Heute"
+   trägt sie, die BIBLIOTHEK nicht — sie trägt `wide`. Das Band stand dort
+   also offen, mit einem Reiter „Einfügen", der nichts einzufügen hatte. Auf
+   einem Bildschirmfoto gesehen, von keiner Prüfung gemeldet (§55.1).
+
+   Deshalb wird jetzt jede Ansicht einzeln gefragt, und die Bibliothek ist
+   ausdrücklich dabei: sie ist die, die den ersten Test überlistet hat. */
+const ORTE: Array<[string, string, boolean]> = [
+  ['echte Seite',   'seite',      false],
+  ['Bibliothek',    'bibliothek', true],
+  ['Lernwelt heute','lernwelt',   true]
+];
+const falscherOrt: string[] = [];
+for (const [name, wie, sollZu] of ORTE) {
+  const ging = await seite.evaluate((w: string) => {
+    try {
+      if (w === 'seite') {
+        const s2 = Object.values(Store.cache.blocks)
+          .find((b: any) => b?.type === 'page' && b.alive) as any;
+        if (!s2) return false;
+        App.oeffne(s2.id); return true;
+      }
+      if (w === 'bibliothek') {
+        const B = (globalThis as any).Bibliothek;
+        if (!B?.oeffne) return false;
+        B.oeffne(); return true;
+      }
+      const L = (globalThis as any).Lernwelt;
+      if (!L?.oeffnen) return false;
+      L.oeffnen('heute'); return true;
+    } catch { return false; }
+  }, wie);
+  await seite.waitForTimeout(1200);
+  const stand = await seite.evaluate(() => ({
+    zu: document.getElementById('menueband')?.classList.contains('ist-zu') === true,
+    titel: !!document.getElementById('title'),
+    klassen: document.getElementById('page')?.className || ''
+  }));
+  if (!ging || stand.zu !== sollZu)
+    falscherOrt.push(`${name}: ${ging ? '' : 'nicht erreicht, '}Band ${stand.zu ? 'zu' : 'offen'}` +
+      ` (soll ${sollZu ? 'zu' : 'offen'}), #title ${stand.titel}, „${stand.klassen}"`);
+}
+p('Das Band ist genau dort offen, wo eine Seite offen ist',
+  falscherOrt.length === 0, falscherOrt.join(' | '));
+
 console.log('\nFehler auf der Seite:', fehler.length ? fehler.join(' | ') : 'keine');
 p('Keine Fehler auf der Seite', !fehler.length, fehler.join(' | '));
 await seite.close();

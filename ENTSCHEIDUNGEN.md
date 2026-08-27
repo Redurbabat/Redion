@@ -15220,3 +15220,30 @@ inline-end` hilft, aber die Zahl ist eine Rechnung: der Knopf klebt an der
 PADDING-Kante (`right:0` in einem Kasten mit `padding-inline`) und ragt um
 genau dieses Padding hinein. Mit nur der Knopfbreite blieben 6 px Überlappung
 — gemessen, nicht geschätzt.
+
+
+NACHTRAG ZU E210 — WORAN MAN EINE SEITE ERKENNT
+--------------------------------------------------------------------------------
+
+Der Test hiess zuerst: „`#page` trägt die Klasse `produkt-welt`, also ist es
+eine Sonderansicht". Auf einem Bildschirmfoto der Bibliothek stand das Band
+trotzdem offen — mit einem Reiter „Einfügen", der nichts einzufügen hatte.
+
+Nachgemessen über vier Ansichten:
+
+    Start (Heute)   produkt-welt lernwelt        kein #title
+    echte Seite     (keine Klasse)               #title, Symbol, Werkzeuge
+    Bibliothek      wide                         kein #title
+    Arbeitswelt     wide produkt-welt arbeits…   kein #title
+
+Die Bibliothek trägt `wide` und nicht `produkt-welt`. Der Test war also nicht
+falsch für „Heute" — er war unvollständig, und das fiel nur auf, weil jemand
+hingesehen hat.
+
+`#title` ist das einzige, das genau bei der echten Seite steht, und es ist
+auch der richtige BEGRIFF: eine Seite hat einen Titel, in den man schreibt,
+eine Übersicht nicht. Nicht die Blöcke zählen — eine frisch angelegte Seite
+hat null davon und ist trotzdem eine Seite.
+
+Die Prüfung fragt jetzt jede Ansicht einzeln, und die Bibliothek ist
+ausdrücklich dabei: sie ist die, die den ersten Test überlistet hat.
