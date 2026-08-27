@@ -740,7 +740,12 @@ body[data-ruhig="offen"] #tree .sb-zeile:hover .act > button{ opacity:1; pointer
    und deshalb weg — nicht ausgegraut: ein Knopf, der nichts tun kann,
    soll auch nicht dastehen. */
 body[data-ruhig="aus"] #btn-mehr{ display:none }
-.sl-mehr{ color:var(--text-faint) }
+/* `--text-faint` war das falsche Token. Gemessen im hellen Schema:
+   rgb(130,129,126) auf rgb(251,251,250) — Kontrast 3,76:1, unter der
+   Grenze von 4,5:1. Es ist die Farbe für HINWEISE; „Mehr" ist aber eine
+   Handlung, und zwar die, über die man an alles Übrige kommt.
+   `--text-dim` ist dafür da. */
+.sl-mehr{ color:var(--text-dim) }
 .sl-mehr[aria-expanded="true"]{ color:var(--text) }
 
 /* Aufgeklappt bekommt die Leiste eine Trennlinie über dem Schalter, damit
