@@ -220,7 +220,26 @@ import { chromium } from 'playwright';
      pc.seitenleistePos === 'relative' && pc.seitenleiste === 240,
      pc.seitenleistePos + ' / ' + pc.seitenleiste);
   ok('Der Inhalt beginnt dahinter', pc.mainLinks === 240, pc.mainLinks + ' px');
-  ok('Die Kopfzeile zeigt am PC alle Knöpfe', pc.kopfKnoepfe.length >= 10, pc.kopfKnoepfe.length + ' Stück');
+  /* SEIT E219 SIND ES AM PC ABSICHTLICH WENIGER. Fünf Zeichen — Teilen,
+     Kommentare, Versionsverlauf, Automationen, Link kopieren — stehen im
+     ⋯-Menü, und zwar in demselben Block, der dort schon fürs Telefon war.
+     „Alle Knöpfe" wäre damit die falsche Frage. Die richtige ist: sind es
+     die fünf, die bleiben sollen, und kommt der Rest zurück, wenn man die
+     ruhige Fassung abschaltet? */
+  const SOLL_RUHIG = ['btn-back', 'btn-fwd', 'btn-ai', 'btn-fav', 'btn-page-menu'];
+  ok('Die Kopfzeile zeigt am PC die fünf, die bleiben',
+     SOLL_RUHIG.every(k => pc.kopfKnoepfe.includes(k)) &&
+     pc.kopfKnoepfe.length === SOLL_RUHIG.length,
+     pc.kopfKnoepfe.join(', '));
+
+  const ohneRuhig = await d.evaluate(() => {
+    (globalThis as any).Ruhig?.setzen(false);
+    return [...document.querySelectorAll<HTMLElement>('#topbar button')]
+      .filter(b => b.offsetParent !== null).map(b => b.id).filter(Boolean);
+  });
+  ok('Und ausgeschaltet stehen wieder alle da',
+     ohneRuhig.length >= 10, ohneRuhig.length + ' Stück: ' + ohneRuhig.join(', '));
+  await d.evaluate(() => { (globalThis as any).Ruhig?.setzen(true); });
   ok('Die Handy-Leiste unten ist am PC aus', pc.untenAus);
   ok('Die Blockgriffe sind am PC da', pc.griffe);
   ok('Die Datenbank-Werkzeugleiste ist vollständig', pc.dbLeiste >= 7, pc.dbLeiste + ' Knöpfe');

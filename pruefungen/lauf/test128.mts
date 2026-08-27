@@ -34,6 +34,10 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 
+/* Die Module heissen im Browser schlicht so — mit `module: none` sind sie
+   gewöhnliche Konstanten im Skript-Bereich und hängen NICHT am Fenster. */
+declare const Ruhig: any;
+
 const WURZEL = path.resolve(import.meta.dirname, '../..');
 const PORT = 8797;
 
@@ -97,6 +101,17 @@ p('Kein sichtbarer Knopf ist namenlos', namenlos.length === 0,
 
 
 console.log('\n2 · Der Fokus ist zu sehen');
+
+/* SEIT E219 STEHT DIE LEISTE RUHIG: „Suchen", „Neue Seite" und die Reiter
+   sind da, aber hinter „Mehr". Ein verstecktes Element nimmt keinen Fokus
+   an — `focus()` tut dann schlicht nichts, und die Messung liest den
+   Rahmen des unfokussierten Zustands.
+   Also erst aufklappen. Das ist kein Umweg der Prüfung, sondern der Weg,
+   den auch ein Mensch geht (dieselbe Stelle wie in test33). */
+await seite.evaluate(() => {
+  if (typeof Ruhig !== 'undefined' && Ruhig.an() && !Ruhig.offen()) Ruhig.schalten();
+});
+await seite.waitForTimeout(300);
 
 /* Ohne sichtbaren Fokus ist Tastaturbedienung Raten. */
 const fokus = await seite.evaluate(() => {
@@ -259,6 +274,13 @@ console.log('\n7 · Dialoge sind Dialoge — und die Tastatur kommt hinein');
    Repariert an EINER Stelle — `schale/ueberlagerung/fokus.ts`. */
 for (const [name, ruf] of DIALOGE) {
   await aufraeumen();
+  /* Auch hier: der Knopf, auf den der Fokus zurückkommen soll, muss
+     sichtbar sein. `aufraeumen` zeichnet die Leiste neu und klappt „Mehr"
+     dabei zu. */
+  await seite.evaluate(() => {
+    if (typeof Ruhig !== 'undefined' && Ruhig.an() && !Ruhig.offen()) Ruhig.schalten();
+  });
+  await seite.waitForTimeout(200);
   await seite.evaluate(async (r) => {
     document.getElementById('btn-search')?.focus();
     (0, eval)(r);
@@ -300,6 +322,69 @@ for (const [name, ruf] of DIALOGE) {
   p(`${name}: und der Fokus kommt zurück`, zurueck.fokus === 'btn-search',
     zurueck.fokus + ' — vorher blieb er auf <body>, und das nächste Tab fing oben an');
 }
+
+await aufraeumen();
+
+/* ==========================================================================
+ * DER FALL, DEN DIE RUHIGE FASSUNG ERST SCHAFFT (E219)
+ * --------------------------------------------------------------------------
+ * Oben wird „Mehr" aufgeklappt, damit der Knopf, auf den der Fokus
+ * zurückkommen soll, überhaupt da ist. Es gibt aber den anderen Weg: Strg+P
+ * öffnet die Suche AUCH mit zugeklappter Leiste — dann ist der Auslöser
+ * unsichtbar, und ein unsichtbares Element kann den Fokus nicht annehmen.
+ *
+ * Was dann? Nicht `<body>`: von dort fängt das nächste Tab wieder ganz oben
+ * an, und genau davor schützt der Punkt darüber. Es muss irgendein
+ * sichtbares, fokussierbares Element sein — wo genau, ist Geschmackssache,
+ * dass überhaupt eines, ist es nicht.
+ * ========================================================================*/
+console.log('\n7b · Fokus zurück, wenn der Auslöser versteckt ist');
+
+await seite.evaluate(() => {
+  if (typeof Ruhig !== 'undefined') { Ruhig.setzen(true); if (Ruhig.offen()) Ruhig.schalten(); }
+});
+await seite.waitForTimeout(300);
+const versteckt = await seite.evaluate(() => {
+  const k = document.getElementById('btn-search');
+  if (!k) return 'kein Knopf';
+  return getComputedStyle(k).display === 'none' ? 'versteckt' : 'sichtbar';
+});
+p('Mit zugeklappter Leiste ist „Suchen" wirklich versteckt',
+  versteckt === 'versteckt', versteckt);
+
+await seite.keyboard.press('Control+p');
+await seite.waitForTimeout(500);
+await seite.keyboard.press('Escape');
+await seite.waitForTimeout(450);
+const danach = await seite.evaluate(() => {
+  const a = document.activeElement as HTMLElement | null;
+  if (!a || a === document.body) return { wo: '(body)', sichtbar: false, fokussierbar: false };
+  const k = a.getBoundingClientRect();
+  const st = getComputedStyle(a);
+  return {
+    wo: a.id || a.className || a.tagName,
+    sichtbar: k.width > 0 && k.height > 0 && st.visibility !== 'hidden' && st.display !== 'none'
+  };
+});
+p('Der Fokus landet nicht auf <body>', danach.wo !== '(body)', danach.wo);
+p('Sondern auf etwas Sichtbarem', danach.sichtbar === true, danach.wo);
+
+/* UND DIE EIGENTLICHE FRAGE, nicht die Eigenschaft, sondern die Wirkung.
+   `tabindex="-1"` heisst „programmatisch fokussierbar, aber nicht im
+   Tab-Weg" — genau richtig für einen Inhaltsbereich. Ob das Ziel taugt,
+   entscheidet sich also nicht an einem Attribut, sondern daran, ob das
+   nächste Tab WEITERGEHT statt oben neu anzufangen. */
+const vorTab = danach.wo;
+await seite.keyboard.press('Tab');
+await seite.waitForTimeout(250);
+const nachTab = await seite.evaluate(() => {
+  const a = document.activeElement as HTMLElement | null;
+  const ersterInLeiste = document.querySelector<HTMLElement>('#sidebar button');
+  return { wo: a ? (a.id || a.className || a.tagName) : '(body)',
+           gehtObenLosWieder: !!(a && ersterInLeiste && a === ersterInLeiste) };
+});
+p('Und das nächste Tab fängt nicht wieder ganz oben an',
+  !nachTab.gehtObenLosWieder, `${vorTab} → ${nachTab.wo}`);
 
 await aufraeumen();
 

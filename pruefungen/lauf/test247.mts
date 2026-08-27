@@ -558,11 +558,39 @@ const aufHeute = await seite.evaluate(() => ({
   hoch: Math.round(document.getElementById('menueband')?.getBoundingClientRect().height || 0),
   reiter: document.querySelectorAll('#menueband [data-mb-reiter]').length
 }));
-p('Zurück auf „Heute" klappt es von selbst zu',
-  zurueckHeute && aufHeute.sonder === true && aufHeute.zu === true,
+/* SEIT E219 KLAPPT ES DORT NICHT MEHR ZU — ES IST GANZ WEG.
+   Der Grund stand schon vorher im Code, bei `zugeklappt`: „Ein Menüband
+   über einer Startansicht kann ohnehin fast nichts." Zugeklappt blieben
+   davon trotzdem sechs Reiter und ein Pfeil stehen, also sieben
+   anklickbare Dinge, die alle dasselbe sagen: nicht jetzt.
+   Die ruhige Fassung nimmt den Gedanken zu Ende. Was hier geprüft wird,
+   ist deshalb NICHT mehr „zugeklappt", sondern „nicht da" — und das
+   Gegenstück dazu, dass es auf einer offenen Seite sehr wohl da ist,
+   steht drei Punkte weiter oben. */
+p('Zurück auf „Heute" ist das Band ganz weg',
+  zurueckHeute && aufHeute.sonder === true && aufHeute.hoch === 0,
   JSON.stringify(aufHeute));
-p('Die Reiterzeile bleibt dort stehen', aufHeute.reiter === 6 && aufHeute.hoch > 25,
+p('Und es steht auch keine Reiterzeile mehr da', aufHeute.reiter === 0,
   `${aufHeute.reiter} Reiter, ${aufHeute.hoch} px`);
+
+/* Ausgeschaltet gilt weiter das Alte: zugeklappt, aber mit Reiterzeile.
+   Ohne diesen Punkt wäre nicht geprüft, dass der Schalter wirklich
+   zurückschaltet — und die ruhige Fassung wäre keine Fassung, sondern
+   ein Umbau ohne Weg zurück. */
+await seite.evaluate(() => { (globalThis as any).Ruhig?.setzen(false); });
+await seite.waitForTimeout(300);
+await seite.evaluate(() => { (globalThis as any).Menueband?.zeichne(); });
+await seite.waitForTimeout(400);
+const ohneRuhig = await seite.evaluate(() => ({
+  zu: document.getElementById('menueband')?.classList.contains('ist-zu'),
+  hoch: Math.round(document.getElementById('menueband')?.getBoundingClientRect().height || 0),
+  reiter: document.querySelectorAll('#menueband [data-mb-reiter]').length
+}));
+p('Ohne die ruhige Fassung steht die Reiterzeile weiter da',
+  ohneRuhig.reiter === 6 && ohneRuhig.hoch > 25 && ohneRuhig.zu === true,
+  JSON.stringify(ohneRuhig));
+await seite.evaluate(() => { (globalThis as any).Ruhig?.setzen(true); });
+await seite.waitForTimeout(300);
 
 /* VIER ANSICHTEN, NICHT EINE.
    Der erste Test fragte, ob `#page` die Klasse `produkt-welt` trägt. „Heute"
@@ -598,13 +626,24 @@ for (const [name, wie, sollZu] of ORTE) {
     } catch { return false; }
   }, wie);
   await seite.waitForTimeout(1200);
-  const stand = await seite.evaluate(() => ({
-    zu: document.getElementById('menueband')?.classList.contains('ist-zu') === true,
-    titel: !!document.getElementById('title'),
-    klassen: document.getElementById('page')?.className || ''
-  }));
+  /* „ZU" HEISST SEIT E219 AUCH „GAR NICHT DA". Wo das Band nichts kann,
+     steht es nicht mehr zugeklappt herum, sondern fehlt — und ein
+     fehlendes Band trägt keine Klasse `ist-zu`. Wer nur die Klasse
+     abfragt, hält „weg" für „offen" und meldet das Gegenteil der
+     Wahrheit; genau das ist hier passiert. */
+  const stand = await seite.evaluate(() => {
+    const b = document.getElementById('menueband');
+    const hoch = Math.round(b?.getBoundingClientRect().height || 0);
+    return {
+      zu: hoch === 0 || b?.classList.contains('ist-zu') === true,
+      weg: hoch === 0,
+      titel: !!document.getElementById('title'),
+      klassen: document.getElementById('page')?.className || ''
+    };
+  });
   if (!ging || stand.zu !== sollZu)
-    falscherOrt.push(`${name}: ${ging ? '' : 'nicht erreicht, '}Band ${stand.zu ? 'zu' : 'offen'}` +
+    falscherOrt.push(`${name}: ${ging ? '' : 'nicht erreicht, '}Band ` +
+      `${stand.weg ? 'weg' : stand.zu ? 'zu' : 'offen'}` +
       ` (soll ${sollZu ? 'zu' : 'offen'}), #title ${stand.titel}, „${stand.klassen}"`);
 }
 p('Das Band ist genau dort offen, wo eine Seite offen ist',

@@ -345,3 +345,39 @@ input,textarea,select{font:inherit; color:inherit}
   #topbar .sucher{ display:none }
   #topbar .crumb{ max-width:none }
 }
+
+/* ============================================================================
+ * DIE SUCHE BLEIBT IN DER MITTE, AUCH MIT WENIGER KNÖPFEN (E223)
+ * ----------------------------------------------------------------------------
+ * Der Sucher steht mittig, weil links die Krume und rechts die Knöpfe ihn
+ * dorthin schieben — zwei Dehnstücke, die sich die Waage halten. Das hält,
+ * solange rechts gleich viel steht.
+ *
+ * Seit E219 gibt die Kopfzeile in der ruhigen Fassung fünf Zeichen ans
+ * ⋯-Menü ab. Gemessen: der Sucher rutschte 91 px nach rechts. test245 hat
+ * es gemeldet, und zwar zu Recht — mittig war er nicht mehr.
+ *
+ * Das Kommentarfeld oben sagt, was gemeint IST: „mittig zum FENSTER, nicht
+ * mittig zwischen zwei Nachbarn". Die Waage war immer nur eine Annäherung
+ * daran. Hier steht es jetzt wörtlich — und weil der Sucher damit aus dem
+ * Fluss geht, hält ein gleich breites Platzhalterstück die Lücke offen, in
+ * die er gehört. Sonst rückten Krume und Knöpfe zusammen und die Zeile
+ * sähe leer aus.
+ * ==========================================================================*/
+@media (min-width:761px){
+  /* `fixed`, nicht `absolute`. Die Kopfzeile beginnt erst hinter der
+     Seitenleiste; mittig ZU IHR wäre 120 px neben der Fenstermitte, und
+     die Seitenleiste ist ausserdem breitenverstellbar. `fixed` misst am
+     Fenster — das ist es, was gemeint war, und es hält auch, wenn jemand
+     die Leiste breiter zieht. Die Kopfzeile scrollt nicht, also ist
+     `fixed` hier kein Bruch. */
+  body[data-ruhig="an"] #topbar .sucher{
+    position:fixed; left:50%; transform:translateX(-50%);
+    width:min(520px, 42vw); max-width:520px; flex:none; z-index:3;
+  }
+  /* Der Platzhalter: derselbe Raum, nur unsichtbar. `aria-hidden`, damit
+     kein Vorleseprogramm eine leere Fläche ansagt. */
+  body[data-ruhig="an"] #topbar .sucher-platz{
+    flex:1 1 auto; min-width:0; max-width:520px; height:36px; pointer-events:none;
+  }
+}

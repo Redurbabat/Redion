@@ -747,6 +747,42 @@ input,textarea,select{font:inherit; color:inherit}
   #topbar .crumb{ max-width:none }
 }
 
+/* ============================================================================
+ * DIE SUCHE BLEIBT IN DER MITTE, AUCH MIT WENIGER KNÖPFEN (E223)
+ * ----------------------------------------------------------------------------
+ * Der Sucher steht mittig, weil links die Krume und rechts die Knöpfe ihn
+ * dorthin schieben — zwei Dehnstücke, die sich die Waage halten. Das hält,
+ * solange rechts gleich viel steht.
+ *
+ * Seit E219 gibt die Kopfzeile in der ruhigen Fassung fünf Zeichen ans
+ * ⋯-Menü ab. Gemessen: der Sucher rutschte 91 px nach rechts. test245 hat
+ * es gemeldet, und zwar zu Recht — mittig war er nicht mehr.
+ *
+ * Das Kommentarfeld oben sagt, was gemeint IST: „mittig zum FENSTER, nicht
+ * mittig zwischen zwei Nachbarn". Die Waage war immer nur eine Annäherung
+ * daran. Hier steht es jetzt wörtlich — und weil der Sucher damit aus dem
+ * Fluss geht, hält ein gleich breites Platzhalterstück die Lücke offen, in
+ * die er gehört. Sonst rückten Krume und Knöpfe zusammen und die Zeile
+ * sähe leer aus.
+ * ==========================================================================*/
+@media (min-width:761px){
+  /* `fixed`, nicht `absolute`. Die Kopfzeile beginnt erst hinter der
+     Seitenleiste; mittig ZU IHR wäre 120 px neben der Fenstermitte, und
+     die Seitenleiste ist ausserdem breitenverstellbar. `fixed` misst am
+     Fenster — das ist es, was gemeint war, und es hält auch, wenn jemand
+     die Leiste breiter zieht. Die Kopfzeile scrollt nicht, also ist
+     `fixed` hier kein Bruch. */
+  body[data-ruhig="an"] #topbar .sucher{
+    position:fixed; left:50%; transform:translateX(-50%);
+    width:min(520px, 42vw); max-width:520px; flex:none; z-index:3;
+  }
+  /* Der Platzhalter: derselbe Raum, nur unsichtbar. `aria-hidden`, damit
+     kein Vorleseprogramm eine leere Fläche ansagt. */
+  body[data-ruhig="an"] #topbar .sucher-platz{
+    flex:1 1 auto; min-width:0; max-width:520px; height:36px; pointer-events:none;
+  }
+}
+
 </style>
 <style>
 /* ===== quell/schale/stil/aufbau.css ===== */
@@ -10906,6 +10942,10 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
       <span class="sucher-text">Suchen in Redion …</span>
       <kbd>Strg P</kbd>
     </button>
+    <!-- Platzhalter für den Sucher, wenn er in der ruhigen Fassung aus dem
+         Fluss genommen und mittig zum Fenster gestellt wird (E223). Ohne
+         ihn rückten Krume und Knöpfe zusammen. -->
+    <i class="sucher-platz" aria-hidden="true"></i>
     <div class="spacer"></div>
     <button class="top-btn" id="btn-teilen" data-ruhig="mehr" title="Teilen und ausgeben"><span data-sym="share"></span><span>Teilen</span></button>
     <button class="top-btn" id="btn-ai" title="Lokale KI (Strg + J)"><span data-sym="sparkle"></span><span>KI</span></button>
@@ -25688,8 +25728,6 @@ const Fokus = (() => {
         for (const n of dialoge) {
             const ziel = herkunft.get(n);
             herkunft.delete(n);
-            if (!ziel || !document.contains(ziel))
-                continue;
             /* Nur, wenn der Fokus wirklich verwaist ist. Hat inzwischen etwas
                anderes ihn übernommen — ein zweiter Dialog, ein Textfeld —, wäre
                das Zurückholen ein Diebstahl. */
@@ -25698,7 +25736,30 @@ const Fokus = (() => {
                 continue;
             if (document.querySelector(DIALOGE))
                 continue; /* noch etwas offen */
-            ziel.focus?.();
+            if (ziel && document.contains(ziel))
+                ziel.focus?.();
+            /* UND NACHSEHEN, OB ES GEKLAPPT HAT (E223).
+             *
+             * Zwei Fälle lassen den Fokus sonst auf `<body>` liegen, und von dort
+             * fängt das nächste Tab wieder ganz oben an — genau der Fehler, gegen
+             * den dieser ganze Abschnitt geschrieben wurde.
+             *
+             *   · Es gab kein Ziel. Strg+P öffnet die Suche auch dann, wenn gar
+             *     nichts fokussiert war.
+             *   · Das Ziel ist inzwischen unsichtbar. Seit E219 steht „Suchen"
+             *     hinter „Mehr", und ein Element mit `display:none` nimmt den
+             *     Fokus nicht an — `focus()` tut schlicht nichts, ohne Fehler.
+             *
+             * Dann übernimmt der Inhalt. Das ist nicht bloss irgendein Ersatz:
+             * dort hat man gearbeitet, bevor der Dialog kam, und von dort läuft
+             * Tab weiter, statt neu anzufangen. `#page` trägt in `index.html`
+             * schon `tabindex="-1"` — es ist als Fokusziel vorgesehen.
+             */
+            const jetztA = document.activeElement;
+            if (!jetztA || jetztA === document.body || jetztA === document.documentElement) {
+                const inhalt = document.getElementById('page') || document.getElementById('main');
+                inhalt?.focus?.();
+            }
         }
     };
     let laeuft = false;

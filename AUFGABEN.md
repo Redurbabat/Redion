@@ -35,7 +35,46 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
-**25. August 2026 · 202 Prüfläufe · LUECKEN.md ist abgearbeitet**
+**27. August 2026 · 214 Prüfläufe · die ruhige Fassung ist gebaut**
+
+> ### Ruhig: 52 Rahmenknöpfe werden 15 (E218–E222)
+>
+> Redur wollte Redion ruhiger, mit weniger Bereichen, ohne dass etwas
+> verschwindet. Zuerst gemessen statt geschätzt — alles Anklickbare in
+> Seitenleiste, Kopfzeile und Menüband bei 1440 × 900:
+>
+> | | vorher | ruhig |
+> |---|---|---|
+> | Seitenleiste | 32 | 8 |
+> | Kopfzeile | 13 | 7 |
+> | Menüband (Startansicht) | 7 | 0 |
+> | **zusammen** | **52** | **15** |
+>
+> Fünf Wege stehen links: Heute, Lernzentrum, Elektro, Bibliothek, Aufgaben.
+> „Mehr" (Strg + M) holt alles zurück, an derselben Stelle, mit denselben
+> Knöpfen — der Unterschied ist eine CSS-Regel, kein zweiter Katalog.
+> Schalter: Einstellungen → Aussehen → Schrift und Layout.
+>
+> Dazu kam beim Bauen heraus:
+>
+> · **Elektro hatte keine eigene Zeile** — eines der 14 Module, das grösste,
+>   erreichbar nur über den Workspace. Jetzt hat es eine (öffnet aber einen
+>   Rechner, keine Seite — L65).
+> · **Die Leiste sagte nicht, wo man ist.** Ein Klick auf „Bibliothek" liess
+>   „Workspace" aufleuchten; zwei fest verdrahtete Zeilen kannten nur die
+>   Welt. Bei fünf Wegen ist die Markierung der einzige Anhaltspunkt (E221).
+> · **Zweimal derselbe Titel.** Lernwelt und Workspace trugen ihren Namen
+>   noch einmal unter der Pfadnavigation — 60 und 169 px (E219, E222).
+> · **Der Entwurf log an einer Stelle:** die Formatierleiste sollte in den
+>   freien Rand rechts, im Bild waren dort 424 px. In der App sind es 150,
+>   die Leiste ist 552 breit. Zurückgenommen, Messung im Code festgehalten
+>   (E220).
+>
+> Prüfung: test248 mit 41 Punkten, jeder mit eigener Gegenprobe. Der
+> Wächter „nichts ist weg" brauchte drei Anläufe — die ersten beiden waren
+> grün, während ein Eintrag dauerhaft versteckt war.
+
+> ### Vorher: 25. August 2026 · 202 Prüfläufe · LUECKEN.md abgearbeitet
 
 > ### Die Lückenliste, zu Ende gegangen (E170–E182)
 >

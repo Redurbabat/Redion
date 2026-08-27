@@ -43,6 +43,8 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 
+declare const Ruhig: any;
+
 const WURZEL = path.resolve(import.meta.dirname, '../..');
 const PORT = 8980;
 
@@ -394,6 +396,14 @@ p('Keine Marke trägt das `app-`-Präfix aus E166', mitPraefix.length === 0, mit
    Geprüft wird die BEDIENUNG und nicht der Speicher: erst zählen, was zu
    sehen ist, dann klicken, dann wieder zählen. */
 const schublade = await seite.evaluate(async () => {
+  /* Seit E219 steht „Meine Apps" hinter „Mehr" — der ganze Block ist dann
+     `display:none`, und `offsetParent` ist für JEDEN Eintrag null. Die
+     Prüfung hätte also vorher 0 und nachher 0 gezählt und daraus „die
+     Schublade geht nicht auf" gemacht, obwohl sie aufgeht.
+     Erst aufklappen, dann messen: das ist der Weg, den auch ein Mensch
+     geht (dieselbe Stelle wie in test33 und test128). */
+  if (typeof Ruhig !== 'undefined' && Ruhig.an() && !Ruhig.offen()) Ruhig.schalten();
+  await new Promise(r => setTimeout(r, 200));
   const sichtbar = () => [...document.querySelectorAll<HTMLElement>('.apps-block [data-app]')]
     .filter(b => b.offsetParent !== null).length;
   const vorher = sichtbar();
