@@ -2325,3 +2325,28 @@ Ein Weg wäre, beim Speichern einer Seite mit Zeichenschicht oder PDF-Seite ein
 kleines Bild mitzuschreiben — stückweise und in die Dateiablage, nicht als
 Data-URL (§14). Das ist eine Speicheränderung und braucht deshalb einen
 eigenen Plan mit Prüflauf (§9, §30).
+
+L62 — „PDF einlesen" fehlt im Menüband
+--------------------------------------------------------------------------------
+`PdfEinlesen.alsSeiten(datei, elternId)` braucht eine `File`. Das Menüband ist
+ein KATALOG (`register/menueband.ts`), und dort einen Dateiwähler zu bauen wäre
+neues Verhalten in einer Datei, die keines haben darf (E210).
+
+Der Weg gibt es weiterhin: eine PDF auf die Seite ziehen. Er ist nur nicht im
+Band, und das ist für einen Berufsschüler mit Vorlesungs-PDFs die wichtigste
+Stelle, an der er ihn suchen würde.
+
+Was fehlt: ein `PdfEinlesen.waehlen()` im Bereich selbst, das den Wähler öffnet
+und dann `alsSeiten` ruft. Dann kann das Band es aufführen, ohne selbst etwas
+zu tun.
+
+L63 — Die Slash-Aktionen fehlen im Menüband
+--------------------------------------------------------------------------------
+`Register.bloecke` führt elf Einträge mit `aktion` — „Umwandeln in …",
+„Duplizieren", „Person oder Seite erwähnen", „Datum einfügen", „Emoji". Sie
+brauchen den Schreibzeiger und den Block darunter
+(`Blocks.slashAktion(ct, block, was)`), und beides hat ein Knopf im Band nicht.
+
+Sie stehen deshalb weiterhin nur im Slash-Menü. „Erwähnung", „Datum" und
+„Emoji" gehören inhaltlich sehr wohl unter „Einfügen"; was fehlt, ist ein
+Einstieg, der ohne Schreibzeiger auskommt und am Ende der Seite anfügt.

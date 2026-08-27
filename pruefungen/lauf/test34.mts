@@ -78,7 +78,13 @@ import { chromium } from 'playwright';
     [...document.querySelectorAll<HTMLElement>('.side-section span')].map(x => (x.textContent ?? '').replace(/[⌄›]/g, '')));
   console.log('   Abschnitte jetzt:', JSON.stringify(ohneAgenten));
   ok('Ausgeschalteter Abschnitt verschwindet', !(ohneAgenten ?? '').includes('Agenten'));
-  ok('Die anderen bleiben', (ohneAgenten ?? '').includes('Werkzeuge') && (ohneAgenten ?? '').includes('Meine Apps'));
+  /* Das Beispiel hiess „Werkzeuge" und musste getauscht werden: seit E210
+     stehen die sieben Werkzeuge im Menüband, und der Seitenleisten-Abschnitt
+     ist von Haus aus AUS. Die Aussage bleibt dieselbe — ein ausgeschalteter
+     Abschnitt nimmt die anderen nicht mit —, nur der Zeuge dafür ist jetzt
+     einer, der wirklich da ist. */
+  ok('Die anderen bleiben', (ohneAgenten ?? '').includes('Kürzlich verwendet')
+    && (ohneAgenten ?? '').includes('Meine Apps'));
 
   await p.evaluate(() => App.abschnittSchalten('agenten'));
   await p.waitForTimeout(400);

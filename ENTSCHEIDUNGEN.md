@@ -14980,3 +14980,198 @@ Was noch fehlt: die ANZEIGE. Der Weg wird gerechnet und lässt sich als Text
 übernehmen, aber es gibt noch keine Ansicht, die ihn zeigt. Das steht als
 nächster Schritt an und ist der Grund, warum diese Entscheidung hier schon
 steht: der Kern ist geprüft, bevor eine Oberfläche darauf baut.
+
+
+NACHTRAG — WAS DAS ZEIGEN AM DIALOG GEÄNDERT HAT
+--------------------------------------------------------------------------------
+
+Drei Dinge fielen erst auf, als der Weg wirklich auf dem Schirm stand.
+
+ERSTENS: die Zahl stand zweimal da, in zwei Schreibweisen. Oben „0.71194616 %",
+in der letzten Zeile „0.7119 %". Der Kopf benutzte `format` mit acht geltenden
+Ziffern, der Weg seine eigene Rundung. Bei den neun Rechnungen ohne Weg ist
+`format` die einzige Zahl auf dem Schirm und stört niemanden — steht ein Weg
+darunter, muss der Leser raten, welche der beiden die Antwort ist. Wo ein Weg
+da ist, gilt jetzt dessen Schreibweise (`kopfZahl`).
+
+ZWEITENS: der Dialog wuchs auf 1177 px und schob seine eigenen Knöpfe aus dem
+Bild. In einem 980 px hohen Fenster stand „Ergebnis in Seite" danach 185 px
+unter dem Rand, am Telefon 310 px. Gerollt werden konnte, aber niemand rollt
+nach einem Knopf, den er eine Sekunde vorher noch gesehen hat. Jetzt: Kopf
+fest, Bauch rollt, Knopfreihe fest — `grid-template-rows:auto minmax(0,1fr)
+auto`. `minmax(0,1fr)` und nicht `1fr`: eine Rasterzeile schrumpft sonst nicht
+unter ihren Inhalt, und dann rollt gar nichts.
+
+DRITTENS: im festen Fuss standen sieben Knöpfe in drei Zeilen und frassen
+130 px, während der Weg darüber zwei von fünf Schritten zeigte. Fünf davon
+handeln gar nicht vom Rechnen, sondern vom Ein- und Auspacken von Lernpaketen.
+Sie sind NICHT verschwunden — sie stehen jetzt unter dem Ergebnis, mit einer
+Überschrift. Unten bleibt, was zur Rechnung gehört.
+
+Der dritte Punkt hatte eine Falle: der Klick-Lauscher hing an der Knopfreihe.
+Verschobene Knöpfe wären still tot gewesen. Er hängt jetzt am Dialog. Der
+Gegenbeweis dazu ging beim ersten Versuch nicht rot — das `sed`-Muster hiess
+`async event`, gebaut wird `async (event)`, also traf es nichts und der Lauf
+war unverändert grün. Mit passendem Muster: alter Lauscher 1 Karte, neuer
+8 Karten. Ein Gegenbeweis, der nicht beweist, dass er etwas geändert hat, ist
+kein Gegenbeweis (E202).
+
+Alle drei fand das Hinsehen, keiner davon eine Prüfung (§55.1).
+
+
+================================================================================
+E210 — Das Menüband: Start, Einfügen, Zeichnen, Werkzeuge, Elektro, Ansicht
+================================================================================
+
+Redur, wörtlich: „könntest du wie Word machen so ganze oben Start-Einfügen usw
+weiter und z.B. nehmen die Werkzeuge von links dort und schaue was dort kommen
+kann, du musst es wie GoodNotes bauen."
+
+Also ein Menüband über der Seite, und die sieben Werkzeug-Zeilen aus der
+Seitenleiste wandern hinauf.
+
+Zu „wie GoodNotes": gebaut ist das MUSTER — gruppierte Knöpfe, grosse
+Tippflächen, ein Blatt, in dem man rollt. Nicht gebaut sind GoodNotes' Icons,
+Farben und Produktnamen. Ein fremdes Programm nachzuahmen heisst, von ihm zu
+lernen, nicht es abzuzeichnen.
+
+
+ES IST EIN REGISTER, KEINE ZEICHENDATEI
+--------------------------------------------------------------------------------
+
+§8 Regel 3: neue Dinge sind Register-Objekte. Ein Menüband, das seine Knöpfe
+selbst kennt, ist der Anfang genau der Datei, vor der §5 warnt — eine, in der
+jeder Bereich ein bisschen mitschreibt.
+
+    register/menueband.ts     der Katalog: Reiter, Gruppen, Einträge
+    schale/aufbau/menueband.ts  das Aussehen; kennt keinen Knopf beim Namen
+
+Die wichtigste Regel der Registerdatei: KEIN EINTRAG DARF ETWAS NEUES TUN.
+Jeder ruft eine Funktion, die es schon gibt und die schon geprüft ist. Ein
+Menüband ist eine zweite ANSICHT auf das, was Redion kann — keine zweite
+Fassung davon.
+
+Deshalb ist „Einfügen" nicht aufgezählt, sondern kommt aus `Register.bloecke`:
+dieselbe Liste, aus der sich das Slash-Menü bedient, 67 Blockarten. Eine neue
+Blockart erscheint dort von selbst. Ein zweiter Katalog wäre nach der dritten
+neuen Blockart falsch.
+
+Und deshalb steht auch „PDF einlesen" NICHT im Band. `PdfEinlesen.alsSeiten`
+braucht eine `File`; einen Dateiwähler in einen Katalog zu bauen wäre genau das
+neue Verhalten, das die Regel verbietet. Der Weg dahin bleibt das Ziehen einer
+PDF auf die Seite — als Lücke notiert.
+
+
+WAS DER TYPPRÜFER GEFUNDEN HAT, BEVOR ES KNÖPFE WAREN
+--------------------------------------------------------------------------------
+
+Sechs Einträge riefen `Werkzeuge.versionen()`, `sperren()`, `praesentation()`,
+`drucken()`, `quelltext()`, `htmlExport()` ohne Argument. Alle sechs nehmen die
+offene Seite als Block. Ohne `strict` wären das sechs Knöpfe gewesen, die still
+nichts tun.
+
+Dazu: das Editor-Modul heisst `Blocks` und nicht `Editor`, und
+`Marken.schicht` ist die Markierungsschicht über einer PDF-Seite und nicht die
+Zeichenschicht — die heisst `Register.symbole.fuelle`.
+
+
+WAS DAS AUGE GEFUNDEN HAT, WAS KEINE PRÜFUNG GEMELDET HÄTTE (§55.1)
+--------------------------------------------------------------------------------
+
+ERSTENS: drei Knöpfe ohne Zeichen. Der Zeichner unterschied Symbolnamen von
+Textzeichen mit `/^[a-zA-Z]+$/` — „nur Buchstaben, also ein Symbolname". Damit
+wurden „B", „I" und „S" für Fett, Kursiv und Durchgestrichen zu Symbolnamen,
+die es nicht gibt. Jetzt wird gefragt statt geraten: `Register.symbole.hat()`.
+test247 §2 meldet es seither.
+
+ZWEITENS: „Durchgestriche". Ein einzelnes langes Wort kann nicht umbrechen,
+lief über und wurde hart geschnitten — ohne Punkte, ohne Hinweis. Dasselbe wie
+die abgeschnittene Zahl in §55.1.
+
+DRITTENS: die Reihe war ungleich hoch, weil nur die Hälfte der Knöpfe ein
+Tastenkürzel trug. Das Kürzel steht jetzt im Tooltip, wie in Word.
+
+VIERTENS: „Einfügen" zeigte 14 von 67 Knöpfen hinter einem waagerechten
+Roller, und nichts sagte, dass rechts noch 53 folgen. Waagerechtes Rollen
+findet niemand von selbst.
+
+FÜNFTENS: ein Klick auf den SCHON GEWÄHLTEN Reiter klappte das Band zu. Das
+war als Abkürzung gedacht und ist eine Überraschung: wer auf „Start" klickt,
+während „Start" offen ist, sieht plötzlich gar nichts mehr.
+
+
+DIE SILBENTRENNUNG, GEMESSEN STATT GEGLAUBT
+--------------------------------------------------------------------------------
+
+`CSS.supports('hyphens','auto')` sagt `true`. Gemessen bleibt
+„Aufzählungsliste" in 56 px trotzdem einzeilig und 84 px breit — die
+Trennmuster fehlen. Eine Fähigkeit, die der Browser meldet und nicht hat.
+
+Vier Schreibweisen wurden nebeneinander gestellt und angesehen:
+
+    break-word allein       „Aufzählu/ngsliste"   bricht, zeigt alles
+    clamp2 ohne break       „Aufzählun"           hart geschnitten
+    eine Zeile mit Ellipse  „Übersc…"             verliert die Ziffer
+    clamp2 MIT break-word   „Aufzählu/ngsliste"   bricht, zeigt alles,
+                            „Kalkulati/onstab…"   kürzt nur das Längste
+
+Die letzte gewinnt. Ein weicher Trennstrich an bekannten Wortfugen wurde
+probiert und verworfen: „Inhalts-/verzeichnis" und „Lese-/zeichen" wurden
+besser, „Aufgabe/nliste" schlechter. Zwei besser, eines schlechter — zu wenig
+für eine Sonderregel, die beim nächsten Namen wieder anders ausfällt.
+
+
+DIE WERKZEUGE SIND UMGEZOGEN, NICHT GELÖSCHT
+--------------------------------------------------------------------------------
+
+Redur, im selben Auftrag: „wichtig nichts löschen, und wenn du etwas löschen
+willst oder musst, immer mich fragen."
+
+Die sieben Zeilen — Journal, Schnellnotizen, Vorlagen, Graph, Schlagwörter,
+Karteikarten, Umsetzungsstand — stehen jetzt im Reiter „Werkzeuge". In der
+Seitenleiste sind sie ausgeblendet, NICHT entfernt: schaltet man den Abschnitt
+wieder ein, zeichnet die Seitenleiste ihn aus DEMSELBEN Register. Zwei
+Ansichten, eine Wahrheit; sie können nicht auseinanderlaufen.
+
+Dafür brauchte `abschnittAn` eine zweite Liste. Bisher war alles an, was nicht
+in `sidebarAus` stand. Für einen Abschnitt, dessen Vorgabe AUS ist, wäre
+„einblenden" ein Knopf gewesen, der etwas aus `sidebarAus` entfernt, das gar
+nicht drinsteht — er hätte ausgesehen, als täte er etwas. `sidebarAn` merkt
+jetzt das ausdrückliche Einschalten. Wichtig ist der Unterschied zwischen „nie
+etwas gesagt" und „ausdrücklich abgeschaltet": wer den Abschnitt früher
+abgeschaltet hatte, findet ihn nicht plötzlich wieder da.
+
+
+DAS BAND BRICHT UM UND ROLLT SENKRECHT
+--------------------------------------------------------------------------------
+
+Gemessen, warum „Start" trotz schmaler Knöpfe umbrach: die drei Gruppen sind
+zusammen 1155 px breit, das Band 1200 px innen — und trotzdem fiel „Finden" in
+die zweite Zeile. Die Rechnung übersah die Abstände. Der Trenner hatte einen
+eigenen Rand UND das Band einen `gap`; zweimal derselbe Abstand ergab 1209 px.
+
+Die Knöpfe haben jetzt eine feste Breite von 68 px statt einer vom längsten
+Namen abhängigen zwischen 58 und 106. Die Reihe steht ruhig, und die Breite
+ist vorher ausrechenbar.
+
+Am Telefon startet das Band ZUGEKLAPPT. Aufgeklappt begann die Seite erst bei
+y=274 von 844 — ein Drittel des Bildschirms für Knöpfe, bevor ein Wort des
+eigenen Textes zu sehen ist, ist keine Notiz-App mehr.
+
+
+WAS DER PRÜFLAUF SELBST GELERNT HAT
+--------------------------------------------------------------------------------
+
+test247 stürzte beim Gegenbeweis zu §7 ab, statt einen Punkt rot zu machen:
+`page.click` wartet 30 Sekunden auf ein Element, das der eingebaute Fehler nie
+erzeugt hat, und wirft dann. Die Punkte danach wurden nie geprüft. Klicks
+melden jetzt `false` und der Lauf geht weiter.
+
+Und der Gegenbeweis zu §7 brauchte drei Anläufe:
+
+  · den Reiter nicht mehr setzen → der Lauf stürzt ab, §7 wird nie erreicht
+  · den `ablageGeladen`-Horcher entfernen → §7 bleibt GRÜN, der Horcher greift
+    im Normalfall gar nicht (`start()` läuft ohnehin nach dem Laden)
+  · den Merk-Schlüssel pro Seitenladung neu würfeln → §7 wird rot
+
+Nur der dritte ist ein Gegenbeweis. Die ersten beiden sahen wie einer aus.

@@ -2704,6 +2704,11 @@ const App = (() => {
     Vorrat.start();
     Wolke.start();
     Produktwelten.start();
+    /* Das Menüband (E210). Es steht nach den Bereichen, weil sein Register
+       beim Zeichnen `zeigen()` fragt — und das prüft, ob es die Module gibt.
+       Vorher gefragt wäre die Antwort „nein" gewesen, und das Band wäre
+       leer geblieben, ohne dass jemand einen Fehler gesehen hätte. */
+    Menueband.start();
     Blocks.auswahlEinklinken();
     /* DER WILLKOMMENSBILDSCHIRM BLEIBT DER WILLKOMMENSBILDSCHIRM (E137).
        Hier stand `ProduktOnboarding.vielleichtStarten()` zuerst, und der

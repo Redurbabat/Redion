@@ -277,3 +277,257 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
   .such-leer b{font-size:18px}
   .such-leer span{font-size:15.5px}
 }
+
+
+/* ══════════════════════════════════════════════════════════════════════════
+   DAS MENÜBAND (E210)
+
+   Start · Einfügen · Zeichnen · Werkzeuge · Elektro · Ansicht, und darunter
+   die Knöpfe des gewählten Reiters, in Gruppen mit Überschrift.
+
+   ES STEHT ZWISCHEN KOPFZEILE UND SEITE und ist deshalb `flex:0 0 auto` —
+   `#main` ist eine Spalte, und ohne das nähme das Band sich Platz vom
+   Scrollbereich, wenn ein Reiter viele Knöpfe hat.
+
+   ZUGEKLAPPT bleibt die Reiterzeile stehen und das Band verschwindet. Der
+   Unterschied sind 78 px, und auf einem 13-Zoll-Bildschirm ist das der
+   Unterschied zwischen „geht" und „geht nicht".
+   ══════════════════════════════════════════════════════════════════════════ */
+
+#menueband{
+  flex:0 0 auto; display:flex; flex-direction:column;
+  border-bottom:1px solid var(--line-soft); background:var(--bg);
+}
+#menueband[hidden]{ display:none }
+
+/* ── die Reiterzeile ────────────────────────────────────────────────────── */
+
+.mb-reiter{
+  display:flex; align-items:stretch; gap:var(--space-1);
+  padding:0 var(--space-4); min-height:34px;
+  /* Am Telefon passen sechs Reiter nicht nebeneinander. Sie rollen dann
+     seitwärts — und zwar NUR sie: das Band darunter bleibt, wo es ist. */
+  overflow-x:auto; overflow-y:hidden; scrollbar-width:none;
+}
+.mb-reiter::-webkit-scrollbar{ display:none }
+
+.mb-reiter-knopf{
+  /* 34 px und nicht 44: die Fingerregel (§37) gilt für Finger, und dies
+     ist die Regel für Maus und Stift. Am Telefon setzt der Abschnitt weiter
+     unten auf 44 zurück. Die vier Pixel sind kein Geiz — auf der
+     Heute-Ansicht entscheiden sie, ob der Startknopf ohne Rollen im Bild
+     ist (test217). */
+  display:inline-flex; align-items:center; gap:var(--space-2);
+  padding:0 var(--space-4); min-height:34px; white-space:nowrap;
+  border:none; background:none; cursor:pointer;
+  font-size:13.5px; color:var(--text-dim);
+  /* Der Strich unten markiert den gewählten Reiter. Er ist immer da, nur
+     durchsichtig — sonst springt die Zeile beim Wechseln um zwei Pixel. */
+  border-bottom:2px solid transparent;
+  transition:color .12s var(--ease), border-color .12s var(--ease);
+}
+.mb-reiter-knopf:hover{ color:var(--text) }
+.mb-reiter-knopf.ist-an{ color:var(--text); border-bottom-color:var(--accent) }
+/* §38: der gewählte Reiter ist nicht NUR am Strich zu erkennen — er ist
+   auch der einzige in voller Textfarbe und trägt `aria-selected`. */
+.mb-reiter-knopf.ist-an span:last-child{ font-weight:600 }
+.mb-reiter-knopf:focus-visible{ outline:2px solid var(--accent); outline-offset:-2px }
+.mb-reiter-knopf svg{ width:16px; height:16px; opacity:.85 }
+
+.mb-platz{ flex:1 1 auto; min-width:var(--space-2) }
+
+/* DER KLAPP-KNOPF BLEIBT STEHEN, AUCH WENN DIE REITER ROLLEN.
+
+   Am Telefon passen von sechs Reitern vier ins Bild; die Zeile rollt. Der
+   Knopf stand am Ende dieser Zeile und rollte mit — auf dem Bild war er
+   nicht zu sehen. Aufklappen ging (ein Tipp auf einen Reiter tut das), aber
+   ZUklappen nicht mehr: man hätte erst bis ans Ende wischen müssen, um den
+   Knopf zu finden, von dem man nicht weiss, dass es ihn gibt.
+
+   `sticky` klebt ihn an den rechten Rand. Der eigene Grund ist dabei keine
+   Zier: ohne ihn rollen die Reiter sichtbar unter dem Knopf durch. */
+.mb-klapp{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:32px; min-height:34px; border:none; cursor:pointer;
+  color:var(--text-faint);
+  position:sticky; right:0; flex:0 0 auto;
+  background:var(--bg); box-shadow:-8px 0 8px -6px var(--bg);
+}
+.mb-klapp:hover{ color:var(--text) }
+.mb-klapp:focus-visible{ outline:2px solid var(--accent); outline-offset:-2px }
+.mb-klapp svg{ width:15px; height:15px; transition:transform .15s var(--ease) }
+/* Aufgeklappt zeigt der Pfeil nach OBEN („zuklappen"), zugeklappt nach unten.
+   Das Symbolregister kennt chevronD, chevronL und chevronR, aber kein
+   chevronU — ein neues Zeichen in ein geteiltes Register zu legen, nur damit
+   ein Knopf richtig herum zeigt, wäre zu viel. Gedreht ist es dasselbe
+   Zeichen und eine Zeile CSS. */
+#menueband:not(.ist-zu) .mb-klapp svg{ transform:rotate(180deg) }
+@media(prefers-reduced-motion:reduce){ .mb-klapp svg{ transition:none } }
+
+/* ── das Band ───────────────────────────────────────────────────────────── */
+
+/* DAS BAND BRICHT UM UND ROLLT SENKRECHT — NICHT SEITWÄRTS.
+
+   Erster Entwurf: eine Zeile, die seitwärts rollt. Bei „Einfügen" mit 67
+   Knöpfen waren 14 zu sehen und 53 nicht, „Trennlinie" hing halb im Rand,
+   und NICHTS sagte, dass da noch etwas kommt. Ein Verlauf am Rand half
+   nicht — auf dem Bild war er nicht zu erkennen.
+
+   Waagerechtes Rollen findet niemand von selbst; senkrechtes versteht jeder
+   sofort. Also: umbrechen, und ab einer Höhe senkrecht rollen. Nichts ist
+   versteckt, alles ist mit einer Bewegung erreichbar, die man kennt.
+
+   `max-height` ist etwas mehr als zwei Reihen: so ist die dritte angeschnitten
+   zu sehen, und damit sieht man, DASS es weitergeht. Eine Höhe, bei der
+   genau zwei Reihen passen, sähe vollständig aus und wäre es nicht. */
+.mb-band{
+  display:flex; flex-wrap:wrap; align-items:flex-start; align-content:flex-start;
+  /* Gemessen: die drei Start-Gruppen sind zusammen 1155 px breit und das
+     Band 1200 px innen — es brach trotzdem um. Die Rechnung übersah die
+     Abstände: zwei Trenner mit Rand (34 px) und vier Zwischenräume (24 px)
+     ergaben 1213 px. Deshalb hier schmal und beim Trenner ebenso. */
+  gap:var(--space-3) var(--space-1);
+  padding:var(--space-3) var(--space-4) var(--space-2);
+  max-height:186px; overflow-y:auto; overflow-x:hidden;
+  scrollbar-width:thin;
+  background:var(--bg-side);
+  border-top:1px solid var(--line-soft);
+  overscroll-behavior:contain;
+}
+#menueband.ist-zu .mb-band{ display:none }
+
+.mb-gruppe{ display:flex; flex-direction:column; gap:var(--space-1); flex:0 0 auto }
+/* ALLE REIHEN GLEICH HOCH.
+   „Nummerierte Liste" braucht zwei Zeilen, „Zitat" eine — dadurch war die
+   Absatz-Gruppe höher als die Schrift-Gruppe, und die Überschriften ABSATZ
+   und SCHRIFT standen 15 px versetzt. Das sieht man sofort und misst keiner.
+   Die feste Höhe ist die von zwei Namenszeilen; einzeilige Namen sitzen
+   dann mittig statt oben. */
+.mb-reihe{ display:flex; align-items:stretch; gap:var(--space-1); min-height:60px }
+
+.mb-gruppe-titel{
+  font-size:10.5px; letter-spacing:.05em; text-transform:uppercase;
+  color:var(--text-faint); text-align:center; padding-top:2px;
+}
+
+.mb-trenner{
+  /* KEIN eigener Rand — der Abstand kommt schon vom `gap` des Bandes.
+     Gemessen ergab beides zusammen 1209 px in einem 1200 px breiten Band,
+     und die Gruppe „Finden" fiel in die zweite Zeile. Zweimal denselben
+     Abstand zu setzen ist der Fehler, nicht die Breite der Knöpfe. */
+  flex:0 0 1px; margin:0;
+  /* Der Strich reicht so hoch wie die Knopfreihe und NICHT bis unter die
+     Gruppenüberschrift — er trennt Knöpfe, nicht Beschriftungen. */
+  align-self:flex-start; height:60px;
+  background:var(--line-soft);
+}
+
+/* ── ein Knopf ──────────────────────────────────────────────────────────── */
+
+.mb-knopf{
+  /* FESTE BREITE, KEIN INHALTSMASS.
+     Gemessen schwankten die Knöpfe zwischen 58 px („Text") und 106 px
+     („Nummerierte Liste") — die Reihe wirkte unruhig, und die drei
+     Start-Gruppen kamen zusammen auf 1222 px in einem 1200 px breiten Band,
+     brachen also um. Ein festes Raster löst beides auf einmal: die Reihe
+     steht ruhig, und die Breite ist vorher ausrechenbar statt vom längsten
+     Namen abhängig. 68 px fassen zwei Zeilen à etwa zehn Zeichen. */
+  display:inline-flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:3px; width:68px; flex:0 0 68px; padding:var(--space-2) var(--space-1);
+  border:1px solid transparent; border-radius:var(--radius-md);
+  background:none; cursor:pointer; color:var(--text);
+  font-size:11.5px; line-height:1.25; text-align:center;
+  transition:background .12s var(--ease), border-color .12s var(--ease);
+}
+.mb-knopf:hover{ background:var(--bg-hover); border-color:var(--line-soft) }
+.mb-knopf:active{ background:var(--bg-active, var(--bg-hover)) }
+.mb-knopf:focus-visible{ outline:2px solid var(--accent); outline-offset:1px }
+.mb-knopf svg{ width:19px; height:19px }
+.mb-knopf .mb-name{
+  /* Zwei Zeilen, dann Punkte.
+
+     ABER: ein einzelnes langes Wort kann nicht umbrechen. „Durchgestrichen"
+     lief über und wurde bei `overflow:hidden` hart abgeschnitten — auf dem
+     Bild stand „Durchgestriche", ohne Punkte, ohne Hinweis darauf, dass da
+     etwas fehlt. Dasselbe wie die abgeschnittene Zahl in §55.1, und dieselbe
+     Lehre: gesehen, nicht gemessen.
+
+     `hyphens:auto` STEHT HIER UND TUT NICHTS. Gemessen: `CSS.supports
+     ('hyphens','auto')` sagt `true`, und „Aufzählungsliste" in 56 px bleibt
+     trotzdem einzeilig und 84 px breit — die Trennmuster fehlen. Es bleibt
+     stehen, weil es auf Geräten mit Mustern hilft und nirgends schadet.
+
+     Also trägt `overflow-wrap:break-word` die Last. Vier Schreibweisen wurden
+     nebeneinander gemessen und angesehen:
+
+         break-word allein      „Aufzählu/ngsliste"  — bricht, zeigt alles
+         clamp2 ohne break      „Aufzählun"          — hart geschnitten
+         eine Zeile mit Ellipse „Übersc…"            — verliert die Ziffer
+         clamp2 MIT break-word  „Aufzählu/ngsliste"  — bricht, zeigt alles,
+                                „Kalkulati/onstab…"     kürzt nur das Längste
+
+     Die letzte gewinnt: fast jeder Name steht vollständig da, und nur die
+     wirklich langen bekommen Punkte. Der Bruch mitten im Wort bleibt ihr
+     Preis; der ganze Name steht im `title` und im `aria-label`.
+
+     Ein weicher Trennstrich an bekannten Wortfugen („…liste", „…tabelle")
+     wurde probiert und wieder verworfen: er machte „Inhalts-/verzeichnis"
+     und „Lese-/zeichen" besser, „Aufgabe/nliste" aber schlechter. Zwei
+     besser, eines schlechter, der Rest gleich — zu wenig für eine Sonder-
+     regel, die beim nächsten Namen wieder anders ausfällt. */
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
+  overflow:hidden; max-width:100%;
+  hyphens:auto; overflow-wrap:break-word;
+}
+/* Zwei Zeilen Platz, auch bei einzeiligem Namen — sonst stünde „Zitat"
+   höher als „Nummerierte Liste" daneben. */
+.mb-knopf:not(.ist-gross) .mb-name{ min-height:2.5em }
+/* Das Textzeichen einer Blockart („H₁", „•", „B") an derselben Stelle wie
+   ein Symbol und in derselben Grösse — sonst tanzt die Reihe. */
+.mb-knopf .mb-glyph, .mb-reiter-knopf .mb-glyph{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:19px; height:19px; font-size:14px; font-weight:600;
+}
+
+/* Die grosse Kachel: das Wichtigste einer Gruppe, nebeneinander statt
+   übereinander. Sie ist breiter, nicht höher — eine höhere Kachel würde die
+   ganze Zeile mitziehen. */
+.mb-knopf.ist-gross{
+  /* Die grosse Kachel richtet sich nach ihrem Inhalt — sie ist die Ausnahme
+     vom Raster und darf es sein, weil es pro Gruppe höchstens zwei gibt. */
+  flex-direction:row; gap:var(--space-2); width:auto; flex:0 0 auto;
+  padding:var(--space-2) var(--space-3); font-size:12.5px;
+}
+.mb-knopf.ist-gross .mb-name{ -webkit-line-clamp:1; max-width:none; text-align:left }
+.mb-knopf.ist-gross svg{ width:17px; height:17px }
+
+.mb-leer{ padding:var(--space-4); font-size:12.5px; color:var(--text-faint) }
+
+/* ── Telefon (§37) ──────────────────────────────────────────────────────── */
+
+@media(max-width:760px){
+  /* 44 px Tippfläche, nicht 38. Das ist die Fingerregel und keine
+     Mausregel — sie gilt auch, wenn dadurch die Zeile höher wird. */
+  .mb-reiter{ min-height:44px; padding:0 var(--space-2) }
+  .mb-reiter-knopf{ min-height:44px; padding:0 var(--space-3) }
+  .mb-klapp{ min-height:44px; width:44px }
+  .mb-band{ padding:var(--space-2); max-height:44dvh }
+  /* Auf 390 px passt keine Gruppe in eine Zeile. Sie bricht dann selbst um;
+     zusammengehalten wird sie durch die Überschrift, nicht durch die Zeile. */
+  .mb-reihe{ flex-wrap:wrap; min-height:0 }
+  .mb-gruppe{ width:100% }
+  .mb-trenner{ width:100%; height:1px; flex:0 0 1px; margin:var(--space-1) 0 }
+  .mb-knopf{ min-height:44px; width:64px; flex:0 0 64px }
+  .mb-knopf.ist-gross{ min-height:44px }
+  /* Am Telefon steht die Überschrift ÜBER der Gruppe und linksbündig — sie
+     ist dort der einzige Weg, die Gruppen auseinanderzuhalten, seit jede
+     eine eigene Zeile belegt. Sie war hier zuerst ausgeblendet; das war
+     richtig, solange alles in einer Zeile stand, und ist es jetzt nicht mehr. */
+  .mb-gruppe{ flex-direction:column-reverse }
+  .mb-gruppe-titel{ text-align:left; padding:0 0 var(--space-1) var(--space-1) }
+  .mb-trenner{ margin-bottom:0 }
+}
+
+@media(prefers-reduced-motion:reduce){
+  .mb-reiter-knopf, .mb-knopf{ transition:none }
+}

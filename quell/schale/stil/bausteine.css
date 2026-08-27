@@ -3372,20 +3372,92 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .school-card button b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.school-card button em{
   color:var(--text-dim);font-size:11px;font-style:normal;white-space:nowrap}.school-none{color:var(--text-dim);font-size:13px}
 .school-empty{text-align:center;padding-top:15vh}.school-empty-icon{font-size:52px}.school-empty p{color:var(--text-dim)}
-.school-empty button{padding:10px 16px}.electrical-dialog{width:min(620px,95vw)}
-.electrical-dialog>.callout{margin:10px 14px}.electrical-mode{width:calc(100% - 28px);margin:4px 14px 12px;
+.school-empty button{padding:10px 16px}
+
+/* DER RECHNER WÄCHST — DIE KNÖPFE BLEIBEN STEHEN (E209)
+   Kopf, rollender Bauch, Knopfreihe. Ohne das stand „Ergebnis in Seite"
+   nach dem Rechnen 185 px unter dem Fensterrand (am Telefon 310 px), weil
+   der Lösungsweg den Dialog auf 1177 px trieb. `minmax(0,1fr)` und nicht
+   `1fr`: eine Rasterzeile schrumpft sonst nicht unter ihren Inhalt, und
+   dann rollt gar nichts. */
+.electrical-dialog{width:min(620px,95vw);
+  display:grid; grid-template-rows:auto minmax(0,1fr) auto; max-height:min(86dvh,900px)}
+.electrical-bauch{overflow:auto; overscroll-behavior:contain}
+.electrical-bauch>.callout{margin:10px 14px}.electrical-mode{width:calc(100% - 28px);margin:4px 14px 12px;
   min-height:42px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);padding:6px 9px}
 .electrical-fields{display:grid;gap:8px;padding:0 14px}.electrical-field{display:grid;grid-template-columns:1fr 180px 90px;align-items:center;gap:8px}
 .electrical-field input{min-height:40px;padding:7px 9px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text)}
 .electrical-field em{font-style:normal;color:var(--text-dim);font-size:12px}
 .electrical-output{display:grid;gap:3px;min-height:68px;margin:14px;padding:12px;border-radius:10px;background:var(--bg-hover)}
+
+/* ============================================================================
+ * DER LÖSUNGSWEG IM RECHNER (E209)
+ * ----------------------------------------------------------------------------
+ * Redur, mehrfach: der Lösungsweg muss immer gezeigt werden. Bis hierher
+ * stand im Rechner nur „1,64 V" und darüber die Formel — wer das liest, kann
+ * nicht nachprüfen, ob er dasselbe gerechnet hätte.
+ *
+ * Jeder Schritt bekommt seine Nummer, seine Formel und die Zeile mit den
+ * EINGESETZTEN Zahlen. Die Formel steht in fester Schrift, damit „ϱ · 2 · l"
+ * und „= 0.0178 · 2 · 38" untereinander stehen und man beides vergleichen
+ * kann; in einer Proportionalschrift verrutscht das.
+ * ==========================================================================*/
+.el-weg{ display:grid; gap:var(--space-4); margin:var(--space-4) 0 0; padding:0; list-style:none }
+.el-weg > li{
+  display:grid; gap:2px; padding-left:var(--space-8); position:relative;
+  border-left:2px solid var(--line); padding-block:2px
+}
+/* Die Nummer sitzt IM Rand und nicht davor: so bleibt die Formel darunter
+   linksbündig mit der eingesetzten Zeile, und genau die zwei will man
+   übereinander lesen. */
+.el-weg > li[data-nr]::before{
+  content:attr(data-nr); position:absolute; left:var(--space-3); top:2px;
+  display:grid; place-items:center; width:20px; height:20px; border-radius:50%;
+  background:var(--accent-soft,var(--bg-hover)); color:var(--accent-text);
+  font-size:11px; font-weight:800
+}
+.el-weg > li > b{ font-size:12.5px; font-weight:700 }
+.el-weg > li > code{
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:12.5px; color:var(--text)
+}
+.el-weg > li > span{
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:12.5px; color:var(--text-dim)
+}
+/* Die Gegenprobe ist kein Schritt des Wegs, sondern ein zweiter Blick darauf
+   — deshalb ohne Nummer und mit gestricheltem Rand. */
+.el-weg > li.el-probe{ border-left-style:dashed; padding-left:var(--space-5) }
+.el-warnung{
+  margin-top:var(--space-3); padding:var(--space-2) var(--space-4);
+  border-radius:var(--radius-md); background:var(--b-yellow,var(--bg-hover));
+  color:var(--warnung); font-size:12.5px; font-weight:680
+}
+/* Der Hauptknopf war einer von sieben gleich aussehenden. */
+.electrical-actions button.is-primary{
+  border-color:var(--accent-text); background:var(--accent); color:var(--auf-accent);
+  font-weight:680
+}
 .electrical-output strong{font-size:21px}.electrical-output span,.electrical-output small{color:var(--text-dim)}
-.electrical-actions{display:flex;flex-wrap:wrap;gap:7px;padding:0 14px 14px}.electrical-actions button{min-height:40px;padding:7px 11px}
+.electrical-actions{display:flex;flex-wrap:wrap;gap:7px;padding:0 14px 14px}
+.electrical-actions button{min-height:40px;padding:7px 11px}
+/* Der FUSS — nur die direkte Reihe im Dialog. Er steht unter einem
+   rollenden Kasten; ohne Linie und ohne eigenen Grund schöbe sich der
+   Lösungsweg beim Rollen sichtbar dahinter. Die Paketreihe im Bauch rollt
+   mit und braucht beides nicht. */
+.electrical-dialog>.electrical-actions{padding:12px 14px 14px;
+  border-top:1px solid var(--line); background:var(--bg-side)}
+/* Die fünf Paketknöpfe, unter einer Überschrift statt im Fuss. */
+.electrical-pakete{margin:16px 0 4px; padding-top:14px; border-top:1px solid var(--line)}
+.electrical-pakete h4{margin:0 14px 8px; font-size:12px; font-weight:600;
+  letter-spacing:.04em; text-transform:uppercase; color:var(--text-faint)}
 @media(max-width:760px){
   .school-home{padding:8px 10px 38px}.school-hero{display:block;padding:17px}.school-hero h1{font-size:25px}
   .school-quick{margin-top:16px}.school-quick button,.school-folder,.school-card button,.school-empty button,
   .electrical-actions button{min-height:44px}.school-grid{grid-template-columns:1fr}.school-folders{grid-template-columns:1fr 1fr}
-  .electrical-field{grid-template-columns:1fr 96px 54px}.electrical-dialog{max-height:92dvh;overflow:auto}
+  /* `overflow:auto` stand hier, als der ganze Dialog rollte. Jetzt rollt der
+     Bauch, und der Dialog behält seinen Rahmen (`.finder` hat hidden). */
+  .electrical-field{grid-template-columns:1fr 96px 54px}.electrical-dialog{max-height:92dvh}
 }
 
 /* ── Schriftgrösse und Schriftart je Block (E101) ──────────────────────────

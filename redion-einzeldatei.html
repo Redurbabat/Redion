@@ -1030,6 +1030,260 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
   .such-leer span{font-size:15.5px}
 }
 
+
+/* ══════════════════════════════════════════════════════════════════════════
+   DAS MENÜBAND (E210)
+
+   Start · Einfügen · Zeichnen · Werkzeuge · Elektro · Ansicht, und darunter
+   die Knöpfe des gewählten Reiters, in Gruppen mit Überschrift.
+
+   ES STEHT ZWISCHEN KOPFZEILE UND SEITE und ist deshalb `flex:0 0 auto` —
+   `#main` ist eine Spalte, und ohne das nähme das Band sich Platz vom
+   Scrollbereich, wenn ein Reiter viele Knöpfe hat.
+
+   ZUGEKLAPPT bleibt die Reiterzeile stehen und das Band verschwindet. Der
+   Unterschied sind 78 px, und auf einem 13-Zoll-Bildschirm ist das der
+   Unterschied zwischen „geht" und „geht nicht".
+   ══════════════════════════════════════════════════════════════════════════ */
+
+#menueband{
+  flex:0 0 auto; display:flex; flex-direction:column;
+  border-bottom:1px solid var(--line-soft); background:var(--bg);
+}
+#menueband[hidden]{ display:none }
+
+/* ── die Reiterzeile ────────────────────────────────────────────────────── */
+
+.mb-reiter{
+  display:flex; align-items:stretch; gap:var(--space-1);
+  padding:0 var(--space-4); min-height:34px;
+  /* Am Telefon passen sechs Reiter nicht nebeneinander. Sie rollen dann
+     seitwärts — und zwar NUR sie: das Band darunter bleibt, wo es ist. */
+  overflow-x:auto; overflow-y:hidden; scrollbar-width:none;
+}
+.mb-reiter::-webkit-scrollbar{ display:none }
+
+.mb-reiter-knopf{
+  /* 34 px und nicht 44: die Fingerregel (§37) gilt für Finger, und dies
+     ist die Regel für Maus und Stift. Am Telefon setzt der Abschnitt weiter
+     unten auf 44 zurück. Die vier Pixel sind kein Geiz — auf der
+     Heute-Ansicht entscheiden sie, ob der Startknopf ohne Rollen im Bild
+     ist (test217). */
+  display:inline-flex; align-items:center; gap:var(--space-2);
+  padding:0 var(--space-4); min-height:34px; white-space:nowrap;
+  border:none; background:none; cursor:pointer;
+  font-size:13.5px; color:var(--text-dim);
+  /* Der Strich unten markiert den gewählten Reiter. Er ist immer da, nur
+     durchsichtig — sonst springt die Zeile beim Wechseln um zwei Pixel. */
+  border-bottom:2px solid transparent;
+  transition:color .12s var(--ease), border-color .12s var(--ease);
+}
+.mb-reiter-knopf:hover{ color:var(--text) }
+.mb-reiter-knopf.ist-an{ color:var(--text); border-bottom-color:var(--accent) }
+/* §38: der gewählte Reiter ist nicht NUR am Strich zu erkennen — er ist
+   auch der einzige in voller Textfarbe und trägt `aria-selected`. */
+.mb-reiter-knopf.ist-an span:last-child{ font-weight:600 }
+.mb-reiter-knopf:focus-visible{ outline:2px solid var(--accent); outline-offset:-2px }
+.mb-reiter-knopf svg{ width:16px; height:16px; opacity:.85 }
+
+.mb-platz{ flex:1 1 auto; min-width:var(--space-2) }
+
+/* DER KLAPP-KNOPF BLEIBT STEHEN, AUCH WENN DIE REITER ROLLEN.
+
+   Am Telefon passen von sechs Reitern vier ins Bild; die Zeile rollt. Der
+   Knopf stand am Ende dieser Zeile und rollte mit — auf dem Bild war er
+   nicht zu sehen. Aufklappen ging (ein Tipp auf einen Reiter tut das), aber
+   ZUklappen nicht mehr: man hätte erst bis ans Ende wischen müssen, um den
+   Knopf zu finden, von dem man nicht weiss, dass es ihn gibt.
+
+   `sticky` klebt ihn an den rechten Rand. Der eigene Grund ist dabei keine
+   Zier: ohne ihn rollen die Reiter sichtbar unter dem Knopf durch. */
+.mb-klapp{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:32px; min-height:34px; border:none; cursor:pointer;
+  color:var(--text-faint);
+  position:sticky; right:0; flex:0 0 auto;
+  background:var(--bg); box-shadow:-8px 0 8px -6px var(--bg);
+}
+.mb-klapp:hover{ color:var(--text) }
+.mb-klapp:focus-visible{ outline:2px solid var(--accent); outline-offset:-2px }
+.mb-klapp svg{ width:15px; height:15px; transition:transform .15s var(--ease) }
+/* Aufgeklappt zeigt der Pfeil nach OBEN („zuklappen"), zugeklappt nach unten.
+   Das Symbolregister kennt chevronD, chevronL und chevronR, aber kein
+   chevronU — ein neues Zeichen in ein geteiltes Register zu legen, nur damit
+   ein Knopf richtig herum zeigt, wäre zu viel. Gedreht ist es dasselbe
+   Zeichen und eine Zeile CSS. */
+#menueband:not(.ist-zu) .mb-klapp svg{ transform:rotate(180deg) }
+@media(prefers-reduced-motion:reduce){ .mb-klapp svg{ transition:none } }
+
+/* ── das Band ───────────────────────────────────────────────────────────── */
+
+/* DAS BAND BRICHT UM UND ROLLT SENKRECHT — NICHT SEITWÄRTS.
+
+   Erster Entwurf: eine Zeile, die seitwärts rollt. Bei „Einfügen" mit 67
+   Knöpfen waren 14 zu sehen und 53 nicht, „Trennlinie" hing halb im Rand,
+   und NICHTS sagte, dass da noch etwas kommt. Ein Verlauf am Rand half
+   nicht — auf dem Bild war er nicht zu erkennen.
+
+   Waagerechtes Rollen findet niemand von selbst; senkrechtes versteht jeder
+   sofort. Also: umbrechen, und ab einer Höhe senkrecht rollen. Nichts ist
+   versteckt, alles ist mit einer Bewegung erreichbar, die man kennt.
+
+   `max-height` ist etwas mehr als zwei Reihen: so ist die dritte angeschnitten
+   zu sehen, und damit sieht man, DASS es weitergeht. Eine Höhe, bei der
+   genau zwei Reihen passen, sähe vollständig aus und wäre es nicht. */
+.mb-band{
+  display:flex; flex-wrap:wrap; align-items:flex-start; align-content:flex-start;
+  /* Gemessen: die drei Start-Gruppen sind zusammen 1155 px breit und das
+     Band 1200 px innen — es brach trotzdem um. Die Rechnung übersah die
+     Abstände: zwei Trenner mit Rand (34 px) und vier Zwischenräume (24 px)
+     ergaben 1213 px. Deshalb hier schmal und beim Trenner ebenso. */
+  gap:var(--space-3) var(--space-1);
+  padding:var(--space-3) var(--space-4) var(--space-2);
+  max-height:186px; overflow-y:auto; overflow-x:hidden;
+  scrollbar-width:thin;
+  background:var(--bg-side);
+  border-top:1px solid var(--line-soft);
+  overscroll-behavior:contain;
+}
+#menueband.ist-zu .mb-band{ display:none }
+
+.mb-gruppe{ display:flex; flex-direction:column; gap:var(--space-1); flex:0 0 auto }
+/* ALLE REIHEN GLEICH HOCH.
+   „Nummerierte Liste" braucht zwei Zeilen, „Zitat" eine — dadurch war die
+   Absatz-Gruppe höher als die Schrift-Gruppe, und die Überschriften ABSATZ
+   und SCHRIFT standen 15 px versetzt. Das sieht man sofort und misst keiner.
+   Die feste Höhe ist die von zwei Namenszeilen; einzeilige Namen sitzen
+   dann mittig statt oben. */
+.mb-reihe{ display:flex; align-items:stretch; gap:var(--space-1); min-height:60px }
+
+.mb-gruppe-titel{
+  font-size:10.5px; letter-spacing:.05em; text-transform:uppercase;
+  color:var(--text-faint); text-align:center; padding-top:2px;
+}
+
+.mb-trenner{
+  /* KEIN eigener Rand — der Abstand kommt schon vom `gap` des Bandes.
+     Gemessen ergab beides zusammen 1209 px in einem 1200 px breiten Band,
+     und die Gruppe „Finden" fiel in die zweite Zeile. Zweimal denselben
+     Abstand zu setzen ist der Fehler, nicht die Breite der Knöpfe. */
+  flex:0 0 1px; margin:0;
+  /* Der Strich reicht so hoch wie die Knopfreihe und NICHT bis unter die
+     Gruppenüberschrift — er trennt Knöpfe, nicht Beschriftungen. */
+  align-self:flex-start; height:60px;
+  background:var(--line-soft);
+}
+
+/* ── ein Knopf ──────────────────────────────────────────────────────────── */
+
+.mb-knopf{
+  /* FESTE BREITE, KEIN INHALTSMASS.
+     Gemessen schwankten die Knöpfe zwischen 58 px („Text") und 106 px
+     („Nummerierte Liste") — die Reihe wirkte unruhig, und die drei
+     Start-Gruppen kamen zusammen auf 1222 px in einem 1200 px breiten Band,
+     brachen also um. Ein festes Raster löst beides auf einmal: die Reihe
+     steht ruhig, und die Breite ist vorher ausrechenbar statt vom längsten
+     Namen abhängig. 68 px fassen zwei Zeilen à etwa zehn Zeichen. */
+  display:inline-flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:3px; width:68px; flex:0 0 68px; padding:var(--space-2) var(--space-1);
+  border:1px solid transparent; border-radius:var(--radius-md);
+  background:none; cursor:pointer; color:var(--text);
+  font-size:11.5px; line-height:1.25; text-align:center;
+  transition:background .12s var(--ease), border-color .12s var(--ease);
+}
+.mb-knopf:hover{ background:var(--bg-hover); border-color:var(--line-soft) }
+.mb-knopf:active{ background:var(--bg-active, var(--bg-hover)) }
+.mb-knopf:focus-visible{ outline:2px solid var(--accent); outline-offset:1px }
+.mb-knopf svg{ width:19px; height:19px }
+.mb-knopf .mb-name{
+  /* Zwei Zeilen, dann Punkte.
+
+     ABER: ein einzelnes langes Wort kann nicht umbrechen. „Durchgestrichen"
+     lief über und wurde bei `overflow:hidden` hart abgeschnitten — auf dem
+     Bild stand „Durchgestriche", ohne Punkte, ohne Hinweis darauf, dass da
+     etwas fehlt. Dasselbe wie die abgeschnittene Zahl in §55.1, und dieselbe
+     Lehre: gesehen, nicht gemessen.
+
+     `hyphens:auto` STEHT HIER UND TUT NICHTS. Gemessen: `CSS.supports
+     ('hyphens','auto')` sagt `true`, und „Aufzählungsliste" in 56 px bleibt
+     trotzdem einzeilig und 84 px breit — die Trennmuster fehlen. Es bleibt
+     stehen, weil es auf Geräten mit Mustern hilft und nirgends schadet.
+
+     Also trägt `overflow-wrap:break-word` die Last. Vier Schreibweisen wurden
+     nebeneinander gemessen und angesehen:
+
+         break-word allein      „Aufzählu/ngsliste"  — bricht, zeigt alles
+         clamp2 ohne break      „Aufzählun"          — hart geschnitten
+         eine Zeile mit Ellipse „Übersc…"            — verliert die Ziffer
+         clamp2 MIT break-word  „Aufzählu/ngsliste"  — bricht, zeigt alles,
+                                „Kalkulati/onstab…"     kürzt nur das Längste
+
+     Die letzte gewinnt: fast jeder Name steht vollständig da, und nur die
+     wirklich langen bekommen Punkte. Der Bruch mitten im Wort bleibt ihr
+     Preis; der ganze Name steht im `title` und im `aria-label`.
+
+     Ein weicher Trennstrich an bekannten Wortfugen („…liste", „…tabelle")
+     wurde probiert und wieder verworfen: er machte „Inhalts-/verzeichnis"
+     und „Lese-/zeichen" besser, „Aufgabe/nliste" aber schlechter. Zwei
+     besser, eines schlechter, der Rest gleich — zu wenig für eine Sonder-
+     regel, die beim nächsten Namen wieder anders ausfällt. */
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
+  overflow:hidden; max-width:100%;
+  hyphens:auto; overflow-wrap:break-word;
+}
+/* Zwei Zeilen Platz, auch bei einzeiligem Namen — sonst stünde „Zitat"
+   höher als „Nummerierte Liste" daneben. */
+.mb-knopf:not(.ist-gross) .mb-name{ min-height:2.5em }
+/* Das Textzeichen einer Blockart („H₁", „•", „B") an derselben Stelle wie
+   ein Symbol und in derselben Grösse — sonst tanzt die Reihe. */
+.mb-knopf .mb-glyph, .mb-reiter-knopf .mb-glyph{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:19px; height:19px; font-size:14px; font-weight:600;
+}
+
+/* Die grosse Kachel: das Wichtigste einer Gruppe, nebeneinander statt
+   übereinander. Sie ist breiter, nicht höher — eine höhere Kachel würde die
+   ganze Zeile mitziehen. */
+.mb-knopf.ist-gross{
+  /* Die grosse Kachel richtet sich nach ihrem Inhalt — sie ist die Ausnahme
+     vom Raster und darf es sein, weil es pro Gruppe höchstens zwei gibt. */
+  flex-direction:row; gap:var(--space-2); width:auto; flex:0 0 auto;
+  padding:var(--space-2) var(--space-3); font-size:12.5px;
+}
+.mb-knopf.ist-gross .mb-name{ -webkit-line-clamp:1; max-width:none; text-align:left }
+.mb-knopf.ist-gross svg{ width:17px; height:17px }
+
+.mb-leer{ padding:var(--space-4); font-size:12.5px; color:var(--text-faint) }
+
+/* ── Telefon (§37) ──────────────────────────────────────────────────────── */
+
+@media(max-width:760px){
+  /* 44 px Tippfläche, nicht 38. Das ist die Fingerregel und keine
+     Mausregel — sie gilt auch, wenn dadurch die Zeile höher wird. */
+  .mb-reiter{ min-height:44px; padding:0 var(--space-2) }
+  .mb-reiter-knopf{ min-height:44px; padding:0 var(--space-3) }
+  .mb-klapp{ min-height:44px; width:44px }
+  .mb-band{ padding:var(--space-2); max-height:44dvh }
+  /* Auf 390 px passt keine Gruppe in eine Zeile. Sie bricht dann selbst um;
+     zusammengehalten wird sie durch die Überschrift, nicht durch die Zeile. */
+  .mb-reihe{ flex-wrap:wrap; min-height:0 }
+  .mb-gruppe{ width:100% }
+  .mb-trenner{ width:100%; height:1px; flex:0 0 1px; margin:var(--space-1) 0 }
+  .mb-knopf{ min-height:44px; width:64px; flex:0 0 64px }
+  .mb-knopf.ist-gross{ min-height:44px }
+  /* Am Telefon steht die Überschrift ÜBER der Gruppe und linksbündig — sie
+     ist dort der einzige Weg, die Gruppen auseinanderzuhalten, seit jede
+     eine eigene Zeile belegt. Sie war hier zuerst ausgeblendet; das war
+     richtig, solange alles in einer Zeile stand, und ist es jetzt nicht mehr. */
+  .mb-gruppe{ flex-direction:column-reverse }
+  .mb-gruppe-titel{ text-align:left; padding:0 0 var(--space-1) var(--space-1) }
+  .mb-trenner{ margin-bottom:0 }
+}
+
+@media(prefers-reduced-motion:reduce){
+  .mb-reiter-knopf, .mb-knopf{ transition:none }
+}
+
 </style>
 <style>
 /* ===== quell/schale/stil/datenbanken.css ===== */
@@ -8837,20 +9091,92 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .school-card button b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.school-card button em{
   color:var(--text-dim);font-size:11px;font-style:normal;white-space:nowrap}.school-none{color:var(--text-dim);font-size:13px}
 .school-empty{text-align:center;padding-top:15vh}.school-empty-icon{font-size:52px}.school-empty p{color:var(--text-dim)}
-.school-empty button{padding:10px 16px}.electrical-dialog{width:min(620px,95vw)}
-.electrical-dialog>.callout{margin:10px 14px}.electrical-mode{width:calc(100% - 28px);margin:4px 14px 12px;
+.school-empty button{padding:10px 16px}
+
+/* DER RECHNER WÄCHST — DIE KNÖPFE BLEIBEN STEHEN (E209)
+   Kopf, rollender Bauch, Knopfreihe. Ohne das stand „Ergebnis in Seite"
+   nach dem Rechnen 185 px unter dem Fensterrand (am Telefon 310 px), weil
+   der Lösungsweg den Dialog auf 1177 px trieb. `minmax(0,1fr)` und nicht
+   `1fr`: eine Rasterzeile schrumpft sonst nicht unter ihren Inhalt, und
+   dann rollt gar nichts. */
+.electrical-dialog{width:min(620px,95vw);
+  display:grid; grid-template-rows:auto minmax(0,1fr) auto; max-height:min(86dvh,900px)}
+.electrical-bauch{overflow:auto; overscroll-behavior:contain}
+.electrical-bauch>.callout{margin:10px 14px}.electrical-mode{width:calc(100% - 28px);margin:4px 14px 12px;
   min-height:42px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);padding:6px 9px}
 .electrical-fields{display:grid;gap:8px;padding:0 14px}.electrical-field{display:grid;grid-template-columns:1fr 180px 90px;align-items:center;gap:8px}
 .electrical-field input{min-height:40px;padding:7px 9px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text)}
 .electrical-field em{font-style:normal;color:var(--text-dim);font-size:12px}
 .electrical-output{display:grid;gap:3px;min-height:68px;margin:14px;padding:12px;border-radius:10px;background:var(--bg-hover)}
+
+/* ============================================================================
+ * DER LÖSUNGSWEG IM RECHNER (E209)
+ * ----------------------------------------------------------------------------
+ * Redur, mehrfach: der Lösungsweg muss immer gezeigt werden. Bis hierher
+ * stand im Rechner nur „1,64 V" und darüber die Formel — wer das liest, kann
+ * nicht nachprüfen, ob er dasselbe gerechnet hätte.
+ *
+ * Jeder Schritt bekommt seine Nummer, seine Formel und die Zeile mit den
+ * EINGESETZTEN Zahlen. Die Formel steht in fester Schrift, damit „ϱ · 2 · l"
+ * und „= 0.0178 · 2 · 38" untereinander stehen und man beides vergleichen
+ * kann; in einer Proportionalschrift verrutscht das.
+ * ==========================================================================*/
+.el-weg{ display:grid; gap:var(--space-4); margin:var(--space-4) 0 0; padding:0; list-style:none }
+.el-weg > li{
+  display:grid; gap:2px; padding-left:var(--space-8); position:relative;
+  border-left:2px solid var(--line); padding-block:2px
+}
+/* Die Nummer sitzt IM Rand und nicht davor: so bleibt die Formel darunter
+   linksbündig mit der eingesetzten Zeile, und genau die zwei will man
+   übereinander lesen. */
+.el-weg > li[data-nr]::before{
+  content:attr(data-nr); position:absolute; left:var(--space-3); top:2px;
+  display:grid; place-items:center; width:20px; height:20px; border-radius:50%;
+  background:var(--accent-soft,var(--bg-hover)); color:var(--accent-text);
+  font-size:11px; font-weight:800
+}
+.el-weg > li > b{ font-size:12.5px; font-weight:700 }
+.el-weg > li > code{
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:12.5px; color:var(--text)
+}
+.el-weg > li > span{
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:12.5px; color:var(--text-dim)
+}
+/* Die Gegenprobe ist kein Schritt des Wegs, sondern ein zweiter Blick darauf
+   — deshalb ohne Nummer und mit gestricheltem Rand. */
+.el-weg > li.el-probe{ border-left-style:dashed; padding-left:var(--space-5) }
+.el-warnung{
+  margin-top:var(--space-3); padding:var(--space-2) var(--space-4);
+  border-radius:var(--radius-md); background:var(--b-yellow,var(--bg-hover));
+  color:var(--warnung); font-size:12.5px; font-weight:680
+}
+/* Der Hauptknopf war einer von sieben gleich aussehenden. */
+.electrical-actions button.is-primary{
+  border-color:var(--accent-text); background:var(--accent); color:var(--auf-accent);
+  font-weight:680
+}
 .electrical-output strong{font-size:21px}.electrical-output span,.electrical-output small{color:var(--text-dim)}
-.electrical-actions{display:flex;flex-wrap:wrap;gap:7px;padding:0 14px 14px}.electrical-actions button{min-height:40px;padding:7px 11px}
+.electrical-actions{display:flex;flex-wrap:wrap;gap:7px;padding:0 14px 14px}
+.electrical-actions button{min-height:40px;padding:7px 11px}
+/* Der FUSS — nur die direkte Reihe im Dialog. Er steht unter einem
+   rollenden Kasten; ohne Linie und ohne eigenen Grund schöbe sich der
+   Lösungsweg beim Rollen sichtbar dahinter. Die Paketreihe im Bauch rollt
+   mit und braucht beides nicht. */
+.electrical-dialog>.electrical-actions{padding:12px 14px 14px;
+  border-top:1px solid var(--line); background:var(--bg-side)}
+/* Die fünf Paketknöpfe, unter einer Überschrift statt im Fuss. */
+.electrical-pakete{margin:16px 0 4px; padding-top:14px; border-top:1px solid var(--line)}
+.electrical-pakete h4{margin:0 14px 8px; font-size:12px; font-weight:600;
+  letter-spacing:.04em; text-transform:uppercase; color:var(--text-faint)}
 @media(max-width:760px){
   .school-home{padding:8px 10px 38px}.school-hero{display:block;padding:17px}.school-hero h1{font-size:25px}
   .school-quick{margin-top:16px}.school-quick button,.school-folder,.school-card button,.school-empty button,
   .electrical-actions button{min-height:44px}.school-grid{grid-template-columns:1fr}.school-folders{grid-template-columns:1fr 1fr}
-  .electrical-field{grid-template-columns:1fr 96px 54px}.electrical-dialog{max-height:92dvh;overflow:auto}
+  /* `overflow:auto` stand hier, als der ganze Dialog rollte. Jetzt rollt der
+     Bauch, und der Dialog behält seinen Rahmen (`.finder` hat hidden). */
+  .electrical-field{grid-template-columns:1fr 96px 54px}.electrical-dialog{max-height:92dvh}
 }
 
 /* ── Schriftgrösse und Schriftart je Block (E101) ──────────────────────────
@@ -10236,6 +10562,16 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
     <button class="top-btn schmal" id="btn-fav"     title="Zu Favoriten" aria-label="Zu Favoriten"><span data-sym="star"></span></button>
     <button class="top-btn schmal" id="btn-page-menu" title="Seitenoptionen" aria-label="Seitenoptionen"><span data-sym="dots"></span></button>
   </header>
+
+  <!-- DAS MENÜBAND (E210).
+       Start · Einfügen · Zeichnen · Werkzeuge · Elektro · Ansicht, und
+       darunter die Knöpfe des gewählten Reiters. Der Kasten steht leer hier
+       und wird von `schale/aufbau/menueband.js` aus `register/menueband.js`
+       gefüllt — diese Datei kennt keinen einzigen Eintrag beim Namen.
+
+       `hidden`, bis das Register geantwortet hat: eine leere Leiste, die
+       Platz kostet und nichts kann, ist schlimmer als keine. -->
+  <div id="menueband" hidden></div>
 
   <div id="scroll">
     <div id="page" role="document" tabindex="-1"></div>
@@ -12605,6 +12941,219 @@ const ElectricalCalculations = (() => {
     return { voltage, current, resistance, power, powerFromCurrent, energy, cost, series, parallel };
 })();
 window.ElectricalCalculations = ElectricalCalculations;
+
+</script>
+<script>
+/* ===== quell/core/electrical/rechenweg.js ===== */
+"use strict";
+/* ============================================================================
+ * rechenweg.js — Jede Rechnung zeigt ihren Weg
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/core/electrical/rechenweg.ts`. `npm run bauen:ts` schreibt
+ * daraus `quell/core/electrical/rechenweg.js`. Wer das .js bearbeitet, verliert
+ * die Änderung beim nächsten Bauen; `pruefungen/lauf/test105.mts` meldet es.
+ * ----------------------------------------------------------------------------
+ * DER GRUND, WARUM ES DIESE DATEI GIBT
+ *
+ * Redur, mehrfach und wörtlich: der Lösungsweg muss immer gezeigt werden.
+ *
+ * `ElectricalCalculations` gab bis heute `{ value, unit, formula }` zurück —
+ * also „U = I · R" und „1,64 V". Was fehlte, ist der Schritt dazwischen:
+ * „= 3,19 · 0,541". Wer nur Formel und Ergebnis sieht, kann nicht nachprüfen,
+ * ob er dasselbe gerechnet hätte, und lernt nichts. In einer Prüfung wird
+ * ohnehin der Weg bewertet und nicht die Zahl.
+ *
+ * DIE EINGESETZTE ZEILE WIRD NICHT VON HAND GESCHRIEBEN. Sie entsteht aus
+ * denselben Werten, mit denen gerechnet wird — sonst laufen die beiden
+ * auseinander, und zwar still. Genau diese Sorte Fehler ist heute schon
+ * dreimal vorgekommen (leere Miniatur, zu früh gelesene Form, Anhangsgrösse
+ * aus dem falschen Speicher).
+ *
+ * ZWEI WÄCHTER, UND BEIDE HABEN SICH SCHON BEWÄHRT
+ *
+ * 1. Ein Name in der Formel ohne Wert wird gemeldet. Sonst bliebe er als
+ *    Buchstabe in der eingesetzten Zeile stehen und sähe aus wie Absicht.
+ *
+ * 2. Die gezeigte Zeile muss das gezeigte Ergebnis TRAGEN. Zahlen werden beim
+ *    Anzeigen gerundet, und eine zu kurz gerundete Zahl macht aus der Rechnung
+ *    eine andere. Beim ersten Entwurf stand ϱ = 0,0178 als „0,018" da —
+ *    0,018 · 2 · 38 / 2,5 ergibt 0,547 statt 0,541. Wer die Zeile mit dem
+ *    Taschenrechner nachrechnet, muss auf das kommen, was danebensteht; sonst
+ *    sucht er den Fehler bei sich.
+ *
+ * KEIN eval() (§20). Hier wird nichts zerlegt und nichts ausgeführt: die
+ * Rechnung ist eine gewöhnliche Funktion, die Formel ist Text daneben, und
+ * der zweite Wächter ruft dieselbe Funktion noch einmal mit gerundeten
+ * Zahlen. Es gibt nichts zu unterschieben.
+ * ==========================================================================*/
+const Rechenweg = (() => {
+    /**
+     * Eine Zahl, wie ein Mensch sie schreibt.
+     *
+     * `toLocaleString` OHNE `maximumFractionDigits` rundet auf drei Nachkomma-
+     * stellen — unabhängig davon, was `toFixed` vorher gemacht hat. Genau daran
+     * ist die erste Fassung gescheitert: aus 0,0178 wurde „0,018".
+     *
+     * de-CH schreibt den Dezimaltrenner als Punkt und den Tausendertrenner als
+     * Apostroph. Das ist nachgemessen und kein Versehen.
+     */
+    const zahl = (n) => {
+        if (!Number.isFinite(n))
+            return '—';
+        const abs = Math.abs(n);
+        const stellen = abs === 0 ? 0 : abs < 0.01 ? 5 : abs < 1 ? 4 : abs < 100 ? 3 : 1;
+        return Number(n.toFixed(stellen))
+            .toLocaleString('de-CH', { maximumFractionDigits: stellen });
+    };
+    /** Dieselbe Zahl zurück, wie sie GEZEIGT wird — für den zweiten Wächter. */
+    const wieGezeigt = (n) => {
+        const t = zahl(n).replace(/[’']/g, '').replace(',', '.');
+        const z = Number(t);
+        return Number.isFinite(z) ? z : n;
+    };
+    /** Die rechte Seite einer Formel, oder sie ganz, wenn kein „=" darin steht. */
+    const rechteSeite = (formel) => formel.includes('=') ? formel.slice(formel.indexOf('=') + 1).trim() : formel;
+    /**
+     * Namen durch Zahlen ersetzen — von LANG nach KURZ.
+     *
+     * Sonst macht „φ" aus „cosφ" eine Zahl und lässt „cos" stehen. Das ist kein
+     * erfundener Fall: „cosφ" und „φ" stehen in derselben Formelsammlung.
+     */
+    const einsetzen = (formel, werte) => {
+        let raus = rechteSeite(formel);
+        for (const name of Object.keys(werte).sort((a, b) => b.length - a.length))
+            raus = raus.split(name).join(zahl(werte[name]));
+        return raus;
+    };
+    /** Welcher Name steht in der Formel, aber nicht in den Werten? */
+    const fehlende = (formel, werte) => {
+        let rest = rechteSeite(formel);
+        for (const name of Object.keys(werte).sort((a, b) => b.length - a.length))
+            rest = rest.split(name).join(' ');
+        return rest.replace(/[\d\s.,()·+\-*/÷×√²³^%]/g, '').split('').filter(Boolean);
+    };
+    /**
+     * Ein Schritt des Wegs.
+     *
+     * `rechnen` bekommt DIESELBEN Werte, die auch eingesetzt werden. Damit kann
+     * die gezeigte Zeile nicht von der Rechnung abweichen — es gibt nur eine
+     * Quelle für beide.
+     */
+    const schritt = (titel, formel, werte, rechnen, einheit, zusatz = {}) => {
+        const offen = fehlende(formel, werte);
+        if (offen.length)
+            throw new Error('In „' + formel + '" steht ' + offen.join('') + ', wofür kein Wert übergeben wurde.');
+        const wert = rechnen(werte);
+        /* Zweiter Wächter: dieselbe Rechnung mit den Zahlen, wie sie DASTEHEN. */
+        const gerundet = {};
+        for (const [k, v] of Object.entries(werte))
+            gerundet[k] = wieGezeigt(v);
+        const nachgerechnet = rechnen(gerundet);
+        const abweichung = wert === 0
+            ? Math.abs(nachgerechnet)
+            : Math.abs((nachgerechnet - wert) / wert);
+        if (Number.isFinite(abweichung) && abweichung > 0.005)
+            throw new Error('„' + formel + '": nachgerechnet ergibt die gezeigte Zeile ' +
+                zahl(nachgerechnet) + ' ' + einheit + ', danebensteht ' + zahl(wert) + ' ' +
+                einheit + ' — die Zahlen sind zu kurz gerundet.');
+        return {
+            titel,
+            ...(zusatz.hinweis ? { hinweis: zusatz.hinweis } : {}),
+            formel,
+            eingesetzt: einsetzen(formel, werte),
+            wert,
+            einheit,
+            ...(zusatz.quelle ? { quelle: zusatz.quelle } : {})
+        };
+    };
+    /* ======================================================================== *
+     * DIE AUFGABEN
+     * ------------------------------------------------------------------------ *
+     * Eine Aufgabe ist mehr als eine Formel: sie hat eine Reihenfolge, eine
+     * Gegenprobe und Annahmen. Der Spannungsfall ist die erste, weil sie in
+     * Redurs Alltag jede Woche vorkommt und weil sie im abgenommenen Entwurf
+     * ausgeschrieben steht.
+     * ======================================================================== */
+    /** Spezifischer Widerstand in Ω·mm²/m. */
+    const RHO = { kupfer: 0.0178, aluminium: 0.0278 };
+    /**
+     * Spannungsfall einer Wechselstromleitung.
+     *
+     * Der Faktor 2 ist der Hin- UND Rückweg. Er wird gern vergessen, und dann
+     * kommt die Hälfte heraus — deshalb steht er als Hinweis am Schritt und
+     * nicht nur in der Formel.
+     */
+    const spannungsfall = (e) => {
+        const cos = e.cosPhi === undefined ? 1 : e.cosPhi;
+        const werkstoff = e.werkstoff || 'kupfer';
+        const rho = RHO[werkstoff];
+        const grenze = e.grenzeProzent === undefined ? 3 : e.grenzeProzent;
+        const s1 = schritt('Strom aus der Leistung', 'I = P / (U · cosφ)', { P: e.leistungW, U: e.spannungV, 'cosφ': cos }, v => v['P'] / (v['U'] * v['cosφ']), 'A');
+        const s2 = schritt('Widerstand der Leitung', 'R = ϱ · 2 · l / A', { 'ϱ': rho, l: e.laengeM, A: e.querschnittMm2 }, v => v['ϱ'] * 2 * v['l'] / v['A'], 'Ω', { hinweis: 'Hin- und Rückweg' });
+        const s3 = schritt('Spannungsfall', 'ΔU = I · R · cosφ', { I: s1.wert, R: s2.wert, 'cosφ': cos }, v => v['I'] * v['R'] * v['cosφ'], 'V');
+        const s4 = schritt('In Prozent', 'ΔU% = ΔU / U · 100', { 'ΔU': s3.wert, U: e.spannungV }, v => v['ΔU'] / v['U'] * 100, '%');
+        const probe = schritt('Gegenprobe über die Verlustleistung', 'PV = I² · R', { I: s1.wert, R: s2.wert }, v => v['I'] ** 2 * v['R'], 'W');
+        return {
+            titel: 'Spannungsfall der Leitung',
+            schritte: [s1, s2, s3, s4],
+            ergebnis: { wert: s4.wert, einheit: '%', name: 'Spannungsfall' },
+            gegenprobe: probe,
+            annahmen: [
+                'Werkstoff ' + (werkstoff === 'kupfer' ? 'Kupfer' : 'Aluminium') +
+                    ', ϱ = ' + zahl(rho) + ' Ω·mm²/m bei 20 °C',
+                cos === 1 ? 'Rein ohmsche Last, cos φ = 1' : 'cos φ = ' + zahl(cos),
+                'Zulässig sind ' + zahl(grenze) + ' %',
+                /* EHRLICH BLEIBEN: das hier ist die Näherung aus dem Formelheft und
+                   nicht die vollständige Rechnung mit dem Blindanteil der Leitung.
+                   Für Installationsleitungen ist der Unterschied klein; ihn zu
+                   verschweigen wäre trotzdem falsch. */
+                'Näherungsformel ohne den induktiven Anteil der Leitung'
+            ]
+        };
+    };
+    /** Hält die Leitung die Grenze? Eine Zeile, die man vorlesen kann. */
+    const urteil = (weg, grenzeProzent = 3) => {
+        const haelt = weg.ergebnis.wert <= grenzeProzent;
+        return {
+            haelt,
+            satz: haelt
+                ? zahl(weg.ergebnis.wert) + ' % von zulässigen ' + zahl(grenzeProzent) + ' % — hält'
+                : zahl(weg.ergebnis.wert) + ' % über zulässigen ' + zahl(grenzeProzent) +
+                    ' % — zu viel, grösserer Querschnitt nötig'
+        };
+    };
+    /**
+     * Der Weg als Text, den man in eine Seite einfügen kann.
+     *
+     * Kein HTML: das ist der Text, den „als Text übernehmen" in ein Notizblatt
+     * schreibt, und der muss in einem Editor lesbar bleiben, der kein Markup
+     * kann. Die Darstellung auf dem Bildschirm baut ein Bereich; hier steht
+     * nur, was drinsteht.
+     */
+    const alsText = (weg) => {
+        const zeilen = [weg.titel, ''];
+        weg.schritte.forEach((s, i) => {
+            zeilen.push((i + 1) + '. ' + s.titel + (s.hinweis ? ' (' + s.hinweis + ')' : ''));
+            zeilen.push('   ' + s.formel);
+            zeilen.push('   = ' + s.eingesetzt + ' = ' + zahl(s.wert) + ' ' + s.einheit);
+            zeilen.push('');
+        });
+        if (weg.gegenprobe) {
+            const g = weg.gegenprobe;
+            zeilen.push(g.titel);
+            zeilen.push('   ' + g.formel + ' = ' + g.eingesetzt + ' = ' + zahl(g.wert) + ' ' + g.einheit);
+            zeilen.push('');
+        }
+        if (weg.annahmen.length) {
+            zeilen.push('Angenommen:');
+            weg.annahmen.forEach(a => zeilen.push('   · ' + a));
+        }
+        return zeilen.join('\n').trim();
+    };
+    return { schritt, zahl, einsetzen, spannungsfall, urteil, alsText, RHO };
+})();
+window.Rechenweg = Rechenweg;
 
 </script>
 <script>
@@ -16110,6 +16659,422 @@ Register.befehle = (() => {
     return { alle, gruppen, suche, melde, meldeLieferant, nimmZurueck,
         anzahl: () => alle().length,
         lieferanten: () => lieferanten.length };
+})();
+
+</script>
+<script>
+/* ===== quell/register/menueband.js ===== */
+"use strict";
+/* ============================================================================
+ * register/menueband.js — das Menüband: Start, Einfügen, Zeichnen …
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/register/menueband.ts`. `npm run bauen:ts` schreibt
+ * daraus `quell/register/menueband.js`. Wer das .js bearbeitet, verliert die
+ * Änderung beim nächsten Bauen; `pruefungen/lauf/test105.mts` meldet es vorher.
+ * ----------------------------------------------------------------------------
+ * WAS DAS MENÜBAND IST
+ *
+ * Eine Reihe Reiter über der Seite — Start, Einfügen, Zeichnen, Werkzeuge,
+ * Elektro, Ansicht — und unter dem gewählten Reiter die Knöpfe, gruppiert.
+ * Das Muster kennt jeder aus Textprogrammen; es ist deshalb hier, weil Redur
+ * es ausdrücklich so wollte.
+ *
+ * WARUM ES EIN REGISTER IST UND KEINE ZEICHENDATEI
+ *
+ * CLAUDE.md §8, Regel 3: neue Dinge sind Register-Objekte. Ein Menüband, das
+ * seine Knöpfe selbst kennt, ist der Anfang genau der Datei, vor der §5 warnt
+ * — eine, in der jeder Bereich ein bisschen mitschreibt. Hier steht der
+ * KATALOG; gezeichnet wird in `schale/aufbau/menueband.ts`.
+ *
+ * DIE WICHTIGSTE REGEL DIESER DATEI
+ *
+ * Kein Eintrag darf etwas Neues tun. Jeder ruft eine Funktion, die es schon
+ * gibt und die schon geprüft ist. Ein Menüband ist eine ZWEITE ANSICHT auf
+ * das, was Redion kann — keine zweite Fassung davon. Wo hier eine eigene
+ * Rechnung stünde, liefe sie irgendwann von der ersten weg, und zwar still.
+ *
+ * Deshalb ist der Reiter „Einfügen" auch nicht aufgezählt, sondern kommt aus
+ * `Register.bloecke` — dieselbe Liste, aus der sich das Slash-Menü bedient.
+ * Eine neue Blockart erscheint dort von selbst, ohne dass jemand hier etwas
+ * nachträgt. Ein zweiter Katalog wäre nach der dritten neuen Blockart falsch.
+ *
+ * `zeigen()` VERHINDERT DIE HÄUFIGSTE ENTTÄUSCHUNG
+ *
+ * Wie bei `register/befehle.ts`: ein Eintrag, dessen Modul fehlt, kommt gar
+ * nicht erst in die Liste. Ein Knopf, der dasteht und beim Klick sagt, dass
+ * er hier nicht geht, ist schlimmer als einer, den es nicht gibt — und in der
+ * Einzeldatei oder bei einem nicht geladenen Bereich ist genau das der Fall.
+ * ==========================================================================*/
+window.Register = window.Register || {};
+Register.menueband = (() => {
+    /* ======================================================================== *
+     * DIE REITER
+     * ======================================================================== */
+    const REITER = [
+        { id: 'start', name: 'Start', zeichen: 'pencil' },
+        { id: 'einfuegen', name: 'Einfügen', zeichen: 'plus' },
+        { id: 'zeichnen', name: 'Zeichnen', zeichen: 'page' },
+        { id: 'werkzeuge', name: 'Werkzeuge', zeichen: 'box' },
+        { id: 'elektro', name: 'Elektro', zeichen: 'bolt' },
+        { id: 'ansicht', name: 'Ansicht', zeichen: 'sun' }
+    ];
+    /* ======================================================================== *
+     * HILFEN
+     * ======================================================================== */
+    /**
+     * Kann dieses Modul das?
+     *
+     * Der Aufrufer schreibt den Namen HIN — `kann(() => Werkzeuge.journal)` —
+     * statt ihn als Zeichenkette zu übergeben. Das ist Absicht: eine
+     * Zeichenkette müsste zur Laufzeit nachgeschlagen werden, und der einzige
+     * Weg dahin wäre `eval`. Das ist in Redion verboten (§20), und der erste
+     * Entwurf dieser Datei hat es trotzdem getan.
+     *
+     * Fehlt das Modul ganz, wirft der Zugriff einen ReferenceError: mit
+     * `module: none` sind die Module gewöhnliche Konstanten im Skript-Bereich
+     * und hängen NICHT am Fenster. (`(globalThis as any).Store` war beim
+     * Vorschau-Helfer deshalb immer `undefined`, und die Vorschau blieb still
+     * leer — E207.) Der Fehler wird gefangen und heisst dann schlicht „nein".
+     */
+    const kann = (griff) => {
+        try {
+            return typeof griff() === 'function';
+        }
+        catch {
+            return false;
+        }
+    };
+    /**
+     * Die offene Seite als Block.
+     *
+     * Sechs Werkzeuge nehmen sie als Parameter — `versionen(p)`, `sperren(p)`,
+     * `praesentation(p)`, `drucken(p)`, `quelltext(p)`, `htmlExport(p)`. Der
+     * erste Entwurf rief sie ohne Argument; der Typprüfer hat es gefunden,
+     * bevor daraus sechs Knöpfe wurden, die still nichts tun.
+     *
+     * `null` heisst „gerade keine Seite offen" — dann steht der Knopf auch
+     * nicht da, siehe `seiteDa`.
+     */
+    const seiteJetzt = () => {
+        try {
+            const id = App.aktuelleSeite();
+            return id ? Store.getBlock(id) : null;
+        }
+        catch {
+            return null;
+        }
+    };
+    /** Ein Knopf, der eine offene Seite braucht, wartet auf eine. */
+    const seiteDa = (griff) => kann(griff) && !!seiteJetzt();
+    /* ======================================================================== *
+     * START — was man mit dem Text macht
+     * ======================================================================== */
+    /* Die Blockarten, die als „Absatzart" gelten. Die Kennungen sind dieselben
+       wie in `Register.bloecke`; `Blocks.einfuegenAmEnde` nimmt sie direkt. */
+    const ABSATZARTEN = ['text', 'h1', 'h2', 'h3', 'todo', 'bullet', 'number', 'quote', 'callout'];
+    const startEintraege = () => {
+        const aus = [];
+        /* Absatzarten — aus dem Blockregister, damit Name und Zeichen dieselben
+           sind wie im Slash-Menü. Ein eigener Text hier liefe davon weg. */
+        if (Register?.bloecke?.eines) {
+            for (const id of ABSATZARTEN) {
+                const b = Register.bloecke?.eines?.(id);
+                if (!b)
+                    continue;
+                aus.push({
+                    reiter: 'start', gruppe: 'Absatz', id: 'abs-' + id,
+                    name: b.name, zeichen: b.icon || '¶', ...(b.kurz ? { kurz: b.kurz } : {}),
+                    hinweis: b.name + ' einfügen',
+                    tun: () => Blocks.einfuegenAmEnde(id),
+                    zeigen: () => kann(() => Blocks.einfuegenAmEnde)
+                });
+            }
+        }
+        /* Auszeichnung. `Auswahl.umschliesse` setzt die Markdown-Marken um das,
+           was markiert ist — dieselbe Funktion, die die Auswahlleiste ruft.
+           Ohne Markierung tut sie nichts, und das ist richtig so: sie sagt es
+           über die Leiste, nicht über einen zweiten Weg. */
+        const marken = [
+            ['fett', 'Fett', 'B', '**'],
+            ['kursiv', 'Kursiv', 'I', '*'],
+            ['durch', 'Durchgestrichen', 'S', '~~'],
+            ['code', 'Code', '‹›', '`']
+        ];
+        for (const [id, name, zeichen, marke] of marken) {
+            aus.push({
+                reiter: 'start', gruppe: 'Schrift', id, name, zeichen,
+                hinweis: name + ' — wirkt auf das, was markiert ist',
+                tun: () => Auswahl.umschliesse(marke),
+                zeigen: () => kann(() => Auswahl.umschliesse)
+            });
+        }
+        aus.push({
+            reiter: 'start', gruppe: 'Schrift', id: 'link', name: 'Verweis', zeichen: 'link',
+            kurz: 'Strg K', hinweis: 'Markierten Text zu einem Verweis machen',
+            tun: () => Auswahl.linkSetzen(),
+            zeigen: () => kann(() => Auswahl.linkSetzen)
+        });
+        /* SUCHEN UND BEFEHLE STEHEN HIER NICHT.
+    
+           Sie standen kurz als eigene Gruppe „Finden" im Reiter „Start", mit der
+           Begründung, ein Menüband dürfe wiederholen, was anderswo steht. Die
+           Messung sagt etwas anderes: mit ihnen ist „Start" 1185 px breit, und
+           in einem 1400 px breiten Fenster (Seitenleiste ab) bleiben 1160 —
+           das Band brach auf zwei Zeilen um und wurde 221 px hoch statt 137.
+    
+           Zwei Knöpfe, die es oben in der Kopfzeile („Suchen in Redion …",
+           Strg P) und links in der Seitenleiste („Suchen", „Befehle") schon
+           gibt, sind das nicht wert. Sie verdrängten die Zeile für etwas, das
+           woanders zweimal steht. */
+        return aus;
+    };
+    /* ======================================================================== *
+     * EINFÜGEN — kommt vollständig aus dem Blockregister
+     * ======================================================================== */
+    /* Die Reihenfolge der Gruppen im Band. Was `Register.bloecke` sonst noch
+       kennt, hängt sich hinten an — eine neue Gruppe verschwindet also nicht,
+       sie steht nur nicht vorne. */
+    const GRUPPEN_FOLGE = ['Grundlegend', 'Medien', 'Datenbank', 'Wissen', 'Erweitert', 'KI'];
+    const einfuegenEintraege = () => {
+        if (!Register?.bloecke?.alle)
+            return [];
+        /* `aktion` trennt die echten Blockarten von den Slash-BEFEHLEN
+           („Umwandeln in …", „Duplizieren", „Erwähnen"). Die brauchen den
+           Schreibzeiger und den Block darunter — `Editor.slashAktion(ct, block,
+           was)` — und beides hat ein Knopf im Band nicht. Sie stehen deshalb
+           nicht hier, sondern weiterhin im Slash-Menü. Das ist eine bekannte
+           Lücke und keine vergessene Zeile; sie steht in LUECKEN.md. */
+        const bloecke = Register.bloecke.alle().filter(b => b && b.id && !b.aktion);
+        const rang = (g) => {
+            const i = GRUPPEN_FOLGE.indexOf(g);
+            return i < 0 ? GRUPPEN_FOLGE.length : i;
+        };
+        return bloecke
+            .slice()
+            .sort((a, b) => rang(a.gruppe) - rang(b.gruppe))
+            .map(b => ({
+            reiter: 'einfuegen', gruppe: String(b.gruppe || 'Weiteres'),
+            id: 'blk-' + b.id, name: String(b.name || b.id),
+            zeichen: String(b.icon || '▫'),
+            ...(b.kurz ? { kurz: String(b.kurz) } : {}),
+            hinweis: String(b.name || b.id) + ' einfügen',
+            tun: () => Blocks.einfuegenAmEnde(b.id),
+            zeigen: () => kann(() => Blocks.einfuegenAmEnde)
+        }));
+    };
+    /* ======================================================================== *
+     * ZEICHNEN — Blatt, Whiteboard, Plan, Kamera
+     * ======================================================================== */
+    const zeichnenEintraege = () => [
+        { reiter: 'zeichnen', gruppe: 'Fläche', id: 'z-blatt', name: 'Blatt',
+            zeichen: 'page', gross: true, hinweis: 'Ein A4-Blatt zum Schreiben mit der Hand',
+            tun: () => Blocks.einfuegenAmEnde('blatt'),
+            zeigen: () => kann(() => Blocks.einfuegenAmEnde) },
+        { reiter: 'zeichnen', gruppe: 'Fläche', id: 'z-white', name: 'Whiteboard',
+            zeichen: 'graph', gross: true, hinweis: 'Freie Fläche ohne Ränder',
+            tun: () => Blocks.einfuegenAmEnde('whiteboard'),
+            zeigen: () => kann(() => Blocks.einfuegenAmEnde) },
+        { reiter: 'zeichnen', gruppe: 'Fläche', id: 'z-plan', name: 'Schaltplan',
+            zeichen: 'bolt', gross: true, hinweis: 'Fläche mit Fachzeichen und Stromsimulation',
+            tun: () => Blocks.einfuegenAmEnde('schaltplan'),
+            zeigen: () => kann(() => Blocks.einfuegenAmEnde) },
+        { reiter: 'zeichnen', gruppe: 'Aufnehmen', id: 'z-scan', name: 'Seite abfotografieren',
+            zeichen: 'camera', hinweis: 'Ein Blatt mit der Kamera aufnehmen und den Text erkennen',
+            tun: () => Recognition.capturePage(),
+            zeigen: () => kann(() => Recognition.capturePage) },
+        /* „PDF einlesen" stand hier und ist wieder raus. `PdfEinlesen.alsSeiten`
+           braucht eine `File` — einen Dateiwähler in einem KATALOG zu bauen wäre
+           genau das neue Verhalten, das oben verboten ist. Der Weg dahin bleibt
+           das Ziehen einer PDF auf die Seite. Steht als Lücke in LUECKEN.md. */
+        { reiter: 'zeichnen', gruppe: 'Aufnehmen', id: 'z-erkennen', name: 'Text erkennen',
+            zeichen: 'search', hinweis: 'Aus einem Bild den Text herauslesen',
+            tun: () => Recognition.scan(),
+            zeigen: () => kann(() => Recognition.scan) }
+    ];
+    /* ======================================================================== *
+     * WERKZEUGE — die sieben Zeilen, die bis E210 links standen
+     * ======================================================================== */
+    /* Diese Liste hiess vorher `wz` und stand in `schale/aufbau/seitenleiste.ts`
+       mitten im Zeichnen. Sie steht jetzt hier, weil sie ein KATALOG ist und
+       kein Aussehen — und weil das Menüband und die Seitenleiste sonst zwei
+       Fassungen davon hätten. Die Handlungen sind wörtlich dieselben. */
+    const werkzeugEintraege = () => [
+        { reiter: 'werkzeuge', gruppe: 'Schreiben', id: 'w-journal', name: 'Journal',
+            zeichen: 'calendar', kurz: 'Strg ⇧ J', gross: true, hinweis: 'Tageseintrag',
+            tun: () => Werkzeuge.journal(), zeigen: () => kann(() => Werkzeuge.journal) },
+        { reiter: 'werkzeuge', gruppe: 'Schreiben', id: 'w-memos', name: 'Schnellnotizen',
+            zeichen: 'bolt', kurz: 'Strg ⇧ M', gross: true, hinweis: 'Kurze Gedanken',
+            tun: () => Werkzeuge.schnellnotizen(), zeigen: () => kann(() => Werkzeuge.schnellnotizen) },
+        { reiter: 'werkzeuge', gruppe: 'Schreiben', id: 'w-vorlagen', name: 'Vorlagen',
+            zeichen: 'puzzle', hinweis: 'Fertige Aufbauten und eigene Vorlagen',
+            tun: () => Werkzeuge.vorlagen(), zeigen: () => kann(() => Werkzeuge.vorlagen) },
+        { reiter: 'werkzeuge', gruppe: 'Wiederfinden', id: 'w-graph', name: 'Graph',
+            zeichen: 'graph', kurz: 'Strg ⇧ G', hinweis: 'Wie alles zusammenhängt',
+            tun: () => Links.graph(), zeigen: () => kann(() => Links.graph) },
+        { reiter: 'werkzeuge', gruppe: 'Wiederfinden', id: 'w-tags', name: 'Schlagwörter',
+            zeichen: 'tag', kurz: 'Strg ⇧ T', hinweis: 'Alle #Schlagwörter',
+            tun: () => Links.tagRegister(), zeigen: () => kann(() => Links.tagRegister) },
+        { reiter: 'werkzeuge', gruppe: 'Lernen', id: 'w-lernen', name: 'Karteikarten',
+            zeichen: 'cards', gross: true, hinweis: 'Wiederholen nach Plan',
+            tun: () => Werkzeuge.lernen(), zeigen: () => kann(() => Werkzeuge.lernen) },
+        { reiter: 'werkzeuge', gruppe: 'Lernen', id: 'w-stand', name: 'Umsetzungsstand',
+            zeichen: 'checkCircle', hinweis: 'Alle 16 Teile der Notion-Doku, Punkt für Punkt',
+            tun: () => Status.seiteAnlegen(), zeigen: () => kann(() => Status.seiteAnlegen) }
+    ];
+    /* ======================================================================== *
+     * ELEKTRO — der Beruf, um den es geht
+     * ======================================================================== */
+    const elektroEintraege = () => [
+        { reiter: 'elektro', gruppe: 'Rechnen', id: 'e-rechner', name: 'Rechner',
+            zeichen: 'bolt', gross: true, hinweis: 'Zehn Rechnungen mit gezeigtem Lösungsweg',
+            tun: () => Electrical.open(), zeigen: () => kann(() => Electrical.open) },
+        { reiter: 'elektro', gruppe: 'Rechnen', id: 'e-formelheft', name: 'Formelheft',
+            zeichen: 'book', gross: true, hinweis: 'Alle Formeln zum Nachschlagen',
+            tun: () => Formelheft.oeffne(), zeigen: () => kann(() => Formelheft.oeffne) },
+        { reiter: 'elektro', gruppe: 'Rechnen', id: 'e-dreieck', name: 'Formeldreieck',
+            zeichen: 'compass', hinweis: 'Das Dreieck zu einer Formel zeichnen',
+            tun: () => Elektrolernbilder.dreieckFlaeche(),
+            zeigen: () => kann(() => Elektrolernbilder.dreieckFlaeche) },
+        { reiter: 'elektro', gruppe: 'Rechnen', id: 'e-sinus', name: 'Sinuskurve',
+            zeichen: 'chart', hinweis: 'Wechselspannung als Kurve',
+            tun: () => Elektrolernbilder.sinusFlaeche(),
+            zeigen: () => kann(() => Elektrolernbilder.sinusFlaeche) },
+        { reiter: 'elektro', gruppe: 'Üben', id: 'e-ueben', name: 'Üben',
+            zeichen: 'learn', gross: true, hinweis: 'Aufgaben mit Lösungsweg',
+            tun: () => Elektroarbeitsplatz.uebung(),
+            zeigen: () => kann(() => Elektroarbeitsplatz.uebung) },
+        { reiter: 'elektro', gruppe: 'Üben', id: 'e-pruefung', name: 'Prüfung',
+            zeichen: 'medal', hinweis: 'Prüfung unter Zeit',
+            tun: () => Elektroarbeitsplatz.pruefungFlaeche(),
+            zeigen: () => kann(() => Elektroarbeitsplatz.pruefungFlaeche) },
+        { reiter: 'elektro', gruppe: 'Üben', id: 'e-arbeitsplatz', name: 'Arbeitsplatz',
+            zeichen: 'briefcase', hinweis: 'Alles nebeneinander',
+            tun: () => Elektroarbeitsplatz.arbeitsplatz(),
+            zeigen: () => kann(() => Elektroarbeitsplatz.arbeitsplatz) },
+        { reiter: 'elektro', gruppe: 'Zeichnen', id: 'e-plan', name: 'Schaltplan',
+            zeichen: 'graph', gross: true, hinweis: 'Plan mit Fachzeichen und Stromsimulation',
+            tun: () => Blocks.einfuegenAmEnde('schaltplan'),
+            zeigen: () => kann(() => Blocks.einfuegenAmEnde) }
+    ];
+    /* ======================================================================== *
+     * ANSICHT — wie die Seite aussieht und wohin sie geht
+     * ======================================================================== */
+    const ansichtEintraege = () => [
+        { reiter: 'ansicht', gruppe: 'Lesen', id: 'a-fokus', name: 'Fokus',
+            zeichen: 'compass', gross: true, hinweis: 'Alles ausblenden bis auf den Text',
+            tun: () => Werkzeuge.fokus(), zeigen: () => kann(() => Werkzeuge.fokus) },
+        { reiter: 'ansicht', gruppe: 'Lesen', id: 'a-praes', name: 'Präsentation',
+            zeichen: 'rocket', gross: true, hinweis: 'Die Seite als Folien zeigen',
+            tun: () => Werkzeuge.praesentation(seiteJetzt()), zeigen: () => seiteDa(() => Werkzeuge.praesentation) },
+        { reiter: 'ansicht', gruppe: 'Lesen', id: 'a-hell', name: 'Hell / Dunkel',
+            zeichen: 'sun', hinweis: 'Zwischen hellem und dunklem Aussehen wechseln',
+            tun: () => App.theme(), zeigen: () => kann(() => App.theme) },
+        { reiter: 'ansicht', gruppe: 'Lesen', id: 'a-aussehen', name: 'Aussehen …',
+            zeichen: 'settings', hinweis: 'Farbschema, Schrift und Dichte wählen',
+            tun: () => Aussehen.dialog(), zeigen: () => kann(() => Aussehen.dialog) },
+        { reiter: 'ansicht', gruppe: 'Seite', id: 'a-versionen', name: 'Fassungen',
+            zeichen: 'history', hinweis: 'Frühere Stände dieser Seite',
+            tun: () => Werkzeuge.versionen(seiteJetzt()), zeigen: () => seiteDa(() => Werkzeuge.versionen) },
+        { reiter: 'ansicht', gruppe: 'Seite', id: 'a-sperren', name: 'Sperren',
+            zeichen: 'lock', hinweis: 'Seite gegen Bearbeiten sperren',
+            tun: () => Werkzeuge.sperren(seiteJetzt()), zeigen: () => seiteDa(() => Werkzeuge.sperren) },
+        { reiter: 'ansicht', gruppe: 'Seite', id: 'a-quelltext', name: 'Quelltext',
+            zeichen: 'command', hinweis: 'Die Seite als Markdown ansehen',
+            tun: () => Werkzeuge.quelltext(seiteJetzt()), zeigen: () => seiteDa(() => Werkzeuge.quelltext) },
+        { reiter: 'ansicht', gruppe: 'Ausgeben', id: 'a-drucken', name: 'Drucken',
+            zeichen: 'clipboard', hinweis: 'Die Seite drucken oder als PDF sichern',
+            tun: () => Werkzeuge.drucken(seiteJetzt()), zeigen: () => seiteDa(() => Werkzeuge.drucken) },
+        { reiter: 'ansicht', gruppe: 'Ausgeben', id: 'a-html', name: 'Als HTML',
+            zeichen: 'share', hinweis: 'Die Seite als HTML-Datei sichern',
+            tun: () => Werkzeuge.htmlExport(seiteJetzt()), zeigen: () => seiteDa(() => Werkzeuge.htmlExport) }
+    ];
+    /* ======================================================================== *
+     * FREMDE EINTRÄGE
+     * ======================================================================== */
+    /* Wie bei `register/befehle.ts`: ein Bereich meldet seine eigenen Einträge
+       an, ohne dass diese Datei ihn kennen muss. Ohne das stünde hier über
+       kurz oder lang jeder Bereich drin, und §5 Regel 1 wäre umgangen. */
+    const fremde = [];
+    const lieferanten = [];
+    const melde = (eintrag) => {
+        if (!eintrag || !eintrag.id || !eintrag.reiter || typeof eintrag.tun !== 'function')
+            return false;
+        if (fremde.some(x => x.id === eintrag.id))
+            return false;
+        fremde.push(eintrag);
+        return true;
+    };
+    const meldeLieferant = (fn) => {
+        if (typeof fn !== 'function' || lieferanten.includes(fn))
+            return false;
+        lieferanten.push(fn);
+        return true;
+    };
+    const nimmZurueck = (id) => {
+        const i = fremde.findIndex(x => x.id === id);
+        if (i < 0)
+            return false;
+        fremde.splice(i, 1);
+        return true;
+    };
+    /* ======================================================================== *
+     * DIE ABFRAGE
+     * ======================================================================== */
+    /**
+     * Alle Einträge für diesen Augenblick.
+     *
+     * Ein Lieferant, der einen Fehler wirft, fällt weg — das Band bleibt
+     * stehen. Ein Menüband, das sich wegen eines Bereichs gar nicht zeichnet,
+     * wäre der schlimmere Fehler.
+     */
+    const alle = () => {
+        const aus = [];
+        const quellen = [
+            startEintraege, einfuegenEintraege, zeichnenEintraege,
+            werkzeugEintraege, elektroEintraege, ansichtEintraege
+        ];
+        for (const q of [...quellen, ...lieferanten]) {
+            try {
+                aus.push(...(q() || []));
+            }
+            catch { /* dieser Teil fehlt, der Rest steht */ }
+        }
+        aus.push(...fremde);
+        return aus.filter(e => {
+            if (typeof e.zeigen !== 'function')
+                return true;
+            try {
+                return e.zeigen() !== false;
+            }
+            catch {
+                return false;
+            }
+        });
+    };
+    /** Die Einträge eines Reiters, nach Gruppen geordnet. */
+    const inReiter = (reiter) => {
+        const drin = alle().filter(e => e.reiter === reiter);
+        const folge = [];
+        const nach = new Map();
+        for (const e of drin) {
+            if (!nach.has(e.gruppe)) {
+                nach.set(e.gruppe, []);
+                folge.push(e.gruppe);
+            }
+            nach.get(e.gruppe).push(e);
+        }
+        return folge.map(g => ({ gruppe: g, eintraege: nach.get(g) }));
+    };
+    /** Die Reiter, die überhaupt etwas zu zeigen haben. */
+    const reiter = () => {
+        const belegt = new Set(alle().map(e => e.reiter));
+        return REITER.filter(r => belegt.has(r.id));
+    };
+    const eines = (id) => alle().find(e => e.id === id) || null;
+    const anzahl = () => alle().length;
+    return { REITER, reiter, alle, inReiter, eines, anzahl,
+        melde, meldeLieferant, nimmZurueck };
 })();
 
 </script>
@@ -88964,9 +89929,72 @@ const Electrical = (() => {
         energy: { label: 'Energie E = P · t', fields: [['p', 'Leistung', 'W'], ['h', 'Zeit', 'h']], run: v => ElectricalCalculations.energy(v.p, v.h) },
         cost: { label: 'Energiekosten', fields: [['e', 'Energie', 'kWh'], ['price', 'Preis je kWh', 'Geldeinheit']], run: v => ElectricalCalculations.cost(v.e, v.price) },
         series: { label: 'Widerstände in Reihe', fields: [['list', 'Widerstände, mit Komma', 'Ω']], run: v => ElectricalCalculations.series(v.list) },
-        parallel: { label: 'Widerstände parallel', fields: [['list', 'Widerstände, mit Komma', 'Ω']], run: v => ElectricalCalculations.parallel(v.list) }
+        parallel: { label: 'Widerstände parallel', fields: [['list', 'Widerstände, mit Komma', 'Ω']], run: v => ElectricalCalculations.parallel(v.list) },
+        /* DER SPANNUNGSFALL IST DIE ERSTE MEHRSCHRITTIGE RECHNUNG (E209).
+           Die neun darüber sind je eine Formel; hier sind es vier Schritte und
+           eine Gegenprobe. Genau dafür gibt es den Rechenweg: bei einer Formel
+           kann man das Ergebnis noch im Kopf prüfen, bei vier nicht mehr.
+    
+           Die Rechnung selbst steht im Kern (`Rechenweg.spannungsfall`) und
+           nicht hier — sie wird von `test246` ohne Browser geprüft, und was
+           geprüft ist, soll nicht in zwei Fassungen existieren. */
+        drop: {
+            label: 'Spannungsfall einer Leitung',
+            fields: [['p', 'Leistung', 'W'], ['u', 'Spannung', 'V'], ['cos', 'cos φ', ''],
+                ['l', 'Leitungslänge', 'm'], ['a', 'Querschnitt', 'mm²']],
+            run: v => {
+                const zahl = (t, name) => {
+                    const n = Number(String(t).replace(',', '.'));
+                    return Number.isFinite(n) && n > 0 ? n : (fehlt.push(name), null);
+                };
+                /* `Record<string,string>` ist mit `noUncheckedIndexedAccess` überall
+                   `string | undefined` — ein leeres Feld gibt es wirklich, und der
+                   Typ sagt es. `?? ''` ist hier kein Kniff, sondern die Wahrheit. */
+                const fehlt = [];
+                const p2 = zahl(v.p ?? '', 'Leistung'), u = zahl(v.u ?? '', 'Spannung');
+                const l = zahl(v.l ?? '', 'Leitungslänge'), a = zahl(v.a ?? '', 'Querschnitt');
+                /* cos φ darf fehlen — dann ist die Last rein ohmsch, und genau das
+                   steht dann auch in den Annahmen. Es darf aber nicht grösser als
+                   eins sein: ein Kosinus, der das ist, ist ein Tippfehler. */
+                const cosRoh = String(v.cos ?? '').trim();
+                const cos = cosRoh === '' ? 1 : Number(cosRoh.replace(',', '.'));
+                if (fehlt.length)
+                    return { ok: false, error: 'Es fehlt: ' + fehlt.join(', ') + '.' };
+                if (!Number.isFinite(cos) || cos <= 0 || cos > 1)
+                    return { ok: false, error: 'cos φ liegt zwischen 0 und 1 — leer lassen heisst 1.' };
+                try {
+                    const weg = Rechenweg.spannungsfall({
+                        leistungW: p2, spannungV: u, cosPhi: cos,
+                        laengeM: l, querschnittMm2: a
+                    });
+                    const urteil = Rechenweg.urteil(weg, 3);
+                    return { ok: true, value: weg.ergebnis.wert, unit: '%',
+                        formula: 'ΔU% = ΔU / U · 100', assumptions: weg.annahmen,
+                        warnings: urteil.haelt ? [] : [urteil.satz], weg };
+                }
+                catch (fehler) {
+                    /* Der Rechenweg wirft, wenn die gezeigte Zeile ihr Ergebnis nicht
+                       trägt (E209). Das ist ein Fehler IM PROGRAMM und keiner in der
+                       Eingabe — er gehört gemeldet und nicht verschluckt. */
+                    return { ok: false, error: fehler instanceof Error ? fehler.message : String(fehler) };
+                }
+            }
+        }
     };
     const format = (value) => new Intl.NumberFormat('de-CH', { maximumSignificantDigits: 8 }).format(value);
+    /**
+     * Die Zahl im Kopf — und im Seitenblock — so, wie der Weg sie schreibt.
+     *
+     * `format` zeigt acht geltende Ziffern. Bei den neun Rechnungen ohne Weg
+     * ist das die einzige Zahl auf dem Schirm und stört niemanden. Steht aber
+     * ein Weg darunter, dann stand oben „0.71194616 %" und in der letzten
+     * Zeile „0.7119 %" — zweimal dieselbe Zahl in zwei Schreibweisen, und wer
+     * das liest, muss raten, welche davon die Antwort ist. Genau die Sorte
+     * Fehler, die §55.1 meint: keine Prüfung schlug an, sichtbar war es sofort.
+     *
+     * Wo ein Weg da ist, gilt deshalb dessen Schreibweise.
+     */
+    const kopfZahl = (r) => r.weg ? Rechenweg.zahl(r.value) : format(r.value);
     const open = (targetPage) => {
         const overlay = document.createElement('div');
         overlay.className = 'overlay';
@@ -89003,8 +90031,46 @@ const Electrical = (() => {
             b.textContent = label;
             return b;
         };
-        actions.append(button('calculate', 'Rechnen'), button('insert', 'Ergebnis in Seite'), button('install', 'Grundlagenkarten installieren'), button('import', 'Lernpaket importieren'), button('export', 'Beispielpaket exportieren'), button('babat-install', 'BABAT-Paket installieren'), button('babat-export', 'BABAT-Paket exportieren'));
-        dialog.append(header, notice, select, fields, output, actions);
+        /* „Rechnen" ist die Hauptsache und sah aus wie „BABAT-Paket exportieren"
+           — sieben gleichrangige Knöpfe nebeneinander sagen nicht, womit man
+           anfängt. Mit Augen gesehen (§55). */
+        const haupt = button('calculate', 'Rechnen');
+        haupt.className = 'is-primary';
+        /* ZWEI KNÖPFE UNTEN, FÜNF WEITER OBEN — UND KEINER WENIGER (E209).
+    
+           Alle sieben standen in einer Reihe. Seit der Fuss festliegt, kostet
+           die Reihe 130 px in drei Zeilen, und der Lösungsweg zeigte darüber
+           zwei von fünf Schritten. Fünf der sieben handeln aber gar nicht vom
+           Rechnen, sondern vom Ein- und Auspacken von Lernpaketen — sie waren
+           im Weg für etwas, das sie nicht tun.
+    
+           Sie sind NICHT verschwunden. Sie stehen unter dem Ergebnis, mit einer
+           Überschrift, die sagt, was sie sind. Unten bleibt, was zur Rechnung
+           gehört. */
+        actions.append(haupt, button('insert', 'Ergebnis in Seite'));
+        const pakete = document.createElement('div');
+        pakete.className = 'electrical-pakete';
+        const pKopf = document.createElement('h4');
+        pKopf.textContent = 'Lernpakete';
+        const pReihe = document.createElement('div');
+        pReihe.className = 'electrical-actions';
+        pReihe.append(button('install', 'Grundlagenkarten installieren'), button('import', 'Lernpaket importieren'), button('export', 'Beispielpaket exportieren'), button('babat-install', 'BABAT-Paket installieren'), button('babat-export', 'BABAT-Paket exportieren'));
+        pakete.append(pKopf, pReihe);
+        /* KOPF FEST, BAUCH ROLLT, KNOPFREIHE FEST (E209).
+    
+           Vor dem Lösungsweg passte der Rechner ins Fenster: Kopf, Hinweis,
+           Auswahl, fünf Felder, ein Ergebnis, die Knöpfe. Mit dem Weg wird er
+           1177 px hoch, und in einem 980 px hohen Fenster stand „Ergebnis in
+           Seite" danach 185 px unter dem Rand — am Telefon 310 px. Gerollt
+           werden konnte, aber niemand rollt nach einem Knopf, den er eine
+           Sekunde vorher noch gesehen hat.
+    
+           Deshalb wandert alles Wachsende in einen eigenen Kasten. Der Weg darf
+           dann so lang werden, wie die Rechnung ihn braucht. */
+        const bauch = document.createElement('div');
+        bauch.className = 'electrical-bauch';
+        bauch.append(notice, select, fields, output, pakete);
+        dialog.append(header, bauch, actions);
         overlay.appendChild(dialog);
         document.body.appendChild(overlay);
         let latest = null;
@@ -89034,12 +90100,55 @@ const Electrical = (() => {
             latest = MODES[select.value].run(values);
             output.replaceChildren();
             const main = document.createElement('strong');
-            main.textContent = latest.ok ? format(latest.value) + ' ' + latest.unit : latest.error || 'Ungültige Eingabe';
+            main.textContent = latest.ok ? kopfZahl(latest) + ' ' + latest.unit : latest.error || 'Ungültige Eingabe';
             output.appendChild(main);
             if (latest.ok) {
                 const formula = document.createElement('span');
                 formula.textContent = latest.formula || '';
                 output.appendChild(formula);
+                /* DER LÖSUNGSWEG (E209).
+                   Bis hierher stand nur „1,64 V" und darüber „ΔU = I · R · cosφ".
+                   Wer das liest, kann nicht nachprüfen, ob er dasselbe gerechnet
+                   hätte. Jetzt steht jeder Schritt da, mit der Formel und mit den
+                   eingesetzten Zahlen — und die eingesetzte Zeile kommt aus
+                   denselben Werten wie die Rechnung, kann also nicht abweichen.
+        
+                   `textContent` und nicht `innerHTML`: hier kommen Zahlen aus einem
+                   Eingabefeld an (§19). */
+                const weg = latest.weg;
+                if (weg && Array.isArray(weg.schritte)) {
+                    const liste = document.createElement('ol');
+                    liste.className = 'el-weg';
+                    const zeile = (s2, nr) => {
+                        const li = document.createElement('li');
+                        const kopf = document.createElement('b');
+                        kopf.textContent = s2.titel + (s2.hinweis ? ' — ' + s2.hinweis : '');
+                        const f = document.createElement('code');
+                        f.textContent = s2.formel;
+                        const e = document.createElement('span');
+                        e.textContent = '= ' + s2.eingesetzt + '  =  ' +
+                            Rechenweg.zahl(s2.wert) + ' ' + s2.einheit;
+                        li.append(kopf, f, e);
+                        if (nr)
+                            li.dataset['nr'] = nr;
+                        return li;
+                    };
+                    weg.schritte.forEach((s2, i) => liste.appendChild(zeile(s2, String(i + 1))));
+                    if (weg.gegenprobe) {
+                        const li = zeile(weg.gegenprobe, '');
+                        li.className = 'el-probe';
+                        liste.appendChild(li);
+                    }
+                    output.appendChild(liste);
+                }
+                /* Ein Urteil, wenn die Rechnung eines hat — und im SATZ, nicht nur
+                   als Farbe (§38). */
+                (latest.warnings || []).forEach(text => {
+                    const w = document.createElement('strong');
+                    w.className = 'el-warnung';
+                    w.textContent = text;
+                    output.appendChild(w);
+                });
                 (latest.assumptions || []).forEach(text => { const p = document.createElement('small'); p.textContent = text; output.appendChild(p); });
             }
             return latest;
@@ -89049,7 +90158,11 @@ const Electrical = (() => {
         close.addEventListener('click', () => overlay.remove());
         overlay.addEventListener('mousedown', event => { if (event.target === overlay)
             overlay.remove(); });
-        actions.addEventListener('click', async (event) => {
+        /* Der Lauscher hängt am DIALOG und nicht mehr an der Knopfreihe.
+           Die fünf Paketknöpfe stehen jetzt oben im Bauch — an `actions` hätte
+           sie niemand mehr gehört, und ein Knopf, der nichts tut, ist schlimmer
+           als einer, den es nicht gibt. */
+        dialog.addEventListener('click', async (event) => {
             const action = (event.target instanceof Element ? event.target.closest('[data-action]') : null)?.dataset.action;
             if (action === 'calculate')
                 calculate();
@@ -89066,9 +90179,32 @@ const Electrical = (() => {
                     UI.toast('Du darfst auf dieser Seite kein Ergebnis einfügen.');
                     return;
                 }
-                Store.addBlock(pageId, 'equation', { text: `${result.formula} = ${format(result.value)} ${result.unit}`,
+                Store.addBlock(pageId, 'equation', { text: `${result.formula} = ${kopfZahl(result)} ${result.unit}`,
                     electricalCalculation: { fassung: 1, formula: result.formula, value: result.value, unit: result.unit,
                         assumptions: result.assumptions || [], created: Store.now() } });
+                /* DER WEG KOMMT MIT AUF DIE SEITE (E209).
+                   „Ergebnis in Seite" schrieb bisher nur das Ergebnis. In einer
+                   Prüfung wird der Weg bewertet und nicht die Zahl — wer ihn auf dem
+                   Bildschirm sieht und auf dem Blatt nicht, hat nichts gewonnen.
+        
+                   Je Schritt ein Block, nicht ein Textklumpen: so lässt sich eine
+                   Zeile einzeln anfassen, verschieben und kommentieren. Das ist
+                   Redions Vokabular. */
+                const wegD = result.weg;
+                if (wegD && Array.isArray(wegD.schritte)) {
+                    wegD.schritte.forEach((s2, i) => {
+                        Store.addBlock(pageId, 'text', { text: '**' + (i + 1) + '. ' + s2.titel +
+                                (s2.hinweis ? '** — ' + s2.hinweis : '**') });
+                        Store.addBlock(pageId, 'equation', { text: s2.formel + '  =  ' + s2.eingesetzt +
+                                '  =  ' + Rechenweg.zahl(s2.wert) + ' ' + s2.einheit });
+                    });
+                    if (wegD.gegenprobe) {
+                        const g = wegD.gegenprobe;
+                        Store.addBlock(pageId, 'text', { text: '**' + g.titel + '**' });
+                        Store.addBlock(pageId, 'equation', { text: g.formel + '  =  ' + g.eingesetzt +
+                                '  =  ' + Rechenweg.zahl(g.wert) + ' ' + g.einheit });
+                    }
+                }
                 if ((result.assumptions || []).length)
                     Store.addBlock(pageId, 'callout', {
                         icon: '⚠', text: 'Annahme: ' + (result.assumptions || []).join(' ')
@@ -102756,7 +103892,30 @@ const Seitenleiste = (() => {
         ['einrichten', 'Einrichten', 'settings'],
         ['hilfe', 'Hilfe & Pflege', 'help']
     ];
-    const abschnittAn = (id) => !(Store.getMeta('sidebarAus', []) || []).includes(id);
+    /**
+     * Ist dieser Abschnitt eingeschaltet?
+     *
+     * `vorgabe` ist neu (E210). Bisher war alles an, was nicht ausdrücklich in
+     * `sidebarAus` stand — und für die Werkzeuge soll es umgekehrt sein: sie
+     * stehen jetzt im Menüband, hier also aus, bis jemand sie zurückholt.
+     *
+     * Wichtig ist der Unterschied zwischen „nie etwas gesagt" und „ausdrücklich
+     * abgeschaltet". `sidebarAn` merkt sich das Einschalten; wer den Abschnitt
+     * früher abgeschaltet hatte, findet ihn nicht plötzlich wieder da.
+     */
+    /* Welche Abschnitte sind von Haus aus an? Alle ausser diesem einen — die
+       Werkzeuge stehen seit E210 im Menüband. Wächst die Liste, wächst sie
+       hier und nicht verstreut an drei Stellen. */
+    const VORGABE_AUS = ['werkzeuge'];
+    const VORGABE_AN = (id) => !VORGABE_AUS.includes(id);
+    const abschnittAn = (id, vorgabe = true) => {
+        const aus = Store.getMeta('sidebarAus', []) || [];
+        if (aus.includes(id))
+            return false;
+        if (vorgabe)
+            return true;
+        return (Store.getMeta('sidebarAn', []) || []).includes(id);
+    };
     /** Die Abschnitte in der selbst gewählten Reihenfolge. Notion lässt sie
         nur ein- und ausblenden, nicht umsortieren. */
     const abschnitteGeordnet = () => {
@@ -102780,9 +103939,33 @@ const Seitenleiste = (() => {
         Store.setMeta('sidebarFolge', folge);
         zeichneBaum();
     };
+    /**
+     * Einen Abschnitt ein- oder ausschalten.
+     *
+     * Seit E210 gibt es zwei Listen und nicht mehr eine. `sidebarAus` sagt
+     * „ausdrücklich weg", `sidebarAn` sagt „ausdrücklich her" — die zweite
+     * braucht es für Abschnitte, deren VORGABE aus ist. „Werkzeuge" ist der
+     * erste davon: die sieben Zeilen stehen jetzt im Menüband.
+     *
+     * Ohne die zweite Liste wäre „Werkzeuge einblenden" ein Knopf, der aus
+     * `sidebarAus` etwas entfernt, das gar nicht drinsteht — er hätte
+     * ausgesehen, als täte er etwas, und nichts wäre passiert.
+     */
     const abschnittSchalten = (id) => {
         const aus = Store.getMeta('sidebarAus', []) || [];
-        Store.setMeta('sidebarAus', aus.includes(id) ? aus.filter((x) => x !== id) : [...aus, id]);
+        const an = Store.getMeta('sidebarAn', []) || [];
+        if (abschnittAn(id, VORGABE_AN(id))) {
+            /* jetzt an → ausschalten */
+            Store.setMeta('sidebarAn', an.filter(x => x !== id));
+            if (!aus.includes(id))
+                Store.setMeta('sidebarAus', [...aus, id]);
+        }
+        else {
+            /* jetzt aus → einschalten */
+            Store.setMeta('sidebarAus', aus.filter(x => x !== id));
+            if (!an.includes(id))
+                Store.setMeta('sidebarAn', [...an, id]);
+        }
         zeichneBaum();
     };
     let anpassModus = false;
@@ -103043,42 +104226,56 @@ const Seitenleiste = (() => {
             baum.appendChild(fertig);
             return;
         }
-        /* Werkzeuge — die Funktionen der anderen Programme haben hier ihren Ort */
-        if (abschnittAn('werkzeuge')) {
+        /* DIE WERKZEUGE SIND NACH OBEN GEZOGEN (E210).
+    
+           Sieben Zeilen standen hier — Journal, Schnellnotizen, Vorlagen, Graph,
+           Schlagwörter, Karteikarten, Umsetzungsstand. Redur wollte die
+           Seitenleiste kürzer und die Werkzeuge im Menüband; sie stehen jetzt
+           dort unter „Werkzeuge", mit denselben Handlungen.
+    
+           NICHTS IST WEG. Die Liste ist nicht gelöscht, sondern umgezogen: sie
+           steht in `register/menueband.ts` und ist von dort aus dieselbe Wahrheit
+           für beide Ansichten. Wer den Abschnitt lieber hier hätte, schaltet ihn
+           über `sidebarAus` wieder ein — dann zeichnet die Seitenleiste ihn aus
+           demselben Register, und die zwei Wege können nicht auseinanderlaufen.
+    
+           Die Vorgabe ist AUS, und zwar nur die Vorgabe: wer den Abschnitt
+           früher ausdrücklich abgeschaltet hatte, behält seine Wahl. */
+        if (abschnittAn('werkzeuge', VORGABE_AN('werkzeuge'))) {
             const wz = document.createElement('div');
             wz.className = 'wz-block';
-            wz.innerHTML = [
-                /* ZEICHEN STATT EMOJI (E200). Die zweite Spalte ist der Name im
-                   Symbolregister, nicht mehr ein Bildzeichen. Warum, steht in
-                   `register/symbole.ts`. */
-                ['journal', 'calendar', 'Journal', 'Tageseintrag — Strg Shift J'],
-                ['memos', 'bolt', 'Schnellnotizen', 'Kurze Gedanken — Strg Shift M'],
-                ['vorlagen', 'puzzle', 'Vorlagen', 'Fertige Aufbauten und eigene Vorlagen'],
-                ['graph', 'graph', 'Graph', 'Wie alles zusammenhängt — Strg Shift G'],
-                ['tags', 'tag', 'Schlagwörter', 'Alle #Schlagwörter — Strg Shift T'],
-                ['lernen', 'cards', 'Karteikarten', 'Wiederholen nach Plan'],
-                ['stand', 'checkCircle', 'Umsetzungsstand', 'Alle 16 Teile der Notion-Doku, Punkt für Punkt']
-            ].map(([a, i, n, t]) => `<button class="side-item" data-wz="${a}" title="${t}"><span data-sym="${i}"></span><span>${n}</span>` +
-                (a === 'lernen' ? '<span class="k" id="lz"></span>' : '') + '</button>').join('');
+            /* Eine eigene Kennung. `wz-block` ist eine LAYOUT-Klasse und wird von
+               fünf weiteren Stellen benutzt (Erweiterungen, Besprechung, KI …) — wer
+               danach sucht, findet die halbe Seitenleiste. Die Prüfung ist genau
+               darauf hereingefallen und meldete 36 Werkzeuge statt sieben. */
+            wz.dataset['abschnitt'] = 'werkzeuge';
+            const eintraege = (Register?.menueband?.inReiter?.('werkzeuge') || [])
+                .flatMap((g) => g.eintraege || []);
+            eintraege.forEach((e) => {
+                const b = document.createElement('button');
+                b.className = 'side-item';
+                b.dataset['band'] = String(e.id);
+                b.title = String(e.hinweis || e.name || '') + (e.kurz ? '  (' + e.kurz + ')' : '');
+                const zeichen = document.createElement('span');
+                zeichen.dataset['sym'] = String(e.zeichen || 'dots');
+                const name = document.createElement('span');
+                name.textContent = String(e.name || '');
+                b.append(zeichen, name);
+                if (e.id === 'w-lernen') {
+                    const k = document.createElement('span');
+                    k.className = 'k';
+                    k.id = 'lz';
+                    b.appendChild(k);
+                }
+                wz.appendChild(b);
+            });
             wz.addEventListener('click', e => {
-                const b = elVon(e)?.closest('[data-wz]');
+                const b = elVon(e)?.closest('[data-band]');
                 if (!b)
                     return;
-                const a = b.dataset.wz;
-                if (a === 'journal')
-                    Werkzeuge.journal();
-                if (a === 'memos')
-                    Werkzeuge.schnellnotizen();
-                if (a === 'vorlagen')
-                    Werkzeuge.vorlagen();
-                if (a === 'graph')
-                    Links.graph();
-                if (a === 'tags')
-                    Links.tagRegister();
-                if (a === 'lernen')
-                    Werkzeuge.lernen();
-                if (a === 'stand')
-                    Status.seiteAnlegen();
+                const eintrag = Register?.menueband?.eines?.(b.dataset['band'] || '');
+                if (eintrag)
+                    eintrag.tun();
             });
             baum.appendChild(abschnitt('Werkzeuge'));
             baum.appendChild(wz);
@@ -104067,6 +105264,472 @@ const Kopfleiste = (() => {
     return { binde, zeichne, pfad, coverWaehlen };
 })();
 window.Kopfleiste = Kopfleiste;
+
+</script>
+<script>
+/* ===== quell/schale/aufbau/menueband.js ===== */
+"use strict";
+/* ============================================================================
+ * schale/aufbau/menueband.js — das Menüband zeichnen
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/schale/aufbau/menueband.ts`. `npm run bauen:ts` schreibt
+ * daraus `quell/schale/aufbau/menueband.js`. Wer das .js bearbeitet, verliert
+ * die Änderung beim nächsten Bauen; `pruefungen/lauf/test105.mts` meldet es
+ * vorher.
+ * ----------------------------------------------------------------------------
+ * WAS HIER STEHT UND WAS NICHT
+ *
+ * Hier steht das AUSSEHEN. Was im Band steht, steht in
+ * `register/menueband.ts`. Diese Datei kennt keinen einzigen Knopf beim
+ * Namen — sie fragt das Register und zeichnet, was kommt. Deshalb muss
+ * niemand hierher, der einen Eintrag hinzufügt.
+ *
+ * DER AUFBAU
+ *
+ *     <div id="menueband">
+ *       <div class="mb-reiter">   Start · Einfügen · Zeichnen · …
+ *       <div class="mb-band">     die Gruppen des gewählten Reiters
+ *
+ * Der gewählte Reiter und „zugeklappt oder nicht" stehen in `meta` und
+ * überleben deshalb einen Neustart. Wer einmal auf „Elektro" steht, will
+ * beim nächsten Öffnen nicht wieder bei „Start" anfangen.
+ *
+ * WARUM DAS BAND ZUKLAPPBAR IST
+ *
+ * Es kostet Platz, und Platz ist auf einem Laptop knapp. Ein Band, das man
+ * nicht loswird, ist auf einem 13-Zoll-Bildschirm eine Zumutung — auf dem
+ * Telefon erst recht. Zugeklappt bleibt die Reiterzeile stehen: man sieht,
+ * dass es das Band gibt, und ist einen Klick davon entfernt.
+ *
+ * TASTATUR (§38)
+ *
+ * Die Reiterzeile ist eine echte `tablist`: Pfeiltasten wandern, Pos1 und
+ * Ende springen, und nur der gewählte Reiter ist in der Tabulator-Reihenfolge.
+ * Das ist nicht Zierde — ohne das ist ein Menüband mit sechs Reitern für
+ * jeden, der nicht mit der Maus arbeitet, eine Sackgasse.
+ * ==========================================================================*/
+const Menueband = (() => {
+    /* Wo im Baum es hängt. `index.html` legt den Kasten an; hier wird er nur
+       gefüllt. So kann `bauen.mts` die Einzeldatei bauen, ohne zu wissen,
+       dass es das Band gibt. */
+    const WURZEL = 'menueband';
+    const merkeReiter = 'bandReiter';
+    /* ZWEI ERINNERUNGEN, NICHT EINE.
+       Erst gab es nur `bandZu`. Dann fand die Prüfung: wer das Band auf einer
+       SEITE aufklappt, hatte es auch auf „Heute" offen — die Wahl von einem
+       Ort galt am anderen, und die ortsabhängige Vorgabe war damit ausser
+       Kraft. Eine Startansicht mit 137 px Knöpfen darüber ist genau das, was
+       die Vorgabe verhindern sollte. */
+    const merkeZuSeite = 'bandZu'; // der alte Name bleibt der alte Name
+    const merkeZuWelt = 'bandZu:welt';
+    const meta = (name, standard) => {
+        if (typeof Store === 'undefined' || typeof Store.getMeta !== 'function')
+            return standard;
+        try {
+            return Store.getMeta(name, standard);
+        }
+        catch {
+            return standard;
+        }
+    };
+    const setzeMeta = (name, wert) => {
+        if (typeof Store === 'undefined' || typeof Store.setMeta !== 'function')
+            return;
+        try {
+            Store.setMeta(name, wert);
+        }
+        catch { /* ohne Ablage bleibt es bei dieser Sitzung */ }
+    };
+    /* Der Zustand wird BEIM ZEICHNEN gelesen und nicht beim Laden der Datei.
+       Beim Laden ist IndexedDB noch nicht offen, und die gemerkte Wahl käme
+       nie zurück — genau das ist der Bibliothek passiert (E207). */
+    const reiterJetzt = () => String(meta(merkeReiter, 'start') || 'start');
+    /**
+     * Zugeklappt oder nicht — und am Telefon ist die VORGABE zugeklappt.
+     *
+     * Gemessen: Kopfzeile 54 px plus Band 138 px heisst, dass die Seite auf
+     * einem 844 px hohen Bildschirm erst bei y=274 anfängt. Ein Drittel des
+     * Bildschirms für Knöpfe, bevor ein Wort des eigenen Textes zu sehen ist,
+     * ist keine Notiz-App mehr. Die Reiterzeile bleibt stehen; ein Tipp
+     * darauf klappt auf, und die Wahl wird gemerkt.
+     */
+    const amTelefon = () => {
+        try {
+            return AppEinstellung.amTelefon() === true;
+        }
+        catch {
+            return window.innerWidth <= 760;
+        }
+    };
+    /**
+     * Ist gerade eine Seite offen — oder eine Sonderansicht?
+     *
+     * Gemessen wird am DOM und nicht an `App.aktuelleSeite()`: dessen Kennung
+     * bleibt beim Wechsel zurück auf „Heute" auf der zuletzt geöffneten Seite
+     * stehen. Ein Zustand, der veralten kann, ist als Grundlage für „was zeige
+     * ich" schlechter als das, was wirklich auf dem Schirm steht.
+     *
+     * Die Sonderansichten — Heute, Bibliothek, Lernzentrum, Aufgaben — tragen
+     * alle `produkt-welt` am `#page`. Eine echte Seite trägt sie nicht.
+     */
+    const seiteOffen = () => {
+        const p = document.getElementById('page');
+        return !!p && !p.classList.contains('produkt-welt');
+    };
+    /**
+     * Zugeklappt oder nicht.
+     *
+     * Die VORGABE hängt vom Ort ab, die WAHL nicht. Am Telefon und auf einer
+     * Sonderansicht ist das Band zunächst zu; wer es einmal aufklappt, behält
+     * es offen.
+     *
+     * Der Grund ist gemessen: aufgeklappt begann die Seite am Telefon erst bei
+     * y=274 von 844, und auf der Heute-Ansicht rutschte der Startknopf auf
+     * y=1105 in einem 1000 px hohen Fenster (test217). Ein Menüband über einer
+     * Startansicht kann ohnehin fast nichts — „Einfügen" und „Zeichnen"
+     * brauchen eine Seite, in die geschrieben wird.
+     */
+    /** Welche Erinnerung gilt hier — die der Seite oder die der Startansicht? */
+    const merkeZu = () => seiteOffen() ? merkeZuSeite : merkeZuWelt;
+    const zugeklappt = () => meta(merkeZu(), amTelefon() || !seiteOffen()) === true;
+    /* ======================================================================== *
+     * EIN KNOPF
+     * ======================================================================== */
+    /**
+     * Zeichen oder Buchstabe?
+     *
+     * Das Register liefert bei einem Werkzeug einen Namen aus
+     * `register/symbole.ts` („calendar"), bei einer Blockart aber das Zeichen
+     * selbst („H₁", „•", „B").
+     *
+     * Der erste Entwurf unterschied sie mit `/^[a-zA-Z]+$/` — „nur Buchstaben,
+     * also ein Symbolname". Damit wurden „B", „I" und „S" für Fett, Kursiv und
+     * Durchgestrichen zu Symbolnamen, die es nicht gibt, und die drei Knöpfe
+     * standen ohne jedes Zeichen da. Das Auge hat es sofort gesehen, keine
+     * Prüfung hätte es gemeldet (§55.1).
+     *
+     * Jetzt wird gefragt statt geraten: `Register.symbole.hat(name)`.
+     */
+    const zeichenIn = (wo, zeichen) => {
+        if (Register?.symbole?.hat?.(zeichen)) {
+            const s = document.createElement('span');
+            s.dataset['sym'] = zeichen;
+            wo.appendChild(s);
+            return;
+        }
+        const s = document.createElement('span');
+        s.className = 'mb-glyph';
+        s.textContent = zeichen;
+        /* Aus der Vorlesereihe raus: der Name steht daneben im Klartext, und
+           „H tiefgestellt eins" zweimal zu hören hilft niemandem (§38). */
+        s.setAttribute('aria-hidden', 'true');
+        wo.appendChild(s);
+    };
+    const knopf = (e) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'mb-knopf' + (e.gross ? ' ist-gross' : '');
+        b.dataset['band'] = String(e.id);
+        /* `textContent` und nie `innerHTML`: die Namen kommen aus Registern, aber
+           ein Bereich darf über `melde()` eigene beisteuern, und dann stünde hier
+           fremder Text (§19). */
+        zeichenIn(b, String(e.zeichen || '▫'));
+        const t = document.createElement('span');
+        t.className = 'mb-name';
+        t.textContent = String(e.name || '');
+        b.appendChild(t);
+        /* DAS TASTENKÜRZEL STEHT IM TOOLTIP UND NICHT AM KNOPF.
+           Es stand darunter, und weil nur die Hälfte der Knöpfe eines hat, war
+           die Reihe ungleich hoch — „Nummerierte Liste · Ctrl+Shift+6" wurde
+           vierzeilig und zog alles daneben mit. Word macht es genauso: das
+           Kürzel erscheint, wenn man stehen bleibt. */
+        /* Der Hinweis ist der ganze Satz — für die Maus als `title`, für
+           Vorleseprogramme als Beschriftung. Ohne ihn wäre ein Knopf mit dem
+           Zeichen „•" für ein Vorleseprogramm namenlos. */
+        const satz = String(e.hinweis || e.name || '') +
+            (e.kurz ? '  (' + String(e.kurz) + ')' : '');
+        if (satz) {
+            b.title = satz;
+            b.setAttribute('aria-label', satz);
+        }
+        return b;
+    };
+    /* ======================================================================== *
+     * DAS BAND
+     * ======================================================================== */
+    const gruppeZeichnen = (g) => {
+        const kasten = document.createElement('div');
+        kasten.className = 'mb-gruppe';
+        kasten.dataset['gruppe'] = g.gruppe;
+        const reihe = document.createElement('div');
+        reihe.className = 'mb-reihe';
+        g.eintraege.forEach(e => reihe.appendChild(knopf(e)));
+        /* Die Überschrift steht UNTER den Knöpfen, wie in Textprogrammen üblich.
+           Sie ist klein und leise: sie ordnet, sie ruft nicht. */
+        const titel = document.createElement('div');
+        titel.className = 'mb-gruppe-titel';
+        titel.textContent = g.gruppe;
+        kasten.append(reihe, titel);
+        return kasten;
+    };
+    /** Das Band unter der Reiterzeile neu füllen. */
+    const bandFuellen = (band, reiter) => {
+        band.replaceChildren();
+        const gruppen = Register?.menueband?.inReiter?.(reiter) || [];
+        if (!gruppen.length) {
+            /* Ein leerer Reiter kommt vor — `zeigen()` kann alles weggefiltert
+               haben, etwa in der Einzeldatei. Dann steht da ein Satz und nicht
+               eine leere Fläche, die aussieht wie ein Fehler. */
+            const leer = document.createElement('div');
+            leer.className = 'mb-leer';
+            leer.textContent = 'Hier ist gerade nichts verfügbar.';
+            band.appendChild(leer);
+            return;
+        }
+        gruppen.forEach((g, i) => {
+            if (i) {
+                const strich = document.createElement('div');
+                strich.className = 'mb-trenner';
+                strich.setAttribute('aria-hidden', 'true');
+                band.appendChild(strich);
+            }
+            band.appendChild(gruppeZeichnen(g));
+        });
+    };
+    /* ======================================================================== *
+     * ZEICHNEN
+     * ======================================================================== */
+    let gebunden = false;
+    const zeichne = () => {
+        const wurzel = document.getElementById(WURZEL);
+        if (!wurzel)
+            return;
+        const reiter = Register?.menueband?.reiter?.() || [];
+        if (!reiter.length) {
+            /* Ohne Register kein Band. Es zu verstecken ist richtiger, als eine
+               leere Leiste stehen zu lassen, die Platz kostet und nichts kann. */
+            wurzel.hidden = true;
+            wurzel.replaceChildren();
+            return;
+        }
+        wurzel.hidden = false;
+        let gewaehlt = reiterJetzt();
+        if (!reiter.some((r) => r.id === gewaehlt))
+            gewaehlt = String(reiter[0].id);
+        const zu = zugeklappt();
+        wurzel.classList.toggle('ist-zu', zu);
+        wurzel.replaceChildren();
+        /* ── die Reiterzeile ── */
+        const zeile = document.createElement('div');
+        zeile.className = 'mb-reiter';
+        zeile.setAttribute('role', 'tablist');
+        zeile.setAttribute('aria-label', 'Menüband');
+        reiter.forEach((r) => {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'mb-reiter-knopf';
+            b.dataset['mbReiter'] = String(r.id);
+            b.setAttribute('role', 'tab');
+            const aktiv = r.id === gewaehlt;
+            b.setAttribute('aria-selected', aktiv ? 'true' : 'false');
+            /* Nur der gewählte Reiter ist in der Tabulator-Reihenfolge; innerhalb
+               der Zeile wandert man mit den Pfeiltasten. So ist das Band mit einem
+               Tabulatorschlag hinter sich gelassen und nicht mit sechsen. */
+            b.tabIndex = aktiv ? 0 : -1;
+            if (aktiv)
+                b.classList.add('ist-an');
+            zeichenIn(b, String(r.zeichen || 'dots'));
+            const t = document.createElement('span');
+            t.textContent = String(r.name || r.id);
+            b.appendChild(t);
+            zeile.appendChild(b);
+        });
+        const platz = document.createElement('div');
+        platz.className = 'mb-platz';
+        zeile.appendChild(platz);
+        /* ── auf- und zuklappen ── */
+        const klapp = document.createElement('button');
+        klapp.type = 'button';
+        klapp.className = 'mb-klapp';
+        klapp.dataset['band'] = '__klapp';
+        klapp.setAttribute('aria-expanded', zu ? 'false' : 'true');
+        klapp.title = zu ? 'Menüband aufklappen' : 'Menüband zuklappen';
+        klapp.setAttribute('aria-label', klapp.title);
+        const pfeil = document.createElement('span');
+        /* Immer dasselbe Zeichen; die Richtung macht das CSS über eine Drehung
+           (`#menueband:not(.ist-zu) .mb-klapp svg`). Zwei verschiedene Zeichen
+           hätten beim Umschalten gesprungen statt sich zu drehen. */
+        pfeil.dataset['sym'] = 'chevronD';
+        klapp.appendChild(pfeil);
+        zeile.appendChild(klapp);
+        wurzel.appendChild(zeile);
+        /* ── das Band ── */
+        const band = document.createElement('div');
+        band.className = 'mb-band';
+        band.setAttribute('role', 'tabpanel');
+        band.setAttribute('aria-label', 'Menüband: ' + gewaehlt);
+        if (!zu)
+            bandFuellen(band, gewaehlt);
+        wurzel.appendChild(band);
+        /* Die Zeichen nachtragen — dasselbe `fuelle`, das die Seitenleiste nutzt.
+           (Der erste Entwurf rief `Marken.schicht`; das ist die MARKIERUNGS-
+            schicht über einer PDF-Seite und hat mit Symbolen nichts zu tun.
+            Der Typprüfer hat es gefunden: sie nimmt vier Argumente.) */
+        if (Register?.symbole?.fuelle) {
+            try {
+                Register.symbole.fuelle(wurzel);
+            }
+            catch { /* ohne Zeichen bleibt der Name */ }
+        }
+        if (!gebunden) {
+            binde(wurzel);
+            gebunden = true;
+        }
+    };
+    /* ======================================================================== *
+     * ANFASSEN
+     * ======================================================================== */
+    /**
+     * Ein Lauscher an der WURZEL und nicht an den Knöpfen.
+     *
+     * Das Band wird bei jedem Reiterwechsel neu gebaut. Lauscher an den
+     * Knöpfen müssten jedes Mal neu gesetzt werden, und der erste vergessene
+     * Fall wäre ein Knopf, der still nichts tut — genau das ist im
+     * Elektro-Dialog passiert, als fünf Knöpfe aus der Reihe umzogen (E209).
+     */
+    const binde = (wurzel) => {
+        wurzel.addEventListener('click', ereignis => {
+            const ziel = ereignis.target instanceof Element ? ereignis.target : null;
+            if (!ziel)
+                return;
+            const reiterKnopf = ziel.closest('[data-mb-reiter]');
+            if (reiterKnopf) {
+                const id = reiterKnopf.dataset['mbReiter'] || 'start';
+                /* EIN KLICK AUF DEN SCHON GEWÄHLTEN REITER KLAPPT NICHT ZU.
+                   Der erste Entwurf tat genau das — „der schnellste Weg zu mehr
+                   Platz". In der Prüfung fiel auf, was das heisst: wer auf „Start"
+                   klickt, während „Start" offen ist, sieht plötzlich gar nichts
+                   mehr. Das ist keine Abkürzung, das ist eine Überraschung. Zum
+                   Zuklappen gibt es den Pfeil rechts, und er sagt auch, was er tut.
+        
+                   Ist das Band zu, klappt jeder Reiterklick es auf — das ist die
+                   erwartete Richtung: man will dorthin, nicht weg. */
+                setzeMeta(merkeReiter, id);
+                if (zugeklappt())
+                    setzeMeta(merkeZu(), false);
+                zeichne();
+                return;
+            }
+            const band = ziel.closest('[data-band]');
+            if (!band)
+                return;
+            const id = band.dataset['band'] || '';
+            if (id === '__klapp') {
+                setzeMeta(merkeZu(), !zugeklappt());
+                zeichne();
+                return;
+            }
+            const eintrag = Register?.menueband?.eines?.(id);
+            if (!eintrag)
+                return;
+            /* Ein Eintrag, der wirft, darf nicht das ganze Band mitreissen. Die
+               Meldung gehört dem Menschen, nicht nur der Konsole. */
+            try {
+                eintrag.tun();
+            }
+            catch (fehler) {
+                const satz = fehler instanceof Error ? fehler.message : String(fehler);
+                if (typeof UI !== 'undefined' && typeof UI.toast === 'function')
+                    UI.toast(satz);
+            }
+        });
+        /* Pfeiltasten in der Reiterzeile (§38). */
+        wurzel.addEventListener('keydown', ereignis => {
+            const ziel = ereignis.target instanceof Element ? ereignis.target : null;
+            const jetzt = ziel?.closest('[data-mb-reiter]');
+            if (!jetzt)
+                return;
+            const alle = [...wurzel.querySelectorAll('[data-mb-reiter]')];
+            const i = alle.indexOf(jetzt);
+            if (i < 0)
+                return;
+            let zu = -1;
+            if (ereignis.key === 'ArrowRight')
+                zu = (i + 1) % alle.length;
+            if (ereignis.key === 'ArrowLeft')
+                zu = (i - 1 + alle.length) % alle.length;
+            if (ereignis.key === 'Home')
+                zu = 0;
+            if (ereignis.key === 'End')
+                zu = alle.length - 1;
+            if (zu < 0)
+                return;
+            ereignis.preventDefault();
+            const ziel2 = alle[zu];
+            if (!ziel2)
+                return;
+            setzeMeta(merkeReiter, ziel2.dataset['mbReiter'] || 'start');
+            setzeMeta(merkeZu(), false);
+            zeichne();
+            document.querySelector(`#${WURZEL} [data-mb-reiter="${ziel2.dataset['mbReiter']}"]`)?.focus();
+        });
+    };
+    /* ======================================================================== *
+     * START
+     * ======================================================================== */
+    /* Der Ort ändert sich, ohne dass jemand es meldet.
+       Es gibt kein Ereignis „Sonderansicht verlassen" — `seiteGeoeffnet` feuert
+       beim Öffnen einer Seite, aber nicht beim Wechsel zurück auf „Heute".
+       Ein Beobachter am `#page` sieht beides.
+  
+       Er zeichnet NUR bei einem Wechsel und nicht bei jeder Blockänderung:
+       `App.zeichneSeite()` läuft bei jedem Tastendruck, und ein Menüband, das
+       dabei jedesmal neu gebaut wird, kostet ohne Gegenwert. */
+    let warOffen = null;
+    const beobachte = () => {
+        const wo = document.getElementById('page');
+        if (!wo || typeof MutationObserver === 'undefined')
+            return;
+        warOffen = seiteOffen();
+        new MutationObserver(() => {
+            const jetzt = seiteOffen();
+            if (jetzt === warOffen)
+                return;
+            warOffen = jetzt;
+            zeichne();
+        }).observe(wo, { attributes: true, attributeFilter: ['class'], childList: true });
+    };
+    const start = () => {
+        zeichne();
+        beobachte();
+        /* Nach dem Laden der Ablage noch einmal.
+    
+           GEMESSEN GREIFT DAS NICHT: `Menueband.start()` steht in `App.start()`
+           nach den Bereichen, und da ist IndexedDB längst offen — der gemerkte
+           Reiter kommt schon beim ersten Zeichnen zurück. Beim Gegenbeweis zu
+           test247 §7 blieb der Punkt grün, als diese Zeile entfernt wurde.
+    
+           Sie bleibt trotzdem: `zeichne()` ist wiederholbar und kostet nichts,
+           und wenn die Startreihenfolge sich einmal ändert, ist der Unterschied
+           ein Band, das den gemerkten Reiter vergisst — ein Fehler, den niemand
+           meldet, weil er wie eine Vorgabe aussieht. */
+        if (typeof Ereignisse !== 'undefined' && typeof Ereignisse.horche === 'function') {
+            try {
+                Ereignisse.horche('ablageGeladen', () => zeichne());
+            }
+            catch { /* dann eben nicht */ }
+        }
+    };
+    /** Von aussen: das Band auf einen Reiter stellen. */
+    const zeige = (reiter) => {
+        setzeMeta(merkeReiter, reiter);
+        setzeMeta(merkeZu(), false);
+        zeichne();
+    };
+    return { start, zeichne, zeige, WURZEL };
+})();
+window.Menueband = Menueband;
 
 </script>
 <script>
@@ -107168,6 +108831,11 @@ const App = (() => {
         Vorrat.start();
         Wolke.start();
         Produktwelten.start();
+        /* Das Menüband (E210). Es steht nach den Bereichen, weil sein Register
+           beim Zeichnen `zeigen()` fragt — und das prüft, ob es die Module gibt.
+           Vorher gefragt wäre die Antwort „nein" gewesen, und das Band wäre
+           leer geblieben, ohne dass jemand einen Fehler gesehen hätte. */
+        Menueband.start();
         Blocks.auswahlEinklinken();
         /* DER WILLKOMMENSBILDSCHIRM BLEIBT DER WILLKOMMENSBILDSCHIRM (E137).
            Hier stand `ProduktOnboarding.vielleichtStarten()` zuerst, und der

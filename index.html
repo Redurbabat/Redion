@@ -291,6 +291,16 @@
     <button class="top-btn schmal" id="btn-page-menu" title="Seitenoptionen" aria-label="Seitenoptionen"><span data-sym="dots"></span></button>
   </header>
 
+  <!-- DAS MENÜBAND (E210).
+       Start · Einfügen · Zeichnen · Werkzeuge · Elektro · Ansicht, und
+       darunter die Knöpfe des gewählten Reiters. Der Kasten steht leer hier
+       und wird von `schale/aufbau/menueband.js` aus `register/menueband.js`
+       gefüllt — diese Datei kennt keinen einzigen Eintrag beim Namen.
+
+       `hidden`, bis das Register geantwortet hat: eine leere Leiste, die
+       Platz kostet und nichts kann, ist schlimmer als keine. -->
+  <div id="menueband" hidden></div>
+
   <div id="scroll">
     <div id="page" role="document" tabindex="-1"></div>
   </div>
@@ -371,6 +381,7 @@
 <script src="quell/core/sheet/space.js"></script>
 <script src="quell/core/ink/geometry.js"></script>
 <script src="quell/core/electrical/calculations.js"></script>
+<script src="quell/core/electrical/rechenweg.js"></script>
 <script src="quell/core/spreadsheet/address.js"></script>
 <script src="quell/core/spreadsheet/engine.js"></script>
 <script src="quell/core/spreadsheet/csv.js"></script>
@@ -388,6 +399,7 @@
 <script src="quell/register/eigenschaften.js"></script>
 <script src="quell/register/ansichten.js"></script>
 <script src="quell/register/befehle.js"></script>
+<script src="quell/register/menueband.js"></script>
 <script src="quell/register/tasten.js"></script>
 <script src="quell/register/einstellungen.js"></script>
 <script src="quell/register/formeln.js"></script>
@@ -502,6 +514,7 @@
 <script src="quell/bereiche/ki/dienst.js"></script>
 <script src="quell/schale/aufbau/seitenleiste.js"></script>
 <script src="quell/schale/aufbau/kopfleiste.js"></script>
+<script src="quell/schale/aufbau/menueband.js"></script>
 <script src="quell/schale/aufbau/inhaltsflaeche.js"></script>
 <script src="quell/schale/aufbau/schale.js"></script>
 <script src="quell/start.js"></script>

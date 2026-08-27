@@ -116,7 +116,30 @@ const Seitenleiste = (() => {
         ['einrichten', 'Einrichten', 'settings'],
         ['hilfe', 'Hilfe & Pflege', 'help']
     ];
-    const abschnittAn = (id) => !(Store.getMeta('sidebarAus', []) || []).includes(id);
+    /**
+     * Ist dieser Abschnitt eingeschaltet?
+     *
+     * `vorgabe` ist neu (E210). Bisher war alles an, was nicht ausdrücklich in
+     * `sidebarAus` stand — und für die Werkzeuge soll es umgekehrt sein: sie
+     * stehen jetzt im Menüband, hier also aus, bis jemand sie zurückholt.
+     *
+     * Wichtig ist der Unterschied zwischen „nie etwas gesagt" und „ausdrücklich
+     * abgeschaltet". `sidebarAn` merkt sich das Einschalten; wer den Abschnitt
+     * früher abgeschaltet hatte, findet ihn nicht plötzlich wieder da.
+     */
+    /* Welche Abschnitte sind von Haus aus an? Alle ausser diesem einen — die
+       Werkzeuge stehen seit E210 im Menüband. Wächst die Liste, wächst sie
+       hier und nicht verstreut an drei Stellen. */
+    const VORGABE_AUS = ['werkzeuge'];
+    const VORGABE_AN = (id) => !VORGABE_AUS.includes(id);
+    const abschnittAn = (id, vorgabe = true) => {
+        const aus = Store.getMeta('sidebarAus', []) || [];
+        if (aus.includes(id))
+            return false;
+        if (vorgabe)
+            return true;
+        return (Store.getMeta('sidebarAn', []) || []).includes(id);
+    };
     /** Die Abschnitte in der selbst gewählten Reihenfolge. Notion lässt sie
         nur ein- und ausblenden, nicht umsortieren. */
     const abschnitteGeordnet = () => {
@@ -140,9 +163,33 @@ const Seitenleiste = (() => {
         Store.setMeta('sidebarFolge', folge);
         zeichneBaum();
     };
+    /**
+     * Einen Abschnitt ein- oder ausschalten.
+     *
+     * Seit E210 gibt es zwei Listen und nicht mehr eine. `sidebarAus` sagt
+     * „ausdrücklich weg", `sidebarAn` sagt „ausdrücklich her" — die zweite
+     * braucht es für Abschnitte, deren VORGABE aus ist. „Werkzeuge" ist der
+     * erste davon: die sieben Zeilen stehen jetzt im Menüband.
+     *
+     * Ohne die zweite Liste wäre „Werkzeuge einblenden" ein Knopf, der aus
+     * `sidebarAus` etwas entfernt, das gar nicht drinsteht — er hätte
+     * ausgesehen, als täte er etwas, und nichts wäre passiert.
+     */
     const abschnittSchalten = (id) => {
         const aus = Store.getMeta('sidebarAus', []) || [];
-        Store.setMeta('sidebarAus', aus.includes(id) ? aus.filter((x) => x !== id) : [...aus, id]);
+        const an = Store.getMeta('sidebarAn', []) || [];
+        if (abschnittAn(id, VORGABE_AN(id))) {
+            /* jetzt an → ausschalten */
+            Store.setMeta('sidebarAn', an.filter(x => x !== id));
+            if (!aus.includes(id))
+                Store.setMeta('sidebarAus', [...aus, id]);
+        }
+        else {
+            /* jetzt aus → einschalten */
+            Store.setMeta('sidebarAus', aus.filter(x => x !== id));
+            if (!an.includes(id))
+                Store.setMeta('sidebarAn', [...an, id]);
+        }
         zeichneBaum();
     };
     let anpassModus = false;
@@ -403,42 +450,56 @@ const Seitenleiste = (() => {
             baum.appendChild(fertig);
             return;
         }
-        /* Werkzeuge — die Funktionen der anderen Programme haben hier ihren Ort */
-        if (abschnittAn('werkzeuge')) {
+        /* DIE WERKZEUGE SIND NACH OBEN GEZOGEN (E210).
+    
+           Sieben Zeilen standen hier — Journal, Schnellnotizen, Vorlagen, Graph,
+           Schlagwörter, Karteikarten, Umsetzungsstand. Redur wollte die
+           Seitenleiste kürzer und die Werkzeuge im Menüband; sie stehen jetzt
+           dort unter „Werkzeuge", mit denselben Handlungen.
+    
+           NICHTS IST WEG. Die Liste ist nicht gelöscht, sondern umgezogen: sie
+           steht in `register/menueband.ts` und ist von dort aus dieselbe Wahrheit
+           für beide Ansichten. Wer den Abschnitt lieber hier hätte, schaltet ihn
+           über `sidebarAus` wieder ein — dann zeichnet die Seitenleiste ihn aus
+           demselben Register, und die zwei Wege können nicht auseinanderlaufen.
+    
+           Die Vorgabe ist AUS, und zwar nur die Vorgabe: wer den Abschnitt
+           früher ausdrücklich abgeschaltet hatte, behält seine Wahl. */
+        if (abschnittAn('werkzeuge', VORGABE_AN('werkzeuge'))) {
             const wz = document.createElement('div');
             wz.className = 'wz-block';
-            wz.innerHTML = [
-                /* ZEICHEN STATT EMOJI (E200). Die zweite Spalte ist der Name im
-                   Symbolregister, nicht mehr ein Bildzeichen. Warum, steht in
-                   `register/symbole.ts`. */
-                ['journal', 'calendar', 'Journal', 'Tageseintrag — Strg Shift J'],
-                ['memos', 'bolt', 'Schnellnotizen', 'Kurze Gedanken — Strg Shift M'],
-                ['vorlagen', 'puzzle', 'Vorlagen', 'Fertige Aufbauten und eigene Vorlagen'],
-                ['graph', 'graph', 'Graph', 'Wie alles zusammenhängt — Strg Shift G'],
-                ['tags', 'tag', 'Schlagwörter', 'Alle #Schlagwörter — Strg Shift T'],
-                ['lernen', 'cards', 'Karteikarten', 'Wiederholen nach Plan'],
-                ['stand', 'checkCircle', 'Umsetzungsstand', 'Alle 16 Teile der Notion-Doku, Punkt für Punkt']
-            ].map(([a, i, n, t]) => `<button class="side-item" data-wz="${a}" title="${t}"><span data-sym="${i}"></span><span>${n}</span>` +
-                (a === 'lernen' ? '<span class="k" id="lz"></span>' : '') + '</button>').join('');
+            /* Eine eigene Kennung. `wz-block` ist eine LAYOUT-Klasse und wird von
+               fünf weiteren Stellen benutzt (Erweiterungen, Besprechung, KI …) — wer
+               danach sucht, findet die halbe Seitenleiste. Die Prüfung ist genau
+               darauf hereingefallen und meldete 36 Werkzeuge statt sieben. */
+            wz.dataset['abschnitt'] = 'werkzeuge';
+            const eintraege = (Register?.menueband?.inReiter?.('werkzeuge') || [])
+                .flatMap((g) => g.eintraege || []);
+            eintraege.forEach((e) => {
+                const b = document.createElement('button');
+                b.className = 'side-item';
+                b.dataset['band'] = String(e.id);
+                b.title = String(e.hinweis || e.name || '') + (e.kurz ? '  (' + e.kurz + ')' : '');
+                const zeichen = document.createElement('span');
+                zeichen.dataset['sym'] = String(e.zeichen || 'dots');
+                const name = document.createElement('span');
+                name.textContent = String(e.name || '');
+                b.append(zeichen, name);
+                if (e.id === 'w-lernen') {
+                    const k = document.createElement('span');
+                    k.className = 'k';
+                    k.id = 'lz';
+                    b.appendChild(k);
+                }
+                wz.appendChild(b);
+            });
             wz.addEventListener('click', e => {
-                const b = elVon(e)?.closest('[data-wz]');
+                const b = elVon(e)?.closest('[data-band]');
                 if (!b)
                     return;
-                const a = b.dataset.wz;
-                if (a === 'journal')
-                    Werkzeuge.journal();
-                if (a === 'memos')
-                    Werkzeuge.schnellnotizen();
-                if (a === 'vorlagen')
-                    Werkzeuge.vorlagen();
-                if (a === 'graph')
-                    Links.graph();
-                if (a === 'tags')
-                    Links.tagRegister();
-                if (a === 'lernen')
-                    Werkzeuge.lernen();
-                if (a === 'stand')
-                    Status.seiteAnlegen();
+                const eintrag = Register?.menueband?.eines?.(b.dataset['band'] || '');
+                if (eintrag)
+                    eintrag.tun();
             });
             baum.appendChild(abschnitt('Werkzeuge'));
             baum.appendChild(wz);

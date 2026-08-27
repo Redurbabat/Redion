@@ -1,0 +1,412 @@
+"use strict";
+/* ============================================================================
+ * register/menueband.js — das Menüband: Start, Einfügen, Zeichnen …
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/register/menueband.ts`. `npm run bauen:ts` schreibt
+ * daraus `quell/register/menueband.js`. Wer das .js bearbeitet, verliert die
+ * Änderung beim nächsten Bauen; `pruefungen/lauf/test105.mts` meldet es vorher.
+ * ----------------------------------------------------------------------------
+ * WAS DAS MENÜBAND IST
+ *
+ * Eine Reihe Reiter über der Seite — Start, Einfügen, Zeichnen, Werkzeuge,
+ * Elektro, Ansicht — und unter dem gewählten Reiter die Knöpfe, gruppiert.
+ * Das Muster kennt jeder aus Textprogrammen; es ist deshalb hier, weil Redur
+ * es ausdrücklich so wollte.
+ *
+ * WARUM ES EIN REGISTER IST UND KEINE ZEICHENDATEI
+ *
+ * CLAUDE.md §8, Regel 3: neue Dinge sind Register-Objekte. Ein Menüband, das
+ * seine Knöpfe selbst kennt, ist der Anfang genau der Datei, vor der §5 warnt
+ * — eine, in der jeder Bereich ein bisschen mitschreibt. Hier steht der
+ * KATALOG; gezeichnet wird in `schale/aufbau/menueband.ts`.
+ *
+ * DIE WICHTIGSTE REGEL DIESER DATEI
+ *
+ * Kein Eintrag darf etwas Neues tun. Jeder ruft eine Funktion, die es schon
+ * gibt und die schon geprüft ist. Ein Menüband ist eine ZWEITE ANSICHT auf
+ * das, was Redion kann — keine zweite Fassung davon. Wo hier eine eigene
+ * Rechnung stünde, liefe sie irgendwann von der ersten weg, und zwar still.
+ *
+ * Deshalb ist der Reiter „Einfügen" auch nicht aufgezählt, sondern kommt aus
+ * `Register.bloecke` — dieselbe Liste, aus der sich das Slash-Menü bedient.
+ * Eine neue Blockart erscheint dort von selbst, ohne dass jemand hier etwas
+ * nachträgt. Ein zweiter Katalog wäre nach der dritten neuen Blockart falsch.
+ *
+ * `zeigen()` VERHINDERT DIE HÄUFIGSTE ENTTÄUSCHUNG
+ *
+ * Wie bei `register/befehle.ts`: ein Eintrag, dessen Modul fehlt, kommt gar
+ * nicht erst in die Liste. Ein Knopf, der dasteht und beim Klick sagt, dass
+ * er hier nicht geht, ist schlimmer als einer, den es nicht gibt — und in der
+ * Einzeldatei oder bei einem nicht geladenen Bereich ist genau das der Fall.
+ * ==========================================================================*/
+window.Register = window.Register || {};
+Register.menueband = (() => {
+    /* ======================================================================== *
+     * DIE REITER
+     * ======================================================================== */
+    const REITER = [
+        { id: 'start', name: 'Start', zeichen: 'pencil' },
+        { id: 'einfuegen', name: 'Einfügen', zeichen: 'plus' },
+        { id: 'zeichnen', name: 'Zeichnen', zeichen: 'page' },
+        { id: 'werkzeuge', name: 'Werkzeuge', zeichen: 'box' },
+        { id: 'elektro', name: 'Elektro', zeichen: 'bolt' },
+        { id: 'ansicht', name: 'Ansicht', zeichen: 'sun' }
+    ];
+    /* ======================================================================== *
+     * HILFEN
+     * ======================================================================== */
+    /**
+     * Kann dieses Modul das?
+     *
+     * Der Aufrufer schreibt den Namen HIN — `kann(() => Werkzeuge.journal)` —
+     * statt ihn als Zeichenkette zu übergeben. Das ist Absicht: eine
+     * Zeichenkette müsste zur Laufzeit nachgeschlagen werden, und der einzige
+     * Weg dahin wäre `eval`. Das ist in Redion verboten (§20), und der erste
+     * Entwurf dieser Datei hat es trotzdem getan.
+     *
+     * Fehlt das Modul ganz, wirft der Zugriff einen ReferenceError: mit
+     * `module: none` sind die Module gewöhnliche Konstanten im Skript-Bereich
+     * und hängen NICHT am Fenster. (`(globalThis as any).Store` war beim
+     * Vorschau-Helfer deshalb immer `undefined`, und die Vorschau blieb still
+     * leer — E207.) Der Fehler wird gefangen und heisst dann schlicht „nein".
+     */
+    const kann = (griff) => {
+        try {
+            return typeof griff() === 'function';
+        }
+        catch {
+            return false;
+        }
+    };
+    /**
+     * Die offene Seite als Block.
+     *
+     * Sechs Werkzeuge nehmen sie als Parameter — `versionen(p)`, `sperren(p)`,
+     * `praesentation(p)`, `drucken(p)`, `quelltext(p)`, `htmlExport(p)`. Der
+     * erste Entwurf rief sie ohne Argument; der Typprüfer hat es gefunden,
+     * bevor daraus sechs Knöpfe wurden, die still nichts tun.
+     *
+     * `null` heisst „gerade keine Seite offen" — dann steht der Knopf auch
+     * nicht da, siehe `seiteDa`.
+     */
+    const seiteJetzt = () => {
+        try {
+            const id = App.aktuelleSeite();
+            return id ? Store.getBlock(id) : null;
+        }
+        catch {
+            return null;
+        }
+    };
+    /** Ein Knopf, der eine offene Seite braucht, wartet auf eine. */
+    const seiteDa = (griff) => kann(griff) && !!seiteJetzt();
+    /* ======================================================================== *
+     * START — was man mit dem Text macht
+     * ======================================================================== */
+    /* Die Blockarten, die als „Absatzart" gelten. Die Kennungen sind dieselben
+       wie in `Register.bloecke`; `Blocks.einfuegenAmEnde` nimmt sie direkt. */
+    const ABSATZARTEN = ['text', 'h1', 'h2', 'h3', 'todo', 'bullet', 'number', 'quote', 'callout'];
+    const startEintraege = () => {
+        const aus = [];
+        /* Absatzarten — aus dem Blockregister, damit Name und Zeichen dieselben
+           sind wie im Slash-Menü. Ein eigener Text hier liefe davon weg. */
+        if (Register?.bloecke?.eines) {
+            for (const id of ABSATZARTEN) {
+                const b = Register.bloecke?.eines?.(id);
+                if (!b)
+                    continue;
+                aus.push({
+                    reiter: 'start', gruppe: 'Absatz', id: 'abs-' + id,
+                    name: b.name, zeichen: b.icon || '¶', ...(b.kurz ? { kurz: b.kurz } : {}),
+                    hinweis: b.name + ' einfügen',
+                    tun: () => Blocks.einfuegenAmEnde(id),
+                    zeigen: () => kann(() => Blocks.einfuegenAmEnde)
+                });
+            }
+        }
+        /* Auszeichnung. `Auswahl.umschliesse` setzt die Markdown-Marken um das,
+           was markiert ist — dieselbe Funktion, die die Auswahlleiste ruft.
+           Ohne Markierung tut sie nichts, und das ist richtig so: sie sagt es
+           über die Leiste, nicht über einen zweiten Weg. */
+        const marken = [
+            ['fett', 'Fett', 'B', '**'],
+            ['kursiv', 'Kursiv', 'I', '*'],
+            ['durch', 'Durchgestrichen', 'S', '~~'],
+            ['code', 'Code', '‹›', '`']
+        ];
+        for (const [id, name, zeichen, marke] of marken) {
+            aus.push({
+                reiter: 'start', gruppe: 'Schrift', id, name, zeichen,
+                hinweis: name + ' — wirkt auf das, was markiert ist',
+                tun: () => Auswahl.umschliesse(marke),
+                zeigen: () => kann(() => Auswahl.umschliesse)
+            });
+        }
+        aus.push({
+            reiter: 'start', gruppe: 'Schrift', id: 'link', name: 'Verweis', zeichen: 'link',
+            kurz: 'Strg K', hinweis: 'Markierten Text zu einem Verweis machen',
+            tun: () => Auswahl.linkSetzen(),
+            zeigen: () => kann(() => Auswahl.linkSetzen)
+        });
+        /* SUCHEN UND BEFEHLE STEHEN HIER NICHT.
+    
+           Sie standen kurz als eigene Gruppe „Finden" im Reiter „Start", mit der
+           Begründung, ein Menüband dürfe wiederholen, was anderswo steht. Die
+           Messung sagt etwas anderes: mit ihnen ist „Start" 1185 px breit, und
+           in einem 1400 px breiten Fenster (Seitenleiste ab) bleiben 1160 —
+           das Band brach auf zwei Zeilen um und wurde 221 px hoch statt 137.
+    
+           Zwei Knöpfe, die es oben in der Kopfzeile („Suchen in Redion …",
+           Strg P) und links in der Seitenleiste („Suchen", „Befehle") schon
+           gibt, sind das nicht wert. Sie verdrängten die Zeile für etwas, das
+           woanders zweimal steht. */
+        return aus;
+    };
+    /* ======================================================================== *
+     * EINFÜGEN — kommt vollständig aus dem Blockregister
+     * ======================================================================== */
+    /* Die Reihenfolge der Gruppen im Band. Was `Register.bloecke` sonst noch
+       kennt, hängt sich hinten an — eine neue Gruppe verschwindet also nicht,
+       sie steht nur nicht vorne. */
+    const GRUPPEN_FOLGE = ['Grundlegend', 'Medien', 'Datenbank', 'Wissen', 'Erweitert', 'KI'];
+    const einfuegenEintraege = () => {
+        if (!Register?.bloecke?.alle)
+            return [];
+        /* `aktion` trennt die echten Blockarten von den Slash-BEFEHLEN
+           („Umwandeln in …", „Duplizieren", „Erwähnen"). Die brauchen den
+           Schreibzeiger und den Block darunter — `Editor.slashAktion(ct, block,
+           was)` — und beides hat ein Knopf im Band nicht. Sie stehen deshalb
+           nicht hier, sondern weiterhin im Slash-Menü. Das ist eine bekannte
+           Lücke und keine vergessene Zeile; sie steht in LUECKEN.md. */
+        const bloecke = Register.bloecke.alle().filter(b => b && b.id && !b.aktion);
+        const rang = (g) => {
+            const i = GRUPPEN_FOLGE.indexOf(g);
+            return i < 0 ? GRUPPEN_FOLGE.length : i;
+        };
+        return bloecke
+            .slice()
+            .sort((a, b) => rang(a.gruppe) - rang(b.gruppe))
+            .map(b => ({
+            reiter: 'einfuegen', gruppe: String(b.gruppe || 'Weiteres'),
+            id: 'blk-' + b.id, name: String(b.name || b.id),
+            zeichen: String(b.icon || '▫'),
+            ...(b.kurz ? { kurz: String(b.kurz) } : {}),
+            hinweis: String(b.name || b.id) + ' einfügen',
+            tun: () => Blocks.einfuegenAmEnde(b.id),
+            zeigen: () => kann(() => Blocks.einfuegenAmEnde)
+        }));
+    };
+    /* ======================================================================== *
+     * ZEICHNEN — Blatt, Whiteboard, Plan, Kamera
+     * ======================================================================== */
+    const zeichnenEintraege = () => [
+        { reiter: 'zeichnen', gruppe: 'Fläche', id: 'z-blatt', name: 'Blatt',
+            zeichen: 'page', gross: true, hinweis: 'Ein A4-Blatt zum Schreiben mit der Hand',
+            tun: () => Blocks.einfuegenAmEnde('blatt'),
+            zeigen: () => kann(() => Blocks.einfuegenAmEnde) },
+        { reiter: 'zeichnen', gruppe: 'Fläche', id: 'z-white', name: 'Whiteboard',
+            zeichen: 'graph', gross: true, hinweis: 'Freie Fläche ohne Ränder',
+            tun: () => Blocks.einfuegenAmEnde('whiteboard'),
+            zeigen: () => kann(() => Blocks.einfuegenAmEnde) },
+        { reiter: 'zeichnen', gruppe: 'Fläche', id: 'z-plan', name: 'Schaltplan',
+            zeichen: 'bolt', gross: true, hinweis: 'Fläche mit Fachzeichen und Stromsimulation',
+            tun: () => Blocks.einfuegenAmEnde('schaltplan'),
+            zeigen: () => kann(() => Blocks.einfuegenAmEnde) },
+        { reiter: 'zeichnen', gruppe: 'Aufnehmen', id: 'z-scan', name: 'Seite abfotografieren',
+            zeichen: 'camera', hinweis: 'Ein Blatt mit der Kamera aufnehmen und den Text erkennen',
+            tun: () => Recognition.capturePage(),
+            zeigen: () => kann(() => Recognition.capturePage) },
+        /* „PDF einlesen" stand hier und ist wieder raus. `PdfEinlesen.alsSeiten`
+           braucht eine `File` — einen Dateiwähler in einem KATALOG zu bauen wäre
+           genau das neue Verhalten, das oben verboten ist. Der Weg dahin bleibt
+           das Ziehen einer PDF auf die Seite. Steht als Lücke in LUECKEN.md. */
+        { reiter: 'zeichnen', gruppe: 'Aufnehmen', id: 'z-erkennen', name: 'Text erkennen',
+            zeichen: 'search', hinweis: 'Aus einem Bild den Text herauslesen',
+            tun: () => Recognition.scan(),
+            zeigen: () => kann(() => Recognition.scan) }
+    ];
+    /* ======================================================================== *
+     * WERKZEUGE — die sieben Zeilen, die bis E210 links standen
+     * ======================================================================== */
+    /* Diese Liste hiess vorher `wz` und stand in `schale/aufbau/seitenleiste.ts`
+       mitten im Zeichnen. Sie steht jetzt hier, weil sie ein KATALOG ist und
+       kein Aussehen — und weil das Menüband und die Seitenleiste sonst zwei
+       Fassungen davon hätten. Die Handlungen sind wörtlich dieselben. */
+    const werkzeugEintraege = () => [
+        { reiter: 'werkzeuge', gruppe: 'Schreiben', id: 'w-journal', name: 'Journal',
+            zeichen: 'calendar', kurz: 'Strg ⇧ J', gross: true, hinweis: 'Tageseintrag',
+            tun: () => Werkzeuge.journal(), zeigen: () => kann(() => Werkzeuge.journal) },
+        { reiter: 'werkzeuge', gruppe: 'Schreiben', id: 'w-memos', name: 'Schnellnotizen',
+            zeichen: 'bolt', kurz: 'Strg ⇧ M', gross: true, hinweis: 'Kurze Gedanken',
+            tun: () => Werkzeuge.schnellnotizen(), zeigen: () => kann(() => Werkzeuge.schnellnotizen) },
+        { reiter: 'werkzeuge', gruppe: 'Schreiben', id: 'w-vorlagen', name: 'Vorlagen',
+            zeichen: 'puzzle', hinweis: 'Fertige Aufbauten und eigene Vorlagen',
+            tun: () => Werkzeuge.vorlagen(), zeigen: () => kann(() => Werkzeuge.vorlagen) },
+        { reiter: 'werkzeuge', gruppe: 'Wiederfinden', id: 'w-graph', name: 'Graph',
+            zeichen: 'graph', kurz: 'Strg ⇧ G', hinweis: 'Wie alles zusammenhängt',
+            tun: () => Links.graph(), zeigen: () => kann(() => Links.graph) },
+        { reiter: 'werkzeuge', gruppe: 'Wiederfinden', id: 'w-tags', name: 'Schlagwörter',
+            zeichen: 'tag', kurz: 'Strg ⇧ T', hinweis: 'Alle #Schlagwörter',
+            tun: () => Links.tagRegister(), zeigen: () => kann(() => Links.tagRegister) },
+        { reiter: 'werkzeuge', gruppe: 'Lernen', id: 'w-lernen', name: 'Karteikarten',
+            zeichen: 'cards', gross: true, hinweis: 'Wiederholen nach Plan',
+            tun: () => Werkzeuge.lernen(), zeigen: () => kann(() => Werkzeuge.lernen) },
+        { reiter: 'werkzeuge', gruppe: 'Lernen', id: 'w-stand', name: 'Umsetzungsstand',
+            zeichen: 'checkCircle', hinweis: 'Alle 16 Teile der Notion-Doku, Punkt für Punkt',
+            tun: () => Status.seiteAnlegen(), zeigen: () => kann(() => Status.seiteAnlegen) }
+    ];
+    /* ======================================================================== *
+     * ELEKTRO — der Beruf, um den es geht
+     * ======================================================================== */
+    const elektroEintraege = () => [
+        { reiter: 'elektro', gruppe: 'Rechnen', id: 'e-rechner', name: 'Rechner',
+            zeichen: 'bolt', gross: true, hinweis: 'Zehn Rechnungen mit gezeigtem Lösungsweg',
+            tun: () => Electrical.open(), zeigen: () => kann(() => Electrical.open) },
+        { reiter: 'elektro', gruppe: 'Rechnen', id: 'e-formelheft', name: 'Formelheft',
+            zeichen: 'book', gross: true, hinweis: 'Alle Formeln zum Nachschlagen',
+            tun: () => Formelheft.oeffne(), zeigen: () => kann(() => Formelheft.oeffne) },
+        { reiter: 'elektro', gruppe: 'Rechnen', id: 'e-dreieck', name: 'Formeldreieck',
+            zeichen: 'compass', hinweis: 'Das Dreieck zu einer Formel zeichnen',
+            tun: () => Elektrolernbilder.dreieckFlaeche(),
+            zeigen: () => kann(() => Elektrolernbilder.dreieckFlaeche) },
+        { reiter: 'elektro', gruppe: 'Rechnen', id: 'e-sinus', name: 'Sinuskurve',
+            zeichen: 'chart', hinweis: 'Wechselspannung als Kurve',
+            tun: () => Elektrolernbilder.sinusFlaeche(),
+            zeigen: () => kann(() => Elektrolernbilder.sinusFlaeche) },
+        { reiter: 'elektro', gruppe: 'Üben', id: 'e-ueben', name: 'Üben',
+            zeichen: 'learn', gross: true, hinweis: 'Aufgaben mit Lösungsweg',
+            tun: () => Elektroarbeitsplatz.uebung(),
+            zeigen: () => kann(() => Elektroarbeitsplatz.uebung) },
+        { reiter: 'elektro', gruppe: 'Üben', id: 'e-pruefung', name: 'Prüfung',
+            zeichen: 'medal', hinweis: 'Prüfung unter Zeit',
+            tun: () => Elektroarbeitsplatz.pruefungFlaeche(),
+            zeigen: () => kann(() => Elektroarbeitsplatz.pruefungFlaeche) },
+        { reiter: 'elektro', gruppe: 'Üben', id: 'e-arbeitsplatz', name: 'Arbeitsplatz',
+            zeichen: 'briefcase', hinweis: 'Alles nebeneinander',
+            tun: () => Elektroarbeitsplatz.arbeitsplatz(),
+            zeigen: () => kann(() => Elektroarbeitsplatz.arbeitsplatz) },
+        { reiter: 'elektro', gruppe: 'Zeichnen', id: 'e-plan', name: 'Schaltplan',
+            zeichen: 'graph', gross: true, hinweis: 'Plan mit Fachzeichen und Stromsimulation',
+            tun: () => Blocks.einfuegenAmEnde('schaltplan'),
+            zeigen: () => kann(() => Blocks.einfuegenAmEnde) }
+    ];
+    /* ======================================================================== *
+     * ANSICHT — wie die Seite aussieht und wohin sie geht
+     * ======================================================================== */
+    const ansichtEintraege = () => [
+        { reiter: 'ansicht', gruppe: 'Lesen', id: 'a-fokus', name: 'Fokus',
+            zeichen: 'compass', gross: true, hinweis: 'Alles ausblenden bis auf den Text',
+            tun: () => Werkzeuge.fokus(), zeigen: () => kann(() => Werkzeuge.fokus) },
+        { reiter: 'ansicht', gruppe: 'Lesen', id: 'a-praes', name: 'Präsentation',
+            zeichen: 'rocket', gross: true, hinweis: 'Die Seite als Folien zeigen',
+            tun: () => Werkzeuge.praesentation(seiteJetzt()), zeigen: () => seiteDa(() => Werkzeuge.praesentation) },
+        { reiter: 'ansicht', gruppe: 'Lesen', id: 'a-hell', name: 'Hell / Dunkel',
+            zeichen: 'sun', hinweis: 'Zwischen hellem und dunklem Aussehen wechseln',
+            tun: () => App.theme(), zeigen: () => kann(() => App.theme) },
+        { reiter: 'ansicht', gruppe: 'Lesen', id: 'a-aussehen', name: 'Aussehen …',
+            zeichen: 'settings', hinweis: 'Farbschema, Schrift und Dichte wählen',
+            tun: () => Aussehen.dialog(), zeigen: () => kann(() => Aussehen.dialog) },
+        { reiter: 'ansicht', gruppe: 'Seite', id: 'a-versionen', name: 'Fassungen',
+            zeichen: 'history', hinweis: 'Frühere Stände dieser Seite',
+            tun: () => Werkzeuge.versionen(seiteJetzt()), zeigen: () => seiteDa(() => Werkzeuge.versionen) },
+        { reiter: 'ansicht', gruppe: 'Seite', id: 'a-sperren', name: 'Sperren',
+            zeichen: 'lock', hinweis: 'Seite gegen Bearbeiten sperren',
+            tun: () => Werkzeuge.sperren(seiteJetzt()), zeigen: () => seiteDa(() => Werkzeuge.sperren) },
+        { reiter: 'ansicht', gruppe: 'Seite', id: 'a-quelltext', name: 'Quelltext',
+            zeichen: 'command', hinweis: 'Die Seite als Markdown ansehen',
+            tun: () => Werkzeuge.quelltext(seiteJetzt()), zeigen: () => seiteDa(() => Werkzeuge.quelltext) },
+        { reiter: 'ansicht', gruppe: 'Ausgeben', id: 'a-drucken', name: 'Drucken',
+            zeichen: 'clipboard', hinweis: 'Die Seite drucken oder als PDF sichern',
+            tun: () => Werkzeuge.drucken(seiteJetzt()), zeigen: () => seiteDa(() => Werkzeuge.drucken) },
+        { reiter: 'ansicht', gruppe: 'Ausgeben', id: 'a-html', name: 'Als HTML',
+            zeichen: 'share', hinweis: 'Die Seite als HTML-Datei sichern',
+            tun: () => Werkzeuge.htmlExport(seiteJetzt()), zeigen: () => seiteDa(() => Werkzeuge.htmlExport) }
+    ];
+    /* ======================================================================== *
+     * FREMDE EINTRÄGE
+     * ======================================================================== */
+    /* Wie bei `register/befehle.ts`: ein Bereich meldet seine eigenen Einträge
+       an, ohne dass diese Datei ihn kennen muss. Ohne das stünde hier über
+       kurz oder lang jeder Bereich drin, und §5 Regel 1 wäre umgangen. */
+    const fremde = [];
+    const lieferanten = [];
+    const melde = (eintrag) => {
+        if (!eintrag || !eintrag.id || !eintrag.reiter || typeof eintrag.tun !== 'function')
+            return false;
+        if (fremde.some(x => x.id === eintrag.id))
+            return false;
+        fremde.push(eintrag);
+        return true;
+    };
+    const meldeLieferant = (fn) => {
+        if (typeof fn !== 'function' || lieferanten.includes(fn))
+            return false;
+        lieferanten.push(fn);
+        return true;
+    };
+    const nimmZurueck = (id) => {
+        const i = fremde.findIndex(x => x.id === id);
+        if (i < 0)
+            return false;
+        fremde.splice(i, 1);
+        return true;
+    };
+    /* ======================================================================== *
+     * DIE ABFRAGE
+     * ======================================================================== */
+    /**
+     * Alle Einträge für diesen Augenblick.
+     *
+     * Ein Lieferant, der einen Fehler wirft, fällt weg — das Band bleibt
+     * stehen. Ein Menüband, das sich wegen eines Bereichs gar nicht zeichnet,
+     * wäre der schlimmere Fehler.
+     */
+    const alle = () => {
+        const aus = [];
+        const quellen = [
+            startEintraege, einfuegenEintraege, zeichnenEintraege,
+            werkzeugEintraege, elektroEintraege, ansichtEintraege
+        ];
+        for (const q of [...quellen, ...lieferanten]) {
+            try {
+                aus.push(...(q() || []));
+            }
+            catch { /* dieser Teil fehlt, der Rest steht */ }
+        }
+        aus.push(...fremde);
+        return aus.filter(e => {
+            if (typeof e.zeigen !== 'function')
+                return true;
+            try {
+                return e.zeigen() !== false;
+            }
+            catch {
+                return false;
+            }
+        });
+    };
+    /** Die Einträge eines Reiters, nach Gruppen geordnet. */
+    const inReiter = (reiter) => {
+        const drin = alle().filter(e => e.reiter === reiter);
+        const folge = [];
+        const nach = new Map();
+        for (const e of drin) {
+            if (!nach.has(e.gruppe)) {
+                nach.set(e.gruppe, []);
+                folge.push(e.gruppe);
+            }
+            nach.get(e.gruppe).push(e);
+        }
+        return folge.map(g => ({ gruppe: g, eintraege: nach.get(g) }));
+    };
+    /** Die Reiter, die überhaupt etwas zu zeigen haben. */
+    const reiter = () => {
+        const belegt = new Set(alle().map(e => e.reiter));
+        return REITER.filter(r => belegt.has(r.id));
+    };
+    const eines = (id) => alle().find(e => e.id === id) || null;
+    const anzahl = () => alle().length;
+    return { REITER, reiter, alle, inReiter, eines, anzahl,
+        melde, meldeLieferant, nimmZurueck };
+})();
