@@ -2477,3 +2477,39 @@ WAS FEHLT: der Schritt braucht entweder mehr Zeit oder eine Absicherung
 gegen den Kontextverlust. Solange das offen ist, kann ein voller Durchlauf
 hier zufällig rot werden, ohne dass etwas kaputt ist — und genau das macht
 ihn als Aussage schwächer.
+
+
+================================================================================
+L67 — 110 Zählwerte ohne Einzahl-Verzweigung
+================================================================================
+
+Beim Beheben von E231 („1 Einträge") wurde einmal über `src/` gesucht: wo
+steht eine Zahl direkt vor einem Wort, ohne dass in derselben Zeile eine
+Einzahl-Verzweigung vorkommt?
+
+    110 Stellen.
+
+Fünf davon standen in LISTEN, die bei jedem Öffnen zu sehen sind — die sind
+mit E231 auf `zahlWort()` umgestellt. Der Rest ist nicht behoben.
+
+WAS DER REST IST. Fast alles sind Meldungen nach einer Massenaktion:
+
+    „17 Zeilen eingefügt"        „3 Spalten angelegt"
+    „5 Einträge gelöscht"        „12 Werte fallen weg"
+    „vor 5 Minuten"              „Text (43 Zeichen)"
+
+Bei diesen kommt die Eins selten vor, und wenn, stört sie kaum: „1 Zeilen
+eingefügt" ist hässlich, aber niemand liest es zweimal. Ein paar Stellen
+haben ausserdem schon die Klammerform „Datenbank(en)", die zwar unschön,
+aber nicht falsch ist.
+
+WAS FEHLT: eine Entscheidung, ob `zahlWort()` aus der Arbeitswelt in einen
+gemeinsamen Helfer wandert (`kern/helfer/`) und die Meldungen mitzieht. Das
+ist Fleissarbeit über zwölf Dateien und lohnt sich erst, wenn jemand die
+Meldungen ohnehin anfasst — vorher wäre es 110 Änderungen ohne Prüfung
+dahinter, und das ist genau die Sorte Umbau, vor der §45 warnt.
+
+GEZÄHLT WIRD ES HIER, damit die Zahl nicht verloren geht. Wer sie neu
+erheben will:
+
+    Zahl + Leerzeichen + Grossbuchstabenwort, ohne `=== 1` in derselben Zeile

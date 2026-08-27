@@ -959,12 +959,33 @@ const Arbeitswelt = (() => {
     return item;
   };
 
+  /* ==========================================================================
+   * EINS IST EINE ANDERE ZAHL ALS ZWEI (E231)
+   * --------------------------------------------------------------------------
+   * In der Bibliothek stand unter jeder Seite mit genau einem Kind
+   * „1 Einträge". Zwei Zeilen davon waren im Bildschirmfoto gleichzeitig zu
+   * sehen.
+   *
+   * Ärgerlich daran ist nicht der Fehler, sondern dass die Lösung 146 Zeilen
+   * tiefer in DERSELBEN Datei schon stand:
+   *
+   *     `${pdf.seiten} ${pdf.seiten === 1 ? 'Seite' : 'Seiten'}`
+   *     `${board.formen} ${board.formen === 1 ? 'Form' : 'Formen'}`
+   *
+   * Dreimal richtig, einmal vergessen — genau wie bei den Kacheln (E228).
+   * Damit es nicht ein viertes Mal passiert, steht es jetzt an einer Stelle.
+   * ========================================================================*/
+  /** „1 Eintrag" / „7 Einträge" — die Zahl steht vorne, das Wort passt sich an. */
+  const zahlWort = (n: number, einzahl: string, mehrzahl: string): string =>
+    `${n} ${n === 1 ? einzahl : mehrzahl}`;
+
   const seitenListe = (seiten: SeitenEintrag[], suche: string, leerText: string): HTMLElement => {
     const list = element('ul', 'aw-liste');
     const sichtbar = seiten.filter(page => passt(suche, page.titel, page.pfad, page.aliases.join(' ')))
       .slice(0, MAX_LISTE);
     sichtbar.forEach(page => list.append(ressourcenZeile(page.icon, page.titel,
-      page.pfad === page.titel ? `${page.blockAnzahl} Einträge` : page.pfad, page.id)));
+      page.pfad === page.titel
+        ? zahlWort(page.blockAnzahl, 'Eintrag', 'Einträge') : page.pfad, page.id)));
     return sichtbar.length ? list : leer('Noch nichts hier', leerText, 'new-page', 'Seite anlegen');
   };
 
@@ -1110,7 +1131,7 @@ const Arbeitswelt = (() => {
     const pdfList = element('ul', 'aw-liste');
     const visiblePdfs = daten.pdfs.filter(pdf => passt(zustand.suche, pdf.titel)).slice(0, MAX_LISTE);
     visiblePdfs.forEach(pdf => pdfList.append(ressourcenZeile('📕', pdf.titel,
-      `${pdf.seiten} ${pdf.seiten === 1 ? 'Seite' : 'Seiten'}`, pdf.pageId)));
+      zahlWort(pdf.seiten, 'Seite', 'Seiten'), pdf.pageId)));
     pdfs.append(visiblePdfs.length ? pdfList : leer('Noch keine PDFs',
       'PDF-Seiten erscheinen nach dem Einlesen automatisch.'));
 
@@ -1193,7 +1214,8 @@ const Arbeitswelt = (() => {
       const top = element('header', 'aw-datenbank-kopf');
       const open = knopf(`${db.icon} ${db.name}`, 'aw-datenbank-oeffnen');
       if (db.pageId) open.dataset.awOpen = db.pageId;
-      top.append(open, element('span', 'aw-datenbank-meta', `${db.zeilen} Zeilen · ${db.ansichten.length} Ansichten`));
+      top.append(open, element('span', 'aw-datenbank-meta', zahlWort(db.zeilen, 'Zeile', 'Zeilen') + ' · ' +
+        zahlWort(db.ansichten.length, 'Ansicht', 'Ansichten')));
       card.append(top);
       const views = element('div', 'aw-ansichten'); views.setAttribute('role', 'list');
       db.ansichten.forEach(view => {
@@ -1320,7 +1342,7 @@ const Arbeitswelt = (() => {
       else oeffnen.append(element('span', 'aw-board-leer', '🖍'));
       oeffnen.append(element('strong', 'aw-board-titel', board.titel));
       oeffnen.append(element('small', 'aw-board-meta',
-        `${board.formen} ${board.formen === 1 ? 'Form' : 'Formen'} · ${datumText(board.bearbeitet)}`));
+        zahlWort(board.formen, 'Form', 'Formen') + ' · ' + datumText(board.bearbeitet)));
       karte.append(oeffnen);
       const aktionen = element('span', 'aw-board-aktionen');
       const reiter = knopf('↗', 'aw-mini'); reiter.title = 'In neuem Reiter öffnen';
@@ -1345,7 +1367,8 @@ const Arbeitswelt = (() => {
       const article = element('article', 'aw-wiki-eintrag');
       const open = knopf(`${page.icon} ${page.titel}`, 'aw-wiki-oeffnen'); open.dataset.awOpen = page.id;
       const meta = element('p', 'aw-wiki-meta',
-        `${page.backlinkAnzahl} Rückverweise · ${page.aliases.length} Aliasse`);
+        zahlWort(page.backlinkAnzahl, 'Rückverweis', 'Rückverweise') + ' · ' +
+        zahlWort(page.aliases.length, 'Alias', 'Aliasse'));
       article.append(open, meta);
       if (page.aliases.length) {
         const aliases = element('ul', 'aw-aliasse'); aliases.setAttribute('aria-label', 'Aliasse');

@@ -16776,3 +16776,50 @@ Eintrag den Grund — eine Liste aus blossen Klassennamen wächst still.
 
 test249: 17/17. Die bestehenden Kontrast-Suiten bleiben grün: test34 77/77,
 test127 22 ok, test128 54 ok, test231 29, test245 53.
+
+
+================================================================================
+E231 — Eins ist eine andere Zahl als zwei
+================================================================================
+
+Im hellen Bild der Bibliothek stand unter zwei Seiten gleichzeitig:
+
+    Baustelle Halle 3        1 Einträge
+    Elektrotechnik Skript    1 Einträge
+
+Ärgerlich daran ist nicht der Fehler, sondern wo die Lösung lag: 146 Zeilen
+tiefer, in DERSELBEN Datei, dreimal richtig gemacht.
+
+    `${pdf.seiten} ${pdf.seiten === 1 ? 'Seite' : 'Seiten'}`
+    `${board.formen} ${board.formen === 1 ? 'Form' : 'Formen'}`
+
+Dreimal bedacht, einmal vergessen — dasselbe Muster wie bei den Kacheln
+(E228, die Regel stand vierzehn Zeilen tiefer) und beim Kalendertag (E229,
+die Regel stand in der Kalenderansicht). Wenn dieselbe Entscheidung an vier
+Stellen einzeln getroffen werden muss, wird sie irgendwann an einer
+vergessen. Also steht sie jetzt an einer:
+
+    const zahlWort = (n, einzahl, mehrzahl) => `${n} ${n === 1 ? einzahl : mehrzahl}`;
+
+Fünf Aufrufe: Einträge, Zeilen, Ansichten, Rückverweise, Aliasse, Seiten,
+Formen.
+
+WARUM ES NIEMANDEM AUFFIEL. Der übliche Bestand hat Seiten mit null oder
+vielen Kindern. Genau eins ist selten — und genau deshalb legt die Prüfung
+den Fall selbst an, statt zu hoffen, dass er im Bestand vorkommt.
+
+Und sie fragt nicht nach dieser einen Zeile, sondern nach dem MUSTER: steht
+irgendwo „1" vor einem Wort mit Mehrzahl-Endung? Damit fällt auch der
+nächste Vergesser auf.
+
+    Gegenbeweis, alte Zeile eingesetzt:
+      ✗ … und heisst „1 Eintrag", nicht „1 Einträge" — Genau eins | 1 Einträge
+      ✗ Nirgends steht „1" vor einem Mehrzahlwort — ["1 Einträge"]
+
+test214: 23/23.
+
+NEBENBEI GEZÄHLT: ein Suchlauf über `src/` findet 110 Stellen, an denen eine
+Zahl vor einem Wort steht, ohne Einzahl-Verzweigung. Die meisten sind
+Meldungen nach einer Massenaktion („17 Zeilen eingefügt"), wo die Eins kaum
+vorkommt und niemanden stört. Die fünf hier stehen in LISTEN, die bei jedem
+Öffnen zu sehen sind. Der Rest steht in LUECKEN.md, statt still zu bleiben.
