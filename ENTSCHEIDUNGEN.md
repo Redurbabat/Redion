@@ -16204,3 +16204,47 @@ test222 mussten mitwachsen:
     test222  unterscheidet Ziel von Schalter. „Mehr" geht nirgends hin und
              gehört deshalb nicht ins Navigationsregister; jeder ANDERE neue
              Knopf ohne Registereintrag macht die Prüfung weiterhin rot.
+
+
+================================================================================
+E220 — Die Auswahlleiste bleibt, wo sie ist. Das Massband hat entschieden.
+================================================================================
+
+Beim Zeichnen des Entwurfs zu E218 war der auffälligste Fehler im Bild: die
+Leiste, die beim Auswählen erscheint, liegt auf der Zeile darüber. Man wählt
+einen Satz und verliert dafür den davor. Notion und Linear machen es genauso.
+
+Der Entwurf schlug den freien Rand rechts vor — dort verdeckt sie nichts, und
+sie stünde auf der Höhe der Auswahl, also dort, wo das Auge ohnehin ist. Im
+gezeichneten Blatt waren rechts 424 px Platz.
+
+NACHGEMESSEN AN DER LAUFENDEN APP, 1440 px breit:
+
+    #scroll     240 … 1440     die Fläche neben der Seitenleiste
+    #page       390 … 1290     die Textspalte, 900 px breit
+    frei rechts    150 px
+    die Leiste     552 px      vierzehn Knöpfe, drei davon mit Wort
+
+Es passt nicht, und zwar nicht knapp. Die Zahl 424 stammte aus dem Bild, nicht
+aus der App: der Entwurf hatte eine schmalere Spalte gezeichnet, als Redion
+sie hat.
+
+Der Umbau war fertig — dreissig Zeilen, mit sauberem Rückfall auf den alten
+Weg, wenn der Platz nicht reicht. Genau das ist der Grund, ihn wieder
+herauszunehmen: er wäre auf JEDEM Fenster in diesen Rückfall gelaufen und
+damit nie sichtbar geworden. Dreissig Zeilen, die nichts tun, sind schlechter
+als eine Zeile, die etwas tut.
+
+WAS BLEIBT, IST DER BEFUND. Die Leiste verdeckt die Zeile darüber, und das
+ist ein echter Mangel. Nur ist die Antwort darauf nicht eine andere Position,
+sondern eine schmalere Leiste: acht Knöpfe statt vierzehn, 330 statt 552 px,
+der Rest hinter „…". Das steht als Vorschlag im Entwurf und ist noch nicht
+gebaut.
+
+Der Kommentar in `auswahlleiste.ts` trägt die Messung, damit der nächste
+Versuch nicht wieder bei 424 px anfängt.
+
+UND DIE LEHRE, die grösser ist als dieser Fall: ein Entwurf ist eine
+Behauptung über Masse. Wer aus einem Bild eine Zahl abliest und sie für die
+App hält, baut auf eine Zeichnung. Das Blatt „Ruhig — eine Seite" zeigt die
+Leiste jetzt an ihrem echten Ort und nennt die gemessenen 150 px darunter.

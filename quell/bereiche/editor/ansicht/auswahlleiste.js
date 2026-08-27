@@ -130,9 +130,34 @@ const Auswahl = (() => {
                 '<button data-a="komm" title="Kommentar — Strg Shift M">💬</button>' +
                 '<button data-a="farbe" title="Farbe">🎨 ▾</button>';
         document.body.appendChild(leiste);
-        const hoehe = leiste.getBoundingClientRect();
-        leiste.style.left = Math.max(8, Math.min(r.left, innerWidth - hoehe.width - 10)) + 'px';
-        leiste.style.top = Math.max(8, r.top - hoehe.height - 8) + 'px';
+        const mass = leiste.getBoundingClientRect();
+        /* WOHIN DIE LEISTE GEHÖRT — EINE IDEE, DIE AM MASSBAND GESCHEITERT IST.
+         *
+         * Sie steht ÜBER der Auswahl und liegt damit auf der Zeile davor. Beim
+         * Zeichnen des Entwurfs zu E218 war das der auffälligste Fehler im Bild:
+         * man wählt einen Satz und verliert dafür den davor. Notion und Linear
+         * machen es genauso, also schien der freie Rand rechts der bessere Ort —
+         * im Entwurf waren dort 424 px Platz.
+         *
+         * NACHGEMESSEN AN DER LAUFENDEN APP bei 1440 px:
+         *
+         *     #scroll   240 … 1440    die Fläche
+         *     #page     390 … 1290    die Textspalte, 900 px breit
+         *     frei rechts   150 px
+         *     die Leiste    552 px    (vierzehn Knöpfe, drei davon mit Wort)
+         *
+         * Es passt nicht, und zwar nicht knapp. Der Entwurf hatte eine schmalere
+         * Spalte gezeichnet, als Redion sie hat — die Zahl 424 stammte aus dem
+         * Bild, nicht aus der App.
+         *
+         * Der Umbau lag hier schon fertig, mit sauberem Rückfall auf den alten
+         * Weg. Er wäre auf jedem Fenster in diesen Rückfall gelaufen, also
+         * niemals sichtbar geworden: dreissig Zeilen, die nichts tun. Deshalb
+         * steht hier wieder die eine Zeile und darüber, warum es bei ihr bleibt.
+         * Wer es doch will, braucht zuerst eine schmalere Leiste — nicht eine
+         * andere Position. */
+        leiste.style.left = Math.max(8, Math.min(r.left, innerWidth - mass.width - 10)) + 'px';
+        leiste.style.top = Math.max(8, r.top - mass.height - 8) + 'px';
         leiste.addEventListener('mousedown', e => e.preventDefault());
         leiste.addEventListener('click', e => {
             const ziel = e.target instanceof Element ? e.target : null;
