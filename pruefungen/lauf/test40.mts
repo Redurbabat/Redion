@@ -63,7 +63,16 @@ import { chromium } from 'playwright';
       mainBreite: Math.round(r('#main').width),
       seiteBreite: Math.round(r('#page').width),
       seitenleistePos: getComputedStyle(musselement('#sidebar')).position,
-      kopfKnoepfe: [...tb.querySelectorAll<HTMLElement>('button')].filter(x => x.offsetParent).map(x => x.id),
+      /* NICHT `offsetParent` (E226). Ein Element mit `position:fixed` gibt
+         dort `null` zurück, OBWOHL es sichtbar ist — der Sucher stand
+         deshalb nie in dieser Liste, solange E223 ihn fest ans Fenster
+         stellte, und die erwartete Liste hatte sich still darauf
+         eingerichtet. Gefragt ist Sichtbarkeit, nicht Positionierung. */
+      kopfKnoepfe: [...tb.querySelectorAll<HTMLElement>('button')]
+        .filter(x => { const r = x.getBoundingClientRect();
+                       return r.width > 0 && r.height > 0
+                              && getComputedStyle(x).visibility !== 'hidden'; })
+        .map(x => x.id),
       kopfUeberlauf: tb.scrollWidth - tb.clientWidth,
       krume: musselement('#crumb').textContent.trim(),
       seitlicherUeberlauf: document.documentElement.scrollWidth - 428,
@@ -196,7 +205,12 @@ import { chromium } from 'playwright';
       seitenleiste: Math.round(s.getBoundingClientRect().width),
       seitenleistePos: getComputedStyle(s).position,
       mainLinks: Math.round(musselement('#main').getBoundingClientRect().left),
-      kopfKnoepfe: [...tb.querySelectorAll<HTMLElement>('button')].filter(x => x.offsetParent).map(x => x.id),
+      /* Sichtbarkeit, nicht Positionierung (E226) — siehe oben. */
+      kopfKnoepfe: [...tb.querySelectorAll<HTMLElement>('button')]
+        .filter(x => { const r = x.getBoundingClientRect();
+                       return r.width > 0 && r.height > 0
+                              && getComputedStyle(x).visibility !== 'hidden'; })
+        .map(x => x.id),
       untenAus: getComputedStyle(musselement('#handy-unten')).display === 'none' &&
                 getComputedStyle(musselement('#handy-oben')).display === 'none',
       griffe: !!document.querySelector('.blk > .handles'),
@@ -226,8 +240,14 @@ import { chromium } from 'playwright';
      „Alle Knöpfe" wäre damit die falsche Frage. Die richtige ist: sind es
      die fünf, die bleiben sollen, und kommt der Rest zurück, wenn man die
      ruhige Fassung abschaltet? */
-  const SOLL_RUHIG = ['btn-back', 'btn-fwd', 'btn-ai', 'btn-fav', 'btn-page-menu'];
-  ok('Die Kopfzeile zeigt am PC die fünf, die bleiben',
+  /* SECHS, NICHT FÜNF — und der Unterschied ist eine Lehre (E226). Der
+     Sucher gehört selbstverständlich dazu; er stand nur deshalb nicht in
+     dieser Liste, weil `offsetParent` bei `position:fixed` `null` liefert.
+     Die Zeile war grün, weil sie den Knopf nicht SAH, nicht weil er weg
+     war. Als E224 ihn zurück in den Fluss holte, wurde sie rot — und hat
+     damit ihren eigenen blinden Fleck gemeldet. */
+  const SOLL_RUHIG = ['btn-back', 'btn-fwd', 'btn-suche-mitte', 'btn-ai', 'btn-fav', 'btn-page-menu'];
+  ok('Die Kopfzeile zeigt am PC die sechs, die bleiben',
      SOLL_RUHIG.every(k => pc.kopfKnoepfe.includes(k)) &&
      pc.kopfKnoepfe.length === SOLL_RUHIG.length,
      pc.kopfKnoepfe.join(', '));
@@ -235,7 +255,10 @@ import { chromium } from 'playwright';
   const ohneRuhig = await d.evaluate(() => {
     (globalThis as any).Ruhig?.setzen(false);
     return [...document.querySelectorAll<HTMLElement>('#topbar button')]
-      .filter(b => b.offsetParent !== null).map(b => b.id).filter(Boolean);
+      .filter(b => { const r = b.getBoundingClientRect();   /* E226 */
+                     return r.width > 0 && r.height > 0
+                            && getComputedStyle(b).visibility !== 'hidden'; })
+      .map(b => b.id).filter(Boolean);
   });
   ok('Und ausgeschaltet stehen wieder alle da',
      ohneRuhig.length >= 10, ohneRuhig.length + ' Stück: ' + ohneRuhig.join(', '));

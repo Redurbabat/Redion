@@ -16488,3 +16488,57 @@ Die Zeile kann rot werden. test67: 48 von 48.
 Das ist derselbe Fehlertyp wie in §55.2: eine Prüfung, die eine Eigenschaft
 misst statt der Wirkung. „Wo steht die Überschrift" ist nicht dieselbe Frage
 wie „deckt der Inhalt die Navigation zu" — es sah nur lange genug so aus.
+
+
+================================================================================
+E226 — `offsetParent` ist keine Sichtbarkeit
+================================================================================
+
+test40 zählte die Knöpfe der Kopfzeile so:
+
+    [...tb.querySelectorAll('button')].filter(x => x.offsetParent)
+
+und erwartete fünf: `btn-back`, `btn-fwd`, `btn-ai`, `btn-fav`,
+`btn-page-menu`. Der Sucher fehlte in dieser Liste — und niemandem fiel auf,
+warum.
+
+Der Grund: ein Element mit `position:fixed` hat `offsetParent === null`. Seit
+E223 stand der Sucher fest am Fenster. Er war die ganze Zeit da, gut sichtbar,
+mitten in der Zeile — die Prüfung SAH ihn nur nicht. Die Zeile war nicht
+grün, weil sie stimmte, sondern weil sie blind war.
+
+Als E224 den Sucher zurück in den Fluss holte, wurde sie rot. Sie hat damit
+ihren eigenen blinden Fleck gemeldet, und das ist das Beste, was ihr passieren
+konnte.
+
+Gefragt wird jetzt nach der Wirkung: hat der Knopf Fläche, und ist er nicht
+auf `visibility:hidden` gestellt?
+
+    r.width > 0 && r.height > 0 && getComputedStyle(x).visibility !== 'hidden'
+
+Gegenbeweis, beide Richtungen:
+
+    jetzt                back, fwd, suche-mitte, ai, fav, page-menu   (6)
+    #btn-fav ausgeblendet    → 5, die Zeile wird rot
+    #btn-teilen eingeblendet → 7, die Zeile wird rot
+
+DIE STELLE WAR DREIMAL DA, und das ist der eigentliche Punkt. Beim Suchen
+fanden sich in test40 drei Messungen mit demselben Muster — Telefon, Rechner,
+und die Gegenprobe „ausgeschaltet stehen wieder alle da". Nur eine davon war
+rot geworden; die beiden anderen wären beim nächsten `position:fixed`
+drangewesen. Alle drei sind ersetzt.
+
+Anderswo geprüft und in Ordnung: test222 kennt das Problem und umgeht es
+ausdrücklich (der Kommentar dort steht seit E219), test114 fragt nach
+Elementen, die keinen festen Vorfahren haben. 138 ok, 0 offen.
+
+DIE VERWANDTSCHAFT ZU E225 ist kein Zufall. Beide Male wurde eine
+EIGENSCHAFT gemessen statt der WIRKUNG:
+
+    E225   „wo steht die Überschrift"   statt  „deckt Inhalt die Leiste zu"
+    E226   „hat es einen offsetParent"  statt  „sieht man es"
+
+Beide Male sah die Eigenschaft jahrelang aus wie die Wirkung, weil nichts sie
+auseinandergezogen hat. §55.2 sagt: wer eine Prüfung schreibt, prüft zuerst,
+ob sie rot werden KANN. Hier kommt eine zweite Frage dazu: kann sie aus dem
+RICHTIGEN Grund rot werden?
