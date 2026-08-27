@@ -14876,3 +14876,107 @@ abgeschaltetem `estimate`.
 Gegenprobe (§55.2), mit dem Beweis daneben, dass der Fehler in der gebauten
 Datei stand: der fehlende Zeitstempel auf `gut` gesetzt — zwei Punkte rot,
 94/96. Zurückgenommen 96/96.
+
+
+================================================================================
+E209 — Der Lösungsweg: jede Rechnung zeigt ihre Schritte
+================================================================================
+
+Redur, mehrfach und wörtlich: der Lösungsweg muss immer gezeigt werden.
+
+`ElectricalCalculations` gab bis heute `{ value, unit, formula }` zurück — also
+„U = I · R" und „1,64 V". Was fehlte, ist der Schritt dazwischen:
+„= 3,19 · 0,541". Wer nur Formel und Ergebnis sieht, kann nicht nachprüfen, ob
+er dasselbe gerechnet hätte, und lernt nichts. In einer Prüfung wird ohnehin
+der Weg bewertet und nicht die Zahl.
+
+
+DIE EINGESETZTE ZEILE WIRD NICHT VON HAND GESCHRIEBEN
+--------------------------------------------------------------------------------
+
+`Rechenweg.schritt()` bekommt die Formel, die Werte und die Rechnung. Die
+eingesetzte Zeile entsteht aus DENSELBEN Werten, mit denen gerechnet wird —
+es gibt nur eine Quelle für beide. Von Hand geschrieben liefen sie das erste
+Mal auseinander, sobald jemand eine Zahl ändert, und zwar still. Genau diese
+Sorte Fehler ist an einem Tag dreimal vorgekommen (leere Miniatur, zu früh
+gelesene Form, Anhangsgrösse aus dem falschen Speicher).
+
+
+ZWEI WÄCHTER, UND BEIDE HABEN SICH SCHON BEWÄHRT
+--------------------------------------------------------------------------------
+
+**Erstens: ein Name in der Formel ohne Wert wird gemeldet.** Sonst bliebe der
+Buchstabe in der eingesetzten Zeile stehen und sähe aus wie Absicht.
+
+**Zweitens: die gezeigte Zeile muss das gezeigte Ergebnis TRAGEN.** Das ist
+der wichtigere. Zahlen werden beim Anzeigen gerundet, und eine zu kurz
+gerundete Zahl macht aus der Rechnung eine andere:
+
+    ϱ = 0,0178   stand als „0,018" da
+    0,018 · 2 · 38 / 2,5 = 0,547     danebengeschrieben stand 0,541
+
+Wer die Zeile mit dem Taschenrechner nachrechnet, muss auf das kommen, was
+danebensteht; sonst sucht er den Fehler bei sich — und das ist bei einem
+Lernwerkzeug der schlimmste denkbare Fehler.
+
+Die Ursache war `toLocaleString` OHNE `maximumFractionDigits`: es rundet auf
+drei Nachkommastellen, unabhängig davon, was `toFixed` vorher gemacht hat.
+
+Der Wächter rechnet dieselbe Funktion ein zweites Mal — mit den Zahlen, wie
+sie DASTEHEN. Weicht das Ergebnis um mehr als ein halbes Prozent ab, wirft er.
+Der Fehler kommt damit gar nicht erst bis zur Anzeige.
+
+
+KEIN eval() (§20)
+--------------------------------------------------------------------------------
+
+Hier wird nichts zerlegt und nichts ausgeführt: die Rechnung ist eine
+gewöhnliche Funktion, die Formel ist Text daneben, und der zweite Wächter ruft
+dieselbe Funktion noch einmal. Es gibt nichts zu unterschieben. `test246`
+prüft das am Quelltext, mit weggeschnittenen Kommentaren — dort steht das Wort
+nämlich ausdrücklich, und zwar als Zusage.
+
+
+DIE ERSTE AUFGABE: DER SPANNUNGSFALL
+--------------------------------------------------------------------------------
+
+Vier Schritte und eine Gegenprobe, wie im abgenommenen Entwurf:
+
+    1  Strom aus der Leistung     I = P / (U · cosφ)      = 3,1854 A
+    2  Widerstand der Leitung     R = ϱ · 2 · l / A       = 0,54112 Ω
+    3  Spannungsfall              ΔU = I · R · cosφ       = 1,6375 V
+    4  In Prozent                 ΔU% = ΔU / U · 100      = 0,7120 %
+       Gegenprobe                 PV = I² · R             = 5,4905 W
+
+Der Faktor 2 in Schritt 2 ist der Hin- UND Rückweg. Er wird am häufigsten
+vergessen, und dann kommt die Hälfte heraus — deshalb steht er als Hinweis am
+Schritt und nicht nur in der Formel.
+
+Und die Annahmen stehen dabei, auch die unbequeme: das ist die Näherungsformel
+aus dem Formelheft, ohne den induktiven Anteil der Leitung. Für Installations-
+leitungen ist der Unterschied klein; ihn zu verschweigen wäre trotzdem falsch.
+
+
+test246 LÄUFT OHNE BROWSER
+--------------------------------------------------------------------------------
+
+Hier wird gerechnet, nicht gezeichnet — und eine Rechnung braucht kein
+Fenster. Der Lauf dauert Sekundenbruchteile statt einer halben Minute, und
+genau deshalb geht er alle Grenzfälle durch statt drei.
+
+Die Sollwerte sind VON HAND nachgerechnet und nicht aus dem Modul kopiert.
+Eine Prüfung, die ihr Soll aus dem Prüfling holt, bestätigt jeden Fehler.
+
+Und §2 rechnet die eingesetzten Zeilen wirklich nach — die Zeichenkette wird
+zerlegt und mit den gefundenen Zahlen gerechnet. Ein Punkt, der nur prüft,
+DASS eine Zeile dasteht, wäre auch dann grün, wenn Unsinn darinsteht.
+
+Gegenprobe (§55.2), mit dem Beweis daneben, dass der Fehler in der gebauten
+Datei stand: `maximumFractionDigits` entfernt — der Kern wirft beim Bauen des
+Wegs, mit genau der Meldung „nachgerechnet ergibt die gezeigte Zeile 0.547 Ω,
+danebensteht 0.541 Ω". Zurückgenommen 37/37.
+
+Was noch fehlt: die ANZEIGE. Der Weg wird gerechnet und lässt sich als Text
+übernehmen, aber es gibt noch keine Ansicht, die ihn zeigt. Das steht als
+nächster Schritt an und ist der Grund, warum diese Entscheidung hier schon
+steht: der Kern ist geprüft, bevor eine Oberfläche darauf baut.
