@@ -36,6 +36,13 @@ const pruef = (n: any, ist: any, soll: any) => {
 
   /* --- 1 · Jeder Abschnitt hat drei Punkte ------------------------------ */
   const kopf = await p.evaluate(async () => {
+    /* SEIT E211 SIND DIESE VIER ABSCHNITTE AB WERK AUS.
+       Links stehen die BEREICHE, oben im Menüband die Werkzeuge — Redurs
+       Wunsch, und in ENTSCHEIDUNGEN.md unter E211 festgehalten. Weg sind
+       sie nicht: „Abschnitte anpassen" holt jeden zurück, und dieser
+       Prüfpunkt handelt davon, dass sie DANN richtig aussehen.
+       Ohne diese Zeile prüfte er nur noch die neue Vorgabe. */
+    Store.setMeta('sidebarAn', ['werkzeuge', 'agenten', 'bespr', 'kuerzlich']);
     App.zeichneBaum();
     await new Promise(r => setTimeout(r, 350));
     const s = [...document.querySelectorAll<HTMLElement>('#tree .side-section')];
@@ -154,7 +161,13 @@ const pruef = (n: any, ist: any, soll: any) => {
     await new Promise(r => setTimeout(r, 400));
     const nachher = [...document.querySelectorAll<HTMLElement>('#tree .side-section')].length;
     const gemerkt = (Store.getMeta('sidebarAus', []) || []).includes('bespr');
+    /* ZURÜCKSETZEN HEISST SEIT E211 ZWEI LISTEN.
+       `abschnittSchalten` streicht beim Ausschalten aus `sidebarAn` UND
+       trägt in `sidebarAus` ein. „Besprechungen" ist ab Werk aus; nur
+       `sidebarAus` zu leeren liess ihn deshalb weg, und der Punkt meldete
+       5 statt 6 — richtig gemessen, an einer unvollständigen Rücknahme. */
     Store.setMeta('sidebarAus', []);
+    Store.setMeta('sidebarAn', ['werkzeuge', 'agenten', 'bespr', 'kuerzlich']);
     App.zeichneBaum();
     await new Promise(r => setTimeout(r, 300));
     return { vorher, nachher, gemerkt,

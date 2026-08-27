@@ -206,10 +206,20 @@ import { chromium } from 'playwright';
   });
   console.log('   PC:', JSON.stringify(pc));
 
-  ok('Am PC steht die Seitenleiste im Fluss und ist 260 px breit',
-     pc.seitenleistePos === 'relative' && pc.seitenleiste === 260,
+  /* 240 px UND NICHT 260. E201 hat die Seitenleiste schmaler gemacht —
+     „zwanzig Punkte sind dort keine Kosmetik, sie sind zwanzig Punkte
+     Arbeitsfläche" steht als Begründung in der CSS. Dieser Punkt behielt
+     die alte Zahl und war seither rot; aufgefallen ist es erst beim
+     vollständigen Durchlauf, weil er in keiner der Suiten steckt, die man
+     nach einer Änderung einzeln startet.
+
+     Die Zahl bleibt hier ausgeschrieben und wird nicht aus der CSS
+     gelesen: dieser Punkt soll ja gerade merken, wenn sich die Breite
+     ändert, ohne dass jemand es wollte. */
+  ok('Am PC steht die Seitenleiste im Fluss und ist 240 px breit',
+     pc.seitenleistePos === 'relative' && pc.seitenleiste === 240,
      pc.seitenleistePos + ' / ' + pc.seitenleiste);
-  ok('Der Inhalt beginnt dahinter', pc.mainLinks === 260, pc.mainLinks + ' px');
+  ok('Der Inhalt beginnt dahinter', pc.mainLinks === 240, pc.mainLinks + ' px');
   ok('Die Kopfzeile zeigt am PC alle Knöpfe', pc.kopfKnoepfe.length >= 10, pc.kopfKnoepfe.length + ' Stück');
   ok('Die Handy-Leiste unten ist am PC aus', pc.untenAus);
   ok('Die Blockgriffe sind am PC da', pc.griffe);

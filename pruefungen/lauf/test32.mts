@@ -302,6 +302,13 @@ import { chromium } from 'playwright';
    * 7) Seitenleiste: Agenten, Kürzlich, Besprechungen
    * =============================================================*/
   const seitenleiste = await p.evaluate(() => {
+    /* SEIT E211 SIND DIESE VIER ABSCHNITTE AB WERK AUS.
+       Links stehen die BEREICHE, oben im Menüband die Werkzeuge — Redurs
+       Wunsch, und in ENTSCHEIDUNGEN.md unter E211 festgehalten. Weg sind
+       sie nicht: „Abschnitte anpassen" holt jeden zurück, und dieser
+       Prüfpunkt handelt davon, dass sie DANN richtig aussehen.
+       Ohne diese Zeile prüfte er nur noch die neue Vorgabe. */
+    Store.setMeta('sidebarAn', ['werkzeuge', 'agenten', 'bespr', 'kuerzlich']);
     App.zeichneBaum();
     const t = document.getElementById('tree');
     if (!t) return null;
