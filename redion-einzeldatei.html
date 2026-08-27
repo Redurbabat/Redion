@@ -4749,6 +4749,29 @@ body.kontrast .arbeitswelt :where(.aw-bereich,.aw-navigation,.aw-reiter-panel,
   .arbeitswelt .aw-bereichsfilter-auswahl{font-size:12.5px}
 }
 
+/* ============================================================================
+ * DIE RUHIGE FASSUNG (E219/E222)
+ * ----------------------------------------------------------------------------
+ * Gemessen: `.aw-kopf` lief von y=72 bis y=241 — 169 px für „REDION
+ * HAUPTWELT / 🧱 Workspace / Seiten, Wissen, Dateien und Arbeit in einer
+ * gemeinsamen Sicht." Die Pfadnavigation eine Zeile höher sagt bereits
+ * „🧱 Workspace".
+ *
+ * Dieselbe Doppelung wie in der Lernwelt, nur grösser: dort waren es 60 px,
+ * hier 169. Und dieselbe Antwort — die Marke geht, der Bereichsfilter
+ * bleibt und rückt nach oben.
+ *
+ * Der Untertitel geht mit. Er beschreibt, was der Workspace IST; das liest
+ * man einmal und danach nie wieder, und über der Falz ist Höhe das Knappe
+ * (derselbe Satz steht schon in `lernwelt.ts` bei E204).
+ * ==========================================================================*/
+body[data-ruhig="an"] .arbeitswelt .aw-titelgruppe{ display:none }
+body[data-ruhig="an"] .arbeitswelt .aw-kopf{
+  min-height:0; padding:10px 14px; justify-content:flex-end;
+  background:none; border:none; box-shadow:none; overflow:visible;
+}
+body[data-ruhig="an"] .arbeitswelt .aw-kopf::after{ display:none }
+
 </style>
 <style>
 /* ===== quell/schale/stil/lernwelt.css ===== */
