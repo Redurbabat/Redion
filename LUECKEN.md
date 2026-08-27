@@ -2446,3 +2446,34 @@ Knöpfe statt seiner Vordertür.
 
 Bis dahin ist es ehrlicher, es hier stehen zu haben, als so zu tun, als
 wären die fünf Wege gleichartig.
+
+
+L66 — test181 ist unter Last unzuverlässig
+--------------------------------------------------------------------------------
+Im vollen Durchlauf am 27. August brach test181 ab:
+
+    page.evaluate: Execution context was destroyed, most likely because of
+    a navigation.  (test181.mts:221)
+
+Zeile 221 ist der Schritt, in dem die Prüfung ALLES löscht und aus einer
+Sicherung wieder einspielt — die teuerste Stelle des Laufs.
+
+WAS ES NICHT IST. Der Verdacht fiel zuerst auf die Änderungen von E219/E221:
+auf einem Stand vor E219 lief die Suite grün, im Arbeitsverzeichnis rot. Die
+Eingrenzung schien sogar eine Datei zu benennen — `aufbau.css`, deren
+Änderung aus einer einzigen Farbregel besteht. Eine Farbregel kann keine
+Navigation auslösen.
+
+Dreimal hintereinander auf demselben Stand gelaufen: grün, grün, rot. Es war
+also nie die Datei, sondern die Rechenlast — der volle Durchlauf lief die
+ganze Zeit im Hintergrund weiter und teilte sich die Kerne.
+
+DIE LEHRE, teurer als der Befund: eine Eingrenzung, bei der jeder Durchgang
+für sich zufällig ausgehen kann, grenzt nichts ein. Wer bisektiert, muss
+zuerst wissen, ob der Lauf überhaupt wiederholbar ist. Drei Wiederholungen
+hätten das in zwei Minuten geklärt und den ganzen Umweg gespart.
+
+WAS FEHLT: der Schritt braucht entweder mehr Zeit oder eine Absicherung
+gegen den Kontextverlust. Solange das offen ist, kann ein voller Durchlauf
+hier zufällig rot werden, ohne dass etwas kaputt ist — und genau das macht
+ihn als Aussage schwächer.

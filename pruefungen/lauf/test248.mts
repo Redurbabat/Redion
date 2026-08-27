@@ -46,6 +46,11 @@
  * §6 DER SCHALTER SCHALTET WIRKLICH ZURÜCK. Wer die alte Leiste will, bekommt
  *    sie, und der Wunsch überlebt den Neustart.
  *
+ * §8 WO BIN ICH. Wer wenig zeigt, muss das Wenige richtig zeigen. Vor E221
+ *    markierte nur eine CSS-Zeile die WELT — ein Klick auf „Bibliothek"
+ *    liess „Workspace" aufleuchten. In der ruhigen Fassung steht „Workspace"
+ *    gar nicht mehr da, also markierte nichts mehr etwas.
+ *
  * §7 §37/§38: Tippflächen und Tastatur. Der Schalter braucht `aria-expanded`,
  *    und die Zeigen-Knöpfe am Baum müssen bei Tastaturfokus sichtbar werden —
  *    sonst wäre ein fokussierbarer Knopf unsichtbar.
@@ -366,6 +371,40 @@ p('Ein Zeigen-Knopf am Baum steht nicht dauernd da',
   fokus.gefunden && fokus.vorher === '0', `Deckkraft ${fokus.vorher}`);
 p('Wird aber sichtbar, sobald die Tastatur ihn erreicht',
   fokus.gefunden && fokus.nachher === '1', `Deckkraft ${fokus.nachher}`);
+
+/* ==========================================================================
+ * §8 Wo bin ich
+ * ========================================================================*/
+console.log('\n8 · Wo bin ich');
+
+await seite.evaluate(() => Ruhig.setzen(true));
+await seite.waitForTimeout(300);
+const markiert = async (): Promise<string[]> => seite.evaluate(() => {
+  const gemalt = (el: Element): boolean => {
+    const st = getComputedStyle(el);
+    return st.backgroundColor !== 'rgba(0, 0, 0, 0)' && st.backgroundColor !== 'transparent';
+  };
+  return [...document.querySelectorAll('#sidebar .side-item')]
+    .filter(e => e.id && gemalt(e)).map(e => e.id);
+});
+
+const beimStart = await markiert();
+p('Beim Start ist genau ein Weg markiert', beimStart.length === 1, beimStart.join(' | '));
+
+for (const [id, name] of [['btn-library', 'Bibliothek'], ['btn-tasks', 'Aufgaben'],
+                          ['btn-home', 'Heute']] as Array<[string, string]>) {
+  await seite.evaluate(k => (document.getElementById(k) as HTMLElement)?.click(), id);
+  await seite.waitForTimeout(1300);
+  await seite.evaluate(() => document.querySelectorAll('.overlay,[role=dialog]').forEach(x => x.remove()));
+  const jetzt = await markiert();
+  p(`Nach „${name}" ist GENAU DIESER Weg markiert — und nur er`,
+    jetzt.length === 1 && jetzt[0] === id, jetzt.join(' | ') || '(nichts)');
+}
+
+/* Und für das Ohr, nicht nur für das Auge (§38). */
+const fuersOhr = await seite.evaluate(() =>
+  document.getElementById('btn-home')?.getAttribute('aria-current'));
+p('Der aktive Weg sagt es auch dem Vorleseprogramm', fuersOhr === 'page', String(fuersOhr));
 
 console.log('\nFehler auf der Seite:', fehler.length ? fehler.join(' | ') : 'keine');
 p('Keine Fehler auf der Seite', !fehler.length, fehler.join(' | '));

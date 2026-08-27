@@ -2774,7 +2774,30 @@ const App = (() => {
       [...Register.navigation.anPlatz('oben'),
        ...Register.navigation.anPlatz('fuss')].forEach((e: any) => {
         if (e.knopfId && e.tun) an(e.knopfId, () => {
-          try { e.tun(); }
+          try {
+            e.tun();
+            /* WO BIN ICH? (E221)
+             *
+             * Bis hierher markierte nur `produktwelten.css` — zwei fest
+             * verdrahtete Zeilen für „Lernzentrum" und „Workspace", und
+             * sonst nichts. Ein Klick auf „Bibliothek" liess also
+             * „Workspace" aufleuchten; ein Klick auf „Aufgaben" ebenso.
+             *
+             * Mit 32 Zeilen war das eine grobe Auskunft. Mit fünf (E219)
+             * ist es falsch: „Workspace" steht dann gar nicht mehr da, und
+             * die Leiste sagt überhaupt nichts mehr. Wer wenig zeigt, muss
+             * das Wenige richtig zeigen.
+             *
+             * Deshalb hier, an der einen Stelle, an der ohnehin jeder
+             * Eintrag durchkommt — kein zweiter Katalog, keine Liste von
+             * Sonderfällen. Der Fuss („Importieren", „Papierkorb") wird
+             * ausgenommen: das sind Handlungen, keine Orte. */
+            if (e.platz === 'oben') {
+              document.querySelectorAll('#sidebar .side-item[aria-current]')
+                .forEach(k => k.removeAttribute('aria-current'));
+              document.getElementById(e.knopfId)?.setAttribute('aria-current', 'page');
+            }
+          }
           catch (fehler: unknown) {
             if (typeof Reporter !== 'undefined')
               Reporter.error('Seitenleiste',

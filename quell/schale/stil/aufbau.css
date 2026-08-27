@@ -763,3 +763,13 @@ body[data-ruhig="offen"] .side-nav .side-item:not([data-ruhig]){
    jetzt auch für die ruhige Fassung frei. Wer eines von beidem ändert,
    muss das andere sehen; deshalb steht der Grund an beiden Stellen. */
 body[data-ruhig="an"] #topbar [data-ruhig="mehr"]{ display:none }
+
+
+/* WO BIN ICH — DIE MARKIERUNG (E221)
+   `aria-current="page"` ist nicht bloss Zierde: Vorleseprogramme nennen
+   damit den aktuellen Ort, und die Farbe ist die zweite Auskunft daneben —
+   keine Information allein über Farbe (§38). Deshalb trägt der aktive
+   Eintrag zusätzlich mehr Schriftgewicht. */
+#sidebar .side-item[aria-current="page"]{
+  background:var(--bg-hover); color:var(--text); font-weight:600;
+}

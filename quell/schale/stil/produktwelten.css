@@ -24,8 +24,21 @@
    bleiben die zwei Zeilen unten: sie sagen weiterhin, in welcher Welt man
    gerade ist — und zwar dort, wo man hinklickt, statt an einer dritten
    Stelle darüber. */
-body[data-produktwelt="lernen"] #btn-learning,
-body[data-produktwelt="workspace"] #btn-workspace{background:var(--bg-hover);color:var(--text)}
+/* DIE WELT ALS RÜCKFALL, NICHT ALS WAHRHEIT (E221).
+   Diese zwei Zeilen waren bis dahin die EINZIGE Ortsangabe der
+   Seitenleiste — und sie können nur zwei Knöpfe: „Lernzentrum" und
+   „Workspace". Ein Klick auf „Bibliothek" liess deshalb „Workspace"
+   aufleuchten, ein Klick auf „Aufgaben" ebenso.
+
+   Seit E221 setzt `schale.ts` beim Klick `aria-current="page"` auf den
+   Eintrag, der wirklich benutzt wurde. Diese Regel gilt nur noch, solange
+   es keinen solchen gibt — also beim ersten Bild nach dem Start. Sonst
+   stünden zwei Markierungen gleichzeitig da, und zwei sind schlimmer als
+   eine falsche. */
+body[data-produktwelt="lernen"]:not(:has(#sidebar .side-item[aria-current="page"])) #btn-learning,
+body[data-produktwelt="workspace"]:not(:has(#sidebar .side-item[aria-current="page"])) #btn-workspace{
+  background:var(--bg-hover); color:var(--text);
+}
 
 .produkt-bereiche-dialog{width:min(460px,calc(100vw - 24px));max-height:min(720px,90dvh);overflow:auto}
 .produkt-bereiche-hinweis{margin:0;padding:12px 16px;color:var(--text-dim);font-size:13px;line-height:1.5}
