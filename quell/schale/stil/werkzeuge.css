@@ -20,7 +20,8 @@
 .side-fuss{border-top:1px solid var(--line); padding:6px 8px 10px}
 .side-fuss .side-item{width:100%}
 .side-item.neu{color:var(--accent-text)}
-.side-hinweis{padding:8px 8px 2px; font-size:11.5px; color:var(--text-faint)}
+/* Das Versprechen der App, kein Beiwerk (E230). */
+.side-hinweis{padding:8px 8px 2px; font-size:11.5px; color:var(--text-dim)}
 .row.drop{box-shadow:inset 0 -2px 0 var(--accent)}
 
 .top-btn.schmal{padding:5px 8px; min-width:30px; justify-content:center}
@@ -211,7 +212,8 @@ a.bl:hover{color:var(--text)}
 /* --- Startseite und Posteingang ---------------------------------------------------- */
 .home{padding:44px 0 20vh}
 .home h1{font-size:32px; margin-bottom:22px; letter-spacing:-.5px}
-.home h2{font-size:14px; color:var(--text-faint); margin:26px 0 8px; font-weight:600}
+/* Eine Abschnittsüberschrift benennt, was darunter steht (E230). */
+.home h2{font-size:14px; color:var(--text-dim); margin:26px 0 8px; font-weight:600}
 .home-karten{display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:10px}
 .hk{
   text-align:left; padding:14px 16px; border:1px solid var(--line); border-radius:9px;
@@ -225,7 +227,8 @@ a.bl:hover{color:var(--text)}
   border-radius:7px; text-align:left; font-size:14px;
 }
 .home-liste button:hover{background:var(--bg-hover)}
-.home-liste .pth{margin-left:auto; font-size:11.5px; color:var(--text-faint)}
+/* Hier steht das Datum des Termins — es sagt WANN (E230). */
+.home-liste .pth{margin-left:auto; font-size:11.5px; color:var(--text-dim)}
 
 /* ===========================================================================
    DER START-BILDSCHIRM AM TELEFON (E37, Phase 3)

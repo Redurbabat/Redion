@@ -1755,7 +1755,9 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
 #sidebar .pe-link, .wz-block .pe-link{ margin-top:12px }
 .pe-ico{font-size:40px; opacity:.5; margin-bottom:16px}
 .pe-gross{font-size:20px; font-weight:600; margin-bottom:8px}
-.pe-klein{font-size:14px; color:var(--text-faint); max-width:340px; margin:0 auto;
+/* Im leeren Zustand ist dieser Satz oft der einzige Text auf der Fläche —
+   ausgerechnet dort blass zu sein, ist die falsche Stelle dafür (E230). */
+.pe-klein{font-size:14px; color:var(--text-dim); max-width:340px; margin:0 auto;
   line-height:1.5}
 .pe-link{background:none; color:var(--accent-text); font-size:15px; margin-top:18px; padding:6px}
 .pe-link:hover{text-decoration:underline; color:var(--accent-text)}

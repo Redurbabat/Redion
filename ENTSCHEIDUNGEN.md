@@ -16708,3 +16708,71 @@ jahrelang keine gesehen. test215 §8 läuft in Honolulu UND in Zürich.
       ✗ Zürich:   und keine Zeitangabe ist erfunden — ["02:00", …]
 
 Fünf von sechs Zeilen. test215: 50/50.
+
+
+================================================================================
+E230 — Was Bedeutung trägt, gehört nicht in die Beiwerk-Farbe
+================================================================================
+
+§38 verlangt „Kontrast im Hell- und Dunkelmodus prüfen". Geprüft wurde er
+bisher an einzelnen Stellen. Beim Durchsehen der hellen Bilder fiel auf, dass
+die Zeilen unter den Zahlkacheln kaum zu lesen sind — also einmal alles
+gemessen, mit der WCAG-Formel statt nach Augenmass.
+
+    hell    --text-faint #82817e auf #ffffff   3.76 : 1
+                                 auf #f1f1ef   3.44 : 1
+    dunkel  --text-faint #737373 auf #141414   3.67 : 1
+
+Elf Stellen lagen unter AA — und alle elf waren dasselbe Token.
+
+DIE ABSICHT DAHINTER IST RICHTIG UND STEHT IM CODE. In `dunkel.css`:
+
+    --text-faint:    #737373;   /* 3.9:1 — nur Beiwerk und Symbole */
+
+Der Fehler ist also nicht das Token, sondern was hineingeraten ist. Sieben
+der elf Stellen waren kein Beiwerk:
+
+    „Suchen in Redion …"             das Feld der wichtigsten Handlung
+    „Alles bleibt auf diesem Gerät."  das Versprechen der ganzen App
+    „Privat"                         die Überschrift über den eigenen Seiten
+    „heute zu wiederholen"           und drei Geschwister: die Zeilen, die
+    „höchstens 20 pro Runde"         sagen, was die Zahl darüber BEDEUTET
+    „gezielt wiederholen"
+    „keine geplant"
+
+und in der Planung dazu:
+
+    „27. Aug." usw.                  wann der Termin ist
+    „Bevorstehend"                   die Überschrift des Abschnitts
+    „Rede mit, statt mitzuschreiben" der einzige Satz im leeren Zustand
+    der Trefferpfad in der Suche     ohne ihn sind zwei gleichnamige Seiten
+                                     nicht zu unterscheiden
+
+Die vier Kachelzeilen sind genau der Fall, den die Bibliothek schon einmal
+hatte: „drei von sechs Karten sagten nicht mehr, was ihre Zahl bedeutet."
+Dort war die Spalte zu schmal, hier ist die Farbe zu blass. Dasselbe
+Ergebnis, andere Ursache.
+
+Das Token bleibt unverändert. Neun Regeln bekamen `--text-dim`
+(hell 5.9:1, dunkel 6.1:1). Was wirklich Beiwerk ist, bleibt blass: der
+Tastenhinweis `Strg P` im Suchfeld und der Aufklapp-Pfeil `▸` im Baum.
+
+EINE STELLE TRUG ZWEIERLEI, und darum steigt sie mit: `.side-item .k` hält
+in der Planung das DATUM des Termins und sonst den Tastenhinweis „Strg M".
+Ein Datum ist kein Beiwerk. Dass der Tastenhinweis dabei lesbarer wird, ist
+kein Verlust.
+
+DIE NEUE SUITE FRAGT ES FÜR ALLE ACHT PRODUKTWELTEN IN BEIDEN THEMEN
+(test249, 17 Punkte). Ihre Ausnahmeliste ist namentlich und trägt bei jedem
+Eintrag den Grund — eine Liste aus blossen Klassennamen wächst still.
+
+    Gegenbeweis 1, alte Farben wieder eingesetzt:
+      alle 16 Welt/Thema-Fälle rot, mit Namen:
+      „Suchen in Redion …", „Privat", „Alles bleibt auf diesem Gerät.", …
+
+    Gegenbeweis 2, Ausnahmeliste geleert:
+      rot mit genau den zwei Beiwerk-Stellen — die Liste wirkt also
+      wirklich und ist nicht bloss Beiwerk ihrerseits.
+
+test249: 17/17. Die bestehenden Kontrast-Suiten bleiben grün: test34 77/77,
+test127 22 ok, test128 54 ok, test231 29, test245 53.

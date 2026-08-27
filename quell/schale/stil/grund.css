@@ -296,12 +296,45 @@ input,textarea,select{font:inherit; color:inherit}
  * der Sucher mit — und genau das soll er NICHT, also bekommt die Krume eine
  * Höchstbreite dazu.
  * ==========================================================================*/
+/* ============================================================================
+ * WAS BEDEUTUNG TRÄGT, GEHÖRT NICHT IN DIE BEIWERK-FARBE (E230)
+ * ----------------------------------------------------------------------------
+ * `--text-faint` steht in `dunkel.css` mit einem Kommentar, der die Absicht
+ * genau benennt: „3.9:1 — nur Beiwerk und Symbole". Die Absicht ist richtig,
+ * und die Zahl ist bewusst unter AA.
+ *
+ * Nachgemessen (WCAG, beide Themen, Lernzentrale):
+ *
+ *     hell    --text-faint #82817e auf #ffffff   3.76 : 1
+ *                                  auf #f1f1ef   3.44 : 1
+ *     dunkel  --text-faint #737373 auf #141414   3.67 : 1
+ *
+ * Elf Stellen lagen darunter — und sieben davon waren kein Beiwerk:
+ *
+ *     „Suchen in Redion …"            das Feld der wichtigsten Handlung
+ *     „Alles bleibt auf diesem Gerät." das Versprechen der ganzen App
+ *     „Privat"                        die Überschrift über den eigenen Seiten
+ *     „heute zu wiederholen"          und drei Geschwister: die Zeilen, die
+ *     „höchstens 20 pro Runde"        sagen, was die Zahl darüber BEDEUTET
+ *     „gezielt wiederholen"
+ *     „keine geplant"
+ *
+ * Die letzten vier sind genau der Fall, den die Bibliothek schon einmal
+ * hatte: „drei von sechs Karten sagten nicht mehr, was ihre Zahl bedeutet".
+ * Dort war die Spalte zu schmal, hier ist die Farbe zu blass — dasselbe
+ * Ergebnis.
+ *
+ * Das Token bleibt, wie es ist. Was sich ändert, sind die sieben Stellen:
+ * sie bekommen `--text-dim` (hell 5.9:1, dunkel 6.1:1). Was wirklich Beiwerk
+ * ist — `Strg P`, `Strg M`, die Baumpfeile `▸ ⌄` — bleibt bei `--text-faint`,
+ * denn dafür ist es da.
+ * ==========================================================================*/
 #topbar .sucher{
   flex:1 1 auto; min-width:0; max-width:520px;
   justify-content:flex-start;
   height:36px; padding:0 var(--space-3);
   background:var(--bg-input); border-color:var(--line);
-  color:var(--text-faint); font-weight:500;
+  color:var(--text-dim); font-weight:500;
 }
 #topbar .sucher:hover{ background:var(--bg-hover); border-color:var(--line-stark) }
 #topbar .sucher .sucher-text{

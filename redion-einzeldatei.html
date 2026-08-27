@@ -697,12 +697,45 @@ input,textarea,select{font:inherit; color:inherit}
  * der Sucher mit — und genau das soll er NICHT, also bekommt die Krume eine
  * Höchstbreite dazu.
  * ==========================================================================*/
+/* ============================================================================
+ * WAS BEDEUTUNG TRÄGT, GEHÖRT NICHT IN DIE BEIWERK-FARBE (E230)
+ * ----------------------------------------------------------------------------
+ * `--text-faint` steht in `dunkel.css` mit einem Kommentar, der die Absicht
+ * genau benennt: „3.9:1 — nur Beiwerk und Symbole". Die Absicht ist richtig,
+ * und die Zahl ist bewusst unter AA.
+ *
+ * Nachgemessen (WCAG, beide Themen, Lernzentrale):
+ *
+ *     hell    --text-faint #82817e auf #ffffff   3.76 : 1
+ *                                  auf #f1f1ef   3.44 : 1
+ *     dunkel  --text-faint #737373 auf #141414   3.67 : 1
+ *
+ * Elf Stellen lagen darunter — und sieben davon waren kein Beiwerk:
+ *
+ *     „Suchen in Redion …"            das Feld der wichtigsten Handlung
+ *     „Alles bleibt auf diesem Gerät." das Versprechen der ganzen App
+ *     „Privat"                        die Überschrift über den eigenen Seiten
+ *     „heute zu wiederholen"          und drei Geschwister: die Zeilen, die
+ *     „höchstens 20 pro Runde"        sagen, was die Zahl darüber BEDEUTET
+ *     „gezielt wiederholen"
+ *     „keine geplant"
+ *
+ * Die letzten vier sind genau der Fall, den die Bibliothek schon einmal
+ * hatte: „drei von sechs Karten sagten nicht mehr, was ihre Zahl bedeutet".
+ * Dort war die Spalte zu schmal, hier ist die Farbe zu blass — dasselbe
+ * Ergebnis.
+ *
+ * Das Token bleibt, wie es ist. Was sich ändert, sind die sieben Stellen:
+ * sie bekommen `--text-dim` (hell 5.9:1, dunkel 6.1:1). Was wirklich Beiwerk
+ * ist — `Strg P`, `Strg M`, die Baumpfeile `▸ ⌄` — bleibt bei `--text-faint`,
+ * denn dafür ist es da.
+ * ==========================================================================*/
 #topbar .sucher{
   flex:1 1 auto; min-width:0; max-width:520px;
   justify-content:flex-start;
   height:36px; padding:0 var(--space-3);
   background:var(--bg-input); border-color:var(--line);
-  color:var(--text-faint); font-weight:500;
+  color:var(--text-dim); font-weight:500;
 }
 #topbar .sucher:hover{ background:var(--bg-hover); border-color:var(--line-stark) }
 #topbar .sucher .sucher-text{
@@ -852,12 +885,19 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
 }
 .side-item:hover{background:var(--bg-hover); color:var(--text)}
 .side-item.on{background:var(--bg-hover); color:var(--text)}
-.side-item .k{margin-left:auto; font-size:11px; color:var(--text-faint); font-family:var(--mono)}
+/* DIESE STELLE TRÄGT ZWEIERLEI, und darum steigt sie mit (E230): in der
+   Planung steht hier das DATUM des Termins, sonst ein Tastenhinweis. Ein
+   Datum ist kein Beiwerk. Dass der Tastenhinweis dabei lesbarer wird, ist
+   kein Verlust. */
+.side-item .k{margin-left:auto; font-size:11px; color:var(--text-dim); font-family:var(--mono)}
 
+/* Die Überschrift nennt den Abschnitt — sie trägt Bedeutung (E230). Ihr
+   Knopf darunter bleibt blass: der ist Beiwerk und erscheint erst beim
+   Überfahren. */
 .side-section{
   display:flex; align-items:center; gap:4px;
   padding:14px 14px 4px; font-size:11.5px; font-weight:600;
-  color:var(--text-faint); text-transform:none; letter-spacing:.3px;
+  color:var(--text-dim); text-transform:none; letter-spacing:.3px;
 }
 .side-section button{margin-left:auto; opacity:0; color:var(--text-faint); padding:2px 5px; border-radius:4px}
 .side-section:hover button{opacity:1}
@@ -1048,7 +1088,9 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
   border-radius:6px; text-align:left; font-size:14px;
 }
 .finder .res button:hover, .finder .res button.on{background:var(--bg-hover)}
-.finder .res .pth{margin-left:auto; font-size:11.5px; color:var(--text-faint)}
+/* Der Pfad sagt, WO der Treffer liegt — ohne ihn sind zwei gleichnamige
+   Seiten nicht zu unterscheiden (E230). */
+.finder .res .pth{margin-left:auto; font-size:11.5px; color:var(--text-dim)}
 .finder .res .snip{display:block; font-size:12px; color:var(--text-dim); margin-top:2px}
 .finder .hint{padding:8px 14px; font-size:11.5px; color:var(--text-faint); border-top:1px solid var(--line)}
 
@@ -1866,7 +1908,8 @@ body[data-small="1"] .b-text .ct{font-size:14px}
 .side-fuss{border-top:1px solid var(--line); padding:6px 8px 10px}
 .side-fuss .side-item{width:100%}
 .side-item.neu{color:var(--accent-text)}
-.side-hinweis{padding:8px 8px 2px; font-size:11.5px; color:var(--text-faint)}
+/* Das Versprechen der App, kein Beiwerk (E230). */
+.side-hinweis{padding:8px 8px 2px; font-size:11.5px; color:var(--text-dim)}
 .row.drop{box-shadow:inset 0 -2px 0 var(--accent)}
 
 .top-btn.schmal{padding:5px 8px; min-width:30px; justify-content:center}
@@ -2057,7 +2100,8 @@ a.bl:hover{color:var(--text)}
 /* --- Startseite und Posteingang ---------------------------------------------------- */
 .home{padding:44px 0 20vh}
 .home h1{font-size:32px; margin-bottom:22px; letter-spacing:-.5px}
-.home h2{font-size:14px; color:var(--text-faint); margin:26px 0 8px; font-weight:600}
+/* Eine Abschnittsüberschrift benennt, was darunter steht (E230). */
+.home h2{font-size:14px; color:var(--text-dim); margin:26px 0 8px; font-weight:600}
 .home-karten{display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:10px}
 .hk{
   text-align:left; padding:14px 16px; border:1px solid var(--line); border-radius:9px;
@@ -2071,7 +2115,8 @@ a.bl:hover{color:var(--text)}
   border-radius:7px; text-align:left; font-size:14px;
 }
 .home-liste button:hover{background:var(--bg-hover)}
-.home-liste .pth{margin-left:auto; font-size:11.5px; color:var(--text-faint)}
+/* Hier steht das Datum des Termins — es sagt WANN (E230). */
+.home-liste .pth{margin-left:auto; font-size:11.5px; color:var(--text-dim)}
 
 /* ===========================================================================
    DER START-BILDSCHIRM AM TELEFON (E37, Phase 3)
@@ -5293,7 +5338,8 @@ body[data-ruhig="an"] .arbeitswelt .aw-kopf::after{ display:none }
   font-weight:790;letter-spacing:-.025em;text-overflow:ellipsis;font-variant-numeric:tabular-nums
 }
 .lernwelt .lw-metrik>span{margin-top:5px;color:var(--text-dim);font-size:11.5px;font-weight:650}
-.lernwelt .lw-metrik small{margin-top:3px;color:var(--text-faint);font-size:10.5px;line-height:1.3}
+/* Diese Zeile sagt, was die Zahl darüber bedeutet (E230). */
+.lernwelt .lw-metrik small{margin-top:3px;color:var(--text-dim);font-size:10.5px;line-height:1.3}
 
 /* --- Hauptkarten -------------------------------------------------------- */
 .lernwelt .lw-primary-grid{
@@ -7861,7 +7907,9 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
 #sidebar .pe-link, .wz-block .pe-link{ margin-top:12px }
 .pe-ico{font-size:40px; opacity:.5; margin-bottom:16px}
 .pe-gross{font-size:20px; font-weight:600; margin-bottom:8px}
-.pe-klein{font-size:14px; color:var(--text-faint); max-width:340px; margin:0 auto;
+/* Im leeren Zustand ist dieser Satz oft der einzige Text auf der Fläche —
+   ausgerechnet dort blass zu sein, ist die falsche Stelle dafür (E230). */
+.pe-klein{font-size:14px; color:var(--text-dim); max-width:340px; margin:0 auto;
   line-height:1.5}
 .pe-link{background:none; color:var(--accent-text); font-size:15px; margin-top:18px; padding:6px}
 .pe-link:hover{text-decoration:underline; color:var(--accent-text)}
