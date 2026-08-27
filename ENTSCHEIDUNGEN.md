@@ -16398,3 +16398,93 @@ von etwas — eines Fokus, einer Messung, eines Klicks in einer Prüfung. Der
 volle Durchlauf ist die einzige Stelle, an der das vollständig auffällt, und
 er gehört deshalb ans Ende einer solchen Arbeit, nicht in ihre Mitte (die
 Lehre aus E217, hier noch einmal bestätigt).
+
+
+================================================================================
+E224 — Die Mitte ist die Mitte des Arbeitsbereichs, nicht die des Fensters
+================================================================================
+
+E223 stellte den Sucher `position:fixed; left:50%` in die FENSTERmitte. Ein
+Bildschirmfoto der Dokumentseite hat gezeigt, was das kostet: der Seitentitel
+lief unter das Suchfeld. Zu lesen war „📕 Elek…".
+
+GEMESSEN, 1280 px, ruhige Fassung, Seite „Lernen & Alltag":
+
+    Krume        x 328 … 435
+    Sucher       x 380 … 900
+                   ^^^^^^^^^   55 Punkte Überdeckung
+
+Und es ist kein Zufall, den man verschieben könnte:
+
+    Seitenleiste            240
+    zwei Pfeilknöpfe         88   → die Krume beginnt bei 328
+    Sucher 520 breit, mittig zum Fenster → linke Kante bei 380
+    ------------------------------------------------------------
+    für den Titel bleiben    36 Punkte
+
+Sechsunddreissig Punkte sind kein Titel, sondern ein Auslassungszeichen. Bei
+einer 240 px breiten Seitenleiste ist Fensterzentrierung nicht eng, sondern
+unmöglich.
+
+Also zurück in den Fluss, mit der Waage, die vor E223 schon da war: Krume und
+Dehnstück wachsen beide aus der Basis null, der Sucher steht dazwischen. Er
+steht damit mittig zur KOPFLEISTE — und die beginnt hinter der Seitenleiste.
+
+    aus der Fenstermitte          91 Punkte
+    aus der Mitte des Arbeitsbereichs   29 Punkte
+    bei 1280, 1440 und 1920       dieselben 29
+
+Und das ist die Mitte, die ein Mensch sieht. Die Seitenleiste hat einen
+eigenen Hintergrund und ist optisch eine Spalte für sich, kein Teil der
+Seite. Überdecken kann nichts mehr etwas, weil alle drei Stücke Nachbarn in
+derselben Zeile sind: ein langer Titel macht den Sucher schmaler, nicht
+unlesbar.
+
+DIE PRÜFUNG STELLTE DIE FALSCHE FRAGE. test245 mass den Abstand zur
+FENSTERmitte — dieselbe Annahme, die den Fehler verursacht hat. Umgestellt
+auf die Mitte des Arbeitsbereichs, und um die Frage ergänzt, die niemand
+gestellt hatte: läuft die Krume unter den Sucher?
+
+    Gegenbeweis mit der E223-Fassung wieder eingeschaltet:
+      ausDerMitte          29 → 120   (Grenze 45)
+      krumeUnterSucher      0 → 214   (Grenze 0)
+
+Beide Zeilen können rot werden.
+
+DIE LEHRE, und sie ist grösser als diese eine Regel: E223 wurde durch eine
+Prüfung ausgelöst, die „nicht mittig" meldete. Die Prüfung hatte recht — und
+die Antwort darauf hat etwas Schlimmeres kaputtgemacht, weil niemand
+nachgesehen hat, wie es danach aussieht. Eine Zahl grün zu bekommen ist nicht
+dasselbe wie hinsehen (§55).
+
+
+================================================================================
+E225 — Eine Messung, die „ausgeblendet" und „verdeckt" nicht unterscheidet
+================================================================================
+
+test67 fragte am Telefon: „Sein Inhalt beginnt unter der Leiste". Gemessen
+wurde `#page h1` gegen die Unterkante von `#handy-oben`.
+
+Seit die Arbeitswelt ihre doppelte Titelzeile abgelegt hat — die Krume oben
+nennt den Namen bereits —, steht `.aw-titelgruppe` auf `display:none`. Ein
+ausgeblendetes Element gibt `0,0,0,0` zurück. Und `0 >= 80` ist falsch. Die
+Zeile wurde rot, obwohl nichts verdeckt war.
+
+Das Umgekehrte ist der eigentliche Grund, es zu ändern: läge der Titel bei 0,
+weil er WIRKLICH unter der Leiste steckt, sähe die Zahl genau gleich aus. Die
+Messung konnte die beiden Fälle nie unterscheiden — sie war schon vorher
+nicht in der Lage, die Frage zu beantworten, die sie stellt. Dass sie all die
+Zeit grün war, lag daran, dass der Titel sichtbar war, nicht daran, dass sie
+funktionierte.
+
+Gemessen wird jetzt das oberste Stück Inhalt in `#page`, das überhaupt Fläche
+hat (mindestens 40 × 12).
+
+    Gegenbeweis, `#scroll{padding-top:0}`:
+      Inhalt oben   146 → 66     Leiste endet bei 80
+
+Die Zeile kann rot werden. test67: 48 von 48.
+
+Das ist derselbe Fehlertyp wie in §55.2: eine Prüfung, die eine Eigenschaft
+misst statt der Wirkung. „Wo steht die Überschrift" ist nicht dieselbe Frage
+wie „deckt der Inhalt die Navigation zu" — es sah nur lange genug so aus.

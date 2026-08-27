@@ -309,16 +309,43 @@ const pruef = (n: any, ist: any, soll: any) => {
        Stück Inhalt — liegt er unter der Leiste, liegt alles darunter. */
     const l = musselement('#handy-oben').getBoundingClientRect();
     const titel = document.querySelector<HTMLElement>('#page h1');
-    const t = titel ? titel.getBoundingClientRect() : null;
+    /* GEMESSEN WIRD NICHT DIE ÜBERSCHRIFT, SONDERN DER INHALT (E225).
+     *
+     * Die Zeile mass `#page h1`. Seit die Arbeitswelt ihre doppelte
+     * Titelzeile abgelegt hat — die Krume oben nennt den Namen schon —
+     * steht `.aw-titelgruppe` auf `display:none`. Ein ausgeblendetes
+     * Element gibt 0,0,0,0 zurück, und `0 >= 80` ist falsch. Die Prüfung
+     * wurde rot, ohne dass irgendetwas verdeckt war.
+     *
+     * Umgekehrt ist genauso schlimm: läge der Titel bei 0, weil er
+     * WIRKLICH unter der Leiste steckt, sähe die Zahl gleich aus. Eine
+     * Messung, die „ausgeblendet" und „verdeckt" nicht unterscheiden kann,
+     * beantwortet die Frage nicht.
+     *
+     * Also: das oberste Stück Inhalt, das überhaupt Fläche hat. Das ist
+     * die Frage, die gemeint war — deckt der Inhalt die Navigation zu? */
+    let inhaltOben: number | null = null;
+    for (const e of document.querySelectorAll<HTMLElement>('#page *')) {
+      const r = e.getBoundingClientRect();
+      if (r.width < 40 || r.height < 12) continue;
+      if (inhaltOben === null || r.top < inhaltOben) inhaltOben = r.top;
+    }
     const oben = document.elementFromPoint(l.left + l.width * 0.7, l.top + l.height / 2);
     if ((window as any).PWA && PWA.schubladeZu) PWA.schubladeZu();
     await new Promise(r => setTimeout(r, 300));
-    return { inhaltBeginntDarunter: !!t && Math.round(t.top) >= Math.round(l.bottom) - 2,
+    return { inhaltBeginntDarunter: inhaltOben !== null
+               && Math.round(inhaltOben) >= Math.round(l.bottom) - 2,
+             inhaltOben: inhaltOben === null ? -1 : Math.round(inhaltOben),
+             leisteUnten: Math.round(l.bottom),
              titelText: (titel?.textContent ?? '').trim(),
              obenLiegt: !!(oben && oben.closest('#handy-oben')) };
   });
   /* „Seiten" heisst jetzt „🧱 Workspace" (E132). */
   pruef('Der Seitenbereich ist wirklich offen', deckung.titelText, '🧱 Workspace');
+  /* GEGENBEWEIS, damit die Zeile nicht wieder blind wird: nimmt man dem
+     Rollkasten den Platz, den die Leiste braucht (`#scroll{padding-top:0}`),
+     rutscht der Inhalt von 146 auf 66 — unter die Leiste, die bei 80
+     endet. Gemessen, beide Male. Die Zeile KANN rot werden. */
   pruef('Sein Inhalt beginnt unter der Leiste', deckung.inhaltBeginntDarunter, true);
   pruef('Und die Leiste ist anklickbar',                deckung.obenLiegt, true);
 
