@@ -15926,3 +15926,126 @@ der Zug überhaupt im Bild liegt. test201 meldete „Rechteck nicht
 gespeichert" und meinte „ich habe nach ausserhalb des Fensters gezogen".
 
 Stand danach: alle 213 Läufe bestanden.
+
+
+================================================================================
+E218 — Ruhig: dieselbe App, weniger gleichzeitig sichtbar
+================================================================================
+
+Redur: „nicht gleich wie es machen sondern ruhiger, besser und nicht so viel
+Bereiche, aber nichts löschen, alles muss enthalten bleiben."
+
+Das sind zwei Forderungen, die einander zu widersprechen scheinen. Sie tun es
+nur, wenn man „weniger Bereiche" als „weniger Funktionen" liest. Gemeint ist
+etwas anderes: weniger auf einmal im Bild.
+
+
+ZUERST GEZÄHLT, DANN GEZEICHNET
+
+Ohne Zahl ist „zu viel" ein Gefühl. Also gemessen, an der laufenden App bei
+1440 × 900, gezählt wurde alles Anklickbare in Seitenleiste, Kopfzeile und
+Menüband — der Rahmen also, nicht der Inhalt:
+
+    Startbild        Seitenleiste 32 + Kopfzeile 13 + Menüband  7  =  52
+    offene Seite     Seitenleiste 34 + Kopfzeile 12 + Menüband 21  =  67
+
+Zweiundfünfzig Knöpfe, bevor ein Wort geschrieben ist. Dahinter steht ein
+Bestand, der selbst in Ordnung ist: 37 Einträge im Navigations-Register,
+108 im Menüband über sechs Reiter, 78 Blockarten, 14 Module.
+
+Das Problem ist nicht die Zahl der Dinge. Es ist, dass drei Leisten
+übereinander versuchen, sie alle gleichzeitig anzubieten.
+
+
+DIE ANTWORT: DREI TÜREN
+
+    Leiste links    fünf Wege, benannt: Heute, Bibliothek, Aufgaben,
+                    Elektro, Lernen — plus „Mehr" und der eigene Name
+    Kopfzeile       eine Zeile: zurück, wo bin ich, Suchfeld, zwei Zeichen
+    Menüband        nicht mehr da
+
+Macht 13 statt 52 oder 67. Die übrigen wohnen hinter drei Türen, und jede
+ist für sich vollständig:
+
+    „Mehr"      die 30 Bereiche, die nicht in der Leiste stehen, nach
+                Gruppen statt in einer Liste von 37
+    ⌘K          alles Benannte: Bereiche, Blockarten, Befehle, Module,
+                eigene Seiten, Dateien, Karteikarten
+    „…"         das ganze Menüband, unverändert, sechs Reiter, 108 Befehle
+
+Beim Schreiben braucht man das Band gar nicht: die sechs Knöpfe, die auf die
+Auswahl passen, kommen zur Auswahl.
+
+
+WAS DAS HINSEHEN GEFUNDEN HAT (§55)
+
+Fünf Dinge, die keine Rechnung ergeben hätte:
+
+  · Die erste Fassung hatte eine 64-px-Leiste NUR mit Zeichen. Im Bild war
+    „Elektro" von „Lernen" nicht zu unterscheiden — Information allein über
+    die Form eines Symbols, genau was §38 verbietet. Jetzt 208 px mit Wörtern.
+    Fünf benannte Zeilen sind nicht mehr Dinge als fünf stumme, nur lesbare.
+
+  · Die Kontextleiste lag AUF dem Text. Erst unter der Auswahl (falsch
+    gerechnet), dann darüber — und verdeckte dort die Zeile davor. Das machen
+    Notion und Linear auch so. Redions Textspalte lässt aber rechts 424 px
+    ungenutzt: dort steht sie jetzt, auf Höhe der Auswahl, und verdeckt nie
+    etwas. Das ist die Stelle, an der „besser als Redion selbst" konkret wird.
+
+  · Die Kopfzeile sagte „Mittwoch, 27. August", der Kalender darunter begann
+    am Montag, dem 27. Der 27. August 2026 ist ein Donnerstag. Zwei Angaben
+    auf demselben Bild, die einander widersprachen.
+
+  · Ein Zirkel-Zeichen für „Rechnen" sah aus wie ein griechisches Lambda.
+
+  · Das Zahlenband stand unter dem Bildrand. Nicht knapp — die Beschriftungen
+    waren abgeschnitten, die Zahlen darüber sichtbar. Ein Beleg, dessen
+    Belegzeile fehlt, ist schlimmer als keiner.
+
+
+UND EINE PRÜFUNG, DIE VON GEBURT AN BLIND WAR
+
+Gegen den letzten Punkt eine Messung geschrieben: was ist die unterste Kante
+im Blatt? Sie meldete für alle drei Blätter exakt 900 — die Rahmenhöhe.
+
+Der Grund: `textContent` erbt den Text der Kinder, also „trägt" auch der
+äusserste Wrapper Text, und der IST der Rahmen. Die Prüfung mass sich selbst.
+Sie konnte nie rot werden.
+
+Jetzt zählen nur Blätter (`children.length === 0`) und `svg`. Gegenprobe:
+das Blatt um 100 px nach unten geschoben → 916 px, rot, mit dem Satz, der
+übersteht. Zurückgesetzt → grün.
+
+    Eine Prüfung, die immer „passt schon" sagt, ist keine Prüfung.  (§55.2)
+
+
+WAS BEIM NACHZÄHLEN NEBENBEI HERAUSKAM
+
+Zwei Dinge, die vorher niemand gezählt hatte:
+
+  · Das Navigations-Register hat 37 Einträge, aber nur 34 Namen.
+    „Bibliothek", „Papierkorb" und „Was Redion kann" stehen je zweimal darin.
+    Im Entwurf zusammengelegt — das ist kein Löschen: der Weg bleibt, er
+    steht nur einmal da statt zweimal.
+
+  · „Elektro" ist keiner der 37. Es ist eines der 14 Module und hat heute
+    gar keine eigene Zeile in der Seitenleiste — man kommt über den Workspace
+    hin. Im Entwurf bekommt es eine, und zwar oben.
+
+Beides steht auf dem dritten Blatt, nicht in einer Fussnote. Ein Entwurf, der
+seine eigenen Zahlen schönt, ist als Grundlage wertlos.
+
+
+STAND
+
+Drei Blätter in der Entwurfsleinwand, eigene Seite „Ruhig":
+
+    Ruhig.dc.html        Heute — der ruhige Start
+    RuhigSeite.dc.html   eine Seite schreiben, mit der Leiste an der Auswahl
+    RuhigAlles.dc.html   der Beleg: wo alles wohnt, und was es gekostet hat
+
+Gebaut aus einer Quelle (`_ruhig.py` im Arbeitsordner), damit Leiste, Kopf
+und Masse einmal beschrieben sind statt dreimal.
+
+NOCH NICHT GEBAUT. Das ist ein Entwurf, keine Änderung an der App. Wenn er
+gebaut wird, gilt weiter §46: erst die Daten, dann das Aussehen.
