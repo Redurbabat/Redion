@@ -279,10 +279,126 @@ p('Er liegt über der unteren Leiste, nicht auf ihr',
 p('Beide Knöpfe des Streifens sind 44 px hoch',
   streifen.da && streifen.flach.length === 0, streifen.flach.join(', '));
 p('Das ✕ ist 44 px breit', streifen.xBreit >= 44, `${streifen.xBreit}px`);
+/* ------------------------------------------------------------------------ *
+ * DER STAPEL: drei schwebende Meldungen, eine Leiste
+ * -------------------------------------------------------------------------
+ * Toast · Offline-Streifen · Rundgang-Einladung. Bis zum 28. August stand
+ * ihre Lage als DREI ZAHLEN in drei Dateien — 104, 84, 172 —, und jede
+ * beschrieb die Höhe der alten schwebenden Aktionsleiste. Die gibt es seit
+ * E236 nicht mehr; alle drei blieben stehen, wo sie waren. Gemessen: der
+ * Toast endete bei 740, die Leiste beginnt bei 785, und unter ihm lag ein
+ * Dokumentdeckel, den er zudeckte.
+ *
+ * WAS HIER GEPRÜFT WIRD, IST NICHT DIE ZAHL, SONDERN DIE BEZIEHUNG: was
+ * allein da ist, klebt an der Leiste; sind mehrere da, weicht das
+ * flüchtigere nach oben aus, und keines liegt auf dem anderen. Eine Prüfung
+ * auf „bottom === 71px" wäre bei der nächsten Änderung an der Leiste rot,
+ * ohne dass etwas kaputt ist.
+ * ------------------------------------------------------------------------ */
+const lagen = async () => seite.evaluate(() => {
+  const k = (sel: string) => {
+    const e = document.querySelector<HTMLElement>(sel);
+    if (!e) return null;
+    /* NUR WAS MAN SIEHT. Der Toast bleibt im Baum stehen und wird mit
+       `opacity` und einer Schiebestrecke von 80 px versteckt — ein
+       unsichtbarer Toast meldet deshalb eine Lage 80 px WEITER UNTEN, mitten
+       auf der Leiste. Beim ersten Wurf dieser Prüfung stand da „Toast endet
+       822" für einen Toast, der gar nicht da war, und der Punkt „liegt nicht
+       auf der Leiste" blieb trotzdem grün, weil die Zahl aus einer anderen
+       Welt kam. Wer eine Lage misst, muss zuerst fragen, ob es etwas zu
+       messen gibt. */
+    if (Number(getComputedStyle(e).opacity) < 0.5) return null;
+    const r = e.getBoundingClientRect();
+    return r.height ? { t: Math.round(r.top), b: Math.round(r.bottom) } : null;
+  };
+  const bar = k('#handy-oben');
+  return { bar, toast: k('#toast'), streifen: k('#offline-streifen'),
+           einladung: k('#rg-einladung') };
+});
+/* Und gewartet wird auf das BILD, nicht auf die Uhr — aber auf das RICHTIGE
+   Bild. Der erste Wurf wartete auf `opacity > 0.9`, und das war zu früh:
+   Deckkraft und Schiebestrecke laufen dieselben 220 ms, die Deckkraft ist
+   bei 0.9 fast fertig, die Bewegung hat dann noch rund acht Punkte vor
+   sich. Gemessen kam „Toast endet 806, Streifen beginnt 805" heraus — ein
+   Punkt Überlappung, den es gar nicht gab.
+   Gewartet wird deshalb, bis sich die LAGE zwischen zwei Bildern nicht mehr
+   ändert. Das ist die einzige Bedingung, die wirklich sagt: er steht.
+
+   UND DIE MELDUNG BEKOMMT 30 SEKUNDEN statt der üblichen 2,6. Beim zweiten
+   Wurf stand da „Toast endet undefined": er war beim Messen schon wieder
+   verblasst. Eine Prüfung, die gegen eine Uhr misst, misst irgendwann die
+   Uhr. `UI.toast` nimmt eine Dauer — dann gibt es nichts mehr zu gewinnen. */
+/* MALUNABHÄNGIG WARTEN — dieselbe Lehre wie bei der Pille in Abschnitt 17.
+   Zwei Versuche mit `requestAnimationFrame` scheiterten hier, und zwar aus
+   genau dem dort aufgeschriebenen Grund: unter Volllast der ganzen Suite
+   malt der Browser kaum Bilder, und ein Warten, das an Bildern hängt,
+   hungert mit. Gemessen kam ein Toast mit `class="show"` und
+   `opacity: 0.06` heraus — also einer, der gerade erst aufblendet, mit
+   einer Lage 80 Punkte zu tief.
+
+   `transitionstart` und `transitionend` feuern auch dann, wenn kein
+   einziges Bild gemalt wird. Der Merker beginnt bei `true`: steht der
+   Toast schon (weil eine vorige Meldung noch läuft), gibt es gar keinen
+   Übergang, auf den man warten könnte — und dann ist die Antwort „er
+   steht" richtig und nicht faul. */
+await seite.evaluate(() => {
+  const g = globalThis as any;
+  if (g.__toastSteht !== undefined) return;
+  g.__toastSteht = true;
+  const t = document.getElementById('toast');
+  t?.addEventListener('transitionstart', e => {
+    if ((e as TransitionEvent).propertyName === 'transform') g.__toastSteht = false;
+  });
+  t?.addEventListener('transitionend', e => {
+    if ((e as TransitionEvent).propertyName === 'transform') g.__toastSteht = true;
+  });
+});
+const toastAn = async () => {
+  await seite.waitForFunction(() => {
+    const t = document.getElementById('toast');
+    return !!t && (globalThis as any).__toastSteht === true &&
+           Number(getComputedStyle(t).opacity) > 0.99;
+  }, null, { timeout: 5000 });
+};
+
+/* 1 · Der Streifen ist noch da (offline), ohne Toast. */
+const nurStreifen = await lagen();
+p('Allein klebt der Streifen an der Leiste',
+  !!nurStreifen.bar && !!nurStreifen.streifen &&
+  nurStreifen.bar.t - nurStreifen.streifen.b <= 20,
+  `Abstand ${nurStreifen.bar && nurStreifen.streifen
+     ? nurStreifen.bar.t - nurStreifen.streifen.b : '?'} px`);
+
+/* 2 · Und kommt ein Toast dazu, weicht der Toast aus — nicht der Streifen. */
+await seite.evaluate(() => UI.toast('🎴 1 Karteikarte ist fällig', 30000));
+await toastAn();
+const zuZweit = await lagen();
+p('Der Toast weicht dem Streifen aus, statt auf ihm zu liegen',
+  !!zuZweit.toast && !!zuZweit.streifen && zuZweit.toast.b <= zuZweit.streifen.t,
+  `Toast endet ${zuZweit.toast?.b}, Streifen beginnt ${zuZweit.streifen?.t}`);
+p('Und der Streifen bleibt, wo er war',
+  !!zuZweit.bar && !!zuZweit.streifen && zuZweit.bar.t - zuZweit.streifen.b <= 20,
+  `Abstand ${zuZweit.bar && zuZweit.streifen
+     ? zuZweit.bar.t - zuZweit.streifen.b : '?'} px`);
+p('Und keines der beiden liegt auf der Leiste',
+  !!zuZweit.bar && !!zuZweit.toast && !!zuZweit.streifen &&
+  zuZweit.toast.b <= zuZweit.bar.t && zuZweit.streifen.b <= zuZweit.bar.t);
+
 await seite.context().setOffline(false);
 await seite.waitForTimeout(600);
 p('Mit Verbindung verschwindet der Streifen wieder',
   await seite.evaluate(() => !document.getElementById('offline-streifen')));
+
+/* 3 · Und ohne Streifen rückt der Toast wieder an die Leiste heran. Das ist
+       der Punkt, der bei den drei festen Zahlen ROT gewesen wäre: dort hing
+       er 45 px über der Leiste in der Luft und deckte einen Deckel zu. */
+await seite.evaluate(() => UI.toast('🎴 1 Karteikarte ist fällig', 30000));
+await toastAn();
+const nurToast = await lagen();
+p('Allein klebt der Toast an der Leiste',
+  !!nurToast.bar && !!nurToast.toast && nurToast.bar.t - nurToast.toast.b <= 20,
+  `Abstand ${nurToast.bar && nurToast.toast
+     ? nurToast.bar.t - nurToast.toast.b : '?'} px`);
 
 console.log('\n7 · Import am Telefon: nur, was dort wirklich geht');
 

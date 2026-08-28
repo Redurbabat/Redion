@@ -17424,3 +17424,112 @@ selbst falsch lag:
     Die Gegenrichtung gehört dazu: ohne den Punkt „über einer offenen
     Seite sind es wieder sechs" wäre „drei Reiter" auch dann grün, wenn es
     NIE mehr als drei gäbe.
+
+
+E237 — Drei Zahlen, die eine Leiste beschrieben, die es nicht mehr gibt
+================================================================================
+
+Nach E236 stand ein Durchgang durch 69 Bildschirmfotos an (§55). In vier von
+fünf Telefonbildern verdeckte dieselbe Meldung eine Zeile:
+
+    „🎴 1 Karteikarte ist fällig"
+
+Sie lag mitten im Inhalt — im Regal auf einem Dokumentdeckel, in der
+Aufgabenliste auf einer Aufgabe, in der Zentralen Bibliothek auf einer
+ganzen Zeile.
+
+
+WAS DAHINTERSTAND
+--------------------------------------------------------------------------
+
+Drei schwebende Meldungen am unteren Rand, drei Module, drei Dateien, drei
+Zahlen:
+
+    #toast              104 px    ki.css
+    #offline-streifen    84 px    bausteine.css
+    #rg-einladung       172 px    bausteine.css
+
+Jede beschrieb die Höhe der ALTEN schwebenden Aktionsleiste (Suche · KI
+fragen · Neu). Die gibt es seit E236 nicht mehr; unten steht die
+Wegeleiste, und die ist 59 px hoch statt 72. Alle drei blieben stehen, wo
+sie waren.
+
+Gemessen am Telefon: der Toast endete bei 740, die Leiste beginnt bei 785.
+**45 Punkte Nichts dazwischen** — und darunter ein Deckel, den er zudeckte.
+
+
+ZWEI REGELN, UND DIE ZWEITE IST DIE WICHTIGERE
+--------------------------------------------------------------------------
+
+**1 · Keine Zahl, sondern `--hunten`.** Die Marke IST die Höhe der Leiste.
+Eine Zahl, die die Höhe eines anderen Dings abschreibt, stimmt genau bis zu
+dem Tag, an dem jemand das andere Ding anfasst. Genau dieser Tag war E236.
+
+**2 · Der Stapel steht an EINER Stelle.** Drei Lagen in drei Dateien können
+gar nicht anders, als auseinanderzulaufen — sie haben es getan. Sie stehen
+jetzt zusammen in `bausteine.css` unter „DIE DREI SCHWEBENDEN MELDUNGEN"
+(§5: was zwei Bereiche betrifft, gehört in die Schale).
+
+DIE VORGABE IST FÜR ALLE DREI GLEICH: dicht an der Leiste. Denn meistens
+ist nur EINES da, und dann gehört es dorthin. Erst wenn ein zweites
+hinzukommt, weicht das FLÜCHTIGERE nach oben aus — der Toast verschwindet
+nach Sekunden, der Streifen bleibt ohne Netz, die Einladung bis man sie
+wegtippt. `:has()` fragt genau das, und die Frage hat eine ehrliche
+Antwort: beide werden angelegt und wieder ENTFERNT, nicht nur versteckt.
+
+Gemessen in allen sechs Fällen, Abstand zur Leiste in Punkten:
+
+    nur Toast                  Toast 12
+    nur Offline-Streifen       Streifen 12
+    nur Einladung              Einladung 12
+    Toast + Streifen           Streifen 12,  Toast 66
+    Toast + Einladung          Einladung 12, Toast 66
+    alle drei                  Einladung 12, Streifen 66, Toast 122
+
+
+UND DIE PRÜFUNG BRAUCHTE DREI ANLÄUFE
+--------------------------------------------------------------------------
+
+Das ist der lehrreichere Teil. Geprüft wird die BEZIEHUNG und nicht die
+Zahl — „was allein da ist, klebt an der Leiste; sind mehrere da, weicht das
+flüchtigere aus, und keines liegt auf dem anderen". Eine Prüfung auf
+`bottom === 71px` wäre bei der nächsten Änderung an der Leiste rot, ohne
+dass etwas kaputt ist.
+
+Nur: WANN misst man?
+
+  1. Erster Wurf: sofort messen. Ergebnis „Toast endet 822, Streifen
+     beginnt 792" — ein Toast, der gar nicht sichtbar war. Er bleibt im
+     Baum stehen und wird mit `opacity` und 80 px Schiebestrecke versteckt;
+     ein unsichtbarer Toast meldet eine Lage 80 Punkte zu tief.
+     → `lagen()` überspringt jetzt, was durchsichtig ist.
+
+  2. Zweiter Wurf: auf `opacity > 0.9` warten, dann zwei Bilder abwarten
+     und die Lage vergleichen. Ergebnis „Toast endet 806, Streifen beginnt
+     805" — ein Punkt Überlappung, den es nicht gab. Deckkraft und Bewegung
+     laufen dieselben 220 ms; bei 0.9 hat die Bewegung noch acht Punkte vor
+     sich.
+
+  3. Dritter Wurf: beide Bedingungen NACH den zwei Bildern prüfen. Ergebnis
+     „Toast endet undefined" — mit `class="show"` und `opacity: 0.06`.
+
+Der Grund für 2 und 3 stand schon im eigenen Haus, in test114 Abschnitt 17:
+
+    „Unter Volllast der ganzen Suite malte der Browser aber nur ZWEI Bilder
+     in 2,6 Sekunden — der Lauf wurde rot, obwohl die Pille stand wie sie
+     soll. Der Prüfstand hungerte, nicht die App."
+
+Ein Warten, das an `requestAnimationFrame` hängt, hungert mit. Gewartet
+wird jetzt auf `transitionstart`/`transitionend` — die feuern auch dann,
+wenn kein einziges Bild gemalt wird. Der Merker beginnt bei `true`: steht
+der Toast schon, gibt es keinen Übergang, auf den man warten könnte, und
+dann ist „er steht" die richtige Antwort und keine faule.
+
+Und die Meldung bekommt 30 Sekunden statt der üblichen 2,6. Eine Prüfung,
+die gegen eine Uhr misst, misst irgendwann die Uhr.
+
+GEGENPROBE: mit den drei alten Zahlen werden vier der fünf Punkte rot —
+Streifen 25 px von der Leiste, Toast 45 px, und der Toast liegt auf dem
+Streifen. Der fünfte („keines liegt auf der Leiste") bleibt grün, und das
+ist richtig: er stellt eine andere Frage, und die Antwort darauf war auch
+vorher ja.

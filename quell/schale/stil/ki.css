@@ -80,15 +80,28 @@
 }
 #toast.show{transform:translateX(-50%) translateY(0); opacity:1}
 
-/* AM TELEFON STEHT DIE AKTIONSLEISTE UNTEN, und sie ist das Wichtigste auf
-   dem Bild: Suche, KI fragen, Neue Seite. Ein Toast bei bottom:22px legte
-   sich mitten darauf — im Bildschirmfoto vom 6. August verdeckten Toast und
-   Rundgang-Einladung gemeinsam die ganze KI-Leiste. Beide rücken jetzt über
-   die Leiste. Dieselbe Sorte Fehler wie beim Offline-Streifen, dieselbe
-   Lösung: was nur meldet, gehört nicht auf das, womit man arbeitet. */
+/* AM TELEFON STEHT UNTEN EINE LEISTE, und was nur meldet, gehört nicht auf
+   das, womit man arbeitet. Ein Toast bei bottom:22px legte sich mitten
+   darauf — im Bildschirmfoto vom 6. August verdeckten Toast und
+   Rundgang-Einladung gemeinsam die ganze Leiste.
+
+   DIE 104 PX WAREN EINE ABSCHRIFT, und das ist der eigentliche Fehler.
+   Sie beschrieben die Höhe der alten schwebenden Aktionsleiste (Suche · KI
+   fragen · Neu). Die gibt es seit E236 nicht mehr; unten steht die
+   Wegeleiste, und die ist 59 px hoch. Gemessen am 28. August auf 390 × 844:
+   Toast bis 740, Leiste ab 785 — 45 px Nichts dazwischen, und DIREKT unter
+   dem Toast lag ein Dokumentdeckel, den er zudeckte.
+
+   WO DER TOAST STEHT, STEHT NICHT MEHR HIER. Er ist eines von DREI
+   schwebenden Dingen am unteren Rand — Toast, Offline-Streifen,
+   Rundgang-Einladung —, und die drei müssen sich gegenseitig ausweichen.
+   Drei Zahlen in drei Dateien haben genau das nicht getan: als die untere
+   Leiste mit E236 von 72 auf 59 px schrumpfte, blieben alle drei stehen,
+   wo sie waren. Der Stapel steht deshalb an EINER Stelle, in
+   `bausteine.css` unter „DIE DREI SCHWEBENDEN MELDUNGEN" (§5).
+   Hier bleibt nur die FORM des Toasts. */
 @media(max-width:760px){
   #toast{
-    bottom:calc(104px + env(safe-area-inset-bottom));
     left:14px; right:14px; transform:translateY(80px);
     max-width:none; text-align:center;
   }

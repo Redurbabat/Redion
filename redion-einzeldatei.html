@@ -1840,15 +1840,28 @@ table.grid tfoot td{color:var(--text-faint); font-size:12.5px; border:none; padd
 }
 #toast.show{transform:translateX(-50%) translateY(0); opacity:1}
 
-/* AM TELEFON STEHT DIE AKTIONSLEISTE UNTEN, und sie ist das Wichtigste auf
-   dem Bild: Suche, KI fragen, Neue Seite. Ein Toast bei bottom:22px legte
-   sich mitten darauf — im Bildschirmfoto vom 6. August verdeckten Toast und
-   Rundgang-Einladung gemeinsam die ganze KI-Leiste. Beide rücken jetzt über
-   die Leiste. Dieselbe Sorte Fehler wie beim Offline-Streifen, dieselbe
-   Lösung: was nur meldet, gehört nicht auf das, womit man arbeitet. */
+/* AM TELEFON STEHT UNTEN EINE LEISTE, und was nur meldet, gehört nicht auf
+   das, womit man arbeitet. Ein Toast bei bottom:22px legte sich mitten
+   darauf — im Bildschirmfoto vom 6. August verdeckten Toast und
+   Rundgang-Einladung gemeinsam die ganze Leiste.
+
+   DIE 104 PX WAREN EINE ABSCHRIFT, und das ist der eigentliche Fehler.
+   Sie beschrieben die Höhe der alten schwebenden Aktionsleiste (Suche · KI
+   fragen · Neu). Die gibt es seit E236 nicht mehr; unten steht die
+   Wegeleiste, und die ist 59 px hoch. Gemessen am 28. August auf 390 × 844:
+   Toast bis 740, Leiste ab 785 — 45 px Nichts dazwischen, und DIREKT unter
+   dem Toast lag ein Dokumentdeckel, den er zudeckte.
+
+   WO DER TOAST STEHT, STEHT NICHT MEHR HIER. Er ist eines von DREI
+   schwebenden Dingen am unteren Rand — Toast, Offline-Streifen,
+   Rundgang-Einladung —, und die drei müssen sich gegenseitig ausweichen.
+   Drei Zahlen in drei Dateien haben genau das nicht getan: als die untere
+   Leiste mit E236 von 72 auf 59 px schrumpfte, blieben alle drei stehen,
+   wo sie waren. Der Stapel steht deshalb an EINER Stelle, in
+   `bausteine.css` unter „DIE DREI SCHWEBENDEN MELDUNGEN" (§5).
+   Hier bleibt nur die FORM des Toasts. */
 @media(max-width:760px){
   #toast{
-    bottom:calc(104px + env(safe-area-inset-bottom));
     left:14px; right:14px; transform:translateY(80px);
     max-width:none; text-align:center;
   }
@@ -9226,12 +9239,14 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
                          font-size:12px; text-decoration:underline; padding:0 3px}
 #offline-streifen button[data-a="zu"]{text-decoration:none; font-size:13px; opacity:.7}
 #offline-streifen button:hover{opacity:1}
-/* Am Telefon: volle Breite und ÜBER der unteren Leiste (72 px + Safe-Area) —
-   bei bottom:70px lag der Streifen auf ihr. Und die Knöpfe sind
-   Fingerflächen: das ✕ war 17 × 20 px. */
+/* Am Telefon: volle Breite und ÜBER der unteren Leiste — bei bottom:70px
+   lag der Streifen auf ihr. Und die Knöpfe sind Fingerflächen: das ✕ war
+   17 × 20 px.
+
+   Wo er steht, steht weiter unten im Stapel („DIE DREI SCHWEBENDEN
+   MELDUNGEN"). Hier bleibt nur die Form. */
 @media(max-width:760px){
   #offline-streifen{left:10px; right:10px; transform:none;
-                    bottom:calc(84px + env(safe-area-inset-bottom));
                     font-size:13px; gap:6px; padding:2px 4px 2px 13px}
   #offline-streifen span{flex:1 1 auto; min-width:0}
   #offline-streifen button{min-height:44px; padding:0 10px}
@@ -9629,16 +9644,62 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .wahl-knoepfe button span{font-size:12.5px; color:var(--text-dim); line-height:1.5}
 
 
-/* Die Rundgang-Einladung am Telefon: über die Aktionsleiste, nicht darauf.
+/* Die Rundgang-Einladung am Telefon: über die untere Leiste, nicht darauf.
    Sie lag bei bottom:14px und verdeckte zusammen mit dem Toast die halbe
    untere Leiste — sichtbar im Bildschirmfoto vom 6. August (E37). */
 @media(max-width:760px){
-  /* Über den Toast, nicht auf ihn: beide sassen auf derselben Höhe und
-     überdeckten einander. Der Toast ist flüchtig und gehört näher an die
-     Leiste, die Einladung steht länger und rückt darüber. */
-  #rg-einladung{
-    left:14px; right:14px; max-width:none;
-    bottom:calc(172px + env(safe-area-inset-bottom));
+  #rg-einladung{ left:14px; right:14px; max-width:none }
+}
+
+/* ============================================================================
+ * DIE DREI SCHWEBENDEN MELDUNGEN AM UNTEREN RAND
+ * ----------------------------------------------------------------------------
+ * Toast · Offline-Streifen · Rundgang-Einladung. Drei Module, drei Dateien,
+ * und bis zum 28. August drei Zahlen: 104, 84, 172. Jede beschrieb die Höhe
+ * der alten schwebenden Aktionsleiste (Suche · KI fragen · Neu).
+ *
+ * DIE GIBT ES SEIT E236 NICHT MEHR. Unten steht die Wegeleiste, 59 px statt
+ * 72 — und alle drei blieben stehen, wo sie waren. Gemessen am Telefon:
+ * der Toast endete bei 740, die Leiste beginnt bei 785. 45 px Nichts
+ * dazwischen, und DIREKT unter dem Toast lag ein Dokumentdeckel, den er
+ * zudeckte. In vier von fünf Bildschirmfotos war eine Zeile verdeckt.
+ *
+ * ZWEI REGELN, UND DIE ZWEITE IST DIE WICHTIGERE:
+ *
+ *   1. Keine Zahl, sondern `--hunten`. Die Marke IST die Höhe der Leiste;
+ *      wächst sie, wächst der Abstand mit. Eine Zahl, die die Höhe eines
+ *      anderen Dings abschreibt, stimmt bis zu dem Tag, an dem jemand das
+ *      andere Ding anfasst.
+ *
+ *   2. Der Stapel steht an EINER Stelle. Drei Lagen in drei Dateien können
+ *      gar nicht anders, als auseinanderzulaufen — das ist genau passiert.
+ *
+ * DIE VORGABE IST FÜR ALLE DREI GLEICH: dicht an der Leiste. Denn meistens
+ * ist nur EINES da, und dann gehört es dorthin. Erst wenn ein zweites
+ * hinzukommt, rückt das FLÜCHTIGERE nach oben — der Toast verschwindet nach
+ * Sekunden, der Streifen bleibt, solange kein Netz da ist, die Einladung
+ * bis man sie wegtippt.
+ *
+ * `:has()` fragt genau das: ist das andere gerade IM BAUM? Beide werden
+ * angelegt und wieder entfernt (`rundgang.ts`, `pwa.ts`), nicht nur
+ * versteckt — die Frage hat also eine ehrliche Antwort.
+ * ==========================================================================*/
+@media(max-width:760px){
+  #toast, #offline-streifen, #rg-einladung{
+    bottom:calc(var(--hunten, 59px) + 12px);
+  }
+  /* Ist ein längerlebiges da, rückt der Toast darüber. */
+  body:has(#offline-streifen) #toast,
+  body:has(#rg-einladung)     #toast{
+    bottom:calc(var(--hunten, 59px) + 66px);
+  }
+  /* Sind BEIDE da, nimmt die Einladung den untersten Platz — sie steht am
+     längsten —, der Streifen darüber, der Toast ganz oben. */
+  body:has(#rg-einladung) #offline-streifen{
+    bottom:calc(var(--hunten, 59px) + 66px);
+  }
+  body:has(#rg-einladung):has(#offline-streifen) #toast{
+    bottom:calc(var(--hunten, 59px) + 122px);
   }
 }
 
