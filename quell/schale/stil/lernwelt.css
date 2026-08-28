@@ -1327,3 +1327,40 @@ body[data-ruhig="an"] .lernwelt .lw-nav{ padding-right:264px }
   }
   body[data-ruhig="an"] .lernwelt .lw-nav{ padding-right:var(--space-2) }
 }
+
+
+/* --- Noten (E241) --------------------------------------------------------
+   Karten je Fach: Schnitt gross, Zeugnisnote und Zielsatz als Text, die
+   letzten Noten als Balkenreihe. §38: die Farbe (ungenügend = Gefahr)
+   trägt nie allein — Zahl und Satz stehen immer daneben. */
+.lernwelt .lw-grade-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
+  gap:var(--space-4)
+}
+.lernwelt .lw-grade-fach{
+  display:flex;flex-direction:column;gap:var(--space-2);
+  padding:var(--space-4) var(--space-5);border:1px solid var(--line);
+  border-radius:var(--radius-lg);background:var(--lw-panel,var(--bg-card))
+}
+.lernwelt .lw-grade-fach.ist-ungenuegend{border-color:var(--gefahr)}
+.lernwelt .lw-grade-fach header{
+  display:flex;align-items:baseline;justify-content:space-between;gap:var(--space-3)
+}
+.lernwelt .lw-grade-fach h3{
+  overflow:hidden;margin:0;font-size:14px;text-overflow:ellipsis;white-space:nowrap
+}
+.lernwelt .lw-grade-fach header strong{font-size:22px;font-weight:760;letter-spacing:-.02em}
+.lernwelt .lw-grade-fach.ist-ungenuegend header strong{color:var(--gefahr)}
+.lernwelt .lw-grade-zeugnis{margin:0;color:var(--text-dim);font-size:12px}
+.lernwelt .lw-grade-zeugnis b{color:var(--text)}
+.lernwelt .lw-grade-ziel{margin:0;color:var(--text-dim);font-size:11.5px;line-height:1.45}
+/* Die Balken sind eine ZEITREIHE, kein Diagrammersatz: unten ausgerichtet,
+   Höhe = Note. Ihre Zahl steht im title jedes Balkens. */
+.lernwelt .lw-grade-balken{
+  display:flex;align-items:flex-end;gap:3px;height:44px;
+  padding:var(--space-1) 0;border-bottom:1px solid var(--line-soft)
+}
+.lernwelt .lw-grade-balken i{
+  flex:0 0 12px;border-radius:3px 3px 0 0;background:var(--erfolg);opacity:.8
+}
+.lernwelt .lw-grade-balken i.ist-ungenuegend{background:var(--gefahr)}

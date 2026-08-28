@@ -17854,3 +17854,70 @@ und rot geworden (Fluss statt Überlagerung → Inhalt ab 472; Listener raus
 zurück). Verhaltensprobe über sechs Schritte mit Redurs gespeichertem
 Zustand: frisch zu · aufgeklappt liegt darüber · Wechsel Heute zu ·
 Wechsel Termine zu · nach Befehl zu · nach Neuladen zu.
+
+
+E241 — Noten: die Schulvorlage legte das Heft an, jetzt rechnet jemand
+================================================================================
+
+Redur über sein Ziel: „es sollte meine Schule alles begleiten, Noten,
+Lernen, Lernziele … das soll mich Jahre begleiten." Beim Nachmessen der
+Vision fiel auf: das Wort NOTEN kam in Redion nur einmal vor — als
+Datenbank, die die Schulvorlage seit E139 anlegt (`schoolKind: 'grades'`,
+mit Fach, Punkten, Maximum, eigener Note und Gewichtung). Eingetragen
+werden konnte alles. Gerechnet hat damit niemand.
+
+
+DIE ANSICHT „NOTEN" (Lernwelt, neben den Prüfungen)
+--------------------------------------------------------------------------
+
+Gelesen wird wie bei den Prüfungen: aus JEDER Sammlung, die nach Notenheft
+aussieht — `schoolKind: 'grades'` oder ein Name mit „Noten"/„Zeugnis" —,
+mit toleranten Spaltenschlüsseln über die NAMEN. Kein zweiter Katalog
+(§8), keine neue Datenart (§9): Noten sind Datenbankzeilen, die Ansicht
+ist nur der Blick darauf. Wer sein eigenes Heft anders baut, wird trotzdem
+verstanden.
+
+DREI ZAHLEN JE FACH, jede mit Grund:
+
+    Schnitt    gewichtetes Mittel, ungerundet — die Wahrheit
+    Zeugnis    auf halbe Noten gerundet (4.875 → 5.0), wie das Zeugnis
+    nötig      was die nächste Prüfung (Gewicht 1) mindestens bringen
+               muss, damit der Schnitt auf 4.0 kommt:
+               n = 4·(G+1) − S  mit  S = Σ Note·Gewicht, G = Σ Gewicht
+
+Der Zielrechner sagt es als Satz, nicht als Zahl: „sicher" (n ≤ 1),
+„mindestens eine 4.5", oder „mit einer einzelnen Prüfung nicht mehr zu
+erreichen" (n > 6). Das Gesamtzeugnis mittelt ZEUGNISNOTEN, nicht
+Rohwerte — so entsteht die Zahl, die am Semesterende wirklich dasteht.
+
+ZWEI WEGE ZUR NOTE, weil die Vorlage beide anbietet: die eingetragene
+Note gewinnt; fehlt sie, gilt die übliche Schweizer Umrechnung
+Note = 5·Punkte/Maximum + 1. Und ein Wert ausserhalb von 1–6 fällt
+heraus, statt still den Schnitt zu heben — in der Gegenprobe stand
+Mathematik sonst bei 13.63, und der Zielrechner meldete „die 4.0 ist
+sicher".
+
+
+ZWEI FEHLER AUF DEM WEG, BEIDE GEMESSEN
+--------------------------------------------------------------------------
+
+  · **`Number(null)` ist 0, nicht NaN.** Der erste Wurf las das leere
+    Notenfeld mit `zahl(wert, NaN)` — der Rückfall greift aber nur bei
+    NICHT-endlichen Werten, und `Number(null)` ist endlich. Ein leeres
+    Feld wurde zur Note 0 und fiel durch den 1–6-Filter: die
+    Punkte-Leistung (21 von 30) fehlte, Elektrotechnik stand mit „2 Noten
+    · 5.00" statt „3 Noten · 4.88" da. Leer muss leer bleiben, damit der
+    Punkteweg drankommt.
+
+  · **Der Prüfpunkt für den Mittelfall rechnete selbst falsch.** Er
+    erwartete „mindestens eine …" bei Elektrotechnik — dort ist aber
+    n = 4·5 − 19.5 = 0.5, also „sicher". Die Ansicht hatte recht, die
+    Prüfung nicht; der Mittelfall bekam ein eigenes Fach (eine 3.5 →
+    „mindestens eine 4.5").
+
+**Geprüft:** test249, zwölf Punkte — Handrechnung im Test statt
+abgeschriebener Werte, alle drei Zielrechner-Sätze einzeln, beide
+Leerfälle mit ihren Wegen (§47), und der Klick „Notenheft öffnen" bis in
+die Krume. Drei Gegenproben einzeln rot: Punkteweg abgeschaltet →
+Elektrotechnik verliert eine Note; Rundung auf Abrunden verstellt →
+Zeugnis 4.5 statt 5.0; Tippfehler-Filter raus → Schnitt 13.63.

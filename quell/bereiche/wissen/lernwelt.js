@@ -21,6 +21,7 @@ const Lernwelt = (() => {
         { id: 'lernweg', icon: 'compass', name: 'Lernpfad' },
         { id: 'fehler', icon: 'puzzle', name: 'Meine Fehler' },
         { id: 'pruefungen', icon: 'clipboard', name: 'Prüfungen' },
+        { id: 'noten', icon: 'medal', name: 'Noten' },
         { id: 'schule', icon: 'learn', name: 'Schule / Ausbildung' },
         { id: 'uni', icon: 'building', name: 'Uni' },
         { id: 'arbeit', icon: 'briefcase', name: 'Arbeit' },
@@ -49,7 +50,11 @@ const Lernwelt = (() => {
         { id: 'heute', icon: 'today', name: 'Heute' },
         { id: 'lernen', icon: 'cards', name: 'Lernen',
             unter: ['lernen', 'lernweg', 'fehler', 'fortschritt'] },
-        { id: 'pruefungen', icon: 'clipboard', name: 'Prüfungen' },
+        /* NOTEN GEHÖREN NEBEN DIE PRÜFUNGEN (E241). Redur: „es sollte meine
+           Schule alles begleiten, Noten, Lernen, Lernziele". Die Schulvorlage
+           legte das Notenheft seit E139 an — gerechnet hat damit niemand. */
+        { id: 'pruefungen', icon: 'clipboard', name: 'Prüfungen',
+            unter: ['pruefungen', 'noten'] },
         { id: 'schule', icon: 'learn', name: 'Wo du lernst',
             unter: ['schule', 'uni', 'arbeit'] }
     ];
@@ -1468,6 +1473,139 @@ const Lernwelt = (() => {
             (rest.length ? '<details><summary>Ältere (' + rest.length + ')</summary><ul>' +
                 rest.map(zeile).join('') + '</ul></details>' : '') + '</section>';
     };
+    const notenSammlungen = () => Object.values(Store.cache.collections).filter(collection => {
+        const name = String(collection?.name || '').toLowerCase();
+        return collection?.schoolKind === 'grades' || /\bnoten\b|zeugnis/.test(name);
+    });
+    const notenEintraege = () => {
+        const raus = [];
+        notenSammlungen().forEach(collection => {
+            const schema = collection.schema || {};
+            const spalte = (muster, typ = 'number') => Object.keys(schema).find(key => schema[key]?.type === typ &&
+                muster.test(String(schema[key]?.name || key).toLowerCase())) || '';
+            /* „Rückmeldung" heisst im Vorlagen-Schema `note` — der SCHLÜSSEL, nicht
+               der Name. Gesucht wird deshalb über den NAMEN und den Typ: eine
+               Textspalte kann keine Note sein. */
+            const noteKey = spalte(/note|zensur/) || '';
+            const punkteKey = spalte(/punkte|points|erreicht/);
+            const maxKey = spalte(/max/);
+            const gewichtKey = spalte(/gewicht|weight|zaehlt/);
+            const fachKey = schemaSchluessel(collection, 'relation', ['fach', 'subject', 'modul']) ||
+                Object.keys(schema).find(key => /fach|subject|modul/.test(String(schema[key]?.name || key).toLowerCase())) || '';
+            const datumKey = schemaSchluessel(collection, 'date');
+            /* NICHT `zahl(wert, NaN)`: `Number(null)` ist 0, nicht NaN — ein
+               LEERES Notenfeld würde damit zur Note 0 und fiele still durch den
+               1–6-Filter. Genau der Vorlagen-Fall „Punkte eingetragen, Note
+               leer" verlor so seine Leistung: gemessen stand Elektrotechnik mit
+               „2 Noten" da, die dritte (21 von 30 Punkten) war weg. Leer muss
+               leer bleiben, damit der Punkteweg drankommt. */
+            const feldZahl = (wert) => {
+                if (wert === null || wert === undefined || wert === '')
+                    return NaN;
+                return zahl(wert, NaN);
+            };
+            Store.rowsOf(collection.id).forEach((row) => {
+                if (!row || row.alive === false || !darfLesen(row) || !imBereich(row))
+                    return;
+                let note = feldZahl(zeilenWert(row, collection, noteKey));
+                if (!Number.isFinite(note)) {
+                    const p2 = feldZahl(zeilenWert(row, collection, punkteKey));
+                    const m2 = feldZahl(zeilenWert(row, collection, maxKey));
+                    if (Number.isFinite(p2) && Number.isFinite(m2) && m2 > 0)
+                        note = 5 * (p2 / m2) + 1;
+                }
+                if (!Number.isFinite(note))
+                    return;
+                /* Tippfehler fangen, nicht verstecken: eine „45" ist keine Note.
+                   Sie fällt heraus, statt den Schnitt auf 12 zu heben. */
+                if (note < 1 || note > 6)
+                    return;
+                const fachWert = zeilenWert(row, collection, fachKey);
+                raus.push({
+                    fach: textListe(fachWert).join(', ') || String(fachWert || '') || 'Ohne Fach',
+                    note,
+                    gewicht: Math.max(0.1, zahl(zeilenWert(row, collection, gewichtKey), 1) || 1),
+                    datum: datum(zeilenWert(row, collection, datumKey)),
+                    titel: String(row.text || 'Leistung')
+                });
+            });
+        });
+        return raus.sort((a, b) => (a.datum?.getTime() ?? 0) - (b.datum?.getTime() ?? 0));
+    };
+    /* DIE DREI ZAHLEN JE FACH, und warum sie so gerechnet sind:
+       · `schnitt`  gewichtetes Mittel, ungerundet — die Wahrheit.
+       · `zeugnis`  auf halbe Noten gerundet (mathematisch, 4.25 → 4.5), wie
+         ein Schweizer Zeugnis rundet.
+       · `noetig`   was die NÄCHSTE Prüfung (Gewicht 1) bringen muss, damit
+         der Schnitt auf 4.0 kommt: aus Z·(G+1) = S + n folgt
+         n = 4·(G+1) − S, mit S = Summe(Note·Gewicht), G = Summe(Gewicht).
+         Unter 1 heisst „schon sicher", über 6 „mit einer Prüfung nicht mehr
+         zu schaffen" — beides sagt der Text, nicht nur die Zahl. */
+    const notenBilanz = (eintraege) => {
+        const je = new Map();
+        eintraege.forEach(e => {
+            const liste2 = je.get(e.fach) || [];
+            liste2.push(e);
+            je.set(e.fach, liste2);
+        });
+        return [...je.entries()].map(([fach, liste2]) => {
+            const S = liste2.reduce((summe, e) => summe + e.note * e.gewicht, 0);
+            const G = liste2.reduce((summe, e) => summe + e.gewicht, 0);
+            const schnitt = S / G;
+            return { fach, eintraege: liste2, schnitt,
+                zeugnis: Math.round(schnitt * 2) / 2,
+                noetig: 4 * (G + 1) - S };
+        }).sort((a, b) => a.fach.localeCompare(b.fach, 'de-CH'));
+    };
+    const notenAnsicht = () => {
+        const eintraege = notenEintraege();
+        const heftDa = notenSammlungen().length > 0;
+        if (!eintraege.length) {
+            /* Zwei verschiedene Leerfälle, zwei verschiedene Sätze (§47): ohne
+               Heft führt der Knopf zur Schulvorlage, die es anlegt; mit leerem
+               Heft dorthin, wo man einträgt. */
+            if (!heftDa)
+                return '<div class="lw-grades">' +
+                    leer('medal', 'Noch kein Notenheft', 'Die Schulvorlage legt ein Notenheft mit Fächern, Gewichtung und Punkten an — zusätzlich, sie ersetzt nichts.', 'school-install', 'Ausbildung einrichten') + '</div>';
+            return '<div class="lw-grades">' +
+                leer('medal', 'Noch keine Noten eingetragen', 'Trage die erste Note im Notenheft ein — mit Fach, Gewicht und Datum rechnet Redion Schnitt und Zeugnisnote.', 'grades-open', 'Notenheft öffnen') + '</div>';
+        }
+        const bilanz = notenBilanz(eintraege);
+        const gesamtRoh = eintraege.reduce((summe, e) => summe + e.note * e.gewicht, 0) /
+            eintraege.reduce((summe, e) => summe + e.gewicht, 0);
+        /* Das Zeugnis mittelt ZEUGNISNOTEN, nicht Rohwerte — so entsteht die
+           Zahl, die am Semesterende wirklich dasteht. */
+        const gesamtZeugnis = bilanz.reduce((summe, f) => summe + f.zeugnis, 0) / bilanz.length;
+        const unter4 = bilanz.filter(f => f.zeugnis < 4);
+        const balken = (liste2) => '<span class="lw-grade-balken" aria-hidden="true">' +
+            liste2.slice(-8).map(e => '<i class="' + (e.note < 4 ? 'ist-ungenuegend' : '') +
+                '" style="height:' + Math.round(Math.max(8, (e.note - 1) / 5 * 100)) + '%"' +
+                ' title="' + esc(e.titel + ': ' + e.note.toFixed(1)) + '"></i>').join('') +
+            '</span>';
+        const zielSatz = (f) => {
+            if (f.noetig <= 1)
+                return 'Die 4.0 ist sicher — jede gültige Note hält den Schnitt genügend.';
+            if (f.noetig > 6)
+                return 'Mit einer einzelnen Prüfung ist die 4.0 nicht mehr zu erreichen.';
+            return 'Für eine 4.0 im Schnitt braucht die nächste Prüfung mindestens eine ' +
+                (Math.ceil(f.noetig * 10) / 10).toFixed(1) + '.';
+        };
+        return '<div class="lw-grades"><header class="lw-page-head"><div><p>Notenübersicht</p>' +
+            '<h2>' + gesamtZeugnis.toFixed(1) + ' im Zeugnis</h2>' +
+            '<span>Gewichteter Schnitt ' + gesamtRoh.toFixed(2) + ' über ' + eintraege.length +
+            (eintraege.length === 1 ? ' Note' : ' Noten') + ' in ' + bilanz.length +
+            (bilanz.length === 1 ? ' Fach' : ' Fächern') +
+            (unter4.length ? ' · ' + unter4.length + (unter4.length === 1 ? ' Fach' : ' Fächer') +
+                ' ungenügend' : ' · kein Fach ungenügend') + '.</span></div>' +
+            '<button type="button" data-lw-action="grades-open">Notenheft öffnen</button></header>' +
+            '<div class="lw-grade-grid">' + bilanz.map(f => '<article class="lw-grade-fach' + (f.zeugnis < 4 ? ' ist-ungenuegend' : '') + '">' +
+            '<header><h3>' + esc(f.fach) + '</h3><strong>' + f.schnitt.toFixed(2) + '</strong></header>' +
+            '<p class="lw-grade-zeugnis">Zeugnisnote <b>' + f.zeugnis.toFixed(1) + '</b> · ' +
+            f.eintraege.length + (f.eintraege.length === 1 ? ' Note' : ' Noten') + '</p>' +
+            balken(f.eintraege) +
+            '<p class="lw-grade-ziel">' + esc(zielSatz(f)) + '</p>' +
+            '</article>').join('') + '</div></div>';
+    };
     const pruefungenAnsicht = () => {
         if (zustand.simulation)
             return simulationAnsicht();
@@ -1890,6 +2028,7 @@ const Lernwelt = (() => {
             case 'lernweg': return lernpfadAnsicht();
             case 'fehler': return fehlerAnsicht();
             case 'pruefungen': return pruefungenAnsicht();
+            case 'noten': return notenAnsicht();
             case 'schule': return schuleAnsicht();
             case 'uni': return uniAnsicht();
             case 'arbeit': return arbeitAnsicht();
@@ -2262,6 +2401,18 @@ const Lernwelt = (() => {
                 zustand.fachId = '';
                 zeichnen();
             }
+            return;
+        }
+        /* Das Notenheft öffnen — die SEITE, auf der sein Datenbank-Block liegt.
+           Dort trägt man ein; die Notenansicht rechnet nur (E241). */
+        if (aktion === 'grades-open') {
+            const sammlung = notenSammlungen()[0];
+            if (!sammlung)
+                return;
+            const block = Object.values(Store.cache.blocks).find(b => b?.type === 'database' && b.collectionId === sammlung.id && b.alive !== false);
+            const ziel = block ? (block.parentTable === 'block' ? block.parentId : block.id) : null;
+            if (ziel)
+                App.oeffne(String(ziel));
             return;
         }
         if (aktion === 'new-page') {

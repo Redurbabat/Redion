@@ -35,6 +35,19 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
+**28. August 2026 · Noten: das Heft war da, jetzt rechnet jemand (E241)**
+
+> Redur: „es sollte meine Schule alles begleiten, Noten, Lernen,
+> Lernziele." Das Wort NOTEN kam in Redion genau einmal vor — als
+> Datenbank der Schulvorlage. Eintragen ging, gerechnet hat niemand.
+>
+> Neu: Ansicht „Noten" neben den Prüfungen. Je Fach gewichteter Schnitt,
+> Zeugnisnote (auf halbe Noten), Balken der letzten Noten, Zielrechner
+> („für eine 4.0 braucht die nächste Prüfung mindestens eine …").
+> Punkte→Note nach Schweizer Formel; Werte ausserhalb 1–6 fallen heraus
+> statt den Schnitt zu heben (Gegenprobe: 13.63). test249, zwölf Punkte,
+> drei Gegenproben einzeln rot.
+
 **28. August 2026 · Redurs vier iPhone-Fotos: das Menüband stand dauerhaft offen (E240)**
 
 > Ein einziger Reitertipp schrieb „Band offen" in EINEN Schlüssel für alle

@@ -1,210 +1,182 @@
-/* Suite 215 — Was Bedeutung trägt, muss man lesen können (§38, E230)
+/* Suite 249 — Die Notenübersicht (E241)
  * ============================================================================
- * §38 verlangt: „Kontrast im Hell- und Dunkelmodus prüfen." Geprüft wurde er
- * bisher an einzelnen Stellen — an der ⋯-Zeile, an den Pillen, an der Suche.
- * Diese Suite fragt es für ALLE Produktwelten auf einmal, in BEIDEN Themen,
- * und zwar mit der WCAG-Formel statt nach Augenmass.
+ * Redur: „es sollte meine Schule alles begleiten, Noten, Lernen, Lernziele."
+ * Die Schulvorlage legte das Notenheft seit E139 an — gerechnet hat damit
+ * niemand. Diese Suite prüft die Rechnung, nicht die Deko:
  *
- * ─── WOHER SIE KOMMT ───────────────────────────────────────────────────────
- *
- * `--text-faint` steht in `dunkel.css` mit einem Kommentar, der die Absicht
- * genau benennt: „3.9:1 — nur Beiwerk und Symbole". Die Absicht ist richtig
- * und die Zahl bewusst unter AA.
- *
- * Nachgemessen lagen elf Stellen darunter, und sieben davon waren kein
- * Beiwerk: der Platzhalter der Suche, das Versprechen „Alles bleibt auf
- * diesem Gerät.", die Überschrift „Privat" über den eigenen Seiten, die vier
- * Zeilen, die sagen was die Zahl darüber BEDEUTET, dazu in der Planung die
- * Datumsangaben und die Abschnittsüberschrift „Bevorstehend".
- *
- * Das Token blieb. Die sieben Stellen bekamen `--text-dim`.
- *
- * ─── DIE AUSNAHMEN SIND NAMENTLICH, NICHT PAUSCHAL ─────────────────────────
- *
- * Zwei Dinge dürfen blass bleiben, weil sie wirklich Beiwerk sind: der
- * Tastenhinweis `Strg P` im Suchfeld und der Aufklapp-Pfeil `▸` im Baum.
- * Beide stehen unten mit Grund in `ERLAUBT`. Eine Ausnahmeliste, die nur aus
- * Klassennamen besteht, wächst irgendwann still — deshalb steht bei jeder
- * der Grund daneben, und deshalb ist sie kurz.
- *
- * ─── KANN DIESE SUITE ROT WERDEN? (§55.2) ──────────────────────────────────
- *
- * GEMESSEN, mit `--text-faint` an den sieben Stellen wieder eingesetzt:
- *
- *     hell    lernzentrale   11 zu schwach   (statt 0)
- *     dunkel  lernzentrale   11 zu schwach   (statt 0)
- *     dunkel  planung        10 zu schwach   (statt 0)
- *
- * Und die Gegenrichtung: `ERLAUBT` leer gemacht, meldet sie die beiden
- * Beiwerk-Stellen — die Liste wirkt also wirklich und ist nicht bloss
- * Dekoration.
- *
- *   node pruefungen/lauf/test249.mts
+ * §1 SCHNITT UND ZEUGNIS. Gewichtetes Mittel exakt; Zeugnisnote auf halbe
+ *    Noten (4.875 → 5.0). Handrechnung im Test, nicht abgeschrieben.
+ * §2 DER PUNKTEWEG. Eine Zeile ohne Note, aber mit 21 von 30 Punkten, ist
+ *    eine 4.5 — und ein LEERES Notenfeld darf nicht als 0 herausfallen
+ *    (Number(null) ist 0; genau daran scheiterte der erste Wurf).
+ * §3 DER ZIELRECHNER. n = 4·(G+1) − S, mit den drei Aussagen sicher /
+ *    erreichbar / nicht mehr erreichbar — jede einzeln.
+ * §4 TIPPFEHLER FALLEN HERAUS, still den Schnitt heben dürfen sie nicht.
+ * §5 DIE LEERFÄLLE führen wohin (§47): ohne Heft zur Vorlage, mit leerem
+ *    Heft zum Heft.
  * ==========================================================================*/
+import _pfad from 'node:path';
+const WURZEL = _pfad.resolve(import.meta.dirname, '../..');
 import { chromium } from 'playwright';
-import http from 'node:http';
-import type { IncomingMessage, ServerResponse } from 'node:http';
-import fs from 'node:fs';
-import path from 'node:path';
+import { createServer } from 'node:http';
+import { readFileSync, existsSync, statSync } from 'node:fs';
+import { join, extname } from 'node:path';
 
-const WURZEL = path.resolve(import.meta.dirname, '../..');
-const PORT = 8991;
-
+const PORT = 8834;
 const TYP: Record<string, string> = {
-  '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css',
-  '.png': 'image/png', '.json': 'application/json',
-  '.webmanifest': 'application/manifest+json', '.ico': 'image/x-icon'
+  '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8',
+  '.svg': 'image/svg+xml', '.png': 'image/png', '.woff2': 'font/woff2'
 };
-const server = http.createServer((a: IncomingMessage, b: ServerResponse) => {
-  const rein = decodeURIComponent((a.url ?? '/').split('?')[0] ?? '/');
-  const pfad = path.join(WURZEL, rein === '/' ? 'index.html' : rein.slice(1));
-  if (!pfad.startsWith(WURZEL) || !fs.existsSync(pfad) || fs.statSync(pfad).isDirectory()) {
-    b.writeHead(404); b.end(); return;
-  }
-  b.writeHead(200, { 'Content-Type': TYP[path.extname(pfad)] ?? 'application/octet-stream' });
-  b.end(fs.readFileSync(pfad));
+const server = createServer((q, a) => {
+  let pfad = join(WURZEL, decodeURIComponent((q.url || '/').split('?')[0]!));
+  if (existsSync(pfad) && statSync(pfad).isDirectory()) pfad = join(pfad, 'index.html');
+  if (!existsSync(pfad) || !pfad.startsWith(WURZEL)) { a.statusCode = 404; a.end('weg'); return; }
+  a.setHeader('Content-Type', TYP[extname(pfad)] || 'application/octet-stream');
+  a.end(readFileSync(pfad));
 });
-await new Promise<void>(f => { server.listen(PORT, () => f()); });
+await new Promise<void>(f => server.listen(PORT, () => f()));
+
+const b = await chromium.launch();
+const p = await b.newPage({ viewport: { width: 1400, height: 950 } });
+const fehler: string[] = [];
+p.on('pageerror', e => fehler.push('PAGEERROR: ' + e.message));
 
 let ok = 0, weg = 0;
-const p = (n: string, b: unknown, extra = ''): void => {
-  if (b) { ok++; console.log('  ✓ ' + n); }
-  else { weg++; console.log('  ✗ ' + n + (extra ? ' — ' + extra : '')); }
+const pr = (name: string, gut: unknown, ist = ''): void => {
+  if (gut) ok++; else weg++;
+  console.log((gut ? '  ✓ ' : '  ✗ ') + name + (gut || !ist ? '' : ' — ' + ist));
 };
 
-/* WAS BLASS BLEIBEN DARF — und warum. Jede Zeile ist eine Entscheidung,
-   keine Abkürzung. Der Wähler muss auf das Element passen, das den TEXT
-   trägt, nicht auf irgendeinen Vorfahren: sonst deckt eine Ausnahme mehr ab,
-   als sie soll. */
-const ERLAUBT: { wahl: string; grund: string }[] = [
-  { wahl: '#topbar .sucher kbd',
-    grund: 'Tastenhinweis neben dem Feld — die Handlung steht daneben im Klartext' },
-  { wahl: '#tree .tw',
-    grund: 'Aufklapp-Pfeil ▸, ein Symbol; sein Zustand steht in aria-expanded' }
-];
+await p.goto(`http://localhost:${PORT}/index.html`);
+await p.waitForFunction(() => typeof App !== 'undefined' && typeof Store !== 'undefined' &&
+  (document.getElementById('tree')?.children.length || 0) > 0, null, { timeout: 30000 });
+await p.evaluate(() => {
+  Store.setMeta('rundgangGesehen', true);
+  document.getElementById('rg-willkommen')?.remove();
+  document.querySelector('.produkt-onboarding-lage')?.remove();
+});
 
-const WELTEN: { name: string; ruf: string; arg?: string }[] = [
-  { name: 'Lernzentrale', ruf: 'lernen' },
-  { name: 'Workspace',    ruf: 'workspace' },
-  { name: 'Bibliothek',   ruf: 'bibliothek' },
-  { name: 'Aufgaben',     ruf: 'aufgaben' },
-  { name: 'Whiteboards',  ruf: 'whiteboards' },
-  { name: 'Planung',      ruf: 'planung' },
-  { name: 'Arbeit',       ruf: 'lernen', arg: 'arbeit' },
-  { name: 'Prüfungen',    ruf: 'lernen', arg: 'pruefungen' }
-];
+console.log('\n1 · Leerfall ohne Heft: der Weg führt zur Vorlage');
+await p.evaluate(() => Produktwelten.lernen('noten'));
+await p.waitForTimeout(700);
+const leer1 = await p.evaluate(() => ({
+  titel: (document.querySelector('.lw-grades .lw-empty h3, .lw-grades h3')?.textContent || '').trim(),
+  aktion: document.querySelector('.lw-grades [data-lw-action]')?.getAttribute('data-lw-action') || ''
+}));
+pr('Ohne Notenheft steht die Einladung zur Schulvorlage',
+  /kein Notenheft/i.test(leer1.titel) && leer1.aktion === 'school-install',
+  JSON.stringify(leer1));
 
-const browser = await chromium.launch();
-const fehler: string[] = [];
+console.log('\n2 · Mit Heft und Noten: die Rechnung stimmt mit der Hand überein');
+await p.evaluate(() => {
+  const seite = Store.addBlock(null, 'page');
+  Store.updateBlock(seite.id, { text: 'Schule', icon: '🎓' });
+  Store.addDatabase(seite.id, 'Noten', {
+    title: { name: 'Leistung', type: 'title' },
+    d1: { name: 'Datum', type: 'date' },
+    f1: { name: 'Fach', type: 'text' },
+    p1: { name: 'Punkte', type: 'number' },
+    m1: { name: 'Maximum', type: 'number' },
+    n1: { name: 'Note (eigene Skala)', type: 'number' },
+    g1: { name: 'Gewichtung', type: 'number' },
+    r1: { name: 'Rückmeldung', type: 'text' }
+  });
+  const c = Object.values<any>(Store.cache.collections).find(x => x.name === 'Noten')!;
+  (globalThis as any).__notenC = c.id;
+  const rein = (titel: string, fach: string, note: number | null, gewicht: number,
+                punkte: number | null, max: number | null) => {
+    const z = Store.addBlock(c.id, 'page');
+    Store.updateBlock(z.id, { text: titel, parentTable: 'collection',
+      props: { f1: fach, n1: note, g1: gewicht, p1: punkte, m1: max } });
+  };
+  /* Elektrotechnik: 5.5×2 + 4.0×1 + Punkteweg 21/30→4.5×1
+     → S=19.5, G=4, Schnitt 4.875, Zeugnis 5.0. */
+  rein('Ohmsches Gesetz', 'Elektrotechnik', 5.5, 2, null, null);
+  rein('Leistung', 'Elektrotechnik', 4.0, 1, null, null);
+  rein('VDE', 'Elektrotechnik', null, 1, 21, 30);
+  /* Mathematik: 3.0×2 + 3.5×1 → S=9.5, G=3, Schnitt 3.1667 → „3.17",
+     Zeugnis 3.0. Ziel: 4·4 − 9.5 = 6.5 → nicht mehr erreichbar. */
+  rein('Algebra', 'Mathematik', 3.0, 2, null, null);
+  rein('Geometrie', 'Mathematik', 3.5, 1, null, null);
+  /* Deutsch: 6.0×1 → Ziel 4·2 − 6 = 2 unter Bereich… nein: 2.0 ist eine
+     gültige Note. „Sicher" verlangt noetig ≤ 1: 4·2−6=2 > 1. Für den
+     Sicher-Fall braucht es mehr Polster: zwei Sechser → 4·3−12 = 0. */
+  rein('Aufsatz', 'Deutsch', 6.0, 1, null, null);
+  rein('Vortrag', 'Deutsch', 6.0, 1, null, null);
+  /* Physik: eine 3.5×1 → nötig = 4·2 − 3.5 = 4.5 — der Mittelfall.
+     Der erste Wurf wollte ihn an Elektrotechnik prüfen und rechnete
+     falsch: dort ist nötig 4·5 − 19.5 = 0.5, also „sicher". Die Prüfung
+     lag daneben, nicht die Ansicht — der Fall brauchte ein eigenes Fach. */
+  rein('Optik', 'Physik', 3.5, 1, null, null);
+  /* Und ein Tippfehler: die „45" darf NICHT mitrechnen. */
+  rein('Tippfehler', 'Mathematik', 45, 1, null, null);
+  Produktwelten.lernen('noten');
+});
+await p.waitForTimeout(900);
 
-type Fund = { text: string; wert: number; weg: string };
+const karte = await p.evaluate(() => ({
+  kopf: (document.querySelector('.lw-grades h2')?.textContent || '').trim(),
+  satz: (document.querySelector('.lw-grades .lw-page-head span')?.textContent || '').trim(),
+  faecher: [...document.querySelectorAll<HTMLElement>('.lw-grade-fach')].map(f => ({
+    fach: (f.querySelector('h3')?.textContent || '').trim(),
+    schnitt: (f.querySelector('header strong')?.textContent || '').trim(),
+    zeugnis: (f.querySelector('.lw-grade-zeugnis')?.textContent || '').trim(),
+    ziel: (f.querySelector('.lw-grade-ziel')?.textContent || '').trim(),
+    rot: f.classList.contains('ist-ungenuegend'),
+    balken: f.querySelectorAll('.lw-grade-balken i').length
+  }))
+}));
+console.log('   ' + JSON.stringify(karte.faecher));
 
-const messen = async (hell: boolean, welt: typeof WELTEN[number]): Promise<Fund[]> => {
-  const seite = await browser.newPage({
-    viewport: { width: 1280, height: 900 }, colorScheme: hell ? 'light' : 'dark' });
-  seite.on('pageerror', (e: any) =>
-    fehler.push(`PAGEERROR(${welt.name}/${hell ? 'hell' : 'dunkel'}): ` + String(e.message).slice(0, 110)));
-  await seite.goto(`http://localhost:${PORT}/index.html`);
-  await seite.waitForTimeout(2600);
-  await seite.evaluate((h: boolean) => {
-    Store.setMeta('rundgangGesehen', true);
-    document.getElementById('rg-willkommen')?.remove();
-    document.querySelector('.produkt-onboarding-lage')?.remove();
-    const neu = h ? 'light' : 'dark';
-    if (typeof Aussehen !== 'undefined') Aussehen.setzen({ schema: h ? 'hell' : 'standard' });
-    document.documentElement.dataset['theme'] = neu;
-    Store.setMeta('theme', neu);
-  }, hell);
-  try {
-    await seite.evaluate(async (x: any) => {
-      await (globalThis as any).Produktwelten[x.ruf]?.(x.arg);
-    }, welt);
-  } catch { /* eine Welt, die sich nicht öffnen lässt, meldet §0 */ }
-  await seite.waitForTimeout(1400);
+const et = karte.faecher.find(f => f.fach === 'Elektrotechnik');
+const ma = karte.faecher.find(f => f.fach === 'Mathematik');
+const de = karte.faecher.find(f => f.fach === 'Deutsch');
+pr('Elektrotechnik: gewichteter Schnitt 4.88 aus 5.5×2, 4.0 und dem Punkteweg',
+  !!et && et.schnitt === '4.88' && /3 Noten/.test(et.zeugnis), JSON.stringify(et));
+pr('… und die Zeugnisnote rundet 4.875 auf 5.0',
+  !!et && /Zeugnisnote 5\.0/.test(et.zeugnis), et?.zeugnis || '');
+pr('Der Punkteweg zählt: drei Balken, nicht zwei',
+  !!et && et.balken === 3, String(et?.balken));
+pr('Mathematik: 3.17 im Schnitt, Zeugnis 3.0, als ungenügend gekennzeichnet',
+  !!ma && ma.schnitt === '3.17' && /Zeugnisnote 3\.0/.test(ma.zeugnis) && ma.rot === true,
+  JSON.stringify(ma));
 
-  const funde = await seite.evaluate((erlaubt: { wahl: string; grund: string }[]) => {
-    /* WCAG 2.1, wörtlich. Keine Näherung: eine Näherung, die knapp daneben
-       liegt, macht die Prüfung an genau den Stellen falsch, an denen es
-       darauf ankommt. */
-    const anteil = (c: number): number => {
-      const s = c / 255;
-      return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
-    };
-    const licht = (f: number[]): number =>
-      0.2126 * anteil(f[0] ?? 0) + 0.7152 * anteil(f[1] ?? 0) + 0.0722 * anteil(f[2] ?? 0);
-    const verhaeltnis = (a: number[], b: number[]): number => {
-      const [x, y] = [licht(a), licht(b)].sort((m, n) => n - m) as [number, number];
-      return (x + 0.05) / (y + 0.05);
-    };
-    const zuRgb = (s: string): number[] | null => {
-      const m = /rgba?\(([^)]+)\)/.exec(s);
-      if (!m) return null;
-      const t = (m[1] ?? '').split(',').map(Number);
-      return t.length > 3 && (t[3] ?? 1) < 0.05 ? null : t.slice(0, 3);
-    };
-    /* Der Hintergrund ist der erste Vorfahr mit echter Farbe — genau das,
-       was das Auge sieht. */
-    const hinter = (e: Element): number[] => {
-      for (let x: Element | null = e; x; x = x.parentElement) {
-        const c = zuRgb(getComputedStyle(x).backgroundColor);
-        if (c) return c;
-      }
-      return [255, 255, 255];
-    };
+console.log('\n3 · Der Zielrechner sagt alle drei Sätze');
+pr('„nicht mehr erreichbar" bei Mathematik (nötig wäre 6.5)',
+  !!ma && /nicht mehr zu erreichen/.test(ma.ziel), ma?.ziel || '');
+pr('„sicher" bei Deutsch (zwei Sechser)',
+  !!de && /sicher/.test(de.ziel), de?.ziel || '');
+const ph = karte.faecher.find(f => f.fach === 'Physik');
+pr('„mindestens eine 4.5" bei Physik (eine 3.5, Gewicht 1)',
+  !!ph && /mindestens eine 4\.5/.test(ph.ziel), ph?.ziel || '');
 
-    const raus: { text: string; wert: number; weg: string }[] = [];
-    for (const e of document.querySelectorAll('#main *, #topbar *, #sidebar *')) {
-      const eigen = [...e.childNodes]
-        .filter(n => n.nodeType === 3 && (n.textContent || '').trim())
-        .map(n => (n.textContent || '').trim()).join(' ');
-      if (!eigen) continue;
-      if (erlaubt.some(x => e.matches(x.wahl))) continue;
-      const r = e.getBoundingClientRect();
-      if (r.width < 4 || r.height < 4 || r.top > innerHeight || r.bottom < 0) continue;
-      const s = getComputedStyle(e);
-      if (s.visibility === 'hidden' || s.display === 'none' || Number(s.opacity) < 0.1) continue;
-      /* Ein abgeschaltetes Bedienelement ist nach WCAG ausgenommen — und es
-         SAGT ja auch, dass es gerade nichts tut. */
-      if ((e as HTMLButtonElement).disabled || e.closest('[disabled],[aria-disabled="true"]')) continue;
-      const vg = zuRgb(s.color);
-      if (!vg) continue;
-      const gross = parseFloat(s.fontSize) >= 18.66 ||
-        (parseFloat(s.fontSize) >= 14 && Number(s.fontWeight) >= 700);
-      const v = verhaeltnis(vg, hinter(e));
-      if (v >= (gross ? 3 : 4.5)) continue;
-      const pfad: string[] = [];
-      for (let x: Element | null = e; x && pfad.length < 3; x = x.parentElement)
-        pfad.push(x.tagName.toLowerCase() +
-          (x.id ? '#' + x.id : '') +
-          (x.className ? '.' + String(x.className).split(' ')[0] : ''));
-      raus.push({ text: eigen.slice(0, 34), wert: Math.round(v * 100) / 100, weg: pfad.join(' < ') });
-    }
-    return raus.sort((a, b) => a.wert - b.wert);
-  }, ERLAUBT);
+console.log('\n4 · Der Tippfehler rechnet nicht mit');
+/* Stünde die 45 im Schnitt, wäre Mathematik 13.6 — der Punkt oben wäre
+   schon rot. Hier steht die Gegenrichtung: sie fehlt auch in den Balken. */
+pr('Die „45" steht nicht in den Balken', !!ma && ma.balken === 2, String(ma?.balken));
 
-  await seite.close();
-  return funde;
-};
+console.log('\n5 · Leerfall mit leerem Heft: der Weg führt zum Heft');
+await p.evaluate(() => {
+  const c = Store.getCollection((globalThis as any).__notenC);
+  Store.rowsOf(c.id).forEach((row: any) => Store.updateBlock(row.id, { alive: false }));
+  Produktwelten.lernen('noten');
+});
+await p.waitForTimeout(700);
+const leer2 = await p.evaluate(() => ({
+  titel: (document.querySelector('.lw-grades h3')?.textContent || '').trim(),
+  aktion: document.querySelector('.lw-grades [data-lw-action]')?.getAttribute('data-lw-action') || ''
+}));
+pr('Mit leerem Heft führt der Knopf zum Notenheft',
+  /keine Noten/i.test(leer2.titel) && leer2.aktion === 'grades-open', JSON.stringify(leer2));
+/* Und der Knopf tut es wirklich — die Krume wechselt auf die Schulseite. */
+await p.click('.lw-grades [data-lw-action="grades-open"]');
+await p.waitForTimeout(800);
+pr('„Notenheft öffnen" öffnet die Seite mit dem Heft',
+  await p.evaluate(() => /Schule/.test(document.getElementById('crumb')?.textContent || '')),
+  await p.evaluate(() => (document.getElementById('crumb')?.textContent || '').trim()));
 
-console.log('§38 · Kontrast in allen Produktwelten, hell und dunkel');
-console.log('     Ausgenommen und begründet:');
-for (const e of ERLAUBT) console.log('       ' + e.wahl.padEnd(22) + e.grund);
-
-let gesamt = 0;
-for (const hell of [true, false]) {
-  console.log(`\n${hell ? 'HELL' : 'DUNKEL'}`);
-  for (const welt of WELTEN) {
-    const funde = await messen(hell, welt);
-    gesamt += funde.length;
-    p(`${welt.name}: jeder Text erreicht AA`, funde.length === 0,
-      funde.slice(0, 5).map(f => `${f.wert} „${f.text}" ${f.weg}`).join('  |  '));
-  }
-}
-
-console.log(`\nZu schwach insgesamt: ${gesamt}`);
-p('Keine unbehandelten Browserfehler', fehler.length === 0, fehler.slice(0, 3).join(' | '));
-
-console.log(`\n${ok}/${ok + weg} bestanden`);
-await browser.close();
-await new Promise<void>(f => { server.close(() => f()); });
-process.exitCode = weg ? 1 : 0;
+pr('Keine Fehler auf der Seite', fehler.length === 0, fehler.join(' | '));
+await b.close(); server.close();
+console.log(`\n${ok} bestanden, ${weg} durchgefallen`);
+process.exit(weg ? 1 : 0);
