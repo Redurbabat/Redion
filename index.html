@@ -263,6 +263,20 @@
      ====================================================================== -->
 <main id="main" role="main">
 
+  <!-- DAS MENÜBAND (E210) — GANZ OBEN SEIT E236.
+       Es stand bisher UNTER der Kopfzeile. Redur will es dort, wo es an
+       einem Rechner steht: als oberste Zeile, schmal, und die Knöpfe
+       klappen erst beim Antippen auf. Genau das konnte es schon — es sass
+       nur an der falschen Stelle.
+
+       Der Kasten steht leer hier und wird von `schale/aufbau/menueband.js`
+       aus `register/menueband.js` gefüllt — diese Datei kennt keinen
+       einzigen Eintrag beim Namen.
+
+       `hidden`, bis das Register geantwortet hat: eine leere Leiste, die
+       Platz kostet und nichts kann, ist schlimmer als keine. -->
+  <div id="menueband" hidden></div>
+
   <header id="topbar" role="toolbar" aria-label="Seitenwerkzeuge">
     <button class="top-btn schmal" id="btn-back" title="Zurück (Strg + [)" aria-label="Zurück"><span data-sym="arrowL"></span></button>
     <button class="top-btn schmal" id="btn-fwd"  title="Vorwärts (Strg + ])" aria-label="Vorwärts"><span data-sym="arrowR"></span></button>
@@ -301,16 +315,6 @@
     <button class="top-btn schmal" id="btn-fav"     title="Zu Favoriten" aria-label="Zu Favoriten"><span data-sym="star"></span></button>
     <button class="top-btn schmal" id="btn-page-menu" title="Seitenoptionen" aria-label="Seitenoptionen"><span data-sym="dots"></span></button>
   </header>
-
-  <!-- DAS MENÜBAND (E210).
-       Start · Einfügen · Zeichnen · Werkzeuge · Elektro · Ansicht, und
-       darunter die Knöpfe des gewählten Reiters. Der Kasten steht leer hier
-       und wird von `schale/aufbau/menueband.js` aus `register/menueband.js`
-       gefüllt — diese Datei kennt keinen einzigen Eintrag beim Namen.
-
-       `hidden`, bis das Register geantwortet hat: eine leere Leiste, die
-       Platz kostet und nichts kann, ist schlimmer als keine. -->
-  <div id="menueband" hidden></div>
 
   <div id="scroll">
     <div id="page" role="document" tabindex="-1"></div>

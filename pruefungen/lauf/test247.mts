@@ -556,22 +556,39 @@ const aufHeute = await seite.evaluate(() => ({
   sonder: document.getElementById('page')?.classList.contains('produkt-welt'),
   zu: document.getElementById('menueband')?.classList.contains('ist-zu'),
   hoch: Math.round(document.getElementById('menueband')?.getBoundingClientRect().height || 0),
-  reiter: document.querySelectorAll('#menueband [data-mb-reiter]').length
+  reiter: document.querySelectorAll('#menueband [data-mb-reiter]').length,
+  namen: [...document.querySelectorAll<HTMLElement>('#menueband [data-mb-reiter]')]
+    .map(b => b.dataset['mbReiter'] || '')
 }));
-/* SEIT E219 KLAPPT ES DORT NICHT MEHR ZU — ES IST GANZ WEG.
-   Der Grund stand schon vorher im Code, bei `zugeklappt`: „Ein Menüband
-   über einer Startansicht kann ohnehin fast nichts." Zugeklappt blieben
-   davon trotzdem sechs Reiter und ein Pfeil stehen, also sieben
-   anklickbare Dinge, die alle dasselbe sagen: nicht jetzt.
-   Die ruhige Fassung nimmt den Gedanken zu Ende. Was hier geprüft wird,
-   ist deshalb NICHT mehr „zugeklappt", sondern „nicht da" — und das
-   Gegenstück dazu, dass es auf einer offenen Seite sehr wohl da ist,
-   steht drei Punkte weiter oben. */
-p('Zurück auf „Heute" ist das Band ganz weg',
-  zurueckHeute && aufHeute.sonder === true && aufHeute.hoch === 0,
+/* E219 STAND HIER — E236 HAT IHN ZURÜCKGENOMMEN, und der Grund gehört
+   hierher, weil diese Prüfung die alte Entscheidung bewachte.
+
+   E219 sagte: „Ein Menüband über einer Startansicht kann ohnehin fast
+   nichts", also weg damit. Zugeklappt blieben sonst sechs Reiter und ein
+   Pfeil stehen — sieben anklickbare Dinge, die alle dasselbe sagen: nicht
+   jetzt.
+
+   Der Fehler war aber nicht die LEISTE, sondern ihr INHALT. Drei ihrer
+   sechs Reiter — Start, Einfügen, Zeichnen — schreiben in eine Seite und
+   können ohne eine gar nichts. Die anderen drei öffnen ihre eigenen
+   Sachen und funktionieren überall.
+
+   Seit E236 steht das im Register (`BRAUCHT_SEITE`), und damit räumt die
+   Leiste sich selbst auf: aus sechs Reitern werden drei, statt aus einer
+   Leiste keine. Und sie bleibt, weil Redur sie ganz oben haben will, wie
+   an einem Rechner.
+
+   GEPRÜFT WIRD DESHALB DAS, WAS E219 EIGENTLICH MEINTE: dass hier kein
+   Knopf steht, der nichts kann. Rot wird die Prüfung, wenn ein Reiter,
+   der eine Seite braucht, ohne Seite dasteht — oder wenn die Leiste ganz
+   verschwindet und die drei nutzbaren Reiter mitnimmt. */
+p('Zurück auf „Heute" bleibt die Leiste stehen',
+  zurueckHeute && aufHeute.sonder === true && aufHeute.hoch > 25,
   JSON.stringify(aufHeute));
-p('Und es steht auch keine Reiterzeile mehr da', aufHeute.reiter === 0,
-  `${aufHeute.reiter} Reiter, ${aufHeute.hoch} px`);
+p('Aber nur mit den Reitern, die ohne Seite etwas können',
+  aufHeute.reiter === 3 && !aufHeute.namen.some((n: string) =>
+    ['start', 'einfuegen', 'zeichnen'].includes(n)),
+  `${aufHeute.reiter} Reiter: ${aufHeute.namen.join(', ')}`);
 
 /* Ausgeschaltet gilt weiter das Alte: zugeklappt, aber mit Reiterzeile.
    Ohne diesen Punkt wäre nicht geprüft, dass der Schalter wirklich
@@ -586,8 +603,12 @@ const ohneRuhig = await seite.evaluate(() => ({
   hoch: Math.round(document.getElementById('menueband')?.getBoundingClientRect().height || 0),
   reiter: document.querySelectorAll('#menueband [data-mb-reiter]').length
 }));
-p('Ohne die ruhige Fassung steht die Reiterzeile weiter da',
-  ohneRuhig.reiter === 6 && ohneRuhig.hoch > 25 && ohneRuhig.zu === true,
+/* Der Schalter der ruhigen Fassung ändert an der Leiste seit E236 nichts
+   mehr — sie hing nie an der Ruhe, sondern daran, ob eine Seite offen
+   ist. Geprüft wird deshalb, dass das Zurückschalten sie nicht kaputt
+   macht: dieselben drei Reiter, dieselbe Höhe. */
+p('Ohne die ruhige Fassung steht dieselbe Reiterzeile da',
+  ohneRuhig.reiter === 3 && ohneRuhig.hoch > 25 && ohneRuhig.zu === true,
   JSON.stringify(ohneRuhig));
 await seite.evaluate(() => { (globalThis as any).Ruhig?.setzen(true); });
 await seite.waitForTimeout(300);

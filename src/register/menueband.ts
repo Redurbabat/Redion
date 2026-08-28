@@ -630,6 +630,16 @@ Register.menueband = (() => {
    * stehen. Ein Menüband, das sich wegen eines Bereichs gar nicht zeichnet,
    * wäre der schlimmere Fehler.
    */
+  /**
+   * Welche Reiter ohne offene Seite nichts können.
+   *
+   * Sie steht hier und nicht bei jedem der 108 Einträge: die Bedingung
+   * gilt für den ganzen Reiter, nicht für einzelne Zeilen darin. Wer
+   * einen Eintrag hinzufügt, der trotz fehlender Seite geht, gibt ihm
+   * einen eigenen Reiter oder sagt es hier.
+   */
+  const BRAUCHT_SEITE = new Set(['start', 'einfuegen', 'zeichnen']);
+
   const alle = (): BandEintrag[] => {
     const aus: BandEintrag[] = [];
     const quellen: Array<() => BandEintrag[]> = [
@@ -641,6 +651,24 @@ Register.menueband = (() => {
     }
     aus.push(...fremde);
     return aus.filter(e => {
+      /* DREI REITER SCHREIBEN IN EINE SEITE (E236).
+         „Start" formatiert Absätze, „Einfügen" hängt Blöcke ans Ende,
+         „Zeichnen" braucht eine Fläche. Ohne offene Seite tun sie
+         entweder nichts oder melden „Erst eine Seite öffnen" — und ein
+         Knopf, der das sagt, ist ein Knopf ins Leere (§47).
+
+         Bisher wurde deshalb die GANZE Leiste versteckt, sobald keine
+         Seite offen war (E219). Das war richtig, solange die Leiste unter
+         der Kopfzeile sass und sonst nichts konnte. Seit sie ganz oben
+         steht und immer da sein soll, ist es zu viel: „Werkzeuge",
+         „Elektro" und „Ansicht" öffnen ihre eigenen Sachen und
+         funktionieren ohne Seite.
+
+         Also fällt jetzt weg, was wirklich eine Seite braucht — und die
+         drei anderen Reiter bleiben. `reiter()` zählt danach, welche
+         Reiter überhaupt etwas zu zeigen haben, und lässt die leeren
+         von selbst verschwinden. */
+      if (BRAUCHT_SEITE.has(e.reiter) && !seiteJetzt()) return false;
       if (typeof e.zeigen !== 'function') return true;
       try { return e.zeigen() !== false; } catch { return false; }
     });

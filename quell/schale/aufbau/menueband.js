@@ -84,14 +84,10 @@ const Menueband = (() => {
      * ist keine Notiz-App mehr. Die Reiterzeile bleibt stehen; ein Tipp
      * darauf klappt auf, und die Wahl wird gemerkt.
      */
-    const amTelefon = () => {
-        try {
-            return AppEinstellung.amTelefon() === true;
-        }
-        catch {
-            return window.innerWidth <= 760;
-        }
-    };
+    /* SEIT E236 NICHT MEHR GEBRAUCHT und trotzdem hier: der Absatz darüber
+       ist die Begründung dafür, dass die Leiste zugeklappt beginnt — und
+       seit E236 gilt sie überall, nicht nur am Telefon. Die Funktion selbst
+       wäre nur noch ein toter Name; sie fällt weg, der Grund bleibt stehen. */
     /**
      * Ist gerade eine Seite offen — oder eine Sonderansicht?
      *
@@ -134,7 +130,18 @@ const Menueband = (() => {
      */
     /** Welche Erinnerung gilt hier — die der Seite oder die der Startansicht? */
     const merkeZu = () => seiteOffen() ? merkeZuSeite : merkeZuWelt;
-    const zugeklappt = () => meta(merkeZu(), amTelefon() || !seiteOffen()) === true;
+    /* ZUGEKLAPPT IST JETZT ÜBERALL DIE VORGABE (E236).
+       Vorher hing sie am Ort: am Telefon zu, am Rechner offen. Gemessen mit
+       offener Seite auf 1200 px war die offene Leiste 221 px hoch — ein
+       Viertel des Fensters, bevor der erste Buchstabe der Seite kommt.
+  
+       Redur: „ganz oben so wie MacBook … aber es sollte nicht so viel Platz
+       nehmen." Ein Menü am Rechner steht auch nicht offen da; es klappt auf,
+       wenn man es braucht. Zugeklappt sind es 35 px.
+  
+       Die WAHL bleibt unverändert: wer aufklappt, behält es offen — je
+       Seite und je Startansicht getrennt, wie bisher. */
+    const zugeklappt = () => meta(merkeZu(), true) === true;
     /* ======================================================================== *
      * EIN KNOPF
      * ======================================================================== */
@@ -322,11 +329,22 @@ const Menueband = (() => {
            also sieben anklickbare Dinge, die alle dasselbe sagen: nicht jetzt.
            Die ruhige Fassung nimmt den Gedanken zu Ende. Sobald eine Seite
            offen ist, ist das Band wieder da — zugeklappt, wie bisher. */
-        if (typeof Ruhig !== 'undefined' && Ruhig.an() && !seiteOffen()) {
-            wurzel.hidden = true;
-            wurzel.replaceChildren();
-            return;
-        }
+        /* E219 IST HIER ZURÜCKGENOMMEN (E236).
+           Der Absatz darüber hat recht, solange die Leiste UNTER der Kopfzeile
+           sass: „sieben anklickbare Dinge, die alle dasselbe sagen: nicht
+           jetzt." Der Fehler war aber nicht die Leiste, sondern ihr Inhalt —
+           drei ihrer sechs Reiter schreiben in eine Seite und können ohne
+           eine gar nichts.
+    
+           Genau das steht jetzt im Register (`BRAUCHT_SEITE`), und damit
+           räumt sich die Leiste selbst auf: ohne offene Seite bleiben die
+           Reiter, die etwas können. `reiter()` zeigt nur, was belegt ist —
+           aus sechs Reitern werden drei, statt aus einer Leiste keine.
+    
+           Und sie soll bleiben, weil Redur sie ganz oben haben will, wie an
+           einem Rechner: „ganz oben so wie MacBook … aber es sollte nicht so
+           viel Platz nehmen." Zugeklappt sind das 30 px. */
+        void seiteOffen;
         wurzel.hidden = false;
         let gewaehlt = reiterJetzt();
         if (!reiter.some((r) => r.id === gewaehlt))
