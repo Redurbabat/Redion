@@ -800,6 +800,20 @@ const Galerie = (() => {
             source: { name: 'Quelle / Seitenlink', type: 'text' },
             status: { name: 'Stand', type: 'status', options: opt(['Neu', 'gray'], ['In Arbeit', 'yellow'], ['Gelernt', 'green']) }
         });
+        /* Der Stundenplan (E243/L70): Zeiten als Text „08:15", weil sie so
+           getippt werden, wie sie auf dem Papierplan stehen. Die Wochenansicht
+           in der Lernwelt liest Tag und Zeit tolerant. Läuft die Vorlage auf
+           einem Bestand erneut, ergänzt `ensureDatabase` NUR diese Datenbank —
+           vorhandene Fächer, Noten und Prüfungen bleiben unangetastet. */
+        ensureDatabase('timetable', 'Stundenplan', {
+            title: { name: 'Lektion', type: 'title' },
+            day: { name: 'Tag', type: 'select', options: opt(['Montag', 'blue'], ['Dienstag', 'green'], ['Mittwoch', 'orange'], ['Donnerstag', 'purple'], ['Freitag', 'red'], ['Samstag', 'gray']) },
+            from: { name: 'Von', type: 'text' },
+            to: { name: 'Bis', type: 'text' },
+            subject: { name: 'Fach', type: 'relation', ziel: subjects.collectionId },
+            room: { name: 'Raum', type: 'text' },
+            note: { name: 'Hinweis', type: 'text' }
+        });
         ensureBlock('school-tools', 'callout', {
             icon: '⚡', color: 'bg-yellow',
             text: 'Der Elektrotechnik-Rechner in der Seitenwerkzeugleiste enthält nur normfreie Grundlagen. Normative Auslegung muss immer mit der für dich gültigen Quelle geprüft werden.'

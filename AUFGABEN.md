@@ -35,6 +35,28 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
+**28. August 2026 · Das Zielbild-Poster, und zwei Löcher noch am selben Abend zu (E242, E243)**
+
+> Redur schickte sein Zielbild als Poster: „So was will ich — da steht
+> alles, wie es sein sollte." Sechs Delta-Leser haben die Poster-Punkte
+> gemessen (Nachtrag unter „Die Visionskarte"), und die zwei grössten
+> Schul-Löcher sind seither gebaut:
+>
+> **E242 · Zeugnisnote je Semester (L71 zu).** Die Noten-Ansicht mittelte
+> alle Schuljahre in einen Topf; ab dem zweiten Semester wäre die Kopfzahl
+> falsch gewesen. Jetzt: drei Zeitraum-Knöpfe (Dieses/Letztes Semester,
+> Alle), Vorgabe „Dieses Semester", Semestergrenzen Feb/Aug wie die
+> Schweizer Schule, Undatiertes zählt zum aktuellen — und die Kopfzeile
+> sagt das dazu. test249 §5.
+>
+> **E243 · Der Stundenplan-Knopf hält sein Versprechen (L70 zu).** Hinter
+> „Stundenplan" stand nur die Ausbildungsseite. Jetzt: eigene
+> Wochenansicht (Mo–Sa, Samstag nur wenn belegt), Lektionen nach Uhrzeit,
+> „Jetzt: Elektrotechnik bis 09:20 in B204" in der Kopfzeile, das WORT
+> „jetzt" an der laufenden Lektion (§38), zwei Leerfälle mit Wegen (§47);
+> die Schulvorlage legt die Datenbank an — auch nachträglich, ohne
+> Doppel. test250, 15 Punkte.
+
 **28. August 2026 · Die Visionskarte: Redurs Satz, neunfach nachgemessen**
 
 > „Kein Word, Excel, PowerPoint mehr … Schule, Noten, Lernen … PDF,
@@ -1448,6 +1470,48 @@ Nach §46 zuerst die Datenzeile, dann nach Gewicht und Aufwand:
 
 Nichts davon ist eine Wette — jede Zeile stammt aus dem Messprotokoll
 vom 28. August und hat dort ihren Beleg.
+
+### Nachtrag: Redurs Zielbild-Poster, Punkt für Punkt
+
+Am Abend des 28. August schickte Redur ein Poster: sein Zielbild als
+Bildschirm-Entwurf, elf Abschnitte von „Übersicht & Vision" bis „Weitere
+Funktionen". Sechs weitere Leser haben die Poster-Punkte gemessen, die
+die neun Säulen oben nicht abdecken. Das Ergebnis in drei Körben:
+
+**Steht schon, mit Prüflauf.** Reiter oben mit Neuer-Tab-Knopf und
+Strg+Tab (test46), geteilte Ansicht neben- und übereinander (test206),
+Inhaltsverzeichnis-Block (test44), Fassungsvergleich mit Wort-Diff
+(test48), HTML-Export (test182), mehrere PDFs gleichzeitig in Reitern,
+echtes SM-2 wie Anki (nachrechenbar dieselbe Formel), Lückentext-Karten
+mit `{{...}}`, Lernstatistiken, Tagesjournal per Strg+Shift+J (Daily
+Notes), Audio-Aufnahme mit Zeitmarken und Notiz-Verknüpfung (test202),
+Datenvalidierung für Datenbank-Spalten (Pflicht, Regex, Zahlbereich,
+Statusübergänge).
+
+**Gebaut, aber versteckt — reine Sichtbarkeitsarbeit.** Benachrichtigungen
+(Posteingang mit Gelesen-Status, aber keine Glocke oben), Sync-Status
+(Maschine meldet alles, sichtbar nur im Wolke-Dialog), Konto/Profil
+(vollständig, aber nur über die Befehlspalette erreichbar). Alle drei:
+Aufwand klein, Logik liegt fertig da.
+
+**Fehlt wirklich, nach Hebel geordnet.**
+· *Klein:* Suchfeld in der Graph-Ansicht; Rendering-Gleichstand der
+  Karteikarten (Lernwelt zeigt nur esc(), die klassische Ansicht kann
+  Mathe); Folien-Übergänge; Kopf-/Fusszeilen + Seitenzahlen im Druck
+  (ein einziger Druckpfad).
+· *Mittel:* Zellvalidierung im Tabellenblock (Muster liegt in den
+  DB-Prüfregeln fertig); Folien-PDF-Export; Multiple-Choice-Karten im
+  SM-2-System (der Elektro-Generator zeigt die Bausteine); Bild und
+  Audio auf der Karteikarte; Referentennotizen; Namensmanager;
+  Notenverlaufs-Kurve als gelieferte Ansicht; Pomodoro/Lernzeit echt
+  messen statt schätzen; Formen-Erkennung beim Zeichnen; Tab-Gruppen;
+  2FA am Server.
+· *Gross:* Fussnoten; Zitieren mit Literaturverzeichnis; Sparklines;
+  Mindmaps; Lineal/Geodreieck; Masterfolien/Designs; englische
+  Oberfläche (der Schalter existiert, steht bewusst aus).
+
+Zwei Punkte aus dem Poster sind seit demselben Abend GEBAUT statt offen:
+die Zeugnisnote je Semester (E242) und der echte Stundenplan (E243).
 
 ---
 

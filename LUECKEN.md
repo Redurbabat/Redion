@@ -2637,7 +2637,7 @@ Was ein Anfang wäre, in dieser Reihenfolge:
 Gemessen am 28. August 2026 (Visionskarte, Leser „PowerPoint").
 
 
-L70 — Hinter dem Knopf „Stundenplan" steht kein Stundenplan
+L70 — ~~Hinter dem Knopf „Stundenplan" steht kein Stundenplan~~ — GESCHLOSSEN am 28. August 2026 (E243)
 ================================================================================
 
 Auf dem Schul-Dashboard gibt es einen Knopf mit der Aufschrift
@@ -2656,8 +2656,16 @@ seine Zeile auf dem Heute-Dashboard.
 
 Gemessen am 28. August 2026 (Visionskarte, Leser „Schule").
 
+GESCHLOSSEN am selben Abend (E243): eigene Lernwelt-Ansicht
+„Stundenplan" mit Wochenraster Mo–Sa, Sortierung nach Uhrzeit,
+„Jetzt:"-Kopfzeile und zwei Leerfällen; die Schulvorlage legt die
+Datenbank an (Tag, Von, Bis, Fach, Raum, Hinweis), auch nachträglich
+und ohne Doppel. Der Knopf führt jetzt zur Ansicht. Geprüft in
+test250. OFFEN BLEIBT nur die Zeile auf dem Heute-Dashboard
+(„was habe ich jetzt" ausserhalb der Stundenplan-Ansicht).
 
-L71 — Die Zeugnisnote mittelt alle Semester in einen Topf
+
+L71 — ~~Die Zeugnisnote mittelt alle Semester in einen Topf~~ — GESCHLOSSEN am 28. August 2026 (E242)
 ================================================================================
 
 Die Noten-Ansicht (E241, test249) rechnet je Fach den gewichteten Schnitt
@@ -2676,6 +2684,13 @@ Klein zu schliessen: das Datum je Note wird schon gelesen und sortiert
 und nachweist, dass die Kopfzeile nur das gewählte mittelt.
 
 Gemessen am 28. August 2026 (Visionskarte, Leser „Schule").
+
+GESCHLOSSEN am selben Abend (E242): drei Zeitraum-Knöpfe (Dieses
+Semester / Letztes Semester / Alle) mit Zählern, Vorgabe „Dieses
+Semester", Semestergrenzen an Feb/Aug ausgerichtet. Eine Note ohne
+Datum zählt zum aktuellen Semester, und die Kopfzeile sagt das dazu;
+unter „Alle" heisst die Überschrift ehrlich „über alle Semester" statt
+„im Zeugnis". Geprüft in test249 §5.
 
 
 L72 — DOCX trägt in beide Richtungen nur Klartext, und der Import ist ungeprüft

@@ -11,7 +11,8 @@
 const Produktwelten = (() => {
   type Welt = 'lernen' | 'workspace';
   type Lernansicht = 'heute' | 'lernen' | 'lernweg' | 'pfad' | 'fehler' |
-    'pruefungen' | 'noten' | 'schule' | 'ausbildung' | 'uni' | 'arbeit' | 'fortschritt';
+    'pruefungen' | 'noten' | 'stundenplan' | 'schule' | 'ausbildung' | 'uni' |
+    'arbeit' | 'fortschritt';
   type Arbeitsansicht = 'start' | 'uebersicht' | 'seiten' | 'bibliothek' |
     'aufgaben' | 'kalender' | 'datenbanken' | 'whiteboards' | 'projekte' |
     'dateien' | 'wiki' | 'vorlagen';

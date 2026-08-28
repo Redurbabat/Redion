@@ -17921,3 +17921,99 @@ Leerfälle mit ihren Wegen (§47), und der Klick „Notenheft öffnen" bis in
 die Krume. Drei Gegenproben einzeln rot: Punkteweg abgeschaltet →
 Elektrotechnik verliert eine Note; Rundung auf Abrunden verstellt →
 Zeugnis 4.5 statt 5.0; Tippfehler-Filter raus → Schnitt 13.63.
+
+
+E242 — Ein Semester ist kein Topf: die Zeugnisnote bekommt einen Zeitraum
+================================================================================
+
+Der strenge Schule-Leser der Visionskarte fand es am Abend von E241: die
+Noten-Ansicht mittelte ALLE Zeilen der Fach-Datenbank, ohne Zeitraum.
+Im ersten Semester stimmt das. Ab dem zweiten zeigt „X.X im Zeugnis"
+das Allzeit-Mittel — eine Zahl, die auf keinem echten Zeugnis steht,
+plausibel und leicht daneben. Die gefährliche Sorte falsch (L71).
+
+DIE ENTSCHEIDUNGEN
+
+  · **Drei Zeiträume, keine Datumsfelder.** „Dieses Semester" (Vorgabe),
+    „Letztes Semester", „Alle" — als Knöpfe mit Zählern über dem Raster.
+    Ein Datumsbereichs-Wähler wäre mächtiger und würde nie benutzt.
+
+  · **Semestergrenzen Feb/Aug, bewusst grob.** Die Schweizer Schule
+    schneidet August–Januar und Februar–Juli. Es geht nicht um den
+    exakten Schulbeginn eines Kantons, sondern darum, dass keine zwei
+    Schuljahre in einen Topf geraten. Wer es genauer braucht, filtert
+    die Datenbank selbst — die Ansicht rechnet nur.
+
+  · **Vorgabe ist „Dieses Semester", nicht „Alle".** Die Kopfzahl soll
+    eine sein, die auf einem Zeugnis stehen KANN. Unter „Alle" heisst
+    die Überschrift deshalb ehrlich „über alle Semester" statt „im
+    Zeugnis".
+
+  · **Eine Note ohne Datum zählt zum aktuellen Semester** — frisch
+    eingetragen ohne Datum heisst „jetzt", und Verstecken wäre schlimmer
+    als grob einordnen. Die Kopfzeile sagt es dazu („N ohne Datum,
+    zählen zu diesem Semester"). Bei „Alle" zählt ohnehin alles.
+
+  · **Leerer Zeitraum springt nicht still auf „Alle".** Das wäre wieder
+    eine Behauptung statt einer Frage (das Muster der Woche). Stattdessen
+    sagt die Ansicht, wo die Noten liegen — die Zähler in den Knöpfen
+    zeigen es — und lässt den Wechsel dem Nutzer.
+
+  · **Flüchtiger Ansichtszustand, kein Merker.** Wie das Menüband am
+    Telefon (E240): der gewählte Zeitraum lebt im Ansichtszustand und
+    wird nicht persistiert. Eine Ansicht, die sich Wochen später noch
+    an „Alle" erinnert, wäre dieselbe Falle wie der Band-Merker.
+
+**Geprüft:** test249 §5 (17 Punkte gesamt) — die alte 6.0 hebt den
+Schnitt des aktuellen Semesters nicht, „Letztes Semester" zeigt nur das
+alte Fach, „Alle" mittelt beide und benennt es, Undatiertes zählt zum
+aktuellen samt Satz in der Kopfzeile.
+
+
+E243 — Der Stundenplan-Knopf hält sein Versprechen
+================================================================================
+
+Auf dem Schul-Dashboard stand ein Knopf „Stundenplan". Er öffnete die
+Ausbildungsseite (L70) — ein Knopf, der etwas anderes tut, als er
+verspricht, dieselbe Sorte Fehler wie „Neue Tabelle" (E239). Auf Redurs
+Zielbild-Poster steht der Stundenplan gross im Schule-Abschnitt.
+
+DIE ENTSCHEIDUNGEN
+
+  · **Lektionen sind Datenbankzeilen** (§8, §9). Die Schulvorlage legt
+    „Stundenplan" als normale Datenbank an (`schoolKind: 'timetable'`;
+    Tag als Auswahl Mo–Sa, Von/Bis als Text „08:15", Fach als Beziehung,
+    Raum, Hinweis). Gelesen wird wie bei Noten und Prüfungen aus JEDER
+    Sammlung, die nach Stundenplan aussieht, Spalten tolerant über
+    Namen. Kein eigenes Datenformat, kein zweiter Katalog.
+
+  · **Zeiten als Text, nicht als Datum.** „08:15" wird so getippt, wie
+    es auf dem Papierplan steht — auch „8.15" mit Punkt wird verstanden.
+    Was keine Uhrzeit ist, wird NaN und sortiert ans Tagesende, nicht
+    vor die erste Morgenstunde (die `Number(null)`-Lehre aus E241).
+
+  · **Nachträglich ergänzbar ohne Migrationswerk.** `ensureDatabase` in
+    der Vorlage ist idempotent: auf einem Bestand, der die Ausbildung
+    schon hat, legt ein erneuter Lauf NUR die fehlende Stundenplan-
+    Datenbank an. Der Leerfall der Ansicht führt genau dorthin (§47).
+
+  · **Die Woche zeigt Mo–Fr, Samstag nur wenn belegt.** Eine leere
+    Samstagsspalte wäre sechs Spalten Platz für nichts; ein belegter
+    Samstag (Stützkurs, ÜK) erscheint von selbst. Sonntag kennt der
+    Plan nicht — wer sonntags Schule hat, hat andere Sorgen als Redion.
+
+  · **„Jetzt" steht als Wort da** (§38): die Kopfzeile sagt „Jetzt:
+    Elektrotechnik bis 09:20 in B204" bzw. „Als Nächstes: …", die
+    laufende Lektion trägt das Wort „jetzt", der heutige Tag das Wort
+    „heute" — Farbe trägt nie allein.
+
+  · **Der Knopf führt zur Ansicht,** nicht mehr zur Seite. „Stundenplan
+    öffnen" in der Ansicht führt weiter zur Seite mit der Datenbank —
+    dort trägt man ein, die Ansicht rechnet nur (das E241-Muster).
+
+**Geprüft:** test250, 15 Punkte — beide Leerfälle mit Wegen, die Vorlage
+legt genau EINE Datenbank an (auch beim zweiten Lauf), Montag ordnet
+07:45 vor „8.35", der Mittwoch sagt „frei", die sechste Spalte erscheint
+erst mit einer Samstagslektion, die Jetzt-Kopfzeile samt Wort und der
+Klickweg vom Schul-Dashboard bis in die Ansicht. test202 erwartet die
+sechste Schul-Sammlung.

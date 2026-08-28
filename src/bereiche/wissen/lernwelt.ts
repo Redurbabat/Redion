@@ -17,6 +17,7 @@ type LernweltAnsicht =
   | 'fehler'
   | 'pruefungen'
   | 'noten'
+  | 'stundenplan'
   | 'schule'
   | 'uni'
   | 'arbeit'
@@ -160,6 +161,7 @@ type LernweltZustand = {
   ladeSchluessel: string;
   generation: number;
   timer: number | null;
+  notenZeitraum: 'aktuell' | 'vorher' | 'alle';
 };
 
 const Lernwelt = (() => {
@@ -174,6 +176,7 @@ const Lernwelt = (() => {
     { id: 'fehler', icon: 'puzzle', name: 'Meine Fehler' },
     { id: 'pruefungen', icon: 'clipboard', name: 'Prüfungen' },
     { id: 'noten', icon: 'medal', name: 'Noten' },
+    { id: 'stundenplan', icon: 'calendar', name: 'Stundenplan' },
     { id: 'schule', icon: 'learn', name: 'Schule / Ausbildung' },
     { id: 'uni', icon: 'building', name: 'Uni' },
     { id: 'arbeit', icon: 'briefcase', name: 'Arbeit' },
@@ -209,8 +212,11 @@ const Lernwelt = (() => {
        legte das Notenheft seit E139 an — gerechnet hat damit niemand. */
     { id: 'pruefungen', icon: 'clipboard', name: 'Prüfungen',
       unter: ['pruefungen', 'noten'] },
+    /* Der Stundenplan steht bei „Wo du lernst": er sagt, WANN man WO ist
+       (E243/L70) — hinter dem gleichnamigen Knopf des Schul-Dashboards
+       stand vorher nur die Ausbildungsseite. */
     { id: 'schule',     icon: 'learn',     name: 'Wo du lernst',
-      unter: ['schule', 'uni', 'arbeit'] }
+      unter: ['schule', 'stundenplan', 'uni', 'arbeit'] }
   ];
 
   /**
@@ -245,7 +251,11 @@ const Lernwelt = (() => {
     extern: null,
     ladeSchluessel: '',
     generation: 0,
-    timer: null
+    timer: null,
+    /* Vorgabe „aktuelles Semester", damit die Kopfzeile der Noten-Ansicht
+       eine Zahl zeigt, die auf einem echten Zeugnis stehen KANN (L71).
+       Ein Allzeit-Mittel steht auf keinem. */
+    notenZeitraum: 'aktuell'
   };
 
   const esc = (wert: unknown): string => String(wert ?? '')
@@ -1752,6 +1762,27 @@ const Lernwelt = (() => {
       (a.datum?.getTime() ?? 0) - (b.datum?.getTime() ?? 0));
   };
 
+  /* EIN SEMESTER, wie die Schweizer Schule es schneidet: August–Januar
+     und Februar–Juli (L71/E242). Die Grenzen sind bewusst grob — es geht
+     nicht um den exakten Schulbeginn eines Kantons, sondern darum, dass
+     die Zeugniszahl nicht Noten aus zwei Schuljahren in einen Topf
+     mittelt. */
+  type Semester = { start: Date; ende: Date; name: string };
+
+  const semesterVon = (wann: Date): Semester => {
+    const jahr = wann.getFullYear();
+    const monat = wann.getMonth();
+    if (monat >= 7) return { start: new Date(jahr, 7, 1), ende: new Date(jahr + 1, 1, 1),
+                             name: 'Aug ' + jahr + ' – Jan ' + (jahr + 1) };
+    if (monat === 0) return { start: new Date(jahr - 1, 7, 1), ende: new Date(jahr, 1, 1),
+                              name: 'Aug ' + (jahr - 1) + ' – Jan ' + jahr };
+    return { start: new Date(jahr, 1, 1), ende: new Date(jahr, 7, 1),
+             name: 'Feb – Jul ' + jahr };
+  };
+
+  const semesterDavor = (semester: Semester): Semester =>
+    semesterVon(new Date(semester.start.getTime() - 24 * 3600 * 1000));
+
   type FachBilanz = { fach: string; eintraege: NotenEintrag[]; schnitt: number;
                       zeugnis: number; noetig: number };
 
@@ -1781,10 +1812,10 @@ const Lernwelt = (() => {
   };
 
   const notenAnsicht = (): string => {
-    const eintraege = notenEintraege();
+    const alleEintraege = notenEintraege();
     const heftDa = notenSammlungen().length > 0;
 
-    if (!eintraege.length) {
+    if (!alleEintraege.length) {
       /* Zwei verschiedene Leerfälle, zwei verschiedene Sätze (§47): ohne
          Heft führt der Knopf zur Schulvorlage, die es anlegt; mit leerem
          Heft dorthin, wo man einträgt. */
@@ -1796,6 +1827,50 @@ const Lernwelt = (() => {
         leer('medal', 'Noch keine Noten eingetragen',
           'Trage die erste Note im Notenheft ein — mit Fach, Gewicht und Datum rechnet Redion Schnitt und Zeugnisnote.',
           'grades-open', 'Notenheft öffnen') + '</div>';
+    }
+
+    /* DER ZEITRAUM (L71/E242). Ein Zeugnis gilt für EIN Semester; die
+       Kopfzeile darf deshalb nicht alle Schuljahre in einen Topf mitteln.
+       Eine Note OHNE Datum zählt zum aktuellen Semester — frisch
+       eingetragen ohne Datum heisst „jetzt", und verstecken wäre
+       schlimmer als grob einordnen. Bei „Alle" zählt ohnehin alles. */
+    const jetzt = semesterVon(new Date());
+    const davor = semesterDavor(jetzt);
+    const imSemester = (e: NotenEintrag, s: Semester): boolean =>
+      e.datum !== null && e.datum >= s.start && e.datum < s.ende;
+    const jeZeitraum: Record<LernweltZustand['notenZeitraum'], NotenEintrag[]> = {
+      aktuell: alleEintraege.filter(e => e.datum === null || imSemester(e, jetzt)),
+      vorher: alleEintraege.filter(e => imSemester(e, davor)),
+      alle: alleEintraege
+    };
+    const wahl = zustand.notenZeitraum;
+    const eintraege = jeZeitraum[wahl];
+    const ohneDatum = jeZeitraum.aktuell.filter(e => e.datum === null).length;
+
+    const chip = (id: LernweltZustand['notenZeitraum'], beschriftung: string,
+                  zeitraumName: string): string =>
+      '<button type="button" data-lw-zeitraum="' + id + '"' +
+      ' aria-pressed="' + (wahl === id ? 'true' : 'false') + '"' +
+      (zeitraumName ? ' title="' + esc(zeitraumName) + '"' : '') + '>' +
+      esc(beschriftung) + ' <b>' + jeZeitraum[id].length + '</b></button>';
+    const chips = '<nav class="lw-grade-zeitraeume" aria-label="Zeitraum der Noten">' +
+      chip('aktuell', 'Dieses Semester', jetzt.name) +
+      chip('vorher', 'Letztes Semester', davor.name) +
+      chip('alle', 'Alle', '') + '</nav>';
+    const zeitraumName = wahl === 'aktuell' ? jetzt.name
+      : wahl === 'vorher' ? davor.name : 'alle Semester';
+
+    if (!eintraege.length) {
+      /* Im gewählten Zeitraum ist nichts — aber woanders schon. Nicht
+         still auf „Alle" springen (das wäre wieder eine Behauptung statt
+         einer Frage), sondern sagen, wo die Noten liegen: die Zähler in
+         den Chips zeigen es. */
+      return '<div class="lw-grades"><header class="lw-page-head"><div><p>Notenübersicht</p>' +
+        '<h2>Keine Noten in diesem Zeitraum</h2>' +
+        '<span>' + esc(zeitraumName) + ' ist leer — insgesamt ' + alleEintraege.length +
+        (alleEintraege.length === 1 ? ' Note' : ' Noten') + ' in anderen Zeiträumen.</span></div>' +
+        '<button type="button" data-lw-action="grades-open">Notenheft öffnen</button></header>' +
+        chips + '</div>';
     }
 
     const bilanz = notenBilanz(eintraege);
@@ -1821,14 +1896,18 @@ const Lernwelt = (() => {
         (Math.ceil(f.noetig * 10) / 10).toFixed(1) + '.';
     };
 
-    return '<div class="lw-grades"><header class="lw-page-head"><div><p>Notenübersicht</p>' +
-      '<h2>' + gesamtZeugnis.toFixed(1) + ' im Zeugnis</h2>' +
+    return '<div class="lw-grades"><header class="lw-page-head"><div><p>Notenübersicht · ' +
+      esc(zeitraumName) + '</p>' +
+      '<h2>' + gesamtZeugnis.toFixed(1) + (wahl === 'alle' ? ' über alle Semester' : ' im Zeugnis') + '</h2>' +
       '<span>Gewichteter Schnitt ' + gesamtRoh.toFixed(2) + ' über ' + eintraege.length +
       (eintraege.length === 1 ? ' Note' : ' Noten') + ' in ' + bilanz.length +
       (bilanz.length === 1 ? ' Fach' : ' Fächern') +
       (unter4.length ? ' · ' + unter4.length + (unter4.length === 1 ? ' Fach' : ' Fächer') +
-        ' ungenügend' : ' · kein Fach ungenügend') + '.</span></div>' +
+        ' ungenügend' : ' · kein Fach ungenügend') +
+      (wahl === 'aktuell' && ohneDatum ? ' · ' + ohneDatum + ' ohne Datum, zählen zu diesem Semester' : '') +
+      '.</span></div>' +
       '<button type="button" data-lw-action="grades-open">Notenheft öffnen</button></header>' +
+      chips +
       '<div class="lw-grade-grid">' + bilanz.map(f =>
         '<article class="lw-grade-fach' + (f.zeugnis < 4 ? ' ist-ungenuegend' : '') + '">' +
         '<header><h3>' + esc(f.fach) + '</h3><strong>' + f.schnitt.toFixed(2) + '</strong></header>' +
@@ -1837,6 +1916,142 @@ const Lernwelt = (() => {
         balken(f.eintraege) +
         '<p class="lw-grade-ziel">' + esc(zielSatz(f)) + '</p>' +
         '</article>').join('') + '</div></div>';
+  };
+
+  /* ======================================================================
+   * STUNDENPLAN (E243/L70) — hinter dem Knopf stand keiner
+   * ----------------------------------------------------------------------
+   * Auf dem Schul-Dashboard stand ein Knopf „Stundenplan", und er öffnete
+   * die Ausbildungsseite — ein Knopf, der etwas anderes tut, als er
+   * verspricht (dieselbe Sorte Fehler wie E239). Hier ist der Plan selbst:
+   * gelesen wie Noten und Prüfungen aus JEDER Sammlung, die nach
+   * Stundenplan aussieht (`schoolKind: 'timetable'` oder Name), Spalten
+   * tolerant über Namen. Kein zweiter Katalog (§8), keine neue Datenart
+   * (§9): Lektionen SIND Datenbankzeilen.
+   * ==================================================================== */
+  type Lektion = { tag: number; von: string; bis: string; vonMin: number;
+                   bisMin: number; fach: string; raum: string; hinweis: string };
+
+  const TAGE = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
+
+  const stundenplanSammlungen = (): any[] =>
+    Object.values<any>(Store.cache.collections).filter(collection => {
+      const name = String(collection?.name || '').toLowerCase();
+      return collection?.schoolKind === 'timetable' || /stundenplan/.test(name);
+    });
+
+  /* „08:15", „8.15", „ 8:15 " — alles 495. Was keine Uhrzeit ist, ist NaN,
+     nicht 0: eine Lektion ohne Zeit gehört ans Ende des Tages, nicht vor
+     die erste Morgenstunde. */
+  const uhrMin = (wert: unknown): number => {
+    const teil = /(\d{1,2})\s*[:.]\s*(\d{2})/.exec(String(wert ?? ''));
+    if (!teil) return NaN;
+    const h = Number(teil[1]), min = Number(teil[2]);
+    if (h > 23 || min > 59) return NaN;
+    return h * 60 + min;
+  };
+
+  /* „Mo", „montag", „Mittwoch" — die ersten zwei Buchstaben sind unter
+     Mo/Di/Mi/Do/Fr/Sa eindeutig. Was keinem Tag entspricht, fällt heraus
+     statt still auf Montag zu rutschen. */
+  const tagIndex = (wert: unknown): number => {
+    const t = String(wert ?? '').trim().toLowerCase().slice(0, 2);
+    if (t.length < 2) return -1;
+    return TAGE.findIndex(name => name.toLowerCase().startsWith(t));
+  };
+
+  const lektionen = (): Lektion[] => {
+    const raus: Lektion[] = [];
+    stundenplanSammlungen().forEach(collection => {
+      const schema = collection.schema || {};
+      const spalte = (muster: RegExp): string =>
+        Object.keys(schema).find(key =>
+          muster.test(String(schema[key]?.name || key).toLowerCase())) || '';
+      const tagKey = spalte(/^tag\b|wochentag|day/);
+      const vonKey = spalte(/^von\b|start|beginn/);
+      const bisKey = spalte(/^bis\b|ende/);
+      const fachKey = schemaSchluessel(collection, 'relation', ['fach', 'subject', 'modul']) ||
+        spalte(/fach|subject|modul/);
+      const raumKey = spalte(/raum|zimmer|^ort\b/);
+      const hinweisKey = spalte(/hinweis|notiz|bemerk/);
+      Store.rowsOf(collection.id).forEach((row: any) => {
+        if (!row || row.alive === false || !darfLesen(row) || !imBereich(row)) return;
+        const tag = tagIndex(zeilenWert(row, collection, tagKey));
+        if (tag < 0) return;
+        const vonRoh = String(zeilenWert(row, collection, vonKey) ?? '');
+        const bisRoh = String(zeilenWert(row, collection, bisKey) ?? '');
+        const vonMin = uhrMin(vonRoh);
+        const fachWert = zeilenWert(row, collection, fachKey);
+        raus.push({
+          tag,
+          von: vonRoh.trim(), bis: bisRoh.trim(),
+          vonMin: Number.isFinite(vonMin) ? vonMin : 24 * 60,
+          bisMin: uhrMin(bisRoh),
+          fach: textListe(fachWert).join(', ') || String(fachWert || '') ||
+            String(row.text || 'Lektion'),
+          raum: String(zeilenWert(row, collection, raumKey) ?? '').trim(),
+          hinweis: String(zeilenWert(row, collection, hinweisKey) ?? '').trim()
+        });
+      });
+    });
+    return raus.sort((a, b) => a.tag - b.tag || a.vonMin - b.vonMin);
+  };
+
+  const stundenplanAnsicht = (): string => {
+    const alle = lektionen();
+    const planDa = stundenplanSammlungen().length > 0;
+
+    if (!alle.length) {
+      /* Zwei Leerfälle, zwei Wege (§47) — wie bei den Noten. */
+      if (!planDa) return '<div class="lw-plan">' +
+        leer('calendar', 'Noch kein Stundenplan',
+          'Die Schulvorlage legt eine Stundenplan-Datenbank mit Tag, Zeit, Fach und Raum an — auch bei eingerichteter Ausbildung ergänzt sie nur, was fehlt.',
+          'school-install', 'Stundenplan anlegen') + '</div>';
+      return '<div class="lw-plan">' +
+        leer('calendar', 'Noch keine Lektionen eingetragen',
+          'Trage Lektionen mit Tag, Von, Bis, Fach und Raum ein — die Wochenansicht ordnet sie von selbst.',
+          'timetable-open', 'Stundenplan öffnen') + '</div>';
+    }
+
+    const jetzt = new Date();
+    const heuteTag = (jetzt.getDay() + 6) % 7;
+    const jetztMin = jetzt.getHours() * 60 + jetzt.getMinutes();
+    const tageZahl = alle.some(l => l.tag === 5) ? 6 : 5;
+
+    const laufend = alle.find(l => l.tag === heuteTag && Number.isFinite(l.bisMin) &&
+      l.vonMin <= jetztMin && jetztMin < l.bisMin) || null;
+    const naechste = alle.find(l => l.tag === heuteTag &&
+      l.vonMin > jetztMin && l.vonMin < 24 * 60) || null;
+    const heutige = alle.filter(l => l.tag === heuteTag);
+    const jetztSatz = laufend
+      ? 'Jetzt: ' + laufend.fach + (laufend.bis ? ' bis ' + laufend.bis : '') +
+        (laufend.raum ? ' in ' + laufend.raum : '')
+      : naechste
+        ? 'Als Nächstes: ' + naechste.fach + ' um ' + naechste.von +
+          (naechste.raum ? ' in ' + naechste.raum : '')
+        : heutige.length ? 'Für heute ist alles vorbei.' : 'Heute steht nichts im Plan.';
+
+    const spalten = TAGE.slice(0, tageZahl).map((name, tag) => {
+      const drin = alle.filter(l => l.tag === tag);
+      return '<section class="lw-plan-tag' + (tag === heuteTag ? ' ist-heute' : '') + '">' +
+        '<h3>' + name + (tag === heuteTag ? ' <em>heute</em>' : '') + '</h3>' +
+        (drin.length ? drin.map(l =>
+          '<article class="lw-plan-lektion' + (l === laufend ? ' ist-jetzt' : '') + '">' +
+          '<time>' + esc(l.von && l.bis ? l.von + '–' + l.bis : l.von || l.bis || 'ohne Zeit') +
+          '</time>' + (l === laufend ? '<em class="lw-plan-jetzt">jetzt</em>' : '') +
+          '<strong>' + esc(l.fach) + '</strong>' +
+          (l.raum ? '<span>' + esc(l.raum) + '</span>' : '') +
+          (l.hinweis ? '<small>' + esc(l.hinweis) + '</small>' : '') +
+          '</article>').join('') : '<p class="lw-plan-frei">frei</p>') +
+        '</section>';
+    }).join('');
+
+    return '<div class="lw-plan"><header class="lw-page-head"><div><p>Stundenplan</p>' +
+      '<h2>' + esc(jetztSatz) + '</h2>' +
+      '<span>' + alle.length + (alle.length === 1 ? ' Lektion' : ' Lektionen') +
+      ' pro Woche.</span></div>' +
+      '<button type="button" data-lw-action="timetable-open">Stundenplan öffnen</button></header>' +
+      '<div class="lw-plan-woche">' + spalten + '</div></div>';
   };
 
   const pruefungenAnsicht = (): string => {
@@ -2151,7 +2366,9 @@ const Lernwelt = (() => {
         sektion('Noten', eintragListe(gradeEntries, 'Noch keine Note eingetragen.')) +
         sektion('Berichtsheft', eintragListe(reportEntries, 'Noch kein Berichtsheft-Eintrag.')) +
       '</div><div class="lw-quick">' +
-        (root ? '<button type="button" data-lw-open="' + esc(root.id) + '">' + zeichenSpan('calendar') + 'Stundenplan</button>' : '') +
+        /* Seit E243 führt der Knopf zum STUNDENPLAN, nicht mehr zur
+           Ausbildungsseite — er hielt nicht, was er versprach (L70). */
+        '<button type="button" data-lw-nav="stundenplan">' + zeichenSpan('calendar') + 'Stundenplan</button>' +
         '<button type="button" data-lw-nav="lernen">' + zeichenSpan('cards') + 'Lernkarten</button>' +
         '<button type="button" data-lw-nav="fortschritt">' + zeichenSpan('chart') + 'Lernfortschritt</button></div></div>';
   };
@@ -2281,6 +2498,7 @@ const Lernwelt = (() => {
       case 'fehler': return fehlerAnsicht();
       case 'pruefungen': return pruefungenAnsicht();
       case 'noten': return notenAnsicht();
+      case 'stundenplan': return stundenplanAnsicht();
       case 'schule': return schuleAnsicht();
       case 'uni': return uniAnsicht();
       case 'arbeit': return arbeitAnsicht();
@@ -2601,17 +2819,18 @@ const Lernwelt = (() => {
       if (page) { App.zeichneBaum(); zustand.fachId = ''; zeichnen(); }
       return;
     }
-    /* Das Notenheft öffnen — die SEITE, auf der sein Datenbank-Block liegt.
-       Dort trägt man ein; die Notenansicht rechnet nur (E241). */
-    if (aktion === 'grades-open') {
-      const sammlung = notenSammlungen()[0];
+    /* Eine Sammlung öffnen heisst: die SEITE öffnen, auf der ihr
+       Datenbank-Block liegt. Dort trägt man ein; die Ansichten hier
+       rechnen nur (E241/E243). */
+    const sammlungSeiteOeffnen = (sammlung: any): void => {
       if (!sammlung) return;
       const block = Object.values<any>(Store.cache.blocks).find(b =>
         b?.type === 'database' && b.collectionId === sammlung.id && b.alive !== false);
       const ziel = block ? (block.parentTable === 'block' ? block.parentId : block.id) : null;
       if (ziel) App.oeffne(String(ziel));
-      return;
-    }
+    };
+    if (aktion === 'grades-open') { sammlungSeiteOeffnen(notenSammlungen()[0]); return; }
+    if (aktion === 'timetable-open') { sammlungSeiteOeffnen(stundenplanSammlungen()[0]); return; }
     if (aktion === 'new-page') {
       const titel = zustand.ansicht === 'uni' ? 'Studiennotiz' : 'Arbeitsnotiz';
       const icon = zustand.ansicht === 'uni' ? 'building' : 'briefcase';
@@ -2631,6 +2850,13 @@ const Lernwelt = (() => {
     if (open?.dataset.lwOpen) { externOeffnen(open.dataset.lwOpen); return; }
     const action = element.closest<HTMLElement>('[data-lw-action]');
     if (action?.dataset.lwAction) { void aktionAusfuehren(action.dataset.lwAction); return; }
+    /* Zeitraum der Noten-Ansicht (E242): flüchtiger Ansichtszustand wie
+       das Menüband am Telefon — kein Merker, der Ansichten überlebt. */
+    const zeitraum = element.closest<HTMLElement>('[data-lw-zeitraum]');
+    const zeitraumWert = zeitraum?.dataset.lwZeitraum;
+    if (zeitraumWert === 'aktuell' || zeitraumWert === 'vorher' || zeitraumWert === 'alle') {
+      zustand.notenZeitraum = zeitraumWert; zeichnen(); return;
+    }
     const train = element.closest<HTMLElement>('[data-lw-train]');
     if (train?.dataset.lwTrain) { trainingStarten(train.dataset.lwTrain); return; }
     const trainCard = element.closest<HTMLElement>('[data-lw-train-card]');

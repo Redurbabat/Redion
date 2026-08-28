@@ -12,7 +12,10 @@
  * §3 DER ZIELRECHNER. n = 4·(G+1) − S, mit den drei Aussagen sicher /
  *    erreichbar / nicht mehr erreichbar — jede einzeln.
  * §4 TIPPFEHLER FALLEN HERAUS, still den Schnitt heben dürfen sie nicht.
- * §5 DIE LEERFÄLLE führen wohin (§47): ohne Heft zur Vorlage, mit leerem
+ * §5 EIN SEMESTER IST KEIN TOPF (E242/L71): Vorgabe „Dieses Semester",
+ *    eine alte 6.0 hebt den Schnitt nicht; „Letztes Semester" und „Alle"
+ *    schalten um, Undatiertes zählt zum aktuellen und die Kopfzeile sagt es.
+ * §6 DIE LEERFÄLLE führen wohin (§47): ohne Heft zur Vorlage, mit leerem
  *    Heft zum Heft.
  * ==========================================================================*/
 import _pfad from 'node:path';
@@ -156,7 +159,68 @@ console.log('\n4 · Der Tippfehler rechnet nicht mit');
    schon rot. Hier steht die Gegenrichtung: sie fehlt auch in den Balken. */
 pr('Die „45" steht nicht in den Balken', !!ma && ma.balken === 2, String(ma?.balken));
 
-console.log('\n5 · Leerfall mit leerem Heft: der Weg führt zum Heft');
+console.log('\n5 · Ein Semester ist kein Topf für alle (E242/L71)');
+/* Chemie bekommt zwei datierte Noten: eine 6.0 vor einem halben Jahr —
+   ein halbes Jahr zurück liegt IMMER im Nachbarsemester, weil die
+   Semester an Feb/Aug ausgerichtete Sechsmonatsblöcke sind — und eine
+   4.0 von heute. Unter der Vorgabe „Dieses Semester" darf die alte 6.0
+   den Schnitt nicht heben: stünde hier 5.00, wäre L71 zurück. */
+await p.evaluate(() => {
+  const c = Store.getCollection((globalThis as any).__notenC);
+  const heute = new Date();
+  const halbesJahrZurueck = new Date();
+  halbesJahrZurueck.setMonth(halbesJahrZurueck.getMonth() - 6);
+  const rein = (titel: string, note: number, wann: Date) => {
+    const z = Store.addBlock(c.id, 'page');
+    Store.updateBlock(z.id, { text: titel, parentTable: 'collection',
+      props: { f1: 'Chemie', n1: note, g1: 1, d1: wann.toISOString().slice(0, 10) } });
+  };
+  rein('Säuren (altes Semester)', 6.0, halbesJahrZurueck);
+  rein('Basen (dieses Semester)', 4.0, heute);
+  Produktwelten.lernen('noten');
+});
+await p.waitForTimeout(900);
+
+const stand = (fach: string) => p.evaluate((f) => {
+  const karteVon = [...document.querySelectorAll<HTMLElement>('.lw-grade-fach')]
+    .find(k => (k.querySelector('h3')?.textContent || '').trim() === f);
+  return {
+    da: !!karteVon,
+    schnitt: (karteVon?.querySelector('header strong')?.textContent || '').trim(),
+    zeugnis: (karteVon?.querySelector('.lw-grade-zeugnis')?.textContent || '').trim(),
+    faecher: document.querySelectorAll('.lw-grade-fach').length,
+    chips: [...document.querySelectorAll<HTMLElement>('.lw-grade-zeitraeume button')]
+      .map(k => ({ wert: k.dataset.lwZeitraum || '', aktiv: k.getAttribute('aria-pressed') === 'true' })),
+    kopf: (document.querySelector('.lw-grades h2')?.textContent || '').trim(),
+    satz: (document.querySelector('.lw-grades .lw-page-head span')?.textContent || '').trim()
+  };
+}, fach);
+
+let s6 = await stand('Chemie');
+pr('Drei Zeitraum-Knöpfe, „Dieses Semester" ist die Vorgabe',
+  s6.chips.length === 3 && s6.chips.find(c2 => c2.wert === 'aktuell')?.aktiv === true,
+  JSON.stringify(s6.chips));
+pr('Die alte 6.0 hebt den Chemie-Schnitt NICHT: 4.00 aus einer Note',
+  s6.da && s6.schnitt === '4.00' && /1 Note\b/.test(s6.zeugnis),
+  JSON.stringify({ schnitt: s6.schnitt, zeugnis: s6.zeugnis }));
+pr('Die Kopfzeile sagt, dass undatierte Noten zu diesem Semester zählen',
+  /ohne Datum, zählen zu diesem Semester/.test(s6.satz), s6.satz);
+
+await p.click('.lw-grade-zeitraeume button[data-lw-zeitraum="vorher"]');
+await p.waitForTimeout(600);
+s6 = await stand('Chemie');
+pr('„Letztes Semester": nur die alte 6.0, und nur ein Fach — Undatiertes gehört nicht hierher',
+  s6.da && s6.schnitt === '6.00' && s6.faecher === 1,
+  JSON.stringify({ schnitt: s6.schnitt, faecher: s6.faecher }));
+
+await p.click('.lw-grade-zeitraeume button[data-lw-zeitraum="alle"]');
+await p.waitForTimeout(600);
+s6 = await stand('Chemie');
+pr('„Alle": beide Noten mitteln zu 5.00, und die Überschrift nennt es „über alle Semester"',
+  s6.da && s6.schnitt === '5.00' && /über alle Semester/.test(s6.kopf),
+  JSON.stringify({ schnitt: s6.schnitt, kopf: s6.kopf }));
+
+console.log('\n6 · Leerfall mit leerem Heft: der Weg führt zum Heft');
 await p.evaluate(() => {
   const c = Store.getCollection((globalThis as any).__notenC);
   Store.rowsOf(c.id).forEach((row: any) => Store.updateBlock(row.id, { alive: false }));
