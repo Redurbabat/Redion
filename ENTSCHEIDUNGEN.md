@@ -17649,3 +17649,22 @@ DREI VORFÄLLE IN EINER WOCHE, und alle drei haben dieselbe Gestalt: die
 Prüfung war grün, weil ihre Messung am Nachbarn hing statt an der Sache.
 Wer eine schreibt, muss zuerst fragen, WORAN sie rot werden kann — nicht
 nur, ob sie gerade grün ist.
+
+
+UND EINE NEUE DATEI IST NICHT NUR EINE NEUE DATEI
+--------------------------------------------------------------------------
+
+test87 meldete:
+
+    ✗ Jede Datei aus index.html steht auch im sw.js
+      — quell/bereiche/elektro/start.js
+
+Ein Skript, das `index.html` lädt, muss auch im Dienst-Skript stehen, sonst
+fehlt es OFFLINE. „Elektro" wäre damit der einzige der fünf Wege gewesen,
+der ohne Netz ins Leere führt (§28) — und das hätte niemand gemerkt, bevor
+jemand im Zug arbeitet.
+
+Von Hand hätte ich es vergessen. Zwei Listen, die dieselbe Menge nennen
+müssen, laufen immer auseinander; was sie zusammenhält, ist die Prüfung,
+die sie gegeneinander hält. Genau das ist auch der Grund, warum die
+Elektro-Seite ihre acht Wege aus dem Register liest, statt sie abzuschreiben.

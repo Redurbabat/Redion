@@ -110,6 +110,11 @@ const GRUNDSTOCK = [
     './quell/bereiche/elektro/arbeitsplatz.js',
     './quell/bereiche/elektro/lernbilder.js',
     './quell/bereiche/elektro/skizzen.js',
+    /* DIE ELEKTRO-STARTSEITE (E238). Sie muss hier stehen, sonst fehlt sie
+       offline — und „Elektro" wäre der einzige der fünf Wege, der ohne Netz
+       ins Leere führt (§28). Gefunden hat das der Prüflauf, der index.html
+       gegen diese Liste hält; von Hand hätte ich es vergessen. */
+    './quell/bereiche/elektro/start.js',
     './quell/bereiche/pdf/document-mode.js',
     './quell/bereiche/spreadsheet/ansicht.js',
     './quell/bereiche/datenbanken/raster.js',
