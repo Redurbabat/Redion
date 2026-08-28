@@ -17380,3 +17380,47 @@ Gemessen wird dabei die KANTE und nicht `scrollWidth` — der Vergleich
 `scrollWidth > clientWidth` hätte bei genau diesem Fehler „0 gegen 0"
 gesagt. Das ist dieselbe Falle wie beim Tabellenblock (§55.2), nur mit
 einer anderen Ursache: dort Flexbox, hier ein Inline-Element.
+
+
+UND WAS DER VOLLE LAUF DANN NOCH FAND
+--------------------------------------------------------------------------
+
+Fünf von 215 Läufen rot, und keiner davon war ein Fehler in der App. Vier
+waren richtige Antworten auf veraltete Fragen, einer war eine Prüfung, die
+selbst falsch lag:
+
+  · **test54** fragte nach sechs Kreisen oben und drei schwebenden Knöpfen
+    unten. Und einer seiner zwei Punkte war BLIND: er las
+    `document.querySelector('#handy-unten') ?? document.body` und fragte,
+    ob der Grund `display:none` hat. Nimmt man die Leiste weg, fällt der
+    Ausdruck auf `document.body` zurück — `display:block`, also grün. Eine
+    Prüfung, die das Verschwinden ihres eigenen Gegenstands nicht bemerkt,
+    prüft nichts. Sie fragt jetzt nach dem, was da sein MUSS.
+
+  · **test67** erwartete „Heute" als markierten Weg beim Öffnen. Es ist
+    „Dokumente" — das ist der ganze Sinn von Teil 3. Die Frage dahinter
+    bleibt und ist die wichtigere: genau EINER ist markiert.
+
+  · **test114** erwartete unten noch „Plan" statt „Termine".
+
+  · **test225** meldete „ENTSCHEIDUNGEN.md: test67 §11" als Verweis ins
+    Leere — und lag falsch. Den Abschnitt gibt es; test67 schreibt seine
+    Überschriften nur als Kommentarbalken (`/* --- 11 · …`), und die
+    Prüfung kannte nur zwei der drei Schreibweisen. Berichtigt wurde
+    deshalb die PRÜFUNG und nicht die Doku. Gegenprobe: mit `§99` statt
+    `§11` wird sie sofort wieder rot.
+
+  · **test248** trug die zwei Punkte von E219 („über einer Startansicht
+    steht kein Menüband", „zusammen höchstens 18"). E219 ist mit E236
+    zurückgenommen; die Punkte sind es damit auch. Und die Ausgangslage
+    hing am Zufall: `anStart` mass, wohin `letzte` zeigt — seit Redion
+    beim zuletzt geöffneten Dokument aufgeht, war das eine SEITE und nicht
+    die Startansicht, nach der der Punkt benannt war.
+    Jetzt werden beide Zustände ausdrücklich hergestellt und gemessen:
+
+        Startansicht (Regal)   Seitenleiste 8 · Kopf 7 · Leiste 7 · Reiter 3
+        offene Seite           Seitenleiste 8 · Kopf 7 · Leiste 10 · Reiter 6
+
+    Die Gegenrichtung gehört dazu: ohne den Punkt „über einer offenen
+    Seite sind es wieder sechs" wäre „drei Reiter" auch dann grün, wenn es
+    NIE mehr als drei gäbe.

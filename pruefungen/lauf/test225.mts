@@ -72,7 +72,17 @@ const pruefdatei = (name: string): string | null => {
  */
 const hatAbschnitt = (quelle: string, nummer: number): boolean =>
   new RegExp('\\\\n' + nummer + ' · ').test(quelle) ||
-  new RegExp('^\\s*\\*?\\s*§' + nummer + ' ·', 'm').test(quelle);
+  new RegExp('^\\s*\\*?\\s*§' + nummer + ' ·', 'm').test(quelle) ||
+  /* DIE DRITTE SCHREIBWEISE, gefunden am 28. August: test67 setzt seine
+     Abschnitte als Kommentarbalken — Schrägstrich, Stern, drei Striche,
+     dann „11 · Krumenzeile …". Das ist eine Überschrift wie die anderen
+     beiden; sie stand nur nicht in dieser Liste. Die Folge war ein roter
+     Punkt über einen Verweis, den es sehr wohl gibt:
+     „ENTSCHEIDUNGEN.md: test67 §11".
+     Eine Prüfung, die aus dem falschen Grund rot wird, ist so wenig wert
+     wie eine, die aus dem falschen Grund grün ist (E168). Berichtigt wird
+     deshalb die Prüfung und nicht die Doku — der Verweis stimmte. */
+  new RegExp('^\\s*/?\\*[\\s-]*' + nummer + ' · ', 'm').test(quelle);
 
 /** Alle „testNNN"-Nennungen einer Datei, mit ihrer Abschnittsangabe. */
 type Verweis = { datei: string; name: string; abschnitte: number[]; roh: string };

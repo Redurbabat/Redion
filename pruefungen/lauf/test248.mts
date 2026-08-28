@@ -129,6 +129,9 @@ const RAHMEN = `
       leiste: z('#sidebar button, #sidebar a, #sidebar [role=button]'),
       kopf:   z('#topbar button, #topbar a'),
       band:   z('#menueband button, #menueband [role=button], #menueband .mb-knopf'),
+      /* Die REITER allein, ohne Klapp-Pfeil und ohne Suche/KI/Konto rechts.
+         An ihnen hängt seit E236 die Aussage: die Leiste räumt sich auf. */
+      reiter: z('#menueband .mb-reiter-knopf'),
       imBaum: document.querySelectorAll('#sidebar button, #sidebar a, #topbar button').length,
       /* ALLE benannten Wege der Leiste, nicht nur die oberste Gruppe:
          die Navigation, der Fuss und die Gruppen im Baum. Sonst könnte man
@@ -157,11 +160,49 @@ p('Die Seitenleiste zeigt höchstens 10 Dinge (vorher 32)',
   anStart.leiste <= 10, `sind ${anStart.leiste}`);
 p('Die Kopfzeile zeigt höchstens 8 (vorher 13)',
   anStart.kopf <= 8, `sind ${anStart.kopf}`);
-p('Über einer Startansicht steht kein Menüband (vorher 7)',
-  anStart.band === 0, `sind ${anStart.band}`);
-p('Zusammen höchstens 18 statt 52',
-  anStart.leiste + anStart.kopf + anStart.band <= 18,
-  `sind ${anStart.leiste + anStart.kopf + anStart.band}`);
+/* ==========================================================================
+ * E219 IST MIT E236 ZURÜCKGENOMMEN — und die zwei Punkte hier mit ihm.
+ * --------------------------------------------------------------------------
+ * Sie lauteten: „Über einer Startansicht steht kein Menüband" und „zusammen
+ * höchstens 18". Der Gedanke dahinter war richtig — sieben anklickbare
+ * Dinge, die alle sagen „nicht jetzt" —, die Schlussfolgerung war es nicht.
+ * Der Fehler lag nicht an der Leiste, sondern an ihrem INHALT: drei ihrer
+ * sechs Reiter (Start, Einfügen, Zeichnen) schreiben IN eine Seite und
+ * haben ohne offene Seite nichts zu tun.
+ *
+ * Das steht seit E236 an einer Stelle im Register (`BRAUCHT_SEITE`), und
+ * die Leiste räumt sich selbst auf: aus sechs Reitern werden drei, statt
+ * aus einer Leiste keine.
+ *
+ * ZWEI ZUSTÄNDE, ZWEI MESSUNGEN — und beide ausdrücklich hergestellt.
+ * Vorher hing `anStart` davon ab, wohin `letzte` zeigt; seit Redion beim
+ * zuletzt geöffneten Dokument aufgeht, war das eine SEITE und nicht die
+ * Startansicht, nach der der Punkt benannt war. Eine Prüfung, deren
+ * Ausgangslage vom Zufall abhängt, misst irgendwann etwas anderes als
+ * ihr Name sagt.
+ * ========================================================================*/
+p('Die Menüleiste ist überhaupt da (E219 zurückgenommen)',
+  anStart.band > 0, `sind ${anStart.band}`);
+
+await seite.evaluate(() => Bibliothek.oeffne());
+await seite.waitForTimeout(700);
+const imRegal: any = await seite.evaluate(RAHMEN);
+p('Über einer Startansicht bleiben drei Reiter statt sechs',
+  imRegal.reiter === 3, `sind ${imRegal.reiter}`);
+p('Und die Leiste ist trotzdem nicht leer — Suche, KI und Konto stehen rechts',
+  imRegal.band >= imRegal.reiter + 3,
+  `Reiter ${imRegal.reiter}, Leiste gesamt ${imRegal.band}`);
+p('Zusammen höchstens 22 statt 52',
+  imRegal.leiste + imRegal.kopf + imRegal.band <= 22,
+  `sind ${imRegal.leiste + imRegal.kopf + imRegal.band}`);
+
+/* Und die Gegenrichtung, sonst wäre „drei Reiter" auch dann grün, wenn es
+   NIE mehr als drei gäbe: über einer offenen Seite sind es sechs. */
+await seite.evaluate(() => { const s1 = Store.rootPages()[0]; if (s1) App.oeffne(s1.id); });
+await seite.waitForTimeout(900);
+const beiOffenerSeite: any = await seite.evaluate(RAHMEN);
+p('Über einer offenen Seite sind es wieder sechs',
+  beiOffenerSeite.reiter === 6, `sind ${beiOffenerSeite.reiter}`);
 
 /* ==========================================================================
  * §2 „Mehr" holt alles zurück

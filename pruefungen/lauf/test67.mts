@@ -260,11 +260,23 @@ const pruef = (n: any, ist: any, soll: any) => {
      Den Namen von `hl-bespr` setzen die Produktwelten, nicht das HTML —
      und er heisst seit E236 wieder „Termine". Die Kurzform „Plan" stammt
      aus der Zeit der waagerechten Pillen, wo der Platz fehlte (E137). */
-  pruef('Konto und fünf Bereiche', leiste.ids,
+  /* Der Name hiess „Konto und fünf Bereiche" — das Konto ist der sechste
+     Kreis von früher und steht seit E236 in der Menüleiste. Fünf sind es
+     jetzt, und alle fünf sind Wege. */
+  pruef('Fünf Wege', leiste.ids,
         ['hl-dok', 'hl-start', 'hl-lernen', 'hl-bespr', 'hl-mehr']);
   pruef('Jeder hat seinen Namen dabei', leiste.beschriftung,
         ['Dokumente', 'Heute', 'Lernen', 'Termine', 'Mehr']);
-  pruef('Start ist markiert', leiste.markiert, ['hl-start']);
+  /* UND BEIM ÖFFNEN IST „DOKUMENTE" MARKIERT, nicht mehr „Heute".
+     Hier stand `['hl-start']`, und das war richtig, solange Redion mit der
+     Heute-Ansicht aufging. Seit E236 öffnet es dort, wo die Sachen liegen —
+     beim zuletzt geöffneten Dokument, sonst im Regal —, und `oeffne()`
+     setzt den Reiter selbst.
+
+     Die FRAGE ist dieselbe geblieben und die wichtigere: genau EINER ist
+     markiert. Eine Leiste, in der zwei Wege leuchten oder keiner, sagt
+     nicht, wo man ist. */
+  pruef('Beim Öffnen ist genau „Dokumente" markiert', leiste.markiert, ['hl-dok']);
   /* DIESE REGEL IST MIT E236 UMGEDREHT.
      Sie lautete: „Stünden alle Namen da, bliebe für den Inhalt nichts."
      Das galt für eine WAAGERECHTE Pille oben — Zeichen und Wort

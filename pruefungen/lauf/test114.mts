@@ -491,7 +491,7 @@ const seitenReiter = await seite.evaluate(() => {
    sein" — der Satz steht in `seitenleiste.ts` und ist der Grund, warum es
    keinen Rückfall auf „Start" gibt. Der Workspace ist genau so ein Ort. */
 p('Unten stehen die fünf Wege',
-  (seitenReiter?.beschriftungen ?? []).join(',') === 'Dokumente,Heute,Lernen,Plan,Mehr',
+  (seitenReiter?.beschriftungen ?? []).join(',') === 'Dokumente,Heute,Lernen,Termine,Mehr',
   (seitenReiter?.beschriftungen ?? []).join(' · '));
 p('… und „Chats" steht nicht mehr da',
   seitenReiter?.beschriftungen.includes('Chats') === false);
