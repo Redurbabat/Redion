@@ -2608,3 +2608,90 @@ Zwei Wege wären denkbar, beide ungeprüft:
     als Möglichkeit und nicht als Vorschlag.
 
 Gemessen am 28. August 2026 auf 390 × 844.
+
+
+L69 — Es gibt keinen Weg zu einer .pptx-Datei
+================================================================================
+
+Der Vortragsmodus ist gebaut und geprüft (test183, test35): eine Seite
+wird im Vollbild als Folien gezeigt, jede Überschrift 1/2 und jede
+Trennlinie beginnt eine neue. Für den Vortrag vom eigenen Gerät reicht
+das.
+
+Aber die Berufsschule verlangt oft eine ABGABE: eine PowerPoint-Datei
+hochladen oder auf dem Schul-PC öffnen. Dafür gibt es nichts — `grep -ri
+pptx` über `src/`, `quell/` und `pruefungen/` liefert null Treffer. Auch
+den Umweg gibt es nicht: der Druckweg druckt die SEITE als Fliesstext
+(quell/bereiche/wissen/werkzeuge.js, Druckrahmen), nicht die Folien —
+nicht einmal ein Folien-PDF als Handout ist möglich.
+
+Was ein Anfang wäre, in dieser Reihenfolge:
+
+  · Folien-PDF: den Druckrahmen die FOLIEN setzen lassen (eine Folie =
+    eine Seite quer) statt des Fliesstexts. Kein neues Format, nur ein
+    zweiter Druckpfad — und deckt Handout und „als PDF abgeben" ab.
+  · .pptx-Export danach: ist wie .docx/.xlsx ein ZIP mit XML, und den
+    eigenen ZIP-Schreiber gibt es schon (src/bereiche/dateien/
+    ausgeben.ts). Der Aufwand liegt im Folien-XML, nicht im Container.
+
+Gemessen am 28. August 2026 (Visionskarte, Leser „PowerPoint").
+
+
+L70 — Hinter dem Knopf „Stundenplan" steht kein Stundenplan
+================================================================================
+
+Auf dem Schul-Dashboard gibt es einen Knopf mit der Aufschrift
+„Stundenplan" (src/bereiche/wissen/lernwelt.ts:2154). Er öffnet die
+Ausbildungsseite. Das ist alles — es gibt kein Wochenraster, keine
+Lektion, keine Zeiten je Fach, kein „was habe ich jetzt" auf dem
+Heute-Dashboard.
+
+Ein Knopf, der etwas anderes tut, als er verspricht, ist schlimmer als
+kein Knopf (dieselbe Sorte Fehler wie E239, „Neue Tabelle").
+
+Der Unterbau ist da: Termine-Datenbanken, Kalender-Ansicht, ICS-Import
+mit Wiederholungsterminen (quell/bereiche/verbinden/kalender.js). Was
+fehlt, ist ein Wochenraster, das Lektionen je Fach mit Zeiten zeigt, und
+seine Zeile auf dem Heute-Dashboard.
+
+Gemessen am 28. August 2026 (Visionskarte, Leser „Schule").
+
+
+L71 — Die Zeugnisnote mittelt alle Semester in einen Topf
+================================================================================
+
+Die Noten-Ansicht (E241, test249) rechnet je Fach den gewichteten Schnitt
+und die Zeugnisnote — über ALLE Zeilen der Fach-Datenbank, ohne
+Zeitraumfilter. Im ersten Semester stimmt das. Ab dem zweiten zeigt die
+Kopfzeile „X.X im Zeugnis" das Allzeit-Mittel — eine Zahl, die auf keinem
+echten Zeugnis steht.
+
+Das ist die gefährliche Sorte falsch: plausibel, leicht daneben, und wer
+ihr vertraut, rechnet sein „was brauche ich für die 4.0" auf der falschen
+Summe.
+
+Klein zu schliessen: das Datum je Note wird schon gelesen und sortiert
+(notenEintraege, datumKey) — es fehlt nur ein Semester-/Zeitraumfilter
+über der Bilanz und ein Prüfpunkt in test249, der zwei Semester anlegt
+und nachweist, dass die Kopfzeile nur das gewählte mittelt.
+
+Gemessen am 28. August 2026 (Visionskarte, Leser „Schule").
+
+
+L72 — DOCX trägt in beide Richtungen nur Klartext, und der Import ist ungeprüft
+================================================================================
+
+Der DOCX-Export (test49, 50/50) baut eine echte Word-Datei mit eigenem
+ZIP-Schreiber — aber wAbsatz schreibt den ROHEN Blocktext: `**fett**`
+steht in Word wörtlich mit Sternchen da statt als fetter Lauf, Bilder
+werden zum Platzhaltertext „[Bild: …]", und nummerierte Listen bekommen
+Punkte (numbering.xml kennt nur bullet). Der DOCX-Import (docxLesen,
+src/bereiche/dateien/einlesen.ts:767) sammelt nur w:t-Texte: fett/kursiv,
+Bilder, Kopf-/Fusszeilen und Fussnoten gehen verloren.
+
+Und: docxLesen ist der einzige Einlese-Weg OHNE Prüflauf — kein Test in
+pruefungen/lauf/ ruft ihn auf (grep leer). Nach §30 ist das eine
+Pflichtlücke, unabhängig davon, wann die Formatierung kommt: erst der
+Prüflauf (klein), dann echte w:rPr-Läufe im Export (mittel).
+
+Gemessen am 28. August 2026 (Visionskarte, Leser „Word").

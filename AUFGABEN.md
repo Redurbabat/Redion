@@ -35,6 +35,16 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
+**28. August 2026 · Die Visionskarte: Redurs Satz, neunfach nachgemessen**
+
+> „Kein Word, Excel, PowerPoint mehr … Schule, Noten, Lernen … PDF,
+> Fachzeichnen, Elektro-Simulator … Notion, GoodNotes, Graphy, Obsidian."
+> Neun strenge Leser haben jede Säule gegen den Bestand gehalten — nur
+> Belegbares zählt. Ergebnis als eigener Abschnitt **„Die Visionskarte"**
+> weiter unten: sechs Säulen tragen heute nachweislich, Schule trägt zur
+> Hälfte, und die grössten Löcher heissen jetzt L69 (.pptx), L70
+> (Stundenplan), L71 (Zeugnisnote ohne Semester), L72 (DOCX-Klartext).
+
 **28. August 2026 · Noten: das Heft war da, jetzt rechnet jemand (E241)**
 
 > Redur: „es sollte meine Schule alles begleiten, Noten, Lernen,
@@ -1318,6 +1328,126 @@ dem 6. August mit einer leeren `js-bestand.json`. Es bleibt einer:
 Alles andere in LUECKEN.md ist entweder gebaut oder mit Begründung bewusst
 nicht gebaut. Das heisst nicht, dass Redion fertig ist — es heisst, dass die
 Liste ehrlich ist.
+
+---
+
+## Die Visionskarte · 28. August 2026
+
+> Redur: „Ich wollte so etwas machen, das mich Jahre begleitet — dass ich
+> kein Word, Excel, PowerPoint mehr brauche. Es sollte meine Schule alles
+> begleiten: Noten, Lernen, Lernziele. Und PDF bearbeiten, Fachzeichnen,
+> Elektrotechnik-Simulator — und Notion, GoodNotes, Graphy, Obsidian,
+> alles dort haben. Und natürlich mehr."
+
+Dieser Satz ist der Massstab. Neun Leser haben ihn am 28. August gegen den
+Bestand gemessen — streng: nur was in `src/`, `quell/` oder
+`pruefungen/lauf/` belegbar ist, zählt als „kann"; jede Zeile unten hat im
+Messprotokoll einen Dateipfad oder einen grün gelaufenen Prüflauf hinter
+sich. Die Karte sagt für jede Säule zwei Dinge: **was Redur heute trägt**
+und **was zuerst fehlt**.
+
+**Word — trägt für die Schule.** Editor mit Formatierung, fünf Schriften
+und Grössen je Block, Drucken/PDF (test182), A4-Blatt mit Papiervorlagen
+und Dokumentmodus (test212), DOCX in beide Richtungen mit eigenem
+ZIP-Schreiber (test49). Ehrlich: DOCX transportiert in beide Richtungen
+nur Klartext-Struktur — `**fett**` steht in Word wörtlich da, Bilder
+werden Platzhaltertext, und der Import hat als einziger Einlese-Weg
+keinen Prüflauf (→ L72). Beim Drucken fehlen Seitenzahlen, Kopf- und
+Fusszeile — für abzugebende Berichte der sichtbarste Unterschied.
+
+**Excel — trägt für die Berufsschule.** Tabellenblock mit A1-Bezügen,
+255 Formelfunktionen mit deutschen Namen, XLSX/ODS mehrblattfähig in
+beide Richtungen mit echten Bytes geprüft (test110: 191 ok, test165/168/
+171/198), Zellformate machen die Rundreise, CHF und Schweizer Zahlen,
+bedingte Formatierung, Pivot, Zielwertsuche. Ehrlich: ein Diagramm oder
+eine Pivot **aus einem Zellbereich** geht nicht (nur aus Datenbanken),
+verbundene Zellen und Zellkommentare fehlen.
+
+**PowerPoint — trägt den Vortrag, nicht die Abgabe.** Vollbild-Vortrag
+aus jeder Seite (H1/H2/Trennlinie = neue Folie, Marp-Prinzip), mit A4-
+Blättern, Tabellen und Formeln auf der Folie (test183, test35). Ehrlich:
+`.pptx` kommt im ganzen Bestand nicht vor (→ L69), das Folienlayout kennt
+keinen Export (Druck druckt die Seite, nicht die Folien), keine
+Referentenansicht, keine Vortragsvorlage in der Galerie.
+
+**Schule — trägt zur Hälfte.** Prüfungszentrale mit Countdown (test208),
+Schulstruktur per Vorlage „Ausbildung" (test202), seit E241 Noten mit
+gewichtetem Schnitt, Zeugnisnote und Zielrechner (test249 — der Leser sah
+den Stand noch uncommitted; Prüflauf, E241 und Einzeldatei sind
+inzwischen da). Ehrlich: hinter dem Knopf „Stundenplan" steht kein
+Stundenplan (→ L70), die Zeugnisnote mittelt ohne Semesterfilter alle
+Noten aller Zeiten (→ L71), Hausaufgaben mit Fach-Bezug und Lernziele je
+Fach gibt es nicht — nur das tägliche Karten-Ziel.
+
+**GoodNotes — trägt den Kernfall.** PDF einlesen, mit dem Stift
+beschreiben (Druckstärke, Formen, Textanmerkung, Undo), Original bleibt
+Byte für Byte, Papiervorlagen in Blattmassen, Striche lagestabil, PDF-
+Text durchsuchbar, Ausschnitt als Karteikarte, beschriftet drucken — fünf
+Prüfläufe grün (test174/177/181/207/242). Ehrlich: der Stift-Feinschliff
+fehlt — kein Lasso (nur Rechteck-Auswahl), der Radierer löscht nur ganze
+Striche, Handschrift-zu-Text braucht den localhost-Dienst, und PDF-Export
+geht nur über den Druckdialog.
+
+**Notion — trägt für einen Lernenden.** ~60 Blockarten, Slash-Menü,
+13 gerenderte Datenbank-Ansichten (zwei mehr als Notion: Raster, Pivot),
+35 Spaltentypen, Relationen/Rollups, 158 Formeln ohne eval (test106:
+177 ok), Kommentare, Erwähnungen, Sync mit E2E-Verschlüsselung und
+Konfliktzusammenführung (test113: 53 ok). Ehrlich: als Team-Werkzeug
+nicht — kein Live-Tippen, @Person ist faktisch Text, Teilen braucht den
+selbst aufgesetzten Server. Und im Datei-Sync wandert lokales Löschen
+nicht zum Server (L6 — als Datenintegritätslücke die wichtigste Zeile
+dieser Karte).
+
+**Fachzeichnen + Elektro-Simulator — trägt nachweislich.** 106 Symbole
+nach IEC/EN 60617 mit Schweizer Bestand, Schaltplan-Editor mit drei
+Planarten, echte Knotenpotentialanalyse, die die Wheatstone-Brücke
+besteht, 183 rechenbare Formeln, Formelbuch mit eigenen Skizzen aus
+denselben Fachzeichen, erzeugte Übungen mit Schweizer Notenskala — vier
+Prüfläufe, 318/318 (test238/239/241/244). Ehrlich: die Simulation ist
+Gleichstrom, eingeschwungen, linear — Wechselstrom (X_L, X_C, cos φ)
+lässt sich rechnen, aber nicht im Plan simulieren; Zeitrelais verzögern
+nicht; die Prüfungssimulation hat keine Uhr; nur 16 von 183 Formeln
+haben einen Schritt-für-Schritt-Weg in Worten.
+
+**Obsidian — trägt die verlinkte Wissensbasis.** Wikilinks mit Alias,
+Blockverweise, Rückverweise und unverlinkte Erwähnungen unter jeder
+Seite, Graph mit Kräfte-Layout, #Tags mit Tagwolke, Vault-Export als ZIP
+mit Frontmatter und verlustfreiem Wiedereinlesen (test219: 31/31).
+Ehrlich: Obsidians „der Vault IST der Ordner" gibt es nicht — der
+Ordner-Abgleich schreibt nur in eine Richtung, ohne Rücklesen; der Graph
+zeigt nur den Teilgraphen um eine Seite; Rückverweise haben keinen
+eigenen Prüflauf.
+
+**Graphy/Diagramme — trägt den Schulalltag.** Diagramm-Ansicht mit
+Gruppierung, Zeitstufen und Drilldown (test52: 27/27), Dashboard mit
+KPI-Kacheln über fremde Datenbanken (test237: 61 ok), Pivot mit Prozent
+und CSV, Whiteboard mit 12 Werkzeugen und PNG-Export (test209: 55/55).
+Ehrlich: keine zweite Datenreihe (gestapelt/gruppiert), kein XY-/
+Streudiagramm — für einen Elektro-Lernenden das naheliegendste: die
+U-I-Kennlinie aus der Messreihe geht nicht. Und der Chart-Block kann
+seine Datenbank-Quelle lesen, aber keine Oberfläche kann sie setzen.
+
+### Was aus der Karte oben liegt
+
+Nach §46 zuerst die Datenzeile, dann nach Gewicht und Aufwand:
+
+1. **L6 · Datei-Sync-Grabsteine** — lokales Löschen muss zum Server
+   wandern. Die einzige Datenintegritätslücke der Karte.
+2. **L71 · Zeugnisnote je Semester** — ab dem zweiten Semester zeigt die
+   Kernzahl der Noten-Ansicht sonst einen falschen Wert. Das Datum je
+   Note ist schon da, es fehlt nur der Filter.
+3. **L70 · Echter Stundenplan** — Wochenraster mit Lektionen; Unterbau
+   (Termine, Kalender, ICS-Wiederholungen) ist vorhanden.
+4. **Kleine Pflichten (§30):** Prüflauf für den DOCX-Import (L72),
+   Prüflauf für Rückverweise/unverlinkte Erwähnungen, Quellen-Wähler im
+   Chart-Block (Codepfad steht), Seitenzahlen/Kopfzeile beim Drucken,
+   Prüfungs-Timer im Elektro-Arbeitsplatz.
+5. **Die grossen Sichtbaren:** .pptx-Export (L69), Lasso im Stift,
+   Wechselstrom-Simulation, XY-Diagramm, Zwei-Wege-Ordner-Abgleich,
+   Hausaufgaben und Lernziele je Fach.
+
+Nichts davon ist eine Wette — jede Zeile stammt aus dem Messprotokoll
+vom 28. August und hat dort ihren Beleg.
 
 ---
 
