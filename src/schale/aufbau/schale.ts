@@ -2190,7 +2190,16 @@ const App = (() => {
         const p = neueSeite();
         setTimeout(() => {
           if (was === 'db')            Store.addDatabase(p.id, 'Ohne Namen');
-          else if (was === 'tabelle')  Store.addBlock(p.id, 'tabelle', {});
+          /* `spreadsheet`, NICHT `tabelle` — und das ist kein Schönheitsfehler.
+             Es gibt gar keine Blockart `tabelle`: der Editor kennt `table`
+             (Einfache Tabelle) und `spreadsheet` (Kalkulationstabelle).
+             Gemessen wurde ein `tabelle`-Block 24 px hoch mit dem Inhalt
+             „+⋮⋮" — nur der Griff, sonst nichts. Der Weg legte seit E45
+             einen Block an, den niemand zeichnet.
+             Welcher der beiden es sein muss, sagt der Weg selbst: unter
+             „Neue Tabelle" steht „Rechnen wie in Excel". Das ist die
+             Kalkulationstabelle (gemessen 513 px, mit A1, fx, CHF und %). */
+          else if (was === 'tabelle')  Store.addBlock(p.id, 'spreadsheet', {});
           else if (was === 'board')    Store.addBlock(p.id, 'whiteboard', { text: 'Whiteboard' });
           else if (was === 'blatt')    Store.addBlock(p.id, 'blatt', { text: '' });
           else if (was === 'plan')     Store.addBlock(p.id, 'schaltplan', { text: '' });

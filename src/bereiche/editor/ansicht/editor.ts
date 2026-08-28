@@ -839,6 +839,18 @@ const Blocks = (() => {
         break;
       }
 
+      /* `tabelle` IST EINE ALTE SCHREIBWEISE, kein zweiter Block.
+         „+ Neu → Neue Tabelle" legte seit E45 einen Block dieser Art an,
+         und gezeichnet hat ihn nie jemand — gemessen 24 px, Inhalt „+⋮⋮".
+         Der Weg legt jetzt eine Kalkulationstabelle an; wer aber schon
+         einmal darauf getippt hat, hat so einen Block im Bestand.
+
+         Er ist immer LEER, denn ohne Zeichnung konnte niemand etwas
+         hineinschreiben — deshalb genügt es, ihn wie eine einfache Tabelle
+         zu zeichnen. Nichts geht verloren (§46), und niemand muss Daten
+         wandern lassen (§9). Die Zeile hier ist billiger als jede
+         Migration und sagt dasselbe. */
+      case 'tabelle':
       case 'table':
         box.appendChild(Zusatz.tabelle(block));
         break;

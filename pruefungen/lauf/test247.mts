@@ -1258,6 +1258,92 @@ const gestartet = await seite.evaluate(async () => {
 });
 p('Ein Klick auf eine Kachel führt sie aus', gestartet === 'auf', gestartet);
 
+/* ==========================================================================
+ * 16 · Was „+ Neu" anlegt, wird auch gezeichnet
+ * --------------------------------------------------------------------------
+ * DER FEHLER, DEN DAS AUFGEDECKT HAT: „Neue Tabelle" legte seit E45 einen
+ * Block der Art `tabelle` an — und die gibt es nicht. Der Editor kennt
+ * `table` (Einfache Tabelle) und `spreadsheet` (Kalkulationstabelle).
+ * Gemessen war der Block 24 px hoch mit dem Inhalt „+⋮⋮": nur der Griff.
+ * Wer auf „Neue Tabelle · Rechnen wie in Excel" tippte, bekam eine leere
+ * Seite mit einem unsichtbaren Block darin.
+ *
+ * WARUM KEINE PRÜFUNG DAS FAND: E236 fragte „tut jeder Weg etwas?", und
+ * eine neue Seite ist etwas. Die Frage war zu schwach. Sie lautet jetzt:
+ *
+ *   Kennt das Blockregister die Art, die dabei entsteht?
+ *
+ * `tabelle` stand in keinem Register, und das ist die Ursache und nicht die
+ * Folge: eine Art, die niemand angemeldet hat, zeichnet auch niemand. Ein
+ * zweiter Punkt („ist der Block höher als sein Griff?") stand hier kurz und
+ * ist wieder weg — warum, steht weiter unten bei der Messung.
+ * ========================================================================*/
+console.log('\n16 · Was „+ Neu" anlegt, wird auch gezeichnet');
+
+const angelegt = await seite.evaluate(async () => {
+  const raus: any[] = [];
+  App.erstellenBlatt();
+  await new Promise(r => setTimeout(r, 400));
+  const wege = [...document.querySelectorAll<HTMLElement>('.menu [data-neu]')]
+    .map(k => ({ id: k.dataset['neu'] || '',
+                 name: (k.querySelector('b')?.textContent || k.textContent || '').trim() }));
+  document.querySelectorAll<HTMLElement>('.menu,.menu-grund').forEach(o => o.remove());
+
+  for (const w of wege) {
+    document.querySelectorAll<HTMLElement>('.menu,.menu-grund,.overlay').forEach(o => o.remove());
+    App.erstellenBlatt();
+    await new Promise(r => setTimeout(r, 350));
+    const knopf = document.querySelector<HTMLElement>(`.menu [data-neu="${w.id}"]`);
+    if (!knopf) { raus.push({ ...w, fehlt: true }); continue; }
+    knopf.click();
+    await new Promise(r => setTimeout(r, 1500));
+    /* Was steht jetzt auf der Seite? Nur BLÖCKE zählen; Wege, die ein
+       Fenster öffnen oder einen Dateiwähler klicken, legen keinen an und
+       sind hier nicht gemeint. */
+    const bloecke = [...document.querySelectorAll<HTMLElement>('#page .blk[data-bid]')]
+      .map(e => ({ art: (e.className.match(/\bb-([a-z0-9_-]+)/) || [])[1] || '?',
+                   h: Math.round(e.getBoundingClientRect().height) }))
+      /* Der leere Textblock ist der Anfang jeder neuen Seite und nicht das,
+         was der Weg anlegt. */
+      .filter(b => b.art !== 'text');
+    raus.push({ ...w, bloecke,
+                unbekannt: bloecke.filter(b => !Register.bloecke.eines(b.art)).map(b => b.art) });
+    document.querySelectorAll<HTMLElement>('.menu,.menu-grund,.overlay').forEach(o => o.remove());
+  }
+  return raus;
+});
+
+const mitBlock = angelegt.filter((x: any) => (x.bloecke || []).length);
+p('Es gibt überhaupt Wege, die einen Block anlegen', mitBlock.length >= 5,
+  String(mitBlock.length));
+p('Jede Art, die dabei entsteht, kennt das Blockregister',
+  angelegt.every((x: any) => !(x.unbekannt || []).length),
+  angelegt.filter((x: any) => (x.unbekannt || []).length)
+    .map((x: any) => x.name + ' → ' + x.unbekannt.join(', ')).join(' | '));
+/* HIER STAND EIN ZWEITER PUNKT, UND ER IST WIEDER WEG.
+   „Ist der Block höher als sein blosser Griff?" — die Idee war, den Fall zu
+   fangen, in dem eine BEKANNTE Art nichts zeichnet. Gemessen im kaputten
+   Zustand geht das nicht:
+
+       Art                 Kasten   Kinder   Text   HTML
+       tabelle (kaputt)     24 px      1       0     113
+       todo (leer)          26 px      2       0     127
+       divider               1 px      1       0      23
+       table               169 px      1      56    1130
+
+   Der kaputte Block bekommt vom Zeichner dieselbe leere Schreibzeile wie
+   jeder unbekannte Typ. Es gibt kein Mass, das ihn von einer leeren
+   Aufgabe oder einer Trennlinie trennt — jede Grenze wäre geraten, und
+   eine geratene Grenze ist entweder blind oder launisch.
+
+   Der Punkt darüber fängt den Fall dagegen sauber: `tabelle` stand in
+   keinem Register, und das ist die Ursache, nicht die Folge. Eine Prüfung,
+   die nicht rot werden kann, ist keine — auch dann nicht, wenn sie grün
+   gut aussieht (§55.2). */
+p('Kein Weg des Blattes ist verschwunden',
+  angelegt.every((x: any) => !x.fehlt),
+  angelegt.filter((x: any) => x.fehlt).map((x: any) => x.name).join(', '));
+
 console.log('\nFehler auf der Seite:', fehler.length ? fehler.join(' | ') : 'keine');
 p('Keine Fehler auf der Seite', !fehler.length, fehler.join(' | '));
 await seite.close();

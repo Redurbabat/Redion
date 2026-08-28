@@ -17668,3 +17668,98 @@ Von Hand hätte ich es vergessen. Zwei Listen, die dieselbe Menge nennen
 müssen, laufen immer auseinander; was sie zusammenhält, ist die Prüfung,
 die sie gegeneinander hält. Genau das ist auch der Grund, warum die
 Elektro-Seite ihre acht Wege aus dem Register liest, statt sie abzuschreiben.
+
+
+E239 — „Neue Tabelle" legte einen Block an, den niemand zeichnet
+================================================================================
+
+Auf der Suche nach den Blockarten ohne Namen (L61) fiel eine Zahl auf:
+
+    ohne Namen im Register: database · pdfseite · spalte · tabelle · zeichenflaeche
+
+Vier davon sind erklärbar — sie entstehen als TEIL von etwas anderem. Die
+fünfte nicht. `tabelle` kam von „+ Neu → Neue Tabelle", und der Editor kennt
+diese Art gar nicht. Gemessen:
+
+    Art           Höhe    Inhalt
+    tabelle        24 px  „+⋮⋮"                        ← nur der Griff
+    table         169 px  „Spalte + / Spalte − / …"
+    spreadsheet   513 px  „A1 fx F K CHF % …"
+
+Wer auf „Neue Tabelle · Rechnen wie in Excel" tippte, bekam seit E45 eine
+leere Seite mit einem unsichtbaren Block darin.
+
+WELCHE ART ES SEIN MUSS, SAGT DER WEG SELBST: unter dem Namen steht
+„Rechnen wie in Excel". Das ist die Kalkulationstabelle, nicht die einfache
+Tabelle. Der Weg legt jetzt `spreadsheet` an.
+
+UND WAS SCHON ANGELEGT WURDE, VERSCHWINDET NICHT (§46). Der Editor zeichnet
+`tabelle` wie `table`. Diese Blöcke sind immer LEER — ohne Zeichnung konnte
+niemand etwas hineinschreiben —, deshalb genügt eine Zeile im `switch`, und
+niemand muss Daten wandern lassen (§9). Sie ist billiger als jede Migration
+und sagt dasselbe.
+
+
+WARUM KEINE PRÜFUNG DAS FAND
+--------------------------------------------------------------------------
+
+E236 fragte: „tut jeder der neunzehn Wege etwas?" Eine neue Seite ist etwas.
+Die Frage war zu schwach.
+
+Sie lautet jetzt (test247 §16): **kennt das Blockregister die Art, die dabei
+entsteht?** `tabelle` stand in keinem Register, und das ist die Ursache und
+nicht die Folge — eine Art, die niemand angemeldet hat, zeichnet auch
+niemand. Gegenprobe: alter Zustand wiederhergestellt → „Neue Tabelle →
+tabelle", rot.
+
+
+UND EIN ZWEITER PUNKT, DER WIEDER WEGGEFALLEN IST
+--------------------------------------------------------------------------
+
+Der lag nahe: „ist der Block höher als sein blosser Griff?" Er wäre grün
+gewesen, und er wäre wertlos gewesen. Gemessen im kaputten Zustand:
+
+    Art                 Kasten   Kinder   Text   HTML
+    tabelle (kaputt)     24 px      1       0     113
+    todo (leer)          26 px      2       0     127
+    divider               1 px      1       0      23
+    table               169 px      1      56    1130
+
+Der kaputte Block bekommt vom Zeichner dieselbe leere Schreibzeile wie jeder
+unbekannte Typ. Es gibt kein Mass, das ihn von einer leeren Aufgabe oder
+einer Trennlinie trennt. Jede Grenze wäre geraten — und eine geratene Grenze
+ist entweder blind oder launisch.
+
+Der Punkt ist deshalb wieder weg. Eine Prüfung, die nicht rot werden kann,
+ist keine — auch dann nicht, wenn sie grün gut aussieht (§55.2). Das ist
+diese Woche der vierte Fall dieser Art, und der erste, in dem ich ihn an
+meiner EIGENEN neuen Prüfung gefunden habe, bevor sie stehen blieb.
+
+
+FÜNF ARTEN HABEN JETZT EINEN NAMEN (L61, Punkt 2)
+--------------------------------------------------------------------------
+
+`Register.bloecke` kennt eine zweite Liste: Arten, die es GIBT, die man aber
+nicht einfügt.
+
+    pdfseite        PDF-Seite        entsteht beim Einlesen
+    zeichenflaeche  Zeichenfläche    liegt über einem Blatt
+    spalte          Spalte           gehört in „Zwei Spalten"
+    database        Datenbank        entsteht mit `addDatabase`
+    tabelle         Einfache Tabelle alte Schreibweise
+
+`eines()` sieht sie, `alle()` nicht. Das ist die ganze Unterscheidung: „wie
+heisst diese Art?" und „was kann ich einfügen?" sind zwei Fragen, und sie
+hatten bisher nur eine Antwort. Das Slash-Menü, das Umwandeln-Menü, die
+Suche und die Markdown-Kürzel bleiben deshalb unverändert — `anzahl()` steht
+weiter bei 78, und test86 misst genau das.
+
+WAS DAS SICHTBAR ÄNDERT: `Vorschau.miniatur` zeichnet für jeden Block ohne
+Text einen Streifen mit Zeichen und Namen (E216). Für diese fünf blieb er
+LEER. Auf dem Deckel eines PDF stand damit nichts, obwohl das Dokument voll
+ist — genau die Seiten, die man am schnellsten wiedererkennt, zeigten am
+wenigsten. Gemessen vorher vier von sechs Streifen benannt, jetzt sechs von
+sechs.
+
+Das eigentliche Vorschau-BILD bleibt offen (L61, Punkt 1). Es wäre eine
+Speicheränderung mit eigenem Plan.

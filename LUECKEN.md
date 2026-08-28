@@ -2337,11 +2337,19 @@ WAS OFFEN BLEIBT, und zwar zweierlei:
 
 1. Das eigentliche Vorschau-BILD. Unverändert eine Speicheränderung mit
    eigenem Plan.
-2. `pdfseite` und `zeichenflaeche` haben nirgends einen deutschen Namen. Sie
-   stehen nicht im Blockregister, weil sie nicht einfügbar sind — und der
-   Editor liest genau dieses Register als `TYPEN` für Slash-Menü und Suche.
-   Sie bekommen deshalb einen leeren Streifen. Wer ihnen einen Namen geben
-   will, braucht dafür einen Weg, der sie NICHT einfügbar macht.
+2. ~~`pdfseite` und `zeichenflaeche` haben nirgends einen deutschen Namen.~~
+   GESCHLOSSEN mit E239 — und es waren FÜNF, nicht zwei: `database`,
+   `pdfseite`, `spalte`, `tabelle`, `zeichenflaeche`.
+
+   Der gesuchte Weg, der sie nicht einfügbar macht, ist eine zweite Liste im
+   selben Register: `eines()` sieht sie, `alle()` nicht. „Wie heisst diese
+   Art?" und „was kann ich einfügen?" sind zwei Fragen und haben jetzt zwei
+   Antworten. Slash-Menü, Umwandeln, Suche und Markdown bleiben unverändert;
+   `anzahl()` steht weiter bei 78.
+
+   Gemessen: vorher vier von sechs Streifen benannt, jetzt sechs von sechs
+   (test33). Dabei fiel auf, dass „+ Neu → Neue Tabelle" einen Block anlegte,
+   den niemand zeichnet — siehe E239.
 
 L62 — „PDF einlesen" fehlt im Menüband
 --------------------------------------------------------------------------------

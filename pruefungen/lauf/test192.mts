@@ -330,13 +330,25 @@ const durchSlash = new Set([...wege.filter(w => w.weg === 'slash')
   .map(w => wirklich[w.art]), wirklich['page']].filter(Boolean));
 const ohneWeg = [...gezeichnet].filter(x => !durchSlash.has(x)).sort();
 
-gleich('Zwei Blockarten zeichnet er, ohne dass das Slash-Menü sie anbietet',
-  JSON.stringify(ohneWeg), JSON.stringify(['pdfseite', 'spalte']));
+/* DREI SEIT E239, und die dritte ist eine ALTE SCHREIBWEISE.
+   „+ Neu → Neue Tabelle" legte seit E45 Blöcke der Art `tabelle` an, und
+   der Zeichner kannte sie nicht — gemessen 24 px, Inhalt „+⋮⋮", also nur
+   der Griff. Der Weg legt jetzt eine Kalkulationstabelle an; damit die
+   Blöcke, die schon jemand angelegt hat, nicht unsichtbar bleiben (§46),
+   zeichnet der Editor `tabelle` wie `table`.
+   Sie gehört deshalb hierher und nicht ins Slash-Menü: es gibt sie im
+   Bestand, aber neu anlegen soll sie niemand mehr. */
+gleich('Drei Blockarten zeichnet er, ohne dass das Slash-Menü sie anbietet',
+  JSON.stringify(ohneWeg), JSON.stringify(['pdfseite', 'spalte', 'tabelle']));
 
-/* Und für beide steht oben ein Weg — sonst wären sie hier nur genannt und
-   nicht geprüft. */
-p('Für beide steht in der Schleife ein eigener Weg',
-  ohneWeg.every(x => wege.some(w => w.weg !== 'slash' && wirklich[w.art] === x)),
+/* Und für die, die es noch gibt, steht oben ein Weg — sonst wären sie hier
+   nur genannt und nicht geprüft. `tabelle` hat keinen: sie entsteht nicht
+   mehr, sie wird nur noch gezeichnet. Dass sie gezeichnet wird, prüft
+   test247 §16. */
+const ohneWegNeu = ohneWeg.filter(x => x !== 'tabelle');
+p('Für jede, die noch entsteht, steht in der Schleife ein eigener Weg',
+  ohneWegNeu.length === 2 &&
+  ohneWegNeu.every(x => wege.some(w => w.weg !== 'slash' && wirklich[w.art] === x)),
   wege.filter(w => w.weg !== 'slash')
     .map(w => w.art + ' → ' + (wirklich[w.art] || '?')).join(', '));
 

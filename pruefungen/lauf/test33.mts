@@ -297,14 +297,22 @@ import { chromium } from 'playwright';
   ok('Eine Seite ganz ohne Text ist wirklich ohne Text', ohneText.hatText === 0);
   ok('Und ihre Miniatur bleibt trotzdem nicht leer',
      ohneText.streifen === ohneText.kinder && ohneText.zeichen > 0);
-  /* Die Namen kommen aus `Register.bloecke`. Vier der sechs Arten stehen
-     dort; `pdfseite` und `zeichenflaeche` sind nicht einfügbar und haben
-     nirgends einen deutschen Namen — sie bekommen einen leeren Streifen.
-     Steht am Ende gar kein Name da, kommt der Name nicht aus dem Register. */
+  /* JETZT ALLE SECHS (E239). Hier stand `=== 4`: `pdfseite` und
+     `zeichenflaeche` sind nicht einfügbar und hatten deshalb nirgends einen
+     deutschen Namen — ihr Streifen blieb leer. Auf dem Deckel eines PDF
+     stand damit nichts, obwohl das Dokument voll ist.
+     Sie stehen jetzt in `Register.bloecke` als Arten, die man NICHT
+     einfügt (`nurName`): `eines()` sieht sie, `alle()` nicht. Das
+     Slash-Menü bleibt damit unverändert — und genau das prüft die Zahl
+     `anzahl()` weiter oben in test86.
+     Steht am Ende gar kein Name da, kommt der Name nicht aus dem
+     Register. */
   ok('Und die Namen stammen aus dem Blockregister',
-     ohneText.benannt.length === 4 &&
+     ohneText.benannt.length === 6 &&
      ohneText.benannt.some(x => x.includes('Schaltplan')) &&
-     ohneText.benannt.some(x => x.includes('A4-Blatt')));
+     ohneText.benannt.some(x => x.includes('A4-Blatt')) &&
+     ohneText.benannt.some(x => x.includes('PDF-Seite')) &&
+     ohneText.benannt.some(x => x.includes('Zeichenfläche')));
   ok('Und sagt, wie viele Hefte und Seiten es sind', /Hefte? · \d+ Seiten?/.test(regal.zahlen));
   ok('Jedes Heft zeigt echten Inhalt, keinen leeren Kasten',
      regal.mitInhalt === regal.hefte);

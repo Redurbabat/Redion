@@ -126,6 +126,47 @@ Register.bloecke = (() => {
         { id: 'a-komm', name: 'Kommentar', icon: '💬', gruppe: 'Aktionen', aktion: 'komm',
             kurz: 'Ctrl+Shift+M', cmd: ['comment', 'kommentar'] }
     ];
+    /* ========================================================================
+     * ARTEN, DIE ES GIBT — ABER NICHT ZUM EINFÜGEN
+     * ------------------------------------------------------------------------
+     * Fünf Blockarten stehen im Speicher, und keine davon konnte jemand
+     * benennen. Gemessen in einem Arbeitsbereich mit allen Arten:
+     *
+     *     ohne Namen: database · pdfseite · spalte · tabelle · zeichenflaeche
+     *
+     * Sie entstehen NICHT über das Slash-Menü, sondern als Teil von etwas
+     * anderem: eine Spalte gehört in „Zwei Spalten", eine PDF-Seite entsteht
+     * beim Einlesen, die Zeichenfläche liegt über einem Blatt. Sie gehören
+     * deshalb nicht in `alle()` — dort stünden sie im Slash-Menü, im
+     * Umwandeln-Menü und in der Suche, und jeder Klick darauf wäre ein
+     * halbfertiger Block ohne seinen Rahmen.
+     *
+     * ABER EINEN NAMEN BRAUCHEN SIE TROTZDEM. `Vorschau.miniatur` zeichnet
+     * für jeden Block ohne Text einen Streifen mit Zeichen und Namen aus
+     * diesem Register (E216); für diese fünf blieb er LEER. Auf dem Deckel
+     * eines PDF stand damit nichts, obwohl das Dokument voll ist — genau
+     * die Seiten, die man am schnellsten wiedererkennt, zeigten am
+     * wenigsten (L61).
+     *
+     * `eines()` sieht sie deshalb, `alle()` nicht. Das ist kein zweiter
+     * Katalog (§8): es ist dieselbe Datei, dieselbe Form, eine Liste
+     * weiter — und `benannt()` gibt beide zusammen für den, der wirklich
+     * alle Namen will.
+     * ==================================================================== */
+    const NUR_NAME = [
+        { id: 'pdfseite', name: 'PDF-Seite', icon: '📕', nurName: true },
+        { id: 'zeichenflaeche', name: 'Zeichenfläche', icon: '✎', nurName: true },
+        { id: 'spalte', name: 'Spalte', icon: '⫿', nurName: true },
+        { id: 'database', name: 'Datenbank', icon: '▦', nurName: true },
+        /* `tabelle` ist eine ALTE SCHREIBWEISE für die einfache Tabelle.
+           „+ Neu → Neue Tabelle" legte seit E45 Blöcke dieser Art an, und
+           gezeichnet hat sie nie jemand (gemessen: 24 px, Inhalt „+⋮⋮"). Der
+           Weg legt jetzt eine Kalkulationstabelle an, und der Editor zeichnet
+           vorhandene `tabelle`-Blöcke wie eine einfache Tabelle — sie sind
+           immer leer, denn hineinschreiben konnte niemand. Der Name hier ist
+           das, was der Mensch dann sieht. */
+        { id: 'tabelle', name: 'Einfache Tabelle', icon: '⊞', nurName: true }
+    ];
     const LISTE = EINGEBAUT.slice();
     const vonAussen = new Set();
     /**
@@ -155,7 +196,14 @@ Register.bloecke = (() => {
         return true;
     };
     const alle = () => LISTE;
-    const eines = (id) => alle().find(x => x.id === id) || null;
+    /** Jede Art, die einen Namen hat — auch die, die man nicht einfügt. */
+    const benannt = () => [...LISTE, ...NUR_NAME];
+    /* `eines()` FRAGT BEIDE LISTEN. Wer nach dem Namen einer Art fragt, will
+       ihn auch dann, wenn man sie nicht einfügen kann — das ist der ganze
+       Zweck von `NUR_NAME`. Eingefügt wird trotzdem nur, was in `alle()`
+       steht; die zwei Fragen sind verschieden und haben deshalb zwei
+       Antworten. */
+    const eines = (id) => LISTE.find(x => x.id === id) || NUR_NAME.find(x => x.id === id) || null;
     const gruppen = () => [...new Set(alle().map(x => x.gruppe).filter((g) => !!g))];
     const inGruppe = (g) => alle().filter(x => x.gruppe === g);
     /**
@@ -207,7 +255,7 @@ Register.bloecke = (() => {
         return alle().filter(x => (x.name || '').toLowerCase().includes(t) ||
             (x.cmd || []).some(c => c.toLowerCase().startsWith(t)));
     };
-    return { alle, eines, gruppen, inGruppe, zuMarkdown, ueberschriften, zifferZuTyp,
+    return { alle, benannt, eines, gruppen, inGruppe, zuMarkdown, ueberschriften, zifferZuTyp,
         suche, melde, nimmZurueck,
         vonAussen: () => [...vonAussen], anzahl: () => LISTE.length };
 })();
