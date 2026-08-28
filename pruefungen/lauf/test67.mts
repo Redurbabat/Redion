@@ -606,6 +606,77 @@ const pruef = (n: any, ist: any, soll: any) => {
   pruef('Am Rechner steht die Marke ebenfalls',    amRechner.eigene, true);
   pruef('Aber der Pfad bleibt dort sichtbar',      amRechner.krume, 'visible');
 
+  /* --- 12 · Beim Öffnen: das zuletzt geöffnete Dokument (E236) --------- */
+  /* Redur: „wenn ich die Webseite öffne, sollte die zuletzt geöffnete PDF
+     sich öffnen; wenn keine offen war, direkt dort, wo die Dateien liegen."
+
+     ZWEI FEHLER LAGEN DAVOR, und beide waren still:
+
+       · Die Wahl „Zuletzt geöffnete Seite" gab es in den Einstellungen
+         seit Langem. Ausgewertet hat sie niemand. Am Rechner kam
+         trotzdem das Richtige heraus — über den Umweg, dass
+         `startAnsichtZeigen` leer blieb. Am Telefon nicht: dort stand ein
+         ZWEITER Entschluss über dieselbe Frage, der jeden auf „Heute"
+         schickte, ohne die Einstellung zu lesen.
+       · `oeffne()` schreibt `letzte` selbst. Wer erst öffnet und dann
+         fragt „gab es ein zuletzt geöffnetes Dokument?", bekommt immer
+         ja — und das Regal ging nie auf.
+
+     WAS DIESE PRÜFUNG ROT MACHEN KANN:
+       · Liest der Start die Einstellung nicht mehr, steht am Telefon
+         wieder die Lernwelt statt des Dokuments.
+       · Wird `hatteDokument` wieder nach `oeffne()` gefragt, kommt bei
+         einem verschwundenen Dokument die erste Seite statt des Regals.
+       · Fällt die Vorgabe zurück auf „start", trifft es beide Fälle. */
+  const startFall = async (name: string, vorbereiten: () => unknown,
+                           breite: number, erwartet: 'dokument' | 'regal') => {
+    const ctx = await b.newContext({ viewport: { width: breite, height: 844 },
+                                     isMobile: breite <= 430, hasTouch: breite <= 430 });
+    const s = await ctx.newPage();
+    await s.goto('file://' + WURZEL + '/index.html');
+    await s.waitForTimeout(2200);
+    await s.evaluate(() => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+    });
+    await s.evaluate(vorbereiten);
+    await s.evaluate(async () => { await Store.flush(); });
+    /* Die Adresse leeren: ein `#seite` im Hash gewinnt absichtlich gegen
+       jede Startansicht, und dann misst dieser Punkt nichts. */
+    await s.evaluate(() => { location.hash = ''; });
+    await s.reload();
+    await s.waitForTimeout(2600);
+    await s.evaluate(() => {
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+    });
+    const wo = await s.evaluate(() => ({
+      regal: !!document.querySelector('.bib-gitter'),
+      titel: (document.getElementById('title')?.textContent || '').trim()
+    }));
+    await ctx.close();
+    pruef(name, erwartet === 'regal' ? (wo.regal ? 'regal' : wo.titel)
+                                     : (wo.regal ? 'regal' : wo.titel),
+          erwartet === 'regal' ? 'regal' : 'Formeln für Elektroberufe');
+  };
+
+  const pdfAnlegen = () => {
+    const pdf = Store.addPage(null, { text: 'Formeln für Elektroberufe' });
+    Store.addBlock(pdf.id, 'pdfseite', { text: 'Seite 1' });
+    App.oeffne(pdf.id);
+  };
+
+  await startFall('Am Rechner geht das zuletzt geöffnete Dokument auf',
+                  pdfAnlegen, 1200, 'dokument');
+  await startFall('Am Telefon auch — die Einstellung gilt dort ebenso',
+                  pdfAnlegen, 390, 'dokument');
+  await startFall('Ist es nicht mehr da, geht das Regal auf', () => {
+    const weg = Store.addPage(null, { text: 'Weg damit' });
+    App.oeffne(weg.id);
+    Store.setMeta('letzte', 'diese-kennung-gibt-es-nicht');
+  }, 390, 'regal');
+
   console.log(`\n${ok}/${ok + bad} bestanden`);
   const alle = [...fehler, ...fehler2];
   console.log(alle.length ? 'JS-Fehler:\n' + alle.join('\n') : 'Keine JS-Fehler.');

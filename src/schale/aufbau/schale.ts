@@ -2726,9 +2726,17 @@ const App = (() => {
       ? ((typeof Links !== 'undefined' && Links.seiteVon)
           ? (Links.seiteVon(zielBlock) || {}).id || '' : '')
       : location.hash.slice(1).split(':')[0];
+    const zuletztOffen = Store.getMeta('letzte');
+    /* HIER GEMERKT UND NICHT WEITER UNTEN GEFRAGT (E236).
+       `oeffne()` schreibt `letzte` selbst — schon zwei Zeilen später zeigt
+       die Marke also auf die Seite, die gerade aufgegangen ist, und nicht
+       mehr auf die von gestern. Wer weiter unten fragt „gab es ein
+       zuletzt geöffnetes Dokument?", bekommt deshalb IMMER ja.
+       Genau daran ist der erste Versuch gescheitert: das Regal ging nie
+       auf, weil die Bedingung nie falsch wurde. */
+    const hatteDokument = !!(zuletztOffen && Store.getBlock(zuletztOffen));
     const startSeite = (ausHash && Store.getBlock(ausHash)) ? ausHash
-                : (Store.getMeta('letzte') && Store.getBlock(Store.getMeta('letzte')))
-                  ? Store.getMeta('letzte')
+                : hatteDokument ? zuletztOffen
                   : (Store.rootPages()[0] || {}).id;
 
     zeichneBaum();
@@ -2758,9 +2766,19 @@ const App = (() => {
     /* `ausHash` von OBEN, nicht `location.hash` von hier: `oeffne()` schreibt
        die Seitenkennung selbst in die Adresse, und danach ist der Hash immer
        gesetzt. Die Bedingung war damit nie wahr. */
-    if (window.matchMedia('(max-width: 760px)').matches && !ausHash && !produktRoute) {
-      try { Produktwelten.lernen('heute'); } catch { /* ohne Startbildschirm bleibt die Seite */ }
-    }
+    /* HIER STAND EIN ZWEITER ENTSCHLUSS ÜBER DIESELBE FRAGE (E236).
+       Der Absatz darüber begründet gut, warum eine App bei ihrer Übersicht
+       beginnt und nicht in einem halb gescrollten Text. Nur traf er die
+       Entscheidung ein zweites Mal — und ohne die Einstellung zu lesen.
+
+       Die Folge: „Beim Öffnen zeigen: Zuletzt geöffnete Seite" gab es in
+       den Einstellungen seit Langem, und am Telefon tat sie nichts. Wer
+       sie wählte, landete trotzdem auf „Heute".
+
+       Jetzt entscheidet die Wahl, und zwar an EINER Stelle: weiter unten
+       bei `wunsch`. Was hier bleibt, ist nur noch die Vorgabe für den, der
+       nie gewählt hat — und die heisst seit E236 „Dokument". */
+    void 0;
 
     /* ----------------------------------------------------------------------
        WAS DAS ANDERE FENSTER GEÄNDERT HAT
@@ -2799,7 +2817,16 @@ const App = (() => {
     });
 
     /* Beim Öffnen zeigen: was in den Einstellungen gewählt ist */
-    const wunsch = Store.getMeta('startAnsicht', 'start');
+    /* DIE VORGABE IST „DOKUMENT" (E236).
+       Redur: „wenn ich die Webseite öffne, sollte die zuletzt geöffnete
+       PDF sich öffnen; wenn keine offen war, direkt dort, wo die Dateien
+       liegen." Das ist die Erwartung an ein Werkzeug, in dem man arbeitet
+       — nicht an eine Webseite, die einen begrüsst.
+
+       Wer schon einmal etwas anderes gewählt hat, behält seine Wahl:
+       `getMeta` gibt den gespeicherten Wert zurück und die Vorgabe nur,
+       wenn keiner da ist. */
+    const wunsch = Store.getMeta('startAnsicht', 'dokument');
     let startAnsichtZeigen: (() => void) | null = null;
     /* DIE STARTANSICHT DARF NICHT ÜBERSCHREIBEN, WAS SCHON OFFEN IST (E138).
        Hier stand ein blankes `setTimeout(…, 60)`. Wer in diesen 60 ms eine
@@ -2838,6 +2865,20 @@ const App = (() => {
        ganz am Ende von `start()` ausgeführt, wenn alle Module stehen. Danach
        kommt jedes `oeffne()` von aussen garantiert später und gewinnt. */
     if (!ausHash && !produktRoute) {
+      /* „DOKUMENT": das zuletzt geöffnete, sonst das Regal.
+         `startSeite` weiter oben zeigt bereits auf `Store.getMeta('letzte')`,
+         wenn es den Block noch gibt — dann ist die Seite schon offen und
+         hier ist nichts zu tun. Gibt es sie nicht mehr (gelöscht, anderes
+         Gerät, erster Start), geht das Regal auf.
+
+         `letzte` ist derselbe Weg: die Wahl gab es in den Einstellungen
+         schon, nur hat sie nie jemand ausgewertet. Sie führte über den
+         Umweg „startAnsichtZeigen bleibt leer" zufällig zum richtigen
+         Ergebnis — am Rechner. Am Telefon nicht: dort schickte der Block
+         weiter oben JEDEN auf „Heute". */
+      if ((wunsch === 'dokument' || wunsch === 'letzte') && !hatteDokument)
+        startAnsichtZeigen = () => Bibliothek.oeffne();
+      if (wunsch === 'dokumente') startAnsichtZeigen = () => Bibliothek.oeffne();
       if (wunsch === 'start') startAnsichtZeigen = () => Produktwelten.lernen('heute');
       if (wunsch === 'workspace') startAnsichtZeigen = () => Produktwelten.workspace('start');
       if (wunsch === 'posteingang') startAnsichtZeigen = () => Ansichten.posteingang();
@@ -3175,8 +3216,19 @@ const App = (() => {
        Module stehen jetzt, und wer danach eine Seite öffnet, kommt später
        und bleibt sichtbar. */
     if (startAnsichtZeigen) {
+      /* DER FANG SCHWEIGT NICHT MEHR (E236). Hier stand ein leeres
+         `catch { }` mit dem Trost „ohne Startbildschirm bleibt die zuletzt
+         geöffnete Seite". Das stimmt — und man erfährt nie, dass es
+         schiefging. Beim Umbau auf „Dokument, sonst Regal" ging genau
+         hier etwas schief, und die Suche danach kostete eine Stunde, weil
+         nichts davon irgendwo stand.
+         Der Nutzer bekommt weiterhin keine Meldung: er hat eine Seite,
+         alles ist da, und ein Fehlerbanner für einen Startbildschirm wäre
+         Lärm. Aber die Konsole sagt es, und ein Prüflauf kann es lesen. */
       try { startAnsichtZeigen(); }
-      catch { /* Ohne Startbildschirm bleibt die zuletzt geöffnete Seite. */ }
+      catch (fehler) {
+        console.error('Die Startansicht konnte nicht geöffnet werden:', fehler);
+      }
     }
   };
 
