@@ -17533,3 +17533,119 @@ Streifen 25 px von der Leiste, Toast 45 px, und der Toast liegt auf dem
 Streifen. Der fünfte („keines liegt auf der Leiste") bleibt grün, und das
 ist richtig: er stellt eine andere Frage, und die Antwort darauf war auch
 vorher ja.
+
+
+E238 — „Elektro" ist ein Ort geworden (L65)
+================================================================================
+
+Fünf Wege stehen in der obersten Gruppe der Seitenleiste: Heute,
+Lernzentrum, Elektro, Bibliothek, Aufgaben. Vier davon führen an einen ORT —
+die Krume ändert sich, man ist woanders, der Zurück-Pfeil bringt einen
+zurück. „Elektro" rief `Electrical.open()`, eine Überlagerung mit dem
+Rechner.
+
+Der Rechner funktionierte; die Lücke war, dass ein Eintrag zwischen vier
+Zielen steht und als einziger keines ist. Genau derselbe Satz wie bei den
+sechs Kreisen in E236: wer wenig zeigt, muss das Wenige richtig zeigen.
+
+
+KEIN NEUER KATALOG — DER DRITTE FALL IN FOLGE
+--------------------------------------------------------------------------
+
+Was die Seite zeigt, stand schon da: acht Wege in drei Gruppen unter
+`reiter: 'elektro'` im Menüband-Register (E210), jeder mit Namen, Zeichen,
+Hinweis, der Funktion, die ihn ausführt, und `zeigen()` — der Frage, ob es
+das Modul überhaupt gibt.
+
+    Rechnen    Rechner · Formelheft · Formeldreieck · Sinuskurve
+    Üben       Üben · Prüfung · Arbeitsplatz
+    Zeichnen   Schaltplan
+
+Die Seite liest das und zeichnet Kacheln. Welche Kachel gross ist,
+entscheidet `gross: true` im Register und nicht die CSS. Wer einen neunten
+Weg einträgt, sieht ihn dort — ohne diese Datei anzufassen.
+
+UND SIE ERFINDET NICHTS (§47). Jeder Abschnitt fällt WEG, wenn es nichts zu
+zeigen gibt: keine Schaltpläne — kein „Weiter wo du warst"; keine fälligen
+Karten — keine Zeile darüber. Ein leerer Kasten mit einer Überschrift ist
+schlimmer als kein Kasten, weil er behauptet, hier gehöre etwas hin, das
+fehlt.
+
+WORAN REDION EINE ELEKTRO-SEITE ERKENNT: daran, dass ein Schaltplan darin
+liegt — nicht an einem Feld am Block. Ein Feld `bereich: 'elektro'` wäre
+eine Datenwanderung für eine ANSICHT (§9), dieselbe Entscheidung wie bei
+den Deckeln im Regal.
+
+
+ZWEI FEHLER BEIM BAUEN, UND BEIDE FAND NICHT ICH
+--------------------------------------------------------------------------
+
+  · **Der Prüflauf, der `npm run bauen:ts` fährt.** Die neue Datei brach
+    ihn: `Parameter 'g' implicitly has an 'any' type`. `Register` ist zur
+    Bauzeit ein untypisiertes Globales, also kommt aus `inReiter()` ein
+    `any`, und `noImplicitAny` schlägt an der Stelle zu, an der der Rückruf
+    steht. Bemerkenswert daran ist, WANN es auffiel: mitten in einem vollen
+    Lauf, den ich für etwas anderes gestartet hatte.
+
+  · **Das Bild.** Acht Kacheln standen mit leeren grauen Quadraten da. Ein
+    `data-sym` ist noch kein Zeichen, sondern eine Bestellung; eingelöst
+    wird sie von `Register.symbole.fuelle()`, und zwar erst, wenn das
+    Element im Dokument steht. Dazu: nicht jedes `zeichen` im Register ist
+    ein Symbolname — mal steht dort „bolt", mal ein Textzeichen wie „H₁".
+    Gefragt wird jetzt (`Register.symbole.hat`), statt geraten. Genau der
+    Fehler, den test247 §2 für das Menüband schon aufgeschrieben hat.
+
+
+UND EINE PRÜFUNG, DIE BEI NICHTS ZUFRIEDEN WAR
+--------------------------------------------------------------------------
+
+Geprüft wird nicht „acht Kacheln", sondern die KOPPLUNG: die Namen auf der
+Seite müssen Zeichen für Zeichen die Namen aus dem Register sein, in
+derselben Folge. Eine Prüfung, die nur zählt, wäre auch dann grün, wenn die
+Seite ihre eigene Liste führte.
+
+Drei Gegenproben, jede einzeln gefahren:
+
+    eigene Liste statt Register   → 4 Punkte rot
+    `symbole.fuelle` weggelassen  → 1 Punkt rot
+    fünfter Weg wieder ein Fenster → 5 Punkte rot
+
+Die zweite Gegenprobe deckte einen Fehler in meiner eigenen Prüfung auf.
+Zusammen mit der dritten gefahren, blieb „Keine Kachel steht ohne Zeichen
+da" GRÜN — es gab gar keine Kachel, also auch keine ohne Zeichen. Der Punkt
+verlangt jetzt zuerst, dass es überhaupt Kacheln gibt.
+
+Eine Prüfung, die bei NICHTS zufrieden ist, prüft nichts. Das ist dieselbe
+Lehre wie bei test54 in E236, wo `?? document.body` das Verschwinden der
+Leiste in ein grünes Häkchen verwandelte — und sie kommt in dieser Woche
+zum zweiten Mal.
+
+
+UND EIN DRITTES MAL, DIESMAL BEI EINEM FREMDEN PUNKT
+--------------------------------------------------------------------------
+
+test222 §2 wurde rot, und zwar bei „Erfassen & Erkennen" — einem Modul, das
+ich nicht angefasst habe:
+
+    ✗ Und bei jedem ändert sich etwas auf dem Bildschirm — ist ["erkennung"]
+
+`Recognition.scan()` legt ein `<input type="file">` an, klickt es und hängt
+es NICHT ein: der Browser zeigt ein Fenster des Betriebssystems. Am
+Bildschirm ändert sich kein einziges Zeichen. Der Punkt konnte diesen Weg
+also noch nie sehen.
+
+DASS ER TROTZDEM GRÜN WAR, LAG AN DER REIHENFOLGE. Davor stand „Elektro",
+das eine Überlagerung öffnete; deren Aufräumen wirkte in die nächste Messung
+hinein und lieferte den Unterschied, den `erkennung` selbst nicht machte.
+Seit „Elektro" eine SEITE ist, fiel die Stütze weg.
+
+Der Punkt zählt jetzt auch den Klick auf einen Dateiwähler — dieselbe
+Lösung, die in E236 schon einmal drei falsche Kreuze aufgeklärt hat. Und er
+hat einen Wächter dazubekommen: „mindestens einer davon öffnet einen
+Dateiwähler". Ohne den wäre die Erweiterung eine Ausnahme, die alles
+durchlässt. Gegenprobe: Zähler abgeschaltet → beide Punkte rot.
+
+DREI VORFÄLLE IN EINER WOCHE, und alle drei haben dieselbe Gestalt: die
+Prüfung war grün, weil ihre Messung am Nachbarn hing statt an der Sache.
+Wer eine schreibt, muss zuerst fragen, WORAN sie rot werden kann — nicht
+nur, ob sie gerade grün ist.

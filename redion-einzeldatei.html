@@ -11371,6 +11371,108 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
    anfassen kann — ein Tipp dreht es um 90°. */
 .blatt-marken [data-ink-art="zeichen"]{cursor:pointer}
 
+/* ============================================================================
+ * DIE ELEKTRO-STARTSEITE (L65)
+ * ----------------------------------------------------------------------------
+ * „Elektro" war der einzige der fünf Wege in der obersten Gruppe, der kein
+ * ORT war — er öffnete ein Fenster. Jetzt ist es eine Seite wie „Heute",
+ * und was darauf steht, kommt aus dem Menüband-Register (§8).
+ *
+ * KACHELN UND KEINE LISTE, und der Grund ist nicht Geschmack: acht Wege in
+ * einer Liste sind acht Zeilen, die alle gleich aussehen. Als Kacheln
+ * unterscheidet die Grösse das Wichtige vom Nebensächlichen — `gross: true`
+ * steht im Register und heisst dort schon „das Wichtigste einer Gruppe".
+ * ==========================================================================*/
+.els{ max-width:920px; margin:0 auto; padding:8px 0 40px }
+.els-kopf h1{ margin:0 0 4px; font-size:30px; font-weight:760; letter-spacing:-.02em }
+.els-kopf p{ margin:0 0 22px; color:var(--text-dim); font-size:14px }
+
+.els-abschnitt{ margin:0 0 26px }
+.els-abschnitt h2{
+  margin:0 0 10px; font-size:12px; font-weight:700; letter-spacing:.08em;
+  text-transform:uppercase; color:var(--text-faint)
+}
+
+/* Was ansteht, steht ganz oben und ist ein Knopf — nicht eine Meldung.
+   Eine Zahl ohne Weg dahinter ist eine Mahnung, kein Angebot. */
+.els-dran{
+  display:flex; align-items:center; gap:14px; width:100%; margin:0 0 26px;
+  padding:14px 16px; border:1px solid var(--accent); border-radius:14px;
+  /* `--accent-schwach` gibt es schon — die gedämpfte Fassung der
+     Akzentfarbe, in beiden Themen abgestimmt. Eine eigene Farbe hier wäre
+     eine zweite Wahrheit über dasselbe (§39). */
+  background:var(--accent-schwach); color:var(--text);
+  text-align:left; cursor:pointer; min-height:44px;
+  transition:background var(--motion-fast,.14s) var(--ease-standard,ease)
+}
+.els-dran:hover{ background:var(--bg-hover) }
+.els-dran-zahl{
+  flex:none; display:grid; place-items:center; width:46px; height:46px;
+  border-radius:999px; background:var(--accent); color:var(--auf-accent);
+  font-size:19px; font-weight:760
+}
+.els-dran-text{ display:grid; gap:2px; min-width:0 }
+.els-dran-text b{ font-size:15px; font-weight:660 }
+.els-dran-text small{ color:var(--text-dim); font-size:12.5px }
+
+.els-weiter{ display:flex; flex-wrap:wrap; gap:8px }
+.els-seite{
+  display:flex; align-items:center; gap:8px; min-height:44px;
+  padding:8px 14px 8px 10px; border:1px solid var(--line); border-radius:999px;
+  background:var(--bg-card); color:var(--text); cursor:pointer; max-width:100%;
+  transition:background var(--motion-fast,.14s) var(--ease-standard,ease)
+}
+.els-seite:hover{ background:var(--bg-hover) }
+.els-seite-zeichen{ flex:none; font-size:15px }
+/* `min-width:0` ist der Unterschied zwischen „Verteilerplan" und
+   „Verteilerpla": ein Flex-Kind schrumpft von sich aus nicht unter seine
+   Inhaltsbreite, und ein gekürzter Name ohne Auslassungszeichen sieht aus
+   wie ein FALSCHER Name (E227, E236). */
+.els-seite b{
+  min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  font-size:13.5px; font-weight:600
+}
+
+.els-gitter{
+  display:grid; gap:10px;
+  grid-template-columns:repeat(auto-fill, minmax(210px, 1fr))
+}
+.els-kachel{
+  display:flex; align-items:flex-start; gap:11px; min-height:44px;
+  padding:13px 14px; border:1px solid var(--line); border-radius:13px;
+  background:var(--bg-card); color:var(--text); text-align:left; cursor:pointer;
+  transition:background var(--motion-fast,.14s) var(--ease-standard,ease),
+             box-shadow var(--motion-fast,.14s) var(--ease-standard,ease)
+}
+.els-kachel:hover{ background:var(--bg-hover); box-shadow:var(--shadow-2) }
+/* Die grosse Kachel nimmt die ganze Zeile. Welche das ist, entscheidet das
+   Register mit `gross: true` — nicht diese Datei. */
+.els-kachel.gross{ grid-column:1 / -1 }
+.els-zeichen{
+  flex:none; display:grid; place-items:center; width:34px; height:34px;
+  border-radius:9px; background:var(--bg-side); color:var(--accent-text)
+}
+.els-zeichen svg{ width:18px; height:18px }
+/* Steht im Register statt eines Symbolnamens ein Textzeichen („H₁", „B"),
+   wird es als Buchstabe gesetzt — sonst bliebe das Feld leer. */
+.els-zeichen.els-glyph{ font-size:15px; font-weight:700 }
+.els-text{ display:grid; gap:2px; min-width:0 }
+.els-text b{ font-size:14.5px; font-weight:650; line-height:1.3 }
+.els-text small{
+  color:var(--text-dim); font-size:12.5px; line-height:1.4;
+  overflow-wrap:break-word
+}
+.els-leer{ color:var(--text-dim); font-size:14px }
+
+@media(max-width:760px){
+  .els{ padding-bottom:24px }
+  .els-kopf h1{ font-size:25px }
+  .els-gitter{ grid-template-columns:1fr }
+  /* Am Telefon ist jede Kachel eine Zeile; „gross" unterscheidet dann
+     nichts mehr und braucht auch keine eigene Regel. */
+  .els-kachel{ padding:12px 13px }
+}
+
 </style>
 
 <!-- =========================================================================
@@ -16828,7 +16930,12 @@ Register.module = (() => {
             } },
         { id: 'elektro', name: 'Elektrotechnik', icon: '⚡',
             was: 'Rechnungen mit Quellenangabe und ein geprüftes Grundlagen-Lernpaket.',
-            oeffnen: () => (typeof Electrical !== 'undefined') && Electrical.open() },
+            /* Seit L65 die Elektro-Seite, nicht mehr der Rechner allein — beide
+               Register müssen dasselbe Ziel nennen, sonst führen zwei Wege mit
+               demselben Namen an zwei verschiedene Orte. */
+            oeffnen: () => (typeof Elektrostart !== 'undefined')
+                ? Elektrostart.oeffne()
+                : (typeof Electrical !== 'undefined') && Electrical.open() },
         { id: 'erkennung', name: 'Erfassen & Erkennen', icon: '📷',
             was: 'Kamera und Dateien in den Eingang; Text aus Bild, PDF und Handschrift ' +
                 'über den mitgelieferten lokalen Dienst.',
@@ -16981,10 +17088,18 @@ Register.navigation = (() => {
            Formelheft, Prüfung. Wer hin wollte, musste über den Workspace oder
            das Lernzentrum. Beim Nachzählen für E218 fiel das auf: die
            Seitenleiste führte 37 Wege, und der meistbenutzte war keiner davon. */
+        /* UND SEIT L65 FÜHRT ER AN EINEN ORT. Hier stand `Electrical.open()` —
+           eine Überlagerung mit dem Rechner. Vier der fünf Wege dieser Gruppe
+           ändern die Krume, der fünfte tat es als einziger nicht. Der Rechner
+           ist jetzt einer der Knöpfe dieser Seite statt ihre Vordertür. */
         { id: 'elektro', name: 'Elektro', icon: '⚡', platz: 'oben', rang: 45,
             knopfId: 'btn-elektro',
-            tun: () => { if (typeof Electrical !== 'undefined')
-                Electrical.open(); } },
+            tun: () => {
+                if (typeof Elektrostart !== 'undefined')
+                    Elektrostart.oeffne();
+                else if (typeof Electrical !== 'undefined')
+                    Electrical.open();
+            } },
         { id: 'workspace', name: 'Workspace', icon: '🧱', platz: 'oben', rang: 50,
             knopfId: 'btn-workspace', tun: () => Produktwelten.workspace('start') },
         { id: 'bibliothekOben', name: 'Bibliothek', icon: '📚', platz: 'oben', rang: 60,
@@ -43376,6 +43491,218 @@ const Elektroskizzen = (() => {
 })();
 /* Im Browser sichtbar machen — das Formelheft und der Prüflauf greifen darauf zu. */
 globalThis.Elektroskizzen = Elektroskizzen;
+
+</script>
+<!-- Die Elektro-Startseite (L65). Sie liest das Menüband-Register und
+     muss deshalb NACH ihm geladen werden — die Reihenfolge hier ist
+     keine Formsache. -->
+<script>
+/* ===== quell/bereiche/elektro/start.js ===== */
+"use strict";
+/* ==========================================================================
+ * start.ts — Elektro als ORT, nicht als Fenster (L65)
+ *
+ * „Elektro" steht seit E218 als fünfter Weg in der obersten Gruppe der
+ * Seitenleiste, neben Heute, Lernzentrum, Bibliothek und Aufgaben. Vier
+ * davon führen an einen Ort: die Krume ändert sich, man ist woanders, der
+ * Zurück-Pfeil bringt einen zurück.
+ *
+ * „Elektro" nicht. Es rief `Electrical.open()` — eine Überlagerung mit dem
+ * Rechner. Der Rechner funktioniert; die Lücke war, dass ein Eintrag
+ * zwischen vier Zielen steht und als einziger keines ist.
+ *
+ * DIESE SEITE IST KEIN NEUER KATALOG (§8). Was sie zeigt, steht schon im
+ * Menüband-Register unter `reiter: 'elektro'` — acht Wege in drei Gruppen,
+ * jeder mit Namen, Zeichen, Hinweis und der Funktion, die ihn ausführt.
+ * Hier wird das gelesen und als Kacheln gezeichnet, mehr nicht. Wer einen
+ * neunten Weg hinzufügt, trägt ihn ins Register ein und er steht hier.
+ *
+ * UND SIE ERFINDET NICHTS (§47). Jeder Abschnitt fällt WEG, wenn es nichts
+ * zu zeigen gibt: keine Schaltpläne — kein „Weiter wo du warst"; keine
+ * fälligen Karten — keine Zeile darüber. Ein leerer Kasten mit einer
+ * Überschrift ist schlimmer als kein Kasten, weil er behauptet, hier
+ * gehöre etwas hin, das fehlt.
+ * ========================================================================*/
+const Elektrostart = (() => {
+    const esc = (s) => String(s ?? '')
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    /* WORAN REDION EINE ELEKTRO-SEITE ERKENNT: an dem, was darin liegt — und
+       nicht an einem Feld am Block. Ein Feld `bereich: 'elektro'` wäre eine
+       Datenwanderung für eine ANSICHT, und das ist der teuerste Weg, den es
+       gibt (§9). Dieselbe Entscheidung wie bei den Deckeln im Regal (E236). */
+    const ELEKTROARTEN = new Set(['schaltplan']);
+    /** Die zuletzt geöffneten Seiten, in denen ein Schaltplan liegt. */
+    const zuletzt = () => {
+        if (typeof App === 'undefined' || typeof Store === 'undefined')
+            return [];
+        let liste = [];
+        try {
+            liste = App.kuerzlich() || [];
+        }
+        catch {
+            return [];
+        }
+        return liste.filter((p) => {
+            try {
+                return Store.childrenOf(p.id)
+                    .some((k) => ELEKTROARTEN.has(String(k.type)));
+            }
+            catch {
+                return false;
+            }
+        }).slice(0, 4);
+    };
+    /** Wie viele Karteikarten heute fällig sind — 0, wenn es keine gibt. */
+    const faellig = () => {
+        try {
+            return (Werkzeuge.faellig() || []).length;
+        }
+        catch {
+            return 0;
+        }
+    };
+    const wege = () => {
+        try {
+            const roh = Register.menueband.inReiter('elektro');
+            return roh
+                .map((g) => ({
+                gruppe: g.gruppe,
+                /* `zeigen()` ist die Frage „gibt es das Modul überhaupt?". Ein
+                   Weg, dessen Modul fehlt, wäre eine Kachel ins Leere (§47). */
+                eintraege: g.eintraege.filter((e) => {
+                    try {
+                        return typeof e.zeigen !== 'function' || e.zeigen();
+                    }
+                    catch {
+                        return false;
+                    }
+                })
+            }))
+                .filter((g) => g.eintraege.length > 0);
+        }
+        catch {
+            return [];
+        }
+    };
+    /* EIN `data-sym` IST NOCH KEIN ZEICHEN. Es ist eine Bestellung; gezeichnet
+       wird sie von `Register.symbole.fuelle()`, und zwar erst, wenn das
+       Element im Dokument steht. Ohne den Aufruf am Ende von `zeichnen()`
+       standen im ersten Bild acht leere graue Quadrate.
+  
+       UND NICHT JEDES ZEICHEN IST EIN SYMBOLNAME. Im Menüband-Register steht
+       mal „bolt" (ein Name aus `register/symbole.ts`), mal ein Textzeichen
+       wie „H₁". Gefragt wird deshalb, statt geraten — dieselbe Stelle, an der
+       das Menüband es auch fragt. */
+    const zeichenHtml = (zeichen) => {
+        try {
+            if (Register?.symbole?.hat?.(zeichen))
+                return '<span class="els-zeichen" data-sym="' + esc(zeichen) + '" aria-hidden="true"></span>';
+        }
+        catch { /* ohne Symbolregister bleibt der Buchstabe */ }
+        return '<span class="els-zeichen els-glyph" aria-hidden="true">' + esc(zeichen) + '</span>';
+    };
+    const kachel = (e) => '<button type="button" class="els-kachel' + (e.gross ? ' gross' : '') +
+        '" data-weg="' + esc(e.id) + '"' +
+        (e.hinweis ? ' title="' + esc(e.hinweis) + '"' : '') + '>' +
+        zeichenHtml(String(e.zeichen || '')) +
+        '<span class="els-text"><b>' + esc(e.name) + '</b>' +
+        (e.hinweis ? '<small>' + esc(e.hinweis) + '</small>' : '') +
+        '</span></button>';
+    const zeichnen = (wrap) => {
+        const offen = zuletzt();
+        const dran = faellig();
+        const gruppen = wege();
+        let html = '<div class="els">' +
+            '<div class="els-kopf">' +
+            '<h1>⚡ Elektro</h1>' +
+            '<p>Rechnen, üben und zeichnen — alles an einem Ort.</p>' +
+            '</div>';
+        /* WAS ANSTEHT — nur wenn wirklich etwas ansteht. */
+        if (dran > 0) {
+            html += '<button type="button" class="els-dran" data-weg="e-ueben">' +
+                '<span class="els-dran-zahl">' + dran + '</span>' +
+                '<span class="els-dran-text"><b>' +
+                (dran === 1 ? 'Eine Karte ist fällig' : dran + ' Karten sind fällig') +
+                '</b><small>Zuerst Fehler, dann Fälliges, dann Neues.</small></span>' +
+                '</button>';
+        }
+        /* WEITER WO DU WARST — nur, wenn es wirklich einen Plan gibt. */
+        if (offen.length) {
+            html += '<div class="els-abschnitt"><h2>Weiter wo du warst</h2>' +
+                '<div class="els-weiter">' +
+                offen.map((p) => '<button type="button" class="els-seite" data-seite="' + esc(p.id) + '">' +
+                    '<span class="els-seite-zeichen">' + esc(p.icon || '⚡') + '</span>' +
+                    '<b>' + esc(p.text || 'Ohne Titel') + '</b>' +
+                    '</button>').join('') +
+                '</div></div>';
+        }
+        /* UND DIE WERKZEUGE — aus dem Register, Gruppe für Gruppe. */
+        for (const g of gruppen) {
+            html += '<div class="els-abschnitt"><h2>' + esc(g.gruppe) + '</h2>' +
+                '<div class="els-gitter">' + g.eintraege.map(kachel).join('') + '</div></div>';
+        }
+        /* Steht gar nichts da, sagt die Seite das — statt leer zu bleiben. */
+        if (!gruppen.length) {
+            html += '<p class="els-leer">Die Elektro-Werkzeuge sind gerade nicht ' +
+                'geladen. Lade die Seite neu, dann stehen sie wieder hier.</p>';
+        }
+        html += '</div>';
+        wrap.innerHTML = html;
+        /* Erst jetzt, mit dem fertigen Baum: die Bestellungen einlösen. */
+        try {
+            Register?.symbole?.fuelle?.(wrap);
+        }
+        catch { /* ohne Zeichen bleiben die Namen — die stehen ohnehin daneben */ }
+        binde(wrap);
+    };
+    const binde = (wrap) => {
+        wrap.querySelectorAll('[data-weg]').forEach(k => {
+            k.addEventListener('click', () => {
+                const eintrag = Register.menueband.eines(k.dataset['weg'] || '');
+                /* KEIN STILLES SCHLUCKEN. Ein Weg, der nichts tut und nichts sagt,
+                   ist der Fehler, den E236 an „PDF einlesen" gefunden hat. */
+                if (!eintrag || typeof eintrag.tun !== 'function') {
+                    try {
+                        UI.toast('Dieser Weg ist gerade nicht verfügbar.');
+                    }
+                    catch { /* still */ }
+                    return;
+                }
+                try {
+                    eintrag.tun();
+                }
+                catch (fehler) {
+                    console.error('[Elektro] ' + (k.dataset['weg'] || ''), fehler);
+                    try {
+                        UI.toast('Das hat nicht geklappt.');
+                    }
+                    catch { /* still */ }
+                }
+            });
+        });
+        wrap.querySelectorAll('[data-seite]').forEach(k => {
+            k.addEventListener('click', () => App.oeffne(k.dataset['seite'] || null));
+        });
+    };
+    /**
+     * Der Weg hierher — von der Seitenleiste, vom Modulregister und von der
+     * Adresszeile (`#elektro`).
+     *
+     * Den Reiter setzt diese Stelle selbst, wie `Bibliothek.oeffne()` es seit
+     * E236 tut: die Seite geht von mehreren Orten auf, und die Markierung muss
+     * jedes Mal stimmen.
+     */
+    const oeffne = () => {
+        try {
+            Seitenleiste.reiter('elektro');
+        }
+        catch { /* ohne Leiste kein Reiter */ }
+        App.zeigeSonder('Elektro', zeichnen);
+    };
+    return { oeffne, zeichnen, zuletzt, wege };
+})();
+window.Elektrostart = Elektrostart;
 
 </script>
 <script>

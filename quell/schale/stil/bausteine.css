@@ -5098,3 +5098,105 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 /* Ein gesetztes Fachzeichen auf der Seite. Der Zeiger sagt, dass man es
    anfassen kann — ein Tipp dreht es um 90°. */
 .blatt-marken [data-ink-art="zeichen"]{cursor:pointer}
+
+/* ============================================================================
+ * DIE ELEKTRO-STARTSEITE (L65)
+ * ----------------------------------------------------------------------------
+ * „Elektro" war der einzige der fünf Wege in der obersten Gruppe, der kein
+ * ORT war — er öffnete ein Fenster. Jetzt ist es eine Seite wie „Heute",
+ * und was darauf steht, kommt aus dem Menüband-Register (§8).
+ *
+ * KACHELN UND KEINE LISTE, und der Grund ist nicht Geschmack: acht Wege in
+ * einer Liste sind acht Zeilen, die alle gleich aussehen. Als Kacheln
+ * unterscheidet die Grösse das Wichtige vom Nebensächlichen — `gross: true`
+ * steht im Register und heisst dort schon „das Wichtigste einer Gruppe".
+ * ==========================================================================*/
+.els{ max-width:920px; margin:0 auto; padding:8px 0 40px }
+.els-kopf h1{ margin:0 0 4px; font-size:30px; font-weight:760; letter-spacing:-.02em }
+.els-kopf p{ margin:0 0 22px; color:var(--text-dim); font-size:14px }
+
+.els-abschnitt{ margin:0 0 26px }
+.els-abschnitt h2{
+  margin:0 0 10px; font-size:12px; font-weight:700; letter-spacing:.08em;
+  text-transform:uppercase; color:var(--text-faint)
+}
+
+/* Was ansteht, steht ganz oben und ist ein Knopf — nicht eine Meldung.
+   Eine Zahl ohne Weg dahinter ist eine Mahnung, kein Angebot. */
+.els-dran{
+  display:flex; align-items:center; gap:14px; width:100%; margin:0 0 26px;
+  padding:14px 16px; border:1px solid var(--accent); border-radius:14px;
+  /* `--accent-schwach` gibt es schon — die gedämpfte Fassung der
+     Akzentfarbe, in beiden Themen abgestimmt. Eine eigene Farbe hier wäre
+     eine zweite Wahrheit über dasselbe (§39). */
+  background:var(--accent-schwach); color:var(--text);
+  text-align:left; cursor:pointer; min-height:44px;
+  transition:background var(--motion-fast,.14s) var(--ease-standard,ease)
+}
+.els-dran:hover{ background:var(--bg-hover) }
+.els-dran-zahl{
+  flex:none; display:grid; place-items:center; width:46px; height:46px;
+  border-radius:999px; background:var(--accent); color:var(--auf-accent);
+  font-size:19px; font-weight:760
+}
+.els-dran-text{ display:grid; gap:2px; min-width:0 }
+.els-dran-text b{ font-size:15px; font-weight:660 }
+.els-dran-text small{ color:var(--text-dim); font-size:12.5px }
+
+.els-weiter{ display:flex; flex-wrap:wrap; gap:8px }
+.els-seite{
+  display:flex; align-items:center; gap:8px; min-height:44px;
+  padding:8px 14px 8px 10px; border:1px solid var(--line); border-radius:999px;
+  background:var(--bg-card); color:var(--text); cursor:pointer; max-width:100%;
+  transition:background var(--motion-fast,.14s) var(--ease-standard,ease)
+}
+.els-seite:hover{ background:var(--bg-hover) }
+.els-seite-zeichen{ flex:none; font-size:15px }
+/* `min-width:0` ist der Unterschied zwischen „Verteilerplan" und
+   „Verteilerpla": ein Flex-Kind schrumpft von sich aus nicht unter seine
+   Inhaltsbreite, und ein gekürzter Name ohne Auslassungszeichen sieht aus
+   wie ein FALSCHER Name (E227, E236). */
+.els-seite b{
+  min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  font-size:13.5px; font-weight:600
+}
+
+.els-gitter{
+  display:grid; gap:10px;
+  grid-template-columns:repeat(auto-fill, minmax(210px, 1fr))
+}
+.els-kachel{
+  display:flex; align-items:flex-start; gap:11px; min-height:44px;
+  padding:13px 14px; border:1px solid var(--line); border-radius:13px;
+  background:var(--bg-card); color:var(--text); text-align:left; cursor:pointer;
+  transition:background var(--motion-fast,.14s) var(--ease-standard,ease),
+             box-shadow var(--motion-fast,.14s) var(--ease-standard,ease)
+}
+.els-kachel:hover{ background:var(--bg-hover); box-shadow:var(--shadow-2) }
+/* Die grosse Kachel nimmt die ganze Zeile. Welche das ist, entscheidet das
+   Register mit `gross: true` — nicht diese Datei. */
+.els-kachel.gross{ grid-column:1 / -1 }
+.els-zeichen{
+  flex:none; display:grid; place-items:center; width:34px; height:34px;
+  border-radius:9px; background:var(--bg-side); color:var(--accent-text)
+}
+.els-zeichen svg{ width:18px; height:18px }
+/* Steht im Register statt eines Symbolnamens ein Textzeichen („H₁", „B"),
+   wird es als Buchstabe gesetzt — sonst bliebe das Feld leer. */
+.els-zeichen.els-glyph{ font-size:15px; font-weight:700 }
+.els-text{ display:grid; gap:2px; min-width:0 }
+.els-text b{ font-size:14.5px; font-weight:650; line-height:1.3 }
+.els-text small{
+  color:var(--text-dim); font-size:12.5px; line-height:1.4;
+  overflow-wrap:break-word
+}
+.els-leer{ color:var(--text-dim); font-size:14px }
+
+@media(max-width:760px){
+  .els{ padding-bottom:24px }
+  .els-kopf h1{ font-size:25px }
+  .els-gitter{ grid-template-columns:1fr }
+  /* Am Telefon ist jede Kachel eine Zeile; „gross" unterscheidet dann
+     nichts mehr und braucht auch keine eigene Regel. */
+  .els-kachel{ padding:12px 13px }
+}

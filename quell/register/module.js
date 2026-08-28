@@ -94,7 +94,12 @@ Register.module = (() => {
             } },
         { id: 'elektro', name: 'Elektrotechnik', icon: '⚡',
             was: 'Rechnungen mit Quellenangabe und ein geprüftes Grundlagen-Lernpaket.',
-            oeffnen: () => (typeof Electrical !== 'undefined') && Electrical.open() },
+            /* Seit L65 die Elektro-Seite, nicht mehr der Rechner allein — beide
+               Register müssen dasselbe Ziel nennen, sonst führen zwei Wege mit
+               demselben Namen an zwei verschiedene Orte. */
+            oeffnen: () => (typeof Elektrostart !== 'undefined')
+                ? Elektrostart.oeffne()
+                : (typeof Electrical !== 'undefined') && Electrical.open() },
         { id: 'erkennung', name: 'Erfassen & Erkennen', icon: '📷',
             was: 'Kamera und Dateien in den Eingang; Text aus Bild, PDF und Handschrift ' +
                 'über den mitgelieferten lokalen Dienst.',

@@ -1173,6 +1173,91 @@ p('Ein angeklicktes Emoji steht danach im Block',
   gewaehlt === null ? 'kein Emoji-Knopf zum Anklicken — so kann der Punkt nie rot werden'
                     : `gewählt „${gewaehlt}", im Block „${imBlock}"`);
 
+/* ==========================================================================
+ * 15 · Die Elektro-Seite liest dieses Register (L65)
+ * --------------------------------------------------------------------------
+ * „Elektro" war der einzige der fünf Wege in der obersten Gruppe der
+ * Seitenleiste, der KEIN Ort war: er rief `Electrical.open()`, eine
+ * Überlagerung mit dem Rechner. Vier Wege ändern die Krume, der fünfte tat
+ * es nicht.
+ *
+ * WAS HIER GEPRÜFT WIRD, IST DIE KOPPLUNG. Die Seite hat keinen eigenen
+ * Katalog (§8) — sie liest `Register.menueband.inReiter('elektro')`. Genau
+ * das wird gemessen: kommt ein Weg ins Register, steht er auf der Seite;
+ * fehlt einer, fehlt er dort auch. Eine Prüfung, die nur „acht Kacheln"
+ * zählt, wäre auch dann grün, wenn die Seite ihre eigene Liste führte.
+ * ========================================================================*/
+console.log('\n15 · Die Elektro-Seite liest dieses Register (L65)');
+
+await seite.evaluate(() => { document.getElementById('btn-elektro')?.click(); });
+await seite.waitForTimeout(800);
+const els = await seite.evaluate(() => {
+  const ausRegister = Register.menueband.inReiter('elektro')
+    .flatMap((g: any) => g.eintraege)
+    .filter((e: any) => { try { return typeof e.zeigen !== 'function' || e.zeigen(); }
+                          catch { return false; } });
+  return {
+    krume: (document.getElementById('crumb')?.textContent || '').trim(),
+    ueberschrift: (document.querySelector('.els-kopf h1')?.textContent || '').trim(),
+    /* Die Kacheln, in der Folge, in der sie stehen. */
+    kacheln: [...document.querySelectorAll<HTMLElement>('.els-kachel')]
+      .map(k => (k.querySelector('b')?.textContent || '').trim()),
+    wege: [...document.querySelectorAll<HTMLElement>('.els-kachel')]
+      .map(k => k.dataset['weg'] || ''),
+    gruppen: [...document.querySelectorAll<HTMLElement>('.els-abschnitt h2')]
+      .map(h => (h.textContent || '').trim()),
+    /* Und dasselbe direkt aus dem Register. */
+    imRegister: ausRegister.map((e: any) => String(e.name)),
+    idsImRegister: ausRegister.map((e: any) => String(e.id)),
+    /* Ein Zeichen je Kachel — leere graue Quadrate standen im ersten Bild. */
+    ohneZeichen: [...document.querySelectorAll<HTMLElement>('.els-kachel')]
+      .filter(k => {
+        const z = k.querySelector('.els-zeichen');
+        return !z || (!z.querySelector('svg') && !(z.textContent || '').trim());
+      })
+      .map(k => (k.querySelector('b')?.textContent || '').trim()),
+    /* Nichts ragt aus dem Bild. */
+    ueberlauf: [...document.querySelectorAll<HTMLElement>('.els *')]
+      .filter(e => e.getBoundingClientRect().right > innerWidth + 0.5).length
+  };
+});
+p('Der fünfte Weg führt jetzt an einen Ort', els.krume === 'Elektro', els.krume);
+p('Und die Seite nennt sich selbst so', /Elektro/.test(els.ueberschrift), els.ueberschrift);
+p('Es gibt überhaupt Wege im Register zu prüfen', els.imRegister.length >= 5,
+  String(els.imRegister.length));
+/* DIE EIGENTLICHE AUSSAGE: dieselben Namen, dieselbe Folge. */
+p('Die Kacheln sind genau die Register-Einträge',
+  els.kacheln.join(' | ') === els.imRegister.join(' | '),
+  `Seite: ${els.kacheln.join(', ')} — Register: ${els.imRegister.join(', ')}`);
+p('Und jede Kachel nennt die Kennung, über die sie ausgeführt wird',
+  els.wege.join(' | ') === els.idsImRegister.join(' | '),
+  els.wege.join(', '));
+p('Die Gruppen des Registers stehen als Überschriften',
+  ['Rechnen', 'Üben', 'Zeichnen'].every(g => els.gruppen.includes(g)),
+  els.gruppen.join(', '));
+/* MIT DER BEDINGUNG „ES GIBT ÜBERHAUPT KACHELN", und das ist kein Zierat:
+   in der Gegenprobe, die den fünften Weg wieder zum Fenster machte, stand
+   dieser Punkt grün da — es gab keine einzige Kachel, also auch keine ohne
+   Zeichen. Eine Prüfung, die bei NICHTS zufrieden ist, prüft nichts. */
+p('Keine Kachel steht ohne Zeichen da',
+  els.kacheln.length >= 5 && els.ohneZeichen.length === 0,
+  els.kacheln.length < 5 ? `nur ${els.kacheln.length} Kacheln`
+                         : els.ohneZeichen.join(', '));
+p('Nichts ragt aus dem Bild', els.ueberlauf === 0, String(els.ueberlauf));
+
+/* UND DIE GEGENRICHTUNG: ein Klick führt wirklich aus. Geprüft am
+   Formelheft, weil es sich messbar öffnet und nichts anlegt. */
+const gestartet = await seite.evaluate(async () => {
+  document.querySelectorAll<HTMLElement>('.overlay,[role=dialog]').forEach(o => o.remove());
+  const k = document.querySelector<HTMLElement>('.els-kachel[data-weg="e-formelheft"]');
+  if (!k) return '(keine Formelheft-Kachel)';
+  k.click();
+  await new Promise(r => setTimeout(r, 700));
+  const auf = document.querySelector('.overlay, [role=dialog], .fh-wrap');
+  return auf ? 'auf' : 'nichts';
+});
+p('Ein Klick auf eine Kachel führt sie aus', gestartet === 'auf', gestartet);
+
 console.log('\nFehler auf der Seite:', fehler.length ? fehler.join(' | ') : 'keine');
 p('Keine Fehler auf der Seite', !fehler.length, fehler.join(' | '));
 await seite.close();

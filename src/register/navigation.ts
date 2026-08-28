@@ -86,9 +86,14 @@ Register.navigation = (() => {
        Formelheft, Prüfung. Wer hin wollte, musste über den Workspace oder
        das Lernzentrum. Beim Nachzählen für E218 fiel das auf: die
        Seitenleiste führte 37 Wege, und der meistbenutzte war keiner davon. */
+    /* UND SEIT L65 FÜHRT ER AN EINEN ORT. Hier stand `Electrical.open()` —
+       eine Überlagerung mit dem Rechner. Vier der fünf Wege dieser Gruppe
+       ändern die Krume, der fünfte tat es als einziger nicht. Der Rechner
+       ist jetzt einer der Knöpfe dieser Seite statt ihre Vordertür. */
     { id: 'elektro',    name: 'Elektro',           icon: '⚡', platz: 'oben',  rang: 45,
       knopfId: 'btn-elektro',
-      tun: () => { if (typeof Electrical !== 'undefined') Electrical.open(); } },
+      tun: () => { if (typeof Elektrostart !== 'undefined') Elektrostart.oeffne();
+                   else if (typeof Electrical !== 'undefined') Electrical.open(); } },
     { id: 'workspace',  name: 'Workspace',         icon: '🧱', platz: 'oben',  rang: 50,
       knopfId: 'btn-workspace', tun: () => Produktwelten.workspace('start') },
     { id: 'bibliothekOben', name: 'Bibliothek',    icon: '📚', platz: 'oben',  rang: 60,

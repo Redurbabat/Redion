@@ -121,17 +121,43 @@ gleich('Und jeder weiss, wie er aufmacht', bestand.ohneOeffnen, []);
 console.log('\n2 · Und jeder macht wirklich etwas auf');
 
 const geoeffnet = await seite.evaluate(async () => {
+  /* EIN DATEIWÄHLER STEHT NIE IM BAUM.
+     `Recognition.scan()` legt ein `<input type="file">` an, klickt es und
+     hängt es NICHT ein — der Browser zeigt ein Fenster des Betriebssystems.
+     Am Bildschirm ändert sich damit kein einziges Zeichen, und dieser
+     Abschnitt hielt „Erfassen & Erkennen" für einen Weg, der nichts tut.
+
+     Dass er trotzdem grün war, lag am Zufall: davor stand „Elektro", das
+     eine Überlagerung öffnete, und deren Aufräumen wirkte in die nächste
+     Messung hinein. Seit „Elektro" eine SEITE ist (E238), fiel die Stütze
+     weg — und der Punkt zeigte, was er die ganze Zeit nicht sehen konnte.
+
+     Gezählt wird deshalb auch der Klick auf einen Dateiwähler. Dieselbe
+     Lösung wie bei der Probe in E236, die aus demselben Grund drei falsche
+     Kreuze meldete. */
+  const g = globalThis as any;
+  if (!g.__waehlerZaehler) {
+    g.__waehlerZaehler = 0;
+    const echt = HTMLInputElement.prototype.click;
+    HTMLInputElement.prototype.click = function (this: HTMLInputElement) {
+      if (this.type === 'file') g.__waehlerZaehler++;
+      return echt.call(this);
+    };
+  }
   const raus: any[] = [];
   for (const m of Register.module.alle()) {
     /* Sauber anfangen: offene Fenster weg, sonst zählt das vorige mit. */
     document.querySelectorAll<HTMLElement>('.overlay, .menu, .menu-grund').forEach(o => o.remove());
     const vorher = document.body.innerHTML.length + ':' + String(App.aktuelleSeite() || '');
+    const waehlerVorher = g.__waehlerZaehler;
     let ergebnis = false, geworfen = '';
     try { ergebnis = Register.module.oeffne(m.id); }
     catch (e) { geworfen = e instanceof Error ? e.message : String(e); }
     await new Promise(r => setTimeout(r, 500));
     const nachher = document.body.innerHTML.length + ':' + String(App.aktuelleSeite() || '');
-    raus.push({ id: String(m.id), ergebnis, geworfen, geaendert: vorher !== nachher });
+    raus.push({ id: String(m.id), ergebnis, geworfen,
+                geaendert: vorher !== nachher || g.__waehlerZaehler > waehlerVorher,
+                waehler: g.__waehlerZaehler > waehlerVorher });
     document.querySelectorAll<HTMLElement>('.overlay, .menu, .menu-grund').forEach(o => o.remove());
   }
   return raus;
@@ -143,6 +169,12 @@ gleich('Jeder meldet Erfolg',
   geoeffnet.filter((x: any) => x.ergebnis !== true).map((x: any) => x.id), []);
 gleich('Und bei jedem ändert sich etwas auf dem Bildschirm',
   geoeffnet.filter((x: any) => !x.geaendert).map((x: any) => x.id), []);
+/* UND DER ZÄHLER MUSS AUCH WIRKLICH ZÄHLEN. Ohne diesen Punkt wäre die
+   Erweiterung oben eine Ausnahme, die alles durchlässt: sie würde jeden
+   Weg retten, der nichts tut, sobald irgendwann irgendein Wähler klickt. */
+p('Und mindestens einer davon öffnet einen Dateiwähler',
+  geoeffnet.some((x: any) => x.waehler),
+  geoeffnet.filter((x: any) => x.waehler).map((x: any) => x.id).join(', ') || 'keiner');
 
 /* ==========================================================================
  * §3 · Eine erfundene Kennung ergibt false — und wirft nicht

@@ -2417,8 +2417,17 @@ gibt. Beide Richtungen sind geprüft (test247 §11) — Band → Leiste und Leis
 → Band, jeder Punkt einzeln als rot-fähig belegt.
 
 
-L65 — „Elektro" öffnet einen Dialog, keine Seite
+L65 — „Elektro" öffnet einen Dialog, keine Seite — GESCHLOSSEN am 28. August 2026
 --------------------------------------------------------------------------------
+
+GESCHLOSSEN mit E238. `src/bereiche/elektro/start.ts` ist die Seite:
+`App.zeigeSonder('Elektro', …)`, Krume „Elektro", Zurück-Pfeil wie überall.
+Die acht Wege kommen aus `Register.menueband.inReiter('elektro')` — kein
+zweiter Katalog (§8). Der Rechner ist einer ihrer Knöpfe statt ihrer
+Vordertür. Geprüft in test247 §15, jeder Punkt einzeln rot gemacht.
+
+Der Text darunter ist der Stand von vorher und bleibt als Begründung stehen.
+
 Seit E219 steht „Elektro" als fünfter Weg in der Seitenleiste, neben Heute,
 Lernzentrum, Bibliothek und Aufgaben. Vier davon führen an einen ORT: die
 Pfadnavigation ändert sich, man ist woanders, der Zurück-Pfeil bringt einen
