@@ -17159,3 +17159,224 @@ der Lehre aus §55.2 in umgekehrter Richtung: geprüft wurde
 weil sie gar keinen eigenen Grund hat. Die Prüfung wäre rot gewesen, egal
 was der Umbau tut. Gemessen wird jetzt, was sich wirklich unterscheidet:
 die Verschiebung des Inhalts und ob die Leiste Finger fängt.
+
+
+E236 — Redion öffnet dort, wo die Sachen liegen
+================================================================================
+
+Redur hat zwei Bildschirmfotos einer Notiz-App geschickt und dazu
+geschrieben:
+
+    „wenn ich die Webseite öffne, sollte die zuletzt geöffnete PDF sich
+     öffnen; wenn keine offen war, direkt bei den Daten, wo PDF usw. ist.
+     Und ganz oben so wie MacBook, wo Gehen, Einfügen usw. dort sein, aber
+     es sollte nicht so viel Platz nehmen. Dann unten sollte max 4-5
+     Sachen sein. Dann wenn ich + Neu klicke, sollte es mir sagen, was ich
+     erstellen will. Und schau, dass du alle Redion-Funktionen dort hast."
+
+Fünf Teile, und der wichtigste Satz für alle fünf: **Redion hatte das
+meiste davon schon.** Es lag nur an der falschen Stelle.
+
+    was gewollt war              was es schon gab
+    ─────────────────────────────────────────────────────────────────────
+    Menüleiste wie am Rechner    `#menueband` mit sechs Reitern (E210)
+    Regal mit Deckeln            `Bibliothek` — aber als Tabelle
+    „+ Neu" fragt was            `erstellenBlatt()` mit elf Wegen (E45)
+    zuletzt geöffnete PDF        `startAnsicht: 'letzte'` in den Einstellungen
+    unten max 4–5                `#handy-oben` mit sechs Kreisen — oben
+
+Gebaut wurden deshalb keine neuen Kataloge, sondern Umzüge (§8).
+
+
+TEIL 1 — DAS REGAL AUS DECKELN
+--------------------------------------------------------------------------
+
+Die Bibliothek hatte zwei Formen: eine Tabelle mit dreizehn Zeilen, in
+jeder dreimal dieselbe Auskunft, und ein Regal je QUELLE — also je Heft,
+nicht je Dokument. Die Deckelform ist die dritte und die Vorgabe.
+
+KEINE NEUE DATENART. Die Art eines Dokuments wird ABGELESEN aus dem, was
+darin liegt: `pdfseite`, `whiteboard`, `schaltplan`, `blatt`,
+`spreadsheet`, `database`, `flashcard`, `file`. Ein Feld `art` am Block
+wäre eine Migration, und eine Migration für eine ANSICHT ist der teuerste
+Weg, den es gibt (§9).
+
+Ein Ordner ist ebenso keine neue Datenart: eine Seite mit mindestens zwei
+Unterseiten und fast nichts sonst.
+
+
+TEIL 2 — „+ NEU" FRAGT NACH ALLEM
+--------------------------------------------------------------------------
+
+Aus elf Wegen wurden neunzehn in sechs Gruppen — Hereinholen · Schreiben ·
+Zeichnen · Ordnen und rechnen · Lernen · Aufnehmen. Neu dazu: PDF
+einlesen, Aus anderem Werkzeug, Journal-Eintrag, Ordner, Blatt,
+Schaltplan, Diagramm, Lernzentrale.
+
+WAS HIER STEHT, MUSS IRGENDWOHIN FÜHREN (§47). Neben jedem Weg steht die
+Funktion, die ihn ausführt, und `da()` prüft vor dem Zeichnen, ob es sie
+gibt. Alle neunzehn wurden einzeln angeklickt; einer war eine Sackgasse
+(PDF einlesen verlangte eine offene Seite) und legt jetzt selbst eine an.
+
+
+TEIL 3 — DER START
+--------------------------------------------------------------------------
+
+Die Vorgabe heisst „Dokument": das zuletzt geöffnete, sonst das Regal.
+
+ZWEI STILLE FEHLER LAGEN DAVOR. Die Wahl „Zuletzt geöffnete Seite" gab es
+seit Langem und wertete niemand aus; am Telefon stand ein ZWEITER
+Entschluss über dieselbe Frage, der jeden auf „Heute" schickte. Und
+`oeffne()` schreibt `letzte` selbst — wer erst öffnet und dann fragt „gab
+es ein zuletzt geöffnetes Dokument?", bekommt immer ja.
+
+
+TEIL 4 — DIE MENÜLEISTE GANZ OBEN
+--------------------------------------------------------------------------
+
+Sie steht als erstes in `#main`, ist zugeklappt 35 px hoch (45 am Telefon,
+weil §37 44 px Tippfläche verlangt), und die Knöpfe klappen beim Antippen
+auf. Rechts stehen Suche, KI und Konto — wie an einem Rechner.
+
+E219 IST DAMIT ZURÜCKGENOMMEN. Er sagte: über einer Startansicht ist die
+Leiste ganz weg, denn „sieben anklickbare Dinge, die alle dasselbe sagen:
+nicht jetzt". Der Fehler war aber nicht die Leiste, sondern ihr Inhalt:
+drei ihrer sechs Reiter schreiben IN eine Seite. Das steht jetzt an einer
+Stelle im Register (`BRAUCHT_SEITE`), und die Leiste räumt sich selbst
+auf — aus sechs Reitern werden drei, statt aus einer Leiste keine.
+
+
+TEIL 5 — DIE NAVIGATION NACH UNTEN
+--------------------------------------------------------------------------
+
+Fünf Wege: **Dokumente · Heute · Lernen · Termine · Mehr.**
+
+Gemessen lagen am Telefon vorher drei Bänke übereinander — Kreise 68,
+Menüleiste 45, Krume 56 = 169 px von 844, bevor der erste Deckel kommt.
+Unten kostet die Navigation nichts vom Kopf.
+
+WAS AUS DEN SECHS KREISEN WURDE, damit niemand einen Weg sucht (§46):
+
+    R (Arbeitsbereich)  → rechts in die Menüleiste und ins Mehr-Blatt
+    Seiten (Workspace)  → ins Mehr-Blatt
+    Lernen, Heute, Termine, Mehr → bleiben
+    neu dazu: Dokumente
+
+Die schwebende Leiste (Suche · KI fragen · Neu) gibt es nicht mehr — zwei
+Leisten am unteren Rand wären eine zu viel. Suche und KI stehen oben
+rechts, „Neu" ist der grosse Knopf im Regal.
+
+UND „PLAN" HEISST WIEDER „TERMINE". E132 hatte den Namen gekürzt, weil die
+waagerechte Pille ihn nicht fasste. Die Bühne dahinter hiess die ganze Zeit
+„Termine" — zwei Namen für einen Ort. Unten ist der Platz da, also steht
+dort wieder das Wort, das die Überschrift auch sagt.
+
+UND DER GEWINN, DER DEN UMZUG TRÄGT: oben trug nur der aktive Weg seinen
+Namen, weil Zeichen und Wort nebeneinander standen. Unten stehen sie
+übereinander, fünf Wege teilen sich 390 px zu je 78 — jeder Name steht da.
+Wo man ist, sagt jetzt nicht mehr nur die Farbe (§38). Die Zahl fünf ist
+deshalb keine Vorliebe, sondern die Grenze: „Dokumente" braucht bei
+10.5 px rund 62 px, bei sechs Wegen wären nur 65 je Weg übrig.
+
+
+WAS NUR DAS HINSEHEN FAND (§55)
+--------------------------------------------------------------------------
+
+  · Der PDF-Deckel zeigte „Seite 1Seite 2Seite 3", der Whiteboard-Deckel
+    das Wort „Whiteboard". `Vorschau.miniatur` liest den TEXT der Blöcke.
+  · Ein `<button>` zentriert seinen Inhalt senkrecht, auch mit
+    `display:block`: drei Deckel derselben Reihe begannen bei 153, 162, 170.
+  · Sechs `.menu-liste` im Neu-Blatt teilten sich die Höhe und schnitten
+    sich gegenseitig ab — jede trägt am Telefon `flex:1`.
+  · Der aktive Weg unten war leer: beim Aufräumen der alten Kreisregeln
+    ging sein `z-index` mit, und er lag hinter der gleitenden Fläche.
+  · Die Schublade deckte die neue Wegeleiste vollständig zu (bis 844, die
+    Leiste ab 785). Sie reservierte noch Platz oben.
+
+  · Die Titel auf den Deckeln waren HART abgeschnitten, ohne
+    Auslassungszeichen: „Was Notion 10 000-mal besser machen würde" stand
+    als „Was Notion 10 0" da. Grund: `.mini-zeilen > *` setzt zwar
+    `text-overflow:ellipsis`, aber das gilt nicht für ein Inline-Element —
+    und ein `<b>` in einem `display:block`-Kasten bleibt inline.
+    `white-space:nowrap` gilt sehr wohl, also lief die Zeile bis 251 px
+    über einen 102 px breiten Deckel hinaus und wurde von dessen
+    `overflow:hidden` gekappt. In der Lernwelt fiel es nie auf, weil
+    `.lw-mini` ein Grid ist und seine Kinder blockifiziert.
+    Die Prüffalle dabei ist dieselbe wie in §55.2: ein Inline-Element
+    meldet `scrollWidth` 0 und `clientWidth` 0.
+
+  · Die gezeichneten Papierlinien liefen QUER DURCH den Vorschautext.
+    „Die acht Teile" und „Filter, Rechnen, Sortieren" standen
+    durchgestrichen da — die Linien haben 9 px Abstand, die Textzeilen
+    ihre eigene Höhe. Ein Durchstreichen ist keine Verzierung, es ist eine
+    Aussage („erledigt"), und sie war falsch. Das Papier liegt jetzt nur
+    noch da, wo kein Text steht: bei einem PDF, einem Whiteboard, einer
+    leeren Seite. Welche Art es ist, steht ohnehin als Wort darunter.
+
+
+WAS DIE PRÜFUNGEN FANDEN
+--------------------------------------------------------------------------
+
+  · test67 fand den schwersten Fehler dieses Umbaus: die Warnung „noch nie
+    gesichert" und die Platzkarte standen nur in der ALTEN Tabellenform.
+    Ich hatte eine neue Vorgabeansicht gebaut und die Sicherheitsfunktion
+    dabei in einer Ansicht zurückgelassen, die ab jetzt kaum jemand öffnet
+    (§11, §46). Beide stehen nun in jeder der drei Formen.
+
+  · test34 fand einen Fehler, den es vorher schon gab und den erst diese
+    Änderung sichtbar machte: die drei Reiter der Seitenleiste am Rechner
+    leuchteten gar nicht, sobald `Seitenleiste.reiter()` einen Wert der
+    Telefonleiste trug (`dokumente`, `lernen`, `mehr`). Darunter stand
+    dabei der Seitenbaum — drei Reiter, keiner an, und der Kasten zeigt
+    trotzdem den Inhalt des ersten.
+    Die Reiter sind kein Ortsschild, sondern ein Umschalter: `chat` zeigt
+    die Agenten, `bespr` die Besprechungen, alles andere den Seitenbaum.
+    Genau so leuchten sie jetzt. Das ist NICHT der Rückfall auf „Start",
+    den die Wegeleiste unten ausdrücklich nicht macht — dort heisst die
+    Frage „wo bin ich?", hier „welcher Baum steht da?".
+    Sichtbar wurde es, weil `dokumente` seit E236 der ERSTE Wert ist.
+
+  · Und ein Fehler, den ich selbst hineingebaut hatte: `mb-konto` zeigt
+    das Zeichen des Arbeitsbereichs und stand mit der Vorgabe „R" da,
+    während alle anderen Stellen „N" sagen — bei einem Arbeitsbereich
+    ohne eigenes Zeichen zwei Buchstaben für dieselbe Sache. Dazu suchte
+    `kopfzeileAuffrischen()` nur INNERHALB von `#btn-settings`: wer das
+    Zeichen änderte, sah es links sofort und oben rechts erst nach dem
+    nächsten Neuzeichnen. Beide Auffrischungen sehen jetzt im ganzen
+    Blatt nach `.ws-icon`, und test37 prüft nicht, WELCHES Zeichen
+    dasteht, sondern dass überall dasselbe steht — vorher und nach dem
+    Ändern über das echte Feld.
+
+  · test202 kam nicht mehr zum Ausbildungs-Dashboard: es klickte
+    `[data-r="mehr"]`, und in der neuen Vorgabeform hängt die Reiterliste
+    hinter der Ortszeile. Sie sucht jetzt beide Auslöser.
+  · test141 fand die zugedeckte Schublade — und beim Nachbessern, dass die
+    Marke `--hunten` einen Punkt zu klein war: die Trennlinie fehlte.
+  · test126 fand, dass die Knöpfe unten ihren Übergang verloren hatten.
+
+Neun Prüfläufe mussten mitwandern (test31, 37, 40, 67, 114, 126, 141, 156,
+247). Bei jedem wurde die FRAGE beibehalten und nur die Stelle
+nachgezogen, an der die Antwort steht — mehrfach dreht sich dabei die
+Richtung um: „der Inhalt beginnt unter der Leiste" heisst jetzt „der
+Inhalt endet über ihr".
+
+
+UND WAS KEINE PRÜFUNG FRAGTE
+--------------------------------------------------------------------------
+
+Die Deckelform war die erste VORGABEANSICHT ohne einen einzigen Prüfpunkt
+— genau die Ansicht, die jeder als erstes sieht. test33 hat jetzt sechs,
+und jeder einzelne wurde rot gemacht, bevor er stehen blieb (§55.2):
+
+    `display:block` zurückgenommen  → 48 Zeilen ragen über ihren Deckel,
+                                      bis zu 1118 px; 50 bleiben inline
+    `:not(.is-leer)` entschärft     → alle zehn Deckel mit Text tragen
+                                      wieder Papier
+    Marke `is-leer` weggelassen     → fünf Deckel behaupten Inhalt, wo
+                                      keiner ist, und das Papier liegt
+                                      nirgends mehr
+
+Gemessen wird dabei die KANTE und nicht `scrollWidth` — der Vergleich
+`scrollWidth > clientWidth` hätte bei genau diesem Fehler „0 gegen 0"
+gesagt. Das ist dieselbe Falle wie beim Tabellenblock (§55.2), nur mit
+einer anderen Ursache: dort Flexbox, hier ein Inline-Element.

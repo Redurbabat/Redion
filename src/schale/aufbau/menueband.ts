@@ -382,6 +382,73 @@ const Menueband = (() => {
     platz.className = 'mb-platz';
     zeile.appendChild(platz);
 
+    /* ── RECHTS: SUCHE, KI, KONTO (E236) ────────────────────────────────
+       Sie standen am Telefon in einer eigenen schwebenden Leiste unten —
+       zusammen mit „Neu". Seit die Navigation dort hinwandert (Teil 5),
+       wären das zwei Leisten übereinander am unteren Rand.
+
+       An einem Rechner steht genau das rechts in der Menüleiste, und dort
+       stehen sie jetzt auch: gleiche Zeile, gleiche Höhe, kein zusätzlicher
+       Platz. „Neu" braucht hier keinen Knopf mehr — es steht als „+ Neu"
+       im Regal und im Mehr-Blatt.
+
+       DIE ZIELE SIND DIESELBEN FUNKTIONEN wie vorher, nicht neue: ein
+       zweiter Weg zu einer zweiten Suche wäre der Fehler, den E160 schon
+       einmal gemacht hat. */
+    const RECHTS: [string, string, string, () => void][] = [
+      ['mb-suche', 'search',  'Suchen (Strg + P)',
+        () => { try { App.suche(); } catch { /* ohne Suche bleibt die Leiste */ } }],
+      ['mb-ki',    'sparkle', 'Lokale KI (Strg + J)',
+        () => { try { App.kiPanel(true); } catch { /* ohne KI bleibt die Leiste */ } }],
+      /* NICHT `PWA.schubladeAuf` — das ist die Seitenleiste des Rechners,
+         und E38 hat den Weg am Telefon ausdrücklich davon weggeführt.
+         `App.arbeitsbereich()` trifft die Unterscheidung an EINER Stelle:
+         am Telefon das R-Blatt, am Rechner die Schublade. */
+      ['mb-konto', '',        'Arbeitsbereich',
+        () => { try { App.arbeitsbereich(); }
+                catch { /* ohne Arbeitsbereich bleibt die Leiste */ } }]
+    ];
+    const rechts = document.createElement('div');
+    rechts.className = 'mb-rechts';
+    RECHTS.forEach(([id, zeichen, titel, tun]) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.id = id;
+      b.className = 'mb-rechts-knopf' + (zeichen ? '' : ' mb-konto');
+      b.title = titel;
+      b.setAttribute('aria-label', titel);
+      if (zeichen) {
+        const z = document.createElement('span');
+        z.dataset['sym'] = zeichen;
+        b.appendChild(z);
+      } else {
+        /* Das Konto trägt kein Symbol, sondern das Zeichen des
+           Arbeitsbereichs — dasselbe, das im R-Kreis stand.
+
+           `.ws-icon` IST DIE VERBINDUNG, nicht Schmuck: wer das Zeichen in
+           den Einstellungen ändert, ruft `kopfzeileAuffrischen()`, und die
+           sucht genau diese Klasse. Ohne sie stünde hier bis zum nächsten
+           Neuzeichnen das alte Zeichen.
+           Und die Vorgabe heisst „N" wie überall sonst. Hier stand „R" —
+           bei einem Arbeitsbereich ohne eigenes Zeichen hätten Seitenleiste
+           und Menüleiste dann zwei verschiedene Buchstaben für dieselbe
+           Sache gezeigt. */
+        const z = document.createElement('span');
+        z.className = 'ws-icon';
+        try { z.textContent = String(Store.getMeta('arbeitsIcon', 'N')); }
+        catch { z.textContent = 'N'; }
+        b.appendChild(z);
+      }
+      b.addEventListener('click', tun);
+      rechts.appendChild(b);
+    });
+    zeile.appendChild(rechts);
+    /* Der Klapp-Pfeil kommt gleich darunter und gehört DAZU: beide kleben
+       am rechten Rand, und zwei Dinge, die an derselben Stelle kleben,
+       liegen übereinander. Im ersten Bild war der Pfeil deshalb weg.
+       Er steht als erstes in der Gruppe, weil er zur Reiterzeile gehört
+       und nicht zu Suche/KI/Konto. */
+
     /* ── auf- und zuklappen ── */
     const klapp = document.createElement('button');
     klapp.type = 'button';
@@ -396,7 +463,7 @@ const Menueband = (() => {
        hätten beim Umschalten gesprungen statt sich zu drehen. */
     pfeil.dataset['sym'] = 'chevronD';
     klapp.appendChild(pfeil);
-    zeile.appendChild(klapp);
+    rechts.insertBefore(klapp, rechts.firstChild);
 
     wurzel.appendChild(zeile);
 

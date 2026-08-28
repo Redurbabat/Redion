@@ -139,6 +139,18 @@ import { chromium } from 'playwright';
   });
   await p.waitForTimeout(600);
 
+  /* UND DIE MARKIERUNG WANDERT MIT.
+     Seit E236 leuchtet „Start" auch dann, wenn der ORT ein anderer ist —
+     Dokumente, Lernen, Mehr —, weil der Baum darunter der Seitenbaum ist.
+     Ohne diesen Punkt hier wäre „immer Start" eine grüne Prüfung, und
+     genau das wäre der Fehler: schaltet man auf Chat, steht unten die
+     Agentenliste, und dann muss auch „Chat" leuchten. */
+  const markiert = await p.evaluate(() =>
+    [...document.querySelectorAll<HTMLElement>('#side-reiter .sr')]
+      .filter(x => x.classList.contains('on')).map(x => x.dataset.reiter));
+  ok('Auf Chat leuchtet genau „Chat"',
+     markiert.length === 1 && markiert[0] === 'chat');
+
   const chat = await p.evaluate(() => ({
     agenten: [...document.querySelectorAll<HTMLElement>('.ki-agenten button')].map(x => (x.textContent ?? '').replace(/[⌄›]/g, '')),
     gruppen: [...document.querySelectorAll<HTMLElement>('.side-section span')].map(x => (x.textContent ?? '').replace(/[⌄›]/g, '')),

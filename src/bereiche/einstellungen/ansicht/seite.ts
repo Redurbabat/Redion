@@ -853,10 +853,16 @@ const Einstellungen = (() => {
   };
 
   const kopfzeileAuffrischen = () => {
+    /* SEIT E236 TRÄGT AUCH DIE MENÜLEISTE DAS ZEICHEN (`mb-konto`).
+       Hier stand `btn.querySelector('.ws-icon')` — eine Stelle, ein
+       Zeichen. Wer es änderte, sah es in der Seitenleiste sofort und in
+       der Menüleiste erst nach dem nächsten Neuzeichnen: zwei Buchstaben
+       für einen Arbeitsbereich. Gesucht wird deshalb im ganzen Blatt. */
+    document.querySelectorAll('.ws-icon').forEach(ico => {
+      ico.textContent = V('arbeitsIcon', 'N');
+    });
     const btn = document.querySelector('#btn-settings');
     if (!btn) return;
-    const ico = btn.querySelector('.ws-icon');
-    if (ico) ico.textContent = V('arbeitsIcon', 'N');
     const name = btn.querySelectorAll('span')[1];
     if (name) name.textContent = V('arbeitsName', 'Redion');
   };

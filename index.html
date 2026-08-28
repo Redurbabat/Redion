@@ -209,39 +209,64 @@
      Eine Umbenennung hätte nichts verbessert und alles gelöst, was daran
      hängt.
      ====================================================================== -->
-<div id="handy-oben" role="tablist" aria-label="Hauptbereiche">
+<!-- ═══════════════════════════════════════════════════════════════════════
+     DIE NAVIGATION — UNTEN, WO DER DAUMEN IST (E236)
+     ───────────────────────────────────────────────────────────────────────
+     Sie stand als Kreisleiste GANZ OBEN, und darüber lagen dann noch die
+     Menüleiste und die Krume: drei Bänke, 169 px von 844, bevor der erste
+     Deckel kommt.
+
+     Redur: „dann unten sollte max 4-5 Sachen sein." Es sind fünf.
+
+     WAS AUS DEN SECHS KREISEN WURDE, damit niemand einen Weg sucht:
+       R (Arbeitsbereich)  → rechts in die Menüleiste
+       Lernen              → bleibt
+       Heute (Start)       → bleibt
+       Seiten (Workspace)  → ins Mehr-Blatt
+       Termine             → bleibt
+       Mehr                → bleibt
+     Und NEU dazu: Dokumente — das Regal, wo Redion jetzt öffnet.
+
+     Die alte schwebende Leiste (Suche · KI fragen · Neu) gibt es nicht
+     mehr: Suche und KI stehen rechts in der Menüleiste, „Neu" ist der
+     grosse „+ Neu"-Knopf im Regal.
+     ═══════════════════════════════════════════════════════════════════ -->
+<nav id="handy-oben" role="tablist" aria-label="Hauptbereiche">
   <!-- Die gleitende Pille. Sie liegt HINTER den Knöpfen und wandert beim
        Reiterwechsel dorthin, wo die neue Auswahl steht; die Knöpfe selbst
        bleiben durchsichtig. Ein Hintergrund, der springt, sagt „ein
        anderer Knopf" — einer, der wandert, sagt „derselbe Ort, weiter
        vorn". Sie steht als erstes Kind, damit sie auch ohne Stilblatt
        nicht über den Knöpfen liegt. Sie ist leer und aus dem Baum
-       genommen: Vorleseprogramme sollen die vier Reiter finden, nicht
-       fünf Dinge. -->
+       genommen: Vorleseprogramme sollen die fünf Reiter finden, nicht
+       sechs Dinge. -->
   <i id="ho-pille" class="stumm" aria-hidden="true"></i>
-  <button id="hl-konto" class="ho-konto" title="Arbeitsbereich"><span>R</span></button>
+  <button id="hl-dok" role="tab" title="Dokumente"><span class="ho-z"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4.5" width="7" height="15" rx="1.6"/><rect x="13.5" y="4.5" width="7" height="9" rx="1.6"/><path d="M13.5 17h7"/></svg></span><b>Dokumente</b></button>
+  <button id="hl-start" role="tab" title="Heute"><span class="ho-z"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/></svg></span><b>Heute</b></button>
   <button id="hl-lernen" role="tab" title="Lernen"><span class="ho-z"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4 2.5 8.5 12 13l9.5-4.5z"/><path d="M6.5 10.8v4.4c0 .5 2.5 2.3 5.5 2.3s5.5-1.8 5.5-2.3v-4.4"/><path d="M21.5 8.5v5"/></svg></span><b>Lernen</b></button>
-  <button id="hl-start" role="tab" title="Start"><span class="ho-z"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/></svg></span><b>Start</b></button>
-  <button id="hl-seiten" role="tab" title="Seiten"><span class="ho-z"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 3.5h7L18.5 8v12.5h-12z"/><path d="M13.5 3.5V8h5"/><path d="M9.5 12.5h6M9.5 16h4"/></svg></span><b>Seiten</b></button>
-  <button id="hl-bespr" role="tab" title="Besprechungen"><span class="ho-z"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 9.5h17M8 3.5v3M16 3.5v3"/><path d="M8 13h.01M12 13h.01M16 13h.01M8 16.5h.01M12 16.5h.01"/></svg></span><b>Termine</b></button>
+  <button id="hl-bespr" role="tab" title="Termine"><span class="ho-z"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 9.5h17M8 3.5v3M16 3.5v3"/><path d="M8 13h.01M12 13h.01M16 13h.01M8 16.5h.01M12 16.5h.01"/></svg></span><b>Termine</b></button>
   <button id="hl-mehr" role="tab" title="Mehr"><span class="ho-z"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="5" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.4" fill="currentColor" stroke="none"/></svg></span><b>Mehr</b><i class="hl-punkt" hidden></i></button>
-</div>
+</nav>
 
 <!-- =========================================================================
-     DIE DREI SCHWEBENDEN KNÖPFE UNTEN — nur auf dem Telefon
+     HIER STANDEN DIE DREI SCHWEBENDEN KNÖPFE — bis E236
      -------------------------------------------------------------------------
-     Suchen · KI fragen · Neue Seite. Sie stehen NICHT in einer geschlossenen
-     Leiste, sondern schweben über dem Inhalt: der Daumen erreicht sie, und
-     der Bildschirm bleibt trotzdem ganz. Die Mitte ist die breiteste und
-     die einzige mit Text — nach ihr greift man am häufigsten.
+     Suchen · KI fragen · Neue Seite, schwebend über dem Inhalt: der Daumen
+     erreichte sie, und der Bildschirm blieb trotzdem ganz. Das war richtig,
+     SOLANGE unten sonst nichts stand.
+
+     Seit E236 steht dort die Wegeleiste, und zwei Leisten am unteren Rand
+     sind eine zu viel. Die drei Wege sind nicht weg, sie stehen dort, wo
+     sie an einem Rechner auch stünden:
+
+       Suchen     → `mb-suche` rechts in der Menüleiste (und Strg + P)
+       KI fragen  → `mb-ki`    rechts in der Menüleiste (und Strg + J)
+       Neue Seite → der grosse „+ Neu"-Knopf im Regal, und das Mehr-Blatt
+
+     Der Absatz bleibt stehen, weil `hu-suche`, `hu-ki` und `hu-neu` in
+     älterer Doku und in Prüfläufen vorkommen — wer danach sucht, soll hier
+     lesen, wohin sie gegangen sind, statt gar nichts zu finden.
      ====================================================================== -->
-<div id="handy-unten" aria-label="Schnellzugriff">
-  <button id="hu-suche" title="Suchen"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg></button>
-  <button id="hu-ki" title="KI fragen">
-    <span class="hu-av"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.2 13.7 9l5.8 1.7-5.8 1.7L12 18.2l-1.7-5.8L4.5 10.7 10.3 9z"/><path d="M18.6 3v3.2M17 4.6h3.2"/></svg></span><b>KI fragen</b><i class="hu-mik"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="9.25" y="3" width="5.5" height="10" rx="2.75"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg></i>
-  </button>
-  <button id="hu-neu" title="Neue Seite"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12v6.5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h6.5"/><path d="M17.5 3.5 21 7l-8.5 8.5H9v-3.5z"/></svg></button>
-</div>
 
 <!-- Formatleiste über der Tastatur — erscheint beim Schreiben auf dem Telefon -->
 <div id="tastenleiste" role="toolbar" aria-label="Formatieren" hidden>

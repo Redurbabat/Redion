@@ -258,7 +258,12 @@ const streifen = await seite.evaluate(() => {
   const s = document.getElementById('offline-streifen');
   if (!s) return { da: false, bottom: 0, leisteTop: 0, flach: [] as string[], xBreit: 0 };
   const r = s.getBoundingClientRect();
-  const leiste = document.getElementById('handy-unten')?.getBoundingClientRect();
+  /* Die schwebende Leiste (`#handy-unten`) gibt es seit E236 nicht mehr;
+     die Wegeleiste am unteren Rand heisst `#handy-oben` — der Name ist aus
+     der Zeit, als sie oben stand, und wird nicht umbenannt, solange
+     Prüfungen, CSS und Modul ihn kennen (§53.3, Grenze 2). Verdeckt
+     werden darf sie so wenig wie ihre Vorgängerin. */
+  const leiste = document.getElementById('handy-oben')?.getBoundingClientRect();
   const flach = [...s.querySelectorAll('button')]
     .filter(k => k.getBoundingClientRect().height < 44)
     .map(k => `${(k.textContent ?? '').trim().slice(0, 12)} ${Math.round(k.getBoundingClientRect().height)}px`);
@@ -320,7 +325,7 @@ console.log('\n8 · Das R-Blatt: der Arbeitsbereich am Telefon');
    Baum, Reiter, 33-px-Zeilen, auf 390 px geschoben. Jetzt ein Blatt über
    den ganzen Bildschirm mit Fingerzeilen. Am Rechner bleibt die
    Seitenleiste; Abschnitt 4 prüft weiter, dass sich dort nichts ändert. */
-await seite.evaluate(() => document.getElementById('hl-konto')?.click());
+await seite.evaluate(() => document.getElementById('mb-konto')?.click());
 await seite.waitForTimeout(450);
 const blatt = await seite.evaluate(() => {
   const bl = document.getElementById('r-blatt');
@@ -405,14 +410,18 @@ p('Nichts liegt über dem Blatt', speicher?.frei === true,
    Ansicht, ohne den Reiter zu setzen, den `handyLeiste()` liest — man
    landete im Posteingang, und oben stand noch „Start". Derselbe Fehler wie
    an den Reitern selbst, nur an einer Stelle, wo ihn niemand suchte. */
-/* Die Namen der Pillen sind seit E132 andere: `hl-start` heisst „Heute",
-   `hl-seiten` heisst „Workspace" (produktwelten.ts:258-261). Die Wege im
-   Blatt heissen weiter `seiten`, `mehr`, `start` — geprüft wird, dass sie
-   die richtige Pille markieren, nicht wie sie beschriftet ist. */
-for (const [weg, erwartet] of [['seiten', 'Seiten'], ['mehr', 'Mehr'],
+/* Die Namen sind seit E132 andere: `hl-start` heisst „Heute". Die Wege im
+   Blatt heissen weiter `mehr` und `start` — geprüft wird, dass sie den
+   richtigen Weg markieren, nicht wie er beschriftet ist.
+
+   `seiten` FEHLT HIER SEIT E236, und mit Absicht: der Workspace hat unten
+   keinen Weg mehr, er steht im Mehr-Blatt. Dass dort NICHTS markiert wird,
+   statt ersatzweise „Heute", prüft der Punkt weiter unten — das ist der
+   Fall, den man leicht falsch macht. */
+for (const [weg, erwartet] of [['mehr', 'Mehr'],
                                ['start', 'Heute']] as [string, string][]) {
   await seite.evaluate(() => document.getElementById('r-blatt')?.remove());
-  await seite.evaluate(() => document.getElementById('hl-konto')?.click());
+  await seite.evaluate(() => document.getElementById('mb-konto')?.click());
   await seite.waitForTimeout(400);
   await seite.evaluate((w) => {
     document.querySelector<HTMLElement>(`#r-blatt [data-r="${w}"]`)?.click();
@@ -443,7 +452,9 @@ await seite.evaluate(() => {
   Store.addPage(null, { text: 'Einkaufsliste', icon: '🛒', fav: true });
 });
 await seite.waitForTimeout(300);
-await seite.evaluate(() => document.getElementById('hl-seiten')?.click());
+/* „Seiten"/Workspace hat seit E236 keinen Weg mehr in der Leiste — er
+   steht im Mehr-Blatt. Aufgerufen wird deshalb, was der Weg TUT. */
+await seite.evaluate(() => { Produktwelten.workspace('start'); });
 await seite.waitForTimeout(700);
 
 const seitenReiter = await seite.evaluate(() => {
@@ -453,7 +464,7 @@ const seitenReiter = await seite.evaluate(() => {
   const pillen = [...oben.querySelectorAll<HTMLElement>('button[role="tab"]')];
   const titel = [...buehne.querySelectorAll<HTMLElement>('.pt')];
   const zeilen = [...buehne.querySelectorAll<HTMLElement>('button')];
-  const unten = document.getElementById('handy-unten');
+  const kiKnopf = document.getElementById('mb-ki');
   return {
     beschriftungen: pillen.map(b => (b.textContent || '').trim()),
     aktiv: pillen.filter(b => b.classList.contains('an'))
@@ -465,23 +476,31 @@ const seitenReiter = await seite.evaluate(() => {
     zuFlach: zeilen.filter(z => { const h = z.getBoundingClientRect().height;
                                   return h > 0 && h < 44; })
                    .map(z => (z.textContent || '').trim().slice(0, 16)),
-    kiUnten: /KI fragen/.test(unten?.textContent || '')
+    kiOben: !!kiKnopf && kiKnopf.getBoundingClientRect().width > 0
   };
 }) as { beschriftungen: string[]; aktiv: string[]; ueberschrift: string;
         abschnitte: string[]; kursiv: string[]; zuFlach: string[];
-        kiUnten: boolean } | null;
+        kiOben: boolean } | null;
 
-/* „Seiten" heisst am Telefon jetzt „Workspace" (E132). */
-p('Oben steht „Seiten"', seitenReiter?.beschriftungen.includes('Seiten') === true,
+/* „Seiten" hat seit E236 keinen Weg mehr in der Leiste — er steht im
+   Mehr-Blatt. Was hier bewacht wird, ist deshalb ein anderes und
+   wichtigeres: dass die fünf Wege unten die fünf sind, die es sein
+   sollen, und dass keiner markiert ist, wenn man woanders steht.
+
+   „Wer nirgends in der Reiterleiste ist, soll dort auch nirgends markiert
+   sein" — der Satz steht in `seitenleiste.ts` und ist der Grund, warum es
+   keinen Rückfall auf „Start" gibt. Der Workspace ist genau so ein Ort. */
+p('Unten stehen die fünf Wege',
+  (seitenReiter?.beschriftungen ?? []).join(',') === 'Dokumente,Heute,Lernen,Plan,Mehr',
   (seitenReiter?.beschriftungen ?? []).join(' · '));
 p('… und „Chats" steht nicht mehr da',
   seitenReiter?.beschriftungen.includes('Chats') === false);
-p('Ein Tipp darauf öffnet den Seitenbereich',
+p('Der Workspace geht auf',
   seitenReiter?.ueberschrift === '🧱 Workspace', seitenReiter?.ueberschrift);
-p('Die Pille wandert mit',
-  seitenReiter?.aktiv.length === 1 && seitenReiter.aktiv[0] === 'Seiten',
+p('Und keiner der fünf Wege behauptet, man sei dort',
+  seitenReiter?.aktiv.length === 0,
   'aktiv: ' + (seitenReiter?.aktiv ?? []).join(', ') +
-  ' — ohne Seitenleiste.reiter() bliebe sie auf „Heute"');
+  ' — ein falsch markierter Weg ist schlimmer als kein markierter');
 /* DER BEREICH IST EIN ANDERER GEWORDEN (E132): `hl-seiten` öffnet seit den
    Produktwelten die Workspace-Übersicht statt der alten Seitenliste. Die
    Absicht des Prüfpunkts bleibt — man muss finden, woran man zuletzt war,
@@ -495,8 +514,14 @@ p('Die Titel sind aufrecht, nicht kursiv',
   (seitenReiter?.kursiv.length ?? 1) === 0, (seitenReiter?.kursiv ?? []).join(', '));
 p('Keine Zeile ist unter 44 px', (seitenReiter?.zuFlach.length ?? 1) === 0,
   (seitenReiter?.zuFlach ?? []).join(', '));
-p('Die KI ist unten geblieben', seitenReiter?.kiUnten === true,
-  'Redur: „KI bleibt unten" — sie darf mit dem Reiter nicht verschwinden');
+/* DIE KI IST OBEN RECHTS, NICHT MEHR UNTEN (E236). Redurs Satz „KI bleibt
+   unten" galt der schwebenden Leiste; die gibt es nicht mehr, weil unten
+   die Navigation steht und zwei Leisten am unteren Rand eine zu viel
+   wären. Er hat den Umzug selbst gewählt. Was bleibt, ist die Frage
+   dahinter: verschwindet die KI mit dem Reiterwechsel? Nein — sie hängt
+   in der Menüleiste und ist von jeder Ansicht aus da. */
+p('Die KI ist von hier aus erreichbar', seitenReiter?.kiOben === true,
+  'sie darf mit dem Reiterwechsel nicht verschwinden');
 
 console.log('\n10 · Termine und Eingang führen dahin, wo sie hinführen sollen');
 
@@ -518,9 +543,12 @@ p('„Termine" zeigt die Termine auf der Bühne', term.ueberschrift === 'Termine
 p('… und zieht NICHT die Schublade auf', term.schublade === false,
   'die Seitenleiste des Rechners gehört nicht aufs Telefon (E38)');
 p('Der Weg zum Kalender steht darin', term.hatKalender === true);
-/* „Termine" heisst am Telefon jetzt „Plan" (E132). */
-p('Die Pille steht auf „Plan"',
-  term.aktiv.length === 1 && term.aktiv[0] === 'Plan', term.aktiv.join(', '));
+/* E132 kürzte den Namen am Telefon auf „Plan", weil die waagerechte Pille
+   ihn sonst nicht fasste. Seit E236 steht die Leiste unten und die Namen
+   stehen unter den Zeichen — dort passt „Termine", und die Bühne darüber
+   heisst genauso. Zwei Namen für einen Ort waren einer zu viel. */
+p('Die Pille steht auf „Termine"',
+  term.aktiv.length === 1 && term.aktiv[0] === 'Termine', term.aktiv.join(', '));
 
 await seite.evaluate(() => document.getElementById('hl-mehr')?.click());
 await seite.waitForTimeout(700);
@@ -626,7 +654,7 @@ for (const breite of [428, 393, 390, 375, 360]) {
     const l = document.getElementById('handy-oben');
     if (!l) return ['(keine Leiste)'];
     const raus: string[] = [];
-    for (const id of ['hl-start', 'hl-seiten', 'hl-bespr', 'hl-mehr']) {
+    for (const id of ['hl-dok', 'hl-start', 'hl-bespr', 'hl-mehr']) {
       l.querySelectorAll('button[role="tab"]').forEach(b => b.classList.remove('an'));
       document.getElementById(id)?.classList.add('an');
       if (l.scrollWidth > l.clientWidth) {
@@ -639,21 +667,26 @@ for (const breite of [428, 393, 390, 375, 360]) {
   p(`Bei ${breite} px passen alle fünf Wege nebeneinander`, zuBreit.length === 0,
     zuBreit.join(', '));
 
-  /* UND DER INHALT DARF NICHT DAHINTER LIEGEN. Die Leiste steht fest oben;
-     was darunter kommt, muss sich genau um ihre Höhe nach unten setzen.
-     Gemessen am 7. August: Leiste 76 px, freigehaltener Platz 60 px — die
-     obersten 16 px des Zurück-Knopfes lagen dahinter. Am iPhone, wo die
-     Kerbe noch einmal 47 px dazulegt, wäre es die ganze Zeile gewesen,
-     denn die Kerbe wuchs nur in der Leiste mit, nicht im Platz darunter.
+  /* UND DER INHALT DARF NICHT DAHINTER LIEGEN — nur liegt die Leiste seit
+     E236 UNTEN. Die Frage ist dieselbe geblieben, die Richtung nicht: der
+     Rollkasten muss unten genau so viel freihalten, wie die Leiste hoch
+     ist, sonst verschwindet die letzte Zeile dahinter.
 
-     Hier wird bei 0 px Kerbe gemessen — was die Prüfung sichert, ist die
-     Gleichheit der beiden Zahlen. Solange BEIDE dieselbe Kerbe
-     dazurechnen, hält sie auch auf dem Gerät. */
+     Der Fund, der diesen Punkt entstehen liess, gilt weiter und war oben:
+     Leiste 76 px, freigehalten 60 — die obersten 16 px des Zurück-Knopfes
+     lagen dahinter, und am iPhone wäre es die ganze Zeile gewesen, weil
+     die Kerbe nur in der Leiste mitwuchs.
+
+     Hier wird bei 0 px Kerbe gemessen. Was die Prüfung sichert, ist die
+     Gleichheit der beiden Zahlen: solange BEIDE dieselbe Kerbe
+     dazurechnen, hält sie auch auf dem Gerät. Freigehalten wird mehr als
+     die Leiste hoch ist (24 px Luft) — geprüft wird deshalb „mindestens",
+     nicht „genau". */
   const platz = await schmal.evaluate(() => ({
     leiste: Math.round(document.getElementById('handy-oben')!
               .getBoundingClientRect().height),
     frei: Math.round(parseFloat(
-            getComputedStyle(document.getElementById('main')!).paddingTop)),
+            getComputedStyle(document.getElementById('scroll')!).paddingBottom)),
     /* NICHT über `getComputedStyle` — das rechnet `env()` schon aus und
        liefert auf diesem Rechner `calc(80px + 0px)`. Ob die Kerbe
        überhaupt vorkommt, steht nur im Stilblatt selbst. */
@@ -665,7 +698,7 @@ for (const breite of [428, 393, 390, 375, 360]) {
          entlangläuft, kommt an der Deklaration nie vorbei. */
       const geh = (r: CSSRuleList) => {
         for (const rr of [...r] as any[]) {
-          const wert = rr.style?.getPropertyValue?.('--hoben');
+          const wert = rr.style?.getPropertyValue?.('--hunten');
           if (wert) t += wert.trim();
           if (rr.cssRules?.length) geh(rr.cssRules);
         }
@@ -676,18 +709,19 @@ for (const breite of [428, 393, 390, 375, 360]) {
       return t;
     })()
   }));
-  p(`… und der Inhalt beginnt genau darunter (${breite} px)`,
-    platz.frei === platz.leiste,
+  p(`… und der Inhalt endet über ihr (${breite} px)`,
+    platz.frei >= platz.leiste,
     `Leiste ${platz.leiste} px, freigehalten ${platz.frei} px`);
   if (breite === 428) {
     /* Der Teil, den dieser Rechner NICHT nachmessen kann. Hier ist die
        Kerbe 0, also stimmen die beiden Zahlen auch dann, wenn nur die
        Leiste sie mitrechnet. Auf dem iPhone wären es 47 px Unterschied.
        Also wird stattdessen geprüft, dass die gemeinsame Marke die Kerbe
-       überhaupt kennt — die Leiste tut es nachweislich seit E37. */
+       überhaupt kennt — die Leiste tut es nachweislich seit E37, und seit
+       E236 heisst sie `--hunten` und meint den unteren Rand. */
     p('Der freigehaltene Platz rechnet die Kerbe des Geräts mit',
-      /env\(\s*safe-area-inset-top/.test(platz.marke),
-      platz.marke || '--hoben steht nirgends');
+      /env\(\s*safe-area-inset-bottom/.test(platz.marke),
+      platz.marke || '--hunten steht nirgends');
   }
   await schmal.close();
 }
@@ -702,7 +736,10 @@ console.log('\n12 · Das Blatt „Neu erstellen" hinter dem Stift');
 await seite.evaluate(() => {
   document.querySelectorAll('.menu, .menu-grund, #r-blatt').forEach(x => x.remove());
 });
-await seite.evaluate(() => document.getElementById('hu-neu')?.click());
+/* `hu-neu` gab es in der schwebenden Leiste; seit E236 öffnet der
+   „+ Neu"-Knopf im Regal dasselbe Blatt. Aufgerufen wird hier direkt die
+   Funktion — welcher Knopf sie auslöst, prüft test37. */
+await seite.evaluate(() => App.erstellenBlatt());
 await seite.waitForTimeout(600);
 
 const blattNeu = await seite.evaluate(() => {
@@ -794,7 +831,7 @@ console.log('\n13 · Das KI-Blatt kommt von unten (Vorgabe §19)');
 await seite.evaluate(() => {
   document.querySelectorAll('.menu, .menu-grund, #r-blatt').forEach(x => x.remove());
 });
-await seite.evaluate(() => document.getElementById('hu-ki')?.click());
+await seite.evaluate(() => document.getElementById('mb-ki')?.click());
 await seite.waitForTimeout(800);
 
 const ki = await seite.evaluate(() => {

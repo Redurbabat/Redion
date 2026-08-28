@@ -77,10 +77,13 @@ import { chromium } from 'playwright';
       krume: musselement('#crumb').textContent.trim(),
       seitlicherUeberlauf: document.documentElement.scrollWidth - 428,
       obenLeiste: [...document.querySelectorAll<HTMLElement>('#handy-oben button')].map(x => x.id),
-      untenLeiste: [...document.querySelectorAll<HTMLElement>('#handy-unten button')].map(x => x.id),
+      /* Die schwebende Leiste gibt es seit E236 nicht mehr; ihre drei Wege
+         stehen rechts in der Menüleiste. */
+      untenLeiste: [...document.querySelectorAll<HTMLElement>('#menueband .mb-rechts > button')]
+        .map(x => x.id).filter(Boolean),
       /* offsetParent ist bei position:fixed immer null — deshalb den
          berechneten Stil fragen. */
-      untenSichtbar: getComputedStyle(musselement('#handy-unten')).display !== 'none',
+      untenSichtbar: getComputedStyle(musselement('#menueband .mb-rechts')).display !== 'none',
       obenSichtbar: getComputedStyle(musselement('#handy-oben')).display !== 'none',
       griffeAus: getComputedStyle(document.querySelector('.blk > .handles') ?? document.body).display
     };
@@ -113,11 +116,11 @@ import { chromium } from 'playwright';
      dazugekommen. */
   ok('Oben stehen Konto und die fünf Bereiche als Pillen',
      handy.obenSichtbar &&
-     handy.obenLeiste.join(',') === 'hl-konto,hl-lernen,hl-start,hl-seiten,hl-bespr,hl-mehr',
+     handy.obenLeiste.join(',') === 'hl-dok,hl-start,hl-lernen,hl-bespr,hl-mehr',
      handy.obenLeiste.join(','));
   ok('Unten stehen Suchen, KI fragen und Neu',
      handy.untenSichtbar &&
-     handy.untenLeiste.join(',') === 'hu-suche,hu-ki,hu-neu',
+     ['mb-suche', 'mb-ki', 'mb-konto'].every(id => handy.untenLeiste.includes(id)),
      handy.untenLeiste.join(','));
   ok('Die Blockgriffe sind aus, wie in Notion am Handy', handy.griffeAus === 'none', handy.griffeAus);
 
@@ -142,7 +145,7 @@ import { chromium } from 'playwright';
      Vorher zog er die SEITENLEISTE DES RECHNERS als Schublade herein, mit
      Baum, Reitern und 33-px-Zeilen auf 390 px geschoben. Jetzt öffnet er
      ein Blatt über den ganzen Bildschirm mit Fingerzeilen. */
-  await t.click('#hl-konto');
+  await t.click('#mb-konto');
   await t.waitForTimeout(400);
   const auf = await t.evaluate(() => {
     const bl = document.getElementById('r-blatt');
@@ -171,7 +174,7 @@ import { chromium } from 'playwright';
   ok('Das Kreuz führt wieder hinaus', await t.evaluate(() =>
     !document.getElementById('r-blatt')));
 
-  await t.click('#hl-konto');
+  await t.click('#mb-konto');
   await t.waitForTimeout(400);
   await t.click('#r-blatt [data-r="start"]');
   await t.waitForTimeout(500);
@@ -211,7 +214,7 @@ import { chromium } from 'playwright';
                        return r.width > 0 && r.height > 0
                               && getComputedStyle(x).visibility !== 'hidden'; })
         .map(x => x.id),
-      untenAus: getComputedStyle(musselement('#handy-unten')).display === 'none' &&
+      untenAus: !document.getElementById('handy-unten') &&
                 getComputedStyle(musselement('#handy-oben')).display === 'none',
       griffe: !!document.querySelector('.blk > .handles'),
       dbLeiste: [...document.querySelectorAll<HTMLElement>('.db-tools button')].length,

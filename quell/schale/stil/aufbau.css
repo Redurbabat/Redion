@@ -322,7 +322,7 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
      davor. Gemessen: „Elektro" stand danach vollständig im Kasten und
      trotzdem zur Hälfte unter dem Knopf. `scroll-padding` sagt dem Rollen,
      dass die letzten 44 px nicht zählen. */
-  scroll-padding-inline-end:44px;
+  scroll-padding-inline-end:150px;
 }
 .mb-reiter::-webkit-scrollbar{ display:none }
 
@@ -341,6 +341,37 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
   border-bottom:2px solid transparent;
   transition:color .12s var(--ease), border-color .12s var(--ease);
 }
+/* ── RECHTS IN DER MENÜLEISTE: Suche, KI, Konto (E236) ──────────────────
+   Sie kleben am rechten Rand und rollen NICHT mit den Reitern mit — die
+   Reiterzeile rollt seitwärts, und ein Konto, das dabei aus dem Bild
+   fährt, wäre schlimmer als keins. `position:sticky` hält sie dort, wo
+   der Klapp-Pfeil schon klebt. */
+.mb-rechts{
+  position:sticky; right:0; z-index:2; display:flex; align-items:center;
+  gap:2px; flex:none; padding-left:6px; background:var(--bg);
+}
+/* Der Klapp-Pfeil steht jetzt IN dieser Gruppe (E236) und braucht seine
+   eigene Klebeposition nicht mehr — sonst lägen zwei Dinge übereinander. */
+.mb-rechts .mb-klapp{ position:static; right:auto }
+.mb-rechts-knopf{
+  display:grid; place-items:center; min-width:30px; min-height:30px;
+  border:none; border-radius:7px; background:none; color:var(--text-dim);
+  font-size:13px; cursor:pointer;
+}
+.mb-rechts-knopf:hover{ background:var(--bg-hover); color:var(--text) }
+.mb-rechts-knopf svg{ width:15px; height:15px; display:block }
+.mb-rechts-knopf.mb-konto span{
+  display:grid; place-items:center; width:21px; height:21px;
+  border-radius:999px; background:var(--accent); color:var(--auf-accent);
+  font-size:10px; font-weight:700; line-height:1;
+}
+@media(max-width:760px){
+  /* §37: am Finger 44, auch hier. Die Leiste ist dort ohnehin 44 hoch. */
+  .mb-rechts-knopf{ min-width:44px; min-height:44px; font-size:15px }
+  .mb-rechts-knopf svg{ width:19px; height:19px }
+  .mb-rechts-knopf.mb-konto span{ width:26px; height:26px; font-size:11.5px }
+}
+
 .mb-reiter-knopf:hover{ color:var(--text) }
 .mb-reiter-knopf.ist-an{ color:var(--text); border-bottom-color:var(--accent) }
 /* §38: der gewählte Reiter ist nicht NUR am Strich zu erkennen — er ist
@@ -610,7 +641,7 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
 @media(max-width:760px){
   /* 44 px Tippfläche, nicht 38. Das ist die Fingerregel und keine
      Mausregel — sie gilt auch, wenn dadurch die Zeile höher wird. */
-  .mb-reiter{ min-height:44px; padding:0 var(--space-2); scroll-padding-inline-end:52px }
+  .mb-reiter{ min-height:44px; padding:0 var(--space-2); scroll-padding-inline-end:200px }
   .mb-reiter-knopf{ min-height:44px; padding:0 var(--space-3) }
   .mb-klapp{ min-height:44px; width:44px }
   .mb-band{ padding:var(--space-2); max-height:44dvh }

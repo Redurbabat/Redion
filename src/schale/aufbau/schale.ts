@@ -2078,6 +2078,27 @@ const App = (() => {
       da: () => typeof Meeting !== 'undefined' && !!Meeting.panel }
   ];
 
+  /**
+   * Der Arbeitsbereich — Name, Zeichen und der Baum aller Seiten.
+   *
+   * AM TELEFON DAS R-BLATT, AM RECHNER DIE SCHUBLADE. Das ist keine
+   * Laune: E38 hat den Weg am Telefon ausdrücklich WEG von der Schublade
+   * geführt — die ist die Seitenleiste des Rechners, auf 390 px
+   * geschoben, samt Baum und 33-px-Zeilen.
+   *
+   * Herausgegeben seit E236: der Weg wird jetzt von drei Stellen
+   * gebraucht — dem alten Kreis, dem Knopf rechts in der Menüleiste und
+   * der Zeile im Mehr-Blatt. Drei Aufrufe, eine Entscheidung (§8).
+   */
+  const arbeitsbereich = (): void => {
+    if (!window.matchMedia('(max-width: 760px)').matches) {
+      if (PWA.schubladeAuf) PWA.schubladeAuf();
+      return;
+    }
+    PWA.schubladeZu && PWA.schubladeZu();
+    rMenue();
+  };
+
   const erstellenBlatt = (): void => {
     /* Erst aussortieren, was es hier nicht gibt, DANN gruppieren — sonst
        bleibt eine Überschrift ohne Zeilen darunter stehen. */
@@ -2892,9 +2913,11 @@ const App = (() => {
 
     /* Name und Symbol des Arbeitsbereichs */
     const wsBtn = document.getElementById('btn-settings');
-    const wsIcon = wsBtn?.querySelector('.ws-icon');
     const wsName = wsBtn?.querySelectorAll('span')[1];
-    if (wsIcon) wsIcon.textContent = Store.getMeta('arbeitsIcon', 'N');
+    /* Alle `.ws-icon` — seit E236 auch das Konto rechts in der Menüleiste. */
+    document.querySelectorAll('.ws-icon').forEach(ico => {
+      ico.textContent = Store.getMeta('arbeitsIcon', 'N');
+    });
     if (wsName) wsName.textContent = Store.getMeta('arbeitsName', 'Redion');
 
     Blocks.bindeEditor(document.getElementById('page'));
@@ -3031,6 +3054,12 @@ const App = (() => {
      * davon nur über die Schublade — man musste also wissen, dass es sie
      * gibt. Der Kreis in der Mitte bleibt die KI.
      * ---------------------------------------------------------------- */
+    /* DOKUMENTE — das Regal, wo Redion jetzt öffnet (E236). */
+    /* Den Reiter setzt `Bibliothek.oeffne()` selbst — dort gehört er hin,
+       weil das Regal auch vom Start, aus dem Mehr-Blatt und über einen
+       Verweis aufgeht und die Markierung jedes Mal stimmen muss. */
+    an('hl-dok', () => { PWA.schubladeZu && PWA.schubladeZu();
+                         Bibliothek.oeffne(); handyLeiste(); });
     an('hl-start', () => { PWA.schubladeZu && PWA.schubladeZu();
                            Produktwelten.lernen('heute'); handyLeiste(); });
     an('hl-lernen', () => { PWA.schubladeZu && PWA.schubladeZu();
@@ -3050,13 +3079,14 @@ const App = (() => {
        Reiter, der sie wieder hereinholt, macht die Hälfte davon rückgängig. */
     an('hl-bespr', () => { PWA.schubladeZu && PWA.schubladeZu();
                            Produktwelten.planung(); handyLeiste(); });
-    /* Die KI sitzt jetzt unten in der Mitte, nicht mehr in der Reiterleiste. */
-    an('hu-ki', () => kiPanel(true));
-    an('hu-suche', () => suche());
-    /* Am Telefon das Blatt (Vorgabe §18), am Rechner der Direktweg: dort
-       gibt es Strg+N, die Seitenleiste und die Befehlspalette. */
-    an('hu-neu',   () => { if (window.matchMedia('(max-width: 760px)').matches)
-                             erstellenBlatt(); else neueSeite(); });
+    /* `hu-ki`, `hu-suche` und `hu-neu` gab es in der schwebenden Leiste
+       unten. Sie ist mit E236 weggefallen — zwei Leisten am unteren Rand
+       wären eine zu viel gewesen. Die drei Wege sind nicht weg:
+         Suche → `mb-suche` rechts in der Menüleiste (und Strg+P)
+         KI    → `mb-ki`    rechts in der Menüleiste (und Strg+J)
+         Neu   → der „+ Neu"-Knopf im Regal und das Mehr-Blatt
+       `an()` bindet still, wenn es das Element nicht gibt; die drei Zeilen
+       hier stehenzulassen wäre trotzdem eine Lüge über den Aufbau. */
     /* Der Kreis links oben öffnet den Arbeitsbereich — dieselbe Schublade
        wie früher der ☰. */
     /* ----------------------------------------------------------------------
@@ -3070,14 +3100,10 @@ const App = (() => {
      * Am Rechner bleibt es bei der Schublade — dort ist die Seitenleiste
      * richtig, und ein Blatt von unten wäre dort der Fremdkörper.
      * -------------------------------------------------------------------- */
-    an('hl-konto', () => {
-      if (!window.matchMedia('(max-width: 760px)').matches) {
-        if (PWA.schubladeAuf) PWA.schubladeAuf();
-        return;
-      }
-      PWA.schubladeZu && PWA.schubladeZu();
-      rMenue();
-    });
+    /* Der R-Kreis stand links oben in der Reiterleiste. Seit E236 steht
+       er rechts in der Menüleiste (`mb-konto`) und im Mehr-Blatt — die
+       ENTSCHEIDUNG, was er tut, steht aber weiter nur hier. */
+    an('hl-konto', () => arbeitsbereich());
     /* „Mehr" statt „Eingang" (E42 §6): Werkzeuge, Hilfe, Sicherung, Import,
        Papierkorb und Einstellungen brauchen einen Platz oben — ein
        Posteingang, der meistens leer ist, nicht. Er wohnt jetzt als Zeile
@@ -3293,7 +3319,7 @@ const App = (() => {
     markdownExport, markdownVonSeite, woerterZaehlen, dupliziereSeite, seitenMenue, coverWaehlen,
     kuerzlich, kommendeTermine,
     ABSCHNITTE, abschnittAn, abschnittSchalten, abschnitteAnpassen, reiterWechseln,
-    sicherungSpeichern, sicherungLaden, zurueck, vorwaerts,
+    sicherungSpeichern, sicherungLaden, zurueck, vorwaerts, arbeitsbereich,
     /* HERAUSGEGEBEN SEIT E236. Das Blatt „Neu erstellen" war eine interne
        Funktion hinter dem Stift am Telefon — und damit unerreichbar für den
        „+ Neu"-Knopf im Regal und für alles am Rechner. Es ist derselbe

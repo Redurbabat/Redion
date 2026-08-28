@@ -1151,7 +1151,7 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
      davor. Gemessen: „Elektro" stand danach vollständig im Kasten und
      trotzdem zur Hälfte unter dem Knopf. `scroll-padding` sagt dem Rollen,
      dass die letzten 44 px nicht zählen. */
-  scroll-padding-inline-end:44px;
+  scroll-padding-inline-end:150px;
 }
 .mb-reiter::-webkit-scrollbar{ display:none }
 
@@ -1170,6 +1170,37 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
   border-bottom:2px solid transparent;
   transition:color .12s var(--ease), border-color .12s var(--ease);
 }
+/* ── RECHTS IN DER MENÜLEISTE: Suche, KI, Konto (E236) ──────────────────
+   Sie kleben am rechten Rand und rollen NICHT mit den Reitern mit — die
+   Reiterzeile rollt seitwärts, und ein Konto, das dabei aus dem Bild
+   fährt, wäre schlimmer als keins. `position:sticky` hält sie dort, wo
+   der Klapp-Pfeil schon klebt. */
+.mb-rechts{
+  position:sticky; right:0; z-index:2; display:flex; align-items:center;
+  gap:2px; flex:none; padding-left:6px; background:var(--bg);
+}
+/* Der Klapp-Pfeil steht jetzt IN dieser Gruppe (E236) und braucht seine
+   eigene Klebeposition nicht mehr — sonst lägen zwei Dinge übereinander. */
+.mb-rechts .mb-klapp{ position:static; right:auto }
+.mb-rechts-knopf{
+  display:grid; place-items:center; min-width:30px; min-height:30px;
+  border:none; border-radius:7px; background:none; color:var(--text-dim);
+  font-size:13px; cursor:pointer;
+}
+.mb-rechts-knopf:hover{ background:var(--bg-hover); color:var(--text) }
+.mb-rechts-knopf svg{ width:15px; height:15px; display:block }
+.mb-rechts-knopf.mb-konto span{
+  display:grid; place-items:center; width:21px; height:21px;
+  border-radius:999px; background:var(--accent); color:var(--auf-accent);
+  font-size:10px; font-weight:700; line-height:1;
+}
+@media(max-width:760px){
+  /* §37: am Finger 44, auch hier. Die Leiste ist dort ohnehin 44 hoch. */
+  .mb-rechts-knopf{ min-width:44px; min-height:44px; font-size:15px }
+  .mb-rechts-knopf svg{ width:19px; height:19px }
+  .mb-rechts-knopf.mb-konto span{ width:26px; height:26px; font-size:11.5px }
+}
+
 .mb-reiter-knopf:hover{ color:var(--text) }
 .mb-reiter-knopf.ist-an{ color:var(--text); border-bottom-color:var(--accent) }
 /* §38: der gewählte Reiter ist nicht NUR am Strich zu erkennen — er ist
@@ -1439,7 +1470,7 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
 @media(max-width:760px){
   /* 44 px Tippfläche, nicht 38. Das ist die Fingerregel und keine
      Mausregel — sie gilt auch, wenn dadurch die Zeile höher wird. */
-  .mb-reiter{ min-height:44px; padding:0 var(--space-2); scroll-padding-inline-end:52px }
+  .mb-reiter{ min-height:44px; padding:0 var(--space-2); scroll-padding-inline-end:200px }
   .mb-reiter-knopf{ min-height:44px; padding:0 var(--space-3) }
   .mb-klapp{ min-height:44px; width:44px }
   .mb-band{ padding:var(--space-2); max-height:44dvh }
@@ -5949,9 +5980,78 @@ body[data-ruhig="an"] .arbeitswelt .aw-kopf::after{ display:none }
   .lernwelt .lw-head{align-items:flex-start;margin-bottom:8px;padding:4px 1px}
   .lernwelt .lw-brand-icon{flex-basis:39px;width:39px;height:39px;border-radius:12px;font-size:19px}
   .lernwelt .lw-brand h1{font-size:17px}
-  .lernwelt .lw-area{grid-template-columns:1fr;gap:2px;min-width:min(46vw,220px)}
-  .lernwelt .lw-area>span{padding-left:2px;font-size:9.5px}
-  .lernwelt .lw-area select{min-height:44px;padding-block:7px;font-size:11.5px}
+  /* ======================================================================
+   * DER BEREICHSFILTER GIBT SEINE EIGENE ZEILE AB (E235)
+   * ----------------------------------------------------------------------
+   * Redur hat den ganzen Kopfbereich rot angestrichen: „dort sollte
+   * möglichst wenig sein". Gemessen waren es vier Bänke und 236 px von 844
+   * — ein Drittel des Telefons, bevor die erste Zahl kommt.
+   *
+   * Eine dieser Bänke war der Bereichsfilter. Eine ganze Zeile, 44 px, für
+   * ein Feld, in dem fast immer „Alle Bereiche" steht.
+   *
+   * Er wandert neben die Reiter, OHNE dass am HTML etwas bewegt wird: die
+   * Lernwelt wird für diese eine Zeile zum Raster. Alles behält die volle
+   * Breite (`1 / -1`); nur diese beiden teilen sich Zeile eins.
+   *
+   * Warum nicht im Auszeichnungstext verschieben: `kopf()` baut eine
+   * Zeichenkette, und eine Fallunterscheidung „am Telefon woanders" wäre
+   * eine zweite Wahrheit über denselben Aufbau. Die CSS weiss ohnehin, wie
+   * breit das Gerät ist.
+   * ==================================================================== */
+  /* Spalte 1 und Spalte 4 bleiben LEER. Dort stehen die zwei Knöpfe der
+     Schale — Zurück und die drei Punkte —, die am Telefon in diese Zeile
+     hineinrücken (E235, `bausteine.css`). Sie sind kein Rasterelement:
+     die Schale hält ihre Leiste an derselben Stelle, und das Raster hält
+     ihr den Platz frei. 44 px, weil ein Finger 44 braucht (§37). */
+  .lernwelt{
+    display:grid; grid-template-columns:44px minmax(0,1fr) auto 44px;
+    align-items:center
+  }
+  .lernwelt > *{ grid-column:1 / -1 }
+  .lernwelt > .lw-nav { grid-column:2; grid-row:1; margin-bottom:12px }
+  /* Kein `margin-bottom` und `align-self:center`: die Höhe der Zeile macht
+     die Reiterkarte, und ein unterer Abstand am Chip würde ihn in einer
+     mittig ausgerichteten Zeile nach OBEN schieben. */
+  .lernwelt > .lw-head{ grid-column:3; grid-row:1; margin-bottom:0;
+                        align-self:center; padding-left:8px }
+  /* Der Markenblock nennt „Redion / Lernen & Alltag" — beides steht schon
+     oben in der Kreisleiste und in der Krume. Am Telefon war er ohnehin
+     schon aus dem Bild; jetzt ist es ausgesprochen. */
+  .lernwelt .lw-brand{ display:none }
+  /* Aus dem Feld wird ein Chip: die Beschriftung „Bereich" fällt weg (das
+     Zeichen ◎ und der Name stehen im Feld selbst), und breiter als nötig
+     wird er nicht. */
+  .lernwelt .lw-area{grid-template-columns:1fr;gap:0;min-width:0}
+  .lernwelt .lw-area>span{display:none}
+  /* GEMESSEN, NICHT GERATEN — UND ZWEIMAL DANEBEN. Der erste Versuch stand
+     auf `max-width:38vw`; im Bild stand dann nur „◎" und der Pfeil, denn
+     ein Auswahlfeld kürzt nicht mit Auslassungszeichen, es schneidet ab.
+     Der zweite gab ihm 132 px und rechnete mit 11.5 px Schrift — die es
+     nicht gibt: `input, textarea, select{ font-size:16px !important }`
+     steht in `bausteine.css`, damit iOS beim Tippen nicht hineinzoomt. Bei
+     16 px braucht „◎ Alle Bereiche" 120 px Text plus Pfeil und Polster,
+     zusammen rund 160 von 368 — und der Chip stand 49 px ausserhalb.
+
+     Die Antwort ist nicht eine dritte Breite, sondern eine andere Frage:
+     WOZU steht dort ein Wort, wenn es „ich filtere nicht" bedeutet? */
+  .lernwelt .lw-area select{
+    min-height:44px;padding:7px 24px 7px 10px;border-radius:999px;
+    max-width:min(150px,40vw)
+  }
+  /* Filtert nichts → nur das Zeichen, 44 × 44. Der Text bleibt im Feld
+     (das Vorleseprogramm liest ihn, `aria-label` steht ohnehin dort), er
+     wird nur nicht gemalt; das Zeichen darüber ist Deko und fängt keine
+     Tipper ab, damit die native Auswahl weiter aufgeht. */
+  .lernwelt .lw-area[data-alle="ja"]{ position:relative; width:44px }
+  .lernwelt .lw-area[data-alle="ja"] select{
+    width:44px; min-width:44px; padding:0; color:transparent;
+    -webkit-appearance:none; appearance:none
+  }
+  .lernwelt .lw-area[data-alle="ja"]::after{
+    content:"◎"; position:absolute; inset:0; display:grid; place-items:center;
+    color:var(--text-dim); font-size:17px; pointer-events:none
+  }
   .lernwelt .lw-nav{
     position:sticky;z-index:5;top:0;margin-bottom:12px;padding:5px;border-radius:13px;
     box-shadow:var(--shadow-2)
@@ -6373,7 +6473,13 @@ body[data-ruhig="an"] .lernwelt .lw-nav{ padding-right:264px }
 
      Der Kommentar darüber sagt „sie beginnt UNTER den Pillen". Die Absicht
      stand also da, nur die Zahl folgte ihr nicht. */
-  #sidebar{ position:fixed; left:0; top:var(--hoben); height:calc(100% - var(--hoben));
+  /* SEIT E236 STEHT DIE WEGELEISTE UNTEN, und die Schublade muss ÜBER ihr
+     enden statt unter der alten Leiste zu beginnen. Gemessen vor der
+     Änderung: Schublade bis 844, Leiste ab 785 — sie deckte die
+     Navigation vollständig zu. Oben bleibt nur die Menüleiste und die
+     Kerbe des Geräts freizuhalten. */
+  #sidebar{ position:fixed; left:0; top:calc(var(--hoben) + 45px);
+            height:calc(100% - var(--hoben) - 45px - var(--hunten));
             transform:translateX(-102%); transition:transform .22s ease;
             width:100%; z-index:390; flex:0 0 auto;
             border-right:none; }
@@ -6758,6 +6864,264 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 .bib-form button:hover{ background:var(--bg-hover); color:var(--text) }
 .bib-form button.on{ background:var(--bg-card); color:var(--text); box-shadow:var(--shadow-1) }
 
+/* ==========================================================================
+ * DIE DECKELANSICHT DER BIBLIOTHEK (E236)
+ * --------------------------------------------------------------------------
+ * Redur hat ein Regal aus Deckeln beschrieben: jeder sagt schon von weitem,
+ * WAS er ist. Das ist keine Verzierung — es ist die Auskunft, die eine
+ * Tabellenzeile nicht geben kann, ohne eine Spalte dafür zu opfern.
+ *
+ * DIE DECKEL SIND GEZEICHNET, NICHT GELADEN. Ein Vorschaubild je Dokument
+ * wäre ein zweiter Speicher, der mit dem Inhalt altert (§9). Was hier steht,
+ * ist der ANFANG der Seite in kleiner Schrift, genau wie im Heftregal — und
+ * darüber, je nach Art, ein paar Linien, die das Papier andeuten.
+ * ======================================================================== */
+/* EIN RASTER, KEIN UMBRUCH. Mit `flex-wrap` fiel der Listenknopf in eine
+   eigene Zeile, sobald „Dokumente" und „+ Neu" die Breite füllten — aus
+   einer Bank wurden zwei, und genau die zählt Redur. Das Raster sagt
+   stattdessen, WAS schrumpfen darf: der Titel. */
+.bib-dkopf{
+  display:grid; grid-template-columns:minmax(0,1fr) auto auto;
+  align-items:center; gap:6px 10px; margin:0 0 var(--space-4)
+}
+.bib-dkopf h1{
+  grid-column:1; grid-row:1; min-width:0; margin:0;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  font-size:27px; font-weight:760; letter-spacing:-.03em
+}
+/* Der Ort ist eine Auskunft mit einem Weg dahinter, keine Überschrift:
+   „Kürzlich verwendet · 23 Dokumente ▾". Er steht unter dem Titel, weil er
+   sich ändert und der Titel nicht. */
+.bib-ort{
+  grid-column:1 / -1; grid-row:2; justify-self:start;
+  display:flex; align-items:center; gap:5px; min-height:32px;
+  padding:0 8px 0 0; border-radius:8px; background:none; border:0;
+  cursor:pointer; color:var(--text-dim); font-size:13px
+}
+.bib-ort i{ color:var(--text-faint); font-size:13px; font-style:normal }
+.bib-ort:hover{ color:var(--text) }
+.bib-neu{
+  grid-column:2; grid-row:1;
+  display:flex; align-items:center; gap:7px;
+  min-height:44px; padding:0 19px 0 15px; border:0; border-radius:999px;
+  background:var(--accent); color:var(--auf-accent);
+  font-size:15px; font-weight:640; cursor:pointer; box-shadow:var(--shadow-2)
+}
+.bib-neu b{ font-size:19px; font-weight:500; line-height:1 }
+.bib-neu:hover{ background:var(--accent-hover,var(--accent)) }
+.bib-form-knopf{
+  grid-column:3; grid-row:1;
+  display:grid; place-items:center; min-width:44px; min-height:44px;
+  border:0; border-radius:13px; background:none; color:var(--text-dim);
+  font-size:16px; cursor:pointer
+}
+.bib-form-knopf:hover{ background:var(--bg-hover); color:var(--text) }
+
+.bib-arten{
+  display:flex; gap:7px; margin:0 0 var(--space-5); overflow-x:auto;
+  scrollbar-width:none
+}
+.bib-arten::-webkit-scrollbar{ display:none }
+.bib-arten button{
+  flex:none; min-height:34px; padding:0 14px; border:0; border-radius:999px;
+  background:var(--bg-card); color:var(--text-dim); font-size:13px; cursor:pointer
+}
+.bib-arten button:hover{ background:var(--bg-hover); color:var(--text) }
+.bib-arten button.on{ background:var(--text); color:var(--bg); font-weight:620 }
+
+.bib-gitter{
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(148px,1fr));
+  gap:26px 20px; align-items:start
+}
+/* Ein `<button>` zentriert seinen Inhalt senkrecht — auch mit `display:block`.
+   Ohne diese Spalte begannen die Deckel einer Reihe auf verschiedenen Höhen,
+   je nachdem wie lang der Name darunter war (gemessen: 153, 162, 170). */
+.bib-deckel{
+  display:flex; flex-direction:column; align-items:stretch;
+  justify-content:flex-start; width:100%; min-width:0; padding:0;
+  border:0; background:none; text-align:left; cursor:pointer; color:var(--text)
+}
+.bib-deckel-blatt{
+  position:relative; display:block; overflow:hidden;
+  aspect-ratio:3/4; margin:0 0 9px; padding:14px 11px 0;
+  border:1px solid var(--line); border-radius:6px;
+  background:var(--bg-card); box-shadow:var(--shadow-2);
+  color:var(--text-dim); font-size:8px; line-height:1.6
+}
+.bib-deckel:hover .bib-deckel-blatt{ box-shadow:var(--shadow-3) }
+.bib-deckel:active .bib-deckel-blatt{ transform:scale(.985) }
+/* Der Auslauf nach unten — dasselbe Papier wie im Heftregal. */
+.bib-deckel-blatt::after{
+  content:""; position:absolute; right:0; bottom:0; left:0; height:38px;
+  background:linear-gradient(to bottom, transparent, var(--bg-card));
+  pointer-events:none
+}
+.bib-deckel-marke{
+  position:absolute; left:0; top:0; z-index:2; padding:3px 6px;
+  border-radius:0 0 6px 0; background:var(--gefahr); color:#fff;
+  font-size:8.5px; font-weight:800; font-style:normal; letter-spacing:.04em
+}
+.bib-deckel-stern{
+  position:absolute; right:5px; top:4px; z-index:3; font-style:normal;
+  font-size:14px; color:var(--text-faint);
+  /* Ein Stern, der auf einem Strich liegt, ist weg. Ein feiner Schein
+     darunter kostet nichts und rettet ihn auf jedem Muster. */
+  text-shadow:0 0 5px var(--bg-card), 0 0 3px var(--bg-card)
+}
+.bib-deckel-stern.an{ color:var(--warnung) }
+.bib-deckel-name{ display:flex; align-items:flex-start; gap:3px; min-width:0 }
+/* Zwei Zeilen, dann Auslassungszeichen. `min-width:0` ist der Unterschied
+   zwischen „Materialliste" und „Materiallist": ein Flex-Kind schrumpft von
+   sich aus nicht unter seine Inhaltsbreite, und ein gekürzter Name ohne
+   Auslassungszeichen sieht aus wie ein FALSCHER Name (dieselbe Lehre wie
+   E227 bei der Zahl). */
+.bib-deckel-name b{
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
+  overflow:hidden; min-height:33px; min-width:0; overflow-wrap:break-word;
+  font-size:12.5px; font-weight:580; line-height:1.3; letter-spacing:-.005em
+}
+.bib-deckel-mehr{
+  margin-left:auto; flex:none; width:20px; height:20px; display:grid;
+  place-items:center; border-radius:6px; color:var(--text-faint);
+  font-style:normal; font-size:13px
+}
+.bib-deckel-mehr:hover{ background:var(--bg-hover); color:var(--text) }
+.bib-deckel small{
+  display:block; overflow:hidden; margin-top:2px; color:var(--text-faint);
+  font-size:11px; white-space:nowrap; text-overflow:ellipsis
+}
+/* ---- DIE GEZEICHNETEN DECKEL -------------------------------------------
+   Jede Art bekommt ihr eigenes Papier. Das ist keine Verzierung: bei einem
+   PDF, einem Whiteboard oder einer Tabelle steht im TEXT der Blöcke nichts,
+   was jemandem hilft — gemessen stand auf dem PDF-Deckel „Seite 1Seite
+   2Seite 3" und auf dem Whiteboard das Wort „Whiteboard".
+
+   Die Art steht IMMER auch als Wort in der Zeile darunter. Wer die Muster
+   nicht unterscheiden kann, liest sie (§38). */
+.bib-deckel-blatt > i.bib-papier{
+  position:absolute; inset:0; display:block; font-style:normal
+}
+/* UND ES LIEGT NUR DA, WO NICHTS STEHT.
+   Am Rechnerbild sah man es sofort: die Linien des Papiers laufen alle
+   9 px, die Textzeilen der Vorschau haben ihre eigene Höhe — und wo beide
+   sich treffen, geht ein Strich mitten durch das Wort. „Die acht Teile"
+   und „Filter, Rechnen, Sortieren" standen durchgestrichen da. Eine
+   durchgestrichene Überschrift ist keine Verzierung, sie ist eine AUSSAGE
+   („erledigt", „gelöscht"), und sie war falsch.
+   Steht Text auf dem Deckel, ist er die Vorschau. Steht keiner da — bei
+   einem PDF, einem Whiteboard, einer leeren Seite —, zeichnet das Papier.
+   Welche Art es ist, steht ohnehin als Wort in der Zeile darunter (§38). */
+.bib-deckel-blatt:not(.is-leer) > i.bib-papier{ display:none }
+/* EINE LEERE SEITE MUSS WIE PAPIER AUSSEHEN, NICHT WIE EIN LOCH.
+   Im Bild standen „Semester 1", „Semester 2" und „Prüfungen" als drei
+   dunkle Rechtecke — sie haben keinen Text, also gab `Vorschau.miniatur`
+   nichts zurück, und der Deckel blieb leer. Feine Linien darunter sagen:
+   hier ist Platz, hier steht nur noch nichts. Steht Text darauf, liegt er
+   darüber und die Linien sind das Papier. */
+.bib-deckel[data-art="seite"] .bib-papier{
+  background:repeating-linear-gradient(transparent 0 9px,
+              var(--line-soft) 9px 10px) 0 18px/100% 100%
+}
+/* Liniertes Papier — Blatt, Journal, Seite */
+.bib-deckel[data-art="blatt"] .bib-papier{
+  background:repeating-linear-gradient(transparent 0 9px,
+              var(--line) 9px 10px) 0 16px/100% 100%
+}
+/* Kariert — Mitschrift */
+.bib-deckel[data-art="blatt"] .bib-deckel-blatt{ background:var(--bg-card) }
+/* PDF: Textzeilen in Blöcken, wie eine Druckseite */
+.bib-deckel[data-art="pdf"] .bib-papier{
+  opacity:.9;
+  background:
+    linear-gradient(var(--line) 0 0) 14% 26%/58% 5px no-repeat,
+    repeating-linear-gradient(transparent 0 6px, var(--line) 6px 9px)
+      12% 40%/76% 46% no-repeat
+}
+/* Whiteboard: Fläche mit einem Strich darauf */
+.bib-deckel[data-art="board"] .bib-deckel-blatt,
+.bib-deckel[data-art="plan"]  .bib-deckel-blatt{ background:var(--bg-side) }
+/* GEMESSEN AM BILD, NICHT GESCHÄTZT: der erste Strich lief über den ganzen
+   Deckel und war 8 % breit — auf 144 px sind das 12 px, ein Balken, kein
+   Strich. Er deckte ausserdem den Stern zu. Jetzt zwei feine Striche in
+   der Mitte, wie eine Skizze auf einer leeren Fläche. */
+.bib-deckel[data-art="board"] .bib-papier{
+  background:
+    linear-gradient(128deg, transparent 47.5%, var(--info) 47.5% 49.5%, transparent 49.5%)
+      14% 30%/62% 44% no-repeat,
+    linear-gradient(var(--text-faint) 0 0) 18% 68%/34% 2px no-repeat;
+  opacity:.55
+}
+/* Schaltplan: zwei Leitungen und ein Bauteil */
+.bib-deckel[data-art="plan"] .bib-papier{
+  background:
+    linear-gradient(var(--accent-warm) 0 0) 16% 42%/26% 2px no-repeat,
+    linear-gradient(var(--accent-warm) 0 0) 58% 42%/26% 2px no-repeat,
+    linear-gradient(var(--accent-warm) 0 0) 42% 34%/2px 18% no-repeat,
+    linear-gradient(var(--accent-warm) 0 0) 56% 34%/2px 18% no-repeat;
+  opacity:.75
+}
+/* Tabelle: Raster mit farbiger Kopfzeile */
+.bib-deckel[data-art="tab"] .bib-papier{
+  opacity:.7;
+  background:
+    linear-gradient(var(--erfolg) 0 0) 12% 22%/76% 9px no-repeat,
+    repeating-linear-gradient(transparent 0 10px, var(--line) 10px 11px)
+      12% 22%/76% 60% no-repeat,
+    repeating-linear-gradient(90deg, transparent 0 16px, var(--line) 16px 17px)
+      12% 22%/76% 60% no-repeat
+}
+/* Karteikarten: gestapelte Karten */
+.bib-deckel[data-art="karten"] .bib-papier{
+  background:
+    linear-gradient(var(--line) 0 0) 18% 60%/64% 1px no-repeat,
+    linear-gradient(var(--accent) 0 0) 18% 24%/40% 4px no-repeat;
+  opacity:.85
+}
+/* Datenbank: Zeilen mit Kopf in der Akzentfarbe */
+.bib-deckel[data-art="db"] .bib-papier{
+  background:
+    linear-gradient(var(--accent) 0 0) 12% 22%/76% 11px no-repeat,
+    repeating-linear-gradient(transparent 0 10px, var(--line) 10px 11px)
+      12% 22%/76% 60% no-repeat;
+  opacity:.85
+}
+/* Dateien: ein Papier mit umgeknickter Ecke */
+.bib-deckel[data-art="datei"] .bib-papier{
+  background:
+    linear-gradient(225deg, var(--line) 0 14px, transparent 14px) 88% 8%/22px 22px no-repeat,
+    repeating-linear-gradient(transparent 0 8px, var(--line) 8px 9px)
+      14% 44%/72% 40% no-repeat
+}
+.bib-deckel[data-art="ordner"] .bib-deckel-blatt{
+  border:0; box-shadow:none; background:none
+}
+.bib-deckel[data-art="ordner"] .bib-deckel-blatt::before{
+  content:""; position:absolute; inset:16% 4% 8%;
+  border-radius:4px 12px 12px 12px; background:var(--accent); opacity:.85
+}
+.bib-deckel[data-art="ordner"] .bib-deckel-blatt::after{
+  content:""; position:absolute; left:4%; top:8%; width:44%; height:13%;
+  border-radius:4px 8px 0 0; background:var(--accent); opacity:.85
+}
+
+@media(max-width:760px){
+  .bib-gitter{ grid-template-columns:repeat(auto-fill,minmax(102px,1fr));
+               gap:20px 14px }
+  .bib-dkopf{ gap:6px 8px }
+  .bib-dkopf h1{ font-size:24px }
+  .bib-neu{ padding:0 17px 0 13px }
+  /* GEMESSEN: `#page` gibt 28 px Polster, die Bibliothek noch einmal 16 —
+     zusammen 88 von 390. Übrig blieben 302, und damit passten nur ZWEI
+     Deckel nebeneinander statt drei. Das Regal ist die Ansicht, in der
+     Breite in Dokumenten zählt; hier gibt sie das innere Polster ab. */
+  /* ZWEI KLASSEN, NICHT EINE. `.bib{padding:18px 16px 50px}` steht weiter
+     unten in einer eigenen Telefon-Abfrage; bei gleicher Stärke gewinnt die
+     spätere Regel, und meine hier verlor still. Gemessen blieb es bei 16 px
+     und zwei Deckeln. `.bib.bib-deckel-seite` ist stärker und gewinnt
+     unabhängig von der Reihenfolge. */
+  .bib.bib-deckel-seite{ padding-left:0; padding-right:0 }
+}
+
 .bib-regal{
   display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
   gap:var(--space-5); align-items:start
@@ -7122,7 +7486,21 @@ tr.unterzeile .tt-ein{color:var(--text-faint); margin-right:2px}
  * unterschiedlich wieder, und das ist genau das, was eine Vorschau
  * verhindern soll.
  * ==========================================================================*/
-.mini-zeilen > *{ overflow:hidden; min-width:0; text-overflow:ellipsis; white-space:nowrap }
+/* `display:block` IST HIER DIE GANZE ZEILE — und der Grund steht in §55.2.
+   `overflow` und `text-overflow` gelten NICHT für ein nicht ersetztes
+   Inline-Element; `white-space:nowrap` schon. Ein `<b>` blieb also inline,
+   lief über den Deckel hinaus und wurde von dessen `overflow:hidden` hart
+   abgeschnitten — ohne Auslassungszeichen. Gemessen auf dem Telefon: ein
+   Deckel ist 102 px breit, der Titel „Die Oberfläche — wo jeder Knopf
+   sitzt" ragte 251 px darüber hinaus, und „Was Notion 10 000-mal besser
+   machen würde" stand als „Was Notion 10 0" da — ein anderer Titel, kein
+   gekürzter (dieselbe Lehre wie E227 bei der Zahl).
+   Und die Falle für jede Prüfung, die das messen will: ein Inline-Element
+   meldet `scrollWidth` 0 und `clientWidth` 0. Wer die beiden vergleicht,
+   bekommt „0 gegen 0 — passt schon".
+   In der Lernwelt fiel es nicht auf, weil `.lw-mini` ein Grid ist und seine
+   Kinder ohnehin blockifiziert. `display:block` schadet dort nichts. */
+.mini-zeilen > *{ display:block; overflow:hidden; min-width:0; text-overflow:ellipsis; white-space:nowrap }
 .mini-zeilen > b{ color:var(--text); font-size:12px; font-weight:720; letter-spacing:-.01em }
 .mini-zeilen > code{
   padding:1px var(--space-1); border-radius:var(--radius-sm); background:var(--bg-hover);
@@ -7425,80 +7803,102 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
 
      Zwei Zahlen, die dasselbe meinen müssen, gehen irgendwann
      auseinander. Also nur noch eine. */
-  :root{ --hoben: calc(80px + env(safe-area-inset-top)) }
+  /* 68 STATT 80 — UND ZWAR AM POLSTER, NICHT AN DER TASTE (E235).
+     Redur hat den ganzen Kopfbereich rot angestrichen: „dort sollte
+     möglichst wenig sein". Gemessen waren es 236 px von 844, also ein
+     Drittel des Telefons, bevor die erste Zahl kommt.
+
+     Die Rechnung dieser Zeile war 12 + 56 + 12 = 80. Die 56 sind die
+     Fläche, die der Daumen trifft; §37 verlangt 44, und der Absatz
+     darüber verteidigt die 56 ausdrücklich. Daran wird nicht gespart.
+     Gespart wird am Polster: 6 + 56 + 6 = 68.
+
+     Zwölf Punkte klingen wenig. Sie sind ein Viertel der Ersparnis, die
+     ohne Verlust überhaupt zu holen ist — den Rest holen die verschmolzene
+     Reiterzeile (−56) und der Bereichsfilter als Chip (−44). */
+  /* ══════════════════════════════════════════════════════════════════
+   * DIE NAVIGATION STEHT UNTEN (E236)
+   * ------------------------------------------------------------------
+   * `--hoben` heisst weiter so, meint aber jetzt die MENÜLEISTE: sie ist
+   * seit E236 das oberste Ding in `#main`, und alles, was den Abstand
+   * nach oben rechnet, rechnet mit dieser Marke.
+   *
+   * WARUM UNTEN. Gemessen lagen am Telefon drei Bänke übereinander —
+   * Kreise 68, Menüleiste 45, Krume 56 = 169 px von 844, bevor der erste
+   * Deckel kommt. Unten kostet die Navigation nichts vom Kopf, und der
+   * Daumen kommt hin, ohne die Hand umzugreifen.
+   * ════════════════════════════════════════════════════════════════ */
+  :root{ --hoben: env(safe-area-inset-top);
+         /* 5 Polster + 48 Weg + 5 Polster + 1 Trennlinie = 59.
+            Die Linie gehört dazu: gemessen war die Leiste 59 px hoch, die
+            Marke sagte 58, und die Schublade endete einen Punkt zu tief —
+            genau auf der Linie. Ein Punkt ist kein Schaden, aber eine
+            Marke, die nicht stimmt, ist der Anfang von zehn. */
+         --hunten: calc(59px + env(safe-area-inset-bottom)) }
   #handy-oben{
-    display:flex; align-items:center; gap:10px;
-    position:fixed; left:0; right:0; top:0; z-index:401;
-    padding:calc(12px + env(safe-area-inset-top)) 28px 12px;
-    background:var(--bg);
-    overflow-x:auto; scrollbar-width:none;
+    display:flex; align-items:stretch; gap:2px;
+    position:fixed; left:0; right:0; bottom:0; top:auto; z-index:401;
+    padding:5px 8px calc(5px + env(safe-area-inset-bottom));
+    background:var(--bg); border-top:1px solid var(--line);
   }
-  /* GEMESSEN AM 6. AUGUST, und es war knapper als gedacht: bei 390 px
-     brauchte die Leiste 395 px mit „Start" und 421 px mit „Eingang" — die
-     letzte Pille stand ausserhalb des Bildes. Am 428er iPhone fiel das nie
-     auf; E37 sagt aber 390 zuerst.
+  /* JEDER NAME STEHT DA, NICHT NUR DER AKTIVE.
+     Oben war Platz für genau einen Namen — fünf nebeneinander hätten die
+     Leiste gesprengt. Unten stehen sie UNTER dem Zeichen, und dort passen
+     alle fünf: 390 / 5 = 78 px je Weg. Das ist auch der Grund, warum es
+     fünf sein müssen und nicht sechs (§38: nicht nur über Farbe sagen,
+     wo man ist). */
+  #handy-oben > button{
+    flex:1 1 0; min-width:0; min-height:48px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:3px; padding:5px 2px 4px; border:0; border-radius:12px; background:none;
+    color:var(--text-dim);
+    /* ÜBER DER GLEITENDEN FLÄCHE, NICHT DARUNTER. `#ho-pille` liegt auf
+       `z-index:0`; ohne diese zwei Wörter lag der aktive Knopf DAHINTER
+       und war im Bild leer — Zeichen und Name weg, nur die graue Fläche
+       da. Die Regel stand vorher im alten Kreis-Block und ist beim
+       Aufräumen mitgegangen. */
+    position:relative; z-index:1;
+    /* JEDES ANTIPPEN MUSS ANTWORTEN. Die alte Kreisregel hatte diesen
+       Übergang; beim Aufräumen ging er mit, und test126 wurde rot — zu
+       Recht: ein Knopf, der ohne Antwort umschaltet, fühlt sich kaputt an.
+       Nur Farbe und Fläche, nichts, was den Aufbau neu rechnet. */
+    transition:background var(--motion-fast,.14s) var(--ease-standard,ease),
+               color var(--motion-fast,.14s) var(--ease-standard,ease);
+  }
+  #handy-oben > button:active{ background:var(--bg-hover) }
+  #handy-oben > button b{
+    display:block; font-size:10.5px; font-weight:500; letter-spacing:-.01em;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%;
+  }
+  #handy-oben > button.an b{ font-weight:650 }
+  #handy-oben > button.an{ color:var(--accent-text,var(--accent)) }
+  /* ─── WAS HIER STAND, UND WARUM ES WEG IST (E236) ──────────────────
+     Hier lagen drei Absätze Messungen aus dem 6., 7. und 24. August: wie
+     breit sechs runde Pillen mit Namen nebeneinander werden, und ab
+     welcher Bildschirmbreite man am Weissraum sparen muss. Die Rechnung
+     war richtig und ist gegenstandslos geworden.
 
-     NACHGEMESSEN AM 7. AUGUST, nachdem die Tasten von 52 auf 56 px
-     gewachsen sind. Vier Tasten mal 4 px sind 16 px, und die haben zwei
-     Breiten gekippt, die vorher gerade noch gingen:
+     Der Grund: sie ging von einer WAAGERECHTEN Pille aus — Zeichen und
+     Wort nebeneinander, deshalb 56 bis 90 px je Weg, deshalb rollte die
+     Leiste, deshalb stand nur beim aktiven Weg der Name.
 
-       Breite   längster Reiter („Termine")   davor
-       428 px   435 px  →  passt nicht        423 px  passte knapp
-       390 px   395 px  →  passt nicht        379 px  passte
-       375 px   375 px  →  passt genau
+     Unten stehen Zeichen und Wort ÜBEREINANDER. Damit braucht ein Weg
+     nur noch seine Textbreite, fünf teilen sich 390 px zu je 78, und
+     jeder Name steht da. Es gibt nichts mehr zu rollen und nichts mehr
+     zu sparen.
 
-     An der Fläche, die der Daumen trifft, wird nicht gespart — gespart
-     wird am Weissraum. Also rückt jetzt schon ab 440 px zusammen (das
-     nimmt auch das 428er iPhone mit, das vorher ausserhalb jeder Regel
-     stand) und noch einmal ab 380 px:
+     Die Zahl fünf ist deshalb keine Vorliebe, sondern die Grenze:
+     „Dokumente" braucht bei 10.5 px rund 62 px. Bei sechs Wegen wären es
+     65 px je Weg, und der Name müsste wieder gekürzt werden.
 
-       ab 440 px   Rand 17, Abstand 5, Pillenpolster 11   →  385 px
-       ab 380 px   Rand 10, Abstand 4, Pillenpolster 9    →  359 px
-
-     Damit passt jede gängige Telefonbreite: 428, 393, 390, 375, 360.
-     Darunter — 320 px, also iPhone SE der ersten Bauart — rollt die
-     Leiste, und der gewählte Reiter wird von `pilleSchieben()` ins Bild
-     geholt. Das ist die ehrlichere Antwort als eine fünfte Stufe, in der
-     nichts mehr zu holen ist. */
-  /* NACHGEMESSEN AM 24. AUGUST, weil eine SECHSTE Pille dazugekommen ist:
-     die Produktwelten stellen „Lernen" vor die vier Bereiche (E132). Die
-     Rechnung oben galt für fünf, und mit sechs lief sie über — gemessen
-     mit den kurzen Namen (Heute, Lernen, Seiten, Plan, Mehr):
-
-       428 px   Heute 3 px zu viel, Seiten 6 px
-       390 px   vier von fünf zu viel, bis 44 px
-
-     Gespart wird weiter am Weissraum und nicht an der Daumenfläche: die
-     Tasten bleiben 56 px hoch und mindestens 56 px breit. Kleiner werden
-     nur das Polster in der Pille und der Abstand zwischen Sinnbild und
-     Wort. */
+     Die Regeln für die Knöpfe stehen weiter oben, direkt bei der Leiste.
+     ─────────────────────────────────────────────────────────────────── */
   #handy-oben::-webkit-scrollbar{ display:none }
 
-  #handy-oben button{
-    flex:0 0 auto;
-    height:56px; min-width:56px;
-    border-radius:999px;
-    border:1px solid var(--line);
-    background:transparent; color:var(--text-dim);
-    display:flex; align-items:center; justify-content:center; gap:8px;
-    padding:0 13px; font-size:17px; line-height:1;
-    position:relative; z-index:1;
-    transition:background .14s, color .14s;
-  }
-  #handy-oben button:active{ background:var(--bg-hover) }
-
-  @media(max-width:440px){
-    #handy-oben{ gap:5px; padding-left:14px; padding-right:14px }
-    /* Die HÖHE bleibt 56 px — das ist die Fläche, die der Daumen trifft.
-       Schmaler darf eine Taste werden: §37 verlangt 44 px, und 48 × 56 ist
-       immer noch deutlich darüber. Sechs Kreise à 56 px plus die eine
-       beschriftete Pille brauchten bei 390 px rechnerisch 439 px. */
-    #handy-oben button{ min-width:48px; padding:0 9px; gap:6px }
-  }
-  @media(max-width:400px){
-    #handy-oben{ gap:4px; padding-left:8px; padding-right:8px }
-    #handy-oben button{ min-width:44px; padding:0 7px; gap:5px }
-  }
+  /* Fünf Wege teilen sich die Breite, also gibt es nichts mehr zu
+     staffeln — die zwei Stufen für 440 und 400 px sind mit E236 weg. Auf
+     einem 320-px-Bildschirm sind es 64 px je Weg; „Dokumente" wird dort
+     gekürzt, bleibt aber lesbar, und das Zeichen steht darüber. */
 
   /* ---- DIE GLEITENDE PILLE ------------------------------------------- */
   /* Sie ersetzt den Hintergrund der aktiven Pille durch EIN Feld, das
@@ -7517,8 +7917,11 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
      aktive Pille wächst um ihre Beschriftung, und dafür gibt es keine
      Verschiebung. */
   #handy-oben #ho-pille{
-    position:absolute; left:0; top:0; z-index:0;
-    height:56px; width:0; border-radius:999px;
+    /* SEIT E236 STEHT SIE UNTEN und ist so hoch wie ein Weg, nicht wie
+       eine Pille: 48 statt 56, und der Radius passt zu den Knöpfen. Der
+       Abstand von oben ist das Polster der Leiste (5 px). */
+    position:absolute; left:0; top:5px; z-index:0;
+    height:48px; width:0; border-radius:12px;
     background:var(--bg-hover);
     pointer-events:none; opacity:0;
     transition:transform var(--motion-normal) var(--ease-standard),
@@ -7540,37 +7943,25 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
      die Sicherung dagegen. */
   #handy-oben #ho-pille.stumm{ transition:none }
 
-  /* DER NAME STEHT NUR AN DER AKTIVEN PILLE. Das ist die ganze Idee: er
-     kostet Platz, und Platz gibt es nur einmal — also bekommt ihn die
-     Stelle, an der er etwas sagt. */
-  #handy-oben button b{ display:none; font-size:16px; font-weight:600; letter-spacing:-.01em }
-  /* KEIN EIGENER HINTERGRUND MEHR. Den bringt `#ho-pille` mit und schiebt
-     ihn herüber; stünde er hier auch, wären es zwei Flächen übereinander
-     und die wandernde käme bei einer schon fertigen an — die Bewegung
-     wäre da und würde nichts erklären. */
-  #handy-oben button.an{ color:var(--text); border-color:transparent }
-  #handy-oben button.an b{ display:inline }
+  /* JEDER NAME STEHT DA — NICHT NUR DER AKTIVE (E236).
+     Hier stand: „Der Name kostet Platz, und Platz gibt es nur einmal —
+     also bekommt ihn die Stelle, an der er etwas sagt." Das galt für eine
+     WAAGERECHTE Pille oben, in der Zeichen und Wort nebeneinander stehen.
 
-  /* Das Konto ganz links ist ein Kreis mit dem Anfangsbuchstaben. */
-  #handy-oben .ho-konto{
-    width:44px; padding:0; font-size:15px; font-weight:600;
-    color:var(--text-dim);
+     Unten stehen sie übereinander, fünf Wege teilen sich 390 px zu je 78,
+     und ein Name braucht nur seine Textbreite. Der Platz ist da. Und §38
+     ist damit besser bedient: wo man steht, sagt jetzt nicht nur die
+     Farbe der wandernden Fläche, sondern die fettere Schrift daneben. */
+  #handy-oben > button b{
+    display:block; font-size:10.5px; font-weight:500; letter-spacing:-.01em;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%;
   }
-  #handy-oben .ho-konto span{ line-height:1 }
-
-  /* Der zweite Teil der Enge von oben — er MUSS hier unten stehen, nach der
-     Grundregel für `#handy-oben button`. Gleiche Spezifität entscheidet die
-     Reihenfolge, und weiter oben verlor er lautlos: gemessen kamen 13 px
-     Polster und 16 px Schrift zurück, obwohl der Rand daneben schon eng
-     war. Eine Regel, die dasteht und nichts tut, ist schlimmer als keine. */
-  @media(max-width:440px){
-    #handy-oben button{ padding:0 11px }
-    #handy-oben button b{ font-size:15px }
-  }
-  @media(max-width:380px){
-    #handy-oben button{ padding:0 9px }
-    #handy-oben button b{ font-size:14px }
-  }
+  /* KEIN EIGENER HINTERGRUND. Den bringt `#ho-pille` mit und schiebt ihn
+     herüber; stünde er hier auch, wären es zwei Flächen übereinander und
+     die wandernde käme bei einer schon fertigen an — die Bewegung wäre da
+     und würde nichts erklären. */
+  #handy-oben > button.an{ color:var(--accent-text,var(--accent)) }
+  #handy-oben > button.an b{ font-weight:650 }
 
   #handy-oben .ho-z{ display:flex; align-items:center; justify-content:center }
   #handy-oben .ho-z svg{ display:block }
@@ -7734,12 +8125,14 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
      war 76 px hoch — die obersten 16 px des Zurück-Knopfes lagen dahinter.
      Am iPhone, wo die Kerbe noch 47 px dazulegt, war es die ganze Zeile.
      Die Marke rechnet die Kerbe mit; sie steht oben bei `#handy-oben`. */
-  #main{ padding-top:var(--hoben) }
+  #main{ padding-top:var(--hoben) }  /* nur noch die Kerbe (E236) */
   /* Der Inhalt muss unter der Aktionsleiste durchlaufen können, ohne dass
      die letzte Zeile darunter verschwindet: 120 px plus die Kerbe des
      Geräts. Vorher 96 — bei 72 px Leiste blieben 24 px Luft, und mit
      Safe-Area am iPhone gar keine. */
-  #scroll{ padding-bottom:calc(120px + env(safe-area-inset-bottom)) }
+  /* Der Inhalt muss unter der Navigationsleiste durchlaufen können, ohne
+     dass die letzte Zeile darunter verschwindet: ihre Höhe plus Luft. */
+  #scroll{ padding-bottom:calc(var(--hunten) + 24px) }
   #ai.open{ bottom:0 }
 }
 
@@ -7794,6 +8187,96 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
      in JEDER Ansicht braucht, endlich 44 × 44 (§37). */
   #topbar .icon-btn,
   #topbar .top-btn{ min-height:44px; min-width:44px; justify-content:center }
+
+  /* ======================================================================
+   * DIE KRUMENZEILE UND DIE REITERZEILE WERDEN EINE (E235)
+   * ----------------------------------------------------------------------
+   * Gemessen im Lernbereich auf 390 × 844: die Krumenzeile war 56 px hoch
+   * und enthielt DREI Dinge — den Zurück-Knopf, 284 px Seitentitel
+   * („Lernen & Alltag") und die drei Punkte. Der Titel steht zu diesem
+   * Zeitpunkt schon zweimal auf dem Bildschirm: als aktiver Kreis darüber
+   * („Lernen") und als aktiver Reiter darunter.
+   *
+   * 284 von 390 Punkten Breite und eine ganze Bank Höhe für eine Auskunft,
+   * die zweimal daneben steht.
+   *
+   * DER VERTRAG. Ein Bereich, der GANZ OBEN eine eigene, klebende Zeile
+   * zeichnet, markiert sie mit `data-kopfzeile="eigene"`. Dann — und nur
+   * am Telefon — nimmt die Schale ihre eigene Zeile aus dem Fluss: der
+   * Inhalt rückt um genau ihre 56 px nach oben, der Titel wird
+   * unsichtbar, und die zwei Knöpfe bleiben als einzige über der Zeile
+   * des Bereichs stehen. Aus zwei Bänken wird eine.
+   *
+   * WARUM EINE MARKE UND KEIN AUFRUF. Ein Bereich darf die Schale nicht
+   * kennen (§5). Er sagt hier nur etwas ÜBER SICH — „diese Zeile ist mein
+   * Kopf" — genau wie `data-ruhig="mehr"` in `index.html` etwas über
+   * einen Knopf sagt. Fehlt die Marke, ändert sich nichts.
+   *
+   * WARUM `visibility` UND NICHT `display:none` FÜR DIE KRUME. Sie ist
+   * `flex:1 1 0` und schiebt damit die drei Punkte an den rechten Rand.
+   * Mit `display:none` klebten beide Knöpfe links zusammen.
+   *
+   * DIE KINDKOMBINATOREN IN `:has()` SIND ABSICHT. `#main:has(#page
+   * [data-kopfzeile])` müsste der Browser bei jeder Änderung irgendwo in
+   * `#main` neu prüfen — und in `#page` ändert sich beim Schreiben
+   * ständig etwas. Der ganze Pfad als Kind-Kette begrenzt das auf die
+   * eine Ebene, auf der die Marke überhaupt stehen kann.
+   *
+   * DARAUS FOLGT EINE BEDINGUNG, und sie ist mit Absicht eng: die
+   * markierte Zeile muss DIREKT in `#page` liegen. Ein Bereich zeichnet
+   * seinen Wurzelknoten nicht selbst — er bekommt `#page` und setzt seine
+   * Klassen darauf (`#page.produkt-welt.lernwelt`), also stimmt das von
+   * allein. Wickelt ein Bereich seine Zeile doch noch einmal ein, greift
+   * die Marke nicht, und alles bleibt beim Alten — es bricht nichts, es
+   * spart nur nichts.
+   * ==================================================================== */
+  #main:has(> #scroll > #page > [data-kopfzeile="eigene"]) #topbar{
+    position:relative; z-index:6;
+    /* NACHGEMESSEN, WELCHE DIESER DREI ZEILEN ETWAS TUT — weil eine
+       Zeile, die nichts tut, später als Beweis gelesen wird:
+         · `border-bottom:0` WIRKT. Die Leiste hat sonst einen 1-px-Strich
+           unten, und der liefe quer durch die Reiterkarte.
+         · `background:transparent` ändert heute nichts: die Leiste hat gar
+           keinen eigenen Grund, sie zeigt den der Seite. Sie bleibt als
+           Wache stehen — wer ihr einen Grund gibt, deckt sonst die Reiter
+           zu, und das fiele erst im Bild auf.
+         · `box-shadow:none` ist derselbe Fall.                          */
+    background:transparent; border-bottom:0; box-shadow:none;
+    pointer-events:none;
+    /* HINGESEHEN, NICHT NUR GEMESSEN (§55). Im ersten Bild sassen die zwei
+       Knöpfe sechs Punkte zu hoch auf der Karte des Bereichs. Der Grund
+       stand nicht in dieser Regel, sondern in der Grundregel darüber:
+       `align-items:stretch`. Ein Knopf mit fester `height:44px` lässt sich
+       nicht strecken — er bleibt oben kleben. Solange die Leiste ihren
+       eigenen Hintergrund hatte, fiel das nie auf; über einer fremden
+       Karte fällt es sofort auf. */
+    align-items:center;
+    /* Und sechs Punkte Luft unter der Kreisleiste: ohne sie stösst die
+       Karte des Bereichs direkt an die Kreise. Die Leiste rückt mit, damit
+       beide auf derselben Linie bleiben — sie IST jetzt dieselbe Zeile. */
+    margin-top:6px;
+  }
+  #main:has(> #scroll > #page > [data-kopfzeile="eigene"]) #topbar > *{
+    pointer-events:none;
+  }
+  #main:has(> #scroll > #page > [data-kopfzeile="eigene"]) #topbar > #btn-back,
+  #main:has(> #scroll > #page > [data-kopfzeile="eigene"]) #topbar > #btn-page-menu{
+    pointer-events:auto;
+  }
+  #main:has(> #scroll > #page > [data-kopfzeile="eigene"]) #topbar .crumb{
+    visibility:hidden;
+  }
+  /* −56, und keine Zahl mehr: `#topbar{ min-height:56px }` steht 40 Zeilen
+     weiter oben, und die Leiste ist am Telefon genau so hoch. Wächst sie
+     dort, wächst die Verschiebung mit. */
+  #main:has(> #scroll > #page > [data-kopfzeile="eigene"]) #scroll{
+    margin-top:-56px;
+  }
+  /* Damit die Zeile des Bereichs DIREKT unter der Kreisleiste sitzt und
+     nicht 10 px darunter — sonst stünden die zwei Knöpfe schief darüber. */
+  #main:has(> #scroll > #page > [data-kopfzeile="eigene"]) #page{
+    padding-top:0;
+  }
 
   /* AUSSERHALB der Kopfleiste wächst beides. Zwei Symbolknöpfe sassen in
      der Seitenleiste und blieben bei 28 × 28 — gefunden hat das die
@@ -8050,7 +8533,11 @@ table.pivot tbody tr:hover td{ background:var(--bg-hover); }
      echte untere Leiste heisst `#handy-unten`, und weil die Regel ins
      Leere zielte, ragten ihre Knopfkreise hinter der Formatleiste
      hervor. */
-  body.schreibt #handy-unten{ display:none; }
+  /* Beim Schreiben tritt die Leiste am unteren Rand zurück — sonst läge
+     sie zwischen Text und Tastatur. Sie heisst seit E236 `#handy-oben`
+     (der Name stammt aus der Zeit, als sie oben stand); die alte
+     schwebende `#handy-unten` gibt es nicht mehr. */
+  body.schreibt #handy-oben{ display:none; }
 
   /* Ziehen mit dem Finger (E83): langes Drücken hebt den Block — er wird
      leicht und durchscheinend —, die Fallmarke zeigt die Lücke, in die er
@@ -10969,39 +11456,64 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
      Eine Umbenennung hätte nichts verbessert und alles gelöst, was daran
      hängt.
      ====================================================================== -->
-<div id="handy-oben" role="tablist" aria-label="Hauptbereiche">
+<!-- ═══════════════════════════════════════════════════════════════════════
+     DIE NAVIGATION — UNTEN, WO DER DAUMEN IST (E236)
+     ───────────────────────────────────────────────────────────────────────
+     Sie stand als Kreisleiste GANZ OBEN, und darüber lagen dann noch die
+     Menüleiste und die Krume: drei Bänke, 169 px von 844, bevor der erste
+     Deckel kommt.
+
+     Redur: „dann unten sollte max 4-5 Sachen sein." Es sind fünf.
+
+     WAS AUS DEN SECHS KREISEN WURDE, damit niemand einen Weg sucht:
+       R (Arbeitsbereich)  → rechts in die Menüleiste
+       Lernen              → bleibt
+       Heute (Start)       → bleibt
+       Seiten (Workspace)  → ins Mehr-Blatt
+       Termine             → bleibt
+       Mehr                → bleibt
+     Und NEU dazu: Dokumente — das Regal, wo Redion jetzt öffnet.
+
+     Die alte schwebende Leiste (Suche · KI fragen · Neu) gibt es nicht
+     mehr: Suche und KI stehen rechts in der Menüleiste, „Neu" ist der
+     grosse „+ Neu"-Knopf im Regal.
+     ═══════════════════════════════════════════════════════════════════ -->
+<nav id="handy-oben" role="tablist" aria-label="Hauptbereiche">
   <!-- Die gleitende Pille. Sie liegt HINTER den Knöpfen und wandert beim
        Reiterwechsel dorthin, wo die neue Auswahl steht; die Knöpfe selbst
        bleiben durchsichtig. Ein Hintergrund, der springt, sagt „ein
        anderer Knopf" — einer, der wandert, sagt „derselbe Ort, weiter
        vorn". Sie steht als erstes Kind, damit sie auch ohne Stilblatt
        nicht über den Knöpfen liegt. Sie ist leer und aus dem Baum
-       genommen: Vorleseprogramme sollen die vier Reiter finden, nicht
-       fünf Dinge. -->
+       genommen: Vorleseprogramme sollen die fünf Reiter finden, nicht
+       sechs Dinge. -->
   <i id="ho-pille" class="stumm" aria-hidden="true"></i>
-  <button id="hl-konto" class="ho-konto" title="Arbeitsbereich"><span>R</span></button>
+  <button id="hl-dok" role="tab" title="Dokumente"><span class="ho-z"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4.5" width="7" height="15" rx="1.6"/><rect x="13.5" y="4.5" width="7" height="9" rx="1.6"/><path d="M13.5 17h7"/></svg></span><b>Dokumente</b></button>
+  <button id="hl-start" role="tab" title="Heute"><span class="ho-z"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/></svg></span><b>Heute</b></button>
   <button id="hl-lernen" role="tab" title="Lernen"><span class="ho-z"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4 2.5 8.5 12 13l9.5-4.5z"/><path d="M6.5 10.8v4.4c0 .5 2.5 2.3 5.5 2.3s5.5-1.8 5.5-2.3v-4.4"/><path d="M21.5 8.5v5"/></svg></span><b>Lernen</b></button>
-  <button id="hl-start" role="tab" title="Start"><span class="ho-z"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/></svg></span><b>Start</b></button>
-  <button id="hl-seiten" role="tab" title="Seiten"><span class="ho-z"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 3.5h7L18.5 8v12.5h-12z"/><path d="M13.5 3.5V8h5"/><path d="M9.5 12.5h6M9.5 16h4"/></svg></span><b>Seiten</b></button>
-  <button id="hl-bespr" role="tab" title="Besprechungen"><span class="ho-z"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 9.5h17M8 3.5v3M16 3.5v3"/><path d="M8 13h.01M12 13h.01M16 13h.01M8 16.5h.01M12 16.5h.01"/></svg></span><b>Termine</b></button>
+  <button id="hl-bespr" role="tab" title="Termine"><span class="ho-z"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 9.5h17M8 3.5v3M16 3.5v3"/><path d="M8 13h.01M12 13h.01M16 13h.01M8 16.5h.01M12 16.5h.01"/></svg></span><b>Termine</b></button>
   <button id="hl-mehr" role="tab" title="Mehr"><span class="ho-z"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="5" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.4" fill="currentColor" stroke="none"/></svg></span><b>Mehr</b><i class="hl-punkt" hidden></i></button>
-</div>
+</nav>
 
 <!-- =========================================================================
-     DIE DREI SCHWEBENDEN KNÖPFE UNTEN — nur auf dem Telefon
+     HIER STANDEN DIE DREI SCHWEBENDEN KNÖPFE — bis E236
      -------------------------------------------------------------------------
-     Suchen · KI fragen · Neue Seite. Sie stehen NICHT in einer geschlossenen
-     Leiste, sondern schweben über dem Inhalt: der Daumen erreicht sie, und
-     der Bildschirm bleibt trotzdem ganz. Die Mitte ist die breiteste und
-     die einzige mit Text — nach ihr greift man am häufigsten.
+     Suchen · KI fragen · Neue Seite, schwebend über dem Inhalt: der Daumen
+     erreichte sie, und der Bildschirm blieb trotzdem ganz. Das war richtig,
+     SOLANGE unten sonst nichts stand.
+
+     Seit E236 steht dort die Wegeleiste, und zwei Leisten am unteren Rand
+     sind eine zu viel. Die drei Wege sind nicht weg, sie stehen dort, wo
+     sie an einem Rechner auch stünden:
+
+       Suchen     → `mb-suche` rechts in der Menüleiste (und Strg + P)
+       KI fragen  → `mb-ki`    rechts in der Menüleiste (und Strg + J)
+       Neue Seite → der grosse „+ Neu"-Knopf im Regal, und das Mehr-Blatt
+
+     Der Absatz bleibt stehen, weil `hu-suche`, `hu-ki` und `hu-neu` in
+     älterer Doku und in Prüfläufen vorkommen — wer danach sucht, soll hier
+     lesen, wohin sie gegangen sind, statt gar nichts zu finden.
      ====================================================================== -->
-<div id="handy-unten" aria-label="Schnellzugriff">
-  <button id="hu-suche" title="Suchen"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg></button>
-  <button id="hu-ki" title="KI fragen">
-    <span class="hu-av"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.2 13.7 9l5.8 1.7-5.8 1.7L12 18.2l-1.7-5.8L4.5 10.7 10.3 9z"/><path d="M18.6 3v3.2M17 4.6h3.2"/></svg></span><b>KI fragen</b><i class="hu-mik"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="9.25" y="3" width="5.5" height="10" rx="2.75"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg></i>
-  </button>
-  <button id="hu-neu" title="Neue Seite"><svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12v6.5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h6.5"/><path d="M17.5 3.5 21 7l-8.5 8.5H9v-3.5z"/></svg></button>
-</div>
 
 <!-- Formatleiste über der Tastatur — erscheint beim Schreiben auf dem Telefon -->
 <div id="tastenleiste" role="toolbar" aria-label="Formatieren" hidden>
@@ -11022,6 +11534,20 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
      HAUPTBEREICH
      ====================================================================== -->
 <main id="main" role="main">
+
+  <!-- DAS MENÜBAND (E210) — GANZ OBEN SEIT E236.
+       Es stand bisher UNTER der Kopfzeile. Redur will es dort, wo es an
+       einem Rechner steht: als oberste Zeile, schmal, und die Knöpfe
+       klappen erst beim Antippen auf. Genau das konnte es schon — es sass
+       nur an der falschen Stelle.
+
+       Der Kasten steht leer hier und wird von `schale/aufbau/menueband.js`
+       aus `register/menueband.js` gefüllt — diese Datei kennt keinen
+       einzigen Eintrag beim Namen.
+
+       `hidden`, bis das Register geantwortet hat: eine leere Leiste, die
+       Platz kostet und nichts kann, ist schlimmer als keine. -->
+  <div id="menueband" hidden></div>
 
   <header id="topbar" role="toolbar" aria-label="Seitenwerkzeuge">
     <button class="top-btn schmal" id="btn-back" title="Zurück (Strg + [)" aria-label="Zurück"><span data-sym="arrowL"></span></button>
@@ -11061,16 +11587,6 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
     <button class="top-btn schmal" id="btn-fav"     title="Zu Favoriten" aria-label="Zu Favoriten"><span data-sym="star"></span></button>
     <button class="top-btn schmal" id="btn-page-menu" title="Seitenoptionen" aria-label="Seitenoptionen"><span data-sym="dots"></span></button>
   </header>
-
-  <!-- DAS MENÜBAND (E210).
-       Start · Einfügen · Zeichnen · Werkzeuge · Elektro · Ansicht, und
-       darunter die Knöpfe des gewählten Reiters. Der Kasten steht leer hier
-       und wird von `schale/aufbau/menueband.js` aus `register/menueband.js`
-       gefüllt — diese Datei kennt keinen einzigen Eintrag beim Namen.
-
-       `hidden`, bis das Register geantwortet hat: eine leere Leiste, die
-       Platz kostet und nichts kann, ist schlimmer als keine. -->
-  <div id="menueband" hidden></div>
 
   <div id="scroll">
     <div id="page" role="document" tabindex="-1"></div>
@@ -17772,6 +18288,15 @@ Register.menueband = (() => {
      * stehen. Ein Menüband, das sich wegen eines Bereichs gar nicht zeichnet,
      * wäre der schlimmere Fehler.
      */
+    /**
+     * Welche Reiter ohne offene Seite nichts können.
+     *
+     * Sie steht hier und nicht bei jedem der 108 Einträge: die Bedingung
+     * gilt für den ganzen Reiter, nicht für einzelne Zeilen darin. Wer
+     * einen Eintrag hinzufügt, der trotz fehlender Seite geht, gibt ihm
+     * einen eigenen Reiter oder sagt es hier.
+     */
+    const BRAUCHT_SEITE = new Set(['start', 'einfuegen', 'zeichnen']);
     const alle = () => {
         const aus = [];
         const quellen = [
@@ -17786,6 +18311,25 @@ Register.menueband = (() => {
         }
         aus.push(...fremde);
         return aus.filter(e => {
+            /* DREI REITER SCHREIBEN IN EINE SEITE (E236).
+               „Start" formatiert Absätze, „Einfügen" hängt Blöcke ans Ende,
+               „Zeichnen" braucht eine Fläche. Ohne offene Seite tun sie
+               entweder nichts oder melden „Erst eine Seite öffnen" — und ein
+               Knopf, der das sagt, ist ein Knopf ins Leere (§47).
+      
+               Bisher wurde deshalb die GANZE Leiste versteckt, sobald keine
+               Seite offen war (E219). Das war richtig, solange die Leiste unter
+               der Kopfzeile sass und sonst nichts konnte. Seit sie ganz oben
+               steht und immer da sein soll, ist es zu viel: „Werkzeuge",
+               „Elektro" und „Ansicht" öffnen ihre eigenen Sachen und
+               funktionieren ohne Seite.
+      
+               Also fällt jetzt weg, was wirklich eine Seite braucht — und die
+               drei anderen Reiter bleiben. `reiter()` zählt danach, welche
+               Reiter überhaupt etwas zu zeigen haben, und lässt die leeren
+               von selbst verschwinden. */
+            if (BRAUCHT_SEITE.has(e.reiter) && !seiteJetzt())
+                return false;
             if (typeof e.zeigen !== 'function')
                 return true;
             try {
@@ -67034,6 +67578,18 @@ const Ansichten = (() => {
      * ist der ganze Unterschied zwischen einer Liste und einem Wegweiser.
      * ======================================================================*/
     const mehrGruppen = () => [
+        /* DIE ZWEI WEGE, DIE UNTEN KEINEN PLATZ MEHR HABEN (E236).
+           Die Navigation hat seit E236 fünf Wege statt sechs — und aus dem
+           R-Kreis links oben wurde ein Knopf in der Menüleiste. „Workspace"
+           und „Arbeitsbereich wechseln" hatten damit keinen Ort mehr.
+    
+           Sie stehen deshalb hier. Das ist keine Ablage für Übriggebliebenes:
+           §46 sagt, dass nichts verschwinden darf, und ein Weg, den man nur
+           noch über die Adresszeile findet, ist verschwunden. */
+        { name: 'Wo du arbeitest', eintraege: [
+                { z: '▤', t: 'Workspace', s: 'Übersicht, Datenbanken, Wiki und Vorlagen.', a: 'workspace' },
+                { z: '⌂', t: 'Arbeitsbereich', s: 'Name, Zeichen und der Baum aller Seiten.', a: 'schublade' }
+            ] },
         { name: 'Wichtige Werkzeuge', eintraege: [
                 { z: '🧭', t: 'Kompass', s: 'Wie Redion aufgebaut ist und was du machen kannst.', a: 'kompass' },
                 { z: '⌘', t: 'Befehle', s: 'Slash-Befehle und Aktionen.', a: 'befehle' },
@@ -67074,7 +67630,12 @@ const Ansichten = (() => {
             const a = el?.closest('[data-a]')?.dataset.a;
             if (!a)
                 return;
-            if (a === 'kompass')
+            /* Die zwei Wege, die mit E236 aus der Navigation hierherkamen. */
+            if (a === 'workspace')
+                Produktwelten.workspace('start');
+            else if (a === 'schublade')
+                App.arbeitsbereich();
+            else if (a === 'kompass')
                 kompass();
             else if (a === 'befehle')
                 Werkzeuge.palette();
@@ -67476,9 +68037,11 @@ const Einstellungen = (() => {
             zeile('Erscheinungsbild', 'Hell, dunkel oder wie das System', wahl('theme', [['dark', 'Dunkel'], ['light', 'Hell'], ['system', 'Wie das System']], V('theme', 'dark'))) +
             zeile('Schriftgrösse', 'Gilt für den ganzen Text', wahl('schriftgroesse', [['klein', 'Klein'], ['normal', 'Normal'], ['gross', 'Gross']], V('schriftgroesse', 'normal'))) +
             zeile('Zeilenabstand', 'Enger oder luftiger', wahl('dichte', [['eng', 'Eng'], ['normal', 'Normal'], ['weit', 'Weit']], V('dichte', 'normal'))) +
-            zeile('Beim Öffnen zeigen', 'Was erscheint, wenn du die App startest', wahl('startAnsicht', [['start', 'Heute – Lernen & Alltag'], ['workspace', 'Workspace'],
+            zeile('Beim Öffnen zeigen', 'Was erscheint, wenn du die App startest', wahl('startAnsicht', [['dokument', 'Zuletzt geöffnetes Dokument, sonst das Regal'],
+                ['dokumente', 'Immer das Regal'],
+                ['start', 'Heute – Lernen & Alltag'], ['workspace', 'Workspace'],
                 ['letzte', 'Zuletzt geöffnete Seite'],
-                ['journal', 'Heutiges Journal'], ['posteingang', 'Posteingang']], V('startAnsicht', 'start'))) +
+                ['journal', 'Heutiges Journal'], ['posteingang', 'Posteingang']], V('startAnsicht', 'dokument'))) +
             zeile('Woche beginnt am', 'Gilt für Kalender und Kalenderwochen', wahl('wochenstart', [['montag', 'Montag'], ['sonntag', 'Sonntag']], V('wochenstart', 'montag'))) +
             zeile('Datumsformat', 'Wie Datumsangaben geschrieben werden', wahl('datumsformat', ['TT.MM.JJJJ', 'JJJJ-MM-TT', 'MM/TT/JJJJ', 'TT. Monat JJJJ'], V('datumsformat', 'TT.MM.JJJJ'))) +
             zeile('Zeitformat', '', wahl('zeitformat', [['24', '24 Stunden'], ['12', '12 Stunden']], V('zeitformat', '24'))) +
@@ -67893,12 +68456,17 @@ const Einstellungen = (() => {
             });
     };
     const kopfzeileAuffrischen = () => {
+        /* SEIT E236 TRÄGT AUCH DIE MENÜLEISTE DAS ZEICHEN (`mb-konto`).
+           Hier stand `btn.querySelector('.ws-icon')` — eine Stelle, ein
+           Zeichen. Wer es änderte, sah es in der Seitenleiste sofort und in
+           der Menüleiste erst nach dem nächsten Neuzeichnen: zwei Buchstaben
+           für einen Arbeitsbereich. Gesucht wird deshalb im ganzen Blatt. */
+        document.querySelectorAll('.ws-icon').forEach(ico => {
+            ico.textContent = V('arbeitsIcon', 'N');
+        });
         const btn = document.querySelector('#btn-settings');
         if (!btn)
             return;
-        const ico = btn.querySelector('.ws-icon');
-        if (ico)
-            ico.textContent = V('arbeitsIcon', 'N');
         const name = btn.querySelectorAll('span')[1];
         if (name)
             name.textContent = V('arbeitsName', 'Redion');
@@ -85045,7 +85613,53 @@ const Rollrand = (() => {
             beobachter?.disconnect();
         };
     };
-    return { binde, pruefe, SPIEL };
+    /**
+     * Rollt `feld` so weit, dass `stueck` GANZ darin steht.
+     *
+     * WOZU. Eine Leiste, die rollt, zeigt nach dem Zeichnen ihren Anfang —
+     * nicht das, was gerade gewählt ist. Solange alles hineinpasste, fiel das
+     * nie auf. Seit die Reiterzeile der Lernwelt am Telefon mit der
+     * Krumenzeile verschmilzt (E235), passt es nicht mehr: man tippt auf
+     * „Prüfungen", der Reiter wird der aktive — und steht halb ausserhalb
+     * der Karte.
+     *
+     * WARUM NICHT `scrollIntoView`. Das rollt ALLE Vorfahren mit, auch
+     * `#scroll` — die Seite spränge bei jedem Reiterwechsel nach oben oder
+     * unten. Hier wird nur das eine Feld gerollt.
+     *
+     * `rand` ist kein Zierabstand: die Kante blendet den Inhalt über die
+     * letzten Punkte aus. Ein Reiter, der bündig am Rand endet, steht zwar
+     * drin und ist trotzdem halb durchsichtig.
+     */
+    const zeige = (feld, stueck, wahl = {}) => {
+        if (!feld || !stueck)
+            return;
+        const hoch = (wahl.achse || 'quer') === 'hoch';
+        const rand = wahl.rand ?? 12;
+        const f = feld.getBoundingClientRect();
+        const s = stueck.getBoundingClientRect();
+        const anfangF = hoch ? f.top : f.left;
+        const endeF = hoch ? f.bottom : f.right;
+        const anfangS = hoch ? s.top : s.left;
+        const endeS = hoch ? s.bottom : s.right;
+        /* Passt das Stück ohnehin nicht ins Feld, gewinnt sein Anfang: lieber
+           den Anfang eines langen Namens lesen als seine Mitte. */
+        let schub = 0;
+        if (endeS - anfangS > endeF - anfangF)
+            schub = anfangS - anfangF - rand;
+        else if (anfangS < anfangF + rand)
+            schub = anfangS - anfangF - rand;
+        else if (endeS > endeF - rand)
+            schub = endeS - endeF + rand;
+        if (!schub)
+            return;
+        if (hoch)
+            feld.scrollTop += schub;
+        else
+            feld.scrollLeft += schub;
+        pruefe(feld, wahl);
+    };
+    return { binde, pruefe, zeige, SPIEL };
 })();
 window.Rollrand = Rollrand;
 
@@ -96435,9 +97049,16 @@ const Bibliothek = (() => {
      * gesetzt und bekam ein Regal. Kein Wurf, keine Meldung; dieselbe Sorte
      * stiller Fehler wie `Store` an `window` (E207, `vorschau.ts`).
      */
-    const form = () => Store.getMeta('bibForm', 'regal') === 'liste' ? 'liste' : 'regal';
+    const form = () => {
+        const wahl = Store.getMeta('bibForm', 'deckel');
+        return wahl === 'liste' ? 'liste' : wahl === 'regal' ? 'regal' : 'deckel';
+    };
     let zustand = { reiter: 'kuerzlich', sortier: 'wann', richtung: 'ab',
-        suche: '', sucheOffen: false, spalten: SPALTEN.map(s => s.id) };
+        suche: '', sucheOffen: false, spalten: SPALTEN.map(s => s.id),
+        /* Der Artfilter der Deckelansicht (E236). Er steht NEBEN
+           `reiter`, nicht darin: der Reiter fragt „wo liegt es",
+           die Art fragt „was ist es". Zwei Fragen, zwei Filter. */
+        art: 'alle' };
     /** Eine zusammengefuehrte Sicht auf bestehende Redion-Daten. Sie speichert
         weder Dashboard-Karten noch PDF-Kopien; alle Listen sind begrenzt. */
     const zeichneSchule = (wrap) => {
@@ -96589,6 +97210,105 @@ const Bibliothek = (() => {
             });
         }
         return liste;
+    };
+    /* ====================================================================== *
+     * DAS REGAL (E207)
+     * ---------------------------------------------------------------------- *
+     * Ein „Heft" ist keine neue Datenart und wird auch keine. Es ist die
+     * QUELLE, die `quelleVon()` ohnehin schon für jede Seite ausrechnet: die
+     * Datenbank, in der sie liegt, die Elternseite, der Lebensbereich, oder
+     * „Privat". Der Entwurf nennt das Heft; der Bestand nennt es Quelle. Es
+     * ist dasselbe, und deshalb braucht es dafür keine Migration, keinen
+     * zweiten Speicher und keinen Umzug (§9).
+     * ====================================================================== */
+    /* ====================================================================== *
+     * DIE DECKEL — DAS REGAL JE DOKUMENT (E236)
+     * ---------------------------------------------------------------------- *
+     * Redur hat ein Bild geschickt: ein Regal aus Deckeln, jeder sagt schon
+     * von weitem, WAS er ist — ein PDF, ein Notizbuch, ein Whiteboard, eine
+     * Tabelle. Die Bibliothek hatte bisher zwei Formen, und keine davon:
+     *
+     *     Tabelle   dreizehn Zeilen, in jeder dreimal dieselbe Auskunft
+     *     Regal     je QUELLE eine Karte — also je Heft, nicht je Dokument
+     *
+     * Die Deckelform ist die dritte, nicht ein Ersatz. Beide alten bleiben,
+     * weil beide etwas können, was diese nicht kann: die Tabelle sortiert
+     * nach Spalten, das Heftregal zeigt Zusammengehöriges.
+     *
+     * KEINE NEUE DATENART, KEIN NEUES FELD. Die Art eines Dokuments wird
+     * ABGELESEN aus dem, was darin liegt — genau wie das Heft aus
+     * `quelleVon()` abgelesen wird. Ein Feld `art` am Block wäre eine
+     * Migration, und eine Migration für eine ANSICHT ist der teuerste Weg,
+     * den es gibt (§9).
+     * ====================================================================== */
+    /** Die Arten, die ein Dokument haben kann — Reihenfolge = Vorrang. */
+    const ARTEN = [
+        { id: 'pdf', name: 'PDF', typen: ['pdfseite'] },
+        { id: 'board', name: 'Whiteboard', typen: ['whiteboard'] },
+        { id: 'plan', name: 'Schaltplan', typen: ['schaltplan'] },
+        { id: 'blatt', name: 'Blatt', typen: ['blatt'] },
+        { id: 'tab', name: 'Tabelle', typen: ['spreadsheet'] },
+        { id: 'db', name: 'Datenbank', typen: ['database'] },
+        { id: 'karten', name: 'Karteikarten', typen: ['flashcard'] },
+        { id: 'datei', name: 'Dateien', typen: ['file', 'image', 'video', 'audio'] }
+    ];
+    /** Was steckt in dieser Seite? Zählt die Kindblöcke, nimmt den Vorrang. */
+    const artVon = (p) => {
+        const kinder = Store.childrenOf(p.id) || [];
+        for (const art of ARTEN)
+            if (kinder.some((b) => b && b.alive !== false &&
+                art.typen.includes(b.type)))
+                return { id: art.id, name: art.name };
+        /* Eine Seite, die vor allem andere Seiten hält, ist ein Ordner. Das ist
+           keine neue Datenart, sondern eine Beschreibung: `page` in `page`. */
+        const unterseiten = kinder.filter((b) => b && b.alive !== false && b.type === 'page');
+        if (unterseiten.length >= 2 && unterseiten.length >= kinder.length - 1)
+            return { id: 'ordner', name: unterseiten.length + ' Sachen' };
+        return { id: 'seite', name: 'Seite' };
+    };
+    /** Die Filterzeile über dem Regal — sie filtert nach ART, nicht nach Ort. */
+    const ART_FILTER = [
+        { id: 'alle', name: 'Alle' },
+        { id: 'pdf', name: 'PDF' },
+        { id: 'board', name: 'Whiteboards' },
+        { id: 'blatt', name: 'Blätter' },
+        { id: 'tab', name: 'Tabellen' },
+        { id: 'db', name: 'Datenbanken' },
+        { id: 'karten', name: 'Karteikarten' },
+        { id: 'ordner', name: 'Ordner' }
+    ];
+    /**
+     * Ein Deckel. Was darauf steht, ist keine Zeichnung, sondern eine
+     * Aussage: welche Art, und wenn es eine gibt, die echte Vorschau der
+     * Seite. `Vorschau.miniatur` liefert sie — dieselbe, die „Weiter wo du
+     * warst" verwendet (E205), damit nicht zwei Vorschauen gepflegt werden.
+     */
+    /* WELCHE ARTEN EINE ECHTE TEXTVORSCHAU VERTRAGEN — und welche nicht.
+       Gemessen am Bild: der Deckel eines PDF zeigte „Seite 1Seite 2Seite 3",
+       der eines Whiteboards eine graue Pille mit dem Wort „Whiteboard". Das
+       ist keine Vorschau, das ist der Name der Blockart dreimal.
+       `Vorschau.miniatur` liest den TEXT der Kindblöcke — bei einer Seite ist
+       das der Anfang des Textes und damit die beste Auskunft, die es gibt.
+       Bei einem PDF, einem Whiteboard oder einer Tabelle steht im Text
+       nichts, was jemandem hilft. Dort zeichnet die CSS das Papier. */
+    const MIT_TEXT = new Set(['seite', 'karten', 'db']);
+    const deckelKarte = (p) => {
+        const art = artVon(p);
+        const bild = MIT_TEXT.has(art.id) ? (Vorschau.miniatur(p.id, 5) || '') : '';
+        const wann = wannText(p.zuletztGeoeffnet || p.edited || p.created);
+        return `<button class="bib-deckel" data-id="${esc(p.id)}" data-art="${esc(art.id)}" ` +
+            `title="${esc(p.text || 'Ohne Titel')}">` +
+            `<span class="bib-deckel-blatt mini-zeilen${bild ? '' : ' is-leer'}">` +
+            '<i class="bib-papier" aria-hidden="true"></i>' +
+            (bild || '') +
+            (art.id === 'pdf' ? '<i class="bib-deckel-marke">PDF</i>' : '') +
+            `<i class="bib-deckel-stern${p.favorite ? ' an' : ''}" aria-hidden="true">` +
+            (p.favorite ? '\u2605' : '\u2606') + '</i>' +
+            '</span>' +
+            '<span class="bib-deckel-name"><b>' + esc(p.text || 'Ohne Titel') + '</b>' +
+            '<i class="bib-deckel-mehr" aria-hidden="true">\u2304</i></span>' +
+            '<small>' + esc(art.name) + ' \u00b7 ' + esc(wann) + '</small>' +
+            '</button>';
     };
     const hefte = (liste) => {
         const nach = new Map();
@@ -96806,6 +97526,80 @@ const Bibliothek = (() => {
                 'Gesamtgrösse, die Aufteilung kommt aus dem Bestand.</p>';
         });
     };
+    /* ---------------------------------------------------------------- *
+     * DIE DECKELANSICHT (E236)
+     * ---------------------------------------------------------------- */
+    const zeichneDeckel = (wrap) => {
+        const alle = gefiltert();
+        const liste = zustand.art === 'alle'
+            ? alle : alle.filter(p => artVon(p).id === zustand.art);
+        /* Welche Arten es überhaupt GIBT — ein Filter für eine Art, die
+           niemand hat, ist ein Knopf, der immer leer antwortet. */
+        const vorhanden = new Set(alle.map(p => artVon(p).id));
+        wrap.innerHTML =
+            '<div class="bib bib-deckel-seite">' +
+                deckelKopf(alle.length) +
+                '<div class="bib-arten" role="group" aria-label="Nach Art filtern">' +
+                ART_FILTER.filter(a => a.id === 'alle' || vorhanden.has(a.id) ||
+                    a.id === zustand.art)
+                    .map(a => `<button data-art="${esc(a.id)}"` +
+                    (zustand.art === a.id ? ' class="on" aria-pressed="true"' : ' aria-pressed="false"') +
+                    `>${esc(a.name)}</button>`).join('') +
+                '</div>' +
+                (liste.length
+                    ? '<div class="bib-gitter">' + liste.map(deckelKarte).join('') + '</div>'
+                    : '<p class="bib-leer">' + (zustand.art === 'alle'
+                        ? 'Hier ist noch nichts. Tippe auf „Neu", um anzufangen.'
+                        : 'Von dieser Art gibt es hier nichts.') + '</p>') +
+                /* DIE SICHERUNG UND DER PLATZ GEHÖREN IN JEDE FORM.
+                   Der erste Entwurf liess beide weg — sie standen nur im
+                   Heftregal, und das ist seit E236 nicht mehr die Vorgabe. Damit
+                   war die Warnung „du hast noch nie gesichert" aus der Ansicht
+                   verschwunden, die jetzt jeder zuerst sieht.
+        
+                   Das ist keine Zierde: §11 nennt die Sicherung eine
+                   Sicherheitsfunktion, und §46 stellt Datenintegrität vor alles
+                   andere. Eine Warnung, die man nur in einer Ansicht sieht, die
+                   kaum jemand öffnet, ist keine Warnung. */
+                sicherungsKarte() +
+                platzKarte() +
+                '</div>';
+        if (typeof Register !== 'undefined' && Register.symbole)
+            Register.symbole.fuelle(wrap);
+        binde(wrap);
+        platzNachtragen(wrap);
+    };
+    /**
+     * Der Kopf der Deckelansicht: Titel, „+ Neu", Formwahl.
+     *
+     * ER IST NICHT `bibKopf`. Der alte Kopf trägt die Reiter (wo liegt es)
+     * und zwei Formknöpfe; dieser trägt die Handlung. Beide zusammen wären
+     * vier Bänke übereinander — genau das, was Redur rot angestrichen hat.
+     * Die Reiter sind deshalb hier ein Menü hinter dem Titel.
+     */
+    /**
+     * Der Kopf der Deckelansicht: Titel, „+ Neu", Formwahl.
+     *
+     * DER TITEL HEISST „DOKUMENTE" UND NICHT WIE DER REITER. Der erste
+     * Entwurf setzte den Reiternamen als Überschrift — und „Kürzlich
+     * verwendet" ist bei 24 px so breit, dass der Neu-Knopf in die nächste
+     * Zeile fiel und aus einer Bank zwei wurden. Ausserdem stimmt es nicht:
+     * die Seite IST das Regal, der Reiter ist nur ein Filter darauf. Er
+     * steht deshalb klein darunter, zusammen mit der Zahl.
+     */
+    const deckelKopf = (anzahl) => {
+        const ort = REITER.find(r => r.id === zustand.reiter)?.name || 'Alle';
+        return '<header class="bib-dkopf">' +
+            '<h1>Dokumente</h1>' +
+            '<button class="bib-neu" data-neu-auf>' +
+            '<b aria-hidden="true">+</b><span>Neu</span></button>' +
+            '<button class="bib-form-knopf" data-form="liste" ' +
+            'aria-label="Als Liste anzeigen">\u2630</button>' +
+            '<button class="bib-ort" data-orte aria-haspopup="menu">' +
+            esc(ort) + ' \u00b7 ' + anzahl + (anzahl === 1 ? ' Dokument' : ' Dokumente') +
+            '<i aria-hidden="true">\u25be</i></button>' +
+            '</header>';
+    };
     const zeichneRegal = (wrap) => {
         const liste = gefiltert();
         const regal = hefte(liste);
@@ -96877,10 +97671,102 @@ const Bibliothek = (() => {
             if (id)
                 App.oeffne(id);
         }));
+        /* --- Die Deckelansicht (E236) ---------------------------------- */
+        wrap.querySelectorAll('.bib-arten [data-art]').forEach(b => b.addEventListener('click', () => {
+            zustand.art = b.dataset['art'] ?? 'alle';
+            App.zeichneSeite();
+        }));
+        wrap.querySelectorAll('[data-orte]').forEach(b => b.addEventListener('click', () => {
+            const r = b.getBoundingClientRect();
+            /* Die Reiter als Menü hinter dem Titel — dieselbe Liste wie in der
+               Tabelle, nur nicht als eigene Bank. Sonst stünden hier vier
+               Zeilen übereinander, bevor das erste Dokument kommt. */
+            const m = UI.menu(REITER.map(x => `<button data-x="${x.id}"${zustand.reiter === x.id ? ' class="on"' : ''}>` +
+                `<span class="mi">${x.icon}</span>${esc(x.name)}</button>`).join('') +
+                '<div class="sep"></div>' +
+                '<button data-x="__regal"><span class="mi">\u25a4</span>Nach Heften ordnen</button>' +
+                '<button data-x="__liste"><span class="mi">\u2630</span>Als Tabelle</button>', r.left, r.bottom + 6);
+            m.addEventListener('click', ev => {
+                const x = elVon(ev)?.closest('[data-x]');
+                if (!x)
+                    return;
+                const wahl = x.dataset['x'] ?? '';
+                m.remove();
+                if (wahl === '__regal') {
+                    Store.setMeta('bibForm', 'regal');
+                }
+                else if (wahl === '__liste') {
+                    Store.setMeta('bibForm', 'liste');
+                }
+                else {
+                    zustand.reiter = wahl || zustand.reiter;
+                    zustand.art = 'alle';
+                }
+                App.zeichneSeite();
+            });
+        }));
+        wrap.querySelectorAll('[data-neu-auf]').forEach(b => b.addEventListener('click', () => App.erstellenBlatt()));
+        wrap.querySelectorAll('.bib-deckel[data-id]').forEach(k => {
+            k.addEventListener('click', ereignis => {
+                /* Der Pfeil im Namen öffnet das Menü zum Stück, nicht das Stück. */
+                if (ereignis.target instanceof Element &&
+                    ereignis.target.closest('.bib-deckel-mehr'))
+                    return;
+                const id = k.dataset['id'];
+                if (id)
+                    App.oeffne(id);
+            });
+            k.querySelector('.bib-deckel-mehr')?.addEventListener('click', ereignis => {
+                ereignis.stopPropagation();
+                const id = k.dataset['id'];
+                const p = id ? Store.getBlock(id) : null;
+                if (!p)
+                    return;
+                const r = k.getBoundingClientRect();
+                const m = UI.menu(`<button data-a="oeffnen"><span class="mi">\u2197</span>Öffnen</button>` +
+                    `<button data-a="stern"><span class="mi">${p.favorite ? '\u2605' : '\u2606'}</span>` +
+                    (p.favorite ? 'Aus Favoriten' : 'Zu Favoriten') + '</button>' +
+                    '<button data-a="umbenennen"><span class="mi">\u270e</span>Umbenennen</button>' +
+                    '<div class="sep"></div>' +
+                    '<button data-a="papierkorb"><span class="mi">\u2327</span>In den Papierkorb</button>', Math.min(r.left, innerWidth - 230), r.bottom + 4);
+                m.addEventListener('click', ev => {
+                    const b = elVon(ev)?.closest('[data-a]');
+                    if (!b)
+                        return;
+                    const a = b.dataset['a'];
+                    m.remove();
+                    if (a === 'oeffnen') {
+                        App.oeffne(p.id);
+                        return;
+                    }
+                    if (a === 'stern') {
+                        Store.updateBlock(p.id, { favorite: !p.favorite });
+                    }
+                    if (a === 'umbenennen') {
+                        /* Umbenannt wird auf der Seite selbst — ein zweites Eingabefeld
+                           für denselben Titel wäre eine zweite Wahrheit (§8). */
+                        App.oeffne(p.id);
+                        setTimeout(() => document.getElementById('title')?.focus(), 80);
+                        return;
+                    }
+                    if (a === 'papierkorb') {
+                        /* NICHT LÖSCHEN, SONDERN IN DEN PAPIERKORB. `alive: false` ist
+                           umkehrbar; `Store.removeBlock` wäre es nicht (§46). */
+                        Store.updateBlock(p.id, { alive: false });
+                        UI.toast('„' + (p.text || 'Ohne Titel') + '" liegt im Papierkorb');
+                    }
+                    App.zeichneSeite();
+                });
+            });
+        });
     };
     const zeichnen = (wrap) => {
         if (zustand.reiter === 'schule') {
             zeichneSchule(wrap);
+            return;
+        }
+        if (form() === 'deckel') {
+            zeichneDeckel(wrap);
             return;
         }
         if (form() === 'regal') {
@@ -97027,7 +97913,29 @@ const Bibliothek = (() => {
             });
         }
     };
-    const oeffne = () => App.zeigeSonder('Bibliothek', zeichnen);
+    /**
+     * Das Regal öffnen.
+     *
+     * ZWEI SACHEN STEHEN HIER UND NICHT BEIM AUFRUFER (E236).
+     *
+     * `Seitenleiste.reiter('dokumente')` markiert den Weg unten. Er stand
+     * zuerst nur im Knopf `hl-dok` — und damit leuchtete unten „Heute",
+     * sobald das Regal von woanders aufging: vom Start, aus dem Mehr-Blatt,
+     * über einen Verweis. Eine Markierung, die nur bei EINEM von vier Wegen
+     * stimmt, ist schlimmer als keine.
+     *
+     * Und der Name lautet „Dokumente", nicht „Bibliothek": die Seite
+     * schreibt es gross darüber, Redur nennt es so, und zwei Namen für
+     * dieselbe Sache sind einer zu viel. Das Modul heisst weiter
+     * `Bibliothek` — es ist der Ordner, nicht die Aufschrift.
+     */
+    const oeffne = () => {
+        try {
+            Seitenleiste.reiter('dokumente');
+        }
+        catch { /* ohne Leiste kein Reiter */ }
+        App.zeigeSonder('Dokumente', zeichnen);
+    };
     /* ------------------------------------------------------------------ *
      * MEINE AUFGABEN
      *
@@ -99397,7 +100305,15 @@ const Lernwelt = (() => {
         return '<header class="lw-head">' +
             '<div class="lw-brand"><span class="lw-brand-icon" data-sym="learn" aria-hidden="true"></span><div>' +
             '<p>Redion</p><h1>Lernen &amp; Alltag</h1></div></div>' +
-            '<label class="lw-area"><span>Bereich</span><select data-lw-area aria-label="Lebensbereich auswählen">' +
+            /* `data-alle` sagt der CSS, ob der Filter gerade etwas TUT (E235).
+               Am Telefon zieht er in die Reiterzeile, und dort ist Platz knapp:
+               „◎ Alle Bereiche" braucht bei 16 px — der Pflichtgrösse, damit iOS
+               beim Tippen nicht hineinzoomt — rund 160 px von 368. Das ist fast
+               die halbe Zeile für die Aussage „ich filtere nicht".
+               Steht der Filter auf „alle", bleibt darum nur das Zeichen ◎ übrig;
+               sobald ein Bereich gewählt ist, steht sein Name da. */
+            '<label class="lw-area" data-alle="' + (aktiv.id === 'alle' ? 'ja' : 'nein') +
+            '"><span>Bereich</span><select data-lw-area aria-label="Lebensbereich auswählen">' +
             optionen.map(item => '<option value="' + esc(item.id) + '"' +
                 (item.id === aktiv.id ? ' selected' : '') + '>' + esc(item.icon + ' ' + item.name) + '</option>').join('') +
             '</select></label></header>' +
@@ -99412,7 +100328,12 @@ const Lernwelt = (() => {
                     .map(a => ({ id: a.id, icon: a.icon, name: a.name }));
                 const reihe = [...REITER, ...zusatz];
                 const hier = gruppeVon(zustand.ansicht);
-                const haupt = '<nav class="lw-nav" aria-label="Lernen und Alltag">' + reihe.map(item => {
+                /* `data-kopfzeile="eigene"` ist ein Vertrag mit der Schale, kein
+                   Aufruf in sie hinein (§5): am Telefon verschmilzt sie ihre eigene
+                   Krumenzeile mit GENAU dieser Zeile, statt eine zweite Bank
+                   darüberzusetzen. Fehlt die Marke, bleibt alles wie vorher — die
+                   Schale fragt nur, sie verlangt nichts. */
+                const haupt = '<nav class="lw-nav" data-kopfzeile="eigene" aria-label="Lernen und Alltag">' + reihe.map(item => {
                     const drin = item.id === zustand.ansicht ||
                         (item.unter || []).includes(zustand.ansicht);
                     return '<button type="button" data-lw-nav="' +
@@ -100328,7 +101249,15 @@ const Lernwelt = (() => {
      * `data-mehr` steht danach genau wie vorher (E159).
      */
     const reiterRollstand = () => {
-        Rollrand.binde(zustand.root?.querySelector('.lw-nav') || null, { art: 'mehr' });
+        const leiste = zustand.root?.querySelector('.lw-nav') || null;
+        Rollrand.binde(leiste, { art: 'mehr' });
+        /* UND DER GEWÄHLTE REITER MUSS AUCH ZU SEHEN SEIN.
+           Gefunden im Bild, nicht in einer Prüfung (§55): in der Prüfungssicht
+           stand der aktive Reiter „Prüfungen" halb ausserhalb der Karte — man
+           tippt darauf, er wird hell, und dann ist er weg. Solange die Leiste
+           322 px breit war, passte alles; seit sie sich am Telefon die Zeile
+           mit der Krume teilt (E235), sind es 234. */
+        Rollrand.zeige(leiste, leiste?.querySelector('[aria-current="page"]') || null);
     };
     const ansichtGueltig = (wert) => ANSICHTEN.some(item => item.id === wert);
     const wechseln = (ansicht) => {
@@ -103360,8 +104289,16 @@ const Produktwelten = (() => {
            Wort, das Redion schon vorher benutzt hat. */
         mobileBeschriftung('hl-start', 'Heute', 'Heute');
         mobileBeschriftung('hl-lernen', 'Lernen & Alltag', 'Lernen');
-        mobileBeschriftung('hl-seiten', 'Workspace', 'Seiten');
-        mobileBeschriftung('hl-bespr', 'Planung und Termine', 'Plan');
+        /* SEIT E236 GIBT ES `hl-seiten` NICHT MEHR — der Workspace steht im
+           Mehr-Blatt unter „Wo du arbeitest". Die Zeile hier wäre eine Anweisung
+           an einen Knopf, den niemand mehr baut.
+           Und aus „Plan" wurde wieder „Termine": die Kurzform stammt aus der
+           Zeit der waagerechten Pillen, wo Zeichen und Wort NEBENEINANDER
+           standen und vier von fünf Namen überliefen (E137). Unten stehen sie
+           übereinander, jeder Weg hat 78 px — „Termine" braucht bei 10.5 px
+           rund 48. Der kurze Name kostete Deutlichkeit, die es nicht mehr zu
+           sparen gibt. */
+        mobileBeschriftung('hl-bespr', 'Planung und Termine', 'Termine');
         if (gestartet)
             return;
         gestartet = true;
@@ -105773,8 +106710,23 @@ const Seitenleiste = (() => {
         if (!leiste)
             return;
         leiste.classList.toggle('ohne-namen', !tabNamen());
+        /* WELCHER REITER LEUCHTET, HÄNGT AM BAUM DARUNTER — nicht daran, wo
+           man gerade ist. Die drei Reiter der Seitenleiste sind kein Ortsschild,
+           sondern ein Umschalter: `zeichneBaum()` zeigt für `chat` die Agenten,
+           für `bespr` die Besprechungen und SONST den Seitenbaum.
+           `reiter` trägt aber auch die Werte der Wegeleiste am Telefon —
+           `dokumente`, `lernen`, `mehr`. Stand einer davon, leuchtete hier gar
+           nichts, während der Seitenbaum darunter stand: drei Reiter, keiner
+           an, und der mittlere Kasten zeigt trotzdem den Baum des ersten.
+           Seit E236 fällt das jedem sofort auf, weil Redion mit dem Regal
+           ÖFFNET und `dokumente` damit der erste Wert überhaupt ist.
+           Das ist NICHT der Rückfall auf „Start", den `handyLeiste()` weiter
+           unten ausdrücklich nicht macht. Dort lautet die Frage „wo bin ich?",
+           und darauf ist „Start" eine falsche Antwort. Hier lautet sie „welcher
+           Baum steht da?", und darauf ist „der Seitenbaum" die richtige. */
+        const baumReiter = (reiter === 'chat' || reiter === 'bespr') ? reiter : 'start';
         leiste.querySelectorAll('.sr').forEach(b => {
-            const hier = b.dataset.reiter === reiter;
+            const hier = b.dataset.reiter === baumReiter;
             b.classList.toggle('on', hier);
             /* Die Klasse `on` färbt den Reiter. Ein Vorleseprogramm sieht keine
                Farbe — für es ist `aria-current` der einzige Unterschied zwischen
@@ -105866,9 +106818,15 @@ const Seitenleiste = (() => {
         /* `chat` hat oben keinen Reiter mehr (E38) — die Zeile bleibt trotzdem
            stehen, damit die Seitenleiste am Rechner weiterhin ihren Chat-Reiter
            kennt; sie findet dann eben keinen Knopf zum Hervorheben. */
+        /* SEIT E236 STEHT SIE UNTEN UND HAT FÜNF WEGE.
+           „Seiten"/„Workspace" hat dort keinen Knopf mehr — der Weg steht im
+           Mehr-Blatt. Er FEHLT hier deshalb absichtlich: der Absatz weiter
+           unten erklärt, warum kein Rückfall auf „Start" stattfindet, und
+           genau das gilt hier auch. Wer im Workspace ist, soll unten nirgends
+           markiert sein statt an der falschen Stelle. */
         const karte = {
+            dokumente: 'hl-dok', bibliothek: 'hl-dok',
             start: 'hl-start', lernen: 'hl-lernen',
-            seiten: 'hl-seiten', workspace: 'hl-seiten',
             bespr: 'hl-bespr', mehr: 'hl-mehr'
         };
         l.querySelectorAll('button[role="tab"]').forEach(b => {
@@ -107155,14 +108113,10 @@ const Menueband = (() => {
      * ist keine Notiz-App mehr. Die Reiterzeile bleibt stehen; ein Tipp
      * darauf klappt auf, und die Wahl wird gemerkt.
      */
-    const amTelefon = () => {
-        try {
-            return AppEinstellung.amTelefon() === true;
-        }
-        catch {
-            return window.innerWidth <= 760;
-        }
-    };
+    /* SEIT E236 NICHT MEHR GEBRAUCHT und trotzdem hier: der Absatz darüber
+       ist die Begründung dafür, dass die Leiste zugeklappt beginnt — und
+       seit E236 gilt sie überall, nicht nur am Telefon. Die Funktion selbst
+       wäre nur noch ein toter Name; sie fällt weg, der Grund bleibt stehen. */
     /**
      * Ist gerade eine Seite offen — oder eine Sonderansicht?
      *
@@ -107205,7 +108159,18 @@ const Menueband = (() => {
      */
     /** Welche Erinnerung gilt hier — die der Seite oder die der Startansicht? */
     const merkeZu = () => seiteOffen() ? merkeZuSeite : merkeZuWelt;
-    const zugeklappt = () => meta(merkeZu(), amTelefon() || !seiteOffen()) === true;
+    /* ZUGEKLAPPT IST JETZT ÜBERALL DIE VORGABE (E236).
+       Vorher hing sie am Ort: am Telefon zu, am Rechner offen. Gemessen mit
+       offener Seite auf 1200 px war die offene Leiste 221 px hoch — ein
+       Viertel des Fensters, bevor der erste Buchstabe der Seite kommt.
+  
+       Redur: „ganz oben so wie MacBook … aber es sollte nicht so viel Platz
+       nehmen." Ein Menü am Rechner steht auch nicht offen da; es klappt auf,
+       wenn man es braucht. Zugeklappt sind es 35 px.
+  
+       Die WAHL bleibt unverändert: wer aufklappt, behält es offen — je
+       Seite und je Startansicht getrennt, wie bisher. */
+    const zugeklappt = () => meta(merkeZu(), true) === true;
     /* ======================================================================== *
      * EIN KNOPF
      * ======================================================================== */
@@ -107393,11 +108358,22 @@ const Menueband = (() => {
            also sieben anklickbare Dinge, die alle dasselbe sagen: nicht jetzt.
            Die ruhige Fassung nimmt den Gedanken zu Ende. Sobald eine Seite
            offen ist, ist das Band wieder da — zugeklappt, wie bisher. */
-        if (typeof Ruhig !== 'undefined' && Ruhig.an() && !seiteOffen()) {
-            wurzel.hidden = true;
-            wurzel.replaceChildren();
-            return;
-        }
+        /* E219 IST HIER ZURÜCKGENOMMEN (E236).
+           Der Absatz darüber hat recht, solange die Leiste UNTER der Kopfzeile
+           sass: „sieben anklickbare Dinge, die alle dasselbe sagen: nicht
+           jetzt." Der Fehler war aber nicht die Leiste, sondern ihr Inhalt —
+           drei ihrer sechs Reiter schreiben in eine Seite und können ohne
+           eine gar nichts.
+    
+           Genau das steht jetzt im Register (`BRAUCHT_SEITE`), und damit
+           räumt sich die Leiste selbst auf: ohne offene Seite bleiben die
+           Reiter, die etwas können. `reiter()` zeigt nur, was belegt ist —
+           aus sechs Reitern werden drei, statt aus einer Leiste keine.
+    
+           Und sie soll bleiben, weil Redur sie ganz oben haben will, wie an
+           einem Rechner: „ganz oben so wie MacBook … aber es sollte nicht so
+           viel Platz nehmen." Zugeklappt sind das 30 px. */
+        void seiteOffen;
         wurzel.hidden = false;
         let gewaehlt = reiterJetzt();
         if (!reiter.some((r) => r.id === gewaehlt))
@@ -107433,6 +108409,87 @@ const Menueband = (() => {
         const platz = document.createElement('div');
         platz.className = 'mb-platz';
         zeile.appendChild(platz);
+        /* ── RECHTS: SUCHE, KI, KONTO (E236) ────────────────────────────────
+           Sie standen am Telefon in einer eigenen schwebenden Leiste unten —
+           zusammen mit „Neu". Seit die Navigation dort hinwandert (Teil 5),
+           wären das zwei Leisten übereinander am unteren Rand.
+    
+           An einem Rechner steht genau das rechts in der Menüleiste, und dort
+           stehen sie jetzt auch: gleiche Zeile, gleiche Höhe, kein zusätzlicher
+           Platz. „Neu" braucht hier keinen Knopf mehr — es steht als „+ Neu"
+           im Regal und im Mehr-Blatt.
+    
+           DIE ZIELE SIND DIESELBEN FUNKTIONEN wie vorher, nicht neue: ein
+           zweiter Weg zu einer zweiten Suche wäre der Fehler, den E160 schon
+           einmal gemacht hat. */
+        const RECHTS = [
+            ['mb-suche', 'search', 'Suchen (Strg + P)',
+                () => { try {
+                    App.suche();
+                }
+                catch { /* ohne Suche bleibt die Leiste */ } }],
+            ['mb-ki', 'sparkle', 'Lokale KI (Strg + J)',
+                () => { try {
+                    App.kiPanel(true);
+                }
+                catch { /* ohne KI bleibt die Leiste */ } }],
+            /* NICHT `PWA.schubladeAuf` — das ist die Seitenleiste des Rechners,
+               und E38 hat den Weg am Telefon ausdrücklich davon weggeführt.
+               `App.arbeitsbereich()` trifft die Unterscheidung an EINER Stelle:
+               am Telefon das R-Blatt, am Rechner die Schublade. */
+            ['mb-konto', '', 'Arbeitsbereich',
+                () => {
+                    try {
+                        App.arbeitsbereich();
+                    }
+                    catch { /* ohne Arbeitsbereich bleibt die Leiste */ }
+                }]
+        ];
+        const rechts = document.createElement('div');
+        rechts.className = 'mb-rechts';
+        RECHTS.forEach(([id, zeichen, titel, tun]) => {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.id = id;
+            b.className = 'mb-rechts-knopf' + (zeichen ? '' : ' mb-konto');
+            b.title = titel;
+            b.setAttribute('aria-label', titel);
+            if (zeichen) {
+                const z = document.createElement('span');
+                z.dataset['sym'] = zeichen;
+                b.appendChild(z);
+            }
+            else {
+                /* Das Konto trägt kein Symbol, sondern das Zeichen des
+                   Arbeitsbereichs — dasselbe, das im R-Kreis stand.
+        
+                   `.ws-icon` IST DIE VERBINDUNG, nicht Schmuck: wer das Zeichen in
+                   den Einstellungen ändert, ruft `kopfzeileAuffrischen()`, und die
+                   sucht genau diese Klasse. Ohne sie stünde hier bis zum nächsten
+                   Neuzeichnen das alte Zeichen.
+                   Und die Vorgabe heisst „N" wie überall sonst. Hier stand „R" —
+                   bei einem Arbeitsbereich ohne eigenes Zeichen hätten Seitenleiste
+                   und Menüleiste dann zwei verschiedene Buchstaben für dieselbe
+                   Sache gezeigt. */
+                const z = document.createElement('span');
+                z.className = 'ws-icon';
+                try {
+                    z.textContent = String(Store.getMeta('arbeitsIcon', 'N'));
+                }
+                catch {
+                    z.textContent = 'N';
+                }
+                b.appendChild(z);
+            }
+            b.addEventListener('click', tun);
+            rechts.appendChild(b);
+        });
+        zeile.appendChild(rechts);
+        /* Der Klapp-Pfeil kommt gleich darunter und gehört DAZU: beide kleben
+           am rechten Rand, und zwei Dinge, die an derselben Stelle kleben,
+           liegen übereinander. Im ersten Bild war der Pfeil deshalb weg.
+           Er steht als erstes in der Gruppe, weil er zur Reiterzeile gehört
+           und nicht zu Suche/KI/Konto. */
         /* ── auf- und zuklappen ── */
         const klapp = document.createElement('button');
         klapp.type = 'button';
@@ -107447,7 +108504,7 @@ const Menueband = (() => {
            hätten beim Umschalten gesprungen statt sich zu drehen. */
         pfeil.dataset['sym'] = 'chevronD';
         klapp.appendChild(pfeil);
-        zeile.appendChild(klapp);
+        rechts.insertBefore(klapp, rechts.firstChild);
         wurzel.appendChild(zeile);
         /* ── das Band ── */
         const band = document.createElement('div');
@@ -109978,45 +111035,98 @@ const App = (() => {
         setTimeout(() => document.getElementById('title')?.focus(), 60);
         return p;
     };
-    /* ==========================================================================
-     * „NEU ERSTELLEN" — das Blatt hinter dem Stift (E45, Vorgabe §18)
-     * --------------------------------------------------------------------------
-     * WAS DER STIFT VORHER TAT: sofort eine leere Seite anlegen. Das ist der
-     * richtige Weg für den, der genau das will, und eine Sackgasse für alle
-     * anderen. Redion kann Datenbanken, Tabellen, Aufgaben, Karteikarten,
-     * Dateien und Vorlagen — und keines davon war von hier aus erreichbar.
-     * Wer nicht wusste, dass es Karteikarten gibt, fand sie nie.
-     *
-     * Deshalb ein Blatt mit acht Wegen, und die leere Seite steht als erster
-     * darin: wer sie will, tippt einmal mehr. Das ist der Preis dafür, dass
-     * die anderen sieben überhaupt existieren.
-     *
-     * NUR AM TELEFON. Am Rechner gibt es Strg+N, die Seitenleiste und die
-     * Befehlspalette — dort wäre ein Blatt ein Umweg, kein Wegweiser.
-     * ========================================================================*/
     const ERSTELLEN = [
-        ['seite', '📄', 'Neue Seite', 'Leere Seite anlegen'],
-        ['memo', '⚡', 'Schnellnotiz', 'Gedanken sofort festhalten'],
-        ['db', '▦', 'Neue Datenbank', 'Zeilen sind eigene Seiten'],
-        ['tabelle', '📊', 'Neue Tabelle', 'Rechnen wie in Excel'],
-        ['aufgabe', '☑', 'Aufgabe', 'Mit Datum planen'],
-        ['karte', '📚', 'Karteikarte', 'Später wiederholen'],
-        /* AUFNAHME UND WHITEBOARD FEHLTEN (E138, Auftrag §46). Beide Wege gab es
-           längst — die Besprechungsaufnahme und den Whiteboard-Block —, nur
-           nicht an der Stelle, an der man am Telefon etwas Neues anfängt. Ein
-           Weg, den man nur über die Befehlspalette findet, ist am Telefon kein
-           Weg: dort gibt es keine Tastatur mit Strg. */
-        ['aufnahme', '🎙', 'Aufnahme', 'Mitschnitt mit Marken und Notizen'],
-        ['board', '🖍', 'Whiteboard', 'Freie Fläche zum Skizzieren'],
-        ['scan', '📷', 'Dokument scannen', 'Kamera, Foto oder PDF in den Eingang'],
-        ['datei', '📎', 'Datei hochladen', 'Bleibt auf diesem Gerät'],
-        ['vorlage', '🧩', 'Vorlage verwenden', 'Mit fertiger Struktur starten']
+        /* --- Hereinholen ------------------------------------------------- */
+        { gruppe: 'Hereinholen', id: 'pdf', zeichen: '📕', name: 'PDF einlesen',
+            sub: 'Blättern, beschreiben, Text durchsuchen',
+            da: () => typeof PdfEinlesen !== 'undefined' && !!PdfEinlesen.waehlen },
+        { gruppe: 'Hereinholen', id: 'scan', zeichen: '📷', name: 'Dokument scannen',
+            sub: 'Kamera, Foto oder PDF in den Eingang',
+            da: () => typeof Recognition !== 'undefined' && !!Recognition.scan },
+        { gruppe: 'Hereinholen', id: 'datei', zeichen: '📎', name: 'Datei hochladen',
+            sub: 'Bleibt auf diesem Gerät' },
+        { gruppe: 'Hereinholen', id: 'umzug', zeichen: '⇤', name: 'Aus anderem Werkzeug',
+            sub: 'Notion, Obsidian, Trello, Evernote, Anki …',
+            da: () => typeof Austausch !== 'undefined' && !!Austausch.dialog },
+        /* --- Schreiben ---------------------------------------------------- */
+        { gruppe: 'Schreiben', id: 'seite', zeichen: '📄', name: 'Neue Seite',
+            sub: 'Leere Seite anlegen' },
+        { gruppe: 'Schreiben', id: 'memo', zeichen: '⚡', name: 'Schnellnotiz',
+            sub: 'Gedanken sofort festhalten' },
+        { gruppe: 'Schreiben', id: 'journal', zeichen: '📔', name: 'Journal-Eintrag',
+            sub: 'Der heutige Tag',
+            da: () => typeof Werkzeuge !== 'undefined' && !!Werkzeuge.journal },
+        { gruppe: 'Schreiben', id: 'vorlage', zeichen: '🧩', name: 'Vorlage verwenden',
+            sub: 'Mit fertiger Struktur starten' },
+        { gruppe: 'Schreiben', id: 'ordner', zeichen: '🗂', name: 'Ordner',
+            sub: 'Eine Seite, die andere hält' },
+        /* --- Zeichnen ----------------------------------------------------- */
+        { gruppe: 'Zeichnen', id: 'board', zeichen: '🖍', name: 'Whiteboard',
+            sub: 'Freie Fläche zum Skizzieren' },
+        { gruppe: 'Zeichnen', id: 'blatt', zeichen: '📐', name: 'Blatt',
+            sub: 'A4 — liniert, kariert, Punktraster, Millimeter' },
+        { gruppe: 'Zeichnen', id: 'plan', zeichen: '⚡', name: 'Schaltplan',
+            sub: 'Mit Fachzeichen und Stromsimulation' },
+        /* --- Ordnen und rechnen ------------------------------------------- */
+        { gruppe: 'Ordnen und rechnen', id: 'db', zeichen: '▦', name: 'Neue Datenbank',
+            sub: 'Zeilen sind eigene Seiten' },
+        { gruppe: 'Ordnen und rechnen', id: 'tabelle', zeichen: '📊', name: 'Neue Tabelle',
+            sub: 'Rechnen wie in Excel' },
+        { gruppe: 'Ordnen und rechnen', id: 'aufgabe', zeichen: '☑', name: 'Aufgabe',
+            sub: 'Mit Datum planen' },
+        { gruppe: 'Ordnen und rechnen', id: 'diagramm', zeichen: '📈', name: 'Diagramm',
+            sub: 'Zahlen aus einer Datenbank zeichnen' },
+        /* --- Lernen -------------------------------------------------------- */
+        { gruppe: 'Lernen', id: 'karte', zeichen: '📚', name: 'Karteikarte',
+            sub: 'Später wiederholen (SM-2)' },
+        { gruppe: 'Lernen', id: 'lernen', zeichen: '🎓', name: 'Lernzentrale öffnen',
+            sub: 'Fällige Karten, Fehler, Prüfungen',
+            da: () => typeof Produktwelten !== 'undefined' && !!Produktwelten.lernen },
+        /* --- Aufnehmen ------------------------------------------------------ */
+        { gruppe: 'Aufnehmen', id: 'aufnahme', zeichen: '🎙', name: 'Besprechung aufnehmen',
+            sub: 'Mitschnitt mit Marken und Notizen',
+            da: () => typeof Meeting !== 'undefined' && !!Meeting.panel }
     ];
+    /**
+     * Der Arbeitsbereich — Name, Zeichen und der Baum aller Seiten.
+     *
+     * AM TELEFON DAS R-BLATT, AM RECHNER DIE SCHUBLADE. Das ist keine
+     * Laune: E38 hat den Weg am Telefon ausdrücklich WEG von der Schublade
+     * geführt — die ist die Seitenleiste des Rechners, auf 390 px
+     * geschoben, samt Baum und 33-px-Zeilen.
+     *
+     * Herausgegeben seit E236: der Weg wird jetzt von drei Stellen
+     * gebraucht — dem alten Kreis, dem Knopf rechts in der Menüleiste und
+     * der Zeile im Mehr-Blatt. Drei Aufrufe, eine Entscheidung (§8).
+     */
+    const arbeitsbereich = () => {
+        if (!window.matchMedia('(max-width: 760px)').matches) {
+            if (PWA.schubladeAuf)
+                PWA.schubladeAuf();
+            return;
+        }
+        PWA.schubladeZu && PWA.schubladeZu();
+        rMenue();
+    };
     const erstellenBlatt = () => {
-        const html = '<div class="menu-liste">' +
-            ERSTELLEN.map(([was, z, name, sub]) => `<button data-neu="${was}"><span class="mi">${z}</span>` +
-                `<span class="ne-txt"><b>${name}</b><i>${sub}</i></span>` +
-                '<span class="ne-pfeil">›</span></button>').join('') +
+        /* Erst aussortieren, was es hier nicht gibt, DANN gruppieren — sonst
+           bleibt eine Überschrift ohne Zeilen darunter stehen. */
+        const wege = ERSTELLEN.filter(w => !w.da || w.da());
+        const gruppen = [];
+        for (const w of wege)
+            if (!gruppen.includes(w.gruppe))
+                gruppen.push(w.gruppe);
+        /* EINE LISTE, NICHT SECHS. Der erste Entwurf gab jeder Gruppe ihre
+           eigene `.menu-liste` — und die trägt am Telefon `flex:1`, weil sie
+           dort das ganze Blatt füllen soll. Sechs davon teilten sich die Höhe
+           und schnitten sich gegenseitig ab: „Dokument scannen" war halb weg,
+           „Neue Tabelle" halb weg, und gerollt hat keine von ihnen.
+           Die Überschriften laufen deshalb IN der Liste mit — `.grp` ist genau
+           dafür da und wird in jedem anderen Menü auch so verwendet. */
+        const html = '<div class="menu-liste">' + gruppen.map(g => `<div class="grp">${esc(g)}</div>` +
+            wege.filter(w => w.gruppe === g).map(w => `<button data-neu="${esc(w.id)}"><span class="mi">${esc(w.zeichen)}</span>` +
+                `<span class="ne-txt"><b>${esc(w.name)}</b><i>${esc(w.sub)}</i></span>` +
+                '<span class="ne-pfeil">›</span></button>').join('')).join('') +
             '</div>';
         const m = UI.menu(html, 0, 0, { titel: 'Neu erstellen' });
         m.addEventListener('click', (e) => {
@@ -110029,41 +111139,116 @@ const App = (() => {
             /* Erst schliessen, dann handeln — ein Dialog unter einem Blatt ist
                von aussen nicht erreichbar (derselbe Grund wie im R-Blatt). */
             setTimeout(() => {
-                if (was === 'seite')
+                /* Wege, die kein Blatt Papier brauchen: sie öffnen etwas, das es
+                   schon gibt, oder einen Wähler. */
+                if (was === 'seite') {
                     neueSeite();
-                else if (was === 'memo')
+                    return;
+                }
+                if (was === 'memo') {
                     Werkzeuge.schnellnotizen();
-                else if (was === 'datei')
+                    return;
+                }
+                if (was === 'datei') {
                     Werkzeuge.dateienLesen();
-                else if (was === 'scan')
+                    return;
+                }
+                if (was === 'scan') {
                     Recognition.scan();
-                else if (was === 'vorlage')
+                    return;
+                }
+                if (was === 'vorlage') {
                     Werkzeuge.vorlagen();
-                else if (was === 'karte')
+                    return;
+                }
+                if (was === 'karte') {
                     Werkzeuge.lernen();
-                else if (was === 'aufnahme') {
+                    return;
+                }
+                if (was === 'journal') {
+                    Werkzeuge.journal();
+                    return;
+                }
+                if (was === 'umzug') {
+                    Austausch.dialog();
+                    return;
+                }
+                if (was === 'pdf') {
+                    /* GEMESSEN UND EINE SACKGASSE GEFUNDEN. `PdfEinlesen.waehlen()`
+                       beginnt mit `App.aktuelleSeite()` und meldet „Erst eine Seite
+                       öffnen", wenn keine offen ist — und im Regal ist keine offen.
+                       Von dort führte der Weg also ins Nichts (§47).
+          
+                       Aus dem Blatt „Neu erstellen" heraus ist das ohnehin die
+                       falsche Frage: wer hier klickt, will ein NEUES Dokument aus
+                       der PDF, keine PDF in einer bestehenden Seite. Also erst die
+                       Seite, dann hinein damit.
+          
+                       Bricht jemand den Dateiwähler ab, bleibt eine leere,
+                       namenlose Seite übrig — die wandert in den Papierkorb, nicht
+                       in den Abgrund: `alive:false` ist umkehrbar (§46). */
+                    const ziel = neueSeite();
+                    void PdfEinlesen.waehlen(ziel.id).then((erg) => {
+                        if (erg) {
+                            zeichneBaum();
+                            zeichneSeite();
+                            return;
+                        }
+                        const jetzt = Store.getBlock(ziel.id);
+                        const leer = jetzt && !(jetzt.text || '').trim() &&
+                            (Store.childrenOf(ziel.id) || [])
+                                .filter((k) => k && k.alive !== false).length === 0;
+                        if (leer) {
+                            Store.updateBlock(ziel.id, { alive: false });
+                            zeichneBaum();
+                        }
+                    });
+                    return;
+                }
+                if (was === 'lernen') {
+                    Produktwelten.lernen('lernen');
+                    return;
+                }
+                if (was === 'aufnahme') {
                     if (typeof Meeting !== 'undefined' && Meeting.panel)
                         Meeting.panel();
                     else
                         UI.toast('Die Aufnahme ist in dieser Fassung nicht geladen.');
+                    return;
                 }
-                else {
-                    /* Datenbank, Tabelle und Aufgabe entstehen IN einer Seite — es
-                       gibt sie nicht ohne eine. Also erst die Seite, dann der Block
-                       darin, und der Cursor steht schon an der richtigen Stelle. */
-                    const p = neueSeite();
-                    setTimeout(() => {
-                        if (was === 'db')
-                            Store.addDatabase(p.id, 'Ohne Namen');
-                        else if (was === 'tabelle')
-                            Store.addBlock(p.id, 'tabelle', {});
-                        else if (was === 'board')
-                            Store.addBlock(p.id, 'whiteboard', { text: 'Whiteboard' });
-                        else if (was === 'aufgabe')
-                            Store.addBlock(p.id, 'todo', { text: '' });
-                        zeichneSeite();
-                    }, 80);
+                if (was === 'ordner') {
+                    /* EIN ORDNER IST KEINE NEUE DATENART. Er ist eine Seite, die
+                       andere hält — genau so liest die Bibliothek ihn auch wieder
+                       (E236, `artVon`). Ein eigenes Feld dafür wäre eine Migration
+                       für eine Ansicht (§9). Das Mappensymbol sagt, wozu sie da
+                       ist; wer sie vollschreibt, hat trotzdem eine Seite. */
+                    const ord = Store.addPage(null, { text: '', icon: '\ud83d\uddc2' });
+                    zeichneBaum();
+                    oeffne(ord.id);
+                    setTimeout(() => document.getElementById('title')?.focus(), 60);
+                    return;
                 }
+                /* Alles andere entsteht IN einer Seite — es gibt es nicht ohne
+                   eine. Also erst die Seite, dann der Block darin, und der Cursor
+                   steht schon an der richtigen Stelle. */
+                const p = neueSeite();
+                setTimeout(() => {
+                    if (was === 'db')
+                        Store.addDatabase(p.id, 'Ohne Namen');
+                    else if (was === 'tabelle')
+                        Store.addBlock(p.id, 'tabelle', {});
+                    else if (was === 'board')
+                        Store.addBlock(p.id, 'whiteboard', { text: 'Whiteboard' });
+                    else if (was === 'blatt')
+                        Store.addBlock(p.id, 'blatt', { text: '' });
+                    else if (was === 'plan')
+                        Store.addBlock(p.id, 'schaltplan', { text: '' });
+                    else if (was === 'diagramm')
+                        Store.addBlock(p.id, 'chart', { text: '' });
+                    else if (was === 'aufgabe')
+                        Store.addBlock(p.id, 'todo', { text: '' });
+                    zeichneSeite();
+                }, 80);
             }, 60);
         });
     };
@@ -110672,9 +111857,17 @@ const App = (() => {
             ? ((typeof Links !== 'undefined' && Links.seiteVon)
                 ? (Links.seiteVon(zielBlock) || {}).id || '' : '')
             : location.hash.slice(1).split(':')[0];
+        const zuletztOffen = Store.getMeta('letzte');
+        /* HIER GEMERKT UND NICHT WEITER UNTEN GEFRAGT (E236).
+           `oeffne()` schreibt `letzte` selbst — schon zwei Zeilen später zeigt
+           die Marke also auf die Seite, die gerade aufgegangen ist, und nicht
+           mehr auf die von gestern. Wer weiter unten fragt „gab es ein
+           zuletzt geöffnetes Dokument?", bekommt deshalb IMMER ja.
+           Genau daran ist der erste Versuch gescheitert: das Regal ging nie
+           auf, weil die Bedingung nie falsch wurde. */
+        const hatteDokument = !!(zuletztOffen && Store.getBlock(zuletztOffen));
         const startSeite = (ausHash && Store.getBlock(ausHash)) ? ausHash
-            : (Store.getMeta('letzte') && Store.getBlock(Store.getMeta('letzte')))
-                ? Store.getMeta('letzte')
+            : hatteDokument ? zuletztOffen
                 : (Store.rootPages()[0] || {}).id;
         zeichneBaum();
         oeffne(startSeite);
@@ -110702,12 +111895,19 @@ const App = (() => {
         /* `ausHash` von OBEN, nicht `location.hash` von hier: `oeffne()` schreibt
            die Seitenkennung selbst in die Adresse, und danach ist der Hash immer
            gesetzt. Die Bedingung war damit nie wahr. */
-        if (window.matchMedia('(max-width: 760px)').matches && !ausHash && !produktRoute) {
-            try {
-                Produktwelten.lernen('heute');
-            }
-            catch { /* ohne Startbildschirm bleibt die Seite */ }
-        }
+        /* HIER STAND EIN ZWEITER ENTSCHLUSS ÜBER DIESELBE FRAGE (E236).
+           Der Absatz darüber begründet gut, warum eine App bei ihrer Übersicht
+           beginnt und nicht in einem halb gescrollten Text. Nur traf er die
+           Entscheidung ein zweites Mal — und ohne die Einstellung zu lesen.
+    
+           Die Folge: „Beim Öffnen zeigen: Zuletzt geöffnete Seite" gab es in
+           den Einstellungen seit Langem, und am Telefon tat sie nichts. Wer
+           sie wählte, landete trotzdem auf „Heute".
+    
+           Jetzt entscheidet die Wahl, und zwar an EINER Stelle: weiter unten
+           bei `wunsch`. Was hier bleibt, ist nur noch die Vorgabe für den, der
+           nie gewählt hat — und die heisst seit E236 „Dokument". */
+        void 0;
         /* ----------------------------------------------------------------------
            WAS DAS ANDERE FENSTER GEÄNDERT HAT
            ----------------------------------------------------------------------
@@ -110746,7 +111946,16 @@ const App = (() => {
             zeichneSeite();
         });
         /* Beim Öffnen zeigen: was in den Einstellungen gewählt ist */
-        const wunsch = Store.getMeta('startAnsicht', 'start');
+        /* DIE VORGABE IST „DOKUMENT" (E236).
+           Redur: „wenn ich die Webseite öffne, sollte die zuletzt geöffnete
+           PDF sich öffnen; wenn keine offen war, direkt dort, wo die Dateien
+           liegen." Das ist die Erwartung an ein Werkzeug, in dem man arbeitet
+           — nicht an eine Webseite, die einen begrüsst.
+    
+           Wer schon einmal etwas anderes gewählt hat, behält seine Wahl:
+           `getMeta` gibt den gespeicherten Wert zurück und die Vorgabe nur,
+           wenn keiner da ist. */
+        const wunsch = Store.getMeta('startAnsicht', 'dokument');
         let startAnsichtZeigen = null;
         /* DIE STARTANSICHT DARF NICHT ÜBERSCHREIBEN, WAS SCHON OFFEN IST (E138).
            Hier stand ein blankes `setTimeout(…, 60)`. Wer in diesen 60 ms eine
@@ -110785,6 +111994,21 @@ const App = (() => {
            ganz am Ende von `start()` ausgeführt, wenn alle Module stehen. Danach
            kommt jedes `oeffne()` von aussen garantiert später und gewinnt. */
         if (!ausHash && !produktRoute) {
+            /* „DOKUMENT": das zuletzt geöffnete, sonst das Regal.
+               `startSeite` weiter oben zeigt bereits auf `Store.getMeta('letzte')`,
+               wenn es den Block noch gibt — dann ist die Seite schon offen und
+               hier ist nichts zu tun. Gibt es sie nicht mehr (gelöscht, anderes
+               Gerät, erster Start), geht das Regal auf.
+      
+               `letzte` ist derselbe Weg: die Wahl gab es in den Einstellungen
+               schon, nur hat sie nie jemand ausgewertet. Sie führte über den
+               Umweg „startAnsichtZeigen bleibt leer" zufällig zum richtigen
+               Ergebnis — am Rechner. Am Telefon nicht: dort schickte der Block
+               weiter oben JEDEN auf „Heute". */
+            if ((wunsch === 'dokument' || wunsch === 'letzte') && !hatteDokument)
+                startAnsichtZeigen = () => Bibliothek.oeffne();
+            if (wunsch === 'dokumente')
+                startAnsichtZeigen = () => Bibliothek.oeffne();
             if (wunsch === 'start')
                 startAnsichtZeigen = () => Produktwelten.lernen('heute');
             if (wunsch === 'workspace')
@@ -110803,10 +112027,11 @@ const App = (() => {
             startAnsichtZeigen = () => Produktwelten.routeOeffnen(produktRoute);
         /* Name und Symbol des Arbeitsbereichs */
         const wsBtn = document.getElementById('btn-settings');
-        const wsIcon = wsBtn?.querySelector('.ws-icon');
         const wsName = wsBtn?.querySelectorAll('span')[1];
-        if (wsIcon)
-            wsIcon.textContent = Store.getMeta('arbeitsIcon', 'N');
+        /* Alle `.ws-icon` — seit E236 auch das Konto rechts in der Menüleiste. */
+        document.querySelectorAll('.ws-icon').forEach(ico => {
+            ico.textContent = Store.getMeta('arbeitsIcon', 'N');
+        });
         if (wsName)
             wsName.textContent = Store.getMeta('arbeitsName', 'Redion');
         Blocks.bindeEditor(document.getElementById('page'));
@@ -110939,6 +112164,15 @@ const App = (() => {
          * davon nur über die Schublade — man musste also wissen, dass es sie
          * gibt. Der Kreis in der Mitte bleibt die KI.
          * ---------------------------------------------------------------- */
+        /* DOKUMENTE — das Regal, wo Redion jetzt öffnet (E236). */
+        /* Den Reiter setzt `Bibliothek.oeffne()` selbst — dort gehört er hin,
+           weil das Regal auch vom Start, aus dem Mehr-Blatt und über einen
+           Verweis aufgeht und die Markierung jedes Mal stimmen muss. */
+        an('hl-dok', () => {
+            PWA.schubladeZu && PWA.schubladeZu();
+            Bibliothek.oeffne();
+            handyLeiste();
+        });
         an('hl-start', () => {
             PWA.schubladeZu && PWA.schubladeZu();
             Produktwelten.lernen('heute');
@@ -110970,17 +112204,14 @@ const App = (() => {
             Produktwelten.planung();
             handyLeiste();
         });
-        /* Die KI sitzt jetzt unten in der Mitte, nicht mehr in der Reiterleiste. */
-        an('hu-ki', () => kiPanel(true));
-        an('hu-suche', () => suche());
-        /* Am Telefon das Blatt (Vorgabe §18), am Rechner der Direktweg: dort
-           gibt es Strg+N, die Seitenleiste und die Befehlspalette. */
-        an('hu-neu', () => {
-            if (window.matchMedia('(max-width: 760px)').matches)
-                erstellenBlatt();
-            else
-                neueSeite();
-        });
+        /* `hu-ki`, `hu-suche` und `hu-neu` gab es in der schwebenden Leiste
+           unten. Sie ist mit E236 weggefallen — zwei Leisten am unteren Rand
+           wären eine zu viel gewesen. Die drei Wege sind nicht weg:
+             Suche → `mb-suche` rechts in der Menüleiste (und Strg+P)
+             KI    → `mb-ki`    rechts in der Menüleiste (und Strg+J)
+             Neu   → der „+ Neu"-Knopf im Regal und das Mehr-Blatt
+           `an()` bindet still, wenn es das Element nicht gibt; die drei Zeilen
+           hier stehenzulassen wäre trotzdem eine Lüge über den Aufbau. */
         /* Der Kreis links oben öffnet den Arbeitsbereich — dieselbe Schublade
            wie früher der ☰. */
         /* ----------------------------------------------------------------------
@@ -110994,15 +112225,10 @@ const App = (() => {
          * Am Rechner bleibt es bei der Schublade — dort ist die Seitenleiste
          * richtig, und ein Blatt von unten wäre dort der Fremdkörper.
          * -------------------------------------------------------------------- */
-        an('hl-konto', () => {
-            if (!window.matchMedia('(max-width: 760px)').matches) {
-                if (PWA.schubladeAuf)
-                    PWA.schubladeAuf();
-                return;
-            }
-            PWA.schubladeZu && PWA.schubladeZu();
-            rMenue();
-        });
+        /* Der R-Kreis stand links oben in der Reiterleiste. Seit E236 steht
+           er rechts in der Menüleiste (`mb-konto`) und im Mehr-Blatt — die
+           ENTSCHEIDUNG, was er tut, steht aber weiter nur hier. */
+        an('hl-konto', () => arbeitsbereich());
         /* „Mehr" statt „Eingang" (E42 §6): Werkzeuge, Hilfe, Sicherung, Import,
            Papierkorb und Einstellungen brauchen einen Platz oben — ein
            Posteingang, der meistens leer ist, nicht. Er wohnt jetzt als Zeile
@@ -111167,10 +112393,21 @@ const App = (() => {
            Module stehen jetzt, und wer danach eine Seite öffnet, kommt später
            und bleibt sichtbar. */
         if (startAnsichtZeigen) {
+            /* DER FANG SCHWEIGT NICHT MEHR (E236). Hier stand ein leeres
+               `catch { }` mit dem Trost „ohne Startbildschirm bleibt die zuletzt
+               geöffnete Seite". Das stimmt — und man erfährt nie, dass es
+               schiefging. Beim Umbau auf „Dokument, sonst Regal" ging genau
+               hier etwas schief, und die Suche danach kostete eine Stunde, weil
+               nichts davon irgendwo stand.
+               Der Nutzer bekommt weiterhin keine Meldung: er hat eine Seite,
+               alles ist da, und ein Fehlerbanner für einen Startbildschirm wäre
+               Lärm. Aber die Konsole sagt es, und ein Prüflauf kann es lesen. */
             try {
                 startAnsichtZeigen();
             }
-            catch { /* Ohne Startbildschirm bleibt die zuletzt geöffnete Seite. */ }
+            catch (fehler) {
+                console.error('Die Startansicht konnte nicht geöffnet werden:', fehler);
+            }
         }
     };
     /* --- Beispielinhalt beim ersten Start ----------------------------------- */
@@ -111231,7 +112468,12 @@ const App = (() => {
         markdownExport, markdownVonSeite, woerterZaehlen, dupliziereSeite, seitenMenue, coverWaehlen,
         kuerzlich, kommendeTermine,
         ABSCHNITTE, abschnittAn, abschnittSchalten, abschnitteAnpassen, reiterWechseln,
-        sicherungSpeichern, sicherungLaden, zurueck, vorwaerts
+        sicherungSpeichern, sicherungLaden, zurueck, vorwaerts, arbeitsbereich,
+        /* HERAUSGEGEBEN SEIT E236. Das Blatt „Neu erstellen" war eine interne
+           Funktion hinter dem Stift am Telefon — und damit unerreichbar für den
+           „+ Neu"-Knopf im Regal und für alles am Rechner. Es ist derselbe
+           Katalog, nur endlich von überall erreichbar (§8). */
+        erstellenBlatt
     };
 })();
 /* Los geht's */

@@ -631,6 +631,17 @@ const Ansichten = (() => {
    * ist der ganze Unterschied zwischen einer Liste und einem Wegweiser.
    * ======================================================================*/
   const mehrGruppen = () => [
+    /* DIE ZWEI WEGE, DIE UNTEN KEINEN PLATZ MEHR HABEN (E236).
+       Die Navigation hat seit E236 fünf Wege statt sechs — und aus dem
+       R-Kreis links oben wurde ein Knopf in der Menüleiste. „Workspace"
+       und „Arbeitsbereich wechseln" hatten damit keinen Ort mehr.
+
+       Sie stehen deshalb hier. Das ist keine Ablage für Übriggebliebenes:
+       §46 sagt, dass nichts verschwinden darf, und ein Weg, den man nur
+       noch über die Adresszeile findet, ist verschwunden. */
+    { name: 'Wo du arbeitest', eintraege: [
+      { z: '▤', t: 'Workspace', s: 'Übersicht, Datenbanken, Wiki und Vorlagen.', a: 'workspace' },
+      { z: '⌂', t: 'Arbeitsbereich', s: 'Name, Zeichen und der Baum aller Seiten.', a: 'schublade' } ] },
     { name: 'Wichtige Werkzeuge', eintraege: [
       { z: '🧭', t: 'Kompass', s: 'Wie Redion aufgebaut ist und was du machen kannst.', a: 'kompass' },
       { z: '⌘', t: 'Befehle', s: 'Slash-Befehle und Aktionen.', a: 'befehle' },
@@ -671,7 +682,10 @@ const Ansichten = (() => {
       const el = (e.target instanceof Element) ? e.target : null;
       const a = el?.closest<HTMLElement>('[data-a]')?.dataset.a;
       if (!a) return;
-      if (a === 'kompass')            kompass();
+      /* Die zwei Wege, die mit E236 aus der Navigation hierherkamen. */
+      if (a === 'workspace')          Produktwelten.workspace('start');
+      else if (a === 'schublade')     App.arbeitsbereich();
+      else if (a === 'kompass')       kompass();
       else if (a === 'befehle')       Werkzeuge.palette();
       else if (a === 'tasten')        Werkzeuge.tastenkuerzel();
       else if (a === 'vorlagen')      Werkzeuge.vorlagen && Werkzeuge.vorlagen();

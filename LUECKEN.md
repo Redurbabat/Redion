@@ -2552,3 +2552,42 @@ GEZÄHLT WIRD ES HIER, damit die Zahl nicht verloren geht. Wer sie neu
 erheben will:
 
     Zahl + Leerzeichen + Grossbuchstabenwort, ohne `=== 1` in derselben Zeile
+
+
+L68 — Die Reiterzeile der Lernwelt hat im verschmolzenen Kopf 234 px
+================================================================================
+
+E235 lässt einen Bereich seine eigene oberste Zeile mit
+`data-kopfzeile="eigene"` melden; die Schale legt ihre Krumenzeile dann
+DARÜBER, statt eine zweite Bank zu bauen. Das spart am Telefon eine ganze
+Bank Höhe und ist genau das, worum Redur gebeten hatte.
+
+Der Preis steht in `lernwelt.css`: das Raster hält 44 px links für den
+Zurück-Knopf frei, 44 px rechts für die drei Punkte und dazwischen noch
+den Bereichs-Chip. Gemessen auf 390 px bleibt der Reiterzeile
+
+    vorher (eigene Bank)     11 → 377      366 px
+    jetzt (verschmolzen)     55 → 289      234 px
+
+Sichtbar sind damit etwa zweieinhalb Reiter; „Prüfungen" steht am Rand als
+„Prü" da.
+
+WAS SCHON DAGEGEN GETAN IST — und warum das die Lücke klein hält:
+
+  · Die Zeile rollt waagerecht, und `data-mehr` blendet an der Seite ein,
+    wo noch mehr steht. Kein Weg ist unerreichbar (§47).
+  · `Rollrand.zeige()` rollt beim Zeichnen zum AKTIVEN Reiter. Wer auf
+    „Prüfungen" steht, sieht „Prüfungen" — abgeschnitten ist immer nur,
+    wo man gerade nicht ist.
+
+WAS OFFEN BLEIBT: man sieht nicht auf einen Blick, welche Reiter es gibt.
+Zwei Wege wären denkbar, beide ungeprüft:
+
+  · Die drei Punkte weglassen, wenn der Bereich gar kein Seitenmenü hat —
+    dann sind es 278 statt 234 px. Setzt voraus, dass die Schale weiss,
+    wann das Menü leer ist; heute weiss sie es nicht.
+  · Den Bereichs-Chip in eine zweite Reihe nehmen. Das kostet Höhe und
+    nimmt damit genau zurück, wofür E235 da ist — deshalb steht es hier
+    als Möglichkeit und nicht als Vorschlag.
+
+Gemessen am 28. August 2026 auf 390 × 844.

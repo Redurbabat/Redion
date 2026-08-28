@@ -35,6 +35,53 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
+**28. August 2026 · Redion öffnet dort, wo die Sachen liegen (E236)**
+
+> Redur hat zwei Bildschirmfotos einer Notiz-App geschickt und beschrieben,
+> wie Redion sich öffnen soll. Fünf Teile — und das meiste davon gab es
+> schon, nur an der falschen Stelle.
+>
+> | | was gewollt war | was es schon gab | was ich tat |
+> |---|---|---|---|
+> | **1** | Regal mit Deckeln | `Bibliothek` als Tabelle | dritte Form: ein Deckel je Dokument, die Art abgelesen aus dem Inhalt |
+> | **2** | „+ Neu" fragt was | `erstellenBlatt()` mit 11 Wegen, versteckt hinterm Stift | 19 Wege in 6 Gruppen, überall erreichbar |
+> | **3** | zuletzt geöffnete PDF beim Start | die Einstellung gab es, ausgewertet hat sie niemand | Vorgabe „Dokument, sonst Regal" |
+> | **4** | Menüleiste wie am Rechner | `#menueband` (E210), meist versteckt | ganz oben, 35 px, räumt sich selbst auf |
+> | **5** | unten max 4–5 | 6 Kreise **oben** | fünf Wege unten, jeder mit Namen |
+>
+> **Der rote Faden:** kein einziger neuer Katalog (§8). Fünf Umzüge.
+>
+> **E219 ist zurückgenommen.** Er versteckte die Menüleiste über
+> Startansichten, weil dort „sieben Dinge stehen, die alle sagen: nicht
+> jetzt". Der Fehler war nicht die Leiste, sondern ihr Inhalt — drei ihrer
+> sechs Reiter brauchen eine offene Seite. Das steht jetzt an einer Stelle
+> im Register, und die Leiste räumt sich selbst auf.
+>
+> **Sieben Fehler fand nur das Bild (§55):** die Deckel zeigten „Seite
+> 1Seite 2Seite 3" statt Papier; ein `<button>` zentriert seinen Inhalt
+> senkrecht; sechs `.menu-liste` schnitten sich gegenseitig ab; der aktive
+> Weg unten lag hinter der gleitenden Fläche; die Schublade deckte die neue
+> Wegeleiste zu; die Titel auf den Deckeln waren HART abgeschnitten
+> („Was Notion 10 0"), weil `text-overflow` für ein Inline-Element nicht
+> gilt; und die Papierlinien liefen quer durch den Text wie ein
+> Durchstreichen.
+>
+> **Vier fanden Prüfungen:** test202 kam nicht mehr zum
+> Ausbildungs-Dashboard, test141 fand die zugedeckte Schublade und einen
+> Punkt Fehler in `--hunten`, test126 den verlorenen Antipp-Übergang, und
+> test67 den schwersten: die Sicherungswarnung und die Platzkarte standen
+> nur noch in der alten Tabellenform — eine Sicherheitsfunktion (§11) in
+> einer Ansicht zurückgelassen, die ab jetzt kaum jemand öffnet.
+>
+> **Zehn Prüfläufe wanderten mit** (31, 34, 37, 40, 67, 114, 126, 141, 156,
+> 247). Bei jedem blieb die FRAGE, nur die Stelle wurde nachgezogen —
+> mehrfach dreht sich dabei die Richtung um.
+>
+> **Und die Deckelform war die erste Vorgabeansicht ohne einen einzigen
+> Prüfpunkt.** test33 hat jetzt sechs, jeder einzeln rot gemacht, bevor er
+> stehen blieb (§55.2). Neu ist auch L68: die Reiterzeile der Lernwelt hat
+> im verschmolzenen Kopf 234 statt 366 px.
+
 **28. August 2026 · der Kopf am Telefon: 236 → 124 px**
 
 > ### Was Redur rot angestrichen hat (E232–E235)

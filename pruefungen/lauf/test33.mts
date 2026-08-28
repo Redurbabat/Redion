@@ -115,6 +115,75 @@ import { chromium } from 'playwright';
   await p.click('[data-app="bib"]');
   await p.waitForTimeout(600);
 
+  /* ================================================================== *
+   * DIE DECKELFORM (E236) — die Ansicht, mit der Redion jetzt öffnet
+   * ------------------------------------------------------------------ *
+   * Sie war die erste Vorgabeansicht ohne einen einzigen Prüfpunkt. Zwei
+   * Fehler fand daran nur das Hinsehen, und beide sind von der Sorte, die
+   * ohne Bild nie auffällt:
+   *
+   *   · Ein Titel wurde HART abgeschnitten. „Was Notion 10 000-mal besser
+   *     machen würde" stand als „Was Notion 10 0" da — ein anderer Titel,
+   *     kein gekürzter. Grund: `text-overflow` gilt nicht für ein
+   *     Inline-Element, `white-space:nowrap` schon.
+   *   · Die gezeichneten Papierlinien liefen quer durch den Text, und
+   *     „Die acht Teile" stand durchgestrichen da.
+   *
+   * WARUM HIER DIE KANTE GEMESSEN WIRD UND NICHT `scrollWidth`: genau das
+   * ist die Falle aus §55.2. Ein Inline-Element meldet `scrollWidth` 0 und
+   * `clientWidth` 0 — der Vergleich sagt „passt schon", während der Text
+   * 251 px über einen 102 px breiten Deckel hinausragt.
+   * ================================================================== */
+  const deckel = await p.evaluate(() => {
+    const HELFER = '.bib-papier, .bib-deckel-marke, .bib-deckel-stern';
+    const karten = [...document.querySelectorAll<HTMLElement>('.bib-deckel')];
+    const ueber: string[] = [];
+    const inline: string[] = [];
+    const luegt: string[] = [];
+    const falschesPapier: string[] = [];
+    let mitPapier = 0;
+    for (const k of karten) {
+      const blatt = k.querySelector<HTMLElement>('.bib-deckel-blatt');
+      if (!blatt) continue;
+      const kante = blatt.getBoundingClientRect().right;
+      const zeilen = [...blatt.children]
+        .filter(x => !x.matches(HELFER)) as HTMLElement[];
+      let zeichen = 0;
+      for (const z of zeilen) {
+        zeichen += (z.textContent || '').trim().length;
+        const r = z.getBoundingClientRect();
+        if (r.width > 0 && r.right > kante + 0.5)
+          ueber.push((z.textContent || '').trim().slice(0, 24) +
+                     ' (' + Math.round(r.right - kante) + ' px darüber)');
+        if (getComputedStyle(z).display === 'inline')
+          inline.push((z.textContent || '').trim().slice(0, 24));
+      }
+      /* Die Marke `is-leer` ist kein Schmuck: an ihr hängt, ob das Papier
+         gezeichnet wird. Sie muss deshalb die Wahrheit sagen. */
+      const leer = blatt.classList.contains('is-leer');
+      if (leer !== (zeichen === 0))
+        luegt.push((k.getAttribute('title') || '?') + ': is-leer=' + leer +
+                   ', Zeichen=' + zeichen);
+      const papier = blatt.querySelector<HTMLElement>('.bib-papier');
+      const sichtbar = !!papier && getComputedStyle(papier).display !== 'none';
+      if (sichtbar) mitPapier++;
+      if (sichtbar !== leer)
+        falschesPapier.push((k.getAttribute('title') || '?') + ': Papier=' + sichtbar);
+    }
+    return { karten: karten.length, ueber, inline, luegt, falschesPapier, mitPapier,
+             arten: [...new Set(karten.map(k => k.getAttribute('data-art') || '?'))] };
+  });
+  console.log('   Deckel:', JSON.stringify(deckel));
+  ok('Die Vorgabeform zeigt Deckel', deckel.karten >= 3);
+  ok('Kein Titel ragt über seinen Deckel hinaus', deckel.ueber.length === 0);
+  ok('Und keine Vorschauzeile bleibt inline', deckel.inline.length === 0);
+  ok('`is-leer` sagt die Wahrheit', deckel.luegt.length === 0);
+  ok('Papier liegt nur da, wo kein Text steht', deckel.falschesPapier.length === 0);
+  /* Ein Gegengewicht zum Punkt darüber: wäre das Papier ÜBERALL aus,
+     wären `falschesPapier` und dieser Punkt zusammen der Beweis, dass es
+     genau dort liegt, wo es hingehört — und nicht nirgends. */
+  ok('Und es liegt überhaupt irgendwo', deckel.mitPapier >= 1);
+
   /* DIE BIBLIOTHEK HAT SEIT E207 ZWEI FORMEN, und das Regal ist die
      Voreinstellung. Was hier geprüft wird — Spalten, Sortieren, Zeilen —
      gehört der LISTE; im Regal gibt es keinen Spaltenkopf, und ein Klick
@@ -125,12 +194,20 @@ import { chromium } from 'playwright';
      Die Wahl bleibt gemerkt, deshalb steht sie hier einmal und nicht vor
      jedem Punkt. */
   /* ================================================================== *
-   * DAS REGAL (E207) — geprüft, BEVOR auf die Liste geschaltet wird
+   * DAS HEFTREGAL (E207) — geprüft, BEVOR auf die Liste geschaltet wird
    * ------------------------------------------------------------------ *
-   * Es ist die Voreinstellung und war bis hierher ungeprüft. Die drei
-   * Punkte sind die drei Behauptungen, die es aufstellt: es fasst nach
-   * Heften zusammen, es zeigt echten Inhalt, und ein Klick führt hin.
+   * Die drei Punkte sind die drei Behauptungen, die es aufstellt: es
+   * fasst nach Heften zusammen, es zeigt echten Inhalt, und ein Klick
+   * führt hin.
+   *
+   * SEIT E236 IST ES NICHT MEHR DIE VOREINSTELLUNG — das ist die
+   * Deckelform, ein Deckel je Dokument. Das Heftregal bleibt vollständig
+   * erhalten und kann etwas, das die Deckel nicht können:
+   * Zusammengehöriges zeigen. Es wird deshalb hier ausdrücklich gewählt,
+   * statt sich darauf zu verlassen, dass es zufällig oben liegt.
    * ================================================================== */
+  await p.evaluate(() => { Store.setMeta('bibForm', 'regal'); App.zeichneSeite(); });
+  await p.waitForTimeout(500);
   const regal = await p.evaluate(() => {
     const karten = [...document.querySelectorAll<HTMLElement>('.bib-heft')];
     return {
@@ -339,7 +416,11 @@ import { chromium } from 'playwright';
   ok('Zeilen erscheinen', bib.zeilen >= 2);
   ok('Quelle wird gezeigt', bib.hatQuelle);
   ok('Person wird gezeigt', bib.hatPerson);
-  ok('Krume nennt die Bibliothek', /Bibliothek/.test(bib.krume || ''));
+  /* SIE HEISST SEIT E236 „DOKUMENTE".
+     Die Seite schrieb den Namen schon gross darüber, während die Krume
+     „Bibliothek" sagte — zwei Namen für dieselbe Sache. Das Modul heisst
+     weiter `Bibliothek`; das ist der Ordner, nicht die Aufschrift. */
+  ok('Krume nennt die Dokumente', /Dokumente/.test(bib.krume || ''));
   ok('Fusszeile zählt', /Seiten?/.test(bib.fuss || ''));
 
   /* Reiter Favoriten */

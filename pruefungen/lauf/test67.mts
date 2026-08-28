@@ -253,27 +253,34 @@ const pruef = (n: any, ist: any, soll: any) => {
              punkt: !!l.querySelector('.hl-punkt') };
   }) as any;
   pruef('Die Leiste steht am Telefon', leiste.sichtbar, true);
-  /* Seit E38: „Seiten" statt „Chats". Der Platz oben gehört dem, was man
-     täglich sucht; die KI steht unten in der Leiste und im R-Blatt. */
-  /* SEIT E132 SIND ES FÜNF BEREICHE, und drei heissen anders: die
-     Produktwelten benennen `hl-start` in „Heute", `hl-seiten` in
-     „Seiten" (der Titel bleibt „Workspace") und `hl-bespr` in „Plan" um und
-     stellen „Lernen" davor. Dieselben Tasten, dieselben Ziele, andere
-     Namen. */
+  /* SEIT E236 STEHT SIE UNTEN UND HAT FÜNF WEGE.
+     „Dokumente" ist neu — das Regal, wo Redion jetzt öffnet. „Seiten"
+     (Workspace) hat hier keinen Weg mehr; er steht im Mehr-Blatt, und
+     dass er dort wirklich ankommt, prüft der Punkt weiter unten.
+     Den Namen von `hl-bespr` setzen die Produktwelten, nicht das HTML —
+     und er heisst seit E236 wieder „Termine". Die Kurzform „Plan" stammt
+     aus der Zeit der waagerechten Pillen, wo der Platz fehlte (E137). */
   pruef('Konto und fünf Bereiche', leiste.ids,
-        ['hl-konto', 'hl-lernen', 'hl-start', 'hl-seiten', 'hl-bespr', 'hl-mehr']);
+        ['hl-dok', 'hl-start', 'hl-lernen', 'hl-bespr', 'hl-mehr']);
   pruef('Jeder hat seinen Namen dabei', leiste.beschriftung,
-        ['Lernen', 'Heute', 'Seiten', 'Plan', 'Mehr']);
+        ['Dokumente', 'Heute', 'Lernen', 'Termine', 'Mehr']);
   pruef('Start ist markiert', leiste.markiert, ['hl-start']);
-  /* DAS IST DIE REGEL, DIE DEN PLATZ MACHT. Stünden alle vier Namen da,
-     bliebe für den Inhalt nichts; stünde keiner da, müsste man raten. */
-  pruef('Nur der markierte zeigt seinen Namen', leiste.nameSichtbar, ['hl-start']);
+  /* DIESE REGEL IST MIT E236 UMGEDREHT.
+     Sie lautete: „Stünden alle Namen da, bliebe für den Inhalt nichts."
+     Das galt für eine WAAGERECHTE Pille oben — Zeichen und Wort
+     nebeneinander. Unten stehen sie übereinander, fünf Wege teilen sich
+     390 px zu je 78, und ein Name braucht nur seine Textbreite.
+
+     Jetzt steht jeder Name da, und das ist besser: wo man ist, sagt nicht
+     mehr nur die Farbe der wandernden Fläche (§38). */
+  pruef('Jeder Weg zeigt seinen Namen', leiste.nameSichtbar,
+        ['hl-dok', 'hl-start', 'hl-lernen', 'hl-bespr', 'hl-mehr']);
   pruef('Mehr hat einen Punktplatz', leiste.punkt, true);
 
   /* Umschalten markiert richtig */
   const wechsel = await handy.evaluate(async () => {
     const raus = [];
-    for (const id of ['hl-seiten', 'hl-bespr', 'hl-start']) {
+    for (const id of ['hl-dok', 'hl-bespr', 'hl-start']) {
       document.getElementById(id)?.click();
       await new Promise(r => setTimeout(r, 450));
       raus.push([id, [...document.querySelectorAll<HTMLElement>('#handy-oben button.an')].map(x => x.id)]);
@@ -295,7 +302,7 @@ const pruef = (n: any, ist: any, soll: any) => {
       if (!x) throw new Error(sel + ' ist nicht da.');
       return x;
     };
-    musselement('#hl-seiten').click();
+    musselement('#hl-dok').click();
     await new Promise(r => setTimeout(r, 500));
     /* DIE RICHTUNG HAT SICH ZWEIMAL GEDREHT. Erst lag die Leiste unten und
        die Schublade musste ÜBER ihr enden. Dann lagen die Pillen oben und
@@ -308,6 +315,10 @@ const pruef = (n: any, ist: any, soll: any) => {
        ist eine Sackgasse. Der Titel der Ansicht ist das oberste sichtbare
        Stück Inhalt — liegt er unter der Leiste, liegt alles darunter. */
     const l = musselement('#handy-oben').getBoundingClientRect();
+    /* SEIT E236 STEHT DIE NAVIGATION UNTEN — und damit dreht sich die
+       Richtung dieser Messung zum dritten Mal um. Oben steht jetzt die
+       Menüleiste; DIE ist es, unter der der Inhalt beginnen muss. */
+    const o = musselement('#menueband').getBoundingClientRect();
     const titel = document.querySelector<HTMLElement>('#page h1');
     /* GEMESSEN WIRD NICHT DIE ÜBERSCHRIFT, SONDERN DER INHALT (E225).
      *
@@ -334,20 +345,28 @@ const pruef = (n: any, ist: any, soll: any) => {
     if ((window as any).PWA && PWA.schubladeZu) PWA.schubladeZu();
     await new Promise(r => setTimeout(r, 300));
     return { inhaltBeginntDarunter: inhaltOben !== null
-               && Math.round(inhaltOben) >= Math.round(l.bottom) - 2,
+               && Math.round(inhaltOben) >= Math.round(o.bottom) - 2,
              inhaltOben: inhaltOben === null ? -1 : Math.round(inhaltOben),
-             leisteUnten: Math.round(l.bottom),
+             leisteUnten: Math.round(l.bottom), leisteOben: Math.round(l.top),
+             menueUnten: Math.round(o.bottom),
              titelText: (titel?.textContent ?? '').trim(),
              obenLiegt: !!(oben && oben.closest('#handy-oben')) };
   });
-  /* „Seiten" heisst jetzt „🧱 Workspace" (E132). */
-  pruef('Der Seitenbereich ist wirklich offen', deckung.titelText, '🧱 Workspace');
-  /* GEGENBEWEIS, damit die Zeile nicht wieder blind wird: nimmt man dem
-     Rollkasten den Platz, den die Leiste braucht (`#scroll{padding-top:0}`),
-     rutscht der Inhalt von 146 auf 66 — unter die Leiste, die bei 80
-     endet. Gemessen, beide Male. Die Zeile KANN rot werden. */
-  pruef('Sein Inhalt beginnt unter der Leiste', deckung.inhaltBeginntDarunter, true);
-  pruef('Und die Leiste ist anklickbar',                deckung.obenLiegt, true);
+  /* Angetippt wird seit E236 „Dokumente" — „Seiten" hat unten keinen Weg
+     mehr. Die Frage bleibt dieselbe: ist der Bereich wirklich offen, und
+     deckt sein Inhalt die Navigation zu? */
+  pruef('Der Dokumentenbereich ist wirklich offen', deckung.titelText, 'Dokumente');
+  /* ZWEI FRAGEN, ZWEI RICHTUNGEN — und beide sind dieselbe: verdeckt
+     etwas einen Weg?
+
+     Oben steht seit E236 die Menüleiste. Der Inhalt muss UNTER ihr
+     beginnen; täte er es nicht, läge sein Anfang unter den Reitern.
+
+     Unten steht die Navigation. Sie muss anklickbar bleiben —
+     `elementFromPoint` in ihrer Mitte muss sie selbst zurückgeben und
+     nicht ein Stück Inhalt, das darüberliegt. */
+  pruef('Der Inhalt beginnt unter der Menüleiste', deckung.inhaltBeginntDarunter, true);
+  pruef('Und die Wegeleiste unten ist anklickbar',  deckung.obenLiegt, true);
 
   /* Suchen und Neu sind in die Kopfzeile gewandert */
   const kopfzeile = await handy.evaluate(() => {
@@ -364,16 +383,25 @@ const pruef = (n: any, ist: any, soll: any) => {
     const t = musselement('#topbar').getBoundingClientRect();
     return { ids, ueberlauf: musselement('#topbar').scrollWidth - Math.round(t.width) };
   });
-  /* SUCHEN UND NEU SIND NACH UNTEN GEWANDERT — dorthin, wo der Daumen
-     hinkommt. In der Kopfzeile stehen sie deshalb nicht mehr; sie hat nur
-     noch, was zur geöffneten Seite gehört. */
+  /* SUCHEN UND NEU SIND ZWEIMAL GEWANDERT.
+     Erst aus der Kopfzeile nach unten, dorthin, wo der Daumen hinkommt.
+     Seit E236 steht unten die Navigation mit ihren fünf Wegen, und die
+     schwebende Leiste gibt es nicht mehr: Suchen steht rechts in der
+     Menüleiste (wie an einem Rechner), „Neu" ist der grosse „+ Neu"-Knopf
+     im Regal.
+
+     In der Kopfzeile stehen sie weiterhin nicht — sie hat nur, was zur
+     geöffneten Seite gehört. Das ist der Punkt, der hier bewacht wird. */
   pruef('Suchen steht nicht mehr in der Kopfzeile',
         (kopfzeile.ids ?? '').includes('btn-suche-handy'), false);
   pruef('Die Kopfzeile läuft nicht über', Number(kopfzeile.ueberlauf ?? -1) <= 1, true);
-  const untenDa = await handy.evaluate(() =>
-    [...document.querySelectorAll<HTMLElement>('#handy-unten button')].map(b => b.id)) as string[];
-  pruef('Suchen steht unten', untenDa.includes('hu-suche'), true);
-  pruef('Neu ebenso',         untenDa.includes('hu-neu'), true);
+  const obenRechts = await handy.evaluate(() =>
+    [...document.querySelectorAll<HTMLElement>('#menueband .mb-rechts > button')]
+      .map(b => b.id).filter(Boolean)) as string[];
+  pruef('Suchen steht oben rechts', obenRechts.includes('mb-suche'), true);
+  pruef('Die KI ebenso',            obenRechts.includes('mb-ki'), true);
+  pruef('Die schwebende Leiste ist weg',
+        await handy.evaluate(() => !document.getElementById('handy-unten')), true);
 
   const werkzeuge = await handy.evaluate(async () => {
     /* Ein Element, das dasein MUSS. Fehlt es, misst der Lauf nichts mehr —
@@ -384,7 +412,7 @@ const pruef = (n: any, ist: any, soll: any) => {
       if (!x) throw new Error(sel + ' ist nicht da.');
       return x;
     };
-    musselement('#hu-suche').click();
+    musselement('#mb-suche').click();
     await new Promise(r => setTimeout(r, 400));
     const sucheDa = !!document.querySelector('.overlay');
     document.querySelectorAll<HTMLElement>('.overlay').forEach(o => o.remove());
@@ -394,7 +422,10 @@ const pruef = (n: any, ist: any, soll: any) => {
        legte er sofort eine leere Seite an, was in einem von acht Fällen
        richtig war. Diese Prüfung tippt jetzt wie ein Mensch: erst den
        Stift, dann „Neue Seite". */
-    musselement('#hu-neu').click();
+    /* `hu-neu` gab es in der schwebenden Leiste. Seit E236 öffnet der
+       „+ Neu"-Knopf im Regal dasselbe Blatt — welcher Knopf es auslöst,
+       prüft test37; hier geht es um das Blatt und darum, was es tut. */
+    App.erstellenBlatt();
     await new Promise(r => setTimeout(r, 500));
     const blattDa = !!document.querySelector('.menu.blatt [data-neu="seite"]');
     document.querySelector<HTMLElement>('.menu.blatt [data-neu="seite"]')?.click();
@@ -402,7 +433,7 @@ const pruef = (n: any, ist: any, soll: any) => {
     return { sucheDa, blattDa, mehr: Store.rootPages().length > vorher,
              zu: document.querySelectorAll('.menu, .menu-grund').length === 0 };
   });
-  pruef('Der Lupenknopf öffnet die Suche', werkzeuge.sucheDa, true);
+  pruef('Die Lupe oben rechts öffnet die Suche', werkzeuge.sucheDa, true);
   pruef('Der Stift fragt erst, was entstehen soll', werkzeuge.blattDa, true);
   pruef('… und „Neue Seite" legt eine an', werkzeuge.mehr, true);
   pruef('… und das Blatt ist danach zu',   werkzeuge.zu, true);

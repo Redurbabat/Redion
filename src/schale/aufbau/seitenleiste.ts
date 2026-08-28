@@ -215,8 +215,23 @@ const Seitenleiste = (() => {
     const leiste = document.getElementById('side-reiter');
     if (!leiste) return;
     leiste.classList.toggle('ohne-namen', !tabNamen());
+    /* WELCHER REITER LEUCHTET, HÄNGT AM BAUM DARUNTER — nicht daran, wo
+       man gerade ist. Die drei Reiter der Seitenleiste sind kein Ortsschild,
+       sondern ein Umschalter: `zeichneBaum()` zeigt für `chat` die Agenten,
+       für `bespr` die Besprechungen und SONST den Seitenbaum.
+       `reiter` trägt aber auch die Werte der Wegeleiste am Telefon —
+       `dokumente`, `lernen`, `mehr`. Stand einer davon, leuchtete hier gar
+       nichts, während der Seitenbaum darunter stand: drei Reiter, keiner
+       an, und der mittlere Kasten zeigt trotzdem den Baum des ersten.
+       Seit E236 fällt das jedem sofort auf, weil Redion mit dem Regal
+       ÖFFNET und `dokumente` damit der erste Wert überhaupt ist.
+       Das ist NICHT der Rückfall auf „Start", den `handyLeiste()` weiter
+       unten ausdrücklich nicht macht. Dort lautet die Frage „wo bin ich?",
+       und darauf ist „Start" eine falsche Antwort. Hier lautet sie „welcher
+       Baum steht da?", und darauf ist „der Seitenbaum" die richtige. */
+    const baumReiter = (reiter === 'chat' || reiter === 'bespr') ? reiter : 'start';
     leiste.querySelectorAll<HTMLElement>('.sr').forEach(b => {
-      const hier = b.dataset.reiter === reiter;
+      const hier = b.dataset.reiter === baumReiter;
       b.classList.toggle('on', hier);
       /* Die Klasse `on` färbt den Reiter. Ein Vorleseprogramm sieht keine
          Farbe — für es ist `aria-current` der einzige Unterschied zwischen
@@ -308,9 +323,15 @@ const Seitenleiste = (() => {
     /* `chat` hat oben keinen Reiter mehr (E38) — die Zeile bleibt trotzdem
        stehen, damit die Seitenleiste am Rechner weiterhin ihren Chat-Reiter
        kennt; sie findet dann eben keinen Knopf zum Hervorheben. */
+    /* SEIT E236 STEHT SIE UNTEN UND HAT FÜNF WEGE.
+       „Seiten"/„Workspace" hat dort keinen Knopf mehr — der Weg steht im
+       Mehr-Blatt. Er FEHLT hier deshalb absichtlich: der Absatz weiter
+       unten erklärt, warum kein Rückfall auf „Start" stattfindet, und
+       genau das gilt hier auch. Wer im Workspace ist, soll unten nirgends
+       markiert sein statt an der falschen Stelle. */
     const karte: Record<string, string> = {
+      dokumente: 'hl-dok', bibliothek: 'hl-dok',
       start: 'hl-start', lernen: 'hl-lernen',
-      seiten: 'hl-seiten', workspace: 'hl-seiten',
       bespr: 'hl-bespr', mehr: 'hl-mehr'
     };
     l.querySelectorAll('button[role="tab"]').forEach(b => {

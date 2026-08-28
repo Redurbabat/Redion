@@ -94,7 +94,9 @@ const beiBreite = async (breite: number) => {
       cssSagt:   matchMedia('(max-width: 760px)').matches,
       /* Und was daraus wird */
       leisteOben:  sichtbar('handy-oben'),
-      leisteUnten: sichtbar('handy-unten'),
+      /* Seit E236 steht die Navigation selbst unten; die schwebende
+         Leiste `#handy-unten` gibt es nicht mehr. */
+      leisteUnten: sichtbar('handy-oben'),
       seitenleiste: sb ? getComputedStyle(sb).position : 'fehlt'
     };
   });
@@ -183,13 +185,17 @@ const sl = await schublade.evaluate(() => {
       return st.display !== 'none' && st.visibility !== 'hidden' && rr.height > 8;
     })
     .sort((a, b2) => a.getBoundingClientRect().top - b2.getBoundingClientRect().top);
-  const ersteZeile = sichtbareZeilen[0];
-  const rz = ersteZeile?.getBoundingClientRect();
+  /* Die LETZTE sichtbare Zeile — sie ist es, die seit E236 verschwinden
+     könnte, weil die Leiste unten steht. */
+  const letzteZeile = sichtbareZeilen[sichtbareZeilen.length - 1];
+  const rz = letzteZeile?.getBoundingClientRect();
   return {
     leisteUnten: ro ? Math.round(ro.bottom) : -1,
+    leisteOben: ro ? Math.round(ro.top) : -1,
     schubladeOben: r ? Math.round(r.top) : -1,
-    zeileOben: rz ? Math.round(rz.top) : -1,
-    zeileText: (ersteZeile?.textContent ?? '').trim().slice(0, 24),
+    schubladeUnten: r ? Math.round(r.bottom) : -1,
+    letzteZeileUnten: rz ? Math.round(rz.bottom) : -1,
+    zeileText: (letzteZeile?.textContent ?? '').trim().slice(0, 24),
     zTiefe: sb ? Number(getComputedStyle(sb).zIndex) : -1,
     zLeiste: oben ? Number(getComputedStyle(oben).zIndex) : -1
   };
@@ -199,12 +205,24 @@ await schublade.close();
 p('Die Pillenleiste liegt über der Schublade',
   (sl as any).zLeiste > (sl as any).zTiefe,
   `Leiste ${(sl as any).zLeiste}, Schublade ${(sl as any).zTiefe}`);
-gleich('Die Schublade beginnt genau an der Unterkante der Leiste',
-  (sl as any).schubladeOben, (sl as any).leisteUnten);
-p('… und ihre erste Zeile liegt ganz darunter',
-  (sl as any).zeileOben >= (sl as any).leisteUnten,
-  `„${(sl as any).zeileText}" beginnt bei ${(sl as any).zeileOben} px, ` +
-  `die Leiste endet bei ${(sl as any).leisteUnten} px`);
+/* SEIT E236 STEHT DIE LEISTE UNTEN — und damit dreht sich diese Messung um.
+   Die Frage ist dieselbe geblieben und die einzige, die zählt: verdeckt
+   die Schublade einen Weg, oder liegt sie sauber daneben?
+
+   Vorher: die Schublade musste UNTER der Leiste beginnen.
+   Jetzt: sie muss ÜBER ihr enden — ihre letzte Zeile darf die Leiste nicht
+   erreichen, sonst tippt man auf „Heute" und trifft die Schublade.
+
+   Der Fund, der diesen Punkt entstehen liess, gilt unverändert: die Leiste
+   rechnet die Kerbe des Geräts mit, die Schublade muss es auch. */
+p('Die Schublade endet über der Wegeleiste',
+  (sl as any).schubladeUnten <= (sl as any).leisteOben,
+  `Schublade endet bei ${(sl as any).schubladeUnten} px, ` +
+  `die Leiste beginnt bei ${(sl as any).leisteOben} px`);
+p('… und ihre letzte Zeile liegt ganz darüber',
+  (sl as any).letzteZeileUnten <= (sl as any).leisteOben,
+  `„${(sl as any).zeileText}" endet bei ${(sl as any).letzteZeileUnten} px, ` +
+  `die Leiste beginnt bei ${(sl as any).leisteOben} px`);
 
 console.log('\n5 · Im Quelltext steht keine zweite Grenze mehr');
 /* Sechs `matchMedia('(max-width: 700px)')` im TypeScript und drei

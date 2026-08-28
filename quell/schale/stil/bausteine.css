@@ -214,7 +214,13 @@
 
      Der Kommentar darüber sagt „sie beginnt UNTER den Pillen". Die Absicht
      stand also da, nur die Zahl folgte ihr nicht. */
-  #sidebar{ position:fixed; left:0; top:var(--hoben); height:calc(100% - var(--hoben));
+  /* SEIT E236 STEHT DIE WEGELEISTE UNTEN, und die Schublade muss ÜBER ihr
+     enden statt unter der alten Leiste zu beginnen. Gemessen vor der
+     Änderung: Schublade bis 844, Leiste ab 785 — sie deckte die
+     Navigation vollständig zu. Oben bleibt nur die Menüleiste und die
+     Kerbe des Geräts freizuhalten. */
+  #sidebar{ position:fixed; left:0; top:calc(var(--hoben) + 45px);
+            height:calc(100% - var(--hoben) - 45px - var(--hunten));
             transform:translateX(-102%); transition:transform .22s ease;
             width:100%; z-index:390; flex:0 0 auto;
             border-right:none; }
@@ -736,6 +742,17 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 .bib-deckel-blatt > i.bib-papier{
   position:absolute; inset:0; display:block; font-style:normal
 }
+/* UND ES LIEGT NUR DA, WO NICHTS STEHT.
+   Am Rechnerbild sah man es sofort: die Linien des Papiers laufen alle
+   9 px, die Textzeilen der Vorschau haben ihre eigene Höhe — und wo beide
+   sich treffen, geht ein Strich mitten durch das Wort. „Die acht Teile"
+   und „Filter, Rechnen, Sortieren" standen durchgestrichen da. Eine
+   durchgestrichene Überschrift ist keine Verzierung, sie ist eine AUSSAGE
+   („erledigt", „gelöscht"), und sie war falsch.
+   Steht Text auf dem Deckel, ist er die Vorschau. Steht keiner da — bei
+   einem PDF, einem Whiteboard, einer leeren Seite —, zeichnet das Papier.
+   Welche Art es ist, steht ohnehin als Wort in der Zeile darunter (§38). */
+.bib-deckel-blatt:not(.is-leer) > i.bib-papier{ display:none }
 /* EINE LEERE SEITE MUSS WIE PAPIER AUSSEHEN, NICHT WIE EIN LOCH.
    Im Bild standen „Semester 1", „Semester 2" und „Prüfungen" als drei
    dunkle Rechtecke — sie haben keinen Text, also gab `Vorschau.miniatur`
@@ -1210,7 +1227,21 @@ tr.unterzeile .tt-ein{color:var(--text-faint); margin-right:2px}
  * unterschiedlich wieder, und das ist genau das, was eine Vorschau
  * verhindern soll.
  * ==========================================================================*/
-.mini-zeilen > *{ overflow:hidden; min-width:0; text-overflow:ellipsis; white-space:nowrap }
+/* `display:block` IST HIER DIE GANZE ZEILE — und der Grund steht in §55.2.
+   `overflow` und `text-overflow` gelten NICHT für ein nicht ersetztes
+   Inline-Element; `white-space:nowrap` schon. Ein `<b>` blieb also inline,
+   lief über den Deckel hinaus und wurde von dessen `overflow:hidden` hart
+   abgeschnitten — ohne Auslassungszeichen. Gemessen auf dem Telefon: ein
+   Deckel ist 102 px breit, der Titel „Die Oberfläche — wo jeder Knopf
+   sitzt" ragte 251 px darüber hinaus, und „Was Notion 10 000-mal besser
+   machen würde" stand als „Was Notion 10 0" da — ein anderer Titel, kein
+   gekürzter (dieselbe Lehre wie E227 bei der Zahl).
+   Und die Falle für jede Prüfung, die das messen will: ein Inline-Element
+   meldet `scrollWidth` 0 und `clientWidth` 0. Wer die beiden vergleicht,
+   bekommt „0 gegen 0 — passt schon".
+   In der Lernwelt fiel es nicht auf, weil `.lw-mini` ein Grid ist und seine
+   Kinder ohnehin blockifiziert. `display:block` schadet dort nichts. */
+.mini-zeilen > *{ display:block; overflow:hidden; min-width:0; text-overflow:ellipsis; white-space:nowrap }
 .mini-zeilen > b{ color:var(--text); font-size:12px; font-weight:720; letter-spacing:-.01em }
 .mini-zeilen > code{
   padding:1px var(--space-1); border-radius:var(--radius-sm); background:var(--bg-hover);
@@ -1526,80 +1557,89 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
      Zwölf Punkte klingen wenig. Sie sind ein Viertel der Ersparnis, die
      ohne Verlust überhaupt zu holen ist — den Rest holen die verschmolzene
      Reiterzeile (−56) und der Bereichsfilter als Chip (−44). */
-  :root{ --hoben: calc(68px + env(safe-area-inset-top)) }
+  /* ══════════════════════════════════════════════════════════════════
+   * DIE NAVIGATION STEHT UNTEN (E236)
+   * ------------------------------------------------------------------
+   * `--hoben` heisst weiter so, meint aber jetzt die MENÜLEISTE: sie ist
+   * seit E236 das oberste Ding in `#main`, und alles, was den Abstand
+   * nach oben rechnet, rechnet mit dieser Marke.
+   *
+   * WARUM UNTEN. Gemessen lagen am Telefon drei Bänke übereinander —
+   * Kreise 68, Menüleiste 45, Krume 56 = 169 px von 844, bevor der erste
+   * Deckel kommt. Unten kostet die Navigation nichts vom Kopf, und der
+   * Daumen kommt hin, ohne die Hand umzugreifen.
+   * ════════════════════════════════════════════════════════════════ */
+  :root{ --hoben: env(safe-area-inset-top);
+         /* 5 Polster + 48 Weg + 5 Polster + 1 Trennlinie = 59.
+            Die Linie gehört dazu: gemessen war die Leiste 59 px hoch, die
+            Marke sagte 58, und die Schublade endete einen Punkt zu tief —
+            genau auf der Linie. Ein Punkt ist kein Schaden, aber eine
+            Marke, die nicht stimmt, ist der Anfang von zehn. */
+         --hunten: calc(59px + env(safe-area-inset-bottom)) }
   #handy-oben{
-    display:flex; align-items:center; gap:10px;
-    position:fixed; left:0; right:0; top:0; z-index:401;
-    padding:calc(6px + env(safe-area-inset-top)) 28px 6px;
-    background:var(--bg);
-    overflow-x:auto; scrollbar-width:none;
+    display:flex; align-items:stretch; gap:2px;
+    position:fixed; left:0; right:0; bottom:0; top:auto; z-index:401;
+    padding:5px 8px calc(5px + env(safe-area-inset-bottom));
+    background:var(--bg); border-top:1px solid var(--line);
   }
-  /* GEMESSEN AM 6. AUGUST, und es war knapper als gedacht: bei 390 px
-     brauchte die Leiste 395 px mit „Start" und 421 px mit „Eingang" — die
-     letzte Pille stand ausserhalb des Bildes. Am 428er iPhone fiel das nie
-     auf; E37 sagt aber 390 zuerst.
+  /* JEDER NAME STEHT DA, NICHT NUR DER AKTIVE.
+     Oben war Platz für genau einen Namen — fünf nebeneinander hätten die
+     Leiste gesprengt. Unten stehen sie UNTER dem Zeichen, und dort passen
+     alle fünf: 390 / 5 = 78 px je Weg. Das ist auch der Grund, warum es
+     fünf sein müssen und nicht sechs (§38: nicht nur über Farbe sagen,
+     wo man ist). */
+  #handy-oben > button{
+    flex:1 1 0; min-width:0; min-height:48px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:3px; padding:5px 2px 4px; border:0; border-radius:12px; background:none;
+    color:var(--text-dim);
+    /* ÜBER DER GLEITENDEN FLÄCHE, NICHT DARUNTER. `#ho-pille` liegt auf
+       `z-index:0`; ohne diese zwei Wörter lag der aktive Knopf DAHINTER
+       und war im Bild leer — Zeichen und Name weg, nur die graue Fläche
+       da. Die Regel stand vorher im alten Kreis-Block und ist beim
+       Aufräumen mitgegangen. */
+    position:relative; z-index:1;
+    /* JEDES ANTIPPEN MUSS ANTWORTEN. Die alte Kreisregel hatte diesen
+       Übergang; beim Aufräumen ging er mit, und test126 wurde rot — zu
+       Recht: ein Knopf, der ohne Antwort umschaltet, fühlt sich kaputt an.
+       Nur Farbe und Fläche, nichts, was den Aufbau neu rechnet. */
+    transition:background var(--motion-fast,.14s) var(--ease-standard,ease),
+               color var(--motion-fast,.14s) var(--ease-standard,ease);
+  }
+  #handy-oben > button:active{ background:var(--bg-hover) }
+  #handy-oben > button b{
+    display:block; font-size:10.5px; font-weight:500; letter-spacing:-.01em;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%;
+  }
+  #handy-oben > button.an b{ font-weight:650 }
+  #handy-oben > button.an{ color:var(--accent-text,var(--accent)) }
+  /* ─── WAS HIER STAND, UND WARUM ES WEG IST (E236) ──────────────────
+     Hier lagen drei Absätze Messungen aus dem 6., 7. und 24. August: wie
+     breit sechs runde Pillen mit Namen nebeneinander werden, und ab
+     welcher Bildschirmbreite man am Weissraum sparen muss. Die Rechnung
+     war richtig und ist gegenstandslos geworden.
 
-     NACHGEMESSEN AM 7. AUGUST, nachdem die Tasten von 52 auf 56 px
-     gewachsen sind. Vier Tasten mal 4 px sind 16 px, und die haben zwei
-     Breiten gekippt, die vorher gerade noch gingen:
+     Der Grund: sie ging von einer WAAGERECHTEN Pille aus — Zeichen und
+     Wort nebeneinander, deshalb 56 bis 90 px je Weg, deshalb rollte die
+     Leiste, deshalb stand nur beim aktiven Weg der Name.
 
-       Breite   längster Reiter („Termine")   davor
-       428 px   435 px  →  passt nicht        423 px  passte knapp
-       390 px   395 px  →  passt nicht        379 px  passte
-       375 px   375 px  →  passt genau
+     Unten stehen Zeichen und Wort ÜBEREINANDER. Damit braucht ein Weg
+     nur noch seine Textbreite, fünf teilen sich 390 px zu je 78, und
+     jeder Name steht da. Es gibt nichts mehr zu rollen und nichts mehr
+     zu sparen.
 
-     An der Fläche, die der Daumen trifft, wird nicht gespart — gespart
-     wird am Weissraum. Also rückt jetzt schon ab 440 px zusammen (das
-     nimmt auch das 428er iPhone mit, das vorher ausserhalb jeder Regel
-     stand) und noch einmal ab 380 px:
+     Die Zahl fünf ist deshalb keine Vorliebe, sondern die Grenze:
+     „Dokumente" braucht bei 10.5 px rund 62 px. Bei sechs Wegen wären es
+     65 px je Weg, und der Name müsste wieder gekürzt werden.
 
-       ab 440 px   Rand 17, Abstand 5, Pillenpolster 11   →  385 px
-       ab 380 px   Rand 10, Abstand 4, Pillenpolster 9    →  359 px
-
-     Damit passt jede gängige Telefonbreite: 428, 393, 390, 375, 360.
-     Darunter — 320 px, also iPhone SE der ersten Bauart — rollt die
-     Leiste, und der gewählte Reiter wird von `pilleSchieben()` ins Bild
-     geholt. Das ist die ehrlichere Antwort als eine fünfte Stufe, in der
-     nichts mehr zu holen ist. */
-  /* NACHGEMESSEN AM 24. AUGUST, weil eine SECHSTE Pille dazugekommen ist:
-     die Produktwelten stellen „Lernen" vor die vier Bereiche (E132). Die
-     Rechnung oben galt für fünf, und mit sechs lief sie über — gemessen
-     mit den kurzen Namen (Heute, Lernen, Seiten, Plan, Mehr):
-
-       428 px   Heute 3 px zu viel, Seiten 6 px
-       390 px   vier von fünf zu viel, bis 44 px
-
-     Gespart wird weiter am Weissraum und nicht an der Daumenfläche: die
-     Tasten bleiben 56 px hoch und mindestens 56 px breit. Kleiner werden
-     nur das Polster in der Pille und der Abstand zwischen Sinnbild und
-     Wort. */
+     Die Regeln für die Knöpfe stehen weiter oben, direkt bei der Leiste.
+     ─────────────────────────────────────────────────────────────────── */
   #handy-oben::-webkit-scrollbar{ display:none }
 
-  #handy-oben button{
-    flex:0 0 auto;
-    height:56px; min-width:56px;
-    border-radius:999px;
-    border:1px solid var(--line);
-    background:transparent; color:var(--text-dim);
-    display:flex; align-items:center; justify-content:center; gap:8px;
-    padding:0 13px; font-size:17px; line-height:1;
-    position:relative; z-index:1;
-    transition:background .14s, color .14s;
-  }
-  #handy-oben button:active{ background:var(--bg-hover) }
-
-  @media(max-width:440px){
-    #handy-oben{ gap:5px; padding-left:14px; padding-right:14px }
-    /* Die HÖHE bleibt 56 px — das ist die Fläche, die der Daumen trifft.
-       Schmaler darf eine Taste werden: §37 verlangt 44 px, und 48 × 56 ist
-       immer noch deutlich darüber. Sechs Kreise à 56 px plus die eine
-       beschriftete Pille brauchten bei 390 px rechnerisch 439 px. */
-    #handy-oben button{ min-width:48px; padding:0 9px; gap:6px }
-  }
-  @media(max-width:400px){
-    #handy-oben{ gap:4px; padding-left:8px; padding-right:8px }
-    #handy-oben button{ min-width:44px; padding:0 7px; gap:5px }
-  }
+  /* Fünf Wege teilen sich die Breite, also gibt es nichts mehr zu
+     staffeln — die zwei Stufen für 440 und 400 px sind mit E236 weg. Auf
+     einem 320-px-Bildschirm sind es 64 px je Weg; „Dokumente" wird dort
+     gekürzt, bleibt aber lesbar, und das Zeichen steht darüber. */
 
   /* ---- DIE GLEITENDE PILLE ------------------------------------------- */
   /* Sie ersetzt den Hintergrund der aktiven Pille durch EIN Feld, das
@@ -1618,8 +1658,11 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
      aktive Pille wächst um ihre Beschriftung, und dafür gibt es keine
      Verschiebung. */
   #handy-oben #ho-pille{
-    position:absolute; left:0; top:0; z-index:0;
-    height:56px; width:0; border-radius:999px;
+    /* SEIT E236 STEHT SIE UNTEN und ist so hoch wie ein Weg, nicht wie
+       eine Pille: 48 statt 56, und der Radius passt zu den Knöpfen. Der
+       Abstand von oben ist das Polster der Leiste (5 px). */
+    position:absolute; left:0; top:5px; z-index:0;
+    height:48px; width:0; border-radius:12px;
     background:var(--bg-hover);
     pointer-events:none; opacity:0;
     transition:transform var(--motion-normal) var(--ease-standard),
@@ -1641,37 +1684,25 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
      die Sicherung dagegen. */
   #handy-oben #ho-pille.stumm{ transition:none }
 
-  /* DER NAME STEHT NUR AN DER AKTIVEN PILLE. Das ist die ganze Idee: er
-     kostet Platz, und Platz gibt es nur einmal — also bekommt ihn die
-     Stelle, an der er etwas sagt. */
-  #handy-oben button b{ display:none; font-size:16px; font-weight:600; letter-spacing:-.01em }
-  /* KEIN EIGENER HINTERGRUND MEHR. Den bringt `#ho-pille` mit und schiebt
-     ihn herüber; stünde er hier auch, wären es zwei Flächen übereinander
-     und die wandernde käme bei einer schon fertigen an — die Bewegung
-     wäre da und würde nichts erklären. */
-  #handy-oben button.an{ color:var(--text); border-color:transparent }
-  #handy-oben button.an b{ display:inline }
+  /* JEDER NAME STEHT DA — NICHT NUR DER AKTIVE (E236).
+     Hier stand: „Der Name kostet Platz, und Platz gibt es nur einmal —
+     also bekommt ihn die Stelle, an der er etwas sagt." Das galt für eine
+     WAAGERECHTE Pille oben, in der Zeichen und Wort nebeneinander stehen.
 
-  /* Das Konto ganz links ist ein Kreis mit dem Anfangsbuchstaben. */
-  #handy-oben .ho-konto{
-    width:44px; padding:0; font-size:15px; font-weight:600;
-    color:var(--text-dim);
+     Unten stehen sie übereinander, fünf Wege teilen sich 390 px zu je 78,
+     und ein Name braucht nur seine Textbreite. Der Platz ist da. Und §38
+     ist damit besser bedient: wo man steht, sagt jetzt nicht nur die
+     Farbe der wandernden Fläche, sondern die fettere Schrift daneben. */
+  #handy-oben > button b{
+    display:block; font-size:10.5px; font-weight:500; letter-spacing:-.01em;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%;
   }
-  #handy-oben .ho-konto span{ line-height:1 }
-
-  /* Der zweite Teil der Enge von oben — er MUSS hier unten stehen, nach der
-     Grundregel für `#handy-oben button`. Gleiche Spezifität entscheidet die
-     Reihenfolge, und weiter oben verlor er lautlos: gemessen kamen 13 px
-     Polster und 16 px Schrift zurück, obwohl der Rand daneben schon eng
-     war. Eine Regel, die dasteht und nichts tut, ist schlimmer als keine. */
-  @media(max-width:440px){
-    #handy-oben button{ padding:0 11px }
-    #handy-oben button b{ font-size:15px }
-  }
-  @media(max-width:380px){
-    #handy-oben button{ padding:0 9px }
-    #handy-oben button b{ font-size:14px }
-  }
+  /* KEIN EIGENER HINTERGRUND. Den bringt `#ho-pille` mit und schiebt ihn
+     herüber; stünde er hier auch, wären es zwei Flächen übereinander und
+     die wandernde käme bei einer schon fertigen an — die Bewegung wäre da
+     und würde nichts erklären. */
+  #handy-oben > button.an{ color:var(--accent-text,var(--accent)) }
+  #handy-oben > button.an b{ font-weight:650 }
 
   #handy-oben .ho-z{ display:flex; align-items:center; justify-content:center }
   #handy-oben .ho-z svg{ display:block }
@@ -1835,12 +1866,14 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
      war 76 px hoch — die obersten 16 px des Zurück-Knopfes lagen dahinter.
      Am iPhone, wo die Kerbe noch 47 px dazulegt, war es die ganze Zeile.
      Die Marke rechnet die Kerbe mit; sie steht oben bei `#handy-oben`. */
-  #main{ padding-top:var(--hoben) }
+  #main{ padding-top:var(--hoben) }  /* nur noch die Kerbe (E236) */
   /* Der Inhalt muss unter der Aktionsleiste durchlaufen können, ohne dass
      die letzte Zeile darunter verschwindet: 120 px plus die Kerbe des
      Geräts. Vorher 96 — bei 72 px Leiste blieben 24 px Luft, und mit
      Safe-Area am iPhone gar keine. */
-  #scroll{ padding-bottom:calc(120px + env(safe-area-inset-bottom)) }
+  /* Der Inhalt muss unter der Navigationsleiste durchlaufen können, ohne
+     dass die letzte Zeile darunter verschwindet: ihre Höhe plus Luft. */
+  #scroll{ padding-bottom:calc(var(--hunten) + 24px) }
   #ai.open{ bottom:0 }
 }
 
@@ -2241,7 +2274,11 @@ table.pivot tbody tr:hover td{ background:var(--bg-hover); }
      echte untere Leiste heisst `#handy-unten`, und weil die Regel ins
      Leere zielte, ragten ihre Knopfkreise hinter der Formatleiste
      hervor. */
-  body.schreibt #handy-unten{ display:none; }
+  /* Beim Schreiben tritt die Leiste am unteren Rand zurück — sonst läge
+     sie zwischen Text und Tastatur. Sie heisst seit E236 `#handy-oben`
+     (der Name stammt aus der Zeit, als sie oben stand); die alte
+     schwebende `#handy-unten` gibt es nicht mehr. */
+  body.schreibt #handy-oben{ display:none; }
 
   /* Ziehen mit dem Finger (E83): langes Drücken hebt den Block — er wird
      leicht und durchscheinend —, die Fallmarke zeigt die Lücke, in die er

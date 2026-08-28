@@ -409,7 +409,7 @@ const Bibliothek = (() => {
     const wann = wannText(p.zuletztGeoeffnet || p.edited || p.created);
     return `<button class="bib-deckel" data-id="${esc(p.id)}" data-art="${esc(art.id)}" ` +
       `title="${esc(p.text || 'Ohne Titel')}">` +
-      `<span class="bib-deckel-blatt mini-zeilen">` +
+      `<span class="bib-deckel-blatt mini-zeilen${bild ? '' : ' is-leer'}">` +
         '<i class="bib-papier" aria-hidden="true"></i>' +
         (bild || '') +
         (art.id === 'pdf' ? '<i class="bib-deckel-marke">PDF</i>' : '') +
@@ -673,11 +673,24 @@ const Bibliothek = (() => {
           : '<p class="bib-leer">' + (zustand.art === 'alle'
               ? 'Hier ist noch nichts. Tippe auf „Neu", um anzufangen.'
               : 'Von dieser Art gibt es hier nichts.') + '</p>') +
+        /* DIE SICHERUNG UND DER PLATZ GEHÖREN IN JEDE FORM.
+           Der erste Entwurf liess beide weg — sie standen nur im
+           Heftregal, und das ist seit E236 nicht mehr die Vorgabe. Damit
+           war die Warnung „du hast noch nie gesichert" aus der Ansicht
+           verschwunden, die jetzt jeder zuerst sieht.
+
+           Das ist keine Zierde: §11 nennt die Sicherung eine
+           Sicherheitsfunktion, und §46 stellt Datenintegrität vor alles
+           andere. Eine Warnung, die man nur in einer Ansicht sieht, die
+           kaum jemand öffnet, ist keine Warnung. */
+        sicherungsKarte() +
+        platzKarte() +
       '</div>';
 
     if (typeof Register !== 'undefined' && Register.symbole)
       Register.symbole.fuelle(wrap);
     binde(wrap);
+    platzNachtragen(wrap);
   };
 
   /**
@@ -1005,7 +1018,26 @@ const Bibliothek = (() => {
     }
   };
 
-  const oeffne = (): void => App.zeigeSonder('Bibliothek', zeichnen);
+  /**
+   * Das Regal öffnen.
+   *
+   * ZWEI SACHEN STEHEN HIER UND NICHT BEIM AUFRUFER (E236).
+   *
+   * `Seitenleiste.reiter('dokumente')` markiert den Weg unten. Er stand
+   * zuerst nur im Knopf `hl-dok` — und damit leuchtete unten „Heute",
+   * sobald das Regal von woanders aufging: vom Start, aus dem Mehr-Blatt,
+   * über einen Verweis. Eine Markierung, die nur bei EINEM von vier Wegen
+   * stimmt, ist schlimmer als keine.
+   *
+   * Und der Name lautet „Dokumente", nicht „Bibliothek": die Seite
+   * schreibt es gross darüber, Redur nennt es so, und zwei Namen für
+   * dieselbe Sache sind einer zu viel. Das Modul heisst weiter
+   * `Bibliothek` — es ist der Ordner, nicht die Aufschrift.
+   */
+  const oeffne = (): void => {
+    try { Seitenleiste.reiter('dokumente'); } catch { /* ohne Leiste kein Reiter */ }
+    App.zeigeSonder('Dokumente', zeichnen);
+  };
 
   /* ------------------------------------------------------------------ *
    * MEINE AUFGABEN
