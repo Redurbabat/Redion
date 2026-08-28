@@ -468,6 +468,144 @@ const pruef = (n: any, ist: any, soll: any) => {
   pruef('Die Reihenfolge auch',             nach.folge, 'apps');
   pruef('Und zeigt sich in der Leiste',     nach.erster, 'Meine Apps');
 
+  /* --- 11 · Krumenzeile und Reiterzeile sind EINE (E235) ---------------- */
+  /* Redur hat den Kopfbereich am Telefon rot angestrichen: „dort sollte
+     möglichst wenig sein". Vier Bänke, 236 px von 844. Eine davon war die
+     Krumenzeile: Zurück-Knopf, 284 px Seitentitel, drei Punkte — und der
+     Titel stand zu dem Zeitpunkt schon zweimal daneben.
+
+     Der Vertrag steht in `bausteine.css`: eine Zeile mit
+     `data-kopfzeile="eigene"` GANZ OBEN in `#page` holt die Kopfleiste der
+     Schale am Telefon zu sich herunter.
+
+     WAS DIESE PRÜFUNG ROT MACHEN KANN — und das ist die Frage, die §55.2
+     stellt, nicht ob sie heute grün ist:
+
+       · Fällt die `:has()`-Regel weg, stehen die zwei Zeilen wieder 66 px
+         auseinander. Genau so wurde es vor dem Umbau gemessen.
+       · Fehlt `pointer-events:auto` an den zwei Knöpfen, liefert
+         `elementFromPoint` die Leiste statt des Knopfes: man SIEHT ihn und
+         trifft ihn nicht.
+       · Fehlen die zwei leeren Rasterspalten in `lernwelt.css`, beginnt
+         die Reiterkarte bei x = 11 und liegt unter dem Zurück-Knopf.
+       · Greift die Regel auch auf einer gewöhnlichen Seite, ist dort die
+         Krume unsichtbar — der Seitenpfad wäre weg.
+       · Steht die Regel ausserhalb der Telefon-Abfrage, verschwindet der
+         Pfad auch am Rechner. */
+  await handy.reload();
+  await handy.waitForTimeout(1900);
+  await handy.evaluate(() => {
+    Store.setMeta('rundgangGesehen', true);
+    document.getElementById('rg-willkommen')?.remove();
+    document.getElementById('rg-einladung')?.remove();
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+  });
+  await handy.evaluate(() => { Produktwelten.lernen('lernen'); });
+  await handy.waitForTimeout(900);
+
+  const band = await handy.evaluate(() => {
+    const kasten = (s: string) => {
+      const e = document.querySelector(s);
+      if (!e) return null;
+      const r = e.getBoundingClientRect();
+      return { oben: Math.round(r.top), links: Math.round(r.left),
+               rechts: Math.round(r.right), mitte: Math.round(r.top + r.height / 2) };
+    };
+    const treffer = (s: string) => {
+      const e = document.querySelector(s);
+      if (!e) return 'fehlt';
+      const r = e.getBoundingClientRect();
+      const t = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+      return t ? (t.closest(s) ? 'selbst' : (t.id || t.className || t.tagName)) : 'nichts';
+    };
+    const nav = kasten('#page > .lw-nav');
+    const leiste = kasten('#topbar');
+    const zurueck = kasten('#btn-back');
+    const chip = kasten('#page > .lw-head');
+    const punkte = kasten('#btn-page-menu');
+    const ersterReiter = document.querySelector<HTMLElement>('#page > .lw-nav button');
+    let reiterTreffer = 'fehlt';
+    if (ersterReiter) {
+      const r = ersterReiter.getBoundingClientRect();
+      const t = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+      reiterTreffer = t?.closest('[data-lw-nav]') ? 'reiter' : (t?.id || 'anderes');
+    }
+    return {
+      /* Eine Zeile, nicht zwei: dieselbe Oberkante. */
+      eineZeile: !!(nav && leiste) && Math.abs(nav!.oben - leiste!.oben) <= 1,
+      krume: getComputedStyle(document.querySelector('#topbar .crumb')!).visibility,
+      /* Die zwei Knöpfe der Schale liegen ÜBER der Zeile des Bereichs und
+         fangen dort auch die Finger. */
+      zurueckTrifft: treffer('#btn-back'),
+      punkteTrifft: treffer('#btn-page-menu'),
+      reiterTrifft: reiterTreffer,
+      /* Und nichts überlappt: Zurück | Karte | Chip | drei Punkte. */
+      folge: !!(zurueck && nav && chip && punkte)
+        && zurueck!.rechts <= nav!.links
+        && nav!.rechts <= chip!.links
+        && chip!.rechts <= punkte!.links,
+      /* Alles auf einer Linie — im ersten Bild sassen die Knöpfe sechs
+         Punkte zu hoch, weil `align-items:stretch` einen Knopf mit fester
+         Höhe oben kleben lässt. */
+      aufEinerLinie: !!(zurueck && nav && punkte)
+        && Math.abs(zurueck!.mitte - nav!.mitte) <= 2
+        && Math.abs(punkte!.mitte - nav!.mitte) <= 2
+    };
+  }) as any;
+  pruef('Krume und Reiter stehen auf EINER Zeile', band.eineZeile, true);
+  pruef('Der doppelte Weltname ist unsichtbar',    band.krume, 'hidden');
+  pruef('Der Zurück-Knopf fängt seine Finger',     band.zurueckTrifft, 'selbst');
+  pruef('Die drei Punkte auch',                    band.punkteTrifft, 'selbst');
+  pruef('Und die Reiter darunter ebenso',          band.reiterTrifft, 'reiter');
+  pruef('Nichts überlappt in der Zeile',           band.folge, true);
+  pruef('Alles steht auf einer Linie',             band.aufEinerLinie, true);
+
+  /* Die Gegenrichtung: auf einer gewöhnlichen Seite gibt es keine eigene
+     Kopfzeile, also auch keine Verschmelzung — und der Seitenpfad steht
+     wieder da. Ohne diesen Punkt würde eine Regel, die IMMER greift, hier
+     grün durchgehen und den Pfad überall stillegen. */
+  const gewoehnlich = await handy.evaluate(() => {
+    const s = Store.addPage(null, { text: 'Eine ganz gewöhnliche Seite' });
+    /* NICHT `(globalThis as any).App` — DAS IST STILL FALSCH. `App` ist ein
+       `const` auf oberster Ebene und steht nicht auf `window`; das
+       Fragezeichen hätte den Fehler verschluckt und die Prüfung hätte
+       gemessen, wie die Lernwelt aussieht, während sie behauptet, eine
+       gewöhnliche Seite zu messen. `src/global.d.ts` sagt es im Klartext. */
+    App.oeffne(s.id);
+    return s.id;
+  });
+  await handy.waitForTimeout(700);
+  /* HIER STAND ZUERST `backgroundColor` — UND DAS WAR NICHTS GEMESSEN.
+     Die Leiste hat gar keinen eigenen Hintergrund, in KEINEM der beiden
+     Zustände: `rgba(0,0,0,0)` hier wie dort, sie zeigt den Grund der Seite
+     dahinter. Die Prüfung wäre also rot gewesen, egal was der Umbau tut —
+     die Umkehrung des Fehlers aus §55.2, aber derselbe Fehler: gemessen
+     wurde eine Eigenschaft statt der Wirkung.
+     Gemessen wird jetzt, was sich wirklich unterscheidet: die Verschiebung
+     des Inhalts und ob die Leiste Finger fängt. */
+  const ohne = await handy.evaluate(() => ({
+    krume: getComputedStyle(document.querySelector('#topbar .crumb')!).visibility,
+    schub: getComputedStyle(document.getElementById('scroll')!).marginTop,
+    zeiger: getComputedStyle(document.getElementById('topbar')!).pointerEvents,
+    eigene: !!document.querySelector('#page > [data-kopfzeile="eigene"]')
+  })) as any;
+  pruef('Ohne eigene Kopfzeile bleibt der Pfad',   ohne.krume, 'visible');
+  pruef('Der Inhalt rückt dort nicht hoch',        ohne.schub, '0px');
+  pruef('Und die Leiste fängt ihre Finger selbst', ohne.zeiger, 'auto');
+  pruef('Die Marke ist dort auch gar nicht da',    ohne.eigene, false);
+  void gewoehnlich;
+
+  /* Am Rechner ändert sich nichts. Die Regel steht in der Telefon-Abfrage;
+     stünde sie ausserhalb, wäre der Seitenpfad auch dort unsichtbar. */
+  await p.evaluate(() => { Produktwelten.lernen('lernen'); });
+  await p.waitForTimeout(800);
+  const amRechner = await p.evaluate(() => ({
+    krume: getComputedStyle(document.querySelector('#topbar .crumb')!).visibility,
+    eigene: !!document.querySelector('#page > [data-kopfzeile="eigene"]')
+  })) as any;
+  pruef('Am Rechner steht die Marke ebenfalls',    amRechner.eigene, true);
+  pruef('Aber der Pfad bleibt dort sichtbar',      amRechner.krume, 'visible');
+
   console.log(`\n${ok}/${ok + bad} bestanden`);
   const alle = [...fehler, ...fehler2];
   console.log(alle.length ? 'JS-Fehler:\n' + alle.join('\n') : 'Keine JS-Fehler.');

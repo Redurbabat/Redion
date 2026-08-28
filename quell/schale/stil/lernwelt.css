@@ -1054,9 +1054,78 @@
   .lernwelt .lw-head{align-items:flex-start;margin-bottom:8px;padding:4px 1px}
   .lernwelt .lw-brand-icon{flex-basis:39px;width:39px;height:39px;border-radius:12px;font-size:19px}
   .lernwelt .lw-brand h1{font-size:17px}
-  .lernwelt .lw-area{grid-template-columns:1fr;gap:2px;min-width:min(46vw,220px)}
-  .lernwelt .lw-area>span{padding-left:2px;font-size:9.5px}
-  .lernwelt .lw-area select{min-height:44px;padding-block:7px;font-size:11.5px}
+  /* ======================================================================
+   * DER BEREICHSFILTER GIBT SEINE EIGENE ZEILE AB (E235)
+   * ----------------------------------------------------------------------
+   * Redur hat den ganzen Kopfbereich rot angestrichen: „dort sollte
+   * möglichst wenig sein". Gemessen waren es vier Bänke und 236 px von 844
+   * — ein Drittel des Telefons, bevor die erste Zahl kommt.
+   *
+   * Eine dieser Bänke war der Bereichsfilter. Eine ganze Zeile, 44 px, für
+   * ein Feld, in dem fast immer „Alle Bereiche" steht.
+   *
+   * Er wandert neben die Reiter, OHNE dass am HTML etwas bewegt wird: die
+   * Lernwelt wird für diese eine Zeile zum Raster. Alles behält die volle
+   * Breite (`1 / -1`); nur diese beiden teilen sich Zeile eins.
+   *
+   * Warum nicht im Auszeichnungstext verschieben: `kopf()` baut eine
+   * Zeichenkette, und eine Fallunterscheidung „am Telefon woanders" wäre
+   * eine zweite Wahrheit über denselben Aufbau. Die CSS weiss ohnehin, wie
+   * breit das Gerät ist.
+   * ==================================================================== */
+  /* Spalte 1 und Spalte 4 bleiben LEER. Dort stehen die zwei Knöpfe der
+     Schale — Zurück und die drei Punkte —, die am Telefon in diese Zeile
+     hineinrücken (E235, `bausteine.css`). Sie sind kein Rasterelement:
+     die Schale hält ihre Leiste an derselben Stelle, und das Raster hält
+     ihr den Platz frei. 44 px, weil ein Finger 44 braucht (§37). */
+  .lernwelt{
+    display:grid; grid-template-columns:44px minmax(0,1fr) auto 44px;
+    align-items:center
+  }
+  .lernwelt > *{ grid-column:1 / -1 }
+  .lernwelt > .lw-nav { grid-column:2; grid-row:1; margin-bottom:12px }
+  /* Kein `margin-bottom` und `align-self:center`: die Höhe der Zeile macht
+     die Reiterkarte, und ein unterer Abstand am Chip würde ihn in einer
+     mittig ausgerichteten Zeile nach OBEN schieben. */
+  .lernwelt > .lw-head{ grid-column:3; grid-row:1; margin-bottom:0;
+                        align-self:center; padding-left:8px }
+  /* Der Markenblock nennt „Redion / Lernen & Alltag" — beides steht schon
+     oben in der Kreisleiste und in der Krume. Am Telefon war er ohnehin
+     schon aus dem Bild; jetzt ist es ausgesprochen. */
+  .lernwelt .lw-brand{ display:none }
+  /* Aus dem Feld wird ein Chip: die Beschriftung „Bereich" fällt weg (das
+     Zeichen ◎ und der Name stehen im Feld selbst), und breiter als nötig
+     wird er nicht. */
+  .lernwelt .lw-area{grid-template-columns:1fr;gap:0;min-width:0}
+  .lernwelt .lw-area>span{display:none}
+  /* GEMESSEN, NICHT GERATEN — UND ZWEIMAL DANEBEN. Der erste Versuch stand
+     auf `max-width:38vw`; im Bild stand dann nur „◎" und der Pfeil, denn
+     ein Auswahlfeld kürzt nicht mit Auslassungszeichen, es schneidet ab.
+     Der zweite gab ihm 132 px und rechnete mit 11.5 px Schrift — die es
+     nicht gibt: `input, textarea, select{ font-size:16px !important }`
+     steht in `bausteine.css`, damit iOS beim Tippen nicht hineinzoomt. Bei
+     16 px braucht „◎ Alle Bereiche" 120 px Text plus Pfeil und Polster,
+     zusammen rund 160 von 368 — und der Chip stand 49 px ausserhalb.
+
+     Die Antwort ist nicht eine dritte Breite, sondern eine andere Frage:
+     WOZU steht dort ein Wort, wenn es „ich filtere nicht" bedeutet? */
+  .lernwelt .lw-area select{
+    min-height:44px;padding:7px 24px 7px 10px;border-radius:999px;
+    max-width:min(150px,40vw)
+  }
+  /* Filtert nichts → nur das Zeichen, 44 × 44. Der Text bleibt im Feld
+     (das Vorleseprogramm liest ihn, `aria-label` steht ohnehin dort), er
+     wird nur nicht gemalt; das Zeichen darüber ist Deko und fängt keine
+     Tipper ab, damit die native Auswahl weiter aufgeht. */
+  .lernwelt .lw-area[data-alle="ja"]{ position:relative; width:44px }
+  .lernwelt .lw-area[data-alle="ja"] select{
+    width:44px; min-width:44px; padding:0; color:transparent;
+    -webkit-appearance:none; appearance:none
+  }
+  .lernwelt .lw-area[data-alle="ja"]::after{
+    content:"◎"; position:absolute; inset:0; display:grid; place-items:center;
+    color:var(--text-dim); font-size:17px; pointer-events:none
+  }
   .lernwelt .lw-nav{
     position:sticky;z-index:5;top:0;margin-bottom:12px;padding:5px;border-radius:13px;
     box-shadow:var(--shadow-2)

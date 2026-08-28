@@ -1026,7 +1026,15 @@ const Lernwelt = (() => {
         return '<header class="lw-head">' +
             '<div class="lw-brand"><span class="lw-brand-icon" data-sym="learn" aria-hidden="true"></span><div>' +
             '<p>Redion</p><h1>Lernen &amp; Alltag</h1></div></div>' +
-            '<label class="lw-area"><span>Bereich</span><select data-lw-area aria-label="Lebensbereich auswählen">' +
+            /* `data-alle` sagt der CSS, ob der Filter gerade etwas TUT (E235).
+               Am Telefon zieht er in die Reiterzeile, und dort ist Platz knapp:
+               „◎ Alle Bereiche" braucht bei 16 px — der Pflichtgrösse, damit iOS
+               beim Tippen nicht hineinzoomt — rund 160 px von 368. Das ist fast
+               die halbe Zeile für die Aussage „ich filtere nicht".
+               Steht der Filter auf „alle", bleibt darum nur das Zeichen ◎ übrig;
+               sobald ein Bereich gewählt ist, steht sein Name da. */
+            '<label class="lw-area" data-alle="' + (aktiv.id === 'alle' ? 'ja' : 'nein') +
+            '"><span>Bereich</span><select data-lw-area aria-label="Lebensbereich auswählen">' +
             optionen.map(item => '<option value="' + esc(item.id) + '"' +
                 (item.id === aktiv.id ? ' selected' : '') + '>' + esc(item.icon + ' ' + item.name) + '</option>').join('') +
             '</select></label></header>' +
@@ -1041,7 +1049,12 @@ const Lernwelt = (() => {
                     .map(a => ({ id: a.id, icon: a.icon, name: a.name }));
                 const reihe = [...REITER, ...zusatz];
                 const hier = gruppeVon(zustand.ansicht);
-                const haupt = '<nav class="lw-nav" aria-label="Lernen und Alltag">' + reihe.map(item => {
+                /* `data-kopfzeile="eigene"` ist ein Vertrag mit der Schale, kein
+                   Aufruf in sie hinein (§5): am Telefon verschmilzt sie ihre eigene
+                   Krumenzeile mit GENAU dieser Zeile, statt eine zweite Bank
+                   darüberzusetzen. Fehlt die Marke, bleibt alles wie vorher — die
+                   Schale fragt nur, sie verlangt nichts. */
+                const haupt = '<nav class="lw-nav" data-kopfzeile="eigene" aria-label="Lernen und Alltag">' + reihe.map(item => {
                     const drin = item.id === zustand.ansicht ||
                         (item.unter || []).includes(zustand.ansicht);
                     return '<button type="button" data-lw-nav="' +
@@ -1957,7 +1970,15 @@ const Lernwelt = (() => {
      * `data-mehr` steht danach genau wie vorher (E159).
      */
     const reiterRollstand = () => {
-        Rollrand.binde(zustand.root?.querySelector('.lw-nav') || null, { art: 'mehr' });
+        const leiste = zustand.root?.querySelector('.lw-nav') || null;
+        Rollrand.binde(leiste, { art: 'mehr' });
+        /* UND DER GEWÄHLTE REITER MUSS AUCH ZU SEHEN SEIN.
+           Gefunden im Bild, nicht in einer Prüfung (§55): in der Prüfungssicht
+           stand der aktive Reiter „Prüfungen" halb ausserhalb der Karte — man
+           tippt darauf, er wird hell, und dann ist er weg. Solange die Leiste
+           322 px breit war, passte alles; seit sie sich am Telefon die Zeile
+           mit der Krume teilt (E235), sind es 234. */
+        Rollrand.zeige(leiste, leiste?.querySelector('[aria-current="page"]') || null);
     };
     const ansichtGueltig = (wert) => ANSICHTEN.some(item => item.id === wert);
     const wechseln = (ansicht) => {

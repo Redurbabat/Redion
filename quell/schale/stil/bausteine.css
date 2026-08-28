@@ -599,6 +599,253 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 .bib-form button:hover{ background:var(--bg-hover); color:var(--text) }
 .bib-form button.on{ background:var(--bg-card); color:var(--text); box-shadow:var(--shadow-1) }
 
+/* ==========================================================================
+ * DIE DECKELANSICHT DER BIBLIOTHEK (E236)
+ * --------------------------------------------------------------------------
+ * Redur hat ein Regal aus Deckeln beschrieben: jeder sagt schon von weitem,
+ * WAS er ist. Das ist keine Verzierung — es ist die Auskunft, die eine
+ * Tabellenzeile nicht geben kann, ohne eine Spalte dafür zu opfern.
+ *
+ * DIE DECKEL SIND GEZEICHNET, NICHT GELADEN. Ein Vorschaubild je Dokument
+ * wäre ein zweiter Speicher, der mit dem Inhalt altert (§9). Was hier steht,
+ * ist der ANFANG der Seite in kleiner Schrift, genau wie im Heftregal — und
+ * darüber, je nach Art, ein paar Linien, die das Papier andeuten.
+ * ======================================================================== */
+/* EIN RASTER, KEIN UMBRUCH. Mit `flex-wrap` fiel der Listenknopf in eine
+   eigene Zeile, sobald „Dokumente" und „+ Neu" die Breite füllten — aus
+   einer Bank wurden zwei, und genau die zählt Redur. Das Raster sagt
+   stattdessen, WAS schrumpfen darf: der Titel. */
+.bib-dkopf{
+  display:grid; grid-template-columns:minmax(0,1fr) auto auto;
+  align-items:center; gap:6px 10px; margin:0 0 var(--space-4)
+}
+.bib-dkopf h1{
+  grid-column:1; grid-row:1; min-width:0; margin:0;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  font-size:27px; font-weight:760; letter-spacing:-.03em
+}
+/* Der Ort ist eine Auskunft mit einem Weg dahinter, keine Überschrift:
+   „Kürzlich verwendet · 23 Dokumente ▾". Er steht unter dem Titel, weil er
+   sich ändert und der Titel nicht. */
+.bib-ort{
+  grid-column:1 / -1; grid-row:2; justify-self:start;
+  display:flex; align-items:center; gap:5px; min-height:32px;
+  padding:0 8px 0 0; border-radius:8px; background:none; border:0;
+  cursor:pointer; color:var(--text-dim); font-size:13px
+}
+.bib-ort i{ color:var(--text-faint); font-size:13px; font-style:normal }
+.bib-ort:hover{ color:var(--text) }
+.bib-neu{
+  grid-column:2; grid-row:1;
+  display:flex; align-items:center; gap:7px;
+  min-height:44px; padding:0 19px 0 15px; border:0; border-radius:999px;
+  background:var(--accent); color:var(--auf-accent);
+  font-size:15px; font-weight:640; cursor:pointer; box-shadow:var(--shadow-2)
+}
+.bib-neu b{ font-size:19px; font-weight:500; line-height:1 }
+.bib-neu:hover{ background:var(--accent-hover,var(--accent)) }
+.bib-form-knopf{
+  grid-column:3; grid-row:1;
+  display:grid; place-items:center; min-width:44px; min-height:44px;
+  border:0; border-radius:13px; background:none; color:var(--text-dim);
+  font-size:16px; cursor:pointer
+}
+.bib-form-knopf:hover{ background:var(--bg-hover); color:var(--text) }
+
+.bib-arten{
+  display:flex; gap:7px; margin:0 0 var(--space-5); overflow-x:auto;
+  scrollbar-width:none
+}
+.bib-arten::-webkit-scrollbar{ display:none }
+.bib-arten button{
+  flex:none; min-height:34px; padding:0 14px; border:0; border-radius:999px;
+  background:var(--bg-card); color:var(--text-dim); font-size:13px; cursor:pointer
+}
+.bib-arten button:hover{ background:var(--bg-hover); color:var(--text) }
+.bib-arten button.on{ background:var(--text); color:var(--bg); font-weight:620 }
+
+.bib-gitter{
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(148px,1fr));
+  gap:26px 20px; align-items:start
+}
+/* Ein `<button>` zentriert seinen Inhalt senkrecht — auch mit `display:block`.
+   Ohne diese Spalte begannen die Deckel einer Reihe auf verschiedenen Höhen,
+   je nachdem wie lang der Name darunter war (gemessen: 153, 162, 170). */
+.bib-deckel{
+  display:flex; flex-direction:column; align-items:stretch;
+  justify-content:flex-start; width:100%; min-width:0; padding:0;
+  border:0; background:none; text-align:left; cursor:pointer; color:var(--text)
+}
+.bib-deckel-blatt{
+  position:relative; display:block; overflow:hidden;
+  aspect-ratio:3/4; margin:0 0 9px; padding:14px 11px 0;
+  border:1px solid var(--line); border-radius:6px;
+  background:var(--bg-card); box-shadow:var(--shadow-2);
+  color:var(--text-dim); font-size:8px; line-height:1.6
+}
+.bib-deckel:hover .bib-deckel-blatt{ box-shadow:var(--shadow-3) }
+.bib-deckel:active .bib-deckel-blatt{ transform:scale(.985) }
+/* Der Auslauf nach unten — dasselbe Papier wie im Heftregal. */
+.bib-deckel-blatt::after{
+  content:""; position:absolute; right:0; bottom:0; left:0; height:38px;
+  background:linear-gradient(to bottom, transparent, var(--bg-card));
+  pointer-events:none
+}
+.bib-deckel-marke{
+  position:absolute; left:0; top:0; z-index:2; padding:3px 6px;
+  border-radius:0 0 6px 0; background:var(--gefahr); color:#fff;
+  font-size:8.5px; font-weight:800; font-style:normal; letter-spacing:.04em
+}
+.bib-deckel-stern{
+  position:absolute; right:5px; top:4px; z-index:3; font-style:normal;
+  font-size:14px; color:var(--text-faint);
+  /* Ein Stern, der auf einem Strich liegt, ist weg. Ein feiner Schein
+     darunter kostet nichts und rettet ihn auf jedem Muster. */
+  text-shadow:0 0 5px var(--bg-card), 0 0 3px var(--bg-card)
+}
+.bib-deckel-stern.an{ color:var(--warnung) }
+.bib-deckel-name{ display:flex; align-items:flex-start; gap:3px; min-width:0 }
+/* Zwei Zeilen, dann Auslassungszeichen. `min-width:0` ist der Unterschied
+   zwischen „Materialliste" und „Materiallist": ein Flex-Kind schrumpft von
+   sich aus nicht unter seine Inhaltsbreite, und ein gekürzter Name ohne
+   Auslassungszeichen sieht aus wie ein FALSCHER Name (dieselbe Lehre wie
+   E227 bei der Zahl). */
+.bib-deckel-name b{
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
+  overflow:hidden; min-height:33px; min-width:0; overflow-wrap:break-word;
+  font-size:12.5px; font-weight:580; line-height:1.3; letter-spacing:-.005em
+}
+.bib-deckel-mehr{
+  margin-left:auto; flex:none; width:20px; height:20px; display:grid;
+  place-items:center; border-radius:6px; color:var(--text-faint);
+  font-style:normal; font-size:13px
+}
+.bib-deckel-mehr:hover{ background:var(--bg-hover); color:var(--text) }
+.bib-deckel small{
+  display:block; overflow:hidden; margin-top:2px; color:var(--text-faint);
+  font-size:11px; white-space:nowrap; text-overflow:ellipsis
+}
+/* ---- DIE GEZEICHNETEN DECKEL -------------------------------------------
+   Jede Art bekommt ihr eigenes Papier. Das ist keine Verzierung: bei einem
+   PDF, einem Whiteboard oder einer Tabelle steht im TEXT der Blöcke nichts,
+   was jemandem hilft — gemessen stand auf dem PDF-Deckel „Seite 1Seite
+   2Seite 3" und auf dem Whiteboard das Wort „Whiteboard".
+
+   Die Art steht IMMER auch als Wort in der Zeile darunter. Wer die Muster
+   nicht unterscheiden kann, liest sie (§38). */
+.bib-deckel-blatt > i.bib-papier{
+  position:absolute; inset:0; display:block; font-style:normal
+}
+/* EINE LEERE SEITE MUSS WIE PAPIER AUSSEHEN, NICHT WIE EIN LOCH.
+   Im Bild standen „Semester 1", „Semester 2" und „Prüfungen" als drei
+   dunkle Rechtecke — sie haben keinen Text, also gab `Vorschau.miniatur`
+   nichts zurück, und der Deckel blieb leer. Feine Linien darunter sagen:
+   hier ist Platz, hier steht nur noch nichts. Steht Text darauf, liegt er
+   darüber und die Linien sind das Papier. */
+.bib-deckel[data-art="seite"] .bib-papier{
+  background:repeating-linear-gradient(transparent 0 9px,
+              var(--line-soft) 9px 10px) 0 18px/100% 100%
+}
+/* Liniertes Papier — Blatt, Journal, Seite */
+.bib-deckel[data-art="blatt"] .bib-papier{
+  background:repeating-linear-gradient(transparent 0 9px,
+              var(--line) 9px 10px) 0 16px/100% 100%
+}
+/* Kariert — Mitschrift */
+.bib-deckel[data-art="blatt"] .bib-deckel-blatt{ background:var(--bg-card) }
+/* PDF: Textzeilen in Blöcken, wie eine Druckseite */
+.bib-deckel[data-art="pdf"] .bib-papier{
+  opacity:.9;
+  background:
+    linear-gradient(var(--line) 0 0) 14% 26%/58% 5px no-repeat,
+    repeating-linear-gradient(transparent 0 6px, var(--line) 6px 9px)
+      12% 40%/76% 46% no-repeat
+}
+/* Whiteboard: Fläche mit einem Strich darauf */
+.bib-deckel[data-art="board"] .bib-deckel-blatt,
+.bib-deckel[data-art="plan"]  .bib-deckel-blatt{ background:var(--bg-side) }
+/* GEMESSEN AM BILD, NICHT GESCHÄTZT: der erste Strich lief über den ganzen
+   Deckel und war 8 % breit — auf 144 px sind das 12 px, ein Balken, kein
+   Strich. Er deckte ausserdem den Stern zu. Jetzt zwei feine Striche in
+   der Mitte, wie eine Skizze auf einer leeren Fläche. */
+.bib-deckel[data-art="board"] .bib-papier{
+  background:
+    linear-gradient(128deg, transparent 47.5%, var(--info) 47.5% 49.5%, transparent 49.5%)
+      14% 30%/62% 44% no-repeat,
+    linear-gradient(var(--text-faint) 0 0) 18% 68%/34% 2px no-repeat;
+  opacity:.55
+}
+/* Schaltplan: zwei Leitungen und ein Bauteil */
+.bib-deckel[data-art="plan"] .bib-papier{
+  background:
+    linear-gradient(var(--accent-warm) 0 0) 16% 42%/26% 2px no-repeat,
+    linear-gradient(var(--accent-warm) 0 0) 58% 42%/26% 2px no-repeat,
+    linear-gradient(var(--accent-warm) 0 0) 42% 34%/2px 18% no-repeat,
+    linear-gradient(var(--accent-warm) 0 0) 56% 34%/2px 18% no-repeat;
+  opacity:.75
+}
+/* Tabelle: Raster mit farbiger Kopfzeile */
+.bib-deckel[data-art="tab"] .bib-papier{
+  opacity:.7;
+  background:
+    linear-gradient(var(--erfolg) 0 0) 12% 22%/76% 9px no-repeat,
+    repeating-linear-gradient(transparent 0 10px, var(--line) 10px 11px)
+      12% 22%/76% 60% no-repeat,
+    repeating-linear-gradient(90deg, transparent 0 16px, var(--line) 16px 17px)
+      12% 22%/76% 60% no-repeat
+}
+/* Karteikarten: gestapelte Karten */
+.bib-deckel[data-art="karten"] .bib-papier{
+  background:
+    linear-gradient(var(--line) 0 0) 18% 60%/64% 1px no-repeat,
+    linear-gradient(var(--accent) 0 0) 18% 24%/40% 4px no-repeat;
+  opacity:.85
+}
+/* Datenbank: Zeilen mit Kopf in der Akzentfarbe */
+.bib-deckel[data-art="db"] .bib-papier{
+  background:
+    linear-gradient(var(--accent) 0 0) 12% 22%/76% 11px no-repeat,
+    repeating-linear-gradient(transparent 0 10px, var(--line) 10px 11px)
+      12% 22%/76% 60% no-repeat;
+  opacity:.85
+}
+/* Dateien: ein Papier mit umgeknickter Ecke */
+.bib-deckel[data-art="datei"] .bib-papier{
+  background:
+    linear-gradient(225deg, var(--line) 0 14px, transparent 14px) 88% 8%/22px 22px no-repeat,
+    repeating-linear-gradient(transparent 0 8px, var(--line) 8px 9px)
+      14% 44%/72% 40% no-repeat
+}
+.bib-deckel[data-art="ordner"] .bib-deckel-blatt{
+  border:0; box-shadow:none; background:none
+}
+.bib-deckel[data-art="ordner"] .bib-deckel-blatt::before{
+  content:""; position:absolute; inset:16% 4% 8%;
+  border-radius:4px 12px 12px 12px; background:var(--accent); opacity:.85
+}
+.bib-deckel[data-art="ordner"] .bib-deckel-blatt::after{
+  content:""; position:absolute; left:4%; top:8%; width:44%; height:13%;
+  border-radius:4px 8px 0 0; background:var(--accent); opacity:.85
+}
+
+@media(max-width:760px){
+  .bib-gitter{ grid-template-columns:repeat(auto-fill,minmax(102px,1fr));
+               gap:20px 14px }
+  .bib-dkopf{ gap:6px 8px }
+  .bib-dkopf h1{ font-size:24px }
+  .bib-neu{ padding:0 17px 0 13px }
+  /* GEMESSEN: `#page` gibt 28 px Polster, die Bibliothek noch einmal 16 —
+     zusammen 88 von 390. Übrig blieben 302, und damit passten nur ZWEI
+     Deckel nebeneinander statt drei. Das Regal ist die Ansicht, in der
+     Breite in Dokumenten zählt; hier gibt sie das innere Polster ab. */
+  /* ZWEI KLASSEN, NICHT EINE. `.bib{padding:18px 16px 50px}` steht weiter
+     unten in einer eigenen Telefon-Abfrage; bei gleicher Stärke gewinnt die
+     spätere Regel, und meine hier verlor still. Gemessen blieb es bei 16 px
+     und zwei Deckeln. `.bib.bib-deckel-seite` ist stärker und gewinnt
+     unabhängig von der Reihenfolge. */
+  .bib.bib-deckel-seite{ padding-left:0; padding-right:0 }
+}
+
 .bib-regal{
   display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
   gap:var(--space-5); align-items:start
@@ -1266,11 +1513,24 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
 
      Zwei Zahlen, die dasselbe meinen müssen, gehen irgendwann
      auseinander. Also nur noch eine. */
-  :root{ --hoben: calc(80px + env(safe-area-inset-top)) }
+  /* 68 STATT 80 — UND ZWAR AM POLSTER, NICHT AN DER TASTE (E235).
+     Redur hat den ganzen Kopfbereich rot angestrichen: „dort sollte
+     möglichst wenig sein". Gemessen waren es 236 px von 844, also ein
+     Drittel des Telefons, bevor die erste Zahl kommt.
+
+     Die Rechnung dieser Zeile war 12 + 56 + 12 = 80. Die 56 sind die
+     Fläche, die der Daumen trifft; §37 verlangt 44, und der Absatz
+     darüber verteidigt die 56 ausdrücklich. Daran wird nicht gespart.
+     Gespart wird am Polster: 6 + 56 + 6 = 68.
+
+     Zwölf Punkte klingen wenig. Sie sind ein Viertel der Ersparnis, die
+     ohne Verlust überhaupt zu holen ist — den Rest holen die verschmolzene
+     Reiterzeile (−56) und der Bereichsfilter als Chip (−44). */
+  :root{ --hoben: calc(68px + env(safe-area-inset-top)) }
   #handy-oben{
     display:flex; align-items:center; gap:10px;
     position:fixed; left:0; right:0; top:0; z-index:401;
-    padding:calc(12px + env(safe-area-inset-top)) 28px 12px;
+    padding:calc(6px + env(safe-area-inset-top)) 28px 6px;
     background:var(--bg);
     overflow-x:auto; scrollbar-width:none;
   }
@@ -1635,6 +1895,96 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
      in JEDER Ansicht braucht, endlich 44 × 44 (§37). */
   #topbar .icon-btn,
   #topbar .top-btn{ min-height:44px; min-width:44px; justify-content:center }
+
+  /* ======================================================================
+   * DIE KRUMENZEILE UND DIE REITERZEILE WERDEN EINE (E235)
+   * ----------------------------------------------------------------------
+   * Gemessen im Lernbereich auf 390 × 844: die Krumenzeile war 56 px hoch
+   * und enthielt DREI Dinge — den Zurück-Knopf, 284 px Seitentitel
+   * („Lernen & Alltag") und die drei Punkte. Der Titel steht zu diesem
+   * Zeitpunkt schon zweimal auf dem Bildschirm: als aktiver Kreis darüber
+   * („Lernen") und als aktiver Reiter darunter.
+   *
+   * 284 von 390 Punkten Breite und eine ganze Bank Höhe für eine Auskunft,
+   * die zweimal daneben steht.
+   *
+   * DER VERTRAG. Ein Bereich, der GANZ OBEN eine eigene, klebende Zeile
+   * zeichnet, markiert sie mit `data-kopfzeile="eigene"`. Dann — und nur
+   * am Telefon — nimmt die Schale ihre eigene Zeile aus dem Fluss: der
+   * Inhalt rückt um genau ihre 56 px nach oben, der Titel wird
+   * unsichtbar, und die zwei Knöpfe bleiben als einzige über der Zeile
+   * des Bereichs stehen. Aus zwei Bänken wird eine.
+   *
+   * WARUM EINE MARKE UND KEIN AUFRUF. Ein Bereich darf die Schale nicht
+   * kennen (§5). Er sagt hier nur etwas ÜBER SICH — „diese Zeile ist mein
+   * Kopf" — genau wie `data-ruhig="mehr"` in `index.html` etwas über
+   * einen Knopf sagt. Fehlt die Marke, ändert sich nichts.
+   *
+   * WARUM `visibility` UND NICHT `display:none` FÜR DIE KRUME. Sie ist
+   * `flex:1 1 0` und schiebt damit die drei Punkte an den rechten Rand.
+   * Mit `display:none` klebten beide Knöpfe links zusammen.
+   *
+   * DIE KINDKOMBINATOREN IN `:has()` SIND ABSICHT. `#main:has(#page
+   * [data-kopfzeile])` müsste der Browser bei jeder Änderung irgendwo in
+   * `#main` neu prüfen — und in `#page` ändert sich beim Schreiben
+   * ständig etwas. Der ganze Pfad als Kind-Kette begrenzt das auf die
+   * eine Ebene, auf der die Marke überhaupt stehen kann.
+   *
+   * DARAUS FOLGT EINE BEDINGUNG, und sie ist mit Absicht eng: die
+   * markierte Zeile muss DIREKT in `#page` liegen. Ein Bereich zeichnet
+   * seinen Wurzelknoten nicht selbst — er bekommt `#page` und setzt seine
+   * Klassen darauf (`#page.produkt-welt.lernwelt`), also stimmt das von
+   * allein. Wickelt ein Bereich seine Zeile doch noch einmal ein, greift
+   * die Marke nicht, und alles bleibt beim Alten — es bricht nichts, es
+   * spart nur nichts.
+   * ==================================================================== */
+  #main:has(> #scroll > #page > [data-kopfzeile="eigene"]) #topbar{
+    position:relative; z-index:6;
+    /* NACHGEMESSEN, WELCHE DIESER DREI ZEILEN ETWAS TUT — weil eine
+       Zeile, die nichts tut, später als Beweis gelesen wird:
+         · `border-bottom:0` WIRKT. Die Leiste hat sonst einen 1-px-Strich
+           unten, und der liefe quer durch die Reiterkarte.
+         · `background:transparent` ändert heute nichts: die Leiste hat gar
+           keinen eigenen Grund, sie zeigt den der Seite. Sie bleibt als
+           Wache stehen — wer ihr einen Grund gibt, deckt sonst die Reiter
+           zu, und das fiele erst im Bild auf.
+         · `box-shadow:none` ist derselbe Fall.                          */
+    background:transparent; border-bottom:0; box-shadow:none;
+    pointer-events:none;
+    /* HINGESEHEN, NICHT NUR GEMESSEN (§55). Im ersten Bild sassen die zwei
+       Knöpfe sechs Punkte zu hoch auf der Karte des Bereichs. Der Grund
+       stand nicht in dieser Regel, sondern in der Grundregel darüber:
+       `align-items:stretch`. Ein Knopf mit fester `height:44px` lässt sich
+       nicht strecken — er bleibt oben kleben. Solange die Leiste ihren
+       eigenen Hintergrund hatte, fiel das nie auf; über einer fremden
+       Karte fällt es sofort auf. */
+    align-items:center;
+    /* Und sechs Punkte Luft unter der Kreisleiste: ohne sie stösst die
+       Karte des Bereichs direkt an die Kreise. Die Leiste rückt mit, damit
+       beide auf derselben Linie bleiben — sie IST jetzt dieselbe Zeile. */
+    margin-top:6px;
+  }
+  #main:has(> #scroll > #page > [data-kopfzeile="eigene"]) #topbar > *{
+    pointer-events:none;
+  }
+  #main:has(> #scroll > #page > [data-kopfzeile="eigene"]) #topbar > #btn-back,
+  #main:has(> #scroll > #page > [data-kopfzeile="eigene"]) #topbar > #btn-page-menu{
+    pointer-events:auto;
+  }
+  #main:has(> #scroll > #page > [data-kopfzeile="eigene"]) #topbar .crumb{
+    visibility:hidden;
+  }
+  /* −56, und keine Zahl mehr: `#topbar{ min-height:56px }` steht 40 Zeilen
+     weiter oben, und die Leiste ist am Telefon genau so hoch. Wächst sie
+     dort, wächst die Verschiebung mit. */
+  #main:has(> #scroll > #page > [data-kopfzeile="eigene"]) #scroll{
+    margin-top:-56px;
+  }
+  /* Damit die Zeile des Bereichs DIREKT unter der Kreisleiste sitzt und
+     nicht 10 px darunter — sonst stünden die zwei Knöpfe schief darüber. */
+  #main:has(> #scroll > #page > [data-kopfzeile="eigene"]) #page{
+    padding-top:0;
+  }
 
   /* AUSSERHALB der Kopfleiste wächst beides. Zwei Symbolknöpfe sassen in
      der Seitenleiste und blieben bei 28 × 28 — gefunden hat das die

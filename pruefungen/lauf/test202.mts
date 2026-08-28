@@ -787,7 +787,20 @@ const bestandVorDashboard = await seite.evaluate(() => ({
 }));
 await seite.evaluate(() => Bibliothek.oeffne());
 await seite.waitForSelector('.bib');
-await seite.locator('[data-r="mehr"]').click();
+/* DER WEG ZUM DASHBOARD, NICHT DER KNOPF (E236).
+   Hier stand `[data-r="mehr"]` — der Knopf „3 mehr …" der Tabellen- und
+   der Heftform. Seit die Bibliothek als DRITTE Form ein Regal aus Deckeln
+   hat und dieses die Vorgabe ist, gibt es diesen Knopf in der Vorgabeform
+   nicht mehr: die Reiterliste hängt dort hinter der Ortszeile.
+
+   Die Prüfung soll aber gar nicht wissen, wie der Knopf heisst — sie soll
+   wissen, ob „Ausbildung" von der Bibliothek aus ERREICHBAR ist. Genau das
+   war der Fund, der sie überhaupt entstehen liess: im ersten Regal fehlte
+   der Knopf, und damit war ein ganzer Bereich unerreichbar.
+
+   Sie sucht deshalb beide Auslöser. Fehlt BEIDES, wird sie rot — und das
+   ist der Fall, den sie bewachen soll. */
+await seite.locator('[data-r="mehr"], [data-orte]').first().click();
 const schoolChoice = seite.locator('[data-x="schule"]').last();
 if (await schoolChoice.count()) {
   await schoolChoice.click();

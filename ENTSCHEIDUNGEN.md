@@ -16997,3 +16997,165 @@ hätten das in zwei Minuten geklärt." Genau das war richtig aufgeschrieben —
 und dann kam man trotzdem zum falschen Schluss, weil die drei Wiederholungen
 auf dem BELASTETEN Rechner liefen statt auf einem ruhigen Abzug. Eine Lehre
 aufzuschreiben ist leichter, als sie beim nächsten Mal anzuwenden.
+
+
+E235 — Der Kopf am Telefon: aus vier Bänken werden zwei
+================================================================================
+
+Redur hat ein Bildschirmfoto der Lernzentrale geschickt und einen roten
+Kasten darüber gezogen — über den ganzen oberen Bereich, mit dem Satz:
+
+    „dort sollte möglichst wenig sein"
+
+GEMESSEN, bevor etwas geändert wurde, auf 390 × 844:
+
+    y=  0  h= 80   Kreisleiste     R · Lernen · Heute · Seiten · Plan · Mehr
+    y= 80  h= 56   Krume           ←  „Lernen & Alltag"  ⋯
+    y=146  h= 44   Bereichsfilter  ◎ Alle Bereiche
+    y=198  h= 56   Reiter          Heute · Lernen · Prüfungen · Wo du lernst
+    ─────────────
+           236 px  von 844 — und die erste Zahl im Inhalt stand bei y = 517
+
+Vier Bänke. Und in ihnen stand der Name der Welt DREIMAL: als aktiver Kreis
+(„Lernen"), als Krume („Lernen & Alltag") und als aktiver Reiter.
+
+
+DIE DREI SCHNITTE
+--------------------------------------------------------------------------
+
+**1 · Die Kreise werden kleiner: 80 → 68.**
+
+Nicht die Trefferfläche — die bleibt bei 56 (§37 verlangt 44, und der
+Absatz in `bausteine.css` verteidigt die 56 ausdrücklich). Gespart wird am
+Polster: 12 + 56 + 12 wird zu 6 + 56 + 6.
+
+Zwölf Punkte sind wenig. Es ist genau das, was ohne Verlust zu holen ist.
+
+**2 · Der Bereichsfilter gibt seine Zeile ab: −44.**
+
+Eine ganze Bank für ein Feld, in dem fast immer „Alle Bereiche" steht. Er
+zieht neben die Reiter, ohne dass am Auszeichnungstext etwas wandert: die
+Lernwelt wird für diese eine Zeile zum Raster.
+
+ZWEIMAL DANEBEN, BEVOR ES STIMMTE — und der Grund gehört hierher, weil er
+sich wiederholen wird:
+
+  · `max-width:38vw` liess das Feld selbst rechnen. Im Bild stand danach
+    nur noch „◎" und der Pfeil: ein Auswahlfeld kürzt seinen Text NICHT
+    mit Auslassungszeichen, es schneidet ihn ab.
+  · 132 px, gerechnet mit 11.5 px Schrift — die es nicht gibt. In
+    `bausteine.css` steht `input, textarea, select{ font-size:16px
+    !important }`, damit iOS beim Tippen nicht hineinzoomt. Bei 16 px
+    braucht „◎ Alle Bereiche" rund 160 von 368 px, und der Chip stand
+    49 px ausserhalb des Bildes.
+
+Die Antwort war keine dritte Breite, sondern eine andere Frage: WOZU steht
+dort ein Wort, wenn es „ich filtere nicht" bedeutet? Steht der Filter auf
+„alle", bleibt nur das Zeichen ◎ in einem Kreis von 44 × 44. Sobald ein
+Bereich gewählt ist, steht sein Name da — die Auskunft erscheint genau dann,
+wenn sie eine ist.
+
+**3 · Krumenzeile und Reiterzeile werden EINE: −56.**
+
+Der grösste Schnitt, und der einzige, der etwas Neues braucht.
+
+Die Krumenzeile enthielt drei Dinge: den Zurück-Knopf, 284 px Seitentitel
+und die drei Punkte. Der Titel stand zu dem Zeitpunkt schon zweimal
+daneben. Also nimmt die Schale ihre Zeile aus dem Fluss, macht den Titel
+unsichtbar, und ihre zwei Knöpfe bleiben als einzige über der Zeile des
+Bereichs stehen.
+
+    vorher   [←] Lernen & Alltag                     [⋯]
+             [ Heute · Lernen · Prüfungen · Wo … ]  [◎]
+
+    nachher  [←] [ Heute · Lernen · Prüfungen ]  [◎] [⋯]
+
+
+DER VERTRAG — EINE MARKE, KEIN AUFRUF
+--------------------------------------------------------------------------
+
+Ein Bereich darf die Schale nicht kennen (§5). Er sagt deshalb nur etwas
+ÜBER SICH:
+
+    <nav class="lw-nav" data-kopfzeile="eigene" …>
+
+Und die Schale fragt danach, in `bausteine.css`, nur am Telefon:
+
+    #main:has(> #scroll > #page > [data-kopfzeile="eigene"]) #scroll{
+      margin-top:-56px;
+    }
+
+Dasselbe Muster wie `data-ruhig="mehr"` in `index.html`: eine Aussage über
+ein Element, kein Griff in ein fremdes Modul. Fehlt die Marke, ändert sich
+nichts — die Schale verlangt nichts, sie bietet an.
+
+WARUM DIE KINDKOMBINATOREN. `#main:has(#page [data-kopfzeile])` müsste der
+Browser bei jeder Änderung irgendwo in `#main` neu prüfen, und in `#page`
+ändert sich beim Schreiben ständig etwas. Der ganze Pfad als Kind-Kette
+begrenzt das auf die eine Ebene, auf der die Marke stehen kann. Daraus
+folgt eine Bedingung: die markierte Zeile muss DIREKT in `#page` liegen.
+Das stimmt von allein, weil ein Bereich seinen Wurzelknoten nicht selbst
+zeichnet — er bekommt `#page` und setzt seine Klassen darauf.
+
+WARUM `visibility:hidden` UND NICHT `display:none` FÜR DIE KRUME. Sie ist
+`flex:1 1 0` und schiebt damit die drei Punkte an den rechten Rand. Mit
+`display:none` klebten beide Knöpfe links zusammen.
+
+
+WAS DAS HINSEHEN FAND, UND KEINE PRÜFUNG HATTE (§55)
+--------------------------------------------------------------------------
+
+**Die zwei Knöpfe sassen sechs Punkte zu hoch auf der Karte.** Der Grund
+stand nicht in der neuen Regel, sondern in der alten darüber:
+`align-items:stretch`. Ein Knopf mit fester `height:44px` lässt sich nicht
+strecken — er bleibt oben kleben. Solange die Leiste einen eigenen
+Hintergrund hatte, fiel das nie auf; über einer fremden Karte sofort.
+
+**Der aktive Reiter stand halb ausserhalb.** In der Prüfungssicht war
+„Prüfungen" der gewählte Reiter und zur Hälfte abgeschnitten: man tippt
+darauf, er wird hell, und dann ist er weg. Solange die Leiste 322 px breit
+war, passte alles; bei 234 nicht mehr.
+
+Die Antwort gehört nicht in die Lernwelt, sondern zu den anderen drei
+Rollleisten: `Rollrand.zeige(feld, stueck)` rollt ein Feld so weit, dass ein
+Stück ganz darin steht — und rollt dabei NUR dieses Feld. `scrollIntoView`
+hätte alle Vorfahren mitgerollt, auch `#scroll`; die Seite wäre bei jedem
+Reiterwechsel gesprungen.
+
+
+DIE RECHNUNG
+--------------------------------------------------------------------------
+
+    Kreise            80 → 68     −12
+    Bereichsfilter    eigene Zeile → Chip in der Reiterzeile   −44
+    Krume             eigene Zeile → mit den Reitern verschmolzen   −56
+    ────────────────────────────────────────────────────────────
+    236 → 124 px
+
+    erste Zahl im Inhalt   y = 517  →  y = 387
+
+WAS ES KOSTET, und es steht hier, damit es niemand später als Fehler
+meldet: die Reiterkarte ist von 322 auf 234 px geschrumpft. Sie rollt und
+zeigt ihre Kante als Schatten (E159), und seit `Rollrand.zeige` steht der
+gewählte Reiter immer ganz im Bild. Sichtbar sind damit zweieinhalb statt
+dreieinhalb Reiter. Das ist der Preis für die Höhe, und die Höhe war die
+Frage.
+
+VERSPROCHEN WAREN 112. Es sind 124 geworden. Die 112 kamen aus einer
+Schätzung, in der die Kreise auf 56 schrumpfen — das ist die Trefferfläche
+selbst und wäre unter §37 gegangen.
+
+**Geprüft:** test67 §11, elf Punkte. Vier Gegenproben, jede einzeln
+gefahren und jede rot geworden: ohne `pointer-events:auto` fängt die Karte
+die Finger der beiden Knöpfe; ohne die Verschiebung stehen die Zeilen
+wieder 66 px auseinander; ohne `align-items:center` sitzen die Knöpfe
+schief; ohne die zwei leeren Rasterspalten liegt die Karte unter dem
+Zurück-Knopf. Dazu die Gegenrichtung: auf einer gewöhnlichen Seite bleibt
+der Pfad sichtbar, und am Rechner ändert sich gar nichts.
+
+EIN PUNKT DAVON WAR ZUERST FALSCH GEMESSEN, und das ist die Wiederholung
+der Lehre aus §55.2 in umgekehrter Richtung: geprüft wurde
+`backgroundColor` der Leiste — die in BEIDEN Zuständen `rgba(0,0,0,0)` ist,
+weil sie gar keinen eigenen Grund hat. Die Prüfung wäre rot gewesen, egal
+was der Umbau tut. Gemessen wird jetzt, was sich wirklich unterscheidet:
+die Verschiebung des Inhalts und ob die Leiste Finger fängt.

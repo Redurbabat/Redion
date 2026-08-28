@@ -35,6 +35,46 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
+**28. August 2026 · der Kopf am Telefon: 236 → 124 px**
+
+> ### Was Redur rot angestrichen hat (E232–E235)
+>
+> Ein Bildschirmfoto der Lernzentrale, ein roter Kasten über den ganzen
+> oberen Bereich, ein Satz: *„dort sollte möglichst wenig sein"*.
+>
+> Gemessen waren es vier Bänke und 236 px von 844 — und der Name der Welt
+> stand dreimal darin: als aktiver Kreis, als Krume, als aktiver Reiter.
+>
+> | | was gemacht wurde | was es bringt |
+> |---|---|---|
+> | **E232** | Zurück und die drei Punkte auf 44 × 44 (§37) | die Krume wird 9 % kürzer |
+> | **E235 ①** | Kreisleiste 80 → 68, nur am Polster gespart | −12 px |
+> | **E235 ②** | Bereichsfilter wird ein Chip in der Reiterzeile | −44 px |
+> | **E235 ③** | Krumenzeile und Reiterzeile werden EINE | −56 px |
+>
+> **Wie ③ ohne Kopplung geht:** ein Bereich markiert seine oberste, klebende
+> Zeile mit `data-kopfzeile="eigene"` und sagt damit nur etwas über SICH.
+> Die Schale fragt danach — `#main:has(> #scroll > #page >
+> [data-kopfzeile="eigene"])` — und nimmt am Telefon ihre eigene Zeile aus
+> dem Fluss. Fehlt die Marke, ändert sich nichts (§5).
+>
+> **Zwei Fehler fand nur das Hinsehen (§55):** die zwei Knöpfe sassen sechs
+> Punkte zu hoch auf der Karte (`align-items:stretch` streckt keinen Knopf
+> mit fester Höhe), und der GEWÄHLTE Reiter stand halb ausserhalb. Das
+> zweite wurde in `Rollrand.zeige()` gelöst, also für alle vier Rollleisten
+> auf einmal.
+>
+> **Und der Preis, ausgesprochen:** die Reiterkarte ist von 322 auf 234 px
+> geschrumpft — zweieinhalb statt dreieinhalb sichtbare Reiter. Sie rollt,
+> zeigt ihre Kante als Schatten, und der aktive Reiter steht immer im Bild.
+>
+> **Versprochen waren 112 px, geworden sind es 124.** Die 112 kamen aus einer
+> Schätzung, in der die Kreise auf 56 schrumpfen — das ist die Trefferfläche
+> selbst und wäre unter §37 gegangen.
+>
+> **Geprüft:** test67 §11, elf Punkte, vier Gegenproben einzeln gefahren und
+> jede rot geworden.
+
 **27. August 2026 · 215 Prüfläufe · acht Fehler aus dem Bilderdurchgang**
 
 > ### Was 92 Bildschirmfotos gefunden haben (E224–E231)
@@ -68,9 +108,10 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 > **Neu:** test249 misst den Kontrast in acht Produktwelten × zwei Themen mit
 > der WCAG-Formel und einer namentlich begründeten Ausnahmeliste.
 >
-> **Offen:** welche Ansicht Redur gebaut haben will. Der Befund dazu steht
-> unten unter „Was zu voll ist" — die zwei Reiterzeilen sind der grösste
-> Einzelposten, am Telefon 40 % des Bildschirms.
+> **Erledigt am 28. August:** „die zwei Reiterzeilen sind der grösste
+> Einzelposten" — Redur hat den Kasten rot angestrichen, und E235 hat die
+> Krumenzeile mit der Reiterzeile verschmolzen. 236 → 124 px. Der Block
+> ganz oben erzählt es.
 
 **27. August 2026 · die ruhige Fassung ist gebaut**
 

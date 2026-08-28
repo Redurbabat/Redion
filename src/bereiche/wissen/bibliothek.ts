@@ -150,11 +150,17 @@ const Bibliothek = (() => {
    * gesetzt und bekam ein Regal. Kein Wurf, keine Meldung; dieselbe Sorte
    * stiller Fehler wie `Store` an `window` (E207, `vorschau.ts`).
    */
-  const form = (): 'regal' | 'liste' =>
-    Store.getMeta('bibForm', 'regal') === 'liste' ? 'liste' : 'regal';
+  const form = (): 'deckel' | 'regal' | 'liste' => {
+    const wahl = Store.getMeta('bibForm', 'deckel');
+    return wahl === 'liste' ? 'liste' : wahl === 'regal' ? 'regal' : 'deckel';
+  };
 
   let zustand = { reiter: 'kuerzlich', sortier: 'wann', richtung: 'ab',
-                  suche: '', sucheOffen: false, spalten: SPALTEN.map(s => s.id) };
+                  suche: '', sucheOffen: false, spalten: SPALTEN.map(s => s.id),
+                  /* Der Artfilter der Deckelansicht (E236). Er steht NEBEN
+                     `reiter`, nicht darin: der Reiter fragt „wo liegt es",
+                     die Art fragt „was ist es". Zwei Fragen, zwei Filter. */
+                  art: 'alle' };
 
   /** Eine zusammengefuehrte Sicht auf bestehende Redion-Daten. Sie speichert
       weder Dashboard-Karten noch PDF-Kopien; alle Listen sind begrenzt. */
@@ -318,6 +324,103 @@ const Bibliothek = (() => {
    * ist dasselbe, und deshalb braucht es dafür keine Migration, keinen
    * zweiten Speicher und keinen Umzug (§9).
    * ====================================================================== */
+
+  /* ====================================================================== *
+   * DIE DECKEL — DAS REGAL JE DOKUMENT (E236)
+   * ---------------------------------------------------------------------- *
+   * Redur hat ein Bild geschickt: ein Regal aus Deckeln, jeder sagt schon
+   * von weitem, WAS er ist — ein PDF, ein Notizbuch, ein Whiteboard, eine
+   * Tabelle. Die Bibliothek hatte bisher zwei Formen, und keine davon:
+   *
+   *     Tabelle   dreizehn Zeilen, in jeder dreimal dieselbe Auskunft
+   *     Regal     je QUELLE eine Karte — also je Heft, nicht je Dokument
+   *
+   * Die Deckelform ist die dritte, nicht ein Ersatz. Beide alten bleiben,
+   * weil beide etwas können, was diese nicht kann: die Tabelle sortiert
+   * nach Spalten, das Heftregal zeigt Zusammengehöriges.
+   *
+   * KEINE NEUE DATENART, KEIN NEUES FELD. Die Art eines Dokuments wird
+   * ABGELESEN aus dem, was darin liegt — genau wie das Heft aus
+   * `quelleVon()` abgelesen wird. Ein Feld `art` am Block wäre eine
+   * Migration, und eine Migration für eine ANSICHT ist der teuerste Weg,
+   * den es gibt (§9).
+   * ====================================================================== */
+
+  /** Die Arten, die ein Dokument haben kann — Reihenfolge = Vorrang. */
+  const ARTEN = [
+    { id: 'pdf',    name: 'PDF',        typen: ['pdfseite'] },
+    { id: 'board',  name: 'Whiteboard', typen: ['whiteboard'] },
+    { id: 'plan',   name: 'Schaltplan', typen: ['schaltplan'] },
+    { id: 'blatt',  name: 'Blatt',      typen: ['blatt'] },
+    { id: 'tab',    name: 'Tabelle',    typen: ['spreadsheet'] },
+    { id: 'db',     name: 'Datenbank',  typen: ['database'] },
+    { id: 'karten', name: 'Karteikarten', typen: ['flashcard'] },
+    { id: 'datei',  name: 'Dateien',    typen: ['file', 'image', 'video', 'audio'] }
+  ] as const;
+
+  type ArtId = typeof ARTEN[number]['id'] | 'ordner' | 'seite';
+
+  /** Was steckt in dieser Seite? Zählt die Kindblöcke, nimmt den Vorrang. */
+  const artVon = (p: any): { id: ArtId; name: string } => {
+    const kinder = Store.childrenOf(p.id) || [];
+    for (const art of ARTEN)
+      if (kinder.some((b: any) => b && b.alive !== false &&
+                                  (art.typen as readonly string[]).includes(b.type)))
+        return { id: art.id, name: art.name };
+    /* Eine Seite, die vor allem andere Seiten hält, ist ein Ordner. Das ist
+       keine neue Datenart, sondern eine Beschreibung: `page` in `page`. */
+    const unterseiten = kinder.filter((b: any) => b && b.alive !== false && b.type === 'page');
+    if (unterseiten.length >= 2 && unterseiten.length >= kinder.length - 1)
+      return { id: 'ordner', name: unterseiten.length + ' Sachen' };
+    return { id: 'seite', name: 'Seite' };
+  };
+
+  /** Die Filterzeile über dem Regal — sie filtert nach ART, nicht nach Ort. */
+  const ART_FILTER: { id: string; name: string }[] = [
+    { id: 'alle',   name: 'Alle' },
+    { id: 'pdf',    name: 'PDF' },
+    { id: 'board',  name: 'Whiteboards' },
+    { id: 'blatt',  name: 'Blätter' },
+    { id: 'tab',    name: 'Tabellen' },
+    { id: 'db',     name: 'Datenbanken' },
+    { id: 'karten', name: 'Karteikarten' },
+    { id: 'ordner', name: 'Ordner' }
+  ];
+
+  /**
+   * Ein Deckel. Was darauf steht, ist keine Zeichnung, sondern eine
+   * Aussage: welche Art, und wenn es eine gibt, die echte Vorschau der
+   * Seite. `Vorschau.miniatur` liefert sie — dieselbe, die „Weiter wo du
+   * warst" verwendet (E205), damit nicht zwei Vorschauen gepflegt werden.
+   */
+  /* WELCHE ARTEN EINE ECHTE TEXTVORSCHAU VERTRAGEN — und welche nicht.
+     Gemessen am Bild: der Deckel eines PDF zeigte „Seite 1Seite 2Seite 3",
+     der eines Whiteboards eine graue Pille mit dem Wort „Whiteboard". Das
+     ist keine Vorschau, das ist der Name der Blockart dreimal.
+     `Vorschau.miniatur` liest den TEXT der Kindblöcke — bei einer Seite ist
+     das der Anfang des Textes und damit die beste Auskunft, die es gibt.
+     Bei einem PDF, einem Whiteboard oder einer Tabelle steht im Text
+     nichts, was jemandem hilft. Dort zeichnet die CSS das Papier. */
+  const MIT_TEXT = new Set(['seite', 'karten', 'db']);
+
+  const deckelKarte = (p: any): string => {
+    const art = artVon(p);
+    const bild = MIT_TEXT.has(art.id) ? (Vorschau.miniatur(p.id, 5) || '') : '';
+    const wann = wannText(p.zuletztGeoeffnet || p.edited || p.created);
+    return `<button class="bib-deckel" data-id="${esc(p.id)}" data-art="${esc(art.id)}" ` +
+      `title="${esc(p.text || 'Ohne Titel')}">` +
+      `<span class="bib-deckel-blatt mini-zeilen">` +
+        '<i class="bib-papier" aria-hidden="true"></i>' +
+        (bild || '') +
+        (art.id === 'pdf' ? '<i class="bib-deckel-marke">PDF</i>' : '') +
+        `<i class="bib-deckel-stern${p.favorite ? ' an' : ''}" aria-hidden="true">` +
+          (p.favorite ? '\u2605' : '\u2606') + '</i>' +
+      '</span>' +
+      '<span class="bib-deckel-name"><b>' + esc(p.text || 'Ohne Titel') + '</b>' +
+        '<i class="bib-deckel-mehr" aria-hidden="true">\u2304</i></span>' +
+      '<small>' + esc(art.name) + ' \u00b7 ' + esc(wann) + '</small>' +
+      '</button>';
+  };
 
   type Heft = { id: string; icon: string; name: string;
                 seiten: any[]; zuletzt: any; wann: number };
@@ -543,6 +646,72 @@ const Bibliothek = (() => {
     });
   };
 
+  /* ---------------------------------------------------------------- *
+   * DIE DECKELANSICHT (E236)
+   * ---------------------------------------------------------------- */
+  const zeichneDeckel = (wrap: HTMLElement): void => {
+    const alle = gefiltert();
+    const liste = zustand.art === 'alle'
+      ? alle : alle.filter(p => artVon(p).id === zustand.art);
+
+    /* Welche Arten es überhaupt GIBT — ein Filter für eine Art, die
+       niemand hat, ist ein Knopf, der immer leer antwortet. */
+    const vorhanden = new Set(alle.map(p => artVon(p).id as string));
+
+    wrap.innerHTML =
+      '<div class="bib bib-deckel-seite">' +
+        deckelKopf(alle.length) +
+        '<div class="bib-arten" role="group" aria-label="Nach Art filtern">' +
+          ART_FILTER.filter(a => a.id === 'alle' || vorhanden.has(a.id) ||
+                                 a.id === zustand.art)
+            .map(a => `<button data-art="${esc(a.id)}"` +
+              (zustand.art === a.id ? ' class="on" aria-pressed="true"' : ' aria-pressed="false"') +
+              `>${esc(a.name)}</button>`).join('') +
+        '</div>' +
+        (liste.length
+          ? '<div class="bib-gitter">' + liste.map(deckelKarte).join('') + '</div>'
+          : '<p class="bib-leer">' + (zustand.art === 'alle'
+              ? 'Hier ist noch nichts. Tippe auf „Neu", um anzufangen.'
+              : 'Von dieser Art gibt es hier nichts.') + '</p>') +
+      '</div>';
+
+    if (typeof Register !== 'undefined' && Register.symbole)
+      Register.symbole.fuelle(wrap);
+    binde(wrap);
+  };
+
+  /**
+   * Der Kopf der Deckelansicht: Titel, „+ Neu", Formwahl.
+   *
+   * ER IST NICHT `bibKopf`. Der alte Kopf trägt die Reiter (wo liegt es)
+   * und zwei Formknöpfe; dieser trägt die Handlung. Beide zusammen wären
+   * vier Bänke übereinander — genau das, was Redur rot angestrichen hat.
+   * Die Reiter sind deshalb hier ein Menü hinter dem Titel.
+   */
+  /**
+   * Der Kopf der Deckelansicht: Titel, „+ Neu", Formwahl.
+   *
+   * DER TITEL HEISST „DOKUMENTE" UND NICHT WIE DER REITER. Der erste
+   * Entwurf setzte den Reiternamen als Überschrift — und „Kürzlich
+   * verwendet" ist bei 24 px so breit, dass der Neu-Knopf in die nächste
+   * Zeile fiel und aus einer Bank zwei wurden. Ausserdem stimmt es nicht:
+   * die Seite IST das Regal, der Reiter ist nur ein Filter darauf. Er
+   * steht deshalb klein darunter, zusammen mit der Zahl.
+   */
+  const deckelKopf = (anzahl: number): string => {
+    const ort = REITER.find(r => r.id === zustand.reiter)?.name || 'Alle';
+    return '<header class="bib-dkopf">' +
+      '<h1>Dokumente</h1>' +
+      '<button class="bib-neu" data-neu-auf>' +
+        '<b aria-hidden="true">+</b><span>Neu</span></button>' +
+      '<button class="bib-form-knopf" data-form="liste" ' +
+        'aria-label="Als Liste anzeigen">\u2630</button>' +
+      '<button class="bib-ort" data-orte aria-haspopup="menu">' +
+        esc(ort) + ' \u00b7 ' + anzahl + (anzahl === 1 ? ' Dokument' : ' Dokumente') +
+        '<i aria-hidden="true">\u25be</i></button>' +
+    '</header>';
+  };
+
   const zeichneRegal = (wrap: HTMLElement): void => {
     const liste = gefiltert();
     const regal = hefte(liste);
@@ -616,10 +785,90 @@ const Bibliothek = (() => {
         const id = k.dataset['id'];
         if (id) App.oeffne(id);
       }));
+
+    /* --- Die Deckelansicht (E236) ---------------------------------- */
+    wrap.querySelectorAll<HTMLElement>('.bib-arten [data-art]').forEach(b =>
+      b.addEventListener('click', () => {
+        zustand.art = b.dataset['art'] ?? 'alle';
+        App.zeichneSeite();
+      }));
+    wrap.querySelectorAll<HTMLElement>('[data-orte]').forEach(b =>
+      b.addEventListener('click', () => {
+        const r = b.getBoundingClientRect();
+        /* Die Reiter als Menü hinter dem Titel — dieselbe Liste wie in der
+           Tabelle, nur nicht als eigene Bank. Sonst stünden hier vier
+           Zeilen übereinander, bevor das erste Dokument kommt. */
+        const m = UI.menu(REITER.map(x =>
+          `<button data-x="${x.id}"${zustand.reiter === x.id ? ' class="on"' : ''}>` +
+          `<span class="mi">${x.icon}</span>${esc(x.name)}</button>`).join('') +
+          '<div class="sep"></div>' +
+          '<button data-x="__regal"><span class="mi">\u25a4</span>Nach Heften ordnen</button>' +
+          '<button data-x="__liste"><span class="mi">\u2630</span>Als Tabelle</button>',
+          r.left, r.bottom + 6);
+        m.addEventListener('click', ev => {
+          const x = elVon(ev)?.closest<HTMLElement>('[data-x]');
+          if (!x) return;
+          const wahl = x.dataset['x'] ?? '';
+          m.remove();
+          if (wahl === '__regal')      { Store.setMeta('bibForm', 'regal'); }
+          else if (wahl === '__liste') { Store.setMeta('bibForm', 'liste'); }
+          else { zustand.reiter = wahl || zustand.reiter; zustand.art = 'alle'; }
+          App.zeichneSeite();
+        });
+      }));
+    wrap.querySelectorAll<HTMLElement>('[data-neu-auf]').forEach(b =>
+      b.addEventListener('click', () => App.erstellenBlatt()));
+    wrap.querySelectorAll<HTMLElement>('.bib-deckel[data-id]').forEach(k => {
+      k.addEventListener('click', ereignis => {
+        /* Der Pfeil im Namen öffnet das Menü zum Stück, nicht das Stück. */
+        if (ereignis.target instanceof Element &&
+            ereignis.target.closest('.bib-deckel-mehr')) return;
+        const id = k.dataset['id'];
+        if (id) App.oeffne(id);
+      });
+      k.querySelector<HTMLElement>('.bib-deckel-mehr')?.addEventListener('click', ereignis => {
+        ereignis.stopPropagation();
+        const id = k.dataset['id'];
+        const p = id ? Store.getBlock(id) : null;
+        if (!p) return;
+        const r = k.getBoundingClientRect();
+        const m = UI.menu(
+          `<button data-a="oeffnen"><span class="mi">\u2197</span>Öffnen</button>` +
+          `<button data-a="stern"><span class="mi">${p.favorite ? '\u2605' : '\u2606'}</span>` +
+            (p.favorite ? 'Aus Favoriten' : 'Zu Favoriten') + '</button>' +
+          '<button data-a="umbenennen"><span class="mi">\u270e</span>Umbenennen</button>' +
+          '<div class="sep"></div>' +
+          '<button data-a="papierkorb"><span class="mi">\u2327</span>In den Papierkorb</button>',
+          Math.min(r.left, innerWidth - 230), r.bottom + 4);
+        m.addEventListener('click', ev => {
+          const b = elVon(ev)?.closest<HTMLElement>('[data-a]');
+          if (!b) return;
+          const a = b.dataset['a'];
+          m.remove();
+          if (a === 'oeffnen') { App.oeffne(p.id); return; }
+          if (a === 'stern')   { Store.updateBlock(p.id, { favorite: !p.favorite }); }
+          if (a === 'umbenennen') {
+            /* Umbenannt wird auf der Seite selbst — ein zweites Eingabefeld
+               für denselben Titel wäre eine zweite Wahrheit (§8). */
+            App.oeffne(p.id);
+            setTimeout(() => document.getElementById('title')?.focus(), 80);
+            return;
+          }
+          if (a === 'papierkorb') {
+            /* NICHT LÖSCHEN, SONDERN IN DEN PAPIERKORB. `alive: false` ist
+               umkehrbar; `Store.removeBlock` wäre es nicht (§46). */
+            Store.updateBlock(p.id, { alive: false });
+            UI.toast('„' + (p.text || 'Ohne Titel') + '" liegt im Papierkorb');
+          }
+          App.zeichneSeite();
+        });
+      });
+    });
   };
 
   const zeichnen = (wrap: HTMLElement): void => {
     if (zustand.reiter === 'schule') { zeichneSchule(wrap); return; }
+    if (form() === 'deckel') { zeichneDeckel(wrap); return; }
     if (form() === 'regal') { zeichneRegal(wrap); return; }
     const liste = gefiltert();
     const spalten = SPALTEN.filter(s => zustand.spalten.includes(s.id));

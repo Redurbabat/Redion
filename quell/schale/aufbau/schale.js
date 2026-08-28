@@ -3398,7 +3398,12 @@ const App = (() => {
         markdownExport, markdownVonSeite, woerterZaehlen, dupliziereSeite, seitenMenue, coverWaehlen,
         kuerzlich, kommendeTermine,
         ABSCHNITTE, abschnittAn, abschnittSchalten, abschnitteAnpassen, reiterWechseln,
-        sicherungSpeichern, sicherungLaden, zurueck, vorwaerts
+        sicherungSpeichern, sicherungLaden, zurueck, vorwaerts,
+        /* HERAUSGEGEBEN SEIT E236. Das Blatt „Neu erstellen" war eine interne
+           Funktion hinter dem Stift am Telefon — und damit unerreichbar für den
+           „+ Neu"-Knopf im Regal und für alles am Rechner. Es ist derselbe
+           Katalog, nur endlich von überall erreichbar (§8). */
+        erstellenBlatt
     };
 })();
 /* Los geht's */
