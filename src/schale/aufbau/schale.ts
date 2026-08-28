@@ -2001,32 +2001,105 @@ const App = (() => {
    * NUR AM TELEFON. Am Rechner gibt es Strg+N, die Seitenleiste und die
    * Befehlspalette — dort wäre ein Blatt ein Umweg, kein Wegweiser.
    * ========================================================================*/
-  const ERSTELLEN: [string, string, string, string][] = [
-    ['seite',    '📄', 'Neue Seite',       'Leere Seite anlegen'],
-    ['memo',     '⚡', 'Schnellnotiz',     'Gedanken sofort festhalten'],
-    ['db',       '▦', 'Neue Datenbank',   'Zeilen sind eigene Seiten'],
-    ['tabelle',  '📊', 'Neue Tabelle',     'Rechnen wie in Excel'],
-    ['aufgabe',  '☑', 'Aufgabe',          'Mit Datum planen'],
-    ['karte',    '📚', 'Karteikarte',      'Später wiederholen'],
-    /* AUFNAHME UND WHITEBOARD FEHLTEN (E138, Auftrag §46). Beide Wege gab es
-       längst — die Besprechungsaufnahme und den Whiteboard-Block —, nur
-       nicht an der Stelle, an der man am Telefon etwas Neues anfängt. Ein
-       Weg, den man nur über die Befehlspalette findet, ist am Telefon kein
-       Weg: dort gibt es keine Tastatur mit Strg. */
-    ['aufnahme', '🎙', 'Aufnahme',         'Mitschnitt mit Marken und Notizen'],
-    ['board',    '🖍', 'Whiteboard',       'Freie Fläche zum Skizzieren'],
-    ['scan',     '📷', 'Dokument scannen', 'Kamera, Foto oder PDF in den Eingang'],
-    ['datei',    '📎', 'Datei hochladen',  'Bleibt auf diesem Gerät'],
-    ['vorlage',  '🧩', 'Vorlage verwenden', 'Mit fertiger Struktur starten']
+  /* WAS HIER STEHT, MUSS IRGENDWOHIN FÜHREN. §47 verbietet, Dinge zu
+     versprechen, die nicht funktionieren — deshalb steht neben jedem Weg
+     die Funktion, die ihn ausführt, und `da()` prüft vor dem Zeichnen, ob
+     es sie in dieser Fassung überhaupt gibt. Ein Eintrag ohne Ziel wird
+     nicht gezeichnet, statt einen Fehler zu zeigen.
+
+     DIE GRUPPEN SIND KEINE ZIERDE. Vierzehn Zeilen hintereinander liest
+     niemand; sechs Überschriften sagen, wonach man sucht, bevor man liest.
+
+     Die Reihenfolge ist die des Auftrags: was man HEREINHOLT, steht oben.
+     Redur öffnet Redion, um an einer PDF weiterzuarbeiten — nicht, um eine
+     leere Seite anzulegen. */
+  type NeuWeg = {
+    id: string; zeichen: string; name: string; sub: string;
+    gruppe: string;
+    /** Fehlt sie, ist der Weg in dieser Fassung nicht geladen. */
+    da?: () => boolean;
+  };
+
+  const ERSTELLEN: NeuWeg[] = [
+    /* --- Hereinholen ------------------------------------------------- */
+    { gruppe: 'Hereinholen', id: 'pdf', zeichen: '📕', name: 'PDF einlesen',
+      sub: 'Blättern, beschreiben, Text durchsuchen',
+      da: () => typeof PdfEinlesen !== 'undefined' && !!PdfEinlesen.waehlen },
+    { gruppe: 'Hereinholen', id: 'scan', zeichen: '📷', name: 'Dokument scannen',
+      sub: 'Kamera, Foto oder PDF in den Eingang',
+      da: () => typeof Recognition !== 'undefined' && !!Recognition.scan },
+    { gruppe: 'Hereinholen', id: 'datei', zeichen: '📎', name: 'Datei hochladen',
+      sub: 'Bleibt auf diesem Gerät' },
+    { gruppe: 'Hereinholen', id: 'umzug', zeichen: '⇤', name: 'Aus anderem Werkzeug',
+      sub: 'Notion, Obsidian, Trello, Evernote, Anki …',
+      da: () => typeof Austausch !== 'undefined' && !!Austausch.dialog },
+
+    /* --- Schreiben ---------------------------------------------------- */
+    { gruppe: 'Schreiben', id: 'seite', zeichen: '📄', name: 'Neue Seite',
+      sub: 'Leere Seite anlegen' },
+    { gruppe: 'Schreiben', id: 'memo', zeichen: '⚡', name: 'Schnellnotiz',
+      sub: 'Gedanken sofort festhalten' },
+    { gruppe: 'Schreiben', id: 'journal', zeichen: '📔', name: 'Journal-Eintrag',
+      sub: 'Der heutige Tag',
+      da: () => typeof Werkzeuge !== 'undefined' && !!Werkzeuge.journal },
+    { gruppe: 'Schreiben', id: 'vorlage', zeichen: '🧩', name: 'Vorlage verwenden',
+      sub: 'Mit fertiger Struktur starten' },
+    { gruppe: 'Schreiben', id: 'ordner', zeichen: '🗂', name: 'Ordner',
+      sub: 'Eine Seite, die andere hält' },
+
+    /* --- Zeichnen ----------------------------------------------------- */
+    { gruppe: 'Zeichnen', id: 'board', zeichen: '🖍', name: 'Whiteboard',
+      sub: 'Freie Fläche zum Skizzieren' },
+    { gruppe: 'Zeichnen', id: 'blatt', zeichen: '📐', name: 'Blatt',
+      sub: 'A4 — liniert, kariert, Punktraster, Millimeter' },
+    { gruppe: 'Zeichnen', id: 'plan', zeichen: '⚡', name: 'Schaltplan',
+      sub: 'Mit Fachzeichen und Stromsimulation' },
+
+    /* --- Ordnen und rechnen ------------------------------------------- */
+    { gruppe: 'Ordnen und rechnen', id: 'db', zeichen: '▦', name: 'Neue Datenbank',
+      sub: 'Zeilen sind eigene Seiten' },
+    { gruppe: 'Ordnen und rechnen', id: 'tabelle', zeichen: '📊', name: 'Neue Tabelle',
+      sub: 'Rechnen wie in Excel' },
+    { gruppe: 'Ordnen und rechnen', id: 'aufgabe', zeichen: '☑', name: 'Aufgabe',
+      sub: 'Mit Datum planen' },
+    { gruppe: 'Ordnen und rechnen', id: 'diagramm', zeichen: '📈', name: 'Diagramm',
+      sub: 'Zahlen aus einer Datenbank zeichnen' },
+
+    /* --- Lernen -------------------------------------------------------- */
+    { gruppe: 'Lernen', id: 'karte', zeichen: '📚', name: 'Karteikarte',
+      sub: 'Später wiederholen (SM-2)' },
+    { gruppe: 'Lernen', id: 'lernen', zeichen: '🎓', name: 'Lernzentrale öffnen',
+      sub: 'Fällige Karten, Fehler, Prüfungen',
+      da: () => typeof Produktwelten !== 'undefined' && !!Produktwelten.lernen },
+
+    /* --- Aufnehmen ------------------------------------------------------ */
+    { gruppe: 'Aufnehmen', id: 'aufnahme', zeichen: '🎙', name: 'Besprechung aufnehmen',
+      sub: 'Mitschnitt mit Marken und Notizen',
+      da: () => typeof Meeting !== 'undefined' && !!Meeting.panel }
   ];
 
   const erstellenBlatt = (): void => {
-    const html = '<div class="menu-liste">' +
-      ERSTELLEN.map(([was, z, name, sub]) =>
-        `<button data-neu="${was}"><span class="mi">${z}</span>` +
-        `<span class="ne-txt"><b>${name}</b><i>${sub}</i></span>` +
-        '<span class="ne-pfeil">›</span></button>').join('') +
+    /* Erst aussortieren, was es hier nicht gibt, DANN gruppieren — sonst
+       bleibt eine Überschrift ohne Zeilen darunter stehen. */
+    const wege = ERSTELLEN.filter(w => !w.da || w.da());
+    const gruppen: string[] = [];
+    for (const w of wege) if (!gruppen.includes(w.gruppe)) gruppen.push(w.gruppe);
+
+    /* EINE LISTE, NICHT SECHS. Der erste Entwurf gab jeder Gruppe ihre
+       eigene `.menu-liste` — und die trägt am Telefon `flex:1`, weil sie
+       dort das ganze Blatt füllen soll. Sechs davon teilten sich die Höhe
+       und schnitten sich gegenseitig ab: „Dokument scannen" war halb weg,
+       „Neue Tabelle" halb weg, und gerollt hat keine von ihnen.
+       Die Überschriften laufen deshalb IN der Liste mit — `.grp` ist genau
+       dafür da und wird in jedem anderen Menü auch so verwendet. */
+    const html = '<div class="menu-liste">' + gruppen.map(g =>
+      `<div class="grp">${esc(g)}</div>` +
+      wege.filter(w => w.gruppe === g).map(w =>
+        `<button data-neu="${esc(w.id)}"><span class="mi">${esc(w.zeichen)}</span>` +
+        `<span class="ne-txt"><b>${esc(w.name)}</b><i>${esc(w.sub)}</i></span>` +
+        '<span class="ne-pfeil">›</span></button>').join('')).join('') +
       '</div>';
+
     const m = UI.menu(html, 0, 0, { titel: 'Neu erstellen' });
     m.addEventListener('click', (e: Event) => {
       const b = (e.target instanceof Element)
@@ -2037,29 +2110,73 @@ const App = (() => {
       /* Erst schliessen, dann handeln — ein Dialog unter einem Blatt ist
          von aussen nicht erreichbar (derselbe Grund wie im R-Blatt). */
       setTimeout(() => {
-        if (was === 'seite')        neueSeite();
-        else if (was === 'memo')    Werkzeuge.schnellnotizen();
-        else if (was === 'datei')   Werkzeuge.dateienLesen();
-        else if (was === 'scan')    Recognition.scan();
-        else if (was === 'vorlage') Werkzeuge.vorlagen();
-        else if (was === 'karte')   Werkzeuge.lernen();
-        else if (was === 'aufnahme') {
+        /* Wege, die kein Blatt Papier brauchen: sie öffnen etwas, das es
+           schon gibt, oder einen Wähler. */
+        if (was === 'seite')        { neueSeite(); return; }
+        if (was === 'memo')         { Werkzeuge.schnellnotizen(); return; }
+        if (was === 'datei')        { Werkzeuge.dateienLesen(); return; }
+        if (was === 'scan')         { Recognition.scan(); return; }
+        if (was === 'vorlage')      { Werkzeuge.vorlagen(); return; }
+        if (was === 'karte')        { Werkzeuge.lernen(); return; }
+        if (was === 'journal')      { Werkzeuge.journal(); return; }
+        if (was === 'umzug')        { Austausch.dialog(); return; }
+        if (was === 'pdf') {
+          /* GEMESSEN UND EINE SACKGASSE GEFUNDEN. `PdfEinlesen.waehlen()`
+             beginnt mit `App.aktuelleSeite()` und meldet „Erst eine Seite
+             öffnen", wenn keine offen ist — und im Regal ist keine offen.
+             Von dort führte der Weg also ins Nichts (§47).
+
+             Aus dem Blatt „Neu erstellen" heraus ist das ohnehin die
+             falsche Frage: wer hier klickt, will ein NEUES Dokument aus
+             der PDF, keine PDF in einer bestehenden Seite. Also erst die
+             Seite, dann hinein damit.
+
+             Bricht jemand den Dateiwähler ab, bleibt eine leere,
+             namenlose Seite übrig — die wandert in den Papierkorb, nicht
+             in den Abgrund: `alive:false` ist umkehrbar (§46). */
+          const ziel = neueSeite();
+          void PdfEinlesen.waehlen(ziel.id).then((erg: any) => {
+            if (erg) { zeichneBaum(); zeichneSeite(); return; }
+            const jetzt = Store.getBlock(ziel.id);
+            const leer = jetzt && !(jetzt.text || '').trim() &&
+                         (Store.childrenOf(ziel.id) || [])
+                           .filter((k: any) => k && k.alive !== false).length === 0;
+            if (leer) { Store.updateBlock(ziel.id, { alive: false }); zeichneBaum(); }
+          });
+          return;
+        }
+        if (was === 'lernen')       { Produktwelten.lernen('lernen'); return; }
+        if (was === 'aufnahme') {
           if (typeof Meeting !== 'undefined' && Meeting.panel) Meeting.panel();
           else UI.toast('Die Aufnahme ist in dieser Fassung nicht geladen.');
+          return;
         }
-        else {
-          /* Datenbank, Tabelle und Aufgabe entstehen IN einer Seite — es
-             gibt sie nicht ohne eine. Also erst die Seite, dann der Block
-             darin, und der Cursor steht schon an der richtigen Stelle. */
-          const p = neueSeite();
-          setTimeout(() => {
-            if (was === 'db')           Store.addDatabase(p.id, 'Ohne Namen');
-            else if (was === 'tabelle') Store.addBlock(p.id, 'tabelle', {});
-            else if (was === 'board')   Store.addBlock(p.id, 'whiteboard', { text: 'Whiteboard' });
-            else if (was === 'aufgabe') Store.addBlock(p.id, 'todo', { text: '' });
-            zeichneSeite();
-          }, 80);
+        if (was === 'ordner') {
+          /* EIN ORDNER IST KEINE NEUE DATENART. Er ist eine Seite, die
+             andere hält — genau so liest die Bibliothek ihn auch wieder
+             (E236, `artVon`). Ein eigenes Feld dafür wäre eine Migration
+             für eine Ansicht (§9). Das Mappensymbol sagt, wozu sie da
+             ist; wer sie vollschreibt, hat trotzdem eine Seite. */
+          const ord = Store.addPage(null, { text: '', icon: '\ud83d\uddc2' });
+          zeichneBaum(); oeffne(ord.id);
+          setTimeout(() => document.getElementById('title')?.focus(), 60);
+          return;
         }
+
+        /* Alles andere entsteht IN einer Seite — es gibt es nicht ohne
+           eine. Also erst die Seite, dann der Block darin, und der Cursor
+           steht schon an der richtigen Stelle. */
+        const p = neueSeite();
+        setTimeout(() => {
+          if (was === 'db')            Store.addDatabase(p.id, 'Ohne Namen');
+          else if (was === 'tabelle')  Store.addBlock(p.id, 'tabelle', {});
+          else if (was === 'board')    Store.addBlock(p.id, 'whiteboard', { text: 'Whiteboard' });
+          else if (was === 'blatt')    Store.addBlock(p.id, 'blatt', { text: '' });
+          else if (was === 'plan')     Store.addBlock(p.id, 'schaltplan', { text: '' });
+          else if (was === 'diagramm') Store.addBlock(p.id, 'chart', { text: '' });
+          else if (was === 'aufgabe')  Store.addBlock(p.id, 'todo', { text: '' });
+          zeichneSeite();
+        }, 80);
       }, 60);
     });
   };

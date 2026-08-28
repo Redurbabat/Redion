@@ -718,19 +718,41 @@ const blattNeu = await seite.evaluate(() => {
                .map(b => (b.textContent || '').trim().slice(0, 16)),
     ohneSatz: kn.filter(b => !b.querySelector('.ne-txt i')).length,
     amBoden: Math.round(r.bottom) >= innerHeight - 1,
-    seitenVorher: Store.rootPages().length
+    seitenVorher: Store.rootPages().length,
+    gruppen: [...m.querySelectorAll<HTMLElement>('.grp')].map(g => (g.textContent || '').trim()),
+    listen: m.querySelectorAll('.menu-liste').length
   };
 }) as { titel: string; wege: string[]; grund: boolean; zuFlach: string[];
-        ohneSatz: number; amBoden: boolean; seitenVorher: number } | null;
+        ohneSatz: number; amBoden: boolean; seitenVorher: number;
+        gruppen: string[]; listen: number } | null;
 
 p('Der Stift öffnet ein Blatt', !!blattNeu, 'er legte vorher sofort eine Seite an');
 p('Es heisst „Neu erstellen"', blattNeu?.titel === 'Neu erstellen', blattNeu?.titel);
 /* ELF SEIT E138: Aufnahme und Whiteboard sind dazugekommen (Auftrag §46).
    Beide Wege gab es vorher schon, nur nicht an der Stelle, an der man am
    Telefon etwas Neues anfängt. */
-p('Es führt zu elf Sachen inklusive Scanner, nicht zu einer',
-  (blattNeu?.wege.length ?? 0) === 11 && (blattNeu?.wege ?? []).includes('scan'),
+/* NEUNZEHN SEIT E236, und in sechs Gruppen. Redur hat ein Blatt
+   beschrieben, das FRAGT, was entstehen soll — und dabei alles zeigt, was
+   Redion kann. Dazugekommen sind: PDF einlesen, Aus anderem Werkzeug,
+   Journal-Eintrag, Ordner, Blatt, Schaltplan, Diagramm, Lernzentrale.
+   Die Zahl steht hier absichtlich hart: wächst das Blatt weiter, soll
+   jemand diese Zeile lesen und entscheiden, ob es noch ein Wegweiser ist
+   oder schon eine Liste. */
+p('Es führt zu neunzehn Sachen inklusive Scanner, nicht zu einer',
+  (blattNeu?.wege.length ?? 0) === 19 && (blattNeu?.wege ?? []).includes('scan'),
   (blattNeu?.wege ?? []).join(', '));
+p('Die neuen Wege von E236 sind alle dabei',
+  ['pdf', 'umzug', 'journal', 'ordner', 'blatt', 'plan', 'diagramm', 'lernen']
+    .every(w => (blattNeu?.wege ?? []).includes(w)),
+  (blattNeu?.wege ?? []).join(', '));
+/* SECHS ÜBERSCHRIFTEN, EINE LISTE. Der erste Entwurf gab jeder Gruppe eine
+   eigene `.menu-liste` — und die trägt am Telefon `flex:1`. Sechs davon
+   teilten sich die Höhe und schnitten sich gegenseitig ab; gerollt hat
+   keine. Im Bild war „Dokument scannen" halb weg. */
+p('Sechs Überschriften ordnen die Wege', (blattNeu?.gruppen ?? []).length === 6,
+  (blattNeu?.gruppen ?? []).join(' | '));
+p('Und es ist EINE Liste, die rollt — nicht sechs, die sich abschneiden',
+  blattNeu?.listen === 1, String(blattNeu?.listen) + ' Listen');
 p('Aufnahme und Whiteboard stehen darunter',
   (blattNeu?.wege ?? []).includes('aufnahme') && (blattNeu?.wege ?? []).includes('board'),
   (blattNeu?.wege ?? []).join(', '));
