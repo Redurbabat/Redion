@@ -1451,6 +1451,69 @@ p('Es rollt senkrecht und nicht seitwärts',
 p('Und nimmt höchstens die halbe Höhe', handyAuf.bandHoch <= 844 / 2,
   `${handyAuf.bandHoch} px`);
 
+/* ==========================================================================
+ * AM TELEFON IST DAS OFFENE BAND EIN MENÜ (E240)
+ * --------------------------------------------------------------------------
+ * Redur hat vier Fotos seines iPhones geschickt: das Band stand offen über
+ * Termine, Lernen, Heute und einer offenen Seite — 371 von 844 px,
+ * dauerhaft. Der Weg dahin war EIN Reitertipp: er schrieb `bandZu:welt=
+ * false`, dieser eine Schlüssel gilt für alle Startansichten und übersteht
+ * jedes Neuladen. Zuklappen konnte nur der Pfeil; ein Tipp daneben, ein
+ * Bereichswechsel, ein Befehl — nichts davon schloss.
+ *
+ * Die vier Punkte hier sind die vier Eigenschaften eines Menüs. Jeder
+ * wurde einzeln rot gemacht (Gegenproben in E240). */
+const anfangZu = await handy.evaluate(() => {
+  document.getElementById('menueband')?.classList.add('ist-zu');
+  return Math.round(document.getElementById('scroll')?.getBoundingClientRect().top || 0);
+});
+await klick(handy, '#menueband .mb-reiter-knopf');
+await handy.waitForTimeout(350);
+const alsMenu = await handy.evaluate(() => ({
+  offen: document.getElementById('menueband')?.classList.contains('ist-zu') === false,
+  bandHoch: Math.round(document.querySelector('.mb-band')?.getBoundingClientRect().height || 0),
+  seiteAb: Math.round(document.getElementById('scroll')?.getBoundingClientRect().top || 0)
+}));
+p('Offen liegt das Band ÜBER dem Inhalt statt ihn zu verdrängen',
+  alsMenu.offen && alsMenu.bandHoch > 100 && alsMenu.seiteAb === anfangZu,
+  `Band ${alsMenu.bandHoch} px, Inhalt ab ${alsMenu.seiteAb} (zu: ${anfangZu})`);
+
+/* Ein Tipp daneben schliesst — der Inhalt unter dem Band ist „daneben". */
+await handy.mouse.down(); await handy.mouse.up();
+await handy.mouse.move(195, 700);
+await handy.mouse.down(); await handy.mouse.up();
+await handy.waitForTimeout(250);
+p('Ein Tipp daneben schliesst es',
+  await handy.evaluate(() =>
+    document.getElementById('menueband')?.classList.contains('ist-zu') === true));
+
+/* Ein Bereichswechsel unten schliesst — Redurs Fotos: es blieb offen.
+   ZWEI WEGE TRAGEN DIESEN PUNKT, und das ist Absicht: der pointerdown-
+   Listener (der Tipp auf die Leiste ist „daneben") UND der Beobachter, der
+   beim Wechsel Seite→Welt neu zeichnet — am Telefon beginnt jede Zeichnung
+   zu. In der Gegenprobe ohne Listener blieb der Punkt deshalb grün; der
+   Listener ist durch „Ein Tipp daneben" allein belegt (dort wurde er rot). */
+await klick(handy, '#menueband .mb-reiter-knopf');
+await handy.waitForTimeout(300);
+await klick(handy, '#hl-start');
+await handy.waitForTimeout(600);
+p('Ein Bereichswechsel unten schliesst es',
+  await handy.evaluate(() =>
+    document.getElementById('menueband')?.classList.contains('ist-zu') === true));
+
+/* Und der GESPEICHERTE kaputte Zustand echter Geräte muss geheilt sein:
+   auf Redurs iPhone stehen beide Merker auf „offen". Das Telefon liest
+   sie nicht mehr — die Vorgabe gilt, der Rechner behält seine Wahl. */
+const geerbt = await handy.evaluate(async () => {
+  Store.setMeta('bandZu', false);
+  Store.setMeta('bandZu:welt', false);
+  Menueband.zeichne();
+  await new Promise(r => setTimeout(r, 250));
+  return document.getElementById('menueband')?.classList.contains('ist-zu');
+});
+p('Ein gemerktes „offen" von früher zählt am Telefon nicht mehr',
+  geerbt === true);
+
 /* AM TELEFON SIND ES ZEILEN, UND SIE STEHEN AUF EINER LINIE.
 
    Erst standen dort Kacheln: die grossen (Zeichen links, Name rechts) neben

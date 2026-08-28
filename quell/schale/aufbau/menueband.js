@@ -139,9 +139,53 @@ const Menueband = (() => {
        nehmen." Ein Menü am Rechner steht auch nicht offen da; es klappt auf,
        wenn man es braucht. Zugeklappt sind es 35 px.
   
-       Die WAHL bleibt unverändert: wer aufklappt, behält es offen — je
-       Seite und je Startansicht getrennt, wie bisher. */
-    const zugeklappt = () => meta(merkeZu(), true) === true;
+       Am RECHNER bleibt die Wahl gemerkt: wer aufklappt, behält es offen —
+       je Seite und je Startansicht getrennt, wie bisher. */
+    const amTelefon = () => {
+        try {
+            return window.matchMedia('(max-width: 760px)').matches;
+        }
+        catch {
+            return false;
+        }
+    };
+    /* AM TELEFON WIRD „OFFEN" NICHT MEHR GEMERKT (E240).
+       Redur hat vier Fotos seines iPhones geschickt: das Band stand offen
+       über Termine, Lernen, Heute UND einer offenen Seite — 371 px von 844,
+       dauerhaft. Der Weg dahin ist ein einziger Reitertipp: er schrieb
+       `bandZu:welt=false`, und dieser EINE Schlüssel gilt für alle
+       Startansichten, über jedes Neuladen hinweg. Wer keinen Befehl wählte
+       und den Pfeil nicht fand, behielt das halbe Bild belegt — für immer.
+  
+       Am Telefon ist das Band deshalb ein MENÜ und kein Arbeitszustand:
+       Aufklappen zeigt es JETZT (nur als Klasse im Baum, nie im Speicher),
+       jede Neuzeichnung beginnt zu, ein Tipp daneben schliesst es. Am
+       Rechner ist Platz; dort bleibt der Merker. */
+    const zugeklappt = () => amTelefon() || meta(merkeZu(), true) === true;
+    /** Das Band JETZT zeigen oder verbergen, ohne den Speicher anzufassen. */
+    const fluechtig = (zu) => {
+        const w = document.getElementById(WURZEL);
+        if (!w)
+            return;
+        /* `zeichne()` spart sich das Befüllen, wenn zugeklappt — und am Telefon
+           IST es beim Zeichnen immer zugeklappt. Wer hier öffnet, muss also
+           nachfüllen, sonst zeigt er ein leeres Band: gemessen 14 px hoch,
+           nur das Polster. (`bandFuellen` steht weiter unten im Modul; beim
+           ersten Aufruf hier existiert es längst — Klick kommt nach Aufbau.) */
+        if (!zu) {
+            const band = w.querySelector('.mb-band');
+            if (band && !band.childElementCount) {
+                bandFuellen(band, reiterJetzt());
+                if (Register?.symbole?.fuelle) {
+                    try {
+                        Register.symbole.fuelle(band);
+                    }
+                    catch { /* ohne Zeichen bleibt der Name */ }
+                }
+            }
+        }
+        w.classList.toggle('ist-zu', zu);
+    };
     /* ======================================================================== *
      * EIN KNOPF
      * ======================================================================== */
@@ -568,6 +612,11 @@ const Menueband = (() => {
                    Ist das Band zu, klappt jeder Reiterklick es auf — das ist die
                    erwartete Richtung: man will dorthin, nicht weg. */
                 setzeMeta(merkeReiter, id);
+                if (amTelefon()) {
+                    zeichne();
+                    fluechtig(false);
+                    return;
+                }
                 if (zugeklappt())
                     setzeMeta(merkeZu(), false);
                 zeichne();
@@ -578,6 +627,11 @@ const Menueband = (() => {
                 return;
             const id = band.dataset['band'] || '';
             if (id === '__klapp') {
+                if (amTelefon()) {
+                    const w = document.getElementById(WURZEL);
+                    fluechtig(!w?.classList.contains('ist-zu'));
+                    return;
+                }
                 setzeMeta(merkeZu(), !zugeklappt());
                 zeichne();
                 return;
@@ -595,6 +649,29 @@ const Menueband = (() => {
                 if (typeof UI !== 'undefined' && typeof UI.toast === 'function')
                     UI.toast(satz);
             }
+            /* Die Wahl ist getroffen — am Telefon schliesst das Menü. Bisher
+               sah das nur so aus: „Journal" öffnete eine Seite, damit wechselte
+               `merkeZu()` auf den Seiten-Schlüssel, und DER stand noch auf zu.
+               Ein Befehl, der die Ansicht nicht wechselt („Fett"), liess das
+               Band stehen. Jetzt ist es eine Regel und kein Zufall. */
+            if (amTelefon())
+                fluechtig(true);
+        });
+        /* EIN TIPP DANEBEN SCHLIESST — nur am Telefon, wo das offene Band ein
+           Menü ist. Das deckt auch jeden Bereichswechsel ab: die fünf Wege
+           unten liegen ausserhalb der Wurzel. `pointerdown` statt `click`,
+           damit das Band schon zu ist, wenn der Tipp sein eigentliches Ziel
+           erreicht — sonst tippte man erst das Band weg und dann noch einmal. */
+        document.addEventListener('pointerdown', ereignis => {
+            if (!amTelefon())
+                return;
+            const w = document.getElementById(WURZEL);
+            if (!w || w.classList.contains('ist-zu'))
+                return;
+            const ziel = ereignis.target instanceof Element ? ereignis.target : null;
+            if (ziel && w.contains(ziel))
+                return;
+            fluechtig(true);
         });
         /* Pfeiltasten in der Reiterzeile (§38). */
         wurzel.addEventListener('keydown', ereignis => {
@@ -622,8 +699,14 @@ const Menueband = (() => {
             if (!ziel2)
                 return;
             setzeMeta(merkeReiter, ziel2.dataset['mbReiter'] || 'start');
-            setzeMeta(merkeZu(), false);
-            zeichne();
+            if (amTelefon()) {
+                zeichne();
+                fluechtig(false);
+            }
+            else {
+                setzeMeta(merkeZu(), false);
+                zeichne();
+            }
             document.querySelector(`#${WURZEL} [data-mb-reiter="${ziel2.dataset['mbReiter']}"]`)?.focus();
         });
     };
@@ -692,6 +775,11 @@ const Menueband = (() => {
     /** Von aussen: das Band auf einen Reiter stellen. */
     const zeige = (reiter) => {
         setzeMeta(merkeReiter, reiter);
+        if (amTelefon()) {
+            zeichne();
+            fluechtig(false);
+            return;
+        }
         setzeMeta(merkeZu(), false);
         zeichne();
     };

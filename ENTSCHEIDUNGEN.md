@@ -17763,3 +17763,94 @@ sechs.
 
 Das eigentliche Vorschau-BILD bleibt offen (L61, Punkt 1). Es wäre eine
 Speicheränderung mit eigenem Plan.
+
+
+E240 — Das Menüband am Telefon ist ein Menü, kein Zustand
+================================================================================
+
+Redur hat vier Fotos seines iPhones geschickt (die App läuft dort über den
+Worker) und dazu: „was ist das, räume das alles auf." Auf allen vieren
+dasselbe Bild: das aufgeklappte Menüband steht über Termine, über Lernen,
+über Heute und über einer offenen Seite — 371 von 844 px, dauerhaft.
+
+
+WIE ES DAZU KAM — EIN EINZIGER TIPP
+--------------------------------------------------------------------------
+
+Der Aufklapp-Zustand war eine GEMERKTE WAHL (E210/E236): ein Reitertipp
+schrieb `bandZu:welt=false`, und dieser eine Schlüssel gilt für ALLE
+Startansichten, über jedes Neuladen hinweg. Zuklappen konnte nur der
+Pfeil. Ein Tipp daneben — nichts. Ein Bereichswechsel unten — nichts: der
+Beobachter am `#page` feuert beim Wechsel Welt→Welt gar nicht (`seiteOffen`
+bleibt falsch), und selbst wenn er feuerte, stellte `zeichne()` den
+gemerkten Offen-Zustand wieder her. Ein Befehl im Band — auch nichts; dass
+es in der Probe nach „Journal" zu war, war ZUFALL: der Befehl öffnete eine
+Seite, damit wechselte `merkeZu()` auf den Seiten-Schlüssel, und DER stand
+noch auf zu. Redurs viertes Foto zeigt den Endzustand: auch der
+Seiten-Schlüssel gekippt, das Band überall offen.
+
+Wer einmal neugierig einen Reiter antippte und den Pfeil nicht fand,
+behielt das halbe Bild belegt — für immer. Gemessen am Prüfstand mit
+Redurs gespeichertem Zustand: Inhalt ab 472 statt 101.
+
+Untersucht mit vier parallelen Lesern (Klapp-Logik, CSS, Schliess-Wege,
+Prüfungen); die Befunde deckten sich und ergänzten sich um den
+entscheidenden: **es gibt gar kein öffentliches Zuklappen** — von aussen
+konnte das Band niemand schliessen, und `zeige()` klappte sogar immer auf.
+
+
+DIE ENTSCHEIDUNG
+--------------------------------------------------------------------------
+
+Am Telefon ist das offene Band ein MENÜ. Ein Menü hat drei Eigenschaften,
+und alle drei fehlten:
+
+  1. **Es liegt ÜBER dem, worauf es wirkt.** `.mb-band` ist am Telefon
+     `position:absolute` unter der Reiterzeile statt im Fluss — der Inhalt
+     bleibt bei 101, ob offen oder zu. Vorher schob das Band das ganze
+     Regal um 371 px nach unten.
+
+  2. **Es verschwindet nach der Wahl.** Ein Befehl schliesst es — als
+     Regel, nicht als Zufall des Schlüsselwechsels.
+
+  3. **Ein Tipp daneben schliesst es.** Ein `pointerdown`-Listener am
+     Dokument; `pointerdown` statt `click`, damit das Band schon zu ist,
+     wenn der Tipp sein eigentliches Ziel erreicht — sonst tippte man erst
+     das Band weg und dann noch einmal. Das deckt nebenbei jeden
+     Bereichswechsel ab: die fünf Wege unten liegen ausserhalb.
+
+UND „OFFEN" WIRD AM TELEFON NICHT MEHR GEMERKT. `zugeklappt()` liefert
+dort immer die Vorgabe; der Offen-Zustand lebt nur als Klasse im Baum
+(`fluechtig()`), bis zur nächsten Zeichnung. Das heilt auch die GERÄTE,
+auf denen der Merker schon gekippt ist — Redurs iPhone muss nichts
+löschen: die Merker stehen noch da, das Telefon liest sie nicht mehr.
+
+AM RECHNER ÄNDERT SICH NICHTS. Dort ist Platz, und ein offen gelassenes
+Band ist ein Arbeitszustand wie in jedem Büroprogramm — die Wahl bleibt
+gemerkt, je Seite und je Startansicht getrennt.
+
+
+ZWEI FUNDE BEIM BAUEN
+--------------------------------------------------------------------------
+
+  · `zeichne()` spart sich das Befüllen, wenn zugeklappt — und am Telefon
+    IST es beim Zeichnen jetzt immer zugeklappt. Der erste Wurf von
+    `fluechtig(false)` zeigte deshalb ein LEERES Band: gemessen 14 px,
+    nur das Polster. Es füllt jetzt nach, wenn der Kasten leer ist.
+
+  · Die Gegenprobe „Listener raus" liess den Punkt „ein Bereichswechsel
+    schliesst" GRÜN: der Wechsel Seite→Welt feuert den Beobachter, der neu
+    zeichnet, und jede Zeichnung beginnt am Telefon zu. Der Punkt ist
+    also von zwei Wegen getragen; der Listener ist durch „ein Tipp
+    daneben" allein belegt (dort wurde die Gegenprobe rot). Das steht als
+    Kommentar in der Prüfung — sonst hielte der Nächste den Punkt für
+    einen Beleg des Listeners.
+
+**Geprüft:** test247 §8, vier neue Punkte — Überlagerung statt Verdrängung,
+Tipp daneben, Bereichswechsel, und der wichtigste: ein gemerktes „offen"
+von früher zählt am Telefon nicht mehr. Drei Gegenproben einzeln gefahren
+und rot geworden (Fluss statt Überlagerung → Inhalt ab 472; Listener raus
+→ Tipp daneben bleibt offen; Merker gilt wieder → das geerbte offen kommt
+zurück). Verhaltensprobe über sechs Schritte mit Redurs gespeichertem
+Zustand: frisch zu · aufgeklappt liegt darüber · Wechsel Heute zu ·
+Wechsel Termine zu · nach Befehl zu · nach Neuladen zu.

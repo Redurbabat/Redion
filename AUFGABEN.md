@@ -35,6 +35,19 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
+**28. August 2026 · Redurs vier iPhone-Fotos: das Menüband stand dauerhaft offen (E240)**
+
+> Ein einziger Reitertipp schrieb „Band offen" in EINEN Schlüssel für alle
+> Startansichten — und zuklappen konnte nur der Pfeil. Auf den Fotos stand
+> das Band mit 371 von 844 px über Termine, Lernen, Heute und einer Seite.
+>
+> Am Telefon ist es jetzt ein MENÜ: liegt über dem Inhalt statt ihn zu
+> verdrängen, schliesst bei Tipp daneben, bei Bereichswechsel und nach
+> jedem Befehl, und „offen" wird dort nicht mehr gemerkt — geerbte Merker
+> von echten Geräten sind damit geheilt, ohne dass jemand etwas löscht.
+> Am Rechner bleibt die gemerkte Wahl. Vier neue Punkte in test247 §8,
+> drei Gegenproben einzeln rot. Untersucht mit vier parallelen Lesern.
+
 **28. August 2026 · Redion öffnet dort, wo die Sachen liegen (E236)**
 
 > Redur hat zwei Bildschirmfotos einer Notiz-App geschickt und beschrieben,

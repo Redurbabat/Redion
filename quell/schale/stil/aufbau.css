@@ -644,7 +644,19 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
   .mb-reiter{ min-height:44px; padding:0 var(--space-2); scroll-padding-inline-end:200px }
   .mb-reiter-knopf{ min-height:44px; padding:0 var(--space-3) }
   .mb-klapp{ min-height:44px; width:44px }
-  .mb-band{ padding:var(--space-2); max-height:44dvh }
+  /* DAS OFFENE BAND IST EIN MENÜ, KEIN STOCKWERK (E240).
+     Es lag im Fluss und verdrängte den Inhalt: gemessen begann die Seite
+     bei offenem Band erst bei 472 statt 101 — auf Redurs Fotos stand es
+     über Termine, Lernen und Heute und nahm 371 von 844 px. Ein Menü
+     liegt ÜBER dem, worauf es wirkt, und verschwindet nach der Wahl.
+     `top:100%` hängt es an die Unterkante der Reiterzeile; z-index über
+     der Krume (6) und unter den Überlagerungen (900). */
+  #menueband{ position:relative }
+  .mb-band{
+    position:absolute; top:100%; left:0; right:0; z-index:402;
+    padding:var(--space-2); max-height:44dvh;
+    border-bottom:1px solid var(--line); box-shadow:var(--shadow-3);
+  }
   /* AM TELEFON SIND ES ZEILEN, KEINE KACHELN.
 
      Gemessen und angesehen: im Reiter „Werkzeuge" standen drei grosse
