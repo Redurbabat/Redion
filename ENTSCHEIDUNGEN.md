@@ -17967,7 +17967,12 @@ DIE ENTSCHEIDUNGEN
 **Geprüft:** test249 §5 (17 Punkte gesamt) — die alte 6.0 hebt den
 Schnitt des aktuellen Semesters nicht, „Letztes Semester" zeigt nur das
 alte Fach, „Alle" mittelt beide und benennt es, Undatiertes zählt zum
-aktuellen samt Satz in der Kopfzeile.
+aktuellen samt Satz in der Kopfzeile. Drei Gegenproben einzeln rot:
+Filter totgelegt → Chemie steht mit 5.00 da (genau die L71-Zahl);
+Vorgabe auf „Alle" verstellt → drei Punkte rot; Undatiertes vom
+aktuellen Semester ausgeschlossen → NEUN Punkte rot, weil die ganzen
+§2–§4-Rechnungen an undatierten Noten hängen — der Null-Datum-Schutz
+trägt die halbe Suite.
 
 
 E243 — Der Stundenplan-Knopf hält sein Versprechen
@@ -18016,4 +18021,10 @@ legt genau EINE Datenbank an (auch beim zweiten Lauf), Montag ordnet
 07:45 vor „8.35", der Mittwoch sagt „frei", die sechste Spalte erscheint
 erst mit einer Samstagslektion, die Jetzt-Kopfzeile samt Wort und der
 Klickweg vom Schul-Dashboard bis in die Ansicht. test202 erwartet die
-sechste Schul-Sammlung.
+sechste Schul-Sammlung. Zwei Gegenproben einzeln rot: Zeitsortierung
+raus → Montag beginnt mit der 9:35-Lektion und der Raum-Punkt kippt
+mit; „Samstag immer" → der Fünf-Spalten-Punkt zählt 6.
+
+Der volle Lauf vom selben Abend: 214 von 215 grün; das eine Rot war
+test202 mit der alten Fünf-Sammlungen-Erwartung, die während des Laufs
+von dieser Änderung überholt wurde — frisch danach: 84 ok, 0 offen.
