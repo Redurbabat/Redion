@@ -35,6 +35,15 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
+**29. August 2026 · Kartentext sieht überall gleich aus (E252)**
+
+> Der Karteikasten zeichnete **fett** und `Code`, die Lernwelt zeigte an
+> sieben Stellen nackte Sternchen — Training, Simulation, Fehlerlisten.
+> Jetzt läuft verfasster Kartentext überall durch `Blocks.inline`
+> (maskiert zuerst, §19); Getipptes bleibt wörtlich. test259 sucht die
+> Karte durch die Runde (die erste Karte ist die Demo-Karte!), prüft
+> Auszeichnung UND Maskierung; Gegenprobe mit echtem onerror-Lauf.
+
 **29. August 2026 · Glocke und Wolke-Punkt — am Ende in der Menüleiste (E251)**
 
 > Der Bild-Abgleich fand drei Fertigteile ohne sichtbaren Weg:

@@ -18403,3 +18403,40 @@ Telefon ist die Glocke da und ≥44 px. Drei Gegenproben einzeln rot:
 mehr auf → „Neubau behält den Stand" rot; Wolke-Zeile raus → „Mehr
 führt die Wolke-Zeile" rot. Danach test40 24/24, test245 53/53,
 test248 44/44 (zweimal), Typprüfung grün, `git status` sauber.
+
+
+================================================================================
+E252 — Kartentext sieht überall gleich aus
+================================================================================
+
+Der Karteikasten (werkzeuge.ts, `k-vorn`/`k-hinten`) zeichnet Karten mit
+`Blocks.inline` — **fett** wird fett, `Code` wird Code, $Formeln$ werden
+gesetzt. Dieselbe Karte stand in der Lernwelt an sieben Stellen mit
+nackten Sternchen da: Training, Simulation, Fehlerliste und die
+Fach-Fehlerliste nutzten `esc`. Zwei Anzeigen desselben Textes, eine
+davon falsch — wer seine Karten auszeichnet, sah die Auszeichnung nur
+an einem der beiden Orte.
+
+DIE ENTSCHEIDUNG
+
+Ein Helfer `kartenText` in lernwelt.ts: `Blocks.inline` wenn der Editor
+geladen ist (der maskiert zuerst, §19, und verziert dann), sonst `esc`.
+Die sieben Stellen für VERFASSTEN Kartentext (frage, antwort) nutzen
+ihn; was jemand in ein Antwortfeld GETIPPT hat (`letzteAntwort`),
+bleibt wörtlich bei `esc` — wer `**a**` tippt, hat Sternchen getippt,
+und die Fehlerliste soll zeigen, was da stand.
+
+`Blocks` ist ein Laufzeit-Global des Editor-Bereichs; werkzeuge.ts im
+selben Bereich nutzt es seit Langem genauso (kein Import, Regel 1
+bleibt gewahrt, `typeof`-Wache für den Fall ohne Editor).
+
+**Geprüft:** test259, 8 Punkte — die Ohm-Karte wird in der
+Trainingsrunde GESUCHT statt als erste angenommen (der erste Entwurf
+mass die Willkommens-Demokarte „Wo liegen meine Daten?"), Vorderseite
+und aufgedeckte Antwort tragen <b> und <code>, die Sternchen sind aus
+dem Text verschwunden; eine Angriffs-Karte (`<img onerror=…>` und
+getipptes `<b>`) wird Text, kein Element, und kein Code läuft. Zwei
+Gegenproben einzeln rot: eine Stelle zurück auf `esc` → genau die
+Vorderseiten-Punkte; `kartenText` ohne Maskierung → das img wird ein
+Element und `window.__xss259` steht auf 1 — der §19-Teil schlägt an.
+Nachbarn danach grün: test208 43/43, test215 50/50, test224 18/18.

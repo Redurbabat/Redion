@@ -97,6 +97,23 @@ const Lernwelt = (() => {
     };
     const esc = (wert) => String(wert ?? '')
         .replace(/[&<>\"]/g, zeichen => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;' }[zeichen] ?? zeichen));
+    /* KARTENTEXT WIE IM TRAINER (E252). Der Karteikasten zeichnet Vorder-
+       und Rückseite mit `Blocks.inline` — **fett** wird fett, `Code` wird
+       Code. Dieselbe Karte stand hier in Simulation, Training und
+       Fehlerliste mit nackten Sternchen da: zwei Anzeigen desselben
+       Textes, eine davon falsch. `Blocks.inline` maskiert zuerst (§19)
+       und verziert dann; ohne Editor-Modul bleibt es beim Maskieren.
+       Nur für VERFASSTEN Kartentext — was jemand in ein Antwortfeld
+       GETIPPT hat, bleibt wörtlich (esc), Sternchen und alles. */
+    const kartenText = (wert) => {
+        try {
+            if (typeof Blocks !== 'undefined' && typeof Blocks.inline === 'function') {
+                return Blocks.inline(String(wert ?? ''));
+            }
+        }
+        catch { /* dann eben unverziert */ }
+        return esc(wert);
+    };
     const zahl = (wert, rueckfall = 0) => {
         const ausgabe = Number(wert);
         return Number.isFinite(ausgabe) ? ausgabe : rueckfall;
@@ -1431,10 +1448,10 @@ const Lernwelt = (() => {
             '</section>' +
             (fehler.length
                 ? '<div class="lw-error-list">' + fehler.map(item => '<article class="' + (item.stabil ? 'is-stable' : 'is-open') + '"><header><div><span>' +
-                    esc(item.fach) + '</span><h3>' + esc(item.frage) + '</h3></div><strong>' +
+                    esc(item.fach) + '</span><h3>' + kartenText(item.frage) + '</h3></div><strong>' +
                     (item.stabil ? '✓ stabil' : item.anzahl + (item.anzahl === 1 ? ' Fehler' : ' Fehler')) +
                     '</strong></header><dl><div><dt>Letzte falsche Antwort</dt><dd>' + esc(item.letzteAntwort) +
-                    '</dd></div><div><dt>Richtige Antwort</dt><dd>' + esc(item.antwort) +
+                    '</dd></div><div><dt>Richtige Antwort</dt><dd>' + kartenText(item.antwort) +
                     '</dd></div><div><dt>Thema</dt><dd>' + esc(item.thema) +
                     '</dd></div><div><dt>Quelle</dt><dd>' + esc(item.quelle) +
                     '</dd></div><div><dt>Letzter Fehler</dt><dd>' + esc(datumText(item.zuletzt, true)) +
@@ -1866,8 +1883,8 @@ const Lernwelt = (() => {
             '</h2></div><time aria-label="Verbleibende Zeit">' + String(minuten).padStart(2, '0') + ':' +
             String(sekunden).padStart(2, '0') + '</time></header><progress max="' + simulation.karten.length +
             '" value="' + simulation.index + '" aria-label="Prüfungsfortschritt"></progress>' +
-            '<article class="lw-study-card"><small>' + esc(themaVon(card)) + '</small><h3>' + esc(frage) + '</h3>' +
-            (simulation.aufgedeckt ? '<div class="lw-answer"><span>Richtige Antwort</span><p>' + esc(antwort) + '</p></div>' : '') +
+            '<article class="lw-study-card"><small>' + esc(themaVon(card)) + '</small><h3>' + kartenText(frage) + '</h3>' +
+            (simulation.aufgedeckt ? '<div class="lw-answer"><span>Richtige Antwort</span><p>' + kartenText(antwort) + '</p></div>' : '') +
             '</article><div class="lw-actions">' +
             (simulation.aufgedeckt
                 ? '<button type="button" data-lw-sim-answer="wrong">Falsch</button>' +
@@ -1894,8 +1911,8 @@ const Lernwelt = (() => {
             '<button type="button" data-lw-action="training-close">Beenden</button></header>' +
             '<progress max="' + training.karten.length + '" value="' + training.index +
             '" aria-label="Lernfortschritt"></progress><article class="lw-study-card"><small>' +
-            esc(themaVon(card)) + '</small><h3>' + esc(frage) + '</h3>' +
-            (training.aufgedeckt ? '<div class="lw-answer"><span>Antwort</span><p>' + esc(antwort) + '</p></div>' : '') +
+            esc(themaVon(card)) + '</small><h3>' + kartenText(frage) + '</h3>' +
+            (training.aufgedeckt ? '<div class="lw-answer"><span>Antwort</span><p>' + kartenText(antwort) + '</p></div>' : '') +
             (source ? '<button type="button" class="lw-source" data-lw-card-source="' + esc(card.id) + '">Quelle: ' +
                 esc(typeof Learning !== 'undefined' && Learning.sourceLabel ? Learning.sourceLabel(source) : source.label) +
                 '</button>' : '') + '</article><div class="lw-rating">' +
@@ -1991,7 +2008,7 @@ const Lernwelt = (() => {
                 'Termin offen') + '</small></span><span>›</span></button></li>').join('') + '</ul>' :
                 '<p class="lw-none">Keine Prüfung für dieses Fach gefunden.</p>') +
             sektion('Fehler', fachFehler.length ? '<ul class="lw-compact-errors">' + fachFehler.slice(0, 8).map(item => '<li><button type="button" data-lw-train-card="' + esc(item.card.id) + '"><span>' +
-                (item.stabil ? '✓' : '!') + '</span><strong>' + esc(item.frage) + '</strong><small>' + item.anzahl +
+                (item.stabil ? '✓' : '!') + '</span><strong>' + kartenText(item.frage) + '</strong><small>' + item.anzahl +
                 ' Fehler</small></button></li>').join('') + '</ul>' : '<p class="lw-none">Keine Fehler in diesem Fach.</p>') +
             '</div></div>';
     };
