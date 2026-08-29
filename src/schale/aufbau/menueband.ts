@@ -608,7 +608,21 @@ const Menueband = (() => {
        braucht, soll sie erfragen können — deshalb steht sie hier als
        Zahl an `main`, gesetzt von dem, der sie kennt. */
     const heim = wurzel.parentElement;
-    if (heim) heim.style.setProperty('--inhalt-oben', (wurzel.offsetTop + wurzel.offsetHeight) + 'px');
+    /* MIT der Kopfzeile, nicht nur mit der eigenen Unterkante (E257).
+       Seit E236 steht die Menüleiste ÜBER der Kopfzeile — wer hier nur
+       sich selbst misst, sagt der Randleiste (#rand-toc), der feste Kopf
+       ende bei 35 px. Bei einer Seite mit vielen Überschriften wuchs die
+       Leiste bis an diese Marke und lag über den Seitenknöpfen: zweimal
+       fing sie im vollen Lauf den Klick auf „Seitenoptionen" ab, je nach
+       dem, wie viele Überschriften beim Messen schon gezeichnet waren.
+       Mit der Kopfzeile in der Rechnung kann die Oberkante der Leiste
+       rechnerisch nie mehr über ihr liegen. */
+    if (heim) {
+      const kopf = document.getElementById('topbar');
+      const bis = Math.max(wurzel.offsetTop + wurzel.offsetHeight,
+        kopf ? kopf.offsetTop + kopf.offsetHeight : 0);
+      heim.style.setProperty('--inhalt-oben', bis + 'px');
+    }
 
     /* Frisch gebaute Knöpfe kennen ihren Stand noch nicht. */
     glockeFrisch();

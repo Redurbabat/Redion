@@ -532,9 +532,9 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
    hinwies. `max-height` plus `overflow-y:auto` bindet sie an den Textteil —
    sichtbar gerollt statt still abgeschnitten (§55.2). */
 #rand-toc{position:absolute; right:14px;
-  top:calc(var(--inhalt-oben, 54px) + (100% - var(--inhalt-oben, 54px)) / 2);
+  top:calc(var(--inhalt-oben, 90px) + (100% - var(--inhalt-oben, 90px)) / 2);
   transform:translateY(-50%);
-  max-height:calc(100% - var(--inhalt-oben, 54px) - 24px);
+  max-height:calc(100% - var(--inhalt-oben, 90px) - 24px);
   overflow-y:auto; scrollbar-width:thin; overscroll-behavior:contain;
   display:flex; flex-direction:column; gap:8px; z-index:20; padding:8px 0}
 /* Ohne das schrumpfen die Knöpfe im Flex-Kasten, sobald gerollt werden

@@ -18670,3 +18670,35 @@ Elektrotechnik-Seite. Beim Bauen zweimal nachgesehen statt geraten
 stehen nur auf dem Dashboard — der erste Deutsch-Klick klickte ins
 Leere. test202 danach 84 ok (kinds um homework/goals erweitert),
 test215 50/50, test250 15/15.
+
+
+================================================================================
+E257 — Die Randleiste zählt die Kopfzeile mit
+================================================================================
+
+Zweimal fiel im vollen Lauf test248 an derselben Stelle: das
+Inhaltsverzeichnis am rechten Rand (#rand-toc) fing den Klick auf
+„Seitenoptionen" ab. Einzeln lief die Suite jedes Mal durch — je nach
+dem, wie viele Überschriften beim Messen schon gezeichnet waren, lag
+die Leiste über den Seitenknöpfen oder nicht. Ein Fehler, der nur
+unter Last kommt, ist trotzdem ein Fehler; er war nur schwer zu sehen.
+
+DIE WURZEL: `--inhalt-oben` sagt der Randleiste, wo der feste Kopf
+endet — gesetzt vom Menüband aus SEINER Unterkante. Seit E236 steht
+die Menüleiste ÜBER der Kopfzeile: die Rechnung endete bei 35 px, die
+Kopfzeile reicht bis 89. Bei genug Überschriften wuchs die Leiste bis
+an die falsche Marke (gemessen: Oberkante 47 bei 40 Überschriften,
+Knopf verdeckt).
+
+DIE ENTSCHEIDUNG: das Menüband misst jetzt `max(eigene Unterkante,
+Unterkante der Kopfzeile)` — damit kann die Leisten-Oberkante
+rechnerisch nie mehr über der Kopfzeile liegen, egal wie viele
+Überschriften eine Seite hat. Der CSS-Rückfall steigt von 54 auf
+90 px (Menüleiste + Kopfzeile), für den Wimpernschlag vor dem ersten
+Zeichnen.
+
+**Geprüft:** Messung mit 40 Überschriften — vorher Oberkante 47/
+Kopf 89/Knopf verdeckt, nachher 101/89/frei; der Gegenbeweis (alte
+Rechnung) zeigt exakt das Lauf-Rot. test248 trägt den Messpunkt jetzt
+als stehenden Wächter VOR dem Klick (45 Punkte) — ein Klick, der
+zufällig durchgeht, ist kein Beweis. test40 24/24, test245 53/53.

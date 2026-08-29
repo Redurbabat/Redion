@@ -35,6 +35,13 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
+**29. August 2026 · Die Randleiste zählt die Kopfzeile mit (E257)**
+
+> Der doppelte Lauf-Abfang von test248 war kein Flattern: seit E236
+> mass `--inhalt-oben` nur die Menüleiste, und das Inhaltsverzeichnis
+> wuchs bei vielen Überschriften über die Seitenknöpfe. Jetzt zählt
+> die Kopfzeile mit; test248 misst es als stehenden Wächter.
+
 **29. August 2026 · Hausaufgaben und Lernziele je Fach (E256)**
 
 > Die zwei fehlenden Poster-Zeilen der Schulsäule. Vorlage legt homework
