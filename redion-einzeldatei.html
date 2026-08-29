@@ -9674,6 +9674,23 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    bleibt die KI, weil sie am häufigsten gebraucht wird; Suchen und Neu
    wandern dafür in die Kopfzeile, wo am Telefon Platz frei ist. */
 .nur-handy{ display:none }
+
+/* Glocke und Konto in der Kopfzeile (E251). Am Telefon bleiben sie weg —
+   dort trägt die Seitenleiste den Ungelesen-Punkt, und die Kopfzeile ist
+   voll. Zahl und Punkt sind Bild; die Wörter stehen im aria-label (§38). */
+#btn-glocke, #btn-konto{ position:relative }
+.glocke-zahl{ position:absolute; top:2px; right:1px; min-width:15px; height:15px;
+  padding:0 3px; border-radius:8px; background:var(--gefahr); color:#fff;
+  font-size:9.5px; font-weight:700; line-height:15px; text-align:center;
+  font-style:normal }
+.wolke-punkt{ position:absolute; top:5px; right:4px; width:8px; height:8px;
+  border-radius:50%; border:1.5px solid var(--bg-card); display:block }
+.wolke-punkt.ist-gut{ background:var(--erfolg) }
+.wolke-punkt.ist-laeuft{ background:var(--warnung) }
+.wolke-punkt.ist-fehler{ background:var(--gefahr) }
+.wolke-punkt[hidden]{ display:none }
+@media(max-width:760px){ .nur-rechner{ display:none } }
+
 #handy-leiste button[role="tab"].an b{ font-weight:650 }
 #handy-leiste .hl-punkt{ position:absolute; top:7px; right:calc(50% - 15px);
   width:7px; height:7px; border-radius:50%; background:var(--accent); display:block }
@@ -11853,6 +11870,13 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
     <button class="top-btn schmal" id="btn-auto" data-ruhig="mehr"    title="Automationen der Datenbank" aria-label="Automationen"><span data-sym="bolt"></span></button>
     <button class="top-btn schmal" id="btn-link" data-ruhig="mehr"    title="Link zur Seite kopieren" aria-label="Link kopieren"><span data-sym="link"></span></button>
     <button class="top-btn schmal" id="btn-lock" data-ruhig="mehr"    title="Seite gegen Bearbeiten sperren" aria-label="Seite sperren"><span data-sym="lockOpen"></span></button>
+    <!-- Glocke und Konto (E251): beide Fertigteile lagen versteckt — der
+         Posteingang hinter „Mehr", das Konto nur in der Befehlspalette.
+         Der Zähler und der Statuspunkt sind Bild; die Wörter dazu stehen
+         im aria-label (§38). Am Telefon bleiben beide weg: dort trägt die
+         Seitenleiste den Ungelesen-Punkt, und die Kopfzeile ist voll. -->
+    <button class="top-btn schmal nur-rechner" id="btn-glocke" title="Posteingang" aria-label="Posteingang"><span data-sym="bell"></span><b class="glocke-zahl" hidden></b></button>
+    <button class="top-btn schmal nur-rechner" id="btn-konto" title="Konto und Abgleich" aria-label="Konto und Abgleich"><span data-sym="user"></span><i class="wolke-punkt" hidden></i></button>
     <button class="top-btn schmal" id="btn-fav"     title="Zu Favoriten" aria-label="Zu Favoriten"><span data-sym="star"></span></button>
     <button class="top-btn schmal" id="btn-page-menu" title="Seitenoptionen" aria-label="Seitenoptionen"><span data-sym="dots"></span></button>
   </header>
@@ -64139,6 +64163,7 @@ const Werkzeuge = (() => {
             wann: new Date().toISOString(), gelesen: false
         });
         Store.setMeta('meldungen', liste.slice(0, 200));
+        meldungenGeaendert();
         /* Kurz sichtbar machen, damit man es auch ohne Posteingang mitbekommt */
         try {
             UI.toast('🔔 ' + (m.text || 'Neue Benachrichtigung'));
@@ -64151,8 +64176,18 @@ const Werkzeuge = (() => {
     const meldungGelesen = (id) => {
         const liste = meldungen().map((x) => x.id === id ? { ...x, gelesen: true } : x);
         Store.setMeta('meldungen', liste);
+        meldungenGeaendert();
     };
-    const meldungenLeeren = () => Store.setMeta('meldungen', []);
+    const meldungenLeeren = () => { Store.setMeta('meldungen', []); meldungenGeaendert(); };
+    /* Wer den Zähler zeigt (die Glocke in der Kopfzeile, E251), erfährt es
+       hier — als DOM-Ereignis, nicht als Direktaufruf: der Bereich kennt
+       die Schale nicht (Regel 1). */
+    const meldungenGeaendert = () => {
+        try {
+            document.dispatchEvent(new CustomEvent('redion:meldungen'));
+        }
+        catch { }
+    };
     /** Ein Datum, wie es ein `datetime-local`-Feld erwartet: ORTSZEIT.
      *
      *  Hier stand `toISOString().slice(0, 16)`, und das ist Weltzeit. In der
@@ -113597,6 +113632,64 @@ const App = (() => {
             zeichneBaum();
             zeichneCrumbs();
         });
+        /* GLOCKE UND KONTO (E251). Beide Fertigteile lagen versteckt: der
+           Posteingang zählte seine Ungelesenen längst (die Seitenleiste am
+           Telefon zeigt den Punkt), und der Wolke-Dialog kannte Konto und
+           Abgleichzustand — erreichbar war er nur über die Befehlspalette.
+           Hier hängen sie an der Kopfzeile; die Wörter stehen im aria-label,
+           Zahl und Punkt sind nur Bild (§38). */
+        const glocke = document.getElementById('btn-glocke');
+        const glockeFrisch = () => {
+            if (!glocke)
+                return;
+            const zahl = glocke.querySelector('.glocke-zahl');
+            let offen = 0;
+            try {
+                offen = (Werkzeuge.meldungen ? Werkzeuge.meldungen() : [])
+                    .filter((m) => !m.gelesen).length;
+            }
+            catch { }
+            if (zahl) {
+                zahl.textContent = offen > 99 ? '99+' : String(offen);
+                zahl.hidden = !offen;
+                zahl.setAttribute('aria-hidden', 'true');
+            }
+            glocke.setAttribute('aria-label', offen
+                ? 'Posteingang, ' + offen + ' ungelesen' : 'Posteingang');
+        };
+        an('btn-glocke', () => { Ansichten.posteingang(); });
+        document.addEventListener('redion:meldungen', glockeFrisch);
+        glockeFrisch();
+        const kontoKnopf = document.getElementById('btn-konto');
+        an('btn-konto', () => {
+            if (typeof WolkeFenster !== 'undefined')
+                WolkeFenster.dialog();
+        });
+        if (kontoKnopf && typeof Wolke !== 'undefined' && Wolke.beiAenderung) {
+            Wolke.beiAenderung((z) => {
+                const punkt = kontoKnopf.querySelector('.wolke-punkt');
+                if (!punkt)
+                    return;
+                punkt.setAttribute('aria-hidden', 'true');
+                if (!z.angemeldet) {
+                    punkt.hidden = true;
+                    kontoKnopf.title = 'Konto und Abgleich';
+                    kontoKnopf.setAttribute('aria-label', 'Konto und Abgleich — nicht angemeldet');
+                    return;
+                }
+                const schlecht = String(z.fehler || z.fehlerDateien || '');
+                punkt.hidden = false;
+                punkt.className = 'wolke-punkt ' +
+                    (schlecht ? 'ist-fehler' : z.laeuft ? 'ist-laeuft' : 'ist-gut');
+                const name = z.konto && z.konto.name ? String(z.konto.name) : 'angemeldet';
+                const stand = schlecht ? 'Abgleichfehler: ' + schlecht
+                    : z.laeuft ? 'Abgleich läuft'
+                        : z.letzter ? 'Letzter Abgleich ' + String(z.letzter).slice(11, 16)
+                            : 'noch kein Abgleich';
+                kontoKnopf.title = name + ' · ' + stand;
+                kontoKnopf.setAttribute('aria-label', 'Konto ' + name + ', ' + stand);
+            });
+        }
         an('btn-page-menu', (e) => {
             const p = Store.getBlock(seiteId);
             if (p)

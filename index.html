@@ -337,6 +337,13 @@
     <button class="top-btn schmal" id="btn-auto" data-ruhig="mehr"    title="Automationen der Datenbank" aria-label="Automationen"><span data-sym="bolt"></span></button>
     <button class="top-btn schmal" id="btn-link" data-ruhig="mehr"    title="Link zur Seite kopieren" aria-label="Link kopieren"><span data-sym="link"></span></button>
     <button class="top-btn schmal" id="btn-lock" data-ruhig="mehr"    title="Seite gegen Bearbeiten sperren" aria-label="Seite sperren"><span data-sym="lockOpen"></span></button>
+    <!-- Glocke und Konto (E251): beide Fertigteile lagen versteckt — der
+         Posteingang hinter „Mehr", das Konto nur in der Befehlspalette.
+         Der Zähler und der Statuspunkt sind Bild; die Wörter dazu stehen
+         im aria-label (§38). Am Telefon bleiben beide weg: dort trägt die
+         Seitenleiste den Ungelesen-Punkt, und die Kopfzeile ist voll. -->
+    <button class="top-btn schmal nur-rechner" id="btn-glocke" title="Posteingang" aria-label="Posteingang"><span data-sym="bell"></span><b class="glocke-zahl" hidden></b></button>
+    <button class="top-btn schmal nur-rechner" id="btn-konto" title="Konto und Abgleich" aria-label="Konto und Abgleich"><span data-sym="user"></span><i class="wolke-punkt" hidden></i></button>
     <button class="top-btn schmal" id="btn-fav"     title="Zu Favoriten" aria-label="Zu Favoriten"><span data-sym="star"></span></button>
     <button class="top-btn schmal" id="btn-page-menu" title="Seitenoptionen" aria-label="Seitenoptionen"><span data-sym="dots"></span></button>
   </header>

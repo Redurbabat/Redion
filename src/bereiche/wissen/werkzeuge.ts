@@ -1166,6 +1166,7 @@ const Werkzeuge = (() => {
       wann: new Date().toISOString(), gelesen: false
     });
     Store.setMeta('meldungen', liste.slice(0, 200));
+    meldungenGeaendert();
     /* Kurz sichtbar machen, damit man es auch ohne Posteingang mitbekommt */
     try { UI.toast('🔔 ' + (m.text || 'Neue Benachrichtigung')); } catch {}
     /* Und, falls erlaubt, als echte Benachrichtigung des Geräts */
@@ -1176,9 +1177,17 @@ const Werkzeuge = (() => {
   const meldungGelesen = (id: string) => {
     const liste = meldungen().map((x: any) => x.id === id ? { ...x, gelesen: true } : x);
     Store.setMeta('meldungen', liste);
+    meldungenGeaendert();
   };
 
-  const meldungenLeeren = () => Store.setMeta('meldungen', []);
+  const meldungenLeeren = () => { Store.setMeta('meldungen', []); meldungenGeaendert(); };
+
+  /* Wer den Zähler zeigt (die Glocke in der Kopfzeile, E251), erfährt es
+     hier — als DOM-Ereignis, nicht als Direktaufruf: der Bereich kennt
+     die Schale nicht (Regel 1). */
+  const meldungenGeaendert = () => {
+    try { document.dispatchEvent(new CustomEvent('redion:meldungen')); } catch {}
+  };
 
   /** Ein Datum, wie es ein `datetime-local`-Feld erwartet: ORTSZEIT.
    *

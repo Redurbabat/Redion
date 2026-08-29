@@ -18320,3 +18320,44 @@ Reinform. Nachbarn grün: test113 (53), test118 (18).
 OFFEN BLEIBT L73 Teil 2: das Muster trash+purge im selben Tick — der
 Satz verlässt den Cache, bevor je ein Abgleich lief. Das braucht das
 Merklisten-Muster aus E249 für Blöcke und ist ein eigener Eingriff.
+
+
+E251 — Glocke und Konto-Knopf: zwei Fertigteile werden sichtbar
+================================================================================
+
+Der Bild-Abgleich zu Redurs Zielbild-Poster fand drei Punkte, die
+„funktional komplett, aber versteckt" waren: Benachrichtigungen (der
+Posteingang zählte längst, nur am Telefon zeigte ein Punkt es an),
+Sync-Status und Konto (beides im Wolke-Dialog, erreichbar nur über die
+Befehlspalette). Alles Sichtbarkeitsarbeit auf fertiger Logik.
+
+DIE ENTSCHEIDUNGEN
+
+  · **Zwei Knöpfe, nicht drei.** Der Statuspunkt wohnt AM Konto-Knopf
+    (grün ok, gelb läuft, rot Fehler) statt als eigener Knopf — zwei
+    nebeneinanderliegende Knöpfe, die denselben Dialog öffnen, wären
+    einer zu viel, und die Kopfzeile ist voll genug (die L68-Lehre).
+
+  · **Der Bereich ruft die Schale nicht.** Werkzeuge meldet Änderungen
+    der Meldungsliste als DOM-Ereignis `redion:meldungen`; die Schale
+    hört zu und zählt neu. Kein Direktaufruf bereiche→schale (Regel 1).
+
+  · **Der Punkt am Wolke-Horcher.** `Wolke.beiAenderung` liefert den
+    Zustand bei jeder Änderung — der Punkt und die Beschriftung hängen
+    daran, nichts fragt im Takt nach.
+
+  · **Zahl und Punkt sind Bild, die Wörter stehen im aria-label** (§38):
+    „Posteingang, 3 ungelesen", „Konto Redur, letzter Abgleich 14:32",
+    „Konto und Abgleich — nicht angemeldet".
+
+  · **Am Telefon bleiben beide weg** (`nur-rechner`): die Kopfzeile
+    trägt dort schon Suchen und Neu, und den Ungelesen-Punkt zeigt die
+    Seitenleiste. Ein Weg weniger ist dort mehr.
+
+**Geprüft:** test258, 11 Punkte — Glocke ohne Ungelesenes ohne Zahl,
+Zähler steigt mit jeder Meldung samt aria-Wortlaut, Gelesen senkt,
+Leeren versteckt, Klick öffnet den Posteingang bis in die Krume,
+Konto-Knopf abgemeldet ohne Punkt und ehrlich beschriftet, Klick öffnet
+den Wolke-Dialog, am Telefon sind beide display:none. Zwei Gegenproben
+einzeln rot: Ereignis verstummt → der Zähler bleibt bei 0 stehen;
+Punkt lügt (sichtbar trotz abgemeldet) → genau der Konto-Punkt.
