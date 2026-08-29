@@ -537,6 +537,20 @@ const Planflaeche = (() => {
       return true;
     };
 
+    /* Ein Teil ist ein `[data-id]` IM SVG — und nur dort. Der Editor hängt
+       an JEDEN Block-Kasten `data-id = block.type` (editor.ts, render):
+       von der leeren Fläche aus wanderte `closest('[data-id]')` am SVG
+       vorbei bis zum Kasten und hielt jeden Klick für „Teil ‚schaltplan'
+       angeklickt". Einfügen, Radieren und das Schalten in der Simulation
+       gingen im Seiten-Editor darum ins Leere — vom ersten Tag an, denn
+       kein Prüflauf hat je echt geklickt, alle haben über Store gesät
+       (E261, gefunden von Redur mit der Maus). */
+    const teilAm = (ziel: Element): HTMLElement | null =>
+      ziel.closest('svg [data-id]') as HTMLElement | null;
+
+    /* Für die Doppeltipp-Erkennung unten: welcher Teil, wie eben. */
+    let letzterTipp = { id: '', zeit: 0 };
+
     /* --- Zeigerereignisse ------------------------------------------------ */
     buehne.addEventListener('pointerdown', e => {
       const svg = buehne.querySelector('svg') as SVGSVGElement;
@@ -549,13 +563,13 @@ const Planflaeche = (() => {
          eine Schalttafel. Nichts wird verschoben, nichts gelöscht — man kann
          den Plan beim Ausprobieren nicht versehentlich kaputt machen. */
       if (z.simulation) {
-        const g = ziel.closest('[data-id]') as HTMLElement | null;
+        const g = teilAm(ziel);
         if (g && g.dataset.id) schalte(g.dataset.id);
         return;
       }
 
       if (z.werkzeug === 'radieren') {
-        const g = ziel.closest('[data-id]') as HTMLElement | null;
+        const g = teilAm(ziel);
         if (g && g.dataset.id) { z.auswahl = new Set([g.dataset.id]); loeschen(); }
         return;
       }
@@ -579,7 +593,7 @@ const Planflaeche = (() => {
       }
 
       /* Werkzeug „zeigen" */
-      const g = ziel.closest('[data-id]') as HTMLElement | null;
+      const g = teilAm(ziel);
       if (!g || !g.dataset.id) {
         /* Auf leere Fläche: Symbol setzen, oder Rahmen aufziehen. */
         if (z.gewaehltesZeichen) { setzeSymbol(z.gewaehltesZeichen, p.x, p.y); return; }
@@ -591,6 +605,21 @@ const Planflaeche = (() => {
       }
 
       const id = g.dataset.id;
+
+      /* Doppeltipp aufs Teil: sein Dialog (Betriebsmittel, Anschlüsse,
+         Punkte 18/19). Von Hand erkannt, nicht über das native dblclick —
+         das stirbt hier zweimal: der erste Klick wählt aus und zeichnet die
+         Fläche neu, der zweite trifft einen NEUEN Knoten, und der Browser
+         zählt Klicks nur auf demselben weiter. Und am Telefon gibt es gar
+         kein dblclick. Gemessen mit test263 §2: null Ereignisse (E261). */
+      const jetztMs = Date.now();
+      if (letzterTipp.id === id && jetztMs - letzterTipp.zeit < 400) {
+        letzterTipp = { id: '', zeit: 0 };
+        const t = teilVon(id);
+        if (t) { teilDialog(t); return; }
+      }
+      letzterTipp = { id, zeit: jetztMs };
+
       const gruppe = mitGruppe(id);
       if (e.shiftKey) gruppe.forEach(x => z.auswahl.has(x) ? z.auswahl.delete(x) : z.auswahl.add(x));
       else if (!z.auswahl.has(id)) z.auswahl = new Set(gruppe);
@@ -687,14 +716,9 @@ const Planflaeche = (() => {
     buehne.addEventListener('pointerup', zugEnde);
     buehne.addEventListener('pointercancel', zugEnde);
 
-    /* Doppeltippen auf ein Teil: Betriebsmittel und Anschlussnummern (18/19) */
-    buehne.addEventListener('dblclick', e => {
-      const g = (e.target as Element).closest('[data-id]') as HTMLElement | null;
-      const t = g && g.dataset.id ? teilVon(g.dataset.id) : null;
-      if (!t) return;
-      e.preventDefault();
-      teilDialog(t);
-    });
+    /* KEIN dblclick-Horcher mehr: das Doppeltippen erkennt der
+       pointerdown selbst (Begründung dort). Ein zweiter Horcher öffnete
+       den Dialog doppelt, sobald der Browser doch ein dblclick baut. */
 
     /* --- Der Dialog am Teil ---------------------------------------------- */
     const teilDialog = (t: any): void => {

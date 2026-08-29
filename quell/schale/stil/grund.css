@@ -56,15 +56,27 @@
   --radius-2xl:  20px;  /* grosse Dialoge und Blätter                        */
   --radius-pill: 999px; /* Pillen und runde Symbolknöpfe                     */
 
-  /* --- Bewegung. Vier Stufen und EINE Kurve. -----------------------------
+  /* --- Bewegung. Vier Stufen und EINE Kurve (E259). ----------------------
    * Die Kurve ist überall dieselbe. Zwei Bewegungen mit verschiedenen
    * Beschleunigungen nebeneinander wirken wie zwei verschiedene Programme.
+   * Bis E259 standen drei der Dauern AUCH in marken.css (E43, mit anderen
+   * Zahlen) — gewonnen hat immer dieser Block, nur durch Ladereihenfolge.
+   * Jetzt wohnt Bewegung ausschliesslich hier.
    * -------------------------------------------------------------------- */
   --motion-instant: 80ms;   /* Druckpunkt eines Knopfes                      */
   --motion-fast:    140ms;  /* Überfahren, kleine Umschalter                 */
   --motion-normal:  200ms;  /* Seitenleiste, Popover, Reiter                 */
   --motion-slow:    320ms;  /* Blätter, grosse Überlagerungen                */
   --ease:           cubic-bezier(.2,.8,.3,1);
+
+  /* Die zwei GERICHTETEN Kurven aus E43 bleiben: was hereinkommt, bremst
+     weich aus; was geht, geht zügig. Das ist keine zweite Beschleunigung,
+     sondern Tür auf und Tür zu desselben Programms. `--ease-standard` ist
+     seit E259 nur noch ein zweiter Name für die EINE Kurve — rund zwanzig
+     Stellen benutzen ihn; wer neu schreibt, nimmt `--ease`. */
+  --ease-standard: var(--ease);
+  --ease-enter:    cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-exit:     cubic-bezier(0.4, 0, 1, 1);
 
   /* --- Die zwei alten Schattennamen (E204). ----------------------------
    * Die vier Sprossen `--shadow-1` … `--shadow-4` stehen in `hell.css` und
@@ -80,6 +92,15 @@
   /* --- Schwebende Flächen (§16). --------------------------------------- */
   --glas-rand:    inset 0 0 0 1px rgba(255,255,255,.10);
   --glas-blur:    saturate(180%) blur(20px);
+
+  /* --- Die Tinte auf Papier (E260). ------------------------------------
+   * `--paper` und `--grid` wechseln mit dem Thema und stehen in
+   * dunkel.css/hell.css. Die Tinte nicht: Papier ist in beiden Modi
+   * papierfarben, also ist die Schrift darauf in beiden Modi dunkel
+   * (12,9:1 auf dem dunkleren der beiden Papiere, gemessen). Ein Wert,
+   * der in beiden Modi gleich ist, wird nur einmal gepflegt (test245 §1).
+   * -------------------------------------------------------------------- */
+  --paper-ink: #292d34;
 }
 
 /* WER BEWEGUNG NICHT WILL, BEKOMMT KEINE (§62). Nicht als Zusatz an jeder

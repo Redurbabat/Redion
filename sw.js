@@ -34,7 +34,7 @@ const ich = self;
 /** Der Name der Ablage. Muss `KONSTANTEN.ABLAGE_NAME` gleichen — siehe
  *  die Erklärung bei `faelligeErinnerungen`. `test143` rechnet es nach. */
 const ABLAGE_NAME = 'notizen';
-const VERSION = 'notizen-v29';
+const VERSION = 'notizen-v30';
 const ABLAGE = VERSION;
 /* Was beim ersten Besuch gleich mitgenommen wird. */
 const GRUNDSTOCK = [
@@ -207,6 +207,7 @@ const GRUNDSTOCK = [
     './quell/schale/stil/hell.css',
     './quell/schale/stil/grund.css',
     './quell/schale/stil/aufbau.css',
+    './quell/schale/stil/anatomie.css',
     './quell/schale/stil/datenbanken.css',
     './quell/schale/stil/ki.css',
     './quell/schale/stil/werkzeuge.css',

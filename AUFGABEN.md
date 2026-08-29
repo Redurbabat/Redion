@@ -35,6 +35,50 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
+**29. August 2026 · Schaltplan: Einfügen und Schalten gehen wieder (E261)**
+
+> Redur fand es mit der Maus: `closest('[data-id]')` lief am SVG vorbei
+> bis zum Block-Kasten (der trägt `data-id = block.type`) — Einfügen
+> per Klick ging im Seiten-Editor vom ersten Tag an ins Leere, kein
+> Prüflauf hatte je echt geklickt. Jetzt sucht `teilAm()` nur im SVG,
+> der Teil-Dialog kommt per eigener Doppeltipp-Erkennung (dblclick
+> stirbt am Neuzeichnen, am Telefon gibt es keins), und das doppelte
+> CSS-Raster aus E260 ist zurückgenommen. test263 neu, drei Gegenproben
+> einzeln rot, test238/239/240 grün.
+
+**29. August 2026 · Papier-Token und geteilte Anatomien (E260)**
+
+> Amdion Phase 1 wird sichtbar: `--paper`/`--paper-ink`/`--grid`, das
+> A4-Blatt ist im Dunkeln warm statt reinweiss, der Schaltplan liegt
+> auf Amdions Punktraster. Neu: `anatomie.css` (Stufe 2) mit
+> stat-karte, kicker, leer-zustand, hebt und ansicht-herein — je mit
+> sofortigem Nutzer in Lernwelt und Menüband. test245 fing die doppelt
+> gepflegte Papier-Tinte; zehn Suiten grün, Bilder im Chat.
+
+**29. August 2026 · Bewegung wohnt nur noch in grund.css (E259)**
+
+> Phase-1-Vorarbeit des Amdion-Bogens: das Dauern-Doppel aus marken.css
+> (E43) gegen grund.css (E198) ist aufgelöst — grund.css gewann bisher
+> nur durch Ladereihenfolge. Die gerichteten Kurven ziehen mit um,
+> `--ease-standard` ist jetzt ein Alias der EINEN Kurve. Gegenprobe
+> einzeln rot, test126/245/40 grün.
+
+**29. August 2026 · Amdion ist die Vorlage — der Übernahme-Bogen beginnt (E258)**
+
+> Redur will Redion „genau so" wie seinen eigenen Prototyp Amdion.
+> Übernommen wird die Gestalt, nie Code oder Datenlayouts (Amdion ist
+> funktional eine Teilmenge). Das Regiebuch mit acht Phasen steht in
+> doku/AMDION-UEBERNAHME.md — Phase 1 ist Designsprache und
+> Shell-Look, beginnend mit dem Motion-Token-Doppel aus marken.css
+> gegen grund.css.
+
+**29. August 2026 · Die Randleiste zählt die Kopfzeile mit (E257)**
+
+> Der doppelte Lauf-Abfang von test248 war kein Flattern: seit E236
+> mass `--inhalt-oben` nur die Menüleiste, und das Inhaltsverzeichnis
+> wuchs bei vielen Überschriften über die Seitenknöpfe. Jetzt zählt
+> die Kopfzeile mit; test248 misst es als stehenden Wächter.
+
 **29. August 2026 · Hausaufgaben und Lernziele je Fach (E256)**
 
 > Die zwei fehlenden Poster-Zeilen der Schulsäule. Vorlage legt homework

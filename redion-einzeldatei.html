@@ -69,40 +69,21 @@
 }
 
 /* ===========================================================================
-   BEWEGUNG — die Marken aus Redurs Vorgabe (E43)
+   BERÜHRUNG UND TELEFON — die Marken aus Redurs Vorgabe (E43)
    ---------------------------------------------------------------------------
-   Bis hierher stand jede Dauer an ihrer eigenen Stelle: .14s hier, 200ms
-   dort, .22s im Blatt. Gemessen am 7. August: rund achtunddreissig
-   Übergänge in sieben Stilblättern, kein einziger gemeinsamer Wert. Wer die
-   App als Ganzes ruhiger oder schneller machen wollte, musste sie suchen.
+   BEWEGUNG STEHT NICHT MEHR HIER. Von E43 bis E259 definierte dieser Block
+   auch drei Dauern und die Kurven — und `grund.css` definierte vier Dauern
+   mit ANDEREN Zahlen noch einmal (E198). Gewonnen hat immer grund.css, nur
+   durch die Ladereihenfolge; die Zahlen hier waren seitdem tote Zeilen, die
+   beim Lesen das Falsche behaupteten. Seit E259 wohnen alle Dauern und
+   Kurven in `grund.css` unter „Bewegung", einschliesslich der gerichteten
+   E43-Kurven `--ease-enter`/`--ease-exit`. Dort steht auch die Abschaltung
+   für Menschen, die keine Bewegung wollen.
 
-   DREI DAUERN REICHEN, und das ist der Punkt der Vorgabe:
-
-     schnell   Berührung, Knopfdruck — es soll SOFORT wirken
-     normal    Reiterwechsel, Seitenwechsel, Hinweis
-     langsam   Blätter von unten; sie dürfen schwer wirken
-
-   Die Kurven sind nicht Geschmack. `ease-enter` startet schnell und bremst
-   weich aus — was hereinkommt, soll ankommen, nicht anschweben.
-   `ease-exit` macht es umgekehrt: was geht, geht zügig. Beides linear wäre
-   das, was billige Oberflächen unterscheidet von teuren.
-
-   WAS HIER ABSICHTLICH NICHT STEHT: Federn und Sprünge. Redion ist ein
-   Arbeitsgerät. Ein Blatt, das nachwippt, ist beim ersten Mal nett und beim
-   fünfzigsten eine Verzögerung.
-
-   Wer keine Bewegung mag, bekommt keine — die Regel dafür steht global in
-   `bausteine.css` und überschreibt jede dieser Marken.
+   Geblieben sind die Marken, die nichts mit Zeit zu tun haben: wie tief
+   etwas einsinkt, und die semantischen Telefonmasse.
    =========================================================================*/
 :root{
-  --motion-fast: 120ms;
-  --motion-normal: 220ms;
-  --motion-slow: 320ms;
-
-  --ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
-  --ease-enter:    cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-exit:     cubic-bezier(0.4, 0, 1, 1);
-
   /* Wie weit etwas beim Antippen einsinkt. Ein Knopf darf deutlich
      reagieren; eine Karte, die man mit der halben Handfläche trifft, nur
      angedeutet — sonst zuckt der halbe Bildschirm. */
@@ -237,6 +218,18 @@
   /* Schwebende Flächen (§16): durchscheinend, aber nie so weit, dass die
      Schrift darauf um ihren Grund kämpfen muss. */
   --bg-schwebend:  rgba(28,28,32,.72);
+
+  /* PAPIER (E260, aus Amdion). Ein Blatt, ein Plan, eine Zeichnung sind
+     Papier und keine Fenster: sie bleiben papierfarben, auch wenn die App
+     dunkel ist. Im Dunkeln ist das Papier warm gebrochen statt reinweiss —
+     so blendet es nicht neben den dunklen Flächen. Die Tinte darauf
+     (`--paper-ink`) ist in beiden Modi dieselbe und steht darum in
+     `grund.css` — ein modusfreier Wert wird nicht zweimal gepflegt
+     (test245 §1). `--grid` ist das Punktraster UNTER einem Plan — es
+     liegt auf dem Thema-Grund, nicht auf dem Papier, und wechselt darum
+     mit dem Thema. */
+  --paper:     #f8f8f5;
+  --grid:      rgba(255,255,255,.12);
 
   /* Die zehn Notion-Textfarben */
   --c-default: #e9e9e7;
@@ -387,6 +380,13 @@ html[data-theme="light"]{
   --info:        #0369a1;
   --warnung:     #b45309;
 
+  /* Papier (E260): im Hellen reinweiss — heller als der helle Grund, damit
+     ein Blatt auch hier als Blatt lesbar bleibt. Die Tinte (`--paper-ink`)
+     ist modusfrei und steht in `grund.css`. Das Punktraster liegt auf dem
+     Thema-Grund und braucht hier dunkle Punkte. */
+  --paper:     #ffffff;
+  --grid:      rgba(34,38,49,.12);
+
   --c-default:#37352f; --c-gray:#787774; --c-brown:#9f6b53; --c-orange:#d9730d;
   --c-yellow:#cb912f;  --c-green:#448361; --c-blue:#337ea9;  --c-purple:#9065b0;
   --c-pink:#c14c8a;    --c-red:#d44c47;
@@ -457,15 +457,27 @@ html[data-theme="light"]{
   --radius-2xl:  20px;  /* grosse Dialoge und Blätter                        */
   --radius-pill: 999px; /* Pillen und runde Symbolknöpfe                     */
 
-  /* --- Bewegung. Vier Stufen und EINE Kurve. -----------------------------
+  /* --- Bewegung. Vier Stufen und EINE Kurve (E259). ----------------------
    * Die Kurve ist überall dieselbe. Zwei Bewegungen mit verschiedenen
    * Beschleunigungen nebeneinander wirken wie zwei verschiedene Programme.
+   * Bis E259 standen drei der Dauern AUCH in marken.css (E43, mit anderen
+   * Zahlen) — gewonnen hat immer dieser Block, nur durch Ladereihenfolge.
+   * Jetzt wohnt Bewegung ausschliesslich hier.
    * -------------------------------------------------------------------- */
   --motion-instant: 80ms;   /* Druckpunkt eines Knopfes                      */
   --motion-fast:    140ms;  /* Überfahren, kleine Umschalter                 */
   --motion-normal:  200ms;  /* Seitenleiste, Popover, Reiter                 */
   --motion-slow:    320ms;  /* Blätter, grosse Überlagerungen                */
   --ease:           cubic-bezier(.2,.8,.3,1);
+
+  /* Die zwei GERICHTETEN Kurven aus E43 bleiben: was hereinkommt, bremst
+     weich aus; was geht, geht zügig. Das ist keine zweite Beschleunigung,
+     sondern Tür auf und Tür zu desselben Programms. `--ease-standard` ist
+     seit E259 nur noch ein zweiter Name für die EINE Kurve — rund zwanzig
+     Stellen benutzen ihn; wer neu schreibt, nimmt `--ease`. */
+  --ease-standard: var(--ease);
+  --ease-enter:    cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-exit:     cubic-bezier(0.4, 0, 1, 1);
 
   /* --- Die zwei alten Schattennamen (E204). ----------------------------
    * Die vier Sprossen `--shadow-1` … `--shadow-4` stehen in `hell.css` und
@@ -481,6 +493,15 @@ html[data-theme="light"]{
   /* --- Schwebende Flächen (§16). --------------------------------------- */
   --glas-rand:    inset 0 0 0 1px rgba(255,255,255,.10);
   --glas-blur:    saturate(180%) blur(20px);
+
+  /* --- Die Tinte auf Papier (E260). ------------------------------------
+   * `--paper` und `--grid` wechseln mit dem Thema und stehen in
+   * dunkel.css/hell.css. Die Tinte nicht: Papier ist in beiden Modi
+   * papierfarben, also ist die Schrift darauf in beiden Modi dunkel
+   * (12,9:1 auf dem dunkleren der beiden Papiere, gemessen). Ein Wert,
+   * der in beiden Modi gleich ist, wird nur einmal gepflegt (test245 §1).
+   * -------------------------------------------------------------------- */
+  --paper-ink: #292d34;
 }
 
 /* WER BEWEGUNG NICHT WILL, BEKOMMT KEINE (§62). Nicht als Zusatz an jeder
@@ -1280,8 +1301,14 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
    dann mittig statt oben. */
 .mb-reihe{ display:flex; align-items:stretch; gap:var(--space-1); min-height:60px }
 
-.mb-gruppe-titel{
-  font-size:10.5px; letter-spacing:.05em; text-transform:uppercase;
+/* Die Kicker-Form (Grossbuchstaben, Sperrung, Gewicht) kommt seit E260 aus
+   `anatomie.css`. Hier bleiben die Band-Abweichungen: die Überschrift ist
+   Beiwerk unter beschrifteten Knöpfen und darf leiser sein als ein Kicker
+   im Fliesstext — `--text-faint` ist dafür gemessen genug (E230: 3,9:1).
+   ZWEI Klassen im Selektor, mit Absicht: dieses Blatt lädt VOR anatomie.css
+   (Stufe 1 gegen 2, test87), die Abweichung muss also schwerer wiegen als
+   der Baustein, nicht später kommen. */
+.kicker.mb-gruppe-titel{
   color:var(--text-faint); text-align:center; padding-top:2px;
 }
 
@@ -1653,6 +1680,107 @@ body[data-ruhig="an"] #topbar [data-ruhig="mehr"]{ display:none }
    Eintrag zusätzlich mehr Schriftgewicht. */
 #sidebar .side-item[aria-current="page"]{
   background:var(--bg-hover); color:var(--text); font-weight:600;
+}
+
+</style>
+<style>
+/* ===== quell/schale/stil/anatomie.css ===== */
+/* ============================================================================
+ * anatomie.css — die geteilten Anatomien (E258/E260)
+ * ----------------------------------------------------------------------------
+ * Redurs Prototyp Amdion hat für dieselben Dinge überall dieselbe Form:
+ * eine Kennzahl-Karte sieht im Lernen aus wie im Elektro-Rechner, ein
+ * leerer Zustand wie der andere. In Redion stand jede dieser Formen bisher
+ * in ihrem Bereich noch einmal — vier Kicker-Fassungen, zwei Leerzustände,
+ * eigene Karten. Hier stehen die FORMEN einmal; die Bereiche behalten nur
+ * noch ihre Abweichungen (Dichte, Farben, Ränder).
+ *
+ * Die Werte sind Redions geeichte Marken (E198/E204/E230/E259), nicht
+ * Amdions Zahlen: Amdion misst seine Kontraste nicht, Redion schon.
+ * Deshalb 10 px statt 9 und `--text-dim` statt eines `--muted`, das unter
+ * der Messlatte läge.
+ *
+ * Dieses Blatt ist Stufe 2 der Kaskade (test87): es lädt VOR den
+ * Bereichs-Blättern, damit deren Abweichungen gewinnen.
+ * ==========================================================================*/
+
+/* --- Der Kicker ------------------------------------------------------------
+   Die kleine Zeile ÜBER einer Sache, die sagt, was für eine Sorte Sache
+   kommt: „HEUTE", „ZULETZT", ein Gruppentitel im Menüband. Amdion nennt sie
+   eyebrow (part1.css) und setzt 9 px in --muted — beides fällt unter
+   Redions E230-Messlatte, darum 10 px und `--text-dim`. */
+.kicker{
+  text-transform:uppercase; letter-spacing:.09em;
+  font-size:10px; font-weight:800; color:var(--text-dim);
+}
+.kicker.akzent{ color:var(--accent-text) }
+
+/* --- Die Stat-Karte --------------------------------------------------------
+   Amdions Kennzahl-Anatomie (part2.css .stat-card): Etikett OBEN, darunter
+   die grosse Zahl, die Bedeutungszeile klebt am BODEN der Karte. So haben
+   vier Karten nebeneinander ihre Zahlen auf einer Linie, auch wenn eine
+   Bedeutungszeile zwei Zeilen braucht.
+
+   Das Markup bleibt Redions (E256/test262 lesen es): strong, span, small —
+   der `order:-1` hebt das Etikett optisch nach oben, ohne die Lesefolge
+   für Werkzeuge zu ändern, die den Text als Ganzes nehmen. */
+.stat-karte{
+  display:flex; flex-direction:column; min-height:112px;
+  padding:var(--space-5);
+  border:1px solid var(--line); border-radius:var(--radius-lg);
+  background:var(--bg-card); box-shadow:var(--shadow-1);
+}
+.stat-karte>span{
+  order:-1; color:var(--text-dim); font-size:11.5px; font-weight:650;
+}
+.stat-karte strong{
+  margin-top:6px; overflow:hidden; text-overflow:ellipsis;
+  color:var(--text); font-size:clamp(20px,2vw,27px); line-height:1.15;
+  font-weight:790; letter-spacing:-.03em; font-variant-numeric:tabular-nums;
+}
+.stat-karte small{
+  margin-top:auto; padding-top:4px;
+  color:var(--text-dim); font-size:10.5px; line-height:1.3;
+}
+
+/* --- Der Leerzustand -------------------------------------------------------
+   Eine Zeichenkachel, ein Satz, was fehlt, und wenn möglich der Knopf, der
+   es behebt (§47: kein Weg ins Leere). Die Kachel-Geometrie stand bisher
+   nur in der Lernwelt (E204); jetzt kann jeder Bereich sie tragen. */
+.leer-zustand{
+  display:grid; justify-items:center; align-content:center;
+  gap:var(--space-3); padding:var(--space-7);
+  color:var(--text-dim); text-align:center;
+}
+.leer-zeichen{
+  display:grid; place-items:center; width:48px; height:48px;
+  border-radius:var(--radius-xl); background:var(--bg-hover);
+  color:var(--text-dim); font-size:22px;
+}
+
+/* --- Das Heben beim Überfahren ---------------------------------------------
+   Amdions Karten heben sich um EINEN Pixel (part2.css) — spürbar, nicht
+   springend. Die Dauern kommen aus grund.css und werden dort für Menschen
+   ohne Bewegungswunsch genullt (§62). */
+.hebt{
+  transition:transform var(--motion-fast) var(--ease),
+             border-color var(--motion-fast) var(--ease),
+             box-shadow var(--motion-fast) var(--ease);
+}
+.hebt:hover{
+  transform:translateY(-1px);
+  border-color:var(--line-stark,var(--line));
+  box-shadow:var(--shadow-2);
+}
+
+/* --- Die Ansichts-Einblendung ----------------------------------------------
+   Ein Ansichtswechsel kommt 5 px von unten herein (Amdions viewIn,
+   part1.css). Einmal beim Aufbau, keine Schleife — unter Reduced Motion
+   bleibt davon 1 ms übrig, also nichts. */
+.ansicht-herein{ animation:ansicht-herein var(--motion-normal) var(--ease) }
+@keyframes ansicht-herein{
+  from{ opacity:0; transform:translateY(5px) }
+  to{ opacity:1; transform:none }
 }
 
 </style>
@@ -5467,18 +5595,13 @@ body[data-ruhig="an"] .arbeitswelt .aw-kopf::after{ display:none }
 .lernwelt .lw-metrics{
   display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--space-4)
 }
+/* Die Anatomie (Etikett oben, Zahl, Bedeutung am Boden) kommt seit E260 aus
+   `anatomie.css` (.stat-karte) — hier stehen nur noch die Abweichungen der
+   Lernwelt: ihre Fläche, ihr Radius. Die Bedeutungszeile (E230) zeichnet
+   jetzt der Baustein. */
 .lernwelt .lw-metrik{
-  display:grid;align-content:center;min-height:90px;padding:var(--space-5);
-  border:1px solid var(--line);border-radius:var(--lw-radius-md);
-  background:var(--lw-surface);box-shadow:var(--shadow-1)
+  border-radius:var(--lw-radius-md);background:var(--lw-surface)
 }
-.lernwelt .lw-metrik strong{
-  overflow:hidden;color:var(--text);font-size:clamp(19px,2vw,25px);line-height:1.15;
-  font-weight:790;letter-spacing:-.025em;text-overflow:ellipsis;font-variant-numeric:tabular-nums
-}
-.lernwelt .lw-metrik>span{margin-top:5px;color:var(--text-dim);font-size:11.5px;font-weight:650}
-/* Diese Zeile sagt, was die Zahl darüber bedeutet (E230). */
-.lernwelt .lw-metrik small{margin-top:3px;color:var(--text-dim);font-size:10.5px;line-height:1.3}
 
 /* --- Hauptkarten -------------------------------------------------------- */
 .lernwelt .lw-primary-grid{
@@ -5947,13 +6070,15 @@ body[data-ruhig="an"] .arbeitswelt .aw-kopf::after{ display:none }
 .lernwelt .lw-compact-errors small{color:var(--text-dim);font-size:10px}
 
 /* --- Leere Zustände und Erklärhinweise --------------------------------- */
+/* Aufbau und Kachel-Geometrie kommen seit E260 aus `anatomie.css`
+   (.leer-zustand/.leer-zeichen) — hier bleiben der gestrichelte Rahmen der
+   Lernwelt und ihre Akzentfärbung der Kachel. */
 .lernwelt .lw-leer{
-  display:grid;justify-items:center;align-content:center;gap:var(--space-3);min-height:190px;padding:var(--space-7);
+  min-height:190px;
   border:1px dashed var(--line-stark,var(--line));border-radius:var(--lw-radius-md);
-  background:var(--bg-side);text-align:center
+  background:var(--bg-side)
 }
 .lernwelt .lw-leer-icon{
-  display:grid;place-items:center;width:48px;height:48px;border-radius:var(--radius-xl);
   background:var(--lw-accent-soft);color:var(--accent-text);font-size:24px
 }
 .lernwelt .lw-leer h3{margin:0;font-size:15px;font-weight:740}
@@ -7023,9 +7148,9 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
    hinwies. `max-height` plus `overflow-y:auto` bindet sie an den Textteil —
    sichtbar gerollt statt still abgeschnitten (§55.2). */
 #rand-toc{position:absolute; right:14px;
-  top:calc(var(--inhalt-oben, 54px) + (100% - var(--inhalt-oben, 54px)) / 2);
+  top:calc(var(--inhalt-oben, 90px) + (100% - var(--inhalt-oben, 90px)) / 2);
   transform:translateY(-50%);
-  max-height:calc(100% - var(--inhalt-oben, 54px) - 24px);
+  max-height:calc(100% - var(--inhalt-oben, 90px) - 24px);
   overflow-y:auto; scrollbar-width:thin; overscroll-behavior:contain;
   display:flex; flex-direction:column; gap:8px; z-index:20; padding:8px 0}
 /* Ohne das schrumpfen die Knöpfe im Flex-Kasten, sobald gerollt werden
@@ -10130,8 +10255,10 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
           line-height:1.4 }
 
 /* ── Das A4-Blatt (E100) ───────────────────────────────────────────────────
-   Das Papier ist weiss, auch im Dunkelmodus: ein Blatt, das die Farbe
-   wechselt, ist kein Blatt. Nur der Rahmen darum folgt dem Thema.        */
+   Das Papier ist papierfarben, auch im Dunkelmodus: ein Blatt, das die
+   Farbe wechselt, ist kein Blatt. Nur der Rahmen darum folgt dem Thema.
+   Seit E260 kommt der Ton aus `--paper` (dunkel.css): im Dunkeln warm
+   gebrochen statt reinweiss, im Hellen weiss wie zuvor.                  */
 /* `width:100%; min-width:0` ist hier nicht Zierde: die Hülle steht in einem
    Flex-Elternteil, und ein Flex-Kind mit `min-width:auto` wächst mit seinem
    Inhalt, statt zu schrumpfen. Gemessen: die Werkzeugleiste war 627 px breit
@@ -10191,7 +10318,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-strich{display:flex; align-items:center; justify-content:center; width:30px}
 .blatt-strich i{display:block; width:16px; background:currentColor; border-radius:3px}
 
-.blatt-papier{position:relative; width:100%; background:#fff; color:#111;
+.blatt-papier{position:relative; width:100%; background:var(--paper,#fff); color:#111;
               border:1px solid var(--rand); border-radius:0 0 8px 8px;
               box-shadow:0 2px 10px rgba(0,0,0,.18); overflow:hidden}
 .blatt-inhalt{position:relative; z-index:1; height:100%; overflow:auto}
@@ -10796,6 +10923,11 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical}
 .sp-sym.sp-fav .sp-sym-name::before{content:'★ '; color:var(--accent-text)}
 
+/* KEIN CSS-Raster hier (E261): der Plan zeichnet sein Punktraster selbst,
+   im SVG (`schaltplan.ts`, sp-raster-Muster) — dort skaliert es mit dem
+   Zoom. E260 legte kurz ein zweites Raster per CSS darunter; zwei Raster
+   mit verschiedener Teilung sind Moiré, nicht Amdion. `--grid` bleibt als
+   Token für Flächen, die KEIN eigenes Raster mitbringen. */
 .sp-buehne{flex:1; overflow:auto; padding:14px; background:var(--bg);
   display:flex; align-items:flex-start; justify-content:center}
 .sp-flaeche{max-width:100%; height:auto; color:var(--text); touch-action:none;
@@ -38916,6 +39048,17 @@ const Planflaeche = (() => {
             male();
             return true;
         };
+        /* Ein Teil ist ein `[data-id]` IM SVG — und nur dort. Der Editor hängt
+           an JEDEN Block-Kasten `data-id = block.type` (editor.ts, render):
+           von der leeren Fläche aus wanderte `closest('[data-id]')` am SVG
+           vorbei bis zum Kasten und hielt jeden Klick für „Teil ‚schaltplan'
+           angeklickt". Einfügen, Radieren und das Schalten in der Simulation
+           gingen im Seiten-Editor darum ins Leere — vom ersten Tag an, denn
+           kein Prüflauf hat je echt geklickt, alle haben über Store gesät
+           (E261, gefunden von Redur mit der Maus). */
+        const teilAm = (ziel) => ziel.closest('svg [data-id]');
+        /* Für die Doppeltipp-Erkennung unten: welcher Teil, wie eben. */
+        let letzterTipp = { id: '', zeit: 0 };
         /* --- Zeigerereignisse ------------------------------------------------ */
         buehne.addEventListener('pointerdown', e => {
             const svg = buehne.querySelector('svg');
@@ -38928,13 +39071,13 @@ const Planflaeche = (() => {
                eine Schalttafel. Nichts wird verschoben, nichts gelöscht — man kann
                den Plan beim Ausprobieren nicht versehentlich kaputt machen. */
             if (z.simulation) {
-                const g = ziel.closest('[data-id]');
+                const g = teilAm(ziel);
                 if (g && g.dataset.id)
                     schalte(g.dataset.id);
                 return;
             }
             if (z.werkzeug === 'radieren') {
-                const g = ziel.closest('[data-id]');
+                const g = teilAm(ziel);
                 if (g && g.dataset.id) {
                     z.auswahl = new Set([g.dataset.id]);
                     loeschen();
@@ -38960,7 +39103,7 @@ const Planflaeche = (() => {
                 return;
             }
             /* Werkzeug „zeigen" */
-            const g = ziel.closest('[data-id]');
+            const g = teilAm(ziel);
             if (!g || !g.dataset.id) {
                 /* Auf leere Fläche: Symbol setzen, oder Rahmen aufziehen. */
                 if (z.gewaehltesZeichen) {
@@ -38975,6 +39118,22 @@ const Planflaeche = (() => {
                 return;
             }
             const id = g.dataset.id;
+            /* Doppeltipp aufs Teil: sein Dialog (Betriebsmittel, Anschlüsse,
+               Punkte 18/19). Von Hand erkannt, nicht über das native dblclick —
+               das stirbt hier zweimal: der erste Klick wählt aus und zeichnet die
+               Fläche neu, der zweite trifft einen NEUEN Knoten, und der Browser
+               zählt Klicks nur auf demselben weiter. Und am Telefon gibt es gar
+               kein dblclick. Gemessen mit test263 §2: null Ereignisse (E261). */
+            const jetztMs = Date.now();
+            if (letzterTipp.id === id && jetztMs - letzterTipp.zeit < 400) {
+                letzterTipp = { id: '', zeit: 0 };
+                const t = teilVon(id);
+                if (t) {
+                    teilDialog(t);
+                    return;
+                }
+            }
+            letzterTipp = { id, zeit: jetztMs };
             const gruppe = mitGruppe(id);
             if (e.shiftKey)
                 gruppe.forEach(x => z.auswahl.has(x) ? z.auswahl.delete(x) : z.auswahl.add(x));
@@ -39075,15 +39234,9 @@ const Planflaeche = (() => {
         };
         buehne.addEventListener('pointerup', zugEnde);
         buehne.addEventListener('pointercancel', zugEnde);
-        /* Doppeltippen auf ein Teil: Betriebsmittel und Anschlussnummern (18/19) */
-        buehne.addEventListener('dblclick', e => {
-            const g = e.target.closest('[data-id]');
-            const t = g && g.dataset.id ? teilVon(g.dataset.id) : null;
-            if (!t)
-                return;
-            e.preventDefault();
-            teilDialog(t);
-        });
+        /* KEIN dblclick-Horcher mehr: das Doppeltippen erkennt der
+           pointerdown selbst (Begründung dort). Ein zweiter Horcher öffnete
+           den Dialog doppelt, sobald der Browser doch ein dblclick baut. */
         /* --- Der Dialog am Teil ---------------------------------------------- */
         const teilDialog = (t) => {
             const zeichen = Register.fachzeichen.holen(t.zeichen);
@@ -101518,12 +101671,15 @@ const Lernwelt = (() => {
             ? '<span' + k + ' data-sym="' + esc(icon) + '" aria-hidden="true"></span>'
             : '<span' + k + ' aria-hidden="true">' + esc(icon) + '</span>';
     };
-    const kennzahl = (wert, name, zusatz = '') => '<article class="lw-metrik"><strong>' + esc(wert) + '</strong><span>' + esc(name) + '</span>' +
+    /* Die Anatomie (Etikett oben, Zahl, Bedeutung am Boden) kommt aus der
+       Schale: .stat-karte in anatomie.css (E260). .lw-metrik behält nur die
+       Lernwelt-Abweichungen. */
+    const kennzahl = (wert, name, zusatz = '') => '<article class="stat-karte lw-metrik"><strong>' + esc(wert) + '</strong><span>' + esc(name) + '</span>' +
         (zusatz ? '<small>' + esc(zusatz) + '</small>' : '') + '</article>';
     const fortschritt = (wert, label) => '<div class="lw-progress"><div><span>' + esc(label) + '</span><strong>' + prozent(wert) +
         ' %</strong></div><progress max="100" value="' + prozent(wert) + '" aria-label="' +
         esc(label) + '">' + prozent(wert) + ' %</progress></div>';
-    const leer = (icon, titel, text, aktion = '', label = '') => '<div class="lw-leer">' + zeichenSpan(icon, 'lw-leer-icon') +
+    const leer = (icon, titel, text, aktion = '', label = '') => '<div class="lw-leer leer-zustand">' + zeichenSpan(icon, 'lw-leer-icon leer-zeichen') +
         '<h3>' + esc(titel) + '</h3><p>' + esc(text) + '</p>' +
         (aktion && label ? '<button type="button" data-lw-action="' + esc(aktion) + '">' + esc(label) + '</button>' : '') +
         '</div>';
@@ -101571,7 +101727,7 @@ const Lernwelt = (() => {
        eine Datei ist und auf einer Seite liegt (E205). */
     const weiterKarte = (item) => {
         const bild = miniatur(item.pageId || item.id);
-        return '<button type="button" class="lw-continue-card" data-lw-open="' + esc(item.id) + '">' +
+        return '<button type="button" class="lw-continue-card hebt" data-lw-open="' + esc(item.id) + '">' +
             '<span class="lw-mini mini-zeilen' + (bild ? '' : ' is-leer') + '">' +
             (bild || '<span>Diese Seite ist noch leer.</span>') + '</span>' +
             '<span class="lw-continue-foot">' + zeichenSpan(item.icon, 'lw-object-icon') +
@@ -102944,7 +103100,7 @@ const Lernwelt = (() => {
             return;
         root.className = 'produkt-welt lernwelt';
         root.dataset.lwView = zustand.ansicht;
-        root.innerHTML = kopf() + '<main class="lw-main" id="lernwelt-inhalt" tabindex="-1">' +
+        root.innerHTML = kopf() + '<main class="lw-main ansicht-herein" id="lernwelt-inhalt" tabindex="-1">' +
             ansichtsInhalt() + '</main>';
         /* Die Zeichen der Reiter füllen (E200). Ohne das bleiben die Stellen
            leer, und das sieht aus wie ein Ladefehler — die Namen stehen ja
@@ -110127,9 +110283,11 @@ const Menueband = (() => {
         reihe.className = 'mb-reihe';
         g.eintraege.forEach(e => reihe.appendChild(knopf(e)));
         /* Die Überschrift steht UNTER den Knöpfen, wie in Textprogrammen üblich.
-           Sie ist klein und leise: sie ordnet, sie ruft nicht. */
+           Sie ist klein und leise: sie ordnet, sie ruft nicht. Die Form kommt
+           aus dem Kicker-Baustein (anatomie.css, E260); .mb-gruppe-titel behält
+           nur die Band-Abweichungen. */
         const titel = document.createElement('div');
-        titel.className = 'mb-gruppe-titel';
+        titel.className = 'kicker mb-gruppe-titel';
         titel.textContent = g.gruppe;
         kasten.append(reihe, titel);
         return kasten;
@@ -110440,8 +110598,20 @@ const Menueband = (() => {
            braucht, soll sie erfragen können — deshalb steht sie hier als
            Zahl an `main`, gesetzt von dem, der sie kennt. */
         const heim = wurzel.parentElement;
-        if (heim)
-            heim.style.setProperty('--inhalt-oben', (wurzel.offsetTop + wurzel.offsetHeight) + 'px');
+        /* MIT der Kopfzeile, nicht nur mit der eigenen Unterkante (E257).
+           Seit E236 steht die Menüleiste ÜBER der Kopfzeile — wer hier nur
+           sich selbst misst, sagt der Randleiste (#rand-toc), der feste Kopf
+           ende bei 35 px. Bei einer Seite mit vielen Überschriften wuchs die
+           Leiste bis an diese Marke und lag über den Seitenknöpfen: zweimal
+           fing sie im vollen Lauf den Klick auf „Seitenoptionen" ab, je nach
+           dem, wie viele Überschriften beim Messen schon gezeichnet waren.
+           Mit der Kopfzeile in der Rechnung kann die Oberkante der Leiste
+           rechnerisch nie mehr über ihr liegen. */
+        if (heim) {
+            const kopf = document.getElementById('topbar');
+            const bis = Math.max(wurzel.offsetTop + wurzel.offsetHeight, kopf ? kopf.offsetTop + kopf.offsetHeight : 0);
+            heim.style.setProperty('--inhalt-oben', bis + 'px');
+        }
         /* Frisch gebaute Knöpfe kennen ihren Stand noch nicht. */
         glockeFrisch();
         wolkeFrisch();

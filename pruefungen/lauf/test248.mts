@@ -348,6 +348,18 @@ await seite.evaluate(() => {
   if (s) App.oeffne(s.id);
 });
 await seite.waitForTimeout(900);
+/* DIE RANDLEISTE DARF NICHT ÜBER DER KOPFZEILE LIEGEN (E257). Zweimal
+   fing sie im vollen Lauf genau diesen Klick ab: `--inhalt-oben` mass
+   nur die Menüleiste, und bei genug Überschriften wuchs das
+   Inhaltsverzeichnis bis über die Seitenknöpfe. Gemessen wird VOR dem
+   Klick — ein Klick, der zufällig durchgeht, ist kein Beweis. */
+const rand = await seite.evaluate(() => {
+  const r = document.getElementById('rand-toc')?.getBoundingClientRect();
+  const k = document.getElementById('topbar')?.getBoundingClientRect();
+  return { randOben: r ? Math.round(r.top) : null, kopfUnten: k ? Math.round(k.bottom) : 0 };
+});
+p('Die Randleiste beginnt unter der Kopfzeile',
+  rand.randOben === null || rand.randOben >= rand.kopfUnten, JSON.stringify(rand));
 await seite.click('#btn-page-menu');
 await seite.waitForTimeout(500);
 const imMenue: string = await seite.evaluate(() =>

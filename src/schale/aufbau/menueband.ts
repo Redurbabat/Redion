@@ -302,9 +302,11 @@ const Menueband = (() => {
     g.eintraege.forEach(e => reihe.appendChild(knopf(e)));
 
     /* Die Überschrift steht UNTER den Knöpfen, wie in Textprogrammen üblich.
-       Sie ist klein und leise: sie ordnet, sie ruft nicht. */
+       Sie ist klein und leise: sie ordnet, sie ruft nicht. Die Form kommt
+       aus dem Kicker-Baustein (anatomie.css, E260); .mb-gruppe-titel behält
+       nur die Band-Abweichungen. */
     const titel = document.createElement('div');
-    titel.className = 'mb-gruppe-titel';
+    titel.className = 'kicker mb-gruppe-titel';
     titel.textContent = g.gruppe;
 
     kasten.append(reihe, titel);
@@ -608,7 +610,21 @@ const Menueband = (() => {
        braucht, soll sie erfragen können — deshalb steht sie hier als
        Zahl an `main`, gesetzt von dem, der sie kennt. */
     const heim = wurzel.parentElement;
-    if (heim) heim.style.setProperty('--inhalt-oben', (wurzel.offsetTop + wurzel.offsetHeight) + 'px');
+    /* MIT der Kopfzeile, nicht nur mit der eigenen Unterkante (E257).
+       Seit E236 steht die Menüleiste ÜBER der Kopfzeile — wer hier nur
+       sich selbst misst, sagt der Randleiste (#rand-toc), der feste Kopf
+       ende bei 35 px. Bei einer Seite mit vielen Überschriften wuchs die
+       Leiste bis an diese Marke und lag über den Seitenknöpfen: zweimal
+       fing sie im vollen Lauf den Klick auf „Seitenoptionen" ab, je nach
+       dem, wie viele Überschriften beim Messen schon gezeichnet waren.
+       Mit der Kopfzeile in der Rechnung kann die Oberkante der Leiste
+       rechnerisch nie mehr über ihr liegen. */
+    if (heim) {
+      const kopf = document.getElementById('topbar');
+      const bis = Math.max(wurzel.offsetTop + wurzel.offsetHeight,
+        kopf ? kopf.offsetTop + kopf.offsetHeight : 0);
+      heim.style.setProperty('--inhalt-oben', bis + 'px');
+    }
 
     /* Frisch gebaute Knöpfe kennen ihren Stand noch nicht. */
     glockeFrisch();

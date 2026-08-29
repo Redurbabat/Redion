@@ -18670,3 +18670,173 @@ Elektrotechnik-Seite. Beim Bauen zweimal nachgesehen statt geraten
 stehen nur auf dem Dashboard — der erste Deutsch-Klick klickte ins
 Leere. test202 danach 84 ok (kinds um homework/goals erweitert),
 test215 50/50, test250 15/15.
+
+
+================================================================================
+E257 — Die Randleiste zählt die Kopfzeile mit
+================================================================================
+
+Zweimal fiel im vollen Lauf test248 an derselben Stelle: das
+Inhaltsverzeichnis am rechten Rand (#rand-toc) fing den Klick auf
+„Seitenoptionen" ab. Einzeln lief die Suite jedes Mal durch — je nach
+dem, wie viele Überschriften beim Messen schon gezeichnet waren, lag
+die Leiste über den Seitenknöpfen oder nicht. Ein Fehler, der nur
+unter Last kommt, ist trotzdem ein Fehler; er war nur schwer zu sehen.
+
+DIE WURZEL: `--inhalt-oben` sagt der Randleiste, wo der feste Kopf
+endet — gesetzt vom Menüband aus SEINER Unterkante. Seit E236 steht
+die Menüleiste ÜBER der Kopfzeile: die Rechnung endete bei 35 px, die
+Kopfzeile reicht bis 89. Bei genug Überschriften wuchs die Leiste bis
+an die falsche Marke (gemessen: Oberkante 47 bei 40 Überschriften,
+Knopf verdeckt).
+
+DIE ENTSCHEIDUNG: das Menüband misst jetzt `max(eigene Unterkante,
+Unterkante der Kopfzeile)` — damit kann die Leisten-Oberkante
+rechnerisch nie mehr über der Kopfzeile liegen, egal wie viele
+Überschriften eine Seite hat. Der CSS-Rückfall steigt von 54 auf
+90 px (Menüleiste + Kopfzeile), für den Wimpernschlag vor dem ersten
+Zeichnen.
+
+**Geprüft:** Messung mit 40 Überschriften — vorher Oberkante 47/
+Kopf 89/Knopf verdeckt, nachher 101/89/frei; der Gegenbeweis (alte
+Rechnung) zeigt exakt das Lauf-Rot. test248 trägt den Messpunkt jetzt
+als stehenden Wächter VOR dem Klick (45 Punkte) — ein Klick, der
+zufällig durchgeht, ist kein Beweis. test40 24/24, test245 53/53.
+
+E258 — Amdion ist die Vorlage, Redion bleibt das Haus
+================================================================================
+
+Redur: „schaue mal die amdion repo und ich genaue so haben kannst du
+alles im redion nehmen." Amdion (github.com/Redurbabat/Amdion, Zweig
+codex-premium-foundation) ist Redurs eigener Prototyp — reines
+TypeScript, kein Framework, local-first, und funktional eine
+TEILMENGE von Redion. „Alles nehmen" kann darum nicht heissen, Code
+oder Datenlayouts zu verpflanzen: Amdions Karteikarten kennen keine
+SM-2-Planung, seine Dateiablage keine Stücke, sein Export kein
+.redion. Jede dieser Übernahmen wäre ein Rückschritt oder eine
+Datenmigration nebenbei (§53.3).
+
+DIE ENTSCHEIDUNG: Übernommen wird die GESTALT — Designsprache,
+Shell-Anmutung und eine Handvoll additiver Funktionsideen — in
+Redions Architektur, phasenweise, jede Phase als eigener E-Eintrag
+mit Prüfläufen und Bildern. Der vollständige Plan mit acht Phasen,
+der Nicht-übernehmen-Liste und den Risiken steht in
+doku/AMDION-UEBERNAHME.md; er wurde aus fünf unabhängigen Lesungen
+beider Codebasen gebaut und ist das Regiebuch dieses Bogens.
+
+Ausdrücklich NICHT übernommen (die Doku nennt die Gründe je einzeln):
+Amdions Datenfelder (size/type/chunks gegen groesse/typ/teile),
+sein Karteikarten-Modell, sein Export-Format, sein ESM-Modulstart,
+innerHTML-Neuzeichnen, prompt()-Dialoge, die vierte App-Leiste, der
+Akzent #7c5cff (Redion behält den gemessenen #6d4aff aus E199) und
+Inter/14px. Ein Amdion-JSON-Import nach Redion bleibt verboten, bis
+ein dokumentierter Migrationspfad existiert.
+
+**Geprüft:** Amdion gebaut, gestartet, vier Ansichten fotografiert
+und an Redur geschickt; der Plan zitiert Datei und Zeile für jede
+Aussage über beide Codebasen. Code hat sich in diesem Eintrag nicht
+geändert — er ist die Eintrittskarte für E259 ff.
+
+E259 — Bewegung wohnt nur noch in grund.css (Amdion Phase 1, Vorarbeit)
+================================================================================
+
+Erster Schritt des E258-Bogens, und noch reine Hygiene: `--motion-fast/
+normal/slow` waren ZWEIMAL definiert — marken.css (E43: 120/220/320)
+und grund.css (E198: 140/200/320 plus instant). Gewonnen hat immer
+grund.css, nur durch die Ladereihenfolge; die Zahlen in marken.css
+waren seitdem tote Zeilen, die beim Lesen das Falsche behaupteten. Wer
+vor der Stilarbeit der Phase 1 an Dauern dreht, muss wissen, WO er
+dreht.
+
+DIE ENTSCHEIDUNG: alle Dauern und Kurven stehen in grund.css unter
+„Bewegung". Die gerichteten E43-Kurven `--ease-enter`/`--ease-exit`
+ziehen dorthin um (Tür auf, Tür zu — keine zweite Beschleunigung).
+`--ease-standard` wird zum Alias `var(--ease)`: bis jetzt liefen
+E43-Stellen eine MINIMAL andere Kurve (0.2,0.8,0.2,1) als E198-Stellen
+(.2,.8,.3,1) — genau das „zwei Programme nebeneinander", vor dem der
+grund-Kommentar warnt. Rund zwanzig Stellen behalten den alten Namen;
+wer neu schreibt, nimmt `--ease`. In marken.css bleiben nur die
+zeitlosen Marken (Einsinken, Telefonmasse), und der Kommentar dort
+sagt jetzt auch richtig, dass die Bewegungs-Abschaltung in grund.css
+steht (er behauptete bausteine.css).
+
+**Geprüft:** Gegenprobe — `--ease-standard` entfernt lässt test126
+„Es gibt drei Kurven" rot werden UND tötet real einen Übergang der
+unteren Leiste (var() ohne Rückfall macht die ganze transition-Zeile
+ungültig: dauer 0s). Wiederhergestellt: test126 22/22, test245 53/53,
+test40 24/24. Einzeldatei neu gebaut (+54 Bytes, die Kommentare).
+
+E260 — Papier-Token und die ersten geteilten Anatomien (Amdion Phase 1)
+================================================================================
+
+Zweiter Schritt des E258-Bogens, und der erste sichtbare. Zwei Dinge:
+
+PAPIER ALS TOKEN. `--paper` (dunkel #f8f8f5 warm gebrochen, hell
+reinweiss), `--grid` (Punktraster, thememitlaufend) und `--paper-ink`
+(modusfrei, darum in grund.css — test245 fing die erste Fassung mit
+dem doppelten Wert). Das A4-Blatt trägt jetzt `--paper` statt #fff,
+die Schaltplan-Bühne Amdions Punktraster; die Zeichenfläche ist
+durchsichtig, damit das Raster unter dem Plan weiterläuft.
+
+ANATOMIE.CSS, ein neues Stilblatt der Stufe 2 (test87 prüft Ort und
+Einbettung): die Formen, die Amdion überall gleich hat und Redion
+bisher je Bereich neu baute. Fünf Bausteine mit sofortigen Nutzern —
+`.stat-karte` (Etikett oben per order:-1, Zahl, Bedeutungszeile am
+Boden; die Lernwelt-Kennzahlen tragen sie, .lw-metrik behält nur
+Fläche und Radius), `.kicker` (10 px/800/±.09em in --text-dim statt
+Amdions 9 px/--muted, E230; die Menüband-Gruppentitel tragen ihn,
+ihre Abweichung wiegt zwei Klassen, weil aufbau.css früher lädt),
+`.leer-zustand`/`.leer-zeichen` (aus .lw-leer herausgelöst),
+`.hebt` (translateY(-1px) beim Überfahren, „Weiter wo du warst"),
+`.ansicht-herein` (Amdions viewIn auf dem Lernwelt-Hauptbereich).
+Segment-Schalter, Zähl-Pille, Listenzeile und Verlaufskarte kommen
+erst mit ihren Nutzern in Phase 2/3/7 — tote Stile wären §29-Ballast.
+
+**Geprüft:** test87 133/133 (ging beim Bau zweimal ehrlich rot:
+Einzeldatei ohne das neue Blatt, sw.js hatte es — der Dienstarbeiter
+wird aus src/dienst/sw.ts ERZEUGT, die Liste steht jetzt dort),
+test245 53/53 (nach der --paper-ink-Korrektur), test126 22/22,
+test127 22/22, test202 84/84, test207 37/37, test215 50/50,
+test247 102/102, test262 11/11, test40 24/24. Einzeldatei 7061→7068
+KB. Vier Bilder im Gespräch: Kennzahlen, Raster, warmes Papier,
+Menüband-Kicker.
+
+E261 — Der Klick auf die Schaltplan-Fläche landete am Block-Kasten
+================================================================================
+
+Redur, mit der Maus: Symbol gewählt, auf die Fläche geklickt — nichts.
+Der Editor hängt an JEDEN Block-Kasten `data-id = block.type`
+(editor.ts, render); die Teil-Suche `closest('[data-id]')` wanderte
+von der leeren Fläche am SVG vorbei bis zum Kasten und hielt jeden
+Klick für „Teil ‚schaltplan' angeklickt". Einfügen ging im
+Seiten-Editor darum ins Leere — VOM ERSTEN TAG AN, denn kein Prüflauf
+hat je echt geklickt: alle haben über Store gesät (§30-Lücke).
+
+ZWEI ENTSCHEIDUNGEN:
+
+1. Ein Teil ist ein `[data-id]` IM SVG — `teilAm()` sucht mit
+   `closest('svg [data-id]')`, an allen vier Stellen (einfügen,
+   radieren, schalten, Doppeltipp).
+
+2. Der Teil-Dialog kommt per EIGENER Doppeltipp-Erkennung im
+   pointerdown, nicht mehr per nativem dblclick. Das dblclick starb
+   hier zweimal: der erste Klick wählt aus und zeichnet die Fläche neu,
+   der zweite trifft einen NEUEN Knoten, und der Browser zählt Klicks
+   nur auf demselben weiter (gemessen: null dblclick-Ereignisse). Am
+   Telefon gibt es dblclick ohnehin nicht — jetzt geht Doppeltippen
+   auch dort.
+
+NEBENBEI ZURÜCKGENOMMEN: das CSS-Punktraster aus E260 auf der
+Schaltplan-Bühne. Der Plan zeichnet sein Raster selbst im SVG
+(sp-raster-Muster) — dort skaliert es mit dem Zoom; zwei Raster mit
+verschiedener Teilung sind Moiré, nicht Amdion. `--grid` bleibt als
+Token für Flächen ohne eigenes Raster. Die Lehre ist E21: der
+Übernahmeplan hatte Amdions Raster notiert, ohne nachzusehen, dass
+Redion längst eines hat.
+
+**Geprüft:** test263 NEU (10 Punkte — echte Klicks ohne force:
+einfügen, Doppeltipp-Dialog, Radiergummi trifft nur Teile, Simulation
+schaltet per Klick, kein Doppelraster). Drei Gegenproben einzeln rot:
+alte closest-Suche → Einfügen rot; CSS-Raster wieder rein → §4 rot;
+Doppeltipp-Fenster auf 0 → §2 rot. test238 77/77, test239 68/68,
+test240 100/100. Einzeldatei neu gebaut.
