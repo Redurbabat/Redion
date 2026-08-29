@@ -18130,3 +18130,41 @@ abfängt. Erst beide Wachen aus → „Unverlinkte Erwähnungen 2" mit dem
 Laborbericht doppelt, zwei Punkte rot. Der Prüfpunkt hält also das
 PAAR fest — fällt eine Wache, trägt die andere; fallen beide, wird er
 rot. Erste Gegenprobe (verweiseAuf leer) → drei Punkte rot.
+
+
+E247 — Der Diagramm-Block bekommt seinen Quellen-Wähler
+================================================================================
+
+Der Bild-Abgleich fand die halbe Sache: `chartDaten` konnte längst aus
+einer Datenbank gruppieren und summieren (`quelleDb`, `gruppeNach`,
+`messen`) — aber keine Oberfläche schrieb diese Felder. Der
+„✎ Daten"-Dialog bot nur Textzeilen an. Wer aus einer Datenbank charten
+wollte, musste die Daten abtippen.
+
+DIE ENTSCHEIDUNGEN
+
+  · **Die Quelle wohnt im bestehenden Dialog,** nicht in einem neuen.
+    Oben die Wahl (Handdaten oder eine Datenbank), darunter je nach Wahl
+    die Spalten-Selects ODER die Textzeilen — nie beides, das eine
+    Sichtbare ist das eine Wirksame.
+
+  · **„Zeilen zählen" ist die erste Mess-Option.** Ohne Messspalte zählt
+    jede Zeile eins — das ist der häufigste Fall (wie viele je Status?)
+    und deckt Datenbanken ohne Zahlenspalte ab. Messbar sind sonst nur
+    number- und formula-Spalten; eine Textspalte als Summe wäre eine
+    stille Null.
+
+  · **Zurück zu Handdaten heisst LOSLASSEN.** `chartDaten` fragt zuerst
+    die Datenbank; ein stehengebliebenes `quelleDb` würde die getippten
+    Zeilen still übertrumpfen. Der Wechsel leert deshalb Quelle,
+    Gruppierung und Messwert — die Gegenprobe zeigt das Gegenteil:
+    Legende „Elektrotechnik 2" statt „Montag 3".
+
+**Geprüft:** test254, 10 Punkte — Dialog bietet die Datenbank an,
+Spalten-Selects erscheinen und die Handzeilen verschwinden, der Block
+trägt die drei Felder, das Diagramm summiert je Fach (5.5+4.5 = 10),
+zählt ohne Messspalte, nimmt eine NEUE Datenbankzeile beim Neuzeichnen
+mit (eine Quelle, keine Kopie), und der Rückweg leert die Quelle. Zwei
+Gegenproben einzeln rot: Dialog schreibt ins falsche Feld → Block ohne
+Quelle, Legende leer; Loslassen unterlassen → die Datenbank übertrumpft
+die getippten Zeilen sichtbar.
