@@ -4358,7 +4358,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
    ab — gemessen, nicht vermutet: scrollWidth 40 gegen clientWidth 34. Das
    ist derselbe Fehler wie die abgeschnittene Zahl in CLAUDE.md §55.1, nur
    in Buchstaben. */
-.sp-start{width:auto !important; min-width:max-content; padding:0 11px; gap:5px;
+.sp-start, .sp-netz{width:auto !important; min-width:max-content; padding:0 11px; gap:5px;
   display:inline-flex; align-items:center; white-space:nowrap; flex:0 0 auto}
 .sp-start.an{background:var(--sp-strom); color:#231000; border-color:var(--sp-strom)}
 

@@ -650,10 +650,114 @@ const Schaltplan = (() => {
             mach(plan.hoehe - 40, 'PE');
         }
     };
+    /* --- Das Netz und die Beispielschaltungen (E262) --------------------------
+     * Redur: „füge dort alle Leitungen wie L1 und N ein, damit ich direkt
+     * testen kann — oder für eine Türklingel; es sollte direkt dort sein,
+     * also im Code."
+     *
+     * `schienenBauen` (oben) zeichnet nur Striche — zum ZEICHNEN. Hier
+     * entsteht das NETZ ZUM RECHNEN: dieselben Schienen, aber an eine echte
+     * Quelle gebunden, damit die Simulation sofort etwas zu rechnen hat.
+     * Ein Zweig, dessen Leitung auf einer Schiene ENDET, ist verbunden — die
+     * Simulation zapft Sammelschienen ausdrücklich an (simulation.ts,
+     * netzInfo). Und darauf bauen die Beispielschaltungen aus dem Lehrmittel:
+     * fertig verdrahtet, ein Klick, Strom drücken, schalten.
+     * ------------------------------------------------------------------------*/
+    /** L1 oben, N unten, links die Quelle dazwischen. Gibt die Geometrie
+     *  zurück, damit ein Beispiel seine Zweige daran hängen kann. */
+    const netzBauen = (plan, ebene = 'plan', volt) => {
+        const oben = rasten(40);
+        const unten = rasten(plan.hoehe - 40);
+        const gy = rasten((oben + unten) / 2 - 30);
+        const rechts = rasten(plan.breite - 20);
+        const quelle = {
+            id: uid(), zeichen: 'wechselspannung', x: 20, y: gy,
+            drehung: 0, gespiegelt: false,
+            bmk: naechstesBmk(plan, 'wechselspannung'),
+            nummern: {}, gruppe: '', ebene
+        };
+        if (typeof volt === 'number')
+            quelle.werte = { U: volt };
+        plan.teile.push(quelle);
+        const kx = quelle.x + 30;
+        plan.leitungen.push({ id: uid(), ebene, vonTeil: quelle.id, vonNr: 'L',
+            punkte: [{ x: kx, y: gy }, { x: kx, y: oben }, { x: rechts, y: oben }] }, { id: uid(), ebene, vonTeil: quelle.id, vonNr: 'N',
+            punkte: [{ x: kx, y: gy + 60 }, { x: kx, y: unten }, { x: rechts, y: unten }] });
+        plan.texte.push({ id: uid(), x: kx + 14, y: oben - 8, t: 'L1', ebene }, { id: uid(), x: kx + 14, y: unten - 8, t: 'N', ebene });
+        return { oben, unten, quelle };
+    };
+    /** Die eingebauten Beispiele. Namen erscheinen im Menü, der Hinweis im
+     *  Toast nach dem Einfügen — er sagt, WOMIT man jetzt spielen kann. */
+    const BEISPIELE = [
+        { id: 'ausschaltung', name: 'Ausschaltung — eine Lampe, ein Schalter',
+            hinweis: 'Strom drücken, dann auf S1 tippen: E1 leuchtet.' },
+        { id: 'wechselschaltung', name: 'Wechselschaltung — Treppenhaus',
+            hinweis: 'Strom drücken — JEDER der beiden Schalter schaltet die Lampe.' },
+        { id: 'tuerklingel', name: 'Türklingel — Taster und Klingel (12 V)',
+            hinweis: 'Strom drücken, S1 gedrückt halten: die Klingel bekommt 12 V.' }
+    ];
+    const beispielBauen = (plan, id, ebene = 'plan') => {
+        const teil = (zeichen, x, y, drehung = 0) => {
+            const t = { id: uid(), zeichen, x: rasten(x), y: rasten(y), drehung,
+                gespiegelt: false, bmk: naechstesBmk(plan, zeichen),
+                nummern: {}, gruppe: '', ebene };
+            plan.teile.push(t);
+            return t;
+        };
+        const draht = (punkte, von, vonNr, nach, nachNr) => {
+            const l = { id: uid(), ebene, punkte: punkte.map(p => ({ x: rasten(p.x), y: rasten(p.y) })) };
+            if (von) {
+                l.vonTeil = von.id;
+                l.vonNr = vonNr;
+            }
+            if (nach) {
+                l.nachTeil = nach.id;
+                l.nachNr = nachNr;
+            }
+            plan.leitungen.push(l);
+        };
+        if (id === 'ausschaltung') {
+            const n = netzBauen(plan, ebene);
+            const s = teil('ch-schema0', 380, 140); /* 3 oben (400,140), 4 unten (400,200) */
+            const h = teil('lampe', 370, 320); /* X1 (400,320), X2 (400,380) */
+            draht([{ x: 400, y: n.oben }, { x: 400, y: 140 }], undefined, undefined, s, '3');
+            draht([{ x: 400, y: 200 }, { x: 400, y: 320 }], s, '4', h, 'X1');
+            draht([{ x: 400, y: 380 }, { x: 400, y: n.unten }], h, 'X2');
+            return true;
+        }
+        if (id === 'wechselschaltung') {
+            const n = netzBauen(plan, ebene);
+            /* S1 steht auf dem Kopf (180°): sein 3 zeigt zur L1-Schiene, seine
+               korrespondierenden 1/2 nach unten zu S2. So laufen beide
+               Korrespondierenden als gerade Strecken — keine Leitung kreuzt
+               einen Anschluss (die test239-Lehre). */
+            const s1 = teil('ch-schema3', 350, 120, 180); /* 3 (380,120) · 1 (400,180) · 2 (360,180) */
+            const s2 = teil('ch-schema3', 350, 300); /* 1 (360,300) · 2 (400,300) · 3 (380,360) */
+            const h = teil('lampe', 350, 440); /* X1 (380,440), X2 (380,500) */
+            draht([{ x: 380, y: n.oben }, { x: 380, y: 120 }], undefined, undefined, s1, '3');
+            draht([{ x: 400, y: 180 }, { x: 400, y: 300 }], s1, '1', s2, '2');
+            draht([{ x: 360, y: 180 }, { x: 360, y: 300 }], s1, '2', s2, '1');
+            draht([{ x: 380, y: 360 }, { x: 380, y: 440 }], s2, '3', h, 'X1');
+            draht([{ x: 380, y: 500 }, { x: 380, y: n.unten }], h, 'X2');
+            return true;
+        }
+        if (id === 'tuerklingel') {
+            /* 12 V wie am Klingeltrafo — die Quelle trägt den Wert selbst. */
+            const n = netzBauen(plan, ebene, 12);
+            const s = teil('taster-schliesser', 380, 140); /* 3 (400,140), 4 (400,200) */
+            const p = teil('klingel', 370, 320); /* X1 (400,320), X2 (400,380) */
+            draht([{ x: 400, y: n.oben }, { x: 400, y: 140 }], undefined, undefined, s, '3');
+            draht([{ x: 400, y: 200 }, { x: 400, y: 320 }], s, '4', p, 'X1');
+            draht([{ x: 400, y: 380 }, { x: 400, y: n.unten }], p, 'X2');
+            return true;
+        }
+        return false;
+    };
     return {
         ARTEN, artVon, EBENEN_VORGABE, neuerPlan, lesen, alsSvg, rasten,
         naechstesBmk, anschlussOrt, anschluesseVon, fangeAnschluss, rechtwinklig,
-        verbindungspunkte, kreuzungen, leitungPfad, schienenBauen, uid, esc
+        verbindungspunkte, kreuzungen, leitungPfad, schienenBauen,
+        netzBauen, BEISPIELE, beispielBauen, uid, esc
     };
 })();
 window.Schaltplan = Schaltplan;

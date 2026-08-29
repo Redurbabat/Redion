@@ -18840,3 +18840,42 @@ schaltet per Klick, kein Doppelraster). Drei Gegenproben einzeln rot:
 alte closest-Suche → Einfügen rot; CSS-Raster wieder rein → §4 rot;
 Doppeltipp-Fenster auf 0 → §2 rot. test238 77/77, test239 68/68,
 test240 100/100. Einzeldatei neu gebaut.
+
+E262 — „⚡ Schaltung": Netz, Türklingel und Co. — bereit zum Simulieren
+================================================================================
+
+Redur, zweimal hintereinander: „füge dort alle Leitungen wie L1 und N
+ein, damit ich direkt testen kann" — und: „oder für eine Türklingel;
+es sollte direkt dort sein, also im Code." Bisher begann jeder
+Stromlaufplan leer, und die Simulation sagte zu Recht „keine
+Spannungsquelle". Es gab zwar „Stromschienen einzeichnen" (Striche
+ohne Quelle, im Mehr-Menü) und „Als Vorlage speichern" — aber die
+gespeicherten Vorlagen liessen sich NIRGENDS einsetzen. Ein Weg ins
+Leere (§47).
+
+DIE ENTSCHEIDUNG: im Stromlaufplan ein Knopf „⚡ Schaltung" mit einem
+Menü aus drei Schichten, alle über EINEN Einfügeweg:
+
+1. NETZ — L1 als Schiene oben, N unten, links eine
+   Wechselspannungsquelle daran. Ein Zweig, dessen Leitung auf einer
+   Schiene ENDET, ist verbunden; die Simulation zapft Sammelschienen
+   ausdrücklich an (simulation.ts, netzInfo).
+2. DREI BEISPIELE IM CODE (Schaltplan.BEISPIELE, Kern ohne DOM):
+   Ausschaltung (Schema 0), Wechselschaltung (zwei Schema-3-Schalter,
+   S1 um 180° gedreht, damit die Korrespondierenden gerade laufen und
+   keine Leitung einen Anschluss überbrückt — die test239-Lehre) und
+   die Türklingel: Taster plus Klingel an 12 V, denn die Quelle kann
+   ihren Wert selbst tragen (werte.U, wie am Klingeltrafo).
+3. DIE EIGENEN VORLAGEN, endlich einsetzbar — mit FRISCHEN Kennungen
+   und versetzt, damit zweimal Einsetzen keine Duplikate erzeugt.
+
+Der Wächter bleibt: steht schon ein Netz oder eine Quelle im Plan,
+kommt ein Toast statt eines zweiten Netzes.
+
+**Geprüft:** test263 §6/§7 — echte Klicks: Netz einfügen (Quelle,
+zwei Schienen, L1/N), zweiter Klick legt nichts doppelt, ein nur auf
+den Schienen ENDENDER Zweig führt Strom (Lampe leuchtet); Türklingel
+aus dem Menü: Taster schliesst, 12 mA an der Klingel (nicht 230 V!);
+Wechselschaltung: S1 ändert den Lampenzustand, S2 ändert ihn zurück.
+Zwei Gegenproben einzeln rot (Knopf tot → §6 rot; Türklingel aus der
+Liste → §7 rot). 17/17; Bilder im Gespräch.

@@ -171,6 +171,149 @@ p('Ein echter Klick auf den Schalter lässt den Strom fliessen',
   `${await seite.locator('.sp-fluss').count()} Leitungen, ` +
   `${await seite.locator('.sp-leuchtet').count()} leuchten`);
 
+console.log('\n6 · Der Netz-Knopf: L1 und N, bereit zum Simulieren (E262)');
+/* Redur: „füge dort alle Leitungen wie L1 und N ein, damit ich direkt
+   testen kann." Ein Klick, und der Plan hat die Schienen samt Quelle. */
+await seite.evaluate(() => {
+  const st = Store.addPage(null, { text: 'Netzprobe' });
+  Store.addBlock(st.id, 'schaltplan', { text: 'Plan' });
+  App.zeichneBaum(); App.oeffne(st.id);
+  (window as any).__netzSeite = st.id;
+});
+await seite.waitForTimeout(800);
+await seite.evaluate(() =>
+  document.querySelectorAll('#rg-willkommen, .overlay').forEach(x => x.remove()));
+/* Hinter dem Knopf steht seit dem Türklingel-Wunsch ein MENÜ. */
+await seite.locator('.sp-netz').click();
+await seite.waitForTimeout(300);
+await seite.locator('[data-s="netz"]').click();
+await seite.waitForTimeout(400);
+const netzBlock = (): Promise<any> => seite.evaluate(() => {
+  const s = Store.getBlock((window as any).__netzSeite);
+  const kid = (s.content || []).map((i: string) => Store.getBlock(i))
+    .find((x: any) => x && x.type === 'schaltplan');
+  return { id: kid.id, teile: kid.plan?.teile?.length ?? 0,
+           leitungen: kid.plan?.leitungen?.length ?? 0,
+           texte: (kid.plan?.texte || []).map((t: any) => t.t) };
+});
+const netz1 = await netzBlock();
+p('Ein Klick setzt Quelle, beide Schienen und die Namen L1 und N',
+  netz1.teile === 1 && netz1.leitungen === 2 &&
+  netz1.texte.includes('L1') && netz1.texte.includes('N'), JSON.stringify(netz1));
+await seite.locator('.sp-netz').click();
+await seite.waitForTimeout(300);
+await seite.locator('[data-s="netz"]').click();
+await seite.waitForTimeout(300);
+const netz2 = await netzBlock();
+p('Der zweite Klick legt nichts doppelt',
+  netz2.teile === 1 && netz2.leitungen === 2, JSON.stringify(netz2));
+
+/* Und jetzt „direkt testen": ein Zweig, dessen Leitungen nur auf den
+   Schienen ENDEN — kein vonTeil zur Quelle. Fliesst Strom, sind die
+   Schienen echte Sammelschienen und nicht bloss Striche. */
+await seite.evaluate((blockId: string) => {
+  const b = Store.getBlock(blockId);
+  const plan = b.plan;
+  const oben = 40, unten = plan.hoehe - 40;
+  plan.teile.push(
+    { id: 'zs', zeichen: 'ch-schema0', x: 380, y: 140, drehung: 0,
+      gespiegelt: false, bmk: 'S1', nummern: {}, gruppe: '', ebene: 'plan' },
+    { id: 'zh', zeichen: 'lampe', x: 370, y: 300, drehung: 0,
+      gespiegelt: false, bmk: 'E1', nummern: {}, gruppe: '', ebene: 'plan' });
+  plan.leitungen.push(
+    { id: 'zl1', ebene: 'plan', punkte: [{ x: 400, y: oben }, { x: 400, y: 140 }],
+      nachTeil: 'zs', nachNr: '3' },
+    { id: 'zl2', ebene: 'plan', punkte: [{ x: 400, y: 200 }, { x: 400, y: 300 }],
+      vonTeil: 'zs', vonNr: '4', nachTeil: 'zh', nachNr: 'X1' },
+    { id: 'zl3', ebene: 'plan', punkte: [{ x: 400, y: 360 }, { x: 400, y: unten }],
+      vonTeil: 'zh', vonNr: 'X2' });
+  Store.updateBlock(b.id, { plan });
+  App.zeichneBaum(); App.oeffne((window as any).__netzSeite);
+}, netz1.id);
+await seite.waitForTimeout(800);
+await seite.evaluate(() =>
+  document.querySelectorAll('#rg-willkommen, .overlay').forEach(x => x.remove()));
+await seite.locator('.sp-start').click();
+await seite.waitForTimeout(400);
+const netzSchalter = await seite.locator('.sp-schaltbar').first().boundingBox();
+if (netzSchalter) await seite.mouse.click(netzSchalter.x + netzSchalter.width / 2,
+                                          netzSchalter.y + netzSchalter.height / 2);
+await seite.waitForTimeout(400);
+p('Ein Zweig, der auf den Schienen endet, führt Strom — die Lampe leuchtet',
+  await seite.locator('.sp-fluss').count() >= 4 &&
+  await seite.locator('.sp-leuchtet').count() === 1,
+  `${await seite.locator('.sp-fluss').count()} fliessen, ` +
+  `${await seite.locator('.sp-leuchtet').count()} leuchten`);
+
+console.log('\n7 · Die Türklingel aus dem Menü klingelt (E262)');
+/* „… oder für eine Türklingel — es sollte direkt dort sein, also im
+   Code." Ein Menüpunkt, fertig verdrahtet, 12 V wie am Klingeltrafo. */
+await seite.evaluate(() => {
+  const st = Store.addPage(null, { text: 'Klingelprobe' });
+  Store.addBlock(st.id, 'schaltplan', { text: 'Plan' });
+  App.zeichneBaum(); App.oeffne(st.id);
+});
+await seite.waitForTimeout(800);
+await seite.evaluate(() =>
+  document.querySelectorAll('#rg-willkommen, .overlay').forEach(x => x.remove()));
+await seite.locator('.sp-netz').click();
+await seite.waitForTimeout(300);
+p('Das Menü nennt die Türklingel',
+  await seite.locator('[data-s="tuerklingel"]').count() === 1);
+await seite.locator('[data-s="tuerklingel"]').click();
+await seite.waitForTimeout(500);
+await seite.locator('.sp-start').click();
+await seite.waitForTimeout(400);
+const klingelSchalter = await seite.locator('.sp-schaltbar').first().boundingBox();
+if (klingelSchalter) await seite.mouse.click(
+  klingelSchalter.x + klingelSchalter.width / 2,
+  klingelSchalter.y + klingelSchalter.height / 2);
+await seite.waitForTimeout(400);
+const klingel = await seite.evaluate(() => ({
+  fliesst: document.querySelectorAll('.sp-fluss').length,
+  fuss: (document.querySelector('.sp-fuss') as HTMLElement | null)?.textContent || ''
+}));
+p('Der Taster schliesst, der Strom fliesst', klingel.fliesst >= 4,
+  klingel.fliesst + ' Leitungen');
+/* 12 V an 1000 Ω sind 12 mA — steht der Wert am Bauteil, rechnet die
+   Simulation wirklich mit dem Klingeltrafo und nicht mit 230 V. */
+p('… mit 12 V vom Klingeltrafo (12 mA an der Klingel)',
+  await seite.evaluate(() =>
+    [...document.querySelectorAll('.sp-messwert')].some(m => /12\s*mA/.test(m.textContent || ''))),
+  klingel.fuss.slice(0, 100));
+
+/* Und die Wechselschaltung — das Treppenhaus-Verhalten ist der Beweis,
+   dass die Korrespondierenden richtig verdrahtet sind: JEDER Schalter
+   ändert den Zustand der Lampe. */
+await seite.evaluate(() => {
+  const st = Store.addPage(null, { text: 'Treppenhaus' });
+  Store.addBlock(st.id, 'schaltplan', { text: 'Plan' });
+  App.zeichneBaum(); App.oeffne(st.id);
+});
+await seite.waitForTimeout(800);
+await seite.evaluate(() =>
+  document.querySelectorAll('#rg-willkommen, .overlay').forEach(x => x.remove()));
+await seite.locator('.sp-netz').click();
+await seite.waitForTimeout(300);
+await seite.locator('[data-s="wechselschaltung"]').click();
+await seite.waitForTimeout(500);
+await seite.locator('.sp-start').click();
+await seite.waitForTimeout(400);
+const leuchtet = (): Promise<number> =>
+  seite.evaluate(() => document.querySelectorAll('.sp-leuchtet').length);
+const vorher = await leuchtet();
+const s1Box = await seite.locator('.sp-schaltbar').nth(0).boundingBox();
+if (s1Box) await seite.mouse.click(s1Box.x + s1Box.width / 2, s1Box.y + s1Box.height / 2);
+await seite.waitForTimeout(400);
+const nachS1 = await leuchtet();
+const s2Box = await seite.locator('.sp-schaltbar').nth(1).boundingBox();
+if (s2Box) await seite.mouse.click(s2Box.x + s2Box.width / 2, s2Box.y + s2Box.height / 2);
+await seite.waitForTimeout(400);
+const nachS2 = await leuchtet();
+p('Wechselschaltung: S1 ändert den Lampenzustand, S2 ändert ihn zurück',
+  nachS1 !== vorher && nachS2 !== nachS1,
+  `vorher ${vorher}, nach S1 ${nachS1}, nach S2 ${nachS2}`);
+
 p('Keine Fehler auf der Seite', fehler.length === 0, fehler.join(' | '));
 await browser.close(); server.close();
 console.log(`\n${ok} bestanden, ${weg} durchgefallen`);
