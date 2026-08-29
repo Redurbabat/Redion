@@ -531,12 +531,16 @@
 
    Der Weg ist nicht `!important`, sondern dieselbe Spezifität: die
    Fussleiste steht jetzt in der Aufzählung mit drin. */
+/* Die Fläche ist die Marke `--haupt-flaeche` (grund.css, E263): EIN
+   Rezept für alle Hauptknöpfe. Sie muss hier stehen — diese Selektoren
+   wiegen mehr als die Grundregel, und ohne eigene Fläche käme aus den
+   Basisregeln wieder `--bg-side` durch (genau der Fall oben). */
 .lernwelt button.is-primary,
 .lernwelt .lw-actions button.is-primary,
 .lernwelt .lw-exam-list footer button.is-primary,
 .lernwelt .lw-rating button.is-primary{
-  border-color:var(--accent-text);background:var(--accent);color:var(--auf-accent);
-  box-shadow:var(--shadow-1)
+  border-color:var(--accent-text);background:var(--haupt-flaeche);
+  color:var(--auf-accent);box-shadow:var(--haupt-schein)
 }
 
 /* --- Dashboard-Sektionen und Objektlisten ------------------------------ */
@@ -653,7 +657,10 @@
   width:100%;min-height:var(--lw-touch);padding:8px 10px;border:1px solid var(--line);
   border-radius:var(--lw-radius-sm);background:var(--bg-side);font-size:11.5px;font-weight:680
 }
-.lernwelt .lw-study-actions button.is-primary{border-color:var(--accent-text);background:var(--accent);color:var(--auf-accent)}
+.lernwelt .lw-study-actions button.is-primary{
+  border-color:var(--accent-text);background:var(--haupt-flaeche);
+  color:var(--auf-accent);box-shadow:var(--haupt-schein)
+}
 .lernwelt .lw-explanation{display:grid;gap:5px;margin:0;padding:0;list-style:none;counter-reset:lw-plan}
 .lernwelt .lw-explanation li{
   position:relative;display:grid;gap:2px;min-height:52px;padding:8px 8px 8px 43px;
@@ -993,7 +1000,11 @@
   }
   .lernwelt :where(button.is-primary,.lw-actions button.is-primary,
     .lw-rating button.is-primary,.lw-study-actions button.is-primary):hover{
-    border-color:var(--accent-text);background:var(--accent);color:var(--auf-accent);filter:brightness(1.08)
+    /* Der Hover-Verlauf nimmt --accent-hover und ist damit je Modus
+       richtig herum (E199) — das alte brightness(1.08) war es im
+       Hellmodus nicht. */
+    border-color:var(--accent-text);background:var(--haupt-flaeche-hover);
+    color:var(--auf-accent)
   }
   .lernwelt :where(.lw-metrik,.lw-focus-card,.lw-exam-card,.lw-section,
     .lw-study-actions article,.lw-error-list>article,.lw-exam-list>article,

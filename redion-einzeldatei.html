@@ -494,6 +494,24 @@ html[data-theme="light"]{
   --glas-rand:    inset 0 0 0 1px rgba(255,255,255,.10);
   --glas-blur:    saturate(180%) blur(20px);
 
+  /* --- Die Hauptknopf-Fläche (E263, aus Amdion). -----------------------
+   * EIN Rezept für alle Hauptknöpfe, als Marke wie die Schattennamen
+   * (E204): wer es zweimal schriebe, pflegte es zweimal. Der Verlauf
+   * läuft nach UNTEN ins Dunkle — Amdion hellt nach oben auf, aber
+   * gemessen fällt dabei die weisse Schrift im Dunkelmodus auf 3,77
+   * (nötig 4,5). Abdunkeln gibt denselben Licht-über-Schatten-Eindruck,
+   * und jede Stelle liegt ÜBER dem gemessenen Wert des reinen Akzents:
+   * Fuss 90 % Akzent + 10 % Schwarz = Weiss darauf 6,09/7,37
+   * (dunkel/hell), Fläche gegen den Grund 3,03/6,68. Die Hover-Fassung
+   * nimmt --accent-hover und ist damit je Modus richtig herum (E199).
+   * ------------------------------------------------------------------- */
+  --haupt-flaeche: linear-gradient(180deg, var(--accent),
+                   color-mix(in srgb, var(--accent) 90%, black));
+  --haupt-flaeche-hover: linear-gradient(180deg, var(--accent-hover),
+                   color-mix(in srgb, var(--accent-hover) 90%, black));
+  --haupt-schein: inset 0 1px 0 rgba(255,255,255,.18),
+                  0 6px 16px color-mix(in srgb, var(--accent) 24%, transparent);
+
   /* --- Die Tinte auf Papier (E260). ------------------------------------
    * `--paper` und `--grid` wechseln mit dem Thema und stehen in
    * dunkel.css/hell.css. Die Tinte nicht: Papier ist in beiden Modi
@@ -676,24 +694,17 @@ input,textarea,select{font:inherit; color:inherit}
    Die Schriftfarbe kommt aus `--auf-accent`, nicht aus Weiss: welche Farbe
    auf dem Akzent lesbar ist, wird je Modus gemessen (E142, E199).
 
-   DER VERLAUF LÄUFT NACH UNTEN INS DUNKLE (E262, aus Amdion). Amdion hellt
-   nach OBEN auf — gemessen fällt dabei die weisse Schrift im Dunkelmodus
-   auf 3,77 (nötig 4,5). Abdunkeln nach unten gibt denselben
-   Licht-über-Schatten-Eindruck, und jede Stelle der Fläche liegt ÜBER dem
-   gemessenen Wert des reinen Akzents: Fuss 90 % Akzent + 10 % Schwarz =
-   Weiss darauf 6,09/7,37 (dunkel/hell), Fläche gegen den Grund 3,03/6,68.
-   Die Volltonzeile davor bleibt als Rückfall für Browser ohne color-mix. */
-.rb.haupt{
-  background:var(--accent); color:var(--auf-accent); border-color:transparent;
-  background:linear-gradient(180deg, var(--accent),
-             color-mix(in srgb, var(--accent) 90%, black));
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.18),
-             0 6px 16px color-mix(in srgb, var(--accent) 24%, transparent);
+   Die Fläche kommt aus den Marken `--haupt-flaeche`/`--haupt-schein`
+   (oben bei den Werten, mit der Messung) — `button.is-primary` steht mit
+   im Selektor, weil DAS die Hauptknöpfe sind, die es heute wirklich gibt
+   (Lernwelt, Elektro-Rechner); `.rb.haupt` war definiert und nirgends im
+   Markup. Bereichsregeln mit mehr Gewicht zeigen auf DIESELBEN Marken. */
+.rb.haupt, button.is-primary{
+  background:var(--haupt-flaeche); color:var(--auf-accent); border-color:transparent;
+  box-shadow:var(--haupt-schein);
 }
-.rb.haupt:hover{
-  background:var(--accent-hover); border-color:transparent;
-  background:linear-gradient(180deg, var(--accent-hover),
-             color-mix(in srgb, var(--accent-hover) 90%, black));
+.rb.haupt:hover, button.is-primary:hover{
+  background:var(--haupt-flaeche-hover); border-color:transparent;
 }
 
 /* LEISE. Kein Rand, keine Fläche — bis man hinfasst. Für Handlungen, die
@@ -5702,12 +5713,16 @@ body[data-ruhig="an"] .arbeitswelt .aw-kopf::after{ display:none }
 
    Der Weg ist nicht `!important`, sondern dieselbe Spezifität: die
    Fussleiste steht jetzt in der Aufzählung mit drin. */
+/* Die Fläche ist die Marke `--haupt-flaeche` (grund.css, E263): EIN
+   Rezept für alle Hauptknöpfe. Sie muss hier stehen — diese Selektoren
+   wiegen mehr als die Grundregel, und ohne eigene Fläche käme aus den
+   Basisregeln wieder `--bg-side` durch (genau der Fall oben). */
 .lernwelt button.is-primary,
 .lernwelt .lw-actions button.is-primary,
 .lernwelt .lw-exam-list footer button.is-primary,
 .lernwelt .lw-rating button.is-primary{
-  border-color:var(--accent-text);background:var(--accent);color:var(--auf-accent);
-  box-shadow:var(--shadow-1)
+  border-color:var(--accent-text);background:var(--haupt-flaeche);
+  color:var(--auf-accent);box-shadow:var(--haupt-schein)
 }
 
 /* --- Dashboard-Sektionen und Objektlisten ------------------------------ */
@@ -5824,7 +5839,10 @@ body[data-ruhig="an"] .arbeitswelt .aw-kopf::after{ display:none }
   width:100%;min-height:var(--lw-touch);padding:8px 10px;border:1px solid var(--line);
   border-radius:var(--lw-radius-sm);background:var(--bg-side);font-size:11.5px;font-weight:680
 }
-.lernwelt .lw-study-actions button.is-primary{border-color:var(--accent-text);background:var(--accent);color:var(--auf-accent)}
+.lernwelt .lw-study-actions button.is-primary{
+  border-color:var(--accent-text);background:var(--haupt-flaeche);
+  color:var(--auf-accent);box-shadow:var(--haupt-schein)
+}
 .lernwelt .lw-explanation{display:grid;gap:5px;margin:0;padding:0;list-style:none;counter-reset:lw-plan}
 .lernwelt .lw-explanation li{
   position:relative;display:grid;gap:2px;min-height:52px;padding:8px 8px 8px 43px;
@@ -6164,7 +6182,11 @@ body[data-ruhig="an"] .arbeitswelt .aw-kopf::after{ display:none }
   }
   .lernwelt :where(button.is-primary,.lw-actions button.is-primary,
     .lw-rating button.is-primary,.lw-study-actions button.is-primary):hover{
-    border-color:var(--accent-text);background:var(--accent);color:var(--auf-accent);filter:brightness(1.08)
+    /* Der Hover-Verlauf nimmt --accent-hover und ist damit je Modus
+       richtig herum (E199) — das alte brightness(1.08) war es im
+       Hellmodus nicht. */
+    border-color:var(--accent-text);background:var(--haupt-flaeche-hover);
+    color:var(--auf-accent)
   }
   .lernwelt :where(.lw-metrik,.lw-focus-card,.lw-exam-card,.lw-section,
     .lw-study-actions article,.lw-error-list>article,.lw-exam-list>article,
@@ -9352,12 +9374,20 @@ button[disabled]{opacity:.4; cursor:not-allowed}
 #reiterleiste{display:flex; align-items:stretch; gap:2px; padding:4px 6px 0;
               background:var(--bg-side); border-bottom:1px solid var(--line);
               overflow-x:auto; flex:0 0 auto}
+/* DER AKTIVE REITER KLINKT IN DIE FLÄCHE EIN (E263, aus Amdion): drei
+   Ränder oben und an den Seiten, unten offen, und einen Punkt tiefer
+   gerückt, damit seine Fläche die Unterlinie der Leiste ÜBERDECKT. Vorher
+   zog eine eingelegte Linie unter dem aktiven Reiter durch — er sass auf
+   der Fläche statt in ihr. Der Radius steigt von 7 auf die Leiter (E198). */
 .rt-tab{display:flex; align-items:center; gap:6px; padding:5px 8px 5px 11px;
-        border-radius:7px 7px 0 0; font-size:12.5px; color:var(--text-dim);
+        border:1px solid transparent; border-bottom:0;
+        border-radius:var(--radius-md) var(--radius-md) 0 0; font-size:12.5px;
+        color:var(--text-dim);
         cursor:pointer; max-width:210px; white-space:nowrap; user-select:none}
 .rt-tab span{overflow:hidden; text-overflow:ellipsis}
 .rt-tab:hover{background:var(--bg-hover)}
-.rt-tab.an{background:var(--bg); color:var(--text); box-shadow:0 -1px 0 var(--line) inset}
+.rt-tab.an{background:var(--bg); color:var(--text); border-color:var(--line);
+           margin-bottom:-1px; padding-bottom:6px}
 .rt-tab button{border:0; background:transparent; color:var(--text-faint); cursor:pointer;
                font-size:11px; padding:0 3px; border-radius:3px; opacity:0}
 .rt-tab:hover button, .rt-tab.an button{opacity:1}
@@ -10575,9 +10605,11 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   border-radius:var(--radius-md); background:var(--b-yellow,var(--bg-hover));
   color:var(--warnung); font-size:12.5px; font-weight:680
 }
-/* Der Hauptknopf war einer von sieben gleich aussehenden. */
+/* Der Hauptknopf war einer von sieben gleich aussehenden. Seine Fläche
+   ist die Marke `--haupt-flaeche` (grund.css, E263). */
 .electrical-actions button.is-primary{
-  border-color:var(--accent-text); background:var(--accent); color:var(--auf-accent);
+  border-color:var(--accent-text); background:var(--haupt-flaeche);
+  color:var(--auf-accent); box-shadow:var(--haupt-schein);
   font-weight:680
 }
 .electrical-output strong{font-size:21px}.electrical-output span,.electrical-output small{color:var(--text-dim)}

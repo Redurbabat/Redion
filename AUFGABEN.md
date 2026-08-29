@@ -35,6 +35,15 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
+**29. August 2026 · Hauptknopf-Verlauf und einklinkende Reiter (E263)**
+
+> Amdion Phase 1, weiter: die Hauptknopf-Fläche als EINE Marke
+> (--haupt-flaeche, Verlauf nach unten ins Dunkle — Amdions Aufhellung
+> fiel bei der Messung auf 3,77 durch), getragen von .rb.haupt UND den
+> echten is-primary-Knöpfen; der Lernwelt-Hover ist jetzt je Modus
+> richtig herum. Der aktive Reiter klinkt mit drei Rändern in die
+> Fläche ein statt auf einer Linie zu sitzen. Sechs Suiten grün.
+
 **29. August 2026 · „⚡ Schaltung": Netz, Türklingel und Co. (E262)**
 
 > Redurs Wunsch, zweistufig: erst L1 und N mit Quelle auf einen Klick,

@@ -18879,3 +18879,37 @@ aus dem Menü: Taster schliesst, 12 mA an der Klingel (nicht 230 V!);
 Wechselschaltung: S1 ändert den Lampenzustand, S2 ändert ihn zurück.
 Zwei Gegenproben einzeln rot (Knopf tot → §6 rot; Türklingel aus der
 Liste → §7 rot). 17/17; Bilder im Gespräch.
+
+E263 — Der Hauptknopf-Verlauf und der Reiter, der einklinkt (Amdion Phase 1)
+================================================================================
+
+Zwei sichtbare Stücke aus Amdions Formsprache, beide auf Redions
+gemessenen Werten:
+
+DIE HAUPTKNOPF-FLÄCHE ALS MARKE. Amdions Primärknopf hellt nach OBEN
+auf — gemessen fällt dabei die weisse Schrift im Dunkelmodus auf 3,77
+(nötig 4,5). Redions Fassung läuft nach UNTEN ins Dunkle: derselbe
+Licht-über-Schatten-Eindruck, und jede Stelle liegt ÜBER dem Wert des
+reinen Akzents (Fuss 90 % Akzent + 10 % Schwarz: Weiss 6,09/7,37,
+Fläche 3,03/6,68). Das Rezept steht EINMAL, als Marken
+`--haupt-flaeche`/`--haupt-flaeche-hover`/`--haupt-schein` in
+grund.css (E204-Muster) — die Bereichsregeln in lernwelt.css und
+bausteine.css zeigen darauf, denn sie wiegen mehr und müssen die
+Fläche selbst tragen (sonst käme aus den Basisregeln wieder --bg-side
+durch: die E142-Falle, die im Kommentar dort schon einmal erzählt
+wird). Der Selektor umfasst `.rb.haupt` UND `button.is-primary`, denn
+DAS sind die Hauptknöpfe, die es im Markup wirklich gibt; .rb.haupt
+war definiert und nirgends benutzt. Der Hover nimmt --accent-hover
+und ist damit je Modus richtig herum — das alte brightness(1.08) der
+Lernwelt war es im Hellmodus nicht (E199).
+
+DER AKTIVE REITER KLINKT EIN. Bisher zog eine eingelegte Linie UNTER
+dem aktiven Reiter durch — er sass auf der Fläche statt in ihr.
+Jetzt: drei Ränder (oben, seitlich), unten offen, einen Punkt tiefer
+gerückt, damit seine Fläche die Unterlinie der Leiste überdeckt
+(Amdions Tab-Anatomie). Radius von 7 auf die Leiter (--radius-md,
+E198). Kein Verhalten geändert.
+
+**Geprüft:** test127 22/22 (Kontrast), test126 22/22, test245 53/53,
+test202 84/84, test206 66/66 (Reiter), test40 24/24. Einzeldatei
+7081→7083 KB. Bild im Gespräch („Tagesrunde starten" mit Verlauf).
