@@ -1,19 +1,23 @@
-/* Suite 258 — Glocke und Konto-Knopf in der Kopfzeile (E251)
+/* Suite 258 — Glocke und Statuspunkt in der Menüleiste (E251, zweiter Anlauf)
  * ============================================================================
- * Der Bild-Abgleich fand drei Fertigteile, die versteckt lagen: der
- * Posteingang zählte seine Ungelesenen (der Punkt am Telefon zeigt sie),
- * der Wolke-Dialog kannte Konto und Abgleichzustand — erreichbar nur über
- * die Befehlspalette. Jetzt hängen Glocke (mit Zähler) und Konto-Knopf
- * (mit Statuspunkt) an der Kopfzeile.
+ * Der erste Anlauf hängte Glocke und Konto-Knopf an die KOPFZEILE — und
+ * drei Wächter wurden rot: test40 führt die sechs Seitenknöpfe namentlich,
+ * test248 zählt das Budget, test245 mass die Suche aus der Mitte gerückt.
+ * Die Wächter hatten recht: die Kopfzeile gehört der SEITE, Ungelesenes
+ * und Kontostand gehören der APP — also in die Menüleiste, wo rechts schon
+ * Suche, KI und Arbeitsbereich stehen.
  *
- * §1 DIE GLOCKE steht da — ohne Ungelesenes ohne Zahl.
+ * §1 DIE KOPFZEILE IST SAUBER: btn-glocke/btn-konto gibt es nicht mehr;
+ *    die Glocke wartet versteckt in der Menüleiste.
  * §2 DER ZÄHLER LEBT: jede Meldung hebt ihn, das Wort steht im aria-label.
- * §3 GELESEN SENKT, LEEREN VERSTECKT.
- * §4 EIN KLICK öffnet den Posteingang.
- * §5 DER KONTO-KNOPF: abgemeldet ohne Punkt, ehrlich beschriftet; ein
- *    Klick öffnet den Wolke-Dialog.
- * §6 AM TELEFON bleiben beide weg — die Kopfzeile ist dort voll, den
- *    Ungelesen-Punkt trägt die Seitenleiste.
+ * §3 EIN NEUBAU DER LEISTE (Reiterwechsel) verliert den Stand nicht.
+ * §4 GELESEN SENKT, LEEREN VERSTECKT.
+ * §5 EIN KLICK öffnet den Posteingang.
+ * §6 DER STATUSPUNKT hängt am Arbeitsbereichs-Knopf — abgemeldet ist er
+ *    weg, und das aria-label verspricht nur, was der Klick tut.
+ * §7 DER WEG ZUR WOLKE steht unter „Mehr" — nicht mehr nur in der Palette.
+ * §8 AM TELEFON ist die Glocke da und fingertauglich (§37) — die
+ *    Menüleiste ist die App-Zeile, und die gibt es dort auch.
  * ==========================================================================*/
 import _pfad from 'node:path';
 const WURZEL = _pfad.resolve(import.meta.dirname, '../..');
@@ -53,82 +57,127 @@ await p.waitForFunction(() => typeof App !== 'undefined' && typeof Store !== 'un
   (document.getElementById('tree')?.children.length || 0) > 0, null, { timeout: 30000 });
 await p.evaluate(() => { Store.setMeta('rundgangGesehen', true); });
 
-console.log('\n1 · Die Glocke steht da — ohne Ungelesenes ohne Zahl');
+console.log('\n1 · Die Kopfzeile ist sauber, die Glocke wartet in der Menüleiste');
 const start = await p.evaluate(() => ({
-  glocke: !!document.getElementById('btn-glocke'),
-  symbol: !!document.querySelector('#btn-glocke svg, #btn-glocke [data-sym] *'),
-  zahlWeg: (document.querySelector('#btn-glocke .glocke-zahl') as HTMLElement)?.hidden === true,
-  beschriftung: document.getElementById('btn-glocke')?.getAttribute('aria-label') || ''
+  kopfGlocke: !!document.getElementById('btn-glocke'),
+  kopfKonto: !!document.getElementById('btn-konto'),
+  glocke: !!document.querySelector('#menueband #mb-glocke'),
+  inRechts: !!document.querySelector('.mb-rechts #mb-glocke'),
+  versteckt: (document.getElementById('mb-glocke') as HTMLElement)?.hidden === true,
+  /* GERECHNETER STIL, NICHT NUR DAS ATTRIBUT. `display:grid` an
+     .mb-rechts-knopf schlägt die [hidden]-Regel des Browsers; genau so
+     stand im ersten Anlauf eine „versteckte" Glocke sichtbar in der
+     Kopfzeile, und die Prüfung, die nur das Attribut las, blieb grün. */
+  wirklichWeg: getComputedStyle(document.getElementById('mb-glocke')!).display === 'none',
+  symbol: !!document.querySelector('#mb-glocke svg, #mb-glocke [data-sym] *')
 }));
-pr('Glocke mit gezeichnetem Symbol', start.glocke && start.symbol);
-pr('Ohne Ungelesenes keine Zahl, schlichtes aria-label',
-  start.zahlWeg && start.beschriftung === 'Posteingang', JSON.stringify(start));
+pr('btn-glocke und btn-konto stehen NICHT mehr in der Kopfzeile',
+  !start.kopfGlocke && !start.kopfKonto, JSON.stringify(start));
+pr('Die Glocke wartet versteckt rechts in der Menüleiste — mit gezeichnetem Symbol',
+  start.glocke && start.inRechts && start.versteckt && start.symbol, JSON.stringify(start));
+pr('Und versteckt heisst auch GEZEICHNET weg (display:none, nicht nur das Attribut)',
+  start.wirklichWeg, JSON.stringify(start));
 
 console.log('\n2 · Der Zähler lebt');
 const einz = await p.evaluate(() => {
   Werkzeuge.posteingangMelden({ text: 'Erste Probe', quelle: 'test258' });
-  const zahl = document.querySelector('#btn-glocke .glocke-zahl') as HTMLElement;
+  const zahl = document.querySelector('#mb-glocke .glocke-zahl') as HTMLElement;
   return { text: zahl?.textContent, sichtbar: zahl?.hidden === false,
-           beschriftung: document.getElementById('btn-glocke')?.getAttribute('aria-label') || '' };
+           knopfDa: (document.getElementById('mb-glocke') as HTMLElement)?.hidden === false,
+           beschriftung: document.getElementById('mb-glocke')?.getAttribute('aria-label') || '' };
 });
-pr('Eine Meldung: der Zähler zeigt 1 und das aria-label sagt es in Worten',
-  einz.text === '1' && einz.sichtbar && /Posteingang, 1 ungelesen/.test(einz.beschriftung),
+pr('Eine Meldung: die Glocke ERSCHEINT mit Zähler 1, das aria-label sagt es in Worten',
+  einz.knopfDa && einz.text === '1' && einz.sichtbar &&
+  /Posteingang, 1 ungelesen/.test(einz.beschriftung),
   JSON.stringify(einz));
 const zwei = await p.evaluate(() => {
   Werkzeuge.posteingangMelden({ text: 'Zweite Probe', quelle: 'test258' });
-  return (document.querySelector('#btn-glocke .glocke-zahl') as HTMLElement)?.textContent;
+  return (document.querySelector('#mb-glocke .glocke-zahl') as HTMLElement)?.textContent;
 });
 pr('Die zweite Meldung hebt auf 2', zwei === '2', String(zwei));
 
-console.log('\n3 · Gelesen senkt, Leeren versteckt');
+console.log('\n3 · Ein Neubau der Leiste verliert den Stand nicht');
+/* Die Leiste wird bei jedem Reiterwechsel komplett neu gebaut. Eine
+   Glocke, die nur auf Ereignisse hört, wäre nach dem Neubau leer —
+   deshalb ruft zeichne() selbst auf. Hier wird genau das geprüft. */
+const neubau = await p.evaluate(() => {
+  Menueband.zeichne();
+  const g = document.getElementById('mb-glocke') as HTMLElement;
+  return { da: g?.hidden === false,
+           zahl: (g?.querySelector('.glocke-zahl') as HTMLElement)?.textContent };
+});
+pr('Nach Menueband.zeichne() zeigt die frische Glocke weiterhin 2',
+  neubau.da && neubau.zahl === '2', JSON.stringify(neubau));
+
+console.log('\n4 · Gelesen senkt, Leeren versteckt');
 const gelesen = await p.evaluate(() => {
   const erste = Werkzeuge.meldungen()[0];
   Werkzeuge.meldungGelesen(erste.id);
-  return (document.querySelector('#btn-glocke .glocke-zahl') as HTMLElement)?.textContent;
+  return (document.querySelector('#mb-glocke .glocke-zahl') as HTMLElement)?.textContent;
 });
 pr('Eine gelesene Meldung senkt auf 1', gelesen === '1', String(gelesen));
 const leer = await p.evaluate(() => {
   Werkzeuge.meldungenLeeren();
-  const zahl = document.querySelector('#btn-glocke .glocke-zahl') as HTMLElement;
-  return { versteckt: zahl?.hidden === true,
-           beschriftung: document.getElementById('btn-glocke')?.getAttribute('aria-label') || '' };
+  return { knopfWeg: (document.getElementById('mb-glocke') as HTMLElement)?.hidden === true,
+           beschriftung: document.getElementById('mb-glocke')?.getAttribute('aria-label') || '' };
 });
-pr('Leeren versteckt die Zahl wieder', leer.versteckt && leer.beschriftung === 'Posteingang',
-  JSON.stringify(leer));
+pr('Leeren lässt die ganze Glocke wieder verschwinden',
+  leer.knopfWeg && leer.beschriftung === 'Posteingang', JSON.stringify(leer));
 
-console.log('\n4 · Ein Klick öffnet den Posteingang');
-await p.click('#btn-glocke');
+console.log('\n5 · Ein Klick öffnet den Posteingang');
+await p.evaluate(() => { Werkzeuge.posteingangMelden({ text: 'Klickprobe', quelle: 'test258' }); });
+await p.click('#mb-glocke');
 await p.waitForTimeout(600);
 pr('Die Krume zeigt den Posteingang',
   await p.evaluate(() => /Posteingang/.test(document.getElementById('crumb')?.textContent || '')),
   await p.evaluate(() => (document.getElementById('crumb')?.textContent || '').trim()));
+await p.evaluate(() => { Werkzeuge.meldungenLeeren(); });
 
-console.log('\n5 · Der Konto-Knopf');
+console.log('\n6 · Der Statuspunkt am Arbeitsbereichs-Knopf');
 const konto = await p.evaluate(() => ({
-  da: !!document.getElementById('btn-konto'),
-  punktWeg: (document.querySelector('#btn-konto .wolke-punkt') as HTMLElement)?.hidden === true,
-  beschriftung: document.getElementById('btn-konto')?.getAttribute('aria-label') || ''
+  da: !!document.getElementById('mb-konto'),
+  punktDa: !!document.querySelector('#mb-konto .wolke-punkt'),
+  punktWeg: (document.querySelector('#mb-konto .wolke-punkt') as HTMLElement)?.hidden === true,
+  beschriftung: document.getElementById('mb-konto')?.getAttribute('aria-label') || ''
 }));
-pr('Abgemeldet: kein Punkt, und das aria-label sagt es',
-  konto.da && konto.punktWeg && /nicht angemeldet/.test(konto.beschriftung),
+pr('Abgemeldet ist der Punkt versteckt; das aria-label verspricht den Arbeitsbereich',
+  konto.da && konto.punktDa && konto.punktWeg && /Arbeitsbereich/.test(konto.beschriftung),
   JSON.stringify(konto));
-await p.click('#btn-konto');
+
+console.log('\n7 · Der Weg zur Wolke steht unter „Mehr"');
+await p.evaluate(() => { Ansichten.mehr(); });
+await p.waitForTimeout(400);
+const wolkeZeile = await p.evaluate(() => {
+  const knopf = document.querySelector<HTMLElement>('#page [data-a="wolke"]');
+  return { da: !!knopf, wort: (knopf?.textContent || '').includes('Wolke') };
+});
+pr('„Mehr" führt eine Wolke-Zeile bei Daten und Sicherheit',
+  wolkeZeile.da && wolkeZeile.wort, JSON.stringify(wolkeZeile));
+await p.click('#page [data-a="wolke"]');
 await p.waitForTimeout(600);
-pr('Ein Klick öffnet den Wolke-Dialog',
+pr('Ein Klick darauf öffnet den Wolke-Dialog',
   await p.evaluate(() => !!document.querySelector('.overlay') &&
     /Wolke|Konto|Anmelden/i.test(document.querySelector('.overlay')?.textContent || '')),
   await p.evaluate(() => (document.querySelector('.overlay')?.textContent || '').slice(0, 80)));
 await p.keyboard.press('Escape');
+await p.waitForTimeout(300);
 
-console.log('\n6 · Am Telefon bleiben beide weg');
+console.log('\n8 · Am Telefon ist die Glocke da und fingertauglich');
 await p.setViewportSize({ width: 390, height: 844 });
 await p.waitForTimeout(400);
-const handy = await p.evaluate(() => ({
-  glocke: getComputedStyle(document.getElementById('btn-glocke')!).display,
-  konto: getComputedStyle(document.getElementById('btn-konto')!).display
-}));
-pr('Glocke und Konto sind am Telefon ausgeblendet',
-  handy.glocke === 'none' && handy.konto === 'none', JSON.stringify(handy));
+const handy = await p.evaluate(() => {
+  Werkzeuge.posteingangMelden({ text: 'Handyprobe', quelle: 'test258' });
+  const g = document.getElementById('mb-glocke') as HTMLElement;
+  const r = g?.getBoundingClientRect();
+  return { da: g?.hidden === false,
+           sichtbar: !!r && r.width > 0 && r.height > 0,
+           hoehe: r ? Math.round(r.height) : 0,
+           breite: r ? Math.round(r.width) : 0 };
+});
+pr('Mit Ungelesenem erscheint die Glocke auch am Telefon',
+  handy.da && handy.sichtbar, JSON.stringify(handy));
+pr('Und sie ist mindestens 44 px gross (§37)',
+  handy.hoehe >= 44 && handy.breite >= 44, JSON.stringify(handy));
 
 pr('Keine Fehler auf der Seite', fehler.length === 0, fehler.join(' | '));
 await b.close(); server.close();

@@ -3481,64 +3481,10 @@ const App = (() => {
             zeichneBaum();
             zeichneCrumbs();
         });
-        /* GLOCKE UND KONTO (E251). Beide Fertigteile lagen versteckt: der
-           Posteingang zählte seine Ungelesenen längst (die Seitenleiste am
-           Telefon zeigt den Punkt), und der Wolke-Dialog kannte Konto und
-           Abgleichzustand — erreichbar war er nur über die Befehlspalette.
-           Hier hängen sie an der Kopfzeile; die Wörter stehen im aria-label,
-           Zahl und Punkt sind nur Bild (§38). */
-        const glocke = document.getElementById('btn-glocke');
-        const glockeFrisch = () => {
-            if (!glocke)
-                return;
-            const zahl = glocke.querySelector('.glocke-zahl');
-            let offen = 0;
-            try {
-                offen = (Werkzeuge.meldungen ? Werkzeuge.meldungen() : [])
-                    .filter((m) => !m.gelesen).length;
-            }
-            catch { }
-            if (zahl) {
-                zahl.textContent = offen > 99 ? '99+' : String(offen);
-                zahl.hidden = !offen;
-                zahl.setAttribute('aria-hidden', 'true');
-            }
-            glocke.setAttribute('aria-label', offen
-                ? 'Posteingang, ' + offen + ' ungelesen' : 'Posteingang');
-        };
-        an('btn-glocke', () => { Ansichten.posteingang(); });
-        document.addEventListener('redion:meldungen', glockeFrisch);
-        glockeFrisch();
-        const kontoKnopf = document.getElementById('btn-konto');
-        an('btn-konto', () => {
-            if (typeof WolkeFenster !== 'undefined')
-                WolkeFenster.dialog();
-        });
-        if (kontoKnopf && typeof Wolke !== 'undefined' && Wolke.beiAenderung) {
-            Wolke.beiAenderung((z) => {
-                const punkt = kontoKnopf.querySelector('.wolke-punkt');
-                if (!punkt)
-                    return;
-                punkt.setAttribute('aria-hidden', 'true');
-                if (!z.angemeldet) {
-                    punkt.hidden = true;
-                    kontoKnopf.title = 'Konto und Abgleich';
-                    kontoKnopf.setAttribute('aria-label', 'Konto und Abgleich — nicht angemeldet');
-                    return;
-                }
-                const schlecht = String(z.fehler || z.fehlerDateien || '');
-                punkt.hidden = false;
-                punkt.className = 'wolke-punkt ' +
-                    (schlecht ? 'ist-fehler' : z.laeuft ? 'ist-laeuft' : 'ist-gut');
-                const name = z.konto && z.konto.name ? String(z.konto.name) : 'angemeldet';
-                const stand = schlecht ? 'Abgleichfehler: ' + schlecht
-                    : z.laeuft ? 'Abgleich läuft'
-                        : z.letzter ? 'Letzter Abgleich ' + String(z.letzter).slice(11, 16)
-                            : 'noch kein Abgleich';
-                kontoKnopf.title = name + ' · ' + stand;
-                kontoKnopf.setAttribute('aria-label', 'Konto ' + name + ', ' + stand);
-            });
-        }
+        /* Glocke und Wolke-Punkt hängen NICHT hier (E251, zweiter Anlauf):
+           die Kopfzeile gehört der Seite, die Menüleiste der App — dort
+           zeichnet menueband.ts beide, und der Wolke-Dialog steht unter
+           „Mehr → Wolke". */
         an('btn-page-menu', (e) => {
             const p = Store.getBlock(seiteId);
             if (p)

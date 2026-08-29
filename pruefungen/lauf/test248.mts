@@ -107,6 +107,16 @@ const seiteAuf = async (breite = 1440, hoehe = 900) => {
   await seite.waitForTimeout(2800);
   await seite.evaluate(() => {
     document.querySelectorAll('#rg-willkommen,.overlay,[role=dialog]').forEach(x => x.remove());
+    /* AUSGANGSLAGE, NICHT ZUFALL (die Lehre aus §1 unten): der erste Start
+       legt eine „Karteikarte ist fällig"-Meldung an (E184), und mit
+       Ungelesenem ERSCHEINT die Glocke in der Menüleiste — zu Recht, das
+       prüft Suite 258. HIER wird aber der ruhige Grundzustand vermessen,
+       und der hat keine ungelesene Post. Also wird sie ausdrücklich
+       geleert statt gehofft, dass keine kommt. */
+    if (typeof (window as any).Werkzeuge !== 'undefined' &&
+        (window as any).Werkzeuge.meldungenLeeren) {
+      (window as any).Werkzeuge.meldungenLeeren();
+    }
   });
   await seite.waitForTimeout(300);
   return { seite, fehler };

@@ -35,6 +35,21 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
+**29. August 2026 · Glocke und Wolke-Punkt — am Ende in der Menüleiste (E251)**
+
+> Der Bild-Abgleich fand drei Fertigteile ohne sichtbaren Weg:
+> Ungelesenen-Zähler, Abgleichstand, Wolke-Dialog. Der erste Anlauf
+> hängte Glocke und Konto an die Kopfzeile — test40/245/248 wurden zu
+> Recht rot: die Kopfzeile gehört der SEITE, die App-Zeile ist die
+> Menüleiste. Jetzt: `mb-glocke` erscheint nur mit Ungelesenem (auf
+> allen Geräten, am Telefon 44 px), der Statuspunkt sitzt an
+> `mb-konto`, der Wolke-Dialog steht unter „Mehr → Wolke". Beifang mit
+> eigener Lehre: `display:grid` schlägt die `[hidden]`-Regel des
+> Browsers — die „versteckte" Glocke stand sichtbar da, und nur eine
+> Prüfung des GERECHNETEN Stils sieht das (test258, 15 Punkte, drei
+> Gegenproben einzeln rot). test248 stellt seine Ausgangslage seither
+> ausdrücklich her, statt auf meldungsfreien Zufall zu hoffen.
+
 **29. August 2026 · Gelöscht heisst gelöscht — auf allen Geräten (E249, L6 zu)**
 
 > Die einzige Datenintegritätszeile der Visionskarte. Lokales Löschen

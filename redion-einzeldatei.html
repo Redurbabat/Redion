@@ -9675,21 +9675,29 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    wandern dafür in die Kopfzeile, wo am Telefon Platz frei ist. */
 .nur-handy{ display:none }
 
-/* Glocke und Konto in der Kopfzeile (E251). Am Telefon bleiben sie weg —
-   dort trägt die Seitenleiste den Ungelesen-Punkt, und die Kopfzeile ist
-   voll. Zahl und Punkt sind Bild; die Wörter stehen im aria-label (§38). */
-#btn-glocke, #btn-konto{ position:relative }
-.glocke-zahl{ position:absolute; top:2px; right:1px; min-width:15px; height:15px;
+/* Glocke und Statuspunkt in der MENÜLEISTE (E251, zweiter Anlauf). Der
+   erste hängte beide an die Kopfzeile — test40/245/248 wurden zu Recht
+   rot: die Kopfzeile gehört der Seite, die Menüleiste der App. Die Glocke
+   erscheint nur mit Ungelesenem; der Punkt sitzt am Arbeitsbereichs-Knopf
+   und zeigt den Abgleichstand. Zahl und Punkt sind Bild; die Wörter
+   stehen im aria-label (§38). */
+#mb-glocke, #mb-konto{ position:relative }
+/* `display:grid` an .mb-rechts-knopf SCHLÄGT die [hidden]-Regel des
+   Browsers — Autorenstil gewinnt gegen das UA-Stylesheet. Ohne diese
+   Zeile stand die „versteckte" Glocke sichtbar da: das Attribut stimmte,
+   das Bild nicht. Genau daran ist schon der erste Anlauf gescheitert
+   (test40 fand den Knopf trotz hidden). */
+#mb-glocke[hidden]{ display:none }
+.glocke-zahl{ position:absolute; top:1px; right:0; min-width:15px; height:15px;
   padding:0 3px; border-radius:8px; background:var(--gefahr); color:#fff;
   font-size:9.5px; font-weight:700; line-height:15px; text-align:center;
   font-style:normal }
-.wolke-punkt{ position:absolute; top:5px; right:4px; width:8px; height:8px;
-  border-radius:50%; border:1.5px solid var(--bg-card); display:block }
+.wolke-punkt{ position:absolute; top:2px; right:2px; width:8px; height:8px;
+  border-radius:50%; border:1.5px solid var(--bg); display:block }
 .wolke-punkt.ist-gut{ background:var(--erfolg) }
 .wolke-punkt.ist-laeuft{ background:var(--warnung) }
 .wolke-punkt.ist-fehler{ background:var(--gefahr) }
 .wolke-punkt[hidden]{ display:none }
-@media(max-width:760px){ .nur-rechner{ display:none } }
 
 #handy-leiste button[role="tab"].an b{ font-weight:650 }
 #handy-leiste .hl-punkt{ position:absolute; top:7px; right:calc(50% - 15px);
@@ -11870,13 +11878,12 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
     <button class="top-btn schmal" id="btn-auto" data-ruhig="mehr"    title="Automationen der Datenbank" aria-label="Automationen"><span data-sym="bolt"></span></button>
     <button class="top-btn schmal" id="btn-link" data-ruhig="mehr"    title="Link zur Seite kopieren" aria-label="Link kopieren"><span data-sym="link"></span></button>
     <button class="top-btn schmal" id="btn-lock" data-ruhig="mehr"    title="Seite gegen Bearbeiten sperren" aria-label="Seite sperren"><span data-sym="lockOpen"></span></button>
-    <!-- Glocke und Konto (E251): beide Fertigteile lagen versteckt — der
-         Posteingang hinter „Mehr", das Konto nur in der Befehlspalette.
-         Der Zähler und der Statuspunkt sind Bild; die Wörter dazu stehen
-         im aria-label (§38). Am Telefon bleiben beide weg: dort trägt die
-         Seitenleiste den Ungelesen-Punkt, und die Kopfzeile ist voll. -->
-    <button class="top-btn schmal nur-rechner" id="btn-glocke" title="Posteingang" aria-label="Posteingang"><span data-sym="bell"></span><b class="glocke-zahl" hidden></b></button>
-    <button class="top-btn schmal nur-rechner" id="btn-konto" title="Konto und Abgleich" aria-label="Konto und Abgleich"><span data-sym="user"></span><i class="wolke-punkt" hidden></i></button>
+    <!-- KEINE Glocke und kein Konto hier (E251, zweiter Anlauf). Der erste
+         hängte beide an die Kopfzeile — und test40, test245 und test248
+         wurden zu Recht rot: die Kopfzeile gehört der SEITE, Ungelesenes
+         und Kontostand gehören der APP. Sie stehen deshalb in der
+         Menüleiste (mb-glocke, Punkt an mb-konto), gezeichnet von
+         menueband.ts; der Weg zum Wolke-Dialog steht unter „Mehr". -->
     <button class="top-btn schmal" id="btn-fav"     title="Zu Favoriten" aria-label="Zu Favoriten"><span data-sym="star"></span></button>
     <button class="top-btn schmal" id="btn-page-menu" title="Seitenoptionen" aria-label="Seitenoptionen"><span data-sym="dots"></span></button>
   </header>
@@ -68361,6 +68368,12 @@ const Ansichten = (() => {
                 { z: '💾', t: 'Sicherung', s: 'JSON und .redion — mit Anhängen oder ohne.', a: 'sichern' },
                 { z: '📥', t: 'Importieren', s: 'Dateien und Sicherungen laden.', a: 'import' },
                 { z: '📥', t: 'Posteingang', s: 'Erinnerungen, Kommentare, Erwähnungen.', a: 'inbox' },
+                /* DER WEG ZUR WOLKE (E251). Der Dialog konnte längst anmelden und
+                   abgleichen — erreichbar war er nur über die Befehlspalette, und
+                   ein Weg, den man nur über die Palette findet, ist verschwunden
+                   (dieselbe Regel wie zwei Gruppen weiter oben). Hier steht er
+                   neben Sicherung und Import, wo Daten-Dinge wohnen. */
+                { z: '☁', t: 'Wolke', s: 'Konto, Anmelden und Abgleich zwischen Geräten.', a: 'wolke' },
                 { z: '🗑', t: 'Papierkorb', s: 'Gelöschte Seiten wiederherstellen.', a: 'papierkorb' }
             ] },
         { name: 'System', eintraege: [
@@ -68410,6 +68423,12 @@ const Ansichten = (() => {
                 Werkzeuge.dateienLesen();
             else if (a === 'inbox')
                 posteingang();
+            else if (a === 'wolke') {
+                if (typeof WolkeFenster !== 'undefined')
+                    WolkeFenster.dialog();
+                else
+                    UI.toast('Die Wolke ist in dieser Fassung nicht geladen.');
+            }
             else if (a === 'papierkorb')
                 App.papierkorb();
             else if (a === 'einstellungen')
@@ -109664,6 +109683,43 @@ const Menueband = (() => {
         ];
         const rechts = document.createElement('div');
         rechts.className = 'mb-rechts';
+        /* ── DIE GLOCKE (E251, zweiter Anlauf) ──────────────────────────────
+           Der erste Anlauf hängte sie an die Kopfzeile — und drei Wächter
+           wurden rot: test40 führt die sechs Seitenknöpfe NAMENTLICH, test248
+           zählt das Budget, test245 mass die Suche aus der Mitte gerückt.
+           Die Wächter hatten recht, nicht die Glocke: die Kopfzeile gehört
+           der SEITE (Teilen, Verlauf, Sperren — alles Dinge über dieses eine
+           Dokument), Ungelesenes gehört der APP. Die App-Zeile ist die
+           Menüleiste, und rechts stehen dort schon Suche, KI und
+           Arbeitsbereich — die Glocke ist deren vierter Nachbar.
+    
+           SIE ERSCHEINT ERST MIT UNGELESENEM. Eine dauerhaft sichtbare stumme
+           Glocke sagte nichts und kostete einen Platz in einer Zeile, die am
+           Telefon ohnehin rollt. Ohne Meldungen ist sie `hidden` — dasselbe
+           Prinzip wie der Punkt an der unteren Leiste des Telefons. Die Zahl
+           ist nur Bild; die Wörter stehen im aria-label (§38). */
+        const glocke = document.createElement('button');
+        glocke.type = 'button';
+        glocke.id = 'mb-glocke';
+        glocke.className = 'mb-rechts-knopf';
+        glocke.hidden = true;
+        glocke.setAttribute('aria-label', 'Posteingang');
+        glocke.title = 'Posteingang';
+        const glockenZeichen = document.createElement('span');
+        glockenZeichen.dataset['sym'] = 'bell';
+        glocke.appendChild(glockenZeichen);
+        const glockenZahl = document.createElement('b');
+        glockenZahl.className = 'glocke-zahl';
+        glockenZahl.hidden = true;
+        glockenZahl.setAttribute('aria-hidden', 'true');
+        glocke.appendChild(glockenZahl);
+        glocke.addEventListener('click', () => {
+            try {
+                Ansichten.posteingang();
+            }
+            catch { /* ohne Posteingang bleibt die Leiste */ }
+        });
+        rechts.appendChild(glocke);
         RECHTS.forEach(([id, zeichen, titel, tun]) => {
             const b = document.createElement('button');
             b.type = 'button';
@@ -109697,6 +109753,20 @@ const Menueband = (() => {
                     z.textContent = 'N';
                 }
                 b.appendChild(z);
+                /* DER STATUSPUNKT (E251). Wer angemeldet ist, sieht am
+                   Arbeitsbereichs-Knopf, ob der Abgleich gut steht, läuft oder
+                   hakt — abgemeldet ist der Punkt weg, denn „kein Konto" ist kein
+                   Zustand, den man überwachen müsste. Der Punkt ist nur Farbe;
+                   die Wörter stehen im title und aria-label (§38). Gemalt wird er
+                   von `wolkeFrisch` unten, aus dem gemerkten Stand — die Leiste
+                   wird bei jedem Reiterwechsel neu gebaut, und ein Punkt, der
+                   dann bis zur nächsten Änderung leer bliebe, wäre ein Anzeiger,
+                   der meistens lügt. */
+                const punkt = document.createElement('i');
+                punkt.className = 'wolke-punkt';
+                punkt.hidden = true;
+                punkt.setAttribute('aria-hidden', 'true');
+                b.appendChild(punkt);
             }
             b.addEventListener('click', tun);
             rechts.appendChild(b);
@@ -109784,6 +109854,9 @@ const Menueband = (() => {
         const heim = wurzel.parentElement;
         if (heim)
             heim.style.setProperty('--inhalt-oben', (wurzel.offsetTop + wurzel.offsetHeight) + 'px');
+        /* Frisch gebaute Knöpfe kennen ihren Stand noch nicht. */
+        glockeFrisch();
+        wolkeFrisch();
     };
     /* ======================================================================== *
      * ANFASSEN
@@ -109913,6 +109986,69 @@ const Menueband = (() => {
         });
     };
     /* ======================================================================== *
+     * GLOCKE UND STATUSPUNKT AUFFRISCHEN (E251)
+     * ------------------------------------------------------------------------
+     * Beide Funktionen suchen ihre Knöpfe bei JEDEM Aufruf neu. Die Leiste
+     * wird bei jedem Reiterwechsel neu gebaut; ein beim ersten Zeichnen
+     * gefangener Verweis zeigte danach auf einen Knopf, der nicht mehr im
+     * Baum hängt — die Glocke sähe frisch aus und wäre es nicht.
+     * Die Horcher stehen in `start()` und werden EINMAL gesetzt: ein Horcher
+     * je Zeichnen wäre nach zehn Reiterwechseln ein Chor.
+     * ======================================================================== */
+    const glockeFrisch = () => {
+        const glocke = document.getElementById('mb-glocke');
+        if (!glocke)
+            return;
+        let offen = 0;
+        try {
+            offen = (typeof Werkzeuge !== 'undefined' && Werkzeuge.meldungen
+                ? Werkzeuge.meldungen() : [])
+                .filter((m) => !m.gelesen).length;
+        }
+        catch { /* ohne Posteingang bleibt die Glocke versteckt */ }
+        glocke.hidden = !offen;
+        const zahl = glocke.querySelector('.glocke-zahl');
+        if (zahl) {
+            zahl.textContent = offen > 99 ? '99+' : String(offen);
+            zahl.hidden = !offen;
+        }
+        const wort = offen ? 'Posteingang, ' + offen + ' ungelesen' : 'Posteingang';
+        glocke.setAttribute('aria-label', wort);
+        glocke.title = wort;
+    };
+    /* Der letzte gemeldete Wolke-Stand. `Wolke.beiAenderung` ruft nur bei
+       ÄNDERUNGEN — ein frisch gebauter Punkt muss den Stand von davor kennen,
+       sonst zeigt er bis zum nächsten Takt nichts. */
+    let wolkeStand = null;
+    const wolkeFrisch = () => {
+        const konto = document.getElementById('mb-konto');
+        const punkt = konto?.querySelector('.wolke-punkt');
+        if (!konto || !punkt)
+            return;
+        const z = wolkeStand;
+        if (!z || !z.angemeldet) {
+            punkt.hidden = true;
+            konto.title = 'Arbeitsbereich';
+            konto.setAttribute('aria-label', 'Arbeitsbereich');
+            return;
+        }
+        const schlecht = String(z.fehler || z.fehlerDateien || '');
+        punkt.hidden = false;
+        punkt.className = 'wolke-punkt ' +
+            (schlecht ? 'ist-fehler' : z.laeuft ? 'ist-laeuft' : 'ist-gut');
+        const name = z.konto && z.konto.name ? String(z.konto.name) : 'angemeldet';
+        const stand = schlecht ? 'Abgleichfehler: ' + schlecht
+            : z.laeuft ? 'Abgleich läuft'
+                : z.letzter ? 'Letzter Abgleich ' + String(z.letzter).slice(11, 16)
+                    : 'noch kein Abgleich';
+        /* Der Knopf öffnet weiterhin den Arbeitsbereich — das aria-label darf
+           nichts anderes versprechen. Der Wolke-Stand steht DAHINTER, als
+           Auskunft, nicht als Ziel; der Weg zum Wolke-Dialog steht unter
+           „Mehr → Wolke". */
+        konto.title = 'Arbeitsbereich · ' + name + ' · ' + stand;
+        konto.setAttribute('aria-label', 'Arbeitsbereich — Konto ' + name + ', ' + stand);
+    };
+    /* ======================================================================== *
      * START
      * ======================================================================== */
     /* Der Ort ändert sich, ohne dass jemand es meldet.
@@ -109972,6 +110108,20 @@ const Menueband = (() => {
                 Ereignisse.horche('ablageGeladen', () => zeichne());
             }
             catch { /* dann eben nicht */ }
+        }
+        /* GLOCKE UND STATUSPUNKT (E251) — die Horcher, einmal.
+           `redion:meldungen` feuert bei jeder neuen, gelesenen oder geleerten
+           Meldung (werkzeuge.ts schickt es); der Ereignisbus statt eines
+           direkten Aufrufs, weil ein Bereich die Schale nicht kennen darf
+           (Regel 1). `Wolke.beiAenderung` meldet Anmelden, Abgleich und
+           Fehler — der Stand wird gemerkt, gemalt wird aus `wolkeFrisch`. */
+        document.addEventListener('redion:meldungen', glockeFrisch);
+        glockeFrisch();
+        if (typeof Wolke !== 'undefined' && typeof Wolke.beiAenderung === 'function') {
+            try {
+                Wolke.beiAenderung((z) => { wolkeStand = z; wolkeFrisch(); });
+            }
+            catch { /* ohne Wolke bleibt der Punkt versteckt */ }
         }
     };
     /** Von aussen: das Band auf einen Reiter stellen. */
@@ -113632,64 +113782,10 @@ const App = (() => {
             zeichneBaum();
             zeichneCrumbs();
         });
-        /* GLOCKE UND KONTO (E251). Beide Fertigteile lagen versteckt: der
-           Posteingang zählte seine Ungelesenen längst (die Seitenleiste am
-           Telefon zeigt den Punkt), und der Wolke-Dialog kannte Konto und
-           Abgleichzustand — erreichbar war er nur über die Befehlspalette.
-           Hier hängen sie an der Kopfzeile; die Wörter stehen im aria-label,
-           Zahl und Punkt sind nur Bild (§38). */
-        const glocke = document.getElementById('btn-glocke');
-        const glockeFrisch = () => {
-            if (!glocke)
-                return;
-            const zahl = glocke.querySelector('.glocke-zahl');
-            let offen = 0;
-            try {
-                offen = (Werkzeuge.meldungen ? Werkzeuge.meldungen() : [])
-                    .filter((m) => !m.gelesen).length;
-            }
-            catch { }
-            if (zahl) {
-                zahl.textContent = offen > 99 ? '99+' : String(offen);
-                zahl.hidden = !offen;
-                zahl.setAttribute('aria-hidden', 'true');
-            }
-            glocke.setAttribute('aria-label', offen
-                ? 'Posteingang, ' + offen + ' ungelesen' : 'Posteingang');
-        };
-        an('btn-glocke', () => { Ansichten.posteingang(); });
-        document.addEventListener('redion:meldungen', glockeFrisch);
-        glockeFrisch();
-        const kontoKnopf = document.getElementById('btn-konto');
-        an('btn-konto', () => {
-            if (typeof WolkeFenster !== 'undefined')
-                WolkeFenster.dialog();
-        });
-        if (kontoKnopf && typeof Wolke !== 'undefined' && Wolke.beiAenderung) {
-            Wolke.beiAenderung((z) => {
-                const punkt = kontoKnopf.querySelector('.wolke-punkt');
-                if (!punkt)
-                    return;
-                punkt.setAttribute('aria-hidden', 'true');
-                if (!z.angemeldet) {
-                    punkt.hidden = true;
-                    kontoKnopf.title = 'Konto und Abgleich';
-                    kontoKnopf.setAttribute('aria-label', 'Konto und Abgleich — nicht angemeldet');
-                    return;
-                }
-                const schlecht = String(z.fehler || z.fehlerDateien || '');
-                punkt.hidden = false;
-                punkt.className = 'wolke-punkt ' +
-                    (schlecht ? 'ist-fehler' : z.laeuft ? 'ist-laeuft' : 'ist-gut');
-                const name = z.konto && z.konto.name ? String(z.konto.name) : 'angemeldet';
-                const stand = schlecht ? 'Abgleichfehler: ' + schlecht
-                    : z.laeuft ? 'Abgleich läuft'
-                        : z.letzter ? 'Letzter Abgleich ' + String(z.letzter).slice(11, 16)
-                            : 'noch kein Abgleich';
-                kontoKnopf.title = name + ' · ' + stand;
-                kontoKnopf.setAttribute('aria-label', 'Konto ' + name + ', ' + stand);
-            });
-        }
+        /* Glocke und Wolke-Punkt hängen NICHT hier (E251, zweiter Anlauf):
+           die Kopfzeile gehört der Seite, die Menüleiste der App — dort
+           zeichnet menueband.ts beide, und der Wolke-Dialog steht unter
+           „Mehr → Wolke". */
         an('btn-page-menu', (e) => {
             const p = Store.getBlock(seiteId);
             if (p)

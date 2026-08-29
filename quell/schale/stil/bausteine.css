@@ -3304,21 +3304,29 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    wandern dafür in die Kopfzeile, wo am Telefon Platz frei ist. */
 .nur-handy{ display:none }
 
-/* Glocke und Konto in der Kopfzeile (E251). Am Telefon bleiben sie weg —
-   dort trägt die Seitenleiste den Ungelesen-Punkt, und die Kopfzeile ist
-   voll. Zahl und Punkt sind Bild; die Wörter stehen im aria-label (§38). */
-#btn-glocke, #btn-konto{ position:relative }
-.glocke-zahl{ position:absolute; top:2px; right:1px; min-width:15px; height:15px;
+/* Glocke und Statuspunkt in der MENÜLEISTE (E251, zweiter Anlauf). Der
+   erste hängte beide an die Kopfzeile — test40/245/248 wurden zu Recht
+   rot: die Kopfzeile gehört der Seite, die Menüleiste der App. Die Glocke
+   erscheint nur mit Ungelesenem; der Punkt sitzt am Arbeitsbereichs-Knopf
+   und zeigt den Abgleichstand. Zahl und Punkt sind Bild; die Wörter
+   stehen im aria-label (§38). */
+#mb-glocke, #mb-konto{ position:relative }
+/* `display:grid` an .mb-rechts-knopf SCHLÄGT die [hidden]-Regel des
+   Browsers — Autorenstil gewinnt gegen das UA-Stylesheet. Ohne diese
+   Zeile stand die „versteckte" Glocke sichtbar da: das Attribut stimmte,
+   das Bild nicht. Genau daran ist schon der erste Anlauf gescheitert
+   (test40 fand den Knopf trotz hidden). */
+#mb-glocke[hidden]{ display:none }
+.glocke-zahl{ position:absolute; top:1px; right:0; min-width:15px; height:15px;
   padding:0 3px; border-radius:8px; background:var(--gefahr); color:#fff;
   font-size:9.5px; font-weight:700; line-height:15px; text-align:center;
   font-style:normal }
-.wolke-punkt{ position:absolute; top:5px; right:4px; width:8px; height:8px;
-  border-radius:50%; border:1.5px solid var(--bg-card); display:block }
+.wolke-punkt{ position:absolute; top:2px; right:2px; width:8px; height:8px;
+  border-radius:50%; border:1.5px solid var(--bg); display:block }
 .wolke-punkt.ist-gut{ background:var(--erfolg) }
 .wolke-punkt.ist-laeuft{ background:var(--warnung) }
 .wolke-punkt.ist-fehler{ background:var(--gefahr) }
 .wolke-punkt[hidden]{ display:none }
-@media(max-width:760px){ .nur-rechner{ display:none } }
 
 #handy-leiste button[role="tab"].an b{ font-weight:650 }
 #handy-leiste .hl-punkt{ position:absolute; top:7px; right:calc(50% - 15px);

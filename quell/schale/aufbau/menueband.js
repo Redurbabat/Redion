@@ -462,6 +462,43 @@ const Menueband = (() => {
         ];
         const rechts = document.createElement('div');
         rechts.className = 'mb-rechts';
+        /* ── DIE GLOCKE (E251, zweiter Anlauf) ──────────────────────────────
+           Der erste Anlauf hängte sie an die Kopfzeile — und drei Wächter
+           wurden rot: test40 führt die sechs Seitenknöpfe NAMENTLICH, test248
+           zählt das Budget, test245 mass die Suche aus der Mitte gerückt.
+           Die Wächter hatten recht, nicht die Glocke: die Kopfzeile gehört
+           der SEITE (Teilen, Verlauf, Sperren — alles Dinge über dieses eine
+           Dokument), Ungelesenes gehört der APP. Die App-Zeile ist die
+           Menüleiste, und rechts stehen dort schon Suche, KI und
+           Arbeitsbereich — die Glocke ist deren vierter Nachbar.
+    
+           SIE ERSCHEINT ERST MIT UNGELESENEM. Eine dauerhaft sichtbare stumme
+           Glocke sagte nichts und kostete einen Platz in einer Zeile, die am
+           Telefon ohnehin rollt. Ohne Meldungen ist sie `hidden` — dasselbe
+           Prinzip wie der Punkt an der unteren Leiste des Telefons. Die Zahl
+           ist nur Bild; die Wörter stehen im aria-label (§38). */
+        const glocke = document.createElement('button');
+        glocke.type = 'button';
+        glocke.id = 'mb-glocke';
+        glocke.className = 'mb-rechts-knopf';
+        glocke.hidden = true;
+        glocke.setAttribute('aria-label', 'Posteingang');
+        glocke.title = 'Posteingang';
+        const glockenZeichen = document.createElement('span');
+        glockenZeichen.dataset['sym'] = 'bell';
+        glocke.appendChild(glockenZeichen);
+        const glockenZahl = document.createElement('b');
+        glockenZahl.className = 'glocke-zahl';
+        glockenZahl.hidden = true;
+        glockenZahl.setAttribute('aria-hidden', 'true');
+        glocke.appendChild(glockenZahl);
+        glocke.addEventListener('click', () => {
+            try {
+                Ansichten.posteingang();
+            }
+            catch { /* ohne Posteingang bleibt die Leiste */ }
+        });
+        rechts.appendChild(glocke);
         RECHTS.forEach(([id, zeichen, titel, tun]) => {
             const b = document.createElement('button');
             b.type = 'button';
@@ -495,6 +532,20 @@ const Menueband = (() => {
                     z.textContent = 'N';
                 }
                 b.appendChild(z);
+                /* DER STATUSPUNKT (E251). Wer angemeldet ist, sieht am
+                   Arbeitsbereichs-Knopf, ob der Abgleich gut steht, läuft oder
+                   hakt — abgemeldet ist der Punkt weg, denn „kein Konto" ist kein
+                   Zustand, den man überwachen müsste. Der Punkt ist nur Farbe;
+                   die Wörter stehen im title und aria-label (§38). Gemalt wird er
+                   von `wolkeFrisch` unten, aus dem gemerkten Stand — die Leiste
+                   wird bei jedem Reiterwechsel neu gebaut, und ein Punkt, der
+                   dann bis zur nächsten Änderung leer bliebe, wäre ein Anzeiger,
+                   der meistens lügt. */
+                const punkt = document.createElement('i');
+                punkt.className = 'wolke-punkt';
+                punkt.hidden = true;
+                punkt.setAttribute('aria-hidden', 'true');
+                b.appendChild(punkt);
             }
             b.addEventListener('click', tun);
             rechts.appendChild(b);
@@ -582,6 +633,9 @@ const Menueband = (() => {
         const heim = wurzel.parentElement;
         if (heim)
             heim.style.setProperty('--inhalt-oben', (wurzel.offsetTop + wurzel.offsetHeight) + 'px');
+        /* Frisch gebaute Knöpfe kennen ihren Stand noch nicht. */
+        glockeFrisch();
+        wolkeFrisch();
     };
     /* ======================================================================== *
      * ANFASSEN
@@ -711,6 +765,69 @@ const Menueband = (() => {
         });
     };
     /* ======================================================================== *
+     * GLOCKE UND STATUSPUNKT AUFFRISCHEN (E251)
+     * ------------------------------------------------------------------------
+     * Beide Funktionen suchen ihre Knöpfe bei JEDEM Aufruf neu. Die Leiste
+     * wird bei jedem Reiterwechsel neu gebaut; ein beim ersten Zeichnen
+     * gefangener Verweis zeigte danach auf einen Knopf, der nicht mehr im
+     * Baum hängt — die Glocke sähe frisch aus und wäre es nicht.
+     * Die Horcher stehen in `start()` und werden EINMAL gesetzt: ein Horcher
+     * je Zeichnen wäre nach zehn Reiterwechseln ein Chor.
+     * ======================================================================== */
+    const glockeFrisch = () => {
+        const glocke = document.getElementById('mb-glocke');
+        if (!glocke)
+            return;
+        let offen = 0;
+        try {
+            offen = (typeof Werkzeuge !== 'undefined' && Werkzeuge.meldungen
+                ? Werkzeuge.meldungen() : [])
+                .filter((m) => !m.gelesen).length;
+        }
+        catch { /* ohne Posteingang bleibt die Glocke versteckt */ }
+        glocke.hidden = !offen;
+        const zahl = glocke.querySelector('.glocke-zahl');
+        if (zahl) {
+            zahl.textContent = offen > 99 ? '99+' : String(offen);
+            zahl.hidden = !offen;
+        }
+        const wort = offen ? 'Posteingang, ' + offen + ' ungelesen' : 'Posteingang';
+        glocke.setAttribute('aria-label', wort);
+        glocke.title = wort;
+    };
+    /* Der letzte gemeldete Wolke-Stand. `Wolke.beiAenderung` ruft nur bei
+       ÄNDERUNGEN — ein frisch gebauter Punkt muss den Stand von davor kennen,
+       sonst zeigt er bis zum nächsten Takt nichts. */
+    let wolkeStand = null;
+    const wolkeFrisch = () => {
+        const konto = document.getElementById('mb-konto');
+        const punkt = konto?.querySelector('.wolke-punkt');
+        if (!konto || !punkt)
+            return;
+        const z = wolkeStand;
+        if (!z || !z.angemeldet) {
+            punkt.hidden = true;
+            konto.title = 'Arbeitsbereich';
+            konto.setAttribute('aria-label', 'Arbeitsbereich');
+            return;
+        }
+        const schlecht = String(z.fehler || z.fehlerDateien || '');
+        punkt.hidden = false;
+        punkt.className = 'wolke-punkt ' +
+            (schlecht ? 'ist-fehler' : z.laeuft ? 'ist-laeuft' : 'ist-gut');
+        const name = z.konto && z.konto.name ? String(z.konto.name) : 'angemeldet';
+        const stand = schlecht ? 'Abgleichfehler: ' + schlecht
+            : z.laeuft ? 'Abgleich läuft'
+                : z.letzter ? 'Letzter Abgleich ' + String(z.letzter).slice(11, 16)
+                    : 'noch kein Abgleich';
+        /* Der Knopf öffnet weiterhin den Arbeitsbereich — das aria-label darf
+           nichts anderes versprechen. Der Wolke-Stand steht DAHINTER, als
+           Auskunft, nicht als Ziel; der Weg zum Wolke-Dialog steht unter
+           „Mehr → Wolke". */
+        konto.title = 'Arbeitsbereich · ' + name + ' · ' + stand;
+        konto.setAttribute('aria-label', 'Arbeitsbereich — Konto ' + name + ', ' + stand);
+    };
+    /* ======================================================================== *
      * START
      * ======================================================================== */
     /* Der Ort ändert sich, ohne dass jemand es meldet.
@@ -770,6 +887,20 @@ const Menueband = (() => {
                 Ereignisse.horche('ablageGeladen', () => zeichne());
             }
             catch { /* dann eben nicht */ }
+        }
+        /* GLOCKE UND STATUSPUNKT (E251) — die Horcher, einmal.
+           `redion:meldungen` feuert bei jeder neuen, gelesenen oder geleerten
+           Meldung (werkzeuge.ts schickt es); der Ereignisbus statt eines
+           direkten Aufrufs, weil ein Bereich die Schale nicht kennen darf
+           (Regel 1). `Wolke.beiAenderung` meldet Anmelden, Abgleich und
+           Fehler — der Stand wird gemerkt, gemalt wird aus `wolkeFrisch`. */
+        document.addEventListener('redion:meldungen', glockeFrisch);
+        glockeFrisch();
+        if (typeof Wolke !== 'undefined' && typeof Wolke.beiAenderung === 'function') {
+            try {
+                Wolke.beiAenderung((z) => { wolkeStand = z; wolkeFrisch(); });
+            }
+            catch { /* ohne Wolke bleibt der Punkt versteckt */ }
         }
     };
     /** Von aussen: das Band auf einen Reiter stellen. */

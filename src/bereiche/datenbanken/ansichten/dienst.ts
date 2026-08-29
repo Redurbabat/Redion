@@ -651,6 +651,12 @@ const Ansichten = (() => {
       { z: '💾', t: 'Sicherung', s: 'JSON und .redion — mit Anhängen oder ohne.', a: 'sichern' },
       { z: '📥', t: 'Importieren', s: 'Dateien und Sicherungen laden.', a: 'import' },
       { z: '📥', t: 'Posteingang', s: 'Erinnerungen, Kommentare, Erwähnungen.', a: 'inbox' },
+      /* DER WEG ZUR WOLKE (E251). Der Dialog konnte längst anmelden und
+         abgleichen — erreichbar war er nur über die Befehlspalette, und
+         ein Weg, den man nur über die Palette findet, ist verschwunden
+         (dieselbe Regel wie zwei Gruppen weiter oben). Hier steht er
+         neben Sicherung und Import, wo Daten-Dinge wohnen. */
+      { z: '☁', t: 'Wolke', s: 'Konto, Anmelden und Abgleich zwischen Geräten.', a: 'wolke' },
       { z: '🗑', t: 'Papierkorb', s: 'Gelöschte Seiten wiederherstellen.', a: 'papierkorb' } ] },
     { name: 'System', eintraege: [
       { z: '⚙', t: 'Einstellungen', s: 'Darstellung, Speicher, KI, Konto und Wolke.', a: 'einstellungen' },
@@ -692,6 +698,10 @@ const Ansichten = (() => {
       else if (a === 'sichern')       App.sicherungSpeichern();
       else if (a === 'import')        Werkzeuge.dateienLesen();
       else if (a === 'inbox')         posteingang();
+      else if (a === 'wolke') {
+        if (typeof WolkeFenster !== 'undefined') WolkeFenster.dialog();
+        else UI.toast('Die Wolke ist in dieser Fassung nicht geladen.');
+      }
       else if (a === 'papierkorb')    App.papierkorb();
       else if (a === 'einstellungen') App.einstellungen();
       else if (a === 'ueber')         App.einstellungen('ueber');

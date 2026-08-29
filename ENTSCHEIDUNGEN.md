@@ -18331,33 +18331,75 @@ Posteingang zählte längst, nur am Telefon zeigte ein Punkt es an),
 Sync-Status und Konto (beides im Wolke-Dialog, erreichbar nur über die
 Befehlspalette). Alles Sichtbarkeitsarbeit auf fertiger Logik.
 
-DIE ENTSCHEIDUNGEN
+DER ERSTE ANLAUF WAR FALSCH — UND DREI WÄCHTER HABEN ES GESAGT
 
-  · **Zwei Knöpfe, nicht drei.** Der Statuspunkt wohnt AM Konto-Knopf
-    (grün ok, gelb läuft, rot Fehler) statt als eigener Knopf — zwei
-    nebeneinanderliegende Knöpfe, die denselben Dialog öffnen, wären
-    einer zu viel, und die Kopfzeile ist voll genug (die L68-Lehre).
+Der erste Bau hängte Glocke und Konto-Knopf an die KOPFZEILE. Drei
+Prüfläufe wurden rot, und zwar zu Recht: test40 führt die sechs
+Seitenknöpfe der ruhigen Kopfzeile NAMENTLICH und fand zwei Fremde;
+test248 zählte 23 statt höchstens 22; test245 mass die Suche 48 px aus
+der Mitte gerückt. Der Versuch, die Wächter mit `hidden` und
+`data-ruhig="mehr"` zu besänftigen, scheiterte doppelt — einmal, weil
+die Ausgangslage der Wächter eine ungelesene Meldung trägt (der
+Karteikarten-Hinweis des ersten Starts, E184), und einmal aus einem
+Grund, der eine eigene Zeile verdient (unten).
+
+Die Wächter hatten das Argument: die Kopfzeile gehört der SEITE —
+Teilen, Verlauf, Sperren, alles Aussagen über dieses eine Dokument.
+Ungelesene Post und der Abgleichstand sind Aussagen über die APP. Die
+App-Zeile ist die Menüleiste, und rechts stehen dort seit E236 schon
+Suche, KI und Arbeitsbereich.
+
+DIE ENTSCHEIDUNGEN (ZWEITER ANLAUF)
+
+  · **Die Glocke wohnt in der Menüleiste** (`mb-glocke`, vor Suche/KI/
+    Konto) und ERSCHEINT erst mit Ungelesenem — eine dauerhaft sichtbare
+    stumme Glocke sagte nichts und kostete Platz in einer Zeile, die am
+    Telefon rollt. Damit gilt sie auf allen Geräten: die Menüleiste gibt
+    es am Telefon auch, mit 44-px-Knöpfen (§37). Die Sonderregel „am
+    Telefon weg" aus dem ersten Anlauf entfällt ersatzlos.
+
+  · **Der Statuspunkt sitzt am Arbeitsbereichs-Knopf** (`mb-konto`,
+    grün ok, gelb läuft, rot Fehler) — abgemeldet ist er weg, denn „kein
+    Konto" ist kein Zustand, den man überwachen müsste. Das aria-label
+    verspricht weiter den Arbeitsbereich (das öffnet der Klick) und
+    trägt den Wolke-Stand als Auskunft dahinter.
+
+  · **Der Weg zum Wolke-Dialog steht unter „Mehr → Wolke"** (Daten und
+    Sicherheit, neben Sicherung und Import) — auf jedem Gerät findbar.
+    Vorher führte nur die Befehlspalette hin, und ein Weg, den man nur
+    über die Palette findet, ist verschwunden (dieselbe Regel, mit der
+    E236 Workspace und Arbeitsbereich nach „Mehr" gerettet hat).
+
+  · **Die Leiste wird bei jedem Reiterwechsel neu gebaut** — deshalb
+    suchen `glockeFrisch`/`wolkeFrisch` ihre Knöpfe bei jedem Aufruf
+    frisch, die Horcher (`redion:meldungen`, `Wolke.beiAenderung`)
+    stehen EINMAL in `Menueband.start()`, der letzte Wolke-Stand wird
+    gemerkt, und `zeichne()` ruft beide am Ende selbst.
 
   · **Der Bereich ruft die Schale nicht.** Werkzeuge meldet Änderungen
-    der Meldungsliste als DOM-Ereignis `redion:meldungen`; die Schale
-    hört zu und zählt neu. Kein Direktaufruf bereiche→schale (Regel 1).
+    der Meldungsliste als DOM-Ereignis `redion:meldungen` (Regel 1);
+    Zahl und Punkt sind Bild, die Wörter stehen im aria-label (§38).
 
-  · **Der Punkt am Wolke-Horcher.** `Wolke.beiAenderung` liefert den
-    Zustand bei jeder Änderung — der Punkt und die Beschriftung hängen
-    daran, nichts fragt im Takt nach.
+DIE LEHRE MIT DEM [hidden]
 
-  · **Zahl und Punkt sind Bild, die Wörter stehen im aria-label** (§38):
-    „Posteingang, 3 ungelesen", „Konto Redur, letzter Abgleich 14:32",
-    „Konto und Abgleich — nicht angemeldet".
+`display:grid` an `.mb-rechts-knopf` SCHLÄGT die `[hidden]`-Regel des
+Browsers — Autorenstil gewinnt gegen das UA-Stylesheet. Die „versteckte"
+Glocke stand deshalb sichtbar da: das Attribut stimmte, das Bild nicht.
+Genau daran war schon der erste Besänftigungsversuch gescheitert
+(test40 fand den Knopf TROTZ `hidden`), und die eigene Prüfung blieb
+grün, weil sie nur das Attribut las. Seitdem: `#mb-glocke[hidden]{
+display:none }` in bausteine.css, und test258 §1 misst den GERECHNETEN
+Stil, nicht das Attribut. test248 stellt seine Ausgangslage jetzt
+ausdrücklich her (Meldungen leeren nach dem Säen) — seine eigene Lehre,
+angewandt auf sich selbst.
 
-  · **Am Telefon bleiben beide weg** (`nur-rechner`): die Kopfzeile
-    trägt dort schon Suchen und Neu, und den Ungelesen-Punkt zeigt die
-    Seitenleiste. Ein Weg weniger ist dort mehr.
-
-**Geprüft:** test258, 11 Punkte — Glocke ohne Ungelesenes ohne Zahl,
-Zähler steigt mit jeder Meldung samt aria-Wortlaut, Gelesen senkt,
-Leeren versteckt, Klick öffnet den Posteingang bis in die Krume,
-Konto-Knopf abgemeldet ohne Punkt und ehrlich beschriftet, Klick öffnet
-den Wolke-Dialog, am Telefon sind beide display:none. Zwei Gegenproben
-einzeln rot: Ereignis verstummt → der Zähler bleibt bei 0 stehen;
-Punkt lügt (sichtbar trotz abgemeldet) → genau der Konto-Punkt.
+**Geprüft:** test258 neu geschrieben, 15 Punkte — Kopfzeile ohne beide
+Knöpfe, Glocke versteckt UND gezeichnet weg, Zähler steigt mit
+aria-Wortlaut, Neubau der Leiste behält den Stand, Gelesen senkt,
+Leeren versteckt, Klick öffnet den Posteingang, Punkt abgemeldet weg,
+„Mehr" führt die Wolke-Zeile und der Klick öffnet den Dialog, am
+Telefon ist die Glocke da und ≥44 px. Drei Gegenproben einzeln rot:
+`[hidden]`-CSS raus → „gezeichnet weg" rot; `zeichne()` ruft nicht
+mehr auf → „Neubau behält den Stand" rot; Wolke-Zeile raus → „Mehr
+führt die Wolke-Zeile" rot. Danach test40 24/24, test245 53/53,
+test248 44/44 (zweimal), Typprüfung grün, `git status` sauber.
