@@ -16,40 +16,21 @@
 }
 
 /* ===========================================================================
-   BEWEGUNG — die Marken aus Redurs Vorgabe (E43)
+   BERÜHRUNG UND TELEFON — die Marken aus Redurs Vorgabe (E43)
    ---------------------------------------------------------------------------
-   Bis hierher stand jede Dauer an ihrer eigenen Stelle: .14s hier, 200ms
-   dort, .22s im Blatt. Gemessen am 7. August: rund achtunddreissig
-   Übergänge in sieben Stilblättern, kein einziger gemeinsamer Wert. Wer die
-   App als Ganzes ruhiger oder schneller machen wollte, musste sie suchen.
+   BEWEGUNG STEHT NICHT MEHR HIER. Von E43 bis E259 definierte dieser Block
+   auch drei Dauern und die Kurven — und `grund.css` definierte vier Dauern
+   mit ANDEREN Zahlen noch einmal (E198). Gewonnen hat immer grund.css, nur
+   durch die Ladereihenfolge; die Zahlen hier waren seitdem tote Zeilen, die
+   beim Lesen das Falsche behaupteten. Seit E259 wohnen alle Dauern und
+   Kurven in `grund.css` unter „Bewegung", einschliesslich der gerichteten
+   E43-Kurven `--ease-enter`/`--ease-exit`. Dort steht auch die Abschaltung
+   für Menschen, die keine Bewegung wollen.
 
-   DREI DAUERN REICHEN, und das ist der Punkt der Vorgabe:
-
-     schnell   Berührung, Knopfdruck — es soll SOFORT wirken
-     normal    Reiterwechsel, Seitenwechsel, Hinweis
-     langsam   Blätter von unten; sie dürfen schwer wirken
-
-   Die Kurven sind nicht Geschmack. `ease-enter` startet schnell und bremst
-   weich aus — was hereinkommt, soll ankommen, nicht anschweben.
-   `ease-exit` macht es umgekehrt: was geht, geht zügig. Beides linear wäre
-   das, was billige Oberflächen unterscheidet von teuren.
-
-   WAS HIER ABSICHTLICH NICHT STEHT: Federn und Sprünge. Redion ist ein
-   Arbeitsgerät. Ein Blatt, das nachwippt, ist beim ersten Mal nett und beim
-   fünfzigsten eine Verzögerung.
-
-   Wer keine Bewegung mag, bekommt keine — die Regel dafür steht global in
-   `bausteine.css` und überschreibt jede dieser Marken.
+   Geblieben sind die Marken, die nichts mit Zeit zu tun haben: wie tief
+   etwas einsinkt, und die semantischen Telefonmasse.
    =========================================================================*/
 :root{
-  --motion-fast: 120ms;
-  --motion-normal: 220ms;
-  --motion-slow: 320ms;
-
-  --ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
-  --ease-enter:    cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-exit:     cubic-bezier(0.4, 0, 1, 1);
-
   /* Wie weit etwas beim Antippen einsinkt. Ein Knopf darf deutlich
      reagieren; eine Karte, die man mit der halben Handfläche trifft, nur
      angedeutet — sonst zuckt der halbe Bildschirm. */

@@ -35,6 +35,14 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
+**29. August 2026 · Bewegung wohnt nur noch in grund.css (E259)**
+
+> Phase-1-Vorarbeit des Amdion-Bogens: das Dauern-Doppel aus marken.css
+> (E43) gegen grund.css (E198) ist aufgelöst — grund.css gewann bisher
+> nur durch Ladereihenfolge. Die gerichteten Kurven ziehen mit um,
+> `--ease-standard` ist jetzt ein Alias der EINEN Kurve. Gegenprobe
+> einzeln rot, test126/245/40 grün.
+
 **29. August 2026 · Amdion ist die Vorlage — der Übernahme-Bogen beginnt (E258)**
 
 > Redur will Redion „genau so" wie seinen eigenen Prototyp Amdion.

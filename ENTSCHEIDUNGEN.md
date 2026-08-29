@@ -18736,3 +18736,32 @@ ein dokumentierter Migrationspfad existiert.
 und an Redur geschickt; der Plan zitiert Datei und Zeile für jede
 Aussage über beide Codebasen. Code hat sich in diesem Eintrag nicht
 geändert — er ist die Eintrittskarte für E259 ff.
+
+E259 — Bewegung wohnt nur noch in grund.css (Amdion Phase 1, Vorarbeit)
+================================================================================
+
+Erster Schritt des E258-Bogens, und noch reine Hygiene: `--motion-fast/
+normal/slow` waren ZWEIMAL definiert — marken.css (E43: 120/220/320)
+und grund.css (E198: 140/200/320 plus instant). Gewonnen hat immer
+grund.css, nur durch die Ladereihenfolge; die Zahlen in marken.css
+waren seitdem tote Zeilen, die beim Lesen das Falsche behaupteten. Wer
+vor der Stilarbeit der Phase 1 an Dauern dreht, muss wissen, WO er
+dreht.
+
+DIE ENTSCHEIDUNG: alle Dauern und Kurven stehen in grund.css unter
+„Bewegung". Die gerichteten E43-Kurven `--ease-enter`/`--ease-exit`
+ziehen dorthin um (Tür auf, Tür zu — keine zweite Beschleunigung).
+`--ease-standard` wird zum Alias `var(--ease)`: bis jetzt liefen
+E43-Stellen eine MINIMAL andere Kurve (0.2,0.8,0.2,1) als E198-Stellen
+(.2,.8,.3,1) — genau das „zwei Programme nebeneinander", vor dem der
+grund-Kommentar warnt. Rund zwanzig Stellen behalten den alten Namen;
+wer neu schreibt, nimmt `--ease`. In marken.css bleiben nur die
+zeitlosen Marken (Einsinken, Telefonmasse), und der Kommentar dort
+sagt jetzt auch richtig, dass die Bewegungs-Abschaltung in grund.css
+steht (er behauptete bausteine.css).
+
+**Geprüft:** Gegenprobe — `--ease-standard` entfernt lässt test126
+„Es gibt drei Kurven" rot werden UND tötet real einen Übergang der
+unteren Leiste (var() ohne Rückfall macht die ganze transition-Zeile
+ungültig: dauer 0s). Wiederhergestellt: test126 22/22, test245 53/53,
+test40 24/24. Einzeldatei neu gebaut (+54 Bytes, die Kommentare).

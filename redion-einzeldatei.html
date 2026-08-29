@@ -69,40 +69,21 @@
 }
 
 /* ===========================================================================
-   BEWEGUNG — die Marken aus Redurs Vorgabe (E43)
+   BERÜHRUNG UND TELEFON — die Marken aus Redurs Vorgabe (E43)
    ---------------------------------------------------------------------------
-   Bis hierher stand jede Dauer an ihrer eigenen Stelle: .14s hier, 200ms
-   dort, .22s im Blatt. Gemessen am 7. August: rund achtunddreissig
-   Übergänge in sieben Stilblättern, kein einziger gemeinsamer Wert. Wer die
-   App als Ganzes ruhiger oder schneller machen wollte, musste sie suchen.
+   BEWEGUNG STEHT NICHT MEHR HIER. Von E43 bis E259 definierte dieser Block
+   auch drei Dauern und die Kurven — und `grund.css` definierte vier Dauern
+   mit ANDEREN Zahlen noch einmal (E198). Gewonnen hat immer grund.css, nur
+   durch die Ladereihenfolge; die Zahlen hier waren seitdem tote Zeilen, die
+   beim Lesen das Falsche behaupteten. Seit E259 wohnen alle Dauern und
+   Kurven in `grund.css` unter „Bewegung", einschliesslich der gerichteten
+   E43-Kurven `--ease-enter`/`--ease-exit`. Dort steht auch die Abschaltung
+   für Menschen, die keine Bewegung wollen.
 
-   DREI DAUERN REICHEN, und das ist der Punkt der Vorgabe:
-
-     schnell   Berührung, Knopfdruck — es soll SOFORT wirken
-     normal    Reiterwechsel, Seitenwechsel, Hinweis
-     langsam   Blätter von unten; sie dürfen schwer wirken
-
-   Die Kurven sind nicht Geschmack. `ease-enter` startet schnell und bremst
-   weich aus — was hereinkommt, soll ankommen, nicht anschweben.
-   `ease-exit` macht es umgekehrt: was geht, geht zügig. Beides linear wäre
-   das, was billige Oberflächen unterscheidet von teuren.
-
-   WAS HIER ABSICHTLICH NICHT STEHT: Federn und Sprünge. Redion ist ein
-   Arbeitsgerät. Ein Blatt, das nachwippt, ist beim ersten Mal nett und beim
-   fünfzigsten eine Verzögerung.
-
-   Wer keine Bewegung mag, bekommt keine — die Regel dafür steht global in
-   `bausteine.css` und überschreibt jede dieser Marken.
+   Geblieben sind die Marken, die nichts mit Zeit zu tun haben: wie tief
+   etwas einsinkt, und die semantischen Telefonmasse.
    =========================================================================*/
 :root{
-  --motion-fast: 120ms;
-  --motion-normal: 220ms;
-  --motion-slow: 320ms;
-
-  --ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
-  --ease-enter:    cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-exit:     cubic-bezier(0.4, 0, 1, 1);
-
   /* Wie weit etwas beim Antippen einsinkt. Ein Knopf darf deutlich
      reagieren; eine Karte, die man mit der halben Handfläche trifft, nur
      angedeutet — sonst zuckt der halbe Bildschirm. */
@@ -457,15 +438,27 @@ html[data-theme="light"]{
   --radius-2xl:  20px;  /* grosse Dialoge und Blätter                        */
   --radius-pill: 999px; /* Pillen und runde Symbolknöpfe                     */
 
-  /* --- Bewegung. Vier Stufen und EINE Kurve. -----------------------------
+  /* --- Bewegung. Vier Stufen und EINE Kurve (E259). ----------------------
    * Die Kurve ist überall dieselbe. Zwei Bewegungen mit verschiedenen
    * Beschleunigungen nebeneinander wirken wie zwei verschiedene Programme.
+   * Bis E259 standen drei der Dauern AUCH in marken.css (E43, mit anderen
+   * Zahlen) — gewonnen hat immer dieser Block, nur durch Ladereihenfolge.
+   * Jetzt wohnt Bewegung ausschliesslich hier.
    * -------------------------------------------------------------------- */
   --motion-instant: 80ms;   /* Druckpunkt eines Knopfes                      */
   --motion-fast:    140ms;  /* Überfahren, kleine Umschalter                 */
   --motion-normal:  200ms;  /* Seitenleiste, Popover, Reiter                 */
   --motion-slow:    320ms;  /* Blätter, grosse Überlagerungen                */
   --ease:           cubic-bezier(.2,.8,.3,1);
+
+  /* Die zwei GERICHTETEN Kurven aus E43 bleiben: was hereinkommt, bremst
+     weich aus; was geht, geht zügig. Das ist keine zweite Beschleunigung,
+     sondern Tür auf und Tür zu desselben Programms. `--ease-standard` ist
+     seit E259 nur noch ein zweiter Name für die EINE Kurve — rund zwanzig
+     Stellen benutzen ihn; wer neu schreibt, nimmt `--ease`. */
+  --ease-standard: var(--ease);
+  --ease-enter:    cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-exit:     cubic-bezier(0.4, 0, 1, 1);
 
   /* --- Die zwei alten Schattennamen (E204). ----------------------------
    * Die vier Sprossen `--shadow-1` … `--shadow-4` stehen in `hell.css` und
