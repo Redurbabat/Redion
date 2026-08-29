@@ -18440,3 +18440,52 @@ Gegenproben einzeln rot: eine Stelle zurück auf `esc` → genau die
 Vorderseiten-Punkte; `kartenText` ohne Maskierung → das img wird ein
 Element und `window.__xss259` steht auf 1 — der §19-Teil schlägt an.
 Nachbarn danach grün: test208 43/43, test215 50/50, test224 18/18.
+
+
+================================================================================
+E253 — Suchfeld im Wissensgraphen, und der Graph bekommt seinen Boden
+================================================================================
+
+Der Graph zeigt bewusst nur den Ausschnitt um den Mittelpunkt (seit der
+600-Knoten-Lehre). Wer eine BESTIMMTE Seite im Geflecht sehen wollte,
+musste sie erst im Editor öffnen und den Graphen neu aufmachen — ein
+Umweg über ein anderes Werkzeug für eine Frage, die der Graph selbst
+beantworten können muss.
+
+DIE ENTSCHEIDUNGEN
+
+  · **Ein Suchfeld in der Steuerzeile.** Tippen listet Treffer aus dem
+    GANZEN Index im Seitenfeld (gedeckelt wie die Verwaisten-Liste),
+    nicht nur aus dem sichtbaren Ausschnitt — das ist der Sinn.
+
+  · **Klick oder Enter springt.** Liegt der Treffer ausserhalb des
+    Ausschnitts, wird er der neue Mittelpunkt (`centerId` ist dafür von
+    `const` zu `let` geworden); liegt er drin, reicht das Auswählen.
+    Die Knotenkarte sagt seitdem „Mittelpunkt des Graphen" statt
+    „aktuelle Seite" — seit die Suche recentert, wäre das alte Wort
+    eine Behauptung.
+
+  · **Escape im Feld leert erst die Suche** — der Graph bleibt offen,
+    das zweite Escape schliesst (§38: kein Überraschungs-Zuschlag
+    mitten im Tippen). Die Ausnahme steht IM capture-Horcher des
+    Dokuments, weil der vor dem Feld dran ist; ein stopPropagation am
+    Feld käme zu spät.
+
+  · **Kein Treffer sagt es ehrlich** mit dem gesuchten Wort (§47).
+
+DER BEIFUND (§55): Das Bild vor der Arbeit zeigte, dass Steuerzeile und
+Seitenfeld des Graphen ZU KEINER ZEIT Stil hatten — rohe
+Fieldset-Rahmen, und das Seitenfeld floss als Fliesstext unter die
+Zeichenfläche („ÖffnenNachbarn erweitern" als ein Wort). Funktional
+war alles da, lesbar nichts. Die fehlenden Stile stehen jetzt in
+werkzeuge.css (Steuerzeile als Flex-Zeile, Seitenfeld als echtes
+280-px-Feld mit Trefferliste, am Telefon unter der Fläche statt
+daneben).
+
+**Geprüft:** test260, 9 Punkte — Feld beschriftet da, Treffer aus dem
+ganzen Index (Gamma liegt VOR der Suche nicht im Ausschnitt), Klick
+macht den Treffer zum Mittelpunkt, Enter nimmt den ersten, Escape
+leert erst und schliesst dann, Leerfall nennt das Wort. Zwei
+Gegenproben einzeln rot: ohne Recentern zeigt die Karte wieder
+Alpha; ohne die Escape-Ausnahme schliesst das erste Escape den
+Graphen mitten im Tippen. test195 (Graphvorbereitung) danach 20/20.

@@ -35,6 +35,15 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
+**29. August 2026 · Der Graph bekommt ein Suchfeld — und seinen Boden (E253)**
+
+> Tippen listet Treffer aus dem ganzen Index, Klick/Enter macht den
+> Treffer zum neuen Mittelpunkt, Escape leert erst die Suche (§38),
+> der Leerfall nennt das Wort (§47). Beifund nach §55: Steuerzeile und
+> Seitenfeld des Graphen hatten NIE Stil — rohe Fieldsets, das Panel
+> floss als Fliesstext unter die Fläche. Beides steht jetzt in
+> werkzeuge.css. test260 (9 Punkte, 2 Gegenproben einzeln rot).
+
 **29. August 2026 · Kartentext sieht überall gleich aus (E252)**
 
 > Der Karteikasten zeichnete **fett** und `Code`, die Lernwelt zeigte an

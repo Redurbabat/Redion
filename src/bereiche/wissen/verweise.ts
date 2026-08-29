@@ -828,7 +828,11 @@ const Links = (() => {
       });
       return beste;
     };
-    const centerId = index.nodes.has(offen) ? offen : zuletzt();
+    /* `let`, nicht `const` (E253): die Suche macht ihren Treffer zum neuen
+       Mittelpunkt — der Graph baut sich dann um ihn statt um die offene
+       Seite. `center` bleibt der ERSTE Mittelpunkt; er dient nur noch als
+       Rückfall für die Knotenkarte. */
+    let centerId = index.nodes.has(offen) ? offen : zuletzt();
     const center = index.nodes.get(centerId);
     if (!center) {
       UI.toast('Noch keine Seiten für den Graphen');
@@ -850,6 +854,14 @@ const Links = (() => {
           '<button type="button" class="icon-btn" data-a="zu" aria-label="Graph schliessen">✕</button>' +
         '</div>' +
         '<div class="graph-controls" aria-label="Graph filtern">' +
+          /* DIE SUCHE ZUERST (E253). Der Graph zeigt nur den Ausschnitt um
+             den Mittelpunkt — wer eine BESTIMMTE Seite im Geflecht sucht,
+             musste sie bisher erst im Editor öffnen und den Graphen neu
+             aufmachen. Tippen listet Treffer aus dem GANZEN Index im
+             Seitenfeld; Klick oder Enter springt hin. */
+          '<input type="search" class="graph-suche" data-graph-suche ' +
+            'placeholder="Knoten suchen …" aria-label="Knoten im Graphen suchen" ' +
+            'autocomplete="off" spellcheck="false">' +
           '<fieldset><legend>Tiefe</legend>' +
             '<button type="button" data-graph-depth="1" aria-pressed="true">1</button>' +
             '<button type="button" data-graph-depth="2" aria-pressed="false">2</button></fieldset>' +
@@ -886,7 +898,9 @@ const Links = (() => {
 
     const abort = new AbortController();
     const signal = abort.signal;
-    let running = true, depth = 1, selectedId = centerId, panelMode: 'node' | 'orphans' | 'areas' = 'node';
+    let running = true, depth = 1, selectedId = centerId,
+      panelMode: 'node' | 'orphans' | 'areas' | 'suche' = 'node';
+    let sucheWort = '';
     let filters: KnowledgeGraphFilters = { ...DEFAULT_GRAPH_FILTERS };
     const expanded = new Set<string>();
     const positions = new Map<string, { x: number; y: number; vx: number; vy: number }>();
@@ -910,7 +924,39 @@ const Links = (() => {
       close(); App.oeffne(node.rawId);
     };
 
+    /* Treffer aus dem GANZEN Index, nicht nur dem sichtbaren Ausschnitt —
+       das ist der Sinn der Suche: finden, was der Ausschnitt gerade nicht
+       zeigt. Gedeckelt wie die Verwaisten-Liste. */
+    const sucheTreffer = (): KnowledgeGraphNode[] => {
+      const wort = sucheWort.trim().toLowerCase();
+      if (!wort) return [];
+      return [...index.nodes.values()]
+        .filter(node => node.kind !== 'tag' && node.name.toLowerCase().includes(wort))
+        .slice(0, 80);
+    };
+
+    const springeZu = (id: string): void => {
+      if (!index.nodes.has(id)) return;
+      selectedId = id;
+      /* Liegt der Treffer ausserhalb des Ausschnitts, wird er der neue
+         Mittelpunkt — sonst zeigte die Karte einen Knoten, den das Bild
+         nicht enthält. Liegt er drin, reicht das Auswählen. */
+      if (!visibleSlice.nodes.some(node => node.id === id)) centerId = id;
+      panelMode = 'node';
+      render();
+    };
+
     const showPanel = (): void => {
+      if (panelMode === 'suche') {
+        const treffer = sucheTreffer();
+        panel.innerHTML = '<h2>Suche</h2>' +
+          (treffer.length
+            ? '<div class="graph-panel-list">' + treffer.map(node =>
+                `<button type="button" data-graph-ziel="${esc(node.id)}"><span>${esc(node.icon)}</span>` +
+                `<span>${esc(node.name)}</span><em>${kindName(node.kind)}</em></button>`).join('') + '</div>'
+            : `<div class="graph-empty">Nichts gefunden zu „${esc(sucheWort.trim())}“.</div>`);
+        return;
+      }
       if (panelMode === 'orphans') {
         panel.innerHTML = '<h2>Verwaiste Seiten</h2>' +
           '<p>Ohne Link, Rückverweis, Relation oder Unterseite. Tags allein zählen nicht als Verbindung.</p>' +
@@ -939,7 +985,10 @@ const Links = (() => {
       const canExpand = visibleSlice.nodes.some(node => node.id === selected.id);
       panel.innerHTML = `<h2>${esc(selected.icon)} ${esc(selected.name)}</h2>` +
         `<p>${kindName(selected.kind)} · ${selected.degree} Verbindungen` +
-          (selected.id === centerId ? ' · aktuelle Seite' : '') + '</p>' +
+          /* „Mittelpunkt des Graphen", nicht „aktuelle Seite": seit die
+             Suche recentert (E253), ist der Mittelpunkt nicht mehr immer
+             die offene Seite — das alte Wort wäre dann eine Behauptung. */
+          (selected.id === centerId ? ' · Mittelpunkt des Graphen' : '') + '</p>' +
         '<div class="graph-panel-actions">' +
           (selected.rawId ? `<button type="button" data-graph-open="${esc(selected.id)}">Öffnen</button>` : '') +
           (canExpand ? `<button type="button" data-graph-expand="${esc(selected.id)}"` +
@@ -1144,6 +1193,8 @@ const Links = (() => {
       if (selectButton?.dataset.graphSelect) {
         selectedId = selectButton.dataset.graphSelect; panelMode = 'node'; showPanel(); return;
       }
+      const zielButton = element?.closest<HTMLElement>('[data-graph-ziel]');
+      if (zielButton?.dataset.graphZiel) { springeZu(zielButton.dataset.graphZiel); return; }
       const expandButton = element?.closest<HTMLElement>('[data-graph-expand]');
       if (expandButton?.dataset.graphExpand) {
         expanded.add(expandButton.dataset.graphExpand); panelMode = 'node'; render(); return;
@@ -1155,7 +1206,37 @@ const Links = (() => {
         const kind = newButton.dataset.graphNew; close(); createKnowledgeObject(kind); return;
       }
     }, { signal });
-    document.addEventListener('keydown', event => { if (event.key === 'Escape') close(); }, { capture: true, signal });
+    overlay.addEventListener('input', event => {
+      const feld = elVon(event)?.closest<HTMLInputElement>('[data-graph-suche]');
+      if (!feld) return;
+      sucheWort = feld.value;
+      panelMode = sucheWort.trim() ? 'suche' : 'node';
+      showPanel();
+    }, { signal });
+    overlay.addEventListener('keydown', event => {
+      const feld = elVon(event)?.closest<HTMLInputElement>('[data-graph-suche]');
+      if (!feld || event.key !== 'Enter') return;
+      const erster = sucheTreffer()[0];
+      if (erster) springeZu(erster.id);
+    }, { signal });
+    document.addEventListener('keydown', event => {
+      if (event.key !== 'Escape') return;
+      /* ESCAPE IM SUCHFELD LEERT ERST DIE SUCHE (E253). Dieser Horcher
+         läuft in der capture-Phase — VOR dem Feld selbst; ein
+         stopPropagation am Feld käme also zu spät. Die Ausnahme muss
+         deshalb hier stehen: Feld mit Inhalt → leeren, Graph bleibt.
+         Wer wirklich schliessen will, drückt noch einmal (§38: kein
+         Überraschungs-Zuschlag mitten im Tippen). */
+      const feld = event.target instanceof HTMLInputElement &&
+        event.target.closest('.graph-overlay') &&
+        event.target.matches('[data-graph-suche]') ? event.target : null;
+      if (feld && feld.value) {
+        event.stopPropagation();
+        feld.value = ''; sucheWort = ''; panelMode = 'node'; showPanel();
+        return;
+      }
+      close();
+    }, { capture: true, signal });
     addEventListener('resize', resize, { signal });
 
     resize(); render(); loop();
