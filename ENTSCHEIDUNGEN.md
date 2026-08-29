@@ -18028,3 +18028,47 @@ mit; „Samstag immer" → der Fünf-Spalten-Punkt zählt 6.
 Der volle Lauf vom selben Abend: 214 von 215 grün; das eine Rot war
 test202 mit der alten Fünf-Sammlungen-Erwartung, die während des Laufs
 von dieser Änderung überholt wurde — frisch danach: 84 ok, 0 offen.
+
+
+E244 — Der Ausdruck bekommt Kopfzeile, Datum und Seitenzahlen
+================================================================================
+
+AUFGABEN.md nannte es beim Vermessen des Zielbild-Posters den
+„sichtbarsten Unterschied zu Word für abzugebende Berufsschul-Berichte":
+der Druckrahmen schrieb den Inhalt mit festem 22-mm-body-Rand und sonst
+nichts — keine Seitenzahl, keine Kopfzeile, kein Datum.
+
+DIE ENTSCHEIDUNGEN
+
+  · **@page-Randkästen statt Elemente im Fluss.** Kopf und Fuss leben in
+    `@top-left`, `@top-right` und `@bottom-center` der @page-Regel: der
+    Browser wiederholt sie auf JEDER gedruckten Seite und zählt selbst
+    (`counter(page)` / `counter(pages)`) — genau das kann kein Element
+    im Inhalt. Ein Browser ohne Randkästen druckt wie bisher, nur mit
+    @page- statt body-Rand: das Neue fällt weg, nichts bricht.
+
+  · **Die erste Seite trägt keinen Kopf** (`@page:first`): dort steht
+    der Titel schon als H1 — doppelt wäre Word-Karikatur, nicht Word.
+    Die Seitenzahl unten bekommt auch Seite 1, wie in Word.
+
+  · **Der Rand zieht von body nach @page um.** Vorher `body{margin:22mm}`,
+    jetzt `@page{margin:20mm 18mm 22mm}` und `body{margin:0}` — sonst
+    addierten sich beide Ränder zu 40 mm Leerraum.
+
+  · **CSS-content ist eine Zeichenkette, und Titel sind Nutzertext.**
+    `Bericht "Q3" \ Schluss` muss als Kopfzeile funktionieren: \ und "
+    werden escapt, Zeilenumbrüche geglättet, nach 60 Zeichen ist
+    Schluss. Ohne das Escaping verwirft der Browser die ganze Regel
+    STILL — die Kopfzeile fehlt dann einfach (Gegenprobe unten).
+
+**Geprüft:** test251, 13 Punkte, in zwei Hälften. §1 liest den
+Druckrahmen: Fusskasten mit counter(page), Titel escapt, Datum, erste
+Seite ohne Kopf, kein Doppelrand. §2 sind echte Bytes: derselbe Rahmen
+wird per Chromium zu einem PDF gedruckt, das PDF wird über Redions
+EIGENEN Einlese-Weg zurückgeholt (DataTransfer-Drop wie in test181),
+und der Suchtext von Seite 2 muss „Seite 2 von N" und den Titel tragen
+— Redion liest seinen eigenen Ausdruck. Zwei Gegenproben einzeln rot:
+Fusskasten raus → drei Punkte rot (das PDF verliert seine Seitenzahlen
+wirklich); Escaping raus → die kaputte content-Regel fällt still weg
+und Seite 2 trägt nur noch das Datum. test182 (36/36) und test190
+bleiben grün.

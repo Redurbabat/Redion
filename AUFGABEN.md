@@ -35,6 +35,18 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
+**28. August 2026 · Der Ausdruck wird abgabefähig (E244)**
+
+> Aus dem Poster-Abgleich, „kleine Pflicht" mit grosser Sichtbarkeit:
+> Drucken hat jetzt Kopfzeile (Titel), Datum und „Seite X von Y" — in
+> @page-Randkästen, die der Browser auf jeder Seite wiederholt und
+> selbst zählt. Erste Seite ohne Kopf (dort steht der H1), Rand zieht
+> von body nach @page um (kein Doppelrand), Titel mit " und \ sprengen
+> die content-Regel nicht. test251 beweist es mit echten Bytes: das
+> gedruckte PDF wird über Redions eigenen Einlese-Weg zurückgeholt, und
+> Seite 2 trägt „Seite 2 von N" im Suchtext. Zwei Gegenproben einzeln
+> rot.
+
 **28. August 2026 · Das Zielbild-Poster, und zwei Löcher noch am selben Abend zu (E242, E243)**
 
 > Redur schickte sein Zielbild als Poster: „So was will ich — da steht
@@ -1462,8 +1474,8 @@ Nach §46 zuerst die Datenzeile, dann nach Gewicht und Aufwand:
    (Termine, Kalender, ICS-Wiederholungen) ist vorhanden.
 4. **Kleine Pflichten (§30):** Prüflauf für den DOCX-Import (L72),
    Prüflauf für Rückverweise/unverlinkte Erwähnungen, Quellen-Wähler im
-   Chart-Block (Codepfad steht), Seitenzahlen/Kopfzeile beim Drucken,
-   Prüfungs-Timer im Elektro-Arbeitsplatz.
+   Chart-Block (Codepfad steht), ~~Seitenzahlen/Kopfzeile beim Drucken~~
+   (E244, test251), Prüfungs-Timer im Elektro-Arbeitsplatz.
 5. **Die grossen Sichtbaren:** .pptx-Export (L69), Lasso im Stift,
    Wechselstrom-Simulation, XY-Diagramm, Zwei-Wege-Ordner-Abgleich,
    Hausaufgaben und Lernziele je Fach.
@@ -1497,8 +1509,8 @@ Aufwand klein, Logik liegt fertig da.
 **Fehlt wirklich, nach Hebel geordnet.**
 · *Klein:* Suchfeld in der Graph-Ansicht; Rendering-Gleichstand der
   Karteikarten (Lernwelt zeigt nur esc(), die klassische Ansicht kann
-  Mathe); Folien-Übergänge; Kopf-/Fusszeilen + Seitenzahlen im Druck
-  (ein einziger Druckpfad).
+  Mathe); Folien-Übergänge; ~~Kopf-/Fusszeilen + Seitenzahlen im Druck~~
+  (gebaut am selben Abend: E244, test251).
 · *Mittel:* Zellvalidierung im Tabellenblock (Muster liegt in den
   DB-Prüfregeln fertig); Folien-PDF-Export; Multiple-Choice-Karten im
   SM-2-System (der Elektro-Generator zeigt die Bausteine); Bild und
