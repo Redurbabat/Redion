@@ -1691,6 +1691,49 @@ const Store = (() => {
             views: d.views || {},
             meta: d.meta || {}
         };
+        /* --- DIE WOLKE-MERKLISTEN ÜBERLEBEN DAS ERSETZEN (E255/L74) ---------
+           „Ersetzen" tauscht auch `meta` vollständig — eine noch nicht
+           versandte Löschabsicht (wolkeDateienWeg aus E249, wolkeBloeckeWeg
+           aus E254) starb dabei, und die kurz vor dem Import getätigte
+           endgültige Löschung erreichte den Server dann doch nie. Das
+           Oben-Set (wolkeDateienOben) gehört dazu: ohne ist die
+           Datei-Grabstein-Wache blind, und JEDE spätere Löschung einer
+           Bestandsdatei bliebe wieder stumm — das wäre L6 durch die
+           Hintertür.
+    
+           Gerettet wird die VEREINIGUNG aus altem Bestand und Sicherung —
+           mit einer Ausnahme: ein Block-Grabstein, dessen Kennung die
+           Sicherung selbst wieder mitbringt, fällt weg. Die Wieder-Anlage
+           derselben Kennung nimmt den Grabstein zurück (dasselbe Prinzip
+           wie in rohSetzen, E254) — sonst löschte der nächste Takt drüben,
+           was hier eben wiederhergestellt wurde.
+    
+           Der Bestand selbst bekommt beim Ersetzen weiterhin KEINE
+           Grabsteine: eine alte Sicherung einzuspielen darf nicht als
+           Massenlöschung zum Server durchschlagen (E249/E254). */
+        if (art === 'ersetzen') {
+            const alteListe = (k) => {
+                const w = getMeta(k, null);
+                return Array.isArray(w) ? w : [];
+            };
+            const ausSicherung = (k) => Array.isArray(neu.meta[k]) ? neu.meta[k] : [];
+            const bloecke = new Map();
+            for (const e of [...ausSicherung('wolkeBloeckeWeg'), ...alteListe('wolkeBloeckeWeg')]) {
+                if (!e || !e.id)
+                    continue;
+                if (neu.blocks[e.id] || neu.collections[e.id] ||
+                    neu.views[e.id])
+                    continue;
+                bloecke.set(e.id, e);
+            }
+            if (bloecke.size)
+                neu.meta['wolkeBloeckeWeg'] = [...bloecke.values()];
+            for (const k of ['wolkeDateienWeg', 'wolkeDateienOben']) {
+                const beide = [...new Set([...ausSicherung(k).map(String), ...alteListe(k).map(String)])];
+                if (beide.length)
+                    neu.meta[k] = beide;
+            }
+        }
         /* --- ALLES IN EINER TRANSAKTION -----------------------------------
            Löschen und Schreiben liefen hier als hunderte einzelne
            Transaktionen. E71 hat den Abbruch VOR dem ersten Anfassen sauber

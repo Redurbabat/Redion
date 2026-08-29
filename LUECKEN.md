@@ -2767,8 +2767,17 @@ endgültigem Löschen.
 Gefunden am 29. August 2026 (L6-Leser, Belegstellen in E249).
 
 ================================================================================
-L74 — Import „ersetzen" verliert die Wolke-Merklisten
+L74 — Import „ersetzen" verliert die Wolke-Merklisten — GESCHLOSSEN
 ================================================================================
+
+**GESCHLOSSEN am 29. August 2026** mit E255/test261 §11: importAll
+rettet im Ersetzen-Zweig die Vereinigung von wolkeDateienWeg,
+wolkeBloeckeWeg und wolkeDateienOben; Grabsteine für Kennungen, die die
+Sicherung selbst wieder mitbringt, fallen (Wieder-Anlage-Prinzip). Die
+Frage nach Token/Marken nach dem Ersetzen ist L76.
+
+Der ursprüngliche Eintrag:
+
 
 `importAll` im Ersetzen-Modus tauscht auch das Fach `meta` vollständig.
 Eine noch nicht versandte `wolkeDateienWeg`- oder `wolkeBloeckeWeg`-Liste
@@ -2800,3 +2809,20 @@ eigene Sätze statt als EINE Meta-Liste — erst angehen, wenn Multi-Tab
 plus Wolke wirklich zusammen gemessen wird.
 
 Gefunden am 29. August 2026 (E254-Leser, Risiko 3).
+
+================================================================================
+L76 — Wolke-Zustand nach Import „ersetzen" ist unentschieden
+================================================================================
+
+E255 rettet die drei Lösch-Merklisten — Token, Bereich, Salz, Marken
+und das Abgleich-Ja folgen weiter der Sicherung (bzw. verschwinden,
+wenn sie dort fehlen). Beides ist verteidigbar und beides hat Haken:
+Marken mitnehmen hiesse, der wiederhergestellte (ältere) Bestand ist
+für zuSchicken unsichtbar — der Server behielte den neueren Stand und
+die Geräte lögen auseinander; Marken verlieren hiesse Voll-Neuabgleich
+mit „veraltet"-Gewitter. Auch `basis` bleibt beim Import unangetastet
+und beschreibt danach einen Bestand, den es nicht mehr gibt. Gehört
+als EIGENE Entscheidung geplant (Import-Dialog könnte fragen: „Konto
+behalten und Bestand neu abgleichen?"), nicht als Beifang.
+
+Gefunden am 29. August 2026 (beim Bau von E255).

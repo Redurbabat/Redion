@@ -35,6 +35,15 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
+**29. August 2026 · Die Löschabsicht überlebt den Import (E255, L74 zu)**
+
+> „Ersetzen" tauschte auch meta — wartende Grabsteine (E249/E254)
+> starben mit, und ohne das Oben-Set wäre die Datei-Wache erblindet
+> (L6 durch die Hintertür). Jetzt rettet importAll die Vereinigung der
+> drei Listen; Kennungen, die die Sicherung wieder mitbringt, nehmen
+> ihren Grabstein zurück. test261 §11, Gegenprobe einzeln rot. Die
+> offene Konto/Marken-Frage ist ehrlich als L76 notiert.
+
 **29. August 2026 · Endgültig heisst endgültig — jetzt auch für Blöcke (E254, L73 zu)**
 
 > Das Muster „Papierkorb und sofort löschen" entfernte den Satz, bevor

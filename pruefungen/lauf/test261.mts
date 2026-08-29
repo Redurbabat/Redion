@@ -295,6 +295,54 @@ p('Der Grabstein entsteht, wird aber still ausgetragen statt gemeldet',
   stumm.vorher && !stumm.nachher, JSON.stringify(stumm));
 p('Und der Server hat nie von ihm gehört', !(await amServer(stumm.id)));
 
+console.log('\n11 · Import „ersetzen" rettet die Löschabsicht hinüber (E255/L74)');
+const importErg = await A.seite.evaluate(async () => {
+  /* Zwei Kandidaten mit gemeinsamem Server-Stand; die Sicherung wird
+     VOR dem Löschen gezogen und bringt nur EINEN von beiden wieder mit.
+     Dessen Grabstein muss fallen (Wieder-Anlage), der andere überleben. */
+  const s = Store.addBlock(null, 'page', { text: 'Importheft' });
+  const bleibt = Store.addBlock(s.id, 'text', { text: 'Ich bin in der Sicherung.' });
+  const faellt = Store.addBlock(s.id, 'text', { text: 'Mich kennt die Sicherung nicht mehr.' });
+  await Store.flush();
+  await Wolke.abgleichen();
+  const sicherung = await Store.exportAll();
+  const ohne = JSON.parse(sicherung);
+  delete ohne.blocks[faellt.id];
+  Store.trashBlock(bleibt.id); Store.purgeBlock(bleibt.id);
+  Store.trashBlock(faellt.id); Store.purgeBlock(faellt.id);
+  const vorher = Store.blockGrabsteine().map((e: any) => e && e.id);
+  await Store.importAll(JSON.stringify(ohne), 'ersetzen');
+  const nachher2 = Store.blockGrabsteine().map((e: any) => e && e.id);
+  return { bleibtId: bleibt.id, faelltId: faellt.id,
+           vorherBeide: vorher.includes(bleibt.id) && vorher.includes(faellt.id),
+           bleibtWeg: !nachher2.includes(bleibt.id),
+           faelltDa: nachher2.includes(faellt.id) };
+}) as any;
+p('Vor dem Import stehen beide Grabsteine', importErg.vorherBeide, JSON.stringify(importErg));
+p('Der Grabstein des wiederhergestellten Blocks fällt — der andere überlebt das Ersetzen',
+  importErg.bleibtWeg && importErg.faelltDa, JSON.stringify(importErg));
+const nachImport = await A.seite.evaluate(async ([tok]: [string]) => {
+  /* Nach dem Ersetzen ist das Konto-Meta mit der Sicherung getauscht —
+     für die Probe wird die Verbindung neu gesetzt, wie ein Mensch es
+     nach einem Import täte. Der überlebte Grabstein muss dann wirklich
+     hochgehen. */
+  await Wolke.tokenUebernehmen(tok);
+  await Wolke.schluesselSetzen('mein langer geheimer satz');
+  Wolke.abgleichSetzen(true);
+  await Wolke.abgleichen();
+  return Store.blockGrabsteine().length;
+}, [await (async () => {
+  const roh = 'sit_' + kennung();
+  await kern.ablage.setze('sitzungen', { token: await abdruck(roh), kontoId: 'k1',
+    geraet: 'Prüfung', angelegt: new Date().toISOString(),
+    bis: new Date(Date.now() + 86400000).toISOString() });
+  return roh;
+})()] as [string]) as number;
+const geloeschtAmServer = await amServer(importErg.faelltId);
+p('Der überlebende Grabstein erreicht den Server nach dem Import',
+  nachImport === 0 && !!geloeschtAmServer && Number(geloeschtAmServer.geloescht) === 1,
+  JSON.stringify({ merkliste: nachImport, g: geloeschtAmServer?.geloescht }));
+
 p('Keine Seitenfehler auf allen Geräten', fehler.length === 0, fehler.join(' | ').slice(0, 200));
 
 await browser.close();

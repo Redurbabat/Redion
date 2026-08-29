@@ -18582,3 +18582,40 @@ test256 16/16, test257 6/6, test87 129 ok, test100 32 ok. Beim Bauen der
 Suite selbst zweimal E21 bestätigt: addDatabase gibt {block,
 collectionId, viewId} zurück (nicht den Block), und der Papierkorb purgt
 Blöcke erst nach der SICHTBARKEITS-Frist (papierkorbSichtbarSeit).
+
+
+================================================================================
+E255 — Die Wolke-Merklisten überleben das Ersetzen (L74)
+================================================================================
+
+Import „ersetzen" tauscht auch `meta` vollständig. Eine noch nicht
+versandte Löschabsicht (wolkeDateienWeg aus E249, wolkeBloeckeWeg aus
+E254) starb dabei — die kurz vor dem Import getätigte endgültige
+Löschung erreichte den Server dann doch nie. Und mit dem Oben-Set
+(wolkeDateienOben) starb die Wache der Datei-Grabsteine gleich mit:
+JEDE spätere Löschung einer Bestandsdatei wäre wieder stumm geblieben —
+L6 durch die Hintertür.
+
+DIE ENTSCHEIDUNG: `importAll` rettet im Ersetzen-Zweig die VEREINIGUNG
+aus altem Bestand und Sicherung für genau drei Schlüssel —
+wolkeDateienWeg, wolkeBloeckeWeg, wolkeDateienOben. Eine Ausnahme: ein
+Block-Grabstein, dessen Kennung die Sicherung selbst wieder mitbringt,
+fällt weg (Wieder-Anlage nimmt den Grabstein zurück, dasselbe Prinzip
+wie rohSetzen in E254) — sonst löschte der nächste Takt drüben, was
+hier eben wiederhergestellt wurde. Der Bestand selbst bekommt beim
+Ersetzen weiterhin KEINE Grabsteine (keine Massenlöschung zum Server).
+
+Die übrigen Wolke-Schlüssel (Token, Bereich, Salz, Marken, Abgleich-Ja)
+behalten das bisherige Verhalten — was nach einem Ersetzen mit dem
+KONTO geschehen soll, ist eine eigene, offene Frage (L76): die Marken
+mitzunehmen liesse den wiederhergestellten alten Bestand für den
+Abgleich unsichtbar, sie zu verlieren erzwänge einen Voll-Neuabgleich.
+Beides hier mitzuentscheiden wäre §45 zuwider.
+
+**Geprüft:** test261 §11 (jetzt 19 Punkte) — Sicherung vor dem Löschen
+gezogen, beide Kandidaten sofort gelöscht, Import „ersetzen": der
+Grabstein des in der Sicherung enthaltenen Blocks fällt, der andere
+überlebt und erreicht nach neu gesetzter Verbindung den Server
+(geloescht=1, Merkliste leer). Gegenprobe einzeln rot: Rettungsblock
+raus → die Absicht stirbt mit dem Import (faelltDa:false, Server g:0).
+Danach test96 18 ok, test100 32 ok.
