@@ -18107,3 +18107,26 @@ Tabellenpunkt rot. Beim Zurückbauen fiel der Neubau einem Typfehler im
 Test selbst zum Opfer (typecheck rot → bauen:ts lief nie) — aufgefallen
 am `git status`, der quell/ noch verändert zeigte. Der Endstand ist
 byte-gleich zum Commit und 15/15.
+
+
+E246 — Die Rückverweis-Fusszeile bekommt ihren Prüflauf
+================================================================================
+
+Der Obsidian-Leser der Visionskarte fand: `verweiseAuf` und `unverlinkt`
+hängen als Fusszeile unter jeder Seite — und kein Prüflauf ruft sie auf.
+Geprüft war nur der Resolver darunter (test202) und der Vault-Rundlauf
+(test219). Nach §30 die zweite Pflichtlücke aus derselben Messung.
+
+test253, 8 Punkte: wer `[[Ohmsches Gesetz]]` schreibt, steht unter dem
+Ziel als Rückverweis mit Fundstelle; wer den Titel nur erwähnt, steht
+bei den unverlinkten Erwähnungen — und wer schon verlinkt, NICHT noch
+einmal dort; der Klick auf den Eintrag öffnet die Quellseite bis in die
+Krume; eine Seite ohne Verweise bekommt keinen leeren Kasten.
+
+Die Gegenprobe wurde selbst zur Erkenntnis: `hatLink` allein
+abzuschalten liess alles grün, weil eine ZWEITE Wache
+(`schonVerlinkt`, seitenweise statt blockweise) denselben Fall
+abfängt. Erst beide Wachen aus → „Unverlinkte Erwähnungen 2" mit dem
+Laborbericht doppelt, zwei Punkte rot. Der Prüfpunkt hält also das
+PAAR fest — fällt eine Wache, trägt die andere; fallen beide, wird er
+rot. Erste Gegenprobe (verweiseAuf leer) → drei Punkte rot.
