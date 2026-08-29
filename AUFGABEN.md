@@ -35,6 +35,19 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
+**29. August 2026 · Die fünf kleinen Pflichten der Karte sind ab (E244–E248)**
+
+> Aus dem Poster-Abgleich, in einem Zug: Seitenzahlen/Kopfzeile beim
+> Drucken (E244, test251 liest den eigenen Ausdruck zurück), Prüflauf
+> für den DOCX-Import samt handgebauter deutscher Word-Datei (E245,
+> test252), Prüflauf für die Rückverweis-Fusszeile — mit der Erkenntnis,
+> dass dort ZWEI Wachen dasselbe halten (E246, test253), der
+> Quellen-Wähler im Diagramm-Block: Datenbank wählen, gruppieren,
+> messen, und Loslassen beim Rückweg (E247, test254), und die Uhr in
+> der Elektro-Prüfung: 90 s je Aufgabe, Ablauf gibt ab wie auf Papier
+> (E248, test255). Zusammen 53 neue Prüfpunkte, jede Änderung mit
+> einzeln rot bewiesenen Gegenproben.
+
 **28. August 2026 · Der Ausdruck wird abgabefähig (E244)**
 
 > Aus dem Poster-Abgleich, „kleine Pflicht" mit grosser Sichtbarkeit:
@@ -1472,11 +1485,12 @@ Nach §46 zuerst die Datenzeile, dann nach Gewicht und Aufwand:
    Note ist schon da, es fehlt nur der Filter.
 3. **L70 · Echter Stundenplan** — Wochenraster mit Lektionen; Unterbau
    (Termine, Kalender, ICS-Wiederholungen) ist vorhanden.
-4. **Kleine Pflichten (§30):** ~~Prüflauf für den DOCX-Import~~ (E245,
-   test252 — L72 Teil 2, die Formatierung, bleibt offen),
-   Prüflauf für Rückverweise/unverlinkte Erwähnungen, Quellen-Wähler im
-   Chart-Block (Codepfad steht), ~~Seitenzahlen/Kopfzeile beim Drucken~~
-   (E244, test251), Prüfungs-Timer im Elektro-Arbeitsplatz.
+4. **Kleine Pflichten (§30) — alle fünf erledigt am 28./29. August:**
+   ~~Prüflauf für den DOCX-Import~~ (E245, test252 — L72 Teil 2, die
+   Formatierung, bleibt offen), ~~Prüflauf für Rückverweise/unverlinkte
+   Erwähnungen~~ (E246, test253), ~~Quellen-Wähler im Chart-Block~~
+   (E247, test254), ~~Seitenzahlen/Kopfzeile beim Drucken~~ (E244,
+   test251), ~~Prüfungs-Timer im Elektro-Arbeitsplatz~~ (E248, test255).
 5. **Die grossen Sichtbaren:** .pptx-Export (L69), Lasso im Stift,
    Wechselstrom-Simulation, XY-Diagramm, Zwei-Wege-Ordner-Abgleich,
    Hausaufgaben und Lernziele je Fach.

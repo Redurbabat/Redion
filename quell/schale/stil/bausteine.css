@@ -4733,6 +4733,13 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 
 .ea-leiste{display:flex; align-items:center; gap:8px; padding:8px 12px;
   border-bottom:1px solid var(--line); background:var(--bg-card); flex:0 0 auto}
+/* Die Prüfungsuhr (E248). §38: die fallende Zahl selbst trägt die
+   Information — die Farbe unter einer Minute kommt nur dazu. */
+.ea-uhr{margin-left:auto; font-variant-numeric:tabular-nums; font-size:13px;
+  color:var(--text-dim); white-space:nowrap}
+.ea-uhr.ist-knapp{color:var(--gefahr); font-weight:640}
+.ea-zeitaus{margin:0 0 10px; padding:8px 12px; border:1px solid var(--gefahr);
+  border-radius:8px; color:var(--gefahr); font-size:13px}
 .ea-artwahl{display:flex; gap:4px; overflow-x:auto; scrollbar-width:none;
   flex:1; min-width:0}
 .ea-artwahl::-webkit-scrollbar{display:none}

@@ -18168,3 +18168,47 @@ mit (eine Quelle, keine Kopie), und der Rückweg leert die Quelle. Zwei
 Gegenproben einzeln rot: Dialog schreibt ins falsche Feld → Block ohne
 Quelle, Legende leer; Loslassen unterlassen → die Datenbank übertrumpft
 die getippten Zeilen sichtbar.
+
+
+E248 — Die Prüfungssimulation bekommt eine Uhr
+================================================================================
+
+Der Elektro-Leser der Visionskarte: „eine Prüfungssimulation ohne Uhr
+ist eine Übung mit strengerer Auflösung." In `arbeitsplatz.ts` gab es
+keinerlei Timer-Logik.
+
+DIE ENTSCHEIDUNGEN
+
+  · **Ein Endzeitpunkt, kein Restzähler.** `endeUm` ist ein Zeitpunkt;
+    die Uhr rechnet jede Sekunde neu gegen `Date.now()`. Verschluckt der
+    Rechner Ticks (Hintergrund-Tab, Last), geht sie trotzdem richtig —
+    ein dekrementierter Restwert ginge nach.
+
+  · **90 Sekunden je Aufgabe als Vorgabe,** Minuten überschreibbar
+    (`pruefungFlaeche(anzahl, saat, minuten)`). Zehn Aufgaben sind
+    fünfzehn Minuten — an Berufsschul-Kurzaufgaben gemessen eher knapp
+    als grosszügig, und genau das soll eine Simulation sein.
+
+  · **Ablauf heisst abgeben, was da steht** — wie auf Papier. Vorher
+    wird die offene Antwort eingesammelt (`merkeAntwort`), sonst
+    verlöre der Ablauf genau die Aufgabe, an der gerade geschrieben
+    wurde. Das Ergebnis sagt es dazu: „Die Zeit war um — abgegeben
+    wurde, was da stand."
+
+  · **Die Uhr räumt sich selbst auf.** Der Tick prüft
+    `wurzel.isConnected` und beendet sich, sobald die Fläche aus dem
+    Baum fällt — sonst tickte jede verlassene Prüfung für immer weiter
+    (dieselbe Leckform wie der nie abgemeldete resize-Zuhörer des
+    Graphen).
+
+  · **§38 auch hier:** unter einer Minute wird die Uhr rot UND die
+    fallende Zahl selbst trägt die Information — „Noch 0:42" braucht
+    keine Farbe, um verstanden zu werden.
+
+**Geprüft:** test255, 7 Punkte — „Noch 7:30" bei fünf Aufgaben, knapp
+unter einer Minute, automatische Abgabe nach Ablauf (mit kleinen
+Minutenwerten statt verstellter Systemzeit), Startwert bleibt sichtbar,
+„Neue Prüfung" stellt die Uhr neu. test241 bleibt 105/105 — der
+bisherige Prüfungsfluss ist unberührt. Zwei Gegenproben einzeln rot:
+Ablauf-Zweig tot → §3 wartet vergebens auf das Ergebnis (Suite bricht
+mit Timeout ab); Uhr aus der Leiste entfernt → der 7:30-Punkt.
