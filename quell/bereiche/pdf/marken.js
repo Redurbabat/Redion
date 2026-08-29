@@ -485,6 +485,15 @@ const Marken = (() => {
         });
         flaeche.addEventListener('pointerdown', (event) => {
             const e = event;
+            /* Wer hier zeichnet, meint DIESE Fläche — und zwar auch dann, wenn er
+               gleich wieder abbricht. Das steht vor dem `return` unten, weil auch
+               ein Griff im Modus „Schreiben" eine Berührung ist. */
+            if (typeof Zeichenziel !== 'undefined') {
+                try {
+                    Zeichenziel.beruehrt(steuerung);
+                }
+                catch { /* egal */ }
+            }
             if (tool === 'schreiben' || !e.isPrimary || e.button !== 0)
                 return;
             const point = R.zuBlatt(flaeche, e);
@@ -635,10 +644,39 @@ const Marken = (() => {
             listener(state());
             return () => stateListeners.delete(listener);
         };
-        return { flaeche, setzeWerkzeug, setzeFarbe, setzeStrich, marken: marks,
+        /* DAS RÜCKGABEOBJEKT BEKOMMT EINEN NAMEN.
+           Es stand als Literal im `return` am Ende — und der Lauscher weiter
+           oben braucht genau dieses Objekt, um sich beim Kern zu melden. Zwei
+           verschiedene Objekte für dieselbe Fläche wären der sichere Weg zu
+           einem Knopf, der auf nichts wirkt. */
+        const steuerung = { flaeche, setzeWerkzeug, setzeFarbe, setzeStrich, marken: marks,
             undo, redo, deleteSelection, beiAenderung, state };
+        return steuerung;
     };
     const leiste = (controls, extra = '') => {
+        /* DIE FLÄCHE MELDET SICH IM KERN AN (E212).
+    
+           Bis hierher wusste nur diese Leiste, welche Fläche sie steuert. Der
+           Reiter „Zeichnen" im Menüband konnte deshalb nichts — er hätte nicht
+           gewusst, worauf er wirkt (L64).
+    
+           `Zeichenziel` im Kern hält jetzt den Zeiger. Diese Datei gibt ihn
+           ab und behält alles andere: kein Strich, keine Farbe, keine Marke
+           wandert dorthin. Wo die Zeichenlogik an zwei Stellen stünde, liefe
+           die zweite irgendwann von der ersten weg. */
+        if (typeof Zeichenziel !== 'undefined') {
+            try {
+                Zeichenziel.melde(controls, 'Zeichenfläche');
+                /* WELCHE FARBE UND WELCHE STÄRKE STEHEN GERADE AN.
+                   Die Leiste malt sie sich gleich selbst mit `.on` an (siehe
+                   `index === 0` bzw. `index === 1` unten). Sagt sie es dem Kern
+                   nicht, zeigt das Menüband fünf Farbknöpfe und markiert keinen —
+                   obwohl hier einer markiert ist. Zwei Anzeigen, ein Zustand. */
+                Zeichenziel.uebernehmeFarbe(controls, FARBEN[0]);
+                Zeichenziel.uebernehmeStrich(controls, BREITEN[1]);
+            }
+            catch { /* ohne Kern geht es wie bisher */ }
+        }
         const row = document.createElement('div');
         row.className = 'blatt-reihe';
         const tools = document.createElement('div');
@@ -665,8 +703,12 @@ const Marken = (() => {
                 FARBEN.map((value, index) => `<button class="blatt-farbe${index === 0 ? ' on' : ''}" ` +
                     `data-c="${value}" style="background:${value}" title="Farbe"></button>`).join('') +
                 '<span class="blatt-trenn"></span>' +
+                /* Doppelter Massstab wie im Menüband: mit der wahren Stärke sahen
+                   „dünn" (1,2 px) und „mittel" (2,4 px) gleich aus, weil der Boden
+                   von 2 px den ersten hochzog. Das Verhältnis 1 : 2 : 4 bleibt. */
                 BREITEN.map((value, index) => `<button class="blatt-strich${index === 1 ? ' on' : ''}" ` +
-                    `data-b="${value}" title="Strichbreite"><i style="height:${Math.max(2, value)}px"></i></button>`).join('');
+                    `data-b="${value}" title="Strichbreite ${String(value).replace('.', ',')}">` +
+                    `<i style="height:${Math.max(2, value * 2)}px"></i></button>`).join('');
         /* SICHTBAR MACHEN, DASS DIE LEISTE ROLLT (E140, §55.1).
            Bei 390 px ist die Leiste 310 px breit und ihr Inhalt 1059 — von 21
            Knöpfen stehen 15 draussen, alle rechts. Gerollt werden kann sie
@@ -696,12 +738,73 @@ const Marken = (() => {
                 remove.disabled = !next.selected;
         };
         controls.beiAenderung?.(updateState);
+        /* ZWEI ANSICHTEN DESSELBEN ZUSTANDS (E212, §55.1).
+    
+           Diese Leiste markiert ihr Werkzeug selbst, wenn man sie drückt. Wird
+           das Werkzeug oben im Menüband gewählt, passiert hier nichts — auf dem
+           Bildschirmfoto stand die Fläche längst auf `data-tool="stift"`, das
+           Band zeigte „Stift" markiert, und diese Leiste zeigte „Schreiben".
+           Gemessen: `[data-wz].on` = schreiben, `.mb-knopf.ist-an` = Stift.
+    
+           Wer zwei Anzeigen für einen Zustand baut, muss beide an denselben
+           Zustand hängen. Sonst läuft die eine der anderen hinterher, und der
+           Nutzer glaubt der falschen.
+    
+           `werkzeugVon(controls)` und nicht `jetzt()`: gemeint ist DIESE
+           Fläche. Bei zwei Blättern auf einer Seite zeigte `jetzt()` beiden
+           Leisten das Werkzeug des zuletzt berührten. */
+        const markiere = () => {
+            if (!tools.isConnected) {
+                Zeichenziel.vergiss(markiere);
+                return;
+            }
+            const wz = Zeichenziel.werkzeugVon(controls);
+            if (wz)
+                tools.querySelectorAll('[data-wz]').forEach(node => {
+                    node.classList.toggle('on', node.dataset.wz === wz);
+                });
+            const farbe = Zeichenziel.farbeVon(controls);
+            if (farbe)
+                tools.querySelectorAll('.blatt-farbe').forEach(node => {
+                    node.classList.toggle('on', node.dataset.c === farbe);
+                });
+            const dicke = Zeichenziel.dickeVon(controls);
+            if (dicke)
+                tools.querySelectorAll('.blatt-strich').forEach(node => {
+                    node.classList.toggle('on', Number(node.dataset.b) === dicke);
+                });
+        };
+        if (typeof Zeichenziel !== 'undefined' && typeof Zeichenziel.horche === 'function') {
+            try {
+                Zeichenziel.horche(markiere);
+            }
+            catch { /* dann eben nur die Leiste */ }
+        }
+        /* Ein Klick auf die Leiste heisst: DIESE Fläche ist gemeint. Bei einer
+           einzigen ist das gleichgültig, bei drei Blättern auf einer Seite ist
+           es die ganze Frage. */
+        tools.addEventListener('pointerdown', () => {
+            if (typeof Zeichenziel !== 'undefined') {
+                try {
+                    Zeichenziel.beruehrt(controls);
+                }
+                catch { /* egal */ }
+            }
+        }, true);
         tools.addEventListener('click', event => {
             const target = event.target?.closest?.('button');
             if (!target || target.disabled)
                 return;
             if (target.dataset.wz) {
                 controls.setzeWerkzeug(target.dataset.wz);
+                /* Auch der Kern muss es wissen — sonst zeigt das Menüband weiter
+                   das alte Werkzeug an. Derselbe Fehler wie oben, nur andersherum. */
+                if (typeof Zeichenziel !== 'undefined') {
+                    try {
+                        Zeichenziel.uebernehme(controls, target.dataset.wz);
+                    }
+                    catch { /* egal */ }
+                }
                 tools.querySelectorAll('[data-wz]').forEach(node => node.classList.remove('on'));
                 target.classList.add('on');
                 return;
@@ -717,12 +820,26 @@ const Marken = (() => {
             }
             if (target.dataset.c) {
                 controls.setzeFarbe(target.dataset.c);
+                /* Dieselbe Gegenrichtung wie beim Werkzeug: sonst stünde oben eine
+                   Farbe markiert, die niemand mehr benutzt. */
+                if (typeof Zeichenziel !== 'undefined') {
+                    try {
+                        Zeichenziel.uebernehmeFarbe(controls, target.dataset.c);
+                    }
+                    catch { /* egal */ }
+                }
                 tools.querySelectorAll('.blatt-farbe').forEach(node => node.classList.remove('on'));
                 target.classList.add('on');
                 return;
             }
             if (target.dataset.b) {
                 controls.setzeStrich(Number(target.dataset.b));
+                if (typeof Zeichenziel !== 'undefined') {
+                    try {
+                        Zeichenziel.uebernehmeStrich(controls, Number(target.dataset.b));
+                    }
+                    catch { /* egal */ }
+                }
                 tools.querySelectorAll('.blatt-strich').forEach(node => node.classList.remove('on'));
                 target.classList.add('on');
             }

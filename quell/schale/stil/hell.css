@@ -33,12 +33,40 @@ html[data-theme="light"]{
      lesen. Gefunden hat es `test127`, nicht das Auge. */
   --text-dim:  #66655f;
   --text-faint:#82817e;
-  --shadow:    0 8px 28px rgba(15,15,15,.12);
+  /* ==========================================================================
+   * DIE SCHATTENLEITER (E204)
+   * --------------------------------------------------------------------------
+   * E198 hat Masse, Radien und Zeiten auf eine Leiter gesetzt. Die Schatten
+   * fehlten, und man sah es: allein in `lernwelt.css` standen SECHZEHN
+   * handgeschriebene `rgba(0,0,0,…)` — .025, .035, .04, .045, .055, .07,
+   * .075, .08, .1, .12 — ohne Ordnung und ohne Abstufung. Nebeneinander
+   * ergibt das keine Höhenstaffelung, sondern Unruhe: zehn Karten, die alle
+   * ein bisschen anders schweben.
+   *
+   * Vier Sprossen reichen, und sie bedeuten etwas:
+   *
+   *     1  liegt auf   Karte, Kennzahl, Reihe — kaum sichtbar, nur Kante
+   *     2  angehoben   Hauptkarte, Tafel, was sich beim Überfahren hebt
+   *     3  schwebt     Menü, Popover, Seitenblatt      (= das alte --shadow)
+   *     4  überlagert  Dialog, schwebende Leiste  (= --schatten-schwebend)
+   *
+   * `--shadow` und `--schatten-schwebend` bleiben als Namen bestehen und
+   * zeigen jetzt auf Sprosse 3 und 4 — WERTGLEICH, damit die 21 Stellen, die
+   * `var(--shadow)` benutzen, sich nicht ändern. Die Leiter ist ein Angebot
+   * nach unten, kein Umbau nach oben.
+   *
+   * Warum hier und nicht in `grund.css` wie die Masse: ein Schatten ist
+   * Farbe. `rgba(15,15,15,.06)` ist auf Weiss eine zarte Kante und auf
+   * #1a1a1a unsichtbar. E159 hat genau diesen Fehler einmal gekostet.
+   * ======================================================================= */
+  --shadow-1: 0 1px 2px rgba(15,15,15,.04), 0 2px 6px rgba(15,15,15,.03);
+  --shadow-2: 0 2px 6px rgba(15,15,15,.05), 0 8px 20px rgba(15,15,15,.06);
+  --shadow-3: 0 8px 28px rgba(15,15,15,.12);
+  --shadow-4: 0 12px 40px rgba(15,15,15,.16);
   --bg-schwebend: rgba(255,255,255,.74);
   /* Auf hellem Grund ist der Innenrand dunkel, nicht weiss — sonst
      verschwindet er auf der eigenen Fläche. */
   --glas-rand:    inset 0 0 0 1px rgba(15,15,15,.10);
-  --schatten-schwebend: 0 12px 40px rgba(15,15,15,.16);
 
   /* ------------------------------------------------------------------------
    * NOCTURNE IM HELLMODUS (E44)

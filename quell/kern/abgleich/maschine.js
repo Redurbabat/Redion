@@ -329,6 +329,11 @@ const Wolke = (() => {
         Store.setMeta('wolkeMarkeRunter', '');
         Store.setMeta('wolkeMarkeDateien', '');
         Store.setMeta('wolkeDateienOben', []);
+        /* Unversandte Datei-Grabsteine gehören zu DIESEM Konto: nach dem
+           Abmelden bleibt der Server-Bestand unangetastet, und ein späteres,
+           anderes Konto erbt keine fremden Löschabsichten (E249). */
+        Store.setMeta('wolkeDateienWeg', []);
+        Store.setMeta('wolkeBloeckeWeg', []);
         /* Das Ja zum Abgleich gehörte zu DIESEM Konto — das nächste wird neu
            gefragt. */
         Store.setMeta('wolkeAbgleich', null);
@@ -500,12 +505,95 @@ const Wolke = (() => {
             strittig: (typeof Zusammen !== 'undefined') ? Zusammen.offene().length : 0,
             mehr: false };
     };
+    /** Melden, welche SÄTZE hier endgültig gelöscht wurden (E254/L73 Teil 2).
+     *  Das Gegenstück zu `dateienWeg`: die Merkliste `wolkeBloeckeWeg` hält
+     *  versandfertige Grabsteine aus `purgeTief` — Sätze, die `zuSchicken`
+     *  nie mehr sieht, weil sie den Zwischenspeicher schon verlassen haben.
+     *
+     *  Läuft VOR dem Holen: wer erst holt, belebt das eben Gelöschte wieder
+     *  (dieselbe Reihenfolge-Lehre wie bei den Dateien).
+     *
+     *  Die basis-Wache steht HIER und nicht am Schreibpunkt: `basisHolen`
+     *  ist asynchron, der Purge synchron. Kein gemeinsamer Stand heisst,
+     *  der Server hat den Satz nie gesehen — offline Angelegtes-und-
+     *  Gelöschtes wird still ausgetragen statt gemeldet. */
+    const bloeckeWeg = async () => {
+        const offen = Store.getMeta('wolkeBloeckeWeg', []) || [];
+        if (!offen.length)
+            return { bloeckeWeggemeldet: 0 };
+        let gemeldet = 0;
+        const dran = [];
+        for (const e of offen) {
+            if (!e || !e.id || !e.satz) {
+                if (e && e.id)
+                    Store.blockGrabsteinWeg(e.id);
+                continue;
+            }
+            const basis = await Store.basisHolen(e.id);
+            if (!basis) {
+                Store.blockGrabsteinWeg(e.id);
+                continue;
+            }
+            dran.push(e);
+        }
+        for (let von = 0; von < dran.length; von += RUNDE) {
+            const teil = dran.slice(von, von + RUNDE);
+            const paket = [];
+            for (const e of teil) {
+                const klar = JSON.stringify(e.satz);
+                const geteilt = istGeteilt(e.seite);
+                paket.push({
+                    id: e.id, tabelle: e.tabelle || 'blocks', seite: e.seite,
+                    daten: (geteilt || !hatSchluessel()) ? klar : await verschluessele(klar),
+                    verschluesselt: !geteilt && hatSchluessel(),
+                    version: Number(e.satz.wolkeVersion || 1),
+                    geaendert: e.satz.edited || e.satz.created || Store.now(),
+                    geloescht: true
+                });
+            }
+            const a = await ruf('/sync/hoch', { m: 'POST', k: { bereich: bereich(), saetze: paket } });
+            const gruende = new Map();
+            for (const x of [...(a.abgelehnt || []), ...(a.angepasst || [])]) {
+                if (x && x.id)
+                    gruende.set(x.id, String(x.grund || 'angepasst'));
+                else if (typeof x === 'string')
+                    gruende.set(x, '');
+            }
+            for (const e of teil) {
+                if (gruende.has(e.id)) {
+                    /* Abgelehnt wird nicht wiederholt — der Takt käme alle zwei
+                       Minuten mit derselben Antwort. „veraltet" heisst: drüben ist
+                       neuer, der fremde Stand kommt beim Holen zurück (bestehende
+                       Konfliktregel, kein neues Loch). Fehlendes Schreibrecht steht
+                       im Protokoll — Rechte entscheiden final (§26). */
+                    Store.blockGrabsteinWeg(e.id);
+                    if (/Schreibrecht/.test(gruende.get(e.id) || '') && typeof Protokoll !== 'undefined')
+                        Protokoll.notieren('konto', 'Ein gelöschter Block bleibt auf dem Server: ' +
+                            'kein Schreibrecht auf seiner Seite (' + e.id + ').');
+                    continue;
+                }
+                Store.blockGrabsteinWeg(e.id);
+                /* Jetzt darf auch das Gedächtnis weg — der gemeinsame Stand IST
+                   die Löschung. */
+                await Store.basisWeg(e.id);
+                gemeldet++;
+            }
+        }
+        zustand.hoch += gemeldet;
+        return { bloeckeWeggemeldet: gemeldet };
+    };
     const runterEinmal = async () => {
         const a = await ruf('/sync/runter', { m: 'POST',
             k: { bereich: bereich(), seit: Store.getMeta('wolkeMarkeRunter', '') } });
         zustand.rolle = a.rolle || '';
+        /* Was hier zum Löschen vorgemerkt ist, wird nicht wiederbelebt — auch
+           dann nicht, wenn der Versand eben gescheitert ist (E254, dasselbe
+           Muster wie `wegOffen` bei den Dateien). */
+        const wegOffen = new Set((Store.getMeta('wolkeBloeckeWeg', []) || []).map((e) => e && e.id).filter(Boolean));
         let uebernommen = 0, unlesbar = 0, gemischt = 0, strittig = 0;
         for (const s of a.saetze) {
+            if (wegOffen.has(s.id))
+                continue;
             let klar = s.daten;
             if (s.verschluesselt) {
                 klar = await entschluessele(s.daten);
@@ -525,8 +613,17 @@ const Wolke = (() => {
             const hier = s.tabelle === 'blocks' ? Store.cache.blocks[s.id]
                 : s.tabelle === 'collections' ? Store.cache.collections[s.id]
                     : Store.cache.views[s.id];
-            /* Nichts hier? Dann ist es einfach neu. */
+            /* Nichts hier? Dann ist es einfach neu — AUSSER es ist ein
+               Grabstein (E254). Der eigene käme sonst als Papierkorbleiche
+               zurück (Echo, dessen Frist-Purge den nächsten Grabstein schriebe),
+               und fremde legten Leichen für nie Gehabtes an. Stellt drüben
+               jemand wieder her, kommt der Satz mit geloescht:false und wird
+               normal angelegt. */
             if (!hier) {
+                if (s.geloescht) {
+                    await Store.basisWeg(s.id);
+                    continue;
+                }
                 Store.rohSetzen(s.tabelle, satz);
                 await Store.basisPut(s.id, satz);
                 uebernommen++;
@@ -606,6 +703,15 @@ const Wolke = (() => {
         zustand.fehler = '';
         melden();
         try {
+            /* Grabsteine VOR dem Holen (E254) — wer erst holt, belebt das eben
+               Gelöschte wieder. Scheitert der Versand am Netz, bleibt die
+               Merkliste liegen und die Wache in `runterEinmal` hält solange;
+               der Takt selbst darf weiterlaufen. */
+            let w = null;
+            try {
+                w = await bloeckeWeg();
+            }
+            catch { /* nächster Takt versucht es wieder — beharrlich, nicht laut */ }
             const r = await runter();
             const h = await hoch();
             /* Erst die Sätze, dann die Bytes dazu — ein Blockverweis ohne Datei
@@ -624,7 +730,7 @@ const Wolke = (() => {
                 }
                 catch { }
             }
-            return { ...r, ...h, ...(d || {}) };
+            return { ...r, ...h, ...(d || {}), ...(w || {}) };
         }
         catch (e) {
             zustand.fehler = e instanceof Error ? e.message : String(e);
@@ -689,16 +795,60 @@ const Wolke = (() => {
         const b = d.blockId ? Store.getBlock(d.blockId) : null;
         return b ? seiteVon(b) : String(d.blockId || d.id);
     };
+    /** Melden, was hier endgültig gelöscht wurde (E249/L6) — und zwar VOR
+     *  dem Holen: sonst lädt `dateienRunter` die eben gelöschte Datei vom
+     *  Server zurück, bevor ihr Grabstein je gesendet war. */
+    const dateienWeg = async () => {
+        const offen = Store.getMeta('wolkeDateienWeg', []) || [];
+        let gemeldet = 0;
+        for (const id of offen) {
+            try {
+                await ruf('/datei/weg', { m: 'POST', k: { bereich: bereich(), dateiId: id } });
+                Store.dateiGrabsteinWeg(id);
+                gemeldet++;
+            }
+            catch (e) {
+                const satz = e instanceof Error ? e.message : String(e);
+                /* Kein Dateispeicher: derselbe Riegel wie bei Runter/Hoch. */
+                if (/Dateispeicher/.test(satz))
+                    throw e;
+                /* 404 — der Server kennt sie nicht (mehr): erledigt. */
+                if (/gibt es hier nicht/.test(satz)) {
+                    Store.dateiGrabsteinWeg(id);
+                    continue;
+                }
+                /* 403 — kein Schreibrecht auf der Seite: der Grabstein wird
+                   ausgetragen statt ewig wiederholt. Die Datei bleibt auf dem
+                   Server, und das steht im Protokoll — Rechte entscheiden final
+                   (§26), ein Zwei-Minuten-Takt ändert daran nichts. */
+                if (/Schreibrecht/.test(satz)) {
+                    Store.dateiGrabsteinWeg(id);
+                    if (typeof Protokoll !== 'undefined')
+                        Protokoll.notieren('konto', 'Eine gelöschte Datei bleibt auf dem Server: ' +
+                            'kein Schreibrecht auf ihrer Seite (' + id + ').');
+                    continue;
+                }
+                /* Netz oder Serverfehler: liegen lassen — der nächste Takt
+                   versucht es wieder. Der Grabstein ist beharrlich, nicht laut. */
+            }
+        }
+        return { dateienWeggemeldet: gemeldet };
+    };
     /** Holen, was der Server hat und hier fehlt — und löschen, was er als
      *  Grabstein meldet. */
     const dateienRunter = async () => {
         let marke = Store.getMeta('wolkeMarkeDateien', '');
         const oben = new Set(Store.getMeta('wolkeDateienOben', []) || []);
+        /* Was hier zum Löschen vorgemerkt ist, wird nicht wiederbelebt —
+           auch dann nicht, wenn der Versand eben gescheitert ist. */
+        const wegOffen = new Set(Store.getMeta('wolkeDateienWeg', []) || []);
         let geholt = 0, entfernt = 0, unlesbar = 0;
         for (let runde = 0; runde < 20; runde++) {
             const a = await ruf('/datei/stand', { m: 'POST',
                 k: { bereich: bereich(), seit: marke, grenze: 200 } });
             for (const d of (a.dateien || [])) {
+                if (wegOffen.has(d.id))
+                    continue;
                 const lokal = await Store.dateiHolen(d.id);
                 if (d.geloescht) {
                     if (lokal) {
@@ -796,15 +946,18 @@ const Wolke = (() => {
         }
         return { dateienRauf: rauf };
     };
-    /** Beide Richtungen für Anhänge — nach den Sätzen, nie statt ihrer. */
+    /** Beide Richtungen für Anhänge — nach den Sätzen, nie statt ihrer.
+     *  Zuerst die Grabsteine (E249): wer erst holt, belebt das eben
+     *  Gelöschte wieder, bevor der Server je davon erfuhr. */
     const dateienAbgleichen = async () => {
         if (dateienGehenNicht)
             return null;
         try {
+            const w = await dateienWeg();
             const r = await dateienRunter();
             const h = await dateienHoch();
             zustand.fehlerDateien = '';
-            return { ...r, ...h };
+            return { ...w, ...r, ...h };
         }
         catch (e) {
             const satz = e instanceof Error ? e.message : String(e);

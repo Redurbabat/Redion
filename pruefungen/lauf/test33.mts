@@ -31,10 +31,31 @@ import { chromium } from 'playwright';
     [...document.querySelectorAll<HTMLElement>('.apps-block [data-app]')].map(x => (x.textContent ?? '').replace(/[⌄›]/g, '')));
   console.log('   Meine Apps:', JSON.stringify(apps));
   ok('Abschnitt Meine Apps hat neun Einträge', apps.length >= 9);
-  ok('Bibliothek dabei', apps.some(x => (x ?? '').includes('Bibliothek')));
+  /* HIESS „BIBLIOTHEK", HEISST „ALLE SEITEN" (E207).
+     Der Name musste sich ändern, weil daneben eine Zeile „Bibliothek" in der
+     obersten Gruppe steht, die etwas ANDERES öffnet — die Bibliothek der
+     Arbeitswelt. Zwei gleich benannte Knöpfe zu zwei Ansichten sind
+     schlimmer als ein ungewohnter Name.
+
+     Geprüft wird über die Marke und nicht über den Text: `bib` ist eine
+     Adresse nach aussen und bleibt (E167), der sichtbare Name darf sich
+     ändern. Der erste Entwurf dieses Punktes prüfte den Text und ging
+     deshalb rot, obwohl der Knopf unverändert dasteht. */
+  const marken = await p.evaluate(() =>
+    [...document.querySelectorAll<HTMLElement>('.apps-block [data-app]')]
+      .map(x => x.dataset['app'] || ''));
+  ok('Die Seitenübersicht ist dabei', marken.includes('bib'));
   ok('Meine Aufgaben dabei', apps.some(x => (x ?? '').includes('Meine Aufgaben')));
   ok('Marktplatz dabei', apps.some(x => (x ?? '').includes('Marktplatz')));
-  ok('Papierkorb dabei', apps.some(x => (x ?? '').includes('Papierkorb')));
+  /* DER PAPIERKORB STEHT NICHT MEHR IN „MEINE APPS" (E206) — er stand dort
+     UND im Fuss, und beide riefen `App.papierkorb()`. Redur hat dem
+     Entfernen der Kopie zugestimmt.
+
+     Die Behauptung dahinter war nie „er steht in dieser Liste", sondern „man
+     kommt hin". Genau das steht jetzt hier. Der alte Punkt wäre auch grün
+     geblieben, wenn der Knopf ins Leere geführt hätte. */
+  const papierkorbDa = await p.evaluate(() => !!document.getElementById('btn-trash'));
+  ok('Zum Papierkorb führt ein Weg', papierkorbDa);
   ok('Abschnittsüberschrift steht darüber', await p.evaluate(() =>
     [...document.querySelectorAll<HTMLElement>('.side-section span')].some(x => (x.textContent ?? '').startsWith('Meine Apps'))));
 
@@ -49,8 +70,337 @@ import { chromium } from 'playwright';
   });
   await p.waitForTimeout(500);
 
+  /* DIE APPS LIEGEN SEIT E206 IN SCHUBLADEN, und zugeklappt ist die
+     Voreinstellung. Ein Klick auf ein verstecktes Element wartet, bis die
+     Zeit abläuft — die Schublade muss also erst auf.
+
+     Das ist kein Umweg um die Prüfung herum, sondern der Weg, den ein
+     Mensch auch geht. Und er prüft im selben Zug, dass die Schublade
+     überhaupt aufgeht: bliebe sie zu, liefe der Klick danach in denselben
+     Zeitablauf.
+
+     `[data-app="bib"]` heisst seit E207 „Alle Seiten" und nicht mehr
+     „Bibliothek" — die Marke bleibt, weil sie eine Adresse nach aussen ist
+     (E167). Der Weg über `#btn-library` wäre FALSCH: der führt in die
+     Bibliothek der Arbeitswelt, nicht in diese hier. Genau daran ist der
+     erste Versuch gescheitert.
+
+     Geöffnet werden ALLE Schubladen und nicht die eine, in der „bib" heute
+     liegt: sonst wäre dieser Lauf an eine Gruppenzuordnung gebunden, die
+     eine Gestaltungsfrage ist und keine Zusage. Wer eine App umsortiert,
+     soll dafür keine Prüfung anfassen müssen. */
+  const schubladenAuf = async () => {
+    /* Über den Speicher und nicht über Klicks: der Baum wird bei jedem
+       Ansichtswechsel neu gezeichnet, und ein Knopf, den man vorher
+       gegriffen hat, ist danach ein anderer — der zweite Aufruf lief prompt
+       in „element is not attached".
+
+       Dass die Schublade sich mit einem Klick öffnet, prüft `test222` §6.
+       Hier wird nur der Zustand hergestellt, den dieser Lauf braucht; eine
+       Prüfung, die nebenbei etwas anderes mitprüft, ist bei einem Fehler
+       schwerer zu lesen, nicht leichter. */
+    await p.evaluate(() => {
+      /* Seit E219 steht „Meine Apps" hinter „Mehr". Das ist kein Umweg der
+         Prüfung, sondern der Weg, den auch Redur geht — deshalb wird hier
+         geklickt und nicht die ruhige Fassung abgeschaltet. */
+      if (typeof Ruhig !== 'undefined' && Ruhig.an() && !Ruhig.offen()) Ruhig.schalten();
+      const alle = [...document.querySelectorAll<HTMLElement>('[data-app-gruppe]')]
+        .map(b => b.dataset['appGruppe'] || '').filter(Boolean);
+      Store.setMeta('appGruppenAuf', alle);
+      App.zeichneBaum();
+    });
+    await p.waitForTimeout(300);
+  };
+  await schubladenAuf();
   await p.click('[data-app="bib"]');
   await p.waitForTimeout(600);
+
+  /* ================================================================== *
+   * DIE DECKELFORM (E236) — die Ansicht, mit der Redion jetzt öffnet
+   * ------------------------------------------------------------------ *
+   * Sie war die erste Vorgabeansicht ohne einen einzigen Prüfpunkt. Zwei
+   * Fehler fand daran nur das Hinsehen, und beide sind von der Sorte, die
+   * ohne Bild nie auffällt:
+   *
+   *   · Ein Titel wurde HART abgeschnitten. „Was Notion 10 000-mal besser
+   *     machen würde" stand als „Was Notion 10 0" da — ein anderer Titel,
+   *     kein gekürzter. Grund: `text-overflow` gilt nicht für ein
+   *     Inline-Element, `white-space:nowrap` schon.
+   *   · Die gezeichneten Papierlinien liefen quer durch den Text, und
+   *     „Die acht Teile" stand durchgestrichen da.
+   *
+   * WARUM HIER DIE KANTE GEMESSEN WIRD UND NICHT `scrollWidth`: genau das
+   * ist die Falle aus §55.2. Ein Inline-Element meldet `scrollWidth` 0 und
+   * `clientWidth` 0 — der Vergleich sagt „passt schon", während der Text
+   * 251 px über einen 102 px breiten Deckel hinausragt.
+   * ================================================================== */
+  const deckel = await p.evaluate(() => {
+    const HELFER = '.bib-papier, .bib-deckel-marke, .bib-deckel-stern';
+    const karten = [...document.querySelectorAll<HTMLElement>('.bib-deckel')];
+    const ueber: string[] = [];
+    const inline: string[] = [];
+    const luegt: string[] = [];
+    const falschesPapier: string[] = [];
+    let mitPapier = 0;
+    for (const k of karten) {
+      const blatt = k.querySelector<HTMLElement>('.bib-deckel-blatt');
+      if (!blatt) continue;
+      const kante = blatt.getBoundingClientRect().right;
+      const zeilen = [...blatt.children]
+        .filter(x => !x.matches(HELFER)) as HTMLElement[];
+      let zeichen = 0;
+      for (const z of zeilen) {
+        zeichen += (z.textContent || '').trim().length;
+        const r = z.getBoundingClientRect();
+        if (r.width > 0 && r.right > kante + 0.5)
+          ueber.push((z.textContent || '').trim().slice(0, 24) +
+                     ' (' + Math.round(r.right - kante) + ' px darüber)');
+        if (getComputedStyle(z).display === 'inline')
+          inline.push((z.textContent || '').trim().slice(0, 24));
+      }
+      /* Die Marke `is-leer` ist kein Schmuck: an ihr hängt, ob das Papier
+         gezeichnet wird. Sie muss deshalb die Wahrheit sagen. */
+      const leer = blatt.classList.contains('is-leer');
+      if (leer !== (zeichen === 0))
+        luegt.push((k.getAttribute('title') || '?') + ': is-leer=' + leer +
+                   ', Zeichen=' + zeichen);
+      const papier = blatt.querySelector<HTMLElement>('.bib-papier');
+      const sichtbar = !!papier && getComputedStyle(papier).display !== 'none';
+      if (sichtbar) mitPapier++;
+      if (sichtbar !== leer)
+        falschesPapier.push((k.getAttribute('title') || '?') + ': Papier=' + sichtbar);
+    }
+    return { karten: karten.length, ueber, inline, luegt, falschesPapier, mitPapier,
+             arten: [...new Set(karten.map(k => k.getAttribute('data-art') || '?'))] };
+  });
+  console.log('   Deckel:', JSON.stringify(deckel));
+  ok('Die Vorgabeform zeigt Deckel', deckel.karten >= 3);
+  ok('Kein Titel ragt über seinen Deckel hinaus', deckel.ueber.length === 0);
+  ok('Und keine Vorschauzeile bleibt inline', deckel.inline.length === 0);
+  ok('`is-leer` sagt die Wahrheit', deckel.luegt.length === 0);
+  ok('Papier liegt nur da, wo kein Text steht', deckel.falschesPapier.length === 0);
+  /* Ein Gegengewicht zum Punkt darüber: wäre das Papier ÜBERALL aus,
+     wären `falschesPapier` und dieser Punkt zusammen der Beweis, dass es
+     genau dort liegt, wo es hingehört — und nicht nirgends. */
+  ok('Und es liegt überhaupt irgendwo', deckel.mitPapier >= 1);
+
+  /* DIE BIBLIOTHEK HAT SEIT E207 ZWEI FORMEN, und das Regal ist die
+     Voreinstellung. Was hier geprüft wird — Spalten, Sortieren, Zeilen —
+     gehört der LISTE; im Regal gibt es keinen Spaltenkopf, und ein Klick
+     darauf wartet, bis die Zeit abläuft.
+
+     Umgeschaltet wird über den Knopf und nicht über `Store.setMeta`: so
+     prüft dieser Schritt nebenbei, dass der Umschalter überhaupt umschaltet.
+     Die Wahl bleibt gemerkt, deshalb steht sie hier einmal und nicht vor
+     jedem Punkt. */
+  /* ================================================================== *
+   * DAS HEFTREGAL (E207) — geprüft, BEVOR auf die Liste geschaltet wird
+   * ------------------------------------------------------------------ *
+   * Die drei Punkte sind die drei Behauptungen, die es aufstellt: es
+   * fasst nach Heften zusammen, es zeigt echten Inhalt, und ein Klick
+   * führt hin.
+   *
+   * SEIT E236 IST ES NICHT MEHR DIE VOREINSTELLUNG — das ist die
+   * Deckelform, ein Deckel je Dokument. Das Heftregal bleibt vollständig
+   * erhalten und kann etwas, das die Deckel nicht können:
+   * Zusammengehöriges zeigen. Es wird deshalb hier ausdrücklich gewählt,
+   * statt sich darauf zu verlassen, dass es zufällig oben liegt.
+   * ================================================================== */
+  await p.evaluate(() => { Store.setMeta('bibForm', 'regal'); App.zeichneSeite(); });
+  await p.waitForTimeout(500);
+  const regal = await p.evaluate(() => {
+    const karten = [...document.querySelectorAll<HTMLElement>('.bib-heft')];
+    return {
+      hefte: karten.length,
+      zahlen: document.querySelector('.bib-zahlen')?.textContent || '',
+      /* Die entscheidende Zahl: wie viele Blätter tragen wirklich Text?
+         Ein Regal, in dem überall „Dieses Heft ist noch leer" steht, hätte
+         alle anderen Punkte ebenfalls bestanden — genau so sah es aus,
+         als `Vorschau` den Speicher über `window` suchte. */
+      mitInhalt: karten.filter(k =>
+        (k.querySelector('.bib-heft-blatt')?.textContent || '').trim().length > 20).length,
+      ziele: karten.map(k => k.dataset['id'] || '').filter(Boolean).length,
+      quellenImBestand: new Set(Object.values<any>(Store.cache.blocks)
+        .filter(b => b.type === 'page' && b.alive !== false && !b.system)
+        .map(b => b.parentTable === 'collection' ? 'c:' + b.parentId : 'p')).size
+    };
+  });
+  console.log('   Regal:', JSON.stringify(regal));
+  ok('Das Regal fasst die Seiten zu Heften zusammen', regal.hefte > 0);
+
+  /* ------------------------------------------------------------------ *
+   * UND DIE VORSCHAU SELBST — sonst prüft `mitInhalt` das Falsche.
+   * ------------------------------------------------------------------ *
+   * Erster Versuch der Gegenprobe: den Fehler „Store über window suchen"
+   * wieder eingebaut, gebaut, geprüft, und `mitInhalt` blieb bei 3.
+   * Nachgemessen war `Vorschau.miniatur()` dabei nachweislich leer — 0
+   * Zeichen bei einer Seite mit 16 Kindern.
+   *
+   * Der Grund ist MEIN EIGENER RÜCKFALL: hat ein Heft keine Miniatur, zeigt
+   * die Karte stattdessen die Titel ihrer Seiten (`inhaltsListe`). Das ist
+   * für Datenbankzeilen richtig und macht die Prüfung darüber blind — das
+   * Blatt ist gefüllt, egal ob die Vorschau lebt.
+   *
+   * Geprüft wird deshalb die Behauptung des Kernmoduls direkt: hat eine
+   * Seite Kinder mit Text, muss `miniatur()` etwas liefern. E202 sagt es
+   * genau so — eine Gegenprobe muss selbst beweisen, dass sie etwas
+   * geändert hat, und dieser Punkt ist der Beweis.
+   */
+  const vorschauKern = await p.evaluate(() => {
+    const seiten = Object.values<any>(Store.cache.blocks)
+      .filter(b => b.type === 'page' && b.alive !== false)
+      .filter(b => Store.childrenOf(b.id).some((k: any) => (k.text || '').trim()));
+    const probe = seiten.slice(0, 5).map((b: any) => ({
+      kinder: Store.childrenOf(b.id).length,
+      zeichen: Vorschau.miniatur(b.id, 6).length,
+      anriss: Vorschau.anriss(b.id, b.text || '').length
+    }));
+    return { gepruefte: probe.length, stumm: probe.filter(x => !x.zeichen).length,
+             ohneAnriss: probe.filter(x => !x.anriss).length, probe };
+  });
+  console.log('   Vorschau:', JSON.stringify(vorschauKern.probe));
+  ok('Es gibt überhaupt Seiten mit Inhalt zu prüfen', vorschauKern.gepruefte >= 3);
+  ok('Keine Seite mit Text liefert eine stumme Miniatur', vorschauKern.stumm === 0);
+  ok('Und auch keinen leeren Anriss', vorschauKern.ohneAnriss === 0);
+
+  /* ------------------------------------------------------------------ *
+   * EINE SEITE GANZ OHNE TEXT (E216/L61)
+   * ------------------------------------------------------------------ *
+   * Alle Punkte oben fragen nach Seiten, deren Kinder TEXT haben. Eine
+   * Seite aus einem Schaltplan, PDF-Seiten und einem A4-Blatt hat keinen —
+   * und stand bis E216 als vollkommen weisse Karte da. Gemessen: sechs
+   * Blöcke, `umfang` 6, Miniatur 0 Zeichen. Sie fiel also nicht heraus,
+   * sie war nur leer.
+   *
+   * Geprüft wird der Kern selbst, nicht die Karte: hätte die Karte einen
+   * Rückfall (bei den Heften ist es `inhaltsListe`), wäre der Punkt blind.
+   * ------------------------------------------------------------------ */
+  const ohneText = await p.evaluate(() => {
+    const s2 = Store.addBlock(null, 'page');
+    Store.updateBlock(s2.id, { text: 'Nur Bilder' });
+    const arten = ['blatt', 'schaltplan', 'pdfseite', 'image', 'zeichenflaeche', 'table'];
+    for (const t of arten) Store.addBlock(s2.id, t);
+    const kinder = Store.childrenOf(s2.id);
+    const html = Vorschau.miniatur(s2.id, 6);
+    const hilfs = document.createElement('div');
+    hilfs.innerHTML = html;
+    return {
+      kinder: kinder.length,
+      hatText: kinder.filter((k: any) => (k.text || '').trim()).length,
+      zeichen: html.length,
+      streifen: hilfs.querySelectorAll('.mini-obj').length,
+      benannt: [...hilfs.querySelectorAll('.mini-obj')]
+        .map(x => (x.textContent || '').trim()).filter(Boolean)
+    };
+  });
+  console.log('   Ohne Text:', JSON.stringify(ohneText));
+  ok('Eine Seite ganz ohne Text ist wirklich ohne Text', ohneText.hatText === 0);
+  ok('Und ihre Miniatur bleibt trotzdem nicht leer',
+     ohneText.streifen === ohneText.kinder && ohneText.zeichen > 0);
+  /* JETZT ALLE SECHS (E239). Hier stand `=== 4`: `pdfseite` und
+     `zeichenflaeche` sind nicht einfügbar und hatten deshalb nirgends einen
+     deutschen Namen — ihr Streifen blieb leer. Auf dem Deckel eines PDF
+     stand damit nichts, obwohl das Dokument voll ist.
+     Sie stehen jetzt in `Register.bloecke` als Arten, die man NICHT
+     einfügt (`nurName`): `eines()` sieht sie, `alle()` nicht. Das
+     Slash-Menü bleibt damit unverändert — und genau das prüft die Zahl
+     `anzahl()` weiter oben in test86.
+     Steht am Ende gar kein Name da, kommt der Name nicht aus dem
+     Register. */
+  ok('Und die Namen stammen aus dem Blockregister',
+     ohneText.benannt.length === 6 &&
+     ohneText.benannt.some(x => x.includes('Schaltplan')) &&
+     ohneText.benannt.some(x => x.includes('A4-Blatt')) &&
+     ohneText.benannt.some(x => x.includes('PDF-Seite')) &&
+     ohneText.benannt.some(x => x.includes('Zeichenfläche')));
+  ok('Und sagt, wie viele Hefte und Seiten es sind', /Hefte? · \d+ Seiten?/.test(regal.zahlen));
+  ok('Jedes Heft zeigt echten Inhalt, keinen leeren Kasten',
+     regal.mitInhalt === regal.hefte);
+  ok('Und jedes führt auf eine Seite', regal.ziele === regal.hefte);
+
+  /* ------------------------------------------------------------------ *
+   * SICHERUNG, PAPIERKORB UND PLATZ (E208)
+   * ------------------------------------------------------------------ *
+   * Nach §46 ist Priorität 1, keine Daten zu verlieren. Was hier steht,
+   * darf deshalb nichts beschönigen — eine Ansicht, die „gesichert" sagt,
+   * wo nichts gesichert ist, ist schlimmer als gar keine Ansicht.
+   * ------------------------------------------------------------------ */
+  const pflege = await p.evaluate(async () => {
+    /* Ausgangslage herstellen: kein Zeitstempel. Danach MUSS gewarnt
+       werden — der erste Zustand jedes neuen Geräts. */
+    Store.setMeta('sicherung:zuletzt', '');
+    Store.setMeta('sicherung:art', '');
+    App.zeichneSeite();
+    await new Promise(r => setTimeout(r, 350));
+    const karte = () => document.querySelector<HTMLElement>('[class*="bib-sicher-"]');
+    const stufeVon = (el: HTMLElement | null) =>
+      (el?.className.match(/bib-sicher-(\w+)/) || [])[1] || '';
+    const ohne = { stufe: stufeVon(karte()), text: (karte()?.textContent || '').trim() };
+
+    /* Und nach einer Sicherung von heute muss es gut sein. */
+    Sicherung.merken('redion');
+    App.zeichneSeite();
+    await new Promise(r => setTimeout(r, 350));
+    const mit = { stufe: stufeVon(karte()), text: (karte()?.textContent || '').trim() };
+
+    /* Vor 40 Tagen — das ist die Warnstufe. */
+    Store.setMeta('sicherung:zuletzt',
+      new Date(Date.now() - 40 * 86400000).toISOString());
+    App.zeichneSeite();
+    await new Promise(r => setTimeout(r, 350));
+    const alt40 = { stufe: stufeVon(karte()), text: (karte()?.textContent || '').trim() };
+
+    /* Und die eine Frage, für die der Kern-Umzug überhaupt gemacht wurde:
+       rechnen Bibliothek und Kern dasselbe? `dienst.ts` liest jetzt
+       `Sicherung.stand()` — zwei Fassungen wären zwei Wahrheiten über die
+       Frage, ob die Daten sicher sind. */
+    const kern = Sicherung.stand();
+    return { ohne, mit, alt40, kernStufe: kern.stufe, kernTage: kern.tage,
+             platzDa: !!document.querySelector('[data-bib-platz]') };
+  });
+  console.log('   Pflege:', JSON.stringify(pflege));
+  ok('Ohne Sicherung wird gewarnt', pflege.ohne.stufe === 'warnen');
+  ok('Und der Satz sagt es, nicht nur die Farbe (§38)',
+     /noch keine/i.test(pflege.ohne.text));
+  ok('Nach einer Sicherung heute ist es gut', pflege.mit.stufe === 'gut');
+  ok('Und der Satz sagt „heute"', /heute/i.test(pflege.mit.text));
+  ok('Nach 40 Tagen wird wieder gewarnt', pflege.alt40.stufe === 'warnen');
+  ok('Der Satz nennt die Tage', /40 Tagen/.test(pflege.alt40.text));
+  ok('Bibliothek und Kern rechnen dasselbe',
+     pflege.kernStufe === pflege.alt40.stufe && pflege.kernTage === 40);
+  ok('Und der Platz bekommt seine Stelle', pflege.platzDa);
+
+  /* DER PLATZ DARF NICHTS ERFINDEN. Ohne `estimate()` steht dort keine
+     Zahl — danach richtet jemand seine Entscheidung aus, ob er noch ein
+     Video einfügt. Geprüft wird mit abgeschaltetem `estimate`. */
+  const ohneMessung = await p.evaluate(async () => {
+    const echt = navigator.storage?.estimate;
+    try {
+      (navigator.storage as any).estimate = undefined;
+      const p2 = await Sicherung.platz();
+      return { bekannt: p2.bekannt, gesamt: p2.gesamt };
+    } finally { if (echt) (navigator.storage as any).estimate = echt; }
+  });
+  ok('Ohne Messung behauptet der Platz nichts',
+     ohneMessung.bekannt === false && ohneMessung.gesamt === 0);
+
+  /* DIE GEMERKTE WAHL MUSS EINEN NEUAUFBAU ÜBERLEBEN.
+     Der erste Entwurf las die Form beim SKRIPTLADEN — da ist IndexedDB noch
+     nicht ausgelesen, `getMeta` gab den Standard, und die Wahl war beim
+     nächsten Start weg. Kein Wurf, keine Meldung. Diese Prüfung geht rot,
+     wenn jemand den Wert wieder zu früh liest. */
+  await p.click('[data-form="liste"]');
+  await p.waitForTimeout(400);
+  await p.evaluate(() => { App.zeichneSeite(); });
+  await p.waitForTimeout(400);
+  const merktSich = await p.evaluate(() => ({
+    gemerkt: Store.getMeta('bibForm', 'regal'),
+    gezeigt: document.querySelector('.bib-tab') ? 'liste' : 'regal'
+  }));
+  ok('Die Wahl „Liste" wird gemerkt', merktSich.gemerkt === 'liste');
+  ok('… und beim nächsten Zeichnen auch gezeigt', merktSich.gezeigt === 'liste');
+
+  await p.waitForTimeout(500);
 
   const bib = await p.evaluate(() => ({
     titel: document.querySelector('.bib-titel')?.textContent,
@@ -74,7 +424,11 @@ import { chromium } from 'playwright';
   ok('Zeilen erscheinen', bib.zeilen >= 2);
   ok('Quelle wird gezeigt', bib.hatQuelle);
   ok('Person wird gezeigt', bib.hatPerson);
-  ok('Krume nennt die Bibliothek', /Bibliothek/.test(bib.krume || ''));
+  /* SIE HEISST SEIT E236 „DOKUMENTE".
+     Die Seite schrieb den Namen schon gross darüber, während die Krume
+     „Bibliothek" sagte — zwei Namen für dieselbe Sache. Das Modul heisst
+     weiter `Bibliothek`; das ist der Ordner, nicht die Aufschrift. */
+  ok('Krume nennt die Dokumente', /Dokumente/.test(bib.krume || ''));
   ok('Fusszeile zählt', /Seiten?/.test(bib.fuss || ''));
 
   /* Reiter Favoriten */
@@ -130,6 +484,7 @@ import { chromium } from 'playwright';
     Store.updateBlock(c2.id, { text: 'Fremde Aufgabe', props: { wer: 'Jemand anderes', fertig: false } });
   });
   await p.waitForTimeout(400);
+  await schubladenAuf();
   await p.click('[data-app="aufgaben"]');
   await p.waitForTimeout(600);
 

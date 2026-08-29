@@ -127,18 +127,39 @@ const pruef = (n: any, ist: any, soll: any) => {
     pruef('Fenster passt aufs Telefon: ' + name, erg.da && !erg.raus, true);
   }
 
-  /* --- Bedienleiste unten und Schublade --------------------------------- */
-  const unten = await p.evaluate(() => ({
-    oben:  getComputedStyle(document.querySelector<HTMLElement>('#handy-oben') ?? document.body).display,
-    unten: getComputedStyle(document.querySelector<HTMLElement>('#handy-unten') ?? document.body).display,
-    bereiche: [...document.querySelectorAll<HTMLElement>('#handy-oben button')].map(x => x.id),
-    aktionen: [...document.querySelectorAll<HTMLElement>('#handy-unten button')].map(x => x.id)
-  }));
-  pruef('Bereichsleiste oben sichtbar', unten.oben !== 'none', true);
-  /* Sechs seit E132: „Lernen" ist mit den Produktwelten dazugekommen. */
-  pruef('Konto und fünf Bereiche',      unten.bereiche.length, 6);
-  pruef('Aktionsleiste unten sichtbar', unten.unten !== 'none', true);
-  pruef('Suchen, KI und Neu',           unten.aktionen.length, 3);
+  /* --- Die Wegeleiste und wo die drei Aktionen hin sind ------------------ *
+   * SEIT E236 STEHT DIE LEISTE UNTEN UND HAT FÜNF WEGE — sechs waren es,
+   * und der sechste war das Konto. Es steht jetzt rechts in der Menüleiste.
+   *
+   * UND DIE SCHWEBENDE LEISTE (`#handy-unten`) GIBT ES NICHT MEHR: zwei
+   * Leisten am unteren Rand wären eine zu viel gewesen. Suche und KI stehen
+   * rechts in der Menüleiste, „Neu" ist der „+ Neu"-Knopf im Regal.
+   *
+   * DIE ALTE PRÜFUNG WAR AN EINER STELLE BLIND, und das ist die eigentliche
+   * Lehre hier: sie las `#handy-unten` mit `?? document.body` und fragte,
+   * ob der Grund `display:none` hat. Nimmt man die Leiste WEG, fällt der
+   * Ausdruck auf `document.body` zurück — `display:block`, also grün. Eine
+   * Prüfung, die das Verschwinden ihres Gegenstands nicht bemerkt, prüft
+   * nichts (§55.2). Gefragt wird jetzt nach dem, was da sein MUSS.
+   * --------------------------------------------------------------------- */
+  const unten = await p.evaluate(() => {
+    const leiste = document.getElementById('handy-oben');
+    return {
+      leisteDa: !!leiste && getComputedStyle(leiste).display !== 'none',
+      wege: [...document.querySelectorAll<HTMLElement>('#handy-oben > button')].map(x => x.id),
+      schwebendWeg: !document.getElementById('handy-unten'),
+      /* Die drei Aktionen an ihren neuen Orten. `mb-konto` ist der sechste
+         Kreis von früher. */
+      rechtsOben: ['mb-suche', 'mb-ki', 'mb-konto']
+        .filter(id => !!document.getElementById(id))
+    };
+  });
+  pruef('Die Wegeleiste ist da',        unten.leisteDa, true);
+  pruef('Fünf Wege',                    unten.wege.join(','),
+        'hl-dok,hl-start,hl-lernen,hl-bespr,hl-mehr');
+  pruef('Die schwebende Leiste ist weg', unten.schwebendWeg, true);
+  pruef('Suche, KI und Konto stehen oben rechts',
+        unten.rechtsOben.join(','), 'mb-suche,mb-ki,mb-konto');
 
   /* --- Ein Rundgang ohne Fehler ----------------------------------------- */
   const rundgang = await p.evaluate(async () => {

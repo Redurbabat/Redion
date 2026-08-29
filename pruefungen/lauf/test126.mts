@@ -78,8 +78,11 @@ p('Das Einsinken beim Antippen ist spürbar, aber klein',
 console.log('\n2 · Am Telefon antwortet jedes Antippen');
 
 const rueck = await handy.evaluate(() => {
-  const el = document.querySelector<HTMLElement>('#handy-unten #hu-suche') ||
-             document.querySelector<HTMLElement>('#handy-oben button');
+  /* „Die untere Leiste" ist seit E236 die Navigation selbst — die Wege,
+     die man mit dem Daumen antippt. Sie zuerst, die Menüleiste als
+     Ausweichmessung. */
+  const el = document.querySelector<HTMLElement>('#handy-oben > button') ||
+             document.querySelector<HTMLElement>('#menueband #mb-suche');
   if (!el) return null;
   const st = getComputedStyle(el);
   return { dauer: st.transitionDuration, was: st.transitionProperty };
@@ -126,7 +129,7 @@ const sekunden = (wert: string): number =>
   }));
 
 const still = await ruhig.evaluate(() => {
-  const proben = ['#handy-unten #hu-suche', '#handy-oben button', '#page'];
+  const proben = ['#menueband #mb-suche', '#handy-oben button', '#page'];
   return proben.map(sel => {
     const el = document.querySelector<HTMLElement>(sel);
     if (!el) return { sel, da: false, uebergang: '', animation: '' };

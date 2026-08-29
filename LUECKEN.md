@@ -251,8 +251,9 @@ Punkte), `test118` Abschnitt 3 (zwei echte Geräte, Byte für Byte),
 **Was benannt offen bleibt:**
 
 ```txt
-✗ Lokales Löschen wandert nicht zum Server — es gibt keinen lokalen
-  Grabstein; gelöscht wird bisher nur vom Server zum Gerät
+✓ Lokales Löschen wandert zum Server — GESCHLOSSEN am 29. August (E249):
+  Merkliste wolkeDateienWeg mit Oben-Wache, Versand VOR dem Holen,
+  404/403-Regeln; test256 mit echtem Server und zwei Geräten, 16 Punkte
 ✗ Der Download ist eifrig — am Telefon kann ein grosser Bereich viel
   Datenvolumen ziehen; ein „nur bei Bedarf" ist eine eigene Entscheidung
 ✗ .redion-Archiv in R2 als Cloud-Sicherung
@@ -2302,3 +2303,526 @@ schlimmer als ein zu kleines Ziel, weil man nicht sieht, warum. `test243`
 prüft jetzt für zwölf Aufgaben nacheinander, dass über keinem Griff etwas
 anderes liegt; mit EINER Aufgabe blieb die Prüfung grün, obwohl der Fehler
 noch drin war.
+
+
+--------------------------------------------------------------------------------
+L61 — Es gibt kein Vorschaubild zu einer Seite
+--------------------------------------------------------------------------------
+
+„Weiter wo du warst" (E205) zeigt den Anfang einer Seite als TEXT nach: Über-
+schriften fett, Haken als Kästchen, Listenpunkte mit Punkt. Das reicht zum
+Wiedererkennen und ist ehrlich — aber es ist kein Bild.
+
+Was fehlt: Redion legt zu keiner Seite ein Vorschaubild an. Eine Seite, die
+hauptsächlich aus einem Schaltplan, einer PDF-Seite oder einer Zeichnung
+besteht, hat kaum Text — und ihre Miniatur ist deshalb fast leer, obwohl die
+Seite voll ist. Genau die Seiten, die man am Bild am schnellsten wiedererkennt,
+zeigen am wenigsten.
+
+Am nächsten dran ist `page.cover` (gesetzt über `Kopfleiste.coverWaehlen`);
+das ist ein vom Nutzer gewähltes Titelbild und keine Vorschau des Inhalts.
+
+Ein Weg wäre, beim Speichern einer Seite mit Zeichenschicht oder PDF-Seite ein
+kleines Bild mitzuschreiben — stückweise und in die Dateiablage, nicht als
+Data-URL (§14). Das ist eine Speicheränderung und braucht deshalb einen
+eigenen Plan mit Prüflauf (§9, §30).
+
+TEILWEISE ERLEDIGT mit E216 — die SICHTBARKEIT, nicht das Bild.
+
+Gemessen war die Miniatur einer Seite aus sechs textlosen Blöcken 0 Zeichen
+lang, und `umfang` meldete 6: die Karte fiel nicht heraus, sie stand weiss da.
+Jetzt bekommt jeder Block, der seinen Inhalt nicht im `text` trägt, einen
+Streifen mit Zeichen und Namen aus `Register.bloecke`.
+
+WAS OFFEN BLEIBT, und zwar zweierlei:
+
+1. Das eigentliche Vorschau-BILD. Unverändert eine Speicheränderung mit
+   eigenem Plan.
+2. ~~`pdfseite` und `zeichenflaeche` haben nirgends einen deutschen Namen.~~
+   GESCHLOSSEN mit E239 — und es waren FÜNF, nicht zwei: `database`,
+   `pdfseite`, `spalte`, `tabelle`, `zeichenflaeche`.
+
+   Der gesuchte Weg, der sie nicht einfügbar macht, ist eine zweite Liste im
+   selben Register: `eines()` sieht sie, `alle()` nicht. „Wie heisst diese
+   Art?" und „was kann ich einfügen?" sind zwei Fragen und haben jetzt zwei
+   Antworten. Slash-Menü, Umwandeln, Suche und Markdown bleiben unverändert;
+   `anzahl()` steht weiter bei 78.
+
+   Gemessen: vorher vier von sechs Streifen benannt, jetzt sechs von sechs
+   (test33). Dabei fiel auf, dass „+ Neu → Neue Tabelle" einen Block anlegte,
+   den niemand zeichnet — siehe E239.
+
+L62 — „PDF einlesen" fehlt im Menüband
+--------------------------------------------------------------------------------
+`PdfEinlesen.alsSeiten(datei, elternId)` braucht eine `File`. Das Menüband ist
+ein KATALOG (`register/menueband.ts`), und dort einen Dateiwähler zu bauen wäre
+neues Verhalten in einer Datei, die keines haben darf (E210).
+
+Der Weg gibt es weiterhin: eine PDF auf die Seite ziehen. Er ist nur nicht im
+Band, und das ist für einen Berufsschüler mit Vorlesungs-PDFs die wichtigste
+Stelle, an der er ihn suchen würde.
+
+Was fehlt: ein `PdfEinlesen.waehlen()` im Bereich selbst, das den Wähler öffnet
+und dann `alsSeiten` ruft. Dann kann das Band es aufführen, ohne selbst etwas
+zu tun.
+
+ERLEDIGT mit E214. Genau so gebaut: `PdfEinlesen.waehlen(elternId?)` öffnet den
+Wähler und ruft `alsSeiten`; im Band steht nur der Eintrag `z-pdf` unter
+„Aufnehmen". Ohne offene Seite kommt ein Satz statt eines stillen Nichts.
+Geprüft in test247 §13 — nicht daran, ob die Funktion existiert, sondern daran,
+ob wirklich ein Dateiwähler aufgeht und wonach er fragt.
+
+L63 — Die Slash-Aktionen fehlen im Menüband
+--------------------------------------------------------------------------------
+`Register.bloecke` führt elf Einträge mit `aktion` — „Umwandeln in …",
+„Duplizieren", „Person oder Seite erwähnen", „Datum einfügen", „Emoji". Sie
+brauchen den Schreibzeiger und den Block darunter
+(`Blocks.slashAktion(ct, block, was)`), und beides hat ein Knopf im Band nicht.
+
+Sie stehen deshalb weiterhin nur im Slash-Menü. „Erwähnung", „Datum" und
+„Emoji" gehören inhaltlich sehr wohl unter „Einfügen"; was fehlt, ist ein
+Einstieg, der ohne Schreibzeiger auskommt und am Ende der Seite anfügt.
+
+ERLEDIGT mit E215 — aber als ZWEI und nicht als drei. `Blocks.aktionAmEnde`
+hängt einen leeren Textblock ans Ende; die Gruppe „Im Text" im Reiter
+„Einfügen" führt auf, was `Blocks.AM_ENDE` nennt.
+
+„Datum" ist bewusst NICHT dabei: nachgemessen öffnet es dasselbe Menü wie
+„Erwähnung" (das Seiten, Personen und Datumsangaben führt). Zwei Kacheln für
+dasselbe Menü, davon eine mit einer Überschrift, die nicht dazu passt, führen
+in die Irre. Der eine Einstieg nennt im Hinweis alle drei.
+
+Beim Emoji kam dabei ein ÄLTERER Fehler heraus: „:" allein öffnet nichts, das
+Menü verlangt zwei Buchstaben dahinter. Der Slash-Befehl `/emoji` hinterliess
+also seit jeher einen einsamen Doppelpunkt. Der Weg geht jetzt über den
+Ereignisbus zur vollen Auswahl mit Suchfeld.
+
+Die anderen acht Aktionen bleiben im Slash-Menü — sie handeln von EINEM
+bestimmten Block, und ohne Schreibzeiger gibt es keinen.
+
+L64 — Die echten Zeichenwerkzeuge fehlen im Reiter „Zeichnen"
+--------------------------------------------------------------------------------
+Auf einem Bildschirmfoto der PDF-Seite steht eine vollständige Zeichenleiste:
+Schreiben, Auswahl, Stift, Marker, Linie, Pfeil, Rechteck, Ellipse, Text,
+Fachzeichen, Radieren, Zurück, Vor, Löschen, vier Farben, drei Strichstärken.
+
+Der Reiter „Zeichnen" im Menüband (E210) kennt davon nichts. Dort stehen nur
+Blatt, Whiteboard, Schaltplan und Kamera — also, WOMIT man anfängt, nicht,
+WOMIT man zeichnet.
+
+Warum es noch nicht drin ist: die Werkzeuge gehören zur jeweiligen Fläche
+(PDF-Seite, Blatt, Whiteboard, Planfläche) und wirken auf deren Zustand. Ein
+Knopf im Band bräuchte den Bezug zur offenen Fläche — sonst ist er entweder
+tot oder er wirkt auf die falsche.
+
+Was fehlt: ein gemeinsamer Weg, über den eine Zeichenfläche ihr aktuelles
+Werkzeug meldet und entgegennimmt. Dann kann das Band sie aufführen, ohne
+selbst etwas zu tun (die Regel aus `register/menueband.ts`).
+
+ERLEDIGT mit E212. `src/kern/helfer/zeichenziel.ts` ist dieser Weg: die
+zuletzt berührte Fläche ist die gemeinte. Elf Werkzeuge plus Zurück, Vor und
+Löschen stehen im Reiter „Zeichnen" und erscheinen nur, wenn es eine Fläche
+gibt. Beide Richtungen sind geprüft (test247 §11) — Band → Leiste und Leiste
+→ Band, jeder Punkt einzeln als rot-fähig belegt.
+
+
+L65 — „Elektro" öffnet einen Dialog, keine Seite — GESCHLOSSEN am 28. August 2026
+--------------------------------------------------------------------------------
+
+GESCHLOSSEN mit E238. `src/bereiche/elektro/start.ts` ist die Seite:
+`App.zeigeSonder('Elektro', …)`, Krume „Elektro", Zurück-Pfeil wie überall.
+Die acht Wege kommen aus `Register.menueband.inReiter('elektro')` — kein
+zweiter Katalog (§8). Der Rechner ist einer ihrer Knöpfe statt ihrer
+Vordertür. Geprüft in test247 §15, jeder Punkt einzeln rot gemacht.
+
+Der Text darunter ist der Stand von vorher und bleibt als Begründung stehen.
+
+Seit E219 steht „Elektro" als fünfter Weg in der Seitenleiste, neben Heute,
+Lernzentrum, Bibliothek und Aufgaben. Vier davon führen an einen ORT: die
+Pfadnavigation ändert sich, man ist woanders, der Zurück-Pfeil bringt einen
+zurück.
+
+„Elektro" nicht. Es ruft `Electrical.open()`, und das ist eine Überlagerung —
+ein Rechner mit Modusauswahl und den Lernpaket-Knöpfen. Der Rechner
+funktioniert; das ist keine Lücke im Sinn von „kaputt". Die Lücke ist, dass
+ein Eintrag zwischen vier Zielen steht und als einziger keines ist.
+
+Aufgefallen ist es beim Durchklicken aller fünf Wege nach E219: der Rundgang
+räumte Überlagerungen weg, bevor er das Bild machte, und danach sah es aus,
+als führe der Knopf ins Leere. Er tut es nicht — aber die Verwechslung war
+möglich, und das sagt etwas über die Sache selbst.
+
+Was fehlt: Elektrotechnik hat viel mehr als den Rechner — Fachzeichen,
+Schaltplan mit Simulation, Formelheft, Prüfung, Werkstatt (Elektro A bis E).
+Es gibt nur keine Seite, die das zusammen zeigt. Der Menüband-Reiter
+„Elektro" mit acht Einträgen ist bisher das Nächste dazu.
+
+Was es bräuchte: eine Elektro-Startseite in derselben Form wie „Heute" —
+weiter wo du warst, was ansteht, die Werkzeuge als Kacheln. Dann wäre der
+fünfte Weg ein Ort wie die anderen vier, und der Rechner einer seiner
+Knöpfe statt seiner Vordertür.
+
+Bis dahin ist es ehrlicher, es hier stehen zu haben, als so zu tun, als
+wären die fünf Wege gleichartig.
+
+
+L66 — test181 war unzuverlässig (behoben, E234 — und die Ursache war
+      eine andere als hier zuerst vermutet)
+--------------------------------------------------------------------------------
+Im vollen Durchlauf am 27. August brach test181 ab:
+
+    page.evaluate: Execution context was destroyed, most likely because of
+    a navigation.  (test181.mts:221)
+
+Zeile 221 ist der Schritt, in dem die Prüfung ALLES löscht und aus einer
+Sicherung wieder einspielt — die teuerste Stelle des Laufs.
+
+WAS ES NICHT IST. Der Verdacht fiel zuerst auf die Änderungen von E219/E221:
+auf einem Stand vor E219 lief die Suite grün, im Arbeitsverzeichnis rot. Die
+Eingrenzung schien sogar eine Datei zu benennen — `aufbau.css`, deren
+Änderung aus einer einzigen Farbregel besteht. Eine Farbregel kann keine
+Navigation auslösen.
+
+Dreimal hintereinander auf demselben Stand gelaufen: grün, grün, rot. Es war
+also nie die Datei, sondern die Rechenlast — der volle Durchlauf lief die
+ganze Zeit im Hintergrund weiter und teilte sich die Kerne.
+
+DIE LEHRE, teurer als der Befund: eine Eingrenzung, bei der jeder Durchgang
+für sich zufällig ausgehen kann, grenzt nichts ein. Wer bisektiert, muss
+zuerst wissen, ob der Lauf überhaupt wiederholbar ist. Drei Wiederholungen
+hätten das in zwei Minuten geklärt und den ganzen Umweg gespart.
+
+────────────────────────────────────────────────────────────────────────────
+ERLEDIGT AM 27. AUGUST (E234) — UND DIE ERKLÄRUNG OBEN WAR FALSCH
+────────────────────────────────────────────────────────────────────────────
+
+Die Last war es nicht. Nachgemessen auf einem Abzug des Standes von E228,
+ganz ohne Nebenlast:
+
+    drei von drei Läufen rot
+
+Und im Arbeitsverzeichnis zwei von drei. Die Lehre über die Wiederholbarkeit
+oben stimmt also — nur ihr Ergebnis nicht: „drei Wiederholungen hätten es in
+zwei Minuten geklärt" war richtig gesagt und dann trotzdem nicht getan, denn
+DREI Wiederholungen auf einem lastfreien Abzug hätten sofort gezeigt, dass
+es die Last nicht ist.
+
+WAS ES WIRKLICH IST. Über CDP mitgehört meldet Chromium während des Aufrufs
+
+    Runtime.executionContextsCleared
+
+und gleichzeitig:
+
+    kein `beforeunload`, kein `pagehide`, kein `hashchange`
+    eine vorher gesetzte Fenstervariable lebt weiter
+    `document.readyState` = complete, die Adresse nur am ANKER anders
+
+Die Seite wird also nicht neu geladen. Chromium meldet
+`executionContextsCleared` auch bei einer reinen Anker-Navigation, und
+Playwright hält den gebundenen Kontext danach für tot. Der ersetzende Import
+zeichnet die Seite neu, dabei wandert `location.hash` — und wer gerade in
+einem langen `evaluate` steckt, verliert es.
+
+Kein Fehler in Redion, keiner in der Prüfung: ein Wettlauf zwischen beiden.
+
+BEHOBEN durch vier kurze Aufrufe statt eines langen (jeder Schritt dauert
+einzeln 3 bis 350 ms).
+
+    vorher    2 von 5 grün
+    nachher   8 von 8, davor 5 von 5 auf der Messkopie
+
+DIE LEHRE FÜR ANDERE PRÜFUNGEN: ein `evaluate`, das lange läuft UND dabei
+die App etwas neu zeichnen lässt, ist ein Wettlauf. Wer so etwas schreibt,
+teilt es besser gleich.
+
+
+================================================================================
+L67 — 110 Zählwerte ohne Einzahl-Verzweigung
+================================================================================
+
+Beim Beheben von E231 („1 Einträge") wurde einmal über `src/` gesucht: wo
+steht eine Zahl direkt vor einem Wort, ohne dass in derselben Zeile eine
+Einzahl-Verzweigung vorkommt?
+
+    110 Stellen.
+
+Fünf davon standen in LISTEN, die bei jedem Öffnen zu sehen sind — die sind
+mit E231 auf `zahlWort()` umgestellt. Der Rest ist nicht behoben.
+
+WAS DER REST IST. Fast alles sind Meldungen nach einer Massenaktion:
+
+    „17 Zeilen eingefügt"        „3 Spalten angelegt"
+    „5 Einträge gelöscht"        „12 Werte fallen weg"
+    „vor 5 Minuten"              „Text (43 Zeichen)"
+
+Bei diesen kommt die Eins selten vor, und wenn, stört sie kaum: „1 Zeilen
+eingefügt" ist hässlich, aber niemand liest es zweimal. Ein paar Stellen
+haben ausserdem schon die Klammerform „Datenbank(en)", die zwar unschön,
+aber nicht falsch ist.
+
+WAS FEHLT: eine Entscheidung, ob `zahlWort()` aus der Arbeitswelt in einen
+gemeinsamen Helfer wandert (`kern/helfer/`) und die Meldungen mitzieht. Das
+ist Fleissarbeit über zwölf Dateien und lohnt sich erst, wenn jemand die
+Meldungen ohnehin anfasst — vorher wäre es 110 Änderungen ohne Prüfung
+dahinter, und das ist genau die Sorte Umbau, vor der §45 warnt.
+
+GEZÄHLT WIRD ES HIER, damit die Zahl nicht verloren geht. Wer sie neu
+erheben will:
+
+    Zahl + Leerzeichen + Grossbuchstabenwort, ohne `=== 1` in derselben Zeile
+
+
+L68 — Die Reiterzeile der Lernwelt hat im verschmolzenen Kopf 234 px
+================================================================================
+
+E235 lässt einen Bereich seine eigene oberste Zeile mit
+`data-kopfzeile="eigene"` melden; die Schale legt ihre Krumenzeile dann
+DARÜBER, statt eine zweite Bank zu bauen. Das spart am Telefon eine ganze
+Bank Höhe und ist genau das, worum Redur gebeten hatte.
+
+Der Preis steht in `lernwelt.css`: das Raster hält 44 px links für den
+Zurück-Knopf frei, 44 px rechts für die drei Punkte und dazwischen noch
+den Bereichs-Chip. Gemessen auf 390 px bleibt der Reiterzeile
+
+    vorher (eigene Bank)     11 → 377      366 px
+    jetzt (verschmolzen)     55 → 289      234 px
+
+Sichtbar sind damit etwa zweieinhalb Reiter; „Prüfungen" steht am Rand als
+„Prü" da.
+
+WAS SCHON DAGEGEN GETAN IST — und warum das die Lücke klein hält:
+
+  · Die Zeile rollt waagerecht, und `data-mehr` blendet an der Seite ein,
+    wo noch mehr steht. Kein Weg ist unerreichbar (§47).
+  · `Rollrand.zeige()` rollt beim Zeichnen zum AKTIVEN Reiter. Wer auf
+    „Prüfungen" steht, sieht „Prüfungen" — abgeschnitten ist immer nur,
+    wo man gerade nicht ist.
+
+WAS OFFEN BLEIBT: man sieht nicht auf einen Blick, welche Reiter es gibt.
+Zwei Wege wären denkbar, beide ungeprüft:
+
+  · Die drei Punkte weglassen, wenn der Bereich gar kein Seitenmenü hat —
+    dann sind es 278 statt 234 px. Setzt voraus, dass die Schale weiss,
+    wann das Menü leer ist; heute weiss sie es nicht.
+  · Den Bereichs-Chip in eine zweite Reihe nehmen. Das kostet Höhe und
+    nimmt damit genau zurück, wofür E235 da ist — deshalb steht es hier
+    als Möglichkeit und nicht als Vorschlag.
+
+Gemessen am 28. August 2026 auf 390 × 844.
+
+
+L69 — Es gibt keinen Weg zu einer .pptx-Datei
+================================================================================
+
+Der Vortragsmodus ist gebaut und geprüft (test183, test35): eine Seite
+wird im Vollbild als Folien gezeigt, jede Überschrift 1/2 und jede
+Trennlinie beginnt eine neue. Für den Vortrag vom eigenen Gerät reicht
+das.
+
+Aber die Berufsschule verlangt oft eine ABGABE: eine PowerPoint-Datei
+hochladen oder auf dem Schul-PC öffnen. Dafür gibt es nichts — `grep -ri
+pptx` über `src/`, `quell/` und `pruefungen/` liefert null Treffer. Auch
+den Umweg gibt es nicht: der Druckweg druckt die SEITE als Fliesstext
+(quell/bereiche/wissen/werkzeuge.js, Druckrahmen), nicht die Folien —
+nicht einmal ein Folien-PDF als Handout ist möglich.
+
+Was ein Anfang wäre, in dieser Reihenfolge:
+
+  · Folien-PDF: den Druckrahmen die FOLIEN setzen lassen (eine Folie =
+    eine Seite quer) statt des Fliesstexts. Kein neues Format, nur ein
+    zweiter Druckpfad — und deckt Handout und „als PDF abgeben" ab.
+  · .pptx-Export danach: ist wie .docx/.xlsx ein ZIP mit XML, und den
+    eigenen ZIP-Schreiber gibt es schon (src/bereiche/dateien/
+    ausgeben.ts). Der Aufwand liegt im Folien-XML, nicht im Container.
+
+Gemessen am 28. August 2026 (Visionskarte, Leser „PowerPoint").
+
+
+L70 — ~~Hinter dem Knopf „Stundenplan" steht kein Stundenplan~~ — GESCHLOSSEN am 28. August 2026 (E243)
+================================================================================
+
+Auf dem Schul-Dashboard gibt es einen Knopf mit der Aufschrift
+„Stundenplan" (src/bereiche/wissen/lernwelt.ts:2154). Er öffnet die
+Ausbildungsseite. Das ist alles — es gibt kein Wochenraster, keine
+Lektion, keine Zeiten je Fach, kein „was habe ich jetzt" auf dem
+Heute-Dashboard.
+
+Ein Knopf, der etwas anderes tut, als er verspricht, ist schlimmer als
+kein Knopf (dieselbe Sorte Fehler wie E239, „Neue Tabelle").
+
+Der Unterbau ist da: Termine-Datenbanken, Kalender-Ansicht, ICS-Import
+mit Wiederholungsterminen (quell/bereiche/verbinden/kalender.js). Was
+fehlt, ist ein Wochenraster, das Lektionen je Fach mit Zeiten zeigt, und
+seine Zeile auf dem Heute-Dashboard.
+
+Gemessen am 28. August 2026 (Visionskarte, Leser „Schule").
+
+GESCHLOSSEN am selben Abend (E243): eigene Lernwelt-Ansicht
+„Stundenplan" mit Wochenraster Mo–Sa, Sortierung nach Uhrzeit,
+„Jetzt:"-Kopfzeile und zwei Leerfällen; die Schulvorlage legt die
+Datenbank an (Tag, Von, Bis, Fach, Raum, Hinweis), auch nachträglich
+und ohne Doppel. Der Knopf führt jetzt zur Ansicht. Geprüft in
+test250. OFFEN BLEIBT nur die Zeile auf dem Heute-Dashboard
+(„was habe ich jetzt" ausserhalb der Stundenplan-Ansicht).
+
+
+L71 — ~~Die Zeugnisnote mittelt alle Semester in einen Topf~~ — GESCHLOSSEN am 28. August 2026 (E242)
+================================================================================
+
+Die Noten-Ansicht (E241, test249) rechnet je Fach den gewichteten Schnitt
+und die Zeugnisnote — über ALLE Zeilen der Fach-Datenbank, ohne
+Zeitraumfilter. Im ersten Semester stimmt das. Ab dem zweiten zeigt die
+Kopfzeile „X.X im Zeugnis" das Allzeit-Mittel — eine Zahl, die auf keinem
+echten Zeugnis steht.
+
+Das ist die gefährliche Sorte falsch: plausibel, leicht daneben, und wer
+ihr vertraut, rechnet sein „was brauche ich für die 4.0" auf der falschen
+Summe.
+
+Klein zu schliessen: das Datum je Note wird schon gelesen und sortiert
+(notenEintraege, datumKey) — es fehlt nur ein Semester-/Zeitraumfilter
+über der Bilanz und ein Prüfpunkt in test249, der zwei Semester anlegt
+und nachweist, dass die Kopfzeile nur das gewählte mittelt.
+
+Gemessen am 28. August 2026 (Visionskarte, Leser „Schule").
+
+GESCHLOSSEN am selben Abend (E242): drei Zeitraum-Knöpfe (Dieses
+Semester / Letztes Semester / Alle) mit Zählern, Vorgabe „Dieses
+Semester", Semestergrenzen an Feb/Aug ausgerichtet. Eine Note ohne
+Datum zählt zum aktuellen Semester, und die Kopfzeile sagt das dazu;
+unter „Alle" heisst die Überschrift ehrlich „über alle Semester" statt
+„im Zeugnis". Geprüft in test249 §5.
+
+
+L72 — DOCX trägt in beide Richtungen nur Klartext, und der Import ist ungeprüft
+================================================================================
+
+Der DOCX-Export (test49, 50/50) baut eine echte Word-Datei mit eigenem
+ZIP-Schreiber — aber wAbsatz schreibt den ROHEN Blocktext: `**fett**`
+steht in Word wörtlich mit Sternchen da statt als fetter Lauf, Bilder
+werden zum Platzhaltertext „[Bild: …]", und nummerierte Listen bekommen
+Punkte (numbering.xml kennt nur bullet). Der DOCX-Import (docxLesen,
+src/bereiche/dateien/einlesen.ts:767) sammelt nur w:t-Texte: fett/kursiv,
+Bilder, Kopf-/Fusszeilen und Fussnoten gehen verloren.
+
+Und: docxLesen ist der einzige Einlese-Weg OHNE Prüflauf — kein Test in
+pruefungen/lauf/ ruft ihn auf (grep leer). Nach §30 ist das eine
+Pflichtlücke, unabhängig davon, wann die Formatierung kommt: erst der
+Prüflauf (klein), dann echte w:rPr-Läufe im Export (mittel).
+
+Gemessen am 28. August 2026 (Visionskarte, Leser „Word").
+
+TEIL 1 GESCHLOSSEN am selben Abend (E245): test252 prüft den Import auf
+drei Wegen — Rundlauf über Redions eigenen Word-Export (Titel wird H1,
+Überschrift bleibt Überschrift, Zitat bleibt Zitat, Listenpunkte und
+Tabellenzeilen bleiben, kΩ und äöüß überleben), eine handgebaute
+DEUTSCHE Word-Datei (Stil-IDs „berschrift2" und „Zitat", Nummerierung
+über w:numPr — die toleranten Erkennungswege, die der Rundlauf nie
+berührt), und die Verlust-Ehrlichkeit: `**fett**` steht wörtlich da.
+Zwei Gegenproben einzeln rot. OFFEN BLEIBT Teil 2: echte w:rPr-Läufe
+in beide Richtungen — fett/kursiv als Formatierung statt Sternchen,
+Bilder statt Platzhaltertext.
+
+
+L73 — Der Block-Grabstein hat zwei eigene Löcher — GESCHLOSSEN
+================================================================================
+
+**GESCHLOSSEN am 29. August 2026.** Teil 1 (trashBlock ohne edited) mit
+E250/test257; Teil 2 (trash+purge im selben Tick, Frist-Purge offline,
+Wiederbelebung beim Holen) mit E254/test261: Merkliste `wolkeBloeckeWeg`
+nach dem E249-Muster, Schreibpunkt in purgeTief (samt Zeilen, Ansichten
+und Sammlung — deren Löschen war über den Abgleich vorher gar nicht
+ausdrückbar), Versand vor dem Holen, basis-Wache, zwei Runter-Wachen
+gegen Echo und Leichen. Rein clientseitig; der Server konnte geloescht
+längst. Zwei Folgelücken daraus: L74 (Import „ersetzen" verliert die
+Wolke-Merklisten) und L75 (Merklisten-Schreibfenster bei mehreren Tabs).
+
+Der ursprüngliche Eintrag:
+
+
+Beim Vermessen für E249 (Datei-Grabsteine) fand der Leser, dass das
+VORBILD — der Weg, auf dem Block-Löschungen zum Server wandern — selbst
+undicht ist. Zwei Fälle, beide nach reiner Code-Lage:
+
+  · **trashBlock hebt `edited` nicht an** (src/kern/ablage/indexdb.ts,
+    trashBlock setzt nur alive:false und trashedAt). `zuSchicken` filtert
+    aber mit `edited||created <= wolkeMarkeHoch`. Ein Block, dessen
+    letzte Bearbeitung vor der letzten Hoch-Marke liegt, trägt sein
+    Papierkorb-Flag nie zum Server. Genau für dieses Muster bekamen
+    updateCollection/updateView eigens ihren Zeitstempel.
+
+  · **trash + purge im selben Tick**: das verbreitete Muster
+    `Store.trashBlock(id); Store.purgeBlock(id);` (Editor, Mehrfach-
+    auswahl, KI-Dienst) entfernt den Satz aus dem Cache, bevor je ein
+    Abgleich lief — auch das weiche geloescht-Flag erreicht den Server
+    dann nie. Der Satz verschwindet lokal, drüben lebt er weiter.
+
+Beides gehört NICHT als Beifang in E249 (eine Änderung, ein Ziel — §45),
+sondern als eigener Eingriff: trashBlock einen Zeitstempel geben und für
+den Sofort-Purge dasselbe Merklisten-Muster erwägen, das E249 für
+Dateien gebaut hat. Bis dahin gilt: eine Block-Löschung, die den Server
+erreichen soll, braucht einen Abgleich zwischen Papierkorb und
+endgültigem Löschen.
+
+Gefunden am 29. August 2026 (L6-Leser, Belegstellen in E249).
+
+================================================================================
+L74 — Import „ersetzen" verliert die Wolke-Merklisten — GESCHLOSSEN
+================================================================================
+
+**GESCHLOSSEN am 29. August 2026** mit E255/test261 §11: importAll
+rettet im Ersetzen-Zweig die Vereinigung von wolkeDateienWeg,
+wolkeBloeckeWeg und wolkeDateienOben; Grabsteine für Kennungen, die die
+Sicherung selbst wieder mitbringt, fallen (Wieder-Anlage-Prinzip). Die
+Frage nach Token/Marken nach dem Ersetzen ist L76.
+
+Der ursprüngliche Eintrag:
+
+
+`importAll` im Ersetzen-Modus tauscht auch das Fach `meta` vollständig.
+Eine noch nicht versandte `wolkeDateienWeg`- oder `wolkeBloeckeWeg`-Liste
+stirbt dabei bzw. wird durch die der Sicherung ersetzt: eine kurz vor dem
+Import getätigte endgültige Löschung erreicht den Server dann doch nie.
+
+Das Löschen des BESTANDS beim Ersetzen bleibt mit Absicht ohne
+Grabsteine (E249/E254): eine alte Sicherung einzuspielen darf nicht als
+Massenlöschung zum Server durchschlagen. Offen ist nur das Hinüberretten
+der beiden Merklisten (und wohl der Wolke-Marken) aus dem alten Bestand —
+ein eigener, kleiner Eingriff am Import, nicht am Abgleich.
+
+Gefunden am 29. August 2026 (E254-Leser, Risiko 4).
+
+================================================================================
+L75 — Merklisten-Schreibfenster bei mehreren Tabs
+================================================================================
+
+`setMeta` schreibt den Zwischenspeicher sofort, die Platte folgt nach
+dem Flush — ein Tab-Schluss unmittelbar nach einem Sofort-Löschen kann
+den frischen Grabstein-Eintrag verlieren. Und Lesen-Ändern-Schreiben
+derselben Liste in zwei Tabs kann Einträge des jeweils anderen
+überschreiben. Beides betrifft `wolkeDateienWeg` (seit E249) und
+`wolkeBloeckeWeg` (seit E254) gleichermassen und ist dieselbe bereits
+hingenommene Restlücke: der doppelte Versand ist serverseitig
+idempotent, das Überleben eines normalen Neuladens ist geprüft
+(test256 §3, test261 §3). Ein echter Verbund bräuchte Merklisten als
+eigene Sätze statt als EINE Meta-Liste — erst angehen, wenn Multi-Tab
+plus Wolke wirklich zusammen gemessen wird.
+
+Gefunden am 29. August 2026 (E254-Leser, Risiko 3).
+
+================================================================================
+L76 — Wolke-Zustand nach Import „ersetzen" ist unentschieden
+================================================================================
+
+E255 rettet die drei Lösch-Merklisten — Token, Bereich, Salz, Marken
+und das Abgleich-Ja folgen weiter der Sicherung (bzw. verschwinden,
+wenn sie dort fehlen). Beides ist verteidigbar und beides hat Haken:
+Marken mitnehmen hiesse, der wiederhergestellte (ältere) Bestand ist
+für zuSchicken unsichtbar — der Server behielte den neueren Stand und
+die Geräte lögen auseinander; Marken verlieren hiesse Voll-Neuabgleich
+mit „veraltet"-Gewitter. Auch `basis` bleibt beim Import unangetastet
+und beschreibt danach einen Bestand, den es nicht mehr gibt. Gehört
+als EIGENE Entscheidung geplant (Import-Dialog könnte fragen: „Konto
+behalten und Bestand neu abgleichen?"), nicht als Beifang.
+
+Gefunden am 29. August 2026 (beim Bau von E255).

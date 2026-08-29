@@ -290,6 +290,54 @@ const mitEmoji = schale.treffer.filter(t => EMOJI.test(t));
 p('Kein Emoji in Seitenleiste und Kopfleiste', mitEmoji.length === 0,
   mitEmoji.slice(0, 4).join(' | '));
 
+/* --- E202: DIE SCHALE IST QUELLTEXT, ALSO PRÜFT MAN DEN QUELLTEXT -------
+   Die Messung am Bildschirm findet nur, was gerade sichtbar ist. In
+   `index.html` steht aber ausschliesslich Redions eigene Oberfläche — dort
+   kann per Bauart kein Nutzerzeichen liegen. Also ist die Datei selbst die
+   schärfere Prüfung: sie erwischt auch, was hinter einem geschlossenen Feld
+   steht (das KI-Feld hatte zwölf Emoji, die kein Bild je zeigte, solange
+   niemand es aufklappte).
+
+   Gefunden am 26. August: 🎓 in der Handy-Leiste, ✨ im KI-Knopf, 🔗 und ☑ in
+   der Tastenleiste, dazu ✒️🤖🎙📖🗂📄🧾⚙🧩🎤 im KI-Feld. */
+const quelltext = fs.readFileSync(path.join(WURZEL, 'index.html'), 'utf8');
+const imQuelltext = [...quelltext.matchAll(
+  /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}]/gu)].map(m => m[0]);
+p('Kein Emoji in index.html — der Schale', imQuelltext.length === 0,
+  [...new Set(imQuelltext)].slice(0, 8).join(' '));
+
+/* --- E202: DIE LERNWELT GEHÖRT AUCH REDION -----------------------------
+   Die Prüfung oben deckte nur Seitenleiste und Kopfleiste ab. In der
+   Lernwelt standen deshalb bis zum 26. August fünfzig Emoji: 🎓 im Kopf,
+   🎴 auf der Tagesrunde, 📝 auf der Prüfung, ✅📅📚📷 in der Schnellwahl.
+   Sie tragen ihre eigene Farbe — beim Wechsel von hell nach dunkel blieben
+   sie stehen, wie sie waren.
+
+   Dieselbe Grenze wie oben: `.lw-object-icon` bleibt AUSSEN VOR, denn dort
+   steht das Zeichen einer Seite, und das hat ein Mensch gesetzt. Ebenso die
+   Auswahlliste der Bereiche — in einem `<option>` kann kein SVG stehen. */
+await seite.evaluate(() => { (globalThis as any).Lernwelt?.oeffnen?.('heute'); });
+await seite.waitForTimeout(1400);
+
+const lernwelt = await seite.evaluate(() => {
+  const wurzel = document.querySelector('.lernwelt');
+  if (!wurzel) return { da: false, treffer: [] as string[], zeichen: 0 };
+  const treffer: string[] = [];
+  wurzel.querySelectorAll('*').forEach(el => {
+    /* Nur Elemente ohne Kinder — sonst zählte jeder Vorfahr denselben Text. */
+    if (el.children.length) return;
+    if (el.closest('.lw-object-icon, select, option')) return;
+    const text = (el.textContent || '').trim();
+    if (text) treffer.push(text.slice(0, 40));
+  });
+  return { da: true, treffer, zeichen: wurzel.querySelectorAll('svg.sym').length };
+});
+p('Die Lernwelt ist offen und messbar', lernwelt.da);
+const lwEmoji = lernwelt.treffer.filter(t => EMOJI.test(t));
+p('Kein Emoji in Redions eigener Lernwelt', lwEmoji.length === 0,
+  lwEmoji.slice(0, 5).join(' | '));
+p('Und sie trägt eigene Zeichen', lernwelt.zeichen >= 10, `${lernwelt.zeichen} Zeichen`);
+
 /* UND DIE ZEICHEN SIND WIRKLICH DA. Ein `data-sym`, das niemand gefüllt
    hat, ist eine leere Stelle — und die sieht man im Bild nicht, weil da
    ohnehin nichts steht. Genau deshalb wird sie gezählt. */
@@ -327,8 +375,25 @@ const schaleMass = await seite.evaluate(() => {
     kopfHoehe: kopf ? Math.round(kopf.getBoundingClientRect().height) : 0,
     sucherDa: !!sucher,
     sucherBreite: sr ? Math.round(sr.width) : 0,
-    /* Wie weit sitzt die Mitte des Suchers von der Fenstermitte weg? */
-    ausDerMitte: sr ? Math.abs(Math.round((sr.left + sr.width / 2) - fenster / 2)) : 9999,
+    /* WELCHE MITTE? Die des ARBEITSBEREICHS, nicht die des Fensters (E224).
+       Die Seitenleiste hat einen eigenen Hintergrund; sie ist optisch eine
+       Spalte für sich. Gemessen wird darum ab ihrer rechten Kante. */
+    ausDerMitte: (() => {
+      if (!sr) return 9999;
+      const links = seitenleiste ? seitenleiste.getBoundingClientRect().right : 0;
+      return Math.abs(Math.round((sr.left + sr.width / 2) - (links + (fenster - links) / 2)));
+    })(),
+    /* UND DAS, WAS KEINE PRÜFUNG FRAGTE: läuft der Seitentitel unter das
+       Suchfeld? E223 stellte den Sucher mittig zum FENSTER; auf 1280 blieben
+       der Krume damit 36 Punkte, und im Bildschirmfoto stand „Elek…" unter
+       dem Feld. Gemessen wurde nichts, weil niemand danach fragte. */
+    krumeUnterSucher: (() => {
+      const k = b('#topbar .crumb');
+      if (!k || !sr) return -1;
+      const kr = k.getBoundingClientRect();
+      if (kr.width === 0) return 0;
+      return Math.max(0, Math.round(kr.right - sr.left));
+    })(),
     /* Der Druckpunkt: steht an den Knöpfen eine Übergangszeit für `transform`? */
     druck: (() => {
       const k = b('#sidebar .side-item');
@@ -372,8 +437,15 @@ const wandert = await seite.evaluate(() => {
 });
 p('Die Suche wandert nicht mit dem Seitentitel', wandert === 0,
   `${wandert} Punkte Unterschied`);
-p('… und steht dabei ungefähr in der Mitte', schaleMass.ausDerMitte <= 60,
-  `${schaleMass.ausDerMitte} Punkte daneben`);
+p('… und steht dabei ungefähr in der Mitte des Arbeitsbereichs',
+  schaleMass.ausDerMitte <= 45, `${schaleMass.ausDerMitte} Punkte daneben`);
+/* DER GEGENBEWEIS ZU DIESER ZEILE, weil sie sonst nur eine Zahl bestätigt:
+   mit `position:fixed; left:50%` — genau der Fassung aus E223 — misst
+   dieselbe Zeile 120 statt 29. Sie kann also rot werden.
+   Und die Zeile darunter ist die, die E223 gar nicht erst gestellt hat. */
+p('Der Seitentitel läuft nicht unter das Suchfeld',
+  schaleMass.krumeUnterSucher === 0,
+  `${schaleMass.krumeUnterSucher} Punkte Überdeckung`);
 p('Sie ist breit genug, um sie zu sehen', schaleMass.sucherBreite >= 260,
   `${schaleMass.sucherBreite}`);
 /* §15: der Druckpunkt. Geprüft wird, dass `transform` überhaupt überblendet

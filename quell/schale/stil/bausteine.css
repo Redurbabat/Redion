@@ -214,7 +214,13 @@
 
      Der Kommentar darüber sagt „sie beginnt UNTER den Pillen". Die Absicht
      stand also da, nur die Zahl folgte ihr nicht. */
-  #sidebar{ position:fixed; left:0; top:var(--hoben); height:calc(100% - var(--hoben));
+  /* SEIT E236 STEHT DIE WEGELEISTE UNTEN, und die Schublade muss ÜBER ihr
+     enden statt unter der alten Leiste zu beginnen. Gemessen vor der
+     Änderung: Schublade bis 844, Leiste ab 785 — sie deckte die
+     Navigation vollständig zu. Oben bleibt nur die Menüleiste und die
+     Kerbe des Geräts freizuhalten. */
+  #sidebar{ position:fixed; left:0; top:calc(var(--hoben) + 45px);
+            height:calc(100% - var(--hoben) - 45px - var(--hunten));
             transform:translateX(-102%); transition:transform .22s ease;
             width:100%; z-index:390; flex:0 0 auto;
             border-right:none; }
@@ -511,8 +517,30 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 .side-leer{padding:6px 14px; font-size:12.5px; color:var(--text-faint)}
 
 /* Inhalts-Streifen am rechten Rand */
-#rand-toc{position:absolute; right:14px; top:50%; transform:translateY(-50%);
+/* MITTIG IM TEXT, NICHT MITTIG IN `main`.
+   `top:50%` mass die ganze Spalte samt Kopfzeile und Menüband. Bei vierzehn
+   Überschriften begann die Leiste dadurch bei y=156, während das Band bis
+   y=192 reicht — die Striche lagen über den Knöpfen. `--inhalt-oben` setzt
+   das Menüband selbst (schale/aufbau/menueband.ts); ohne Band bleibt es bei
+   der Kopfzeile. Die Rechnung ist die Mitte des Rests: Anfang plus halbe
+   verbleibende Höhe. */
+/* UND SIE MUSS INS FENSTER PASSEN.
+   Mittig allein genügt nicht. Gemessen lief die Leiste auf einer Seite mit
+   39 Überschriften von y=-3 bis y=1175 in einem 980 px hohen Fenster: oben
+   im Menüband, unten unter dem Bildrand. Bei 53 Überschriften begann sie
+   bei y=-213. Die Striche fehlten dann einfach, ohne dass etwas darauf
+   hinwies. `max-height` plus `overflow-y:auto` bindet sie an den Textteil —
+   sichtbar gerollt statt still abgeschnitten (§55.2). */
+#rand-toc{position:absolute; right:14px;
+  top:calc(var(--inhalt-oben, 54px) + (100% - var(--inhalt-oben, 54px)) / 2);
+  transform:translateY(-50%);
+  max-height:calc(100% - var(--inhalt-oben, 54px) - 24px);
+  overflow-y:auto; scrollbar-width:thin; overscroll-behavior:contain;
   display:flex; flex-direction:column; gap:8px; z-index:20; padding:8px 0}
+/* Ohne das schrumpfen die Knöpfe im Flex-Kasten, sobald gerollt werden
+   muss — aus 22 px Strichen würden 14, und die Stufen h1/h2/h3 wären nicht
+   mehr auseinanderzuhalten. */
+#rand-toc button{flex:0 0 auto}
 #rand-toc button{display:flex; align-items:center; justify-content:flex-end; gap:9px;
   background:none; padding:2px 0}
 #rand-toc i{display:block; height:2px; border-radius:2px; background:var(--text-faint);
@@ -541,7 +569,487 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
  * Notion zeigt beide als eigene Seiten, nicht als Fenster.
  * ======================================================================== */
 .bib{max-width:1100px; margin:0 auto; padding:26px 46px 60px}
-.bib-titel{font-size:38px; font-weight:700; margin:0 0 18px; letter-spacing:-.02em}
+.bib-titel{font-size:38px; font-weight:700; margin:0 0 var(--space-1); letter-spacing:-.02em}
+
+/* ============================================================================
+ * DAS REGAL (E207)
+ * ----------------------------------------------------------------------------
+ * Die Bibliothek war eine Tabelle: dreizehn Zeilen, in jeder ein Titel und
+ * dreimal dieselbe Auskunft. Man liest darin nicht, man sucht — und man muss
+ * den Titel schon kennen, um ihn zu finden.
+ *
+ * Das Regal zeigt je Heft eine Karte, und auf jeder steht der ANFANG der
+ * Seite, an der zuletzt gearbeitet wurde. Die Zeilen darin kommen aus
+ * `Vorschau.miniatur()` und tragen die `.mini-*`-Klassen weiter oben — die
+ * Lernwelt zeichnet dieselben, und dieselbe Seite soll an beiden Orten gleich
+ * aussehen.
+ *
+ * Die Tabelle ist nicht weg: der Umschalter oben führt hin und zurück, und
+ * sie kann nach wie vor sortieren und Spalten zeigen. Zwei Formen für zwei
+ * Fragen — „welche Seite war das?" und „welche Seiten gibt es?".
+ * ==========================================================================*/
+.bib-zahlen{
+  margin:0 0 var(--space-5); color:var(--text-dim); font-size:13px
+}
+.bib-form{
+  display:inline-flex; gap:2px; margin-bottom:var(--space-5); padding:3px;
+  border:1px solid var(--line); border-radius:var(--radius-lg); background:var(--bg-side)
+}
+.bib-form button{
+  display:inline-flex; align-items:center; gap:var(--space-2); min-height:32px;
+  padding:var(--space-1) var(--space-4); border:0; border-radius:var(--radius-md);
+  background:transparent; color:var(--text-dim); font:inherit; font-size:12.5px;
+  font-weight:620; cursor:pointer
+}
+.bib-form button > svg{ width:14px; height:14px; display:block }
+.bib-form button:hover{ background:var(--bg-hover); color:var(--text) }
+.bib-form button.on{ background:var(--bg-card); color:var(--text); box-shadow:var(--shadow-1) }
+
+/* ==========================================================================
+ * DIE DECKELANSICHT DER BIBLIOTHEK (E236)
+ * --------------------------------------------------------------------------
+ * Redur hat ein Regal aus Deckeln beschrieben: jeder sagt schon von weitem,
+ * WAS er ist. Das ist keine Verzierung — es ist die Auskunft, die eine
+ * Tabellenzeile nicht geben kann, ohne eine Spalte dafür zu opfern.
+ *
+ * DIE DECKEL SIND GEZEICHNET, NICHT GELADEN. Ein Vorschaubild je Dokument
+ * wäre ein zweiter Speicher, der mit dem Inhalt altert (§9). Was hier steht,
+ * ist der ANFANG der Seite in kleiner Schrift, genau wie im Heftregal — und
+ * darüber, je nach Art, ein paar Linien, die das Papier andeuten.
+ * ======================================================================== */
+/* EIN RASTER, KEIN UMBRUCH. Mit `flex-wrap` fiel der Listenknopf in eine
+   eigene Zeile, sobald „Dokumente" und „+ Neu" die Breite füllten — aus
+   einer Bank wurden zwei, und genau die zählt Redur. Das Raster sagt
+   stattdessen, WAS schrumpfen darf: der Titel. */
+.bib-dkopf{
+  display:grid; grid-template-columns:minmax(0,1fr) auto auto;
+  align-items:center; gap:6px 10px; margin:0 0 var(--space-4)
+}
+.bib-dkopf h1{
+  grid-column:1; grid-row:1; min-width:0; margin:0;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  font-size:27px; font-weight:760; letter-spacing:-.03em
+}
+/* Der Ort ist eine Auskunft mit einem Weg dahinter, keine Überschrift:
+   „Kürzlich verwendet · 23 Dokumente ▾". Er steht unter dem Titel, weil er
+   sich ändert und der Titel nicht. */
+.bib-ort{
+  grid-column:1 / -1; grid-row:2; justify-self:start;
+  display:flex; align-items:center; gap:5px; min-height:32px;
+  padding:0 8px 0 0; border-radius:8px; background:none; border:0;
+  cursor:pointer; color:var(--text-dim); font-size:13px
+}
+.bib-ort i{ color:var(--text-faint); font-size:13px; font-style:normal }
+.bib-ort:hover{ color:var(--text) }
+.bib-neu{
+  grid-column:2; grid-row:1;
+  display:flex; align-items:center; gap:7px;
+  min-height:44px; padding:0 19px 0 15px; border:0; border-radius:999px;
+  background:var(--accent); color:var(--auf-accent);
+  font-size:15px; font-weight:640; cursor:pointer; box-shadow:var(--shadow-2)
+}
+.bib-neu b{ font-size:19px; font-weight:500; line-height:1 }
+.bib-neu:hover{ background:var(--accent-hover,var(--accent)) }
+.bib-form-knopf{
+  grid-column:3; grid-row:1;
+  display:grid; place-items:center; min-width:44px; min-height:44px;
+  border:0; border-radius:13px; background:none; color:var(--text-dim);
+  font-size:16px; cursor:pointer
+}
+.bib-form-knopf:hover{ background:var(--bg-hover); color:var(--text) }
+
+.bib-arten{
+  display:flex; gap:7px; margin:0 0 var(--space-5); overflow-x:auto;
+  scrollbar-width:none
+}
+.bib-arten::-webkit-scrollbar{ display:none }
+.bib-arten button{
+  flex:none; min-height:34px; padding:0 14px; border:0; border-radius:999px;
+  background:var(--bg-card); color:var(--text-dim); font-size:13px; cursor:pointer
+}
+.bib-arten button:hover{ background:var(--bg-hover); color:var(--text) }
+.bib-arten button.on{ background:var(--text); color:var(--bg); font-weight:620 }
+
+.bib-gitter{
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(148px,1fr));
+  gap:26px 20px; align-items:start
+}
+/* Ein `<button>` zentriert seinen Inhalt senkrecht — auch mit `display:block`.
+   Ohne diese Spalte begannen die Deckel einer Reihe auf verschiedenen Höhen,
+   je nachdem wie lang der Name darunter war (gemessen: 153, 162, 170). */
+.bib-deckel{
+  display:flex; flex-direction:column; align-items:stretch;
+  justify-content:flex-start; width:100%; min-width:0; padding:0;
+  border:0; background:none; text-align:left; cursor:pointer; color:var(--text)
+}
+.bib-deckel-blatt{
+  position:relative; display:block; overflow:hidden;
+  aspect-ratio:3/4; margin:0 0 9px; padding:14px 11px 0;
+  border:1px solid var(--line); border-radius:6px;
+  background:var(--bg-card); box-shadow:var(--shadow-2);
+  color:var(--text-dim); font-size:8px; line-height:1.6
+}
+.bib-deckel:hover .bib-deckel-blatt{ box-shadow:var(--shadow-3) }
+.bib-deckel:active .bib-deckel-blatt{ transform:scale(.985) }
+/* Der Auslauf nach unten — dasselbe Papier wie im Heftregal. */
+.bib-deckel-blatt::after{
+  content:""; position:absolute; right:0; bottom:0; left:0; height:38px;
+  background:linear-gradient(to bottom, transparent, var(--bg-card));
+  pointer-events:none
+}
+.bib-deckel-marke{
+  position:absolute; left:0; top:0; z-index:2; padding:3px 6px;
+  border-radius:0 0 6px 0; background:var(--gefahr); color:#fff;
+  font-size:8.5px; font-weight:800; font-style:normal; letter-spacing:.04em
+}
+.bib-deckel-stern{
+  position:absolute; right:5px; top:4px; z-index:3; font-style:normal;
+  font-size:14px; color:var(--text-faint);
+  /* Ein Stern, der auf einem Strich liegt, ist weg. Ein feiner Schein
+     darunter kostet nichts und rettet ihn auf jedem Muster. */
+  text-shadow:0 0 5px var(--bg-card), 0 0 3px var(--bg-card)
+}
+.bib-deckel-stern.an{ color:var(--warnung) }
+.bib-deckel-name{ display:flex; align-items:flex-start; gap:3px; min-width:0 }
+/* Zwei Zeilen, dann Auslassungszeichen. `min-width:0` ist der Unterschied
+   zwischen „Materialliste" und „Materiallist": ein Flex-Kind schrumpft von
+   sich aus nicht unter seine Inhaltsbreite, und ein gekürzter Name ohne
+   Auslassungszeichen sieht aus wie ein FALSCHER Name (dieselbe Lehre wie
+   E227 bei der Zahl). */
+.bib-deckel-name b{
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
+  overflow:hidden; min-height:33px; min-width:0; overflow-wrap:break-word;
+  font-size:12.5px; font-weight:580; line-height:1.3; letter-spacing:-.005em
+}
+.bib-deckel-mehr{
+  margin-left:auto; flex:none; width:20px; height:20px; display:grid;
+  place-items:center; border-radius:6px; color:var(--text-faint);
+  font-style:normal; font-size:13px
+}
+.bib-deckel-mehr:hover{ background:var(--bg-hover); color:var(--text) }
+.bib-deckel small{
+  display:block; overflow:hidden; margin-top:2px; color:var(--text-faint);
+  font-size:11px; white-space:nowrap; text-overflow:ellipsis
+}
+/* ---- DIE GEZEICHNETEN DECKEL -------------------------------------------
+   Jede Art bekommt ihr eigenes Papier. Das ist keine Verzierung: bei einem
+   PDF, einem Whiteboard oder einer Tabelle steht im TEXT der Blöcke nichts,
+   was jemandem hilft — gemessen stand auf dem PDF-Deckel „Seite 1Seite
+   2Seite 3" und auf dem Whiteboard das Wort „Whiteboard".
+
+   Die Art steht IMMER auch als Wort in der Zeile darunter. Wer die Muster
+   nicht unterscheiden kann, liest sie (§38). */
+.bib-deckel-blatt > i.bib-papier{
+  position:absolute; inset:0; display:block; font-style:normal
+}
+/* UND ES LIEGT NUR DA, WO NICHTS STEHT.
+   Am Rechnerbild sah man es sofort: die Linien des Papiers laufen alle
+   9 px, die Textzeilen der Vorschau haben ihre eigene Höhe — und wo beide
+   sich treffen, geht ein Strich mitten durch das Wort. „Die acht Teile"
+   und „Filter, Rechnen, Sortieren" standen durchgestrichen da. Eine
+   durchgestrichene Überschrift ist keine Verzierung, sie ist eine AUSSAGE
+   („erledigt", „gelöscht"), und sie war falsch.
+   Steht Text auf dem Deckel, ist er die Vorschau. Steht keiner da — bei
+   einem PDF, einem Whiteboard, einer leeren Seite —, zeichnet das Papier.
+   Welche Art es ist, steht ohnehin als Wort in der Zeile darunter (§38). */
+.bib-deckel-blatt:not(.is-leer) > i.bib-papier{ display:none }
+/* EINE LEERE SEITE MUSS WIE PAPIER AUSSEHEN, NICHT WIE EIN LOCH.
+   Im Bild standen „Semester 1", „Semester 2" und „Prüfungen" als drei
+   dunkle Rechtecke — sie haben keinen Text, also gab `Vorschau.miniatur`
+   nichts zurück, und der Deckel blieb leer. Feine Linien darunter sagen:
+   hier ist Platz, hier steht nur noch nichts. Steht Text darauf, liegt er
+   darüber und die Linien sind das Papier. */
+.bib-deckel[data-art="seite"] .bib-papier{
+  background:repeating-linear-gradient(transparent 0 9px,
+              var(--line-soft) 9px 10px) 0 18px/100% 100%
+}
+/* Liniertes Papier — Blatt, Journal, Seite */
+.bib-deckel[data-art="blatt"] .bib-papier{
+  background:repeating-linear-gradient(transparent 0 9px,
+              var(--line) 9px 10px) 0 16px/100% 100%
+}
+/* Kariert — Mitschrift */
+.bib-deckel[data-art="blatt"] .bib-deckel-blatt{ background:var(--bg-card) }
+/* PDF: Textzeilen in Blöcken, wie eine Druckseite */
+.bib-deckel[data-art="pdf"] .bib-papier{
+  opacity:.9;
+  background:
+    linear-gradient(var(--line) 0 0) 14% 26%/58% 5px no-repeat,
+    repeating-linear-gradient(transparent 0 6px, var(--line) 6px 9px)
+      12% 40%/76% 46% no-repeat
+}
+/* Whiteboard: Fläche mit einem Strich darauf */
+.bib-deckel[data-art="board"] .bib-deckel-blatt,
+.bib-deckel[data-art="plan"]  .bib-deckel-blatt{ background:var(--bg-side) }
+/* GEMESSEN AM BILD, NICHT GESCHÄTZT: der erste Strich lief über den ganzen
+   Deckel und war 8 % breit — auf 144 px sind das 12 px, ein Balken, kein
+   Strich. Er deckte ausserdem den Stern zu. Jetzt zwei feine Striche in
+   der Mitte, wie eine Skizze auf einer leeren Fläche. */
+.bib-deckel[data-art="board"] .bib-papier{
+  background:
+    linear-gradient(128deg, transparent 47.5%, var(--info) 47.5% 49.5%, transparent 49.5%)
+      14% 30%/62% 44% no-repeat,
+    linear-gradient(var(--text-faint) 0 0) 18% 68%/34% 2px no-repeat;
+  opacity:.55
+}
+/* Schaltplan: zwei Leitungen und ein Bauteil */
+.bib-deckel[data-art="plan"] .bib-papier{
+  background:
+    linear-gradient(var(--accent-warm) 0 0) 16% 42%/26% 2px no-repeat,
+    linear-gradient(var(--accent-warm) 0 0) 58% 42%/26% 2px no-repeat,
+    linear-gradient(var(--accent-warm) 0 0) 42% 34%/2px 18% no-repeat,
+    linear-gradient(var(--accent-warm) 0 0) 56% 34%/2px 18% no-repeat;
+  opacity:.75
+}
+/* Tabelle: Raster mit farbiger Kopfzeile */
+.bib-deckel[data-art="tab"] .bib-papier{
+  opacity:.7;
+  background:
+    linear-gradient(var(--erfolg) 0 0) 12% 22%/76% 9px no-repeat,
+    repeating-linear-gradient(transparent 0 10px, var(--line) 10px 11px)
+      12% 22%/76% 60% no-repeat,
+    repeating-linear-gradient(90deg, transparent 0 16px, var(--line) 16px 17px)
+      12% 22%/76% 60% no-repeat
+}
+/* Karteikarten: gestapelte Karten */
+.bib-deckel[data-art="karten"] .bib-papier{
+  background:
+    linear-gradient(var(--line) 0 0) 18% 60%/64% 1px no-repeat,
+    linear-gradient(var(--accent) 0 0) 18% 24%/40% 4px no-repeat;
+  opacity:.85
+}
+/* Datenbank: Zeilen mit Kopf in der Akzentfarbe */
+.bib-deckel[data-art="db"] .bib-papier{
+  background:
+    linear-gradient(var(--accent) 0 0) 12% 22%/76% 11px no-repeat,
+    repeating-linear-gradient(transparent 0 10px, var(--line) 10px 11px)
+      12% 22%/76% 60% no-repeat;
+  opacity:.85
+}
+/* Dateien: ein Papier mit umgeknickter Ecke */
+.bib-deckel[data-art="datei"] .bib-papier{
+  background:
+    linear-gradient(225deg, var(--line) 0 14px, transparent 14px) 88% 8%/22px 22px no-repeat,
+    repeating-linear-gradient(transparent 0 8px, var(--line) 8px 9px)
+      14% 44%/72% 40% no-repeat
+}
+.bib-deckel[data-art="ordner"] .bib-deckel-blatt{
+  border:0; box-shadow:none; background:none
+}
+.bib-deckel[data-art="ordner"] .bib-deckel-blatt::before{
+  content:""; position:absolute; inset:16% 4% 8%;
+  border-radius:4px 12px 12px 12px; background:var(--accent); opacity:.85
+}
+.bib-deckel[data-art="ordner"] .bib-deckel-blatt::after{
+  content:""; position:absolute; left:4%; top:8%; width:44%; height:13%;
+  border-radius:4px 8px 0 0; background:var(--accent); opacity:.85
+}
+
+@media(max-width:760px){
+  .bib-gitter{ grid-template-columns:repeat(auto-fill,minmax(102px,1fr));
+               gap:20px 14px }
+  .bib-dkopf{ gap:6px 8px }
+  .bib-dkopf h1{ font-size:24px }
+  .bib-neu{ padding:0 17px 0 13px }
+  /* GEMESSEN: `#page` gibt 28 px Polster, die Bibliothek noch einmal 16 —
+     zusammen 88 von 390. Übrig blieben 302, und damit passten nur ZWEI
+     Deckel nebeneinander statt drei. Das Regal ist die Ansicht, in der
+     Breite in Dokumenten zählt; hier gibt sie das innere Polster ab. */
+  /* ZWEI KLASSEN, NICHT EINE. `.bib{padding:18px 16px 50px}` steht weiter
+     unten in einer eigenen Telefon-Abfrage; bei gleicher Stärke gewinnt die
+     spätere Regel, und meine hier verlor still. Gemessen blieb es bei 16 px
+     und zwei Deckeln. `.bib.bib-deckel-seite` ist stärker und gewinnt
+     unabhängig von der Reihenfolge. */
+  .bib.bib-deckel-seite{ padding-left:0; padding-right:0 }
+}
+
+.bib-regal{
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:var(--space-5); align-items:start
+}
+.bib-heft{
+  display:grid; grid-template-rows:auto 1fr auto; min-width:0; overflow:hidden;
+  padding:0; border:1px solid var(--line); border-radius:var(--radius-lg);
+  background:var(--bg-side); box-shadow:var(--shadow-1); text-align:left;
+  cursor:pointer;
+  transition:border-color var(--motion-fast) var(--ease),
+    box-shadow var(--motion-fast) var(--ease), transform var(--motion-fast) var(--ease)
+}
+.bib-heft:hover{ border-color:var(--line-stark,var(--line)); box-shadow:var(--shadow-2) }
+.bib-heft:active{ transform:scale(var(--press-scale,.985)) }
+.bib-heft-marke{
+  overflow:hidden; padding:var(--space-3) var(--space-5) 0;
+  color:var(--text-dim); font-size:10.5px; font-weight:750;
+  letter-spacing:.06em; text-transform:uppercase;
+  text-overflow:ellipsis; white-space:nowrap
+}
+/* DAS BLATT. Es soll aussehen wie Papier und nicht wie ein Textfeld: heller
+   Grund, feine Zeilen, und unten läuft es aus statt an einer harten Kante
+   mitten im Wort aufzuhören. */
+.bib-heft-blatt{
+  position:relative; display:grid; align-content:start; gap:var(--space-2);
+  overflow:hidden; height:150px; margin:var(--space-3) var(--space-4) 0;
+  padding:var(--space-4) var(--space-4) 0;
+  /* DAS BLATT MUSS SICH ABHEBEN, SONST IST ES KEINS. Erst stand hier
+     `--bg` auf einer Karte in `--bg-card` — im Hellmodus Weiss auf fast
+     Weiss, und der Rand war `--line-soft`. Auf dem Bild sah man kein Blatt,
+     sondern Text, der im Nichts anfing. Die Karte liegt jetzt auf der
+     Nebenfläche, das Blatt darauf ist die Kartenfläche, und der Rand ist
+     der normale. */
+  border:1px solid var(--line); border-bottom:0;
+  border-radius:var(--radius-md) var(--radius-md) 0 0;
+  background:var(--bg-card); color:var(--text-dim); font-size:10.5px; line-height:1.5
+}
+.bib-heft-blatt::after{
+  content:""; position:absolute; right:0; bottom:0; left:0; height:34px;
+  pointer-events:none; background:linear-gradient(to bottom,transparent,var(--bg-card))
+}
+.bib-heft-blatt.is-leer{
+  align-content:center; justify-items:center; color:var(--text-faint); font-style:italic
+}
+.bib-heft-blatt.is-leer::after{ display:none }
+.bib-heft-fuss{
+  display:grid; gap:1px; min-width:0; padding:var(--space-4) var(--space-5)
+}
+.bib-heft-fuss strong{
+  overflow:hidden; font-size:13.5px; font-weight:680; line-height:1.35;
+  text-overflow:ellipsis; white-space:nowrap
+}
+.bib-heft-fuss small{ color:var(--text-dim); font-size:11px }
+
+/* ============================================================================
+ * SICHERUNG, PAPIERKORB UND PLATZ (E208)
+ * ----------------------------------------------------------------------------
+ * Nach §46 ist Priorität 1, keine Daten zu verlieren. Deshalb steht das hier
+ * und nicht in einem Einstellungsdialog, den niemand aufmacht: wer die
+ * Bibliothek ansieht, sieht auch, wie alt seine letzte Sicherung ist.
+ *
+ * Die Stufe steht NICHT nur in der Farbe (§38) — sie steht im Satz
+ * („Gesichert heute" / „das ist lange her"). Die Farbe ist der zweite Weg,
+ * nicht der einzige.
+ * ==========================================================================*/
+.bib-pflege{
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+  gap:var(--space-4)
+}
+.bib-pflege-karte{
+  display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center;
+  gap:var(--space-4); padding:var(--space-4) var(--space-5);
+  border:1px solid var(--line); border-radius:var(--radius-lg); background:var(--bg-card)
+}
+.bib-pflege-karte > span:nth-child(2){ display:grid; gap:2px; min-width:0 }
+.bib-pflege-karte strong{ font-size:13px; font-weight:680; line-height:1.35 }
+.bib-pflege-karte small{ color:var(--text-dim); font-size:11px; line-height:1.4 }
+.bib-pflege-karte > button{
+  flex:none; min-height:var(--lw-touch,44px); padding:var(--space-2) var(--space-4);
+  border:1px solid var(--line); border-radius:var(--radius-md);
+  background:var(--bg-side); color:var(--text); font:inherit; font-size:12px;
+  font-weight:650; cursor:pointer; white-space:nowrap
+}
+.bib-pflege-karte > button:hover{ background:var(--bg-hover) }
+.bib-pflege-zeichen{ display:grid; place-items:center; flex:none; color:var(--text-dim) }
+.bib-pflege-zeichen > svg{ width:18px; height:18px; display:block }
+.bib-sicher-gut .bib-pflege-zeichen{ color:var(--erfolg) }
+.bib-sicher-erinnern .bib-pflege-zeichen{ color:var(--warnung) }
+.bib-sicher-warnen .bib-pflege-zeichen{ color:var(--gefahr) }
+.bib-sicher-warnen{ border-color:var(--gefahr) }
+.bib-sicher-erinnern{ border-color:var(--warnung) }
+
+/* --- Platz auf dem Gerät -------------------------------------------------- */
+.bib-platz-balken{
+  overflow:hidden; height:10px; border-radius:var(--radius-pill);
+  background:var(--bg-hover)
+}
+.bib-platz-balken > i{
+  display:block; height:100%; border-radius:var(--radius-pill);
+  background:var(--accent-text)
+}
+/* Die Anhänge sind der ERSTE Teil des belegten Balkens, nicht ein zweiter
+   daneben: sie liegen im selben Platz und nicht neben ihm. */
+.bib-platz-balken > i > b{
+  display:block; height:100%; border-radius:var(--radius-pill) 0 0 var(--radius-pill);
+  background:var(--accent-warm)
+}
+.bib-platz-teile{
+  display:flex; align-items:center; flex-wrap:wrap; gap:var(--space-2) var(--space-5);
+  margin:var(--space-3) 0 0; color:var(--text-dim); font-size:11.5px
+}
+.bib-platz-teile > span{
+  width:9px; height:9px; margin-right:var(--space-2); border-radius:50%
+}
+.bib-platz-anhang{ background:var(--accent-warm) }
+.bib-platz-rest{ background:var(--accent-text) }
+.bib-platz-hinweis,.bib-platz-unbekannt{
+  margin:var(--space-2) 0 0; color:var(--text-faint); font-size:10.5px; line-height:1.5
+}
+.bib-platz-unbekannt{ font-size:12px; color:var(--text-dim) }
+
+@media(max-width:760px){
+  .bib-pflege{ grid-template-columns:1fr }
+  .bib-pflege-karte{ grid-template-columns:auto minmax(0,1fr); row-gap:var(--space-3) }
+  .bib-pflege-karte > button{ grid-column:1/-1 }
+}
+
+/* --- Zuletzt in der Hand ------------------------------------------------- */
+.bib-abschnitt{ margin-top:var(--space-9) }
+.bib-abschnitt > header{ margin-bottom:var(--space-4) }
+.bib-abschnitt h2{ margin:0; font-size:15px; font-weight:750; letter-spacing:-.015em }
+.bib-abschnitt > header p{ margin:2px 0 0; color:var(--text-dim); font-size:11px }
+.bib-hand-reihe{
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr));
+  gap:var(--space-4); align-items:start
+}
+.bib-hand{
+  display:grid; grid-template-rows:1fr auto; min-width:0; overflow:hidden; padding:0;
+  border:1px solid var(--line); border-radius:var(--radius-lg);
+  background:var(--bg-card); text-align:left; cursor:pointer;
+  transition:border-color var(--motion-fast) var(--ease), box-shadow var(--motion-fast) var(--ease)
+}
+.bib-hand:hover{ border-color:var(--line-stark,var(--line)); box-shadow:var(--shadow-1) }
+.bib-hand-blatt{
+  position:relative; display:grid; align-content:start; gap:var(--space-1);
+  overflow:hidden; height:84px; padding:var(--space-3) var(--space-4) 0;
+  color:var(--text-dim); font-size:10px; line-height:1.45
+}
+.bib-hand-blatt::after{
+  content:""; position:absolute; right:0; bottom:0; left:0; height:22px;
+  pointer-events:none; background:linear-gradient(to bottom,transparent,var(--bg-card))
+}
+.bib-hand-blatt.is-leer{ align-content:center; justify-items:center; color:var(--text-faint) }
+.bib-hand-blatt.is-leer::after{ display:none }
+.bib-hand-fuss{
+  display:grid; gap:1px; min-width:0; padding:var(--space-3) var(--space-4);
+  border-top:1px solid var(--line-soft)
+}
+.bib-hand-fuss strong{
+  overflow:hidden; font-size:12px; font-weight:680; text-overflow:ellipsis; white-space:nowrap
+}
+.bib-hand-fuss small{
+  overflow:hidden; color:var(--text-dim); font-size:10px;
+  text-overflow:ellipsis; white-space:nowrap
+}
+
+@media(max-width:760px){
+  .bib-regal{ grid-template-columns:1fr; gap:var(--space-4) }
+  .bib-heft-blatt{ height:130px }
+  .bib-hand-reihe{ grid-template-columns:1fr 1fr }
+}
+/* AM TELEFON EINE ZEILE ZUM SCHIEBEN, NICHT ZWEI ZUM UMBRECHEN.
+   Gesehen auf 390 × 844: die vier Reiter plus „3 mehr …" brachen um, der
+   Umschalter rutschte darunter, und zusammen kosteten sie 150 px, bevor das
+   erste Heft anfing. Derselbe Griff wie bei der Reiterleiste der Lernwelt —
+   und dieselbe Begründung: eine waagerechte Leiste ist am Telefon die
+   vertraute Form, zwei Reihen kosten zu viel Höhe. */
+@media(max-width:760px){
+  .bib-kopf{ display:grid; gap:var(--space-3) }
+  .bib-reiter{
+    flex-wrap:nowrap; overflow-x:auto; overscroll-behavior-inline:contain;
+    scrollbar-width:none
+  }
+  .bib-reiter > button{ flex:0 0 auto }
+  .bib-form{ justify-self:start; margin-bottom:var(--space-3) }
+}
+@media(pointer:coarse){ .bib-form button{ min-height:40px } }
 .bib-kopf{display:flex; align-items:center; gap:10px; border-bottom:1px solid var(--line);
   padding-bottom:8px; margin-bottom:2px; flex-wrap:wrap}
 .bib-reiter{display:flex; gap:4px; flex:1; flex-wrap:wrap}
@@ -703,6 +1211,90 @@ tr.unterzeile .tt-ein{color:var(--text-faint); margin-right:2px}
  * REITERLEISTE DER SEITENLEISTE (Notion: Home · Chat · Meetings · Inbox)
  * ======================================================================== */
 .side-reiter{display:flex; gap:2px; padding:6px 10px 4px; align-items:center}
+
+/* ============================================================================
+ * DIE ZEILEN EINER SEITENVORSCHAU (E207)
+ * ----------------------------------------------------------------------------
+ * `Vorschau.miniatur()` im Kern gibt den Anfang einer Seite als Satzinhalt
+ * zurück: Überschriften fett, Haken als Kästchen, Listenpunkte mit Punkt.
+ * ZWEI Bereiche zeichnen das — die Lernwelt in „Weiter wo du warst", die
+ * Bibliothek im Regal. Der Stil dafür steht deshalb hier und nicht in einem
+ * der beiden Bereichsblätter (CLAUDE.md §5).
+ *
+ * Was der jeweilige Bereich beisteuert, ist der AUSSCHNITT: wie hoch er ist,
+ * wo die Blende endet, auf welcher Fläche er liegt. Was darin steht, sieht
+ * überall gleich aus — sonst erkennt man dieselbe Seite an zwei Orten
+ * unterschiedlich wieder, und das ist genau das, was eine Vorschau
+ * verhindern soll.
+ * ==========================================================================*/
+/* `display:block` IST HIER DIE GANZE ZEILE — und der Grund steht in §55.2.
+   `overflow` und `text-overflow` gelten NICHT für ein nicht ersetztes
+   Inline-Element; `white-space:nowrap` schon. Ein `<b>` blieb also inline,
+   lief über den Deckel hinaus und wurde von dessen `overflow:hidden` hart
+   abgeschnitten — ohne Auslassungszeichen. Gemessen auf dem Telefon: ein
+   Deckel ist 102 px breit, der Titel „Die Oberfläche — wo jeder Knopf
+   sitzt" ragte 251 px darüber hinaus, und „Was Notion 10 000-mal besser
+   machen würde" stand als „Was Notion 10 0" da — ein anderer Titel, kein
+   gekürzter (dieselbe Lehre wie E227 bei der Zahl).
+   Und die Falle für jede Prüfung, die das messen will: ein Inline-Element
+   meldet `scrollWidth` 0 und `clientWidth` 0. Wer die beiden vergleicht,
+   bekommt „0 gegen 0 — passt schon".
+   In der Lernwelt fiel es nicht auf, weil `.lw-mini` ein Grid ist und seine
+   Kinder ohnehin blockifiziert. `display:block` schadet dort nichts. */
+.mini-zeilen > *{ display:block; overflow:hidden; min-width:0; text-overflow:ellipsis; white-space:nowrap }
+.mini-zeilen > b{ color:var(--text); font-size:12px; font-weight:720; letter-spacing:-.01em }
+.mini-zeilen > code{
+  padding:1px var(--space-1); border-radius:var(--radius-sm); background:var(--bg-hover);
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:10px
+}
+.mini-li{ position:relative; padding-left:var(--space-4) }
+.mini-li::before{ content:"•"; position:absolute; left:var(--space-1); color:var(--text-faint) }
+.mini-q{ padding-left:var(--space-3); border-left:2px solid var(--line-stark,var(--line)) }
+.mini-todo{ display:flex; align-items:center; gap:var(--space-2) }
+.mini-todo > svg{ flex:none; width:12px; height:12px }
+.mini-hr{ height:1px; background:var(--line) }
+/* EIN BLOCK OHNE TEXT (L61). Schaltplan, Blatt, Bild, Tabelle — sie tragen
+   ihren Inhalt nicht im Text, und die Miniatur stand für sie leer da. Der
+   Streifen sieht bewusst nicht wie eine Textzeile aus: leicht hinterlegt,
+   damit man auf einen Blick sieht, dass dort etwas ANDERES steht. */
+.mini-obj{
+  display:block; padding:1px var(--space-2); border-radius:var(--radius-sm);
+  background:var(--bg-hover); color:var(--text-dim); font-size:10.5px;
+}
+/* Was das Blockregister nicht kennt (`pdfseite`, `zeichenflaeche`) hat
+   keinen deutschen Namen — dann steht hier ein leerer Streifen. Er braucht
+   eine Höhe, sonst wäre er gar nicht da. */
+.mini-obj-leer{ height:9px; opacity:.75 }
+
+/* ============================================================================
+ * DIE SCHUBLADEN IN „MEINE APPS" (E206)
+ * ----------------------------------------------------------------------------
+ * Zwanzig gleichrangige Zeilen ganz unten in der Seitenleiste sind keine
+ * Liste, sondern eine Wand: man liest sie nicht, man sucht darin — und um
+ * überhaupt hinzusehen, muss man an allem anderen vorbeirollen.
+ *
+ * Vier Schubladen mit drei bis fünf Zeilen liest man. Gelöscht ist nichts;
+ * jede App steht weiterhin da, nur eine Ebene tiefer. Der Zähler rechts sagt
+ * vorher, wie viele drin sind — ohne ihn öffnet man eine Schublade, um zu
+ * sehen, ob sich das Öffnen lohnt.
+ * ==========================================================================*/
+/* Zähler und Pfeil stehen NEBENEINANDER am rechten Rand. Der erste Entwurf
+   gab beiden `margin-left:auto` — dann schob der Zähler sich in die Mitte
+   und der Pfeil an den Rand, und die vier Zeilen sahen aus wie zwei
+   Spalten, die nicht zueinander gehören. Mit Augen gesehen. */
+.app-gruppe > .k{
+  margin-left:auto; opacity:.55; font-size:11px; font-variant-numeric:tabular-nums
+}
+.app-gruppe > .app-pfeil{
+  flex:none; opacity:.45;
+  transition:transform var(--motion-fast) var(--ease)
+}
+.app-gruppe > .app-pfeil > svg{ width:13px; height:13px; display:block }
+.app-gruppe.auf > .app-pfeil{ transform:rotate(180deg) }
+/* Eingerückt, damit man sieht, wozu die Zeile gehört — und mit einer Linie,
+   damit man es auch dann sieht, wenn zwei Schubladen offen sind. */
+.app-unter{ margin-left:14px; padding-left:8px; border-left:1px solid var(--line-soft) }
+.app-unter[hidden]{ display:none }
 /* Die vier stummen Reiter enger: 6 Punkte Rand statt 9. Gemessen bringt das
    24 Punkte, und genau die braucht der aktive, damit „Heute" ganz dasteht
    statt als „He…". Am Telefon ist diese Leiste ausgeblendet, hier gilt also
@@ -952,80 +1544,102 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
 
      Zwei Zahlen, die dasselbe meinen müssen, gehen irgendwann
      auseinander. Also nur noch eine. */
-  :root{ --hoben: calc(80px + env(safe-area-inset-top)) }
+  /* 68 STATT 80 — UND ZWAR AM POLSTER, NICHT AN DER TASTE (E235).
+     Redur hat den ganzen Kopfbereich rot angestrichen: „dort sollte
+     möglichst wenig sein". Gemessen waren es 236 px von 844, also ein
+     Drittel des Telefons, bevor die erste Zahl kommt.
+
+     Die Rechnung dieser Zeile war 12 + 56 + 12 = 80. Die 56 sind die
+     Fläche, die der Daumen trifft; §37 verlangt 44, und der Absatz
+     darüber verteidigt die 56 ausdrücklich. Daran wird nicht gespart.
+     Gespart wird am Polster: 6 + 56 + 6 = 68.
+
+     Zwölf Punkte klingen wenig. Sie sind ein Viertel der Ersparnis, die
+     ohne Verlust überhaupt zu holen ist — den Rest holen die verschmolzene
+     Reiterzeile (−56) und der Bereichsfilter als Chip (−44). */
+  /* ══════════════════════════════════════════════════════════════════
+   * DIE NAVIGATION STEHT UNTEN (E236)
+   * ------------------------------------------------------------------
+   * `--hoben` heisst weiter so, meint aber jetzt die MENÜLEISTE: sie ist
+   * seit E236 das oberste Ding in `#main`, und alles, was den Abstand
+   * nach oben rechnet, rechnet mit dieser Marke.
+   *
+   * WARUM UNTEN. Gemessen lagen am Telefon drei Bänke übereinander —
+   * Kreise 68, Menüleiste 45, Krume 56 = 169 px von 844, bevor der erste
+   * Deckel kommt. Unten kostet die Navigation nichts vom Kopf, und der
+   * Daumen kommt hin, ohne die Hand umzugreifen.
+   * ════════════════════════════════════════════════════════════════ */
+  :root{ --hoben: env(safe-area-inset-top);
+         /* 5 Polster + 48 Weg + 5 Polster + 1 Trennlinie = 59.
+            Die Linie gehört dazu: gemessen war die Leiste 59 px hoch, die
+            Marke sagte 58, und die Schublade endete einen Punkt zu tief —
+            genau auf der Linie. Ein Punkt ist kein Schaden, aber eine
+            Marke, die nicht stimmt, ist der Anfang von zehn. */
+         --hunten: calc(59px + env(safe-area-inset-bottom)) }
   #handy-oben{
-    display:flex; align-items:center; gap:10px;
-    position:fixed; left:0; right:0; top:0; z-index:401;
-    padding:calc(12px + env(safe-area-inset-top)) 28px 12px;
-    background:var(--bg);
-    overflow-x:auto; scrollbar-width:none;
+    display:flex; align-items:stretch; gap:2px;
+    position:fixed; left:0; right:0; bottom:0; top:auto; z-index:401;
+    padding:5px 8px calc(5px + env(safe-area-inset-bottom));
+    background:var(--bg); border-top:1px solid var(--line);
   }
-  /* GEMESSEN AM 6. AUGUST, und es war knapper als gedacht: bei 390 px
-     brauchte die Leiste 395 px mit „Start" und 421 px mit „Eingang" — die
-     letzte Pille stand ausserhalb des Bildes. Am 428er iPhone fiel das nie
-     auf; E37 sagt aber 390 zuerst.
+  /* JEDER NAME STEHT DA, NICHT NUR DER AKTIVE.
+     Oben war Platz für genau einen Namen — fünf nebeneinander hätten die
+     Leiste gesprengt. Unten stehen sie UNTER dem Zeichen, und dort passen
+     alle fünf: 390 / 5 = 78 px je Weg. Das ist auch der Grund, warum es
+     fünf sein müssen und nicht sechs (§38: nicht nur über Farbe sagen,
+     wo man ist). */
+  #handy-oben > button{
+    flex:1 1 0; min-width:0; min-height:48px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:3px; padding:5px 2px 4px; border:0; border-radius:12px; background:none;
+    color:var(--text-dim);
+    /* ÜBER DER GLEITENDEN FLÄCHE, NICHT DARUNTER. `#ho-pille` liegt auf
+       `z-index:0`; ohne diese zwei Wörter lag der aktive Knopf DAHINTER
+       und war im Bild leer — Zeichen und Name weg, nur die graue Fläche
+       da. Die Regel stand vorher im alten Kreis-Block und ist beim
+       Aufräumen mitgegangen. */
+    position:relative; z-index:1;
+    /* JEDES ANTIPPEN MUSS ANTWORTEN. Die alte Kreisregel hatte diesen
+       Übergang; beim Aufräumen ging er mit, und test126 wurde rot — zu
+       Recht: ein Knopf, der ohne Antwort umschaltet, fühlt sich kaputt an.
+       Nur Farbe und Fläche, nichts, was den Aufbau neu rechnet. */
+    transition:background var(--motion-fast,.14s) var(--ease-standard,ease),
+               color var(--motion-fast,.14s) var(--ease-standard,ease);
+  }
+  #handy-oben > button:active{ background:var(--bg-hover) }
+  #handy-oben > button b{
+    display:block; font-size:10.5px; font-weight:500; letter-spacing:-.01em;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%;
+  }
+  #handy-oben > button.an b{ font-weight:650 }
+  #handy-oben > button.an{ color:var(--accent-text,var(--accent)) }
+  /* ─── WAS HIER STAND, UND WARUM ES WEG IST (E236) ──────────────────
+     Hier lagen drei Absätze Messungen aus dem 6., 7. und 24. August: wie
+     breit sechs runde Pillen mit Namen nebeneinander werden, und ab
+     welcher Bildschirmbreite man am Weissraum sparen muss. Die Rechnung
+     war richtig und ist gegenstandslos geworden.
 
-     NACHGEMESSEN AM 7. AUGUST, nachdem die Tasten von 52 auf 56 px
-     gewachsen sind. Vier Tasten mal 4 px sind 16 px, und die haben zwei
-     Breiten gekippt, die vorher gerade noch gingen:
+     Der Grund: sie ging von einer WAAGERECHTEN Pille aus — Zeichen und
+     Wort nebeneinander, deshalb 56 bis 90 px je Weg, deshalb rollte die
+     Leiste, deshalb stand nur beim aktiven Weg der Name.
 
-       Breite   längster Reiter („Termine")   davor
-       428 px   435 px  →  passt nicht        423 px  passte knapp
-       390 px   395 px  →  passt nicht        379 px  passte
-       375 px   375 px  →  passt genau
+     Unten stehen Zeichen und Wort ÜBEREINANDER. Damit braucht ein Weg
+     nur noch seine Textbreite, fünf teilen sich 390 px zu je 78, und
+     jeder Name steht da. Es gibt nichts mehr zu rollen und nichts mehr
+     zu sparen.
 
-     An der Fläche, die der Daumen trifft, wird nicht gespart — gespart
-     wird am Weissraum. Also rückt jetzt schon ab 440 px zusammen (das
-     nimmt auch das 428er iPhone mit, das vorher ausserhalb jeder Regel
-     stand) und noch einmal ab 380 px:
+     Die Zahl fünf ist deshalb keine Vorliebe, sondern die Grenze:
+     „Dokumente" braucht bei 10.5 px rund 62 px. Bei sechs Wegen wären es
+     65 px je Weg, und der Name müsste wieder gekürzt werden.
 
-       ab 440 px   Rand 17, Abstand 5, Pillenpolster 11   →  385 px
-       ab 380 px   Rand 10, Abstand 4, Pillenpolster 9    →  359 px
-
-     Damit passt jede gängige Telefonbreite: 428, 393, 390, 375, 360.
-     Darunter — 320 px, also iPhone SE der ersten Bauart — rollt die
-     Leiste, und der gewählte Reiter wird von `pilleSchieben()` ins Bild
-     geholt. Das ist die ehrlichere Antwort als eine fünfte Stufe, in der
-     nichts mehr zu holen ist. */
-  /* NACHGEMESSEN AM 24. AUGUST, weil eine SECHSTE Pille dazugekommen ist:
-     die Produktwelten stellen „Lernen" vor die vier Bereiche (E132). Die
-     Rechnung oben galt für fünf, und mit sechs lief sie über — gemessen
-     mit den kurzen Namen (Heute, Lernen, Seiten, Plan, Mehr):
-
-       428 px   Heute 3 px zu viel, Seiten 6 px
-       390 px   vier von fünf zu viel, bis 44 px
-
-     Gespart wird weiter am Weissraum und nicht an der Daumenfläche: die
-     Tasten bleiben 56 px hoch und mindestens 56 px breit. Kleiner werden
-     nur das Polster in der Pille und der Abstand zwischen Sinnbild und
-     Wort. */
+     Die Regeln für die Knöpfe stehen weiter oben, direkt bei der Leiste.
+     ─────────────────────────────────────────────────────────────────── */
   #handy-oben::-webkit-scrollbar{ display:none }
 
-  #handy-oben button{
-    flex:0 0 auto;
-    height:56px; min-width:56px;
-    border-radius:999px;
-    border:1px solid var(--line);
-    background:transparent; color:var(--text-dim);
-    display:flex; align-items:center; justify-content:center; gap:8px;
-    padding:0 13px; font-size:17px; line-height:1;
-    position:relative; z-index:1;
-    transition:background .14s, color .14s;
-  }
-  #handy-oben button:active{ background:var(--bg-hover) }
-
-  @media(max-width:440px){
-    #handy-oben{ gap:5px; padding-left:14px; padding-right:14px }
-    /* Die HÖHE bleibt 56 px — das ist die Fläche, die der Daumen trifft.
-       Schmaler darf eine Taste werden: §37 verlangt 44 px, und 48 × 56 ist
-       immer noch deutlich darüber. Sechs Kreise à 56 px plus die eine
-       beschriftete Pille brauchten bei 390 px rechnerisch 439 px. */
-    #handy-oben button{ min-width:48px; padding:0 9px; gap:6px }
-  }
-  @media(max-width:400px){
-    #handy-oben{ gap:4px; padding-left:8px; padding-right:8px }
-    #handy-oben button{ min-width:44px; padding:0 7px; gap:5px }
-  }
+  /* Fünf Wege teilen sich die Breite, also gibt es nichts mehr zu
+     staffeln — die zwei Stufen für 440 und 400 px sind mit E236 weg. Auf
+     einem 320-px-Bildschirm sind es 64 px je Weg; „Dokumente" wird dort
+     gekürzt, bleibt aber lesbar, und das Zeichen steht darüber. */
 
   /* ---- DIE GLEITENDE PILLE ------------------------------------------- */
   /* Sie ersetzt den Hintergrund der aktiven Pille durch EIN Feld, das
@@ -1044,8 +1658,11 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
      aktive Pille wächst um ihre Beschriftung, und dafür gibt es keine
      Verschiebung. */
   #handy-oben #ho-pille{
-    position:absolute; left:0; top:0; z-index:0;
-    height:56px; width:0; border-radius:999px;
+    /* SEIT E236 STEHT SIE UNTEN und ist so hoch wie ein Weg, nicht wie
+       eine Pille: 48 statt 56, und der Radius passt zu den Knöpfen. Der
+       Abstand von oben ist das Polster der Leiste (5 px). */
+    position:absolute; left:0; top:5px; z-index:0;
+    height:48px; width:0; border-radius:12px;
     background:var(--bg-hover);
     pointer-events:none; opacity:0;
     transition:transform var(--motion-normal) var(--ease-standard),
@@ -1067,37 +1684,25 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
      die Sicherung dagegen. */
   #handy-oben #ho-pille.stumm{ transition:none }
 
-  /* DER NAME STEHT NUR AN DER AKTIVEN PILLE. Das ist die ganze Idee: er
-     kostet Platz, und Platz gibt es nur einmal — also bekommt ihn die
-     Stelle, an der er etwas sagt. */
-  #handy-oben button b{ display:none; font-size:16px; font-weight:600; letter-spacing:-.01em }
-  /* KEIN EIGENER HINTERGRUND MEHR. Den bringt `#ho-pille` mit und schiebt
-     ihn herüber; stünde er hier auch, wären es zwei Flächen übereinander
-     und die wandernde käme bei einer schon fertigen an — die Bewegung
-     wäre da und würde nichts erklären. */
-  #handy-oben button.an{ color:var(--text); border-color:transparent }
-  #handy-oben button.an b{ display:inline }
+  /* JEDER NAME STEHT DA — NICHT NUR DER AKTIVE (E236).
+     Hier stand: „Der Name kostet Platz, und Platz gibt es nur einmal —
+     also bekommt ihn die Stelle, an der er etwas sagt." Das galt für eine
+     WAAGERECHTE Pille oben, in der Zeichen und Wort nebeneinander stehen.
 
-  /* Das Konto ganz links ist ein Kreis mit dem Anfangsbuchstaben. */
-  #handy-oben .ho-konto{
-    width:44px; padding:0; font-size:15px; font-weight:600;
-    color:var(--text-dim);
+     Unten stehen sie übereinander, fünf Wege teilen sich 390 px zu je 78,
+     und ein Name braucht nur seine Textbreite. Der Platz ist da. Und §38
+     ist damit besser bedient: wo man steht, sagt jetzt nicht nur die
+     Farbe der wandernden Fläche, sondern die fettere Schrift daneben. */
+  #handy-oben > button b{
+    display:block; font-size:10.5px; font-weight:500; letter-spacing:-.01em;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%;
   }
-  #handy-oben .ho-konto span{ line-height:1 }
-
-  /* Der zweite Teil der Enge von oben — er MUSS hier unten stehen, nach der
-     Grundregel für `#handy-oben button`. Gleiche Spezifität entscheidet die
-     Reihenfolge, und weiter oben verlor er lautlos: gemessen kamen 13 px
-     Polster und 16 px Schrift zurück, obwohl der Rand daneben schon eng
-     war. Eine Regel, die dasteht und nichts tut, ist schlimmer als keine. */
-  @media(max-width:440px){
-    #handy-oben button{ padding:0 11px }
-    #handy-oben button b{ font-size:15px }
-  }
-  @media(max-width:380px){
-    #handy-oben button{ padding:0 9px }
-    #handy-oben button b{ font-size:14px }
-  }
+  /* KEIN EIGENER HINTERGRUND. Den bringt `#ho-pille` mit und schiebt ihn
+     herüber; stünde er hier auch, wären es zwei Flächen übereinander und
+     die wandernde käme bei einer schon fertigen an — die Bewegung wäre da
+     und würde nichts erklären. */
+  #handy-oben > button.an{ color:var(--accent-text,var(--accent)) }
+  #handy-oben > button.an b{ font-weight:650 }
 
   #handy-oben .ho-z{ display:flex; align-items:center; justify-content:center }
   #handy-oben .ho-z svg{ display:block }
@@ -1261,12 +1866,14 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
      war 76 px hoch — die obersten 16 px des Zurück-Knopfes lagen dahinter.
      Am iPhone, wo die Kerbe noch 47 px dazulegt, war es die ganze Zeile.
      Die Marke rechnet die Kerbe mit; sie steht oben bei `#handy-oben`. */
-  #main{ padding-top:var(--hoben) }
+  #main{ padding-top:var(--hoben) }  /* nur noch die Kerbe (E236) */
   /* Der Inhalt muss unter der Aktionsleiste durchlaufen können, ohne dass
      die letzte Zeile darunter verschwindet: 120 px plus die Kerbe des
      Geräts. Vorher 96 — bei 72 px Leiste blieben 24 px Luft, und mit
      Safe-Area am iPhone gar keine. */
-  #scroll{ padding-bottom:calc(120px + env(safe-area-inset-bottom)) }
+  /* Der Inhalt muss unter der Navigationsleiste durchlaufen können, ohne
+     dass die letzte Zeile darunter verschwindet: ihre Höhe plus Luft. */
+  #scroll{ padding-bottom:calc(var(--hunten) + 24px) }
   #ai.open{ bottom:0 }
 }
 
@@ -1307,8 +1914,110 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
      Daumen ohnehin — die Breite ist in einer waagerechten Leiste die
      weniger wichtige Hälfte. */
   #topbar{ align-items:stretch; }
+  /* NACHGEMESSEN — DER GRUND OBEN GILT NICHT MEHR (E232).
+     Der Absatz darüber wägt Breite gegen Titel ab: „eine Kopfleiste ohne
+     Titel ist schlimmer als eine mit etwas schmaleren Knöpfen". Richtig
+     gedacht, nur nie ausgerechnet. Auf 390 px:
+
+         Leiste 390 — btn-back 30 — Krume 312 — btn-page-menu 30
+                                         ^^^ und 18 px stehen frei
+
+     Beide Knöpfe auf 44 kosten 28 Punkte. Die Krume behält 284 — und ein
+     Seitentitel braucht selten mehr als 200. Der Titel verschwindet also
+     nicht, er wird um neun Prozent kürzer. Dafür sind zwei Knöpfe, die man
+     in JEDER Ansicht braucht, endlich 44 × 44 (§37). */
   #topbar .icon-btn,
-  #topbar .top-btn{ min-height:44px; }
+  #topbar .top-btn{ min-height:44px; min-width:44px; justify-content:center }
+
+  /* ======================================================================
+   * DIE KRUMENZEILE UND DIE REITERZEILE WERDEN EINE (E235)
+   * ----------------------------------------------------------------------
+   * Gemessen im Lernbereich auf 390 × 844: die Krumenzeile war 56 px hoch
+   * und enthielt DREI Dinge — den Zurück-Knopf, 284 px Seitentitel
+   * („Lernen & Alltag") und die drei Punkte. Der Titel steht zu diesem
+   * Zeitpunkt schon zweimal auf dem Bildschirm: als aktiver Kreis darüber
+   * („Lernen") und als aktiver Reiter darunter.
+   *
+   * 284 von 390 Punkten Breite und eine ganze Bank Höhe für eine Auskunft,
+   * die zweimal daneben steht.
+   *
+   * DER VERTRAG. Ein Bereich, der GANZ OBEN eine eigene, klebende Zeile
+   * zeichnet, markiert sie mit `data-kopfzeile="eigene"`. Dann — und nur
+   * am Telefon — nimmt die Schale ihre eigene Zeile aus dem Fluss: der
+   * Inhalt rückt um genau ihre 56 px nach oben, der Titel wird
+   * unsichtbar, und die zwei Knöpfe bleiben als einzige über der Zeile
+   * des Bereichs stehen. Aus zwei Bänken wird eine.
+   *
+   * WARUM EINE MARKE UND KEIN AUFRUF. Ein Bereich darf die Schale nicht
+   * kennen (§5). Er sagt hier nur etwas ÜBER SICH — „diese Zeile ist mein
+   * Kopf" — genau wie `data-ruhig="mehr"` in `index.html` etwas über
+   * einen Knopf sagt. Fehlt die Marke, ändert sich nichts.
+   *
+   * WARUM `visibility` UND NICHT `display:none` FÜR DIE KRUME. Sie ist
+   * `flex:1 1 0` und schiebt damit die drei Punkte an den rechten Rand.
+   * Mit `display:none` klebten beide Knöpfe links zusammen.
+   *
+   * DIE KINDKOMBINATOREN IN `:has()` SIND ABSICHT. `#main:has(#page
+   * [data-kopfzeile])` müsste der Browser bei jeder Änderung irgendwo in
+   * `#main` neu prüfen — und in `#page` ändert sich beim Schreiben
+   * ständig etwas. Der ganze Pfad als Kind-Kette begrenzt das auf die
+   * eine Ebene, auf der die Marke überhaupt stehen kann.
+   *
+   * DARAUS FOLGT EINE BEDINGUNG, und sie ist mit Absicht eng: die
+   * markierte Zeile muss DIREKT in `#page` liegen. Ein Bereich zeichnet
+   * seinen Wurzelknoten nicht selbst — er bekommt `#page` und setzt seine
+   * Klassen darauf (`#page.produkt-welt.lernwelt`), also stimmt das von
+   * allein. Wickelt ein Bereich seine Zeile doch noch einmal ein, greift
+   * die Marke nicht, und alles bleibt beim Alten — es bricht nichts, es
+   * spart nur nichts.
+   * ==================================================================== */
+  #main:has(> #scroll > #page > [data-kopfzeile="eigene"]) #topbar{
+    position:relative; z-index:6;
+    /* NACHGEMESSEN, WELCHE DIESER DREI ZEILEN ETWAS TUT — weil eine
+       Zeile, die nichts tut, später als Beweis gelesen wird:
+         · `border-bottom:0` WIRKT. Die Leiste hat sonst einen 1-px-Strich
+           unten, und der liefe quer durch die Reiterkarte.
+         · `background:transparent` ändert heute nichts: die Leiste hat gar
+           keinen eigenen Grund, sie zeigt den der Seite. Sie bleibt als
+           Wache stehen — wer ihr einen Grund gibt, deckt sonst die Reiter
+           zu, und das fiele erst im Bild auf.
+         · `box-shadow:none` ist derselbe Fall.                          */
+    background:transparent; border-bottom:0; box-shadow:none;
+    pointer-events:none;
+    /* HINGESEHEN, NICHT NUR GEMESSEN (§55). Im ersten Bild sassen die zwei
+       Knöpfe sechs Punkte zu hoch auf der Karte des Bereichs. Der Grund
+       stand nicht in dieser Regel, sondern in der Grundregel darüber:
+       `align-items:stretch`. Ein Knopf mit fester `height:44px` lässt sich
+       nicht strecken — er bleibt oben kleben. Solange die Leiste ihren
+       eigenen Hintergrund hatte, fiel das nie auf; über einer fremden
+       Karte fällt es sofort auf. */
+    align-items:center;
+    /* Und sechs Punkte Luft unter der Kreisleiste: ohne sie stösst die
+       Karte des Bereichs direkt an die Kreise. Die Leiste rückt mit, damit
+       beide auf derselben Linie bleiben — sie IST jetzt dieselbe Zeile. */
+    margin-top:6px;
+  }
+  #main:has(> #scroll > #page > [data-kopfzeile="eigene"]) #topbar > *{
+    pointer-events:none;
+  }
+  #main:has(> #scroll > #page > [data-kopfzeile="eigene"]) #topbar > #btn-back,
+  #main:has(> #scroll > #page > [data-kopfzeile="eigene"]) #topbar > #btn-page-menu{
+    pointer-events:auto;
+  }
+  #main:has(> #scroll > #page > [data-kopfzeile="eigene"]) #topbar .crumb{
+    visibility:hidden;
+  }
+  /* −56, und keine Zahl mehr: `#topbar{ min-height:56px }` steht 40 Zeilen
+     weiter oben, und die Leiste ist am Telefon genau so hoch. Wächst sie
+     dort, wächst die Verschiebung mit. */
+  #main:has(> #scroll > #page > [data-kopfzeile="eigene"]) #scroll{
+    margin-top:-56px;
+  }
+  /* Damit die Zeile des Bereichs DIREKT unter der Kreisleiste sitzt und
+     nicht 10 px darunter — sonst stünden die zwei Knöpfe schief darüber. */
+  #main:has(> #scroll > #page > [data-kopfzeile="eigene"]) #page{
+    padding-top:0;
+  }
 
   /* AUSSERHALB der Kopfleiste wächst beides. Zwei Symbolknöpfe sassen in
      der Seitenleiste und blieben bei 28 × 28 — gefunden hat das die
@@ -1441,7 +2150,9 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
 #sidebar .pe-link, .wz-block .pe-link{ margin-top:12px }
 .pe-ico{font-size:40px; opacity:.5; margin-bottom:16px}
 .pe-gross{font-size:20px; font-weight:600; margin-bottom:8px}
-.pe-klein{font-size:14px; color:var(--text-faint); max-width:340px; margin:0 auto;
+/* Im leeren Zustand ist dieser Satz oft der einzige Text auf der Fläche —
+   ausgerechnet dort blass zu sein, ist die falsche Stelle dafür (E230). */
+.pe-klein{font-size:14px; color:var(--text-dim); max-width:340px; margin:0 auto;
   line-height:1.5}
 .pe-link{background:none; color:var(--accent-text); font-size:15px; margin-top:18px; padding:6px}
 .pe-link:hover{text-decoration:underline; color:var(--accent-text)}
@@ -1563,7 +2274,11 @@ table.pivot tbody tr:hover td{ background:var(--bg-hover); }
      echte untere Leiste heisst `#handy-unten`, und weil die Regel ins
      Leere zielte, ragten ihre Knopfkreise hinter der Formatleiste
      hervor. */
-  body.schreibt #handy-unten{ display:none; }
+  /* Beim Schreiben tritt die Leiste am unteren Rand zurück — sonst läge
+     sie zwischen Text und Tastatur. Sie heisst seit E236 `#handy-oben`
+     (der Name stammt aus der Zeit, als sie oben stand); die alte
+     schwebende `#handy-unten` gibt es nicht mehr. */
+  body.schreibt #handy-oben{ display:none; }
 
   /* Ziehen mit dem Finger (E83): langes Drücken hebt den Block — er wird
      leicht und durchscheinend —, die Fallmarke zeigt die Lücke, in die er
@@ -2252,12 +2967,14 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
                          font-size:12px; text-decoration:underline; padding:0 3px}
 #offline-streifen button[data-a="zu"]{text-decoration:none; font-size:13px; opacity:.7}
 #offline-streifen button:hover{opacity:1}
-/* Am Telefon: volle Breite und ÜBER der unteren Leiste (72 px + Safe-Area) —
-   bei bottom:70px lag der Streifen auf ihr. Und die Knöpfe sind
-   Fingerflächen: das ✕ war 17 × 20 px. */
+/* Am Telefon: volle Breite und ÜBER der unteren Leiste — bei bottom:70px
+   lag der Streifen auf ihr. Und die Knöpfe sind Fingerflächen: das ✕ war
+   17 × 20 px.
+
+   Wo er steht, steht weiter unten im Stapel („DIE DREI SCHWEBENDEN
+   MELDUNGEN"). Hier bleibt nur die Form. */
 @media(max-width:760px){
   #offline-streifen{left:10px; right:10px; transform:none;
-                    bottom:calc(84px + env(safe-area-inset-bottom));
                     font-size:13px; gap:6px; padding:2px 4px 2px 13px}
   #offline-streifen span{flex:1 1 auto; min-width:0}
   #offline-streifen button{min-height:44px; padding:0 10px}
@@ -2586,6 +3303,31 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    bleibt die KI, weil sie am häufigsten gebraucht wird; Suchen und Neu
    wandern dafür in die Kopfzeile, wo am Telefon Platz frei ist. */
 .nur-handy{ display:none }
+
+/* Glocke und Statuspunkt in der MENÜLEISTE (E251, zweiter Anlauf). Der
+   erste hängte beide an die Kopfzeile — test40/245/248 wurden zu Recht
+   rot: die Kopfzeile gehört der Seite, die Menüleiste der App. Die Glocke
+   erscheint nur mit Ungelesenem; der Punkt sitzt am Arbeitsbereichs-Knopf
+   und zeigt den Abgleichstand. Zahl und Punkt sind Bild; die Wörter
+   stehen im aria-label (§38). */
+#mb-glocke, #mb-konto{ position:relative }
+/* `display:grid` an .mb-rechts-knopf SCHLÄGT die [hidden]-Regel des
+   Browsers — Autorenstil gewinnt gegen das UA-Stylesheet. Ohne diese
+   Zeile stand die „versteckte" Glocke sichtbar da: das Attribut stimmte,
+   das Bild nicht. Genau daran ist schon der erste Anlauf gescheitert
+   (test40 fand den Knopf trotz hidden). */
+#mb-glocke[hidden]{ display:none }
+.glocke-zahl{ position:absolute; top:1px; right:0; min-width:15px; height:15px;
+  padding:0 3px; border-radius:8px; background:var(--gefahr); color:#fff;
+  font-size:9.5px; font-weight:700; line-height:15px; text-align:center;
+  font-style:normal }
+.wolke-punkt{ position:absolute; top:2px; right:2px; width:8px; height:8px;
+  border-radius:50%; border:1.5px solid var(--bg); display:block }
+.wolke-punkt.ist-gut{ background:var(--erfolg) }
+.wolke-punkt.ist-laeuft{ background:var(--warnung) }
+.wolke-punkt.ist-fehler{ background:var(--gefahr) }
+.wolke-punkt[hidden]{ display:none }
+
 #handy-leiste button[role="tab"].an b{ font-weight:650 }
 #handy-leiste .hl-punkt{ position:absolute; top:7px; right:calc(50% - 15px);
   width:7px; height:7px; border-radius:50%; background:var(--accent); display:block }
@@ -2655,16 +3397,62 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .wahl-knoepfe button span{font-size:12.5px; color:var(--text-dim); line-height:1.5}
 
 
-/* Die Rundgang-Einladung am Telefon: über die Aktionsleiste, nicht darauf.
+/* Die Rundgang-Einladung am Telefon: über die untere Leiste, nicht darauf.
    Sie lag bei bottom:14px und verdeckte zusammen mit dem Toast die halbe
    untere Leiste — sichtbar im Bildschirmfoto vom 6. August (E37). */
 @media(max-width:760px){
-  /* Über den Toast, nicht auf ihn: beide sassen auf derselben Höhe und
-     überdeckten einander. Der Toast ist flüchtig und gehört näher an die
-     Leiste, die Einladung steht länger und rückt darüber. */
-  #rg-einladung{
-    left:14px; right:14px; max-width:none;
-    bottom:calc(172px + env(safe-area-inset-bottom));
+  #rg-einladung{ left:14px; right:14px; max-width:none }
+}
+
+/* ============================================================================
+ * DIE DREI SCHWEBENDEN MELDUNGEN AM UNTEREN RAND
+ * ----------------------------------------------------------------------------
+ * Toast · Offline-Streifen · Rundgang-Einladung. Drei Module, drei Dateien,
+ * und bis zum 28. August drei Zahlen: 104, 84, 172. Jede beschrieb die Höhe
+ * der alten schwebenden Aktionsleiste (Suche · KI fragen · Neu).
+ *
+ * DIE GIBT ES SEIT E236 NICHT MEHR. Unten steht die Wegeleiste, 59 px statt
+ * 72 — und alle drei blieben stehen, wo sie waren. Gemessen am Telefon:
+ * der Toast endete bei 740, die Leiste beginnt bei 785. 45 px Nichts
+ * dazwischen, und DIREKT unter dem Toast lag ein Dokumentdeckel, den er
+ * zudeckte. In vier von fünf Bildschirmfotos war eine Zeile verdeckt.
+ *
+ * ZWEI REGELN, UND DIE ZWEITE IST DIE WICHTIGERE:
+ *
+ *   1. Keine Zahl, sondern `--hunten`. Die Marke IST die Höhe der Leiste;
+ *      wächst sie, wächst der Abstand mit. Eine Zahl, die die Höhe eines
+ *      anderen Dings abschreibt, stimmt bis zu dem Tag, an dem jemand das
+ *      andere Ding anfasst.
+ *
+ *   2. Der Stapel steht an EINER Stelle. Drei Lagen in drei Dateien können
+ *      gar nicht anders, als auseinanderzulaufen — das ist genau passiert.
+ *
+ * DIE VORGABE IST FÜR ALLE DREI GLEICH: dicht an der Leiste. Denn meistens
+ * ist nur EINES da, und dann gehört es dorthin. Erst wenn ein zweites
+ * hinzukommt, rückt das FLÜCHTIGERE nach oben — der Toast verschwindet nach
+ * Sekunden, der Streifen bleibt, solange kein Netz da ist, die Einladung
+ * bis man sie wegtippt.
+ *
+ * `:has()` fragt genau das: ist das andere gerade IM BAUM? Beide werden
+ * angelegt und wieder entfernt (`rundgang.ts`, `pwa.ts`), nicht nur
+ * versteckt — die Frage hat also eine ehrliche Antwort.
+ * ==========================================================================*/
+@media(max-width:760px){
+  #toast, #offline-streifen, #rg-einladung{
+    bottom:calc(var(--hunten, 59px) + 12px);
+  }
+  /* Ist ein längerlebiges da, rückt der Toast darüber. */
+  body:has(#offline-streifen) #toast,
+  body:has(#rg-einladung)     #toast{
+    bottom:calc(var(--hunten, 59px) + 66px);
+  }
+  /* Sind BEIDE da, nimmt die Einladung den untersten Platz — sie steht am
+     längsten —, der Streifen darüber, der Toast ganz oben. */
+  body:has(#rg-einladung) #offline-streifen{
+    bottom:calc(var(--hunten, 59px) + 66px);
+  }
+  body:has(#rg-einladung):has(#offline-streifen) #toast{
+    bottom:calc(var(--hunten, 59px) + 122px);
   }
 }
 
@@ -3092,20 +3880,92 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .school-card button b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.school-card button em{
   color:var(--text-dim);font-size:11px;font-style:normal;white-space:nowrap}.school-none{color:var(--text-dim);font-size:13px}
 .school-empty{text-align:center;padding-top:15vh}.school-empty-icon{font-size:52px}.school-empty p{color:var(--text-dim)}
-.school-empty button{padding:10px 16px}.electrical-dialog{width:min(620px,95vw)}
-.electrical-dialog>.callout{margin:10px 14px}.electrical-mode{width:calc(100% - 28px);margin:4px 14px 12px;
+.school-empty button{padding:10px 16px}
+
+/* DER RECHNER WÄCHST — DIE KNÖPFE BLEIBEN STEHEN (E209)
+   Kopf, rollender Bauch, Knopfreihe. Ohne das stand „Ergebnis in Seite"
+   nach dem Rechnen 185 px unter dem Fensterrand (am Telefon 310 px), weil
+   der Lösungsweg den Dialog auf 1177 px trieb. `minmax(0,1fr)` und nicht
+   `1fr`: eine Rasterzeile schrumpft sonst nicht unter ihren Inhalt, und
+   dann rollt gar nichts. */
+.electrical-dialog{width:min(620px,95vw);
+  display:grid; grid-template-rows:auto minmax(0,1fr) auto; max-height:min(86dvh,900px)}
+.electrical-bauch{overflow:auto; overscroll-behavior:contain}
+.electrical-bauch>.callout{margin:10px 14px}.electrical-mode{width:calc(100% - 28px);margin:4px 14px 12px;
   min-height:42px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);padding:6px 9px}
 .electrical-fields{display:grid;gap:8px;padding:0 14px}.electrical-field{display:grid;grid-template-columns:1fr 180px 90px;align-items:center;gap:8px}
 .electrical-field input{min-height:40px;padding:7px 9px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text)}
 .electrical-field em{font-style:normal;color:var(--text-dim);font-size:12px}
 .electrical-output{display:grid;gap:3px;min-height:68px;margin:14px;padding:12px;border-radius:10px;background:var(--bg-hover)}
+
+/* ============================================================================
+ * DER LÖSUNGSWEG IM RECHNER (E209)
+ * ----------------------------------------------------------------------------
+ * Redur, mehrfach: der Lösungsweg muss immer gezeigt werden. Bis hierher
+ * stand im Rechner nur „1,64 V" und darüber die Formel — wer das liest, kann
+ * nicht nachprüfen, ob er dasselbe gerechnet hätte.
+ *
+ * Jeder Schritt bekommt seine Nummer, seine Formel und die Zeile mit den
+ * EINGESETZTEN Zahlen. Die Formel steht in fester Schrift, damit „ϱ · 2 · l"
+ * und „= 0.0178 · 2 · 38" untereinander stehen und man beides vergleichen
+ * kann; in einer Proportionalschrift verrutscht das.
+ * ==========================================================================*/
+.el-weg{ display:grid; gap:var(--space-4); margin:var(--space-4) 0 0; padding:0; list-style:none }
+.el-weg > li{
+  display:grid; gap:2px; padding-left:var(--space-8); position:relative;
+  border-left:2px solid var(--line); padding-block:2px
+}
+/* Die Nummer sitzt IM Rand und nicht davor: so bleibt die Formel darunter
+   linksbündig mit der eingesetzten Zeile, und genau die zwei will man
+   übereinander lesen. */
+.el-weg > li[data-nr]::before{
+  content:attr(data-nr); position:absolute; left:var(--space-3); top:2px;
+  display:grid; place-items:center; width:20px; height:20px; border-radius:50%;
+  background:var(--accent-soft,var(--bg-hover)); color:var(--accent-text);
+  font-size:11px; font-weight:800
+}
+.el-weg > li > b{ font-size:12.5px; font-weight:700 }
+.el-weg > li > code{
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:12.5px; color:var(--text)
+}
+.el-weg > li > span{
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:12.5px; color:var(--text-dim)
+}
+/* Die Gegenprobe ist kein Schritt des Wegs, sondern ein zweiter Blick darauf
+   — deshalb ohne Nummer und mit gestricheltem Rand. */
+.el-weg > li.el-probe{ border-left-style:dashed; padding-left:var(--space-5) }
+.el-warnung{
+  margin-top:var(--space-3); padding:var(--space-2) var(--space-4);
+  border-radius:var(--radius-md); background:var(--b-yellow,var(--bg-hover));
+  color:var(--warnung); font-size:12.5px; font-weight:680
+}
+/* Der Hauptknopf war einer von sieben gleich aussehenden. */
+.electrical-actions button.is-primary{
+  border-color:var(--accent-text); background:var(--accent); color:var(--auf-accent);
+  font-weight:680
+}
 .electrical-output strong{font-size:21px}.electrical-output span,.electrical-output small{color:var(--text-dim)}
-.electrical-actions{display:flex;flex-wrap:wrap;gap:7px;padding:0 14px 14px}.electrical-actions button{min-height:40px;padding:7px 11px}
+.electrical-actions{display:flex;flex-wrap:wrap;gap:7px;padding:0 14px 14px}
+.electrical-actions button{min-height:40px;padding:7px 11px}
+/* Der FUSS — nur die direkte Reihe im Dialog. Er steht unter einem
+   rollenden Kasten; ohne Linie und ohne eigenen Grund schöbe sich der
+   Lösungsweg beim Rollen sichtbar dahinter. Die Paketreihe im Bauch rollt
+   mit und braucht beides nicht. */
+.electrical-dialog>.electrical-actions{padding:12px 14px 14px;
+  border-top:1px solid var(--line); background:var(--bg-side)}
+/* Die fünf Paketknöpfe, unter einer Überschrift statt im Fuss. */
+.electrical-pakete{margin:16px 0 4px; padding-top:14px; border-top:1px solid var(--line)}
+.electrical-pakete h4{margin:0 14px 8px; font-size:12px; font-weight:600;
+  letter-spacing:.04em; text-transform:uppercase; color:var(--text-faint)}
 @media(max-width:760px){
   .school-home{padding:8px 10px 38px}.school-hero{display:block;padding:17px}.school-hero h1{font-size:25px}
   .school-quick{margin-top:16px}.school-quick button,.school-folder,.school-card button,.school-empty button,
   .electrical-actions button{min-height:44px}.school-grid{grid-template-columns:1fr}.school-folders{grid-template-columns:1fr 1fr}
-  .electrical-field{grid-template-columns:1fr 96px 54px}.electrical-dialog{max-height:92dvh;overflow:auto}
+  /* `overflow:auto` stand hier, als der ganze Dialog rollte. Jetzt rollt der
+     Bauch, und der Dialog behält seinen Rahmen (`.finder` hat hidden). */
+  .electrical-field{grid-template-columns:1fr 96px 54px}.electrical-dialog{max-height:92dvh}
 }
 
 /* ── Schriftgrösse und Schriftart je Block (E101) ──────────────────────────
@@ -3898,6 +4758,13 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 
 .ea-leiste{display:flex; align-items:center; gap:8px; padding:8px 12px;
   border-bottom:1px solid var(--line); background:var(--bg-card); flex:0 0 auto}
+/* Die Prüfungsuhr (E248). §38: die fallende Zahl selbst trägt die
+   Information — die Farbe unter einer Minute kommt nur dazu. */
+.ea-uhr{margin-left:auto; font-variant-numeric:tabular-nums; font-size:13px;
+  color:var(--text-dim); white-space:nowrap}
+.ea-uhr.ist-knapp{color:var(--gefahr); font-weight:640}
+.ea-zeitaus{margin:0 0 10px; padding:8px 12px; border:1px solid var(--gefahr);
+  border-radius:8px; color:var(--gefahr); font-size:13px}
 .ea-artwahl{display:flex; gap:4px; overflow-x:auto; scrollbar-width:none;
   flex:1; min-width:0}
 .ea-artwahl::-webkit-scrollbar{display:none}
@@ -4263,3 +5130,105 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 /* Ein gesetztes Fachzeichen auf der Seite. Der Zeiger sagt, dass man es
    anfassen kann — ein Tipp dreht es um 90°. */
 .blatt-marken [data-ink-art="zeichen"]{cursor:pointer}
+
+/* ============================================================================
+ * DIE ELEKTRO-STARTSEITE (L65)
+ * ----------------------------------------------------------------------------
+ * „Elektro" war der einzige der fünf Wege in der obersten Gruppe, der kein
+ * ORT war — er öffnete ein Fenster. Jetzt ist es eine Seite wie „Heute",
+ * und was darauf steht, kommt aus dem Menüband-Register (§8).
+ *
+ * KACHELN UND KEINE LISTE, und der Grund ist nicht Geschmack: acht Wege in
+ * einer Liste sind acht Zeilen, die alle gleich aussehen. Als Kacheln
+ * unterscheidet die Grösse das Wichtige vom Nebensächlichen — `gross: true`
+ * steht im Register und heisst dort schon „das Wichtigste einer Gruppe".
+ * ==========================================================================*/
+.els{ max-width:920px; margin:0 auto; padding:8px 0 40px }
+.els-kopf h1{ margin:0 0 4px; font-size:30px; font-weight:760; letter-spacing:-.02em }
+.els-kopf p{ margin:0 0 22px; color:var(--text-dim); font-size:14px }
+
+.els-abschnitt{ margin:0 0 26px }
+.els-abschnitt h2{
+  margin:0 0 10px; font-size:12px; font-weight:700; letter-spacing:.08em;
+  text-transform:uppercase; color:var(--text-faint)
+}
+
+/* Was ansteht, steht ganz oben und ist ein Knopf — nicht eine Meldung.
+   Eine Zahl ohne Weg dahinter ist eine Mahnung, kein Angebot. */
+.els-dran{
+  display:flex; align-items:center; gap:14px; width:100%; margin:0 0 26px;
+  padding:14px 16px; border:1px solid var(--accent); border-radius:14px;
+  /* `--accent-schwach` gibt es schon — die gedämpfte Fassung der
+     Akzentfarbe, in beiden Themen abgestimmt. Eine eigene Farbe hier wäre
+     eine zweite Wahrheit über dasselbe (§39). */
+  background:var(--accent-schwach); color:var(--text);
+  text-align:left; cursor:pointer; min-height:44px;
+  transition:background var(--motion-fast,.14s) var(--ease-standard,ease)
+}
+.els-dran:hover{ background:var(--bg-hover) }
+.els-dran-zahl{
+  flex:none; display:grid; place-items:center; width:46px; height:46px;
+  border-radius:999px; background:var(--accent); color:var(--auf-accent);
+  font-size:19px; font-weight:760
+}
+.els-dran-text{ display:grid; gap:2px; min-width:0 }
+.els-dran-text b{ font-size:15px; font-weight:660 }
+.els-dran-text small{ color:var(--text-dim); font-size:12.5px }
+
+.els-weiter{ display:flex; flex-wrap:wrap; gap:8px }
+.els-seite{
+  display:flex; align-items:center; gap:8px; min-height:44px;
+  padding:8px 14px 8px 10px; border:1px solid var(--line); border-radius:999px;
+  background:var(--bg-card); color:var(--text); cursor:pointer; max-width:100%;
+  transition:background var(--motion-fast,.14s) var(--ease-standard,ease)
+}
+.els-seite:hover{ background:var(--bg-hover) }
+.els-seite-zeichen{ flex:none; font-size:15px }
+/* `min-width:0` ist der Unterschied zwischen „Verteilerplan" und
+   „Verteilerpla": ein Flex-Kind schrumpft von sich aus nicht unter seine
+   Inhaltsbreite, und ein gekürzter Name ohne Auslassungszeichen sieht aus
+   wie ein FALSCHER Name (E227, E236). */
+.els-seite b{
+  min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  font-size:13.5px; font-weight:600
+}
+
+.els-gitter{
+  display:grid; gap:10px;
+  grid-template-columns:repeat(auto-fill, minmax(210px, 1fr))
+}
+.els-kachel{
+  display:flex; align-items:flex-start; gap:11px; min-height:44px;
+  padding:13px 14px; border:1px solid var(--line); border-radius:13px;
+  background:var(--bg-card); color:var(--text); text-align:left; cursor:pointer;
+  transition:background var(--motion-fast,.14s) var(--ease-standard,ease),
+             box-shadow var(--motion-fast,.14s) var(--ease-standard,ease)
+}
+.els-kachel:hover{ background:var(--bg-hover); box-shadow:var(--shadow-2) }
+/* Die grosse Kachel nimmt die ganze Zeile. Welche das ist, entscheidet das
+   Register mit `gross: true` — nicht diese Datei. */
+.els-kachel.gross{ grid-column:1 / -1 }
+.els-zeichen{
+  flex:none; display:grid; place-items:center; width:34px; height:34px;
+  border-radius:9px; background:var(--bg-side); color:var(--accent-text)
+}
+.els-zeichen svg{ width:18px; height:18px }
+/* Steht im Register statt eines Symbolnamens ein Textzeichen („H₁", „B"),
+   wird es als Buchstabe gesetzt — sonst bliebe das Feld leer. */
+.els-zeichen.els-glyph{ font-size:15px; font-weight:700 }
+.els-text{ display:grid; gap:2px; min-width:0 }
+.els-text b{ font-size:14.5px; font-weight:650; line-height:1.3 }
+.els-text small{
+  color:var(--text-dim); font-size:12.5px; line-height:1.4;
+  overflow-wrap:break-word
+}
+.els-leer{ color:var(--text-dim); font-size:14px }
+
+@media(max-width:760px){
+  .els{ padding-bottom:24px }
+  .els-kopf h1{ font-size:25px }
+  .els-gitter{ grid-template-columns:1fr }
+  /* Am Telefon ist jede Kachel eine Zeile; „gross" unterscheidet dann
+     nichts mehr und braucht auch keine eigene Regel. */
+  .els-kachel{ padding:12px 13px }
+}

@@ -66,6 +66,17 @@
   --motion-slow:    320ms;  /* Blätter, grosse Überlagerungen                */
   --ease:           cubic-bezier(.2,.8,.3,1);
 
+  /* --- Die zwei alten Schattennamen (E204). ----------------------------
+   * Die vier Sprossen `--shadow-1` … `--shadow-4` stehen in `hell.css` und
+   * `dunkel.css`, denn ein Schatten ist Farbe. Diese beiden hier sind nur
+   * noch Namen für zwei davon — und ein Name ist modusfrei. Sie zweimal zu
+   * schreiben hiesse, ihn zweimal zu pflegen, ohne etwas davon zu haben
+   * (test245 §1). Sie bleiben bestehen, weil 21 Stellen `var(--shadow)`
+   * benutzen; wer neu schreibt, nimmt die Sprosse.
+   * -------------------------------------------------------------------- */
+  --shadow:             var(--shadow-3);
+  --schatten-schwebend: var(--shadow-4);
+
   /* --- Schwebende Flächen (§16). --------------------------------------- */
   --glas-rand:    inset 0 0 0 1px rgba(255,255,255,.10);
   --glas-blur:    saturate(180%) blur(20px);
@@ -285,12 +296,45 @@ input,textarea,select{font:inherit; color:inherit}
  * der Sucher mit — und genau das soll er NICHT, also bekommt die Krume eine
  * Höchstbreite dazu.
  * ==========================================================================*/
+/* ============================================================================
+ * WAS BEDEUTUNG TRÄGT, GEHÖRT NICHT IN DIE BEIWERK-FARBE (E230)
+ * ----------------------------------------------------------------------------
+ * `--text-faint` steht in `dunkel.css` mit einem Kommentar, der die Absicht
+ * genau benennt: „3.9:1 — nur Beiwerk und Symbole". Die Absicht ist richtig,
+ * und die Zahl ist bewusst unter AA.
+ *
+ * Nachgemessen (WCAG, beide Themen, Lernzentrale):
+ *
+ *     hell    --text-faint #82817e auf #ffffff   3.76 : 1
+ *                                  auf #f1f1ef   3.44 : 1
+ *     dunkel  --text-faint #737373 auf #141414   3.67 : 1
+ *
+ * Elf Stellen lagen darunter — und sieben davon waren kein Beiwerk:
+ *
+ *     „Suchen in Redion …"            das Feld der wichtigsten Handlung
+ *     „Alles bleibt auf diesem Gerät." das Versprechen der ganzen App
+ *     „Privat"                        die Überschrift über den eigenen Seiten
+ *     „heute zu wiederholen"          und drei Geschwister: die Zeilen, die
+ *     „höchstens 20 pro Runde"        sagen, was die Zahl darüber BEDEUTET
+ *     „gezielt wiederholen"
+ *     „keine geplant"
+ *
+ * Die letzten vier sind genau der Fall, den die Bibliothek schon einmal
+ * hatte: „drei von sechs Karten sagten nicht mehr, was ihre Zahl bedeutet".
+ * Dort war die Spalte zu schmal, hier ist die Farbe zu blass — dasselbe
+ * Ergebnis.
+ *
+ * Das Token bleibt, wie es ist. Was sich ändert, sind die sieben Stellen:
+ * sie bekommen `--text-dim` (hell 5.9:1, dunkel 6.1:1). Was wirklich Beiwerk
+ * ist — `Strg P`, `Strg M`, die Baumpfeile `▸ ⌄` — bleibt bei `--text-faint`,
+ * denn dafür ist es da.
+ * ==========================================================================*/
 #topbar .sucher{
   flex:1 1 auto; min-width:0; max-width:520px;
   justify-content:flex-start;
   height:36px; padding:0 var(--space-3);
   background:var(--bg-input); border-color:var(--line);
-  color:var(--text-faint); font-weight:500;
+  color:var(--text-dim); font-weight:500;
 }
 #topbar .sucher:hover{ background:var(--bg-hover); border-color:var(--line-stark) }
 #topbar .sucher .sucher-text{
@@ -333,4 +377,48 @@ input,textarea,select{font:inherit; color:inherit}
 @media (max-width:760px){
   #topbar .sucher{ display:none }
   #topbar .crumb{ max-width:none }
+}
+
+/* ============================================================================
+ * DIE MITTE IST DIE MITTE DES ARBEITSBEREICHS, NICHT DES FENSTERS (E224)
+ * ----------------------------------------------------------------------------
+ * E223 stellte den Sucher `fixed` in die FENSTERmitte. Das war falsch, und
+ * ein Bildschirmfoto der Dokumentseite hat es gezeigt: der Seitentitel lief
+ * unter das Suchfeld.
+ *
+ * GEMESSEN, 1280 px, ruhige Fassung, Seite „Lernen & Alltag":
+ *
+ *     Krume        x 328 … 435
+ *     Sucher       x 380 … 900
+ *                    ^^^^^^^^^  55 Punkte Überdeckung
+ *
+ * Und es ist kein Zufall, den man wegschieben könnte. Die Rechnung:
+ *
+ *     Seitenleiste            240
+ *     zwei Pfeilknöpfe         88   → die Krume beginnt bei 328
+ *     Sucher 520 breit, mittig zum Fenster → seine linke Kante bei 380
+ *     ------------------------------------------------------------
+ *     für den Titel bleiben    36 Punkte
+ *
+ * Sechsunddreissig Punkte sind kein Titel, sondern ein Auslassungszeichen.
+ * Bei einer 240 px breiten Seitenleiste ist Fensterzentrierung nicht eng,
+ * sondern unmöglich.
+ *
+ * Also zurück in den Fluss — und zwar mit der Waage, die vor E223 schon da
+ * war: Krume und Dehnstück wachsen beide aus der Basis null, der Sucher
+ * steht dazwischen. Damit steht er mittig zur KOPFLEISTE, und die Kopfleiste
+ * beginnt hinter der Seitenleiste. Gemessen liegt seine Mitte dann rund
+ * 20 Punkte neben der Mitte des Arbeitsbereichs — und das ist die Mitte,
+ * die ein Mensch sieht: die Seitenleiste hat einen eigenen Hintergrund und
+ * ist optisch eine Spalte für sich, kein Teil der Seite.
+ *
+ * Überdecken kann hier nichts mehr etwas, weil alle drei Stücke Nachbarn in
+ * derselben Zeile sind. Ein langer Titel macht den Sucher schmaler, nicht
+ * unlesbar.
+ * ==========================================================================*/
+@media (min-width:761px){
+  /* Der Platzhalter aus E223 hielt die Lücke für ein Stück offen, das jetzt
+     wieder selbst in der Zeile steht. Er bleibt im HTML (er kostet nichts
+     und `aria-hidden` schweigt), nimmt aber keinen Raum mehr ein. */
+  #topbar .sucher-platz{ display:none }
 }

@@ -440,6 +440,12 @@ const Store = (() => {
     if (!b) return;
     b.alive = false;
     b.trashedAt = now();
+    /* Der Papierkorb ist eine ÄNDERUNG (E250/L73): zuSchicken filtert
+       nach `edited`, und ein Block, dessen letzte Bearbeitung vor der
+       Hoch-Marke lag, trüge sein alive:false sonst nie zum Server —
+       drüben lebte er weiter. Dieselbe Lehre wie der Zeitstempel an
+       Sammlung und Ansicht weiter unten. */
+    b.edited = now();
     const p = cache.blocks[b.parentId];
     if (p) {
       p.content = p.content.filter((x: any) => x !== id);
@@ -453,6 +459,10 @@ const Store = (() => {
     if (!b) return;
     b.alive = true;
     delete b.trashedAt;
+    /* Die Gegenrichtung braucht den Stempel genauso: ein Wiederherstellen
+       ohne `edited` käme drüben nie an — der Block bliebe dort im
+       Papierkorb und fiele nach der Frist ins endgültige Löschen. */
+    b.edited = now();
     const p = cache.blocks[b.parentId];
     if (p && !p.content.includes(id)) { p.content.push(id); elternGeaendert(p); }
     save('blocks', b);
@@ -583,11 +593,33 @@ const Store = (() => {
     return raus;
   };
 
+  /* Zu welcher Seite gehört dieser Block? Dieselbe Wanderung, die die
+     Abgleichmaschine für `zuSchicken` macht — hier noch einmal, weil sie
+     IM PURGE-MOMENT laufen muss: nach `purgeTief` ist die Elternkette aus
+     dem Zwischenspeicher, und die Maschine fände nichts mehr (E254). */
+  const seiteVonHier = (b: any): string => {
+    let cur = b, tiefe = 0;
+    while (cur && tiefe++ < 40) {
+      if (cur.type === 'page' && cur.parentTable !== 'collection') return cur.id;
+      if (!cur.parentId) return cur.id;
+      const eltern = cache.blocks[cur.parentId];
+      if (!eltern) return cur.id;
+      cur = eltern;
+    }
+    return b.id;
+  };
+
   const purgeTief = (id: string, gesammelt: any[], geloescht: Promise<void>[] = [],
                      anhaenge: Record<string, string[]> = {}) => {
     const b = cache.blocks[id];
     if (!b) return;
     gesammelt.push(id);
+    /* GRABSTEIN VOR DEM LÖSCHEN (E254/L73 Teil 2). `zuSchicken` läuft nur
+       über den Zwischenspeicher — ein hier entfernter Satz erreicht den
+       Server nie, drüben lebt er weiter. Also merkt sich der Purge das
+       versandfertige Stück, solange Satz und Elternkette noch stehen; die
+       Abgleichmaschine schickt es beim nächsten Takt als geloescht. */
+    blockGrabstein('blocks', b, seiteVonHier(b));
     /* JETZT merken, nicht später. Nach dieser Funktion ist der Block aus dem
        Zwischenspeicher, und `purgeAnhaenge` fand seine Datei nie wieder —
        genau das war L43. */
@@ -606,13 +638,24 @@ const Store = (() => {
           gesammelt.push(r.id); vergissAusstehendes('blocks', r.id);
           const ihre = dateienAmBlock(r);
           if (ihre.length) anhaenge[r.id] = ihre;
+          /* Eine Zeile ist eine Seite — auch ihr Ende muss drüben ankommen.
+             `seiteVonHier` liefert für Zeilen die eigene Kennung, exakt wie
+             `zuSchicken` es im Leben täte. */
+          blockGrabstein('blocks', r, seiteVonHier(r));
           delete cache.blocks[r.id]; geloescht.push(del('blocks', r.id));
         });
         (c.viewIds || []).forEach((v: any) => {
           vergissAusstehendes('views', v);
+          /* Für Sammlungen und Ansichten kann `zuSchicken` ein Löschen gar
+             nicht ausdrücken (geloescht ist dort hart false) — ohne
+             Grabstein kämen sie über das Holen zurück. Die Seiten-Angabe
+             spiegelt zuSchicken: Ansicht → ihre Sammlung, Sammlung → sie
+             selbst. */
+          if (cache.views[v]) blockGrabstein('views', cache.views[v], b.collectionId);
           delete cache.views[v]; geloescht.push(del('views', v));
         });
         vergissAusstehendes('collections', b.collectionId);
+        blockGrabstein('collections', c, b.collectionId);
         delete cache.collections[b.collectionId];
         geloescht.push(del('collections', b.collectionId));
         /* Die vorberechneten Werte dieser Datenbank sind ohne sie sinnlos. */
@@ -680,6 +723,8 @@ const Store = (() => {
         continue;
       }
       for (const st of await stueckeVon(dateiId)) await del('stuecke', st.id);
+      /* Endgültig weg heisst: dem Server sagen (E249) — falls er sie kennt. */
+      dateiGrabstein(dateiId);
       await dateiWeg(dateiId);
     }
   };
@@ -887,6 +932,10 @@ const Store = (() => {
              : tabelle === 'views' ? 'views' : 'blocks';
     cache[wo][satz.id] = satz;
     save(wo, satz);
+    /* Wer dieselbe Kennung wieder anlegt (Verlauf-Undo, Fassungen,
+       Abgleich), nimmt einen liegengebliebenen Grabstein zurück (E254) —
+       sonst löschte der nächste Takt den eben zurückgeholten Satz drüben. */
+    blockGrabsteinWeg(satz.id);
     return satz;
   };
 
@@ -1641,6 +1690,47 @@ const Store = (() => {
       meta:        d.meta        || {}
     };
 
+    /* --- DIE WOLKE-MERKLISTEN ÜBERLEBEN DAS ERSETZEN (E255/L74) ---------
+       „Ersetzen" tauscht auch `meta` vollständig — eine noch nicht
+       versandte Löschabsicht (wolkeDateienWeg aus E249, wolkeBloeckeWeg
+       aus E254) starb dabei, und die kurz vor dem Import getätigte
+       endgültige Löschung erreichte den Server dann doch nie. Das
+       Oben-Set (wolkeDateienOben) gehört dazu: ohne ist die
+       Datei-Grabstein-Wache blind, und JEDE spätere Löschung einer
+       Bestandsdatei bliebe wieder stumm — das wäre L6 durch die
+       Hintertür.
+
+       Gerettet wird die VEREINIGUNG aus altem Bestand und Sicherung —
+       mit einer Ausnahme: ein Block-Grabstein, dessen Kennung die
+       Sicherung selbst wieder mitbringt, fällt weg. Die Wieder-Anlage
+       derselben Kennung nimmt den Grabstein zurück (dasselbe Prinzip
+       wie in rohSetzen, E254) — sonst löschte der nächste Takt drüben,
+       was hier eben wiederhergestellt wurde.
+
+       Der Bestand selbst bekommt beim Ersetzen weiterhin KEINE
+       Grabsteine: eine alte Sicherung einzuspielen darf nicht als
+       Massenlöschung zum Server durchschlagen (E249/E254). */
+    if (art === 'ersetzen') {
+      const alteListe = (k: string): any[] => {
+        const w = getMeta(k, null);
+        return Array.isArray(w) ? w : [];
+      };
+      const ausSicherung = (k: string): any[] =>
+        Array.isArray((neu.meta as any)[k]) ? (neu.meta as any)[k] : [];
+      const bloecke = new Map<string, any>();
+      for (const e of [...ausSicherung('wolkeBloeckeWeg'), ...alteListe('wolkeBloeckeWeg')]) {
+        if (!e || !e.id) continue;
+        if ((neu.blocks as any)[e.id] || (neu.collections as any)[e.id] ||
+            (neu.views as any)[e.id]) continue;
+        bloecke.set(e.id, e);
+      }
+      if (bloecke.size) (neu.meta as any)['wolkeBloeckeWeg'] = [...bloecke.values()];
+      for (const k of ['wolkeDateienWeg', 'wolkeDateienOben']) {
+        const beide = [...new Set([...ausSicherung(k).map(String), ...alteListe(k).map(String)])];
+        if (beide.length) (neu.meta as any)[k] = beide;
+      }
+    }
+
     /* --- ALLES IN EINER TRANSAKTION -----------------------------------
        Löschen und Schreiben liefen hier als hunderte einzelne
        Transaktionen. E71 hat den Abbruch VOR dem ersten Anfassen sauber
@@ -2078,6 +2168,71 @@ const Store = (() => {
     return satz;
   };
   const dateiWeg   = (id: string) => { dateiNamen.delete(String(id)); return del('dateien', id); };
+
+  /* --- DATEI-GRABSTEINE (E249/L6) ----------------------------------------
+     Lokales Löschen erreichte den Server nie: dateiWeg entfernt hart, und
+     nichts merkte sich die Absicht. Diese drei Helfer führen die Merkliste
+     `wolkeDateienWeg` in meta — geschrieben an den zwei Stellen, an denen
+     eine FERTIGE Datei endgültig verschwindet (Dateien.weg, purgeAnhaenge),
+     versandt ausschliesslich von der Abgleichmaschine.
+
+     Die Wache: ein Grabstein entsteht NUR, wenn `wolkeDateienOben` die
+     Kennung führt — der Server kennt sie also. Abgebrochene Uploads,
+     Abgeleitetes (E103) und Über-100-MB-Dateien (E33) waren nie oben und
+     erzeugen nichts. Im selben Zug verlässt die Kennung das Oben-Set:
+     eine später mit derselben Kennung wieder eingespielte Datei (§11:
+     .redion erhält Kennungen) darf wieder hochgehen.
+
+     Die Maschine selbst schreibt beim ANWENDEN eines Server-Grabsteins
+     über die rohen dateiWeg/stueckWeg — bewusst an diesen Helfern vorbei,
+     sonst spiegelte jedes Gerät die Löschung als neue zurück (Echo). */
+  const dateiGrabsteine = (): string[] => getMeta('wolkeDateienWeg', []) || [];
+  const dateiGrabstein = (id: string): void => {
+    const kennung = String(id || '');
+    if (!kennung) return;
+    const oben = new Set<string>(getMeta('wolkeDateienOben', []) || []);
+    if (!oben.has(kennung)) return;
+    oben.delete(kennung);
+    setMeta('wolkeDateienOben', [...oben]);
+    const weg2 = new Set<string>(dateiGrabsteine());
+    weg2.add(kennung);
+    setMeta('wolkeDateienWeg', [...weg2]);
+  };
+  const dateiGrabsteinWeg = (id: string): void => {
+    setMeta('wolkeDateienWeg', dateiGrabsteine().filter(x => x !== String(id)));
+  };
+
+  /* --- BLOCK-GRABSTEINE (E254/L73 Teil 2) --------------------------------
+     Das Sofort-Muster `trashBlock(id); purgeBlock(id)` entfernt den Satz
+     aus dem Zwischenspeicher, bevor je ein Abgleich lief — `zuSchicken`
+     erzeugt für ihn nichts mehr, drüben lebt er weiter. Diese Merkliste
+     `wolkeBloeckeWeg` hält je gelöschtem Satz das VERSANDFERTIGE Stück
+     {id, tabelle, seite, satz}: die Seite muss im Purge-Moment bestimmt
+     werden (danach ist die Elternkette weg), der Satz ist eine Kopie mit
+     alive:false und frischem edited (E250-Lehre — ein Purge ohne
+     vorherigen trashBlock trüge sonst einen alten Stempel).
+
+     Geschrieben wird an EINER Stelle (purgeTief), versandt ausschliesslich
+     von der Abgleichmaschine (bloeckeWeg, vor dem Holen). Die Wache „kennt
+     der Server den Satz überhaupt?" ist hier NICHT prüfbar — `basis` ist
+     asynchron, der Purge synchron. Deshalb prüft die Maschine vor dem
+     Versand: kein basis-Eintrag → still austragen. Damit die Liste bei
+     Nur-Lokal-Nutzern gar nicht erst wächst, schreibt der Helfer nur,
+     wenn je ein Abgleich lief (wolkeMarkeHoch gesetzt). */
+  const blockGrabsteine = (): any[] => getMeta('wolkeBloeckeWeg', []) || [];
+  const blockGrabstein = (tabelle: string, satz: any, seite: string): void => {
+    if (!satz || !satz.id) return;
+    if (!getMeta('wolkeMarkeHoch', '')) return;
+    const kopie = Object.assign({}, satz, { alive: false, edited: now() });
+    const liste = blockGrabsteine().filter(e => !e || e.id !== satz.id);
+    liste.push({ id: satz.id, tabelle, seite: String(seite || satz.id), satz: kopie });
+    setMeta('wolkeBloeckeWeg', liste);
+  };
+  const blockGrabsteinWeg = (id: string): void => {
+    const liste = blockGrabsteine();
+    if (!liste.some(e => e && e.id === id)) return;
+    setMeta('wolkeBloeckeWeg', liste.filter(e => e && e.id !== id));
+  };
   const dateiAlle  = async () => {
     const alle = await all('dateien');
     alle.forEach(dateiNameMerken);
@@ -2215,6 +2370,8 @@ const Store = (() => {
     versionSpeichern, versionen, versionLoeschen, fassungenAusduennen,
     search, durchsuchbar, pfadText, exportAll, exportVorbereiten, importAll, wipe, usage,
     dateiPut, dateiHolen, dateiWeg, dateiAlle,
+    blockGrabsteine, blockGrabstein, blockGrabsteinWeg,
+    dateiGrabstein, dateiGrabsteine, dateiGrabsteinWeg,
     basisPut, basisHolen, basisWeg, basisAlle, basisLeeren,
     vorratPut, vorratHolen, vorratWeg, vorratAlle,
     suchindexAendern, suchindexErsetzen, suchindexLeeren,

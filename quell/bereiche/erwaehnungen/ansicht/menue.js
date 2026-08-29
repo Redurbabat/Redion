@@ -201,6 +201,46 @@ const Erwaehnung = (() => {
             else
                 zu();
         });
+        /* DIE EMOJI-AUSWAHL AUF ZURUF (E215/L63).
+    
+           Das Menüband kann nicht tippen. „:" allein öffnet hier nichts —
+           `emojiMenue` verlangt zwei Buchstaben danach, damit ein gewöhnlicher
+           Doppelpunkt im Satz kein Menü aufklappt.
+    
+           Der Editor meldet deshalb ein Ereignis, statt uns aufzurufen: ein
+           Bereich darf keinen anderen aufrufen (CLAUDE.md §5, Regel 1). Wer
+           zuhört, ist der Bereich, dem die Emojis gehören — also dieser.
+    
+           Eingesetzt wird über `Store`, nicht über das Feld: der Block ist
+           gerade erst entstanden, und sein `.ct` kann beim Zeichnen ein anderes
+           Element geworden sein. Der Speicher ist in beiden Fällen richtig. */
+        if (typeof Ereignisse !== 'undefined') {
+            Ereignisse.horche('emojiWaehlen', (daten) => {
+                const id = daten && daten.blockId;
+                if (!id)
+                    return;
+                /* Einen Wimpernschlag warten. Der Rufer zeichnet die Seite neu,
+                   bevor er meldet — aber ob der Block dann schon im Baum hängt,
+                   hängt daran, wie gezeichnet wird. Dieselben 30 ms wie überall,
+                   wo im Editor auf ein frisches Feld gewartet wird. */
+                setTimeout(() => oeffneAuswahl(id), 30);
+            });
+        }
+        const oeffneAuswahl = (id) => {
+            const feld = document.querySelector(`.blk[data-bid="${id}"] .ct`)
+                || document.querySelector(`.blk[data-bid="${id}"]`);
+            if (!feld)
+                return;
+            emojiWaehler(feld, (zeichen) => {
+                if (!zeichen)
+                    return;
+                const b = Store.getBlock(id);
+                if (!b)
+                    return;
+                Store.updateBlock(id, { text: (b.text || '') + zeichen });
+                App.zeichneSeite(id, 'ende');
+            });
+        };
         document.addEventListener('keydown', e => {
             const m = menue;
             if (!m)

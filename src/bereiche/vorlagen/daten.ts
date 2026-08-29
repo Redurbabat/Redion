@@ -954,6 +954,39 @@ const Galerie = (() => {
       source: { name: 'Quelle / Seitenlink', type: 'text' },
       status: { name: 'Stand', type: 'status', options: opt(['Neu','gray'],['In Arbeit','yellow'],['Gelernt','green']) }
     });
+    /* Der Stundenplan (E243/L70): Zeiten als Text „08:15", weil sie so
+       getippt werden, wie sie auf dem Papierplan stehen. Die Wochenansicht
+       in der Lernwelt liest Tag und Zeit tolerant. Läuft die Vorlage auf
+       einem Bestand erneut, ergänzt `ensureDatabase` NUR diese Datenbank —
+       vorhandene Fächer, Noten und Prüfungen bleiben unangetastet. */
+    ensureDatabase('timetable', 'Stundenplan', {
+      title: { name: 'Lektion', type: 'title' },
+      day: { name: 'Tag', type: 'select', options: opt(['Montag','blue'],['Dienstag','green'],['Mittwoch','orange'],['Donnerstag','purple'],['Freitag','red'],['Samstag','gray']) },
+      from: { name: 'Von', type: 'text' },
+      to: { name: 'Bis', type: 'text' },
+      subject: { name: 'Fach', type: 'relation', ziel: subjects.collectionId },
+      room: { name: 'Raum', type: 'text' },
+      note: { name: 'Hinweis', type: 'text' }
+    });
+    /* Hausaufgaben und Lernziele (E256): die zwei Poster-Zeilen der
+       Schulsäule, die noch fehlten. Beide hängen am Fach — die Lernwelt
+       zeigt sie im Schul-Dashboard und auf der Fachseite. Läuft die
+       Vorlage auf einem Bestand erneut, ergänzt `ensureDatabase` nur,
+       was fehlt (dasselbe Versprechen wie beim Stundenplan). */
+    ensureDatabase('homework', 'Hausaufgaben', {
+      title: { name: 'Aufgabe', type: 'title' },
+      subject: { name: 'Fach', type: 'relation', ziel: subjects.collectionId },
+      due: { name: 'Fällig', type: 'date' },
+      done: { name: 'Erledigt', type: 'checkbox' },
+      note: { name: 'Hinweis', type: 'text' }
+    });
+    ensureDatabase('goals', 'Lernziele', {
+      title: { name: 'Lernziel', type: 'title' },
+      subject: { name: 'Fach', type: 'relation', ziel: subjects.collectionId },
+      status: { name: 'Stand', type: 'status', options: opt(['Offen','gray'],['In Arbeit','yellow'],['Sicher','green']) },
+      until: { name: 'Bis', type: 'date' },
+      note: { name: 'Woran ich es merke', type: 'text' }
+    });
 
     ensureBlock('school-tools', 'callout', {
       icon: '⚡', color: 'bg-yellow',

@@ -128,6 +128,26 @@ dauerhafter Internetverbindung
 
 
 
+Die Oberfläche: fünf Wege, und alles andere hinter „Mehr"
+
+Redion zeigt links fünf Wege — Heute, Lernzentrum, Elektro, Bibliothek,
+Aufgaben — und darunter „Mehr". Ein Klick darauf (oder Strg + M) blendet
+alles Übrige wieder ein: Suchen, Befehle, Workspace, Posteingang, Neue
+Seite, Planen, Daten, Einrichten, Hilfe, Importieren, Papierkorb,
+Tastenkürzel und die eigenen Seiten. Nichts davon ist entfernt, es steht
+nur nicht ständig da.
+
+Dasselbe oben: die Kopfzeile trägt Zurück, den Pfad, die Suche, KI,
+Favorit und ⋯ — Teilen, Kommentare, Versionsverlauf, Automationen und
+„Link kopieren" stehen im ⋯-Menü. Das Menüband erscheint, sobald eine
+Seite offen ist.
+
+Wer die volle Leiste dauerhaft will: Einstellungen → Aussehen, oder
+`Ruhig.setzen(false)` in der Konsole. Die Wahl bleibt gespeichert.
+
+Gemessen: vorher 52 anklickbare Dinge auf dem Startbild, jetzt 15.
+
+
 Schnellstart
 
 Variante 1: Direkt öffnen

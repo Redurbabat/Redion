@@ -218,15 +218,58 @@ p('Und die dritte Seite steht im Bild',
  * ========================================================================*/
 console.log('\n4 · Der Text überlebt die Sicherung — die Bilder nicht');
 
-const nachSicherung = await seite.evaluate(async () => {
-  const daten = Store.exportAll(true);
-  /* Alles weg und wieder herein — ohne die abgeleiteten Bilder (E103). */
+/* ==========================================================================
+ * VIER KURZE AUFRUFE STATT EINES LANGEN — WARUM (E234)
+ * --------------------------------------------------------------------------
+ * Hier stand ein einziges `evaluate`, das exportiert, alle Dateien löscht,
+ * ersetzend importiert UND das Ergebnis abliest. Es scheiterte in etwa jedem
+ * zweiten Lauf mit
+ *
+ *     Execution context was destroyed, most likely because of a navigation.
+ *
+ * L66 schrieb das der Rechnerlast zu. Nachgemessen stimmt das nicht: auf
+ * einem Abzug des Standes von vorgestern scheiterte es DREI von DREI Malen
+ * ohne jede Nebenlast.
+ *
+ * Was wirklich geschieht, sagt Chromium selbst. Über CDP mitgehört:
+ *
+ *     Runtime.executionContextsCleared      ← genau während des Aufrufs
+ *
+ * Und trotzdem:
+ *
+ *     kein `beforeunload`, kein `pagehide`, kein `hashchange`
+ *     eine vorher gesetzte Variable im Fenster lebt noch
+ *     `document.readyState` ist `complete`, die Adresse nur am Anker anders
+ *
+ * Die Seite wird also NICHT neu geladen. Chromium meldet
+ * `executionContextsCleared` auch bei einer reinen ANKER-Navigation, und
+ * Playwright hält den gebundenen Kontext danach für tot. Der ersetzende
+ * Import zeichnet die Seite neu, dabei wandert `location.hash` — und wer
+ * gerade in einem langen `evaluate` steckt, verliert es.
+ *
+ * Es ist also kein Fehler in Redion und keiner in der Prüfung, sondern ein
+ * Wettlauf zwischen beiden. Kurze Aufrufe verlieren ihn nicht: gemessen
+ * dauert jeder Schritt einzeln 3 bis 350 ms.
+ *
+ *     vorher   2 von 5 grün
+ *     nachher  5 von 5, dann 8 von 8
+ * ========================================================================*/
+await seite.evaluate(() => { (globalThis as any).__sicherung = Store.exportAll(true); });
+/* Alles weg und wieder herein — ohne die abgeleiteten Bilder (E103). */
+await seite.evaluate(async () => {
   for (const s of await Store.dateiAlle()) {
     for (const st of await Store.stueckeVon(s.id)) await Store.stueckWeg(st.id);
     await Store.dateiWeg(s.id);
     Dateien.adresseWeg(s.id);
   }
-  await Store.importAll(daten, 'ersetzen');
+});
+await seite.evaluate(async () => {
+  await Store.importAll((globalThis as any).__sicherung, 'ersetzen');
+});
+/* Kurz Luft lassen: der Neuaufbau nach dem Ersetzen setzt den Anker, und
+   genau das ist der Wettlauf, den dieser Abschnitt aufgelöst hat. */
+await seite.waitForTimeout(400);
+const nachSicherung = await seite.evaluate(() => {
   const seiten = (Object.values(Store.cache.blocks) as any[])
     .filter(b => b.type === 'pdfseite' && b.alive).sort((a, b) => a.nr - b.nr);
   return {

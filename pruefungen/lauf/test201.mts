@@ -106,11 +106,50 @@ const selectTool = async (tool: string): Promise<void> => {
       .find(button => button.dataset.wz === value))?.click();
   }, tool);
 };
+/* ZUERST HINSCHAUEN, DANN ZIEHEN.
+
+   Seit dem Menüband (E210) beginnt das Blatt weiter unten: gemessen bei
+   y=563 in einem 900 px hohen Fenster, und es ist selbst 1001 px hoch.
+   Das Rechteck sollte von 36 % auf 52 % der Blatthöhe gezogen werden —
+   das sind y=923 und y=1084, und der Endpunkt lag damit AUSSERHALB des
+   Fensters.
+
+   Der Zeiger landete dort auf nichts, das Rechteck entstand nicht, und der
+   Punkt meldete „nicht gespeichert". Das las sich wie ein kaputtes
+   Werkzeug und war eine Prüfung, die ins Leere zieht: das Rechteck war nie
+   das Problem, der Bildausschnitt war es.
+
+   Deshalb wird jetzt vor jedem Zug so weit gerollt, dass beide Punkte im
+   Bild stehen — und wenn das nicht reicht, bricht es mit einer Meldung ab,
+   die sagt warum. Eine Prüfung, die still danebenzieht, prüft nichts. */
 const draw = async (from: [number, number], to: [number, number], steps = 8): Promise<void> => {
-  const box = await page.locator('.blatt-papier').boundingBox();
-  if (!box) throw new Error('Kein Blatt');
-  const at = (point: [number, number]) => ({ x: box.x + box.width * point[0], y: box.y + box.height * point[1] });
-  const start = at(from), end = at(to);
+  const sicht = page.viewportSize();
+  const hoehe = sicht?.height ?? 0;
+  const rand = 40;
+
+  const punkte = async () => {
+    const box = await page.locator('.blatt-papier').boundingBox();
+    if (!box) throw new Error('Kein Blatt');
+    const at = (point: [number, number]) =>
+      ({ x: box.x + box.width * point[0], y: box.y + box.height * point[1] });
+    return { box, start: at(from), end: at(to) };
+  };
+
+  let lage = await punkte();
+  const mitte = (lage.start.y + lage.end.y) / 2;
+  if (mitte < rand || mitte > hoehe - rand) {
+    await page.evaluate((d: number) => {
+      const s2 = document.getElementById('scroll') || document.scrollingElement;
+      if (s2) s2.scrollTop += d;
+    }, Math.round(mitte - hoehe / 2));
+    await page.waitForTimeout(250);
+    lage = await punkte();
+  }
+  const { start, end } = lage;
+  if (start.y < 0 || end.y < 0 || start.y > hoehe || end.y > hoehe)
+    throw new Error(`Der Zug läge ausserhalb des Fensters: ${Math.round(start.y)} → ` +
+      `${Math.round(end.y)} bei ${hoehe} px Höhe. Gerollt wurde bereits.`);
+
   await page.mouse.move(start.x, start.y); await page.mouse.down();
   for (let index = 1; index <= steps; index++)
     await page.mouse.move(start.x + (end.x - start.x) * index / steps,

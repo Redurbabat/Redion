@@ -93,6 +93,17 @@ const messen = async (seite: any, ansicht: string): Promise<any> => {
       .filter(l => l.scrollWidth > l.clientWidth + 1)
       .map(l => (l.textContent || '').trim());
 
+    /* DIESELBE FRAGE FÜR DIE HANDLUNGSKACHELN (E228). Die Zählerkarten
+       bekamen im August ihre Breite nach der eigenen Spalte; die Kacheln
+       „Schnell starten" behielten `repeat(4, 1fr)` und standen sieben von
+       acht abgeschnitten da — „Whit…", „Scan…", „Sich…".
+       Sie umbrechen (`white-space:normal`), abgeschnitten wird also immer
+       ein einzelnes WORT, das in keine Zeile passt. `scrollWidth` sieht
+       genau das. */
+    const engeAktion = [...document.querySelectorAll<HTMLElement>('.aw-aktion-text')]
+      .filter(l => l.scrollWidth > l.clientWidth + 1)
+      .map(l => (l.textContent || '').trim());
+
     return {
       ansicht: a,
       fenster: document.documentElement.clientWidth,
@@ -102,6 +113,8 @@ const messen = async (seite: any, ansicht: string): Promise<any> => {
       feldBreite: feld ? Math.round(feld.clientWidth) : 0,
       platzNoetig,
       engeLabel,
+      engeAktion,
+      aktionen: document.querySelectorAll('.aw-aktion').length,
       zaehler: document.querySelectorAll('.aw-zaehler').length,
       randToc: !!document.getElementById('rand-toc')
     };
@@ -159,6 +172,13 @@ for (const [name, breite, hoehe, mindestens] of
   const enge = stand.flatMap(s => s.engeLabel.map((t: string) => `${s.ansicht}: ${t}`));
   gleich('Keine Zähler-Beschriftung ist abgeschnitten', enge, []);
 
+  /* ── §2b · Und keine Handlungskachel (E228) ───────────────────────────── */
+  const mitAktionen = stand.filter(s => s.aktionen > 0);
+  p('Es gibt überhaupt Kacheln zu prüfen', mitAktionen.length > 0,
+    JSON.stringify(stand.map(s => [s.ansicht, s.aktionen])));
+  const engeK = stand.flatMap(s => s.engeAktion.map((t: string) => `${s.ansicht}: ${t}`));
+  gleich('Keine Kachel-Beschriftung ist abgeschnitten', engeK, []);
+
   /* ── §3 · Jeder Platzhalter steht ganz da ─────────────────────────────── */
   const mitFeld = stand.filter(s => s.platzhalter);
   p('Es gibt überhaupt Suchfelder zu prüfen', mitFeld.length >= 5, `${mitFeld.length}`);
@@ -175,6 +195,56 @@ for (const [name, breite, hoehe, mindestens] of
 
   await seite.close();
 }
+
+/* ==========================================================================
+ * §6 · Eins ist eine andere Zahl als zwei (E231)
+ * --------------------------------------------------------------------------
+ * In der Bibliothek stand unter jeder Seite mit genau einem Kind
+ * „1 Einträge" — zwei davon waren im Bildschirmfoto gleichzeitig zu sehen.
+ *
+ * GEPRÜFT WIRD DER FALL, DER DEN FEHLER ZEIGT. Der übliche Bestand hat
+ * Seiten mit null oder vielen Kindern; genau eins kommt selten vor, und
+ * darum ist es jahrelang niemandem aufgefallen. Die Prüfung legt den Fall
+ * deshalb selbst an.
+ *
+ * Gefragt wird nicht nach der einen Zeile, sondern nach dem MUSTER: steht
+ * irgendwo „1 " gefolgt von einem Mehrzahlwort? Damit fällt auch der
+ * nächste Vergesser auf, nicht nur dieser.
+ *
+ *     Gegenbeweis, alte Zeile eingesetzt:  ["1 Einträge"]
+ *     jetzt:                               keine
+ * ========================================================================*/
+console.log('\n6 · Eins ist eine andere Zahl als zwei');
+
+const einzahl = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+await einzahl.goto(`http://localhost:${PORT}/index.html`);
+await einzahl.waitForTimeout(2600);
+const grammatik = await einzahl.evaluate(async () => {
+  Store.setMeta('rundgangGesehen', true);
+  document.getElementById('rg-willkommen')?.remove();
+  document.querySelector('.produkt-onboarding-lage')?.remove();
+  const s = Store.addPage(null, { text: 'Genau eins', icon: '📄' });
+  Store.addBlock(s.id, 'text', { text: 'Ein einziger Block' });
+  await Store.flush();
+  await (globalThis as any).Produktwelten.bibliothek();
+  await new Promise(r => setTimeout(r, 1400));
+  const text = (document.querySelector('#main') as HTMLElement)?.innerText || '';
+  const zeilen = text.split('\n');
+  const i = zeilen.findIndex(z => /Genau eins/.test(z));
+  return {
+    zeile: i >= 0 ? zeilen.slice(i, i + 2).join(' | ') : '(nicht gefunden)',
+    /* „1 " und danach ein Wort, das auf eine Mehrzahl-Endung ausgeht. */
+    falsch: [...new Set([...text.matchAll(/\b1 ([A-ZÄÖÜ][a-zäöüß]+(?:e|en|er|se|s))\b/g)]
+      .map(m => m[0]))]
+  };
+});
+await einzahl.close();
+
+p('Der Fall mit genau einem Kind steht in der Liste',
+  /Genau eins/.test(grammatik.zeile), grammatik.zeile);
+p('… und heisst „1 Eintrag", nicht „1 Einträge"',
+  /1 Eintrag\b/.test(grammatik.zeile), grammatik.zeile);
+gleich('Nirgends steht „1" vor einem Mehrzahlwort', grammatik.falsch, []);
 
 /* ========================================================================*/
 console.log(`\n${ok}/${ok + weg} bestanden`);

@@ -4,7 +4,7 @@
  * am 9. August fand vier Fehler, die kein Prüflauf hatte:
  *
  *   · Die Versteck-Regel zielte auf `#handy-leiste` — ein Element, das es
- *     nicht mehr gibt. Die echte Reiterleiste (`#handy-unten`) blieb stehen,
+ *     nicht mehr gibt. Die echte Reiterleiste (heute `#handy-oben`) blieb stehen,
  *     ihre Knopfkreise ragten hinter der Formatleiste hervor.
  *   · Die Knöpfe waren 44×38 statt 44×44 — die Fingerregel (§37) galt für
  *     die Breite und wurde bei der Höhe vergessen.
@@ -113,7 +113,11 @@ const lage = await handy.evaluate(async () => {
     return { t: (k as HTMLElement).dataset['t'], kurz: Math.min(r.width, r.height) };
   });
   const fertig = l.querySelector('button[data-t="fertig"]')!.getBoundingClientRect();
-  const unten = document.getElementById('handy-unten');
+  /* Seit E236 heisst die Leiste am unteren Rand `#handy-oben` — der Name
+     stammt aus der Zeit, als sie oben stand, und wird nicht umbenannt,
+     solange Modul, CSS und Prüfungen ihn kennen (§53.3). Die Frage bleibt
+     dieselbe: tritt sie zurück, wenn die Tastatur kommt? */
+  const unten = document.getElementById('handy-oben');
   return {
     sichtbar: !l.hidden,
     schreibt: document.body.classList.contains('schreibt'),
@@ -130,7 +134,7 @@ p('Alle ' + lage.knoepfe + ' Knöpfe messen mindestens 44 px (§37)',
   lage.knoepfe >= 11 && lage.zuKlein.length === 0,
   'zu klein: ' + lage.zuKlein.join(', '));
 gleich('Der Fertig-Knopf bleibt im Bild, obwohl die Leiste rollt', lage.fertigImBild, true);
-gleich('Die Reiterleiste #handy-unten tritt zurück — die Regel zielt aufs echte Element',
+gleich('Die Wegeleiste tritt zurück — die Regel zielt aufs echte Element',
   lage.untenWeg, true);
 gleich('Ohne Tastatur sitzt die Leiste am unteren Rand', lage.bottom, 844);
 
@@ -172,11 +176,11 @@ await handy.waitForTimeout(300);
 const zu = await handy.evaluate(() => ({
   versteckt: document.getElementById('tastenleiste')!.hidden,
   schreibt: document.body.classList.contains('schreibt'),
-  untenDa: getComputedStyle(document.getElementById('handy-unten')!).display !== 'none'
+  untenDa: getComputedStyle(document.getElementById('handy-oben')!).display !== 'none'
 }));
 gleich('Die Leiste ist zu', zu.versteckt, true);
 gleich('… der Schreibzustand beendet', zu.schreibt, false);
-gleich('… und die Reiterleiste wieder da', zu.untenDa, true);
+gleich('… und die Wegeleiste wieder da', zu.untenDa, true);
 
 console.log('\n5 · Die schwebende Auswahlleiste passt ins Telefonbild');
 

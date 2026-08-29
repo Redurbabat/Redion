@@ -190,7 +190,16 @@ const rueckKlick = /dblclick[\s\S]{0,120}?setze\((\d+)\)/.exec(schaleTs)?.[1] ??
 const aufbauCss = lies('quell/schale/stil/aufbau.css');
 const startBreite = /#sidebar\{[^}]*width:(\d+)px/.exec(aufbauCss)?.[1] ?? '(fehlt)';
 const rueckfall = /--side-w, (\d+)px/.exec(aufbauCss)?.[1] ?? '(fehlt)';
-gleich('Die Seitenleiste startet mit 260 px', startBreite, '260');
+/* Die feste 260 stand hier, nachdem §68 das CSS auf 240 gesetzt hatte —
+   der Lauf war rot, ohne dass etwas kaputt war. Und schlimmer: er hätte
+   den Rücksetzer auf 260 gedeckt, den `test245` (220–250) verbietet.
+   Die eigentliche Behauptung ist nicht die Zahl, sondern die Gleichheit:
+   Zurücksetzen muss dorthin führen, wo der erste Start auch steht.
+   Die Zahl selbst hütet `test245`; hier wird nur das Band nachgehalten,
+   damit ein Ausrutscher nach 400 nicht durchginge. */
+const startZahl = Number(startBreite);
+p('Die Startbreite liegt im erlaubten Band (220–250)',
+  startZahl >= 220 && startZahl <= 250, `ist ${startBreite}`);
 gleich('Der Doppelklick setzt auf dieselbe Breite zurück', rueckKlick, startBreite);
 gleich('… und der CSS-Rückfall nennt sie auch', rueckfall, startBreite);
 
@@ -204,8 +213,8 @@ const gemessen = await seite.evaluate(async () => {
   await new Promise(r => setTimeout(r, 100));
   return { breite: Math.round(side.getBoundingClientRect().width) };
 });
-gleich('Gemessen: der Doppelklick stellt 260 px her',
-  (gemessen as any).breite, 260);
+gleich('Gemessen: der Doppelklick stellt die Startbreite her',
+  (gemessen as any).breite, startZahl);
 
 console.log('\n6 · Die Konsole');
 p('Kein Skriptfehler', fehler.length === 0, fehler.slice(0, 3).join(' | '));

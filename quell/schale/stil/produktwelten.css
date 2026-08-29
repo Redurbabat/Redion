@@ -11,26 +11,34 @@
   --accent-soft:color-mix(in srgb,var(--accent) 14%,transparent);
   --bg-sub:var(--bg-side);
   --bg-subtle:var(--bg-side);
-  --shadow-sm:0 2px 10px rgba(0,0,0,.14);
-  --shadow-lg:var(--shadow)
+  /* Sprossen der Schattenleiter (E204), nicht mehr eigene Zahlen.
+     `0 2px 10px rgba(0,0,0,.14)` war themenblind: dieselbe schwarze
+     Deckkraft auf Weiss wie auf #1a1a1a. Genau der Fehler aus E159. */
+  --shadow-sm:var(--shadow-2);
+  --shadow-lg:var(--shadow-3)
 }
 
-.weltwechsel{
-  display:grid;grid-template-columns:1fr 1fr;gap:4px;margin:2px 10px 7px;
-  padding:4px;border:1px solid var(--line);border-radius:12px;background:var(--bg-sub)
+/* HIER STAND DER WELT-UMSCHALTER (E206).
+   Seine Auszeichnung ist aus `index.html` verschwunden, weil seine zwei
+   Knöpfe nachweislich dasselbe taten wie zwei Zeilen darunter. Übrig
+   bleiben die zwei Zeilen unten: sie sagen weiterhin, in welcher Welt man
+   gerade ist — und zwar dort, wo man hinklickt, statt an einer dritten
+   Stelle darüber. */
+/* DIE WELT ALS RÜCKFALL, NICHT ALS WAHRHEIT (E221).
+   Diese zwei Zeilen waren bis dahin die EINZIGE Ortsangabe der
+   Seitenleiste — und sie können nur zwei Knöpfe: „Lernzentrum" und
+   „Workspace". Ein Klick auf „Bibliothek" liess deshalb „Workspace"
+   aufleuchten, ein Klick auf „Aufgaben" ebenso.
+
+   Seit E221 setzt `schale.ts` beim Klick `aria-current="page"` auf den
+   Eintrag, der wirklich benutzt wurde. Diese Regel gilt nur noch, solange
+   es keinen solchen gibt — also beim ersten Bild nach dem Start. Sonst
+   stünden zwei Markierungen gleichzeitig da, und zwei sind schlimmer als
+   eine falsche. */
+body[data-produktwelt="lernen"]:not(:has(#sidebar .side-item[aria-current="page"])) #btn-learning,
+body[data-produktwelt="workspace"]:not(:has(#sidebar .side-item[aria-current="page"])) #btn-workspace{
+  background:var(--bg-hover); color:var(--text);
 }
-.weltwechsel button{
-  min-width:0;min-height:34px;display:flex;align-items:center;justify-content:center;
-  gap:6px;padding:6px 8px;border:0;border-radius:8px;background:transparent;
-  color:var(--text-dim);cursor:pointer;font:inherit
-}
-.weltwechsel button b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11.5px}
-.weltwechsel button:hover{background:var(--bg-hover);color:var(--text)}
-.weltwechsel button.an,.weltwechsel button[aria-pressed="true"]{
-  color:var(--text);background:var(--bg-card);box-shadow:0 1px 5px rgba(0,0,0,.13)
-}
-body[data-produktwelt="lernen"] #btn-learning,
-body[data-produktwelt="workspace"] #btn-workspace{background:var(--bg-hover);color:var(--text)}
 
 .produkt-bereiche-dialog{width:min(460px,calc(100vw - 24px));max-height:min(720px,90dvh);overflow:auto}
 .produkt-bereiche-hinweis{margin:0;padding:12px 16px;color:var(--text-dim);font-size:13px;line-height:1.5}

@@ -35,7 +35,330 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
-**25. August 2026 · 202 Prüfläufe · LUECKEN.md ist abgearbeitet**
+**29. August 2026 · Hausaufgaben und Lernziele je Fach (E256)**
+
+> Die zwei fehlenden Poster-Zeilen der Schulsäule. Vorlage legt homework
+> und goals an (additiv wie beim Stundenplan), das Schul-Dashboard zeigt
+> beide Sektionen („N offen", Überfälliges mit dem WORT), der Haken
+> schreibt die Checkbox-Spalte der Zeile selbst, die Fachseite filtert
+> über die echte Fach-Relation. test262 (11 Punkte, 2 Gegenproben
+> einzeln rot), test202/215/250 grün. Bilder im Chat.
+
+**29. August 2026 · Die Löschabsicht überlebt den Import (E255, L74 zu)**
+
+> „Ersetzen" tauschte auch meta — wartende Grabsteine (E249/E254)
+> starben mit, und ohne das Oben-Set wäre die Datei-Wache erblindet
+> (L6 durch die Hintertür). Jetzt rettet importAll die Vereinigung der
+> drei Listen; Kennungen, die die Sicherung wieder mitbringt, nehmen
+> ihren Grabstein zurück. test261 §11, Gegenprobe einzeln rot. Die
+> offene Konto/Marken-Frage ist ehrlich als L76 notiert.
+
+**29. August 2026 · Endgültig heisst endgültig — jetzt auch für Blöcke (E254, L73 zu)**
+
+> Das Muster „Papierkorb und sofort löschen" entfernte den Satz, bevor
+> je ein Abgleich lief — drüben lebte er weiter und kam sogar zurück.
+> Jetzt: Merkliste `wolkeBloeckeWeg` nach dem E249-Muster, geschrieben
+> in purgeTief (samt Zeilen, Ansichten, Sammlung), versandt vor dem
+> Holen, basis-Wache gegen Falschmeldung, zwei Runter-Wachen gegen Echo
+> und Leichen. Server unverändert. test261: 16 Punkte, echter
+> Prüfserver, zeitweise drei Geräte; Gegenprobe ohne Schreibpunkt →
+> 9 rot, darunter B mit {"alive":true}. Folgelücken L74/L75 notiert.
+
+**29. August 2026 · Der Graph bekommt ein Suchfeld — und seinen Boden (E253)**
+
+> Tippen listet Treffer aus dem ganzen Index, Klick/Enter macht den
+> Treffer zum neuen Mittelpunkt, Escape leert erst die Suche (§38),
+> der Leerfall nennt das Wort (§47). Beifund nach §55: Steuerzeile und
+> Seitenfeld des Graphen hatten NIE Stil — rohe Fieldsets, das Panel
+> floss als Fliesstext unter die Fläche. Beides steht jetzt in
+> werkzeuge.css. test260 (9 Punkte, 2 Gegenproben einzeln rot).
+
+**29. August 2026 · Kartentext sieht überall gleich aus (E252)**
+
+> Der Karteikasten zeichnete **fett** und `Code`, die Lernwelt zeigte an
+> sieben Stellen nackte Sternchen — Training, Simulation, Fehlerlisten.
+> Jetzt läuft verfasster Kartentext überall durch `Blocks.inline`
+> (maskiert zuerst, §19); Getipptes bleibt wörtlich. test259 sucht die
+> Karte durch die Runde (die erste Karte ist die Demo-Karte!), prüft
+> Auszeichnung UND Maskierung; Gegenprobe mit echtem onerror-Lauf.
+
+**29. August 2026 · Glocke und Wolke-Punkt — am Ende in der Menüleiste (E251)**
+
+> Der Bild-Abgleich fand drei Fertigteile ohne sichtbaren Weg:
+> Ungelesenen-Zähler, Abgleichstand, Wolke-Dialog. Der erste Anlauf
+> hängte Glocke und Konto an die Kopfzeile — test40/245/248 wurden zu
+> Recht rot: die Kopfzeile gehört der SEITE, die App-Zeile ist die
+> Menüleiste. Jetzt: `mb-glocke` erscheint nur mit Ungelesenem (auf
+> allen Geräten, am Telefon 44 px), der Statuspunkt sitzt an
+> `mb-konto`, der Wolke-Dialog steht unter „Mehr → Wolke". Beifang mit
+> eigener Lehre: `display:grid` schlägt die `[hidden]`-Regel des
+> Browsers — die „versteckte" Glocke stand sichtbar da, und nur eine
+> Prüfung des GERECHNETEN Stils sieht das (test258, 15 Punkte, drei
+> Gegenproben einzeln rot). test248 stellt seine Ausgangslage seither
+> ausdrücklich her, statt auf meldungsfreien Zufall zu hoffen.
+
+**29. August 2026 · Gelöscht heisst gelöscht — auf allen Geräten (E249, L6 zu)**
+
+> Die einzige Datenintegritätszeile der Visionskarte. Lokales Löschen
+> einer Datei erreichte den Server nie und wurde beim nächsten Abgleich
+> sogar rückgängig gemacht. Jetzt: Merkliste `wolkeDateienWeg` mit
+> Oben-Wache (nie Hochgeladenes bleibt stumm), Versand VOR dem Holen
+> (sonst belebt das Holen das Gelöschte wieder), 404/403-Regeln,
+> Import-„ersetzen" bewusst ohne Grabsteine (§46), Abmelden leert die
+> Liste. test256: echter Prüfserver, zwei echte Geräte, 16 Punkte —
+> Grabstein überlebt das Neuladen, Server räumt die Bytes, Gerät B
+> verliert die Datei. Zweistufige Gegenprobe: ohne Versand behält B die
+> Datei; ohne Runter-Wache holt A die eigene Löschung zurück
+> (dateienGeholt: 1). Beifund L73: das Block-Vorbild ist selbst undicht.
+
+**29. August 2026 · Die fünf kleinen Pflichten der Karte sind ab (E244–E248)**
+
+> Aus dem Poster-Abgleich, in einem Zug: Seitenzahlen/Kopfzeile beim
+> Drucken (E244, test251 liest den eigenen Ausdruck zurück), Prüflauf
+> für den DOCX-Import samt handgebauter deutscher Word-Datei (E245,
+> test252), Prüflauf für die Rückverweis-Fusszeile — mit der Erkenntnis,
+> dass dort ZWEI Wachen dasselbe halten (E246, test253), der
+> Quellen-Wähler im Diagramm-Block: Datenbank wählen, gruppieren,
+> messen, und Loslassen beim Rückweg (E247, test254), und die Uhr in
+> der Elektro-Prüfung: 90 s je Aufgabe, Ablauf gibt ab wie auf Papier
+> (E248, test255). Zusammen 53 neue Prüfpunkte, jede Änderung mit
+> einzeln rot bewiesenen Gegenproben.
+
+**28. August 2026 · Der Ausdruck wird abgabefähig (E244)**
+
+> Aus dem Poster-Abgleich, „kleine Pflicht" mit grosser Sichtbarkeit:
+> Drucken hat jetzt Kopfzeile (Titel), Datum und „Seite X von Y" — in
+> @page-Randkästen, die der Browser auf jeder Seite wiederholt und
+> selbst zählt. Erste Seite ohne Kopf (dort steht der H1), Rand zieht
+> von body nach @page um (kein Doppelrand), Titel mit " und \ sprengen
+> die content-Regel nicht. test251 beweist es mit echten Bytes: das
+> gedruckte PDF wird über Redions eigenen Einlese-Weg zurückgeholt, und
+> Seite 2 trägt „Seite 2 von N" im Suchtext. Zwei Gegenproben einzeln
+> rot.
+
+**28. August 2026 · Das Zielbild-Poster, und zwei Löcher noch am selben Abend zu (E242, E243)**
+
+> Redur schickte sein Zielbild als Poster: „So was will ich — da steht
+> alles, wie es sein sollte." Sechs Delta-Leser haben die Poster-Punkte
+> gemessen (Nachtrag unter „Die Visionskarte"), und die zwei grössten
+> Schul-Löcher sind seither gebaut:
+>
+> **E242 · Zeugnisnote je Semester (L71 zu).** Die Noten-Ansicht mittelte
+> alle Schuljahre in einen Topf; ab dem zweiten Semester wäre die Kopfzahl
+> falsch gewesen. Jetzt: drei Zeitraum-Knöpfe (Dieses/Letztes Semester,
+> Alle), Vorgabe „Dieses Semester", Semestergrenzen Feb/Aug wie die
+> Schweizer Schule, Undatiertes zählt zum aktuellen — und die Kopfzeile
+> sagt das dazu. test249 §5.
+>
+> **E243 · Der Stundenplan-Knopf hält sein Versprechen (L70 zu).** Hinter
+> „Stundenplan" stand nur die Ausbildungsseite. Jetzt: eigene
+> Wochenansicht (Mo–Sa, Samstag nur wenn belegt), Lektionen nach Uhrzeit,
+> „Jetzt: Elektrotechnik bis 09:20 in B204" in der Kopfzeile, das WORT
+> „jetzt" an der laufenden Lektion (§38), zwei Leerfälle mit Wegen (§47);
+> die Schulvorlage legt die Datenbank an — auch nachträglich, ohne
+> Doppel. test250, 15 Punkte.
+
+**28. August 2026 · Die Visionskarte: Redurs Satz, neunfach nachgemessen**
+
+> „Kein Word, Excel, PowerPoint mehr … Schule, Noten, Lernen … PDF,
+> Fachzeichnen, Elektro-Simulator … Notion, GoodNotes, Graphy, Obsidian."
+> Neun strenge Leser haben jede Säule gegen den Bestand gehalten — nur
+> Belegbares zählt. Ergebnis als eigener Abschnitt **„Die Visionskarte"**
+> weiter unten: sechs Säulen tragen heute nachweislich, Schule trägt zur
+> Hälfte, und die grössten Löcher heissen jetzt L69 (.pptx), L70
+> (Stundenplan), L71 (Zeugnisnote ohne Semester), L72 (DOCX-Klartext).
+
+**28. August 2026 · Noten: das Heft war da, jetzt rechnet jemand (E241)**
+
+> Redur: „es sollte meine Schule alles begleiten, Noten, Lernen,
+> Lernziele." Das Wort NOTEN kam in Redion genau einmal vor — als
+> Datenbank der Schulvorlage. Eintragen ging, gerechnet hat niemand.
+>
+> Neu: Ansicht „Noten" neben den Prüfungen. Je Fach gewichteter Schnitt,
+> Zeugnisnote (auf halbe Noten), Balken der letzten Noten, Zielrechner
+> („für eine 4.0 braucht die nächste Prüfung mindestens eine …").
+> Punkte→Note nach Schweizer Formel; Werte ausserhalb 1–6 fallen heraus
+> statt den Schnitt zu heben (Gegenprobe: 13.63). test249, zwölf Punkte,
+> drei Gegenproben einzeln rot.
+
+**28. August 2026 · Redurs vier iPhone-Fotos: das Menüband stand dauerhaft offen (E240)**
+
+> Ein einziger Reitertipp schrieb „Band offen" in EINEN Schlüssel für alle
+> Startansichten — und zuklappen konnte nur der Pfeil. Auf den Fotos stand
+> das Band mit 371 von 844 px über Termine, Lernen, Heute und einer Seite.
+>
+> Am Telefon ist es jetzt ein MENÜ: liegt über dem Inhalt statt ihn zu
+> verdrängen, schliesst bei Tipp daneben, bei Bereichswechsel und nach
+> jedem Befehl, und „offen" wird dort nicht mehr gemerkt — geerbte Merker
+> von echten Geräten sind damit geheilt, ohne dass jemand etwas löscht.
+> Am Rechner bleibt die gemerkte Wahl. Vier neue Punkte in test247 §8,
+> drei Gegenproben einzeln rot. Untersucht mit vier parallelen Lesern.
+
+**28. August 2026 · Redion öffnet dort, wo die Sachen liegen (E236)**
+
+> Redur hat zwei Bildschirmfotos einer Notiz-App geschickt und beschrieben,
+> wie Redion sich öffnen soll. Fünf Teile — und das meiste davon gab es
+> schon, nur an der falschen Stelle.
+>
+> | | was gewollt war | was es schon gab | was ich tat |
+> |---|---|---|---|
+> | **1** | Regal mit Deckeln | `Bibliothek` als Tabelle | dritte Form: ein Deckel je Dokument, die Art abgelesen aus dem Inhalt |
+> | **2** | „+ Neu" fragt was | `erstellenBlatt()` mit 11 Wegen, versteckt hinterm Stift | 19 Wege in 6 Gruppen, überall erreichbar |
+> | **3** | zuletzt geöffnete PDF beim Start | die Einstellung gab es, ausgewertet hat sie niemand | Vorgabe „Dokument, sonst Regal" |
+> | **4** | Menüleiste wie am Rechner | `#menueband` (E210), meist versteckt | ganz oben, 35 px, räumt sich selbst auf |
+> | **5** | unten max 4–5 | 6 Kreise **oben** | fünf Wege unten, jeder mit Namen |
+>
+> **Der rote Faden:** kein einziger neuer Katalog (§8). Fünf Umzüge.
+>
+> **E219 ist zurückgenommen.** Er versteckte die Menüleiste über
+> Startansichten, weil dort „sieben Dinge stehen, die alle sagen: nicht
+> jetzt". Der Fehler war nicht die Leiste, sondern ihr Inhalt — drei ihrer
+> sechs Reiter brauchen eine offene Seite. Das steht jetzt an einer Stelle
+> im Register, und die Leiste räumt sich selbst auf.
+>
+> **Sieben Fehler fand nur das Bild (§55):** die Deckel zeigten „Seite
+> 1Seite 2Seite 3" statt Papier; ein `<button>` zentriert seinen Inhalt
+> senkrecht; sechs `.menu-liste` schnitten sich gegenseitig ab; der aktive
+> Weg unten lag hinter der gleitenden Fläche; die Schublade deckte die neue
+> Wegeleiste zu; die Titel auf den Deckeln waren HART abgeschnitten
+> („Was Notion 10 0"), weil `text-overflow` für ein Inline-Element nicht
+> gilt; und die Papierlinien liefen quer durch den Text wie ein
+> Durchstreichen.
+>
+> **Vier fanden Prüfungen:** test202 kam nicht mehr zum
+> Ausbildungs-Dashboard, test141 fand die zugedeckte Schublade und einen
+> Punkt Fehler in `--hunten`, test126 den verlorenen Antipp-Übergang, und
+> test67 den schwersten: die Sicherungswarnung und die Platzkarte standen
+> nur noch in der alten Tabellenform — eine Sicherheitsfunktion (§11) in
+> einer Ansicht zurückgelassen, die ab jetzt kaum jemand öffnet.
+>
+> **Zehn Prüfläufe wanderten mit** (31, 34, 37, 40, 67, 114, 126, 141, 156,
+> 247). Bei jedem blieb die FRAGE, nur die Stelle wurde nachgezogen —
+> mehrfach dreht sich dabei die Richtung um.
+>
+> **Und die Deckelform war die erste Vorgabeansicht ohne einen einzigen
+> Prüfpunkt.** test33 hat jetzt sechs, jeder einzeln rot gemacht, bevor er
+> stehen blieb (§55.2). Neu ist auch L68: die Reiterzeile der Lernwelt hat
+> im verschmolzenen Kopf 234 statt 366 px.
+
+**28. August 2026 · der Kopf am Telefon: 236 → 124 px**
+
+> ### Was Redur rot angestrichen hat (E232–E235)
+>
+> Ein Bildschirmfoto der Lernzentrale, ein roter Kasten über den ganzen
+> oberen Bereich, ein Satz: *„dort sollte möglichst wenig sein"*.
+>
+> Gemessen waren es vier Bänke und 236 px von 844 — und der Name der Welt
+> stand dreimal darin: als aktiver Kreis, als Krume, als aktiver Reiter.
+>
+> | | was gemacht wurde | was es bringt |
+> |---|---|---|
+> | **E232** | Zurück und die drei Punkte auf 44 × 44 (§37) | die Krume wird 9 % kürzer |
+> | **E235 ①** | Kreisleiste 80 → 68, nur am Polster gespart | −12 px |
+> | **E235 ②** | Bereichsfilter wird ein Chip in der Reiterzeile | −44 px |
+> | **E235 ③** | Krumenzeile und Reiterzeile werden EINE | −56 px |
+>
+> **Wie ③ ohne Kopplung geht:** ein Bereich markiert seine oberste, klebende
+> Zeile mit `data-kopfzeile="eigene"` und sagt damit nur etwas über SICH.
+> Die Schale fragt danach — `#main:has(> #scroll > #page >
+> [data-kopfzeile="eigene"])` — und nimmt am Telefon ihre eigene Zeile aus
+> dem Fluss. Fehlt die Marke, ändert sich nichts (§5).
+>
+> **Zwei Fehler fand nur das Hinsehen (§55):** die zwei Knöpfe sassen sechs
+> Punkte zu hoch auf der Karte (`align-items:stretch` streckt keinen Knopf
+> mit fester Höhe), und der GEWÄHLTE Reiter stand halb ausserhalb. Das
+> zweite wurde in `Rollrand.zeige()` gelöst, also für alle vier Rollleisten
+> auf einmal.
+>
+> **Und der Preis, ausgesprochen:** die Reiterkarte ist von 322 auf 234 px
+> geschrumpft — zweieinhalb statt dreieinhalb sichtbare Reiter. Sie rollt,
+> zeigt ihre Kante als Schatten, und der aktive Reiter steht immer im Bild.
+>
+> **Versprochen waren 112 px, geworden sind es 124.** Die 112 kamen aus einer
+> Schätzung, in der die Kreise auf 56 schrumpfen — das ist die Trefferfläche
+> selbst und wäre unter §37 gegangen.
+>
+> **Geprüft:** test67 §11, elf Punkte, vier Gegenproben einzeln gefahren und
+> jede rot geworden.
+
+**27. August 2026 · 215 Prüfläufe · acht Fehler aus dem Bilderdurchgang**
+
+> ### Was 92 Bildschirmfotos gefunden haben (E224–E231)
+>
+> Redur wollte alle Ansichten sehen — Rechner und Telefon, hell und dunkel —
+> und wissen, was zu voll ist. Aus dem Hinsehen wurden acht Behebungen, und
+> keine davon hätte eine bestehende Prüfung gefunden.
+>
+> | | was zu sehen war | was dahinter steckte |
+> |---|---|---|
+> | **E224** | „📕 Elek…" | der Sucher lag über dem Seitentitel, 55 px |
+> | **E225** | test67 rot | die Prüfung mass die Überschrift statt den Inhalt |
+> | **E226** | test40 rot | `offsetParent` ist keine Sichtbarkeit — dreimal |
+> | **E227** | Karte „1’450" | die Kartenansicht las nie ein Zellformat |
+> | **E228** | „Whit…" „Scan…" | 7 von 8 Kacheln hatten 45 px für den Text |
+> | **E229** | „00:00" | Ganztagstermine verschwanden westlich von Greenwich |
+> | **E230** | blasse Zeilen | 11 Texte unter AA, 7 davon trugen Bedeutung |
+> | **E231** | „1 Einträge" | die Mehrzahl-Regel stand 146 Zeilen tiefer |
+>
+> **Der rote Faden, dreimal derselbe:** bei E228, E229 und E231 stand die
+> richtige Regel bereits im Projekt — vierzehn Zeilen tiefer, in der
+> Kalenderansicht, hundertsechsundvierzig Zeilen tiefer. Eine Entscheidung,
+> die an vier Stellen einzeln getroffen werden muss, wird irgendwann an einer
+> vergessen. Deshalb steht sie jetzt jeweils an EINER.
+>
+> **Und dreimal habe ich mich geirrt** und es berichtigt: `634.216667` ist die
+> richtige Kürzung und kein abgeschnittener Wert; der doppelte Aufgabeneintrag
+> war ein Fehler im Bild-Beispiel, nicht in der App; die beiden Namen des
+> Simulationsknopfes sind Absicht und stehen so im Code begründet.
+>
+> **Neu:** test249 misst den Kontrast in acht Produktwelten × zwei Themen mit
+> der WCAG-Formel und einer namentlich begründeten Ausnahmeliste.
+>
+> **Erledigt am 28. August:** „die zwei Reiterzeilen sind der grösste
+> Einzelposten" — Redur hat den Kasten rot angestrichen, und E235 hat die
+> Krumenzeile mit der Reiterzeile verschmolzen. 236 → 124 px. Der Block
+> ganz oben erzählt es.
+
+**27. August 2026 · die ruhige Fassung ist gebaut**
+
+> ### Ruhig: 52 Rahmenknöpfe werden 15 (E218–E222)
+>
+> Redur wollte Redion ruhiger, mit weniger Bereichen, ohne dass etwas
+> verschwindet. Zuerst gemessen statt geschätzt — alles Anklickbare in
+> Seitenleiste, Kopfzeile und Menüband bei 1440 × 900:
+>
+> | | vorher | ruhig |
+> |---|---|---|
+> | Seitenleiste | 32 | 8 |
+> | Kopfzeile | 13 | 7 |
+> | Menüband (Startansicht) | 7 | 0 |
+> | **zusammen** | **52** | **15** |
+>
+> Fünf Wege stehen links: Heute, Lernzentrum, Elektro, Bibliothek, Aufgaben.
+> „Mehr" (Strg + M) holt alles zurück, an derselben Stelle, mit denselben
+> Knöpfen — der Unterschied ist eine CSS-Regel, kein zweiter Katalog.
+> Schalter: Einstellungen → Aussehen → Schrift und Layout.
+>
+> Dazu kam beim Bauen heraus:
+>
+> · **Elektro hatte keine eigene Zeile** — eines der 14 Module, das grösste,
+>   erreichbar nur über den Workspace. Jetzt hat es eine (öffnet aber einen
+>   Rechner, keine Seite — L65).
+> · **Die Leiste sagte nicht, wo man ist.** Ein Klick auf „Bibliothek" liess
+>   „Workspace" aufleuchten; zwei fest verdrahtete Zeilen kannten nur die
+>   Welt. Bei fünf Wegen ist die Markierung der einzige Anhaltspunkt (E221).
+> · **Zweimal derselbe Titel.** Lernwelt und Workspace trugen ihren Namen
+>   noch einmal unter der Pfadnavigation — 60 und 169 px (E219, E222).
+> · **Der Entwurf log an einer Stelle:** die Formatierleiste sollte in den
+>   freien Rand rechts, im Bild waren dort 424 px. In der App sind es 150,
+>   die Leiste ist 552 breit. Zurückgenommen, Messung im Code festgehalten
+>   (E220).
+>
+> Prüfung: test248 mit 41 Punkten, jeder mit eigener Gegenprobe. Der
+> Wächter „nichts ist weg" brauchte drei Anläufe — die ersten beiden waren
+> grün, während ein Eintrag dauerhaft versteckt war.
+
+> ### Vorher: 25. August 2026 · 202 Prüfläufe · LUECKEN.md abgearbeitet
 
 > ### Die Lückenliste, zu Ende gegangen (E170–E182)
 >
@@ -1128,6 +1451,171 @@ dem 6. August mit einer leeren `js-bestand.json`. Es bleibt einer:
 Alles andere in LUECKEN.md ist entweder gebaut oder mit Begründung bewusst
 nicht gebaut. Das heisst nicht, dass Redion fertig ist — es heisst, dass die
 Liste ehrlich ist.
+
+---
+
+## Die Visionskarte · 28. August 2026
+
+> Redur: „Ich wollte so etwas machen, das mich Jahre begleitet — dass ich
+> kein Word, Excel, PowerPoint mehr brauche. Es sollte meine Schule alles
+> begleiten: Noten, Lernen, Lernziele. Und PDF bearbeiten, Fachzeichnen,
+> Elektrotechnik-Simulator — und Notion, GoodNotes, Graphy, Obsidian,
+> alles dort haben. Und natürlich mehr."
+
+Dieser Satz ist der Massstab. Neun Leser haben ihn am 28. August gegen den
+Bestand gemessen — streng: nur was in `src/`, `quell/` oder
+`pruefungen/lauf/` belegbar ist, zählt als „kann"; jede Zeile unten hat im
+Messprotokoll einen Dateipfad oder einen grün gelaufenen Prüflauf hinter
+sich. Die Karte sagt für jede Säule zwei Dinge: **was Redur heute trägt**
+und **was zuerst fehlt**.
+
+**Word — trägt für die Schule.** Editor mit Formatierung, fünf Schriften
+und Grössen je Block, Drucken/PDF (test182), A4-Blatt mit Papiervorlagen
+und Dokumentmodus (test212), DOCX in beide Richtungen mit eigenem
+ZIP-Schreiber (test49). Ehrlich: DOCX transportiert in beide Richtungen
+nur Klartext-Struktur — `**fett**` steht in Word wörtlich da, Bilder
+werden Platzhaltertext, und der Import hat als einziger Einlese-Weg
+keinen Prüflauf (→ L72). Beim Drucken fehlen Seitenzahlen, Kopf- und
+Fusszeile — für abzugebende Berichte der sichtbarste Unterschied.
+
+**Excel — trägt für die Berufsschule.** Tabellenblock mit A1-Bezügen,
+255 Formelfunktionen mit deutschen Namen, XLSX/ODS mehrblattfähig in
+beide Richtungen mit echten Bytes geprüft (test110: 191 ok, test165/168/
+171/198), Zellformate machen die Rundreise, CHF und Schweizer Zahlen,
+bedingte Formatierung, Pivot, Zielwertsuche. Ehrlich: ein Diagramm oder
+eine Pivot **aus einem Zellbereich** geht nicht (nur aus Datenbanken),
+verbundene Zellen und Zellkommentare fehlen.
+
+**PowerPoint — trägt den Vortrag, nicht die Abgabe.** Vollbild-Vortrag
+aus jeder Seite (H1/H2/Trennlinie = neue Folie, Marp-Prinzip), mit A4-
+Blättern, Tabellen und Formeln auf der Folie (test183, test35). Ehrlich:
+`.pptx` kommt im ganzen Bestand nicht vor (→ L69), das Folienlayout kennt
+keinen Export (Druck druckt die Seite, nicht die Folien), keine
+Referentenansicht, keine Vortragsvorlage in der Galerie.
+
+**Schule — trägt zur Hälfte.** Prüfungszentrale mit Countdown (test208),
+Schulstruktur per Vorlage „Ausbildung" (test202), seit E241 Noten mit
+gewichtetem Schnitt, Zeugnisnote und Zielrechner (test249 — der Leser sah
+den Stand noch uncommitted; Prüflauf, E241 und Einzeldatei sind
+inzwischen da). Ehrlich: hinter dem Knopf „Stundenplan" steht kein
+Stundenplan (→ L70), die Zeugnisnote mittelt ohne Semesterfilter alle
+Noten aller Zeiten (→ L71), Hausaufgaben mit Fach-Bezug und Lernziele je
+Fach gibt es nicht — nur das tägliche Karten-Ziel.
+
+**GoodNotes — trägt den Kernfall.** PDF einlesen, mit dem Stift
+beschreiben (Druckstärke, Formen, Textanmerkung, Undo), Original bleibt
+Byte für Byte, Papiervorlagen in Blattmassen, Striche lagestabil, PDF-
+Text durchsuchbar, Ausschnitt als Karteikarte, beschriftet drucken — fünf
+Prüfläufe grün (test174/177/181/207/242). Ehrlich: der Stift-Feinschliff
+fehlt — kein Lasso (nur Rechteck-Auswahl), der Radierer löscht nur ganze
+Striche, Handschrift-zu-Text braucht den localhost-Dienst, und PDF-Export
+geht nur über den Druckdialog.
+
+**Notion — trägt für einen Lernenden.** ~60 Blockarten, Slash-Menü,
+13 gerenderte Datenbank-Ansichten (zwei mehr als Notion: Raster, Pivot),
+35 Spaltentypen, Relationen/Rollups, 158 Formeln ohne eval (test106:
+177 ok), Kommentare, Erwähnungen, Sync mit E2E-Verschlüsselung und
+Konfliktzusammenführung (test113: 53 ok). Ehrlich: als Team-Werkzeug
+nicht — kein Live-Tippen, @Person ist faktisch Text, Teilen braucht den
+selbst aufgesetzten Server. Und im Datei-Sync wandert lokales Löschen
+nicht zum Server (L6 — als Datenintegritätslücke die wichtigste Zeile
+dieser Karte).
+
+**Fachzeichnen + Elektro-Simulator — trägt nachweislich.** 106 Symbole
+nach IEC/EN 60617 mit Schweizer Bestand, Schaltplan-Editor mit drei
+Planarten, echte Knotenpotentialanalyse, die die Wheatstone-Brücke
+besteht, 183 rechenbare Formeln, Formelbuch mit eigenen Skizzen aus
+denselben Fachzeichen, erzeugte Übungen mit Schweizer Notenskala — vier
+Prüfläufe, 318/318 (test238/239/241/244). Ehrlich: die Simulation ist
+Gleichstrom, eingeschwungen, linear — Wechselstrom (X_L, X_C, cos φ)
+lässt sich rechnen, aber nicht im Plan simulieren; Zeitrelais verzögern
+nicht; die Prüfungssimulation hat keine Uhr; nur 16 von 183 Formeln
+haben einen Schritt-für-Schritt-Weg in Worten.
+
+**Obsidian — trägt die verlinkte Wissensbasis.** Wikilinks mit Alias,
+Blockverweise, Rückverweise und unverlinkte Erwähnungen unter jeder
+Seite, Graph mit Kräfte-Layout, #Tags mit Tagwolke, Vault-Export als ZIP
+mit Frontmatter und verlustfreiem Wiedereinlesen (test219: 31/31).
+Ehrlich: Obsidians „der Vault IST der Ordner" gibt es nicht — der
+Ordner-Abgleich schreibt nur in eine Richtung, ohne Rücklesen; der Graph
+zeigt nur den Teilgraphen um eine Seite; Rückverweise haben keinen
+eigenen Prüflauf.
+
+**Graphy/Diagramme — trägt den Schulalltag.** Diagramm-Ansicht mit
+Gruppierung, Zeitstufen und Drilldown (test52: 27/27), Dashboard mit
+KPI-Kacheln über fremde Datenbanken (test237: 61 ok), Pivot mit Prozent
+und CSV, Whiteboard mit 12 Werkzeugen und PNG-Export (test209: 55/55).
+Ehrlich: keine zweite Datenreihe (gestapelt/gruppiert), kein XY-/
+Streudiagramm — für einen Elektro-Lernenden das naheliegendste: die
+U-I-Kennlinie aus der Messreihe geht nicht. Und der Chart-Block kann
+seine Datenbank-Quelle lesen, aber keine Oberfläche kann sie setzen.
+
+### Was aus der Karte oben liegt
+
+Nach §46 zuerst die Datenzeile, dann nach Gewicht und Aufwand:
+
+1. ~~**L6 · Datei-Sync-Grabsteine**~~ — GESCHLOSSEN am 29. August (E249,
+   test256 mit echtem Server und zwei Geräten). Beifund: das
+   Block-Vorbild ist selbst undicht → L73.
+2. **L71 · Zeugnisnote je Semester** — ab dem zweiten Semester zeigt die
+   Kernzahl der Noten-Ansicht sonst einen falschen Wert. Das Datum je
+   Note ist schon da, es fehlt nur der Filter.
+3. **L70 · Echter Stundenplan** — Wochenraster mit Lektionen; Unterbau
+   (Termine, Kalender, ICS-Wiederholungen) ist vorhanden.
+4. **Kleine Pflichten (§30) — alle fünf erledigt am 28./29. August:**
+   ~~Prüflauf für den DOCX-Import~~ (E245, test252 — L72 Teil 2, die
+   Formatierung, bleibt offen), ~~Prüflauf für Rückverweise/unverlinkte
+   Erwähnungen~~ (E246, test253), ~~Quellen-Wähler im Chart-Block~~
+   (E247, test254), ~~Seitenzahlen/Kopfzeile beim Drucken~~ (E244,
+   test251), ~~Prüfungs-Timer im Elektro-Arbeitsplatz~~ (E248, test255).
+5. **Die grossen Sichtbaren:** .pptx-Export (L69), Lasso im Stift,
+   Wechselstrom-Simulation, XY-Diagramm, Zwei-Wege-Ordner-Abgleich,
+   ~~Hausaufgaben und Lernziele je Fach~~ (E256, test262 — 29. August).
+
+Nichts davon ist eine Wette — jede Zeile stammt aus dem Messprotokoll
+vom 28. August und hat dort ihren Beleg.
+
+### Nachtrag: Redurs Zielbild-Poster, Punkt für Punkt
+
+Am Abend des 28. August schickte Redur ein Poster: sein Zielbild als
+Bildschirm-Entwurf, elf Abschnitte von „Übersicht & Vision" bis „Weitere
+Funktionen". Sechs weitere Leser haben die Poster-Punkte gemessen, die
+die neun Säulen oben nicht abdecken. Das Ergebnis in drei Körben:
+
+**Steht schon, mit Prüflauf.** Reiter oben mit Neuer-Tab-Knopf und
+Strg+Tab (test46), geteilte Ansicht neben- und übereinander (test206),
+Inhaltsverzeichnis-Block (test44), Fassungsvergleich mit Wort-Diff
+(test48), HTML-Export (test182), mehrere PDFs gleichzeitig in Reitern,
+echtes SM-2 wie Anki (nachrechenbar dieselbe Formel), Lückentext-Karten
+mit `{{...}}`, Lernstatistiken, Tagesjournal per Strg+Shift+J (Daily
+Notes), Audio-Aufnahme mit Zeitmarken und Notiz-Verknüpfung (test202),
+Datenvalidierung für Datenbank-Spalten (Pflicht, Regex, Zahlbereich,
+Statusübergänge).
+
+**Gebaut, aber versteckt — reine Sichtbarkeitsarbeit.** Benachrichtigungen
+(Posteingang mit Gelesen-Status, aber keine Glocke oben), Sync-Status
+(Maschine meldet alles, sichtbar nur im Wolke-Dialog), Konto/Profil
+(vollständig, aber nur über die Befehlspalette erreichbar). Alle drei:
+Aufwand klein, Logik liegt fertig da.
+
+**Fehlt wirklich, nach Hebel geordnet.**
+· *Klein:* Suchfeld in der Graph-Ansicht; Rendering-Gleichstand der
+  Karteikarten (Lernwelt zeigt nur esc(), die klassische Ansicht kann
+  Mathe); Folien-Übergänge; ~~Kopf-/Fusszeilen + Seitenzahlen im Druck~~
+  (gebaut am selben Abend: E244, test251).
+· *Mittel:* Zellvalidierung im Tabellenblock (Muster liegt in den
+  DB-Prüfregeln fertig); Folien-PDF-Export; Multiple-Choice-Karten im
+  SM-2-System (der Elektro-Generator zeigt die Bausteine); Bild und
+  Audio auf der Karteikarte; Referentennotizen; Namensmanager;
+  Notenverlaufs-Kurve als gelieferte Ansicht; Pomodoro/Lernzeit echt
+  messen statt schätzen; Formen-Erkennung beim Zeichnen; Tab-Gruppen;
+  2FA am Server.
+· *Gross:* Fussnoten; Zitieren mit Literaturverzeichnis; Sparklines;
+  Mindmaps; Lineal/Geodreieck; Masterfolien/Designs; englische
+  Oberfläche (der Schalter existiert, steht bewusst aus).
+
+Zwei Punkte aus dem Poster sind seit demselben Abend GEBAUT statt offen:
+die Zeugnisnote je Semester (E242) und der echte Stundenplan (E243).
 
 ---
 

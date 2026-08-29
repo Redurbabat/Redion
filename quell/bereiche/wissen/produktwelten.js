@@ -289,8 +289,16 @@ const Produktwelten = (() => {
            Wort, das Redion schon vorher benutzt hat. */
         mobileBeschriftung('hl-start', 'Heute', 'Heute');
         mobileBeschriftung('hl-lernen', 'Lernen & Alltag', 'Lernen');
-        mobileBeschriftung('hl-seiten', 'Workspace', 'Seiten');
-        mobileBeschriftung('hl-bespr', 'Planung und Termine', 'Plan');
+        /* SEIT E236 GIBT ES `hl-seiten` NICHT MEHR — der Workspace steht im
+           Mehr-Blatt unter „Wo du arbeitest". Die Zeile hier wäre eine Anweisung
+           an einen Knopf, den niemand mehr baut.
+           Und aus „Plan" wurde wieder „Termine": die Kurzform stammt aus der
+           Zeit der waagerechten Pillen, wo Zeichen und Wort NEBENEINANDER
+           standen und vier von fünf Namen überliefen (E137). Unten stehen sie
+           übereinander, jeder Weg hat 78 px — „Termine" braucht bei 10.5 px
+           rund 48. Der kurze Name kostete Deutlichkeit, die es nicht mehr zu
+           sparen gibt. */
+        mobileBeschriftung('hl-bespr', 'Planung und Termine', 'Termine');
         if (gestartet)
             return;
         gestartet = true;

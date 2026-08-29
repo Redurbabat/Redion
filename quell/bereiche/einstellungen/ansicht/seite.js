@@ -232,9 +232,11 @@ const Einstellungen = (() => {
             zeile('Erscheinungsbild', 'Hell, dunkel oder wie das System', wahl('theme', [['dark', 'Dunkel'], ['light', 'Hell'], ['system', 'Wie das System']], V('theme', 'dark'))) +
             zeile('Schriftgrösse', 'Gilt für den ganzen Text', wahl('schriftgroesse', [['klein', 'Klein'], ['normal', 'Normal'], ['gross', 'Gross']], V('schriftgroesse', 'normal'))) +
             zeile('Zeilenabstand', 'Enger oder luftiger', wahl('dichte', [['eng', 'Eng'], ['normal', 'Normal'], ['weit', 'Weit']], V('dichte', 'normal'))) +
-            zeile('Beim Öffnen zeigen', 'Was erscheint, wenn du die App startest', wahl('startAnsicht', [['start', 'Heute – Lernen & Alltag'], ['workspace', 'Workspace'],
+            zeile('Beim Öffnen zeigen', 'Was erscheint, wenn du die App startest', wahl('startAnsicht', [['dokument', 'Zuletzt geöffnetes Dokument, sonst das Regal'],
+                ['dokumente', 'Immer das Regal'],
+                ['start', 'Heute – Lernen & Alltag'], ['workspace', 'Workspace'],
                 ['letzte', 'Zuletzt geöffnete Seite'],
-                ['journal', 'Heutiges Journal'], ['posteingang', 'Posteingang']], V('startAnsicht', 'start'))) +
+                ['journal', 'Heutiges Journal'], ['posteingang', 'Posteingang']], V('startAnsicht', 'dokument'))) +
             zeile('Woche beginnt am', 'Gilt für Kalender und Kalenderwochen', wahl('wochenstart', [['montag', 'Montag'], ['sonntag', 'Sonntag']], V('wochenstart', 'montag'))) +
             zeile('Datumsformat', 'Wie Datumsangaben geschrieben werden', wahl('datumsformat', ['TT.MM.JJJJ', 'JJJJ-MM-TT', 'MM/TT/JJJJ', 'TT. Monat JJJJ'], V('datumsformat', 'TT.MM.JJJJ'))) +
             zeile('Zeitformat', '', wahl('zeitformat', [['24', '24 Stunden'], ['12', '12 Stunden']], V('zeitformat', '24'))) +
@@ -649,12 +651,17 @@ const Einstellungen = (() => {
             });
     };
     const kopfzeileAuffrischen = () => {
+        /* SEIT E236 TRÄGT AUCH DIE MENÜLEISTE DAS ZEICHEN (`mb-konto`).
+           Hier stand `btn.querySelector('.ws-icon')` — eine Stelle, ein
+           Zeichen. Wer es änderte, sah es in der Seitenleiste sofort und in
+           der Menüleiste erst nach dem nächsten Neuzeichnen: zwei Buchstaben
+           für einen Arbeitsbereich. Gesucht wird deshalb im ganzen Blatt. */
+        document.querySelectorAll('.ws-icon').forEach(ico => {
+            ico.textContent = V('arbeitsIcon', 'N');
+        });
         const btn = document.querySelector('#btn-settings');
         if (!btn)
             return;
-        const ico = btn.querySelector('.ws-icon');
-        if (ico)
-            ico.textContent = V('arbeitsIcon', 'N');
         const name = btn.querySelectorAll('span')[1];
         if (name)
             name.textContent = V('arbeitsName', 'Redion');

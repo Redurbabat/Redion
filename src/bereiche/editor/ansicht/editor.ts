@@ -839,6 +839,18 @@ const Blocks = (() => {
         break;
       }
 
+      /* `tabelle` IST EINE ALTE SCHREIBWEISE, kein zweiter Block.
+         „+ Neu → Neue Tabelle" legte seit E45 einen Block dieser Art an,
+         und gezeichnet hat ihn nie jemand — gemessen 24 px, Inhalt „+⋮⋮".
+         Der Weg legt jetzt eine Kalkulationstabelle an; wer aber schon
+         einmal darauf getippt hat, hat so einen Block im Bestand.
+
+         Er ist immer LEER, denn ohne Zeichnung konnte niemand etwas
+         hineinschreiben — deshalb genügt es, ihn wie eine einfache Tabelle
+         zu zeichnen. Nichts geht verloren (§46), und niemand muss Daten
+         wandern lassen (§9). Die Zeile hier ist billiger als jede
+         Migration und sagt dasselbe. */
+      case 'tabelle':
       case 'table':
         box.appendChild(Zusatz.tabelle(block));
         break;
@@ -2794,18 +2806,104 @@ const Blocks = (() => {
 
     /* Erwähnung, Datum, Erinnerung und Emoji schreiben ihr Zeichen und
        lassen dann das Menü aufgehen, das ohnehin daran hängt. */
-    const ZEICHEN: Record<string, string> =
-      { mention: '@', date: '@', remind: '@remind ', emoji: ':' };
-    const zeichen = ZEICHEN[was];
-    if (!zeichen) return;
-    ct.textContent = (ct.textContent || '') + zeichen;
-    Store.updateBlock(b.id, { text: ct.textContent });
+    zeichenAusloesen(b.id, was);
+  };
+
+  /* ------------------------------------------------------------------------
+   * DAS AUSLÖSEZEICHEN SCHREIBEN — EINMAL, FÜR ZWEI WEGE
+   *
+   * „@" öffnet die Erwähnung, „:" das Emoji-Menü. Beide hängen ohnehin am
+   * Tippen; die Aktion tut nichts weiter, als das Zeichen zu setzen und so
+   * zu tun, als sei es getippt worden.
+   *
+   * Das stand als Schwanz in `slashAktion` und wird seit E215 auch vom
+   * Menüband gebraucht (L63). Zwei Kopien desselben Schwanzes wären zwei
+   * Stellen, an denen jemand später ein Zeichen ändert — und eine, an der
+   * er es vergisst.
+   *
+   * GELESEN WIRD AUS DEM SPEICHER, NICHT AUS DEM DOM. `slashAktion` hatte
+   * `ct.textContent`; an der Stelle des Aufrufs ist beides gleich, aber der
+   * Speicher gilt auch dann, wenn kein Feld im Bild steht — und genau das
+   * ist beim Weg über das Menüband der Normalfall.
+   * ----------------------------------------------------------------------*/
+  const AUSLOESER: Record<string, string> =
+    { mention: '@', date: '@', remind: '@remind ', emoji: ':' };
+
+  const zeichenAusloesen = (blockId: string, was: string): boolean => {
+    const zeichen = AUSLOESER[was];
+    if (!zeichen) return false;
+    const b = Store.getBlock(blockId);
+    if (!b) return false;
+    Store.updateBlock(b.id, { text: (b.text || '') + zeichen });
     App.zeichneSeite(b.id, 'ende');
     setTimeout(() => {
       const feld = document.querySelector<HTMLElement>(`.blk[data-bid="${b.id}"] [contenteditable]`);
       if (feld) { feld.focus(); cursorAnsEnde(feld);
                   feld.dispatchEvent(new InputEvent('input', { bubbles: true })); }
     }, 30);
+    return true;
+  };
+
+  /**
+   * DIESELBE AKTION, ABER OHNE SCHREIBZEIGER (L63).
+   *
+   * `slashAktion` braucht das Feld, in dem gerade getippt wird, und den
+   * Block darunter. Ein Knopf im Menüband hat weder das eine noch das
+   * andere — deshalb standen „Erwähnung", „Datum" und „Emoji" bisher nur im
+   * Slash-Menü, obwohl sie inhaltlich unter „Einfügen" gehören.
+   *
+   * Hier wird stattdessen ein leerer Textblock ans Ende der Seite gehängt
+   * und das Auslösezeichen dort geschrieben. Ab da ist es derselbe Weg wie
+   * beim Tippen — dasselbe `zeichenAusloesen`, dasselbe Menü.
+   *
+   * NUR DIESE DREI. Die anderen acht Aktionen (Umwandeln, Farbe,
+   * Duplizieren, Verschieben, Löschen, Kommentar …) handeln von EINEM
+   * bestimmten Block. Ohne Schreibzeiger gibt es keinen, und einer, der
+   * sich den letzten Block greift, würde irgendwann den falschen erwischen.
+   * Ein Knopf, der manchmal das Richtige trifft, ist schlimmer als keiner.
+   */
+  /* ZWEI UND NICHT DREI — „Datum" IST DASSELBE MENÜ.
+     Nachgemessen: `mention` und `date` schreiben beide „@" und öffnen damit
+     dasselbe Menü. Das ist kein Fehler — dieses Menü führt Seiten, Personen
+     UND Datumsangaben („heute", „morgen", „Datum wählen …"). Aber ein Knopf
+     „Datum", der ein Menü mit der Überschrift „Seiten" aufmacht, führt in
+     die Irre. Ein Einstieg, dessen Hinweis alle drei nennt, tut das nicht. */
+  const AM_ENDE = ['mention', 'emoji'];
+
+  const aktionAmEnde = (was: string): boolean => {
+    if (!AM_ENDE.includes(was)) return false;
+    const seite = App.aktuelleSeite();
+    if (!seite) { UI.toast('Erst eine Seite öffnen'); return false; }
+    const b = Store.addBlock(seite, 'text');
+    if (!b) return false;
+
+    /* EMOJI GEHT NICHT ÜBER DAS AUSLÖSEZEICHEN.
+
+       Gemessen: „:" allein öffnet nichts. Das Emoji-Menü hängt an
+       `/(?:^|\s):([a-zäöü]{2,})$/` — es braucht MINDESTENS ZWEI
+       Buchstaben nach dem Doppelpunkt, damit ein gewöhnlicher Doppelpunkt
+       im Satz kein Menü aufklappt. Das ist beim Tippen richtig und beim
+       Knopfdruck falsch: dort steht am Ende nur ein Doppelpunkt und sonst
+       nichts. (Derselbe Weg über `slashAktion` hat dasselbe Problem.)
+
+       Die volle Auswahl mit Suchfeld gibt es — `Erwaehnungen.emojiWaehler`.
+       Sie liegt aber in einem ANDEREN Bereich, und ein Bereich darf keinen
+       anderen aufrufen (CLAUDE.md §5, Regel 1). Der vorgesehene Weg dafür
+       ist der Ereignisbus, und genau der wird hier benutzt.
+
+       Hört niemand zu, bleibt es beim Doppelpunkt — dann ist es so gut wie
+       vorher und nicht schlechter. */
+    if (was === 'emoji' && typeof Ereignisse !== 'undefined') {
+      try {
+        /* ERST ZEICHNEN, DANN RUFEN. Der Block ist gerade erst im Speicher
+           entstanden; auf der Seite steht er noch nicht. Wer daran ein Menü
+           aufhängen will, findet nichts — gemessen kam beim ersten Versuch
+           kein einziges Menü, obwohl der Zuhörer lief. */
+        App.zeichneSeite(b.id, 'ende');
+        if (Ereignisse.melde('emojiWaehlen', { blockId: b.id }) > 0) return true;
+      } catch { /* dann eben das Zeichen */ }
+    }
+    return zeichenAusloesen(b.id, was);
   };
 
   /* ========================================================================
@@ -3386,7 +3484,7 @@ const Blocks = (() => {
 
   return {
     TYPEN, typ, render, bindeEditor, umwandeln, umwandelnMenue, inline, esc,
-    cursorAnsEnde, slashMenue, slashAktion, alleToggles, einfuegenAmEnde, dupliziere, verschiebe, lege,
+    cursorAnsEnde, slashMenue, slashAktion, aktionAmEnde, AM_ENDE, alleToggles, einfuegenAmEnde, dupliziere, verschiebe, lege,
     blockVerschiebenNach, seitenPicker, blockMenue, datenbankWaehlen,
     knopfAusfuehren, eineAktion, AKTIONS_NAMEN,
     DIENSTE, einbettungsAdresse,

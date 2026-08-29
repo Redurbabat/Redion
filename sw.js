@@ -34,7 +34,7 @@ const ich = self;
 /** Der Name der Ablage. Muss `KONSTANTEN.ABLAGE_NAME` gleichen — siehe
  *  die Erklärung bei `faelligeErinnerungen`. `test143` rechnet es nach. */
 const ABLAGE_NAME = 'notizen';
-const VERSION = 'notizen-v23';
+const VERSION = 'notizen-v29';
 const ABLAGE = VERSION;
 /* Was beim ersten Besuch gleich mitgenommen wird. */
 const GRUNDSTOCK = [
@@ -56,6 +56,7 @@ const GRUNDSTOCK = [
     './quell/core/sheet/space.js',
     './quell/core/ink/geometry.js',
     './quell/core/electrical/calculations.js',
+    './quell/core/electrical/rechenweg.js',
     './quell/core/spreadsheet/address.js',
     './quell/core/spreadsheet/engine.js',
     './quell/core/spreadsheet/csv.js',
@@ -63,6 +64,11 @@ const GRUNDSTOCK = [
     './quell/kern/sicherheit/pruefen.js',
     './quell/kern/ablage/formen.js',
     './quell/kern/ablage/umzuege.js',
+    /* Die Zeichen zuerst — Navigation und Schale zeichnen als erstes damit.
+       Fehlte die Zeile, kam die Datei offline nicht aus dem Vorrat, der
+       Arbeiter antwortete mit 504, und `Register.symbole` blieb undefiniert:
+       eine Seitenleiste ohne Zeichen, nur ohne Netz (test143). */
+    './quell/register/symbole.js',
     './quell/register/module.js',
     './quell/register/navigation.js',
     './quell/register/bloecke.js',
@@ -70,6 +76,7 @@ const GRUNDSTOCK = [
     './quell/register/eigenschaften.js',
     './quell/register/ansichten.js',
     './quell/register/befehle.js',
+    './quell/register/menueband.js',
     './quell/register/tasten.js',
     './quell/register/einstellungen.js',
     './quell/register/formeln.js',
@@ -103,6 +110,11 @@ const GRUNDSTOCK = [
     './quell/bereiche/elektro/arbeitsplatz.js',
     './quell/bereiche/elektro/lernbilder.js',
     './quell/bereiche/elektro/skizzen.js',
+    /* DIE ELEKTRO-STARTSEITE (E238). Sie muss hier stehen, sonst fehlt sie
+       offline — und „Elektro" wäre der einzige der fünf Wege, der ohne Netz
+       ins Leere führt (§28). Gefunden hat das der Prüflauf, der index.html
+       gegen diese Liste hält; von Hand hätte ich es vergessen. */
+    './quell/bereiche/elektro/start.js',
     './quell/bereiche/pdf/document-mode.js',
     './quell/bereiche/spreadsheet/ansicht.js',
     './quell/bereiche/datenbanken/raster.js',
@@ -145,6 +157,14 @@ const GRUNDSTOCK = [
     './quell/kern/helfer/tempo.js',
     './quell/kern/helfer/ablage.js',
     './quell/kern/helfer/rollrand.js',
+    /* Die Seitenvorschau (E207). Sie hängt an KEINEM Bereich — Lernwelt und
+       Bibliothek zeichnen beide damit. Fehlte die Zeile, käme sie offline
+       nicht aus dem Vorrat, `Vorschau` bliebe undefiniert, und beide Ansichten
+       hätten leere Karten: derselbe Fehler wie bei `symbole.js` in test143,
+       nur an zwei Stellen gleichzeitig. */
+    './quell/kern/helfer/vorschau.js',
+    './quell/kern/helfer/sicherung.js',
+    './quell/kern/helfer/zeichenziel.js',
     './quell/bereiche/planen/dienst.js',
     './quell/bereiche/einstellungen/erweiterungen.js',
     './quell/bereiche/verbinden/eingang.js',
@@ -175,8 +195,10 @@ const GRUNDSTOCK = [
     './quell/bereiche/wissen/produkt_onboarding.js',
     './quell/bereiche/wissen/produktwelten.js',
     './quell/bereiche/ki/dienst.js',
+    './quell/schale/aufbau/ruhig.js',
     './quell/schale/aufbau/seitenleiste.js',
     './quell/schale/aufbau/kopfleiste.js',
+    './quell/schale/aufbau/menueband.js',
     './quell/schale/aufbau/inhaltsflaeche.js',
     './quell/schale/aufbau/schale.js',
     './quell/start.js',

@@ -218,8 +218,6 @@ const Fokus = (() => {
         for (const n of dialoge) {
             const ziel = herkunft.get(n);
             herkunft.delete(n);
-            if (!ziel || !document.contains(ziel))
-                continue;
             /* Nur, wenn der Fokus wirklich verwaist ist. Hat inzwischen etwas
                anderes ihn übernommen — ein zweiter Dialog, ein Textfeld —, wäre
                das Zurückholen ein Diebstahl. */
@@ -228,7 +226,30 @@ const Fokus = (() => {
                 continue;
             if (document.querySelector(DIALOGE))
                 continue; /* noch etwas offen */
-            ziel.focus?.();
+            if (ziel && document.contains(ziel))
+                ziel.focus?.();
+            /* UND NACHSEHEN, OB ES GEKLAPPT HAT (E223).
+             *
+             * Zwei Fälle lassen den Fokus sonst auf `<body>` liegen, und von dort
+             * fängt das nächste Tab wieder ganz oben an — genau der Fehler, gegen
+             * den dieser ganze Abschnitt geschrieben wurde.
+             *
+             *   · Es gab kein Ziel. Strg+P öffnet die Suche auch dann, wenn gar
+             *     nichts fokussiert war.
+             *   · Das Ziel ist inzwischen unsichtbar. Seit E219 steht „Suchen"
+             *     hinter „Mehr", und ein Element mit `display:none` nimmt den
+             *     Fokus nicht an — `focus()` tut schlicht nichts, ohne Fehler.
+             *
+             * Dann übernimmt der Inhalt. Das ist nicht bloss irgendein Ersatz:
+             * dort hat man gearbeitet, bevor der Dialog kam, und von dort läuft
+             * Tab weiter, statt neu anzufangen. `#page` trägt in `index.html`
+             * schon `tabindex="-1"` — es ist als Fokusziel vorgesehen.
+             */
+            const jetztA = document.activeElement;
+            if (!jetztA || jetztA === document.body || jetztA === document.documentElement) {
+                const inhalt = document.getElementById('page') || document.getElementById('main');
+                inhalt?.focus?.();
+            }
         }
     };
     let laeuft = false;

@@ -91,6 +91,13 @@ const pruef = (n: any, ist: any, soll: any) => {
   await p.evaluate(() => { document.querySelectorAll<HTMLElement>('.overlay').forEach(o => o.remove()); });
   const vorher = await p.evaluate(async () => {
     Store.setMeta('sidebarFolge', null);
+    /* SEIT E211 SIND DIESE VIER ABSCHNITTE AB WERK AUS.
+       Links stehen die BEREICHE, oben im Menüband die Werkzeuge — Redurs
+       Wunsch, und in ENTSCHEIDUNGEN.md unter E211 festgehalten. Weg sind
+       sie nicht: „Abschnitte anpassen" holt jeden zurück, und dieser
+       Prüfpunkt handelt davon, dass sie DANN richtig aussehen.
+       Ohne diese Zeile prüfte er nur noch die neue Vorgabe. */
+    Store.setMeta('sidebarAn', ['werkzeuge', 'agenten', 'bespr', 'kuerzlich']);
     App.zeichneBaum();
     await new Promise(r => setTimeout(r, 300));
     return [...document.querySelectorAll<HTMLElement>('#tree .side-section span')]

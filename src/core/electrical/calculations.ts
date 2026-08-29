@@ -13,6 +13,12 @@
 type ElectricalResult = {
   ok: boolean; value?: number; unit?: string; formula?: string;
   assumptions?: string[]; warnings?: string[]; error?: string;
+  /* Der Lösungsweg, wenn die Rechnung einen hat (E209). Die neun Rechnungen
+     hier drunter haben keinen — sie sind je eine Formel, und ein Weg mit
+     einem Schritt ist keiner. Das Feld steht trotzdem hier und nicht als
+     Anbau in `bereiche/wissen/electrical.ts`: wer ein Ergebnis annimmt,
+     soll am Typ sehen, dass ein Weg dabei sein kann. */
+  weg?: RwWeg;
 };
 
 const ElectricalCalculations = (() => {

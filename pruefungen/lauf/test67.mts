@@ -36,6 +36,13 @@ const pruef = (n: any, ist: any, soll: any) => {
 
   /* --- 1 · Jeder Abschnitt hat drei Punkte ------------------------------ */
   const kopf = await p.evaluate(async () => {
+    /* SEIT E211 SIND DIESE VIER ABSCHNITTE AB WERK AUS.
+       Links stehen die BEREICHE, oben im Menüband die Werkzeuge — Redurs
+       Wunsch, und in ENTSCHEIDUNGEN.md unter E211 festgehalten. Weg sind
+       sie nicht: „Abschnitte anpassen" holt jeden zurück, und dieser
+       Prüfpunkt handelt davon, dass sie DANN richtig aussehen.
+       Ohne diese Zeile prüfte er nur noch die neue Vorgabe. */
+    Store.setMeta('sidebarAn', ['werkzeuge', 'agenten', 'bespr', 'kuerzlich']);
     App.zeichneBaum();
     await new Promise(r => setTimeout(r, 350));
     const s = [...document.querySelectorAll<HTMLElement>('#tree .side-section')];
@@ -154,7 +161,13 @@ const pruef = (n: any, ist: any, soll: any) => {
     await new Promise(r => setTimeout(r, 400));
     const nachher = [...document.querySelectorAll<HTMLElement>('#tree .side-section')].length;
     const gemerkt = (Store.getMeta('sidebarAus', []) || []).includes('bespr');
+    /* ZURÜCKSETZEN HEISST SEIT E211 ZWEI LISTEN.
+       `abschnittSchalten` streicht beim Ausschalten aus `sidebarAn` UND
+       trägt in `sidebarAus` ein. „Besprechungen" ist ab Werk aus; nur
+       `sidebarAus` zu leeren liess ihn deshalb weg, und der Punkt meldete
+       5 statt 6 — richtig gemessen, an einer unvollständigen Rücknahme. */
     Store.setMeta('sidebarAus', []);
+    Store.setMeta('sidebarAn', ['werkzeuge', 'agenten', 'bespr', 'kuerzlich']);
     App.zeichneBaum();
     await new Promise(r => setTimeout(r, 300));
     return { vorher, nachher, gemerkt,
@@ -240,27 +253,46 @@ const pruef = (n: any, ist: any, soll: any) => {
              punkt: !!l.querySelector('.hl-punkt') };
   }) as any;
   pruef('Die Leiste steht am Telefon', leiste.sichtbar, true);
-  /* Seit E38: „Seiten" statt „Chats". Der Platz oben gehört dem, was man
-     täglich sucht; die KI steht unten in der Leiste und im R-Blatt. */
-  /* SEIT E132 SIND ES FÜNF BEREICHE, und drei heissen anders: die
-     Produktwelten benennen `hl-start` in „Heute", `hl-seiten` in
-     „Seiten" (der Titel bleibt „Workspace") und `hl-bespr` in „Plan" um und
-     stellen „Lernen" davor. Dieselben Tasten, dieselben Ziele, andere
-     Namen. */
-  pruef('Konto und fünf Bereiche', leiste.ids,
-        ['hl-konto', 'hl-lernen', 'hl-start', 'hl-seiten', 'hl-bespr', 'hl-mehr']);
+  /* SEIT E236 STEHT SIE UNTEN UND HAT FÜNF WEGE.
+     „Dokumente" ist neu — das Regal, wo Redion jetzt öffnet. „Seiten"
+     (Workspace) hat hier keinen Weg mehr; er steht im Mehr-Blatt, und
+     dass er dort wirklich ankommt, prüft der Punkt weiter unten.
+     Den Namen von `hl-bespr` setzen die Produktwelten, nicht das HTML —
+     und er heisst seit E236 wieder „Termine". Die Kurzform „Plan" stammt
+     aus der Zeit der waagerechten Pillen, wo der Platz fehlte (E137). */
+  /* Der Name hiess „Konto und fünf Bereiche" — das Konto ist der sechste
+     Kreis von früher und steht seit E236 in der Menüleiste. Fünf sind es
+     jetzt, und alle fünf sind Wege. */
+  pruef('Fünf Wege', leiste.ids,
+        ['hl-dok', 'hl-start', 'hl-lernen', 'hl-bespr', 'hl-mehr']);
   pruef('Jeder hat seinen Namen dabei', leiste.beschriftung,
-        ['Lernen', 'Heute', 'Seiten', 'Plan', 'Mehr']);
-  pruef('Start ist markiert', leiste.markiert, ['hl-start']);
-  /* DAS IST DIE REGEL, DIE DEN PLATZ MACHT. Stünden alle vier Namen da,
-     bliebe für den Inhalt nichts; stünde keiner da, müsste man raten. */
-  pruef('Nur der markierte zeigt seinen Namen', leiste.nameSichtbar, ['hl-start']);
+        ['Dokumente', 'Heute', 'Lernen', 'Termine', 'Mehr']);
+  /* UND BEIM ÖFFNEN IST „DOKUMENTE" MARKIERT, nicht mehr „Heute".
+     Hier stand `['hl-start']`, und das war richtig, solange Redion mit der
+     Heute-Ansicht aufging. Seit E236 öffnet es dort, wo die Sachen liegen —
+     beim zuletzt geöffneten Dokument, sonst im Regal —, und `oeffne()`
+     setzt den Reiter selbst.
+
+     Die FRAGE ist dieselbe geblieben und die wichtigere: genau EINER ist
+     markiert. Eine Leiste, in der zwei Wege leuchten oder keiner, sagt
+     nicht, wo man ist. */
+  pruef('Beim Öffnen ist genau „Dokumente" markiert', leiste.markiert, ['hl-dok']);
+  /* DIESE REGEL IST MIT E236 UMGEDREHT.
+     Sie lautete: „Stünden alle Namen da, bliebe für den Inhalt nichts."
+     Das galt für eine WAAGERECHTE Pille oben — Zeichen und Wort
+     nebeneinander. Unten stehen sie übereinander, fünf Wege teilen sich
+     390 px zu je 78, und ein Name braucht nur seine Textbreite.
+
+     Jetzt steht jeder Name da, und das ist besser: wo man ist, sagt nicht
+     mehr nur die Farbe der wandernden Fläche (§38). */
+  pruef('Jeder Weg zeigt seinen Namen', leiste.nameSichtbar,
+        ['hl-dok', 'hl-start', 'hl-lernen', 'hl-bespr', 'hl-mehr']);
   pruef('Mehr hat einen Punktplatz', leiste.punkt, true);
 
   /* Umschalten markiert richtig */
   const wechsel = await handy.evaluate(async () => {
     const raus = [];
-    for (const id of ['hl-seiten', 'hl-bespr', 'hl-start']) {
+    for (const id of ['hl-dok', 'hl-bespr', 'hl-start']) {
       document.getElementById(id)?.click();
       await new Promise(r => setTimeout(r, 450));
       raus.push([id, [...document.querySelectorAll<HTMLElement>('#handy-oben button.an')].map(x => x.id)]);
@@ -282,7 +314,7 @@ const pruef = (n: any, ist: any, soll: any) => {
       if (!x) throw new Error(sel + ' ist nicht da.');
       return x;
     };
-    musselement('#hl-seiten').click();
+    musselement('#hl-dok').click();
     await new Promise(r => setTimeout(r, 500));
     /* DIE RICHTUNG HAT SICH ZWEIMAL GEDREHT. Erst lag die Leiste unten und
        die Schublade musste ÜBER ihr enden. Dann lagen die Pillen oben und
@@ -295,19 +327,58 @@ const pruef = (n: any, ist: any, soll: any) => {
        ist eine Sackgasse. Der Titel der Ansicht ist das oberste sichtbare
        Stück Inhalt — liegt er unter der Leiste, liegt alles darunter. */
     const l = musselement('#handy-oben').getBoundingClientRect();
+    /* SEIT E236 STEHT DIE NAVIGATION UNTEN — und damit dreht sich die
+       Richtung dieser Messung zum dritten Mal um. Oben steht jetzt die
+       Menüleiste; DIE ist es, unter der der Inhalt beginnen muss. */
+    const o = musselement('#menueband').getBoundingClientRect();
     const titel = document.querySelector<HTMLElement>('#page h1');
-    const t = titel ? titel.getBoundingClientRect() : null;
+    /* GEMESSEN WIRD NICHT DIE ÜBERSCHRIFT, SONDERN DER INHALT (E225).
+     *
+     * Die Zeile mass `#page h1`. Seit die Arbeitswelt ihre doppelte
+     * Titelzeile abgelegt hat — die Krume oben nennt den Namen schon —
+     * steht `.aw-titelgruppe` auf `display:none`. Ein ausgeblendetes
+     * Element gibt 0,0,0,0 zurück, und `0 >= 80` ist falsch. Die Prüfung
+     * wurde rot, ohne dass irgendetwas verdeckt war.
+     *
+     * Umgekehrt ist genauso schlimm: läge der Titel bei 0, weil er
+     * WIRKLICH unter der Leiste steckt, sähe die Zahl gleich aus. Eine
+     * Messung, die „ausgeblendet" und „verdeckt" nicht unterscheiden kann,
+     * beantwortet die Frage nicht.
+     *
+     * Also: das oberste Stück Inhalt, das überhaupt Fläche hat. Das ist
+     * die Frage, die gemeint war — deckt der Inhalt die Navigation zu? */
+    let inhaltOben: number | null = null;
+    for (const e of document.querySelectorAll<HTMLElement>('#page *')) {
+      const r = e.getBoundingClientRect();
+      if (r.width < 40 || r.height < 12) continue;
+      if (inhaltOben === null || r.top < inhaltOben) inhaltOben = r.top;
+    }
     const oben = document.elementFromPoint(l.left + l.width * 0.7, l.top + l.height / 2);
     if ((window as any).PWA && PWA.schubladeZu) PWA.schubladeZu();
     await new Promise(r => setTimeout(r, 300));
-    return { inhaltBeginntDarunter: !!t && Math.round(t.top) >= Math.round(l.bottom) - 2,
+    return { inhaltBeginntDarunter: inhaltOben !== null
+               && Math.round(inhaltOben) >= Math.round(o.bottom) - 2,
+             inhaltOben: inhaltOben === null ? -1 : Math.round(inhaltOben),
+             leisteUnten: Math.round(l.bottom), leisteOben: Math.round(l.top),
+             menueUnten: Math.round(o.bottom),
              titelText: (titel?.textContent ?? '').trim(),
              obenLiegt: !!(oben && oben.closest('#handy-oben')) };
   });
-  /* „Seiten" heisst jetzt „🧱 Workspace" (E132). */
-  pruef('Der Seitenbereich ist wirklich offen', deckung.titelText, '🧱 Workspace');
-  pruef('Sein Inhalt beginnt unter der Leiste', deckung.inhaltBeginntDarunter, true);
-  pruef('Und die Leiste ist anklickbar',                deckung.obenLiegt, true);
+  /* Angetippt wird seit E236 „Dokumente" — „Seiten" hat unten keinen Weg
+     mehr. Die Frage bleibt dieselbe: ist der Bereich wirklich offen, und
+     deckt sein Inhalt die Navigation zu? */
+  pruef('Der Dokumentenbereich ist wirklich offen', deckung.titelText, 'Dokumente');
+  /* ZWEI FRAGEN, ZWEI RICHTUNGEN — und beide sind dieselbe: verdeckt
+     etwas einen Weg?
+
+     Oben steht seit E236 die Menüleiste. Der Inhalt muss UNTER ihr
+     beginnen; täte er es nicht, läge sein Anfang unter den Reitern.
+
+     Unten steht die Navigation. Sie muss anklickbar bleiben —
+     `elementFromPoint` in ihrer Mitte muss sie selbst zurückgeben und
+     nicht ein Stück Inhalt, das darüberliegt. */
+  pruef('Der Inhalt beginnt unter der Menüleiste', deckung.inhaltBeginntDarunter, true);
+  pruef('Und die Wegeleiste unten ist anklickbar',  deckung.obenLiegt, true);
 
   /* Suchen und Neu sind in die Kopfzeile gewandert */
   const kopfzeile = await handy.evaluate(() => {
@@ -324,16 +395,25 @@ const pruef = (n: any, ist: any, soll: any) => {
     const t = musselement('#topbar').getBoundingClientRect();
     return { ids, ueberlauf: musselement('#topbar').scrollWidth - Math.round(t.width) };
   });
-  /* SUCHEN UND NEU SIND NACH UNTEN GEWANDERT — dorthin, wo der Daumen
-     hinkommt. In der Kopfzeile stehen sie deshalb nicht mehr; sie hat nur
-     noch, was zur geöffneten Seite gehört. */
+  /* SUCHEN UND NEU SIND ZWEIMAL GEWANDERT.
+     Erst aus der Kopfzeile nach unten, dorthin, wo der Daumen hinkommt.
+     Seit E236 steht unten die Navigation mit ihren fünf Wegen, und die
+     schwebende Leiste gibt es nicht mehr: Suchen steht rechts in der
+     Menüleiste (wie an einem Rechner), „Neu" ist der grosse „+ Neu"-Knopf
+     im Regal.
+
+     In der Kopfzeile stehen sie weiterhin nicht — sie hat nur, was zur
+     geöffneten Seite gehört. Das ist der Punkt, der hier bewacht wird. */
   pruef('Suchen steht nicht mehr in der Kopfzeile',
         (kopfzeile.ids ?? '').includes('btn-suche-handy'), false);
   pruef('Die Kopfzeile läuft nicht über', Number(kopfzeile.ueberlauf ?? -1) <= 1, true);
-  const untenDa = await handy.evaluate(() =>
-    [...document.querySelectorAll<HTMLElement>('#handy-unten button')].map(b => b.id)) as string[];
-  pruef('Suchen steht unten', untenDa.includes('hu-suche'), true);
-  pruef('Neu ebenso',         untenDa.includes('hu-neu'), true);
+  const obenRechts = await handy.evaluate(() =>
+    [...document.querySelectorAll<HTMLElement>('#menueband .mb-rechts > button')]
+      .map(b => b.id).filter(Boolean)) as string[];
+  pruef('Suchen steht oben rechts', obenRechts.includes('mb-suche'), true);
+  pruef('Die KI ebenso',            obenRechts.includes('mb-ki'), true);
+  pruef('Die schwebende Leiste ist weg',
+        await handy.evaluate(() => !document.getElementById('handy-unten')), true);
 
   const werkzeuge = await handy.evaluate(async () => {
     /* Ein Element, das dasein MUSS. Fehlt es, misst der Lauf nichts mehr —
@@ -344,7 +424,7 @@ const pruef = (n: any, ist: any, soll: any) => {
       if (!x) throw new Error(sel + ' ist nicht da.');
       return x;
     };
-    musselement('#hu-suche').click();
+    musselement('#mb-suche').click();
     await new Promise(r => setTimeout(r, 400));
     const sucheDa = !!document.querySelector('.overlay');
     document.querySelectorAll<HTMLElement>('.overlay').forEach(o => o.remove());
@@ -354,7 +434,10 @@ const pruef = (n: any, ist: any, soll: any) => {
        legte er sofort eine leere Seite an, was in einem von acht Fällen
        richtig war. Diese Prüfung tippt jetzt wie ein Mensch: erst den
        Stift, dann „Neue Seite". */
-    musselement('#hu-neu').click();
+    /* `hu-neu` gab es in der schwebenden Leiste. Seit E236 öffnet der
+       „+ Neu"-Knopf im Regal dasselbe Blatt — welcher Knopf es auslöst,
+       prüft test37; hier geht es um das Blatt und darum, was es tut. */
+    App.erstellenBlatt();
     await new Promise(r => setTimeout(r, 500));
     const blattDa = !!document.querySelector('.menu.blatt [data-neu="seite"]');
     document.querySelector<HTMLElement>('.menu.blatt [data-neu="seite"]')?.click();
@@ -362,7 +445,7 @@ const pruef = (n: any, ist: any, soll: any) => {
     return { sucheDa, blattDa, mehr: Store.rootPages().length > vorher,
              zu: document.querySelectorAll('.menu, .menu-grund').length === 0 };
   });
-  pruef('Der Lupenknopf öffnet die Suche', werkzeuge.sucheDa, true);
+  pruef('Die Lupe oben rechts öffnet die Suche', werkzeuge.sucheDa, true);
   pruef('Der Stift fragt erst, was entstehen soll', werkzeuge.blattDa, true);
   pruef('… und „Neue Seite" legt eine an', werkzeuge.mehr, true);
   pruef('… und das Blatt ist danach zu',   werkzeuge.zu, true);
@@ -427,6 +510,215 @@ const pruef = (n: any, ist: any, soll: any) => {
   pruef('Zugeklappt überlebt den Neustart', nach.zu, ['Meine Apps']);
   pruef('Die Reihenfolge auch',             nach.folge, 'apps');
   pruef('Und zeigt sich in der Leiste',     nach.erster, 'Meine Apps');
+
+  /* --- 11 · Krumenzeile und Reiterzeile sind EINE (E235) ---------------- */
+  /* Redur hat den Kopfbereich am Telefon rot angestrichen: „dort sollte
+     möglichst wenig sein". Vier Bänke, 236 px von 844. Eine davon war die
+     Krumenzeile: Zurück-Knopf, 284 px Seitentitel, drei Punkte — und der
+     Titel stand zu dem Zeitpunkt schon zweimal daneben.
+
+     Der Vertrag steht in `bausteine.css`: eine Zeile mit
+     `data-kopfzeile="eigene"` GANZ OBEN in `#page` holt die Kopfleiste der
+     Schale am Telefon zu sich herunter.
+
+     WAS DIESE PRÜFUNG ROT MACHEN KANN — und das ist die Frage, die §55.2
+     stellt, nicht ob sie heute grün ist:
+
+       · Fällt die `:has()`-Regel weg, stehen die zwei Zeilen wieder 66 px
+         auseinander. Genau so wurde es vor dem Umbau gemessen.
+       · Fehlt `pointer-events:auto` an den zwei Knöpfen, liefert
+         `elementFromPoint` die Leiste statt des Knopfes: man SIEHT ihn und
+         trifft ihn nicht.
+       · Fehlen die zwei leeren Rasterspalten in `lernwelt.css`, beginnt
+         die Reiterkarte bei x = 11 und liegt unter dem Zurück-Knopf.
+       · Greift die Regel auch auf einer gewöhnlichen Seite, ist dort die
+         Krume unsichtbar — der Seitenpfad wäre weg.
+       · Steht die Regel ausserhalb der Telefon-Abfrage, verschwindet der
+         Pfad auch am Rechner. */
+  await handy.reload();
+  await handy.waitForTimeout(1900);
+  await handy.evaluate(() => {
+    Store.setMeta('rundgangGesehen', true);
+    document.getElementById('rg-willkommen')?.remove();
+    document.getElementById('rg-einladung')?.remove();
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+  });
+  await handy.evaluate(() => { Produktwelten.lernen('lernen'); });
+  await handy.waitForTimeout(900);
+
+  const band = await handy.evaluate(() => {
+    const kasten = (s: string) => {
+      const e = document.querySelector(s);
+      if (!e) return null;
+      const r = e.getBoundingClientRect();
+      return { oben: Math.round(r.top), links: Math.round(r.left),
+               rechts: Math.round(r.right), mitte: Math.round(r.top + r.height / 2) };
+    };
+    const treffer = (s: string) => {
+      const e = document.querySelector(s);
+      if (!e) return 'fehlt';
+      const r = e.getBoundingClientRect();
+      const t = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+      return t ? (t.closest(s) ? 'selbst' : (t.id || t.className || t.tagName)) : 'nichts';
+    };
+    const nav = kasten('#page > .lw-nav');
+    const leiste = kasten('#topbar');
+    const zurueck = kasten('#btn-back');
+    const chip = kasten('#page > .lw-head');
+    const punkte = kasten('#btn-page-menu');
+    const ersterReiter = document.querySelector<HTMLElement>('#page > .lw-nav button');
+    let reiterTreffer = 'fehlt';
+    if (ersterReiter) {
+      const r = ersterReiter.getBoundingClientRect();
+      const t = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+      reiterTreffer = t?.closest('[data-lw-nav]') ? 'reiter' : (t?.id || 'anderes');
+    }
+    return {
+      /* Eine Zeile, nicht zwei: dieselbe Oberkante. */
+      eineZeile: !!(nav && leiste) && Math.abs(nav!.oben - leiste!.oben) <= 1,
+      krume: getComputedStyle(document.querySelector('#topbar .crumb')!).visibility,
+      /* Die zwei Knöpfe der Schale liegen ÜBER der Zeile des Bereichs und
+         fangen dort auch die Finger. */
+      zurueckTrifft: treffer('#btn-back'),
+      punkteTrifft: treffer('#btn-page-menu'),
+      reiterTrifft: reiterTreffer,
+      /* Und nichts überlappt: Zurück | Karte | Chip | drei Punkte. */
+      folge: !!(zurueck && nav && chip && punkte)
+        && zurueck!.rechts <= nav!.links
+        && nav!.rechts <= chip!.links
+        && chip!.rechts <= punkte!.links,
+      /* Alles auf einer Linie — im ersten Bild sassen die Knöpfe sechs
+         Punkte zu hoch, weil `align-items:stretch` einen Knopf mit fester
+         Höhe oben kleben lässt. */
+      aufEinerLinie: !!(zurueck && nav && punkte)
+        && Math.abs(zurueck!.mitte - nav!.mitte) <= 2
+        && Math.abs(punkte!.mitte - nav!.mitte) <= 2
+    };
+  }) as any;
+  pruef('Krume und Reiter stehen auf EINER Zeile', band.eineZeile, true);
+  pruef('Der doppelte Weltname ist unsichtbar',    band.krume, 'hidden');
+  pruef('Der Zurück-Knopf fängt seine Finger',     band.zurueckTrifft, 'selbst');
+  pruef('Die drei Punkte auch',                    band.punkteTrifft, 'selbst');
+  pruef('Und die Reiter darunter ebenso',          band.reiterTrifft, 'reiter');
+  pruef('Nichts überlappt in der Zeile',           band.folge, true);
+  pruef('Alles steht auf einer Linie',             band.aufEinerLinie, true);
+
+  /* Die Gegenrichtung: auf einer gewöhnlichen Seite gibt es keine eigene
+     Kopfzeile, also auch keine Verschmelzung — und der Seitenpfad steht
+     wieder da. Ohne diesen Punkt würde eine Regel, die IMMER greift, hier
+     grün durchgehen und den Pfad überall stillegen. */
+  const gewoehnlich = await handy.evaluate(() => {
+    const s = Store.addPage(null, { text: 'Eine ganz gewöhnliche Seite' });
+    /* NICHT `(globalThis as any).App` — DAS IST STILL FALSCH. `App` ist ein
+       `const` auf oberster Ebene und steht nicht auf `window`; das
+       Fragezeichen hätte den Fehler verschluckt und die Prüfung hätte
+       gemessen, wie die Lernwelt aussieht, während sie behauptet, eine
+       gewöhnliche Seite zu messen. `src/global.d.ts` sagt es im Klartext. */
+    App.oeffne(s.id);
+    return s.id;
+  });
+  await handy.waitForTimeout(700);
+  /* HIER STAND ZUERST `backgroundColor` — UND DAS WAR NICHTS GEMESSEN.
+     Die Leiste hat gar keinen eigenen Hintergrund, in KEINEM der beiden
+     Zustände: `rgba(0,0,0,0)` hier wie dort, sie zeigt den Grund der Seite
+     dahinter. Die Prüfung wäre also rot gewesen, egal was der Umbau tut —
+     die Umkehrung des Fehlers aus §55.2, aber derselbe Fehler: gemessen
+     wurde eine Eigenschaft statt der Wirkung.
+     Gemessen wird jetzt, was sich wirklich unterscheidet: die Verschiebung
+     des Inhalts und ob die Leiste Finger fängt. */
+  const ohne = await handy.evaluate(() => ({
+    krume: getComputedStyle(document.querySelector('#topbar .crumb')!).visibility,
+    schub: getComputedStyle(document.getElementById('scroll')!).marginTop,
+    zeiger: getComputedStyle(document.getElementById('topbar')!).pointerEvents,
+    eigene: !!document.querySelector('#page > [data-kopfzeile="eigene"]')
+  })) as any;
+  pruef('Ohne eigene Kopfzeile bleibt der Pfad',   ohne.krume, 'visible');
+  pruef('Der Inhalt rückt dort nicht hoch',        ohne.schub, '0px');
+  pruef('Und die Leiste fängt ihre Finger selbst', ohne.zeiger, 'auto');
+  pruef('Die Marke ist dort auch gar nicht da',    ohne.eigene, false);
+  void gewoehnlich;
+
+  /* Am Rechner ändert sich nichts. Die Regel steht in der Telefon-Abfrage;
+     stünde sie ausserhalb, wäre der Seitenpfad auch dort unsichtbar. */
+  await p.evaluate(() => { Produktwelten.lernen('lernen'); });
+  await p.waitForTimeout(800);
+  const amRechner = await p.evaluate(() => ({
+    krume: getComputedStyle(document.querySelector('#topbar .crumb')!).visibility,
+    eigene: !!document.querySelector('#page > [data-kopfzeile="eigene"]')
+  })) as any;
+  pruef('Am Rechner steht die Marke ebenfalls',    amRechner.eigene, true);
+  pruef('Aber der Pfad bleibt dort sichtbar',      amRechner.krume, 'visible');
+
+  /* --- 12 · Beim Öffnen: das zuletzt geöffnete Dokument (E236) --------- */
+  /* Redur: „wenn ich die Webseite öffne, sollte die zuletzt geöffnete PDF
+     sich öffnen; wenn keine offen war, direkt dort, wo die Dateien liegen."
+
+     ZWEI FEHLER LAGEN DAVOR, und beide waren still:
+
+       · Die Wahl „Zuletzt geöffnete Seite" gab es in den Einstellungen
+         seit Langem. Ausgewertet hat sie niemand. Am Rechner kam
+         trotzdem das Richtige heraus — über den Umweg, dass
+         `startAnsichtZeigen` leer blieb. Am Telefon nicht: dort stand ein
+         ZWEITER Entschluss über dieselbe Frage, der jeden auf „Heute"
+         schickte, ohne die Einstellung zu lesen.
+       · `oeffne()` schreibt `letzte` selbst. Wer erst öffnet und dann
+         fragt „gab es ein zuletzt geöffnetes Dokument?", bekommt immer
+         ja — und das Regal ging nie auf.
+
+     WAS DIESE PRÜFUNG ROT MACHEN KANN:
+       · Liest der Start die Einstellung nicht mehr, steht am Telefon
+         wieder die Lernwelt statt des Dokuments.
+       · Wird `hatteDokument` wieder nach `oeffne()` gefragt, kommt bei
+         einem verschwundenen Dokument die erste Seite statt des Regals.
+       · Fällt die Vorgabe zurück auf „start", trifft es beide Fälle. */
+  const startFall = async (name: string, vorbereiten: () => unknown,
+                           breite: number, erwartet: 'dokument' | 'regal') => {
+    const ctx = await b.newContext({ viewport: { width: breite, height: 844 },
+                                     isMobile: breite <= 430, hasTouch: breite <= 430 });
+    const s = await ctx.newPage();
+    await s.goto('file://' + WURZEL + '/index.html');
+    await s.waitForTimeout(2200);
+    await s.evaluate(() => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+    });
+    await s.evaluate(vorbereiten);
+    await s.evaluate(async () => { await Store.flush(); });
+    /* Die Adresse leeren: ein `#seite` im Hash gewinnt absichtlich gegen
+       jede Startansicht, und dann misst dieser Punkt nichts. */
+    await s.evaluate(() => { location.hash = ''; });
+    await s.reload();
+    await s.waitForTimeout(2600);
+    await s.evaluate(() => {
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+    });
+    const wo = await s.evaluate(() => ({
+      regal: !!document.querySelector('.bib-gitter'),
+      titel: (document.getElementById('title')?.textContent || '').trim()
+    }));
+    await ctx.close();
+    pruef(name, erwartet === 'regal' ? (wo.regal ? 'regal' : wo.titel)
+                                     : (wo.regal ? 'regal' : wo.titel),
+          erwartet === 'regal' ? 'regal' : 'Formeln für Elektroberufe');
+  };
+
+  const pdfAnlegen = () => {
+    const pdf = Store.addPage(null, { text: 'Formeln für Elektroberufe' });
+    Store.addBlock(pdf.id, 'pdfseite', { text: 'Seite 1' });
+    App.oeffne(pdf.id);
+  };
+
+  await startFall('Am Rechner geht das zuletzt geöffnete Dokument auf',
+                  pdfAnlegen, 1200, 'dokument');
+  await startFall('Am Telefon auch — die Einstellung gilt dort ebenso',
+                  pdfAnlegen, 390, 'dokument');
+  await startFall('Ist es nicht mehr da, geht das Regal auf', () => {
+    const weg = Store.addPage(null, { text: 'Weg damit' });
+    App.oeffne(weg.id);
+    Store.setMeta('letzte', 'diese-kennung-gibt-es-nicht');
+  }, 390, 'regal');
 
   console.log(`\n${ok}/${ok + bad} bestanden`);
   const alle = [...fehler, ...fehler2];

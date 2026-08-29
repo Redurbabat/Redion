@@ -563,6 +563,89 @@ const ANSICHTEN: Record<string, { titel: string; bauen: () => void | Promise<voi
     }
   },
 
+  noten: {
+    titel: 'Die Notenübersicht mit Semester-Wahl und Zielrechner (E241/E242)',
+    bauen: async () => {
+      const w = window as any;
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const seite = Store.addPage(null, { text: 'Schule', icon: '🎓' });
+      const db = Store.addDatabase(seite.id, 'Noten', {
+        title: { name: 'Leistung', type: 'title' },
+        d1: { name: 'Datum', type: 'date' },
+        f1: { name: 'Fach', type: 'text' },
+        p1: { name: 'Punkte', type: 'number' },
+        m1: { name: 'Maximum', type: 'number' },
+        n1: { name: 'Note', type: 'number' },
+        g1: { name: 'Gewichtung', type: 'number' } });
+      Store.updateCollection(db.collectionId, { schoolKind: 'grades' });
+      const heute = new Date().toISOString().slice(0, 10);
+      const alt = new Date(); alt.setMonth(alt.getMonth() - 6);
+      const altTag = alt.toISOString().slice(0, 10);
+      const rein = (titel: string, fach: string, note: number | null, gewicht: number,
+                    wann: string, punkte: number | null = null, max: number | null = null) => {
+        const zeile = Store.addRow(db.collectionId, { title: titel });
+        Store.setProp(zeile.id, 'f1', fach);
+        Store.setProp(zeile.id, 'd1', wann);
+        Store.setProp(zeile.id, 'g1', gewicht);
+        if (note !== null) Store.setProp(zeile.id, 'n1', note);
+        if (punkte !== null) { Store.setProp(zeile.id, 'p1', punkte); Store.setProp(zeile.id, 'm1', max); }
+      };
+      rein('Ohmsches Gesetz', 'Elektrotechnik', 5.5, 2, heute);
+      rein('VDE-Prüfung', 'Elektrotechnik', null, 1, heute, 21, 30);
+      rein('Algebra', 'Mathematik', 3.5, 2, heute);
+      rein('Geometrie', 'Mathematik', 3.0, 1, heute);
+      rein('Aufsatz', 'Deutsch', 5.0, 1, heute);
+      rein('Altes Semester', 'Deutsch', 6.0, 1, altTag);
+      w.Produktwelten.lernen('noten');
+      await new Promise(r => setTimeout(r, 1000));
+    }
+  },
+
+  stundenplan: {
+    titel: 'Der Stundenplan: Woche mit Jetzt-Zeile (E243)',
+    bauen: async () => {
+      const w = window as any;
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const seite = Store.addPage(null, { text: 'Ausbildung', icon: '🎓' });
+      const db = Store.addDatabase(seite.id, 'Stundenplan', {
+        title: { name: 'Lektion', type: 'title' },
+        day: { name: 'Tag', type: 'select', options: [
+          { name: 'Montag', color: 'blue' }, { name: 'Dienstag', color: 'green' },
+          { name: 'Mittwoch', color: 'orange' }, { name: 'Donnerstag', color: 'purple' },
+          { name: 'Freitag', color: 'red' }] },
+        from: { name: 'Von', type: 'text' },
+        to: { name: 'Bis', type: 'text' },
+        room: { name: 'Raum', type: 'text' } });
+      Store.updateCollection(db.collectionId, { schoolKind: 'timetable' });
+      const rein = (titel: string, tag: string, von: string, bis: string, raum: string) => {
+        const zeile = Store.addRow(db.collectionId, { title: titel });
+        Store.setProp(zeile.id, 'day', tag);
+        Store.setProp(zeile.id, 'from', von);
+        Store.setProp(zeile.id, 'to', bis);
+        Store.setProp(zeile.id, 'room', raum);
+      };
+      rein('Mathematik', 'Montag', '07:45', '09:15', 'A101');
+      rein('Elektrotechnik', 'Montag', '09:35', '11:05', 'B204');
+      rein('Fachzeichnen', 'Dienstag', '07:45', '09:15', 'C12');
+      rein('Berufskunde', 'Dienstag', '09:35', '11:05', 'B204');
+      rein('Allgemeinbildung', 'Donnerstag', '13:15', '14:45', 'A210');
+      rein('Sport', 'Freitag', '10:00', '11:30', 'Halle');
+      /* Eine Lektion, die JETZT läuft — damit das Bild die Jetzt-Zeile
+         zeigt. Am Sonntag gibt es keine; das Bild zeigt dann die Woche. */
+      const heute = new Date().getDay();
+      if (heute >= 1 && heute <= 5) {
+        const TAGE = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag'];
+        rein('Laborpraktikum', TAGE[heute - 1]!, '00:00', '23:59', 'Labor 2');
+      }
+      w.Produktwelten.lernen('stundenplan');
+      await new Promise(r => setTimeout(r, 1000));
+    }
+  },
+
   arbeit: {
     titel: 'Arbeit: Projekte, Meetings, Termine, Wissen',
     bauen: async () => {
@@ -648,7 +731,14 @@ const ANSICHTEN: Record<string, { titel: string; bauen: () => void | Promise<voi
         });
       const notiz = Store.addPage(null, { text: 'Notizen', icon: '📝' });
       Store.addBlock(notiz.id, 'todo', { text: 'Aufgabenblatt Elektrotechnik abgeben' });
-      Store.addBlock(notiz.id, 'todo', { text: 'Ollama installieren', erledigt: true });
+      /* `checked`, NICHT `erledigt`. Redion hält den Haken eines Todo-Blocks
+         in `checked` (Editor, Markdown-Ausgang, Arbeitswelt lesen alle das).
+         Mit `erledigt` entstand ein Block mit einer Eigenschaft, die niemand
+         liest — und das Bild zeigte die Aufgabe als OFFEN, obwohl das
+         Beispiel sie als erledigt meinte. Ein Bild, das etwas anderes zeigt
+         als gemeint, ist schlimmer als kein Bild (§52.8: nachsehen, nicht
+         raten). */
+      Store.addBlock(notiz.id, 'todo', { text: 'Ollama installieren', checked: true });
       await Store.flush();
       w.Produktwelten.aufgaben();
       await new Promise(r => setTimeout(r, 1100));

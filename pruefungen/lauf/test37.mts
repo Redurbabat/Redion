@@ -42,62 +42,84 @@ import { chromium } from 'playwright';
   await p.waitForTimeout(800);
 
   /* ================================================================== *
-   * 1) DIE BEREICHE OBEN, DIE DREI KNÖPFE UNTEN
+   * 1) DIE FÜNF WEGE UNTEN, SUCHE UND KI OBEN RECHTS
    * ------------------------------------------------------------------
-   * BIS HIER STAND ETWAS ANDERES. Die Bereiche lagen unten in einer
-   * Reiterleiste mit fünf Feldern, jedes mit einem Wort in zehn Pixeln.
-   * Nach der Vorlage aus Notions App stehen sie jetzt oben als Pillen —
-   * und nur die aktive trägt ihren Namen. Unten sind dafür die drei
-   * Dinge, die man von überall aus will: suchen, KI fragen, schreiben.
+   * ZWEIMAL UMGEZOGEN, UND DIE PRÜFUNG JEDES MAL MIT.
    *
-   * Die Prüfung ist mitgewandert und nicht weggefallen: dieselben Fragen,
-   * an den Stellen, wo die Antworten jetzt stehen.
+   * Zuerst lagen die Bereiche unten in einer Leiste mit fünf Feldern.
+   * Dann standen sie oben als Pillen, und unten die drei Dinge, die man
+   * von überall will: suchen, KI fragen, schreiben.
+   *
+   * Seit E236 stehen sie wieder unten — aber anders als beim ersten Mal:
+   * Zeichen und Name ÜBEREINANDER, deshalb passen fünf Namen nebeneinander
+   * statt einem. Redur: „dann unten sollte max 4-5 Sachen sein."
+   *
+   * Was aus den sechs Kreisen wurde:
+   *     R (Arbeitsbereich)  → rechts in die Menüleiste (`mb-konto`)
+   *     Seiten (Workspace)  → ins Mehr-Blatt
+   * Und neu dazu: „Dokumente" — das Regal, wo Redion jetzt öffnet.
+   *
+   * Die schwebende Leiste (Suche · KI · Neu) gibt es nicht mehr: zwei
+   * Leisten am unteren Rand wären eine zu viel. Suche und KI stehen rechts
+   * in der Menüleiste, „Neu" ist der „+ Neu"-Knopf im Regal.
+   *
+   * Die Fragen sind dieselben geblieben. Nur die Stellen, an denen die
+   * Antworten stehen, sind neu.
    * ================================================================== */
   const leiste = await p.evaluate(() => {
     const o = document.getElementById('handy-oben');
     if (!o) throw new Error('handy-oben ist nicht da — der Lauf misst sonst nichts.');
-    const u = document.getElementById('handy-unten');
-    if (!u) throw new Error('handy-unten ist nicht da — der Lauf misst sonst nichts.');
-    const ro = o.getBoundingClientRect(), ru = u.getBoundingClientRect();
+    const mb = document.getElementById('menueband');
+    if (!mb) throw new Error('menueband ist nicht da — der Lauf misst sonst nichts.');
+    const ro = o.getBoundingClientRect();
     return { sichtbar: getComputedStyle(o).display !== 'none',
-             obenBuendig: Math.round(ro.top) <= 0,
-             untenBuendig: Math.round(ru.bottom) >= 926,
+             untenBuendig: Math.round(ro.bottom) >= 926,
              breite: Math.round(ro.width),
              knoepfe: [...o.querySelectorAll<HTMLElement>('button')].map(x => x.id),
-             untenKnoepfe: [...u.querySelectorAll<HTMLElement>('button')].map(x => x.id),
-             kiText: u.querySelector('#hu-ki')?.textContent };
+             rechtsOben: [...mb.querySelectorAll<HTMLElement>('.mb-rechts > button')]
+               .map(x => x.id).filter(Boolean),
+             /* Die alte schwebende Leiste darf nicht heimlich zurückkommen. */
+             schwebendWeg: !document.getElementById('handy-unten') };
   }) as any;
-  console.log('   Bereichsleiste:', JSON.stringify(leiste));
-  ok('Die Bereichsleiste steht oben auf dem Telefon', leiste.sichtbar && leiste.obenBuendig);
+  console.log('   Wegeleiste:', JSON.stringify(leiste));
+  ok('Die Wegeleiste steht unten auf dem Telefon', leiste.sichtbar && leiste.untenBuendig);
   ok('Sie geht über die volle Breite', leiste.breite === 428);
-  /* SECHS, nicht mehr fünf: `hl-lernen` ist mit den Produktwelten
-     dazugekommen (E132). Die Reihenfolge steht hier weiterhin ausgeschrieben
-     und nicht als Zahl — sie ist der Punkt, nicht die Anzahl. */
-  ok('Konto, Lernen, Start, Seiten, Termine, Mehr',
-     leiste.knoepfe.join(',') === 'hl-konto,hl-lernen,hl-start,hl-seiten,hl-bespr,hl-mehr',
+  /* FÜNF, und die Reihenfolge steht ausgeschrieben und nicht als Zahl —
+     sie ist der Punkt, nicht die Anzahl. */
+  ok('Dokumente, Heute, Lernen, Termine, Mehr',
+     leiste.knoepfe.join(',') === 'hl-dok,hl-start,hl-lernen,hl-bespr,hl-mehr',
      leiste.knoepfe.join(','));
-  ok('Unten stehen Suchen, KI und Neu', leiste.untenBuendig &&
-     leiste.untenKnoepfe.join(',') === 'hu-suche,hu-ki,hu-neu', leiste.untenKnoepfe.join(','));
-  ok('Die Mitte ist die KI', /KI/.test(leiste.kiText || ''), leiste.kiText);
+  ok('Suche, KI und Konto stehen oben rechts',
+     ['mb-suche', 'mb-ki', 'mb-konto'].every(id => leiste.rechtsOben.includes(id)),
+     leiste.rechtsOben.join(','));
+  ok('Die schwebende Leiste ist weg', leiste.schwebendWeg);
 
-  /* NUR DIE AKTIVE PILLE TRÄGT IHREN NAMEN — das ist der ganze Kniff, mit
-     dem fünf Ziele in 428 Pixel passen. Geht er verloren, stehen entweder
-     fünf Wörter da, die keiner liest, oder gar keins, und man rät. */
+  /* JEDER WEG TRÄGT SEINEN NAMEN — und das ist der Gewinn des Umzugs.
+     Oben trug ihn nur der aktive, weil Zeichen und Wort nebeneinander
+     standen und fünf Namen die Leiste gesprengt hätten. Untereinander
+     passen sie. §38: wo man steht, darf nicht nur die Farbe sagen. */
   const namen = await p.evaluate(() => {
     const sicht = (el: Element | null) =>
       !!el && getComputedStyle(el).display !== 'none';
+    const alle = [...document.querySelectorAll('#handy-oben > button b')];
     return {
-      aktivMitName: sicht(document.querySelector('#handy-oben button.an b')),
-      andereOhne: [...document.querySelectorAll('#handy-oben button:not(.an) b')]
-        .every(b => !sicht(b))
+      alleMitNamen: alle.length === 5 && alle.every(b => sicht(b)),
+      aktivFetter: (() => {
+        const an = document.querySelector('#handy-oben > button.an b');
+        const aus = document.querySelector('#handy-oben > button:not(.an) b');
+        if (!an || !aus) return false;
+        return Number(getComputedStyle(an).fontWeight) >
+               Number(getComputedStyle(aus).fontWeight);
+      })()
     };
   }) as any;
-  ok('Die aktive Pille zeigt ihren Namen', namen.aktivMitName);
-  ok('… und nur sie', namen.andereOhne);
+  ok('Alle fünf Wege tragen ihren Namen', namen.alleMitNamen);
+  ok('Der aktive steht fetter da — nicht nur farbig (§38)', namen.aktivFetter);
 
-  await p.click('#hu-ki');
+  await p.evaluate(() => document.getElementById('mb-ki')?.click());
+
   await p.waitForTimeout(600);
-  ok('Die Mitte öffnet die KI', await p.evaluate(() =>
+  ok('Der Funke oben rechts öffnet die KI', await p.evaluate(() =>
     document.querySelector<HTMLElement>('#ai')?.classList.contains('open')));
   await p.evaluate(() => App.kiPanel(false));
   await p.waitForTimeout(600);      /* das KI-Fenster deckt am Telefon alles zu */
@@ -115,9 +137,14 @@ import { chromium } from 'playwright';
      Eine Prüfung, die grün bleibt, wenn sich das Verhalten ändert, ist
      schlimmer als keine: sie behauptet, jemand habe hingesehen. */
   const seitenVorher = await p.evaluate(() => Store.rootPages().length);
-  await p.click('#hu-neu');
+  /* DER STIFT HIESS `hu-neu` UND STAND IN DER SCHWEBENDEN LEISTE.
+     Seit E236 gibt es die nicht mehr; dasselbe Blatt öffnet der grosse
+     „+ Neu"-Knopf im Regal. Dass DER Knopf es öffnet, prüft test114 §12
+     — hier geht es um das Blatt selbst und darum, dass es wirklich etwas
+     anlegt. */
+  await p.evaluate(() => App.erstellenBlatt());
   await p.waitForTimeout(700);
-  ok('Der Stift öffnet das Blatt „Neu erstellen"', await p.evaluate(() =>
+  ok('„+ Neu" öffnet das Blatt „Neu erstellen"', await p.evaluate(() =>
     !!document.querySelector('.menu.blatt [data-neu="seite"]')));
   await p.click('.menu.blatt [data-neu="seite"]');
   await p.waitForTimeout(800);
@@ -136,17 +163,19 @@ import { chromium } from 'playwright';
     if (fokus instanceof HTMLElement) fokus.blur();
                            document.body?.classList.remove('schreibt'); });
   await p.waitForTimeout(400);
-  /* Seit E38 steht hier „Seiten" statt „Chats" — der Platz oben gehört
-     dem, was man täglich sucht. Die KI blieb unten in der Leiste. */
-  await p.click('#hl-seiten');
-  await p.waitForTimeout(500);
-  ok('Der Seitenbereich markiert sich', await p.evaluate(() =>
-    document.querySelector<HTMLElement>('#hl-seiten')?.classList.contains('an')));
+  /* „Seiten" (Workspace) hat seit E236 keinen Weg mehr in der Leiste — er
+     steht im Mehr-Blatt. An seine Stelle trat „Dokumente", das Regal, wo
+     Redion jetzt öffnet. Geprüft wird derselbe Satz wie vorher: markiert
+     sich der angetippte Weg? */
+  await p.click('#hl-dok');
+  await p.waitForTimeout(600);
+  ok('Der Dokumentenbereich markiert sich', await p.evaluate(() =>
+    document.querySelector<HTMLElement>('#hl-dok')?.classList.contains('an')));
   await p.click('#hl-bespr');
   await p.waitForTimeout(500);
   ok('Besprechungen ebenso', await p.evaluate(() =>
     document.querySelector<HTMLElement>('#hl-bespr')?.classList.contains('an') &&
-    !document.querySelector<HTMLElement>('#hl-seiten')?.classList.contains('an')));
+    !document.querySelector<HTMLElement>('#hl-dok')?.classList.contains('an')));
   await p.click('#hl-start');
   await p.waitForTimeout(500);
   ok('Und zurück auf Start', await p.evaluate(() =>
@@ -287,7 +316,16 @@ import { chromium } from 'playwright';
   /* ================================================================== *
    * 5) ABSCHNITTE ZUKLAPPEN
    * ================================================================== */
-  await p.evaluate(() => { PWA.schubladeAuf && PWA.schubladeAuf(); });
+  await p.evaluate(() => {
+    PWA.schubladeAuf && PWA.schubladeAuf();
+    /* SEIT E211 SIND VIER ABSCHNITTE AB WERK AUS — links die Bereiche,
+       oben die Werkzeuge. Weg sind sie nicht; dieser Punkt handelt davon,
+       dass sich ein Abschnitt ZUKLAPPEN lässt, und dafür muss er da sein.
+       Es muss VOR der Messung stehen: `vorher` zählt die Pfeile, und die
+       erste Fassung schaltete erst danach ein — vier statt fünf. */
+    Store.setMeta('sidebarAn', ['werkzeuge', 'agenten', 'bespr', 'kuerzlich']);
+    App.zeichneBaum();
+  });
   await p.waitForTimeout(500);
   const vorher = await p.evaluate(() => ({
     pfeile: document.querySelectorAll('.ss-pfeil').length,
@@ -369,15 +407,17 @@ import { chromium } from 'playwright';
     };
     App.reiterWechseln('start');
     return { oben: getComputedStyle(musselement('#handy-oben')).display,
-             unten: getComputedStyle(musselement('#handy-unten')).display,
+             /* Die schwebende Leiste gibt es seit E236 nicht mehr — geprüft
+                wird jetzt, dass sie auch nicht heimlich zurückkommt. */
+             untenWeg: !document.getElementById('handy-unten'),
              polster: getComputedStyle(musselement('#scroll')).paddingBottom };
   });
   console.log('   Am Rechner:', JSON.stringify(rechner));
   /* Die Gegenprobe: was fürs Telefon gebaut wurde, darf am Rechner nicht
      auftauchen. Dort gibt es die Seitenleiste, und zwei Navigationen
      nebeneinander wären eine zu viel. */
-  ok('Die Bereichspillen sind am Rechner weg', rechner.oben === 'none');
-  ok('Die drei Knöpfe unten auch', rechner.unten === 'none');
+  ok('Die Wegeleiste ist am Rechner weg', rechner.oben === 'none');
+  ok('Und die alte schwebende Leiste gibt es nirgends mehr', rechner.untenWeg);
 
   await p.evaluate(() => App.seitenMenue(document.getElementById('btn-page-menu'),
                                           Store.getBlock(Store.rootPages()[0].id)));
@@ -408,6 +448,44 @@ import { chromium } from 'playwright';
     Object.values(Store.cache.blocks).some(b2 => b2.cover)));
   ok('Zugeklappte Abschnitte bleiben gemerkt', await p.evaluate(() =>
     Array.isArray(Store.getMeta('sidebarZu', []))));
+
+  /* ================================================================== *
+   * EIN ARBEITSBEREICH, EIN ZEICHEN (E236)
+   * ------------------------------------------------------------------ *
+   * `mb-konto` rechts in der Menüleiste ist die dritte Stelle, die das
+   * Zeichen des Arbeitsbereichs zeigt. Sie stand mit der Vorgabe „R" da,
+   * während alle anderen „N" sagen — bei einem Arbeitsbereich ohne
+   * eigenes Zeichen wären das zwei Buchstaben für dieselbe Sache. Und die
+   * Auffrischung beim Ändern suchte nur INNERHALB von `#btn-settings`.
+   *
+   * Geprüft wird nicht, WELCHES Zeichen dasteht, sondern dass überall
+   * dasselbe steht — vorher und nach dem Ändern. Das ist die Aussage; die
+   * Vorgabe selbst darf sich ändern.
+   * ================================================================== */
+  const zeichenVorher = await p.evaluate(() =>
+    [...document.querySelectorAll<HTMLElement>('.ws-icon')]
+      .map(x => (x.textContent || '').trim()));
+  ok('Es gibt überhaupt mehrere Stellen mit dem Zeichen',
+     zeichenVorher.length >= 2, zeichenVorher.join(','));
+  ok('Und alle zeigen dasselbe',
+     new Set(zeichenVorher).size === 1, zeichenVorher.join(','));
+
+  /* Und beim Ändern gehen alle mit — über das echte Feld, nicht über
+     `setMeta`: die Auffrischung hängt am Feld, nicht am Speicher. */
+  await p.evaluate(() => { Einstellungen.oeffne('arbeitsplatz'); });
+  await p.waitForTimeout(700);
+  const feld = await p.$('[data-set="arbeitsIcon"]');
+  ok('Das Feld für das Zeichen ist da', !!feld);
+  if (feld) {
+    await feld.fill('\u{1F98A}');
+    await p.waitForTimeout(500);
+    const zeichenNachher = await p.evaluate(() =>
+      [...document.querySelectorAll<HTMLElement>('.ws-icon')]
+        .map(x => (x.textContent || '').trim()));
+    ok('Nach dem Ändern zeigen wieder alle dasselbe',
+       zeichenNachher.length >= 2 && new Set(zeichenNachher).size === 1 &&
+       zeichenNachher[0] === '\u{1F98A}', zeichenNachher.join(','));
+  }
 
   console.log('\n=== ERGEBNIS ===');
   pruef.forEach(([n, x, z]: any[]) => console.log((x ? '✅ ' : '❌ ') + n +

@@ -36,7 +36,7 @@ const pruef = (n: any, ist: any, soll: any) => {
     breite: Math.round(document.querySelector<HTMLElement>('#sidebar')?.getBoundingClientRect().width ?? -1)
   }));
   pruef('Ziehgriff an der Seitenleiste', griffDa.griff, true);
-  pruef('Startbreite 260',               griffDa.breite, 260);
+  pruef('Startbreite 240',               griffDa.breite, 240);
 
   const kasten = await p.evaluate(() => {
     /* Ein Element, das dasein MUSS. Fehlt es, misst der Lauf nichts mehr —
@@ -99,7 +99,7 @@ const pruef = (n: any, ist: any, soll: any) => {
   await p.waitForTimeout(250);
   const zurueck = await p.evaluate(() =>
     Math.round(document.querySelector<HTMLElement>('#sidebar')?.getBoundingClientRect().width ?? -1) ?? -1);
-  pruef('Doppelklick setzt auf 260 zurück', zurueck, 260);
+  pruef('Doppelklick setzt auf 240 zurück', zurueck, 240);
 
   /* Breite überlebt den Neustart */
   await p.evaluate(async () => { Store.setMeta('seiteBreite', 330); await Store.flush(); });

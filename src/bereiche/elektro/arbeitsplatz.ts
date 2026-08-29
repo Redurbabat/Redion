@@ -410,15 +410,27 @@ const Elektroarbeitsplatz = (() => {
   type Pruefung = {
     saat: number; aufgaben: any[]; antworten: string[];
     jetzt: number; fertig: boolean;
+    /* DIE UHR (E248). Eine Prüfungssimulation ohne Zeit war eine Übung
+       mit strengerer Auflösung — der Elektro-Leser der Visionskarte
+       nannte es so. `endeUm` ist ein Zeitpunkt, kein Restwert: die Uhr
+       rechnet jede Sekunde neu gegen Date.now() und geht damit auch
+       dann richtig, wenn der Rechner Ticks verschluckt. */
+    endeUm: number; zeitAus: boolean;
   };
 
-  const pruefungStarten = (anzahl = 10, saat?: number): Pruefung | null => {
+  /* 90 Sekunden je Aufgabe — an Berufsschul-Kurzaufgaben gemessen eher
+     knapp als grosszügig; wer mehr braucht, gibt Minuten selbst mit. */
+  const zeitFuer = (anzahl: number, minuten?: number): number =>
+    Math.round((typeof minuten === 'number' ? minuten : anzahl * 1.5) * 60000);
+
+  const pruefungStarten = (anzahl = 10, saat?: number, minuten?: number): Pruefung | null => {
     const a = A(); if (!a) return null;
     const s = (typeof saat === 'number') ? saat : Math.floor(Math.random() * 2147483647);
     const aufgaben = a.reihe(anzahl, { saat: s });
     if (!aufgaben.length) return null;
     return { saat: s, aufgaben, antworten: aufgaben.map(() => ''),
-             jetzt: 0, fertig: false };
+             jetzt: 0, fertig: false,
+             endeUm: Date.now() + zeitFuer(anzahl, minuten), zeitAus: false };
   };
 
   /** Auswerten — je Aufgabe und in der Summe. */
@@ -441,10 +453,40 @@ const Elektroarbeitsplatz = (() => {
     return { richtig, gesamt, prozent, note, einzeln };
   };
 
-  const pruefungFlaeche = (anzahl = 10, saat?: number): HTMLElement => {
+  const pruefungFlaeche = (anzahl = 10, saat?: number, minuten?: number): HTMLElement => {
     const wurzel = document.createElement('div');
     wurzel.className = 'ea-wrap ea-pruefung';
-    let p = pruefungStarten(anzahl, saat);
+    let p = pruefungStarten(anzahl, saat, minuten);
+
+    /* Die Uhr tickt sekündlich und räumt sich SELBST auf, sobald die
+       Fläche nicht mehr im Baum hängt — sonst tickte jede verlassene
+       Prüfung für immer weiter (dieselbe Leckform wie der nie
+       abgemeldete resize-Zuhörer des Graphen, L-Notiz in LUECKEN.md). */
+    const restText = (): string => {
+      const rest = Math.max(0, Math.ceil(((p?.endeUm ?? 0) - Date.now()) / 1000));
+      return 'Noch ' + Math.floor(rest / 60) + ':' + String(rest % 60).padStart(2, '0');
+    };
+    let uhrTakt: number | null = null;
+    const uhrAus = (): void => {
+      if (uhrTakt !== null) { clearInterval(uhrTakt); uhrTakt = null; }
+    };
+    const tick = (): void => {
+      if (!wurzel.isConnected || !p || p.fertig) { uhrAus(); return; }
+      if (Date.now() >= p.endeUm) {
+        /* Die Zeit ist um: abgegeben wird, was da war — wie auf Papier.
+           Erst die offene Antwort einsammeln, sonst verlöre der Ablauf
+           genau die Aufgabe, an der gerade geschrieben wurde. */
+        merkeAntwort();
+        p.zeitAus = true; p.fertig = true;
+        uhrAus(); male(); return;
+      }
+      const uhr = wurzel.querySelector('.ea-uhr');
+      if (uhr) {
+        uhr.textContent = restText();
+        uhr.classList.toggle('ist-knapp', p.endeUm - Date.now() < 60000);
+      }
+    };
+    const uhrAn = (): void => { uhrAus(); uhrTakt = window.setInterval(tick, 1000); };
 
     const male = (): void => {
       if (!p) {
@@ -453,10 +495,12 @@ const Elektroarbeitsplatz = (() => {
         return;
       }
       if (p.fertig) {
+        uhrAus();
         const e = auswerten(p);
         merke(M_PRUEFUNG, { saat: p.saat, richtig: e.richtig, gesamt: e.gesamt });
         wurzel.innerHTML =
           `<div class="ea-ergebnis">` +
+          (p.zeitAus ? `<p class="ea-zeitaus">Die Zeit war um — abgegeben wurde, was da stand.</p>` : '') +
           `<h3>${e.richtig} von ${e.gesamt} richtig</h3>` +
           `<p class="ea-note">Note ${esc(e.note)} · ${e.prozent} %</p>` +
           `<ol class="ea-liste">` + e.einzeln.map((x, i) =>
@@ -478,6 +522,7 @@ const Elektroarbeitsplatz = (() => {
         `<div class="ea-leiste"><span class="ea-fortschritt">` +
         `Aufgabe ${p.jetzt + 1} von ${p.aufgaben.length}</span>` +
         `<span class="ea-balken"><i style="width:${(p.jetzt / p.aufgaben.length * 100).toFixed(0)}%"></i></span>` +
+        `<span class="ea-uhr" title="Verbleibende Zeit">${esc(restText())}</span>` +
         `</div>` +
         `<div class="ea-buehne">${aufgabeHtml(a, {
           beantwortet: false, antwort: p.antworten[p.jetzt] ?? '', pruefung: true })}</div>` +
@@ -513,7 +558,7 @@ const Elektroarbeitsplatz = (() => {
         male(); return;
       }
       if (was === 'zurueck') { merkeAntwort(); p.jetzt = Math.max(0, p.jetzt - 1); male(); return; }
-      if (was === 'neu') { p = pruefungStarten(anzahl); male(); return; }
+      if (was === 'neu') { p = pruefungStarten(anzahl, undefined, minuten); uhrAn(); male(); return; }
       if (was === 'durchgehen') {
         /* Nach der Abgabe darf alles gezeigt werden — jetzt ist es Lernstoff
            und keine Prüfung mehr. */
@@ -530,6 +575,7 @@ const Elektroarbeitsplatz = (() => {
     });
 
     male();
+    uhrAn();
     return wurzel;
   };
 

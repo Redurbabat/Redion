@@ -1302,6 +1302,7 @@ const Werkzeuge = (() => {
             wann: new Date().toISOString(), gelesen: false
         });
         Store.setMeta('meldungen', liste.slice(0, 200));
+        meldungenGeaendert();
         /* Kurz sichtbar machen, damit man es auch ohne Posteingang mitbekommt */
         try {
             UI.toast('🔔 ' + (m.text || 'Neue Benachrichtigung'));
@@ -1314,8 +1315,18 @@ const Werkzeuge = (() => {
     const meldungGelesen = (id) => {
         const liste = meldungen().map((x) => x.id === id ? { ...x, gelesen: true } : x);
         Store.setMeta('meldungen', liste);
+        meldungenGeaendert();
     };
-    const meldungenLeeren = () => Store.setMeta('meldungen', []);
+    const meldungenLeeren = () => { Store.setMeta('meldungen', []); meldungenGeaendert(); };
+    /* Wer den Zähler zeigt (die Glocke in der Kopfzeile, E251), erfährt es
+       hier — als DOM-Ereignis, nicht als Direktaufruf: der Bereich kennt
+       die Schale nicht (Regel 1). */
+    const meldungenGeaendert = () => {
+        try {
+            document.dispatchEvent(new CustomEvent('redion:meldungen'));
+        }
+        catch { }
+    };
     /** Ein Datum, wie es ein `datetime-local`-Feld erwartet: ORTSZEIT.
      *
      *  Hier stand `toISOString().slice(0, 16)`, und das ist Weltzeit. In der
@@ -2038,9 +2049,29 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
             f.remove();
             return;
         }
+        /* KOPFZEILE, DATUM UND SEITENZAHLEN (E244). Sie leben in den
+           @page-Randkästen: der Browser wiederholt sie auf JEDER gedruckten
+           Seite und zählt selbst — genau das kann kein Element im Fluss.
+           Die erste Seite trägt keine Kopfzeile, dort steht der H1 schon.
+           In einer CSS-content-Zeichenkette escapen \ und " — ein Titel
+           `Bericht "Q3"` darf die Regel nicht sprengen. Browser ohne
+           Randkästen drucken wie bisher, nur mit @page- statt body-Rand. */
+        const inhaltText = (wert) => wert.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\s+/g, ' ').slice(0, 60);
+        const heute = new Date();
+        const druckDatum = heute.getDate() + '. ' +
+            ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August',
+                'September', 'Oktober', 'November', 'Dezember'][heute.getMonth()] + ' ' +
+            heute.getFullYear();
+        const randStil = 'font:9pt Georgia,serif;color:#555';
         d.open();
         d.write('<!doctype html><html><head><meta charset="utf-8"><title>' + esc(p.text || 'Seite') + '</title>' +
-            '<style>body{font:12pt/1.6 Georgia,serif;margin:22mm}h1{font-size:22pt}h3{font-size:16pt}h4{font-size:13pt}' +
+            '<style>' +
+            '@page{size:A4;margin:20mm 18mm 22mm;' +
+            '@top-left{content:"' + inhaltText(p.text || 'Ohne Titel') + '";' + randStil + '}' +
+            '@top-right{content:"' + inhaltText(druckDatum) + '";' + randStil + '}' +
+            '@bottom-center{content:"Seite " counter(page) " von " counter(pages);' + randStil + '}}' +
+            '@page:first{@top-left{content:none}@top-right{content:none}}' +
+            'body{font:12pt/1.6 Georgia,serif;margin:0}h1{font-size:22pt}h3{font-size:16pt}h4{font-size:13pt}' +
             'pre{background:#f2f2f2;padding:10px;white-space:pre-wrap}table{border-collapse:collapse;width:100%}' +
             'td,th{border:1px solid #999;padding:5px 8px;font-size:10.5pt}img{max-width:100%}' +
             '.cal{background:#f2f2f2;padding:10px;border-radius:4px}' + DRUCK_STIL +

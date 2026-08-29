@@ -107,7 +107,52 @@ const Seitenleiste = (() => {
     ['apps',      'Meine Apps']
   ];
 
-  const abschnittAn = (id: string) => !(Store.getMeta('sidebarAus', []) || []).includes(id);
+  /**
+   * Die Schubladen in „Meine Apps" (E206).
+   *
+   * Kennung, Name, Zeichen. Die Reihenfolge hier ist die Reihenfolge auf dem
+   * Bildschirm; die Reihenfolge INNERHALB einer Schublade steht als `rang`
+   * am Registereintrag.
+   *
+   * Wer eine fünfte Gruppe braucht, trägt sie hier ein und setzt `gruppe`
+   * am Eintrag. Wer nur einen Eintrag anmeldet und keine Gruppe nennt,
+   * bekommt „Sonstiges" — die Zeile geht nicht verloren, und niemand muss
+   * zwei Stellen pflegen.
+   */
+  const APP_GRUPPEN: Array<[string, string, string]> = [
+    ['planen',     'Planen',         'calendar'],
+    ['daten',      'Daten',          'database'],
+    ['einrichten', 'Einrichten',     'settings'],
+    ['hilfe',      'Hilfe & Pflege', 'help']
+  ];
+
+  /**
+   * Ist dieser Abschnitt eingeschaltet?
+   *
+   * `vorgabe` ist neu (E210). Bisher war alles an, was nicht ausdrücklich in
+   * `sidebarAus` stand — und für die Werkzeuge soll es umgekehrt sein: sie
+   * stehen jetzt im Menüband, hier also aus, bis jemand sie zurückholt.
+   *
+   * Wichtig ist der Unterschied zwischen „nie etwas gesagt" und „ausdrücklich
+   * abgeschaltet". `sidebarAn` merkt sich das Einschalten; wer den Abschnitt
+   * früher abgeschaltet hatte, findet ihn nicht plötzlich wieder da.
+   */
+  /* Welche Abschnitte sind von Haus aus an? Alle ausser diesem einen — die
+     Werkzeuge stehen seit E210 im Menüband. Wächst die Liste, wächst sie
+     hier und nicht verstreut an drei Stellen. */
+  /* E211: drei weitere. Bei „agenten" und „bespr" war der Abschnitt im Baum
+     ohnehin eine Doppelung — die Seitenleiste hat oben schon Reiter dafür.
+     „kuerzlich" führt jetzt über das Menüband in die Bibliothek, wo es
+     Vorschauen statt einer Namensliste gibt. */
+  const VORGABE_AUS = ['werkzeuge', 'agenten', 'bespr', 'kuerzlich'];
+  const VORGABE_AN = (id: string) => !VORGABE_AUS.includes(id);
+
+  const abschnittAn = (id: string, vorgabe = true) => {
+    const aus = Store.getMeta('sidebarAus', []) || [];
+    if (aus.includes(id)) return false;
+    if (vorgabe) return true;
+    return (Store.getMeta('sidebarAn', []) || []).includes(id);
+  };
 
   /** Die Abschnitte in der selbst gewählten Reihenfolge. Notion lässt sie
       nur ein- und ausblenden, nicht umsortieren. */
@@ -130,9 +175,30 @@ const Seitenleiste = (() => {
     zeichneBaum();
   };
 
+  /**
+   * Einen Abschnitt ein- oder ausschalten.
+   *
+   * Seit E210 gibt es zwei Listen und nicht mehr eine. `sidebarAus` sagt
+   * „ausdrücklich weg", `sidebarAn` sagt „ausdrücklich her" — die zweite
+   * braucht es für Abschnitte, deren VORGABE aus ist. „Werkzeuge" ist der
+   * erste davon: die sieben Zeilen stehen jetzt im Menüband.
+   *
+   * Ohne die zweite Liste wäre „Werkzeuge einblenden" ein Knopf, der aus
+   * `sidebarAus` etwas entfernt, das gar nicht drinsteht — er hätte
+   * ausgesehen, als täte er etwas, und nichts wäre passiert.
+   */
   const abschnittSchalten = (id: string) => {
-    const aus = Store.getMeta('sidebarAus', []) || [];
-    Store.setMeta('sidebarAus', aus.includes(id) ? aus.filter((x: any) => x !== id) : [...aus, id]);
+    const aus: string[] = Store.getMeta('sidebarAus', []) || [];
+    const an: string[] = Store.getMeta('sidebarAn', []) || [];
+    if (abschnittAn(id, VORGABE_AN(id))) {
+      /* jetzt an → ausschalten */
+      Store.setMeta('sidebarAn', an.filter(x => x !== id));
+      if (!aus.includes(id)) Store.setMeta('sidebarAus', [...aus, id]);
+    } else {
+      /* jetzt aus → einschalten */
+      Store.setMeta('sidebarAus', aus.filter(x => x !== id));
+      if (!an.includes(id)) Store.setMeta('sidebarAn', [...an, id]);
+    }
     zeichneBaum();
   };
 
@@ -149,8 +215,23 @@ const Seitenleiste = (() => {
     const leiste = document.getElementById('side-reiter');
     if (!leiste) return;
     leiste.classList.toggle('ohne-namen', !tabNamen());
+    /* WELCHER REITER LEUCHTET, HÄNGT AM BAUM DARUNTER — nicht daran, wo
+       man gerade ist. Die drei Reiter der Seitenleiste sind kein Ortsschild,
+       sondern ein Umschalter: `zeichneBaum()` zeigt für `chat` die Agenten,
+       für `bespr` die Besprechungen und SONST den Seitenbaum.
+       `reiter` trägt aber auch die Werte der Wegeleiste am Telefon —
+       `dokumente`, `lernen`, `mehr`. Stand einer davon, leuchtete hier gar
+       nichts, während der Seitenbaum darunter stand: drei Reiter, keiner
+       an, und der mittlere Kasten zeigt trotzdem den Baum des ersten.
+       Seit E236 fällt das jedem sofort auf, weil Redion mit dem Regal
+       ÖFFNET und `dokumente` damit der erste Wert überhaupt ist.
+       Das ist NICHT der Rückfall auf „Start", den `handyLeiste()` weiter
+       unten ausdrücklich nicht macht. Dort lautet die Frage „wo bin ich?",
+       und darauf ist „Start" eine falsche Antwort. Hier lautet sie „welcher
+       Baum steht da?", und darauf ist „der Seitenbaum" die richtige. */
+    const baumReiter = (reiter === 'chat' || reiter === 'bespr') ? reiter : 'start';
     leiste.querySelectorAll<HTMLElement>('.sr').forEach(b => {
-      const hier = b.dataset.reiter === reiter;
+      const hier = b.dataset.reiter === baumReiter;
       b.classList.toggle('on', hier);
       /* Die Klasse `on` färbt den Reiter. Ein Vorleseprogramm sieht keine
          Farbe — für es ist `aria-current` der einzige Unterschied zwischen
@@ -242,9 +323,15 @@ const Seitenleiste = (() => {
     /* `chat` hat oben keinen Reiter mehr (E38) — die Zeile bleibt trotzdem
        stehen, damit die Seitenleiste am Rechner weiterhin ihren Chat-Reiter
        kennt; sie findet dann eben keinen Knopf zum Hervorheben. */
+    /* SEIT E236 STEHT SIE UNTEN UND HAT FÜNF WEGE.
+       „Seiten"/„Workspace" hat dort keinen Knopf mehr — der Weg steht im
+       Mehr-Blatt. Er FEHLT hier deshalb absichtlich: der Absatz weiter
+       unten erklärt, warum kein Rückfall auf „Start" stattfindet, und
+       genau das gilt hier auch. Wer im Workspace ist, soll unten nirgends
+       markiert sein statt an der falschen Stelle. */
     const karte: Record<string, string> = {
+      dokumente: 'hl-dok', bibliothek: 'hl-dok',
       start: 'hl-start', lernen: 'hl-lernen',
-      seiten: 'hl-seiten', workspace: 'hl-seiten',
       bespr: 'hl-bespr', mehr: 'hl-mehr'
     };
     l.querySelectorAll('button[role="tab"]').forEach(b => {
@@ -367,35 +454,50 @@ const Seitenleiste = (() => {
       return;
     }
 
-    /* Werkzeuge — die Funktionen der anderen Programme haben hier ihren Ort */
-    if (abschnittAn('werkzeuge')) {
+    /* DIE WERKZEUGE SIND NACH OBEN GEZOGEN (E210).
+
+       Sieben Zeilen standen hier — Journal, Schnellnotizen, Vorlagen, Graph,
+       Schlagwörter, Karteikarten, Umsetzungsstand. Redur wollte die
+       Seitenleiste kürzer und die Werkzeuge im Menüband; sie stehen jetzt
+       dort unter „Werkzeuge", mit denselben Handlungen.
+
+       NICHTS IST WEG. Die Liste ist nicht gelöscht, sondern umgezogen: sie
+       steht in `register/menueband.ts` und ist von dort aus dieselbe Wahrheit
+       für beide Ansichten. Wer den Abschnitt lieber hier hätte, schaltet ihn
+       über `sidebarAus` wieder ein — dann zeichnet die Seitenleiste ihn aus
+       demselben Register, und die zwei Wege können nicht auseinanderlaufen.
+
+       Die Vorgabe ist AUS, und zwar nur die Vorgabe: wer den Abschnitt
+       früher ausdrücklich abgeschaltet hatte, behält seine Wahl. */
+    if (abschnittAn('werkzeuge', VORGABE_AN('werkzeuge'))) {
     const wz = document.createElement('div');
     wz.className = 'wz-block';
-    wz.innerHTML = [
-      /* ZEICHEN STATT EMOJI (E200). Die zweite Spalte ist der Name im
-         Symbolregister, nicht mehr ein Bildzeichen. Warum, steht in
-         `register/symbole.ts`. */
-      ['journal', 'calendar',    'Journal', 'Tageseintrag — Strg Shift J'],
-      ['memos',   'bolt',        'Schnellnotizen', 'Kurze Gedanken — Strg Shift M'],
-      ['vorlagen','puzzle',      'Vorlagen', 'Fertige Aufbauten und eigene Vorlagen'],
-      ['graph',   'graph',       'Graph', 'Wie alles zusammenhängt — Strg Shift G'],
-      ['tags',    'tag',         'Schlagwörter', 'Alle #Schlagwörter — Strg Shift T'],
-      ['lernen',  'cards',       'Karteikarten', 'Wiederholen nach Plan'],
-      ['stand',   'checkCircle', 'Umsetzungsstand', 'Alle 16 Teile der Notion-Doku, Punkt für Punkt']
-    ].map(([a, i, n, t]) =>
-      `<button class="side-item" data-wz="${a}" title="${t}"><span data-sym="${i}"></span><span>${n}</span>` +
-      (a === 'lernen' ? '<span class="k" id="lz"></span>' : '') + '</button>').join('');
+    /* Eine eigene Kennung. `wz-block` ist eine LAYOUT-Klasse und wird von
+       fünf weiteren Stellen benutzt (Erweiterungen, Besprechung, KI …) — wer
+       danach sucht, findet die halbe Seitenleiste. Die Prüfung ist genau
+       darauf hereingefallen und meldete 36 Werkzeuge statt sieben. */
+    wz.dataset['abschnitt'] = 'werkzeuge';
+    const eintraege = (Register?.menueband?.inReiter?.('werkzeuge') || [])
+      .flatMap((g: any) => g.eintraege || []);
+    eintraege.forEach((e: any) => {
+      const b = document.createElement('button');
+      b.className = 'side-item';
+      b.dataset['band'] = String(e.id);
+      b.title = String(e.hinweis || e.name || '') + (e.kurz ? '  (' + e.kurz + ')' : '');
+      const zeichen = document.createElement('span');
+      zeichen.dataset['sym'] = String(e.zeichen || 'dots');
+      const name = document.createElement('span');
+      name.textContent = String(e.name || '');
+      b.append(zeichen, name);
+      if (e.id === 'w-lernen') { const k = document.createElement('span');
+        k.className = 'k'; k.id = 'lz'; b.appendChild(k); }
+      wz.appendChild(b);
+    });
     wz.addEventListener('click', e => {
-      const b = elVon(e)?.closest<HTMLElement>('[data-wz]');
+      const b = elVon(e)?.closest<HTMLElement>('[data-band]');
       if (!b) return;
-      const a = b.dataset.wz;
-      if (a === 'journal') Werkzeuge.journal();
-      if (a === 'memos') Werkzeuge.schnellnotizen();
-      if (a === 'vorlagen') Werkzeuge.vorlagen();
-      if (a === 'graph') Links.graph();
-      if (a === 'tags') Links.tagRegister();
-      if (a === 'lernen') Werkzeuge.lernen();
-      if (a === 'stand') Status.seiteAnlegen();
+      const eintrag = Register?.menueband?.eines?.(b.dataset['band'] || '');
+      if (eintrag) eintrag.tun();
     });
     baum.appendChild(abschnitt('Werkzeuge'));
     baum.appendChild(wz);
@@ -406,7 +508,7 @@ const Seitenleiste = (() => {
     }
 
     /* Agenten — wie in Notions Seitenleiste */
-    if (abschnittAn('agenten')) {
+    if (abschnittAn('agenten', VORGABE_AN('agenten'))) {
     const agenten = Agent.eigene();
     baum.appendChild(abschnitt('Agenten', () => Agent.eigenerDialog()));
     const ag = document.createElement('div');
@@ -425,7 +527,7 @@ const Seitenleiste = (() => {
     }
 
     /* Besprechungen */
-    if (abschnittAn('bespr')) {
+    if (abschnittAn('bespr', VORGABE_AN('bespr'))) {
     const bes = document.createElement('div');
     bes.className = 'wz-block';
     const naechste = kommendeTermine(3);
@@ -446,7 +548,7 @@ const Seitenleiste = (() => {
     }
 
     /* Kürzlich verwendet */
-    const letzte = abschnittAn('kuerzlich') ? kuerzlich() : [];
+    const letzte = abschnittAn('kuerzlich', VORGABE_AN('kuerzlich')) ? kuerzlich() : [];
     if (letzte.length) {
       baum.appendChild(abschnitt('Kürzlich verwendet'));
       const kv = document.createElement('div');
@@ -515,7 +617,13 @@ const Seitenleiste = (() => {
 
     /* Meine Apps — bei Notion steht hier „Notion-Apps" ganz unten */
     if (!abschnittAn('apps')) return;
-    baum.appendChild(abschnitt('Meine Apps', null, () => abschnitteAnpassen()));
+    /* `data-ruhig="chrome"` heisst: das hier ist Gerüst, keine eigene Seite.
+       Die ruhige Fassung blendet Gerüst aus und lässt Eigenes stehen (E219).
+       Der Unterschied ist nicht kosmetisch: „Privat" und „Kürzlich" tragen,
+       was Redur selbst geschrieben hat — das versteckt man nicht. */
+    const appKopf = abschnitt('Meine Apps', null, () => abschnitteAnpassen());
+    appKopf.dataset['ruhig'] = 'chrome';
+    baum.appendChild(appKopf);
     /* AUS DEM REGISTER, NICHT AUS ZWEI LISTEN (L58, E166).
        Hier standen die zwanzig Apps als Datentabelle und darunter eine Kette
        aus zwanzig `if (a === '…')`. Zwei Listen für dieselben zwanzig Dinge:
@@ -527,12 +635,63 @@ const Seitenleiste = (() => {
        Nutzertext (CLAUDE.md §19). */
     const apps = document.createElement('div');
     apps.className = 'wz-block apps-block';
+    apps.dataset['ruhig'] = 'chrome';
     const appliste = (typeof Register !== 'undefined' && Register.navigation)
       ? Register.navigation.anPlatz('apps') : [];
-    apps.innerHTML = appliste.map((x: any) =>
-      `<button class="side-item" data-app="${esc(x.marke || x.id)}" title="${esc(x.hinweis || x.name)}">` +
-      `<span>${esc(x.icon || '•')}</span><span>${esc(x.name)}</span></button>`
-    ).join('');
+
+    /* VIER GRUPPEN STATT ZWANZIG ZEILEN (E206).
+       Redur am 26. August: „Links habe ich so viel Bereiche, reduziere es."
+       Zwanzig gleichrangige Zeilen untereinander sind keine Liste, sondern
+       eine Wand — man liest sie nicht, man sucht darin. Und weil sie ganz
+       unten steht, scrollt man an allem anderen vorbei, um sie zu sehen.
+
+       Gelöscht wird dabei nichts: jede App bleibt, sie steht nur in einer
+       Schublade. Zu ist die Voreinstellung, aufgeklappt merkt sich der
+       Speicher — wer „Einrichten" offen lässt, findet es offen wieder.
+
+       Ein Eintrag ohne `gruppe` fällt nicht heraus, sondern landet unter
+       „Sonstiges". Eine Erweiterung, die sich über `melde` anhängt, kennt
+       diese Gruppennamen nicht und darf trotzdem erscheinen. */
+    const offeneGruppen = (): string[] => {
+      const g = Store.getMeta('appGruppenAuf', []);
+      return Array.isArray(g) ? g : [];
+    };
+    const gruppeAuf = (id: string) => offeneGruppen().includes(id);
+    const gruppeSchalten = (id: string) => {
+      const auf = offeneGruppen();
+      Store.setMeta('appGruppenAuf', auf.includes(id) ? auf.filter(x => x !== id) : [...auf, id]);
+      zeichneBaum();
+    };
+
+    const inGruppe = (id: string) => appliste.filter((x: any) =>
+      id === 'sonstiges' ? !APP_GRUPPEN.some(([g]) => g === x.gruppe) : x.gruppe === id);
+
+    /* „Sonstiges" steht ausdrücklich in derselben Form wie die vier echten
+       Gruppen, damit die Schleife eine Schleife bleibt und keine Sonderzeile
+       darunter braucht. */
+    const alleGruppen: Array<[string, string, string]> =
+      [...APP_GRUPPEN, ['sonstiges', 'Sonstiges', 'dots']];
+    apps.innerHTML = alleGruppen
+      .map(([id, name, zeichen]) => {
+        const drin = inGruppe(id);
+        if (!drin.length) return '';
+        const auf = gruppeAuf(id);
+        return `<button class="side-item app-gruppe${auf ? ' auf' : ''}" data-app-gruppe="${esc(id)}"` +
+          ` aria-expanded="${auf ? 'true' : 'false'}">` +
+          `<span data-sym="${esc(zeichen)}" aria-hidden="true"></span>` +
+          `<span>${esc(name)}</span>` +
+          `<span class="k">${drin.length}</span>` +
+          `<span class="app-pfeil" data-sym="chevronD" aria-hidden="true"></span></button>` +
+          `<div class="app-unter"${auf ? '' : ' hidden'}>` + drin.map((x: any) =>
+            `<button class="side-item" data-app="${esc(x.marke || x.id)}" title="${esc(x.hinweis || x.name)}">` +
+            `<span>${esc(x.icon || '•')}</span><span>${esc(x.name)}</span></button>`
+          ).join('') + '</div>';
+      }).join('');
+
+    apps.addEventListener('click', e => {
+      const g = elVon(e)?.closest<HTMLElement>('[data-app-gruppe]');
+      if (g?.dataset.appGruppe) { gruppeSchalten(g.dataset.appGruppe); return; }
+    });
     /* Zugeklappte Abschnitte: alles bis zur nächsten Überschrift verstecken */
     setTimeout(() => {
       let versteckt = false;

@@ -85,6 +85,11 @@ const Aussehen = (() => {
         ['mono', 'Monospace', '"SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace'],
         ['lesbar', 'Gut lesbar', '"Atkinson Hyperlegible", "Verdana", "Segoe UI", sans-serif']
     ];
+    /* Die ruhige Fassung liegt NICHT in `aussehen`, sondern unter dem eigenen
+       Schlüssel `ruhig` — dort, wo `schale/aufbau/ruhig.ts` sie liest. Zwei
+       Speicherplätze für dieselbe Sache wären genau die Doppelung, gegen die
+       E219 antritt. Hier steht nur die Bedienung. */
+    const ruhigAn = () => typeof Ruhig !== 'undefined' ? Ruhig.an() : Store.getMeta('ruhig', true) !== false;
     const einstellung = () => Object.assign({
         schema: 'standard', akzent: '', schrift: 'system', groesse: 100,
         abstand: 'normal', breite: 'normal'
@@ -290,7 +295,24 @@ const Aussehen = (() => {
                         .map(([i, n]) => `<button data-br="${i}" class="${s.breite === i ? 'an' : ''}">${n}</button>`).join('') +
                         '</div>' +
                         '<div class="au-hinweis">Die Schriftwahl je Seite (Standard, Serif, Mono) bleibt daneben ' +
-                        'bestehen — sie sticht diese Einstellung für die eine Seite.</div>';
+                        'bestehen — sie sticht diese Einstellung für die eine Seite.</div>' +
+                        /* RUHIGE OBERFLÄCHE (E219). Der Schalter steht hier, weil er
+                           dasselbe entscheidet wie Zeilenabstand und Seitenbreite: wie
+                           viel Platz die Oberfläche für sich selbst nimmt. Der Hinweis
+                           nennt den Weg zurück ausdrücklich — ein Schalter, nach dem man
+                           die halbe Seitenleiste sucht, ist ein schlechter Schalter. */
+                        '<div class="au-titel">Ruhige Oberfläche</div>' +
+                        '<div class="au-liste">' +
+                        ['<button data-ruhig-schalter="an" class="' + (ruhigAn() ? 'an' : '') +
+                                '">Fünf Wege</button>',
+                            '<button data-ruhig-schalter="aus" class="' + (ruhigAn() ? '' : 'an') +
+                                '">Alles zeigen</button>'].join('') +
+                        '</div>' +
+                        '<div class="au-hinweis">Mit „Fünf Wege" zeigt die Seitenleiste Heute, ' +
+                        'Lernzentrum, Elektro, Bibliothek und Aufgaben; alles Übrige steht hinter ' +
+                        '„Mehr" ganz unten (Strg + M). Die Kopfzeile gibt fünf Zeichen an das ' +
+                        '⋯-Menü ab, und das Menüband erscheint, sobald eine Seite offen ist. ' +
+                        'Entfernt wird nichts.</div>';
             }
             if (reiter === 'tasten') {
                 const e = eigene();
@@ -393,6 +415,18 @@ const Aussehen = (() => {
             const br = elVon(e)?.closest('[data-br]');
             if (br) {
                 setzen({ breite: br.dataset['br'] });
+                zeichne();
+                return;
+            }
+            const ru = elVon(e)?.closest('[data-ruhig-schalter]');
+            if (ru) {
+                if (typeof Ruhig !== 'undefined')
+                    Ruhig.setzen(ru.dataset['ruhigSchalter'] === 'an');
+                /* Das Menüband entscheidet beim Zeichnen, ob es dasteht — es muss
+                   also neu zeichnen, sonst bleibt es weg (oder da), bis irgendetwas
+                   anderes es anfasst. */
+                if (typeof Menueband !== 'undefined')
+                    Menueband.zeichne();
                 zeichne();
                 return;
             }

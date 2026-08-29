@@ -284,6 +284,11 @@ const Dateien = (() => {
         const stuecke = await Store.stueckeVon(dateiId);
         for (const s of stuecke)
             await Store.stueckWeg(s.id);
+        /* Endgültig weg heisst: dem Server sagen (E249). Der Grabstein
+           entsteht nur, wenn der Server die Datei kennt — abgebrochene
+           Uploads und Abgeleitetes erzeugen nichts (Wache im Store). */
+        if (Store.dateiGrabstein)
+            Store.dateiGrabstein(dateiId);
         await Store.dateiWeg(dateiId);
         adresseWeg(dateiId);
         laufend.delete(dateiId);

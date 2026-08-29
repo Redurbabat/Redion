@@ -590,7 +590,31 @@ const KI = (() => {
             zeichneModellKnopf();
             return;
         }
-        const da = await ollamaPruefen();
+        /* ======================================================================
+         * NUR SUCHEN, WER SCHON EINMAL GEFUNDEN HAT (E233)
+         * ----------------------------------------------------------------------
+         * Hier stand `ollamaPruefen()` ohne Bedingung. Bei JEDEM Start ging
+         * damit eine Anfrage an `localhost:11434` — auch bei jemandem, der KI
+         * nie geöffnet hat und Ollama nie installiert hat.
+         *
+         * Es verlässt nichts den Rechner (§21 ist also gewahrt), aber:
+         *
+         *   · Jeder Start hinterlässt einen Fehler in der Konsole
+         *     (`ERR_CONNECTION_REFUSED`). Und eine Konsole, in der immer ein
+         *     Fehler steht, ist eine Konsole, in der man den nächsten übersieht.
+         *     Die eigenen Prüfläufe fragen „Keine Fehler auf der Seite" — dieser
+         *     hier wurde nur deshalb nicht rot, weil er als Netzfehler und nicht
+         *     als Skriptfehler zählt.
+         *   · Hört ein anderes Programm auf 11434, redet Redion mit ihm.
+         *
+         * Gesucht wird jetzt, wenn es einen Grund gibt: Ollama war schon einmal
+         * die Quelle, ODER der Mensch öffnet die Modellauswahl (`modellMenue`
+         * fragt ohnehin), ODER er drückt dort „Suche nach Ollama".
+         *
+         * Wer Ollama benutzt, merkt nichts. Wer es nicht benutzt, startet leise.
+         * ====================================================================*/
+        const lohntSuche = !!gemerkt && gemerkt.quelle === 'ollama';
+        const da = lohntSuche ? await ollamaPruefen() : false;
         if (da) {
             zustand.quelle = 'ollama';
             zustand.modell = (gemerkt && gemerkt.quelle === 'ollama' &&
@@ -2022,7 +2046,22 @@ const KI = (() => {
         });
         melde('Alles läuft lokal. Kein Text verlässt deinen Rechner.');
     };
-    return { start, bindePanel, senden, blockAktion, frageMitAuswahl, wikipedia, nachschlagen,
+    /* Der Weg für die Schale (E233): beim ÖFFNEN des KI-Fensters einmal nach
+       Ollama sehen — aber nur, wenn noch keine Quelle steht. Zweimal fragen
+       wäre so unnötig wie gar nicht fragen. */
+    const sucheOllamaJetzt = async () => {
+        if (zustand.bereit || zustand.quelle === 'ollama')
+            return;
+        if (!(await ollamaPruefen()))
+            return;
+        zustand.quelle = 'ollama';
+        zustand.modell = zustand.ollamaModelle[0]?.id ?? '';
+        zustand.bereit = !!zustand.modell;
+        if (zustand.bereit)
+            status('ok', kurzName(zustand.modell));
+        zeichneModellKnopf();
+    };
+    return { start, bindePanel, sucheOllamaJetzt, senden, blockAktion, frageMitAuswahl, wikipedia, nachschlagen,
         datenbankBauen, datenbankBauenAus, seiteBauen, protokollZeigen, protokoll,
         quellenKarte, quellenLeiste, seitenKontext, SYSTEM,
         SCHREIB_BEFEHLE, schreibMenue, schreibLauf, alsBloeckeEinfuegen,

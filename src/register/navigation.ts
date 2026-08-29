@@ -81,6 +81,19 @@ Register.navigation = (() => {
       knopfId: 'btn-home',      tun: () => Produktwelten.lernen('heute') },
     { id: 'lernzentrum',name: 'Lernzentrum',       icon: '🎓', platz: 'oben',  rang: 40,
       knopfId: 'btn-learning',  tun: () => Produktwelten.lernen('lernen') },
+    /* ELEKTRO HATTE KEINE EIGENE ZEILE. Es ist eines der 14 Module, und
+       zwar das grösste — Fachzeichen, Schaltplan, Simulation, Rechner,
+       Formelheft, Prüfung. Wer hin wollte, musste über den Workspace oder
+       das Lernzentrum. Beim Nachzählen für E218 fiel das auf: die
+       Seitenleiste führte 37 Wege, und der meistbenutzte war keiner davon. */
+    /* UND SEIT L65 FÜHRT ER AN EINEN ORT. Hier stand `Electrical.open()` —
+       eine Überlagerung mit dem Rechner. Vier der fünf Wege dieser Gruppe
+       ändern die Krume, der fünfte tat es als einziger nicht. Der Rechner
+       ist jetzt einer der Knöpfe dieser Seite statt ihre Vordertür. */
+    { id: 'elektro',    name: 'Elektro',           icon: '⚡', platz: 'oben',  rang: 45,
+      knopfId: 'btn-elektro',
+      tun: () => { if (typeof Elektrostart !== 'undefined') Elektrostart.oeffne();
+                   else if (typeof Electrical !== 'undefined') Electrical.open(); } },
     { id: 'workspace',  name: 'Workspace',         icon: '🧱', platz: 'oben',  rang: 50,
       knopfId: 'btn-workspace', tun: () => Produktwelten.workspace('start') },
     { id: 'bibliothekOben', name: 'Bibliothek',    icon: '📚', platz: 'oben',  rang: 60,
@@ -108,46 +121,97 @@ Register.navigation = (() => {
        `hinweis` ist der Text, der beim Darüberfahren erscheint. Er gehört
        zum Eintrag und nicht zum Zeichner: wer die App beschreibt, beschreibt
        sie hier. */
-    { id: 'app-kalender', marke: 'kalender',  name: 'Kalender',        icon: '📅', platz: 'apps', rang: 10,
+    /* DER RANG LÄUFT DURCH, ER FÄNGT NICHT JE GRUPPE NEU AN (E206).
+       Der erste Entwurf gab jeder Gruppe 10, 20, 30 … — und `anPlatz('apps')`
+       sortiert nach `rang`, ohne die Gruppe zu kennen. Heraus kam eine Liste,
+       in der erst alle Ersten jeder Gruppe standen, dann alle Zweiten: eine
+       Reihenfolge, die auf dem Bildschirm nirgends vorkommt. test222 §6
+       vergleicht Register und Bild und ging deshalb rot — zu Recht.
+
+       Durchlaufend heisst: Registerreihenfolge IST Bildschirmreihenfolge,
+       und die Gruppen sind nur die Schnitte darin. */
+    { id: 'app-kalender', marke: 'kalender',  name: 'Kalender',        icon: '📅', platz: 'apps', gruppe: 'planen', rang: 10,
       hinweis: 'Termine aus allen Quellen',                tun: () => Kalender.dialog() },
-    { id: 'app-pwa', marke: 'pwa',       name: 'App installieren', icon: '📱', platz: 'apps', rang: 20,
-      hinweis: 'Auf dem Telefon oder Rechner ablegen',     tun: () => PWA.installieren() },
-    { id: 'app-bib', marke: 'bib',       name: 'Bibliothek',      icon: '📚', platz: 'apps', rang: 30,
-      hinweis: 'Alle Seiten, sortierbar',                  tun: () => Bibliothek.oeffne() },
-    { id: 'app-aufgaben', marke: 'aufgaben',  name: 'Meine Aufgaben',  icon: '☑',  platz: 'apps', rang: 40,
-      hinweis: 'Was dir zugewiesen ist',                   tun: () => Bibliothek.aufgaben() },
-    { id: 'app-markt', marke: 'markt',     name: 'Marktplatz',      icon: '🛍', platz: 'apps', rang: 50,
-      hinweis: 'Fertige Vorlagen',                         tun: () => Werkzeuge.vorlagen() },
-    { id: 'app-wissen', marke: 'wissen',    name: 'Notion-Wissen',   icon: '📖', platz: 'apps', rang: 60,
-      hinweis: 'Alles über Notion und Redion, in acht Teilen', tun: () => Wissen.oeffnen() },
-    { id: 'app-pflege', marke: 'pflege',    name: 'Erste Hilfe',     icon: '🧰', platz: 'apps', rang: 70,
-      hinweis: 'Prüfen, reparieren, sichern',              tun: () => Pflege.ersteHilfe() },
-    { id: 'app-modell', marke: 'modell',    name: 'Datenmodell',     icon: '🗺', platz: 'apps', rang: 80,
-      hinweis: 'Alle Datenbanken und ihre Verknüpfungen',  tun: () => Schema.ansicht() },
-    { id: 'app-kennzahl', marke: 'kennzahl',  name: 'Kennzahlen',      icon: '📊', platz: 'apps', rang: 90,
-      hinweis: 'Zahlen aus mehreren Datenbanken',          tun: () => Schema.tafel() },
-    { id: 'app-krypto', marke: 'krypto',    name: 'Passwort',        icon: '🔐', platz: 'apps', rang: 100,
-      hinweis: 'Verschlüsselte Sicherung und Sperre',      tun: () => Krypto.dialog() },
-    { id: 'app-aussehen', marke: 'aussehen',  name: 'Aussehen',        icon: '🎨', platz: 'apps', rang: 110,
-      hinweis: 'Farben, Schrift und Tastenkürzel',         tun: () => Aussehen.dialog() },
-    { id: 'app-tempo', marke: 'tempo',     name: 'Tempo',           icon: '⏱', platz: 'apps', rang: 120,
-      hinweis: 'Wie schnell gezeichnet und gerechnet wird', tun: () => Tempo.dialog() },
-    { id: 'app-kann', marke: 'kann',      name: 'Was Redion kann', icon: '⭐', platz: 'apps', rang: 130,
-      hinweis: 'Alles auf einen Blick, mit Führung',       tun: () => Rundgang.uebersicht() },
-    { id: 'app-erweitern', marke: 'erweitern', name: 'Erweiterungen',   icon: '🧩', platz: 'apps', rang: 140,
-      hinweis: 'Eigene Befehle, Knöpfe und Formeln',       tun: () => Erweiterung.dialog() },
-    { id: 'app-eingang', marke: 'eingang',   name: 'Was hereinkommt', icon: '📨', platz: 'apps', rang: 150,
-      hinweis: 'Daten von aussen abholen und einwerfen',   tun: () => Eingang.dialog() },
-    { id: 'app-tagesplan', marke: 'tagesplan', name: 'Tagesplan',       icon: '☀',  platz: 'apps', rang: 160,
+    { id: 'app-tagesplan', marke: 'tagesplan', name: 'Tagesplan',      icon: '☀',  platz: 'apps', gruppe: 'planen', rang: 20,
       hinweis: 'Was heute ansteht',                        tun: () => Plan.tagesplan() },
-    { id: 'app-woche', marke: 'woche',     name: 'Wochenrückblick', icon: '📅', platz: 'apps', rang: 170,
+    { id: 'app-woche', marke: 'woche',     name: 'Wochenrückblick', icon: '📅', platz: 'apps', gruppe: 'planen', rang: 30,
       hinweis: 'Was lief, was blieb liegen',               tun: () => Plan.wochenrueckblick() },
-    { id: 'app-spaeter', marke: 'spaeter',   name: 'Zurückgestellt',  icon: '⏰', platz: 'apps', rang: 180,
+    { id: 'app-spaeter', marke: 'spaeter',   name: 'Zurückgestellt',  icon: '⏰', platz: 'apps', gruppe: 'planen', rang: 40,
       hinweis: 'Was später wieder hochkommt',              tun: () => Plan.uebersicht() },
-    { id: 'app-hilfe', marke: 'hilfe',     name: 'Hilfe',           icon: '？', platz: 'apps', rang: 190,
-      hinweis: 'Tastenkürzel — Strg /',                    tun: () => Werkzeuge.tastenkuerzel() },
-    { id: 'app-papier', marke: 'papier',    name: 'Papierkorb',      icon: '🗑', platz: 'apps', rang: 200,
-      hinweis: 'Gelöschte Seiten',                         tun: () => App.papierkorb() },
+    /* NICHT dasselbe wie die Zeile „Aufgaben" in der obersten Gruppe.
+       Die ruft `Produktwelten.aufgaben()`, also `workspace('aufgaben')`;
+       diese hier ruft `Bibliothek.aufgaben()`. Zwei Ansichten auf zwei
+       verschiedene Fragen — beim Aufräumen (E206) sah es nach einer
+       Doppelung aus und war keine. */
+    { id: 'app-aufgaben', marke: 'aufgaben',  name: 'Meine Aufgaben',  icon: '☑',  platz: 'apps', gruppe: 'planen', rang: 50,
+      hinweis: 'Was dir zugewiesen ist',                   tun: () => Bibliothek.aufgaben() },
+
+    /* ZURÜCKGEHOLT — ES WAR KEINE DOPPELUNG (E207).
+       E206 hat diesen Eintrag entfernt, weil in der obersten Gruppe eine
+       Zeile „Bibliothek" steht. Beim Nachlesen der Aufrufe stimmte das auch
+       — nur habe ich EINE Ebene zu früh aufgehört:
+
+           app-bib      → `Bibliothek.oeffne()`
+                          die Seitenübersicht mit Reitern und Spalten
+           btn-library  → `Produktwelten.bibliothek()` → `workspace('bibliothek')`
+                          die Bibliothek der Arbeitswelt
+
+       Zwei Namen, zwei Ansichten. `test33` fand es: es klickte auf den
+       ersetzten Weg und landete im Workspace — Krume „🧱 Workspace",
+       null Reiter, null Zeilen.
+
+       Der Fehler ist eine Lehre und keine Panne: ich habe nach dem NAMEN der
+       aufgerufenen Funktion verglichen und nicht danach, wohin sie führt.
+       Bei `suche`/`inbox` reichte das, weil dort wörtlich derselbe Aufruf
+       steht; hier heissen beide Wege „Bibliothek" und meinen Verschiedenes.
+       Redurs Bedingung war „nichts löschen", und das hier war ein Löschen. */
+    { id: 'app-bib', marke: 'bib',       name: 'Alle Seiten',     icon: '📚', platz: 'apps', gruppe: 'daten', rang: 55,
+      hinweis: 'Jede Seite, mit Reitern und Spalten',      tun: () => Bibliothek.oeffne() },
+    { id: 'app-modell', marke: 'modell',    name: 'Datenmodell',     icon: '🗺', platz: 'apps', gruppe: 'daten', rang: 60,
+      hinweis: 'Alle Datenbanken und ihre Verknüpfungen',  tun: () => Schema.ansicht() },
+    { id: 'app-kennzahl', marke: 'kennzahl',  name: 'Kennzahlen',      icon: '📊', platz: 'apps', gruppe: 'daten', rang: 70,
+      hinweis: 'Zahlen aus mehreren Datenbanken',          tun: () => Schema.tafel() },
+    { id: 'app-eingang', marke: 'eingang',   name: 'Was hereinkommt', icon: '📨', platz: 'apps', gruppe: 'daten', rang: 80,
+      hinweis: 'Daten von aussen abholen und einwerfen',   tun: () => Eingang.dialog() },
+    { id: 'app-markt', marke: 'markt',     name: 'Marktplatz',      icon: '🛍', platz: 'apps', gruppe: 'daten', rang: 90,
+      hinweis: 'Fertige Vorlagen',                         tun: () => Werkzeuge.vorlagen() },
+
+    { id: 'app-aussehen', marke: 'aussehen',  name: 'Aussehen',        icon: '🎨', platz: 'apps', gruppe: 'einrichten', rang: 100,
+      hinweis: 'Farben, Schrift und Tastenkürzel',         tun: () => Aussehen.dialog() },
+    { id: 'app-tempo', marke: 'tempo',     name: 'Tempo',           icon: '⏱', platz: 'apps', gruppe: 'einrichten', rang: 110,
+      hinweis: 'Wie schnell gezeichnet und gerechnet wird', tun: () => Tempo.dialog() },
+    { id: 'app-krypto', marke: 'krypto',    name: 'Passwort',        icon: '🔐', platz: 'apps', gruppe: 'einrichten', rang: 120,
+      hinweis: 'Verschlüsselte Sicherung und Sperre',      tun: () => Krypto.dialog() },
+    { id: 'app-erweitern', marke: 'erweitern', name: 'Erweiterungen',   icon: '🧩', platz: 'apps', gruppe: 'einrichten', rang: 130,
+      hinweis: 'Eigene Befehle, Knöpfe und Formeln',       tun: () => Erweiterung.dialog() },
+    { id: 'app-pwa', marke: 'pwa',       name: 'App installieren', icon: '📱', platz: 'apps', gruppe: 'einrichten', rang: 140,
+      hinweis: 'Auf dem Telefon oder Rechner ablegen',     tun: () => PWA.installieren() },
+
+    /* NICHT die Seite „Notion-Wissen" im Baum. Das hier ist das Modul mit
+       den acht Teilen; die Seite ist eine Seite. Auch das sah beim
+       Aufräumen nach einer Doppelung aus (E206). */
+    { id: 'app-wissen', marke: 'wissen',    name: 'Notion-Wissen',   icon: '📖', platz: 'apps', gruppe: 'hilfe', rang: 150,
+      hinweis: 'Alles über Notion und Redion, in acht Teilen', tun: () => Wissen.oeffnen() },
+    { id: 'app-kann', marke: 'kann',      name: 'Was Redion kann', icon: '⭐', platz: 'apps', gruppe: 'hilfe', rang: 160,
+      hinweis: 'Alles auf einen Blick, mit Führung',       tun: () => Rundgang.uebersicht() },
+    { id: 'app-pflege', marke: 'pflege',    name: 'Erste Hilfe',     icon: '🧰', platz: 'apps', gruppe: 'hilfe', rang: 170,
+      hinweis: 'Prüfen, reparieren, sichern',              tun: () => Pflege.ersteHilfe() },
+
+    /* DREI EINTRÄGE STANDEN HIER UND STEHEN WOANDERS SCHON (E206).
+       Redur: „Links habe ich so viel Bereiche, reduziere es — aber wichtig
+       nichts löschen." Gelöscht ist auch nichts: alle drei Ziele bleiben,
+       nur eben je einmal statt zweimal.
+
+           app-bib     „Bibliothek"    →  `Bibliothek.oeffne()`
+                                          = btn-library, oberste Gruppe
+           app-papier  „Papierkorb"    →  `App.papierkorb()`
+                                          = btn-trash, im Fuss
+           app-hilfe   „Hilfe"         →  `Werkzeuge.tastenkuerzel()`
+                                          = btn-hilfe, im Fuss
+
+       Wer eine davon über `Register.navigation.eines('app-bib')` gesucht
+       hat, findet sie nicht mehr — das ist der einzige Bruch, und er trifft
+       nur Code, den es hier nicht gibt. */
 
     { id: 'favoriten',  name: 'Favoriten',         icon: '★',  platz: 'baum',  rang: 10 },
     { id: 'seiten',     name: 'Seiten',            icon: '📄', platz: 'baum',  rang: 20 },
@@ -206,6 +270,16 @@ Register.navigation = (() => {
     kuerzel?: string;
     /** Der Text beim Darüberfahren. Nur bei „Meine Apps" gebraucht. */
     hinweis?: string;
+    /**
+     * Die Untergruppe innerhalb von „Meine Apps" (E206).
+     *
+     * Zwanzig gleichrangige Zeilen untereinander sind keine Liste, sondern
+     * eine Wand: man liest sie nicht, man sucht darin. Vier Gruppen mit
+     * drei bis fünf Zeilen liest man. Die Namen stehen in `APP_GRUPPEN`
+     * in `seitenleiste.ts`; ein Eintrag ohne `gruppe` landet unten unter
+     * „Sonstiges" und geht damit nicht verloren.
+     */
+    gruppe?: string;
     /**
      * Der Wert von `data-app` am gezeichneten Knopf.
      *

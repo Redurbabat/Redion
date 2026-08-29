@@ -16,6 +16,8 @@ type LernweltAnsicht =
   | 'lernweg'
   | 'fehler'
   | 'pruefungen'
+  | 'noten'
+  | 'stundenplan'
   | 'schule'
   | 'uni'
   | 'arbeit'
@@ -41,12 +43,20 @@ type LernweltTermin = {
   id: string;
   titel: string;
   datum: Date;
+  /* Ein Kalendertag ohne Uhrzeit (E229). Ein `Date` kann das nicht sagen —
+     es ist immer ein Zeitpunkt, auch wenn niemand einen gemeint hat. */
+  ganztags: boolean;
   quelle: string;
   bereichIds: string[];
 };
 
 type LernweltEintrag = {
   id: string;
+  /* Die Seite, auf der der Eintrag steht — falls er selbst keine ist.
+     Ein Eintrag aus den Lebensbereichen kann eine DATEI sein; dann ist
+     `id` eine Dateikennung, und `App.oeffne` kann damit nichts anfangen
+     (E205). `pageId` ist der Weg dorthin, wo die Datei liegt. */
+  pageId?: string;
   titel: string;
   icon: string;
   zeit: string;
@@ -151,6 +161,7 @@ type LernweltZustand = {
   ladeSchluessel: string;
   generation: number;
   timer: number | null;
+  notenZeitraum: 'aktuell' | 'vorher' | 'alle';
 };
 
 const Lernwelt = (() => {
@@ -164,11 +175,70 @@ const Lernwelt = (() => {
     { id: 'lernweg', icon: 'compass', name: 'Lernpfad' },
     { id: 'fehler', icon: 'puzzle', name: 'Meine Fehler' },
     { id: 'pruefungen', icon: 'clipboard', name: 'Prüfungen' },
+    { id: 'noten', icon: 'medal', name: 'Noten' },
+    { id: 'stundenplan', icon: 'calendar', name: 'Stundenplan' },
     { id: 'schule', icon: 'learn', name: 'Schule / Ausbildung' },
     { id: 'uni', icon: 'building', name: 'Uni' },
     { id: 'arbeit', icon: 'briefcase', name: 'Arbeit' },
     { id: 'fortschritt', icon: 'chart', name: 'Fortschritt' }
   ];
+
+  /**
+   * NEUN REITER WAREN ZU VIELE (E206).
+   *
+   * Redur am 26. August: „es sollte nicht so viele Bereiche haben, z. B. wie
+   * Uni / Schule Ausbildung usw." Gemessen stimmt das auch ohne Auge: neun
+   * Reiter brauchen 1016 px, am Rechner umbrachen sie auf ZWEI Reihen und
+   * kosteten damit 106 px über der Falz — mehr als jede Karte darunter, und
+   * darauf stehen zehn Wörter.
+   *
+   * Vier Gruppen, und keine Ansicht geht verloren: was zusammengehört, steht
+   * unter einem Namen und klappt als zweite, kurze Reihe auf, sobald man
+   * darin ist. `ANSICHTEN` bleibt unverändert die Wahrheit über die neun —
+   * `Lernwelt.ansichten` gibt weiterhin alle neun heraus, Routen wie
+   * `#welt-lernen-uni` funktionieren weiter, und wer eine zehnte Ansicht
+   * anlegt und hier nicht einträgt, bekommt sie als eigenen Reiter statt
+   * gar nicht.
+   *
+   * `unter[0]` ist das, was der Gruppenkopf selbst öffnet.
+   */
+  const REITER: Array<{ id: LernweltAnsicht; icon: string; name: string;
+                        unter?: LernweltAnsicht[] }> = [
+    { id: 'heute',      icon: 'today',     name: 'Heute' },
+    { id: 'lernen',     icon: 'cards',     name: 'Lernen',
+      unter: ['lernen', 'lernweg', 'fehler', 'fortschritt'] },
+    /* NOTEN GEHÖREN NEBEN DIE PRÜFUNGEN (E241). Redur: „es sollte meine
+       Schule alles begleiten, Noten, Lernen, Lernziele". Die Schulvorlage
+       legte das Notenheft seit E139 an — gerechnet hat damit niemand. */
+    { id: 'pruefungen', icon: 'clipboard', name: 'Prüfungen',
+      unter: ['pruefungen', 'noten'] },
+    /* Der Stundenplan steht bei „Wo du lernst": er sagt, WANN man WO ist
+       (E243/L70) — hinter dem gleichnamigen Knopf des Schul-Dashboards
+       stand vorher nur die Ausbildungsseite. */
+    { id: 'schule',     icon: 'learn',     name: 'Wo du lernst',
+      unter: ['schule', 'stundenplan', 'uni', 'arbeit'] }
+  ];
+
+  /**
+   * Wie eine Ansicht in der ZWEITEN Reihe heisst.
+   *
+   * Auf dem Bild vom 26. August stand „Lernen › Lernen": die Gruppe heisst
+   * wie ihr erster Eintrag, und untereinander gelesen sieht das aus wie ein
+   * Fehler. In der Gruppe ist der Name aber ohnehin schon gesagt — was der
+   * Unterreiter braucht, ist nur noch, WELCHER Teil davon.
+   *
+   * `ANSICHTEN` bleibt unangetastet: dort heisst die Ansicht weiterhin
+   * „Lernen", und `Lernwelt.ansichten` gibt das auch so heraus. Umbenannt
+   * wird die Beschriftung, nicht die Ansicht.
+   */
+  const KURZ: Record<string, string> = { lernen: 'Übersicht' };
+
+  const ansichtName = (id: string): string =>
+    KURZ[id] || ANSICHTEN.find(x => x.id === id)?.name || id;
+
+  /** Zu welcher Gruppe gehört die Ansicht, in der wir gerade sind? */
+  const gruppeVon = (ansicht: string) =>
+    REITER.find(r => r.id === ansicht || (r.unter || []).includes(ansicht as LernweltAnsicht)) || null;
 
   const zustand: LernweltZustand = {
     root: null,
@@ -181,12 +251,33 @@ const Lernwelt = (() => {
     extern: null,
     ladeSchluessel: '',
     generation: 0,
-    timer: null
+    timer: null,
+    /* Vorgabe „aktuelles Semester", damit die Kopfzeile der Noten-Ansicht
+       eine Zahl zeigt, die auf einem echten Zeugnis stehen KANN (L71).
+       Ein Allzeit-Mittel steht auf keinem. */
+    notenZeitraum: 'aktuell'
   };
 
   const esc = (wert: unknown): string => String(wert ?? '')
     .replace(/[&<>\"]/g, zeichen =>
       ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;' } as Record<string, string>)[zeichen] ?? zeichen);
+
+  /* KARTENTEXT WIE IM TRAINER (E252). Der Karteikasten zeichnet Vorder-
+     und Rückseite mit `Blocks.inline` — **fett** wird fett, `Code` wird
+     Code. Dieselbe Karte stand hier in Simulation, Training und
+     Fehlerliste mit nackten Sternchen da: zwei Anzeigen desselben
+     Textes, eine davon falsch. `Blocks.inline` maskiert zuerst (§19)
+     und verziert dann; ohne Editor-Modul bleibt es beim Maskieren.
+     Nur für VERFASSTEN Kartentext — was jemand in ein Antwortfeld
+     GETIPPT hat, bleibt wörtlich (esc), Sternchen und alles. */
+  const kartenText = (wert: unknown): string => {
+    try {
+      if (typeof Blocks !== 'undefined' && typeof Blocks.inline === 'function') {
+        return Blocks.inline(String(wert ?? ''));
+      }
+    } catch { /* dann eben unverziert */ }
+    return esc(wert);
+  };
 
   const zahl = (wert: unknown, rueckfall = 0): number => {
     const ausgabe = Number(wert);
@@ -609,6 +700,7 @@ const Lernwelt = (() => {
       id: String(item.id || item.ref?.id || ''),
       titel: String(item.text || item.titel || 'Termin'),
       datum: datum(item.d || item.datum || item.zeit) || new Date(),
+      ganztags: item.ganztags !== false,
       quelle: String(item.quelle || 'Kalender'),
       bereichIds: direkteBereichIds(Store.getBlock(item.id) || item)
     })).filter(item => item.id && imBereich(Store.getBlock(item.id) || item))
@@ -626,7 +718,7 @@ const Lernwelt = (() => {
     return seiten.filter(page => darfLesen(page) && imBereich(page)).slice(0, 8).map(page => ({
       id: String(page.id),
       titel: String(page.text || 'Ohne Titel'),
-      icon: String(page.icon || '📄'),
+      icon: String(page.icon || 'page'),
       zeit: String(page.zuletztGeoeffnet || page.edited || page.created || ''),
       untertitel: 'Zuletzt geöffnet',
       bereichIds: direkteBereichIds(page)
@@ -645,7 +737,7 @@ const Lernwelt = (() => {
       .slice(0, 8).map(page => ({
         id: String(page.id),
         titel: String(page.text || 'Projekt'),
-        icon: String(page.icon || '🚀'),
+        icon: String(page.icon || 'rocket'),
         zeit: String(page.edited || page.created || ''),
         untertitel: String(page.status || 'Laufendes Projekt'),
         bereichIds: direkteBereichIds(page)
@@ -664,7 +756,7 @@ const Lernwelt = (() => {
         ausgabe.push({
           id: String(page.id),
           titel: String(page.text || 'PDF'),
-          icon: '📕',
+          icon: 'book',
           zeit: String(page.edited || block.edited || block.created || ''),
           untertitel: 'PDF · Seite ' + String(block.nr || 1),
           bereichIds: direkteBereichIds(page)
@@ -679,7 +771,7 @@ const Lernwelt = (() => {
     .slice(0, 16).map(page => ({
       id: String(page.id),
       titel: String(page.text || 'Ohne Titel'),
-      icon: String(page.icon || '📄'),
+      icon: String(page.icon || 'page'),
       zeit: String(page.edited || page.created || ''),
       untertitel: page.besprechung ? 'Meeting-Notiz' : 'Dokument',
       bereichIds: direkteBereichIds(page)
@@ -687,20 +779,31 @@ const Lernwelt = (() => {
 
   const externeId = (item: any): string => String(item?.id || item?.ref?.id || item?.pageId || '');
 
+  /* DIE SEITE GEWINNT IMMER (E205).
+     Bisher entschied ein Zusatzwert `seiteBevorzugen`, den nur die PDF-Liste
+     setzte. Für „Zuletzt geöffnet" und „Laufende Projekte" stand er auf nein
+     — und dort steht `id` bei einem DATEI-Eintrag auf einer Dateikennung.
+     `App.oeffne` bekam sie, fand keinen Block und tat nichts: ein Knopf, der
+     sich drücken lässt und nichts macht. Wenn eine Seite bekannt ist, ist sie
+     das Ziel; wenn nicht, ändert sich nichts. Damit braucht es den Zusatzwert
+     nicht mehr. */
   const externeEintraege = (
     items: any[],
     icon: string,
-    untertitel: string,
-    seiteBevorzugen = false
+    untertitel: string
   ): LernweltEintrag[] =>
-    items.map(item => ({
-      id: String(seiteBevorzugen && item?.pageId ? item.pageId : externeId(item)),
-      titel: String(item?.titel || item?.text || item?.name || untertitel),
-      icon: String(item?.icon || icon),
-      zeit: String(item?.zeit || item?.edited || item?.datum || ''),
-      untertitel: String(item?.untertitel || item?.quelle || untertitel),
-      bereichIds: textListe(item?.bereichIds)
-    })).filter(item => item.id);
+    items.map(item => {
+      const seite = String(item?.pageId || item?.ref?.pageId || '');
+      return {
+        id: seite || externeId(item),
+        ...(seite ? { pageId: seite } : {}),
+        titel: String(item?.titel || item?.text || item?.name || untertitel),
+        icon: String(item?.icon || icon),
+        zeit: String(item?.zeit || item?.edited || item?.datum || ''),
+        untertitel: String(item?.untertitel || item?.quelle || untertitel),
+        bereichIds: textListe(item?.bereichIds)
+      };
+    }).filter(item => item.id);
 
   const bereichOptionen = (): any => zustand.bereichId === 'alle'
     ? { limit: 24 }
@@ -827,6 +930,9 @@ const Lernwelt = (() => {
       id: externeId(item),
       titel: String(item?.titel || item?.text || 'Termin'),
       datum: datum(item?.datum || item?.zeit || item?.start) || new Date(),
+      /* Fremdquellen sagen es selten. Zehn Zeichen sind ein Tag. */
+      ganztags: item?.ganztags === true ||
+        /^\d{4}-\d{2}-\d{2}$/.test(String(item?.datum || item?.zeit || item?.start || '').trim()),
       quelle: String(item?.quelle || 'Kalender'),
       bereichIds: textListe(item?.bereichIds)
     })).filter(item => item.id);
@@ -835,15 +941,15 @@ const Lernwelt = (() => {
   };
 
   const sichtbareZuletzt = (): LernweltEintrag[] => zustand.extern?.zuletzt.length
-    ? externeEintraege(zustand.extern.zuletzt, '📄', 'Zuletzt geöffnet').slice(0, 8)
+    ? externeEintraege(zustand.extern.zuletzt, 'page', 'Zuletzt geöffnet').slice(0, 8)
     : zuletzt();
 
   const sichtbareProjekte = (): LernweltEintrag[] => zustand.extern?.projekte.length
-    ? externeEintraege(zustand.extern.projekte, '🚀', 'Laufendes Projekt').slice(0, 8)
+    ? externeEintraege(zustand.extern.projekte, 'rocket', 'Laufendes Projekt').slice(0, 8)
     : projekte();
 
   const sichtbarePdfs = (): LernweltEintrag[] => zustand.extern?.pdfs.length
-    ? externeEintraege(zustand.extern.pdfs, '📕', 'PDF', true).slice(0, 12)
+    ? externeEintraege(zustand.extern.pdfs, 'book', 'PDF').slice(0, 12)
     : pdfs();
 
   const fortschreibung = (card: any, note: number): { sr: any; reviewVerlauf: Record<string, any> } => {
@@ -982,6 +1088,28 @@ const Lernwelt = (() => {
 
   const prozent = (wert: unknown): number => Math.max(0, Math.min(100, Math.round(zahl(wert))));
 
+  /**
+   * Ein Zeichen — oder eben ein Text.
+   *
+   * Redions eigene Oberfläche trägt Strichzeichen aus `Register.symbole`
+   * (E200 für die Schale, E202 hier für die Lernwelt). Emoji sehen auf jedem
+   * System anders aus, tragen ihre eigene Farbe und lassen sich nicht auf
+   * `currentColor` stellen — in einer Fläche, die hell und dunkel kann, ist
+   * das ein Fleck, der bei jedem Wechsel gleich bleibt.
+   *
+   * Was der NUTZER gesetzt hat, bleibt aber, wie er es gesetzt hat: wer
+   * seiner Seite ein 🚀 gibt, soll ein 🚀 sehen. Deshalb entscheidet der
+   * NAME und nicht der Ort — ist er ein bekanntes Zeichen, wird gezeichnet,
+   * sonst steht da, was dasteht.
+   */
+  const zeichenSpan = (icon: string, klasse = ''): string => {
+    const reg = (globalThis as any).Register;
+    const k = klasse ? ' class="' + klasse + '"' : '';
+    return reg?.symbole?.hat?.(icon)
+      ? '<span' + k + ' data-sym="' + esc(icon) + '" aria-hidden="true"></span>'
+      : '<span' + k + ' aria-hidden="true">' + esc(icon) + '</span>';
+  };
+
   const kennzahl = (wert: string, name: string, zusatz = ''): string =>
     '<article class="lw-metrik"><strong>' + esc(wert) + '</strong><span>' + esc(name) + '</span>' +
       (zusatz ? '<small>' + esc(zusatz) + '</small>' : '') + '</article>';
@@ -992,37 +1120,112 @@ const Lernwelt = (() => {
       esc(label) + '">' + prozent(wert) + ' %</progress></div>';
 
   const leer = (icon: string, titel: string, text: string, aktion = '', label = ''): string =>
-    '<div class="lw-leer"><span class="lw-leer-icon" aria-hidden="true">' + esc(icon) + '</span>' +
+    '<div class="lw-leer">' + zeichenSpan(icon, 'lw-leer-icon') +
       '<h3>' + esc(titel) + '</h3><p>' + esc(text) + '</p>' +
       (aktion && label ? '<button type="button" data-lw-action="' + esc(aktion) + '">' + esc(label) + '</button>' : '') +
       '</div>';
+
+  /* Ein Untertitel soll sagen, was die Liste NICHT zeigt.
+     „Aufgaben heute" trug „1 heute", „Überfällig" trug „alles im Plan" — und
+     darunter stand „Keine überfällige Aufgabe." Zweimal dasselbe ist einmal
+     zu viel. Interessant ist allein, was die Liste WEGLÄSST, denn sie ist
+     abgeschnitten und sagt es sonst nirgends. */
+  const mehrAls = (gesamt: number, gezeigt: number): string =>
+    gesamt > gezeigt ? gezeigt + ' von ' + gesamt : '';
 
   const sektion = (titel: string, inhalt: string, zusatz = ''): string =>
     '<section class="lw-section"><header><div><h2>' + esc(titel) + '</h2>' +
       (zusatz ? '<p>' + esc(zusatz) + '</p>' : '') + '</div></header>' + inhalt + '</section>';
 
+  /**
+   * Der Anfang einer Seite als EINE Zeile.
+   *
+   * Auf dem Heute-Bild vom 26. August standen neun Zeilen untereinander, und
+   * jede sagte „Zuletzt geöffnet · gerade eben". Der Untertitel wiederholte
+   * die Überschrift der Sektion, und die Zeit war überall dieselbe, weil
+   * dieselbe Sitzung alle neun geöffnet hatte. Neun Zeilen, kein Unterschied
+   * — und genau das Eine fehlte, woran man eine Seite wiedererkennt: was
+   * draufsteht.
+   *
+   * `Store.childrenOf` ist gleichläufig und liest den Spiegel im Arbeits-
+   * speicher: kein Warten, kein zweiter Speicherweg, kein Ladezustand. Drei
+   * Ebenen tief wie `Kontext.textVonSeite` wäre genauer und für eine Zeile
+   * zu teuer — die erste Ebene ist der Anfang der Seite, und mehr wird
+   * ohnehin nicht angezeigt.
+   */
+  /* DIESE DREI STANDEN HIER UND STEHEN JETZT IM KERN (E207).
+     `klartext`, `vorschau` und `miniatur` kamen mit E205 hierher, und mit
+     der Bibliothek brauchte sie ein ZWEITER Bereich. CLAUDE.md §5, Regel 1
+     ist da eindeutig: ein Bereich importiert nicht aus einem anderen, und
+     was beide brauchen, gehört nach `kern/`.
+
+     Der bequeme Weg wäre gewesen, die dreissig Zeilen dort noch einmal
+     hinzuschreiben. Dann gäbe es zwei Anrisse, die sich das erste Mal
+     unterscheiden, sobald jemand eine Auszeichnung ergänzt — und gemerkt
+     hätte man es an der Stelle, die man gerade nicht ansieht.
+
+     Die Namen bleiben hier stehen, damit die Aufrufer unten unverändert
+     lesbar sind; sie zeigen nur woandershin. */
+  const vorschau = (seiteId: string, titel = '', laenge = 90): string =>
+    Vorschau.anriss(seiteId, titel, laenge);
+  const miniatur = (seiteId: string, zeilen = 5): string =>
+    Vorschau.miniatur(seiteId, zeilen);
+
+  /* Eine Karte für „Weiter wo du warst". Der Knopf öffnet weiterhin
+     `item.id` — die Miniatur liest von `pageId`, falls der Eintrag selbst
+     eine Datei ist und auf einer Seite liegt (E205). */
+  const weiterKarte = (item: LernweltEintrag): string => {
+    const bild = miniatur(item.pageId || item.id);
+    return '<button type="button" class="lw-continue-card" data-lw-open="' + esc(item.id) + '">' +
+      '<span class="lw-mini mini-zeilen' + (bild ? '' : ' is-leer') + '">' +
+        (bild || '<span>Diese Seite ist noch leer.</span>') + '</span>' +
+      '<span class="lw-continue-foot">' + zeichenSpan(item.icon, 'lw-object-icon') +
+        '<span><strong>' + esc(item.titel) + '</strong><small>' + esc(item.untertitel) +
+        (item.zeit ? ' · ' + esc(relativText(item.zeit)) : '') + '</small></span></span>' +
+      '</button>';
+  };
+
+  /* Die Zeit steht in einer eigenen Spalte, damit der Anriss die ganze
+     Zeile hat. Vorher stand dort ein „›" — ein Zeichen, das dem Auge
+     mitteilt, dass ein Knopf ein Knopf ist. Das weiss es schon. */
   const eintragListe = (werte: LernweltEintrag[], leerText: string): string => werte.length
-    ? '<ul class="lw-object-list">' + werte.map(item =>
-        '<li><button type="button" data-lw-open="' + esc(item.id) + '"><span class="lw-object-icon" aria-hidden="true">' +
-          esc(item.icon) + '</span><span><strong>' + esc(item.titel) + '</strong><small>' +
-          esc(item.untertitel) + (item.zeit ? ' · ' + esc(relativText(item.zeit)) : '') +
-          '</small></span><span aria-hidden="true">›</span></button></li>').join('') + '</ul>'
+    ? '<ul class="lw-object-list">' + werte.map(item => {
+        const seite = item.pageId || item.id;
+        const anriss = vorschau(seite, item.titel);
+        return '<li><button type="button" data-lw-open="' + esc(item.id) + '">' +
+          zeichenSpan(item.icon, 'lw-object-icon') +
+          '<span><strong>' + esc(item.titel) + '</strong><small>' +
+          esc(anriss || item.untertitel) + '</small></span>' +
+          (item.zeit ? '<time datetime="' + esc(item.zeit) + '">' +
+            esc(relativText(item.zeit)) + '</time>' : '') +
+          '</button></li>';
+      }).join('') + '</ul>'
     : '<p class="lw-none">' + esc(leerText) + '</p>';
 
   const aufgabenListe = (werte: LernweltAufgabe[], leerText: string): string => werte.length
     ? '<ul class="lw-task-list">' + werte.map(item =>
-        '<li><button type="button" data-lw-open="' + esc(item.id) + '"><span aria-hidden="true">' +
-          (item.fertig ? '☑' : '☐') + '</span><span><strong>' + esc(item.titel) + '</strong><small>' +
+        '<li><button type="button" data-lw-open="' + esc(item.id) + '">' +
+          zeichenSpan(item.fertig ? 'boxChecked' : 'box', 'lw-task-box') +
+          '<span><strong>' + esc(item.titel) + '</strong><small>' +
           esc(item.quelle) + (item.datum ? ' · ' + esc(datumText(item.datum)) : '') +
           '</small></span></button></li>').join('') + '</ul>'
     : '<p class="lw-none">' + esc(leerText) + '</p>';
 
   const terminListe = (werte: LernweltTermin[], leerText: string): string => werte.length
     ? '<ul class="lw-event-list">' + werte.map(item =>
+        /* KEINE ERFUNDENE UHRZEIT (E229). Ein Ganztagstermin bekam hier
+           `00:00` — und das war noch der harmlose Fall: in Zürich stand
+           `02:00`, in Auckland `12:00`. Eine Uhrzeit, die niemand eingegeben
+           hat, sieht aus wie eine, die jemand eingegeben hat.
+           Statt ihrer steht der Wochentag: dieselbe Spalte, dieselbe Breite,
+           und er ist wahr. */
         '<li><button type="button" data-lw-open="' + esc(item.id) + '"><time datetime="' +
-          esc(item.datum.toISOString()) + '">' + esc(item.datum.toLocaleTimeString('de-CH', {
-            hour: '2-digit', minute: '2-digit'
-          })) + '</time><span><strong>' + esc(item.titel) + '</strong><small>' + esc(item.quelle) +
+          esc(item.ganztags ? item.datum.toISOString().slice(0, 10) : item.datum.toISOString()) +
+          '"' + (item.ganztags ? ' class="lw-ganztags"' : '') + '>' +
+          esc(item.ganztags
+            ? item.datum.toLocaleDateString('de-CH', { weekday: 'short' })
+            : item.datum.toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit' })) +
+          '</time><span><strong>' + esc(item.titel) + '</strong><small>' + esc(item.quelle) +
           ' · ' + esc(datumText(item.datum)) + '</small></span></button></li>').join('') + '</ul>'
     : '<p class="lw-none">' + esc(leerText) + '</p>';
 
@@ -1034,27 +1237,65 @@ const Lernwelt = (() => {
           '<span class="lw-topic-score">' + prozent(thema.progress) + ' %</span><progress max="100" value="' +
           prozent(thema.progress) + '" aria-label="Fortschritt ' + esc(thema.label) + '"></progress></button>')
         .join('') + '</div>'
-    : leer('🎴', 'Noch keine Themen', 'Themen entstehen automatisch aus deinen Lernkarten.',
+    : leer('cards', 'Noch keine Themen', 'Themen entstehen automatisch aus deinen Lernkarten.',
         'capture', 'Lernmaterial erfassen');
 
   const kopf = (): string => {
     const optionen = bereiche();
     const aktiv = aktiverBereich();
     return '<header class="lw-head">' +
-      '<div class="lw-brand"><span class="lw-brand-icon" aria-hidden="true">🎓</span><div>' +
+      '<div class="lw-brand"><span class="lw-brand-icon" data-sym="learn" aria-hidden="true"></span><div>' +
         '<p>Redion</p><h1>Lernen &amp; Alltag</h1></div></div>' +
-      '<label class="lw-area"><span>Bereich</span><select data-lw-area aria-label="Lebensbereich auswählen">' +
+      /* `data-alle` sagt der CSS, ob der Filter gerade etwas TUT (E235).
+         Am Telefon zieht er in die Reiterzeile, und dort ist Platz knapp:
+         „◎ Alle Bereiche" braucht bei 16 px — der Pflichtgrösse, damit iOS
+         beim Tippen nicht hineinzoomt — rund 160 px von 368. Das ist fast
+         die halbe Zeile für die Aussage „ich filtere nicht".
+         Steht der Filter auf „alle", bleibt darum nur das Zeichen ◎ übrig;
+         sobald ein Bereich gewählt ist, steht sein Name da. */
+      '<label class="lw-area" data-alle="' + (aktiv.id === 'alle' ? 'ja' : 'nein') +
+        '"><span>Bereich</span><select data-lw-area aria-label="Lebensbereich auswählen">' +
         optionen.map(item => '<option value="' + esc(item.id) + '"' +
           (item.id === aktiv.id ? ' selected' : '') + '>' + esc(item.icon + ' ' + item.name) + '</option>').join('') +
         '</select></label></header>' +
       /* Die Zeichen werden nach dem Einsetzen gefüllt — siehe `fuelleZeichen`
          unten. Hier steht nur die Stelle. */
-      '<nav class="lw-nav" aria-label="Lernen und Alltag">' + ANSICHTEN.map(item =>
-        '<button type="button" data-lw-nav="' + item.id + '"' +
-          (zustand.ansicht === item.id ? ' aria-current="page" class="is-active"' : '') + '>' +
-          '<span data-sym="' + esc(item.icon) + '"></span><span>' + esc(item.name) +
-          '</span></button>').join('') +
-        '</nav>';
+      /* Eine Ansicht, die in KEINER Gruppe steht, bekommt ihren eigenen
+         Reiter angehängt. So verschwindet nichts, wenn jemand `ANSICHTEN`
+         erweitert und `REITER` vergisst. */
+      (() => {
+        const bekannt = new Set(REITER.flatMap(r => [r.id, ...(r.unter || [])]));
+        const zusatz = ANSICHTEN.filter(a => !bekannt.has(a.id))
+          .map(a => ({ id: a.id, icon: a.icon, name: a.name }));
+        const reihe = [...REITER, ...zusatz];
+        const hier = gruppeVon(zustand.ansicht);
+
+        /* `data-kopfzeile="eigene"` ist ein Vertrag mit der Schale, kein
+           Aufruf in sie hinein (§5): am Telefon verschmilzt sie ihre eigene
+           Krumenzeile mit GENAU dieser Zeile, statt eine zweite Bank
+           darüberzusetzen. Fehlt die Marke, bleibt alles wie vorher — die
+           Schale fragt nur, sie verlangt nichts. */
+        const haupt = '<nav class="lw-nav" data-kopfzeile="eigene" aria-label="Lernen und Alltag">' + reihe.map(item => {
+          const drin = item.id === zustand.ansicht ||
+            ((item as any).unter || []).includes(zustand.ansicht);
+          return '<button type="button" data-lw-nav="' +
+            ((item as any).unter ? (item as any).unter[0] : item.id) + '"' +
+            (drin ? ' aria-current="page" class="is-active"' : '') + '>' +
+            '<span data-sym="' + esc(item.icon) + '"></span><span>' + esc(item.name) + '</span>' +
+            ((item as any).unter
+              ? '<span class="lw-nav-mehr" data-sym="chevronD" aria-hidden="true"></span>' : '') +
+            '</button>';
+        }).join('') + '</nav>';
+
+        /* Die zweite Reihe steht nur da, wenn man in einer Gruppe IST — und
+           dann zeigt sie genau deren Ansichten. Eine Leiste, die immer alles
+           zeigt, ist wieder die alte. */
+        if (!hier?.unter) return haupt;
+        return haupt + '<nav class="lw-subnav" aria-label="' + esc(hier.name) + '">' +
+          hier.unter.map(id => '<button type="button" data-lw-nav="' + esc(id) + '"' +
+            (zustand.ansicht === id ? ' aria-current="page" class="is-active"' : '') + '>' +
+            esc(ansichtName(id)) + '</button>').join('') + '</nav>';
+      })();
   };
 
   const heuteAnsicht = (): string => {
@@ -1075,6 +1316,10 @@ const Lernwelt = (() => {
       (datum(item.datum)?.getTime() || 0) < heute.getTime());
     const heutigeTermine = sichtbareTermine().filter(item =>
       item.datum.getTime() >= heute.getTime() && item.datum.getTime() < morgen.getTime()).slice(0, 6);
+    const alleZuletzt = sichtbareZuletzt();
+    const weiterKarten = alleZuletzt.slice(0, 3);
+    const alleProjekte = sichtbareProjekte();
+    const projekteGezeigt = alleProjekte.slice(0, 5);
     const naechstePruefung = pruefungen().find(item => item.tage === null || item.tage >= 0) || null;
     const pruefungText = naechstePruefung
       ? naechstePruefung.tage === 0 ? 'heute'
@@ -1099,22 +1344,63 @@ const Lernwelt = (() => {
 
     return '<div class="lw-today">' +
       einrichtung +
-      '<section class="lw-hero"><div><p>' + esc(gruss + ', ' + aktor().name) + '</p><h2>' +
+      /* DREIMAL DERSELBE BEREICH WAR ZWEIMAL ZU VIEL (E205).
+         Hier stand „◎ Alle Bereiche" als Marke — dieselbe Auskunft, die 300 px
+         weiter oben schon im Auswahlfeld steht und die man dort auch ändern
+         kann. Eine Marke, die nur wiederholt, was daneben steht, kostet Höhe
+         und sagt nichts; über der Falz ist Höhe das Knappe. */
+      /* „Guten Abend, Ich" — so stand es da, solange kein Konto einen Namen
+         trägt. „Ich" ist der Rückfallwert der AKTOR-Kennung, nicht ein Name,
+         mit dem man jemanden anspricht; im Deutschen grüsst man sich nicht
+         mit dem eigenen Pronomen. Ohne Namen bleibt es beim blossen Gruss.
+         Der Aktor selbst bleibt unberührt — er wird an anderer Stelle
+         gebraucht, und dort ist „Ich" richtig. */
+      '<section class="lw-hero"><div><p>' +
+        esc(aktor().name && aktor().name !== 'Ich' ? gruss + ', ' + aktor().name : gruss) +
+      '</p><h2>' +
         esc(new Date().toLocaleDateString('de-CH', {
           weekday: 'long', day: 'numeric', month: 'long'
-        })) + '</h2><span>' + esc(aktiverBereich().icon + ' ' + aktiverBereich().name) +
-        '</span></div><div class="lw-goal"><button type="button" data-lw-action="goal" aria-label="Tagesziel ändern">' +
+        })) + '</h2></div><div class="lw-goal"><button type="button" data-lw-action="goal" aria-label="Tagesziel ändern">' +
         '<span>' + stats.reviewedToday + ' / ' + ziel + '</span><small>Lernziel heute</small></button>' +
         '<progress max="100" value="' + zielProzent + '" aria-label="Tagesfortschritt"></progress></div></section>' +
+      /* WEITER WO DU WARST — DIE ERSTE FRAGE DES TAGES (E205).
+         Hier stand bisher nichts, und unten in der Übersicht stand
+         „Zuletzt geöffnet": neun Zeilen, jede mit demselben Untertitel und
+         derselben Zeit. Wer morgens aufmacht, sucht keine Titelliste,
+         sondern die Seite, an der er gestern aufgehört hat — und die
+         erkennt man an dem, was draufsteht. Drei Karten mit dem echten
+         Anfang der Seite sagen das, was neun Titel nicht sagen konnten.
+
+         Die Liste unten entfällt damit; sie war dieselbe Auskunft in
+         schlechterer Form. */
+      (weiterKarten.length
+        ? '<section class="lw-continue"><header><div><h2>Weiter wo du warst</h2>' +
+            '<p>Die Seiten, an denen du zuletzt gearbeitet hast</p></div>' +
+            (alleZuletzt.length > weiterKarten.length
+              ? '<button type="button" data-lw-action="library">Alle ' +
+                  alleZuletzt.length + ' ansehen</button>'
+              : '') +
+            '</header><div class="lw-continue-grid">' +
+            weiterKarten.map(weiterKarte).join('') + '</div></section>'
+        : '') +
       '<section class="lw-metrics" aria-label="Heute auf einen Blick">' +
-        kennzahl(String(queue.errors.length + queue.due.length), 'fällig', 'SM-2-Wissensstand') +
-        kennzahl(String(queue.newCards.length), 'neu', 'maximal 20 in der Runde') +
+        kennzahl(String(queue.errors.length + queue.due.length), 'fällig', 'heute zu wiederholen') +
+        kennzahl(String(queue.newCards.length), 'neu', 'höchstens 20 pro Runde') +
         kennzahl(String(fehlerListe().filter(item => !item.stabil).length), 'Fehler', 'gezielt wiederholen') +
-        kennzahl(pruefungText, 'nächste Prüfung', naechstePruefung?.titel || '') + '</section>' +
+        /* VIER ZAHLEN, ALSO AUCH HIER EINE ZAHL. Ohne geplante Prüfung stand
+           in der vierten Kachel „keine geplant" in Zahlengrösse — ein Satz
+           dort, wo daneben dreimal eine Ziffer steht, und die Reihe las sich
+           nicht mehr als Reihe. Was fehlt, ist ein Strich; der Satz erklärt
+           ihn eine Zeile tiefer. */
+        (naechstePruefung
+          ? kennzahl(pruefungText, 'nächste Prüfung', naechstePruefung.titel || '')
+          : kennzahl('–', 'nächste Prüfung', 'keine geplant')) + '</section>' +
       '<div class="lw-primary-grid">' +
         '<section class="lw-focus-card"><header><div><p>Deine Tagesrunde</p><h2>' +
-          (queue.all.length ? queue.all.length + ' Karten warten' : 'Alles für heute erledigt') +
-          '</h2></div><span aria-hidden="true">🎴</span></header><p>' +
+          (queue.all.length === 1 ? '1 Karte wartet'
+            : queue.all.length ? queue.all.length + ' Karten warten'
+            : 'Alles für heute erledigt') +
+          '</h2></div><span class="lw-card-icon" data-sym="cards" aria-hidden="true"></span></header><p>' +
           (queue.all.length
             ? 'Zuerst Fehler, danach fällige Karten und zum Schluss neue Inhalte.'
             : stats.total ? 'Die nächste Wiederholung erscheint automatisch zum geplanten Zeitpunkt.'
@@ -1122,39 +1408,55 @@ const Lernwelt = (() => {
           '<button type="button" class="is-primary" data-lw-train="today"' +
             (queue.all.length ? '' : ' disabled') + '>Tagesrunde starten</button>' +
           '<button type="button" data-lw-nav="lernen">Plan ansehen</button></div></section>' +
-        '<section class="lw-exam-card"><header><p>Nächste Prüfung</p><span aria-hidden="true">📝</span></header>' +
+        '<section class="lw-exam-card"><header><p>Nächste Prüfung</p>' +
+          '<span class="lw-card-icon" data-sym="clipboard" aria-hidden="true"></span></header>' +
           (naechstePruefung
             ? '<h2>' + esc(naechstePruefung.titel) + '</h2><strong>' + esc(pruefungText) + '</strong><p>' +
                 esc(naechstePruefung.fach || naechstePruefung.lernstoff || 'Lernstoff noch nicht zugeordnet') +
                 '</p><button type="button" data-lw-exam="' + esc(naechstePruefung.id) + '">Vorbereitung öffnen</button>'
-            : leer('🗓️', 'Keine Prüfung geplant', 'Lege einen Termin in deiner Prüfungsdatenbank an.',
+            : leer('calendar', 'Keine Prüfung geplant', 'Lege einen Termin in deiner Prüfungsdatenbank an.',
                 'school-setup', 'Prüfungen öffnen')) + '</section>' +
       '</div>' +
       '<div class="lw-dashboard-grid">' +
-        sektion('Aufgaben heute', aufgabenListe(heutigeAufgaben.slice(0, 6), 'Heute ist keine Aufgabe fällig.'),
-          heutigeAufgaben.length + ' heute') +
-        sektion('Überfällig', aufgabenListe(ueberfaellige.slice(0, 6), 'Keine überfällige Aufgabe.'),
-          ueberfaellige.length ? ueberfaellige.length + ' brauchen Aufmerksamkeit' : 'alles im Plan') +
+        /* VIER KACHELN, NICHT SECHS (E205).
+           Sechs Sektionen mit sehr unterschiedlich langen Listen ergaben in
+           zwei Spalten ein weisses Loch von fast 400 px: „Termine" mit einer
+           Zeile stand neben „Zuletzt geöffnet" mit acht.
+
+           „Aufgaben heute" und „Überfällig" sind ausserdem dieselbe Frage —
+           was ist offen. Die Antwort steht in der ZEILE („heute", „Do",
+           „26. Aug."), nicht in zwei Überschriften; überfällig kommt zuerst,
+           weil es zuerst dran ist. „Zuletzt geöffnet" ist nach oben gewandert
+           und dort etwas geworden, das man ansehen kann. */
+        sektion('Offen', aufgabenListe([...ueberfaellige, ...heutigeAufgaben].slice(0, 6),
+          'Nichts offen — heute ist keine Aufgabe fällig.'),
+          mehrAls(ueberfaellige.length + heutigeAufgaben.length, 6)) +
         sektion('Termine', terminListe(heutigeTermine, 'Heute steht kein Termin an.'), 'Unterricht, Arbeit und Meetings') +
-        sektion('Zuletzt geöffnet', eintragListe(sichtbareZuletzt(), 'Noch keine zuletzt geöffnete Seite.'),
-          'dieselben Dateien wie im Workspace') +
-        sektion('Laufende Projekte', eintragListe(sichtbareProjekte(), 'Noch kein Projekt zugeordnet.'),
-          'ohne Kopien') +
         sektion('Themenfortschritt', themenListe(liste(stats.topics), 5), 'fachlicher SM-2-Stand') +
+        sektion('Laufende Projekte', eintragListe(projekteGezeigt, 'Noch kein Projekt zugeordnet.'),
+          mehrAls(alleProjekte.length, 5) || 'ohne Kopien') +
       '</div>' +
       '<section class="lw-engagement"><header><div><p>Aktivität &amp; Motivation</p><h2>Deine Lernroutine</h2></div>' +
         '<span>Getrennt vom Wissensstand</span></header><div class="lw-metrics">' +
+        /* VIER UND NICHT FÜNF (E204). Fünf Karten in vier Spalten liessen
+           „Level" allein in einer zweiten Reihe stehen, daneben drei Viertel
+           weisse Fläche — bei JEDER Breite, denn fünf teilt sich durch nichts.
+           XP und Level sind ohnehin dieselbe Zahl zweimal: das eine ist die
+           Rechnung, das andere ihr Ergebnis. Damit vier, und vier geht auf.
+
+           Drei Entschuldigungen standen auf derselben Karte — die Marke oben,
+           „kein Wissensstand" und „Motivation, nicht Fachfortschritt". Es
+           bleibt die oben; sie gilt für die ganze Karte. */
         kennzahl('~' + spiel.minuten + ' Min.', 'Lernzeit', 'aus Lernaktivitäten geschätzt') +
         kennzahl(spiel.woche + ' / ' + ziel * 7, 'Wochenziel') +
-        kennzahl(spiel.streak + ' Tage', 'Streak') +
-        kennzahl(String(spiel.xp), 'Aktivitäts-XP', 'kein Wissensstand') +
-        kennzahl(String(spiel.level), 'Level', 'Motivation, nicht Fachfortschritt') +
+        kennzahl(spiel.streak + (spiel.streak === 1 ? ' Tag' : ' Tage'), 'Streak') +
+        kennzahl('Level ' + spiel.level, 'Aktivität', spiel.xp + ' XP') +
       '</div>' + fortschritt(spiel.wochenProzent, 'Wochenfortschritt') + '</section>' +
       '<div class="lw-quick" aria-label="Schnellzugriff">' +
-        '<button type="button" data-lw-action="tasks"><span aria-hidden="true">✅</span>Alle Aufgaben</button>' +
-        '<button type="button" data-lw-action="calendar"><span aria-hidden="true">📅</span>Kalender</button>' +
-        '<button type="button" data-lw-action="library"><span aria-hidden="true">📚</span>Bibliothek</button>' +
-        '<button type="button" data-lw-action="capture"><span aria-hidden="true">📷</span>Erfassen</button>' +
+        '<button type="button" data-lw-action="tasks">' + zeichenSpan('tasks') + 'Alle Aufgaben</button>' +
+        '<button type="button" data-lw-action="calendar">' + zeichenSpan('calendar') + 'Kalender</button>' +
+        '<button type="button" data-lw-action="library">' + zeichenSpan('library') + 'Bibliothek</button>' +
+        '<button type="button" data-lw-action="capture">' + zeichenSpan('camera') + 'Erfassen</button>' +
       '</div></div>';
   };
 
@@ -1206,14 +1508,14 @@ const Lernwelt = (() => {
         kennzahl(stats.nextAt ? datumText(stats.nextAt, true) : '—', 'nächste Wiederholung') +
       '</section>' +
       '<div class="lw-study-actions">' +
-        '<article><span aria-hidden="true">☀️</span><h3>Tagesrunde</h3><p>Fehler → fällig → bis zu 20 neue Karten.</p>' +
+        '<article>' + zeichenSpan('sun') + '<h3>Tagesrunde</h3><p>Fehler → fällig → bis zu 20 neue Karten.</p>' +
           '<button type="button" class="is-primary" data-lw-train="today"' +
           (queue.all.length ? '' : ' disabled') + '>Starten · ' + queue.all.length + '</button></article>' +
-        '<article><span aria-hidden="true">🧩</span><h3>Fehlertraining</h3><p>Alle instabilen Fehler gezielt festigen.</p>' +
+        '<article>' + zeichenSpan('puzzle') + '<h3>Fehlertraining</h3><p>Alle instabilen Fehler gezielt festigen.</p>' +
           '<button type="button" data-lw-train="errors"' +
           (fehlerListe().some(item => !item.stabil) ? '' : ' disabled') + '>Trainieren · ' +
           fehlerListe().filter(item => !item.stabil).length + '</button></article>' +
-        '<article><span aria-hidden="true">✨</span><h3>Neue Karten</h3><p>Neue Inhalte ohne fällige Karten üben.</p>' +
+        '<article>' + zeichenSpan('sparkle') + '<h3>Neue Karten</h3><p>Neue Inhalte ohne fällige Karten üben.</p>' +
           '<button type="button" data-lw-train="new"' +
           (queue.newCards.length ? '' : ' disabled') + '>Lernen · ' + queue.newCards.length + '</button></article>' +
         /* DIE KACHEL TUT JETZT, WAS AUF IHR STEHT (E136). Sie versprach
@@ -1225,7 +1527,7 @@ const Lernwelt = (() => {
           const naechste = pruefungen().find(item => item.tage !== null && item.tage >= 0)
             || pruefungen().find(item => item.tage === null) || null;
           const passend = naechste ? nurPassendeKarten(naechste) : [];
-          return '<article><span aria-hidden="true">📝</span><h3>Prüfungsfokus</h3><p>' +
+          return '<article>' + zeichenSpan('clipboard') + '<h3>Prüfungsfokus</h3><p>' +
             (naechste
               ? esc('Karten passend zu „' + naechste.titel + '" mischen.')
               : 'Sobald eine Prüfung eingetragen ist, wird hier gezielt geübt.') +
@@ -1301,7 +1603,7 @@ const Lernwelt = (() => {
                 prozent(thema.progress) + '" aria-label="' + esc(thema.label) + ': ' + prozent(thema.progress) +
                 ' Prozent"></progress></span><span class="lw-path-open">Lernen</span></button></li>';
           }).join('') + '</ol>'
-        : leer('🧭', 'Dein Lernpfad ist noch leer',
+        : leer('compass', 'Dein Lernpfad ist noch leer',
             'Sobald Lernkarten Themen tragen, erscheinen sie hier als frei erreichbare Stufen.',
             'capture', 'Erste Karte erstellen')) +
       /* WAS DIESEN PFAD GEORDNET HAT — und wo die Ordnung aufhört.
@@ -1345,10 +1647,10 @@ const Lernwelt = (() => {
       (fehler.length
         ? '<div class="lw-error-list">' + fehler.map(item =>
             '<article class="' + (item.stabil ? 'is-stable' : 'is-open') + '"><header><div><span>' +
-              esc(item.fach) + '</span><h3>' + esc(item.frage) + '</h3></div><strong>' +
+              esc(item.fach) + '</span><h3>' + kartenText(item.frage) + '</h3></div><strong>' +
               (item.stabil ? '✓ stabil' : item.anzahl + (item.anzahl === 1 ? ' Fehler' : ' Fehler')) +
               '</strong></header><dl><div><dt>Letzte falsche Antwort</dt><dd>' + esc(item.letzteAntwort) +
-              '</dd></div><div><dt>Richtige Antwort</dt><dd>' + esc(item.antwort) +
+              '</dd></div><div><dt>Richtige Antwort</dt><dd>' + kartenText(item.antwort) +
               '</dd></div><div><dt>Thema</dt><dd>' + esc(item.thema) +
               '</dd></div><div><dt>Quelle</dt><dd>' + esc(item.quelle) +
               '</dd></div><div><dt>Letzter Fehler</dt><dd>' + esc(datumText(item.zuletzt, true)) +
@@ -1356,7 +1658,7 @@ const Lernwelt = (() => {
               '</dd></div></dl><footer><button type="button" data-lw-card-source="' + esc(item.card.id) +
               '">Quelle öffnen</button><button type="button" data-lw-train-card="' + esc(item.card.id) +
               '">Diese Karte üben</button></footer></article>').join('') + '</div>'
-        : leer('🎉', 'Noch keine Fehler', 'Bewertete Fehler erscheinen hier mit Antwort, Thema und Quelle.',
+        : leer('party', 'Noch keine Fehler', 'Bewertete Fehler erscheinen hier mit Antwort, Thema und Quelle.',
             'nav-lernen', 'Lernen starten')) + '</div>';
   };
 
@@ -1398,6 +1700,377 @@ const Lernwelt = (() => {
         rest.map(zeile).join('') + '</ul></details>' : '') + '</section>';
   };
 
+  /* ======================================================================
+   * NOTEN (E241) — die Schulvorlage legte das Heft an, hier wird gerechnet
+   * ----------------------------------------------------------------------
+   * Gelesen wird wie bei `pruefungen()`: aus JEDER Sammlung, die nach
+   * Notenheft aussieht — `schoolKind: 'grades'` aus der Vorlage oder ein
+   * Name mit „Noten"/„Zeugnis". Kein zweiter Katalog (§8), keine neue
+   * Datenart (§9): Noten SIND Datenbankzeilen, hier steht nur der Blick
+   * darauf.
+   *
+   * ZWEI WEGE ZUR NOTE, weil die Vorlage beide anbietet: entweder steht
+   * sie direkt in der Spalte „Note", oder es stehen Punkte und Maximum da
+   * — dann gilt die übliche Schweizer Umrechnung Note = 5·P/Max + 1.
+   * Steht beides, gewinnt die eingetragene Note: wer von Hand etwas
+   * hinschreibt, meint es.
+   * ==================================================================== */
+  type NotenEintrag = { fach: string; note: number; gewicht: number;
+                        datum: Date | null; titel: string };
+
+  const notenSammlungen = (): any[] =>
+    Object.values<any>(Store.cache.collections).filter(collection => {
+      const name = String(collection?.name || '').toLowerCase();
+      return collection?.schoolKind === 'grades' || /\bnoten\b|zeugnis/.test(name);
+    });
+
+  const notenEintraege = (): NotenEintrag[] => {
+    const raus: NotenEintrag[] = [];
+    notenSammlungen().forEach(collection => {
+      const schema = collection.schema || {};
+      const spalte = (muster: RegExp, typ = 'number'): string =>
+        Object.keys(schema).find(key => schema[key]?.type === typ &&
+          muster.test(String(schema[key]?.name || key).toLowerCase())) || '';
+      /* „Rückmeldung" heisst im Vorlagen-Schema `note` — der SCHLÜSSEL, nicht
+         der Name. Gesucht wird deshalb über den NAMEN und den Typ: eine
+         Textspalte kann keine Note sein. */
+      const noteKey = spalte(/note|zensur/) || '';
+      const punkteKey = spalte(/punkte|points|erreicht/);
+      const maxKey = spalte(/max/);
+      const gewichtKey = spalte(/gewicht|weight|zaehlt/);
+      const fachKey = schemaSchluessel(collection, 'relation', ['fach', 'subject', 'modul']) ||
+        Object.keys(schema).find(key =>
+          /fach|subject|modul/.test(String(schema[key]?.name || key).toLowerCase())) || '';
+      const datumKey = schemaSchluessel(collection, 'date');
+      /* NICHT `zahl(wert, NaN)`: `Number(null)` ist 0, nicht NaN — ein
+         LEERES Notenfeld würde damit zur Note 0 und fiele still durch den
+         1–6-Filter. Genau der Vorlagen-Fall „Punkte eingetragen, Note
+         leer" verlor so seine Leistung: gemessen stand Elektrotechnik mit
+         „2 Noten" da, die dritte (21 von 30 Punkten) war weg. Leer muss
+         leer bleiben, damit der Punkteweg drankommt. */
+      const feldZahl = (wert: unknown): number => {
+        if (wert === null || wert === undefined || wert === '') return NaN;
+        return zahl(wert, NaN);
+      };
+      Store.rowsOf(collection.id).forEach((row: any) => {
+        if (!row || row.alive === false || !darfLesen(row) || !imBereich(row)) return;
+        let note = feldZahl(zeilenWert(row, collection, noteKey));
+        if (!Number.isFinite(note)) {
+          const p2 = feldZahl(zeilenWert(row, collection, punkteKey));
+          const m2 = feldZahl(zeilenWert(row, collection, maxKey));
+          if (Number.isFinite(p2) && Number.isFinite(m2) && m2 > 0)
+            note = 5 * (p2 / m2) + 1;
+        }
+        if (!Number.isFinite(note)) return;
+        /* Tippfehler fangen, nicht verstecken: eine „45" ist keine Note.
+           Sie fällt heraus, statt den Schnitt auf 12 zu heben. */
+        if (note < 1 || note > 6) return;
+        const fachWert = zeilenWert(row, collection, fachKey);
+        raus.push({
+          fach: textListe(fachWert).join(', ') || String(fachWert || '') || 'Ohne Fach',
+          note,
+          gewicht: Math.max(0.1, zahl(zeilenWert(row, collection, gewichtKey), 1) || 1),
+          datum: datum(zeilenWert(row, collection, datumKey)),
+          titel: String(row.text || 'Leistung')
+        });
+      });
+    });
+    return raus.sort((a, b) =>
+      (a.datum?.getTime() ?? 0) - (b.datum?.getTime() ?? 0));
+  };
+
+  /* EIN SEMESTER, wie die Schweizer Schule es schneidet: August–Januar
+     und Februar–Juli (L71/E242). Die Grenzen sind bewusst grob — es geht
+     nicht um den exakten Schulbeginn eines Kantons, sondern darum, dass
+     die Zeugniszahl nicht Noten aus zwei Schuljahren in einen Topf
+     mittelt. */
+  type Semester = { start: Date; ende: Date; name: string };
+
+  const semesterVon = (wann: Date): Semester => {
+    const jahr = wann.getFullYear();
+    const monat = wann.getMonth();
+    if (monat >= 7) return { start: new Date(jahr, 7, 1), ende: new Date(jahr + 1, 1, 1),
+                             name: 'Aug ' + jahr + ' – Jan ' + (jahr + 1) };
+    if (monat === 0) return { start: new Date(jahr - 1, 7, 1), ende: new Date(jahr, 1, 1),
+                              name: 'Aug ' + (jahr - 1) + ' – Jan ' + jahr };
+    return { start: new Date(jahr, 1, 1), ende: new Date(jahr, 7, 1),
+             name: 'Feb – Jul ' + jahr };
+  };
+
+  const semesterDavor = (semester: Semester): Semester =>
+    semesterVon(new Date(semester.start.getTime() - 24 * 3600 * 1000));
+
+  type FachBilanz = { fach: string; eintraege: NotenEintrag[]; schnitt: number;
+                      zeugnis: number; noetig: number };
+
+  /* DIE DREI ZAHLEN JE FACH, und warum sie so gerechnet sind:
+     · `schnitt`  gewichtetes Mittel, ungerundet — die Wahrheit.
+     · `zeugnis`  auf halbe Noten gerundet (mathematisch, 4.25 → 4.5), wie
+       ein Schweizer Zeugnis rundet.
+     · `noetig`   was die NÄCHSTE Prüfung (Gewicht 1) bringen muss, damit
+       der Schnitt auf 4.0 kommt: aus Z·(G+1) = S + n folgt
+       n = 4·(G+1) − S, mit S = Summe(Note·Gewicht), G = Summe(Gewicht).
+       Unter 1 heisst „schon sicher", über 6 „mit einer Prüfung nicht mehr
+       zu schaffen" — beides sagt der Text, nicht nur die Zahl. */
+  const notenBilanz = (eintraege: NotenEintrag[]): FachBilanz[] => {
+    const je = new Map<string, NotenEintrag[]>();
+    eintraege.forEach(e => {
+      const liste2 = je.get(e.fach) || [];
+      liste2.push(e); je.set(e.fach, liste2);
+    });
+    return [...je.entries()].map(([fach, liste2]) => {
+      const S = liste2.reduce((summe, e) => summe + e.note * e.gewicht, 0);
+      const G = liste2.reduce((summe, e) => summe + e.gewicht, 0);
+      const schnitt = S / G;
+      return { fach, eintraege: liste2, schnitt,
+               zeugnis: Math.round(schnitt * 2) / 2,
+               noetig: 4 * (G + 1) - S };
+    }).sort((a, b) => a.fach.localeCompare(b.fach, 'de-CH'));
+  };
+
+  const notenAnsicht = (): string => {
+    const alleEintraege = notenEintraege();
+    const heftDa = notenSammlungen().length > 0;
+
+    if (!alleEintraege.length) {
+      /* Zwei verschiedene Leerfälle, zwei verschiedene Sätze (§47): ohne
+         Heft führt der Knopf zur Schulvorlage, die es anlegt; mit leerem
+         Heft dorthin, wo man einträgt. */
+      if (!heftDa) return '<div class="lw-grades">' +
+        leer('medal', 'Noch kein Notenheft',
+          'Die Schulvorlage legt ein Notenheft mit Fächern, Gewichtung und Punkten an — zusätzlich, sie ersetzt nichts.',
+          'school-install', 'Ausbildung einrichten') + '</div>';
+      return '<div class="lw-grades">' +
+        leer('medal', 'Noch keine Noten eingetragen',
+          'Trage die erste Note im Notenheft ein — mit Fach, Gewicht und Datum rechnet Redion Schnitt und Zeugnisnote.',
+          'grades-open', 'Notenheft öffnen') + '</div>';
+    }
+
+    /* DER ZEITRAUM (L71/E242). Ein Zeugnis gilt für EIN Semester; die
+       Kopfzeile darf deshalb nicht alle Schuljahre in einen Topf mitteln.
+       Eine Note OHNE Datum zählt zum aktuellen Semester — frisch
+       eingetragen ohne Datum heisst „jetzt", und verstecken wäre
+       schlimmer als grob einordnen. Bei „Alle" zählt ohnehin alles. */
+    const jetzt = semesterVon(new Date());
+    const davor = semesterDavor(jetzt);
+    const imSemester = (e: NotenEintrag, s: Semester): boolean =>
+      e.datum !== null && e.datum >= s.start && e.datum < s.ende;
+    const jeZeitraum: Record<LernweltZustand['notenZeitraum'], NotenEintrag[]> = {
+      aktuell: alleEintraege.filter(e => e.datum === null || imSemester(e, jetzt)),
+      vorher: alleEintraege.filter(e => imSemester(e, davor)),
+      alle: alleEintraege
+    };
+    const wahl = zustand.notenZeitraum;
+    const eintraege = jeZeitraum[wahl];
+    const ohneDatum = jeZeitraum.aktuell.filter(e => e.datum === null).length;
+
+    const chip = (id: LernweltZustand['notenZeitraum'], beschriftung: string,
+                  zeitraumName: string): string =>
+      '<button type="button" data-lw-zeitraum="' + id + '"' +
+      ' aria-pressed="' + (wahl === id ? 'true' : 'false') + '"' +
+      (zeitraumName ? ' title="' + esc(zeitraumName) + '"' : '') + '>' +
+      esc(beschriftung) + ' <b>' + jeZeitraum[id].length + '</b></button>';
+    const chips = '<nav class="lw-grade-zeitraeume" aria-label="Zeitraum der Noten">' +
+      chip('aktuell', 'Dieses Semester', jetzt.name) +
+      chip('vorher', 'Letztes Semester', davor.name) +
+      chip('alle', 'Alle', '') + '</nav>';
+    const zeitraumName = wahl === 'aktuell' ? jetzt.name
+      : wahl === 'vorher' ? davor.name : 'alle Semester';
+
+    if (!eintraege.length) {
+      /* Im gewählten Zeitraum ist nichts — aber woanders schon. Nicht
+         still auf „Alle" springen (das wäre wieder eine Behauptung statt
+         einer Frage), sondern sagen, wo die Noten liegen: die Zähler in
+         den Chips zeigen es. */
+      return '<div class="lw-grades"><header class="lw-page-head"><div><p>Notenübersicht</p>' +
+        '<h2>Keine Noten in diesem Zeitraum</h2>' +
+        '<span>' + esc(zeitraumName) + ' ist leer — insgesamt ' + alleEintraege.length +
+        (alleEintraege.length === 1 ? ' Note' : ' Noten') + ' in anderen Zeiträumen.</span></div>' +
+        '<button type="button" data-lw-action="grades-open">Notenheft öffnen</button></header>' +
+        chips + '</div>';
+    }
+
+    const bilanz = notenBilanz(eintraege);
+    const gesamtRoh = eintraege.reduce((summe, e) => summe + e.note * e.gewicht, 0) /
+      eintraege.reduce((summe, e) => summe + e.gewicht, 0);
+    /* Das Zeugnis mittelt ZEUGNISNOTEN, nicht Rohwerte — so entsteht die
+       Zahl, die am Semesterende wirklich dasteht. */
+    const gesamtZeugnis = bilanz.reduce((summe, f) => summe + f.zeugnis, 0) / bilanz.length;
+    const unter4 = bilanz.filter(f => f.zeugnis < 4);
+
+    const balken = (liste2: NotenEintrag[]): string =>
+      '<span class="lw-grade-balken" aria-hidden="true">' +
+      liste2.slice(-8).map(e =>
+        '<i class="' + (e.note < 4 ? 'ist-ungenuegend' : '') +
+        '" style="height:' + Math.round(Math.max(8, (e.note - 1) / 5 * 100)) + '%"' +
+        ' title="' + esc(e.titel + ': ' + e.note.toFixed(1)) + '"></i>').join('') +
+      '</span>';
+
+    const zielSatz = (f: FachBilanz): string => {
+      if (f.noetig <= 1) return 'Die 4.0 ist sicher — jede gültige Note hält den Schnitt genügend.';
+      if (f.noetig > 6) return 'Mit einer einzelnen Prüfung ist die 4.0 nicht mehr zu erreichen.';
+      return 'Für eine 4.0 im Schnitt braucht die nächste Prüfung mindestens eine ' +
+        (Math.ceil(f.noetig * 10) / 10).toFixed(1) + '.';
+    };
+
+    return '<div class="lw-grades"><header class="lw-page-head"><div><p>Notenübersicht · ' +
+      esc(zeitraumName) + '</p>' +
+      '<h2>' + gesamtZeugnis.toFixed(1) + (wahl === 'alle' ? ' über alle Semester' : ' im Zeugnis') + '</h2>' +
+      '<span>Gewichteter Schnitt ' + gesamtRoh.toFixed(2) + ' über ' + eintraege.length +
+      (eintraege.length === 1 ? ' Note' : ' Noten') + ' in ' + bilanz.length +
+      (bilanz.length === 1 ? ' Fach' : ' Fächern') +
+      (unter4.length ? ' · ' + unter4.length + (unter4.length === 1 ? ' Fach' : ' Fächer') +
+        ' ungenügend' : ' · kein Fach ungenügend') +
+      (wahl === 'aktuell' && ohneDatum ? ' · ' + ohneDatum + ' ohne Datum, zählen zu diesem Semester' : '') +
+      '.</span></div>' +
+      '<button type="button" data-lw-action="grades-open">Notenheft öffnen</button></header>' +
+      chips +
+      '<div class="lw-grade-grid">' + bilanz.map(f =>
+        '<article class="lw-grade-fach' + (f.zeugnis < 4 ? ' ist-ungenuegend' : '') + '">' +
+        '<header><h3>' + esc(f.fach) + '</h3><strong>' + f.schnitt.toFixed(2) + '</strong></header>' +
+        '<p class="lw-grade-zeugnis">Zeugnisnote <b>' + f.zeugnis.toFixed(1) + '</b> · ' +
+          f.eintraege.length + (f.eintraege.length === 1 ? ' Note' : ' Noten') + '</p>' +
+        balken(f.eintraege) +
+        '<p class="lw-grade-ziel">' + esc(zielSatz(f)) + '</p>' +
+        '</article>').join('') + '</div></div>';
+  };
+
+  /* ======================================================================
+   * STUNDENPLAN (E243/L70) — hinter dem Knopf stand keiner
+   * ----------------------------------------------------------------------
+   * Auf dem Schul-Dashboard stand ein Knopf „Stundenplan", und er öffnete
+   * die Ausbildungsseite — ein Knopf, der etwas anderes tut, als er
+   * verspricht (dieselbe Sorte Fehler wie E239). Hier ist der Plan selbst:
+   * gelesen wie Noten und Prüfungen aus JEDER Sammlung, die nach
+   * Stundenplan aussieht (`schoolKind: 'timetable'` oder Name), Spalten
+   * tolerant über Namen. Kein zweiter Katalog (§8), keine neue Datenart
+   * (§9): Lektionen SIND Datenbankzeilen.
+   * ==================================================================== */
+  type Lektion = { tag: number; von: string; bis: string; vonMin: number;
+                   bisMin: number; fach: string; raum: string; hinweis: string };
+
+  const TAGE = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
+
+  const stundenplanSammlungen = (): any[] =>
+    Object.values<any>(Store.cache.collections).filter(collection => {
+      const name = String(collection?.name || '').toLowerCase();
+      return collection?.schoolKind === 'timetable' || /stundenplan/.test(name);
+    });
+
+  /* „08:15", „8.15", „ 8:15 " — alles 495. Was keine Uhrzeit ist, ist NaN,
+     nicht 0: eine Lektion ohne Zeit gehört ans Ende des Tages, nicht vor
+     die erste Morgenstunde. */
+  const uhrMin = (wert: unknown): number => {
+    const teil = /(\d{1,2})\s*[:.]\s*(\d{2})/.exec(String(wert ?? ''));
+    if (!teil) return NaN;
+    const h = Number(teil[1]), min = Number(teil[2]);
+    if (h > 23 || min > 59) return NaN;
+    return h * 60 + min;
+  };
+
+  /* „Mo", „montag", „Mittwoch" — die ersten zwei Buchstaben sind unter
+     Mo/Di/Mi/Do/Fr/Sa eindeutig. Was keinem Tag entspricht, fällt heraus
+     statt still auf Montag zu rutschen. */
+  const tagIndex = (wert: unknown): number => {
+    const t = String(wert ?? '').trim().toLowerCase().slice(0, 2);
+    if (t.length < 2) return -1;
+    return TAGE.findIndex(name => name.toLowerCase().startsWith(t));
+  };
+
+  const lektionen = (): Lektion[] => {
+    const raus: Lektion[] = [];
+    stundenplanSammlungen().forEach(collection => {
+      const schema = collection.schema || {};
+      const spalte = (muster: RegExp): string =>
+        Object.keys(schema).find(key =>
+          muster.test(String(schema[key]?.name || key).toLowerCase())) || '';
+      const tagKey = spalte(/^tag\b|wochentag|day/);
+      const vonKey = spalte(/^von\b|start|beginn/);
+      const bisKey = spalte(/^bis\b|ende/);
+      const fachKey = schemaSchluessel(collection, 'relation', ['fach', 'subject', 'modul']) ||
+        spalte(/fach|subject|modul/);
+      const raumKey = spalte(/raum|zimmer|^ort\b/);
+      const hinweisKey = spalte(/hinweis|notiz|bemerk/);
+      Store.rowsOf(collection.id).forEach((row: any) => {
+        if (!row || row.alive === false || !darfLesen(row) || !imBereich(row)) return;
+        const tag = tagIndex(zeilenWert(row, collection, tagKey));
+        if (tag < 0) return;
+        const vonRoh = String(zeilenWert(row, collection, vonKey) ?? '');
+        const bisRoh = String(zeilenWert(row, collection, bisKey) ?? '');
+        const vonMin = uhrMin(vonRoh);
+        const fachWert = zeilenWert(row, collection, fachKey);
+        raus.push({
+          tag,
+          von: vonRoh.trim(), bis: bisRoh.trim(),
+          vonMin: Number.isFinite(vonMin) ? vonMin : 24 * 60,
+          bisMin: uhrMin(bisRoh),
+          fach: textListe(fachWert).join(', ') || String(fachWert || '') ||
+            String(row.text || 'Lektion'),
+          raum: String(zeilenWert(row, collection, raumKey) ?? '').trim(),
+          hinweis: String(zeilenWert(row, collection, hinweisKey) ?? '').trim()
+        });
+      });
+    });
+    return raus.sort((a, b) => a.tag - b.tag || a.vonMin - b.vonMin);
+  };
+
+  const stundenplanAnsicht = (): string => {
+    const alle = lektionen();
+    const planDa = stundenplanSammlungen().length > 0;
+
+    if (!alle.length) {
+      /* Zwei Leerfälle, zwei Wege (§47) — wie bei den Noten. */
+      if (!planDa) return '<div class="lw-plan">' +
+        leer('calendar', 'Noch kein Stundenplan',
+          'Die Schulvorlage legt eine Stundenplan-Datenbank mit Tag, Zeit, Fach und Raum an — auch bei eingerichteter Ausbildung ergänzt sie nur, was fehlt.',
+          'school-install', 'Stundenplan anlegen') + '</div>';
+      return '<div class="lw-plan">' +
+        leer('calendar', 'Noch keine Lektionen eingetragen',
+          'Trage Lektionen mit Tag, Von, Bis, Fach und Raum ein — die Wochenansicht ordnet sie von selbst.',
+          'timetable-open', 'Stundenplan öffnen') + '</div>';
+    }
+
+    const jetzt = new Date();
+    const heuteTag = (jetzt.getDay() + 6) % 7;
+    const jetztMin = jetzt.getHours() * 60 + jetzt.getMinutes();
+    const tageZahl = alle.some(l => l.tag === 5) ? 6 : 5;
+
+    const laufend = alle.find(l => l.tag === heuteTag && Number.isFinite(l.bisMin) &&
+      l.vonMin <= jetztMin && jetztMin < l.bisMin) || null;
+    const naechste = alle.find(l => l.tag === heuteTag &&
+      l.vonMin > jetztMin && l.vonMin < 24 * 60) || null;
+    const heutige = alle.filter(l => l.tag === heuteTag);
+    const jetztSatz = laufend
+      ? 'Jetzt: ' + laufend.fach + (laufend.bis ? ' bis ' + laufend.bis : '') +
+        (laufend.raum ? ' in ' + laufend.raum : '')
+      : naechste
+        ? 'Als Nächstes: ' + naechste.fach + ' um ' + naechste.von +
+          (naechste.raum ? ' in ' + naechste.raum : '')
+        : heutige.length ? 'Für heute ist alles vorbei.' : 'Heute steht nichts im Plan.';
+
+    const spalten = TAGE.slice(0, tageZahl).map((name, tag) => {
+      const drin = alle.filter(l => l.tag === tag);
+      return '<section class="lw-plan-tag' + (tag === heuteTag ? ' ist-heute' : '') + '">' +
+        '<h3>' + name + (tag === heuteTag ? ' <em>heute</em>' : '') + '</h3>' +
+        (drin.length ? drin.map(l =>
+          '<article class="lw-plan-lektion' + (l === laufend ? ' ist-jetzt' : '') + '">' +
+          '<time>' + esc(l.von && l.bis ? l.von + '–' + l.bis : l.von || l.bis || 'ohne Zeit') +
+          '</time>' + (l === laufend ? '<em class="lw-plan-jetzt">jetzt</em>' : '') +
+          '<strong>' + esc(l.fach) + '</strong>' +
+          (l.raum ? '<span>' + esc(l.raum) + '</span>' : '') +
+          (l.hinweis ? '<small>' + esc(l.hinweis) + '</small>' : '') +
+          '</article>').join('') : '<p class="lw-plan-frei">frei</p>') +
+        '</section>';
+    }).join('');
+
+    return '<div class="lw-plan"><header class="lw-page-head"><div><p>Stundenplan</p>' +
+      '<h2>' + esc(jetztSatz) + '</h2>' +
+      '<span>' + alle.length + (alle.length === 1 ? ' Lektion' : ' Lektionen') +
+      ' pro Woche.</span></div>' +
+      '<button type="button" data-lw-action="timetable-open">Stundenplan öffnen</button></header>' +
+      '<div class="lw-plan-woche">' + spalten + '</div></div>';
+  };
+
   const pruefungenAnsicht = (): string => {
     if (zustand.simulation) return simulationAnsicht();
     const alle = pruefungen();
@@ -1436,7 +2109,7 @@ const Lernwelt = (() => {
               (karten.length ? 'Simulation starten' : 'Simulation aus allen Karten') +
               '</button></footer></article>';
           }).join('') + '</div>'
-        : leer('🗓️', 'Keine Prüfung geplant',
+        : leer('calendar', 'Keine Prüfung geplant',
             'Prüfungen bleiben normale Datenbankzeilen. Lege einen Termin in der Ausbildung an.',
             'school-setup', 'Ausbildung einrichten')) +
       simulationsVerlauf() +
@@ -1465,7 +2138,7 @@ const Lernwelt = (() => {
         if (!item.richtig) wert.fehler++;
         themen.set(item.thema, wert);
       });
-      return '<div class="lw-simulation lw-simulation-result"><header><span aria-hidden="true">🏁</span>' +
+      return '<div class="lw-simulation lw-simulation-result"><header>' + zeichenSpan('flag') +
         '<p>Simulation beendet</p><h2>' + esc(simulation.titel) + '</h2><strong>' + quote + ' %</strong></header>' +
         '<section class="lw-metrics">' + kennzahl(richtig + ' / ' + gesamt, 'richtig') +
           kennzahl(String(gesamt - richtig), 'Fehler') +
@@ -1490,8 +2163,8 @@ const Lernwelt = (() => {
       '</h2></div><time aria-label="Verbleibende Zeit">' + String(minuten).padStart(2, '0') + ':' +
       String(sekunden).padStart(2, '0') + '</time></header><progress max="' + simulation.karten.length +
       '" value="' + simulation.index + '" aria-label="Prüfungsfortschritt"></progress>' +
-      '<article class="lw-study-card"><small>' + esc(themaVon(card)) + '</small><h3>' + esc(frage) + '</h3>' +
-      (simulation.aufgedeckt ? '<div class="lw-answer"><span>Richtige Antwort</span><p>' + esc(antwort) + '</p></div>' : '') +
+      '<article class="lw-study-card"><small>' + esc(themaVon(card)) + '</small><h3>' + kartenText(frage) + '</h3>' +
+      (simulation.aufgedeckt ? '<div class="lw-answer"><span>Richtige Antwort</span><p>' + kartenText(antwort) + '</p></div>' : '') +
       '</article><div class="lw-actions">' +
       (simulation.aufgedeckt
         ? '<button type="button" data-lw-sim-answer="wrong">Falsch</button>' +
@@ -1505,7 +2178,7 @@ const Lernwelt = (() => {
     const training = zustand.training;
     if (!training) return '';
     if (training.index >= training.karten.length) {
-      return '<div class="lw-training-result"><span aria-hidden="true">🎉</span><p>Runde abgeschlossen</p><h2>' +
+      return '<div class="lw-training-result">' + zeichenSpan('party') + '<p>Runde abgeschlossen</p><h2>' +
         esc(training.titel) + '</h2><strong>' + training.bewertet + ' Karten bewertet</strong><div class="lw-actions">' +
         '<button type="button" data-lw-action="training-close">Zur Übersicht</button>' +
         '<button type="button" class="is-primary" data-lw-train="today">Nächste Runde</button></div></div>';
@@ -1518,8 +2191,8 @@ const Lernwelt = (() => {
       '<button type="button" data-lw-action="training-close">Beenden</button></header>' +
       '<progress max="' + training.karten.length + '" value="' + training.index +
       '" aria-label="Lernfortschritt"></progress><article class="lw-study-card"><small>' +
-      esc(themaVon(card)) + '</small><h3>' + esc(frage) + '</h3>' +
-      (training.aufgedeckt ? '<div class="lw-answer"><span>Antwort</span><p>' + esc(antwort) + '</p></div>' : '') +
+      esc(themaVon(card)) + '</small><h3>' + kartenText(frage) + '</h3>' +
+      (training.aufgedeckt ? '<div class="lw-answer"><span>Antwort</span><p>' + kartenText(antwort) + '</p></div>' : '') +
       (source ? '<button type="button" class="lw-source" data-lw-card-source="' + esc(card.id) + '">Quelle: ' +
         esc(typeof Learning !== 'undefined' && Learning.sourceLabel ? Learning.sourceLabel(source) : source.label) +
         '</button>' : '') + '</article><div class="lw-rating">' +
@@ -1580,6 +2253,106 @@ const Lernwelt = (() => {
     return suchtext.includes(id.toLowerCase()) || (titel.length > 2 && suchtext.includes(titel.toLowerCase()));
   };
 
+  /* ====================================================================
+   * HAUSAUFGABEN UND LERNZIELE (E256) — die zwei Poster-Zeilen der
+   * Schulsäule. Beides sind Datenbankzeilen (§9, kein zweiter Katalog):
+   * hier steht nur der Blick darauf, eingetragen wird auf der Seite der
+   * Datenbank. Gefunden wird wie beim Notenheft — `schoolKind` aus der
+   * Vorlage ODER der Name, damit auch Handangelegtes zählt.
+   * ==================================================================== */
+  type HausaufgabenEintrag = { id: string; titel: string; faellig: string;
+    erledigt: boolean; doneKey: string; row: any; collection: any };
+  type LernzielEintrag = { id: string; titel: string; stand: string;
+    bis: string; row: any; collection: any };
+
+  const hausaufgabenSammlungen = (): any[] =>
+    Object.values<any>(Store.cache.collections).filter(collection => {
+      const name = String(collection?.name || '').toLowerCase();
+      return collection?.schoolKind === 'homework' || /hausaufgabe/.test(name);
+    });
+
+  const lernzielSammlungen = (): any[] =>
+    Object.values<any>(Store.cache.collections).filter(collection => {
+      const name = String(collection?.name || '').toLowerCase();
+      return collection?.schoolKind === 'goals' || /lernziel/.test(name);
+    });
+
+  const hausaufgaben = (): HausaufgabenEintrag[] => {
+    const raus: HausaufgabenEintrag[] = [];
+    hausaufgabenSammlungen().forEach(collection => {
+      const dueKey = schemaSchluessel(collection, 'date', ['fällig', 'faellig', 'due', 'termin']);
+      const doneKey = schemaSchluessel(collection, 'checkbox', ['erledigt', 'done']);
+      Store.rowsOf(collection.id).forEach((row: any) => {
+        if (!row || row.alive === false || !darfLesen(row) || !imBereich(row)) return;
+        raus.push({
+          id: String(row.id),
+          titel: zeilenTitel(row, collection),
+          faellig: String(zeilenWert(row, collection, dueKey) ?? '').slice(0, 10),
+          /* Roh aus props, nicht über die Anzeige-Formatierung: ein
+             Haken ist wahr oder falsch, nicht „Ja". */
+          erledigt: !!(doneKey && row?.props?.[doneKey]),
+          doneKey, row, collection
+        });
+      });
+    });
+    /* Offene zuerst, darin die Fälligsten oben; Erledigtes ans Ende. */
+    return raus.sort((a, b) => a.erledigt !== b.erledigt
+      ? (a.erledigt ? 1 : -1)
+      : String(a.faellig || '9999').localeCompare(String(b.faellig || '9999')));
+  };
+
+  const lernziele = (): LernzielEintrag[] => {
+    const raus: LernzielEintrag[] = [];
+    lernzielSammlungen().forEach(collection => {
+      const statusKey = schemaSchluessel(collection, 'status', ['stand', 'status']) ||
+        schemaSchluessel(collection, 'select', ['stand', 'status']);
+      const untilKey = schemaSchluessel(collection, 'date', ['bis', 'until', 'termin']);
+      Store.rowsOf(collection.id).forEach((row: any) => {
+        if (!row || row.alive === false || !darfLesen(row) || !imBereich(row)) return;
+        raus.push({
+          id: String(row.id),
+          titel: zeilenTitel(row, collection),
+          stand: String((statusKey && row?.props?.[statusKey]) || 'Offen'),
+          bis: String(zeilenWert(row, collection, untilKey) ?? '').slice(0, 10),
+          row, collection
+        });
+      });
+    });
+    /* „Sicher" ans Ende — was sitzt, muss nicht oben stehen. */
+    return raus.sort((a, b) => (a.stand === 'Sicher' ? 1 : 0) - (b.stand === 'Sicher' ? 1 : 0));
+  };
+
+  const hausaufgabenListe = (items: HausaufgabenEintrag[], leerText: string): string => {
+    if (!items.length) return '<p class="lw-none">' + esc(leerText) + '</p>';
+    const heute = String(Store.now()).slice(0, 10);
+    return '<ul class="lw-hw-list">' + items.map(h => {
+      const dran = !h.erledigt && !!h.faellig && h.faellig < heute;
+      return '<li class="' + (h.erledigt ? 'ist-erledigt' : dran ? 'ist-faellig' : '') + '">' +
+        '<button type="button" class="lw-hw-check" data-lw-hw-done="' + esc(h.id) + '" ' +
+          'aria-pressed="' + (h.erledigt ? 'true' : 'false') + '" ' +
+          'aria-label="' + (h.erledigt ? 'Wieder öffnen' : 'Als erledigt abhaken') + ': ' + esc(h.titel) + '">' +
+          (h.erledigt ? '✓' : '') + '</button>' +
+        '<button type="button" class="lw-hw-open" data-lw-open="' + esc(h.id) + '">' +
+          '<strong>' + esc(h.titel) + '</strong>' +
+          '<small>' + (h.faellig
+            ? 'fällig ' + esc(datumText(h.faellig)) + (dran ? ' · überfällig' : '')
+            : 'ohne Termin') + '</small></button></li>';
+    }).join('') + '</ul>';
+  };
+
+  const lernzielListe = (items: LernzielEintrag[], leerText: string): string => {
+    if (!items.length) return '<p class="lw-none">' + esc(leerText) + '</p>';
+    const slug = (stand: string): string =>
+      stand === 'Sicher' ? 'sicher' : /arbeit/i.test(stand) ? 'arbeit' : 'offen';
+    return '<ul class="lw-goal-list">' + items.map(z =>
+      '<li><button type="button" data-lw-open="' + esc(z.id) + '">' +
+        /* Das Wort trägt die Aussage, die Farbe unterstreicht nur (§38). */
+        '<span class="lw-goal-stand ist-' + slug(z.stand) + '">' + esc(z.stand) + '</span>' +
+        '<strong>' + esc(z.titel) + '</strong>' +
+        '<small>' + (z.bis ? 'bis ' + esc(datumText(z.bis)) : 'ohne Termin') + '</small>' +
+      '</button></li>').join('') + '</ul>';
+  };
+
   const fachAnsicht = (fach: { row: any; collection: any; titel: string }): string => {
     const karten = lernkarten().filter(card => fachVon(card).toLowerCase().includes(fach.titel.toLowerCase()) ||
       beziehtSichAuf(card, fach.row.id, fach.titel));
@@ -1598,6 +2371,13 @@ const Lernwelt = (() => {
         item.titel.toLowerCase().includes(fach.titel.toLowerCase());
     });
     const fachNotizen = dokumente().filter(item => item.titel.toLowerCase().includes(fach.titel.toLowerCase()));
+    /* Hausaufgaben und Lernziele DIESES Fachs (E256) — über die
+       Fach-Relation (die Kennung steht in den props) oder den Titel,
+       derselbe Weg wie bei Karten und Prüfungen. */
+    const fachHw = hausaufgaben().filter(item =>
+      beziehtSichAuf(item.row, fach.row.id, fach.titel));
+    const fachZiele = lernziele().filter(item =>
+      beziehtSichAuf(item.row, fach.row.id, fach.titel));
     const fort = karten.length
       ? Math.round(karten.reduce((summe, card) => summe + Math.min(2, zahl(card?.sr?.wdh)), 0) /
         (karten.length * 2) * 100)
@@ -1607,22 +2387,27 @@ const Lernwelt = (() => {
       '</h2><span>Eine Fachseite, dieselben Notizen, PDFs, Aufgaben und Karten.</span></div>' +
       '<button type="button" data-lw-open="' + esc(fach.row.id) + '">Datensatz öffnen</button></header>' +
       '<section class="lw-metrics">' + kennzahl(String(karten.length), 'Lernkarten') +
+        kennzahl(String(fachHw.filter(item => !item.erledigt).length), 'offene Hausaufgaben') +
         kennzahl(String(fachAufgaben.filter(item => !item.fertig).length), 'offene Aufgaben') +
         kennzahl(String(fachPruefungen.length), 'Prüfungen') +
         kennzahl(String(fachFehler.filter(item => !item.stabil).length), 'aktive Fehler') + '</section>' +
       fortschritt(fort, 'Fachlicher Fortschritt') +
       '<div class="lw-dashboard-grid">' +
+        sektion('Hausaufgaben', hausaufgabenListe(fachHw.slice(0, 8),
+          'Keine Hausaufgabe für dieses Fach eingetragen.')) +
+        sektion('Lernziele', lernzielListe(fachZiele.slice(0, 8),
+          'Noch kein Lernziel für dieses Fach.')) +
         sektion('Unterricht & Notizen', eintragListe(fachNotizen.slice(0, 8), 'Noch keine Notiz diesem Fach zugeordnet.')) +
         sektion('PDFs & Material', eintragListe(fachPdfs.slice(0, 8), 'Noch kein PDF diesem Fach zugeordnet.')) +
         sektion('Aufgaben', aufgabenListe(fachAufgaben.slice(0, 8), 'Keine Fachaufgabe gefunden.')) +
         sektion('Prüfungen', fachPruefungen.length ? '<ul class="lw-object-list">' + fachPruefungen.map(item =>
-          '<li><button type="button" data-lw-exam="' + esc(item.id) + '"><span class="lw-object-icon">📝</span>' +
+          '<li><button type="button" data-lw-exam="' + esc(item.id) + '">' + zeichenSpan('clipboard', 'lw-object-icon') +
           '<span><strong>' + esc(item.titel) + '</strong><small>' + esc(item.datum ? datumText(item.datum) :
             'Termin offen') + '</small></span><span>›</span></button></li>').join('') + '</ul>' :
           '<p class="lw-none">Keine Prüfung für dieses Fach gefunden.</p>') +
         sektion('Fehler', fachFehler.length ? '<ul class="lw-compact-errors">' + fachFehler.slice(0, 8).map(item =>
           '<li><button type="button" data-lw-train-card="' + esc(item.card.id) + '"><span>' +
-          (item.stabil ? '✓' : '!') + '</span><strong>' + esc(item.frage) + '</strong><small>' + item.anzahl +
+          (item.stabil ? '✓' : '!') + '</span><strong>' + kartenText(item.frage) + '</strong><small>' + item.anzahl +
           ' Fehler</small></button></li>').join('') + '</ul>' : '<p class="lw-none">Keine Fehler in diesem Fach.</p>') +
       '</div></div>';
   };
@@ -1650,7 +2435,7 @@ const Lernwelt = (() => {
        einzeln hat es gezeigt. */
     const schonDa = !root && (schulSammlungen().some(sammlung => sammlung?.schoolKind) ||
       pruefungen().length > 0 || lernkarten().length > 0 || fachZeilen().length > 0);
-    if (!root && !schonDa) return '<div class="lw-school">' + leer('🎓', 'Ausbildung noch nicht eingerichtet',
+    if (!root && !schonDa) return '<div class="lw-school">' + leer('learn', 'Ausbildung noch nicht eingerichtet',
       'Die additive Vorlage erstellt normale Seiten und Datenbanken für Fächer, Prüfungen, Noten und Material.',
       'school-install', 'Ausbildung einrichten') + '</div>';
     const faecher = fachZeilen();
@@ -1659,9 +2444,12 @@ const Lernwelt = (() => {
     const tasks = sichtbareAufgaben().filter(item => !item.fertig).slice(0, 8);
     const exams = pruefungen().filter(item => item.tage === null || item.tage >= 0).slice(0, 6);
     const themen = liste(statistik().topics).slice(0, 8);
-    const gradeEntries = sammlungsEintraege('grades', '🏅', 6);
-    const reportEntries = sammlungsEintraege('reports', '📓', 6);
-    const materialEntries = sammlungsEintraege('materials', '📚', 8);
+    const hw = hausaufgaben();
+    const offeneHw = hw.filter(item => !item.erledigt);
+    const ziele = lernziele();
+    const gradeEntries = sammlungsEintraege('grades', 'medal', 6);
+    const reportEntries = sammlungsEintraege('reports', 'clipboard', 6);
+    const materialEntries = sammlungsEintraege('materials', 'library', 8);
     /* Ohne Ausbildungsseite gibt es nichts zu öffnen — dort steht statt des
        Knopfes das Angebot, die Vorlage nachzuziehen. */
     return '<div class="lw-school"><header class="lw-page-head"><div><p>Schule / Ausbildung</p><h2>' +
@@ -1690,7 +2478,7 @@ const Lernwelt = (() => {
             ? Math.round(cards.reduce((summe, card) => summe + Math.min(2, zahl(card?.sr?.wdh)), 0) /
               (cards.length * 2) * 100)
             : 0;
-          return '<button type="button" data-lw-subject="' + esc(item.row.id) + '"><span aria-hidden="true">📘</span>' +
+          return '<button type="button" data-lw-subject="' + esc(item.row.id) + '">' + zeichenSpan('book') +
             '<strong>' + esc(item.titel) + '</strong><small>' + cards.length + ' Karten · ' + progress +
             ' %</small><progress max="100" value="' + progress + '" aria-label="Fortschritt ' +
             esc(item.titel) + '"></progress></button>';
@@ -1698,10 +2486,21 @@ const Lernwelt = (() => {
           '<button type="button" data-lw-open="' + esc(root?.id || '') + '">Fächer hinzufügen</button>' +
           '</div>') + '</section>' : '') +
       '<div class="lw-dashboard-grid">' +
+        /* Hausaufgaben und Lernziele (E256) zuerst — das sind die zwei
+           Fragen des Schulalltags: was ist zu tun, und wohin soll es. */
+        sektion('Hausaufgaben',
+          hausaufgabenListe(hw.slice(0, 8), 'Keine Hausaufgabe eingetragen.') +
+          (hausaufgabenSammlungen().length
+            ? '<button type="button" class="lw-alle" data-lw-action="homework-open">Alle Hausaufgaben</button>' : ''),
+          offeneHw.length ? offeneHw.length + ' offen' : '') +
+        sektion('Lernziele',
+          lernzielListe(ziele.slice(0, 8), 'Noch kein Lernziel festgehalten.') +
+          (lernzielSammlungen().length
+            ? '<button type="button" class="lw-alle" data-lw-action="goals-open">Alle Lernziele</button>' : '')) +
         sektion('Aktuelle Themen', themenListe(themen, 8), 'aus deinen Lernkarten') +
         sektion('Aufgaben', aufgabenListe(tasks, 'Keine offene Ausbildungsaufgabe.')) +
         sektion('Prüfungen', exams.length ? '<ul class="lw-object-list">' + exams.map(item =>
-          '<li><button type="button" data-lw-exam="' + esc(item.id) + '"><span class="lw-object-icon">📝</span>' +
+          '<li><button type="button" data-lw-exam="' + esc(item.id) + '">' + zeichenSpan('clipboard', 'lw-object-icon') +
           '<span><strong>' + esc(item.titel) + '</strong><small>' + esc(item.datum ? datumText(item.datum) :
           'Termin offen') + '</small></span><span>›</span></button></li>').join('') + '</ul>' :
           '<p class="lw-none">Keine Prüfung geplant.</p>') +
@@ -1710,9 +2509,11 @@ const Lernwelt = (() => {
         sektion('Noten', eintragListe(gradeEntries, 'Noch keine Note eingetragen.')) +
         sektion('Berichtsheft', eintragListe(reportEntries, 'Noch kein Berichtsheft-Eintrag.')) +
       '</div><div class="lw-quick">' +
-        (root ? '<button type="button" data-lw-open="' + esc(root.id) + '">📅 Stundenplan</button>' : '') +
-        '<button type="button" data-lw-nav="lernen">🎴 Lernkarten</button>' +
-        '<button type="button" data-lw-nav="fortschritt">📈 Lernfortschritt</button></div></div>';
+        /* Seit E243 führt der Knopf zum STUNDENPLAN, nicht mehr zur
+           Ausbildungsseite — er hielt nicht, was er versprach (L70). */
+        '<button type="button" data-lw-nav="stundenplan">' + zeichenSpan('calendar') + 'Stundenplan</button>' +
+        '<button type="button" data-lw-nav="lernen">' + zeichenSpan('cards') + 'Lernkarten</button>' +
+        '<button type="button" data-lw-nav="fortschritt">' + zeichenSpan('chart') + 'Lernfortschritt</button></div></div>';
   };
 
   const passendeBereiche = (art: string): LernweltBereich[] => bereiche().filter(item => {
@@ -1753,7 +2554,7 @@ const Lernwelt = (() => {
 
   const uniAnsicht = (): string => {
     const uniBereiche = passendeBereiche('uni');
-    const module = domainingEintraege(/semester|modul|vorlesung|übung|uebung|literatur|studium/i, '🏛️');
+    const module = domainingEintraege(/semester|modul|vorlesung|übung|uebung|literatur|studium/i, 'building');
     const tasks = sichtbareAufgaben().filter(item => !item.fertig).slice(0, 8);
     const exams = pruefungen().filter(item => item.tage === null || item.tage >= 0).slice(0, 6);
     return '<div class="lw-domain"><header class="lw-page-head"><div><p>Uni</p><h2>Studium im selben Workspace</h2>' +
@@ -1769,7 +2570,7 @@ const Lernwelt = (() => {
           'zuletzt bearbeitet') +
         sektion('Übungen & Aufgaben', aufgabenListe(tasks, 'Keine offene Übung oder Aufgabe.')) +
         sektion('Prüfungen', exams.length ? '<ul class="lw-object-list">' + exams.map(item =>
-          '<li><button type="button" data-lw-exam="' + esc(item.id) + '"><span class="lw-object-icon">📝</span>' +
+          '<li><button type="button" data-lw-exam="' + esc(item.id) + '">' + zeichenSpan('clipboard', 'lw-object-icon') +
           '<span><strong>' + esc(item.titel) + '</strong><small>' + esc(item.fach || datumText(item.datum)) +
           '</small></span><span>›</span></button></li>').join('') + '</ul>' : '<p class="lw-none">Keine Prüfung geplant.</p>') +
         sektion('Literatur & PDFs', eintragListe(sichtbarePdfs(), 'Noch keine Literatur oder PDF zugeordnet.')) +
@@ -1782,10 +2583,10 @@ const Lernwelt = (() => {
     const meetings = alleBloecke().filter(block => block.type === 'page' && block.besprechung && imBereich(block))
       .sort((a, b) => String(b.created || '').localeCompare(String(a.created || ''))).slice(0, 8)
       .map(page => ({
-        id: String(page.id), titel: String(page.text || 'Meeting'), icon: String(page.icon || '🎙'),
+        id: String(page.id), titel: String(page.text || 'Meeting'), icon: String(page.icon || 'mic'),
         zeit: String(page.created || ''), untertitel: 'Meeting-Notiz', bereichIds: direkteBereichIds(page)
       } as LernweltEintrag));
-    const wissen = domainingEintraege(/entscheidung|wissensbasis|knowledge|offene punkte|projekt/i, '💼');
+    const wissen = domainingEintraege(/entscheidung|wissensbasis|knowledge|offene punkte|projekt/i, 'briefcase');
     return '<div class="lw-domain"><header class="lw-page-head"><div><p>Arbeit</p><h2>Projekte, Meetings und Wissen</h2>' +
       '<span>Professionelle Arbeitssicht auf dieselben Seiten, Aufgaben, Termine und Dateien.</span></div>' +
       '<div class="lw-actions"><button type="button" data-lw-action="meeting">Meeting-Notiz</button>' +
@@ -1839,6 +2640,8 @@ const Lernwelt = (() => {
       case 'lernweg': return lernpfadAnsicht();
       case 'fehler': return fehlerAnsicht();
       case 'pruefungen': return pruefungenAnsicht();
+      case 'noten': return notenAnsicht();
+      case 'stundenplan': return stundenplanAnsicht();
       case 'schule': return schuleAnsicht();
       case 'uni': return uniAnsicht();
       case 'arbeit': return arbeitAnsicht();
@@ -1912,8 +2715,15 @@ const Lernwelt = (() => {
    * `data-mehr` steht danach genau wie vorher (E159).
    */
   const reiterRollstand = (): void => {
-    Rollrand.binde(zustand.root?.querySelector<HTMLElement>('.lw-nav') || null,
-      { art: 'mehr' });
+    const leiste = zustand.root?.querySelector<HTMLElement>('.lw-nav') || null;
+    Rollrand.binde(leiste, { art: 'mehr' });
+    /* UND DER GEWÄHLTE REITER MUSS AUCH ZU SEHEN SEIN.
+       Gefunden im Bild, nicht in einer Prüfung (§55): in der Prüfungssicht
+       stand der aktive Reiter „Prüfungen" halb ausserhalb der Karte — man
+       tippt darauf, er wird hell, und dann ist er weg. Solange die Leiste
+       322 px breit war, passte alles; seit sie sich am Telefon die Zeile
+       mit der Krume teilt (E235), sind es 234. */
+    Rollrand.zeige(leiste, leiste?.querySelector<HTMLElement>('[aria-current="page"]') || null);
   };
 
   const ansichtGueltig = (wert: unknown): wert is LernweltAnsicht =>
@@ -2152,9 +2962,23 @@ const Lernwelt = (() => {
       if (page) { App.zeichneBaum(); zustand.fachId = ''; zeichnen(); }
       return;
     }
+    /* Eine Sammlung öffnen heisst: die SEITE öffnen, auf der ihr
+       Datenbank-Block liegt. Dort trägt man ein; die Ansichten hier
+       rechnen nur (E241/E243). */
+    const sammlungSeiteOeffnen = (sammlung: any): void => {
+      if (!sammlung) return;
+      const block = Object.values<any>(Store.cache.blocks).find(b =>
+        b?.type === 'database' && b.collectionId === sammlung.id && b.alive !== false);
+      const ziel = block ? (block.parentTable === 'block' ? block.parentId : block.id) : null;
+      if (ziel) App.oeffne(String(ziel));
+    };
+    if (aktion === 'grades-open') { sammlungSeiteOeffnen(notenSammlungen()[0]); return; }
+    if (aktion === 'timetable-open') { sammlungSeiteOeffnen(stundenplanSammlungen()[0]); return; }
+    if (aktion === 'homework-open') { sammlungSeiteOeffnen(hausaufgabenSammlungen()[0]); return; }
+    if (aktion === 'goals-open') { sammlungSeiteOeffnen(lernzielSammlungen()[0]); return; }
     if (aktion === 'new-page') {
       const titel = zustand.ansicht === 'uni' ? 'Studiennotiz' : 'Arbeitsnotiz';
-      const icon = zustand.ansicht === 'uni' ? '🏛️' : '💼';
+      const icon = zustand.ansicht === 'uni' ? 'building' : 'briefcase';
       const page = Store.addPage(null, { text: titel, icon });
       await neuZuordnen(page);
       externOeffnen(page.id);
@@ -2167,10 +2991,31 @@ const Lernwelt = (() => {
     const nav = element.closest<HTMLElement>('[data-lw-nav]');
     const navId = nav?.dataset.lwNav;
     if (ansichtGueltig(navId)) { wechseln(navId); return; }
+    /* Der Haken an der Hausaufgabe (E256): umschalten, nicht öffnen —
+       deshalb VOR data-lw-open, der Knopf steht neben einem Öffnen-Knopf.
+       Geschrieben wird die Checkbox-Spalte der Zeile selbst (setProp);
+       die Ansicht zeichnet danach aus den Daten neu. */
+    const hwKnopf = element.closest<HTMLElement>('[data-lw-hw-done]');
+    if (hwKnopf?.dataset.lwHwDone) {
+      const rowId = hwKnopf.dataset.lwHwDone;
+      const eintrag = hausaufgaben().find(item => item.id === rowId);
+      if (eintrag && eintrag.doneKey) {
+        Store.setProp(rowId, eintrag.doneKey, !eintrag.erledigt);
+        zeichnen();
+      }
+      return;
+    }
     const open = element.closest<HTMLElement>('[data-lw-open]');
     if (open?.dataset.lwOpen) { externOeffnen(open.dataset.lwOpen); return; }
     const action = element.closest<HTMLElement>('[data-lw-action]');
     if (action?.dataset.lwAction) { void aktionAusfuehren(action.dataset.lwAction); return; }
+    /* Zeitraum der Noten-Ansicht (E242): flüchtiger Ansichtszustand wie
+       das Menüband am Telefon — kein Merker, der Ansichten überlebt. */
+    const zeitraum = element.closest<HTMLElement>('[data-lw-zeitraum]');
+    const zeitraumWert = zeitraum?.dataset.lwZeitraum;
+    if (zeitraumWert === 'aktuell' || zeitraumWert === 'vorher' || zeitraumWert === 'alle') {
+      zustand.notenZeitraum = zeitraumWert; zeichnen(); return;
+    }
     const train = element.closest<HTMLElement>('[data-lw-train]');
     if (train?.dataset.lwTrain) { trainingStarten(train.dataset.lwTrain); return; }
     const trainCard = element.closest<HTMLElement>('[data-lw-train-card]');

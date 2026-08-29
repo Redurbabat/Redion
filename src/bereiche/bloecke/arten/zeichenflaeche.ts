@@ -855,7 +855,8 @@ const Zusatz = (() => {
 
     if (!werte.length) {
       flaeche.innerHTML = '<div class="chart-leer">Noch keine Daten. Klicke auf <b>✎ Daten</b> ' +
-                          'und schreibe Zeilen wie <code>Montag: 12</code>.</div>';
+                          'und schreibe Zeilen wie <code>Montag: 12</code> — oder wähle dort ' +
+                          'eine Datenbank als Quelle.</div>';
     } else {
       flaeche.appendChild(chartSvg(typ, werte));
       const legende = document.createElement('div');
@@ -1034,27 +1035,85 @@ const Zusatz = (() => {
   };
 
   const datenEditor = (block: any) => {
+    /* DIE QUELLE WAR NUR LESBAR (E247). `chartDaten` konnte längst aus
+       einer Datenbank gruppieren und summieren — aber keine Oberfläche
+       schrieb `quelleDb`, `gruppeNach` oder `messen`. Der Bild-Abgleich
+       fand es: „der Codepfad steht, nur die Bedienung fehlt." Hier ist
+       sie: Handdaten ODER Datenbank, mit Gruppier- und Messspalte. */
+    const sammlungen = Object.values<any>(Store.cache.collections)
+      .filter(c => c && c.name)
+      .sort((a, b) => String(a.name).localeCompare(String(b.name), 'de-CH'));
+    const feldStil = 'width:100%; background:var(--bg-input); border:1px solid var(--line);' +
+      'border-radius:8px; padding:8px 10px; outline:none; font-size:13.5px';
+
+    const spaltenWahl = (c: any, gewaehlt: string, nurZahlen: boolean): string => {
+      const schema = c?.schema || {};
+      const passend = Object.keys(schema).filter(key =>
+        !nurZahlen || schema[key]?.type === 'number' || schema[key]?.type === 'formula');
+      return (nurZahlen ? '<option value="">Zeilen zählen</option>' : '') +
+        passend.map(key => `<option value="${esc(key)}"${key === gewaehlt ? ' selected' : ''}>` +
+          esc(schema[key]?.name || key) + '</option>').join('');
+    };
+
     const o = document.createElement('div');
     o.className = 'overlay';
     o.innerHTML =
       '<div class="finder" style="width:min(560px,94vw)">' +
         '<div class="fh">Daten des Diagramms</div>' +
-        '<div style="padding:14px 18px">' +
-          '<textarea id="cd" rows="10" style="width:100%; background:var(--bg-input); border:1px solid var(--line);' +
-          'border-radius:8px; padding:10px 12px; outline:none; font:13.5px var(--mono); resize:vertical">' +
-          esc(block.daten || 'Montag: 12\nDienstag: 18\nMittwoch: 9') + '</textarea>' +
-          '<div style="margin-top:10px; font-size:12.5px; color:var(--text-dim)">' +
-          'Eine Zeile je Wert: <code>Name: Zahl</code></div>' +
+        '<div style="padding:14px 18px; display:flex; flex-direction:column; gap:10px">' +
+          '<label style="font-size:12.5px; color:var(--text-dim)">Quelle' +
+            `<select id="cq" style="${feldStil}; margin-top:4px">` +
+              '<option value="">Handdaten — Zeilen unten</option>' +
+              sammlungen.map(c => `<option value="${esc(c.id)}"${c.id === block.quelleDb ? ' selected' : ''}>` +
+                'Datenbank: ' + esc(c.name) + '</option>').join('') +
+            '</select></label>' +
+          '<div id="cq-felder" style="display:flex; gap:10px"' + (block.quelleDb ? '' : ' hidden') + '>' +
+            '<label style="flex:1; font-size:12.5px; color:var(--text-dim)">Gruppieren nach' +
+              `<select id="cg" style="${feldStil}; margin-top:4px"></select></label>` +
+            '<label style="flex:1; font-size:12.5px; color:var(--text-dim)">Messen' +
+              `<select id="cm" style="${feldStil}; margin-top:4px"></select></label>` +
+          '</div>' +
+          '<div id="cq-hand"' + (block.quelleDb ? ' hidden' : '') + '>' +
+            '<textarea id="cd" rows="10" style="' + feldStil + '; font:13.5px var(--mono); resize:vertical">' +
+            esc(block.daten || 'Montag: 12\nDienstag: 18\nMittwoch: 9') + '</textarea>' +
+            '<div style="margin-top:8px; font-size:12.5px; color:var(--text-dim)">' +
+            'Eine Zeile je Wert: <code>Name: Zahl</code></div>' +
+          '</div>' +
         '</div>' +
         '<div class="fbtns"><button data-a="ok" class="prim">Übernehmen</button>' +
         '<button data-a="zu">Abbrechen</button></div>' +
       '</div>';
     document.body.appendChild(o);
     const ta = o.querySelector<HTMLTextAreaElement>('#cd');
-    ta?.focus();
+    const quelle = o.querySelector<HTMLSelectElement>('#cq');
+    const gruppe = o.querySelector<HTMLSelectElement>('#cg');
+    const mess = o.querySelector<HTMLSelectElement>('#cm');
+    const felder = o.querySelector<HTMLElement>('#cq-felder');
+    const hand = o.querySelector<HTMLElement>('#cq-hand');
+
+    const spaltenFuellen = () => {
+      const c = quelle?.value ? Store.getCollection(quelle.value) : null;
+      if (gruppe) gruppe.innerHTML = c ? spaltenWahl(c, block.gruppeNach || '', false) : '';
+      if (mess) mess.innerHTML = c ? spaltenWahl(c, block.messen || '', true) : '';
+      if (felder) felder.hidden = !c;
+      if (hand) hand.hidden = !!c;
+    };
+    spaltenFuellen();
+    quelle?.addEventListener('change', spaltenFuellen);
+    (quelle?.value ? quelle : ta)?.focus();
+
     o.addEventListener('click', e => {
       if (elVon(e)?.closest<HTMLElement>('[data-a="ok"]')) {
-        if (ta) Store.updateBlock(block.id, { daten: ta.value });
+        if (quelle?.value) {
+          Store.updateBlock(block.id, { quelleDb: quelle.value,
+            gruppeNach: gruppe?.value || '', messen: mess?.value || '' });
+        } else {
+          /* Zurück zu Handdaten heisst: die Quelle WIRKLICH loslassen —
+             ein stehengebliebenes `quelleDb` würde die Zeilen unten
+             still übertrumpfen (chartDaten fragt zuerst die Datenbank). */
+          Store.updateBlock(block.id, { quelleDb: '', gruppeNach: '', messen: '',
+            daten: ta ? ta.value : block.daten });
+        }
         o.remove(); App.zeichneSeite();
       } else if (elVon(e)?.closest<HTMLElement>('[data-a="zu"]') || e.target === o) o.remove();
     });

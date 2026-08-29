@@ -164,7 +164,7 @@ import http from 'node:http';
        Ziel, an der Stelle, an der man es sucht. Geprüft wird weiterhin,
        DASS es einen sichtbaren Knopf gibt, der sie aufklappt; nur sein
        Name hat sich geändert. */
-    const menu = document.getElementById('hl-konto') || document.getElementById('btn-menu');
+    const menu = document.getElementById('mb-konto') || document.getElementById('btn-menu');
     const side = document.getElementById('sidebar');
     /* Fehlt die Seitenleiste, ist 'none' die Antwort, die unten rot wird —
        eine leere Zeichenkette wäre ungleich 'none' und damit still grün. */

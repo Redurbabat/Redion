@@ -43,6 +43,8 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 
+declare const Ruhig: any;
+
 const WURZEL = path.resolve(import.meta.dirname, '../..');
 const PORT = 8980;
 
@@ -119,17 +121,43 @@ gleich('Und jeder weiss, wie er aufmacht', bestand.ohneOeffnen, []);
 console.log('\n2 · Und jeder macht wirklich etwas auf');
 
 const geoeffnet = await seite.evaluate(async () => {
+  /* EIN DATEIWÄHLER STEHT NIE IM BAUM.
+     `Recognition.scan()` legt ein `<input type="file">` an, klickt es und
+     hängt es NICHT ein — der Browser zeigt ein Fenster des Betriebssystems.
+     Am Bildschirm ändert sich damit kein einziges Zeichen, und dieser
+     Abschnitt hielt „Erfassen & Erkennen" für einen Weg, der nichts tut.
+
+     Dass er trotzdem grün war, lag am Zufall: davor stand „Elektro", das
+     eine Überlagerung öffnete, und deren Aufräumen wirkte in die nächste
+     Messung hinein. Seit „Elektro" eine SEITE ist (E238), fiel die Stütze
+     weg — und der Punkt zeigte, was er die ganze Zeit nicht sehen konnte.
+
+     Gezählt wird deshalb auch der Klick auf einen Dateiwähler. Dieselbe
+     Lösung wie bei der Probe in E236, die aus demselben Grund drei falsche
+     Kreuze meldete. */
+  const g = globalThis as any;
+  if (!g.__waehlerZaehler) {
+    g.__waehlerZaehler = 0;
+    const echt = HTMLInputElement.prototype.click;
+    HTMLInputElement.prototype.click = function (this: HTMLInputElement) {
+      if (this.type === 'file') g.__waehlerZaehler++;
+      return echt.call(this);
+    };
+  }
   const raus: any[] = [];
   for (const m of Register.module.alle()) {
     /* Sauber anfangen: offene Fenster weg, sonst zählt das vorige mit. */
     document.querySelectorAll<HTMLElement>('.overlay, .menu, .menu-grund').forEach(o => o.remove());
     const vorher = document.body.innerHTML.length + ':' + String(App.aktuelleSeite() || '');
+    const waehlerVorher = g.__waehlerZaehler;
     let ergebnis = false, geworfen = '';
     try { ergebnis = Register.module.oeffne(m.id); }
     catch (e) { geworfen = e instanceof Error ? e.message : String(e); }
     await new Promise(r => setTimeout(r, 500));
     const nachher = document.body.innerHTML.length + ':' + String(App.aktuelleSeite() || '');
-    raus.push({ id: String(m.id), ergebnis, geworfen, geaendert: vorher !== nachher });
+    raus.push({ id: String(m.id), ergebnis, geworfen,
+                geaendert: vorher !== nachher || g.__waehlerZaehler > waehlerVorher,
+                waehler: g.__waehlerZaehler > waehlerVorher });
     document.querySelectorAll<HTMLElement>('.overlay, .menu, .menu-grund').forEach(o => o.remove());
   }
   return raus;
@@ -141,6 +169,12 @@ gleich('Jeder meldet Erfolg',
   geoeffnet.filter((x: any) => x.ergebnis !== true).map((x: any) => x.id), []);
 gleich('Und bei jedem ändert sich etwas auf dem Bildschirm',
   geoeffnet.filter((x: any) => !x.geaendert).map((x: any) => x.id), []);
+/* UND DER ZÄHLER MUSS AUCH WIRKLICH ZÄHLEN. Ohne diesen Punkt wäre die
+   Erweiterung oben eine Ausnahme, die alles durchlässt: sie würde jeden
+   Weg retten, der nichts tut, sobald irgendwann irgendein Wähler klickt. */
+p('Und mindestens einer davon öffnet einen Dateiwähler',
+  geoeffnet.some((x: any) => x.waehler),
+  geoeffnet.filter((x: any) => x.waehler).map((x: any) => x.id).join(', ') || 'keiner');
 
 /* ==========================================================================
  * §3 · Eine erfundene Kennung ergibt false — und wirft nicht
@@ -226,7 +260,13 @@ p('Mit einem Dokument schaltet er um', mitDokument);
 console.log('\n5 · Seitenleiste und Register sagen dasselbe');
 
 const leiste = await seite.evaluate(() => {
+  /* `[data-ruhig="schalter"]` ist KEIN Ziel. „Mehr" (E219) geht nirgends hin,
+     es ändert nur, wie viel die Leiste zeigt — und gehört deshalb nicht ins
+     Navigationsregister, sonst stünde im Katalog ein Weg, den es nicht gibt.
+     Die Prüfung bleibt scharf: jeder ANDERE neue Knopf ohne Registereintrag
+     macht sie weiterhin rot. */
   const zeilen = [...document.querySelectorAll<HTMLElement>('.side-nav .side-item')]
+    .filter(b => b.dataset['ruhig'] !== 'schalter')
     .map(b => {
       const teile = [...b.children] as HTMLElement[];
       return { knopfId: b.id,
@@ -273,7 +313,8 @@ p('„Befehle" öffnet die Befehle', zwei.befehle.befehlsfeld && !zwei.befehle.s
 /* Und keine Zeile ist tot. */
 const tot = await seite.evaluate(async () => {
   const raus: string[] = [];
-  for (const b of [...document.querySelectorAll<HTMLElement>('.side-nav .side-item')]) {
+  for (const b of [...document.querySelectorAll<HTMLElement>('.side-nav .side-item')]
+         .filter(b => b.dataset['ruhig'] !== 'schalter')) {
     document.querySelectorAll<HTMLElement>('.overlay, .menu').forEach(o => o.remove());
     const vorher = document.body.innerHTML.length + ':' + String(App.aktuelleSeite() || '');
     b.click();
@@ -342,7 +383,23 @@ const apps = await seite.evaluate(() => {
   return { reg, gezeichnet };
 });
 
-p('Es gibt zwanzig Apps', apps.reg.length === 20, String(apps.reg.length));
+/* ACHTZEHN (E206, berichtigt in E207). Zwanzig waren es; drei sahen nach
+   Doppelungen aus, und eine davon war keine:
+
+       Papierkorb   `App.papierkorb()`            = btn-trash, im Fuss   ✓ weg
+       Hilfe        `Werkzeuge.tastenkuerzel()`   = btn-hilfe, im Fuss   ✓ weg
+       Bibliothek   `Bibliothek.oeffne()` — und `btn-library` ruft
+                    `Produktwelten.bibliothek()`, also die Bibliothek der
+                    ARBEITSWELT. Zwei Namen, zwei Ansichten. `test33` fand
+                    es: der ersetzte Weg landete im Workspace. Der Eintrag
+                    ist unter „Alle Seiten" zurück.
+
+   Redur hat dem Entfernen der Kopien zugestimmt; ein Löschen war nur die
+   erste Fassung, und die Prüfung hat sie zurückgeholt.
+
+   Die Zahl steht hier weiterhin fest und nicht als `> 0`: eine Prüfung, die
+   jede Zahl durchlässt, merkt nicht, wenn die Hälfte der Liste wegfällt. */
+p('Es gibt achtzehn Apps', apps.reg.length === 18, String(apps.reg.length));
 gleich('Und genauso viele stehen da', apps.gezeichnet.length, apps.reg.length);
 gleich('In derselben Folge', apps.gezeichnet.map((x: any) => x.id),
   apps.reg.map((x: any) => x.id));
@@ -350,10 +407,52 @@ gleich('In derselben Folge', apps.gezeichnet.map((x: any) => x.id),
    umbenannt; der volle Prüflauf fand drei Zeilen in test33 und test61, die
    die Knöpfe über `[data-app="bib"]` anfassen. Ein solcher Wert ist eine
    Adresse nach aussen — eigenes CSS und eigene Erweiterungen dürfen darauf
-   zeigen (E167). */
-gleich('Und die Marken sind die kurzen, unveränderten',
-  apps.gezeichnet.slice(0, 4).map((x: any) => x.id),
-  ['kalender', 'pwa', 'bib', 'aufgaben']);
+   zeigen (E167).
+
+   HIER STANDEN VIER FESTE NAMEN, und drei davon prüften nur, in welcher
+   REIHENFOLGE die Liste steht — nicht, was die Behauptung sagt. Als E206
+   die Gruppen einführte, ging der Punkt rot, obwohl keine Marke sich
+   geändert hatte. Geprüft wird jetzt die Behauptung selbst: keine Marke
+   trägt das Präfix, das E166 verursacht und E167 zurückgenommen hat. */
+const mitPraefix = apps.gezeichnet.filter((x: any) => /^app-/.test(x.id)).map((x: any) => x.id);
+p('Keine Marke trägt das `app-`-Präfix aus E166', mitPraefix.length === 0, mitPraefix.join(', '));
+
+/* DIE SCHUBLADEN MÜSSEN AUFGEHEN (E206/E207).
+   Seit E206 liegen die Apps in vier Gruppen, und zugeklappt ist die
+   Voreinstellung. Das ist genau dann eine gute Idee, wenn ein Klick sie
+   wieder öffnet — und genau dann eine schlechte, wenn nicht: die Einträge
+   stehen im Baum, ein Vorleseprogramm findet sie, und niemand kommt hin.
+   `test33` lief prompt in einen Zeitablauf, weil es auf einen versteckten
+   Knopf klickte.
+
+   Geprüft wird die BEDIENUNG und nicht der Speicher: erst zählen, was zu
+   sehen ist, dann klicken, dann wieder zählen. */
+const schublade = await seite.evaluate(async () => {
+  /* Seit E219 steht „Meine Apps" hinter „Mehr" — der ganze Block ist dann
+     `display:none`, und `offsetParent` ist für JEDEN Eintrag null. Die
+     Prüfung hätte also vorher 0 und nachher 0 gezählt und daraus „die
+     Schublade geht nicht auf" gemacht, obwohl sie aufgeht.
+     Erst aufklappen, dann messen: das ist der Weg, den auch ein Mensch
+     geht (dieselbe Stelle wie in test33 und test128). */
+  if (typeof Ruhig !== 'undefined' && Ruhig.an() && !Ruhig.offen()) Ruhig.schalten();
+  await new Promise(r => setTimeout(r, 200));
+  const sichtbar = () => [...document.querySelectorAll<HTMLElement>('.apps-block [data-app]')]
+    .filter(b => b.offsetParent !== null).length;
+  const vorher = sichtbar();
+  const kopf = document.querySelector<HTMLElement>('[data-app-gruppe]');
+  const name = kopf?.dataset['appGruppe'] || '';
+  kopf?.click();
+  await new Promise(r => setTimeout(r, 260));
+  const neuerKopf = document.querySelector<HTMLElement>(`[data-app-gruppe="${name}"]`);
+  return { vorher, nachher: sichtbar(), name,
+           offen: neuerKopf?.getAttribute('aria-expanded') };
+});
+p('Ein Klick öffnet die Schublade', schublade.nachher > schublade.vorher,
+  JSON.stringify(schublade));
+gleich('Und sie sagt es auch dem Vorleseprogramm', schublade.offen, 'true');
+p('Und die kurzen Marken sind noch da',
+  ['kalender', 'pwa', 'aufgaben'].every(m => apps.gezeichnet.some((x: any) => x.id === m)),
+  apps.gezeichnet.map((x: any) => x.id).join(', '));
 gleich('Mit denselben Namen', apps.gezeichnet.map((x: any) => x.name),
   apps.reg.map((x: any) => x.name));
 gleich('Und denselben Hinweistexten', apps.gezeichnet.map((x: any) => x.hinweis),

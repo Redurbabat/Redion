@@ -63,15 +63,27 @@ import { chromium } from 'playwright';
       mainBreite: Math.round(r('#main').width),
       seiteBreite: Math.round(r('#page').width),
       seitenleistePos: getComputedStyle(musselement('#sidebar')).position,
-      kopfKnoepfe: [...tb.querySelectorAll<HTMLElement>('button')].filter(x => x.offsetParent).map(x => x.id),
+      /* NICHT `offsetParent` (E226). Ein Element mit `position:fixed` gibt
+         dort `null` zurück, OBWOHL es sichtbar ist — der Sucher stand
+         deshalb nie in dieser Liste, solange E223 ihn fest ans Fenster
+         stellte, und die erwartete Liste hatte sich still darauf
+         eingerichtet. Gefragt ist Sichtbarkeit, nicht Positionierung. */
+      kopfKnoepfe: [...tb.querySelectorAll<HTMLElement>('button')]
+        .filter(x => { const r = x.getBoundingClientRect();
+                       return r.width > 0 && r.height > 0
+                              && getComputedStyle(x).visibility !== 'hidden'; })
+        .map(x => x.id),
       kopfUeberlauf: tb.scrollWidth - tb.clientWidth,
       krume: musselement('#crumb').textContent.trim(),
       seitlicherUeberlauf: document.documentElement.scrollWidth - 428,
       obenLeiste: [...document.querySelectorAll<HTMLElement>('#handy-oben button')].map(x => x.id),
-      untenLeiste: [...document.querySelectorAll<HTMLElement>('#handy-unten button')].map(x => x.id),
+      /* Die schwebende Leiste gibt es seit E236 nicht mehr; ihre drei Wege
+         stehen rechts in der Menüleiste. */
+      untenLeiste: [...document.querySelectorAll<HTMLElement>('#menueband .mb-rechts > button')]
+        .map(x => x.id).filter(Boolean),
       /* offsetParent ist bei position:fixed immer null — deshalb den
          berechneten Stil fragen. */
-      untenSichtbar: getComputedStyle(musselement('#handy-unten')).display !== 'none',
+      untenSichtbar: getComputedStyle(musselement('#menueband .mb-rechts')).display !== 'none',
       obenSichtbar: getComputedStyle(musselement('#handy-oben')).display !== 'none',
       griffeAus: getComputedStyle(document.querySelector('.blk > .handles') ?? document.body).display
     };
@@ -104,11 +116,11 @@ import { chromium } from 'playwright';
      dazugekommen. */
   ok('Oben stehen Konto und die fünf Bereiche als Pillen',
      handy.obenSichtbar &&
-     handy.obenLeiste.join(',') === 'hl-konto,hl-lernen,hl-start,hl-seiten,hl-bespr,hl-mehr',
+     handy.obenLeiste.join(',') === 'hl-dok,hl-start,hl-lernen,hl-bespr,hl-mehr',
      handy.obenLeiste.join(','));
   ok('Unten stehen Suchen, KI fragen und Neu',
      handy.untenSichtbar &&
-     handy.untenLeiste.join(',') === 'hu-suche,hu-ki,hu-neu',
+     ['mb-suche', 'mb-ki', 'mb-konto'].every(id => handy.untenLeiste.includes(id)),
      handy.untenLeiste.join(','));
   ok('Die Blockgriffe sind aus, wie in Notion am Handy', handy.griffeAus === 'none', handy.griffeAus);
 
@@ -133,7 +145,7 @@ import { chromium } from 'playwright';
      Vorher zog er die SEITENLEISTE DES RECHNERS als Schublade herein, mit
      Baum, Reitern und 33-px-Zeilen auf 390 px geschoben. Jetzt öffnet er
      ein Blatt über den ganzen Bildschirm mit Fingerzeilen. */
-  await t.click('#hl-konto');
+  await t.click('#mb-konto');
   await t.waitForTimeout(400);
   const auf = await t.evaluate(() => {
     const bl = document.getElementById('r-blatt');
@@ -162,7 +174,7 @@ import { chromium } from 'playwright';
   ok('Das Kreuz führt wieder hinaus', await t.evaluate(() =>
     !document.getElementById('r-blatt')));
 
-  await t.click('#hl-konto');
+  await t.click('#mb-konto');
   await t.waitForTimeout(400);
   await t.click('#r-blatt [data-r="start"]');
   await t.waitForTimeout(500);
@@ -196,8 +208,13 @@ import { chromium } from 'playwright';
       seitenleiste: Math.round(s.getBoundingClientRect().width),
       seitenleistePos: getComputedStyle(s).position,
       mainLinks: Math.round(musselement('#main').getBoundingClientRect().left),
-      kopfKnoepfe: [...tb.querySelectorAll<HTMLElement>('button')].filter(x => x.offsetParent).map(x => x.id),
-      untenAus: getComputedStyle(musselement('#handy-unten')).display === 'none' &&
+      /* Sichtbarkeit, nicht Positionierung (E226) — siehe oben. */
+      kopfKnoepfe: [...tb.querySelectorAll<HTMLElement>('button')]
+        .filter(x => { const r = x.getBoundingClientRect();
+                       return r.width > 0 && r.height > 0
+                              && getComputedStyle(x).visibility !== 'hidden'; })
+        .map(x => x.id),
+      untenAus: !document.getElementById('handy-unten') &&
                 getComputedStyle(musselement('#handy-oben')).display === 'none',
       griffe: !!document.querySelector('.blk > .handles'),
       dbLeiste: [...document.querySelectorAll<HTMLElement>('.db-tools button')].length,
@@ -206,11 +223,49 @@ import { chromium } from 'playwright';
   });
   console.log('   PC:', JSON.stringify(pc));
 
-  ok('Am PC steht die Seitenleiste im Fluss und ist 260 px breit',
-     pc.seitenleistePos === 'relative' && pc.seitenleiste === 260,
+  /* 240 px UND NICHT 260. E201 hat die Seitenleiste schmaler gemacht —
+     „zwanzig Punkte sind dort keine Kosmetik, sie sind zwanzig Punkte
+     Arbeitsfläche" steht als Begründung in der CSS. Dieser Punkt behielt
+     die alte Zahl und war seither rot; aufgefallen ist es erst beim
+     vollständigen Durchlauf, weil er in keiner der Suiten steckt, die man
+     nach einer Änderung einzeln startet.
+
+     Die Zahl bleibt hier ausgeschrieben und wird nicht aus der CSS
+     gelesen: dieser Punkt soll ja gerade merken, wenn sich die Breite
+     ändert, ohne dass jemand es wollte. */
+  ok('Am PC steht die Seitenleiste im Fluss und ist 240 px breit',
+     pc.seitenleistePos === 'relative' && pc.seitenleiste === 240,
      pc.seitenleistePos + ' / ' + pc.seitenleiste);
-  ok('Der Inhalt beginnt dahinter', pc.mainLinks === 260, pc.mainLinks + ' px');
-  ok('Die Kopfzeile zeigt am PC alle Knöpfe', pc.kopfKnoepfe.length >= 10, pc.kopfKnoepfe.length + ' Stück');
+  ok('Der Inhalt beginnt dahinter', pc.mainLinks === 240, pc.mainLinks + ' px');
+  /* SEIT E219 SIND ES AM PC ABSICHTLICH WENIGER. Fünf Zeichen — Teilen,
+     Kommentare, Versionsverlauf, Automationen, Link kopieren — stehen im
+     ⋯-Menü, und zwar in demselben Block, der dort schon fürs Telefon war.
+     „Alle Knöpfe" wäre damit die falsche Frage. Die richtige ist: sind es
+     die fünf, die bleiben sollen, und kommt der Rest zurück, wenn man die
+     ruhige Fassung abschaltet? */
+  /* SECHS, NICHT FÜNF — und der Unterschied ist eine Lehre (E226). Der
+     Sucher gehört selbstverständlich dazu; er stand nur deshalb nicht in
+     dieser Liste, weil `offsetParent` bei `position:fixed` `null` liefert.
+     Die Zeile war grün, weil sie den Knopf nicht SAH, nicht weil er weg
+     war. Als E224 ihn zurück in den Fluss holte, wurde sie rot — und hat
+     damit ihren eigenen blinden Fleck gemeldet. */
+  const SOLL_RUHIG = ['btn-back', 'btn-fwd', 'btn-suche-mitte', 'btn-ai', 'btn-fav', 'btn-page-menu'];
+  ok('Die Kopfzeile zeigt am PC die sechs, die bleiben',
+     SOLL_RUHIG.every(k => pc.kopfKnoepfe.includes(k)) &&
+     pc.kopfKnoepfe.length === SOLL_RUHIG.length,
+     pc.kopfKnoepfe.join(', '));
+
+  const ohneRuhig = await d.evaluate(() => {
+    (globalThis as any).Ruhig?.setzen(false);
+    return [...document.querySelectorAll<HTMLElement>('#topbar button')]
+      .filter(b => { const r = b.getBoundingClientRect();   /* E226 */
+                     return r.width > 0 && r.height > 0
+                            && getComputedStyle(b).visibility !== 'hidden'; })
+      .map(b => b.id).filter(Boolean);
+  });
+  ok('Und ausgeschaltet stehen wieder alle da',
+     ohneRuhig.length >= 10, ohneRuhig.length + ' Stück: ' + ohneRuhig.join(', '));
+  await d.evaluate(() => { (globalThis as any).Ruhig?.setzen(true); });
   ok('Die Handy-Leiste unten ist am PC aus', pc.untenAus);
   ok('Die Blockgriffe sind am PC da', pc.griffe);
   ok('Die Datenbank-Werkzeugleiste ist vollständig', pc.dbLeiste >= 7, pc.dbLeiste + ' Knöpfe');

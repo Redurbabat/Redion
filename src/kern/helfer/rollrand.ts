@@ -170,7 +170,47 @@ const Rollrand = (() => {
     };
   };
 
-  return { binde, pruefe, SPIEL };
+  /**
+   * Rollt `feld` so weit, dass `stueck` GANZ darin steht.
+   *
+   * WOZU. Eine Leiste, die rollt, zeigt nach dem Zeichnen ihren Anfang —
+   * nicht das, was gerade gewählt ist. Solange alles hineinpasste, fiel das
+   * nie auf. Seit die Reiterzeile der Lernwelt am Telefon mit der
+   * Krumenzeile verschmilzt (E235), passt es nicht mehr: man tippt auf
+   * „Prüfungen", der Reiter wird der aktive — und steht halb ausserhalb
+   * der Karte.
+   *
+   * WARUM NICHT `scrollIntoView`. Das rollt ALLE Vorfahren mit, auch
+   * `#scroll` — die Seite spränge bei jedem Reiterwechsel nach oben oder
+   * unten. Hier wird nur das eine Feld gerollt.
+   *
+   * `rand` ist kein Zierabstand: die Kante blendet den Inhalt über die
+   * letzten Punkte aus. Ein Reiter, der bündig am Rand endet, steht zwar
+   * drin und ist trotzdem halb durchsichtig.
+   */
+  const zeige = (feld: HTMLElement | null, stueck: HTMLElement | null,
+                 wahl: Wahl & { rand?: number } = {}): void => {
+    if (!feld || !stueck) return;
+    const hoch = (wahl.achse || 'quer') === 'hoch';
+    const rand = wahl.rand ?? 12;
+    const f = feld.getBoundingClientRect();
+    const s = stueck.getBoundingClientRect();
+    const anfangF = hoch ? f.top : f.left;
+    const endeF   = hoch ? f.bottom : f.right;
+    const anfangS = hoch ? s.top : s.left;
+    const endeS   = hoch ? s.bottom : s.right;
+    /* Passt das Stück ohnehin nicht ins Feld, gewinnt sein Anfang: lieber
+       den Anfang eines langen Namens lesen als seine Mitte. */
+    let schub = 0;
+    if (endeS - anfangS > endeF - anfangF) schub = anfangS - anfangF - rand;
+    else if (anfangS < anfangF + rand)     schub = anfangS - anfangF - rand;
+    else if (endeS > endeF - rand)         schub = endeS - endeF + rand;
+    if (!schub) return;
+    if (hoch) feld.scrollTop += schub; else feld.scrollLeft += schub;
+    pruefe(feld, wahl);
+  };
+
+  return { binde, pruefe, zeige, SPIEL };
 })();
 
 (window as any).Rollrand = Rollrand;

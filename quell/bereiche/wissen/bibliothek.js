@@ -114,8 +114,44 @@ const Bibliothek = (() => {
         { id: 'quelle', icon: '📍', name: 'Quelle', breit: '1.2fr' },
         { id: 'wann', icon: '🕘', name: 'Zuletzt bearbeitet', breit: '1fr' }
     ];
+    /* REGAL ODER LISTE (E207).
+       Die Bibliothek war eine Tabelle: dreizehn Zeilen, in jeder ein Titel und
+       dreimal dieselbe Auskunft („Ich", „gerade eben"). Man liest darin nicht,
+       man sucht — und man muss den Titel schon kennen, um ihn zu finden.
+  
+       Der abgenommene Entwurf zeigt stattdessen ein Regal: je Heft eine Karte,
+       und auf jeder Karte steht der ANFANG der Seite, an der zuletzt gearbeitet
+       wurde. Das ist dieselbe Antwort wie in „Weiter wo du warst" (E205), nur
+       für den ganzen Bestand.
+  
+       Die Tabelle bleibt vollständig erhalten und ist einen Klick entfernt.
+       Sie kann etwas, das das Regal nicht kann — nach Spalten sortieren,
+       Eigenschaften ein- und ausblenden, viele Zeilen auf einmal überblicken.
+       Was gebraucht wird, entscheidet nicht die Form, sondern die Frage. */
+    /**
+     * Welche Form ist gewählt?
+     *
+     * DIESER WERT WIRD BEIM ZEICHNEN GELESEN UND NICHT BEIM LADEN. Der erste
+     * Entwurf legte ihn als `zustand.form = formLesen()` an — und diese Zeile
+     * läuft, während die Datei geladen wird, also lange bevor IndexedDB
+     * ausgelesen ist. `getMeta` gab damals brav den Standard zurück, und die
+     * gemerkte Wahl war beim nächsten Start weg: wer „Liste" wählte, bekam
+     * wieder das Regal.
+     *
+     * Gefunden hat es das Bild — ich hatte im Bildskript ausdrücklich „liste"
+     * gesetzt und bekam ein Regal. Kein Wurf, keine Meldung; dieselbe Sorte
+     * stiller Fehler wie `Store` an `window` (E207, `vorschau.ts`).
+     */
+    const form = () => {
+        const wahl = Store.getMeta('bibForm', 'deckel');
+        return wahl === 'liste' ? 'liste' : wahl === 'regal' ? 'regal' : 'deckel';
+    };
     let zustand = { reiter: 'kuerzlich', sortier: 'wann', richtung: 'ab',
-        suche: '', sucheOffen: false, spalten: SPALTEN.map(s => s.id) };
+        suche: '', sucheOffen: false, spalten: SPALTEN.map(s => s.id),
+        /* Der Artfilter der Deckelansicht (E236). Er steht NEBEN
+           `reiter`, nicht darin: der Reiter fragt „wo liegt es",
+           die Art fragt „was ist es". Zwei Fragen, zwei Filter. */
+        art: 'alle' };
     /** Eine zusammengefuehrte Sicht auf bestehende Redion-Daten. Sie speichert
         weder Dashboard-Karten noch PDF-Kopien; alle Listen sind begrenzt. */
     const zeichneSchule = (wrap) => {
@@ -268,9 +304,566 @@ const Bibliothek = (() => {
         }
         return liste;
     };
+    /* ====================================================================== *
+     * DAS REGAL (E207)
+     * ---------------------------------------------------------------------- *
+     * Ein „Heft" ist keine neue Datenart und wird auch keine. Es ist die
+     * QUELLE, die `quelleVon()` ohnehin schon für jede Seite ausrechnet: die
+     * Datenbank, in der sie liegt, die Elternseite, der Lebensbereich, oder
+     * „Privat". Der Entwurf nennt das Heft; der Bestand nennt es Quelle. Es
+     * ist dasselbe, und deshalb braucht es dafür keine Migration, keinen
+     * zweiten Speicher und keinen Umzug (§9).
+     * ====================================================================== */
+    /* ====================================================================== *
+     * DIE DECKEL — DAS REGAL JE DOKUMENT (E236)
+     * ---------------------------------------------------------------------- *
+     * Redur hat ein Bild geschickt: ein Regal aus Deckeln, jeder sagt schon
+     * von weitem, WAS er ist — ein PDF, ein Notizbuch, ein Whiteboard, eine
+     * Tabelle. Die Bibliothek hatte bisher zwei Formen, und keine davon:
+     *
+     *     Tabelle   dreizehn Zeilen, in jeder dreimal dieselbe Auskunft
+     *     Regal     je QUELLE eine Karte — also je Heft, nicht je Dokument
+     *
+     * Die Deckelform ist die dritte, nicht ein Ersatz. Beide alten bleiben,
+     * weil beide etwas können, was diese nicht kann: die Tabelle sortiert
+     * nach Spalten, das Heftregal zeigt Zusammengehöriges.
+     *
+     * KEINE NEUE DATENART, KEIN NEUES FELD. Die Art eines Dokuments wird
+     * ABGELESEN aus dem, was darin liegt — genau wie das Heft aus
+     * `quelleVon()` abgelesen wird. Ein Feld `art` am Block wäre eine
+     * Migration, und eine Migration für eine ANSICHT ist der teuerste Weg,
+     * den es gibt (§9).
+     * ====================================================================== */
+    /** Die Arten, die ein Dokument haben kann — Reihenfolge = Vorrang. */
+    const ARTEN = [
+        { id: 'pdf', name: 'PDF', typen: ['pdfseite'] },
+        { id: 'board', name: 'Whiteboard', typen: ['whiteboard'] },
+        { id: 'plan', name: 'Schaltplan', typen: ['schaltplan'] },
+        { id: 'blatt', name: 'Blatt', typen: ['blatt'] },
+        { id: 'tab', name: 'Tabelle', typen: ['spreadsheet'] },
+        { id: 'db', name: 'Datenbank', typen: ['database'] },
+        { id: 'karten', name: 'Karteikarten', typen: ['flashcard'] },
+        { id: 'datei', name: 'Dateien', typen: ['file', 'image', 'video', 'audio'] }
+    ];
+    /** Was steckt in dieser Seite? Zählt die Kindblöcke, nimmt den Vorrang. */
+    const artVon = (p) => {
+        const kinder = Store.childrenOf(p.id) || [];
+        for (const art of ARTEN)
+            if (kinder.some((b) => b && b.alive !== false &&
+                art.typen.includes(b.type)))
+                return { id: art.id, name: art.name };
+        /* Eine Seite, die vor allem andere Seiten hält, ist ein Ordner. Das ist
+           keine neue Datenart, sondern eine Beschreibung: `page` in `page`. */
+        const unterseiten = kinder.filter((b) => b && b.alive !== false && b.type === 'page');
+        if (unterseiten.length >= 2 && unterseiten.length >= kinder.length - 1)
+            return { id: 'ordner', name: unterseiten.length + ' Sachen' };
+        return { id: 'seite', name: 'Seite' };
+    };
+    /** Die Filterzeile über dem Regal — sie filtert nach ART, nicht nach Ort. */
+    const ART_FILTER = [
+        { id: 'alle', name: 'Alle' },
+        { id: 'pdf', name: 'PDF' },
+        { id: 'board', name: 'Whiteboards' },
+        { id: 'blatt', name: 'Blätter' },
+        { id: 'tab', name: 'Tabellen' },
+        { id: 'db', name: 'Datenbanken' },
+        { id: 'karten', name: 'Karteikarten' },
+        { id: 'ordner', name: 'Ordner' }
+    ];
+    /**
+     * Ein Deckel. Was darauf steht, ist keine Zeichnung, sondern eine
+     * Aussage: welche Art, und wenn es eine gibt, die echte Vorschau der
+     * Seite. `Vorschau.miniatur` liefert sie — dieselbe, die „Weiter wo du
+     * warst" verwendet (E205), damit nicht zwei Vorschauen gepflegt werden.
+     */
+    /* WELCHE ARTEN EINE ECHTE TEXTVORSCHAU VERTRAGEN — und welche nicht.
+       Gemessen am Bild: der Deckel eines PDF zeigte „Seite 1Seite 2Seite 3",
+       der eines Whiteboards eine graue Pille mit dem Wort „Whiteboard". Das
+       ist keine Vorschau, das ist der Name der Blockart dreimal.
+       `Vorschau.miniatur` liest den TEXT der Kindblöcke — bei einer Seite ist
+       das der Anfang des Textes und damit die beste Auskunft, die es gibt.
+       Bei einem PDF, einem Whiteboard oder einer Tabelle steht im Text
+       nichts, was jemandem hilft. Dort zeichnet die CSS das Papier. */
+    const MIT_TEXT = new Set(['seite', 'karten', 'db']);
+    const deckelKarte = (p) => {
+        const art = artVon(p);
+        const bild = MIT_TEXT.has(art.id) ? (Vorschau.miniatur(p.id, 5) || '') : '';
+        const wann = wannText(p.zuletztGeoeffnet || p.edited || p.created);
+        return `<button class="bib-deckel" data-id="${esc(p.id)}" data-art="${esc(art.id)}" ` +
+            `title="${esc(p.text || 'Ohne Titel')}">` +
+            `<span class="bib-deckel-blatt mini-zeilen${bild ? '' : ' is-leer'}">` +
+            '<i class="bib-papier" aria-hidden="true"></i>' +
+            (bild || '') +
+            (art.id === 'pdf' ? '<i class="bib-deckel-marke">PDF</i>' : '') +
+            `<i class="bib-deckel-stern${p.favorite ? ' an' : ''}" aria-hidden="true">` +
+            (p.favorite ? '\u2605' : '\u2606') + '</i>' +
+            '</span>' +
+            '<span class="bib-deckel-name"><b>' + esc(p.text || 'Ohne Titel') + '</b>' +
+            '<i class="bib-deckel-mehr" aria-hidden="true">\u2304</i></span>' +
+            '<small>' + esc(art.name) + ' \u00b7 ' + esc(wann) + '</small>' +
+            '</button>';
+    };
+    const hefte = (liste) => {
+        const nach = new Map();
+        for (const p of liste) {
+            const q = quelleVon(p);
+            /* Der Schlüssel ist die Kennung, wenn es eine gibt — zwei Datenbanken
+               dürfen gleich heissen. Ohne Kennung (Privat, Direkt freigegeben)
+               trägt der Name. */
+            const schluessel = q.id || ('name:' + q.text);
+            let h = nach.get(schluessel);
+            if (!h) {
+                h = { id: q.id, icon: q.icon, name: q.text, seiten: [],
+                    zuletzt: null, wann: 0 };
+                nach.set(schluessel, h);
+            }
+            h.seiten.push(p);
+            const wann = zeitZahl(p.edited || p.created);
+            if (wann >= h.wann) {
+                h.wann = wann;
+                h.zuletzt = p;
+            }
+        }
+        /* DIE NEUESTE SEITE IST NICHT IMMER DIE, DIE MAN ZEIGEN WILL.
+           Auf dem Bild vom 26. August stand „Meine Aufgaben" als leerer Kasten
+           neben zwei vollen — obwohl das Heft drei Seiten hat. Seine neueste
+           Seite („Ollama installieren") ist bloss eine Zeile ohne Inhalt, und
+           damit sah das ganze Heft leer aus. Ein Heft mit drei Seiten ist nicht
+           leer; nur eine davon ist es.
+    
+           Gezeigt wird deshalb die neueste Seite, die überhaupt etwas ZU zeigen
+           hat. Hat keine etwas, bleibt es bei der neuesten — dann stimmt „leer"
+           auch. */
+        for (const h of nach.values()) {
+            if (Vorschau.umfang(h.zuletzt?.id || ''))
+                continue;
+            const mitInhalt = h.seiten
+                .filter(x => Vorschau.umfang(x.id))
+                .sort((a, b) => zeitZahl(b.edited || b.created) - zeitZahl(a.edited || a.created))[0];
+            if (mitInhalt)
+                h.zuletzt = mitInhalt;
+        }
+        return [...nach.values()].sort((a, b) => b.wann - a.wann);
+    };
+    /**
+     * WAS EINE DATENBANKZEILE ZU ZEIGEN HAT, STEHT NICHT IN IHREN KINDERN.
+     *
+     * Auf dem Bild vom 26. August stand „Meine Aufgaben" als leerer Kasten
+     * neben zwei vollen — obwohl das Heft drei Seiten hat. Die drei sind
+     * Zeilen einer Datenbank; ihr Inhalt steckt in den SPALTEN, nicht in
+     * Kindblöcken, und `Vorschau.miniatur` findet dort zu Recht nichts.
+     *
+     * „Dieses Heft ist noch leer" war damit keine Vorsicht, sondern eine
+     * falsche Aussage über einen vollen Bestand — dieselbe Sorte stiller
+     * Fehler wie die abgeschnittene Zahl aus §55.2: plausibel und falsch.
+     *
+     * Was ein solches Heft zu zeigen hat, sind seine Seiten. Das ist keine
+     * Notlösung: bei einer Aufgabenliste ist die Liste der Aufgaben genau
+     * das, was man sehen will.
+     */
+    const inhaltsListe = (h) => h.seiten.slice()
+        .sort((a, b) => zeitZahl(b.edited || b.created) - zeitZahl(a.edited || a.created))
+        .slice(0, 6)
+        .map(x => '<span class="mini-li">' + esc(x.text || 'Ohne Titel') + '</span>')
+        .join('');
+    /** Ein Blatt aus dem Regal: die Miniatur der zuletzt bearbeiteten Seite. */
+    const heftKarte = (h) => {
+        const seite = h.zuletzt;
+        const bild = (seite ? Vorschau.miniatur(seite.id, 6) : '') || inhaltsListe(h);
+        return `<button class="bib-heft" data-id="${esc(seite?.id || '')}" ` +
+            `title="${esc(h.name)}">` +
+            `<span class="bib-heft-marke">${esc(h.icon)} ${esc(h.name)}</span>` +
+            `<span class="bib-heft-blatt mini-zeilen${bild ? '' : ' is-leer'}">` +
+            (bild || '<span>Dieses Heft ist noch leer.</span>') + '</span>' +
+            '<span class="bib-heft-fuss"><strong>' +
+            esc(seite?.text || h.name) + '</strong><small>' +
+            h.seiten.length + (h.seiten.length === 1 ? ' Seite' : ' Seiten') +
+            (h.wann ? ' · ' + esc(wannText(h.wann)) : '') +
+            '</small></span></button>';
+    };
+    /** Eine kleine Karte für „Zuletzt in der Hand" — quer über alle Hefte. */
+    const handKarte = (p) => {
+        const q = quelleVon(p);
+        /* Eine Zeile ohne Kindblöcke hat hier nichts zu zeigen — anders als beim
+           Heft gibt es auch keine Geschwister, die einspringen könnten. Dann
+           steht „noch leer", und das stimmt dann auch. */
+        const bild = Vorschau.miniatur(p.id, 4);
+        return `<button class="bib-hand" data-id="${esc(p.id)}">` +
+            `<span class="bib-hand-blatt mini-zeilen${bild ? '' : ' is-leer'}">` +
+            (bild || '<span>noch leer</span>') + '</span>' +
+            '<span class="bib-hand-fuss"><strong>' + esc(p.text || 'Ohne Titel') +
+            '</strong><small>' + esc(q.text) + ' · ' +
+            esc(wannText(p.edited || p.created)) + '</small></span></button>';
+    };
+    /* Der Kopf gehört BEIDEN Formen. Zwei Köpfe wären zwei Orte, an denen
+       dieselbe Zahl steht — und einer davon wird irgendwann falsch. */
+    /* DIE REITER GEHÖREN IN BEIDE FORMEN, und der erste Entwurf hatte sie nur
+       in der Tabelle. `test202` fand es: es sucht `[data-r="mehr"]`, um über
+       „Ausbildung" ins Schul-Dashboard zu kommen, und im Regal gab es den
+       Knopf nicht. Damit war ein ganzer Bereich von dort aus unerreichbar —
+       genau das, was Redurs „nichts löschen" ausschliesst.
+  
+       Der Grund für den Fehler ist einfach zu benennen: die Reiter FILTERN den
+       Bestand, sie stellen ihn nicht dar. Was gefiltert wird, hat mit der Form
+       nichts zu tun. Sie stehen deshalb im gemeinsamen Kopf und nicht in einer
+       der beiden Zeichenfunktionen. */
+    const bibKopf = (liste, anzahlHefte) => '<h1 class="bib-titel">Bibliothek</h1>' +
+        '<p class="bib-zahlen">' + anzahlHefte +
+        (anzahlHefte === 1 ? ' Heft' : ' Hefte') + ' · ' + liste.length +
+        (liste.length === 1 ? ' Seite' : ' Seiten') + ' auf diesem Gerät</p>' +
+        '<div class="bib-kopf">' +
+        '<div class="bib-reiter">' +
+        REITER.slice(0, 4).map(r => `<button data-r="${r.id}" class="${zustand.reiter === r.id ? 'on' : ''}">` +
+            `<span>${r.icon}</span>${esc(r.name)}</button>`).join('') +
+        `<button data-r="mehr" class="bib-mehr">${REITER.length - 4} mehr …</button>` +
+        '</div>' +
+        '<div class="bib-form" role="group" aria-label="Darstellung">' +
+        `<button data-form="regal"${form() === 'regal' ? ' class="on" aria-pressed="true"' : ' aria-pressed="false"'}>` +
+        '<span data-sym="library" aria-hidden="true"></span>Regal</button>' +
+        `<button data-form="liste"${form() === 'liste' ? ' class="on" aria-pressed="true"' : ' aria-pressed="false"'}>` +
+        '<span data-sym="menu" aria-hidden="true"></span>Liste</button>' +
+        '</div>' +
+        '</div>';
+    /* ====================================================================== *
+     * SICHERUNG, PAPIERKORB UND PLATZ (E208)
+     * ---------------------------------------------------------------------- *
+     * Der letzte Teil des abgenommenen Entwurfs. Er ist kein Beiwerk: nach §46
+     * ist Priorität 1, keine Daten zu verlieren, und wer auf einen Blick sieht,
+     * wann er zuletzt gesichert hat, verliert seltener etwas.
+     *
+     * ALLE ZAHLEN HIER SIND ECHT. Es gibt keine erfundene Grösse, keinen
+     * geschätzten Prozentsatz und keinen Balken ohne Messung — der Entwurf
+     * zeigte „41,2 MB von 2 GB", und wenn der Browser diese Zahl nicht
+     * herausgibt, steht hier keine. Danach richtet jemand seine Entscheidung
+     * aus, ob er noch ein Video einfügt.
+     * ====================================================================== */
+    const sicherungsKarte = () => {
+        const st = Sicherung.stand();
+        const pk = Sicherung.papierkorb();
+        const wieLang = st.tage === null ? 'noch nie'
+            : st.tage === 0 ? 'heute'
+                : st.tage === 1 ? 'gestern'
+                    : 'vor ' + st.tage + ' Tagen';
+        /* Die Stufe steht NICHT nur in der Farbe (§38): sie steht im Satz. */
+        const satz = st.tage === null
+            ? 'Noch keine vollständige Sicherung auf diesem Gerät'
+            : st.stufe === 'gut' ? 'Gesichert ' + wieLang
+                : st.stufe === 'erinnern' ? 'Zuletzt gesichert ' + wieLang + ' — Zeit für eine neue'
+                    : 'Zuletzt gesichert ' + wieLang + ' — das ist lange her';
+        const art = st.art === 'json'
+            ? 'JSON · ohne Anhänge'
+            : st.art === 'redion' ? '.redion · mit Anhängen' : '';
+        const frist = !pk.anzahl ? 'nichts weggelegt'
+            : !pk.tage ? pk.anzahl + (pk.anzahl === 1 ? ' Sache liegt weg' : ' Sachen liegen weg') +
+                ' · keine Frist'
+                : pk.anzahl + (pk.anzahl === 1 ? ' Sache liegt weg' : ' Sachen liegen weg') +
+                    (pk.naechste === null ? '' :
+                        pk.naechste === 0 ? ' · die nächste läuft heute ab'
+                            : pk.naechste === 1 ? ' · die nächste läuft morgen ab'
+                                : ' · noch ' + pk.naechste + ' Tage für die nächste');
+        return '<section class="bib-abschnitt"><header><h2>Sicherung und Papierkorb</h2>' +
+            '<p>alles auf diesem Gerät</p></header><div class="bib-pflege">' +
+            `<div class="bib-pflege-karte bib-sicher-${esc(st.stufe)}">` +
+            `<span class="bib-pflege-zeichen" data-sym="${st.stufe === 'gut' ? 'checkCircle' : 'bell'}" aria-hidden="true"></span>` +
+            '<span><strong>' + esc(satz) + '</strong><small>' +
+            (art || 'Eine vollständige Sicherung nimmt Seiten UND Anhänge mit') +
+            '</small></span>' +
+            '<button type="button" data-a="sichern">Jetzt sichern</button></div>' +
+            '<div class="bib-pflege-karte">' +
+            '<span class="bib-pflege-zeichen" data-sym="trash" aria-hidden="true"></span>' +
+            '<span><strong>Papierkorb</strong><small>' + esc(frist) + '</small></span>' +
+            '<button type="button" data-a="papierkorb">Öffnen</button></div>' +
+            '</div></section>';
+    };
+    /* Der Platz kommt als Versprechen und wird deshalb NACHGETRAGEN. Die Stelle
+       steht sofort da und sagt, dass gerechnet wird — ein Kasten, der aus dem
+       Nichts erscheint, verschiebt alles darunter, während man liest. */
+    const platzKarte = () => '<section class="bib-abschnitt" data-bib-platz><header><h2>Platz auf dem Gerät</h2>' +
+        '<p>wird gemessen …</p></header></section>';
+    const platzNachtragen = (wrap) => {
+        const stelle = wrap.querySelector('[data-bib-platz]');
+        if (!stelle)
+            return;
+        void Sicherung.platz().then(p => {
+            if (!stelle.isConnected)
+                return;
+            if (!p.bekannt) {
+                /* KEINE ERFUNDENE ZAHL. Manche Browser geben `estimate()` nicht
+                   heraus; dann steht hier, was bekannt ist, und sonst nichts. */
+                stelle.innerHTML = '<header><h2>Platz auf dem Gerät</h2></header>' +
+                    '<p class="bib-platz-unbekannt">Dieser Browser sagt nicht, wieviel Platz ' +
+                    'Redion belegt.' + (p.anhaenge
+                    ? ' Die Anhänge allein sind ' + esc(Sicherung.groesse(p.anhaenge)) + '.'
+                    : '') + '</p>';
+                return;
+            }
+            const anteil = Math.min(100, Math.round(p.belegt / p.gesamt * 1000) / 10);
+            const anhangAnteil = p.belegt ? Math.min(100, p.anhaenge / p.belegt * 100) : 0;
+            stelle.innerHTML = '<header><h2>Platz auf dem Gerät</h2>' +
+                '<p>' + esc(Sicherung.groesse(p.belegt)) + ' von ' +
+                esc(Sicherung.groesse(p.gesamt)) + ' · ' +
+                anteil.toLocaleString('de-CH') + ' %</p></header>' +
+                '<div class="bib-platz-balken" role="img" aria-label="' +
+                esc(Sicherung.groesse(p.belegt) + ' von ' + Sicherung.groesse(p.gesamt) + ' belegt') + '">' +
+                '<i style="width:' + anteil + '%"><b style="width:' + anhangAnteil + '%"></b></i>' +
+                '</div>' +
+                '<p class="bib-platz-teile">' +
+                '<span class="bib-platz-anhang"></span>Anhänge ' +
+                esc(Sicherung.groesse(p.anhaenge)) +
+                '<span class="bib-platz-rest"></span>Seiten und Verwaltung ' +
+                esc(Sicherung.groesse(Math.max(0, p.belegt - p.anhaenge))) +
+                '</p>' +
+                /* Der Browser rechnet seinen eigenen Verwaltungsaufwand mit; die
+                   beiden Zahlen müssen nicht aufgehen, und das steht hier auch. */
+                '<p class="bib-platz-hinweis">Geschätzt — der Browser meldet die ' +
+                'Gesamtgrösse, die Aufteilung kommt aus dem Bestand.</p>';
+        });
+    };
+    /* ---------------------------------------------------------------- *
+     * DIE DECKELANSICHT (E236)
+     * ---------------------------------------------------------------- */
+    const zeichneDeckel = (wrap) => {
+        const alle = gefiltert();
+        const liste = zustand.art === 'alle'
+            ? alle : alle.filter(p => artVon(p).id === zustand.art);
+        /* Welche Arten es überhaupt GIBT — ein Filter für eine Art, die
+           niemand hat, ist ein Knopf, der immer leer antwortet. */
+        const vorhanden = new Set(alle.map(p => artVon(p).id));
+        wrap.innerHTML =
+            '<div class="bib bib-deckel-seite">' +
+                deckelKopf(alle.length) +
+                '<div class="bib-arten" role="group" aria-label="Nach Art filtern">' +
+                ART_FILTER.filter(a => a.id === 'alle' || vorhanden.has(a.id) ||
+                    a.id === zustand.art)
+                    .map(a => `<button data-art="${esc(a.id)}"` +
+                    (zustand.art === a.id ? ' class="on" aria-pressed="true"' : ' aria-pressed="false"') +
+                    `>${esc(a.name)}</button>`).join('') +
+                '</div>' +
+                (liste.length
+                    ? '<div class="bib-gitter">' + liste.map(deckelKarte).join('') + '</div>'
+                    : '<p class="bib-leer">' + (zustand.art === 'alle'
+                        ? 'Hier ist noch nichts. Tippe auf „Neu", um anzufangen.'
+                        : 'Von dieser Art gibt es hier nichts.') + '</p>') +
+                /* DIE SICHERUNG UND DER PLATZ GEHÖREN IN JEDE FORM.
+                   Der erste Entwurf liess beide weg — sie standen nur im
+                   Heftregal, und das ist seit E236 nicht mehr die Vorgabe. Damit
+                   war die Warnung „du hast noch nie gesichert" aus der Ansicht
+                   verschwunden, die jetzt jeder zuerst sieht.
+        
+                   Das ist keine Zierde: §11 nennt die Sicherung eine
+                   Sicherheitsfunktion, und §46 stellt Datenintegrität vor alles
+                   andere. Eine Warnung, die man nur in einer Ansicht sieht, die
+                   kaum jemand öffnet, ist keine Warnung. */
+                sicherungsKarte() +
+                platzKarte() +
+                '</div>';
+        if (typeof Register !== 'undefined' && Register.symbole)
+            Register.symbole.fuelle(wrap);
+        binde(wrap);
+        platzNachtragen(wrap);
+    };
+    /**
+     * Der Kopf der Deckelansicht: Titel, „+ Neu", Formwahl.
+     *
+     * ER IST NICHT `bibKopf`. Der alte Kopf trägt die Reiter (wo liegt es)
+     * und zwei Formknöpfe; dieser trägt die Handlung. Beide zusammen wären
+     * vier Bänke übereinander — genau das, was Redur rot angestrichen hat.
+     * Die Reiter sind deshalb hier ein Menü hinter dem Titel.
+     */
+    /**
+     * Der Kopf der Deckelansicht: Titel, „+ Neu", Formwahl.
+     *
+     * DER TITEL HEISST „DOKUMENTE" UND NICHT WIE DER REITER. Der erste
+     * Entwurf setzte den Reiternamen als Überschrift — und „Kürzlich
+     * verwendet" ist bei 24 px so breit, dass der Neu-Knopf in die nächste
+     * Zeile fiel und aus einer Bank zwei wurden. Ausserdem stimmt es nicht:
+     * die Seite IST das Regal, der Reiter ist nur ein Filter darauf. Er
+     * steht deshalb klein darunter, zusammen mit der Zahl.
+     */
+    const deckelKopf = (anzahl) => {
+        const ort = REITER.find(r => r.id === zustand.reiter)?.name || 'Alle';
+        return '<header class="bib-dkopf">' +
+            '<h1>Dokumente</h1>' +
+            '<button class="bib-neu" data-neu-auf>' +
+            '<b aria-hidden="true">+</b><span>Neu</span></button>' +
+            '<button class="bib-form-knopf" data-form="liste" ' +
+            'aria-label="Als Liste anzeigen">\u2630</button>' +
+            '<button class="bib-ort" data-orte aria-haspopup="menu">' +
+            esc(ort) + ' \u00b7 ' + anzahl + (anzahl === 1 ? ' Dokument' : ' Dokumente') +
+            '<i aria-hidden="true">\u25be</i></button>' +
+            '</header>';
+    };
+    const zeichneRegal = (wrap) => {
+        const liste = gefiltert();
+        const regal = hefte(liste);
+        /* „Zuletzt in der Hand" ist bewusst NICHT dasselbe wie das Regal: dort
+           steht je Heft die neueste Seite, hier die neuesten Seiten überhaupt.
+           Wer den ganzen Tag in einem Heft war, sieht hier seinen Tag. */
+        const hand = liste.slice()
+            .sort((a, b) => zeitZahl(b.edited || b.created) - zeitZahl(a.edited || a.created))
+            /* VIER, NICHT FÜNF. Dieselbe Waise wie bei den Kennzahlen in E204:
+               fünf Karten in einem Vierspalter lassen eine allein in der zweiten
+               Reihe stehen, daneben drei Viertel weisse Fläche. */
+            .slice(0, 4);
+        wrap.innerHTML =
+            '<div class="bib bib-regal-seite">' +
+                bibKopf(liste, regal.length) +
+                (regal.length
+                    ? '<div class="bib-regal">' + regal.map(heftKarte).join('') + '</div>'
+                    : '<p class="bib-leer">Hier ist noch nichts. Seiten erscheinen automatisch.</p>') +
+                (hand.length > 1
+                    ? '<section class="bib-abschnitt"><header><h2>Zuletzt in der Hand</h2>' +
+                        '<p>heftübergreifend</p></header>' +
+                        '<div class="bib-hand-reihe">' + hand.map(handKarte).join('') + '</div></section>'
+                    : '') +
+                sicherungsKarte() +
+                platzKarte() +
+                '</div>';
+        if (typeof Register !== 'undefined' && Register.symbole)
+            Register.symbole.fuelle(wrap);
+        binde(wrap);
+        platzNachtragen(wrap);
+    };
+    /** Was in beiden Formen gleich funktioniert: öffnen und umschalten. */
+    const binde = (wrap) => {
+        wrap.querySelectorAll('.bib-reiter [data-r]').forEach(b => b.addEventListener('click', () => {
+            if (b.dataset['r'] === 'mehr') {
+                const r = b.getBoundingClientRect();
+                const m = UI.menu(REITER.slice(4).map(x => `<button data-x="${x.id}"><span class="mi">${x.icon}</span>${esc(x.name)}</button>`).join(''), r.left, r.bottom + 4);
+                m.addEventListener('click', ev => {
+                    const x = elVon(ev)?.closest('[data-x]');
+                    if (!x)
+                        return;
+                    zustand.reiter = x.dataset['x'] ?? zustand.reiter;
+                    m.remove();
+                    App.zeichneSeite();
+                });
+                return;
+            }
+            zustand.reiter = b.dataset['r'] ?? zustand.reiter;
+            App.zeichneSeite();
+        }));
+        wrap.querySelectorAll('[data-form]').forEach(b => b.addEventListener('click', () => {
+            const f = b.dataset['form'] === 'liste' ? 'liste' : 'regal';
+            Store.setMeta('bibForm', f);
+            App.zeichneSeite();
+        }));
+        wrap.querySelectorAll('.bib-pflege [data-a]').forEach(b => b.addEventListener('click', ereignis => {
+            ereignis.stopPropagation();
+            if (b.dataset['a'] === 'papierkorb') {
+                App.papierkorb();
+                return;
+            }
+            /* Gesichert wird über denselben Weg wie im Menü — ein zweiter
+               Sicherungspfad wäre ein zweiter, der schiefgehen kann, und nur
+               einer von beiden hält den Zeitpunkt fest. */
+            void App.sicherungSpeichern();
+        }));
+        wrap.querySelectorAll('.bib-heft[data-id], .bib-hand[data-id]').forEach(k => k.addEventListener('click', () => {
+            const id = k.dataset['id'];
+            if (id)
+                App.oeffne(id);
+        }));
+        /* --- Die Deckelansicht (E236) ---------------------------------- */
+        wrap.querySelectorAll('.bib-arten [data-art]').forEach(b => b.addEventListener('click', () => {
+            zustand.art = b.dataset['art'] ?? 'alle';
+            App.zeichneSeite();
+        }));
+        wrap.querySelectorAll('[data-orte]').forEach(b => b.addEventListener('click', () => {
+            const r = b.getBoundingClientRect();
+            /* Die Reiter als Menü hinter dem Titel — dieselbe Liste wie in der
+               Tabelle, nur nicht als eigene Bank. Sonst stünden hier vier
+               Zeilen übereinander, bevor das erste Dokument kommt. */
+            const m = UI.menu(REITER.map(x => `<button data-x="${x.id}"${zustand.reiter === x.id ? ' class="on"' : ''}>` +
+                `<span class="mi">${x.icon}</span>${esc(x.name)}</button>`).join('') +
+                '<div class="sep"></div>' +
+                '<button data-x="__regal"><span class="mi">\u25a4</span>Nach Heften ordnen</button>' +
+                '<button data-x="__liste"><span class="mi">\u2630</span>Als Tabelle</button>', r.left, r.bottom + 6);
+            m.addEventListener('click', ev => {
+                const x = elVon(ev)?.closest('[data-x]');
+                if (!x)
+                    return;
+                const wahl = x.dataset['x'] ?? '';
+                m.remove();
+                if (wahl === '__regal') {
+                    Store.setMeta('bibForm', 'regal');
+                }
+                else if (wahl === '__liste') {
+                    Store.setMeta('bibForm', 'liste');
+                }
+                else {
+                    zustand.reiter = wahl || zustand.reiter;
+                    zustand.art = 'alle';
+                }
+                App.zeichneSeite();
+            });
+        }));
+        wrap.querySelectorAll('[data-neu-auf]').forEach(b => b.addEventListener('click', () => App.erstellenBlatt()));
+        wrap.querySelectorAll('.bib-deckel[data-id]').forEach(k => {
+            k.addEventListener('click', ereignis => {
+                /* Der Pfeil im Namen öffnet das Menü zum Stück, nicht das Stück. */
+                if (ereignis.target instanceof Element &&
+                    ereignis.target.closest('.bib-deckel-mehr'))
+                    return;
+                const id = k.dataset['id'];
+                if (id)
+                    App.oeffne(id);
+            });
+            k.querySelector('.bib-deckel-mehr')?.addEventListener('click', ereignis => {
+                ereignis.stopPropagation();
+                const id = k.dataset['id'];
+                const p = id ? Store.getBlock(id) : null;
+                if (!p)
+                    return;
+                const r = k.getBoundingClientRect();
+                const m = UI.menu(`<button data-a="oeffnen"><span class="mi">\u2197</span>Öffnen</button>` +
+                    `<button data-a="stern"><span class="mi">${p.favorite ? '\u2605' : '\u2606'}</span>` +
+                    (p.favorite ? 'Aus Favoriten' : 'Zu Favoriten') + '</button>' +
+                    '<button data-a="umbenennen"><span class="mi">\u270e</span>Umbenennen</button>' +
+                    '<div class="sep"></div>' +
+                    '<button data-a="papierkorb"><span class="mi">\u2327</span>In den Papierkorb</button>', Math.min(r.left, innerWidth - 230), r.bottom + 4);
+                m.addEventListener('click', ev => {
+                    const b = elVon(ev)?.closest('[data-a]');
+                    if (!b)
+                        return;
+                    const a = b.dataset['a'];
+                    m.remove();
+                    if (a === 'oeffnen') {
+                        App.oeffne(p.id);
+                        return;
+                    }
+                    if (a === 'stern') {
+                        Store.updateBlock(p.id, { favorite: !p.favorite });
+                    }
+                    if (a === 'umbenennen') {
+                        /* Umbenannt wird auf der Seite selbst — ein zweites Eingabefeld
+                           für denselben Titel wäre eine zweite Wahrheit (§8). */
+                        App.oeffne(p.id);
+                        setTimeout(() => document.getElementById('title')?.focus(), 80);
+                        return;
+                    }
+                    if (a === 'papierkorb') {
+                        /* NICHT LÖSCHEN, SONDERN IN DEN PAPIERKORB. `alive: false` ist
+                           umkehrbar; `Store.removeBlock` wäre es nicht (§46). */
+                        Store.updateBlock(p.id, { alive: false });
+                        UI.toast('„' + (p.text || 'Ohne Titel') + '" liegt im Papierkorb');
+                    }
+                    App.zeichneSeite();
+                });
+            });
+        });
+    };
     const zeichnen = (wrap) => {
         if (zustand.reiter === 'schule') {
             zeichneSchule(wrap);
+            return;
+        }
+        if (form() === 'deckel') {
+            zeichneDeckel(wrap);
+            return;
+        }
+        if (form() === 'regal') {
+            zeichneRegal(wrap);
             return;
         }
         const liste = gefiltert();
@@ -278,13 +871,12 @@ const Bibliothek = (() => {
         const raster = spalten.map(s => s.breit).join(' ');
         wrap.innerHTML =
             '<div class="bib">' +
-                '<h1 class="bib-titel">Bibliothek</h1>' +
-                '<div class="bib-kopf">' +
-                '<div class="bib-reiter">' +
-                REITER.slice(0, 4).map(r => `<button data-r="${r.id}" class="${zustand.reiter === r.id ? 'on' : ''}">` +
-                    `<span>${r.icon}</span>${esc(r.name)}</button>`).join('') +
-                `<button data-r="mehr" class="bib-mehr">${REITER.length - 4} mehr …</button>` +
-                '</div>' +
+                bibKopf(liste, hefte(liste).length) +
+                /* Eigene Klasse: `bib-kopf` trägt seit E207 Reiter und Umschalter und
+                   steht in BEIDEN Formen. Zwei Elemente mit demselben Namen auf einer
+                   Seite sind zwei Dinge, die gleich aussehen sollen und es beim
+                   nächsten Stilzusatz nicht mehr tun. */
+                '<div class="bib-kopf bib-kopf-liste">' +
                 '<div class="bib-werkzeuge">' +
                 '<button data-a="filter" title="Filtern">⚟</button>' +
                 '<button data-a="suche" title="Suchen">🔍</button>' +
@@ -326,24 +918,12 @@ const Bibliothek = (() => {
                 '</div>' +
                 `<div class="bib-fuss">${liste.length} ${liste.length === 1 ? 'Seite' : 'Seiten'}</div>` +
                 '</div>';
-        /* Reiter */
-        wrap.querySelectorAll('[data-r]').forEach((b) => b.addEventListener('click', () => {
-            if (b.dataset.r === 'mehr') {
-                const r = b.getBoundingClientRect();
-                const m = UI.menu(REITER.slice(4).map(x => `<button data-x="${x.id}"><span class="mi">${x.icon}</span>${esc(x.name)}</button>`).join(''), r.left, r.bottom + 4);
-                m.addEventListener('click', ev => {
-                    const x = elVon(ev)?.closest('[data-x]');
-                    if (!x)
-                        return;
-                    zustand.reiter = x.dataset.x ?? zustand.reiter;
-                    m.remove();
-                    App.zeichneSeite();
-                });
-                return;
-            }
-            zustand.reiter = b.dataset.r;
-            App.zeichneSeite();
-        }));
+        if (typeof Register !== 'undefined' && Register.symbole)
+            Register.symbole.fuelle(wrap);
+        binde(wrap);
+        /* Die Reiter bindet `binde()` — sie stehen jetzt im gemeinsamen Kopf
+           und gehören beiden Formen. Hier stand dieselbe Schleife ein zweites
+           Mal; zwei Bindungen an einem Knopf hätten ihn doppelt ausgelöst. */
         /* Sortieren durch Klick auf den Spaltenkopf */
         wrap.querySelectorAll('.bib-kopfzeile [data-s]').forEach((d) => d.addEventListener('click', () => {
             if (zustand.sortier === d.dataset.s)
@@ -426,7 +1006,29 @@ const Bibliothek = (() => {
             });
         }
     };
-    const oeffne = () => App.zeigeSonder('Bibliothek', zeichnen);
+    /**
+     * Das Regal öffnen.
+     *
+     * ZWEI SACHEN STEHEN HIER UND NICHT BEIM AUFRUFER (E236).
+     *
+     * `Seitenleiste.reiter('dokumente')` markiert den Weg unten. Er stand
+     * zuerst nur im Knopf `hl-dok` — und damit leuchtete unten „Heute",
+     * sobald das Regal von woanders aufging: vom Start, aus dem Mehr-Blatt,
+     * über einen Verweis. Eine Markierung, die nur bei EINEM von vier Wegen
+     * stimmt, ist schlimmer als keine.
+     *
+     * Und der Name lautet „Dokumente", nicht „Bibliothek": die Seite
+     * schreibt es gross darüber, Redur nennt es so, und zwei Namen für
+     * dieselbe Sache sind einer zu viel. Das Modul heisst weiter
+     * `Bibliothek` — es ist der Ordner, nicht die Aufschrift.
+     */
+    const oeffne = () => {
+        try {
+            Seitenleiste.reiter('dokumente');
+        }
+        catch { /* ohne Leiste kein Reiter */ }
+        App.zeigeSonder('Dokumente', zeichnen);
+    };
     /* ------------------------------------------------------------------ *
      * MEINE AUFGABEN
      *
