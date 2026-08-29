@@ -35,6 +35,15 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
+**29. August 2026 · Hausaufgaben und Lernziele je Fach (E256)**
+
+> Die zwei fehlenden Poster-Zeilen der Schulsäule. Vorlage legt homework
+> und goals an (additiv wie beim Stundenplan), das Schul-Dashboard zeigt
+> beide Sektionen („N offen", Überfälliges mit dem WORT), der Haken
+> schreibt die Checkbox-Spalte der Zeile selbst, die Fachseite filtert
+> über die echte Fach-Relation. test262 (11 Punkte, 2 Gegenproben
+> einzeln rot), test202/215/250 grün. Bilder im Chat.
+
 **29. August 2026 · Die Löschabsicht überlebt den Import (E255, L74 zu)**
 
 > „Ersetzen" tauschte auch meta — wartende Grabsteine (E249/E254)
@@ -1561,7 +1570,7 @@ Nach §46 zuerst die Datenzeile, dann nach Gewicht und Aufwand:
    test251), ~~Prüfungs-Timer im Elektro-Arbeitsplatz~~ (E248, test255).
 5. **Die grossen Sichtbaren:** .pptx-Export (L69), Lasso im Stift,
    Wechselstrom-Simulation, XY-Diagramm, Zwei-Wege-Ordner-Abgleich,
-   Hausaufgaben und Lernziele je Fach.
+   ~~Hausaufgaben und Lernziele je Fach~~ (E256, test262 — 29. August).
 
 Nichts davon ist eine Wette — jede Zeile stammt aus dem Messprotokoll
 vom 28. August und hat dort ihren Beleg.

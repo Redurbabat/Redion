@@ -968,6 +968,25 @@ const Galerie = (() => {
       room: { name: 'Raum', type: 'text' },
       note: { name: 'Hinweis', type: 'text' }
     });
+    /* Hausaufgaben und Lernziele (E256): die zwei Poster-Zeilen der
+       Schulsäule, die noch fehlten. Beide hängen am Fach — die Lernwelt
+       zeigt sie im Schul-Dashboard und auf der Fachseite. Läuft die
+       Vorlage auf einem Bestand erneut, ergänzt `ensureDatabase` nur,
+       was fehlt (dasselbe Versprechen wie beim Stundenplan). */
+    ensureDatabase('homework', 'Hausaufgaben', {
+      title: { name: 'Aufgabe', type: 'title' },
+      subject: { name: 'Fach', type: 'relation', ziel: subjects.collectionId },
+      due: { name: 'Fällig', type: 'date' },
+      done: { name: 'Erledigt', type: 'checkbox' },
+      note: { name: 'Hinweis', type: 'text' }
+    });
+    ensureDatabase('goals', 'Lernziele', {
+      title: { name: 'Lernziel', type: 'title' },
+      subject: { name: 'Fach', type: 'relation', ziel: subjects.collectionId },
+      status: { name: 'Stand', type: 'status', options: opt(['Offen','gray'],['In Arbeit','yellow'],['Sicher','green']) },
+      until: { name: 'Bis', type: 'date' },
+      note: { name: 'Woran ich es merke', type: 'text' }
+    });
 
     ensureBlock('school-tools', 'callout', {
       icon: '⚡', color: 'bg-yellow',

@@ -18619,3 +18619,54 @@ Grabstein des in der Sicherung enthaltenen Blocks fällt, der andere
 (geloescht=1, Merkliste leer). Gegenprobe einzeln rot: Rettungsblock
 raus → die Absicht stirbt mit dem Import (faelltDa:false, Server g:0).
 Danach test96 18 ok, test100 32 ok.
+
+
+================================================================================
+E256 — Hausaufgaben und Lernziele je Fach
+================================================================================
+
+Die zwei Poster-Zeilen der Schulsäule, die die Visionskarte als fehlend
+mass: „Hausaufgaben mit Fach-Bezug und Lernziele je Fach". Beides sind
+Datenbankzeilen (§9, kein zweiter Katalog, keine neue Datenart) — die
+Vorlage legt zwei Datenbanken an, die Lernwelt zeigt den Blick darauf.
+
+DIE ENTSCHEIDUNGEN
+
+  · **Vorlage:** `homework` (Aufgabe, Fach-Relation, Fällig, Erledigt,
+    Hinweis) und `goals` (Lernziel, Fach-Relation, Stand
+    Offen/In Arbeit/Sicher, Bis, „Woran ich es merke"). Läuft die
+    Vorlage auf einem Bestand erneut, ergänzt sie nur, was fehlt —
+    dasselbe Versprechen wie beim Stundenplan (E243).
+
+  · **Gefunden wie das Notenheft:** `schoolKind` aus der Vorlage ODER
+    der Name (/hausaufgabe/, /lernziel/) — Handangelegtes zählt mit.
+
+  · **Schul-Dashboard:** beide Sektionen zuerst (die zwei Fragen des
+    Alltags: was ist zu tun, und wohin soll es), Kopf sagt „N offen",
+    offene zuerst nach Fälligkeit, Erledigtes ans Ende. Überfälliges
+    trägt das WORT „überfällig", die Farbe unterstreicht nur (§38).
+    Lernziel-Stand als Wort-Chip; „Sicher" sortiert ans Ende.
+
+  · **Der Haken schreibt die Zeile:** ein eigener Umschalt-Knopf
+    (aria-pressed, Wort im aria-label) neben dem Öffnen-Knopf ruft
+    `Store.setProp` auf die Checkbox-Spalte — dieselben Daten, die die
+    Datenbank-Ansicht zeigt, kein Schattenzustand. Am Telefon ist er
+    44 px (§37).
+
+  · **Fachseite filtert über die Relation** (beziehtSichAuf, derselbe
+    Weg wie Karten und Prüfungen), eigene Kennzahl „offene
+    Hausaufgaben", zwei Sektionen mit §47-Leerfällen je Fach.
+    Erledigt-Roh aus `props`, nicht über die Anzeige-Formatierung —
+    ein Haken ist wahr oder falsch, nicht „Ja".
+
+**Geprüft:** test262, 11 Punkte — Vorlage nachträglich additiv, beide
+Sektionen mit „2 offen", Überfälliges oben mit Wort, Haken schreibt
+props und die Ansicht zieht nach (aria-pressed), Elektrotechnik sieht
+nur seins und Deutsch nur seins, 44 px am Telefon. Zwei Gegenproben
+einzeln rot: setProp raus → der Haken lügt (aria sagt false, nichts
+gespeichert); Fach-Filter raus → der Aufsatz von Deutsch steht auf der
+Elektrotechnik-Seite. Beim Bauen zweimal nachgesehen statt geraten
+(E21): addRow liest `props.title` (nicht text), und die Fächerknöpfe
+stehen nur auf dem Dashboard — der erste Deutsch-Klick klickte ins
+Leere. test202 danach 84 ok (kinds um homework/goals erweitert),
+test215 50/50, test250 15/15.

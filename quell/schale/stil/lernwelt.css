@@ -1414,3 +1414,47 @@ body[data-ruhig="an"] .lernwelt .lw-nav{ padding-right:264px }
 .lernwelt .lw-plan-lektion span{font-size:11.5px;color:var(--text-dim)}
 .lernwelt .lw-plan-lektion small{font-size:11px;color:var(--text-dim)}
 .lernwelt .lw-plan-frei{margin:0;color:var(--text-dim);font-size:12px;text-align:center;padding:var(--space-2) 0}
+
+/* Hausaufgaben und Lernziele (E256) ------------------------------------- */
+.lernwelt .lw-hw-list,.lernwelt .lw-goal-list{
+  list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.lernwelt .lw-hw-list li{display:flex;align-items:center;gap:8px}
+.lernwelt .lw-hw-check{
+  flex:none;width:26px;height:26px;border:1.5px solid var(--line);
+  border-radius:7px;background:none;color:var(--erfolg);
+  font-size:14px;line-height:1;cursor:pointer;display:grid;place-items:center}
+.lernwelt .lw-hw-check:hover{border-color:var(--accent)}
+.lernwelt .lw-hw-check:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.lernwelt .lw-hw-open{
+  flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:1px;
+  border:none;background:none;padding:5px 6px;border-radius:7px;cursor:pointer;text-align:left}
+.lernwelt .lw-hw-open:hover{background:var(--bg-hover)}
+.lernwelt .lw-hw-open strong{font-size:13px;color:var(--text);font-weight:550;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.lernwelt .lw-hw-open small{font-size:11.5px;color:var(--text-faint)}
+/* Erledigt: durchgestrichen UND blass — Zustand steht auch im Haken (§38). */
+.lernwelt .lw-hw-list li.ist-erledigt .lw-hw-open strong{
+  text-decoration:line-through;color:var(--text-faint)}
+.lernwelt .lw-hw-list li.ist-erledigt .lw-hw-check{border-color:var(--erfolg)}
+/* Überfällig: das Wort steht im Text, die Farbe unterstreicht (§38). */
+.lernwelt .lw-hw-list li.ist-faellig .lw-hw-open small{color:var(--gefahr)}
+.lernwelt .lw-goal-list li button{
+  width:100%;display:flex;align-items:center;gap:8px;border:none;background:none;
+  padding:6px;border-radius:7px;cursor:pointer;text-align:left}
+.lernwelt .lw-goal-list li button:hover{background:var(--bg-hover)}
+.lernwelt .lw-goal-stand{
+  flex:none;font-size:10.5px;font-weight:650;letter-spacing:.02em;
+  padding:2px 7px;border-radius:999px;border:1px solid var(--line);color:var(--text-dim)}
+.lernwelt .lw-goal-stand.ist-arbeit{color:var(--warnung);border-color:var(--warnung)}
+.lernwelt .lw-goal-stand.ist-sicher{color:var(--erfolg);border-color:var(--erfolg)}
+.lernwelt .lw-goal-list strong{flex:1;min-width:0;font-size:13px;font-weight:550;color:var(--text);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lernwelt .lw-goal-list small{flex:none;font-size:11.5px;color:var(--text-faint)}
+.lernwelt .lw-alle{
+  margin-top:8px;border:1px solid var(--line);background:none;color:var(--text-dim);
+  border-radius:7px;padding:5px 10px;font-size:12px;cursor:pointer}
+.lernwelt .lw-alle:hover{background:var(--bg-hover);color:var(--text)}
+@media(max-width:760px){
+  /* §37: der Haken ist die Handlung des Alltags — am Finger 44 px. */
+  .lernwelt .lw-hw-check{width:44px;height:44px;border-radius:10px;font-size:18px}
+}

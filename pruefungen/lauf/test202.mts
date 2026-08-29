@@ -572,7 +572,8 @@ if (ausbildung) {
     [ausbildung.title, ausbildung.ownAlive, ausbildung.after],
     ['T202 Ausbildung', true, ausbildung.before]);
   gleich('Fächer, Prüfungen, Noten, Berichtsheft, Lernmaterial und Stundenplan sind normale Sammlungen',
-    ausbildung.kinds, ['exams', 'grades', 'materials', 'reports', 'subjects', 'timetable']);
+    ausbildung.kinds, ['exams', 'goals', 'grades', 'homework', 'materials', 'reports',
+      'subjects', 'timetable']);
   pruefe('Die Notenskala bleibt ausdrücklich unkonfiguriert',
     ausbildung.gradeScale?.configured === false, JSON.stringify(ausbildung.gradeScale));
   pruefe('Lernstoff, Eingang und Datenbankblöcke sind normale Kinder der Seite',

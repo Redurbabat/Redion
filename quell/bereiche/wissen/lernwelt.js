@@ -1969,6 +1969,88 @@ const Lernwelt = (() => {
         const suchtext = JSON.stringify(record?.props || record || '').toLowerCase();
         return suchtext.includes(id.toLowerCase()) || (titel.length > 2 && suchtext.includes(titel.toLowerCase()));
     };
+    const hausaufgabenSammlungen = () => Object.values(Store.cache.collections).filter(collection => {
+        const name = String(collection?.name || '').toLowerCase();
+        return collection?.schoolKind === 'homework' || /hausaufgabe/.test(name);
+    });
+    const lernzielSammlungen = () => Object.values(Store.cache.collections).filter(collection => {
+        const name = String(collection?.name || '').toLowerCase();
+        return collection?.schoolKind === 'goals' || /lernziel/.test(name);
+    });
+    const hausaufgaben = () => {
+        const raus = [];
+        hausaufgabenSammlungen().forEach(collection => {
+            const dueKey = schemaSchluessel(collection, 'date', ['fällig', 'faellig', 'due', 'termin']);
+            const doneKey = schemaSchluessel(collection, 'checkbox', ['erledigt', 'done']);
+            Store.rowsOf(collection.id).forEach((row) => {
+                if (!row || row.alive === false || !darfLesen(row) || !imBereich(row))
+                    return;
+                raus.push({
+                    id: String(row.id),
+                    titel: zeilenTitel(row, collection),
+                    faellig: String(zeilenWert(row, collection, dueKey) ?? '').slice(0, 10),
+                    /* Roh aus props, nicht über die Anzeige-Formatierung: ein
+                       Haken ist wahr oder falsch, nicht „Ja". */
+                    erledigt: !!(doneKey && row?.props?.[doneKey]),
+                    doneKey, row, collection
+                });
+            });
+        });
+        /* Offene zuerst, darin die Fälligsten oben; Erledigtes ans Ende. */
+        return raus.sort((a, b) => a.erledigt !== b.erledigt
+            ? (a.erledigt ? 1 : -1)
+            : String(a.faellig || '9999').localeCompare(String(b.faellig || '9999')));
+    };
+    const lernziele = () => {
+        const raus = [];
+        lernzielSammlungen().forEach(collection => {
+            const statusKey = schemaSchluessel(collection, 'status', ['stand', 'status']) ||
+                schemaSchluessel(collection, 'select', ['stand', 'status']);
+            const untilKey = schemaSchluessel(collection, 'date', ['bis', 'until', 'termin']);
+            Store.rowsOf(collection.id).forEach((row) => {
+                if (!row || row.alive === false || !darfLesen(row) || !imBereich(row))
+                    return;
+                raus.push({
+                    id: String(row.id),
+                    titel: zeilenTitel(row, collection),
+                    stand: String((statusKey && row?.props?.[statusKey]) || 'Offen'),
+                    bis: String(zeilenWert(row, collection, untilKey) ?? '').slice(0, 10),
+                    row, collection
+                });
+            });
+        });
+        /* „Sicher" ans Ende — was sitzt, muss nicht oben stehen. */
+        return raus.sort((a, b) => (a.stand === 'Sicher' ? 1 : 0) - (b.stand === 'Sicher' ? 1 : 0));
+    };
+    const hausaufgabenListe = (items, leerText) => {
+        if (!items.length)
+            return '<p class="lw-none">' + esc(leerText) + '</p>';
+        const heute = String(Store.now()).slice(0, 10);
+        return '<ul class="lw-hw-list">' + items.map(h => {
+            const dran = !h.erledigt && !!h.faellig && h.faellig < heute;
+            return '<li class="' + (h.erledigt ? 'ist-erledigt' : dran ? 'ist-faellig' : '') + '">' +
+                '<button type="button" class="lw-hw-check" data-lw-hw-done="' + esc(h.id) + '" ' +
+                'aria-pressed="' + (h.erledigt ? 'true' : 'false') + '" ' +
+                'aria-label="' + (h.erledigt ? 'Wieder öffnen' : 'Als erledigt abhaken') + ': ' + esc(h.titel) + '">' +
+                (h.erledigt ? '✓' : '') + '</button>' +
+                '<button type="button" class="lw-hw-open" data-lw-open="' + esc(h.id) + '">' +
+                '<strong>' + esc(h.titel) + '</strong>' +
+                '<small>' + (h.faellig
+                ? 'fällig ' + esc(datumText(h.faellig)) + (dran ? ' · überfällig' : '')
+                : 'ohne Termin') + '</small></button></li>';
+        }).join('') + '</ul>';
+    };
+    const lernzielListe = (items, leerText) => {
+        if (!items.length)
+            return '<p class="lw-none">' + esc(leerText) + '</p>';
+        const slug = (stand) => stand === 'Sicher' ? 'sicher' : /arbeit/i.test(stand) ? 'arbeit' : 'offen';
+        return '<ul class="lw-goal-list">' + items.map(z => '<li><button type="button" data-lw-open="' + esc(z.id) + '">' +
+            /* Das Wort trägt die Aussage, die Farbe unterstreicht nur (§38). */
+            '<span class="lw-goal-stand ist-' + slug(z.stand) + '">' + esc(z.stand) + '</span>' +
+            '<strong>' + esc(z.titel) + '</strong>' +
+            '<small>' + (z.bis ? 'bis ' + esc(datumText(z.bis)) : 'ohne Termin') + '</small>' +
+            '</button></li>').join('') + '</ul>';
+    };
     const fachAnsicht = (fach) => {
         const karten = lernkarten().filter(card => fachVon(card).toLowerCase().includes(fach.titel.toLowerCase()) ||
             beziehtSichAuf(card, fach.row.id, fach.titel));
@@ -1986,6 +2068,11 @@ const Lernwelt = (() => {
                 item.titel.toLowerCase().includes(fach.titel.toLowerCase());
         });
         const fachNotizen = dokumente().filter(item => item.titel.toLowerCase().includes(fach.titel.toLowerCase()));
+        /* Hausaufgaben und Lernziele DIESES Fachs (E256) — über die
+           Fach-Relation (die Kennung steht in den props) oder den Titel,
+           derselbe Weg wie bei Karten und Prüfungen. */
+        const fachHw = hausaufgaben().filter(item => beziehtSichAuf(item.row, fach.row.id, fach.titel));
+        const fachZiele = lernziele().filter(item => beziehtSichAuf(item.row, fach.row.id, fach.titel));
         const fort = karten.length
             ? Math.round(karten.reduce((summe, card) => summe + Math.min(2, zahl(card?.sr?.wdh)), 0) /
                 (karten.length * 2) * 100)
@@ -1995,11 +2082,14 @@ const Lernwelt = (() => {
             '</h2><span>Eine Fachseite, dieselben Notizen, PDFs, Aufgaben und Karten.</span></div>' +
             '<button type="button" data-lw-open="' + esc(fach.row.id) + '">Datensatz öffnen</button></header>' +
             '<section class="lw-metrics">' + kennzahl(String(karten.length), 'Lernkarten') +
+            kennzahl(String(fachHw.filter(item => !item.erledigt).length), 'offene Hausaufgaben') +
             kennzahl(String(fachAufgaben.filter(item => !item.fertig).length), 'offene Aufgaben') +
             kennzahl(String(fachPruefungen.length), 'Prüfungen') +
             kennzahl(String(fachFehler.filter(item => !item.stabil).length), 'aktive Fehler') + '</section>' +
             fortschritt(fort, 'Fachlicher Fortschritt') +
             '<div class="lw-dashboard-grid">' +
+            sektion('Hausaufgaben', hausaufgabenListe(fachHw.slice(0, 8), 'Keine Hausaufgabe für dieses Fach eingetragen.')) +
+            sektion('Lernziele', lernzielListe(fachZiele.slice(0, 8), 'Noch kein Lernziel für dieses Fach.')) +
             sektion('Unterricht & Notizen', eintragListe(fachNotizen.slice(0, 8), 'Noch keine Notiz diesem Fach zugeordnet.')) +
             sektion('PDFs & Material', eintragListe(fachPdfs.slice(0, 8), 'Noch kein PDF diesem Fach zugeordnet.')) +
             sektion('Aufgaben', aufgabenListe(fachAufgaben.slice(0, 8), 'Keine Fachaufgabe gefunden.')) +
@@ -2044,6 +2134,9 @@ const Lernwelt = (() => {
         const tasks = sichtbareAufgaben().filter(item => !item.fertig).slice(0, 8);
         const exams = pruefungen().filter(item => item.tage === null || item.tage >= 0).slice(0, 6);
         const themen = liste(statistik().topics).slice(0, 8);
+        const hw = hausaufgaben();
+        const offeneHw = hw.filter(item => !item.erledigt);
+        const ziele = lernziele();
         const gradeEntries = sammlungsEintraege('grades', 'medal', 6);
         const reportEntries = sammlungsEintraege('reports', 'clipboard', 6);
         const materialEntries = sammlungsEintraege('materials', 'library', 8);
@@ -2083,6 +2176,14 @@ const Lernwelt = (() => {
                     '<button type="button" data-lw-open="' + esc(root?.id || '') + '">Fächer hinzufügen</button>' +
                     '</div>') + '</section>' : '') +
             '<div class="lw-dashboard-grid">' +
+            /* Hausaufgaben und Lernziele (E256) zuerst — das sind die zwei
+               Fragen des Schulalltags: was ist zu tun, und wohin soll es. */
+            sektion('Hausaufgaben', hausaufgabenListe(hw.slice(0, 8), 'Keine Hausaufgabe eingetragen.') +
+                (hausaufgabenSammlungen().length
+                    ? '<button type="button" class="lw-alle" data-lw-action="homework-open">Alle Hausaufgaben</button>' : ''), offeneHw.length ? offeneHw.length + ' offen' : '') +
+            sektion('Lernziele', lernzielListe(ziele.slice(0, 8), 'Noch kein Lernziel festgehalten.') +
+                (lernzielSammlungen().length
+                    ? '<button type="button" class="lw-alle" data-lw-action="goals-open">Alle Lernziele</button>' : '')) +
             sektion('Aktuelle Themen', themenListe(themen, 8), 'aus deinen Lernkarten') +
             sektion('Aufgaben', aufgabenListe(tasks, 'Keine offene Ausbildungsaufgabe.')) +
             sektion('Prüfungen', exams.length ? '<ul class="lw-object-list">' + exams.map(item => '<li><button type="button" data-lw-exam="' + esc(item.id) + '">' + zeichenSpan('clipboard', 'lw-object-icon') +
@@ -2614,6 +2715,14 @@ const Lernwelt = (() => {
             sammlungSeiteOeffnen(stundenplanSammlungen()[0]);
             return;
         }
+        if (aktion === 'homework-open') {
+            sammlungSeiteOeffnen(hausaufgabenSammlungen()[0]);
+            return;
+        }
+        if (aktion === 'goals-open') {
+            sammlungSeiteOeffnen(lernzielSammlungen()[0]);
+            return;
+        }
         if (aktion === 'new-page') {
             const titel = zustand.ansicht === 'uni' ? 'Studiennotiz' : 'Arbeitsnotiz';
             const icon = zustand.ansicht === 'uni' ? 'building' : 'briefcase';
@@ -2630,6 +2739,20 @@ const Lernwelt = (() => {
         const navId = nav?.dataset.lwNav;
         if (ansichtGueltig(navId)) {
             wechseln(navId);
+            return;
+        }
+        /* Der Haken an der Hausaufgabe (E256): umschalten, nicht öffnen —
+           deshalb VOR data-lw-open, der Knopf steht neben einem Öffnen-Knopf.
+           Geschrieben wird die Checkbox-Spalte der Zeile selbst (setProp);
+           die Ansicht zeichnet danach aus den Daten neu. */
+        const hwKnopf = element.closest('[data-lw-hw-done]');
+        if (hwKnopf?.dataset.lwHwDone) {
+            const rowId = hwKnopf.dataset.lwHwDone;
+            const eintrag = hausaufgaben().find(item => item.id === rowId);
+            if (eintrag && eintrag.doneKey) {
+                Store.setProp(rowId, eintrag.doneKey, !eintrag.erledigt);
+                zeichnen();
+            }
             return;
         }
         const open = element.closest('[data-lw-open]');
