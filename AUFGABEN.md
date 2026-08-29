@@ -35,6 +35,17 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
+**29. August 2026 · Schaltplan: Einfügen und Schalten gehen wieder (E261)**
+
+> Redur fand es mit der Maus: `closest('[data-id]')` lief am SVG vorbei
+> bis zum Block-Kasten (der trägt `data-id = block.type`) — Einfügen
+> per Klick ging im Seiten-Editor vom ersten Tag an ins Leere, kein
+> Prüflauf hatte je echt geklickt. Jetzt sucht `teilAm()` nur im SVG,
+> der Teil-Dialog kommt per eigener Doppeltipp-Erkennung (dblclick
+> stirbt am Neuzeichnen, am Telefon gibt es keins), und das doppelte
+> CSS-Raster aus E260 ist zurückgenommen. test263 neu, drei Gegenproben
+> einzeln rot, test238/239/240 grün.
+
 **29. August 2026 · Papier-Token und geteilte Anatomien (E260)**
 
 > Amdion Phase 1 wird sichtbar: `--paper`/`--paper-ink`/`--grid`, das

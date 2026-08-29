@@ -10923,16 +10923,15 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical}
 .sp-sym.sp-fav .sp-sym-name::before{content:'★ '; color:var(--accent-text)}
 
-/* Die Bühne trägt seit E260 Amdions Punktraster (`--grid`, thememitlaufend):
-   ein Plan liegt auf kariertem Grund, nicht auf leerer Fläche. Die
-   Zeichenfläche selbst ist durchsichtig, damit das Raster unter dem Plan
-   weiterläuft. */
+/* KEIN CSS-Raster hier (E261): der Plan zeichnet sein Punktraster selbst,
+   im SVG (`schaltplan.ts`, sp-raster-Muster) — dort skaliert es mit dem
+   Zoom. E260 legte kurz ein zweites Raster per CSS darunter; zwei Raster
+   mit verschiedener Teilung sind Moiré, nicht Amdion. `--grid` bleibt als
+   Token für Flächen, die KEIN eigenes Raster mitbringen. */
 .sp-buehne{flex:1; overflow:auto; padding:14px; background:var(--bg);
-  background-image:radial-gradient(var(--grid) .8px, transparent .8px);
-  background-size:20px 20px;
   display:flex; align-items:flex-start; justify-content:center}
 .sp-flaeche{max-width:100%; height:auto; color:var(--text); touch-action:none;
-  background:transparent; border-radius:6px}
+  background:var(--bg); border-radius:6px}
 .sp-teil, .sp-leitung, .sp-text{cursor:pointer}
 /* Die Auswahl darf NICHT nur über die Farbe gehen (§38): sie bekommt einen
    gestrichelten Rahmen, den man auch ohne Farbsehen erkennt. */
@@ -39049,6 +39048,17 @@ const Planflaeche = (() => {
             male();
             return true;
         };
+        /* Ein Teil ist ein `[data-id]` IM SVG — und nur dort. Der Editor hängt
+           an JEDEN Block-Kasten `data-id = block.type` (editor.ts, render):
+           von der leeren Fläche aus wanderte `closest('[data-id]')` am SVG
+           vorbei bis zum Kasten und hielt jeden Klick für „Teil ‚schaltplan'
+           angeklickt". Einfügen, Radieren und das Schalten in der Simulation
+           gingen im Seiten-Editor darum ins Leere — vom ersten Tag an, denn
+           kein Prüflauf hat je echt geklickt, alle haben über Store gesät
+           (E261, gefunden von Redur mit der Maus). */
+        const teilAm = (ziel) => ziel.closest('svg [data-id]');
+        /* Für die Doppeltipp-Erkennung unten: welcher Teil, wie eben. */
+        let letzterTipp = { id: '', zeit: 0 };
         /* --- Zeigerereignisse ------------------------------------------------ */
         buehne.addEventListener('pointerdown', e => {
             const svg = buehne.querySelector('svg');
@@ -39061,13 +39071,13 @@ const Planflaeche = (() => {
                eine Schalttafel. Nichts wird verschoben, nichts gelöscht — man kann
                den Plan beim Ausprobieren nicht versehentlich kaputt machen. */
             if (z.simulation) {
-                const g = ziel.closest('[data-id]');
+                const g = teilAm(ziel);
                 if (g && g.dataset.id)
                     schalte(g.dataset.id);
                 return;
             }
             if (z.werkzeug === 'radieren') {
-                const g = ziel.closest('[data-id]');
+                const g = teilAm(ziel);
                 if (g && g.dataset.id) {
                     z.auswahl = new Set([g.dataset.id]);
                     loeschen();
@@ -39093,7 +39103,7 @@ const Planflaeche = (() => {
                 return;
             }
             /* Werkzeug „zeigen" */
-            const g = ziel.closest('[data-id]');
+            const g = teilAm(ziel);
             if (!g || !g.dataset.id) {
                 /* Auf leere Fläche: Symbol setzen, oder Rahmen aufziehen. */
                 if (z.gewaehltesZeichen) {
@@ -39108,6 +39118,22 @@ const Planflaeche = (() => {
                 return;
             }
             const id = g.dataset.id;
+            /* Doppeltipp aufs Teil: sein Dialog (Betriebsmittel, Anschlüsse,
+               Punkte 18/19). Von Hand erkannt, nicht über das native dblclick —
+               das stirbt hier zweimal: der erste Klick wählt aus und zeichnet die
+               Fläche neu, der zweite trifft einen NEUEN Knoten, und der Browser
+               zählt Klicks nur auf demselben weiter. Und am Telefon gibt es gar
+               kein dblclick. Gemessen mit test263 §2: null Ereignisse (E261). */
+            const jetztMs = Date.now();
+            if (letzterTipp.id === id && jetztMs - letzterTipp.zeit < 400) {
+                letzterTipp = { id: '', zeit: 0 };
+                const t = teilVon(id);
+                if (t) {
+                    teilDialog(t);
+                    return;
+                }
+            }
+            letzterTipp = { id, zeit: jetztMs };
             const gruppe = mitGruppe(id);
             if (e.shiftKey)
                 gruppe.forEach(x => z.auswahl.has(x) ? z.auswahl.delete(x) : z.auswahl.add(x));
@@ -39208,15 +39234,9 @@ const Planflaeche = (() => {
         };
         buehne.addEventListener('pointerup', zugEnde);
         buehne.addEventListener('pointercancel', zugEnde);
-        /* Doppeltippen auf ein Teil: Betriebsmittel und Anschlussnummern (18/19) */
-        buehne.addEventListener('dblclick', e => {
-            const g = e.target.closest('[data-id]');
-            const t = g && g.dataset.id ? teilVon(g.dataset.id) : null;
-            if (!t)
-                return;
-            e.preventDefault();
-            teilDialog(t);
-        });
+        /* KEIN dblclick-Horcher mehr: das Doppeltippen erkennt der
+           pointerdown selbst (Begründung dort). Ein zweiter Horcher öffnete
+           den Dialog doppelt, sobald der Browser doch ein dblclick baut. */
         /* --- Der Dialog am Teil ---------------------------------------------- */
         const teilDialog = (t) => {
             const zeichen = Register.fachzeichen.holen(t.zeichen);

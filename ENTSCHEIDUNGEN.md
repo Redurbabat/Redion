@@ -18800,3 +18800,43 @@ test127 22/22, test202 84/84, test207 37/37, test215 50/50,
 test247 102/102, test262 11/11, test40 24/24. Einzeldatei 7061→7068
 KB. Vier Bilder im Gespräch: Kennzahlen, Raster, warmes Papier,
 Menüband-Kicker.
+
+E261 — Der Klick auf die Schaltplan-Fläche landete am Block-Kasten
+================================================================================
+
+Redur, mit der Maus: Symbol gewählt, auf die Fläche geklickt — nichts.
+Der Editor hängt an JEDEN Block-Kasten `data-id = block.type`
+(editor.ts, render); die Teil-Suche `closest('[data-id]')` wanderte
+von der leeren Fläche am SVG vorbei bis zum Kasten und hielt jeden
+Klick für „Teil ‚schaltplan' angeklickt". Einfügen ging im
+Seiten-Editor darum ins Leere — VOM ERSTEN TAG AN, denn kein Prüflauf
+hat je echt geklickt: alle haben über Store gesät (§30-Lücke).
+
+ZWEI ENTSCHEIDUNGEN:
+
+1. Ein Teil ist ein `[data-id]` IM SVG — `teilAm()` sucht mit
+   `closest('svg [data-id]')`, an allen vier Stellen (einfügen,
+   radieren, schalten, Doppeltipp).
+
+2. Der Teil-Dialog kommt per EIGENER Doppeltipp-Erkennung im
+   pointerdown, nicht mehr per nativem dblclick. Das dblclick starb
+   hier zweimal: der erste Klick wählt aus und zeichnet die Fläche neu,
+   der zweite trifft einen NEUEN Knoten, und der Browser zählt Klicks
+   nur auf demselben weiter (gemessen: null dblclick-Ereignisse). Am
+   Telefon gibt es dblclick ohnehin nicht — jetzt geht Doppeltippen
+   auch dort.
+
+NEBENBEI ZURÜCKGENOMMEN: das CSS-Punktraster aus E260 auf der
+Schaltplan-Bühne. Der Plan zeichnet sein Raster selbst im SVG
+(sp-raster-Muster) — dort skaliert es mit dem Zoom; zwei Raster mit
+verschiedener Teilung sind Moiré, nicht Amdion. `--grid` bleibt als
+Token für Flächen ohne eigenes Raster. Die Lehre ist E21: der
+Übernahmeplan hatte Amdions Raster notiert, ohne nachzusehen, dass
+Redion längst eines hat.
+
+**Geprüft:** test263 NEU (10 Punkte — echte Klicks ohne force:
+einfügen, Doppeltipp-Dialog, Radiergummi trifft nur Teile, Simulation
+schaltet per Klick, kein Doppelraster). Drei Gegenproben einzeln rot:
+alte closest-Suche → Einfügen rot; CSS-Raster wieder rein → §4 rot;
+Doppeltipp-Fenster auf 0 → §2 rot. test238 77/77, test239 68/68,
+test240 100/100. Einzeldatei neu gebaut.
