@@ -18702,3 +18702,37 @@ Kopf 89/Knopf verdeckt, nachher 101/89/frei; der Gegenbeweis (alte
 Rechnung) zeigt exakt das Lauf-Rot. test248 trägt den Messpunkt jetzt
 als stehenden Wächter VOR dem Klick (45 Punkte) — ein Klick, der
 zufällig durchgeht, ist kein Beweis. test40 24/24, test245 53/53.
+
+E258 — Amdion ist die Vorlage, Redion bleibt das Haus
+================================================================================
+
+Redur: „schaue mal die amdion repo und ich genaue so haben kannst du
+alles im redion nehmen." Amdion (github.com/Redurbabat/Amdion, Zweig
+codex-premium-foundation) ist Redurs eigener Prototyp — reines
+TypeScript, kein Framework, local-first, und funktional eine
+TEILMENGE von Redion. „Alles nehmen" kann darum nicht heissen, Code
+oder Datenlayouts zu verpflanzen: Amdions Karteikarten kennen keine
+SM-2-Planung, seine Dateiablage keine Stücke, sein Export kein
+.redion. Jede dieser Übernahmen wäre ein Rückschritt oder eine
+Datenmigration nebenbei (§53.3).
+
+DIE ENTSCHEIDUNG: Übernommen wird die GESTALT — Designsprache,
+Shell-Anmutung und eine Handvoll additiver Funktionsideen — in
+Redions Architektur, phasenweise, jede Phase als eigener E-Eintrag
+mit Prüfläufen und Bildern. Der vollständige Plan mit acht Phasen,
+der Nicht-übernehmen-Liste und den Risiken steht in
+doku/AMDION-UEBERNAHME.md; er wurde aus fünf unabhängigen Lesungen
+beider Codebasen gebaut und ist das Regiebuch dieses Bogens.
+
+Ausdrücklich NICHT übernommen (die Doku nennt die Gründe je einzeln):
+Amdions Datenfelder (size/type/chunks gegen groesse/typ/teile),
+sein Karteikarten-Modell, sein Export-Format, sein ESM-Modulstart,
+innerHTML-Neuzeichnen, prompt()-Dialoge, die vierte App-Leiste, der
+Akzent #7c5cff (Redion behält den gemessenen #6d4aff aus E199) und
+Inter/14px. Ein Amdion-JSON-Import nach Redion bleibt verboten, bis
+ein dokumentierter Migrationspfad existiert.
+
+**Geprüft:** Amdion gebaut, gestartet, vier Ansichten fotografiert
+und an Redur geschickt; der Plan zitiert Datei und Zeile für jede
+Aussage über beide Codebasen. Code hat sich in diesem Eintrag nicht
+geändert — er ist die Eintrittskarte für E259 ff.

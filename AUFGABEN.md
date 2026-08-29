@@ -35,6 +35,15 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
+**29. August 2026 · Amdion ist die Vorlage — der Übernahme-Bogen beginnt (E258)**
+
+> Redur will Redion „genau so" wie seinen eigenen Prototyp Amdion.
+> Übernommen wird die Gestalt, nie Code oder Datenlayouts (Amdion ist
+> funktional eine Teilmenge). Das Regiebuch mit acht Phasen steht in
+> doku/AMDION-UEBERNAHME.md — Phase 1 ist Designsprache und
+> Shell-Look, beginnend mit dem Motion-Token-Doppel aus marken.css
+> gegen grund.css.
+
 **29. August 2026 · Die Randleiste zählt die Kopfzeile mit (E257)**
 
 > Der doppelte Lauf-Abfang von test248 war kein Flattern: seit E236
