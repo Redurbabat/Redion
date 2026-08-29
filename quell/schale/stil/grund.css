@@ -93,6 +93,24 @@
   --glas-rand:    inset 0 0 0 1px rgba(255,255,255,.10);
   --glas-blur:    saturate(180%) blur(20px);
 
+  /* --- Die Hauptknopf-Fläche (E263, aus Amdion). -----------------------
+   * EIN Rezept für alle Hauptknöpfe, als Marke wie die Schattennamen
+   * (E204): wer es zweimal schriebe, pflegte es zweimal. Der Verlauf
+   * läuft nach UNTEN ins Dunkle — Amdion hellt nach oben auf, aber
+   * gemessen fällt dabei die weisse Schrift im Dunkelmodus auf 3,77
+   * (nötig 4,5). Abdunkeln gibt denselben Licht-über-Schatten-Eindruck,
+   * und jede Stelle liegt ÜBER dem gemessenen Wert des reinen Akzents:
+   * Fuss 90 % Akzent + 10 % Schwarz = Weiss darauf 6,09/7,37
+   * (dunkel/hell), Fläche gegen den Grund 3,03/6,68. Die Hover-Fassung
+   * nimmt --accent-hover und ist damit je Modus richtig herum (E199).
+   * ------------------------------------------------------------------- */
+  --haupt-flaeche: linear-gradient(180deg, var(--accent),
+                   color-mix(in srgb, var(--accent) 90%, black));
+  --haupt-flaeche-hover: linear-gradient(180deg, var(--accent-hover),
+                   color-mix(in srgb, var(--accent-hover) 90%, black));
+  --haupt-schein: inset 0 1px 0 rgba(255,255,255,.18),
+                  0 6px 16px color-mix(in srgb, var(--accent) 24%, transparent);
+
   /* --- Die Tinte auf Papier (E260). ------------------------------------
    * `--paper` und `--grid` wechseln mit dem Thema und stehen in
    * dunkel.css/hell.css. Die Tinte nicht: Papier ist in beiden Modi
@@ -273,11 +291,20 @@ input,textarea,select{font:inherit; color:inherit}
 
 /* HAUPTHANDLUNG. Genau eine je Bild — mehr macht keine wichtig.
    Die Schriftfarbe kommt aus `--auf-accent`, nicht aus Weiss: welche Farbe
-   auf dem Akzent lesbar ist, wird je Modus gemessen (E142, E199). */
-.rb.haupt{
-  background:var(--accent); color:var(--auf-accent); border-color:transparent;
+   auf dem Akzent lesbar ist, wird je Modus gemessen (E142, E199).
+
+   Die Fläche kommt aus den Marken `--haupt-flaeche`/`--haupt-schein`
+   (oben bei den Werten, mit der Messung) — `button.is-primary` steht mit
+   im Selektor, weil DAS die Hauptknöpfe sind, die es heute wirklich gibt
+   (Lernwelt, Elektro-Rechner); `.rb.haupt` war definiert und nirgends im
+   Markup. Bereichsregeln mit mehr Gewicht zeigen auf DIESELBEN Marken. */
+.rb.haupt, button.is-primary{
+  background:var(--haupt-flaeche); color:var(--auf-accent); border-color:transparent;
+  box-shadow:var(--haupt-schein);
 }
-.rb.haupt:hover{ background:var(--accent-hover); border-color:transparent }
+.rb.haupt:hover, button.is-primary:hover{
+  background:var(--haupt-flaeche-hover); border-color:transparent;
+}
 
 /* LEISE. Kein Rand, keine Fläche — bis man hinfasst. Für Handlungen, die
    danebenstehen dürfen: „Abbrechen", „Später". */

@@ -183,6 +183,13 @@ const Planflaeche = (() => {
                         `title="${esc(t)}" aria-label="${esc(t)}">${ic}</button>`).join('') +
                     `</span>` +
                     `<span class="sp-rechts">` +
+                    /* Nur im Stromlaufplan: im Installationsplan (Grundriss) gibt es
+                       keine Sammelschienen. */
+                    (z.plan.art.startsWith('stromlauf')
+                        ? `<button class="sp-netz" data-a="netz" ` +
+                            `title="Netz (L1 und N mit Quelle) oder eine fertige Beispielschaltung einfügen — bereit zum Simulieren" ` +
+                            `aria-label="Netz oder Beispielschaltung einfügen">⚡ Schaltung</button>`
+                        : '') +
                     `<button class="sp-start${z.simulation ? ' an' : ''}" data-a="simulation" ` +
                     `title="${z.simulation ? 'Simulation anhalten' : 'Strom fliessen lassen'}" ` +
                     `aria-pressed="${z.simulation}" ` +
@@ -335,6 +342,83 @@ const Planflaeche = (() => {
                     nummern: {}, gruppe: '',
                     ebene: aktiveEbene()
                 });
+            });
+        };
+        /* --- Das Netz: L1 und N als Sammelschienen (E262) ---------------------
+         * Redur: „füge dort alle Leitungen wie L1 und N ein, damit ich direkt
+         * testen kann." Ein aufgelöster Stromlaufplan beginnt im Lehrmittel
+         * immer gleich: L1 als Schiene oben, N als Schiene unten, dazwischen
+         * die Zweige. Der Knopf zeichnet genau das — und hängt die Schienen an
+         * eine Wechselspannungsquelle links, damit die Simulation sofort
+         * rechnen kann. Die Schienen sind gewöhnliche Leitungen: wer einen
+         * Zweig darauf ENDEN lässt, ist verbunden (die Simulation zapft
+         * Sammelschienen ausdrücklich an, simulation.ts, netzInfo). PE kommt
+         * bewusst nicht mit: ohne Fehlerfall führte er nichts und stünde nur
+         * als toter Strich im Bild. */
+        const netzSchonDa = () => z.plan.texte.some(t => t && t.t === 'L1') ||
+            z.plan.teile.some(t => t && t.zeichen === 'wechselspannung');
+        /** Netz oder ein Beispiel aus dem Kern einfügen (Schaltplan.beispielBauen). */
+        const schaltungEinfuegen = (id) => {
+            if (netzSchonDa()) {
+                UI.toast('Das Netz steht schon — für ein neues Beispiel zuerst „… → Plan leeren".');
+                return;
+            }
+            if (id === 'netz') {
+                aendere(() => { Schaltplan.netzBauen(z.plan, aktiveEbene()); });
+                return;
+            }
+            const beispiel = Schaltplan.BEISPIELE.find(x => x.id === id);
+            aendere(() => { Schaltplan.beispielBauen(z.plan, id, aktiveEbene()); });
+            if (beispiel)
+                UI.toast(beispiel.hinweis);
+        };
+        /** Eine selbst gespeicherte Vorlage einsetzen — mit FRISCHEN Kennungen.
+         *  Die Vorlage trägt die Kennungen des Plans, aus dem sie ausgeschnitten
+         *  wurde; zweimal eingesetzt wären es doppelte, und die Auswahl fasste
+         *  beide zugleich an. */
+        const vorlageEinsetzen = (v) => {
+            aendere(() => {
+                const neuId = new Map();
+                (v.teile || []).forEach(t => {
+                    const id = Schaltplan.uid();
+                    neuId.set(t.id, id);
+                    z.plan.teile.push({ ...t, id, x: t.x + 120, y: t.y + 80,
+                        bmk: Schaltplan.naechstesBmk(z.plan, t.zeichen) });
+                });
+                (v.leitungen || []).forEach(l => {
+                    const neu = { ...l, id: Schaltplan.uid(),
+                        punkte: (l.punkte || []).map(p => ({ x: p.x + 120, y: p.y + 80 })) };
+                    if (l.vonTeil)
+                        neu.vonTeil = neuId.get(l.vonTeil) || l.vonTeil;
+                    if (l.nachTeil)
+                        neu.nachTeil = neuId.get(l.nachTeil) || l.nachTeil;
+                    z.plan.leitungen.push(neu);
+                });
+            });
+        };
+        /** Das Menü hinter „⚡ Schaltung": Netz, Beispiele, eigene Vorlagen.
+         *  Die eigenen liessen sich bisher nur SPEICHERN, nirgends einsetzen —
+         *  ein Weg ins Leere (§47), hier endet er. */
+        const schaltungMenue = (anker) => {
+            const r = anker.getBoundingClientRect();
+            const eigene = (Store.getMeta(VORLAGEN, []) || [])
+                .filter(v => !v.art || v.art === z.plan.art);
+            const m = UI.menu('<button data-s="netz">Netz — L1 und N mit Quelle</button>' +
+                '<hr>' +
+                Schaltplan.BEISPIELE.map(b => `<button data-s="${esc(b.id)}">${esc(b.name)}</button>`).join('') +
+                (eigene.length
+                    ? '<hr>' + eigene.map((v, i) => `<button data-v="${i}">Vorlage: ${esc(v.name)}</button>`).join('')
+                    : ''), r.left - 120, r.bottom + 6);
+            m.addEventListener('click', e => {
+                const b = e.target.closest('[data-s],[data-v]');
+                if (!b)
+                    return;
+                m.remove();
+                if (b.dataset.s)
+                    return schaltungEinfuegen(b.dataset.s);
+                const v = eigene[Number(b.dataset.v)];
+                if (v)
+                    vorlageEinsetzen(v);
             });
         };
         /* Auf welche Ebene wird gezeichnet: die oberste sichtbare, die nicht
@@ -825,6 +909,8 @@ const Planflaeche = (() => {
                 male();
                 return;
             }
+            if (b.dataset.a === 'netz')
+                return schaltungMenue(b);
             if (b.dataset.a === 'heft')
                 return heftUmschalten();
             if (b.dataset.a === 'simulation')

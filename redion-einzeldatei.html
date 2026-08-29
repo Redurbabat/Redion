@@ -494,6 +494,24 @@ html[data-theme="light"]{
   --glas-rand:    inset 0 0 0 1px rgba(255,255,255,.10);
   --glas-blur:    saturate(180%) blur(20px);
 
+  /* --- Die Hauptknopf-Fläche (E263, aus Amdion). -----------------------
+   * EIN Rezept für alle Hauptknöpfe, als Marke wie die Schattennamen
+   * (E204): wer es zweimal schriebe, pflegte es zweimal. Der Verlauf
+   * läuft nach UNTEN ins Dunkle — Amdion hellt nach oben auf, aber
+   * gemessen fällt dabei die weisse Schrift im Dunkelmodus auf 3,77
+   * (nötig 4,5). Abdunkeln gibt denselben Licht-über-Schatten-Eindruck,
+   * und jede Stelle liegt ÜBER dem gemessenen Wert des reinen Akzents:
+   * Fuss 90 % Akzent + 10 % Schwarz = Weiss darauf 6,09/7,37
+   * (dunkel/hell), Fläche gegen den Grund 3,03/6,68. Die Hover-Fassung
+   * nimmt --accent-hover und ist damit je Modus richtig herum (E199).
+   * ------------------------------------------------------------------- */
+  --haupt-flaeche: linear-gradient(180deg, var(--accent),
+                   color-mix(in srgb, var(--accent) 90%, black));
+  --haupt-flaeche-hover: linear-gradient(180deg, var(--accent-hover),
+                   color-mix(in srgb, var(--accent-hover) 90%, black));
+  --haupt-schein: inset 0 1px 0 rgba(255,255,255,.18),
+                  0 6px 16px color-mix(in srgb, var(--accent) 24%, transparent);
+
   /* --- Die Tinte auf Papier (E260). ------------------------------------
    * `--paper` und `--grid` wechseln mit dem Thema und stehen in
    * dunkel.css/hell.css. Die Tinte nicht: Papier ist in beiden Modi
@@ -674,11 +692,20 @@ input,textarea,select{font:inherit; color:inherit}
 
 /* HAUPTHANDLUNG. Genau eine je Bild — mehr macht keine wichtig.
    Die Schriftfarbe kommt aus `--auf-accent`, nicht aus Weiss: welche Farbe
-   auf dem Akzent lesbar ist, wird je Modus gemessen (E142, E199). */
-.rb.haupt{
-  background:var(--accent); color:var(--auf-accent); border-color:transparent;
+   auf dem Akzent lesbar ist, wird je Modus gemessen (E142, E199).
+
+   Die Fläche kommt aus den Marken `--haupt-flaeche`/`--haupt-schein`
+   (oben bei den Werten, mit der Messung) — `button.is-primary` steht mit
+   im Selektor, weil DAS die Hauptknöpfe sind, die es heute wirklich gibt
+   (Lernwelt, Elektro-Rechner); `.rb.haupt` war definiert und nirgends im
+   Markup. Bereichsregeln mit mehr Gewicht zeigen auf DIESELBEN Marken. */
+.rb.haupt, button.is-primary{
+  background:var(--haupt-flaeche); color:var(--auf-accent); border-color:transparent;
+  box-shadow:var(--haupt-schein);
 }
-.rb.haupt:hover{ background:var(--accent-hover); border-color:transparent }
+.rb.haupt:hover, button.is-primary:hover{
+  background:var(--haupt-flaeche-hover); border-color:transparent;
+}
 
 /* LEISE. Kein Rand, keine Fläche — bis man hinfasst. Für Handlungen, die
    danebenstehen dürfen: „Abbrechen", „Später". */
@@ -5686,12 +5713,16 @@ body[data-ruhig="an"] .arbeitswelt .aw-kopf::after{ display:none }
 
    Der Weg ist nicht `!important`, sondern dieselbe Spezifität: die
    Fussleiste steht jetzt in der Aufzählung mit drin. */
+/* Die Fläche ist die Marke `--haupt-flaeche` (grund.css, E263): EIN
+   Rezept für alle Hauptknöpfe. Sie muss hier stehen — diese Selektoren
+   wiegen mehr als die Grundregel, und ohne eigene Fläche käme aus den
+   Basisregeln wieder `--bg-side` durch (genau der Fall oben). */
 .lernwelt button.is-primary,
 .lernwelt .lw-actions button.is-primary,
 .lernwelt .lw-exam-list footer button.is-primary,
 .lernwelt .lw-rating button.is-primary{
-  border-color:var(--accent-text);background:var(--accent);color:var(--auf-accent);
-  box-shadow:var(--shadow-1)
+  border-color:var(--accent-text);background:var(--haupt-flaeche);
+  color:var(--auf-accent);box-shadow:var(--haupt-schein)
 }
 
 /* --- Dashboard-Sektionen und Objektlisten ------------------------------ */
@@ -5808,7 +5839,10 @@ body[data-ruhig="an"] .arbeitswelt .aw-kopf::after{ display:none }
   width:100%;min-height:var(--lw-touch);padding:8px 10px;border:1px solid var(--line);
   border-radius:var(--lw-radius-sm);background:var(--bg-side);font-size:11.5px;font-weight:680
 }
-.lernwelt .lw-study-actions button.is-primary{border-color:var(--accent-text);background:var(--accent);color:var(--auf-accent)}
+.lernwelt .lw-study-actions button.is-primary{
+  border-color:var(--accent-text);background:var(--haupt-flaeche);
+  color:var(--auf-accent);box-shadow:var(--haupt-schein)
+}
 .lernwelt .lw-explanation{display:grid;gap:5px;margin:0;padding:0;list-style:none;counter-reset:lw-plan}
 .lernwelt .lw-explanation li{
   position:relative;display:grid;gap:2px;min-height:52px;padding:8px 8px 8px 43px;
@@ -6148,7 +6182,11 @@ body[data-ruhig="an"] .arbeitswelt .aw-kopf::after{ display:none }
   }
   .lernwelt :where(button.is-primary,.lw-actions button.is-primary,
     .lw-rating button.is-primary,.lw-study-actions button.is-primary):hover{
-    border-color:var(--accent-text);background:var(--accent);color:var(--auf-accent);filter:brightness(1.08)
+    /* Der Hover-Verlauf nimmt --accent-hover und ist damit je Modus
+       richtig herum (E199) — das alte brightness(1.08) war es im
+       Hellmodus nicht. */
+    border-color:var(--accent-text);background:var(--haupt-flaeche-hover);
+    color:var(--auf-accent)
   }
   .lernwelt :where(.lw-metrik,.lw-focus-card,.lw-exam-card,.lw-section,
     .lw-study-actions article,.lw-error-list>article,.lw-exam-list>article,
@@ -9336,12 +9374,20 @@ button[disabled]{opacity:.4; cursor:not-allowed}
 #reiterleiste{display:flex; align-items:stretch; gap:2px; padding:4px 6px 0;
               background:var(--bg-side); border-bottom:1px solid var(--line);
               overflow-x:auto; flex:0 0 auto}
+/* DER AKTIVE REITER KLINKT IN DIE FLÄCHE EIN (E263, aus Amdion): drei
+   Ränder oben und an den Seiten, unten offen, und einen Punkt tiefer
+   gerückt, damit seine Fläche die Unterlinie der Leiste ÜBERDECKT. Vorher
+   zog eine eingelegte Linie unter dem aktiven Reiter durch — er sass auf
+   der Fläche statt in ihr. Der Radius steigt von 7 auf die Leiter (E198). */
 .rt-tab{display:flex; align-items:center; gap:6px; padding:5px 8px 5px 11px;
-        border-radius:7px 7px 0 0; font-size:12.5px; color:var(--text-dim);
+        border:1px solid transparent; border-bottom:0;
+        border-radius:var(--radius-md) var(--radius-md) 0 0; font-size:12.5px;
+        color:var(--text-dim);
         cursor:pointer; max-width:210px; white-space:nowrap; user-select:none}
 .rt-tab span{overflow:hidden; text-overflow:ellipsis}
 .rt-tab:hover{background:var(--bg-hover)}
-.rt-tab.an{background:var(--bg); color:var(--text); box-shadow:0 -1px 0 var(--line) inset}
+.rt-tab.an{background:var(--bg); color:var(--text); border-color:var(--line);
+           margin-bottom:-1px; padding-bottom:6px}
 .rt-tab button{border:0; background:transparent; color:var(--text-faint); cursor:pointer;
                font-size:11px; padding:0 3px; border-radius:3px; opacity:0}
 .rt-tab:hover button, .rt-tab.an button{opacity:1}
@@ -10559,9 +10605,11 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   border-radius:var(--radius-md); background:var(--b-yellow,var(--bg-hover));
   color:var(--warnung); font-size:12.5px; font-weight:680
 }
-/* Der Hauptknopf war einer von sieben gleich aussehenden. */
+/* Der Hauptknopf war einer von sieben gleich aussehenden. Seine Fläche
+   ist die Marke `--haupt-flaeche` (grund.css, E263). */
 .electrical-actions button.is-primary{
-  border-color:var(--accent-text); background:var(--accent); color:var(--auf-accent);
+  border-color:var(--accent-text); background:var(--haupt-flaeche);
+  color:var(--auf-accent); box-shadow:var(--haupt-schein);
   font-weight:680
 }
 .electrical-output strong{font-size:21px}.electrical-output span,.electrical-output small{color:var(--text-dim)}
@@ -10974,7 +11022,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
    ab — gemessen, nicht vermutet: scrollWidth 40 gegen clientWidth 34. Das
    ist derselbe Fehler wie die abgeschnittene Zahl in CLAUDE.md §55.1, nur
    in Buchstaben. */
-.sp-start{width:auto !important; min-width:max-content; padding:0 11px; gap:5px;
+.sp-start, .sp-netz{width:auto !important; min-width:max-content; padding:0 11px; gap:5px;
   display:inline-flex; align-items:center; white-space:nowrap; flex:0 0 auto}
 .sp-start.an{background:var(--sp-strom); color:#231000; border-color:var(--sp-strom)}
 
@@ -38540,10 +38588,114 @@ const Schaltplan = (() => {
             mach(plan.hoehe - 40, 'PE');
         }
     };
+    /* --- Das Netz und die Beispielschaltungen (E262) --------------------------
+     * Redur: „füge dort alle Leitungen wie L1 und N ein, damit ich direkt
+     * testen kann — oder für eine Türklingel; es sollte direkt dort sein,
+     * also im Code."
+     *
+     * `schienenBauen` (oben) zeichnet nur Striche — zum ZEICHNEN. Hier
+     * entsteht das NETZ ZUM RECHNEN: dieselben Schienen, aber an eine echte
+     * Quelle gebunden, damit die Simulation sofort etwas zu rechnen hat.
+     * Ein Zweig, dessen Leitung auf einer Schiene ENDET, ist verbunden — die
+     * Simulation zapft Sammelschienen ausdrücklich an (simulation.ts,
+     * netzInfo). Und darauf bauen die Beispielschaltungen aus dem Lehrmittel:
+     * fertig verdrahtet, ein Klick, Strom drücken, schalten.
+     * ------------------------------------------------------------------------*/
+    /** L1 oben, N unten, links die Quelle dazwischen. Gibt die Geometrie
+     *  zurück, damit ein Beispiel seine Zweige daran hängen kann. */
+    const netzBauen = (plan, ebene = 'plan', volt) => {
+        const oben = rasten(40);
+        const unten = rasten(plan.hoehe - 40);
+        const gy = rasten((oben + unten) / 2 - 30);
+        const rechts = rasten(plan.breite - 20);
+        const quelle = {
+            id: uid(), zeichen: 'wechselspannung', x: 20, y: gy,
+            drehung: 0, gespiegelt: false,
+            bmk: naechstesBmk(plan, 'wechselspannung'),
+            nummern: {}, gruppe: '', ebene
+        };
+        if (typeof volt === 'number')
+            quelle.werte = { U: volt };
+        plan.teile.push(quelle);
+        const kx = quelle.x + 30;
+        plan.leitungen.push({ id: uid(), ebene, vonTeil: quelle.id, vonNr: 'L',
+            punkte: [{ x: kx, y: gy }, { x: kx, y: oben }, { x: rechts, y: oben }] }, { id: uid(), ebene, vonTeil: quelle.id, vonNr: 'N',
+            punkte: [{ x: kx, y: gy + 60 }, { x: kx, y: unten }, { x: rechts, y: unten }] });
+        plan.texte.push({ id: uid(), x: kx + 14, y: oben - 8, t: 'L1', ebene }, { id: uid(), x: kx + 14, y: unten - 8, t: 'N', ebene });
+        return { oben, unten, quelle };
+    };
+    /** Die eingebauten Beispiele. Namen erscheinen im Menü, der Hinweis im
+     *  Toast nach dem Einfügen — er sagt, WOMIT man jetzt spielen kann. */
+    const BEISPIELE = [
+        { id: 'ausschaltung', name: 'Ausschaltung — eine Lampe, ein Schalter',
+            hinweis: 'Strom drücken, dann auf S1 tippen: E1 leuchtet.' },
+        { id: 'wechselschaltung', name: 'Wechselschaltung — Treppenhaus',
+            hinweis: 'Strom drücken — JEDER der beiden Schalter schaltet die Lampe.' },
+        { id: 'tuerklingel', name: 'Türklingel — Taster und Klingel (12 V)',
+            hinweis: 'Strom drücken, S1 gedrückt halten: die Klingel bekommt 12 V.' }
+    ];
+    const beispielBauen = (plan, id, ebene = 'plan') => {
+        const teil = (zeichen, x, y, drehung = 0) => {
+            const t = { id: uid(), zeichen, x: rasten(x), y: rasten(y), drehung,
+                gespiegelt: false, bmk: naechstesBmk(plan, zeichen),
+                nummern: {}, gruppe: '', ebene };
+            plan.teile.push(t);
+            return t;
+        };
+        const draht = (punkte, von, vonNr, nach, nachNr) => {
+            const l = { id: uid(), ebene, punkte: punkte.map(p => ({ x: rasten(p.x), y: rasten(p.y) })) };
+            if (von) {
+                l.vonTeil = von.id;
+                l.vonNr = vonNr;
+            }
+            if (nach) {
+                l.nachTeil = nach.id;
+                l.nachNr = nachNr;
+            }
+            plan.leitungen.push(l);
+        };
+        if (id === 'ausschaltung') {
+            const n = netzBauen(plan, ebene);
+            const s = teil('ch-schema0', 380, 140); /* 3 oben (400,140), 4 unten (400,200) */
+            const h = teil('lampe', 370, 320); /* X1 (400,320), X2 (400,380) */
+            draht([{ x: 400, y: n.oben }, { x: 400, y: 140 }], undefined, undefined, s, '3');
+            draht([{ x: 400, y: 200 }, { x: 400, y: 320 }], s, '4', h, 'X1');
+            draht([{ x: 400, y: 380 }, { x: 400, y: n.unten }], h, 'X2');
+            return true;
+        }
+        if (id === 'wechselschaltung') {
+            const n = netzBauen(plan, ebene);
+            /* S1 steht auf dem Kopf (180°): sein 3 zeigt zur L1-Schiene, seine
+               korrespondierenden 1/2 nach unten zu S2. So laufen beide
+               Korrespondierenden als gerade Strecken — keine Leitung kreuzt
+               einen Anschluss (die test239-Lehre). */
+            const s1 = teil('ch-schema3', 350, 120, 180); /* 3 (380,120) · 1 (400,180) · 2 (360,180) */
+            const s2 = teil('ch-schema3', 350, 300); /* 1 (360,300) · 2 (400,300) · 3 (380,360) */
+            const h = teil('lampe', 350, 440); /* X1 (380,440), X2 (380,500) */
+            draht([{ x: 380, y: n.oben }, { x: 380, y: 120 }], undefined, undefined, s1, '3');
+            draht([{ x: 400, y: 180 }, { x: 400, y: 300 }], s1, '1', s2, '2');
+            draht([{ x: 360, y: 180 }, { x: 360, y: 300 }], s1, '2', s2, '1');
+            draht([{ x: 380, y: 360 }, { x: 380, y: 440 }], s2, '3', h, 'X1');
+            draht([{ x: 380, y: 500 }, { x: 380, y: n.unten }], h, 'X2');
+            return true;
+        }
+        if (id === 'tuerklingel') {
+            /* 12 V wie am Klingeltrafo — die Quelle trägt den Wert selbst. */
+            const n = netzBauen(plan, ebene, 12);
+            const s = teil('taster-schliesser', 380, 140); /* 3 (400,140), 4 (400,200) */
+            const p = teil('klingel', 370, 320); /* X1 (400,320), X2 (400,380) */
+            draht([{ x: 400, y: n.oben }, { x: 400, y: 140 }], undefined, undefined, s, '3');
+            draht([{ x: 400, y: 200 }, { x: 400, y: 320 }], s, '4', p, 'X1');
+            draht([{ x: 400, y: 380 }, { x: 400, y: n.unten }], p, 'X2');
+            return true;
+        }
+        return false;
+    };
     return {
         ARTEN, artVon, EBENEN_VORGABE, neuerPlan, lesen, alsSvg, rasten,
         naechstesBmk, anschlussOrt, anschluesseVon, fangeAnschluss, rechtwinklig,
-        verbindungspunkte, kreuzungen, leitungPfad, schienenBauen, uid, esc
+        verbindungspunkte, kreuzungen, leitungPfad, schienenBauen,
+        netzBauen, BEISPIELE, beispielBauen, uid, esc
     };
 })();
 window.Schaltplan = Schaltplan;
@@ -38736,6 +38888,13 @@ const Planflaeche = (() => {
                         `title="${esc(t)}" aria-label="${esc(t)}">${ic}</button>`).join('') +
                     `</span>` +
                     `<span class="sp-rechts">` +
+                    /* Nur im Stromlaufplan: im Installationsplan (Grundriss) gibt es
+                       keine Sammelschienen. */
+                    (z.plan.art.startsWith('stromlauf')
+                        ? `<button class="sp-netz" data-a="netz" ` +
+                            `title="Netz (L1 und N mit Quelle) oder eine fertige Beispielschaltung einfügen — bereit zum Simulieren" ` +
+                            `aria-label="Netz oder Beispielschaltung einfügen">⚡ Schaltung</button>`
+                        : '') +
                     `<button class="sp-start${z.simulation ? ' an' : ''}" data-a="simulation" ` +
                     `title="${z.simulation ? 'Simulation anhalten' : 'Strom fliessen lassen'}" ` +
                     `aria-pressed="${z.simulation}" ` +
@@ -38888,6 +39047,83 @@ const Planflaeche = (() => {
                     nummern: {}, gruppe: '',
                     ebene: aktiveEbene()
                 });
+            });
+        };
+        /* --- Das Netz: L1 und N als Sammelschienen (E262) ---------------------
+         * Redur: „füge dort alle Leitungen wie L1 und N ein, damit ich direkt
+         * testen kann." Ein aufgelöster Stromlaufplan beginnt im Lehrmittel
+         * immer gleich: L1 als Schiene oben, N als Schiene unten, dazwischen
+         * die Zweige. Der Knopf zeichnet genau das — und hängt die Schienen an
+         * eine Wechselspannungsquelle links, damit die Simulation sofort
+         * rechnen kann. Die Schienen sind gewöhnliche Leitungen: wer einen
+         * Zweig darauf ENDEN lässt, ist verbunden (die Simulation zapft
+         * Sammelschienen ausdrücklich an, simulation.ts, netzInfo). PE kommt
+         * bewusst nicht mit: ohne Fehlerfall führte er nichts und stünde nur
+         * als toter Strich im Bild. */
+        const netzSchonDa = () => z.plan.texte.some(t => t && t.t === 'L1') ||
+            z.plan.teile.some(t => t && t.zeichen === 'wechselspannung');
+        /** Netz oder ein Beispiel aus dem Kern einfügen (Schaltplan.beispielBauen). */
+        const schaltungEinfuegen = (id) => {
+            if (netzSchonDa()) {
+                UI.toast('Das Netz steht schon — für ein neues Beispiel zuerst „… → Plan leeren".');
+                return;
+            }
+            if (id === 'netz') {
+                aendere(() => { Schaltplan.netzBauen(z.plan, aktiveEbene()); });
+                return;
+            }
+            const beispiel = Schaltplan.BEISPIELE.find(x => x.id === id);
+            aendere(() => { Schaltplan.beispielBauen(z.plan, id, aktiveEbene()); });
+            if (beispiel)
+                UI.toast(beispiel.hinweis);
+        };
+        /** Eine selbst gespeicherte Vorlage einsetzen — mit FRISCHEN Kennungen.
+         *  Die Vorlage trägt die Kennungen des Plans, aus dem sie ausgeschnitten
+         *  wurde; zweimal eingesetzt wären es doppelte, und die Auswahl fasste
+         *  beide zugleich an. */
+        const vorlageEinsetzen = (v) => {
+            aendere(() => {
+                const neuId = new Map();
+                (v.teile || []).forEach(t => {
+                    const id = Schaltplan.uid();
+                    neuId.set(t.id, id);
+                    z.plan.teile.push({ ...t, id, x: t.x + 120, y: t.y + 80,
+                        bmk: Schaltplan.naechstesBmk(z.plan, t.zeichen) });
+                });
+                (v.leitungen || []).forEach(l => {
+                    const neu = { ...l, id: Schaltplan.uid(),
+                        punkte: (l.punkte || []).map(p => ({ x: p.x + 120, y: p.y + 80 })) };
+                    if (l.vonTeil)
+                        neu.vonTeil = neuId.get(l.vonTeil) || l.vonTeil;
+                    if (l.nachTeil)
+                        neu.nachTeil = neuId.get(l.nachTeil) || l.nachTeil;
+                    z.plan.leitungen.push(neu);
+                });
+            });
+        };
+        /** Das Menü hinter „⚡ Schaltung": Netz, Beispiele, eigene Vorlagen.
+         *  Die eigenen liessen sich bisher nur SPEICHERN, nirgends einsetzen —
+         *  ein Weg ins Leere (§47), hier endet er. */
+        const schaltungMenue = (anker) => {
+            const r = anker.getBoundingClientRect();
+            const eigene = (Store.getMeta(VORLAGEN, []) || [])
+                .filter(v => !v.art || v.art === z.plan.art);
+            const m = UI.menu('<button data-s="netz">Netz — L1 und N mit Quelle</button>' +
+                '<hr>' +
+                Schaltplan.BEISPIELE.map(b => `<button data-s="${esc(b.id)}">${esc(b.name)}</button>`).join('') +
+                (eigene.length
+                    ? '<hr>' + eigene.map((v, i) => `<button data-v="${i}">Vorlage: ${esc(v.name)}</button>`).join('')
+                    : ''), r.left - 120, r.bottom + 6);
+            m.addEventListener('click', e => {
+                const b = e.target.closest('[data-s],[data-v]');
+                if (!b)
+                    return;
+                m.remove();
+                if (b.dataset.s)
+                    return schaltungEinfuegen(b.dataset.s);
+                const v = eigene[Number(b.dataset.v)];
+                if (v)
+                    vorlageEinsetzen(v);
             });
         };
         /* Auf welche Ebene wird gezeichnet: die oberste sichtbare, die nicht
@@ -39378,6 +39614,8 @@ const Planflaeche = (() => {
                 male();
                 return;
             }
+            if (b.dataset.a === 'netz')
+                return schaltungMenue(b);
             if (b.dataset.a === 'heft')
                 return heftUmschalten();
             if (b.dataset.a === 'simulation')

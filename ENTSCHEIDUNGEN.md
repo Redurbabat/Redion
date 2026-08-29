@@ -18840,3 +18840,76 @@ schaltet per Klick, kein Doppelraster). Drei Gegenproben einzeln rot:
 alte closest-Suche → Einfügen rot; CSS-Raster wieder rein → §4 rot;
 Doppeltipp-Fenster auf 0 → §2 rot. test238 77/77, test239 68/68,
 test240 100/100. Einzeldatei neu gebaut.
+
+E262 — „⚡ Schaltung": Netz, Türklingel und Co. — bereit zum Simulieren
+================================================================================
+
+Redur, zweimal hintereinander: „füge dort alle Leitungen wie L1 und N
+ein, damit ich direkt testen kann" — und: „oder für eine Türklingel;
+es sollte direkt dort sein, also im Code." Bisher begann jeder
+Stromlaufplan leer, und die Simulation sagte zu Recht „keine
+Spannungsquelle". Es gab zwar „Stromschienen einzeichnen" (Striche
+ohne Quelle, im Mehr-Menü) und „Als Vorlage speichern" — aber die
+gespeicherten Vorlagen liessen sich NIRGENDS einsetzen. Ein Weg ins
+Leere (§47).
+
+DIE ENTSCHEIDUNG: im Stromlaufplan ein Knopf „⚡ Schaltung" mit einem
+Menü aus drei Schichten, alle über EINEN Einfügeweg:
+
+1. NETZ — L1 als Schiene oben, N unten, links eine
+   Wechselspannungsquelle daran. Ein Zweig, dessen Leitung auf einer
+   Schiene ENDET, ist verbunden; die Simulation zapft Sammelschienen
+   ausdrücklich an (simulation.ts, netzInfo).
+2. DREI BEISPIELE IM CODE (Schaltplan.BEISPIELE, Kern ohne DOM):
+   Ausschaltung (Schema 0), Wechselschaltung (zwei Schema-3-Schalter,
+   S1 um 180° gedreht, damit die Korrespondierenden gerade laufen und
+   keine Leitung einen Anschluss überbrückt — die test239-Lehre) und
+   die Türklingel: Taster plus Klingel an 12 V, denn die Quelle kann
+   ihren Wert selbst tragen (werte.U, wie am Klingeltrafo).
+3. DIE EIGENEN VORLAGEN, endlich einsetzbar — mit FRISCHEN Kennungen
+   und versetzt, damit zweimal Einsetzen keine Duplikate erzeugt.
+
+Der Wächter bleibt: steht schon ein Netz oder eine Quelle im Plan,
+kommt ein Toast statt eines zweiten Netzes.
+
+**Geprüft:** test263 §6/§7 — echte Klicks: Netz einfügen (Quelle,
+zwei Schienen, L1/N), zweiter Klick legt nichts doppelt, ein nur auf
+den Schienen ENDENDER Zweig führt Strom (Lampe leuchtet); Türklingel
+aus dem Menü: Taster schliesst, 12 mA an der Klingel (nicht 230 V!);
+Wechselschaltung: S1 ändert den Lampenzustand, S2 ändert ihn zurück.
+Zwei Gegenproben einzeln rot (Knopf tot → §6 rot; Türklingel aus der
+Liste → §7 rot). 17/17; Bilder im Gespräch.
+
+E263 — Der Hauptknopf-Verlauf und der Reiter, der einklinkt (Amdion Phase 1)
+================================================================================
+
+Zwei sichtbare Stücke aus Amdions Formsprache, beide auf Redions
+gemessenen Werten:
+
+DIE HAUPTKNOPF-FLÄCHE ALS MARKE. Amdions Primärknopf hellt nach OBEN
+auf — gemessen fällt dabei die weisse Schrift im Dunkelmodus auf 3,77
+(nötig 4,5). Redions Fassung läuft nach UNTEN ins Dunkle: derselbe
+Licht-über-Schatten-Eindruck, und jede Stelle liegt ÜBER dem Wert des
+reinen Akzents (Fuss 90 % Akzent + 10 % Schwarz: Weiss 6,09/7,37,
+Fläche 3,03/6,68). Das Rezept steht EINMAL, als Marken
+`--haupt-flaeche`/`--haupt-flaeche-hover`/`--haupt-schein` in
+grund.css (E204-Muster) — die Bereichsregeln in lernwelt.css und
+bausteine.css zeigen darauf, denn sie wiegen mehr und müssen die
+Fläche selbst tragen (sonst käme aus den Basisregeln wieder --bg-side
+durch: die E142-Falle, die im Kommentar dort schon einmal erzählt
+wird). Der Selektor umfasst `.rb.haupt` UND `button.is-primary`, denn
+DAS sind die Hauptknöpfe, die es im Markup wirklich gibt; .rb.haupt
+war definiert und nirgends benutzt. Der Hover nimmt --accent-hover
+und ist damit je Modus richtig herum — das alte brightness(1.08) der
+Lernwelt war es im Hellmodus nicht (E199).
+
+DER AKTIVE REITER KLINKT EIN. Bisher zog eine eingelegte Linie UNTER
+dem aktiven Reiter durch — er sass auf der Fläche statt in ihr.
+Jetzt: drei Ränder (oben, seitlich), unten offen, einen Punkt tiefer
+gerückt, damit seine Fläche die Unterlinie der Leiste überdeckt
+(Amdions Tab-Anatomie). Radius von 7 auf die Leiter (--radius-md,
+E198). Kein Verhalten geändert.
+
+**Geprüft:** test127 22/22 (Kontrast), test126 22/22, test245 53/53,
+test202 84/84, test206 66/66 (Reiter), test40 24/24. Einzeldatei
+7081→7083 KB. Bild im Gespräch („Tagesrunde starten" mit Verlauf).
