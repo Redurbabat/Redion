@@ -1472,7 +1472,8 @@ Nach §46 zuerst die Datenzeile, dann nach Gewicht und Aufwand:
    Note ist schon da, es fehlt nur der Filter.
 3. **L70 · Echter Stundenplan** — Wochenraster mit Lektionen; Unterbau
    (Termine, Kalender, ICS-Wiederholungen) ist vorhanden.
-4. **Kleine Pflichten (§30):** Prüflauf für den DOCX-Import (L72),
+4. **Kleine Pflichten (§30):** ~~Prüflauf für den DOCX-Import~~ (E245,
+   test252 — L72 Teil 2, die Formatierung, bleibt offen),
    Prüflauf für Rückverweise/unverlinkte Erwähnungen, Quellen-Wähler im
    Chart-Block (Codepfad steht), ~~Seitenzahlen/Kopfzeile beim Drucken~~
    (E244, test251), Prüfungs-Timer im Elektro-Arbeitsplatz.

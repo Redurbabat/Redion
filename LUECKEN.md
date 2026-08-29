@@ -2710,3 +2710,14 @@ Pflichtlücke, unabhängig davon, wann die Formatierung kommt: erst der
 Prüflauf (klein), dann echte w:rPr-Läufe im Export (mittel).
 
 Gemessen am 28. August 2026 (Visionskarte, Leser „Word").
+
+TEIL 1 GESCHLOSSEN am selben Abend (E245): test252 prüft den Import auf
+drei Wegen — Rundlauf über Redions eigenen Word-Export (Titel wird H1,
+Überschrift bleibt Überschrift, Zitat bleibt Zitat, Listenpunkte und
+Tabellenzeilen bleiben, kΩ und äöüß überleben), eine handgebaute
+DEUTSCHE Word-Datei (Stil-IDs „berschrift2" und „Zitat", Nummerierung
+über w:numPr — die toleranten Erkennungswege, die der Rundlauf nie
+berührt), und die Verlust-Ehrlichkeit: `**fett**` steht wörtlich da.
+Zwei Gegenproben einzeln rot. OFFEN BLEIBT Teil 2: echte w:rPr-Läufe
+in beide Richtungen — fett/kursiv als Formatierung statt Sternchen,
+Bilder statt Platzhaltertext.

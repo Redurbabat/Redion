@@ -18072,3 +18072,38 @@ Fusskasten raus → drei Punkte rot (das PDF verliert seine Seitenzahlen
 wirklich); Escaping raus → die kaputte content-Regel fällt still weg
 und Seite 2 trägt nur noch das Datum. test182 (36/36) und test190
 bleiben grün.
+
+
+E245 — Der DOCX-Import bekommt seinen Prüflauf (L72, Teil 1)
+================================================================================
+
+Der Word-Leser der Visionskarte fand: `docxLesen` war der einzige
+Einlese-Weg ohne Test. test49 prüft die Ausgabe mit CRC — die
+Gegenrichtung prüfte niemand. Nach §30 eine Pflichtlücke.
+
+DIE ENTSCHEIDUNGEN
+
+  · **Der Rundlauf nutzt Redions eigenen Export als Erzeuger.** test252
+    schreibt eine Seite mit `Austausch.alsWord` (dessen Bytes test49
+    schon prüft) und liest sie mit `Einlesen.datei` zurück — kein Mock,
+    keine mitgelieferte Binärdatei, und beide Richtungen halten einander
+    fest: bricht eine, wird der Rundlauf rot.
+
+  · **Eine fremde deutsche Word-Datei zusätzlich, von Hand gebaut.**
+    Der Rundlauf allein berührt die toleranten Erkennungswege nie:
+    deutsches Word schreibt die Stil-IDs „berschrift2" (das Ü fällt in
+    der ID weg) und „Zitat", und Listen kommen oft über `w:numPr` ganz
+    ohne Stilnamen. Genau diese drei Wege füttert §2 mit einem per
+    `zipSchreiben` handgebauten Archiv.
+
+  · **Verluste werden benannt, nicht eingefroren.** `**fett**` kommt
+    heute wörtlich an (L72 Teil 2 bleibt offen). Der Prüfpunkt dazu
+    verlangt nur, dass der TEXT vollständig überlebt — er zementiert
+    nicht die Sternchen als Sollzustand.
+
+**Geprüft:** test252, 15 Punkte. Zwei Gegenproben einzeln rot: w:t
+nicht mehr gelesen → zehn Punkte rot; Tabellenzweig tot → genau der
+Tabellenpunkt rot. Beim Zurückbauen fiel der Neubau einem Typfehler im
+Test selbst zum Opfer (typecheck rot → bauen:ts lief nie) — aufgefallen
+am `git status`, der quell/ noch verändert zeigte. Der Endstand ist
+byte-gleich zum Commit und 15/15.
