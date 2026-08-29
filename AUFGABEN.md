@@ -35,6 +35,15 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
+**29. August 2026 · Papier-Token und geteilte Anatomien (E260)**
+
+> Amdion Phase 1 wird sichtbar: `--paper`/`--paper-ink`/`--grid`, das
+> A4-Blatt ist im Dunkeln warm statt reinweiss, der Schaltplan liegt
+> auf Amdions Punktraster. Neu: `anatomie.css` (Stufe 2) mit
+> stat-karte, kicker, leer-zustand, hebt und ansicht-herein — je mit
+> sofortigem Nutzer in Lernwelt und Menüband. test245 fing die doppelt
+> gepflegte Papier-Tinte; zehn Suiten grün, Bilder im Chat.
+
 **29. August 2026 · Bewegung wohnt nur noch in grund.css (E259)**
 
 > Phase-1-Vorarbeit des Amdion-Bogens: das Dauern-Doppel aus marken.css

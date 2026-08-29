@@ -1,0 +1,97 @@
+/* ============================================================================
+ * anatomie.css — die geteilten Anatomien (E258/E260)
+ * ----------------------------------------------------------------------------
+ * Redurs Prototyp Amdion hat für dieselben Dinge überall dieselbe Form:
+ * eine Kennzahl-Karte sieht im Lernen aus wie im Elektro-Rechner, ein
+ * leerer Zustand wie der andere. In Redion stand jede dieser Formen bisher
+ * in ihrem Bereich noch einmal — vier Kicker-Fassungen, zwei Leerzustände,
+ * eigene Karten. Hier stehen die FORMEN einmal; die Bereiche behalten nur
+ * noch ihre Abweichungen (Dichte, Farben, Ränder).
+ *
+ * Die Werte sind Redions geeichte Marken (E198/E204/E230/E259), nicht
+ * Amdions Zahlen: Amdion misst seine Kontraste nicht, Redion schon.
+ * Deshalb 10 px statt 9 und `--text-dim` statt eines `--muted`, das unter
+ * der Messlatte läge.
+ *
+ * Dieses Blatt ist Stufe 2 der Kaskade (test87): es lädt VOR den
+ * Bereichs-Blättern, damit deren Abweichungen gewinnen.
+ * ==========================================================================*/
+
+/* --- Der Kicker ------------------------------------------------------------
+   Die kleine Zeile ÜBER einer Sache, die sagt, was für eine Sorte Sache
+   kommt: „HEUTE", „ZULETZT", ein Gruppentitel im Menüband. Amdion nennt sie
+   eyebrow (part1.css) und setzt 9 px in --muted — beides fällt unter
+   Redions E230-Messlatte, darum 10 px und `--text-dim`. */
+.kicker{
+  text-transform:uppercase; letter-spacing:.09em;
+  font-size:10px; font-weight:800; color:var(--text-dim);
+}
+.kicker.akzent{ color:var(--accent-text) }
+
+/* --- Die Stat-Karte --------------------------------------------------------
+   Amdions Kennzahl-Anatomie (part2.css .stat-card): Etikett OBEN, darunter
+   die grosse Zahl, die Bedeutungszeile klebt am BODEN der Karte. So haben
+   vier Karten nebeneinander ihre Zahlen auf einer Linie, auch wenn eine
+   Bedeutungszeile zwei Zeilen braucht.
+
+   Das Markup bleibt Redions (E256/test262 lesen es): strong, span, small —
+   der `order:-1` hebt das Etikett optisch nach oben, ohne die Lesefolge
+   für Werkzeuge zu ändern, die den Text als Ganzes nehmen. */
+.stat-karte{
+  display:flex; flex-direction:column; min-height:112px;
+  padding:var(--space-5);
+  border:1px solid var(--line); border-radius:var(--radius-lg);
+  background:var(--bg-card); box-shadow:var(--shadow-1);
+}
+.stat-karte>span{
+  order:-1; color:var(--text-dim); font-size:11.5px; font-weight:650;
+}
+.stat-karte strong{
+  margin-top:6px; overflow:hidden; text-overflow:ellipsis;
+  color:var(--text); font-size:clamp(20px,2vw,27px); line-height:1.15;
+  font-weight:790; letter-spacing:-.03em; font-variant-numeric:tabular-nums;
+}
+.stat-karte small{
+  margin-top:auto; padding-top:4px;
+  color:var(--text-dim); font-size:10.5px; line-height:1.3;
+}
+
+/* --- Der Leerzustand -------------------------------------------------------
+   Eine Zeichenkachel, ein Satz, was fehlt, und wenn möglich der Knopf, der
+   es behebt (§47: kein Weg ins Leere). Die Kachel-Geometrie stand bisher
+   nur in der Lernwelt (E204); jetzt kann jeder Bereich sie tragen. */
+.leer-zustand{
+  display:grid; justify-items:center; align-content:center;
+  gap:var(--space-3); padding:var(--space-7);
+  color:var(--text-dim); text-align:center;
+}
+.leer-zeichen{
+  display:grid; place-items:center; width:48px; height:48px;
+  border-radius:var(--radius-xl); background:var(--bg-hover);
+  color:var(--text-dim); font-size:22px;
+}
+
+/* --- Das Heben beim Überfahren ---------------------------------------------
+   Amdions Karten heben sich um EINEN Pixel (part2.css) — spürbar, nicht
+   springend. Die Dauern kommen aus grund.css und werden dort für Menschen
+   ohne Bewegungswunsch genullt (§62). */
+.hebt{
+  transition:transform var(--motion-fast) var(--ease),
+             border-color var(--motion-fast) var(--ease),
+             box-shadow var(--motion-fast) var(--ease);
+}
+.hebt:hover{
+  transform:translateY(-1px);
+  border-color:var(--line-stark,var(--line));
+  box-shadow:var(--shadow-2);
+}
+
+/* --- Die Ansichts-Einblendung ----------------------------------------------
+   Ein Ansichtswechsel kommt 5 px von unten herein (Amdions viewIn,
+   part1.css). Einmal beim Aufbau, keine Schleife — unter Reduced Motion
+   bleibt davon 1 ms übrig, also nichts. */
+.ansicht-herein{ animation:ansicht-herein var(--motion-normal) var(--ease) }
+@keyframes ansicht-herein{
+  from{ opacity:0; transform:translateY(5px) }
+  to{ opacity:1; transform:none }
+}

@@ -302,9 +302,11 @@ const Menueband = (() => {
     g.eintraege.forEach(e => reihe.appendChild(knopf(e)));
 
     /* Die Überschrift steht UNTER den Knöpfen, wie in Textprogrammen üblich.
-       Sie ist klein und leise: sie ordnet, sie ruft nicht. */
+       Sie ist klein und leise: sie ordnet, sie ruft nicht. Die Form kommt
+       aus dem Kicker-Baustein (anatomie.css, E260); .mb-gruppe-titel behält
+       nur die Band-Abweichungen. */
     const titel = document.createElement('div');
-    titel.className = 'mb-gruppe-titel';
+    titel.className = 'kicker mb-gruppe-titel';
     titel.textContent = g.gruppe;
 
     kasten.append(reihe, titel);

@@ -1110,8 +1110,11 @@ const Lernwelt = (() => {
       : '<span' + k + ' aria-hidden="true">' + esc(icon) + '</span>';
   };
 
+  /* Die Anatomie (Etikett oben, Zahl, Bedeutung am Boden) kommt aus der
+     Schale: .stat-karte in anatomie.css (E260). .lw-metrik behält nur die
+     Lernwelt-Abweichungen. */
   const kennzahl = (wert: string, name: string, zusatz = ''): string =>
-    '<article class="lw-metrik"><strong>' + esc(wert) + '</strong><span>' + esc(name) + '</span>' +
+    '<article class="stat-karte lw-metrik"><strong>' + esc(wert) + '</strong><span>' + esc(name) + '</span>' +
       (zusatz ? '<small>' + esc(zusatz) + '</small>' : '') + '</article>';
 
   const fortschritt = (wert: number, label: string): string =>
@@ -1120,7 +1123,7 @@ const Lernwelt = (() => {
       esc(label) + '">' + prozent(wert) + ' %</progress></div>';
 
   const leer = (icon: string, titel: string, text: string, aktion = '', label = ''): string =>
-    '<div class="lw-leer">' + zeichenSpan(icon, 'lw-leer-icon') +
+    '<div class="lw-leer leer-zustand">' + zeichenSpan(icon, 'lw-leer-icon leer-zeichen') +
       '<h3>' + esc(titel) + '</h3><p>' + esc(text) + '</p>' +
       (aktion && label ? '<button type="button" data-lw-action="' + esc(aktion) + '">' + esc(label) + '</button>' : '') +
       '</div>';
@@ -1176,7 +1179,7 @@ const Lernwelt = (() => {
      eine Datei ist und auf einer Seite liegt (E205). */
   const weiterKarte = (item: LernweltEintrag): string => {
     const bild = miniatur(item.pageId || item.id);
-    return '<button type="button" class="lw-continue-card" data-lw-open="' + esc(item.id) + '">' +
+    return '<button type="button" class="lw-continue-card hebt" data-lw-open="' + esc(item.id) + '">' +
       '<span class="lw-mini mini-zeilen' + (bild ? '' : ' is-leer') + '">' +
         (bild || '<span>Diese Seite ist noch leer.</span>') + '</span>' +
       '<span class="lw-continue-foot">' + zeichenSpan(item.icon, 'lw-object-icon') +
@@ -2681,7 +2684,7 @@ const Lernwelt = (() => {
     if (!root) return;
     root.className = 'produkt-welt lernwelt';
     root.dataset.lwView = zustand.ansicht;
-    root.innerHTML = kopf() + '<main class="lw-main" id="lernwelt-inhalt" tabindex="-1">' +
+    root.innerHTML = kopf() + '<main class="lw-main ansicht-herein" id="lernwelt-inhalt" tabindex="-1">' +
       ansichtsInhalt() + '</main>';
     /* Die Zeichen der Reiter füllen (E200). Ohne das bleiben die Stellen
        leer, und das sieht aus wie ein Ladefehler — die Namen stehen ja

@@ -120,6 +120,13 @@ html[data-theme="light"]{
   --info:        #0369a1;
   --warnung:     #b45309;
 
+  /* Papier (E260): im Hellen reinweiss — heller als der helle Grund, damit
+     ein Blatt auch hier als Blatt lesbar bleibt. Die Tinte (`--paper-ink`)
+     ist modusfrei und steht in `grund.css`. Das Punktraster liegt auf dem
+     Thema-Grund und braucht hier dunkle Punkte. */
+  --paper:     #ffffff;
+  --grid:      rgba(34,38,49,.12);
+
   --c-default:#37352f; --c-gray:#787774; --c-brown:#9f6b53; --c-orange:#d9730d;
   --c-yellow:#cb912f;  --c-green:#448361; --c-blue:#337ea9;  --c-purple:#9065b0;
   --c-pink:#c14c8a;    --c-red:#d44c47;

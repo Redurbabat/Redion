@@ -451,8 +451,14 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
    dann mittig statt oben. */
 .mb-reihe{ display:flex; align-items:stretch; gap:var(--space-1); min-height:60px }
 
-.mb-gruppe-titel{
-  font-size:10.5px; letter-spacing:.05em; text-transform:uppercase;
+/* Die Kicker-Form (Grossbuchstaben, Sperrung, Gewicht) kommt seit E260 aus
+   `anatomie.css`. Hier bleiben die Band-Abweichungen: die Überschrift ist
+   Beiwerk unter beschrifteten Knöpfen und darf leiser sein als ein Kicker
+   im Fliesstext — `--text-faint` ist dafür gemessen genug (E230: 3,9:1).
+   ZWEI Klassen im Selektor, mit Absicht: dieses Blatt lädt VOR anatomie.css
+   (Stufe 1 gegen 2, test87), die Abweichung muss also schwerer wiegen als
+   der Baustein, nicht später kommen. */
+.kicker.mb-gruppe-titel{
   color:var(--text-faint); text-align:center; padding-top:2px;
 }
 

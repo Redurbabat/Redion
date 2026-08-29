@@ -92,6 +92,15 @@
   /* --- Schwebende Flächen (§16). --------------------------------------- */
   --glas-rand:    inset 0 0 0 1px rgba(255,255,255,.10);
   --glas-blur:    saturate(180%) blur(20px);
+
+  /* --- Die Tinte auf Papier (E260). ------------------------------------
+   * `--paper` und `--grid` wechseln mit dem Thema und stehen in
+   * dunkel.css/hell.css. Die Tinte nicht: Papier ist in beiden Modi
+   * papierfarben, also ist die Schrift darauf in beiden Modi dunkel
+   * (12,9:1 auf dem dunkleren der beiden Papiere, gemessen). Ein Wert,
+   * der in beiden Modi gleich ist, wird nur einmal gepflegt (test245 §1).
+   * -------------------------------------------------------------------- */
+  --paper-ink: #292d34;
 }
 
 /* WER BEWEGUNG NICHT WILL, BEKOMMT KEINE (§62). Nicht als Zusatz an jeder

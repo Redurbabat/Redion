@@ -18765,3 +18765,38 @@ steht (er behauptete bausteine.css).
 unteren Leiste (var() ohne Rückfall macht die ganze transition-Zeile
 ungültig: dauer 0s). Wiederhergestellt: test126 22/22, test245 53/53,
 test40 24/24. Einzeldatei neu gebaut (+54 Bytes, die Kommentare).
+
+E260 — Papier-Token und die ersten geteilten Anatomien (Amdion Phase 1)
+================================================================================
+
+Zweiter Schritt des E258-Bogens, und der erste sichtbare. Zwei Dinge:
+
+PAPIER ALS TOKEN. `--paper` (dunkel #f8f8f5 warm gebrochen, hell
+reinweiss), `--grid` (Punktraster, thememitlaufend) und `--paper-ink`
+(modusfrei, darum in grund.css — test245 fing die erste Fassung mit
+dem doppelten Wert). Das A4-Blatt trägt jetzt `--paper` statt #fff,
+die Schaltplan-Bühne Amdions Punktraster; die Zeichenfläche ist
+durchsichtig, damit das Raster unter dem Plan weiterläuft.
+
+ANATOMIE.CSS, ein neues Stilblatt der Stufe 2 (test87 prüft Ort und
+Einbettung): die Formen, die Amdion überall gleich hat und Redion
+bisher je Bereich neu baute. Fünf Bausteine mit sofortigen Nutzern —
+`.stat-karte` (Etikett oben per order:-1, Zahl, Bedeutungszeile am
+Boden; die Lernwelt-Kennzahlen tragen sie, .lw-metrik behält nur
+Fläche und Radius), `.kicker` (10 px/800/±.09em in --text-dim statt
+Amdions 9 px/--muted, E230; die Menüband-Gruppentitel tragen ihn,
+ihre Abweichung wiegt zwei Klassen, weil aufbau.css früher lädt),
+`.leer-zustand`/`.leer-zeichen` (aus .lw-leer herausgelöst),
+`.hebt` (translateY(-1px) beim Überfahren, „Weiter wo du warst"),
+`.ansicht-herein` (Amdions viewIn auf dem Lernwelt-Hauptbereich).
+Segment-Schalter, Zähl-Pille, Listenzeile und Verlaufskarte kommen
+erst mit ihren Nutzern in Phase 2/3/7 — tote Stile wären §29-Ballast.
+
+**Geprüft:** test87 133/133 (ging beim Bau zweimal ehrlich rot:
+Einzeldatei ohne das neue Blatt, sw.js hatte es — der Dienstarbeiter
+wird aus src/dienst/sw.ts ERZEUGT, die Liste steht jetzt dort),
+test245 53/53 (nach der --paper-ink-Korrektur), test126 22/22,
+test127 22/22, test202 84/84, test207 37/37, test215 50/50,
+test247 102/102, test262 11/11, test40 24/24. Einzeldatei 7061→7068
+KB. Vier Bilder im Gespräch: Kennzahlen, Raster, warmes Papier,
+Menüband-Kicker.

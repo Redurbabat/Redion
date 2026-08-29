@@ -105,6 +105,18 @@
      Schrift darauf um ihren Grund kämpfen muss. */
   --bg-schwebend:  rgba(28,28,32,.72);
 
+  /* PAPIER (E260, aus Amdion). Ein Blatt, ein Plan, eine Zeichnung sind
+     Papier und keine Fenster: sie bleiben papierfarben, auch wenn die App
+     dunkel ist. Im Dunkeln ist das Papier warm gebrochen statt reinweiss —
+     so blendet es nicht neben den dunklen Flächen. Die Tinte darauf
+     (`--paper-ink`) ist in beiden Modi dieselbe und steht darum in
+     `grund.css` — ein modusfreier Wert wird nicht zweimal gepflegt
+     (test245 §1). `--grid` ist das Punktraster UNTER einem Plan — es
+     liegt auf dem Thema-Grund, nicht auf dem Papier, und wechselt darum
+     mit dem Thema. */
+  --paper:     #f8f8f5;
+  --grid:      rgba(255,255,255,.12);
+
   /* Die zehn Notion-Textfarben */
   --c-default: #e9e9e7;
   --c-gray:    #9b9a97;
