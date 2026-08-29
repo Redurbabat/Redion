@@ -2724,8 +2724,21 @@ in beide Richtungen — fett/kursiv als Formatierung statt Sternchen,
 Bilder statt Platzhaltertext.
 
 
-L73 — Der Block-Grabstein hat zwei eigene Löcher
+L73 — Der Block-Grabstein hat zwei eigene Löcher — GESCHLOSSEN
 ================================================================================
+
+**GESCHLOSSEN am 29. August 2026.** Teil 1 (trashBlock ohne edited) mit
+E250/test257; Teil 2 (trash+purge im selben Tick, Frist-Purge offline,
+Wiederbelebung beim Holen) mit E254/test261: Merkliste `wolkeBloeckeWeg`
+nach dem E249-Muster, Schreibpunkt in purgeTief (samt Zeilen, Ansichten
+und Sammlung — deren Löschen war über den Abgleich vorher gar nicht
+ausdrückbar), Versand vor dem Holen, basis-Wache, zwei Runter-Wachen
+gegen Echo und Leichen. Rein clientseitig; der Server konnte geloescht
+längst. Zwei Folgelücken daraus: L74 (Import „ersetzen" verliert die
+Wolke-Merklisten) und L75 (Merklisten-Schreibfenster bei mehreren Tabs).
+
+Der ursprüngliche Eintrag:
+
 
 Beim Vermessen für E249 (Datei-Grabsteine) fand der Leser, dass das
 VORBILD — der Weg, auf dem Block-Löschungen zum Server wandern — selbst
@@ -2752,3 +2765,38 @@ erreichen soll, braucht einen Abgleich zwischen Papierkorb und
 endgültigem Löschen.
 
 Gefunden am 29. August 2026 (L6-Leser, Belegstellen in E249).
+
+================================================================================
+L74 — Import „ersetzen" verliert die Wolke-Merklisten
+================================================================================
+
+`importAll` im Ersetzen-Modus tauscht auch das Fach `meta` vollständig.
+Eine noch nicht versandte `wolkeDateienWeg`- oder `wolkeBloeckeWeg`-Liste
+stirbt dabei bzw. wird durch die der Sicherung ersetzt: eine kurz vor dem
+Import getätigte endgültige Löschung erreicht den Server dann doch nie.
+
+Das Löschen des BESTANDS beim Ersetzen bleibt mit Absicht ohne
+Grabsteine (E249/E254): eine alte Sicherung einzuspielen darf nicht als
+Massenlöschung zum Server durchschlagen. Offen ist nur das Hinüberretten
+der beiden Merklisten (und wohl der Wolke-Marken) aus dem alten Bestand —
+ein eigener, kleiner Eingriff am Import, nicht am Abgleich.
+
+Gefunden am 29. August 2026 (E254-Leser, Risiko 4).
+
+================================================================================
+L75 — Merklisten-Schreibfenster bei mehreren Tabs
+================================================================================
+
+`setMeta` schreibt den Zwischenspeicher sofort, die Platte folgt nach
+dem Flush — ein Tab-Schluss unmittelbar nach einem Sofort-Löschen kann
+den frischen Grabstein-Eintrag verlieren. Und Lesen-Ändern-Schreiben
+derselben Liste in zwei Tabs kann Einträge des jeweils anderen
+überschreiben. Beides betrifft `wolkeDateienWeg` (seit E249) und
+`wolkeBloeckeWeg` (seit E254) gleichermassen und ist dieselbe bereits
+hingenommene Restlücke: der doppelte Versand ist serverseitig
+idempotent, das Überleben eines normalen Neuladens ist geprüft
+(test256 §3, test261 §3). Ein echter Verbund bräuchte Merklisten als
+eigene Sätze statt als EINE Meta-Liste — erst angehen, wenn Multi-Tab
+plus Wolke wirklich zusammen gemessen wird.
+
+Gefunden am 29. August 2026 (E254-Leser, Risiko 3).

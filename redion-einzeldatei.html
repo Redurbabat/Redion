@@ -27691,11 +27691,35 @@ const Store = (() => {
         }
         return raus;
     };
+    /* Zu welcher Seite gehört dieser Block? Dieselbe Wanderung, die die
+       Abgleichmaschine für `zuSchicken` macht — hier noch einmal, weil sie
+       IM PURGE-MOMENT laufen muss: nach `purgeTief` ist die Elternkette aus
+       dem Zwischenspeicher, und die Maschine fände nichts mehr (E254). */
+    const seiteVonHier = (b) => {
+        let cur = b, tiefe = 0;
+        while (cur && tiefe++ < 40) {
+            if (cur.type === 'page' && cur.parentTable !== 'collection')
+                return cur.id;
+            if (!cur.parentId)
+                return cur.id;
+            const eltern = cache.blocks[cur.parentId];
+            if (!eltern)
+                return cur.id;
+            cur = eltern;
+        }
+        return b.id;
+    };
     const purgeTief = (id, gesammelt, geloescht = [], anhaenge = {}) => {
         const b = cache.blocks[id];
         if (!b)
             return;
         gesammelt.push(id);
+        /* GRABSTEIN VOR DEM LÖSCHEN (E254/L73 Teil 2). `zuSchicken` läuft nur
+           über den Zwischenspeicher — ein hier entfernter Satz erreicht den
+           Server nie, drüben lebt er weiter. Also merkt sich der Purge das
+           versandfertige Stück, solange Satz und Elternkette noch stehen; die
+           Abgleichmaschine schickt es beim nächsten Takt als geloescht. */
+        blockGrabstein('blocks', b, seiteVonHier(b));
         /* JETZT merken, nicht später. Nach dieser Funktion ist der Block aus dem
            Zwischenspeicher, und `purgeAnhaenge` fand seine Datei nie wieder —
            genau das war L43. */
@@ -27717,15 +27741,27 @@ const Store = (() => {
                     const ihre = dateienAmBlock(r);
                     if (ihre.length)
                         anhaenge[r.id] = ihre;
+                    /* Eine Zeile ist eine Seite — auch ihr Ende muss drüben ankommen.
+                       `seiteVonHier` liefert für Zeilen die eigene Kennung, exakt wie
+                       `zuSchicken` es im Leben täte. */
+                    blockGrabstein('blocks', r, seiteVonHier(r));
                     delete cache.blocks[r.id];
                     geloescht.push(del('blocks', r.id));
                 });
                 (c.viewIds || []).forEach((v) => {
                     vergissAusstehendes('views', v);
+                    /* Für Sammlungen und Ansichten kann `zuSchicken` ein Löschen gar
+                       nicht ausdrücken (geloescht ist dort hart false) — ohne
+                       Grabstein kämen sie über das Holen zurück. Die Seiten-Angabe
+                       spiegelt zuSchicken: Ansicht → ihre Sammlung, Sammlung → sie
+                       selbst. */
+                    if (cache.views[v])
+                        blockGrabstein('views', cache.views[v], b.collectionId);
                     delete cache.views[v];
                     geloescht.push(del('views', v));
                 });
                 vergissAusstehendes('collections', b.collectionId);
+                blockGrabstein('collections', c, b.collectionId);
                 delete cache.collections[b.collectionId];
                 geloescht.push(del('collections', b.collectionId));
                 /* Die vorberechneten Werte dieser Datenbank sind ohne sie sinnlos. */
@@ -27994,6 +28030,10 @@ const Store = (() => {
             : tabelle === 'views' ? 'views' : 'blocks';
         cache[wo][satz.id] = satz;
         save(wo, satz);
+        /* Wer dieselbe Kennung wieder anlegt (Verlauf-Undo, Fassungen,
+           Abgleich), nimmt einen liegengebliebenen Grabstein zurück (E254) —
+           sonst löschte der nächste Takt den eben zurückgeholten Satz drüben. */
+        blockGrabsteinWeg(satz.id);
         return satz;
     };
     /* Auch eine Sammlung und eine Ansicht bekommen einen Zeitstempel.
@@ -29249,6 +29289,40 @@ const Store = (() => {
     const dateiGrabsteinWeg = (id) => {
         setMeta('wolkeDateienWeg', dateiGrabsteine().filter(x => x !== String(id)));
     };
+    /* --- BLOCK-GRABSTEINE (E254/L73 Teil 2) --------------------------------
+       Das Sofort-Muster `trashBlock(id); purgeBlock(id)` entfernt den Satz
+       aus dem Zwischenspeicher, bevor je ein Abgleich lief — `zuSchicken`
+       erzeugt für ihn nichts mehr, drüben lebt er weiter. Diese Merkliste
+       `wolkeBloeckeWeg` hält je gelöschtem Satz das VERSANDFERTIGE Stück
+       {id, tabelle, seite, satz}: die Seite muss im Purge-Moment bestimmt
+       werden (danach ist die Elternkette weg), der Satz ist eine Kopie mit
+       alive:false und frischem edited (E250-Lehre — ein Purge ohne
+       vorherigen trashBlock trüge sonst einen alten Stempel).
+  
+       Geschrieben wird an EINER Stelle (purgeTief), versandt ausschliesslich
+       von der Abgleichmaschine (bloeckeWeg, vor dem Holen). Die Wache „kennt
+       der Server den Satz überhaupt?" ist hier NICHT prüfbar — `basis` ist
+       asynchron, der Purge synchron. Deshalb prüft die Maschine vor dem
+       Versand: kein basis-Eintrag → still austragen. Damit die Liste bei
+       Nur-Lokal-Nutzern gar nicht erst wächst, schreibt der Helfer nur,
+       wenn je ein Abgleich lief (wolkeMarkeHoch gesetzt). */
+    const blockGrabsteine = () => getMeta('wolkeBloeckeWeg', []) || [];
+    const blockGrabstein = (tabelle, satz, seite) => {
+        if (!satz || !satz.id)
+            return;
+        if (!getMeta('wolkeMarkeHoch', ''))
+            return;
+        const kopie = Object.assign({}, satz, { alive: false, edited: now() });
+        const liste = blockGrabsteine().filter(e => !e || e.id !== satz.id);
+        liste.push({ id: satz.id, tabelle, seite: String(seite || satz.id), satz: kopie });
+        setMeta('wolkeBloeckeWeg', liste);
+    };
+    const blockGrabsteinWeg = (id) => {
+        const liste = blockGrabsteine();
+        if (!liste.some(e => e && e.id === id))
+            return;
+        setMeta('wolkeBloeckeWeg', liste.filter(e => e && e.id !== id));
+    };
     const dateiAlle = async () => {
         const alle = await all('dateien');
         alle.forEach(dateiNameMerken);
@@ -29396,6 +29470,7 @@ const Store = (() => {
         versionSpeichern, versionen, versionLoeschen, fassungenAusduennen,
         search, durchsuchbar, pfadText, exportAll, exportVorbereiten, importAll, wipe, usage,
         dateiPut, dateiHolen, dateiWeg, dateiAlle,
+        blockGrabsteine, blockGrabstein, blockGrabsteinWeg,
         dateiGrabstein, dateiGrabsteine, dateiGrabsteinWeg,
         basisPut, basisHolen, basisWeg, basisAlle, basisLeeren,
         vorratPut, vorratHolen, vorratWeg, vorratAlle,
@@ -96668,6 +96743,7 @@ const Wolke = (() => {
            Abmelden bleibt der Server-Bestand unangetastet, und ein späteres,
            anderes Konto erbt keine fremden Löschabsichten (E249). */
         Store.setMeta('wolkeDateienWeg', []);
+        Store.setMeta('wolkeBloeckeWeg', []);
         /* Das Ja zum Abgleich gehörte zu DIESEM Konto — das nächste wird neu
            gefragt. */
         Store.setMeta('wolkeAbgleich', null);
@@ -96839,12 +96915,95 @@ const Wolke = (() => {
             strittig: (typeof Zusammen !== 'undefined') ? Zusammen.offene().length : 0,
             mehr: false };
     };
+    /** Melden, welche SÄTZE hier endgültig gelöscht wurden (E254/L73 Teil 2).
+     *  Das Gegenstück zu `dateienWeg`: die Merkliste `wolkeBloeckeWeg` hält
+     *  versandfertige Grabsteine aus `purgeTief` — Sätze, die `zuSchicken`
+     *  nie mehr sieht, weil sie den Zwischenspeicher schon verlassen haben.
+     *
+     *  Läuft VOR dem Holen: wer erst holt, belebt das eben Gelöschte wieder
+     *  (dieselbe Reihenfolge-Lehre wie bei den Dateien).
+     *
+     *  Die basis-Wache steht HIER und nicht am Schreibpunkt: `basisHolen`
+     *  ist asynchron, der Purge synchron. Kein gemeinsamer Stand heisst,
+     *  der Server hat den Satz nie gesehen — offline Angelegtes-und-
+     *  Gelöschtes wird still ausgetragen statt gemeldet. */
+    const bloeckeWeg = async () => {
+        const offen = Store.getMeta('wolkeBloeckeWeg', []) || [];
+        if (!offen.length)
+            return { bloeckeWeggemeldet: 0 };
+        let gemeldet = 0;
+        const dran = [];
+        for (const e of offen) {
+            if (!e || !e.id || !e.satz) {
+                if (e && e.id)
+                    Store.blockGrabsteinWeg(e.id);
+                continue;
+            }
+            const basis = await Store.basisHolen(e.id);
+            if (!basis) {
+                Store.blockGrabsteinWeg(e.id);
+                continue;
+            }
+            dran.push(e);
+        }
+        for (let von = 0; von < dran.length; von += RUNDE) {
+            const teil = dran.slice(von, von + RUNDE);
+            const paket = [];
+            for (const e of teil) {
+                const klar = JSON.stringify(e.satz);
+                const geteilt = istGeteilt(e.seite);
+                paket.push({
+                    id: e.id, tabelle: e.tabelle || 'blocks', seite: e.seite,
+                    daten: (geteilt || !hatSchluessel()) ? klar : await verschluessele(klar),
+                    verschluesselt: !geteilt && hatSchluessel(),
+                    version: Number(e.satz.wolkeVersion || 1),
+                    geaendert: e.satz.edited || e.satz.created || Store.now(),
+                    geloescht: true
+                });
+            }
+            const a = await ruf('/sync/hoch', { m: 'POST', k: { bereich: bereich(), saetze: paket } });
+            const gruende = new Map();
+            for (const x of [...(a.abgelehnt || []), ...(a.angepasst || [])]) {
+                if (x && x.id)
+                    gruende.set(x.id, String(x.grund || 'angepasst'));
+                else if (typeof x === 'string')
+                    gruende.set(x, '');
+            }
+            for (const e of teil) {
+                if (gruende.has(e.id)) {
+                    /* Abgelehnt wird nicht wiederholt — der Takt käme alle zwei
+                       Minuten mit derselben Antwort. „veraltet" heisst: drüben ist
+                       neuer, der fremde Stand kommt beim Holen zurück (bestehende
+                       Konfliktregel, kein neues Loch). Fehlendes Schreibrecht steht
+                       im Protokoll — Rechte entscheiden final (§26). */
+                    Store.blockGrabsteinWeg(e.id);
+                    if (/Schreibrecht/.test(gruende.get(e.id) || '') && typeof Protokoll !== 'undefined')
+                        Protokoll.notieren('konto', 'Ein gelöschter Block bleibt auf dem Server: ' +
+                            'kein Schreibrecht auf seiner Seite (' + e.id + ').');
+                    continue;
+                }
+                Store.blockGrabsteinWeg(e.id);
+                /* Jetzt darf auch das Gedächtnis weg — der gemeinsame Stand IST
+                   die Löschung. */
+                await Store.basisWeg(e.id);
+                gemeldet++;
+            }
+        }
+        zustand.hoch += gemeldet;
+        return { bloeckeWeggemeldet: gemeldet };
+    };
     const runterEinmal = async () => {
         const a = await ruf('/sync/runter', { m: 'POST',
             k: { bereich: bereich(), seit: Store.getMeta('wolkeMarkeRunter', '') } });
         zustand.rolle = a.rolle || '';
+        /* Was hier zum Löschen vorgemerkt ist, wird nicht wiederbelebt — auch
+           dann nicht, wenn der Versand eben gescheitert ist (E254, dasselbe
+           Muster wie `wegOffen` bei den Dateien). */
+        const wegOffen = new Set((Store.getMeta('wolkeBloeckeWeg', []) || []).map((e) => e && e.id).filter(Boolean));
         let uebernommen = 0, unlesbar = 0, gemischt = 0, strittig = 0;
         for (const s of a.saetze) {
+            if (wegOffen.has(s.id))
+                continue;
             let klar = s.daten;
             if (s.verschluesselt) {
                 klar = await entschluessele(s.daten);
@@ -96864,8 +97023,17 @@ const Wolke = (() => {
             const hier = s.tabelle === 'blocks' ? Store.cache.blocks[s.id]
                 : s.tabelle === 'collections' ? Store.cache.collections[s.id]
                     : Store.cache.views[s.id];
-            /* Nichts hier? Dann ist es einfach neu. */
+            /* Nichts hier? Dann ist es einfach neu — AUSSER es ist ein
+               Grabstein (E254). Der eigene käme sonst als Papierkorbleiche
+               zurück (Echo, dessen Frist-Purge den nächsten Grabstein schriebe),
+               und fremde legten Leichen für nie Gehabtes an. Stellt drüben
+               jemand wieder her, kommt der Satz mit geloescht:false und wird
+               normal angelegt. */
             if (!hier) {
+                if (s.geloescht) {
+                    await Store.basisWeg(s.id);
+                    continue;
+                }
                 Store.rohSetzen(s.tabelle, satz);
                 await Store.basisPut(s.id, satz);
                 uebernommen++;
@@ -96945,6 +97113,15 @@ const Wolke = (() => {
         zustand.fehler = '';
         melden();
         try {
+            /* Grabsteine VOR dem Holen (E254) — wer erst holt, belebt das eben
+               Gelöschte wieder. Scheitert der Versand am Netz, bleibt die
+               Merkliste liegen und die Wache in `runterEinmal` hält solange;
+               der Takt selbst darf weiterlaufen. */
+            let w = null;
+            try {
+                w = await bloeckeWeg();
+            }
+            catch { /* nächster Takt versucht es wieder — beharrlich, nicht laut */ }
             const r = await runter();
             const h = await hoch();
             /* Erst die Sätze, dann die Bytes dazu — ein Blockverweis ohne Datei
@@ -96963,7 +97140,7 @@ const Wolke = (() => {
                 }
                 catch { }
             }
-            return { ...r, ...h, ...(d || {}) };
+            return { ...r, ...h, ...(d || {}), ...(w || {}) };
         }
         catch (e) {
             zustand.fehler = e instanceof Error ? e.message : String(e);

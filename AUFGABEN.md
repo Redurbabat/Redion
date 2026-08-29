@@ -35,6 +35,17 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
+**29. August 2026 · Endgültig heisst endgültig — jetzt auch für Blöcke (E254, L73 zu)**
+
+> Das Muster „Papierkorb und sofort löschen" entfernte den Satz, bevor
+> je ein Abgleich lief — drüben lebte er weiter und kam sogar zurück.
+> Jetzt: Merkliste `wolkeBloeckeWeg` nach dem E249-Muster, geschrieben
+> in purgeTief (samt Zeilen, Ansichten, Sammlung), versandt vor dem
+> Holen, basis-Wache gegen Falschmeldung, zwei Runter-Wachen gegen Echo
+> und Leichen. Server unverändert. test261: 16 Punkte, echter
+> Prüfserver, zeitweise drei Geräte; Gegenprobe ohne Schreibpunkt →
+> 9 rot, darunter B mit {"alive":true}. Folgelücken L74/L75 notiert.
+
 **29. August 2026 · Der Graph bekommt ein Suchfeld — und seinen Boden (E253)**
 
 > Tippen listet Treffer aus dem ganzen Index, Klick/Enter macht den

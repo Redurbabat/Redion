@@ -18489,3 +18489,96 @@ leert erst und schliesst dann, Leerfall nennt das Wort. Zwei
 Gegenproben einzeln rot: ohne Recentern zeigt die Karte wieder
 Alpha; ohne die Escape-Ausnahme schliesst das erste Escape den
 Graphen mitten im Tippen. test195 (Graphvorbereitung) danach 20/20.
+
+
+================================================================================
+E254 — Block-Grabsteine: Sofort-Löschen erreicht den Server (L73 Teil 2)
+================================================================================
+
+Das verbreitete Muster `Store.trashBlock(id); Store.purgeBlock(id)` —
+Editor-Backspace, Mehrfachauswahl, Datenbank löschen, KI-Dienst, rund
+fünfzehn Aufrufstellen — entfernte den Satz aus dem Zwischenspeicher,
+bevor je ein Abgleich lief. `zuSchicken` läuft nur über den
+Zwischenspeicher: es erzeugte nichts mehr, auch das weiche
+geloescht-Flag ging nie hoch. Hier gelöscht, drüben lebte der Block
+weiter — und kam beim nächsten Holen sogar zurück (der Runter-Zweig
+kannte kein geloescht). Dasselbe galt für den Frist-Purge des
+Papierkorbs auf einem Gerät, das die Frist über offline war, und für
+Sammlungen und Ansichten war ein Löschen über den Abgleich überhaupt
+nicht ausdrückbar (geloescht dort hart false).
+
+DER SERVER BRAUCHT NICHTS NEUES. `/sync/hoch` speichert `geloescht`
+längst, `/sync/runter` verteilt es, Rechte- und Versionsregeln greifen
+wie bei jeder Änderung. Der Eingriff ist rein clientseitig — das
+E249-Muster (Datei-Grabsteine), auf Sätze übertragen.
+
+DIE ENTSCHEIDUNGEN
+
+  · **Merkliste statt Purge-Zurückhalten.** `purgeBlock` muss synchron
+    bleiben (über hundert Aufrufstellen, mitten im Zeichnen), offline
+    darf der Speicher nicht auf unbestimmte Zeit belegt bleiben, und
+    ohne Konto gäbe es kein „bis synchron". Also: EIN Schreibpunkt in
+    `purgeTief`, Versand ausschliesslich durch die Maschine.
+
+  · **Der Eintrag ist das versandfertige Stück** {id, tabelle, seite,
+    satz}: die Seite muss IM Purge-Moment bestimmt werden (danach ist
+    die Elternkette weg), der Satz ist eine Kopie mit alive:false und
+    frischem edited (E250-Lehre), voll und kein Rumpf — andere Geräte
+    mergen ihn per Drei-Wege, fehlende Felder sähen wie
+    Feld-Löschungen aus. Zeilen, Ansichten und die Sammlung einer
+    gelöschten Datenbank gehen denselben Weg mit.
+
+  · **Zwei Wachen gegen Wachstum und Falschmeldung.** Der Schreibpunkt
+    selbst schreibt nur, wenn je ein Abgleich lief (wolkeMarkeHoch) —
+    Nur-Lokal-Nutzer sammeln nichts an. Die Maschine prüft vor dem
+    Versand `basis`: kein gemeinsamer Stand → der Server hat den Satz
+    nie gesehen → still austragen. (`basis` bleibt beim Purge bewusst
+    stehen — genau dafür.)
+
+  · **Versand VOR dem Holen** (`bloeckeWeg` in `abgleichen`), sonst
+    belebt das Holen das eben Gelöschte wieder — dieselbe
+    Reihenfolge-Lehre wie E249. Scheitert der Versand am Netz, bleibt
+    die Liste liegen und die Runter-Wache hält solange; der Takt läuft
+    weiter.
+
+  · **Zwei Wachen im Holen:** Sätze aus der eigenen Merkliste werden
+    nicht wiederbelebt (Versand eben gescheitert), und ein Grabstein
+    für etwas, das es hier nicht gibt, legt NICHTS an — er räumt nur
+    `basis`. Damit ist das eigene Echo kein Papierkorb-Zombie, und
+    fremde Löschungen erzeugen keine Leichen für nie Gehabtes. Existiert
+    der Satz hier, bleibt es beim Drei-Wege-Merge: das Ergebnis ist der
+    Papierkorb, nicht der Purge — bewusstes Minimal-Verhalten.
+
+  · **Abgelehnt wird ausgetragen, nicht wiederholt.** „veraltet" heisst:
+    drüben ist neuer — der fremde Stand kommt beim selben Abgleich
+    zurück (bestehende Konfliktregel; die Version wird beim Grabstein
+    NICHT künstlich angehoben). Fehlendes Schreibrecht steht im
+    Protokoll, der Block bleibt drüben (§26). `abmelden()` leert die
+    Liste wie die der Dateien.
+
+  · **Wieder-Anlage derselben Kennung** (Verlauf-Undo, Fassungen,
+    Abgleich) nimmt einen liegengebliebenen Grabstein in `rohSetzen`
+    zurück — sonst löschte der nächste Takt den eben zurückgeholten
+    Satz drüben.
+
+RANDNOTIZ: der Server behält bei geloescht=1 das zuletzt gesendete
+`daten` unbegrenzt — ein echter Server-Purge wäre ein neuer Endpunkt.
+Das gilt für jede Papierkorb-Synchronisation heute schon und wird hier
+nicht verschärft. Import „ersetzen" löscht weiterhin bewusst OHNE
+Grabsteine (eine alte Sicherung darf nicht als Massenlöschung
+durchschlagen) — die dabei sterbende Merkliste ist L74.
+
+**Geprüft:** test261, 16 Punkte auf echtem Prüfserver mit zwei (zeitweise
+drei) echten Geräten — Sofort-Muster füllt die Merkliste samt Datenbank,
+sie überlebt das Neuladen, der Server-Satz trägt geloescht=1, Merkliste
+und basis danach leer, Gerät B verliert den Block, Gerät C legt ihn nie
+an, kein Echo auf A, „veraltet" trägt aus und der fremde Stand kehrt
+zurück, rohSetzen nimmt den Grabstein zurück, der Frist-Purge schreibt
+dieselben Grabsteine, die basis-Wache lässt offline
+Angelegtes-und-Gelöschtes stumm. Gegenprobe einzeln rot: Schreibpunkt in
+purgeTief raus → 9 von 16 rot, darunter „Auf B ist der Block aus dem
+Weg" mit {"alive":true} — „drüben lebt er weiter" in Reinform. Danach
+test256 16/16, test257 6/6, test87 129 ok, test100 32 ok. Beim Bauen der
+Suite selbst zweimal E21 bestätigt: addDatabase gibt {block,
+collectionId, viewId} zurück (nicht den Block), und der Papierkorb purgt
+Blöcke erst nach der SICHTBARKEITS-Frist (papierkorbSichtbarSeit).
