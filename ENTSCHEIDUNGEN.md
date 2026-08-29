@@ -18292,3 +18292,31 @@ zweistufige Gegenprobe statt eines nie-roten Prüfpunkts (§55.2).
 Beifund des Lesers: das Block-Vorbild ist selbst undicht (trashBlock
 ohne edited-Anhebung; trash+purge im selben Tick) — als L73 festgehalten,
 nicht hier mitgeflickt (§45).
+
+
+E250 — Der Papierkorb bekommt einen Zeitstempel (L73, Teil 1)
+================================================================================
+
+Der Beifund aus der E249-Vermessung: `trashBlock` setzte alive:false und
+trashedAt, aber nicht `edited` — und `zuSchicken` filtert nach `edited`.
+Ein Block, dessen letzte Bearbeitung vor der Hoch-Marke lag, trug sein
+Papierkorb-Flag nie zum Server: hier gelöscht, drüben lebte er weiter.
+Genau die Falle, für die `updateCollection` und `updateView` längst ihren
+Zeitstempel bekommen hatten — der Papierkorb war übersehen worden.
+
+Die Änderung ist zwei Zeilen: `trashBlock` und `restoreBlock` heben
+`edited` an. Beide Richtungen, denn ein Wiederherstellen ohne Stempel
+käme drüben ebenso nie an — der Block bliebe dort im Papierkorb und
+fiele nach der Frist ins endgültige Löschen.
+
+**Geprüft:** test257 — echter Prüfserver, zwei echte Geräte (Ports
+9022/9023): erst der gemeinsame Stand (die Marken rücken am Block
+vorbei), DANN Papierkorb auf A → drüben liegt er auch im Papierkorb;
+Wiederherstellen auf A → drüben lebt er wieder, mit unverändertem Text;
+beide Stempel messbar. Gegenprobe einzeln rot: Stempel raus → B behält
+den Block lebendig (`{"alive":true}`) — das historische Loch in
+Reinform. Nachbarn grün: test113 (53), test118 (18).
+
+OFFEN BLEIBT L73 Teil 2: das Muster trash+purge im selben Tick — der
+Satz verlässt den Cache, bevor je ein Abgleich lief. Das braucht das
+Merklisten-Muster aus E249 für Blöcke und ist ein eigener Eingriff.

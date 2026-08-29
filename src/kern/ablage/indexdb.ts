@@ -440,6 +440,12 @@ const Store = (() => {
     if (!b) return;
     b.alive = false;
     b.trashedAt = now();
+    /* Der Papierkorb ist eine ÄNDERUNG (E250/L73): zuSchicken filtert
+       nach `edited`, und ein Block, dessen letzte Bearbeitung vor der
+       Hoch-Marke lag, trüge sein alive:false sonst nie zum Server —
+       drüben lebte er weiter. Dieselbe Lehre wie der Zeitstempel an
+       Sammlung und Ansicht weiter unten. */
+    b.edited = now();
     const p = cache.blocks[b.parentId];
     if (p) {
       p.content = p.content.filter((x: any) => x !== id);
@@ -453,6 +459,10 @@ const Store = (() => {
     if (!b) return;
     b.alive = true;
     delete b.trashedAt;
+    /* Die Gegenrichtung braucht den Stempel genauso: ein Wiederherstellen
+       ohne `edited` käme drüben nie an — der Block bliebe dort im
+       Papierkorb und fiele nach der Frist ins endgültige Löschen. */
+    b.edited = now();
     const p = cache.blocks[b.parentId];
     if (p && !p.content.includes(id)) { p.content.push(id); elternGeaendert(p); }
     save('blocks', b);
