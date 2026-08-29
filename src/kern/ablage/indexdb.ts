@@ -680,6 +680,8 @@ const Store = (() => {
         continue;
       }
       for (const st of await stueckeVon(dateiId)) await del('stuecke', st.id);
+      /* Endgültig weg heisst: dem Server sagen (E249) — falls er sie kennt. */
+      dateiGrabstein(dateiId);
       await dateiWeg(dateiId);
     }
   };
@@ -2078,6 +2080,39 @@ const Store = (() => {
     return satz;
   };
   const dateiWeg   = (id: string) => { dateiNamen.delete(String(id)); return del('dateien', id); };
+
+  /* --- DATEI-GRABSTEINE (E249/L6) ----------------------------------------
+     Lokales Löschen erreichte den Server nie: dateiWeg entfernt hart, und
+     nichts merkte sich die Absicht. Diese drei Helfer führen die Merkliste
+     `wolkeDateienWeg` in meta — geschrieben an den zwei Stellen, an denen
+     eine FERTIGE Datei endgültig verschwindet (Dateien.weg, purgeAnhaenge),
+     versandt ausschliesslich von der Abgleichmaschine.
+
+     Die Wache: ein Grabstein entsteht NUR, wenn `wolkeDateienOben` die
+     Kennung führt — der Server kennt sie also. Abgebrochene Uploads,
+     Abgeleitetes (E103) und Über-100-MB-Dateien (E33) waren nie oben und
+     erzeugen nichts. Im selben Zug verlässt die Kennung das Oben-Set:
+     eine später mit derselben Kennung wieder eingespielte Datei (§11:
+     .redion erhält Kennungen) darf wieder hochgehen.
+
+     Die Maschine selbst schreibt beim ANWENDEN eines Server-Grabsteins
+     über die rohen dateiWeg/stueckWeg — bewusst an diesen Helfern vorbei,
+     sonst spiegelte jedes Gerät die Löschung als neue zurück (Echo). */
+  const dateiGrabsteine = (): string[] => getMeta('wolkeDateienWeg', []) || [];
+  const dateiGrabstein = (id: string): void => {
+    const kennung = String(id || '');
+    if (!kennung) return;
+    const oben = new Set<string>(getMeta('wolkeDateienOben', []) || []);
+    if (!oben.has(kennung)) return;
+    oben.delete(kennung);
+    setMeta('wolkeDateienOben', [...oben]);
+    const weg2 = new Set<string>(dateiGrabsteine());
+    weg2.add(kennung);
+    setMeta('wolkeDateienWeg', [...weg2]);
+  };
+  const dateiGrabsteinWeg = (id: string): void => {
+    setMeta('wolkeDateienWeg', dateiGrabsteine().filter(x => x !== String(id)));
+  };
   const dateiAlle  = async () => {
     const alle = await all('dateien');
     alle.forEach(dateiNameMerken);
@@ -2215,6 +2250,7 @@ const Store = (() => {
     versionSpeichern, versionen, versionLoeschen, fassungenAusduennen,
     search, durchsuchbar, pfadText, exportAll, exportVorbereiten, importAll, wipe, usage,
     dateiPut, dateiHolen, dateiWeg, dateiAlle,
+    dateiGrabstein, dateiGrabsteine, dateiGrabsteinWeg,
     basisPut, basisHolen, basisWeg, basisAlle, basisLeeren,
     vorratPut, vorratHolen, vorratWeg, vorratAlle,
     suchindexAendern, suchindexErsetzen, suchindexLeeren,

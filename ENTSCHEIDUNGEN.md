@@ -18212,3 +18212,83 @@ Minutenwerten statt verstellter Systemzeit), Startwert bleibt sichtbar,
 bisherige Prüfungsfluss ist unberührt. Zwei Gegenproben einzeln rot:
 Ablauf-Zweig tot → §3 wartet vergebens auf das Ergebnis (Suite bricht
 mit Timeout ab); Uhr aus der Leiste entfernt → der 7:30-Punkt.
+
+
+E249 — Datei-Grabsteine: lokales Löschen erreicht den Server (L6)
+================================================================================
+
+Die einzige Datenintegritätszeile der Visionskarte. L6 sagte es wörtlich:
+„Lokales Löschen wandert nicht zum Server — es gibt keinen lokalen
+Grabstein." Schlimmer als „kommt nicht an": die Löschung wurde AKTIV
+rückgängig gemacht — nach Abmelden/Anmelden oder auf jedem anderen Gerät
+lud der Abgleich die gelöschte Datei wieder herunter, und der Server
+behielt sie unbegrenzt, obwohl der Nutzer sie gelöscht glaubte.
+
+Vier Leser haben vor dem Eingriff den Bestand vermessen. Der wichtigste
+Befund: die SERVER-Hälfte existierte längst — `/datei/weg` legt den
+Grabstein an (geloescht:1, Metadaten bleiben, Blobs weg), `/datei/stand`
+verteilt ihn, und der Client WENDET ihn beim Empfang an. Es rief ihn nur
+niemand. Der ganze Eingriff ist client-seitig.
+
+DIE ENTSCHEIDUNGEN
+
+  · **Die Merkliste `wolkeDateienWeg` in meta** — dieselbe Speicherklasse
+    wie das bestehende `wolkeDateienOben`, keine Schemaänderung. Sie wird
+    an den ZWEI Engstellen geschrieben, an denen eine fertige Datei
+    endgültig verschwindet: `Dateien.weg` (Löschknopf, Aufräumen) und
+    `purgeAnhaenge` (endgültige Block-Löschung, Papierkorb-Frist). Nicht
+    am rohen `Store.dateiWeg`: den ruft die Maschine selbst beim Anwenden
+    von SERVER-Grabsteinen — ein Haken dort spiegelte jede empfangene
+    Löschung als neue zurück (Echo).
+
+  · **Die Oben-Wache**: ein Grabstein entsteht nur, wenn
+    `wolkeDateienOben` die Kennung führt — der Server kennt sie also.
+    Abgebrochene Uploads, Abgeleitetes (E103) und Über-100-MB-Dateien
+    (E33) waren nie oben und bleiben stumm. Im selben Zug verlässt die
+    Kennung das Oben-Set: eine später mit derselben Kennung wieder
+    eingespielte Datei (§11: .redion erhält Kennungen) darf wieder hoch.
+
+  · **Versand VOR dem Holen** (`dateienWeg` als erster Schritt in
+    `dateienAbgleichen`): wer erst holt, belebt das eben Gelöschte
+    wieder, bevor der Server je davon erfuhr. Zusätzlich überspringt
+    `dateienRunter` alles, was lokal zum Löschen vorgemerkt ist — die
+    Wache für den Fall, dass der Versand eben scheiterte.
+
+  · **404 heisst erledigt, 403 heisst austragen mit Protokoll.** Ein
+    Grabstein für Unbekanntes wird ausgetragen statt ewig wiederholt.
+    Ohne Schreibrecht auf der Seite bleibt die Datei auf dem Server —
+    Rechte entscheiden final (§26), und ein Zwei-Minuten-Takt ändert
+    daran nichts; der Protokolleintrag sagt es. Netz- und Serverfehler
+    lassen den Grabstein liegen: beharrlich, nicht laut.
+
+  · **Import „ersetzen" erzeugt KEINE Grabsteine.** Er löscht über den
+    rohen `Store.dateiWeg` (an den Engstellen vorbei) — bewusst so
+    belassen: das Einspielen eines ALTEN Stands darf nicht kontoweit
+    Anhänge auf allen Geräten löschen (§46). Die Ersetzung bleibt lokal;
+    was der Server behalten soll, regelt der normale Abgleich.
+
+  · **Abmelden leert die Merkliste.** Unversandte Löschabsichten gehören
+    zu DIESEM Konto: nach dem Abmelden bleibt der Server-Bestand
+    unangetastet, und ein späteres, anderes Konto erbt nichts.
+
+**Geprüft:** test256, 16 Punkte — echter Prüfserver, zwei echte Geräte
+(das test118-Gerüst, Ports 9020/9021): A lädt hoch, B bekommt die Datei;
+A löscht über den echten Nutzerweg; der Grabstein liegt in der Merkliste
+und überlebt das NEULADEN; der Abgleich meldet, der Server trägt
+geloescht=1, die Bytes sind aus dem Blob-Speicher verschwunden (dieselbe
+Schnittstelle wie R2); B verliert die Datei; die Oben-Wache hält; die
+404-Regel trägt aus. Nachbarn unverändert grün: test118 (18), test119
+(19), test113 (53), test100 (32).
+
+Gegenproben: (1) Versand abgeklemmt → SIEBEN Punkte rot, und B behält
+die Datei — L6 in Reinform. (1b) Zusätzlich die Runter-Wache entfernt →
+`dateienGeholt: 1`: Gerät A lädt seine eben gelöschte Datei selbst
+zurück. Die Wache ist im grünen Zustand unbeobachtbar (ihr Fall setzt
+einen gescheiterten Versand bei gelingendem Holen voraus, den dieses
+Gerüst nicht deterministisch herstellen kann) — deshalb steht hier die
+zweistufige Gegenprobe statt eines nie-roten Prüfpunkts (§55.2).
+(2) Oben-Wache abgeschaltet → genau der Stumm-Punkt rot.
+
+Beifund des Lesers: das Block-Vorbild ist selbst undicht (trashBlock
+ohne edited-Anhebung; trash+purge im selben Tick) — als L73 festgehalten,
+nicht hier mitgeflickt (§45).

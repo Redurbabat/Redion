@@ -251,8 +251,9 @@ Punkte), `test118` Abschnitt 3 (zwei echte Geräte, Byte für Byte),
 **Was benannt offen bleibt:**
 
 ```txt
-✗ Lokales Löschen wandert nicht zum Server — es gibt keinen lokalen
-  Grabstein; gelöscht wird bisher nur vom Server zum Gerät
+✓ Lokales Löschen wandert zum Server — GESCHLOSSEN am 29. August (E249):
+  Merkliste wolkeDateienWeg mit Oben-Wache, Versand VOR dem Holen,
+  404/403-Regeln; test256 mit echtem Server und zwei Geräten, 16 Punkte
 ✗ Der Download ist eifrig — am Telefon kann ein grosser Bereich viel
   Datenvolumen ziehen; ein „nur bei Bedarf" ist eine eigene Entscheidung
 ✗ .redion-Archiv in R2 als Cloud-Sicherung
@@ -2721,3 +2722,33 @@ berührt), und die Verlust-Ehrlichkeit: `**fett**` steht wörtlich da.
 Zwei Gegenproben einzeln rot. OFFEN BLEIBT Teil 2: echte w:rPr-Läufe
 in beide Richtungen — fett/kursiv als Formatierung statt Sternchen,
 Bilder statt Platzhaltertext.
+
+
+L73 — Der Block-Grabstein hat zwei eigene Löcher
+================================================================================
+
+Beim Vermessen für E249 (Datei-Grabsteine) fand der Leser, dass das
+VORBILD — der Weg, auf dem Block-Löschungen zum Server wandern — selbst
+undicht ist. Zwei Fälle, beide nach reiner Code-Lage:
+
+  · **trashBlock hebt `edited` nicht an** (src/kern/ablage/indexdb.ts,
+    trashBlock setzt nur alive:false und trashedAt). `zuSchicken` filtert
+    aber mit `edited||created <= wolkeMarkeHoch`. Ein Block, dessen
+    letzte Bearbeitung vor der letzten Hoch-Marke liegt, trägt sein
+    Papierkorb-Flag nie zum Server. Genau für dieses Muster bekamen
+    updateCollection/updateView eigens ihren Zeitstempel.
+
+  · **trash + purge im selben Tick**: das verbreitete Muster
+    `Store.trashBlock(id); Store.purgeBlock(id);` (Editor, Mehrfach-
+    auswahl, KI-Dienst) entfernt den Satz aus dem Cache, bevor je ein
+    Abgleich lief — auch das weiche geloescht-Flag erreicht den Server
+    dann nie. Der Satz verschwindet lokal, drüben lebt er weiter.
+
+Beides gehört NICHT als Beifang in E249 (eine Änderung, ein Ziel — §45),
+sondern als eigener Eingriff: trashBlock einen Zeitstempel geben und für
+den Sofort-Purge dasselbe Merklisten-Muster erwägen, das E249 für
+Dateien gebaut hat. Bis dahin gilt: eine Block-Löschung, die den Server
+erreichen soll, braucht einen Abgleich zwischen Papierkorb und
+endgültigem Löschen.
+
+Gefunden am 29. August 2026 (L6-Leser, Belegstellen in E249).

@@ -329,6 +329,10 @@ const Wolke = (() => {
         Store.setMeta('wolkeMarkeRunter', '');
         Store.setMeta('wolkeMarkeDateien', '');
         Store.setMeta('wolkeDateienOben', []);
+        /* Unversandte Datei-Grabsteine gehören zu DIESEM Konto: nach dem
+           Abmelden bleibt der Server-Bestand unangetastet, und ein späteres,
+           anderes Konto erbt keine fremden Löschabsichten (E249). */
+        Store.setMeta('wolkeDateienWeg', []);
         /* Das Ja zum Abgleich gehörte zu DIESEM Konto — das nächste wird neu
            gefragt. */
         Store.setMeta('wolkeAbgleich', null);
@@ -689,16 +693,60 @@ const Wolke = (() => {
         const b = d.blockId ? Store.getBlock(d.blockId) : null;
         return b ? seiteVon(b) : String(d.blockId || d.id);
     };
+    /** Melden, was hier endgültig gelöscht wurde (E249/L6) — und zwar VOR
+     *  dem Holen: sonst lädt `dateienRunter` die eben gelöschte Datei vom
+     *  Server zurück, bevor ihr Grabstein je gesendet war. */
+    const dateienWeg = async () => {
+        const offen = Store.getMeta('wolkeDateienWeg', []) || [];
+        let gemeldet = 0;
+        for (const id of offen) {
+            try {
+                await ruf('/datei/weg', { m: 'POST', k: { bereich: bereich(), dateiId: id } });
+                Store.dateiGrabsteinWeg(id);
+                gemeldet++;
+            }
+            catch (e) {
+                const satz = e instanceof Error ? e.message : String(e);
+                /* Kein Dateispeicher: derselbe Riegel wie bei Runter/Hoch. */
+                if (/Dateispeicher/.test(satz))
+                    throw e;
+                /* 404 — der Server kennt sie nicht (mehr): erledigt. */
+                if (/gibt es hier nicht/.test(satz)) {
+                    Store.dateiGrabsteinWeg(id);
+                    continue;
+                }
+                /* 403 — kein Schreibrecht auf der Seite: der Grabstein wird
+                   ausgetragen statt ewig wiederholt. Die Datei bleibt auf dem
+                   Server, und das steht im Protokoll — Rechte entscheiden final
+                   (§26), ein Zwei-Minuten-Takt ändert daran nichts. */
+                if (/Schreibrecht/.test(satz)) {
+                    Store.dateiGrabsteinWeg(id);
+                    if (typeof Protokoll !== 'undefined')
+                        Protokoll.notieren('konto', 'Eine gelöschte Datei bleibt auf dem Server: ' +
+                            'kein Schreibrecht auf ihrer Seite (' + id + ').');
+                    continue;
+                }
+                /* Netz oder Serverfehler: liegen lassen — der nächste Takt
+                   versucht es wieder. Der Grabstein ist beharrlich, nicht laut. */
+            }
+        }
+        return { dateienWeggemeldet: gemeldet };
+    };
     /** Holen, was der Server hat und hier fehlt — und löschen, was er als
      *  Grabstein meldet. */
     const dateienRunter = async () => {
         let marke = Store.getMeta('wolkeMarkeDateien', '');
         const oben = new Set(Store.getMeta('wolkeDateienOben', []) || []);
+        /* Was hier zum Löschen vorgemerkt ist, wird nicht wiederbelebt —
+           auch dann nicht, wenn der Versand eben gescheitert ist. */
+        const wegOffen = new Set(Store.getMeta('wolkeDateienWeg', []) || []);
         let geholt = 0, entfernt = 0, unlesbar = 0;
         for (let runde = 0; runde < 20; runde++) {
             const a = await ruf('/datei/stand', { m: 'POST',
                 k: { bereich: bereich(), seit: marke, grenze: 200 } });
             for (const d of (a.dateien || [])) {
+                if (wegOffen.has(d.id))
+                    continue;
                 const lokal = await Store.dateiHolen(d.id);
                 if (d.geloescht) {
                     if (lokal) {
@@ -796,15 +844,18 @@ const Wolke = (() => {
         }
         return { dateienRauf: rauf };
     };
-    /** Beide Richtungen für Anhänge — nach den Sätzen, nie statt ihrer. */
+    /** Beide Richtungen für Anhänge — nach den Sätzen, nie statt ihrer.
+     *  Zuerst die Grabsteine (E249): wer erst holt, belebt das eben
+     *  Gelöschte wieder, bevor der Server je davon erfuhr. */
     const dateienAbgleichen = async () => {
         if (dateienGehenNicht)
             return null;
         try {
+            const w = await dateienWeg();
             const r = await dateienRunter();
             const h = await dateienHoch();
             zustand.fehlerDateien = '';
-            return { ...r, ...h };
+            return { ...w, ...r, ...h };
         }
         catch (e) {
             const satz = e instanceof Error ? e.message : String(e);

@@ -35,6 +35,20 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
+**29. August 2026 · Gelöscht heisst gelöscht — auf allen Geräten (E249, L6 zu)**
+
+> Die einzige Datenintegritätszeile der Visionskarte. Lokales Löschen
+> einer Datei erreichte den Server nie und wurde beim nächsten Abgleich
+> sogar rückgängig gemacht. Jetzt: Merkliste `wolkeDateienWeg` mit
+> Oben-Wache (nie Hochgeladenes bleibt stumm), Versand VOR dem Holen
+> (sonst belebt das Holen das Gelöschte wieder), 404/403-Regeln,
+> Import-„ersetzen" bewusst ohne Grabsteine (§46), Abmelden leert die
+> Liste. test256: echter Prüfserver, zwei echte Geräte, 16 Punkte —
+> Grabstein überlebt das Neuladen, Server räumt die Bytes, Gerät B
+> verliert die Datei. Zweistufige Gegenprobe: ohne Versand behält B die
+> Datei; ohne Runter-Wache holt A die eigene Löschung zurück
+> (dateienGeholt: 1). Beifund L73: das Block-Vorbild ist selbst undicht.
+
 **29. August 2026 · Die fünf kleinen Pflichten der Karte sind ab (E244–E248)**
 
 > Aus dem Poster-Abgleich, in einem Zug: Seitenzahlen/Kopfzeile beim
@@ -1478,8 +1492,9 @@ seine Datenbank-Quelle lesen, aber keine Oberfläche kann sie setzen.
 
 Nach §46 zuerst die Datenzeile, dann nach Gewicht und Aufwand:
 
-1. **L6 · Datei-Sync-Grabsteine** — lokales Löschen muss zum Server
-   wandern. Die einzige Datenintegritätslücke der Karte.
+1. ~~**L6 · Datei-Sync-Grabsteine**~~ — GESCHLOSSEN am 29. August (E249,
+   test256 mit echtem Server und zwei Geräten). Beifund: das
+   Block-Vorbild ist selbst undicht → L73.
 2. **L71 · Zeugnisnote je Semester** — ab dem zweiten Semester zeigt die
    Kernzahl der Noten-Ansicht sonst einen falschen Wert. Das Datum je
    Note ist schon da, es fehlt nur der Filter.
