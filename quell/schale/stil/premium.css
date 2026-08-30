@@ -370,6 +370,154 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   DIE KONTEXTKANTE UND IHRE LADE (E272 Phase F)
+   ───────────────────────────────────────────────────────────────────────────
+   54 Pixel statt 240. Die Seitenleiste zeigte auf jeder Seite dieselben 32
+   Knöpfe; die Kante zeigt sechs bis zehn, und zwar die des Ortes, an dem man
+   steht. Wohin man geht, steht im Reiter „Gehen".
+
+   DAS RASTER. `#main` war eine Spalte (Band · Reiterleiste · Kopfzeile ·
+   Inhalt). Es wird zu einem Raster mit zwei Spalten, damit das Band über
+   die ganze Breite läuft und die Kante darunter am linken Rand steht — die
+   Anatomie des Entwurfs. Alle vier Kinder werden AUSDRÜCKLICH gesetzt: die
+   Reiterleiste entsteht erst zur Laufzeit (`reiter.ts`), und ein Kind ohne
+   Platzangabe sucht sich selbst eine freie Zelle.
+
+   `#rand-toc` ist `position:absolute` und damit nicht im Raster — es hängt
+   an `#main`, weil das `position:relative` trägt. Wer hier etwas ergänzt,
+   muss dasselbe tun oder eine Zelle bekommen.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 761px) {
+
+  /* DIE SEITENLEISTE IST AM RECHNER WEG.
+     Nicht gelöscht: am Telefon IST sie die Schublade (`PWA.schubladeAuf`),
+     und `#tree` darin ist der einzige Seitenbaum, den es gibt — die Lade
+     schiebt ihn sich herüber und wieder zurück. Ein zweiter Baum wäre ein
+     zweiter Zustand. */
+  body[data-schale="premium"] #sidebar{ display: none }
+
+  body[data-schale="premium"] #main{
+    display: grid;
+    grid-template-columns: var(--kante-b) minmax(0, 1fr);
+    grid-template-rows: auto auto auto minmax(0, 1fr);
+  }
+  body[data-schale="premium"] #main > #menueband{ grid-column: 1 / -1; grid-row: 1 }
+  body[data-schale="premium"] #main > #kante{ grid-column: 1; grid-row: 2 / -1 }
+  body[data-schale="premium"] #main > #reiterleiste{ grid-column: 2; grid-row: 2 }
+  body[data-schale="premium"] #main > #topbar{ grid-column: 2; grid-row: 3 }
+  body[data-schale="premium"] #main > #scroll{ grid-column: 2; grid-row: 4 }
+
+  /* OHNE KANTE RÜCKT DER INHALT NACH LINKS. Sie kann zu sein (Strg + \),
+     und dann sollen die 54 Pixel nicht als leerer Streifen stehenbleiben. */
+  body[data-schale="premium"] #main:has(> #kante[hidden]){
+    grid-template-columns: 0 minmax(0, 1fr);
+  }
+
+  /* ── Die Kante ────────────────────────────────────────────────────────── */
+  body[data-schale="premium"] #kante{
+    display: flex; flex-direction: column; justify-content: space-between;
+    min-height: 0; padding: var(--space-2) 0;
+    background: var(--bg-side);
+    border-right: 1px solid var(--line);
+    overflow: hidden;
+  }
+  body[data-schale="premium"] #kante[hidden]{ display: none }
+  .k-oben, .k-unten{ display: flex; flex-direction: column; align-items: center; gap: 2px }
+  .k-oben{ overflow-y: auto; scrollbar-width: none; min-height: 0 }
+  .k-oben::-webkit-scrollbar{ display: none }
+
+  /* 42 × 42 UND NICHT 44 (§37). Die Fingerregel gilt für Finger; die Kante
+     gibt es unter 761 px gar nicht, und test114 misst bei 428 und 390 px.
+     Zwei Punkte mehr kosteten hier eine ganze Knopfreihe. */
+  .k-knopf{
+    display: grid; place-items: center;
+    width: var(--kante-knopf); height: var(--kante-knopf);
+    flex: 0 0 auto;
+    color: var(--text-dim);
+    background: none; border: none; border-radius: var(--radius-md);
+    cursor: pointer;
+  }
+  .k-knopf:hover{ color: var(--text); background: var(--gold-glass) }
+  .k-knopf:focus-visible{ outline: 2px solid var(--gold); outline-offset: -2px }
+  /* §38: der offene Knopf ist nicht NUR an der Farbe zu erkennen — er trägt
+     den Goldfond, den Strich links und `aria-expanded="true"`. */
+  .k-knopf.ist-an{
+    color: var(--gold-tinte); background: var(--gold-glass);
+    box-shadow: inset 2px 0 0 var(--gold);
+  }
+  .k-knopf svg{ width: 19px; height: 19px }
+  .k-unten{ border-top: 1px solid var(--line); padding-top: var(--space-2) }
+
+  /* ── Die Lade ─────────────────────────────────────────────────────────
+     Sie LIEGT ÜBER dem Inhalt und schiebt ihn nicht. Beim Schieben rutscht
+     der Text unter dem Zeiger weg — dieselbe Entscheidung wie beim Band
+     (E272 Phase D, test247). */
+  body[data-schale="premium"] #kanten-lade{
+    /* SIE LIEGT IM RASTER, NICHT DARÜBER — und genau deshalb sitzt sie
+       richtig. Der erste Entwurf war `position:absolute; top:0`, und „0"
+       ist im `#main` die OBERKANTE DES MENÜBANDS: die Lade deckte auf dem
+       Bild „Datei", „Gehen" und „Start" zu.
+
+       Ein `top: calc(reiterzeile + band)` hätte gerechnet werden müssen —
+       und das Band ist mal 36 und mal 108 Pixel hoch. Zwei Rasterzellen
+       übereinander stapeln sich von selbst und rechnen nichts: die Lade
+       nimmt Spalte 2 ab Zeile 2, also genau den Bereich UNTER dem Band und
+       RECHTS von der Kante, und liegt über dem Inhalt statt ihn zu
+       schieben. `justify-self` hält sie auf ihren 252 Pixeln. */
+    grid-column: 2; grid-row: 2 / -1;
+    justify-self: start; align-self: stretch;
+    width: var(--kanten-lade-b);
+    z-index: 60;
+    display: flex; flex-direction: column;
+    background: var(--bg-side);
+    border-right: 1px solid var(--line);
+    box-shadow: var(--gold-shadow);
+  }
+  body[data-schale="premium"] #kanten-lade[hidden]{ display: none }
+  .kl-kopf{
+    display: flex; align-items: center; gap: var(--space-2);
+    padding: var(--space-3) var(--space-2) var(--space-2) var(--space-3);
+    border-bottom: 1px solid var(--line);
+  }
+  .kl-kopf b{ flex: 1 1 auto; font-size: 12.5px; font-weight: 600; color: var(--text) }
+  .kl-zu{
+    flex: 0 0 auto; width: 26px; height: 26px;
+    display: grid; place-items: center;
+    color: var(--text-faint); background: none; border: none;
+    border-radius: var(--radius-sm); cursor: pointer;
+  }
+  .kl-zu:hover{ color: var(--text); background: var(--bg-hover) }
+  .kl-zu:focus-visible{ outline: 2px solid var(--gold); outline-offset: -2px }
+  .kl-koerper{ flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: var(--space-2) }
+  .kl-leer{ margin: var(--space-3); font-size: 12.5px; color: var(--text-muted) }
+  .kl-grp{
+    padding: var(--space-2) var(--space-2) 4px;
+    font-size: 10.5px; font-weight: 700; letter-spacing: .06em;
+    text-transform: uppercase; color: var(--text-faint);
+  }
+  .kl-zeile{
+    display: flex; align-items: center; gap: var(--space-2);
+    width: 100%; min-height: 32px; padding: var(--space-1) var(--space-2);
+    background: none; border: none; border-radius: var(--radius-sm);
+    cursor: pointer; text-align: left;
+  }
+  .kl-zeile:hover{ background: var(--gold-glass) }
+  .kl-zeile:focus-visible{ outline: 2px solid var(--gold); outline-offset: -2px }
+  .kl-zeile.ist-an{ background: var(--gold-glass); font-weight: 600 }
+  .kl-zeile svg{ width: 15px; height: 15px; flex: 0 0 auto; color: var(--text-faint) }
+  .kl-t{ flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column }
+  .kl-t b{ font-size: 12.5px; font-weight: 500; color: var(--text);
+           overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+  .kl-t i{ font-style: normal; font-size: 11px; color: var(--text-muted) }
+  .kl-stapel{ border-top: 1px solid var(--line); padding: var(--space-2) }
+
+  /* Der Seitenbaum, wenn er in der Lade steht. Er bringt seine eigenen
+     Masse mit; hier bekommt er nur den Platz. */
+  .kl-koerper > #tree{ padding: 0 }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    DIE DATEI-FLÄCHE (Backstage, E272 Phase G)
    ───────────────────────────────────────────────────────────────────────────
    SIE STEHT AUSSERHALB DES 761-PX-BLOCKS, und das ist Absicht. Der Knopf,

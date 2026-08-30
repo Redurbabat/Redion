@@ -3503,7 +3503,13 @@ table.stab td:focus, table.stab th:focus{box-shadow:inset 0 0 0 2px var(--accent
 #page mark{background:#ffdc4966; color:inherit; border-radius:2px}
 
 /* --- Fokus-Modus ---------------------------------------------------------------------------------- */
-body.fokus #sidebar, body.fokus #topbar, body.fokus #ai{display:none}
+/* SEIT E272 PHASE F AUCH DIE NEUE SCHALE. Der Fokusmodus versteckte
+   Seitenleiste, Kopfzeile und KI — Menüband und Reiterleiste blieben
+   stehen, und mit der Kontextkante wären es drei Dinge zu viel. „Fokus"
+   heisst: das Blatt und sonst nichts. */
+body.fokus #sidebar, body.fokus #topbar, body.fokus #ai,
+body.fokus #menueband, body.fokus #reiterleiste,
+body.fokus #kante, body.fokus #kanten-lade{display:none}
 body.fokus #page{max-width:760px; padding-top:8vh}
 body.fokus .blk{opacity:.42; transition:opacity .18s}
 body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
@@ -13372,6 +13378,154 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   DIE KONTEXTKANTE UND IHRE LADE (E272 Phase F)
+   ───────────────────────────────────────────────────────────────────────────
+   54 Pixel statt 240. Die Seitenleiste zeigte auf jeder Seite dieselben 32
+   Knöpfe; die Kante zeigt sechs bis zehn, und zwar die des Ortes, an dem man
+   steht. Wohin man geht, steht im Reiter „Gehen".
+
+   DAS RASTER. `#main` war eine Spalte (Band · Reiterleiste · Kopfzeile ·
+   Inhalt). Es wird zu einem Raster mit zwei Spalten, damit das Band über
+   die ganze Breite läuft und die Kante darunter am linken Rand steht — die
+   Anatomie des Entwurfs. Alle vier Kinder werden AUSDRÜCKLICH gesetzt: die
+   Reiterleiste entsteht erst zur Laufzeit (`reiter.ts`), und ein Kind ohne
+   Platzangabe sucht sich selbst eine freie Zelle.
+
+   `#rand-toc` ist `position:absolute` und damit nicht im Raster — es hängt
+   an `#main`, weil das `position:relative` trägt. Wer hier etwas ergänzt,
+   muss dasselbe tun oder eine Zelle bekommen.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 761px) {
+
+  /* DIE SEITENLEISTE IST AM RECHNER WEG.
+     Nicht gelöscht: am Telefon IST sie die Schublade (`PWA.schubladeAuf`),
+     und `#tree` darin ist der einzige Seitenbaum, den es gibt — die Lade
+     schiebt ihn sich herüber und wieder zurück. Ein zweiter Baum wäre ein
+     zweiter Zustand. */
+  body[data-schale="premium"] #sidebar{ display: none }
+
+  body[data-schale="premium"] #main{
+    display: grid;
+    grid-template-columns: var(--kante-b) minmax(0, 1fr);
+    grid-template-rows: auto auto auto minmax(0, 1fr);
+  }
+  body[data-schale="premium"] #main > #menueband{ grid-column: 1 / -1; grid-row: 1 }
+  body[data-schale="premium"] #main > #kante{ grid-column: 1; grid-row: 2 / -1 }
+  body[data-schale="premium"] #main > #reiterleiste{ grid-column: 2; grid-row: 2 }
+  body[data-schale="premium"] #main > #topbar{ grid-column: 2; grid-row: 3 }
+  body[data-schale="premium"] #main > #scroll{ grid-column: 2; grid-row: 4 }
+
+  /* OHNE KANTE RÜCKT DER INHALT NACH LINKS. Sie kann zu sein (Strg + \),
+     und dann sollen die 54 Pixel nicht als leerer Streifen stehenbleiben. */
+  body[data-schale="premium"] #main:has(> #kante[hidden]){
+    grid-template-columns: 0 minmax(0, 1fr);
+  }
+
+  /* ── Die Kante ────────────────────────────────────────────────────────── */
+  body[data-schale="premium"] #kante{
+    display: flex; flex-direction: column; justify-content: space-between;
+    min-height: 0; padding: var(--space-2) 0;
+    background: var(--bg-side);
+    border-right: 1px solid var(--line);
+    overflow: hidden;
+  }
+  body[data-schale="premium"] #kante[hidden]{ display: none }
+  .k-oben, .k-unten{ display: flex; flex-direction: column; align-items: center; gap: 2px }
+  .k-oben{ overflow-y: auto; scrollbar-width: none; min-height: 0 }
+  .k-oben::-webkit-scrollbar{ display: none }
+
+  /* 42 × 42 UND NICHT 44 (§37). Die Fingerregel gilt für Finger; die Kante
+     gibt es unter 761 px gar nicht, und test114 misst bei 428 und 390 px.
+     Zwei Punkte mehr kosteten hier eine ganze Knopfreihe. */
+  .k-knopf{
+    display: grid; place-items: center;
+    width: var(--kante-knopf); height: var(--kante-knopf);
+    flex: 0 0 auto;
+    color: var(--text-dim);
+    background: none; border: none; border-radius: var(--radius-md);
+    cursor: pointer;
+  }
+  .k-knopf:hover{ color: var(--text); background: var(--gold-glass) }
+  .k-knopf:focus-visible{ outline: 2px solid var(--gold); outline-offset: -2px }
+  /* §38: der offene Knopf ist nicht NUR an der Farbe zu erkennen — er trägt
+     den Goldfond, den Strich links und `aria-expanded="true"`. */
+  .k-knopf.ist-an{
+    color: var(--gold-tinte); background: var(--gold-glass);
+    box-shadow: inset 2px 0 0 var(--gold);
+  }
+  .k-knopf svg{ width: 19px; height: 19px }
+  .k-unten{ border-top: 1px solid var(--line); padding-top: var(--space-2) }
+
+  /* ── Die Lade ─────────────────────────────────────────────────────────
+     Sie LIEGT ÜBER dem Inhalt und schiebt ihn nicht. Beim Schieben rutscht
+     der Text unter dem Zeiger weg — dieselbe Entscheidung wie beim Band
+     (E272 Phase D, test247). */
+  body[data-schale="premium"] #kanten-lade{
+    /* SIE LIEGT IM RASTER, NICHT DARÜBER — und genau deshalb sitzt sie
+       richtig. Der erste Entwurf war `position:absolute; top:0`, und „0"
+       ist im `#main` die OBERKANTE DES MENÜBANDS: die Lade deckte auf dem
+       Bild „Datei", „Gehen" und „Start" zu.
+
+       Ein `top: calc(reiterzeile + band)` hätte gerechnet werden müssen —
+       und das Band ist mal 36 und mal 108 Pixel hoch. Zwei Rasterzellen
+       übereinander stapeln sich von selbst und rechnen nichts: die Lade
+       nimmt Spalte 2 ab Zeile 2, also genau den Bereich UNTER dem Band und
+       RECHTS von der Kante, und liegt über dem Inhalt statt ihn zu
+       schieben. `justify-self` hält sie auf ihren 252 Pixeln. */
+    grid-column: 2; grid-row: 2 / -1;
+    justify-self: start; align-self: stretch;
+    width: var(--kanten-lade-b);
+    z-index: 60;
+    display: flex; flex-direction: column;
+    background: var(--bg-side);
+    border-right: 1px solid var(--line);
+    box-shadow: var(--gold-shadow);
+  }
+  body[data-schale="premium"] #kanten-lade[hidden]{ display: none }
+  .kl-kopf{
+    display: flex; align-items: center; gap: var(--space-2);
+    padding: var(--space-3) var(--space-2) var(--space-2) var(--space-3);
+    border-bottom: 1px solid var(--line);
+  }
+  .kl-kopf b{ flex: 1 1 auto; font-size: 12.5px; font-weight: 600; color: var(--text) }
+  .kl-zu{
+    flex: 0 0 auto; width: 26px; height: 26px;
+    display: grid; place-items: center;
+    color: var(--text-faint); background: none; border: none;
+    border-radius: var(--radius-sm); cursor: pointer;
+  }
+  .kl-zu:hover{ color: var(--text); background: var(--bg-hover) }
+  .kl-zu:focus-visible{ outline: 2px solid var(--gold); outline-offset: -2px }
+  .kl-koerper{ flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: var(--space-2) }
+  .kl-leer{ margin: var(--space-3); font-size: 12.5px; color: var(--text-muted) }
+  .kl-grp{
+    padding: var(--space-2) var(--space-2) 4px;
+    font-size: 10.5px; font-weight: 700; letter-spacing: .06em;
+    text-transform: uppercase; color: var(--text-faint);
+  }
+  .kl-zeile{
+    display: flex; align-items: center; gap: var(--space-2);
+    width: 100%; min-height: 32px; padding: var(--space-1) var(--space-2);
+    background: none; border: none; border-radius: var(--radius-sm);
+    cursor: pointer; text-align: left;
+  }
+  .kl-zeile:hover{ background: var(--gold-glass) }
+  .kl-zeile:focus-visible{ outline: 2px solid var(--gold); outline-offset: -2px }
+  .kl-zeile.ist-an{ background: var(--gold-glass); font-weight: 600 }
+  .kl-zeile svg{ width: 15px; height: 15px; flex: 0 0 auto; color: var(--text-faint) }
+  .kl-t{ flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column }
+  .kl-t b{ font-size: 12.5px; font-weight: 500; color: var(--text);
+           overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+  .kl-t i{ font-style: normal; font-size: 11px; color: var(--text-muted) }
+  .kl-stapel{ border-top: 1px solid var(--line); padding: var(--space-2) }
+
+  /* Der Seitenbaum, wenn er in der Lade steht. Er bringt seine eigenen
+     Masse mit; hier bekommt er nur den Platz. */
+  .kl-koerper > #tree{ padding: 0 }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    DIE DATEI-FLÄCHE (Backstage, E272 Phase G)
    ───────────────────────────────────────────────────────────────────────────
    SIE STEHT AUSSERHALB DES 761-PX-BLOCKS, und das ist Absicht. Der Knopf,
@@ -18896,6 +19050,22 @@ Register.symbole = (() => {
         arrowR: '<path d="M4 12h15.6"/><path d="m14 5.6 6 6.4-6 6.4"/>',
         bell: '<path d="M18 9a6 6 0 1 0-12 0c0 5.2-2 6.7-2 6.7h16S18 14.2 18 9z"/>' +
             '<path d="M13.7 19.2a2 2 0 0 1-3.4 0"/>',
+        /* --- Fuenf fuer die Kontextkante (E272 Phase F) ----------------------
+           Ein Knopf ohne Zeichen ist in einer 54 Pixel breiten Spalte ein
+           leeres Quadrat — dasselbe, was in Phase B mit `clock` passiert ist
+           und was nur das Hinsehen findet. Die fuenf sind allgemein und nicht
+           nur fuer die Kante: „drucken", „ansehen", „abspielen", „Kommentar"
+           und „mehrere Seiten" braucht Redion an mehr als einer Stelle. */
+        comment: '<path d="M20.5 11.8c0 3.9-3.8 7-8.5 7a10 10 0 0 1-2.8-.4L4.4 20l1.4-3.7' +
+            'A6.6 6.6 0 0 1 3.5 11.8c0-3.9 3.8-7 8.5-7s8.5 3.1 8.5 7z"/>',
+        pages: '<path d="M8.4 2.8h6.2L19 7.2v11.2a1.6 1.6 0 0 1-1.6 1.6H8.4a1.6 1.6 0 0 1-1.6-1.6V4.4' +
+            'a1.6 1.6 0 0 1 1.6-1.6z"/><path d="M14.6 2.8v4.4H19"/>' +
+            '<path d="M4.2 6.6v12.8a2.4 2.4 0 0 0 2.4 2.4h8.2"/>',
+        printer: '<path d="M7 9V3.6h10V9"/><rect x="4" y="9" width="16" height="7.4" rx="2"/>' +
+            '<path d="M7 14.2h10v6.2H7z"/>',
+        eye: '<path d="M2.6 12S6.4 5.6 12 5.6 21.4 12 21.4 12 17.6 18.4 12 18.4 2.6 12 2.6 12z"/>' +
+            '<circle cx="12" cy="12" r="3.1"/>',
+        play: '<path d="M8.4 5.4 18.6 12 8.4 18.6z"/>',
         settings: '<circle cx="12" cy="12" r="3.1"/>' +
             '<path d="M19.5 14.6a1.5 1.5 0 0 0 .3 1.7l.06.05a1.8 1.8 0 1 1-2.6 2.6l-.05-.06' +
             'a1.5 1.5 0 0 0-1.7-.3 1.5 1.5 0 0 0-.9 1.37v.14a1.8 1.8 0 1 1-3.6 0v-.07' +
@@ -22314,6 +22484,214 @@ Register.verbindungen = (() => {
     return { alle, eines, arten, inArt, eingerichtet, wasHinausgeht, melde,
         anzahl: () => LISTE.length };
 })();
+
+</script>
+<script>
+/* ===== quell/register/context.js ===== */
+"use strict";
+/* ============================================================================
+ * register/context.js — was am Rand steht, sagt der Bereich selbst
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/register/context.ts`. `npm run bauen:ts` schreibt daraus
+ * `quell/register/context.js`. Wer das .js bearbeitet, verliert die Änderung beim
+ * nächsten Bauen; `pruefungen/lauf/test105.mts` meldet es vorher.
+ * ----------------------------------------------------------------------------
+ * WOFÜR ES DAS GIBT (E272 Phase F).
+ *
+ * Die Kontextkante ist die 54 px schmale Spalte links vom Inhalt. Was darin
+ * steht, hängt davon ab, wo man ist: auf einer Seite die Seitenwerkzeuge, im
+ * PDF die Stifte, in einer Datenbank Ansichten und Filter, in Elektro die
+ * acht Fachwerkzeuge.
+ *
+ * SIE STEHT NICHT IN DER SCHALE. Der Prototyp hat dafür zwei feste Listen —
+ * CONTEXT_RAIL und CONTEXT_PANELS —, in denen jeder Bereich einmal
+ * vorkommt. Das wäre in Redion genau die Kopplung, die §5 verbietet: die
+ * Schale müsste den Editor, das PDF, die Datenbanken und Elektro namentlich
+ * kennen, und ein neuer Bereich hiesse eine Änderung in der Schale.
+ *
+ * Hier ist es umgekehrt. Jeder Bereich meldet SICH an, die Kante fragt nur
+ * nach dem Schauplatz und zeichnet, was zurückkommt. Die Kante kennt keinen
+ * einzigen Bereich beim Namen.
+ *
+ * ZWEI FORMEN, UND DER UNTERSCHIED IST WICHTIG
+ *
+ *   · Ein Knopf mit `tun` HANDELT sofort. „Fokus", „Drucken", „Neu".
+ *   · Ein Knopf mit `liefern` ÖFFNET DIE LADE und zeigt, was `liefern()`
+ *     zurückgibt. „Blöcke", „Ansichten", „Fassungen" — Listen, die sich
+ *     dauernd ändern und deshalb erst beim Öffnen entstehen dürfen.
+ *
+ * Beides zusammen ist erlaubt und heisst: klicken handelt, die Lade zeigt
+ * mehr. Keines von beidem ist ein Fehler und wird abgewiesen.
+ *
+ * EIN KAPUTTER LIEFERANT DARF DIE KANTE NIE LEEREN.
+ *
+ * `fuer()` fängt jeden Fehler aus `zeigen()` einzeln ab und lässt den
+ * Eintrag dann weg — nicht die ganze Liste. Ein Bereich, der beim Laden
+ * einen Fehler hat, nimmt sonst die Bedienung aller anderen mit. Dasselbe
+ * gilt für `liefern()`: wirft es, gibt es eine leere Lade mit einem Satz,
+ * und nicht eine Kante, die verschwindet.
+ * ==========================================================================*/
+window.Register = window.Register || {};
+const RegisterKontext = (() => {
+    const LISTE = [];
+    /** Lieferanten: sie werden bei JEDEM `fuer()` gefragt, nicht einmal. */
+    const LIEFERANTEN = [];
+    /** Wer den Arbeitsstapel füllt — die Liste unten in der Lade. */
+    const stapelQuellen = [];
+    /**
+     * Einen Knopf anmelden.
+     *
+     * Abgewiesen wird nur, was nicht funktionieren KANN: ohne Bereich, ohne
+     * Kennung, ohne Namen, ohne Zeichen — oder ohne beides, `tun` und
+     * `liefern`, denn dann tut der Knopf nichts.
+     *
+     * `bereich + id` ist der Schlüssel, nicht `id` allein: „Filter" gibt es
+     * in der Datenbank und in den Aufgaben, und das sind zwei Knöpfe.
+     */
+    const melde = (knopf) => {
+        if (!knopf || !knopf.bereich || !knopf.id || !knopf.name || !knopf.zeichen)
+            return false;
+        if (typeof knopf.tun !== 'function' && typeof knopf.liefern !== 'function')
+            return false;
+        if (LISTE.some(x => x.bereich === knopf.bereich && x.id === knopf.id))
+            return false;
+        LISTE.push(knopf);
+        return true;
+    };
+    /**
+     * Einen LIEFERANTEN anmelden — eine Liste, die erst beim Fragen entsteht.
+     *
+     * WARUM ES DAS BRAUCHT, UND ZWAR GEMESSEN. Elektro meldete seine acht
+     * Werkzeuge beim Laden einzeln an, aus `inReiter('elektro')`. In der
+     * Kante standen dann sechs. Der Grund: `Register.menueband.alle()` wendet
+     * `zeigen()` schon selbst an, und `zeigen()` fragt „ist das Modul da?" —
+     * beim Laden von `elektro/start.js` war `Electrical` noch nicht geladen.
+     * Zwei Werkzeuge waren damit für immer weg, und niemand hätte es
+     * gemerkt: sechs Knöpfe sehen aus wie sechs Knöpfe.
+     *
+     * Ein Lieferant fragt bei jedem Zeichnen neu. Was später geladen wird,
+     * ist dann auch später da.
+     */
+    const meldeLieferant = (bereich, fn) => {
+        if (!bereich || typeof fn !== 'function')
+            return false;
+        if (LIEFERANTEN.some(l => l.bereich === bereich && l.fn === fn))
+            return false;
+        LIEFERANTEN.push({ bereich, fn });
+        return true;
+    };
+    const nimmZurueck = (bereich, id) => {
+        const i = LISTE.findIndex(x => x.bereich === bereich && x.id === id);
+        if (i < 0)
+            return false;
+        LISTE.splice(i, 1);
+        return true;
+    };
+    /**
+     * Die Knöpfe eines Schauplatzes, in der Reihenfolge, in der sie stehen.
+     *
+     * `rang` sortiert; ohne Rang zählt die Anmeldereihenfolge. `sort` ist in
+     * modernen Browsern stabil, gleiche Ränge behalten also ihre Folge — das
+     * ist zugesichert und keine Beobachtung.
+     */
+    const fuer = (bereich) => {
+        if (!bereich)
+            return [];
+        const roh = LISTE.filter(k => k.bereich === bereich);
+        for (const l of LIEFERANTEN) {
+            if (l.bereich !== bereich)
+                continue;
+            try {
+                const teil = l.fn();
+                if (Array.isArray(teil))
+                    for (const k of teil) {
+                        if (!k || !k.id || !k.name || !k.zeichen)
+                            continue;
+                        if (typeof k.tun !== 'function' && typeof k.liefern !== 'function')
+                            continue;
+                        if (roh.some(x => x.id === k.id))
+                            continue; /* kein Doppel */
+                        roh.push({ ...k, bereich });
+                    }
+            }
+            catch { /* ein kaputter Lieferant nimmt nicht die anderen mit */ }
+        }
+        return roh
+            .filter(k => {
+            if (typeof k.zeigen !== 'function')
+                return true;
+            try {
+                return !!k.zeigen();
+            }
+            catch {
+                return false;
+            } /* ein kaputtes zeigen() nimmt EINEN Knopf */
+        })
+            .slice()
+            .sort((a, b) => (a.rang ?? 500) - (b.rang ?? 500));
+    };
+    /**
+     * Die Zeilen eines Knopfes holen — mit Netz.
+     *
+     * Der Aufrufer bekommt IMMER eine Liste, nie eine Ausnahme. Was schief
+     * ging, steht als Zeile darin: eine leere Lade ohne Erklärung ist
+     * schlimmer als eine mit einem Satz.
+     */
+    const zeilen = (knopf) => {
+        if (!knopf || typeof knopf.liefern !== 'function')
+            return [];
+        try {
+            const raus = knopf.liefern();
+            return Array.isArray(raus) ? raus.filter(z => z && z.id && z.name) : [];
+        }
+        catch {
+            return [{ id: 'fehler', name: 'Lässt sich gerade nicht laden.',
+                    tun: () => { } }];
+        }
+    };
+    /** Wer etwas zum Arbeitsstapel beisteuert. */
+    const meldeStapel = (fn) => {
+        if (typeof fn !== 'function' || stapelQuellen.includes(fn))
+            return false;
+        stapelQuellen.push(fn);
+        return true;
+    };
+    /**
+     * Der Arbeitsstapel — was gerade offen ist.
+     *
+     * KEIN NEUES DATENMODELL. Er ist eine ANSICHT auf das, was es schon gibt
+     * (offene Reiter, zuletzt geöffnet, angeheftet). Wer hier etwas speichert,
+     * hat einen zweiten Bestand angelegt, den niemand sichert.
+     */
+    const stapel = () => {
+        const raus = [];
+        for (const q of stapelQuellen) {
+            try {
+                const teil = q();
+                if (Array.isArray(teil))
+                    raus.push(...teil.filter(z => z && z.id && z.name));
+            }
+            catch { /* eine kaputte Quelle nimmt nicht die anderen mit */ }
+        }
+        return raus;
+    };
+    /** Welche Schauplätze überhaupt jemand angemeldet hat. */
+    const bereiche = () => {
+        const raus = [];
+        for (const k of LISTE)
+            if (!raus.includes(k.bereich))
+                raus.push(k.bereich);
+        for (const l of LIEFERANTEN)
+            if (!raus.includes(l.bereich))
+                raus.push(l.bereich);
+        return raus;
+    };
+    return { melde, meldeLieferant, nimmZurueck, fuer, zeilen,
+        meldeStapel, stapel, bereiche,
+        alle: () => LISTE.slice(), anzahl: () => LISTE.length };
+})();
+window.Register.kontext = RegisterKontext;
 
 </script>
 <script>
@@ -35569,6 +35947,43 @@ const Links = (() => {
     };
 })();
 window.Links = Links;
+/* Verweise und Rückverweise in der Kontextkante (E272 Phase F).
+   `verweiseAuf(id)` ist dieselbe Quelle wie die Fusszeile der Seite — eine
+   zweite Suche über den Index wäre derselbe Lauf zweimal. */
+if (typeof Register !== 'undefined' && Register.kontext) {
+    Register.kontext.melde({
+        bereich: 'editor', id: 'verweise', name: 'Verweise',
+        zeichen: 'link', rang: 60,
+        liefern: () => {
+            let id = '';
+            try {
+                id = String(App.aktuelleSeite() || '');
+            }
+            catch {
+                id = '';
+            }
+            if (!id)
+                return [];
+            let treffer = [];
+            try {
+                treffer = Links.verweiseAuf(id) || [];
+            }
+            catch {
+                treffer = [];
+            }
+            if (!treffer.length)
+                return [{ id: 'keine',
+                        name: 'Noch verweist nichts hierher.', tun: () => { } }];
+            return treffer.slice(0, 20).map((b) => ({
+                id: 'ref-' + b.id, name: String(b.text || 'Ohne Titel'),
+                zeichen: 'page', tun: () => { try {
+                    App.oeffne(b.id);
+                }
+                catch { /* … */ } }
+            }));
+        }
+    });
+}
 
 </script>
 <script>
@@ -47088,6 +47503,57 @@ const Elektrostart = (() => {
     return { oeffne, zeichnen, zuletzt, wege };
 })();
 window.Elektrostart = Elektrostart;
+/* ============================================================================
+ * DIE KONTEXTKANTE VON ELEKTRO (E272 Phase F)
+ * ----------------------------------------------------------------------------
+ * DIESELBE QUELLE WIE DIE STARTSEITE, und das ist der ganze Punkt.
+ *
+ * Redur hat entschieden, dass „Elektro" kein eigener Reiter im Menüband
+ * mehr ist (E272 Phase D). Die acht Einträge behalten trotzdem
+ * `reiter: 'elektro'` im Register — die Startseite oben in dieser Datei
+ * liest `inReiter('elektro')`, und die Kante liest es hier genauso.
+ *
+ * Eine zweite Liste hier wäre der Fehler, gegen den der ganze Bogen
+ * geschrieben ist: zwei Kataloge für dieselben acht Werkzeuge, und beim
+ * neunten pflegt jemand nur einen.
+ *
+ * `zeigen()` wird MITGENOMMEN und nicht ausgewertet: die Kante fragt es
+ * selbst, jedes Mal, wenn sie zeichnet. Ein Modul, das später geladen
+ * wird, taucht dann von selbst auf.
+ * ==========================================================================*/
+if (typeof Register !== 'undefined' && Register.kontext) {
+    /* EIN LIEFERANT UND KEINE ACHT ANMELDUNGEN — gemessen, nicht gewählt.
+       Der erste Anlauf meldete beim Laden jeden Eintrag einzeln an. In der
+       Kante standen dann SECHS statt acht: `Register.menueband.alle()` wendet
+       `zeigen()` schon selbst an, und `zeigen()` fragt „ist das Modul da?".
+       Beim Laden dieser Datei war `Electrical` noch nicht geladen — „Rechner"
+       und „Schaltplan" waren damit für immer weg, und sechs Knöpfe sehen aus
+       wie sechs Knöpfe.
+  
+       Ein Lieferant wird bei JEDEM Zeichnen gefragt. Was später kommt, ist
+       dann auch später da. */
+    Register.kontext.meldeLieferant('elektro', () => {
+        const raus = [];
+        try {
+            let rang = 10;
+            for (const g of (Register.menueband.inReiter('elektro') || [])) {
+                for (const e of (g.eintraege || [])) {
+                    raus.push({
+                        bereich: 'elektro', id: String(e.id), name: String(e.name || e.id),
+                        zeichen: String(e.zeichen || 'bolt'), rang: rang,
+                        tun: () => { try {
+                            e.tun();
+                        }
+                        catch { /* toter Griff bleibt still */ } }
+                    });
+                    rang += 10;
+                }
+            }
+        }
+        catch { /* ohne Register bleibt die Kante leer, die Seite läuft weiter */ }
+        return raus;
+    });
+}
 
 </script>
 <script>
@@ -47545,6 +48011,78 @@ const DocumentMode = (() => {
     return { available, active, select, toggle, documentsIn, render, sourceLabel };
 })();
 window.DocumentMode = DocumentMode;
+/* ============================================================================
+ * DIE KONTEXTKANTE IM DOKUMENTMODUS (E272 Phase F)
+ * ----------------------------------------------------------------------------
+ * DIESELBEN WERKZEUGE WIE DER REITER „ZEICHNEN", aus derselben Quelle:
+ * `Register.menueband.inReiter('zeichnen')`. Eine zweite Stiftliste hier
+ * wäre die dritte Stelle, an der „Marker" definiert wird — nach dem
+ * Menüband und der Werkzeugspalte im Dokument selbst.
+ *
+ * `zeigen()` wird mitgenommen und nicht ausgewertet: die Kante fragt es
+ * jedes Mal neu, und ein Werkzeug, das nur mit offener Fläche Sinn hat,
+ * verschwindet dann von selbst wieder.
+ * ==========================================================================*/
+if (typeof Register !== 'undefined' && Register.kontext) {
+    const K = Register.kontext;
+    /* AUCH HIER EIN LIEFERANT (derselbe Grund wie in `elektro/start.ts`):
+       `inReiter('zeichnen')` filtert schon mit `zeigen()`, und die Werkzeuge
+       brauchen eine offene Fläche. Beim Laden gibt es keine — einmal gefragt
+       hiesse für immer leer. */
+    K.meldeLieferant('pdf', () => {
+        const raus = [];
+        let rang = 20;
+        for (const g of (Register.menueband.inReiter('zeichnen') || [])) {
+            raus.push({
+                bereich: 'pdf', id: 'zeichnen-' + String(g.gruppe).toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+                name: String(g.gruppe), zeichen: 'pencil', rang: rang,
+                liefern: () => (g.eintraege || [])
+                    .filter((e) => {
+                    try {
+                        return typeof e.zeigen !== 'function' || e.zeigen();
+                    }
+                    catch {
+                        return false;
+                    }
+                })
+                    .map((e) => ({
+                    id: String(e.id), name: String(e.name || e.id), unter: e.hinweis,
+                    zeichen: e.zeichen,
+                    an: (() => {
+                        try {
+                            return typeof e.an === 'function' ? !!e.an() : false;
+                        }
+                        catch {
+                            return false;
+                        }
+                    })(),
+                    tun: () => { try {
+                        e.tun();
+                    }
+                    catch { /* toter Griff bleibt still */ } }
+                }))
+            });
+            rang += 10;
+        }
+        return raus;
+    });
+    /* OCR und Formelheft stehen nicht im Zeichnen-Reiter — sie gehören dem
+       Dokument und nicht dem Stift. */
+    K.melde({ bereich: 'pdf', id: 'ocr', name: 'Text erkennen (OCR)',
+        zeichen: 'camera', rang: 200,
+        zeigen: () => typeof Recognition !== 'undefined' && !!Recognition.capturePage,
+        tun: () => { try {
+            Recognition.capturePage();
+        }
+        catch { /* … */ } } });
+    K.melde({ bereich: 'pdf', id: 'formelheft', name: 'Formelheft',
+        zeichen: 'book', rang: 210,
+        zeigen: () => typeof Formelheft !== 'undefined' && !!Formelheft.umschalten,
+        tun: () => { try {
+            Formelheft.umschalten();
+        }
+        catch { /* … */ } } });
+}
 
 </script>
 <script>
@@ -68750,6 +69288,109 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
     };
 })();
 window.Werkzeuge = Werkzeuge;
+/* ============================================================================
+ * DIE KONTEXTKANTE EINER OFFENEN SEITE (E272 Phase F)
+ * ----------------------------------------------------------------------------
+ * Hier meldet sich der Editor selbst an. Die Kante kennt diesen Bereich
+ * nicht — sie fragt `Register.kontext.fuer('editor')` und zeichnet, was
+ * zurückkommt (§5).
+ *
+ * KEIN EINZIGER NEUER GRIFF. Jede Zeile ruft dieselbe Funktion wie das
+ * Menüband und das Seitenmenü. Eine Kante mit eigener Logik wäre eine
+ * dritte Stelle, an der „Fassungen" etwas anderes bedeutet.
+ * ==========================================================================*/
+if (typeof Register !== 'undefined' && Register.kontext) {
+    const K = Register.kontext;
+    const seite = () => {
+        try {
+            const id = App.aktuelleSeite();
+            return id ? Store.getBlock(id) : null;
+        }
+        catch {
+            return null;
+        }
+    };
+    K.melde({
+        bereich: 'editor', id: 'seitenwerkzeuge', name: 'Seitenwerkzeuge',
+        zeichen: 'settings', rang: 10,
+        liefern: () => {
+            const p = seite();
+            if (!p)
+                return [];
+            return [
+                { id: 'statistik', name: 'Statistik', unter: 'Wörter, Zeichen, Lesezeit',
+                    zeichen: 'chart', tun: () => Werkzeuge.statistik(p) },
+                { id: 'drucken', name: 'Drucken oder als PDF', zeichen: 'printer',
+                    tun: () => { void Werkzeuge.drucken(p); } },
+                { id: 'sperren', name: p.locked ? 'Entsperren' : 'Gegen Bearbeiten sperren',
+                    zeichen: p.locked ? 'lockOpen' : 'lock',
+                    tun: () => (p.locked ? Werkzeuge.entsperren(p) : Werkzeuge.sperren(p)) },
+                { id: 'fokus', name: 'Fokusmodus', unter: 'Strg + Umschalt + F',
+                    zeichen: 'eye', tun: () => Werkzeuge.fokus() },
+                { id: 'praesentation', name: 'Präsentation', zeichen: 'play',
+                    tun: () => { void Werkzeuge.praesentation(p); } }
+            ];
+        }
+    });
+    K.melde({
+        bereich: 'editor', id: 'fassungen', name: 'Fassungen',
+        zeichen: 'history', rang: 20,
+        zeigen: () => !!seite(),
+        tun: () => { const p = seite(); if (p)
+            Werkzeuge.versionen(p); }
+    });
+    /* `karten()` GIBT EINE LISTE ZURÜCK und öffnet nichts — nachgesehen,
+       nicht geraten (Zeile 567). Der Weg zum Lernen ist `lernen()`. */
+    K.melde({
+        bereich: 'editor', id: 'karteikarten', name: 'Karteikarten',
+        zeichen: 'cards', rang: 40,
+        liefern: () => {
+            let liste = [];
+            try {
+                liste = Werkzeuge.karten() || [];
+            }
+            catch {
+                liste = [];
+            }
+            const raus = [{ id: 'lernen', name: 'Lernzentrum öffnen',
+                    unter: liste.length + ' Karten im Bestand', zeichen: 'learn',
+                    tun: () => Werkzeuge.lernen() }];
+            for (const k of liste.slice(0, 10))
+                raus.push({
+                    id: 'karte-' + k.id,
+                    name: (String(k.text || 'Karte').split('::')[0] || 'Karte').trim(),
+                    zeichen: 'cards',
+                    tun: () => { try {
+                        App.zeigeBlock(k.id);
+                    }
+                    catch { /* … */ } }
+                });
+            return raus;
+        }
+    });
+    /* DERSELBE KATALOG WIE „EINFÜGEN" (§8). Ein zweiter Blockkatalog wäre
+       eine Liste, die bei jeder neuen Blockart vergessen wird. */
+    K.melde({
+        bereich: 'editor', id: 'bloecke', name: 'Blöcke',
+        zeichen: 'plus', rang: 30,
+        zeigen: () => !!(typeof Register !== 'undefined' && Register.bloecke?.alle),
+        liefern: () => {
+            const p = seite();
+            if (!p)
+                return [];
+            return (Register.bloecke.alle() || []).slice(0, 24).map((b) => ({
+                id: 'blk-' + b.id, name: String(b.name || b.id), zeichen: b.zeichen,
+                tun: () => {
+                    try {
+                        Store.addBlock(p.id, b.id, {});
+                        App.zeichneSeite();
+                    }
+                    catch { /* eine Blockart, die es nicht mehr gibt, tut nichts */ }
+                }
+            }));
+        }
+    });
+}
 
 </script>
 <script>
@@ -70624,6 +71265,26 @@ window.Kommentare = Kommentare;
 /* ==========================================================================
  * 5. MEHRFACHAUSWAHL VON BLÖCKEN
  * ========================================================================*/
+/* Die Kommentare melden sich für die Kontextkante an (E272 Phase F).
+   `panel()` ist derselbe Griff wie im Menüband und in der Kopfzeile. */
+if (typeof Register !== 'undefined' && Register.kontext) {
+    Register.kontext.melde({
+        bereich: 'editor', id: 'kommentare', name: 'Kommentare',
+        zeichen: 'comment', rang: 50,
+        zeigen: () => { try {
+            return !!App.aktuelleSeite();
+        }
+        catch {
+            return false;
+        } },
+        tun: () => {
+            try {
+                Kommentare.panel(App.aktuelleSeite());
+            }
+            catch { /* ohne offene Seite gibt es nichts zu kommentieren */ }
+        }
+    });
+}
 
 </script>
 <script>
@@ -71646,6 +72307,45 @@ const Ansichten = (() => {
         gruss, skelett, beimLaden };
 })();
 window.Ansichten = Ansichten;
+/* Die Startansicht „Heute" meldet ihre Kontextkante an (E272 Phase F). */
+if (typeof Register !== 'undefined' && Register.kontext) {
+    const K = Register.kontext;
+    const bereiche = ['heute', 'leer'];
+    for (const b of bereiche) {
+        K.melde({ bereich: b, id: 'ueberblick', name: 'Überblick',
+            zeichen: 'today', rang: 10, tun: () => Ansichten.start() });
+        K.melde({ bereich: b, id: 'seiten', name: 'Seiten und Notizen',
+            zeichen: 'pages', rang: 20, tun: () => Ansichten.seiten() });
+        K.melde({ bereich: b, id: 'termine', name: 'Termine',
+            zeichen: 'calendar', rang: 30, tun: () => Ansichten.termine() });
+        K.melde({ bereich: b, id: 'posteingang', name: 'Posteingang',
+            zeichen: 'inbox', rang: 40, tun: () => Ansichten.posteingang() });
+        /* ZULETZT GEÖFFNET, ganz oben im Bild und ganz oben in der Kante —
+           derselbe Bestand wie im Startbild (`App.kuerzlich()`). */
+        K.melde({ bereich: b, id: 'zuletzt', name: 'Zuletzt geöffnet',
+            zeichen: 'history', rang: 50,
+            liefern: () => {
+                let letzte = [];
+                try {
+                    letzte = App.kuerzlich() || [];
+                }
+                catch {
+                    letzte = [];
+                }
+                if (!letzte.length)
+                    return [{ id: 'keine', name: 'Noch nichts geöffnet.',
+                            tun: () => { } }];
+                return letzte.map((x) => ({
+                    id: 'z-' + x.id, name: String(x.text || 'Ohne Titel'), zeichen: 'page',
+                    tun: () => { try {
+                        App.oeffne(x.id);
+                    }
+                    catch { /* … */ } }
+                }));
+            }
+        });
+    }
+}
 
 </script>
 <script>
@@ -91456,6 +92156,42 @@ const Plan = (() => {
         aufgaben, wochenDaten, wochenrueckblick, tagesplan, liste, FRISTEN };
 })();
 window.Plan = Plan;
+/* Die Aufgaben melden ihre Kontextkante an (E272 Phase F).
+   Alle vier Griffe stehen schon im Modul; hier steht nur, wo sie hingehören. */
+if (typeof Register !== 'undefined' && Register.kontext) {
+    const K = Register.kontext;
+    K.melde({ bereich: 'aufgaben', id: 'uebersicht', name: 'Übersicht',
+        zeichen: 'tasks', rang: 10, tun: () => Plan.uebersicht() });
+    K.melde({ bereich: 'aufgaben', id: 'tagesplan', name: 'Tagesplan',
+        zeichen: 'today', rang: 20, tun: () => Plan.tagesplan() });
+    K.melde({ bereich: 'aufgaben', id: 'woche', name: 'Wochenrückblick',
+        zeichen: 'calendar', rang: 30, tun: () => Plan.wochenrueckblick() });
+    /* FÄLLIG ist eine Lade: die Liste ändert sich mit jedem Tag und mit
+       jedem Haken, und eine Zahl im Knopf wäre nach fünf Minuten falsch. */
+    K.melde({ bereich: 'aufgaben', id: 'faellig', name: 'Fällig',
+        zeichen: 'clock', rang: 40,
+        liefern: () => {
+            let liste = [];
+            try {
+                liste = Plan.faellige() || [];
+            }
+            catch {
+                liste = [];
+            }
+            if (!liste.length)
+                return [{ id: 'keine', name: 'Nichts ist fällig.',
+                        tun: () => { } }];
+            return liste.slice(0, 20).map((b) => ({
+                id: 'f-' + b.id, name: String(b.text || b.title || 'Aufgabe'),
+                zeichen: 'tasks',
+                tun: () => { try {
+                    App.zeigeBlock(b.id);
+                }
+                catch { /* … */ } }
+            }));
+        }
+    });
+}
 
 </script>
 <script>
@@ -92447,38 +93183,51 @@ const Rundgang = (() => {
      * Mitte gezeigt statt übersprungen — so bricht nichts, wenn sich die
      * Oberfläche ändert.
      * ======================================================================*/
+    /* DIE ANKER ZEIGEN AUF DIE NEUE SCHALE (E272 Phase F).
+       Sie zeigten auf `#sidebar .ws-btn`, `#btn-search`, `#btn-new`, `#tree`,
+       `#btn-settings` und drei `[data-app=…]` — alle in der Seitenleiste,
+       und die ist am Rechner seit Phase F weg. Der Rundgang lief trotzdem
+       durch (`stellen()` versteckt das Loch, wenn das Ziel fehlt), und genau
+       das ist die stille Sorte Fehler: neun Schritte ohne Loch sehen aus wie
+       eine Führung, zeigen aber auf nichts.
+  
+       Die neuen Anker sind die Stellen, an denen dieselben Dinge JETZT
+       stehen — Reiter „Gehen" statt Seitenleiste, die Kante statt „+ Neu",
+       „Datei" statt `#btn-settings`. test61 misst, dass das Loch auf dem
+       ersten Ziel wirklich liegt. */
     const SCHRITTE = [
         /* E270: ohne Konto stimmt der Satz weiterhin — er darf nur nicht mehr
            behaupten, es GÄBE keinen Server. Er ist da und freiwillig. */
-        { ziel: '#sidebar .ws-btn', titel: 'Alles liegt hier',
-            text: 'Links steht dein ganzer Arbeitsbereich. Ohne Konto bleibt alles in ' +
-                'diesem Browser auf diesem Gerät — für dieselben Notizen auf Rechner ' +
-                'und Telefon gibt es die Wolke, freiwillig.' },
-        { ziel: '#btn-search', titel: 'Suchen und Befehle',
+        { ziel: '[data-mb-reiter="gehen"]', titel: 'Alles liegt hier',
+            text: 'Unter <b>Gehen</b> steht jeder Bereich, den Redion hat — Heute, ' +
+                'Bibliothek, Aufgaben, Elektro und dreissig weitere. Ohne Konto ' +
+                'bleibt alles in diesem Browser auf diesem Gerät; für dieselben ' +
+                'Notizen auf Rechner und Telefon gibt es die Wolke, freiwillig.' },
+        { ziel: '#mb-suche', titel: 'Suchen und Befehle',
             text: 'Strg + K sucht in allem. Strg + P öffnet die Befehle: dort steht ' +
                 'jede Funktion mit Namen, auch die, die du noch nicht kennst. ' +
                 'Sie sucht unscharf — „wchrck" findet den Wochenrückblick.' },
-        { ziel: '#btn-new', titel: 'Eine Seite anfangen',
+        { ziel: '#kante .k-knopf[data-k="neu"]', titel: 'Eine Seite anfangen',
             text: 'Strg + N legt eine Seite an. Ein <b>/</b> im Text öffnet die Bausteine: ' +
                 '43 Stück, von der Überschrift bis zur Datenbank.' },
-        { ziel: '#tree', titel: 'Zwölf Ansichten auf dieselben Daten',
+        { ziel: '[data-mb-reiter="einfuegen"]', titel: 'Zwölf Ansichten auf dieselben Daten',
             text: 'Eine Datenbank kann Tabelle, Board, Zeitstrahl, Kalender, Galerie, ' +
                 'Liste, Diagramm, Formular, Feed, Karte, Kreuztabelle und Dashboard ' +
                 'zugleich sein — jede mit eigenem Filter.' },
-        { ziel: '#btn-ai', titel: 'Die KI, die nichts kaputt macht',
+        { ziel: '#kante .k-knopf[data-k="ki"]', titel: 'Die KI, die nichts kaputt macht',
             text: 'Sie schreibt Formeln, Automationen und Filter — aber sie ändert nie ' +
                 'einfach etwas. Jeder Vorschlag wird an deinen echten Daten ' +
                 'durchgerechnet und Zeile für Zeile verglichen, bevor du zustimmst.' },
-        { ziel: '[data-app="aussehen"]', titel: 'So, wie du es willst',
+        { ziel: '#kante .k-knopf[data-k="einstellungen"]', titel: 'So, wie du es willst',
             text: 'Acht Farbschemata, eigene Akzentfarbe, Schrift und Seitenbreite — ' +
                 'und alle Tastenkürzel lassen sich umbelegen. Notions Kürzel sind fest.' },
-        { ziel: '[data-app="tempo"]', titel: 'Ehrlich beim Tempo',
+        { ziel: '[data-mb-reiter="ueberpruefen"]', titel: 'Ehrlich beim Tempo',
             text: 'Hier steht, wie lange das Zeichnen gedauert hat und welche Formel ' +
                 'die teuerste ist — mit Namen. Kein anderes Programm sagt dir das.' },
-        { ziel: '[data-app="wissen"]', titel: 'Alles zum Nachlesen',
+        { ziel: '[data-mb-reiter="hilfe"]', titel: 'Alles zum Nachlesen',
             text: 'Acht Dokumente: sieben über Notion, eines über alles, was Redion ' +
                 'mehr kann. Darin steht auch, was Redion bewusst <i>nicht</i> tut.' },
-        { ziel: '#btn-settings', titel: 'Zum Schluss',
+        { ziel: '#mb-datei', titel: 'Zum Schluss',
             text: 'In den Einstellungen richtest du die KI ein, sicherst alles ' +
                 'verschlüsselt und stellst ein, was Redion beim Start tut. ' +
                 'Viel Freude damit.' }
@@ -103067,6 +103816,46 @@ const Bibliothek = (() => {
     return { oeffne, aufgaben, meineAufgaben, quellenDialog, alleSeiten, quelleVon, wannText };
 })();
 window.Bibliothek = Bibliothek;
+/* Die Bibliothek meldet ihre Kontextkante an (E272 Phase F). */
+if (typeof Register !== 'undefined' && Register.kontext) {
+    const K = Register.kontext;
+    K.melde({ bereich: 'bibliothek', id: 'uebersicht', name: 'Übersicht',
+        zeichen: 'library', rang: 10, tun: () => Bibliothek.oeffne() });
+    K.melde({ bereich: 'bibliothek', id: 'notizhefte', name: 'Notizhefte',
+        zeichen: 'book', rang: 20,
+        zeigen: () => typeof Notebook !== 'undefined' && !!Notebook.oeffnen,
+        tun: () => Notebook.oeffnen() });
+    K.melde({ bereich: 'bibliothek', id: 'aufgaben', name: 'Aufgaben',
+        zeichen: 'tasks', rang: 30, tun: () => Bibliothek.aufgaben() });
+    K.melde({ bereich: 'bibliothek', id: 'alle', name: 'Alle Seiten',
+        zeichen: 'pages', rang: 40, tun: () => Bibliothek.alleSeiten() });
+    K.melde({ bereich: 'bibliothek', id: 'suche', name: 'Suchen',
+        zeichen: 'search', rang: 50, tun: () => App.suche() });
+    /* ZULETZT GEÖFFNET ist eine Lade und kein Knopf: eine Liste, die sich
+       bei jedem Öffnen ändert, darf nicht beim Zeichnen der Kante entstehen. */
+    K.melde({ bereich: 'bibliothek', id: 'zuletzt', name: 'Zuletzt geöffnet',
+        zeichen: 'history', rang: 60,
+        liefern: () => {
+            let letzte = [];
+            try {
+                letzte = App.kuerzlich() || [];
+            }
+            catch {
+                letzte = [];
+            }
+            if (!letzte.length)
+                return [{ id: 'keine', name: 'Noch nichts geöffnet.',
+                        tun: () => { } }];
+            return letzte.map((b) => ({
+                id: 'z-' + b.id, name: String(b.text || 'Ohne Titel'), zeichen: 'page',
+                tun: () => { try {
+                    App.oeffne(b.id);
+                }
+                catch { /* … */ } }
+            }));
+        }
+    });
+}
 
 </script>
 <script>
@@ -116330,6 +117119,515 @@ window.Backstage = Backstage;
 
 </script>
 <script>
+/* ===== quell/schale/aufbau/context-rail.js ===== */
+"use strict";
+/* ============================================================================
+ * context-rail.js — die Kontextkante: 54 Pixel, die sich merken, wo man ist
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/schale/aufbau/context-rail.ts`. `npm run bauen:ts` schreibt daraus
+ * `quell/schale/aufbau/context-rail.js`. Wer das .js bearbeitet, verliert die Änderung beim
+ * nächsten Bauen; `pruefungen/lauf/test105.mts` meldet es vorher.
+ * ----------------------------------------------------------------------------
+ * WAS SIE ERSETZT (E272 Phase F).
+ *
+ * Die 240 Pixel breite Seitenleiste zeigte 32 Knöpfe, und zwar auf JEDER
+ * Seite dieselben (gezählt in E218: 52 Knöpfe im Startbild, 67 mit offener
+ * Seite). Zweiundfünfzig Knöpfe, bevor ein Wort geschrieben ist.
+ *
+ * Die Kante zeigt sechs bis zehn, und zwar die des Ortes, an dem man
+ * steht. Sie kostet 54 statt 240 Pixel. Wohin man geht, steht im Reiter
+ * „Gehen" (Phase E) — Navigation ist eine Sache, Werkzeug eine andere, und
+ * die Seitenleiste war beides gleichzeitig.
+ *
+ * SIE KENNT KEINEN EINZIGEN BEREICH BEIM NAMEN.
+ *
+ * Was in ihr steht, liefert `Register.kontext` (Phase F): jeder Bereich
+ * meldet sich selbst an. Diese Datei fragt `App.schauplatz()`, holt die
+ * Knöpfe und zeichnet. Ein neuer Bereich braucht hier keine Zeile — das
+ * ist §5, und es ist der ganze Grund für das Register.
+ *
+ * DREI DINGE STEHEN TROTZDEM FEST IN DIESER DATEI
+ *
+ *   · UNTEN: KI · Neu · Einstellungen. Sie gehören keinem Bereich, sondern
+ *     der App, und sie sind überall dieselben. Ein Register-Eintrag je
+ *     Bereich wäre neunmal dasselbe.
+ *
+ *   · OBEN: „Seiten". Der Seitenbaum ist die Navigation der Schale und
+ *     nicht das Werkzeug eines Bereichs; `Seitenleiste.zeichne()` zeichnet
+ *     ihn weiter in `#tree`, und `#tree` wird beim Öffnen in die Lade
+ *     GESCHOBEN — nicht kopiert. Ein zweiter Baum wäre ein zweiter Zustand.
+ *
+ *   · DER SCHAUPLATZ WIRD ÜBERSETZT. `App.schauplatz()` sagt „seite" für
+ *     jede offene Seite. Ob das ein Text, eine PDF oder ein Blatt ist,
+ *     steht im Baum darunter — `bereichJetzt()` sieht nach und macht daraus
+ *     „editor" oder „pdf". Die Alternative wäre, `schale.ts` das
+ *     unterscheiden zu lassen; dann wüsste die Schale wieder, was eine PDF
+ *     ist.
+ *
+ * AM TELEFON GIBT ES SIE NICHT. Unter 761 px trägt die untere Fünferleiste
+ * (E236/E240) die Navigation, und 54 Pixel von 390 sind ein Siebtel des
+ * Bildes. Die Seitenleiste bleibt dort die Schublade, die sie ist.
+ * ==========================================================================*/
+const Kontextkante = (() => {
+    const WURZEL = 'kante';
+    const LADE = 'kanten-lade';
+    /* KEIN `esc` UND KEIN `innerHTML` IN DIESER DATEI.
+       Alles hier wird mit `createElement` und `textContent` gebaut. Namen von
+       Seiten und Bereichen sind Nutzertext, und ein Escape, das man einmal
+       vergisst, ist ein Loch (§19). Wo nichts zusammengeklebt wird, gibt es
+       nichts zu vergessen. */
+    const amTelefon = () => {
+        try {
+            return window.matchMedia('(max-width: 760px)').matches;
+        }
+        catch {
+            return false;
+        }
+    };
+    const holen = (name) => {
+        try {
+            return globalThis[name];
+        }
+        catch {
+            return undefined;
+        }
+    };
+    /* ══════════════════════════════════════════════════════════════════════
+       WO BIN ICH
+       ══════════════════════════════════════════════════════════════════════ */
+    /**
+     * Der Schauplatz, für die Kante übersetzt.
+     *
+     * `App.schauplatz()` kennt nur „seite". Was für eine Seite es ist, steht
+     * im gezeichneten Baum: der Dokumentmodus setzt `body.dokument`, eine
+     * PDF-Seite zeichnet `.pdfseite`, ein Blatt `.blattraum`. Gefragt wird
+     * der Baum und nicht der Bestand — eine Seite mit einem PDF-Block, die
+     * gerade als Text gelesen wird, ist der Editor und nicht die PDF.
+     */
+    const bereichJetzt = () => {
+        let wo = 'leer';
+        try {
+            wo = String(App.schauplatz() || 'leer');
+        }
+        catch {
+            wo = 'leer';
+        }
+        if (wo !== 'seite')
+            return wo;
+        try {
+            if (document.body.classList.contains('dokument'))
+                return 'pdf';
+            if (document.querySelector('#page .pdfseite, #page .blattraum'))
+                return 'pdf';
+        }
+        catch { /* ohne Baum bleibt es der Editor */ }
+        return 'editor';
+    };
+    /* ══════════════════════════════════════════════════════════════════════
+       DIE LADE
+       ══════════════════════════════════════════════════════════════════════ */
+    /** Welcher Knopf die Lade gerade offen hat — leer heisst zu. */
+    let offenerKnopf = '';
+    /** Wohin der Fokus zurückgeht. */
+    let herkunft = null;
+    const lade = () => document.getElementById(LADE);
+    const ladeZu = (fokusZurueck = true) => {
+        const l = lade();
+        if (!l)
+            return;
+        l.hidden = true;
+        l.replaceChildren();
+        offenerKnopf = '';
+        markiere();
+        /* DEN BAUM ZURÜCKHOLEN, BEVOR DIE LADE LEER GERÄUMT WIRD — sonst ist
+           `#tree` weg, und `Seitenleiste.zeichne()` zeichnet ins Nichts.
+           (Steht deshalb weiter unten in `baumZurueck`, aufgerufen VOR dem
+           Leerräumen; hier bleibt nur der Fokus.) */
+        if (fokusZurueck && herkunft && document.contains(herkunft)) {
+            try {
+                herkunft.focus();
+            }
+            catch { /* ohne Fokus geht es auch */ }
+        }
+        herkunft = null;
+    };
+    /** `#tree` steht normalerweise in der Seitenleiste. Hier ist sein Zuhause. */
+    const baumHeim = () => document.getElementById('sidebar');
+    const baumZurueck = () => {
+        const baum = document.getElementById('tree');
+        const heim = baumHeim();
+        if (!baum || !heim || baum.parentElement === heim)
+            return;
+        /* Vor den Fuss, also dorthin, wo er in `index.html` steht. */
+        const fuss = heim.querySelector('.side-fuss');
+        if (fuss)
+            heim.insertBefore(baum, fuss);
+        else
+            heim.appendChild(baum);
+    };
+    /**
+     * Die Lade mit dem füllen, was ein Knopf liefert.
+     *
+     * Ein Sonderfall, und nur einer: „Seiten" bekommt den echten `#tree`
+     * hineingeschoben. Alles andere sind Zeilen aus `Register.kontext`.
+     */
+    const ladeAuf = (knopf, quelleKnopf) => {
+        const l = lade();
+        if (!l)
+            return;
+        baumZurueck();
+        l.replaceChildren();
+        const kopf = document.createElement('div');
+        kopf.className = 'kl-kopf';
+        const titel = document.createElement('b');
+        titel.textContent = String(knopf.name || '');
+        const zu = document.createElement('button');
+        zu.type = 'button';
+        zu.className = 'kl-zu';
+        zu.setAttribute('aria-label', 'Schliessen (Esc)');
+        zu.textContent = '✕';
+        zu.addEventListener('click', () => ladeZu());
+        kopf.appendChild(titel);
+        kopf.appendChild(zu);
+        l.appendChild(kopf);
+        const koerper = document.createElement('div');
+        koerper.className = 'kl-koerper';
+        if (knopf.id === 'seiten') {
+            const baum = document.getElementById('tree');
+            if (baum) {
+                koerper.appendChild(baum);
+                try {
+                    holen('Seitenleiste')?.zeichne?.();
+                }
+                catch { /* ohne Baum bleibt die Lade leer, aber offen */ }
+            }
+            else {
+                koerper.appendChild(satz('Der Seitenbaum ist gerade nicht da.'));
+            }
+        }
+        else {
+            const zeilen = Register.kontext.zeilen(knopf);
+            if (!zeilen.length) {
+                koerper.appendChild(satz('Hier steht gerade nichts.'));
+            }
+            else {
+                for (const z of zeilen)
+                    koerper.appendChild(zeile(z));
+            }
+        }
+        l.appendChild(koerper);
+        /* DER ARBEITSSTAPEL steht unten in JEDER Lade — er sagt, was offen
+           ist, und das ist überall dieselbe Frage. Er ist eine ANSICHT auf
+           Vorhandenes und kein zweiter Bestand. */
+        const stapel = Register.kontext.stapel();
+        if (stapel.length) {
+            const st = document.createElement('div');
+            st.className = 'kl-stapel';
+            const t = document.createElement('div');
+            t.className = 'kl-grp';
+            t.textContent = 'Arbeitsstapel';
+            st.appendChild(t);
+            for (const z of stapel.slice(0, 8))
+                st.appendChild(zeile(z));
+            l.appendChild(st);
+        }
+        /* DIE ZEICHEN NACHTRAGEN — dasselbe `fuelle`, das das Band und die
+           Kante nutzen. Ohne das steht in der Lade eine Liste ohne Bilder:
+           jede Zeile trägt ein `data-sym`, aber niemand hat es eingesetzt.
+           (Auf dem Bild der Blöcke-Lade sofort zu sehen.) */
+        if (Register?.symbole?.fuelle) {
+            try {
+                Register.symbole.fuelle(l);
+            }
+            catch { /* ohne Zeichen bleibt der Name, und der ist die Hauptsache */ }
+        }
+        l.hidden = false;
+        offenerKnopf = String(knopf.id || '');
+        herkunft = quelleKnopf;
+        markiere();
+        /* Den Fokus hinein, aber nicht mit Gewalt: steht er schon in der Lade
+           (zweiter Klick auf denselben Knopf), bleibt er, wo er ist. */
+        if (!l.contains(document.activeElement)) {
+            const erstes = l.querySelector('button, [tabindex]:not([tabindex="-1"])');
+            erstes?.focus();
+        }
+    };
+    const satz = (text) => {
+        const d = document.createElement('p');
+        d.className = 'kl-leer';
+        d.textContent = text;
+        return d;
+    };
+    const zeile = (z) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'kl-zeile' + (z.an ? ' ist-an' : '');
+        if (z.an)
+            b.setAttribute('aria-current', 'true');
+        if (z.zeichen) {
+            const s = document.createElement('span');
+            s.dataset['sym'] = String(z.zeichen);
+            b.appendChild(s);
+        }
+        const t = document.createElement('span');
+        t.className = 'kl-t';
+        const n = document.createElement('b');
+        n.textContent = String(z.name || '');
+        t.appendChild(n);
+        if (z.unter) {
+            const u = document.createElement('i');
+            u.textContent = String(z.unter);
+            t.appendChild(u);
+        }
+        b.appendChild(t);
+        b.addEventListener('click', () => {
+            try {
+                z.tun();
+            }
+            catch { /* eine tote Zeile schliesst nicht die Lade */ }
+        });
+        return b;
+    };
+    /** Welcher Kantenknopf gerade gedrückt aussieht. */
+    const markiere = () => {
+        const w = document.getElementById(WURZEL);
+        if (!w)
+            return;
+        w.querySelectorAll('.k-knopf').forEach(k => {
+            const an = !!offenerKnopf && k.dataset['k'] === offenerKnopf;
+            k.classList.toggle('ist-an', an);
+            k.setAttribute('aria-expanded', an ? 'true' : 'false');
+        });
+    };
+    /* ══════════════════════════════════════════════════════════════════════
+       DIE KANTE
+       ══════════════════════════════════════════════════════════════════════ */
+    /** Der Baum-Knopf, den kein Bereich anmeldet — er gehört der Schale. */
+    const SEITEN = { bereich: '*', id: 'seiten', name: 'Seiten',
+        zeichen: 'page', liefern: () => [] };
+    /** Unten, überall gleich. */
+    const FUSS = [
+        { id: 'ki', name: 'Lokale KI', zeichen: 'sparkle',
+            tun: () => { try {
+                App.kiPanel(true);
+            }
+            catch { /* ohne KI bleibt der Knopf */ } } },
+        { id: 'neu', name: 'Neu erstellen', zeichen: 'plus',
+            tun: () => { try {
+                App.erstellenBlatt();
+            }
+            catch { /* ohne Katalog nichts */ } } },
+        { id: 'einstellungen', name: 'Einstellungen', zeichen: 'settings',
+            tun: () => { try {
+                holen('Einstellungen')?.oeffne?.();
+            }
+            catch { /* … */ } } }
+    ];
+    const knopfBauen = (k, klasse) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'k-knopf ' + klasse;
+        b.dataset['k'] = String(k.id);
+        /* DER NAME STEHT IM `aria-label` UND IM `title`, nicht daneben (§38).
+           54 Pixel tragen kein Wort; ein Zeichen ohne Namen ist für ein
+           Vorleseprogramm aber gar nichts. */
+        b.setAttribute('aria-label', String(k.name));
+        b.title = String(k.name);
+        const s = document.createElement('span');
+        s.dataset['sym'] = String(k.zeichen || 'dots');
+        b.appendChild(s);
+        b.addEventListener('click', () => {
+            /* Zweiter Klick auf denselben Knopf schliesst — wie überall. */
+            if (typeof k.liefern === 'function' || k.id === 'seiten') {
+                if (offenerKnopf === String(k.id)) {
+                    ladeZu();
+                    return;
+                }
+                ladeAuf(k, b);
+                if (typeof k.tun === 'function') {
+                    try {
+                        k.tun();
+                    }
+                    catch { /* … */ }
+                }
+                return;
+            }
+            try {
+                k.tun();
+            }
+            catch { /* ein toter Griff lässt die Kante stehen */ }
+        });
+        return b;
+    };
+    /**
+     * Die Kante für den Ort zeichnen, an dem man gerade steht.
+     *
+     * Sie wird bei jedem Wechsel neu gebaut. Das ist billig (zehn Knöpfe) und
+     * spart den ganzen Abgleich, welcher Knopf jetzt weg muss — der Fehler,
+     * an dem die Seitenleiste jahrelang gelitten hat.
+     */
+    const zeichne = () => {
+        const w = document.getElementById(WURZEL);
+        if (!w)
+            return;
+        if (amTelefon()) {
+            w.hidden = true;
+            return;
+        }
+        const bereich = bereichJetzt();
+        let knoepfe = [];
+        try {
+            knoepfe = Register.kontext.fuer(bereich) || [];
+        }
+        catch {
+            knoepfe = [];
+        }
+        w.replaceChildren();
+        w.hidden = false;
+        w.dataset['bereich'] = bereich;
+        const oben = document.createElement('div');
+        oben.className = 'k-oben';
+        oben.appendChild(knopfBauen(SEITEN, 'k-seiten'));
+        for (const k of knoepfe)
+            oben.appendChild(knopfBauen(k, 'k-bereich'));
+        w.appendChild(oben);
+        const unten = document.createElement('div');
+        unten.className = 'k-unten';
+        for (const k of FUSS)
+            unten.appendChild(knopfBauen(k, 'k-fuss'));
+        w.appendChild(unten);
+        if (Register?.symbole?.fuelle) {
+            try {
+                Register.symbole.fuelle(w);
+            }
+            catch { /* ohne Zeichen bleibt der Name im aria-label */ }
+        }
+        /* Eine offene Lade, deren Knopf es hier nicht mehr gibt, muss zu —
+           sonst steht sie über einem Bereich, zu dem sie nicht gehört. */
+        if (offenerKnopf && !w.querySelector('.k-knopf[data-k="' + offenerKnopf + '"]')) {
+            baumZurueck();
+            ladeZu(false);
+        }
+        else {
+            markiere();
+        }
+    };
+    /** Auf oder zu — für Strg + Umschalt + Backslash. */
+    const schalten = () => {
+        const w = document.getElementById(WURZEL);
+        if (!w)
+            return;
+        if (amTelefon())
+            return;
+        const zu = w.hidden;
+        w.hidden = !zu;
+        if (!zu) {
+            baumZurueck();
+            ladeZu(false);
+        }
+        try {
+            Store.setMeta('kanteZu', !zu);
+        }
+        catch { /* ohne Merker gilt es nur jetzt */ }
+    };
+    /** Die Lade auf oder zu — für Strg + M. Öffnet den ersten Knopf. */
+    const ladeSchalten = () => {
+        if (offenerKnopf) {
+            baumZurueck();
+            ladeZu();
+            return;
+        }
+        const w = document.getElementById(WURZEL);
+        const erster = w?.querySelector('.k-knopf');
+        erster?.click();
+    };
+    /* ══════════════════════════════════════════════════════════════════════
+       AUFBAU
+       ══════════════════════════════════════════════════════════════════════ */
+    let gebunden = false;
+    /**
+     * Einmal beim Start. Legt Kante und Lade in `#main` an — beide fehlen in
+     * `index.html`, weil sie erst etwas zeigen können, wenn das Register
+     * geantwortet hat (dasselbe Prinzip wie beim Menüband).
+     */
+    const binde = () => {
+        if (gebunden)
+            return;
+        const main = document.getElementById('main');
+        if (!main)
+            return;
+        gebunden = true;
+        const w = document.createElement('aside');
+        w.id = WURZEL;
+        w.setAttribute('role', 'toolbar');
+        w.setAttribute('aria-orientation', 'vertical');
+        w.setAttribute('aria-label', 'Werkzeuge dieses Bereichs');
+        w.hidden = true;
+        const l = document.createElement('div');
+        l.id = LADE;
+        l.setAttribute('role', 'region');
+        l.setAttribute('aria-label', 'Ausklappbare Werkzeuge');
+        l.hidden = true;
+        /* Hinter das Menüband, vor alles andere: das Band steht oben über der
+           ganzen Breite, die Kante darunter am linken Rand. */
+        const band = document.getElementById('menueband');
+        if (band && band.nextSibling) {
+            main.insertBefore(w, band.nextSibling);
+            main.insertBefore(l, w.nextSibling);
+        }
+        else {
+            main.insertBefore(w, main.firstChild);
+            main.insertBefore(l, w.nextSibling);
+        }
+        /* Esc schliesst die Lade — aber nur, wenn kein Dialog davor steht.
+           `schale.ts` räumt bei Esc die oberste `.overlay` weg; wer beides
+           gleichzeitig schliesst, nimmt einem Klick zwei Wirkungen. */
+        document.addEventListener('keydown', (e) => {
+            if (e.key !== 'Escape' || !offenerKnopf)
+                return;
+            if (document.querySelector('.overlay, .menu'))
+                return;
+            baumZurueck();
+            ladeZu();
+        });
+        /* Ein Klick daneben schliesst auch. `pointerdown` und nicht `click`:
+           wer in den Inhalt fasst, will dort arbeiten und nicht erst die Lade
+           wegklicken. */
+        document.addEventListener('pointerdown', (e) => {
+            if (!offenerKnopf)
+                return;
+            const ziel = e.target instanceof Element ? e.target : null;
+            if (!ziel)
+                return;
+            if (ziel.closest('#' + LADE) || ziel.closest('#' + WURZEL))
+                return;
+            baumZurueck();
+            ladeZu(false);
+        });
+        /* Der Ort hat gewechselt — andere Knöpfe. */
+        window.addEventListener('redion:schauplatz', () => zeichne());
+        /* Am Telefon ist sie aus; beim Drehen oder Aufziehen ändert sich das. */
+        try {
+            window.matchMedia('(max-width: 760px)').addEventListener('change', () => zeichne());
+        }
+        catch { /* alte Browser bekommen die Kante beim nächsten Wechsel */ }
+        zeichne();
+        /* Ein gemerktes „zu" gilt weiter — aber nur am Rechner. */
+        try {
+            if (Store.getMeta('kanteZu', false) === true && !amTelefon())
+                w.hidden = true;
+        }
+        catch { /* ohne Merker steht sie offen */ }
+    };
+    return { binde, zeichne, schalten, ladeSchalten, bereichJetzt,
+        ladeZu: () => { baumZurueck(); ladeZu(); },
+        offen: () => !!offenerKnopf };
+})();
+window.Kontextkante = Kontextkante;
+
+</script>
+<script>
 /* ===== quell/schale/aufbau/inhaltsflaeche.js ===== */
 "use strict";
 /* ============================================================================
@@ -119073,18 +120371,39 @@ const App = (() => {
                 suche();
                 return;
             }
+            /* Strg+Backslash war „Seitenleiste auf/zu" und ist seit E272 Phase F
+               „Kontextkante auf/zu" — dieselbe Taste, dasselbe Versprechen (die
+               Spalte links weg oder da), nur ist die Spalte jetzt 54 statt 240
+               Pixel breit. Am Telefon gibt es die Kante nicht; dort schaltet
+               die Taste weiter die Schublade, damit sie nicht ins Leere geht. */
             if (k === '\\') {
                 e.preventDefault();
-                document.getElementById('sidebar')?.classList.toggle('collapsed');
+                if (typeof Kontextkante !== 'undefined'
+                    && !window.matchMedia('(max-width: 760px)').matches) {
+                    Kontextkante.schalten();
+                }
+                else {
+                    document.getElementById('sidebar')?.classList.toggle('collapsed');
+                }
                 return;
             }
-            /* Strg+M: „Mehr" in der Seitenleiste auf und zu (E219). Ohne ruhige
-               Fassung tut `schalten` nichts — dann soll die Taste auch nicht
-               `preventDefault` rufen und das Kürzel dem Browser wegnehmen. */
-            if (k === 'm' && !e.shiftKey && typeof Ruhig !== 'undefined' && Ruhig.an()) {
-                e.preventDefault();
-                Ruhig.schalten();
-                return;
+            /* Strg+M: die Lade der Kante auf und zu (E272 Phase F). Vorher war es
+               „Mehr" in der Seitenleiste (E219); die gibt es am Rechner nicht
+               mehr, am Telefon schon — deshalb beide, jeder an seinem Ort.
+               Ohne beides ruft die Taste kein `preventDefault` und bleibt dem
+               Browser. */
+            if (k === 'm' && !e.shiftKey) {
+                if (typeof Kontextkante !== 'undefined'
+                    && !window.matchMedia('(max-width: 760px)').matches) {
+                    e.preventDefault();
+                    Kontextkante.ladeSchalten();
+                    return;
+                }
+                if (typeof Ruhig !== 'undefined' && Ruhig.an()) {
+                    e.preventDefault();
+                    Ruhig.schalten();
+                    return;
+                }
             }
             if (k === 'j' && !e.shiftKey) {
                 e.preventDefault();
@@ -119435,6 +120754,13 @@ const App = (() => {
             sonder: () => sonder
         });
         Inhaltsflaeche.binde({ aktuelleSeite });
+        /* DIE KONTEXTKANTE (E272 Phase F). Sie kommt NACH allen anderen: sie
+           liest `App.schauplatz()` und hört auf `redion:schauplatz`, und beides
+           gibt es erst, wenn die Schale steht. Ohne das Modul (Einzeldatei
+           älteren Standes, Prüflauf ohne die Datei) bleibt der Platz leer und
+           die Seitenleiste sichtbar — kein Absturz. */
+        if (typeof Kontextkante !== 'undefined')
+            Kontextkante.binde();
         /* ----------------------------------------------------------------------
          * FEHLER SICHTBAR MACHEN — aber nur, wenn die Meldung etwas wert ist
          * ----------------------------------------------------------------------

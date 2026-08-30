@@ -605,7 +605,16 @@ console.log('    (' + imMehr.verborgen.length + ' verborgen, ' +
   imMehr.inLade.length + ' in der Lade)');
 
 /* GEGENPROBE: die Messung des Überstands muss anschlagen KÖNNEN. Ein Knopf,
-   den wir von Hand wieder sichtbar machen, steht garantiert über. */
+   den wir von Hand wieder sichtbar machen, steht garantiert über.
+
+   UND ZWAR AN EINEM SCHMALEN FENSTER (E272 Phase F). Seit die Seitenleiste
+   am Rechner weg ist, hat das Band 240 Pixel mehr — bei 1280 verbirgt dann
+   die FÜNFZEHNERREGEL und nicht mehr die Breite, und der wieder
+   eingeblendete Knopf passte mit 16 Pixeln Luft hinein. Die Gegenprobe
+   mass danach nichts mehr, obwohl sie grün gewesen wäre, hätte man das
+   Vorzeichen umgedreht. Bei 820 px beisst die Breite wieder. */
+await seite.setViewportSize({ width: 820, height: 900 });
+await seite.waitForTimeout(500);
 const gegenUeberstand = await seite.evaluate(() => {
   const band = document.querySelector('.mb-band') as HTMLElement | null;
   const verborgen = band
@@ -627,6 +636,8 @@ const gegenUeberstand = await seite.evaluate(() => {
   if (gruppe) gruppe.hidden = gruppeWar;
   return ueber;
 }) as number;
+await seite.setViewportSize({ width: 1280, height: 900 });
+await seite.waitForTimeout(400);
 p('Gegenprobe: ein wieder eingeblendeter Knopf steht messbar über',
   gegenUeberstand > 2, String(gegenUeberstand) + ' px');
 
@@ -950,6 +961,192 @@ p('Keine zweite Sicherungsmaschine — es ruft `App.sicherungSpeichern`',
    Merksatz zum Fehler — und man haette ihn geloescht statt behalten. */
 p('Kein erfundener Sendeweg — `Mail.senden(` wird nirgends gerufen',
   !/Mail\.senden\s*\(/.test(bsQuelle));
+
+/* ==========================================================================
+ * §14 — Die Kontextkante (E272 Phase F)
+ * --------------------------------------------------------------------------
+ * Der eine Satz: die Kante kennt keinen Bereich beim Namen. Was in ihr
+ * steht, meldet der Bereich selbst an (`Register.kontext`), und die Schale
+ * fragt nur nach dem Schauplatz.
+ * ========================================================================*/
+console.log('\n14 · Die Kontextkante (E272 Phase F)');
+
+const kanteGrund = await seite.evaluate(async () => {
+  const p1 = Store.rootPages()[0];
+  if (p1) App.oeffne(p1.id);
+  await new Promise(f => setTimeout(f, 420));
+  const k = document.getElementById('kante');
+  const knoepfe = [...(k?.querySelectorAll('.k-knopf') ?? [])];
+  return {
+    da: !!k, versteckt: k?.hidden !== false,
+    breit: Math.round(k?.getBoundingClientRect().width ?? 0),
+    bereich: (window as any).Kontextkante.bereichJetzt(),
+    /* JEDER Knopf hat einen hoerbaren Namen und ein gezeichnetes Zeichen —
+       54 Pixel tragen kein Wort, also muss beides stimmen (§38, E202). */
+    ohneNamen: knoepfe.filter(b => !b.getAttribute('aria-label')).length,
+    ohneZeichen: knoepfe.filter(b => !b.querySelector('svg')).length,
+    /* 42 × 42: die Fingerregel gilt fuer Finger, und unter 761 px gibt es
+       die Kante nicht (test114 misst bei 428 und 390). */
+    zuKlein: knoepfe.filter(b => {
+      const r = b.getBoundingClientRect();
+      return r.width < 42 || r.height < 42;
+    }).length,
+    ids: knoepfe.map(b => (b as HTMLElement).dataset['k']),
+    /* Die Seitenleiste ist am Rechner weg — das ist die andere Haelfte. */
+    seitenleiste: Math.round(document.getElementById('sidebar')?.getBoundingClientRect().width ?? -1)
+  };
+}) as any;
+
+p('Die Kante steht da', kanteGrund.da && !kanteGrund.versteckt);
+p('Sie ist 54 px breit', kanteGrund.breit === 54, String(kanteGrund.breit));
+p('Die Seitenleiste ist am Rechner weg', kanteGrund.seitenleiste === 0,
+  String(kanteGrund.seitenleiste));
+p('Eine offene Seite ist der Bereich „editor"', kanteGrund.bereich === 'editor',
+  String(kanteGrund.bereich));
+p('Jeder Knopf hat einen hoerbaren Namen', kanteGrund.ohneNamen === 0,
+  kanteGrund.ohneNamen + ' ohne aria-label');
+p('Jeder Knopf hat ein gezeichnetes Zeichen', kanteGrund.ohneZeichen === 0,
+  kanteGrund.ohneZeichen + ' ohne SVG — fehlt der Name in Register.symbole?');
+p('Und ist gross genug zum Treffen', kanteGrund.zuKlein === 0,
+  kanteGrund.zuKlein + ' unter 42 px');
+p('Unten stehen KI, Neu und Einstellungen',
+  ['ki', 'neu', 'einstellungen'].every((x: string) => kanteGrund.ids.includes(x)),
+  (kanteGrund.ids ?? []).join(', '));
+
+/* JEDER GEMELDETE BEREICH LIEFERT ETWAS. Eine Kante, die in einem Bereich
+   leer bleibt, ist ein Streifen ohne Zweck. */
+const kanteBereiche = await seite.evaluate(() => {
+  const raus: Record<string, number> = {};
+  for (const b of Register.kontext.bereiche()) raus[b] = Register.kontext.fuer(b).length;
+  return raus;
+}) as Record<string, number>;
+console.log('    ' + JSON.stringify(kanteBereiche));
+p('Jeder gemeldete Bereich liefert mindestens einen Knopf',
+  Object.values(kanteBereiche).every(n => n > 0),
+  JSON.stringify(kanteBereiche));
+p('Und es sind mindestens sechs Bereiche',
+  Object.keys(kanteBereiche).length >= 6,
+  Object.keys(kanteBereiche).join(', '));
+
+/* GEGENPROBE: einen Lieferanten abmelden, und der Punkt muss es merken. */
+const kanteGegen = await seite.evaluate(async () => {
+  const vorher = Register.kontext.fuer('editor').length;
+  Register.kontext.nimmZurueck('editor', 'fassungen');
+  (window as any).Kontextkante.zeichne();
+  await new Promise(f => setTimeout(f, 200));
+  const gezeichnet = document.querySelectorAll('#kante .k-bereich').length;
+  return { vorher, nachher: Register.kontext.fuer('editor').length, gezeichnet };
+}) as any;
+p('Gegenprobe: ein abgemeldeter Knopf verschwindet aus der Kante',
+  kanteGegen.nachher === kanteGegen.vorher - 1
+  && kanteGegen.gezeichnet === kanteGegen.nachher,
+  JSON.stringify(kanteGegen) + ' — bliebe die Zahl gleich, zeichnete die '
+  + 'Kante eine eigene Liste statt des Registers');
+
+/* ELEKTRO LIEST DIESELBE QUELLE WIE SEINE STARTSEITE (Redurs Entscheid:
+   kein eigener Reiter). Das ist der Punkt, an dem eine zweite Liste
+   auffallen wuerde. */
+const kanteElektro = await seite.evaluate(() => {
+  /* NUR DIE, DEREN `zeigen()` ZUSAGT — genau die Frage, die auch
+     `elektro/start.ts:66` stellt: „gibt es das Modul ueberhaupt?". Der
+     erste Anlauf verglich alle acht und wurde rot, weil `e-rechner` und
+     `e-plan` sich im Pruefstand selbst abmelden. Das ist §47 bei der
+     Arbeit und kein Fehler; der Punkt hat die falsche Liste gezaehlt. */
+  const ausRegister: string[] = [];
+  for (const g of (Register.menueband.inReiter('elektro') || []))
+    for (const e of (g.eintraege || [])) {
+      let zeigt = true;
+      try { zeigt = typeof e.zeigen !== 'function' || !!e.zeigen(); }
+      catch { zeigt = false; }
+      if (zeigt) ausRegister.push(String(e.id));
+    }
+  const inKante = Register.kontext.fuer('elektro').map((k: any) => String(k.id));
+  return { ausRegister, inKante };
+}) as any;
+p('Die Elektro-Kante ist der Reiter „elektro" aus dem Register',
+  kanteElektro.ausRegister.length > 0
+  && kanteElektro.ausRegister.every((id: string) => kanteElektro.inKante.includes(id)),
+  kanteElektro.ausRegister.join(', ') + ' → ' + kanteElektro.inKante.join(', '));
+
+/* DIE LADE: auf, Fokus hinein, Esc, und der Baum wieder zu Hause. */
+const kanteLade = await seite.evaluate(async () => {
+  const knopf = document.querySelector<HTMLElement>('#kante .k-knopf[data-k="seiten"]');
+  knopf?.click();
+  await new Promise(f => setTimeout(f, 260));
+  const l = document.getElementById('kanten-lade');
+  return {
+    offen: !!l && !l.hidden,
+    breit: Math.round(l?.getBoundingClientRect().width ?? 0),
+    /* DER ECHTE BAUM, hineingeschoben und nicht kopiert. Zwei Baeume
+       waeren zwei Zustaende. */
+    baumDrin: !!l?.querySelector('#tree'),
+    baeume: document.querySelectorAll('#tree').length,
+    knopfAn: knopf?.getAttribute('aria-expanded'),
+    /* Sie liegt UNTER dem Band und nicht darueber (auf dem Bild deckte sie
+       „Datei", „Gehen" und „Start" zu). */
+    ueberBand: (l?.getBoundingClientRect().top ?? 0)
+               < (document.getElementById('menueband')?.getBoundingClientRect().bottom ?? 0) - 1
+  };
+}) as any;
+p('Die Lade geht auf', kanteLade.offen === true);
+p('… und ist 252 px breit', kanteLade.breit === 252, String(kanteLade.breit));
+p('… und liegt UNTER dem Menüband', kanteLade.ueberBand === false);
+p('Der Seitenbaum steht darin — und es gibt nur einen',
+  kanteLade.baumDrin === true && kanteLade.baeume === 1,
+  kanteLade.baeume + ' Baeume');
+p('Der Knopf sagt an, dass er offen ist', kanteLade.knopfAn === 'true',
+  String(kanteLade.knopfAn));
+
+/* NICHTS DAVOR STEHEN LASSEN. Die Kante gibt Esc bewusst ab, wenn ein
+   Dialog oder Menue offen ist — wer beides gleichzeitig schliesst, gibt
+   einem Tastendruck zwei Wirkungen. Aus frueheren Paragrafen kann noch
+   eines herumliegen; dann misst dieser Punkt die falsche Sache. */
+await seite.evaluate(() => {
+  document.querySelectorAll('.overlay, .menu, .menu-grund').forEach(x => x.remove());
+});
+await seite.waitForTimeout(120);
+await seite.keyboard.press('Escape');
+await seite.waitForTimeout(220);
+const kanteZu = await seite.evaluate(() => ({
+  zu: document.getElementById('kanten-lade')?.hidden === true,
+  baumHeim: document.getElementById('tree')?.parentElement?.id === 'sidebar',
+  baeume: document.querySelectorAll('#tree').length
+})) as any;
+p('Esc schliesst die Lade', kanteZu.zu === true);
+p('Und der Baum ist wieder zu Hause — sonst zeichnet die Seitenleiste ins Nichts',
+  kanteZu.baumHeim === true && kanteZu.baeume === 1, JSON.stringify(kanteZu));
+
+/* AM TELEFON GIBT ES SIE NICHT. 54 von 390 Pixeln waeren ein Siebtel des
+   Bildes, und die untere Fuenferleiste (E236/E240) traegt dort die
+   Navigation. */
+await seite.setViewportSize({ width: 390, height: 844 });
+await seite.waitForTimeout(500);
+const kanteHandy = await seite.evaluate(() => {
+  (window as any).Kontextkante.zeichne();
+  const k = document.getElementById('kante');
+  return { versteckt: k?.hidden === true,
+           breit: Math.round(k?.getBoundingClientRect().width ?? 0),
+           datei: (() => { const d = document.getElementById('mb-datei');
+                           return d ? getComputedStyle(d).display : 'weg'; })() };
+}) as any;
+p('Am Telefon ist die Kante aus', kanteHandy.versteckt === true
+  && kanteHandy.breit === 0, JSON.stringify(kanteHandy));
+p('Und „Datei" auch — dort fuehrt der Weg ueber das R-Blatt',
+  kanteHandy.datei === 'none', String(kanteHandy.datei));
+await seite.setViewportSize({ width: 1280, height: 900 });
+await seite.waitForTimeout(400);
+
+/* Und im Quelltext: die Schale kennt keinen Bereich beim Namen (§5). */
+const kanteQuelle = lies('src/schale/aufbau/context-rail.ts');
+p('Die Kante nennt keinen Bereich beim Namen (§5)',
+  !/'(editor|pdf|bibliothek|elektro|aufgaben|datenbank)'\s*:/.test(kanteQuelle)
+  && !/inReiter\(/.test(kanteQuelle));
+/* Der Zuweisung nachgehen und nicht dem Wort: die Datei ERWAEHNT
+   `innerHTML` in ihrem Kopf, um zu sagen, dass sie es nicht benutzt.
+   Derselbe Fehler wie bei `Mail.senden(` in §13 — ein Muster ohne
+   Gleichheitszeichen macht den eigenen Merksatz zum Verstoss. */
+p('Und baut ihr HTML ohne `innerHTML =` (§19)',
+  !/innerHTML\s*=/.test(kanteQuelle));
 
 await browser.close();
 server.close();

@@ -425,3 +425,58 @@ const DocumentMode = (() => {
 })();
 
 (window as any).DocumentMode = DocumentMode;
+
+/* ============================================================================
+ * DIE KONTEXTKANTE IM DOKUMENTMODUS (E272 Phase F)
+ * ----------------------------------------------------------------------------
+ * DIESELBEN WERKZEUGE WIE DER REITER „ZEICHNEN", aus derselben Quelle:
+ * `Register.menueband.inReiter('zeichnen')`. Eine zweite Stiftliste hier
+ * wäre die dritte Stelle, an der „Marker" definiert wird — nach dem
+ * Menüband und der Werkzeugspalte im Dokument selbst.
+ *
+ * `zeigen()` wird mitgenommen und nicht ausgewertet: die Kante fragt es
+ * jedes Mal neu, und ein Werkzeug, das nur mit offener Fläche Sinn hat,
+ * verschwindet dann von selbst wieder.
+ * ==========================================================================*/
+if (typeof Register !== 'undefined' && (Register as any).kontext) {
+  const K = (Register as any).kontext;
+  /* AUCH HIER EIN LIEFERANT (derselbe Grund wie in `elektro/start.ts`):
+     `inReiter('zeichnen')` filtert schon mit `zeigen()`, und die Werkzeuge
+     brauchen eine offene Fläche. Beim Laden gibt es keine — einmal gefragt
+     hiesse für immer leer. */
+  K.meldeLieferant('pdf', () => {
+    const raus: any[] = [];
+    let rang = 20;
+    for (const g of (Register.menueband.inReiter('zeichnen') || [])) {
+      raus.push({
+        bereich: 'pdf', id: 'zeichnen-' + String(g.gruppe).toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        name: String(g.gruppe), zeichen: 'pencil', rang: rang,
+        liefern: () => (g.eintraege || [])
+          .filter((e: any) => {
+            try { return typeof e.zeigen !== 'function' || e.zeigen(); }
+            catch { return false; }
+          })
+          .map((e: any) => ({
+            id: String(e.id), name: String(e.name || e.id), unter: e.hinweis,
+            zeichen: e.zeichen,
+            an: (() => { try { return typeof e.an === 'function' ? !!e.an() : false; }
+                         catch { return false; } })(),
+            tun: () => { try { e.tun(); } catch { /* toter Griff bleibt still */ } }
+          }))
+      });
+      rang += 10;
+    }
+    return raus;
+  });
+
+  /* OCR und Formelheft stehen nicht im Zeichnen-Reiter — sie gehören dem
+     Dokument und nicht dem Stift. */
+  K.melde({ bereich: 'pdf', id: 'ocr', name: 'Text erkennen (OCR)',
+    zeichen: 'camera', rang: 200,
+    zeigen: () => typeof Recognition !== 'undefined' && !!Recognition.capturePage,
+    tun: () => { try { Recognition.capturePage(); } catch { /* … */ } } });
+  K.melde({ bereich: 'pdf', id: 'formelheft', name: 'Formelheft',
+    zeichen: 'book', rang: 210,
+    zeigen: () => typeof Formelheft !== 'undefined' && !!Formelheft.umschalten,
+    tun: () => { try { Formelheft.umschalten(); } catch { /* … */ } } });
+}

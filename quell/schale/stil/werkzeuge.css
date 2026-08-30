@@ -621,7 +621,13 @@ table.stab td:focus, table.stab th:focus{box-shadow:inset 0 0 0 2px var(--accent
 #page mark{background:#ffdc4966; color:inherit; border-radius:2px}
 
 /* --- Fokus-Modus ---------------------------------------------------------------------------------- */
-body.fokus #sidebar, body.fokus #topbar, body.fokus #ai{display:none}
+/* SEIT E272 PHASE F AUCH DIE NEUE SCHALE. Der Fokusmodus versteckte
+   Seitenleiste, Kopfzeile und KI — Menüband und Reiterleiste blieben
+   stehen, und mit der Kontextkante wären es drei Dinge zu viel. „Fokus"
+   heisst: das Blatt und sonst nichts. */
+body.fokus #sidebar, body.fokus #topbar, body.fokus #ai,
+body.fokus #menueband, body.fokus #reiterleiste,
+body.fokus #kante, body.fokus #kanten-lade{display:none}
 body.fokus #page{max-width:760px; padding-top:8vh}
 body.fokus .blk{opacity:.42; transition:opacity .18s}
 body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}

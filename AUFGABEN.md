@@ -1862,3 +1862,13 @@ node pruefungen/lauf/test105.mjs
   wie ein Reiter, ISO-Datum), Esc schliesst jetzt die oberste Überlagerung.
   L84 aufgelöst: kein Kontrastfehler, ein Messfehler — test128 liest jetzt
   Verläufe und rechnet Alpha-Schichten. sw v41.
+* E272 Phase F (Kontextkante): 54 px statt 240. NEU src/register/context.ts
+  (Register.kontext, das 16.) und src/schale/aufbau/context-rail.ts. Acht
+  Bereiche melden sich selbst an; die Schale nennt keinen beim Namen (§5).
+  Elektro und Zeichnen lesen dieselbe Registerquelle wie ihre eigene
+  Ansicht. #main ist am Rechner ein Raster, die Lade liegt darin statt mit
+  gerechnetem `top`. Ein Baum, nicht zwei: #tree wird in die Lade
+  geschoben und zurückgestellt. Strg+\ schaltet die Kante, Strg+M die
+  Lade; der Fokusmodus versteckt jetzt auch Band und Kante. Fünf fehlende
+  Zeichen ergänzt. Neun Wächter mitgezogen, zwei Gegenproben rot gesehen,
+  eine dritte war blind geworden. L91/L92 neu. sw v42.

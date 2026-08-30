@@ -206,6 +206,20 @@ gleich('… und der CSS-Rückfall nennt sie auch', rueckfall, startBreite);
 /* Und die Wirkung, nicht nur der Text: nach dem Doppelklick ist die
    Leiste wirklich so breit wie beim ersten Start. */
 const gemessen = await seite.evaluate(async () => {
+    /* DIE SEITENLEISTE WIRD FÜR DIE MESSUNG WIEDER EINGEBLENDET (E272 Phase F).
+       Am Rechner steht sie seit Phase F auf `display:none` — dort trägt die
+       54 Pixel schmale Kontextkante die Werkzeuge und der Reiter „Gehen" die
+       Navigation. Ihr Code ist UNVERÄNDERT: sie ist am Telefon weiter die
+       Schublade, und `#tree` darin ist der einzige Seitenbaum, den es gibt.
+
+       Der Ziehgriff ist damit am Rechner nicht mehr erreichbar. Das ist eine
+       Folge des Umbaus und keine Absicht dieses Prüflaufs — ob die Breite
+       einstellbar bleiben soll, entscheidet Redur (LUECKEN L91). Bis dahin
+       wird die Mechanik weiter geprüft, statt den Punkt zu streichen: eine
+       Prüfung, die aufhört zu messen, ist keine gelöste Frage. */
+    const sb = document.getElementById('sidebar');
+    if (sb) sb.style.display = 'flex';
+  await new Promise(r => setTimeout(r, 120));
   const side = document.getElementById('sidebar');
   const griff = document.querySelector<HTMLElement>('.side-griff');
   if (!side || !griff) return { breite: -1 };

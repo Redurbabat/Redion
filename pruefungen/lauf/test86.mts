@@ -31,11 +31,15 @@ await seite.waitForTimeout(1200);
    dabei sieht man, dass man eines angelegt hat. */
 console.log('\n— Die Register sind vollzählig —');
 const PFLICHT = ['ansichten', 'befehle', 'bloecke', 'eigenschaften', 'einstellungen',
-                 'elektroformeln', 'fachzeichen', 'formeln', 'menueband', 'module',
-                 'navigation', 'symbole', 'tasten', 'verbindungen', 'vorlagen'];
+                 'elektroformeln', 'fachzeichen', 'formeln', 'kontext', 'menueband',
+                 'module', 'navigation', 'symbole', 'tasten', 'verbindungen', 'vorlagen'];
 /* `menueband` kam mit E210 dazu — der Katalog der Reiter und Knöpfe oben.
    `symbole` ist älter und stand hier nie: der Punkt hat es seither
-   gemeldet, und niemand hat es eingetragen. Genau dafür ist er da. */
+   gemeldet, und niemand hat es eingetragen. Genau dafür ist er da.
+   `kontext` ist seit E272 Phase F das sechzehnte: was in der Kontextkante
+   je Bereich steht, meldet der Bereich selbst an — `navigation` konnte das
+   nicht übernehmen, weil test222 §5/§6 es vertraglich als „Seitenleiste"
+   festhalten. */
 let r = await seite.evaluate(() => Object.keys(Register).sort());
 const fehlend = PFLICHT.filter(x => !(r ?? []).includes(x));
 const zusaetzlich = (r ?? []).filter((x: string) => !PFLICHT.includes(x));

@@ -1355,3 +1355,26 @@ const Links = (() => {
 })();
 
 (window as any).Links = Links;
+
+/* Verweise und Rückverweise in der Kontextkante (E272 Phase F).
+   `verweiseAuf(id)` ist dieselbe Quelle wie die Fusszeile der Seite — eine
+   zweite Suche über den Index wäre derselbe Lauf zweimal. */
+if (typeof Register !== 'undefined' && (Register as any).kontext) {
+  (Register as any).kontext.melde({
+    bereich: 'editor', id: 'verweise', name: 'Verweise',
+    zeichen: 'link', rang: 60,
+    liefern: () => {
+      let id = '';
+      try { id = String(App.aktuelleSeite() || ''); } catch { id = ''; }
+      if (!id) return [];
+      let treffer: any[] = [];
+      try { treffer = Links.verweiseAuf(id) || []; } catch { treffer = []; }
+      if (!treffer.length) return [{ id: 'keine',
+        name: 'Noch verweist nichts hierher.', tun: () => {} }];
+      return treffer.slice(0, 20).map((b: any) => ({
+        id: 'ref-' + b.id, name: String(b.text || 'Ohne Titel'),
+        zeichen: 'page', tun: () => { try { App.oeffne(b.id); } catch { /* … */ } }
+      }));
+    }
+  });
+}

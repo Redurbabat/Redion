@@ -1305,3 +1305,35 @@ const Bibliothek = (() => {
 })();
 
 (window as any).Bibliothek = Bibliothek;
+
+/* Die Bibliothek meldet ihre Kontextkante an (E272 Phase F). */
+if (typeof Register !== 'undefined' && (Register as any).kontext) {
+  const K = (Register as any).kontext;
+  K.melde({ bereich: 'bibliothek', id: 'uebersicht', name: 'Übersicht',
+    zeichen: 'library', rang: 10, tun: () => Bibliothek.oeffne() });
+  K.melde({ bereich: 'bibliothek', id: 'notizhefte', name: 'Notizhefte',
+    zeichen: 'book', rang: 20,
+    zeigen: () => typeof Notebook !== 'undefined' && !!Notebook.oeffnen,
+    tun: () => Notebook.oeffnen() });
+  K.melde({ bereich: 'bibliothek', id: 'aufgaben', name: 'Aufgaben',
+    zeichen: 'tasks', rang: 30, tun: () => Bibliothek.aufgaben() });
+  K.melde({ bereich: 'bibliothek', id: 'alle', name: 'Alle Seiten',
+    zeichen: 'pages', rang: 40, tun: () => Bibliothek.alleSeiten() });
+  K.melde({ bereich: 'bibliothek', id: 'suche', name: 'Suchen',
+    zeichen: 'search', rang: 50, tun: () => App.suche() });
+  /* ZULETZT GEÖFFNET ist eine Lade und kein Knopf: eine Liste, die sich
+     bei jedem Öffnen ändert, darf nicht beim Zeichnen der Kante entstehen. */
+  K.melde({ bereich: 'bibliothek', id: 'zuletzt', name: 'Zuletzt geöffnet',
+    zeichen: 'history', rang: 60,
+    liefern: () => {
+      let letzte: any[] = [];
+      try { letzte = App.kuerzlich() || []; } catch { letzte = []; }
+      if (!letzte.length) return [{ id: 'keine', name: 'Noch nichts geöffnet.',
+                                    tun: () => {} }];
+      return letzte.map((b: any) => ({
+        id: 'z-' + b.id, name: String(b.text || 'Ohne Titel'), zeichen: 'page',
+        tun: () => { try { App.oeffne(b.id); } catch { /* … */ } }
+      }));
+    }
+  });
+}

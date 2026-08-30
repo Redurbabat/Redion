@@ -81,7 +81,12 @@ const pruef = (n: any, ist: any, soll: any) => {
       return x;
     };
     const l = musselement('#rg-loch').getBoundingClientRect();
-    const z = (document.querySelector('#sidebar .ws-btn') ?? document.body).getBoundingClientRect();
+    /* SEIT E272 PHASE F ZEIGT SCHRITT 1 AUF DEN REITER „GEHEN".
+       Vorher war es `#sidebar .ws-btn`; die Seitenleiste gibt es am
+       Rechner nicht mehr. Der Anker steht in `rundgang.ts` — wer ihn
+       ändert, muss diese Zeile mitnehmen, und das ist Absicht: ein
+       Prüfpunkt, der irgendein Element nimmt, misst irgendetwas. */
+    const z = (document.querySelector('[data-mb-reiter="gehen"]') ?? document.body).getBoundingClientRect();
     return { nah: Math.abs(l.left + 6 - z.left) < 3 && Math.abs(l.top + 6 - z.top) < 3,
              sichtbar: getComputedStyle(musselement('#rg-loch')).display };
   });

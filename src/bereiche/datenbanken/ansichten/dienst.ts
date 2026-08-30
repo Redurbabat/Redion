@@ -852,3 +852,34 @@ const Ansichten = (() => {
            gruss, skelett, beimLaden };
 })();
 (window as any).Ansichten = Ansichten;
+
+/* Die Startansicht „Heute" meldet ihre Kontextkante an (E272 Phase F). */
+if (typeof Register !== 'undefined' && (Register as any).kontext) {
+  const K = (Register as any).kontext;
+  const bereiche = ['heute', 'leer'];
+  for (const b of bereiche) {
+    K.melde({ bereich: b, id: 'ueberblick', name: 'Überblick',
+      zeichen: 'today', rang: 10, tun: () => Ansichten.start() });
+    K.melde({ bereich: b, id: 'seiten', name: 'Seiten und Notizen',
+      zeichen: 'pages', rang: 20, tun: () => Ansichten.seiten() });
+    K.melde({ bereich: b, id: 'termine', name: 'Termine',
+      zeichen: 'calendar', rang: 30, tun: () => Ansichten.termine() });
+    K.melde({ bereich: b, id: 'posteingang', name: 'Posteingang',
+      zeichen: 'inbox', rang: 40, tun: () => Ansichten.posteingang() });
+    /* ZULETZT GEÖFFNET, ganz oben im Bild und ganz oben in der Kante —
+       derselbe Bestand wie im Startbild (`App.kuerzlich()`). */
+    K.melde({ bereich: b, id: 'zuletzt', name: 'Zuletzt geöffnet',
+      zeichen: 'history', rang: 50,
+      liefern: () => {
+        let letzte: any[] = [];
+        try { letzte = App.kuerzlich() || []; } catch { letzte = []; }
+        if (!letzte.length) return [{ id: 'keine', name: 'Noch nichts geöffnet.',
+                                      tun: () => {} }];
+        return letzte.map((x: any) => ({
+          id: 'z-' + x.id, name: String(x.text || 'Ohne Titel'), zeichen: 'page',
+          tun: () => { try { App.oeffne(x.id); } catch { /* … */ } }
+        }));
+      }
+    });
+  }
+}

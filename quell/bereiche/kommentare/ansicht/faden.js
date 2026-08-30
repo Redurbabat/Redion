@@ -259,3 +259,23 @@ window.Kommentare = Kommentare;
 /* ==========================================================================
  * 5. MEHRFACHAUSWAHL VON BLÖCKEN
  * ========================================================================*/
+/* Die Kommentare melden sich für die Kontextkante an (E272 Phase F).
+   `panel()` ist derselbe Griff wie im Menüband und in der Kopfzeile. */
+if (typeof Register !== 'undefined' && Register.kontext) {
+    Register.kontext.melde({
+        bereich: 'editor', id: 'kommentare', name: 'Kommentare',
+        zeichen: 'comment', rang: 50,
+        zeigen: () => { try {
+            return !!App.aktuelleSeite();
+        }
+        catch {
+            return false;
+        } },
+        tun: () => {
+            try {
+                Kommentare.panel(App.aktuelleSeite());
+            }
+            catch { /* ohne offene Seite gibt es nichts zu kommentieren */ }
+        }
+    });
+}

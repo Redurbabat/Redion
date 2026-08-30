@@ -203,3 +203,54 @@ const Elektrostart = (() => {
     return { oeffne, zeichnen, zuletzt, wege };
 })();
 window.Elektrostart = Elektrostart;
+/* ============================================================================
+ * DIE KONTEXTKANTE VON ELEKTRO (E272 Phase F)
+ * ----------------------------------------------------------------------------
+ * DIESELBE QUELLE WIE DIE STARTSEITE, und das ist der ganze Punkt.
+ *
+ * Redur hat entschieden, dass „Elektro" kein eigener Reiter im Menüband
+ * mehr ist (E272 Phase D). Die acht Einträge behalten trotzdem
+ * `reiter: 'elektro'` im Register — die Startseite oben in dieser Datei
+ * liest `inReiter('elektro')`, und die Kante liest es hier genauso.
+ *
+ * Eine zweite Liste hier wäre der Fehler, gegen den der ganze Bogen
+ * geschrieben ist: zwei Kataloge für dieselben acht Werkzeuge, und beim
+ * neunten pflegt jemand nur einen.
+ *
+ * `zeigen()` wird MITGENOMMEN und nicht ausgewertet: die Kante fragt es
+ * selbst, jedes Mal, wenn sie zeichnet. Ein Modul, das später geladen
+ * wird, taucht dann von selbst auf.
+ * ==========================================================================*/
+if (typeof Register !== 'undefined' && Register.kontext) {
+    /* EIN LIEFERANT UND KEINE ACHT ANMELDUNGEN — gemessen, nicht gewählt.
+       Der erste Anlauf meldete beim Laden jeden Eintrag einzeln an. In der
+       Kante standen dann SECHS statt acht: `Register.menueband.alle()` wendet
+       `zeigen()` schon selbst an, und `zeigen()` fragt „ist das Modul da?".
+       Beim Laden dieser Datei war `Electrical` noch nicht geladen — „Rechner"
+       und „Schaltplan" waren damit für immer weg, und sechs Knöpfe sehen aus
+       wie sechs Knöpfe.
+  
+       Ein Lieferant wird bei JEDEM Zeichnen gefragt. Was später kommt, ist
+       dann auch später da. */
+    Register.kontext.meldeLieferant('elektro', () => {
+        const raus = [];
+        try {
+            let rang = 10;
+            for (const g of (Register.menueband.inReiter('elektro') || [])) {
+                for (const e of (g.eintraege || [])) {
+                    raus.push({
+                        bereich: 'elektro', id: String(e.id), name: String(e.name || e.id),
+                        zeichen: String(e.zeichen || 'bolt'), rang: rang,
+                        tun: () => { try {
+                            e.tun();
+                        }
+                        catch { /* toter Griff bleibt still */ } }
+                    });
+                    rang += 10;
+                }
+            }
+        }
+        catch { /* ohne Register bleibt die Kante leer, die Seite läuft weiter */ }
+        return raus;
+    });
+}

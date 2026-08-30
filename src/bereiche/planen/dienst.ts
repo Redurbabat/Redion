@@ -409,3 +409,31 @@ const Plan = (() => {
 })();
 
 (window as any).Plan = Plan;
+
+/* Die Aufgaben melden ihre Kontextkante an (E272 Phase F).
+   Alle vier Griffe stehen schon im Modul; hier steht nur, wo sie hingehören. */
+if (typeof Register !== 'undefined' && (Register as any).kontext) {
+  const K = (Register as any).kontext;
+  K.melde({ bereich: 'aufgaben', id: 'uebersicht', name: 'Übersicht',
+    zeichen: 'tasks', rang: 10, tun: () => Plan.uebersicht() });
+  K.melde({ bereich: 'aufgaben', id: 'tagesplan', name: 'Tagesplan',
+    zeichen: 'today', rang: 20, tun: () => Plan.tagesplan() });
+  K.melde({ bereich: 'aufgaben', id: 'woche', name: 'Wochenrückblick',
+    zeichen: 'calendar', rang: 30, tun: () => Plan.wochenrueckblick() });
+  /* FÄLLIG ist eine Lade: die Liste ändert sich mit jedem Tag und mit
+     jedem Haken, und eine Zahl im Knopf wäre nach fünf Minuten falsch. */
+  K.melde({ bereich: 'aufgaben', id: 'faellig', name: 'Fällig',
+    zeichen: 'clock', rang: 40,
+    liefern: () => {
+      let liste: any[] = [];
+      try { liste = Plan.faellige() || []; } catch { liste = []; }
+      if (!liste.length) return [{ id: 'keine', name: 'Nichts ist fällig.',
+                                   tun: () => {} }];
+      return liste.slice(0, 20).map((b: any) => ({
+        id: 'f-' + b.id, name: String(b.text || b.title || 'Aufgabe'),
+        zeichen: 'tasks',
+        tun: () => { try { App.zeigeBlock(b.id); } catch { /* … */ } }
+      }));
+    }
+  });
+}

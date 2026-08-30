@@ -204,9 +204,17 @@ import { chromium } from 'playwright';
     if (!tb) throw new Error('tb ist nicht da — der Lauf misst sonst nichts.');
     const s = document.getElementById('sidebar');
     if (!s) throw new Error('sidebar ist nicht da — der Lauf misst sonst nichts.');
+    /* Die Kante gibt es erst seit E272 Phase F; ohne sie (Einzeldatei
+       älteren Standes) wird 0 gemessen und der Punkt sagt es. */
+    const kante = document.getElementById('kante');
     return {
       seitenleiste: Math.round(s.getBoundingClientRect().width),
       seitenleistePos: getComputedStyle(s).position,
+      kante: kante ? Math.round(kante.getBoundingClientRect().width) : 0,
+      /* Wo der INHALT anfängt, nicht wo `#main` anfängt: `#main` läuft
+         seit Phase F über die volle Breite, weil das Menüband darin oben
+         quer darüber steht. Gemessen wird die Rollfläche. */
+      inhaltLinks: Math.round(musselement('#scroll').getBoundingClientRect().left),
       mainLinks: Math.round(musselement('#main').getBoundingClientRect().left),
       /* Sichtbarkeit, nicht Positionierung (E226) — siehe oben. */
       kopfKnoepfe: [...tb.querySelectorAll<HTMLElement>('button')]
@@ -233,10 +241,23 @@ import { chromium } from 'playwright';
      Die Zahl bleibt hier ausgeschrieben und wird nicht aus der CSS
      gelesen: dieser Punkt soll ja gerade merken, wenn sich die Breite
      ändert, ohne dass jemand es wollte. */
-  ok('Am PC steht die Seitenleiste im Fluss und ist 240 px breit',
-     pc.seitenleistePos === 'relative' && pc.seitenleiste === 240,
-     pc.seitenleistePos + ' / ' + pc.seitenleiste);
-  ok('Der Inhalt beginnt dahinter', pc.mainLinks === 240, pc.mainLinks + ' px');
+  /* SEIT E272 PHASE F IST ES DIE KONTEXTKANTE UND NICHT DIE SEITENLEISTE.
+     240 Pixel zeigten auf jeder Seite dieselben 32 Knöpfe; die Kante zeigt
+     54 Pixel breit sechs bis zehn, und zwar die des Ortes, an dem man
+     steht. Wohin man geht, steht im Reiter „Gehen" (Phase E).
+
+     Die Zahl bleibt hier ausgeschrieben, aus demselben Grund wie vorher:
+     dieser Punkt soll merken, wenn die Breite sich ändert, ohne dass
+     jemand es wollte. Die Seitenleiste ist NICHT gelöscht — am Telefon ist
+     sie die Schublade, und `#tree` darin ist der einzige Seitenbaum, den
+     es gibt (die Lade schiebt ihn sich herüber). Am Rechner ist sie
+     `display:none`, und genau das wird hier gemessen. */
+  ok('Am PC ist die Kontextkante da und 54 px breit',
+     pc.kante === 54, String(pc.kante) + ' px');
+  ok('Und die alte 240-px-Seitenleiste ist dort weg',
+     pc.seitenleiste === 0, pc.seitenleistePos + ' / ' + pc.seitenleiste);
+  ok('Der Inhalt beginnt hinter der Kante', pc.inhaltLinks === 54,
+     pc.inhaltLinks + ' px');
   /* SEIT E219 SIND ES AM PC ABSICHTLICH WENIGER. Fünf Zeichen — Teilen,
      Kommentare, Versionsverlauf, Automationen, Link kopieren — stehen im
      ⋯-Menü, und zwar in demselben Block, der dort schon fürs Telefon war.

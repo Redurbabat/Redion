@@ -115,7 +115,18 @@ await seite.waitForTimeout(300);
 
 /* Ohne sichtbaren Fokus ist Tastaturbedienung Raten. */
 const fokus = await seite.evaluate(() => {
-  const proben = ['#btn-search', '#btn-new', '#btn-settings', '.side-item', '.sr'];
+  /* DIE PROBEN SIND DIE SCHALE VON HEUTE (E272 Phase F).
+     Vorher standen hier fünf Selektoren aus der Seitenleiste. Die ist am
+     Rechner `display:none`, und ein unsichtbares Element nimmt den Fokus
+     nicht an — `el.focus()` tat nichts, `outlineWidth` blieb 0, und der
+     Punkt meldete „kein sichtbarer Fokus" für eine Leiste, die gar nicht
+     da war. Falscher Alarm auf einer echten Frage.
+
+     Gemessen wird jetzt, was ein Mensch am Rechner mit der Tastatur
+     wirklich erreicht: der Reiter, „Datei", die Suche oben rechts, ein
+     Knopf der Kontextkante und einer der Kopfzeile. */
+  const proben = ['.mb-reiter-knopf', '#mb-datei', '#mb-suche',
+                  '#kante .k-knopf', '#btn-page-menu'];
   return proben.map(q => {
     const el = document.querySelector<HTMLElement>(q);
     if (!el) return { q, fehlt: true, anders: false, breite: 0 };
@@ -281,8 +292,16 @@ for (const [name, ruf] of DIALOGE) {
     if (typeof Ruhig !== 'undefined' && Ruhig.an() && !Ruhig.offen()) Ruhig.schalten();
   });
   await seite.waitForTimeout(200);
+  /* DER HERKUNFTSKNOPF IST SEIT E272 PHASE F `mb-suche`.
+     Vorher war es `#btn-search` in der Seitenleiste; die ist am Rechner
+     `display:none`, und ein unsichtbares Element nimmt den Fokus nicht an
+     — `focus()` tut dann schlicht nichts, ohne Fehler. Der Dialog hatte
+     also keine Herkunft, und `fokus.ts` fiel korrekt auf `#page` zurück
+     (E223). Gemessen wurde damit die Notlösung statt des Regelfalls.
+     `mb-suche` ist derselbe Griff (`App.suche()`), nur an der Stelle, an
+     der er heute steht. */
   await seite.evaluate(async (r) => {
-    document.getElementById('btn-search')?.focus();
+    document.getElementById('mb-suche')?.focus();
     (0, eval)(r);
     await new Promise(f => setTimeout(f, 450));
   }, ruf);
@@ -319,7 +338,7 @@ for (const [name, ruf] of DIALOGE) {
     fokus: (document.activeElement as HTMLElement | null)?.id || '(body)'
   }));
   p(`${name}: Escape schliesst`, zurueck.offen === 0, String(zurueck.offen));
-  p(`${name}: und der Fokus kommt zurück`, zurueck.fokus === 'btn-search',
+  p(`${name}: und der Fokus kommt zurück`, zurueck.fokus === 'mb-suche',
     zurueck.fokus + ' — vorher blieb er auf <body>, und das nächste Tab fing oben an');
 }
 

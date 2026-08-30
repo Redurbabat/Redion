@@ -20009,3 +20009,89 @@ test248 46 · test222 51 · test155 20 · test86 58 · test87 156 · test105 55 
 test40 24 · test61 36 · test258 15. Drei Gegenproben rot gesehen: „Datei"
 zurück in die `tablist` (zwei Punkte in zwei Suiten), ein Druck-Knopf ohne
 offene Seite, und die Esc-Sache war vor der Reparatur wirklich rot.
+
+### Phase F — 54 Pixel statt 240: die Kontextkante
+
+Die Seitenleiste zeigte auf JEDER Seite dieselben 32 Knöpfe (gezählt in
+E218: 52 im Startbild, 67 mit offener Seite). Die Kante zeigt sechs bis
+zehn, und zwar die des Ortes, an dem man steht. Wohin man geht, steht seit
+Phase E im Reiter „Gehen" — Navigation ist eine Sache, Werkzeug eine
+andere, und die Seitenleiste war beides gleichzeitig.
+
+Neu: `src/register/context.ts` (`Register.kontext`, das sechzehnte Register)
+und `src/schale/aufbau/context-rail.ts` (Global `Kontextkante`).
+
+DIE SCHALE KENNT KEINEN BEREICH BEIM NAMEN. Der Prototyp hat dafür zwei
+feste Listen, in denen jeder Bereich einmal vorkommt; in Redion wäre das
+genau die Kopplung, die §5 verbietet. Hier meldet jeder Bereich SICH an —
+`werkzeuge.ts`, `faden.ts`, `verweise.ts`, `bibliothek.ts`, `planen/dienst.ts`,
+`elektro/start.ts`, `datenbanken/ansichten/dienst.ts`, `pdf/document-mode.ts` —,
+und `context-rail.ts` fragt nur `App.schauplatz()`. test272 §14 misst, dass
+im Quelltext der Kante kein einziger Bereichsname steht.
+
+ELEKTRO UND ZEICHNEN LESEN DIESELBE QUELLE WIE IHRE EIGENE ANSICHT —
+`Register.menueband.inReiter('elektro')` bzw. `('zeichnen')`. Redurs
+Entscheid war „kein eigener Elektro-Reiter"; die acht Einträge behalten
+trotzdem ihr Feld `reiter: 'elektro'`, und die Kante liest genau dieselbe
+Liste wie die Elektro-Startseite. Keine zweite Liste, nirgends.
+
+DER FUND, DER EINE ZWEITE API NÖTIG MACHTE. Der erste Anlauf meldete die
+acht Elektro-Werkzeuge beim Laden einzeln an. In der Kante standen SECHS.
+Der Grund: `Register.menueband.alle()` wendet `zeigen()` schon selbst an,
+und `zeigen()` fragt „ist das Modul da?" — beim Laden von
+`elektro/start.js` war `Electrical` noch nicht geladen. „Rechner" und
+„Schaltplan" waren damit für immer weg, und sechs Knöpfe sehen aus wie
+sechs Knöpfe. `Register.kontext.meldeLieferant(bereich, fn)` fragt bei
+JEDEM Zeichnen neu; was später geladen wird, ist dann auch später da.
+
+DAS RASTER STATT EINER RECHNUNG. `#main` ist am Rechner ein Gitter mit zwei
+Spalten und vier Zeilen — Band über die volle Breite, Kante darunter links.
+Die Lade sitzt in Spalte 2 ab Zeile 2 und liegt damit über dem Inhalt, ohne
+ihn zu schieben. Der erste Entwurf war `position:absolute; top:0`, und „0"
+ist im `#main` die Oberkante des Bands: auf dem Bild deckte die Lade
+„Datei", „Gehen" und „Start" zu. Ein `top: calc(…)` hätte gerechnet werden
+müssen, und das Band ist mal 36 und mal 108 Pixel hoch.
+
+EIN BAUM, NICHT ZWEI. `#tree` wird beim Öffnen der Lade in sie hinein-
+GESCHOBEN und beim Schliessen zurückgestellt. `Seitenleiste.zeichne()`
+zeichnet weiter in `#tree`, wo es gerade steht. Ein zweiter Baum wäre ein
+zweiter Zustand; die Gegenprobe (Rückstellung abgeschaltet) macht test272
+§14 rot.
+
+DIE SEITENLEISTE IST NICHT GELÖSCHT. Am Rechner steht sie auf
+`display:none`; am Telefon IST sie die Schublade (E38/E236), und `#tree`
+darin ist der einzige Seitenbaum, den es gibt. Alle Griffe leben weiter.
+
+TASTEN: Strg + Backslash schaltet die Kante (vorher die Seitenleiste —
+dasselbe Versprechen, nur 54 statt 240 Pixel), Strg + M die Lade (vorher
+„Mehr"; am Telefon weiter „Mehr"). Der Fokusmodus versteckt jetzt auch
+Menüband, Reiterleiste, Kante und Lade — die Altlücke aus dem Plan.
+
+FÜNF ZEICHEN FEHLTEN IM REGISTER: `comment`, `pages`, `printer`, `eye`,
+`play`. Ein Knopf ohne Zeichen ist in einer 54 Pixel breiten Spalte ein
+leeres Quadrat, und keine Prüfung hätte es gemeldet — dieselbe Sorte Fund
+wie `clock` in Phase B. test272 §14 zählt jetzt die Knöpfe ohne SVG.
+
+**Die Wächter, die mitgezogen wurden — und warum jeder einzelne:**
+
+| Suite | Was sich änderte |
+|---|---|
+| test40 | misst die Kante (54 px) statt der Seitenleiste (240) und `#scroll` statt `#main` — `#main` läuft jetzt über die volle Breite |
+| test245 | dasselbe: §5 des Auftrags war „Seitenleiste 220–250", jetzt „Kante 54" |
+| test222 | die Apps-Schublade wird am TELEFON gemessen — dort lebt sie weiter |
+| test248 | §1–§4 (die ruhige Fassung der Seitenleiste) am Telefon, §5 am Rechner, §7 wieder am Telefon. Zwei Verträge, zwei Breiten |
+| test61 | die neun Anker des Rundgangs zeigten auf die Seitenleiste. Der Rundgang lief trotzdem — `stellen()` versteckt das Loch, wenn das Ziel fehlt, und neun Schritte ohne Loch sehen aus wie eine Führung |
+| test128 | der Herkunftsknopf ist `mb-suche` statt `#btn-search`, und die Fokusring-Proben sind die Schale von heute. Ein unsichtbares Element nimmt den Fokus nicht an — gemessen wurde die Notlösung statt des Regelfalls |
+| test52, test143 | die Breiten-Mechanik wird weiter geprüft, mit kurz wieder eingeblendeter Leiste. Der Ziehgriff ist am Rechner nicht mehr erreichbar (L91) |
+| test86 | PFLICHT = 16 |
+| test272 | §14 neu, 24 Punkte |
+
+**Geprüft:** test272 126 · test247 106 · test248 45 · test245 51 · test128 54 ·
+test114 153 · test40 25 · test61 36 · test222 51 · test86 58 · test87 156 ·
+test105 55 · test109 20 · test155 20 · test258 15 · test143 23 · test52 27 ·
+test31 35 · test65 66 · test74 12 · test141 27 · test146 22 · test37 52 ·
+test67 65 · test117 41 — alle ohne roten Punkt. Zwei Gegenproben rot
+vorgeführt: die Rückstellung des Baums abgeschaltet, und die Kante am
+Telefon stehen gelassen. Eine dritte (§11) war zuerst blind geworden, weil
+das Band ohne Seitenleiste 240 Pixel mehr hat — sie misst jetzt bei 820 px,
+wo die Breite wirklich beisst. sw v42, Einzeldatei 7406 KB.

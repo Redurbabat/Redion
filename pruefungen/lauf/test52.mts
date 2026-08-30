@@ -31,6 +31,23 @@ const pruef = (n: any, ist: any, soll: any) => {
   });
 
   /* --- Seitenleiste breiter ziehen ------------------------------------- */
+  await p.evaluate(() => {
+    /* DIE SEITENLEISTE WIRD FÜR DIE MESSUNG WIEDER EINGEBLENDET (E272 Phase F).
+       Am Rechner steht sie seit Phase F auf `display:none` — dort trägt die
+       54 Pixel schmale Kontextkante die Werkzeuge und der Reiter „Gehen" die
+       Navigation. Ihr Code ist UNVERÄNDERT: sie ist am Telefon weiter die
+       Schublade, und `#tree` darin ist der einzige Seitenbaum, den es gibt.
+
+       Der Ziehgriff ist damit am Rechner nicht mehr erreichbar. Das ist eine
+       Folge des Umbaus und keine Absicht dieses Prüflaufs — ob die Breite
+       einstellbar bleiben soll, entscheidet Redur (LUECKEN L91). Bis dahin
+       wird die Mechanik weiter geprüft, statt den Punkt zu streichen: eine
+       Prüfung, die aufhört zu messen, ist keine gelöste Frage. */
+    const sb = document.getElementById('sidebar');
+    if (sb) sb.style.display = 'flex';
+  });
+  await p.waitForTimeout(200);
+
   const griffDa = await p.evaluate(() => ({
     griff: !!document.querySelector('.side-griff'),
     breite: Math.round(document.querySelector<HTMLElement>('#sidebar')?.getBoundingClientRect().width ?? -1)
@@ -111,8 +128,13 @@ const pruef = (n: any, ist: any, soll: any) => {
     Store.setMeta('rundgangGesehen', true);
     document.querySelector('.produkt-onboarding-lage')?.remove();
   });
-  const nachNeustart = await p.evaluate(() =>
-    Math.round(document.querySelector<HTMLElement>('#sidebar')?.getBoundingClientRect().width ?? -1) ?? -1);
+  /* Nach dem Neuladen steht auch die Ausblendung aus Phase F wieder —
+     siehe den Absatz weiter oben. */
+  const nachNeustart = await p.evaluate(() => {
+    const sb = document.getElementById('sidebar');
+    if (sb) sb.style.display = 'flex';
+    return Math.round(sb?.getBoundingClientRect().width ?? -1) ?? -1;
+  });
   pruef('Breite nach dem Neustart', nachNeustart, 330);
 
   /* --- Verbindungsanzeige ---------------------------------------------- */

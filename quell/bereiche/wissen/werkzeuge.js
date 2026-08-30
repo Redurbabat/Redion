@@ -2834,3 +2834,106 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
     };
 })();
 window.Werkzeuge = Werkzeuge;
+/* ============================================================================
+ * DIE KONTEXTKANTE EINER OFFENEN SEITE (E272 Phase F)
+ * ----------------------------------------------------------------------------
+ * Hier meldet sich der Editor selbst an. Die Kante kennt diesen Bereich
+ * nicht — sie fragt `Register.kontext.fuer('editor')` und zeichnet, was
+ * zurückkommt (§5).
+ *
+ * KEIN EINZIGER NEUER GRIFF. Jede Zeile ruft dieselbe Funktion wie das
+ * Menüband und das Seitenmenü. Eine Kante mit eigener Logik wäre eine
+ * dritte Stelle, an der „Fassungen" etwas anderes bedeutet.
+ * ==========================================================================*/
+if (typeof Register !== 'undefined' && Register.kontext) {
+    const K = Register.kontext;
+    const seite = () => {
+        try {
+            const id = App.aktuelleSeite();
+            return id ? Store.getBlock(id) : null;
+        }
+        catch {
+            return null;
+        }
+    };
+    K.melde({
+        bereich: 'editor', id: 'seitenwerkzeuge', name: 'Seitenwerkzeuge',
+        zeichen: 'settings', rang: 10,
+        liefern: () => {
+            const p = seite();
+            if (!p)
+                return [];
+            return [
+                { id: 'statistik', name: 'Statistik', unter: 'Wörter, Zeichen, Lesezeit',
+                    zeichen: 'chart', tun: () => Werkzeuge.statistik(p) },
+                { id: 'drucken', name: 'Drucken oder als PDF', zeichen: 'printer',
+                    tun: () => { void Werkzeuge.drucken(p); } },
+                { id: 'sperren', name: p.locked ? 'Entsperren' : 'Gegen Bearbeiten sperren',
+                    zeichen: p.locked ? 'lockOpen' : 'lock',
+                    tun: () => (p.locked ? Werkzeuge.entsperren(p) : Werkzeuge.sperren(p)) },
+                { id: 'fokus', name: 'Fokusmodus', unter: 'Strg + Umschalt + F',
+                    zeichen: 'eye', tun: () => Werkzeuge.fokus() },
+                { id: 'praesentation', name: 'Präsentation', zeichen: 'play',
+                    tun: () => { void Werkzeuge.praesentation(p); } }
+            ];
+        }
+    });
+    K.melde({
+        bereich: 'editor', id: 'fassungen', name: 'Fassungen',
+        zeichen: 'history', rang: 20,
+        zeigen: () => !!seite(),
+        tun: () => { const p = seite(); if (p)
+            Werkzeuge.versionen(p); }
+    });
+    /* `karten()` GIBT EINE LISTE ZURÜCK und öffnet nichts — nachgesehen,
+       nicht geraten (Zeile 567). Der Weg zum Lernen ist `lernen()`. */
+    K.melde({
+        bereich: 'editor', id: 'karteikarten', name: 'Karteikarten',
+        zeichen: 'cards', rang: 40,
+        liefern: () => {
+            let liste = [];
+            try {
+                liste = Werkzeuge.karten() || [];
+            }
+            catch {
+                liste = [];
+            }
+            const raus = [{ id: 'lernen', name: 'Lernzentrum öffnen',
+                    unter: liste.length + ' Karten im Bestand', zeichen: 'learn',
+                    tun: () => Werkzeuge.lernen() }];
+            for (const k of liste.slice(0, 10))
+                raus.push({
+                    id: 'karte-' + k.id,
+                    name: (String(k.text || 'Karte').split('::')[0] || 'Karte').trim(),
+                    zeichen: 'cards',
+                    tun: () => { try {
+                        App.zeigeBlock(k.id);
+                    }
+                    catch { /* … */ } }
+                });
+            return raus;
+        }
+    });
+    /* DERSELBE KATALOG WIE „EINFÜGEN" (§8). Ein zweiter Blockkatalog wäre
+       eine Liste, die bei jeder neuen Blockart vergessen wird. */
+    K.melde({
+        bereich: 'editor', id: 'bloecke', name: 'Blöcke',
+        zeichen: 'plus', rang: 30,
+        zeigen: () => !!(typeof Register !== 'undefined' && Register.bloecke?.alle),
+        liefern: () => {
+            const p = seite();
+            if (!p)
+                return [];
+            return (Register.bloecke.alle() || []).slice(0, 24).map((b) => ({
+                id: 'blk-' + b.id, name: String(b.name || b.id), zeichen: b.zeichen,
+                tun: () => {
+                    try {
+                        Store.addBlock(p.id, b.id, {});
+                        App.zeichneSeite();
+                    }
+                    catch { /* eine Blockart, die es nicht mehr gibt, tut nichts */ }
+                }
+            }));
+        }
+    });
+}

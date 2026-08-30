@@ -30,38 +30,51 @@ const Rundgang = (() => {
      * Mitte gezeigt statt übersprungen — so bricht nichts, wenn sich die
      * Oberfläche ändert.
      * ======================================================================*/
+    /* DIE ANKER ZEIGEN AUF DIE NEUE SCHALE (E272 Phase F).
+       Sie zeigten auf `#sidebar .ws-btn`, `#btn-search`, `#btn-new`, `#tree`,
+       `#btn-settings` und drei `[data-app=…]` — alle in der Seitenleiste,
+       und die ist am Rechner seit Phase F weg. Der Rundgang lief trotzdem
+       durch (`stellen()` versteckt das Loch, wenn das Ziel fehlt), und genau
+       das ist die stille Sorte Fehler: neun Schritte ohne Loch sehen aus wie
+       eine Führung, zeigen aber auf nichts.
+  
+       Die neuen Anker sind die Stellen, an denen dieselben Dinge JETZT
+       stehen — Reiter „Gehen" statt Seitenleiste, die Kante statt „+ Neu",
+       „Datei" statt `#btn-settings`. test61 misst, dass das Loch auf dem
+       ersten Ziel wirklich liegt. */
     const SCHRITTE = [
         /* E270: ohne Konto stimmt der Satz weiterhin — er darf nur nicht mehr
            behaupten, es GÄBE keinen Server. Er ist da und freiwillig. */
-        { ziel: '#sidebar .ws-btn', titel: 'Alles liegt hier',
-            text: 'Links steht dein ganzer Arbeitsbereich. Ohne Konto bleibt alles in ' +
-                'diesem Browser auf diesem Gerät — für dieselben Notizen auf Rechner ' +
-                'und Telefon gibt es die Wolke, freiwillig.' },
-        { ziel: '#btn-search', titel: 'Suchen und Befehle',
+        { ziel: '[data-mb-reiter="gehen"]', titel: 'Alles liegt hier',
+            text: 'Unter <b>Gehen</b> steht jeder Bereich, den Redion hat — Heute, ' +
+                'Bibliothek, Aufgaben, Elektro und dreissig weitere. Ohne Konto ' +
+                'bleibt alles in diesem Browser auf diesem Gerät; für dieselben ' +
+                'Notizen auf Rechner und Telefon gibt es die Wolke, freiwillig.' },
+        { ziel: '#mb-suche', titel: 'Suchen und Befehle',
             text: 'Strg + K sucht in allem. Strg + P öffnet die Befehle: dort steht ' +
                 'jede Funktion mit Namen, auch die, die du noch nicht kennst. ' +
                 'Sie sucht unscharf — „wchrck" findet den Wochenrückblick.' },
-        { ziel: '#btn-new', titel: 'Eine Seite anfangen',
+        { ziel: '#kante .k-knopf[data-k="neu"]', titel: 'Eine Seite anfangen',
             text: 'Strg + N legt eine Seite an. Ein <b>/</b> im Text öffnet die Bausteine: ' +
                 '43 Stück, von der Überschrift bis zur Datenbank.' },
-        { ziel: '#tree', titel: 'Zwölf Ansichten auf dieselben Daten',
+        { ziel: '[data-mb-reiter="einfuegen"]', titel: 'Zwölf Ansichten auf dieselben Daten',
             text: 'Eine Datenbank kann Tabelle, Board, Zeitstrahl, Kalender, Galerie, ' +
                 'Liste, Diagramm, Formular, Feed, Karte, Kreuztabelle und Dashboard ' +
                 'zugleich sein — jede mit eigenem Filter.' },
-        { ziel: '#btn-ai', titel: 'Die KI, die nichts kaputt macht',
+        { ziel: '#kante .k-knopf[data-k="ki"]', titel: 'Die KI, die nichts kaputt macht',
             text: 'Sie schreibt Formeln, Automationen und Filter — aber sie ändert nie ' +
                 'einfach etwas. Jeder Vorschlag wird an deinen echten Daten ' +
                 'durchgerechnet und Zeile für Zeile verglichen, bevor du zustimmst.' },
-        { ziel: '[data-app="aussehen"]', titel: 'So, wie du es willst',
+        { ziel: '#kante .k-knopf[data-k="einstellungen"]', titel: 'So, wie du es willst',
             text: 'Acht Farbschemata, eigene Akzentfarbe, Schrift und Seitenbreite — ' +
                 'und alle Tastenkürzel lassen sich umbelegen. Notions Kürzel sind fest.' },
-        { ziel: '[data-app="tempo"]', titel: 'Ehrlich beim Tempo',
+        { ziel: '[data-mb-reiter="ueberpruefen"]', titel: 'Ehrlich beim Tempo',
             text: 'Hier steht, wie lange das Zeichnen gedauert hat und welche Formel ' +
                 'die teuerste ist — mit Namen. Kein anderes Programm sagt dir das.' },
-        { ziel: '[data-app="wissen"]', titel: 'Alles zum Nachlesen',
+        { ziel: '[data-mb-reiter="hilfe"]', titel: 'Alles zum Nachlesen',
             text: 'Acht Dokumente: sieben über Notion, eines über alles, was Redion ' +
                 'mehr kann. Darin steht auch, was Redion bewusst <i>nicht</i> tut.' },
-        { ziel: '#btn-settings', titel: 'Zum Schluss',
+        { ziel: '#mb-datei', titel: 'Zum Schluss',
             text: 'In den Einstellungen richtest du die KI ein, sicherst alles ' +
                 'verschlüsselt und stellst ein, was Redion beim Start tut. ' +
                 'Viel Freude damit.' }

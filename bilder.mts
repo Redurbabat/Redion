@@ -141,6 +141,48 @@ const ANSICHTEN: Record<string, { titel: string; bauen: () => void | Promise<voi
     }
   },
 
+  /* ── Die Kontextkante (E272 Phase F) ─────────────────────────────────────
+     Zwei Bilder: die Kante mit geschlossener Lade steht schon in
+     `schaleBand`; hier geht es um die LADE. „Seiten" zeigt den echten
+     Seitenbaum (hineingeschoben, nicht kopiert), „Fassungen" eine Liste
+     aus dem Register. */
+  kanteLade: {
+    titel: 'Die Kontextkante — Lade „Seiten" offen',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      Store.setMeta('bandZu', true);
+      Store.setMeta('bandZu:welt', true);
+      const s = Store.addPage(null, { text: 'Elektrotechnik — Skript' });
+      Store.addBlock(s.id, 'h1', { text: 'Grundlagen' });
+      Store.addBlock(s.id, 'text', { text: 'U = R · I, und daraus P = U · I.' });
+      Store.addPage(null, { text: 'Formelsammlung' });
+      Store.addPage(null, { text: 'Klausurplan' });
+      App.oeffne(s.id);
+      await new Promise(f => setTimeout(f, 300));
+      document.querySelector<HTMLElement>('#kante .k-knopf[data-k="seiten"]')?.click();
+      await new Promise(f => setTimeout(f, 200));
+    }
+  },
+
+  kanteBloecke: {
+    titel: 'Die Kontextkante — Lade „Blöcke" offen',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      Store.setMeta('bandZu', true);
+      Store.setMeta('bandZu:welt', true);
+      const s = Store.addPage(null, { text: 'Elektrotechnik — Skript' });
+      Store.addBlock(s.id, 'text', { text: 'U = R · I.' });
+      App.oeffne(s.id);
+      await new Promise(f => setTimeout(f, 300));
+      document.querySelector<HTMLElement>('#kante .k-knopf[data-k="bloecke"]')?.click();
+      await new Promise(f => setTimeout(f, 200));
+    }
+  },
+
   /* ── Die Datei-Fläche (E272 Phase G) ─────────────────────────────────────
      Zwei Bilder, weil zwei ganz verschiedene Dinge darauf zu sehen sind:
      „Informationen" zeigt echte Auskünfte (Sicherungsstand, Ordner, Platz),

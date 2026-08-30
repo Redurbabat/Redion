@@ -376,6 +376,8 @@ const schaleMass = await seite.evaluate(() => {
   const sr = sucher?.getBoundingClientRect();
   return {
     seite: seitenleiste ? Math.round(seitenleiste.getBoundingClientRect().width) : 0,
+    kante: (() => { const k = document.getElementById('kante');
+                    return k ? Math.round(k.getBoundingClientRect().width) : 0; })(),
     kopfHoehe: kopf ? Math.round(kopf.getBoundingClientRect().height) : 0,
     sucherDa: !!sucher,
     alteBoxWeg: !alteBox,
@@ -408,10 +410,18 @@ const schaleMass = await seite.evaluate(() => {
   };
 });
 
-/* §5 DES AUFTRAGS: 220–250. Sie war 260 — und auf 1366 × 768 sind zwanzig
-   Punkte keine Kosmetik, sondern zwanzig Punkte Arbeitsfläche (§68). */
-p('Die Seitenleiste liegt zwischen 220 und 250',
-  schaleMass.seite >= 220 && schaleMass.seite <= 250, `${schaleMass.seite}`);
+/* §5 DES AUFTRAGS WAR: SEITENLEISTE 220–250. Sie war 260, wurde 240 — und
+   ist seit E272 Phase F am Rechner gar nicht mehr da. An ihrer Stelle steht
+   die Kontextkante: 54 Pixel, und darin die Werkzeuge des Ortes, an dem man
+   gerade ist. Die Navigation steht im Reiter „Gehen".
+
+   Der Punkt misst deshalb die Kante. Die Zahl bleibt ausgeschrieben und
+   wird nicht aus der CSS gelesen — er soll ja gerade merken, wenn die
+   Breite sich ändert, ohne dass jemand es wollte. */
+p('Die Kontextkante ist 54 px breit', schaleMass.kante === 54,
+  String(schaleMass.kante));
+p('Und die alte 240-px-Seitenleiste steht am Rechner nicht mehr im Weg',
+  schaleMass.seite === 0, `${schaleMass.seite}`);
 /* §8: 52–58. */
 p('Die Kopfleiste ist 52 bis 58 hoch',
   schaleMass.kopfHoehe >= 52 && schaleMass.kopfHoehe <= 58, `${schaleMass.kopfHoehe}`);

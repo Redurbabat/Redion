@@ -174,6 +174,22 @@ Register.symbole = (() => {
         arrowR: '<path d="M4 12h15.6"/><path d="m14 5.6 6 6.4-6 6.4"/>',
         bell: '<path d="M18 9a6 6 0 1 0-12 0c0 5.2-2 6.7-2 6.7h16S18 14.2 18 9z"/>' +
             '<path d="M13.7 19.2a2 2 0 0 1-3.4 0"/>',
+        /* --- Fuenf fuer die Kontextkante (E272 Phase F) ----------------------
+           Ein Knopf ohne Zeichen ist in einer 54 Pixel breiten Spalte ein
+           leeres Quadrat — dasselbe, was in Phase B mit `clock` passiert ist
+           und was nur das Hinsehen findet. Die fuenf sind allgemein und nicht
+           nur fuer die Kante: „drucken", „ansehen", „abspielen", „Kommentar"
+           und „mehrere Seiten" braucht Redion an mehr als einer Stelle. */
+        comment: '<path d="M20.5 11.8c0 3.9-3.8 7-8.5 7a10 10 0 0 1-2.8-.4L4.4 20l1.4-3.7' +
+            'A6.6 6.6 0 0 1 3.5 11.8c0-3.9 3.8-7 8.5-7s8.5 3.1 8.5 7z"/>',
+        pages: '<path d="M8.4 2.8h6.2L19 7.2v11.2a1.6 1.6 0 0 1-1.6 1.6H8.4a1.6 1.6 0 0 1-1.6-1.6V4.4' +
+            'a1.6 1.6 0 0 1 1.6-1.6z"/><path d="M14.6 2.8v4.4H19"/>' +
+            '<path d="M4.2 6.6v12.8a2.4 2.4 0 0 0 2.4 2.4h8.2"/>',
+        printer: '<path d="M7 9V3.6h10V9"/><rect x="4" y="9" width="16" height="7.4" rx="2"/>' +
+            '<path d="M7 14.2h10v6.2H7z"/>',
+        eye: '<path d="M2.6 12S6.4 5.6 12 5.6 21.4 12 21.4 12 17.6 18.4 12 18.4 2.6 12 2.6 12z"/>' +
+            '<circle cx="12" cy="12" r="3.1"/>',
+        play: '<path d="M8.4 5.4 18.6 12 8.4 18.6z"/>',
         settings: '<circle cx="12" cy="12" r="3.1"/>' +
             '<path d="M19.5 14.6a1.5 1.5 0 0 0 .3 1.7l.06.05a1.8 1.8 0 1 1-2.6 2.6l-.05-.06' +
             'a1.5 1.5 0 0 0-1.7-.3 1.5 1.5 0 0 0-.9 1.37v.14a1.8 1.8 0 1 1-3.6 0v-.07' +

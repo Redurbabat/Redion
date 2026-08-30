@@ -382,6 +382,25 @@ und **woher** die Zeilen kommen.
 | `lernen` | Karteikarten · Fällig · Lernpfad · Prüfungen | `Werkzeuge.lernen/karten/faellig` |
 | `ki` | Chat · Agent · Besprechung · Protokoll | `App.kiPanel`, `Agent.panel`, `Meeting.panel` |
 
+### Gebaut in Phase F — was daraus wurde
+
+`Register.kontext` (das sechzehnte Register) und `context-rail.ts`. Acht
+Bereiche melden sich selbst an; gemessen liefert die Kante:
+
+    editor 6 · elektro 8 · pdf 2+ · heute 5 · leer 5 · aufgaben 4 · bibliothek 6
+
+Drei Abweichungen von der Tabelle darüber, alle mit Grund:
+
+| Punkt | Was der Plan sagte | Was gebaut wurde |
+|---|---|---|
+| Anmeldung | `melde()` je Knopf | zusätzlich `meldeLieferant(bereich, fn)`. Elektro meldete acht an und bekam sechs: `inReiter()` wendet `zeigen()` schon an, und beim Laden war `Electrical` noch nicht da |
+| Lade-Lage | `position:absolute` | eine Zelle im `#main`-Raster. `top:0` ist im `#main` die Oberkante des Bands — die Lade deckte „Datei", „Gehen" und „Start" zu |
+| „Seiten" | ein Bereichs-Provider | ein fester Knopf der Schale: der Seitenbaum ist Navigation und gehört keinem Bereich. `#tree` wird hineingeschoben, nicht kopiert |
+
+Die feineren Panels aus der Tabelle (Filter · Sortieren · Gruppieren in der
+Datenbank, Formelheft und Fachzeichen als eigene Laden) stehen noch aus —
+sie brauchen je einen eigenen Griff im Bereich und sind kein Schalen-Thema.
+
 **Die PDF-Kante existiert schon** — als Werkzeugspalte mitten im Dokumentmodus
 (im Bild von heute gut zu sehen: Schreiben · Auswahl · Stift · Marker · Linie ·
 Pfeil · Rechteck · Ellipse · Abdecken · Haftnotiz · Text · Fachzeichen ·

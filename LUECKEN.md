@@ -3304,3 +3304,53 @@ sammelt und meldet, wenn zwei Bereiche denselben benutzen. Nicht gebaut —
 das gehört in einen eigenen Bogen und nicht in eine Schalen-Phase.
 
 Gefunden am 30. August 2026 (E272 Phase G, auf dem Bild).
+
+--------------------------------------------------------------------------------
+L91 — Die Seitenleiste ist am Rechner weg, und mit ihr drei Kleinigkeiten
+--------------------------------------------------------------------------------
+
+E272 Phase F stellt `#sidebar` am Rechner auf `display:none`. Die Leiste
+selbst ist NICHT gelöscht — am Telefon ist sie die Schublade, `#tree` darin
+ist der einzige Seitenbaum, und die Lade der Kontextkante schiebt ihn sich
+herüber. Drei Dinge sind damit trotzdem am Rechner nicht mehr erreichbar:
+
+  1. DER ZIEHGRIFF. `.side-griff` änderte die Breite (180–460 px), und ein
+     Doppelklick stellte 240 wieder her. Die Kante ist 54 Pixel und fest.
+     Ob die Breite einstellbar sein soll, ist eine Frage an Redur — nicht
+     „die Kante breiter ziehen", sondern: braucht es das überhaupt noch,
+     wenn dort nur Zeichen stehen? Die Mechanik wird weiter geprüft
+     (test52, test143 blenden die Leiste für die Messung kurz ein), also
+     ist nichts verloren, solange die Frage offen ist.
+
+  2. DER ARBEITSBEREICHS-KNOPF `#btn-settings` (das „N Redion" oben links).
+     Sein Weg lebt weiter: „Datei → Konto → Arbeitsbereich" (Phase G) und
+     der Kontokreis rechts im Band.
+
+  3. DIE DREI SEITENLEISTEN-REITER (`start`/`chat`/`bespr`). Chat und
+     Besprechungen erreicht man über den Reiter „Gehen" und über das
+     KI-Panel; der Umschalter selbst gibt es am Rechner nicht mehr. Der
+     Plan sah dafür einen eigenen Commit vor („Griffwechsel w-agenten/
+     w-bespr auf `App.kiPanel(true)`/`Meeting.panel()`") — der steht noch
+     aus.
+
+Gefunden am 30. August 2026 (E272 Phase F, beim Durchgehen der Wächter).
+
+--------------------------------------------------------------------------------
+L92 — Blockarten haben kein Strichzeichen (E272 Phase F)
+--------------------------------------------------------------------------------
+
+Die Lade „Blöcke" der Kontextkante zeigt den echten Bestand aus
+`Register.bloecke` — 43 Arten, jede mit Namen, keine mit Bild. Der Grund
+steht im Register: jeder Eintrag führt `icon` (ein Emoji oder ein Zeichen
+wie `¶`), aber kein `zeichen` aus `Register.symbole`.
+
+E202 hat Emoji aus der Schale verbannt, und zu Recht — sie sehen auf jedem
+System anders aus und tragen nicht die Farbe ihrer Zeile. In Phase E hat
+`Register.module` und `Register.navigation` deshalb ein Feld `zeichen`
+bekommen. Für `Register.bloecke` wären das dreiundvierzig neue Striche;
+das ist ein eigener Bogen und keine Nebensache in einer Schalen-Phase.
+
+Bis dahin ist die Liste eine reine Textliste. Das ist nicht falsch — nur
+weniger, als sie sein könnte.
+
+Gefunden am 30. August 2026 (E272 Phase F, auf dem Bild).

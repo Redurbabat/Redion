@@ -428,6 +428,17 @@ p('Keine Marke trägt das `app-`-Präfix aus E166', mitPraefix.length === 0, mit
 
    Geprüft wird die BEDIENUNG und nicht der Speicher: erst zählen, was zu
    sehen ist, dann klicken, dann wieder zählen. */
+/* AM TELEFON GEMESSEN, SEIT E272 PHASE F. Die Apps-Schublade lebt in der
+   Seitenleiste, und die ist am Rechner seit Phase F `display:none` — dort
+   führt der Weg über den Reiter „Gehen" (test272 §12 misst, dass er jedes
+   Modul deckt). Am Telefon IST die Seitenleiste weiter die Schublade, und
+   dort gilt dieser Vertrag unverändert.
+
+   Nicht gestrichen, sondern umgezogen: die Mechanik gibt es noch, sie ist
+   nur nicht mehr überall. Ein Punkt, der das Messen aufgibt, weil der Ort
+   sich geändert hat, ist ein Punkt weniger — kein gelöstes Problem. */
+await seite.setViewportSize({ width: 390, height: 844 });
+await seite.waitForTimeout(400);
 const schublade = await seite.evaluate(async () => {
   /* Seit E219 steht „Meine Apps" hinter „Mehr" — der ganze Block ist dann
      `display:none`, und `offsetParent` ist für JEDEN Eintrag null. Die
@@ -448,7 +459,8 @@ const schublade = await seite.evaluate(async () => {
   return { vorher, nachher: sichtbar(), name,
            offen: neuerKopf?.getAttribute('aria-expanded') };
 });
-p('Ein Klick öffnet die Schublade', schublade.nachher > schublade.vorher,
+p('Ein Klick öffnet die Schublade (am Telefon)',
+  schublade.nachher > schublade.vorher,
   JSON.stringify(schublade));
 gleich('Und sie sagt es auch dem Vorleseprogramm', schublade.offen, 'true');
 p('Und die kurzen Marken sind noch da',

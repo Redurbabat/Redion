@@ -2583,18 +2583,39 @@ const App = (() => {
                 suche();
                 return;
             }
+            /* Strg+Backslash war „Seitenleiste auf/zu" und ist seit E272 Phase F
+               „Kontextkante auf/zu" — dieselbe Taste, dasselbe Versprechen (die
+               Spalte links weg oder da), nur ist die Spalte jetzt 54 statt 240
+               Pixel breit. Am Telefon gibt es die Kante nicht; dort schaltet
+               die Taste weiter die Schublade, damit sie nicht ins Leere geht. */
             if (k === '\\') {
                 e.preventDefault();
-                document.getElementById('sidebar')?.classList.toggle('collapsed');
+                if (typeof Kontextkante !== 'undefined'
+                    && !window.matchMedia('(max-width: 760px)').matches) {
+                    Kontextkante.schalten();
+                }
+                else {
+                    document.getElementById('sidebar')?.classList.toggle('collapsed');
+                }
                 return;
             }
-            /* Strg+M: „Mehr" in der Seitenleiste auf und zu (E219). Ohne ruhige
-               Fassung tut `schalten` nichts — dann soll die Taste auch nicht
-               `preventDefault` rufen und das Kürzel dem Browser wegnehmen. */
-            if (k === 'm' && !e.shiftKey && typeof Ruhig !== 'undefined' && Ruhig.an()) {
-                e.preventDefault();
-                Ruhig.schalten();
-                return;
+            /* Strg+M: die Lade der Kante auf und zu (E272 Phase F). Vorher war es
+               „Mehr" in der Seitenleiste (E219); die gibt es am Rechner nicht
+               mehr, am Telefon schon — deshalb beide, jeder an seinem Ort.
+               Ohne beides ruft die Taste kein `preventDefault` und bleibt dem
+               Browser. */
+            if (k === 'm' && !e.shiftKey) {
+                if (typeof Kontextkante !== 'undefined'
+                    && !window.matchMedia('(max-width: 760px)').matches) {
+                    e.preventDefault();
+                    Kontextkante.ladeSchalten();
+                    return;
+                }
+                if (typeof Ruhig !== 'undefined' && Ruhig.an()) {
+                    e.preventDefault();
+                    Ruhig.schalten();
+                    return;
+                }
             }
             if (k === 'j' && !e.shiftKey) {
                 e.preventDefault();
@@ -2945,6 +2966,13 @@ const App = (() => {
             sonder: () => sonder
         });
         Inhaltsflaeche.binde({ aktuelleSeite });
+        /* DIE KONTEXTKANTE (E272 Phase F). Sie kommt NACH allen anderen: sie
+           liest `App.schauplatz()` und hört auf `redion:schauplatz`, und beides
+           gibt es erst, wenn die Schale steht. Ohne das Modul (Einzeldatei
+           älteren Standes, Prüflauf ohne die Datei) bleibt der Platz leer und
+           die Seitenleiste sichtbar — kein Absturz. */
+        if (typeof Kontextkante !== 'undefined')
+            Kontextkante.binde();
         /* ----------------------------------------------------------------------
          * FEHLER SICHTBAR MACHEN — aber nur, wenn die Meldung etwas wert ist
          * ----------------------------------------------------------------------

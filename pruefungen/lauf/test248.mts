@@ -169,7 +169,32 @@ const RAHMEN = `
  * ========================================================================*/
 console.log('\n1 · Weniger sichtbar');
 
-const { seite, fehler } = await seiteAuf();
+/* GEMESSEN AM TELEFON, SEIT E272 PHASE F.
+   Diese Suite prüft die RUHIGE FASSUNG DER SEITENLEISTE (E219): höchstens
+   zehn sichtbare Wege, „Mehr" holt alles zurück, nichts ist weg. Die
+   Seitenleiste ist am Rechner seit Phase F `display:none` — dort trägt die
+   54 Pixel schmale Kontextkante die Werkzeuge und der Reiter „Gehen" die
+   Navigation.
+
+   AM TELEFON GILT DER VERTRAG UNVERÄNDERT. Die Seitenleiste ist dort die
+   Schublade (E38/E236), „Mehr" schaltet weiter, und genau das misst diese
+   Suite. Sie zieht deshalb um statt zu verschwinden: eine Prüfung, die
+   aufhört zu messen, weil der Ort sich geändert hat, ist eine Prüfung
+   weniger — kein gelöstes Problem.
+
+   Was am Rechner GILT, misst test40 (Kante 54 px, Seitenleiste weg) und
+   test272 §13/§14. */
+const { seite, fehler } = await seiteAuf(390, 844);
+
+/* UND DIE SCHUBLADE MUSS AUF SEIN. Am Telefon steht die Seitenleiste
+   ausserhalb des Bildes, bis man sie holt — Playwright weigerte sich zu
+   Recht, auf „Mehr" zu klicken („element is outside of the viewport").
+   Das ist kein Kunstgriff für den Prüflauf: es ist genau der Griff, den
+   `App.arbeitsbereich()` am Telefon nimmt. */
+await seite.evaluate(() => {
+  try { (globalThis as any).PWA?.schubladeAuf?.(); } catch { /* … */ }
+});
+await seite.waitForTimeout(500);
 const anStart: any = await seite.evaluate(RAHMEN);
 
 p('Von Haus aus ist die ruhige Fassung an', anStart.zustand === 'an', anStart.zustand);
@@ -245,12 +270,29 @@ p('Über einer offenen Seite sind es wieder acht',
  * ========================================================================*/
 console.log('\n2 · „Mehr" holt alles zurück');
 
+/* DIE SCHUBLADE NOCH EINMAL. `App.oeffne()` eine Handvoll Zeilen weiter
+   oben schliesst sie — genau wie beim Menschen, der eine Seite antippt.
+   Ohne das steht „Mehr" ausserhalb des Bildes, und Playwright weigert
+   sich zu klicken, statt an einer unsichtbaren Stelle zu tippen. */
+const schubladeAuf = async () => {
+  await seite.evaluate(() => {
+    try { (globalThis as any).PWA?.schubladeAuf?.(); } catch { /* ohne PWA bleibt es zu */ }
+  });
+  await seite.waitForTimeout(400);
+};
+await schubladeAuf();
+
 await seite.click('#btn-mehr');
 await seite.waitForTimeout(400);
 const offen: any = await seite.evaluate(RAHMEN);
 
 p('Der Zustand heisst jetzt „offen"', offen.zustand === 'offen', offen.zustand);
-p('Und die Leiste zeigt deutlich mehr', offen.leiste > anStart.leiste + 10,
+/* ZEHN MEHR, NICHT ELF. Am Telefon blendet `bausteine.css` die Kopfzeile
+   der Schublade und ihre eigene Reiterleiste aus, und die ruhige Fassung
+   beginnt dort bei sieben statt zehn. Gemessen: 7 -> 17. Die Aussage
+   bleibt dieselbe — „Mehr" holt mehr als das Doppelte —, nur die Schwelle
+   war eine Rechner-Schwelle. */
+p('Und die Leiste zeigt deutlich mehr', offen.leiste >= anStart.leiste + 10,
   `${anStart.leiste} → ${offen.leiste}`);
 p('Ohne ein zweites Fenster aufzumachen',
   await seite.evaluate(() => !document.querySelector('.overlay,[role=dialog],#sl-mehr-panel')));
@@ -258,6 +300,7 @@ p('Der Schalter heisst dann „Weniger"',
   (await seite.textContent('#btn-mehr'))?.includes('Weniger'),
   await seite.textContent('#btn-mehr') ?? '');
 
+await schubladeAuf();
 await seite.click('#btn-mehr');
 await seite.waitForTimeout(400);
 const wiederZu: any = await seite.evaluate(RAHMEN);
@@ -305,9 +348,17 @@ await seite.waitForTimeout(300);
 p('Im Baum stehen in JEDEM Zustand gleich viele Knöpfe',
   anStart.imBaum === offen.imBaum && offen.imBaum === aus.imBaum,
   `an ${anStart.imBaum}, offen ${offen.imBaum}, aus ${aus.imBaum}`);
+/* VIERUNDZWANZIG STATT DREISSIG, gemessen und nicht geraten: am Telefon
+   blendet `bausteine.css` `.side-top` und `#side-reiter` in der Schublade
+   aus, weil den Arbeitsbereich dort der Kreis links oben öffnet.
+   Ausgeschaltet gemessen: 25.
+
+   DIE KOPFZEILE STEHT HIER NICHT MEHR. Am Telefon trägt sie seit E236
+   drei Knöpfe und nicht dreizehn — die übrigen sind im ⋯-Menü und in der
+   unteren Fünferleiste. „Zwölf oder mehr" war eine Rechner-Zahl und wird
+   in §5 am Rechner gemessen, wo sie hingehört. */
 p('Ausgeschaltet ist die Leiste wieder so voll wie früher',
-  aus.leiste >= 30, `sind ${aus.leiste}`);
-p('Und die Kopfzeile auch', aus.kopf >= 12, `sind ${aus.kopf}`);
+  aus.leiste >= 24, `sind ${aus.leiste}`);
 
 /* ==========================================================================
  * §4 Die fünf sind die richtigen
@@ -368,6 +419,18 @@ await seite.waitForTimeout(300);
  * ========================================================================*/
 console.log('\n5 · Was aus der Kopfzeile ging, steht im Menü');
 
+/* AB HIER WIEDER AM RECHNER. Die Kopfzeile und die Randleiste sind ein
+   Rechner-Vertrag: am Telefon trägt `#topbar` drei Knöpfe, und `#rand-toc`
+   steht dort gar nicht erst. Die Paragrafen 1 bis 4 messen die Schublade,
+   und die gibt es nur am Telefon; dieser hier misst die Kopfzeile, und die
+   ist am Telefon eine andere. Zwei Verträge, zwei Breiten. */
+await seite.setViewportSize({ width: 1440, height: 900 });
+await seite.waitForTimeout(600);
+await seite.evaluate(() => {
+  try { (globalThis as any).PWA?.schubladeZu?.(); } catch { /* … */ }
+});
+await seite.waitForTimeout(300);
+
 await seite.evaluate(() => {
   const St = Store;
   const s = Object.values(St.cache.blocks).find((b: any) => b?.type === 'page' && b.alive) as any;
@@ -425,9 +488,15 @@ p('Und eingeschaltet eingeschaltet', nachNeustart2.zustand === 'an', nachNeustar
  * ========================================================================*/
 console.log('\n7 · Tippflächen und Tastatur');
 
+/* UND WIEDER ANS TELEFON. Tippflächen sind eine Fingerfrage (§37), und
+   der Schalter „Mehr", um den es hier geht, steht am Rechner seit E272
+   Phase F nicht mehr im Bild. */
+await seite.setViewportSize({ width: 390, height: 844 });
+await seite.waitForTimeout(600);
 await seite.evaluate(() => {
   document.querySelectorAll('#rg-willkommen,.overlay,[role=dialog]').forEach(x => x.remove());
 });
+await schubladeAuf();
 const zugang: any = await seite.evaluate(() => {
   const m = document.getElementById('btn-mehr');
   return {
@@ -440,6 +509,7 @@ await seite.click('#btn-mehr');
 await seite.waitForTimeout(300);
 p('Und nach dem Klick sagt er es auch',
   await seite.evaluate(() => document.getElementById('btn-mehr')?.getAttribute('aria-expanded') === 'true'));
+await schubladeAuf();
 await seite.click('#btn-mehr');
 await seite.waitForTimeout(300);
 
