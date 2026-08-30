@@ -202,6 +202,47 @@
   --accent-text:   #9b87ff;
   --accent-schwach: rgba(109,74,255,.16);
   --accent-warm:   #fb923c;
+
+  /* ==========================================================================
+   * GOLD — die Farbe der SCHALE (E272)
+   * --------------------------------------------------------------------------
+   * Der Premium-Entwurf setzt durchgehend Gold. Violett bleibt, wo es INHALT
+   * einfärbt (Haken, Kalendereinträge, Markierungen in der Seite); Gold
+   * übernimmt, was die APP ist: Reiter, Kanten, Fokusringe, Überlaufknopf.
+   *
+   * Die Trennung ist nach ZUSTÄNDIGKEIT, nicht nach Geschmack — beides
+   * nebeneinander wäre bunt statt gestaltet. Statusfarben bleiben, was sie
+   * sind: ein rotes „nicht gesichert" wird nicht golden.
+   *
+   * DREI ROLLEN, DREI WERTE — die Lehre aus E199. Der Akzent hatte dort
+   * einen Wert für zwei Rollen, und als Tinte reichte er nicht. Beim Gold
+   * ist es genauso, nur schärfer: gemessen auf dem Grund #141414 und auf
+   * der Karte #202020.
+   *
+   *     --gold        #d8b767   Grund 9,55   Karte 8,45   Fläche UND Tinte
+   *     --gold-bright #f0d58d   Grund 12,81  Karte 11,33  Hervorhebung
+   *     --gold-deep   #9e7c39   Grund 4,73   Karte 4,19   Rahmen, Ring
+   *
+   * `--gold-deep` reicht auf der Karte NICHT für Text (4,19 gegen 4,5), sehr
+   * wohl aber für ein Bedienelement (3,0). Deshalb ist es der Rahmen und
+   * nicht die Schrift.
+   * ========================================================================*/
+  --gold:        #d8b767;
+  --gold-bright: #f0d58d;
+  --gold-deep:   #9e7c39;
+  /* GOLD ALS TINTE. Im Dunkelmodus kann `--gold` es selbst (8,45 auf der
+     Karte) — der eigene Name steht trotzdem hier, weil er im HELLMODUS
+     einen anderen Wert braucht. Wer `color: var(--gold-tinte)` schreibt,
+     bekommt in beiden Modi etwas Lesbares; wer `var(--gold)` schreibt, im
+     Hellmodus 2,26 zu 1. */
+  --gold-tinte:  #d8b767;
+  /* Die Glasschichten. Auf dunklem Grund tragen sie WENIGER Farbe als im
+     Hellmodus — ein Schleier über Schwarz wirkt kräftiger als über Weiss.
+     15/24 % wären hier zu viel. */
+  --gold-glass:  color-mix(in srgb, var(--gold) 13%, transparent);
+  --gold-strong: color-mix(in srgb, var(--gold) 22%, transparent);
+  --gold-line:   color-mix(in srgb, var(--gold) 34%, transparent);
+  --gold-shadow: 0 6px 20px color-mix(in srgb, #000000 46%, transparent);
   --gefahr:        #ef4444;
   --erfolg:        #22c55e;
   --info:          #38bdf8;
@@ -375,6 +416,45 @@ html[data-theme="light"]{
   --accent-text: #7c3aed;
   --accent-schwach: rgba(124,58,237,.12);
   --accent-warm: #ea580c;
+
+  /* ==========================================================================
+   * GOLD IM HELLMODUS (E272) — und warum es hier VIER Werte sind
+   * --------------------------------------------------------------------------
+   * Der Entwurf nennt drei Töne. Auf hellem Grund reichen sie nicht, und das
+   * ist keine Meinung, sondern die Rechnung — gemessen auf Weiss, auf der
+   * Karte #f7f7f5 und auf der Leiste #fbfbfa:
+   *
+   *     --gold        #caa85e   Weiss 2,26   Karte 2,11   ✗ nicht mal Rahmen
+   *     --gold-bright #e4c77c   Weiss 1,65   Karte 1,53   ✗
+   *     --gold-deep   #9f7b37   Weiss 3,92   Karte 3,65   ✓ Rahmen (3,0)
+   *                                                       ✗ Text   (4,5)
+   *
+   * Das ist genau der Fehler, den E142 beim Orange fand und E199 beim
+   * Violett: eine Farbe, die auf Schwarz leuchtet, verschwindet auf Weiss.
+   * Daraus folgen zwei Regeln, die für den ganzen Hellmodus gelten:
+   *
+   *   1. `--gold` ist hier NUR FLÄCHE. Text darauf ist dunkel
+   *      (#1b1d20 auf --gold: 7,46).
+   *   2. Rahmen und Fokusringe nehmen `--gold-deep` (3,92 auf Weiss,
+   *      3,65 auf der Karte) — nie `--gold`.
+   *
+   * Und weil Gold trotzdem manchmal Schrift sein muss, gibt es einen vierten
+   * Wert. Gesucht wurde der hellste Ton auf dem Farbton 41°, der 4,5 auf der
+   * KARTE schafft; die Sättigung wurde dabei angehoben, damit er golden
+   * bleibt und nicht olivbraun wird:
+   *
+   *     #836c39   Weiss 5,04   Karte 4,70   S 0,56   zu stumpf
+   *     --gold-tinte #8a6a20   Weiss 5,04   Karte 4,70   S 0,77   ✓
+   * ========================================================================*/
+  --gold:        #caa85e;
+  --gold-bright: #e4c77c;
+  --gold-deep:   #9f7b37;
+  --gold-tinte:  #8a6a20;
+  /* Mehr Farbe als im Dunkelmodus: über Weiss trägt ein Schleier weniger. */
+  --gold-glass:  color-mix(in srgb, var(--gold) 15%, transparent);
+  --gold-strong: color-mix(in srgb, var(--gold) 24%, transparent);
+  --gold-line:   color-mix(in srgb, var(--gold) 38%, transparent);
+  --gold-shadow: 0 6px 20px color-mix(in srgb, var(--gold-deep) 18%, transparent);
   --gefahr:      #dc2626;
   --erfolg:      #15803d;
   --info:        #0369a1;
@@ -456,6 +536,39 @@ html[data-theme="light"]{
   --radius-xl:   16px;  /* schwebende Leisten                                */
   --radius-2xl:  20px;  /* grosse Dialoge und Blätter                        */
   --radius-pill: 999px; /* Pillen und runde Symbolknöpfe                     */
+
+  /* --- Die Masse der Schale (E272). ---------------------------------------
+   * Sie stehen hier und nicht in `dunkel.css`, weil eine Höhe nicht vom
+   * Thema abhängt. Die Zahlen kommen aus der zehnten Schicht des
+   * Premium-Entwurfs; sie sind das Ziel, nicht ein Pixelgesetz.
+   *
+   * WARUM SO SCHMAL. Das Band steht heute in ZWEI Zeilen und misst 227 px
+   * (test247:547 ist deswegen rot, siehe L88). 36 + 58 = 94 px für Reiter
+   * UND Werkzeuge zusammen ist die Ansage: was nicht hineinpasst, wandert
+   * in das reitereigene „•••", statt eine zweite Zeile aufzumachen.
+   * ---------------------------------------------------------------------- */
+  --shell-reiter-h:  36px;  /* die Reiterzeile ganz oben, fest             */
+  --shell-band-h:    58px;  /* das Werkzeugband darunter, wenn offen       */
+  --kante-b:         54px;  /* die Kontextkante am linken Rand             */
+  --kante-knopf:     42px;  /* ihre Knöpfe — am Telefon ist die Kante aus  */
+  --kanten-lade-b:  252px;  /* die Lade, die aus der Kante fährt           */
+  --backstage-nav-b: 202px; /* die dunkle Spalte der Datei-Fläche          */
+
+  /* --- Die Schalenfläche. --------------------------------------------------
+   * Sie ist in BEIDEN Themen dunkel — das ist der Entwurf, und es ist der
+   * Grund, warum diese drei Werte hier stehen und nicht in den Modusdateien:
+   * sie sind keine Abweichung zwischen Hell und Dunkel, sondern dieselbe
+   * Fläche in beiden.
+   *
+   * Gemessen auf #1b1d20:
+   *     --schale-text   #e8e8e6   13,77   Reiterschrift, Knopfnamen
+   *     --schale-still  #9d9d9a    6,21   Gruppentitel, Nebensätze
+   *     --gold-bright   (hell)    10,26   der aktive Reiter
+   *     --gold-bright   (dunkel)  11,75
+   * -------------------------------------------------------------------- */
+  --schale-grund: #1b1d20;
+  --schale-text:  #e8e8e6;
+  --schale-still: #9d9d9a;
 
   /* --- Bewegung. Vier Stufen und EINE Kurve (E259). ----------------------
    * Die Kurve ist überall dieselbe. Zwei Bewegungen mit verschiedenen

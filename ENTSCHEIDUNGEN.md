@@ -19632,3 +19632,46 @@ erste davon förderte einen Befund zutage: `melde()` prüft
 ungefiltert in `alle()`. Die Gegenprobe musste deshalb über den Lieferanten
 laufen, und weil es für Lieferanten kein `nimmZurueck` gibt, entwaffnet sie
 sich über eine Schaltmarke selbst.
+
+
+PHASE B (Marken) — was gemessen wurde, bevor etwas gefärbt wurde
+---------------------------------------------------------------
+
+Der Entwurf nennt drei Goldtöne je Modus. Im DUNKELMODUS reichen sie:
+#d8b767 hat 9,55 auf dem Grund und 8,45 auf der Karte, ist also Fläche und
+Tinte in einem. Im HELLMODUS reicht kein einziger:
+
+    --gold        #caa85e   Weiss 2,26   Karte 2,11   nicht mal als Rahmen
+    --gold-bright #e4c77c   Weiss 1,65   Karte 1,53
+    --gold-deep   #9f7b37   Weiss 3,92   Karte 3,65   Rahmen ja, Text nein
+
+Das ist derselbe Fehler wie E142 beim Orange und E199 beim Violett: eine
+Farbe, die auf Schwarz leuchtet, verschwindet auf Weiss. Daraus folgt ein
+VIERTER Wert, den der Entwurf nicht hat — `--gold-tinte`. Gesucht wurde der
+hellste Ton auf dem Farbton 41°, der 4,5 auf der KARTE schafft; die
+Sättigung wurde dabei angehoben, damit er golden bleibt statt olivbraun:
+
+    #836c39   Weiss 5,04   Karte 4,70   Sättigung 0,56   zu stumpf
+    #8a6a20   Weiss 5,04   Karte 4,70   Sättigung 0,77   ✓ gewählt
+
+Im Dunkelmodus zeigt `--gold-tinte` auf denselben Wert wie `--gold`. Das ist
+Absicht: wer `color: var(--gold-tinte)` schreibt, bekommt in BEIDEN Modi
+etwas Lesbares — wer `var(--gold)` schreibt, im Hellmodus 2,26.
+
+Die Schalenfläche ist in beiden Themen dieselbe (#1b1d20) und steht deshalb
+modusfrei in `grund.css`, zusammen mit den sechs Massen (36 · 58 · 54 · 42 ·
+252 · 202 px). Gemessen darauf: `--schale-text` 13,77 · `--schale-still`
+6,21 · `--gold-bright` 10,26 (hell) bzw. 11,75 (dunkel).
+
+**Geprüft:** test272 §10, sechzehn neue Punkte — die Marken werden im
+laufenden Browser aus `:root` gelesen und in beiden Themen durchgerechnet.
+Vier Gegenproben einzeln rot gesehen: eine fehlende Marke im Hellmodus
+(test245 §1), dieselbe Marke zweimal mit gleichem Wert (test245 §1), das
+Entwurfsgold #caa85e als Tinte (2,26 statt 4,5 — genau der Wert, wegen dem
+es `--gold-tinte` gibt), und ein fehlendes Schalenmass.
+
+Warum die Prüfung in test272 steht und nicht in test245: dort wird am
+laufenden Bild gemessen, und was nichts einfärbt, hat nichts zu messen. Die
+Marken sind in Phase B eingeführt und werden erst in Phase C benutzt —
+zwischen beiden liegt genau die Lücke, in der sich ein unlesbarer Wert
+einnistet.

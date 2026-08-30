@@ -3163,7 +3163,23 @@ jemand die Zahl nachgezogen hat.
     dort neu festgelegt (Kontextkante statt Leiste). Bis dahin bleibt der Punkt
     rot und ist hier festgehalten, statt still angepasst zu werden.
 
+NACHTRAG AUS PHASE B — es sind fünf, nicht zwei. Beim Setzen der Gold-Marken
+lief test245 mit und war ebenfalls rot, wieder vorher wie nachher:
+
+  test245  „Die Seitenleiste liegt zwischen 220 und 250" — **320**
+  test245  „Die Kopfleiste ist 52 bis 58 hoch" — **50**
+  test245  „… und steht dabei ungefähr in der Mitte des Arbeitsbereichs"
+           — **139 Punkte daneben**
+
+Diese drei sind der Konflikt, den der E272-Plan vorhergesagt hat: `einfach.css`
+aus PR #46 setzt die Seitenleiste auf 320 px, drückt die Kopfzeile auf 50 und
+nimmt die Suche aus der Mitte — E258 wollte genau das Gegenteil. Zwei
+Schalen-Vorhaben nebeneinander, die einander widersprechen.
+
+  → Phase C hängt `einfach.css` an einem Präfix ab (Notausstieg bleibt), Phase J
+    löscht sie. Danach misst test245 wieder die eine Schale, die es dann gibt.
+
 Warum das hier steht und nicht schnell repariert wurde: eine Zahl in einem
 Wächter zu senken, weil sie nicht mehr passt, ist die Bewegung, gegen die der
-Wächter gebaut wurde. Beide Punkte gehören in die Phase, die den betroffenen
+Wächter gebaut wurde. Alle fünf Punkte gehören in die Phase, die den betroffenen
 Teil ohnehin neu baut.

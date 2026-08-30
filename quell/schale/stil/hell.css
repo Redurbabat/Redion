@@ -115,6 +115,45 @@ html[data-theme="light"]{
   --accent-text: #7c3aed;
   --accent-schwach: rgba(124,58,237,.12);
   --accent-warm: #ea580c;
+
+  /* ==========================================================================
+   * GOLD IM HELLMODUS (E272) — und warum es hier VIER Werte sind
+   * --------------------------------------------------------------------------
+   * Der Entwurf nennt drei Töne. Auf hellem Grund reichen sie nicht, und das
+   * ist keine Meinung, sondern die Rechnung — gemessen auf Weiss, auf der
+   * Karte #f7f7f5 und auf der Leiste #fbfbfa:
+   *
+   *     --gold        #caa85e   Weiss 2,26   Karte 2,11   ✗ nicht mal Rahmen
+   *     --gold-bright #e4c77c   Weiss 1,65   Karte 1,53   ✗
+   *     --gold-deep   #9f7b37   Weiss 3,92   Karte 3,65   ✓ Rahmen (3,0)
+   *                                                       ✗ Text   (4,5)
+   *
+   * Das ist genau der Fehler, den E142 beim Orange fand und E199 beim
+   * Violett: eine Farbe, die auf Schwarz leuchtet, verschwindet auf Weiss.
+   * Daraus folgen zwei Regeln, die für den ganzen Hellmodus gelten:
+   *
+   *   1. `--gold` ist hier NUR FLÄCHE. Text darauf ist dunkel
+   *      (#1b1d20 auf --gold: 7,46).
+   *   2. Rahmen und Fokusringe nehmen `--gold-deep` (3,92 auf Weiss,
+   *      3,65 auf der Karte) — nie `--gold`.
+   *
+   * Und weil Gold trotzdem manchmal Schrift sein muss, gibt es einen vierten
+   * Wert. Gesucht wurde der hellste Ton auf dem Farbton 41°, der 4,5 auf der
+   * KARTE schafft; die Sättigung wurde dabei angehoben, damit er golden
+   * bleibt und nicht olivbraun wird:
+   *
+   *     #836c39   Weiss 5,04   Karte 4,70   S 0,56   zu stumpf
+   *     --gold-tinte #8a6a20   Weiss 5,04   Karte 4,70   S 0,77   ✓
+   * ========================================================================*/
+  --gold:        #caa85e;
+  --gold-bright: #e4c77c;
+  --gold-deep:   #9f7b37;
+  --gold-tinte:  #8a6a20;
+  /* Mehr Farbe als im Dunkelmodus: über Weiss trägt ein Schleier weniger. */
+  --gold-glass:  color-mix(in srgb, var(--gold) 15%, transparent);
+  --gold-strong: color-mix(in srgb, var(--gold) 24%, transparent);
+  --gold-line:   color-mix(in srgb, var(--gold) 38%, transparent);
+  --gold-shadow: 0 6px 20px color-mix(in srgb, var(--gold-deep) 18%, transparent);
   --gefahr:      #dc2626;
   --erfolg:      #15803d;
   --info:        #0369a1;

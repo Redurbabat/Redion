@@ -56,6 +56,39 @@
   --radius-2xl:  20px;  /* grosse Dialoge und Blätter                        */
   --radius-pill: 999px; /* Pillen und runde Symbolknöpfe                     */
 
+  /* --- Die Masse der Schale (E272). ---------------------------------------
+   * Sie stehen hier und nicht in `dunkel.css`, weil eine Höhe nicht vom
+   * Thema abhängt. Die Zahlen kommen aus der zehnten Schicht des
+   * Premium-Entwurfs; sie sind das Ziel, nicht ein Pixelgesetz.
+   *
+   * WARUM SO SCHMAL. Das Band steht heute in ZWEI Zeilen und misst 227 px
+   * (test247:547 ist deswegen rot, siehe L88). 36 + 58 = 94 px für Reiter
+   * UND Werkzeuge zusammen ist die Ansage: was nicht hineinpasst, wandert
+   * in das reitereigene „•••", statt eine zweite Zeile aufzumachen.
+   * ---------------------------------------------------------------------- */
+  --shell-reiter-h:  36px;  /* die Reiterzeile ganz oben, fest             */
+  --shell-band-h:    58px;  /* das Werkzeugband darunter, wenn offen       */
+  --kante-b:         54px;  /* die Kontextkante am linken Rand             */
+  --kante-knopf:     42px;  /* ihre Knöpfe — am Telefon ist die Kante aus  */
+  --kanten-lade-b:  252px;  /* die Lade, die aus der Kante fährt           */
+  --backstage-nav-b: 202px; /* die dunkle Spalte der Datei-Fläche          */
+
+  /* --- Die Schalenfläche. --------------------------------------------------
+   * Sie ist in BEIDEN Themen dunkel — das ist der Entwurf, und es ist der
+   * Grund, warum diese drei Werte hier stehen und nicht in den Modusdateien:
+   * sie sind keine Abweichung zwischen Hell und Dunkel, sondern dieselbe
+   * Fläche in beiden.
+   *
+   * Gemessen auf #1b1d20:
+   *     --schale-text   #e8e8e6   13,77   Reiterschrift, Knopfnamen
+   *     --schale-still  #9d9d9a    6,21   Gruppentitel, Nebensätze
+   *     --gold-bright   (hell)    10,26   der aktive Reiter
+   *     --gold-bright   (dunkel)  11,75
+   * -------------------------------------------------------------------- */
+  --schale-grund: #1b1d20;
+  --schale-text:  #e8e8e6;
+  --schale-still: #9d9d9a;
+
   /* --- Bewegung. Vier Stufen und EINE Kurve (E259). ----------------------
    * Die Kurve ist überall dieselbe. Zwei Bewegungen mit verschiedenen
    * Beschleunigungen nebeneinander wirken wie zwei verschiedene Programme.

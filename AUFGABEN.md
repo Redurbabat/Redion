@@ -1828,3 +1828,8 @@ node pruefungen/lauf/test105.mjs
   einer Methode), und sein Zeichen `clock` fehlte im Symbolregister.
   Gemessen statt geschätzt: 141 Bandeinträge, nicht 108. Neue Lücken
   L85–L88.
+* E272 Phase B (Marken): Gold in beiden Modi, vier Werte statt drei — der
+  Entwurfston #caa85e hat auf Weiss 2,26 und taugt dort nicht einmal als
+  Rahmen, deshalb `--gold-tinte` #8a6a20 (4,70 auf der Karte). Sechs Masse
+  der Schale und die Schalenfläche #1b1d20 modusfrei in grund.css.
+  test272 §10, 16 Punkte, vier Gegenproben rot gesehen. sw v37.

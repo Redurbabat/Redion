@@ -26,6 +26,8 @@
  * §6  Kein Reiter ist leer, und das Band zeigt genau die Reiter des Registers.
  * §7  Die zwölf Stellen, an denen der Umbau lautlos brechen kann.
  * §8  Gegenproben — kann dieser Lauf überhaupt rot werden?
+ * §9  Bau-Hygiene.
+ * §10 Die Gold-Marken sind gerechnet, nicht geschätzt.
  *
  *   node pruefungen/lauf/test272.mts
  * ==========================================================================*/
@@ -371,6 +373,106 @@ p('… und nennt die gemessene Zahl der Bandeinträge',
   /\b141\b/.test(lies('doku/PREMIUM-SHELL-MATRIX.md')));
 p('ENTSCHEIDUNGEN.md hält E272 fest',
   /^E272 — /m.test(lies('ENTSCHEIDUNGEN.md')));
+
+/* ==========================================================================
+ * §10 — Die Gold-Marken sind gerechnet, nicht geschätzt (E272 Phase B)
+ * ========================================================================*/
+console.log('\n10 · Die Gold-Marken (E272)');
+
+/* WARUM DAS HIER STEHT UND NICHT IN test245: dort wird am laufenden Bild
+   gemessen — was nichts einfärbt, hat auch nichts zu messen. Die Gold-Marken
+   sind in Phase B eingeführt und in Phase C erst benutzt. Zwischen beiden
+   liegt genau die Lücke, in der sich ein unlesbarer Wert einnisten kann.
+
+   Gemessen werden deshalb die WERTE, die der Browser für `:root` liefert —
+   in beiden Themen, mit derselben WCAG-Rechnung wie test127 und test245. */
+
+const wcag = (a: string, b: string): number => {
+  const kanal = (x: number): number => {
+    const c = x / 255;
+    return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  };
+  const licht = (h: string): number => {
+    const t = h.trim().replace('#', '');
+    const v = t.length === 3 ? t.split('').map(c => c + c).join('') : t;
+    const r = parseInt(v.slice(0, 2), 16), g = parseInt(v.slice(2, 4), 16),
+          bl = parseInt(v.slice(4, 6), 16);
+    return 0.2126 * kanal(r) + 0.7152 * kanal(g) + 0.0722 * kanal(bl);
+  };
+  const la = licht(a), lb = licht(b);
+  return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+};
+
+const markenLesen = async (thema: string) => {
+  await seite.evaluate((t: string) =>
+    document.documentElement.setAttribute('data-theme', t), thema);
+  await seite.waitForTimeout(250);
+  return await seite.evaluate(() => {
+    const s = getComputedStyle(document.documentElement);
+    const w = (n: string): string => s.getPropertyValue(n).trim();
+    return {
+      gold: w('--gold'), bright: w('--gold-bright'), deep: w('--gold-deep'),
+      tinte: w('--gold-tinte'), bg: w('--bg'), karte: w('--bg-card'),
+      schale: w('--schale-grund'), schaleText: w('--schale-text'),
+      schaleStill: w('--schale-still')
+    };
+  }) as Record<string, string>;
+};
+
+for (const thema of ['light', 'dark']) {
+  const m = await markenLesen(thema);
+  const wo = thema === 'light' ? 'Hellmodus' : 'Dunkelmodus';
+
+  p(wo + ': die vier Gold-Marken sind da',
+    !!m['gold'] && !!m['bright'] && !!m['deep'] && !!m['tinte'],
+    JSON.stringify(m));
+
+  /* GOLD ALS TINTE muss 4,5 schaffen — auf dem Grund UND auf der Karte.
+     Genau hier scheiterte im Hellmodus der Entwurfswert #caa85e mit 2,26;
+     deshalb gibt es `--gold-tinte` überhaupt. */
+  const tinteGrund = wcag(m['tinte'] ?? '#000', m['bg'] ?? '#fff');
+  const tinteKarte = wcag(m['tinte'] ?? '#000', m['karte'] ?? '#fff');
+  p(wo + ': --gold-tinte ist auf dem Grund lesbar', tinteGrund >= 4.5,
+    tinteGrund.toFixed(2) + ' — nötig 4,5');
+  p(wo + ': --gold-tinte ist auch auf der Karte lesbar', tinteKarte >= 4.5,
+    tinteKarte.toFixed(2) + ' — nötig 4,5');
+
+  /* GOLD ALS RAHMEN braucht 3,0 (Bedienelement), nicht 4,5. */
+  const deepKarte = wcag(m['deep'] ?? '#000', m['karte'] ?? '#fff');
+  p(wo + ': --gold-deep taugt als Rahmen und Fokusring', deepKarte >= 3.0,
+    deepKarte.toFixed(2) + ' — nötig 3,0');
+
+  /* DIE SCHALENFLÄCHE ist in beiden Themen dieselbe dunkle Fläche. Ihre
+     Schrift und der aktive Reiter müssen darauf lesbar sein. */
+  const st = wcag(m['schaleText'] ?? '#fff', m['schale'] ?? '#000');
+  const ss = wcag(m['schaleStill'] ?? '#fff', m['schale'] ?? '#000');
+  const br = wcag(m['bright'] ?? '#fff', m['schale'] ?? '#000');
+  p(wo + ': --schale-text ist auf der Schalenfläche lesbar', st >= 4.5,
+    st.toFixed(2));
+  p(wo + ': --schale-still reicht für Gruppentitel', ss >= 4.5, ss.toFixed(2));
+  p(wo + ': --gold-bright trägt den aktiven Reiter', br >= 4.5, br.toFixed(2));
+}
+
+/* GEGENPROBE: die Rechnung selbst. Zwei Werte, deren Verhältnis bekannt ist —
+   Schwarz auf Weiss sind 21, Weiss auf Weiss ist 1. Ohne diesen Punkt könnte
+   `wcag` immer 21 liefern und alle Prüfungen oben wären dauerhaft grün. */
+p('Gegenprobe: die Kontrastrechnung rechnet wirklich',
+  Math.abs(wcag('#000000', '#ffffff') - 21) < 0.01 &&
+  Math.abs(wcag('#ffffff', '#ffffff') - 1) < 0.01,
+  wcag('#000000', '#ffffff').toFixed(2) + ' / ' + wcag('#ffffff', '#ffffff').toFixed(2));
+
+/* Und die Masse der Schale — sie stehen modusfrei in grund.css. */
+const masse = await seite.evaluate(() => {
+  const s = getComputedStyle(document.documentElement);
+  return ['--shell-reiter-h', '--shell-band-h', '--kante-b', '--kante-knopf',
+          '--kanten-lade-b', '--backstage-nav-b']
+    .map(n => n + '=' + s.getPropertyValue(n).trim());
+}) as string[];
+p('Die sechs Masse der Schale sind gesetzt',
+  masse.every(x => /=\d+px$/.test(x)), masse.join(' · '));
+console.log('    ' + masse.join(' · '));
+
+await seite.evaluate(() => document.documentElement.removeAttribute('data-theme'));
 
 await browser.close();
 server.close();

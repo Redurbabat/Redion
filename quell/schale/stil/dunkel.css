@@ -88,6 +88,47 @@
   --accent-text:   #9b87ff;
   --accent-schwach: rgba(109,74,255,.16);
   --accent-warm:   #fb923c;
+
+  /* ==========================================================================
+   * GOLD — die Farbe der SCHALE (E272)
+   * --------------------------------------------------------------------------
+   * Der Premium-Entwurf setzt durchgehend Gold. Violett bleibt, wo es INHALT
+   * einfärbt (Haken, Kalendereinträge, Markierungen in der Seite); Gold
+   * übernimmt, was die APP ist: Reiter, Kanten, Fokusringe, Überlaufknopf.
+   *
+   * Die Trennung ist nach ZUSTÄNDIGKEIT, nicht nach Geschmack — beides
+   * nebeneinander wäre bunt statt gestaltet. Statusfarben bleiben, was sie
+   * sind: ein rotes „nicht gesichert" wird nicht golden.
+   *
+   * DREI ROLLEN, DREI WERTE — die Lehre aus E199. Der Akzent hatte dort
+   * einen Wert für zwei Rollen, und als Tinte reichte er nicht. Beim Gold
+   * ist es genauso, nur schärfer: gemessen auf dem Grund #141414 und auf
+   * der Karte #202020.
+   *
+   *     --gold        #d8b767   Grund 9,55   Karte 8,45   Fläche UND Tinte
+   *     --gold-bright #f0d58d   Grund 12,81  Karte 11,33  Hervorhebung
+   *     --gold-deep   #9e7c39   Grund 4,73   Karte 4,19   Rahmen, Ring
+   *
+   * `--gold-deep` reicht auf der Karte NICHT für Text (4,19 gegen 4,5), sehr
+   * wohl aber für ein Bedienelement (3,0). Deshalb ist es der Rahmen und
+   * nicht die Schrift.
+   * ========================================================================*/
+  --gold:        #d8b767;
+  --gold-bright: #f0d58d;
+  --gold-deep:   #9e7c39;
+  /* GOLD ALS TINTE. Im Dunkelmodus kann `--gold` es selbst (8,45 auf der
+     Karte) — der eigene Name steht trotzdem hier, weil er im HELLMODUS
+     einen anderen Wert braucht. Wer `color: var(--gold-tinte)` schreibt,
+     bekommt in beiden Modi etwas Lesbares; wer `var(--gold)` schreibt, im
+     Hellmodus 2,26 zu 1. */
+  --gold-tinte:  #d8b767;
+  /* Die Glasschichten. Auf dunklem Grund tragen sie WENIGER Farbe als im
+     Hellmodus — ein Schleier über Schwarz wirkt kräftiger als über Weiss.
+     15/24 % wären hier zu viel. */
+  --gold-glass:  color-mix(in srgb, var(--gold) 13%, transparent);
+  --gold-strong: color-mix(in srgb, var(--gold) 22%, transparent);
+  --gold-line:   color-mix(in srgb, var(--gold) 34%, transparent);
+  --gold-shadow: 0 6px 20px color-mix(in srgb, #000000 46%, transparent);
   --gefahr:        #ef4444;
   --erfolg:        #22c55e;
   --info:          #38bdf8;
