@@ -18,6 +18,37 @@ const lies = (p: string): string => fs.readFileSync(pfad.join(wurzel, p), 'utf8'
 
 let html = lies('index.html');
 
+/* Lokale CSS-Imports mitnehmen.
+
+   Ein normales index.html darf ein Stilblatt in kleinere Stilblätter teilen.
+   Die Einzeldatei darf diese Neben-Dateien aber nicht voraussetzen. Ein
+   `@import url("./einfach.css")` würde nach dem Einbetten relativ zur
+   Einzeldatei gesucht — also am falschen Ort — und die Oberfläche wäre dort
+   unvollständig.
+
+   Deshalb werden ausschliesslich lokale Imports rekursiv eingesetzt. URLs,
+   data:-Adressen und andere externe Quellen bleiben unangetastet. Ein Kreis
+   in lokalen Imports ist ein Baufehler und wird ausdrücklich gemeldet, statt
+   eine halb gebaute Datei zu erzeugen. */
+const cssMitImports = (datei: string, kette: string[] = []): string => {
+  const normal = pfad.normalize(datei);
+  if (kette.includes(normal)) {
+    throw new Error('Kreis in CSS-Imports: ' + [...kette, normal].join(' -> '));
+  }
+  const basis = pfad.dirname(normal);
+  const naechste = [...kette, normal];
+  return lies(normal).replace(
+    /@import\s+(?:url\(\s*)?["']([^"')]+)["']\s*\)?\s*;/g,
+    (ganz: string, ziel: string) => {
+      const z = String(ziel).trim();
+      if (/^(?:[a-z]+:|\/\/|#)/i.test(z)) return ganz;
+      const importDatei = pfad.normalize(pfad.join(basis, z));
+      return '\n/* ===== import ' + importDatei.replace(/\\/g, '/') + ' ===== */\n' +
+             cssMitImports(importDatei, naechste) + '\n';
+    }
+  );
+};
+
 /* Stilblätter einsetzen — ALLE, in der Reihenfolge, in der sie im HTML stehen.
    Hier fehlte das g: solange es nur ein Stilblatt gab, fiel das nicht auf.
    Ab dem zweiten hätte die Einzeldatei die übrigen als <link> behalten — und
@@ -26,7 +57,7 @@ let html = lies('index.html');
    Gestaltung fehlt, aber nichts meldet einen Fehler. */
 html = html.replace(/<link rel="stylesheet" href="([^"]+)">/g,
   (_m: string, datei: string) =>
-    '<style>\n/* ===== ' + datei + ' ===== */\n' + lies(datei) + '\n</style>');
+    '<style>\n/* ===== ' + datei + ' ===== */\n' + cssMitImports(datei) + '\n</style>');
 
 /* Skripte einsetzen — in der Reihenfolge, in der sie im HTML stehen */
 html = html.replace(/<script src="(quell\/[^"]+)"><\/script>/g,
