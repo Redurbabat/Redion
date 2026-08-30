@@ -7,17 +7,20 @@
  * ----------------------------------------------------------------------------
  * ==========================================================================*/
 /* ==========================================================================
- * notebook.js — die Ansicht „Notizhefte" (E264)
+ * notebook.js — die Ansicht „Notizhefte" (E264, Bibliothek dazu in E265)
  *
  * Redur, wörtlich: „Ich brauche eine ganz neue Ansicht, komplett neu, wie
  * GoodNotes. Es sollte schnell zugreifbar sein — wenn man öffnet, muss man
- * direkt wissen, was man machen muss."
+ * direkt wissen, was man machen muss." Und zum Dossier: „Es muss so sein —
+ * aber ohne unsere Funktionen zu löschen."
  *
  * Die Ansicht ist ein Regal aus Heft-Deckeln, das mit EINEM Tipp in ein
- * schreibbereites A4-Heft führt. GoodNotes ist dabei nur die Inspiration
- * für den ABLAUF (Regal → antippen → sofort schreiben); die Optik besteht
- * vollständig aus Redions gezeichneten Deckeln und Marken — nichts wird
- * nachgebaut.
+ * schreibbereites A4-Heft führt. Seit E265 ist sie zusätzlich die
+ * Heft-Bibliothek aus dem GoodNotes-Dossier: Reiter (Dokumente, Favoriten,
+ * Papierkorb), Fächer, Gitter oder Liste, Stern, Deckelfarbe und das
+ * Verschlüsseln im Kontextmenü. GoodNotes liefert dabei nur die ABLÄUFE;
+ * die Optik besteht vollständig aus Redions gezeichneten Deckeln und
+ * Marken — nichts wird nachgebaut.
  *
  * EIN HEFT IST KEINE NEUE DATENART, sondern eine Ansichtsregel: eine
  * lebende Seite, deren direkte Kinder mindestens einen blatt-Block und
@@ -26,6 +29,14 @@
  * bestimmt (artVon: pdf hat Vorrang vor blatt). Das geöffnete Heft ist
  * der vorhandene Dokumentmodus; diese Datei steuert nur den kurzen Weg
  * dorthin bei.
+ *
+ * EIN FACH IST GENAUSO WENIG EINE DATENART: eine lebende Seite ohne
+ * eigene Blätter, in der Hefte liegen. Das einzige gespeicherte Korn ist
+ * `heftArt` — 'fach' am frisch angelegten, noch leeren Fach (sonst wäre
+ * es unsichtbar, bis das erste Heft darin liegt) und 'heft' an einer
+ * Seite, die IM REGAL verschlüsselt wurde (ihre Kinder sind dann
+ * Chiffretext, die abgeleitete Regel wäre blind). Beides ist additiv,
+ * nichts Bestehendes ändert seine Bedeutung.
  *
  * Die Ansicht heisst „Notizhefte" und nicht „Hefte", weil „Heft" seit
  * E207 in der Bibliothek die Quellen-Gruppierung meint — ein Wort darf
@@ -36,28 +47,69 @@ const Notebook = (() => {
     const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] ?? c));
     /* Der Zustand des Regals ist bewusst FLÜCHTIG: die Sonderansicht wird
        bei jedem `App.oeffne` weggeräumt (schale.js, zeigeSonder). Was
-       überleben muss, liegt in Meta: `heft:zuletzt` und `heft:papier`. */
+       überleben muss, liegt in Meta: `heft:zuletzt`, `heft:papier` und die
+       Darstellungswahl `heft:form`. Reiter und offenes Fach sind
+       Blickrichtungen, keine Orte — nach einem Neuladen beginnt das Regal
+       vorn (dieselbe Entscheidung wie die Reiter der Bibliothek; die
+       Grenze steht in LUECKEN.md). */
     let searchText = '';
     let shelfRoot = null;
+    let tab = 'dokumente';
+    let fachId = null;
     /* ------------------------------------------------------------------ *
-     * Die Heft-Regel
+     * Die Heft-Regel — und seit E265 die Fach-Regel daneben
      * ------------------------------------------------------------------ */
-    /** Eine Seite ist ein Heft, wenn unter ihren DIREKTEN Kindern ein
-     *  blatt-Block liegt und kein pdfseite-Block. Der pdf-Vorrang ist
-     *  deckungsgleich mit der Deckel-Art der Bibliothek — eine Seite darf
-     *  nicht dort als PDF und hier als Heft auftauchen. Nur direkte
-     *  Kinder; die Grenze steht in LUECKEN.md. */
-    const isNotebook = (p) => {
-        if (!p || p.type !== 'page' || p.alive === false || p.system)
+    /** Heftartig OHNE die Frage, ob die Seite lebt — der Papierkorb-Reiter
+     *  braucht dieselbe Regel für tote Seiten. `trashBlock` lässt die
+     *  Kinder lebendig, `childrenOf` funktioniert also unverändert.
+     *  Eine verschlüsselte Seite hat KEINE lesbaren Kinder mehr; sie
+     *  zählt als Heft, solange sie gesperrt ist und den Merker trägt
+     *  (gesetzt beim Sperren aus dem Regal). Sobald sie wieder offen ist,
+     *  entscheidet allein die abgeleitete Regel — ein verwaister Merker
+     *  kann so nie lügen. */
+    const heftArtig = (p) => {
+        if (!p || p.type !== 'page' || p.system)
             return false;
+        if (p.locked)
+            return p.heftArt === 'heft';
         const kinder = Store.childrenOf(p.id);
         if (kinder.some((k) => k.type === 'pdfseite'))
             return false;
         return kinder.some((k) => k.type === 'blatt');
     };
+    /** Eine Seite ist ein Heft, wenn sie lebt und heftartig ist. Nur
+     *  direkte Kinder; der pdf-Vorrang ist deckungsgleich mit der
+     *  Deckel-Art der Bibliothek. Grenzen stehen in LUECKEN.md. */
+    const isNotebook = (p) => !!p && p.alive !== false && heftArtig(p);
+    /** Ein Fach: eine lebende Seite ohne eigene Blätter/PDF-Seiten, in der
+     *  mindestens ein Heft liegt — oder die als Fach angelegt wurde
+     *  (`heftArt:'fach'`), damit sie nicht unsichtbar ist, solange sie
+     *  leer ist. Eine verschlüsselte Seite ist nie ein Fach: was in ihr
+     *  liegt, ist von aussen nicht zu sehen. */
+    const istFach = (p) => {
+        if (!p || p.type !== 'page' || p.alive === false || p.system || p.locked)
+            return false;
+        const kinder = Store.childrenOf(p.id);
+        if (kinder.some((k) => k.type === 'blatt' || k.type === 'pdfseite'))
+            return false;
+        return kinder.some(isNotebook) || p.heftArt === 'fach';
+    };
     const notebookPages = () => Object.values(Store.cache.blocks)
         .filter(isNotebook)
         .sort((a, b) => String(b.edited || '').localeCompare(String(a.edited || '')));
+    /** Alle Fächer, flach und nach Namen — auch ein Fach in einem Fach
+     *  steht an der Wurzel (EINE Ebene zeigt das Regal; nichts geht
+     *  verloren, die Grenze steht in LUECKEN.md). */
+    const faecher = () => Object.values(Store.cache.blocks)
+        .filter(istFach)
+        .sort((a, b) => String(a.text || '').localeCompare(String(b.text || ''), 'de'));
+    /** Hefte, deren Eltern-Seite KEIN Fach ist — sie liegen lose im Regal
+     *  (Hefte in gewöhnlichen Seiten bleiben so sichtbar, wie seit E264). */
+    const loseHefte = () => notebookPages().filter(p => !istFach(p.parentId ? Store.getBlock(p.parentId) : null));
+    const fachHefte = (fid) => Store.childrenOf(fid).filter(isNotebook)
+        .sort((a, b) => String(b.edited || '').localeCompare(String(a.edited || '')));
+    /** Tote Hefte für den Papierkorb-Reiter. */
+    const toteHefte = () => Store.trashed().filter(heftArtig);
     /** Wie viele A4-Blätter die Seite hat — echt gerechnet aus der
      *  Blatthöhe (E208: keine erfundene Zahl), je blatt-Block mindestens
      *  eines. */
@@ -74,10 +126,29 @@ const Notebook = (() => {
         return bib && typeof bib.wannText === 'function' ? bib.wannText(p.edited) : '';
     };
     /** „1 Blatt", „5 Blätter" — eine Einzahl, die „1 Blätter" sagt, sieht
-     *  aus wie ein Rechenfehler. */
+     *  aus wie ein Rechenfehler. Bei einer verschlüsselten Seite wäre die
+     *  Zahl 0 und damit gelogen — dort steht das ehrliche Wort. */
     const sheetLabel = (p) => {
+        if (p.locked)
+            return 'Verschlüsselt';
         const n = sheetCount(p);
         return n === 1 ? '1 Blatt' : n + ' Blätter';
+    };
+    /* Die Deckelfarbe ist das BESTEHENDE Feld `color`, das an jeder Seite
+       liegt und bei Seiten nie gezeichnet wurde — hier wird es zur Kante
+       am Deckel. Nur diese Namen erzeugen ein Attribut: der Wert wandert
+       in einen Stil, und ein Feld aus einer fremden Sicherung darf dort
+       nichts einschleusen können (§19). */
+    const FARBEN = [
+        { id: 'gray', name: 'Grau' }, { id: 'brown', name: 'Braun' },
+        { id: 'orange', name: 'Orange' }, { id: 'yellow', name: 'Gelb' },
+        { id: 'green', name: 'Grün' }, { id: 'blue', name: 'Blau' },
+        { id: 'purple', name: 'Violett' }, { id: 'pink', name: 'Rosa' },
+        { id: 'red', name: 'Rot' }
+    ];
+    const farbeVon = (p) => {
+        const wert = String(p?.color || '');
+        return FARBEN.some(f => f.id === wert) ? wert : '';
     };
     /* ------------------------------------------------------------------ *
      * Öffnen und Anlegen
@@ -113,6 +184,14 @@ const Notebook = (() => {
             renderShelf();
             return;
         }
+        if (p.locked) {
+            /* Eine gesperrte Seite öffnet ihren Sperrbildschirm über den ganz
+               normalen Weg — kein Dokumentmodus, kein Fokusversuch in
+               Chiffretext. */
+            Store.setMeta('heft:zuletzt', id);
+            App.oeffne(id);
+            return;
+        }
         if (!p.dokumentModus)
             Store.updateBlock(id, { dokumentModus: true });
         Store.setMeta('heft:zuletzt', id);
@@ -120,19 +199,86 @@ const Notebook = (() => {
         focusFirstLine(id);
     };
     /** Ein Heft anlegen und SOFORT schreibbereit öffnen — ohne Dialog.
-     *  Die Papierwahl liegt im geöffneten Heft einen Tipp entfernt
-     *  (Blatt-Leiste); als Vorgabe gilt das zuletzt gewählte Papier. Das
+     *  Im offenen Fach entsteht es IM Fach. Die Papierwahl liegt im
+     *  geöffneten Heft einen Tipp entfernt (Blatt-Leiste); als Vorgabe
+     *  gilt das zuletzt gewählte Papier — und wer im Neu-Menü ein Papier
+     *  antippt, wählt es damit zugleich als neue Vorgabe. Das
      *  E118-Textkind wird hier selbst angelegt, damit der Fokusweg die
      *  Kennung kennt, statt auf den Renderer zu warten. */
-    const createNotebook = () => {
+    const createNotebook = (papier) => {
+        const gewaehlt = papier || String(Store.getMeta('heft:papier', 'liniert'));
+        if (papier)
+            Store.setMeta('heft:papier', papier);
+        const eltern = tab === 'dokumente' ? fachId : null;
         const datum = new Date().toLocaleDateString('de-DE', { day: 'numeric', month: 'short' });
-        const p = Store.addPage(null, { text: 'Heft vom ' + datum, icon: '📓' });
-        const sheet = Store.addBlock(p.id, 'blatt', { text: '', papier: Store.getMeta('heft:papier', 'liniert') });
+        const p = Store.addPage(eltern, { text: 'Heft vom ' + datum, icon: '📓' });
+        const sheet = Store.addBlock(p.id, 'blatt', { text: '', papier: gewaehlt });
         Store.addBlock(sheet.id, 'text', { text: '' });
         Store.updateBlock(p.id, { dokumentModus: true });
         Store.setMeta('heft:zuletzt', p.id);
         App.oeffne(p.id);
         focusFirstLine(p.id);
+    };
+    /** Ein Fach anlegen — eine gewöhnliche Seite mit Mappensymbol. Der
+     *  `heftArt:'fach'`-Merker hält sie im Regal sichtbar, solange sie
+     *  leer ist; sobald Hefte darin liegen, trüge sie sich auch ohne ihn
+     *  selbst (istFach). */
+    const createFach = async () => {
+        const name = await UI.frage('Name des Fachs', '');
+        if (!name)
+            return;
+        Store.addPage(null, { text: name, icon: '🗂', heftArt: 'fach' });
+        renderShelf();
+    };
+    /** Ein Heft in ein Fach hängen (oder mit zielId null zurück ins
+     *  Regal). `Werkzeuge.verschiebe` pflegt beide content-Listen und
+     *  zeichnet selbst neu; die Ring-Wache davor fehlt ihm — ein Fach,
+     *  das UNTER dem Heft hängt, wäre sonst sein eigener Grossvater. */
+    const moveToFach = (heftId, zielId) => {
+        const p = Store.getBlock(heftId);
+        if (!p)
+            return;
+        if (zielId) {
+            if (zielId === heftId ||
+                (typeof WissenDienst !== 'undefined' && WissenDienst.istUnter(zielId, heftId))) {
+                UI.toast('Das geht nicht — dieses Fach liegt im Heft selbst.');
+                return;
+            }
+        }
+        Werkzeuge.verschiebe(p, zielId);
+    };
+    const toggleFavorit = (id) => {
+        const p = Store.getBlock(id);
+        if (!p)
+            return;
+        Store.updateBlock(id, { favorite: !p.favorite });
+        renderShelf();
+    };
+    const setzeFarbe = (id, farbe) => {
+        Store.updateBlock(id, { color: FARBEN.some(f => f.id === farbe) ? farbe : '' });
+        renderShelf();
+    };
+    /** Verschlüsseln aus dem Regal. NACH dem erfolgreichen Sperren wird
+     *  `heftArt:'heft'` gesetzt — die Kinder sind dann Chiffretext, und
+     *  ohne den Merker fiele das Heft aus seiner eigenen Bibliothek
+     *  (Erfolg = das locked-Feld steht wirklich am Block; ein Abbruch im
+     *  Passwortdialog ändert nichts). */
+    const sperrenHier = async (id) => {
+        const p = Store.getBlock(id);
+        if (!p)
+            return;
+        await Werkzeuge.sperren(p);
+        const danach = Store.getBlock(id);
+        if (danach?.locked && danach.heftArt !== 'heft')
+            Store.updateBlock(id, { heftArt: 'heft' });
+        renderShelf();
+    };
+    const entsperrenHier = async (id) => {
+        const p = Store.getBlock(id);
+        if (!p)
+            return;
+        await Werkzeuge.entsperren(p);
+        renderShelf();
     };
     /** Für die Startansicht „Zuletzt benutztes Heft": direkt hinein — und
      *  wenn es das Heft nicht mehr gibt, lautlos das Regal (§47). */
@@ -144,30 +290,109 @@ const Notebook = (() => {
         else
             oeffnen();
     };
+    const openFach = (id) => { fachId = id; renderShelf(); };
+    const closeFach = () => { fachId = null; renderShelf(); };
     /* ------------------------------------------------------------------ *
      * Das Regal
      * ------------------------------------------------------------------ */
+    const form = () => Store.getMeta('heft:form', 'gitter') === 'liste' ? 'liste' : 'gitter';
     /** Ein Deckel im Regal. Die Optik ist die gezeichnete Deckelkarte der
      *  Bibliothek (Klassen `bib-deckel`/`bib-deckel-blatt`, E207) — das
      *  Markup steht hier bewusst NOCH EINMAL, denn ein Bereich importiert
      *  keinen anderen (§5); geteilt wird über die Stilklassen. Das
      *  Deckel-Blatt trägt das Papier des ersten Blatts: ein kariertes
-     *  Heft sieht im Regal kariert aus. */
+     *  Heft sieht im Regal kariert aus. Stern und ⋯ sind GESCHWISTER des
+     *  Deckel-Knopfs — ein Knopf im Knopf wäre keiner (§38). */
     const coverCard = (p) => {
         const sheet = Store.childrenOf(p.id).find((k) => k.type === 'blatt');
         const papier = String(sheet?.papier || 'blanko');
+        const farbe = farbeVon(p);
+        const deckelBlatt = p.locked
+            ? `<span class="bib-deckel-blatt is-leer is-gesperrt">` +
+                `<span class="nh-schloss" aria-hidden="true">🔒</span></span>`
+            : `<span class="bib-deckel-blatt is-leer" data-papier="${esc(papier)}">` +
+                `<i class="bib-papier" aria-hidden="true"></i></span>`;
         return `<div class="nh-karte">` +
-            `<button class="bib-deckel" data-id="${esc(p.id)}" data-art="blatt" ` +
-            `aria-label="Heft öffnen: ${esc(p.text || 'Ohne Titel')}">` +
+            `<button class="bib-deckel" data-id="${esc(p.id)}" data-art="blatt"` +
+            (farbe ? ` data-farbe="${esc(farbe)}" style="--deckel-farbe:var(--c-${esc(farbe)})"` : '') +
+            ` aria-label="Heft öffnen: ${esc(p.text || 'Ohne Titel')}">` +
             /* `is-leer` lässt das gezeichnete Papier durch — auf diesen Deckeln
                steht nie Vorschautext, das Papier IST die Vorschau. */
-            `<span class="bib-deckel-blatt is-leer" data-papier="${esc(papier)}">` +
-            `<i class="bib-papier" aria-hidden="true"></i></span>` +
+            deckelBlatt +
             `<span class="bib-deckel-name"><b>${esc(p.text || 'Ohne Titel')}</b></span>` +
-            `<small>${esc(sheetLabel(p))} · ${esc(wann(p))}</small>` +
+            `<small>${esc(sheetLabel(p))}${p.locked ? '' : ' · ' + esc(wann(p))}</small>` +
             `</button>` +
+            sternKnopf(p) +
             `<button class="nh-mehr" data-mehr="${esc(p.id)}" title="Mehr zu diesem Heft" ` +
             `aria-label="Mehr zu ${esc(p.text || 'diesem Heft')}">⋯</button></div>`;
+    };
+    /** Der Stern zeigt seinen Zustand über die FORM (★ gefüllt, ☆ leer)
+     *  und `aria-pressed` — nicht nur über Farbe (§38). */
+    const sternKnopf = (p) => `<button class="nh-stern${p.favorite ? ' an' : ''}" data-stern="${esc(p.id)}" ` +
+        `aria-pressed="${p.favorite ? 'true' : 'false'}" ` +
+        `title="${p.favorite ? 'Aus Favoriten' : 'Zu Favoriten'}" ` +
+        `aria-label="${p.favorite ? 'Aus Favoriten: ' : 'Zu Favoriten: '}` +
+        `${esc(p.text || 'Ohne Titel')}">${p.favorite ? '★' : '☆'}</button>`;
+    /** Die Fach-Karte: Redions gezeichnete Ordner-Mappe (`data-art="ordner"`
+     *  aus der Bibliotheks-Anatomie) mit Symbol und ehrlicher Zählung. */
+    const fachCard = (f) => {
+        const n = fachHefte(f.id).length;
+        return `<div class="nh-karte nh-fach">` +
+            `<button class="bib-deckel" data-fach="${esc(f.id)}" data-art="ordner" ` +
+            `aria-label="Fach öffnen: ${esc(f.text || 'Ohne Namen')}">` +
+            `<span class="bib-deckel-blatt is-leer">` +
+            `<span class="nh-fach-icon" aria-hidden="true">${esc(f.icon || '🗂')}</span></span>` +
+            `<span class="bib-deckel-name"><b>${esc(f.text || 'Ohne Namen')}</b></span>` +
+            `<small>${n === 1 ? '1 Heft' : n + ' Hefte'}</small>` +
+            `</button>` +
+            `<button class="nh-mehr" data-mehr-fach="${esc(f.id)}" title="Mehr zu diesem Fach" ` +
+            `aria-label="Mehr zu ${esc(f.text || 'diesem Fach')}">⋯</button></div>`;
+    };
+    /** Eine Zeile der Listenform — Mini-Deckel, Name, Blattzahl, Zeit. */
+    const listRow = (p) => {
+        const sheet = Store.childrenOf(p.id).find((k) => k.type === 'blatt');
+        const papier = String(sheet?.papier || 'blanko');
+        const mini = p.locked
+            ? `<span class="bib-deckel-blatt is-leer nh-mini is-gesperrt" aria-hidden="true">` +
+                `<span class="nh-schloss">🔒</span></span>`
+            : `<span class="bib-deckel-blatt is-leer nh-mini" data-papier="${esc(papier)}" ` +
+                `aria-hidden="true"><i class="bib-papier"></i></span>`;
+        const farbe = farbeVon(p);
+        return `<div class="nh-zeile">` +
+            `<button class="nh-zeile-auf" data-id="${esc(p.id)}"` +
+            (farbe ? ` data-farbe="${esc(farbe)}" style="--deckel-farbe:var(--c-${esc(farbe)})"` : '') +
+            `>` + mini +
+            `<span class="nh-zeile-text"><b>${esc(p.text || 'Ohne Titel')}</b>` +
+            `<small>${esc(sheetLabel(p))}${p.locked ? '' : ' · ' + esc(wann(p))}</small></span>` +
+            `</button>` + sternKnopf(p) +
+            `<button class="nh-mehr" data-mehr="${esc(p.id)}" title="Mehr zu diesem Heft" ` +
+            `aria-label="Mehr zu ${esc(p.text || 'diesem Heft')}">⋯</button></div>`;
+    };
+    const fachRow = (f) => {
+        const n = fachHefte(f.id).length;
+        return `<div class="nh-zeile nh-fach">` +
+            `<button class="nh-zeile-auf" data-fach="${esc(f.id)}">` +
+            `<span class="nh-mini nh-mini-fach" aria-hidden="true">${esc(f.icon || '🗂')}</span>` +
+            `<span class="nh-zeile-text"><b>${esc(f.text || 'Ohne Namen')}</b>` +
+            `<small>${n === 1 ? '1 Heft' : n + ' Hefte'}</small></span>` +
+            `</button>` +
+            `<button class="nh-mehr" data-mehr-fach="${esc(f.id)}" title="Mehr zu diesem Fach" ` +
+            `aria-label="Mehr zu ${esc(f.text || 'diesem Fach')}">⋯</button></div>`;
+    };
+    /** Ein toter Deckel im Papierkorb-Reiter: nichts zu öffnen, nur der
+     *  eine Wort-Knopf. Endgültig löschen gibt es hier NICHT — die eine
+     *  Löschmaschine mit Rückfrage ist der Papierkorb selbst (E29). */
+    const trashCard = (p) => {
+        const sheet = Store.childrenOf(p.id).find((k) => k.type === 'blatt');
+        const papier = String(sheet?.papier || 'blanko');
+        return `<div class="nh-karte nh-tot">` +
+            `<div class="bib-deckel" data-art="blatt" aria-hidden="true">` +
+            `<span class="bib-deckel-blatt is-leer" data-papier="${esc(papier)}">` +
+            `<i class="bib-papier"></i></span>` +
+            `<span class="bib-deckel-name"><b>${esc(p.text || 'Ohne Titel')}</b></span>` +
+            `</div>` +
+            `<button class="rb leise nh-herstellen" data-herstellen="${esc(p.id)}">` +
+            `Wiederherstellen</button></div>`;
     };
     const resumeCard = () => {
         const id = String(Store.getMeta('heft:zuletzt', '') || '');
@@ -190,52 +415,277 @@ const Notebook = (() => {
         (andereSeiten
             ? `<button class="rb leise" data-alle>Alle Dokumente ansehen</button>` : '') +
         `</div>`;
-    const shelfHtml = () => {
-        const alle = notebookPages();
-        const filter = searchText.trim().toLowerCase();
-        const hefte = filter
-            ? alle.filter(p => String(p.text || '').toLowerCase().includes(filter))
-            : alle;
-        const gitter = `<div class="bib-gitter nh-gitter">` +
-            `<button class="nh-neu" data-neu>` +
-            `<span class="nh-neu-plus" aria-hidden="true">＋</span>` +
-            `<span>Neues Heft</span></button>` +
-            hefte.map(coverCard).join('') + `</div>`;
-        const inhalt = alle.length
-            ? (resumeCard() + (filter && !hefte.length
-                ? `<p class="nh-nichts">Kein Heft heisst „${esc(searchText)}".</p>`
-                : gitter))
-            : emptyState(Object.values(Store.cache.blocks)
-                .some((b) => b?.type === 'page' && b.alive !== false && !b.system));
-        return `<div class="nh-regal">` +
-            `<header class="nh-kopf" data-kopfzeile="eigene">` +
-            `<h1>Notizhefte</h1>` +
+    /* ------------------------------------------------------------------ *
+     * Der Kopf: Titel oder Brotkrume, Suche, Neu, Reiter, Formwahl
+     * ------------------------------------------------------------------ */
+    const kopfHtml = () => {
+        const fach = fachId ? Store.getBlock(fachId) : null;
+        const zeile1 = `<div class="nh-kopf-zeile">` +
+            (fach
+                ? `<button class="rb leise nh-zurueck" data-zurueck>← Notizhefte</button>` +
+                    `<h1>${esc(fach.icon || '🗂')} ${esc(fach.text || 'Ohne Namen')}</h1>`
+                : `<h1>Notizhefte</h1>`) +
             `<input class="nh-suche" type="search" placeholder="Heft suchen …" ` +
             `aria-label="Notizhefte durchsuchen" value="${esc(searchText)}"` +
             `${searchText ? '' : ' hidden'}>` +
             `<button class="rb zeichen nh-suche-knopf" data-suche title="Heft suchen" ` +
             `aria-label="Notizhefte durchsuchen"><span data-sym="search"></span></button>` +
+            `<button class="rb nh-neu-knopf" data-neu-menue>＋ Neu</button>` +
             `<button class="rb nh-alle" data-alle>Alle Dokumente</button>` +
-            `</header>` + inhalt +
-            `<button class="nh-neu-fab" data-neu aria-label="Neues Heft">＋</button>` +
             `</div>`;
+        /* Die Reiterzeile nur an der Wurzel — im offenen Fach führt die
+           Brotkrume zurück, und ein Reiterwechsel dort wäre zweideutig. */
+        const favN = notebookPages().filter(p => p.favorite).length;
+        const korbN = toteHefte().length;
+        const zeile2 = fach ? '' :
+            `<div class="nh-kopf-zeile nh-kopf-zeile2">` +
+                `<div class="nh-reiter" role="group" aria-label="Bestand">` +
+                `<button data-reiter="dokumente"${tab === 'dokumente' ? ' class="on"' : ''}>Dokumente</button>` +
+                `<button data-reiter="favoriten"${tab === 'favoriten' ? ' class="on"' : ''}>Favoriten` +
+                `${favN ? ' (' + favN + ')' : ''}</button>` +
+                `<button data-reiter="papierkorb"${tab === 'papierkorb' ? ' class="on"' : ''}>Papierkorb` +
+                `${korbN ? ' (' + korbN + ')' : ''}</button>` +
+                `</div>` +
+                (tab === 'papierkorb' ? '' :
+                    `<div class="nh-form" role="group" aria-label="Darstellung">` +
+                        `<button data-form="gitter" aria-pressed="${form() === 'gitter'}"` +
+                        `${form() === 'gitter' ? ' class="on"' : ''}>Gitter</button>` +
+                        `<button data-form="liste" aria-pressed="${form() === 'liste'}"` +
+                        `${form() === 'liste' ? ' class="on"' : ''}>Liste</button>` +
+                        `</div>`) +
+                `</div>`;
+        return `<header class="nh-kopf" data-kopfzeile="eigene">${zeile1}${zeile2}</header>`;
+    };
+    /* ------------------------------------------------------------------ *
+     * Der Inhalt je Reiter
+     * ------------------------------------------------------------------ */
+    const gefiltert = (liste) => {
+        const filter = searchText.trim().toLowerCase();
+        return filter
+            ? liste.filter(p => String(p.text || '').toLowerCase().includes(filter))
+            : liste;
+    };
+    const nichtsSatz = () => `<p class="nh-nichts">Kein Heft heisst „${esc(searchText)}".</p>`;
+    const gitterHtml = (hefte, mitNeu, mitFaechern) => `<div class="bib-gitter nh-gitter">` +
+        (mitNeu
+            ? `<button class="nh-neu" data-neu>` +
+                `<span class="nh-neu-plus" aria-hidden="true">＋</span>` +
+                `<span>Neues Heft</span></button>`
+            : '') +
+        (mitFaechern ? faecher().map(fachCard).join('') : '') +
+        hefte.map(coverCard).join('') + `</div>`;
+    const listeHtml = (hefte, mitFaechern) => `<div class="nh-liste">` +
+        (mitFaechern ? faecher().map(fachRow).join('') : '') +
+        hefte.map(listRow).join('') + `</div>`;
+    const korbHtml = () => {
+        const tote = gefiltert(toteHefte());
+        return `<div class="nh-korb">` +
+            `<p class="nh-korb-hinweis">Gelöschte Hefte. Wiederherstellen geht hier — ` +
+            `endgültig löschen nur im Papierkorb selbst, mit Rückfrage.</p>` +
+            (tote.length
+                ? `<div class="bib-gitter nh-gitter">` + tote.map(trashCard).join('') + `</div>`
+                : `<p class="nh-nichts">Der Papierkorb hält kein Heft.</p>`) +
+            `<button class="rb leise nh-korb-auf" data-korb-auf>Papierkorb ganz öffnen …</button>` +
+            `</div>`;
+    };
+    const shelfHtml = () => {
+        let inhalt = '';
+        if (tab === 'papierkorb') {
+            inhalt = korbHtml();
+        }
+        else if (tab === 'favoriten') {
+            const favs = gefiltert(notebookPages().filter(p => p.favorite));
+            inhalt = favs.length
+                ? (form() === 'liste' ? listeHtml(favs, false) : gitterHtml(favs, false, false))
+                : (searchText.trim() ? nichtsSatz()
+                    : `<p class="nh-nichts">Noch kein Heft mit Stern — der Stern sitzt ` +
+                        `an jeder Karte.</p>`);
+        }
+        else if (fachId && Store.getBlock(fachId)) {
+            const hefte = gefiltert(fachHefte(fachId));
+            inhalt = (searchText.trim() && !hefte.length) ? nichtsSatz()
+                : (form() === 'liste' ? listeHtml(hefte, false) : gitterHtml(hefte, true, false));
+        }
+        else {
+            if (fachId)
+                fachId = null; /* das Fach ist weg — zurück zur Wurzel */
+            const alle = notebookPages();
+            const filter = searchText.trim();
+            if (!alle.length && !faecher().length) {
+                inhalt = emptyState(Object.values(Store.cache.blocks)
+                    .some((b) => b?.type === 'page' && b.alive !== false && !b.system));
+            }
+            else if (filter) {
+                /* Während der Suche flach über ALLE Hefte — finden schlägt
+                   sortieren; die Fach-Karten träten nur dazwischen. */
+                const hefte = gefiltert(alle);
+                inhalt = resumeCard() + (hefte.length
+                    ? (form() === 'liste' ? listeHtml(hefte, false) : gitterHtml(hefte, false, false))
+                    : nichtsSatz());
+            }
+            else {
+                const lose = loseHefte();
+                inhalt = resumeCard() + (form() === 'liste'
+                    ? listeHtml(lose, true) : gitterHtml(lose, true, true));
+            }
+        }
+        return `<div class="nh-regal">` + kopfHtml() + inhalt +
+            `<button class="nh-neu-fab" data-neu-menue aria-label="Neu">＋</button>` +
+            `</div>`;
+    };
+    /* ------------------------------------------------------------------ *
+     * Menüs
+     * ------------------------------------------------------------------ */
+    /** Das Neu-Menü am ＋-Knopf im Kopf und am Telefon-FAB. Die grosse
+     *  ＋-Kachel im Gitter bleibt davon unberührt der EIN-Klick-Weg zum
+     *  Heft (die Seele von E264). Fremde Wege laufen über den EINEN
+     *  Katalog der Schale: `App.erstellenWege()` sagt, was diese Fassung
+     *  geladen hat (§47), `App.erstellenWeg(id)` führt aus — so kennt
+     *  dieser Bereich weder PdfEinlesen noch das Whiteboard (§5, E29). */
+    const neuMenue = (anker) => {
+        const geladen = new Set((App.erstellenWege ? App.erstellenWege() : []).map((w) => String(w.id)));
+        const weg = (id, zeichen, name) => geladen.has(id)
+            ? `<button data-w="${id}"><span class="mi">${zeichen}</span>${name}</button>`
+            : '';
+        const papiere = [
+            ['liniert', 'Liniert'], ['kariert', 'Kariert'], ['blanko', 'Blanko'],
+            ['punkte', 'Punktraster'], ['mm', 'Millimeterpapier']
+        ].map(([id, name]) => `<button class="nh-papierwahl" data-w-papier="${id}" title="Neues Heft: ${name}" ` +
+            `aria-label="Neues Heft: ${name}">` +
+            `<span class="bib-deckel-blatt is-leer nh-mini" data-papier="${id}" aria-hidden="true">` +
+            `<i class="bib-papier"></i></span></button>`).join('');
+        const r = anker.getBoundingClientRect();
+        const m = UI.menu(`<button data-w="heft"><span class="mi">📓</span>Notizheft</button>` +
+            `<div class="nh-papiere">${papiere}</div>` +
+            `<button data-w="fach"><span class="mi">🗂</span>Neues Fach</button>` +
+            `<div class="sep"></div>` +
+            weg('pdf', '📕', 'PDF einlesen') +
+            weg('board', '🖍', 'Whiteboard') +
+            weg('seite', '📄', 'Textseite') +
+            `<div class="sep"></div>` +
+            `<button data-w="alle">Alle Wege …</button>`, Math.min(r.left, innerWidth - 240), Math.min(r.bottom + 4, innerHeight - 300));
+        m.addEventListener('click', (e) => {
+            const ziel = e.target instanceof Element ? e.target : null;
+            if (!ziel)
+                return;
+            const papier = ziel.closest('[data-w-papier]');
+            const b = ziel.closest('[data-w]');
+            if (!papier && !b)
+                return;
+            m.remove();
+            if (papier)
+                return createNotebook(String(papier.dataset['wPapier']));
+            const was = String(b?.dataset['w'] || '');
+            if (was === 'heft')
+                return createNotebook();
+            if (was === 'fach') {
+                void createFach();
+                return;
+            }
+            if (was === 'alle')
+                return App.erstellenBlatt();
+            /* Erst schliessen, dann handeln — wie im Katalog-Blatt selbst. */
+            setTimeout(() => App.erstellenWeg(was), 60);
+        });
+    };
+    const farbMenue = (anker, id) => {
+        const p = Store.getBlock(id);
+        if (!p)
+            return;
+        const jetzt = farbeVon(p);
+        const r = anker.getBoundingClientRect();
+        const m = UI.menu(`<div class="swatches nh-farben">` +
+            FARBEN.map(f => `<button data-farbe="${f.id}" title="${f.name}" aria-label="${f.name}" ` +
+                `aria-pressed="${jetzt === f.id}" style="background:var(--c-${f.id})">` +
+                `${jetzt === f.id ? '✓' : ''}</button>`).join('') +
+            `</div>` +
+            `<button data-farbe="">Ohne Farbe</button>`, Math.min(r.left, innerWidth - 240), r.bottom + 4);
+        m.addEventListener('click', (e) => {
+            const b = e.target.closest('[data-farbe]');
+            if (!b)
+                return;
+            m.remove();
+            setzeFarbe(id, String(b.dataset['farbe'] || ''));
+        });
+    };
+    const fachwahlMenue = (anker, heftId) => {
+        const p = Store.getBlock(heftId);
+        if (!p)
+            return;
+        const ziele = faecher().filter(f => f.id !== heftId &&
+            !(typeof WissenDienst !== 'undefined' && WissenDienst.istUnter(f.id, heftId)));
+        const imFach = istFach(p.parentId ? Store.getBlock(p.parentId) : null);
+        const r = anker.getBoundingClientRect();
+        const m = UI.menu(ziele.map(f => `<button data-z="${esc(f.id)}"><span class="mi">${esc(f.icon || '🗂')}</span>` +
+            `${esc(f.text || 'Ohne Namen')}</button>`).join('') +
+            (imFach ? `<button data-z=""><span class="mi">▤</span>Regal (ohne Fach)</button>` : '') +
+            `<div class="sep"></div>` +
+            `<button data-z-neu><span class="mi">＋</span>Neues Fach …</button>`, Math.min(r.left, innerWidth - 240), r.bottom + 4);
+        m.addEventListener('click', (e) => {
+            const ziel = e.target instanceof Element ? e.target : null;
+            if (!ziel)
+                return;
+            const neu = ziel.closest('[data-z-neu]');
+            const b = ziel.closest('[data-z]');
+            if (!neu && !b)
+                return;
+            m.remove();
+            if (neu) {
+                void (async () => {
+                    const name = await UI.frage('Name des Fachs', '');
+                    if (!name)
+                        return;
+                    const f = Store.addPage(null, { text: name, icon: '🗂', heftArt: 'fach' });
+                    moveToFach(heftId, f.id);
+                })();
+                return;
+            }
+            moveToFach(heftId, String(b?.dataset['z'] || '') || null);
+        });
     };
     const kontextMenue = (anker, id) => {
         const p = Store.getBlock(id);
         if (!p)
             return;
         const r = anker.getBoundingClientRect();
-        const m = UI.menu(`<button data-k="auf">Öffnen</button>` +
-            `<button data-k="name">Umbenennen</button>` +
-            `<button data-k="korb">In den Papierkorb</button>`, r.left - 140, r.bottom + 4);
+        const html = p.locked
+            ? `<button data-k="auf">Öffnen</button>` +
+                `<button data-k="stern">${p.favorite ? 'Aus Favoriten' : 'Zu Favoriten'}</button>` +
+                `<button data-k="entsperren">Entschlüsseln</button>` +
+                `<div class="sep"></div>` +
+                `<button data-k="korb">In den Papierkorb</button>`
+            : `<button data-k="auf">Öffnen</button>` +
+                `<button data-k="stern">${p.favorite ? 'Aus Favoriten' : 'Zu Favoriten'}</button>` +
+                `<button data-k="name">Umbenennen</button>` +
+                `<button data-k="farbe">Farbe …</button>` +
+                `<button data-k="fach">In Fach verschieben …</button>` +
+                `<button data-k="sperren">Verschlüsseln</button>` +
+                `<div class="sep"></div>` +
+                `<button data-k="korb">In den Papierkorb</button>`;
+        const m = UI.menu(html, Math.min(r.left - 140, innerWidth - 240), r.bottom + 4);
         m.addEventListener('click', (e) => {
             const b = e.target.closest('[data-k]');
             if (!b)
                 return;
             m.remove();
-            if (b.dataset['k'] === 'auf')
+            const k = b.dataset['k'];
+            if (k === 'auf')
                 return openNotebook(id);
-            if (b.dataset['k'] === 'name') {
+            if (k === 'stern')
+                return toggleFavorit(id);
+            if (k === 'farbe')
+                return farbMenue(anker, id);
+            if (k === 'fach')
+                return fachwahlMenue(anker, id);
+            if (k === 'sperren') {
+                void sperrenHier(id);
+                return;
+            }
+            if (k === 'entsperren') {
+                void entsperrenHier(id);
+                return;
+            }
+            if (k === 'name') {
                 void (async () => {
                     const name = await UI.frage('Name des Hefts', String(p.text || ''));
                     if (name) {
@@ -245,24 +695,97 @@ const Notebook = (() => {
                 })();
                 return;
             }
-            if (b.dataset['k'] === 'korb') {
-                /* Umkehrbar — der Papierkorb der Bibliothek holt es zurück. */
+            if (k === 'korb') {
+                /* Umkehrbar — der Papierkorb-Reiter holt es mit einem Klick zurück. */
                 Store.trashBlock(id);
-                UI.toast('Ins Papierkorb gelegt. Zurückholen: Bibliothek → Papierkorb.');
+                UI.toast('Ins Papierkorb gelegt — Reiter „Papierkorb" holt es zurück.');
                 renderShelf();
             }
         });
     };
+    const fachKontextMenue = (anker, id) => {
+        const f = Store.getBlock(id);
+        if (!f)
+            return;
+        const r = anker.getBoundingClientRect();
+        const m = UI.menu(`<button data-k="auf">Öffnen</button>` +
+            `<button data-k="name">Umbenennen</button>` +
+            `<div class="sep"></div>` +
+            `<button data-k="korb">In den Papierkorb</button>`, Math.min(r.left - 140, innerWidth - 240), r.bottom + 4);
+        m.addEventListener('click', (e) => {
+            const b = e.target.closest('[data-k]');
+            if (!b)
+                return;
+            m.remove();
+            if (b.dataset['k'] === 'auf')
+                return openFach(id);
+            if (b.dataset['k'] === 'name') {
+                void (async () => {
+                    const name = await UI.frage('Name des Fachs', String(f.text || ''));
+                    if (name) {
+                        Store.updateBlock(id, { text: name });
+                        renderShelf();
+                    }
+                })();
+                return;
+            }
+            if (b.dataset['k'] === 'korb') {
+                /* Die Hefte darin bleiben lebendig und erscheinen als lose Hefte
+                   an der Wurzel — trashBlock nimmt nur das Fach heraus. */
+                Store.trashBlock(id);
+                UI.toast('Fach in den Papierkorb gelegt. Seine Hefte bleiben im Regal.');
+                renderShelf();
+            }
+        });
+    };
+    /* ------------------------------------------------------------------ *
+     * Verdrahtung
+     * ------------------------------------------------------------------ */
     const bindShelf = (wurzel) => {
         wurzel.addEventListener('click', e => {
             const ziel = e.target instanceof Element ? e.target : null;
             if (!ziel)
                 return;
+            const stern = ziel.closest('[data-stern]');
+            if (stern && stern.dataset['stern'])
+                return toggleFavorit(stern.dataset['stern']);
+            const mehrFach = ziel.closest('[data-mehr-fach]');
+            if (mehrFach && mehrFach.dataset['mehrFach'])
+                return fachKontextMenue(mehrFach, mehrFach.dataset['mehrFach']);
             const mehr = ziel.closest('[data-mehr]');
             if (mehr && mehr.dataset['mehr'])
                 return kontextMenue(mehr, mehr.dataset['mehr']);
+            const menue = ziel.closest('[data-neu-menue]');
+            if (menue)
+                return neuMenue(menue);
             if (ziel.closest('[data-neu]'))
                 return createNotebook();
+            if (ziel.closest('[data-zurueck]'))
+                return closeFach();
+            if (ziel.closest('[data-korb-auf]')) {
+                App.papierkorb();
+                return;
+            }
+            const herstellen = ziel.closest('[data-herstellen]');
+            if (herstellen && herstellen.dataset['herstellen']) {
+                Store.restoreBlock(herstellen.dataset['herstellen']);
+                UI.toast('Wiederhergestellt.');
+                renderShelf();
+                return;
+            }
+            const reiter = ziel.closest('[data-reiter]');
+            if (reiter) {
+                tab = reiter.dataset['reiter'] || 'dokumente';
+                fachId = null;
+                renderShelf();
+                return;
+            }
+            const wahl = ziel.closest('[data-form]');
+            if (wahl) {
+                Store.setMeta('heft:form', wahl.dataset['form'] === 'liste' ? 'liste' : 'gitter');
+                renderShelf();
+                return;
+            }
             if (ziel.closest('[data-alle]')) {
                 const bib = globalThis.Bibliothek;
                 if (bib && typeof bib.oeffne === 'function')
@@ -277,7 +800,10 @@ const Notebook = (() => {
                 }
                 return;
             }
-            const deckel = ziel.closest('.bib-deckel[data-id], .nh-weiter[data-id]');
+            const fach = ziel.closest('[data-fach]');
+            if (fach && fach.dataset['fach'])
+                return openFach(fach.dataset['fach']);
+            const deckel = ziel.closest('.bib-deckel[data-id], .nh-weiter[data-id], .nh-zeile-auf[data-id]');
             if (deckel && deckel.dataset['id'])
                 return openNotebook(deckel.dataset['id']);
         });
@@ -286,13 +812,13 @@ const Notebook = (() => {
             if (!feld.classList.contains('nh-suche'))
                 return;
             searchText = feld.value;
-            /* Nur das Gitter neu, das Feld behält Fokus und Anschlag. */
-            const alt = wurzel.querySelector('.nh-gitter, .nh-nichts');
+            /* Nur den Inhalt neu, das Feld behält Fokus und Anschlag. */
+            const alt = wurzel.querySelector('.nh-gitter, .nh-liste, .nh-nichts');
             if (!alt)
                 return;
             const probe = document.createElement('div');
             probe.innerHTML = shelfHtml();
-            const neu = probe.querySelector('.nh-gitter, .nh-nichts');
+            const neu = probe.querySelector('.nh-gitter, .nh-liste, .nh-nichts');
             if (neu)
                 alt.replaceWith(neu);
         });
@@ -325,7 +851,13 @@ const Notebook = (() => {
         if (wrap && wrap.isConnected && document.querySelector('.nh-regal'))
             render(wrap);
     };
-    const oeffnen = () => { App.zeigeSonder('Notizhefte', render); };
+    const oeffnen = () => {
+        /* Vorhersehbar beginnen: der Weg über die Navigation zeigt die
+           Dokumente-Wurzel, nicht den Reiter von vorhin. */
+        tab = 'dokumente';
+        fachId = null;
+        App.zeigeSonder('Notizhefte', render);
+    };
     return { oeffnen, open: oeffnen, resume, render };
 })();
 window.Notebook = Notebook;

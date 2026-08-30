@@ -2218,6 +2218,13 @@ const App = (() => {
         PWA.schubladeZu && PWA.schubladeZu();
         rMenue();
     };
+    /* Der da()-gefilterte Katalog, OHNE die da-Funktionen — für jeden, der
+       die Wege anbieten will, ohne die fremden Module selbst zu kennen.
+       Seit E265 fragt das Notizhefte-Regal hier nach: sein Neu-Menü darf
+       keinen Weg versprechen, den diese Fassung nicht geladen hat (§47),
+       und dürfte dafür nicht selbst nach PdfEinlesen greifen (§5). */
+    const erstellenWege = () => ERSTELLEN.filter(w => !w.da || w.da())
+        .map(w => ({ id: w.id, zeichen: w.zeichen, name: w.name, sub: w.sub }));
     const erstellenBlatt = () => {
         /* Erst aussortieren, was es hier nicht gibt, DANN gruppieren — sonst
            bleibt eine Überschrift ohne Zeilen darunter stehen. */
@@ -2248,128 +2255,133 @@ const App = (() => {
             document.querySelectorAll('.menu, .menu-grund').forEach(x => x.remove());
             /* Erst schliessen, dann handeln — ein Dialog unter einem Blatt ist
                von aussen nicht erreichbar (derselbe Grund wie im R-Blatt). */
-            setTimeout(() => {
-                /* Wege, die kein Blatt Papier brauchen: sie öffnen etwas, das es
-                   schon gibt, oder einen Wähler. */
-                if (was === 'seite') {
-                    neueSeite();
-                    return;
-                }
-                if (was === 'memo') {
-                    Werkzeuge.schnellnotizen();
-                    return;
-                }
-                if (was === 'datei') {
-                    Werkzeuge.dateienLesen();
-                    return;
-                }
-                if (was === 'scan') {
-                    Recognition.scan();
-                    return;
-                }
-                if (was === 'vorlage') {
-                    Werkzeuge.vorlagen();
-                    return;
-                }
-                if (was === 'karte') {
-                    Werkzeuge.lernen();
-                    return;
-                }
-                if (was === 'journal') {
-                    Werkzeuge.journal();
-                    return;
-                }
-                if (was === 'umzug') {
-                    Austausch.dialog();
-                    return;
-                }
-                if (was === 'pdf') {
-                    /* GEMESSEN UND EINE SACKGASSE GEFUNDEN. `PdfEinlesen.waehlen()`
-                       beginnt mit `App.aktuelleSeite()` und meldet „Erst eine Seite
-                       öffnen", wenn keine offen ist — und im Regal ist keine offen.
-                       Von dort führte der Weg also ins Nichts (§47).
-          
-                       Aus dem Blatt „Neu erstellen" heraus ist das ohnehin die
-                       falsche Frage: wer hier klickt, will ein NEUES Dokument aus
-                       der PDF, keine PDF in einer bestehenden Seite. Also erst die
-                       Seite, dann hinein damit.
-          
-                       Bricht jemand den Dateiwähler ab, bleibt eine leere,
-                       namenlose Seite übrig — die wandert in den Papierkorb, nicht
-                       in den Abgrund: `alive:false` ist umkehrbar (§46). */
-                    const ziel = neueSeite();
-                    void PdfEinlesen.waehlen(ziel.id).then((erg) => {
-                        if (erg) {
-                            zeichneBaum();
-                            zeichneSeite();
-                            return;
-                        }
-                        const jetzt = Store.getBlock(ziel.id);
-                        const leer = jetzt && !(jetzt.text || '').trim() &&
-                            (Store.childrenOf(ziel.id) || [])
-                                .filter((k) => k && k.alive !== false).length === 0;
-                        if (leer) {
-                            Store.updateBlock(ziel.id, { alive: false });
-                            zeichneBaum();
-                        }
-                    });
-                    return;
-                }
-                if (was === 'lernen') {
-                    Produktwelten.lernen('lernen');
-                    return;
-                }
-                if (was === 'aufnahme') {
-                    if (typeof Meeting !== 'undefined' && Meeting.panel)
-                        Meeting.panel();
-                    else
-                        UI.toast('Die Aufnahme ist in dieser Fassung nicht geladen.');
-                    return;
-                }
-                if (was === 'ordner') {
-                    /* EIN ORDNER IST KEINE NEUE DATENART. Er ist eine Seite, die
-                       andere hält — genau so liest die Bibliothek ihn auch wieder
-                       (E236, `artVon`). Ein eigenes Feld dafür wäre eine Migration
-                       für eine Ansicht (§9). Das Mappensymbol sagt, wozu sie da
-                       ist; wer sie vollschreibt, hat trotzdem eine Seite. */
-                    const ord = Store.addPage(null, { text: '', icon: '\ud83d\uddc2' });
-                    zeichneBaum();
-                    oeffne(ord.id);
-                    setTimeout(() => document.getElementById('title')?.focus(), 60);
-                    return;
-                }
-                /* Alles andere entsteht IN einer Seite — es gibt es nicht ohne
-                   eine. Also erst die Seite, dann der Block darin, und der Cursor
-                   steht schon an der richtigen Stelle. */
-                const p = neueSeite();
-                setTimeout(() => {
-                    if (was === 'db')
-                        Store.addDatabase(p.id, 'Ohne Namen');
-                    /* `spreadsheet`, NICHT `tabelle` — und das ist kein Schönheitsfehler.
-                       Es gibt gar keine Blockart `tabelle`: der Editor kennt `table`
-                       (Einfache Tabelle) und `spreadsheet` (Kalkulationstabelle).
-                       Gemessen wurde ein `tabelle`-Block 24 px hoch mit dem Inhalt
-                       „+⋮⋮" — nur der Griff, sonst nichts. Der Weg legte seit E45
-                       einen Block an, den niemand zeichnet.
-                       Welcher der beiden es sein muss, sagt der Weg selbst: unter
-                       „Neue Tabelle" steht „Rechnen wie in Excel". Das ist die
-                       Kalkulationstabelle (gemessen 513 px, mit A1, fx, CHF und %). */
-                    else if (was === 'tabelle')
-                        Store.addBlock(p.id, 'spreadsheet', {});
-                    else if (was === 'board')
-                        Store.addBlock(p.id, 'whiteboard', { text: 'Whiteboard' });
-                    else if (was === 'blatt')
-                        Store.addBlock(p.id, 'blatt', { text: '' });
-                    else if (was === 'plan')
-                        Store.addBlock(p.id, 'schaltplan', { text: '' });
-                    else if (was === 'diagramm')
-                        Store.addBlock(p.id, 'chart', { text: '' });
-                    else if (was === 'aufgabe')
-                        Store.addBlock(p.id, 'todo', { text: '' });
-                    zeichneSeite();
-                }, 80);
-            }, 60);
+            setTimeout(() => { erstellenWeg(was || ''); }, 60);
         });
+    };
+    /* Führt genau EINEN Weg aus dem Katalog aus. Herausgelöst aus dem
+       Klick-Handler von erstellenBlatt (E265), wörtlich — damit das
+       Notizhefte-Regal dieselben Wege gehen kann, ohne eine zweite
+       PDF-Anlege-Maschine zu bauen (E29). */
+    const erstellenWeg = (was) => {
+        /* Wege, die kein Blatt Papier brauchen: sie öffnen etwas, das es
+           schon gibt, oder einen Wähler. */
+        if (was === 'seite') {
+            neueSeite();
+            return;
+        }
+        if (was === 'memo') {
+            Werkzeuge.schnellnotizen();
+            return;
+        }
+        if (was === 'datei') {
+            Werkzeuge.dateienLesen();
+            return;
+        }
+        if (was === 'scan') {
+            Recognition.scan();
+            return;
+        }
+        if (was === 'vorlage') {
+            Werkzeuge.vorlagen();
+            return;
+        }
+        if (was === 'karte') {
+            Werkzeuge.lernen();
+            return;
+        }
+        if (was === 'journal') {
+            Werkzeuge.journal();
+            return;
+        }
+        if (was === 'umzug') {
+            Austausch.dialog();
+            return;
+        }
+        if (was === 'pdf') {
+            /* GEMESSEN UND EINE SACKGASSE GEFUNDEN. `PdfEinlesen.waehlen()`
+               beginnt mit `App.aktuelleSeite()` und meldet „Erst eine Seite
+               öffnen", wenn keine offen ist — und im Regal ist keine offen.
+               Von dort führte der Weg also ins Nichts (§47).
+      
+               Aus dem Blatt „Neu erstellen" heraus ist das ohnehin die
+               falsche Frage: wer hier klickt, will ein NEUES Dokument aus
+               der PDF, keine PDF in einer bestehenden Seite. Also erst die
+               Seite, dann hinein damit.
+      
+               Bricht jemand den Dateiwähler ab, bleibt eine leere,
+               namenlose Seite übrig — die wandert in den Papierkorb, nicht
+               in den Abgrund: `alive:false` ist umkehrbar (§46). */
+            const ziel = neueSeite();
+            void PdfEinlesen.waehlen(ziel.id).then((erg) => {
+                if (erg) {
+                    zeichneBaum();
+                    zeichneSeite();
+                    return;
+                }
+                const jetzt = Store.getBlock(ziel.id);
+                const leer = jetzt && !(jetzt.text || '').trim() &&
+                    (Store.childrenOf(ziel.id) || [])
+                        .filter((k) => k && k.alive !== false).length === 0;
+                if (leer) {
+                    Store.updateBlock(ziel.id, { alive: false });
+                    zeichneBaum();
+                }
+            });
+            return;
+        }
+        if (was === 'lernen') {
+            Produktwelten.lernen('lernen');
+            return;
+        }
+        if (was === 'aufnahme') {
+            if (typeof Meeting !== 'undefined' && Meeting.panel)
+                Meeting.panel();
+            else
+                UI.toast('Die Aufnahme ist in dieser Fassung nicht geladen.');
+            return;
+        }
+        if (was === 'ordner') {
+            /* EIN ORDNER IST KEINE NEUE DATENART. Er ist eine Seite, die
+               andere hält — genau so liest die Bibliothek ihn auch wieder
+               (E236, `artVon`). Ein eigenes Feld dafür wäre eine Migration
+               für eine Ansicht (§9). Das Mappensymbol sagt, wozu sie da
+               ist; wer sie vollschreibt, hat trotzdem eine Seite. */
+            const ord = Store.addPage(null, { text: '', icon: '\ud83d\uddc2' });
+            zeichneBaum();
+            oeffne(ord.id);
+            setTimeout(() => document.getElementById('title')?.focus(), 60);
+            return;
+        }
+        /* Alles andere entsteht IN einer Seite — es gibt es nicht ohne
+           eine. Also erst die Seite, dann der Block darin, und der Cursor
+           steht schon an der richtigen Stelle. */
+        const p = neueSeite();
+        setTimeout(() => {
+            if (was === 'db')
+                Store.addDatabase(p.id, 'Ohne Namen');
+            /* `spreadsheet`, NICHT `tabelle` — und das ist kein Schönheitsfehler.
+               Es gibt gar keine Blockart `tabelle`: der Editor kennt `table`
+               (Einfache Tabelle) und `spreadsheet` (Kalkulationstabelle).
+               Gemessen wurde ein `tabelle`-Block 24 px hoch mit dem Inhalt
+               „+⋮⋮" — nur der Griff, sonst nichts. Der Weg legte seit E45
+               einen Block an, den niemand zeichnet.
+               Welcher der beiden es sein muss, sagt der Weg selbst: unter
+               „Neue Tabelle" steht „Rechnen wie in Excel". Das ist die
+               Kalkulationstabelle (gemessen 513 px, mit A1, fx, CHF und %). */
+            else if (was === 'tabelle')
+                Store.addBlock(p.id, 'spreadsheet', {});
+            else if (was === 'board')
+                Store.addBlock(p.id, 'whiteboard', { text: 'Whiteboard' });
+            else if (was === 'blatt')
+                Store.addBlock(p.id, 'blatt', { text: '' });
+            else if (was === 'plan')
+                Store.addBlock(p.id, 'schaltplan', { text: '' });
+            else if (was === 'diagramm')
+                Store.addBlock(p.id, 'chart', { text: '' });
+            else if (was === 'aufgabe')
+                Store.addBlock(p.id, 'todo', { text: '' });
+            zeichneSeite();
+        }, 80);
     };
     /* ------------------------------------------------------------------------
      * BREITE DER SEITENLEISTE
@@ -3603,7 +3615,11 @@ const App = (() => {
            Funktion hinter dem Stift am Telefon — und damit unerreichbar für den
            „+ Neu"-Knopf im Regal und für alles am Rechner. Es ist derselbe
            Katalog, nur endlich von überall erreichbar (§8). */
-        erstellenBlatt
+        erstellenBlatt,
+        /* Seit E265 auch einzeln: die Liste der geladenen Wege und das
+           Ausführen genau eines Wegs — für Menüs, die nur eine Auswahl des
+           Katalogs zeigen (Notizhefte), ohne die Module dahinter zu kennen. */
+        erstellenWege, erstellenWeg
     };
 })();
 /* Los geht's */

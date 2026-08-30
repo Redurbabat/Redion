@@ -2843,9 +2843,35 @@ Fünf hingenommene Grenzen der ersten Fassung, jede mit Grund:
 3. Eine Seite mit PDF-Seiten UND Blättern zählt als PDF, nicht als
    Heft (PDF-Vorrang wie in der Bibliothek) — sie steht in der
    Bibliothek, nicht im Regal.
-4. Keine Deckelfarben — p.color liegt an jeder Seite bereit und wird
-   nirgends gerendert; kommt mit E265.
+4. ✅ Keine Deckelfarben — seit E265 erledigt: `p.color` wird als
+   Kante am Deckel gezeichnet, mit Whitelist.
 5. Kein Ziehen-Sortieren im Gitter; sortiert wird nach zuletzt
    bearbeitet, was die Weiterschreiben-Frage am besten beantwortet.
 
 Gefunden am 30. August 2026 (beim Bau von E264).
+
+================================================================================
+L78 — Was die Heft-Bibliothek (E265) bewusst noch nicht kann
+================================================================================
+
+L77 Punkt 4 (Deckelfarben) ist damit erledigt. Neu hingenommen:
+
+1. Kein Ziehen-und-Ablegen ins Fach — verschieben geht über das
+   Kontextmenü. Drag&Drop wäre ein eigener Bogen mit Telefon-Fassung.
+2. Das Regal zeigt EINE Fach-Ebene: ein Fach im Fach steht flach an
+   der Wurzel (nichts geht verloren, aber die Schachtelung sieht man
+   nur im Baum).
+3. Reiter und offenes Fach sind flüchtiger Modulzustand — nach einem
+   Neuladen beginnt das Regal an der Dokumente-Wurzel. Der Hash bleibt
+   `#notizhefte`; ein Fach-Hash bräuchte einen zweiten Start-Leseweg.
+4. Ein Heft, das ANDERSWO verschlüsselt wurde (Seitenmenü, Palette),
+   trägt kein `heftArt` und fehlt im Regal, bis es entsperrt wird —
+   werkzeuge.ts soll die Heft-Regel nicht kennen (eine Regel-Maschine).
+5. Ein Fach verliert seine Fach-Eigenschaft, wenn sein letztes Heft im
+   Papierkorb liegt und es ohne `heftArt:'fach'` angelegt wurde (z.B.
+   als gewöhnliche Seite entstand) — es lebt in Bibliothek und Baum
+   weiter, nur die Fach-Karte verschwindet.
+6. Die Listenform läuft volle Breite — auf sehr breiten Bildschirmen
+   liegen Stern und ⋯ weit rechts vom Namen.
+
+Gefunden am 30. August 2026 (beim Bau von E265).

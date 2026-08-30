@@ -930,25 +930,61 @@ const ANSICHTEN: Record<string, { titel: string; bauen: () => void | Promise<voi
      Miniaturen. */
 
   notizhefte: {
-    titel: 'Die Notizhefte — das Regal',
+    titel: 'Die Notizhefte — das Regal mit Fächern, Stern und Farbe (E265)',
     bauen: async () => {
       const w = window as any;
       Store.setMeta('rundgangGesehen', true);
       document.querySelector('.produkt-onboarding-lage')?.remove();
       document.getElementById('rg-willkommen')?.remove();
-      const mach = (name: string, papier: string, zeilen: string[]) => {
-        const p = Store.addPage(null, { text: name, icon: '📓' });
+      const mach = (eltern: string | null, name: string, papier: string,
+                    zeilen: string[]) => {
+        const p = Store.addPage(eltern, { text: name, icon: '📓' });
         const blatt = Store.addBlock(p.id, 'blatt', { text: '', papier });
         for (const z of zeilen) Store.addBlock(blatt.id, 'text', { text: z });
         Store.updateBlock(p.id, { dokumentModus: true });
         return p;
       };
-      mach('Fachzeichnen', 'mm', ['Massstab 1:50 üben']);
-      mach('Elektro Mitschrift', 'kariert', ['Reihenschaltung: R = R1 + R2']);
-      const letztes = mach('Ohmsches Gesetz', 'liniert', ['U = R · I', 'P = U · I']);
+      /* Ein Fach mit zwei Heften, zwei lose Hefte — eines gesternt, eines
+         mit Deckelfarbe: so zeigt EIN Bild alles Neue von E265. */
+      const fach = Store.addPage(null, { text: 'Elektrotechnik', icon: '🗂' });
+      mach(fach.id, 'Mitschrift', 'kariert', ['Reihenschaltung: R = R1 + R2']);
+      mach(fach.id, 'Fachzeichnen', 'mm', ['Massstab 1:50 üben']);
+      const gesternt = mach(null, 'Prüfungsstoff', 'punkte', ['Formeln wiederholen']);
+      Store.updateBlock(gesternt.id, { favorite: true });
+      const letztes = mach(null, 'Ohmsches Gesetz', 'liniert', ['U = R · I', 'P = U · I']);
+      Store.updateBlock(letztes.id, { color: 'blue' });
       Store.setMeta('heft:zuletzt', letztes.id);
       w.Notebook.oeffnen();
       await new Promise(r => setTimeout(r, 700));
+    }
+  },
+
+  notizhefteFach: {
+    titel: 'Ein offenes Fach in der Listenform (E265)',
+    bauen: async () => {
+      const w = window as any;
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const mach = (eltern: string | null, name: string, papier: string) => {
+        const p = Store.addPage(eltern, { text: name, icon: '📓' });
+        const blatt = Store.addBlock(p.id, 'blatt', { text: '', papier });
+        Store.addBlock(blatt.id, 'text', { text: '' });
+        Store.updateBlock(p.id, { dokumentModus: true });
+        return p;
+      };
+      const fach = Store.addPage(null, { text: 'Elektrotechnik', icon: '🗂' });
+      mach(fach.id, 'Mitschrift', 'kariert');
+      const bunt = mach(fach.id, 'Fachzeichnen', 'mm');
+      Store.updateBlock(bunt.id, { color: 'green' });
+      const stern = mach(fach.id, 'Prüfungsstoff', 'liniert');
+      Store.updateBlock(stern.id, { favorite: true });
+      Store.setMeta('heft:form', 'liste');
+      w.Notebook.oeffnen();
+      await new Promise(r => setTimeout(r, 500));
+      document.querySelector<HTMLElement>(
+        `.bib-deckel[data-fach="${fach.id}"], .nh-zeile-auf[data-fach="${fach.id}"]`)?.click();
+      await new Promise(r => setTimeout(r, 600));
     }
   },
 
