@@ -18913,3 +18913,57 @@ E198). Kein Verhalten geändert.
 **Geprüft:** test127 22/22 (Kontrast), test126 22/22, test245 53/53,
 test202 84/84, test206 66/66 (Reiter), test40 24/24. Einzeldatei
 7081→7083 KB. Bild im Gespräch („Tagesrunde starten" mit Verlauf).
+
+E264 — Die Notizhefte: ein Regal, das sofort schreiben lässt
+================================================================================
+
+Redur: „Ich brauche eine ganz neue Ansicht, komplett neu wie GoodNotes
+… es sollte schnell zugreifbar sein, man muss beim Öffnen direkt
+wissen, was man machen muss." Entschieden wurde eine EIGENE Ansicht
+„Notizhefte" — nicht ein Umbau der Bibliothek, die bewusst ALLE
+Dokumentarten zeigt und damit eine andere Frage beantwortet.
+
+DIE WICHTIGSTE ENTSCHEIDUNG: EIN HEFT IST EINE ANSICHTSREGEL, KEINE
+DATENART. Ein Heft ist eine lebendige Seite, deren direkte Kinder
+mindestens ein Blatt und keine PDF-Seite enthalten (PDF gewinnt, wie
+in der Bibliotheks-Deckelart). Kein neues Feld, kein neuer Speicher,
+keine Migration: jede bestehende Seite mit Blättern IST rückwirkend
+ein Heft, und jedes Heft bleibt eine gewöhnliche Seite — Baum, Suche,
+Sicherung, Export sehen nichts Neues. Das geöffnete Heft ist der
+BESTEHENDE Dokument-Arbeitsplatz (dokumentModus, E103/E207) — eine
+zweite Schreibmaschine für dieselbe Frage wäre die E29-Falle.
+
+Das Regal beantwortet beim Öffnen genau eine Frage: „Wo schreibe ich
+weiter — oder womit fange ich an?" Deshalb genau drei Dinge auf der
+Fläche: die Weiterschreiben-Karte (heft:zuletzt, mit echter
+Blattzahl), das Gitter der Deckel (Papiermuster des ersten Blatts als
+Vorschau — das Papier IST die Vorschau) und die Neues-Heft-Kachel.
+EIN Klick auf sie legt Heft + Blatt + erste Zeile an und setzt den
+Schreibzeiger hinein — null Entscheidungen bis zum ersten Wort. Das
+neue Heft nimmt das zuletzt am Blatt gewählte Papier (heft:papier,
+geschrieben vom Papier-Wähler des Blatts — Store ist Kern, keine
+Bereichskopplung).
+
+BEIDE ENDEN IM SELBEN SCHRITT (die E236-Lehre): die Startwerte
+„notizhefte" (Regal) und „notizheft" (zuletzt benutztes Heft, sofort
+schreibbereit) stehen in den Einstellungen UND werden in start()
+ausgewertet — im selben Commit. Ein Seiten-Hash gewinnt weiterhin
+gegen die Startansicht; test264 §8 lädt dafür ausdrücklich neu, denn
+ein reiner Fragment-Wechsel löst im Browser keinen Start aus.
+
+GoodNotes war ABLAUF-Vorbild (Regal → ein Tipp → schreiben), nicht
+Gestalt-Vorlage: Optik, Anatomie und Wortwahl sind Redions eigene
+(bib-Deckel aus E207, Marken aus E260). Verworfen: eine eigene
+Datenart „Heft" (Migrationsrisiko ohne Gewinn), Deckelfarben und
+Ziehen-Sortieren (erst, wenn das Regal sie braucht — siehe L77).
+
+**Geprüft:** test264, 25 Punkte auf Port 9041 — Register/Navigation,
+Drei-Dinge-Budget, der Ein-Klick-Schreibweg (Fokus im linierten
+Blatt), Papiervorgabe, die Heft-Regel (NurText/PDF/tot bleiben
+draussen), Weiterschreiben-Karte mit Einzahl-Blattzahl, tote Kennung
+fällt lautlos aufs Regal, E236-Wächter für beide Startwerte,
+Seiten-Hash-Vorrang, Telefon-FAB über der Fünf-Wege-Leiste (§37),
+böser Heftname escaped (§19), Bau-Hygiene (sw.js v31, Einzeldatei).
+Drei Gegenproben einzeln rot gesehen (Fokus weg → §3; Rückweg als
+Zeichen statt Wort → §7; sw-Eintrag weg → §11). test222 zählt jetzt
+neunzehn Apps. Sechs Bilder im Gespräch.

@@ -923,6 +923,54 @@ const ANSICHTEN: Record<string, { titel: string; bauen: () => void | Promise<voi
     }
   },
 
+  /* --- Die Notizhefte (E264) ----------------------------------------------
+     Das Regal und ein offenes Heft. Die Daten sind bewusst drei Hefte mit
+     DREI verschiedenen Papieren — die Deckel-Muster im Regal unterscheiden
+     sich sonst nicht, und genau dieses Unterscheiden ist der Sinn der
+     Miniaturen. */
+
+  notizhefte: {
+    titel: 'Die Notizhefte — das Regal',
+    bauen: async () => {
+      const w = window as any;
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const mach = (name: string, papier: string, zeilen: string[]) => {
+        const p = Store.addPage(null, { text: name, icon: '📓' });
+        const blatt = Store.addBlock(p.id, 'blatt', { text: '', papier });
+        for (const z of zeilen) Store.addBlock(blatt.id, 'text', { text: z });
+        Store.updateBlock(p.id, { dokumentModus: true });
+        return p;
+      };
+      mach('Fachzeichnen', 'mm', ['Massstab 1:50 üben']);
+      mach('Elektro Mitschrift', 'kariert', ['Reihenschaltung: R = R1 + R2']);
+      const letztes = mach('Ohmsches Gesetz', 'liniert', ['U = R · I', 'P = U · I']);
+      Store.setMeta('heft:zuletzt', letztes.id);
+      w.Notebook.oeffnen();
+      await new Promise(r => setTimeout(r, 700));
+    }
+  },
+
+  notizheft: {
+    titel: 'Ein offenes Heft — weiterschreiben ohne Umweg',
+    bauen: async () => {
+      const w = window as any;
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const p = Store.addPage(null, { text: 'Ohmsches Gesetz', icon: '📓' });
+      const blatt = Store.addBlock(p.id, 'blatt', { text: '', papier: 'liniert' });
+      for (const z of ['U = R · I', 'P = U · I  →  P = R · I²',
+                       'Reihenschaltung: R = R1 + R2'])
+        Store.addBlock(blatt.id, 'text', { text: z });
+      Store.updateBlock(p.id, { dokumentModus: true });
+      Store.setMeta('heft:zuletzt', p.id);
+      w.Notebook.resume();
+      await new Promise(r => setTimeout(r, 900));
+    }
+  },
+
   tabelleLeer: {
     titel: 'Der leere Zustand',
     bauen: () => {

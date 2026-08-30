@@ -276,6 +276,8 @@ const Einstellungen = (() => {
             wahl('startAnsicht', [['dokument', 'Zuletzt geöffnetes Dokument, sonst das Regal'],
                                   ['dokumente', 'Immer das Regal'],
                                   ['start', 'Heute – Lernen & Alltag'], ['workspace', 'Workspace'],
+                                  ['notizhefte', 'Notizhefte – Regal zum Losschreiben'],
+                                  ['notizheft', 'Zuletzt benutztes Heft, sofort schreibbereit'],
                                   ['letzte', 'Zuletzt geöffnete Seite'],
                                   ['journal', 'Heutiges Journal'], ['posteingang', 'Posteingang']],
                  V('startAnsicht', 'dokument'))) +

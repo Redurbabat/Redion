@@ -169,6 +169,11 @@ Register.navigation = (() => {
            Bei `suche`/`inbox` reichte das, weil dort wörtlich derselbe Aufruf
            steht; hier heissen beide Wege „Bibliothek" und meinen Verschiedenes.
            Redurs Bedingung war „nichts löschen", und das hier war ein Löschen. */
+        /* Rang 52: nach „Meine Aufgaben" (50), vor „Alle Seiten" (55) — die
+           Reihe läuft durch (E206), Zehner sind keine Pflicht. */
+        { id: 'app-notizhefte', marke: 'notizhefte', name: 'Notizhefte', icon: '📓', platz: 'apps', gruppe: 'daten', rang: 52,
+            hinweis: 'Deine Schreibhefte, sofort schreibbereit',
+            tun: () => (typeof Notebook !== 'undefined') && Notebook.oeffnen() },
         { id: 'app-bib', marke: 'bib', name: 'Alle Seiten', icon: '📚', platz: 'apps', gruppe: 'daten', rang: 55,
             hinweis: 'Jede Seite, mit Reitern und Spalten', tun: () => Bibliothek.oeffne() },
         { id: 'app-modell', marke: 'modell', name: 'Datenmodell', icon: '🗺', platz: 'apps', gruppe: 'daten', rang: 60,

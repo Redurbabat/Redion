@@ -35,6 +35,20 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
+**30. August 2026 · Die Notizhefte: ein Regal, das sofort schreiben lässt (E264)**
+
+> Neue Ansicht „Notizhefte" (Redurs GoodNotes-Wunsch, als Ablauf, nicht
+> als Optik): Weiterschreiben-Karte, Deckel mit echtem Papiermuster,
+> EIN Klick bis zum Schreibzeiger im linierten Blatt. Ein Heft ist eine
+> Ansichtsregel (Seite mit Blatt-Kind, keine PDF-Seite) — kein neues
+> Datenmodell. Startwerte „notizhefte"/„notizheft" in Einstellungen UND
+> start() im selben Schritt (E236-Lehre). test264: 25 Punkte, drei
+> Gegenproben rot gesehen. Als Nächstes E265: das Regal wird die
+> GoodNotes-Bibliothek aus Redurs Dossier (Fächer, Favoriten,
+> Papierkorb-Reiter, Liste, Deckelfarbe, Sperren im Menü) — dann
+> Abdeckband (E266), Haftnotiz+Lineal (E267), Zeitmesser (E268),
+> Auswahl-Feinschliff (E269).
+
 **29. August 2026 · Hauptknopf-Verlauf und einklinkende Reiter (E263)**
 
 > Amdion Phase 1, weiter: die Hauptknopf-Fläche als EINE Marke

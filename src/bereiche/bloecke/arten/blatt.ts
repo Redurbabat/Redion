@@ -126,6 +126,9 @@ const Blatt = (() => {
            Eigenschaft des Papiers, also wird das Papier umgestellt. */
         const art = b.dataset.papier;
         Store.updateBlock(block.id, { papier: art });
+        /* Das zuletzt gewählte Papier wird die Vorgabe für neue Hefte
+           (Notizhefte, E264). Store ist Kern — keine Bereichskopplung. */
+        Store.setMeta('heft:papier', art);
         papier.dataset.papier = art;
         werk.querySelectorAll<HTMLElement>('[data-papier]').forEach(k => {
           const an = k.dataset.papier === art;
