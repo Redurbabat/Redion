@@ -144,6 +144,49 @@ const Dialog = (() => {
         document.addEventListener('keydown', beiTaste);
         o.querySelector('[data-w]')?.focus();
     });
-    return { frage, wahl };
+    /**
+     * Die mehrzeilige Frage — für Texte, die länger als eine Zeile sind:
+     * Haftnotizen (E267), später vielleicht die Whiteboard-Notiz, deren
+     * `prompt()` in LUECKEN.md schon als Schwäche steht. Enter macht eine
+     * neue Zeile; übernehmen heisst Strg+Enter oder der Knopf.
+     */
+    const mehrzeilig = (titel, vorgabe = '') => new Promise(ok => {
+        const o = document.createElement('div');
+        o.className = 'overlay';
+        o.innerHTML =
+            '<div class="finder" style="width:min(460px,94vw)">' +
+                `<div class="fh">${esc(titel)}</div>` +
+                '<div style="padding:16px 18px"><textarea id="fq" rows="4" ' +
+                'style="width:100%; padding:10px 12px; background:var(--bg-input); border:1px solid var(--line); ' +
+                'border-radius:8px; outline:none; font-size:15px; font-family:inherit; resize:vertical">' +
+                `${esc(vorgabe)}</textarea>` +
+                '<p style="margin:6px 0 0; font-size:11.5px; color:var(--text-faint)">' +
+                'Übernehmen mit Strg + Enter</p></div>' +
+                '<div class="fbtns"><button data-a="ok" class="prim">Übernehmen</button>' +
+                '<button data-a="zu">Abbrechen</button></div></div>';
+        document.body.appendChild(o);
+        const feld = o.querySelector('#fq');
+        const fertig = (wert) => { o.remove(); ok(wert); };
+        if (!feld) {
+            fertig(null);
+            return;
+        }
+        o.addEventListener('click', e => {
+            const ziel = e.target instanceof Element ? e.target : null;
+            if (ziel?.closest('[data-a="ok"]'))
+                fertig(feld.value);
+            else if (ziel?.closest('[data-a="zu"]') || e.target === o)
+                fertig(null);
+        });
+        feld.addEventListener('keydown', e => {
+            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey))
+                fertig(feld.value);
+            if (e.key === 'Escape')
+                fertig(null);
+        });
+        feld.focus();
+        feld.select();
+    });
+    return { frage, wahl, mehrzeilig };
 })();
 window.Dialog = Dialog;

@@ -361,6 +361,7 @@ Register.menueband = (() => {
         ['rectangle', 'Rechteck', '□', 'Rechteck'],
         ['ellipse', 'Ellipse', '○', 'Ellipse'],
         ['abdeck', 'Abdecken', '▬', 'Abdeckband — Antippen im Schreiben-Modus deckt auf'],
+        ['zettel', 'Haftnotiz', '🗒', 'Einen Zettel aufziehen und beschriften'],
         ['text', 'Text', 'T', 'Textanmerkung auf der Fläche'],
         ['zeichen', 'Fachzeichen', '⚡', 'Ein elektrotechnisches Zeichen setzen'],
         ['select', 'Auswahl', '⌖', 'Marken auswählen, gemeinsam bewegen oder löschen'],

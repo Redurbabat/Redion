@@ -35,6 +35,14 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
+**30. August 2026 · Haftnotiz und Lineal auf der Zeichenschicht (E267)**
+
+> Marken-Art `zettel`: aufziehen, Redions mehrzeiliges Blatt fragt nach
+> Text (neu: Dialog.mehrzeilig — kein prompt()), Tinte nach Helligkeit,
+> Umbruch in tspans, Abbruch räumt weg. Lineal-Schalter rastet
+> Linie/Pfeil auf 15°-Schritte. test267: 16 Punkte, drei Gegenproben
+> rot. Weiter: Zeitmesser (E268), Auswahl-Feinschliff (E269).
+
 **30. August 2026 · Das Abdeckband — Active Recall auf Blatt und PDF (E266)**
 
 > Neue Marken-Art `abdeck` in der einen Zeichenschicht: deckende Fläche

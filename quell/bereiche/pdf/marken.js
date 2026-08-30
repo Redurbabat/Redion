@@ -130,6 +130,58 @@ const Marken = (() => {
             element.setAttribute('data-ink-art', art);
             return element;
         }
+        else if (art === 'zettel' && points.length >= 2) {
+            /* DIE HAFTNOTIZ (E267): ein farbiger Zettel mit Text, direkt auf
+               Blatt oder PDF-Seite — für „hier nachfragen!" neben der Aufgabe.
+               Der Text bricht selbst um (SVG-Text kann das nicht); die Schrift
+               wählt ihre Tinte nach der Helligkeit des Zettels, sonst stünde
+               Schwarz auf Schwarz. Wie beim Abdeckband gilt: eigener Zweig mit
+               Rückgabe, der Strich-Block unten würde die Füllung löschen. */
+            const box = InkGeometry.rectangle(points[0], points[1]);
+            const gruppe = svg('g', { 'pointer-events': 'all' });
+            const wert = /^#([0-9a-f]{6})$/i.exec(color)?.[1] || 'e0a419';
+            const hell = (parseInt(wert.slice(0, 2), 16) * 299 +
+                parseInt(wert.slice(2, 4), 16) * 587 +
+                parseInt(wert.slice(4, 6), 16) * 114) / 255000;
+            const tinte = hell < 0.55 ? '#f5f5f2' : '#1c1c1c';
+            gruppe.appendChild(svg('rect', { x: box.x, y: box.y, width: box.width,
+                height: box.height, rx: 3, fill: color, 'fill-opacity': 0.92,
+                stroke: 'rgba(0,0,0,.2)', 'stroke-width': 0.6 }));
+            const groesse = Math.max(9, Number(mark.fontSize) || 13);
+            const pad = Math.max(4, groesse * 0.5);
+            const textKnoten = svg('text', {
+                x: box.x + pad, y: box.y + pad + groesse * 0.8, fill: tinte,
+                'font-size': groesse, 'font-family': 'system-ui, sans-serif'
+            });
+            const proZeile = Math.max(4, Math.floor((box.width - pad * 2) / (groesse * 0.52)));
+            const zeilen = [];
+            for (const roh of String(mark.text || '').split(/\r?\n/)) {
+                let rest = roh;
+                if (!rest) {
+                    zeilen.push('');
+                    continue;
+                }
+                while (rest.length > proZeile) {
+                    let schnitt = rest.lastIndexOf(' ', proZeile);
+                    if (schnitt < proZeile * 0.5)
+                        schnitt = proZeile;
+                    zeilen.push(rest.slice(0, schnitt));
+                    rest = rest.slice(schnitt).replace(/^ /, '');
+                }
+                zeilen.push(rest);
+            }
+            const maxZeilen = Math.max(1, Math.floor((box.height - pad) / (groesse * 1.25)));
+            zeilen.slice(0, maxZeilen).forEach((zeile, index) => {
+                const stueck = svg('tspan', { x: box.x + pad,
+                    dy: index === 0 ? 0 : groesse * 1.25 });
+                stueck.textContent = zeile || ' ';
+                textKnoten.appendChild(stueck);
+            });
+            gruppe.appendChild(textKnoten);
+            gruppe.setAttribute('data-sid', idOf(mark));
+            gruppe.setAttribute('data-ink-art', art);
+            return gruppe;
+        }
         else if (art === 'ellipse' && points.length >= 2) {
             const box = InkGeometry.rectangle(points[0], points[1]);
             element = svg('ellipse', { cx: box.x + box.width / 2, cy: box.y + box.height / 2,
@@ -259,6 +311,22 @@ const Marken = (() => {
                 else
                     node.removeAttribute('data-auf');
             });
+        };
+        /* Das Lineal (E267): ein Schalter, kein Werkzeug. Solange es anliegt,
+           rasten Linie und Pfeil auf 15°-Schritte — waagrecht, senkrecht und
+           die üblichen Winkel dazwischen, ohne zitternde Hand. Nur Laufzeit,
+           Vorgabe aus. */
+        let lineal = false;
+        const rasten = (anfang, ende) => {
+            const dx = ende[0] - anfang[0];
+            const dy = ende[1] - anfang[1];
+            const radius = Math.hypot(dx, dy);
+            if (radius < 0.001)
+                return ende;
+            const schritt = Math.PI / 12;
+            const winkel = Math.round(Math.atan2(dy, dx) / schritt) * schritt;
+            return [anfang[0] + radius * Math.cos(winkel),
+                anfang[1] + radius * Math.sin(winkel)];
         };
         const snapshot = () => clone(marks);
         const state = () => ({ undo: historyUndo.length > 0, redo: historyRedo.length > 0,
@@ -399,7 +467,36 @@ const Marken = (() => {
             runningNode = updateNode(node, mark);
             commit(before);
             runningNode = null;
+            /* Die frisch aufgezogene Haftnotiz fragt sofort nach ihrem Text —
+               eine leere Fläche wäre ein Versprechen ohne Inhalt. */
+            if (mark.art === 'zettel' && !String(mark.text || '').trim())
+                void zettelText(idOf(mark), true);
             return true;
+        };
+        /** Text einer Haftnotiz erfragen — mehrzeilig, mit Redions eigenem
+         *  Blatt statt prompt() (dessen Schwäche im Whiteboard LUECKEN.md
+         *  längst führt). Bricht jemand die FRISCHE Notiz ab oder lässt sie
+         *  leer, verschwindet sie wieder: ein leerer Zettel sagt nichts. */
+        const zettelText = async (targetId, frisch = false) => {
+            const zettel = marks.find(mark => idOf(mark) === targetId && mark.art === 'zettel');
+            if (!zettel)
+                return;
+            const antwort = await Dialog.mehrzeilig('Haftnotiz', String(zettel.text || ''));
+            const before = snapshot();
+            if (antwort === null || !antwort.trim()) {
+                if (frisch || (antwort !== null && !antwort.trim())) {
+                    const index = marks.findIndex(mark => idOf(mark) === targetId);
+                    if (index >= 0) {
+                        marks.splice(index, 1);
+                        redraw();
+                        commit(before);
+                    }
+                }
+                return;
+            }
+            zettel.text = antwort;
+            redraw();
+            commit(before);
         };
         const editText = async (point, targetId = '') => {
             const current = targetId ? marks.find(mark => idOf(mark) === targetId && mark.art === 'text') : null;
@@ -549,6 +646,13 @@ const Marken = (() => {
                 void editText(point, targetId);
                 return;
             }
+            /* Ein Tipp auf einen VORHANDENEN Zettel bearbeitet ihn; sonst wird
+               gleich unten eine neue Fläche aufgezogen (der Zwei-Punkt-Weg). */
+            if (tool === 'zettel' && targetId &&
+                marks.some(mark => idOf(mark) === targetId && mark.art === 'zettel')) {
+                void zettelText(targetId);
+                return;
+            }
             if (tool === 'zeichen') {
                 void setzeZeichen(point, targetId);
                 return;
@@ -589,7 +693,12 @@ const Marken = (() => {
                 runningNode = zeichneMarke({ ...running, pts: [point, point], pressure: [pressureOf(event), pressureOf(event)] });
             }
             else {
-                running = { id, art: tool, farbe: color, breite: width, pts: [point, point] };
+                /* Ein schwarzer Zettel mit schwarzer Vorgabetinte wäre keiner —
+                   die Haftnotiz nimmt als Vorgabe das Marker-Gelb (derselbe
+                   Handgriff wie beim Marker vier Zeilen höher). */
+                const flaechenFarbe = tool === 'zettel' && color === FARBEN[0]
+                    ? MARKER_FARBE : color;
+                running = { id, art: tool, farbe: flaechenFarbe, breite: width, pts: [point, point] };
                 runningNode = zeichneMarke(running);
             }
             if (runningNode)
@@ -636,7 +745,8 @@ const Marken = (() => {
                 (coalesced.length ? coalesced : [event]).forEach(addSample);
             }
             else
-                running.pts[1] = point;
+                running.pts[1] = lineal && (running.art === 'line' || running.art === 'arrow')
+                    ? rasten(running.pts[0], point) : point;
             runningNode = updateNode(runningNode, running.art === 'stift' || running.art === 'marker'
                 ? { ...running, pts: running.pts.length > 1 ? running.pts : [running.pts[0], running.pts[0]] }
                 : running);
@@ -699,8 +809,10 @@ const Marken = (() => {
            oben braucht genau dieses Objekt, um sich beim Kern zu melden. Zwei
            verschiedene Objekte für dieselbe Fläche wären der sichere Weg zu
            einem Knopf, der auf nichts wirkt. */
+        const setzeLineal = (an) => { lineal = !!an; };
+        const linealAn = () => lineal;
         const steuerung = { flaeche, setzeWerkzeug, setzeFarbe, setzeStrich, marken: marks,
-            undo, redo, deleteSelection, beiAenderung, state };
+            undo, redo, deleteSelection, beiAenderung, state, setzeLineal, linealAn };
         return steuerung;
     };
     const leiste = (controls, extra = '') => {
@@ -743,6 +855,7 @@ const Marken = (() => {
                 button('rectangle', '□', 'Rechteck', 'Rechteck') +
                 button('ellipse', '○', 'Ellipse', 'Ellipse') +
                 button('abdeck', '▬', 'Abdecken', 'Abdeckband über Lösungen ziehen — Antippen im Schreiben-Modus deckt auf') +
+                button('zettel', '🗒', 'Haftnotiz', 'Einen Zettel aufziehen und beschriften; Antippen mit dem Werkzeug bearbeitet ihn') +
                 button('text', 'T', 'Text', 'Textanmerkung') +
                 button('zeichen', '⚡', 'Fachzeichen', 'Ein elektrotechnisches Symbol auf die Seite setzen') +
                 button('radierer', '⌫', 'Radieren', 'Eine Marke entfernen') +
@@ -750,6 +863,11 @@ const Marken = (() => {
                 '<button data-act="undo" title="Rückgängig" disabled><span class="zeichen">↶</span><span class="wort">Zurück</span></button>' +
                 '<button data-act="redo" title="Wiederholen" disabled><span class="zeichen">↷</span><span class="wort">Vor</span></button>' +
                 '<button data-act="delete" title="Auswahl löschen" disabled><span class="zeichen">🗑</span><span class="wort">Löschen</span></button>' +
+                /* Das Lineal ist ein SCHALTER neben den Werkzeugen: solange es
+                   anliegt, rasten Linie und Pfeil auf 15°-Schritte (E267). */
+                '<button data-act="lineal" aria-pressed="false" ' +
+                'title="Lineal: Linie und Pfeil rasten auf 15°-Schritte">' +
+                '<span class="zeichen">📐</span><span class="wort">Lineal</span></button>' +
                 '<span class="blatt-trenn"></span>' +
                 FARBEN.map((value, index) => `<button class="blatt-farbe${index === 0 ? ' on' : ''}" ` +
                     `data-c="${value}" style="background:${value}" title="Farbe"></button>`).join('') +
@@ -867,6 +985,12 @@ const Marken = (() => {
                     controls.redo();
                 if (target.dataset.act === 'delete')
                     controls.deleteSelection();
+                if (target.dataset.act === 'lineal' && controls.setzeLineal) {
+                    const an = !controls.linealAn?.();
+                    controls.setzeLineal(an);
+                    target.setAttribute('aria-pressed', an ? 'true' : 'false');
+                    target.classList.toggle('on', an);
+                }
                 return;
             }
             if (target.dataset.c) {
