@@ -35,6 +35,19 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
+**30. August 2026 · Der Zeitmesser — Lernzeit messen statt schätzen (E268)**
+
+> Schwebendes Feld mit Stoppuhr und Timer (5/25 Min), das sich merkt, an
+> welcher Seite gearbeitet wurde; jede Sitzung landet mit Dauer und Seite
+> in `zeit:sitzungen` (höchstens fünfzig). Schliessen stoppt nicht.
+> Löst den alten Punkt „Pomodoro/Lernzeit echt messen statt schätzen".
+> test268: 15 Punkte, drei Gegenproben rot — und ein Fund über die
+> Prüfung selbst: die Pausenprobe war bei 1,4 s Wartezeit keine Prüfung
+> (Rundung frass den Unterschied), erst 2,6 s machen sie rotfähig (§55.2).
+> Als Nächstes E270: Redions Server scharfschalten, damit dieselben
+> Notizen auf Rechner, iPhone und iPad stehen — Redurs iCloud-Wunsch, auf
+> dem einzigen Weg, der ihn wirklich einlöst.
+
 **30. August 2026 · Haftnotiz und Lineal auf der Zeichenschicht (E267)**
 
 > Marken-Art `zettel`: aufziehen, Redions mehrzeiliges Blatt fragt nach

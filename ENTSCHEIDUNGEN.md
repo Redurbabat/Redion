@@ -19133,3 +19133,51 @@ Auswahl-Verschieben, Radierer, Bau-Hygiene (sw v34). Drei Gegenproben
 einzeln rot (Lineal wirkungslos → Winkel-Punkt; Abbruch lässt Zettel
 stehen → §3, riss erwartbar die Folgeschritte mit; Tinte immer dunkel
 → §5). test264/265/266/207/87/105/109 grün. Bilder im Gespräch.
+
+E268 — Der Zeitmesser: Lernzeit messen statt schätzen
+================================================================================
+
+Der »Time Keeper« aus Redurs GoodNotes-Dossier — und zugleich die
+Einlösung eines alten Punktes aus AUFGABEN.md: „Pomodoro/Lernzeit echt
+messen statt schätzen". Bis hierher gab es zwei Uhren, beide fest an
+eine Prüfung gebunden (Elektro-Arbeitsplatz, Lernwelt-Simulation), und
+die Lernzeit in der Lernwelt war GESCHÄTZT („~45 Min., aus
+Lernaktivitäten geschätzt").
+
+DIE ENTSCHEIDUNG: ein kleines schwebendes Feld, kein Bereich, kein
+Blocktyp, keine Seite. Stoppuhr fürs Messen, Timer fürs Begrenzen
+(5 und 25 Minuten als Schnellwahl — die 25 ist die Pomodoro-Länge,
+ohne dass die Sache so heissen muss).
+
+DER DOKUMENTBEZUG ENTSTEHT BEIM START, nicht durch einen Ort im Baum:
+die Uhr merkt sich, welche Seite offen war, als sie losging. Jede
+beendete Sitzung landet mit Dauer, Art und Seitennamen in
+`zeit:sitzungen` — höchstens fünfzig, damit der Verlauf nicht still
+wächst (§15 gilt auch für Kleinkram). Sitzungen unter fünf Sekunden
+werden verworfen: sonst füllte jedes versehentliche Antippen die
+Liste.
+
+SCHLIESSEN IST NICHT AUS. Das Feld lässt sich wegklicken, die Uhr
+läuft weiter — sie gehört zur Arbeit, nicht zum Fenster. Wer es
+wieder öffnet, sieht den Stand.
+
+Verworfen: die Uhr an einen Block zu binden (dann gehörte sie einer
+Seite und nicht der Arbeit), automatisches Starten beim Öffnen einer
+Seite (Messen ist eine Entscheidung, kein Nebenprodukt), und eine
+Statistik-Ansicht — erst messen, dann auswerten, und die Auswertung
+gehört in die Lernwelt, die dafür schon einen Ort hat.
+
+**Geprüft:** test268, 15 Punkte auf Port 9047 — Register-Weg, Wörter
+statt Zeichen auf den Knöpfen, ECHT gewartete Sekunden (nicht
+behauptete), Pause hält an und Weiter läuft weiter, Dokumentbezug im
+Verlauf, Kappung bei fünfzig, Timer endet von selbst mit Meldung und
+Eintrag, Schliessen stoppt nicht, Bau-Hygiene (sw v35). Drei
+Gegenproben einzeln rot: merken tot → Verlaufspunkt; Kappung weg →
+Fünfzig-Punkt; Pause wirkungslos → Pausenpunkt.
+
+Und ein Fund über die Prüfung selbst: die Pausenprobe wartete zuerst
+1,4 Sekunden und war damit KEINE Prüfung — bei Sekundenrundung plus
+einer Toleranz von ±1 blieb sie auch mit kaputtem Pausenpfad grün.
+Erst 2,6 Sekunden Wachstum lassen sich nicht wegrunden. Genau der
+Fall aus §55.2: wer eine neue Prüfung schreibt, prüft zuerst, ob sie
+überhaupt rot werden KANN.

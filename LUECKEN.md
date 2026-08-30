@@ -2906,3 +2906,23 @@ L80 — Was Haftnotiz und Lineal (E267) bewusst noch nicht können
    einer Seite haben je ihr eigenes Lineal, nach Neuladen ist es aus.
 
 Gefunden am 30. August 2026 (beim Bau von E267).
+
+================================================================================
+L81 — Was der Zeitmesser (E268) bewusst noch nicht kann
+================================================================================
+
+1. Der Verlauf wird nirgends AUSGEWERTET — es gibt keine Wochensumme,
+   kein Fach-Diagramm, keinen Vergleich. Die Zahlen liegen in
+   `zeit:sitzungen` bereit; die Auswertung gehört in die Lernwelt, wo
+   der Ort dafür schon existiert (dort steht die Lernzeit bis heute
+   als Schätzung).
+2. Läuft die Uhr, während der Rechner schläft, zählt sie die Schlafzeit
+   mit — gerechnet wird aus der Wanduhr, nicht aus wacher Zeit.
+3. Kein Ton und keine Systemmeldung beim Ablauf, nur der Hinweis in
+   der App. Wer wegklickt, sieht ihn beim Zurückkommen.
+4. Die Uhr überlebt kein Neuladen: sie ist Laufzeit, nicht Ablage.
+   Eine beendete Sitzung ist gemerkt, eine laufende geht verloren.
+5. Nur eine Uhr gleichzeitig; ein zweiter Start beendet die erste
+   (und merkt sie, wenn sie lang genug lief).
+
+Gefunden am 30. August 2026 (beim Bau von E268).

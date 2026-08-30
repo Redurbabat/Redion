@@ -124,6 +124,10 @@ Register.module = (() => {
            'über den mitgelieferten lokalen Dienst.',
       oeffnen: () => (typeof Recognition !== 'undefined') && Recognition.scan() },
 
+    { id: 'zeitmesser',    name: 'Zeitmesser', icon: '⏱',
+      was: 'Stoppuhr und Timer mit Dokumentbezug — Lernzeit messen statt schätzen (E268).',
+      oeffnen: () => (typeof Zeitmesser !== 'undefined') && Zeitmesser.panel() },
+
     { id: 'dokumentmodus', name: 'Dokumentmodus',  icon: '📖',
       was: 'Eine PDF- oder Blattseite gross, mit den Objekten daneben.',
       /* SAGT, WARUM ES NICHT GEHT, statt stumm nichts zu tun. `toggle`

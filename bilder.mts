@@ -986,6 +986,32 @@ const ANSICHTEN: Record<string, { titel: string; bauen: () => void | Promise<voi
     }
   },
 
+  zeitmesser: {
+    titel: 'Der Zeitmesser — Lernzeit messen statt schätzen (E268)',
+    bauen: async () => {
+      const w = window as any;
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const s = Store.addPage(null, { text: 'Ohmsches Gesetz üben', icon: '📓' });
+      Store.addBlock(s.id, 'text', { text: 'U = R · I — Aufgaben 1 bis 12' });
+      App.oeffne(s.id);
+      await new Promise(r => setTimeout(r, 700));
+      /* Ein paar Sitzungen im Verlauf, damit „Zuletzt" etwas zeigt. */
+      Store.setMeta('zeit:sitzungen', [
+        { art: 'timer', beginn: 1, dauerSek: 1500, sollSek: 1500,
+          seiteId: '', seitenName: 'Ohmsches Gesetz üben' },
+        { art: 'stoppuhr', beginn: 1, dauerSek: 738, sollSek: 0,
+          seiteId: '', seitenName: 'Fachzeichnen' },
+        { art: 'timer', beginn: 1, dauerSek: 300, sollSek: 300,
+          seiteId: '', seitenName: 'Prüfungsstoff' }
+      ]);
+      w.Zeitmesser.start('timer', 25 * 60);
+      w.Zeitmesser.panel();
+      await new Promise(r => setTimeout(r, 700));
+    }
+  },
+
   haftnotiz: {
     titel: 'Haftnotiz und Lineal auf dem Blatt (E267)',
     bauen: async () => {
