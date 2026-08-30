@@ -362,26 +362,21 @@ p('„Ohne Farbe" räumt Feld und Attribut',
     const karte = document.querySelector(`.bib-deckel[data-id="${a.h1}"]`);
     return Store.getBlock(a.h1)?.color === '' && !karte?.hasAttribute('data-farbe');
   }, ids));
+/* Das Heft liegt im Fach — erst dorthin, dann nachsehen. */
+await seite.evaluate((a: any) => {
+  Store.updateBlock(a.h1, { color: 'red;background:url(x)' });
+  (window as any).Notebook.oeffnen();
+}, ids);
+await seite.waitForTimeout(400);
+await seite.locator(`.bib-deckel[data-fach="${ids.fach}"]`).click();
+await seite.waitForTimeout(400);
 p('Ein eingeschleuster color-Wert erzeugt WEDER Attribut noch Stil (Whitelist, §19)',
   await seite.evaluate((a: any) => {
-    Store.updateBlock(a.h1, { color: 'red;background:url(x)' });
-    (window as any).Notebook.oeffnen();
-    return new Promise(f => setTimeout(() => {
-      const karte = document.querySelector(`.bib-deckel[data-id="${a.h1}"]`) ||
-        (() => {
-          (document.querySelector(`.bib-deckel[data-fach="${a.fach}"]`) as HTMLElement)?.click();
-          return null;
-        })();
-      /* Das Heft liegt im Fach — dort nachsehen. */
-      setTimeout(() => {}, 0);
-      return f(new Promise(f2 => setTimeout(() => {
-        const k = document.querySelector(`.bib-deckel[data-id="${a.h1}"]`);
-        const sauber = !!k && !k.hasAttribute('data-farbe') &&
-          !(k.getAttribute('style') || '').includes('url');
-        Store.updateBlock(a.h1, { color: '' });
-        f2(sauber);
-      }, 400)));
-    }, 400));
+    const k = document.querySelector(`.bib-deckel[data-id="${a.h1}"]`);
+    const sauber = !!k && !k.hasAttribute('data-farbe') &&
+      !(k.getAttribute('style') || '').includes('url');
+    Store.updateBlock(a.h1, { color: '' });
+    return sauber;
   }, ids));
 
 console.log('\n7 · Verschlüsseln im Kontextmenü — das Heft bleibt im Regal');
@@ -559,8 +554,14 @@ const swJs = fs.readFileSync(path.join(WURZEL, 'sw.js'), 'utf8');
 p('Die erzeugten Dateien tragen den ERZEUGT-Kopf und kennen die neuen Teile',
   notebookJs.includes('ERZEUGT') && notebookJs.includes('nh-reiter') &&
   schaleJs.includes('ERZEUGT') && schaleJs.includes('erstellenWeg'));
-p('sw.js: neue Fassung, Dateiliste unverändert (nichts kam dazu, nichts fehlt)',
-  swJs.includes('notizen-v32') && swJs.includes('quell/bereiche/wissen/notebook.js') &&
+/* Nicht „v32" festnageln — die Fassung wächst mit jeder Lieferung. Die
+   Wahrheit ist: das erzeugte sw.js trägt DIESELBE Fassung wie seine
+   Quelle, und die Dateiliste kennt die Notizhefte weiterhin. */
+const swQuelle = fs.readFileSync(path.join(WURZEL, 'src/dienst/sw.ts'), 'utf8');
+const fassung = /VERSION = '([^']+)'/.exec(swQuelle)?.[1] || '';
+p('sw.js trägt die Fassung seiner Quelle, die Dateiliste kennt die Notizhefte',
+  !!fassung && swJs.includes(`'${fassung}'`) &&
+  swJs.includes('quell/bereiche/wissen/notebook.js') &&
   swJs.includes('quell/schale/stil/notizhefte.css'));
 p('Die Einzeldatei enthält die Reiter-Bibliothek',
   fs.readFileSync(path.join(WURZEL, 'redion-einzeldatei.html'), 'utf8').includes('nh-reiter'));
