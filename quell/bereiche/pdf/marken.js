@@ -113,6 +113,23 @@ const Marken = (() => {
             const box = InkGeometry.rectangle(points[0], points[1]);
             element = svg('rect', { x: box.x, y: box.y, width: box.width, height: box.height });
         }
+        else if (art === 'abdeck' && points.length >= 2) {
+            /* DAS ABDECKBAND (E266): eine DECKENDE Fläche über dem, was man
+               gleich abfragen will — Formel zudecken, selbst antworten,
+               antippen, nachsehen. Gezeichnet wird es wie ein Rechteck; die
+               Füllung ist der Sinn der Sache und steht deshalb HIER, vor dem
+               Strich-Block unten, der jede Form auf fill:none stellt.
+               GESPEICHERT IST IMMER „ZUGEDECKT": das Aufdecken lebt nur im
+               Sichtbaren (data-auf, siehe schicht) und schreibt nie in die
+               Ablage — Lernen darf den Speicher nicht anfassen. Druck und
+               Folien rufen denselben Zeichner und zeigen darum zu. */
+            const box = InkGeometry.rectangle(points[0], points[1]);
+            element = svg('rect', { x: box.x, y: box.y, width: box.width,
+                height: box.height, rx: 4, fill: color, 'pointer-events': 'all' });
+            element.setAttribute('data-sid', idOf(mark));
+            element.setAttribute('data-ink-art', art);
+            return element;
+        }
         else if (art === 'ellipse' && points.length >= 2) {
             const box = InkGeometry.rectangle(points[0], points[1]);
             element = svg('ellipse', { cx: box.x + box.width / 2, cy: box.y + box.height / 2,
@@ -230,6 +247,19 @@ const Marken = (() => {
         }
         marks.forEach(mark => { const node = zeichneMarke(mark); if (node)
             flaeche.appendChild(node); });
+        /* Welche Abdeckbänder GERADE aufgedeckt sind — nur Laufzeit, nie
+           Ablage: nach Neuladen oder Neuzeichnen von aussen ist wieder alles
+           zu, und genau das ist die ehrliche Vorgabe beim Lernen (E266). */
+        const aufgedeckt = new Set();
+        const abdeckAnwenden = () => {
+            flaeche.querySelectorAll('[data-ink-art="abdeck"]').forEach(node => {
+                const id = node.getAttribute('data-sid') || '';
+                if (aufgedeckt.has(id))
+                    node.setAttribute('data-auf', '1');
+                else
+                    node.removeAttribute('data-auf');
+            });
+        };
         const snapshot = () => clone(marks);
         const state = () => ({ undo: historyUndo.length > 0, redo: historyRedo.length > 0,
             selected: selection.size });
@@ -251,6 +281,7 @@ const Marken = (() => {
             flaeche.querySelectorAll('[data-sid],[data-ink-ui]').forEach(node => node.remove());
             marks.forEach(mark => { const node = zeichneMarke(mark); if (node)
                 flaeche.appendChild(node); });
+            abdeckAnwenden();
             renderSelection();
         };
         const restore = (next) => {
@@ -613,6 +644,25 @@ const Marken = (() => {
         flaeche.addEventListener('pointerup', finish);
         flaeche.addEventListener('pointercancel', finish);
         flaeche.addEventListener('pointerleave', finish);
+        /* Aufdecken per Tipp — NUR im Schreiben-Modus. Die Fläche selbst ist
+           dort durchlässig (pointer-events:none), das Band bleibt greifbar,
+           weil sein Knoten `pointer-events:all` trägt. In jedem Werkzeug-
+           Modus gilt der Tipp dem Werkzeug (zeichnen, radieren, wählen). */
+        flaeche.addEventListener('click', (event) => {
+            if (tool !== 'schreiben')
+                return;
+            const ziel = event.target?.closest?.('[data-ink-art="abdeck"]');
+            if (!ziel)
+                return;
+            event.preventDefault();
+            event.stopPropagation();
+            const id = ziel.getAttribute('data-sid') || '';
+            if (aufgedeckt.has(id))
+                aufgedeckt.delete(id);
+            else
+                aufgedeckt.add(id);
+            abdeckAnwenden();
+        });
         flaeche.addEventListener('keydown', (event) => {
             if ((event.key === 'Delete' || event.key === 'Backspace') && selection.size) {
                 event.preventDefault();
@@ -692,6 +742,7 @@ const Marken = (() => {
                 button('arrow', '→', 'Pfeil', 'Pfeil') +
                 button('rectangle', '□', 'Rechteck', 'Rechteck') +
                 button('ellipse', '○', 'Ellipse', 'Ellipse') +
+                button('abdeck', '▬', 'Abdecken', 'Abdeckband über Lösungen ziehen — Antippen im Schreiben-Modus deckt auf') +
                 button('text', 'T', 'Text', 'Textanmerkung') +
                 button('zeichen', '⚡', 'Fachzeichen', 'Ein elektrotechnisches Symbol auf die Seite setzen') +
                 button('radierer', '⌫', 'Radieren', 'Eine Marke entfernen') +

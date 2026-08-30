@@ -19056,3 +19056,44 @@ Ring-Waechter-Probe entlarvte dabei einen leer-grünen Prüfpunkt
 erst dadurch zu einer Prüfung, die rot werden KANN (§55.2). test264
 unangetastet 25/25; test87/105/109/207/222 grün. Einzeldatei 7140 KB.
 Sechs Bilder im Gespräch.
+
+E266 — Das Abdeckband: zudecken, antippen, wissen
+================================================================================
+
+Der eine Active-Recall-Baustein aus Redurs GoodNotes-Dossier, den es in
+Redion wirklich nicht gab (repo-weit unter keinem Namen, E265-Erkundung):
+eine deckende Fläche über Formeln und Lösungen — zudecken, selbst
+antworten, antippen, nachsehen.
+
+DIE ENTSCHEIDUNG: eine neue Marken-Art `abdeck` in der EINEN
+Zeichenschicht (bereiche/pdf/marken.ts) — damit liegt sie auf dem
+A4-Blatt UND auf der PDF-Seite, denn beide nutzen dieselbe Schicht
+(E103). Gezeichnet wird sie wie ein Rechteck; ihre Füllung steht VOR
+dem Strich-Block des Zeichners, der sonst jede Form auf fill:none
+stellt.
+
+GESPEICHERT IST IMMER „ZUGEDECKT". Das Aufdecken ist ein Laufzeit-
+Attribut (data-auf) am SVG-Knoten und schreibt NIE in die Ablage —
+Lernen darf den Speicher nicht anfassen (kein edited-Anstieg, kein
+Sync-Rauschen, kein Fassungs-Müll vom blossen Nachsehen). Nach
+Neuladen ist alles zu: die ehrliche Vorgabe beim Abfragen. Druck,
+Folien und Miniaturen rufen denselben Zeichner und zeigen darum zu —
+ein gedrucktes Übungsblatt bleibt ein Übungsblatt.
+
+Aufgedeckt wird NUR im Schreiben-Modus (die Fläche ist dort
+durchlässig, das Band bleibt greifbar über pointer-events:all am
+Knoten); in jedem Werkzeug-Modus gilt der Tipp dem Werkzeug — Radierer
+entfernt, Auswahl verschiebt, wie jede Marke. Der aufgedeckte Zustand
+zeigt sich über FORM (fast durchsichtig + gestrichelte Kante), nicht
+nur über Farbe (§38). Knopf in der Blatt-Leiste und im Menüband-Reiter
+„Zeichnen", beide mit dem Wort „Abdecken".
+
+**Geprüft:** test266, 12 Punkte auf Port 9045 — Werkzeug mit Wort,
+echtes Ziehen per Maus (Marke in der Ablage, Knoten GEFÜLLT), Tipp
+auf/zu mit Ablage-Schweigen (Marken-JSON und edited unverändert),
+Neuladen deckt zu (sogar nach absichtlich offen gelassenem Band),
+Radierer, der eine Zeichner liefert zugedeckt, Bau-Hygiene (sw v33,
+Einzeldatei). Drei Gegenproben einzeln rot: Tipp-Umschalter tot → §3
+rot; Füllung weg → §2 und §6 rot; Umschalter schreibt in die Ablage →
+Schweige-Punkt rot. test264/265/207/87/105/109 grün. Bilder im
+Gespräch (zu + auf).

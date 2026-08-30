@@ -2875,3 +2875,16 @@ L77 Punkt 4 (Deckelfarben) ist damit erledigt. Neu hingenommen:
    liegen Stern und ⋯ weit rechts vom Namen.
 
 Gefunden am 30. August 2026 (beim Bau von E265).
+
+================================================================================
+L79 — Was das Abdeckband (E266) bewusst noch nicht kann
+================================================================================
+
+1. Nur Rechteckform — kein Freihand-Band, keine Muster/Streifen-Optik.
+2. Aufdecken zählt nirgends mit: keine Lernstatistik, kein „5 von 8
+   gewusst". Wer zählen will, nimmt Lernkarten — das Band ist bewusst
+   das leichtere Werkzeug daneben.
+3. „Alle aufdecken/zudecken" auf einen Schlag fehlt; bei zwanzig
+   Bändern heisst das zwanzig Tipps.
+
+Gefunden am 30. August 2026 (beim Bau von E266).

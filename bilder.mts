@@ -959,6 +959,33 @@ const ANSICHTEN: Record<string, { titel: string; bauen: () => void | Promise<voi
     }
   },
 
+  abdeckband: {
+    titel: 'Das Abdeckband — zugedeckt lernen, antippen, wissen (E266)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const s = Store.addPage(null, { text: 'Formeln abfragen', icon: '📓' });
+      const blatt = Store.addBlock(s.id, 'blatt', { text: '', papier: 'liniert' });
+      for (const z of ['Leistung:  P = U · I', '',
+                       'Reihenschaltung:  R = R1 + R2', '',
+                       'Ohmsches Gesetz:  U = R · I'])
+        Store.addBlock(blatt.id, 'text', { text: z });
+      /* Zwei Bänder über den rechten Formelhälften — das obere bleibt zu,
+         das untere wird im Bild aufgedeckt gezeigt. */
+      Store.updateBlock(blatt.id, { marken: [
+        { id: 'b1', art: 'abdeck', farbe: '#e0a419', pts: [[150, 60], [330, 88]] },
+        { id: 'b2', art: 'abdeck', farbe: '#2f7ed8', pts: [[170, 148], [360, 176]] }
+      ] });
+      App.oeffne(s.id);
+      await new Promise(r => setTimeout(r, 900));
+      const unten = [...document.querySelectorAll('[data-ink-art="abdeck"]')]
+        .find(k => k.getAttribute('data-sid') === 'b2');
+      unten?.setAttribute('data-auf', '1');
+      await new Promise(r => setTimeout(r, 200));
+    }
+  },
+
   notizhefteFach: {
     titel: 'Ein offenes Fach in der Listenform (E265)',
     bauen: async () => {

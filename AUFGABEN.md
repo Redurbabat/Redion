@@ -35,6 +35,16 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
+**30. August 2026 · Das Abdeckband — Active Recall auf Blatt und PDF (E266)**
+
+> Neue Marken-Art `abdeck` in der einen Zeichenschicht: deckende Fläche
+> über Lösungen, Antippen im Schreiben-Modus deckt auf/zu — NUR als
+> Laufzeit-Attribut, die Ablage schweigt (kein edited, kein Sync-
+> Rauschen). Neuladen/Druck/Folien zeigen zu. Knopf „Abdecken" in
+> Blatt-Leiste und Menüband. test266: 12 Punkte, drei Gegenproben rot
+> gesehen. Weiter: Haftnotiz+Lineal (E267), Zeitmesser (E268),
+> Auswahl-Feinschliff (E269).
+
 **30. August 2026 · Die Heft-Bibliothek aus Redurs GoodNotes-Dossier (E265)**
 
 > Das Regal wird die Bibliothek aus dem Dossier: Reiter Dokumente/
