@@ -35,6 +35,18 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
+**30. August 2026 · Die Heft-Bibliothek aus Redurs GoodNotes-Dossier (E265)**
+
+> Das Regal wird die Bibliothek aus dem Dossier: Reiter Dokumente/
+> Favoriten/Papierkorb (wiederherstellen ja, endgültig löschen nur in
+> der einen Löschmaschine), Fächer aus normalen Seiten (additives Feld
+> `heftArt`, kein Datenmodell), Neu-Menü mit Papier-Schnellwahl über
+> die neuen App.erstellenWege/erstellenWeg (die Kachel bleibt der
+> Ein-Klick-Weg), Gitter/Liste, klickbarer Stern, Deckelfarbe aus
+> `p.color` mit Whitelist, Verschlüsseln im Kontextmenü. test265: 38
+> Punkte, drei Gegenproben rot gesehen — eine davon entlarvte einen
+> leer-grünen Prüfpunkt (§55.2). Als Nächstes das Abdeckband (E266).
+
 **30. August 2026 · Die Notizhefte: ein Regal, das sofort schreiben lässt (E264)**
 
 > Neue Ansicht „Notizhefte" (Redurs GoodNotes-Wunsch, als Ablauf, nicht

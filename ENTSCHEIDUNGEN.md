@@ -18967,3 +18967,92 @@ böser Heftname escaped (§19), Bau-Hygiene (sw.js v31, Einzeldatei).
 Drei Gegenproben einzeln rot gesehen (Fokus weg → §3; Rückweg als
 Zeichen statt Wort → §7; sw-Eintrag weg → §11). test222 zählt jetzt
 neunzehn Apps. Sechs Bilder im Gespräch.
+
+E265 — Die Heft-Bibliothek aus dem GoodNotes-Dossier
+================================================================================
+
+Redur hat ein 32-seitiges GoodNotes-Dossier mitgebracht: „Es muss so
+sein — aber ohne unsere Funktionen zu löschen." Das Dossier beschreibt
+zwei Ebenen (Library View, Document View); E265 baut die Bibliotheks-
+Ebene in die Notizhefte — als ABLÄUFE, nicht als Optik: jede Karte,
+jeder Reiter, jedes Menü besteht aus Redions eigenen Deckeln, Marken
+und Wörtern. Nichts Bestehendes wurde entfernt, kein Datenmodell
+geändert.
+
+WAS DAZUKAM, und die Entscheidungen dahinter:
+
+REITER Dokumente · Favoriten · Papierkorb — Wörter, keine Symbole
+(§38). Favoriten ist das bestehende Feld `favorite`; der Stern sitzt
+jetzt KLICKBAR an jeder Karte (in der Bibliothek ist er tote Anzeige).
+Der Papierkorb-Reiter zeigt tote Hefte mit genau EINEM Knopf:
+„Wiederherstellen". Endgültig löschen gibt es dort NICHT — die eine
+Löschmaschine mit Rückfrage bleibt der Papierkorb selbst (E29).
+
+FÄCHER sind Seiten, keine Datenart: eine lebende Seite ohne eigene
+Blätter, in der Hefte liegen, wird als Fach-Karte gezeichnet (Redions
+Ordner-Mappe aus E236). Das einzige neue Korn ist das additive Feld
+`heftArt`: 'fach' am frisch angelegten, noch leeren Fach (sonst wäre
+es bis zum ersten Heft unsichtbar) und 'heft' an einer Seite, die IM
+REGAL verschlüsselt wurde — ihre Kinder sind danach Chiffretext, die
+abgeleitete Heft-Regel wäre blind, und das Heft fiele aus seiner
+eigenen Bibliothek. Der Merker zählt nur, SOLANGE `locked` wahr ist;
+sobald die Kinder wieder lesbar sind, entscheidet allein die Regel —
+ein verwaister Merker kann nie lügen. Verschieben läuft über den
+vorhandenen `Werkzeuge.verschiebe` (beide content-Listen), davor die
+`istUnter`-Ring-Wache. Das Regal zeigt EINE Fach-Ebene; ein offenes
+Fach ist Modulzustand, der Hash bleibt `#notizhefte` (ein Fach-Hash
+bräuchte einen zweiten Start-Leseweg neben `startAnsicht`).
+
+DAS NEU-MENÜ (＋-Knopf im Kopf, am Telefon der FAB): Notizheft mit
+fünf Papier-Schnellwahlen, Neues Fach, PDF einlesen, Whiteboard,
+Textseite, „Alle Wege …". Die Kollision des ersten Entwurfs: das Menü
+auf der grossen ＋-Kachel hätte den Ein-Klick-Weg von E264 zerstört
+(test264 §3 tippt und erwartet ein Heft, kein Menü). Die Kachel BLEIBT
+deshalb Direktweg; das Menü liegt daneben. Fremde Wege laufen über die
+neuen `App.erstellenWege()`/`App.erstellenWeg(id)` — wörtlich aus dem
+Katalog-Blatt herausgelöst, damit es weiterhin EINE Anlege-Maschine
+gibt (E29) und die Notizhefte weder PdfEinlesen noch das Whiteboard
+kennen müssen (§5).
+
+GITTER/LISTE als Meta `heft:form` (das bibForm-Muster). DECKELFARBE
+ist das bestehende Feld `color`, das an jeder Seite liegt und bei
+Seiten nie gezeichnet wurde — jetzt eine Kante am Deckel, mit
+Whitelist: nur die neun bekannten Farbnamen erzeugen Attribut und
+Stil, ein eingeschleuster Wert aus einer fremden Sicherung erzeugt
+nichts (§19). VERSCHLÜSSELN/ENTSCHLÜSSELN im Kontextmenü ruft die
+vorhandenen `Werkzeuge.sperren/entsperren` (AES-GCM, E-L21); die
+🔒-Karte sagt „Verschlüsselt" statt einer erlogenen Blattzahl.
+
+DIE LANDKARTE Dossier → Redion (was es schon gibt, unter eigenem
+Namen — deshalb ist „komplett so" nachprüfbar statt behauptet):
+
+    Audio + Note Replay        Meeting-Aufnahme mit Zeitmarken-Sprung
+    Handschrift→Text (OCR)     „⌁ Erkennen" im Dokumentmodus
+    Templates/Marketplace      Vorlagen-Galerie + Register.vorlagen
+    Passwortschutz             Werkzeuge.sperren (AES-GCM/PBKDF2)
+    Presentation Mode          Präsentation, Strg+Alt+P
+    Study Sets/Active Recall   Lernkarten, Lückenkarten, Ausschnitt→Karte
+    Papier-Templates je Seite  Papier-Wähler am Blatt (E207)
+    Suche über Handschrift     grosse Suche + OCR-Text (L29)
+
+WAS DANACH KOMMT (eigene Bögen): Abdeckband/Tape E266, Haftnotiz und
+Lineal E267, Zeitmesser E268, Auswahl-Feinschliff E269. Verworfen:
+GoodNotes-Optik (Trade-Dress), Marketplace-/Shared-Reiter (Vorlagen
+und Teilen existieren), Zoom-Fenster und Laserpointer (im Dossier
+selbst als iOS-exklusiv geführt; Redion hat Zoomregler und
+Präsentationsmodus), endgültiges Löschen im Regal.
+
+**Geprüft:** test265, 38 Punkte auf Port 9043 — Reiter samt Budget-
+Wächter, Fach-Regel mit leerem Fach, Neu-im-Fach, Umhängen mit
+content-Probe, Ring-Wache, Neu-Menü gegen Sofort-Heft, Papier-
+Schnellwahl mit Vorgabe-Merken, Katalog-Anschluss, der Kachel-Wächter
+(Ein-Klick, KEIN Menü), Liste mit Einzahl-Probe, Stern mit
+aria-pressed und Zähler, Farbkante GEMESSEN, Whitelist gegen
+Einschleusen, Verschlüsseln samt Sperrbildschirm und Rückweg,
+Papierkorb-Reiter ohne Endgültig, Telefon-Masse, böser Fachname in
+Karte/Menü/Kopfzeile. Drei Gegenproben einzeln rot gesehen — die
+Ring-Waechter-Probe entlarvte dabei einen leer-grünen Prüfpunkt
+(Menü öffnete sich nie, „nicht angeboten" stimmte leer) und wurde
+erst dadurch zu einer Prüfung, die rot werden KANN (§55.2). test264
+unangetastet 25/25; test87/105/109/207/222 grün. Einzeldatei 7140 KB.
+Sechs Bilder im Gespräch.
