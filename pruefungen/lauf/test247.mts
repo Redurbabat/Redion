@@ -172,9 +172,19 @@ const grund = await seite.evaluate(() => {
 
 p('Der Kasten ist im Baum', grund.da);
 p('Er ist nicht versteckt', !grund.versteckt);
-p('Alle sechs Reiter stehen da',
-  ['start', 'einfuegen', 'zeichnen', 'werkzeuge', 'elektro', 'ansicht']
-    .every(r => grund.reiter.includes(r)), grund.reiter.join(', '));
+/* ACHT SEIT E272, und zwei Namen fehlen mit Absicht.
+   „Werkzeuge" ist aufgeloest — der Reiter war eine Restekiste, seine elf
+   Eintraege stehen jetzt in Gehen, Verlauf, Ueberpruefen und Hilfe
+   (doku/PREMIUM-SHELL-MATRIX.md, R6). „Elektro" ist auf Redurs Entscheid
+   kein eigener Reiter mehr; seine acht Eintraege behalten trotzdem
+   `reiter: 'elektro'` im Register, weil `bereiche/elektro/start.ts` seine
+   Kacheln daraus liest — geprueft wird das in test272 §5. */
+p('Alle acht Reiter stehen da',
+  ['gehen', 'start', 'einfuegen', 'zeichnen', 'verlauf', 'ueberpruefen',
+   'ansicht', 'hilfe'].every(r => grund.reiter.includes(r)),
+  grund.reiter.join(', '));
+p('Und „Werkzeuge" ist wirklich weg, nicht nur leer',
+  !grund.reiter.includes('werkzeuge'), grund.reiter.join(', '));
 p('Genau EIN Reiter ist gewählt', grund.aktiv.length === 1, grund.aktiv.join(','));
 p('Die Reiterzeile ist eine tablist (§38)', grund.rolle === 'tablist', String(grund.rolle));
 p('Das Register hat mehr als achtzig Einträge', grund.registerZahl > 80,
@@ -184,7 +194,13 @@ p('Das Register hat mehr als achtzig Einträge', grund.registerZahl > 80,
    niemand braucht — oder ein `zeigen()`, das zu streng ist. */
 console.log('\n1b · Kein Reiter ist leer');
 const proReiter: Record<string, number> = {};
-for (const r of ['start', 'einfuegen', 'zeichnen', 'werkzeuge', 'elektro', 'ansicht']) {
+/* NUR DIE SICHTBAREN. Seit E272 verbirgt der Ueberlauf alles, was nicht in
+   die eine Zeile passt (`hidden`), und ein verborgener Knopf hat die Breite
+   null — die Messung „hat das SVG Flaeche" meldete ihn als zeichenlos. Beim
+   Reiter „Einfuegen" waren das 56 falsche Treffer.
+   Dass die Verborgenen erreichbar bleiben, prueft §2b darunter. */
+for (const r of ['gehen', 'start', 'einfuegen', 'zeichnen', 'verlauf',
+                 'ueberpruefen', 'ansicht', 'hilfe']) {
   await klick(seite, `#menueband [data-mb-reiter="${r}"]`);
   await seite.waitForTimeout(260);
   const z = await seite.evaluate(() => ({
@@ -210,7 +226,7 @@ for (const r of ['start', 'einfuegen', 'zeichnen', 'werkzeuge', 'elektro', 'ansi
   await klick(seite, `#menueband [data-mb-reiter="${r}"]`);
   await seite.waitForTimeout(240);
   const fund = await seite.evaluate((reiter: string) =>
-    [...document.querySelectorAll('#menueband .mb-knopf')].map(b => {
+    [...document.querySelectorAll('#menueband .mb-knopf:not([hidden])')].map(b => {
       const svg = b.querySelector('svg');
       const glyph = b.querySelector('.mb-glyph');
       /* „Vorhanden" reicht nicht — ein leeres <span data-sym="B"> ist da und
@@ -303,7 +319,9 @@ p('Jeder Eintrag ist vollständig', tot.fehlt.length === 0, tot.fehlt.slice(0, 4
 
 /* Und einer wird wirklich gedrückt. „Journal" legt einen Tageseintrag an —
    das ist im Bestand sichtbar und braucht keine Vermutung. */
-await klick(seite, '#menueband [data-mb-reiter="werkzeuge"]');
+/* „Journal" wohnt seit E272 unter „Gehen" — derselbe Eintrag, derselbe
+   Griff `Werkzeuge.journal()`, nur ein anderer Reiter. */
+await klick(seite, '#menueband [data-mb-reiter="gehen"]');
 await seite.waitForTimeout(260);
 const vorher = await seite.evaluate(() =>
   Object.keys(Store.cache.blocks).length);
@@ -324,15 +342,17 @@ console.log('\n5 · Die Werkzeuge sind umgezogen, nicht gelöscht');
 
 const werkzeuge = await seite.evaluate(() => {
   const R = Register?.menueband;
-  const imBand = (R?.inReiter?.('werkzeuge') || [])
-    .flatMap((g: any) => g.eintraege).map((e: any) => e.name);
+  /* SEIT E272 UEBER ALLE REITER, nicht nur ueber „werkzeuge" — den gibt es
+     nicht mehr. Die Frage ist dieselbe geblieben: stehen die sieben
+     Werkzeuge irgendwo im Band, oder sind sie beim Umbau verlorengegangen? */
+  const imBand = (R?.alle?.() || []).map((e: any) => e.name);
   const inLeiste = [...document.querySelectorAll('#sidebar [data-abschnitt="werkzeuge"] button')]
     .map(b => (b.textContent || '').trim());
   return { imBand, inLeiste };
 });
 const SOLL = ['Journal', 'Schnellnotizen', 'Vorlagen', 'Graph', 'Schlagwörter',
               'Karteikarten', 'Umsetzungsstand'];
-p('Alle sieben stehen im Band',
+p('Alle sieben stehen weiterhin im Band',
   SOLL.every(n => werkzeuge.imBand.includes(n)),
   'fehlt: ' + SOLL.filter(n => !werkzeuge.imBand.includes(n)).join(', '));
 p('Und links stehen sie nicht mehr', werkzeuge.inLeiste.length === 0,
@@ -377,8 +397,11 @@ console.log('\n5b · Drei weitere Abschnitte sind oben statt links');
    Doppelung: die Seitenleiste hat OBEN schon Reiter dafür. */
 const dreiOben = await seite.evaluate(() => {
   const R = Register?.menueband;
-  const namen = (R?.inReiter?.('werkzeuge') || [])
-    .flatMap((g: any) => g.eintraege).map((e: any) => e.name);
+  /* SEIT E272 UEBER DAS GANZE BAND. Den Reiter „werkzeuge" gibt es nicht
+     mehr; „Agenten" und „Besprechungen" stehen unter „Gehen", „Zuletzt
+     verwendet" unter „Verlauf". Die Frage von E211 bleibt dieselbe: stehen
+     sie OBEN und nicht mehr links? */
+  const namen = (R?.alle?.() || []).map((e: any) => e.name);
   const linksTitel = [...document.querySelectorAll('#sidebar .side-section span')]
     .map(x => (x.textContent || '').replace(/[⌄›]/g, '').trim());
   return { namen, linksTitel };
@@ -469,7 +492,13 @@ const nachNeustart = await seite.evaluate(() =>
   [...document.querySelectorAll('#menueband [data-mb-reiter]')]
     .filter(b => b.getAttribute('aria-selected') === 'true')
     .map(b => (b as HTMLElement).dataset['mbReiter'])[0] || '');
-p('Nach dem Neustart steht „Elektro" noch', nachNeustart === 'elektro', nachNeustart);
+/* SEIT E272 IST „ELEKTRO" KEIN REITER MEHR (Redurs Entscheid). Gemerkt
+   wird der Reiter weiterhin — er faellt nur auf den ersten zurueck, wenn der
+   gemerkte nicht mehr existiert. Genau das prueft diese Zeile jetzt: das
+   Merken funktioniert, und ein Reiter, den es nicht gibt, fuehrt nicht zu
+   einer leeren Auswahl. */
+p('Ein gemerkter Reiter, den es nicht mehr gibt, faellt sauber zurueck',
+  nachNeustart === 'gehen', nachNeustart);
 
 /* Zuklappen und wieder auf. */
 await klick(seite, '#menueband .mb-klapp');
@@ -481,7 +510,7 @@ const zu = await seite.evaluate(() => ({
 }));
 p('Zugeklappt verschwindet das Band', zu.klasse === true && zu.bandHoch === 0,
   `Klasse ${zu.klasse}, Höhe ${zu.bandHoch}`);
-p('Die Reiterzeile bleibt stehen', zu.reiterDa === 6, String(zu.reiterDa));
+p('Die Reiterzeile bleibt stehen', zu.reiterDa === 8, String(zu.reiterDa));
 await klick(seite, '#menueband .mb-klapp');
 await seite.waitForTimeout(300);
 const wiederAuf = await seite.evaluate(() =>
@@ -503,7 +532,8 @@ const nachPfeil = await seite.evaluate(() =>
   [...document.querySelectorAll('#menueband [data-mb-reiter]')]
     .filter(b => b.getAttribute('aria-selected') === 'true')
     .map(b => (b as HTMLElement).dataset['mbReiter'])[0] || '');
-p('Pfeil rechts wechselt den Reiter', nachPfeil === 'ansicht', nachPfeil);
+/* Der Pfeil geht EINEN weiter, und der erste heisst seit E272 „Gehen". */
+p('Pfeil rechts wechselt den Reiter', nachPfeil === 'start', nachPfeil);
 
 await seite.keyboard.press('Home');
 await seite.waitForTimeout(320);
@@ -511,7 +541,7 @@ const nachHome = await seite.evaluate(() =>
   [...document.querySelectorAll('#menueband [data-mb-reiter]')]
     .filter(b => b.getAttribute('aria-selected') === 'true')
     .map(b => (b as HTMLElement).dataset['mbReiter'])[0] || '');
-p('Pos1 springt zum ersten', nachHome === 'start', nachHome);
+p('Pos1 springt zum ersten', nachHome === 'gehen', nachHome);
 
 const tabFolge = await seite.evaluate(() =>
   [...document.querySelectorAll('#menueband [data-mb-reiter]')]
@@ -586,7 +616,11 @@ p('Zurück auf „Heute" bleibt die Leiste stehen',
   zurueckHeute && aufHeute.sonder === true && aufHeute.hoch > 25,
   JSON.stringify(aufHeute));
 p('Aber nur mit den Reitern, die ohne Seite etwas können',
-  aufHeute.reiter === 3 && !aufHeute.namen.some((n: string) =>
+  /* FUENF SEIT E272, nicht drei: zu Gehen und Ansicht sind Verlauf,
+     Ueberpruefen und Hilfe gekommen. Die REGEL ist unveraendert und das
+     Wichtige an dieser Zeile: die drei Reiter, die eine Seite brauchen,
+     stehen ohne Seite nicht da. */
+  aufHeute.reiter === 5 && !aufHeute.namen.some((n: string) =>
     ['start', 'einfuegen', 'zeichnen'].includes(n)),
   `${aufHeute.reiter} Reiter: ${aufHeute.namen.join(', ')}`);
 
@@ -608,7 +642,7 @@ const ohneRuhig = await seite.evaluate(() => ({
    ist. Geprüft wird deshalb, dass das Zurückschalten sie nicht kaputt
    macht: dieselben drei Reiter, dieselbe Höhe. */
 p('Ohne die ruhige Fassung steht dieselbe Reiterzeile da',
-  ohneRuhig.reiter === 3 && ohneRuhig.hoch > 25 && ohneRuhig.zu === true,
+  ohneRuhig.reiter === 5 && ohneRuhig.hoch > 25 && ohneRuhig.zu === true,
   JSON.stringify(ohneRuhig));
 await seite.evaluate(() => { (globalThis as any).Ruhig?.setzen(true); });
 await seite.waitForTimeout(300);
@@ -1113,9 +1147,31 @@ p('Die Gruppe „Im Text" führt genau das, was `Blocks.AM_ENDE` nennt',
    vorigen — dort ist sie das Einzige, was Gruppen auseinanderhält. */
 p('Und sie trägt ihre Überschrift', imText.gruppe, JSON.stringify(imText));
 
+/* EINEN BEFEHL ANKLICKEN, EGAL OB ER SICHTBAR IST (E272).
+   Seit die 15er-Regel gilt, steht nicht mehr jeder Befehl im Band —
+   „Erwähnung" und „Emoji" sind die letzten zwei von 69 in „Einfügen" und
+   liegen im „•••". Ein Prüflauf, der stur auf den Bandknopf klickt, misst
+   ab dann nicht mehr die Funktion, sondern die Fensterbreite.
+
+   Er geht deshalb denselben Weg wie ein Mensch: erst schauen, ob der Knopf
+   dasteht; wenn nicht, das „•••" öffnen und ihn dort nehmen. Findet er ihn
+   auch dort nicht, gibt er `false` zurück — dann ist der Befehl wirklich
+   verloren, und genau das soll rot werden. */
+const klickBefehl = async (s2: any, id: string): Promise<boolean> => {
+  const drin = await s2.evaluate((k: string) => {
+    const b = document.querySelector<HTMLElement>(`#menueband [data-band="${k}"]`);
+    return !!b && !b.hidden;
+  }, id);
+  if (drin) return klick(s2, `#menueband [data-band="${id}"]`);
+  const mehrDa = await klick(s2, '#menueband .mb-mehr');
+  if (!mehrDa) return false;
+  await s2.waitForTimeout(220);
+  return klick(s2, `#mb-mehr-lade [data-band="${id}"]`);
+};
+
 /* „Erwähnung" hängt einen Block an und öffnet das Menü, das am „@" hängt. */
 const vorMention = await seite.evaluate(() => Store.childrenOf(App.aktuelleSeite()).length);
-await klick(seite, '#menueband [data-band="akt-mention"]');
+await klickBefehl(seite, 'akt-mention');
 await seite.waitForTimeout(1200);
 const nachMention = await seite.evaluate(() => {
   const kinder = Store.childrenOf(App.aktuelleSeite());
@@ -1140,7 +1196,7 @@ await seite.waitForTimeout(300);
    stehen bleibt. */
 await seite.evaluate(() => { document.querySelectorAll('.menu').forEach(m => m.remove()); });
 const vorEmoji = await seite.evaluate(() => Store.childrenOf(App.aktuelleSeite()).length);
-await klick(seite, '#menueband [data-band="akt-emoji"]');
+await klickBefehl(seite, 'akt-emoji');
 await seite.waitForTimeout(1200);
 const nachEmoji = await seite.evaluate(() => {
   const kinder = Store.childrenOf(App.aktuelleSeite());

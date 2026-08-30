@@ -105,6 +105,21 @@ Register.symbole = (() => {
             '<path d="M8.6 7.2V5.4a2 2 0 0 1 2-2h2.8a2 2 0 0 1 2 2v1.8"/>' +
             '<path d="M2.8 12.6h18.4"/>',
         chart: '<path d="M3.6 20.4h16.8"/><path d="M6.6 20.4v-6M11 20.4V7.6M15.4 20.4v-4M19.8 20.4V11"/>',
+        /* --- Fünf Zeichen für die neuen Reiter (E272) --------------------------
+           „Zurücknehmen" und „Wiederherstellen" gab es im Band bisher nur im
+           Reiter Zeichnen, und dort als TEXTZEICHEN ↶ ↷. Für die Seite ist das
+           zu wenig: ein Pfeil, der aus einer Schrift kommt, sieht auf jedem
+           System anders aus und trägt nicht die Farbe seiner Zeile. Also
+           gezeichnet, wie alle anderen hier.
+           -------------------------------------------------------------------- */
+        undo: '<path d="M3.6 8.4h9.2a6 6 0 0 1 0 12H7.4"/><path d="M7.4 4.2 3.4 8.4l4 4.2"/>',
+        redo: '<path d="M20.4 8.4h-9.2a6 6 0 0 0 0 12h5.4"/><path d="M16.6 4.2l4 4.2-4 4.2"/>',
+        copy: '<rect x="8.6" y="8.6" width="11.6" height="11.6" rx="2.2"/>' +
+            '<path d="M15.6 5.4V4.9a1.5 1.5 0 0 0-1.5-1.5H5.3A1.5 1.5 0 0 0 3.8 4.9v8.8a1.5 1.5 0 0 0 1.5 1.5h.5"/>',
+        shield: '<path d="M12 3.2 4.6 6.1v5.6c0 4.4 3 8.1 7.4 9.1 4.4-1 7.4-4.7 7.4-9.1V6.1z"/>' +
+            '<path d="m9 12.2 2.2 2.2 4-4.4"/>',
+        download: '<path d="M12 3.8v11.7"/><path d="m7.8 11.3 4.2 4.2 4.2-4.2"/>' +
+            '<path d="M4 15v3.6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V15"/>',
         /* --- Was die Lernwelt bisher mit Emoji sagte (E202) --------------------
            Emoji sind fremde Zeichen: sie sehen auf jedem System anders aus, tragen
            ihre eigene Farbe und lassen sich nicht auf die Textfarbe stellen. Für

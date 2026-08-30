@@ -3207,7 +3207,47 @@ dann selbst nur eine.
     dabei test247 auf mehrere Breiten UND mehrere Reiter. Vorher wäre eine
     feste Höhe ein Verstecken von Befehlen ohne Weg dorthin.
 
-Warum das hier steht und nicht schnell repariert wurde: eine Zahl in einem
-Wächter zu senken, weil sie nicht mehr passt, ist die Bewegung, gegen die der
-Wächter gebaut wurde. Der letzte Punkt gehört in die Phase, die das Band
-ohnehin neu baut.
+ERLEDIGT IN PHASE D — alle fünf. Das Band steht jetzt in einer Zeile von
+72 px, und die Prüfung dazu misst nicht mehr eine Breite, sondern VIER
+(1280 · 1366 · 1440 · 2400) über alle acht Reiter, in test272 §11.
+
+Die 2400 sind kein Zierwert: bei 1280 bis 1440 greift immer schon der Platz —
+mehr als zwölf Knöpfe passen dort gar nicht nebeneinander, und die Zahl 15
+wird nie erreicht. Die Gegenprobe zeigte es: `HOECHSTENS` auf 99 gesetzt, und
+der Lauf blieb grün. Erst auf einem breiten Bildschirm entscheidet wirklich
+die Regel und nicht die Breite.
+
+Warum die Punkte hier standen und nicht schnell repariert wurden: eine Zahl in
+einem Wächter zu senken, weil sie nicht mehr passt, ist die Bewegung, gegen die
+der Wächter gebaut wurde. Sie gehörten in die Phase, die den betroffenen Teil
+ohnehin neu baut — und dort sind sie erledigt worden.
+
+
+--------------------------------------------------------------------------------
+L89 — Zwei blinde Prüfungen, gefunden durch ihre eigene Gegenprobe (E272 Phase D)
+--------------------------------------------------------------------------------
+
+Beim Schreiben von test272 §11 sind zwei Prüfpunkte entstanden, die NICHT rot
+werden konnten. Beide sind behoben; sie stehen hier, weil das Muster
+wiederkommt.
+
+1. „NIE MEHR ALS FÜNFZEHN BEFEHLE SICHTBAR", gemessen bei 1280, 1366 und 1440.
+   Gegenprobe: die Konstante `HOECHSTENS` von 15 auf 99 gesetzt — der Lauf
+   blieb grün. Grund: bei diesen Breiten greift immer schon der PLATZ. Mehr
+   als zwölf Knöpfe passen gar nicht nebeneinander, also wird die Zahl 15 nie
+   erreicht, und die Prüfung bestätigte eine Grenze, die nichts begrenzte.
+   → Behoben durch eine vierte Breite, 2400 px, bei der rund zwanzig passen.
+
+2. „KEIN SICHTBARER KNOPF STEHT ÜBER DEN RAND HINAUS."
+   Gegenprobe: die CSS-Regel entfernt, die `[hidden]` überhaupt wirken lässt
+   (`.mb-knopf{display:inline-flex}` schlägt das Browser-Stilblatt) — der Lauf
+   blieb grün. Grund: die Prüfung misst den letzten Knopf, dessen `hidden`
+   FALSCH ist. Wirkt `hidden` nicht, stehen die verborgenen Knöpfe sichtbar
+   da, und der gemessene ist trotzdem brav am Platz.
+   → Behoben durch eine zweite Messung, `scrollWidth − clientWidth`, die
+     fragt: ragt ÜBERHAUPT etwas über den Kasten hinaus.
+
+Der gemeinsame Nenner: beide Prüfungen massen die richtige Grösse am falschen
+Gegenstand. Beim nächsten Mal lohnt die Frage vor dem Schreiben — was müsste
+kaputt sein, damit dieser Punkt rot wird, und kann das im gemessenen Zustand
+überhaupt eintreten?

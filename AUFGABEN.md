@@ -1840,3 +1840,9 @@ node pruefungen/lauf/test105.mjs
   abgehängt — vier der fünf alten roten Punkte aus L88 wurden dadurch grün,
   der fünfte entpuppte sich als falsches Grün (test247 misst nur 1440 px).
   sw v38.
+* E272 Phase D (Band): acht Reiter statt sechs, „Werkzeuge" aufgelöst,
+  „Elektro" virtuell. Die 15er-Regel mit reitereigenem „•••" — Band jetzt
+  eine Zeile von 72 px (nicht 58: deutsche Namen brauchen zwei Zeilen, und
+  §23 verbietet kleinere Schrift). Farben zählen nicht als Befehle.
+  test272 §11 misst vier Breiten × acht Reiter; zwei Gegenproben zeigten
+  zuerst blinde Prüfungen (L89). sw v39.

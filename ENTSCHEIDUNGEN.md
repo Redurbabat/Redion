@@ -19753,3 +19753,80 @@ test40 24/24 · test67 65/65 · test114 153 ok · test132 81 ok · test272 56 ok
 test87 156 ok · test105 55 ok. Eine Gegenprobe: die alte Suchbox wieder ins
 Markup gesetzt — „die grosse Box in der Kopfzeile ist weg" wurde rot.
 sw VERSION v37 → v38.
+
+PHASE D (acht Reiter, eine Zeile) — und die Regel, die sich selbst widerlegte
+----------------------------------------------------------------------------
+
+DIE REITER. Aus sechs werden acht: Gehen · Start · Einfügen · Zeichnen ·
+Verlauf · Überprüfen · Ansicht · Hilfe.
+
+„Werkzeuge" ist aufgelöst. Der Reiter war eine Restekiste — vier Gruppen,
+die nichts miteinander zu tun hatten. Seine elf Einträge stehen jetzt dort,
+wo man sie sucht (Umzugsliste: doku/PREMIUM-SHELL-MATRIX.md, R6); keiner ist
+weggefallen, alle behalten ihre Kennung.
+
+„Elektro" ist auf Redurs Entscheid kein Reiter mehr, seine acht Einträge
+behalten aber `reiter: 'elektro'` im Register — `elektro/start.ts` liest
+seine Kacheln daraus. `elektroEintraege` bleibt deshalb in der Quellenliste
+von `alle()`, obwohl kein Reiter sie zeigt. test272 §5 hält das fest.
+
+NEU IM BAND, mit Griffen, die es schon gab:
+`Verlauf.zurueck()`/`.vor()` als „Rückgängig"/„Wiederherstellen" — bisher nur
+über Strg+Z erreichbar. Sie heissen ausdrücklich NICHT „Zurück"/„Vor": so
+heissen im Reiter Zeichnen die Knöpfe, die einen STRICH zurücknehmen. Zwei
+gleich benannte Knöpfe mit verschiedener Wirkung wären eine Falle.
+Dazu Fassungen, Duplizieren, Verschieben, Kommentare, Posteingang,
+Papierkorb, Statistik, Fällige Karten, Bestand prüfen, Erste Hilfe,
+Tastenkürzel, Rundgang, Sicherung speichern und einlesen.
+
+Fünf Zeichen ins Symbolregister: undo, redo, copy, shield, download.
+
+DIE 15er-REGEL. Höchstens fünfzehn Befehle je Reiter sind sichtbar; alles
+Weitere steht im reitereigenen „•••", gruppiert und in Registerreihenfolge.
+Verborgen wird von rechts. Nichts wird kleiner: §23 verbietet das, und der
+Entwurf selbst ist an dieser Stelle auf 8,5 px gerutscht.
+
+DREI DINGE, DIE DABEI ANDERS KAMEN ALS GEPLANT:
+
+1. DAS BAND IST 72 PX HOCH, nicht 58. Der Entwurf kommt mit 58 aus, weil
+   seine Namen einzeilig sind und seine Gruppentitel 8,5 px. „Nummerierte
+   Liste" und „Durchgestrichen" brauchen auf 11 px zwei Zeilen. Gerechnet:
+   Knopfreihe 54 + Gruppentitel 12 + Luft 6 = 72. Die Alternative wäre
+   gewesen, die Schrift zu schrumpfen — genau das, was §23 verbietet.
+
+2. EINE FARBE IST KEIN BEFEHL. Der Reiter Zeichnen hat fünf Farben und drei
+   Strichstärken. Zählt man sie mit, verschwinden beim Zeichnen entweder die
+   Werkzeuge oder die Farben — und im ersten Anlauf war es genau so: der
+   Prüfpunkt „Der gezogene Strich ist wirklich blau" wurde rot, weil der
+   blaue Knopf nicht mehr dastand. Eine Farbwahl ist eine Einstellung des
+   laufenden Werkzeugs, kein eigener Befehl; sie trägt eine `probe` statt
+   eines Zeichens und zählt nicht mit. Dazu ist die Reihenfolge im Register
+   jetzt eine Entscheidung: Werkzeug, Farbe, Strich, dann alles andere.
+
+3. `scrollWidth` TAUGT NICHT FÜR DIE MESSUNG. Der Entwurf misst damit, und
+   in einem einzelnen Dokument geht das. Hier nicht: `scrollWidth` wird nie
+   kleiner als `clientWidth`, und `margin-left:auto` am „•••" saugt den
+   freien Platz auf. Der erste Anlauf verbarg einen Knopf zu wenig (1058
+   gegen 1040), der zweite alle vierzehn. Gemessen wird jetzt die rechte
+   Kante des letzten sichtbaren Knopfes gegen die innere Kante des Bandes,
+   abzüglich der 34 px fürs „•••".
+
+UND EIN FEHLER, DEN NUR DAS HINSEHEN FAND: `[hidden]` wirkte gar nicht.
+Der Überlauf setzte es korrekt, und die Knöpfe standen weiter da —
+`.mb-gruppe{display:flex}` und `.mb-knopf{display:inline-flex}` schlagen das
+Browser-Stilblatt. Vierzehn von vierzehn Knöpfen waren `hidden` und
+sichtbar. Behoben mit drei Selektorteilen statt eines `!important`.
+
+**Geprüft:** test272 67 Punkte (neu: §11, vier Fensterbreiten × acht Reiter =
+32 Messungen) · test247 105 · test248 46 · test222 51 · test86 58 · test87 156 ·
+test105 55 · test40 24 · test245 50 · test258 15 · test67 65 · test114 153.
+
+Vier Gegenproben einzeln rot gesehen — und ZWEI DAVON HABEN ZUERST NICHTS
+BEWIESEN. `HOECHSTENS` auf 99 gesetzt: grün, weil bei 1280–1440 immer schon
+der Platz greift und die Zahl 15 nie erreicht wird. Die `[hidden]`-Regel
+entfernt: ebenfalls grün, weil die Prüfung den letzten Knopf misst, dessen
+`hidden` falsch ist. Beide Prüfungen waren blind; sie stehen als L89 in
+LUECKEN.md und sind behoben — durch eine vierte Breite (2400 px) und eine
+zweite Messung über `scrollWidth`. Danach wurden beide rot, wie sie sollen.
+
+sw VERSION v38 → v39. Einzeldatei 7253 → 7286 KB.

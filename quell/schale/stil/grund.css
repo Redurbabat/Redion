@@ -67,7 +67,15 @@
    * in das reitereigene „•••", statt eine zweite Zeile aufzumachen.
    * ---------------------------------------------------------------------- */
   --shell-reiter-h:  36px;  /* die Reiterzeile ganz oben, fest             */
-  --shell-band-h:    58px;  /* das Werkzeugband darunter, wenn offen       */
+  /* 72 UND NICHT DIE 58 DES ENTWURFS — nachgerechnet, nicht nachgegeben.
+     Der Entwurf kommt mit 58 px aus, weil seine Befehlsnamen einzeilig sind
+     und seine Gruppentitel 8,5 px hoch. Beides geht hier nicht: „Nummerierte
+     Liste" und „Durchgestrichen" brauchen auf 11 px zwei Zeilen, und §23 des
+     Auftrags verbietet ausdrücklich, Beschriftungen zu schrumpfen — der
+     Entwurf nennt seine eigenen 8,5 px einen Fehler.
+     Gemessen: Knopfreihe 54 (Zeichen 17 + zwei Namenszeilen 27 + Polster 6
+     + Rahmen 2) + Gruppentitel 12 + Luft 6 = 72. */
+  --shell-band-h:    72px;  /* das Werkzeugband darunter, wenn offen       */
   --kante-b:         54px;  /* die Kontextkante am linken Rand             */
   --kante-knopf:     42px;  /* ihre Knöpfe — am Telefon ist die Kante aus  */
   --kanten-lade-b:  252px;  /* die Lade, die aus der Kante fährt           */

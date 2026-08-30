@@ -28,6 +28,7 @@
  * §8  Gegenproben — kann dieser Lauf überhaupt rot werden?
  * §9  Bau-Hygiene.
  * §10 Die Gold-Marken sind gerechnet, nicht geschätzt.
+ * §11 Die 15er-Regel — und nichts geht dabei verloren.
  *
  *   node pruefungen/lauf/test272.mts
  * ==========================================================================*/
@@ -473,6 +474,162 @@ p('Die sechs Masse der Schale sind gesetzt',
 console.log('    ' + masse.join(' · '));
 
 await seite.evaluate(() => document.documentElement.removeAttribute('data-theme'));
+
+/* ==========================================================================
+ * §11 — Die 15er-Regel, bei jeder Breite und in jedem Reiter (E272 Phase D)
+ * ========================================================================*/
+console.log('\n11 · Die 15er-Regel (E272)');
+
+/* WARUM MEHRERE BREITEN. test247 misst die Bandhöhe bei EINER Fensterbreite
+   — 1440 —, und genau dort passte „Start" zufällig in eine Zeile. Bei 1280
+   und 1366 waren es 223 px statt 143. Der Kommentar dort warnt sogar vor
+   dieser Kippkante und misst dann selbst nur eine Seite davon (L88).
+
+   Hier wird deshalb über drei Breiten und alle Reiter gemessen. Und nicht
+   nur die Höhe: dass ein Befehl aus dem Band verschwindet, ist nur dann in
+   Ordnung, wenn er im „•••" wieder auftaucht. */
+
+const bandLage = async (breite: number, reiter: string) => {
+  await seite.setViewportSize({ width: breite, height: 950 });
+  await seite.waitForTimeout(160);
+  await seite.evaluate((r: string) => {
+    Store.setMeta('bandZu', false);
+    Store.setMeta('bandZu:welt', false);
+    Store.setMeta('bandReiter', r);
+    (window as any).Menueband.zeichne();
+  }, reiter);
+  /* Zwei Bilder abwarten: der Überlauf misst per rAF, und vorher stehen die
+     Zeichen noch nicht im Baum — dann sind die Knöpfe schmaler, als sie
+     werden. Genau dieser Fehler steckte im ersten Entwurf. */
+  await seite.evaluate(() => new Promise<void>(f =>
+    requestAnimationFrame(() => requestAnimationFrame(() => f()))));
+  await seite.waitForTimeout(120);
+  return await seite.evaluate(() => {
+    const w = document.getElementById('menueband');
+    const band = w?.querySelector('.mb-band') as HTMLElement | null;
+    const knoepfe = band
+      ? [...band.querySelectorAll('.mb-knopf[data-band]')] as HTMLElement[] : [];
+    const probe = (k: HTMLElement): boolean => !!k.querySelector('.mb-probe');
+    const sichtbar = knoepfe.filter(k => !k.hidden);
+    const letzte = sichtbar[sichtbar.length - 1];
+    const stil = band ? getComputedStyle(band) : null;
+    const innenRechts = band && stil
+      ? band.getBoundingClientRect().right - (parseFloat(stil.paddingRight) || 0)
+      : 0;
+    return {
+      hoch: Math.round(w?.getBoundingClientRect().height || 0),
+      bandHoch: Math.round(band?.getBoundingClientRect().height || 0),
+      alle: knoepfe.length,
+      sichtbar: sichtbar.length,
+      befehleSichtbar: sichtbar.filter(k => !probe(k)).length,
+      verborgen: knoepfe.filter(k => k.hidden).map(k => k.dataset['band'] || ''),
+      mehrDa: !(w?.querySelector('.mb-mehr') as HTMLElement | null)?.hidden,
+      /* Steht der letzte sichtbare Knopf noch INNERHALB des Bandes? */
+      ueberstand: letzte
+        ? Math.round(letzte.getBoundingClientRect().right - innenRechts) : 0,
+      /* UND DIE ZWEITE FRAGE, die die erste nicht beantwortet: steht
+         ÜBERHAUPT etwas über den Rand?
+         `ueberstand` misst den letzten Knopf, dessen `hidden` false ist.
+         Wirkt `hidden` aber gar nicht — weil eine CSS-Regel `display`
+         setzt und das Browser-Stilblatt schlägt —, dann stehen die
+         verborgenen Knöpfe sichtbar da und der gemessene ist trotzdem
+         brav am Platz. Genau dieser Fehler war in Phase D wirklich drin,
+         und die Gegenprobe dazu blieb grün.
+         `scrollWidth` beantwortet die Frage, für die es taugt: ragt
+         Inhalt über den Kasten hinaus? */
+      randUeberlauf: band ? Math.max(0, band.scrollWidth - band.clientWidth) : 0
+    };
+  });
+};
+
+const REITER_ALLE = ['gehen', 'start', 'einfuegen', 'zeichnen', 'verlauf',
+                     'ueberpruefen', 'ansicht', 'hilfe'];
+let zuHoch = 0, zuViele = 0, ueberstehend = 0, ohneMehr = 0, gemessen = 0;
+let randRaus = 0;
+
+/* 2400 IST KEIN ZIERWERT, SONDERN DER EINZIGE, BEI DEM DIE 15er-REGEL
+   ÜBERHAUPT MESSBAR IST. Bei 1280 bis 1440 greift immer schon die Breite:
+   mehr als zwölf Knöpfe passen dort gar nicht nebeneinander, und die Zahl
+   15 wird nie erreicht. Die Gegenprobe zeigte es — `HOECHSTENS` auf 99
+   gesetzt, und der Lauf blieb grün: die Prüfung konnte nicht rot werden
+   und prüfte damit nichts (§55.2).
+   Auf einem breiten Bildschirm passen rund zwanzig; dort entscheidet
+   wirklich die Regel und nicht der Platz. */
+for (const breite of [1280, 1366, 1440, 2400]) {
+  for (const r of REITER_ALLE) {
+    const m = await bandLage(breite, r);
+    if (!m.alle) continue;          /* ein Reiter ohne Knöpfe hat nichts zu messen */
+    gemessen++;
+    if (m.hoch > 130) { zuHoch++; console.log(`    zu hoch: ${breite}px ${r} = ${m.hoch}px`); }
+    if (m.befehleSichtbar > 15) { zuViele++; console.log(`    zu viele: ${breite}px ${r} = ${m.befehleSichtbar}`); }
+    if (m.ueberstand > 2) { ueberstehend++; console.log(`    steht über: ${breite}px ${r} = ${m.ueberstand}px`); }
+    if (m.verborgen.length && !m.mehrDa) { ohneMehr++; console.log(`    verborgen ohne „•••": ${breite}px ${r}`); }
+    if (m.randUeberlauf > 1) { randRaus++; console.log(`    ragt über den Rand: ${breite}px ${r} = ${m.randUeberlauf}px`); }
+  }
+}
+
+p('Es wurde wirklich über alle Reiter und Breiten gemessen', gemessen >= 20,
+  String(gemessen) + ' Messungen');
+p('Das Band bleibt in EINER Zeile — bei 1280, 1366 und 1440', zuHoch === 0,
+  String(zuHoch) + ' Fälle über 130 px');
+p('Nie mehr als fünfzehn Befehle sichtbar', zuViele === 0,
+  String(zuViele) + ' Fälle');
+p('Kein sichtbarer Knopf steht über den Rand hinaus', ueberstehend === 0,
+  String(ueberstehend) + ' Fälle');
+p('Wo etwas verborgen ist, steht auch das „•••"', ohneMehr === 0,
+  String(ohneMehr) + ' Fälle');
+p('Und nichts ragt über den Rand des Bandes hinaus', randRaus === 0,
+  String(randRaus) + ' Fälle');
+
+/* UND DER EIGENTLICHE PUNKT: was aus dem Band verschwindet, ist im „•••"
+   wieder da. Ohne diese Zeile wäre die 15er-Regel eine Löschregel. */
+await seite.setViewportSize({ width: 1280, height: 950 });
+const imMehr = await (async () => {
+  const m = await bandLage(1280, 'einfuegen');
+  await seite.click('#menueband .mb-mehr');
+  await seite.waitForTimeout(260);
+  const inLade = await seite.evaluate(() =>
+    [...document.querySelectorAll('#mb-mehr-lade [data-band]')]
+      .map(b => (b as HTMLElement).dataset['band'] || ''));
+  await seite.keyboard.press('Escape');
+  await seite.waitForTimeout(160);
+  return { verborgen: m.verborgen, inLade };
+})();
+p('Der Reiter „Einfügen" verbirgt überhaupt etwas', imMehr.verborgen.length > 0,
+  String(imMehr.verborgen.length));
+p('Und jedes Verborgene steht im „•••"',
+  imMehr.verborgen.every(id => imMehr.inLade.includes(id)),
+  'fehlt: ' + imMehr.verborgen.filter(id => !imMehr.inLade.includes(id)).slice(0, 6).join(', '));
+console.log('    (' + imMehr.verborgen.length + ' verborgen, ' +
+  imMehr.inLade.length + ' in der Lade)');
+
+/* GEGENPROBE: die Messung des Überstands muss anschlagen KÖNNEN. Ein Knopf,
+   den wir von Hand wieder sichtbar machen, steht garantiert über. */
+const gegenUeberstand = await seite.evaluate(() => {
+  const band = document.querySelector('.mb-band') as HTMLElement | null;
+  const verborgen = band
+    ? [...band.querySelectorAll('.mb-knopf[data-band][hidden]')] as HTMLElement[] : [];
+  const letzter = verborgen[verborgen.length - 1];
+  if (!letzter || !band) return -1;
+  /* AUCH DIE GRUPPE. Der erste Anlauf blendete nur den Knopf ein und mass
+     -1272 px — seine ganze Gruppe war ebenfalls `hidden`, also blieb er
+     ohne Aussehen und ohne Rechteck. Eine Gegenprobe, die den Zustand
+     nicht wirklich herstellt, beweist nichts. */
+  const gruppe = letzter.closest('.mb-gruppe') as HTMLElement | null;
+  const gruppeWar = gruppe ? gruppe.hidden : false;
+  if (gruppe) gruppe.hidden = false;
+  letzter.hidden = false;
+  const stil = getComputedStyle(band);
+  const innenRechts = band.getBoundingClientRect().right - (parseFloat(stil.paddingRight) || 0);
+  const ueber = Math.round(letzter.getBoundingClientRect().right - innenRechts);
+  letzter.hidden = true;
+  if (gruppe) gruppe.hidden = gruppeWar;
+  return ueber;
+}) as number;
+p('Gegenprobe: ein wieder eingeblendeter Knopf steht messbar über',
+  gegenUeberstand > 2, String(gegenUeberstand) + ' px');
+
+await seite.setViewportSize({ width: 1360, height: 950 });
 
 await browser.close();
 server.close();

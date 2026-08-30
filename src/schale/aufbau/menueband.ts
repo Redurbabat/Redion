@@ -336,6 +336,299 @@ const Menueband = (() => {
       }
       band.appendChild(gruppeZeichnen(g));
     });
+
+    /* DAS „•••" GEHÖRT ZUM BAND, NICHT ZUR REITERZEILE (E272).
+       Es zeigt, was in DIESEM Reiter nicht hineinpasste — ein zweiter Reiter
+       hat einen anderen Überlauf. Stünde es oben, sähe es aus wie ein
+       Befehl der ganzen App.
+
+       Es steht immer im Baum und ist nur `hidden`, solange nichts überläuft.
+       Es beim Bedarf zu erzeugen hiesse, es bei jeder Fensterbreite neu
+       einzuhängen — und `ueberlaufLayout` müsste dabei messen, was es
+       gerade selbst verändert. */
+    const mehr = document.createElement('button');
+    mehr.type = 'button';
+    mehr.className = 'mb-mehr';
+    mehr.dataset['band'] = '__mehr';
+    mehr.hidden = true;
+    mehr.setAttribute('aria-haspopup', 'dialog');
+    mehr.setAttribute('aria-label', 'Weitere Befehle');
+    mehr.title = 'Weitere Befehle';
+    const punkte = document.createElement('span');
+    punkte.dataset['sym'] = 'dots';
+    mehr.appendChild(punkte);
+    band.appendChild(mehr);
+  };
+
+  /* ======================================================================== *
+   * DER ÜBERLAUF — höchstens fünfzehn auf einmal (E272)
+   * ------------------------------------------------------------------------
+   * Das Band stand bis E272 in bis zu ZWEI ZEILEN und war dann 223 px hoch.
+   * „Einfügen" mit seinen 69 Knöpfen brauchte bei jeder Fensterbreite zwei.
+   * Der Auftrag will EINE Zeile von 58 px — und alles, was nicht hineinpasst,
+   * hinter einem „•••" desselben Reiters.
+   *
+   * DIE REGEL HAT ZWEI TEILE, und der zweite ist der wichtigere:
+   *
+   *   1. Höchstens 15 Befehle je Reiter sind sichtbar. Das ist eine feste
+   *      Zahl aus dem Entwurf und keine Messung: mehr als fünfzehn Dinge
+   *      nebeneinander liest niemand mehr, er sucht sie.
+   *   2. Auch von den ersten fünfzehn wandern weitere ins „•••", solange die
+   *      Zeile überläuft. Bei einem schmalen Fenster bleiben eben acht.
+   *
+   * VERSTECKT WIRD VON RECHTS, und die Reihenfolge im „•••" ist wieder die
+   * des Registers. Wer „Fett" gewohnt ist, findet es beim schmalen Fenster
+   * an derselben Stelle in der Liste — nur eben in der Liste.
+   *
+   * WAS HIER NICHT PASSIERT: schrumpfen. Kein Knopf wird schmaler, keine
+   * Beschriftung kleiner. §23 des Auftrags ist da eindeutig, und der Entwurf
+   * selbst ist an dieser Stelle auf 8,5 px gerutscht — erklärtermassen ein
+   * Fehler. Wenn es eng wird, verschwindet ein BEFEHL, nicht ein Buchstabe.
+   * ======================================================================== */
+
+  const HOECHSTENS = 15;
+
+  /** Was gerade im „•••" liegt — in Registerreihenfolge. */
+  let imUeberlauf: any[] = [];
+
+  const ueberlaufLayout = (): void => {
+    const wurzel = document.getElementById(WURZEL);
+    if (!wurzel || wurzel.classList.contains('ist-zu')) return;
+    /* Am Telefon ist das Band ein Menü und darf rollen — dort gibt es
+       keinen Überlauf, sondern eine Liste (E240). */
+    if (amTelefon()) return;
+    const band = wurzel.querySelector<HTMLElement>('.mb-band');
+    const mehr = wurzel.querySelector<HTMLElement>('.mb-mehr');
+    if (!band || !mehr) return;
+
+    const knoepfe = [...band.querySelectorAll<HTMLElement>('.mb-knopf[data-band]')];
+    const gruppen = [...band.querySelectorAll<HTMLElement>('.mb-gruppe')];
+    const trenner = [...band.querySelectorAll<HTMLElement>('.mb-trenner')];
+
+    /* Erst alles zeigen — sonst misst der zweite Durchgang gegen den
+       Zustand des ersten und versteckt bei jeder Grössenänderung mehr. */
+    knoepfe.forEach(k => { k.hidden = false; });
+    gruppen.forEach(g => { g.hidden = false; });
+    trenner.forEach(t => { t.hidden = false; });
+    mehr.hidden = true;
+    imUeberlauf = [];
+
+    const versteckt: number[] = [];
+    const verstecke = (i: number): void => {
+      const k = knoepfe[i];
+      if (!k || k.hidden) return;
+      k.hidden = true;
+      versteckt.push(i);
+      /* Eine Gruppe ohne sichtbaren Knopf verschwindet mit ihrer
+         Überschrift — sonst bliebe ein Titel über nichts stehen. */
+      const g = k.closest<HTMLElement>('.mb-gruppe');
+      if (g && !g.querySelector('.mb-knopf[data-band]:not([hidden])')) g.hidden = true;
+    };
+
+    /* WIE MISST MAN "PASST NICHT MEHR"? NICHT MIT scrollWidth.
+     *
+     * Der Entwurf tut es so, und in einem einzelnen Dokument geht das auch.
+     * Hier nicht, und der Grund kostete zwei Anlaeufe:
+     *
+     *   `scrollWidth` wird NIE KLEINER als `clientWidth`. Sobald der Inhalt
+     *   passt, sind beide gleich. Ein Vergleich "scrollWidth > clientWidth
+     *   minus Platz fuers Mehr-Zeichen" ist damit fuer immer wahr — der Lauf
+     *   verbarg erst einen Knopf zu wenig (gemessen 1058 gegen 1040) und
+     *   nach der "Berichtigung" alle vierzehn.
+     *
+     *   Dazu kommt `margin-left:auto` am Mehr-Knopf: ein Element, das den
+     *   freien Platz aufsaugt, macht `scrollWidth` und `clientWidth` erst
+     *   recht gleich. Beides zusammen ergibt eine Messung, die immer
+     *   dasselbe sagt, egal was auf dem Bild steht.
+     *
+     * Gemessen wird deshalb die RECHTE KANTE DES LETZTEN SICHTBAREN KNOPFES
+     * gegen die innere rechte Kante des Bandes, abzueglich des Platzes fuer
+     * den Mehr-Knopf. Das ist eine Zahl ueber das, was man sieht, und keine
+     * ueber einen Kasten, der sich selbst begrenzt.
+     *
+     * Damit das ueberhaupt messbar IST, duerfen die Knoepfe nicht gestaucht
+     * werden — `flex: 0 0 auto` an Gruppe und Knopf. Genau diese Falle
+     * beschreibt CLAUDE.md 55.2 am Tabellenblock: ein Flex-Kind wird
+     * gequetscht statt ueberzustehen, und dann misst man 109 gegen 109.
+     */
+    const PLATZ_MEHR = 34;
+
+    const passtNoch = (abzug: number): boolean => {
+      const sichtbar = knoepfe.filter(k => !k.hidden);
+      const letzte = sichtbar[sichtbar.length - 1];
+      if (!letzte) return true;
+      const stil = getComputedStyle(band);
+      const rechts = band.getBoundingClientRect().right
+        - (parseFloat(stil.paddingRight) || 0)
+        - (parseFloat(stil.borderRightWidth) || 0);
+      /* Ein Punkt Nachsicht: Unterpixelbreiten machen aus "passt genau"
+         sonst "passt nicht", und das Band verloere bei jeder Neuzeichnung
+         einen weiteren Knopf. */
+      return letzte.getBoundingClientRect().right <= rechts - abzug + 1;
+    };
+
+    /* Teil 1: alles ab Nummer 16 — ohne zu messen, das ist die feste Regel.
+     *
+     * EINE FARBE IST KEIN BEFEHL. Der Reiter „Zeichnen" hat fünf Farben und
+     * drei Strichstärken; sie unter die fünfzehn zu zählen hiesse, dass beim
+     * Zeichnen entweder die Werkzeuge oder die Farben verschwinden. Beides
+     * braucht die Hand gleichzeitig.
+     *
+     * Die Regel des Auftrags heisst „höchstens 15 BEFEHLE". Eine Farbwahl
+     * ist eine Einstellung des laufenden Werkzeugs, kein eigener Befehl —
+     * sie trägt deshalb eine `probe` statt eines Zeichens und zählt hier
+     * nicht mit. Am Platz muss sie sich trotzdem messen lassen: Teil 2 geht
+     * über ALLE Knöpfe. */
+    const istProbe = (k: HTMLElement): boolean => !!k.querySelector('.mb-probe');
+    const zaehlbar = knoepfe.filter(k => !istProbe(k));
+    for (let n = zaehlbar.length - 1; n >= HOECHSTENS; n--) {
+      const k = zaehlbar[n];
+      if (k) verstecke(knoepfe.indexOf(k));
+    }
+
+    /* Teil 2: und weiter von rechts, solange es nicht passt. Der Abzug fuer
+       den Mehr-Knopf gilt, sobald ueberhaupt etwas verborgen ist — dann wird
+       er ja gebraucht. */
+    for (let i = Math.min(HOECHSTENS, knoepfe.length) - 1; i >= 0; i--) {
+      if (passtNoch(versteckt.length ? PLATZ_MEHR : 0)) break;
+      verstecke(i);
+    }
+    /* Und ein letzter Blick: hat Teil 1 etwas verborgen, ohne dass Teil 2
+       je gemessen haette, kann der Platz fuer den Mehr-Knopf noch fehlen. */
+    for (let i = Math.min(HOECHSTENS, knoepfe.length) - 1;
+         i >= 0 && versteckt.length && !passtNoch(PLATZ_MEHR); i--) verstecke(i);
+
+    /* Leere Gruppen und ihre Trenner aufräumen — auch die aus Teil 1. */
+    gruppen.forEach(g => {
+      if (!g.querySelector('.mb-knopf[data-band]:not([hidden])')) g.hidden = true;
+    });
+    /* Ein Trenner vor einer verborgenen Gruppe hinge in der Luft. */
+    trenner.forEach(t => {
+      const naechste = t.nextElementSibling as HTMLElement | null;
+      if (!naechste || naechste.hidden) t.hidden = true;
+    });
+
+    if (!versteckt.length) return;
+
+    /* Die Liste fürs „•••" — in Registerreihenfolge, nicht in der
+       Reihenfolge des Versteckens (die läuft von rechts nach links). */
+    imUeberlauf = versteckt
+      .sort((a, b) => a - b)
+      .map(i => {
+        const k = knoepfe[i];
+        const id = k?.dataset['band'] || '';
+        const gruppe = k?.closest<HTMLElement>('.mb-gruppe')?.dataset['gruppe'] || '';
+        const eintrag = Register?.menueband?.eines?.(id);
+        return eintrag ? { ...eintrag, gruppe: eintrag.gruppe || gruppe } : null;
+      })
+      .filter(Boolean);
+
+    mehr.hidden = false;
+    mehr.setAttribute('aria-label', imUeberlauf.length + ' weitere Befehle');
+    mehr.title = imUeberlauf.length + ' weitere Befehle';
+  };
+
+  /* Nach jedem Zeichnen und bei jeder Grössenänderung — aber erst, wenn die
+     Zeichen eingesetzt sind. Ohne `requestAnimationFrame` misst der Lauf
+     gegen Knöpfe ohne SVG, die schmaler sind: derselbe Fehler, den der
+     Kommentar bei `scrollIntoView` weiter unten beschreibt. */
+  const ueberlaufBald = (): void => {
+    try { requestAnimationFrame(() => ueberlaufLayout()); }
+    catch { ueberlaufLayout(); }
+  };
+
+  let messUhr: any = null;
+  const beobachten = (): void => {
+    try {
+      const b = new ResizeObserver(() => {
+        if (messUhr) clearTimeout(messUhr);
+        messUhr = setTimeout(ueberlaufBald, 70);
+      });
+      const w = document.getElementById(WURZEL);
+      if (w) b.observe(w);
+    } catch { /* ohne ResizeObserver misst nur das Zeichnen */ }
+  };
+
+  /* ======================================================================== *
+   * DIE MEHR-LADE — was nicht ins Band passte
+   * ------------------------------------------------------------------------
+   * Ein Blatt, das von rechts unter dem „•••" aufgeht. Es ist ein Dialog:
+   * Esc schliesst, der Fokus bleibt darin, und beim Schliessen geht er
+   * dorthin zurück, wo er herkam (§38).
+   * ======================================================================== */
+
+  const ladeSchliessen = (): void => {
+    const lade = document.getElementById('mb-mehr-lade');
+    if (!lade) return;
+    lade.remove();
+    const mehr = document.querySelector<HTMLElement>('.mb-mehr');
+    try { mehr?.focus(); } catch { /* dann eben nicht */ }
+  };
+
+  const ladeOeffnen = (): void => {
+    if (document.getElementById('mb-mehr-lade')) { ladeSchliessen(); return; }
+    if (!imUeberlauf.length) return;
+
+    const lade = document.createElement('div');
+    lade.id = 'mb-mehr-lade';
+    lade.setAttribute('role', 'dialog');
+    lade.setAttribute('aria-modal', 'false');
+    lade.setAttribute('aria-label', 'Weitere Befehle');
+
+    const kopf = document.createElement('div');
+    kopf.className = 'mbl-kopf';
+    const reiterName = (Register?.menueband?.reiter?.() || [])
+      .find((r: any) => r.id === reiterJetzt())?.name || '';
+    kopf.textContent = reiterName ? 'Weitere Befehle — ' + reiterName : 'Weitere Befehle';
+    lade.appendChild(kopf);
+
+    let letzteGruppe = '';
+    imUeberlauf.forEach(e => {
+      if (e.gruppe && e.gruppe !== letzteGruppe) {
+        letzteGruppe = e.gruppe;
+        const t = document.createElement('div');
+        t.className = 'kicker mbl-gruppe';
+        t.textContent = e.gruppe;
+        lade.appendChild(t);
+      }
+      const z = document.createElement('button');
+      z.type = 'button';
+      z.className = 'mbl-zeile';
+      z.dataset['band'] = String(e.id);
+      zeichenIn(z, String(e.zeichen || 'dots'));
+      const name = document.createElement('span');
+      name.className = 'mbl-name';
+      name.textContent = String(e.name || e.id);
+      z.appendChild(name);
+      if (e.kurz) {
+        const k = document.createElement('span');
+        k.className = 'mbl-kurz';
+        k.textContent = String(e.kurz);
+        z.appendChild(k);
+      }
+      if (e.hinweis) z.title = String(e.hinweis);
+      lade.appendChild(z);
+    });
+
+    const wurzel = document.getElementById(WURZEL);
+    (wurzel || document.body).appendChild(lade);
+    if (Register?.symbole?.fuelle) {
+      try { Register.symbole.fuelle(lade); } catch { /* ohne Zeichen bleibt der Name */ }
+    }
+
+    /* Der Fokus geht hinein, nicht daneben. */
+    try { lade.querySelector<HTMLElement>('.mbl-zeile')?.focus(); } catch { /* egal */ }
+
+    /* Esc schliesst; Tabulator bleibt drin (§38). */
+    lade.addEventListener('keydown', ev => {
+      if (ev.key === 'Escape') { ev.stopPropagation(); ladeSchliessen(); return; }
+      if (ev.key !== 'Tab') return;
+      const drin = [...lade.querySelectorAll<HTMLElement>('button')];
+      if (!drin.length) return;
+      const erste = drin[0]!, letzte = drin[drin.length - 1]!;
+      if (ev.shiftKey && document.activeElement === erste) { ev.preventDefault(); letzte.focus(); }
+      else if (!ev.shiftKey && document.activeElement === letzte) { ev.preventDefault(); erste.focus(); }
+    });
   };
 
   /* ======================================================================== *
@@ -343,6 +636,7 @@ const Menueband = (() => {
    * ======================================================================== */
 
   let gebunden = false;
+  let beobachtet = false;
 
   const zeichne = (): void => {
     const wurzel = document.getElementById(WURZEL);
@@ -650,6 +944,13 @@ const Menueband = (() => {
     /* Frisch gebaute Knöpfe kennen ihren Stand noch nicht. */
     glockeFrisch();
     wolkeFrisch();
+
+    /* Und zuletzt: was passt in eine Zeile? Eine offene Mehr-Lade gehört
+       zum vorigen Reiter und wäre nach dem Wechsel eine Liste zu etwas,
+       das nicht mehr gilt. */
+    ladeSchliessen();
+    ueberlaufBald();
+    if (!beobachtet) { beobachten(); beobachtet = true; }
   };
 
   /* ======================================================================== *
@@ -691,6 +992,7 @@ const Menueband = (() => {
       const band = ziel.closest<HTMLElement>('[data-band]');
       if (!band) return;
       const id = band.dataset['band'] || '';
+      if (id === '__mehr') { ladeOeffnen(); return; }
       if (id === '__klapp') {
         if (amTelefon()) {
           const w = document.getElementById(WURZEL);
@@ -702,6 +1004,10 @@ const Menueband = (() => {
 
       const eintrag = Register?.menueband?.eines?.(id);
       if (!eintrag) return;
+      /* Kam der Klick aus der Mehr-Lade, geht sie zu — eine Lade, die nach
+         der Wahl offen bleibt, verdeckt genau das, was man gerade ausgelöst
+         hat. Vor `tun()`, damit ein Dialog darüber liegt und nicht darunter. */
+      if (ziel.closest('#mb-mehr-lade')) ladeSchliessen();
       /* Ein Eintrag, der wirft, darf nicht das ganze Band mitreissen. Die
          Meldung gehört dem Menschen, nicht nur der Konsole. */
       try { eintrag.tun(); }

@@ -83,13 +83,37 @@ Register.menueband = (() => {
    * DIE REITER
    * ======================================================================== */
 
+  /* ACHT REITER SEIT E272, und zwei Dinge daran brauchen eine Erklärung.
+   *
+   * „ELEKTRO" IST NICHT MEHR DABEI — die acht Einträge sehr wohl.
+   * Redur hat entschieden: kein eigener Elektro-Reiter, wie im Entwurf.
+   * Die Einträge behalten trotzdem `reiter: 'elektro'`, denn
+   * `bereiche/elektro/start.ts:64-66` liest daraus seine acht Kacheln.
+   * Wer statt dieser Liste das Feld ändert, leert die Elektro-Startseite —
+   * und kein anderer Lauf merkt es. test272 §5 hält genau das fest.
+   * Sichtbar sind sie über die Elektro-Seite selbst und ab Phase F über die
+   * Kontextkante des Bereichs.
+   *
+   * „WERKZEUGE" GIBT ES NICHT MEHR. Der Reiter war eine Restekiste — vier
+   * Gruppen, die nichts miteinander zu tun hatten („Schreiben",
+   * „Wiederfinden", „Lernen", „Weiteres"). Seine elf Einträge stehen jetzt
+   * dort, wo man sie suchen würde; die Umzugsliste steht in
+   * doku/PREMIUM-SHELL-MATRIX.md, R6.
+   *
+   * „GEHEN" IST HIER SCHON EINGETRAGEN, hat aber vorerst nur die sechs
+   * Einträge, die aus „Werkzeuge" kommen. `reiter()` zeigt nur Reiter, die
+   * etwas zu zeigen haben — ein leerer Reiter verschwände von selbst. Die
+   * volle Fassung aus `Register.module` und `Register.navigation` kommt in
+   * Phase E. */
   const REITER: BandReiter[] = [
-    { id: 'start',     name: 'Start',     zeichen: 'pencil' },
-    { id: 'einfuegen', name: 'Einfügen',  zeichen: 'plus' },
-    { id: 'zeichnen',  name: 'Zeichnen',  zeichen: 'page' },
-    { id: 'werkzeuge', name: 'Werkzeuge', zeichen: 'box' },
-    { id: 'elektro',   name: 'Elektro',   zeichen: 'bolt' },
-    { id: 'ansicht',   name: 'Ansicht',   zeichen: 'sun' }
+    { id: 'gehen',       name: 'Gehen',      zeichen: 'compass' },
+    { id: 'start',       name: 'Start',      zeichen: 'pencil' },
+    { id: 'einfuegen',   name: 'Einfügen',   zeichen: 'plus' },
+    { id: 'zeichnen',    name: 'Zeichnen',   zeichen: 'page' },
+    { id: 'verlauf',     name: 'Verlauf',    zeichen: 'history' },
+    { id: 'ueberpruefen', name: 'Überprüfen', zeichen: 'search' },
+    { id: 'ansicht',     name: 'Ansicht',    zeichen: 'sun' },
+    { id: 'hilfe',       name: 'Hilfe',      zeichen: 'help' }
   ];
 
   /* ======================================================================== *
@@ -392,7 +416,54 @@ Register.menueband = (() => {
      1166 px und eine. */
   const flaecheGross = (): boolean => !flaecheDa();
 
+  /* DIE REIHENFOLGE IST SEIT E272 EINE ENTSCHEIDUNG, KEINE GEWOHNHEIT.
+   *
+   * Hoechstens fuenfzehn Befehle sind sichtbar; was danach kommt, steht im
+   * Mehr-Knopf. Damit wird die Reihenfolge hier zur Frage „was braucht man
+   * beim Zeichnen zuerst?" — und die Antwort war vorher falsch herum.
+   *
+   * Vorher: Flaeche, Werkzeug, Zuruecknehmen, Aufnehmen, Farbe, Strich.
+   * Beim Zeichnen landeten damit ALLE Farben und Strichstaerken im Mehr —
+   * im Prueflauf gesehen: „Der gezogene Strich ist wirklich blau" wurde rot,
+   * weil der blaue Knopf gar nicht mehr dastand.
+   *
+   * Jetzt zuerst, was die Hand die ganze Zeit braucht: Werkzeug, Farbe,
+   * Strich. Danach das Zuruecknehmen, und zuletzt, was man einmal am Anfang
+   * tut — eine Flaeche anlegen oder etwas einlesen.
+   */
   const zeichnenEintraege = (): BandEintrag[] => [
+    /* Die Rueckgabe ist ausdruecklich angeschrieben. Solange dieser Block
+       NACH einem Objektliteral stand, hat TypeScript den Typ von dort
+       genommen; seit er als erster kommt, schliesst es aus `WERKZEUGE`
+       zurueck — und mit `noUncheckedIndexedAccess` ist jedes Feld dort
+       moeglicherweise `undefined`. Eine Zeile Typ statt einer Stunde
+       Suche. */
+    /* Die Werkzeuge selbst — nur, wenn eine Flaeche da ist (`zeigen`). */
+    ...WERKZEUGE.map(([id, name, zeichen, hinweis]): BandEintrag => ({
+      reiter: 'zeichnen', gruppe: 'Werkzeug', id: 'wz-' + String(id),
+      name: String(name), zeichen: String(zeichen), hinweis: String(hinweis),
+      tun: () => { if (!Zeichenziel.setze(id)) UI.toast('Erst eine Zeichenfläche öffnen'); },
+      /* WELCHES WERKZEUG IST AN? Ohne diese Zeile stand im Band nichts
+         markiert, und der graue Kasten um den zuletzt geklickten Knopf war
+         nur der Fokus — er blieb auch dann, wenn man in der Leiste unten
+         etwas anderes wählte (§38: nicht nur Farbe, aber auch nicht gar
+         nichts). */
+      an: () => { try { return Zeichenziel.jetzt() === id; } catch { return false; } },
+      zeigen: flaecheDa
+    })),
+
+    ...farbEintraege(), ...strichEintraege(),
+
+    { reiter: 'zeichnen', gruppe: 'Zurücknehmen', id: 'wz-undo', name: 'Zurück',
+      zeichen: '↶', hinweis: 'Den letzten Strich zurücknehmen',
+      tun: () => { Zeichenziel.ruf('undo'); }, zeigen: flaecheDa },
+    { reiter: 'zeichnen', gruppe: 'Zurücknehmen', id: 'wz-redo', name: 'Vor',
+      zeichen: '↷', hinweis: 'Wiederholen',
+      tun: () => { Zeichenziel.ruf('redo'); }, zeigen: flaecheDa },
+    { reiter: 'zeichnen', gruppe: 'Zurücknehmen', id: 'wz-weg', name: 'Löschen',
+      zeichen: 'trash', hinweis: 'Das Ausgewählte löschen',
+      tun: () => { Zeichenziel.ruf('deleteSelection'); }, zeigen: flaecheDa },
+
     { reiter: 'zeichnen', gruppe: 'Fläche', id: 'z-blatt', name: 'Blatt',
       zeichen: 'page', gross: flaecheGross(),  hinweis: 'Ein A4-Blatt zum Schreiben mit der Hand',
       tun: () => Blocks.einfuegenAmEnde('blatt'),
@@ -405,29 +476,6 @@ Register.menueband = (() => {
       zeichen: 'bolt', gross: flaecheGross(),  hinweis: 'Fläche mit Fachzeichen und Stromsimulation',
       tun: () => Blocks.einfuegenAmEnde('schaltplan'),
       zeigen: () => kann(() => Blocks.einfuegenAmEnde) },
-
-    /* Die Werkzeuge selbst — nur, wenn eine Fläche da ist. */
-    ...WERKZEUGE.map(([id, name, zeichen, hinweis]) => ({
-      reiter: 'zeichnen', gruppe: 'Werkzeug', id: 'wz-' + id, name, zeichen, hinweis,
-      tun: () => { if (!Zeichenziel.setze(id)) UI.toast('Erst eine Zeichenfläche öffnen'); },
-      /* WELCHES WERKZEUG IST AN? Ohne diese Zeile stand im Band nichts
-         markiert, und der graue Kasten um den zuletzt geklickten Knopf war
-         nur der Fokus — er blieb auch dann, wenn man in der Leiste unten
-         etwas anderes wählte (§38: nicht nur Farbe, aber auch nicht gar
-         nichts). */
-      an: () => { try { return Zeichenziel.jetzt() === id; } catch { return false; } },
-      zeigen: flaecheDa
-    })),
-
-    { reiter: 'zeichnen', gruppe: 'Zurücknehmen', id: 'wz-undo', name: 'Zurück',
-      zeichen: '↶', hinweis: 'Den letzten Strich zurücknehmen',
-      tun: () => { Zeichenziel.ruf('undo'); }, zeigen: flaecheDa },
-    { reiter: 'zeichnen', gruppe: 'Zurücknehmen', id: 'wz-redo', name: 'Vor',
-      zeichen: '↷', hinweis: 'Wiederholen',
-      tun: () => { Zeichenziel.ruf('redo'); }, zeigen: flaecheDa },
-    { reiter: 'zeichnen', gruppe: 'Zurücknehmen', id: 'wz-weg', name: 'Löschen',
-      zeichen: 'trash', hinweis: 'Das Ausgewählte löschen',
-      tun: () => { Zeichenziel.ruf('deleteSelection'); }, zeigen: flaecheDa },
 
     { reiter: 'zeichnen', gruppe: 'Aufnehmen', id: 'z-scan', name: 'Seite abfotografieren',
       zeichen: 'camera', hinweis: 'Ein Blatt mit der Kamera aufnehmen und den Text erkennen',
@@ -445,9 +493,7 @@ Register.menueband = (() => {
     { reiter: 'zeichnen', gruppe: 'Aufnehmen', id: 'z-erkennen', name: 'Text erkennen',
       zeichen: 'search', hinweis: 'Aus einem Bild den Text herauslesen',
       tun: () => Recognition.scan(),
-      zeigen: () => kann(() => Recognition.scan) },
-
-    ...farbEintraege(), ...strichEintraege()
+      zeigen: () => kann(() => Recognition.scan) }
   ];
 
   /* ======================================================================== *
@@ -458,72 +504,172 @@ Register.menueband = (() => {
      mitten im Zeichnen. Sie steht jetzt hier, weil sie ein KATALOG ist und
      kein Aussehen — und weil das Menüband und die Seitenleiste sonst zwei
      Fassungen davon hätten. Die Handlungen sind wörtlich dieselben. */
-  const werkzeugEintraege = (): BandEintrag[] => [
-    { reiter: 'werkzeuge', gruppe: 'Schreiben', id: 'w-journal', name: 'Journal',
+  /* ======================================================================== *
+   * GEHEN — wohin man geht (E272)
+   * ------------------------------------------------------------------------
+   * Vorerst nur die sechs Einträge, die aus dem aufgelösten Reiter
+   * „Werkzeuge" kommen. Die volle Fassung liest in Phase E aus
+   * `Register.module` und `Register.navigation` — dieselbe Wahrheit, aus
+   * der auch die Seitenleiste lebt, damit es keinen zweiten Katalog gibt.
+   * ======================================================================== */
+
+  const gehenEintraege = (): BandEintrag[] => [
+    { reiter: 'gehen', gruppe: 'Erfassen', id: 'w-journal', name: 'Journal',
       zeichen: 'calendar', kurz: 'Strg ⇧ J', gross: true, hinweis: 'Tageseintrag',
       tun: () => Werkzeuge.journal(), zeigen: () => kann(() => Werkzeuge.journal) },
-    { reiter: 'werkzeuge', gruppe: 'Schreiben', id: 'w-memos', name: 'Schnellnotizen',
+    { reiter: 'gehen', gruppe: 'Erfassen', id: 'w-memos', name: 'Schnellnotizen',
       zeichen: 'bolt', kurz: 'Strg ⇧ M', gross: true, hinweis: 'Kurze Gedanken',
       tun: () => Werkzeuge.schnellnotizen(), zeigen: () => kann(() => Werkzeuge.schnellnotizen) },
-    { reiter: 'werkzeuge', gruppe: 'Schreiben', id: 'w-vorlagen', name: 'Vorlagen',
+    { reiter: 'gehen', gruppe: 'Erfassen', id: 'w-vorlagen', name: 'Vorlagen',
       zeichen: 'puzzle', hinweis: 'Fertige Aufbauten und eigene Vorlagen',
       tun: () => Werkzeuge.vorlagen(), zeigen: () => kann(() => Werkzeuge.vorlagen) },
 
-    { reiter: 'werkzeuge', gruppe: 'Wiederfinden', id: 'w-graph', name: 'Graph',
-      zeichen: 'graph', kurz: 'Strg ⇧ G', hinweis: 'Wie alles zusammenhängt',
-      tun: () => Links.graph(), zeigen: () => kann(() => Links.graph) },
-    { reiter: 'werkzeuge', gruppe: 'Wiederfinden', id: 'w-tags', name: 'Schlagwörter',
-      zeichen: 'tag', kurz: 'Strg ⇧ T', hinweis: 'Alle #Schlagwörter',
-      tun: () => Links.tagRegister(), zeigen: () => kann(() => Links.tagRegister) },
-
-    { reiter: 'werkzeuge', gruppe: 'Lernen', id: 'w-lernen', name: 'Karteikarten',
-      zeichen: 'cards', gross: true, hinweis: 'Wiederholen nach Plan',
-      tun: () => Werkzeuge.lernen(), zeigen: () => kann(() => Werkzeuge.lernen) },
-    { reiter: 'werkzeuge', gruppe: 'Lernen', id: 'w-stand', name: 'Umsetzungsstand',
-      zeichen: 'checkCircle', hinweis: 'Alle 16 Teile der Notion-Doku, Punkt für Punkt',
-      tun: () => Status.seiteAnlegen(), zeigen: () => kann(() => Status.seiteAnlegen) },
-
-    /* DREI ABSCHNITTE, DIE LINKS ZU VIEL WAREN (E211).
-
-       Redur: „links habe ich sehr viele Bereiche … Agenten, Besprechungen,
-       Kürzlich verwendet können auch oben bei den Menüs sein. Dort oben
-       kommt nur, was man nicht so viel braucht."
-
-       Die Regel dahinter ist gut und gilt jetzt für beide Seiten:
-
-           LINKS  die Bereiche — wohin man geht
-           OBEN   die Werkzeuge — womit man arbeitet
-
-       Bei zweien davon war es sogar eine echte Doppelung: die Seitenleiste
-       hat OBEN schon Reiter für Agenten und Besprechungen (`chat`, `bespr`).
-       Der Abschnitt im Baum darunter zeigte dieselben Dinge ein zweites Mal.
-       Diese Knöpfe schalten deshalb auf den Reiter, der ohnehin da ist —
-       sie bauen keine dritte Ansicht.
-
-       „Kürzlich verwendet" führt in die Bibliothek: dort ist es der erste
-       Filter, und man sieht Vorschauen statt einer Namensliste. */
-    { reiter: 'werkzeuge', gruppe: 'Weiteres', id: 'w-agenten', name: 'Agenten',
-      zeichen: 'robot', hinweis: 'Deine Agenten und der Chatverlauf',
-      tun: () => App.reiterWechseln('chat'),
-      zeigen: () => kann(() => App.reiterWechseln) },
-    { reiter: 'werkzeuge', gruppe: 'Weiteres', id: 'w-bespr', name: 'Besprechungen',
-      zeichen: 'mic', hinweis: 'Termine und Besprechungsnotizen',
-      tun: () => App.reiterWechseln('bespr'),
-      zeigen: () => kann(() => App.reiterWechseln) },
-    { reiter: 'werkzeuge', gruppe: 'Weiteres', id: 'w-zeit', name: 'Zeitmesser',
+    { reiter: 'gehen', gruppe: 'Planung & Lernen', id: 'w-zeit', name: 'Zeitmesser',
       zeichen: 'clock', hinweis: 'Stoppuhr und Timer — misst die Zeit an der offenen Seite',
       tun: () => (window as any).Zeitmesser?.panel?.(),
       /* `.panel`, NICHT das Modul. `kann()` fragt `typeof griff() ===
          'function'`; `Zeitmesser` selbst ist ein Objekt, also war die
          Antwort seit E268 immer „nein" und der Knopf stand nie da. Alle
-         anderen 26 Aufrufe hier nennen eine Methode und waren nie
-         betroffen — gefunden beim Nachzählen für E272 (das Band zeigte
-         zehn Werkzeuge, das Register führt elf). */
+         anderen Aufrufe hier nennen eine Methode und waren nie betroffen —
+         gefunden beim Nachzählen für E272 (das Band zeigte zehn Werkzeuge,
+         das Register führt elf). */
       zeigen: () => kann(() => (window as any).Zeitmesser?.panel) },
-    { reiter: 'werkzeuge', gruppe: 'Weiteres', id: 'w-zuletzt', name: 'Zuletzt verwendet',
-      zeichen: 'history', hinweis: 'Die Bibliothek, gefiltert auf zuletzt Verwendetes',
-      tun: () => Bibliothek.oeffne(),
-      zeigen: () => kann(() => Bibliothek.oeffne) }
+
+    /* DIESE ZWEI SCHALTEN HEUTE NOCH DIE SEITENLEISTE UM (E211).
+       `App.reiterWechseln('chat')` stellt den Baum auf die Agentenliste.
+       In Phase F entfällt die Seitenleiste am Rechner — dann zeigen beide
+       ins Leere, und der Griff wird auf `App.kiPanel(true)` bzw.
+       `Meeting.panel()` gewechselt. Das ist ein eigener Commit, damit der
+       Wechsel im Verlauf sichtbar bleibt und nicht in einem Umbau untergeht. */
+    { reiter: 'gehen', gruppe: 'Verbinden', id: 'w-agenten', name: 'Agenten',
+      zeichen: 'robot', hinweis: 'Deine Agenten und der Chatverlauf',
+      tun: () => App.reiterWechseln('chat'),
+      zeigen: () => kann(() => App.reiterWechseln) },
+    { reiter: 'gehen', gruppe: 'Verbinden', id: 'w-bespr', name: 'Besprechungen',
+      zeichen: 'mic', hinweis: 'Termine und Besprechungsnotizen',
+      tun: () => App.reiterWechseln('bespr'),
+      zeigen: () => kann(() => App.reiterWechseln) }
+  ];
+
+  /* ======================================================================== *
+   * VERLAUF — was man zurücknimmt und wiederfindet (E272)
+   * ------------------------------------------------------------------------
+   * ZWEI VERSCHIEDENE „ZURÜCK", und die Namen müssen es sagen.
+   *
+   * Im Reiter „Zeichnen" nimmt `wz-undo` einen STRICH zurück
+   * (`Zeichenziel.ruf('undo')`). Hier nimmt `v-undo` eine Änderung an der
+   * SEITE zurück (`Verlauf.zurueck()`). Zwei Knöpfe, beide „Zurück"
+   * genannt, wären eine Falle — deshalb heissen diese „Rückgängig" und
+   * „Wiederherstellen".
+   *
+   * `Verlauf.zurueck()` gibt es seit langem; gerufen wurde es bisher nur
+   * von Strg+Z (`schale.ts`) und aus dem Seitenmenü. Ein Knopf dafür
+   * fehlte im Band — er ruft dieselbe Funktion, keine zweite.
+   * ======================================================================== */
+
+  const verlaufEintraege = (): BandEintrag[] => [
+    { reiter: 'verlauf', gruppe: 'Zurücknehmen', id: 'v-undo', name: 'Rückgängig',
+      zeichen: 'undo', kurz: 'Strg Z', gross: true,
+      hinweis: 'Die letzte Änderung an der Seite zurücknehmen',
+      tun: () => (window as any).Verlauf.zurueck(),
+      zeigen: () => kann(() => (window as any).Verlauf?.zurueck) },
+    { reiter: 'verlauf', gruppe: 'Zurücknehmen', id: 'v-redo', name: 'Wiederherstellen',
+      zeichen: 'redo', kurz: 'Strg ⇧ Z',
+      hinweis: 'Die zurückgenommene Änderung wieder anwenden',
+      tun: () => (window as any).Verlauf.vor(),
+      zeigen: () => kann(() => (window as any).Verlauf?.vor) },
+
+    { reiter: 'verlauf', gruppe: 'Diese Seite', id: 'v-fassungen', name: 'Fassungen',
+      zeichen: 'history', hinweis: 'Frühere Stände dieser Seite ansehen',
+      tun: () => { void Werkzeuge.versionen(seiteJetzt()); },
+      zeigen: () => seiteDa(() => Werkzeuge.versionen) },
+    { reiter: 'verlauf', gruppe: 'Diese Seite', id: 'v-duplizieren', name: 'Duplizieren',
+      zeichen: 'copy', hinweis: 'Eine Kopie dieser Seite anlegen',
+      tun: () => { const p2 = seiteJetzt(); if (p2) App.dupliziereSeite(p2.id); },
+      zeigen: () => seiteDa(() => App.dupliziereSeite) },
+    { reiter: 'verlauf', gruppe: 'Diese Seite', id: 'v-verschieben', name: 'Verschieben',
+      zeichen: 'arrowR', hinweis: 'Diese Seite an eine andere Stelle hängen',
+      tun: () => Werkzeuge.verschiebenNach(seiteJetzt()),
+      zeigen: () => seiteDa(() => Werkzeuge.verschiebenNach) },
+    { reiter: 'verlauf', gruppe: 'Diese Seite', id: 'v-kommentare', name: 'Kommentare',
+      zeichen: 'chat', hinweis: 'Die Anmerkungen an dieser Seite',
+      tun: () => { const p2 = seiteJetzt(); if (p2) Kommentare.panel(p2.id); },
+      zeigen: () => seiteDa(() => Kommentare.panel) },
+
+    { reiter: 'verlauf', gruppe: 'Wiederfinden', id: 'v-posteingang', name: 'Posteingang',
+      zeichen: 'inbox', hinweis: 'Erinnerungen, Kommentare, Erwähnungen',
+      tun: () => Ansichten.posteingang(), zeigen: () => kann(() => Ansichten.posteingang) },
+    { reiter: 'verlauf', gruppe: 'Wiederfinden', id: 'w-zuletzt', name: 'Zuletzt verwendet',
+      zeichen: 'clock', hinweis: 'Die Bibliothek, gefiltert auf zuletzt Verwendetes',
+      tun: () => Bibliothek.oeffne(), zeigen: () => kann(() => Bibliothek.oeffne) },
+    { reiter: 'verlauf', gruppe: 'Wiederfinden', id: 'v-papierkorb', name: 'Papierkorb',
+      zeichen: 'trash', hinweis: 'Gelöschtes ansehen und zurückholen',
+      tun: () => App.papierkorb(), zeigen: () => kann(() => App.papierkorb) }
+  ];
+
+  /* ======================================================================== *
+   * ÜBERPRÜFEN — nachsehen, zählen, wiederholen (E272)
+   * ------------------------------------------------------------------------
+   * ELEKTROS „ÜBEN" UND „PRÜFUNG" STEHEN HIER NOCH NICHT.
+   * Der Entwurf sieht sie vor, und die Griffe gibt es
+   * (`Elektroarbeitsplatz.uebung`, `.pruefungFlaeche`). Sie hier
+   * einzutragen hiesse aber, jedem eine Elektro-Prüfung anzubieten, der
+   * gerade einen Einkaufszettel schreibt. Sinn ergeben sie erst, wenn
+   * `zeigen()` den Schauplatz kennt — das kommt mit der Kontextkante in
+   * Phase F/H. Bis dahin sind sie über die Elektro-Seite erreichbar, die
+   * ihre acht Kacheln aus `inReiter('elektro')` liest.
+   * ======================================================================== */
+
+  const ueberpruefenEintraege = (): BandEintrag[] => [
+    { reiter: 'ueberpruefen', gruppe: 'Lernen', id: 'w-lernen', name: 'Karteikarten',
+      zeichen: 'cards', gross: true, hinweis: 'Wiederholen nach Plan',
+      tun: () => Werkzeuge.lernen(), zeigen: () => kann(() => Werkzeuge.lernen) },
+    { reiter: 'ueberpruefen', gruppe: 'Lernen', id: 'u-faellig', name: 'Fällige Karten',
+      zeichen: 'checkCircle', hinweis: 'Was heute dran wäre',
+      tun: () => Werkzeuge.faellig(), zeigen: () => kann(() => Werkzeuge.faellig) },
+
+    { reiter: 'ueberpruefen', gruppe: 'Wiederfinden', id: 'w-graph', name: 'Graph',
+      zeichen: 'graph', kurz: 'Strg ⇧ G', hinweis: 'Wie alles zusammenhängt',
+      tun: () => Links.graph(), zeigen: () => kann(() => Links.graph) },
+    { reiter: 'ueberpruefen', gruppe: 'Wiederfinden', id: 'w-tags', name: 'Schlagwörter',
+      zeichen: 'tag', kurz: 'Strg ⇧ T', hinweis: 'Alle #Schlagwörter',
+      tun: () => Links.tagRegister(), zeigen: () => kann(() => Links.tagRegister) },
+
+    { reiter: 'ueberpruefen', gruppe: 'Nachsehen', id: 'u-statistik', name: 'Statistik',
+      zeichen: 'chart', hinweis: 'Wörter, Zeichen, Lesedauer dieser Seite',
+      tun: () => Werkzeuge.statistik(seiteJetzt()),
+      zeigen: () => seiteDa(() => Werkzeuge.statistik) },
+    { reiter: 'ueberpruefen', gruppe: 'Nachsehen', id: 'u-gesundheit', name: 'Bestand prüfen',
+      zeichen: 'shield', hinweis: 'Was in den Daten nicht stimmt',
+      tun: () => Pflege.gesundheit(), zeigen: () => kann(() => Pflege.gesundheit) }
+  ];
+
+  /* ======================================================================== *
+   * HILFE (E272)
+   * ======================================================================== */
+
+  const hilfeEintraege = (): BandEintrag[] => [
+    { reiter: 'hilfe', gruppe: 'Lernen, was geht', id: 'h-rundgang', name: 'Was Redion kann',
+      zeichen: 'help', gross: true, hinweis: 'Der Rundgang durch alle Bereiche',
+      tun: () => Rundgang.uebersicht(), zeigen: () => kann(() => Rundgang.uebersicht) },
+    { reiter: 'hilfe', gruppe: 'Lernen, was geht', id: 'h-kuerzel', name: 'Tastenkürzel',
+      zeichen: 'command', kurz: 'Strg /', hinweis: 'Alle Kürzel auf einen Blick',
+      tun: () => Werkzeuge.tastenkuerzel(), zeigen: () => kann(() => Werkzeuge.tastenkuerzel) },
+
+    { reiter: 'hilfe', gruppe: 'Wenn etwas klemmt', id: 'h-erstehilfe', name: 'Erste Hilfe',
+      zeichen: 'shield', hinweis: 'Wenn etwas nicht stimmt: prüfen und richten',
+      tun: () => Pflege.ersteHilfe(), zeigen: () => kann(() => Pflege.ersteHilfe) },
+    { reiter: 'hilfe', gruppe: 'Wenn etwas klemmt', id: 'w-stand', name: 'Umsetzungsstand',
+      zeichen: 'checkCircle', hinweis: 'Alle 16 Teile der Notion-Doku, Punkt für Punkt',
+      tun: () => Status.seiteAnlegen(), zeigen: () => kann(() => Status.seiteAnlegen) },
+
+    { reiter: 'hilfe', gruppe: 'Deine Daten', id: 'h-sichern', name: 'Sicherung speichern',
+      zeichen: 'download', hinweis: 'Alles in eine Datei — mit Anhängen als .redion',
+      tun: () => { void App.sicherungSpeichern(); },
+      zeigen: () => kann(() => App.sicherungSpeichern) },
+    { reiter: 'hilfe', gruppe: 'Deine Daten', id: 'h-einlesen', name: 'Sicherung einlesen',
+      zeichen: 'upload', hinweis: 'Eine gespeicherte Sicherung zurückholen',
+      tun: () => App.sicherungLaden(), zeigen: () => kann(() => App.sicherungLaden) }
   ];
 
   /* ======================================================================== *
@@ -655,8 +801,15 @@ Register.menueband = (() => {
   const alle = (): BandEintrag[] => {
     const aus: BandEintrag[] = [];
     const quellen: Array<() => BandEintrag[]> = [
-      startEintraege, einfuegenEintraege, zeichnenEintraege,
-      werkzeugEintraege, elektroEintraege, ansichtEintraege
+      gehenEintraege, startEintraege, einfuegenEintraege, zeichnenEintraege,
+      verlaufEintraege, ueberpruefenEintraege, ansichtEintraege, hilfeEintraege,
+      /* `elektroEintraege` steht weiter in der Liste, obwohl „Elektro" kein
+         Reiter mehr ist. Das ist kein Versehen: `alle()` ist die Quelle für
+         `inReiter()`, und `bereiche/elektro/start.ts` fragt genau darüber
+         nach seinen acht Kacheln. Nähme man die Zeile heraus, wäre die
+         Elektro-Startseite leer — und keine Prüfung ausser test272 §5
+         merkte es. */
+      elektroEintraege
     ];
     for (const q of [...quellen, ...lieferanten]) {
       try { aus.push(...(q() || [])); } catch { /* dieser Teil fehlt, der Rest steht */ }

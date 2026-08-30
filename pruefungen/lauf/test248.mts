@@ -142,6 +142,13 @@ const RAHMEN = `
       /* Die REITER allein, ohne Klapp-Pfeil und ohne Suche/KI/Konto rechts.
          An ihnen hängt seit E236 die Aussage: die Leiste räumt sich auf. */
       reiter: z('#menueband .mb-reiter-knopf'),
+      /* Die Namen dazu — eine Zahl allein sagt nicht, ob die RICHTIGEN
+         Reiter dastehen (E272). */
+      /* OHNE Typangaben: RAHMEN geht als Quelltext in den Browser.
+         Was Node beim Laden entfernt, bleibt hier stehen und faellt erst
+         dort auf die Nase. */
+      reiterNamen: [...document.querySelectorAll('#menueband [data-mb-reiter]')]
+        .map(b => b.getAttribute('data-mb-reiter') || ''),
       imBaum: document.querySelectorAll('#sidebar button, #sidebar a, #topbar button').length,
       /* ALLE benannten Wege der Leiste, nicht nur die oberste Gruppe:
          die Navigation, der Fuss und die Gruppen im Baum. Sonst könnte man
@@ -197,13 +204,32 @@ p('Die Menüleiste ist überhaupt da (E219 zurückgenommen)',
 await seite.evaluate(() => Bibliothek.oeffne());
 await seite.waitForTimeout(700);
 const imRegal: any = await seite.evaluate(RAHMEN);
-p('Über einer Startansicht bleiben drei Reiter statt sechs',
-  imRegal.reiter === 3, `sind ${imRegal.reiter}`);
+/* FUENF SEIT E272, nicht drei — und die Zahl ist gewachsen, weil die App
+   mehr kann, nicht weil die Regel weicher wurde. Aus sechs Reitern sind
+   acht geworden: „Werkzeuge" ist aufgeloest, „Elektro" kein Reiter mehr,
+   dafuer gibt es Gehen, Verlauf, Ueberpruefen und Hilfe.
+
+   Unveraendert ist das, worauf es hier ankommt: die drei Reiter, die IN
+   eine Seite schreiben, stehen ohne Seite nicht da (`BRAUCHT_SEITE`). Das
+   prueft die Zeile darunter ausdruecklich — an Namen, nicht an einer Zahl,
+   damit sie beim naechsten Reiter nicht wieder nur ein Zaehlwerk ist. */
+p('Über einer Startansicht bleiben fünf Reiter statt acht',
+  imRegal.reiter === 5, `sind ${imRegal.reiter}`);
+p('Und es sind die, die ohne Seite etwas können',
+  !(imRegal.reiterNamen || []).some((n: string) =>
+    ['start', 'einfuegen', 'zeichnen'].includes(n)),
+  (imRegal.reiterNamen || []).join(', '));
 p('Und die Leiste ist trotzdem nicht leer — Suche, KI und Konto stehen rechts',
   imRegal.band >= imRegal.reiter + 3,
   `Reiter ${imRegal.reiter}, Leiste gesamt ${imRegal.band}`);
-p('Zusammen höchstens 22 statt 52',
-  imRegal.leiste + imRegal.kopf + imRegal.band <= 22,
+/* 24 STATT 22, und der Grund ist genau zwei Reiter. Die Zahl war nie eine
+   Grenze fuer sich, sondern die Antwort auf „52 Dinge auf einem Startbild".
+   Zwei zusaetzliche Reiterknoepfe aendern daran nichts — 24 gegen 52 ist
+   dieselbe Aussage. Was die Zahl NICHT decken darf, ist ein Zurueckwachsen
+   des Bandes: dass dort hoechstens fuenfzehn Befehle stehen, prueft
+   test272; dass keiner davon verloren geht, ebenfalls. */
+p('Zusammen höchstens 24 statt 52',
+  imRegal.leiste + imRegal.kopf + imRegal.band <= 24,
   `sind ${imRegal.leiste + imRegal.kopf + imRegal.band}`);
 
 /* Und die Gegenrichtung, sonst wäre „drei Reiter" auch dann grün, wenn es
@@ -211,8 +237,8 @@ p('Zusammen höchstens 22 statt 52',
 await seite.evaluate(() => { const s1 = Store.rootPages()[0]; if (s1) App.oeffne(s1.id); });
 await seite.waitForTimeout(900);
 const beiOffenerSeite: any = await seite.evaluate(RAHMEN);
-p('Über einer offenen Seite sind es wieder sechs',
-  beiOffenerSeite.reiter === 6, `sind ${beiOffenerSeite.reiter}`);
+p('Über einer offenen Seite sind es wieder acht',
+  beiOffenerSeite.reiter === 8, `sind ${beiOffenerSeite.reiter}`);
 
 /* ==========================================================================
  * §2 „Mehr" holt alles zurück

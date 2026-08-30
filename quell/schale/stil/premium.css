@@ -149,18 +149,174 @@
     outline: 2px solid var(--gold-bright); outline-offset: -2px;
   }
 
-  /* ── Das Werkzeugband darunter ────────────────────────────────────────────
-     Es bleibt in dieser Phase, wie es ist — es bricht noch um und ist
-     deshalb bis zu 227 px hoch (L88). Erst Phase D gibt ihm die 58 px und
-     das reitereigene „•••"; vorher wäre eine feste Höhe ein VERSTECKEN von
-     Befehlen ohne Weg dorthin, und das verbietet §2.1 des Auftrags.
+  /* ── Das Werkzeugband: EINE Zeile, 58 px ──────────────────────────────────
+     Bis E272 brach es um und war dann 223 px hoch — bei „Einfügen" mit
+     seinen 69 Knöpfen an JEDER Fensterbreite. Die 15er-Regel macht daraus
+     eine Zeile: was nicht hineinpasst, steht im „•••" desselben Reiters.
 
-     Was es hier schon bekommt, ist die Anbindung an die Reiterzeile: eine
-     goldene Haarlinie statt der grauen, und der Grund der Schale statt der
-     Seitenfarbe. */
+     `flex-wrap: nowrap` ist dabei die Ansage, `overflow: hidden` der Zaun.
+     Gemessen wird in `ueberlaufLayout()` mit `scrollWidth > clientWidth` —
+     dafür MUSS das Band überstehen können, statt zu stauchen. Genau das
+     ist die Falle aus CLAUDE.md §55.2: ein Flex-Kind wird gequetscht
+     statt überzustehen, und dann misst man 109 gegen 109. Deshalb tragen
+     die Gruppen unten `flex: 0 0 auto`. */
   body[data-schale="premium"] .mb-band{
+    flex-wrap: nowrap;
+    align-items: center;
+    height: var(--shell-band-h);
+    max-height: var(--shell-band-h);
+    min-height: var(--shell-band-h);
+    overflow: hidden;
+    padding: 2px var(--space-3) 0;
+    gap: 0 var(--space-1);
     border-top: 1px solid var(--gold-line);
     background: var(--bg-side);
+  }
+  body[data-schale="premium"] .mb-gruppe{ flex: 0 0 auto; gap: 0 }
+  body[data-schale="premium"] .mb-trenner{ flex: 0 0 auto }
+
+  /* ── `hidden` MUSS AUCH WIRKEN ────────────────────────────────────────────
+     Der erste Anlauf versteckte alle vierzehn Knöpfe und mass danach
+     unverändert 1171 gegen 1040 Punkte. Der Grund ist eine der ältesten
+     Fallen in CSS: `[hidden]` kommt aus dem Browser-Stilblatt, und jede
+     eigene Regel mit `display` schlägt es. `.mb-gruppe{display:flex}` und
+     `.mb-knopf{display:inline-flex}` tun genau das — die Elemente waren
+     `hidden` und standen trotzdem da.
+
+     Der Überlauf lief also, versteckte alles und half nichts. Genau die
+     Sorte Fehler, die §55.2 meint: die Messung stimmte, die Wirkung fehlte.
+
+     Kein `!important`: drei Selektorteile schlagen einen. */
+  body[data-schale="premium"] .mb-knopf[hidden],
+  body[data-schale="premium"] .mb-gruppe[hidden],
+  body[data-schale="premium"] .mb-trenner[hidden],
+  body[data-schale="premium"] .mb-mehr[hidden]{ display: none }
+
+  /* ── Der Knopf muss in 58 px passen ───────────────────────────────────────
+     Gemessen war er 66 px hoch, die Gruppe mit Überschrift 91 px — in einem
+     58-px-Band wurden die Zeichen oben abgeschnitten. Sichtbar auf dem Bild,
+     von keiner Prüfung gemessen.
+
+     Gerechnet für 58 px: Bandpolster 2 + Knopf 40 (Zeichen 16, Lücke 1,
+     Name 11 × 1,2, Polster 2 × 3) + Überschrift 11 + 2 Abstand = 57.
+
+     DIE SCHRIFT BLEIBT BEI 11 px. §23 des Auftrags verbietet, sie zu
+     schrumpfen, und der Entwurf ist an dieser Stelle auf 8,5 px gerutscht —
+     erklärtermassen ein Fehler. Was schrumpft, ist das Polster. */
+  body[data-schale="premium"] .mb-reihe{ min-height: 0; gap: 2px }
+  body[data-schale="premium"] .mb-knopf{
+    gap: 1px;
+    padding: 3px var(--space-1);
+    min-height: 40px;
+    font-size: 11px;
+    border-radius: var(--radius-sm);
+  }
+  body[data-schale="premium"] .mb-knopf > [data-sym],
+  body[data-schale="premium"] .mb-knopf > .mb-glyph{ flex: 0 0 17px }
+  body[data-schale="premium"] .mb-knopf svg{ width: 16px; height: 16px }
+  body[data-schale="premium"] .mb-knopf > .mb-probe{ flex: 0 0 16px; width: 16px; height: 16px }
+  /* EIN FARBKNOPF DARF SCHMAL SEIN. Die 68 px Mindestbreite sind für Namen
+     wie „Nummerierte Liste" gemessen (E210); „Rot" und „Dünn" brauchen sie
+     nicht, und acht davon in voller Breite drängen die Werkzeuge aus der
+     Zeile. Der Name bleibt stehen — §38 verlangt, dass die Farbe nicht NUR
+     über Farbe erkennbar ist. */
+  body[data-schale="premium"] .mb-knopf:has(> .mb-probe){ min-width: 46px }
+  /* Der gewählte Knopf wird golden statt violett — er gehört zur Schale. */
+  body[data-schale="premium"] .mb-knopf.ist-an{
+    background: var(--gold-glass); border-color: var(--gold-deep);
+    color: var(--gold-tinte);
+  }
+  body[data-schale="premium"] .mb-knopf.ist-an:hover{ background: var(--gold-strong) }
+  body[data-schale="premium"] .mb-knopf:focus-visible{
+    outline: 2px solid var(--gold-deep); outline-offset: 1px;
+  }
+  /* ── KEINE GROSSEN KACHELN MEHR ───────────────────────────────────────────
+     `gross: true` legte das Zeichen NEBEN den Namen statt darüber. In einem
+     mehrzeiligen Band war das eine sinnvolle Hervorhebung; in einer Zeile
+     von 72 px stehen dann zwei Formen nebeneinander — im Bild von „Gehen"
+     gut zu sehen: „Journal" und „Schnellnotizen" waagerecht, „Vorlagen"
+     und „Zeitmesser" senkrecht daneben. Zwei Formen in einer Reihe lesen
+     sich als zwei Arten von Knopf, und das sind sie nicht.
+
+     Das Register behält sein `gross` — es sagt weiter, was das Wichtigste
+     einer Gruppe ist, und die alte Schale und das Telefon nutzen es
+     unverändert. Hier zeigt es sich nur anders: durch Gewicht, nicht durch
+     eine andere Form. */
+  body[data-schale="premium"] .mb-knopf.ist-gross{
+    flex-direction: column;
+    min-width: 68px; max-width: 112px;
+  }
+  body[data-schale="premium"] .mb-knopf.ist-gross .mb-name{
+    font-weight: 600;
+  }
+  body[data-schale="premium"] .mb-knopf:not(.ist-gross) .mb-name{ min-height: 0 }
+
+  body[data-schale="premium"] .kicker.mb-gruppe-titel{
+    padding-top: 0; font-size: 9.5px; line-height: 1.2;
+  }
+
+  /* ── Der Überlaufknopf ────────────────────────────────────────────────────
+     Er klebt rechts und ist golden — das ist der eine Ort, an dem Gold auf
+     hellem Grund als FLÄCHE erscheint (als Text hätte `--gold` dort 2,26).
+     Er steht ausserhalb des Rollens, weil er sonst genau dann aus dem Bild
+     führe, wenn man ihn braucht. */
+  body[data-schale="premium"] .mb-mehr{
+    flex: 0 0 auto;
+    margin-left: auto;
+    display: grid; place-items: center;
+    width: 26px; height: 26px;
+    border: 1px solid var(--gold-line);
+    border-radius: var(--radius-sm);
+    background: var(--gold-glass);
+    color: var(--gold-tinte);
+    cursor: pointer;
+  }
+  body[data-schale="premium"] .mb-mehr:hover{
+    background: var(--gold-strong);
+  }
+  body[data-schale="premium"] .mb-mehr:focus-visible{
+    outline: 2px solid var(--gold-deep); outline-offset: 2px;
+  }
+  body[data-schale="premium"] .mb-mehr svg{ width: 15px; height: 15px }
+
+  /* ── Die Mehr-Lade ────────────────────────────────────────────────────────
+     Sie geht rechts unter dem „•••" auf. 252 px breit wie die Kontextkante
+     später — dieselbe Lade an einem anderen Rand. */
+  body[data-schale="premium"] #mb-mehr-lade{
+    position: absolute; right: var(--space-3); z-index: 60;
+    top: calc(var(--shell-reiter-h) + var(--shell-band-h) + 4px);
+    width: var(--kanten-lade-b);
+    max-height: 60vh; overflow-y: auto;
+    padding: var(--space-3);
+    background: var(--bg-card);
+    border: 1px solid var(--gold-line);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+  }
+  body[data-schale="premium"] .mbl-kopf{
+    font-size: 11px; font-weight: 600; color: var(--gold-tinte);
+    padding: 0 var(--space-2) var(--space-2);
+  }
+  body[data-schale="premium"] .mbl-gruppe{
+    padding: var(--space-3) var(--space-2) var(--space-1);
+  }
+  body[data-schale="premium"] .mbl-zeile{
+    display: flex; align-items: center; gap: var(--space-3);
+    width: 100%; min-height: 32px;
+    padding: 0 var(--space-2);
+    border: none; border-radius: var(--radius-md);
+    background: none; color: var(--text);
+    /* §23: NIE unter 11 px. Der Entwurf ist hier auf 8,5 gerutscht. */
+    font-size: 12.5px; text-align: left; cursor: pointer;
+  }
+  body[data-schale="premium"] .mbl-zeile:hover{ background: var(--gold-glass) }
+  body[data-schale="premium"] .mbl-zeile:focus-visible{
+    outline: 2px solid var(--gold-deep); outline-offset: -2px;
+  }
+  body[data-schale="premium"] .mbl-zeile svg{ width: 15px; height: 15px; flex: none }
+  body[data-schale="premium"] .mbl-name{ flex: 1 1 auto; min-width: 0 }
+  body[data-schale="premium"] .mbl-kurz{
+    flex: none; font-size: 10.5px; color: var(--text-faint);
   }
 
   /* ── Die Gruppentitel ─────────────────────────────────────────────────────

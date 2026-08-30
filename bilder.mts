@@ -119,6 +119,28 @@ const ANSICHTEN: Record<string, { titel: string; bauen: () => void | Promise<voi
     }
   },
 
+  schaleMehr: {
+    titel: 'Die Schale — die Mehr-Lade des Reiters offen',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      Store.setMeta('bandZu', false);
+      Store.setMeta('bandZu:welt', false);
+      Store.setMeta('bandReiter', 'einfuegen');
+
+      const s = Store.addPage(null, { text: 'Elektrotechnik — Skript' });
+      Store.addBlock(s.id, 'text', { text: 'Hier kommt ein Block hin.' });
+      App.oeffne(s.id);
+      (window as any).Menueband?.zeichne?.();
+      /* Zwei Bilder abwarten: der Ueberlauf misst per rAF, und vorher steht
+         der Mehr-Knopf noch auf `hidden`. */
+      await new Promise(f => requestAnimationFrame(() => requestAnimationFrame(f)));
+      await new Promise(f => setTimeout(f, 260));
+      document.querySelector<HTMLElement>('.mb-mehr')?.click();
+    }
+  },
+
   schaleBandStart: {
     titel: 'Die Schale — Menüband offen, Reiter Start',
     bauen: async () => {
