@@ -5158,6 +5158,31 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   fill-opacity:.1; stroke:currentColor; stroke-width:1; stroke-dasharray:4 3;
 }
 
+/* Der Zeitmesser (E268): ein schwebendes Feld rechts unten, ÜBER der
+   Telefon-Leiste (--hunten) und unter den Menüs. Die Uhr läuft weiter,
+   wenn das Feld zu ist — schliessen heisst nur „aus dem Blick". */
+.zm-feld{
+  position:fixed; right:16px; bottom:calc(var(--hunten, 0px) + 16px);
+  z-index:45; width:min(280px, calc(100vw - 32px));
+  padding:12px 14px; border:1px solid var(--line);
+  border-radius:var(--radius-lg, 12px); background:var(--bg-schwebend, var(--bg));
+  box-shadow:var(--shadow-3, 0 8px 30px rgba(0,0,0,.25));
+}
+.zm-kopf{ display:flex; align-items:center; justify-content:space-between }
+.zm-kopf b{ font-size:13px }
+.zm-uhr{
+  margin:6px 0 2px; font-size:34px; font-weight:740;
+  font-variant-numeric:tabular-nums; letter-spacing:.01em;
+}
+.zm-wo{ margin:0 0 10px; font-size:11.5px; color:var(--text-dim) }
+.zm-reihe{ display:flex; gap:6px; margin-bottom:6px; flex-wrap:wrap }
+.zm-reihe .rb{ min-height:34px }
+.zm-sitzungen{ margin-top:8px; border-top:1px solid var(--line-soft, var(--line)); padding-top:8px }
+.zm-sitzungen span{ font-size:10.5px; color:var(--text-faint); text-transform:uppercase; letter-spacing:.05em }
+.zm-sitzungen ul{ margin:4px 0 0; padding:0; list-style:none }
+.zm-sitzungen li{ font-size:11.5px; color:var(--text-dim); padding:2px 0 }
+.zm-sitzungen i{ font-style:normal; color:var(--text-faint) }
+
 /* ============================================================================
  * DIE ELEKTRO-STARTSEITE (L65)
  * ----------------------------------------------------------------------------
