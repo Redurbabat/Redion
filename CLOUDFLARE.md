@@ -92,6 +92,8 @@ wrangler.toml    ← sagt Cloudflare, was zu tun ist
 functions/       ← die Brücke
 start.bat        ← lokal starten
 oeffnen.bat      ← lokal ohne Server öffnen
+holen.bat        ← GitHub → dieser Ordner
+hochladen.bat    ← dieser Ordner → GitHub
 ```
 
 > **`.assetsignore` ist keine Bequemlichkeit.** `wrangler.toml` bindet

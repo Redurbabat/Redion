@@ -2970,3 +2970,63 @@ L82 — Was der Geräte-Abgleich und die Ordner-Sicherung (E270) noch nicht kön
    Klasse.
 
 Gefunden am 30. August 2026 (beim Bau von E270, beim Ansehen der Bilder).
+
+================================================================================
+L83 — Was zwischen „gepusht" und „Redur sieht es" noch fehlt (E271)
+================================================================================
+
+1. **Der Prüflauf wird nicht abgewartet.** `holen.bat` holt `main`, egal ob
+   die GitHub-Aktion rot ist. Besonders: wurde ein `src/**.ts` ohne
+   `npm run bauen:ts` geschoben, bekommt Redur das ALTE Verhalten —
+   fehlerfrei und ohne jede Meldung. Nur `test105` fängt das, und zwar
+   drüben, nicht hier.
+2. **Kein Skript sagt, auf welchem Weg Redur gerade schaut.** Öffnet er die
+   Cloudflare-Adresse statt seines Ordners, ist `holen.bat` für das, was er
+   sieht, vollkommen irrelevant. Drei Wege (Ordner, `start.bat`, Cloudflare),
+   und keiner davon nennt sich.
+3. **Zweimal F5 ist ein Rennen, keine Zusicherung.** Ohne erhöhte `VERSION`
+   in `src/dienst/sw.ts` liefert der Dienst-Arbeiter jede Datei einzeln nach;
+   kommt der zweite Ladevorgang zu früh, mischen sich alte und neue. Und
+   nichts erzwingt die Erhöhung: `test99` prüft nur `fassung >= 11`,
+   `test143` nur die Form `notizen-v\d+`.
+4. **Die Rettungen häufen sich an.** Jeder Lauf von `holen.bat` mit eigener
+   Arbeit legt einen `sicherung/`-Zweig und eine Ablage an. Niemand räumt sie
+   je weg, und niemand fragt, ob sie noch gebraucht werden. `hochladen.bat`
+   nennt sie wenigstens.
+5. **Der Rückweg aus der Rettung ist keine Doppelklick-Sache.** `git stash
+   apply` und `git cherry-pick` stehen auf dem Bildschirm, aber wer sie
+   braucht, ist per Definition in der Lage, in der er sie nicht sicher
+   ausführen kann. Der Text sagt deshalb „melden" — das ist ehrlich, aber
+   keine Lösung.
+6. **`ADRESSEN` (mehrere Adressen) bleibt ungeprüft** — siehe L82.7.
+7. **Die Skripte gibt es nur auf Windows.** Kein `.sh`-Gegenstück. Bisher
+   kein Bedarf, aber es steht nirgends.
+
+Gefunden am 30. August 2026 (beim Bau von E271, durch die Prüfung).
+
+================================================================================
+L84 — „Simulation starten" ist im Hellmodus unlesbar (älter als E271)
+================================================================================
+
+`test128` meldet: **Prüfungszentrale, hell — „Simulation starten" [1.07:1].**
+Ein Kontrast von 1,07 zu 1 heisst: der Knopf ist da, er ist anklickbar, und
+man sieht ihn nicht. §38 verlangt mindestens 4,5:1.
+
+Nachgemessen, damit die Zuordnung stimmt: der Fehler fällt auch auf dem
+Stand **vor** E270/E271 (Commit `18950b19`) — er stammt nicht aus dieser
+Arbeit. Gefunden hat ihn der volle Prüflauf, der hier ohnehin lief.
+
+Was schon bekannt ist: **E142 hat genau diesen Fall einmal behoben** —
+weisse Schrift auf `--bg-side`, weil `.lernwelt .lw-exam-list footer button`
+spezifischer war als die Hauptknopf-Regel und keine Schriftfarbe setzte. Die
+Reparatur steht in `quell/schale/stil/lernwelt.css:538-544`. Offenbar
+erreicht sie diesen Knopf heute nicht mehr, oder ein weiterer Selektor ist
+dazwischengekommen.
+
+Nicht behoben, weil es ein anderer Bogen ist als E271 und weil eine
+Vermutung hier nichts wert wäre: welcher Selektor gewinnt, muss im Browser
+gemessen werden, nicht aus der Datei gelesen. Ein Anlauf dazu ist gescheitert
+(die Prüfungskarte wurde im Messaufbau nicht gezeichnet) — der nächste
+beginnt am besten bei `test128:483-517`, das den Knopf nachweislich findet.
+
+Gefunden am 30. August 2026 (voller Prüflauf während E271).

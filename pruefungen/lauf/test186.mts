@@ -218,12 +218,21 @@ gleich('Es gibt GENAU EINE Escape-Funktion in der Datei',
 p('Sie ersetzt alle fünf Zeichen (§19)',
   /&amp;/.test(code) && /&lt;/.test(code) && /&gt;/.test(code) &&
   /&quot;/.test(code) && /&#39;/.test(code));
-/* GEZAEHLT, nicht bloss gefunden. Beide Dialoge setzen einen `.fh`-Titel;
+/* GEZAEHLT, nicht bloss gefunden. Jeder Dialog setzt einen `.fh`-Titel;
    ein `test()` faende den escapten in `wahl` auch dann noch, wenn der in
    `frage` daneben roh dastuende — und waere gruen. Gemessen: genau so war
-   es, bis hier gezaehlt wurde (§55.2). */
-gleich('BEIDE Dialogtitel gehen durch sie hindurch',
-  (code.match(/class="fh">\$\{esc\(titel\)\}/g) || []).length, 2);
+   es, bis hier gezaehlt wurde (§55.2).
+
+   GEGEN DIE GESAMTZAHL, nicht gegen eine feste Zahl. Hier stand `2`, und
+   mit `mehrzeilig` (E267) wurden es drei — die Pruefung wurde rot, obwohl
+   alle drei escapt sind. Eine Zahl, die bei jedem neuen Dialog von Hand
+   nachgezogen werden muss, wird irgendwann nachgezogen statt geprueft.
+   So bleibt die Aussage dieselbe und haelt: JEDER Titel geht hindurch. */
+const titelAlle   = (code.match(/class="fh">/g) || []).length;
+const titelEscapt = (code.match(/class="fh">\$\{esc\(titel\)\}/g) || []).length;
+gleich('JEDER Dialogtitel geht durch sie hindurch', titelEscapt, titelAlle);
+p('Und es sind wirklich welche da',
+  titelAlle >= 3, String(titelAlle));
 gleich('Und keiner steht roh da',
   (code.match(/class="fh">\$\{titel\}/g) || []).length, 0);
 p('Die Vorgabe auch',

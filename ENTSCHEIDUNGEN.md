@@ -19366,3 +19366,114 @@ Sicherheitspunkt; der Abdruck zählt `meta` mit → der Endlos-Punkt.
 Wächter grün geblieben: test87/105/109 · test92/93/96/100/101 ·
 test113/118/119/120/121/140/256/257/261 + servercheck · test222 ·
 test264–268.
+
+
+================================================================================
+E271 — Zwei Skripte, zwei Richtungen: holen und hochladen
+       (und dabei gefunden: das Verzeichnis ist öffentlich)
+================================================================================
+
+Redur: „eine holt die von github auf laptop und die andere umgekehrt".
+
+DER ANLASS: seit Claude an einem anderen Rechner arbeitet und nach GitHub
+schiebt, ist die Richtung GitHub → Laptop die wichtigere — und für die gab
+es gar nichts. Die Anleitung beschrieb nur das Hochladen, und das Skript
+dafür (`auto-hochladen.bat`) lag auf Redurs Desktop: unversioniert, für
+niemanden lesbar, ohne Prüfung, ob drüben etwas Neueres steht.
+
+DIE ENTSCHEIDUNG: zwei Dateien, je eine Richtung, im Verzeichnis.
+
+    holen.bat       GitHub  →  Ordner    lädt nie hoch
+    hochladen.bat   Ordner  →  GitHub    verändert nie den Ordner
+
+Ein Werkzeug, das mal so und mal so herum arbeitet, macht irgendwann das
+Falsche, und beim Austausch zwischen zwei Rechnern heisst „das Falsche"
+verlorene Arbeit. Getrennt kostet ein Fehlgriff nichts: das falsche Skript
+weigert sich, die Aufgabe des anderen zu übernehmen.
+
+DER FUND, DER SCHWERER WIEGT ALS DIE SKRIPTE
+
+Beim Prüfen nachgemessen: `api.github.com/repos/Redurbabat/Redion` liefert
+`"private": false`. **Das Verzeichnis ist öffentlich.**
+
+Und `.gitignore` deckte weder `*.redion` noch `.env.local` noch `.dev.vars`
+ab — nachgemessen mit `git check-ignore`, alle drei wären mitgegangen.
+
+Zusammen ergibt das eine Falle, die E270 gerade erst gebaut hat:
+`ordnersicherung.ts` schreibt von selbst `redion-sicherung-<datum>.redion`
+in einen Ordner, den ein Mensch wählt — mit allen Seiten, Datenbanken und
+Anhängen, unverschlüsselt. Wählt Redur dafür den Projektordner (naheliegend:
+es ist der Ordner, den er kennt), lädt das nächste `git add -A` seinen
+ganzen Arbeitsbereich öffentlich ins Netz. Auf einem öffentlichen Repository
+ist das nicht zurückzunehmen.
+
+`.gitignore` deckt das Muster jetzt ab — **bevor** es passieren konnte.
+Das ist der wichtigste Teil dieses Eintrags; die Skripte sind der Anlass,
+nicht der Inhalt.
+
+WAS DIE PRÜFUNG SONST FAND, in echten Git-Repos nachgemessen
+
+  · Ein Commit, der nur auf dem örtlichen `main` lag, war nach
+    `checkout -B main origin/main` von keiner Referenz mehr erreichbar —
+    und der Bildschirm meldete „[OK] Fertig". Der Zähler mass HEAD,
+    zurückgesetzt wurde `main`. Jetzt werden beide gemessen und beide
+    gerettet.
+  · „Sind wir schon gleich" verglich INHALTE (`git diff --quiet`). Zwei
+    verschiedene Commits mit gleichem Inhalt — der Normalfall nach einem
+    Merge — galten als gleich, das Skript sprang heraus, und Redur blieb
+    auf einem fremden Zweig sitzen in dem Glauben, er sei auf `main`.
+    Jetzt werden Kennungen verglichen, samt Zweigname.
+  · Der Zeitstempel hat nie funktioniert: ein verirrtes Anführungszeichen
+    liess PowerShell scheitern, `2>nul` schluckte die Meldung, und die
+    Rettungszweige hiessen `vor-holen-24187`. Bei Namensgleichheit brach
+    das Skript ab, ohne dass Redur etwas tun konnte.
+  · `git status --porcelain` meldet bei reinen Zeilenenden-Unterschieden
+    Dateien, die git selbst für unverändert hält — genau der Vorfall aus
+    `.gitattributes` (309 Dateien, kein Zeichen Inhalt). Folge: ein echter
+    Push wurde übersprungen und falsch begründet. Jetzt wird über
+    `git diff --quiet` plus `ls-files -o` gemessen, das antwortet richtig.
+  · `hochladen.bat` liess einen Push von einem FREMDEN Zweig nach `main`
+    durch: der Riegel prüfte nur „vorwärtsspulbar", und das ist ein
+    Arbeitszweig sehr wohl. Jetzt wird der Zweigname geprüft.
+  · Der `fetch` in `hochladen.bat` wurde nicht auf Erfolg geprüft — ohne
+    Netz rechnete das Skript gegen eine alte Kopie und behauptete „GitHub
+    hat schon alles".
+  · `git add -A` in einer ungelösten Zusammenführung trägt die
+    Konfliktmarken als Lösung ein, und der Push gelingt. Beide Skripte
+    erkennen das jetzt vorher.
+  · Der Rat `git stash pop` war der gefährlichste Satz in beiden Dateien:
+    die Ablage entstand gegen den alten Stand, der Ordner steht auf dem
+    neuen, und bei Kollision schreibt `pop` Konfliktmarken IN die Dateien.
+    Trifft es `quell/**.js`, startet Redion nicht mehr — und
+    `redion-einzeldatei.html` wird bei fast jedem Push neu erzeugt, die
+    Kollision ist also der Normalfall. Jetzt `apply`, das die Ablage
+    liegen lässt, mit einer Warnung vor Konfliktmarken.
+  · Ein Anführungszeichen in der getippten Beschreibung zerlegte die
+    Commit-Zeile. Jetzt werden sie entfernt.
+  · Und beim Schreiben selbst gefunden: die Abfrage nach der Beschreibung
+    stand in einem Klammerblock. cmd.exe ersetzt `%MELDUNG%` schon beim
+    EINLESEN des Blocks — also bevor `set /p` gefragt hat. Jeder Commit
+    hätte den Ersatztext getragen. Jetzt über Sprungmarken; der übliche
+    Ausweg `EnableDelayedExpansion` geht nicht, der frisst jedes
+    Ausrufezeichen aus den Meldungen.
+
+Verworfen: `EnableDelayedExpansion` (siehe oben); ein einziges Skript mit
+Richtungsfrage (ein Klick, zwei Bedeutungen); ein erzwungener Push als
+Ausweg aus dem Zweig-Fall (nicht rücknehmbar); die Skripte umzubenennen in
+`1-runter…`/`2-hoch…` (ein Fehlgriff kostet nichts mehr, seit jedes Skript
+die Aufgabe des anderen verweigert).
+
+**Geprüft:** test87 §11, zehn Punkte ohne Browser — beide Dateien
+existieren, `holen.bat` schiebt nichts hoch, `hochladen.bat` setzt nichts
+zurück, keines erzwingt oder räumt, und der Rat lautet `apply`. REM- und
+`echo`-Zeilen werden vorher gefiltert, weil beide Dateien im Kopf
+ERKLÄREN, warum es kein `--force` gibt — eine Prüfung, die an ihrer eigenen
+Begründung anschlägt, ist keine. Drei Gegenproben einzeln rot gesehen: ein
+`push` in `holen.bat`, ein `--force` in `hochladen.bat`, und der Rat wieder
+auf `pop` gestellt.
+
+Und ein Fund über die Prüfung selbst, derselbe wie bei E268: die erste
+Fassung suchte den `apply`-Rat in den BEFEHLSzeilen — dort, wo der Filter
+gerade alle Ratschläge entfernt hatte. Sie konnte nicht grün werden und
+verriet damit den Fehler; wäre die Bedingung umgekehrt formuliert gewesen,
+wäre sie für immer trivial grün geblieben (§55.2).

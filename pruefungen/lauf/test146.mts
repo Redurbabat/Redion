@@ -146,9 +146,16 @@ gleich('… und die Zelle bleibt nicht auf „denkt nach" stehen', kz.zelle3, '(
 console.log('\n3 · Die Worte stimmen wieder (A4, A5, D10)');
 
 const schaleTs = fs.readFileSync(path.join(WURZEL, 'src/schale/aufbau/schale.ts'), 'utf8');
+/* AUF DAS WORT GEPRUEFT, NICHT AUF DEN AUFRUF. Hier stand
+   `UI.toast('Geprüft: ' …)` als Muster. E270 hat `sicherungSpeichern` in
+   `sicherungPaketBauen` plus Ausliefern geschnitten, damit die automatische
+   Ordner-Sicherung dasselbe Paket bauen kann, ohne Toasts zu werfen — der
+   Fortschritt geht seither durch `sagen(…)`, das ohne Angabe `UI.toast`
+   ist. Verhalten unveraendert, Muster hin. Worauf es A4 ankam, ist das
+   WORT: waehrend die Pruefsummen laufen, ist noch nichts gesichert. */
 p('Der Fortschritts-Toast sagt „Geprüft", nicht „Gesichert" (A4)',
-  /UI\.toast\('Geprüft: ' \+ name\.replace/.test(schaleTs) &&
-  !/UI\.toast\('Gesichert: ' \+ name\.replace/.test(schaleTs));
+  /\bGeprüft: ' \+ name\.replace/.test(schaleTs) &&
+  !/\bGesichert: ' \+ name\.replace/.test(schaleTs));
 
 /* Der Verschlüsseln-Dialog, wirklich geöffnet. */
 const dialogText = await seite.evaluate(() => {
