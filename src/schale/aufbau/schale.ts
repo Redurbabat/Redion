@@ -2913,6 +2913,13 @@ const App = (() => {
       if (wunsch === 'workspace') startAnsichtZeigen = () => Produktwelten.workspace('start');
       if (wunsch === 'posteingang') startAnsichtZeigen = () => Ansichten.posteingang();
       if (wunsch === 'journal') startAnsichtZeigen = () => Werkzeuge.journal();
+      /* Die Notizhefte (E264): beide Enden im SELBEN Schritt wie die
+         Einstellungs-Werte verdrahtet — die E236-Lehre („die Wahl gab es,
+         nur hat sie nie jemand ausgewertet") wiederholt sich nicht. */
+      if (wunsch === 'notizhefte')
+        startAnsichtZeigen = () => (globalThis as any).Notebook?.oeffnen?.();
+      if (wunsch === 'notizheft')
+        startAnsichtZeigen = () => (globalThis as any).Notebook?.resume?.();
       if (wunsch === 'seite' && Store.getMeta('startSeite')) {
         const z = Store.getBlock(Store.getMeta('startSeite'));
         if (z) oeffne(z.id);

@@ -235,6 +235,8 @@ const Einstellungen = (() => {
             zeile('Beim Öffnen zeigen', 'Was erscheint, wenn du die App startest', wahl('startAnsicht', [['dokument', 'Zuletzt geöffnetes Dokument, sonst das Regal'],
                 ['dokumente', 'Immer das Regal'],
                 ['start', 'Heute – Lernen & Alltag'], ['workspace', 'Workspace'],
+                ['notizhefte', 'Notizhefte – Regal zum Losschreiben'],
+                ['notizheft', 'Zuletzt benutztes Heft, sofort schreibbereit'],
                 ['letzte', 'Zuletzt geöffnete Seite'],
                 ['journal', 'Heutiges Journal'], ['posteingang', 'Posteingang']], V('startAnsicht', 'dokument'))) +
             zeile('Woche beginnt am', 'Gilt für Kalender und Kalenderwochen', wahl('wochenstart', [['montag', 'Montag'], ['sonntag', 'Sonntag']], V('wochenstart', 'montag'))) +

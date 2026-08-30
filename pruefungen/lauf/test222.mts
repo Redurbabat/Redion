@@ -398,8 +398,9 @@ const apps = await seite.evaluate(() => {
    erste Fassung, und die Prüfung hat sie zurückgeholt.
 
    Die Zahl steht hier weiterhin fest und nicht als `> 0`: eine Prüfung, die
-   jede Zahl durchlässt, merkt nicht, wenn die Hälfte der Liste wegfällt. */
-p('Es gibt achtzehn Apps', apps.reg.length === 18, String(apps.reg.length));
+   jede Zahl durchlässt, merkt nicht, wenn die Hälfte der Liste wegfällt.
+   Seit E264 sind es neunzehn — die Notizhefte kamen als eigene App dazu. */
+p('Es gibt neunzehn Apps', apps.reg.length === 19, String(apps.reg.length));
 gleich('Und genauso viele stehen da', apps.gezeichnet.length, apps.reg.length);
 gleich('In derselben Folge', apps.gezeichnet.map((x: any) => x.id),
   apps.reg.map((x: any) => x.id));

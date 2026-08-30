@@ -2826,3 +2826,26 @@ als EIGENE Entscheidung geplant (Import-Dialog könnte fragen: „Konto
 behalten und Bestand neu abgleichen?"), nicht als Beifang.
 
 Gefunden am 29. August 2026 (beim Bau von E255).
+
+================================================================================
+L77 — Was das Notizhefte-Regal (E264) bewusst noch nicht kann
+================================================================================
+
+Fünf hingenommene Grenzen der ersten Fassung, jede mit Grund:
+
+1. Die Regal-Suche findet nur TITEL. Die grosse Suche (Strg P) kennt
+   längst Inhalte und Handschrift-Erkanntes — das Regal soll sie nicht
+   nachbauen (E29), sondern höchstens dorthin führen.
+2. Die Heft-Regel liest nur DIREKTE Kinder. Ein Blatt zwei Ebenen tief
+   macht die Seite nicht zum Heft — dieselbe Lesart wie die
+   Bibliotheks-Deckelart, und billig; wer tief verschachtelt, findet
+   die Seite weiter in Bibliothek und Baum.
+3. Eine Seite mit PDF-Seiten UND Blättern zählt als PDF, nicht als
+   Heft (PDF-Vorrang wie in der Bibliothek) — sie steht in der
+   Bibliothek, nicht im Regal.
+4. Keine Deckelfarben — p.color liegt an jeder Seite bereit und wird
+   nirgends gerendert; kommt mit E265.
+5. Kein Ziehen-Sortieren im Gitter; sortiert wird nach zuletzt
+   bearbeitet, was die Weiterschreiben-Frage am besten beantwortet.
+
+Gefunden am 30. August 2026 (beim Bau von E264).
