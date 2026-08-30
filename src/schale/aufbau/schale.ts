@@ -2182,6 +2182,14 @@ const App = (() => {
    */
   const arbeitsbereich = (): void => {
     if (!window.matchMedia('(max-width: 760px)').matches) {
+      /* AM RECHNER SEIT E272 PHASE G: die Datei-Fläche, Fach „Konto".
+         Vorher ging hier die Seitenleisten-Schublade auf — und die
+         verschwindet am Rechner in Phase F. Der Knopf hätte dann kein
+         Ziel mehr gehabt; deshalb steht G vor F und nicht danach.
+         Die Schublade bleibt der Notweg, solange die Fläche fehlt
+         (Einzeldatei, halb geladenes Fenster, Prüflauf ohne das Modul). */
+      const bs = (window as any).Backstage;
+      if (bs?.oeffne) { bs.oeffne('konto'); return; }
       if (PWA.schubladeAuf) PWA.schubladeAuf();
       return;
     }
@@ -2506,11 +2514,27 @@ const App = (() => {
       }
     });
 
-    /* Esc schliesst Menüs und Overlays */
+    /* ── Esc schliesst Menüs und Überlagerungen ────────────────────────
+       DIE OBERSTE, NICHT DIE ERSTE (E272 Phase G).
+
+       Hier stand `document.querySelector('.overlay')` — und das ist die
+       ERSTE im Baum, nicht die vorderste auf dem Bildschirm. Liegt noch
+       eine ältere Überlagerung weiter oben im Dokument, schloss Esc die
+       unsichtbare dahinter und liess die vor der Nase stehen. Gemessen
+       beim Bau der Datei-Fläche: sie ging mit Esc nicht zu, obwohl sie
+       ganz vorne stand.
+
+       `fokus.ts` rechnet seit E223 genauso — die letzte im Dokument ist
+       die oberste. Dieselbe Regel an beiden Stellen, sonst schliesst Esc
+       etwas anderes, als der Fokus gerade hält. */
     document.addEventListener('keydown', e => {
       if (e.key !== 'Escape') return;
-      const m = document.querySelector('.menu');
-      const o = document.querySelector('.overlay');
+      const letztes = (wahl: string): Element | null => {
+        const alle = document.querySelectorAll(wahl);
+        return alle.length ? alle[alle.length - 1]! : null;
+      };
+      const m = letztes('.menu');
+      const o = letztes('.overlay');
       if (m) m.remove();
       else if (o) o.remove();
     });

@@ -17,7 +17,8 @@
  * DER AUFBAU
  *
  *     <div id="menueband">
- *       <div class="mb-reiter">   Start · Einfügen · Zeichnen · …
+ *       <div class="mb-reiter">   R · Datei · <div class="mb-tabs" role=tablist>
+ *                                 Gehen · Start · Einfügen · … </div> · ⌕ ✦ K ⌄
  *       <div class="mb-band">     die Gruppen des gewählten Reiters
  *
  * Der gewählte Reiter und „zugeklappt oder nicht" stehen in `meta` und
@@ -33,10 +34,16 @@
  *
  * TASTATUR (§38)
  *
- * Die Reiterzeile ist eine echte `tablist`: Pfeiltasten wandern, Pos1 und
+ * Die Reiterliste ist eine echte `tablist`: Pfeiltasten wandern, Pos1 und
  * Ende springen, und nur der gewählte Reiter ist in der Tabulator-Reihenfolge.
- * Das ist nicht Zierde — ohne das ist ein Menüband mit sechs Reitern für
+ * Das ist nicht Zierde — ohne das ist ein Menüband mit acht Reitern für
  * jeden, der nicht mit der Maus arbeitet, eine Sackgasse.
+ *
+ * Die `tablist` ist seit E272 Phase G der INNERE Kasten `.mb-tabs` und
+ * nicht mehr die ganze Zeile: neben den Reitern stehen dort die Marke,
+ * „Datei", Suche, KI, Konto und der Klapp-Pfeil, und keines davon ist ein
+ * Reiter. Eine Liste, die etwas anderes enthält als das, was sie ansagt,
+ * ist für ein Vorleseprogramm schlimmer als gar keine.
  * ==========================================================================*/
 
 const Menueband = (() => {
@@ -687,19 +694,31 @@ const Menueband = (() => {
     /* ── die Reiterzeile ── */
     const zeile = document.createElement('div');
     zeile.className = 'mb-reiter';
-    zeile.setAttribute('role', 'tablist');
-    zeile.setAttribute('aria-label', 'Menüband');
+
+    /* DIE `tablist` IST NICHT MEHR DIE GANZE ZEILE (E272 Phase G).
+       In der Zeile stehen inzwischen Dinge, die keine Reiter SIND: die
+       Marke, der Knopf „Datei", Suche, KI, Konto, der Klapp-Pfeil. Eine
+       `role="tablist"` verspricht einem Vorleseprogramm, dass ihre Kinder
+       Reiter sind — „Datei" darin wäre entweder eine Lüge (`role="tab"`
+       für etwas, das eine Fläche öffnet) oder ein namenloses Fremdstück.
+
+       Die Reiter bekommen deshalb ihren eigenen Kasten. Das kostet eine
+       Zeile CSS und macht die Zusage wieder wahr; `test272 §13` misst
+       nach, dass in der Liste NUR Reiter stehen. */
+    const reiterliste = document.createElement('div');
+    reiterliste.className = 'mb-tabs';
+    reiterliste.setAttribute('role', 'tablist');
+    reiterliste.setAttribute('aria-label', 'Menüband');
 
     /* DIE MARKE GANZ LINKS (E272).
        Ein „R" im Gold der App, damit die Zeile links nicht kahl beginnt.
 
-       Sie ist KEIN Knopf und trägt `aria-hidden`. Zwei Gründe, und der
-       zweite ist der wichtigere: erstens erreicht man die Startansicht über
-       „Gehen", ein zweiter Weg dorthin wäre die Doppelung, die E206 beim
-       Welt-Umschalter gerade entfernt hat. Zweitens steht sie IN einer
-       `role="tablist"` — ein Kind darin, das kein `role="tab"` hat und
-       trotzdem angesagt wird, verwirrt Vorleseprogramme mehr, als das
-       Zeichen ihnen nützt.
+       Sie ist KEIN Knopf und trägt `aria-hidden`: man erreicht die
+       Startansicht über „Gehen", und ein zweiter Weg dorthin wäre die
+       Doppelung, die E206 beim Welt-Umschalter gerade entfernt hat. Seit
+       Phase G steht sie ausserhalb der `tablist` — vorher war sie ein
+       Fremdstück darin und musste sich das mit `aria-hidden` erkaufen;
+       jetzt ist sie schlicht Zierrat neben der Liste.
 
        Das Zeichen ist der Buchstabe des Arbeitsbereichs, dasselbe wie im
        Kontokreis rechts — nicht ein zweites, festes „R". Wer seinen
@@ -710,6 +729,32 @@ const Menueband = (() => {
     try { marke.textContent = String(Store.getMeta('arbeitsIcon', 'N')); }
     catch { marke.textContent = 'N'; }
     zeile.appendChild(marke);
+
+    /* ── „DATEI" — KEIN REITER, SONDERN EINE FLÄCHE (E272 Phase G) ──────
+       Die acht Reiter zeigen Befehle für das, was offen ist. „Datei"
+       wirkt auf das Ganze: sichern, drucken, weitergeben, Konto,
+       Einstellungen. Es öffnet deshalb eine eigene Fläche (`backstage.ts`)
+       und trägt `aria-haspopup="dialog"` statt `role="tab"`.
+
+       AB 761 PX. Am Telefon führt derselbe Weg über das R-Blatt
+       (`App.arbeitsbereich()` → Sichern, Importieren, Papierkorb,
+       Tastenkürzel, Einstellungen) — E240 hat die Zeile dort bewusst
+       schlank gehalten, und eine zweite Vollfläche daneben wäre die
+       Doppelung, die E206 gerade weggeräumt hat. Versteckt wird er im
+       Stil, nicht hier: `matchMedia` beim Zeichnen hiesse, dass ein
+       gedrehtes Tablet den Knopf erst beim nächsten Neuzeichnen bekommt. */
+    const datei = document.createElement('button');
+    datei.type = 'button';
+    datei.id = 'mb-datei';
+    datei.className = 'mb-datei';
+    datei.textContent = 'Datei';
+    datei.setAttribute('aria-haspopup', 'dialog');
+    datei.title = 'Datei — sichern, drucken, weitergeben, Einstellungen';
+    datei.addEventListener('click', () => {
+      try { (window as any).Backstage?.schalten?.(); }
+      catch { /* ohne die Fläche bleibt die Zeile stehen */ }
+    });
+    zeile.appendChild(datei);
 
     reiter.forEach((r: any) => {
       const b = document.createElement('button');
@@ -728,8 +773,9 @@ const Menueband = (() => {
       const t = document.createElement('span');
       t.textContent = String(r.name || r.id);
       b.appendChild(t);
-      zeile.appendChild(b);
+      reiterliste.appendChild(b);
     });
+    zeile.appendChild(reiterliste);
 
     const platz = document.createElement('div');
     platz.className = 'mb-platz';

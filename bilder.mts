@@ -141,6 +141,38 @@ const ANSICHTEN: Record<string, { titel: string; bauen: () => void | Promise<voi
     }
   },
 
+  /* ── Die Datei-Fläche (E272 Phase G) ─────────────────────────────────────
+     Zwei Bilder, weil zwei ganz verschiedene Dinge darauf zu sehen sind:
+     „Informationen" zeigt echte Auskünfte (Sicherungsstand, Ordner, Platz),
+     „Neu" den Katalog aus `App.erstellenWege()`. Ein Bild von nur einem
+     Fach hätte die halbe Fläche nie gezeigt. */
+  backstageInfo: {
+    titel: 'Die Datei-Fläche — Informationen',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const s = Store.addPage(null, { text: 'Elektrotechnik — Skript' });
+      Store.addBlock(s.id, 'text', { text: 'U = R · I, und daraus P = U · I.' });
+      App.oeffne(s.id);
+      (window as any).Backstage?.oeffne?.('info');
+      /* Der Platz kommt als Versprechen zurück — ohne Warten stünde auf dem
+         Bild „wird gemessen …", also genau das, was niemand sehen will. */
+      await new Promise(f => setTimeout(f, 320));
+    }
+  },
+
+  backstageNeu: {
+    titel: 'Die Datei-Fläche — Neu',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      (window as any).Backstage?.oeffne?.('neu');
+      await new Promise(f => setTimeout(f, 120));
+    }
+  },
+
   schaleBandStart: {
     titel: 'Die Schale — Menüband offen, Reiter Start',
     bauen: async () => {

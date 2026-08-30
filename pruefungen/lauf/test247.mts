@@ -165,7 +165,15 @@ const grund = await seite.evaluate(() => {
     aktiv: [...document.querySelectorAll('#menueband [data-mb-reiter]')]
       .filter(b => b.getAttribute('aria-selected') === 'true')
       .map(b => (b as HTMLElement).dataset['mbReiter']),
-    rolle: band?.querySelector('.mb-reiter')?.getAttribute('role'),
+    /* SEIT E272 PHASE G LIEGT DIE ROLLE AUF DEM INNEREN KASTEN.
+       In `.mb-reiter` stehen inzwischen die Marke, „Datei", Suche, KI,
+       Konto und der Klapp-Pfeil — nichts davon ist ein Reiter. Die
+       `tablist` ist deshalb `.mb-tabs`. */
+    rolle: band?.querySelector('.mb-tabs')?.getAttribute('role'),
+    /* Und die Zusage muss stimmen: NUR Reiter darin. */
+    fremdInListe: [...(band?.querySelector('.mb-tabs')?.children ?? [])]
+      .filter(k => k.getAttribute('role') !== 'tab')
+      .map(k => k.className),
     registerZahl: Register?.menueband?.anzahl?.() ?? -1
   };
 });
@@ -186,7 +194,11 @@ p('Alle acht Reiter stehen da',
 p('Und „Werkzeuge" ist wirklich weg, nicht nur leer',
   !grund.reiter.includes('werkzeuge'), grund.reiter.join(', '));
 p('Genau EIN Reiter ist gewählt', grund.aktiv.length === 1, grund.aktiv.join(','));
-p('Die Reiterzeile ist eine tablist (§38)', grund.rolle === 'tablist', String(grund.rolle));
+p('Die Reiterliste ist eine tablist (§38)', grund.rolle === 'tablist', String(grund.rolle));
+/* GEGENPROBE-TAUGLICH: wer „Datei" wieder in die Liste schiebt, macht
+   diesen Punkt rot — genau das war der Grund fuer den inneren Kasten. */
+p('… und darin steht NUR, was ein Reiter ist',
+  grund.fremdInListe.length === 0, grund.fremdInListe.join(' | '));
 p('Das Register hat mehr als achtzig Einträge', grund.registerZahl > 80,
   String(grund.registerZahl));
 

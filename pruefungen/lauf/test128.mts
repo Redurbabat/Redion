@@ -449,16 +449,82 @@ const KONTRAST_MESSUNG = `(async () => {
   };
   /* Der Grund eines Knopfes kann durchsichtig sein — dann zählt der Grund
      dahinter. Ohne diesen Aufstieg misst man Transparenz gegen Transparenz
-     und bekommt für jeden schlichten Knopf einen Fehlalarm. */
-  const grundVon = (el) => {
+     und bekommt für jeden schlichten Knopf einen Fehlalarm.
+
+     UND HALBDURCHSICHTIG IST NICHT DECKEND (E272 Phase G). Der erste
+     Aufstieg hielt bei der ersten Farbe mit Alpha über 0,05 an und rechnete
+     mit ihr, als wäre sie deckend. Beim gewählten Reiter des Menübands ist
+     der Grund die Marke --gold-glass: Gold zu 13 Prozent über fast Schwarz.
+     Gemessen ergab das 1,34 zu 1 und war ein Fehlalarm: wirklich sind es
+     9,04 zu 1, denn 13 Prozent Gold über #1b1d20 ist #333129 und nicht
+     Gold. Die Schichten werden deshalb übereinandergerechnet, bis eine
+     deckt — genau das, was der Browser auch tut.
+
+     Das ist derselbe Grund, aus dem der Absatz darüber steht: ein Messgerät
+     mit Fehlalarmen wird abgeschaltet, und dann sieht es den echten Fall
+     auch nicht mehr. */
+  /* UND EIN VERLAUF IST AUCH EIN GRUND (E272 Phase G).
+     Redions Hauptknoepfe tragen die Marke --haupt-flaeche, und die ist ein
+     linear-gradient — also ein background-IMAGE. backgroundColor gibt
+     dafuer rgba(0,0,0,0) zurueck. Der Aufstieg lief deshalb an der
+     violetten Flaeche vorbei bis zur weissen Tafel dahinter und meldete
+     weisse Schrift auf Weiss: 1,07 zu 1 fuer "Simulation starten".
+
+     GEMESSEN AM LAUFENDEN KNOPF: color rgb(255,255,255),
+     backgroundColor rgba(0,0,0,0), backgroundImage
+     linear-gradient(rgb(124,58,237), color(srgb 0.44 0.20 0.84)) — der
+     Knopf ist violett und weiss lesbar. L84 war ein Messfehler, kein
+     Kontrastfehler.
+
+     Genommen wird die Farbstufe des Verlaufs mit dem SCHLECHTESTEN
+     Kontrast: ein Waechter darf im Zweifel strenger sein, nie milder. */
+  const stufenAusVerlauf = (el) => {
+    const bild = getComputedStyle(el).backgroundImage;
+    if (!bild || bild === 'none' || !/gradient\\(/.test(bild)) return [];
+    return (bild.match(/rgba?\\([^)]*\\)|color\\([^)]*\\)/g) || [])
+      .map(zahl).filter(t => t.length >= 3 && (t.length < 4 || t[3] > 0.5))
+      .map(t => [t[0], t[1], t[2]]);
+  };
+  const grundVon = (el, vorne) => {
     let knoten = el;
+    const schichten = [];
     while (knoten && knoten !== document.documentElement) {
-      const farbe = getComputedStyle(knoten).backgroundColor;
-      const teile = zahl(farbe);
-      if (teile.length >= 3 && (teile.length < 4 || teile[3] > 0.05)) return teile;
+      const teile = zahl(getComputedStyle(knoten).backgroundColor);
+      let gesetzt = false;
+      if (teile.length >= 3) {
+        const alpha = teile.length < 4 ? 1 : teile[3];
+        if (alpha > 0.001) {
+          schichten.push([teile[0], teile[1], teile[2], alpha]);
+          gesetzt = true;
+          if (alpha >= 0.999) break;              /* deckt — dahinter zählt nichts */
+        }
+      }
+      if (!gesetzt) {
+        const stufen = stufenAusVerlauf(knoten);
+        if (stufen.length) {
+          const hellV = helligkeit(vorne);
+          let schlimmste = stufen[0], schlecht = Infinity;
+          for (const st of stufen) {
+            const h = helligkeit(st);
+            const k = (Math.max(hellV, h) + 0.05) / (Math.min(hellV, h) + 0.05);
+            if (k < schlecht) { schlecht = k; schlimmste = st; }
+          }
+          schichten.push([schlimmste[0], schlimmste[1], schlimmste[2], 1]);
+          break;                                   /* ein Verlauf deckt */
+        }
+      }
       knoten = knoten.parentElement;
     }
-    return [255, 255, 255];
+    /* Von hinten nach vorne zusammenrechnen. Deckt keine Schicht, liegt
+       ganz hinten das Weiss der Seite. */
+    let unten = [255, 255, 255];
+    if (schichten.length && schichten[schichten.length - 1][3] >= 0.999)
+      unten = schichten.pop().slice(0, 3);
+    for (let i = schichten.length - 1; i >= 0; i--) {
+      const s = schichten[i], a = s[3];
+      unten = [0, 1, 2].map(k => a * s[k] + (1 - a) * unten[k]);
+    }
+    return unten;
   };
   const schlecht = [];
   document.querySelectorAll('button').forEach(knopf => {
@@ -470,7 +536,7 @@ const KONTRAST_MESSUNG = `(async () => {
     if (!(knopf.textContent || '').trim()) return;
     const vorne = zahl(stil.color);
     if (vorne.length >= 4 && vorne[3] < 0.5) return;
-    const hell1 = helligkeit(vorne), hell2 = helligkeit(grundVon(knopf));
+    const hell1 = helligkeit(vorne), hell2 = helligkeit(grundVon(knopf, vorne));
     const kontrast = (Math.max(hell1, hell2) + 0.05) / (Math.min(hell1, hell2) + 0.05);
     if (kontrast < 3)
       schlecht.push(((knopf.textContent || '').trim().slice(0, 34)) +

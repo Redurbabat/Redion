@@ -3005,8 +3005,38 @@ L83 — Was zwischen „gepusht" und „Redur sieht es" noch fehlt (E271)
 Gefunden am 30. August 2026 (beim Bau von E271, durch die Prüfung).
 
 ================================================================================
-L84 — „Simulation starten" ist im Hellmodus unlesbar (älter als E271)
+L84 — ERLEDIGT: „Simulation starten" war lesbar, die MESSUNG war falsch
 ================================================================================
+
+**Aufgelöst am 30. August 2026 in E272 Phase G — und zwar anders, als hier
+stand.** Der Knopf hatte nie einen Kontrastfehler. Nachgemessen am laufenden
+Knopf:
+
+    color            rgb(255, 255, 255)
+    backgroundColor  rgba(0, 0, 0, 0)
+    backgroundImage  linear-gradient(rgb(124,58,237), color(srgb 0.44 0.20 0.84))
+
+Redions Hauptknöpfe tragen die Marke `--haupt-flaeche`, und die ist ein
+Verlauf — also ein background-IMAGE. `getComputedStyle(el).backgroundColor`
+gibt dafür `rgba(0,0,0,0)` zurück. Der Aufstieg in `test128` suchte den
+ersten deckenden Grund, lief an der violetten Fläche vorbei und landete auf
+der weissen Tafel dahinter: weiss auf weiss, 1,07 zu 1. Weiss auf #7c3aed
+sind in Wahrheit rund 5,3 zu 1.
+
+Der Absatz oben (E142, `lernwelt.css:538-544`) erreicht den Knopf also sehr
+wohl — die Vermutung, ein Selektor sei dazwischengekommen, war falsch. Sie
+stand hier drei Wochen und hat einen ganzen Abschnitt lang plausibel
+geklungen; das ist genau der Grund, warum die Notiz „im Browser messen, nicht
+aus der Datei lesen" darin steht.
+
+Die Messung liest jetzt auch Verläufe (mit ihrer schlechtesten Farbstufe) und
+rechnet halbdurchsichtige Schichten übereinander. Sie fand danach denselben
+echten Fall, den ihre eigene Gegenprobe einbaut — sie ist also nicht blind
+geworden, sondern genauer. **test128: 54 ok, 0 offen.**
+
+Was hier vorher stand, bleibt als Beleg stehen:
+
+--------------------------------------------------------------------------------
 
 `test128` meldet: **Prüfungszentrale, hell — „Simulation starten" [1.07:1].**
 Ein Kontrast von 1,07 zu 1 heisst: der Knopf ist da, er ist anklickbar, und
@@ -3251,3 +3281,26 @@ Der gemeinsame Nenner: beide Prüfungen massen die richtige Grösse am falschen
 Gegenstand. Beim nächsten Mal lohnt die Frage vor dem Schreiben — was müsste
 kaputt sein, damit dieser Punkt rot wird, und kann das im gemessenen Zustand
 überhaupt eintreten?
+
+--------------------------------------------------------------------------------
+L90 — Der Namensraum `bs-` ist doppelt vergeben (E272 Phase G)
+--------------------------------------------------------------------------------
+
+`bs-` gehört seit dem Formelbuch der BUCHSEITE: `.bs-zeile`, `.bs-kopf`,
+`.bs-inhalt`, `.bs-groessen`, `.bs-formel` und ein Dutzend mehr stehen in
+`bausteine.css`. Die Datei-Fläche griff beim ersten Entwurf danach — und
+erbte prompt `font-weight:700` und `--accent-text` in ihren Unterzeilen. Sie
+heisst jetzt `bst-`.
+
+DIE LÜCKE IST NICHT DIESE EINE STELLE, SONDERN DASS NICHTS DAVOR WARNT.
+Redion hat rund vierzig CSS-Namensräume mit zwei bis vier Buchstaben (`mb-`,
+`lw-`, `dz-`, `rt-`, `sp-`, `fh-`, `bs-`, `bst-` …), und keiner ist
+irgendwo aufgeschrieben. Der nächste neue Bereich greift genauso ins Leere,
+und der Fehler sieht wieder nicht wie ein Fehler aus — er sieht aus wie ein
+Stil, den man nicht bestellt hat.
+
+Was helfen würde: ein Prüfpunkt, der die Präfixe aus allen Stildateien
+sammelt und meldet, wenn zwei Bereiche denselben benutzen. Nicht gebaut —
+das gehört in einen eigenen Bogen und nicht in eine Schalen-Phase.
+
+Gefunden am 30. August 2026 (E272 Phase G, auf dem Bild).

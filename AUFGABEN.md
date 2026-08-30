@@ -1852,4 +1852,13 @@ node pruefungen/lauf/test105.mjs
   Kontextkante. Beide Register führen jetzt ein Feld `zeichen` mit einem
   Strichzeichen; im Band standen sonst dreizehn Emoji nebeneinander (E202).
   Eine Phase-A-Behauptung berichtigt: die fünf unsichtbaren Wege auf Platz
-  `unten` sind alle Doppelungen.
+  `unten` sind alle Doppelungen. sw v40.
+* E272 Phase G (Datei-Backstage): „Datei" ist kein Reiter, sondern eine
+  Fläche mit neun Fächern — `src/schale/aufbau/backstage.ts`, jede Zeile an
+  einem Dienst, den es gibt, kein eigener Erstellcode. Sie ist eine
+  `.overlay`, damit `fokus.ts` Rolle, Fokusfalle und `inert` auflegt; die
+  `tablist` sitzt jetzt auf `.mb-tabs` statt auf der ganzen Zeile. Drei
+  Funde nur durch Hinsehen (Namensraum `bs-` doppelt → L90, „Datei" sah aus
+  wie ein Reiter, ISO-Datum), Esc schliesst jetzt die oberste Überlagerung.
+  L84 aufgelöst: kein Kontrastfehler, ein Messfehler — test128 liest jetzt
+  Verläufe und rechnet Alpha-Schichten. sw v41.

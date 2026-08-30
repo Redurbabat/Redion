@@ -329,6 +329,26 @@ nachgelesen, nicht angenommen.
 | | `Verbindungen.dialog()` | **Drittkonten** (Google, GitHub, Jira) — ein anderes Ding |
 | Optionen | `Einstellungen.oeffne(bereich?)`, `Aussehen.dialog()`, `App.theme()`, `Werkzeuge.tastenkuerzel()` | |
 
+### Gebaut in Phase G — was daraus wurde
+
+Neun Fächer, in dieser Reihenfolge:
+
+    info · neu · oeffnen · kopie · drucken · weitergeben · export · konto · optionen
+
+Vier Abweichungen von der Tabelle darüber, alle gemessen:
+
+| Punkt | Was der Plan sagte | Was gebaut wurde, und warum |
+|---|---|---|
+| Wurzel | statisches `<div id="backstage" hidden>` in `index.html` | eine `.overlay`, gebaut und wieder entfernt — nur so legt `fokus.ts` (E223) Rolle, `aria-modal`, Fokus, Tabulatorkreis, Rückkehr und `inert` von selbst auf |
+| Esc | eigener Tastenhorcher | keiner nötig: `schale.ts` räumt `.overlay` schon weg. Dabei fiel auf, dass es die ERSTE im Baum nahm statt der obersten — repariert |
+| Klassen | `bs-` | `bst-`: `bs-` gehört seit dem Formelbuch der Buchseite (L90) |
+| „Datei" am Telefon | Blatt (test155) | der KNOPF entfällt unter 761 px — das R-Blatt (E236) trägt dort dieselben Wege. Die FLÄCHE wird trotzdem zum Blatt, für schmale Fenster |
+
+Ausserdem: die `role="tablist"` sitzt jetzt auf `.mb-tabs` und nicht mehr
+auf `.mb-reiter`. In der Zeile stehen Marke, „Datei", Suche, KI, Konto und
+der Klapp-Pfeil — eine Liste, die etwas anderes enthält als das, was sie
+ansagt, ist für ein Vorleseprogramm schlimmer als gar keine.
+
 ### Die Sektion „Senden" gibt es nicht
 
 Der Prototyp hat sie. Redion hat keinen Sendeweg: **`Mail.senden` existiert

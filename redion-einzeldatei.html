@@ -1814,6 +1814,14 @@ body[data-ruhig="an"] #topbar [data-ruhig="mehr"]{ display:none }
   background:var(--bg-hover); color:var(--text); font-weight:600;
 }
 
+/* ── Die Reiterliste in der Reiterzeile (E272 Phase G) ────────────────────
+   `.mb-reiter` ist die ganze Zeile — Marke, „Datei", Reiter, Suche, KI,
+   Konto, Klapp-Pfeil. Die `role="tablist"` sitzt seit Phase G auf diesem
+   inneren Kasten, damit sie nur das ansagt, was wirklich ein Reiter ist.
+   Er darf nicht schrumpfen: sonst quetscht die rechte Gruppe die Reiter
+   zusammen, statt dass die Zeile rollt. */
+.mb-tabs{ display:flex; align-items:stretch; gap:var(--space-1); flex:0 0 auto }
+
 </style>
 <style>
 /* ===== quell/schale/stil/anatomie.css ===== */
@@ -13066,6 +13074,43 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
     user-select: none;
   }
 
+  /* ── „Datei" — der Knopf, der eine Fläche öffnet (Phase G) ────────────────
+     Er steht links neben den Reitern und sieht aus wie einer, ist aber
+     keiner: `aria-haspopup="dialog"`, kein `role="tab"`. Damit man das
+     SIEHT und nicht nur hört, trägt er den Goldfond dauerhaft — die Reiter
+     bekommen ihn erst, wenn sie gewählt sind.
+
+     VOLLES GOLD, NICHT DER SCHLEIER. Der erste Anlauf gab ihm `--gold-glass`
+     — auf dem Bild sah er dann aus wie der GEWÄHLTE Reiter daneben (der
+     trägt denselben Schleier), und die zwei einzigen goldenen Stellen der
+     Zeile waren nicht auseinanderzuhalten. Office füllt „Datei" seit 2010
+     satt, und aus genau diesem Grund: es ist kein Reiter, also darf es auch
+     nicht wie einer aussehen.
+
+     Gemessen: dunkle Schrift `--schale-grund` auf `--gold` ergibt 7,46 im
+     Hellmodus und 8,76 im Dunkelmodus — beides weit über den 4,5 für
+     kleinen Text. */
+  body[data-schale="premium"] .mb-datei{
+    flex: 0 0 auto;
+    display: inline-flex; align-items: center;
+    min-height: var(--shell-reiter-h);
+    padding: 0 var(--space-4);
+    margin-right: var(--space-2);
+    font-size: 12.5px; font-weight: 600;
+    color: var(--schale-grund);
+    background: var(--gold);
+    border: none; border-radius: 0;
+    cursor: pointer;
+  }
+  body[data-schale="premium"] .mb-datei:hover{
+    background: var(--gold-bright);
+    color: var(--schale-grund);
+  }
+  body[data-schale="premium"] .mb-datei:focus-visible{
+    outline: 2px solid var(--gold-bright);
+    outline-offset: -3px;
+  }
+
   /* ── Die Reiter ───────────────────────────────────────────────────────────
      NUR TEXT, kein Zeichen. Neun Reiter mit Zeichen wären eine Zeile voller
      kleiner Bilder, die niemand unterscheidet; die Namen sind kurz genug.
@@ -13327,12 +13372,202 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   AM TELEFON ÄNDERT SICH NICHTS
+   DIE DATEI-FLÄCHE (Backstage, E272 Phase G)
    ───────────────────────────────────────────────────────────────────────────
-   Der ganze Block oben hängt an `min-width: 761px`. Unter 760 px bleibt das
-   Band Redions Menü (E240) und die untere Fünferleiste der Hauptweg. Wer
-   hier etwas ergänzt, muss dieselbe Grenze ziehen.
+   SIE STEHT AUSSERHALB DES 761-PX-BLOCKS, und das ist Absicht. Der Knopf,
+   der sie öffnet, ist am Telefon versteckt (§ oben) — aber ein gedrehtes
+   Tablet, ein schmal gezogenes Fenster oder ein Prüflauf können sie trotzdem
+   zeigen. Eine Fläche, die dann als Rechner-Kasten mitten im Bild stünde,
+   wäre genau der Fehler, den test155 für Menüs schon einmal gefunden hat.
+
+   Sie ist eine `.overlay` und erbt von dort `position:fixed; inset:0`. Was
+   hier steht, hebt nur die Suchfeld-Haltung auf: die Suche schwebt mit
+   14 vh Abstand von oben, die Datei-Fläche nimmt das ganze Bild.
    ═══════════════════════════════════════════════════════════════════════════ */
+
+.overlay.bst-grund{
+  padding-top: 0;
+  align-items: stretch; justify-content: stretch;
+  background: var(--schale-grund);
+}
+
+.backstage{
+  display: flex; flex: 1 1 auto; min-height: 0;
+  background: var(--bg);
+}
+
+/* ── Die linke Spalte ──────────────────────────────────────────────────────
+   202 px, dunkel wie die Reiterzeile. Sie rollt für sich: neun Fächer
+   passen, ein zehntes soll die Fläche daneben nicht mitnehmen. */
+.bst-nav{
+  flex: 0 0 var(--backstage-nav-b);
+  display: flex; flex-direction: column;
+  gap: 2px; padding: var(--space-3) 0;
+  background: var(--schale-grund);
+  overflow-y: auto;
+}
+
+.bst-zurueck{
+  display: flex; align-items: center; gap: var(--space-2);
+  min-height: 40px; padding: 0 var(--space-4);
+  margin-bottom: var(--space-3);
+  font-size: 13px; font-weight: 600;
+  color: var(--gold-bright);
+  background: none; border: none; border-radius: 0;
+  cursor: pointer; text-align: left;
+}
+.bst-zurueck:hover{ background: color-mix(in srgb, #ffffff 8%, transparent) }
+.bst-zurueck:focus-visible{ outline: 2px solid var(--gold-bright); outline-offset: -3px }
+
+.bst-nav-knopf{
+  display: block; width: 100%;
+  min-height: 38px; padding: 0 var(--space-4);
+  font-size: 13px;
+  color: var(--schale-still);
+  background: none; border: none; border-radius: 0;
+  border-left: 3px solid transparent;
+  cursor: pointer; text-align: left;
+}
+.bst-nav-knopf:hover{ color: var(--schale-text); background: color-mix(in srgb, #ffffff 6%, transparent) }
+/* §38: das gewählte Fach ist nicht NUR an der Farbe zu erkennen — es trägt
+   den Goldstrich links, mehr Schriftgewicht und `aria-current="page"`. */
+.bst-nav-knopf.ist-an{
+  color: var(--gold-bright); font-weight: 600;
+  border-left-color: var(--gold);
+  background: var(--gold-glass);
+}
+.bst-nav-knopf:focus-visible{ outline: 2px solid var(--gold-bright); outline-offset: -3px }
+
+/* ── Die rechte Fläche ─────────────────────────────────────────────────── */
+.bst-flaeche{
+  flex: 1 1 auto; min-width: 0;
+  padding: var(--space-6) var(--space-6) var(--space-8);
+  overflow-y: auto;
+  background: var(--bg);
+}
+.bst-flaeche:focus{ outline: none }
+
+/* EINE LESEBREITE, NICHT DIE FENSTERBREITE.
+   Beim ersten Hinsehen (1440 px) waren die Zeilen 1198 px breit: der Name
+   klebte links, der Pfeil ‚›' stand einen Meter weiter rechts, und dazwischen
+   war nichts. Eine Zeile, deren Anfang und Ende nicht zusammen ins Auge
+   passen, liest sich nicht als eine Zeile. Die Kacheln dürfen breiter sein —
+   sie werden gescannt, nicht gelesen. */
+.bst-titel{ margin: 0 0 var(--space-2); font-size: 26px; font-weight: 600; color: var(--text) }
+.bst-unter{ margin: 0 0 var(--space-6); max-width: 62ch; font-size: 13.5px; color: var(--text-muted) }
+.bst-grp{
+  max-width: 760px;
+  margin: var(--space-6) 0 var(--space-2);
+  font-size: 11.5px; font-weight: 700; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--text-faint);
+}
+
+/* Eine Auskunft ohne Handlung. Kein Knopf — es gibt hier nichts zu klicken,
+   und ein Kasten, der wie ein Knopf aussieht und keiner ist, ist eine
+   Enttäuschung mit Ansage. */
+.bst-fakt{
+  max-width: 760px;
+  display: flex; align-items: baseline; gap: var(--space-3);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 13.5px;
+}
+.bst-fakt b{ flex: 0 0 190px; font-weight: 500; color: var(--text-muted) }
+.bst-fakt span{ color: var(--text) }
+/* Die zwei Stufen aus `Sicherung.stand()`. Die Farbe ist die zweite
+   Auskunft; die erste ist der Satz selbst (§38). */
+.bst-fakt.ist-erinnern span{ color: var(--warnung) }
+.bst-fakt.ist-warnen span{ color: var(--gefahr); font-weight: 600 }
+
+/* DER NAME MUSS AUF DERSELBEN SENKRECHTEN STEHEN wie die Auskünfte
+   darüber. Das Polster links schob ihn sonst um 12 px ein — nebeneinander
+   sah das aus wie zwei verschiedene Spalten. Der negative Rand nimmt das
+   Polster wieder heraus, ohne die Klickfläche zu verkleinern. */
+.bst-zeile{
+  display: flex; align-items: center; gap: var(--space-3);
+  width: 100%; max-width: 784px; min-height: 46px; padding: var(--space-2) var(--space-3);
+  margin-left: calc(var(--space-3) * -1);
+  background: none; border: none; border-radius: var(--radius-md);
+  cursor: pointer; text-align: left;
+}
+.bst-zeile:hover{ background: var(--gold-glass) }
+.bst-zeile:focus-visible{ outline: 2px solid var(--gold); outline-offset: -2px }
+.bst-z-t{ flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 1px }
+.bst-z-t b{ font-size: 13.5px; font-weight: 500; color: var(--text) }
+.bst-z-t i{ font-style: normal; font-size: 12px; color: var(--text-muted) }
+.bst-z-pfeil{ flex: 0 0 auto; color: var(--text-faint); font-size: 16px }
+
+/* ── „Neu": der Katalog aus `App.erstellenWege()` ─────────────────────────
+   Kacheln und keine Liste, weil hier gewählt und nicht gelesen wird. Die
+   Spaltenzahl ist nicht gesetzt, sondern gerechnet: `auto-fill` mit einer
+   Mindestbreite füllt jede Fensterbreite, ohne dass irgendwo eine Zahl
+   steht, die man beim nächsten Mass vergisst. */
+.bst-kacheln{
+  max-width: 1000px;
+  display: grid; gap: var(--space-3);
+  grid-template-columns: repeat(auto-fill, minmax(232px, 1fr));
+}
+.bst-kachel{
+  display: flex; align-items: flex-start; gap: var(--space-3);
+  padding: var(--space-3); min-height: 62px;
+  background: var(--bg-side); border: 1px solid var(--line);
+  border-radius: var(--radius-md); cursor: pointer; text-align: left;
+}
+.bst-kachel:hover{ background: var(--gold-glass); border-color: var(--gold-deep) }
+.bst-kachel:focus-visible{ outline: 2px solid var(--gold); outline-offset: 1px }
+.bst-k-z{ flex: 0 0 auto; font-size: 19px; line-height: 1.2 }
+.bst-k-t{ flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px }
+.bst-k-t b{ font-size: 13.5px; font-weight: 600; color: var(--text) }
+.bst-k-t i{ font-style: normal; font-size: 12px; color: var(--text-muted) }
+
+/* ── Am Telefon: ein Blatt, keine zwei Spalten (test155) ──────────────────
+   202 px Navigation plus Inhalt liessen bei 390 px genau 129 px für den
+   Inhalt übrig — dieselbe Rechnung, die E58 für die Einstellungen gemacht
+   hat. Die Fächer werden deshalb eine rollende Zeile oben, der Inhalt
+   bekommt die ganze Breite. */
+@media (max-width: 760px){
+  .backstage{ flex-direction: column }
+  .bst-nav{
+    flex: 0 0 auto; flex-direction: row; align-items: center;
+    gap: 0; padding: 0 var(--space-2);
+    overflow-x: auto; overflow-y: hidden; scrollbar-width: none;
+  }
+  .bst-nav::-webkit-scrollbar{ display: none }
+  .bst-zurueck{ margin: 0 var(--space-2) 0 0; flex: 0 0 auto; min-height: 44px }
+  .bst-nav-knopf{
+    width: auto; flex: 0 0 auto; min-height: 44px;
+    padding: 0 var(--space-3); white-space: nowrap;
+    border-left: none; border-bottom: 2px solid transparent;
+  }
+  .bst-nav-knopf.ist-an{ border-left: none; border-bottom-color: var(--gold) }
+  .bst-flaeche{ padding: var(--space-4) var(--space-4) var(--space-8) }
+  .bst-titel{ font-size: 21px }
+  .bst-fakt{ flex-direction: column; gap: 2px }
+  .bst-fakt b{ flex: none }
+  .bst-kacheln{ grid-template-columns: 1fr }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   AM TELEFON ÄNDERT SICH FAST NICHTS
+   ───────────────────────────────────────────────────────────────────────────
+   Der Reiterzeilen-Block oben hängt an `min-width: 761px`. Unter 760 px
+   bleibt das Band Redions Menü (E240) und die untere Fünferleiste der
+   Hauptweg. Wer dort etwas ergänzt, muss dieselbe Grenze ziehen.
+
+   EINE AUSNAHME, und sie ist eine Wegnahme: der Knopf „Datei". Am Telefon
+   führt derselbe Weg über das R-Blatt — Sichern, Importieren, Papierkorb,
+   Tastenkürzel, Einstellungen stehen dort seit E236. Ein zweiter
+   Vollflächen-Weg daneben wäre die Doppelung, die E206 gerade weggeräumt
+   hat, und er kostete Platz in einer Zeile, die ohnehin rollt.
+
+   VERSTECKT, NICHT WEGGELASSEN. Der Knopf steht im Baum; wer das Fenster
+   aufzieht, hat ihn sofort. Ihn beim Zeichnen wegzulassen hiesse, dass ein
+   gedrehtes Tablet ihn erst beim nächsten Neuzeichnen bekommt.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 760px){
+  .mb-datei{ display: none }
+}
 
 </style>
 
@@ -114223,7 +114458,8 @@ window.Kopfleiste = Kopfleiste;
  * DER AUFBAU
  *
  *     <div id="menueband">
- *       <div class="mb-reiter">   Start · Einfügen · Zeichnen · …
+ *       <div class="mb-reiter">   R · Datei · <div class="mb-tabs" role=tablist>
+ *                                 Gehen · Start · Einfügen · … </div> · ⌕ ✦ K ⌄
  *       <div class="mb-band">     die Gruppen des gewählten Reiters
  *
  * Der gewählte Reiter und „zugeklappt oder nicht" stehen in `meta` und
@@ -114239,10 +114475,16 @@ window.Kopfleiste = Kopfleiste;
  *
  * TASTATUR (§38)
  *
- * Die Reiterzeile ist eine echte `tablist`: Pfeiltasten wandern, Pos1 und
+ * Die Reiterliste ist eine echte `tablist`: Pfeiltasten wandern, Pos1 und
  * Ende springen, und nur der gewählte Reiter ist in der Tabulator-Reihenfolge.
- * Das ist nicht Zierde — ohne das ist ein Menüband mit sechs Reitern für
+ * Das ist nicht Zierde — ohne das ist ein Menüband mit acht Reitern für
  * jeden, der nicht mit der Maus arbeitet, eine Sackgasse.
+ *
+ * Die `tablist` ist seit E272 Phase G der INNERE Kasten `.mb-tabs` und
+ * nicht mehr die ganze Zeile: neben den Reitern stehen dort die Marke,
+ * „Datei", Suche, KI, Konto und der Klapp-Pfeil, und keines davon ist ein
+ * Reiter. Eine Liste, die etwas anderes enthält als das, was sie ansagt,
+ * ist für ein Vorleseprogramm schlimmer als gar keine.
  * ==========================================================================*/
 const Menueband = (() => {
     /* Wo im Baum es hängt. `index.html` legt den Kasten an; hier wird er nur
@@ -114918,18 +115160,29 @@ const Menueband = (() => {
         /* ── die Reiterzeile ── */
         const zeile = document.createElement('div');
         zeile.className = 'mb-reiter';
-        zeile.setAttribute('role', 'tablist');
-        zeile.setAttribute('aria-label', 'Menüband');
+        /* DIE `tablist` IST NICHT MEHR DIE GANZE ZEILE (E272 Phase G).
+           In der Zeile stehen inzwischen Dinge, die keine Reiter SIND: die
+           Marke, der Knopf „Datei", Suche, KI, Konto, der Klapp-Pfeil. Eine
+           `role="tablist"` verspricht einem Vorleseprogramm, dass ihre Kinder
+           Reiter sind — „Datei" darin wäre entweder eine Lüge (`role="tab"`
+           für etwas, das eine Fläche öffnet) oder ein namenloses Fremdstück.
+    
+           Die Reiter bekommen deshalb ihren eigenen Kasten. Das kostet eine
+           Zeile CSS und macht die Zusage wieder wahr; `test272 §13` misst
+           nach, dass in der Liste NUR Reiter stehen. */
+        const reiterliste = document.createElement('div');
+        reiterliste.className = 'mb-tabs';
+        reiterliste.setAttribute('role', 'tablist');
+        reiterliste.setAttribute('aria-label', 'Menüband');
         /* DIE MARKE GANZ LINKS (E272).
            Ein „R" im Gold der App, damit die Zeile links nicht kahl beginnt.
     
-           Sie ist KEIN Knopf und trägt `aria-hidden`. Zwei Gründe, und der
-           zweite ist der wichtigere: erstens erreicht man die Startansicht über
-           „Gehen", ein zweiter Weg dorthin wäre die Doppelung, die E206 beim
-           Welt-Umschalter gerade entfernt hat. Zweitens steht sie IN einer
-           `role="tablist"` — ein Kind darin, das kein `role="tab"` hat und
-           trotzdem angesagt wird, verwirrt Vorleseprogramme mehr, als das
-           Zeichen ihnen nützt.
+           Sie ist KEIN Knopf und trägt `aria-hidden`: man erreicht die
+           Startansicht über „Gehen", und ein zweiter Weg dorthin wäre die
+           Doppelung, die E206 beim Welt-Umschalter gerade entfernt hat. Seit
+           Phase G steht sie ausserhalb der `tablist` — vorher war sie ein
+           Fremdstück darin und musste sich das mit `aria-hidden` erkaufen;
+           jetzt ist sie schlicht Zierrat neben der Liste.
     
            Das Zeichen ist der Buchstabe des Arbeitsbereichs, dasselbe wie im
            Kontokreis rechts — nicht ein zweites, festes „R". Wer seinen
@@ -114944,6 +115197,33 @@ const Menueband = (() => {
             marke.textContent = 'N';
         }
         zeile.appendChild(marke);
+        /* ── „DATEI" — KEIN REITER, SONDERN EINE FLÄCHE (E272 Phase G) ──────
+           Die acht Reiter zeigen Befehle für das, was offen ist. „Datei"
+           wirkt auf das Ganze: sichern, drucken, weitergeben, Konto,
+           Einstellungen. Es öffnet deshalb eine eigene Fläche (`backstage.ts`)
+           und trägt `aria-haspopup="dialog"` statt `role="tab"`.
+    
+           AB 761 PX. Am Telefon führt derselbe Weg über das R-Blatt
+           (`App.arbeitsbereich()` → Sichern, Importieren, Papierkorb,
+           Tastenkürzel, Einstellungen) — E240 hat die Zeile dort bewusst
+           schlank gehalten, und eine zweite Vollfläche daneben wäre die
+           Doppelung, die E206 gerade weggeräumt hat. Versteckt wird er im
+           Stil, nicht hier: `matchMedia` beim Zeichnen hiesse, dass ein
+           gedrehtes Tablet den Knopf erst beim nächsten Neuzeichnen bekommt. */
+        const datei = document.createElement('button');
+        datei.type = 'button';
+        datei.id = 'mb-datei';
+        datei.className = 'mb-datei';
+        datei.textContent = 'Datei';
+        datei.setAttribute('aria-haspopup', 'dialog');
+        datei.title = 'Datei — sichern, drucken, weitergeben, Einstellungen';
+        datei.addEventListener('click', () => {
+            try {
+                window.Backstage?.schalten?.();
+            }
+            catch { /* ohne die Fläche bleibt die Zeile stehen */ }
+        });
+        zeile.appendChild(datei);
         reiter.forEach((r) => {
             const b = document.createElement('button');
             b.type = 'button';
@@ -114962,8 +115242,9 @@ const Menueband = (() => {
             const t = document.createElement('span');
             t.textContent = String(r.name || r.id);
             b.appendChild(t);
-            zeile.appendChild(b);
+            reiterliste.appendChild(b);
         });
+        zeile.appendChild(reiterliste);
         const platz = document.createElement('div');
         platz.className = 'mb-platz';
         zeile.appendChild(platz);
@@ -115490,6 +115771,562 @@ const Menueband = (() => {
     return { start, zeichne, zeige, WURZEL };
 })();
 window.Menueband = Menueband;
+
+</script>
+<script>
+/* ===== quell/schale/aufbau/backstage.js ===== */
+"use strict";
+/* ============================================================================
+ * backstage.js — „Datei": eine Fläche statt eines Menübands
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/schale/aufbau/backstage.ts`. `npm run bauen:ts` schreibt daraus
+ * `quell/schale/aufbau/backstage.js`. Wer das .js bearbeitet, verliert die Änderung beim
+ * nächsten Bauen; `pruefungen/lauf/test105.mts` meldet es vorher.
+ * ----------------------------------------------------------------------------
+ * WARUM „DATEI" KEIN REITER IST (E272 Phase G).
+ *
+ * Die anderen acht Reiter zeigen Befehle, die auf das wirken, was gerade
+ * offen ist — fett machen, einen Block einfügen, eine Linie ziehen. „Datei"
+ * wirkt auf das Ganze: sichern, drucken, weitergeben, das Konto, die
+ * Einstellungen. Office trennt das seit 2010 in eine eigene Fläche, und der
+ * Grund ist nicht Geschmack: wer eine Sicherung schreibt, tut das nicht
+ * nebenbei zwischen zwei Sätzen. Die Fläche nimmt den Bildschirm, sagt in
+ * ganzen Sätzen, was Sache ist, und geht wieder.
+ *
+ * WAS HIER NEU IST: NICHTS AUSSER DER FLÄCHE.
+ *
+ * Jede Zeile ruft einen Dienst, den es schon gibt. Es gibt hier keinen
+ * eigenen Erstellcode, keine zweite Sicherungsmaschine, keinen eigenen
+ * Exportweg — das wäre genau die Doppelung, gegen die §8 geschrieben ist.
+ * Die Bindungen stehen namentlich in `doku/PREMIUM-SHELL-MATRIX.md`, Teil 3,
+ * und `pruefungen/lauf/test272.mts` §13 misst nach, dass sie halten.
+ *
+ * DREI DINGE, DIE HIER ABSICHT SIND
+ *
+ *   · SIE IST EINE `.overlay`, DIE GEBAUT UND WIEDER ENTFERNT WIRD.
+ *     Der Plan sah eine feste, versteckte Wurzel in `index.html` vor. Beim
+ *     Nachsehen war das der schlechtere Weg: `schale/ueberlagerung/fokus.ts`
+ *     (E223) beobachtet, was an `<body>` gehängt wird, und legt jeder neuen
+ *     Überlagerung auf, was ihr fehlt — `role`, `aria-modal`, den Fokus
+ *     hinein, Tabulator im Kreis, den Fokus beim Schliessen zurück, und
+ *     `inert` auf allem dahinter. Ein Kasten, der nur sein `hidden`
+ *     wegnimmt, bekommt davon nichts: er wird nie „hinzugefügt". Wer die
+ *     feste Wurzel wollte, müsste sechs Dinge von Hand nachbauen, die es an
+ *     einer Stelle schon richtig gibt.
+ *
+ *   · SIE VERSPRICHT NICHTS, WAS SIE NICHT HAT (§47).
+ *     „Drucken" ohne offene Seite ist kein Knopf, der bedauert — es steht
+ *     ein Satz da, der sagt, was fehlt. „Automatisch in einen Ordner"
+ *     erscheint nur, wo der Browser es kann (Safari auf dem iPhone und
+ *     Firefox können es nicht). Und die Sektion heisst „Weitergeben" und
+ *     nicht „Senden": `Mail.senden` gibt es nicht, das Mail-Modul kann
+ *     lesen und antworten, aber nicht verschicken (Matrix, Teil 3).
+ *
+ *   · SIE HEISST `bst-` UND NICHT `bs-`.
+ *     Der erste Entwurf nahm `bs-` — und `bs-` ist seit dem Formelbuch die
+ *     BUCHSEITE: `.bs-zeile`, `.bs-kopf`, `.bs-inhalt`, `.bs-groessen`
+ *     stehen alle in `bausteine.css`. Gemessen war der Unterzeile jeder
+ *     Datei-Zeile deshalb `font-weight:600` statt `400` und die Farbe
+ *     `--text` statt `--text-muted`: die Buchseiten-Regel gewann. Gefunden
+ *     wurde es nicht von einem Prüflauf, sondern auf dem Bild (§55).
+ *
+ *   · SIE ERFINDET KEINE ZAHL.
+ *     `Sicherung.platz()` ist ein Versprechen und kann `bekannt:false`
+ *     zurückgeben. Dann steht kein Balken da und keine geschätzte Zahl,
+ *     sondern der Satz, dass dieser Browser es nicht sagt. Eine erfundene
+ *     Belegung wäre schlimmer als keine — man richtet sich danach.
+ * ==========================================================================*/
+const Backstage = (() => {
+    const WURZEL = 'backstage';
+    const esc = (s) => String(s ?? '')
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    /** Gibt es das Modul, und kann es, was gefragt ist? */
+    const kann = (f) => {
+        try {
+            return typeof f() === 'function';
+        }
+        catch {
+            return false;
+        }
+    };
+    const holen = (name) => {
+        try {
+            return globalThis[name];
+        }
+        catch {
+            return undefined;
+        }
+    };
+    /**
+     * Ein Zeitpunkt, wie ein Mensch ihn liest.
+     *
+     * `.slice(0,16).replace('T',' ')` stand hier zuerst und ergab
+     * „2026-08-30 22:04" — auf dem Bild sofort als Maschinenschrift zu
+     * erkennen. Redion schreibt Daten sonst überall in `de-CH`
+     * (`datenbanken/raster.ts:113`, `einstellungen/…/seite.ts:494`), und
+     * eine Fläche, die als einzige ISO spricht, wirkt wie ein Protokoll.
+     */
+    const wann = (iso) => {
+        const t = Date.parse(String(iso ?? ''));
+        if (Number.isNaN(t))
+            return '—';
+        return new Date(t).toLocaleString('de-CH', { day: '2-digit', month: '2-digit', year: 'numeric',
+            hour: '2-digit', minute: '2-digit' });
+    };
+    /** Die offene Seite als Block — oder nichts. */
+    const seiteJetzt = () => {
+        try {
+            const id = App.aktuelleSeite();
+            if (!id)
+                return null;
+            return Store.getBlock(id) || null;
+        }
+        catch {
+            return null;
+        }
+    };
+    /* ══════════════════════════════════════════════════════════════════════
+       BAUSTEINE DER RECHTEN FLÄCHE
+       ────────────────────────────────────────────────────────────────────
+       Vier Formen, mehr braucht keine Sektion. Sie tragen alle dieselbe
+       Datenmarke `data-bst-tun`, damit ein einziger Klickhorcher genügt —
+       neun Sektionen mit neun Horchern wären neun Stellen zum Vergessen.
+       ══════════════════════════════════════════════════════════════════════ */
+    const kopf = (titel, unter = '') => `<h2 class="bst-titel">${esc(titel)}</h2>` +
+        (unter ? `<p class="bst-unter">${esc(unter)}</p>` : '');
+    /** Eine grosse Handlungskachel. */
+    const kachel = (tun, zeichen, name, sub) => `<button class="bst-kachel" data-bst-tun="${esc(tun)}">` +
+        `<span class="bst-k-z" aria-hidden="true">${esc(zeichen)}</span>` +
+        `<span class="bst-k-t"><b>${esc(name)}</b><i>${esc(sub)}</i></span></button>`;
+    /** Eine Zeile in einer Liste. */
+    const zeile = (tun, name, sub = '') => `<button class="bst-zeile" data-bst-tun="${esc(tun)}">` +
+        `<span class="bst-z-t"><b>${esc(name)}</b>` +
+        (sub ? `<i>${esc(sub)}</i>` : '') + '</span>' +
+        '<span class="bst-z-pfeil" aria-hidden="true">›</span></button>';
+    /** Eine Auskunft ohne Handlung — Text, kein Knopf. */
+    const auskunft = (name, wert, ton = '') => `<div class="bst-fakt${ton ? ' ist-' + esc(ton) : ''}">` +
+        `<b>${esc(name)}</b><span>${esc(wert)}</span></div>`;
+    const gruppe = (name, inhalt) => inhalt ? `<div class="bst-grp">${esc(name)}</div>${inhalt}` : '';
+    /* ══════════════════════════════════════════════════════════════════════
+       DIE NEUN FÄCHER
+       ══════════════════════════════════════════════════════════════════════ */
+    const SEKTIONEN = [
+        /* ── Informationen ────────────────────────────────────────────────── */
+        { id: 'info', name: 'Informationen', zeichne: () => {
+                const p = seiteJetzt();
+                let aus = kopf('Informationen', 'Was Redion gerade hält, und wie gut es gesichert ist.');
+                /* Die offene Seite. Steht keine offen, ist das kein Fehler — dann
+                   steht hier eben nichts über sie. */
+                if (p) {
+                    aus += gruppe('Diese Seite', auskunft('Titel', String(p.text || 'Ohne Titel')) +
+                        auskunft('Zuletzt geändert', wann(p.edited || p.created)) +
+                        (p.locked ? auskunft('Gesperrt', 'Ja — Bearbeiten ist aus', 'warnen') : ''));
+                }
+                /* Der Sicherungsstand. `tage: null` heisst UNBEKANNT und nicht
+                   „null Tage" — der Satz muss beides auseinanderhalten. */
+                const s = holen('Sicherung');
+                if (s && typeof s.stand === 'function') {
+                    const st = s.stand();
+                    const satz = st.tage === null
+                        ? 'Noch keine Sicherung bekannt.'
+                        : st.tage === 0 ? 'Heute gesichert.'
+                            : 'Vor ' + st.tage + (st.tage === 1 ? ' Tag' : ' Tagen') + ' gesichert.';
+                    const ton = st.stufe === 'gut' ? '' : st.stufe;
+                    aus += gruppe('Sicherung', auskunft('Letzte Sicherung', satz + (st.art ? ' (' + st.art + ')' : ''), ton) +
+                        zeile('kopie', 'Jetzt eine Kopie speichern', 'Geht zu „Kopie speichern"'));
+                }
+                /* Der Ordner (E270). ERST `moeglich()`, DANN `an()`: wo der Browser
+                   es nicht kann, wäre auch ein „Aus" eine falsche Auskunft — es ist
+                   nicht aus, es gibt es dort nicht. */
+                const os = holen('OrdnerSicherung');
+                if (os && typeof os.moeglich === 'function') {
+                    if (!os.moeglich()) {
+                        aus += gruppe('Automatische Sicherung', auskunft('Ordner', 'Dieser Browser kann keinen Ordner behalten.'));
+                    }
+                    else if (os.an()) {
+                        aus += gruppe('Automatische Sicherung', auskunft('Ordner', String(os.name() || 'gewählt')) +
+                            auskunft('Zuletzt geschrieben', os.zuletzt() ? wann(os.zuletzt()) : 'noch nicht') +
+                            (os.fehler() ? auskunft('Letzter Fehler', String(os.fehler()), 'warnen') : ''));
+                    }
+                    else {
+                        aus += gruppe('Automatische Sicherung', auskunft('Ordner', 'Aus — Redion schreibt nichts von selbst.'));
+                    }
+                }
+                /* Der Platz. Asynchron: hier steht erst ein Platzhalter, `platzNach`
+                   trägt die Zahl nach. Steht sie nie, bleibt der ehrliche Satz. */
+                aus += gruppe('Auf diesem Gerät', '<div class="bst-fakt" id="bst-platz"><b>Belegter Platz</b>' +
+                    '<span>wird gemessen …</span></div>');
+                /* DER ABGLEICH — und zwar von den Griffen, die es GIBT.
+                   `Wolke` hat kein `stand()`; es hat `angemeldet()` und `adresse()`.
+                   Ein Zweig auf einen erfundenen Namen wäre für immer tot gewesen
+                   und hätte grün ausgesehen, weil `typeof` ihn wegfängt. */
+                const w = holen('Wolke');
+                if (w && typeof w.angemeldet === 'function') {
+                    try {
+                        aus += gruppe('Abgleich', w.angemeldet()
+                            ? auskunft('Server', String(w.adresse?.() || 'verbunden'))
+                            : auskunft('Server', 'Nicht angemeldet — alles bleibt auf diesem Gerät.'));
+                    }
+                    catch { /* ohne Wolke steht hier nichts, und das ist richtig */ }
+                }
+                return aus;
+            } },
+        /* ── Neu ──────────────────────────────────────────────────────────── */
+        { id: 'neu', name: 'Neu', zeichne: () => {
+                /* KEIN EIGENER KATALOG. `App.erstellenWege()` ist seit E265 der
+                   gefilterte Bestand — gefiltert heisst: was diese Fassung wirklich
+                   geladen hat. Eine zweite Liste hier hiesse, jeden neuen Weg an zwei
+                   Stellen nachzutragen, und die zweite vergisst man. */
+                let wege = [];
+                try {
+                    wege = App.erstellenWege() || [];
+                }
+                catch {
+                    wege = [];
+                }
+                if (!wege.length)
+                    return kopf('Neu', 'Es ist gerade kein Weg geladen.');
+                return kopf('Neu', 'Womit soll es losgehen?') +
+                    '<div class="bst-kacheln">' +
+                    wege.map(w => kachel('neu:' + w.id, w.zeichen, w.name, w.sub)).join('') +
+                    '</div>';
+            } },
+        /* ── Öffnen ───────────────────────────────────────────────────────── */
+        { id: 'oeffnen', name: 'Öffnen', zeichne: () => {
+                let aus = kopf('Öffnen', 'Wo etwas liegt, das es schon gibt.');
+                aus += gruppe('Orte', (kann(() => holen('Bibliothek')?.oeffne)
+                    ? zeile('ort:bibliothek', 'Bibliothek', 'Fächer, Notizbücher, Dokumente') : '') +
+                    (kann(() => holen('Notebook')?.oeffnen)
+                        ? zeile('ort:notizhefte', 'Notizhefte', 'Das Regal mit den Deckeln') : '') +
+                    zeile('ort:suche', 'Suchen', 'Über alle Seiten und Inhalte (Strg + P)'));
+                /* Zuletzt geöffnet — echte Liste, keine erfundene. */
+                let letzte = [];
+                try {
+                    letzte = (App.kuerzlich() || []).slice(0, 8);
+                }
+                catch {
+                    letzte = [];
+                }
+                if (letzte.length)
+                    aus += gruppe('Zuletzt geöffnet', letzte.map(b => zeile('seite:' + b.id, String(b.text || 'Ohne Titel'))).join(''));
+                return aus;
+            } },
+        /* ── Kopie speichern ──────────────────────────────────────────────── */
+        { id: 'kopie', name: 'Kopie speichern', zeichne: () => {
+                let aus = kopf('Kopie speichern', 'Eine Sicherung ist eine Datei auf deinem Gerät. Redion lädt sie ' +
+                    'herunter; wohin sie geht, entscheidet der Browser.');
+                aus += gruppe('Von Hand', zeile('sich:speichern', 'Sicherung speichern', 'Alles in eine Datei — mit Anhängen als .redion') +
+                    zeile('sich:laden', 'Sicherung einlesen', 'Eine gespeicherte Datei zurückholen'));
+                const os = holen('OrdnerSicherung');
+                if (os && typeof os.moeglich === 'function' && os.moeglich()) {
+                    aus += gruppe('Automatisch (E270)', (os.an()
+                        ? zeile('ord:jetzt', 'Jetzt in den Ordner sichern', 'Ordner: ' + String(os.name() || 'gewählt'))
+                        : zeile('ord:waehlen', 'Ordner wählen', 'Danach alle fünf Minuten, aber nur bei Änderungen')));
+                }
+                return aus;
+            } },
+        /* ── Drucken ──────────────────────────────────────────────────────── */
+        { id: 'drucken', name: 'Drucken', zeichne: () => {
+                const p = seiteJetzt();
+                /* §47: kein Knopf, der bedauert. Ohne offene Seite steht hier der
+                   Satz, was fehlt — und der Weg dahin. */
+                if (!p)
+                    return kopf('Drucken', 'Gedruckt wird eine Seite. Gerade ist keine offen.') +
+                        gruppe('Zuerst', zeile('ort:bibliothek', 'Eine Seite öffnen', 'Geht zur Bibliothek'));
+                return kopf('Drucken', 'Der Browser zeigt die Vorschau und kann auch ' +
+                    'als PDF speichern.') +
+                    gruppe('Diese Seite', zeile('druck:seite', 'Drucken oder als PDF speichern', String(p.text || 'Ohne Titel')));
+            } },
+        /* ── Weitergeben ──────────────────────────────────────────────────── */
+        { id: 'weitergeben', name: 'Weitergeben', zeichne: () => {
+                /* SIE HEISST NICHT „SENDEN". `Mail.senden` gibt es nicht; das
+                   Mail-Modul kann lesen und antworten, aber nicht verschicken
+                   (Matrix Teil 3). Ein Knopf „Senden", der nichts sendet, wäre
+                   genau die Enttäuschung, gegen die `zeigen()` gebaut wurde. */
+                const p = seiteJetzt();
+                if (!p)
+                    return kopf('Weitergeben', 'Weitergegeben wird eine Seite. Gerade ist keine offen.') +
+                        gruppe('Zuerst', zeile('ort:bibliothek', 'Eine Seite öffnen', 'Geht zur Bibliothek'));
+                return kopf('Weitergeben', 'Alle Wege stehen im Teilen-Menü: Link, Text, Markdown, ' +
+                    'HTML, PDF, Word, Excel, Obsidian.') +
+                    gruppe('Diese Seite', zeile('teil:menue', 'Teilen …', String(p.text || 'Ohne Titel')) +
+                        zeile('teil:link', 'Link auf diese Seite kopieren', 'Öffnet dieses Gerät an dieser Stelle'));
+            } },
+        /* ── Exportieren ──────────────────────────────────────────────────── */
+        { id: 'export', name: 'Exportieren', zeichne: () => {
+                const p = seiteJetzt();
+                let aus = kopf('Exportieren', 'Ein Export ist kein Ersatz für eine Sicherung: er nimmt den Text ' +
+                    'mit, nicht den Zustand der App.');
+                if (p)
+                    aus += gruppe('Diese Seite', zeile('exp:md', 'Als Markdown speichern', String(p.text || 'Ohne Titel')) +
+                        (kann(() => holen('Werkzeuge')?.htmlExport)
+                            ? zeile('exp:html', 'Als HTML speichern', '') : ''));
+                aus += gruppe('Alles', (kann(() => holen('Werkzeuge')?.einzelDatei)
+                    ? zeile('exp:einzel', 'Alles als eine HTML-Datei', 'Zum Lesen ohne Redion') : '') +
+                    (kann(() => holen('Werkzeuge')?.ordnerSchreiben)
+                        ? zeile('exp:ordner', 'Alles in einen Ordner schreiben', 'Je Seite eine Markdown-Datei') : ''));
+                return aus;
+            } },
+        /* ── Konto ────────────────────────────────────────────────────────── */
+        { id: 'konto', name: 'Konto', zeichne: () => {
+                let aus = kopf('Konto', 'Redion läuft ohne Konto. Eines gibt es nur, wenn du es willst — ' +
+                    'für den Abgleich zwischen Geräten.');
+                aus += gruppe('Redion', (kann(() => holen('WolkeFenster')?.dialog)
+                    ? zeile('konto:wolke', 'Redion-Konto und Abgleich', 'Anmelden, Geräte, Serveradresse') : '') +
+                    zeile('konto:arbeitsbereich', 'Arbeitsbereich', 'Name und Zeichen dieses Bereichs'));
+                /* Drittkonten sind ein ANDERES Ding als das Redion-Konto — Google,
+                   GitHub, Jira. Sie in einen Topf zu werfen hiesse, „abmelden" zu
+                   verwechseln. */
+                if (kann(() => holen('Verbindungen')?.dialog))
+                    aus += gruppe('Andere Dienste', zeile('konto:verbindungen', 'Verbindungen', 'Google, GitHub, Jira und die übrigen'));
+                return aus;
+            } },
+        /* ── Optionen ─────────────────────────────────────────────────────── */
+        { id: 'optionen', name: 'Optionen', zeichne: () => kopf('Optionen', 'Alles, was Redion für dich merkt.') +
+                gruppe('Einstellungen', zeile('opt:einstellungen', 'Einstellungen öffnen', 'Aussehen, Bereiche, Daten, Pflege, Erweiterungen') +
+                    (kann(() => holen('Aussehen')?.dialog)
+                        ? zeile('opt:aussehen', 'Aussehen', 'Farben, Schrift, Tastenkürzel') : '') +
+                    zeile('opt:thema', 'Hell oder dunkel umschalten', 'Strg + Umschalt + L') +
+                    (kann(() => holen('Werkzeuge')?.tastenkuerzel)
+                        ? zeile('opt:tasten', 'Tastenkürzel anzeigen', 'Strg + /') : '')) }
+    ];
+    /** Die Fächer, die diese Fassung wirklich hat. */
+    const faecher = () => SEKTIONEN.filter(s => !s.da || s.da());
+    /* ══════════════════════════════════════════════════════════════════════
+       DIE HANDLUNGEN
+       ────────────────────────────────────────────────────────────────────
+       Eine Karte statt einer Kette von `if`. Jede Zeile ruft genau einen
+       fremden Dienst; was hier steht, ist die Verdrahtung und nicht die
+       Sache selbst.
+       ══════════════════════════════════════════════════════════════════════ */
+    /** Erst schliessen, dann handeln — ein Dialog unter der Fläche wäre
+     *  von aussen nicht erreichbar (derselbe Grund wie im R-Blatt). */
+    const zuUnd = (f) => { schliesse(); setTimeout(f, 60); };
+    const tun = (was) => {
+        /* Die Wege mit Doppelpunkt zuerst: sie tragen ein Ziel bei sich. */
+        if (was.startsWith('neu:')) {
+            zuUnd(() => App.erstellenWeg(was.slice(4)));
+            return;
+        }
+        if (was.startsWith('seite:')) {
+            zuUnd(() => App.oeffne(was.slice(6)));
+            return;
+        }
+        const karte = {
+            /* Nur die Sektion wechseln — die Fläche bleibt stehen. */
+            'kopie': () => zeige('kopie'),
+            'ort:bibliothek': () => zuUnd(() => holen('Bibliothek')?.oeffne?.()),
+            'ort:notizhefte': () => zuUnd(() => holen('Notebook')?.oeffnen?.()),
+            'ort:suche': () => zuUnd(() => App.suche()),
+            'sich:speichern': () => zuUnd(() => { void App.sicherungSpeichern(); }),
+            'sich:laden': () => zuUnd(() => App.sicherungLaden()),
+            'ord:waehlen': () => zuUnd(() => { void holen('OrdnerSicherung')?.waehlen?.(); }),
+            'ord:jetzt': () => {
+                const os = holen('OrdnerSicherung');
+                if (!os?.jetztSichern)
+                    return;
+                try {
+                    UI.toast('Sicherung wird geschrieben …');
+                }
+                catch { /* ohne Hinweis geht es auch */ }
+                Promise.resolve(os.jetztSichern(true)).then(() => neuZeichnen()).catch(() => { });
+            },
+            'druck:seite': () => {
+                const p = seiteJetzt();
+                if (p)
+                    zuUnd(() => { void holen('Werkzeuge')?.drucken?.(p); });
+            },
+            'teil:menue': () => {
+                const p = seiteJetzt();
+                if (p)
+                    zuUnd(() => {
+                        const anker = document.getElementById('btn-page-menu')
+                            || document.getElementById('mb-datei');
+                        holen('Werkzeuge')?.teilenMenue?.(anker, p);
+                    });
+            },
+            'teil:link': () => {
+                const p = seiteJetzt();
+                if (!p)
+                    return;
+                zuUnd(() => holen('Ablage')?.kopiereJetzt?.(location.origin + location.pathname + '#' + p.id, 'Link zur Seite kopiert'));
+            },
+            'exp:md': () => {
+                const p = seiteJetzt();
+                if (p)
+                    zuUnd(() => App.markdownExport(p));
+            },
+            'exp:html': () => {
+                const p = seiteJetzt();
+                if (p)
+                    zuUnd(() => holen('Werkzeuge')?.htmlExport?.(p));
+            },
+            'exp:einzel': () => zuUnd(() => holen('Werkzeuge')?.einzelDatei?.()),
+            'exp:ordner': () => zuUnd(() => holen('Werkzeuge')?.ordnerSchreiben?.()),
+            'konto:wolke': () => zuUnd(() => holen('WolkeFenster')?.dialog?.()),
+            'konto:verbindungen': () => zuUnd(() => holen('Verbindungen')?.dialog?.()),
+            /* NICHT `App.arbeitsbereich()` — das führt am Rechner seit dieser
+               Phase hierher zurück und wäre eine Schleife. Der Arbeitsbereich
+               wird in den Einstellungen benannt. */
+            'konto:arbeitsbereich': () => zuUnd(() => holen('Einstellungen')?.oeffne?.('arbeitsplatz')),
+            'opt:einstellungen': () => zuUnd(() => holen('Einstellungen')?.oeffne?.()),
+            'opt:aussehen': () => zuUnd(() => holen('Aussehen')?.dialog?.()),
+            'opt:thema': () => { try {
+                App.theme();
+            }
+            catch { /* Thema bleibt */ } },
+            'opt:tasten': () => zuUnd(() => holen('Werkzeuge')?.tastenkuerzel?.())
+        };
+        const f = karte[was];
+        if (f) {
+            try {
+                f();
+            }
+            catch { /* ein toter Dienst schliesst nicht die Fläche */ }
+        }
+    };
+    /* ══════════════════════════════════════════════════════════════════════
+       DIE FLÄCHE
+       ══════════════════════════════════════════════════════════════════════ */
+    let gewaehlt = 'info';
+    const wurzel = () => document.getElementById(WURZEL);
+    const offen = () => !!wurzel();
+    /** Den Platz nachtragen, sobald der Browser antwortet. */
+    const platzNach = () => {
+        const s = holen('Sicherung');
+        if (!s?.platz)
+            return;
+        Promise.resolve(s.platz()).then((z) => {
+            const feld = document.getElementById('bst-platz');
+            if (!feld)
+                return; /* inzwischen weitergeklickt */
+            const wert = feld.querySelector('span');
+            if (!wert)
+                return;
+            /* KEINE ERFUNDENE ZAHL. `bekannt:false` heisst: dieser Browser sagt
+               es nicht. Dann steht das da und kein geschätzter Balken. */
+            if (!z || !z.bekannt) {
+                wert.textContent = 'Dieser Browser sagt es nicht.';
+                return;
+            }
+            const g = (b) => s.groesse(b);
+            wert.textContent = g(z.belegt) + ' belegt · ' + g(z.frei) + ' frei'
+                + (z.anhaenge ? ' · ' + z.anhaenge + ' Anhänge' : '');
+        }).catch(() => { });
+    };
+    /** Die rechte Fläche neu zeichnen. */
+    const fuellen = () => {
+        const w = wurzel();
+        if (!w)
+            return;
+        const flaeche = w.querySelector('.bst-flaeche');
+        if (!flaeche)
+            return;
+        const s = faecher().find(x => x.id === gewaehlt) || faecher()[0];
+        if (!s)
+            return;
+        try {
+            flaeche.innerHTML = s.zeichne();
+        }
+        catch {
+            flaeche.innerHTML = kopf('Nicht verfügbar', 'Dieses Fach lässt sich gerade nicht zeichnen.');
+        }
+        flaeche.scrollTop = 0;
+        w.querySelectorAll('.bst-nav-knopf').forEach(k => {
+            const an = k.dataset['bst'] === s.id;
+            k.classList.toggle('ist-an', an);
+            k.setAttribute('aria-current', an ? 'page' : 'false');
+        });
+        if (s.id === 'info')
+            platzNach();
+    };
+    /** Ein anderes Fach zeigen. */
+    const zeige = (id) => {
+        if (faecher().some(s => s.id === id))
+            gewaehlt = id;
+        fuellen();
+    };
+    const neuZeichnen = () => { if (offen())
+        fuellen(); };
+    const schliesse = () => { wurzel()?.remove(); };
+    /**
+     * Aufmachen.
+     *
+     * Zweimal aufrufen wechselt nur das Fach — zwei Flächen übereinander
+     * wären zwei Fokusfallen, und die zweite gewönne.
+     */
+    const oeffne = (sektion) => {
+        if (offen()) {
+            if (sektion)
+                zeige(sektion);
+            return;
+        }
+        if (sektion && faecher().some(s => s.id === sektion))
+            gewaehlt = sektion;
+        const grund = document.createElement('div');
+        /* `.overlay` ist kein Zierrat: `schale/ueberlagerung/fokus.ts` erkennt
+           daran den Dialog und legt Rolle, `aria-modal`, Fokus, Tabulatorkreis
+           und `inert` auf. Und `schale.ts` schliesst `.overlay` mit Esc. */
+        grund.className = 'overlay bst-grund';
+        grund.id = WURZEL;
+        const kasten = document.createElement('div');
+        kasten.className = 'backstage';
+        const nav = document.createElement('nav');
+        nav.className = 'bst-nav';
+        nav.setAttribute('aria-label', 'Datei');
+        const zurueck = document.createElement('button');
+        zurueck.type = 'button';
+        zurueck.className = 'bst-zurueck';
+        zurueck.innerHTML = '<span aria-hidden="true">←</span><span>Zurück</span>';
+        zurueck.setAttribute('aria-label', 'Datei schliessen (Esc)');
+        zurueck.addEventListener('click', () => schliesse());
+        nav.appendChild(zurueck);
+        faecher().forEach(s => {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'bst-nav-knopf';
+            b.dataset['bst'] = s.id;
+            b.textContent = s.name;
+            b.addEventListener('click', () => zeige(s.id));
+            nav.appendChild(b);
+        });
+        const flaeche = document.createElement('section');
+        flaeche.className = 'bst-flaeche';
+        flaeche.tabIndex = -1;
+        /* EIN HORCHER FÜR NEUN FÄCHER. Die Zeilen werden bei jedem
+           Fachwechsel neu geschrieben; ein Horcher je Knopf hiesse, ihn bei
+           jedem Wechsel neu zu hängen — und einmal zu vergessen. */
+        flaeche.addEventListener('click', (e) => {
+            const b = (e.target instanceof Element)
+                ? e.target.closest('[data-bst-tun]') : null;
+            if (!b)
+                return;
+            tun(String(b.dataset['bstTun'] || ''));
+        });
+        kasten.appendChild(nav);
+        kasten.appendChild(flaeche);
+        grund.appendChild(kasten);
+        /* Ein Klick auf den Grund NEBEN dem Kasten schliesst. Am Rechner füllt
+           der Kasten die Fläche ganz; am Telefon bleibt oben ein Streifen. */
+        grund.addEventListener('click', (e) => {
+            if (e.target === grund)
+                schliesse();
+        });
+        document.body.appendChild(grund);
+        fuellen();
+    };
+    /** Auf oder zu, für den Knopf in der Reiterzeile. */
+    const schalten = () => { if (offen())
+        schliesse();
+    else
+        oeffne(); };
+    return { oeffne, schliesse, schalten, offen, zeige, neuZeichnen,
+        /* Für Prüfläufe: welche Fächer diese Fassung hat. */
+        faecher: () => faecher().map(s => ({ id: s.id, name: s.name })) };
+})();
+window.Backstage = Backstage;
 
 </script>
 <script>
@@ -117951,6 +118788,17 @@ const App = (() => {
      */
     const arbeitsbereich = () => {
         if (!window.matchMedia('(max-width: 760px)').matches) {
+            /* AM RECHNER SEIT E272 PHASE G: die Datei-Fläche, Fach „Konto".
+               Vorher ging hier die Seitenleisten-Schublade auf — und die
+               verschwindet am Rechner in Phase F. Der Knopf hätte dann kein
+               Ziel mehr gehabt; deshalb steht G vor F und nicht danach.
+               Die Schublade bleibt der Notweg, solange die Fläche fehlt
+               (Einzeldatei, halb geladenes Fenster, Prüflauf ohne das Modul). */
+            const bs = window.Backstage;
+            if (bs?.oeffne) {
+                bs.oeffne('konto');
+                return;
+            }
             if (PWA.schubladeAuf)
                 PWA.schubladeAuf();
             return;
@@ -118377,12 +119225,28 @@ const App = (() => {
                 return;
             }
         });
-        /* Esc schliesst Menüs und Overlays */
+        /* ── Esc schliesst Menüs und Überlagerungen ────────────────────────
+           DIE OBERSTE, NICHT DIE ERSTE (E272 Phase G).
+    
+           Hier stand `document.querySelector('.overlay')` — und das ist die
+           ERSTE im Baum, nicht die vorderste auf dem Bildschirm. Liegt noch
+           eine ältere Überlagerung weiter oben im Dokument, schloss Esc die
+           unsichtbare dahinter und liess die vor der Nase stehen. Gemessen
+           beim Bau der Datei-Fläche: sie ging mit Esc nicht zu, obwohl sie
+           ganz vorne stand.
+    
+           `fokus.ts` rechnet seit E223 genauso — die letzte im Dokument ist
+           die oberste. Dieselbe Regel an beiden Stellen, sonst schliesst Esc
+           etwas anderes, als der Fokus gerade hält. */
         document.addEventListener('keydown', e => {
             if (e.key !== 'Escape')
                 return;
-            const m = document.querySelector('.menu');
-            const o = document.querySelector('.overlay');
+            const letztes = (wahl) => {
+                const alle = document.querySelectorAll(wahl);
+                return alle.length ? alle[alle.length - 1] : null;
+            };
+            const m = letztes('.menu');
+            const o = letztes('.overlay');
             if (m)
                 m.remove();
             else if (o)

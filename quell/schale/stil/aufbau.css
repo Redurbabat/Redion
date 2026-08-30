@@ -831,3 +831,11 @@ body[data-ruhig="an"] #topbar [data-ruhig="mehr"]{ display:none }
 #sidebar .side-item[aria-current="page"]{
   background:var(--bg-hover); color:var(--text); font-weight:600;
 }
+
+/* ── Die Reiterliste in der Reiterzeile (E272 Phase G) ────────────────────
+   `.mb-reiter` ist die ganze Zeile — Marke, „Datei", Reiter, Suche, KI,
+   Konto, Klapp-Pfeil. Die `role="tablist"` sitzt seit Phase G auf diesem
+   inneren Kasten, damit sie nur das ansagt, was wirklich ein Reiter ist.
+   Er darf nicht schrumpfen: sonst quetscht die rechte Gruppe die Reiter
+   zusammen, statt dass die Zeile rollt. */
+.mb-tabs{ display:flex; align-items:stretch; gap:var(--space-1); flex:0 0 auto }

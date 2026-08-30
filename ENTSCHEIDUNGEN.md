@@ -19903,3 +19903,109 @@ nicht doppelt) · test247 105 · test248 46 · test222 51 · test86 58 ·
 test87 156 · test105 55. Zwei Gegenproben rot gesehen: die 19 Apps aus der
 Schleife genommen (zwei Prüfpunkte rot), und `schauplatz()` auf einen festen
 Wert gestellt. Eine dritte blieb grün und wurde damit selbst zum Fund.
+### Phase G — „Datei" ist keine Liste, sondern eine Fläche
+
+Die acht Reiter zeigen Befehle für das, was gerade offen ist. „Datei" wirkt
+auf das Ganze: sichern, drucken, weitergeben, Konto, Einstellungen. Office
+trennt das seit 2010 in eine eigene Fläche, und der Grund ist nicht
+Geschmack — wer eine Sicherung schreibt, tut das nicht nebenbei zwischen
+zwei Sätzen.
+
+Neu ist `src/schale/aufbau/backstage.ts` (Global `Backstage`) mit neun
+Fächern: Informationen · Neu · Öffnen · Kopie speichern · Drucken ·
+Weitergeben · Exportieren · Konto · Optionen. Der Knopf steht links in der
+Reiterzeile, satt in Gold, ab 761 px.
+
+DIE FLÄCHE ERFINDET NICHTS. Jede Zeile ruft einen Dienst, den es gibt:
+`App.erstellenWege()/erstellenWeg()` (E265) für „Neu" — kein eigener
+Erstellcode; `App.sicherungSpeichern/sicherungLaden` und
+`OrdnerSicherung.waehlen/jetztSichern` (E270) für „Kopie speichern";
+`Werkzeuge.drucken/teilenMenue/htmlExport/einzelDatei/ordnerSchreiben`;
+`WolkeFenster.dialog` und `Verbindungen.dialog` — zwei verschiedene Dinge,
+Redion-Konto und Drittkonten; `Einstellungen.oeffne`. Die Bindungen stehen
+namentlich in `doku/PREMIUM-SHELL-MATRIX.md` Teil 3, und test272 §13 misst
+sie nach.
+
+SIE HEISST „WEITERGEBEN" UND NICHT „SENDEN". `Mail.senden` gibt es nicht;
+das Mail-Modul kann lesen und antworten, aber nicht verschicken. Der
+Prototyp hat die Sektion, Redion hat den Weg nicht — also steht dort der
+echte, vollständige (`teilenMenue`) und kein Knopf, der nichts tut (§47).
+Aus demselben Grund gibt es „Drucken" nur mit offener Seite; sonst steht
+ein Satz da, was fehlt, und der Weg dorthin.
+
+EINE `.overlay`, KEINE FESTE WURZEL. Der Plan sah `<div id="backstage"
+hidden>` in `index.html` vor. Beim Nachsehen war das der schlechtere Weg:
+`schale/ueberlagerung/fokus.ts` (E223) beobachtet, was an `<body>` gehängt
+wird, und legt jeder neuen Überlagerung Rolle, `aria-modal`, den Fokus
+hinein, den Tabulatorkreis, die Rückkehr beim Schliessen und `inert` auf
+allem dahinter auf. Ein Kasten, der nur sein `hidden` wegnimmt, bekommt
+davon nichts — er wird nie „hinzugefügt". Sechs Dinge von Hand nachbauen,
+die es an einer Stelle schon richtig gibt, ist kein Plan, sondern eine
+zweite Stelle zum Vergessen.
+
+DIE `tablist` IST JETZT DER INNERE KASTEN. In der Reiterzeile stehen die
+Marke, „Datei", Suche, KI, Konto und der Klapp-Pfeil — nichts davon ist ein
+Reiter. `role="tablist"` sitzt deshalb auf `.mb-tabs` und sagt nur noch an,
+was sie wirklich enthält. test247 prüft das jetzt zweifach: die Rolle, und
+dass in der Liste kein Fremdstück steht.
+
+DREI FUNDE, DIE NUR DAS HINSEHEN MACHTE (§55):
+
+  · `bs-` WAR SCHON VERGEBEN. Die erste Fassung nannte ihre Klassen `bs-`
+    — und `bs-` ist seit dem Formelbuch die BUCHSEITE: `.bs-zeile`,
+    `.bs-kopf`, `.bs-inhalt` stehen in `bausteine.css`. Gemessen war die
+    Unterzeile jeder Datei-Zeile `font-weight:600` statt `400` und die
+    Farbe `--text` statt `--text-muted`. Kein Prüflauf hätte das gefunden;
+    auf dem Bild sah man es sofort. Der Namensraum heisst jetzt `bst-`.
+
+  · DER KNOPF SAH AUS WIE EIN REITER. Mit `--gold-glass` trug „Datei"
+    denselben Schleier wie der GEWÄHLTE Reiter daneben, und die zwei
+    einzigen goldenen Stellen der Zeile waren nicht auseinanderzuhalten.
+    Jetzt volles Gold mit dunkler Schrift — gemessen 7,46 (hell) und 8,76
+    (dunkel).
+
+  · MASCHINENSCHRIFT. „Zuletzt geändert 2026-08-30 22:04" stand da, weil
+    ein `slice(0,16).replace('T',' ')` schneller geschrieben ist als ein
+    `toLocaleString('de-CH')`. Redion schreibt Daten sonst überall deutsch.
+
+ESC SCHLIESST DIE OBERSTE, NICHT DIE ERSTE. `schale.ts` nahm
+`document.querySelector('.overlay')` — und das ist die erste im BAUM, nicht
+die vorderste auf dem BILDSCHIRM. Die Datei-Fläche ging mit Esc nicht zu,
+weil eine ältere Überlagerung weiter oben im Dokument stand. `fokus.ts`
+rechnet seit E223 richtig (die letzte ist die oberste); jetzt tun es beide.
+
+L84 IST KEIN KONTRASTFEHLER, SONDERN EIN MESSFEHLER — und damit erledigt.
+test128 meldete „Simulation starten" mit 1,07 zu 1. Nachgemessen am
+laufenden Knopf: Schrift `rgb(255,255,255)`, `backgroundColor`
+`rgba(0,0,0,0)`, `backgroundImage`
+`linear-gradient(rgb(124,58,237), color(srgb 0.44 0.20 0.84))`. Redions
+Hauptknöpfe tragen die Marke `--haupt-flaeche`, und die ist ein Verlauf —
+also ein background-IMAGE. Der Aufstieg der Messung lief an der violetten
+Fläche vorbei bis zur weissen Tafel dahinter. Der Knopf ist violett und
+weiss darauf gut lesbar.
+
+Dieselbe Messung meldete zwei weitere Fehlalarme: der gewählte Reiter des
+Menübands trägt `--gold-glass`, Gold zu 13 Prozent über fast Schwarz, und
+die Messung hielt bei der ersten Farbe mit Alpha über 0,05 an und rechnete
+mit ihr, als wäre sie deckend — 1,34 zu 1 statt der wirklichen 9,04. Beides
+ist jetzt gerechnet: Schichten werden übereinandergelegt, bis eine deckt,
+und ein Verlauf zählt mit seiner schlechtesten Farbstufe. Der Absatz, der
+im Prüflauf schon stand, sagt warum: ein Messgerät mit Fehlalarmen wird
+abgeschaltet, und dann sieht es den echten Fall auch nicht mehr.
+
+AM TELEFON GIBT ES DEN KNOPF NICHT. Dort führt derselbe Weg über das
+R-Blatt — Sichern, Importieren, Papierkorb, Tastenkürzel, Einstellungen
+stehen seit E236 darin —, und E240 hat die Zeile bewusst schlank gehalten.
+Versteckt wird er im Stil, nicht beim Zeichnen: wer das Fenster aufzieht,
+hat ihn sofort. Die Fläche selbst wird unter 761 px trotzdem zum Blatt mit
+rollender Fächerzeile (test155), damit ein schmales Fenster nicht auf einen
+Rechner-Kasten mitten im Bild trifft.
+
+**Geprüft:** test272 103 Punkte (neu §13: neun Fächer, Fokusfalle, Esc,
+„Neu" deckt `erstellenWege()`, §47 bei Drucken, echter Sicherungsstand, der
+Knopf ist kein Reiter, und drei Quelltextproben gegen einen zweiten
+Katalog) · test247 106 · test128 54 (vorher 2 rot) · test114 153 ·
+test248 46 · test222 51 · test155 20 · test86 58 · test87 156 · test105 55 ·
+test40 24 · test61 36 · test258 15. Drei Gegenproben rot gesehen: „Datei"
+zurück in die `tablist` (zwei Punkte in zwei Suiten), ein Druck-Knopf ohne
+offene Seite, und die Esc-Sache war vor der Reparatur wirklich rot.

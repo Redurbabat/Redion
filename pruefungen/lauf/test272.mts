@@ -761,6 +761,196 @@ p('… und derselbe Schauplatz nicht zweimal hintereinander',
   schauplaetze.gehoert.every((x, i) => i === 0 || x !== schauplaetze.gehoert[i - 1]),
   schauplaetze.gehoert.join(' → '));
 
+/* ==========================================================================
+ * §13 — Die Datei-Flaeche haengt an echten Diensten (E272 Phase G)
+ * --------------------------------------------------------------------------
+ * Der eine Satz, um den es hier geht: die Flaeche erfindet NICHTS. Jede
+ * Zeile ruft einen Dienst, den es schon gibt — sonst waere sie eine zweite
+ * Sicherungsmaschine, ein zweiter Erstellkatalog, ein zweiter Exportweg.
+ * ========================================================================*/
+console.log('\n13 · Die Datei-Flaeche (E272 Phase G)');
+
+const bsGrund = await seite.evaluate(() => {
+  const B = (window as any).Backstage;
+  if (!B) return null;
+  B.oeffne('info');
+  const w = document.getElementById('backstage');
+  const nav = w?.querySelector('.bst-nav');
+  return {
+    da: !!w,
+    istOverlay: !!w?.classList.contains('overlay'),
+    /* `fokus.ts` legt Rolle und aria-modal auf, weil es eine `.overlay` ist
+       — es tut das im MutationObserver, also erst nach einem Takt. */
+    faecher: B.faecher().map((f: any) => f.id),
+    navKnoepfe: nav ? nav.querySelectorAll('.bst-nav-knopf').length : -1,
+    /* Genau eines ist gewaehlt, und es ist das verlangte. */
+    gewaehlt: [...(nav?.querySelectorAll('.bst-nav-knopf.ist-an') ?? [])]
+      .map(k => (k as HTMLElement).dataset['bst'])
+  };
+}) as any;
+
+p('Es gibt ein Modul „Backstage"', !!bsGrund, 'window.Backstage fehlt');
+p('Die Flaeche ist eine `.overlay` (damit `fokus.ts` sie kennt)',
+  !!bsGrund?.istOverlay);
+p('Sie hat neun Faecher', (bsGrund?.faecher?.length ?? 0) === 9,
+  (bsGrund?.faecher ?? []).join(', '));
+p('Jedes Fach hat einen Knopf in der Spalte',
+  bsGrund?.navKnoepfe === bsGrund?.faecher?.length,
+  bsGrund?.navKnoepfe + ' Knoepfe / ' + bsGrund?.faecher?.length + ' Faecher');
+p('Genau EINES ist gewaehlt, und zwar das verlangte',
+  bsGrund?.gewaehlt?.length === 1 && bsGrund?.gewaehlt?.[0] === 'info',
+  (bsGrund?.gewaehlt ?? []).join(','));
+/* Die Sektion heisst NICHT „Senden": `Mail.senden` gibt es nicht
+   (Matrix Teil 3). Ein Knopf, der nichts sendet, ist §47. */
+p('Es gibt kein Fach „senden" — nur „weitergeben"',
+  !bsGrund?.faecher?.includes('senden')
+  && bsGrund?.faecher?.includes('weitergeben'),
+  (bsGrund?.faecher ?? []).join(', '));
+
+/* Tastatur und Fokus (§38). `fokus.ts` legt es auf, nicht diese Datei —
+   geprueft wird trotzdem hier, denn wer die Flaeche einmal auf eine feste
+   Wurzel mit `hidden` umbaut, verliert alles davon auf einen Schlag. */
+const bsFokus = await seite.evaluate(async () => {
+  await new Promise(f => setTimeout(f, 120));
+  const w = document.getElementById('backstage');
+  return {
+    rolle: w?.getAttribute('role'),
+    modal: w?.getAttribute('aria-modal'),
+    fokusDrin: !!w && w.contains(document.activeElement),
+    /* Alles ausserhalb ist stillgelegt — sonst tabbt man hinter die
+       Flaeche in eine Seite, die niemand mehr sieht. */
+    hinterStill: [...document.body.children]
+      .filter(k => k.id !== 'backstage' && !k.classList.contains('menu-grund'))
+      .every(k => (k as HTMLElement).inert)
+  };
+}) as any;
+p('Sie ist ein Dialog fuer Vorleseprogramme', bsFokus?.rolle === 'dialog',
+  String(bsFokus?.rolle));
+p('… mit aria-modal', bsFokus?.modal === 'true', String(bsFokus?.modal));
+p('Der Fokus steht in der Flaeche', bsFokus?.fokusDrin === true);
+p('Und alles dahinter ist stillgelegt', bsFokus?.hinterStill === true);
+
+/* Esc schliesst — `schale.ts` raeumt `.overlay` weg, ohne dass diese
+   Datei einen eigenen Tastenhorcher braucht. */
+await seite.keyboard.press('Escape');
+await seite.waitForTimeout(120);
+const bsZu = await seite.evaluate(() => !document.getElementById('backstage'));
+p('Esc schliesst sie wieder', bsZu === true);
+
+/* ── „Neu" nimmt den ECHTEN Katalog ────────────────────────────────────
+   Die Gegenprobe steht gleich darunter: faellt ein Weg aus `ERSTELLEN`
+   weg, muss die Liste messbar schrumpfen. */
+const bsNeu = await seite.evaluate(() => {
+  const B = (window as any).Backstage;
+  B.oeffne('neu');
+  const kacheln = [...document.querySelectorAll('#backstage .bst-kachel')]
+    .map(k => String((k as HTMLElement).dataset['bstTun'] ?? ''));
+  const wege = App.erstellenWege().map((w: any) => 'neu:' + w.id);
+  B.schliesse();
+  return { kacheln, wege };
+}) as any;
+p('„Neu" zeigt genau die Wege aus `App.erstellenWege()`',
+  bsNeu.kacheln.length === bsNeu.wege.length
+  && bsNeu.wege.every((w: string) => bsNeu.kacheln.includes(w)),
+  bsNeu.kacheln.length + ' Kacheln / ' + bsNeu.wege.length + ' Wege');
+
+const bsNeuGegen = await seite.evaluate(() => {
+  const B = (window as any).Backstage;
+  const echt = App.erstellenWege;
+  /* Einen Weg herausnehmen — als haette diese Fassung ihn nicht geladen. */
+  (App as any).erstellenWege = () => echt().slice(1);
+  B.oeffne('neu');
+  const nachher = document.querySelectorAll('#backstage .bst-kachel').length;
+  B.schliesse();
+  (App as any).erstellenWege = echt;
+  B.oeffne('neu');
+  const wieder = document.querySelectorAll('#backstage .bst-kachel').length;
+  B.schliesse();
+  return { nachher, wieder };
+}) as any;
+p('Gegenprobe: faellt ein Weg weg, schrumpft „Neu" messbar',
+  bsNeuGegen.nachher === bsNeuGegen.wieder - 1,
+  'ohne einen Weg ' + bsNeuGegen.nachher + ', mit ' + bsNeuGegen.wieder
+  + ' — gleich hiesse: „Neu" fuehrt eine eigene Liste');
+
+/* ── „Drucken" ohne offene Seite verspricht nichts (§47) ──────────────── */
+const bsDruck = await seite.evaluate(async () => {
+  const B = (window as any).Backstage;
+  Bibliothek.oeffne();
+  await new Promise(f => setTimeout(f, 260));
+  B.oeffne('drucken');
+  const ohne = [...document.querySelectorAll('#backstage .bst-zeile')]
+    .map(z => String((z as HTMLElement).dataset['bstTun'] ?? ''));
+  B.schliesse();
+  const s1 = Store.rootPages()[0];
+  if (s1) App.oeffne(s1.id);
+  await new Promise(f => setTimeout(f, 260));
+  B.oeffne('drucken');
+  const mit = [...document.querySelectorAll('#backstage .bst-zeile')]
+    .map(z => String((z as HTMLElement).dataset['bstTun'] ?? ''));
+  B.schliesse();
+  return { ohne, mit };
+}) as any;
+p('Ohne offene Seite gibt es keinen Druck-Knopf (§47)',
+  !bsDruck.ohne.includes('druck:seite'), bsDruck.ohne.join(', '));
+p('Mit offener Seite schon', bsDruck.mit.includes('druck:seite'),
+  bsDruck.mit.join(', '));
+
+/* ── „Informationen" zeigt den ECHTEN Sicherungsstand ─────────────────── */
+const bsInfo = await seite.evaluate(async () => {
+  const B = (window as any).Backstage;
+  Store.setMeta('sicherung:zuletzt', new Date(Date.now() - 12 * 86400000).toISOString());
+  Store.setMeta('sicherung:art', 'redion');
+  B.oeffne('info');
+  await new Promise(f => setTimeout(f, 360));
+  const text = document.getElementById('backstage')?.textContent ?? '';
+  const stufe = document.querySelector('#backstage .bst-fakt.ist-erinnern')
+             || document.querySelector('#backstage .bst-fakt.ist-warnen');
+  const platz = document.getElementById('bst-platz')?.textContent ?? '';
+  B.schliesse();
+  Store.setMeta('sicherung:zuletzt', '');
+  return { zwoelf: /12 Tagen/.test(text), art: /redion/.test(text),
+           stufeDa: !!stufe, platzGemessen: !/wird gemessen/.test(platz), platz };
+}) as any;
+p('Der Sicherungsstand ist der echte, nicht ein Platzhalter',
+  bsInfo.zwoelf && bsInfo.art, JSON.stringify(bsInfo).slice(0, 140));
+/* §38: die Warnstufe ist nicht NUR Farbe — der Satz sagt sie auch. */
+p('Eine alte Sicherung traegt zusaetzlich eine Stufe', bsInfo.stufeDa === true);
+p('Der Platz wird nachgetragen (oder ehrlich verschwiegen)',
+  bsInfo.platzGemessen === true, bsInfo.platz);
+
+/* ── Der Knopf in der Reiterzeile ist KEIN Reiter ─────────────────────── */
+const bsKnopf = await seite.evaluate(() => {
+  const k = document.getElementById('mb-datei');
+  const inTablist = !!document.querySelector('#menueband .mb-tabs #mb-datei');
+  return { da: !!k, rolle: k?.getAttribute('role'),
+           popup: k?.getAttribute('aria-haspopup'), inTablist,
+           breit: Math.round(k?.getBoundingClientRect().width ?? 0),
+           hoch: Math.round(k?.getBoundingClientRect().height ?? 0) };
+}) as any;
+p('„Datei" steht in der Reiterzeile', bsKnopf.da === true);
+p('… aber NICHT in der tablist', bsKnopf.inTablist === false);
+p('… und gibt sich nicht als Reiter aus', !bsKnopf.rolle,
+  String(bsKnopf.rolle));
+p('… sondern sagt an, dass er einen Dialog oeffnet',
+  bsKnopf.popup === 'dialog', String(bsKnopf.popup));
+p('Er ist gross genug zum Treffen', bsKnopf.breit >= 44 && bsKnopf.hoch >= 30,
+  bsKnopf.breit + '×' + bsKnopf.hoch);
+
+/* ── Und die Bindungen sind im Quelltext echt ─────────────────────────── */
+const bsQuelle = lies('src/schale/aufbau/backstage.ts');
+p('Kein eigener Erstellcode — „Neu" ruft `App.erstellenWeg`',
+  /App\.erstellenWeg\(/.test(bsQuelle) && !/Store\.addPage\(/.test(bsQuelle));
+p('Keine zweite Sicherungsmaschine — es ruft `App.sicherungSpeichern`',
+  /App\.sicherungSpeichern\(/.test(bsQuelle)
+  && !/exportAll|JSON\.stringify\(Store/.test(bsQuelle));
+/* Der Klammer-Auf im Muster ist nicht Zierde: die Datei ERWAEHNT
+   `Mail.senden` in ihrem Kopf, um zu erklaeren, warum es die Sektion
+   „Senden" nicht gibt. Ein Muster ohne Klammer machte den eigenen
+   Merksatz zum Fehler — und man haette ihn geloescht statt behalten. */
+p('Kein erfundener Sendeweg — `Mail.senden(` wird nirgends gerufen',
+  !/Mail\.senden\s*\(/.test(bsQuelle));
+
 await browser.close();
 server.close();
 console.log('\n  Suite 272 — Kein Griff geht verloren: ' + ok + ' ok, ' + weg + ' offen');
