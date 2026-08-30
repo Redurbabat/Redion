@@ -1833,3 +1833,10 @@ node pruefungen/lauf/test105.mjs
   Rahmen, deshalb `--gold-tinte` #8a6a20 (4,70 auf der Karte). Sechs Masse
   der Schale und die Schalenfläche #1b1d20 modusfrei in grund.css.
   test272 §10, 16 Punkte, vier Gegenproben rot gesehen. sw v37.
+* E272 Phase C (Reiterzeile): premium.css neu, 36 px dunkle Reiterzeile in
+  beiden Themen, Reiter nur als Text, Gold für den gewählten. Die grosse
+  Suchbox der Kopfzeile ist entfallen (vier Wege zur Suche bleiben), samt
+  ihrer Verdrahtung und ihrem CSS. einfach.css hinter einem Präfix
+  abgehängt — vier der fünf alten roten Punkte aus L88 wurden dadurch grün,
+  der fünfte entpuppte sich als falsches Grün (test247 misst nur 1440 px).
+  sw v38.

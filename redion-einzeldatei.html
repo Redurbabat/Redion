@@ -891,24 +891,14 @@ input,textarea,select{font:inherit; color:inherit}
  * ist — `Strg P`, `Strg M`, die Baumpfeile `▸ ⌄` — bleibt bei `--text-faint`,
  * denn dafür ist es da.
  * ==========================================================================*/
-#topbar .sucher{
-  flex:1 1 auto; min-width:0; max-width:520px;
-  justify-content:flex-start;
-  height:36px; padding:0 var(--space-3);
-  background:var(--bg-input); border-color:var(--line);
-  color:var(--text-dim); font-weight:500;
-}
-#topbar .sucher:hover{ background:var(--bg-hover); border-color:var(--line-stark) }
-#topbar .sucher .sucher-text{
-  flex:1 1 auto; min-width:0; text-align:left;
-  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-}
-#topbar .sucher kbd{
-  flex:none; font-size:10px; font-family:inherit;
-  padding:2px var(--space-2); border-radius:var(--radius-sm);
-  border:1px solid var(--line); border-bottom-color:var(--line-stark);
-  background:var(--bg-card); color:var(--text-faint);
-}
+/* HIER STAND DER SUCHER — bis E272.
+   Fünf Regeln für eine 520 px breite Box in der Kopfzeile: Grund, Rahmen,
+   Platzhaltertext mit Auslassung, das `Strg P`-Kästchen. Die Box ist mit
+   E272 entfallen, weil über der Kopfzeile die Reiterzeile steht und dort
+   schon ein ⌕ sitzt. Regeln für ein Element, das es nicht mehr gibt, sind
+   nicht harmlos: sie lesen sich beim nächsten Mal wie eine Beschreibung
+   dessen, was da sein sollte. */
+
 /* DIE FEDER GEHÖRT AN DIE KRUME, und das ist der ganze Kniff.
  *
  * Rechts gab es längst eine (`.spacer{flex:1}`), links keine. Der Sucher
@@ -937,7 +927,6 @@ input,textarea,select{font:inherit; color:inherit}
    Aktionsleiste unten, und eine zweite Suche oben wäre kein zweiter Weg,
    sondern eine zweite Frage („welche von beiden?"). */
 @media (max-width:760px){
-  #topbar .sucher{ display:none }
   #topbar .crumb{ max-width:none }
 }
 
@@ -978,12 +967,7 @@ input,textarea,select{font:inherit; color:inherit}
  * derselben Zeile sind. Ein langer Titel macht den Sucher schmaler, nicht
  * unlesbar.
  * ==========================================================================*/
-@media (min-width:761px){
-  /* Der Platzhalter aus E223 hielt die Lücke für ein Stück offen, das jetzt
-     wieder selbst in der Zeile steht. Er bleibt im HTML (er kostet nichts
-     und `aria-hidden` schweigt), nimmt aber keinen Raum mehr ein. */
-  #topbar .sucher-platz{ display:none }
-}
+
 
 </style>
 <style>
@@ -1828,6 +1812,27 @@ body[data-ruhig="an"] #topbar [data-ruhig="mehr"]{ display:none }
 
 /* ===== import quell/schale/stil/einfach.css ===== */
 /* ============================================================================
+ * einfach.css — ABGEHÄNGT SEIT E272, WIRD IN PHASE J GELÖSCHT
+ * ----------------------------------------------------------------------------
+ * Jeder Selektor dieser Datei trägt seit E272 zusätzlich
+ * `:not([data-schale="premium"])`, und `index.html` setzt
+ * `<body data-schale="premium">` fest. Damit gilt hier nichts mehr.
+ *
+ * WARUM NICHT GLEICH LÖSCHEN. Solange die neue Schale entsteht, ist ein
+ * Notausstieg mehr wert als eine aufgeräumte Datei: `data-schale` am body
+ * entfernen, und die alte Fassung ist zurück — ohne Bauen, ohne Commit.
+ * In Phase J fällt beides weg.
+ *
+ * WAS SIE GEKOSTET HAT, bevor sie abgehängt wurde. Drei Prüfpunkte in
+ * test245 waren ihretwegen rot (L88): Seitenleiste 320 statt 240,
+ * Kopfzeile 50 statt 54, Suche aus der Mitte gerückt. E258 hatte für
+ * dieselbe Schale das Gegenteil geplant. Zwei Vorhaben nebeneinander, die
+ * einander widersprechen — genau der Grund, warum E272 beide ablöst.
+ *
+ * Der ursprüngliche Kopf steht unverändert darunter.
+ * ==========================================================================*/
+
+/* ============================================================================
  * einfach.css — ruhige Redion-Schale: GoodNotes × OneNote × Notion
  * ----------------------------------------------------------------------------
  * Ziel: Redion soll nicht weniger können, sondern im Normalzustand deutlich
@@ -1848,20 +1853,20 @@ body[data-ruhig="an"] #topbar [data-ruhig="mehr"]{ display:none }
 /* --------------------------------------------------------------------------
    GEMEINSAME OBERFLÄCHENWERTE
    -------------------------------------------------------------------------- */
-body[data-ruhig]:not([data-ruhig="aus"]){
+body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]){
   --einfach-rail:72px;
   --einfach-baum:248px;
   --einfach-seite:920px;
   --einfach-kopf:50px;
 }
 
-body[data-ruhig]:not([data-ruhig="aus"]) button,
-body[data-ruhig]:not([data-ruhig="aus"]) [role="button"]{
+body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) button,
+body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) [role="button"]{
   -webkit-tap-highlight-color:transparent;
 }
 
-body[data-ruhig]:not([data-ruhig="aus"]) button:focus-visible,
-body[data-ruhig]:not([data-ruhig="aus"]) [role="button"]:focus-visible{
+body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) button:focus-visible,
+body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) [role="button"]:focus-visible{
   outline:2px solid var(--accent);
   outline-offset:2px;
 }
@@ -1870,11 +1875,11 @@ body[data-ruhig]:not([data-ruhig="aus"]) [role="button"]:focus-visible{
    DESKTOP: ONE-NOTE-ARTIGE ZWEISTUFIGE NAVIGATION
    -------------------------------------------------------------------------- */
 @media(min-width:761px){
-  body[data-ruhig]:not([data-ruhig="aus"]){
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]){
     --side-w:calc(var(--einfach-rail) + var(--einfach-baum));
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) #sidebar{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #sidebar{
     width:var(--side-w) !important;
     flex:0 0 var(--side-w) !important;
     display:grid !important;
@@ -1886,12 +1891,12 @@ body[data-ruhig]:not([data-ruhig="aus"]) [role="button"]:focus-visible{
     box-shadow:1px 0 0 color-mix(in srgb,var(--line) 38%,transparent);
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) #sidebar.collapsed{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #sidebar.collapsed{
     margin-left:calc(-1 * var(--side-w));
   }
 
   /* Arbeitsbereich oben: eine ruhige Zeile statt weiterer Navigation. */
-  body[data-ruhig]:not([data-ruhig="aus"]) .side-top{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .side-top{
     grid-column:1 / -1;
     grid-row:1;
     min-width:0;
@@ -1901,14 +1906,14 @@ body[data-ruhig]:not([data-ruhig="aus"]) [role="button"]:focus-visible{
     background:var(--bg-side);
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) .ws-btn{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .ws-btn{
     min-height:35px;
     padding:5px 7px;
     border-radius:9px;
     font-size:13.5px;
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) .ws-btn .ws-icon{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .ws-btn .ws-icon{
     width:25px;
     height:25px;
     flex-basis:25px;
@@ -1917,13 +1922,13 @@ body[data-ruhig]:not([data-ruhig="aus"]) [role="button"]:focus-visible{
 
   /* Start/Chat/Besprechungen ist im neuen Normalzustand kein dritter
      Navigationsstreifen. Die Ziele bleiben über Mehr/Werkzeuge erreichbar. */
-  body[data-ruhig]:not([data-ruhig="aus"]) .side-reiter{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .side-reiter{
     display:none !important;
   }
 
   /* Linker Rail: Hauptbereiche wie eine App-Leiste. Beim Öffnen von „Mehr"
      erscheinen dort auch die übrigen vorhandenen Ziele — ohne zweite Liste. */
-  body[data-ruhig]:not([data-ruhig="aus"]) .side-nav{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .side-nav{
     grid-column:1;
     grid-row:2;
     min-width:0;
@@ -1937,9 +1942,9 @@ body[data-ruhig]:not([data-ruhig="aus"]) [role="button"]:focus-visible{
     scrollbar-width:none;
     background:color-mix(in srgb,var(--bg-side) 96%,var(--bg));
   }
-  body[data-ruhig]:not([data-ruhig="aus"]) .side-nav::-webkit-scrollbar{display:none}
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .side-nav::-webkit-scrollbar{display:none}
 
-  body[data-ruhig]:not([data-ruhig="aus"]) .side-nav .side-item{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .side-nav .side-item{
     width:100%;
     min-height:55px;
     padding:6px 3px;
@@ -1957,7 +1962,7 @@ body[data-ruhig]:not([data-ruhig="aus"]) [role="button"]:focus-visible{
                transform var(--motion-fast) var(--ease);
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) .side-nav .side-item > [data-sym]{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .side-nav .side-item > [data-sym]{
     width:23px;
     height:23px;
     display:grid;
@@ -1965,37 +1970,37 @@ body[data-ruhig]:not([data-ruhig="aus"]) [role="button"]:focus-visible{
     color:currentColor;
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) .side-nav .side-item > [data-sym] svg{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .side-nav .side-item > [data-sym] svg{
     width:19px;
     height:19px;
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) .side-nav .side-item > span:nth-child(2){
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .side-nav .side-item > span:nth-child(2){
     width:100%;
     overflow:hidden;
     text-overflow:ellipsis;
     white-space:nowrap;
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) .side-nav .side-item .k{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .side-nav .side-item .k{
     display:none !important;
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) .side-nav .side-item:hover{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .side-nav .side-item:hover{
     transform:translateY(-1px);
     background:var(--bg-hover);
     color:var(--text);
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) .side-nav .side-item.on,
-  body[data-ruhig]:not([data-ruhig="aus"]) .side-nav .side-item[aria-current="page"]{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .side-nav .side-item.on,
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .side-nav .side-item[aria-current="page"]{
     background:var(--accent-schwach);
     color:var(--accent-text);
     font-weight:650;
   }
 
   /* Der Seitenbaum wird zur OneNote-Spalte. */
-  body[data-ruhig]:not([data-ruhig="aus"]) #tree{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #tree{
     grid-column:2;
     grid-row:2;
     min-width:0;
@@ -2005,7 +2010,7 @@ body[data-ruhig]:not([data-ruhig="aus"]) [role="button"]:focus-visible{
     background:var(--bg-side);
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) #tree::before{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #tree::before{
     content:"Notizbücher & Seiten";
     display:block;
     position:sticky;
@@ -2021,13 +2026,13 @@ body[data-ruhig]:not([data-ruhig="aus"]) [role="button"]:focus-visible{
     letter-spacing:.035em;
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) #tree .side-section{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #tree .side-section{
     padding:12px 6px 5px;
     font-size:11px;
     letter-spacing:.015em;
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) #tree .row{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #tree .row{
     min-height:34px;
     margin:1px 0;
     padding-right:4px;
@@ -2035,13 +2040,13 @@ body[data-ruhig]:not([data-ruhig="aus"]) [role="button"]:focus-visible{
     font-size:13.5px;
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) #tree .row.on{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #tree .row.on{
     background:var(--accent-schwach);
     color:var(--text);
     font-weight:650;
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) #tree .kids{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #tree .kids{
     margin-left:11px;
     padding-left:3px;
     border-left:1px solid var(--line-soft);
@@ -2049,7 +2054,7 @@ body[data-ruhig]:not([data-ruhig="aus"]) [role="button"]:focus-visible{
 
   /* Unten nur ein ruhiger Abschluss. Wenn „Mehr" geöffnet ist, bleiben die
      vorhandenen Import-/Papierkorb-/Hilfe-Knöpfe nutzbar. */
-  body[data-ruhig]:not([data-ruhig="aus"]) .side-fuss{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .side-fuss{
     grid-column:1 / -1;
     grid-row:3;
     min-width:0;
@@ -2061,26 +2066,26 @@ body[data-ruhig]:not([data-ruhig="aus"]) [role="button"]:focus-visible{
     background:var(--bg-side);
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) .side-fuss > .side-item{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .side-fuss > .side-item{
     width:auto;
     min-height:34px;
     padding:6px 8px;
     font-size:11.5px;
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) .side-fuss > .side-item .k,
-  body[data-ruhig]:not([data-ruhig="aus"]) .side-hinweis{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .side-fuss > .side-item .k,
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .side-hinweis{
     display:none;
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) .side-unten{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .side-unten{
     margin-left:auto;
     display:flex;
     align-items:center;
     gap:5px;
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) .side-schreib{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .side-schreib{
     width:34px;
     height:34px;
     border-radius:10px;
@@ -2092,7 +2097,7 @@ body[data-ruhig]:not([data-ruhig="aus"]) [role="button"]:focus-visible{
   /* ------------------------------------------------------------------------
      NOTION-ARTIGE KOPFZEILE
      ------------------------------------------------------------------------ */
-  body[data-ruhig]:not([data-ruhig="aus"]) #topbar{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #topbar{
     height:var(--einfach-kopf);
     flex:0 0 var(--einfach-kopf);
     gap:3px;
@@ -2101,33 +2106,33 @@ body[data-ruhig]:not([data-ruhig="aus"]) [role="button"]:focus-visible{
     border-bottom:1px solid var(--line-soft);
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) #topbar .top-btn{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #topbar .top-btn{
     min-height:34px;
     padding:5px 8px;
     border-radius:9px;
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) #topbar .top-btn.schmall,
-  body[data-ruhig]:not([data-ruhig="aus"]) #topbar .top-btn.schmal{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #topbar .top-btn.schmall,
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #topbar .top-btn.schmal{
     width:34px;
     padding:0;
     justify-content:center;
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) #topbar .crumb{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #topbar .crumb{
     min-width:80px;
     max-width:min(38vw,520px);
     font-size:13px;
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) #topbar .crumb a{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #topbar .crumb a{
     padding:4px 6px;
     border-radius:7px;
   }
 
   /* Suche liegt im normalen Fluss: dadurch bleibt sie stabil, wenn die Krume
      länger wird. Das wirkt wie Notion/OneNote statt wie eine schwebende Box. */
-  body[data-ruhig]:not([data-ruhig="aus"]) #btn-suche-mitte{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #btn-suche-mitte{
     position:static !important;
     inset:auto !important;
     transform:none !important;
@@ -2143,30 +2148,30 @@ body[data-ruhig]:not([data-ruhig="aus"]) [role="button"]:focus-visible{
     box-shadow:none;
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) #btn-suche-mitte:hover{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #btn-suche-mitte:hover{
     background:var(--bg-hover);
     border-color:var(--line);
     color:var(--text);
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) #btn-suche-mitte .sucher-text{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #btn-suche-mitte .sucher-text{
     overflow:hidden;
     text-overflow:ellipsis;
     white-space:nowrap;
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) #btn-suche-mitte kbd{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #btn-suche-mitte kbd{
     margin-left:auto;
     opacity:.62;
     font-size:10px;
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) .sucher-platz,
-  body[data-ruhig]:not([data-ruhig="aus"]) #topbar > .spacer{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .sucher-platz,
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #topbar > .spacer{
     display:none !important;
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) #btn-ai{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #btn-ai{
     min-width:45px;
     justify-content:center;
     color:var(--accent-text);
@@ -2175,33 +2180,33 @@ body[data-ruhig]:not([data-ruhig="aus"]) [role="button"]:focus-visible{
   /* ------------------------------------------------------------------------
      KONTAKTBEZOGENES MENÜBAND — eher Werkzeugschublade als zweite App
      ------------------------------------------------------------------------ */
-  body[data-ruhig]:not([data-ruhig="aus"]) #menueband{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #menueband{
     background:var(--bg);
     border-bottom:1px solid var(--line-soft);
     box-shadow:none;
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) .mb-reiter{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .mb-reiter{
     min-height:36px;
     padding:0 10px;
     gap:2px;
     background:var(--bg);
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) .mb-reiter-knopf{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .mb-reiter-knopf{
     min-height:32px;
     padding:0 10px;
     border-radius:8px;
     font-size:12px;
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) .mb-reiter-knopf[aria-selected="true"],
-  body[data-ruhig]:not([data-ruhig="aus"]) .mb-reiter-knopf.on{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .mb-reiter-knopf[aria-selected="true"],
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .mb-reiter-knopf.on{
     background:var(--accent-schwach);
     color:var(--accent-text);
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) .mb-band{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .mb-band{
     padding:8px 10px 9px;
     max-height:190px;
     overflow:auto;
@@ -2209,18 +2214,18 @@ body[data-ruhig]:not([data-ruhig="aus"]) [role="button"]:focus-visible{
     border-top:1px solid var(--line-soft);
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) .mb-gruppe{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .mb-gruppe{
     border-radius:10px;
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) .mb-knopf{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .mb-knopf{
     border-radius:8px;
   }
 
   /* ------------------------------------------------------------------------
      GOODNOTES-ARTIGE ARBEITSFLÄCHE FÜR ECHTE SEITEN
      ------------------------------------------------------------------------ */
-  body[data-ruhig]:not([data-ruhig="aus"]) #scroll{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #scroll{
     background:color-mix(in srgb,var(--bg-side) 58%,var(--bg));
     scroll-padding-top:18px;
   }
@@ -2228,7 +2233,7 @@ body[data-ruhig]:not([data-ruhig="aus"]) [role="button"]:focus-visible{
   /* Nur eine echte Seite bekommt das Papier. Startseiten/Bibliotheken bleiben
      volle Ansichten. `:has(#title)` entspricht der bereits im Menüband
      verwendeten Definition „echte Seite hat #title". */
-  body[data-ruhig]:not([data-ruhig="aus"]) #page:has(#title){
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page:has(#title){
     box-sizing:border-box;
     width:min(calc(100% - 40px),var(--einfach-seite));
     max-width:var(--einfach-seite);
@@ -2241,48 +2246,48 @@ body[data-ruhig]:not([data-ruhig="aus"]) [role="button"]:focus-visible{
     box-shadow:var(--shadow-1);
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) #page.wide:has(#title){
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page.wide:has(#title){
     width:calc(100% - 32px);
     max-width:none;
     padding-left:54px;
     padding-right:54px;
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) #page:has(#title) .cover{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page:has(#title) .cover{
     height:172px;
     margin:-34px -70px 0;
     border-radius:14px 14px 0 0;
     overflow:hidden;
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) #page.wide:has(#title) .cover{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page.wide:has(#title) .cover{
     margin-left:-54px;
     margin-right:-54px;
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) #page:has(#title) .pg-icon{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page:has(#title) .pg-icon{
     margin-top:26px;
     font-size:50px;
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) #page:has(#title) #title{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page:has(#title) #title{
     margin:8px 0 8px;
     font-size:34px;
     line-height:1.16;
     letter-spacing:-.025em;
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) #page:has(#title) .pg-tools{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page:has(#title) .pg-tools{
     margin-bottom:18px;
     gap:4px;
     opacity:.58;
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) #page:has(#title):hover .pg-tools{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page:has(#title):hover .pg-tools{
     opacity:1;
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) #page:has(#title) .pg-tools button{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page:has(#title) .pg-tools button{
     padding:4px 7px;
     border-radius:7px;
     font-size:12px;
@@ -2290,22 +2295,22 @@ body[data-ruhig]:not([data-ruhig="aus"]) [role="button"]:focus-visible{
 
   /* Blöcke ruhiger und näher an Notion: Griffe existieren weiterhin, aber
      die Seite selbst bleibt optisch dominant. */
-  body[data-ruhig]:not([data-ruhig="aus"]) #page:has(#title) .blk > .handles{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page:has(#title) .blk > .handles{
     left:-42px;
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) #page:has(#title) .b-text .ct{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page:has(#title) .b-text .ct{
     font-size:15.5px;
     line-height:1.62;
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) #page:has(#title) .b-h1 .ct{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page:has(#title) .b-h1 .ct{
     font-size:28px;
   }
-  body[data-ruhig]:not([data-ruhig="aus"]) #page:has(#title) .b-h2 .ct{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page:has(#title) .b-h2 .ct{
     font-size:22px;
   }
-  body[data-ruhig]:not([data-ruhig="aus"]) #page:has(#title) .b-h3 .ct{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page:has(#title) .b-h3 .ct{
     font-size:18px;
   }
 
@@ -2313,9 +2318,9 @@ body[data-ruhig]:not([data-ruhig="aus"]) [role="button"]:focus-visible{
      weiterer App-Bereich. Die Klassen sind dieselben Block-Klassen, die der
      Editor aus den Register-IDs bildet; unbekannte Varianten werden nicht
      berührt. */
-  body[data-ruhig]:not([data-ruhig="aus"]) #page .b-blatt,
-  body[data-ruhig]:not([data-ruhig="aus"]) #page .b-whiteboard,
-  body[data-ruhig]:not([data-ruhig="aus"]) #page .b-schaltplan{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page .b-blatt,
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page .b-whiteboard,
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page .b-schaltplan{
     margin:14px 0;
     border-radius:13px;
     overflow:hidden;
@@ -2325,15 +2330,15 @@ body[data-ruhig]:not([data-ruhig="aus"]) [role="button"]:focus-visible{
   /* Mehr Platz auf kleineren Laptops, ohne die Zwei-Spalten-Navigation zu
      verlieren. */
   @media(max-width:1120px){
-    body[data-ruhig]:not([data-ruhig="aus"]){
+    body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]){
       --einfach-rail:64px;
       --einfach-baum:216px;
       --einfach-seite:860px;
     }
-    body[data-ruhig]:not([data-ruhig="aus"]) #btn-suche-mitte{
+    body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #btn-suche-mitte{
       width:clamp(160px,22vw,280px);
     }
-    body[data-ruhig]:not([data-ruhig="aus"]) #page:has(#title){
+    body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page:has(#title){
       padding-left:54px;
       padding-right:54px;
     }
@@ -2344,11 +2349,11 @@ body[data-ruhig]:not([data-ruhig="aus"]) [role="button"]:focus-visible{
    TELEFON: GOODNOTES-ARTIGER INHALT + FÜNF DAUMENWEGE
    -------------------------------------------------------------------------- */
 @media(max-width:760px){
-  body[data-ruhig]:not([data-ruhig="aus"]){
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]){
     --einfach-kopf:48px;
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) #topbar{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #topbar{
     height:var(--einfach-kopf);
     flex-basis:var(--einfach-kopf);
     padding:0 max(8px,env(safe-area-inset-left));
@@ -2357,60 +2362,60 @@ body[data-ruhig]:not([data-ruhig="aus"]) [role="button"]:focus-visible{
     border-bottom:1px solid var(--line-soft);
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) #topbar .top-btn{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #topbar .top-btn{
     min-width:40px;
     min-height:40px;
     border-radius:10px;
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) #topbar .crumb{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #topbar .crumb{
     font-size:13px;
     font-weight:600;
   }
 
   /* Die vorhandenen fünf Hauptwege bleiben die einzige feste Navigation am
      unteren Rand. Keine zweite schwebende Aktionsleiste. */
-  body[data-ruhig]:not([data-ruhig="aus"]) #handy-oben{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #handy-oben{
     background:color-mix(in srgb,var(--bg-side) 94%,var(--bg));
     border-top:1px solid var(--line);
     box-shadow:0 -8px 28px color-mix(in srgb,#000 15%,transparent);
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) #handy-oben button{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #handy-oben button{
     min-height:48px;
     border-radius:12px;
   }
 
   /* Auf dem Telefon ist eine Seite randlos wie in GoodNotes; der Browserrand
      selbst ist bereits der Rahmen. */
-  body[data-ruhig]:not([data-ruhig="aus"]) #scroll{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #scroll{
     background:var(--bg);
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) #page:has(#title){
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page:has(#title){
     max-width:none;
     margin:0;
     padding:18px 18px calc(42vh + env(safe-area-inset-bottom));
     background:var(--bg);
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) #page:has(#title) .cover{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page:has(#title) .cover{
     height:132px;
     margin:-18px -18px 0;
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) #page:has(#title) .pg-icon{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page:has(#title) .pg-icon{
     margin-top:20px;
     font-size:42px;
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) #page:has(#title) #title{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page:has(#title) #title{
     margin:6px 0 7px;
     font-size:29px;
     line-height:1.15;
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) #page:has(#title) .pg-tools{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page:has(#title) .pg-tools{
     overflow-x:auto;
     scrollbar-width:none;
     opacity:1;
@@ -2418,9 +2423,9 @@ body[data-ruhig]:not([data-ruhig="aus"]) [role="button"]:focus-visible{
     margin:0 -4px 12px;
     padding:0 4px 4px;
   }
-  body[data-ruhig]:not([data-ruhig="aus"]) #page:has(#title) .pg-tools::-webkit-scrollbar{display:none}
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page:has(#title) .pg-tools::-webkit-scrollbar{display:none}
 
-  body[data-ruhig]:not([data-ruhig="aus"]) #page:has(#title) .pg-tools button{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page:has(#title) .pg-tools button{
     flex:0 0 auto;
     min-height:36px;
     padding:5px 9px;
@@ -2429,7 +2434,7 @@ body[data-ruhig]:not([data-ruhig="aus"]) [role="button"]:focus-visible{
 
   /* Das aufgeklappte Menüband bleibt das existierende Bottom-/Overlay-Menü,
      bekommt aber die ruhige Flächenform der übrigen App. */
-  body[data-ruhig]:not([data-ruhig="aus"]) .mb-band{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .mb-band{
     background:var(--bg-side);
     border:1px solid var(--line);
     border-left:0;
@@ -2437,12 +2442,12 @@ body[data-ruhig]:not([data-ruhig="aus"]) [role="button"]:focus-visible{
     box-shadow:0 12px 36px color-mix(in srgb,#000 24%,transparent);
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) .mb-gruppe{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .mb-gruppe{
     border:1px solid var(--line-soft);
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) .menu,
-  body[data-ruhig]:not([data-ruhig="aus"]) .finder{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .menu,
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .finder{
     border-radius:14px;
   }
 }
@@ -2451,12 +2456,12 @@ body[data-ruhig]:not([data-ruhig="aus"]) [role="button"]:focus-visible{
    SEHR KLEINE TELEFONE
    -------------------------------------------------------------------------- */
 @media(max-width:390px){
-  body[data-ruhig]:not([data-ruhig="aus"]) #page:has(#title){
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page:has(#title){
     padding-left:15px;
     padding-right:15px;
   }
 
-  body[data-ruhig]:not([data-ruhig="aus"]) #page:has(#title) #title{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page:has(#title) #title{
     font-size:27px;
   }
 }
@@ -2465,10 +2470,10 @@ body[data-ruhig]:not([data-ruhig="aus"]) [role="button"]:focus-visible{
    BEWEGUNGSWUNSCH
    -------------------------------------------------------------------------- */
 @media(prefers-reduced-motion:reduce){
-  body[data-ruhig]:not([data-ruhig="aus"]) .side-nav .side-item{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .side-nav .side-item{
     transition:none;
   }
-  body[data-ruhig]:not([data-ruhig="aus"]) .side-nav .side-item:hover{
+  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .side-nav .side-item:hover{
     transform:none;
   }
 }
@@ -12973,6 +12978,199 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 }
 
 </style>
+<!-- DIE PREMIUM-SCHALE (E272). Sie steht ABSICHTLICH als letzte: sie ordnet,
+     was die Blätter darüber gebaut haben, und muss deshalb gewinnen. Alles
+     darin hängt an `body[data-schale="premium"]` — das Attribut steht unten
+     fest am body und ist der Notausstieg, solange die Schale entsteht. -->
+<style>
+/* ===== quell/schale/stil/premium.css ===== */
+/* ============================================================================
+ * premium.css — die Schale von E272
+ * ----------------------------------------------------------------------------
+ * Redurs Auftrag: ein Menüband wie in einem Textprogramm, eine Kontextkante
+ * am linken Rand, „Datei" als eigene Fläche — und dazu Gold als Farbe der
+ * App. Der Entwurf dazu ist `redion_final_kontextleiste_v13.html`.
+ *
+ * ALLES HIER STEHT UNTER `body[data-schale="premium"]`.
+ *
+ * Das ist kein Zierrat, sondern der Notausstieg: solange die neue Schale
+ * entsteht, muss man sie ausschalten können, ohne etwas zu bauen. Das
+ * Attribut steht fest in `index.html` (kein Aufblitzen der alten Fassung
+ * beim Laden); wer es entfernt, bekommt die alte Schale zurück. In Phase J
+ * fällt der Wächter weg, und `einfach.css` wird gelöscht.
+ *
+ * WAS AUS DEM ENTWURF NICHT ÜBERNOMMEN WIRD, und warum
+ *
+ * `position:fixed` für das Band. Der Entwurf braucht es, weil er ein
+ * einzelnes Dokument ist. Redion hat einen richtigen Aufbau: `#menueband`
+ * und `#topbar` sind Flex-Kinder von `#main`, gescrollt wird in `#scroll`.
+ * Das Band ist damit ohnehin immer sichtbar; `fixed` würde es nur aus dem
+ * Fluss nehmen und die Kopfzeile darunterrutschen lassen.
+ *
+ * `display:none` für das Band am Telefon. Der Auftrag sagt „Ribbon aus ab
+ * 760 px" — am Telefon IST das Band aber Redions Menü (E240, nach vier
+ * Fotos von Redur). Es zu verstecken nähme dort Start, Einfügen und
+ * Zeichnen weg. Der Premium-Stil gilt deshalb erst ab 761 px; darunter
+ * bleibt alles, wie E236/E240 es gebaut haben.
+ * ==========================================================================*/
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DIE REITERZEILE — 36 px, dunkel, in BEIDEN Themen
+   ───────────────────────────────────────────────────────────────────────────
+   Dass sie auch im Hellmodus dunkel ist, ist der auffälligste Zug des
+   Entwurfs und Absicht: die Schale ist nicht die Seite. Ein Blatt Papier
+   liegt auf einem Tisch, nicht auf einem zweiten Blatt.
+
+   Die Schrift darauf ist gemessen (E272 Phase B, test272 §10):
+       --schale-text   #e8e8e6 auf #1b1d20   13,77
+       --schale-still  #9d9d9a auf #1b1d20    6,21
+       --gold-bright   hell 10,26 · dunkel 11,75
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 761px) {
+
+  body[data-schale="premium"] #menueband{
+    background: var(--schale-grund);
+    border-bottom: 1px solid color-mix(in srgb, #ffffff 8%, transparent);
+  }
+
+  body[data-schale="premium"] .mb-reiter{
+    min-height: var(--shell-reiter-h);
+    padding: 0 var(--space-2) 0 0;
+    gap: 0;
+    align-items: center;
+    background: var(--schale-grund);
+  }
+
+  /* ── Die Marke ganz links ─────────────────────────────────────────────────
+     Ein „R" im Gold der App. Sie ist KEIN Knopf: die Startansicht erreicht
+     man über Gehen, und ein zweiter Weg dorthin wäre genau die Doppelung,
+     gegen die E206 den Welt-Umschalter entfernt hat. Sie steht da, damit die
+     Zeile links nicht kahl beginnt, und ist für Vorleseprogramme unsichtbar. */
+  body[data-schale="premium"] .mb-marke{
+    flex: 0 0 auto;
+    display: grid; place-items: center;
+    width: 26px; height: var(--shell-reiter-h);
+    margin-right: var(--space-2);
+    font-size: 14px; font-weight: 700; line-height: 1;
+    color: var(--gold-bright);
+    letter-spacing: .01em;
+    user-select: none;
+  }
+
+  /* ── Die Reiter ───────────────────────────────────────────────────────────
+     NUR TEXT, kein Zeichen. Neun Reiter mit Zeichen wären eine Zeile voller
+     kleiner Bilder, die niemand unterscheidet; die Namen sind kurz genug.
+
+     12,5 px und nicht die 11,5 des Entwurfs: §23 des Auftrags verbietet
+     ausdrücklich, Beschriftungen zu schrumpfen, um mehr unterzubringen. Wenn
+     es eng wird, wandert ein BEFEHL ins „•••" — nie die Schrift nach unten. */
+  body[data-schale="premium"] .mb-reiter-knopf{
+    min-height: var(--shell-reiter-h);
+    padding: 0 var(--space-4);
+    font-size: 12.5px;
+    color: var(--schale-still);
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    gap: 0;
+  }
+  /* Das Zeichen des Reiters bleibt im Baum (das Register liefert es, und
+     das Telefon zeigt es weiter) — hier ist es nur nicht zu sehen. */
+  body[data-schale="premium"] .mb-reiter-knopf svg{ display: none }
+
+  body[data-schale="premium"] .mb-reiter-knopf:hover{
+    color: var(--schale-text);
+    background: color-mix(in srgb, #ffffff 6%, transparent);
+  }
+  body[data-schale="premium"] .mb-reiter-knopf.ist-an{
+    color: var(--gold-bright);
+    border-bottom-color: var(--gold);
+    background: var(--gold-glass);
+  }
+  /* §38: der gewählte Reiter ist nicht NUR an der Farbe zu erkennen — er
+     trägt zusätzlich den Strich, das Fettgewicht und `aria-selected`. */
+  body[data-schale="premium"] .mb-reiter-knopf.ist-an span:last-child{
+    font-weight: 600;
+  }
+  body[data-schale="premium"] .mb-reiter-knopf:focus-visible{
+    outline: 2px solid var(--gold-bright);
+    outline-offset: -3px;
+  }
+
+  /* ── Rechts: Glocke, Suche, KI, Konto, Klappe ─────────────────────────────
+     Sie kleben weiter am rechten Rand (E236) und bekommen nur den dunklen
+     Grund. Der eigene Hintergrund ist dabei nötig, nicht Zier: ohne ihn
+     rollen die Reiter sichtbar darunter durch. */
+  body[data-schale="premium"] .mb-rechts{
+    background: var(--schale-grund);
+    padding-left: var(--space-2);
+  }
+  body[data-schale="premium"] .mb-rechts-knopf{
+    min-width: 28px; min-height: 28px;
+    color: var(--schale-still);
+    border-radius: var(--radius-sm);
+  }
+  body[data-schale="premium"] .mb-rechts-knopf:hover{
+    background: var(--gold-glass);
+    color: var(--gold-bright);
+  }
+  body[data-schale="premium"] .mb-rechts-knopf:focus-visible{
+    outline: 2px solid var(--gold-bright); outline-offset: -2px;
+  }
+  /* Der Kontokreis behält seine Farbe: er zeigt den ARBEITSBEREICH an, nicht
+     die Schale. Ein goldener Kreis neben goldenen Knöpfen wäre ausserdem
+     nicht mehr als Zustand erkennbar. */
+  body[data-schale="premium"] .mb-rechts-knopf.mb-konto span{
+    width: 20px; height: 20px; font-size: 9.5px;
+  }
+
+  body[data-schale="premium"] .mb-klapp{
+    width: 27px; min-height: var(--shell-reiter-h);
+    color: var(--schale-still);
+    background: var(--schale-grund);
+    box-shadow: -8px 0 8px -6px var(--schale-grund);
+  }
+  body[data-schale="premium"] .mb-klapp:hover{ color: var(--gold-bright) }
+  body[data-schale="premium"] .mb-klapp:focus-visible{
+    outline: 2px solid var(--gold-bright); outline-offset: -2px;
+  }
+
+  /* ── Das Werkzeugband darunter ────────────────────────────────────────────
+     Es bleibt in dieser Phase, wie es ist — es bricht noch um und ist
+     deshalb bis zu 227 px hoch (L88). Erst Phase D gibt ihm die 58 px und
+     das reitereigene „•••"; vorher wäre eine feste Höhe ein VERSTECKEN von
+     Befehlen ohne Weg dorthin, und das verbietet §2.1 des Auftrags.
+
+     Was es hier schon bekommt, ist die Anbindung an die Reiterzeile: eine
+     goldene Haarlinie statt der grauen, und der Grund der Schale statt der
+     Seitenfarbe. */
+  body[data-schale="premium"] .mb-band{
+    border-top: 1px solid var(--gold-line);
+    background: var(--bg-side);
+  }
+
+  /* ── Die Gruppentitel ─────────────────────────────────────────────────────
+     Sie standen UNTER ihren Knöpfen und lasen sich, als beschrifteten sie
+     die Zeile darunter — mit Augen gefunden, von keiner Prüfung gemessen
+     (L88). Hier bleiben sie unten, bekommen aber Abstand nach oben und
+     weniger nach unten, damit die Zuordnung stimmt. Die eigentliche Lösung
+     ist die eine Zeile in Phase D. */
+  body[data-schale="premium"] .mb-gruppe-titel{
+    margin-top: var(--space-1);
+    color: var(--text-faint);
+    letter-spacing: .06em;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   AM TELEFON ÄNDERT SICH NICHTS
+   ───────────────────────────────────────────────────────────────────────────
+   Der ganze Block oben hängt an `min-width: 761px`. Unter 760 px bleibt das
+   Band Redions Menü (E240) und die untere Fünferleiste der Hauptweg. Wer
+   hier etwas ergänzt, muss dieselbe Grenze ziehen.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+</style>
 
 <!-- =========================================================================
      ANMELDE-FENSTER
@@ -13000,7 +13198,13 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 })();
 </script>
 </head>
-<body>
+<!-- `data-schale` STEHT HIER UND WIRD NICHT GESETZT (E272).
+     Ein Skript, das es nach dem Laden anhängt, hiesse: die alte Schale wird
+     erst gezeichnet und dann ersetzt — sichtbar als Zucken. Fest im Markup
+     gilt es ab dem ersten Bild.
+     Wer die alte Fassung braucht, nimmt das Attribut hier heraus; dann
+     greift `einfach.css` wieder, die genau darauf wartet. -->
+<body data-schale="premium">
 
 <!-- Für die Tastatur: der kürzeste Weg an der Seitenleiste vorbei -->
 <a href="#page" id="zum-inhalt">Zum Inhalt springen</a>
@@ -13219,25 +13423,27 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
          die vier Bereiche stehen. Am PC sind sie in der Seitenleiste. -->
     <button class="top-btn schmal nur-handy" id="btn-suche-handy" title="Suchen" aria-label="Suchen"><span data-sym="search"></span></button>
     <button class="top-btn schmal nur-handy" id="btn-neu-handy"   title="Neue Seite" aria-label="Neue Seite"><span data-sym="pencil"></span></button>
-    <!-- DIE SUCHE IN DIE MITTE (§8, §10 des Gestaltungs-Auftrags).
-         Sie stand bisher als Zeile in der Seitenleiste. Eine Suche, die das
-         Wichtigste einer Wissens-App ist, gehört dorthin, wo das Auge zuerst
-         hinsieht — und sie muss dort auch AUSSEHEN wie ein Feld, nicht wie
-         ein Menüeintrag.
-         Es ist ein KNOPF und kein `<input>`: getippt wird in der
-         Suchüberlagerung, die Strg+P ohnehin öffnet. Ein Feld, das beim
-         ersten Zeichen durch ein anderes Feld ersetzt wird, verliert den
-         Anschlag — genau das passiert, wenn man es „richtig" macht. -->
-    <button class="rb sucher" id="btn-suche-mitte"
-            title="Suchen (Strg + P)" aria-label="In Redion suchen">
-      <span data-sym="search"></span>
-      <span class="sucher-text">Suchen in Redion …</span>
-      <kbd>Strg P</kbd>
-    </button>
-    <!-- Platzhalter für den Sucher, wenn er in der ruhigen Fassung aus dem
-         Fluss genommen und mittig zum Fenster gestellt wird (E223). Ohne
-         ihn rückten Krume und Knöpfe zusammen. -->
-    <i class="sucher-platz" aria-hidden="true"></i>
+    <!-- HIER STAND DIE GROSSE SUCHBOX — bis E272.
+         E223 hatte sie in die Mitte der Kopfzeile gestellt: 320 Punkte breit,
+         mit Platzhaltertext und Tastenkürzel, „weil das Auge zuerst dorthin
+         sieht". Das stimmte, solange die Kopfzeile die oberste Zeile war.
+
+         Seit E272 ist sie es nicht mehr. Über ihr steht die Reiterzeile, und
+         darin steht die Suche als ⌕ (`mb-suche`, rechts, seit E236). Zwei
+         Sucheingänge übereinander sind ein doppelter Kopf — genau das, was
+         der Premium-Auftrag als Erstes abschafft.
+
+         DIE SUCHE IST NICHT WEG, sie hat nur keine Box mehr. Vier Wege
+         führen weiterhin zu DERSELBEN `App.suche()`:
+
+             ⌕ in der Reiterzeile     `mb-suche`
+             Strg + P
+             „Suchen" in der Seitenleiste  `btn-search`
+             ⌕ in der Kopfzeile, nur am Telefon  `btn-suche-handy`
+
+         Der Platzhalter `.sucher-platz` fällt mit weg: er hielt den Raum
+         frei, wenn der Sucher aus dem Fluss genommen wurde (E223). Ohne
+         Sucher gibt es nichts freizuhalten. -->
     <div class="spacer"></div>
     <button class="top-btn" id="btn-teilen" data-ruhig="mehr" title="Teilen und ausgeben"><span data-sym="share"></span><span>Teilen</span></button>
     <button class="top-btn" id="btn-ai" title="Lokale KI (Strg + J)"><span data-sym="sparkle"></span><span>KI</span></button>
@@ -113894,6 +114100,30 @@ const Menueband = (() => {
         zeile.className = 'mb-reiter';
         zeile.setAttribute('role', 'tablist');
         zeile.setAttribute('aria-label', 'Menüband');
+        /* DIE MARKE GANZ LINKS (E272).
+           Ein „R" im Gold der App, damit die Zeile links nicht kahl beginnt.
+    
+           Sie ist KEIN Knopf und trägt `aria-hidden`. Zwei Gründe, und der
+           zweite ist der wichtigere: erstens erreicht man die Startansicht über
+           „Gehen", ein zweiter Weg dorthin wäre die Doppelung, die E206 beim
+           Welt-Umschalter gerade entfernt hat. Zweitens steht sie IN einer
+           `role="tablist"` — ein Kind darin, das kein `role="tab"` hat und
+           trotzdem angesagt wird, verwirrt Vorleseprogramme mehr, als das
+           Zeichen ihnen nützt.
+    
+           Das Zeichen ist der Buchstabe des Arbeitsbereichs, dasselbe wie im
+           Kontokreis rechts — nicht ein zweites, festes „R". Wer seinen
+           Arbeitsbereich „Notizen" nennt, sieht links und rechts dasselbe N. */
+        const marke = document.createElement('div');
+        marke.className = 'mb-marke';
+        marke.setAttribute('aria-hidden', 'true');
+        try {
+            marke.textContent = String(Store.getMeta('arbeitsIcon', 'N'));
+        }
+        catch {
+            marke.textContent = 'N';
+        }
+        zeile.appendChild(marke);
         reiter.forEach((r) => {
             const b = document.createElement('button');
             b.type = 'button';
@@ -118001,11 +118231,14 @@ const App = (() => {
             handyLeiste();
         });
         an('btn-suche-handy', () => suche());
-        /* Der Sucher in der Mitte der Kopfleiste (E201). Er öffnet dieselbe
-           Überlagerung wie Strg+P und die Zeile in der Seitenleiste — drei
-           Wege, ein Ziel. Drei Wege zu DREI verschiedenen Suchen wären der
-           Fehler; das war bei `suche` und `palette` schon einmal so (E160). */
-        an('btn-suche-mitte', () => suche());
+        /* HIER STAND `an('btn-suche-mitte', …)` — bis E272.
+           Den Knopf gibt es seit dem Wegfall der grossen Suchbox nicht mehr.
+           Die Zeile stehen zu lassen wäre die vierte tote Verdrahtung dieser
+           Datei gewesen: `an()` bindet mit `?.` still ins Leere, und niemand
+           merkt es (L86 führt die drei anderen). Die Suche selbst ist
+           unverändert erreichbar — `mb-suche` in der Reiterzeile, Strg + P,
+           `btn-search` in der Seitenleiste, `btn-suche-handy` am Telefon; alle
+           vier rufen dasselbe `suche()`. */
         an('btn-neu-handy', () => neueSeite());
         handyLeiste();
         /* Reiterleiste oben in der Seitenleiste */

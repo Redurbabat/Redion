@@ -66,6 +66,11 @@
 <link rel="stylesheet" href="quell/schale/stil/lernwelt.css">
 <link rel="stylesheet" href="quell/schale/stil/notizhefte.css">
 <link rel="stylesheet" href="quell/schale/stil/bausteine.css">
+<!-- DIE PREMIUM-SCHALE (E272). Sie steht ABSICHTLICH als letzte: sie ordnet,
+     was die Blätter darüber gebaut haben, und muss deshalb gewinnen. Alles
+     darin hängt an `body[data-schale="premium"]` — das Attribut steht unten
+     fest am body und ist der Notausstieg, solange die Schale entsteht. -->
+<link rel="stylesheet" href="quell/schale/stil/premium.css">
 
 <!-- =========================================================================
      ANMELDE-FENSTER
@@ -93,7 +98,13 @@
 })();
 </script>
 </head>
-<body>
+<!-- `data-schale` STEHT HIER UND WIRD NICHT GESETZT (E272).
+     Ein Skript, das es nach dem Laden anhängt, hiesse: die alte Schale wird
+     erst gezeichnet und dann ersetzt — sichtbar als Zucken. Fest im Markup
+     gilt es ab dem ersten Bild.
+     Wer die alte Fassung braucht, nimmt das Attribut hier heraus; dann
+     greift `einfach.css` wieder, die genau darauf wartet. -->
+<body data-schale="premium">
 
 <!-- Für die Tastatur: der kürzeste Weg an der Seitenleiste vorbei -->
 <a href="#page" id="zum-inhalt">Zum Inhalt springen</a>
@@ -312,25 +323,27 @@
          die vier Bereiche stehen. Am PC sind sie in der Seitenleiste. -->
     <button class="top-btn schmal nur-handy" id="btn-suche-handy" title="Suchen" aria-label="Suchen"><span data-sym="search"></span></button>
     <button class="top-btn schmal nur-handy" id="btn-neu-handy"   title="Neue Seite" aria-label="Neue Seite"><span data-sym="pencil"></span></button>
-    <!-- DIE SUCHE IN DIE MITTE (§8, §10 des Gestaltungs-Auftrags).
-         Sie stand bisher als Zeile in der Seitenleiste. Eine Suche, die das
-         Wichtigste einer Wissens-App ist, gehört dorthin, wo das Auge zuerst
-         hinsieht — und sie muss dort auch AUSSEHEN wie ein Feld, nicht wie
-         ein Menüeintrag.
-         Es ist ein KNOPF und kein `<input>`: getippt wird in der
-         Suchüberlagerung, die Strg+P ohnehin öffnet. Ein Feld, das beim
-         ersten Zeichen durch ein anderes Feld ersetzt wird, verliert den
-         Anschlag — genau das passiert, wenn man es „richtig" macht. -->
-    <button class="rb sucher" id="btn-suche-mitte"
-            title="Suchen (Strg + P)" aria-label="In Redion suchen">
-      <span data-sym="search"></span>
-      <span class="sucher-text">Suchen in Redion …</span>
-      <kbd>Strg P</kbd>
-    </button>
-    <!-- Platzhalter für den Sucher, wenn er in der ruhigen Fassung aus dem
-         Fluss genommen und mittig zum Fenster gestellt wird (E223). Ohne
-         ihn rückten Krume und Knöpfe zusammen. -->
-    <i class="sucher-platz" aria-hidden="true"></i>
+    <!-- HIER STAND DIE GROSSE SUCHBOX — bis E272.
+         E223 hatte sie in die Mitte der Kopfzeile gestellt: 320 Punkte breit,
+         mit Platzhaltertext und Tastenkürzel, „weil das Auge zuerst dorthin
+         sieht". Das stimmte, solange die Kopfzeile die oberste Zeile war.
+
+         Seit E272 ist sie es nicht mehr. Über ihr steht die Reiterzeile, und
+         darin steht die Suche als ⌕ (`mb-suche`, rechts, seit E236). Zwei
+         Sucheingänge übereinander sind ein doppelter Kopf — genau das, was
+         der Premium-Auftrag als Erstes abschafft.
+
+         DIE SUCHE IST NICHT WEG, sie hat nur keine Box mehr. Vier Wege
+         führen weiterhin zu DERSELBEN `App.suche()`:
+
+             ⌕ in der Reiterzeile     `mb-suche`
+             Strg + P
+             „Suchen" in der Seitenleiste  `btn-search`
+             ⌕ in der Kopfzeile, nur am Telefon  `btn-suche-handy`
+
+         Der Platzhalter `.sucher-platz` fällt mit weg: er hielt den Raum
+         frei, wenn der Sucher aus dem Fluss genommen wurde (E223). Ohne
+         Sucher gibt es nichts freizuhalten. -->
     <div class="spacer"></div>
     <button class="top-btn" id="btn-teilen" data-ruhig="mehr" title="Teilen und ausgeben"><span data-sym="share"></span><span>Teilen</span></button>
     <button class="top-btn" id="btn-ai" title="Lokale KI (Strg + J)"><span data-sym="sparkle"></span><span>KI</span></button>

@@ -249,7 +249,13 @@ import { chromium } from 'playwright';
      Die Zeile war grün, weil sie den Knopf nicht SAH, nicht weil er weg
      war. Als E224 ihn zurück in den Fluss holte, wurde sie rot — und hat
      damit ihren eigenen blinden Fleck gemeldet. */
-  const SOLL_RUHIG = ['btn-back', 'btn-fwd', 'btn-suche-mitte', 'btn-ai', 'btn-fav', 'btn-page-menu'];
+  /* OHNE `btn-suche-mitte` SEIT E272: die grosse Suchbox in der Kopfzeile ist
+     entfallen, weil über ihr die Reiterzeile steht und dort schon ein ⌕ sitzt
+     (`mb-suche`, E236). Zwei Sucheingänge übereinander sind der doppelte Kopf,
+     den der Premium-Auftrag abschafft. Die Suche selbst ist unverändert
+     erreichbar: ⌕ oben, Strg + P, „Suchen" in der Seitenleiste, und am Telefon
+     `btn-suche-handy` weiterhin hier in der Kopfzeile. */
+  const SOLL_RUHIG = ['btn-back', 'btn-fwd', 'btn-ai', 'btn-fav', 'btn-page-menu'];
   ok('Die Kopfzeile zeigt am PC die sechs, die bleiben',
      SOLL_RUHIG.every(k => pc.kopfKnoepfe.includes(k)) &&
      pc.kopfKnoepfe.length === SOLL_RUHIG.length,

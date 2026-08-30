@@ -403,6 +403,30 @@ const Menueband = (() => {
         zeile.className = 'mb-reiter';
         zeile.setAttribute('role', 'tablist');
         zeile.setAttribute('aria-label', 'Menüband');
+        /* DIE MARKE GANZ LINKS (E272).
+           Ein „R" im Gold der App, damit die Zeile links nicht kahl beginnt.
+    
+           Sie ist KEIN Knopf und trägt `aria-hidden`. Zwei Gründe, und der
+           zweite ist der wichtigere: erstens erreicht man die Startansicht über
+           „Gehen", ein zweiter Weg dorthin wäre die Doppelung, die E206 beim
+           Welt-Umschalter gerade entfernt hat. Zweitens steht sie IN einer
+           `role="tablist"` — ein Kind darin, das kein `role="tab"` hat und
+           trotzdem angesagt wird, verwirrt Vorleseprogramme mehr, als das
+           Zeichen ihnen nützt.
+    
+           Das Zeichen ist der Buchstabe des Arbeitsbereichs, dasselbe wie im
+           Kontokreis rechts — nicht ein zweites, festes „R". Wer seinen
+           Arbeitsbereich „Notizen" nennt, sieht links und rechts dasselbe N. */
+        const marke = document.createElement('div');
+        marke.className = 'mb-marke';
+        marke.setAttribute('aria-hidden', 'true');
+        try {
+            marke.textContent = String(Store.getMeta('arbeitsIcon', 'N'));
+        }
+        catch {
+            marke.textContent = 'N';
+        }
+        zeile.appendChild(marke);
         reiter.forEach((r) => {
             const b = document.createElement('button');
             b.type = 'button';

@@ -3179,7 +3179,35 @@ Schalen-Vorhaben nebeneinander, die einander widersprechen.
   → Phase C hängt `einfach.css` an einem Präfix ab (Notausstieg bleibt), Phase J
     löscht sie. Danach misst test245 wieder die eine Schale, die es dann gibt.
 
+NACHTRAG AUS PHASE C — vier der fünf sind erledigt, und der fünfte war ein
+FALSCHES GRÜN.
+
+Das Abhängen von `einfach.css` hat die drei test245-Punkte und den
+test248-Punkt in einem Zug grün gemacht: Seitenleiste wieder 240, Kopfzeile
+wieder 54, Suche wieder in der Mitte, 30 Knöpfe statt 29. Sie waren also
+tatsächlich alle vier Folgen desselben Stilblatts.
+
+test247:547 wurde dabei ebenfalls grün — und das ist der Fund. Die Prüfung
+misst bei EINER Fensterbreite, und zwar bei 1440. Nachgemessen über drei
+Breiten, je Reiter, mit offener Seite:
+
+    Breite   start   einfügen   zeichnen   werkzeuge   elektro   ansicht
+    1280 px  223 px   223 px     143 px     223 px      143 px   143 px
+    1366 px  223 px   223 px     143 px     143 px      143 px   143 px
+    1440 px  143 px   223 px     143 px     143 px      143 px   143 px
+
+Bei 1440 passt „Start" zufällig in eine Zeile — das ist die einzige Zelle,
+die die Prüfung ansieht. Bei 1280 und 1366 steht dasselbe Band in zwei
+Zeilen, und „Einfügen" mit seinen 69 Knöpfen steht bei JEDER Breite in
+zwei. Der Kommentar über der Prüfung warnt sogar davor („genau die Sorte
+Kippkante, die man nur trifft, wenn man beide Breiten misst") — und misst
+dann selbst nur eine.
+
+  → Phase D gibt dem Band die 58 px und das reitereigene „•••" und erweitert
+    dabei test247 auf mehrere Breiten UND mehrere Reiter. Vorher wäre eine
+    feste Höhe ein Verstecken von Befehlen ohne Weg dorthin.
+
 Warum das hier steht und nicht schnell repariert wurde: eine Zahl in einem
 Wächter zu senken, weil sie nicht mehr passt, ist die Bewegung, gegen die der
-Wächter gebaut wurde. Alle fünf Punkte gehören in die Phase, die den betroffenen
-Teil ohnehin neu baut.
+Wächter gebaut wurde. Der letzte Punkt gehört in die Phase, die das Band
+ohnehin neu baut.

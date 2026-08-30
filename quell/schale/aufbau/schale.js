@@ -3416,11 +3416,14 @@ const App = (() => {
             handyLeiste();
         });
         an('btn-suche-handy', () => suche());
-        /* Der Sucher in der Mitte der Kopfleiste (E201). Er öffnet dieselbe
-           Überlagerung wie Strg+P und die Zeile in der Seitenleiste — drei
-           Wege, ein Ziel. Drei Wege zu DREI verschiedenen Suchen wären der
-           Fehler; das war bei `suche` und `palette` schon einmal so (E160). */
-        an('btn-suche-mitte', () => suche());
+        /* HIER STAND `an('btn-suche-mitte', …)` — bis E272.
+           Den Knopf gibt es seit dem Wegfall der grossen Suchbox nicht mehr.
+           Die Zeile stehen zu lassen wäre die vierte tote Verdrahtung dieser
+           Datei gewesen: `an()` bindet mit `?.` still ins Leere, und niemand
+           merkt es (L86 führt die drei anderen). Die Suche selbst ist
+           unverändert erreichbar — `mb-suche` in der Reiterzeile, Strg + P,
+           `btn-search` in der Seitenleiste, `btn-suche-handy` am Telefon; alle
+           vier rufen dasselbe `suche()`. */
         an('btn-neu-handy', () => neueSeite());
         handyLeiste();
         /* Reiterleiste oben in der Seitenleiste */

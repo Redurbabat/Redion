@@ -1,0 +1,185 @@
+/* ============================================================================
+ * premium.css — die Schale von E272
+ * ----------------------------------------------------------------------------
+ * Redurs Auftrag: ein Menüband wie in einem Textprogramm, eine Kontextkante
+ * am linken Rand, „Datei" als eigene Fläche — und dazu Gold als Farbe der
+ * App. Der Entwurf dazu ist `redion_final_kontextleiste_v13.html`.
+ *
+ * ALLES HIER STEHT UNTER `body[data-schale="premium"]`.
+ *
+ * Das ist kein Zierrat, sondern der Notausstieg: solange die neue Schale
+ * entsteht, muss man sie ausschalten können, ohne etwas zu bauen. Das
+ * Attribut steht fest in `index.html` (kein Aufblitzen der alten Fassung
+ * beim Laden); wer es entfernt, bekommt die alte Schale zurück. In Phase J
+ * fällt der Wächter weg, und `einfach.css` wird gelöscht.
+ *
+ * WAS AUS DEM ENTWURF NICHT ÜBERNOMMEN WIRD, und warum
+ *
+ * `position:fixed` für das Band. Der Entwurf braucht es, weil er ein
+ * einzelnes Dokument ist. Redion hat einen richtigen Aufbau: `#menueband`
+ * und `#topbar` sind Flex-Kinder von `#main`, gescrollt wird in `#scroll`.
+ * Das Band ist damit ohnehin immer sichtbar; `fixed` würde es nur aus dem
+ * Fluss nehmen und die Kopfzeile darunterrutschen lassen.
+ *
+ * `display:none` für das Band am Telefon. Der Auftrag sagt „Ribbon aus ab
+ * 760 px" — am Telefon IST das Band aber Redions Menü (E240, nach vier
+ * Fotos von Redur). Es zu verstecken nähme dort Start, Einfügen und
+ * Zeichnen weg. Der Premium-Stil gilt deshalb erst ab 761 px; darunter
+ * bleibt alles, wie E236/E240 es gebaut haben.
+ * ==========================================================================*/
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DIE REITERZEILE — 36 px, dunkel, in BEIDEN Themen
+   ───────────────────────────────────────────────────────────────────────────
+   Dass sie auch im Hellmodus dunkel ist, ist der auffälligste Zug des
+   Entwurfs und Absicht: die Schale ist nicht die Seite. Ein Blatt Papier
+   liegt auf einem Tisch, nicht auf einem zweiten Blatt.
+
+   Die Schrift darauf ist gemessen (E272 Phase B, test272 §10):
+       --schale-text   #e8e8e6 auf #1b1d20   13,77
+       --schale-still  #9d9d9a auf #1b1d20    6,21
+       --gold-bright   hell 10,26 · dunkel 11,75
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 761px) {
+
+  body[data-schale="premium"] #menueband{
+    background: var(--schale-grund);
+    border-bottom: 1px solid color-mix(in srgb, #ffffff 8%, transparent);
+  }
+
+  body[data-schale="premium"] .mb-reiter{
+    min-height: var(--shell-reiter-h);
+    padding: 0 var(--space-2) 0 0;
+    gap: 0;
+    align-items: center;
+    background: var(--schale-grund);
+  }
+
+  /* ── Die Marke ganz links ─────────────────────────────────────────────────
+     Ein „R" im Gold der App. Sie ist KEIN Knopf: die Startansicht erreicht
+     man über Gehen, und ein zweiter Weg dorthin wäre genau die Doppelung,
+     gegen die E206 den Welt-Umschalter entfernt hat. Sie steht da, damit die
+     Zeile links nicht kahl beginnt, und ist für Vorleseprogramme unsichtbar. */
+  body[data-schale="premium"] .mb-marke{
+    flex: 0 0 auto;
+    display: grid; place-items: center;
+    width: 26px; height: var(--shell-reiter-h);
+    margin-right: var(--space-2);
+    font-size: 14px; font-weight: 700; line-height: 1;
+    color: var(--gold-bright);
+    letter-spacing: .01em;
+    user-select: none;
+  }
+
+  /* ── Die Reiter ───────────────────────────────────────────────────────────
+     NUR TEXT, kein Zeichen. Neun Reiter mit Zeichen wären eine Zeile voller
+     kleiner Bilder, die niemand unterscheidet; die Namen sind kurz genug.
+
+     12,5 px und nicht die 11,5 des Entwurfs: §23 des Auftrags verbietet
+     ausdrücklich, Beschriftungen zu schrumpfen, um mehr unterzubringen. Wenn
+     es eng wird, wandert ein BEFEHL ins „•••" — nie die Schrift nach unten. */
+  body[data-schale="premium"] .mb-reiter-knopf{
+    min-height: var(--shell-reiter-h);
+    padding: 0 var(--space-4);
+    font-size: 12.5px;
+    color: var(--schale-still);
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    gap: 0;
+  }
+  /* Das Zeichen des Reiters bleibt im Baum (das Register liefert es, und
+     das Telefon zeigt es weiter) — hier ist es nur nicht zu sehen. */
+  body[data-schale="premium"] .mb-reiter-knopf svg{ display: none }
+
+  body[data-schale="premium"] .mb-reiter-knopf:hover{
+    color: var(--schale-text);
+    background: color-mix(in srgb, #ffffff 6%, transparent);
+  }
+  body[data-schale="premium"] .mb-reiter-knopf.ist-an{
+    color: var(--gold-bright);
+    border-bottom-color: var(--gold);
+    background: var(--gold-glass);
+  }
+  /* §38: der gewählte Reiter ist nicht NUR an der Farbe zu erkennen — er
+     trägt zusätzlich den Strich, das Fettgewicht und `aria-selected`. */
+  body[data-schale="premium"] .mb-reiter-knopf.ist-an span:last-child{
+    font-weight: 600;
+  }
+  body[data-schale="premium"] .mb-reiter-knopf:focus-visible{
+    outline: 2px solid var(--gold-bright);
+    outline-offset: -3px;
+  }
+
+  /* ── Rechts: Glocke, Suche, KI, Konto, Klappe ─────────────────────────────
+     Sie kleben weiter am rechten Rand (E236) und bekommen nur den dunklen
+     Grund. Der eigene Hintergrund ist dabei nötig, nicht Zier: ohne ihn
+     rollen die Reiter sichtbar darunter durch. */
+  body[data-schale="premium"] .mb-rechts{
+    background: var(--schale-grund);
+    padding-left: var(--space-2);
+  }
+  body[data-schale="premium"] .mb-rechts-knopf{
+    min-width: 28px; min-height: 28px;
+    color: var(--schale-still);
+    border-radius: var(--radius-sm);
+  }
+  body[data-schale="premium"] .mb-rechts-knopf:hover{
+    background: var(--gold-glass);
+    color: var(--gold-bright);
+  }
+  body[data-schale="premium"] .mb-rechts-knopf:focus-visible{
+    outline: 2px solid var(--gold-bright); outline-offset: -2px;
+  }
+  /* Der Kontokreis behält seine Farbe: er zeigt den ARBEITSBEREICH an, nicht
+     die Schale. Ein goldener Kreis neben goldenen Knöpfen wäre ausserdem
+     nicht mehr als Zustand erkennbar. */
+  body[data-schale="premium"] .mb-rechts-knopf.mb-konto span{
+    width: 20px; height: 20px; font-size: 9.5px;
+  }
+
+  body[data-schale="premium"] .mb-klapp{
+    width: 27px; min-height: var(--shell-reiter-h);
+    color: var(--schale-still);
+    background: var(--schale-grund);
+    box-shadow: -8px 0 8px -6px var(--schale-grund);
+  }
+  body[data-schale="premium"] .mb-klapp:hover{ color: var(--gold-bright) }
+  body[data-schale="premium"] .mb-klapp:focus-visible{
+    outline: 2px solid var(--gold-bright); outline-offset: -2px;
+  }
+
+  /* ── Das Werkzeugband darunter ────────────────────────────────────────────
+     Es bleibt in dieser Phase, wie es ist — es bricht noch um und ist
+     deshalb bis zu 227 px hoch (L88). Erst Phase D gibt ihm die 58 px und
+     das reitereigene „•••"; vorher wäre eine feste Höhe ein VERSTECKEN von
+     Befehlen ohne Weg dorthin, und das verbietet §2.1 des Auftrags.
+
+     Was es hier schon bekommt, ist die Anbindung an die Reiterzeile: eine
+     goldene Haarlinie statt der grauen, und der Grund der Schale statt der
+     Seitenfarbe. */
+  body[data-schale="premium"] .mb-band{
+    border-top: 1px solid var(--gold-line);
+    background: var(--bg-side);
+  }
+
+  /* ── Die Gruppentitel ─────────────────────────────────────────────────────
+     Sie standen UNTER ihren Knöpfen und lasen sich, als beschrifteten sie
+     die Zeile darunter — mit Augen gefunden, von keiner Prüfung gemessen
+     (L88). Hier bleiben sie unten, bekommen aber Abstand nach oben und
+     weniger nach unten, damit die Zuordnung stimmt. Die eigentliche Lösung
+     ist die eine Zeile in Phase D. */
+  body[data-schale="premium"] .mb-gruppe-titel{
+    margin-top: var(--space-1);
+    color: var(--text-faint);
+    letter-spacing: .06em;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   AM TELEFON ÄNDERT SICH NICHTS
+   ───────────────────────────────────────────────────────────────────────────
+   Der ganze Block oben hängt an `min-width: 761px`. Unter 760 px bleibt das
+   Band Redions Menü (E240) und die untere Fünferleiste der Hauptweg. Wer
+   hier etwas ergänzt, muss dieselbe Grenze ziehen.
+   ═══════════════════════════════════════════════════════════════════════════ */

@@ -410,24 +410,14 @@ input,textarea,select{font:inherit; color:inherit}
  * ist — `Strg P`, `Strg M`, die Baumpfeile `▸ ⌄` — bleibt bei `--text-faint`,
  * denn dafür ist es da.
  * ==========================================================================*/
-#topbar .sucher{
-  flex:1 1 auto; min-width:0; max-width:520px;
-  justify-content:flex-start;
-  height:36px; padding:0 var(--space-3);
-  background:var(--bg-input); border-color:var(--line);
-  color:var(--text-dim); font-weight:500;
-}
-#topbar .sucher:hover{ background:var(--bg-hover); border-color:var(--line-stark) }
-#topbar .sucher .sucher-text{
-  flex:1 1 auto; min-width:0; text-align:left;
-  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-}
-#topbar .sucher kbd{
-  flex:none; font-size:10px; font-family:inherit;
-  padding:2px var(--space-2); border-radius:var(--radius-sm);
-  border:1px solid var(--line); border-bottom-color:var(--line-stark);
-  background:var(--bg-card); color:var(--text-faint);
-}
+/* HIER STAND DER SUCHER — bis E272.
+   Fünf Regeln für eine 520 px breite Box in der Kopfzeile: Grund, Rahmen,
+   Platzhaltertext mit Auslassung, das `Strg P`-Kästchen. Die Box ist mit
+   E272 entfallen, weil über der Kopfzeile die Reiterzeile steht und dort
+   schon ein ⌕ sitzt. Regeln für ein Element, das es nicht mehr gibt, sind
+   nicht harmlos: sie lesen sich beim nächsten Mal wie eine Beschreibung
+   dessen, was da sein sollte. */
+
 /* DIE FEDER GEHÖRT AN DIE KRUME, und das ist der ganze Kniff.
  *
  * Rechts gab es längst eine (`.spacer{flex:1}`), links keine. Der Sucher
@@ -456,7 +446,6 @@ input,textarea,select{font:inherit; color:inherit}
    Aktionsleiste unten, und eine zweite Suche oben wäre kein zweiter Weg,
    sondern eine zweite Frage („welche von beiden?"). */
 @media (max-width:760px){
-  #topbar .sucher{ display:none }
   #topbar .crumb{ max-width:none }
 }
 
@@ -497,9 +486,4 @@ input,textarea,select{font:inherit; color:inherit}
  * derselben Zeile sind. Ein langer Titel macht den Sucher schmaler, nicht
  * unlesbar.
  * ==========================================================================*/
-@media (min-width:761px){
-  /* Der Platzhalter aus E223 hielt die Lücke für ein Stück offen, das jetzt
-     wieder selbst in der Zeile steht. Er bleibt im HTML (er kostet nichts
-     und `aria-hidden` schweigt), nimmt aber keinen Raum mehr ein. */
-  #topbar .sucher-platz{ display:none }
-}
+

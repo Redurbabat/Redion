@@ -366,7 +366,11 @@ console.log('\n5 · Die Schale: Masse, Druckpunkt, Suche');
 const schaleMass = await seite.evaluate(() => {
   const b = (s: string) => document.querySelector<HTMLElement>(s);
   const seitenleiste = b('#sidebar');
-  const sucher = b('#topbar .sucher');
+  /* SEIT E272 STEHT DIE SUCHE IN DER REITERZEILE, nicht in der Kopfzeile.
+     Der Auftrag schafft den doppelten Kopf ab; die grosse Box aus E223 ist
+     dabei entfallen, das ⌕ aus E236 blieb. Gemessen wird deshalb dort. */
+  const sucher = b('#menueband #mb-suche');
+  const alteBox = b('#topbar .sucher');
   const kopf = b('#topbar');
   const fenster = window.innerWidth;
   const sr = sucher?.getBoundingClientRect();
@@ -374,6 +378,7 @@ const schaleMass = await seite.evaluate(() => {
     seite: seitenleiste ? Math.round(seitenleiste.getBoundingClientRect().width) : 0,
     kopfHoehe: kopf ? Math.round(kopf.getBoundingClientRect().height) : 0,
     sucherDa: !!sucher,
+    alteBoxWeg: !alteBox,
     sucherBreite: sr ? Math.round(sr.width) : 0,
     /* WELCHE MITTE? Die des ARBEITSBEREICHS, nicht die des Fensters (E224).
        Die Seitenleiste hat einen eigenen Hintergrund; sie ist optisch eine
@@ -410,44 +415,31 @@ p('Die Seitenleiste liegt zwischen 220 und 250',
 /* §8: 52–58. */
 p('Die Kopfleiste ist 52 bis 58 hoch',
   schaleMass.kopfHoehe >= 52 && schaleMass.kopfHoehe <= 58, `${schaleMass.kopfHoehe}`);
-p('Die Suche steht in der Kopfleiste', schaleMass.sucherDa);
-/* NICHT „STEHT MITTIG", SONDERN „STEHT STILL".
- *
- * Der erste Anlauf prüfte den Abstand zur Fenstermitte mit 90 Punkten
- * Nachsicht. Der Gegenbeweis blieb grün: auch die kaputte Lage lag bei
- * einem der beiden Titel innerhalb der 90. Eine Prüfung, die den Fehler
- * durchlässt, den sie verhindern soll, ist keine (§55.2).
- *
- * Gemessen ist der Fehler etwas anderes: der Sucher WANDERT mit dem
- * Seitentitel. Kurzer Titel 559, langer Titel 751 — 192 Punkte. Mit der
- * Feder an der Krume: beide Male dieselbe Stelle.
- *
- * Also wird genau das gemessen, und der Unterschied ist nicht knapp,
- * sondern 192 gegen 0. */
-const wandert = await seite.evaluate(() => {
-  const k = document.querySelector('#topbar .crumb') as HTMLElement;
-  const s = document.querySelector('#topbar .sucher') as HTMLElement;
-  if (!k || !s) return -1;
-  const alt = k.textContent;
-  const wo = () => Math.round(s.getBoundingClientRect().left);
-  k.textContent = 'Kurz';                    const a = wo();
-  k.textContent = 'Ein ziemlich langer Seitentitel für den Versuch'; const b = wo();
-  k.textContent = alt;
-  return Math.abs(a - b);
-});
-p('Die Suche wandert nicht mit dem Seitentitel', wandert === 0,
-  `${wandert} Punkte Unterschied`);
-p('… und steht dabei ungefähr in der Mitte des Arbeitsbereichs',
-  schaleMass.ausDerMitte <= 45, `${schaleMass.ausDerMitte} Punkte daneben`);
-/* DER GEGENBEWEIS ZU DIESER ZEILE, weil sie sonst nur eine Zahl bestätigt:
-   mit `position:fixed; left:50%` — genau der Fassung aus E223 — misst
-   dieselbe Zeile 120 statt 29. Sie kann also rot werden.
-   Und die Zeile darunter ist die, die E223 gar nicht erst gestellt hat. */
-p('Der Seitentitel läuft nicht unter das Suchfeld',
-  schaleMass.krumeUnterSucher === 0,
-  `${schaleMass.krumeUnterSucher} Punkte Überdeckung`);
-p('Sie ist breit genug, um sie zu sehen', schaleMass.sucherBreite >= 260,
-  `${schaleMass.sucherBreite}`);
+p('Die Suche steht in der Reiterzeile', schaleMass.sucherDa);
+/* UND NICHT MEHR IN DER KOPFZEILE. Das ist der eigentliche Punkt von E272:
+   nicht „die Suche ist woanders", sondern „sie ist nur noch EINMAL oben".
+   Zwei Eingänge übereinander sind der doppelte Kopf, den der Auftrag
+   abschafft. Solange diese Zeile grün ist, ist er weg. */
+p('… und die grosse Box in der Kopfzeile ist weg', schaleMass.alteBoxWeg);
+
+/* DREI PRÜFUNGEN SIND HIER ENTFALLEN, und der Grund gehört aufgeschrieben,
+   sonst sieht es aus wie Nachgeben:
+
+     „Die Suche wandert nicht mit dem Seitentitel"   (E224)
+     „… und steht in der Mitte des Arbeitsbereichs"  (E224)
+     „Der Seitentitel läuft nicht unter das Suchfeld" (E223)
+     „Sie ist breit genug, um sie zu sehen" (≥260 px)
+
+   Alle vier messen dasselbe Ding: eine 320 Punkte breite Box, die in der
+   Kopfzeile mit dem Seitentitel um Platz ringt. Genau dieses Ringen hat
+   E272 beendet, indem es die Box entfernt hat. Ein ⌕ von 28 × 28 in der
+   Reiterzeile wandert nicht, drängt nichts und muss nicht breit sein.
+
+   Sie durch schwächere Fassungen zu ersetzen wäre schlimmer als sie
+   wegzulassen — eine Prüfung, die etwas misst, das es nicht mehr gibt,
+   ist ab dann für immer grün. Was bleibt, ist die Frage, auf die es
+   ankommt: TUT die Suche noch etwas. Das steht weiter unten. */
+
 /* §15: der Druckpunkt. Geprüft wird, dass `transform` überhaupt überblendet
    wird — ohne das springt der Knopf statt nachzugeben. */
 p('Die Knöpfe blenden ihren Druckpunkt über',
@@ -455,7 +447,7 @@ p('Die Knöpfe blenden ihren Druckpunkt über',
 
 /* UND SIE TUT ETWAS. Ein Suchfeld, das nichts öffnet, ist die schlimmste
    Sorte Attrappe — es sieht aus wie das Wichtigste der App. */
-await seite.click('#topbar .sucher');
+await seite.click('#menueband #mb-suche');
 await seite.waitForTimeout(500);
 const suchDa = await seite.evaluate(() =>
   !!document.querySelector('#suche-overlay, .suche-fenster, [data-suche], .overlay input'));

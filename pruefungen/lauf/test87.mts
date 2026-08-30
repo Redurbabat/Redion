@@ -198,7 +198,19 @@ console.log('\n— Die Stilblätter —');
  *     Stufe 0  marken · dunkel · hell   die Werte  (--bg, --accent …)
  *     Stufe 1  grund · aufbau           das Gerüst (Körper, Raster)
  *     Stufe 2  alle Bauteile            untereinander egal
- *     Stufe 3  bausteine                zuletzt, es überschreibt Bauteile
+ *     Stufe 3  bausteine                überschreibt die Bauteile
+ *     Stufe 4  premium                  die Schale, ganz zuletzt (E272)
+ *
+ * WARUM PREMIUM NOCH HINTER BAUSTEINE. `bausteine.css` ordnet die BAUTEILE
+ * — Knöpfe, Karten, Dialoge. `premium.css` ordnet die SCHALE, die aus
+ * ebendiesen Bauteilen besteht: die Reiterzeile ist eine Reihe Knöpfe, und
+ * sie muss dunkel sein, obwohl ein Knopf hell ist. Käme sie davor, gewönne
+ * das allgemeinere Blatt gegen das besondere.
+ *
+ * Der Preis ist eine Regel, die man kennen muss: was in `premium.css` steht,
+ * kann nur noch durch höhere Genauigkeit übersteuert werden, nicht durch
+ * spätere Position. Deshalb steht dort AUSSCHLIESSLICH Schale — und alles
+ * hinter `body[data-schale="premium"]`, damit es sich abschalten lässt.
  *
  * Ein neues Bauteil-Stilblatt braucht damit keine Änderung mehr an dieser
  * Datei — ein an die falsche Stelle gehängtes aber sehr wohl.
@@ -210,7 +222,8 @@ const STILE = _liste(STIL_ORDNER).filter(n => n.endsWith('.css')).sort();
    der erst zur Laufzeit feststeht — deshalb `Record<string, number>`. */
 const STUFE: Record<string, number> = { 'marken.css': 0, 'dunkel.css': 0, 'hell.css': 0,
                 'grund.css': 1, 'aufbau.css': 1,
-                'bausteine.css': 3 };
+                'bausteine.css': 3,
+                'premium.css': 4 };
 const stufeVon = (d: string) => STUFE[d] ?? 2;
 
 const html = _lies(_dazu(WURZEL, 'index.html'), 'utf8');

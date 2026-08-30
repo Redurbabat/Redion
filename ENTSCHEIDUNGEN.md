@@ -19675,3 +19675,81 @@ laufenden Bild gemessen, und was nichts einfärbt, hat nichts zu messen. Die
 Marken sind in Phase B eingeführt und werden erst in Phase C benutzt —
 zwischen beiden liegt genau die Lücke, in der sich ein unlesbarer Wert
 einnistet.
+
+PHASE C (die Reiterzeile) — und ein Stilblatt, das fünf Wächter rot hielt
+------------------------------------------------------------------------
+
+NEU `quell/schale/stil/premium.css`, alles unter `body[data-schale="premium"]`.
+Das Attribut steht FEST in `index.html` und wird nicht von einem Skript
+gesetzt: nachträglich angehängt hiesse, die alte Schale erst zu zeichnen
+und dann zu ersetzen — sichtbar als Zucken. Wer es herausnimmt, hat die
+alte Fassung zurück, ohne zu bauen. Das ist der Notausstieg, solange die
+Schale entsteht; in Phase J fällt er weg.
+
+DIE REITERZEILE: 36 px, Grund `--schale-grund` (#1b1d20) in BEIDEN Themen,
+links eine Marke mit dem Zeichen des Arbeitsbereichs, Reiter NUR ALS TEXT
+(neun Zeichen nebeneinander unterscheidet niemand), der gewählte in
+`--gold-bright` mit goldenem Strich und Glasfond.
+
+Die Reiterschrift ist 12,5 px und nicht die 11,5 des Entwurfs. §23 des
+Auftrags verbietet ausdrücklich, Beschriftungen zu schrumpfen, um mehr
+unterzubringen: wenn es eng wird, wandert ein BEFEHL ins „•••" — nie die
+Schrift nach unten.
+
+ZWEI DINGE AUS DEM ENTWURF WURDEN NICHT ÜBERNOMMEN, mit Grund:
+
+  · `position:fixed` fürs Band. Der Entwurf braucht es, weil er ein
+    einzelnes Dokument ist. In Redion sind `#menueband` und `#topbar`
+    Flex-Kinder von `#main`, gescrollt wird in `#scroll` — das Band ist
+    ohnehin immer sichtbar. `fixed` würde es nur aus dem Fluss nehmen.
+  · `display:none` fürs Band ab 760 px. Am Telefon IST das Band Redions
+    Menü (E240, nach Redurs vier Fotos). Es dort zu verstecken nähme
+    Start, Einfügen und Zeichnen weg. Der Premium-Stil gilt deshalb erst
+    ab 761 px.
+
+DIE GROSSE SUCHBOX IST WEG. E223 hatte sie in die Mitte der Kopfzeile
+gestellt, „weil das Auge zuerst dorthin sieht" — das stimmte, solange die
+Kopfzeile die oberste Zeile war. Seit E272 steht darüber die Reiterzeile
+mit ihrem ⌕ (E236). Zwei Sucheingänge übereinander SIND der doppelte Kopf,
+den der Auftrag als Erstes abschafft. Die Suche selbst ist unverändert
+über vier Wege erreichbar, alle zu demselben `App.suche()`.
+
+Dabei sofort mitentfernt statt aufgeschoben: die Verdrahtung
+`an('btn-suche-mitte', …)` in `schale.ts` und die fünf CSS-Regeln für
+`#topbar .sucher`. Beide wären ab sofort tot gewesen — genau die vierte
+Zeile der Sorte, die L86 gerade als Muster beschreibt.
+
+`einfach.css` IST ABGEHÄNGT. Alle 98 Selektoren tragen jetzt zusätzlich
+`:not([data-schale="premium"])`. Das Ergebnis war deutlicher als erwartet:
+VIER der fünf vorbestehenden roten Punkte aus L88 wurden in einem Zug grün
+— Seitenleiste wieder 240 statt 320, Kopfzeile wieder 54 statt 50, Suche
+wieder mittig, 30 Seitenleistenknöpfe statt 29. Alle vier waren Folgen
+desselben Stilblatts.
+
+UND EIN FALSCHES GRÜN GEFUNDEN. Der fünfte Punkt (test247:547, „braucht
+dafür nur eine Zeile") wurde ebenfalls grün — zu Unrecht. Die Prüfung misst
+bei EINER Fensterbreite, 1440, und dort passt „Start" zufällig in eine
+Zeile. Nachgemessen über drei Breiten:
+
+    Breite   start   einfügen   zeichnen   werkzeuge   elektro   ansicht
+    1280 px  223 px   223 px     143 px     223 px      143 px   143 px
+    1366 px  223 px   223 px     143 px     143 px      143 px   143 px
+    1440 px  143 px   223 px     143 px     143 px      143 px   143 px
+
+Der Kommentar über der Prüfung warnt sogar vor genau dieser Kippkante — und
+misst dann selbst nur eine Breite. Phase D gibt dem Band die 58 px und das
+reitereigene „•••" und erweitert test247 dabei auf mehrere Breiten und
+Reiter. Vorher wäre eine feste Höhe ein Verstecken von Befehlen ohne Weg
+dorthin, und das verbietet §2.1.
+
+test87 bekam eine fünfte Kaskadenstufe: `premium.css` steht hinter
+`bausteine.css`. Der Grund steht dort im Kommentar — bausteine ordnet die
+BAUTEILE, premium die SCHALE, die aus ebendiesen Bauteilen besteht. Die
+Reiterzeile ist eine Reihe Knöpfe und muss dunkel sein, obwohl ein Knopf
+hell ist.
+
+**Geprüft:** test245 50 ok · test247 102 ok · test248 45 ok · test258 15 ok ·
+test40 24/24 · test67 65/65 · test114 153 ok · test132 81 ok · test272 56 ok ·
+test87 156 ok · test105 55 ok. Eine Gegenprobe: die alte Suchbox wieder ins
+Markup gesetzt — „die grosse Box in der Kopfzeile ist weg" wurde rot.
+sw VERSION v37 → v38.
