@@ -82,11 +82,21 @@ Register.einstellungen = (() => {
       was: 'Was die KI zu sehen bekommt. Weniger ist hier oft besser: kürzerer ' +
            'Kontext heisst genauere Antwort.' },
 
+    /* SEIT E270 WIRD DIESER WERT WIRKLICH GELESEN (maschine.ts, takt()).
+       Vorher stand er hier und nirgends sonst: der Abgleich nahm fest
+       zwei Minuten. Die Beschriftung des Wertes `0` hiess „nur von Hand"
+       und versprach damit zu viel — beim Öffnen des Fensters gleicht
+       Redion weiterhin ab, und das soll auch so bleiben, sonst laufen
+       zwei Geräte lautlos auseinander. Wer gar nichts schicken will,
+       schaltet den Abgleich aus (Wolke → Nur lokal arbeiten). Die
+       KENNUNG `0` bleibt, nur das Wort ist jetzt wahr. */
     { id: 'wolkeTakt', gruppe: 'Wolke', name: 'Abgleich alle', art: 'auswahl',
-      werte: [['0', 'nur von Hand'], ['120', '2 Minuten'], ['600', '10 Minuten']],
+      werte: [['0', 'nur beim Öffnen und von Hand'],
+              ['120', '2 Minuten'], ['600', '10 Minuten']],
       vorgabe: '120',
       was: 'Bei zwei Geräten sind zwei Minuten rund 1500 Anfragen am Tag — ein ' +
-           'Sechzigstel der kostenlosen Grenze.' }
+           'Sechzigstel der kostenlosen Grenze. Seltener heisst: das andere ' +
+           'Gerät sieht deine Änderung später.' }
   ];
 
   /**

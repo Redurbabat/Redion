@@ -88,6 +88,12 @@ export const bedienen = async (request: Request, env: Umwelt, _ctx?: unknown) =>
        ob der Worker überhaupt läuft. */
     if (u.pathname === '/api/stand') return new Response(JSON.stringify({
       app: 'Redion', stand: 'läuft', ablage: 'keine',
+      /* AUCH HIER, und gerade hier (E270): das ist der Zustand, den man
+         als Erstes sieht — frisch veröffentlicht, nichts eingerichtet.
+         Fehlte das Feld ausgerechnet in diesem Zweig, könnte die
+         Oberfläche die wichtigste Frage im wichtigsten Augenblick nicht
+         beantworten. */
+      dateien: env && env.R2 ? 'r2' : 'keine',
       hinweis: 'Der Worker läuft, aber D1 ist noch nicht gebunden. ' +
                'Siehe SERVER-EINRICHTEN.md.'
     }), { status: 200, headers: { 'Content-Type': 'application/json; charset=utf-8',

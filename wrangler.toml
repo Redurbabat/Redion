@@ -7,14 +7,25 @@
 #
 #    main     der Einstiegspunkt. Er beantwortet /api/* selbst und reicht
 #             alles andere an die Dateiablage weiter.
-#    assets   die Projektwurzel mit den Dateien der App. Alles andere -
-#             der Worker selbst, die Anleitungen, die .git-Ablage - bleibt
-#             draussen. Das ist wichtig: die .git-Ablage enthaelt eine Datei
-#             ueber 25 MB, und daran ist der erste Versuch gescheitert.
+#    assets   die Projektwurzel. Sie nimmt ALLES, was hier liegt - was
+#             draussen bleiben soll, steht in `.assetsignore`.
+#
+#  HIER STAND EINE FALSCHE BEHAUPTUNG (E270). Es hiess: "Alles andere -
+#  der Worker selbst, die Anleitungen, die .git-Ablage - bleibt draussen."
+#  Es blieb nichts draussen. Gemessen mit `npx wrangler deploy --dry-run`:
+#  8318 Dateien gelesen, danach Abbruch, weil `.git/objects/pack/...`
+#  78,6 MB gross ist und Cloudflare bei 25 MB je Datei aufhoert.
+#  Veroeffentlichen war damit gar nicht moeglich - und waere es moeglich
+#  gewesen, haette es `src/`, `pruefungen/`, `node_modules/` und eine
+#  etwaige `.env` mit ins Netz genommen (§42).
+#
+#  `.gitignore` hilft dabei NICHT: Wrangler liest `.assetsignore`. Seit
+#  E270 gibt es sie, und der Lauf geht durch.
 #
 #  Von Hand veroeffentlichen geht auch:
 #      npm install -g wrangler
 #      wrangler login
+#      wrangler deploy --dry-run     # sagt, wie viele Dateien mitgehen
 #      wrangler deploy
 # ===========================================================================
 
@@ -38,6 +49,21 @@ binding = "ASSETS"
 #  er sagt dann bei /api/stand, dass die Datenbank fehlt, und Redion
 #  arbeitet weiter rein auf dem Geraet.
 #
+#  ACHTUNG: Die Rauten erst wegnehmen, wenn eine ECHTE Kennung dasteht.
+#  Cloudflare prueft die Bindung beim Veroeffentlichen gegen das Konto —
+#  mit dem Platzhalter bricht `wrangler deploy` ab, und der Worker bleibt
+#  auf dem alten Stand. Auskommentiert-bleiben ist also kein Versaeumnis,
+#  sondern die einzige Form, in der die Datei VOR `d1 create` deploybar
+#  ist. Ohne Bindung antwortet der Server ehrlich (server/cloudflare.ts).
+#
+#  DARF DIE KENNUNG INS REPOSITORY? Ja. Sie ist kein Geheimnis nach §42 —
+#  kein Token, kein Schluessel, kein Passwort, und ohne Zugang zum Konto
+#  nutzlos. Wenn Cloudflare aus GitHub baut, MUSS sie sogar mit: sonst
+#  veroeffentlicht der naechste Push einen Worker ohne Datenbank.
+#  Die echten Geheimnisse stehen nie hier, sondern hinter
+#  `wrangler secret put` (ADRESSE, GITHUB_GEHEIM, GOOGLE_GEHEIM,
+#  VAPID_PRIVAT).
+#
 #  Die ganze Anleitung steht in SERVER-EINRICHTEN.md.
 # ===========================================================================
 # [[d1_databases]]
@@ -53,7 +79,15 @@ binding = "ASSETS"
 #      npx wrangler r2 bucket create redion-dateien
 #
 #  und wird dann hier eingebunden. Ohne ihn laeuft alles Uebrige weiter —
-#  die /datei-Wege sagen dann 503 mit genau diesem Hinweis.
+#  die /datei-Wege sagen dann 503 mit genau diesem Hinweis, und Redion
+#  gleicht Saetze ab, aber keine Anhaenge.
+#
+#  ACHTUNG: dieselbe Regel wie oben — die Rauten erst weg, wenn der Bucket
+#  wirklich angelegt ist. Sonst bricht `wrangler deploy` ab.
+#
+#  Nachsehen laesst es sich jederzeit: `/api/stand` nennt seit E270 auch
+#  den Dateispeicher ("dateien": "r2" oder "keine"), und in Redion sagt es
+#  der Knopf Wolke → Server pruefen in Worten.
 # ===========================================================================
 # [[r2_buckets]]
 # binding = "R2"

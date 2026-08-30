@@ -698,13 +698,55 @@ const Wolke = (() => {
     }
   };
 
-  /* Alle zwei Minuten von selbst — und wenn das Fenster wieder nach vorne
-     kommt, denn dann hat womöglich das andere Gerät gearbeitet. */
+  /* Von selbst in einem gewählten Takt — und wenn das Fenster wieder nach
+     vorne kommt, denn dann hat womöglich das andere Gerät gearbeitet.
+
+     DER TAKT STAND HIER ALS ZAHL, UND DIE EINSTELLUNG DANEBEN WAR TOT
+     (E270). `Register.einstellungen` führt seit Langem `wolkeTakt` mit den
+     Werten „nur von Hand / 2 Minuten / 10 Minuten" — gelesen hat sie
+     niemand, hier standen 120000 fest. Wer „10 Minuten" wählte, bekam
+     zwei; wer „nur von Hand" wählte, bekam trotzdem alle zwei Minuten
+     einen Abgleich. Ein Schalter, der nichts tut, ist schlimmer als
+     keiner (§47).
+
+     DER RÜCKGABEWERT IST DIE GESTELLTE ZAHL, nicht void. Sonst lässt sich
+     von aussen nicht messen, ob die Wahl ankam — und eine Prüfung, die
+     nichts messen kann, ist keine (§55.2). */
   let uhr: any = null;
-  const takt = () => {
+  const takt = (): number => {
     clearInterval(uhr);
-    if (!angemeldet()) return;
-    uhr = setInterval(() => { abgleichen().catch(() => {}); }, 120000);
+    uhr = null;
+    if (!angemeldet()) return 0;
+    const sek = Number(Store.getMeta('wolkeTakt', '120'));
+    /* `0` heisst „nur beim Öffnen und von Hand" — der Weg über
+       `visibilitychange` bleibt, denn er kostet nichts, solange niemand
+       hinsieht, und ohne ihn liefen zwei Geräte lautlos auseinander. Wer
+       gar nichts schicken will, schaltet den Abgleich aus (E1/E34); das
+       ist die Frage, für die es diesen Schalter NICHT gibt. */
+    if (!Number.isFinite(sek) || sek <= 0) return 0;
+    const ms = sek * 1000;
+    uhr = setInterval(() => { abgleichen().catch(() => {}); }, ms);
+    return ms;
+  };
+
+  /**
+   * Den Takt ändern und sofort neu stellen. Die Wertprüfung steckt im
+   * Register — hier wird sie benutzt, nicht nachgebaut (§8).
+   *
+   * `-1` heisst: das Register hat den Wert NICHT genommen, und der alte
+   * Takt läuft weiter. Das ist die richtige Antwort auf einen unmöglichen
+   * Wert — den Abgleich anzuhalten wäre schlimmer als ihn zu behalten —
+   * aber sie muss ablesbar sein. Ein `taktSetzen`, das bei einer
+   * abgelehnten Zahl dieselbe Zahl zurückgibt wie bei einer genommenen,
+   * behauptet einen Erfolg, den es nicht gab.
+   */
+  const taktSetzen = (wert: string | number): number => {
+    const text = String(wert);
+    const reg = (globalThis as any).Register;
+    if (reg?.einstellungen?.setze) reg.einstellungen.setze('wolkeTakt', text);
+    else Store.setMeta('wolkeTakt', text);
+    if (String(Store.getMeta('wolkeTakt', '120')) !== text) return -1;
+    return takt();
   };
 
   /* ========================================================================
@@ -966,13 +1008,19 @@ const Wolke = (() => {
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden && angemeldet()) abgleichen().catch(() => {});
     });
+    /* Wird der Takt anderswo geändert — im Wolke-Fenster, über das
+       Register —, gilt er sofort und nicht erst nach dem Neuladen. */
+    const ev = (globalThis as any).Ereignisse;
+    if (ev?.horche) ev.horche('einstellung.geaendert', (d: any) => {
+      if (d && d.id === 'wolkeTakt') takt();
+    });
   };
 
   return { adresse, token, bereich, angemeldet, geraeteName, zustand, beiAenderung,
            anmeldenMit, codeHolen, codeWarten, codeFreigeben, tokenUebernehmen, abmelden,
            abgleichErlaubt, abgleichSetzen, kontoLoeschen,
            schluesselSetzen, hatSchluessel, verschluessele, entschluessele,
-           hoch, runter, abgleichen, dateienAbgleichen, takt, zuSchicken, seiteVon,
+           hoch, runter, abgleichen, dateienAbgleichen, takt, taktSetzen, zuSchicken, seiteVon,
            geteiltSetzen, istGeteilt, freigeben, freigaben,
            veroeffentlichen, zurueckziehen,
            markeAnlegen, markenListe, markeWeg, ruf, start };

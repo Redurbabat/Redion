@@ -35,6 +35,27 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
+**30. August 2026 · Deine Daten auf allen Geräten (E270)**
+
+> Redurs Wunsch war „alles auf iCloud". Ein Browser kann das nicht — also
+> zwei Wege, die es wirklich einlösen, und beide waren gebaut und keiner
+> benutzbar. Der eigene Cloudflare-Server ist fertig (Konten, Abgleich,
+> Drei-Wege-Merge, E2E, R2) und war nur nicht scharfgeschaltet, während
+> die Oberfläche an VIER Stellen behauptete, es gäbe ihn nicht.
+> Dazu ein Sicherheitsfund: `[assets] directory = "./"` hätte ohne
+> `.assetsignore` das ganze Verzeichnis veröffentlicht — gemessen brach
+> `wrangler deploy` sogar an einer 78,6-MB-Datei in `.git` ab, Redur
+> hätte also gar nicht veröffentlichen können.
+> Neu ausserdem: Sicherung in einen Ordner (liegt er in iCloud Drive,
+> lädt der Dienst sie selbst hoch), alle fünf Minuten und nur bei echter
+> Änderung, 7 Tage plus je Monat einer, gelöscht wird nur das eigene
+> Namensmuster und erst nach `close()`.
+> test270: 65 Punkte, fünf Gegenproben einzeln rot gesehen.
+> **Was Redur selbst tun muss:** die sechs Befehle in
+> SERVER-EINRICHTEN.md, Schritt 0 — sein Cloudflare-Konto kann ich nicht
+> bedienen. Danach sagt „Wolke → Server prüfen" in Worten, ob es steht.
+> Als Nächstes E269: Auswahl-Feinschliff der Zeichenschicht.
+
 **30. August 2026 · Der Zeitmesser — Lernzeit messen statt schätzen (E268)**
 
 > Schwebendes Feld mit Stoppuhr und Timer (5/25 Min), das sich merkt, an
@@ -44,9 +65,7 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 > test268: 15 Punkte, drei Gegenproben rot — und ein Fund über die
 > Prüfung selbst: die Pausenprobe war bei 1,4 s Wartezeit keine Prüfung
 > (Rundung frass den Unterschied), erst 2,6 s machen sie rotfähig (§55.2).
-> Als Nächstes E270: Redions Server scharfschalten, damit dieselben
-> Notizen auf Rechner, iPhone und iPad stehen — Redurs iCloud-Wunsch, auf
-> dem einzigen Weg, der ihn wirklich einlöst.
+> Danach E270: Redions Server scharfschalten (erledigt, siehe oben).
 
 **30. August 2026 · Haftnotiz und Lineal auf der Zeichenschicht (E267)**
 

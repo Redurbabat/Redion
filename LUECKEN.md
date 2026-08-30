@@ -2926,3 +2926,47 @@ L81 — Was der Zeitmesser (E268) bewusst noch nicht kann
    (und merkt sie, wenn sie lang genug lief).
 
 Gefunden am 30. August 2026 (beim Bau von E268).
+
+================================================================================
+L82 — Was der Geräte-Abgleich und die Ordner-Sicherung (E270) noch nicht können
+================================================================================
+
+1. **Der Server ist scharfschaltbar, aber nicht scharfgeschaltet.** Alles
+   Vorbereitende ist getan; die sechs Befehle in SERVER-EINRICHTEN.md
+   (Schritt 0) muss Redur in seinem eigenen Cloudflare-Konto ausführen.
+   Bis dahin sagt „Wolke → Server prüfen" in Worten, was fehlt — aber
+   abgleichen tut nichts.
+2. **Die Ordner-Sicherung geht nur am Rechner.** Safari auf iPhone und
+   iPad und Firefox kennen `showDirectoryPicker` nicht. Dort steht ein
+   Satz statt eines Knopfs, und der Weg heisst Abgleich.
+3. **Läuft der Rechner nicht, sichert nichts.** Es gibt keinen Dienst im
+   Hintergrund; der Fünf-Minuten-Takt lebt im offenen Fenster. Ein
+   geschlossener Reiter sichert nicht, und beim Schliessen zu sichern
+   kann die Plattform nicht (siehe E270).
+4. **Die Sicherungen im Ordner sind unverschlüsselt.** Absicht — sonst
+   wären sie ohne Redion nicht zu öffnen, und genau das soll dieser Weg
+   leisten. Wer den Ordner in einen Cloud-Dienst legt, legt seine Daten
+   in die Hand dieses Dienstes. Der Dialog sagt es beim Einschalten; in
+   den Einstellungen steht es nicht noch einmal.
+5. **Der Abdruck erkennt keine Änderung an einem Anhang.** Er läuft über
+   Blöcke, Sammlungen und Ansichten. Wer nur eine Datei austauscht, ohne
+   dass ein Block sich ändert, löst keine Sicherung aus — bis zur
+   nächsten echten Änderung.
+6. **Kein Fortschritt beim Schreiben.** Ein 500-MB-Paket wird still
+   geschrieben; man sieht nur hinterher, dass es da ist. Für die Grössen,
+   um die es heute geht, reicht das.
+7. **`ADRESSEN` (mehrere Adressen) ist gebaut, aber ungeprüft** — kein
+   Prüflauf fährt zwei Ursprünge gegen denselben Server.
+8. **Die Aufbewahrung ist nicht einstellbar.** Sieben Tage plus je Monat
+   einer stehen fest im Code. Wer mehr will, hat den Ordner ja selbst.
+
+9. **Das Wolke-Fenster war beim Hinsehen fast unbedienbar** — und das
+   ist behoben, aber der Grund steht noch: `grund.css:169` nimmt JEDEM
+   Knopf Rahmen und Hintergrund, und wer welche will, holt sie sich über
+   eine Klasse. Das Wolke-Fenster hatte seit E251 keine. „Mit GitHub
+   anmelden" stand als nackte Zeile da. Es gibt keinen Prüflauf, der
+   fragt, ob ein Knopf wie einer aussieht — und andere Fenster mit
+   demselben Muster sind ungeprüft. Wer das nächste baut, gibt ihm eine
+   Klasse.
+
+Gefunden am 30. August 2026 (beim Bau von E270, beim Ansehen der Bilder).

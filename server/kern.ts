@@ -204,7 +204,7 @@ const teile = (pfad: string) => String(pfad).replace(/^\/+|\/+$/g, '').split('/'
  * @param {object} ablage  eine Ablage aus ablage.js
  * @param {object} umwelt  { GITHUB_ID, GITHUB_GEHEIM, GOOGLE_ID, …, holen }
  */
-const beantworteRoh = async (a: any, ablage: any, umwelt = {}) => {
+const beantworteRoh = async (a: any, ablage: any, umwelt: any = {}) => {
   const m = String(a.methode || 'GET').toUpperCase();
   const t = teile(a.pfad || '/');
   const kopf = a.kopf || {};
@@ -225,6 +225,13 @@ const beantworteRoh = async (a: any, ablage: any, umwelt = {}) => {
     if (t[0] === 'api' && t[1] === 'stand') {
       return antwort(200, {
         app: 'Redion', stand: 'läuft', ablage: ablage.art,
+        /* SEIT E270 SAGT DAS LEBENSZEICHEN AUCH, OB ANHÄNGE GEHEN.
+           Vorher nannte es nur die Satz-Ablage — wer eine Datenbank, aber
+           keinen R2-Bucket eingerichtet hatte, sah „ablage: d1" und hielt
+           alles für fertig; die Anhänge blieben trotzdem liegen, und der
+           erste Hinweis darauf war ein 503 tief im Abgleich. Ein
+           Lebenszeichen, das die halbe Wahrheit sagt, ist eine Falle. */
+        dateien: umwelt && umwelt.blobs ? (umwelt.blobs.art || 'ja') : 'keine',
         konten: await ablage.zaehle('konten'),
         hinweis: 'Private Seiten liegen hier verschlüsselt. Der Schlüssel bleibt auf dem Gerät.'
       }, { 'Access-Control-Allow-Origin': '*' });

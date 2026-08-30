@@ -1565,6 +1565,19 @@ const Store = (() => {
     const dateienDa = zaehlerDateien();
     const abgeleitetDa = zaehlerAbgeleitet();
     const fehlenAnhaenge = dateienDa && !mitAnhaengen;
+    /* DER SICHERUNGSORDNER DARF NICHT MITREISEN (E270).
+       `sicherungOrdner` hält einen Zugriff auf ein echtes Verzeichnis —
+       er lebt im strukturierten Klon dieses Browsers und ist an dieses
+       Gerät gebunden. `JSON.stringify` macht daraus `{}`; das wäre nicht
+       kaputt, aber wertlos, und beim Einspielen überschriebe dieses `{}`
+       einen lebenden Zugriff. Also raus hier — und, weil eine Sicherung
+       sagen muss, was sie auslässt (§52.10), MIT Nennung im Manifest.
+       Der Name bleibt als Text drin: nach dem Einspielen soll man lesen
+       können, welcher Ordner es war. */
+    const ordnerDa = 'sicherungOrdner' in cache.meta && !!cache.meta['sicherungOrdner'];
+    const metaOhneOrdner: Record<string, any> = {};
+    for (const k of Object.keys(cache.meta))
+      if (k !== 'sicherungOrdner') metaOhneOrdner[k] = cache.meta[k];
     /* Im Archiv liegen nur die NICHT abgeleiteten — siehe `sicherungSpeichern`
        in der Schale, das genauso filtert. Die Zahl hier muss dieselbe sein,
        sonst zählt das Manifest etwas anderes als das Archiv enthält. */
@@ -1580,19 +1593,30 @@ const Store = (() => {
         : ' ' + abgeleitetDa + ' gerasterte Seitenbilder sind bewusst NICHT ' +
           'dabei: sie entstehen aus den Originalen neu — in Redion über den ' +
           'Knopf „Aus dem Original zurückholen" auf der leeren Seite.';
+    /* Und derselbe Satz für den Ordnerzugriff. Der NAME steht weiter im
+       Manifest — nur der Zugriff selbst nicht. Wer die Sicherung auf einem
+       anderen Rechner einspielt, soll lesen können, welcher Ordner es war,
+       und ihn dort einmal neu wählen. */
+    const ordnerName = String(cache.meta['sicherungOrdnerName'] || '').trim();
+    const ueberOrdner = !ordnerDa ? ''
+      : ' Der gewählte Sicherungsordner ist NICHT dabei: ein Ordnerzugriff ' +
+        'gilt nur auf dem Gerät, auf dem er erteilt wurde, und liesse sich ' +
+        'nicht mitschreiben.' +
+        (ordnerName ? ' Er hiess „' + ordnerName + '".' : '') +
+        ' Nach dem Einspielen einmal neu wählen unter Einstellungen → ' +
+        'Sicherung.';
     return JSON.stringify({
       version: VERSION,
       exportiert: now(),
       /* Was drin ist — damit ein Einleser es nachsehen kann, statt zu raten. */
       enthaelt: ['blocks', 'collections', 'views', 'meta', 'versions']
         .concat(mitAnhaengen && echteImArchiv ? ['dateien', 'stuecke'] : []),
-      fehlt: fehlenAnhaenge
-        ? ['dateien', 'stuecke']
-        : [],
+      fehlt: (fehlenAnhaenge ? ['dateien', 'stuecke'] : [])
+        .concat(ordnerDa ? ['sicherungOrdner'] : []),
       /* Wie viele Dateien absichtlich draussen blieben — als Zahl, damit ein
          Einleser es nachrechnen kann, statt einen Satz zu lesen. */
       abgeleitetAusgelassen: mitAnhaengen ? abgeleitetDa : 0,
-      hinweis: fehlenAnhaenge
+      hinweis: (fehlenAnhaenge
         ? 'Diese Sicherung enthält ' + dateienDa + ' Datei(en) NICHT — nur ihre ' +
           'Blöcke. Anhänge liegen als Blob in der Ablage und passen nicht in ' +
           'eine JSON-Datei. Sie bleiben auf diesem Gerät.'
@@ -1601,11 +1625,11 @@ const Store = (() => {
             '„dateien" desselben Archivs.' + ueberAbgeleitete
           : abgeleitetDa
             ? 'Dieser Bestand hat nur abgeleitete Dateien.' + ueberAbgeleitete
-            : 'Vollständig: dieser Bestand hat keine Dateianhänge.',
+            : 'Vollständig: dieser Bestand hat keine Dateianhänge.') + ueberOrdner,
       blocks: cache.blocks,
       collections: cache.collections,
       views: cache.views,
-      meta: cache.meta,
+      meta: metaOhneOrdner,
       versions: exportVersionen
     }, null, 2);
   };
@@ -1689,6 +1713,34 @@ const Store = (() => {
       views:       d.views       || {},
       meta:        d.meta        || {}
     };
+
+    /* --- DER ORDNERZUGRIFF ÜBERLEBT BEIDE ARTEN (E270) ------------------
+       `sicherungOrdner` hält einen echten Verzeichniszugriff, den ein
+       Mensch auf DIESEM Gerät einmal erlaubt hat. Er steht nicht in der
+       Sicherung — `exportAll` lässt ihn bewusst aus. Genau deshalb hätte
+       „ersetzen" ihn mit dem Rest von `meta` weggelöscht, und die
+       automatische Sicherung hätte nach dem Einspielen still aufgehört zu
+       schreiben. Still: das ist die Sorte Fehler, die man erst merkt, wenn
+       man die Sicherung braucht.
+
+       Und umgekehrt kann eine ältere oder von Hand gebaute Sicherung an
+       dieser Stelle ein `{}` mitbringen — das, was `JSON.stringify` aus
+       einem Zugriff macht. Das ist kein Zugriff, sondern seine Attrappe,
+       und sie über einen lebenden zu schreiben wäre derselbe stille
+       Ausfall.
+
+       Beides hat dieselbe Antwort: eine Sicherung kann keine Erlaubnis
+       mitbringen, also sticht immer, was hier erlaubt wurde. Der NAME
+       gehört zum Zugriff und wird mitgerettet — sonst stünde in den
+       Einstellungen der Ordner eines fremden Geräts über dem eigenen. */
+    const lebenderOrdner = getMeta('sicherungOrdner', null);
+    if (lebenderOrdner) {
+      (neu.meta as any)['sicherungOrdner'] = lebenderOrdner;
+      const lebenderName = getMeta('sicherungOrdnerName', '');
+      if (lebenderName) (neu.meta as any)['sicherungOrdnerName'] = lebenderName;
+    } else {
+      delete (neu.meta as any)['sicherungOrdner'];
+    }
 
     /* --- DIE WOLKE-MERKLISTEN ÜBERLEBEN DAS ERSETZEN (E255/L74) ---------
        „Ersetzen" tauscht auch `meta` vollständig — eine noch nicht

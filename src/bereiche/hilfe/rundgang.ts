@@ -35,9 +35,12 @@ const Rundgang = (() => {
    * Oberfläche ändert.
    * ======================================================================*/
   const SCHRITTE = [
+    /* E270: ohne Konto stimmt der Satz weiterhin — er darf nur nicht mehr
+       behaupten, es GÄBE keinen Server. Er ist da und freiwillig. */
     { ziel: '#sidebar .ws-btn', titel: 'Alles liegt hier',
-      text: 'Links steht dein ganzer Arbeitsbereich. Kein Konto, kein Server — ' +
-            'alles bleibt in diesem Browser auf diesem Gerät.' },
+      text: 'Links steht dein ganzer Arbeitsbereich. Ohne Konto bleibt alles in ' +
+            'diesem Browser auf diesem Gerät — für dieselben Notizen auf Rechner ' +
+            'und Telefon gibt es die Wolke, freiwillig.' },
     { ziel: '#btn-search', titel: 'Suchen und Befehle',
       text: 'Strg + K sucht in allem. Strg + P öffnet die Befehle: dort steht ' +
             'jede Funktion mit Namen, auch die, die du noch nicht kennst. ' +

@@ -1824,23 +1824,42 @@ const App = (() => {
      * eine reguläre Rückkehr nicht von einem Erfolg unterscheiden kann.
      * Deshalb: `true` heisst gesichert, `false` heisst nicht.
      */
-    const sicherungSpeichern = async () => {
+    /**
+     * DAS PAKET BAUEN — ohne es auszuliefern (E270).
+     *
+     * Vorher war Bauen und Ausliefern ein Stück: derselbe Ablauf las den
+     * Bestand, packte das Archiv, hängte ein `<a download>` an den Browser
+     * und meldete „Gesichert". Für den Knopf ist das richtig. Für die
+     * automatische Sicherung in einen Ordner ist es unbrauchbar — sie will
+     * genau dasselbe Paket, aber in eine Datei schreiben statt in den
+     * Download-Ordner, und ohne dass ein Fenster aufgeht.
+     *
+     * Die Alternative wäre gewesen, das Packen ein zweites Mal zu
+     * schreiben. Zwei Stellen, die eine Sicherung bauen, sind zwei
+     * Gelegenheiten, dass die eine etwas auslässt, was die andere mitnimmt —
+     * und man merkt es erst, wenn man die Sicherung braucht. Also einmal
+     * bauen, zweimal ausliefern. Dasselbe, was `Krypto.paketBauen` vormacht.
+     *
+     * Wirft bei einem Fehler, statt `false` zurückzugeben: der Knopf zeigt
+     * daraus einen `alert`, die automatische Sicherung darf das nicht (ein
+     * Fenster, das im Hintergrund aufspringt, ist keine Meldung, sondern ein
+     * Überfall). Wer ruft, entscheidet, wie er es sagt.
+     *
+     * @param melden Wohin die Zwischenstände gehen. Ohne Angabe: Toast.
+     *        Die automatische Sicherung gibt hier eine stille Funktion mit.
+     */
+    const sicherungPaketBauen = async (melden) => {
+        const sagen = melden || ((t) => UI.toast(t));
         /* Erst holen, was nicht im Zwischenspeicher liegt — der Versionsverlauf.
            Er fehlte in jeder Sicherung, die diese App je geschrieben hat. */
         const stand = await Store.exportVorbereiten();
-        const heute = new Date().toISOString().slice(0, 10);
         if (!stand.dateien) {
-            const blob = new Blob([Store.exportAll()], { type: 'application/json' });
-            const l = document.createElement('a');
-            l.href = URL.createObjectURL(blob);
-            l.download = 'redion-sicherung-' + heute + '.json';
-            l.click();
-            sicherungGemerkt('json');
-            UI.toast('Sicherung gespeichert (' + stand.versionen + ' Fassungen im Verlauf)');
-            return true;
+            return { blob: new Blob([Store.exportAll()], { type: 'application/json' }),
+                art: 'json', endung: '.json',
+                anhaenge: 0, versionen: stand.versionen };
         }
-        UI.toast(stand.dateien + ' Anhänge kommen mit — das dauert einen Moment');
-        try {
+        sagen(stand.dateien + ' Anhänge kommen mit — das dauert einen Moment');
+        {
             /* ABGELEITETES BLEIBT DRAUSSEN (E103). Ein gerastertes PDF-Seiten-
                bild entsteht beim Einlesen in Sekunden neu; mitgepackt kostet es
                bei 200 KB je Seite und 500 Seiten hundert Megabyte in JEDER
@@ -1888,18 +1907,31 @@ const App = (() => {
                geschweige denn heruntergeladen. Das Wort „Gesichert" gehört dem
                Abschluss-Toast unten — hier ist es nur ein Lebenszeichen. */
             const blob = await Austausch.zipSchreiben(eintraege, (name, anteil) => { if (anteil >= 1)
-                UI.toast('Geprüft: ' + name.replace('dateien/', '') + ' — wird verpackt'); });
+                sagen('Geprüft: ' + name.replace('dateien/', '') + ' — wird verpackt'); });
+            return { blob, art: 'redion', endung: '.redion',
+                anhaenge: eintraege.length - 2, versionen: stand.versionen };
+        }
+    };
+    const sicherungSpeichern = async () => {
+        try {
+            const paket = await sicherungPaketBauen();
+            const heute = new Date().toISOString().slice(0, 10);
             const l = document.createElement('a');
-            l.href = URL.createObjectURL(blob);
-            l.download = 'redion-sicherung-' + heute + '.redion';
+            l.href = URL.createObjectURL(paket.blob);
+            l.download = 'redion-sicherung-' + heute + paket.endung;
             l.click();
-            sicherungGemerkt('redion');
-            UI.toast('Sicherung gespeichert — mit ' + (eintraege.length - 2) + ' Anhang/Anhängen');
+            sicherungGemerkt(paket.art);
+            UI.toast(paket.art === 'json'
+                ? 'Sicherung gespeichert (' + paket.versionen + ' Fassungen im Verlauf)'
+                : 'Sicherung gespeichert — mit ' + paket.anhaenge + ' Anhang/Anhängen');
             return true;
         }
         catch (err) {
             /* Kein stiller Fehlschlag. Wer glaubt, gesichert zu haben, und es nicht
-               hat, ist schlechter dran als jemand, der es weiss. */
+               hat, ist schlechter dran als jemand, der es weiss.
+               Neu seit E270 deckt dieser Fang auch den JSON-Weg ab — der lief
+               vorher ungeschützt, und ein Fehler dort verschwand in einer nicht
+               behandelten Zusage. */
             alert('Die Sicherung kam nicht zustande: ' +
                 (err instanceof Error ? err.message : String(err)) +
                 '\n\nEs wurde nichts geschrieben.');
@@ -3200,6 +3232,11 @@ const App = (() => {
         Fassung.start();
         Vorrat.start();
         Wolke.start();
+        /* Die automatische Sicherung in einen Ordner (E270). Sie tut nichts,
+           solange kein Ordner gewählt ist — `start()` setzt dann nicht einmal
+           einen Zeitgeber. */
+        if (typeof OrdnerSicherung !== 'undefined')
+            OrdnerSicherung.start();
         Produktwelten.start();
         /* Das Menüband (E210). Es steht nach den Bereichen, weil sein Register
            beim Zeichnen `zeigen()` fragt — und das prüft, ob es die Module gibt.
@@ -3557,7 +3594,13 @@ const App = (() => {
         const p = Store.addPage(null, { text: 'Willkommen', icon: '👋' });
         const b = (typ, text, extra) => Store.addBlock(p.id, typ, Object.assign({ text }, extra || {}));
         b('h1', 'Willkommen in Redion');
-        b('text', 'Alles hier liegt **lokal** in deinem Browser. Kein Konto, kein Server, keine Cloud.');
+        /* E270: „kein Konto, kein Server, keine Cloud" stimmte, bis der Server
+           gebaut war. Der erste Satz, den ein neuer Nutzer liest, darf nicht
+           der erste sein, der nicht mehr gilt. Local-first bleibt die Wahrheit
+           — nur ist es jetzt eine Wahl und keine Grenze. */
+        b('text', 'Alles hier liegt **lokal** in deinem Browser — ohne Konto, ohne Server. ' +
+            'Ein eigener Server für den Abgleich zwischen deinen Geräten ist ' +
+            'möglich und freiwillig (Mehr → Wolke).');
         b('callout', 'Tippe irgendwo `/` — dann öffnet sich das Blockmenü mit allen Bausteinen.', { icon: '💡' });
         b('h2', 'Was du sofort ausprobieren kannst');
         b('bullet', 'Strg + P sucht, Strg + Shift + P öffnet alle Befehle');
@@ -3610,7 +3653,7 @@ const App = (() => {
         markdownExport, markdownVonSeite, woerterZaehlen, dupliziereSeite, seitenMenue, coverWaehlen,
         kuerzlich, kommendeTermine,
         ABSCHNITTE, abschnittAn, abschnittSchalten, abschnitteAnpassen, reiterWechseln,
-        sicherungSpeichern, sicherungLaden, zurueck, vorwaerts, arbeitsbereich,
+        sicherungSpeichern, sicherungPaketBauen, sicherungLaden, zurueck, vorwaerts, arbeitsbereich,
         /* HERAUSGEGEBEN SEIT E236. Das Blatt „Neu erstellen" war eine interne
            Funktion hinter dem Stift am Telefon — und damit unerreichbar für den
            „+ Neu"-Knopf im Regal und für alles am Rechner. Es ist derselbe

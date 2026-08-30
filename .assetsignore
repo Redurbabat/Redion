@@ -1,0 +1,64 @@
+# ===========================================================================
+#  .assetsignore — was NICHT ins Netz geht (E270)
+# ---------------------------------------------------------------------------
+#  `wrangler.toml` bindet als Dateiablage die Projektwurzel: directory = "./".
+#  Das nimmt ALLES, was hier liegt — und `.gitignore` hilft dabei nicht,
+#  denn Wrangler liest diese Datei hier, nicht jene.
+#
+#  GEMESSEN, bevor es diese Datei gab: `npx wrangler deploy --dry-run` las
+#  8318 Dateien und brach dann ab, weil `.git/objects/pack/…` 78,6 MB gross
+#  ist und Cloudflare bei 25 MB je Datei aufhört. Der Kommentar in
+#  `wrangler.toml` behauptete, die .git-Ablage bliebe draussen. Sie blieb
+#  nicht draussen — sie war der Grund, warum das Veröffentlichen scheiterte.
+#
+#  Ohne diese Datei wäre also entweder gar kein Deploy möglich, oder — nach
+#  einem Aufräumen von .git — das ganze Repository öffentlich: der Quelltext
+#  unter `src/`, die Prüfläufe, `node_modules/`, und auf einem Rechner mit
+#  eigener Konfiguration eine `.env` mit echten Schlüsseln (§42).
+#
+#  Die Regel dahinter: hier bleibt drin, was der Browser wirklich lädt.
+#  Nachgesehen in `index.html` — das sind `quell/`, `oeffentlich/`,
+#  `lernpakete/`, `index.html`, `sw.js`; dazu `redion-einzeldatei.html` als
+#  Weitergabe-Fassung. Alles andere ist Werkstatt.
+#
+#  Prüfen lässt sich das jederzeit, ohne etwas hochzuladen:
+#      npx wrangler deploy --dry-run
+#  Die Zeile „Read N files" sagt, wie viele es geworden sind.
+# ===========================================================================
+
+# --- Werkstatt: Herkunft, Werkzeuge, Abhängigkeiten -------------------------
+.git/
+.github/
+node_modules/
+src/
+pruefungen/
+server/
+functions/
+skripte/
+dienste/
+bilder/
+doku/
+
+# --- Geheimnisse: gehören nie ins Netz und nie ins Repository (§42) --------
+.env
+.env.*
+.dev.vars
+.wrangler/
+
+# --- Bauwerk und Beschreibung ----------------------------------------------
+*.mts
+*.ts
+*.bat
+*.md
+tsconfig*.json
+jsconfig.json
+package.json
+package-lock.json
+wrangler.toml
+.assetsignore
+.gitignore
+.editorconfig
+
+# Ausnahme: worker.ts ist der Einstiegspunkt des Workers selbst. Wrangler
+# holt ihn über `main`, nicht über die Dateiablage — der Ausschluss oben
+# ist also richtig und nimmt ihm nichts weg.
