@@ -2888,3 +2888,21 @@ L79 — Was das Abdeckband (E266) bewusst noch nicht kann
    Bändern heisst das zwanzig Tipps.
 
 Gefunden am 30. August 2026 (beim Bau von E266).
+
+================================================================================
+L80 — Was Haftnotiz und Lineal (E267) bewusst noch nicht können
+================================================================================
+
+1. Der Zettel-Umbruch ist GESCHÄTZT (Zeichenzahl je Breite), kein
+   echtes Textmass — bei sehr schmalen Zetteln kann eine Zeile knapp
+   überstehen. Ein echtes Mass bräuchte getComputedTextLength je
+   Zeile beim Zeichnen.
+2. Zettel lassen sich verschieben, aber nicht nachträglich in der
+   Grösse ziehen — das gehört zum Auswahl-Feinschliff (E269,
+   Skalier-Griffe für alle Marken).
+3. Das Lineal gilt nur für Linie und Pfeil; Rechteck/Ellipse rasten
+   nicht (dort fehlt der Bedarf: die Form ist schon gerade).
+4. Der Lineal-Zustand ist je Fläche und Laufzeit — zwei Blätter auf
+   einer Seite haben je ihr eigenes Lineal, nach Neuladen ist es aus.
+
+Gefunden am 30. August 2026 (beim Bau von E267).

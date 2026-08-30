@@ -19097,3 +19097,39 @@ Einzeldatei). Drei Gegenproben einzeln rot: Tipp-Umschalter tot → §3
 rot; Füllung weg → §2 und §6 rot; Umschalter schreibt in die Ablage →
 Schweige-Punkt rot. test264/265/207/87/105/109 grün. Bilder im
 Gespräch (zu + auf).
+
+E267 — Haftnotiz und Lineal auf der Zeichenschicht
+================================================================================
+
+Zwei weitere Stücke aus Redurs GoodNotes-Dossier, beide in der EINEN
+Schicht für Blatt und PDF-Seite (E103):
+
+DIE HAFTNOTIZ (Marken-Art `zettel`): aufziehen wie ein Rechteck, dann
+fragt sofort Redions MEHRZEILIGES Blatt nach dem Text — dafür bekam
+die Schale `Dialog.mehrzeilig` (Strg+Enter übernimmt), NICHT das
+prompt()-Muster, dessen Schwäche im Whiteboard LUECKEN.md längst
+führt. Eine abgebrochene oder leer gelassene frische Notiz verschwindet
+wieder: ein leerer Zettel sagt nichts. Antippen mit dem Werkzeug
+bearbeitet; Auswahl verschiebt, Radierer entfernt — wie jede Marke.
+Der Text bricht selbst um (SVG kann es nicht; geschätzt über die
+Zeichenbreite, tspan je Zeile) und wählt seine TINTE NACH DER
+HELLIGKEIT des Zettels — auf Marker-Gelb schreibt Dunkel, auf Blau
+schreibt Hell, sonst stünde Schwarz auf Schwarz. Vorgabefarbe ist das
+Marker-Gelb (derselbe Handgriff wie beim Marker: die schwarze
+Grundfarbe wäre als Zettel unlesbar).
+
+DAS LINEAL ist ein SCHALTER, kein Werkzeug: solange es anliegt, rasten
+Linie und Pfeil auf 15°-Schritte — waagrecht, senkrecht, 45° ohne
+zitternde Hand. Nur Laufzeit, Vorgabe aus; der Knopf trägt
+aria-pressed und das Wort (§38). Kein Anlege-Geodreieck, kein
+Massband — der eine Winkel-Rast deckt den Alltagsfall (Fachzeichnen!)
+und bleibt eine Zeile Mathematik.
+
+**Geprüft:** test267, 16 Punkte auf Port 9046 — Werkzeuge mit Wort,
+Aufziehen mit textarea-Blatt (kein prompt), Umbruch in tspans, Abbruch
+räumt weg, Bearbeiten mit Vorgabe, Tinte nach Helligkeit (blau→hell,
+gelb→dunkel), Winkel frei 50,2° gegen gerastet 45°, Schalterzustand,
+Auswahl-Verschieben, Radierer, Bau-Hygiene (sw v34). Drei Gegenproben
+einzeln rot (Lineal wirkungslos → Winkel-Punkt; Abbruch lässt Zettel
+stehen → §3, riss erwartbar die Folgeschritte mit; Tinte immer dunkel
+→ §5). test264/265/266/207/87/105/109 grün. Bilder im Gespräch.

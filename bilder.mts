@@ -986,6 +986,29 @@ const ANSICHTEN: Record<string, { titel: string; bauen: () => void | Promise<voi
     }
   },
 
+  haftnotiz: {
+    titel: 'Haftnotiz und Lineal auf dem Blatt (E267)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const s = Store.addPage(null, { text: 'Skizze mit Zetteln', icon: '📓' });
+      const blatt = Store.addBlock(s.id, 'blatt', { text: '', papier: 'kariert' });
+      Store.addBlock(blatt.id, 'text', { text: 'Schaltung der Werkstatt — Fragen an den Meister' });
+      Store.updateBlock(blatt.id, { marken: [
+        { id: 'z1', art: 'zettel', farbe: '#e0a419', pts: [[330, 70], [560, 150]],
+          text: 'Nachfragen: Warum 1,5 mm² statt 2,5 mm²?\nLeitungslänge prüfen!' },
+        { id: 'z2', art: 'zettel', farbe: '#2f7ed8', pts: [[60, 300], [230, 360]],
+          text: 'FI 30 mA — Pflicht im Bad' },
+        /* Zwei Linien, wie sie das Lineal rastet: exakt 45° und waagrecht. */
+        { id: 'l1', art: 'line', farbe: '#111111', breite: 2.4, pts: [[80, 120], [230, 270]] },
+        { id: 'l2', art: 'line', farbe: '#d64545', breite: 2.4, pts: [[80, 120], [300, 120]] }
+      ] });
+      App.oeffne(s.id);
+      await new Promise(r => setTimeout(r, 900));
+    }
+  },
+
   notizhefteFach: {
     titel: 'Ein offenes Fach in der Listenform (E265)',
     bauen: async () => {
