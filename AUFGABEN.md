@@ -35,6 +35,21 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 
 ## Aktueller Stand
 
+**30. August 2026 · Holen und Hochladen, je ein Skript (E271)**
+
+> Redur: „eine holt die von github auf laptop und die andere umgekehrt".
+> `holen.bat` und `hochladen.bat`, je eine Richtung, keines fasst die andere
+> an. Beide wirft nichts weg bzw. überschreibt nichts Fremdes.
+> **Der eigentliche Fund kam aus der Prüfung: das Verzeichnis ist ÖFFENTLICH**
+> (`"private": false`, nachgemessen) — und `.gitignore` deckte `*.redion`
+> nicht ab. Da E270 gerade automatische `.redion`-Sicherungen eingeführt hat,
+> hätte ein `git add -A` Redurs ganzen Arbeitsbereich öffentlich ins Netz
+> laden können. Geschlossen, bevor es passieren konnte.
+> Dazu acht in echten Git-Repos nachgemessene Fehler in den Skripten selbst,
+> darunter zwei mit Datenverlust. test87 §11 mit zehn Punkten, drei
+> Gegenproben rot.
+> Als Nächstes E269: Auswahl-Feinschliff der Zeichenschicht.
+
 **30. August 2026 · Deine Daten auf allen Geräten (E270)**
 
 > Redurs Wunsch war „alles auf iCloud". Ein Browser kann das nicht — also
@@ -54,7 +69,7 @@ sieht, worauf das Nächste aufbaut, ohne die ganze Geschichte zu lesen.
 > **Was Redur selbst tun muss:** die sechs Befehle in
 > SERVER-EINRICHTEN.md, Schritt 0 — sein Cloudflare-Konto kann ich nicht
 > bedienen. Danach sagt „Wolke → Server prüfen" in Worten, ob es steht.
-> Als Nächstes E269: Auswahl-Feinschliff der Zeichenschicht.
+> Danach E271: holen.bat und hochladen.bat (erledigt, siehe oben).
 
 **30. August 2026 · Der Zeitmesser — Lernzeit messen statt schätzen (E268)**
 

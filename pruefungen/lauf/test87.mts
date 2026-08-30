@@ -721,5 +721,86 @@ p('Die Wortliste erkennt „Rueckgaengig" und „Loeschen"',
   probe.every(text => UMLAUTWOERTER.some(w => text.toLowerCase().includes(w))),
   JSON.stringify(probe));
 
+/* ==========================================================================
+ * 11 · DIE ZWEI RICHTUNGEN BLEIBEN GETRENNT (E271)
+ * --------------------------------------------------------------------------
+ * `holen.bat` und `hochladen.bat` gehen je in EINE Richtung, und das ist
+ * kein Stilentscheid: sie laufen per Doppelklick auf Redurs eigenem Ordner.
+ * Ein `push` in `holen.bat` schöbe ungefragt hoch; ein `reset --hard` in
+ * `hochladen.bat` warf seine Arbeit weg. Und ein `--force` in einem der
+ * beiden überschriebe fremde Arbeit unwiderruflich.
+ *
+ * Bis heute lag unter den beiden Dateien gar nichts — `grep -rn "\.bat"
+ * pruefungen/` fand keine einzige Zeile.
+ *
+ * REM- und echo-Zeilen werden vorher entfernt: beide Dateien ERKLÄREN im
+ * Kopf, warum es kein `--force` gibt, und eine Prüfung, die an ihrer
+ * eigenen Begründung anschlägt, ist keine.
+ * ======================================================================*/
+console.log('\n11 · Die zwei Richtungen bleiben getrennt (E271)');
+
+const batBefehle = (datei: string): string => {
+  const pfad = _dazu(WURZEL, datei);
+  if (!_da(pfad)) return '';
+  return String(_lies(pfad, 'utf8')).split(/\r?\n/)
+    /* Kommentare und Bildschirmtexte raus — übrig bleibt, was ausgeführt
+       wird. `echo.` und `echo   Text` beide, aber nicht `echoirgendwas`. */
+    .filter((z: string) => !/^\s*(REM\b|::)/i.test(z))
+    .filter((z: string) => !/^\s*echo(\s|\.|$)/i.test(z))
+    .join('\n');
+};
+
+/* Und die Gegenrichtung: NUR die Bildschirmtexte. Ratschlaege stehen in
+   echo-Zeilen — sie gegen `batBefehle` zu pruefen kann nie anschlagen, weil
+   der Filter sie gerade entfernt. Genau darauf ist die erste Fassung dieser
+   Prüfung hereingefallen (§55.2: erst zeigen, dass sie rot werden KANN). */
+const batTexte = (datei: string): string => {
+  const pfad = _dazu(WURZEL, datei);
+  if (!_da(pfad)) return '';
+  return String(_lies(pfad, 'utf8')).split(/\r?\n/)
+    .filter((z: string) => /^\s*echo\s/i.test(z))
+    .join('\n');
+};
+
+const holen = batBefehle('holen.bat');
+const hoch = batBefehle('hochladen.bat');
+const holenText = batTexte('holen.bat');
+
+p('holen.bat gibt es', holen.length > 0);
+p('hochladen.bat gibt es', hoch.length > 0);
+
+p('holen.bat schiebt nichts hoch — kein git push',
+  !/\bgit\s+push\b/.test(holen),
+  'es holt, es schiebt nicht (E271)');
+p('hochladen.bat setzt nichts zurück — kein reset, kein checkout -B',
+  !/\bgit\s+reset\b/.test(hoch) && !/\bcheckout\s+-B\b/.test(hoch),
+  'es schiebt, es verändert den Ordner nicht');
+p('Keines von beiden erzwingt etwas — kein --force, kein -f, kein +refs',
+  !/--force|\bpush\b[^\n]*\s-f\b|\+refs\//.test(holen + '\n' + hoch),
+  'ein erzwungener Push wirft fremde Arbeit weg und ist nicht rücknehmbar');
+p('Keines von beiden räumt auf — kein git clean',
+  !/\bgit\s+clean\b/.test(holen + '\n' + hoch));
+/* Der Rat am Ende von holen.bat: `apply` behält die Ablage, `pop` wirft sie
+   weg — und schreibt bei Kollision Konfliktmarken in die Dateien. Gemessen
+   am 30. August 2026: trifft es `quell/**.js`, startet Redion nicht mehr. */
+p('holen.bat rät zu `stash apply`, nicht zu `stash pop`',
+  /stash\s+apply/.test(holenText) && !/stash\s+pop/.test(holenText),
+  'gemessen: pop schreibt bei Kollision Konfliktmarken in quell/**.js — ' +
+  'danach startet Redion nicht mehr');
+
+/* Gegenprobe — sie muss zeigen, dass die Regeln überhaupt anschlagen KÖNNEN.
+   Ohne sie wäre nicht zu unterscheiden, ob die Dateien sauber sind oder ob
+   `batBefehle` einfach alles wegfiltert (§55.2). */
+const attrappe = batBefehle('holen.bat') + '\ngit push --force origin main\n';
+p('Die Regeln können rot werden: eine erfundene Zeile schlägt an',
+  /\bgit\s+push\b/.test(attrappe) && /--force/.test(attrappe));
+/* Und die andere Richtung: der Filter darf nicht ALLES wegwerfen. */
+p('… und der Filter lässt echte Befehle stehen',
+  /\bgit\s+fetch\b/.test(holen) && /\bgit\s+push\b/.test(hoch),
+  'sonst wäre jede Regel oben trivial erfüllt');
+p('… und der Textfilter lässt echte Bildschirmtexte stehen',
+  holenText.includes('GitHub') && holenText.length > 400,
+  'sonst wäre die stash-Regel trivial erfüllt');
+
 console.log(`\n  Suite 52 — Quelltext: ${ok} ok, ${weg} offen`);
 process.exit(weg ? 1 : 0);

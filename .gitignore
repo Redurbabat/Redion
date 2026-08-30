@@ -7,3 +7,31 @@ Thumbs.db
 _to_delete/
 _alt/
 bilder/
+
+# ---------------------------------------------------------------------------
+# SICHERUNGEN UND GEHEIMNISSE — nachgemessen am 30. August 2026 (E271)
+# ---------------------------------------------------------------------------
+# Zwei Dinge, die zusammen gefährlich sind:
+#
+#   1. Dieses Repository ist ÖFFENTLICH. Nachgemessen:
+#      api.github.com/repos/Redurbabat/Redion  ->  "private": false
+#   2. Seit E270 schreibt Redion von selbst  redion-sicherung-<datum>.redion
+#      in einen Ordner, den ein Mensch wählt — mit ALLEN Seiten, Datenbanken
+#      und Anhängen, unverschlüsselt.
+#
+# Wählt jemand dafür den Projektordner (naheliegend, es ist der Ordner, den
+# er kennt), dann lädt das nächste  git add -A  seinen ganzen Arbeitsbereich
+# öffentlich ins Netz. Auf einem öffentlichen Repository ist das nicht
+# zurückzunehmen: die Datei liegt danach in Klonen, Caches und Suchmaschinen.
+#
+# Deshalb: das Muster steht hier, BEVOR es passieren kann.
+*.redion
+
+# Und die echten Geheimnisse. `.env` allein reichte nicht — `.env.local`,
+# `.env.produktion` und `.dev.vars` (Wranglers lokale Geheimnisse) gingen
+# alle mit. Nachgemessen mit `git check-ignore`, §42.
+.env.*
+!.env.beispiel
+.dev.vars
+.dev.vars.*
+*.log
