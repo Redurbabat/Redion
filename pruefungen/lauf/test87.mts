@@ -217,11 +217,33 @@ const html = _lies(_dazu(WURZEL, 'index.html'), 'utf8');
 const verlinkt = [...html.matchAll(/<link rel="stylesheet" href="quell\/schale\/stil\/([^"]+)">/g)]
   .map(m => m[1] ?? '');
 
-/* Nichts vergessen: jedes Blatt auf der Platte hängt auch drin. Genau das
-   ist der Fehler, der beim Anlegen einer neuen Datei passiert. */
-const nichtVerlinkt = STILE.filter(d => !(verlinkt ?? '').includes(d));
-p('index.html lädt jedes Stilblatt aus dem Ordner (' + STILE.length + ')',
-  nichtVerlinkt.length === 0, 'fehlt: ' + nichtVerlinkt.join(', '));
+/* Nichts vergessen: jedes Blatt auf der Platte kommt auch an. Genau das ist
+   der Fehler, der beim Anlegen einer neuen Datei passiert.
+
+   ZWEI WEGE, seit PR #46: ein Blatt hängt entweder als <link> in index.html
+   — oder ein verlinktes Blatt holt es per `@import`. `anatomie.css` macht
+   das mit `einfach.css`. Die Regel hier stand nur auf dem ersten Weg und
+   wurde bei völlig richtiger Arbeit rot. Das ist derselbe Fehlschlag, gegen
+   den der Kommentar oben schon einmal geschrieben wurde: eine Prüfung, die
+   eine erlaubte Bauweise bestraft, wird abgeschaltet statt befolgt.
+
+   Wichtig bleibt der Punkt selbst: KEIN Blatt darf verwaist im Ordner
+   liegen. Also wird jetzt beides gezählt. */
+const importiert = new Set<string>();
+STILE.forEach(datei => {
+  const inhalt = String(_lies(_dazu(STIL_ORDNER, datei), 'utf8'));
+  [...inhalt.matchAll(/@import\s+url\(["']\.\/([^"')]+)["']\)/g)]
+    .forEach(m => importiert.add(m[1] ?? ''));
+});
+const erreicht = (d: string) => (verlinkt ?? '').includes(d) || importiert.has(d);
+const nichtVerlinkt = STILE.filter(d => !erreicht(d));
+p('index.html erreicht jedes Stilblatt aus dem Ordner (' + STILE.length + ')',
+  nichtVerlinkt.length === 0,
+  'weder verlinkt noch importiert: ' + nichtVerlinkt.join(', '));
+/* Und die Gegenprobe: es wurden wirklich Imports gefunden, sonst wäre die
+   Lockerung oben eine stille Abschaltung der halben Regel (§55.2). */
+p('… und es wurde wirklich ein @import gesehen',
+  importiert.size >= 1, [...importiert].join(', '));
 
 /* Und umgekehrt: kein toter <link> auf eine Datei, die es nicht mehr gibt. */
 const totLink = verlinkt.filter(d => !STILE.includes(d));
@@ -249,8 +271,13 @@ p('marken.css, dann dunkel.css, dann hell.css',
 p('Und die Prüfung würde eine verdrehte Folge merken',
   stufeVon('marken.css') < stufeVon('bausteine.css'));
 
+/* HIER WIRD NICHT GELOCKERT, und das ist der Unterschied: ein `@import` ist
+   eine EIGENE Netzanfrage. Offline nützt es nichts, dass das importierende
+   Blatt im Speicher liegt — das importierte muss auch drin sein. Genau so
+   fehlte `einfach.css` nach PR #46: im Ordner, verlinkt über anatomie.css,
+   und offline nicht da (E271). */
 const sw = _lies(_dazu(WURZEL, 'sw.js'), 'utf8');
-p('sw.js kennt jedes Blatt — sonst fehlen sie offline',
+p('sw.js kennt jedes Blatt — auch die importierten, sonst fehlen sie offline',
   STILE.every(d => (sw ?? '').includes('quell/schale/stil/' + d)),
   STILE.filter(d => !(sw ?? '').includes('quell/schale/stil/' + d)).join(', '));
 
@@ -260,9 +287,26 @@ const einzel = _lies(_dazu(WURZEL, 'redion-einzeldatei.html'), 'utf8');
 const LINK_MUSTER = /<link rel="stylesheet"/;
 p('Die Einzeldatei hat kein <link rel="stylesheet"> mehr',
   !LINK_MUSTER.test(einzel));
+/* Auch hier zwei Wege: ein verlinktes Blatt bekommt seine eigene Marke,
+   ein importiertes wird von `bauen.mts` in das importierende hineingesetzt
+   (der Import-Einbetter aus PR #46). Geprüft wird deshalb, dass der INHALT
+   ankommt — bei importierten über eine Zeile, die es nur dort gibt. */
 STILE.forEach(datei => {
-  p(datei + ' steckt eingebettet in der Einzeldatei',
-    (einzel ?? '').includes('/* ===== quell/schale/stil/' + datei + ' ===== */'));
+  const marke = '/* ===== quell/schale/stil/' + datei + ' ===== */';
+  if (!importiert.has(datei)) {
+    p(datei + ' steckt eingebettet in der Einzeldatei', (einzel ?? '').includes(marke));
+    return;
+  }
+  const inhalt = String(_lies(_dazu(STIL_ORDNER, datei), 'utf8'));
+  /* Eine lange, eindeutige Zeile aus der Datei selbst — nicht der Anfang,
+     der ist bei allen ein Kommentarrahmen. */
+  const kenn = inhalt.split(/\r?\n/)
+    .map(z => z.trim())
+    .filter(z => z.length > 30 && !z.startsWith('*') && !z.startsWith('/*'))
+    .sort((a, b) => b.length - a.length)[0] ?? '';
+  p(datei + ' steckt (als Import) eingebettet in der Einzeldatei',
+    kenn.length > 0 && (einzel ?? '').includes(kenn),
+    'gesucht: ' + kenn.slice(0, 60));
 });
 
 /* Gegenprobe wie oben: findet die Prüfung einen übriggebliebenen <link>?

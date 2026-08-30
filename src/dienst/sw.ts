@@ -214,6 +214,12 @@ const GRUNDSTOCK = [
   './quell/schale/stil/grund.css',
   './quell/schale/stil/aufbau.css',
   './quell/schale/stil/anatomie.css',
+  /* `anatomie.css` holt dieses Blatt über `@import` — und ein Import ist
+     eine EIGENE Netzanfrage. Ohne diese Zeile fehlte die ganze ruhige
+     Schale, sobald jemand offline ist: die Datei stand im Ordner, sie war
+     verlinkt, und trotzdem kam sie nicht an. Gefunden beim Zusammenführen
+     von PR #46 (E271). */
+  './quell/schale/stil/einfach.css',
   './quell/schale/stil/datenbanken.css',
   './quell/schale/stil/ki.css',
   './quell/schale/stil/werkzeuge.css',
