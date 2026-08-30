@@ -29,6 +29,7 @@
  * §9  Bau-Hygiene.
  * §10 Die Gold-Marken sind gerechnet, nicht geschätzt.
  * §11 Die 15er-Regel — und nichts geht dabei verloren.
+ * §12 „Gehen" deckt die Register, und der Schauplatz sagt, wo man ist.
  *
  *   node pruefungen/lauf/test272.mts
  * ==========================================================================*/
@@ -630,6 +631,135 @@ p('Gegenprobe: ein wieder eingeblendeter Knopf steht messbar über',
   gegenUeberstand > 2, String(gegenUeberstand) + ' px');
 
 await seite.setViewportSize({ width: 1360, height: 950 });
+
+/* ==========================================================================
+ * §12 — „Gehen" deckt die Register (E272 Phase E)
+ * ========================================================================*/
+console.log('\n12 · „Gehen" deckt die Register');
+
+const gehen = await seite.evaluate(() => {
+  const imBand = new Set<string>();
+  for (const g of Register.menueband.inReiter('gehen'))
+    for (const e of g.eintraege) imBand.add(String(e.id ?? ''));
+
+  /* Was AUS SICHT DES BENUTZERS ein Ort ist. Drei Modul-Einträge sind
+     keiner und stehen deshalb nicht drin — sie sagen das im Register
+     selbst („KEIN EIGENER BILDSCHIRM") oder schalten einen Modus auf der
+     offenen Seite. */
+  const KEIN_ORT = ['lebensbereiche', 'dokumentmodus', 'editor'];
+  /* Und was zweimal dasselbe tut: links fällt weg, rechts bleibt. */
+  const DOPPELT: Record<string, string> = {
+    lernwelt: 'heute', arbeitswelt: 'workspace', notizhefte: 'app-notizhefte',
+    hilfe: 'app-kann', vorlagen: 'app-markt', bibliothek: 'app-bib',
+    papierkorb: 'papierkorbFuss'
+  };
+
+  const fehlendeModule: string[] = [];
+  for (const m of Register.module.alle()) {
+    const id = String(m?.id ?? '');
+    if (!id || KEIN_ORT.includes(id)) continue;
+    const ziel = DOPPELT[id] || id;
+    if (!imBand.has(ziel)) fehlendeModule.push(id + (DOPPELT[id] ? ' → ' + ziel : ''));
+  }
+
+  const fehlendeWege: string[] = [];
+  let wegeGeprueft = 0;
+  for (const platz of ['oben', 'apps', 'fuss', 'unten']) {
+    for (const e of Register.navigation.anPlatz(platz)) {
+      const id = String(e?.id ?? '');
+      if (!id || typeof e.tun !== 'function') continue;   /* Überschriften */
+      wegeGeprueft++;
+      const ziel = DOPPELT[id] || id;
+      if (!imBand.has(ziel)) fehlendeWege.push(id + '/' + platz);
+    }
+  }
+  return { imBand: imBand.size, fehlendeModule, fehlendeWege, wegeGeprueft };
+}) as { imBand: number; fehlendeModule: string[]; fehlendeWege: string[]; wegeGeprueft: number };
+
+console.log('    (' + gehen.imBand + ' Einträge in „Gehen", ' +
+  gehen.wegeGeprueft + ' Navigationswege geprüft)');
+p('„Gehen" ist gefüllt', gehen.imBand > 20, String(gehen.imBand));
+p('Jedes Modul, das ein ORT ist, steht in „Gehen"',
+  gehen.fehlendeModule.length === 0, gehen.fehlendeModule.join(', '));
+p('Und jeder Weg der Seitenleiste ebenfalls',
+  gehen.fehlendeWege.length === 0, gehen.fehlendeWege.join(', '));
+
+/* DIE FÜNF EINTRÄGE AUF PLATZ `unten` SIND ALLE DOPPELT — nachgemessen.
+   Die Phase-A-Matrix behauptete, „Gehen" bringe fünf Wege zurück, die
+   `seitenleiste.ts:733` wegfiltert. Gemessen stimmt der erste Teil (sie
+   werden gefiltert), der zweite nicht: jeder der fünf führt zu einem Ziel,
+   das anderswo schon steht.
+
+       vorlagen      → Galerie.oeffne()        = app-markt
+       bibliothek    → Bibliothek.oeffne()     = app-bib
+       papierkorb    → App.papierkorb()        = papierkorbFuss
+       hilfe         → Rundgang.uebersicht()   = app-kann
+       einstellungen → Einstellungen.oeffne()  = Modul „einstellungen"
+
+   Gefunden hat es eine Gegenprobe: den Platz `unten` aus der Schleife
+   genommen — und der Lauf blieb grün. Es ist also nichts verlorengegangen,
+   als sie unsichtbar waren, und es kommt auch nichts zurück. Die Matrix ist
+   berichtigt.
+
+   Geprüft wird deshalb, was wirklich zutrifft: das Ziel ist erreichbar. */
+p('Der Weg „Einstellungen" ist über „Gehen" erreichbar',
+  await seite.evaluate(() => {
+    for (const g of Register.menueband.inReiter('gehen'))
+      for (const e of g.eintraege) if (e.id === 'einstellungen') return true;
+    return false;
+  }));
+
+/* GEGENPROBE: eine erfundene Kennung im Modulregister muss auffallen.
+   Ohne sie prüft der Abgleich oben nur, dass zwei Listen leer sind. */
+const gegenGehen = await seite.evaluate(() => {
+  Register.module.melde({ id: 'gibtesnicht', name: 'Gibt es nicht', icon: '?',
+                          was: 'Nur für die Gegenprobe', oeffnen: () => {} });
+  const imBand = new Set<string>();
+  for (const g of Register.menueband.inReiter('gehen'))
+    for (const e of g.eintraege) imBand.add(String(e.id ?? ''));
+  const kennt = Register.module.alle().some((m: any) => m && m.id === 'gibtesnicht');
+  return { kennt, imBand: imBand.has('gibtesnicht') };
+}) as { kennt: boolean; imBand: boolean };
+p('Gegenprobe: ein nachgemeldetes Modul erscheint in „Gehen"',
+  !gegenGehen.kennt || gegenGehen.imBand,
+  'das Modulregister kennt es, „Gehen" zeigt es nicht — dann misst §12 nichts');
+
+/* Der Schauplatz — die Grundlage der Kontextkante (Phase F). */
+const schauplaetze = await seite.evaluate(async () => {
+  const gehoert: string[] = [];
+  const horcher = (e: Event) => gehoert.push(String((e as CustomEvent).detail));
+  window.addEventListener('redion:schauplatz', horcher);
+  const warte = (): Promise<void> => new Promise(f => setTimeout(f, 260));
+  const raus: Record<string, string> = {};
+  Bibliothek.oeffne();          await warte(); raus['bibliothek'] = App.schauplatz();
+  App.papierkorb();             await warte(); raus['papierkorb'] = App.schauplatz();
+  const s1 = Store.rootPages()[0];
+  if (s1) App.oeffne(s1.id);    await warte(); raus['seite'] = App.schauplatz();
+  window.removeEventListener('redion:schauplatz', horcher);
+  return { raus, gehoert };
+}) as { raus: Record<string, string>; gehoert: string[] };
+
+console.log('    ' + JSON.stringify(schauplaetze.raus));
+p('Eine offene Seite meldet sich als „seite"', schauplaetze.raus['seite'] === 'seite',
+  String(schauplaetze.raus['seite']));
+p('Die Bibliothek meldet sich als „bibliothek"',
+  schauplaetze.raus['bibliothek'] === 'bibliothek', String(schauplaetze.raus['bibliothek']));
+p('Ein Bereich ohne eigenen Namen bekommt trotzdem eine Kennung',
+  !!schauplaetze.raus['papierkorb'] && schauplaetze.raus['papierkorb'] !== 'leer',
+  String(schauplaetze.raus['papierkorb']));
+/* NUR WECHSEL, UND KEINE DOPPELUNG. Der erste Anlauf erwartete drei
+   Ereignisse für drei Aufrufe und wurde rot — zu Recht, aber nicht wegen
+   eines Fehlers: „Papierkorb" wird IN der Bibliothek gezeichnet
+   (`Bibliothek.oeffne()` mit Filter), der Schauplatz bleibt also
+   `bibliothek`. Dass dann kein zweites Ereignis kommt, ist genau der
+   Vertrag: gemeldet wird der WECHSEL, nicht der Aufruf. Ein Horcher, der
+   bei jedem Klick neu zeichnet, wäre das Gegenteil von dem, wofür die
+   Kante das Ereignis braucht. */
+p('Jeder Wechsel wird als Ereignis gemeldet',
+  schauplaetze.gehoert.length >= 2, schauplaetze.gehoert.join(' → '));
+p('… und derselbe Schauplatz nicht zweimal hintereinander',
+  schauplaetze.gehoert.every((x, i) => i === 0 || x !== schauplaetze.gehoert[i - 1]),
+  schauplaetze.gehoert.join(' → '));
 
 await browser.close();
 server.close();

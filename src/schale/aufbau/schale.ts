@@ -666,12 +666,65 @@ const App = (() => {
   /* Sonderansichten — Bibliothek, Meine Aufgaben. Sie ersetzen den Seiteninhalt,
      ohne eine echte Seite zu sein, genau wie bei Notion. */
   let sonder: any = null;
+
+  /* ========================================================================
+   * DER SCHAUPLATZ — wo man gerade ist (E272)
+   * ------------------------------------------------------------------------
+   * Die Kontextkante zeigt je Bereich andere Knöpfe; dafür muss sie
+   * fragen können, welcher Bereich das gerade ist. Bisher wusste das
+   * niemand ausser `zeigeSonder` und `oeffne` selbst — in einer lokalen
+   * Variablen, die keiner sieht.
+   *
+   * `schauplatz()` gibt EINEN kleinen Bezeichner zurück, nicht das ganze
+   * Innenleben: `'heute'`, `'bibliothek'`, `'seite'`, `'leer'`. Wer mehr
+   * braucht — ob auf der Seite ein PDF liegt zum Beispiel —, fragt seinen
+   * eigenen Bereich; die Schale soll nicht wissen müssen, was ein PDF ist.
+   *
+   * Und ein Ereignis dazu, damit niemand pollen muss. Es heisst
+   * `redion:schauplatz` und trägt den Bezeichner im `detail`. Das ist die
+   * Bauart, die §5 verlangt: die Kante hängt nicht an `App`, sondern hört
+   * zu.
+   * ====================================================================== */
+  const SCHAUPLATZ_NAMEN: Record<string, string> = {
+    'Lernen & Alltag': 'heute', 'Heute': 'heute', 'Lernzentrum': 'lernen',
+    'Bibliothek': 'bibliothek', 'Alle Seiten': 'bibliothek',
+    'Dokumente': 'bibliothek', 'Notizhefte': 'notizhefte',
+    'Workspace': 'workspace', 'Meine Aufgaben': 'aufgaben',
+    'Aufgaben': 'aufgaben', 'Posteingang': 'posteingang',
+    'Elektrotechnik': 'elektro', 'Elektro': 'elektro',
+    'Papierkorb': 'papierkorb', 'Kalender': 'kalender'
+  };
+
+  const schauplatz = (): string => {
+    if (seiteId) return 'seite';
+    if (!sonder) return 'leer';
+    const titel = String(sonder.titel || '');
+    if (SCHAUPLATZ_NAMEN[titel]) return SCHAUPLATZ_NAMEN[titel] as string;
+    /* Ein unbekannter Titel wird zu einer brauchbaren Kennung statt zu
+       „unbekannt": kleingeschrieben, ohne Sonderzeichen. So bekommt ein
+       neuer Bereich von selbst einen Schauplatz, ohne dass jemand ihn
+       hier einträgt — und die Kante kann sich darauf anmelden. */
+    return titel.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+      || 'leer';
+  };
+
+  let letzterSchauplatz = '';
+  const schauplatzMelden = (): void => {
+    const jetzt = schauplatz();
+    if (jetzt === letzterSchauplatz) return;
+    letzterSchauplatz = jetzt;
+    try {
+      window.dispatchEvent(new CustomEvent('redion:schauplatz', { detail: jetzt }));
+    } catch { /* ohne CustomEvent bleibt der Rest */ }
+  };
+
   const zeigeSonder = (titel: string, zeichner: any) => {
     sonder = { titel, zeichner };
     seiteId = null;
     location.hash = '#' + titel.toLowerCase().replace(/[^a-z]+/g, '-');
     zeichneBaum();
     zeichneSeite();
+    schauplatzMelden();
     const scr = document.getElementById('scroll');
     if (scr) scr.scrollTop = 0;
   };
@@ -690,6 +743,7 @@ const App = (() => {
     location.hash = id || '';
     zeichneBaum();
     zeichneSeite();
+    schauplatzMelden();
     if (typeof Fenster !== 'undefined' && id) Fenster.gemerkt(id);
     const scr = document.getElementById('scroll');
     if (scr) scr.scrollTop = 0;
@@ -3402,6 +3456,8 @@ const App = (() => {
     kiPanel, suche, seitenSuche, theme, einstellungen, papierkorb, neueSeite,
     markdownExport, markdownVonSeite, woerterZaehlen, dupliziereSeite, seitenMenue, coverWaehlen,
     kuerzlich, kommendeTermine,
+    /* Wo man gerade ist — für die Kontextkante (E272). */
+    schauplatz,
     ABSCHNITTE, abschnittAn, abschnittSchalten, abschnitteAnpassen, reiterWechseln,
     sicherungSpeichern, sicherungPaketBauen, sicherungLaden, zurueck, vorwaerts, arbeitsbereich,
     /* HERAUSGEGEBEN SEIT E236. Das Blatt „Neu erstellen" war eine interne

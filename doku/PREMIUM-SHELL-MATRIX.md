@@ -95,8 +95,25 @@ Ein Fund, kein Nebensatz:
   gezeichnet wird nur, was `x.tun && x.vonAussen` hat, und eingebaute Einträge
   haben kein `vonAussen`.
 
-Der Reiter **Gehen** bringt diese fünf Wege also nicht um; er bringt sie zum
-ersten Mal seit ihrer Eintragung wieder auf den Bildschirm.
+**BERICHTIGT IN PHASE E.** Hier stand: „Der Reiter Gehen bringt diese fünf
+Wege zum ersten Mal seit ihrer Eintragung wieder auf den Bildschirm." Der
+erste Teil stimmt — sie werden gefiltert. Der zweite nicht: nachgemessen
+führt jeder der fünf zu einem Ziel, das anderswo schon steht.
+
+    vorlagen      → Galerie.oeffne()        = app-markt
+    bibliothek    → Bibliothek.oeffne()     = app-bib
+    papierkorb    → App.papierkorb()        = papierkorbFuss
+    hilfe         → Rundgang.uebersicht()   = app-kann
+    einstellungen → Einstellungen.oeffne()  = Modul „einstellungen"
+
+Es ist also nichts verlorengegangen, als sie unsichtbar waren, und es kommt
+auch nichts zurück. Gefunden hat es eine Gegenprobe in Phase E: den Platz
+`unten` aus der Schleife genommen, und der Prüflauf blieb grün — eine
+Gegenprobe, die nichts beweist, weil es nichts zu beweisen gab.
+
+Was bleibt: acht Registereinträge werden nicht gezeichnet, und der Grund
+dafür ist ein Filter, den niemand mehr begründen kann. Das ist eine
+Aufräumaufgabe für Phase J, kein Funktionsverlust.
 
 ---
 

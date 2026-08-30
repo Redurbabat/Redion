@@ -22,46 +22,63 @@
  * eine Reihenfolgenfalle.
  * ==========================================================================*/
 
+/* EIN ZWEITES FELD FÜR DAS ZEICHEN — `zeichen` neben `icon` (E272).
+ *
+ * `icon` trägt ein EMOJI. Das war richtig, solange nur die Seitenleiste und
+ * das Mehr-Blatt es lasen: dort steht es in einer Zeile und darf bunt sein.
+ *
+ * Im Menüband geht es nicht. E202 hat die Emoji aus der Lernwelt entfernt
+ * und den Grund aufgeschrieben: sie sehen auf jedem System anders aus,
+ * tragen nicht die Farbe ihrer Zeile, und in einer Reihe gleich grosser
+ * Strichzeichen fallen sie als Fremdkörper auf. Genau so sah der Reiter
+ * „Gehen" im ersten Bild aus — dreizehn Emoji nebeneinander.
+ *
+ * `zeichen` nennt deshalb ein Strichzeichen aus `Register.symbole`. Wer
+ * `icon` liest, bekommt weiter das Emoji; wer `zeichen` liest, das
+ * gezeichnete. Kein Umbau, kein zweiter Katalog — dasselbe Register, ein
+ * Feld mehr.
+ * ==========================================================================*/
+
 (window as any).Register = (window as any).Register || {};
 
 Register.module = (() => {
 
   const EINGEBAUT = [
-    { id: 'editor',        name: 'Schreiben',      icon: '✎',
+    { id: 'editor',        name: 'Schreiben',      icon: '✎', zeichen: 'pencil',
       was: 'Seiten und Blöcke — der Teil, in dem man tippt.',
       /* `App.oeffneZuletzt` gibt es nicht — die zuletzt geöffnete Seite steht
          in `App.aktuelleSeite()`. Weil `App.oeffneZuletzt &&` davorstand, tat
          der Punkt „Schreiben" in der Modulübersicht nichts. */
       oeffnen: () => App.oeffne(App.aktuelleSeite()) },
 
-    { id: 'datenbanken',   name: 'Datenbanken',    icon: '▦',
+    { id: 'datenbanken',   name: 'Datenbanken',    icon: '▦', zeichen: 'database',
       was: 'Tabellen, Ansichten, Formeln, Filter, Automationen.',
       oeffnen: () => (typeof Werkzeuge !== 'undefined') && Werkzeuge.palette('datenbank') },
 
-    { id: 'wissen',        name: 'Wissen',         icon: '🧠',
+    { id: 'wissen',        name: 'Wissen',         icon: '🧠', zeichen: 'cards',
       was: 'Verweise, Graph, Schlagwörter, Karteikarten, Journal.',
       oeffnen: () => (typeof Werkzeuge !== 'undefined') && Werkzeuge.lernen && Werkzeuge.lernen() },
 
-    { id: 'ki',            name: 'KI',             icon: '✨',
+    { id: 'ki',            name: 'KI',             icon: '✨', zeichen: 'sparkle',
       was: 'Modelle, Kontext, Agenten, Werkzeuge über MCP.',
       /* `KI.panel` gibt es nicht — das Fenster öffnet `App.kiPanel`. Weil hier
          `KI.panel &&` davorstand, tat der Punkt „KI" in der Modulübersicht
          schlicht nichts. */
       oeffnen: () => App.kiPanel() },
 
-    { id: 'verbinden',     name: 'Verbinden',      icon: '🔗',
+    { id: 'verbinden',     name: 'Verbinden',      icon: '🔗', zeichen: 'link',
       was: 'Konten, Kalender, Mail, Besprechungen, Wolke, Schnittstelle.',
       oeffnen: () => (typeof Verbindungen !== 'undefined') && Verbindungen.dialog() },
 
-    { id: 'dateien',       name: 'Dateien',        icon: '📎',
+    { id: 'dateien',       name: 'Dateien',        icon: '📎', zeichen: 'clipboard',
       was: 'Ablage in Stücken, Einlesen, Ausgeben, fremde Formate.',
       oeffnen: () => (typeof Dateien !== 'undefined') && Dateien.dialog() },
 
-    { id: 'einstellungen', name: 'Einstellungen',  icon: '⚙',
+    { id: 'einstellungen', name: 'Einstellungen',  icon: '⚙', zeichen: 'settings',
       was: 'Aussehen, Bereiche, Pflege, Erweiterungen.',
       oeffnen: () => (typeof Einstellungen !== 'undefined') && Einstellungen.oeffne() },
 
-    { id: 'hilfe',         name: 'Hilfe',          icon: '?',
+    { id: 'hilfe',         name: 'Hilfe',          icon: '?', zeichen: 'help',
       was: 'Rundgang, Tastenkürzel, Wissensseiten, Umsetzungsstand.',
       oeffnen: () => (typeof Rundgang !== 'undefined') && Rundgang.uebersicht() },
 
@@ -76,19 +93,19 @@ Register.module = (() => {
        passiert nichts, und `Register.oeffne` schreibt es in den Reporter.
        Ein stiller Fehlschlag sähe aus wie ein toter Knopf (E118). */
 
-    { id: 'lernwelt',      name: 'Lernen & Alltag', icon: '🎓',
+    { id: 'lernwelt',      name: 'Lernen & Alltag', icon: '🎓', zeichen: 'today',
       was: 'Heute, Lernzentrale, Lernpfad, Fehler, Prüfungen, Schule, Uni, Arbeit.',
       oeffnen: () => (typeof Produktwelten !== 'undefined') && Produktwelten.lernen('heute') },
 
-    { id: 'notizhefte',    name: 'Notizhefte',      icon: '📓',
+    { id: 'notizhefte',    name: 'Notizhefte',      icon: '📓', zeichen: 'book',
       was: 'Regal deiner Schreibhefte — öffnen und losschreiben (E264).',
       oeffnen: () => (typeof Notebook !== 'undefined') && Notebook.oeffnen() },
 
-    { id: 'arbeitswelt',   name: 'Workspace',      icon: '🧱',
+    { id: 'arbeitswelt',   name: 'Workspace',      icon: '🧱', zeichen: 'workspace',
       was: 'Seiten, Bibliothek, Aufgaben, Kalender, Datenbanken, Whiteboards, Wiki, Vorlagen.',
       oeffnen: () => (typeof Produktwelten !== 'undefined') && Produktwelten.workspace('uebersicht') },
 
-    { id: 'lebensbereiche', name: 'Lebensbereiche', icon: '◎',
+    { id: 'lebensbereiche', name: 'Lebensbereiche', icon: '◎', zeichen: 'compass',
       was: 'Schule, Arbeit, Privat — dieselbe Seite darf in mehreren stehen, ohne Kopie.',
       /* KEIN EIGENER BILDSCHIRM, und der Eintrag darf das nicht behaupten.
          Ein Lebensbereich ist ein kleines Metafeld am vorhandenen Objekt
@@ -110,7 +127,7 @@ Register.module = (() => {
         Produktwelten.bereicheDialog(seite);
       } },
 
-    { id: 'elektro',       name: 'Elektrotechnik', icon: '⚡',
+    { id: 'elektro',       name: 'Elektrotechnik', icon: '⚡', zeichen: 'bolt',
       was: 'Rechnungen mit Quellenangabe und ein geprüftes Grundlagen-Lernpaket.',
       /* Seit L65 die Elektro-Seite, nicht mehr der Rechner allein — beide
          Register müssen dasselbe Ziel nennen, sonst führen zwei Wege mit
@@ -119,16 +136,16 @@ Register.module = (() => {
         ? Elektrostart.oeffne()
         : (typeof Electrical !== 'undefined') && Electrical.open() },
 
-    { id: 'erkennung',     name: 'Erfassen & Erkennen', icon: '📷',
+    { id: 'erkennung',     name: 'Erfassen & Erkennen', icon: '📷', zeichen: 'camera',
       was: 'Kamera und Dateien in den Eingang; Text aus Bild, PDF und Handschrift ' +
            'über den mitgelieferten lokalen Dienst.',
       oeffnen: () => (typeof Recognition !== 'undefined') && Recognition.scan() },
 
-    { id: 'zeitmesser',    name: 'Zeitmesser', icon: '⏱',
+    { id: 'zeitmesser',    name: 'Zeitmesser', icon: '⏱', zeichen: 'clock',
       was: 'Stoppuhr und Timer mit Dokumentbezug — Lernzeit messen statt schätzen (E268).',
       oeffnen: () => (typeof Zeitmesser !== 'undefined') && Zeitmesser.panel() },
 
-    { id: 'dokumentmodus', name: 'Dokumentmodus',  icon: '📖',
+    { id: 'dokumentmodus', name: 'Dokumentmodus',  icon: '📖', zeichen: 'library',
       was: 'Eine PDF- oder Blattseite gross, mit den Objekten daneben.',
       /* SAGT, WARUM ES NICHT GEHT, statt stumm nichts zu tun. `toggle`
          steigt ohne geeignete Seite wortlos aus — aus einer Modulübersicht

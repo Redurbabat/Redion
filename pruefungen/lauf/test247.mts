@@ -317,6 +317,28 @@ const tot = await seite.evaluate(() => {
 });
 p('Jeder Eintrag ist vollständig', tot.fehlt.length === 0, tot.fehlt.slice(0, 4).join(' | '));
 
+/* EINEN BEFEHL ANKLICKEN, EGAL OB ER SICHTBAR IST (E272).
+   Seit die 15er-Regel gilt, steht nicht mehr jeder Befehl im Band —
+   „Erwähnung" und „Emoji" sind die letzten zwei von 69 in „Einfügen" und
+   liegen im „•••". Ein Prüflauf, der stur auf den Bandknopf klickt, misst
+   ab dann nicht mehr die Funktion, sondern die Fensterbreite.
+
+   Er geht deshalb denselben Weg wie ein Mensch: erst schauen, ob der Knopf
+   dasteht; wenn nicht, das „•••" öffnen und ihn dort nehmen. Findet er ihn
+   auch dort nicht, gibt er `false` zurück — dann ist der Befehl wirklich
+   verloren, und genau das soll rot werden. */
+const klickBefehl = async (s2: any, id: string): Promise<boolean> => {
+  const drin = await s2.evaluate((k: string) => {
+    const b = document.querySelector<HTMLElement>(`#menueband [data-band="${k}"]`);
+    return !!b && !b.hidden;
+  }, id);
+  if (drin) return klick(s2, `#menueband [data-band="${id}"]`);
+  const mehrDa = await klick(s2, '#menueband .mb-mehr');
+  if (!mehrDa) return false;
+  await s2.waitForTimeout(220);
+  return klick(s2, `#mb-mehr-lade [data-band="${id}"]`);
+};
+
 /* Und einer wird wirklich gedrückt. „Journal" legt einen Tageseintrag an —
    das ist im Bestand sichtbar und braucht keine Vermutung. */
 /* „Journal" wohnt seit E272 unter „Gehen" — derselbe Eintrag, derselbe
@@ -325,7 +347,12 @@ await klick(seite, '#menueband [data-mb-reiter="gehen"]');
 await seite.waitForTimeout(260);
 const vorher = await seite.evaluate(() =>
   Object.keys(Store.cache.blocks).length);
-const journalDa = await klick(seite, '#menueband [data-band="w-journal"]');
+/* SEIT PHASE E STEHT „JOURNAL" NICHT MEHR VORNE. Der Reiter „Gehen" liest
+   jetzt aus `Register.module` und `Register.navigation` — 45 Einträge statt
+   sechs, und „Erfassen" kommt nach „Hauptbereiche" und „Planung & Lernen".
+   Damit landet Journal jenseits der fünfzehn und steht im „•••". Der
+   Prüflauf geht denselben Weg wie ein Mensch. */
+const journalDa = await klickBefehl(seite, 'w-journal');
 await seite.waitForTimeout(900);
 p('Der Knopf „Journal" ist im Band anklickbar', journalDa);
 const nachher = await seite.evaluate(() => ({
@@ -418,14 +445,14 @@ await klick(seite, '#menueband [data-mb-reiter="werkzeuge"]');
 await seite.waitForTimeout(300);
 const vorReiter = await seite.evaluate(() =>
   document.querySelector('#side-reiter .sr.on')?.getAttribute('data-reiter') || '');
-await klick(seite, '#menueband [data-band="w-agenten"]');
+await klickBefehl(seite, 'w-agenten');
 await seite.waitForTimeout(700);
 const nachAgenten = await seite.evaluate(() =>
   document.querySelector('#side-reiter .sr.on')?.getAttribute('data-reiter') || '');
 p('„Agenten" schaltet die Seitenleiste auf ihren Reiter',
   vorReiter !== 'chat' && nachAgenten === 'chat', `${vorReiter} → ${nachAgenten}`);
 
-await klick(seite, '#menueband [data-band="w-bespr"]');
+await klickBefehl(seite, 'w-bespr');
 await seite.waitForTimeout(700);
 const nachBespr = await seite.evaluate(() =>
   document.querySelector('#side-reiter .sr.on')?.getAttribute('data-reiter') || '');
@@ -1146,28 +1173,6 @@ p('Die Gruppe „Im Text" führt genau das, was `Blocks.AM_ENDE` nennt',
 /* Ohne Überschrift steht die Gruppe am Telefon ohne Trennung neben der
    vorigen — dort ist sie das Einzige, was Gruppen auseinanderhält. */
 p('Und sie trägt ihre Überschrift', imText.gruppe, JSON.stringify(imText));
-
-/* EINEN BEFEHL ANKLICKEN, EGAL OB ER SICHTBAR IST (E272).
-   Seit die 15er-Regel gilt, steht nicht mehr jeder Befehl im Band —
-   „Erwähnung" und „Emoji" sind die letzten zwei von 69 in „Einfügen" und
-   liegen im „•••". Ein Prüflauf, der stur auf den Bandknopf klickt, misst
-   ab dann nicht mehr die Funktion, sondern die Fensterbreite.
-
-   Er geht deshalb denselben Weg wie ein Mensch: erst schauen, ob der Knopf
-   dasteht; wenn nicht, das „•••" öffnen und ihn dort nehmen. Findet er ihn
-   auch dort nicht, gibt er `false` zurück — dann ist der Befehl wirklich
-   verloren, und genau das soll rot werden. */
-const klickBefehl = async (s2: any, id: string): Promise<boolean> => {
-  const drin = await s2.evaluate((k: string) => {
-    const b = document.querySelector<HTMLElement>(`#menueband [data-band="${k}"]`);
-    return !!b && !b.hidden;
-  }, id);
-  if (drin) return klick(s2, `#menueband [data-band="${id}"]`);
-  const mehrDa = await klick(s2, '#menueband .mb-mehr');
-  if (!mehrDa) return false;
-  await s2.waitForTimeout(220);
-  return klick(s2, `#mb-mehr-lade [data-band="${id}"]`);
-};
 
 /* „Erwähnung" hängt einen Block an und öffnet das Menü, das am „@" hängt. */
 const vorMention = await seite.evaluate(() => Store.childrenOf(App.aktuelleSeite()).length);

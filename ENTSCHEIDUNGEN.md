@@ -19830,3 +19830,76 @@ LUECKEN.md und sind behoben — durch eine vierte Breite (2400 px) und eine
 zweite Messung über `scrollWidth`. Danach wurden beide rot, wie sie sollen.
 
 sw VERSION v38 → v39. Einzeldatei 7253 → 7286 KB.
+
+PHASE E („Gehen") — der Reiter, der keinen eigenen Katalog hat
+--------------------------------------------------------------
+
+`gehenEintraege()` liest, was es gibt, aus den zwei Registern, die es
+ohnehin führen: `Register.module` (16 Bereiche) und `Register.navigation`
+(39 Zeilen der Seitenleiste). Aus sechs Einträgen werden 45.
+
+Das ist nicht Bequemlichkeit, sondern die Bedingung dafür, dass „Gehen" die
+Seitenleiste in Phase F ABLÖSEN kann: zwei Listen, die dasselbe behaupten,
+laufen auseinander. Bei `suche` und `palette` ist genau das schon passiert
+(E160).
+
+Eigen ist dem Reiter nur, was keine Liste sein kann:
+
+  GEHEN_GRUPPE   welche Kennung unter welcher Überschrift steht. Was hier
+                 fehlt, landet unter „Weiteres" — es verschwindet nicht.
+                 Ein neuer Bereich taucht auf, auch wenn niemand daran
+                 gedacht hat, ihn einzutragen.
+  GEHEN_DOPPELT  was zweimal dasselbe TUT, gemessen an den Griffen und
+                 nicht an den Namen. Sieben Paare.
+  GEHEN_NICHT    was kein ORT ist: `lebensbereiche` sagt im Register selbst
+                 „KEIN EIGENER BILDSCHIRM", `dokumentmodus` schaltet einen
+                 Modus auf der offenen Seite, `editor` führt zur laufenden
+                 Seite zurück. Alle drei geben ohne Seite nur einen Toast.
+
+NICHT zusammengelegt werden die zwei Paare, die gleich HEISSEN und
+Verschiedenes tun: `bibliothekOben` geht über die Arbeitswelt, `app-bib`
+öffnet die Liste; bei `aufgaben`/`app-aufgaben` ebenso. Der Kommentar in
+`navigation.ts:141` hält das ausdrücklich fest. Beide stehen da, unter
+ihren eigenen Namen.
+
+EINE BEHAUPTUNG AUS PHASE A IST DABEI GEFALLEN. Die Matrix sagte, „Gehen"
+bringe fünf Wege zurück, die `seitenleiste.ts:733` wegfiltert. Der erste
+Teil stimmt; der zweite nicht. Nachgemessen führt jeder der fünf
+`unten`-Einträge zu einem Ziel, das anderswo schon steht — Vorlagen zu
+app-markt, Bibliothek zu app-bib, Papierkorb zu papierkorbFuss, Hilfe zu
+app-kann, Einstellungen zum gleichnamigen Modul.
+
+Gefunden hat es eine GEGENPROBE, die nichts bewies: den Platz `unten` aus
+der Schleife genommen, und der Lauf blieb grün. Es war also nichts zu
+beweisen. Die Matrix ist berichtigt; es ist nichts verlorengegangen, als
+sie unsichtbar waren, und es kommt auch nichts zurück.
+
+EMOJI IM BAND — der Fund, den nur das Hinsehen machte. Der erste Bildschirm
+des neuen Reiters zeigte dreizehn Emoji nebeneinander: beide Register führen
+in `icon` ein Emoji, und das Band setzte es als Textzeichen. E202 hat genau
+das einmal abgeschafft und den Grund aufgeschrieben — Emoji sehen auf jedem
+System anders aus und tragen nicht die Farbe ihrer Zeile.
+
+Beide Register haben jetzt ein zweites Feld `zeichen` mit dem Namen eines
+Strichzeichens aus `Register.symbole`. Wer `icon` liest, bekommt weiter das
+Emoji (Seitenleiste, Mehr-Blatt); das Band liest `zeichen`. Kein Umbau, kein
+zweiter Katalog — dasselbe Register, ein Feld mehr. Vier Zeichen wurden
+danach noch getauscht, weil sie zwei verschiedene Ziele meinten.
+
+DER SCHAUPLATZ. `App.schauplatz()` sagt in einem Wort, wo man ist —
+`'heute'`, `'bibliothek'`, `'seite'`, `'leer'` —, und `redion:schauplatz`
+meldet jeden WECHSEL als Ereignis. Das ist die Grundlage der Kontextkante
+(Phase F), und die Bauart, die §5 verlangt: die Kante hängt nicht an `App`,
+sondern hört zu.
+
+Gemeldet wird der Wechsel, nicht der Aufruf. „Papierkorb" wird IN der
+Bibliothek gezeichnet, der Schauplatz bleibt also `bibliothek` und es kommt
+kein zweites Ereignis — der erste Prüfpunkt erwartete drei für drei Aufrufe
+und wurde zu Recht rot.
+
+**Geprüft:** test272 77 Punkte (neu §12: jedes Modul und jeder
+Navigationsweg steht in „Gehen"; der Schauplatz meldet sich richtig und
+nicht doppelt) · test247 105 · test248 46 · test222 51 · test86 58 ·
+test87 156 · test105 55. Zwei Gegenproben rot gesehen: die 19 Apps aus der
+Schleife genommen (zwei Prüfpunkte rot), und `schauplatz()` auf einen festen
+Wert gestellt. Eine dritte blieb grün und wurde damit selbst zum Fund.

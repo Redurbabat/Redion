@@ -49,6 +49,23 @@
  * das ohne Konto nicht geht, ist schlimmer als kein Eintrag.
  * ==========================================================================*/
 
+/* EIN ZWEITES FELD FÜR DAS ZEICHEN — `zeichen` neben `icon` (E272).
+ *
+ * `icon` trägt ein EMOJI. Das war richtig, solange nur die Seitenleiste und
+ * das Mehr-Blatt es lasen: dort steht es in einer Zeile und darf bunt sein.
+ *
+ * Im Menüband geht es nicht. E202 hat die Emoji aus der Lernwelt entfernt
+ * und den Grund aufgeschrieben: sie sehen auf jedem System anders aus,
+ * tragen nicht die Farbe ihrer Zeile, und in einer Reihe gleich grosser
+ * Strichzeichen fallen sie als Fremdkörper auf. Genau so sah der Reiter
+ * „Gehen" im ersten Bild aus — dreizehn Emoji nebeneinander.
+ *
+ * `zeichen` nennt deshalb ein Strichzeichen aus `Register.symbole`. Wer
+ * `icon` liest, bekommt weiter das Emoji; wer `zeichen` liest, das
+ * gezeichnete. Kein Umbau, kein zweiter Katalog — dasselbe Register, ein
+ * Feld mehr.
+ * ==========================================================================*/
+
 (window as any).Register = (window as any).Register || {};
 
 Register.navigation = (() => {
@@ -69,17 +86,17 @@ Register.navigation = (() => {
        Wer hier eine Zeile ändert, ändert damit wirklich die Seitenleiste;
        wer sie in index.html ändert, ohne hier nachzuziehen, macht test222
        §5 rot. Das ist der ganze Zweck der Übung. */
-    { id: 'suche',      name: 'Suchen',            icon: '🔍', platz: 'oben',  rang: 10,
+    { id: 'suche',      name: 'Suchen',            icon: '🔍', zeichen: 'search', platz: 'oben',  rang: 10,
       knopfId: 'btn-search',    kuerzel: 'Strg P',
       /* Hier stand `Werkzeuge.palette()` — das ist „Befehle", eine Zeile
          tiefer. Die Suche hat ihr eigenes Fenster (E160). */
       tun: () => App.suche() },
-    { id: 'befehle',    name: 'Befehle',           icon: '⌘',  platz: 'oben',  rang: 20,
+    { id: 'befehle',    name: 'Befehle',           icon: '⌘', zeichen: 'command',  platz: 'oben',  rang: 20,
       knopfId: 'btn-cmd',       kuerzel: 'Strg ⇧ P',
       tun: () => Werkzeuge.palette() },
-    { id: 'heute',      name: 'Heute',             icon: '☀️', platz: 'oben',  rang: 30,
+    { id: 'heute',      name: 'Heute',             icon: '☀️', zeichen: 'today', platz: 'oben',  rang: 30,
       knopfId: 'btn-home',      tun: () => Produktwelten.lernen('heute') },
-    { id: 'lernzentrum',name: 'Lernzentrum',       icon: '🎓', platz: 'oben',  rang: 40,
+    { id: 'lernzentrum',name: 'Lernzentrum',       icon: '🎓', zeichen: 'learn', platz: 'oben',  rang: 40,
       knopfId: 'btn-learning',  tun: () => Produktwelten.lernen('lernen') },
     /* ELEKTRO HATTE KEINE EIGENE ZEILE. Es ist eines der 14 Module, und
        zwar das grösste — Fachzeichen, Schaltplan, Simulation, Rechner,
@@ -90,25 +107,25 @@ Register.navigation = (() => {
        eine Überlagerung mit dem Rechner. Vier der fünf Wege dieser Gruppe
        ändern die Krume, der fünfte tat es als einziger nicht. Der Rechner
        ist jetzt einer der Knöpfe dieser Seite statt ihre Vordertür. */
-    { id: 'elektro',    name: 'Elektro',           icon: '⚡', platz: 'oben',  rang: 45,
+    { id: 'elektro',    name: 'Elektro',           icon: '⚡', zeichen: 'bolt', platz: 'oben',  rang: 45,
       knopfId: 'btn-elektro',
       tun: () => { if (typeof Elektrostart !== 'undefined') Elektrostart.oeffne();
                    else if (typeof Electrical !== 'undefined') Electrical.open(); } },
-    { id: 'workspace',  name: 'Workspace',         icon: '🧱', platz: 'oben',  rang: 50,
+    { id: 'workspace',  name: 'Workspace',         icon: '🧱', zeichen: 'workspace', platz: 'oben',  rang: 50,
       knopfId: 'btn-workspace', tun: () => Produktwelten.workspace('start') },
-    { id: 'bibliothekOben', name: 'Bibliothek',    icon: '📚', platz: 'oben',  rang: 60,
+    { id: 'bibliothekOben', name: 'Bibliothek',    icon: '📚', zeichen: 'library', platz: 'oben',  rang: 60,
       /* Zweimal „Bibliothek": hier die Zeile der obersten Gruppe, weiter
          unten der Anhängepunkt mit demselben Namen. Verschiedene Kennungen,
          weil `melde` über die Kennung dublettenfrei hält. */
       knopfId: 'btn-library',   tun: () => Produktwelten.bibliothek() },
-    { id: 'aufgaben',   name: 'Aufgaben',          icon: '☑',  platz: 'oben',  rang: 70,
+    { id: 'aufgaben',   name: 'Aufgaben',          icon: '☑', zeichen: 'tasks',  platz: 'oben',  rang: 70,
       knopfId: 'btn-tasks',     tun: () => Produktwelten.aufgaben() },
-    { id: 'posteingang',name: 'Posteingang',       icon: '📥', platz: 'oben',  rang: 80,
+    { id: 'posteingang',name: 'Posteingang',       icon: '📥', zeichen: 'inbox', platz: 'oben',  rang: 80,
       /* Und hier stand `Werkzeuge.meldungen()`. Der Knopf ruft seit jeher
          `Ansichten.posteingang()`; das eine ist die Meldungsliste, das
          andere der Posteingang. Auch das fiel nie auf (E160). */
       knopfId: 'btn-inbox',     tun: () => Ansichten.posteingang() },
-    { id: 'neu',        name: 'Neue Seite',        icon: '✚',  platz: 'oben',  rang: 90,
+    { id: 'neu',        name: 'Neue Seite',        icon: '✚', zeichen: 'plus',  platz: 'oben',  rang: 90,
       knopfId: 'btn-new',       kuerzel: 'Strg N',
       tun: () => App.neueSeite() },
 
@@ -130,20 +147,20 @@ Register.navigation = (() => {
 
        Durchlaufend heisst: Registerreihenfolge IST Bildschirmreihenfolge,
        und die Gruppen sind nur die Schnitte darin. */
-    { id: 'app-kalender', marke: 'kalender',  name: 'Kalender',        icon: '📅', platz: 'apps', gruppe: 'planen', rang: 10,
+    { id: 'app-kalender', marke: 'kalender',  name: 'Kalender',        icon: '📅', zeichen: 'calendar', platz: 'apps', gruppe: 'planen', rang: 10,
       hinweis: 'Termine aus allen Quellen',                tun: () => Kalender.dialog() },
-    { id: 'app-tagesplan', marke: 'tagesplan', name: 'Tagesplan',      icon: '☀',  platz: 'apps', gruppe: 'planen', rang: 20,
+    { id: 'app-tagesplan', marke: 'tagesplan', name: 'Tagesplan',      icon: '☀', zeichen: 'clipboard',  platz: 'apps', gruppe: 'planen', rang: 20,
       hinweis: 'Was heute ansteht',                        tun: () => Plan.tagesplan() },
-    { id: 'app-woche', marke: 'woche',     name: 'Wochenrückblick', icon: '📅', platz: 'apps', gruppe: 'planen', rang: 30,
+    { id: 'app-woche', marke: 'woche',     name: 'Wochenrückblick', icon: '📅', zeichen: 'chart', platz: 'apps', gruppe: 'planen', rang: 30,
       hinweis: 'Was lief, was blieb liegen',               tun: () => Plan.wochenrueckblick() },
-    { id: 'app-spaeter', marke: 'spaeter',   name: 'Zurückgestellt',  icon: '⏰', platz: 'apps', gruppe: 'planen', rang: 40,
+    { id: 'app-spaeter', marke: 'spaeter',   name: 'Zurückgestellt',  icon: '⏰', zeichen: 'flag', platz: 'apps', gruppe: 'planen', rang: 40,
       hinweis: 'Was später wieder hochkommt',              tun: () => Plan.uebersicht() },
     /* NICHT dasselbe wie die Zeile „Aufgaben" in der obersten Gruppe.
        Die ruft `Produktwelten.aufgaben()`, also `workspace('aufgaben')`;
        diese hier ruft `Bibliothek.aufgaben()`. Zwei Ansichten auf zwei
        verschiedene Fragen — beim Aufräumen (E206) sah es nach einer
        Doppelung aus und war keine. */
-    { id: 'app-aufgaben', marke: 'aufgaben',  name: 'Meine Aufgaben',  icon: '☑',  platz: 'apps', gruppe: 'planen', rang: 50,
+    { id: 'app-aufgaben', marke: 'aufgaben',  name: 'Meine Aufgaben',  icon: '☑', zeichen: 'boxChecked',  platz: 'apps', gruppe: 'planen', rang: 50,
       hinweis: 'Was dir zugewiesen ist',                   tun: () => Bibliothek.aufgaben() },
 
     /* ZURÜCKGEHOLT — ES WAR KEINE DOPPELUNG (E207).
@@ -167,39 +184,39 @@ Register.navigation = (() => {
        Redurs Bedingung war „nichts löschen", und das hier war ein Löschen. */
     /* Rang 52: nach „Meine Aufgaben" (50), vor „Alle Seiten" (55) — die
        Reihe läuft durch (E206), Zehner sind keine Pflicht. */
-    { id: 'app-notizhefte', marke: 'notizhefte', name: 'Notizhefte', icon: '📓', platz: 'apps', gruppe: 'daten', rang: 52,
+    { id: 'app-notizhefte', marke: 'notizhefte', name: 'Notizhefte', icon: '📓', zeichen: 'book', platz: 'apps', gruppe: 'daten', rang: 52,
       hinweis: 'Deine Schreibhefte, sofort schreibbereit',
       tun: () => (typeof Notebook !== 'undefined') && Notebook.oeffnen() },
-    { id: 'app-bib', marke: 'bib',       name: 'Alle Seiten',     icon: '📚', platz: 'apps', gruppe: 'daten', rang: 55,
+    { id: 'app-bib', marke: 'bib',       name: 'Alle Seiten',     icon: '📚', zeichen: 'page', platz: 'apps', gruppe: 'daten', rang: 55,
       hinweis: 'Jede Seite, mit Reitern und Spalten',      tun: () => Bibliothek.oeffne() },
-    { id: 'app-modell', marke: 'modell',    name: 'Datenmodell',     icon: '🗺', platz: 'apps', gruppe: 'daten', rang: 60,
+    { id: 'app-modell', marke: 'modell',    name: 'Datenmodell',     icon: '🗺', zeichen: 'database', platz: 'apps', gruppe: 'daten', rang: 60,
       hinweis: 'Alle Datenbanken und ihre Verknüpfungen',  tun: () => Schema.ansicht() },
-    { id: 'app-kennzahl', marke: 'kennzahl',  name: 'Kennzahlen',      icon: '📊', platz: 'apps', gruppe: 'daten', rang: 70,
+    { id: 'app-kennzahl', marke: 'kennzahl',  name: 'Kennzahlen',      icon: '📊', zeichen: 'chart', platz: 'apps', gruppe: 'daten', rang: 70,
       hinweis: 'Zahlen aus mehreren Datenbanken',          tun: () => Schema.tafel() },
-    { id: 'app-eingang', marke: 'eingang',   name: 'Was hereinkommt', icon: '📨', platz: 'apps', gruppe: 'daten', rang: 80,
+    { id: 'app-eingang', marke: 'eingang',   name: 'Was hereinkommt', icon: '📨', zeichen: 'inbox', platz: 'apps', gruppe: 'daten', rang: 80,
       hinweis: 'Daten von aussen abholen und einwerfen',   tun: () => Eingang.dialog() },
-    { id: 'app-markt', marke: 'markt',     name: 'Marktplatz',      icon: '🛍', platz: 'apps', gruppe: 'daten', rang: 90,
+    { id: 'app-markt', marke: 'markt',     name: 'Marktplatz',      icon: '🛍', zeichen: 'puzzle', platz: 'apps', gruppe: 'daten', rang: 90,
       hinweis: 'Fertige Vorlagen',                         tun: () => Werkzeuge.vorlagen() },
 
-    { id: 'app-aussehen', marke: 'aussehen',  name: 'Aussehen',        icon: '🎨', platz: 'apps', gruppe: 'einrichten', rang: 100,
+    { id: 'app-aussehen', marke: 'aussehen',  name: 'Aussehen',        icon: '🎨', zeichen: 'sun', platz: 'apps', gruppe: 'einrichten', rang: 100,
       hinweis: 'Farben, Schrift und Tastenkürzel',         tun: () => Aussehen.dialog() },
-    { id: 'app-tempo', marke: 'tempo',     name: 'Tempo',           icon: '⏱', platz: 'apps', gruppe: 'einrichten', rang: 110,
+    { id: 'app-tempo', marke: 'tempo',     name: 'Tempo',           icon: '⏱', zeichen: 'rocket', platz: 'apps', gruppe: 'einrichten', rang: 110,
       hinweis: 'Wie schnell gezeichnet und gerechnet wird', tun: () => Tempo.dialog() },
-    { id: 'app-krypto', marke: 'krypto',    name: 'Passwort',        icon: '🔐', platz: 'apps', gruppe: 'einrichten', rang: 120,
+    { id: 'app-krypto', marke: 'krypto',    name: 'Passwort',        icon: '🔐', zeichen: 'lock', platz: 'apps', gruppe: 'einrichten', rang: 120,
       hinweis: 'Verschlüsselte Sicherung und Sperre',      tun: () => Krypto.dialog() },
-    { id: 'app-erweitern', marke: 'erweitern', name: 'Erweiterungen',   icon: '🧩', platz: 'apps', gruppe: 'einrichten', rang: 130,
+    { id: 'app-erweitern', marke: 'erweitern', name: 'Erweiterungen',   icon: '🧩', zeichen: 'puzzle', platz: 'apps', gruppe: 'einrichten', rang: 130,
       hinweis: 'Eigene Befehle, Knöpfe und Formeln',       tun: () => Erweiterung.dialog() },
-    { id: 'app-pwa', marke: 'pwa',       name: 'App installieren', icon: '📱', platz: 'apps', gruppe: 'einrichten', rang: 140,
+    { id: 'app-pwa', marke: 'pwa',       name: 'App installieren', icon: '📱', zeichen: 'download', platz: 'apps', gruppe: 'einrichten', rang: 140,
       hinweis: 'Auf dem Telefon oder Rechner ablegen',     tun: () => PWA.installieren() },
 
     /* NICHT die Seite „Notion-Wissen" im Baum. Das hier ist das Modul mit
        den acht Teilen; die Seite ist eine Seite. Auch das sah beim
        Aufräumen nach einer Doppelung aus (E206). */
-    { id: 'app-wissen', marke: 'wissen',    name: 'Notion-Wissen',   icon: '📖', platz: 'apps', gruppe: 'hilfe', rang: 150,
+    { id: 'app-wissen', marke: 'wissen',    name: 'Notion-Wissen',   icon: '📖', zeichen: 'book', platz: 'apps', gruppe: 'hilfe', rang: 150,
       hinweis: 'Alles über Notion und Redion, in acht Teilen', tun: () => Wissen.oeffnen() },
-    { id: 'app-kann', marke: 'kann',      name: 'Was Redion kann', icon: '⭐', platz: 'apps', gruppe: 'hilfe', rang: 160,
+    { id: 'app-kann', marke: 'kann',      name: 'Was Redion kann', icon: '⭐', zeichen: 'compass', platz: 'apps', gruppe: 'hilfe', rang: 160,
       hinweis: 'Alles auf einen Blick, mit Führung',       tun: () => Rundgang.uebersicht() },
-    { id: 'app-pflege', marke: 'pflege',    name: 'Erste Hilfe',     icon: '🧰', platz: 'apps', gruppe: 'hilfe', rang: 170,
+    { id: 'app-pflege', marke: 'pflege',    name: 'Erste Hilfe',     icon: '🧰', zeichen: 'shield', platz: 'apps', gruppe: 'hilfe', rang: 170,
       hinweis: 'Prüfen, reparieren, sichern',              tun: () => Pflege.ersteHilfe() },
 
     /* DREI EINTRÄGE STANDEN HIER UND STEHEN WOANDERS SCHON (E206).
@@ -218,9 +235,9 @@ Register.navigation = (() => {
        hat, findet sie nicht mehr — das ist der einzige Bruch, und er trifft
        nur Code, den es hier nicht gibt. */
 
-    { id: 'favoriten',  name: 'Favoriten',         icon: '★',  platz: 'baum',  rang: 10 },
-    { id: 'seiten',     name: 'Seiten',            icon: '📄', platz: 'baum',  rang: 20 },
-    { id: 'geteilt',    name: 'Geteilt',           icon: '👥', platz: 'baum',  rang: 30,
+    { id: 'favoriten',  name: 'Favoriten',         icon: '★', zeichen: 'star',  platz: 'baum',  rang: 10 },
+    { id: 'seiten',     name: 'Seiten',            icon: '📄', zeichen: 'page', platz: 'baum',  rang: 20 },
+    { id: 'geteilt',    name: 'Geteilt',           icon: '👥', zeichen: 'share', platz: 'baum',  rang: 30,
       zeigen: () => da('Wolke') && Wolke.angemeldet() },
 
     /* DER FUSS DER SEITENLEISTE (E167). Drei Zeilen stehen dort fest in
@@ -238,21 +255,21 @@ Register.navigation = (() => {
        test222 §5 falsch, ohne dass sich am Bildschirm etwas ändert — und
        eine Prüfung, die aus dem falschen Grund rot wird, ist so wenig wert
        wie eine, die aus dem falschen Grund grün ist. */
-    { id: 'papierkorbFuss', name: 'Papierkorb',     icon: '🗑', platz: 'fuss', rang: 20,
+    { id: 'papierkorbFuss', name: 'Papierkorb',     icon: '🗑', zeichen: 'trash', platz: 'fuss', rang: 20,
       knopfId: 'btn-trash',  tun: () => App.papierkorb() },
-    { id: 'tastenkuerzel',  name: 'Tastenkürzel',   icon: '?',  platz: 'fuss', rang: 30,
+    { id: 'tastenkuerzel',  name: 'Tastenkürzel',   icon: '?', zeichen: 'command',  platz: 'fuss', rang: 30,
       knopfId: 'btn-hilfe',  kuerzel: 'Strg /',
       tun: () => Werkzeuge.tastenkuerzel() },
 
-    { id: 'vorlagen',   name: 'Vorlagen',          icon: '🧩', platz: 'unten', rang: 10,
+    { id: 'vorlagen',   name: 'Vorlagen',          icon: '🧩', zeichen: 'puzzle', platz: 'unten', rang: 10,
       tun: () => Galerie.oeffne() },
-    { id: 'bibliothek', name: 'Bibliothek',        icon: '📚', platz: 'unten', rang: 20,
+    { id: 'bibliothek', name: 'Bibliothek',        icon: '📚', zeichen: 'library', platz: 'unten', rang: 20,
       tun: () => Bibliothek.oeffne() },
-    { id: 'papierkorb', name: 'Papierkorb',        icon: '🗑', platz: 'unten', rang: 30,
+    { id: 'papierkorb', name: 'Papierkorb',        icon: '🗑', zeichen: 'trash', platz: 'unten', rang: 30,
       tun: () => App.papierkorb() },
-    { id: 'einstellungen', name: 'Einstellungen',  icon: '⚙',  platz: 'unten', rang: 40,
+    { id: 'einstellungen', name: 'Einstellungen',  icon: '⚙', zeichen: 'settings',  platz: 'unten', rang: 40,
       tun: () => Einstellungen.oeffne() },
-    { id: 'hilfe',      name: 'Was Redion kann',   icon: '?',  platz: 'unten', rang: 50,
+    { id: 'hilfe',      name: 'Was Redion kann',   icon: '?', zeichen: 'help',  platz: 'unten', rang: 50,
       tun: () => Rundgang.uebersicht() }
   ];
 

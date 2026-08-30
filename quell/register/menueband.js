@@ -494,41 +494,195 @@ Register.menueband = (() => {
      * `Register.module` und `Register.navigation` — dieselbe Wahrheit, aus
      * der auch die Seitenleiste lebt, damit es keinen zweiten Katalog gibt.
      * ======================================================================== */
-    const gehenEintraege = () => [
-        { reiter: 'gehen', gruppe: 'Erfassen', id: 'w-journal', name: 'Journal',
-            zeichen: 'calendar', kurz: 'Strg ⇧ J', gross: true, hinweis: 'Tageseintrag',
-            tun: () => Werkzeuge.journal(), zeigen: () => kann(() => Werkzeuge.journal) },
-        { reiter: 'gehen', gruppe: 'Erfassen', id: 'w-memos', name: 'Schnellnotizen',
-            zeichen: 'bolt', kurz: 'Strg ⇧ M', gross: true, hinweis: 'Kurze Gedanken',
-            tun: () => Werkzeuge.schnellnotizen(), zeigen: () => kann(() => Werkzeuge.schnellnotizen) },
-        { reiter: 'gehen', gruppe: 'Erfassen', id: 'w-vorlagen', name: 'Vorlagen',
-            zeichen: 'puzzle', hinweis: 'Fertige Aufbauten und eigene Vorlagen',
-            tun: () => Werkzeuge.vorlagen(), zeigen: () => kann(() => Werkzeuge.vorlagen) },
-        { reiter: 'gehen', gruppe: 'Planung & Lernen', id: 'w-zeit', name: 'Zeitmesser',
-            zeichen: 'clock', hinweis: 'Stoppuhr und Timer — misst die Zeit an der offenen Seite',
-            tun: () => window.Zeitmesser?.panel?.(),
-            /* `.panel`, NICHT das Modul. `kann()` fragt `typeof griff() ===
-               'function'`; `Zeitmesser` selbst ist ein Objekt, also war die
-               Antwort seit E268 immer „nein" und der Knopf stand nie da. Alle
-               anderen Aufrufe hier nennen eine Methode und waren nie betroffen —
-               gefunden beim Nachzählen für E272 (das Band zeigte zehn Werkzeuge,
-               das Register führt elf). */
-            zeigen: () => kann(() => window.Zeitmesser?.panel) },
-        /* DIESE ZWEI SCHALTEN HEUTE NOCH DIE SEITENLEISTE UM (E211).
-           `App.reiterWechseln('chat')` stellt den Baum auf die Agentenliste.
-           In Phase F entfällt die Seitenleiste am Rechner — dann zeigen beide
-           ins Leere, und der Griff wird auf `App.kiPanel(true)` bzw.
-           `Meeting.panel()` gewechselt. Das ist ein eigener Commit, damit der
-           Wechsel im Verlauf sichtbar bleibt und nicht in einem Umbau untergeht. */
-        { reiter: 'gehen', gruppe: 'Verbinden', id: 'w-agenten', name: 'Agenten',
-            zeichen: 'robot', hinweis: 'Deine Agenten und der Chatverlauf',
-            tun: () => App.reiterWechseln('chat'),
-            zeigen: () => kann(() => App.reiterWechseln) },
-        { reiter: 'gehen', gruppe: 'Verbinden', id: 'w-bespr', name: 'Besprechungen',
-            zeichen: 'mic', hinweis: 'Termine und Besprechungsnotizen',
-            tun: () => App.reiterWechseln('bespr'),
-            zeigen: () => kann(() => App.reiterWechseln) }
-    ];
+    /* WOHIN GEHÖRT WAS — die einzige Liste, die dieser Reiter selbst führt.
+     *
+     * Sie sagt nicht, WAS es gibt (das steht in `Register.module` und
+     * `Register.navigation`), sondern nur, unter welcher Überschrift es
+     * erscheint. Eine Kennung, die hier fehlt, landet unter „Weiteres" —
+     * sie verschwindet nicht. Das ist Absicht: ein neuer Bereich soll
+     * auftauchen, auch wenn niemand daran gedacht hat, ihn hier
+     * einzutragen. */
+    const GEHEN_GRUPPE = {
+        /* Hauptbereiche — wohin man am häufigsten geht */
+        heute: 'Hauptbereiche', lernzentrum: 'Hauptbereiche',
+        bibliothekOben: 'Hauptbereiche', 'app-bib': 'Hauptbereiche',
+        workspace: 'Hauptbereiche', aufgaben: 'Hauptbereiche',
+        'app-notizhefte': 'Hauptbereiche',
+        /* Planung & Lernen */
+        elektro: 'Planung & Lernen', 'app-kalender': 'Planung & Lernen',
+        'app-tagesplan': 'Planung & Lernen', 'app-woche': 'Planung & Lernen',
+        'app-spaeter': 'Planung & Lernen', 'app-aufgaben': 'Planung & Lernen',
+        wissen: 'Planung & Lernen', 'w-zeit': 'Planung & Lernen',
+        /* Erfassen — was man anlegt */
+        neu: 'Erfassen', 'w-journal': 'Erfassen', 'w-memos': 'Erfassen',
+        'w-vorlagen': 'Erfassen', 'app-markt': 'Erfassen',
+        erkennung: 'Erfassen', dateien: 'Erfassen',
+        /* Verbinden */
+        'w-agenten': 'Verbinden', 'w-bespr': 'Verbinden', ki: 'Verbinden',
+        verbinden: 'Verbinden', 'app-eingang': 'Verbinden',
+        posteingang: 'Verbinden',
+        /* Daten */
+        datenbanken: 'Daten', 'app-modell': 'Daten', 'app-kennzahl': 'Daten',
+        /* System */
+        einstellungen: 'System', 'app-aussehen': 'System', 'app-tempo': 'System',
+        'app-krypto': 'System', 'app-erweitern': 'System', 'app-pwa': 'System',
+        suche: 'System', befehle: 'System'
+    };
+    /* WAS ZWEIMAL DASSELBE TUT — gemessen an den GRIFFEN, nicht an den Namen
+     * (doku/PREMIUM-SHELL-MATRIX.md, Teil 2).
+     *
+     * Links steht, was wegfällt; rechts, was bleibt. Beide Register führen
+     * ihre Einträge weiter — hier wird nur nicht zweimal derselbe Knopf
+     * gezeichnet.
+     *
+     * NICHT dabei sind die beiden Fälle, die gleich HEISSEN und Verschiedenes
+     * tun: `bibliothekOben` geht über die Arbeitswelt, `app-bib` öffnet die
+     * Liste; `aufgaben` und `app-aufgaben` ebenso. Der Kommentar in
+     * `navigation.ts:141` hält das ausdrücklich fest. Sie stehen beide da,
+     * unter ihren eigenen Namen. */
+    const GEHEN_DOPPELT = {
+        lernwelt: 'heute', /* Produktwelten.lernen('heute') */
+        arbeitswelt: 'workspace', /* Produktwelten.workspace(…)    */
+        notizhefte: 'app-notizhefte', /* Notebook.oeffnen()            */
+        hilfe: 'app-kann', /* Rundgang.uebersicht()         */
+        vorlagen: 'app-markt', /* Galerie.oeffne()              */
+        bibliothek: 'app-bib', /* Bibliothek.oeffne()           */
+        papierkorb: 'papierkorbFuss' /* App.papierkorb()              */
+    };
+    /* Was kein ORT ist und deshalb nicht unter „Gehen" gehört.
+       `lebensbereiche` sagt im Register selbst „KEIN EIGENER BILDSCHIRM";
+       `dokumentmodus` schaltet einen Modus AUF der offenen Seite (er steht
+       unter Ansicht); `editor` führt zur laufenden Seite zurück, das ist
+       kein Hingehen. Ohne offene Seite geben alle drei nur einen Toast — und
+       ein Knopf, der das tut, ist ein Knopf ins Leere (§47). */
+    const GEHEN_NICHT = new Set(['lebensbereiche', 'dokumentmodus', 'editor',
+        'favoriten', 'seiten', 'geteilt']);
+    /* Die Reihenfolge der Gruppen im Band. Was hier nicht steht, kommt
+       danach — in der Reihenfolge, in der es auftaucht. */
+    const GEHEN_FOLGE = ['Hauptbereiche', 'Planung & Lernen', 'Erfassen',
+        'Verbinden', 'Daten', 'System', 'Weiteres'];
+    /* ======================================================================== *
+     * GEHEN — wohin man geht (E272)
+     * ------------------------------------------------------------------------
+     * KEIN EIGENER KATALOG. Der Reiter liest, was es gibt, aus den zwei
+     * Registern, die es ohnehin führen:
+     *
+     *     Register.module      die 16 Bereiche
+     *     Register.navigation  die Zeilen der Seitenleiste
+     *
+     * Das ist nicht Bequemlichkeit, sondern die Bedingung dafür, dass „Gehen"
+     * die Seitenleiste ABLÖSEN kann (Phase F): zwei Listen, die dasselbe
+     * behaupten, laufen auseinander — bei `suche` und `palette` ist das schon
+     * einmal passiert (E160).
+     *
+     * DABEI KOMMEN FÜNF WEGE ZURÜCK, die heute niemand sieht. Die Einträge
+     * auf Platz `unten` — Vorlagen, Bibliothek, Papierkorb, Einstellungen,
+     * Hilfe — werden von `seitenleiste.ts:733` weggefiltert (`vonAussen`
+     * fehlt bei eingebauten Einträgen). Sie stehen seit ihrer Eintragung im
+     * Register und waren nie auf dem Bildschirm.
+     * ======================================================================== */
+    const gehenEintraege = () => {
+        const roh = [];
+        /* 1. Die Bereiche. `oeffne(id)` statt `m.oeffnen()`: das Register fängt
+              dort den Fehler ab und schreibt ihn in den Reporter — ein Bereich,
+              der wirft, darf nicht das Band mitreissen. */
+        try {
+            for (const m of (Register?.module?.alle?.() || [])) {
+                const id = String(m?.id ?? '');
+                if (!id || GEHEN_NICHT.has(id) || GEHEN_DOPPELT[id])
+                    continue;
+                /* `zeichen` VOR `icon`. Beide Register führen seit E272 beides: ein
+                   Emoji für Listenzeilen und den Namen eines Strichzeichens fürs
+                   Band. Im Band ist das Emoji falsch — E202 hat den Grund
+                   aufgeschrieben, und der erste Bildschirm des Reiters „Gehen" hat
+                   ihn bestätigt: dreizehn Emoji nebeneinander in einer Reihe
+                   gleich grosser Zeichen. */
+                roh.push({ id, name: String(m.name ?? id),
+                    zeichen: String(m.zeichen ?? m.icon ?? 'dots'),
+                    hinweis: String(m.was ?? m.name ?? ''),
+                    tun: () => { Register.module.oeffne(id); } });
+            }
+        }
+        catch { /* ohne Modulregister bleibt der Rest */ }
+        /* 2. Die Wege der Seitenleiste, in ihrer eigenen Reihenfolge. */
+        for (const platz of ['oben', 'apps', 'fuss', 'unten']) {
+            let liste = [];
+            try {
+                liste = Register?.navigation?.anPlatz?.(platz) || [];
+            }
+            catch {
+                liste = [];
+            }
+            for (const e of liste) {
+                const id = String(e?.id ?? '');
+                if (!id || GEHEN_NICHT.has(id) || GEHEN_DOPPELT[id])
+                    continue;
+                if (typeof e.tun !== 'function')
+                    continue; /* Überschriften ohne Handlung */
+                if (roh.some(x => x.id === id))
+                    continue;
+                roh.push({ id, name: String(e.name ?? id),
+                    zeichen: String(e.zeichen ?? e.icon ?? 'dots'),
+                    hinweis: String(e.was ?? e.name ?? ''),
+                    tun: () => { e.tun(); } });
+            }
+        }
+        /* 3. Die sechs aus dem aufgelösten Reiter „Werkzeuge". Sie stehen in
+              keinem der beiden Register — ihre Griffe gehören Modulen, die
+              keinen eigenen Bereich haben. */
+        const eigene = [
+            { reiter: 'gehen', gruppe: GEHEN_GRUPPE['w-journal'] ?? 'Erfassen',
+                id: 'w-journal', name: 'Journal', zeichen: 'calendar', kurz: 'Strg ⇧ J',
+                gross: true, hinweis: 'Tageseintrag',
+                tun: () => Werkzeuge.journal(), zeigen: () => kann(() => Werkzeuge.journal) },
+            { reiter: 'gehen', gruppe: GEHEN_GRUPPE['w-memos'] ?? 'Erfassen',
+                id: 'w-memos', name: 'Schnellnotizen', zeichen: 'bolt', kurz: 'Strg ⇧ M',
+                gross: true, hinweis: 'Kurze Gedanken',
+                tun: () => Werkzeuge.schnellnotizen(), zeigen: () => kann(() => Werkzeuge.schnellnotizen) },
+            { reiter: 'gehen', gruppe: GEHEN_GRUPPE['w-vorlagen'] ?? 'Erfassen',
+                id: 'w-vorlagen', name: 'Vorlagen', zeichen: 'puzzle',
+                hinweis: 'Fertige Aufbauten und eigene Vorlagen',
+                tun: () => Werkzeuge.vorlagen(), zeigen: () => kann(() => Werkzeuge.vorlagen) },
+            { reiter: 'gehen', gruppe: GEHEN_GRUPPE['w-zeit'] ?? 'Planung & Lernen',
+                id: 'w-zeit', name: 'Zeitmesser', zeichen: 'clock',
+                hinweis: 'Stoppuhr und Timer — misst die Zeit an der offenen Seite',
+                tun: () => window.Zeitmesser?.panel?.(),
+                /* `.panel`, NICHT das Modul. `kann()` fragt `typeof griff() ===
+                   'function'`; `Zeitmesser` selbst ist ein Objekt, also war die
+                   Antwort seit E268 immer „nein" und der Knopf stand nie da. */
+                zeigen: () => kann(() => window.Zeitmesser?.panel) },
+            /* DIESE ZWEI SCHALTEN HEUTE NOCH DIE SEITENLEISTE UM (E211).
+               In Phase F entfällt sie am Rechner — dann wird der Griff auf
+               `App.kiPanel(true)` bzw. `Meeting.panel()` gewechselt, als eigener
+               Commit, damit der Wechsel im Verlauf sichtbar bleibt. */
+            { reiter: 'gehen', gruppe: GEHEN_GRUPPE['w-agenten'] ?? 'Verbinden',
+                id: 'w-agenten', name: 'Agenten', zeichen: 'robot',
+                hinweis: 'Deine Agenten und der Chatverlauf',
+                tun: () => App.reiterWechseln('chat'),
+                zeigen: () => kann(() => App.reiterWechseln) },
+            { reiter: 'gehen', gruppe: GEHEN_GRUPPE['w-bespr'] ?? 'Verbinden',
+                id: 'w-bespr', name: 'Besprechungen', zeichen: 'mic',
+                hinweis: 'Termine und Besprechungsnotizen',
+                tun: () => App.reiterWechseln('bespr'),
+                zeigen: () => kann(() => App.reiterWechseln) }
+        ];
+        const ausRegistern = roh.map(e => ({
+            reiter: 'gehen',
+            gruppe: GEHEN_GRUPPE[e.id] ?? 'Weiteres',
+            id: e.id, name: e.name, zeichen: e.zeichen, hinweis: e.hinweis,
+            tun: e.tun
+        }));
+        /* Nach Gruppen ordnen — `inReiter` behält die Reihenfolge des Feldes,
+           also entscheidet sie hier. Innerhalb einer Gruppe bleibt es bei der
+           Folge der Register. */
+        const rang = (g) => {
+            const i = GEHEN_FOLGE.indexOf(g);
+            return i < 0 ? GEHEN_FOLGE.length : i;
+        };
+        return [...eigene, ...ausRegistern]
+            .slice()
+            .sort((a, b) => rang(a.gruppe) - rang(b.gruppe));
+    };
     /* ======================================================================== *
      * VERLAUF — was man zurücknimmt und wiederfindet (E272)
      * ------------------------------------------------------------------------

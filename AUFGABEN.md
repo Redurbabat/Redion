@@ -1846,3 +1846,10 @@ node pruefungen/lauf/test105.mjs
   §23 verbietet kleinere Schrift). Farben zählen nicht als Befehle.
   test272 §11 misst vier Breiten × acht Reiter; zwei Gegenproben zeigten
   zuerst blinde Prüfungen (L89). sw v39.
+* E272 Phase E (Gehen): der Reiter liest aus Register.module und
+  Register.navigation statt aus einer eigenen Liste — 45 Einträge. Dazu
+  App.schauplatz() und das Ereignis redion:schauplatz als Grundlage der
+  Kontextkante. Beide Register führen jetzt ein Feld `zeichen` mit einem
+  Strichzeichen; im Band standen sonst dreizehn Emoji nebeneinander (E202).
+  Eine Phase-A-Behauptung berichtigt: die fünf unsichtbaren Wege auf Platz
+  `unten` sind alle Doppelungen.
