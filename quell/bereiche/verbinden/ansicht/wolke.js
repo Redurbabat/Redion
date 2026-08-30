@@ -29,7 +29,10 @@ const WolkeFenster = (() => {
     const dialog = () => {
         const o = document.createElement('div');
         o.className = 'overlay';
-        o.innerHTML = '<div class="finder" style="width:min(640px,95vw)">' +
+        /* `wolke-blatt`: nur damit die Knöpfe hier wie Knöpfe aussehen.
+           `grund.css` nimmt jedem Knopf Rahmen und Hintergrund, und dieses
+           Fenster hatte nie eine Klasse, die sie zurückgibt (E270). */
+        o.innerHTML = '<div class="finder wolke-blatt" style="width:min(640px,95vw)">' +
             '<div class="fh">☁ Wolke<button class="icon-btn" data-a="zu">✕</button></div>' +
             '<div class="res" id="wo-inhalt" style="padding:18px"></div></div>';
         document.body.appendChild(o);
@@ -41,6 +44,20 @@ const WolkeFenster = (() => {
             if (Wolke.angemeldet())
                 await zahlenNachtragen(ziel);
         };
+        /* Der Takt: EIN Zuhörer am Fenster, nicht am Feld — `zeichne()`
+           ersetzt das Innere bei jedem Durchgang, ein Zuhörer am Feld wäre
+           danach weg (dasselbe Muster wie #wo-offen weiter unten). */
+        o.addEventListener('change', (e) => {
+            const feld = e.target;
+            if (!feld || feld.id !== 'wo-takt')
+                return;
+            const ms = Wolke.taktSetzen(feld.value);
+            /* `-1` heisst: nicht genommen. Dann darf hier nicht „jetzt alle X
+               Minuten" stehen — das wäre ein Erfolg, den es nicht gab. */
+            UI.toast(ms < 0 ? 'Diesen Takt gibt es nicht — es bleibt beim bisherigen.'
+                : ms ? 'Abgleich jetzt alle ' + Math.round(ms / 60000) + ' Minuten.'
+                    : 'Abgleich nur noch beim Öffnen und von Hand.');
+        });
         o.addEventListener('click', async (e) => {
             if (e.target === o || elVon(e)?.closest('[data-a="zu"]')) {
                 o.remove();
@@ -117,6 +134,13 @@ const WolkeFenster = (() => {
                         await zeichne();
                     }
                 }
+                if (was === 'pruefen') {
+                    a.disabled = true;
+                    a.textContent = 'Sehe nach …';
+                    await pruefenUndZeigen(o.querySelector('#wo-pruef'));
+                    a.disabled = false;
+                    a.textContent = 'Server prüfen';
+                }
             }
             catch (err) {
                 UI.toast(err instanceof Error ? err.message : String(err));
@@ -124,6 +148,88 @@ const WolkeFenster = (() => {
             }
         });
         zeichne();
+    };
+    /* ------------------------------------------------------------------
+     * „SERVER PRÜFEN" — die Frage, die man sonst raten muss (E270)
+     * ------------------------------------------------------------------
+     * `/api/stand` weiss seit E270 beides: ob eine Datenbank gebunden ist
+     * (`ablage`) und ob es einen Dateispeicher gibt (`dateien`). Vorher sah
+     * man nur die halbe Wahrheit — wer D1 eingerichtet hatte, aber kein R2,
+     * las „ablage: d1", hielt alles für fertig, und die Anhänge blieben
+     * trotzdem liegen. Der erste Hinweis darauf war ein 503 tief im
+     * Abgleich.
+     *
+     * Der Weg ist lesend und braucht kein Token (kern.ts: das Lebenszeichen
+     * steht vor dem Tor). Jedes Ergebnis trägt ein WORT, nicht nur eine
+     * Farbe (§38), und wo etwas fehlt, steht der Befehl dabei — raten
+     * müssen ist die Sorte Sackgasse, gegen die §47 geschrieben ist.
+     * ------------------------------------------------------------------ */
+    const kasten = (art, inhalt) => '<div style="padding:11px 12px; border-radius:8px; font-size:12.5px; ' +
+        'line-height:1.6; border:1px solid ' +
+        (art === 'gut' ? 'var(--line)' : art === 'fehlt' ? 'var(--warn,#c88)' : 'var(--rot,#d64545)') +
+        '">' + inhalt + '</div>';
+    const befehl = (text) => '<code style="display:block; margin:4px 0; padding:5px 8px; ' +
+        'background:var(--bg-hover); border-radius:5px; font-size:11.5px; ' +
+        'overflow-x:auto; white-space:pre">' + esc(text) + '</code>';
+    const serverPruefen = async (ziel) => {
+        if (!ziel)
+            return;
+        if (!Wolke.adresse()) {
+            ziel.innerHTML = kasten('weg', '<b>Redion läuft gerade als Datei.</b> Von hier aus gibt es keinen Server — ' +
+                'öffne Redion über eine Adresse, oder trage oben eine eigene ein.');
+            return;
+        }
+        let stand = null;
+        try {
+            stand = await Wolke.ruf('/api/stand');
+        }
+        catch (err) {
+            ziel.innerHTML = kasten('weg', '<b>Nicht erreichbar.</b> ' +
+                esc(err instanceof Error ? err.message : String(err)));
+            return;
+        }
+        const ablage = String(stand?.ablage || 'keine');
+        const dateien = String(stand?.dateien || 'keine');
+        if (ablage === 'keine') {
+            ziel.innerHTML = kasten('fehlt', '<b>Der Worker läuft, die Datenbank fehlt.</b> Ohne sie gleicht nichts ab. ' +
+                'Das dauert zwei Minuten:' +
+                befehl('npx wrangler d1 create redion') +
+                'Die Ausgabe zeigt eine <code>database_id</code> — die in ' +
+                '<code>wrangler.toml</code> eintragen und die Rauten wegnehmen.' +
+                befehl('npx wrangler d1 execute redion --remote --file=server/schema.sql') +
+                befehl('npx wrangler deploy') +
+                'Ganz steht es in <b>SERVER-EINRICHTEN.md</b>.');
+            return;
+        }
+        if (dateien === 'keine') {
+            ziel.innerHTML = kasten('fehlt', '<b>Datenbank steht (' + esc(ablage) + '), der Dateispeicher fehlt.</b> ' +
+                'Seiten und Datenbanken gleichen ab — Anhänge wie PDFs und Bilder nicht.' +
+                befehl('npx wrangler r2 bucket create redion-dateien') +
+                'Danach in <code>wrangler.toml</code> die drei Zeilen unter ' +
+                '<code>[[r2_buckets]]</code> einkommentieren und neu veröffentlichen.');
+            return;
+        }
+        ziel.innerHTML = kasten('gut', '<b>Alles bereit.</b> Datenbank: <code>' + esc(ablage) + '</code>, ' +
+            'Dateispeicher: <code>' + esc(dateien) + '</code>. ' +
+            'Sätze und Anhänge können abgleichen.');
+    };
+    /**
+     * DIE ANTWORT MUSS MAN AUCH SEHEN.
+     *
+     * `#wo-pruef` steht unten im Blatt, unter den Anmeldeknöpfen und dem
+     * Trennstrich. Beim Hinsehen fiel auf: nach dem Druck auf „Server
+     * prüfen" steht die Auskunft da — halb unter dem Fensterrand, und die
+     * vier Befehle darunter gar nicht (§55.1). Kein Prüflauf hätte das
+     * gemerkt; `textContent` stimmte ja.
+     */
+    const pruefenUndZeigen = async (ziel) => {
+        await serverPruefen(ziel);
+        /* `block: 'end'` und nicht `'nearest'`: der Kasten fängt sichtbar an
+           und hört unsichtbar auf — `'nearest'` hielt ihn deshalb für schon
+           gesehen und rührte sich nicht. Es geht aber um die vier Befehle
+           darunter, und die sind der ganze Zweck. */
+        if (ziel && ziel.scrollIntoView)
+            ziel.scrollIntoView({ block: 'end', behavior: 'smooth' });
     };
     /* ------------------------------------------------------------------ */
     const abgemeldetHtml = () => {
@@ -152,8 +258,10 @@ const WolkeFenster = (() => {
             '<hr style="border:none;border-top:1px solid var(--line); margin:18px 0">' +
             '<div style="font-size:12px; color:var(--text-faint); line-height:1.6">' +
             'Server: <code>' + esc(wurzel || 'keiner') + '</code> ' +
-            '<button data-a="adresse" style="font-size:11.5px; padding:2px 8px">ändern</button>' +
-            '<br><br>Private Seiten werden auf diesem Gerät verschlüsselt und verlassen es ' +
+            '<button data-a="adresse" class="klein">ändern</button> ' +
+            '<button data-a="pruefen" class="klein">Server prüfen</button>' +
+            '<div id="wo-pruef" style="margin-top:9px"></div>' +
+            '<br>Private Seiten werden auf diesem Gerät verschlüsselt und verlassen es ' +
             'nur so. Der Schlüssel wird nie mitgeschickt — der Server sieht bei ihnen nichts ' +
             'als Buchstabensalat.' +
             '</div>');
@@ -210,7 +318,21 @@ const WolkeFenster = (() => {
             'Letzter Abgleich: ' + (z.letzter ? esc(new Date(z.letzter).toLocaleString('de-CH'))
             : 'noch keiner') +
             '<br>Gerät: ' + esc(Wolke.geraeteName()) +
-            '<br>Server: <code>' + esc(Wolke.adresse()) + '</code>' +
+            '<br>Server: <code>' + esc(Wolke.adresse()) + '</code> ' +
+            '<button data-a="pruefen" style="font-size:11.5px; padding:2px 8px">Server prüfen</button>' +
+            '<div id="wo-pruef" style="margin-top:9px"></div>' +
+            '</div>' +
+            /* Der Takt — die Einstellung gab es seit Langem und niemand las sie
+               (E270). Jetzt steht sie da, wo man sie sucht: neben dem Abgleich,
+               den sie steuert. */
+            '<div style="margin-top:14px; font-size:12px; color:var(--text-faint); ' +
+            'display:flex; gap:9px; align-items:center; flex-wrap:wrap">' +
+            '<label for="wo-takt">Von selbst abgleichen:</label>' +
+            '<select id="wo-takt" style="font-size:12px; padding:4px 8px">' +
+            ['0', '120', '600'].map(v => `<option value="${v}"${String(Store.getMeta('wolkeTakt', '120')) === v ? ' selected' : ''}>` +
+                (v === '0' ? 'nur beim Öffnen und von Hand'
+                    : v === '120' ? 'alle 2 Minuten' : 'alle 10 Minuten') + '</option>').join('') +
+            '</select>' +
             '</div>' +
             '<hr style="border:none;border-top:1px solid var(--line); margin:16px 0 12px">' +
             '<div style="display:flex; gap:8px; align-items:center; font-size:12px; ' +
@@ -639,6 +761,11 @@ const WolkeFenster = (() => {
         });
         await zeichne();
     };
-    return { dialog, teilenFenster, markenFenster, codeFenster, schluesselFragen };
+    /* `serverPruefen` steht mit im Rückgabeobjekt, damit `test270.mts` es gegen
+       eine Attrappe laufen lassen kann. Vier Ausgänge, die ein Mensch nur zu
+       sehen bekommt, wenn sein Server gerade halb eingerichtet ist — genau die
+       Sorte Weg, die ohne Prüflauf jahrelang falsch bleibt. */
+    return { dialog, teilenFenster, markenFenster, codeFenster, schluesselFragen,
+        serverPruefen };
 })();
 window.WolkeFenster = WolkeFenster;

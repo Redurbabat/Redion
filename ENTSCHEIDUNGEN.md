@@ -19181,3 +19181,188 @@ einer Toleranz von ±1 blieb sie auch mit kaputtem Pausenpfad grün.
 Erst 2,6 Sekunden Wachstum lassen sich nicht wegrunden. Genau der
 Fall aus §55.2: wer eine neue Prüfung schreibt, prüft zuerst, ob sie
 überhaupt rot werden KANN.
+
+
+================================================================================
+E270 — Deine Daten auf allen Geräten: der Server wird erreichbar, und ein
+       Ordner sichert von selbst
+================================================================================
+
+Redur: „ich will meine alle daten auf icloude spiecher kannst du das
+machen".
+
+ZUR EHRLICHKEIT ZUERST: ein Browser kann nicht in iCloud schreiben.
+Apple gibt fremden Seiten keinen Schreibzugriff auf iCloud Drive, und
+Safari auf iPhone und iPad darf nicht einmal in einen gewöhnlichen
+Ordner schreiben. „Redion in iCloud" ist keine Lücke in Redion, sondern
+eine Grenze der Plattform. Auf Rückfrage hat Redur entschieden:
+**echter Geräte-Abgleich über Redions eigenen Server**, Umfang „alles,
+regelmässig".
+
+DER BEFUND WAR NICHT, DASS ETWAS FEHLTE. Der Server ist seit Langem
+fertig gebaut — Konten über GitHub, Google und Gerätecode, Abgleich in
+beide Richtungen, Drei-Wege-Zusammenführung, Ende-zu-Ende-Verschlüs-
+selung (PBKDF2 mit 310 000 Runden, Salz `redion:<kontoId>`, damit
+Rechner und Telefon denselben Schlüssel bilden), Anhänge stückweise in
+R2, dreizehn D1-Tabellen, geprüft mit test113/118/119/120/121/140/256/
+257/261 gegen einen echten Server mit zwei Geräten.
+
+Er war nur nicht scharfgeschaltet — und die Oberfläche behauptete an
+vier Stellen das Gegenteil dessen, was gebaut ist:
+
+  1. Einstellungen → „Mein Konto": „Diese App kennt kein Konto und
+     keinen Server", „es gibt keine Anmeldung", „Nichts wird übertragen".
+  2. Das Teilen-Menü jeder Seite: „Es gibt keinen Server und kein
+     Konto — deshalb auch keine Freigabe ins Netz." Vierzehn Zeilen
+     weiter oben ruft dieselbe Datei `WolkeFenster.teilenFenster()`.
+  3. `wolkeTakt` stand seit Langem im Register mit „nur von Hand / 2
+     Minuten / 10 Minuten" — gelesen hat es niemand, in `maschine.ts`
+     standen 120 000 fest. Wer „10 Minuten" wählte, bekam zwei.
+  4. `sicherungErinnern` war ein Schalter ohne jede Wirkung.
+
+Vier tote Wege sind schlimmer als vier fehlende: wer liest, es gäbe
+keinen Server, sucht nicht weiter (§47).
+
+DER SICHERHEITSFUND, DER VOR JEDEM `deploy` STEHT
+
+`wrangler.toml` bindet `[assets] directory = "./"` — das veröffentlicht
+das ganze Verzeichnis. `.gitignore` hilft dabei nicht; Wrangler liest
+`.assetsignore`, und die Datei gab es nicht. Gemessen mit
+`npx wrangler deploy --dry-run`: der Vorgang **brach ab**, weil in
+`.git/objects/pack/` eine Datei mit 78,6 MB liegt und Cloudflare bei 25
+MB die Grenze zieht. Redur hätte also gar nicht veröffentlichen können —
+und wäre `.git` aufgeräumt gewesen, wären `src/`, `pruefungen/`,
+`node_modules/` und eine etwaige `.env` ins Netz gegangen.
+
+`.assetsignore` behebt beides. Nachgemessen: mit der Datei läuft
+`--dry-run` durch, ohne sie bricht er mit „Asset too large" ab. Die
+Zeile „Read 8322 files" steht in beiden Fällen da — sie zählt das
+Verzeichnis vor dem Filtern und ist kein Mass. In SERVER-EINRICHTEN.md
+steht deshalb, worauf wirklich zu achten ist: dass keine Fehlermeldung
+kommt.
+
+WARUM `wrangler.toml` AUSKOMMENTIERT BLEIBT
+
+Cloudflare prüft Bindungen beim Veröffentlichen gegen das Konto. Ein
+aktiver `[[d1_databases]]`-Block mit Platzhalter-ID lässt
+`wrangler deploy` abbrechen. Auskommentiert-bleiben ist also kein
+Versäumnis, sondern die einzige deploybare Form vor `wrangler d1
+create` — `server/cloudflare.ts:61` ist genau dafür gebaut. Über jedem
+auskommentierten Block steht jetzt eine ACHTUNG-Zeile, die den
+Fehlerfall benennt.
+
+UND DIE `database_id` IST KEIN GEHEIMNIS (§42)
+
+Sie ist kein Token und kein Schlüssel, und ohne Zugang zum Konto
+wertlos. Sie **muss** mitcommittet werden, wenn Cloudflare aus GitHub
+baut — sonst veröffentlicht der nächste Push einen Worker ohne
+Datenbank. Die echten Geheimnisse (`ADRESSE`, `GITHUB_GEHEIM`,
+`GOOGLE_GEHEIM`, `VAPID_PRIVAT`) stehen nie in der Datei, sondern
+hinter `wrangler secret put`.
+
+WAS GEBAUT WURDE — TEIL A: DER SERVER WIRD ERREICHBAR UND EHRLICH
+
+`/api/stand` nennt jetzt auch den Dateispeicher (`dateien:
+'r2' | 'speicher' | 'keine'`), und zwar in BEIDEN Zweigen — auch dem
+ohne Datenbank, der genau vor `wrangler d1 create` läuft und deshalb
+der wichtigere ist.
+
+„Mein Konto" hat drei Zustände statt einer Behauptung: kein Konto /
+Konto ohne Abgleich / mit Abgleich. Der mittlere ist der wichtigste —
+angemeldet und trotzdem verlässt nichts das Gerät (E1/E34). Der Weg
+führt zum **vorhandenen** Wolke-Fenster; kein zweiter Dialog (E29).
+
+Neu im Wolke-Fenster: **Server prüfen.** Es fragt `/api/stand` und sagt
+in Worten, was fehlt — Datei-Modus, nicht erreichbar, Datenbank fehlt
+(mit den vier Befehlen), Dateispeicher fehlt (mit dem r2-Befehl), oder
+bereit. Und ein Auswahlfeld für `wolkeTakt`, das den Wert erstmals
+wirklich stellt. `taktSetzen` gibt die Millisekunden zurück, damit sich
+prüfen lässt, ob die Wahl ankam; `-1` heisst „abgelehnt, alter Takt
+läuft weiter" — eine abgelehnte Zahl darf nicht wie eine genommene
+aussehen.
+
+WAS GEBAUT WURDE — TEIL B: SICHERUNG IN EINEN ORDNER
+
+Der Weg, der Redurs iCloud-Wunsch am nächsten kommt: wählt er
+`C:\Users\redur\iCloudDrive\Redion`, legt Redion dort selbständig
+vollständige `.redion`-Pakete ab, iCloud lädt sie hoch, und sie liegen
+auf iPhone und iPad in „Dateien".
+
+Neue Datei `src/kern/helfer/ordnersicherung.ts`. Alle fünf Minuten
+nachsehen — und nur schreiben, wenn sich wirklich etwas geändert hat.
+Der Änderungsabdruck läuft über `Store.cache` (Anzahl, jüngster
+Zeitstempel, ein billiger Streuwert über Kennung, Zeit und Textlänge);
+`meta` bleibt bewusst draussen, weil das Sichern selbst dorthin
+schreibt und Redion sonst endlos im Kreis sicherte.
+
+Aufbewahrung: die letzten sieben Tage vollständig, davor je Monat
+eine. Gelöscht wird NUR, was exakt dem eigenen Namensmuster entspricht,
+nie ein Verzeichnis, nie Fremdes — und erst, **nachdem** die neue Datei
+geschrieben und geschlossen ist. `zuLoeschen()` ist eine reine
+Funktion: sie fasst nichts an, bekommt Namen und gibt Namen zurück, und
+lässt sich deshalb ohne echten Ordner prüfen. Bei einer Sache, die
+Dateien löscht, ist „lässt sich prüfen" keine Bequemlichkeit.
+
+Vorarbeit dafür: `App.sicherungSpeichern` ist in `sicherungPaketBauen()`
+plus Ausliefern geschnitten — dieselbe Trennung, die `Krypto.paketBauen`
+vormacht. Zwei Stellen, die eine Sicherung bauen, wären zwei
+Gelegenheiten, dass die eine etwas auslässt, was die andere mitnimmt.
+
+DIE SICHERUNGS-FALLE, UND WARUM SIE ZUERST GESCHLOSSEN WURDE
+
+`sicherungOrdner` hält einen echten Verzeichniszugriff. Er lebt im
+strukturierten Klon dieses Browsers und übersteht das Neuladen — aber
+`JSON.stringify` macht daraus `{}`. Ohne Vorkehrung hätte die erste
+Sicherung dieses `{}` mitgeschrieben, und beim Einspielen hätte es
+einen lebenden Zugriff überschrieben. Die automatische Sicherung hätte
+danach still aufgehört zu schreiben, und man hätte es erst gemerkt,
+wenn man sie braucht.
+
+Also: `exportAll` lässt ihn aus und **nennt ihn** in `fehlt` und
+`hinweis`, mit Namen (§52.10 — eine Sicherung, die nicht sagt, was sie
+auslässt, ist die gefährlichste Sorte). `importAll` rettet den lebenden
+Zugriff über beide Arten, `ersetzen` wie `zusammenfuehren`, und wirft
+ein mitgebrachtes `{}` weg: eine Sicherung kann keine Erlaubnis
+mitbringen, also sticht immer, was auf diesem Gerät erlaubt wurde. Der
+Name wird mitgerettet, sonst stünde in den Einstellungen der Ordner
+eines fremden Geräts über dem eigenen. Dasselbe Muster wie die
+Wolke-Rettung aus E255.
+
+`sicherungErinnern` HAT JETZT EIN HALTBARES VERSPRECHEN
+
+Der Schalter hiess „Beim Schliessen an eine Sicherung erinnern". Das
+konnte er nicht halten: beim Entladen einer Seite darf kein Fenster
+mehr aufgehen, und eine asynchrone Sicherung läuft nicht zu Ende. Jetzt
+heisst er „Beim Zurückkommen melden, wenn die letzte Sicherung älter
+als eine Woche ist" — über dieselbe Frist, die `Sicherung.ERINNERN`
+ohnehin führt, höchstens einmal am Tag.
+
+Verworfen: beim Schliessen zu sichern (die Plattform kann es nicht, und
+es wäre der dritte tote Schalter dieser App gewesen); den Ordnerzugriff
+zu verschlüsseln, bevor er in die Ablage geht (er ist ohnehin an dieses
+Gerät gebunden und wertlos anderswo); die Sicherungen im Ordner zu
+verschlüsseln (dann wären sie ohne Redion nicht mehr zu öffnen — und
+genau das soll dieser Weg leisten).
+
+**Geprüft:** test270, 65 Punkte auf den Ports 9048/9049 — `.assetsignore`
+schliesst das Richtige aus und `quell/` NICHT aus; `/api/stand` in
+beiden Server-Zweigen; `takt()` liefert 0 / 600 000 / 120 000 und `-1`
+für Unsinn; die drei Konto-Zustände ohne die alten Sätze; „Wolke
+öffnen" öffnet GENAU EIN Fenster; „Server prüfen" in vier Ausgängen
+gegen eine Attrappe; das Teilen-Menü; `exportAll` ohne Zugriff, mit
+`fehlt` und `hinweis`; `importAll` in beiden Arten; `zuLoeschen` lässt
+Fremdes liegen und behält 7 Tage plus je Monat einen; der Abdruck
+ändert sich bei echten Änderungen und NICHT durch Marken; ohne
+`showDirectoryPicker` ein Satz statt eines Knopfs; eine echte Runde mit
+5-MB-Anhang und Handle-Attrappe zu einem gültigen ZIP; Bau-Hygiene
+(sw v36).
+
+Fünf Gegenproben einzeln rot gesehen: `exportAll` gibt wieder
+`cache.meta` → der Zugriff steht in der Sicherung; die `importAll`-
+Rettung entfernt → drei Punkte fallen; `zuLoeschen` ohne Musterprüfung
+→ Fremdes wird genannt; `.assetsignore` ohne `src/` → der
+Sicherheitspunkt; der Abdruck zählt `meta` mit → der Endlos-Punkt.
+
+Wächter grün geblieben: test87/105/109 · test92/93/96/100/101 ·
+test113/118/119/120/121/140/256/257/261 + servercheck · test222 ·
+test264–268.

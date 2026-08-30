@@ -41,7 +41,7 @@ Zugriff auf das eine Repository beschränken — mehr braucht es nicht.
 
 ### 3. Repository wählen
 
-Wähle **Redurbabat/Notizen-** und klicke **Begin setup**.
+Wähle **Redurbabat/Redion** und klicke **Begin setup**.
 
 ### 4. Einstellungen
 
@@ -69,22 +69,37 @@ Ab jetzt gilt: Jeder `git push` veröffentlicht automatisch neu.
 > `wrangler.toml` für Pages geschrieben war und Cloudflare ein Worker-Projekt
 > gebaut hat. Ausserdem hätte Cloudflare die ganze `.git`-Ablage mit
 > ausgeliefert — darin liegt eine Datei über 25 MB, und mehr lässt Cloudflare
-> nicht zu. Beides ist behoben: Die App liegt jetzt im Ordner `public`, und
-> nur dieser Ordner geht ins Netz. Einmal pushen, dann läuft es.
+> nicht zu. Beides ist behoben: `wrangler.toml` ist für einen Worker
+> geschrieben, und `.assetsignore` sagt, was NICHT ins Netz geht (E270).
+> Einmal pushen, dann läuft es.
 
 ### So ist das Repository aufgebaut
 
+Es gibt **keinen** `public/`-Ordner. Redion liegt so im Netz, wie es auch
+lokal liegt — `index.html` in der Wurzel, der Code darunter. Das ist der
+ganze Grund, warum sich die App per Doppelklick öffnen lässt (§6), und
+Cloudflare kommt damit zurecht.
+
 ```
-public/          ← das kommt ins Netz
-  index.html
-  app.css
-  js/  icons/  sw.js  manifest.webmanifest  _headers
-worker.ts        ← Einstiegspunkt: beantwortet /api/*, liefert sonst public/
+index.html       ← die App
+quell/           ← ihr Code (erzeugt aus src/, mitversioniert)
+sw.js            ← Dienst-Arbeiter für Offline
+oeffentlich/     ← Symbole, manifest.webmanifest
+worker.ts        ← Einstiegspunkt: beantwortet /api/*, liefert sonst die Dateien
+server/          ← der Serverteil (cloudflare.ts, kern.ts, schema.sql)
 wrangler.toml    ← sagt Cloudflare, was zu tun ist
+.assetsignore    ← sagt Cloudflare, was NICHT ins Netz geht
 functions/       ← die Brücke
-start.bat        ← lokal starten (dient public/ aus)
+start.bat        ← lokal starten
 oeffnen.bat      ← lokal ohne Server öffnen
 ```
+
+> **`.assetsignore` ist keine Bequemlichkeit.** `wrangler.toml` bindet
+> `[assets] directory = "./"` — also das ganze Verzeichnis. Ohne diese Datei
+> gingen `src/`, `pruefungen/`, `node_modules/`, `.git/` und eine etwaige
+> `.env` mit ins Netz. Gemessen: **8318 Dateien**, und der Vorgang brach
+> ohnehin an einer 78,6-MB-Datei in `.git` ab. Wer sie löscht, veröffentlicht
+> beim nächsten Push seinen Quelltext samt allem, was daneben liegt.
 
 ### 5. Eigene Adresse (freiwillig)
 

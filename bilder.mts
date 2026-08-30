@@ -986,6 +986,65 @@ const ANSICHTEN: Record<string, { titel: string; bauen: () => void | Promise<voi
     }
   },
 
+  ordnersicherung: {
+    titel: 'Sicherung in einen Ordner — Redurs iCloud-Weg (E270)',
+    bauen: async () => {
+      const w = window as any;
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      /* Ein gewählter Ordner, damit der eingeschaltete Zustand zu sehen
+         ist — die Attrappe reicht, gezeichnet wird aus Name und Zeit. */
+      Store.cache.meta['sicherungOrdner'] = { kind: 'directory', name: 'iCloudRedion' };
+      Store.setMeta('sicherungOrdnerName', 'iCloudRedion');
+      Store.setMeta('sicherungOrdnerZuletzt', new Date().toISOString());
+      Store.setMeta('sicherungErinnern', true);
+      w.Einstellungen.oeffne('daten');
+      await new Promise(r => setTimeout(r, 700));
+      const blatt = document.querySelector('.overlay');
+      const zeile = [...(blatt?.querySelectorAll('*') || [])]
+        .find(e => (e.textContent || '').startsWith('Sicherung in einen Ordner'));
+      zeile?.scrollIntoView({ block: 'center' });
+      await new Promise(r => setTimeout(r, 300));
+    }
+  },
+
+  meinkonto: {
+    titel: 'Mein Konto — jetzt ehrlich, mit Weg zur Wolke (E270)',
+    bauen: async () => {
+      const w = window as any;
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      w.Einstellungen.oeffne('konto');
+      await new Promise(r => setTimeout(r, 700));
+    }
+  },
+
+  serverpruefen: {
+    titel: 'Wolke → Server prüfen: was fehlt, in Worten (E270)',
+    bauen: async () => {
+      const w = window as any;
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      w.WolkeFenster.dialog();
+      await new Promise(r => setTimeout(r, 700));
+      /* Der Ausgang „Datenbank fehlt" — der, den Redur als Erstes sieht,
+         solange der Server nicht scharfgeschaltet ist. */
+      const ziel = document.querySelector('#wo-pruef');
+      if (ziel) {
+        const alt = w.Wolke.ruf;
+        w.Wolke.ruf = async () => ({ ablage: 'keine', dateien: 'keine' });
+        Store.setMeta('wolkeAdresse', 'https://redion.beispiel.workers.dev');
+        await w.WolkeFenster.serverPruefen(ziel);
+        w.Wolke.ruf = alt;
+        ziel.scrollIntoView({ block: 'end' });
+      }
+      await new Promise(r => setTimeout(r, 800));
+    }
+  },
+
   zeitmesser: {
     titel: 'Der Zeitmesser — Lernzeit messen statt schätzen (E268)',
     bauen: async () => {

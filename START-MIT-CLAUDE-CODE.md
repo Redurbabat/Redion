@@ -14,7 +14,7 @@ was du hineinkopierst.
 
 2. **In den Projektordner gehen** — dort, wo `CLAUDE.md` liegt:
    ```
-   cd %USERPROFILE%\Desktop\Redion-App
+   cd %USERPROFILE%\Documents\ChatGPT\Redion\Redion-src
    ```
 
 3. **Claude Code starten:**
@@ -102,7 +102,7 @@ oder
 Claude Code committet, lädt aber nicht hoch. Das machst du:
 
 1. `auto-hochladen.bat` auf dem Desktop starten — sie schaut alle 60
-   Sekunden nach Änderungen in `Redion-App` und lädt sie hoch.
+   Sekunden nach Änderungen in `Redion-src` und lädt sie hoch.
 2. Oder einmalig: `auto-hochladen.bat /einmal`
 
 Beim ersten Mal fragt Windows nach deinem GitHub-Konto. Falls das nicht

@@ -2017,9 +2017,17 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
   /* ========================================================================
    * 17. TEILEN   (Notions „Share")
    * ------------------------------------------------------------------------
-   * Ohne Server gibt es niemanden, dem man etwas freigeben könnte — dafür
-   * jede Form, die Seite aus der Hand zu geben.
+   * OHNE KONTO heisst Weitergeben: eine Datei erzeugen — und davon gibt es
+   * jede Form. MIT KONTO kommt die echte Freigabe dazu (Link ins Netz,
+   * widerrufbar, nur die freigegebene Seite). Bis E270 behauptete dieses
+   * Menü, es gäbe „keinen Server und kein Konto" — vierzehn Zeilen unter
+   * einem Aufruf des Freigabe-Fensters (Zeile 279).
    * ======================================================================*/
+  const wolkeDa = (): boolean => {
+    const w = (globalThis as any).Wolke;
+    return !!(w?.angemeldet?.() && (globalThis as any).WolkeFenster?.teilenFenster);
+  };
+
   const teilenMenue = (anker: any, p: any) => {
     const r = anker.getBoundingClientRect();
     const m = UI.menu(
@@ -2036,8 +2044,16 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
       '<button data-a="ordner"><span class="mi">📁</span>Alles als Markdown-Ordner</button>' +
       '<button data-a="obsidian"><span class="mi">🔮</span>Als Obsidian-Vault (.zip)</button>' +
       '<hr>' +
-      '<div class="teilen-hinweis">Es gibt keinen Server und kein Konto — ' +
-      'deshalb auch keine Freigabe ins Netz. Weitergeben heisst hier: eine Datei erzeugen.</div>',
+      /* HIER STAND, ES GÄBE KEINEN SERVER (E270) — vierzehn Zeilen unter
+         einem Aufruf von `WolkeFenster.teilenFenster`, der genau das tut.
+         Jetzt sagt das Menü, was wirklich geht: mit Konto eine Freigabe,
+         ohne Konto eine Datei. */
+      (wolkeDa()
+        ? '<button data-a="wolke"><span class="mi">↗</span>Teilen und veröffentlichen …</button>' +
+          '<div class="teilen-hinweis">Eine Freigabe ist ein Link ins Netz — ' +
+          'nur die Seite, die du freigibst, und widerrufbar.</div>'
+        : '<div class="teilen-hinweis">Ohne Konto heisst Weitergeben: eine Datei ' +
+          'erzeugen. Mit einem Konto (Wolke) geht auch eine Freigabe ins Netz.</div>'),
       r.right - 240, r.bottom + 6);
 
     m.addEventListener('click', e => {
@@ -2045,6 +2061,7 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
       if (!b) return;
       m.remove();
       const a = b.dataset.a;
+      if (a === 'wolke') { (globalThis as any).WolkeFenster.teilenFenster(p.id); return; }
       if (a === 'link') { Ablage.kopiereJetzt(location.origin + location.pathname + '#' + p.id, 'Link kopiert'); }
       if (a === 'text') { Ablage.kopiereJetzt(alsMarkdown(p), 'Text kopiert'); }
       if (a === 'md') App.markdownExport(p);

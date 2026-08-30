@@ -250,19 +250,55 @@ const Einstellungen = (() => {
    * DIE EINZELNEN BEREICHE
    * ======================================================================*/
   const inhalt = (b: any): string => (({
-    konto: () =>
-      kopf('Mein Konto', 'Diese App kennt kein Konto und keinen Server. Dein Name steht nur hier ' +
-           'im Browser und erscheint bei Kommentaren und Erwähnungen.') +
+    /* HIER STAND DAS GEGENTEIL DESSEN, WAS GEBAUT IST (E270).
+       „Diese App kennt kein Konto und keinen Server", „es gibt keine
+       Anmeldung", „Nichts wird übertragen, es gibt keine Sitzungen" —
+       drei Sätze aus der Zeit vor dem Serverbau. Seither gibt es Konten
+       (GitHub, Google, Gerätecode), Sitzungen, Abgleich und Freigaben,
+       samt Wolke-Fenster. Wer hier nachlas, bekam die Auskunft, es gäbe
+       nichts davon.
+       Die Seite baut deshalb KEINEN zweiten Dialog (E29), sondern sagt
+       die Wahrheit und führt zum vorhandenen. Drei Zustände, weil es
+       drei gibt — und der mittlere ist der wichtigste: angemeldet und
+       trotzdem nichts hinausgeschickt (E1/E34). */
+    konto: () => {
+      const w = (globalThis as any).Wolke;
+      const angemeldet = !!(w && w.angemeldet && w.angemeldet());
+      const gleichtAb = angemeldet && !!(w.abgleichErlaubt && w.abgleichErlaubt());
+      const wo = angemeldet ? String(w.adresse?.() || '') : '';
+      const geraet = angemeldet ? String(w.geraeteName?.() || '') : '';
+      const einleitung = !angemeldet
+        ? 'Ohne Konto liegt alles auf diesem Gerät — so wie bisher, und das bleibt ' +
+          'der Normalfall. Redion hat einen eigenen Server; er ist freiwillig und ' +
+          'bringt dieselben Notizen auf Rechner und Telefon.'
+        : gleichtAb
+          ? 'Angemeldet, und dieses Gerät gleicht ab' + (wo ? ' mit ' + esc(wo) : '') +
+            '. Private Seiten gehen verschlüsselt hinaus; im Klartext geht nur, was ' +
+            'du ausdrücklich teilst oder veröffentlichst.'
+          : 'Angemeldet — aber es verlässt nichts dieses Gerät. Der Abgleich ist ' +
+            'ausgeschaltet, und ohne ihn bleibt alles lokal.';
+      return kopf('Mein Konto', einleitung) +
       zeile('Name', 'So wirst du in Kommentaren genannt', feld('nutzer', V('nutzer', ''), 'Dein Name')) +
       zeile('Symbol', 'Kürzel oben in der Seitenleiste', feld('arbeitsIcon', V('arbeitsIcon', 'N'))) +
-      zeile('E-Mail', 'Wird nicht gebraucht — es gibt keine Anmeldung',
-            '<span class="ez-grau">keine nötig</span>') +
+      zeile('Anmeldung', angemeldet
+              ? 'Mit einem Konto — Wolke, Freigaben und Abgleich sind möglich'
+              : 'Ohne Konto — nur mit einem gibt es Abgleich und Freigaben',
+            knopf('wolke-oeffnen', angemeldet ? 'Wolke öffnen' : 'Konto einrichten')) +
       zeile('Passwort', 'Einzelne Seiten lassen sich verschlüsseln',
             knopf('seite-sperren', 'Seite verschlüsseln')) +
-      zeile('Angemeldete Geräte', 'Nichts wird übertragen, es gibt keine Sitzungen',
-            '<span class="ez-grau">nur dieses Gerät</span>') +
-      zeile('Konto löschen', 'Entfernt alle Daten aus diesem Browser',
-            knopf('alles-loeschen', 'Alle Daten löschen', 'warn')),
+      zeile('Angemeldete Geräte', angemeldet
+              ? 'Die Liste und der Freigabe-Code stehen im Wolke-Fenster'
+              : 'Ohne Konto gibt es keine Sitzungen',
+            '<span class="ez-grau">' +
+              (angemeldet ? esc(geraet || 'dieses Gerät') : 'nur dieses Gerät') +
+            '</span>') +
+      zeile('Alle Daten auf diesem Gerät löschen',
+            angemeldet
+              ? 'Leert diesen Browser. Das Konto auf dem Server bleibt — löschen ' +
+                'lässt es sich im Wolke-Fenster.'
+              : 'Entfernt alle Daten aus diesem Browser',
+            knopf('alles-loeschen', 'Alle Daten löschen', 'warn'));
+    },
 
     allgemein: () =>
       kopf('Einstellungen') +
@@ -420,8 +456,48 @@ const Einstellungen = (() => {
       zeile('Datenschutz', '',
             '<span class="ez-grau">alles im Browser; nur was du verbindest, geht hinaus</span>'),
 
-    daten: () =>
-      kopf('Import und Export') +
+    daten: () => {
+      /* DIE AUTOMATISCHE SICHERUNG (E270).
+         Redur wollte „alle Daten auf iCloud". Ein Browser kann nicht in
+         iCloud schreiben — aber er kann in EINEN Ordner schreiben, den
+         man ihm gezeigt hat, und wenn dieser Ordner in iCloud Drive (oder
+         OneDrive, oder Dropbox) liegt, erledigt den Rest der Dienst
+         selbst.
+         Kann der Browser das nicht — Safari auf iPhone und iPad, Firefox —
+         steht hier ein Satz und KEIN Knopf. Ein Knopf, der beim Drücken
+         nichts tut, ist der Fehler, gegen den §47 geschrieben ist. */
+      const os = (globalThis as any).OrdnerSicherung;
+      const ordnerGeht = !!(os && os.moeglich && os.moeglich());
+      const ordnerAn = !!(os && os.an && os.an());
+      const ordnerName = ordnerAn ? String(os.name() || '') : '';
+      const ordnerFehler = os && os.fehler ? String(os.fehler() || '') : '';
+      const ordnerZuletzt = ordnerAn && os.zuletzt ? String(os.zuletzt() || '') : '';
+      const ordnerRecht = !ordnerGeht
+        ? '<span class="ez-grau">in diesem Browser nicht möglich</span>'
+        : ordnerAn
+          ? `<span class="ez-grau">${esc(ordnerName)}</span> ` +
+            knopf('ordner-sicherung-jetzt', 'Jetzt sichern') + ' ' +
+            knopf('ordner-sicherung-aus', 'Abschalten')
+          : knopf('ordner-sicherung-an', 'Ordner wählen');
+      const ordnerUnter = !ordnerGeht
+        ? 'Safari auf iPhone und iPad und Firefox können keinen Ordner behalten. ' +
+          'Dort bleibt „Sicherung speichern" von Hand — oder du gleichst über die ' +
+          'Wolke ab.'
+        : ordnerFehler
+          ? ordnerFehler
+          : ordnerAn
+            ? 'Alle fünf Minuten, aber nur wenn sich etwas geändert hat. Die letzten ' +
+              'sieben Tage bleiben vollständig liegen, davor je Monat eine.' +
+              (ordnerZuletzt
+                /* Ohne Sekunden — bei einer Sicherung, die alle fünf Minuten
+                   nachsieht, ist die Sekunde kein Wissen, sondern Lärm. */
+                ? ' Zuletzt: ' + esc(new Date(ordnerZuletzt).toLocaleString('de-CH',
+                    { dateStyle: 'short', timeStyle: 'short' }))
+                : ' Noch nichts geschrieben.')
+            : 'Wähle einen Ordner — zum Beispiel in iCloud Drive, OneDrive oder ' +
+              'Dropbox. Redion legt dort selbständig vollständige Sicherungen ab, ' +
+              'und der Dienst bringt sie auf deine anderen Geräte.';
+      return kopf('Import und Export') +
       zeile('Sicherung speichern', 'Alles als eine JSON-Datei', knopf('export-json', 'Speichern')) +
       zeile('Sicherung laden', 'Ersetzt den jetzigen Inhalt', knopf('import-json', 'Laden')) +
       zeile('Markdown-Ordner schreiben', 'Je Seite eine .md-Datei, Unterseiten in Unterordnern',
@@ -435,8 +511,19 @@ const Einstellungen = (() => {
       zeile('Offene Seite als Markdown', '', knopf('seite-md', 'Speichern')) +
       zeile('Offene Seite als HTML', '', knopf('seite-html', 'Speichern')) +
       zeile('Offene Seite drucken oder als PDF', '', knopf('seite-pdf', 'Drucken')) +
-      zeile('Automatische Sicherung', 'Beim Schliessen an eine Sicherung erinnern',
-            schalter('sicherungErinnern', V('sicherungErinnern', false))),
+      zeile('Sicherung in einen Ordner', ordnerUnter,
+            ordnerRecht + (ordnerFehler ? ' ' + knopf('ordner-sicherung-an', 'Neu wählen') : '')) +
+      /* DER SCHALTER HIESS „Beim Schliessen an eine Sicherung erinnern" (E270).
+         Das konnte er nicht halten: beim Entladen einer Seite darf kein
+         Fenster mehr aufgehen, und was der Schalter versprach, war nirgends
+         gebaut. Jetzt verspricht er, was die Plattform hergibt — und
+         `OrdnerSicherung` löst es beim Zurückkommen ein, über dieselbe
+         Wochenfrist, die `Sicherung.ERINNERN` ohnehin führt. */
+      zeile('An die Sicherung erinnern',
+            'Beim Zurückkommen melden, wenn die letzte Sicherung älter als eine ' +
+            'Woche ist',
+            schalter('sicherungErinnern', V('sicherungErinnern', false)));
+    },
 
     ki: () =>
       kopf('Künstliche Intelligenz', 'Beide Wege sind kostenlos und laufen auf deinem Rechner. ' +
@@ -1086,11 +1173,67 @@ const Einstellungen = (() => {
       'dateien-lesen': () => { o.remove(); Werkzeuge.dateienLesen(); },
       'einzeldatei': () => Werkzeuge.einzelDatei(),
       'export-json': () => App.sicherungSpeichern(),
+      /* --- Die automatische Sicherung in einen Ordner (E270) -----------
+         `waehlen` bekommt die Zusage-Frage als Angabe gereicht, statt
+         selbst ein `confirm` zu bauen — so nimmt die Oberfläche ihren
+         eigenen Dialog (E29) und ein Prüflauf kann sie setzen. */
+      'ordner-sicherung-an': async () => {
+        const os = (globalThis as any).OrdnerSicherung;
+        if (!os) return;
+        const erg = await os.waehlen((frage: string) => Dialog.wahl({
+          titel: 'Automatisch in diesen Ordner sichern?',
+          text: frage,
+          knoepfe: [
+            { id: 'ja', text: 'Ja, ab jetzt automatisch sichern',
+              hinweis: 'Alle fünf Minuten, aber nur wenn sich etwas geändert hat' },
+            { id: '', text: 'Abbrechen',
+              hinweis: 'Es wird kein Ordner gemerkt und nichts geschrieben' }
+          ]
+        }).then((w: string) => w === 'ja'));
+        (o as HTMLElement & { neuZeichnen?: () => void }).neuZeichnen?.();
+        if (erg.ok) UI.toast('Redion sichert ab jetzt nach „' + erg.name + '"');
+        else if (erg.grund) UI.banner(erg.grund, 'fehler');
+      },
+      'ordner-sicherung-jetzt': async () => {
+        const os = (globalThis as any).OrdnerSicherung;
+        if (!os) return;
+        UI.toast('Sicherung wird geschrieben …');
+        await os.jetztSichern(true);
+        (o as HTMLElement & { neuZeichnen?: () => void }).neuZeichnen?.();
+      },
+      'ordner-sicherung-aus': async () => {
+        const os = (globalThis as any).OrdnerSicherung;
+        if (!os) return;
+        /* Was im Ordner liegt, bleibt liegen — und das muss dastehen,
+           sonst rechnet jemand mit dem Gegenteil. */
+        const w = await Dialog.wahl({
+          titel: 'Automatische Sicherung abschalten?',
+          text: 'Redion sichert dann nicht mehr von selbst in „' + os.name() + '".',
+          knoepfe: [
+            { id: 'aus', text: 'Abschalten',
+              hinweis: 'Was schon im Ordner liegt, bleibt unangetastet liegen' },
+            { id: '', text: 'Abbrechen', hinweis: 'Es bleibt, wie es ist' }
+          ]
+        });
+        if (w !== 'aus') return;
+        os.loesen();
+        (o as HTMLElement & { neuZeichnen?: () => void }).neuZeichnen?.();
+        UI.toast('Automatische Sicherung abgeschaltet');
+      },
       'import-json': () => App.sicherungLaden(() => o.remove()),
       'seite-md': () => seite && App.markdownExport(seite),
       'seite-html': () => seite && Werkzeuge.htmlExport(seite),
       'seite-pdf': () => { o.remove(); if (seite) Werkzeuge.drucken(seite); },
       'seite-sperren': () => { o.remove(); if (seite) Werkzeuge.sperren(seite); },
+      /* Der Weg zum vorhandenen Wolke-Fenster — dasselbe Muster, mit dem
+         es das Mehr-Blatt schon öffnet (E251). Kein zweiter Dialog (E29),
+         und kein Import: der Bereich greift über den globalen Namen (§5). */
+      'wolke-oeffnen': () => {
+        o.remove();
+        const wf = (globalThis as any).WolkeFenster;
+        if (wf?.dialog) wf.dialog();
+        else UI.toast('Die Wolke ist in dieser Fassung nicht geladen.');
+      },
       'seite-schreibschutz': () => {
         if (!seite) return;
         Store.updateBlock(seite.id, { gesperrt: !seite.gesperrt });

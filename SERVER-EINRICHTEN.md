@@ -34,9 +34,53 @@ Tarif nicht danach.
 
 ---
 
+## Schritt 0 — Genau diese Befehle, der Reihe nach
+
+Alles Weitere steht ausführlich darunter. Wer es einfach abarbeiten will:
+**PowerShell** öffnen (Windows-Taste, „PowerShell" tippen) und Zeile für
+Zeile eingeben. Der Ordner ist der, in dem `index.html` liegt:
+
+```powershell
+cd C:\Users\redur\Documents\ChatGPT\Redion\Redion-src
+
+npx wrangler login
+npx wrangler d1 create redion
+#   → die vier Zeilen der Ausgabe in wrangler.toml einkommentieren
+#     und die database_id eintragen (Schritt 1)
+npx wrangler d1 execute redion --remote --file=server/schema.sql
+npx wrangler r2 bucket create redion-dateien
+#   → auch die [[r2_buckets]]-Zeilen in wrangler.toml einkommentieren
+npx wrangler secret put ADRESSE
+#   → https://redion.<dein-name>.workers.dev, ohne Schrägstrich am Ende
+npx wrangler deploy --dry-run
+npx wrangler deploy
+```
+
+`--dry-run` lädt nichts hoch — es probiert den Vorgang nur durch. **Worauf
+es dabei ankommt: dass keine Fehlermeldung kommt.** Steht dort
+
+```
+✘ [ERROR] Asset too large … .git/objects/pack/… 78.6 MiB
+```
+
+dann fehlt `.assetsignore` — und dann würde nicht nur der Vorgang abbrechen,
+sondern beim nächsten Versuch auch `src/`, `pruefungen/` und eine etwaige
+`.env` mit ins Netz gehen.
+
+> Die Zeile `✨ Read 8322 files from the assets directory` steht **auch dann
+> da, wenn alles stimmt.** Sie zählt, was im Verzeichnis liegt, bevor
+> `.assetsignore` angewandt wird — nicht, was hochgeht. Nachgemessen, damit
+> hier nicht steht, man solle auf eine Zahl achten, die nichts bedeutet.
+
+> **Zwei Fallen mit PowerShell.** `npx` heisst dort manchmal `npx.cmd`. Und
+> wenn „npx wird nicht erkannt" kommt, fehlt Node.js — von `nodejs.org` das
+> LTS-Paket, danach PowerShell einmal schliessen und neu öffnen.
+
+---
+
 ## Schritt 1 — Die Datenbank anlegen
 
-Auf dem Rechner, im Ordner `Redion-App`:
+Auf dem Rechner, im Ordner `Redion-src` (dort, wo `index.html` liegt):
 
 ```
 npx wrangler d1 create redion
@@ -52,8 +96,22 @@ database_name = "redion"
 database_id = "a1b2c3d4-…"
 ```
 
-Diese vier Zeilen **ans Ende von `wrangler.toml` kopieren.** Die
-`database_id` ist bei jedem anders — deshalb steht sie nicht schon drin.
+In `wrangler.toml` steht dieser Block schon — **auskommentiert**, mit `#`
+davor. Die `#` entfernen und die `database_id` aus der Ausgabe eintragen.
+
+> **Warum er auskommentiert dasteht und nicht mit einem Platzhalter:**
+> Cloudflare prüft die Bindungen beim Veröffentlichen gegen dein Konto. Eine
+> Platzhalter-ID lässt `wrangler deploy` **abbrechen** — auskommentiert ist
+> also nicht Nachlässigkeit, sondern die einzige Form, die sich vor
+> `wrangler d1 create` überhaupt veröffentlichen lässt. `server/cloudflare.ts`
+> ist genau dafür gebaut: ohne Datenbank läuft der Rest weiter.
+
+> **Die `database_id` ist kein Geheimnis** und gehört mitcommittet. Sie ist
+> kein Schlüssel und ohne Zugang zu deinem Cloudflare-Konto wertlos. Wer sie
+> weglässt, veröffentlicht beim nächsten Push einen Server **ohne Datenbank** —
+> denn Cloudflare baut aus GitHub, nicht von deinem Rechner. Die echten
+> Geheimnisse (`ADRESSE`, `GITHUB_GEHEIM`, `GOOGLE_GEHEIM`, `VAPID_PRIVAT`)
+> stehen nie in der Datei, sondern hinter `wrangler secret put` (§42).
 
 ---
 
@@ -95,8 +153,20 @@ Danach prüfen, ob es läuft:
 https://deine-adresse/api/stand
 ```
 
-Da muss stehen: `"ablage": "d1"`. Steht dort `"ablage": "keine"`, ist die
-Datenbank noch nicht gebunden — dann ist in Schritt 1 etwas schiefgegangen.
+Da müssen **zwei** Dinge stehen:
+
+```json
+{ "ablage": "d1", "dateien": "r2" }
+```
+
+`"ablage": "keine"` heisst: die Datenbank ist nicht gebunden — in Schritt 1
+ist etwas schiefgegangen. `"dateien": "keine"` heisst: der Dateispeicher
+fehlt (Schritt 2b). Dann läuft alles Übrige weiter, aber Bilder, PDFs und
+Videos bleiben auf dem Gerät.
+
+**In Redion sagt es dir dieselbe Auskunft in Worten:** Mehr → Daten und
+Sicherheit → ☁ Wolke → **Server prüfen**. Der Knopf nennt, was fehlt, und
+gibt die Befehle dazu an.
 
 **Ab hier funktioniert der Abgleich schon** — mit dem Gerätecode. Anmelden
 über GitHub oder Google braucht noch Schritt 4.
@@ -186,6 +256,42 @@ Seiten zwar noch auf dem Server, aber niemand kann sie mehr lesen.
 Auf dem zweiten Gerät **denselben Satz** eingeben. Ein anderer Satz ergibt
 einen anderen Schlüssel, und dann kommt nichts an. Redion sagt das dann auch
 deutlich, statt still nichts zu tun.
+
+---
+
+## Schritt 6 — iPhone und iPad
+
+Der Reihe nach, und der zweite Punkt ist der wichtigste:
+
+1. Die Adresse in **Safari** öffnen. Nicht Chrome, nicht der Browser in einer
+   anderen App — nur Safari darf auf iOS eine Seite installieren.
+2. **Teilen** (das Kästchen mit dem Pfeil) → **Zum Home-Bildschirm**.
+
+Punkt 2 ist keine Bequemlichkeit. Safari räumt die Daten einer normalen
+Webseite nach **sieben Tagen ohne Besuch** weg — Speicher, Ablage, alles. Als
+installierte App zählt Redion nicht mehr als „Webseite", und das passiert
+nicht. Wer diesen Schritt überspringt, kann nach zwei Wochen Ferien vor einem
+leeren Telefon stehen.
+
+3. Redion vom Home-Bildschirm starten.
+4. Mehr → Daten und Sicherheit → ☁ **Wolke** → **Mit einem Code von einem
+   anderen Gerät.** Der Rechner zeigt den Code, das Telefon tippt ihn ein.
+5. **Denselben Satz für die Verschlüsselung** eingeben wie am Rechner. Ein
+   anderer Satz ergibt einen anderen Schlüssel, und dann kommt nichts an.
+6. **Abgleich einschalten.** Er steht bewusst nicht von selbst an: es
+   verlässt nichts dieses Gerät, solange niemand ausdrücklich ja gesagt hat.
+
+### Und der Ordner-Weg, der auf dem Telefon nicht geht
+
+In den Einstellungen gibt es **Sicherung in einen Ordner** — Redion legt dann
+alle paar Minuten von selbst eine vollständige Sicherung dort ab. Liegt der
+Ordner in iCloud Drive, OneDrive oder Dropbox, lädt der Dienst sie hoch, und
+sie erscheint auf dem Telefon in **Dateien**.
+
+Das geht nur am **Rechner** (Chrome oder Edge). Safari auf iPhone und iPad
+kann keinen Ordner behalten, und Firefox auch nicht — dort steht in den
+Einstellungen deshalb ein Satz statt eines Knopfes. Für das Telefon ist der
+Abgleich oben der richtige Weg.
 
 ---
 
