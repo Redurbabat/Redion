@@ -3030,3 +3030,140 @@ gemessen werden, nicht aus der Datei gelesen. Ein Anlauf dazu ist gescheitert
 beginnt am besten bei `test128:483-517`, das den Knopf nachweislich findet.
 
 Gefunden am 30. August 2026 (voller Prüflauf während E271).
+
+--------------------------------------------------------------------------------
+L85 — Vier Prototyp-Knöpfe ohne Griff (E272)
+--------------------------------------------------------------------------------
+
+Beim Inventar für die Premium-Schale (doku/PREMIUM-SHELL-MATRIX.md, Teil 5)
+haben vier Knöpfe des v13-Entwurfs in Redion kein Gegenstück. Sie bekommen
+KEINEN erfundenen — hier steht, was fehlt und was stattdessen dasteht.
+
+1. VOLLBILD. Im ganzen `src/`-Baum gibt es keinen Vollbild-Griff.
+   `requestFullscreen` kommt zweimal vor: `werkzeuge.ts:995` im
+   Präsentationsmodus und als `allowfullscreen`-Attribut einer Einbettung
+   (`editor.ts:1342`). `Werkzeuge.fokus()` (`werkzeuge.ts:835`) setzt nur eine
+   CSS-Klasse an `body`.
+   → Der Reiter Ansicht führt „Präsentation", das das Echte tut. Ein eigener
+     Vollbildmodus für die normale Ansicht ist offen.
+
+2. ZOOM. Kein Griff. Strg + / − / 0 setzt `Store.setMeta('schriftgroesse', …)`
+   in drei Stufen, inline im Tastenhandler `schale.ts:2436-2451`.
+   → Phase D zieht denselben Code als `App.schriftgroesse(richtung)` heraus.
+     Ein echter Zoom (auch für Bilder und Zeichenflächen) bleibt offen.
+
+3. VOLLE BREITE. Kein benannter Griff. Der Schalter lebt zweimal:
+   `schale.ts:432` (Seitenmenü) und `kopfleiste.ts:269` (`data-a="wide"`),
+   beide als `Store.updateBlock(p.id, { wide: … })`.
+   → Phase D zieht ihn als `App.volleBreite(p)` heraus, damit beide Aufrufer
+     dieselbe Funktion rufen.
+
+4. SENDEN. `Mail.senden` gibt es nicht. Der Code sagt es selbst,
+   `editor.ts:2369-2372`: „Hier stand `Mail.senden(…)` — die Funktion gibt es
+   nicht. Das Mail-Modul kann lesen und antworten, aber nicht von sich aus
+   verschicken." Die zwei tatsächlichen Wege sind `location.href = 'mailto:…'`
+   (`editor.ts:2373`, `steuerung.ts:7823`) und Gmails Compose-Fenster in einem
+   neuen Tab (`mail.ts:363`).
+   → Die Backstage-Sektion heisst „Weitergeben" und öffnet
+     `Werkzeuge.teilenMenue` — den echten, vollständigen Weg. Echtes Senden
+     aus Redion heraus bleibt offen.
+
+Warum das hier steht und nicht einfach gebaut wird: ein Knopf, der dasteht und
+beim Klick sagt, dass er hier nicht geht, ist schlimmer als einer, den es nicht
+gibt. Das ist die Begründung von `zeigen()` im Menüband (§47), und sie gilt für
+Backstage genauso.
+
+--------------------------------------------------------------------------------
+L86 — Drei tote Verdrahtungen in der Schale (E272, Phase A gefunden)
+--------------------------------------------------------------------------------
+
+`schale.ts:3050` bindet Knöpfe mit
+`document.getElementById(id)?.addEventListener(…)`. Der Optional-Chain
+verschluckt jede Kennung, die es nicht mehr gibt — kein Fehler, keine Warnung,
+kein Prüflauf. Drei Fälle sind heute so:
+
+  · `hl-seiten`  (`schale.ts:3141-3145`) — Element seit E236 weg;
+    `produktwelten.ts:278-280` hält das sogar fest, die Zeile in `schale.ts`
+    wurde vergessen. Die Handlung `Produktwelten.workspace('start')` ist über
+    `btn-workspace` weiter erreichbar.
+  · `hl-konto`   (`schale.ts:3177`) — Element seit E236 weg. `arbeitsbereich()`
+    ist über `mb-konto` (`menueband.ts:446`) und
+    `ansichten/dienst.ts:693` weiter erreichbar.
+  · `weltwechsel` (`produktwelten.ts:292`) — der Welt-Umschalter wurde mit E206
+    entfernt.
+
+Dazu totes CSS: `produktwelten.css:78` und `:81` ordnen `#hl-konto` und
+`#hl-seiten` ein, die es nicht gibt.
+
+Keine dieser drei kostet eine Funktion — alle drei Handlungen sind anderswo
+erreichbar. Sie werden in E272 Phase J entfernt, zusammen mit der CSS-Leiche
+`#handy-unten` (`bausteine.css:1817-1858`).
+
+Der eigentliche Punkt ist aber allgemeiner und bleibt danach offen: SOLANGE
+`an()` still bindet, entsteht die nächste tote Zeile genauso unbemerkt. Ein
+Prüflauf, der jede in `schale.ts` verdrahtete Kennung gegen `index.html` hält,
+gibt es nicht.
+
+--------------------------------------------------------------------------------
+L87 — melde() prüft, meldeLieferant() nicht (E272, Phase A gefunden)
+--------------------------------------------------------------------------------
+
+`Register.menueband` hat zwei Wege, von aussen Einträge nachzureichen, und sie
+sind verschieden streng:
+
+  · `melde(eintrag)` (`menueband.ts:609`) weist ab, was keine `id`, keinen
+    `reiter` oder kein `tun` als Funktion hat.
+  · `meldeLieferant(fn)` (`:616`) prüft nur, dass `fn` eine Funktion ist. Was
+    sie ZURÜCKGIBT, wandert bei `:654` ungefiltert in `alle()`.
+
+Ein Lieferant kann also einen Eintrag ohne `tun` ins Band schieben, den `melde`
+abgewiesen hätte. Heute nutzt niemand die Lieferanten (beide Listen sind zur
+Laufzeit leer), aber E272 Phase F wird es tun.
+
+Dazu kommt: es gibt kein `nimmZurueckLieferant`. Ein einmal angemeldeter
+Lieferant bleibt bis zum Neuladen. test272 §8 umgeht das mit einem Lieferanten,
+der sich über eine Schaltmarke selbst entwaffnet — das ist ein Behelf, keine
+Lösung.
+
+Offen: dieselbe Prüfung in `alle()` ziehen (dann prüfen beide Wege gleich), und
+`nimmZurueckLieferant` ergänzen.
+
+--------------------------------------------------------------------------------
+L88 — Zwei Wächter waren schon rot, bevor E272 anfing
+--------------------------------------------------------------------------------
+
+Beim Ausgangsmessen für die Premium-Schale (Phase A) liefen alle Schalen-Wächter
+mit. Zwei waren rot, und zwar auch dann, wenn man die Änderungen der Phase A
+wieder herausnimmt (mit `git stash` gemessen, beide Male dasselbe Ergebnis):
+
+  test247:547  „Und braucht dafür nur eine Zeile" — **227 px**, erlaubt ≤ 150
+  test248:282  „Ausgeschaltet ist die Leiste wieder so voll wie früher"
+               — **29** Knöpfe, erwartet ≥ 30
+
+ZU test247. Das Band steht bei offener Seite in ZWEI Zeilen. Mit Augen bestätigt
+(`node bilder.mts schaleBandStart`): im Reiter Start liegt „Absatz" mit neun
+Knöpfen oben, „Schrift" mit fünf darunter, zusammen rund 270 px. Der Kommentar
+über der Prüfung beschreibt genau diesen Fall schon einmal — „Mit der Gruppe
+„Finden" waren es zwei und 221 px". Er ist wiedergekommen.
+
+Und beim Hinsehen fiel ein zweiter Mangel auf, den keine Prüfung misst: die
+Gruppentitel stehen UNTER ihren Knöpfen. „ABSATZ" steht zwischen der
+Absatz-Zeile und der Schrift-Zeile und liest sich, als beschriftete es die
+Zeile darunter.
+
+  → Beides erledigt Phase C/D von E272: 58 px hohes Band, höchstens 15
+    sichtbare Befehle, der Rest in das reitereigene `•••`. Genau dafür ist
+    die 15er-Regel da.
+
+ZU test248. Ohne die ruhige Fassung sollen mindestens 30 Knöpfe in der
+Seitenleiste stehen; es sind 29. Einer ist irgendwann weggefallen, ohne dass
+jemand die Zahl nachgezogen hat.
+
+  → Phase F von E272 baut die Seitenleiste am Rechner ab; die Zählweise wird
+    dort neu festgelegt (Kontextkante statt Leiste). Bis dahin bleibt der Punkt
+    rot und ist hier festgehalten, statt still angepasst zu werden.
+
+Warum das hier steht und nicht schnell repariert wurde: eine Zahl in einem
+Wächter zu senken, weil sie nicht mehr passt, ist die Bewegung, gegen die der
+Wächter gebaut wurde. Beide Punkte gehören in die Phase, die den betroffenen
+Teil ohnehin neu baut.

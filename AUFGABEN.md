@@ -1819,3 +1819,12 @@ node pruefungen/lauf/test105.mjs
    einsetzen. Sonst weiss niemand, ob der Lauf die Sache wirklich hält.
 5. **Feldnamen gespeicherter Daten sind keine Namensfrage**, sondern eine
    Migrationsfrage.
+
+* E272 Phase A (Inventar): doku/PREMIUM-SHELL-MATRIX.md angelegt — jeder
+  Bandeintrag, jedes Modul, jeder Schalenknopf mit seinem künftigen Ort.
+  test272 neu, 40 Punkte auf Port 9050, vier Gegenproben im Lauf und fünf
+  von Hand einzeln rot gesehen. Dabei gefunden und behoben: der Knopf
+  „Zeitmesser" stand seit E268 nie im Band (`kann()` prüfte das Modul statt
+  einer Methode), und sein Zeichen `clock` fehlte im Symbolregister.
+  Gemessen statt geschätzt: 141 Bandeinträge, nicht 108. Neue Lücken
+  L85–L88.

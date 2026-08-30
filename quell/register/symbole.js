@@ -140,6 +140,11 @@ Register.symbole = (() => {
             '<path d="M12 15.2V3.6"/><path d="m8 7.4 4-3.8 4 3.8"/>',
         history: '<path d="M3.6 12a8.4 8.4 0 1 0 2.5-6"/><path d="M3.4 3.6v4.2h4.2"/>' +
             '<path d="M12 7.6V12l3 1.8"/>',
+        /* Die Uhr (E272). `menueband.ts` nennt sie seit E268 für den Knopf
+           „Zeitmesser"; im Register stand sie nicht, also zeigte der Knopf das
+           WORT `clock` statt eines Zeichens. Aufgefallen ist es erst, als der
+           Knopf durch die zweite Berichtigung überhaupt sichtbar wurde. */
+        clock: '<circle cx="12" cy="12" r="8.6"/><path d="M12 7.4V12l3.1 1.9"/>',
         link: '<path d="M10.3 13.7a4.2 4.2 0 0 0 6.1.35l2.6-2.6a4.2 4.2 0 0 0-5.94-5.94l-1.5 1.5"/>' +
             '<path d="M13.7 10.3a4.2 4.2 0 0 0-6.1-.35L5 12.55a4.2 4.2 0 0 0 5.94 5.94l1.5-1.5"/>',
         lockOpen: '<rect x="4.2" y="10.4" width="15.6" height="10.4" rx="2.4"/>' +

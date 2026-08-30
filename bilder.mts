@@ -90,6 +90,53 @@ const server = createServer((a, b) => {
    Bild der Zustand von davor. */
 const ANSICHTEN: Record<string, { titel: string; bauen: () => void | Promise<void> }> = {
 
+  /* --- Die Schale selbst (E272) ------------------------------------------
+     Bis hierher zeigte jede Ansicht einen INHALT und die Schale nur
+     nebenbei. Für den Umbau der Schale ist das die falsche Richtung: das
+     Menüband ist standardmässig ZUGEKLAPPT, also war auf keinem der 34
+     Bilder je ein Bandknopf zu sehen — und dass „Zeitmesser" seit E268
+     fehlte, konnte deshalb niemand bemerken (§55.2).
+
+     `bandZu` ist der Merker, den `schale/aufbau/menueband.ts:57` liest;
+     `bandZu:welt` gilt ohne offene Seite. Beide auf `false`, damit das
+     Band wirklich aufgeht. */
+
+  schaleBand: {
+    titel: 'Die Schale — Menüband offen, Reiter Werkzeuge',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      Store.setMeta('bandZu', false);
+      Store.setMeta('bandZu:welt', false);
+      Store.setMeta('bandReiter', 'werkzeuge');
+
+      const s = Store.addPage(null, { text: 'Elektrotechnik — Skript' });
+      Store.addBlock(s.id, 'h1', { text: 'Grundlagen' });
+      Store.addBlock(s.id, 'text', { text: 'U = R · I, und daraus P = U · I.' });
+      App.oeffne(s.id);
+      (window as any).Menueband?.zeichne?.();
+    }
+  },
+
+  schaleBandStart: {
+    titel: 'Die Schale — Menüband offen, Reiter Start',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      Store.setMeta('bandZu', false);
+      Store.setMeta('bandZu:welt', false);
+      Store.setMeta('bandReiter', 'start');
+
+      const s = Store.addPage(null, { text: 'Elektrotechnik — Skript' });
+      Store.addBlock(s.id, 'h1', { text: 'Grundlagen' });
+      Store.addBlock(s.id, 'text', { text: 'U = R · I, und daraus P = U · I.' });
+      App.oeffne(s.id);
+      (window as any).Menueband?.zeichne?.();
+    }
+  },
+
   /* --- Die zwei Produktwelten ---------------------------------------------
      Sie fehlten hier, und das hat gekostet: vier falsche Zahlen im
      Heute-Bild — „0 neu" bei fabrikneuen Karten, „null Tage" beim

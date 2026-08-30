@@ -513,7 +513,13 @@ Register.menueband = (() => {
     { reiter: 'werkzeuge', gruppe: 'Weiteres', id: 'w-zeit', name: 'Zeitmesser',
       zeichen: 'clock', hinweis: 'Stoppuhr und Timer — misst die Zeit an der offenen Seite',
       tun: () => (window as any).Zeitmesser?.panel?.(),
-      zeigen: () => kann(() => (window as any).Zeitmesser) },
+      /* `.panel`, NICHT das Modul. `kann()` fragt `typeof griff() ===
+         'function'`; `Zeitmesser` selbst ist ein Objekt, also war die
+         Antwort seit E268 immer „nein" und der Knopf stand nie da. Alle
+         anderen 26 Aufrufe hier nennen eine Methode und waren nie
+         betroffen — gefunden beim Nachzählen für E272 (das Band zeigte
+         zehn Werkzeuge, das Register führt elf). */
+      zeigen: () => kann(() => (window as any).Zeitmesser?.panel) },
     { reiter: 'werkzeuge', gruppe: 'Weiteres', id: 'w-zuletzt', name: 'Zuletzt verwendet',
       zeichen: 'history', hinweis: 'Die Bibliothek, gefiltert auf zuletzt Verwendetes',
       tun: () => Bibliothek.oeffne(),

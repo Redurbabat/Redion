@@ -19477,3 +19477,158 @@ Fassung suchte den `apply`-Rat in den BEFEHLSzeilen — dort, wo der Filter
 gerade alle Ratschläge entfernt hatte. Sie konnte nicht grün werden und
 verriet damit den Fehler; wäre die Bedingung umgekehrt formuliert gewesen,
 wäre sie für immer trivial grün geblieben (§55.2).
+
+
+================================================================================
+E272 — Die Premium-Schale: Menüband, Gehen, Kontextkante, Backstage
+       (Gold ersetzt Violett als Farbe der Schale)
+================================================================================
+
+Redur hat einen Masterprompt und einen in dreizehn Fassungen gereiften
+HTML-Entwurf geliefert: `CLAUDE_MASTERPROMPT_REDION_PREMIUM_UI.md` und
+`redion_final_kontextleiste_v13.html`. Der Auftrag ist ausdrücklich KEIN
+zweites Redion, sondern der Umbau des bestehenden — Daten, Dienste und
+Prüfläufe bleiben, die Schale wird neu.
+
+DIE ENTSCHEIDUNG in fünf Sätzen:
+
+  1. Das Menüband bekommt neun Reiter statt sechs: Datei · Gehen · Start ·
+     Einfügen · Zeichnen · Verlauf · Überprüfen · Ansicht · Hilfe. „Datei"
+     ist kein Reiter, sondern eine Fläche (Backstage).
+  2. Die Seitenleiste entfällt am Rechner. Navigation läuft über „Gehen",
+     das sich aus `Register.module` und `Register.navigation` speist.
+  3. An den linken Rand kommt eine 54 px schmale KONTEXTKANTE, deren
+     Knöpfe je Bereich andere sind — registergetrieben, nicht hartkodiert.
+  4. Je Reiter sind höchstens 15 Befehle sichtbar; alles Weitere steht im
+     reitereigenen `•••`. Nichts wird entfernt, nur später gezeigt.
+  5. Die Schale wird golden. Violett bleibt, wo es INHALT einfärbt.
+
+WARUM GOLD UND NICHT VIOLETT — der eigentliche Produktentscheid
+
+Redion hat seit E204 einen violetten Akzent (`--accent`). Der Entwurf setzt
+durchgehend Gold: `#caa85e` hell, `#d8b767` dunkel, dazu Glas- und
+Linientöne daraus. Beides nebeneinander wäre bunt statt gestaltet.
+
+Getrennt wird deshalb nach ZUSTÄNDIGKEIT, nicht nach Geschmack:
+
+    Gold      alles, was die APP ist — Reiter, Kanten, Fokusringe,
+              Überlaufknopf, die Flächen der Schale
+    Violett   alles, was der INHALT ist — Haken, Kalendereinträge,
+              Markierungen in der Seite
+    Farbe     Statusfarben bleiben, was sie sind. Ein rotes „nicht
+              gesichert" wird nicht golden, nur weil es besser aussähe.
+
+Genau so hält es der Entwurf selbst; seine Inhaltsflächen sind ebenfalls
+nicht umgefärbt worden.
+
+WAS DAMIT ABGELÖST WIRD
+
+E258 (Amdion-Übernahme) hatte für die Schale eine eigene Designsprache
+geplant, PR #46 hat mit `einfach.css` eine zweite begonnen. Die beiden
+widersprachen einander bereits — bei der Suche in der Kopfzeile
+gegenläufig. E272 löst beide ab; die Reihenfolge des Masterprompts sagt es
+so: der v13-Entwurf hat Vorrang, Amdion bleibt Nebenreferenz. `einfach.css`
+wird in Phase C an einem Präfix abgehängt (Notausstieg) und in Phase J
+gelöscht — nicht überschrieben.
+
+KEIN ELEKTRO-REITER — von Redur entschieden
+
+Gefragt, ob Elektrotechnik einen eigenen zehnten Reiter bekommen soll,
+hat Redur „wie im Prototyp" gewählt: keinen. Elektro erreicht man über
+Gehen, seine acht Werkzeuge stehen in der Kontextkante, Üben und Prüfung
+zusätzlich unter Überprüfen.
+
+Die acht Einträge BEHALTEN trotzdem `reiter: 'elektro'` im Register; nur
+die `REITER`-Konstante führt ihn nicht mehr. Das ist kein Trick, sondern
+Notwendigkeit: `bereiche/elektro/start.ts:64-66` liest seine acht Kacheln
+aus `inReiter('elektro')`. Wer statt der Reiterliste das Feld ändert, leert
+die Elektro-Startseite — und kein anderer Lauf merkt es. test272 §5 hält
+genau das fest.
+
+WAS PHASE A GEMESSEN HAT
+
+Die Umzugsliste steht in `doku/PREMIUM-SHELL-MATRIX.md`. Drei Zahlen daraus
+sind anders, als die Dokumentation bisher sagte:
+
+  · Das Band hat 141 Einträge, nicht 108 — im laufenden Browser gemessen,
+    bei offener Seite mit Zeichenfläche. Ohne Zeichenfläche sind es 117,
+    ohne offene Seite 22. Der Kommentar in `register/menueband.ts:642` ist
+    mit den Registern nicht mitgewachsen.
+  · Beim Nachzählen gefunden und gleich behoben: der Knopf „Zeitmesser"
+    (E268) stand seit seiner Einführung NIE im Band. Seine Bedingung
+    lautete `kann(() => (window as any).Zeitmesser)`, `kann()` fragt aber
+    `typeof griff() === 'function'` — und `Zeitmesser` ist das Modul, ein
+    Objekt. Die Antwort war immer „nein". Alle 26 anderen `kann()`-Aufrufe
+    dieser Datei nennen eine Methode und waren nie betroffen. Berichtigt
+    zu `?.panel`. Dabei kam der zweite Teil desselben Fehlers zutage: das
+    Zeichen `clock` gab es im Symbolregister nicht, der Knopf hätte das
+    Wort gezeigt — aufgefallen wäre es nie, weil er nicht da war.
+  · Von 39 Navigationseinträgen werden nur 31 gezeichnet.
+    `anPlatz('baum')` wird nirgends aufgerufen (3 Einträge), und die 5
+    `unten`-Einträge fallen durch den `vonAussen`-Filter in
+    `seitenleiste.ts:733`. „Gehen" bringt diese fünf Wege also nicht um,
+    sondern zum ersten Mal wieder auf den Bildschirm.
+  · `hl-seiten` und `hl-konto` sind seit E236 tot: die Verdrahtung steht in
+    `schale.ts:3141` und `:3177`, das Element fehlt in `index.html`. Der
+    Optional-Chain in `schale.ts:3050` bindet still ins Leere. Eine dritte
+    dieser Art dazu gefunden: `produktwelten.ts:292` hängt an
+    `element('weltwechsel')`, den E206 entfernt hat.
+
+VIER PROTOTYP-KNÖPFE HABEN KEINEN GRIFF — und bekommen keinen erfundenen
+
+  · Vollbild: gibt es in Redion nicht. `requestFullscreen` kommt zweimal
+    vor, beide im Präsentationsmodus bzw. als Attribut einer Einbettung.
+    `Werkzeuge.fokus()` setzt nur eine CSS-Klasse. Statt eines neuen
+    Knopfes steht „Präsentation" da, das das Echte tut.
+  · Zoom: kein Griff. Strg + / − / 0 setzt die Schriftgrösse in drei Stufen,
+    inline im Tastenhandler (`schale.ts:2436-2451`). Phase D zieht denselben
+    Code als `App.schriftgroesse(richtung)` heraus.
+  · Volle Breite: ebenso ohne Namen, lebt im Seitenmenü und in der Krume.
+    Wird als `App.volleBreite(p)` herausgezogen.
+  · Senden: `Mail.senden` gibt es nicht, und der Code sagt es selbst
+    (`editor.ts:2369`: „Das Mail-Modul kann lesen und antworten, aber nicht
+    von sich aus verschicken."). Die Backstage-Sektion heisst deshalb
+    „Weitergeben" und öffnet `Werkzeuge.teilenMenue` — den echten Weg.
+
+Ein Knopf, der dasteht und beim Klick sagt, dass er hier nicht geht, ist
+schlimmer als einer, den es nicht gibt. Das ist die Begründung von
+`zeigen()` im Menüband, und sie gilt für Backstage genauso.
+
+DIE REIHENFOLGE: A · B · C · D · E · G · F · H · I · J
+
+Backstage (G) steht bewusst VOR dem Abriss der Seitenleiste (F).
+`App.arbeitsbereich()` öffnet am Rechner `PWA.schubladeAuf()` — stirbt die
+Leiste zuerst, hat der Konto-Knopf kein Ziel. Mit G zuerst hat jeder Griff
+sein neues Zuhause, bevor F das Markup entfernt.
+
+**Geprüft:** test272, neuer Lauf auf Port 9050 — 9 Paragraphen gegen den
+Bestand von HEUTE, absichtlich schon vor dem Umbau grün. Er misst, dass
+jeder Bandeintrag Kennung, Namen, Zeichen und ein lebendes `tun` hat, dass
+keine Kennung doppelt vorkommt, dass jedes Modul sich öffnen lässt, dass
+„Einfügen" das Blockregister vollständig deckt, dass die acht
+Elektro-Griffe über `inReiter('elektro')` erreichbar sind, und dass die
+sieben Stellen noch stehen, an denen der Umbau lautlos brechen könnte
+(`#crumb`, `#page`, `btn-komm`, `btn-auto`, die Sprungmarke, die
+`data-ruhig`-Marken).
+
+Ausserdem liefen alle Schalen-Wächter mit. Zwei waren rot — und blieben es,
+als die Änderungen der Phase A zum Vergleich herausgenommen wurden: test247
+misst 227 px für ein Band, das in eine Zeile passen soll, und test248 zählt 29
+Seitenleistenknöpfe statt 30. Beide sind älter als E272 und stehen als L88 in
+LUECKEN.md; erledigt werden sie von den Phasen, die den betroffenen Teil
+ohnehin neu bauen (C/D für die Bandhöhe, F für die Leiste). Eine Zahl in einem
+Wächter zu senken, weil sie nicht mehr passt, ist die Bewegung, gegen die der
+Wächter gebaut wurde.
+
+Fünf Gegenproben zusätzlich von Hand: ein `tun`, das keine Funktion ist; eine
+Kennung zweimal; eine Blockart aus „Einfügen" gefiltert; das `reiter`-Feld
+eines Elektro-Eintrags verstellt; `#crumb` aus dem Markup entfernt. Alle fünf
+einzeln rot gesehen und wieder zurückgenommen.
+
+Vier weitere Gegenproben stehen IM Lauf (§55.2). Die
+erste davon förderte einen Befund zutage: `melde()` prüft
+`typeof tun === 'function'` und weist einen kaputten Eintrag ab —
+`meldeLieferant()` prüft NICHTS, was ein Lieferant zurückgibt, wandert
+ungefiltert in `alle()`. Die Gegenprobe musste deshalb über den Lieferanten
+laufen, und weil es für Lieferanten kein `nimmZurueck` gibt, entwaffnet sie
+sich über eine Schaltmarke selbst.
