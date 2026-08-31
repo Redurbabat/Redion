@@ -112,7 +112,18 @@ import { chromium } from 'playwright';
     await p.waitForTimeout(300);
   };
   await schubladenAuf();
-  await p.click('[data-app="bib"]');
+  /* ÜBER DEN REITER „GEHEN", NICHT ÜBER DIE SEITENLEISTE (E272 Phase F).
+     `[data-app="bib"]` steht in der Seitenleiste, und die ist am Rechner
+     seit Phase F `display:none` — Playwright wartete zu Recht dreissig
+     Sekunden auf einen Knopf, den niemand sehen kann.
+
+     Der Weg des Menschen führt jetzt über das Menüband: Reiter „Gehen",
+     dann „Alle Seiten". Dieselbe Kennung, dieselbe Handlung
+     (`Bibliothek.oeffne()`), nur an der Stelle, an der sie heute steht.
+     Dass „Gehen" jedes Modul deckt, misst test272 §12. */
+  await p.click('#menueband [data-mb-reiter="gehen"]');
+  await p.waitForTimeout(500);
+  await p.click('#menueband .mb-knopf[data-band="app-bib"]');
   await p.waitForTimeout(600);
 
   /* ================================================================== *
@@ -485,7 +496,11 @@ import { chromium } from 'playwright';
   });
   await p.waitForTimeout(400);
   await schubladenAuf();
-  await p.click('[data-app="aufgaben"]');
+  /* Auch hier über „Gehen" statt über die Seitenleiste (E272 Phase F) —
+     derselbe Grund und dieselbe Kennung wie oben. */
+  await p.click('#menueband [data-mb-reiter="gehen"]');
+  await p.waitForTimeout(500);
+  await p.click('#menueband .mb-knopf[data-band="app-aufgaben"]');
   await p.waitForTimeout(600);
 
   const auf = await p.evaluate(() => ({

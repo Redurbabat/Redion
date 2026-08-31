@@ -4811,9 +4811,24 @@ body[data-produktwelt="workspace"]:not(:has(#sidebar .side-item[aria-current="pa
   border-radius:10px;background:var(--aw-accent-soft);font-size:17px
 }
 .arbeitswelt .aw-zaehler-wert{font-size:19px;line-height:1.1;font-variant-numeric:tabular-nums}
+/* SIE UMBRICHT, STATT ABGESCHNITTEN ZU WERDEN (E272 Phase J).
+   Gemessen bei 1280 px: die Karte ist 154 px breit, die Beschriftung
+   bekommt davon 84 — und „Offene Aufgaben" braucht 86. Zwei Pixel, und
+   auf dem Bild steht „Offene Aufgabe…".
+
+   `text-overflow:ellipsis` war die falsche Antwort auf die richtige Frage.
+   Eine Beschriftung, die sagt, was die Zahl darüber bedeutet, darf nicht
+   die Hälfte ihres Sinns verlieren, weil zwei Pixel fehlen; sie darf eine
+   zweite Zeile nehmen. Platz ist da: 34 (Zeichen) + 21 (Wert) + 14 = 69
+   von 72 px Mindesthöhe, und die Karte wächst notfalls mit.
+
+   Das ist auch der Unterschied zur Kürzung im Menüband (§23): dort wandert
+   ein BEFEHL ins „•••", wenn es eng wird. Hier gibt es nichts zu
+   verschieben — es gibt nur die Wahl zwischen zwei Zeilen und einem
+   halben Wort. */
 .arbeitswelt .aw-zaehler-label{
-  overflow:hidden;color:var(--text-dim);font-size:11.5px;line-height:1.25;
-  text-overflow:ellipsis;white-space:nowrap
+  color:var(--text-dim);font-size:11.5px;line-height:1.25;
+  white-space:normal;overflow-wrap:break-word
 }
 
 .arbeitswelt .aw-uebersicht-grid,
