@@ -370,6 +370,52 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   DER DOKUMENTMODUS (E272 Phase I)
+   ───────────────────────────────────────────────────────────────────────────
+   NUR FARBE UND MASS. Die Logik in `document-mode.ts`, `marken.ts` und
+   `seite.ts` bleibt unangetastet — seitentreue Marken sind das Empfindlichste,
+   was Redion hat (test201/266/267), und für einen dunkleren Rand rührt man
+   sie nicht an.
+
+   ZWEI DINGE ÄNDERN SICH, und beide sind gemessen:
+
+     · DER RAND WIRD DUNKLER. Ein weisses Blatt auf einem fast weissen
+       Grund ist kein Blatt, sondern ein Rechteck mit Rahmen. Der Grund um
+       das Papier bekommt deshalb die Schalenfarbe im Dunkelmodus und einen
+       spürbar dunkleren Ton im Hellmodus — genau der Unterschied, den E260
+       für das Papier selbst schon gezogen hat.
+
+     · DER KOPF WIRD KOMPAKTER. 48 Pixel Werkzeugleiste über einem Band von
+       36 (oder 108) und einer Kopfzeile — das sind drei Streifen, bevor die
+       Seite anfängt. 40 reichen; die Knöpfe bleiben bei 36 und damit über
+       der Fingergrenze für den Zeiger.
+
+   DIE KANTE BLEIBT SICHTBAR. Sie ist im Dokument nützlicher als sonst
+   irgendwo: Stift, Marker, Formelheft und OCR stehen darin (Phase F).
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 761px) {
+
+  body[data-schale="premium"] .document-center{
+    background: color-mix(in srgb, var(--text) 9%, var(--bg));
+  }
+  body[data-schale="premium"] .document-workspace{
+    border-radius: var(--radius-lg);
+    border-color: var(--line);
+  }
+  body[data-schale="premium"] .document-topbar{
+    min-height: 40px;
+    padding: 4px 8px;
+  }
+  /* Die gewählte Vorschauseite trägt Gold statt Violett — sie ist Schale,
+     nicht Inhalt. Der Rahmen bleibt als zweite Auskunft (§38). */
+  body[data-schale="premium"] .document-thumbnail.is-selected{
+    border-color: var(--gold-deep);
+    background: var(--gold-glass);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    DIE KONTEXTKANTE UND IHRE LADE (E272 Phase F)
    ───────────────────────────────────────────────────────────────────────────
    54 Pixel statt 240. Die Seitenleiste zeigte auf jeder Seite dieselben 32

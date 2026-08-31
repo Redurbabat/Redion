@@ -1,4 +1,15 @@
-@import url("./einfach.css");
+/* HIER STAND `@import url("./einfach.css")` (E272 Phase J).
+
+   `einfach.css` kam mit PR #46 als „ruhige Schale" und hing an
+   `body[data-ruhig]`. Phase C hat jeden ihrer 93 Selektoren mechanisch mit
+   `:not([data-schale="premium"])` versehen, und `index.html` setzt
+   `data-schale="premium"` fest — seither war die ganze Datei wirkungslos,
+   in JEDER Breite. Sie ist mit dieser Phase gelöscht.
+
+   Was sie wollte, tut jetzt die Premium-Schale: weniger sichtbar, ruhiger
+   Grund, klare Reiterzeile. Was sie zusätzlich anfasste — die Dichte der
+   Kopfzeile über `data-ruhig` —, steht unverändert in `aufbau.css` und
+   gilt weiter am Telefon (test248). */
 
 /* ============================================================================
  * anatomie.css — die geteilten Anatomien (E258/E260)

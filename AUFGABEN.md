@@ -1872,3 +1872,12 @@ node pruefungen/lauf/test105.mjs
   Lade; der Fokusmodus versteckt jetzt auch Band und Kante. Fünf fehlende
   Zeichen ergänzt. Neun Wächter mitgezogen, zwei Gegenproben rot gesehen,
   eine dritte war blind geworden. L91/L92 neu. sw v42.
+* E272 Phase I+J (Zuschnitt und Aufräumen): Dokumentmodus bekommt nur Farbe
+  und Mass — dunklerer Rand ums Papier, Kopf von 48 auf 40, gewählte
+  Vorschauseite in Gold; document-mode.ts/marken.ts/seite.ts unangetastet.
+  einfach.css gelöscht (93 Regeln, alle 93 seit Phase C wirkungslos) samt
+  ihrem @import in anatomie.css. Die tote Verdrahtung hl-seiten/hl-konto
+  bleibt stehen und ist als unverdrahtet markiert — sie ist die einzige
+  Stelle, an der die Absicht steht, und Löschen fragt man vorher.
+  Viewport-Abnahme 1440/1366/1024/768/390: kein waagrechter Überlauf,
+  Kante überall 54, am Telefon aus. sw v43, Einzeldatei 7387 KB.

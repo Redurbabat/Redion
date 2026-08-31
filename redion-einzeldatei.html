@@ -1825,676 +1825,18 @@ body[data-ruhig="an"] #topbar [data-ruhig="mehr"]{ display:none }
 </style>
 <style>
 /* ===== quell/schale/stil/anatomie.css ===== */
-
-/* ===== import quell/schale/stil/einfach.css ===== */
-/* ============================================================================
- * einfach.css — ABGEHÄNGT SEIT E272, WIRD IN PHASE J GELÖSCHT
- * ----------------------------------------------------------------------------
- * Jeder Selektor dieser Datei trägt seit E272 zusätzlich
- * `:not([data-schale="premium"])`, und `index.html` setzt
- * `<body data-schale="premium">` fest. Damit gilt hier nichts mehr.
- *
- * WARUM NICHT GLEICH LÖSCHEN. Solange die neue Schale entsteht, ist ein
- * Notausstieg mehr wert als eine aufgeräumte Datei: `data-schale` am body
- * entfernen, und die alte Fassung ist zurück — ohne Bauen, ohne Commit.
- * In Phase J fällt beides weg.
- *
- * WAS SIE GEKOSTET HAT, bevor sie abgehängt wurde. Drei Prüfpunkte in
- * test245 waren ihretwegen rot (L88): Seitenleiste 320 statt 240,
- * Kopfzeile 50 statt 54, Suche aus der Mitte gerückt. E258 hatte für
- * dieselbe Schale das Gegenteil geplant. Zwei Vorhaben nebeneinander, die
- * einander widersprechen — genau der Grund, warum E272 beide ablöst.
- *
- * Der ursprüngliche Kopf steht unverändert darunter.
- * ==========================================================================*/
-
-/* ============================================================================
- * einfach.css — ruhige Redion-Schale: GoodNotes × OneNote × Notion
- * ----------------------------------------------------------------------------
- * Ziel: Redion soll nicht weniger können, sondern im Normalzustand deutlich
- * weniger gleichzeitig zeigen. Die vorhandenen Handlungen, Register und
- * Datenmodelle bleiben unangetastet. Dieses Stilblatt ordnet nur die Schale.
- *
- * Leitbild:
- *   - OneNote: links ein schmaler Bereichs-Rail + daneben der Seitenbaum.
- *   - Notion: ruhige Kopfzeile, Suche/KI oben, Inhalt im Mittelpunkt.
- *   - GoodNotes: Dokumente wirken wie eine echte Arbeitsfläche; Zeichnen und
- *     Einfügen erscheinen als kontextbezogenes Werkzeugband.
- *
- * Die neue Schale gilt nur, solange die bestehende „ruhige Fassung" aktiv
- * ist. Einstellungen → Aussehen kann weiterhin auf die alte volle Fassung
- * wechseln (`data-ruhig="aus"`). Es wird kein Knopf aus dem DOM entfernt.
- * ==========================================================================*/
-
-/* --------------------------------------------------------------------------
-   GEMEINSAME OBERFLÄCHENWERTE
-   -------------------------------------------------------------------------- */
-body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]){
-  --einfach-rail:72px;
-  --einfach-baum:248px;
-  --einfach-seite:920px;
-  --einfach-kopf:50px;
-}
-
-body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) button,
-body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) [role="button"]{
-  -webkit-tap-highlight-color:transparent;
-}
-
-body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) button:focus-visible,
-body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) [role="button"]:focus-visible{
-  outline:2px solid var(--accent);
-  outline-offset:2px;
-}
-
-/* --------------------------------------------------------------------------
-   DESKTOP: ONE-NOTE-ARTIGE ZWEISTUFIGE NAVIGATION
-   -------------------------------------------------------------------------- */
-@media(min-width:761px){
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]){
-    --side-w:calc(var(--einfach-rail) + var(--einfach-baum));
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #sidebar{
-    width:var(--side-w) !important;
-    flex:0 0 var(--side-w) !important;
-    display:grid !important;
-    grid-template-columns:var(--einfach-rail) minmax(0,var(--einfach-baum));
-    grid-template-rows:52px minmax(0,1fr) 48px;
-    overflow:hidden;
-    background:var(--bg-side);
-    border-right:1px solid var(--line);
-    box-shadow:1px 0 0 color-mix(in srgb,var(--line) 38%,transparent);
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #sidebar.collapsed{
-    margin-left:calc(-1 * var(--side-w));
-  }
-
-  /* Arbeitsbereich oben: eine ruhige Zeile statt weiterer Navigation. */
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .side-top{
-    grid-column:1 / -1;
-    grid-row:1;
-    min-width:0;
-    padding:8px 9px;
-    gap:5px;
-    border-bottom:1px solid var(--line-soft);
-    background:var(--bg-side);
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .ws-btn{
-    min-height:35px;
-    padding:5px 7px;
-    border-radius:9px;
-    font-size:13.5px;
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .ws-btn .ws-icon{
-    width:25px;
-    height:25px;
-    flex-basis:25px;
-    border-radius:7px;
-  }
-
-  /* Start/Chat/Besprechungen ist im neuen Normalzustand kein dritter
-     Navigationsstreifen. Die Ziele bleiben über Mehr/Werkzeuge erreichbar. */
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .side-reiter{
-    display:none !important;
-  }
-
-  /* Linker Rail: Hauptbereiche wie eine App-Leiste. Beim Öffnen von „Mehr"
-     erscheinen dort auch die übrigen vorhandenen Ziele — ohne zweite Liste. */
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .side-nav{
-    grid-column:1;
-    grid-row:2;
-    min-width:0;
-    padding:8px 7px 12px;
-    display:flex;
-    flex-direction:column;
-    gap:4px;
-    overflow-y:auto;
-    overflow-x:hidden;
-    border-right:1px solid var(--line-soft);
-    scrollbar-width:none;
-    background:color-mix(in srgb,var(--bg-side) 96%,var(--bg));
-  }
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .side-nav::-webkit-scrollbar{display:none}
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .side-nav .side-item{
-    width:100%;
-    min-height:55px;
-    padding:6px 3px;
-    gap:3px;
-    flex-direction:column;
-    justify-content:center;
-    align-items:center;
-    border-radius:11px;
-    text-align:center;
-    font-size:10.5px;
-    line-height:1.15;
-    color:var(--text-dim);
-    transition:background var(--motion-fast) var(--ease),
-               color var(--motion-fast) var(--ease),
-               transform var(--motion-fast) var(--ease);
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .side-nav .side-item > [data-sym]{
-    width:23px;
-    height:23px;
-    display:grid;
-    place-items:center;
-    color:currentColor;
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .side-nav .side-item > [data-sym] svg{
-    width:19px;
-    height:19px;
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .side-nav .side-item > span:nth-child(2){
-    width:100%;
-    overflow:hidden;
-    text-overflow:ellipsis;
-    white-space:nowrap;
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .side-nav .side-item .k{
-    display:none !important;
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .side-nav .side-item:hover{
-    transform:translateY(-1px);
-    background:var(--bg-hover);
-    color:var(--text);
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .side-nav .side-item.on,
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .side-nav .side-item[aria-current="page"]{
-    background:var(--accent-schwach);
-    color:var(--accent-text);
-    font-weight:650;
-  }
-
-  /* Der Seitenbaum wird zur OneNote-Spalte. */
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #tree{
-    grid-column:2;
-    grid-row:2;
-    min-width:0;
-    min-height:0;
-    padding:8px 9px 22px;
-    overflow-y:auto;
-    background:var(--bg-side);
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #tree::before{
-    content:"Notizbücher & Seiten";
-    display:block;
-    position:sticky;
-    top:-8px;
-    z-index:2;
-    margin:0 -1px 7px;
-    padding:11px 6px 8px;
-    background:var(--bg-side);
-    color:var(--text-dim);
-    font-size:11px;
-    line-height:1;
-    font-weight:750;
-    letter-spacing:.035em;
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #tree .side-section{
-    padding:12px 6px 5px;
-    font-size:11px;
-    letter-spacing:.015em;
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #tree .row{
-    min-height:34px;
-    margin:1px 0;
-    padding-right:4px;
-    border-radius:8px;
-    font-size:13.5px;
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #tree .row.on{
-    background:var(--accent-schwach);
-    color:var(--text);
-    font-weight:650;
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #tree .kids{
-    margin-left:11px;
-    padding-left:3px;
-    border-left:1px solid var(--line-soft);
-  }
-
-  /* Unten nur ein ruhiger Abschluss. Wenn „Mehr" geöffnet ist, bleiben die
-     vorhandenen Import-/Papierkorb-/Hilfe-Knöpfe nutzbar. */
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .side-fuss{
-    grid-column:1 / -1;
-    grid-row:3;
-    min-width:0;
-    padding:6px 8px;
-    display:flex;
-    align-items:center;
-    gap:4px;
-    border-top:1px solid var(--line-soft);
-    background:var(--bg-side);
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .side-fuss > .side-item{
-    width:auto;
-    min-height:34px;
-    padding:6px 8px;
-    font-size:11.5px;
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .side-fuss > .side-item .k,
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .side-hinweis{
-    display:none;
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .side-unten{
-    margin-left:auto;
-    display:flex;
-    align-items:center;
-    gap:5px;
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .side-schreib{
-    width:34px;
-    height:34px;
-    border-radius:10px;
-    background:var(--accent);
-    color:var(--auf-accent);
-    box-shadow:var(--shadow-1);
-  }
-
-  /* ------------------------------------------------------------------------
-     NOTION-ARTIGE KOPFZEILE
-     ------------------------------------------------------------------------ */
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #topbar{
-    height:var(--einfach-kopf);
-    flex:0 0 var(--einfach-kopf);
-    gap:3px;
-    padding:0 12px;
-    background:color-mix(in srgb,var(--bg) 96%,var(--bg-side));
-    border-bottom:1px solid var(--line-soft);
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #topbar .top-btn{
-    min-height:34px;
-    padding:5px 8px;
-    border-radius:9px;
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #topbar .top-btn.schmall,
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #topbar .top-btn.schmal{
-    width:34px;
-    padding:0;
-    justify-content:center;
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #topbar .crumb{
-    min-width:80px;
-    max-width:min(38vw,520px);
-    font-size:13px;
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #topbar .crumb a{
-    padding:4px 6px;
-    border-radius:7px;
-  }
-
-  /* Suche liegt im normalen Fluss: dadurch bleibt sie stabil, wenn die Krume
-     länger wird. Das wirkt wie Notion/OneNote statt wie eine schwebende Box. */
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #btn-suche-mitte{
-    position:static !important;
-    inset:auto !important;
-    transform:none !important;
-    margin-left:auto;
-    width:clamp(190px,27vw,380px);
-    min-width:150px;
-    height:34px;
-    padding:0 10px;
-    border:1px solid var(--line-soft);
-    border-radius:10px;
-    background:var(--bg-card);
-    color:var(--text-dim);
-    box-shadow:none;
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #btn-suche-mitte:hover{
-    background:var(--bg-hover);
-    border-color:var(--line);
-    color:var(--text);
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #btn-suche-mitte .sucher-text{
-    overflow:hidden;
-    text-overflow:ellipsis;
-    white-space:nowrap;
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #btn-suche-mitte kbd{
-    margin-left:auto;
-    opacity:.62;
-    font-size:10px;
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .sucher-platz,
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #topbar > .spacer{
-    display:none !important;
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #btn-ai{
-    min-width:45px;
-    justify-content:center;
-    color:var(--accent-text);
-  }
-
-  /* ------------------------------------------------------------------------
-     KONTAKTBEZOGENES MENÜBAND — eher Werkzeugschublade als zweite App
-     ------------------------------------------------------------------------ */
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #menueband{
-    background:var(--bg);
-    border-bottom:1px solid var(--line-soft);
-    box-shadow:none;
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .mb-reiter{
-    min-height:36px;
-    padding:0 10px;
-    gap:2px;
-    background:var(--bg);
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .mb-reiter-knopf{
-    min-height:32px;
-    padding:0 10px;
-    border-radius:8px;
-    font-size:12px;
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .mb-reiter-knopf[aria-selected="true"],
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .mb-reiter-knopf.on{
-    background:var(--accent-schwach);
-    color:var(--accent-text);
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .mb-band{
-    padding:8px 10px 9px;
-    max-height:190px;
-    overflow:auto;
-    background:color-mix(in srgb,var(--bg-card) 72%,var(--bg));
-    border-top:1px solid var(--line-soft);
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .mb-gruppe{
-    border-radius:10px;
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .mb-knopf{
-    border-radius:8px;
-  }
-
-  /* ------------------------------------------------------------------------
-     GOODNOTES-ARTIGE ARBEITSFLÄCHE FÜR ECHTE SEITEN
-     ------------------------------------------------------------------------ */
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #scroll{
-    background:color-mix(in srgb,var(--bg-side) 58%,var(--bg));
-    scroll-padding-top:18px;
-  }
-
-  /* Nur eine echte Seite bekommt das Papier. Startseiten/Bibliotheken bleiben
-     volle Ansichten. `:has(#title)` entspricht der bereits im Menüband
-     verwendeten Definition „echte Seite hat #title". */
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page:has(#title){
-    box-sizing:border-box;
-    width:min(calc(100% - 40px),var(--einfach-seite));
-    max-width:var(--einfach-seite);
-    min-height:calc(100vh - 128px);
-    margin:18px auto 72px;
-    padding:34px 70px 42vh;
-    background:var(--bg);
-    border:1px solid var(--line-soft);
-    border-radius:15px;
-    box-shadow:var(--shadow-1);
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page.wide:has(#title){
-    width:calc(100% - 32px);
-    max-width:none;
-    padding-left:54px;
-    padding-right:54px;
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page:has(#title) .cover{
-    height:172px;
-    margin:-34px -70px 0;
-    border-radius:14px 14px 0 0;
-    overflow:hidden;
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page.wide:has(#title) .cover{
-    margin-left:-54px;
-    margin-right:-54px;
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page:has(#title) .pg-icon{
-    margin-top:26px;
-    font-size:50px;
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page:has(#title) #title{
-    margin:8px 0 8px;
-    font-size:34px;
-    line-height:1.16;
-    letter-spacing:-.025em;
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page:has(#title) .pg-tools{
-    margin-bottom:18px;
-    gap:4px;
-    opacity:.58;
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page:has(#title):hover .pg-tools{
-    opacity:1;
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page:has(#title) .pg-tools button{
-    padding:4px 7px;
-    border-radius:7px;
-    font-size:12px;
-  }
-
-  /* Blöcke ruhiger und näher an Notion: Griffe existieren weiterhin, aber
-     die Seite selbst bleibt optisch dominant. */
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page:has(#title) .blk > .handles{
-    left:-42px;
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page:has(#title) .b-text .ct{
-    font-size:15.5px;
-    line-height:1.62;
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page:has(#title) .b-h1 .ct{
-    font-size:28px;
-  }
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page:has(#title) .b-h2 .ct{
-    font-size:22px;
-  }
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page:has(#title) .b-h3 .ct{
-    font-size:18px;
-  }
-
-  /* Zeichnen/PDF/Schaltplan wirken wie eingebettete Dokumente statt wie ein
-     weiterer App-Bereich. Die Klassen sind dieselben Block-Klassen, die der
-     Editor aus den Register-IDs bildet; unbekannte Varianten werden nicht
-     berührt. */
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page .b-blatt,
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page .b-whiteboard,
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page .b-schaltplan{
-    margin:14px 0;
-    border-radius:13px;
-    overflow:hidden;
-    box-shadow:var(--shadow-1);
-  }
-
-  /* Mehr Platz auf kleineren Laptops, ohne die Zwei-Spalten-Navigation zu
-     verlieren. */
-  @media(max-width:1120px){
-    body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]){
-      --einfach-rail:64px;
-      --einfach-baum:216px;
-      --einfach-seite:860px;
-    }
-    body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #btn-suche-mitte{
-      width:clamp(160px,22vw,280px);
-    }
-    body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page:has(#title){
-      padding-left:54px;
-      padding-right:54px;
-    }
-  }
-}
-
-/* --------------------------------------------------------------------------
-   TELEFON: GOODNOTES-ARTIGER INHALT + FÜNF DAUMENWEGE
-   -------------------------------------------------------------------------- */
-@media(max-width:760px){
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]){
-    --einfach-kopf:48px;
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #topbar{
-    height:var(--einfach-kopf);
-    flex-basis:var(--einfach-kopf);
-    padding:0 max(8px,env(safe-area-inset-left));
-    gap:2px;
-    background:var(--bg);
-    border-bottom:1px solid var(--line-soft);
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #topbar .top-btn{
-    min-width:40px;
-    min-height:40px;
-    border-radius:10px;
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #topbar .crumb{
-    font-size:13px;
-    font-weight:600;
-  }
-
-  /* Die vorhandenen fünf Hauptwege bleiben die einzige feste Navigation am
-     unteren Rand. Keine zweite schwebende Aktionsleiste. */
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #handy-oben{
-    background:color-mix(in srgb,var(--bg-side) 94%,var(--bg));
-    border-top:1px solid var(--line);
-    box-shadow:0 -8px 28px color-mix(in srgb,#000 15%,transparent);
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #handy-oben button{
-    min-height:48px;
-    border-radius:12px;
-  }
-
-  /* Auf dem Telefon ist eine Seite randlos wie in GoodNotes; der Browserrand
-     selbst ist bereits der Rahmen. */
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #scroll{
-    background:var(--bg);
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page:has(#title){
-    max-width:none;
-    margin:0;
-    padding:18px 18px calc(42vh + env(safe-area-inset-bottom));
-    background:var(--bg);
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page:has(#title) .cover{
-    height:132px;
-    margin:-18px -18px 0;
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page:has(#title) .pg-icon{
-    margin-top:20px;
-    font-size:42px;
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page:has(#title) #title{
-    margin:6px 0 7px;
-    font-size:29px;
-    line-height:1.15;
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page:has(#title) .pg-tools{
-    overflow-x:auto;
-    scrollbar-width:none;
-    opacity:1;
-    gap:3px;
-    margin:0 -4px 12px;
-    padding:0 4px 4px;
-  }
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page:has(#title) .pg-tools::-webkit-scrollbar{display:none}
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page:has(#title) .pg-tools button{
-    flex:0 0 auto;
-    min-height:36px;
-    padding:5px 9px;
-    border-radius:9px;
-  }
-
-  /* Das aufgeklappte Menüband bleibt das existierende Bottom-/Overlay-Menü,
-     bekommt aber die ruhige Flächenform der übrigen App. */
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .mb-band{
-    background:var(--bg-side);
-    border:1px solid var(--line);
-    border-left:0;
-    border-right:0;
-    box-shadow:0 12px 36px color-mix(in srgb,#000 24%,transparent);
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .mb-gruppe{
-    border:1px solid var(--line-soft);
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .menu,
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .finder{
-    border-radius:14px;
-  }
-}
-
-/* --------------------------------------------------------------------------
-   SEHR KLEINE TELEFONE
-   -------------------------------------------------------------------------- */
-@media(max-width:390px){
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page:has(#title){
-    padding-left:15px;
-    padding-right:15px;
-  }
-
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) #page:has(#title) #title{
-    font-size:27px;
-  }
-}
-
-/* --------------------------------------------------------------------------
-   BEWEGUNGSWUNSCH
-   -------------------------------------------------------------------------- */
-@media(prefers-reduced-motion:reduce){
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .side-nav .side-item{
-    transition:none;
-  }
-  body[data-ruhig]:not([data-ruhig="aus"]):not([data-schale="premium"]) .side-nav .side-item:hover{
-    transform:none;
-  }
-}
-
-
+/* HIER STAND `@import url("./einfach.css")` (E272 Phase J).
+
+   `einfach.css` kam mit PR #46 als „ruhige Schale" und hing an
+   `body[data-ruhig]`. Phase C hat jeden ihrer 93 Selektoren mechanisch mit
+   `:not([data-schale="premium"])` versehen, und `index.html` setzt
+   `data-schale="premium"` fest — seither war die ganze Datei wirkungslos,
+   in JEDER Breite. Sie ist mit dieser Phase gelöscht.
+
+   Was sie wollte, tut jetzt die Premium-Schale: weniger sichtbar, ruhiger
+   Grund, klare Reiterzeile. Was sie zusätzlich anfasste — die Dichte der
+   Kopfzeile über `data-ruhig` —, steht unverändert in `aufbau.css` und
+   gilt weiter am Telefon (test248). */
 
 /* ============================================================================
  * anatomie.css — die geteilten Anatomien (E258/E260)
@@ -13378,6 +12720,52 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   DER DOKUMENTMODUS (E272 Phase I)
+   ───────────────────────────────────────────────────────────────────────────
+   NUR FARBE UND MASS. Die Logik in `document-mode.ts`, `marken.ts` und
+   `seite.ts` bleibt unangetastet — seitentreue Marken sind das Empfindlichste,
+   was Redion hat (test201/266/267), und für einen dunkleren Rand rührt man
+   sie nicht an.
+
+   ZWEI DINGE ÄNDERN SICH, und beide sind gemessen:
+
+     · DER RAND WIRD DUNKLER. Ein weisses Blatt auf einem fast weissen
+       Grund ist kein Blatt, sondern ein Rechteck mit Rahmen. Der Grund um
+       das Papier bekommt deshalb die Schalenfarbe im Dunkelmodus und einen
+       spürbar dunkleren Ton im Hellmodus — genau der Unterschied, den E260
+       für das Papier selbst schon gezogen hat.
+
+     · DER KOPF WIRD KOMPAKTER. 48 Pixel Werkzeugleiste über einem Band von
+       36 (oder 108) und einer Kopfzeile — das sind drei Streifen, bevor die
+       Seite anfängt. 40 reichen; die Knöpfe bleiben bei 36 und damit über
+       der Fingergrenze für den Zeiger.
+
+   DIE KANTE BLEIBT SICHTBAR. Sie ist im Dokument nützlicher als sonst
+   irgendwo: Stift, Marker, Formelheft und OCR stehen darin (Phase F).
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 761px) {
+
+  body[data-schale="premium"] .document-center{
+    background: color-mix(in srgb, var(--text) 9%, var(--bg));
+  }
+  body[data-schale="premium"] .document-workspace{
+    border-radius: var(--radius-lg);
+    border-color: var(--line);
+  }
+  body[data-schale="premium"] .document-topbar{
+    min-height: 40px;
+    padding: 4px 8px;
+  }
+  /* Die gewählte Vorschauseite trägt Gold statt Violett — sie ist Schale,
+     nicht Inhalt. Der Rahmen bleibt als zweite Auskunft (§38). */
+  body[data-schale="premium"] .document-thumbnail.is-selected{
+    border-color: var(--gold-deep);
+    background: var(--gold-glass);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    DIE KONTEXTKANTE UND IHRE LADE (E272 Phase F)
    ───────────────────────────────────────────────────────────────────────────
    54 Pixel statt 240. Die Seitenleiste zeigte auf jeder Seite dieselben 32
@@ -13755,8 +13143,10 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
      Ein Skript, das es nach dem Laden anhängt, hiesse: die alte Schale wird
      erst gezeichnet und dann ersetzt — sichtbar als Zucken. Fest im Markup
      gilt es ab dem ersten Bild.
-     Wer die alte Fassung braucht, nimmt das Attribut hier heraus; dann
-     greift `einfach.css` wieder, die genau darauf wartet. -->
+     Es ist seit Phase J kein Schalter mehr: `einfach.css` — die Datei, die
+     auf sein Fehlen wartete — ist gelöscht. Das Attribut steht weiter da,
+     weil `premium.css` daran hängt und weil ein Selektor, der eine Fassung
+     benennt, besser liest als einer, der sie voraussetzt. -->
 <body data-schale="premium">
 
 <!-- Für die Tastatur: der kürzeste Weg an der Seitenleiste vorbei -->
@@ -121258,7 +120648,15 @@ const App = (() => {
         });
         /* „Seiten" statt „Chats" (E38): Redion ist keine Chat-App. Die KI bleibt
            unten in der Leiste erreichbar und im R-Blatt, aber der Platz oben
-           gehört dem, was man täglich sucht — den eigenen Seiten. */
+           gehört dem, was man täglich sucht — den eigenen Seiten.
+    
+           DIESER KNOPF STEHT HEUTE IN KEINEM MARKUP (gemessen: die Leiste oben
+           führt `hl-dok`, `hl-start`, `hl-lernen`, `hl-bespr`, `hl-mehr`).
+           `an()` auf eine fehlende Kennung tut nichts, die Zeile kostet also
+           nichts — und sie ist die einzige Stelle, an der steht, was der Knopf
+           TÄTE. E272 Phase J hätte sie ausgeräumt; sie bleibt stehen, bis
+           Redur sagt, dass der Weg wirklich weg soll (§47 gilt auch für
+           Absichten). */
         an('hl-seiten', () => {
             PWA.schubladeZu && PWA.schubladeZu();
             /* Erst den Reiter setzen, dann zeichnen: `handyLeiste`
@@ -121300,7 +120698,9 @@ const App = (() => {
          * -------------------------------------------------------------------- */
         /* Der R-Kreis stand links oben in der Reiterleiste. Seit E236 steht
            er rechts in der Menüleiste (`mb-konto`) und im Mehr-Blatt — die
-           ENTSCHEIDUNG, was er tut, steht aber weiter nur hier. */
+           ENTSCHEIDUNG, was er tut, steht aber weiter nur hier. Genau deshalb
+           bleibt die Zeile, obwohl `hl-konto` in keinem Markup mehr steht:
+           sie kostet nichts und ist die Erklärung (E272 Phase J). */
         an('hl-konto', () => arbeitsbereich());
         /* „Mehr" statt „Eingang" (E42 §6): Werkzeuge, Hilfe, Sicherung, Import,
            Papierkorb und Einstellungen brauchen einen Platz oben — ein

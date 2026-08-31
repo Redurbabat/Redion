@@ -20095,3 +20095,48 @@ vorgeführt: die Rückstellung des Baums abgeschaltet, und die Kante am
 Telefon stehen gelassen. Eine dritte (§11) war zuerst blind geworden, weil
 das Band ohne Seitenleiste 240 Pixel mehr hat — sie misst jetzt bei 820 px,
 wo die Breite wirklich beisst. sw v42, Einzeldatei 7406 KB.
+
+### Phase I — der Dokumentmodus, nur Farbe und Mass
+
+Kein einziger Eingriff in `document-mode.ts`, `marken.ts` oder `seite.ts`.
+Seitentreue Marken sind das Empfindlichste, was Redion hat (test201/266/267),
+und für einen dunkleren Rand rührt man sie nicht an.
+
+Drei Regeln in `premium.css`: der Grund um das Papier wird spürbar dunkler
+(ein weisses Blatt auf fast weissem Grund ist kein Blatt, sondern ein
+Rechteck mit Rahmen — dieselbe Überlegung wie E260 für das Papier selbst),
+die Werkzeugleiste des Dokuments schrumpft von 48 auf 40 Pixel, und die
+gewählte Vorschauseite trägt Gold statt Violett. Die Knöpfe bleiben bei 36.
+
+Die Kontextkante bleibt im Dokument stehen. Sie ist dort nützlicher als
+sonst irgendwo: Stift, Marker, Formelheft und OCR stehen darin (Phase F).
+
+### Phase J — was gelöscht wurde, und was ausdrücklich nicht
+
+GELÖSCHT: `quell/schale/stil/einfach.css` und ihr `@import` in
+`anatomie.css`. Die Datei kam mit PR #46, hing an `body[data-ruhig]` und
+bekam in Phase C mechanisch `:not([data-schale="premium"])` auf alle 93
+Selektoren. `index.html` setzt `data-schale="premium"` fest — die Datei war
+seither in JEDER Breite wirkungslos. Gemessen vor dem Löschen: 93 Regeln,
+alle 93 mit der Sperre. Was sie wollte, tut die Premium-Schale; was sie
+zusätzlich anfasste (die Dichte der Kopfzeile über `data-ruhig`), steht
+unverändert in `aufbau.css` und gilt weiter am Telefon.
+
+NICHT GELÖSCHT, obwohl der Plan es vorsah: die Verdrahtung von `hl-seiten`
+und `hl-konto` in `schale.ts`. Beide Kennungen stehen in keinem Markup mehr
+(gemessen: die Leiste oben führt `hl-dok`, `hl-start`, `hl-lernen`,
+`hl-bespr`, `hl-mehr`), `an()` auf eine fehlende Kennung tut nichts, und
+die zwei Zeilen sind die EINZIGE Stelle, an der steht, was die Knöpfe
+täten. Redurs stehende Regel ist „nichts löschen, vorher fragen"; hier
+kostet das Behalten nichts und das Löschen wäre der Verlust einer
+Begründung. Sie sind jetzt als unverdrahtet markiert und warten auf sein
+Wort. Dasselbe gilt für die CSS-Leiche `#handy-unten`.
+
+**Der Bogen E272 in Zahlen.** Sieben Phasen (A · B · C · D · E · G · F ·
+I · J), neun Commits, alle auf `main`. Neu: vier Dateien
+(`register/context.ts`, `schale/aufbau/backstage.ts`,
+`schale/aufbau/context-rail.ts`, `stil/premium.css`) und ein Prüflauf
+(test272, 126 Punkte). Gelöscht: eine (`einfach.css`). Die Schale hat statt
+einer 240-Pixel-Seitenleiste mit 32 immer gleichen Knöpfen jetzt acht
+Reiter mit einer 15er-Regel, eine Datei-Fläche mit neun Fächern und eine
+54-Pixel-Kante, die weiss, wo man ist.

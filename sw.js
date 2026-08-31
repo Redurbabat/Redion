@@ -34,7 +34,7 @@ const ich = self;
 /** Der Name der Ablage. Muss `KONSTANTEN.ABLAGE_NAME` gleichen — siehe
  *  die Erklärung bei `faelligeErinnerungen`. `test143` rechnet es nach. */
 const ABLAGE_NAME = 'notizen';
-const VERSION = 'notizen-v42';
+const VERSION = 'notizen-v43';
 const ABLAGE = VERSION;
 /* Was beim ersten Besuch gleich mitgenommen wird. */
 const GRUNDSTOCK = [
@@ -219,7 +219,6 @@ const GRUNDSTOCK = [
        Schale, sobald jemand offline ist: die Datei stand im Ordner, sie war
        verlinkt, und trotzdem kam sie nicht an. Gefunden beim Zusammenführen
        von PR #46 (E271). */
-    './quell/schale/stil/einfach.css',
     './quell/schale/stil/premium.css',
     './quell/schale/stil/datenbanken.css',
     './quell/schale/stil/ki.css',
