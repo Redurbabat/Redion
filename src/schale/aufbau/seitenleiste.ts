@@ -317,6 +317,38 @@ const Seitenleiste = (() => {
    * setzen. Wird bei jedem Wechsel und nach jedem Zeichnen aufgerufen —
    * eine Leiste, die nicht zeigt, wo man ist, ist nur eine Knopfreihe.
    */
+  /* ==========================================================================
+   * WO MAN IST — ÜBER DAS EREIGNIS, NICHT ÜBER `App` (E274)
+   * --------------------------------------------------------------------------
+   * `test87 §3` führt diese Datei namentlich: die Zeichner rufen `App` nicht,
+   * sie bekommen ihre Griffe über `binde({…})`. Für den Schauplatz braucht es
+   * aber gar keinen Griff — die Schale ruft ihn seit E272 Phase E aus:
+   * `redion:schauplatz` trägt den Bezeichner im `detail`. Genau so hört auch
+   * die Kontextkante zu.
+   * ========================================================================*/
+  let schauplatzJetzt = 'leer';
+  try {
+    addEventListener('redion:schauplatz', (e: any) => {
+      schauplatzJetzt = String(e?.detail || 'leer');
+      handyLeiste();
+    });
+  } catch { /* ohne Ereignisse bleibt der Rest */ }
+
+  /* Schauplatz → Knopf unten. Was hier fehlt, hat unten KEINEN Knopf. */
+  const ORT_ZU_KNOPF: Record<string, string> = {
+    heute: 'hl-start', lernen: 'hl-lernen',
+    bibliothek: 'hl-dok', notizhefte: 'hl-dok',
+    kalender: 'hl-bespr', mehr: 'hl-mehr'
+  };
+
+  /* Orte, die es WIRKLICH gibt und die unten trotzdem keinen Knopf haben.
+     Sie stehen ausdrücklich da, statt „alles andere" zu heissen: `seite`
+     und `leer` sind auch nicht in `ORT_ZU_KNOPF`, sollen aber weiter dem
+     Reiter folgen — wer ein Dokument öffnet, kam aus „Dokumente", und die
+     Pille soll dort stehenbleiben. */
+  const ORTE_OHNE_KNOPF = ['posteingang', 'kompass', 'workspace',
+                           'aufgaben', 'papierkorb', 'elektro'];
+
   const handyLeiste = () => {
     const l = document.getElementById('handy-oben');
     if (!l) return;
@@ -348,7 +380,19 @@ const Seitenleiste = (() => {
        Reiter, also leuchtete beim Öffnen die Start-Pille — man stand im
        Kompass, und oben stand „Start". Wer nirgends in der Reiterleiste
        ist, soll dort auch nirgends markiert sein. */
-    const id = karte[reiter];
+    /* DER SCHAUPLATZ STICHT DEN REITER (E274).
+       Gemessen war: „Mehr → Posteingang" liess unten „Heute" leuchten, und
+       der Kompass ebenso. Der Grund stand zwei Funktionen weiter unten —
+       `reiterWechseln('inbox')` setzt `reiter` danach auf `'start'` zurück,
+       und die Leiste las nur den Reiter.
+
+       Der Absatz darüber wollte schon damals das Richtige („wer nirgends in
+       der Reiterleiste ist, soll dort auch nirgends markiert sein"); es gab
+       nur nichts, woran man das hätte erkennen können. Seit E273 gibt es
+       das: `App.schauplatz()` sagt seit den sechs umgestellten Bildschirmen
+       auf JEDEM Bildschirm die Wahrheit. */
+    const id = ORT_ZU_KNOPF[schauplatzJetzt]
+      ?? (ORTE_OHNE_KNOPF.includes(schauplatzJetzt) ? undefined : karte[reiter]);
     const aktiv = id ? document.getElementById(id) : null;
     if (aktiv) { aktiv.classList.add('an'); aktiv.setAttribute('aria-selected', 'true'); }
     pilleSchieben(l, aktiv);

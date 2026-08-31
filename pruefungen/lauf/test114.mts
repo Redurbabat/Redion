@@ -1224,11 +1224,21 @@ p('… den bringt die Pille', !/^rgba\(0, 0, 0, 0\)$/.test(spur.pilleGrund), spu
    keinen Eintrag — der Punkt kann also weiter rot werden. Die Ankunft
    wird abgewartet statt abgepasst: der Zeitwert der Transition schreitet
    auch ohne Malen voran, `getBoundingClientRect` liest ihn jederzeit. */
+/* DER ECHTE HEBEL IST DER KNOPF, NICHT `reiterWechseln` (E274).
+   Hier stand `Seitenleiste.reiterWechseln('bespr')`. Das setzt den Reiter
+   der SEITENLEISTE — und die untere Leiste hing daran nur als Stellvertreter.
+   Seit E274 liest sie den Schauplatz, weil die Markierung stimmen muss,
+   egal wie man ankommt: das Regal geht auch vom Start, aus dem Mehr-Blatt
+   und über einen Verweis auf (der Absatz steht seit E240 über `an('hl-dok')`
+   in `schale.ts`, nur konnte ihn niemand einlösen).
+
+   Der Punkt misst dasselbe wie vorher — die Pille fliegt und kommt an —,
+   nur wird sie jetzt so ausgelöst, wie ein Mensch es täte. */
 const flug = await spurSeite.evaluate(async () => {
   const pl = document.getElementById('ho-pille')!;
   const ort = () => Math.round(pl.getBoundingClientRect().left);
   const start = ort();
-  Seitenleiste.reiterWechseln('bespr');
+  document.getElementById('hl-bespr')!.click();
   /* Die Transition entsteht mit dem Stilwechsel — kurz darauf ist sie
      als Animation sichtbar. Bis zu 600 ms darauf warten, dann aufgeben. */
   let unterwegs = false;
@@ -1248,10 +1258,16 @@ p('Beim Wechsel ist die Pille unterwegs zwischen den Reitern',
   `Transition ${flug.unterwegs ? 'lief' : 'lief NICHT'}, ${flug.start} → ${flug.ende} (Ziel ${flug.ziel})`);
 p('… und kommt genau an', flug.ende === flug.ziel, flug.ende + ' statt ' + flug.ziel);
 
-/* „Kompass" hat oben keinen Reiter (E42). Dann gehört die Pille nirgendwo
-   hin — und sie an den Anfang zu schieben wäre eine falsche Aussage. */
+/* Der Posteingang hat unten keinen Knopf (E42). Dann gehört die Pille
+   nirgendwo hin — und sie an den Anfang zu schieben wäre eine falsche
+   Aussage.
+
+   Auch hier der echte Weg: `reiterWechseln('inbox')` ist der Griff, den das
+   Mehr-Blatt ruft. Er öffnet den Posteingang UND setzt den Reiter danach
+   auf `'start'` zurück — genau deshalb leuchtete vor E274 unten „Heute",
+   während man im Posteingang stand. Der Schauplatz sagt es jetzt richtig. */
 const ohne = await spurSeite.evaluate(async () => {
-  Seitenleiste.reiterWechseln('kompass');
+  Seitenleiste.reiterWechseln('inbox');
   await new Promise(f => setTimeout(f, 500));
   const pl = document.getElementById('ho-pille')!;
   return {

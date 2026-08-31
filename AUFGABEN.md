@@ -1913,4 +1913,13 @@ node pruefungen/lauf/test105.mjs
   auf nichts melden könnte. Ein Zeichner für zwei Orte: `chatBaum(ziel)`
   aus `seitenleiste` herausgelöst. Drei Emoji weniger in der Zeile (E202).
   test34 +6 Punkte. sw v45.
+* E274: die untere Leiste am Telefon markierte „Heute", während man im
+  Posteingang stand — sie las den Reiter der Seitenleiste, und
+  `reiterWechseln('inbox')` setzt den danach auf 'start' zurück. Sie liest
+  jetzt `redion:schauplatz` (nicht `App.` — test87 §3). Drei Fälle: Ort mit
+  Knopf → markiert; Ort ohne Knopf → nichts; `seite`/`leer` → wie bisher der
+  Reiter. Möglich erst durch E273, vorher log der Schauplatz auf sechs
+  Bildschirmen. Drei Punkte in test114 zogen den falschen Hebel
+  (`reiterWechseln` statt Knopfdruck) und zeigen jetzt auf den echten.
+  L98 neu. sw v46.
 

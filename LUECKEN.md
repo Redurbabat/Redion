@@ -3501,3 +3501,22 @@ zuerst eine Antwort darauf, wie ähnlich zu ähnlich ist.
 
 Gefunden am 31. August 2026 (E273, auf dem Bild der Kalenderkante).
 
+--------------------------------------------------------------------------------
+L98 — Ein Kommentar an einem verschachtelten Block öffnet nichts (E273)
+--------------------------------------------------------------------------------
+
+`Kommentare.anMich()` liefert `{ block, k }`. Beide Stellen, die daraus eine
+anklickbare Zeile bauen — die Posteingang-Seite (`ansichten/dienst.ts:383`)
+und seit E273 die Kante —, rufen `App.oeffne(block.parentId)`.
+
+Für einen Block auf oberster Ebene ist `parentId` die Seite, und es stimmt.
+Für einen VERSCHACHTELTEN Block ist es der Elternblock, und `App.oeffne`
+bekommt eine Kennung, die keine Seite ist.
+
+Nicht gemessen, wie sich das anfühlt — deshalb steht es hier und nicht in
+ENTSCHEIDUNGEN. Der Weg wäre ein `Store.seiteVon(blockId)`, das nach oben
+läuft, bis es einen Block mit `type === 'page'` findet. Beide Stellen
+bekämen ihn dann; heute steht die Rechnung an keiner.
+
+Gefunden am 31. August 2026 (E273, beim Bauen der Posteingang-Kante).
+

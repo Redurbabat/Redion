@@ -20413,3 +20413,81 @@ den Bestand anfasst, legt ihn zurück.
 
 sw v45, Einzeldatei 7414 KB.
 
+
+================================================================================
+E274 — Die untere Leiste am Telefon sagt jetzt, wo man IST
+================================================================================
+31. August 2026
+
+Ein Nachtrag zu E273, und einer, der ohne E273 nicht möglich gewesen wäre.
+
+### Was gemessen wurde
+
+Am Telefon, 390 px, echter Weg — Knopf drücken, nicht Funktion rufen:
+
+    Weg                        Schauplatz     markiert unten
+    ─────────────────────────────────────────────────────────
+    „Heute" unten              heute          Heute        ✓
+    „Termine" unten            kalender       Termine      ✓
+    Mehr → Posteingang         posteingang    Heute        ✗
+    Kompass                    kompass        Heute        ✗
+    Seiten                     bibliothek     Heute        ✗
+
+Man stand im Posteingang, und unten leuchtete „Heute".
+
+### Warum
+
+`handyLeiste()` las den Reiter der SEITENLEISTE. Der ist nicht der Ort:
+`reiterWechseln('inbox')` öffnet den Posteingang und setzt `reiter` danach
+ausdrücklich auf `'start'` zurück (seitenleiste.ts:387). Die Leiste bekam
+also „start" gemeldet, während der Mensch im Posteingang stand.
+
+Die Datei wusste das schon. Über dem Knopf steht seit E240:
+
+    „weil das Regal auch vom Start, aus dem Mehr-Blatt und über einen
+     Verweis aufgeht und die Markierung jedes Mal stimmen muss"
+
+und zwei Absätze weiter unten:
+
+    „Wer nirgends in der Reiterleiste ist, soll dort auch nirgends
+     markiert sein."
+
+Beides war richtig gedacht und nicht einlösbar: es gab nichts, woran man
+„wo bin ich" hätte ablesen können. Der Reiter war ein Stellvertreter, und
+Stellvertreter sind irgendwann daneben.
+
+### Was sich geändert hat — und warum erst jetzt
+
+Seit E273 sagt `App.schauplatz()` auf JEDEM Bildschirm die Wahrheit; vorher
+log er auf sechsen. Die Leiste liest ihn deshalb jetzt, und zwar über das
+Ereignis `redion:schauplatz` statt über einen Griff: `test87 §3` führt
+`seitenleiste.js` namentlich als Zeichner, der `App` nicht rufen darf.
+Dieselbe Bauart nimmt die Kontextkante seit E272 Phase F.
+
+Drei Fälle, ausdrücklich getrennt:
+
+  · Der Ort hat unten einen Knopf → dieser Knopf wird markiert.
+  · Der Ort hat unten KEINEN Knopf (posteingang, kompass, workspace,
+    aufgaben, papierkorb, elektro) → es wird nichts markiert.
+  · Der Ort ist `seite` oder `leer` → wie bisher der Reiter. Wer ein
+    Dokument öffnet, kam aus „Dokumente", und die Pille bleibt dort. Das
+    ist der häufigste Zustand am Telefon; ihn mitzuändern wäre ein zweiter
+    Entschluss gewesen, und er stand nicht zur Debatte.
+
+### Und drei Punkte in test114, die den falschen Hebel zogen
+
+Sie riefen `Seitenleiste.reiterWechseln('bespr')` bzw. `('kompass')` und
+massen die Pille. Das ist der Reiter der Seitenleiste — ein Hebel, der die
+untere Leiste nie gesteuert hat, ausser als Stellvertreter. Die Knöpfe
+unten rufen `Bibliothek.oeffne()`, `Produktwelten.lernen('heute')` und
+`Produktwelten.planung()`; `reiterWechseln` kommt in keinem von ihnen vor.
+
+Die Punkte messen jetzt dasselbe — die Pille fliegt, kommt an, und steht
+nirgends, wo kein Knopf zuständig ist —, nur ausgelöst über den Weg, den
+ein Mensch nimmt. Das ist keine angepasste Prüfung, sondern eine, die
+endlich auf den richtigen Hebel zeigt.
+
+**Geprüft:** test114 153 (vorher 150 + 3 rote) · test37 52 · test67 65 ·
+test240 100 · test247 106 · test248 45 · test272 148 · test87 152 ·
+test105 55. sw v46.
+
