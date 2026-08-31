@@ -839,7 +839,15 @@ const App = (() => {
   /* ========================================================================
    * SUCHE
    * ======================================================================*/
-  const suche = () => {
+  /**
+   * Die grosse Suche.
+   *
+   * @param vorgabe Ein Wort, mit dem sie schon gefüllt aufgeht — für den
+   *        Weg aus einer kleinen Suche heraus (E282: die Regal-Suche findet
+   *        nur Titel und führt hierher, statt Inhalte nachzubauen, E29).
+   *        Ohne Angabe geht sie leer auf, wie bisher.
+   */
+  const suche = (vorgabe?: string) => {
     /* DER PLATZHALTER IST AM TELEFON EIN ANDERER.
        Der lange nennt sechs Suchbefehle — am Rechner ist das die beste
        Stelle dafür, weil man sie sonst nie erfährt. Am Telefon passt ein
@@ -1219,8 +1227,16 @@ const App = (() => {
        Suchfeld ein leeres Fenster — und das ist der häufigste Zustand
        überhaupt: man öffnet die Suche und hat noch nichts eingegeben.
        Genau dort gehören die letzten Suchbegriffe hin. */
+    /* Die Vorgabe VOR dem Zeichnen setzen, sonst zeigte der erste Aufbau
+       den leeren Zustand („Zuletzt gesucht") und erst der nächste
+       Tastendruck die Treffer — man sähe eine Suche, die ihr eigenes Wort
+       nicht kennt. */
+    if (vorgabe) inp.value = String(vorgabe);
     zeichne();
     inp.focus();
+    /* Und den Anschlag ans Ende, nicht an den Anfang: wer aus dem Regal
+       kommt, will weitertippen und nicht vor sein eigenes Wort geraten. */
+    if (vorgabe) inp.setSelectionRange(inp.value.length, inp.value.length);
   };
 
   /**

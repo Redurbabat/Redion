@@ -115,7 +115,44 @@
 .nh-fach-icon{ font-size:34px }
 
 /* --- Die Listenform -------------------------------------------------------- */
-.nh-liste{ display:grid; gap:2px }
+/* DIE LISTE LÄUFT NICHT MEHR ÜBER DEN GANZEN SCHIRM (E282 / L78 Punkt 6).
+   Vorher: volle Breite. Auf einem breiten Bildschirm lagen Name links und
+   Stern samt ⋯ ganz rechts — dazwischen 900 px Nichts, und die Augen mussten
+   für jede Zeile hin und zurück. Das Gitter daneben hat diese Grenze längst
+   (es füllt in Spalten), nur die Liste nicht.
+
+   `ch` statt `px`: die Grenze soll an der SCHRIFT hängen, nicht an einer
+   Zahl. Wer die Schriftgrösse hochstellt, bekommt eine mitwachsende Zeile
+   statt einer, die plötzlich eng wirkt. 92ch sind rund 800 px in der
+   Grundschrift — breit genug für lange Heftnamen, schmal genug, dass der
+   Stern in Sichtweite des Namens bleibt.
+
+   Links ausgerichtet, nicht mittig: darüber steht die Kopfzeile links, und
+   eine Liste, die in der Mitte schwebt, sähe aus wie ein zweiter Inhalt. */
+.nh-liste{ display:grid; gap:2px; max-width:92ch }
+
+/* DIE BRÜCKE ZUR GROSSEN SUCHE (E282 / L77 Punkt 1).
+   Sie steht unter dem Ergebnis und soll wie ein ANGEBOT aussehen, nicht wie
+   ein Treffer — sonst zählte man sie mit. Deshalb leise, mit Abstand nach
+   oben und derselben Breitengrenze wie die Liste: ein Knopf, der über den
+   halben Bildschirm läuft, liest sich als Fehlermeldung.
+
+   44 px hoch, weil man ihn auch am Telefon trifft (§37). */
+.nh-weitersuchen{
+  /* `justify-content:flex-start` MUSS hier stehen. `.rb` zentriert seinen
+     Inhalt (grund.css:323) — beim Hinsehen begann der Satz deshalb weit
+     rechts, während die Liste darüber links anfing. Zwei linke Kanten, die
+     nicht übereinanderliegen, lesen sich wie zwei verschiedene Dinge.
+     `white-space:normal` aus demselben Grund: `.rb` verbietet den Umbruch,
+     und dieser Satz ist länger als ein Knopftext. */
+  display:flex; align-items:center; justify-content:flex-start; gap:9px;
+  margin-top:18px; max-width:92ch; min-height:44px;
+  padding:10px 14px; text-align:left;
+  white-space:normal; font-weight:400;
+  color:var(--text-dim); font-size:13.5px;
+}
+.nh-weitersuchen:hover{ color:var(--text) }
+.nh-weitersuchen [data-sym]{ flex:none; opacity:.75 }
 .nh-zeile{ position:relative; display:flex; align-items:center; gap:var(--space-2) }
 .nh-zeile .nh-stern{ position:static; flex:none; width:44px; height:44px }
 .nh-zeile .nh-mehr{ position:static; flex:none; width:32px; height:32px; opacity:1 }

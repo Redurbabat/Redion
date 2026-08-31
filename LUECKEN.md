@@ -2861,9 +2861,10 @@ L77 — Was das Notizhefte-Regal (E264) bewusst noch nicht kann
 
 Fünf hingenommene Grenzen der ersten Fassung, jede mit Grund:
 
-1. Die Regal-Suche findet nur TITEL. Die grosse Suche (Strg P) kennt
-   längst Inhalte und Handschrift-Erkanntes — das Regal soll sie nicht
-   nachbauen (E29), sondern höchstens dorthin führen.
+1. ✅ Die Regal-Suche findet nur TITEL — seit E282 führt sie aber
+   dorthin: unter dem Ergebnis steht eine Zeile, die das getippte Wort
+   in die grosse Suche mitnimmt (auch bei Treffern, nicht nur bei
+   null). Nachgebaut wird die grosse Suche weiterhin nicht (E29).
 2. Die Heft-Regel liest nur DIREKTE Kinder. Ein Blatt zwei Ebenen tief
    macht die Seite nicht zum Heft — dieselbe Lesart wie die
    Bibliotheks-Deckelart, und billig; wer tief verschachtelt, findet
@@ -2889,9 +2890,12 @@ L77 Punkt 4 (Deckelfarben) ist damit erledigt. Neu hingenommen:
 2. Das Regal zeigt EINE Fach-Ebene: ein Fach im Fach steht flach an
    der Wurzel (nichts geht verloren, aber die Schachtelung sieht man
    nur im Baum).
-3. Reiter und offenes Fach sind flüchtiger Modulzustand — nach einem
-   Neuladen beginnt das Regal an der Dokumente-Wurzel. Der Hash bleibt
-   `#notizhefte`; ein Fach-Hash bräuchte einen zweiten Start-Leseweg.
+3. ✅ Seit E282 überleben Reiter und offenes Fach das Neuladen
+   (`heft:reiter`, `heft:fach`, geschrieben beim Wechseln). Zwei
+   Wächter fangen den gelöschten Fall ab. Der Hash bleibt
+   `#notizhefte` — ein Fach-Hash bräuchte einen zweiten Start-Leseweg
+   und ist damit keine offene Lücke mehr, sondern eine bewusst nicht
+   gebaute Zusatzform (ein Fach lässt sich nicht verlinken).
 4. Ein Heft, das ANDERSWO verschlüsselt wurde (Seitenmenü, Palette),
    trägt kein `heftArt` und fehlt im Regal, bis es entsperrt wird —
    werkzeuge.ts soll die Heft-Regel nicht kennen (eine Regel-Maschine).
@@ -2899,8 +2903,9 @@ L77 Punkt 4 (Deckelfarben) ist damit erledigt. Neu hingenommen:
    Papierkorb liegt und es ohne `heftArt:'fach'` angelegt wurde (z.B.
    als gewöhnliche Seite entstand) — es lebt in Bibliothek und Baum
    weiter, nur die Fach-Karte verschwindet.
-6. Die Listenform läuft volle Breite — auf sehr breiten Bildschirmen
-   liegen Stern und ⋯ weit rechts vom Namen.
+6. ✅ Die Listenform lief volle Breite — seit E282 hört sie bei 92ch
+   auf (`ch`, damit die Grenze an der Schrift hängt und nicht an einer
+   Zahl), links ausgerichtet wie die Kopfzeile darüber.
 
 Gefunden am 30. August 2026 (beim Bau von E265).
 

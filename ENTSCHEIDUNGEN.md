@@ -21024,3 +21024,124 @@ ohne Prüfung dahinter.
 
 **Geprüft:** test275 neu (21 Punkte, ohne Browser — der Helfer rechnet nur) ·
 typecheck grün.
+
+================================================================================
+E282 — Das Regal merkt sich, wo man war (L77 Punkt 1, L78 Punkte 3 und 6)
+================================================================================
+31. August 2026
+
+Redurs elfter Punkt aus E277: „Regalzustand persistieren, Listenbreite
+verbessern, globale Inhaltssuche anbinden. Drag&Drop und tiefe
+Fachverschachtelung später separat."
+
+Drei Punkte aus zwei Lückenlisten, die dasselbe gemeinsam haben: sie waren
+beim BAUEN vertretbar und sind beim BENUTZEN ärgerlich.
+
+### 1 · Reiter und Fach überleben das Neuladen (L78 Punkt 3)
+
+Im Code stand als Begründung: „Reiter und offenes Fach sind Blickrichtungen,
+keine Orte." Der Satz klingt richtig und ist es nicht. Wer im Fach „Elektro"
+arbeitet, ein Heft öffnet, hineinschreibt und zurückgeht, steht wieder an
+der Wurzel — und muss sich durch dieselben zwei Klicks arbeiten, jedes Mal.
+Eine Blickrichtung, die man dreissig Mal am Tag neu einstellt, ist ein Ort.
+
+Gemerkt wird in `heft:reiter` und `heft:fach`, neben dem, was ohnehin schon
+dort liegt (`heft:zuletzt`, `heft:papier`, `heft:form`).
+
+**Geschrieben wird beim WECHSELN, nicht beim Zeichnen.** `renderShelf` läuft
+auch bei jeder Datenänderung; dort zu schreiben hiesse, bei jedem
+Tastendruck in einem offenen Heft eine Meta-Zeile zu setzen — eine
+Schreiblast für nichts, und eine, die sich erst bei jemandem mit tausend
+Blöcken zeigt.
+
+**Zwei Wächter, und beide sind nötig.** Ein gemerkter Zustand, den es nicht
+mehr gibt, ist keine Erinnerung, sondern eine Sackgasse:
+
+* Ein Reiter, der nicht in `REITER` steht (alte Meta-Zeile, Handbearbeitung,
+  irgendwann ein umbenannter Reiter), fällt auf `dokumente`.
+* Ein Fach, das im Papierkorb liegt ODER inzwischen kein Fach mehr ist,
+  fällt auf die Wurzel — und die Meta-Zeile wird dabei gelöscht, damit der
+  nächste Start nicht wieder danach sucht.
+
+Der zweite Fall ist kein erfundener: L78 Punkt 5 hält fest, dass eine Seite
+ihre Fach-Eigenschaft VERLIERT, wenn ihr letztes Heft in den Papierkorb
+wandert. Ohne den Wächter öffnete sich das Regal in eine Brotkrume mit
+leerem Inhalt und einem Zurück-Knopf als einzigem Weg.
+
+**Und eine dritte Regel, die erst beim Durchspielen auffiel:** ein Fach
+gehört zum Dokumente-Reiter. Steht der gemerkte Reiter auf Favoriten oder
+Papierkorb, zeigt die Kopfzeile gar keine Reiterzeile — dann läge der
+Reiter unsichtbar neben einem offenen Fach. Beim Öffnen gewinnt deshalb das
+Fach, und der Reiter wird auf `dokumente` mitgezogen.
+
+**Der Suchtext wird ABSICHTLICH nicht gemerkt.** Er ist eine Frage, keine
+Blickrichtung. Eine Frage von vorgestern beim Öffnen wiederzufinden, mit
+einem halb leeren Regal darunter, sieht aus wie ein Fehler und nicht wie
+eine Erinnerung.
+
+### 2 · Die Brücke zur grossen Suche (L77 Punkt 1)
+
+L77 sagt seit E264: die Regal-Suche findet nur TITEL, und das Regal soll die
+grosse Suche nicht nachbauen (E29), „sondern höchstens dorthin führen".
+
+Der zweite Halbsatz war nie gebaut. Wer „Ohmsches Gesetz" tippte und es in
+keinem Heftnamen stand, bekam „Kein Heft heisst ..." und musste selbst
+darauf kommen, dass es Strg+P gibt und dass die grosse Suche Texte kennt.
+
+Jetzt steht unter dem Ergebnis eine Zeile, die das Wort mitnimmt:
+`App.suche(searchText)` füllt die grosse Suche gefüllt auf, mit dem Anschlag
+am ENDE — wer aus dem Regal kommt, will weitertippen und nicht vor sein
+eigenes Wort geraten.
+
+**Sie steht bei JEDER Suche da, nicht nur bei null Treffern.** Wer drei
+Hefte findet, sucht vielleicht das vierte, in dem das Wort nur im Text
+vorkommt. Ein Angebot, das nur im Misserfolgsfall erscheint, findet man
+genau dann nicht, wenn man es bräuchte.
+
+`App.suche()` bekam dafür einen Vorgabewert. Die Vorgabe wird VOR `zeichne()`
+gesetzt: sonst zeigte der erste Aufbau den leeren Zustand („Zuletzt
+gesucht") und erst der nächste Tastendruck die Treffer — eine Suche, die ihr
+eigenes Wort nicht kennt.
+
+### 3 · Die Liste hört bei 92ch auf (L78 Punkt 6)
+
+Vorher lief die Listenform über den ganzen Schirm. Auf einem breiten
+Bildschirm lag der Name links, Stern und ⋯ ganz rechts, dazwischen 900 px
+Nichts — und die Augen mussten für jede Zeile hin und zurück. Das Gitter
+daneben hatte diese Grenze längst (es füllt in Spalten), nur die Liste
+nicht.
+
+`ch` statt `px`, damit die Grenze an der SCHRIFT hängt und nicht an einer
+Zahl: wer die Schriftgrösse hochstellt, bekommt eine mitwachsende Zeile
+statt einer, die plötzlich eng wirkt.
+
+### Was das BILD fand und die Prüfung nicht
+
+Beim ersten Durchgang fehlte in der Brücke das Suchzeichen — ein leerer
+Platzhalter mit Breite, direkt vor dem Satz.
+
+`Register.symbole.fuelle()` läuft am Ende von `render()`. Der Tipp-Weg im
+Regal ruft `render` aber absichtlich NICHT: er tauscht nur den
+Ergebnisblock, damit das Suchfeld Fokus und Anschlag behält. Die Brücke
+entstand also auf einem Weg, den der Zeichen-Füller nie sieht.
+
+Die Prüfung fragte „ist die Brücke da?" und bekam ja. Sie war da — mit
+einem Loch, wo das Zeichen sein sollte. Ein Bild zeigt so etwas in einer
+Sekunde (§55.1). Zwei Punkte in test276 prüfen es seitdem: das Zeichen ist
+gezeichnet, und der Satz beginnt links.
+
+**Und dieselbe Sorte Fund im selben Durchgang:** der Satz begann weit
+rechts. `.rb` ist `display:inline-flex; justify-content:center`
+(grund.css:323) — ein Knopf zentriert seinen Inhalt. Zwei linke Kanten, die
+nicht übereinanderliegen, lesen sich wie zwei verschiedene Dinge. Dazu
+`white-space:normal`, weil `.rb` den Umbruch verbietet und dieser Satz
+länger ist als ein Knopftext.
+
+### Was bewusst offen bleibt
+
+Redur hat es im selben Satz gesagt: Drag&Drop ins Fach (L78 Punkt 1) und
+tiefe Fachverschachtelung (L78 Punkt 2, L77 Punkt 2) sind eigene Bögen mit
+eigener Telefon-Fassung. Sie bleiben in LUECKEN.md stehen.
+
+**Geprüft:** test276 neu (22 Punkte) · typecheck grün · Einzeldatei neu
+gebaut · Bilder vom Regal am Rechner und am Telefon.

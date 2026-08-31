@@ -1982,3 +1982,19 @@ node pruefungen/lauf/test105.mjs
   Fassung: -1 ist Einzahl, `NaN` wird zum Strich statt zu „NaN Einträge",
   und eine Null-Sonderform, die ohne Angabe nicht einspringt. test275 neu
   (21, ohne Browser). Der 104-Stellen-Umbau bleibt bewusst offen (E277/§45).
+* E282 (E277 Teil 5 — L77 Punkt 1, L78 Punkte 3+6): Das Regal merkt sich
+  jetzt Reiter und offenes Fach (`heft:reiter`, `heft:fach`), geschrieben
+  beim Wechseln und nicht beim Zeichnen — sonst setzte jeder Tastendruck in
+  einem offenen Heft eine Meta-Zeile. Zwei Wächter: ein unbekannter Reiter
+  und ein gelöschtes oder nicht mehr fachartiges Fach fallen auf die Wurzel,
+  statt eine leere Brotkrume zu zeigen (L78 Punkt 5 macht den zweiten Fall
+  real). Der Suchtext wird bewusst NICHT gemerkt. Dazu die Brücke, die L77
+  seit E264 versprach: unter dem Ergebnis führt eine Zeile in die grosse
+  Suche und nimmt das Wort mit (`App.suche(vorgabe)`, Anschlag am Ende) —
+  bei JEDER Suche, nicht nur bei null Treffern. Und die Liste hört bei 92ch
+  auf statt volle Breite zu laufen. Zwei Funde nur durchs Hinsehen: das
+  Suchzeichen in der Brücke blieb leer, weil `Register.symbole.fuelle()` am
+  Ende von `render()` läuft und der Tipp-Weg `render` absichtlich meidet;
+  und der Satz begann mittig, weil `.rb` seinen Inhalt zentriert. test276
+  neu (22). Drag&Drop und tiefe Verschachtelung bleiben offen (Redurs
+  eigener Satz in E277).

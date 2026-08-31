@@ -47,16 +47,47 @@ const Notebook = (() => {
   const esc = (s: unknown): string => String(s ?? '').replace(/[&<>"]/g,
     c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' } as Record<string, string>)[c] ?? c);
 
-  /* Der Zustand des Regals ist bewusst FLÜCHTIG: die Sonderansicht wird
-     bei jedem `App.oeffne` weggeräumt (schale.js, zeigeSonder). Was
-     überleben muss, liegt in Meta: `heft:zuletzt`, `heft:papier` und die
-     Darstellungswahl `heft:form`. Reiter und offenes Fach sind
-     Blickrichtungen, keine Orte — nach einem Neuladen beginnt das Regal
-     vorn (dieselbe Entscheidung wie die Reiter der Bibliothek; die
-     Grenze steht in LUECKEN.md). */
+  /* DER ZUSTAND DES REGALS ÜBERLEBT DAS NEULADEN (E282 / L78 Punkt 3).
+     Hier stand: „Reiter und offenes Fach sind Blickrichtungen, keine Orte
+     — nach einem Neuladen beginnt das Regal vorn." Das war beim Bau von
+     E265 eine vertretbare Grenze und ist beim Benutzen eine ärgerliche:
+     wer in einem Fach arbeitet, ein Heft öffnet und zurückgeht, stand
+     wieder an der Wurzel. Redur hat es in E277 entschieden.
+
+     ZWEI WÄCHTER, und beide sind nötig. Ein gemerkter Reiter, den es
+     nicht gibt, und ein gemerktes Fach, das gelöscht wurde, sind KEIN
+     Zustand, sondern eine Sackgasse: das Regal öffnete sich in eine
+     Brotkrume ohne Inhalt und mit einem Zurück-Knopf als einzigem Weg.
+     Beide fallen deshalb auf die Wurzel zurück, statt zu zeigen, was
+     nicht mehr da ist.
+
+     Der Suchtext wird ABSICHTLICH nicht gemerkt. Er ist eine Frage, keine
+     Blickrichtung — und eine Frage von vorgestern beim Öffnen wieder
+     vorzufinden, mit einem halb leeren Regal darunter, sieht aus wie ein
+     Fehler. */
+  const REITER = ['dokumente', 'favoriten', 'papierkorb'] as const;
+  type Reiter = typeof REITER[number];
+
+  const gemerkterReiter = (): Reiter => {
+    const w = String(Store.getMeta('heft:reiter', '') || '');
+    return (REITER as readonly string[]).includes(w) ? (w as Reiter) : 'dokumente';
+  };
+
+  /** Das gemerkte Fach — aber nur, wenn es das noch gibt UND es noch ein
+   *  Fach ist. Ein Heft, das sein letztes Unterheft verloren hat, ist
+   *  keins mehr (siehe `istFach`); es als Fach zu öffnen zeigte eine
+   *  leere Mappe. */
+  const gemerktesFach = (): string | null => {
+    const id = String(Store.getMeta('heft:fach', '') || '');
+    if (!id) return null;
+    const p = Store.getBlock(id);
+    if (!p || p.alive === false || !istFach(p)) { Store.setMeta('heft:fach', ''); return null; }
+    return id;
+  };
+
   let searchText = '';
   let shelfRoot: HTMLElement | null = null;
-  let tab: 'dokumente' | 'favoriten' | 'papierkorb' = 'dokumente';
+  let tab: Reiter = 'dokumente';
   let fachId: string | null = null;
 
   /* ------------------------------------------------------------------ *
@@ -305,8 +336,15 @@ const Notebook = (() => {
     else oeffnen();
   };
 
-  const openFach = (id: string): void => { fachId = id; renderShelf(); };
-  const closeFach = (): void => { fachId = null; renderShelf(); };
+  /* Beim Wechseln MERKEN, nicht beim Zeichnen (E282). `renderShelf` läuft
+     auch bei jeder Datenänderung; dort zu schreiben hiesse, bei jedem
+     Tastendruck in einem Heft eine Meta-Zeile zu setzen. */
+  const openFach = (id: string): void => {
+    fachId = id; Store.setMeta('heft:fach', id); renderShelf();
+  };
+  const closeFach = (): void => {
+    fachId = null; Store.setMeta('heft:fach', ''); renderShelf();
+  };
 
   /* ------------------------------------------------------------------ *
    * Das Regal
@@ -498,6 +536,26 @@ const Notebook = (() => {
       : liste;
   };
 
+  /* DER WEG ZUR GROSSEN SUCHE (E282 / L77 Punkt 1).
+     Die Regal-Suche findet nur TITEL — das steht so in L77 und bleibt so:
+     die grosse Suche kennt längst Inhalte und Handschrift-Erkanntes, und
+     das Regal soll sie nicht nachbauen (E29), sondern dorthin führen.
+
+     Bisher führte sie nirgendwohin. Wer „Ohmsches Gesetz" tippte und es
+     im Titel keines Heftes stand, bekam „Kein Heft heisst ..." und musste
+     selbst darauf kommen, dass es Strg+P gibt.
+
+     Die Zeile steht bei JEDER Suche da, nicht nur bei null Treffern: auch
+     wer drei Hefte findet, sucht vielleicht das vierte, in dem das Wort
+     nur im Text vorkommt. Ein Angebot, das nur im Misserfolgsfall
+     erscheint, findet man genau dann nicht, wenn man es bräuchte. */
+  const weiterSuchenZeile = (): string =>
+    !searchText.trim() ? '' :
+    `<button class="rb leise nh-weitersuchen" data-weitersuchen>` +
+    `<span data-sym="search" aria-hidden="true"></span> ` +
+    `„${esc(searchText)}" im ganzen Bestand suchen — auch in Texten` +
+    `</button>`;
+
   const nichtsSatz = (): string =>
     `<p class="nh-nichts">Kein Heft heisst „${esc(searchText)}".</p>`;
 
@@ -563,7 +621,9 @@ const Notebook = (() => {
           ? listeHtml(lose, true) : gitterHtml(lose, true, true));
       }
     }
-    return `<div class="nh-regal">` + kopfHtml() + inhalt +
+    /* Die Brücke zur grossen Suche steht UNTER dem Ergebnis, nicht statt
+       seiner — auch dann, wenn Treffer da sind (siehe `weiterSuchenZeile`). */
+    return `<div class="nh-regal">` + kopfHtml() + inhalt + weiterSuchenZeile() +
       `<button class="nh-neu-fab" data-neu-menue aria-label="Neu">＋</button>` +
       `</div>`;
   };
@@ -786,8 +846,10 @@ const Notebook = (() => {
       }
       const reiter = ziel.closest<HTMLElement>('[data-reiter]');
       if (reiter) {
-        tab = (reiter.dataset['reiter'] as typeof tab) || 'dokumente';
+        tab = (reiter.dataset['reiter'] as Reiter) || 'dokumente';
         fachId = null;
+        Store.setMeta('heft:reiter', tab);
+        Store.setMeta('heft:fach', '');
         renderShelf();
         return;
       }
@@ -801,6 +863,12 @@ const Notebook = (() => {
       if (ziel.closest('[data-alle]')) {
         const bib = (globalThis as any).Bibliothek;
         if (bib && typeof bib.oeffne === 'function') bib.oeffne();
+        return;
+      }
+      if (ziel.closest('[data-weitersuchen]')) {
+        /* Nicht selbst suchen — hinführen. Die grosse Suche nimmt das Wort
+           mit, damit niemand es zweimal tippt. */
+        App.suche(searchText);
         return;
       }
       if (ziel.closest('[data-suche]')) {
@@ -825,6 +893,34 @@ const Notebook = (() => {
       probe.innerHTML = shelfHtml();
       const neu = probe.querySelector('.nh-gitter, .nh-liste, .nh-nichts');
       if (neu) alt.replaceWith(neu);
+      /* UND DIE BRÜCKE ZUR GROSSEN SUCHE MIT (E282). Dieser Weg tauscht
+         absichtlich nur den Ergebnisblock, damit das Feld Fokus und
+         Anschlag behält — die Brücke steht daneben und wäre sonst beim
+         Tippen nie zu sehen: sie erschiene erst beim nächsten vollen
+         Zeichnen, also praktisch nie. Genau die Sorte Griff, die es gibt
+         und die niemand findet. */
+      const brueckeAlt = wurzel.querySelector('.nh-weitersuchen');
+      const brueckeNeu = probe.querySelector('.nh-weitersuchen');
+      if (brueckeAlt && brueckeNeu) brueckeAlt.replaceWith(brueckeNeu);
+      else if (brueckeAlt) brueckeAlt.remove();
+      else if (brueckeNeu) {
+        /* Vor den FAB, damit sie unter dem Ergebnis steht und nicht
+           darunter weg. */
+        const fab = wurzel.querySelector('.nh-neu-fab');
+        if (fab) fab.before(brueckeNeu); else wurzel.querySelector('.nh-regal')?.append(brueckeNeu);
+      }
+      /* UND DIE ZEICHEN NACHZIEHEN. `Register.symbole.fuelle()` läuft am
+         Ende von `render()` — dieser Weg hier ruft `render` aber gerade
+         NICHT, das ist ja sein Sinn. Ohne diese Zeile blieb das Suchzeichen
+         in der Brücke ein leerer Platzhalter mit Breite.
+
+         Gefunden beim Hinsehen, nicht beim Messen (§55.1): der Prüflauf
+         fragte, ob die Brücke DA ist — sie war da, mit einer Lücke, wo das
+         Zeichen sein sollte. Ein Bild zeigt so etwas in einer Sekunde. */
+      if (typeof Register !== 'undefined') {
+        const frisch = wurzel.querySelector('.nh-weitersuchen');
+        if (frisch) Register.symbole?.fuelle?.(frisch);
+      }
     });
     wurzel.addEventListener('keydown', e => {
       if ((e as KeyboardEvent).key !== 'Escape') return;
@@ -854,10 +950,27 @@ const Notebook = (() => {
   };
 
   const oeffnen = (): void => {
-    /* Vorhersehbar beginnen: der Weg über die Navigation zeigt die
-       Dokumente-Wurzel, nicht den Reiter von vorhin. */
-    tab = 'dokumente';
-    fachId = null;
+    /* DA WEITERMACHEN, WO MAN AUFGEHÖRT HAT (E282 / L78 Punkt 3).
+       Hier stand „vorhersehbar beginnen: die Dokumente-Wurzel, nicht der
+       Reiter von vorhin". Beim Benutzen ist es andersherum: wer in einem
+       Fach arbeitet, ein Heft öffnet und zurückgeht, will das Fach
+       wiedersehen und nicht die Wurzel.
+
+       Die Wächter stehen in `gemerkterReiter`/`gemerktesFach` — ein
+       gelöschtes Fach oder ein unbekannter Reiter fallen dort auf die
+       Wurzel zurück, statt eine leere Brotkrume zu zeigen.
+
+       Der Suchtext wird bewusst zurückgesetzt: eine Frage von vorgestern
+       beim Öffnen wieder vorzufinden, mit halb leerem Regal darunter,
+       sieht aus wie ein Fehler. */
+    searchText = '';
+    tab = gemerkterReiter();
+    fachId = gemerktesFach();
+    /* Ein Fach gehört zum Dokumente-Reiter. Steht der gemerkte Reiter auf
+       Favoriten oder Papierkorb, zeigt die Kopfzeile gar keine Reiter
+       (siehe `kopfHtml`) — dann wäre die Brotkrume der einzige Weg
+       zurück, und der Reiter läge unsichtbar daneben. */
+    if (fachId && tab !== 'dokumente') { tab = 'dokumente'; Store.setMeta('heft:reiter', tab); }
     App.zeigeSonder('Notizhefte', render);
   };
 
