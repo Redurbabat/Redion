@@ -1292,7 +1292,7 @@ p('Gegenprobe: ein Weg mit leerem `tun` wird als wirkungslos erkannt',
   JSON.stringify(gegenWirkung) + ' — waere er „wirksam", misst §15 nichts');
 
 /* ==========================================================================
- * §16 — JEDER BILDSCHIRM SAGT, WO ER IST (E273)
+ * §16 · Jeder Bildschirm sagt, wo er ist (E273)
  * --------------------------------------------------------------------------
  * `App.schauplatz()` ist die einzige Frage, die die Kontextkante stellt.
  * Wer sie nicht beantwortet, bekommt keine leere Kante — er bekommt die des
@@ -1307,7 +1307,14 @@ p('Gegenprobe: ein Weg mit leerem `tun` wird als wirkungslos erkannt',
  * Dieser Punkt prueft es fuer JEDEN Weg: nach dem Klick muss der Schauplatz
  * der sein, der zu diesem Bildschirm gehoert — und nicht der von vorher.
  * ========================================================================*/
-console.log('\n§16 — Jeder Bildschirm sagt, wo er ist (E273)');
+/* DIE ÜBERSCHRIFT SCHREIBT SICH „16 · …", NICHT „§16 — …".
+   test225 prüft, dass jeder Verweis der Doku („test272 §16") auf einen
+   Abschnitt zeigt, den es gibt, und erkennt Abschnitte an drei
+   Schreibweisen — eine davon ist `\n<Nummer> · `. Der erste Wurf hier
+   stand mit Paragraphenzeichen und Gedankenstrich da; test225 fand ihn
+   nicht und wurde rot. Die Prüfung hatte recht: die Datei schreibt ihre
+   fünfzehn anderen Abschnitte genau so. */
+console.log('\n16 · Jeder Bildschirm sagt, wo er ist (E273)');
 
 const ORTE: Array<[string, string, string]> = [
   /* Aufruf, erwarteter Schauplatz, Name fuer die Ausgabe */
