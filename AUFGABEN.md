@@ -1939,3 +1939,11 @@ node pruefungen/lauf/test105.mjs
   Typfehler in test56.mts ging deshalb durch alle 235 Läufe auf main. Jetzt
   läuft `tsc --noEmit` über das ganze Projekt, mit Gegenprobe und einmal
   rot vorgeführt. sw v47.
+* E278 (E277 Teil 1 — L87, L68): `meldeLieferant()` prüft jetzt dieselben
+  Einträge wie `melde()`, dazu `nimmZurueckLieferant()`. Die Gegenprobe in
+  test272 §8 wurde davon rot, weil sie genau diesen ungeprüften Weg
+  benutzte — sie prüft jetzt den Prüfer und dass der Weg zu bleibt. Und
+  „•••" plus Stern standen auf jedem Bildschirm, obwohl beide ohne offene
+  Seite lautlos nichts tun; sie verschwinden. Dabei eine CSS-Falle:
+  `.top-btn{display:flex}` schlägt `[hidden]` — `k.hidden = true` bewirkte
+  nichts. test272 §17 neu, test86 +8. sw v47.

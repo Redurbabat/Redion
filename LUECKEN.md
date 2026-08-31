@@ -2572,7 +2572,7 @@ erheben will:
     Zahl + Leerzeichen + Grossbuchstabenwort, ohne `=== 1` in derselben Zeile
 
 
-L68 — Die Reiterzeile der Lernwelt hat im verschmolzenen Kopf 234 px
+L68 — Die Reiterzeile der Lernwelt hat im verschmolzenen Kopf 234 px — GESCHLOSSEN
 ================================================================================
 
 E235 lässt einen Bereich seine eigene oberste Zeile mit
@@ -3135,7 +3135,7 @@ Prüflauf, der jede in `schale.ts` verdrahtete Kennung gegen `index.html` hält,
 gibt es nicht.
 
 --------------------------------------------------------------------------------
-L87 — melde() prüft, meldeLieferant() nicht (E272, Phase A gefunden)
+L87 — melde() prüft, meldeLieferant() nicht (E272, Phase A gefunden) — GESCHLOSSEN
 --------------------------------------------------------------------------------
 
 `Register.menueband` hat zwei Wege, von aussen Einträge nachzureichen, und sie

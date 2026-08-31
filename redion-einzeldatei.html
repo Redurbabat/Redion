@@ -1106,6 +1106,13 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
   padding:5px 9px; border-radius:6px; font-size:13.5px; color:var(--text-dim);
   display:flex; align-items:center; gap:5px;
 }
+/* `display:flex` DARÜBER SCHLÄGT `[hidden]` (E277, L68).
+   Das Browser-Grundblatt gibt einem `[hidden]`-Element `display:none` —
+   aber jede eigene `display`-Regel gewinnt dagegen, weil sie später kommt
+   und genauer ist. Wer `k.hidden = true` setzt und nichts sieht, sucht
+   danach lange am JavaScript. Für `#menueband` und `.app-unter` steht
+   dieselbe Zeile schon anderswo; hier fehlte sie. */
+.top-btn[hidden]{display:none}
 .top-btn:hover{background:var(--bg-hover); color:var(--text)}
 .top-btn.on{color:var(--accent-text)}
 
@@ -20662,6 +20669,45 @@ Register.menueband = (() => {
         fremde.splice(i, 1);
         return true;
     };
+    /**
+     * Einen Lieferanten wieder abmelden (E277, L87).
+     *
+     * `melde` hatte seit jeher ein `nimmZurueck`, `meldeLieferant` nicht.
+     * Wer einen Lieferanten anmeldete, wurde ihn nicht mehr los — für eine
+     * Gegenprobe heisst das: ihr Fantasie-Eintrag steht bis zum Ende des
+     * Laufs im Band und taucht dann in einem ganz anderen Punkt als
+     * „Weg, der nichts tut" auf. Genau das ist bei `Register.module`
+     * passiert (E273), und dort war die Antwort dieselbe.
+     */
+    const nimmZurueckLieferant = (fn) => {
+        const i = lieferanten.indexOf(fn);
+        if (i < 0)
+            return false;
+        lieferanten.splice(i, 1);
+        return true;
+    };
+    /**
+     * Ist das ein brauchbarer Bandeintrag? (E277, L87)
+     *
+     * DIESE PRÜFUNG STAND NUR IN `melde`. Ein Lieferant durfte zurückgeben,
+     * was er wollte — ohne Kennung, ohne Reiter, ohne lebendes `tun` —, und
+     * `alle()` schob es ungesehen ins Band. Sichtbar wurde das erst als
+     * Knopf, der beim Klick wirft, oder als Zeichen ohne Namen.
+     *
+     * Beides an EINER Stelle zu prüfen ist nicht bloss ordentlicher: die
+     * Lieferanten sind die Quelle, die sich zur Laufzeit ändert. `melde`
+     * bekommt sein Objekt einmal und behält es; ein Lieferant baut bei jedem
+     * Zeichnen ein neues. Er ist also der Weg, auf dem ein kaputter Eintrag
+     * WIRKLICH hereinkommt — und war der ungeprüfte.
+     *
+     * `Register.kontext` macht es seit E272 Phase F genau so (context.ts:145).
+     */
+    const brauchbar = (e) => {
+        if (!e || typeof e !== 'object')
+            return false;
+        const x = e;
+        return !!x.id && !!x.reiter && !!x.name && typeof x.tun === 'function';
+    };
     /* ======================================================================== *
      * DIE ABFRAGE
      * ======================================================================== */
@@ -20694,11 +20740,23 @@ Register.menueband = (() => {
                merkte es. */
             elektroEintraege
         ];
-        for (const q of [...quellen, ...lieferanten]) {
+        /* DIE EIGENEN QUELLEN UNGEPRÜFT, DIE FREMDEN GEPRÜFT.
+           Die Liste oben steht in dieser Datei; wer sie kaputt macht, sieht es
+           beim Typprüfen. Ein Lieferant kommt von aussen und baut bei jedem
+           Zeichnen neu — dort wird gesiebt (L87). */
+        for (const q of quellen) {
             try {
                 aus.push(...(q() || []));
             }
             catch { /* dieser Teil fehlt, der Rest steht */ }
+        }
+        for (const l of lieferanten) {
+            try {
+                for (const e of (l() || []))
+                    if (brauchbar(e))
+                        aus.push(e);
+            }
+            catch { /* ein kaputter Lieferant nimmt die anderen nicht mit */ }
         }
         aus.push(...fremde);
         return aus.filter(e => {
@@ -20753,7 +20811,7 @@ Register.menueband = (() => {
     const eines = (id) => alle().find(e => e.id === id) || null;
     const anzahl = () => alle().length;
     return { REITER, reiter, alle, inReiter, eines, anzahl,
-        melde, meldeLieferant, nimmZurueck };
+        melde, meldeLieferant, nimmZurueck, nimmZurueckLieferant };
 })();
 
 </script>
@@ -115151,6 +115209,29 @@ const Kopfleiste = (() => {
            alle an der Kopfzeile, die es dann nicht gibt. */
         if (!c)
             return;
+        /* ZWEI KNÖPFE, DIE OHNE SEITE NICHTS TUN KÖNNEN (E277, L68).
+    
+           Gemessen auf fünf Bildschirmen: „•••" und der Stern standen auf
+           JEDEM — auch auf Notizhefte, Posteingang, Kompass und Start. Und
+           beide prüfen beim Klick, ob es überhaupt eine Seite gibt:
+           `an('btn-page-menu')` mit `if (p)` und `an('btn-fav')` mit
+           `if (!seiteId) return` (schale.ts:3415, :3425). Ohne Seite passiert
+           also nichts — lautlos, und das ist die heimtückischere Hälfte von
+           §47: ein Knopf, der „geht gerade nicht" sagt, ist ärgerlich; einer,
+           der schweigend nichts bewirkt, lässt den Menschen an sich zweifeln.
+    
+           Sie verschwinden jetzt, statt dazustehen. Der KI-Knopf daneben
+           bleibt: `kiPanel()` geht auf jedem Bildschirm.
+    
+           Das steht VOR den beiden Rücksprüngen darunter — die kehren bei
+           einem Sonderbildschirm und bei „keine Seite" sofort um, und genau
+           das sind die Fälle, um die es hier geht. */
+        const echteSeite = !sonder && !!seiteId && !!Store.getBlock(seiteId);
+        for (const id of ['btn-page-menu', 'btn-fav']) {
+            const k = document.getElementById(id);
+            if (k)
+                k.hidden = !echteSeite;
+        }
         if (sonder) {
             c.innerHTML = '<a>' + esc(sonder.titel) + '</a>';
             return;

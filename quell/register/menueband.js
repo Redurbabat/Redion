@@ -906,6 +906,45 @@ Register.menueband = (() => {
         fremde.splice(i, 1);
         return true;
     };
+    /**
+     * Einen Lieferanten wieder abmelden (E277, L87).
+     *
+     * `melde` hatte seit jeher ein `nimmZurueck`, `meldeLieferant` nicht.
+     * Wer einen Lieferanten anmeldete, wurde ihn nicht mehr los — für eine
+     * Gegenprobe heisst das: ihr Fantasie-Eintrag steht bis zum Ende des
+     * Laufs im Band und taucht dann in einem ganz anderen Punkt als
+     * „Weg, der nichts tut" auf. Genau das ist bei `Register.module`
+     * passiert (E273), und dort war die Antwort dieselbe.
+     */
+    const nimmZurueckLieferant = (fn) => {
+        const i = lieferanten.indexOf(fn);
+        if (i < 0)
+            return false;
+        lieferanten.splice(i, 1);
+        return true;
+    };
+    /**
+     * Ist das ein brauchbarer Bandeintrag? (E277, L87)
+     *
+     * DIESE PRÜFUNG STAND NUR IN `melde`. Ein Lieferant durfte zurückgeben,
+     * was er wollte — ohne Kennung, ohne Reiter, ohne lebendes `tun` —, und
+     * `alle()` schob es ungesehen ins Band. Sichtbar wurde das erst als
+     * Knopf, der beim Klick wirft, oder als Zeichen ohne Namen.
+     *
+     * Beides an EINER Stelle zu prüfen ist nicht bloss ordentlicher: die
+     * Lieferanten sind die Quelle, die sich zur Laufzeit ändert. `melde`
+     * bekommt sein Objekt einmal und behält es; ein Lieferant baut bei jedem
+     * Zeichnen ein neues. Er ist also der Weg, auf dem ein kaputter Eintrag
+     * WIRKLICH hereinkommt — und war der ungeprüfte.
+     *
+     * `Register.kontext` macht es seit E272 Phase F genau so (context.ts:145).
+     */
+    const brauchbar = (e) => {
+        if (!e || typeof e !== 'object')
+            return false;
+        const x = e;
+        return !!x.id && !!x.reiter && !!x.name && typeof x.tun === 'function';
+    };
     /* ======================================================================== *
      * DIE ABFRAGE
      * ======================================================================== */
@@ -938,11 +977,23 @@ Register.menueband = (() => {
                merkte es. */
             elektroEintraege
         ];
-        for (const q of [...quellen, ...lieferanten]) {
+        /* DIE EIGENEN QUELLEN UNGEPRÜFT, DIE FREMDEN GEPRÜFT.
+           Die Liste oben steht in dieser Datei; wer sie kaputt macht, sieht es
+           beim Typprüfen. Ein Lieferant kommt von aussen und baut bei jedem
+           Zeichnen neu — dort wird gesiebt (L87). */
+        for (const q of quellen) {
             try {
                 aus.push(...(q() || []));
             }
             catch { /* dieser Teil fehlt, der Rest steht */ }
+        }
+        for (const l of lieferanten) {
+            try {
+                for (const e of (l() || []))
+                    if (brauchbar(e))
+                        aus.push(e);
+            }
+            catch { /* ein kaputter Lieferant nimmt die anderen nicht mit */ }
         }
         aus.push(...fremde);
         return aus.filter(e => {
@@ -997,5 +1048,5 @@ Register.menueband = (() => {
     const eines = (id) => alle().find(e => e.id === id) || null;
     const anzahl = () => alle().length;
     return { REITER, reiter, alle, inReiter, eines, anzahl,
-        melde, meldeLieferant, nimmZurueck };
+        melde, meldeLieferant, nimmZurueck, nimmZurueckLieferant };
 })();

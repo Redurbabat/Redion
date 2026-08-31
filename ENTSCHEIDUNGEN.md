@@ -20592,3 +20592,160 @@ Ein Prüflauf, den man von Hand starten muss, ist kein Netz — er ist eine
 Absicht.
 
 **Geprüft:** test105 57 (zwei neu) · test272 148 · test225 11. sw v47.
+
+
+================================================================================
+E277 — Zwölf Entscheidungen, die Redur festgelegt hat
+================================================================================
+31. August 2026
+
+Nach dem geprüften Durchgang durch die offenen LUECKEN-Zeilen (E276) hat
+Redur die Produktfragen entschieden — alle auf einmal, damit hier nicht mehr
+gewartet wird. Sie stehen hier als BESCHLUSS, nicht als Vorschlag. Wer eine
+davon ändern will, ändert diesen Abschnitt.
+
+Vorab zwei Berichtigungen an meinem eigenen Bericht:
+
+  · **L63 und L64 sind gebaut.** Mein Prüfdurchgang meldete sie als „offen",
+    und das war irreführend: gemeint waren stehengebliebene ZAHLEN in der
+    Doku („die anderen acht Aktionen" — es sind neun; „elf Werkzeuge" — es
+    sind dreizehn), nicht fehlende Funktion. Die Funktion steht. Nicht neu
+    bauen; nur die Zahlen berichtigen.
+  · **L87 ist offen** und soll sofort gebaut werden.
+
+--------------------------------------------------------------------------------
+
+**L91 — Die Kante bleibt fest.**
+54 px, kein Ziehgriff am Rechner. Links stehen Werkzeuge und Zeichen, nicht
+die alte Seitenleiste. Die aufklappende Lade darf davon getrennt ihre rund
+250 px haben.
+
+**L69 — PPTX kommt, in dieser Reihenfolge.**
+Zuerst ein sauberes Folien-PDF, danach der echte `.pptx`-Export. KEIN
+PowerPoint-Editor. Vortragsmodus und ZIP-Schreiber gibt es bereits.
+
+**L85 — Nicht alle vier bauen.**
+  · Vollbild: bauen.
+  · Volle Breite: den Code, den es an zwei Stellen schon gibt, zu EINEM
+    gemeinsamen Griff zusammenziehen.
+  · Globaler Zoom: STREICHEN. PDF, Whiteboard und Zeichenfläche behalten
+    ihren eigenen, echten Zoom.
+  · Senden: STREICHEN. Bis es echten Mailversand gibt, heisst der Weg
+    „Weitergeben/Teilen". Kein vorgetäuschter Versand.
+
+**L76 — Import „Ersetzen" ersetzt Inhalte, nicht die Identität.**
+Der Cloud-Zugang des Geräts (Token, Konto) BLEIBT. Sync-Marken und `basis`
+werden danach zurückgesetzt, und der Zustand ist „neu abgleichen
+erforderlich". Der Mensch wählt dann ausdrücklich zwischen zwei sicheren
+Wegen: „Nur lokal verwenden" oder „Mit der Wolke vollständig neu
+abgleichen".
+
+NIEMALS von selbst eine Richtung bevorzugen — weder den alten lokalen
+Bestand hochladen noch den neueren Cloudbestand darüberziehen. Das ist die
+Datenschutzregel dieses Bogens (§46, Priorität 1).
+
+**L61 — Vorschaubilder, aber nur für visuelle Seiten.**
+PDF, A4/Ink, Whiteboard, Schaltplan, Bilder. Textlastige Seiten brauchen
+kein gerendertes Bild. Die Bilder sind ABGELEITETER CACHE: jederzeit neu
+erzeugbar, keine neue Datenwahrheit, faul erzeugt, klein gespeichert.
+
+**L67 — Kein 110-Stellen-Umbau.**
+`zahlWort()` wandert in einen gemeinsamen Kernhelfer. Neue und gerade
+angefasste Oberflächen benutzen ihn. Die wichtigsten sichtbaren Meldungen
+werden berichtigt, der Rest nach und nach. Niedrige Priorität.
+
+**L82 — Den Abgleich wirklich scharfschalten.**
+Cloudflare aktivieren und echt prüfen. Die Ordner-Sicherung darf am Rechner
+bleiben; auf iPhone/iPad tritt der Sync an ihre Stelle. Kein Hintergrund-
+dienst für einen geschlossenen Browser. Unverschlüsselte lesbare
+Ordnersicherungen bleiben erlaubt — MIT klarer Warnung. Anhangsänderungen
+müssen den Sicherungs-Abdruck auslösen, und grosse Sicherungen zeigen
+Fortschritt. Mehrere Serveradressen und einstellbare Aufbewahrung: später.
+
+**L83 — Man muss sehen, welchen Stand man ansieht.**
+`holen` übernimmt nur einen geprüften Stand oder warnt deutlich, wenn CI rot
+oder noch nicht fertig ist. Redion zeigt sichtbar an, woher der Stand kommt
+— lokal, Prüfserver oder Wolke — samt Commit/Build. Die Service-Worker-
+Version wird beim Bauen automatisch an den Stand gekoppelt, damit sie
+niemand mehr von Hand vergessen kann. Windows-Skripte reichen vorerst.
+
+**L86 — Die Leichen kommen raus.**
+`hl-seiten`, `hl-konto`, `weltwechsel` und das zugehörige tote CSS werden
+entfernt. Dazu ein Wächter, der JEDE fest verdrahtete DOM-Kennung gegen die
+echte Oberfläche hält — `?.addEventListener` versteckt solche Leichen sonst
+still.
+
+**L68 — Eine Kopfzeile, keine zweite.**
+Das `•••` verschwindet automatisch, wenn es wirklich kein Seitenmenü gibt.
+So gewinnt die Lernwelt Platz, ohne wieder Höhe zu verbrauchen.
+
+**L77/L78 — Kein GoodNotes-Nachbau in einem Zug.**
+Jetzt: Fach und Reiter über ein Neuladen merken, die Listenbreite auf
+grossen Monitoren begrenzen, und die Regalsuche bekommt einen Weg „In
+Inhalten suchen" in die grosse Suche. Ziehen-und-Ablegen in Fächer und
+beliebig tiefe Regalordner kommen später als eigener Bogen, mit Telefon.
+
+**L87 — Sofort bauen.**
+`meldeLieferant()` muss GENAU dieselben Einträge prüfen wie `melde()`, und
+es braucht `nimmZurueckLieferant()`. Kleine Architekturarbeit, die spätere
+tote Bandeinträge verhindert.
+
+--------------------------------------------------------------------------------
+
+Diese Punkte werden ohne weitere Rückfrage abgearbeitet. Eine Rückfrage gibt
+es nur noch, wenn dabei eine DATENMIGRATION oder eine SICHERHEITSFRAGE neu
+entsteht — dann gilt wieder §9 und §19.
+
+
+================================================================================
+E278 — Die ersten drei aus E277: L87, L68 und eine Gegenprobe, die rot wurde
+================================================================================
+31. August 2026
+
+### L87 — ein Lieferant wird geprüft wie eine Anmeldung
+
+`melde()` siebte seit jeher: ohne Kennung, ohne Reiter, ohne lebendes `tun`
+kommt nichts ins Band. `meldeLieferant()` tat es nicht.
+
+Das ist die gefährlichere Hälfte, und zwar aus einem Grund, der erst beim
+Hinsehen auffällt: `melde` bekommt sein Objekt EINMAL und behält es. Ein
+Lieferant baut bei JEDEM Zeichnen ein neues. Er ist also der Weg, auf dem
+ein kaputter Eintrag wirklich hereinkommt — und war der ungeprüfte.
+
+`alle()` siebt jetzt beides, mit derselben Bedingung. Und es gibt
+`nimmZurueckLieferant()`: wer einen Lieferanten anmeldete, wurde ihn nicht
+mehr los — für eine Gegenprobe heisst das, ihr Fantasie-Eintrag bleibt bis
+zum Ende des Laufs stehen und fällt einem ganz anderen Punkt zur Last.
+Dasselbe war bei `Register.module` schon einmal die Antwort (E273).
+
+**Und die Gegenprobe von test272 §8 wurde davon rot** — zu Recht. Sie schob
+ihren kaputten Eintrag ausdrücklich über `meldeLieferant()` ein, weil das
+der einzige ungeprüfte Weg war; ihr eigener Kommentar nannte das ihren
+Befund. Der Weg ist jetzt zu, also prüft sie den PRÜFER statt den Weg — und
+zusätzlich, dass der Weg zu BLEIBT.
+
+### L68 — zwei Knöpfe, die nichts tun konnten
+
+Gemessen auf fünf Bildschirmen: „•••" und der Stern standen auf jedem, auch
+auf Notizhefte, Posteingang, Kompass und Start. Beide prüfen beim Klick, ob
+es eine Seite gibt (`if (p)` bzw. `if (!seiteId) return`) — ohne Seite
+passiert nichts, lautlos.
+
+Redur hatte das `•••` entschieden; der Stern hat dieselbe Bauart und
+dasselbe Schweigen, also geht er mit. Der KI-Knopf daneben bleibt:
+`kiPanel()` geht überall.
+
+**Eine CSS-Falle dabei**, und sie ist die eigentliche Geschichte: `k.hidden
+= true` bewirkte NICHTS. Das Browser-Grundblatt gibt einem `[hidden]`-
+Element `display:none`, aber `.top-btn{display:flex}` gewinnt dagegen. Wer
+das nicht weiss, sucht danach lange im JavaScript. Für `#menueband` und
+`.app-unter` steht dieselbe Zeile längst irgendwo; bei `.top-btn` fehlte
+sie.
+
+test272 §17 misst es jetzt auf fünf Bildschirmen, mit einer Gegenprobe, die
+sicherstellt, dass die Messung einen sichtbaren Knopf überhaupt sieht —
+sonst wäre „überall verschwunden" auch dann grün, wenn sie immer `false`
+liefert.
+
+**Geprüft:** test272 153 (§17 neu) · test86 69 (acht neu) · test105 57 ·
+typecheck grün.
