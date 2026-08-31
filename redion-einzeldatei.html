@@ -4587,13 +4587,19 @@ body[data-produktwelt="workspace"]:not(:has(#sidebar .side-item[aria-current="pa
 .produkt-welt button{touch-action:manipulation}
 
 @media(max-width:760px){
-  .weltwechsel{display:none}
-  #handy-oben #hl-konto{order:0}
+  /* DIE REIHENFOLGE DER FÜNF WEGE UNTEN (E280 / L86).
+     Hier standen sechs Zeilen für sechs Knöpfe — zwei davon (`hl-konto`,
+     `hl-seiten`) gibt es seit E236 nicht mehr, und `.weltwechsel` seit
+     E206 nicht. Sie sind weg.
+     `hl-dok` stand nie hier und war trotzdem richtig — aber nur aus
+     Versehen: `order` ist ohne Angabe 0, und 0 kommt vor 1. Wer die Liste
+     später umsortiert, hätte einen Knopf, der sich nicht mitbewegt, weil
+     er gar nicht mitgezählt wird. Jetzt steht er mit drin. */
+  #handy-oben #hl-dok{order:0}
   #handy-oben #hl-start{order:1}
   #handy-oben #hl-lernen{order:2}
-  #handy-oben #hl-seiten{order:3}
-  #handy-oben #hl-bespr{order:4}
-  #handy-oben #hl-mehr{order:5}
+  #handy-oben #hl-bespr{order:3}
+  #handy-oben #hl-mehr{order:4}
   #page.produkt-welt,
   .produkt-welt{padding:10px 12px calc(112px + env(safe-area-inset-bottom))}
   .produkt-bereiche-dialog{width:100vw;max-height:82dvh;margin-top:auto;border-radius:18px 18px 0 0}
@@ -4602,7 +4608,6 @@ body[data-produktwelt="workspace"]:not(:has(#sidebar .side-item[aria-current="pa
 }
 
 @media(min-width:761px) and (max-width:1000px){
-  .weltwechsel button b{font-size:10.5px}
   #page.produkt-welt,
   .produkt-welt{padding-inline:18px}
 }
@@ -6834,6 +6839,13 @@ body[data-ruhig="an"] .lernwelt .lw-nav{ padding-right:264px }
    trägt Fläche UND Strich — nicht nur Farbe. */
 .nh-kopf-zeile2{ justify-content:space-between; flex-wrap:wrap }
 .nh-reiter, .nh-form{ display:flex; gap:2px }
+/* DIE DARSTELLUNGSWAHL BLEIBT RECHTS, AUCH ALLEIN (E283).
+   Seit sie auch im offenen Fach steht (dort ohne Reiterzeile daneben),
+   ist sie manchmal das EINZIGE Kind dieser Zeile — und
+   `space-between` schiebt ein einzelnes Kind nach links. Damit sässe
+   derselbe Umschalter im Fach links und an der Wurzel rechts, eine
+   Ansicht auseinander. `margin-left:auto` hält ihn beide Male rechts. */
+.nh-form{ margin-left:auto }
 .nh-reiter button, .nh-form button{
   min-height:44px; padding:0 var(--space-3); border-radius:var(--radius-md);
   background:transparent; color:var(--text-dim); font-size:13px; font-weight:600;
@@ -6922,7 +6934,44 @@ body[data-ruhig="an"] .lernwelt .lw-nav{ padding-right:264px }
 .nh-fach-icon{ font-size:34px }
 
 /* --- Die Listenform -------------------------------------------------------- */
-.nh-liste{ display:grid; gap:2px }
+/* DIE LISTE LÄUFT NICHT MEHR ÜBER DEN GANZEN SCHIRM (E282 / L78 Punkt 6).
+   Vorher: volle Breite. Auf einem breiten Bildschirm lagen Name links und
+   Stern samt ⋯ ganz rechts — dazwischen 900 px Nichts, und die Augen mussten
+   für jede Zeile hin und zurück. Das Gitter daneben hat diese Grenze längst
+   (es füllt in Spalten), nur die Liste nicht.
+
+   `ch` statt `px`: die Grenze soll an der SCHRIFT hängen, nicht an einer
+   Zahl. Wer die Schriftgrösse hochstellt, bekommt eine mitwachsende Zeile
+   statt einer, die plötzlich eng wirkt. 92ch sind rund 800 px in der
+   Grundschrift — breit genug für lange Heftnamen, schmal genug, dass der
+   Stern in Sichtweite des Namens bleibt.
+
+   Links ausgerichtet, nicht mittig: darüber steht die Kopfzeile links, und
+   eine Liste, die in der Mitte schwebt, sähe aus wie ein zweiter Inhalt. */
+.nh-liste{ display:grid; gap:2px; max-width:92ch }
+
+/* DIE BRÜCKE ZUR GROSSEN SUCHE (E282 / L77 Punkt 1).
+   Sie steht unter dem Ergebnis und soll wie ein ANGEBOT aussehen, nicht wie
+   ein Treffer — sonst zählte man sie mit. Deshalb leise, mit Abstand nach
+   oben und derselben Breitengrenze wie die Liste: ein Knopf, der über den
+   halben Bildschirm läuft, liest sich als Fehlermeldung.
+
+   44 px hoch, weil man ihn auch am Telefon trifft (§37). */
+.nh-weitersuchen{
+  /* `justify-content:flex-start` MUSS hier stehen. `.rb` zentriert seinen
+     Inhalt (grund.css:323) — beim Hinsehen begann der Satz deshalb weit
+     rechts, während die Liste darüber links anfing. Zwei linke Kanten, die
+     nicht übereinanderliegen, lesen sich wie zwei verschiedene Dinge.
+     `white-space:normal` aus demselben Grund: `.rb` verbietet den Umbruch,
+     und dieser Satz ist länger als ein Knopftext. */
+  display:flex; align-items:center; justify-content:flex-start; gap:9px;
+  margin-top:18px; max-width:92ch; min-height:44px;
+  padding:10px 14px; text-align:left;
+  white-space:normal; font-weight:400;
+  color:var(--text-dim); font-size:13.5px;
+}
+.nh-weitersuchen:hover{ color:var(--text) }
+.nh-weitersuchen [data-sym]{ flex:none; opacity:.75 }
 .nh-zeile{ position:relative; display:flex; align-items:center; gap:var(--space-2) }
 .nh-zeile .nh-stern{ position:static; flex:none; width:44px; height:44px }
 .nh-zeile .nh-mehr{ position:static; flex:none; width:32px; height:32px; opacity:1 }
@@ -8591,7 +8640,9 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
  * die KI fragen, etwas Neues schreiben. Sie schweben über dem Inhalt statt
  * in einer Leiste zu sitzen — der Bildschirm bleibt dadurch ganz.
  * ========================================================================== */
-#handy-oben, #handy-unten{ display:none }
+/* `#handy-unten` stand hier mit drin — die schwebende Leiste fiel mit
+   E236 weg, ihr Stil blieb bis E280 (L86). */
+#handy-oben{ display:none }
 
 @media(max-width:760px){
 
@@ -8878,51 +8929,14 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
   }
   #handy-oben button.an .hl-punkt{ border-color:var(--bg-hover) }
 
-  /* --- UNTEN: suchen · KI fragen · schreiben --------------------------- */
-  /* UNTEN: Suche, KI fragen, Neu — die drei Griffe, die immer da sind.
-     56 px hohe Tasten und 28 px Rand nach der Telefon-Vorgabe (E37). */
-  #handy-unten{
-    display:flex; align-items:center; gap:12px;
-    position:fixed; left:0; right:0; bottom:0; z-index:400;
-    padding:12px 28px calc(12px + env(safe-area-inset-bottom));
-    background:linear-gradient(to top, var(--bg) 58%, transparent);
-    pointer-events:none;
-  }
-  #handy-unten > *{ pointer-events:auto }
-
-  @media(max-width:380px){ #handy-unten{ padding-left:22px; padding-right:22px } }
-
-  #handy-unten button{
-    height:56px;
-    border-radius:999px;
-    border:1px solid var(--line);
-    background:var(--bg-side);
-    color:var(--text-dim);
-    display:flex; align-items:center; justify-content:center;
-    font-size:19px;
-    backdrop-filter:saturate(140%) blur(12px);
-  }
-  #handy-unten button:active{ background:var(--bg-hover) }
-  #handy-unten #hu-suche, #handy-unten #hu-neu{ width:56px; flex:0 0 56px }
-
-  /* Die Mitte ist die breiteste und die einzige mit Text — nach ihr greift
-     man am häufigsten. */
-  #handy-unten #hu-ki{
-    flex:1 1 auto; min-width:0;
-    justify-content:flex-start; gap:10px;
-    padding:0 14px 0 6px;
-  }
-  #handy-unten .hu-av{
-    width:38px; height:38px; border-radius:50%; flex:none;
-    background:var(--bg-hover);
-    display:flex; align-items:center; justify-content:center; font-size:17px;
-  }
-  #handy-unten #hu-ki b{
-    flex:1; text-align:left; font-size:16px; font-weight:400;
-    color:var(--text-faint);
-    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-  }
-  #handy-unten .hu-mik{ font-style:normal; font-size:17px; flex:none }
+  /* --- HIER STAND DIE SCHWEBENDE LEISTE — bis E280 (L86) --------------- */
+  /* `#handy-unten` mit `hu-suche`, `hu-ki` und `hu-neu`: drei Griffe, die
+     über dem Inhalt schwebten. Sie sind mit E236 weggefallen — zwei
+     Leisten am unteren Rand wären eine zu viel gewesen —, und `schale.ts`
+     hat damals auch ihre Bindungen ausgeräumt. Nur der Stil blieb: rund
+     vierzig Zeilen für ein Element, das in keinem Markup mehr steht.
+     Die drei Wege sind nicht weg: Suche und KI stehen rechts in der
+     Menüleiste (`mb-suche`, `mb-ki`), „Neu" im Regal und im Mehr-Blatt. */
 
   /* --- Platz für beide ------------------------------------------------- */
   /* Oben die Pillenleiste, unten die drei Knöpfe: der Inhalt dazwischen
@@ -9335,16 +9349,18 @@ table.pivot tbody tr:hover td{ background:var(--bg-hover); }
     margin-left:auto; position:sticky; right:0;
     background:var(--bg-side); box-shadow:-6px 0 6px var(--bg-side);
   }
-  /* Solange die Formatleiste da ist, tritt die Reiterleiste zurück.
-     Hier stand `#handy-leiste` — ein Element, das es nicht mehr gibt
-     (siehe den Kommentar bei der Schubladen-Höhe weiter unten). Die
-     echte untere Leiste heisst `#handy-unten`, und weil die Regel ins
-     Leere zielte, ragten ihre Knopfkreise hinter der Formatleiste
-     hervor. */
   /* Beim Schreiben tritt die Leiste am unteren Rand zurück — sonst läge
-     sie zwischen Text und Tastatur. Sie heisst seit E236 `#handy-oben`
-     (der Name stammt aus der Zeit, als sie oben stand); die alte
-     schwebende `#handy-unten` gibt es nicht mehr. */
+     sie zwischen Text und Tastatur. Sie heisst `#handy-oben`; der Name
+     stammt aus der Zeit, als sie wirklich oben stand.
+
+     Hier standen zwei Kommentare übereinander, und der erste war
+     überholt: er nannte `#handy-unten` die „echte untere Leiste". Die
+     gibt es seit E236 nicht mehr, und seit E280 auch ihren Stil nicht.
+     Davor stand hier `#handy-leiste` — ein Name, den es schon länger
+     nicht gab; die Regel zielte ins Leere, und die Knopfkreise ragten
+     hinter der Formatleiste hervor. Zweimal derselbe Fehler an
+     derselben Zeile: ein Kommentar, der einen Namen nennt, den es nicht
+     mehr gibt. */
   body.schreibt #handy-oben{ display:none; }
 
   /* Ziehen mit dem Finger (E83): langes Drücken hebt den Block — er wird
@@ -10695,7 +10711,6 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   .home-karten .hk,
   .home-liste button,
   #handy-oben button,
-  #handy-unten > *,
   #r-blatt .rm-gruppe button,
   .kp-wolke span{
     transition: transform var(--motion-fast) var(--ease-standard),
@@ -10707,7 +10722,6 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
     background: var(--bg-hover);
   }
   #handy-oben button:active,
-  #handy-unten > *:active,
   #r-blatt .rm-gruppe button:active{
     transform: scale(var(--press-scale));
   }
@@ -14744,6 +14758,91 @@ window.Throttle = Throttle;
 
 </script>
 <script>
+/* ===== quell/core/helpers/plural.js ===== */
+"use strict";
+/* ============================================================================
+ * core/helpers/plural.ts — eins ist eine andere Zahl als zwei
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/core/helpers/plural.ts`. `npm run bauen:ts` schreibt
+ * daraus `quell/core/helpers/plural.js`. Wer das .js bearbeitet, verliert die
+ * Änderung beim nächsten Bauen; `pruefungen/lauf/test105.mts` meldet es
+ * vorher.
+ * ----------------------------------------------------------------------------
+ * WARUM ES DIESE DATEI GIBT. In der Bibliothek stand unter jeder Seite mit
+ * genau einem Kind „1 Einträge" (E231). Ärgerlich daran war nicht der Fehler,
+ * sondern dass die Lösung 146 Zeilen tiefer in DERSELBEN Datei schon stand:
+ *
+ *     `${pdf.seiten} ${pdf.seiten === 1 ? 'Seite' : 'Seiten'}`
+ *
+ * Dreimal richtig, einmal vergessen. E231 hat daraus ein `zahlWort()` in
+ * `bereiche/wissen/arbeitswelt.ts` gemacht — und damit war es an EINER
+ * Stelle, aber in einem BEREICH. Nach §5 darf kein anderer Bereich es holen,
+ * also schrieben elf weitere Dateien die Verzweigung weiter von Hand oder
+ * gar nicht.
+ *
+ * Redur hat in E277 entschieden: der Helfer wandert hierher, und die
+ * verbleibenden Meldungen werden NICHT in einem ungeprüften Rutsch
+ * umgeschrieben (§45). Die Zahl steht in `LUECKEN.md` unter L67.
+ *
+ * ─── SPRACHE ────────────────────────────────────────────────────────────────
+ * Namen englisch, Erklärungen deutsch — `ENTSCHEIDUNGEN.md` E27, wie bei
+ * `Dates` und `Ids`. Die WÖRTER, die hineingereicht werden, sind natürlich
+ * deutsch: sie stehen auf dem Bildschirm.
+ *
+ * ─── WAS ER BEWUSST NICHT TUT ───────────────────────────────────────────────
+ * Er beugt nicht. „1 Eintrag" und „7 Einträge" bekommt er, weil beide Wörter
+ * hineingereicht werden — er RÄT sie nicht aus dem Singular. Deutsche
+ * Mehrzahlbildung ist unregelmässig (Eintrag/Einträge, Alias/Aliasse,
+ * Datum/Daten), und ein Helfer, der es meistens richtig rät, ist schlimmer
+ * als einer, der fragt: man merkt die Ausnahme erst auf dem Bildschirm.
+ * ==========================================================================*/
+const Plural = (() => {
+    /**
+     * „1 Eintrag" · „7 Einträge" · „0 Einträge"
+     *
+     * Die Zahl steht vorne, das Wort passt sich an. Genau ein Leerzeichen
+     * dazwischen.
+     *
+     * @param n        die Anzahl
+     * @param one      das Wort bei genau eins
+     * @param many     das Wort bei allem anderen
+     * @param zero     wenn angegeben, der GANZE Text bei null — für „Keine
+     *                 Einträge" statt „0 Einträge". Ohne Angabe gilt `many`
+     *                 mit der Null davor; das ist die bisherige Form und
+     *                 bleibt die Vorgabe, damit nichts sich still ändert.
+     *
+     * NULL IST MEHRZAHL, nicht Einzahl — „0 Einträge", nicht „0 Eintrag".
+     * Das ist im Deutschen so und im Englischen auch; nur wenige Sprachen
+     * machen es anders.
+     *
+     * MINUS EINS ZÄHLT ALS EINZAHL: „-1 Grad" und nicht „-1 Grade". Auch das
+     * ist die deutsche Form. Gemessen wird deshalb der BETRAG.
+     *
+     * NICHTGANZE ZAHLEN sind immer Mehrzahl — „1,5 Stunden", nie „1,5 Stunde".
+     * `1.0` ist ganz und zählt als eins.
+     */
+    const count = (n, one, many, zero) => {
+        /* Kaputte Zahlen nicht durchreichen. `NaN` als „NaN Einträge" auf dem
+           Bildschirm ist die Sorte Fehler, die aussieht wie ein Zufall, statt
+           wie ein Fehler — und dann nicht gemeldet wird. */
+        if (!Number.isFinite(n))
+            return `– ${many}`;
+        if (n === 0 && zero !== undefined)
+            return zero;
+        return `${n} ${Math.abs(n) === 1 ? one : many}`;
+    };
+    /**
+     * Nur das WORT, ohne Zahl davor — für Fälle, in denen die Zahl schon
+     * woanders steht (in einer grossen Kachel etwa, mit dem Wort darunter).
+     */
+    const word = (n, one, many) => Number.isFinite(n) && Math.abs(n) === 1 ? one : many;
+    return { count, word };
+})();
+window.Plural = Plural;
+
+</script>
+<script>
 /* ===== quell/kern/ereignisse/arten.js ===== */
 "use strict";
 /* ============================================================================
@@ -18582,7 +18681,15 @@ Register.symbole = (() => {
         chevronR: '<path d="m9.5 5.5 6.5 6.5-6.5 6.5"/>',
         chevronD: '<path d="m5.5 9.5 6.5 6.5 6.5-6.5"/>',
         panelL: '<rect x="3" y="4.5" width="18" height="15" rx="2.6"/><path d="M9.5 4.5v15"/>',
-        panelR: '<rect x="3" y="4.5" width="18" height="15" rx="2.6"/><path d="M14.5 4.5v15"/>'
+        panelR: '<rect x="3" y="4.5" width="18" height="15" rx="2.6"/><path d="M14.5 4.5v15"/>',
+        /* Vier Ecken statt eines Rahmens (E283). Ein Rechteck hiesse „Fenster"
+           und stünde neben `panelL`/`panelR`, die genau das sind. Die vier
+           ausgestellten Ecken sind das Zeichen, das jeder Videoabspieler seit
+           zwanzig Jahren für Vollbild benutzt — hier gelernt, nicht erklärt. */
+        maximize: '<path d="M9 3.5H5.5a2 2 0 0 0-2 2V9"/>' +
+            '<path d="M15 3.5h3.5a2 2 0 0 1 2 2V9"/>' +
+            '<path d="M15 20.5h3.5a2 2 0 0 0 2-2V15"/>' +
+            '<path d="M9 20.5H5.5a2 2 0 0 1-2-2V15"/>'
     };
     /* ------------------------------------------------------------------------
      * AUSGABE
@@ -20631,6 +20738,21 @@ Register.menueband = (() => {
         { reiter: 'ansicht', gruppe: 'Lesen', id: 'a-praes', name: 'Präsentation',
             zeichen: 'rocket', gross: true, hinweis: 'Die Seite als Folien zeigen',
             tun: () => Werkzeuge.praesentation(seiteJetzt()), zeigen: () => seiteDa(() => Werkzeuge.praesentation) },
+        /* VOLLBILD (E283 / L85 Punkt 1). Er steht neben „Fokus", weil beide
+           dasselbe Ziel haben und Gegenteiliges tun: Fokus räumt REDIONS
+           Oberfläche weg und lässt den Browser stehen, Vollbild räumt den
+           BROWSER weg und lässt Redion stehen. Nebeneinander sieht man das.
+    
+           `an` liest den Zustand FRISCH bei jedem Zeichnen — Escape verlässt das
+           Vollbild ohne uns, und ein gemerkter Wert stünde danach falsch.
+           `zeigen` fragt zusätzlich `vollbildGeht()`: auf dem iPhone gibt es
+           kein Element-Vollbild, und ein Knopf, der dort nichts tut, ist §47. */
+        { reiter: 'ansicht', gruppe: 'Lesen', id: 'a-vollbild', name: 'Vollbild',
+            zeichen: 'maximize', hinweis: 'Den ganzen Bildschirm nutzen — Esc beendet es',
+            an: () => kann(() => App.vollbildAn) && App.vollbildAn(),
+            tun: () => { App.vollbild(); },
+            zeigen: () => kann(() => App.vollbild) && kann(() => App.vollbildGeht) &&
+                App.vollbildGeht() },
         { reiter: 'ansicht', gruppe: 'Lesen', id: 'a-hell', name: 'Hell / Dunkel',
             zeichen: 'sun', hinweis: 'Zwischen hellem und dunklem Aussehen wechseln',
             tun: () => App.theme(), zeigen: () => kann(() => App.theme) },
@@ -108261,13 +108383,44 @@ window.Lernwelt = Lernwelt;
 const Notebook = (() => {
     /* Sicher escapen — mit `&quot;`, denn Heftnamen landen in Attributen. */
     const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] ?? c));
-    /* Der Zustand des Regals ist bewusst FLÜCHTIG: die Sonderansicht wird
-       bei jedem `App.oeffne` weggeräumt (schale.js, zeigeSonder). Was
-       überleben muss, liegt in Meta: `heft:zuletzt`, `heft:papier` und die
-       Darstellungswahl `heft:form`. Reiter und offenes Fach sind
-       Blickrichtungen, keine Orte — nach einem Neuladen beginnt das Regal
-       vorn (dieselbe Entscheidung wie die Reiter der Bibliothek; die
-       Grenze steht in LUECKEN.md). */
+    /* DER ZUSTAND DES REGALS ÜBERLEBT DAS NEULADEN (E282 / L78 Punkt 3).
+       Hier stand: „Reiter und offenes Fach sind Blickrichtungen, keine Orte
+       — nach einem Neuladen beginnt das Regal vorn." Das war beim Bau von
+       E265 eine vertretbare Grenze und ist beim Benutzen eine ärgerliche:
+       wer in einem Fach arbeitet, ein Heft öffnet und zurückgeht, stand
+       wieder an der Wurzel. Redur hat es in E277 entschieden.
+  
+       ZWEI WÄCHTER, und beide sind nötig. Ein gemerkter Reiter, den es
+       nicht gibt, und ein gemerktes Fach, das gelöscht wurde, sind KEIN
+       Zustand, sondern eine Sackgasse: das Regal öffnete sich in eine
+       Brotkrume ohne Inhalt und mit einem Zurück-Knopf als einzigem Weg.
+       Beide fallen deshalb auf die Wurzel zurück, statt zu zeigen, was
+       nicht mehr da ist.
+  
+       Der Suchtext wird ABSICHTLICH nicht gemerkt. Er ist eine Frage, keine
+       Blickrichtung — und eine Frage von vorgestern beim Öffnen wieder
+       vorzufinden, mit einem halb leeren Regal darunter, sieht aus wie ein
+       Fehler. */
+    const REITER = ['dokumente', 'favoriten', 'papierkorb'];
+    const gemerkterReiter = () => {
+        const w = String(Store.getMeta('heft:reiter', '') || '');
+        return REITER.includes(w) ? w : 'dokumente';
+    };
+    /** Das gemerkte Fach — aber nur, wenn es das noch gibt UND es noch ein
+     *  Fach ist. Ein Heft, das sein letztes Unterheft verloren hat, ist
+     *  keins mehr (siehe `istFach`); es als Fach zu öffnen zeigte eine
+     *  leere Mappe. */
+    const gemerktesFach = () => {
+        const id = String(Store.getMeta('heft:fach', '') || '');
+        if (!id)
+            return null;
+        const p = Store.getBlock(id);
+        if (!p || p.alive === false || !istFach(p)) {
+            Store.setMeta('heft:fach', '');
+            return null;
+        }
+        return id;
+    };
     let searchText = '';
     let shelfRoot = null;
     let tab = 'dokumente';
@@ -108506,8 +108659,19 @@ const Notebook = (() => {
         else
             oeffnen();
     };
-    const openFach = (id) => { fachId = id; renderShelf(); };
-    const closeFach = () => { fachId = null; renderShelf(); };
+    /* Beim Wechseln MERKEN, nicht beim Zeichnen (E282). `renderShelf` läuft
+       auch bei jeder Datenänderung; dort zu schreiben hiesse, bei jedem
+       Tastendruck in einem Heft eine Meta-Zeile zu setzen. */
+    const openFach = (id) => {
+        fachId = id;
+        Store.setMeta('heft:fach', id);
+        renderShelf();
+    };
+    const closeFach = () => {
+        fachId = null;
+        Store.setMeta('heft:fach', '');
+        renderShelf();
+    };
     /* ------------------------------------------------------------------ *
      * Das Regal
      * ------------------------------------------------------------------ */
@@ -108649,27 +108813,45 @@ const Notebook = (() => {
             `<button class="rb nh-neu-knopf" data-neu-menue>＋ Neu</button>` +
             `<button class="rb nh-alle" data-alle>Alle Dokumente</button>` +
             `</div>`;
-        /* Die Reiterzeile nur an der Wurzel — im offenen Fach führt die
-           Brotkrume zurück, und ein Reiterwechsel dort wäre zweideutig. */
+        /* Die REITERZEILE nur an der Wurzel — im offenen Fach führt die
+           Brotkrume zurück, und ein Reiterwechsel dort wäre zweideutig.
+    
+           DIE DARSTELLUNGSWAHL DAGEGEN STEHT ÜBERALL (E283, Nachlauf zu E282).
+           Vorher fiel sie mit der Reiterzeile zusammen weg, und das war
+           harmlos, solange ein offenes Fach flüchtig war: einmal zurück, und
+           der Umschalter war wieder da.
+    
+           Seit E282 überlebt das Fach das Neuladen — und damit war der
+           Umschalter genau dort unerreichbar, wo er noch WIRKT: der
+           Fach-Inhalt liest `form()` weiter (siehe `shelfHtml`). Wer im Fach
+           auf Liste stand, konnte nicht zurück auf Gitter, ohne das Fach zu
+           verlassen. Ein Zustand, den man einstellen kann und nicht mehr
+           ändern, ist §47 von der anderen Seite.
+    
+           Gefunden hat es test265 §4, das genau hier über den fehlenden
+           Umschalter stolperte — die Prüfung hielt das alte Verhalten fest
+           und wurde durch die Entscheidung rot. */
         const favN = notebookPages().filter(p => p.favorite).length;
         const korbN = toteHefte().length;
-        const zeile2 = fach ? '' :
-            `<div class="nh-kopf-zeile nh-kopf-zeile2">` +
-                `<div class="nh-reiter" role="group" aria-label="Bestand">` +
+        const reiterHtml = fach ? '' :
+            `<div class="nh-reiter" role="group" aria-label="Bestand">` +
                 `<button data-reiter="dokumente"${tab === 'dokumente' ? ' class="on"' : ''}>Dokumente</button>` +
                 `<button data-reiter="favoriten"${tab === 'favoriten' ? ' class="on"' : ''}>Favoriten` +
                 `${favN ? ' (' + favN + ')' : ''}</button>` +
                 `<button data-reiter="papierkorb"${tab === 'papierkorb' ? ' class="on"' : ''}>Papierkorb` +
                 `${korbN ? ' (' + korbN + ')' : ''}</button>` +
-                `</div>` +
-                (tab === 'papierkorb' ? '' :
-                    `<div class="nh-form" role="group" aria-label="Darstellung">` +
-                        `<button data-form="gitter" aria-pressed="${form() === 'gitter'}"` +
-                        `${form() === 'gitter' ? ' class="on"' : ''}>Gitter</button>` +
-                        `<button data-form="liste" aria-pressed="${form() === 'liste'}"` +
-                        `${form() === 'liste' ? ' class="on"' : ''}>Liste</button>` +
-                        `</div>`) +
                 `</div>`;
+        /* Im Papierkorb nicht: dort gibt es nur die Liste, und ein Umschalter
+           ohne zweite Stellung ist eine Attrappe. */
+        const formHtml = (!fach && tab === 'papierkorb') ? '' :
+            `<div class="nh-form" role="group" aria-label="Darstellung">` +
+                `<button data-form="gitter" aria-pressed="${form() === 'gitter'}"` +
+                `${form() === 'gitter' ? ' class="on"' : ''}>Gitter</button>` +
+                `<button data-form="liste" aria-pressed="${form() === 'liste'}"` +
+                `${form() === 'liste' ? ' class="on"' : ''}>Liste</button>` +
+                `</div>`;
+        const zeile2 = (!reiterHtml && !formHtml) ? '' :
+            `<div class="nh-kopf-zeile nh-kopf-zeile2">${reiterHtml}${formHtml}</div>`;
         return `<header class="nh-kopf" data-kopfzeile="eigene">${zeile1}${zeile2}</header>`;
     };
     /* ------------------------------------------------------------------ *
@@ -108681,6 +108863,24 @@ const Notebook = (() => {
             ? liste.filter(p => String(p.text || '').toLowerCase().includes(filter))
             : liste;
     };
+    /* DER WEG ZUR GROSSEN SUCHE (E282 / L77 Punkt 1).
+       Die Regal-Suche findet nur TITEL — das steht so in L77 und bleibt so:
+       die grosse Suche kennt längst Inhalte und Handschrift-Erkanntes, und
+       das Regal soll sie nicht nachbauen (E29), sondern dorthin führen.
+  
+       Bisher führte sie nirgendwohin. Wer „Ohmsches Gesetz" tippte und es
+       im Titel keines Heftes stand, bekam „Kein Heft heisst ..." und musste
+       selbst darauf kommen, dass es Strg+P gibt.
+  
+       Die Zeile steht bei JEDER Suche da, nicht nur bei null Treffern: auch
+       wer drei Hefte findet, sucht vielleicht das vierte, in dem das Wort
+       nur im Text vorkommt. Ein Angebot, das nur im Misserfolgsfall
+       erscheint, findet man genau dann nicht, wenn man es bräuchte. */
+    const weiterSuchenZeile = () => !searchText.trim() ? '' :
+        `<button class="rb leise nh-weitersuchen" data-weitersuchen>` +
+            `<span data-sym="search" aria-hidden="true"></span> ` +
+            `„${esc(searchText)}" im ganzen Bestand suchen — auch in Texten` +
+            `</button>`;
     const nichtsSatz = () => `<p class="nh-nichts">Kein Heft heisst „${esc(searchText)}".</p>`;
     const gitterHtml = (hefte, mitNeu, mitFaechern) => `<div class="bib-gitter nh-gitter">` +
         (mitNeu
@@ -108745,7 +108945,9 @@ const Notebook = (() => {
                     ? listeHtml(lose, true) : gitterHtml(lose, true, true));
             }
         }
-        return `<div class="nh-regal">` + kopfHtml() + inhalt +
+        /* Die Brücke zur grossen Suche steht UNTER dem Ergebnis, nicht statt
+           seiner — auch dann, wenn Treffer da sind (siehe `weiterSuchenZeile`). */
+        return `<div class="nh-regal">` + kopfHtml() + inhalt + weiterSuchenZeile() +
             `<button class="nh-neu-fab" data-neu-menue aria-label="Neu">＋</button>` +
             `</div>`;
     };
@@ -108993,6 +109195,8 @@ const Notebook = (() => {
             if (reiter) {
                 tab = reiter.dataset['reiter'] || 'dokumente';
                 fachId = null;
+                Store.setMeta('heft:reiter', tab);
+                Store.setMeta('heft:fach', '');
                 renderShelf();
                 return;
             }
@@ -109006,6 +109210,12 @@ const Notebook = (() => {
                 const bib = globalThis.Bibliothek;
                 if (bib && typeof bib.oeffne === 'function')
                     bib.oeffne();
+                return;
+            }
+            if (ziel.closest('[data-weitersuchen]')) {
+                /* Nicht selbst suchen — hinführen. Die grosse Suche nimmt das Wort
+                   mit, damit niemand es zweimal tippt. */
+                App.suche(searchText);
                 return;
             }
             if (ziel.closest('[data-suche]')) {
@@ -109037,6 +109247,40 @@ const Notebook = (() => {
             const neu = probe.querySelector('.nh-gitter, .nh-liste, .nh-nichts');
             if (neu)
                 alt.replaceWith(neu);
+            /* UND DIE BRÜCKE ZUR GROSSEN SUCHE MIT (E282). Dieser Weg tauscht
+               absichtlich nur den Ergebnisblock, damit das Feld Fokus und
+               Anschlag behält — die Brücke steht daneben und wäre sonst beim
+               Tippen nie zu sehen: sie erschiene erst beim nächsten vollen
+               Zeichnen, also praktisch nie. Genau die Sorte Griff, die es gibt
+               und die niemand findet. */
+            const brueckeAlt = wurzel.querySelector('.nh-weitersuchen');
+            const brueckeNeu = probe.querySelector('.nh-weitersuchen');
+            if (brueckeAlt && brueckeNeu)
+                brueckeAlt.replaceWith(brueckeNeu);
+            else if (brueckeAlt)
+                brueckeAlt.remove();
+            else if (brueckeNeu) {
+                /* Vor den FAB, damit sie unter dem Ergebnis steht und nicht
+                   darunter weg. */
+                const fab = wurzel.querySelector('.nh-neu-fab');
+                if (fab)
+                    fab.before(brueckeNeu);
+                else
+                    wurzel.querySelector('.nh-regal')?.append(brueckeNeu);
+            }
+            /* UND DIE ZEICHEN NACHZIEHEN. `Register.symbole.fuelle()` läuft am
+               Ende von `render()` — dieser Weg hier ruft `render` aber gerade
+               NICHT, das ist ja sein Sinn. Ohne diese Zeile blieb das Suchzeichen
+               in der Brücke ein leerer Platzhalter mit Breite.
+      
+               Gefunden beim Hinsehen, nicht beim Messen (§55.1): der Prüflauf
+               fragte, ob die Brücke DA ist — sie war da, mit einer Lücke, wo das
+               Zeichen sein sollte. Ein Bild zeigt so etwas in einer Sekunde. */
+            if (typeof Register !== 'undefined') {
+                const frisch = wurzel.querySelector('.nh-weitersuchen');
+                if (frisch)
+                    Register.symbole?.fuelle?.(frisch);
+            }
         });
         wurzel.addEventListener('keydown', e => {
             if (e.key !== 'Escape')
@@ -109068,10 +109312,30 @@ const Notebook = (() => {
             render(wrap);
     };
     const oeffnen = () => {
-        /* Vorhersehbar beginnen: der Weg über die Navigation zeigt die
-           Dokumente-Wurzel, nicht den Reiter von vorhin. */
-        tab = 'dokumente';
-        fachId = null;
+        /* DA WEITERMACHEN, WO MAN AUFGEHÖRT HAT (E282 / L78 Punkt 3).
+           Hier stand „vorhersehbar beginnen: die Dokumente-Wurzel, nicht der
+           Reiter von vorhin". Beim Benutzen ist es andersherum: wer in einem
+           Fach arbeitet, ein Heft öffnet und zurückgeht, will das Fach
+           wiedersehen und nicht die Wurzel.
+    
+           Die Wächter stehen in `gemerkterReiter`/`gemerktesFach` — ein
+           gelöschtes Fach oder ein unbekannter Reiter fallen dort auf die
+           Wurzel zurück, statt eine leere Brotkrume zu zeigen.
+    
+           Der Suchtext wird bewusst zurückgesetzt: eine Frage von vorgestern
+           beim Öffnen wieder vorzufinden, mit halb leerem Regal darunter,
+           sieht aus wie ein Fehler. */
+        searchText = '';
+        tab = gemerkterReiter();
+        fachId = gemerktesFach();
+        /* Ein Fach gehört zum Dokumente-Reiter. Steht der gemerkte Reiter auf
+           Favoriten oder Papierkorb, zeigt die Kopfzeile gar keine Reiter
+           (siehe `kopfHtml`) — dann wäre die Brotkrume der einzige Weg
+           zurück, und der Reiter läge unsichtbar daneben. */
+        if (fachId && tab !== 'dokumente') {
+            tab = 'dokumente';
+            Store.setMeta('heft:reiter', tab);
+        }
         App.zeigeSonder('Notizhefte', render);
     };
     return { oeffnen, open: oeffnen, resume, render };
@@ -110120,9 +110384,14 @@ const Arbeitswelt = (() => {
      *
      * Dreimal richtig, einmal vergessen — genau wie bei den Kacheln (E228).
      * Damit es nicht ein viertes Mal passiert, steht es jetzt an einer Stelle.
-     * ========================================================================*/
-    /** „1 Eintrag" / „7 Einträge" — die Zahl steht vorne, das Wort passt sich an. */
-    const zahlWort = (n, einzahl, mehrzahl) => `${n} ${n === 1 ? einzahl : mehrzahl}`;
+     *
+     * UND SEIT E281 (L67) NICHT MEHR HIER, sondern in `core/helpers/plural.ts`.
+     * An EINER Stelle zu stehen war richtig — aber die eine Stelle lag in einem
+     * BEREICH, und nach §5 darf kein anderer Bereich sie holen. Elf weitere
+     * Dateien schrieben die Verzweigung deshalb weiter von Hand oder gar nicht.
+     * Der Name hier bleibt, damit die acht Aufrufer unten unverändert lesen;
+     * er zeigt nur woandershin. */
+    const zahlWort = (n, einzahl, mehrzahl) => Plural.count(n, einzahl, mehrzahl);
     const seitenListe = (seiten, suche, leerText) => {
         const list = element('ul', 'aw-liste');
         const sichtbar = seiten.filter(page => passt(suche, page.titel, page.pfad, page.aliases.join(' ')))
@@ -111818,16 +112087,15 @@ const Produktwelten = (() => {
         if (gestartet)
             return;
         gestartet = true;
-        /* Der Produktwelt-Schalter ist der einzige Zuhörer hier. Die übrigen
-           Ziele bindet App.start(), damit jeder Knopf genau einen Besitzer hat. */
-        element('weltwechsel')?.addEventListener('click', ereignis => {
-            const ziel = ereignis.target instanceof Element
-                ? ereignis.target.closest('[data-welt]') : null;
-            if (ziel?.dataset.welt === 'workspace')
-                workspace();
-            else if (ziel?.dataset.welt === 'lernen')
-                lernen('heute');
-        });
+        /* HIER STAND DER ZUHÖRER AM `weltwechsel` — bis E280 (L86).
+           Den Umschalter gibt es seit E206 nicht mehr: `index.html` erklärt in
+           einem eigenen Absatz, warum er wegfiel („ein dritter Weg zu zwei
+           Orten, ganz oben, in der auffälligsten Zeile"). Der Zuhörer blieb
+           und hing an nichts — `element('weltwechsel')` gab seither `null`,
+           und `?.` schluckte es still.
+           `Produktwelten.markieren()` läuft weiter über `[data-welt]`; findet
+           es keins, geht `forEach` über eine leere Liste. Das war schon in
+           E206 die ganze Rechnung. */
     };
     return {
         start, aktiv, markieren, wechseln: weltSetzen, zurAktivenWelt,
@@ -115337,6 +115605,10 @@ const Kopfleiste = (() => {
     const kiPanel = braucht('kiPanel');
     const oeffne = braucht('oeffne');
     const aktuelleSeite = braucht('aktuelleSeite');
+    /* Seit E283 EIN Griff statt eines eigenen `updateBlock` hier (L85 Punkt 2).
+       `braucht` sorgt dafür, dass ein Vergessen beim Binden laut wird und nicht
+       still — genau darum steht er hier oben bei den anderen. */
+    const volleBreite = braucht('volleBreite');
     /* Die Sonderansicht ist ein Zustand der Schale, kein Aufruf — deshalb ein
        Leser statt einer Weiterreichung. */
     const sonderJetzt = () => (typeof gebunden['sonder'] === 'function' ? gebunden['sonder']() : null);
@@ -115568,8 +115840,7 @@ const Kopfleiste = (() => {
                 if (a === 'cover')
                     coverWaehlen(p);
                 if (a === 'wide') {
-                    Store.updateBlock(p.id, { wide: !p.wide });
-                    zeichneSeite();
+                    volleBreite(p);
                 }
                 if (a === 'document')
                     DocumentMode.toggle(p);
@@ -117001,6 +117272,19 @@ const Menueband = (() => {
             }
             catch { /* dann eben nicht */ }
         }
+        /* NEU ZEICHNEN, WENN DAS VOLLBILD KIPPT (E283 / L85 Punkt 1).
+    
+           Der Vollbild-Knopf zeigt seinen Zustand über `an()`, und `an()` wird
+           nur beim Zeichnen gelesen. Ohne diesen Horcher stimmte er genau so
+           lange, wie NIEMAND das Vollbild anders verlässt als über ihn — und
+           Escape ist der übliche Weg. Der Knopf stünde danach auf „AN" über
+           einem Fenster mit Adressleiste.
+    
+           `fullscreenchange` feuert bei BEIDEN Richtungen und auch dann, wenn
+           der Browser das Vollbild von sich aus beendet (Wechsel des Reiters,
+           ein Videoabspieler, der es an sich zieht). Genau deshalb hängt der
+           Horcher hier und nicht in `App.vollbild()`. */
+        document.addEventListener('fullscreenchange', () => zeichne());
         /* Nach dem Laden der Ablage noch einmal.
     
            GEMESSEN GREIFT DAS NICHT: `Menueband.start()` steht in `App.start()`
@@ -118805,9 +119089,16 @@ const App = (() => {
                 UI.toast('Alles liegt ohnehin auf diesem Gerät — auch ohne Netz.');
                 return;
             }
+            /* „Volle Breite" hat seit E283 einen eigenen Griff und steht deshalb
+               VOR dem Sammelzweig — der Schalter kippt trotzdem an Ort und Stelle,
+               nur die Schreibarbeit macht `volleBreite`. */
+            if (a === 'breit') {
+                b.querySelector('.mschalter')?.classList.toggle('an', volleBreite(p));
+                return;
+            }
             /* Schalter bleiben im Menü stehen und kippen an Ort und Stelle */
-            if (a === 'klein' || a === 'breit' || a === 'wz-gesperrt' || a === 'pfad') {
-                const feld = a === 'klein' ? 'small' : a === 'breit' ? 'wide'
+            if (a === 'klein' || a === 'wz-gesperrt' || a === 'pfad') {
+                const feld = a === 'klein' ? 'small'
                     : a === 'pfad' ? 'pfad' : 'gesperrt';
                 const neu = a === 'pfad' ? !(p.pfad !== false) : !p[feld];
                 Store.updateBlock(p.id, { [feld]: neu });
@@ -118909,8 +119200,7 @@ const App = (() => {
                 zeichneSeite();
             }
             if (a === 'breit') {
-                Store.updateBlock(p.id, { wide: !p.wide });
-                zeichneSeite();
+                volleBreite(p);
             }
             if (a === 'rename') {
                 const n = await UI.frage('Neuer Titel', p.text);
@@ -119175,7 +119465,15 @@ const App = (() => {
     /* ========================================================================
      * SUCHE
      * ======================================================================*/
-    const suche = () => {
+    /**
+     * Die grosse Suche.
+     *
+     * @param vorgabe Ein Wort, mit dem sie schon gefüllt aufgeht — für den
+     *        Weg aus einer kleinen Suche heraus (E282: die Regal-Suche findet
+     *        nur Titel und führt hierher, statt Inhalte nachzubauen, E29).
+     *        Ohne Angabe geht sie leer auf, wie bisher.
+     */
+    const suche = (vorgabe) => {
         /* DER PLATZHALTER IST AM TELEFON EIN ANDERER.
            Der lange nennt sechs Suchbefehle — am Rechner ist das die beste
            Stelle dafür, weil man sie sonst nie erfährt. Am Telefon passt ein
@@ -119585,8 +119883,18 @@ const App = (() => {
            Suchfeld ein leeres Fenster — und das ist der häufigste Zustand
            überhaupt: man öffnet die Suche und hat noch nichts eingegeben.
            Genau dort gehören die letzten Suchbegriffe hin. */
+        /* Die Vorgabe VOR dem Zeichnen setzen, sonst zeigte der erste Aufbau
+           den leeren Zustand („Zuletzt gesucht") und erst der nächste
+           Tastendruck die Treffer — man sähe eine Suche, die ihr eigenes Wort
+           nicht kennt. */
+        if (vorgabe)
+            inp.value = String(vorgabe);
         zeichne();
         inp.focus();
+        /* Und den Anschlag ans Ende, nicht an den Anfang: wer aus dem Regal
+           kommt, will weitertippen und nicht vor sein eigenes Wort geraten. */
+        if (vorgabe)
+            inp.setSelectionRange(inp.value.length, inp.value.length);
     };
     /**
      * Einen Suchtreffer öffnen.
@@ -120496,6 +120804,95 @@ const App = (() => {
         Store.setMeta('theme', neu);
     };
     /* ========================================================================
+     * VOLLBILD  (E283 / L85 Punkt 1)
+     * ------------------------------------------------------------------------
+     * Nicht zu verwechseln mit `Werkzeuge.fokus()`. Der Fokus-Modus blendet
+     * REDIONS eigene Oberfläche aus und lässt die Leisten des Browsers stehen;
+     * Vollbild macht das Gegenteil — Redion bleibt vollständig, der Browser
+     * verschwindet. Beide sind sinnvoll, und beide zusammen ergeben die
+     * ruhigste Ansicht, die Redion hat.
+     *
+     * DREI DINGE, DIE DIE NAIVE FASSUNG FALSCH MACHT:
+     *
+     * 1. Ein gemerktes `let vollbild = false` geht am ersten Escape kaputt.
+     *    Escape verlässt das Vollbild im BROWSER, ohne uns zu fragen — die
+     *    Erinnerung stünde danach für immer falsch, und der Knopf zeigte „AN"
+     *    über einem Fenster mit Adressleiste. Deshalb wird der Zustand nie
+     *    gemerkt, sondern jedes Mal frisch an `document.fullscreenElement`
+     *    abgelesen.
+     * 2. `requestFullscreen()` gibt es nicht überall. Auf dem iPhone kennt
+     *    Safari kein Element-Vollbild (nur `<video>`), und in einem
+     *    eingebetteten Rahmen ohne `allowfullscreen` ist es gesperrt. Ein
+     *    Knopf, der dort dasteht und nichts tut, ist §47 — `vollbildGeht()`
+     *    beantwortet die Frage, und das Menüband blendet ihn danach aus.
+     * 3. Der Aufruf kann auch dort ABGELEHNT werden, wo er möglich ist: ohne
+     *    frische Nutzerhandlung wirft er. Deshalb ein `catch` mit einem Satz,
+     *    der sagt was zu tun ist — und nicht eine Fehlermeldung in der Konsole,
+     *    die niemand sieht.
+     * ======================================================================*/
+    /** Kann dieses Gerät überhaupt Vollbild? */
+    const vollbildGeht = () => !!(document.fullscreenEnabled &&
+        typeof document.documentElement.requestFullscreen === 'function');
+    /** Ist gerade Vollbild? IMMER frisch gelesen — siehe Punkt 1 oben. */
+    const vollbildAn = () => !!document.fullscreenElement;
+    /**
+     * Vollbild an, aus oder umschalten.
+     * @param an `undefined` schaltet um, `true`/`false` setzt hart.
+     * @returns den Zustand NACH dem Versuch — nicht den gewünschten.
+     */
+    const vollbild = async (an) => {
+        if (!vollbildGeht()) {
+            UI.toast('Dieser Browser kann kein Vollbild.');
+            return false;
+        }
+        const ziel = an === undefined ? !vollbildAn() : !!an;
+        try {
+            if (ziel)
+                await document.documentElement.requestFullscreen();
+            else if (vollbildAn())
+                await document.exitFullscreen();
+        }
+        catch {
+            /* Nicht verschweigen: der Knopf sah aus, als hätte er gewirkt. */
+            UI.toast(ziel
+                ? 'Vollbild wurde abgelehnt — der Browser lässt es nur direkt nach einem Klick zu.'
+                : 'Das Vollbild liess sich nicht beenden — Escape hilft immer.');
+        }
+        return vollbildAn();
+    };
+    /* ========================================================================
+     * VOLLE BREITE  (E283 / L85 Punkt 2)
+     * ------------------------------------------------------------------------
+     * DERSELBE SCHALTER STAND AN DREI STELLEN, nicht an zwei: L85 nannte das
+     * Seitenmenü (`schale.ts`) und die Kopfleiste — der Schalter in der
+     * Schalterzeile desselben Menüs war übersehen. Alle drei schrieben
+     * `Store.updateBlock(p.id, { wide: !p.wide })` von Hand, jeder mit seinem
+     * eigenen Nachlauf.
+     *
+     * Das ist genau die Sorte Verdopplung, die still auseinanderläuft: wer
+     * morgen eine Regel ergänzt (etwa „am Telefon hat volle Breite keine
+     * Wirkung", E156), ergänzt sie an einer Stelle und wundert sich, warum
+     * der andere Weg sie nicht kennt.
+     * ======================================================================*/
+    /**
+     * Volle Breite für eine Seite umschalten.
+     * @param p   die Seite; ohne `id` passiert nichts (und es wird nichts
+     *            behauptet — der Rückgabewert sagt es).
+     * @param an  `undefined` schaltet um, `true`/`false` setzt hart.
+     * @returns den Zustand danach.
+     */
+    const volleBreite = (p, an) => {
+        if (!p || !p.id)
+            return false;
+        const neu = an === undefined ? !p.wide : !!an;
+        Store.updateBlock(p.id, { wide: neu });
+        /* Das übergebene Objekt MIT nachziehen: die Aufrufer zeichnen ihr Menü
+           aus derselben Kopie weiter und zeigten sonst den alten Stand. */
+        p.wide = neu;
+        zeichneSeite();
+        return neu;
+    };
+    /* ========================================================================
      * EXPORT
      * ======================================================================*/
     /** Die Seite als Markdown — für „Seiteninhalte kopieren" und den Export. */
@@ -121266,6 +121663,8 @@ const App = (() => {
             Ruhig.binde();
         Kopfleiste.binde({
             zeichneSeite, zeichneBaum, kiPanel, oeffne, aktuelleSeite,
+            /* Seit E283 EIN Griff für „volle Breite" statt dreier Handgriffe. */
+            volleBreite,
             /* Ein Leser, keine Weiterreichung: die Sonderansicht ist ein Zustand
                der Schale, und die Pfadleiste muss den jeweils aktuellen sehen. */
             sonder: () => sonder
@@ -121773,25 +122172,13 @@ const App = (() => {
             Produktwelten.lernen('lernen');
             handyLeiste();
         });
-        /* „Seiten" statt „Chats" (E38): Redion ist keine Chat-App. Die KI bleibt
-           unten in der Leiste erreichbar und im R-Blatt, aber der Platz oben
-           gehört dem, was man täglich sucht — den eigenen Seiten.
-    
-           DIESER KNOPF STEHT HEUTE IN KEINEM MARKUP (gemessen: die Leiste oben
-           führt `hl-dok`, `hl-start`, `hl-lernen`, `hl-bespr`, `hl-mehr`).
-           `an()` auf eine fehlende Kennung tut nichts, die Zeile kostet also
-           nichts — und sie ist die einzige Stelle, an der steht, was der Knopf
-           TÄTE. E272 Phase J hätte sie ausgeräumt; sie bleibt stehen, bis
-           Redur sagt, dass der Weg wirklich weg soll (§47 gilt auch für
-           Absichten). */
-        an('hl-seiten', () => {
-            PWA.schubladeZu && PWA.schubladeZu();
-            /* Erst den Reiter setzen, dann zeichnen: `handyLeiste`
-               liest ihn, und ohne ihn bliebe die Pille auf „Start"
-               stehen, während daneben schon die Seiten stünden. */
-            Produktwelten.workspace('start');
-            handyLeiste();
-        });
+        /* HIER STAND `an('hl-seiten', …)` — bis E280 (L86).
+           Der Knopf war seit E236 in keinem Markup mehr; die Zeile blieb als
+           Erklärung stehen, „bis Redur sagt, dass der Weg wirklich weg soll".
+           Er hat es in E277 gesagt.
+           Der Weg selbst bleibt: `Produktwelten.workspace('start')` steht in
+           `register/navigation.ts` (Knopf `btn-workspace`), in der
+           Befehlspalette und in der Mehr-Kante. */
         /* AM TELEFON AUF DIE BÜHNE, am Rechner in die Seitenleiste. Vorher zog
            dieser Reiter auch am Telefon die Schublade auf — also die
            Seitenleiste des Rechners auf 390 px geschoben, samt Baum und
@@ -121823,12 +122210,10 @@ const App = (() => {
          * Am Rechner bleibt es bei der Schublade — dort ist die Seitenleiste
          * richtig, und ein Blatt von unten wäre dort der Fremdkörper.
          * -------------------------------------------------------------------- */
-        /* Der R-Kreis stand links oben in der Reiterleiste. Seit E236 steht
-           er rechts in der Menüleiste (`mb-konto`) und im Mehr-Blatt — die
-           ENTSCHEIDUNG, was er tut, steht aber weiter nur hier. Genau deshalb
-           bleibt die Zeile, obwohl `hl-konto` in keinem Markup mehr steht:
-           sie kostet nichts und ist die Erklärung (E272 Phase J). */
-        an('hl-konto', () => arbeitsbereich());
+        /* UND HIER STAND `an('hl-konto', …)` — ebenfalls bis E280 (L86).
+           Der R-Kreis steht seit E236 rechts in der Menüleiste; sein Klick
+           hängt an `mb-konto` in `menueband.ts` und ruft dort `App.arbeitsbereich()`.
+           Die Zeile hier band an nichts. */
         /* „Mehr" statt „Eingang" (E42 §6): Werkzeuge, Hilfe, Sicherung, Import,
            Papierkorb und Einstellungen brauchen einen Platz oben — ein
            Posteingang, der meistens leer ist, nicht. Er wohnt jetzt als Zeile
@@ -122078,6 +122463,11 @@ const App = (() => {
         start, oeffne, zeigeSonder, zeichneSeite, zeichneBaum, zeichneCrumbs, aktuelleSeite, setzeSeite,
         zeigeBlock, blockAusHash,
         kiPanel, suche, seitenSuche, theme, einstellungen, papierkorb, neueSeite,
+        /* E283 / L85: die zwei Griffe, die der Entwurf verlangte und die es
+           vorher nur als verstreuten Code gab. `vollbildGeht` gehört dazu —
+           ohne die Frage stünde im Menüband ein Knopf, der auf dem iPhone
+           nichts tut (§47). */
+        vollbild, vollbildAn, vollbildGeht, volleBreite,
         markdownExport, markdownVonSeite, woerterZaehlen, dupliziereSeite, seitenMenue, coverWaehlen,
         kuerzlich, kommendeTermine,
         /* Wo man gerade ist — für die Kontextkante (E272). */

@@ -814,9 +814,14 @@ const Arbeitswelt = (() => {
      *
      * Dreimal richtig, einmal vergessen — genau wie bei den Kacheln (E228).
      * Damit es nicht ein viertes Mal passiert, steht es jetzt an einer Stelle.
-     * ========================================================================*/
-    /** „1 Eintrag" / „7 Einträge" — die Zahl steht vorne, das Wort passt sich an. */
-    const zahlWort = (n, einzahl, mehrzahl) => `${n} ${n === 1 ? einzahl : mehrzahl}`;
+     *
+     * UND SEIT E281 (L67) NICHT MEHR HIER, sondern in `core/helpers/plural.ts`.
+     * An EINER Stelle zu stehen war richtig — aber die eine Stelle lag in einem
+     * BEREICH, und nach §5 darf kein anderer Bereich sie holen. Elf weitere
+     * Dateien schrieben die Verzweigung deshalb weiter von Hand oder gar nicht.
+     * Der Name hier bleibt, damit die acht Aufrufer unten unverändert lesen;
+     * er zeigt nur woandershin. */
+    const zahlWort = (n, einzahl, mehrzahl) => Plural.count(n, einzahl, mehrzahl);
     const seitenListe = (seiten, suche, leerText) => {
         const list = element('ul', 'aw-liste');
         const sichtbar = seiten.filter(page => passt(suche, page.titel, page.pfad, page.aliases.join(' ')))

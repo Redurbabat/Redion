@@ -65,6 +65,10 @@ const Kopfleiste = (() => {
   const kiPanel       = braucht('kiPanel');
   const oeffne        = braucht('oeffne');
   const aktuelleSeite = braucht('aktuelleSeite');
+  /* Seit E283 EIN Griff statt eines eigenen `updateBlock` hier (L85 Punkt 2).
+     `braucht` sorgt dafür, dass ein Vergessen beim Binden laut wird und nicht
+     still — genau darum steht er hier oben bei den anderen. */
+  const volleBreite  = braucht('volleBreite');
   /* Die Sonderansicht ist ein Zustand der Schale, kein Aufruf — deshalb ein
      Leser statt einer Weiterreichung. */
   const sonderJetzt   = () =>
@@ -279,7 +283,7 @@ const Kopfleiste = (() => {
         if (!b) return;
         const a = b.dataset.a;
         if (a === 'cover') coverWaehlen(p);
-        if (a === 'wide') { Store.updateBlock(p.id, { wide: !p.wide }); zeichneSeite(); }
+        if (a === 'wide') { volleBreite(p); }
         if (a === 'document') DocumentMode.toggle(p);
         if (a === 'electrical') Electrical.open(p);
         if (a === 'vorlage') Werkzeuge.vorlageEinfuegen(p);

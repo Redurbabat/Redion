@@ -1220,6 +1220,20 @@ const Menueband = (() => {
     if (typeof Zeichenziel !== 'undefined' && typeof Zeichenziel.horche === 'function') {
       try { Zeichenziel.horche(() => zeichne()); } catch { /* dann eben nicht */ }
     }
+
+    /* NEU ZEICHNEN, WENN DAS VOLLBILD KIPPT (E283 / L85 Punkt 1).
+
+       Der Vollbild-Knopf zeigt seinen Zustand über `an()`, und `an()` wird
+       nur beim Zeichnen gelesen. Ohne diesen Horcher stimmte er genau so
+       lange, wie NIEMAND das Vollbild anders verlässt als über ihn — und
+       Escape ist der übliche Weg. Der Knopf stünde danach auf „AN" über
+       einem Fenster mit Adressleiste.
+
+       `fullscreenchange` feuert bei BEIDEN Richtungen und auch dann, wenn
+       der Browser das Vollbild von sich aus beendet (Wechsel des Reiters,
+       ein Videoabspieler, der es an sich zieht). Genau deshalb hängt der
+       Horcher hier und nicht in `App.vollbild()`. */
+    document.addEventListener('fullscreenchange', () => zeichne());
     /* Nach dem Laden der Ablage noch einmal.
 
        GEMESSEN GREIFT DAS NICHT: `Menueband.start()` steht in `App.start()`

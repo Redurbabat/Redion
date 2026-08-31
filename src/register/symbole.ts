@@ -281,7 +281,15 @@ Register.symbole = (() => {
     chevronR:  '<path d="m9.5 5.5 6.5 6.5-6.5 6.5"/>',
     chevronD:  '<path d="m5.5 9.5 6.5 6.5 6.5-6.5"/>',
     panelL:    '<rect x="3" y="4.5" width="18" height="15" rx="2.6"/><path d="M9.5 4.5v15"/>',
-    panelR:    '<rect x="3" y="4.5" width="18" height="15" rx="2.6"/><path d="M14.5 4.5v15"/>'
+    panelR:    '<rect x="3" y="4.5" width="18" height="15" rx="2.6"/><path d="M14.5 4.5v15"/>',
+    /* Vier Ecken statt eines Rahmens (E283). Ein Rechteck hiesse „Fenster"
+       und stünde neben `panelL`/`panelR`, die genau das sind. Die vier
+       ausgestellten Ecken sind das Zeichen, das jeder Videoabspieler seit
+       zwanzig Jahren für Vollbild benutzt — hier gelernt, nicht erklärt. */
+    maximize:  '<path d="M9 3.5H5.5a2 2 0 0 0-2 2V9"/>' +
+               '<path d="M15 3.5h3.5a2 2 0 0 1 2 2V9"/>' +
+               '<path d="M15 20.5h3.5a2 2 0 0 0 2-2V15"/>' +
+               '<path d="M9 20.5H5.5a2 2 0 0 1-2-2V15"/>'
   };
 
   /* ------------------------------------------------------------------------

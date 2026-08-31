@@ -1537,7 +1537,9 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
  * die KI fragen, etwas Neues schreiben. Sie schweben über dem Inhalt statt
  * in einer Leiste zu sitzen — der Bildschirm bleibt dadurch ganz.
  * ========================================================================== */
-#handy-oben, #handy-unten{ display:none }
+/* `#handy-unten` stand hier mit drin — die schwebende Leiste fiel mit
+   E236 weg, ihr Stil blieb bis E280 (L86). */
+#handy-oben{ display:none }
 
 @media(max-width:760px){
 
@@ -1824,51 +1826,14 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
   }
   #handy-oben button.an .hl-punkt{ border-color:var(--bg-hover) }
 
-  /* --- UNTEN: suchen · KI fragen · schreiben --------------------------- */
-  /* UNTEN: Suche, KI fragen, Neu — die drei Griffe, die immer da sind.
-     56 px hohe Tasten und 28 px Rand nach der Telefon-Vorgabe (E37). */
-  #handy-unten{
-    display:flex; align-items:center; gap:12px;
-    position:fixed; left:0; right:0; bottom:0; z-index:400;
-    padding:12px 28px calc(12px + env(safe-area-inset-bottom));
-    background:linear-gradient(to top, var(--bg) 58%, transparent);
-    pointer-events:none;
-  }
-  #handy-unten > *{ pointer-events:auto }
-
-  @media(max-width:380px){ #handy-unten{ padding-left:22px; padding-right:22px } }
-
-  #handy-unten button{
-    height:56px;
-    border-radius:999px;
-    border:1px solid var(--line);
-    background:var(--bg-side);
-    color:var(--text-dim);
-    display:flex; align-items:center; justify-content:center;
-    font-size:19px;
-    backdrop-filter:saturate(140%) blur(12px);
-  }
-  #handy-unten button:active{ background:var(--bg-hover) }
-  #handy-unten #hu-suche, #handy-unten #hu-neu{ width:56px; flex:0 0 56px }
-
-  /* Die Mitte ist die breiteste und die einzige mit Text — nach ihr greift
-     man am häufigsten. */
-  #handy-unten #hu-ki{
-    flex:1 1 auto; min-width:0;
-    justify-content:flex-start; gap:10px;
-    padding:0 14px 0 6px;
-  }
-  #handy-unten .hu-av{
-    width:38px; height:38px; border-radius:50%; flex:none;
-    background:var(--bg-hover);
-    display:flex; align-items:center; justify-content:center; font-size:17px;
-  }
-  #handy-unten #hu-ki b{
-    flex:1; text-align:left; font-size:16px; font-weight:400;
-    color:var(--text-faint);
-    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-  }
-  #handy-unten .hu-mik{ font-style:normal; font-size:17px; flex:none }
+  /* --- HIER STAND DIE SCHWEBENDE LEISTE — bis E280 (L86) --------------- */
+  /* `#handy-unten` mit `hu-suche`, `hu-ki` und `hu-neu`: drei Griffe, die
+     über dem Inhalt schwebten. Sie sind mit E236 weggefallen — zwei
+     Leisten am unteren Rand wären eine zu viel gewesen —, und `schale.ts`
+     hat damals auch ihre Bindungen ausgeräumt. Nur der Stil blieb: rund
+     vierzig Zeilen für ein Element, das in keinem Markup mehr steht.
+     Die drei Wege sind nicht weg: Suche und KI stehen rechts in der
+     Menüleiste (`mb-suche`, `mb-ki`), „Neu" im Regal und im Mehr-Blatt. */
 
   /* --- Platz für beide ------------------------------------------------- */
   /* Oben die Pillenleiste, unten die drei Knöpfe: der Inhalt dazwischen
@@ -2281,16 +2246,18 @@ table.pivot tbody tr:hover td{ background:var(--bg-hover); }
     margin-left:auto; position:sticky; right:0;
     background:var(--bg-side); box-shadow:-6px 0 6px var(--bg-side);
   }
-  /* Solange die Formatleiste da ist, tritt die Reiterleiste zurück.
-     Hier stand `#handy-leiste` — ein Element, das es nicht mehr gibt
-     (siehe den Kommentar bei der Schubladen-Höhe weiter unten). Die
-     echte untere Leiste heisst `#handy-unten`, und weil die Regel ins
-     Leere zielte, ragten ihre Knopfkreise hinter der Formatleiste
-     hervor. */
   /* Beim Schreiben tritt die Leiste am unteren Rand zurück — sonst läge
-     sie zwischen Text und Tastatur. Sie heisst seit E236 `#handy-oben`
-     (der Name stammt aus der Zeit, als sie oben stand); die alte
-     schwebende `#handy-unten` gibt es nicht mehr. */
+     sie zwischen Text und Tastatur. Sie heisst `#handy-oben`; der Name
+     stammt aus der Zeit, als sie wirklich oben stand.
+
+     Hier standen zwei Kommentare übereinander, und der erste war
+     überholt: er nannte `#handy-unten` die „echte untere Leiste". Die
+     gibt es seit E236 nicht mehr, und seit E280 auch ihren Stil nicht.
+     Davor stand hier `#handy-leiste` — ein Name, den es schon länger
+     nicht gab; die Regel zielte ins Leere, und die Knopfkreise ragten
+     hinter der Formatleiste hervor. Zweimal derselbe Fehler an
+     derselben Zeile: ein Kommentar, der einen Namen nennt, den es nicht
+     mehr gibt. */
   body.schreibt #handy-oben{ display:none; }
 
   /* Ziehen mit dem Finger (E83): langes Drücken hebt den Block — er wird
@@ -3641,7 +3608,6 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   .home-karten .hk,
   .home-liste button,
   #handy-oben button,
-  #handy-unten > *,
   #r-blatt .rm-gruppe button,
   .kp-wolke span{
     transition: transform var(--motion-fast) var(--ease-standard),
@@ -3653,7 +3619,6 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
     background: var(--bg-hover);
   }
   #handy-oben button:active,
-  #handy-unten > *:active,
   #r-blatt .rm-gruppe button:active{
     transform: scale(var(--press-scale));
   }

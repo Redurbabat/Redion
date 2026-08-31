@@ -2537,7 +2537,7 @@ teilt es besser gleich.
 
 
 ================================================================================
-L67 — 110 Zählwerte ohne Einzahl-Verzweigung
+L67 — 110 Zählwerte ohne Einzahl-Verzweigung — HELFER DA, Umbau bewusst offen
 ================================================================================
 
 Beim Beheben von E231 („1 Einträge") wurde einmal über `src/` gesucht: wo
@@ -2570,6 +2570,21 @@ GEZÄHLT WIRD ES HIER, damit die Zahl nicht verloren geht. Wer sie neu
 erheben will:
 
     Zahl + Leerzeichen + Grossbuchstabenwort, ohne `=== 1` in derselben Zeile
+
+**Die HÄLFTE davon ist am 31. August 2026 mit E281 erledigt:** den
+gemeinsamen Helfer gibt es, er steht in `core/helpers/plural.ts` und ist
+damit für jeden Bereich erreichbar (vorher lag er in `arbeitswelt.ts`, also
+in einem Bereich — §5 verbot den anderen, ihn zu holen; DAS war der
+eigentliche Grund, warum elf Dateien es weiter von Hand machten).
+
+Er kann ausserdem drei Dinge, die die naive Fassung falsch machte: minus
+eins ist Einzahl, `NaN` kommt nicht als „NaN Einträge" auf den Bildschirm,
+und es gibt eine Null-Sonderform („Keine Einträge"), die ohne ausdrückliche
+Angabe NICHT einspringt.
+
+**Offen bleibt der Umbau selbst, und zwar mit Absicht** (Redur in E277,
+§45). Nachgezählt am 31. August: **104 Stellen**. Sie werden umgestellt,
+wenn jemand die betreffende Meldung ohnehin anfasst.
 
 
 L68 — Die Reiterzeile der Lernwelt hat im verschmolzenen Kopf 234 px — GESCHLOSSEN
@@ -2846,9 +2861,10 @@ L77 — Was das Notizhefte-Regal (E264) bewusst noch nicht kann
 
 Fünf hingenommene Grenzen der ersten Fassung, jede mit Grund:
 
-1. Die Regal-Suche findet nur TITEL. Die grosse Suche (Strg P) kennt
-   längst Inhalte und Handschrift-Erkanntes — das Regal soll sie nicht
-   nachbauen (E29), sondern höchstens dorthin führen.
+1. ✅ Die Regal-Suche findet nur TITEL — seit E282 führt sie aber
+   dorthin: unter dem Ergebnis steht eine Zeile, die das getippte Wort
+   in die grosse Suche mitnimmt (auch bei Treffern, nicht nur bei
+   null). Nachgebaut wird die grosse Suche weiterhin nicht (E29).
 2. Die Heft-Regel liest nur DIREKTE Kinder. Ein Blatt zwei Ebenen tief
    macht die Seite nicht zum Heft — dieselbe Lesart wie die
    Bibliotheks-Deckelart, und billig; wer tief verschachtelt, findet
@@ -2873,10 +2889,20 @@ L77 Punkt 4 (Deckelfarben) ist damit erledigt. Neu hingenommen:
    Kontextmenü. Drag&Drop wäre ein eigener Bogen mit Telefon-Fassung.
 2. Das Regal zeigt EINE Fach-Ebene: ein Fach im Fach steht flach an
    der Wurzel (nichts geht verloren, aber die Schachtelung sieht man
-   nur im Baum).
-3. Reiter und offenes Fach sind flüchtiger Modulzustand — nach einem
-   Neuladen beginnt das Regal an der Dokumente-Wurzel. Der Hash bleibt
-   `#notizhefte`; ein Fach-Hash bräuchte einen zweiten Start-Leseweg.
+   nur im Baum). Bleibt offen — Redur hat in E277 entschieden, dass
+   tiefe Verschachtelung ein eigener Bogen ist.
+
+   Nachtrag E283: Die Reiterzeile fehlt im offenen Fach weiterhin mit
+   Absicht (die Brotkrume führt zurück, ein Reiterwechsel dort wäre
+   zweideutig). Die DARSTELLUNGSWAHL steht seit E283 dagegen auch dort
+   — sie wirkte im Fach längst, war aber nur an der Wurzel erreichbar,
+   und seit E282 das Fach überlebt, war das eine Sackgasse.
+3. ✅ Seit E282 überleben Reiter und offenes Fach das Neuladen
+   (`heft:reiter`, `heft:fach`, geschrieben beim Wechseln). Zwei
+   Wächter fangen den gelöschten Fall ab. Der Hash bleibt
+   `#notizhefte` — ein Fach-Hash bräuchte einen zweiten Start-Leseweg
+   und ist damit keine offene Lücke mehr, sondern eine bewusst nicht
+   gebaute Zusatzform (ein Fach lässt sich nicht verlinken).
 4. Ein Heft, das ANDERSWO verschlüsselt wurde (Seitenmenü, Palette),
    trägt kein `heftArt` und fehlt im Regal, bis es entsperrt wird —
    werkzeuge.ts soll die Heft-Regel nicht kennen (eine Regel-Maschine).
@@ -2884,8 +2910,9 @@ L77 Punkt 4 (Deckelfarben) ist damit erledigt. Neu hingenommen:
    Papierkorb liegt und es ohne `heftArt:'fach'` angelegt wurde (z.B.
    als gewöhnliche Seite entstand) — es lebt in Bibliothek und Baum
    weiter, nur die Fach-Karte verschwindet.
-6. Die Listenform läuft volle Breite — auf sehr breiten Bildschirmen
-   liegen Stern und ⋯ weit rechts vom Namen.
+6. ✅ Die Listenform lief volle Breite — seit E282 hört sie bei 92ch
+   auf (`ch`, damit die Grenze an der Schrift hängt und nicht an einer
+   Zahl), links ausgerichtet wie die Kopfzeile darüber.
 
 Gefunden am 30. August 2026 (beim Bau von E265).
 
@@ -3075,31 +3102,50 @@ beginnt am besten bei `test128:483-517`, das den Knopf nachweislich findet.
 Gefunden am 30. August 2026 (voller Prüflauf während E271).
 
 --------------------------------------------------------------------------------
-L85 — Vier Prototyp-Knöpfe ohne Griff (E272)
+L85 — Vier Prototyp-Knöpfe ohne Griff (E272) — GESCHLOSSEN
 --------------------------------------------------------------------------------
 
+GESCHLOSSEN am 31. August 2026 (E283). Redur hat in E277 nicht „alle vier
+bauen" entschieden, sondern ausgewählt: Vollbild bauen, volle Breite
+zusammenziehen, Zoom und Senden streichen. Zwei davon sind gebaut, zwei sind
+BEANTWORTET — und eine beantwortete Frage ist keine Lücke mehr. Was jeweils
+geschah, steht unten bei den Punkten.
+
 Beim Inventar für die Premium-Schale (doku/PREMIUM-SHELL-MATRIX.md, Teil 5)
-haben vier Knöpfe des v13-Entwurfs in Redion kein Gegenstück. Sie bekommen
-KEINEN erfundenen — hier steht, was fehlt und was stattdessen dasteht.
+haben vier Knöpfe des v13-Entwurfs in Redion kein Gegenstück. Sie bekamen
+KEINEN erfundenen — hier steht, was fehlte und was stattdessen dastand.
 
 1. VOLLBILD. Im ganzen `src/`-Baum gibt es keinen Vollbild-Griff.
    `requestFullscreen` kommt zweimal vor: `werkzeuge.ts:995` im
    Präsentationsmodus und als `allowfullscreen`-Attribut einer Einbettung
    (`editor.ts:1342`). `Werkzeuge.fokus()` (`werkzeuge.ts:835`) setzt nur eine
    CSS-Klasse an `body`.
-   → Der Reiter Ansicht führt „Präsentation", das das Echte tut. Ein eigener
-     Vollbildmodus für die normale Ansicht ist offen.
+   → ✅ GEBAUT (E283). `App.vollbild()` / `vollbildAn()` / `vollbildGeht()`,
+     der Knopf steht im Reiter Ansicht neben „Fokus" (die beiden tun
+     Gegenteiliges: Fokus räumt Redion weg, Vollbild den Browser). Der
+     Zustand wird NIE gemerkt, sondern frisch gelesen — Escape beendet das
+     Vollbild ohne uns. Wo der Browser kein Element-Vollbild kann (iPhone,
+     eingebetteter Rahmen), verschwindet der Knopf, statt dazustehen (§47).
 
 2. ZOOM. Kein Griff. Strg + / − / 0 setzt `Store.setMeta('schriftgroesse', …)`
    in drei Stufen, inline im Tastenhandler `schale.ts:2436-2451`.
-   → Phase D zieht denselben Code als `App.schriftgroesse(richtung)` heraus.
-     Ein echter Zoom (auch für Bilder und Zeichenflächen) bleibt offen.
+   → ✅ GESTRICHEN (E277/E283, Redurs Entscheidung). PDF, Whiteboard und
+     Zeichenfläche haben ihren eigenen, echten Zoom. Ein vierter „globaler"
+     wäre entweder dasselbe wie Strg + / − des Browsers (überflüssig) oder
+     ein zweiter Massstab daneben (verwirrend). Die Schriftgrösse bleibt
+     über Strg + / − / 0 und „Aussehen …" erreichbar. test277 §5 misst,
+     dass kein halber Zoom-Knopf auftaucht.
 
 3. VOLLE BREITE. Kein benannter Griff. Der Schalter lebt zweimal:
    `schale.ts:432` (Seitenmenü) und `kopfleiste.ts:269` (`data-a="wide"`),
    beide als `Store.updateBlock(p.id, { wide: … })`.
-   → Phase D zieht ihn als `App.volleBreite(p)` heraus, damit beide Aufrufer
-     dieselbe Funktion rufen.
+   → ✅ GEBAUT (E283) — und es waren DREI Stellen, nicht zwei: der Schalter
+     in der Schalterzeile desselben Menüs war hier übersehen. Alle drei
+     rufen jetzt `App.volleBreite(p, an?)`; die Kopfleiste bekommt ihn über
+     `braucht('volleBreite')` gebunden, damit ein Vergessen laut wird statt
+     still. test277 §4 misst den ausgelieferten Quelltext, nicht nur das
+     Verhalten: alle drei taten schon das Richtige, sie taten es nur jeder
+     für sich.
 
 4. SENDEN. `Mail.senden` gibt es nicht. Der Code sagt es selbst,
    `editor.ts:2369-2372`: „Hier stand `Mail.senden(…)` — die Funktion gibt es
@@ -3107,9 +3153,12 @@ KEINEN erfundenen — hier steht, was fehlt und was stattdessen dasteht.
    verschicken." Die zwei tatsächlichen Wege sind `location.href = 'mailto:…'`
    (`editor.ts:2373`, `steuerung.ts:7823`) und Gmails Compose-Fenster in einem
    neuen Tab (`mail.ts:363`).
-   → Die Backstage-Sektion heisst „Weitergeben" und öffnet
-     `Werkzeuge.teilenMenue` — den echten, vollständigen Weg. Echtes Senden
-     aus Redion heraus bleibt offen.
+   → ✅ GESTRICHEN (E277/E283, Redurs Entscheidung). Die Backstage-Sektion
+     heisst „Weitergeben" und öffnet `Werkzeuge.teilenMenue` — den echten,
+     vollständigen Weg. Ein Knopf „Senden", der in Wahrheit `mailto:`
+     öffnet, behauptet mehr als er tut. Echtes Senden aus Redion heraus
+     wäre ein eigener Bogen mit eigener Entscheidung (Anbieter, Konto,
+     Zustellung), nicht eine Beschriftung.
 
 Warum das hier steht und nicht einfach gebaut wird: ein Knopf, der dasteht und
 beim Klick sagt, dass er hier nicht geht, ist schlimmer als einer, den es nicht
@@ -3117,7 +3166,7 @@ gibt. Das ist die Begründung von `zeigen()` im Menüband (§47), und sie gilt f
 Backstage genauso.
 
 --------------------------------------------------------------------------------
-L86 — Drei tote Verdrahtungen in der Schale (E272, Phase A gefunden)
+L86 — Drei tote Verdrahtungen in der Schale (E272, Phase A gefunden) — GESCHLOSSEN
 --------------------------------------------------------------------------------
 
 `schale.ts:3050` bindet Knöpfe mit
@@ -3146,6 +3195,18 @@ Der eigentliche Punkt ist aber allgemeiner und bleibt danach offen: SOLANGE
 `an()` still bindet, entsteht die nächste tote Zeile genauso unbemerkt. Ein
 Prüflauf, der jede in `schale.ts` verdrahtete Kennung gegen `index.html` hält,
 gibt es nicht.
+
+**GESCHLOSSEN am 31. August 2026 durch E280** — beide Hälften. Die drei
+Verdrahtungen und die CSS-Leiche `#handy-unten` sind weg (keine Handlung
+dabei verloren, jede nachgemessen). Und den fehlenden Prüflauf gibt es jetzt:
+`test274` liest ZWEI Sammelstellen — `an('…')` in der Schale und
+`getElementById('…')`/`element('…')` in ganz `src/` —, weil eine allein nur
+zwei der drei gefunden hätte. Gemessen am Baum von vorher: 26 Bindungen, 142
+Nachschlagestellen, genau drei verwaist.
+
+Nebenfund beim Aufräumen: `#hl-dok` hatte gar keine `order`-Regel und stand
+nur zufällig richtig (`order` ist ohne Angabe 0). Jetzt stehen alle fünf
+Knöpfe durchnumeriert da.
 
 --------------------------------------------------------------------------------
 L87 — melde() prüft, meldeLieferant() nicht (E272, Phase A gefunden) — GESCHLOSSEN
@@ -3327,13 +3388,13 @@ selbst ist NICHT gelöscht — am Telefon ist sie die Schublade, `#tree` darin
 ist der einzige Seitenbaum, und die Lade der Kontextkante schiebt ihn sich
 herüber. Drei Dinge sind damit trotzdem am Rechner nicht mehr erreichbar:
 
-  1. DER ZIEHGRIFF. `.side-griff` änderte die Breite (180–460 px), und ein
-     Doppelklick stellte 240 wieder her. Die Kante ist 54 Pixel und fest.
-     Ob die Breite einstellbar sein soll, ist eine Frage an Redur — nicht
-     „die Kante breiter ziehen", sondern: braucht es das überhaupt noch,
-     wenn dort nur Zeichen stehen? Die Mechanik wird weiter geprüft
-     (test52, test143 blenden die Leiste für die Messung kurz ein), also
-     ist nichts verloren, solange die Frage offen ist.
+  1. ✅ DER ZIEHGRIFF — die Frage ist beantwortet (E277/E283). Redur:
+     „Die Kante bleibt fest. 54 px, kein Ziehgriff am Rechner. Links
+     stehen Werkzeuge und Zeichen, nicht die alte Seitenleiste. Die
+     aufklappende Lade darf davon getrennt ihre rund 250 px haben."
+     `.side-griff` selbst ist nicht gelöscht — die Mechanik wird weiter
+     geprüft (test52, test143 blenden die Leiste für die Messung kurz
+     ein). Es ist also nichts entfernt, nur nichts gebaut.
 
   2. DER ARBEITSBEREICHS-KNOPF `#btn-settings` (das „N Redion" oben links).
      Sein Weg lebt weiter: „Datei → Konto → Arbeitsbereich" (Phase G) und

@@ -1963,3 +1963,65 @@ node pruefungen/lauf/test105.mjs
   und auf der Kontoseite. test273 neu (34, jeder Abschnitt mit Gegenprobe),
   test261 §11 umgeschrieben (21). L100 offen: beim Dazulegen bleiben die
   Marken stehen. sw v49.
+* E280 (E277 Teil 3 — L86): Drei Verdrahtungen, die an nichts hingen
+  (`hl-seiten`, `hl-konto` in schale.ts, `weltwechsel` in produktwelten.ts),
+  plus die CSS-Leiche `#handy-unten` — rund vierzig Zeilen für eine Leiste,
+  die mit E236 wegfiel. Keine Handlung geht verloren; jeder Ersatzweg
+  nachgemessen. Neu `test274`: der Wächter liest ZWEI Sammelstellen, weil
+  `hl-seiten` nur über `an()` und `weltwechsel` nur über `element()` läuft.
+  Er muss Kommentare streichen, sonst meldet er aufgeräumte Wege als tot —
+  passiert beim Schreiben zweimal, einmal davon in meiner eigenen Prüfung.
+  Nebenfund: `#hl-dok` hatte keine `order`-Regel und stand nur zufällig
+  richtig. Und eine Berichtigung: die Suiten melden teils mit ❌, teils mit
+  ✗ — `alle.mts` liest beide, ich hatte nur eins gegrept und Redur deshalb
+  eine falsche Zuordnung gemeldet. Keine Code-Lücke, ein Lesefehler.
+* E281 (E277 Teil 4 — L67): `zahlWort` lag in `arbeitswelt.ts`, also in einem
+  BEREICH — nach §5 durfte kein anderer ihn holen, und genau deshalb machten
+  elf Dateien es weiter von Hand. Jetzt `core/helpers/plural.ts`, englisch
+  benannt wie `Dates` und `Ids`. Er kann drei Dinge mehr als die naive
+  Fassung: -1 ist Einzahl, `NaN` wird zum Strich statt zu „NaN Einträge",
+  und eine Null-Sonderform, die ohne Angabe nicht einspringt. test275 neu
+  (21, ohne Browser). Der 104-Stellen-Umbau bleibt bewusst offen (E277/§45).
+* E282 (E277 Teil 5 — L77 Punkt 1, L78 Punkte 3+6): Das Regal merkt sich
+  jetzt Reiter und offenes Fach (`heft:reiter`, `heft:fach`), geschrieben
+  beim Wechseln und nicht beim Zeichnen — sonst setzte jeder Tastendruck in
+  einem offenen Heft eine Meta-Zeile. Zwei Wächter: ein unbekannter Reiter
+  und ein gelöschtes oder nicht mehr fachartiges Fach fallen auf die Wurzel,
+  statt eine leere Brotkrume zu zeigen (L78 Punkt 5 macht den zweiten Fall
+  real). Der Suchtext wird bewusst NICHT gemerkt. Dazu die Brücke, die L77
+  seit E264 versprach: unter dem Ergebnis führt eine Zeile in die grosse
+  Suche und nimmt das Wort mit (`App.suche(vorgabe)`, Anschlag am Ende) —
+  bei JEDER Suche, nicht nur bei null Treffern. Und die Liste hört bei 92ch
+  auf statt volle Breite zu laufen. Zwei Funde nur durchs Hinsehen: das
+  Suchzeichen in der Brücke blieb leer, weil `Register.symbole.fuelle()` am
+  Ende von `render()` läuft und der Tipp-Weg `render` absichtlich meidet;
+  und der Satz begann mittig, weil `.rb` seinen Inhalt zentriert. test276
+  neu (22). Drag&Drop und tiefe Verschachtelung bleiben offen (Redurs
+  eigener Satz in E277).
+* E283 (E277 Teil 6 — L85, L91): Redurs dritter Punkt war eine AUSWAHL:
+  Vollbild bauen, volle Breite zusammenziehen, Zoom und Senden streichen.
+  Vollbild ist gebaut (`App.vollbild`/`vollbildAn`/`vollbildGeht`, Knopf im
+  Reiter Ansicht neben „Fokus" — die beiden tun Gegenteiliges: Fokus räumt
+  Redions Oberfläche weg, Vollbild den Browser). Drei Fallen darin: ein
+  gemerkter Zustand ginge am ersten Escape kaputt (deshalb frisch gelesen +
+  `fullscreenchange`-Horcher), `requestFullscreen` gibt es auf dem iPhone
+  nicht (deshalb `zeigen()`, sonst §47), und der Aufruf kann auch dort
+  abgelehnt werden, wo er möglich ist (deshalb ein Satz statt einer
+  Konsolenmeldung). Volle Breite lag an DREI Stellen, nicht an den zwei, die
+  L85 nannte — der Schalter im selben Menü war übersehen; jetzt EIN
+  `App.volleBreite(p, an?)`, die Kopfleiste über `braucht()` gebunden, damit
+  ein Vergessen laut wird. Zoom und Senden sind gestrichen und werden als
+  ABWESENHEIT geprüft — ein gestrichener Punkt, der später als halber Knopf
+  auftaucht, ist §47. Neues Zeichen `maximize` (vier Ecken, kein Rechteck —
+  ein Rechteck hiesse „Fenster" wie `panelL`/`panelR`). Dazu L91 Punkt 1
+  beantwortet: die Kante bleibt fest bei 54 px, der Ziehgriff wird nicht
+  gebaut und auch nicht entfernt. test277 neu, mit drei Gegenproben.
+  Nachlauf im selben Bogen: der volle Lauf über E279–E282 war 239/240 grün,
+  und der eine rote (test265) war kein Zufall — er hielt fest, dass
+  `Notebook.oeffnen()` zur Wurzel zurückspringt, was E282 gerade umgekehrt
+  hatte. Der Fund dahinter ist echt: die Darstellungswahl (Gitter/Liste)
+  WIRKT im offenen Fach, stand aber nur an der Wurzel — seit das Fach das
+  Neuladen überlebt, war das eine Sackgasse. Sie steht jetzt auch im Fach,
+  mit `.nh-form{margin-left:auto}`, sonst rutschte sie als einziges Kind der
+  Zeile nach links. Und test265 verliess sich an FÜNF Stellen still auf die
+  Wurzel; alle fünf sagen es jetzt über `anDieWurzel()`.

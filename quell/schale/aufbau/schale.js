@@ -530,9 +530,16 @@ const App = (() => {
                 UI.toast('Alles liegt ohnehin auf diesem Gerät — auch ohne Netz.');
                 return;
             }
+            /* „Volle Breite" hat seit E283 einen eigenen Griff und steht deshalb
+               VOR dem Sammelzweig — der Schalter kippt trotzdem an Ort und Stelle,
+               nur die Schreibarbeit macht `volleBreite`. */
+            if (a === 'breit') {
+                b.querySelector('.mschalter')?.classList.toggle('an', volleBreite(p));
+                return;
+            }
             /* Schalter bleiben im Menü stehen und kippen an Ort und Stelle */
-            if (a === 'klein' || a === 'breit' || a === 'wz-gesperrt' || a === 'pfad') {
-                const feld = a === 'klein' ? 'small' : a === 'breit' ? 'wide'
+            if (a === 'klein' || a === 'wz-gesperrt' || a === 'pfad') {
+                const feld = a === 'klein' ? 'small'
                     : a === 'pfad' ? 'pfad' : 'gesperrt';
                 const neu = a === 'pfad' ? !(p.pfad !== false) : !p[feld];
                 Store.updateBlock(p.id, { [feld]: neu });
@@ -634,8 +641,7 @@ const App = (() => {
                 zeichneSeite();
             }
             if (a === 'breit') {
-                Store.updateBlock(p.id, { wide: !p.wide });
-                zeichneSeite();
+                volleBreite(p);
             }
             if (a === 'rename') {
                 const n = await UI.frage('Neuer Titel', p.text);
@@ -900,7 +906,15 @@ const App = (() => {
     /* ========================================================================
      * SUCHE
      * ======================================================================*/
-    const suche = () => {
+    /**
+     * Die grosse Suche.
+     *
+     * @param vorgabe Ein Wort, mit dem sie schon gefüllt aufgeht — für den
+     *        Weg aus einer kleinen Suche heraus (E282: die Regal-Suche findet
+     *        nur Titel und führt hierher, statt Inhalte nachzubauen, E29).
+     *        Ohne Angabe geht sie leer auf, wie bisher.
+     */
+    const suche = (vorgabe) => {
         /* DER PLATZHALTER IST AM TELEFON EIN ANDERER.
            Der lange nennt sechs Suchbefehle — am Rechner ist das die beste
            Stelle dafür, weil man sie sonst nie erfährt. Am Telefon passt ein
@@ -1310,8 +1324,18 @@ const App = (() => {
            Suchfeld ein leeres Fenster — und das ist der häufigste Zustand
            überhaupt: man öffnet die Suche und hat noch nichts eingegeben.
            Genau dort gehören die letzten Suchbegriffe hin. */
+        /* Die Vorgabe VOR dem Zeichnen setzen, sonst zeigte der erste Aufbau
+           den leeren Zustand („Zuletzt gesucht") und erst der nächste
+           Tastendruck die Treffer — man sähe eine Suche, die ihr eigenes Wort
+           nicht kennt. */
+        if (vorgabe)
+            inp.value = String(vorgabe);
         zeichne();
         inp.focus();
+        /* Und den Anschlag ans Ende, nicht an den Anfang: wer aus dem Regal
+           kommt, will weitertippen und nicht vor sein eigenes Wort geraten. */
+        if (vorgabe)
+            inp.setSelectionRange(inp.value.length, inp.value.length);
     };
     /**
      * Einen Suchtreffer öffnen.
@@ -2221,6 +2245,95 @@ const App = (() => {
         Store.setMeta('theme', neu);
     };
     /* ========================================================================
+     * VOLLBILD  (E283 / L85 Punkt 1)
+     * ------------------------------------------------------------------------
+     * Nicht zu verwechseln mit `Werkzeuge.fokus()`. Der Fokus-Modus blendet
+     * REDIONS eigene Oberfläche aus und lässt die Leisten des Browsers stehen;
+     * Vollbild macht das Gegenteil — Redion bleibt vollständig, der Browser
+     * verschwindet. Beide sind sinnvoll, und beide zusammen ergeben die
+     * ruhigste Ansicht, die Redion hat.
+     *
+     * DREI DINGE, DIE DIE NAIVE FASSUNG FALSCH MACHT:
+     *
+     * 1. Ein gemerktes `let vollbild = false` geht am ersten Escape kaputt.
+     *    Escape verlässt das Vollbild im BROWSER, ohne uns zu fragen — die
+     *    Erinnerung stünde danach für immer falsch, und der Knopf zeigte „AN"
+     *    über einem Fenster mit Adressleiste. Deshalb wird der Zustand nie
+     *    gemerkt, sondern jedes Mal frisch an `document.fullscreenElement`
+     *    abgelesen.
+     * 2. `requestFullscreen()` gibt es nicht überall. Auf dem iPhone kennt
+     *    Safari kein Element-Vollbild (nur `<video>`), und in einem
+     *    eingebetteten Rahmen ohne `allowfullscreen` ist es gesperrt. Ein
+     *    Knopf, der dort dasteht und nichts tut, ist §47 — `vollbildGeht()`
+     *    beantwortet die Frage, und das Menüband blendet ihn danach aus.
+     * 3. Der Aufruf kann auch dort ABGELEHNT werden, wo er möglich ist: ohne
+     *    frische Nutzerhandlung wirft er. Deshalb ein `catch` mit einem Satz,
+     *    der sagt was zu tun ist — und nicht eine Fehlermeldung in der Konsole,
+     *    die niemand sieht.
+     * ======================================================================*/
+    /** Kann dieses Gerät überhaupt Vollbild? */
+    const vollbildGeht = () => !!(document.fullscreenEnabled &&
+        typeof document.documentElement.requestFullscreen === 'function');
+    /** Ist gerade Vollbild? IMMER frisch gelesen — siehe Punkt 1 oben. */
+    const vollbildAn = () => !!document.fullscreenElement;
+    /**
+     * Vollbild an, aus oder umschalten.
+     * @param an `undefined` schaltet um, `true`/`false` setzt hart.
+     * @returns den Zustand NACH dem Versuch — nicht den gewünschten.
+     */
+    const vollbild = async (an) => {
+        if (!vollbildGeht()) {
+            UI.toast('Dieser Browser kann kein Vollbild.');
+            return false;
+        }
+        const ziel = an === undefined ? !vollbildAn() : !!an;
+        try {
+            if (ziel)
+                await document.documentElement.requestFullscreen();
+            else if (vollbildAn())
+                await document.exitFullscreen();
+        }
+        catch {
+            /* Nicht verschweigen: der Knopf sah aus, als hätte er gewirkt. */
+            UI.toast(ziel
+                ? 'Vollbild wurde abgelehnt — der Browser lässt es nur direkt nach einem Klick zu.'
+                : 'Das Vollbild liess sich nicht beenden — Escape hilft immer.');
+        }
+        return vollbildAn();
+    };
+    /* ========================================================================
+     * VOLLE BREITE  (E283 / L85 Punkt 2)
+     * ------------------------------------------------------------------------
+     * DERSELBE SCHALTER STAND AN DREI STELLEN, nicht an zwei: L85 nannte das
+     * Seitenmenü (`schale.ts`) und die Kopfleiste — der Schalter in der
+     * Schalterzeile desselben Menüs war übersehen. Alle drei schrieben
+     * `Store.updateBlock(p.id, { wide: !p.wide })` von Hand, jeder mit seinem
+     * eigenen Nachlauf.
+     *
+     * Das ist genau die Sorte Verdopplung, die still auseinanderläuft: wer
+     * morgen eine Regel ergänzt (etwa „am Telefon hat volle Breite keine
+     * Wirkung", E156), ergänzt sie an einer Stelle und wundert sich, warum
+     * der andere Weg sie nicht kennt.
+     * ======================================================================*/
+    /**
+     * Volle Breite für eine Seite umschalten.
+     * @param p   die Seite; ohne `id` passiert nichts (und es wird nichts
+     *            behauptet — der Rückgabewert sagt es).
+     * @param an  `undefined` schaltet um, `true`/`false` setzt hart.
+     * @returns den Zustand danach.
+     */
+    const volleBreite = (p, an) => {
+        if (!p || !p.id)
+            return false;
+        const neu = an === undefined ? !p.wide : !!an;
+        Store.updateBlock(p.id, { wide: neu });
+        /* Das übergebene Objekt MIT nachziehen: die Aufrufer zeichnen ihr Menü
+           aus derselben Kopie weiter und zeigten sonst den alten Stand. */
+        p.wide = neu;
+        zeichneSeite();
+        return neu;
+    };
+    /* ========================================================================
      * EXPORT
      * ======================================================================*/
     /** Die Seite als Markdown — für „Seiteninhalte kopieren" und den Export. */
@@ -2991,6 +3104,8 @@ const App = (() => {
             Ruhig.binde();
         Kopfleiste.binde({
             zeichneSeite, zeichneBaum, kiPanel, oeffne, aktuelleSeite,
+            /* Seit E283 EIN Griff für „volle Breite" statt dreier Handgriffe. */
+            volleBreite,
             /* Ein Leser, keine Weiterreichung: die Sonderansicht ist ein Zustand
                der Schale, und die Pfadleiste muss den jeweils aktuellen sehen. */
             sonder: () => sonder
@@ -3498,25 +3613,13 @@ const App = (() => {
             Produktwelten.lernen('lernen');
             handyLeiste();
         });
-        /* „Seiten" statt „Chats" (E38): Redion ist keine Chat-App. Die KI bleibt
-           unten in der Leiste erreichbar und im R-Blatt, aber der Platz oben
-           gehört dem, was man täglich sucht — den eigenen Seiten.
-    
-           DIESER KNOPF STEHT HEUTE IN KEINEM MARKUP (gemessen: die Leiste oben
-           führt `hl-dok`, `hl-start`, `hl-lernen`, `hl-bespr`, `hl-mehr`).
-           `an()` auf eine fehlende Kennung tut nichts, die Zeile kostet also
-           nichts — und sie ist die einzige Stelle, an der steht, was der Knopf
-           TÄTE. E272 Phase J hätte sie ausgeräumt; sie bleibt stehen, bis
-           Redur sagt, dass der Weg wirklich weg soll (§47 gilt auch für
-           Absichten). */
-        an('hl-seiten', () => {
-            PWA.schubladeZu && PWA.schubladeZu();
-            /* Erst den Reiter setzen, dann zeichnen: `handyLeiste`
-               liest ihn, und ohne ihn bliebe die Pille auf „Start"
-               stehen, während daneben schon die Seiten stünden. */
-            Produktwelten.workspace('start');
-            handyLeiste();
-        });
+        /* HIER STAND `an('hl-seiten', …)` — bis E280 (L86).
+           Der Knopf war seit E236 in keinem Markup mehr; die Zeile blieb als
+           Erklärung stehen, „bis Redur sagt, dass der Weg wirklich weg soll".
+           Er hat es in E277 gesagt.
+           Der Weg selbst bleibt: `Produktwelten.workspace('start')` steht in
+           `register/navigation.ts` (Knopf `btn-workspace`), in der
+           Befehlspalette und in der Mehr-Kante. */
         /* AM TELEFON AUF DIE BÜHNE, am Rechner in die Seitenleiste. Vorher zog
            dieser Reiter auch am Telefon die Schublade auf — also die
            Seitenleiste des Rechners auf 390 px geschoben, samt Baum und
@@ -3548,12 +3651,10 @@ const App = (() => {
          * Am Rechner bleibt es bei der Schublade — dort ist die Seitenleiste
          * richtig, und ein Blatt von unten wäre dort der Fremdkörper.
          * -------------------------------------------------------------------- */
-        /* Der R-Kreis stand links oben in der Reiterleiste. Seit E236 steht
-           er rechts in der Menüleiste (`mb-konto`) und im Mehr-Blatt — die
-           ENTSCHEIDUNG, was er tut, steht aber weiter nur hier. Genau deshalb
-           bleibt die Zeile, obwohl `hl-konto` in keinem Markup mehr steht:
-           sie kostet nichts und ist die Erklärung (E272 Phase J). */
-        an('hl-konto', () => arbeitsbereich());
+        /* UND HIER STAND `an('hl-konto', …)` — ebenfalls bis E280 (L86).
+           Der R-Kreis steht seit E236 rechts in der Menüleiste; sein Klick
+           hängt an `mb-konto` in `menueband.ts` und ruft dort `App.arbeitsbereich()`.
+           Die Zeile hier band an nichts. */
         /* „Mehr" statt „Eingang" (E42 §6): Werkzeuge, Hilfe, Sicherung, Import,
            Papierkorb und Einstellungen brauchen einen Platz oben — ein
            Posteingang, der meistens leer ist, nicht. Er wohnt jetzt als Zeile
@@ -3803,6 +3904,11 @@ const App = (() => {
         start, oeffne, zeigeSonder, zeichneSeite, zeichneBaum, zeichneCrumbs, aktuelleSeite, setzeSeite,
         zeigeBlock, blockAusHash,
         kiPanel, suche, seitenSuche, theme, einstellungen, papierkorb, neueSeite,
+        /* E283 / L85: die zwei Griffe, die der Entwurf verlangte und die es
+           vorher nur als verstreuten Code gab. `vollbildGeht` gehört dazu —
+           ohne die Frage stünde im Menüband ein Knopf, der auf dem iPhone
+           nichts tut (§47). */
+        vollbild, vollbildAn, vollbildGeht, volleBreite,
         markdownExport, markdownVonSeite, woerterZaehlen, dupliziereSeite, seitenMenue, coverWaehlen,
         kuerzlich, kommendeTermine,
         /* Wo man gerade ist — für die Kontextkante (E272). */
