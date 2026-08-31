@@ -48,6 +48,7 @@ const GRUNDSTOCK = [
     './quell/core/helpers/objects.js',
     './quell/core/helpers/bytes.js',
     './quell/core/helpers/throttle.js',
+    './quell/core/helpers/plural.js',
     './quell/kern/ereignisse/arten.js',
     './quell/kern/einstellung/app.js',
     './quell/kern/einstellung/schalter.js',

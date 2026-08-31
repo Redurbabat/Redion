@@ -1975,3 +1975,10 @@ node pruefungen/lauf/test105.mjs
   richtig. Und eine Berichtigung: die Suiten melden teils mit ❌, teils mit
   ✗ — `alle.mts` liest beide, ich hatte nur eins gegrept und Redur deshalb
   eine falsche Zuordnung gemeldet. Keine Code-Lücke, ein Lesefehler.
+* E281 (E277 Teil 4 — L67): `zahlWort` lag in `arbeitswelt.ts`, also in einem
+  BEREICH — nach §5 durfte kein anderer ihn holen, und genau deshalb machten
+  elf Dateien es weiter von Hand. Jetzt `core/helpers/plural.ts`, englisch
+  benannt wie `Dates` und `Ids`. Er kann drei Dinge mehr als die naive
+  Fassung: -1 ist Einzahl, `NaN` wird zum Strich statt zu „NaN Einträge",
+  und eine Null-Sonderform, die ohne Angabe nicht einspringt. test275 neu
+  (21, ohne Browser). Der 104-Stellen-Umbau bleibt bewusst offen (E277/§45).

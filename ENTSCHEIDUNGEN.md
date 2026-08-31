@@ -20963,3 +20963,64 @@ grepen.
 
 **Geprüft:** test274 neu (11 Punkte, vier Gegenproben) · test272 · test114 ·
 test67 · typecheck grün · Einzeldatei neu gebaut.
+
+================================================================================
+E281 — Der Zählwort-Helfer wandert aus dem Bereich heraus (L67)
+================================================================================
+31. August 2026
+
+Redurs sechster Punkt aus E277: „Gemeinsamen `zahlWort`-Helfer schaffen;
+keinen ungeprüften 110-Stellen-Massenumbau."
+
+### Warum das eine echte Verbesserung ist und nicht Verschieben
+
+E231 hatte „1 Einträge" behoben und die Rechnung an EINE Stelle gezogen.
+Richtig — aber die eine Stelle lag in `bereiche/wissen/arbeitswelt.ts`, also
+in einem BEREICH. Nach §5 darf kein anderer Bereich sie holen. Der Helfer
+war damit für elf weitere Dateien unerreichbar, und die schrieben die
+Verzweigung weiter von Hand oder gar nicht.
+
+Er steht jetzt in `core/helpers/plural.ts`, wie `Dates` und `Ids`: englisch
+benannt, deutsch kommentiert (E27). `arbeitswelt.ts` behält seinen Namen
+`zahlWort` und zeigt nur woandershin — die acht Aufrufer dort lesen sich
+unverändert.
+
+### Drei Ränder, die die naive Fassung falsch macht
+
+Der Helfer ist klein genug, dass man ihn für offensichtlich hält. Genau da
+stehen die Fehler jahrelang. `n === 1 ? one : many` liegt daneben bei:
+
+    -1      „-1 Grade" statt „-1 Grad"     — gemessen wird jetzt der BETRAG
+    NaN     „NaN Einträge" auf dem Schirm  — das sieht aus wie ein Zufall
+                                             statt wie ein Fehler und wird
+                                             deshalb nie gemeldet
+    1.5     richtig als Mehrzahl, aber nur zufällig
+
+test275 stellt jede dieser Zeilen MIT der naiven Rechnung daneben, damit der
+Unterschied gezeigt und nicht behauptet wird.
+
+### Die Null-Sonderform, und warum sie nicht von selbst einspringt
+
+`count(0, 'Eintrag', 'Einträge', 'Keine Einträge')` gibt den ganzen Satz.
+OHNE das vierte Wort bleibt es bei „0 Einträge" — der bisherigen Form. Ein
+Helfer, der beim Umzug still die Ausgabe ändert, macht aus einer Aufräumung
+eine Überraschung.
+
+### Was er bewusst NICHT tut
+
+Er beugt nicht. Beide Wörter werden hineingereicht; er rät die Mehrzahl
+nicht aus der Einzahl. Deutsche Mehrzahlbildung ist unregelmässig
+(Eintrag/Einträge, Alias/Aliasse, Datum/Daten), und ein Helfer, der es
+meistens richtig rät, ist schlimmer als einer, der fragt — man merkt die
+Ausnahme erst auf dem Bildschirm.
+
+### Und der Massenumbau bleibt aus
+
+Redur hat es ausdrücklich gesagt, und §45 sagt dasselbe. Nachgezählt am
+31. August: **104 Stellen** (L67 nannte im August 110; die Zahl sinkt, weil
+Meldungen beim Anfassen mitgezogen werden). Sie werden umgestellt, wenn
+jemand die betreffende Meldung ohnehin bearbeitet — nicht in einem Rutsch
+ohne Prüfung dahinter.
+
+**Geprüft:** test275 neu (21 Punkte, ohne Browser — der Helfer rechnet nur) ·
+typecheck grün.

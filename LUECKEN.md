@@ -2537,7 +2537,7 @@ teilt es besser gleich.
 
 
 ================================================================================
-L67 — 110 Zählwerte ohne Einzahl-Verzweigung
+L67 — 110 Zählwerte ohne Einzahl-Verzweigung — HELFER DA, Umbau bewusst offen
 ================================================================================
 
 Beim Beheben von E231 („1 Einträge") wurde einmal über `src/` gesucht: wo
@@ -2570,6 +2570,21 @@ GEZÄHLT WIRD ES HIER, damit die Zahl nicht verloren geht. Wer sie neu
 erheben will:
 
     Zahl + Leerzeichen + Grossbuchstabenwort, ohne `=== 1` in derselben Zeile
+
+**Die HÄLFTE davon ist am 31. August 2026 mit E281 erledigt:** den
+gemeinsamen Helfer gibt es, er steht in `core/helpers/plural.ts` und ist
+damit für jeden Bereich erreichbar (vorher lag er in `arbeitswelt.ts`, also
+in einem Bereich — §5 verbot den anderen, ihn zu holen; DAS war der
+eigentliche Grund, warum elf Dateien es weiter von Hand machten).
+
+Er kann ausserdem drei Dinge, die die naive Fassung falsch machte: minus
+eins ist Einzahl, `NaN` kommt nicht als „NaN Einträge" auf den Bildschirm,
+und es gibt eine Null-Sonderform („Keine Einträge"), die ohne ausdrückliche
+Angabe NICHT einspringt.
+
+**Offen bleibt der Umbau selbst, und zwar mit Absicht** (Redur in E277,
+§45). Nachgezählt am 31. August: **104 Stellen**. Sie werden umgestellt,
+wenn jemand die betreffende Meldung ohnehin anfasst.
 
 
 L68 — Die Reiterzeile der Lernwelt hat im verschmolzenen Kopf 234 px — GESCHLOSSEN
