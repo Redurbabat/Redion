@@ -3672,3 +3672,140 @@ Prüfung, also steht es hier und nicht als halbe Umsetzung im Code.
 **Betroffen:** `src/kern/ablage/indexdb.ts` (`importAll`, Zweig
 `zusammenfuehren`), `src/kern/abgleich/maschine.ts` (`zuSchicken`).
 **Beschlossen:** offen. **Gefunden:** beim Umsetzen von L76 (E279).
+
+================================================================================
+L101 — Was die Import-Härtung (E284) bewusst noch nicht deckt
+================================================================================
+
+E284 hat das Loch geschlossen — fremde Prototypen kommen nicht mehr durch,
+und die Formatfassung wird endlich gelesen. Vier Dinge bleiben, jedes mit
+Grund:
+
+1. **Die „Vorschau" ist eine ZÄHLUNG.** `schale.ts:2012` zählt
+   `Object.keys(vorschau.blocks).length` und zeigt „1247 Blöcke". Das sagt,
+   wie GROSS die Sicherung ist, nicht WAS sich ändert. Wer wissen will, ob
+   die eigene Seite von gestern überlebt, erfährt es erst danach.
+
+   Eine echte Vorschau müsste den Bestand gegen die Sicherung stellen: wie
+   viele Seiten kommen dazu, wie viele werden überschrieben, wie viele
+   verschwinden beim Ersetzen. Das ist machbar (beide Verzeichnisse liegen
+   vor), aber es ist Oberfläche und gehört in einen eigenen Bogen mit einem
+   Bild dazu.
+
+2. **Die Transaktion deckt die ANHÄNGE nicht ab.** Die Alles-oder-nichts-
+   Zusage gilt für fünf Fächer; die Anhänge kommen danach, Stück für Stück,
+   jedes in einer eigenen Transaktion. Bricht es dort ab, sind Blöcke und
+   Anhänge auseinander.
+
+3. **Der offene Weg schreibt vor dem Ersetzen keine Sicherheitskopie.** Der
+   Krypto-Dialog tut es (`krypto.ts:935 await sicherungSchreiben()`), der
+   normale Weg nicht. Das ist genau umgekehrt zur Gefahr: den offenen Weg
+   benutzen mehr Leute.
+
+4. **Die Sicherheit ist insgesamt verkehrt herum verteilt.** Der
+   VERSCHLÜSSELTE `.redion`-Weg ist streng — Manifestfassung, KDF-Parameter,
+   Pfad-Regex, keine undeklarierten ZIP-Einträge, Bytegrössen, vollständiger
+   Trockenlauf vor dem ersten Schreibzugriff (`krypto.ts:404-693`). Der
+   offene Weg hatte bis E284 einen einzigen Feldtest. E284 hat ihn
+   angehoben, aber nicht auf dieselbe Höhe.
+
+Gefunden am 31. August 2026 (E284, bei der gemessenen Bestandsaufnahme).
+
+================================================================================
+L102 — Was die Bestandsaufnahme vom 31. August sonst noch fand
+================================================================================
+
+Zehn Leser sind durch `src/` gegangen, jeder Befund von einem zweiten Agenten
+angegriffen. Was dabei auffiel und NICHT zu E284 gehört, steht hier, damit es
+nicht verlorengeht:
+
+1. **Der Kalender liefert still FALSCHE Daten.** `wiederholungen()`
+   (`kalender.ts:143-182`) zerlegt eine RRULE vollständig in `teile`, liest
+   davon aber nur vier Schlüssel und wirft den Rest wortlos weg.
+   `FREQ=MONTHLY;BYDAY=2TU` — „jeder zweite Dienstag" — wird zu „jeden Monat
+   am selben Tag". Kein Fehler, keine Meldung, ein falscher Termin.
+   Repo-weit null Treffer für BYDAY, EXDATE, RDATE, VTODO, TZID, VTIMEZONE,
+   BYMONTHDAY, BYSETPOS — auch in Doku und Prüfläufen.
+
+   Das ist schlimmer als „fehlt" und gehört vor die Ausbaupunkte.
+
+2. **Die Rechteprüfung der Agenten fragt die falsche Seite.**
+   `agenten.ts:773` ruft `Konten.darf(recht)` OHNE Seiten-ID;
+   `sitzung.ts:153-156` setzt dann `seiteId || App.aktuelleSeite()`. Ob ein
+   Agent schreiben darf, entscheidet also die gerade OFFENE Seite —
+   geschrieben wird woanders.
+
+3. **Der ganze Vektorweg ist toter Code.** `findenMitVektoren` ist definiert
+   und exportiert (`kontext.ts:620`, Export `:636`), und im gesamten
+   Verzeichnis ruft es niemand auf. Die semantische Suche existiert also als
+   Code und nicht als Weg (§47).
+
+4. **Der Ereignisbus kann kein async.** `melde` verwirft den Rückgabewert,
+   `frage` sammelt Promises als rohe Werte ein, statt sie abzuwarten. Kein
+   Abbruch, kein Veto, keine Reihenfolge, kein Nachreichen für spät
+   Angemeldete. Und von 42 Namen in `ARTEN` wird genau EINER je benutzt
+   (`ablageGeladen`).
+
+   Eine Auftragsmaschine, die auf diesem Bus aufsetzen soll, braucht ihn
+   vorher erweitert. Das ist ein eigener kleiner Bogen, kein Detail darin.
+
+5. **`exportAll`/`importAll` tragen drei hartkodierte Fachlisten**, während
+   `wipe()` seit dem Anhang-Vorfall die Ablage selbst fragt
+   (`[...db.objectStoreNames]`, `indexdb.ts:2378`). Ein neues Fach würde
+   also gelöscht, aber nie gesichert. Kein Prüflauf deckt das ab.
+
+6. **Das Fehlerzentrum zeigt ein Feld, das nie gefüllt wird.**
+   `lernwelt.ts:1041` liest `letzteAntwort` aus vier möglichen Feldern und
+   zeigt es unter „Letzte falsche Antwort" — gespeichert wird keines davon,
+   es steht dort immer „nicht gespeichert".
+
+7. **Der normale KI-Chat hat GAR KEIN Limit** — weder Tageslimit noch
+   Notaus noch Zähler. Beides hängt allein an `Agent.laufen`.
+   `embeddingsBauen` schickt zusätzlich JEDE Seite einzeln an eine
+   kostenpflichtige API: ein Klick, keine Zahl vorher, keine Obergrenze.
+   Der Grund steht ausgesprochen im Code (`agenten.ts:26`: „hier zählt es
+   Schritte statt Geld, weil die lokale KI nichts kostet") — die Annahme
+   stimmte, als sie geschrieben wurde, und stimmt seit sechs Cloud-Anbietern
+   nicht mehr.
+
+Gefunden am 31. August 2026 (gemessene Bestandsaufnahme vor E284).
+
+================================================================================
+L103 — Was die Auftragsmaschine (E286) noch nicht kann
+================================================================================
+
+Die Maschine steht und ist geprüft. Fünf Dinge fehlen ihr, jedes mit Grund:
+
+1. **Kein Bereich ist angeschlossen.** OCR, PDF-Einlesen, grosser Import,
+   Sicherung, Embeddings — alle laufen weiter wie bisher, im
+   Arbeitsspeicher. Das ist Absicht: eine Auftragsmaschine unter das OCR zu
+   schieben, bevor sie bewiesen ist, wäre der Umbau, den §45 verbietet.
+   Der erste Anschluss ist ein eigener Bogen, und der beste Kandidat ist
+   das PDF-Einlesen — es hat schon eine Wiederaufnahme, nur durch
+   Neu-Herleitung statt aus einem Auftragssatz.
+
+2. **Kein Web Worker.** Ein Auftrag läuft im selben Faden wie die
+   Oberfläche. Bei einem OCR über achtzig Seiten heisst das: die App
+   ruckelt, obwohl der Auftrag brav in Schritten arbeitet. Der
+   Agenten-Sandkasten (`agenten.ts:539`) zeigt, dass Redion Worker kann —
+   ein Auftrag müsste dafür aber seinen Läufer als eigenständigen Code
+   mitbringen, und das ist eine eigene Entscheidung.
+
+3. **Kein Fortschritt in der Oberfläche.** Die Ereignisse (`auftrag.schritt`
+   mit Schritt/Schrittzahl/Text) werden gemeldet, und niemand hört zu. Es
+   gibt keine Liste offener Aufträge, keinen Balken, keinen Abbrechen-Knopf
+   — obwohl `Auftraege.offen()` und `Auftraege.abbrechen(id)` beide da
+   sind. Das ist §47 von der leisen Seite: nicht ein Knopf, der nichts tut,
+   sondern eine Sache, die läuft und die niemand sieht.
+
+4. **Die Pacht ist kein `navigator.locks`.** Sie beruht darauf, dass
+   IndexedDB Transaktionen serialisiert — das reicht gegen zwei Tabs, aber
+   es gibt keine Absprache, wer arbeiten SOLL. Zwei Tabs nehmen
+   verschiedene Aufträge und arbeiten beide; auf einem schwachen Gerät ist
+   das doppelt so viel Last wie nötig.
+
+5. **Kein Zeitplan.** Ein Auftrag läuft, sobald er dran ist. Es gibt kein
+   „heute Nacht", kein „wenn das Gerät am Strom hängt", kein „nur im
+   WLAN". Für OCR und Embeddings wäre genau das die richtige Antwort.
+
+Gefunden am 31. August 2026 (beim Bau von E286).

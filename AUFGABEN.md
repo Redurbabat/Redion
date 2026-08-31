@@ -2025,3 +2025,54 @@ node pruefungen/lauf/test105.mjs
   mit `.nh-form{margin-left:auto}`, sonst rutschte sie als einziges Kind der
   Zeile nach links. Und test265 verliess sich an FÜNF Stellen still auf die
   Wurzel; alle fünf sagen es jetzt über `anDieWurzel()`.
+* E284 (Redurs Punkt 5, VORGEZOGEN): Der Import hält jetzt etwas aus. Ein
+  `__proto__` in einer eingespielten Sicherung funktionierte — `Object.assign`
+  schreibt über `[[Set]]`, also über den geerbten Setzer, und danach gab
+  `getMeta` für jeden ungesetzten Schlüssel das zurück, was in der fremden
+  Datei stand: `wolkeAbgleich`, `agent:notaus`, jeder `api:`-Schlüssel. Neu
+  `core/import/sicherheit.ts` (prototyplose Verzeichnisse statt einer
+  Filterliste, eigener Stapel statt Rekursion, Tiefengrenze mit Meldung) und
+  `core/import/validierung.ts` (liest endlich die Fassung, die der Export seit
+  jeher schreibt). Beides gibt einen BEFUND zurück, keinen stillen Eingriff.
+  test278 neu (37) — das erste feindliche Einspielen überhaupt; die anderen
+  vierzehn Import-Prüfläufe spielen alle eine Sicherung ein, die Redion selbst
+  geschrieben hat. Dabei eine Prüfung, die grün war und trotzdem falsch: sie
+  hielt ein leeres `versions`-Fach für einen Hinweis auf eine abgeschnittene
+  Datei — `enthaelt` spricht aber über das Format, nicht über den Inhalt.
+  Vorschau, Anhangs-Transaktion und die Sicherheitskopie vor dem Ersetzen
+  bleiben offen (L101). Was die Bestandsaufnahme sonst fand, steht als L102 —
+  darunter zwei Dinge, die schlimmer sind als eine Lücke: der Kalender wirft
+  BYDAY wortlos weg und liefert falsche Termine, und die Rechteprüfung der
+  Agenten fragt die gerade offene Seite statt der, auf die geschrieben wird.
+  sw v50.
+* E285 (Redurs Punkt 3): `core/knowledge/rank.ts` — PageRank auf Redions
+  vorhandenem Graphen. Reine Funktion, speichert nichts, jederzeit neu
+  ausrechenbar; 5000 Knoten unter einer Sekunde gemessen. Zwei Dinge, die die
+  abgeschriebene Fassung falsch macht: drei von vier Kantenarten sind in
+  Redion GAR NICHT gerichtet (`addEdge` sortiert sie nach Kennung), und
+  Sackgassen verschlucken Gewicht — die nachgebaute falsche Rechnung kommt
+  auf 0,15 statt 1. Beides prüft test279 mit Gegenprobe. Dabei ein eigener
+  Irrtum, der als Kommentar stehenbleibt: mein erstes §4 wollte zeigen, dass
+  drei starke Zeiger sechs schwache schlagen, und mass das Gegenteil — zu
+  Recht, denn „Qualität schlägt Menge" gilt erst, wenn die Wenigen wirklich
+  stark sind. Und die Falle beim Bauen: `tsconfig.bauen.json` führt eine
+  Aufzählung der core-Ordner, kein `**`; ein neuer Ordner muss eingetragen
+  werden. test279 neu (40). sw v51.
+* E286 (Redurs Punkt 1): Die Auftragsmaschine. Fach `auftraege` (Fassung 7),
+  `core/jobs/modell.ts` mit den REGELN (reine Funktionen, keine Uhr — die
+  Zeit kommt als Zahl herein, deshalb prüft test280 §1 die ganze
+  Zustandsmaschine ohne eine Sekunde zu warten) und `kern/auftraege/` mit der
+  WIRKUNG. Der Auftrag wird VOR der Arbeit geschrieben; nach einem Neustart
+  setzt er beim letzten FERTIGEN Schritt an. Genau das misst §4: die Seite
+  wird mitten in der Arbeit neu geladen, und der Auftrag macht bei Schritt 2
+  weiter statt von vorn. Redurs Bus-Regel gilt für den zweiten Teil (kein
+  Bereich kennt einen anderen), nicht für den ersten: Redions Bus kann kein
+  async, keinen Abbruch, keine Reihenfolge (L102 §4) — die Maschine meldet
+  darüber und steuert nicht. Die Pacht gegen zwei Tabs ist keine Feldangabe,
+  sondern EINE readwrite-Transaktion; §6 misst mit zwei echten Fenstern. Der
+  Versuch zählt beim NEHMEN, nicht beim Scheitern — sonst liefe ein Auftrag,
+  der zuverlässig abstürzt, ewig. Ein Entwurfsfehler, den die Prüfläufe
+  sofort zeigten: `auftraege` immer unter `fehlt` zu nennen machte „nichts
+  fehlt" unmöglich; genannt wird es jetzt nur bei wirklich offener Arbeit.
+  test280 neu (52); test85/95/96/100 auf Fassung 7 nachgezogen. Noch kein
+  Bereich angeschlossen und keine Anzeige — L103. sw v52.
