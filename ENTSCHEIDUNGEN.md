@@ -20132,6 +20132,20 @@ kostet das Behalten nichts und das Löschen wäre der Verlust einer
 Begründung. Sie sind jetzt als unverdrahtet markiert und warten auf sein
 Wort. Dasselbe gilt für die CSS-Leiche `#handy-unten`.
 
+**Der volle Lauf: alle 236 Läufe bestanden** (31. August 2026). Der erste
+Durchgang fand zwei rote Suiten, beide Folgen derselben Sache — die
+Seitenleiste ist am Rechner nicht mehr sichtbar. `test33` klickte auf
+`[data-app="bib"]` und `[data-app="aufgaben"]` darin und wartete zu Recht
+dreissig Sekunden auf einen Knopf, den niemand sehen kann; beide gehen
+jetzt über „Gehen". `test214` fand zwei um zwei Pixel abgeschnittene
+Zählerbeschriftungen in der Arbeitswelt — sie umbrechen jetzt, statt zu
+kürzen.
+
+**Viewport-Abnahme** 1440×900 · 1366×768 · 1024×768 · 768×1024 · 390×844:
+kein waagrechter Überlauf, Band über die volle Breite, Kante überall
+54 px, Inhalt beginnt bei 54, am Telefon Kante und „Datei" aus, acht
+Reiter in jeder Breite.
+
 **Der Bogen E272 in Zahlen.** Sieben Phasen (A · B · C · D · E · G · F ·
 I · J), neun Commits, alle auf `main`. Neu: vier Dateien
 (`register/context.ts`, `schale/aufbau/backstage.ts`,
