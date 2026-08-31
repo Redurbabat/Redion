@@ -296,6 +296,65 @@ p('Nach Art gegliedert',         (r.arten ?? '').includes('kalender') && (r.arte
 p('Ohne Schlüssel ist nichts eingerichtet', r.eingerichtet === 0, String(r.eingerichtet));
 p('Und es steht da, was hinausgeht', /markierst/.test(r.hinaus || ''), r.hinaus);
 
+/* ─────────────────────────────────────────────────────────────────────────
+   EIN LIEFERANT WIRD GENAUSO GEPRUEFT WIE EINE ANMELDUNG (E277, L87)
+
+   `melde()` hat seit jeher gesiebt: ohne Kennung, ohne Reiter, ohne
+   lebendes `tun` kommt nichts ins Band. `meldeLieferant()` hat es NICHT
+   getan — was ein Lieferant zurueckgab, ging ungesehen durch.
+
+   Das ist die gefaehrlichere Haelfte: `melde` bekommt sein Objekt einmal
+   und behaelt es, ein Lieferant baut bei JEDEM Zeichnen ein neues. Er ist
+   der Weg, auf dem ein kaputter Eintrag wirklich hereinkommt.
+
+   Sichtbar wurde so ein Eintrag erst als Knopf, der beim Klick wirft, oder
+   als Zeichen ohne Namen — und dann sucht man an der falschen Stelle. */
+console.log('\n— Ein Lieferant wird geprüft wie eine Anmeldung —');
+r = await seite.evaluate(() => {
+  const M = Register.menueband;
+  const vorher = M.anzahl();
+
+  /* Ein Lieferant mit vier kaputten und EINEM guten Eintrag. */
+  const kaputt = () => ([
+    { reiter: 'ansicht', gruppe: 'Probe', name: 'Ohne Kennung',
+      zeichen: 'star', tun: () => {} },                       /* keine id */
+    { id: 'p-ohne-reiter', gruppe: 'Probe', name: 'Ohne Reiter',
+      zeichen: 'star', tun: () => {} },                       /* kein reiter */
+    { id: 'p-ohne-namen', reiter: 'ansicht', gruppe: 'Probe',
+      zeichen: 'star', tun: () => {} },                       /* kein name */
+    { id: 'p-ohne-tun', reiter: 'ansicht', gruppe: 'Probe',
+      name: 'Ohne tun', zeichen: 'star' },                    /* kein tun */
+    { id: 'p-heil', reiter: 'ansicht', gruppe: 'Probe', name: 'Heiler Eintrag',
+      zeichen: 'star', tun: () => {} }
+  ] as any);
+  M.meldeLieferant(kaputt);
+  const mit = M.alle().map((x: any) => String(x.id || '(ohne)'));
+
+  /* Und abmelden muss gehen — sonst steht der Probeeintrag bis zum Ende
+     des Laufs im Band und faellt einem anderen Punkt zur Last (E273). */
+  const zurueck = M.nimmZurueckLieferant(kaputt);
+  const nochmal = M.nimmZurueckLieferant(kaputt);   /* zweimal geht nicht */
+  const nachher = M.anzahl();
+
+  return {
+    heilDa:    mit.includes('p-heil'),
+    ohneReiter: mit.includes('p-ohne-reiter'),
+    ohneNamen:  mit.includes('p-ohne-namen'),
+    ohneTun:    mit.includes('p-ohne-tun'),
+    ohneId:     mit.filter((x: string) => x === '(ohne)').length,
+    zurueck, nochmal, vorher, nachher
+  };
+});
+p('Der heile Eintrag des Lieferanten kommt an', r.heilDa === true);
+p('Einer ohne Kennung kommt nicht durch', r.ohneId === 0, String(r.ohneId));
+p('Einer ohne Reiter kommt nicht durch',  r.ohneReiter === false);
+p('Einer ohne Namen kommt nicht durch',   r.ohneNamen === false);
+p('Einer ohne `tun` kommt nicht durch',   r.ohneTun === false);
+p('Ein Lieferant lässt sich zurücknehmen', r.zurueck === true);
+p('Zweimal zurücknehmen geht nicht',       r.nochmal === false);
+p('Und danach ist der Bestand wieder der alte',
+  r.nachher === r.vorher, r.vorher + ' → ' + r.nachher);
+
 console.log('\n— Die Seitenleiste liest aus dem Register —');
 r = await seite.evaluate(async () => {
   let gerufen = 0;

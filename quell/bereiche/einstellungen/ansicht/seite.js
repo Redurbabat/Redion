@@ -228,25 +228,36 @@ const Einstellungen = (() => {
            samt Wolke-Fenster. Wer hier nachlas, bekam die Auskunft, es gäbe
            nichts davon.
            Die Seite baut deshalb KEINEN zweiten Dialog (E29), sondern sagt
-           die Wahrheit und führt zum vorhandenen. Drei Zustände, weil es
-           drei gibt — und der mittlere ist der wichtigste: angemeldet und
-           trotzdem nichts hinausgeschickt (E1/E34). */
+           die Wahrheit und führt zum vorhandenen. Vier Zustände, weil es
+           vier gibt — und die mittleren zwei sind die wichtigsten: angemeldet
+           und trotzdem nichts hinausgeschickt (E1/E34), und angemeldet mit
+           einer offenen Entscheidung nach einem Einspielen (L76/E279). */
         konto: () => {
             const w = globalThis.Wolke;
             const angemeldet = !!(w && w.angemeldet && w.angemeldet());
             const gleichtAb = angemeldet && !!(w.abgleichErlaubt && w.abgleichErlaubt());
+            /* VIER Zustände seit L76 — es waren drei. Steht die Frage nach einem
+               eingespielten „Ersetzen", ist `abgleichErlaubt()` falsch, und diese
+               Seite behauptete darum „Der Abgleich ist ausgeschaltet". Das hat
+               niemand ausgeschaltet: es wartet eine Entscheidung. */
+            const frage = angemeldet && !!(w.neuAbgleichOffen && w.neuAbgleichOffen());
             const wo = angemeldet ? String(w.adresse?.() || '') : '';
             const geraet = angemeldet ? String(w.geraeteName?.() || '') : '';
             const einleitung = !angemeldet
                 ? 'Ohne Konto liegt alles auf diesem Gerät — so wie bisher, und das bleibt ' +
                     'der Normalfall. Redion hat einen eigenen Server; er ist freiwillig und ' +
                     'bringt dieselben Notizen auf Rechner und Telefon.'
-                : gleichtAb
-                    ? 'Angemeldet, und dieses Gerät gleicht ab' + (wo ? ' mit ' + esc(wo) : '') +
-                        '. Private Seiten gehen verschlüsselt hinaus; im Klartext geht nur, was ' +
-                        'du ausdrücklich teilst oder veröffentlichst.'
-                    : 'Angemeldet — aber es verlässt nichts dieses Gerät. Der Abgleich ist ' +
-                        'ausgeschaltet, und ohne ihn bleibt alles lokal.';
+                : frage
+                    ? 'Angemeldet — aber der Abgleich wartet auf dich. Du hast eine Sicherung ' +
+                        'eingespielt und den Bestand ersetzt; auf dem Server liegt noch der Stand ' +
+                        'von vorher. Bis du im Wolke-Fenster entschieden hast, geht nichts hinaus ' +
+                        'und nichts herein.'
+                    : gleichtAb
+                        ? 'Angemeldet, und dieses Gerät gleicht ab' + (wo ? ' mit ' + esc(wo) : '') +
+                            '. Private Seiten gehen verschlüsselt hinaus; im Klartext geht nur, was ' +
+                            'du ausdrücklich teilst oder veröffentlichst.'
+                        : 'Angemeldet — aber es verlässt nichts dieses Gerät. Der Abgleich ist ' +
+                            'ausgeschaltet, und ohne ihn bleibt alles lokal.';
             return kopf('Mein Konto', einleitung) +
                 zeile('Name', 'So wirst du in Kommentaren genannt', feld('nutzer', V('nutzer', ''), 'Dein Name')) +
                 zeile('Symbol', 'Kürzel oben in der Seitenleiste', feld('arbeitsIcon', V('arbeitsIcon', 'N'))) +

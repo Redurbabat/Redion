@@ -343,6 +343,29 @@ const Kopfleiste = (() => {
            alle an der Kopfzeile, die es dann nicht gibt. */
         if (!c)
             return;
+        /* ZWEI KNÖPFE, DIE OHNE SEITE NICHTS TUN KÖNNEN (E277, L68).
+    
+           Gemessen auf fünf Bildschirmen: „•••" und der Stern standen auf
+           JEDEM — auch auf Notizhefte, Posteingang, Kompass und Start. Und
+           beide prüfen beim Klick, ob es überhaupt eine Seite gibt:
+           `an('btn-page-menu')` mit `if (p)` und `an('btn-fav')` mit
+           `if (!seiteId) return` (schale.ts:3415, :3425). Ohne Seite passiert
+           also nichts — lautlos, und das ist die heimtückischere Hälfte von
+           §47: ein Knopf, der „geht gerade nicht" sagt, ist ärgerlich; einer,
+           der schweigend nichts bewirkt, lässt den Menschen an sich zweifeln.
+    
+           Sie verschwinden jetzt, statt dazustehen. Der KI-Knopf daneben
+           bleibt: `kiPanel()` geht auf jedem Bildschirm.
+    
+           Das steht VOR den beiden Rücksprüngen darunter — die kehren bei
+           einem Sonderbildschirm und bei „keine Seite" sofort um, und genau
+           das sind die Fälle, um die es hier geht. */
+        const echteSeite = !sonder && !!seiteId && !!Store.getBlock(seiteId);
+        for (const id of ['btn-page-menu', 'btn-fav']) {
+            const k = document.getElementById(id);
+            if (k)
+                k.hidden = !echteSeite;
+        }
         if (sonder) {
             c.innerHTML = '<a>' + esc(sonder.titel) + '</a>';
             return;

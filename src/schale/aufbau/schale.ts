@@ -2016,9 +2016,24 @@ const App = (() => {
         if (zip) anhaenge = await anhaengeEinspielen(zip, wahl);
         danach && danach();
         zeichneBaum(); zeichneSeite();
+        /* EIN Hinweis, nicht zwei. `UI.toast` schreibt in dasselbe Element:
+           ein zweiter Aufruf direkt danach überschriebe den ersten, und
+           gesehen hätte man nur die zweite Hälfte.
+
+           Hat das Einspielen eine Entscheidung offen gelassen (L76), gehört
+           sie in denselben Satz. Eine Frage, von der niemand weiss, dass
+           sie wartet, ist ein stehender Abgleich ohne Grund — und der
+           fällt erst auf, wenn das andere Gerät nichts mehr bekommt. */
         UI.toast('Sicherung geladen — ' + erg.bloecke + ' Blöcke' +
                  (erg.versionen ? ', ' + erg.versionen + ' Fassungen' : '') +
-                 (anhaenge ? ', ' + anhaenge + ' Anhang/Anhänge' : ''));
+                 (anhaenge ? ', ' + anhaenge + ' Anhang/Anhänge' : '') +
+                 (erg.frage
+                   ? '. Der Abgleich mit der Wolke steht still: dort liegt noch ' +
+                     'der Stand von vorher. Entscheide unter „Mehr → Wolke", ob ' +
+                     'dieses Gerät nur lokal weiterarbeitet oder vollständig neu ' +
+                     'abgleicht.'
+                   : ''),
+                 erg.frage ? 14000 : undefined);
       } catch (err: unknown) { alert('Konnte nicht geladen werden: ' +
         (err instanceof Error ? err.message : String(err))); }
     });

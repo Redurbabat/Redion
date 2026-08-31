@@ -1182,6 +1182,32 @@ const Werkzeuge = (() => {
 
   const meldungenLeeren = () => { Store.setMeta('meldungen', []); meldungenGeaendert(); };
 
+  /**
+   * Alle Meldungen als gelesen markieren — der HARMLOSE Zwilling zu
+   * `meldungenLeeren` (E276, L96).
+   *
+   * Beide räumen den Punkt an der Glocke weg, und genau deshalb sehen sie
+   * aus wie dasselbe. Sie sind es nicht: `meldungenLeeren` WIRFT WEG. Was
+   * dort stand, ist danach nicht mehr da — auch die Zeile, die auf eine
+   * Seite zeigte, die man noch hätte ansehen wollen.
+   *
+   * An einen Knopf, den ein Klick ohne Rückfrage auslöst, gehört deshalb
+   * dieser hier und nicht jener. Er tut, was `meldungGelesen(id)` tut, nur
+   * über alle: er ändert ein Feld, er nimmt nichts.
+   *
+   * Gibt zurück, WIE VIELE ungelesen waren. Wer den Knopf zeigt, will das
+   * wissen — ohne offene Meldung hat er nichts zu tun und gehört nicht hin
+   * (§47).
+   */
+  const meldungenAlleGelesen = (): number => {
+    const liste = meldungen();
+    const offen = liste.filter((x: any) => !x.gelesen).length;
+    if (!offen) return 0;
+    Store.setMeta('meldungen', liste.map((x: any) => x.gelesen ? x : { ...x, gelesen: true }));
+    meldungenGeaendert();
+    return offen;
+  };
+
   /* Wer den Zähler zeigt (die Glocke in der Kopfzeile, E251), erfährt es
      hier — als DOM-Ereignis, nicht als Direktaufruf: der Bereich kennt
      die Schale nicht (Regel 1). */
@@ -2572,7 +2598,7 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
     versionen, versionAutomatisch, sperren, entsperren, sperrAnsicht,
     fokus, praesentation, quelltext, alsMarkdown, ausMarkdown, ausHtml, statistik,
     formelBibliothek, formelBibliothekLesen, formelBibliothekAnwenden,
-    erinnerungSetzen, erinnerungen, erinnerungenPruefen, geraeteMeldung, posteingangMelden, meldungen, meldungGelesen, meldungenLeeren,
+    erinnerungSetzen, erinnerungen, erinnerungenPruefen, geraeteMeldung, posteingangMelden, meldungen, meldungGelesen, meldungenAlleGelesen, meldungenLeeren,
     weckrufLegen, naechsteErinnerung,
     ordnerSchreiben, ordnerLesen, dateienLesen, einzelDatei,
     htmlExport, drucken, seiteAlsHtml, verschiebenNach, verschiebe,

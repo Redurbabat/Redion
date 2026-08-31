@@ -20551,3 +20551,325 @@ falsch daran war.
 **Geprüft:** test56 27 (vier neu, darunter die Gegenprobe „`parentId` ist
 hier NICHT die Seite" — ohne sie misst der Punkt darunter nichts).
 
+
+
+================================================================================
+E276 — Der harmlose Zwilling, und ein Netz mit einem Loch
+================================================================================
+31. August 2026
+
+### „Alle gelesen" statt „leeren" (L96)
+
+`meldungenLeeren()` und ein „alle gelesen"-Knopf räumen denselben Punkt an
+der Glocke weg. Deshalb sehen sie aus wie dasselbe. Sie sind es nicht: das
+eine WIRFT WEG — auch die Zeile, die auf eine Seite zeigte, die man noch
+hätte ansehen wollen.
+
+An einen Kantenknopf, den ein Klick ohne Rückfrage auslöst, gehört deshalb
+`meldungenAlleGelesen()`: es tut, was `meldungGelesen(id)` tut, nur über
+alle, und es nimmt nichts. Es gibt zurück, wie viele ungelesen waren — wer
+den Knopf zeigt, will das wissen, und ohne offene Meldung steht er nicht da
+(§47).
+
+### Und ein Loch im Netz, das ich gefunden habe, indem ich hineinfiel
+
+Beim Bauen von E275 habe ich in `pruefungen/lauf/test56.mts` das Ergebnis
+von `.find(...)` ohne `undefined`-Prüfung benutzt. Der volle Lauf war grün,
+alle 235, und es ging auf `main`.
+
+Der Grund ist die Bauart: Node ENTFERNT die Typen beim Ausführen, es prüft
+sie nicht (§54.3). Und `tsc` lief im ganzen Netz genau einmal — test105 mit
+`tsconfig.bauen.json`, und der Bauplan kennt nur, was nach `quell/`
+ausgegeben wird. `pruefungen/` steht nicht darin.
+
+`npm run typecheck` war die ganze Zeit rot. Nur rief ihn niemand.
+
+test105 §3 ruft ihn jetzt. Mit Gegenprobe, und einmal wirklich rot
+vorgeführt: ein eingeschleuster Fehler in test41.mts wurde mit Datei, Zeile
+und TS-Nummer gemeldet, danach zurückgenommen.
+
+Ein Prüflauf, den man von Hand starten muss, ist kein Netz — er ist eine
+Absicht.
+
+**Geprüft:** test105 57 (zwei neu) · test272 148 · test225 11. sw v47.
+
+
+================================================================================
+E277 — Zwölf Entscheidungen, die Redur festgelegt hat
+================================================================================
+31. August 2026
+
+Nach dem geprüften Durchgang durch die offenen LUECKEN-Zeilen (E276) hat
+Redur die Produktfragen entschieden — alle auf einmal, damit hier nicht mehr
+gewartet wird. Sie stehen hier als BESCHLUSS, nicht als Vorschlag. Wer eine
+davon ändern will, ändert diesen Abschnitt.
+
+Vorab zwei Berichtigungen an meinem eigenen Bericht:
+
+  · **L63 und L64 sind gebaut.** Mein Prüfdurchgang meldete sie als „offen",
+    und das war irreführend: gemeint waren stehengebliebene ZAHLEN in der
+    Doku („die anderen acht Aktionen" — es sind neun; „elf Werkzeuge" — es
+    sind dreizehn), nicht fehlende Funktion. Die Funktion steht. Nicht neu
+    bauen; nur die Zahlen berichtigen.
+  · **L87 ist offen** und soll sofort gebaut werden.
+
+--------------------------------------------------------------------------------
+
+**L91 — Die Kante bleibt fest.**
+54 px, kein Ziehgriff am Rechner. Links stehen Werkzeuge und Zeichen, nicht
+die alte Seitenleiste. Die aufklappende Lade darf davon getrennt ihre rund
+250 px haben.
+
+**L69 — PPTX kommt, in dieser Reihenfolge.**
+Zuerst ein sauberes Folien-PDF, danach der echte `.pptx`-Export. KEIN
+PowerPoint-Editor. Vortragsmodus und ZIP-Schreiber gibt es bereits.
+
+**L85 — Nicht alle vier bauen.**
+  · Vollbild: bauen.
+  · Volle Breite: den Code, den es an zwei Stellen schon gibt, zu EINEM
+    gemeinsamen Griff zusammenziehen.
+  · Globaler Zoom: STREICHEN. PDF, Whiteboard und Zeichenfläche behalten
+    ihren eigenen, echten Zoom.
+  · Senden: STREICHEN. Bis es echten Mailversand gibt, heisst der Weg
+    „Weitergeben/Teilen". Kein vorgetäuschter Versand.
+
+**L76 — Import „Ersetzen" ersetzt Inhalte, nicht die Identität.**
+Der Cloud-Zugang des Geräts (Token, Konto) BLEIBT. Sync-Marken und `basis`
+werden danach zurückgesetzt, und der Zustand ist „neu abgleichen
+erforderlich". Der Mensch wählt dann ausdrücklich zwischen zwei sicheren
+Wegen: „Nur lokal verwenden" oder „Mit der Wolke vollständig neu
+abgleichen".
+
+NIEMALS von selbst eine Richtung bevorzugen — weder den alten lokalen
+Bestand hochladen noch den neueren Cloudbestand darüberziehen. Das ist die
+Datenschutzregel dieses Bogens (§46, Priorität 1).
+
+**L61 — Vorschaubilder, aber nur für visuelle Seiten.**
+PDF, A4/Ink, Whiteboard, Schaltplan, Bilder. Textlastige Seiten brauchen
+kein gerendertes Bild. Die Bilder sind ABGELEITETER CACHE: jederzeit neu
+erzeugbar, keine neue Datenwahrheit, faul erzeugt, klein gespeichert.
+
+**L67 — Kein 110-Stellen-Umbau.**
+`zahlWort()` wandert in einen gemeinsamen Kernhelfer. Neue und gerade
+angefasste Oberflächen benutzen ihn. Die wichtigsten sichtbaren Meldungen
+werden berichtigt, der Rest nach und nach. Niedrige Priorität.
+
+**L82 — Den Abgleich wirklich scharfschalten.**
+Cloudflare aktivieren und echt prüfen. Die Ordner-Sicherung darf am Rechner
+bleiben; auf iPhone/iPad tritt der Sync an ihre Stelle. Kein Hintergrund-
+dienst für einen geschlossenen Browser. Unverschlüsselte lesbare
+Ordnersicherungen bleiben erlaubt — MIT klarer Warnung. Anhangsänderungen
+müssen den Sicherungs-Abdruck auslösen, und grosse Sicherungen zeigen
+Fortschritt. Mehrere Serveradressen und einstellbare Aufbewahrung: später.
+
+**L83 — Man muss sehen, welchen Stand man ansieht.**
+`holen` übernimmt nur einen geprüften Stand oder warnt deutlich, wenn CI rot
+oder noch nicht fertig ist. Redion zeigt sichtbar an, woher der Stand kommt
+— lokal, Prüfserver oder Wolke — samt Commit/Build. Die Service-Worker-
+Version wird beim Bauen automatisch an den Stand gekoppelt, damit sie
+niemand mehr von Hand vergessen kann. Windows-Skripte reichen vorerst.
+
+**L86 — Die Leichen kommen raus.**
+`hl-seiten`, `hl-konto`, `weltwechsel` und das zugehörige tote CSS werden
+entfernt. Dazu ein Wächter, der JEDE fest verdrahtete DOM-Kennung gegen die
+echte Oberfläche hält — `?.addEventListener` versteckt solche Leichen sonst
+still.
+
+**L68 — Eine Kopfzeile, keine zweite.**
+Das `•••` verschwindet automatisch, wenn es wirklich kein Seitenmenü gibt.
+So gewinnt die Lernwelt Platz, ohne wieder Höhe zu verbrauchen.
+
+**L77/L78 — Kein GoodNotes-Nachbau in einem Zug.**
+Jetzt: Fach und Reiter über ein Neuladen merken, die Listenbreite auf
+grossen Monitoren begrenzen, und die Regalsuche bekommt einen Weg „In
+Inhalten suchen" in die grosse Suche. Ziehen-und-Ablegen in Fächer und
+beliebig tiefe Regalordner kommen später als eigener Bogen, mit Telefon.
+
+**L87 — Sofort bauen.**
+`meldeLieferant()` muss GENAU dieselben Einträge prüfen wie `melde()`, und
+es braucht `nimmZurueckLieferant()`. Kleine Architekturarbeit, die spätere
+tote Bandeinträge verhindert.
+
+--------------------------------------------------------------------------------
+
+Diese Punkte werden ohne weitere Rückfrage abgearbeitet. Eine Rückfrage gibt
+es nur noch, wenn dabei eine DATENMIGRATION oder eine SICHERHEITSFRAGE neu
+entsteht — dann gilt wieder §9 und §19.
+
+
+================================================================================
+E278 — Die ersten drei aus E277: L87, L68 und eine Gegenprobe, die rot wurde
+================================================================================
+31. August 2026
+
+### L87 — ein Lieferant wird geprüft wie eine Anmeldung
+
+`melde()` siebte seit jeher: ohne Kennung, ohne Reiter, ohne lebendes `tun`
+kommt nichts ins Band. `meldeLieferant()` tat es nicht.
+
+Das ist die gefährlichere Hälfte, und zwar aus einem Grund, der erst beim
+Hinsehen auffällt: `melde` bekommt sein Objekt EINMAL und behält es. Ein
+Lieferant baut bei JEDEM Zeichnen ein neues. Er ist also der Weg, auf dem
+ein kaputter Eintrag wirklich hereinkommt — und war der ungeprüfte.
+
+`alle()` siebt jetzt beides, mit derselben Bedingung. Und es gibt
+`nimmZurueckLieferant()`: wer einen Lieferanten anmeldete, wurde ihn nicht
+mehr los — für eine Gegenprobe heisst das, ihr Fantasie-Eintrag bleibt bis
+zum Ende des Laufs stehen und fällt einem ganz anderen Punkt zur Last.
+Dasselbe war bei `Register.module` schon einmal die Antwort (E273).
+
+**Und die Gegenprobe von test272 §8 wurde davon rot** — zu Recht. Sie schob
+ihren kaputten Eintrag ausdrücklich über `meldeLieferant()` ein, weil das
+der einzige ungeprüfte Weg war; ihr eigener Kommentar nannte das ihren
+Befund. Der Weg ist jetzt zu, also prüft sie den PRÜFER statt den Weg — und
+zusätzlich, dass der Weg zu BLEIBT.
+
+### L68 — zwei Knöpfe, die nichts tun konnten
+
+Gemessen auf fünf Bildschirmen: „•••" und der Stern standen auf jedem, auch
+auf Notizhefte, Posteingang, Kompass und Start. Beide prüfen beim Klick, ob
+es eine Seite gibt (`if (p)` bzw. `if (!seiteId) return`) — ohne Seite
+passiert nichts, lautlos.
+
+Redur hatte das `•••` entschieden; der Stern hat dieselbe Bauart und
+dasselbe Schweigen, also geht er mit. Der KI-Knopf daneben bleibt:
+`kiPanel()` geht überall.
+
+**Eine CSS-Falle dabei**, und sie ist die eigentliche Geschichte: `k.hidden
+= true` bewirkte NICHTS. Das Browser-Grundblatt gibt einem `[hidden]`-
+Element `display:none`, aber `.top-btn{display:flex}` gewinnt dagegen. Wer
+das nicht weiss, sucht danach lange im JavaScript. Für `#menueband` und
+`.app-unter` steht dieselbe Zeile längst irgendwo; bei `.top-btn` fehlte
+sie.
+
+test272 §17 misst es jetzt auf fünf Bildschirmen, mit einer Gegenprobe, die
+sicherstellt, dass die Messung einen sichtbaren Knopf überhaupt sieht —
+sonst wäre „überall verschwunden" auch dann grün, wenn sie immer `false`
+liefert.
+
+**Geprüft:** test272 153 (§17 neu) · test86 69 (acht neu) · test105 57 ·
+typecheck grün.
+
+================================================================================
+E279 — Einspielen ersetzt Inhalte, nicht die Identität (L76)
+================================================================================
+31. August 2026
+
+Redurs vierter Punkt aus E277, wörtlich: Import „Ersetzen" ersetzt Inhalte,
+nicht die Geräte-/Kontoidentität. Cloud-Zugang des Geräts behalten,
+Sync-Marken und `basis` zurücksetzen, danach ausdrücklich „nur lokal" oder
+„vollständig neu mit Wolke abgleichen" wählen. **Niemals automatisch eine
+Richtung bevorzugen.**
+
+### Was vorher geschah
+
+`importAll(…, 'ersetzen')` tauschte `meta` vollständig aus. Darin steht
+`wolkeToken`, `wolkeKonto`, `wolkeBereich`, `wolkeProbe`, `wolkeGeteilt` und
+jeder `api:`-Schlüssel. Wer eine fremde Sicherung einspielte, war danach als
+jemand anderes angemeldet — und der nächste Takt schickte seine Notizen in
+ein fremdes Konto. Wieder die Sorte Fehler, die aussieht wie ein geglückter
+Vorgang.
+
+`wolkeGeteilt` ist dabei die unangenehmste Zeile: `Wolke.istGeteilt()`
+entscheidet damit, ob ein Satz im KLARTEXT oder mit AES hochgeht. Eine
+fremde Liste hätte hiesige private Seiten unverschlüsselt hochgeschickt —
+kein Datenverlust, sondern ein Datenleck.
+
+### Der Zusatzfund: die Sicherung trug Zugangsdaten im Klartext
+
+Beim Messen fiel auf, dass eine `.json` und das `daten.json` im `.redion`
+das Sitzungs-Token und jeden `api:`-Schlüssel offen mit sich herumtrugen.
+Diese Dateien liegen im Downloads-Ordner, im Mail-Anhang, auf dem Stick.
+
+Redur hat entschieden: **Klartext ohne, verschlüsselt mit.** Aus der
+einfachen `.json` und der `.redion` fliegen sie raus und werden im Manifest
+unter `fehlt` genannt; die verschlüsselte Sicherung darf sie mitnehmen — sie
+ist ohne Passwort nichts wert, und mit Passwort ist sie genau das, was man
+auf einem neuen Gerät braucht.
+
+`exportAll` hat dafür einen zweiten Schalter bekommen, und seine Vorgabe ist
+die sichere Seite: wer ihn vergisst, bekommt eine Sicherung OHNE
+Zugangsdaten. `sicherungSchreiben(passwort)` füttert ihn mit `!!passwort` —
+dasselbe Passwort entscheidet beides, damit die zwei Fragen nicht
+auseinanderlaufen können.
+
+Ein Präfix statt einer Aufzählung: `api:` deckt auch die Anbindung, die es
+morgen gibt. Eine Aufzählung wäre bei jeder neuen Verbindung eine
+Gelegenheit, durch Vergessen zu lecken.
+
+### Drei Funde, die die naheliegende Umsetzung widerlegten
+
+**1 · Die Marken zu leeren bevorzugt still eine Richtung.**
+
+`Wolke.abgleichErlaubt()` liest `wolkeAbgleich` und fällt, wenn der `null`
+ist, zurück auf „gibt es Marken?" — der Bestandsgeräte-Weg aus E1/E34. Wer
+die Marken zurücksetzt und sonst nichts tut, kippt diese Antwort von selbst
+auf „nein", also auf „nur lokal". Auch die harmlosere Richtung ist eine
+Richtung, und eine, die sich niemand ausgesucht hat.
+
+Deshalb ein EIGENER Schlüssel, `wolkeNeuAbgleich`, und kein Umdeuten von
+`wolkeAbgleich`. Er steht in `abgleichErlaubt()` als erste Zeile, vor jedem
+Altwert: ein `wolkeAbgleich: true` von vor dem Einspielen galt für einen
+Bestand, den es nicht mehr gibt.
+
+**2 · `basisLeeren()` allein entwaffnet die Block-Grabsteine.**
+
+`bloeckeWeg()` fragt für jeden Grabstein `basisHolen(id)` und wirft still
+jeden weg, der keinen gemeinsamen Stand hat. Das ist die Wache aus E254
+gegen „offline angelegt und gelöscht": der Server soll nichts löschen
+sollen, was er nie gesehen hat.
+
+Eine leere Basis macht diese Wache blind für ALLE Grabsteine. Die
+Löschabsichten, die E255 gerade über das Ersetzen hinübergerettet hat, wären
+danach stumm — die Blöcke blieben auf dem Server, für immer, und niemand
+sähe es. E254 und E255 wären durch die Hintertür wieder offen.
+
+Der Grabstein trägt seinen Satz selbst mit (`e.satz` aus `purgeTief`).
+Daraus wird der gemeinsame Stand nach dem Leeren neu gesät. Was er
+beantworten muss, ist ohnehin nur die eine Frage: hat der Server diesen Satz
+je gesehen?
+
+**3 · `confirm()` und `Dialog.wahl` können diese Frage nicht stellen.**
+
+`confirm()` hat ein OK und ein Abbrechen, Escape wählt Abbrechen.
+`Dialog.wahl` gibt dem ERSTEN Knopf `class="prim"`. Beide heben eine Antwort
+hervor — genau das, was der Beschluss verbietet.
+
+Die Frage steht deshalb als eigene Kiste im Wolke-Fenster, mit zwei gleich
+gewichteten Knöpfen und ohne Vorgabe. Wegklicken beantwortet nichts; die
+Frage steht dann eben weiter. Das ist kein Schönheitsfehler, sondern der
+Punkt: eine Entscheidung, die Arbeit kosten kann, darf nicht aus Versehen
+fallen.
+
+### Was jetzt geschieht
+
+Beim Einspielen (beide Arten) sticht jeder lebende geräteeigene Wert den aus
+der Sicherung. Gibt es hier keinen, bleibt der aus der Sicherung stehen —
+genau das ist der Wiederherstellungsfall auf einem frischen Gerät.
+`sicherungOrdner` bleibt die Ausnahme aus E270: ohne lebenden Zugriff wird
+gelöscht, weil ein serialisierter Zugriff eine Attrappe ist.
+
+Beim „Ersetzen" zusätzlich: die drei Marken auf `''`, die `basis` geleert
+und für die überlebenden Grabsteine neu gesät, und — nur bei lebendem
+Zugang — `wolkeNeuAbgleich` gesetzt. Ohne Anmeldung wird nicht gefragt; das
+wäre eine Aufforderung ins Leere (§47).
+
+Solange die Frage steht, geht nichts hinaus und nichts herein. „Jetzt
+abgleichen" ist dann `disabled` und sagt am Knopf warum, statt in einem
+Toast, den man erst nach dem Drücken sieht. Der Punkt oben rechts hat einen
+vierten Zustand bekommen: er zeigte sonst „ist-gut" und „Letzter Abgleich
+14:03" — beides von vor dem Einspielen. Und der Hinweis nach dem Einspielen
+nennt die Frage in DEMSELBEN Satz, weil `UI.toast` in dasselbe Element
+schreibt und ein zweiter Aufruf den ersten überschriebe.
+
+`Wolke.start()` hängt sich an `Store.on('import')`, sonst zeigte der Punkt
+bis zum nächsten Takt — zwei Minuten — einen Stand von vorhin. Die Ablage
+lädt vor der Abgleichmaschine und kennt sie nicht (§5), also SCHREIBT
+`importAll` den Zustand nur; gelesen und entschieden wird in `maschine.ts`.
+
+### Was das nicht deckt
+
+Beim „Dazulegen" bleiben die Marken stehen — steht als L100 in LUECKEN.md.
+
+**Geprüft:** test273 neu (7 Abschnitte, jeder mit Gegenprobe) · test261 §11
+umgeschrieben, weil es das alte Verhalten als Erwartung festhielt.

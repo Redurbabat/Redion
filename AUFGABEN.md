@@ -1931,3 +1931,35 @@ node pruefungen/lauf/test105.mjs
   dreimal, plus `App.zeigeBlock` seit E105). Beides stand in LUECKEN, weil
   ich geschrieben statt nachgesehen habe. test56 +4 Punkte.
 
+* E276 (L96, L99): `meldungenAlleGelesen()` als harmloser Zwilling zum
+  Leeren — es ändert ein Feld, statt wegzuwerfen; als Kantenknopf „Alle
+  gelesen" im Posteingang, sichtbar nur solange etwas ungelesen ist. Und
+  test105 §3: der volle Lauf typprüfte NICHT — `tsc` lief nur über
+  `tsconfig.bauen.json`, und `pruefungen/` steht dort nicht drin. Ein
+  Typfehler in test56.mts ging deshalb durch alle 235 Läufe auf main. Jetzt
+  läuft `tsc --noEmit` über das ganze Projekt, mit Gegenprobe und einmal
+  rot vorgeführt. sw v47.
+* E278 (E277 Teil 1 — L87, L68): `meldeLieferant()` prüft jetzt dieselben
+  Einträge wie `melde()`, dazu `nimmZurueckLieferant()`. Die Gegenprobe in
+  test272 §8 wurde davon rot, weil sie genau diesen ungeprüften Weg
+  benutzte — sie prüft jetzt den Prüfer und dass der Weg zu bleibt. Und
+  „•••" plus Stern standen auf jedem Bildschirm, obwohl beide ohne offene
+  Seite lautlos nichts tun; sie verschwinden. Dabei eine CSS-Falle:
+  `.top-btn{display:flex}` schlägt `[hidden]` — `k.hidden = true` bewirkte
+  nichts. test272 §17 neu, test86 +8. sw v47.
+* E279 (E277 Teil 2 — L76): Eine eingespielte Sicherung ersetzt Inhalte,
+  nicht die Kontoidentität des Geräts. Vorher tauschte „ersetzen" `meta`
+  vollständig — wer eine fremde Sicherung einspielte, war danach als jemand
+  anderes angemeldet, und der nächste Takt schickte seine Notizen in ein
+  fremdes Konto. Jetzt bleiben Anmeldung, Konto, Bereich, Salz, Probe und
+  die `api:`-Schlüssel; die drei Sync-Marken gehen auf null, die `basis`
+  wird geleert UND für die überlebenden Grabsteine neu gesät (sonst fiele
+  E254/E255 durch die Hintertür); und dann FRAGT Redion, statt eine Richtung
+  zu wählen — eigener Schlüssel `wolkeNeuAbgleich`, weil ein Umdeuten von
+  `wolkeAbgleich` still „nur lokal" gewählt hätte. Dazu: Zugangsdaten
+  fliegen aus der offenen Sicherung und stehen im Manifest unter `fehlt`;
+  Ordnerzugriff und Freigabeliste reisen gar nicht mit, weil eine Sicherung
+  keine Erlaubnis mitbringen kann. Vier statt drei Zustände am Sync-Punkt
+  und auf der Kontoseite. test273 neu (34, jeder Abschnitt mit Gegenprobe),
+  test261 §11 umgeschrieben (21). L100 offen: beim Dazulegen bleiben die
+  Marken stehen. sw v49.

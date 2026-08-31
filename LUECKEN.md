@@ -2572,7 +2572,7 @@ erheben will:
     Zahl + Leerzeichen + Grossbuchstabenwort, ohne `=== 1` in derselben Zeile
 
 
-L68 — Die Reiterzeile der Lernwelt hat im verschmolzenen Kopf 234 px
+L68 — Die Reiterzeile der Lernwelt hat im verschmolzenen Kopf 234 px — GESCHLOSSEN
 ================================================================================
 
 E235 lässt einen Bereich seine eigene oberste Zeile mit
@@ -2811,7 +2811,7 @@ plus Wolke wirklich zusammen gemessen wird.
 Gefunden am 29. August 2026 (E254-Leser, Risiko 3).
 
 ================================================================================
-L76 — Wolke-Zustand nach Import „ersetzen" ist unentschieden
+L76 — Wolke-Zustand nach Import „ersetzen" ist unentschieden — GESCHLOSSEN
 ================================================================================
 
 E255 rettet die drei Lösch-Merklisten — Token, Bereich, Salz, Marken
@@ -2826,6 +2826,19 @@ als EIGENE Entscheidung geplant (Import-Dialog könnte fragen: „Konto
 behalten und Bestand neu abgleichen?"), nicht als Beifang.
 
 Gefunden am 29. August 2026 (beim Bau von E255).
+
+**GESCHLOSSEN am 31. August 2026 durch E279.** Und zwar genau so, wie es
+hier gefordert stand — als eigene Entscheidung, nicht als Beifang: die
+Identität des Geräts überlebt das Einspielen, die drei Marken gehen auf
+null, die `basis` wird geleert UND für die überlebenden Grabsteine neu
+gesät (ohne das Neusäen wären E254/E255 durch die Hintertür wieder offen
+gewesen). Danach hält Redion den Abgleich an und FRAGT, statt eine Richtung
+zu wählen. Die Frage steht in einem eigenen Meta-Schlüssel und nicht in
+`wolkeAbgleich` — dessen Rückfallweg liest die Marken, und die eben zu
+leeren hätte still „nur lokal" gewählt.
+
+Was E279 NICHT deckt, steht als L100: beim Dazulegen bleiben die Marken
+stehen.
 
 ================================================================================
 L77 — Was das Notizhefte-Regal (E264) bewusst noch nicht kann
@@ -3135,7 +3148,7 @@ Prüflauf, der jede in `schale.ts` verdrahtete Kennung gegen `index.html` hält,
 gibt es nicht.
 
 --------------------------------------------------------------------------------
-L87 — melde() prüft, meldeLieferant() nicht (E272, Phase A gefunden)
+L87 — melde() prüft, meldeLieferant() nicht (E272, Phase A gefunden) — GESCHLOSSEN
 --------------------------------------------------------------------------------
 
 `Register.menueband` hat zwei Wege, von aussen Einträge nachzureichen, und sie
@@ -3466,7 +3479,7 @@ sind Zeichenketten wie `▦`, `🧮`, `📅` und keines davon ein Symbolname.
 Gefunden am 31. August 2026 (E273, sechzehn Leser über acht Bereiche).
 
 --------------------------------------------------------------------------------
-L96 — „Benachrichtigungen leeren" hat keinen harmlosen Zwilling (E273)
+L96 — „Benachrichtigungen leeren" hat keinen harmlosen Zwilling (E273) — GESCHLOSSEN
 --------------------------------------------------------------------------------
 
 `Werkzeuge.meldungenLeeren()` setzt die Liste auf leer — es LÖSCHT. Als
@@ -3544,3 +3557,57 @@ muss IM Purge-Moment laufen, wenn der Zwischenspeicher schon leer ist — E254
 erklärt es). `Store.seiteVon` und `Links.seiteVon` sind dagegen dasselbe
 zweimal. Kein Schaden heute, aber §8.
 
+
+--------------------------------------------------------------------------------
+L99 — Ein Typfehler kam durch alle 235 Läufe (E276) — GESCHLOSSEN
+--------------------------------------------------------------------------------
+
+Gemessen am 31. August 2026: eine Zeile in `pruefungen/lauf/test56.mts`, die
+das Ergebnis von `.find(...)` ohne Prüfung auf `undefined` benutzte, ging
+durch den vollen Lauf und landete auf `main`.
+
+Der Grund ist die Bauart, nicht die Nachlässigkeit. Node ENTFERNT beim
+Ausführen die Typen, es prüft sie nicht (CLAUDE.md §54.3) — ein Prüflauf
+läuft also grün, auch wenn er nicht typprüft. Und `tsc` lief nur einmal im
+ganzen Netz: test105 ruft `tsc -p tsconfig.bauen.json`, und dieser Bauplan
+kennt nur, was nach `quell/` ausgegeben wird. `pruefungen/` steht nicht
+darin, `server/` auch nicht.
+
+`npm run typecheck` war rot. Nur rief ihn niemand.
+
+GESCHLOSSEN am 31. August 2026 (E276): test105 §3 ruft jetzt dasselbe wie
+`npm run typecheck` — `tsc --noEmit` über das ganze Projekt. Mit Gegenprobe
+(eine Wegwerfdatei mit echtem Typfehler muss beanstandet werden) und einmal
+wirklich rot vorgeführt: ein eingeschleuster Fehler in test41.mts wurde
+gemeldet, mit Datei, Zeile und TS-Nummer.
+
+Ein Prüflauf, den man von Hand starten muss, ist kein Netz.
+
+--------------------------------------------------------------------------------
+L100 — „Dazulegen" lässt die Marken stehen, und alte Blöcke bleiben liegen
+--------------------------------------------------------------------------------
+
+L76 (E279) setzt beim Einspielen mit **Ersetzen** die drei Sync-Marken auf
+null: der Bestand ist danach ein anderer, also stimmt „bis hierher waren
+beide Seiten gleich" nicht mehr.
+
+Beim **Dazulegen** bleiben sie stehen — und das ist eine Lücke, keine
+Entscheidung.
+
+`Wolke.zuSchicken()` überspringt jeden Satz mit `edited <= marke`. Wer eine
+Sicherung von vor drei Monaten dazulegt, bringt Blöcke mit einem `edited`
+von vor drei Monaten mit. Die Marke steht auf heute. Also sieht der nächste
+Abgleich sie nie, und sie erreichen den Server nicht — auf den anderen
+Geräten fehlen sie, ohne dass irgendwo etwas rot wird.
+
+Der naheliegende Weg (die Marken auch beim Dazulegen leeren) hat einen
+Preis: JEDES Dazulegen löste dann einen Vollabgleich aus, auch das, bei dem
+eine einzige Seite dazukommt. Auf einem grossen Bestand ist das minutenlang.
+
+Was es wirklich braucht, ist enger: nur die dazugelegten Kennungen für den
+nächsten Versand vormerken. Das ist eine eigene Entscheidung und eine eigene
+Prüfung, also steht es hier und nicht als halbe Umsetzung im Code.
+
+**Betroffen:** `src/kern/ablage/indexdb.ts` (`importAll`, Zweig
+`zusammenfuehren`), `src/kern/abgleich/maschine.ts` (`zuSchicken`).
+**Beschlossen:** offen. **Gefunden:** beim Umsetzen von L76 (E279).

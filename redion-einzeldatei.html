@@ -1106,6 +1106,13 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
   padding:5px 9px; border-radius:6px; font-size:13.5px; color:var(--text-dim);
   display:flex; align-items:center; gap:5px;
 }
+/* `display:flex` DARÜBER SCHLÄGT `[hidden]` (E277, L68).
+   Das Browser-Grundblatt gibt einem `[hidden]`-Element `display:none` —
+   aber jede eigene `display`-Regel gewinnt dagegen, weil sie später kommt
+   und genauer ist. Wer `k.hidden = true` setzt und nichts sieht, sucht
+   danach lange am JavaScript. Für `#menueband` und `.app-unter` steht
+   dieselbe Zeile schon anderswo; hier fehlte sie. */
+.top-btn[hidden]{display:none}
 .top-btn:hover{background:var(--bg-hover); color:var(--text)}
 .top-btn.on{color:var(--accent-text)}
 
@@ -10394,6 +10401,12 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .wolke-punkt.ist-gut{ background:var(--erfolg) }
 .wolke-punkt.ist-laeuft{ background:var(--warnung) }
 .wolke-punkt.ist-fehler{ background:var(--gefahr) }
+/* Der vierte Zustand (L76): der Abgleich steht und wartet auf eine
+   Entscheidung. Kein Fehler — aber auch nichts, worüber man hinwegsehen
+   soll. Der hohle Ring hebt ihn von den drei vollen Punkten ab, damit er
+   nicht nur über die Farbe spricht (§38); den Grund sagen `title` und
+   `aria-label` am Knopf. */
+.wolke-punkt.ist-frage{ background:var(--bg); box-shadow:inset 0 0 0 2px var(--warnung) }
 .wolke-punkt[hidden]{ display:none }
 
 /* DAS WOLKE-BLATT — seine Knöpfe sahen aus wie Text (E270).
@@ -10416,6 +10429,13 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    auch sie. */
 .wolke-blatt button.klein{ display:inline-flex; width:auto; flex:0 0 auto;
   padding:3px 9px; font-size:11.5px; min-height:0; vertical-align:middle }
+/* DIE ZWEI ANTWORTEN NACH EINEM EINSPIELEN (L76) sind gleich gewichtet —
+   keine ist `prim`. Wenn beide richtig sein können und die falsche Arbeit
+   kostet, darf keine die Vorgabe sein. Sie stehen nebeneinander, gleich
+   breit, und tragen ihre Erklärung unter der Zeile statt daneben. */
+.wolke-blatt button.wo-wahl{ display:block; width:auto; flex:1 1 190px;
+  text-align:left; padding:8px 11px; font-size:12px; line-height:1.45 }
+.wolke-blatt button.wo-wahl>span{ display:block }
 /* Der Schliessen-Kreuz oben gehört zur Kopfzeile und nicht dazu. */
 .wolke-blatt .fh button{ border:none; background:none; padding:4px;
   min-height:0 }
@@ -20662,6 +20682,45 @@ Register.menueband = (() => {
         fremde.splice(i, 1);
         return true;
     };
+    /**
+     * Einen Lieferanten wieder abmelden (E277, L87).
+     *
+     * `melde` hatte seit jeher ein `nimmZurueck`, `meldeLieferant` nicht.
+     * Wer einen Lieferanten anmeldete, wurde ihn nicht mehr los — für eine
+     * Gegenprobe heisst das: ihr Fantasie-Eintrag steht bis zum Ende des
+     * Laufs im Band und taucht dann in einem ganz anderen Punkt als
+     * „Weg, der nichts tut" auf. Genau das ist bei `Register.module`
+     * passiert (E273), und dort war die Antwort dieselbe.
+     */
+    const nimmZurueckLieferant = (fn) => {
+        const i = lieferanten.indexOf(fn);
+        if (i < 0)
+            return false;
+        lieferanten.splice(i, 1);
+        return true;
+    };
+    /**
+     * Ist das ein brauchbarer Bandeintrag? (E277, L87)
+     *
+     * DIESE PRÜFUNG STAND NUR IN `melde`. Ein Lieferant durfte zurückgeben,
+     * was er wollte — ohne Kennung, ohne Reiter, ohne lebendes `tun` —, und
+     * `alle()` schob es ungesehen ins Band. Sichtbar wurde das erst als
+     * Knopf, der beim Klick wirft, oder als Zeichen ohne Namen.
+     *
+     * Beides an EINER Stelle zu prüfen ist nicht bloss ordentlicher: die
+     * Lieferanten sind die Quelle, die sich zur Laufzeit ändert. `melde`
+     * bekommt sein Objekt einmal und behält es; ein Lieferant baut bei jedem
+     * Zeichnen ein neues. Er ist also der Weg, auf dem ein kaputter Eintrag
+     * WIRKLICH hereinkommt — und war der ungeprüfte.
+     *
+     * `Register.kontext` macht es seit E272 Phase F genau so (context.ts:145).
+     */
+    const brauchbar = (e) => {
+        if (!e || typeof e !== 'object')
+            return false;
+        const x = e;
+        return !!x.id && !!x.reiter && !!x.name && typeof x.tun === 'function';
+    };
     /* ======================================================================== *
      * DIE ABFRAGE
      * ======================================================================== */
@@ -20694,11 +20753,23 @@ Register.menueband = (() => {
                merkte es. */
             elektroEintraege
         ];
-        for (const q of [...quellen, ...lieferanten]) {
+        /* DIE EIGENEN QUELLEN UNGEPRÜFT, DIE FREMDEN GEPRÜFT.
+           Die Liste oben steht in dieser Datei; wer sie kaputt macht, sieht es
+           beim Typprüfen. Ein Lieferant kommt von aussen und baut bei jedem
+           Zeichnen neu — dort wird gesiebt (L87). */
+        for (const q of quellen) {
             try {
                 aus.push(...(q() || []));
             }
             catch { /* dieser Teil fehlt, der Rest steht */ }
+        }
+        for (const l of lieferanten) {
+            try {
+                for (const e of (l() || []))
+                    if (brauchbar(e))
+                        aus.push(e);
+            }
+            catch { /* ein kaputter Lieferant nimmt die anderen nicht mit */ }
         }
         aus.push(...fremde);
         return aus.filter(e => {
@@ -20753,7 +20824,7 @@ Register.menueband = (() => {
     const eines = (id) => alle().find(e => e.id === id) || null;
     const anzahl = () => alle().length;
     return { REITER, reiter, alle, inReiter, eines, anzahl,
-        melde, meldeLieferant, nimmZurueck };
+        melde, meldeLieferant, nimmZurueck, nimmZurueckLieferant };
 })();
 
 </script>
@@ -30838,6 +30909,66 @@ const Store = (() => {
         return null;
     };
     /* ========================================================================
+     * WAS DEM GERÄT GEHÖRT UND NICHT DER SICHERUNG (L76 / E279)
+     * ------------------------------------------------------------------------
+     * Zwei Listen, und sie sind bewusst nicht dieselbe.
+     *
+     * `GEHEIM` — was aus einer KLARTEXT-Sicherung fliegt. Eine `.json` und das
+     * `daten.json` im `.redion` liegen offen da: im Downloads-Ordner, im
+     * Mail-Anhang, im Chat, auf dem USB-Stick. Ein Sitzungs-Token darin ist
+     * ein Schlüssel zum Konto, ein `api:`-Eintrag ein Schlüssel zu einem
+     * fremden Dienst. Die VERSCHLÜSSELTE Sicherung darf beides mitnehmen —
+     * ohne Passwort ist sie nichts wert, und mit Passwort ist sie genau das,
+     * was man auf einem neuen Gerät braucht.
+     *
+     * Ein Präfix statt einer Aufzählung: `api:` deckt auch die Anbindung, die
+     * es morgen gibt. Eine Aufzählung wäre bei jeder neuen Verbindung eine
+     * Gelegenheit, durch Vergessen zu lecken.
+     *
+     * `wolkeProbe` ist selbst schon Chiffre — aber sie ist ein Orakel: mit ihr
+     * lässt sich ein Passwort in Ruhe durchprobieren, ohne dass es jemand
+     * merkt. Sie gehört zum Schlüssel, nicht in die offene Datei.
+     *
+     * `GERAETEIGEN` — was beim Einspielen dem LEBENDEN Gerät gehört. Das ist
+     * die Obermenge: Anmeldung, Konto, Bereich, Salz, Probe, Teilliste und die
+     * Anbindungen. Eine Sicherung ersetzt INHALTE, nicht die Identität des
+     * Geräts (L76). Wer eine Sicherung vom Rechner der Schwester einspielt,
+     * soll danach immer noch sein eigenes Konto haben.
+     *
+     * `wolkeGeteilt` steht mit auf der Liste, und das ist der Sicherheitsteil
+     * daran: `Wolke.istGeteilt()` entscheidet damit, ob ein Satz im KLARTEXT
+     * oder mit AES zum Server geht. Eine fremde Liste würde hiesige private
+     * Seiten unverschlüsselt hochschicken — kein Datenverlust, aber ein
+     * Datenleck, und das ist schlimmer.
+     * ======================================================================*/
+    const GEHEIM_PRAEFIX = 'api:';
+    const GEHEIM = ['wolkeToken', 'wolkeProbe'];
+    const istGeheim = (k) => GEHEIM.includes(k) || k.startsWith(GEHEIM_PRAEFIX);
+    /* Und eine dritte, engste Liste: was eine Sicherung GAR NICHT tragen darf,
+       auch keine verschlüsselte. Das sind keine Daten, sondern ERLAUBNISSE.
+  
+       E270 hat den Satz schon aufgeschrieben und meinte damals den
+       Ordnerzugriff: „eine Sicherung kann keine Erlaubnis mitbringen, also
+       sticht immer, was hier erlaubt wurde." Er gilt genauso für
+       `wolkeGeteilt`. Diese Liste ist der lokale Spiegel dessen, was DIESES
+       Konto auf dem Server wirklich freigegeben hat, und `Wolke.istGeteilt()`
+       entscheidet damit, ob ein Satz im KLARTEXT oder mit AES hochgeht. Eine
+       Liste aus einer fremden Datei könnte eine hiesige private Seite
+       unverschlüsselt hochschicken — kein Datenverlust, sondern ein Leck.
+  
+       Sie zu verlieren kostet nichts Bleibendes: die Wahrheit steht auf dem
+       Server, `Wolke.freigaben()` holt sie. Sie falsch zu erben schon.
+  
+       Deshalb hier der Unterschied zu `GERAETEIGEN`: dort sticht der lebende
+       Wert nur, WENN es ihn gibt (sonst käme ein frisches Gerät nie an seine
+       Anmeldung). Hier sticht er IMMER, auch wenn er leer ist. */
+    const NUR_HIER = ['sicherungOrdner', 'wolkeGeteilt'];
+    const istNurHier = (k) => NUR_HIER.includes(k);
+    const GERAETEIGEN = ['sicherungOrdnerName',
+        'wolkeToken', 'wolkeKonto', 'wolkeBereich',
+        'wolkeSalz', 'wolkeProbe'];
+    const istGeraeteEigen = (k) => GERAETEIGEN.includes(k) || k.startsWith(GEHEIM_PRAEFIX);
+    /* ========================================================================
      * SICHERN UND ZURÜCKHOLEN
      * ------------------------------------------------------------------------
      * Weil alles lokal liegt, gehört ein Export dazu. Sonst hängen die Daten
@@ -30877,7 +31008,7 @@ const Store = (() => {
      * Sicherung, die nicht sagt, was sie auslässt, ist die gefährlichste Sorte:
      * man merkt es erst, wenn man sie braucht.
      */
-    const exportAll = (mitAnhaengen = false) => {
+    const exportAll = (mitAnhaengen = false, mitGeheimnissen = false) => {
         const dateienDa = zaehlerDateien();
         const abgeleitetDa = zaehlerAbgeleitet();
         const fehlenAnhaenge = dateienDa && !mitAnhaengen;
@@ -30891,10 +31022,36 @@ const Store = (() => {
            Der Name bleibt als Text drin: nach dem Einspielen soll man lesen
            können, welcher Ordner es war. */
         const ordnerDa = 'sicherungOrdner' in cache.meta && !!cache.meta['sicherungOrdner'];
-        const metaOhneOrdner = {};
-        for (const k of Object.keys(cache.meta))
-            if (k !== 'sicherungOrdner')
-                metaOhneOrdner[k] = cache.meta[k];
+        /* Was gar nicht mitreisen darf, und ob es überhaupt etwas zu nennen
+           gibt. Eine leere Teilliste ist kein Verlust — sie stünde sonst in
+           jeder Sicherung unter `fehlt`, und ein Manifest, das Nichtigkeiten
+           aufzählt, macht die echten Zeilen unsichtbar. */
+        const nurHierAusgelassen = NUR_HIER.filter(k => {
+            const v = cache.meta[k];
+            return Array.isArray(v) ? v.length > 0 : !!v;
+        });
+        /* UND DIE ZUGANGSDATEN GENAUSO (L76 / E279). Eine Klartext-Sicherung
+           trug bisher das Sitzungs-Token der Wolke und jeden `api:`-Schlüssel
+           offen mit sich herum. Sie bleiben drin, wenn der Aufrufer sagt, dass
+           er verschlüsselt — sonst fliegen sie raus. Und dann steht ihr Name
+           im Manifest, denn eine Sicherung muss sagen, was sie auslässt
+           (§52.10). Der NAME ist keine Preisgabe: dass es einen `api:github`
+           gab, verrät nicht, wie er lautete. */
+        const metaGefiltert = {};
+        const geheimAusgelassen = [];
+        for (const k of Object.keys(cache.meta)) {
+            if (istNurHier(k))
+                continue;
+            if (!mitGeheimnissen && istGeheim(k)) {
+                /* Nur was wirklich einen Wert hat — ein leerer Eintrag ist kein
+                   Geheimnis und gehörte sonst als Verlust ins Manifest. */
+                if (cache.meta[k])
+                    geheimAusgelassen.push(k);
+                continue;
+            }
+            metaGefiltert[k] = cache.meta[k];
+        }
+        geheimAusgelassen.sort();
         /* Im Archiv liegen nur die NICHT abgeleiteten — siehe `sicherungSpeichern`
            in der Schale, das genauso filtert. Die Zahl hier muss dieselbe sein,
            sonst zählt das Manifest etwas anderes als das Archiv enthält. */
@@ -30922,6 +31079,21 @@ const Store = (() => {
                 (ordnerName ? ' Er hiess „' + ordnerName + '".' : '') +
                 ' Nach dem Einspielen einmal neu wählen unter Einstellungen → ' +
                 'Sicherung.';
+        /* Und für die Teilliste derselbe Satz aus demselben Grund: eine
+           Sicherung kann keine Erlaubnis mitbringen. */
+        const ueberGeteilt = !nurHierAusgelassen.includes('wolkeGeteilt') ? ''
+            : ' Welche Seiten geteilt sind, ist NICHT dabei: das ist eine ' +
+                'Erlaubnis auf dem Server, keine Angabe in einer Datei. Nach dem ' +
+                'Einspielen steht sie weiter dort — Redion holt sie beim nächsten ' +
+                'Blick in die Freigaben.';
+        /* Und derselbe Satz für die Zugangsdaten. Er nennt die Zahl und den
+           Weg zurück: eine verschlüsselte Sicherung nimmt sie mit. */
+        const ueberGeheimnisse = !geheimAusgelassen.length ? ''
+            : ' ' + geheimAusgelassen.length + ' Zugangsdaten (' +
+                geheimAusgelassen.join(', ') + ') sind bewusst NICHT dabei: eine ' +
+                'unverschlüsselte Sicherung liegt offen da und würde sie ' +
+                'weitergeben. Eine mit Passwort verschlüsselte Sicherung nimmt ' +
+                'sie mit.';
         return JSON.stringify({
             version: VERSION,
             exportiert: now(),
@@ -30929,7 +31101,8 @@ const Store = (() => {
             enthaelt: ['blocks', 'collections', 'views', 'meta', 'versions']
                 .concat(mitAnhaengen && echteImArchiv ? ['dateien', 'stuecke'] : []),
             fehlt: (fehlenAnhaenge ? ['dateien', 'stuecke'] : [])
-                .concat(ordnerDa ? ['sicherungOrdner'] : []),
+                .concat(nurHierAusgelassen)
+                .concat(geheimAusgelassen),
             /* Wie viele Dateien absichtlich draussen blieben — als Zahl, damit ein
                Einleser es nachrechnen kann, statt einen Satz zu lesen. */
             abgeleitetAusgelassen: mitAnhaengen ? abgeleitetDa : 0,
@@ -30942,11 +31115,11 @@ const Store = (() => {
                         '„dateien" desselben Archivs.' + ueberAbgeleitete
                     : abgeleitetDa
                         ? 'Dieser Bestand hat nur abgeleitete Dateien.' + ueberAbgeleitete
-                        : 'Vollständig: dieser Bestand hat keine Dateianhänge.') + ueberOrdner,
+                        : 'Vollständig: dieser Bestand hat keine Dateianhänge.') + ueberOrdner + ueberGeteilt + ueberGeheimnisse,
             blocks: cache.blocks,
             collections: cache.collections,
             views: cache.views,
-            meta: metaOhneOrdner,
+            meta: metaGefiltert,
             versions: exportVersionen
         }, null, 2);
     };
@@ -31046,15 +31219,47 @@ const Store = (() => {
            mitbringen, also sticht immer, was hier erlaubt wurde. Der NAME
            gehört zum Zugriff und wird mitgerettet — sonst stünde in den
            Einstellungen der Ordner eines fremden Geräts über dem eigenen. */
-        const lebenderOrdner = getMeta('sicherungOrdner', null);
-        if (lebenderOrdner) {
-            neu.meta['sicherungOrdner'] = lebenderOrdner;
-            const lebenderName = getMeta('sicherungOrdnerName', '');
-            if (lebenderName)
-                neu.meta['sicherungOrdnerName'] = lebenderName;
+        /* --- DIE IDENTITÄT DES GERÄTS ÜBERLEBT BEIDE ARTEN (L76 / E279) -----
+           Eine Sicherung ersetzt INHALTE, nicht die Kontoidentität dieses
+           Geräts. Wer eine Sicherung einspielt — die eigene von gestern oder
+           die vom Rechner der Schwester — soll danach immer noch mit seinem
+           eigenen Konto angemeldet sein, seine eigenen Anbindungen haben und
+           seine eigene Teilliste.
+    
+           Vorher war es andersherum: „ersetzen" tauschte `meta` vollständig,
+           also auch `wolkeToken`, `wolkeKonto` und jeden `api:`-Schlüssel. Wer
+           eine fremde Sicherung einspielte, war danach als jemand anderes
+           angemeldet — und der nächste Abgleich schickte seine Notizen in ein
+           fremdes Konto. Das ist die schlimmste Sorte Fehler, die diese App
+           haben kann: sie sieht aus wie ein geglückter Vorgang.
+    
+           Die Regel: gibt es hier einen lebenden Wert, sticht er. Gibt es
+           keinen, bleibt der aus der Sicherung stehen — genau das ist der
+           Wiederherstellungsfall auf einem frischen Gerät.
+    
+           Warum in `neu.meta` und nicht nur im Ersetzen-Zweig: das
+           Zusammenführen macht weiter unten `Object.assign(cache.meta,
+           neu.meta)`. Was nur im Ersetzen-Zweig stünde, wäre dort wirkungslos,
+           und die fremde Anmeldung käme durch die Hintertür.
+    
+           Was eine ERLAUBNIS ist und nicht bloss eine Angabe, steht in
+           `NUR_HIER` und wird in der zweiten Schleife strenger behandelt. */
+        for (const k of Object.keys(cache.meta)) {
+            if (!istGeraeteEigen(k))
+                continue;
+            const lebend = cache.meta[k];
+            if (lebend !== undefined && lebend !== null && lebend !== '')
+                neu.meta[k] = lebend;
         }
-        else {
-            delete neu.meta['sicherungOrdner'];
+        /* Und die Erlaubnisse: hier sticht der lebende Wert IMMER, auch wenn er
+           leer ist. Sonst erbte ein Gerät ohne eigene Teilliste die aus der
+           Datei — und schickte, worauf sie zeigt, im Klartext hoch. */
+        for (const k of NUR_HIER) {
+            const lebend = cache.meta[k];
+            if (lebend === undefined || lebend === null)
+                delete neu.meta[k];
+            else
+                neu.meta[k] = lebend;
         }
         /* --- DIE WOLKE-MERKLISTEN ÜBERLEBEN DAS ERSETZEN (E255/L74) ---------
            „Ersetzen" tauscht auch `meta` vollständig — eine noch nicht
@@ -31098,6 +31303,40 @@ const Store = (() => {
                 if (beide.length)
                     neu.meta[k] = beide;
             }
+            /* --- UND DIE SYNC-MARKEN GEHEN ZURÜCK AUF NULL (L76 / E279) -------
+               Die Marken sagen „bis hierher waren beide Seiten gleich". Nach
+               einem Ersetzen stimmt das nicht mehr: der Bestand ist ein ganz
+               anderer, die Marke aber stünde noch auf gestern Abend. Der nächste
+               Abgleich schickte dann nur, was seit gestern Abend ein neues
+               `edited` hat — also fast nichts — und der Server behielte den
+               alten Bestand. Ein Abgleich, der still die Hälfte weglässt.
+      
+               Auf Null heisst: der nächste Abgleich sieht alles auf beiden
+               Seiten und führt es über den bestehenden Weg zusammen. */
+            neu.meta['wolkeMarkeHoch'] = '';
+            neu.meta['wolkeMarkeRunter'] = '';
+            neu.meta['wolkeMarkeDateien'] = '';
+            /* --- UND DANN WIRD GEFRAGT, NICHT ENTSCHIEDEN --------------------
+               Jetzt stehen zwei Bestände nebeneinander: der eben eingespielte
+               hier und der, den die Wolke noch hat. Beide Richtungen sind
+               plausibel, und beide können Arbeit kosten — hochladen überschreibt
+               drüben, herunterladen überschreibt hier.
+      
+               Redion entscheidet das NICHT (L76). Es hält den Abgleich an und
+               legt die Frage hin; die Antwort gibt ein Mensch im Wolke-Fenster.
+      
+               Warum ein EIGENER Schlüssel und nicht `wolkeAbgleich`: dessen
+               Rückfallweg in `Wolke.abgleichErlaubt()` lautet „gibt es Marken?".
+               Die Marken eben zu leeren kippt diese Antwort von selbst auf
+               „nein" — also auf „nur lokal". Auch die harmlosere Richtung ist
+               eine Richtung, und eine, die sich niemand ausgesucht hat.
+      
+               Und nur bei lebendem Zugang: ohne Anmeldung wäre die Frage eine
+               Aufforderung, die ins Leere zeigt (§47). */
+            if (getMeta('wolkeToken', ''))
+                neu.meta['wolkeNeuAbgleich'] = now();
+            else
+                delete neu.meta['wolkeNeuAbgleich'];
         }
         /* --- ALLES IN EINER TRANSAKTION -----------------------------------
            Löschen und Schreiben liefen hier als hunderte einzelne
@@ -31219,6 +31458,40 @@ const Store = (() => {
             Object.assign(cache.views, neu.views);
             Object.assign(cache.meta, neu.meta);
         }
+        /* --- DER GEMEINSAME STAND WIRD VERGESSEN — ABER NICHT GANZ ----------
+           `basis` merkt sich je Satz, wie er aussah, als beide Seiten ihn
+           zuletzt gleich sahen. Nach einem Ersetzen ist das über den ganzen
+           Bestand gelogen: die Sätze sind andere, die Erinnerung an sie nicht.
+           Ein Dreiwege-Zusammenführen gegen eine falsche Basis führt Dinge
+           zusammen, die nie zusammengehörten. Also weg damit — der nächste
+           Abgleich baut sie neu auf.
+    
+           ERST NACH DER TRANSAKTION. Wäre das Ersetzen abgebrochen und die
+           Basis schon leer, stünde der alte Bestand ohne sein Gedächtnis da.
+    
+           UND DANN WIRD EIN TEIL NEU GESÄT, und das ist der heikle Punkt:
+           `Wolke.bloeckeWeg()` fragt für jeden Grabstein `basisHolen(id)` und
+           wirft jeden still weg, der keinen gemeinsamen Stand hat — das ist
+           die Wache aus E254 gegen „offline angelegt und gelöscht", damit der
+           Server nichts löschen soll, was er nie gesehen hat.
+    
+           Eine leere Basis macht diese Wache blind für ALLE Grabsteine. Die
+           Löschabsichten, die E255 gerade über das Ersetzen hinübergerettet
+           hat, wären danach stumm: die Blöcke blieben auf dem Server, für
+           immer, und niemand sähe es. Genau das, wogegen E254/E255 gebaut
+           wurden — durch die Hintertür wieder auf.
+    
+           Der Grabstein trägt seinen Satz selbst mit (`e.satz`, aus
+           `purgeTief`). Daraus lässt sich der gemeinsame Stand neu setzen. Was
+           er beantworten muss, ist ohnehin nur die eine Frage: hat der Server
+           diesen Satz je gesehen? */
+        if (art === 'ersetzen') {
+            await basisLeeren();
+            const grabsteine = getMeta('wolkeBloeckeWeg', []) || [];
+            for (const e of grabsteine)
+                if (e && e.id && e.satz)
+                    await basisPut(e.id, e.satz);
+        }
         /* UND DIE UMZÜGE NOCH EINMAL.
            Sie laufen beim Start, und beim Start stand hier ein anderer Bestand.
            Eine eingespielte Sicherung kann jahrealt sein — sie bringt genau die
@@ -31254,7 +31527,11 @@ const Store = (() => {
         await settled();
         return { bloecke: Object.keys(cache.blocks).length,
             versionen: Array.isArray(d.versions) ? d.versions.length : 0,
-            fehlt: d.fehlt || [] };
+            fehlt: d.fehlt || [],
+            /* Steht danach eine Entscheidung offen? Die Schale sagt es
+               dem Menschen — sonst wartet die Frage, ohne dass jemand
+               weiss, dass sie wartet. */
+            frage: !!getMeta('wolkeNeuAbgleich', '') };
     };
     /* ========================================================================
      * SEITENBAUM ALS DATENPAKET
@@ -67287,6 +67564,32 @@ const Werkzeuge = (() => {
         meldungenGeaendert();
     };
     const meldungenLeeren = () => { Store.setMeta('meldungen', []); meldungenGeaendert(); };
+    /**
+     * Alle Meldungen als gelesen markieren — der HARMLOSE Zwilling zu
+     * `meldungenLeeren` (E276, L96).
+     *
+     * Beide räumen den Punkt an der Glocke weg, und genau deshalb sehen sie
+     * aus wie dasselbe. Sie sind es nicht: `meldungenLeeren` WIRFT WEG. Was
+     * dort stand, ist danach nicht mehr da — auch die Zeile, die auf eine
+     * Seite zeigte, die man noch hätte ansehen wollen.
+     *
+     * An einen Knopf, den ein Klick ohne Rückfrage auslöst, gehört deshalb
+     * dieser hier und nicht jener. Er tut, was `meldungGelesen(id)` tut, nur
+     * über alle: er ändert ein Feld, er nimmt nichts.
+     *
+     * Gibt zurück, WIE VIELE ungelesen waren. Wer den Knopf zeigt, will das
+     * wissen — ohne offene Meldung hat er nichts zu tun und gehört nicht hin
+     * (§47).
+     */
+    const meldungenAlleGelesen = () => {
+        const liste = meldungen();
+        const offen = liste.filter((x) => !x.gelesen).length;
+        if (!offen)
+            return 0;
+        Store.setMeta('meldungen', liste.map((x) => x.gelesen ? x : { ...x, gelesen: true }));
+        meldungenGeaendert();
+        return offen;
+    };
     /* Wer den Zähler zeigt (die Glocke in der Kopfzeile, E251), erfährt es
        hier — als DOM-Ereignis, nicht als Direktaufruf: der Bereich kennt
        die Schale nicht (Regel 1). */
@@ -68793,7 +69096,7 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
         versionen, versionAutomatisch, sperren, entsperren, sperrAnsicht,
         fokus, praesentation, quelltext, alsMarkdown, ausMarkdown, ausHtml, statistik,
         formelBibliothek, formelBibliothekLesen, formelBibliothekAnwenden,
-        erinnerungSetzen, erinnerungen, erinnerungenPruefen, geraeteMeldung, posteingangMelden, meldungen, meldungGelesen, meldungenLeeren,
+        erinnerungSetzen, erinnerungen, erinnerungenPruefen, geraeteMeldung, posteingangMelden, meldungen, meldungGelesen, meldungenAlleGelesen, meldungenLeeren,
         weckrufLegen, naechsteErinnerung,
         ordnerSchreiben, ordnerLesen, dateienLesen, einzelDatei,
         htmlExport, drucken, seiteAlsHtml, verschiebenNach, verschiebe,
@@ -72009,6 +72312,40 @@ if (typeof Register !== 'undefined' && Register.kontext) {
             }));
         }
     });
+    /* ALLE GELESEN — und ausdrücklich NICHT „leeren" (E276, L96).
+       `meldungenLeeren` räumt denselben Punkt weg und wirft dabei alles fort.
+       An einem Kantenknopf, der ohne Rückfrage auslöst, hat das nichts zu
+       suchen; hier steht der Griff, der ein Feld ändert statt etwas zu
+       nehmen. Sichtbar nur, solange es überhaupt etwas Ungelesenes gibt —
+       sonst wäre es ein Knopf, der nichts tut (§47). */
+    K.melde({ bereich: 'posteingang', id: 'gelesen', name: 'Alle gelesen',
+        zeichen: 'checkCircle', rang: 50,
+        zeigen: () => {
+            if (!da(() => Werkzeuge.meldungenAlleGelesen))
+                return false;
+            try {
+                return (Werkzeuge.meldungen() || []).some((m) => !m.gelesen);
+            }
+            catch {
+                return false;
+            }
+        },
+        tun: () => {
+            let wie = 0;
+            try {
+                wie = Werkzeuge.meldungenAlleGelesen() || 0;
+            }
+            catch { /* … */ }
+            try {
+                UI.toast(wie === 1 ? '1 Meldung als gelesen markiert'
+                    : wie + ' Meldungen als gelesen markiert');
+            }
+            catch { /* … */ }
+            try {
+                Ansichten.posteingang();
+            }
+            catch { /* … */ }
+        } });
     /* --- KALENDER („Termine") ---------------------------------------------- */
     K.melde({ bereich: 'kalender', id: 'uebersicht', name: 'Übersicht',
         zeichen: 'calendar', rang: 10, tun: () => Ansichten.termine() });
@@ -72311,25 +72648,36 @@ const Einstellungen = (() => {
            samt Wolke-Fenster. Wer hier nachlas, bekam die Auskunft, es gäbe
            nichts davon.
            Die Seite baut deshalb KEINEN zweiten Dialog (E29), sondern sagt
-           die Wahrheit und führt zum vorhandenen. Drei Zustände, weil es
-           drei gibt — und der mittlere ist der wichtigste: angemeldet und
-           trotzdem nichts hinausgeschickt (E1/E34). */
+           die Wahrheit und führt zum vorhandenen. Vier Zustände, weil es
+           vier gibt — und die mittleren zwei sind die wichtigsten: angemeldet
+           und trotzdem nichts hinausgeschickt (E1/E34), und angemeldet mit
+           einer offenen Entscheidung nach einem Einspielen (L76/E279). */
         konto: () => {
             const w = globalThis.Wolke;
             const angemeldet = !!(w && w.angemeldet && w.angemeldet());
             const gleichtAb = angemeldet && !!(w.abgleichErlaubt && w.abgleichErlaubt());
+            /* VIER Zustände seit L76 — es waren drei. Steht die Frage nach einem
+               eingespielten „Ersetzen", ist `abgleichErlaubt()` falsch, und diese
+               Seite behauptete darum „Der Abgleich ist ausgeschaltet". Das hat
+               niemand ausgeschaltet: es wartet eine Entscheidung. */
+            const frage = angemeldet && !!(w.neuAbgleichOffen && w.neuAbgleichOffen());
             const wo = angemeldet ? String(w.adresse?.() || '') : '';
             const geraet = angemeldet ? String(w.geraeteName?.() || '') : '';
             const einleitung = !angemeldet
                 ? 'Ohne Konto liegt alles auf diesem Gerät — so wie bisher, und das bleibt ' +
                     'der Normalfall. Redion hat einen eigenen Server; er ist freiwillig und ' +
                     'bringt dieselben Notizen auf Rechner und Telefon.'
-                : gleichtAb
-                    ? 'Angemeldet, und dieses Gerät gleicht ab' + (wo ? ' mit ' + esc(wo) : '') +
-                        '. Private Seiten gehen verschlüsselt hinaus; im Klartext geht nur, was ' +
-                        'du ausdrücklich teilst oder veröffentlichst.'
-                    : 'Angemeldet — aber es verlässt nichts dieses Gerät. Der Abgleich ist ' +
-                        'ausgeschaltet, und ohne ihn bleibt alles lokal.';
+                : frage
+                    ? 'Angemeldet — aber der Abgleich wartet auf dich. Du hast eine Sicherung ' +
+                        'eingespielt und den Bestand ersetzt; auf dem Server liegt noch der Stand ' +
+                        'von vorher. Bis du im Wolke-Fenster entschieden hast, geht nichts hinaus ' +
+                        'und nichts herein.'
+                    : gleichtAb
+                        ? 'Angemeldet, und dieses Gerät gleicht ab' + (wo ? ' mit ' + esc(wo) : '') +
+                            '. Private Seiten gehen verschlüsselt hinaus; im Klartext geht nur, was ' +
+                            'du ausdrücklich teilst oder veröffentlichst.'
+                        : 'Angemeldet — aber es verlässt nichts dieses Gerät. Der Abgleich ist ' +
+                            'ausgeschaltet, und ohne ihn bleibt alles lokal.';
             return kopf('Mein Konto', einleitung) +
                 zeile('Name', 'So wirst du in Kommentaren genannt', feld('nutzer', V('nutzer', ''), 'Dein Name')) +
                 zeile('Symbol', 'Kürzel oben in der Seitenleiste', feld('arbeitsIcon', V('arbeitsIcon', 'N'))) +
@@ -84804,17 +85152,28 @@ const Krypto = (() => {
        Das Manifest in der Datei sagt es auch, aber verschlüsselt liest es
        niemand, bevor er es braucht. */
     let zuletztGefehlt = [];
-    const bestandSammeln = async () => {
+    /**
+     * @param mitGeheimnissen nur wahr, wenn der Aufrufer die Sicherung
+     *        anschliessend WIRKLICH verschlüsselt. Zugangsdaten — das
+     *        Cloud-Token, jeder `api:`-Schlüssel — gehören nur in eine
+     *        Sicherung, die ohne Passwort nichts wert ist (L76 / E279).
+     *        Die Vorgabe ist die sichere Seite: wer den Schalter vergisst,
+     *        bekommt eine Sicherung ohne Zugangsdaten, nicht eine mit.
+     */
+    const bestandSammeln = async (mitGeheimnissen = false) => {
         /* Holt den Verlauf aus der Ablage; er liegt bewusst nicht im
            Zwischenspeicher. Ohne diesen Aufruf wäre `versions` leer — still. */
         if (Store.exportVorbereiten)
             await Store.exportVorbereiten();
-        const d = JSON.parse(Store.exportAll());
+        const d = JSON.parse(Store.exportAll(false, mitGeheimnissen));
         zuletztGefehlt = Array.isArray(d.fehlt) ? d.fehlt : [];
         return JSON.stringify(Object.assign({ art: 'redion-sicherung', fassung: 1, wann: d.exportiert }, d), null, 2);
     };
     const sicherungSchreiben = async (passwort) => {
-        const roh = await bestandSammeln();
+        /* Das Passwort entscheidet BEIDES: ob verschlüsselt wird und ob die
+           Zugangsdaten mitdürfen. Es ist dieselbe Frage, also darf es nicht
+           zwei Schalter geben, die auseinanderlaufen können. */
+        const roh = await bestandSammeln(!!passwort);
         const inhalt = passwort ? await verschluesseln(roh, passwort) : roh;
         const name = 'redion-sicherung-' + new Date().toISOString().slice(0, 10) +
             (passwort ? '.verschluesselt.json' : '.json');
@@ -85047,7 +85406,12 @@ const Krypto = (() => {
         /* Die JSON behauptet nur dann, Anhänge seien enthalten, wenn jedes
            Stück unten wirklich lesbar ist. Ein halber Upload bricht die ganze
            Sicherung ab; er wird nie als vollständige Datei ausgegeben. */
-        await verschluesseltAblegen('daten.enc', 'daten', enc.encode(Store.exportAll(true)));
+        await verschluesseltAblegen(
+        /* `true, true`: mit Anhängen und mit Zugangsdaten. Dieser Weg legt
+           die Daten verschlüsselt ab — `verschluesseltAblegen` heisst so,
+           weil es das tut —, also ist es genau der Fall, für den L76 die
+           Zugangsdaten erlaubt. */
+        'daten.enc', 'daten', enc.encode(Store.exportAll(true, true)));
         const dateien = [];
         for (let dateiNr = 0; dateiNr < saetze.length; dateiNr++) {
             const satz = saetze[dateiNr];
@@ -85381,7 +85745,18 @@ const Krypto = (() => {
                    nicht nur ins verschlüsselte Manifest, wo es niemand liest. */
                 const dazu = zuletztGefehlt.includes('dateien')
                     ? ' — ohne die Dateianhänge (dafür: .redion-Sicherung)' : '';
-                UI.toast((pw ? 'Verschlüsselt gesichert: ' : 'Ungeschützt gesichert: ') + name + dazu);
+                /* Und seit L76 fehlen einer ungeschützten Sicherung auch die
+                   Zugangsdaten. Das gehört in denselben Satz: eine Sicherung, die
+                   nicht sagt, was sie auslässt, ist die gefährlichste Sorte — und
+                   wer sie später einspielt, sucht sonst lange, warum sein
+                   GitHub-Schlüssel weg ist. */
+                const geheim = zuletztGefehlt.filter(k => k === 'wolkeToken' || k === 'wolkeProbe' || k.startsWith('api:')).length;
+                const dazu2 = geheim
+                    ? (dazu ? ' und' : ' —') + ' ohne die ' + geheim +
+                        ' Zugangsdaten (die nimmt nur eine verschlüsselte Sicherung mit)'
+                    : '';
+                UI.toast((pw ? 'Verschlüsselt gesichert: ' : 'Ungeschützt gesichert: ') +
+                    name + dazu + dazu2);
                 return;
             }
             if (elVon(e)?.closest('[data-a="laden"]')) {
@@ -100586,10 +100961,17 @@ const Wolke = (() => {
     const zustand = { angemeldet: false, laeuft: false, letzter: '', fehler: '',
         hoch: 0, runter: 0, konto: null, rolle: '' };
     const horcher = new Set();
-    const melden = () => horcher.forEach((fn) => { try {
-        fn(zustand);
-    }
-    catch { } });
+    const melden = () => {
+        /* Vor dem Melden nachsehen: die Frage wird in `Store.importAll`
+           gesetzt, also ausserhalb dieses Moduls (§5 — die Ablage lädt vor der
+           Abgleichmaschine und kennt sie nicht). Wer sie hier nicht abliest,
+           meldet einen Stand von vorhin. */
+        zustand.frage = neuAbgleichOffen();
+        horcher.forEach((fn) => { try {
+            fn(zustand);
+        }
+        catch { } });
+    };
     const beiAenderung = (fn) => { horcher.add(fn); fn(zustand); return () => horcher.delete(fn); };
     /* ========================================================================
      * 5 · ANMELDEN
@@ -100720,8 +101102,13 @@ const Wolke = (() => {
         Store.setMeta('wolkeDateienWeg', []);
         Store.setMeta('wolkeBloeckeWeg', []);
         /* Das Ja zum Abgleich gehörte zu DIESEM Konto — das nächste wird neu
-           gefragt. */
+           gefragt. Und die offene Frage aus L76 genauso: sie ist die Frage,
+           was mit DIESEM Konto in der Wolke geschehen soll. Bliebe sie
+           stehen, fände das nächste Konto beim Anmelden eine Entscheidung
+           vor, die es gar nicht betrifft — und käme an keinen Abgleich, ohne
+           zu verstehen warum. */
         Store.setMeta('wolkeAbgleich', null);
+        Store.setMeta('wolkeNeuAbgleich', '');
         melden();
         if (typeof Protokoll !== 'undefined')
             Protokoll.notieren('konto', 'Von der Wolke abgemeldet');
@@ -101063,6 +101450,54 @@ const Wolke = (() => {
         return { uebernommen, unlesbar, gemischt, strittig, mehr: a.mehr };
     };
     /* ------------------------------------------------------------------------
+     * DIE OFFENE FRAGE NACH EINEM EINGESPIELTEN ERSETZEN (L76 / E279)
+     * ------------------------------------------------------------------------
+     * `Store.importAll(…, 'ersetzen')` setzt `wolkeNeuAbgleich`, wenn dieses
+     * Gerät angemeldet ist. Dann stehen zwei Bestände nebeneinander — der
+     * eben eingespielte hier und der, den die Wolke noch hat — und Redion
+     * entscheidet NICHT, welcher gewinnt.
+     *
+     * Solange die Frage steht, geht nichts hinaus und nichts kommt herein.
+     * Das ist keine dritte Meinung, sondern das Anhalten: beide Richtungen
+     * können Arbeit kosten, also wartet der Abgleich auf einen Menschen.
+     *
+     * Die Frage steht VOR `wolkeAbgleich` und nicht darin — dessen
+     * Rückfallweg unten liest die Marken, und die sind nach dem Einspielen
+     * leer. Wer die Frage über `wolkeAbgleich` abbilden wollte, hätte damit
+     * schon „nur lokal" gewählt.
+     */
+    const neuAbgleichOffen = () => !!Store.getMeta('wolkeNeuAbgleich', '');
+    /**
+     * Die Antwort. Zwei Wege, beide gleichwertig, keiner die Vorgabe.
+     *
+     *   'lokal'  Der eingespielte Bestand bleibt auf diesem Gerät. Die Wolke
+     *            behält, was sie hat. Nichts wird überschrieben.
+     *   'wolke'  Beide Seiten werden vollständig zusammengeführt. Die Marken
+     *            sind leer und die Basis auch, also sieht der Abgleich alles
+     *            auf beiden Seiten; Kollisionen laufen über die bestehende
+     *            Konfliktanzeige.
+     *
+     * Alles andere ist ein Fehler und keine stille Vorgabe: wer hier raten
+     * müsste, träfe genau die Entscheidung, die niemand treffen soll.
+     */
+    const neuAbgleichAntwort = async (wahl) => {
+        if (wahl !== 'lokal' && wahl !== 'wolke')
+            throw new Error('Nach dem Einspielen muss feststehen, was geschehen ' +
+                'soll: „lokal" behält den Bestand auf diesem Gerät, ' +
+                '„wolke" gleicht beide Seiten vollständig ab. Ohne ' +
+                'Angabe wird nichts getan.');
+        Store.setMeta('wolkeNeuAbgleich', '');
+        Store.setMeta('wolkeAbgleich', wahl === 'wolke');
+        melden();
+        if (typeof Protokoll !== 'undefined')
+            Protokoll.notieren('konto', wahl === 'wolke'
+                ? 'Nach dem Einspielen: vollständig mit der Wolke abgleichen'
+                : 'Nach dem Einspielen: nur lokal weiterarbeiten');
+        if (wahl === 'lokal')
+            return null;
+        return abgleichen();
+    };
+    /* ------------------------------------------------------------------------
      * DER SCHALTER — abgleichen nur mit ausdrücklichem Ja (E1, E34)
      * ------------------------------------------------------------------------
      * Angemeldet sein und abgleichen sind zwei Entscheidungen. Die zweite
@@ -101074,6 +101509,11 @@ const Wolke = (() => {
      * Ja längst gegeben — ein stiller Sync-Stopp wäre die falsche Sorte
      * Überraschung. Die Marken sind der Beleg. */
     const abgleichErlaubt = () => {
+        /* Steht die Frage aus L76, ist die Antwort nein — und zwar bevor
+           irgendein Altwert gelesen wird. Ein `wolkeAbgleich: true` von vor
+           dem Einspielen galt für einen Bestand, den es nicht mehr gibt. */
+        if (neuAbgleichOffen())
+            return false;
         const v = Store.getMeta('wolkeAbgleich', null);
         if (v !== null)
             return !!v;
@@ -101440,6 +101880,15 @@ const Wolke = (() => {
      * 9 · START
      * ======================================================================*/
     const start = async () => {
+        /* Ein Einspielen kann die Frage aus L76 stellen, und es geschieht
+           ausserhalb dieses Moduls. Ohne dieses Anmelden zeigte der Punkt oben
+           rechts bis zum nächsten Takt — also bis zu zwei Minuten lang —
+           weiter „Letzter Abgleich 14:03", während der Abgleich längst stand.
+           Der Horcher hängt VOR dem Token-Abbruch: die Frage gehört auch dann
+           gemeldet, wenn dieses Gerät gerade nicht angemeldet ist. */
+        if (typeof Store.on === 'function')
+            Store.on((was) => { if (was === 'import')
+                melden(); });
         if (!token())
             return;
         zustand.konto = Store.getMeta('wolkeKonto', null);
@@ -101466,6 +101915,7 @@ const Wolke = (() => {
     return { adresse, token, bereich, angemeldet, geraeteName, zustand, beiAenderung,
         anmeldenMit, codeHolen, codeWarten, codeFreigeben, tokenUebernehmen, abmelden,
         abgleichErlaubt, abgleichSetzen, kontoLoeschen,
+        neuAbgleichOffen, neuAbgleichAntwort,
         schluesselSetzen, hatSchluessel, verschluessele, entschluessele,
         hoch, runter, abgleichen, dateienAbgleichen, takt, taktSetzen, zuSchicken, seiteVon,
         geteiltSetzen, istGeteilt, freigeben, freigaben,
@@ -101574,12 +102024,34 @@ const WolkeFenster = (() => {
                     await abgleichFragen();
                     await zeichne();
                 }
+                /* Die beiden Antworten aus L76. Sie stehen NEBENEINANDER und nicht
+                   übereinander: keine ist die Vorgabe, keine der Abbruch. */
+                if (was === 'neu-lokal') {
+                    await Wolke.neuAbgleichAntwort('lokal');
+                    UI.toast('Nur lokal: der eingespielte Bestand bleibt auf diesem Gerät. ' +
+                        'Den Abgleich kannst du hier jederzeit wieder einschalten.');
+                    await zeichne();
+                }
+                if (was === 'neu-wolke') {
+                    a.disabled = true;
+                    a.textContent = 'Gleicht ab …';
+                    UI.toast('Vollständiger Abgleich läuft — das kann dauern.');
+                    try {
+                        await Wolke.neuAbgleichAntwort('wolke');
+                    }
+                    catch { /* der Fehler steht danach im Fenster */ }
+                    await zeichne();
+                }
                 if (was === 'nurlokal') {
                     Wolke.abgleichSetzen(false);
                     UI.toast('Nur lokal: nichts verlässt dieses Gerät, bis du den Abgleich wieder einschaltest.');
                     await zeichne();
                 }
                 if (was === 'jetzt') {
+                    if (Wolke.neuAbgleichOffen()) {
+                        UI.toast('Erst oben entscheiden, wie es nach dem Einspielen weitergehen soll.');
+                        return;
+                    }
                     if (!Wolke.abgleichErlaubt()) {
                         UI.toast('Der Abgleich ist für dieses Gerät ausgeschaltet — erst einschalten.');
                         return;
@@ -101749,6 +102221,7 @@ const WolkeFenster = (() => {
         const z = Wolke.zustand;
         const k = z.konto || {};
         const an = Wolke.abgleichErlaubt();
+        const frage = Wolke.neuAbgleichOffen();
         return ('<div style="display:flex; gap:13px; align-items:center; margin-bottom:16px">' +
             (k.bild ? `<img src="${esc(k.bild)}" style="width:42px;height:42px;border-radius:50%">`
                 : '<div style="width:42px;height:42px;border-radius:50%;background:var(--bg-hover);' +
@@ -101758,25 +102231,74 @@ const WolkeFenster = (() => {
             '<button data-a="abmelden" style="font-size:12.5px">Abmelden</button>' +
             '</div>' +
             /* Der Modus zuerst — er ist die Antwort auf die wichtigste Frage:
-               verlässt etwas dieses Gerät oder nicht? */
-            (an
-                ? '<div style="padding:12px; border:1px solid var(--line); border-radius:8px; ' +
-                    'font-size:12.5px; line-height:1.6; margin-bottom:16px; display:flex; ' +
-                    'gap:10px; align-items:center">' +
-                    '<span style="font-size:17px">🔄</span><div style="flex:1; min-width:0"><b>Lokal + Abgleich.</b> ' +
-                    'Dieses Gerät gleicht mit der Wolke ab.</div>' +
-                    '<button data-a="nurlokal" style="font-size:12px; flex:none; width:auto; white-space:nowrap">' +
-                    'Nur lokal arbeiten</button></div>'
-                : '<div style="padding:12px; border:1px solid var(--warn,#c88); border-radius:8px; ' +
-                    'font-size:12.5px; line-height:1.6; margin-bottom:16px; display:flex; ' +
-                    'gap:10px; align-items:center">' +
-                    '<span style="font-size:17px">📴</span><div style="flex:1; min-width:0"><b>Nur lokal.</b> ' +
-                    'Du bist angemeldet, aber nichts verlässt dieses Gerät.</div>' +
-                    '<button data-a="abgleich-an" class="prim" style="font-size:12px; flex:none; ' +
-                    'width:auto; white-space:nowrap">Abgleich einschalten</button></div>') +
+               verlässt etwas dieses Gerät oder nicht?
+      
+               DREI ZUSTÄNDE, und der erste geht vor (L76 / E279). Nach einem
+               eingespielten „Ersetzen" ist weder „Lokal + Abgleich" noch „Nur
+               lokal" wahr: der Abgleich steht, weil niemand entschieden hat.
+               Stünde hier „Nur lokal", hätte der Bildschirm die Entscheidung
+               schon getroffen — und zwar für den Menschen.
+      
+               Zwei Knöpfe, KEINER mit `prim`. Das ist kein Versehen: `confirm()`
+               und `Dialog.wahl` heben beide eine Antwort hervor (dort bekommt
+               der erste Knopf `class="prim"`), und Escape wählt bei beiden. Wenn
+               beide Antworten richtig sein können und die falsche Arbeit kostet,
+               darf keine die Vorgabe sein. Wegklicken beantwortet hier nichts —
+               die Frage steht dann eben weiter. */
+            (frage
+                ? '<div id="wo-frage" style="padding:13px; border:1px solid var(--warn,#c88); ' +
+                    'border-radius:8px; font-size:12.5px; line-height:1.6; margin-bottom:16px">' +
+                    '<div style="display:flex; gap:10px; align-items:flex-start">' +
+                    '<span style="font-size:17px">⏸</span><div style="flex:1; min-width:0">' +
+                    '<b>Der Abgleich wartet auf dich.</b> Du hast eine Sicherung ' +
+                    'eingespielt und den Bestand ersetzt. Auf dem Server liegt noch der ' +
+                    'Stand von vorher. Es geht gerade nichts hinaus und nichts herein — ' +
+                    'Redion entscheidet das nicht von selbst, weil beide Wege Arbeit ' +
+                    'kosten können.</div></div>' +
+                    /* EIN Kind je Knopf, nicht drei. Beim Hinsehen (§55.1) stand
+                       „Nur lokal verwenden" links und die Erklärung RECHTS DANEBEN
+                       in zwei Spalten, und das `<br>` dazwischen tat nichts:
+                       Knöpfe in diesem Fenster sind Flex-Behälter, also wurden
+                       `<b>`, `<br>` und `<span>` zu drei Flex-Elementen in einer
+                       Reihe. Gemessen: B 63 px, BR 0 px, SPAN 176 px nebeneinander.
+                       Mit einem einzigen Kind, das den Knopf füllt, fliesst der Text
+                       darin wieder normal — unabhängig davon, welche Regel den
+                       Knopf gerade auf `flex` stellt. */
+                    '<div style="display:flex; gap:9px; flex-wrap:wrap; margin-top:11px">' +
+                    '<button data-a="neu-lokal" class="wo-wahl">' +
+                    '<span><b>Nur lokal verwenden</b><br>' +
+                    '<span style="color:var(--text-faint)">Der eingespielte Bestand bleibt ' +
+                    'auf diesem Gerät. Die Wolke behält, was sie hat.</span></span></button>' +
+                    '<button data-a="neu-wolke" class="wo-wahl">' +
+                    '<span><b>Vollständig neu abgleichen</b><br>' +
+                    '<span style="color:var(--text-faint)">Beide Seiten werden ' +
+                    'zusammengeführt. Was sich widerspricht, wird dir gezeigt.</span></span>' +
+                    '</button></div></div>'
+                : an
+                    ? '<div style="padding:12px; border:1px solid var(--line); border-radius:8px; ' +
+                        'font-size:12.5px; line-height:1.6; margin-bottom:16px; display:flex; ' +
+                        'gap:10px; align-items:center">' +
+                        '<span style="font-size:17px">🔄</span><div style="flex:1; min-width:0"><b>Lokal + Abgleich.</b> ' +
+                        'Dieses Gerät gleicht mit der Wolke ab.</div>' +
+                        '<button data-a="nurlokal" style="font-size:12px; flex:none; width:auto; white-space:nowrap">' +
+                        'Nur lokal arbeiten</button></div>'
+                    : '<div style="padding:12px; border:1px solid var(--warn,#c88); border-radius:8px; ' +
+                        'font-size:12.5px; line-height:1.6; margin-bottom:16px; display:flex; ' +
+                        'gap:10px; align-items:center">' +
+                        '<span style="font-size:17px">📴</span><div style="flex:1; min-width:0"><b>Nur lokal.</b> ' +
+                        'Du bist angemeldet, aber nichts verlässt dieses Gerät.</div>' +
+                        '<button data-a="abgleich-an" class="prim" style="font-size:12px; flex:none; ' +
+                        'width:auto; white-space:nowrap">Abgleich einschalten</button></div>') +
             '<div id="wo-zahlen" style="display:flex; gap:9px; margin-bottom:16px; flex-wrap:wrap"></div>' +
+            /* Solange die Frage steht, kann „Jetzt abgleichen" nichts tun —
+               `abgleichen()` gibt dann `null` zurück. Ein Knopf, der still nichts
+               tut, ist §47; also steht der Grund am Knopf statt in einem Toast,
+               den man erst nach dem Drücken sieht. */
             '<div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px">' +
-            '<button data-a="jetzt" class="prim">Jetzt abgleichen</button>' +
+            '<button data-a="jetzt"' + (frage
+            ? ' disabled title="Erst oben entscheiden, wie es nach dem ' +
+                'Einspielen weitergehen soll."'
+            : ' class="prim"') + '>Jetzt abgleichen</button>' +
             '<button data-a="freigeben">Anderes Gerät freigeben</button>' +
             '<button data-a="marken">Marken</button>' +
             '</div>' +
@@ -101828,6 +102350,15 @@ const WolkeFenster = (() => {
     const abgleichFragen = async () => {
         if (!Wolke.angemeldet() || Wolke.abgleichErlaubt())
             return;
+        /* Steht die Frage aus L76, ist sie die grössere: sie kennt beide
+           Richtungen, dieses `confirm()` nur ein Ja und ein Nein. Zwei Fragen
+           übereinander wären eine Falle — wer hier „Abbrechen" drückt, hätte
+           ohne es zu merken „nur lokal" gewählt. */
+        if (Wolke.neuAbgleichOffen()) {
+            UI.toast('Nach dem Einspielen steht oben eine Entscheidung — sie ' +
+                'ersetzt diese Frage.');
+            return;
+        }
         const ja = confirm('Dieses Gerät ab jetzt mit der Wolke abgleichen?\n\n' +
             'Deine bisherigen Notizen gehen dann — verschlüsselt — zum Server ' +
             'und erscheinen auf deinen anderen Geräten.\n\n' +
@@ -115091,6 +115622,29 @@ const Kopfleiste = (() => {
            alle an der Kopfzeile, die es dann nicht gibt. */
         if (!c)
             return;
+        /* ZWEI KNÖPFE, DIE OHNE SEITE NICHTS TUN KÖNNEN (E277, L68).
+    
+           Gemessen auf fünf Bildschirmen: „•••" und der Stern standen auf
+           JEDEM — auch auf Notizhefte, Posteingang, Kompass und Start. Und
+           beide prüfen beim Klick, ob es überhaupt eine Seite gibt:
+           `an('btn-page-menu')` mit `if (p)` und `an('btn-fav')` mit
+           `if (!seiteId) return` (schale.ts:3415, :3425). Ohne Seite passiert
+           also nichts — lautlos, und das ist die heimtückischere Hälfte von
+           §47: ein Knopf, der „geht gerade nicht" sagt, ist ärgerlich; einer,
+           der schweigend nichts bewirkt, lässt den Menschen an sich zweifeln.
+    
+           Sie verschwinden jetzt, statt dazustehen. Der KI-Knopf daneben
+           bleibt: `kiPanel()` geht auf jedem Bildschirm.
+    
+           Das steht VOR den beiden Rücksprüngen darunter — die kehren bei
+           einem Sonderbildschirm und bei „keine Seite" sofort um, und genau
+           das sind die Fälle, um die es hier geht. */
+        const echteSeite = !sonder && !!seiteId && !!Store.getBlock(seiteId);
+        for (const id of ['btn-page-menu', 'btn-fav']) {
+            const k = document.getElementById(id);
+            if (k)
+                k.hidden = !echteSeite;
+        }
         if (sonder) {
             c.innerHTML = '<a>' + esc(sonder.titel) + '</a>';
             return;
@@ -116382,13 +116936,20 @@ const Menueband = (() => {
         }
         const schlecht = String(z.fehler || z.fehlerDateien || '');
         punkt.hidden = false;
+        /* VIER Zustände seit L76. Es waren drei, und mit offener Frage zeigte
+           der Punkt „ist-gut" und „Letzter Abgleich 14:03" — beides von vor
+           dem Einspielen, beides nicht mehr wahr. Der Abgleich steht ja.
+           Die Farbe allein sagt es nicht (§38): der Grund steht im `title` und
+           im `aria-label`, wie bei den anderen drei auch. */
         punkt.className = 'wolke-punkt ' +
-            (schlecht ? 'ist-fehler' : z.laeuft ? 'ist-laeuft' : 'ist-gut');
+            (schlecht ? 'ist-fehler' : z.frage ? 'ist-frage'
+                : z.laeuft ? 'ist-laeuft' : 'ist-gut');
         const name = z.konto && z.konto.name ? String(z.konto.name) : 'angemeldet';
         const stand = schlecht ? 'Abgleichfehler: ' + schlecht
-            : z.laeuft ? 'Abgleich läuft'
-                : z.letzter ? 'Letzter Abgleich ' + String(z.letzter).slice(11, 16)
-                    : 'noch kein Abgleich';
+            : z.frage ? 'Abgleich wartet auf eine Entscheidung (Mehr → Wolke)'
+                : z.laeuft ? 'Abgleich läuft'
+                    : z.letzter ? 'Letzter Abgleich ' + String(z.letzter).slice(11, 16)
+                        : 'noch kein Abgleich';
         /* Der Knopf öffnet weiterhin den Arbeitsbereich — das aria-label darf
            nichts anderes versprechen. Der Wolke-Stand steht DAHINTER, als
            Auskunft, nicht als Ziel; der Weg zum Wolke-Dialog steht unter
@@ -119885,9 +120446,23 @@ const App = (() => {
                 danach && danach();
                 zeichneBaum();
                 zeichneSeite();
+                /* EIN Hinweis, nicht zwei. `UI.toast` schreibt in dasselbe Element:
+                   ein zweiter Aufruf direkt danach überschriebe den ersten, und
+                   gesehen hätte man nur die zweite Hälfte.
+        
+                   Hat das Einspielen eine Entscheidung offen gelassen (L76), gehört
+                   sie in denselben Satz. Eine Frage, von der niemand weiss, dass
+                   sie wartet, ist ein stehender Abgleich ohne Grund — und der
+                   fällt erst auf, wenn das andere Gerät nichts mehr bekommt. */
                 UI.toast('Sicherung geladen — ' + erg.bloecke + ' Blöcke' +
                     (erg.versionen ? ', ' + erg.versionen + ' Fassungen' : '') +
-                    (anhaenge ? ', ' + anhaenge + ' Anhang/Anhänge' : ''));
+                    (anhaenge ? ', ' + anhaenge + ' Anhang/Anhänge' : '') +
+                    (erg.frage
+                        ? '. Der Abgleich mit der Wolke steht still: dort liegt noch ' +
+                            'der Stand von vorher. Entscheide unter „Mehr → Wolke", ob ' +
+                            'dieses Gerät nur lokal weiterarbeitet oder vollständig neu ' +
+                            'abgleicht.'
+                        : ''), erg.frage ? 14000 : undefined);
             }
             catch (err) {
                 alert('Konnte nicht geladen werden: ' +

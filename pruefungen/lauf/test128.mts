@@ -37,6 +37,8 @@ import path from 'node:path';
 /* Die Module heissen im Browser schlicht so — mit `module: none` sind sie
    gewöhnliche Konstanten im Skript-Bereich und hängen NICHT am Fenster. */
 declare const Ruhig: any;
+declare const Store: any;
+declare const App: any;
 
 const WURZEL = path.resolve(import.meta.dirname, '../..');
 const PORT = 8797;
@@ -112,6 +114,22 @@ await seite.evaluate(() => {
   if (typeof Ruhig !== 'undefined' && Ruhig.an() && !Ruhig.offen()) Ruhig.schalten();
 });
 await seite.waitForTimeout(300);
+
+/* UND ERST EINE SEITE ÖFFNEN — dieselbe Lehre, ein Schritt weiter (E279).
+   `#btn-page-menu` und der Stern stehen seit E278/L68 nur noch auf einer
+   ECHTEN Seite: ohne sie täten sie lautlos nichts, also sind sie `hidden`
+   (§47). Ein verstecktes Element nimmt keinen Fokus an — genau der Fall,
+   den der Absatz darüber schon für die Seitenleiste beschreibt.
+
+   Der Punkt war deshalb rot, und er hatte recht: gemessen wurde ein Knopf,
+   den es auf diesem Bildschirm gar nicht gibt. Die Antwort ist nicht, ihn
+   aus der Liste zu streichen — dann bliebe der Fokusrahmen der Kopfzeile
+   ungeprüft —, sondern den Bildschirm herzustellen, auf dem er steht. */
+await seite.evaluate(() => {
+  const s = Store.addBlock(null, 'page', { text: 'Fokusprobe' });
+  App.oeffne(s.id);
+});
+await seite.waitForTimeout(400);
 
 /* Ohne sichtbaren Fokus ist Tastaturbedienung Raten. */
 const fokus = await seite.evaluate(() => {

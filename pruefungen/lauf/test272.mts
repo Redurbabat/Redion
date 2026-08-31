@@ -304,28 +304,46 @@ p('Die tote Verdrahtung hl-seiten ist noch beschrieben, nicht heimlich weg',
  * ========================================================================*/
 console.log('\n8 · Die Gegenproben — kann dieser Lauf überhaupt rot werden?');
 
-/* (a) Ein untergeschobener Eintrag ohne tun muss in §1 auffallen.
-   NICHT ueber `melde()` — das prueft `typeof tun === 'function'` selbst und
-   weist den Eintrag ab (register/menueband.ts:609). Der ungeprueften Weg ist
-   `meldeLieferant()`: was ein Lieferant zurueckgibt, wandert bei :654
-   ungefiltert in `alle()`. Das ist zugleich der Befund — die zwei Wege sind
-   verschieden streng.
+/* (a) Ein Eintrag ohne tun muss in §1 auffallen.
 
-   Der Lieferant entwaffnet sich selbst ueber eine Schaltmarke, weil es fuer
-   Lieferanten kein `nimmZurueck` gibt. Ein Prueflauf, der das Register
-   verschmutzt zuruecklaesst, macht den naechsten Paragraphen rot. */
+   HIER STAND EIN SCHMUGGELWEG, UND ER IST ZUGEMAUERT (E277, L87).
+   Die alte Fassung schob einen Eintrag ohne `tun` ueber `meldeLieferant()`
+   ein — ausdruecklich, weil dieser Weg als EINZIGER nicht prüfte, waehrend
+   `melde()` es tat. Der Kommentar nannte das damals seinen eigenen Befund:
+   „die zwei Wege sind verschieden streng".
+
+   Seit L87 sind sie es nicht mehr. `alle()` siebt auch die Lieferanten
+   (register/menueband.ts, `brauchbar`), und der Eintrag kommt gar nicht
+   mehr an — die Gegenprobe wurde rot, WEIL das Loch zu ist.
+
+   Sie prueft deshalb jetzt den PRUEFER statt den Weg: §1 sammelt die
+   Eintraege und verlangt `typeof e.tun === 'function'`. Dieselbe Bedingung
+   laeuft hier ueber eine Liste, der ein kaputter Eintrag beigelegt wurde.
+   Faende sie ihn nicht, waere §1 blind — und genau das soll dieser Punkt
+   ausschliessen.
+
+   Dazu die zweite Haelfte: der Weg selbst muss dicht BLEIBEN. Ein
+   Lieferant mit `tun: null` darf im Band nicht ankommen. */
 const gegenTun = await seite.evaluate(() => {
-  (window as any).__gegenprobe272 = true;
-  Register.menueband.meldeLieferant(() => (window as any).__gegenprobe272
-    ? [{ reiter: 'ansicht', gruppe: 'Gegenprobe', id: 'gegenprobe-ohne-tun',
-         name: 'Gegenprobe', zeichen: 'dots', tun: null }]
-    : []);
-  let gefunden = false;
+  /* Der Pruefer aus §1, auf eine Liste mit einem kaputten Eintrag. */
+  const echte = Register.menueband.alle()
+    .map((e: any) => ({ id: String(e.id ?? ''), tunArt: typeof e.tun }));
+  const mitKaputtem = [...echte, { id: 'gegenprobe-ohne-tun', tunArt: 'object' }];
+  const findetIhn = mitKaputtem.filter(e => e.tunArt !== 'function').length === 1;
+  const echteSauber = echte.filter((e: any) => e.tunArt !== 'function').length === 0;
+
+  /* Und: der Lieferantenweg bleibt dicht. */
+  const schmuggel = () => ([{ reiter: 'ansicht', gruppe: 'Gegenprobe',
+    id: 'gegenprobe-ohne-tun', name: 'Gegenprobe', zeichen: 'dots',
+    tun: null }] as any);
+  Register.menueband.meldeLieferant(schmuggel);
+  let durchgekommen = false;
   for (const g of Register.menueband.inReiter('ansicht'))
     for (const e of g.eintraege)
-      if (e.id === 'gegenprobe-ohne-tun') gefunden = typeof e.tun !== 'function';
-  (window as any).__gegenprobe272 = false;
-  return gefunden;
+      if (e.id === 'gegenprobe-ohne-tun') durchgekommen = true;
+  Register.menueband.nimmZurueckLieferant(schmuggel);
+
+  return findetIhn && echteSauber && !durchgekommen;
 }) as boolean;
 p('Gegenprobe: ein Eintrag ohne tun waere in §1 aufgefallen', gegenTun,
   'dann prueft §1 gar nichts');
@@ -1376,6 +1394,84 @@ const kanten = await seite.evaluate(() => {
 for (const b of Object.keys(kanten))
   p('Die Kante von „' + b + '" hat Knöpfe', Number(kanten[b]) > 0,
     String(kanten[b]));
+
+/* ==========================================================================
+ * §17 · KEIN KNOPF STEHT DA, DER NICHTS TUN KANN (E277, L68)
+ * --------------------------------------------------------------------------
+ * §15 prueft die Wege in „Gehen": jeder muss etwas bewirken. Dieser Punkt
+ * prueft die andere Haelfte — Knoepfe, die dastehen, OBWOHL sie auf diesem
+ * Bildschirm gar nichts koennen.
+ *
+ * Gemessen auf fuenf Bildschirmen: „•••" und der Stern standen auf jedem,
+ * auch auf Notizhefte, Posteingang, Kompass und Start. Beide pruefen beim
+ * Klick, ob es ueberhaupt eine Seite gibt (schale.ts an('btn-page-menu')
+ * mit `if (p)`, an('btn-fav') mit `if (!seiteId) return`) — ohne Seite
+ * passiert also nichts, lautlos.
+ *
+ * Der KI-Knopf daneben bleibt: `kiPanel()` geht ueberall.
+ * ========================================================================*/
+console.log('\n17 · Kein Knopf steht da, der nichts tun kann (E273/E277)');
+
+const KOPFKNOEPFE = await seite.evaluate(async () => {
+  const sichtbar = (id: string) => {
+    const el = document.getElementById(id);
+    if (!el) return false;
+    const st = getComputedStyle(el);
+    return st.display !== 'none' && st.visibility !== 'hidden' && el.offsetParent !== null;
+  };
+  const messen = () => ({
+    wo: String(App.schauplatz()),
+    menue: sichtbar('btn-page-menu'),
+    stern: sichtbar('btn-fav'),
+    ki:    sichtbar('btn-ai')
+  });
+  const raus: any[] = [];
+
+  const s = Store.addPage(null, { text: 'Knopfprobe' });
+  App.oeffne(s.id);
+  await new Promise(f => setTimeout(f, 300));
+  raus.push(messen());
+
+  for (const ruf of ['Notebook.oeffnen()', 'Ansichten.posteingang()',
+                     'Ansichten.kompass()', 'Ansichten.start()']) {
+    try { (0, eval)(ruf); } catch { /* … */ }
+    await new Promise(f => setTimeout(f, 300));
+    raus.push(messen());
+  }
+  return raus;
+}) as any[];
+
+const mitSeite = KOPFKNOEPFE[0];
+const ohneSeite = KOPFKNOEPFE.slice(1);
+p('Mit offener Seite stehen „•••" und der Stern da',
+  mitSeite.menue === true && mitSeite.stern === true, JSON.stringify(mitSeite));
+p('Ohne Seite verschwindet „•••" auf jedem Bildschirm',
+  ohneSeite.every(x => x.menue === false),
+  JSON.stringify(ohneSeite.filter(x => x.menue).map(x => x.wo)));
+p('Und der Stern ebenso',
+  ohneSeite.every(x => x.stern === false),
+  JSON.stringify(ohneSeite.filter(x => x.stern).map(x => x.wo)));
+p('Der KI-Knopf bleibt überall — er kann überall etwas',
+  KOPFKNOEPFE.every(x => x.ki === true),
+  JSON.stringify(KOPFKNOEPFE.map(x => x.wo + ':' + x.ki)));
+
+/* GEGENPROBE (§55.2): die Messung muss einen sichtbaren Knopf auch sehen.
+   Ohne sie waere „ueberall verschwunden" auch dann gruen, wenn die Messung
+   grundsaetzlich `false` liefert — etwa weil `offsetParent` in einer
+   veraenderten Schale immer null ist. */
+const gegenKnopf = await seite.evaluate(async () => {
+  const k = document.getElementById('btn-page-menu');
+  if (!k) return { ging: false, grund: 'Knopf gibt es nicht' };
+  k.hidden = false;                        /* von Hand wieder herzeigen */
+  await new Promise(f => setTimeout(f, 120));
+  const st = getComputedStyle(k);
+  const sah = st.display !== 'none' && k.offsetParent !== null;
+  k.hidden = true;
+  return { ging: sah, grund: st.display };
+}) as any;
+p('Gegenprobe: ein sichtbarer Knopf wird auch als sichtbar gemessen',
+  gegenKnopf.ging === true,
+  JSON.stringify(gegenKnopf) + ' — sonst misst §17 nur Nullen');
 
 await browser.close();
 server.close();

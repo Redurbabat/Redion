@@ -565,7 +565,14 @@ const pruef = (n: any, ist: any, soll: any) => {
     const leiste = kasten('#topbar');
     const zurueck = kasten('#btn-back');
     const chip = kasten('#page > .lw-head');
-    const punkte = kasten('#btn-page-menu');
+    /* SEIT E278/L68 STEHT DAS ••• NICHT MEHR ÜBERALL. Ohne offene Seite
+       täte es lautlos nichts (`if (!seiteId) return`), also ist es dort
+       `hidden` — und ein verstecktes Element hat keine Box und fängt keine
+       Finger. Genau hier, auf der Lernwelt, ist das der Fall.
+       Also wird jetzt gemessen, was gilt: dass es weg IST. */
+    const punkteKnopf = document.getElementById('btn-page-menu');
+    const punkteWeg = !punkteKnopf || (punkteKnopf as HTMLElement).hidden ||
+                      punkteKnopf.getBoundingClientRect().width === 0;
     const ersterReiter = document.querySelector<HTMLElement>('#page > .lw-nav button');
     let reiterTreffer = 'fehlt';
     if (ersterReiter) {
@@ -580,25 +587,25 @@ const pruef = (n: any, ist: any, soll: any) => {
       /* Die zwei Knöpfe der Schale liegen ÜBER der Zeile des Bereichs und
          fangen dort auch die Finger. */
       zurueckTrifft: treffer('#btn-back'),
-      punkteTrifft: treffer('#btn-page-menu'),
+      punkteWeg,
       reiterTrifft: reiterTreffer,
-      /* Und nichts überlappt: Zurück | Karte | Chip | drei Punkte. */
-      folge: !!(zurueck && nav && chip && punkte)
+      /* Und nichts überlappt: Zurück | Karte | Chip. Das ••• stand hier
+         früher als vierter — es ist auf diesem Bildschirm nicht mehr da,
+         also endet die Reihe beim Chip. */
+      folge: !!(zurueck && nav && chip)
         && zurueck!.rechts <= nav!.links
-        && nav!.rechts <= chip!.links
-        && chip!.rechts <= punkte!.links,
+        && nav!.rechts <= chip!.links,
       /* Alles auf einer Linie — im ersten Bild sassen die Knöpfe sechs
          Punkte zu hoch, weil `align-items:stretch` einen Knopf mit fester
          Höhe oben kleben lässt. */
-      aufEinerLinie: !!(zurueck && nav && punkte)
+      aufEinerLinie: !!(zurueck && nav)
         && Math.abs(zurueck!.mitte - nav!.mitte) <= 2
-        && Math.abs(punkte!.mitte - nav!.mitte) <= 2
     };
   }) as any;
   pruef('Krume und Reiter stehen auf EINER Zeile', band.eineZeile, true);
   pruef('Der doppelte Weltname ist unsichtbar',    band.krume, 'hidden');
   pruef('Der Zurück-Knopf fängt seine Finger',     band.zurueckTrifft, 'selbst');
-  pruef('Die drei Punkte auch',                    band.punkteTrifft, 'selbst');
+  pruef('Die drei Punkte sind hier weg (E278/L68)', band.punkteWeg, true);
   pruef('Und die Reiter darunter ebenso',          band.reiterTrifft, 'reiter');
   pruef('Nichts überlappt in der Zeile',           band.folge, true);
   pruef('Alles steht auf einer Linie',             band.aufEinerLinie, true);

@@ -321,27 +321,28 @@ const importErg = await A.seite.evaluate(async () => {
 p('Vor dem Import stehen beide Grabsteine', importErg.vorherBeide, JSON.stringify(importErg));
 p('Der Grabstein des wiederhergestellten Blocks fällt — der andere überlebt das Ersetzen',
   importErg.bleibtWeg && importErg.faelltDa, JSON.stringify(importErg));
-const nachImport = await A.seite.evaluate(async ([tok]: [string]) => {
-  /* Nach dem Ersetzen ist das Konto-Meta mit der Sicherung getauscht —
-     für die Probe wird die Verbindung neu gesetzt, wie ein Mensch es
-     nach einem Import täte. Der überlebte Grabstein muss dann wirklich
-     hochgehen. */
-  await Wolke.tokenUebernehmen(tok);
-  await Wolke.schluesselSetzen('mein langer geheimer satz');
-  Wolke.abgleichSetzen(true);
-  await Wolke.abgleichen();
-  return Store.blockGrabsteine().length;
-}, [await (async () => {
-  const roh = 'sit_' + kennung();
-  await kern.ablage.setze('sitzungen', { token: await abdruck(roh), kontoId: 'k1',
-    geraet: 'Prüfung', angelegt: new Date().toISOString(),
-    bis: new Date(Date.now() + 86400000).toISOString() });
-  return roh;
-})()] as [string]) as number;
+/* HIER STAND EINE UMGEHUNG, und sie hielt das ALTE Verhalten fest.
+   Vor L76 (E279) tauschte „ersetzen" das Konto-Meta mit der Sicherung aus,
+   also musste diese Probe die Verbindung von Hand neu setzen — mit einem
+   frisch gebauten Token. Seit E279 überlebt die Anmeldung das Einspielen.
+   Aus dem Behelf wird damit eine echte Prüfung: erst nachsehen, dass Token
+   und Schlüssel noch da sind, dann die Frage aus L76 beantworten. */
+const nachImport = await A.seite.evaluate(async ([vorher]: [string]) => {
+  const identitaet = Store.getMeta('wolkeToken', '') === vorher && Wolke.hatSchluessel();
+  /* Seit L76 hält das Ersetzen den Abgleich an und fragt. Ohne Antwort
+     bewegt sich nichts — `abgleichSetzen(true)` allein reicht nicht. */
+  const stand = Wolke.neuAbgleichOffen();
+  await Wolke.neuAbgleichAntwort('wolke');
+  return { identitaet, stand, offen: Store.blockGrabsteine().length };
+}, [await A.seite.evaluate(() => Store.getMeta('wolkeToken', '')) as string] as [string]) as any;
+p('Anmeldung und Schlüssel überleben das Einspielen (L76/E279)',
+  nachImport.identitaet, JSON.stringify(nachImport));
+p('Und das Einspielen hat die Frage gestellt, statt eine Richtung zu wählen',
+  nachImport.stand === true, JSON.stringify(nachImport));
 const geloeschtAmServer = await amServer(importErg.faelltId);
 p('Der überlebende Grabstein erreicht den Server nach dem Import',
-  nachImport === 0 && !!geloeschtAmServer && Number(geloeschtAmServer.geloescht) === 1,
-  JSON.stringify({ merkliste: nachImport, g: geloeschtAmServer?.geloescht }));
+  nachImport.offen === 0 && !!geloeschtAmServer && Number(geloeschtAmServer.geloescht) === 1,
+  JSON.stringify({ merkliste: nachImport.offen, g: geloeschtAmServer?.geloescht }));
 
 p('Keine Seitenfehler auf allen Geräten', fehler.length === 0, fehler.join(' | ').slice(0, 200));
 
