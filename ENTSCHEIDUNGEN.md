@@ -20491,3 +20491,63 @@ endlich auf den richtigen Hebel zeigt.
 test240 100 · test247 106 · test248 45 · test272 148 · test87 152 ·
 test105 55. sw v46.
 
+
+================================================================================
+E275 — Der Weg zum kommentierten Block, und eine berichtigte Lücke
+================================================================================
+31. August 2026
+
+Klein, aber lehrreich — vor allem über mich.
+
+### Was der Eintrag L98 behauptete
+
+Beim Bauen der Posteingang-Kante (E273) ist mir aufgefallen, dass
+`anMich()` den BLOCK liefert und beide Zeilen `App.oeffne(block.parentId)`
+rufen. Ich habe das als Lücke notiert, mit dem Titel „öffnet nichts" und dem
+Satz: „Der Weg wäre ein `Store.seiteVon(blockId)` … heute steht die Rechnung
+an keiner Stelle."
+
+Beides war falsch, und beides war zu haben, indem man nachsieht.
+
+### Was gemessen dasteht
+
+Eine Seite, darin ein Toggle „Kapitel 4", darin ein Textblock mit einer
+Erwähnung. Klick auf die Zeile im Posteingang:
+
+    Krume:   📄 Skript mit Verschachtelung / Kapitel 4
+    Inhalt:  Kapitel 4 · [Cover] [Volle Breite] … · Die Rechnung dazu 💬1
+
+Es öffnet also sehr wohl etwas — den Elternblock, gezeichnet wie eine Seite.
+Der kommentierte Satz ist zu sehen. Deshalb hat es nie jemand gemeldet, und
+deshalb war meine Überschrift zu laut.
+
+Und die Rechnung gibt es DREIMAL: `Store.seiteVonHier` (indexdb.ts:600),
+`Store.seiteVon` (indexdb.ts:1447, nicht ausgeführt) und `Links.seiteVon`.
+Darüber hinaus gibt es seit E105 `App.zeigeBlock` — das die echte Seite
+sucht, sie öffnet, zum Block rollt und bei fehlender Seite einen ehrlichen
+Satz sagt. Es zu schreiben wäre die vierte Fassung gewesen.
+
+### Was geändert wurde
+
+Zwei Zeilen: der Posteingang und die Kante rufen `App.zeigeBlock(block.id)`.
+Die Krume steht danach auf der Seite, und man landet beim Kommentar statt am
+Anfang.
+
+`data-komm` ist dabei weggefallen. Es stand seit jeher an der Zeile und wurde
+NIRGENDS gelesen — gemessen mit einer Suche über den ganzen Baum: ein
+Treffer, die Stelle, die es schreibt.
+
+### Die Lehre, und sie ist nicht die technische
+
+Eine Lücke zu notieren ist gut. Eine Lücke zu notieren, ohne sie gemessen zu
+haben, ist eine Behauptung mit Aktenzeichen — und sie ist gefährlicher als
+gar keine, weil sie danach zitiert wird. Der Eintrag hätte drei Leute in die
+Irre geführt: der Fehler war milder als beschrieben, und der Weg zur Lösung
+lag schon fertig da.
+
+L98 steht deshalb nicht bloss als „geschlossen" da, sondern mit dem, was
+falsch daran war.
+
+**Geprüft:** test56 27 (vier neu, darunter die Gegenprobe „`parentId` ist
+hier NICHT die Seite" — ohne sie misst der Punkt darunter nichts).
+

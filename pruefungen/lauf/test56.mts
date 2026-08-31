@@ -145,6 +145,48 @@ const pruef = (n: any, ist: any, soll: any) => {
   pruef('Erwähnung öffnet die Zielseite', gesprungen.seite, true);
   pruef('Das Fenster schliesst dabei',    gesprungen.zu, true);
 
+  /* --- Ein Kommentar an einem VERSCHACHTELTEN Block (E275, L98) ---------
+     `anMich()` liefert den Block, nicht die Seite. Beide Stellen, die daraus
+     eine Zeile bauen — der Posteingang und die Kontextkante —, riefen
+     `App.oeffne(block.parentId)`. Für einen Block auf oberster Ebene ist das
+     die Seite und stimmt. Für einen verschachtelten ist es der ELTERNBLOCK,
+     und der wurde dann wie eine Seite gezeichnet: Krume „Skript / Kapitel 4",
+     Inhalt die Toggle statt der Seite.
+
+     Es führte also nicht ins Leere — deshalb hat es niemand gemeldet —,
+     sondern an einen Ort, den es als Seite gar nicht gibt.
+
+     `App.zeigeBlock` kann es seit E105 richtig. Der Punkt misst genau den
+     Unterschied: nach dem Sprung muss die offene SEITE die Seite sein. */
+  const tief = await p.evaluate(async () => {
+    const s2 = Store.addBlock(null, 'page', { text: 'Skript mit Verschachtelung' });
+    const oben = Store.addBlock(s2.id, 'toggle', { text: 'Kapitel 4' });
+    const kind = Store.addBlock(oben.id, 'text', { text: 'Die Rechnung dazu' });
+    Store.updateBlock(kind.id, { kommentare: [{
+      id: 'k3', text: '@Redur bitte nachrechnen', autor: 'Lehrer',
+      zeit: Store.now(), erledigt: false, antworten: [], reaktionen: {} }] });
+
+    const treffer = Kommentare.anMich().find((m: any) => m.k.id === 'k3');
+    /* Der alte Weg, zum Vergleich: `parentId` ist NICHT die Seite. */
+    const alterWeg = treffer.block.parentId;
+    App.zeigeBlock(treffer.block.id);
+    await new Promise(r => setTimeout(r, 400));
+    return {
+      gefunden: !!treffer,
+      alterWegWaerDieSeite: alterWeg === s2.id,
+      offen: App.aktuelleSeite() === s2.id,
+      krume: (document.getElementById('crumb')?.textContent || '').trim()
+    };
+  });
+  pruef('Die Erwähnung am tiefen Block wird gefunden', tief.gefunden, true);
+  /* Die Gegenprobe zum Punkt darunter: wäre `parentId` schon die Seite,
+     hätte der alte Weg gestimmt und der neue nichts verbessert. */
+  pruef('Gegenprobe: `parentId` ist hier NICHT die Seite',
+        tief.alterWegWaerDieSeite, false);
+  pruef('Der Sprung öffnet die echte Seite',  tief.offen, true);
+  pruef('Und die Krume zeigt sie, nicht den Elternblock',
+        /Skript mit Verschachtelung$/.test(tief.krume), true);
+
   console.log(`\n${ok}/${ok + bad} bestanden`);
   console.log(fehler.length ? 'JS-Fehler:\n' + fehler.join('\n') : 'Keine JS-Fehler.');
   await b.close();

@@ -3502,7 +3502,7 @@ zuerst eine Antwort darauf, wie ähnlich zu ähnlich ist.
 Gefunden am 31. August 2026 (E273, auf dem Bild der Kalenderkante).
 
 --------------------------------------------------------------------------------
-L98 — Ein Kommentar an einem verschachtelten Block öffnet nichts (E273)
+L98 — Ein Kommentar an einem verschachtelten Block (E273) — GESCHLOSSEN
 --------------------------------------------------------------------------------
 
 `Kommentare.anMich()` liefert `{ block, k }`. Beide Stellen, die daraus eine
@@ -3510,13 +3510,37 @@ anklickbare Zeile bauen — die Posteingang-Seite (`ansichten/dienst.ts:383`)
 und seit E273 die Kante —, rufen `App.oeffne(block.parentId)`.
 
 Für einen Block auf oberster Ebene ist `parentId` die Seite, und es stimmt.
-Für einen VERSCHACHTELTEN Block ist es der Elternblock, und `App.oeffne`
-bekommt eine Kennung, die keine Seite ist.
-
-Nicht gemessen, wie sich das anfühlt — deshalb steht es hier und nicht in
-ENTSCHEIDUNGEN. Der Weg wäre ein `Store.seiteVon(blockId)`, das nach oben
-läuft, bis es einen Block mit `type === 'page'` findet. Beide Stellen
-bekämen ihn dann; heute steht die Rechnung an keiner.
+Für einen VERSCHACHTELTEN Block ist es der Elternblock.
 
 Gefunden am 31. August 2026 (E273, beim Bauen der Posteingang-Kante).
+
+BERICHTIGT und GESCHLOSSEN am 31. August 2026 (E275). Der Eintrag stand hier
+mit zwei Behauptungen, die beide falsch waren — beide, weil ich geschrieben
+habe, statt nachzusehen:
+
+  · Die Überschrift sagte „öffnet nichts". Gemessen öffnet es SEHR WOHL
+    etwas: `App.oeffne` zeichnet den Elternblock wie eine Seite. Die Krume
+    stand auf „Skript / Kapitel 4", der Inhalt war die Toggle, der
+    kommentierte Satz war zu sehen. Es führte also nicht ins Leere, sondern
+    an einen Ort, den es als Seite nicht gibt — milder, und genau deshalb
+    hat es nie jemand gemeldet.
+  · „Heute steht die Rechnung an keiner Stelle" war schlicht unwahr. Es gibt
+    sie DREIMAL: `Store.seiteVonHier` (indexdb.ts:600, für Grabsteine),
+    `Store.seiteVon` (indexdb.ts:1447, nicht ausgeführt) und
+    `Links.seiteVon`. Und darüber hinaus gibt es `App.zeigeBlock` seit E105,
+    das genau das Richtige tut: echte Seite suchen, öffnen, zum Block
+    rollen, und bei fehlender Seite einen ehrlichen Satz sagen.
+
+Beide Stellen rufen jetzt `App.zeigeBlock(block.id)`. Nebenbei ist
+`data-komm` weggefallen — es stand seit jeher an der Zeile und wurde nirgends
+gelesen.
+
+test56 hat vier neue Punkte, darunter die Gegenprobe: wäre `parentId` hier
+schon die Seite, hätte der alte Weg gestimmt und der Punkt nichts gemessen.
+
+OFFEN BLEIBT eine Kleinigkeit, die dabei aufgefallen ist: dieselbe Wanderung
+nach oben steht an drei Stellen. Zwei davon dürfen es sein (`seiteVonHier`
+muss IM Purge-Moment laufen, wenn der Zwischenspeicher schon leer ist — E254
+erklärt es). `Store.seiteVon` und `Links.seiteVon` sind dagegen dasselbe
+zweimal. Kein Schaden heute, aber §8.
 

@@ -331,7 +331,19 @@ const Ansichten = (() => {
                 /* Direkt an mich gerichtet — steht ganz oben, wie in Notion */
                 (anMich.length
                     ? '<h2>An dich gerichtet</h2><div class="home-liste">' +
-                        anMich.map((m) => `<button data-open="${m.block.parentId}" data-komm="${m.k.id}">` +
+                        anMich.map((m) => 
+                        /* NICHT `data-open` MIT `parentId` (E275, L98).
+                           Gemessen: bei einem verschachtelten Block ist `parentId`
+                           der ELTERNBLOCK, und `App.oeffne` zeichnete ihn dann wie
+                           eine Seite — Krume „Skript / Kapitel 4", Inhalt der Toggle
+                           statt der Seite. Es führte also nicht ins Leere, aber an
+                           einen Ort, den es als Seite nicht gibt.
+          
+                           `App.zeigeBlock` kann das seit E105 richtig: es sucht die
+                           echte Seite, öffnet sie und rollt zum Block. `data-komm`
+                           stand daneben und wurde nirgends gelesen — die Kennung des
+                           Blocks ist das, worauf es ankommt. */
+                        `<button data-block="${m.block.id}">` +
                             '<span>@</span>' +
                             `<span style="flex:1">${esc(m.k.text)}` +
                             `<em style="opacity:.6"> — ${esc(m.k.autor || 'jemand')}</em></span>` +
@@ -373,6 +385,12 @@ const Ansichten = (() => {
             const m = ziel?.closest('[data-meld]');
             if (m && m.dataset['meld'])
                 Werkzeuge.meldungGelesen(m.dataset['meld']);
+            /* VOR `data-open`: ein Blocksprung ist kein Seitenaufruf. */
+            const bl = ziel?.closest('[data-block]');
+            if (bl?.dataset['block']) {
+                App.zeigeBlock(bl.dataset['block']);
+                return;
+            }
             const o = ziel?.closest('[data-open]');
             if (o) {
                 App.oeffne(o.dataset['open']);
@@ -985,9 +1003,11 @@ if (typeof Register !== 'undefined' && Register.kontext) {
                 name: String(m?.k?.text || 'Kommentar'),
                 unter: String(m?.k?.autor || 'jemand'),
                 zeichen: 'comment',
+                /* `zeigeBlock` statt `oeffne(parentId)` — siehe die Begründung an
+                   der Zeile im Posteingang (E275, L98). */
                 tun: () => {
                     try {
-                        App.oeffne(m?.block?.parentId || m?.block?.id);
+                        App.zeigeBlock(String(m?.block?.id || ''));
                     }
                     catch { /* … */ }
                 }

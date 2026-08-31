@@ -1922,4 +1922,12 @@ node pruefungen/lauf/test105.mjs
   Bildschirmen. Drei Punkte in test114 zogen den falschen Hebel
   (`reiterWechseln` statt Knopfdruck) und zeigen jetzt auf den echten.
   L98 neu. sw v46.
+* E275 (L98): der Posteingang und die Kante öffneten bei einem Kommentar an
+  einem verschachtelten Block den ELTERNBLOCK wie eine Seite. Beide rufen
+  jetzt `App.zeigeBlock(block.id)` — echte Seite, und man landet beim
+  Kommentar. `data-komm` war seit jeher tot und ist weg. Wichtiger als der
+  Fix: der L98-Eintrag selbst war an zwei Stellen falsch (er sagte „öffnet
+  nichts", und er sagte, die Rechnung gebe es nirgends — es gibt sie
+  dreimal, plus `App.zeigeBlock` seit E105). Beides stand in LUECKEN, weil
+  ich geschrieben statt nachgesehen habe. test56 +4 Punkte.
 
