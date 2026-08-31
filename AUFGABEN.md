@@ -1998,3 +1998,30 @@ node pruefungen/lauf/test105.mjs
   und der Satz begann mittig, weil `.rb` seinen Inhalt zentriert. test276
   neu (22). Drag&Drop und tiefe Verschachtelung bleiben offen (Redurs
   eigener Satz in E277).
+* E283 (E277 Teil 6 — L85, L91): Redurs dritter Punkt war eine AUSWAHL:
+  Vollbild bauen, volle Breite zusammenziehen, Zoom und Senden streichen.
+  Vollbild ist gebaut (`App.vollbild`/`vollbildAn`/`vollbildGeht`, Knopf im
+  Reiter Ansicht neben „Fokus" — die beiden tun Gegenteiliges: Fokus räumt
+  Redions Oberfläche weg, Vollbild den Browser). Drei Fallen darin: ein
+  gemerkter Zustand ginge am ersten Escape kaputt (deshalb frisch gelesen +
+  `fullscreenchange`-Horcher), `requestFullscreen` gibt es auf dem iPhone
+  nicht (deshalb `zeigen()`, sonst §47), und der Aufruf kann auch dort
+  abgelehnt werden, wo er möglich ist (deshalb ein Satz statt einer
+  Konsolenmeldung). Volle Breite lag an DREI Stellen, nicht an den zwei, die
+  L85 nannte — der Schalter im selben Menü war übersehen; jetzt EIN
+  `App.volleBreite(p, an?)`, die Kopfleiste über `braucht()` gebunden, damit
+  ein Vergessen laut wird. Zoom und Senden sind gestrichen und werden als
+  ABWESENHEIT geprüft — ein gestrichener Punkt, der später als halber Knopf
+  auftaucht, ist §47. Neues Zeichen `maximize` (vier Ecken, kein Rechteck —
+  ein Rechteck hiesse „Fenster" wie `panelL`/`panelR`). Dazu L91 Punkt 1
+  beantwortet: die Kante bleibt fest bei 54 px, der Ziehgriff wird nicht
+  gebaut und auch nicht entfernt. test277 neu, mit drei Gegenproben.
+  Nachlauf im selben Bogen: der volle Lauf über E279–E282 war 239/240 grün,
+  und der eine rote (test265) war kein Zufall — er hielt fest, dass
+  `Notebook.oeffnen()` zur Wurzel zurückspringt, was E282 gerade umgekehrt
+  hatte. Der Fund dahinter ist echt: die Darstellungswahl (Gitter/Liste)
+  WIRKT im offenen Fach, stand aber nur an der Wurzel — seit das Fach das
+  Neuladen überlebt, war das eine Sackgasse. Sie steht jetzt auch im Fach,
+  mit `.nh-form{margin-left:auto}`, sonst rutschte sie als einziges Kind der
+  Zeile nach links. Und test265 verliess sich an FÜNF Stellen still auf die
+  Wurzel; alle fünf sagen es jetzt über `anDieWurzel()`.

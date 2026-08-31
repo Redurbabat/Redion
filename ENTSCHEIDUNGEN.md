@@ -21145,3 +21145,170 @@ eigener Telefon-Fassung. Sie bleiben in LUECKEN.md stehen.
 
 **Geprüft:** test276 neu (22 Punkte) · typecheck grün · Einzeldatei neu
 gebaut · Bilder vom Regal am Rechner und am Telefon.
+
+================================================================================
+E283 — Vollbild bauen, „volle Breite" zusammenziehen, zwei Punkte streichen
+       (L85, L91)
+================================================================================
+31. August 2026
+
+Redurs dritter Punkt aus E277 war eine AUSWAHL, keine Liste:
+
+    · Vollbild:      bauen.
+    · Volle Breite:  den Code, den es an zwei Stellen schon gibt, zu EINEM
+                     gemeinsamen Griff zusammenziehen.
+    · Globaler Zoom: STREICHEN. PDF, Whiteboard und Zeichenfläche behalten
+                     ihren eigenen, echten Zoom.
+    · Senden:        STREICHEN. Bis es echten Mailversand gibt, heisst der
+                     Weg „Weitergeben/Teilen". Kein vorgetäuschter Versand.
+
+Dazu L91: die Kante bleibt fest bei 54 px, ohne Ziehgriff.
+
+### 1 · Vollbild — und wieso es nicht dasselbe ist wie Fokus
+
+`Werkzeuge.fokus()` gab es längst, und man könnte meinen, es sei dieselbe
+Sache. Es ist das Gegenteil:
+
+    Fokus     räumt REDIONS Oberfläche weg und lässt den Browser stehen.
+    Vollbild  räumt den BROWSER weg und lässt Redion stehen.
+
+Beide zusammen ergeben die ruhigste Ansicht, die Redion hat. Deshalb steht
+der neue Knopf im Reiter Ansicht direkt NEBEN „Fokus" — nebeneinander sieht
+man den Unterschied, in zwei verschiedenen Gruppen sähe man ihn nie.
+
+### Drei Dinge, die die naive Fassung falsch macht
+
+Vollbild sieht nach drei Zeilen aus. Es sind drei Fallen:
+
+**1 · Ein gemerktes `let vollbild = false` geht am ersten Escape kaputt.**
+Escape verlässt das Vollbild im BROWSER, ohne Redion zu fragen. Ebenso ein
+Reiterwechsel und ein Videoabspieler, der das Vollbild an sich zieht. Die
+Erinnerung stünde danach für immer falsch, und der Knopf zeigte „AN" über
+einem Fenster mit Adressleiste. Der Zustand wird deshalb NIE gemerkt,
+sondern jedes Mal frisch an `document.fullscreenElement` abgelesen — und
+ein Horcher auf `fullscreenchange` zeichnet das Band nach.
+
+Das ist der Punkt, an dem die Prüfung wirklich etwas prüft: test277 §3
+beendet das Vollbild ABSICHTLICH nicht über den Knopf und misst, ob der
+Knopf sich von selbst nachzieht.
+
+**2 · `requestFullscreen()` gibt es nicht überall.** Auf dem iPhone kennt
+Safari kein Element-Vollbild (nur `<video>`), und in einem eingebetteten
+Rahmen ohne `allowfullscreen` ist es gesperrt. Ein Knopf, der dort dasteht
+und nichts tut, ist §47. `App.vollbildGeht()` beantwortet die Frage, und
+`zeigen()` im Register blendet ihn danach aus. Die Gegenprobe in test277 §1
+setzt `vollbildGeht` kurz auf `false` und misst, dass der Eintrag
+verschwindet — sonst prüfte der Abschnitt nur, dass dieser Rechner Vollbild
+kann.
+
+**3 · Auch wo es geht, kann es abgelehnt werden.** Ohne frische
+Nutzerhandlung wirft der Aufruf. Deshalb ein `catch` mit einem Satz, der
+sagt, was zu tun ist — statt einer Konsolenmeldung, die niemand sieht.
+
+### 2 · Volle Breite — es waren DREI Stellen, nicht zwei
+
+L85 nannte zwei: das Seitenmenü in `schale.ts` und die Kopfleiste. Beim
+Nachsehen waren es drei — der Schalter in der Schalterzeile DESSELBEN Menüs
+war übersehen. Alle drei schrieben `Store.updateBlock(p.id, { wide: !p.wide })`
+von Hand, jede mit eigenem Nachlauf.
+
+Wichtig daran: alle drei taten schon das Richtige. Es war kein Fehler,
+sondern eine Verdopplung — und die läuft still auseinander. Wer morgen eine
+Regel ergänzt (etwa „am Telefon hat volle Breite keine Wirkung", E156),
+ergänzt sie an einer Stelle und wundert sich, warum der andere Weg sie nicht
+kennt.
+
+Genau deshalb misst test277 §4 den ausgelieferten QUELLTEXT und nicht nur
+das Verhalten: ein Verhaltenstest kann diesen Unterschied gar nicht sehen.
+Er war vor E283 dreimal rot.
+
+`volleBreite(p, an?)` zieht ausserdem das übergebene Objekt mit nach
+(`p.wide = neu`) — die Aufrufer zeichnen ihr Menü aus derselben Kopie weiter
+und zeigten sonst den alten Stand.
+
+Die Kopfleiste bekommt den Griff über `braucht('volleBreite')` gebunden.
+Das ist Absicht: fehlt die Bindung, wirft es LAUT beim ersten Klick, statt
+still nichts zu tun — dieselbe Sorte Leiche, gegen die E280 den Wächter
+gebaut hat.
+
+### 3 · Was gestrichen wurde, und warum das eine Entscheidung ist
+
+**Globaler Zoom.** Es gibt ihn dreimal echt — im PDF, im Whiteboard, auf der
+Zeichenfläche. Ein vierter, „globaler" Zoom wäre entweder dasselbe wie
+Strg + / − des Browsers (dann ist er überflüssig) oder ein zweiter
+Massstab neben den dreien (dann ist er verwirrend). Die Schriftgrösse lässt
+sich weiterhin über Strg + / − / 0 und über „Aussehen …" einstellen.
+
+**Senden.** `Mail.senden` gibt es nicht, und der Code sagt das selbst. Ein
+Knopf „Senden", der in Wahrheit `mailto:` öffnet, behauptet mehr, als er
+tut. Die Backstage-Sektion heisst „Weitergeben" und öffnet den echten,
+vollständigen Weg.
+
+Beides prüft test277 §5 als ABWESENHEIT — mitsamt der Gegenfrage, ob der
+Ersatzweg wirklich dasteht. Ein gestrichener Punkt, der später doch als
+halber Knopf auftaucht, ist genau der Fehler, den §47 verbietet.
+
+### 4 · L91 — die Kante bleibt fest
+
+Redur hat entschieden: 54 px, kein Ziehgriff am Rechner. Links stehen
+Werkzeuge und Zeichen, nicht die alte Seitenleiste; die aufklappende Lade
+darf davon getrennt ihre rund 250 px haben.
+
+Damit ist L91 Punkt 1 keine offene Frage mehr, sondern eine beantwortete.
+Die Mechanik des alten Ziehgriffs wird weiter geprüft (test52, test143
+blenden die Leiste für ihre Messung kurz ein) — es ist also nichts
+gelöscht, nur nichts gebaut.
+
+L91 Punkte 2 und 3 (Arbeitsbereichs-Knopf, die drei Seitenleisten-Reiter)
+bleiben stehen: für beide gibt es nachgewiesene Ersatzwege, und der
+Griffwechsel `w-agenten`/`w-bespr` ist ein eigener kleiner Bogen.
+
+### Ein neues Zeichen
+
+`Register.symbole` bekam `maximize` — vier ausgestellte Ecken. Kein
+Rechteck: das hiesse „Fenster" und stünde neben `panelL`/`panelR`, die
+genau das sind. Die vier Ecken sind das Zeichen, das jeder Videoabspieler
+seit zwanzig Jahren für Vollbild benutzt; es wird gelesen, nicht erklärt.
+
+### Ein Nachlauf zu E282, den der volle Lauf gefunden hat
+
+Der volle Prüflauf über E279–E282 war 239 von 240 grün. Der eine rote war
+**test265**, und er war kein Zufallsfehler: er hielt das ALTE Verhalten
+fest, das E282 gerade umgekehrt hatte.
+
+Der Abschnitt „Gitter und Liste" öffnete das Regal und klickte auf
+`[data-form="liste"]`. Bis E282 setzte `Notebook.oeffnen()` das offene Fach
+jedes Mal zurück, also stand der Abschnitt an der Wurzel. Seit E282 stellt
+es wieder her, wo man war — und der Abschnitt davor hatte ein Fach
+geöffnet. Im Fach gibt es kein `[data-form]`.
+
+**Der Fund dahinter ist echt, und er ist ein §47-Fall von der anderen
+Seite.** Der Fach-Inhalt liest `form()` sehr wohl (siehe `shelfHtml`) — die
+Wahl WIRKT dort, sie war nur nicht zu erreichen. Solange ein offenes Fach
+flüchtig war, fiel das nicht auf: einmal zurück, und der Umschalter war
+wieder da. Seit das Fach das Neuladen überlebt, konnte jemand im Fach auf
+Liste stehen und nicht zurück auf Gitter, ohne das Fach zu verlassen.
+
+Ein Zustand, den man einstellen kann und nicht mehr ändern, ist genauso
+falsch wie ein Knopf, der nichts tut.
+
+Die Reiterzeile bleibt an der Wurzel — dafür gilt die alte Begründung
+weiter: im Fach führt die Brotkrume zurück, und ein Reiterwechsel dort wäre
+zweideutig. Der Umschalter ist keine Ortsangabe, sondern eine Darstellung;
+er gilt überall. Dazu eine CSS-Zeile: `.nh-form{ margin-left:auto }` — ohne
+sie schöbe `space-between` das einzige Kind der Zeile nach LINKS, und
+derselbe Umschalter sässe im Fach links und an der Wurzel rechts.
+
+**Und was die Prüfung über sich selbst verriet.** test265 verliess sich an
+FÜNF Stellen darauf, dass `oeffnen()` zur Wurzel zurückspringt — §3 (die
+＋-Kachel legt ihr Heft dort an, wo das Regal steht), §4, §6 (§5 endete im
+Favoriten-Reiter), §7 und §8. Keine davon sagte es. Sie sagen es jetzt,
+über einen gemeinsamen Helfer `anDieWurzel()`.
+
+Das ist keine Nachgiebigkeit gegenüber der neuen Fassung. Eine stille
+Annahme, die eine Entscheidung umwirft, war schon vorher eine stille
+Annahme — sie fiel nur nicht auf.
+
+**Geprüft:** test277 neu (43 Punkte, drei Gegenproben) · test265 38/38 ·
+test276 22/22 · test272 153/0 · typecheck grün · Einzeldatei neu gebaut ·
+Bilder vom Band und vom offenen Fach.

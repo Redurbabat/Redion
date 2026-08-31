@@ -71,6 +71,30 @@ const startbereit = async (): Promise<void> => {
     document.getElementById('rg-willkommen')?.remove();
   });
 };
+/* AN DIE WURZEL, UND ZWAR AUSDRÜCKLICH.
+   Bis E282 tat `Notebook.oeffnen()` das von selbst: es setzte Reiter und
+   offenes Fach bei jedem Aufruf zurück. Seit E282 tut es das Gegenteil —
+   es stellt wieder her, wo man war (L78 Punkt 3, Redurs Entscheidung in
+   E277).
+
+   Dieser Prüflauf hat sich an DREI Stellen auf das alte Verhalten
+   verlassen, ohne es je zu sagen: §3 legt ein Heft an und meint die
+   Wurzel, §4 misst die Listendarstellung und meint die Wurzel, §6 sucht
+   die Fach-Karte und meint die Wurzel (§5 hatte vorher den
+   Favoriten-Reiter angeklickt). Alle drei sagen es jetzt.
+
+   Das ist keine Nachgiebigkeit gegenüber der neuen Fassung. Eine stille
+   Annahme, die eine Entscheidung umwirft, war schon vorher eine stille
+   Annahme — sie fiel nur nicht auf. */
+const anDieWurzel = async (): Promise<void> => {
+  await seite.evaluate(() => {
+    Store.setMeta('heft:fach', '');
+    Store.setMeta('heft:reiter', 'dokumente');
+    (window as any).Notebook.oeffnen();
+  });
+  await seite.waitForTimeout(400);
+};
+
 await seite.goto(`http://localhost:${PORT}/index.html`);
 await startbereit();
 
@@ -203,6 +227,9 @@ p('Ein Fach, das im Heft selbst liegt, steht NICHT in der Zielliste (Ring-Wache)
 await seite.waitForTimeout(400);
 
 console.log('\n3 · Das Neu-Menü — und die Kachel bleibt der Ein-Klick-Weg');
+/* §2 hat ein Fach GEÖFFNET. Die ＋-Kachel legt ihr Heft dort an, wo das
+   Regal gerade steht — dieser Abschnitt meint die Wurzel. */
+await anDieWurzel();
 await seite.evaluate(() => (window as any).Notebook.oeffnen());
 await seite.waitForTimeout(400);
 const menueProbe = await seite.evaluate(() => {
@@ -268,20 +295,38 @@ p('Die grosse ＋-Kachel bleibt der Ein-Klick-Weg: neues Heft, KEIN Menü (E264-
   (kachelProbe as any).neuesHeft && (kachelProbe as any).keinMenue);
 
 console.log('\n4 · Gitter und Liste');
-await seite.evaluate(() => (window as any).Notebook.oeffnen());
-await seite.waitForTimeout(400);
+/* AN DER WURZEL MESSEN, und zwar ausdrücklich.
+   Bis E282 genügte `oeffnen()` dafür: es setzte das offene Fach jedes Mal
+   zurück. Seit E282 tut es das Gegenteil — es stellt wieder her, wo man
+   war (L78 Punkt 3), und §2 oben hat ein Fach geöffnet. Dieser Abschnitt
+   misst aber die Darstellung an der WURZEL, mit Fach-Karten und losen
+   Heften nebeneinander; im Fach stünden nur dessen zwei Hefte.
+
+   Der Merker wird deshalb geräumt, bevor gezeichnet wird. Das ist keine
+   Nachgiebigkeit gegenüber der neuen Fassung, sondern die Berichtigung
+   einer stillen Annahme: der Abschnitt hat sich immer auf die Wurzel
+   verlassen, ohne es je zu sagen. */
+await anDieWurzel();
 await seite.locator('[data-form="liste"]').click();
 await seite.waitForTimeout(400);
+/* Mit Befund statt nur ja/nein: dieser Punkt ist einmal rot geworden, und
+   „false" allein sagt nicht, WELCHES der drei Stücke fehlte. */
+const listenProbe = await seite.evaluate(() => {
+  const zeile = document.querySelector('.nh-liste .nh-zeile:not(.nh-fach)');
+  const text = zeile?.querySelector('.nh-zeile-text')?.textContent || '';
+  return {
+    zeileDa: !!zeile,
+    mini: !!zeile?.querySelector('.nh-mini[data-papier]'),
+    text: text.slice(0, 120),
+    blatt: /1 Blatt\b/.test(text),
+    gedrueckt: [...document.querySelectorAll('[data-form]')]
+      .some(b => b.getAttribute('aria-pressed') === 'true'),
+    zeilen: document.querySelectorAll('.nh-liste .nh-zeile').length
+  };
+}) as any;
 p('Die Liste: Zeilen mit Mini-Deckel (Papier), Namen, Blattzahl-WORT und Zeit',
-  await seite.evaluate(() => {
-    const zeile = document.querySelector('.nh-liste .nh-zeile:not(.nh-fach)');
-    if (!zeile) return false;
-    const mini = zeile.querySelector('.nh-mini[data-papier]');
-    const text = zeile.querySelector('.nh-zeile-text')?.textContent || '';
-    return !!mini && /1 Blatt\b/.test(text) &&
-      [...document.querySelectorAll('[data-form]')].some(b =>
-        b.getAttribute('aria-pressed') === 'true');
-  }));
+  listenProbe.zeileDa && listenProbe.mini && listenProbe.blatt && listenProbe.gedrueckt,
+  JSON.stringify(listenProbe));
 p('Die Wahl überlebt als Meta `heft:form` und gilt beim nächsten Öffnen',
   await seite.evaluate(() => {
     if (Store.getMeta('heft:form', '') !== 'liste') return false;
@@ -362,12 +407,12 @@ p('„Ohne Farbe" räumt Feld und Attribut',
     const karte = document.querySelector(`.bib-deckel[data-id="${a.h1}"]`);
     return Store.getBlock(a.h1)?.color === '' && !karte?.hasAttribute('data-farbe');
   }, ids));
-/* Das Heft liegt im Fach — erst dorthin, dann nachsehen. */
+/* Das Heft liegt im Fach — erst an die Wurzel (§5 endete im
+   Favoriten-Reiter, und dort steht keine Fach-Karte), dann hinein. */
 await seite.evaluate((a: any) => {
   Store.updateBlock(a.h1, { color: 'red;background:url(x)' });
-  (window as any).Notebook.oeffnen();
 }, ids);
-await seite.waitForTimeout(400);
+await anDieWurzel();
 await seite.locator(`.bib-deckel[data-fach="${ids.fach}"]`).click();
 await seite.waitForTimeout(400);
 p('Ein eingeschleuster color-Wert erzeugt WEDER Attribut noch Stil (Whitelist, §19)',
@@ -382,8 +427,7 @@ p('Ein eingeschleuster color-Wert erzeugt WEDER Attribut noch Stil (Whitelist, �
 console.log('\n7 · Verschlüsseln im Kontextmenü — das Heft bleibt im Regal');
 const dialogAntwort = (d: any) => { void d.accept('pw'); };
 seite.on('dialog', dialogAntwort);
-await seite.evaluate(() => (window as any).Notebook.oeffnen());
-await seite.waitForTimeout(400);
+await anDieWurzel();
 await seite.locator(`.bib-deckel[data-fach="${ids.fach}"]`).click();
 await seite.waitForTimeout(300);
 await seite.locator(`[data-mehr="${ids.h2}"]`).click();
@@ -396,8 +440,7 @@ p('Verschlüsselt: locked steht, der heftArt-Merker hält das Heft in der Biblio
     return !!h?.locked && h?.heftArt === 'heft' &&
       Store.childrenOf(a.h2).length === 0;
   }, ids));
-await seite.evaluate(() => (window as any).Notebook.oeffnen());
-await seite.waitForTimeout(400);
+await anDieWurzel();
 await seite.locator(`.bib-deckel[data-fach="${ids.fach}"]`).click();
 await seite.waitForTimeout(300);
 p('Die Karte lügt nicht: 🔒 statt Papier, „Verschlüsselt" statt einer Blattzahl',
@@ -412,8 +455,7 @@ await seite.waitForTimeout(600);
 p('Klick auf die 🔒-Karte öffnet den Sperrbildschirm — kein Fokus in Chiffretext',
   await seite.evaluate(() => !!document.querySelector('.gesperrt')) &&
   fehler.length === 0, fehler.join(' | '));
-await seite.evaluate(() => (window as any).Notebook.oeffnen());
-await seite.waitForTimeout(400);
+await anDieWurzel();
 await seite.locator(`.bib-deckel[data-fach="${ids.fach}"]`).click();
 await seite.waitForTimeout(300);
 await seite.locator(`[data-mehr="${ids.h2}"]`).click();
@@ -430,8 +472,8 @@ p('Entschlüsseln bringt Blätter und Papier-Deckel zurück',
 seite.off('dialog', dialogAntwort);
 
 console.log('\n8 · Der Papierkorb-Reiter — eine Löschmaschine, nicht zwei (E29)');
-await seite.evaluate(() => (window as any).Notebook.oeffnen());
-await seite.waitForTimeout(400);
+/* „an der Wurzel" steht schon im Kommentar unten — §7 endete im Fach. */
+await anDieWurzel();
 const loseId = await seite.evaluate(() => {
   /* Das jüngste lose Heft an der Wurzel in den Papierkorb legen. */
   const deckel = document.querySelector<HTMLElement>('.nh-gitter .bib-deckel[data-id]');
@@ -465,8 +507,7 @@ await seite.waitForTimeout(500);
 p('„Papierkorb ganz öffnen" führt in die EINE Löschmaschine mit Rückfrage',
   await seite.evaluate(() => !!document.querySelector('.finder.pk')));
 await seite.evaluate(() => { document.querySelector('.overlay')?.remove(); });
-await seite.evaluate(() => (window as any).Notebook.oeffnen());
-await seite.waitForTimeout(400);
+await anDieWurzel();
 await seite.locator('[data-reiter="papierkorb"]').click();
 await seite.waitForTimeout(300);
 await seite.locator(`[data-herstellen="${loseId}"]`).click();

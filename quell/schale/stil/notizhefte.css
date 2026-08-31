@@ -27,6 +27,13 @@
    trägt Fläche UND Strich — nicht nur Farbe. */
 .nh-kopf-zeile2{ justify-content:space-between; flex-wrap:wrap }
 .nh-reiter, .nh-form{ display:flex; gap:2px }
+/* DIE DARSTELLUNGSWAHL BLEIBT RECHTS, AUCH ALLEIN (E283).
+   Seit sie auch im offenen Fach steht (dort ohne Reiterzeile daneben),
+   ist sie manchmal das EINZIGE Kind dieser Zeile — und
+   `space-between` schiebt ein einzelnes Kind nach links. Damit sässe
+   derselbe Umschalter im Fach links und an der Wurzel rechts, eine
+   Ansicht auseinander. `margin-left:auto` hält ihn beide Male rechts. */
+.nh-form{ margin-left:auto }
 .nh-reiter button, .nh-form button{
   min-height:44px; padding:0 var(--space-3); border-radius:var(--radius-md);
   background:transparent; color:var(--text-dim); font-size:13px; font-weight:600;

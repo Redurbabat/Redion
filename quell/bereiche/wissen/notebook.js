@@ -475,27 +475,45 @@ const Notebook = (() => {
             `<button class="rb nh-neu-knopf" data-neu-menue>＋ Neu</button>` +
             `<button class="rb nh-alle" data-alle>Alle Dokumente</button>` +
             `</div>`;
-        /* Die Reiterzeile nur an der Wurzel — im offenen Fach führt die
-           Brotkrume zurück, und ein Reiterwechsel dort wäre zweideutig. */
+        /* Die REITERZEILE nur an der Wurzel — im offenen Fach führt die
+           Brotkrume zurück, und ein Reiterwechsel dort wäre zweideutig.
+    
+           DIE DARSTELLUNGSWAHL DAGEGEN STEHT ÜBERALL (E283, Nachlauf zu E282).
+           Vorher fiel sie mit der Reiterzeile zusammen weg, und das war
+           harmlos, solange ein offenes Fach flüchtig war: einmal zurück, und
+           der Umschalter war wieder da.
+    
+           Seit E282 überlebt das Fach das Neuladen — und damit war der
+           Umschalter genau dort unerreichbar, wo er noch WIRKT: der
+           Fach-Inhalt liest `form()` weiter (siehe `shelfHtml`). Wer im Fach
+           auf Liste stand, konnte nicht zurück auf Gitter, ohne das Fach zu
+           verlassen. Ein Zustand, den man einstellen kann und nicht mehr
+           ändern, ist §47 von der anderen Seite.
+    
+           Gefunden hat es test265 §4, das genau hier über den fehlenden
+           Umschalter stolperte — die Prüfung hielt das alte Verhalten fest
+           und wurde durch die Entscheidung rot. */
         const favN = notebookPages().filter(p => p.favorite).length;
         const korbN = toteHefte().length;
-        const zeile2 = fach ? '' :
-            `<div class="nh-kopf-zeile nh-kopf-zeile2">` +
-                `<div class="nh-reiter" role="group" aria-label="Bestand">` +
+        const reiterHtml = fach ? '' :
+            `<div class="nh-reiter" role="group" aria-label="Bestand">` +
                 `<button data-reiter="dokumente"${tab === 'dokumente' ? ' class="on"' : ''}>Dokumente</button>` +
                 `<button data-reiter="favoriten"${tab === 'favoriten' ? ' class="on"' : ''}>Favoriten` +
                 `${favN ? ' (' + favN + ')' : ''}</button>` +
                 `<button data-reiter="papierkorb"${tab === 'papierkorb' ? ' class="on"' : ''}>Papierkorb` +
                 `${korbN ? ' (' + korbN + ')' : ''}</button>` +
-                `</div>` +
-                (tab === 'papierkorb' ? '' :
-                    `<div class="nh-form" role="group" aria-label="Darstellung">` +
-                        `<button data-form="gitter" aria-pressed="${form() === 'gitter'}"` +
-                        `${form() === 'gitter' ? ' class="on"' : ''}>Gitter</button>` +
-                        `<button data-form="liste" aria-pressed="${form() === 'liste'}"` +
-                        `${form() === 'liste' ? ' class="on"' : ''}>Liste</button>` +
-                        `</div>`) +
                 `</div>`;
+        /* Im Papierkorb nicht: dort gibt es nur die Liste, und ein Umschalter
+           ohne zweite Stellung ist eine Attrappe. */
+        const formHtml = (!fach && tab === 'papierkorb') ? '' :
+            `<div class="nh-form" role="group" aria-label="Darstellung">` +
+                `<button data-form="gitter" aria-pressed="${form() === 'gitter'}"` +
+                `${form() === 'gitter' ? ' class="on"' : ''}>Gitter</button>` +
+                `<button data-form="liste" aria-pressed="${form() === 'liste'}"` +
+                `${form() === 'liste' ? ' class="on"' : ''}>Liste</button>` +
+                `</div>`;
+        const zeile2 = (!reiterHtml && !formHtml) ? '' :
+            `<div class="nh-kopf-zeile nh-kopf-zeile2">${reiterHtml}${formHtml}</div>`;
         return `<header class="nh-kopf" data-kopfzeile="eigene">${zeile1}${zeile2}</header>`;
     };
     /* ------------------------------------------------------------------ *

@@ -6839,6 +6839,13 @@ body[data-ruhig="an"] .lernwelt .lw-nav{ padding-right:264px }
    trägt Fläche UND Strich — nicht nur Farbe. */
 .nh-kopf-zeile2{ justify-content:space-between; flex-wrap:wrap }
 .nh-reiter, .nh-form{ display:flex; gap:2px }
+/* DIE DARSTELLUNGSWAHL BLEIBT RECHTS, AUCH ALLEIN (E283).
+   Seit sie auch im offenen Fach steht (dort ohne Reiterzeile daneben),
+   ist sie manchmal das EINZIGE Kind dieser Zeile — und
+   `space-between` schiebt ein einzelnes Kind nach links. Damit sässe
+   derselbe Umschalter im Fach links und an der Wurzel rechts, eine
+   Ansicht auseinander. `margin-left:auto` hält ihn beide Male rechts. */
+.nh-form{ margin-left:auto }
 .nh-reiter button, .nh-form button{
   min-height:44px; padding:0 var(--space-3); border-radius:var(--radius-md);
   background:transparent; color:var(--text-dim); font-size:13px; font-weight:600;
@@ -18674,7 +18681,15 @@ Register.symbole = (() => {
         chevronR: '<path d="m9.5 5.5 6.5 6.5-6.5 6.5"/>',
         chevronD: '<path d="m5.5 9.5 6.5 6.5 6.5-6.5"/>',
         panelL: '<rect x="3" y="4.5" width="18" height="15" rx="2.6"/><path d="M9.5 4.5v15"/>',
-        panelR: '<rect x="3" y="4.5" width="18" height="15" rx="2.6"/><path d="M14.5 4.5v15"/>'
+        panelR: '<rect x="3" y="4.5" width="18" height="15" rx="2.6"/><path d="M14.5 4.5v15"/>',
+        /* Vier Ecken statt eines Rahmens (E283). Ein Rechteck hiesse „Fenster"
+           und stünde neben `panelL`/`panelR`, die genau das sind. Die vier
+           ausgestellten Ecken sind das Zeichen, das jeder Videoabspieler seit
+           zwanzig Jahren für Vollbild benutzt — hier gelernt, nicht erklärt. */
+        maximize: '<path d="M9 3.5H5.5a2 2 0 0 0-2 2V9"/>' +
+            '<path d="M15 3.5h3.5a2 2 0 0 1 2 2V9"/>' +
+            '<path d="M15 20.5h3.5a2 2 0 0 0 2-2V15"/>' +
+            '<path d="M9 20.5H5.5a2 2 0 0 1-2-2V15"/>'
     };
     /* ------------------------------------------------------------------------
      * AUSGABE
@@ -20723,6 +20738,21 @@ Register.menueband = (() => {
         { reiter: 'ansicht', gruppe: 'Lesen', id: 'a-praes', name: 'Präsentation',
             zeichen: 'rocket', gross: true, hinweis: 'Die Seite als Folien zeigen',
             tun: () => Werkzeuge.praesentation(seiteJetzt()), zeigen: () => seiteDa(() => Werkzeuge.praesentation) },
+        /* VOLLBILD (E283 / L85 Punkt 1). Er steht neben „Fokus", weil beide
+           dasselbe Ziel haben und Gegenteiliges tun: Fokus räumt REDIONS
+           Oberfläche weg und lässt den Browser stehen, Vollbild räumt den
+           BROWSER weg und lässt Redion stehen. Nebeneinander sieht man das.
+    
+           `an` liest den Zustand FRISCH bei jedem Zeichnen — Escape verlässt das
+           Vollbild ohne uns, und ein gemerkter Wert stünde danach falsch.
+           `zeigen` fragt zusätzlich `vollbildGeht()`: auf dem iPhone gibt es
+           kein Element-Vollbild, und ein Knopf, der dort nichts tut, ist §47. */
+        { reiter: 'ansicht', gruppe: 'Lesen', id: 'a-vollbild', name: 'Vollbild',
+            zeichen: 'maximize', hinweis: 'Den ganzen Bildschirm nutzen — Esc beendet es',
+            an: () => kann(() => App.vollbildAn) && App.vollbildAn(),
+            tun: () => { App.vollbild(); },
+            zeigen: () => kann(() => App.vollbild) && kann(() => App.vollbildGeht) &&
+                App.vollbildGeht() },
         { reiter: 'ansicht', gruppe: 'Lesen', id: 'a-hell', name: 'Hell / Dunkel',
             zeichen: 'sun', hinweis: 'Zwischen hellem und dunklem Aussehen wechseln',
             tun: () => App.theme(), zeigen: () => kann(() => App.theme) },
@@ -108783,27 +108813,45 @@ const Notebook = (() => {
             `<button class="rb nh-neu-knopf" data-neu-menue>＋ Neu</button>` +
             `<button class="rb nh-alle" data-alle>Alle Dokumente</button>` +
             `</div>`;
-        /* Die Reiterzeile nur an der Wurzel — im offenen Fach führt die
-           Brotkrume zurück, und ein Reiterwechsel dort wäre zweideutig. */
+        /* Die REITERZEILE nur an der Wurzel — im offenen Fach führt die
+           Brotkrume zurück, und ein Reiterwechsel dort wäre zweideutig.
+    
+           DIE DARSTELLUNGSWAHL DAGEGEN STEHT ÜBERALL (E283, Nachlauf zu E282).
+           Vorher fiel sie mit der Reiterzeile zusammen weg, und das war
+           harmlos, solange ein offenes Fach flüchtig war: einmal zurück, und
+           der Umschalter war wieder da.
+    
+           Seit E282 überlebt das Fach das Neuladen — und damit war der
+           Umschalter genau dort unerreichbar, wo er noch WIRKT: der
+           Fach-Inhalt liest `form()` weiter (siehe `shelfHtml`). Wer im Fach
+           auf Liste stand, konnte nicht zurück auf Gitter, ohne das Fach zu
+           verlassen. Ein Zustand, den man einstellen kann und nicht mehr
+           ändern, ist §47 von der anderen Seite.
+    
+           Gefunden hat es test265 §4, das genau hier über den fehlenden
+           Umschalter stolperte — die Prüfung hielt das alte Verhalten fest
+           und wurde durch die Entscheidung rot. */
         const favN = notebookPages().filter(p => p.favorite).length;
         const korbN = toteHefte().length;
-        const zeile2 = fach ? '' :
-            `<div class="nh-kopf-zeile nh-kopf-zeile2">` +
-                `<div class="nh-reiter" role="group" aria-label="Bestand">` +
+        const reiterHtml = fach ? '' :
+            `<div class="nh-reiter" role="group" aria-label="Bestand">` +
                 `<button data-reiter="dokumente"${tab === 'dokumente' ? ' class="on"' : ''}>Dokumente</button>` +
                 `<button data-reiter="favoriten"${tab === 'favoriten' ? ' class="on"' : ''}>Favoriten` +
                 `${favN ? ' (' + favN + ')' : ''}</button>` +
                 `<button data-reiter="papierkorb"${tab === 'papierkorb' ? ' class="on"' : ''}>Papierkorb` +
                 `${korbN ? ' (' + korbN + ')' : ''}</button>` +
-                `</div>` +
-                (tab === 'papierkorb' ? '' :
-                    `<div class="nh-form" role="group" aria-label="Darstellung">` +
-                        `<button data-form="gitter" aria-pressed="${form() === 'gitter'}"` +
-                        `${form() === 'gitter' ? ' class="on"' : ''}>Gitter</button>` +
-                        `<button data-form="liste" aria-pressed="${form() === 'liste'}"` +
-                        `${form() === 'liste' ? ' class="on"' : ''}>Liste</button>` +
-                        `</div>`) +
                 `</div>`;
+        /* Im Papierkorb nicht: dort gibt es nur die Liste, und ein Umschalter
+           ohne zweite Stellung ist eine Attrappe. */
+        const formHtml = (!fach && tab === 'papierkorb') ? '' :
+            `<div class="nh-form" role="group" aria-label="Darstellung">` +
+                `<button data-form="gitter" aria-pressed="${form() === 'gitter'}"` +
+                `${form() === 'gitter' ? ' class="on"' : ''}>Gitter</button>` +
+                `<button data-form="liste" aria-pressed="${form() === 'liste'}"` +
+                `${form() === 'liste' ? ' class="on"' : ''}>Liste</button>` +
+                `</div>`;
+        const zeile2 = (!reiterHtml && !formHtml) ? '' :
+            `<div class="nh-kopf-zeile nh-kopf-zeile2">${reiterHtml}${formHtml}</div>`;
         return `<header class="nh-kopf" data-kopfzeile="eigene">${zeile1}${zeile2}</header>`;
     };
     /* ------------------------------------------------------------------ *
@@ -115557,6 +115605,10 @@ const Kopfleiste = (() => {
     const kiPanel = braucht('kiPanel');
     const oeffne = braucht('oeffne');
     const aktuelleSeite = braucht('aktuelleSeite');
+    /* Seit E283 EIN Griff statt eines eigenen `updateBlock` hier (L85 Punkt 2).
+       `braucht` sorgt dafür, dass ein Vergessen beim Binden laut wird und nicht
+       still — genau darum steht er hier oben bei den anderen. */
+    const volleBreite = braucht('volleBreite');
     /* Die Sonderansicht ist ein Zustand der Schale, kein Aufruf — deshalb ein
        Leser statt einer Weiterreichung. */
     const sonderJetzt = () => (typeof gebunden['sonder'] === 'function' ? gebunden['sonder']() : null);
@@ -115788,8 +115840,7 @@ const Kopfleiste = (() => {
                 if (a === 'cover')
                     coverWaehlen(p);
                 if (a === 'wide') {
-                    Store.updateBlock(p.id, { wide: !p.wide });
-                    zeichneSeite();
+                    volleBreite(p);
                 }
                 if (a === 'document')
                     DocumentMode.toggle(p);
@@ -117221,6 +117272,19 @@ const Menueband = (() => {
             }
             catch { /* dann eben nicht */ }
         }
+        /* NEU ZEICHNEN, WENN DAS VOLLBILD KIPPT (E283 / L85 Punkt 1).
+    
+           Der Vollbild-Knopf zeigt seinen Zustand über `an()`, und `an()` wird
+           nur beim Zeichnen gelesen. Ohne diesen Horcher stimmte er genau so
+           lange, wie NIEMAND das Vollbild anders verlässt als über ihn — und
+           Escape ist der übliche Weg. Der Knopf stünde danach auf „AN" über
+           einem Fenster mit Adressleiste.
+    
+           `fullscreenchange` feuert bei BEIDEN Richtungen und auch dann, wenn
+           der Browser das Vollbild von sich aus beendet (Wechsel des Reiters,
+           ein Videoabspieler, der es an sich zieht). Genau deshalb hängt der
+           Horcher hier und nicht in `App.vollbild()`. */
+        document.addEventListener('fullscreenchange', () => zeichne());
         /* Nach dem Laden der Ablage noch einmal.
     
            GEMESSEN GREIFT DAS NICHT: `Menueband.start()` steht in `App.start()`
@@ -119025,9 +119089,16 @@ const App = (() => {
                 UI.toast('Alles liegt ohnehin auf diesem Gerät — auch ohne Netz.');
                 return;
             }
+            /* „Volle Breite" hat seit E283 einen eigenen Griff und steht deshalb
+               VOR dem Sammelzweig — der Schalter kippt trotzdem an Ort und Stelle,
+               nur die Schreibarbeit macht `volleBreite`. */
+            if (a === 'breit') {
+                b.querySelector('.mschalter')?.classList.toggle('an', volleBreite(p));
+                return;
+            }
             /* Schalter bleiben im Menü stehen und kippen an Ort und Stelle */
-            if (a === 'klein' || a === 'breit' || a === 'wz-gesperrt' || a === 'pfad') {
-                const feld = a === 'klein' ? 'small' : a === 'breit' ? 'wide'
+            if (a === 'klein' || a === 'wz-gesperrt' || a === 'pfad') {
+                const feld = a === 'klein' ? 'small'
                     : a === 'pfad' ? 'pfad' : 'gesperrt';
                 const neu = a === 'pfad' ? !(p.pfad !== false) : !p[feld];
                 Store.updateBlock(p.id, { [feld]: neu });
@@ -119129,8 +119200,7 @@ const App = (() => {
                 zeichneSeite();
             }
             if (a === 'breit') {
-                Store.updateBlock(p.id, { wide: !p.wide });
-                zeichneSeite();
+                volleBreite(p);
             }
             if (a === 'rename') {
                 const n = await UI.frage('Neuer Titel', p.text);
@@ -120734,6 +120804,95 @@ const App = (() => {
         Store.setMeta('theme', neu);
     };
     /* ========================================================================
+     * VOLLBILD  (E283 / L85 Punkt 1)
+     * ------------------------------------------------------------------------
+     * Nicht zu verwechseln mit `Werkzeuge.fokus()`. Der Fokus-Modus blendet
+     * REDIONS eigene Oberfläche aus und lässt die Leisten des Browsers stehen;
+     * Vollbild macht das Gegenteil — Redion bleibt vollständig, der Browser
+     * verschwindet. Beide sind sinnvoll, und beide zusammen ergeben die
+     * ruhigste Ansicht, die Redion hat.
+     *
+     * DREI DINGE, DIE DIE NAIVE FASSUNG FALSCH MACHT:
+     *
+     * 1. Ein gemerktes `let vollbild = false` geht am ersten Escape kaputt.
+     *    Escape verlässt das Vollbild im BROWSER, ohne uns zu fragen — die
+     *    Erinnerung stünde danach für immer falsch, und der Knopf zeigte „AN"
+     *    über einem Fenster mit Adressleiste. Deshalb wird der Zustand nie
+     *    gemerkt, sondern jedes Mal frisch an `document.fullscreenElement`
+     *    abgelesen.
+     * 2. `requestFullscreen()` gibt es nicht überall. Auf dem iPhone kennt
+     *    Safari kein Element-Vollbild (nur `<video>`), und in einem
+     *    eingebetteten Rahmen ohne `allowfullscreen` ist es gesperrt. Ein
+     *    Knopf, der dort dasteht und nichts tut, ist §47 — `vollbildGeht()`
+     *    beantwortet die Frage, und das Menüband blendet ihn danach aus.
+     * 3. Der Aufruf kann auch dort ABGELEHNT werden, wo er möglich ist: ohne
+     *    frische Nutzerhandlung wirft er. Deshalb ein `catch` mit einem Satz,
+     *    der sagt was zu tun ist — und nicht eine Fehlermeldung in der Konsole,
+     *    die niemand sieht.
+     * ======================================================================*/
+    /** Kann dieses Gerät überhaupt Vollbild? */
+    const vollbildGeht = () => !!(document.fullscreenEnabled &&
+        typeof document.documentElement.requestFullscreen === 'function');
+    /** Ist gerade Vollbild? IMMER frisch gelesen — siehe Punkt 1 oben. */
+    const vollbildAn = () => !!document.fullscreenElement;
+    /**
+     * Vollbild an, aus oder umschalten.
+     * @param an `undefined` schaltet um, `true`/`false` setzt hart.
+     * @returns den Zustand NACH dem Versuch — nicht den gewünschten.
+     */
+    const vollbild = async (an) => {
+        if (!vollbildGeht()) {
+            UI.toast('Dieser Browser kann kein Vollbild.');
+            return false;
+        }
+        const ziel = an === undefined ? !vollbildAn() : !!an;
+        try {
+            if (ziel)
+                await document.documentElement.requestFullscreen();
+            else if (vollbildAn())
+                await document.exitFullscreen();
+        }
+        catch {
+            /* Nicht verschweigen: der Knopf sah aus, als hätte er gewirkt. */
+            UI.toast(ziel
+                ? 'Vollbild wurde abgelehnt — der Browser lässt es nur direkt nach einem Klick zu.'
+                : 'Das Vollbild liess sich nicht beenden — Escape hilft immer.');
+        }
+        return vollbildAn();
+    };
+    /* ========================================================================
+     * VOLLE BREITE  (E283 / L85 Punkt 2)
+     * ------------------------------------------------------------------------
+     * DERSELBE SCHALTER STAND AN DREI STELLEN, nicht an zwei: L85 nannte das
+     * Seitenmenü (`schale.ts`) und die Kopfleiste — der Schalter in der
+     * Schalterzeile desselben Menüs war übersehen. Alle drei schrieben
+     * `Store.updateBlock(p.id, { wide: !p.wide })` von Hand, jeder mit seinem
+     * eigenen Nachlauf.
+     *
+     * Das ist genau die Sorte Verdopplung, die still auseinanderläuft: wer
+     * morgen eine Regel ergänzt (etwa „am Telefon hat volle Breite keine
+     * Wirkung", E156), ergänzt sie an einer Stelle und wundert sich, warum
+     * der andere Weg sie nicht kennt.
+     * ======================================================================*/
+    /**
+     * Volle Breite für eine Seite umschalten.
+     * @param p   die Seite; ohne `id` passiert nichts (und es wird nichts
+     *            behauptet — der Rückgabewert sagt es).
+     * @param an  `undefined` schaltet um, `true`/`false` setzt hart.
+     * @returns den Zustand danach.
+     */
+    const volleBreite = (p, an) => {
+        if (!p || !p.id)
+            return false;
+        const neu = an === undefined ? !p.wide : !!an;
+        Store.updateBlock(p.id, { wide: neu });
+        /* Das übergebene Objekt MIT nachziehen: die Aufrufer zeichnen ihr Menü
+           aus derselben Kopie weiter und zeigten sonst den alten Stand. */
+        p.wide = neu;
+        zeichneSeite();
+        return neu;
+    };
+    /* ========================================================================
      * EXPORT
      * ======================================================================*/
     /** Die Seite als Markdown — für „Seiteninhalte kopieren" und den Export. */
@@ -121504,6 +121663,8 @@ const App = (() => {
             Ruhig.binde();
         Kopfleiste.binde({
             zeichneSeite, zeichneBaum, kiPanel, oeffne, aktuelleSeite,
+            /* Seit E283 EIN Griff für „volle Breite" statt dreier Handgriffe. */
+            volleBreite,
             /* Ein Leser, keine Weiterreichung: die Sonderansicht ist ein Zustand
                der Schale, und die Pfadleiste muss den jeweils aktuellen sehen. */
             sonder: () => sonder
@@ -122302,6 +122463,11 @@ const App = (() => {
         start, oeffne, zeigeSonder, zeichneSeite, zeichneBaum, zeichneCrumbs, aktuelleSeite, setzeSeite,
         zeigeBlock, blockAusHash,
         kiPanel, suche, seitenSuche, theme, einstellungen, papierkorb, neueSeite,
+        /* E283 / L85: die zwei Griffe, die der Entwurf verlangte und die es
+           vorher nur als verstreuten Code gab. `vollbildGeht` gehört dazu —
+           ohne die Frage stünde im Menüband ein Knopf, der auf dem iPhone
+           nichts tut (§47). */
+        vollbild, vollbildAn, vollbildGeht, volleBreite,
         markdownExport, markdownVonSeite, woerterZaehlen, dupliziereSeite, seitenMenue, coverWaehlen,
         kuerzlich, kommendeTermine,
         /* Wo man gerade ist — für die Kontextkante (E272). */

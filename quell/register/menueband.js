@@ -855,6 +855,21 @@ Register.menueband = (() => {
         { reiter: 'ansicht', gruppe: 'Lesen', id: 'a-praes', name: 'Präsentation',
             zeichen: 'rocket', gross: true, hinweis: 'Die Seite als Folien zeigen',
             tun: () => Werkzeuge.praesentation(seiteJetzt()), zeigen: () => seiteDa(() => Werkzeuge.praesentation) },
+        /* VOLLBILD (E283 / L85 Punkt 1). Er steht neben „Fokus", weil beide
+           dasselbe Ziel haben und Gegenteiliges tun: Fokus räumt REDIONS
+           Oberfläche weg und lässt den Browser stehen, Vollbild räumt den
+           BROWSER weg und lässt Redion stehen. Nebeneinander sieht man das.
+    
+           `an` liest den Zustand FRISCH bei jedem Zeichnen — Escape verlässt das
+           Vollbild ohne uns, und ein gemerkter Wert stünde danach falsch.
+           `zeigen` fragt zusätzlich `vollbildGeht()`: auf dem iPhone gibt es
+           kein Element-Vollbild, und ein Knopf, der dort nichts tut, ist §47. */
+        { reiter: 'ansicht', gruppe: 'Lesen', id: 'a-vollbild', name: 'Vollbild',
+            zeichen: 'maximize', hinweis: 'Den ganzen Bildschirm nutzen — Esc beendet es',
+            an: () => kann(() => App.vollbildAn) && App.vollbildAn(),
+            tun: () => { App.vollbild(); },
+            zeigen: () => kann(() => App.vollbild) && kann(() => App.vollbildGeht) &&
+                App.vollbildGeht() },
         { reiter: 'ansicht', gruppe: 'Lesen', id: 'a-hell', name: 'Hell / Dunkel',
             zeichen: 'sun', hinweis: 'Zwischen hellem und dunklem Aussehen wechseln',
             tun: () => App.theme(), zeigen: () => kann(() => App.theme) },

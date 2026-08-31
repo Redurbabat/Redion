@@ -530,9 +530,16 @@ const App = (() => {
                 UI.toast('Alles liegt ohnehin auf diesem Gerät — auch ohne Netz.');
                 return;
             }
+            /* „Volle Breite" hat seit E283 einen eigenen Griff und steht deshalb
+               VOR dem Sammelzweig — der Schalter kippt trotzdem an Ort und Stelle,
+               nur die Schreibarbeit macht `volleBreite`. */
+            if (a === 'breit') {
+                b.querySelector('.mschalter')?.classList.toggle('an', volleBreite(p));
+                return;
+            }
             /* Schalter bleiben im Menü stehen und kippen an Ort und Stelle */
-            if (a === 'klein' || a === 'breit' || a === 'wz-gesperrt' || a === 'pfad') {
-                const feld = a === 'klein' ? 'small' : a === 'breit' ? 'wide'
+            if (a === 'klein' || a === 'wz-gesperrt' || a === 'pfad') {
+                const feld = a === 'klein' ? 'small'
                     : a === 'pfad' ? 'pfad' : 'gesperrt';
                 const neu = a === 'pfad' ? !(p.pfad !== false) : !p[feld];
                 Store.updateBlock(p.id, { [feld]: neu });
@@ -634,8 +641,7 @@ const App = (() => {
                 zeichneSeite();
             }
             if (a === 'breit') {
-                Store.updateBlock(p.id, { wide: !p.wide });
-                zeichneSeite();
+                volleBreite(p);
             }
             if (a === 'rename') {
                 const n = await UI.frage('Neuer Titel', p.text);
@@ -2239,6 +2245,95 @@ const App = (() => {
         Store.setMeta('theme', neu);
     };
     /* ========================================================================
+     * VOLLBILD  (E283 / L85 Punkt 1)
+     * ------------------------------------------------------------------------
+     * Nicht zu verwechseln mit `Werkzeuge.fokus()`. Der Fokus-Modus blendet
+     * REDIONS eigene Oberfläche aus und lässt die Leisten des Browsers stehen;
+     * Vollbild macht das Gegenteil — Redion bleibt vollständig, der Browser
+     * verschwindet. Beide sind sinnvoll, und beide zusammen ergeben die
+     * ruhigste Ansicht, die Redion hat.
+     *
+     * DREI DINGE, DIE DIE NAIVE FASSUNG FALSCH MACHT:
+     *
+     * 1. Ein gemerktes `let vollbild = false` geht am ersten Escape kaputt.
+     *    Escape verlässt das Vollbild im BROWSER, ohne uns zu fragen — die
+     *    Erinnerung stünde danach für immer falsch, und der Knopf zeigte „AN"
+     *    über einem Fenster mit Adressleiste. Deshalb wird der Zustand nie
+     *    gemerkt, sondern jedes Mal frisch an `document.fullscreenElement`
+     *    abgelesen.
+     * 2. `requestFullscreen()` gibt es nicht überall. Auf dem iPhone kennt
+     *    Safari kein Element-Vollbild (nur `<video>`), und in einem
+     *    eingebetteten Rahmen ohne `allowfullscreen` ist es gesperrt. Ein
+     *    Knopf, der dort dasteht und nichts tut, ist §47 — `vollbildGeht()`
+     *    beantwortet die Frage, und das Menüband blendet ihn danach aus.
+     * 3. Der Aufruf kann auch dort ABGELEHNT werden, wo er möglich ist: ohne
+     *    frische Nutzerhandlung wirft er. Deshalb ein `catch` mit einem Satz,
+     *    der sagt was zu tun ist — und nicht eine Fehlermeldung in der Konsole,
+     *    die niemand sieht.
+     * ======================================================================*/
+    /** Kann dieses Gerät überhaupt Vollbild? */
+    const vollbildGeht = () => !!(document.fullscreenEnabled &&
+        typeof document.documentElement.requestFullscreen === 'function');
+    /** Ist gerade Vollbild? IMMER frisch gelesen — siehe Punkt 1 oben. */
+    const vollbildAn = () => !!document.fullscreenElement;
+    /**
+     * Vollbild an, aus oder umschalten.
+     * @param an `undefined` schaltet um, `true`/`false` setzt hart.
+     * @returns den Zustand NACH dem Versuch — nicht den gewünschten.
+     */
+    const vollbild = async (an) => {
+        if (!vollbildGeht()) {
+            UI.toast('Dieser Browser kann kein Vollbild.');
+            return false;
+        }
+        const ziel = an === undefined ? !vollbildAn() : !!an;
+        try {
+            if (ziel)
+                await document.documentElement.requestFullscreen();
+            else if (vollbildAn())
+                await document.exitFullscreen();
+        }
+        catch {
+            /* Nicht verschweigen: der Knopf sah aus, als hätte er gewirkt. */
+            UI.toast(ziel
+                ? 'Vollbild wurde abgelehnt — der Browser lässt es nur direkt nach einem Klick zu.'
+                : 'Das Vollbild liess sich nicht beenden — Escape hilft immer.');
+        }
+        return vollbildAn();
+    };
+    /* ========================================================================
+     * VOLLE BREITE  (E283 / L85 Punkt 2)
+     * ------------------------------------------------------------------------
+     * DERSELBE SCHALTER STAND AN DREI STELLEN, nicht an zwei: L85 nannte das
+     * Seitenmenü (`schale.ts`) und die Kopfleiste — der Schalter in der
+     * Schalterzeile desselben Menüs war übersehen. Alle drei schrieben
+     * `Store.updateBlock(p.id, { wide: !p.wide })` von Hand, jeder mit seinem
+     * eigenen Nachlauf.
+     *
+     * Das ist genau die Sorte Verdopplung, die still auseinanderläuft: wer
+     * morgen eine Regel ergänzt (etwa „am Telefon hat volle Breite keine
+     * Wirkung", E156), ergänzt sie an einer Stelle und wundert sich, warum
+     * der andere Weg sie nicht kennt.
+     * ======================================================================*/
+    /**
+     * Volle Breite für eine Seite umschalten.
+     * @param p   die Seite; ohne `id` passiert nichts (und es wird nichts
+     *            behauptet — der Rückgabewert sagt es).
+     * @param an  `undefined` schaltet um, `true`/`false` setzt hart.
+     * @returns den Zustand danach.
+     */
+    const volleBreite = (p, an) => {
+        if (!p || !p.id)
+            return false;
+        const neu = an === undefined ? !p.wide : !!an;
+        Store.updateBlock(p.id, { wide: neu });
+        /* Das übergebene Objekt MIT nachziehen: die Aufrufer zeichnen ihr Menü
+           aus derselben Kopie weiter und zeigten sonst den alten Stand. */
+        p.wide = neu;
+        zeichneSeite();
+        return neu;
+    };
+    /* ========================================================================
      * EXPORT
      * ======================================================================*/
     /** Die Seite als Markdown — für „Seiteninhalte kopieren" und den Export. */
@@ -3009,6 +3104,8 @@ const App = (() => {
             Ruhig.binde();
         Kopfleiste.binde({
             zeichneSeite, zeichneBaum, kiPanel, oeffne, aktuelleSeite,
+            /* Seit E283 EIN Griff für „volle Breite" statt dreier Handgriffe. */
+            volleBreite,
             /* Ein Leser, keine Weiterreichung: die Sonderansicht ist ein Zustand
                der Schale, und die Pfadleiste muss den jeweils aktuellen sehen. */
             sonder: () => sonder
@@ -3807,6 +3904,11 @@ const App = (() => {
         start, oeffne, zeigeSonder, zeichneSeite, zeichneBaum, zeichneCrumbs, aktuelleSeite, setzeSeite,
         zeigeBlock, blockAusHash,
         kiPanel, suche, seitenSuche, theme, einstellungen, papierkorb, neueSeite,
+        /* E283 / L85: die zwei Griffe, die der Entwurf verlangte und die es
+           vorher nur als verstreuten Code gab. `vollbildGeht` gehört dazu —
+           ohne die Frage stünde im Menüband ein Knopf, der auf dem iPhone
+           nichts tut (§47). */
+        vollbild, vollbildAn, vollbildGeht, volleBreite,
         markdownExport, markdownVonSeite, woerterZaehlen, dupliziereSeite, seitenMenue, coverWaehlen,
         kuerzlich, kommendeTermine,
         /* Wo man gerade ist — für die Kontextkante (E272). */
