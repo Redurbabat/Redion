@@ -201,10 +201,17 @@ const Wolke = (() => {
     const zustand = { angemeldet: false, laeuft: false, letzter: '', fehler: '',
         hoch: 0, runter: 0, konto: null, rolle: '' };
     const horcher = new Set();
-    const melden = () => horcher.forEach((fn) => { try {
-        fn(zustand);
-    }
-    catch { } });
+    const melden = () => {
+        /* Vor dem Melden nachsehen: die Frage wird in `Store.importAll`
+           gesetzt, also ausserhalb dieses Moduls (§5 — die Ablage lädt vor der
+           Abgleichmaschine und kennt sie nicht). Wer sie hier nicht abliest,
+           meldet einen Stand von vorhin. */
+        zustand.frage = neuAbgleichOffen();
+        horcher.forEach((fn) => { try {
+            fn(zustand);
+        }
+        catch { } });
+    };
     const beiAenderung = (fn) => { horcher.add(fn); fn(zustand); return () => horcher.delete(fn); };
     /* ========================================================================
      * 5 · ANMELDEN
@@ -335,8 +342,13 @@ const Wolke = (() => {
         Store.setMeta('wolkeDateienWeg', []);
         Store.setMeta('wolkeBloeckeWeg', []);
         /* Das Ja zum Abgleich gehörte zu DIESEM Konto — das nächste wird neu
-           gefragt. */
+           gefragt. Und die offene Frage aus L76 genauso: sie ist die Frage,
+           was mit DIESEM Konto in der Wolke geschehen soll. Bliebe sie
+           stehen, fände das nächste Konto beim Anmelden eine Entscheidung
+           vor, die es gar nicht betrifft — und käme an keinen Abgleich, ohne
+           zu verstehen warum. */
         Store.setMeta('wolkeAbgleich', null);
+        Store.setMeta('wolkeNeuAbgleich', '');
         melden();
         if (typeof Protokoll !== 'undefined')
             Protokoll.notieren('konto', 'Von der Wolke abgemeldet');
@@ -678,6 +690,54 @@ const Wolke = (() => {
         return { uebernommen, unlesbar, gemischt, strittig, mehr: a.mehr };
     };
     /* ------------------------------------------------------------------------
+     * DIE OFFENE FRAGE NACH EINEM EINGESPIELTEN ERSETZEN (L76 / E279)
+     * ------------------------------------------------------------------------
+     * `Store.importAll(…, 'ersetzen')` setzt `wolkeNeuAbgleich`, wenn dieses
+     * Gerät angemeldet ist. Dann stehen zwei Bestände nebeneinander — der
+     * eben eingespielte hier und der, den die Wolke noch hat — und Redion
+     * entscheidet NICHT, welcher gewinnt.
+     *
+     * Solange die Frage steht, geht nichts hinaus und nichts kommt herein.
+     * Das ist keine dritte Meinung, sondern das Anhalten: beide Richtungen
+     * können Arbeit kosten, also wartet der Abgleich auf einen Menschen.
+     *
+     * Die Frage steht VOR `wolkeAbgleich` und nicht darin — dessen
+     * Rückfallweg unten liest die Marken, und die sind nach dem Einspielen
+     * leer. Wer die Frage über `wolkeAbgleich` abbilden wollte, hätte damit
+     * schon „nur lokal" gewählt.
+     */
+    const neuAbgleichOffen = () => !!Store.getMeta('wolkeNeuAbgleich', '');
+    /**
+     * Die Antwort. Zwei Wege, beide gleichwertig, keiner die Vorgabe.
+     *
+     *   'lokal'  Der eingespielte Bestand bleibt auf diesem Gerät. Die Wolke
+     *            behält, was sie hat. Nichts wird überschrieben.
+     *   'wolke'  Beide Seiten werden vollständig zusammengeführt. Die Marken
+     *            sind leer und die Basis auch, also sieht der Abgleich alles
+     *            auf beiden Seiten; Kollisionen laufen über die bestehende
+     *            Konfliktanzeige.
+     *
+     * Alles andere ist ein Fehler und keine stille Vorgabe: wer hier raten
+     * müsste, träfe genau die Entscheidung, die niemand treffen soll.
+     */
+    const neuAbgleichAntwort = async (wahl) => {
+        if (wahl !== 'lokal' && wahl !== 'wolke')
+            throw new Error('Nach dem Einspielen muss feststehen, was geschehen ' +
+                'soll: „lokal" behält den Bestand auf diesem Gerät, ' +
+                '„wolke" gleicht beide Seiten vollständig ab. Ohne ' +
+                'Angabe wird nichts getan.');
+        Store.setMeta('wolkeNeuAbgleich', '');
+        Store.setMeta('wolkeAbgleich', wahl === 'wolke');
+        melden();
+        if (typeof Protokoll !== 'undefined')
+            Protokoll.notieren('konto', wahl === 'wolke'
+                ? 'Nach dem Einspielen: vollständig mit der Wolke abgleichen'
+                : 'Nach dem Einspielen: nur lokal weiterarbeiten');
+        if (wahl === 'lokal')
+            return null;
+        return abgleichen();
+    };
+    /* ------------------------------------------------------------------------
      * DER SCHALTER — abgleichen nur mit ausdrücklichem Ja (E1, E34)
      * ------------------------------------------------------------------------
      * Angemeldet sein und abgleichen sind zwei Entscheidungen. Die zweite
@@ -689,6 +749,11 @@ const Wolke = (() => {
      * Ja längst gegeben — ein stiller Sync-Stopp wäre die falsche Sorte
      * Überraschung. Die Marken sind der Beleg. */
     const abgleichErlaubt = () => {
+        /* Steht die Frage aus L76, ist die Antwort nein — und zwar bevor
+           irgendein Altwert gelesen wird. Ein `wolkeAbgleich: true` von vor
+           dem Einspielen galt für einen Bestand, den es nicht mehr gibt. */
+        if (neuAbgleichOffen())
+            return false;
         const v = Store.getMeta('wolkeAbgleich', null);
         if (v !== null)
             return !!v;
@@ -1055,6 +1120,15 @@ const Wolke = (() => {
      * 9 · START
      * ======================================================================*/
     const start = async () => {
+        /* Ein Einspielen kann die Frage aus L76 stellen, und es geschieht
+           ausserhalb dieses Moduls. Ohne dieses Anmelden zeigte der Punkt oben
+           rechts bis zum nächsten Takt — also bis zu zwei Minuten lang —
+           weiter „Letzter Abgleich 14:03", während der Abgleich längst stand.
+           Der Horcher hängt VOR dem Token-Abbruch: die Frage gehört auch dann
+           gemeldet, wenn dieses Gerät gerade nicht angemeldet ist. */
+        if (typeof Store.on === 'function')
+            Store.on((was) => { if (was === 'import')
+                melden(); });
         if (!token())
             return;
         zustand.konto = Store.getMeta('wolkeKonto', null);
@@ -1081,6 +1155,7 @@ const Wolke = (() => {
     return { adresse, token, bereich, angemeldet, geraeteName, zustand, beiAenderung,
         anmeldenMit, codeHolen, codeWarten, codeFreigeben, tokenUebernehmen, abmelden,
         abgleichErlaubt, abgleichSetzen, kontoLoeschen,
+        neuAbgleichOffen, neuAbgleichAntwort,
         schluesselSetzen, hatSchluessel, verschluessele, entschluessele,
         hoch, runter, abgleichen, dateienAbgleichen, takt, taktSetzen, zuSchicken, seiteVon,
         geteiltSetzen, istGeteilt, freigeben, freigaben,

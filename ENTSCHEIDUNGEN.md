@@ -20749,3 +20749,127 @@ liefert.
 
 **Geprüft:** test272 153 (§17 neu) · test86 69 (acht neu) · test105 57 ·
 typecheck grün.
+
+================================================================================
+E279 — Einspielen ersetzt Inhalte, nicht die Identität (L76)
+================================================================================
+31. August 2026
+
+Redurs vierter Punkt aus E277, wörtlich: Import „Ersetzen" ersetzt Inhalte,
+nicht die Geräte-/Kontoidentität. Cloud-Zugang des Geräts behalten,
+Sync-Marken und `basis` zurücksetzen, danach ausdrücklich „nur lokal" oder
+„vollständig neu mit Wolke abgleichen" wählen. **Niemals automatisch eine
+Richtung bevorzugen.**
+
+### Was vorher geschah
+
+`importAll(…, 'ersetzen')` tauschte `meta` vollständig aus. Darin steht
+`wolkeToken`, `wolkeKonto`, `wolkeBereich`, `wolkeProbe`, `wolkeGeteilt` und
+jeder `api:`-Schlüssel. Wer eine fremde Sicherung einspielte, war danach als
+jemand anderes angemeldet — und der nächste Takt schickte seine Notizen in
+ein fremdes Konto. Wieder die Sorte Fehler, die aussieht wie ein geglückter
+Vorgang.
+
+`wolkeGeteilt` ist dabei die unangenehmste Zeile: `Wolke.istGeteilt()`
+entscheidet damit, ob ein Satz im KLARTEXT oder mit AES hochgeht. Eine
+fremde Liste hätte hiesige private Seiten unverschlüsselt hochgeschickt —
+kein Datenverlust, sondern ein Datenleck.
+
+### Der Zusatzfund: die Sicherung trug Zugangsdaten im Klartext
+
+Beim Messen fiel auf, dass eine `.json` und das `daten.json` im `.redion`
+das Sitzungs-Token und jeden `api:`-Schlüssel offen mit sich herumtrugen.
+Diese Dateien liegen im Downloads-Ordner, im Mail-Anhang, auf dem Stick.
+
+Redur hat entschieden: **Klartext ohne, verschlüsselt mit.** Aus der
+einfachen `.json` und der `.redion` fliegen sie raus und werden im Manifest
+unter `fehlt` genannt; die verschlüsselte Sicherung darf sie mitnehmen — sie
+ist ohne Passwort nichts wert, und mit Passwort ist sie genau das, was man
+auf einem neuen Gerät braucht.
+
+`exportAll` hat dafür einen zweiten Schalter bekommen, und seine Vorgabe ist
+die sichere Seite: wer ihn vergisst, bekommt eine Sicherung OHNE
+Zugangsdaten. `sicherungSchreiben(passwort)` füttert ihn mit `!!passwort` —
+dasselbe Passwort entscheidet beides, damit die zwei Fragen nicht
+auseinanderlaufen können.
+
+Ein Präfix statt einer Aufzählung: `api:` deckt auch die Anbindung, die es
+morgen gibt. Eine Aufzählung wäre bei jeder neuen Verbindung eine
+Gelegenheit, durch Vergessen zu lecken.
+
+### Drei Funde, die die naheliegende Umsetzung widerlegten
+
+**1 · Die Marken zu leeren bevorzugt still eine Richtung.**
+
+`Wolke.abgleichErlaubt()` liest `wolkeAbgleich` und fällt, wenn der `null`
+ist, zurück auf „gibt es Marken?" — der Bestandsgeräte-Weg aus E1/E34. Wer
+die Marken zurücksetzt und sonst nichts tut, kippt diese Antwort von selbst
+auf „nein", also auf „nur lokal". Auch die harmlosere Richtung ist eine
+Richtung, und eine, die sich niemand ausgesucht hat.
+
+Deshalb ein EIGENER Schlüssel, `wolkeNeuAbgleich`, und kein Umdeuten von
+`wolkeAbgleich`. Er steht in `abgleichErlaubt()` als erste Zeile, vor jedem
+Altwert: ein `wolkeAbgleich: true` von vor dem Einspielen galt für einen
+Bestand, den es nicht mehr gibt.
+
+**2 · `basisLeeren()` allein entwaffnet die Block-Grabsteine.**
+
+`bloeckeWeg()` fragt für jeden Grabstein `basisHolen(id)` und wirft still
+jeden weg, der keinen gemeinsamen Stand hat. Das ist die Wache aus E254
+gegen „offline angelegt und gelöscht": der Server soll nichts löschen
+sollen, was er nie gesehen hat.
+
+Eine leere Basis macht diese Wache blind für ALLE Grabsteine. Die
+Löschabsichten, die E255 gerade über das Ersetzen hinübergerettet hat, wären
+danach stumm — die Blöcke blieben auf dem Server, für immer, und niemand
+sähe es. E254 und E255 wären durch die Hintertür wieder offen.
+
+Der Grabstein trägt seinen Satz selbst mit (`e.satz` aus `purgeTief`).
+Daraus wird der gemeinsame Stand nach dem Leeren neu gesät. Was er
+beantworten muss, ist ohnehin nur die eine Frage: hat der Server diesen Satz
+je gesehen?
+
+**3 · `confirm()` und `Dialog.wahl` können diese Frage nicht stellen.**
+
+`confirm()` hat ein OK und ein Abbrechen, Escape wählt Abbrechen.
+`Dialog.wahl` gibt dem ERSTEN Knopf `class="prim"`. Beide heben eine Antwort
+hervor — genau das, was der Beschluss verbietet.
+
+Die Frage steht deshalb als eigene Kiste im Wolke-Fenster, mit zwei gleich
+gewichteten Knöpfen und ohne Vorgabe. Wegklicken beantwortet nichts; die
+Frage steht dann eben weiter. Das ist kein Schönheitsfehler, sondern der
+Punkt: eine Entscheidung, die Arbeit kosten kann, darf nicht aus Versehen
+fallen.
+
+### Was jetzt geschieht
+
+Beim Einspielen (beide Arten) sticht jeder lebende geräteeigene Wert den aus
+der Sicherung. Gibt es hier keinen, bleibt der aus der Sicherung stehen —
+genau das ist der Wiederherstellungsfall auf einem frischen Gerät.
+`sicherungOrdner` bleibt die Ausnahme aus E270: ohne lebenden Zugriff wird
+gelöscht, weil ein serialisierter Zugriff eine Attrappe ist.
+
+Beim „Ersetzen" zusätzlich: die drei Marken auf `''`, die `basis` geleert
+und für die überlebenden Grabsteine neu gesät, und — nur bei lebendem
+Zugang — `wolkeNeuAbgleich` gesetzt. Ohne Anmeldung wird nicht gefragt; das
+wäre eine Aufforderung ins Leere (§47).
+
+Solange die Frage steht, geht nichts hinaus und nichts herein. „Jetzt
+abgleichen" ist dann `disabled` und sagt am Knopf warum, statt in einem
+Toast, den man erst nach dem Drücken sieht. Der Punkt oben rechts hat einen
+vierten Zustand bekommen: er zeigte sonst „ist-gut" und „Letzter Abgleich
+14:03" — beides von vor dem Einspielen. Und der Hinweis nach dem Einspielen
+nennt die Frage in DEMSELBEN Satz, weil `UI.toast` in dasselbe Element
+schreibt und ein zweiter Aufruf den ersten überschriebe.
+
+`Wolke.start()` hängt sich an `Store.on('import')`, sonst zeigte der Punkt
+bis zum nächsten Takt — zwei Minuten — einen Stand von vorhin. Die Ablage
+lädt vor der Abgleichmaschine und kennt sie nicht (§5), also SCHREIBT
+`importAll` den Zustand nur; gelesen und entschieden wird in `maschine.ts`.
+
+### Was das nicht deckt
+
+Beim „Dazulegen" bleiben die Marken stehen — steht als L100 in LUECKEN.md.
+
+**Geprüft:** test273 neu (7 Abschnitte, jeder mit Gegenprobe) · test261 §11
+umgeschrieben, weil es das alte Verhalten als Erwartung festhielt.

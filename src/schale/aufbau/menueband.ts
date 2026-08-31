@@ -1157,10 +1157,17 @@ const Menueband = (() => {
     }
     const schlecht = String(z.fehler || z.fehlerDateien || '');
     punkt.hidden = false;
+    /* VIER Zustände seit L76. Es waren drei, und mit offener Frage zeigte
+       der Punkt „ist-gut" und „Letzter Abgleich 14:03" — beides von vor
+       dem Einspielen, beides nicht mehr wahr. Der Abgleich steht ja.
+       Die Farbe allein sagt es nicht (§38): der Grund steht im `title` und
+       im `aria-label`, wie bei den anderen drei auch. */
     punkt.className = 'wolke-punkt ' +
-      (schlecht ? 'ist-fehler' : z.laeuft ? 'ist-laeuft' : 'ist-gut');
+      (schlecht ? 'ist-fehler' : z.frage ? 'ist-frage'
+                : z.laeuft ? 'ist-laeuft' : 'ist-gut');
     const name = z.konto && z.konto.name ? String(z.konto.name) : 'angemeldet';
     const stand = schlecht ? 'Abgleichfehler: ' + schlecht
+      : z.frage ? 'Abgleich wartet auf eine Entscheidung (Mehr → Wolke)'
       : z.laeuft ? 'Abgleich läuft'
       : z.letzter ? 'Letzter Abgleich ' + String(z.letzter).slice(11, 16)
       : 'noch kein Abgleich';

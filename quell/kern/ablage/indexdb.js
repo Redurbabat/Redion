@@ -1527,6 +1527,66 @@ const Store = (() => {
         return null;
     };
     /* ========================================================================
+     * WAS DEM GERÄT GEHÖRT UND NICHT DER SICHERUNG (L76 / E279)
+     * ------------------------------------------------------------------------
+     * Zwei Listen, und sie sind bewusst nicht dieselbe.
+     *
+     * `GEHEIM` — was aus einer KLARTEXT-Sicherung fliegt. Eine `.json` und das
+     * `daten.json` im `.redion` liegen offen da: im Downloads-Ordner, im
+     * Mail-Anhang, im Chat, auf dem USB-Stick. Ein Sitzungs-Token darin ist
+     * ein Schlüssel zum Konto, ein `api:`-Eintrag ein Schlüssel zu einem
+     * fremden Dienst. Die VERSCHLÜSSELTE Sicherung darf beides mitnehmen —
+     * ohne Passwort ist sie nichts wert, und mit Passwort ist sie genau das,
+     * was man auf einem neuen Gerät braucht.
+     *
+     * Ein Präfix statt einer Aufzählung: `api:` deckt auch die Anbindung, die
+     * es morgen gibt. Eine Aufzählung wäre bei jeder neuen Verbindung eine
+     * Gelegenheit, durch Vergessen zu lecken.
+     *
+     * `wolkeProbe` ist selbst schon Chiffre — aber sie ist ein Orakel: mit ihr
+     * lässt sich ein Passwort in Ruhe durchprobieren, ohne dass es jemand
+     * merkt. Sie gehört zum Schlüssel, nicht in die offene Datei.
+     *
+     * `GERAETEIGEN` — was beim Einspielen dem LEBENDEN Gerät gehört. Das ist
+     * die Obermenge: Anmeldung, Konto, Bereich, Salz, Probe, Teilliste und die
+     * Anbindungen. Eine Sicherung ersetzt INHALTE, nicht die Identität des
+     * Geräts (L76). Wer eine Sicherung vom Rechner der Schwester einspielt,
+     * soll danach immer noch sein eigenes Konto haben.
+     *
+     * `wolkeGeteilt` steht mit auf der Liste, und das ist der Sicherheitsteil
+     * daran: `Wolke.istGeteilt()` entscheidet damit, ob ein Satz im KLARTEXT
+     * oder mit AES zum Server geht. Eine fremde Liste würde hiesige private
+     * Seiten unverschlüsselt hochschicken — kein Datenverlust, aber ein
+     * Datenleck, und das ist schlimmer.
+     * ======================================================================*/
+    const GEHEIM_PRAEFIX = 'api:';
+    const GEHEIM = ['wolkeToken', 'wolkeProbe'];
+    const istGeheim = (k) => GEHEIM.includes(k) || k.startsWith(GEHEIM_PRAEFIX);
+    /* Und eine dritte, engste Liste: was eine Sicherung GAR NICHT tragen darf,
+       auch keine verschlüsselte. Das sind keine Daten, sondern ERLAUBNISSE.
+  
+       E270 hat den Satz schon aufgeschrieben und meinte damals den
+       Ordnerzugriff: „eine Sicherung kann keine Erlaubnis mitbringen, also
+       sticht immer, was hier erlaubt wurde." Er gilt genauso für
+       `wolkeGeteilt`. Diese Liste ist der lokale Spiegel dessen, was DIESES
+       Konto auf dem Server wirklich freigegeben hat, und `Wolke.istGeteilt()`
+       entscheidet damit, ob ein Satz im KLARTEXT oder mit AES hochgeht. Eine
+       Liste aus einer fremden Datei könnte eine hiesige private Seite
+       unverschlüsselt hochschicken — kein Datenverlust, sondern ein Leck.
+  
+       Sie zu verlieren kostet nichts Bleibendes: die Wahrheit steht auf dem
+       Server, `Wolke.freigaben()` holt sie. Sie falsch zu erben schon.
+  
+       Deshalb hier der Unterschied zu `GERAETEIGEN`: dort sticht der lebende
+       Wert nur, WENN es ihn gibt (sonst käme ein frisches Gerät nie an seine
+       Anmeldung). Hier sticht er IMMER, auch wenn er leer ist. */
+    const NUR_HIER = ['sicherungOrdner', 'wolkeGeteilt'];
+    const istNurHier = (k) => NUR_HIER.includes(k);
+    const GERAETEIGEN = ['sicherungOrdnerName',
+        'wolkeToken', 'wolkeKonto', 'wolkeBereich',
+        'wolkeSalz', 'wolkeProbe'];
+    const istGeraeteEigen = (k) => GERAETEIGEN.includes(k) || k.startsWith(GEHEIM_PRAEFIX);
+    /* ========================================================================
      * SICHERN UND ZURÜCKHOLEN
      * ------------------------------------------------------------------------
      * Weil alles lokal liegt, gehört ein Export dazu. Sonst hängen die Daten
@@ -1566,7 +1626,7 @@ const Store = (() => {
      * Sicherung, die nicht sagt, was sie auslässt, ist die gefährlichste Sorte:
      * man merkt es erst, wenn man sie braucht.
      */
-    const exportAll = (mitAnhaengen = false) => {
+    const exportAll = (mitAnhaengen = false, mitGeheimnissen = false) => {
         const dateienDa = zaehlerDateien();
         const abgeleitetDa = zaehlerAbgeleitet();
         const fehlenAnhaenge = dateienDa && !mitAnhaengen;
@@ -1580,10 +1640,36 @@ const Store = (() => {
            Der Name bleibt als Text drin: nach dem Einspielen soll man lesen
            können, welcher Ordner es war. */
         const ordnerDa = 'sicherungOrdner' in cache.meta && !!cache.meta['sicherungOrdner'];
-        const metaOhneOrdner = {};
-        for (const k of Object.keys(cache.meta))
-            if (k !== 'sicherungOrdner')
-                metaOhneOrdner[k] = cache.meta[k];
+        /* Was gar nicht mitreisen darf, und ob es überhaupt etwas zu nennen
+           gibt. Eine leere Teilliste ist kein Verlust — sie stünde sonst in
+           jeder Sicherung unter `fehlt`, und ein Manifest, das Nichtigkeiten
+           aufzählt, macht die echten Zeilen unsichtbar. */
+        const nurHierAusgelassen = NUR_HIER.filter(k => {
+            const v = cache.meta[k];
+            return Array.isArray(v) ? v.length > 0 : !!v;
+        });
+        /* UND DIE ZUGANGSDATEN GENAUSO (L76 / E279). Eine Klartext-Sicherung
+           trug bisher das Sitzungs-Token der Wolke und jeden `api:`-Schlüssel
+           offen mit sich herum. Sie bleiben drin, wenn der Aufrufer sagt, dass
+           er verschlüsselt — sonst fliegen sie raus. Und dann steht ihr Name
+           im Manifest, denn eine Sicherung muss sagen, was sie auslässt
+           (§52.10). Der NAME ist keine Preisgabe: dass es einen `api:github`
+           gab, verrät nicht, wie er lautete. */
+        const metaGefiltert = {};
+        const geheimAusgelassen = [];
+        for (const k of Object.keys(cache.meta)) {
+            if (istNurHier(k))
+                continue;
+            if (!mitGeheimnissen && istGeheim(k)) {
+                /* Nur was wirklich einen Wert hat — ein leerer Eintrag ist kein
+                   Geheimnis und gehörte sonst als Verlust ins Manifest. */
+                if (cache.meta[k])
+                    geheimAusgelassen.push(k);
+                continue;
+            }
+            metaGefiltert[k] = cache.meta[k];
+        }
+        geheimAusgelassen.sort();
         /* Im Archiv liegen nur die NICHT abgeleiteten — siehe `sicherungSpeichern`
            in der Schale, das genauso filtert. Die Zahl hier muss dieselbe sein,
            sonst zählt das Manifest etwas anderes als das Archiv enthält. */
@@ -1611,6 +1697,21 @@ const Store = (() => {
                 (ordnerName ? ' Er hiess „' + ordnerName + '".' : '') +
                 ' Nach dem Einspielen einmal neu wählen unter Einstellungen → ' +
                 'Sicherung.';
+        /* Und für die Teilliste derselbe Satz aus demselben Grund: eine
+           Sicherung kann keine Erlaubnis mitbringen. */
+        const ueberGeteilt = !nurHierAusgelassen.includes('wolkeGeteilt') ? ''
+            : ' Welche Seiten geteilt sind, ist NICHT dabei: das ist eine ' +
+                'Erlaubnis auf dem Server, keine Angabe in einer Datei. Nach dem ' +
+                'Einspielen steht sie weiter dort — Redion holt sie beim nächsten ' +
+                'Blick in die Freigaben.';
+        /* Und derselbe Satz für die Zugangsdaten. Er nennt die Zahl und den
+           Weg zurück: eine verschlüsselte Sicherung nimmt sie mit. */
+        const ueberGeheimnisse = !geheimAusgelassen.length ? ''
+            : ' ' + geheimAusgelassen.length + ' Zugangsdaten (' +
+                geheimAusgelassen.join(', ') + ') sind bewusst NICHT dabei: eine ' +
+                'unverschlüsselte Sicherung liegt offen da und würde sie ' +
+                'weitergeben. Eine mit Passwort verschlüsselte Sicherung nimmt ' +
+                'sie mit.';
         return JSON.stringify({
             version: VERSION,
             exportiert: now(),
@@ -1618,7 +1719,8 @@ const Store = (() => {
             enthaelt: ['blocks', 'collections', 'views', 'meta', 'versions']
                 .concat(mitAnhaengen && echteImArchiv ? ['dateien', 'stuecke'] : []),
             fehlt: (fehlenAnhaenge ? ['dateien', 'stuecke'] : [])
-                .concat(ordnerDa ? ['sicherungOrdner'] : []),
+                .concat(nurHierAusgelassen)
+                .concat(geheimAusgelassen),
             /* Wie viele Dateien absichtlich draussen blieben — als Zahl, damit ein
                Einleser es nachrechnen kann, statt einen Satz zu lesen. */
             abgeleitetAusgelassen: mitAnhaengen ? abgeleitetDa : 0,
@@ -1631,11 +1733,11 @@ const Store = (() => {
                         '„dateien" desselben Archivs.' + ueberAbgeleitete
                     : abgeleitetDa
                         ? 'Dieser Bestand hat nur abgeleitete Dateien.' + ueberAbgeleitete
-                        : 'Vollständig: dieser Bestand hat keine Dateianhänge.') + ueberOrdner,
+                        : 'Vollständig: dieser Bestand hat keine Dateianhänge.') + ueberOrdner + ueberGeteilt + ueberGeheimnisse,
             blocks: cache.blocks,
             collections: cache.collections,
             views: cache.views,
-            meta: metaOhneOrdner,
+            meta: metaGefiltert,
             versions: exportVersionen
         }, null, 2);
     };
@@ -1735,15 +1837,47 @@ const Store = (() => {
            mitbringen, also sticht immer, was hier erlaubt wurde. Der NAME
            gehört zum Zugriff und wird mitgerettet — sonst stünde in den
            Einstellungen der Ordner eines fremden Geräts über dem eigenen. */
-        const lebenderOrdner = getMeta('sicherungOrdner', null);
-        if (lebenderOrdner) {
-            neu.meta['sicherungOrdner'] = lebenderOrdner;
-            const lebenderName = getMeta('sicherungOrdnerName', '');
-            if (lebenderName)
-                neu.meta['sicherungOrdnerName'] = lebenderName;
+        /* --- DIE IDENTITÄT DES GERÄTS ÜBERLEBT BEIDE ARTEN (L76 / E279) -----
+           Eine Sicherung ersetzt INHALTE, nicht die Kontoidentität dieses
+           Geräts. Wer eine Sicherung einspielt — die eigene von gestern oder
+           die vom Rechner der Schwester — soll danach immer noch mit seinem
+           eigenen Konto angemeldet sein, seine eigenen Anbindungen haben und
+           seine eigene Teilliste.
+    
+           Vorher war es andersherum: „ersetzen" tauschte `meta` vollständig,
+           also auch `wolkeToken`, `wolkeKonto` und jeden `api:`-Schlüssel. Wer
+           eine fremde Sicherung einspielte, war danach als jemand anderes
+           angemeldet — und der nächste Abgleich schickte seine Notizen in ein
+           fremdes Konto. Das ist die schlimmste Sorte Fehler, die diese App
+           haben kann: sie sieht aus wie ein geglückter Vorgang.
+    
+           Die Regel: gibt es hier einen lebenden Wert, sticht er. Gibt es
+           keinen, bleibt der aus der Sicherung stehen — genau das ist der
+           Wiederherstellungsfall auf einem frischen Gerät.
+    
+           Warum in `neu.meta` und nicht nur im Ersetzen-Zweig: das
+           Zusammenführen macht weiter unten `Object.assign(cache.meta,
+           neu.meta)`. Was nur im Ersetzen-Zweig stünde, wäre dort wirkungslos,
+           und die fremde Anmeldung käme durch die Hintertür.
+    
+           Was eine ERLAUBNIS ist und nicht bloss eine Angabe, steht in
+           `NUR_HIER` und wird in der zweiten Schleife strenger behandelt. */
+        for (const k of Object.keys(cache.meta)) {
+            if (!istGeraeteEigen(k))
+                continue;
+            const lebend = cache.meta[k];
+            if (lebend !== undefined && lebend !== null && lebend !== '')
+                neu.meta[k] = lebend;
         }
-        else {
-            delete neu.meta['sicherungOrdner'];
+        /* Und die Erlaubnisse: hier sticht der lebende Wert IMMER, auch wenn er
+           leer ist. Sonst erbte ein Gerät ohne eigene Teilliste die aus der
+           Datei — und schickte, worauf sie zeigt, im Klartext hoch. */
+        for (const k of NUR_HIER) {
+            const lebend = cache.meta[k];
+            if (lebend === undefined || lebend === null)
+                delete neu.meta[k];
+            else
+                neu.meta[k] = lebend;
         }
         /* --- DIE WOLKE-MERKLISTEN ÜBERLEBEN DAS ERSETZEN (E255/L74) ---------
            „Ersetzen" tauscht auch `meta` vollständig — eine noch nicht
@@ -1787,6 +1921,40 @@ const Store = (() => {
                 if (beide.length)
                     neu.meta[k] = beide;
             }
+            /* --- UND DIE SYNC-MARKEN GEHEN ZURÜCK AUF NULL (L76 / E279) -------
+               Die Marken sagen „bis hierher waren beide Seiten gleich". Nach
+               einem Ersetzen stimmt das nicht mehr: der Bestand ist ein ganz
+               anderer, die Marke aber stünde noch auf gestern Abend. Der nächste
+               Abgleich schickte dann nur, was seit gestern Abend ein neues
+               `edited` hat — also fast nichts — und der Server behielte den
+               alten Bestand. Ein Abgleich, der still die Hälfte weglässt.
+      
+               Auf Null heisst: der nächste Abgleich sieht alles auf beiden
+               Seiten und führt es über den bestehenden Weg zusammen. */
+            neu.meta['wolkeMarkeHoch'] = '';
+            neu.meta['wolkeMarkeRunter'] = '';
+            neu.meta['wolkeMarkeDateien'] = '';
+            /* --- UND DANN WIRD GEFRAGT, NICHT ENTSCHIEDEN --------------------
+               Jetzt stehen zwei Bestände nebeneinander: der eben eingespielte
+               hier und der, den die Wolke noch hat. Beide Richtungen sind
+               plausibel, und beide können Arbeit kosten — hochladen überschreibt
+               drüben, herunterladen überschreibt hier.
+      
+               Redion entscheidet das NICHT (L76). Es hält den Abgleich an und
+               legt die Frage hin; die Antwort gibt ein Mensch im Wolke-Fenster.
+      
+               Warum ein EIGENER Schlüssel und nicht `wolkeAbgleich`: dessen
+               Rückfallweg in `Wolke.abgleichErlaubt()` lautet „gibt es Marken?".
+               Die Marken eben zu leeren kippt diese Antwort von selbst auf
+               „nein" — also auf „nur lokal". Auch die harmlosere Richtung ist
+               eine Richtung, und eine, die sich niemand ausgesucht hat.
+      
+               Und nur bei lebendem Zugang: ohne Anmeldung wäre die Frage eine
+               Aufforderung, die ins Leere zeigt (§47). */
+            if (getMeta('wolkeToken', ''))
+                neu.meta['wolkeNeuAbgleich'] = now();
+            else
+                delete neu.meta['wolkeNeuAbgleich'];
         }
         /* --- ALLES IN EINER TRANSAKTION -----------------------------------
            Löschen und Schreiben liefen hier als hunderte einzelne
@@ -1908,6 +2076,40 @@ const Store = (() => {
             Object.assign(cache.views, neu.views);
             Object.assign(cache.meta, neu.meta);
         }
+        /* --- DER GEMEINSAME STAND WIRD VERGESSEN — ABER NICHT GANZ ----------
+           `basis` merkt sich je Satz, wie er aussah, als beide Seiten ihn
+           zuletzt gleich sahen. Nach einem Ersetzen ist das über den ganzen
+           Bestand gelogen: die Sätze sind andere, die Erinnerung an sie nicht.
+           Ein Dreiwege-Zusammenführen gegen eine falsche Basis führt Dinge
+           zusammen, die nie zusammengehörten. Also weg damit — der nächste
+           Abgleich baut sie neu auf.
+    
+           ERST NACH DER TRANSAKTION. Wäre das Ersetzen abgebrochen und die
+           Basis schon leer, stünde der alte Bestand ohne sein Gedächtnis da.
+    
+           UND DANN WIRD EIN TEIL NEU GESÄT, und das ist der heikle Punkt:
+           `Wolke.bloeckeWeg()` fragt für jeden Grabstein `basisHolen(id)` und
+           wirft jeden still weg, der keinen gemeinsamen Stand hat — das ist
+           die Wache aus E254 gegen „offline angelegt und gelöscht", damit der
+           Server nichts löschen soll, was er nie gesehen hat.
+    
+           Eine leere Basis macht diese Wache blind für ALLE Grabsteine. Die
+           Löschabsichten, die E255 gerade über das Ersetzen hinübergerettet
+           hat, wären danach stumm: die Blöcke blieben auf dem Server, für
+           immer, und niemand sähe es. Genau das, wogegen E254/E255 gebaut
+           wurden — durch die Hintertür wieder auf.
+    
+           Der Grabstein trägt seinen Satz selbst mit (`e.satz`, aus
+           `purgeTief`). Daraus lässt sich der gemeinsame Stand neu setzen. Was
+           er beantworten muss, ist ohnehin nur die eine Frage: hat der Server
+           diesen Satz je gesehen? */
+        if (art === 'ersetzen') {
+            await basisLeeren();
+            const grabsteine = getMeta('wolkeBloeckeWeg', []) || [];
+            for (const e of grabsteine)
+                if (e && e.id && e.satz)
+                    await basisPut(e.id, e.satz);
+        }
         /* UND DIE UMZÜGE NOCH EINMAL.
            Sie laufen beim Start, und beim Start stand hier ein anderer Bestand.
            Eine eingespielte Sicherung kann jahrealt sein — sie bringt genau die
@@ -1943,7 +2145,11 @@ const Store = (() => {
         await settled();
         return { bloecke: Object.keys(cache.blocks).length,
             versionen: Array.isArray(d.versions) ? d.versions.length : 0,
-            fehlt: d.fehlt || [] };
+            fehlt: d.fehlt || [],
+            /* Steht danach eine Entscheidung offen? Die Schale sagt es
+               dem Menschen — sonst wartet die Frage, ohne dass jemand
+               weiss, dass sie wartet. */
+            frage: !!getMeta('wolkeNeuAbgleich', '') };
     };
     /* ========================================================================
      * SEITENBAUM ALS DATENPAKET

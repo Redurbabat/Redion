@@ -424,6 +424,14 @@ Regel:
 
 Wenn eine .json-Sicherung Anhänge nicht enthält, darf der Import vorhandene Anhänge nicht löschen.
 
+Und seit L76/E279: Zugangsdaten gehören nur in die VERSCHLÜSSELTE Sicherung.
+wolkeToken, wolkeProbe und jeder api:*-Schlüssel fliegen aus der offenen
+.json und der .redion und werden im Manifest unter fehlt genannt. Der
+Ordnerzugriff und die Freigabeliste (wolkeGeteilt) reisen gar nicht mit —
+eine Sicherung kann keine Erlaubnis mitbringen. Und ein Einspielen mit
+„Ersetzen" ersetzt Inhalte, nicht die Kontoidentität des Geräts: danach
+hält Redion den Abgleich an und fragt, statt eine Richtung zu wählen.
+
 .redion
 
 Für vollständige Sicherungen mit Anhängen.

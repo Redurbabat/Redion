@@ -85,6 +85,55 @@ Der Hinweis wird beim Einspielen angezeigt. Er ist keine Fussnote, sondern
 die einzige Stelle, an der ein Nutzer erfährt, dass seine Bilder nicht in der
 Datei sind, die er für seine Sicherung hält.
 
+### Was NIE in einer offenen Sicherung steht (L76 / E279)
+
+Eine `.json` und das `daten.json` im `.redion` liegen offen da: im
+Downloads-Ordner, im Mail-Anhang, auf dem Stick. Zugangsdaten gehören da
+nicht hinein.
+
+```txt
+wolkeToken     das Sitzungs-Token der Wolke — ein Schlüssel zum Konto
+wolkeProbe     die Schlüsselprobe. Selbst Chiffre, aber ein Orakel: mit ihr
+               lässt sich ein Passwort in Ruhe durchprobieren
+api:*          jeder Schlüssel zu einem Fremddienst — GitHub, Jira, Webhook,
+               und jede Anbindung, die es morgen gibt
+```
+
+Es ist bewusst ein PRÄFIX und keine Aufzählung: eine Aufzählung wäre bei
+jeder neuen Verbindung eine Gelegenheit, durch Vergessen zu lecken.
+
+Die **verschlüsselte** Sicherung nimmt sie mit. Ohne Passwort ist sie nichts
+wert, und mit Passwort ist sie genau das, was man auf einem neuen Gerät
+braucht. `exportAll(mitAnhaengen, mitGeheimnissen)` steuert das, und die
+Vorgabe ist die sichere Seite: wer den Schalter vergisst, bekommt eine
+Sicherung OHNE Zugangsdaten.
+
+### Und was gar nicht mitreisen kann — auch verschlüsselt nicht
+
+```txt
+sicherungOrdner   ein Verzeichniszugriff gilt nur auf dem Gerät, auf dem er
+                  erteilt wurde. Der NAME reist mit, der Zugriff nicht (E270)
+wolkeGeteilt      welche Seiten geteilt sind. Das ist eine Erlaubnis auf dem
+                  Server, keine Angabe in einer Datei (E279)
+```
+
+Beide stehen aus demselben Grund hier: **eine Sicherung kann keine Erlaubnis
+mitbringen.** Beim Einspielen sticht deshalb immer, was auf diesem Gerät
+erlaubt wurde — auch wenn das nichts ist. Verloren geht dabei nichts
+Bleibendes: den Ordner wählt man einmal neu, die Freigaben stehen weiter auf
+dem Server und `Wolke.freigaben()` holt sie.
+
+Beides steht in `fehlt` und im `hinweis`, sobald es etwas auszulassen gibt.
+
+### Was ein Einspielen mit „Ersetzen" NICHT ersetzt
+
+Eine Sicherung ersetzt **Inhalte**, nicht die Kontoidentität dieses Geräts
+(L76). Es bleiben: Anmeldung, Konto, Bereich, Salz, Schlüsselprobe, die
+Anbindungen und die Freigabeliste. Danach stehen die Sync-Marken auf null,
+die `basis` ist geleert — und Redion hält den Abgleich an und **fragt**,
+statt eine Richtung zu wählen. Die ganze Begründung steht in
+`ENTSCHEIDUNGEN.md` unter E279.
+
 ### Die Sätze
 
 Blöcke, Zeilen, Sammlungen und Ansichten sind in

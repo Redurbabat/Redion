@@ -182,17 +182,28 @@ const Krypto = (() => {
        Das Manifest in der Datei sagt es auch, aber verschlüsselt liest es
        niemand, bevor er es braucht. */
     let zuletztGefehlt = [];
-    const bestandSammeln = async () => {
+    /**
+     * @param mitGeheimnissen nur wahr, wenn der Aufrufer die Sicherung
+     *        anschliessend WIRKLICH verschlüsselt. Zugangsdaten — das
+     *        Cloud-Token, jeder `api:`-Schlüssel — gehören nur in eine
+     *        Sicherung, die ohne Passwort nichts wert ist (L76 / E279).
+     *        Die Vorgabe ist die sichere Seite: wer den Schalter vergisst,
+     *        bekommt eine Sicherung ohne Zugangsdaten, nicht eine mit.
+     */
+    const bestandSammeln = async (mitGeheimnissen = false) => {
         /* Holt den Verlauf aus der Ablage; er liegt bewusst nicht im
            Zwischenspeicher. Ohne diesen Aufruf wäre `versions` leer — still. */
         if (Store.exportVorbereiten)
             await Store.exportVorbereiten();
-        const d = JSON.parse(Store.exportAll());
+        const d = JSON.parse(Store.exportAll(false, mitGeheimnissen));
         zuletztGefehlt = Array.isArray(d.fehlt) ? d.fehlt : [];
         return JSON.stringify(Object.assign({ art: 'redion-sicherung', fassung: 1, wann: d.exportiert }, d), null, 2);
     };
     const sicherungSchreiben = async (passwort) => {
-        const roh = await bestandSammeln();
+        /* Das Passwort entscheidet BEIDES: ob verschlüsselt wird und ob die
+           Zugangsdaten mitdürfen. Es ist dieselbe Frage, also darf es nicht
+           zwei Schalter geben, die auseinanderlaufen können. */
+        const roh = await bestandSammeln(!!passwort);
         const inhalt = passwort ? await verschluesseln(roh, passwort) : roh;
         const name = 'redion-sicherung-' + new Date().toISOString().slice(0, 10) +
             (passwort ? '.verschluesselt.json' : '.json');
@@ -425,7 +436,12 @@ const Krypto = (() => {
         /* Die JSON behauptet nur dann, Anhänge seien enthalten, wenn jedes
            Stück unten wirklich lesbar ist. Ein halber Upload bricht die ganze
            Sicherung ab; er wird nie als vollständige Datei ausgegeben. */
-        await verschluesseltAblegen('daten.enc', 'daten', enc.encode(Store.exportAll(true)));
+        await verschluesseltAblegen(
+        /* `true, true`: mit Anhängen und mit Zugangsdaten. Dieser Weg legt
+           die Daten verschlüsselt ab — `verschluesseltAblegen` heisst so,
+           weil es das tut —, also ist es genau der Fall, für den L76 die
+           Zugangsdaten erlaubt. */
+        'daten.enc', 'daten', enc.encode(Store.exportAll(true, true)));
         const dateien = [];
         for (let dateiNr = 0; dateiNr < saetze.length; dateiNr++) {
             const satz = saetze[dateiNr];
@@ -759,7 +775,18 @@ const Krypto = (() => {
                    nicht nur ins verschlüsselte Manifest, wo es niemand liest. */
                 const dazu = zuletztGefehlt.includes('dateien')
                     ? ' — ohne die Dateianhänge (dafür: .redion-Sicherung)' : '';
-                UI.toast((pw ? 'Verschlüsselt gesichert: ' : 'Ungeschützt gesichert: ') + name + dazu);
+                /* Und seit L76 fehlen einer ungeschützten Sicherung auch die
+                   Zugangsdaten. Das gehört in denselben Satz: eine Sicherung, die
+                   nicht sagt, was sie auslässt, ist die gefährlichste Sorte — und
+                   wer sie später einspielt, sucht sonst lange, warum sein
+                   GitHub-Schlüssel weg ist. */
+                const geheim = zuletztGefehlt.filter(k => k === 'wolkeToken' || k === 'wolkeProbe' || k.startsWith('api:')).length;
+                const dazu2 = geheim
+                    ? (dazu ? ' und' : ' —') + ' ohne die ' + geheim +
+                        ' Zugangsdaten (die nimmt nur eine verschlüsselte Sicherung mit)'
+                    : '';
+                UI.toast((pw ? 'Verschlüsselt gesichert: ' : 'Ungeschützt gesichert: ') +
+                    name + dazu + dazu2);
                 return;
             }
             if (elVon(e)?.closest('[data-a="laden"]')) {

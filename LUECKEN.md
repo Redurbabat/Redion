@@ -3569,3 +3569,32 @@ wirklich rot vorgeführt: ein eingeschleuster Fehler in test41.mts wurde
 gemeldet, mit Datei, Zeile und TS-Nummer.
 
 Ein Prüflauf, den man von Hand starten muss, ist kein Netz.
+
+--------------------------------------------------------------------------------
+L100 — „Dazulegen" lässt die Marken stehen, und alte Blöcke bleiben liegen
+--------------------------------------------------------------------------------
+
+L76 (E279) setzt beim Einspielen mit **Ersetzen** die drei Sync-Marken auf
+null: der Bestand ist danach ein anderer, also stimmt „bis hierher waren
+beide Seiten gleich" nicht mehr.
+
+Beim **Dazulegen** bleiben sie stehen — und das ist eine Lücke, keine
+Entscheidung.
+
+`Wolke.zuSchicken()` überspringt jeden Satz mit `edited <= marke`. Wer eine
+Sicherung von vor drei Monaten dazulegt, bringt Blöcke mit einem `edited`
+von vor drei Monaten mit. Die Marke steht auf heute. Also sieht der nächste
+Abgleich sie nie, und sie erreichen den Server nicht — auf den anderen
+Geräten fehlen sie, ohne dass irgendwo etwas rot wird.
+
+Der naheliegende Weg (die Marken auch beim Dazulegen leeren) hat einen
+Preis: JEDES Dazulegen löste dann einen Vollabgleich aus, auch das, bei dem
+eine einzige Seite dazukommt. Auf einem grossen Bestand ist das minutenlang.
+
+Was es wirklich braucht, ist enger: nur die dazugelegten Kennungen für den
+nächsten Versand vormerken. Das ist eine eigene Entscheidung und eine eigene
+Prüfung, also steht es hier und nicht als halbe Umsetzung im Code.
+
+**Betroffen:** `src/kern/ablage/indexdb.ts` (`importAll`, Zweig
+`zusammenfuehren`), `src/kern/abgleich/maschine.ts` (`zuSchicken`).
+**Beschlossen:** offen. **Gefunden:** beim Umsetzen von L76 (E279).

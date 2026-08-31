@@ -1947,3 +1947,19 @@ node pruefungen/lauf/test105.mjs
   Seite lautlos nichts tun; sie verschwinden. Dabei eine CSS-Falle:
   `.top-btn{display:flex}` schlägt `[hidden]` — `k.hidden = true` bewirkte
   nichts. test272 §17 neu, test86 +8. sw v47.
+* E279 (E277 Teil 2 — L76): Eine eingespielte Sicherung ersetzt Inhalte,
+  nicht die Kontoidentität des Geräts. Vorher tauschte „ersetzen" `meta`
+  vollständig — wer eine fremde Sicherung einspielte, war danach als jemand
+  anderes angemeldet, und der nächste Takt schickte seine Notizen in ein
+  fremdes Konto. Jetzt bleiben Anmeldung, Konto, Bereich, Salz, Probe und
+  die `api:`-Schlüssel; die drei Sync-Marken gehen auf null, die `basis`
+  wird geleert UND für die überlebenden Grabsteine neu gesät (sonst fiele
+  E254/E255 durch die Hintertür); und dann FRAGT Redion, statt eine Richtung
+  zu wählen — eigener Schlüssel `wolkeNeuAbgleich`, weil ein Umdeuten von
+  `wolkeAbgleich` still „nur lokal" gewählt hätte. Dazu: Zugangsdaten
+  fliegen aus der offenen Sicherung und stehen im Manifest unter `fehlt`;
+  Ordnerzugriff und Freigabeliste reisen gar nicht mit, weil eine Sicherung
+  keine Erlaubnis mitbringen kann. Vier statt drei Zustände am Sync-Punkt
+  und auf der Kontoseite. test273 neu (34, jeder Abschnitt mit Gegenprobe),
+  test261 §11 umgeschrieben (21). L100 offen: beim Dazulegen bleiben die
+  Marken stehen. sw v49.

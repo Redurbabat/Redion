@@ -86,12 +86,31 @@ const WolkeFenster = (() => {
           await zeichne();
         }
         if (was === 'abgleich-an') { await abgleichFragen(); await zeichne(); }
+        /* Die beiden Antworten aus L76. Sie stehen NEBENEINANDER und nicht
+           übereinander: keine ist die Vorgabe, keine der Abbruch. */
+        if (was === 'neu-lokal') {
+          await Wolke.neuAbgleichAntwort('lokal');
+          UI.toast('Nur lokal: der eingespielte Bestand bleibt auf diesem Gerät. ' +
+                   'Den Abgleich kannst du hier jederzeit wieder einschalten.');
+          await zeichne();
+        }
+        if (was === 'neu-wolke') {
+          a.disabled = true; a.textContent = 'Gleicht ab …';
+          UI.toast('Vollständiger Abgleich läuft — das kann dauern.');
+          try { await Wolke.neuAbgleichAntwort('wolke'); }
+          catch { /* der Fehler steht danach im Fenster */ }
+          await zeichne();
+        }
         if (was === 'nurlokal') {
           Wolke.abgleichSetzen(false);
           UI.toast('Nur lokal: nichts verlässt dieses Gerät, bis du den Abgleich wieder einschaltest.');
           await zeichne();
         }
         if (was === 'jetzt') {
+          if (Wolke.neuAbgleichOffen()) {
+            UI.toast('Erst oben entscheiden, wie es nach dem Einspielen weitergehen soll.');
+            return;
+          }
           if (!Wolke.abgleichErlaubt()) {
             UI.toast('Der Abgleich ist für dieses Gerät ausgeschaltet — erst einschalten.');
             return;
@@ -256,6 +275,7 @@ const WolkeFenster = (() => {
     const z = Wolke.zustand;
     const k = z.konto || {};
     const an = Wolke.abgleichErlaubt();
+    const frage = Wolke.neuAbgleichOffen();
     return (
       '<div style="display:flex; gap:13px; align-items:center; margin-bottom:16px">' +
         (k.bild ? `<img src="${esc(k.bild)}" style="width:42px;height:42px;border-radius:50%">`
@@ -267,8 +287,50 @@ const WolkeFenster = (() => {
       '</div>' +
 
       /* Der Modus zuerst — er ist die Antwort auf die wichtigste Frage:
-         verlässt etwas dieses Gerät oder nicht? */
-      (an
+         verlässt etwas dieses Gerät oder nicht?
+
+         DREI ZUSTÄNDE, und der erste geht vor (L76 / E279). Nach einem
+         eingespielten „Ersetzen" ist weder „Lokal + Abgleich" noch „Nur
+         lokal" wahr: der Abgleich steht, weil niemand entschieden hat.
+         Stünde hier „Nur lokal", hätte der Bildschirm die Entscheidung
+         schon getroffen — und zwar für den Menschen.
+
+         Zwei Knöpfe, KEINER mit `prim`. Das ist kein Versehen: `confirm()`
+         und `Dialog.wahl` heben beide eine Antwort hervor (dort bekommt
+         der erste Knopf `class="prim"`), und Escape wählt bei beiden. Wenn
+         beide Antworten richtig sein können und die falsche Arbeit kostet,
+         darf keine die Vorgabe sein. Wegklicken beantwortet hier nichts —
+         die Frage steht dann eben weiter. */
+      (frage
+        ? '<div id="wo-frage" style="padding:13px; border:1px solid var(--warn,#c88); ' +
+          'border-radius:8px; font-size:12.5px; line-height:1.6; margin-bottom:16px">' +
+          '<div style="display:flex; gap:10px; align-items:flex-start">' +
+          '<span style="font-size:17px">⏸</span><div style="flex:1; min-width:0">' +
+          '<b>Der Abgleich wartet auf dich.</b> Du hast eine Sicherung ' +
+          'eingespielt und den Bestand ersetzt. Auf dem Server liegt noch der ' +
+          'Stand von vorher. Es geht gerade nichts hinaus und nichts herein — ' +
+          'Redion entscheidet das nicht von selbst, weil beide Wege Arbeit ' +
+          'kosten können.</div></div>' +
+          /* EIN Kind je Knopf, nicht drei. Beim Hinsehen (§55.1) stand
+             „Nur lokal verwenden" links und die Erklärung RECHTS DANEBEN
+             in zwei Spalten, und das `<br>` dazwischen tat nichts:
+             Knöpfe in diesem Fenster sind Flex-Behälter, also wurden
+             `<b>`, `<br>` und `<span>` zu drei Flex-Elementen in einer
+             Reihe. Gemessen: B 63 px, BR 0 px, SPAN 176 px nebeneinander.
+             Mit einem einzigen Kind, das den Knopf füllt, fliesst der Text
+             darin wieder normal — unabhängig davon, welche Regel den
+             Knopf gerade auf `flex` stellt. */
+          '<div style="display:flex; gap:9px; flex-wrap:wrap; margin-top:11px">' +
+          '<button data-a="neu-lokal" class="wo-wahl">' +
+          '<span><b>Nur lokal verwenden</b><br>' +
+          '<span style="color:var(--text-faint)">Der eingespielte Bestand bleibt ' +
+          'auf diesem Gerät. Die Wolke behält, was sie hat.</span></span></button>' +
+          '<button data-a="neu-wolke" class="wo-wahl">' +
+          '<span><b>Vollständig neu abgleichen</b><br>' +
+          '<span style="color:var(--text-faint)">Beide Seiten werden ' +
+          'zusammengeführt. Was sich widerspricht, wird dir gezeigt.</span></span>' +
+          '</button></div></div>'
+        : an
         ? '<div style="padding:12px; border:1px solid var(--line); border-radius:8px; ' +
           'font-size:12.5px; line-height:1.6; margin-bottom:16px; display:flex; ' +
           'gap:10px; align-items:center">' +
@@ -286,8 +348,15 @@ const WolkeFenster = (() => {
 
       '<div id="wo-zahlen" style="display:flex; gap:9px; margin-bottom:16px; flex-wrap:wrap"></div>' +
 
+      /* Solange die Frage steht, kann „Jetzt abgleichen" nichts tun —
+         `abgleichen()` gibt dann `null` zurück. Ein Knopf, der still nichts
+         tut, ist §47; also steht der Grund am Knopf statt in einem Toast,
+         den man erst nach dem Drücken sieht. */
       '<div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px">' +
-        '<button data-a="jetzt" class="prim">Jetzt abgleichen</button>' +
+        '<button data-a="jetzt"' + (frage
+          ? ' disabled title="Erst oben entscheiden, wie es nach dem ' +
+            'Einspielen weitergehen soll."'
+          : ' class="prim"') + '>Jetzt abgleichen</button>' +
         '<button data-a="freigeben">Anderes Gerät freigeben</button>' +
         '<button data-a="marken">Marken</button>' +
       '</div>' +
@@ -345,6 +414,15 @@ const WolkeFenster = (() => {
    * Anmelden allein lädt nichts hoch (E1); erst dieses Ja tut es. */
   const abgleichFragen = async (): Promise<void> => {
     if (!Wolke.angemeldet() || Wolke.abgleichErlaubt()) return;
+    /* Steht die Frage aus L76, ist sie die grössere: sie kennt beide
+       Richtungen, dieses `confirm()` nur ein Ja und ein Nein. Zwei Fragen
+       übereinander wären eine Falle — wer hier „Abbrechen" drückt, hätte
+       ohne es zu merken „nur lokal" gewählt. */
+    if (Wolke.neuAbgleichOffen()) {
+      UI.toast('Nach dem Einspielen steht oben eine Entscheidung — sie ' +
+               'ersetzt diese Frage.');
+      return;
+    }
     const ja = confirm(
       'Dieses Gerät ab jetzt mit der Wolke abgleichen?\n\n' +
       'Deine bisherigen Notizen gehen dann — verschlüsselt — zum Server ' +
