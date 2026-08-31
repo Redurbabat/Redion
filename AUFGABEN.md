@@ -1906,3 +1906,11 @@ node pruefungen/lauf/test105.mjs
   `sun` und hiess an der Kalenderkante „Tagesplan", im Band „helles
   Aussehen" — jetzt ein Kalenderblatt (L97). NEU test272 §16 mit
   Gegenprobe. sw v44.
+* E273 Teil D (L93): der Chatverlauf war seit Phase F am Rechner nicht mehr
+  zu sehen — er stand nur in `KI.seitenleiste`, und die ist dort
+  `display:none`. Er sitzt jetzt im Kopf des KI-Fensters, weil die KI kein
+  ORT ist (kiPanel lässt den Schauplatz in Ruhe) und ein Kantenknopf sich
+  auf nichts melden könnte. Ein Zeichner für zwei Orte: `chatBaum(ziel)`
+  aus `seitenleiste` herausgelöst. Drei Emoji weniger in der Zeile (E202).
+  test34 +6 Punkte. sw v45.
+

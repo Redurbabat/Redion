@@ -1767,6 +1767,138 @@ const KI = (() => {
      * Der Chat-Reiter der Seitenleiste: Agenten oben, darunter der Verlauf
      * nach Tagen gruppiert — so wie Notion es zeigt.
      */
+    /* ==========================================================================
+     * DER CHATVERLAUF — EIN ZEICHNER, ZWEI ORTE (E273, L93)
+     * --------------------------------------------------------------------------
+     * Die Liste stand fest in `seitenleiste()`. Am Telefon war das richtig; am
+     * Rechner ist die Seitenleiste seit E272 Phase F `display:none`, und
+     * `seitenleiste` wird von nirgends sonst gerufen — der ganze Verlauf war
+     * dort nicht mehr zu erreichen. `chatsGruppiert()` und `chatOeffnen(id)`
+     * gab es die ganze Zeit; sie riefen nur nirgends.
+     *
+     * Statt einer zweiten Liste im Panel (§8) steht der Zeichner jetzt hier
+     * und wird von beiden Orten gerufen: von `seitenleiste(baum)` am Telefon
+     * und von `verlauf()` im Kopf des KI-Fensters.
+     *
+     * Warum im KI-Fenster und nicht an der Kontextkante: die KI ist kein Ort,
+     * sondern ein Panel neben dem Inhalt. `kiPanel` lässt `sonder` und
+     * `seiteId` in Ruhe, `App.schauplatz()` bleibt beim Editor oder wo man
+     * gerade war — es gibt keinen Schauplatz `ki`, auf den sich ein
+     * Kantenknopf melden könnte. Das Fenster ist sein eigenes Zuhause.
+     * ========================================================================*/
+    const chatBaum = (ziel) => {
+        chatsGruppiert().forEach(([name, chats]) => {
+            const k = document.createElement('div');
+            k.className = 'side-section';
+            k.innerHTML = `<span>${esc(name)}</span>`;
+            if (name === 'Heute' || name === 'Angeheftet') {
+                const plus = document.createElement('button');
+                plus.textContent = '+';
+                plus.title = 'Neuer Chat';
+                plus.addEventListener('click', neuerChat);
+                k.appendChild(plus);
+            }
+            ziel.appendChild(k);
+            const liste = document.createElement('div');
+            liste.className = 'wz-block';
+            /* DREI EMOJI WENIGER (E202, E273). Die Liste stand nur in der
+               Seitenleiste des Telefons; seit sie auch im KI-Fenster am Rechner
+               steht, ist sie Schale, und dort haben Emoji nichts zu suchen —
+               💬 war ein blaugrauer Fleck in einer Reihe einfarbiger Striche.
+               Der Stern für „angeheftet" folgt E200: EIN Zeichen, der Zustand
+               steckt in der Klasse, nicht in einem zweiten Bildchen. */
+            const zeichen = (id, gr = 15) => {
+                try {
+                    return Register.symbole.alsSvg(id, gr) || '';
+                }
+                catch {
+                    return '';
+                }
+            };
+            liste.innerHTML = chats.map((c) => `<button class="side-item ki-chat${c.id === zustand.chatId ? ' on' : ''}" data-c="${c.id}">` +
+                `<span>${zeichen('comment')}</span><span class="kc-txt">${esc(c.titel)}` +
+                `<em class="kc-wann">${esc(wieLange(c.wann))}</em></span>` +
+                `<span class="ki-pin${c.angeheftet ? ' on' : ''}" data-pin="${c.id}" ` +
+                `title="${c.angeheftet ? 'Nicht mehr anheften' : 'Anheften'}">` +
+                `${zeichen('star', 13)}</span>` +
+                `<span class="ki-weg" data-weg="${c.id}" title="Löschen">` +
+                `${zeichen('close', 13)}</span></button>`).join('');
+            liste.addEventListener('click', e => {
+                const pin = elVon(e)?.closest('[data-pin]');
+                if (pin) {
+                    e.stopPropagation();
+                    chatAnheften(pin.dataset.pin);
+                    return;
+                }
+                const weg = elVon(e)?.closest('[data-weg]');
+                if (weg) {
+                    e.stopPropagation();
+                    chatLoeschen(weg.dataset.weg);
+                    return;
+                }
+                const b = elVon(e)?.closest('[data-c]');
+                if (b)
+                    chatOeffnen(b.dataset.c);
+            });
+            ziel.appendChild(liste);
+        });
+    };
+    /**
+     * Der Verlauf als Überlagerung — der Weg dorthin am Rechner.
+     *
+     * `fokus.ts` gibt jeder `.overlay` Rolle, Fokusfalle und den Weg zurück;
+     * deshalb steht hier weder `role` noch ein eigener Esc-Griff.
+     */
+    const verlauf = () => {
+        const o = document.createElement('div');
+        o.className = 'overlay';
+        const k = document.createElement('div');
+        k.className = 'finder';
+        k.style.width = 'min(460px,94vw)';
+        const kopf = document.createElement('div');
+        kopf.className = 'fh';
+        const titel = document.createElement('span');
+        titel.textContent = 'Unterhaltungen';
+        const neu = document.createElement('button');
+        neu.className = 'icon-btn';
+        neu.type = 'button';
+        neu.title = 'Neuer Chat';
+        neu.setAttribute('aria-label', 'Neuer Chat');
+        neu.textContent = '+';
+        neu.addEventListener('click', () => { o.remove(); neuerChat(); });
+        const zu = document.createElement('button');
+        zu.className = 'icon-btn';
+        zu.type = 'button';
+        zu.title = 'Schliessen';
+        zu.setAttribute('aria-label', 'Schliessen');
+        zu.textContent = '\u2715';
+        zu.addEventListener('click', () => o.remove());
+        kopf.append(titel, neu, zu);
+        k.appendChild(kopf);
+        const koerper = document.createElement('div');
+        koerper.className = 'ki-verlauf';
+        chatBaum(koerper);
+        if (!chatsGruppiert().length) {
+            const leer = document.createElement('div');
+            leer.className = 'leer';
+            leer.textContent = 'Noch keine Unterhaltung. Frag die KI etwas — ' +
+                'was du fragst, bleibt auf diesem Gerät.';
+            koerper.appendChild(leer);
+        }
+        k.appendChild(koerper);
+        /* Ein Klick auf eine Unterhaltung öffnet sie UND schliesst die Liste.
+           `chatBaum` weiss davon nichts — es kennt nur seinen eigenen Ort. */
+        koerper.addEventListener('click', e => {
+            if (elVon(e)?.closest('[data-c]') &&
+                !elVon(e)?.closest('[data-pin]') &&
+                !elVon(e)?.closest('[data-weg]'))
+                o.remove();
+        });
+        o.appendChild(k);
+        o.addEventListener('click', e => { if (e.target === o)
+            o.remove(); });
+        document.body.appendChild(o);
+    };
     const seitenleiste = (baum) => {
         const p = persona();
         const kopf = document.createElement('div');
@@ -1795,44 +1927,7 @@ const KI = (() => {
             Agent.panel(b.dataset.a);
         });
         baum.appendChild(agenten);
-        chatsGruppiert().forEach(([name, chats]) => {
-            const k = document.createElement('div');
-            k.className = 'side-section';
-            k.innerHTML = `<span>${name}</span>`;
-            if (name === 'Heute' || name === 'Angeheftet') {
-                const plus = document.createElement('button');
-                plus.textContent = '+';
-                plus.title = 'Neuer Chat';
-                plus.addEventListener('click', neuerChat);
-                k.appendChild(plus);
-            }
-            baum.appendChild(k);
-            const liste = document.createElement('div');
-            liste.className = 'wz-block';
-            liste.innerHTML = chats.map((c) => `<button class="side-item ki-chat${c.id === zustand.chatId ? ' on' : ''}" data-c="${c.id}">` +
-                `<span>💬</span><span class="kc-txt">${esc(c.titel)}` +
-                `<em class="kc-wann">${esc(wieLange(c.wann))}</em></span>` +
-                `<span class="ki-pin" data-pin="${c.id}" title="Anheften">${c.angeheftet ? '📌' : '📍'}</span>` +
-                `<span class="ki-weg" data-weg="${c.id}" title="Löschen">✕</span></button>`).join('');
-            liste.addEventListener('click', e => {
-                const pin = elVon(e)?.closest('[data-pin]');
-                if (pin) {
-                    e.stopPropagation();
-                    chatAnheften(pin.dataset.pin);
-                    return;
-                }
-                const weg = elVon(e)?.closest('[data-weg]');
-                if (weg) {
-                    e.stopPropagation();
-                    chatLoeschen(weg.dataset.weg);
-                    return;
-                }
-                const b = elVon(e)?.closest('[data-c]');
-                if (b)
-                    chatOeffnen(b.dataset.c);
-            });
-            baum.appendChild(liste);
-        });
+        chatBaum(baum);
         if (!chatsGruppiert().length) {
             /* Vorher stand hier eine graue Zeile in 12,5 Pixeln: „Noch keine
                Unterhaltung." Das sagt, DASS nichts da ist — nicht, was es hier
@@ -2038,6 +2133,9 @@ const KI = (() => {
             if (begriff)
                 nachschlagen(begriff);
         });
+        /* DER VERLAUF, DEN ES SEIT PHASE F NICHT MEHR ZU SEHEN GAB (L93).
+           Er stand nur in der Seitenleiste, und die ist am Rechner weg. */
+        document.getElementById('ai-verlauf')?.addEventListener('click', () => verlauf());
         document.getElementById('ai-clear')?.addEventListener('click', () => {
             zustand.verlauf = [];
             if (chat)
@@ -2067,7 +2165,8 @@ const KI = (() => {
         SCHREIB_BEFEHLE, schreibMenue, schreibLauf, alsBloeckeEinfuegen,
         ANBIETER, anbieter, wolkeFragen, holen, FEHLERTEXT, WIEDERHOLBAR,
         datenbankAuswerten, frageKurz, zustand, modellMenue,
-        seitenleiste, neuerChat, chatOeffnen, chatsLesen, chatsGruppiert, chatSichern,
+        seitenleiste, chatBaum, verlauf, neuerChat, chatOeffnen, chatsLesen,
+        chatsGruppiert, chatSichern,
         chatAnheften, chatLoeschen, faehigkeiten, faehigkeitSichern, faehigkeitLoeschen,
         faehigkeitenMenue, faehigkeitenVerwalten, personalisieren, persona, diktat, wieLange };
 })();

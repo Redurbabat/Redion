@@ -3381,7 +3381,7 @@ das Wort „lightbolb". Die Gegenprobe daneben meldet genau so einen Block
 an und sieht ihn auffallen.
 
 --------------------------------------------------------------------------------
-L93 — Der Chatverlauf hat am Rechner kein Zuhause (E273)
+L93 — Der Chatverlauf hat am Rechner kein Zuhause (E273) — GESCHLOSSEN
 --------------------------------------------------------------------------------
 
 Der Seitenleisten-Reiter „chat" zeigte `KI.seitenleiste(baum)`: die eigene
@@ -3403,6 +3403,26 @@ Panel NEBEN dem Inhalt und möglicherweise gar kein eigener Ort. Am Telefon
 ist die Liste unverändert da.
 
 Gefunden am 31. August 2026 (E273, beim Griffwechsel).
+
+GESCHLOSSEN am 31. August 2026 (E273). Die Frage im Absatz darüber hat eine
+Antwort bekommen, und sie lautet: **die KI ist kein Ort.** `kiPanel` schaltet
+eine Klasse auf `#ai` und lässt `sonder` und `seiteId` in Ruhe — wer das
+Fenster öffnet, steht weiter im Editor oder in der Bibliothek. Es gibt keinen
+Schauplatz `ki`, auf den sich ein Kantenknopf melden könnte, und einen zu
+erfinden hiesse, die Kante über die KI Bescheid wissen zu lassen (§5).
+
+Der Verlauf steht deshalb im KOPF des KI-Fensters, neben „Neuer Chat" — das
+Fenster ist sein eigenes Zuhause. Und nicht als zweite Liste: die Zeichnung
+ist aus `seitenleiste()` herausgelöst (`chatBaum(ziel)`) und wird von beiden
+Orten gerufen, vom Telefon und vom Rechner (§8).
+
+Nebenbei drei Emoji weniger. Die Liste war nur Seitenleiste; seit sie auch
+Schale ist, gelten dort E202-Regeln — 💬 war ein blaugrauer Fleck in einer
+Reihe einfarbiger Striche. Jetzt `comment`, `star` und `close` aus dem
+Symbolregister, und der Stern eines angehefteten Chats bleibt sichtbar statt
+nur bei Hover (er sagt einen ZUSTAND, keinen Griff).
+
+test34 hat sechs neue Punkte, darunter die Gegenprobe für den leeren Fall.
 
 --------------------------------------------------------------------------------
 L94 — Sechs Bildschirme meldeten ihren Ort nicht (E273) — GESCHLOSSEN

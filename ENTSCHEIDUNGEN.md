@@ -20374,3 +20374,42 @@ genau wie die sechs es vorher taten, und muss sehen, dass der Ort
 stehenbleibt. Dazu neun Zeilen, die prüfen, dass jede dieser Kanten
 wirklich Knöpfe hat.
 
+### Der Chatverlauf bekommt ein Zuhause — und es ist nicht die Kante (L93)
+
+L93 hatte den richtigen Ort noch offen gelassen: „die KI-Kontextkante — ein
+Knopf ‚Verlauf'. Er steht nicht hier, weil erst zu klären ist, unter welchem
+Schauplatz die KI überhaupt erscheint."
+
+Die Antwort ist: **unter keinem.** `App.kiPanel` schaltet eine Klasse auf
+`#ai` und lässt `sonder` und `seiteId` unberührt; `schauplatzMelden()` wird
+nicht gerufen. Wer das KI-Fenster öffnet, steht weiter da, wo er war. Einen
+Schauplatz `ki` zu erfinden hiesse, die Kante über die KI Bescheid wissen zu
+lassen — genau die Kopplung, die §5 verbietet.
+
+Der Verlauf steht deshalb im KOPF des KI-Fensters, links neben „Neuer Chat".
+Das Fenster ist sein eigenes Zuhause, und es ist von jedem Schauplatz aus
+erreichbar — ✦ steht im Fuss der Kante.
+
+**Ein Zeichner, zwei Orte.** Die Liste war fest in `seitenleiste(baum)`
+verdrahtet. Sie ist herausgelöst als `chatBaum(ziel)` und wird von beiden
+Orten gerufen: vom Telefon aus der Seitenleiste, vom Rechner aus `verlauf()`.
+Eine zweite Liste zu schreiben wäre schneller gewesen und §8-widrig.
+
+**Und drei Emoji weniger.** Solange die Liste nur Seitenleiste war, ging 💬
+durch. Als Schale geht es nicht: auf dem Bild war es ein blaugrauer Fleck in
+einer Reihe einfarbiger Striche. Jetzt `comment`, `star` und `close` aus dem
+Symbolregister. Der Stern eines angehefteten Chats bleibt dabei sichtbar,
+statt wie die anderen zwei nur bei Hover zu erscheinen — er sagt einen
+ZUSTAND und ist kein Griff. Und er sagt ihn nicht nur über die Farbe: die
+Zeile steht ausserdem in der Gruppe „Angeheftet" ganz oben (§38).
+
+**Geprüft:** test34 84 (sechs neu, darunter die Gegenprobe für den leeren
+Fall). Beim Schreiben der Prüfung zweimal danebengegriffen, und beide Male
+lehrreich: `window.KI` ist `undefined` — `KI` ist wie `App` und `Store` ein
+blosses `const` auf oberster Ebene (Matrix Teil 7) —, und der erste Entwurf
+liess `chats` leer zurück und machte damit einen Punkt weiter unten
+(„Chats überleben") rot, der nichts damit zu tun hatte. Eine Prüfung, die
+den Bestand anfasst, legt ihn zurück.
+
+sw v45, Einzeldatei 7414 KB.
+

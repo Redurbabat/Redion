@@ -244,6 +244,70 @@ import { chromium } from 'playwright';
   ok('Modus steht auf Standard', leiste.modus === 'Standard');
   ok('Platzhalter wie bei Notion', /Mach alles mit KI/.test(leiste.platzhalter ?? ''));
 
+  /* ------------------------------------------------------------------ *
+     DER CHATVERLAUF HAT AM RECHNER EIN ZUHAUSE (E273, L93)
+
+     Er stand nur in `KI.seitenleiste(baum)`, und die Seitenleiste ist am
+     Rechner seit E272 Phase F `display:none` — `chatsGruppiert()` und
+     `chatOeffnen(id)` gab es weiter, nur rief sie niemand. Jetzt sitzt der
+     Weg im Kopf des KI-Fensters.
+
+     Gegenprobe unten: OHNE gespeicherte Unterhaltung darf die Liste nicht
+     einfach leer sein, sondern muss sagen, dass es nichts gibt — sonst
+     sähe der Knopf aus wie einer, der nichts tut (§47).
+     ------------------------------------------------------------------ */
+  const verlauf = await p.evaluate(async () => {
+    /* DEN BESTAND MERKEN UND ZURÜCKLEGEN. Weiter unten prüft dieselbe Datei
+       „Chats überleben" gegen zwei gespeicherte Unterhaltungen; wer hier
+       `chats` überschreibt und liegen lässt, macht diesen Punkt rot und
+       sucht dann an der falschen Stelle. */
+    const vorrat = Store.getMeta('chats', []) || [];
+    Store.setMeta('chats', [
+      { id: 'p1', titel: 'Erste Frage', wann: new Date().toISOString(), verlauf: [] },
+      { id: 'p2', titel: 'Zweite Frage', wann: new Date().toISOString(),
+        angeheftet: true, verlauf: [] }
+    ]);
+    const knopf = document.getElementById('ai-verlauf');
+    knopf?.click();
+    await new Promise(f => setTimeout(f, 260));
+    const lage = document.querySelector('.overlay');
+    const zeilen = [...(lage?.querySelectorAll<HTMLElement>('.ki-chat') ?? [])]
+      .map(x => (x.querySelector('.kc-txt')?.textContent || '').trim());
+    const gruppen = [...(lage?.querySelectorAll<HTMLElement>('.side-section') ?? [])]
+      .map(x => (x.textContent || '').trim());
+    /* Kein Emoji mehr in der Zeile (E202): das Zeichen ist ein SVG. */
+    const gezeichnet = !!lage?.querySelector('.ki-chat svg');
+    /* Und ein Klick öffnet die Unterhaltung wirklich. */
+    lage?.querySelector<HTMLElement>('.ki-chat[data-c="p1"]')?.click();
+    await new Promise(f => setTimeout(f, 200));
+    /* `KI` ist wie `App` und `Store` ein blosses `const` auf oberster Ebene
+       und steht NICHT auf `window` — `window.KI` gäbe hier immer '' zurück
+       und der Punkt wäre blind grün gewesen, wenn er auf Leere prüfte. */
+    const offen = String(KI.zustand?.chatId || '');
+    document.querySelectorAll('.overlay').forEach(o => o.remove());
+
+    /* Gegenprobe: ohne Unterhaltungen ein Satz statt einer leeren Fläche. */
+    Store.setMeta('chats', []);
+    knopf?.click();
+    await new Promise(f => setTimeout(f, 240));
+    const leerText = (document.querySelector('.overlay .ki-verlauf')?.textContent || '').trim();
+    document.querySelectorAll('.overlay').forEach(o => o.remove());
+    Store.setMeta('chats', vorrat);
+    return { knopfDa: !!knopf, zeilen, gruppen, gezeichnet, offen, leerText };
+  });
+  console.log('   KI-Verlauf:', JSON.stringify(verlauf));
+  ok('Der Verlauf hat einen Knopf im KI-Kopf', verlauf.knopfDa);
+  ok('Und zeigt die gespeicherten Unterhaltungen', verlauf.zeilen.length === 2);
+  /* `startsWith`, nicht `===`: in der Überschrift steckt noch der
+     „+"-Knopf für einen neuen Chat, und `textContent` nimmt ihn mit. */
+  ok('Nach Tagen gruppiert, Angeheftetes oben',
+     String(verlauf.gruppen[0] ?? '').startsWith('Angeheftet'));
+  ok('Die Zeilen tragen ein gezeichnetes Zeichen, kein Emoji (E202)',
+     verlauf.gezeichnet);
+  ok('Ein Klick öffnet die Unterhaltung', verlauf.offen === 'p1');
+  ok('Gegenprobe: ohne Unterhaltung steht ein Satz da, keine leere Fläche',
+     /Noch keine Unterhaltung/.test(verlauf.leerText));
+
   /* Shift+Tab wechselt den Modus */
   await p.click('#ai-input');
   await p.keyboard.press('Shift+Tab');

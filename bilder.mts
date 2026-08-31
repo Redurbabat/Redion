@@ -227,6 +227,38 @@ const ANSICHTEN: Record<string, { titel: string; bauen: () => void | Promise<voi
     }
   },
 
+  kiVerlauf: {
+    titel: 'KI — der Chatverlauf am Rechner (L93)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      Store.setMeta('bandZu', true);
+      Store.setMeta('bandZu:welt', true);
+      const heute = new Date();
+      const tage = (n: number) => {
+        const d = new Date(heute); d.setDate(d.getDate() - n); return d.toISOString();
+      };
+      Store.setMeta('chats', [
+        { id: 'c1', titel: 'Spannungsteiler nachrechnen', wann: tage(0),
+          angeheftet: true, verlauf: [] },
+        { id: 'c2', titel: 'Kapitel 4 zusammenfassen', wann: tage(0), verlauf: [] },
+        { id: 'c3', titel: 'Karteikarten aus dem Skript', wann: tage(1), verlauf: [] },
+        { id: 'c4', titel: 'Wie berechne ich den Leiterquerschnitt?', wann: tage(4),
+          verlauf: [] },
+        { id: 'c5', titel: 'Prüfungsplan für den September', wann: tage(40),
+          verlauf: [] }
+      ]);
+      const s = Store.addPage(null, { text: 'Elektrotechnik — Skript' });
+      Store.addBlock(s.id, 'text', { text: 'U = R · I.' });
+      App.oeffne(s.id);
+      App.kiPanel(true);
+      await new Promise(f => setTimeout(f, 320));
+      document.getElementById('ai-verlauf')?.click();
+      await new Promise(f => setTimeout(f, 240));
+    }
+  },
+
   kanteBloecke: {
     titel: 'Die Kontextkante — Lade „Blöcke" offen',
     bauen: async () => {
