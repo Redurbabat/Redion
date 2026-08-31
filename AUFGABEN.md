@@ -2025,3 +2025,23 @@ node pruefungen/lauf/test105.mjs
   mit `.nh-form{margin-left:auto}`, sonst rutschte sie als einziges Kind der
   Zeile nach links. Und test265 verliess sich an FÜNF Stellen still auf die
   Wurzel; alle fünf sagen es jetzt über `anDieWurzel()`.
+* E284 (Redurs Punkt 5, VORGEZOGEN): Der Import hält jetzt etwas aus. Ein
+  `__proto__` in einer eingespielten Sicherung funktionierte — `Object.assign`
+  schreibt über `[[Set]]`, also über den geerbten Setzer, und danach gab
+  `getMeta` für jeden ungesetzten Schlüssel das zurück, was in der fremden
+  Datei stand: `wolkeAbgleich`, `agent:notaus`, jeder `api:`-Schlüssel. Neu
+  `core/import/sicherheit.ts` (prototyplose Verzeichnisse statt einer
+  Filterliste, eigener Stapel statt Rekursion, Tiefengrenze mit Meldung) und
+  `core/import/validierung.ts` (liest endlich die Fassung, die der Export seit
+  jeher schreibt). Beides gibt einen BEFUND zurück, keinen stillen Eingriff.
+  test278 neu (37) — das erste feindliche Einspielen überhaupt; die anderen
+  vierzehn Import-Prüfläufe spielen alle eine Sicherung ein, die Redion selbst
+  geschrieben hat. Dabei eine Prüfung, die grün war und trotzdem falsch: sie
+  hielt ein leeres `versions`-Fach für einen Hinweis auf eine abgeschnittene
+  Datei — `enthaelt` spricht aber über das Format, nicht über den Inhalt.
+  Vorschau, Anhangs-Transaktion und die Sicherheitskopie vor dem Ersetzen
+  bleiben offen (L101). Was die Bestandsaufnahme sonst fand, steht als L102 —
+  darunter zwei Dinge, die schlimmer sind als eine Lücke: der Kalender wirft
+  BYDAY wortlos weg und liefert falsche Termine, und die Rechteprüfung der
+  Agenten fragt die gerade offene Seite statt der, auf die geschrieben wird.
+  sw v50.

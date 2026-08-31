@@ -1805,18 +1805,47 @@ const Store = (() => {
         /* Erst landen lassen, was noch unterwegs ist — sonst löscht ein
            Aufräumen von vorhin in den neuen Bestand hinein (siehe `settled`). */
         await settled();
-        const d = JSON.parse(json);
-        if (!d.blocks)
-            throw new Error('Das sieht nicht nach einer Sicherung dieser App aus.');
+        /* --- ERST ENTSCHÄRFEN, DANN PRÜFEN, DANN EINSPIELEN (E284) ----------
+           Hier stand ein blankes `JSON.parse(json)`, und das Ergebnis ging
+           unbesehen weiter — beim Zusammenführen über `Object.assign`, beim
+           Ersetzen sogar als Zwischenspeicher SELBST.
+    
+           `Object.assign` schreibt über `[[Set]]`, also über den geerbten
+           `__proto__`-SETZER. Ein `{"__proto__":{"wolkeAbgleich":true}}` in
+           einer fremden Sicherung gab `cache.meta` damit einen fremden
+           Prototyp — und danach lieferte `getMeta('wolkeAbgleich')` nicht mehr
+           die Vorgabe, sondern das, was der Angreifer hineingelegt hatte.
+           Dasselbe für `cache.blocks[id]`: eine Kennung, die es nicht gibt,
+           hätte plötzlich einen Block geliefert.
+    
+           `ImportSicherheit.lesen` gibt prototyplose Verzeichnisse zurück, aus
+           denen die drei Namen entfernt sind. Der Fund wird MITGEREICHT, nicht
+           verschluckt (§35): eine Sicherung, die still verändert wurde, ist die
+           gefährlichste Sorte.
+    
+           Die Reihenfolge ist nicht beliebig. Entschärfen kommt VOR dem Prüfen,
+           weil die Prüfung sonst selbst über ein `constructor` stolpern könnte,
+           und beides kommt vor dem ersten Schreibzugriff. */
+        const gelesen = ImportSicherheit.lesen(json);
+        const d = gelesen.wert;
         if (art !== 'ersetzen' && art !== 'zusammenfuehren')
             throw new Error('Beim Einspielen muss feststehen, was geschehen soll: ' +
                 '„ersetzen" wirft weg, was nicht in der Sicherung steht, ' +
                 '„zusammenfuehren" legt sie dazu. Ohne Angabe wird nichts getan.');
+        const befund = ImportValidierung.pruefen(d, VERSION);
+        if (!befund.taugt) {
+            throw new Error(befund.punkte[0]?.text ||
+                'Das sieht nicht nach einer Sicherung dieser App aus.');
+        }
+        /* Die Verzeichnisse bleiben prototyplos — auch die leeren Ersatzwerte.
+           Ein `{}` an dieser Stelle hätte die Lücke an genau der Stelle wieder
+           aufgemacht, an der ein Fach in der Sicherung fehlt. */
+        const leer = () => Object.create(null);
         const neu = {
-            blocks: d.blocks || {},
-            collections: d.collections || {},
-            views: d.views || {},
-            meta: d.meta || {}
+            blocks: ImportSicherheit.verzeichnis(d.blocks) || leer(),
+            collections: ImportSicherheit.verzeichnis(d.collections) || leer(),
+            views: ImportSicherheit.verzeichnis(d.views) || leer(),
+            meta: ImportSicherheit.verzeichnis(d.meta) || leer()
         };
         /* --- DER ORDNERZUGRIFF ÜBERLEBT BEIDE ARTEN (E270) ------------------
            `sicherungOrdner` hält einen echten Verzeichniszugriff, den ein
@@ -2149,7 +2178,16 @@ const Store = (() => {
             /* Steht danach eine Entscheidung offen? Die Schale sagt es
                dem Menschen — sonst wartet die Frage, ohne dass jemand
                weiss, dass sie wartet. */
-            frage: !!getMeta('wolkeNeuAbgleich', '') };
+            frage: !!getMeta('wolkeNeuAbgleich', ''),
+            /* --- WAS BEIM ENTSCHÄRFEN UND PRÜFEN AUFFIEL (E284) --------
+               Beides reist MIT dem Ergebnis, statt in der Konsole zu
+               enden. Eine Sicherung, die still verändert oder still als
+               „aus einer neueren Fassung" erkannt wurde, ist genau die
+               Sorte Fehler, die man erst Wochen später sieht. */
+            entschaerft: gelesen.fund.entfernt,
+            entschaerftSatz: ImportSicherheit.satz(gelesen.fund),
+            befund: befund.punkte,
+            fassung: befund.fassung };
     };
     /* ========================================================================
      * SEITENBAUM ALS DATENPAKET

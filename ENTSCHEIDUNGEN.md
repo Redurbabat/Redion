@@ -21312,3 +21312,122 @@ Annahme — sie fiel nur nicht auf.
 **Geprüft:** test277 neu (43 Punkte, drei Gegenproben) · test265 38/38 ·
 test276 22/22 · test272 153/0 · typecheck grün · Einzeldatei neu gebaut ·
 Bilder vom Band und vom offenen Fach.
+
+================================================================================
+E284 — Der Import hält jetzt auch etwas aus (Redurs Punkt 5, vorgezogen)
+================================================================================
+31. August 2026
+
+Redur hat nach einem tiefen Abgleich mit den anderen Repositories zwölf
+Arbeiten in einer Reihenfolge vorgeschlagen. Die Import-Härtung stand darin
+an fünfter Stelle. Sie steht jetzt an erster, und das ist der einzige Punkt,
+an dem ich seiner Reihenfolge widersprochen habe.
+
+Der Grund ist §46: Import-Härtung ist kein Feature, sondern ein Loch. Ein
+`__proto__` in einer eingespielten Sicherung funktionierte, und zwar heute,
+in der ausgelieferten Fassung.
+
+### Was gemessen wurde, bevor etwas gebaut wurde
+
+Zehn Leser sind durch `src/` gegangen, und zu jedem Befund „das fehlt" lief
+ein zweiter Durchgang, der ihn zu WIDERLEGEN versuchte — mit deutschen
+Suchwörtern statt englischer. Genau daran war eine frühere Übersicht
+gescheitert: sie hatte nach „Job" gesucht, wo „Auftrag" steht.
+
+Acht von zehn Befunden hielten. Zwei fielen, und beide gehören hierher
+notiert, weil sie zeigen, dass die Gegenprobe ihr Geld wert war:
+
+  · `src/kern/ablage/nachbarn.ts` IST der fachneutrale Zwei-Tab-Kanal.
+    Mein Leser hatte nur Stores eigenen Zuhörer angesehen und den Filter
+    dort für den Kanal gehalten.
+  · `Umzuege.FASSUNGEN` IST das Fächer-Register. Es liegt nur nicht unter
+    `src/register/`, und dort war gesucht worden.
+
+Für die Import-Sicherheit dagegen hielten ALLE ACHT Punkte.
+
+### Der Angriff, und warum er funktionierte
+
+`JSON.parse('{"__proto__":{"a":1}}')` erzeugt eine EIGENE Eigenschaft namens
+`__proto__`. Das allein ist harmlos. `Object.assign` reicht sie weiter, und
+zwar über `[[Set]]` — also über den geerbten `__proto__`-SETZER:
+
+    Object.assign(cache.meta, neu.meta);      // zusammenfuehren
+    cache.meta = neu.meta;                    // ersetzen
+
+Danach hatte `cache.meta` einen fremden Prototyp. Und `getMeta(k)` liest
+`cache.meta[k]`. Also gab jeder Schlüssel, der heute NICHT gesetzt ist,
+plötzlich das zurück, was in der fremden Datei stand:
+
+    wolkeAbgleich        der Abgleich schaltet sich selbst ein
+    agent:notaus         der Notaus lässt sich abschalten
+    api:*                ein Schlüssel, der nie eingegeben wurde
+    theme, jede Vorgabe  irgendetwas
+
+Dasselbe für `cache.blocks[id]`: eine Kennung, die es nicht gibt, hätte
+einen Block geliefert.
+
+Der zweite Weg ist der stumpfere: beim „ersetzen" wird gar nicht kopiert —
+das geparste Objekt WIRD der Zwischenspeicher. Ein Schlüssel `constructor`
+steht dann als gewöhnlicher Eintrag darin, und jeder Code der Form
+`if (verzeichnis[k])` geht darauf herein.
+
+### Die Antwort: prototyplose Verzeichnisse, nicht eine Filterliste
+
+`Object.create(null)` hat keinen `__proto__`-Setzer, den man auslösen
+könnte, und `verzeichnis['constructor']` ist ehrlich `undefined`. Das ist
+keine Filterung, die man an einer Stelle vergessen kann — es ist eine Form,
+die das Problem nicht hat.
+
+Die drei Namen fliegen ZUSÄTZLICH beim Kopieren raus. Zwei Wälle statt
+einem, weil der erste an einer Stelle vergessen werden kann, an die heute
+niemand denkt.
+
+**Warum kein `reviver` bei `JSON.parse`.** Das ist der übliche Rat und hier
+zu wenig: er säubert die Werte, ändert aber nichts daran, dass `cache.meta`
+ein gewöhnliches `{}` mit `Object.prototype` bleibt. Der nächste
+`Object.assign` aus einer anderen Quelle stünde wieder offen.
+
+**Warum ein eigener Stapel statt Rekursion.** Die Tiefe ist begrenzt (100),
+die BREITE nicht — eine Sicherung mit zweihunderttausend Blöcken soll den
+Aufrufstapel nicht anfassen. Jenseits der Tiefengrenze wird abgeschnitten
+und gemeldet, nicht durchgereicht: ungeprüft durchreichen wäre genau das
+Loch.
+
+### Und die Fassung, die seit jeher geschrieben und nie gelesen wurde
+
+`exportAll` schreibt `version: VERSION` ins Manifest (indexdb.ts:1713). Beim
+Einspielen las das niemand. Eine Sicherung aus einer NEUEREN Redion-Fassung
+lief still durch und verlor dabei genau das, was sie neu hatte.
+
+`ImportValidierung.pruefen` liest sie jetzt und gibt einen BEFUND zurück,
+keinen Fehler: eine neuere Fassung ist ein Grund zum Nachfragen, kein Grund
+zum Verweigern. Nur was gar keine Sicherung sein KANN, wird hart abgewiesen.
+
+### Eine Prüfung, die grün war und trotzdem falsch
+
+Beim ersten Lauf gegen Redions EIGENEN Export wurde §5 rot — die Stelle, die
+sicherstellt, dass die Härtung keine gültige Sicherung beschädigt.
+
+Der Grund war meine eigene Regel: „das Manifest nennt `versions` unter
+`enthaelt`, aber das Fach ist leer, also ist die Datei abgeschnitten."
+`enthaelt` ist aber eine Aussage über das FORMAT, nicht über den Inhalt —
+`exportAll` schreibt die fünf Namen fest hin, und ein frischer
+Arbeitsbereich hat legitim null Fassungen.
+
+Die Prüfung dieser Regel in test278 war grün. Die Regel war trotzdem falsch.
+Beides ist weg, und an beiden Stellen steht, warum — eine Warnung, die bei
+gewöhnlichem Gebrauch anspringt, bringt Menschen bei, Warnungen
+wegzuklicken, und ist damit schlimmer als keine.
+
+### Was diese Entscheidung NICHT deckt
+
+Die Vorschau. Was es heute gibt, ist eine ZÄHLUNG („1247 Blöcke"), keine
+Vorschau — sie sagt nicht, WAS sich ändert. Ebenso: die Transaktion deckt
+die Anhänge nicht ab (fünf Fächer alles-oder-nichts, die Anhänge kommen
+danach einzeln), und der offene Weg schreibt vor dem Ersetzen keine
+Sicherheitskopie, während der Krypto-Weg das sehr wohl tut. Beides steht als
+L101 in LUECKEN.md.
+
+**Geprüft:** test278 neu (37 Punkte, mit dem ersten feindlichen Einspielen
+überhaupt) · test96, test100, test261, test273 unverändert grün ·
+typecheck grün · sw v50.

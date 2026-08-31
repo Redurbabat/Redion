@@ -17374,6 +17374,409 @@ window.Csv = Csv;
 
 </script>
 <script>
+/* ===== quell/core/import/sicherheit.js ===== */
+"use strict";
+/* ============================================================================
+ * core/import/sicherheit.ts — fremde Sicherungen entschärfen
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/core/import/sicherheit.ts`. `npm run bauen:ts` schreibt
+ * daraus `quell/core/import/sicherheit.js`. Wer das .js bearbeitet, verliert
+ * die Änderung beim nächsten Bauen; `pruefungen/lauf/test105.mts` meldet es
+ * vorher.
+ * ----------------------------------------------------------------------------
+ * WAS HIER SCHIEFGING, BEVOR ES DIESE DATEI GAB (E284).
+ *
+ * `importAll` las eine fremde Sicherung mit einem blanken `JSON.parse` und
+ * legte das Ergebnis unbesehen in den Zwischenspeicher:
+ *
+ *     const d = JSON.parse(json);
+ *     if (!d.blocks) throw new Error('Das sieht nicht nach einer Sicherung …');
+ *     …
+ *     Object.assign(cache.meta, neu.meta);      // zusammenfuehren
+ *     cache.meta = neu.meta;                    // ersetzen
+ *
+ * Das sind zwei verschiedene Löcher, und das erste ist das gemeinere.
+ *
+ * ─── LOCH 1: `Object.assign` ruft Setzer auf ────────────────────────────────
+ *
+ * `JSON.parse('{"__proto__":{"a":1}}')` erzeugt ein Objekt mit einer EIGENEN
+ * Eigenschaft namens `__proto__`. Das ist harmlos, solange niemand sie
+ * weiterreicht. `Object.assign` reicht sie weiter — und zwar über `[[Set]]`,
+ * also über den geerbten `__proto__`-SETZER. Damit bekommt `cache.meta`
+ * einen fremden Prototyp.
+ *
+ * Danach gibt `getMeta('irgendwas')` nicht mehr `undefined` zurück, sondern
+ * das, was der Angreifer hineingelegt hat. `wolkeAbgleich`, `wolkeToken`,
+ * `theme`, `agent:notaus` — alles, was über `cache.meta[k]` gelesen wird und
+ * heute nicht gesetzt ist. Dasselbe für `cache.blocks[id]`: eine Kennung,
+ * die es nicht gibt, liefert plötzlich einen Block.
+ *
+ * ─── LOCH 2: das geparste Objekt WIRD der Zwischenspeicher ──────────────────
+ *
+ * Beim „ersetzen" wird gar nicht kopiert — `cache.meta = neu.meta` macht das
+ * geparste Objekt selbst zum Verzeichnis. Ein Schlüssel `constructor` oder
+ * `prototype` steht dann als gewöhnlicher Eintrag darin und bringt jeden
+ * Code durcheinander, der `if (verzeichnis[k])` schreibt: `{}.constructor`
+ * ist wahr, auch wenn nichts gesetzt wurde.
+ *
+ * ─── DIE ANTWORT: PROTOTYPLOSE VERZEICHNISSE ────────────────────────────────
+ *
+ * Ein Verzeichnis, das aus `Object.create(null)` kommt, hat keinen
+ * `__proto__`-Setzer, den man auslösen könnte, und `verzeichnis['constructor']`
+ * ist ehrlich `undefined`. Das ist keine Filterung, die man vergessen kann —
+ * es ist eine Form, die das Problem nicht hat.
+ *
+ * Zusätzlich fliegen die drei Namen beim Kopieren raus. Zwei Wälle statt
+ * einem, weil der erste an einer Stelle vergessen werden kann, an die heute
+ * niemand denkt.
+ *
+ * ─── WARUM NICHT EIN `reviver` BEI `JSON.parse` ─────────────────────────────
+ *
+ * Ein `reviver`, der `__proto__` verwirft, ist der übliche Rat und er wäre
+ * hier zu wenig: er säubert die WERTE, aber er ändert nichts daran, dass
+ * `cache.meta` ein gewöhnliches `{}` mit `Object.prototype` bleibt. Der
+ * nächste `Object.assign` aus einer anderen Quelle stünde wieder offen.
+ *
+ * ─── WAS DIESE DATEI NICHT TUT ──────────────────────────────────────────────
+ *
+ * Sie prüft nicht, ob die Sicherung inhaltlich stimmt — das ist
+ * `validierung.ts`. Sie sagt nicht, was sich ändern wird — das ist die
+ * Vorschau. Hier geht es einzig darum, dass fremde Schlüssel nichts
+ * übernehmen können.
+ * ==========================================================================*/
+const ImportSicherheit = (() => {
+    /* Die drei Namen, über die ein fremdes Objekt Einfluss auf Code nimmt, den
+       es nie gesehen hat. `__proto__` ist der Setzer, `constructor` und
+       `prototype` sind die Wege dorthin über Umwege. */
+    const GEFAEHRLICH = ['__proto__', 'constructor', 'prototype'];
+    /** Ist dieser Schlüssel einer der drei? */
+    const istGefaehrlich = (schluessel) => GEFAEHRLICH.indexOf(schluessel) !== -1;
+    const leererFund = () => ({ entfernt: 0, wege: [], zuTief: false });
+    /* Eine Sicherung darf verschachtelt sein, aber nicht beliebig. Hundert
+       Ebenen sind mehr, als jedes echte Redion-Objekt braucht (der tiefste
+       Fall ist ein Block mit `props` mit einer Liste mit Objekten — vier).
+       Ohne Grenze wäre eine böswillig tiefe Datei ein Weg, den Stapel zu
+       sprengen, bevor irgendeine Prüfung greift. */
+    const MAX_TIEFE = 100;
+    /* Wie viele Wege im Bericht stehen. Mehr hilft niemandem beim Lesen. */
+    const MAX_WEGE = 20;
+    /**
+     * Ein Wert, aus dem alle gefährlichen Schlüssel entfernt sind — und in dem
+     * jedes Verzeichnis prototyplos ist.
+     *
+     * Arbeitet mit einem eigenen Stapel statt mit Rekursion: die Tiefe ist
+     * begrenzt, aber die BREITE ist es nicht, und eine Sicherung mit
+     * zweihunderttausend Blöcken soll den Stapel nicht anfassen.
+     *
+     * @param roh   frisch aus `JSON.parse`
+     * @param fund  wird mitgeschrieben; `leererFund()` übergeben
+     */
+    const entgiften = (roh, fund) => {
+        let ergebnis = undefined;
+        const stapel = [
+            { quelle: roh, setzen: (w) => { ergebnis = w; }, tiefe: 0, weg: '' }
+        ];
+        while (stapel.length) {
+            const a = stapel.pop();
+            const q = a.quelle;
+            /* Alles, was kein Objekt ist, kann keinen Prototyp tragen. */
+            if (q === null || typeof q !== 'object') {
+                a.setzen(q);
+                continue;
+            }
+            if (a.tiefe >= MAX_TIEFE) {
+                /* Nicht weiterlaufen und auch nicht durchreichen: ab hier ist
+                   nichts geprüft, und ungeprüft durchreichen wäre genau das Loch.
+                   `null` ist ehrlicher als ein halb geprüfter Ast. */
+                fund.zuTief = true;
+                a.setzen(null);
+                continue;
+            }
+            if (Array.isArray(q)) {
+                const neu = new Array(q.length);
+                a.setzen(neu);
+                for (let i = 0; i < q.length; i++) {
+                    stapel.push({
+                        quelle: q[i],
+                        setzen: (w) => { neu[i] = w; },
+                        tiefe: a.tiefe + 1,
+                        weg: a.weg + '[' + i + ']'
+                    });
+                }
+                continue;
+            }
+            /* PROTOTYPLOS. Das ist der eigentliche Schutz — nicht die Liste
+               unten, sondern diese Zeile. */
+            const neu = Object.create(null);
+            a.setzen(neu);
+            /* `Object.keys` liefert nur EIGENE, aufzählbare Schlüssel. Ein
+               geerbtes `toString` steht also gar nicht zur Debatte. */
+            for (const k of Object.keys(q)) {
+                if (istGefaehrlich(k)) {
+                    fund.entfernt++;
+                    if (fund.wege.length < MAX_WEGE) {
+                        fund.wege.push((a.weg ? a.weg + '.' : '') + k);
+                    }
+                    continue;
+                }
+                stapel.push({
+                    quelle: q[k],
+                    setzen: (w) => { neu[k] = w; },
+                    tiefe: a.tiefe + 1,
+                    weg: a.weg ? a.weg + '.' + k : k
+                });
+            }
+        }
+        return ergebnis;
+    };
+    /**
+     * Ein Verzeichnis aus fremden Daten — prototyplos, ohne die drei Namen.
+     *
+     * Für die Stellen, die schon ein Objekt haben und nur ein sicheres
+     * Verzeichnis daraus brauchen (`neu.blocks`, `neu.meta` …). Der Inhalt
+     * wird dabei MIT entgiftet: ein Block, dessen `props` einen `__proto__`
+     * trägt, ist genauso ein Problem wie das Verzeichnis selbst.
+     */
+    const verzeichnis = (roh, fund) => {
+        const f = fund || leererFund();
+        const sauber = entgiften(roh, f);
+        if (sauber === null || typeof sauber !== 'object' || Array.isArray(sauber)) {
+            return Object.create(null);
+        }
+        return sauber;
+    };
+    /**
+     * `JSON.parse` mit Wächter.
+     *
+     * Gibt Wert UND Fund zurück, nie nur den Wert: wer den Fund nicht
+     * anschaut, soll ihn wenigstens in der Hand halten.
+     *
+     * @throws wenn der Text kein JSON ist — mit einem Satz, den ein Mensch
+     *         lesen kann statt „Unexpected token < in JSON at position 0".
+     */
+    const lesen = (text) => {
+        let roh;
+        try {
+            roh = JSON.parse(text);
+        }
+        catch {
+            throw new Error('Die Datei ist keine gültige Sicherung — sie lässt sich ' +
+                'nicht als JSON lesen. Vielleicht ist es eine .redion-Datei? ' +
+                'Die gehört in „Sicherung einspielen" und nicht hierher.');
+        }
+        const fund = leererFund();
+        const wert = entgiften(roh, fund);
+        return { wert, fund };
+    };
+    /**
+     * Ein Satz für den Menschen, wenn etwas entfernt wurde — sonst leer.
+     *
+     * Bewusst kein Abbruch: eine Sicherung mit einem `__proto__` darin ist
+     * nicht zwingend ein Angriff. Sie kann aus einem Werkzeug stammen, das
+     * Objekte falsch serialisiert. Weggenommen wird es trotzdem, und gesagt
+     * wird es auch.
+     */
+    const satz = (fund) => {
+        if (!fund.entfernt && !fund.zuTief)
+            return '';
+        const teile = [];
+        if (fund.entfernt) {
+            teile.push(fund.entfernt === 1
+                ? 'Ein gefährlicher Schlüssel wurde aus der Sicherung entfernt'
+                : fund.entfernt + ' gefährliche Schlüssel wurden aus der Sicherung entfernt');
+            if (fund.wege.length) {
+                teile.push('(' + fund.wege.slice(0, 5).join(', ') +
+                    (fund.entfernt > 5 ? ' …' : '') + ')');
+            }
+        }
+        if (fund.zuTief) {
+            teile.push('Ein Teil der Datei war tiefer verschachtelt als ' + MAX_TIEFE +
+                ' Ebenen und wurde ausgelassen.');
+        }
+        return teile.join(' ') + '.';
+    };
+    return {
+        lesen, entgiften, verzeichnis, leererFund, satz,
+        istGefaehrlich, GEFAEHRLICH, MAX_TIEFE
+    };
+})();
+window.ImportSicherheit = ImportSicherheit;
+
+</script>
+<script>
+/* ===== quell/core/import/validierung.js ===== */
+"use strict";
+/* ============================================================================
+ * core/import/validierung.ts — sagt VOR dem Einspielen, was in der Datei steht
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/core/import/validierung.ts`. `npm run bauen:ts` schreibt
+ * daraus `quell/core/import/validierung.js`. Wer das .js bearbeitet, verliert
+ * die Änderung beim nächsten Bauen; `pruefungen/lauf/test105.mts` meldet es
+ * vorher.
+ * ----------------------------------------------------------------------------
+ * DIE PRÜFUNG WAR EIN FELDTEST (E284).
+ *
+ * Der gesamte Prüfumfang für Blöcke, Sammlungen, Ansichten, Meta und Verlauf
+ * war eine Zeile:
+ *
+ *     if (!d.blocks) throw new Error('Das sieht nicht nach einer Sicherung …');
+ *
+ * Das reicht, um eine Urlaubsfotoliste abzuweisen. Es reicht nicht, um
+ * irgendetwas darüber zu sagen, was gleich in die Ablage geschrieben wird.
+ *
+ * ─── DIE FASSUNG WIRD GESCHRIEBEN UND NIE GELESEN ───────────────────────────
+ *
+ * `exportAll` schreibt seit jeher `version: VERSION` ins Manifest
+ * (indexdb.ts:1713). Beim Einspielen liest das niemand. Eine Sicherung aus
+ * einer NEUEREN Redion-Fassung — mit einem Feld, das dieses Gerät nicht
+ * kennt, oder einem Fach, das es noch nicht gibt — läuft still durch und
+ * verliert dabei genau das, was sie neu hatte.
+ *
+ * Das ist die Sorte Datenverlust, die §46 meint: nicht laut, sondern
+ * unbemerkt, und man sieht es erst Wochen später an einer Seite, die
+ * anders aussieht als vorher.
+ *
+ * ─── WAS HIER GEPRÜFT WIRD, UND WAS NICHT ───────────────────────────────────
+ *
+ * Geprüft wird die FORM: gibt es die Fächer, sind es Verzeichnisse, ist die
+ * Fassung lesbar, passen die Zählungen zum Manifest.
+ *
+ * NICHT geprüft wird der Inhalt jedes einzelnen Blocks. Das wäre bei
+ * zweihunderttausend Blöcken teuer und würde eine leicht abweichende
+ * Sicherung abweisen, die sich problemlos einspielen liesse. Redion ist
+ * nachsichtig gegenüber fremden Feldern (ein unbekanntes Feld bleibt
+ * stehen) — die Prüfung soll das nicht umkehren.
+ *
+ * ─── UND WARUM SIE NICHT WIRFT ──────────────────────────────────────────────
+ *
+ * Sie gibt einen BEFUND zurück, keinen Fehler. Wer einspielt, soll
+ * entscheiden dürfen: eine Sicherung aus einer neueren Fassung ist ein
+ * Grund zum Nachfragen, kein Grund zum Verweigern. Nur was gar keine
+ * Sicherung sein KANN, wird hart abgewiesen — dafür steht `taugt`.
+ * ==========================================================================*/
+const ImportValidierung = (() => {
+    /** Die Fächer, die eine Sicherung dieser App führt. */
+    const FAECHER = ['blocks', 'collections', 'views', 'meta', 'versions'];
+    const zahl = (w) => (typeof w === 'number' && Number.isFinite(w)) ? w : 0;
+    const istVerzeichnis = (w) => !!w && typeof w === 'object' && !Array.isArray(w);
+    /**
+     * Was steht in dieser Datei?
+     *
+     * @param d        der bereits ENTGIFTETE Wert aus `ImportSicherheit.lesen`.
+     *                 Rohes `JSON.parse` gehört hier nicht herein — die
+     *                 Reihenfolge ist entschärfen, dann prüfen.
+     * @param jetzige  die Formatfassung DIESES Geräts (`Umzuege.JETZIGE`).
+     */
+    const pruefen = (d, jetzige) => {
+        const punkte = [];
+        const zahlen = {};
+        if (!istVerzeichnis(d)) {
+            return {
+                taugt: false, fassung: 0, exportiert: '', fehlt: [], zahlen,
+                punkte: [{ stufe: 'fehler',
+                        text: 'Die Datei enthält kein Objekt — eine Sicherung dieser ' +
+                            'App beginnt immer mit einem Objekt.' }]
+            };
+        }
+        const o = d;
+        /* --- Das Mindeste: gibt es überhaupt Blöcke? ---------------------- */
+        if (!istVerzeichnis(o['blocks'])) {
+            return {
+                taugt: false, fassung: zahl(o['version']),
+                exportiert: String(o['exportiert'] ?? ''), fehlt: [], zahlen,
+                punkte: [{ stufe: 'fehler',
+                        text: 'Das sieht nicht nach einer Sicherung dieser App aus — ' +
+                            'es fehlt das Fach „blocks".' }]
+            };
+        }
+        /* --- Die Fächer zählen, statt sie zu glauben ---------------------- */
+        for (const f of FAECHER) {
+            const w = o[f];
+            if (f === 'versions') {
+                zahlen[f] = Array.isArray(w) ? w.length : 0;
+                if (w !== undefined && !Array.isArray(w)) {
+                    punkte.push({ stufe: 'warnen',
+                        text: 'Das Fach „versions" ist keine Liste und wird ausgelassen.' });
+                }
+            }
+            else {
+                zahlen[f] = istVerzeichnis(w) ? Object.keys(w).length : 0;
+                if (w !== undefined && !istVerzeichnis(w)) {
+                    punkte.push({ stufe: 'warnen',
+                        text: 'Das Fach „' + f + '" ist kein Verzeichnis und wird ausgelassen.' });
+                }
+            }
+        }
+        /* --- Die Fassung, die bisher niemand las -------------------------- */
+        const fassung = zahl(o['version']);
+        if (!fassung) {
+            punkte.push({ stufe: 'hinweis',
+                text: 'Die Sicherung nennt keine Formatfassung. Sie ist vermutlich ' +
+                    'älter als die Fassungszählung — das ist kein Problem, ' +
+                    'nur nicht überprüfbar.' });
+        }
+        else if (fassung > jetzige) {
+            punkte.push({ stufe: 'warnen',
+                text: 'Diese Sicherung stammt aus einer NEUEREN Redion-Fassung ' +
+                    '(' + fassung + ' gegen ' + jetzige + ' hier). Was sie an ' +
+                    'Neuem enthält, kennt dieses Gerät nicht und geht beim ' +
+                    'Einspielen verloren. Besser zuerst Redion aktualisieren.' });
+        }
+        else if (fassung < jetzige) {
+            punkte.push({ stufe: 'hinweis',
+                text: 'Ältere Formatfassung (' + fassung + ' gegen ' + jetzige +
+                    '). Die Umzüge laufen beim Einspielen mit.' });
+        }
+        /* --- Was das Manifest selbst über sich sagt ----------------------- */
+        const fehltRoh = o['fehlt'];
+        const fehlt = Array.isArray(fehltRoh)
+            ? fehltRoh.map(x => String(x)).filter(x => x)
+            : [];
+        if (fehlt.length) {
+            punkte.push({ stufe: 'hinweis',
+                text: 'Die Sicherung sagt selbst, dass sie Folgendes auslässt: ' +
+                    fehlt.join(', ') + '.' });
+        }
+        /* HIER STAND EINE PRÜFUNG, DIE FALSCH WAR — und sie ist stehengeblieben
+           als Erklärung, damit sie niemand wieder einbaut.
+    
+           Der Gedanke war: „das Manifest nennt `versions` unter `enthaelt`,
+           aber das Fach ist leer — die Datei ist wohl abgeschnitten." Beim
+           ersten Lauf gegen Redions EIGENEN Export wurde sie sofort rot.
+    
+           Der Grund: `enthaelt` ist eine Aussage über das FORMAT, nicht über
+           den Inhalt. `exportAll` schreibt die fünf Namen fest hin
+           (indexdb.ts:1717), und ein frischer Arbeitsbereich hat legitim null
+           Fassungen, null Sammlungen, null Ansichten. Die Prüfung konnte
+           „rechtmässig leer" von „abgeschnitten" gar nicht unterscheiden.
+    
+           Eine Warnung, die bei gewöhnlichem Gebrauch anspringt, ist schlimmer
+           als keine: sie bringt Menschen bei, Warnungen wegzuklicken. Deshalb
+           ist sie weg und nicht abgeschwächt. */
+        /* --- Ein leerer Bestand ist erlaubt, aber erwähnenswert ----------- */
+        if (zahlen['blocks'] === 0) {
+            punkte.push({ stufe: 'warnen',
+                text: 'Diese Sicherung enthält keine einzige Seite. Mit ' +
+                    '„Ersetzen" eingespielt bliebe nichts übrig.' });
+        }
+        return {
+            taugt: true, fassung,
+            exportiert: String(o['exportiert'] ?? ''),
+            fehlt, zahlen, punkte
+        };
+    };
+    /** Gibt es einen Punkt, der ein Nachfragen wert ist? */
+    const brauchtRueckfrage = (b) => b.punkte.some(p => p.stufe === 'fehler' || p.stufe === 'warnen');
+    /** Alle Punkte einer Stufe, als Sätze. */
+    const saetze = (b, stufe) => b.punkte.filter(p => !stufe || p.stufe === stufe).map(p => p.text);
+    return { pruefen, brauchtRueckfrage, saetze, FAECHER };
+})();
+window.ImportValidierung = ImportValidierung;
+
+</script>
+<script>
 /* ===== quell/core/import/spaltentyp.js ===== */
 "use strict";
 /* ============================================================================
@@ -31309,18 +31712,47 @@ const Store = (() => {
         /* Erst landen lassen, was noch unterwegs ist — sonst löscht ein
            Aufräumen von vorhin in den neuen Bestand hinein (siehe `settled`). */
         await settled();
-        const d = JSON.parse(json);
-        if (!d.blocks)
-            throw new Error('Das sieht nicht nach einer Sicherung dieser App aus.');
+        /* --- ERST ENTSCHÄRFEN, DANN PRÜFEN, DANN EINSPIELEN (E284) ----------
+           Hier stand ein blankes `JSON.parse(json)`, und das Ergebnis ging
+           unbesehen weiter — beim Zusammenführen über `Object.assign`, beim
+           Ersetzen sogar als Zwischenspeicher SELBST.
+    
+           `Object.assign` schreibt über `[[Set]]`, also über den geerbten
+           `__proto__`-SETZER. Ein `{"__proto__":{"wolkeAbgleich":true}}` in
+           einer fremden Sicherung gab `cache.meta` damit einen fremden
+           Prototyp — und danach lieferte `getMeta('wolkeAbgleich')` nicht mehr
+           die Vorgabe, sondern das, was der Angreifer hineingelegt hatte.
+           Dasselbe für `cache.blocks[id]`: eine Kennung, die es nicht gibt,
+           hätte plötzlich einen Block geliefert.
+    
+           `ImportSicherheit.lesen` gibt prototyplose Verzeichnisse zurück, aus
+           denen die drei Namen entfernt sind. Der Fund wird MITGEREICHT, nicht
+           verschluckt (§35): eine Sicherung, die still verändert wurde, ist die
+           gefährlichste Sorte.
+    
+           Die Reihenfolge ist nicht beliebig. Entschärfen kommt VOR dem Prüfen,
+           weil die Prüfung sonst selbst über ein `constructor` stolpern könnte,
+           und beides kommt vor dem ersten Schreibzugriff. */
+        const gelesen = ImportSicherheit.lesen(json);
+        const d = gelesen.wert;
         if (art !== 'ersetzen' && art !== 'zusammenfuehren')
             throw new Error('Beim Einspielen muss feststehen, was geschehen soll: ' +
                 '„ersetzen" wirft weg, was nicht in der Sicherung steht, ' +
                 '„zusammenfuehren" legt sie dazu. Ohne Angabe wird nichts getan.');
+        const befund = ImportValidierung.pruefen(d, VERSION);
+        if (!befund.taugt) {
+            throw new Error(befund.punkte[0]?.text ||
+                'Das sieht nicht nach einer Sicherung dieser App aus.');
+        }
+        /* Die Verzeichnisse bleiben prototyplos — auch die leeren Ersatzwerte.
+           Ein `{}` an dieser Stelle hätte die Lücke an genau der Stelle wieder
+           aufgemacht, an der ein Fach in der Sicherung fehlt. */
+        const leer = () => Object.create(null);
         const neu = {
-            blocks: d.blocks || {},
-            collections: d.collections || {},
-            views: d.views || {},
-            meta: d.meta || {}
+            blocks: ImportSicherheit.verzeichnis(d.blocks) || leer(),
+            collections: ImportSicherheit.verzeichnis(d.collections) || leer(),
+            views: ImportSicherheit.verzeichnis(d.views) || leer(),
+            meta: ImportSicherheit.verzeichnis(d.meta) || leer()
         };
         /* --- DER ORDNERZUGRIFF ÜBERLEBT BEIDE ARTEN (E270) ------------------
            `sicherungOrdner` hält einen echten Verzeichniszugriff, den ein
@@ -31653,7 +32085,16 @@ const Store = (() => {
             /* Steht danach eine Entscheidung offen? Die Schale sagt es
                dem Menschen — sonst wartet die Frage, ohne dass jemand
                weiss, dass sie wartet. */
-            frage: !!getMeta('wolkeNeuAbgleich', '') };
+            frage: !!getMeta('wolkeNeuAbgleich', ''),
+            /* --- WAS BEIM ENTSCHÄRFEN UND PRÜFEN AUFFIEL (E284) --------
+               Beides reist MIT dem Ergebnis, statt in der Konsole zu
+               enden. Eine Sicherung, die still verändert oder still als
+               „aus einer neueren Fassung" erkannt wurde, ist genau die
+               Sorte Fehler, die man erst Wochen später sieht. */
+            entschaerft: gelesen.fund.entfernt,
+            entschaerftSatz: ImportSicherheit.satz(gelesen.fund),
+            befund: befund.punkte,
+            fassung: befund.fassung };
     };
     /* ========================================================================
      * SEITENBAUM ALS DATENPAKET
