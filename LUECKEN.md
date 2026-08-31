@@ -3809,3 +3809,84 @@ Die Maschine steht und ist geprüft. Fünf Dinge fehlen ihr, jedes mit Grund:
    WLAN". Für OCR und Embeddings wäre genau das die richtige Antwort.
 
 Gefunden am 31. August 2026 (beim Bau von E286).
+
+
+================================================================================
+L104 — Das KI-Buch führt Schätzungen, keine gezählten Token (E287)
+================================================================================
+
+Jeder Anbieter schickt die WIRKLICHE Tokenzahl zurück — OpenAI im Feld
+`usage`, Anthropic in `message_start`/`message_delta`. Redion liest sie
+nicht. Der Strom-Leser in `bereiche/ki/dienst.ts` sucht in jedem Ereignis
+nach `delta.content` (bzw. `choices[0].delta.content`) und wirft alles
+andere weg — auch die Abrechnung, die am Ende mitkommt.
+
+Das Buch trägt deshalb die SCHÄTZUNG ein, und weil die Schätzung mit 3,6
+Zeichen je Token bewusst zu hoch greift, steht im Buch tendenziell mehr, als
+der Anbieter berechnet. Für eine Bremse ist das die harmlose Richtung; für
+die Frage „was habe ich diesen Monat wirklich ausgegeben" ist es die
+falsche.
+
+Der Platz dafür ist schon da: `buchen(…, gezaehlt)` hat den vierten
+Parameter genau dafür, und `standAus` könnte gezählte und geschätzte
+Beträge getrennt ausweisen. Was fehlt, ist das Auslesen im Strom-Leser — an
+zwei Stellen, je Anbieter eine.
+
+Drei weitere Dinge, die E287 bewusst offenlässt:
+
+1. **Keine Oberfläche.** `KiBuch.stand()`, `monatJeAnbieter()` und
+   `grenzenSetzen()` sind da; unter Einstellungen → KI steht nichts davon.
+   Wer seine Grenzen ändern will, kann es heute nur über die Konsole. Das
+   ist §47 von der leisen Seite — dieselbe Lücke wie L103 Punkt 3.
+
+2. **Der Agentenlauf ruft `laufBeginnen()` nicht.** `jeLauf` ist damit die
+   einzige der vier Grenzen, die im Alltag nie anschlägt: `laufStand`
+   beginnt beim Laden der Seite bei null und läuft dann durch. Sie
+   FUNKTIONIERT (test281 §3 misst es), sie wird nur nicht zurückgesetzt.
+   Der Aufruf gehört in `agenten.ts` an den Start einer Schleife.
+
+3. **Die Preisliste altert von selbst.** `STAND` sagt, von wann sie ist,
+   und der Satz bei einem unbekannten Modell nennt das Datum. Aber niemand
+   erinnert daran, sie zu pflegen; in einem Jahr rechnet sie mit Preisen
+   von heute weiter. Ein Hinweis, wenn die Liste älter als ein halbes Jahr
+   ist, wäre die kleine Antwort darauf.
+
+Gefunden am 31. August 2026 (beim Bau von E287).
+
+
+================================================================================
+L105 — Was die Lückenansicht (E288) noch nicht kann
+================================================================================
+
+1. **Kein Escape für die anderen Fenster.** Redion hat KEINEN gemeinsamen
+   Escape-Griff für `.overlay`. Der Wissensgraph und das Schlagwortregister
+   schliessen bis heute nicht auf Escape — man muss danebenklicken. §38
+   verlangt es ausdrücklich („Escape schliesst passende Overlays"). Die
+   Lückenansicht bringt ihren eigenen Griff mit; richtig wäre einer für
+   alle, in `schale/`.
+
+2. **Kein „erledigt".** Wer einen Fund gesehen und für unwichtig befunden
+   hat, sieht ihn beim nächsten Öffnen wieder. Für Geister ist das richtig
+   (sie verschwinden, sobald die Seite da ist), für offene Fragen und
+   Inseln nicht: manche Frage bleibt absichtlich offen. Ein Merker in
+   `meta` je Fund-Kennung wäre die kleine Antwort — die Kennung müsste
+   dafür aber stabil sein, und die Frage-Kennung ist heute der Text selbst.
+
+3. **Die Ansicht rechnet bei jedem Öffnen neu.** PageRank über den ganzen
+   Graphen, alle Verweise auflösen, jede Seite nach Fragen durchsuchen.
+   Bei Redions Demobestand sind das Millisekunden; bei zehntausend Seiten
+   wird es spürbar, und es gibt keinen Fortschrittsbalken. Genau dafür gibt
+   es seit E286 die Auftragsmaschine — der Anschluss wäre ein guter erster
+   echter Auftrag (L103 Punkt 1).
+
+4. **„Wichtig, aber verstaubt" kennt keine Absicht.** Ein Archiv ist
+   verstaubt, weil es ein Archiv ist. Redion weiss nicht, welche Seiten
+   fertig sind; ein Feld dafür gibt es nicht.
+
+5. **Die dünnen Themen sind die schwächste Art.** Sie stehen absichtlich
+   unter der Schwelle und werden nie gezählt. Damit sind sie beinahe
+   Zierde — entweder sie bekommen eine bessere Regel (etwa: ein Schlagwort,
+   das einmal vorkommt UND älter als ein Vierteljahr ist), oder sie
+   entfallen.
+
+Gefunden am 31. August 2026 (beim Bau von E288).

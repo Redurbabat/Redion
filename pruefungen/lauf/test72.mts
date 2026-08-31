@@ -26,9 +26,15 @@ const pruef = (n: any, ist: any, soll: any) => {
     db.close();
     return namen.sort();
   });
-  pruef('Zehn Fächer in der Ablage', faecher,
-        ['basis', 'blocks', 'collections', 'dateien', 'meta', 'stuecke',
-         'suchindex', 'versions', 'views', 'vorrat']);
+  /* Die Liste steht ABSICHTLICH als Literal da und wird nicht aus der App
+     abgeleitet. Eine Prüfung, die ihre Erwartung aus derselben Quelle holt,
+     die sie prüft, kann nie rot werden (§55.2) — sie würde ein vergessenes
+     Fach genauso brav bestätigen wie ein vorhandenes. Der Preis ist, dass
+     jede neue Fassung diese Zeile anfasst; das ist der Sinn.
+     Fassung 7 brachte `auftraege` dazu (E286). */
+  pruef('Elf Fächer in der Ablage', faecher,
+        ['auftraege', 'basis', 'blocks', 'collections', 'dateien', 'meta',
+         'stuecke', 'suchindex', 'versions', 'views', 'vorrat']);
 
   /* --- 1 · Die drei Schritte einzeln ------------------------------------- */
   const schritte = await p.evaluate(async () => {

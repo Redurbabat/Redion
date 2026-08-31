@@ -21674,3 +21674,206 @@ Arbeit weg und misst, dass der Auftrag bei Schritt 2 weitermacht und nicht
 von vorn) · test85, test95, test96, test100 auf Fassung 7 nachgezogen —
 alle vier waren rot, und alle vier sollten es sein · test99 (zwei Fenster)
 unverändert grün · typecheck grün · sw v52.
+
+
+================================================================================
+E287 — Was ein KI-Aufruf kostet, BEVOR er läuft (Redurs Punkt 2)
+================================================================================
+31. August 2026
+
+Redion konnte bis heute jede Menge Geld ausgeben, ohne es je zu erwähnen.
+Wer einen Cloud-Anbieter eingetragen hatte, konnte einen Agenten losschicken
+und stellte die Rechnung erst beim Anbieter fest. Es gab keine Grenze, keine
+Schätzung, keinen Stand, kein Buch. Bei einem Werkzeug, das in Schleifen
+ruft — der Agent, das Embeddings-Bauen — ist das kein Schönheitsfehler.
+
+### Zwei Dateien, und warum
+
+    core/ai/kosten.ts       RECHNET. Reine Funktionen: Token schätzen,
+                            Preis rechnen, Grenze prüfen, Stand ausrechnen.
+                            Keine Ablage, keine Uhr von innen, kein `Store`.
+    bereiche/ki/buch.ts     WEISS. Liest die Grenzen aus `meta`, führt das
+                            Buch, ruft die Rechnung, sagt Ja oder Nein.
+
+Dieselbe Teilung wie bei E286 (`modell.ts` gegen `maschine.ts`), aus
+demselben Grund: die Rechnung lässt sich mit erfundenen Zahlen prüfen, ohne
+einen Browser, eine Ablage oder ein Datum zu stellen. Von den 48 Punkten in
+test281 messen 33 nur die Rechnung.
+
+### Die Schätzung sagt, dass sie eine Schätzung ist
+
+3,6 Zeichen je Token, nicht 4. Der übliche Daumenwert 4 stammt aus
+englischem Text; deutsche Komposita („Hintergrundhelligkeit") zerfallen in
+mehr Stücke. 3,6 schätzt also bewusst zu HOCH — bei einer Bremse ist das die
+richtige Richtung.
+
+Dazu ein Aufschlag von 35 % (`unsicherheit()`), und geprüft wird gegen
+`hoechstens`, nicht gegen den wahrscheinlichen Betrag. Eine Grenze, die man
+im Mittel einhält, hält man in der Hälfte der Fälle nicht ein.
+
+### Ein unbekanntes Modell wird DURCHGELASSEN
+
+Der naheliegende Entwurf sperrt, was er nicht kennt. Er ist falsch: die
+Preisliste trägt ein Datum (`STAND`), Anbieter benennen Modelle laufend um,
+und ein `gpt-4o-2026-11` würde jeden Aufruf blockieren, bis jemand eine
+Zeile pflegt. Das ist §47 von der anderen Seite — eine Sperre, die nicht
+schützt, sondern nur im Weg steht.
+
+Also: `bekannt: false`, KEINE geratene Zahl, ein Satz, der das Modell und
+das Alter der Liste nennt, und der Aufruf läuft. Was nicht bekannt ist, wird
+auch nicht verbucht — eine erfundene Zahl im Buch wäre schlimmer als eine
+Lücke, weil man ihr ansieht, dass sie eine Zahl ist.
+
+### Vier Grenzen, der Reihe nach, jede mit Namen
+
+    jeAufruf   0,50 USD   der eine Ausrutscher
+    jeLauf     2,00 USD   der Agent in der Schleife — nur im Speicher
+    jeTag      5,00 USD   der schlechte Tag
+    jeMonat   20,00 USD   die Rechnung
+
+Sie werden in dieser Reihenfolge geprüft, die erste gewinnt, und der Satz
+nennt BEIDE Zahlen („dieser Aufruf kostet höchstens 0,72 USD, die Grenze je
+Aufruf liegt bei 0,50 USD"). Ein „Nein" ohne Zahlen zwingt zum Raten, was
+man ändern muss.
+
+Alle vier sind mit 0 abschaltbar. Die Grenzen gehören dem Menschen; Redion
+hat kein Recht, ihm seine eigene Rechnung zu verbieten.
+
+### Lokale Modelle werden nicht angefasst
+
+Ollama und WebLLM kosten nichts. Eine Kostenprüfung davor wäre Reibung ohne
+Gegenwert — und der zuverlässigste Weg, eine Sicherung unbeliebt zu machen,
+ist, sie dort einzubauen, wo sie nichts schützt. `pruefen({lokal: true})`
+gibt sofort frei.
+
+### Das Kontingent ist keine Währung
+
+`kontingentBuchen`/`kontingentFrei`/`kontingentWartet` zählen Aufrufe oder
+Token in einem gleitenden Fenster — für Anbieter, die nach Menge und nicht
+nach Geld begrenzen, und für lokale Modelle, wo Geld gar keine Rolle spielt.
+Es sagt auch, wie lange man warten muss, statt nur „nein".
+
+### Der Stapel, nicht der Einzelfall
+
+`stapelSchaetzen` gibt es, weil `embeddingsBauen` in einer Schleife ruft.
+Einzeln sieht jeder dieser Aufrufe harmlos aus — 2000 Seiten kosten
+zusammen aber 0,04 USD und 2 Mio Token, und genau diese Summe soll man
+sehen, bevor man Ja sagt. Die Frage stellt `Dialog.wahl` mit zwei benannten
+Knöpfen und der Summe im Text.
+
+### Wo die Prüfung sitzt
+
+An EINER Stelle: `bereiche/ki/dienst.ts`, im Wolken-Zweig, direkt vor dem
+Aufruf. Nicht an jeder Aufrufstelle — das wäre die Sorte Prüfung, die man
+beim nächsten neuen Weg vergisst.
+
+**Geprüft:** test281 neu (48 Punkte, davon 33 ohne Browser-Zustand; §2 die
+Gegenprobe, dass ein unbekanntes Modell durchkommt; §6 dass dieselbe riesige
+Anfrage in der Wolke gebremst und auf dem Gerät durchgelassen wird; §7 dass
+der einzelne Aufruf harmlos aussieht und der Stapel nicht) · test72 auf
+Fassung 7 nachgezogen · test280 §2 auf die E286-Entscheidung nachgezogen und
+um die Gegenprobe erweitert (55 Punkte) · typecheck grün · sw v53.
+
+
+================================================================================
+E288 — Wissenslücken: was FEHLT, verrät der Bestand selbst (Redurs Punkt 4)
+================================================================================
+31. August 2026
+
+Redion konnte sagen, was in einem Bestand steht: suchen, verweisen, zählen,
+seit E285 auch ranken. Es konnte nicht sagen, was NICHT darin steht.
+
+Und E285 hatte ein zweites Problem: der Wissensrang wurde gebaut und danach
+von niemandem benutzt. Vierhundert Zeilen gerechneter PageRank, den kein
+Mensch je zu sehen bekam. E288 gibt ihm seine erste Aufgabe — „wichtig, aber
+lange nicht angefasst" lässt sich ohne ihn gar nicht stellen. Der Grad täte
+es nicht: eine Seite, auf die zwanzig Wegwerfnotizen zeigen, ist nicht
+wichtig.
+
+### Sechs Arten, und woher jede kommt
+
+    Geisterverweise    [[Ziel]], das auf nichts zeigt
+    Mehrdeutige        [[Ziel]], das auf mehrere Seiten passt
+    Wichtig+verstaubt  hoher Rang (E285) und lange nicht angefasst
+    Offene Fragen      selbst aufgeschrieben, nie beantwortet
+    Inseln             kein Verweis hin, keiner weg
+    Dünne Themen       ein Schlagwort an genau einer Seite
+
+Die zweite ist die einzige, die es bei BABAT-RED nicht gibt, und sie ist die
+wertvollste: Redions Auflöser MELDET Mehrdeutigkeit schon lange
+(`loeseSeitenverweis` gibt `status: 'mehrdeutig'`), und niemand hat je
+danach gefragt. Ein Verweis, der irgendwohin führt, ist schlimmer als einer,
+der nirgendwohin führt — beim ersten merkt man es nicht.
+
+### Die Falle, in die diese Sorte Funktion IMMER läuft
+
+Eine Lückenliste findet immer etwas. Wer fünf Listen aneinanderhängt und die
+Längen addiert, zeigt einem frischen Bestand mit drei Seiten „14
+Wissenslücken" — und bringt dem Menschen bei, die Anzeige zu überlesen.
+
+Genau dieser Fehler ist mir in derselben Woche zweimal passiert: die
+Import-Warnung, die bei gewöhnlichem Gebrauch anspringt (E284), und das
+`fehlt`, das nie leer sein kann (E286). Beim dritten Mal habe ich ihn
+vorher eingebaut statt hinterher gefunden.
+
+Jeder Fund trägt deshalb eine STÄRKE von 0 bis 100, und GEZÄHLT wird nur,
+was darüber liegt. Ein Geist, auf den fünf Seiten zeigen, ist ein Fund. Ein
+Schlagwort, das einmal vorkommt, ist eine Beobachtung. Beide stehen da, nur
+eines zählt. test282 §3 misst beide Richtungen: ein gesunder Bestand zählt
+null, und ein einziger Geist mit zwei Quellen macht daraus eins.
+
+### Was das Hinsehen fand, und keine Prüfung finden konnte (§55.1)
+
+Das Fenster war fertig, 50 von 50 Punkten grün. Dann habe ich es
+aufgemacht, und da standen 33 Lücken — davon 26 offene Fragen. Drei Fehler
+auf einen Blick:
+
+**1 · Auszeichnung im Titel.** Wörtlich: `Statusübergänge** — von welchem
+Wert darf man zu welchem springen?` und `*„Was würde Notion 10 000-mal
+besser machen?`. Die Funde stimmten, sie waren nur unlesbar. Kein Prüflauf
+konnte das melden — er hätte prüfen müssen, was er selbst erwartet.
+
+**2 · Dieselbe Frage zweimal untereinander.** Beide Funde stimmten (die
+Frage stand wirklich auf zwei Seiten), und es sah trotzdem aus wie ein
+Fehler. Zusammengefasst wie die Geister ist es eine Auskunft mehr statt
+einer Zeile mehr.
+
+**3 · Und der wichtigste: 26 der 33 gezählten Lücken waren Zitate.**
+Zeilen der Art „Die Antwort auf die Frage „Was würde X besser machen?"" —
+also Sätze, die eine Frage ZITIEREN und gleich beantworten. Eine Liste, die
+zu vier Fünfteln aus Fehlalarm besteht, wird nicht gelesen.
+
+Die Antwort darauf ist nicht, solche Zeilen wegzuwerfen (manchmal steht
+dort wirklich eine offene Frage), sondern der Unterschied zwischen einer
+GESTELLTEN und einer ERWÄHNTEN Frage: steht sie allein auf ihrer Zeile,
+zählt sie voll; steht sie mitten im Satz, bleibt sie als schwache
+Beobachtung stehen. Aus 33 wurden 10 — sieben Geister und drei wirklich
+offene Fragen.
+
+### Der Schnitt nennt sich
+
+Je Art werden höchstens dreissig Funde gezeigt. Der erste Entwurf brach
+beim Sammeln ab und behielt die ersten dreissig in der Reihenfolge, in der
+die Seiten zufällig kamen. Der Prüflauf zeigte es sofort: die eben angelegte
+Frage tauchte gar nicht auf, weil der Demobestand die dreissig schon
+aufgebraucht hatte.
+
+Jetzt wird erst gesammelt, dann nach Stärke geordnet, dann geschnitten —
+und der Satz oben sagt, wie viele nicht dastehen. Ein Schnitt, der sich
+verschweigt, liest sich wie Vollständigkeit.
+
+### Zwei Dateien, wie bei E286 und E287
+
+    core/knowledge/gaps.ts     FINDET. Reine Regeln, keine Uhr, keine
+                               Ablage. `jetzt` kommt als Zahl herein.
+    bereiche/wissen/luecken.ts SAMMELT und ZEIGT.
+
+Der Auflöser bleibt, wo er hingehört: `Links.alleSeitenverweise()` ist neu
+und baut den Seitenindex EINMAL statt einmal je Verweis. Vorher hätte ein
+Bestand mit 400 Verweisen und 900 Seiten 360 000 Durchläufe gebraucht für
+eine Auskunft, die einer genügt.
+
+**Geprüft:** test282 neu (57 Punkte; §3 die beiden Richtungen der Schwelle,
+§5 die Auszeichnung und der Unterschied gestellt/erwähnt, §6 dieselbe Frage
+als Karteikarte und als Absatz, §9 der Schnitt, der sich nennt) · typecheck
+grün · Bilder in hell, dunkel und am Telefon angesehen · sw v54.

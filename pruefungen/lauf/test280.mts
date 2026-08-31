@@ -178,30 +178,54 @@ p('Ein FEHLER wird nie aufgeräumt — das ist der Sinn der Fehlerablage',
 /* ------------------------------------------------------------------------ */
 console.log('\n2 · Das Fach — und was die Sicherung darüber sagt');
 
+/* Gemessen wird BEIDES: ein leeres Auftragsfach lässt nichts aus und darf
+   deshalb nichts unter `fehlt` nennen, ein offener Auftrag sehr wohl.
+   Der erste Entwurf nannte `auftraege` IMMER — dann könnte eine Sicherung
+   eines gewöhnlichen Bestands nie mehr „nichts fehlt" sagen, und ein
+   `fehlt`, das immer etwas enthält, bringt Menschen bei, es zu überlesen
+   (derselbe Fehler wie die Warnung, die bei gewöhnlichem Gebrauch
+   anspringt, E284). Die zweite Hälfte hier ist die Gegenprobe dazu. */
 const fach = await seite.evaluate(async () => {
   const faecher = Umzuege.faecher();
-  const json = JSON.parse(Store.exportAll());
+
+  /* Erst der ruhige Fall: kein offener Auftrag. */
+  for (const a of (await Store.auftragAlle()) || []) await Store.auftragWeg(a.id);
+  await Store.exportVorbereiten();
+  const leer = JSON.parse(Store.exportAll());
+
+  /* Dann derselbe Bestand mit EINEM wartenden Auftrag. */
+  await Store.auftragPut({ id: 'probe1', art: 'x', zustand: 'wartet' });
+  const zurueck = await Store.auftragHolen('probe1');
+  await Store.exportVorbereiten();
+  const offen = JSON.parse(Store.exportAll());
+  await Store.auftragWeg('probe1');
+
   return {
     inFassungen: faecher.includes('auftraege'),
     fassung: Umzuege.JETZIGE,
-    fehltImManifest: (json.fehlt || []).includes('auftraege'),
-    nichtInDaten: json.auftraege === undefined,
-    hinweisDa: typeof json.hinweis === 'string' && json.hinweis.length > 10,
-    /* Und das Fach ist wirklich da: schreiben und wiederfinden. */
-    schreibtUndLiest: await (async () => {
-      await Store.auftragPut({ id: 'probe1', art: 'x', zustand: 'wartet' });
-      const zurueck = await Store.auftragHolen('probe1');
-      await Store.auftragWeg('probe1');
-      return !!zurueck && zurueck.art === 'x';
-    })()
+    schreibtUndLiest: !!zurueck && zurueck.art === 'x',
+    nichtInDaten: leer.auftraege === undefined && offen.auftraege === undefined,
+    ruhigNenntNichts: !(leer.fehlt || []).includes('auftraege'),
+    offenNennt: (offen.fehlt || []).includes('auftraege'),
+    offenImSatz: typeof offen.hinweis === 'string' &&
+                 offen.hinweis.includes('offen'),
+    ruhigNichtImSatz: typeof leer.hinweis === 'string' &&
+                      !leer.hinweis.includes('Auftrag'),
+    hinweisDa: typeof leer.hinweis === 'string' && leer.hinweis.length > 10
   };
 }) as any;
 p('`auftraege` steht in den Ablage-Fassungen', fach.inFassungen === true,
   'Fassung ' + fach.fassung);
 p('Das Fach lässt sich beschreiben und wieder lesen', fach.schreibtUndLiest === true);
-p('Die Sicherung enthält die Aufträge NICHT', fach.nichtInDaten === true);
-p('… und sagt das auch: `auftraege` steht unter `fehlt`',
-  fach.fehltImManifest === true, JSON.stringify(fach));
+p('Die Sicherung enthält die Aufträge NICHT — weder leer noch offen',
+  fach.nichtInDaten === true);
+p('Ohne offenen Auftrag nennt `fehlt` ihn NICHT — sonst wäre `fehlt` nie leer',
+  fach.ruhigNenntNichts === true, JSON.stringify(fach));
+p('… und der Hinweis erfindet auch keinen', fach.ruhigNichtImSatz === true);
+p('GEGENPROBE: mit einem wartenden Auftrag steht er unter `fehlt`',
+  fach.offenNennt === true, JSON.stringify(fach));
+p('… und der Hinweis sagt im Klartext, dass etwas offensteht',
+  fach.offenImSatz === true);
 
 /* ------------------------------------------------------------------------ */
 console.log('\n3 · Ein Auftrag läuft durch');

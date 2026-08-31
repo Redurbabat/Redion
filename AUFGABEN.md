@@ -2076,3 +2076,38 @@ node pruefungen/lauf/test105.mjs
   fehlt" unmöglich; genannt wird es jetzt nur bei wirklich offener Arbeit.
   test280 neu (52); test85/95/96/100 auf Fassung 7 nachgezogen. Noch kein
   Bereich angeschlossen und keine Anzeige — L103. sw v52.
+* E287 (Redurs Punkt 2): Die KI sagt, was sie kostet, BEVOR sie ruft.
+  `core/ai/kosten.ts` RECHNET (reine Funktionen — 33 der 48 Prüfpunkte
+  brauchen keinen Browser), `bereiche/ki/buch.ts` WEISS (Grenzen aus `meta`,
+  Buch in `meta`, Ja oder Nein). Vier Grenzen der Reihe nach — je Aufruf, je
+  Lauf, je Tag, je Monat —, jede mit 0 abschaltbar, und der Satz nennt beide
+  Zahlen statt nur „nein". Geschätzt wird mit 3,6 Zeichen je Token statt 4
+  (deutsche Komposita) plus 35 % Aufschlag, und geprüft wird gegen
+  `hoechstens`: eine Grenze, die man im Mittel einhält, hält man in der
+  Hälfte der Fälle nicht ein. Ein unbekanntes Modell wird DURCHGELASSEN und
+  nicht gesperrt — die Preisliste trägt ein Datum, und eine Sperre, die bei
+  jedem neuen Modellnamen zuschlägt, ist §47 von der anderen Seite. Lokale
+  Modelle werden gar nicht angefasst. `stapelSchaetzen` gibt es, weil
+  `embeddingsBauen` in einer Schleife ruft: 2000 Seiten sehen einzeln
+  harmlos aus und kosten zusammen 2 Mio Token. Die Prüfung sitzt an EINER
+  Stelle, im Wolken-Zweig von `dienst.ts`. test281 neu (48); test72 auf
+  Fassung 7 nachgezogen; test280 §2 auf die E286-Entscheidung nachgezogen
+  und um die Gegenprobe erweitert (55). Das Buch führt Schätzungen, keine
+  gezählten Token, und es gibt keine Oberfläche dafür — L104. sw v53.
+* E288 (Redurs Punkt 4): Wissenslücken. `core/knowledge/gaps.ts` FINDET
+  (reine Regeln, `jetzt` kommt als Zahl herein), `bereiche/wissen/luecken.ts`
+  SAMMELT und ZEIGT. Sechs Arten: Geisterverweise, mehrdeutige Verweise,
+  wichtig-aber-verstaubt, offene Fragen, Inseln, dünne Themen. Die zweite
+  gibt es bei BABAT-RED nicht und ist die wertvollste — Redions Auflöser
+  meldet Mehrdeutigkeit seit jeher, und niemand hat je danach gefragt.
+  Zugleich bekommt E285 seine erste Aufgabe: der Wissensrang war gebaut und
+  von niemandem benutzt. Gegen die Falle, in die diese Sorte Funktion immer
+  läuft (eine Lückenliste findet IMMER etwas — dieselbe Falle wie E284 und
+  E286, diese Woche zum dritten Mal): jeder Fund trägt eine Stärke, gezählt
+  wird nur, was über der Schwelle liegt, und der Schnitt je Art nennt sich
+  selbst. Was das HINSEHEN fand und keine Prüfung finden konnte (§55.1):
+  Markdown-Sternchen mitten im Titel, dieselbe Frage zweimal untereinander,
+  und — das Wichtigste — 26 der 33 gezählten Lücken waren Zeilen, die eine
+  Frage zitieren und gleich beantworten. Aus 33 wurden 10. test282 neu (57).
+  Kein Escape-Griff für die anderen Overlays, kein „erledigt", und die
+  Ansicht rechnet bei jedem Öffnen neu — L105. sw v54.
