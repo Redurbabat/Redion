@@ -3354,3 +3354,27 @@ Bis dahin ist die Liste eine reine Textliste. Das ist nicht falsch — nur
 weniger, als sie sein könnte.
 
 Gefunden am 30. August 2026 (E272 Phase F, auf dem Bild).
+
+--------------------------------------------------------------------------------
+L93 — Der Chatverlauf hat am Rechner kein Zuhause (E273)
+--------------------------------------------------------------------------------
+
+Der Seitenleisten-Reiter „chat" zeigte `KI.seitenleiste(baum)`: die eigene
+Person, die Agenten und den nach Tagen gruppierten Chatverlauf. Am Rechner
+ist die Seitenleiste seit E272 Phase F `display:none`, und `KI.seitenleiste`
+wird von nirgends sonst gerufen — die Liste ist dort also nicht mehr zu
+sehen.
+
+Was es weiter gibt: `App.kiPanel(true)` öffnet das KI-Panel mit dem
+AKTUELLEN Chat (✦ in der Kontextkante, Strg + J), `KI.neuerChat()` beginnt
+einen neuen, `Agent.panel()` zeigt die Agenten. Was fehlt, ist der Weg zu
+einem ÄLTEREN Chat: `KI.chatsGruppiert()` und `KI.chatOeffnen(id)` gibt es,
+sie werden am Rechner nur von niemandem gerufen.
+
+Der richtige Ort ist die KI-Kontextkante — ein Knopf „Verlauf" mit
+`liefern: () => KI.chatsGruppiert()`. Er steht nicht hier, weil erst zu
+klären ist, unter welchem Schauplatz die KI überhaupt erscheint: sie ist ein
+Panel NEBEN dem Inhalt und möglicherweise gar kein eigener Ort. Am Telefon
+ist die Liste unverändert da.
+
+Gefunden am 31. August 2026 (E273, beim Griffwechsel).

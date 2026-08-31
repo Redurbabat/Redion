@@ -451,28 +451,47 @@ for (const t of ['Agenten', 'Besprechungen', 'Kürzlich verwendet'])
   p(`„${t}" steht nicht mehr links`, !dreiOben.linksTitel.includes(t),
     dreiOben.linksTitel.join(', '));
 
-/* Und sie tun wirklich etwas. „Agenten" schaltet die Seitenleiste auf ihren
-   Reiter — messbar daran, welcher Reiter danach `on` trägt. */
-await klick(seite, '#menueband [data-mb-reiter="werkzeuge"]');
-await seite.waitForTimeout(300);
-const vorReiter = await seite.evaluate(() =>
-  document.querySelector('#side-reiter .sr.on')?.getAttribute('data-reiter') || '');
-await klickBefehl(seite, 'w-agenten');
-await seite.waitForTimeout(700);
-const nachAgenten = await seite.evaluate(() =>
-  document.querySelector('#side-reiter .sr.on')?.getAttribute('data-reiter') || '');
-p('„Agenten" schaltet die Seitenleiste auf ihren Reiter',
-  vorReiter !== 'chat' && nachAgenten === 'chat', `${vorReiter} → ${nachAgenten}`);
+/* UND SIE TUN WIRKLICH ETWAS — SEIT E273 ETWAS ANDERES.
 
-await klickBefehl(seite, 'w-bespr');
-await seite.waitForTimeout(700);
-const nachBespr = await seite.evaluate(() =>
-  document.querySelector('#side-reiter .sr.on')?.getAttribute('data-reiter') || '');
-p('„Besprechungen" ebenso', nachBespr === 'bespr', `${nachAgenten} → ${nachBespr}`);
+   Hier stand: „Agenten schaltet die Seitenleiste auf ihren Reiter",
+   gemessen an `#side-reiter .sr.on`. Das war bis E272 Phase F richtig und
+   danach eine Prüfung auf eine Wirkung, die niemand sieht: die
+   Seitenleiste ist am Rechner `display:none`. Der Reiter wechselte
+   brav — hinter einer Wand.
 
-/* Zurück auf den Seitenbaum, sonst messen die nächsten Punkte einen
-   anderen Zustand. */
-await seite.evaluate(() => App.reiterWechseln('start'));
+   Genau deshalb heissen die neuen Griffe `Agent.panel()` und
+   `Meeting.panel()` (E273): sie öffnen eine eigene Fläche, und die sieht
+   man. Gemessen wird jetzt die Fläche. `test272` §15 stellt dieselbe
+   Frage für alle 43 Wege in „Gehen". */
+const flaecheNach = async (kennung: string) => {
+  await seite.evaluate(() => {
+    document.querySelectorAll('.overlay, .menu, .menu-grund').forEach(x => x.remove());
+  });
+  await seite.waitForTimeout(200);
+  await klickBefehl(seite, kennung);
+  await seite.waitForTimeout(700);
+  return await seite.evaluate(() => {
+    const o = document.querySelector('.overlay');
+    return { lagen: document.querySelectorAll('.overlay').length,
+             titel: (o?.querySelector('.fh')?.textContent || '').replace(/[✕×]/g, '').trim() };
+  });
+};
+
+const agentenAuf = await flaecheNach('w-agenten');
+p('„Agenten" öffnet die Agentenfläche',
+  agentenAuf.lagen === 1 && /Agent/i.test(agentenAuf.titel),
+  JSON.stringify(agentenAuf));
+
+const besprAuf = await flaecheNach('w-bespr');
+p('„Besprechungen" öffnet die Besprechungsfläche',
+  besprAuf.lagen === 1 && /Besprech/i.test(besprAuf.titel),
+  JSON.stringify(besprAuf));
+
+/* Aufräumen, sonst messen die nächsten Punkte durch eine Überlagerung. */
+await seite.evaluate(() => {
+  document.querySelectorAll('.overlay, .menu, .menu-grund').forEach(x => x.remove());
+  App.reiterWechseln('start');
+});
 await seite.waitForTimeout(500);
 
 /* ==========================================================================

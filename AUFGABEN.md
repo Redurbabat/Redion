@@ -1881,3 +1881,9 @@ node pruefungen/lauf/test105.mjs
   Stelle, an der die Absicht steht, und Löschen fragt man vorher.
   Viewport-Abnahme 1440/1366/1024/768/390: kein waagrechter Überlauf,
   Kante überall 54, am Telefon aus. sw v43, Einzeldatei 7387 KB.
+* E273 (Nachlauf): „Agenten" und „Besprechungen" riefen nach Phase F den
+  Modus einer unsichtbaren Seitenleiste — sie öffnen jetzt Agent.panel()
+  und Meeting.panel(). NEU test272 §15: jeder der 43 Wege in „Gehen" muss
+  eine messbare Wirkung haben; die erste Fassung kannte nur Überlagerungen
+  und meldete vier Fehlalarme. Register.module bekommt nimmZurueck, damit
+  Gegenproben aufräumen können. L93 neu (Chatverlauf ohne Zuhause).

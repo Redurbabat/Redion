@@ -729,6 +729,11 @@ const gegenGehen = await seite.evaluate(() => {
   for (const g of Register.menueband.inReiter('gehen'))
     for (const e of g.eintraege) imBand.add(String(e.id ?? ''));
   const kennt = Register.module.alle().some((m: any) => m && m.id === 'gibtesnicht');
+  /* UND WIEDER ABRAEUMEN. Das Fantasiemodul blieb bis zum Ende des Laufs
+     stehen und tauchte in §15 als „Weg, der nichts tut" auf — richtig
+     gemessen, falscher Gegenstand. Eine Gegenprobe, die ihren Zustand
+     liegen laesst, verseucht jeden Punkt danach. */
+  try { Register.module.nimmZurueck?.('gibtesnicht'); } catch { /* ohne Ruecknahme bleibt es */ }
   return { kennt, imBand: imBand.has('gibtesnicht') };
 }) as { kennt: boolean; imBand: boolean };
 p('Gegenprobe: ein nachgemeldetes Modul erscheint in „Gehen"',
@@ -1147,6 +1152,144 @@ p('Die Kante nennt keinen Bereich beim Namen (§5)',
    Gleichheitszeichen macht den eigenen Merksatz zum Verstoss. */
 p('Und baut ihr HTML ohne `innerHTML =` (§19)',
   !/innerHTML\s*=/.test(kanteQuelle));
+
+/* ==========================================================================
+ * §15 — Jeder Weg in „Gehen" bewirkt wirklich etwas
+ * --------------------------------------------------------------------------
+ * DER PUNKT, DEN ES VORHER NICHT GAB, UND DER EINEN FEHLER GEFUNDEN HAETTE.
+ *
+ * `w-agenten` und `w-bespr` riefen `App.reiterWechseln('chat')` — das schaltet
+ * den MODUS DER SEITENLEISTE um. Seit Phase F ist die am Rechner
+ * `display:none`. Der Klick tat also etwas, nur sah es niemand. Kein
+ * Prueflauf konnte das melden: die Kennung war da, der Name war da, `tun`
+ * war eine Funktion, und werfen tat sie auch nicht.
+ *
+ * Gemessen wird deshalb die WIRKUNG: nach dem Klick muss sich mindestens
+ * eines geaendert haben — eine Ueberlagerung ist da, der Schauplatz ist ein
+ * anderer, die Krume ist eine andere, oder der Inhalt der Seite ist ein
+ * anderer. Das ist dieselbe Frage, die test248 §4 fuer „Elektro" stellt,
+ * nur fuer alle 45 Wege.
+ * ========================================================================*/
+console.log('\n15 · Jeder Weg in „Gehen" bewirkt wirklich etwas');
+
+/* WAS NICHTS BEWIRKEN DARF, UND WARUM — namentlich, nicht als Muster.
+   Eine Ausnahmeliste, die man mit einem Regex fuellt, waechst von selbst;
+   eine mit Begruendung muss man verteidigen. */
+const OHNE_WIRKUNG: Record<string, string> = {
+  /* Der Dateiwaehler des Browsers laesst sich im Pruefstand nicht oeffnen —
+     `showOpenFilePicker` braucht eine echte Nutzergeste. */
+  'w-import': 'oeffnet den Dateiwaehler des Browsers',
+  /* `Recognition.scan()` will Kamera oder Datei — beides braucht eine
+     echte Nutzergeste, die ein Prueflauf nicht vortaeuschen darf. */
+  'erkennung': 'braucht Kamera oder Dateiwaehler',
+  /* Sie sind schon da: ein Klick auf den Ort, an dem man steht, aendert
+     nichts, und das ist richtig. Der Lauf beginnt auf der Startansicht. */
+  'heute': 'man steht schon dort',
+  'app-heute': 'man steht schon dort'
+};
+
+const wege = await seite.evaluate(() => {
+  const raus: string[] = [];
+  for (const g of Register.menueband.inReiter('gehen'))
+    for (const e of g.eintraege) raus.push(String(e.id));
+  return raus;
+}) as string[];
+
+const wirkungslos: string[] = [];
+const geprueft: string[] = [];
+for (const id of wege) {
+  if (OHNE_WIRKUNG[id]) continue;
+  const erg = await seite.evaluate(async (kennung: string) => {
+    /* Sauberer Anfang: nichts von vorhin darf als Wirkung durchgehen. */
+    /* SAUBERER ANFANG, UND ZWAR IMMER DERSELBE. Ohne ihn misst der Punkt
+       „bin ich schon da?" statt „bewirkt der Weg etwas?" — und welcher Ort
+       gerade offen ist, haengt dann davon ab, welcher Weg vorher dran war.
+       Genau daran haben `bibliothekOben` und `aufgaben` im ersten Anlauf
+       gehangen: mal gruen, mal rot, je nach Reihenfolge. */
+    document.querySelectorAll('.overlay, .menu, .menu-grund, .zm-feld').forEach(x => x.remove());
+    (window as any).Backstage?.schliesse?.();
+    try { App.kiPanel(false); } catch { /* ohne KI-Panel geht es auch */ }
+    try { (globalThis as any).Ansichten?.start?.(); } catch { /* … */ }
+    await new Promise(f => setTimeout(f, 420));
+    /* REDION HAT MEHR FLAECHEN ALS ÜBERLAGERUNGEN, und der erste Anlauf
+       kannte nur die. Er meldete vier Wege als wirkungslos, die alle vier
+       arbeiten: `App.kiPanel()` schaltet eine KLASSE an `#ai`,
+       `Zeitmesser.panel()` baut ein `.zm-feld` (kein `.overlay`), und
+       „Seiten-Peek" ist wieder etwas anderes. Vier Fehlalarme auf eine
+       richtige Frage — genau die Sorte, die man abschaltet und danach den
+       echten Fall nicht mehr sieht (§55.2).
+
+       Die Flaechen stehen deshalb NAMENTLICH da. Wer eine neue baut, muss
+       sie hier eintragen; das ist der Preis dafuer, dass dieser Punkt
+       nicht auf `body.innerHTML.length` ausweicht — die Zahl aendert sich
+       auch, wenn nur eine Uhr weiterlaeuft, und dann waere alles gruen. */
+    const stand = () => ({
+      lagen: document.querySelectorAll('.overlay, .menu, .menu-grund').length,
+      /* Das KI-Panel und die Peek-Spalte schalten nur eine Klasse um. */
+      ki: document.getElementById('ai')?.className || '',
+      peek: document.querySelectorAll('.peek, .peek-mobil').length,
+      /* Der Zeitmesser baut ein eigenes schwebendes Feld (E268). */
+      zm: document.querySelectorAll('.zm-feld').length,
+      /* Und alles, was sich sonst als Dialog ausgibt. */
+      dialoge: document.querySelectorAll('[role="dialog"]').length,
+      koerper: document.body.className,
+      wo: (() => { try { return String(App.schauplatz()); } catch { return '?'; } })(),
+      krume: (document.getElementById('crumb')?.textContent || '').trim(),
+      /* Nur der Anfang: eine Seite mit Zeitangabe aendert sich sonst von
+         selbst, und dann waere jeder Weg gruen. */
+      inhalt: (document.getElementById('page')?.textContent || '').slice(0, 200)
+    });
+    const vorher = stand();
+    let e: any = null;
+    for (const g of Register.menueband.inReiter('gehen'))
+      for (const x of g.eintraege) if (x.id === kennung) e = x;
+    if (!e) return { kennung, da: false, wirkt: false };
+    let warf = '';
+    try { e.tun(); } catch (f) { warf = String(f).slice(0, 80); }
+    await new Promise(f => setTimeout(f, 420));
+    const nachher = stand();
+    return {
+      kennung, da: true, warf,
+      wirkt: JSON.stringify(nachher) !== JSON.stringify(vorher)
+    };
+  }, id) as any;
+  geprueft.push(id);
+  if (!erg.wirkt) wirkungslos.push(id + (erg.warf ? ' (' + erg.warf + ')' : ''));
+}
+await seite.evaluate(() => {
+  document.querySelectorAll('.overlay, .menu, .menu-grund').forEach(x => x.remove());
+});
+
+console.log('    (' + geprueft.length + ' Wege geklickt, '
+  + Object.keys(OHNE_WIRKUNG).length + ' mit Begruendung uebergangen)');
+p('Es wurden ueberhaupt Wege geprueft', geprueft.length >= 35,
+  String(geprueft.length));
+p('Kein Weg in „Gehen" tut nichts', wirkungslos.length === 0,
+  wirkungslos.slice(0, 8).join(' · '));
+
+/* GEGENPROBE: ein Weg, dessen `tun` nichts tut, muss auffallen. Ohne sie
+   waere „kein Weg tut nichts" auch dann gruen, wenn die Messung blind ist. */
+const gegenWirkung = await seite.evaluate(async () => {
+  const echt = Register.menueband.melde({
+    reiter: 'gehen', gruppe: 'Weiteres', id: 'probe-leer', name: 'Leerlauf',
+    zeichen: 'dots', tun: () => {}
+  });
+  if (!echt) return { gemeldet: false, wirkt: true };
+  const lagen = () => document.querySelectorAll('.overlay, .menu, .menu-grund').length;
+  const wo = () => { try { return String(App.schauplatz()); } catch { return '?'; } };
+  const v = { l: lagen(), w: wo() };
+  let e: any = null;
+  for (const g of Register.menueband.inReiter('gehen'))
+    for (const x of g.eintraege) if (x.id === 'probe-leer') e = x;
+  e?.tun();
+  await new Promise(f => setTimeout(f, 300));
+  const wirkt = lagen() > v.l || wo() !== v.w;
+  Register.menueband.nimmZurueck('probe-leer');
+  return { gemeldet: true, wirkt };
+}) as any;
+p('Gegenprobe: ein Weg mit leerem `tun` wird als wirkungslos erkannt',
+  gegenWirkung.gemeldet && gegenWirkung.wirkt === false,
+  JSON.stringify(gegenWirkung) + ' — waere er „wirksam", misst §15 nichts');
 
 await browser.close();
 server.close();

@@ -651,20 +651,32 @@ Register.menueband = (() => {
                    'function'`; `Zeitmesser` selbst ist ein Objekt, also war die
                    Antwort seit E268 immer „nein" und der Knopf stand nie da. */
                 zeigen: () => kann(() => window.Zeitmesser?.panel) },
-            /* DIESE ZWEI SCHALTEN HEUTE NOCH DIE SEITENLEISTE UM (E211).
-               In Phase F entfällt sie am Rechner — dann wird der Griff auf
-               `App.kiPanel(true)` bzw. `Meeting.panel()` gewechselt, als eigener
-               Commit, damit der Wechsel im Verlauf sichtbar bleibt. */
+            /* DER GRIFFWECHSEL, DEN PHASE F ANGEKUENDIGT HAT — und der jetzt
+               faellig ist, weil er sonst ein Knopf ins Nichts waere.
+      
+               Beide riefen `App.reiterWechseln('chat')` bzw. `('bespr')`. Das
+               schaltet den MODUS DER SEITENLEISTE um, und die Seitenleiste ist
+               am Rechner seit E272 Phase F `display:none`. Der Klick tat also
+               etwas — nur sah es niemand. Das ist die heimtueckischere Haelfte
+               von §47: nicht ein Knopf, der bedauert, sondern einer, der
+               schweigend nichts bewirkt.
+      
+               Die neuen Griffe sind die, die es schon gab und die eine eigene
+               Flaeche oeffnen: `Agent.panel()` (agenten.ts:1024, exportiert
+               :1488) und `Meeting.panel()` (besprechung.ts:544, exportiert
+               :1024). Am Telefon bleibt die Seitenleiste die Schublade — dort
+               waere `reiterWechseln` weiter richtig, aber zwei Wege je nach
+               Breite waeren zwei Wahrheiten. Eine Flaeche geht auf beiden. */
             { reiter: 'gehen', gruppe: GEHEN_GRUPPE['w-agenten'] ?? 'Verbinden',
                 id: 'w-agenten', name: 'Agenten', zeichen: 'robot',
-                hinweis: 'Deine Agenten und der Chatverlauf',
-                tun: () => App.reiterWechseln('chat'),
-                zeigen: () => kann(() => App.reiterWechseln) },
+                hinweis: 'Auftraege, Zeitplaene und der Notaus',
+                tun: () => globalThis.Agent.panel(),
+                zeigen: () => kann(() => globalThis.Agent?.panel) },
             { reiter: 'gehen', gruppe: GEHEN_GRUPPE['w-bespr'] ?? 'Verbinden',
                 id: 'w-bespr', name: 'Besprechungen', zeichen: 'mic',
-                hinweis: 'Termine und Besprechungsnotizen',
-                tun: () => App.reiterWechseln('bespr'),
-                zeigen: () => kann(() => App.reiterWechseln) }
+                hinweis: 'Aufnehmen, mitschreiben, auswerten',
+                tun: () => globalThis.Meeting.panel(),
+                zeigen: () => kann(() => globalThis.Meeting?.panel) }
         ];
         const ausRegistern = roh.map(e => ({
             reiter: 'gehen',

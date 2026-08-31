@@ -20154,3 +20154,76 @@ I · J), neun Commits, alle auf `main`. Neu: vier Dateien
 einer 240-Pixel-Seitenleiste mit 32 immer gleichen Knöpfen jetzt acht
 Reiter mit einer 15er-Regel, eine Datei-Fläche mit neun Fächern und eine
 54-Pixel-Kante, die weiss, wo man ist.
+
+================================================================================
+E273 — Der Nachlauf zu E272: Griffe, die schweigend nichts taten
+================================================================================
+31. August 2026
+
+### Zwei Knöpfe, die nach Phase F ins Leere führten
+
+„Agenten" und „Besprechungen" im Reiter „Gehen" riefen
+`App.reiterWechseln('chat')` bzw. `('bespr')`. Das schaltet den MODUS DER
+SEITENLEISTE um — und die ist am Rechner seit E272 Phase F `display:none`.
+Der Klick tat also etwas. Nur sah es niemand.
+
+Das ist die heimtückischere Hälfte von §47. Ein Knopf, der „geht gerade
+nicht" sagt, ist ärgerlich; ein Knopf, der schweigend nichts bewirkt, lässt
+den Menschen an sich selbst zweifeln. Und keine Prüfung konnte es melden:
+die Kennung war da, der Name war da, `tun` war eine Funktion, und werfen tat
+sie auch nicht.
+
+Die neuen Griffe gab es längst: `Agent.panel()` (agenten.ts:1024, exportiert
+:1488) und `Meeting.panel()` (besprechung.ts:544, exportiert :1024). Beide
+öffnen eine eigene Fläche, und die sieht man — auch am Telefon, wo die
+Seitenleiste noch die Schublade ist. Zwei Wege je nach Breite wären zwei
+Wahrheiten gewesen.
+
+Der Chatverlauf, den der Seitenleisten-Reiter „chat" zeigte
+(`KI.seitenleiste`), hat damit am Rechner noch kein Zuhause — er gehört in
+die KI-Kontextkante und steht als L93.
+
+### test272 §15 — die Prüfung, die es vorher nicht gab
+
+Gemessen wird jetzt die WIRKUNG jedes Wegs in „Gehen": nach dem Klick muss
+sich mindestens eines geändert haben — eine Überlagerung, das KI-Panel, das
+Zeitmesser-Feld, eine Peek-Spalte, ein Dialog, die Körperklasse, der
+Schauplatz, die Krume oder der Inhalt.
+
+DER ERSTE ANLAUF KANNTE NUR ÜBERLAGERUNGEN und meldete vier Fehlalarme:
+`App.kiPanel()` schaltet eine KLASSE an `#ai`, `Zeitmesser.panel()` baut ein
+`.zm-feld` und keine `.overlay`. Vier falsche Alarme auf eine richtige
+Frage — genau die Sorte, die man abschaltet und danach den echten Fall nicht
+mehr sieht (§55.2). Die Flächen stehen deshalb namentlich in der Messung;
+wer eine neue baut, trägt sie dort ein. Der bequeme Ausweg wäre
+`body.innerHTML.length` gewesen — die Zahl ändert sich auch, wenn nur eine
+Uhr weiterläuft, und dann wäre alles grün.
+
+Und der Ausgangspunkt ist vor JEDEM Klick derselbe. Ohne das misst der Punkt
+„bin ich schon da?" statt „bewirkt der Weg etwas?", und welcher Ort gerade
+offen ist, hängt davon ab, welcher Weg vorher dran war: `bibliothekOben` und
+`aufgaben` waren mal grün, mal rot, je nach Reihenfolge.
+
+**Die Gegenprobe ist vorgeführt:** mit dem alten Griff
+`App.reiterWechseln('chat')` wird §15 rot und nennt `w-agenten` beim Namen.
+
+### `Register.module.nimmZurueck` — weil eine Gegenprobe aufräumen können muss
+
+Die Gegenprobe in §12 meldet ein Fantasiemodul an, um zu beweisen, dass
+„Gehen" wirklich aus dem Register liest. Sie wurde es nicht mehr los: das
+Modulregister hatte `melde`, aber kein `nimmZurueck`. Das Modul stand bis
+zum Ende des Laufs im Band und tauchte in §15 als „Weg, der nichts tut"
+auf — richtig gemessen, falscher Gegenstand.
+
+`Register.menueband` und `Register.kontext` können das beide. Ein Register,
+aus dem man nichts zurücknehmen kann, zwingt jede Gegenprobe dazu, ihren
+Dreck liegen zu lassen.
+
+### Und zwei Punkte in test247, die dasselbe Problem hatten
+
+Sie massen „Agenten schaltet die Seitenleiste auf ihren Reiter" an
+`#side-reiter .sr.on`. Der Reiter wechselte brav — hinter einer Wand. Sie
+messen jetzt die Fläche, die aufgeht.
+
+**Geprüft:** test272 129 (§15 neu) · test247 106 · test248 45 · test222 51 ·
+test86 58 · test87 152 · test105 55 · test61 36 — kein roter Punkt.

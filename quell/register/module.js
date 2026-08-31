@@ -153,6 +153,26 @@ Register.module = (() => {
         LISTE.push(e);
         return true;
     };
+    /**
+     * Einen nachgemeldeten Bereich wieder abmelden.
+     *
+     * `melde` gibt es seit Langem, `nimmZurueck` nicht — und das fiel erst
+     * auf, als eine Gegenprobe in `test272` §12 ein Fantasiemodul anlegte und
+     * es nicht mehr loswurde. Es stand danach bis zum Ende des Laufs im
+     * Reiter „Gehen" und tauchte in §15 als „Weg, der nichts tut" auf:
+     * richtig gemessen, falscher Gegenstand.
+     *
+     * `Register.menueband` und `Register.kontext` können das beide. Ein
+     * Register, aus dem man nichts zurücknehmen kann, zwingt jede Gegenprobe
+     * dazu, ihren Dreck liegen zu lassen (E273).
+     */
+    const nimmZurueck = (id) => {
+        const i = LISTE.findIndex(x => x.id === id);
+        if (i < 0)
+            return false;
+        LISTE.splice(i, 1);
+        return true;
+    };
     const alle = () => LISTE;
     const eines = (id) => LISTE.find(x => x.id === id) || null;
     /**
@@ -178,5 +198,5 @@ Register.module = (() => {
             return false;
         }
     };
-    return { alle, eines, oeffne, melde, anzahl: () => LISTE.length };
+    return { alle, eines, oeffne, melde, nimmZurueck, anzahl: () => LISTE.length };
 })();
