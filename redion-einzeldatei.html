@@ -17374,6 +17374,612 @@ window.Csv = Csv;
 
 </script>
 <script>
+/* ===== quell/core/jobs/modell.js ===== */
+"use strict";
+/* ============================================================================
+ * core/jobs/modell.ts — was ein Auftrag ist und wann er was darf
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/core/jobs/modell.ts`. `npm run bauen:ts` schreibt daraus
+ * `quell/core/jobs/modell.js`. Wer das .js bearbeitet, verliert die Änderung
+ * beim nächsten Bauen; `pruefungen/lauf/test105.mts` meldet es vorher.
+ * ----------------------------------------------------------------------------
+ * WARUM DIESE DATEI VON DER MASCHINE GETRENNT IST.
+ *
+ * Eine Auftragsmaschine hat zwei Hälften, die man leicht verwechselt:
+ *
+ *   DIE REGELN   Wann darf ein Auftrag laufen? Wie lange wartet er nach
+ *                einem Fehler? Wann ist Schluss? Das ist Rechnen.
+ *   DIE ARBEIT   Ablage öffnen, Transaktion, Zeit messen, Ereignis melden.
+ *                Das ist Wirkung.
+ *
+ * Hier stehen nur die REGELN. Keine Ablage, keine Uhr, kein `Date.now()` —
+ * die Zeit kommt als Zahl herein. Das ist nicht Sauberkeit um ihrer selbst
+ * willen: eine Regel, die auf die echte Uhr wartet, lässt sich nur mit
+ * echtem Warten prüfen, und dann prüft man sie eben nicht.
+ *
+ * Alles hier ist eine reine Funktion. Der Prüflauf dazu braucht keinen
+ * Browser.
+ *
+ * ─── DIE ZUSTÄNDE, UND WARUM ES FÜNF SIND ───────────────────────────────────
+ *
+ *   wartet       angelegt, noch nicht dran. Auch: nach einem Fehler, der
+ *                sich wiederholen lässt.
+ *   laeuft       jemand hat ihn genommen und hält eine PACHT darauf.
+ *   fertig       durch. Bleibt eine Weile liegen, damit man es sieht.
+ *   fehler       endgültig gescheitert — die Versuche sind aufgebraucht.
+ *                Bleibt LIEGEN und wird nicht weggeräumt: ein Auftrag, der
+ *                still verschwindet, ist genau der Fehler, den niemand
+ *                meldet.
+ *   abgebrochen  ein Mensch hat abgebrochen. Kein Fehler.
+ *
+ * Es gibt bewusst KEINEN Zustand „pausiert". Wer pausieren will, bricht ab
+ * und legt neu an; ein vierter Weg, der fast dasselbe tut, kostet mehr
+ * Verwirrung als er bringt.
+ *
+ * ─── DIE PACHT, UND WARUM ES SIE GIBT ───────────────────────────────────────
+ *
+ * Redion kann in mehreren Tabs offen sein (§16). Ohne Absprache nähmen zwei
+ * Tabs denselben Auftrag und täten die Arbeit doppelt — bei einem OCR-Lauf
+ * heisst das doppelte Kosten, bei einem Import doppelte Daten.
+ *
+ * Ein Auftrag trägt deshalb, wer ihn hält (`geraet`) und bis wann
+ * (`bisWann`). Wer ihn nehmen will, prüft beides. Und wenn ein Tab
+ * abstürzt, läuft die Pacht ab und ein anderer darf.
+ *
+ * Das ist keine Sperre im strengen Sinn — die entsteht erst dadurch, dass
+ * die Maschine Lesen und Schreiben in EINE IndexedDB-Transaktion legt.
+ * Diese Datei sagt nur, was gilt; das Durchsetzen steht in `maschine.ts`.
+ * ==========================================================================*/
+const JobModell = (() => {
+    /** Wie lange eine Pacht gilt, wenn niemand etwas anderes sagt. */
+    const PACHT_MS = 30000;
+    /** Wie oft es versucht wird, bevor endgültig Schluss ist. */
+    const MAX_VERSUCHE = 3;
+    /**
+     * Ein neuer Auftrag.
+     *
+     * `jetzt` kommt herein, statt hier `Date.now()` zu rufen — siehe Kopf.
+     */
+    const anlegen = (id, art, eingabe, jetzt, zeitText, opt = {}) => ({
+        id, art, zustand: 'wartet', eingabe,
+        schritt: 0, schritte: opt.schritte || 0, stand: null,
+        versuche: 0, maxVersuche: opt.maxVersuche || MAX_VERSUCHE,
+        geraet: '', bisWann: 0, nachher: jetzt,
+        angelegt: zeitText, begonnen: '', beendet: '',
+        fehler: '', text: opt.text || ''
+    });
+    /**
+     * Darf dieser Auftrag JETZT genommen werden?
+     *
+     * Drei Fälle sagen ja, und der dritte ist der wichtige:
+     *   · er wartet und seine Wartezeit ist um
+     *   · er läuft, aber die Pacht ist abgelaufen — der Halter ist weg
+     *   · er läuft und ICH bin der Halter (Neustart desselben Tabs)
+     */
+    const nehmbar = (a, jetzt, geraet) => {
+        if (!a)
+            return false;
+        if (a.zustand === 'wartet')
+            return a.nachher <= jetzt;
+        if (a.zustand !== 'laeuft')
+            return false;
+        return a.bisWann <= jetzt || a.geraet === geraet;
+    };
+    /**
+     * Der genommene Auftrag.
+     *
+     * `versuche` steigt HIER, nicht beim Scheitern. Das ist Absicht: ein Tab,
+     * der mitten in der Arbeit abstürzt, meldet nichts mehr — er kann gar
+     * nicht mehr zählen. Zählt man erst beim Scheitern, läuft ein Auftrag,
+     * der zuverlässig abstürzt, ewig weiter.
+     */
+    const nehmen = (a, jetzt, geraet, zeitText, pachtMs = PACHT_MS) => ({
+        ...a,
+        zustand: 'laeuft',
+        versuche: a.versuche + 1,
+        geraet,
+        bisWann: jetzt + pachtMs,
+        begonnen: a.begonnen || zeitText
+    });
+    /**
+     * Die Pacht verlängern, während gearbeitet wird.
+     *
+     * Ein OCR-Lauf über achtzig Seiten dauert länger als jede vernünftige
+     * Pacht. Ohne Verlängerung nähme ein zweiter Tab ihn mitten in der Arbeit
+     * weg — und beide liefen weiter.
+     */
+    const halten = (a, jetzt, pachtMs = PACHT_MS) => ({ ...a, bisWann: jetzt + pachtMs });
+    /**
+     * Ein Schritt ist fertig.
+     *
+     * Das ist der Wiederaufsetzpunkt: was hier geschrieben wird, überlebt
+     * einen Absturz. Wer erst am Ende schreibt, hat nach achtzig Seiten OCR
+     * und einem Stromausfall nichts.
+     */
+    const schrittFertig = (a, stand, jetzt, text, pachtMs = PACHT_MS) => ({
+        ...a,
+        schritt: a.schritt + 1,
+        stand,
+        bisWann: jetzt + pachtMs,
+        text: text === undefined ? a.text : text
+    });
+    const fertig = (a, zeitText, text) => ({
+        ...a,
+        zustand: 'fertig', geraet: '', bisWann: 0,
+        beendet: zeitText, fehler: '',
+        text: text === undefined ? a.text : text
+    });
+    const abbrechen = (a, zeitText) => ({
+        ...a,
+        zustand: 'abgebrochen', geraet: '', bisWann: 0, beendet: zeitText
+    });
+    /**
+     * Wie lange nach dem n-ten Fehlversuch gewartet wird.
+     *
+     * Verdoppelnd ab einer Sekunde, gedeckelt bei fünf Minuten. Der Deckel
+     * ist nötig: ohne ihn wartet der zehnte Versuch siebzehn Minuten, und
+     * niemand sieht mehr, ob die Maschine noch lebt.
+     *
+     * Kein Zufallsanteil („jitter"): der wäre gegen einen Serverandrang durch
+     * viele Geräte gedacht, und Redions Aufträge laufen auf EINEM Gerät.
+     * Ein Zufallsanteil machte hier nur die Prüfung unzuverlässig.
+     */
+    const wartezeit = (versuche) => Math.min(300000, 1000 * Math.pow(2, Math.max(0, versuche - 1)));
+    /**
+     * Der Auftrag ist gescheitert.
+     *
+     * Sind die Versuche aufgebraucht, geht er auf `fehler` und BLEIBT LIEGEN.
+     * Ein Auftrag, der nach dem dritten Fehlschlag still verschwindet, ist
+     * die Sorte Fehler, die niemand meldet — der Mensch denkt, das OCR läuft
+     * noch.
+     */
+    const gescheitert = (a, meldung, jetzt, zeitText) => {
+        const aus = a.versuche >= a.maxVersuche;
+        return {
+            ...a,
+            zustand: aus ? 'fehler' : 'wartet',
+            geraet: '', bisWann: 0,
+            nachher: aus ? a.nachher : jetzt + wartezeit(a.versuche),
+            beendet: aus ? zeitText : '',
+            fehler: String(meldung || 'Unbekannter Fehler')
+        };
+    };
+    /**
+     * Nach einem Neustart: was stand offen?
+     *
+     * Ein Auftrag auf `laeuft`, dessen Pacht abgelaufen ist, hat seinen
+     * Halter verloren. Er geht zurück auf `wartet` — mit einer WARTEZEIT,
+     * nicht sofort. Sofort hiesse: ein Auftrag, der den Tab zum Absturz
+     * bringt, bringt ihn beim nächsten Start gleich wieder zum Absturz.
+     */
+    const zurueckstellen = (a, jetzt, zeitText) => {
+        if (a.zustand !== 'laeuft')
+            return a;
+        if (a.versuche >= a.maxVersuche) {
+            return { ...a, zustand: 'fehler', geraet: '', bisWann: 0,
+                beendet: zeitText,
+                fehler: a.fehler || 'Nach einem Neustart nicht fortgesetzt — ' +
+                    'die Versuche waren aufgebraucht.' };
+        }
+        return { ...a, zustand: 'wartet', geraet: '', bisWann: 0,
+            nachher: jetzt + wartezeit(a.versuche) };
+    };
+    /** Ist der Auftrag zu Ende — egal wie? */
+    const beendet = (a) => a.zustand === 'fertig' || a.zustand === 'fehler' || a.zustand === 'abgebrochen';
+    /**
+     * Wie weit ist er, von 0 bis 1?
+     *
+     * Ohne bekannte Schrittzahl gibt es KEINE Zahl — dann `-1`. Ein
+     * erfundener Fortschrittsbalken, der bei 90 % stehenbleibt, ist
+     * schlimmer als gar keiner.
+     */
+    const fortschritt = (a) => {
+        if (a.zustand === 'fertig')
+            return 1;
+        if (!a.schritte || a.schritte <= 0)
+            return -1;
+        return Math.min(1, Math.max(0, a.schritt / a.schritte));
+    };
+    /**
+     * Welcher Auftrag ist als nächstes dran?
+     *
+     * Die Reihenfolge ist ausdrücklich: wer länger wartet, kommt zuerst.
+     * Keine Prioritäten — die verleiten dazu, alles als wichtig zu
+     * markieren, und dann ist wieder nichts wichtig. Wer etwas vorziehen
+     * will, bricht das andere ab.
+     */
+    const naechster = (alle, jetzt, geraet) => {
+        let best = null;
+        for (const a of alle) {
+            if (!nehmbar(a, jetzt, geraet))
+                continue;
+            if (!best || a.angelegt < best.angelegt ||
+                (a.angelegt === best.angelegt && a.id < best.id))
+                best = a;
+        }
+        return best;
+    };
+    /**
+     * Was beim Aufräumen weg darf.
+     *
+     * NUR `fertig` und `abgebrochen`, und auch die erst nach einer Weile.
+     * `fehler` bleibt immer — das ist der ganze Punkt einer Fehlerablage.
+     */
+    const aufraeumbar = (a, jetzt, haltenMs) => {
+        if (a.zustand !== 'fertig' && a.zustand !== 'abgebrochen')
+            return false;
+        if (!a.beendet)
+            return false;
+        const t = Date.parse(a.beendet);
+        if (!Number.isFinite(t))
+            return false;
+        return jetzt - t > haltenMs;
+    };
+    return {
+        anlegen, nehmbar, nehmen, halten, schrittFertig, fertig, abbrechen,
+        gescheitert, zurueckstellen, beendet, fortschritt, naechster,
+        aufraeumbar, wartezeit,
+        PACHT_MS, MAX_VERSUCHE
+    };
+})();
+window.JobModell = JobModell;
+
+</script>
+<script>
+/* ===== quell/kern/auftraege/maschine.js ===== */
+"use strict";
+/* ============================================================================
+ * kern/auftraege/maschine.ts — die Auftragsmaschine
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/kern/auftraege/maschine.ts`. `npm run bauen:ts` schreibt
+ * daraus `quell/kern/auftraege/maschine.js`.
+ * ----------------------------------------------------------------------------
+ * WOFÜR ES SIE GIBT.
+ *
+ * Redion kann heute lange Arbeit tun — PDF einlesen, OCR, grosser Import,
+ * Sicherung, Embeddings bauen. Was es nicht konnte, ist sie ÜBERLEBEN.
+ * Jede dieser Arbeiten lag im Arbeitsspeicher: Tab zu, Arbeit weg. Beim
+ * Datei-Upload wurden im Fehlerfall sogar die schon geschriebenen Stücke
+ * gelöscht (`dateien/ablage.ts:176`), und `verwaist()` erklärte jeden
+ * unfertigen Upload zum Müll.
+ *
+ * Der Auftrag wird jetzt VOR der Arbeit geschrieben. Nach einem Neustart
+ * weiss die App, was offenstand, und setzt beim letzten FERTIGEN Schritt
+ * an — nicht von vorn.
+ *
+ * ─── DIE ARBEITSTEILUNG ─────────────────────────────────────────────────────
+ *
+ *   `core/jobs/modell.ts`   die REGELN. Reine Funktionen, keine Uhr, keine
+ *                           Ablage. Ohne Browser prüfbar.
+ *   diese Datei             die WIRKUNG. Ablage, Zeit, Takt, Meldung.
+ *
+ * ─── WARUM SIE NICHT AUF DEM EREIGNISBUS AUFSETZT ───────────────────────────
+ *
+ * Redurs Regel war richtig: keine Bereiche direkt verkabeln, alles über den
+ * Bus. Nur kann Redions Bus das hier nicht tragen, und das ist gemessen
+ * (LUECKEN.md L102 §4):
+ *
+ *   · `melde` verwirft den Rückgabewert. Ein Auftrag, der etwas mit
+ *     IndexedDB tut, kann so nicht sagen, wann er fertig ist.
+ *   · `frage` sammelt Promises als ROHE WERTE ein, statt sie abzuwarten.
+ *   · Kein Abbruch, kein Veto, keine Reihenfolge, kein Nachreichen.
+ *
+ * Die Maschine benutzt den Bus deshalb zum MELDEN und nie zum Steuern. Wer
+ * eine Arbeit beisteuert, meldet einen Läufer an (`anmelden`) — eine
+ * gewöhnliche Funktion, die ein Promise gibt. Das ist keine Umgehung des
+ * Busses, sondern die Anerkennung dessen, was er ist: ein Rufsystem, kein
+ * Steuerwerk.
+ *
+ * Kein Bereich importiert einen anderen. Ein Bereich meldet seine Art an
+ * und weiss von den anderen nichts (§5).
+ *
+ * ─── ZWEI TABS ──────────────────────────────────────────────────────────────
+ *
+ * Ohne Absprache nähmen zwei Tabs denselben Auftrag: doppeltes OCR,
+ * doppelte Kosten, doppelte Daten. Ein Auftrag trägt deshalb eine PACHT —
+ * wer ihn hält und bis wann.
+ *
+ * Die Sperre entsteht NICHT durch das Feld, sondern dadurch, dass
+ * `Store.auftragNehmen` Lesen und Schreiben in EINE `readwrite`-Transaktion
+ * legt. IndexedDB serialisiert die; der zweite Tab sieht die Pacht des
+ * ersten. Läge das Lesen in einer eigenen Transaktion, sähen beide „frei".
+ *
+ * ─── UND WAS SIE NICHT TUT ──────────────────────────────────────────────────
+ *
+ * Sie arbeitet nicht selbst. Sie kennt keine PDFs, kein OCR, keine
+ * Sicherung. Sie nimmt Läufer entgegen und ruft sie auf.
+ * ==========================================================================*/
+const Auftraege = (() => {
+    /** Wie oft nachgesehen wird, ob etwas zu tun ist. */
+    const TAKT_MS = 4000;
+    /** Wie lange ein fertiger Auftrag noch liegenbleibt, damit man ihn sieht. */
+    const AUFHEBEN_MS = 24 * 3600 * 1000;
+    /** Wie oft die Pacht während der Arbeit verlängert wird. */
+    const HALTEN_MS = 10000;
+    /**
+     * Wer dieses Fenster ist.
+     *
+     * Nicht gespeichert: die Kennung soll je Tab verschieden sein, und ein
+     * gemerkter Wert wäre nach `öffnen im neuen Tab` derselbe. Genau dann
+     * bräuchte man sie aber.
+     */
+    const ICH = 'w' + Math.random().toString(36).slice(2, 10) + '-' + String(Date.now() % 100000);
+    const werkzeuge = new Map();
+    const abbrueche = new Set();
+    let takt = null;
+    let laeuftGerade = false;
+    let bereit = false;
+    const jetzt = () => Date.now();
+    const zeitText = () => (typeof Store !== 'undefined' && Store.now) ? Store.now() : new Date().toISOString();
+    const melde = (name, daten) => {
+        if (typeof Ereignisse === 'undefined' || !Ereignisse.melde)
+            return;
+        try {
+            Ereignisse.melde(name, daten);
+        }
+        catch { /* ein Horcher darf nichts anhalten */ }
+    };
+    /* ========================================================================
+     * ANMELDEN UND ANLEGEN
+     * ======================================================================*/
+    /**
+     * Eine Auftragsart und ihren Läufer anmelden.
+     *
+     * @returns eine Funktion zum Abmelden — sonst hinge der Läufer eines
+     *          entladenen Bereichs für immer.
+     */
+    const anmelden = (art, werkzeug) => {
+        if (!art || typeof werkzeug !== 'function') {
+            throw new Error('Eine Auftragsart braucht einen Namen und einen Läufer.');
+        }
+        werkzeuge.set(art, werkzeug);
+        return () => { werkzeuge.delete(art); };
+    };
+    /** Welche Arten kennt diese Fassung? Für §47: was es nicht gibt, wird nicht angeboten. */
+    const arten = () => [...werkzeuge.keys()];
+    /**
+     * Einen Auftrag anlegen. Er ist damit DAUERHAFT da, auch ohne dass die
+     * Arbeit begonnen hat — genau das ist der Sinn.
+     */
+    const anlegen = async (art, eingabe, opt = {}) => {
+        if (typeof Store === 'undefined' || !Store.auftragPut) {
+            throw new Error('Die Ablage steht noch nicht — Aufträge brauchen sie.');
+        }
+        const id = opt.id || Store.uid();
+        const a = JobModell.anlegen(id, art, eingabe, jetzt(), zeitText(), opt);
+        await Store.auftragPut(a);
+        melde('auftrag.angelegt', { id, art });
+        /* Nicht auf den nächsten Takt warten: wer etwas anstösst, will es
+           laufen sehen. `void`, weil `anlegen` nicht auf die ganze Arbeit
+           warten soll. */
+        void takten();
+        return a;
+    };
+    const alle = async () => (typeof Store !== 'undefined' && Store.auftragAlle) ? (await Store.auftragAlle()) || [] : [];
+    const einer = async (id) => (typeof Store !== 'undefined' && Store.auftragHolen) ? await Store.auftragHolen(id) : null;
+    /** Die offenen — für die Anzeige. */
+    const offen = async () => (await alle()).filter(a => !JobModell.beendet(a));
+    /**
+     * Abbrechen.
+     *
+     * Zwei Wege, und beide werden gebraucht: ein WARTENDER Auftrag wird
+     * sofort umgeschrieben; ein LAUFENDER bekommt eine Marke, die sein Läufer
+     * beim nächsten `abgebrochen()` sieht. Einen laufenden hart zu beenden
+     * ginge nicht — er steckt vielleicht mitten in einer Transaktion.
+     */
+    const abbrechen = async (id) => {
+        const a = await einer(id);
+        if (!a || JobModell.beendet(a))
+            return false;
+        abbrueche.add(id);
+        if (a.zustand === 'wartet') {
+            await Store.auftragPut(JobModell.abbrechen(a, zeitText()));
+            melde('auftrag.beendet', { id, art: a.art, zustand: 'abgebrochen' });
+            abbrueche.delete(id);
+        }
+        return true;
+    };
+    /* ========================================================================
+     * DER TAKT
+     * ======================================================================*/
+    /**
+     * Einmal nachsehen und höchstens EINEN Auftrag laufen lassen.
+     *
+     * Höchstens einen, und das ist Absicht: zwei parallele Aufträge auf
+     * demselben Gerät konkurrieren um dieselbe IndexedDB und dieselbe CPU,
+     * und der Nutzer tippt daneben. Ein Auftrag nach dem anderen ist
+     * langsamer und fühlt sich schneller an.
+     *
+     * `laeuftGerade` verhindert, dass zwei Takte einander überholen — der
+     * Takt ist ausdrücklich idempotent.
+     */
+    const takten = async () => {
+        if (laeuftGerade || !bereit)
+            return false;
+        if (typeof Store === 'undefined' || !Store.auftragNehmen)
+            return false;
+        /* KEIN LÄUFER, KEINE TRANSAKTION. Solange kein Bereich eine Art
+           angemeldet hat, kann kein Auftrag laufen — dann muss auch nicht alle
+           vier Sekunden das Fach gelesen werden. Das ist nicht nur sparsam:
+           zweihundertvierzig Prüfläufe starten die App, und keiner von ihnen
+           soll einen Takt bezahlen, der nichts tun kann. */
+        if (!werkzeuge.size)
+            return false;
+        laeuftGerade = true;
+        try {
+            const t = jetzt();
+            /* Lesen und Pacht schreiben in EINER Transaktion — siehe Kopf. */
+            const genommen = await Store.auftragNehmen((liste) => {
+                const kandidaten = liste.filter(a => werkzeuge.has(a.art));
+                const naechst = JobModell.naechster(kandidaten, t, ICH);
+                if (!naechst)
+                    return null;
+                return JobModell.nehmen(naechst, t, ICH, zeitText());
+            });
+            if (!genommen)
+                return false;
+            await arbeiten(genommen);
+            return true;
+        }
+        catch (e) {
+            /* Ein Fehler im TAKT darf die Maschine nicht anhalten — sonst
+               genügte ein kaputter Auftrag, damit nie wieder einer läuft. */
+            melde('auftrag.fehler', { fehler: String(e && e.message || e) });
+            return false;
+        }
+        finally {
+            laeuftGerade = false;
+        }
+    };
+    /** Einen genommenen Auftrag wirklich ausführen. */
+    const arbeiten = async (a) => {
+        const werkzeug = werkzeuge.get(a.art);
+        if (!werkzeug)
+            return;
+        melde('auftrag.beginnt', { id: a.id, art: a.art, versuch: a.versuche });
+        let stand = a;
+        const schreiben = async (neu) => {
+            stand = neu;
+            await Store.auftragPut(neu);
+        };
+        const hilfe = {
+            schritt: async (wert, text) => {
+                await schreiben(JobModell.schrittFertig(stand, wert, jetzt(), text, HALTEN_MS));
+                melde('auftrag.schritt', {
+                    id: a.id, art: a.art, schritt: stand.schritt,
+                    schritte: stand.schritte, text: stand.text
+                });
+            },
+            abgebrochen: () => abbrueche.has(a.id),
+            lebt: async () => {
+                await schreiben(JobModell.halten(stand, jetzt(), HALTEN_MS));
+            }
+        };
+        try {
+            const ergebnis = await werkzeug(stand, hilfe);
+            if (abbrueche.has(a.id)) {
+                abbrueche.delete(a.id);
+                await schreiben(JobModell.abbrechen(stand, zeitText()));
+                melde('auftrag.beendet', { id: a.id, art: a.art, zustand: 'abgebrochen' });
+                return;
+            }
+            await schreiben(JobModell.fertig({ ...stand, stand: ergebnis === undefined ? stand.stand : ergebnis }, zeitText()));
+            melde('auftrag.beendet', { id: a.id, art: a.art, zustand: 'fertig' });
+        }
+        catch (e) {
+            abbrueche.delete(a.id);
+            const meldung = String(e && e.message || e);
+            const danach = JobModell.gescheitert(stand, meldung, jetzt(), zeitText());
+            await schreiben(danach);
+            melde(danach.zustand === 'fehler' ? 'auftrag.beendet' : 'auftrag.fehler', { id: a.id, art: a.art, zustand: danach.zustand,
+                fehler: meldung, versuche: danach.versuche });
+        }
+    };
+    /* ========================================================================
+     * START UND WIEDERAUFNAHME
+     * ======================================================================*/
+    /**
+     * Was beim letzten Mal offenstand.
+     *
+     * Aufträge auf `laeuft`, deren Pacht abgelaufen ist, haben ihren Halter
+     * verloren — der Tab ist zu. Sie gehen zurück auf `wartet`, aber MIT
+     * Wartezeit: sofort hiesse, dass ein Auftrag, der den Tab zum Absturz
+     * bringt, ihn beim nächsten Start gleich wieder zum Absturz bringt.
+     *
+     * Ein Auftrag DIESES Fensters wird nicht angefasst — beim ersten Start
+     * gibt es keinen, und ein zweiter Aufruf soll nichts kaputtmachen.
+     */
+    const wiederaufnehmen = async () => {
+        const t = jetzt();
+        let n = 0;
+        for (const a of await alle()) {
+            if (a.zustand !== 'laeuft')
+                continue;
+            if (a.geraet === ICH)
+                continue;
+            if (a.bisWann > t)
+                continue;
+            const neu = JobModell.zurueckstellen(a, t, zeitText());
+            if (neu === a)
+                continue;
+            await Store.auftragPut(neu);
+            n++;
+            melde('auftrag.wiederaufgenommen', {
+                id: a.id, art: a.art, schritt: a.schritt, zustand: neu.zustand
+            });
+        }
+        return n;
+    };
+    /** Fertige und abgebrochene Aufträge, die lange genug lagen. */
+    const aufraeumen = async (haltenMs = AUFHEBEN_MS) => {
+        const t = jetzt();
+        let n = 0;
+        for (const a of await alle()) {
+            if (!JobModell.aufraeumbar(a, t, haltenMs))
+                continue;
+            await Store.auftragWeg(a.id);
+            n++;
+        }
+        return n;
+    };
+    /**
+     * Die Maschine anwerfen.
+     *
+     * Reihenfolge: erst wiederaufnehmen, dann aufräumen, dann takten. Wer
+     * zuerst aufräumt, könnte einen Auftrag wegwerfen, den die
+     * Wiederaufnahme gerade gebraucht hätte.
+     */
+    const start = async () => {
+        if (bereit)
+            return;
+        bereit = true;
+        try {
+            await wiederaufnehmen();
+            await aufraeumen();
+        }
+        catch (e) {
+            melde('auftrag.fehler', { fehler: String(e && e.message || e) });
+        }
+        if (takt)
+            clearInterval(takt);
+        takt = setInterval(() => { void takten(); }, TAKT_MS);
+        void takten();
+    };
+    /** Anhalten — für Prüfläufe und für das Schliessen. */
+    const stopp = () => {
+        if (takt)
+            clearInterval(takt);
+        takt = null;
+        bereit = false;
+    };
+    /**
+     * Alles wegwerfen.
+     *
+     * Wird beim Einspielen mit „Ersetzen" gebraucht: die Aufträge zeigen auf
+     * Blöcke und Dateien, die es danach nicht mehr gibt. Ein Auftrag, der
+     * eine verschwundene Datei sucht, scheitert dreimal und landet in der
+     * Fehlerablage — für nichts.
+     */
+    const leeren = async () => {
+        let n = 0;
+        for (const a of await alle()) {
+            await Store.auftragWeg(a.id);
+            n++;
+        }
+        return n;
+    };
+    return {
+        start, stopp, takten, anmelden, arten, anlegen, abbrechen,
+        alle, offen, einer, wiederaufnehmen, aufraeumen, leeren,
+        ICH, TAKT_MS, AUFHEBEN_MS
+    };
+})();
+window.Auftraege = Auftraege;
+
+</script>
+<script>
 /* ===== quell/core/knowledge/rank.js ===== */
 "use strict";
 /* ============================================================================
@@ -18791,7 +19397,17 @@ const Umzuege = (() => {
             warum: 'Vorbereitete Suchwörter je Seite und Datenbankzeile. Auch dieses ' +
                 'Fach ist nur ein Cache: Redions Blöcke und Sammlungen bleiben die ' +
                 'Wahrheit. Fehlt der Index oder ist er beschädigt, wird er aus ihnen ' +
-                'neu aufgebaut.' }
+                'neu aufgebaut.' },
+        { nr: 7, was: 'Aufträge für lange Hintergrundarbeit',
+            faecher: ['auftraege'],
+            warum: 'Ein OCR-Lauf über achtzig Seiten, ein grosser Import, eine ' +
+                'Sicherung: Arbeiten, die länger dauern als ein Tab offen bleibt. ' +
+                'Der Auftrag wird VOR der Arbeit geschrieben und trägt seinen ' +
+                'eigenen Fortschritt — nach einem Neustart weiss die App, was ' +
+                'offenstand, und setzt beim letzten fertigen Schritt an. ' +
+                'Dieses Fach reist NICHT in der Sicherung mit: ein halb ' +
+                'erledigter Auftrag auf einem anderen Gerät hätte seine ' +
+                'Eingaben nicht (E286).' }
     ];
     /* Die letzte Fassung — und die Liste ist nie leer, sonst gäbe es keine
        Ablage. `?.nr ?? 0` schreibt genau das hin, statt es anzunehmen. */
@@ -30322,6 +30938,17 @@ const Store = (() => {
                aus Blöcken und Sammlungen neu gebaut werden. */
             if (!d.objectStoreNames.contains('suchindex'))
                 d.createObjectStore('suchindex', { keyPath: 'id' });
+            /* Version 7: Aufträge für lange Hintergrundarbeit (E286).
+               Der Auftrag wird VOR der Arbeit geschrieben; nach einem Neustart
+               weiss die App dadurch, was offenstand. Zwei Indizes, weil die
+               Maschine genau zwei Fragen stellt: „was ist offen?" (Zustand) und
+               „was ist von dieser Art?" (Art). Ohne sie liefe jeder Takt über
+               alle Aufträge, auch über die längst fertigen. */
+            if (!d.objectStoreNames.contains('auftraege')) {
+                const au = d.createObjectStore('auftraege', { keyPath: 'id' });
+                au.createIndex('zustand', 'zustand');
+                au.createIndex('art', 'art');
+            }
         };
         req.onsuccess = () => {
             db = req.result;
@@ -31886,6 +32513,11 @@ const Store = (() => {
                 'Blick in die Freigaben.';
         /* Und derselbe Satz für die Zugangsdaten. Er nennt die Zahl und den
            Weg zurück: eine verschlüsselte Sicherung nimmt sie mit. */
+        const ueberAuftraege = !exportAuftraegeOffen ? ''
+            : ' ' + exportAuftraegeOffen + ' Auftrag/Aufträge standen beim Sichern ' +
+                'noch offen (z. B. ein laufendes Einlesen). Sie reisen NICHT mit: ' +
+                'ihre Eingaben liegen auf diesem Gerät. Auf diesem Gerät laufen sie ' +
+                'weiter.';
         const ueberGeheimnisse = !geheimAusgelassen.length ? ''
             : ' ' + geheimAusgelassen.length + ' Zugangsdaten (' +
                 geheimAusgelassen.join(', ') + ') sind bewusst NICHT dabei: eine ' +
@@ -31898,7 +32530,17 @@ const Store = (() => {
             /* Was drin ist — damit ein Einleser es nachsehen kann, statt zu raten. */
             enthaelt: ['blocks', 'collections', 'views', 'meta', 'versions']
                 .concat(mitAnhaengen && echteImArchiv ? ['dateien', 'stuecke'] : []),
+            /* `auftraege` reist NIE mit (E286): ein halb erledigter Auftrag ist
+               Arbeit an DIESEM Gerät, und seine Eingaben — eine Datei in
+               Stücken, ein bestimmter Block — gibt es woanders vielleicht gar
+               nicht. Ihn mitzuschicken hiesse, auf dem anderen Gerät eine
+               Arbeit zu beginnen, die nicht laufen kann.
+      
+               GENANNT wird er aber nur, wenn wirklich etwas offensteht. Ein
+               leeres Auftragsfach lässt nichts aus, und ein `fehlt`, das immer
+               etwas enthält, bringt Menschen bei, es zu überlesen. */
             fehlt: (fehlenAnhaenge ? ['dateien', 'stuecke'] : [])
+                .concat(exportAuftraegeOffen ? ['auftraege'] : [])
                 .concat(nurHierAusgelassen)
                 .concat(geheimAusgelassen),
             /* Wie viele Dateien absichtlich draussen blieben — als Zahl, damit ein
@@ -31913,7 +32555,7 @@ const Store = (() => {
                         '„dateien" desselben Archivs.' + ueberAbgeleitete
                     : abgeleitetDa
                         ? 'Dieser Bestand hat nur abgeleitete Dateien.' + ueberAbgeleitete
-                        : 'Vollständig: dieser Bestand hat keine Dateianhänge.') + ueberOrdner + ueberGeteilt + ueberGeheimnisse,
+                        : 'Vollständig: dieser Bestand hat keine Dateianhänge.') + ueberOrdner + ueberGeteilt + ueberGeheimnisse + ueberAuftraege,
             blocks: cache.blocks,
             collections: cache.collections,
             views: cache.views,
@@ -31925,6 +32567,9 @@ const Store = (() => {
        Zwischenspeicher, damit er den Arbeitsspeicher nicht belastet. */
     let exportVersionen = [];
     let exportDateien = 0;
+    /* Wie viele Aufträge beim Sichern noch offenstanden — siehe
+       `exportVorbereiten`. Nur dann nennt das Manifest sie. */
+    let exportAuftraegeOffen = 0;
     /* WIE VIELE DAVON ABGELEITET SIND. Seit E103 packt das `.redion` nicht mehr
        jede Datei ein: gerasterte PDF-Seitenbilder bleiben draussen, weil sie
        sich aus dem mitgesicherten Original neu rechnen lassen. Das Manifest
@@ -31948,8 +32593,26 @@ const Store = (() => {
         const alleDateien = await all('dateien');
         exportDateien = alleDateien.length;
         exportAbgeleitet = alleDateien.filter((d) => d && d.abgeleitet).length;
+        /* OFFENE AUFTRÄGE ZÄHLEN (E286).
+           Nicht: `auftraege` immer unter `fehlt` nennen. Der erste Entwurf tat
+           genau das, und die Prüfläufe zeigten sofort, was daran falsch ist:
+           eine Sicherung eines gewöhnlichen Bestands könnte dann NIE mehr
+           „nichts fehlt" sagen. Ein `fehlt`, das immer etwas enthält, bringt
+           Menschen bei, es zu überlesen — derselbe Fehler wie die Warnung, die
+           bei gewöhnlichem Gebrauch anspringt (E284).
+    
+           Genannt wird es also nur, wenn wirklich Arbeit offensteht. Dann ist
+           die Angabe auch etwas wert: „drei Aufträge laufen noch und reisen
+           nicht mit". */
+        try {
+            const auftraege = await all('auftraege');
+            exportAuftraegeOffen = (auftraege || []).filter((a) => a && (a.zustand === 'wartet' || a.zustand === 'laeuft')).length;
+        }
+        catch {
+            exportAuftraegeOffen = 0;
+        }
         return { versionen: exportVersionen.length, dateien: exportDateien,
-            abgeleitet: exportAbgeleitet };
+            abgeleitet: exportAbgeleitet, auftraegeOffen: exportAuftraegeOffen };
     };
     /**
      * Eine Sicherung einspielen.
@@ -32313,6 +32976,18 @@ const Store = (() => {
            er beantworten muss, ist ohnehin nur die eine Frage: hat der Server
            diesen Satz je gesehen? */
         if (art === 'ersetzen') {
+            /* --- DIE AUFTRÄGE GEHEN MIT (E286) ----------------------------
+               Sie zeigen auf Blöcke und Dateien, die es nach dem Ersetzen
+               nicht mehr gibt. Ein Auftrag, der eine verschwundene Datei
+               sucht, scheitert dreimal und landet in der Fehlerablage — für
+               nichts. Direkt über das Fach, nicht über `Auftraege`: das Modul
+               lädt NACH dieser Datei, und ein `typeof`-Wächter hier wäre eine
+               Abhängigkeit, die nur manchmal da ist. */
+            try {
+                for (const a of (await all('auftraege')) || [])
+                    await del('auftraege', a.id);
+            }
+            catch { /* das Fach gibt es erst ab Fassung 7 */ }
             await basisLeeren();
             const grabsteine = getMeta('wolkeBloeckeWeg', []) || [];
             for (const e of grabsteine)
@@ -32788,6 +33463,50 @@ const Store = (() => {
     const vorratHolen = (id) => get('vorrat', id);
     const vorratWeg = (id) => del('vorrat', id);
     const vorratAlle = () => all('vorrat');
+    /* --- Aufträge (E286) ---------------------------------------------------
+       Vier gewöhnliche Wege plus EINER, der es nicht ist: `auftragNehmen`
+       liest und schreibt in DERSELBEN Transaktion. Das ist der Unterschied
+       zwischen einer Absichtserklärung und einer Sperre.
+  
+       Zwei Tabs, die gleichzeitig denselben Auftrag nehmen wollen, laufen
+       durch dieselbe `readwrite`-Transaktion auf demselben Fach — und die
+       serialisiert IndexedDB. Der zweite sieht die Pacht des ersten und geht
+       weiter. Läge das Lesen in einer eigenen Transaktion, sähen beide
+       „frei" und beide schrieben ihre Pacht. */
+    const auftragPut = (satz) => put('auftraege', satz);
+    const auftragHolen = (id) => get('auftraege', id);
+    const auftragWeg = (id) => del('auftraege', id);
+    const auftragAlle = () => all('auftraege');
+    /**
+     * Einen Auftrag nehmen — Lesen und Schreiben in EINER Transaktion.
+     *
+     * @param waehle  bekommt alle Aufträge und gibt den geänderten zurück,
+     *                oder `null`. Die Regel steht in `JobModell`; hier steht
+     *                nur, dass sie unter einer Transaktion läuft.
+     */
+    const auftragNehmen = (waehle) => new Promise((ok2, fail2) => {
+        if (!db) {
+            ok2(null);
+            return;
+        }
+        let genommen = null;
+        const t = db.transaction('auftraege', 'readwrite');
+        const laden = t.objectStore('auftraege').getAll();
+        laden.onsuccess = () => {
+            try {
+                genommen = waehle(laden.result || []);
+            }
+            catch (e) {
+                /* Eine werfende Regel darf die Transaktion nicht offen lassen. */
+                genommen = null;
+            }
+            if (genommen)
+                t.objectStore('auftraege').put(genommen);
+        };
+        t.oncomplete = () => ok2(genommen);
+        t.onerror = () => fail2(t.error);
+        t.onabort = () => fail2(t.error || new Error('Auftrag nehmen abgebrochen.'));
+    });
     /* --- Persistenter Suchindex ------------------------------------------- */
     /**
      * Schreibt nur den Such-Cache. Diese Wege berühren absichtlich weder
@@ -32899,6 +33618,7 @@ const Store = (() => {
         dateiGrabstein, dateiGrabsteine, dateiGrabsteinWeg,
         basisPut, basisHolen, basisWeg, basisAlle, basisLeeren,
         vorratPut, vorratHolen, vorratWeg, vorratAlle,
+        auftragPut, auftragHolen, auftragWeg, auftragAlle, auftragNehmen,
         suchindexAendern, suchindexErsetzen, suchindexLeeren,
         stueckPut, stueckHolen, stueckWeg, stueckeVon,
         speichertNicht: () => nurSpeicher,
@@ -122391,6 +123111,13 @@ const App = (() => {
            die Seitenleiste sichtbar — kein Absturz. */
         if (typeof Kontextkante !== 'undefined')
             Kontextkante.binde();
+        /* DIE AUFTRAGSMASCHINE (E286). Nach der Ablage, weil sie sie braucht,
+           und nach den Bereichen, weil die ihre Läufer anmelden. Ohne einen
+           einzigen angemeldeten Läufer tut ihr Takt gar nichts — sie liest
+           dann nicht einmal das Fach. */
+        if (typeof Auftraege !== 'undefined') {
+            void Auftraege.start();
+        }
         /* ----------------------------------------------------------------------
          * FEHLER SICHTBAR MACHEN — aber nur, wenn die Meldung etwas wert ist
          * ----------------------------------------------------------------------

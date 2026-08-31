@@ -3769,3 +3769,43 @@ nicht verlorengeht:
    nicht mehr.
 
 Gefunden am 31. August 2026 (gemessene Bestandsaufnahme vor E284).
+
+================================================================================
+L103 — Was die Auftragsmaschine (E286) noch nicht kann
+================================================================================
+
+Die Maschine steht und ist geprüft. Fünf Dinge fehlen ihr, jedes mit Grund:
+
+1. **Kein Bereich ist angeschlossen.** OCR, PDF-Einlesen, grosser Import,
+   Sicherung, Embeddings — alle laufen weiter wie bisher, im
+   Arbeitsspeicher. Das ist Absicht: eine Auftragsmaschine unter das OCR zu
+   schieben, bevor sie bewiesen ist, wäre der Umbau, den §45 verbietet.
+   Der erste Anschluss ist ein eigener Bogen, und der beste Kandidat ist
+   das PDF-Einlesen — es hat schon eine Wiederaufnahme, nur durch
+   Neu-Herleitung statt aus einem Auftragssatz.
+
+2. **Kein Web Worker.** Ein Auftrag läuft im selben Faden wie die
+   Oberfläche. Bei einem OCR über achtzig Seiten heisst das: die App
+   ruckelt, obwohl der Auftrag brav in Schritten arbeitet. Der
+   Agenten-Sandkasten (`agenten.ts:539`) zeigt, dass Redion Worker kann —
+   ein Auftrag müsste dafür aber seinen Läufer als eigenständigen Code
+   mitbringen, und das ist eine eigene Entscheidung.
+
+3. **Kein Fortschritt in der Oberfläche.** Die Ereignisse (`auftrag.schritt`
+   mit Schritt/Schrittzahl/Text) werden gemeldet, und niemand hört zu. Es
+   gibt keine Liste offener Aufträge, keinen Balken, keinen Abbrechen-Knopf
+   — obwohl `Auftraege.offen()` und `Auftraege.abbrechen(id)` beide da
+   sind. Das ist §47 von der leisen Seite: nicht ein Knopf, der nichts tut,
+   sondern eine Sache, die läuft und die niemand sieht.
+
+4. **Die Pacht ist kein `navigator.locks`.** Sie beruht darauf, dass
+   IndexedDB Transaktionen serialisiert — das reicht gegen zwei Tabs, aber
+   es gibt keine Absprache, wer arbeiten SOLL. Zwei Tabs nehmen
+   verschiedene Aufträge und arbeiten beide; auf einem schwachen Gerät ist
+   das doppelt so viel Last wie nötig.
+
+5. **Kein Zeitplan.** Ein Auftrag läuft, sobald er dran ist. Es gibt kein
+   „heute Nacht", kein „wenn das Gerät am Strom hängt", kein „nur im
+   WLAN". Für OCR und Embeddings wäre genau das die richtige Antwort.
+
+Gefunden am 31. August 2026 (beim Bau von E286).

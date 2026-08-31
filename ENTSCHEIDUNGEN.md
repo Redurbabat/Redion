@@ -21543,3 +21543,134 @@ die nächste Entscheidung und nicht diese.
 
 **Geprüft:** test279 neu (40 Punkte, mit von Hand nachgerechneten Werten und
 vier Gegenproben) · test105 grün · typecheck grün · sw v51.
+
+================================================================================
+E286 — Die Auftragsmaschine: Arbeit, die einen Neustart überlebt (Redurs Punkt 1)
+================================================================================
+31. August 2026
+
+Redion konnte lange Arbeit TUN — PDF einlesen, OCR, grosser Import,
+Sicherung, Embeddings bauen. Was es nicht konnte, ist sie ÜBERLEBEN. Jede
+dieser Arbeiten lag im Arbeitsspeicher: Tab zu, Arbeit weg.
+
+Beim Datei-Upload war es schlimmer als „weg": der Fehlerpfad löschte die
+schon geschriebenen Stücke (`dateien/ablage.ts:176`), und `verwaist()`
+erklärte jeden unfertigen Upload zum Müll, den `aufraeumen()` endgültig
+entfernte. Ein abgebrochener Upload einer 400-MB-Datei liess also nichts
+zurück, womit man hätte weitermachen können.
+
+### Was es schon gab, und warum es nicht reichte
+
+Die Bestandsaufnahme fand durchaus Bausteine: die Zustandsmaschine der
+Datei-Uploads (`wartet`/`laeuft`/`fertig`), zwei echte Merklisten für
+Löschabsichten (`wolkeDateienWeg`, `wolkeBloeckeWeg` — ein
+Outbox-Muster mit Wiederholung), Wiederaufnahme-Marken für den Abgleich,
+und beim PDF-Einlesen sogar eine echte Wiederaufnahme — allerdings durch
+NEU-HERLEITUNG aus dem Bestand, nicht aus einem Auftragssatz.
+
+Was fehlte, ist die gemeinsame Form: ein Fach, ein Typ, ein Modul, ein
+Versuchszähler, eine Fehlerablage, eine Absprache zwischen zwei Tabs.
+
+### Die Arbeitsteilung, und warum sie zwei Dateien ist
+
+    core/jobs/modell.ts     die REGELN. Reine Funktionen, keine Uhr, keine
+                            Ablage. Die Zeit kommt als Zahl herein.
+    kern/auftraege/         die WIRKUNG. Ablage, Takt, Meldung.
+
+Das ist nicht Sauberkeit um ihrer selbst willen. Eine Regel, die auf die
+echte Uhr wartet, lässt sich nur mit echtem Warten prüfen — und dann prüft
+man sie eben nicht. test280 §1 rechnet die ganze Zustandsmaschine mit einer
+erfundenen Zeit durch: Pacht, Wartezeiten, drei Fehlversuche, Reihenfolge,
+Aufräumregeln. Ohne eine Sekunde zu warten.
+
+### Redurs Bus-Regel war richtig, und trotzdem geht es nicht so
+
+„Die Auftragsmaschine muss auf Redions Ereignissystem aufsetzen und darf
+nicht Fachbereiche direkt verkabeln." Der zweite Teil gilt und wird
+eingehalten: kein Bereich importiert einen anderen, jeder meldet seine Art
+an und weiss von den übrigen nichts.
+
+Der erste Teil geht nicht, und das ist gemessen (L102 §4):
+
+  · `melde` verwirft den Rückgabewert. Ein Auftrag, der etwas mit
+    IndexedDB tut, kann darüber nicht sagen, wann er fertig ist.
+  · `frage` sammelt Promises als ROHE WERTE ein, statt sie abzuwarten.
+  · Kein Abbruch, kein Veto, keine Reihenfolge, kein Nachreichen.
+  · Von 42 Namen in `ARTEN` wird genau EINER je benutzt.
+
+Die Maschine benutzt den Bus deshalb zum MELDEN und nie zum Steuern
+(`auftrag.angelegt`, `.beginnt`, `.schritt`, `.beendet`, `.fehler`). Das
+ist keine Umgehung, sondern die Anerkennung dessen, was er ist: ein
+Rufsystem, kein Steuerwerk.
+
+### Die Pacht — und warum das Feld nicht die Sperre ist
+
+Zwei Tabs ohne Absprache nähmen denselben Auftrag: doppeltes OCR, doppelte
+Kosten, doppelte Daten. Ein Auftrag trägt deshalb, wer ihn hält (`geraet`)
+und bis wann (`bisWann`).
+
+**Die Sperre entsteht nicht durch das Feld.** Sie entsteht dadurch, dass
+`Store.auftragNehmen` Lesen und Schreiben in EINE `readwrite`-Transaktion
+legt. IndexedDB serialisiert die; der zweite Tab sieht die Pacht des
+ersten. Läge das Lesen in einer eigenen Transaktion, sähen beide „frei" und
+beide schrieben ihre Pacht hinein. test280 §6 misst das mit zwei echten
+Fenstern auf derselben Ablage.
+
+### Der Versuch wird beim NEHMEN gezählt, nicht beim Scheitern
+
+Ein Tab, der mitten in der Arbeit abstürzt, meldet nichts mehr — er kann
+gar nicht mehr zählen. Zählte man erst beim Scheitern, liefe ein Auftrag,
+der zuverlässig abstürzt, ewig weiter: jeder Start nimmt ihn, jeder Start
+stirbt daran, der Zähler bleibt auf null.
+
+Aus demselben Grund kommt ein verwaister Auftrag beim Neustart mit
+WARTEZEIT zurück und nicht sofort.
+
+### Der Fehler bleibt liegen
+
+Sind die Versuche aufgebraucht, geht der Auftrag auf `fehler` und wird
+NICHT weggeräumt. Ein Auftrag, der nach dem dritten Fehlschlag still
+verschwindet, ist die Sorte Fehler, die niemand meldet — der Mensch denkt,
+das OCR laufe noch. `aufraeumen()` fasst nur `fertig` und `abgebrochen` an,
+und auch die erst nach einer Frist.
+
+### Ein Entwurfsfehler, den die Prüfläufe sofort zeigten
+
+Aufträge reisen nicht in der Sicherung mit: ein halb erledigter Auftrag ist
+Arbeit an DIESEM Gerät, und seine Eingaben — eine Datei in Stücken, ein
+bestimmter Block — gibt es woanders vielleicht gar nicht.
+
+Mein erster Entwurf nannte `auftraege` deshalb IMMER unter `fehlt`. test96
+und test100 wurden sofort rot, und zu Recht: eine Sicherung eines
+gewöhnlichen Bestands hätte damit nie wieder „nichts fehlt" sagen können.
+Ein `fehlt`, das immer etwas enthält, bringt Menschen bei, es zu überlesen
+— derselbe Fehler wie die Warnung, die bei gewöhnlichem Gebrauch anspringt
+(E284, dieselbe Woche, dieselbe Falle).
+
+Genannt wird es jetzt nur, wenn wirklich Arbeit offensteht. Dann ist die
+Angabe auch etwas wert: „drei Aufträge standen beim Sichern noch offen."
+
+### Und beim Einspielen mit „Ersetzen"
+
+Die Aufträge gehen mit. Sie zeigen auf Blöcke und Dateien, die es danach
+nicht mehr gibt; ein Auftrag, der eine verschwundene Datei sucht,
+scheitert dreimal und landet in der Fehlerablage — für nichts. Beim
+Zusammenführen bleiben sie stehen, denn dort bleiben die Blöcke ja auch.
+
+### Was diese Entscheidung NICHT tut
+
+Sie arbeitet nicht selbst. Sie kennt keine PDFs, kein OCR, keine Sicherung
+— sie nimmt Läufer entgegen und ruft sie auf. Und es ist noch **kein
+Bereich angeschlossen**: das ist bewusst der nächste Bogen. Eine
+Auftragsmaschine unter das OCR zu schieben, bevor sie bewiesen ist, wäre
+genau die Art Umbau, die §45 verbietet.
+
+Solange kein Läufer angemeldet ist, liest ihr Takt nicht einmal das Fach.
+Zweihundertvierzig Prüfläufe starten die App, und keiner soll einen Takt
+bezahlen, der nichts tun kann.
+
+**Geprüft:** test280 neu (52 Punkte; §4 reisst die Seite mitten in der
+Arbeit weg und misst, dass der Auftrag bei Schritt 2 weitermacht und nicht
+von vorn) · test85, test95, test96, test100 auf Fassung 7 nachgezogen —
+alle vier waren rot, und alle vier sollten es sein · test99 (zwei Fenster)
+unverändert grün · typecheck grün · sw v52.

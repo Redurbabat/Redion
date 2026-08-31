@@ -75,7 +75,7 @@ await new Promise<void>(f => { server.listen(PORT, () => f()); });
    selbst und wäre auch dann grün, wenn beide falsch sind. */
 /** Die Fassungen, die es je gab — als eigener Name, damit die Tabelle unten
     nur mit einer davon gelesen werden kann. */
-type Fassung = 1 | 2 | 3 | 4 | 5 | 6;
+type Fassung = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 const FAECHER_BIS: Record<Fassung, string[]> = {
   1: ['blocks', 'collections', 'views', 'meta'],
@@ -85,13 +85,17 @@ const FAECHER_BIS: Record<Fassung, string[]> = {
   5: ['blocks', 'collections', 'views', 'meta', 'versions', 'dateien', 'stuecke', 'basis', 'vorrat'],
   /* Fassung 6 brachte den inkrementellen Suchindex mit. */
   6: ['blocks', 'collections', 'views', 'meta', 'versions', 'dateien', 'stuecke',
-      'basis', 'vorrat', 'suchindex']
+      'basis', 'vorrat', 'suchindex'],
+  /* Fassung 7 brachte die Aufträge (E286): lange Hintergrundarbeit, die
+     einen Neustart überlebt. */
+  7: ['blocks', 'collections', 'views', 'meta', 'versions', 'dateien', 'stuecke',
+      'basis', 'vorrat', 'suchindex', 'auftraege']
 };
 
 /* Wogegen geprüft wird: der Stand von HEUTE. Steht hier eine Zahl zu
    niedrig, meldet der Prüflauf einen Umzug als gelungen, der ein Fach
    vergessen hat. */
-const HEUTE: Fassung = 6;
+const HEUTE: Fassung = 7;
 
 const browser = await chromium.launch();
 
@@ -174,7 +178,7 @@ for (const fassung of [1, 2, 3, 4, 5, 6] as Fassung[]) {
     const r = indexedDB.open('notizen');
     r.onsuccess = () => { const n = [...r.result.objectStoreNames]; r.result.close(); f(n.sort()); };
   }));
-  gleich(`F${fassung}: Alle zehn Fächer stehen danach bereit`,
+  gleich(`F${fassung}: Alle elf Fächer stehen danach bereit`,
          faecher, FAECHER_BIS[HEUTE]?.slice().sort());
 
   /* 3 · Und die App muss danach benutzbar sein, nicht nur lesbar. */

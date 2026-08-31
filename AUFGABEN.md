@@ -2058,3 +2058,21 @@ node pruefungen/lauf/test105.mjs
   stark sind. Und die Falle beim Bauen: `tsconfig.bauen.json` führt eine
   Aufzählung der core-Ordner, kein `**`; ein neuer Ordner muss eingetragen
   werden. test279 neu (40). sw v51.
+* E286 (Redurs Punkt 1): Die Auftragsmaschine. Fach `auftraege` (Fassung 7),
+  `core/jobs/modell.ts` mit den REGELN (reine Funktionen, keine Uhr — die
+  Zeit kommt als Zahl herein, deshalb prüft test280 §1 die ganze
+  Zustandsmaschine ohne eine Sekunde zu warten) und `kern/auftraege/` mit der
+  WIRKUNG. Der Auftrag wird VOR der Arbeit geschrieben; nach einem Neustart
+  setzt er beim letzten FERTIGEN Schritt an. Genau das misst §4: die Seite
+  wird mitten in der Arbeit neu geladen, und der Auftrag macht bei Schritt 2
+  weiter statt von vorn. Redurs Bus-Regel gilt für den zweiten Teil (kein
+  Bereich kennt einen anderen), nicht für den ersten: Redions Bus kann kein
+  async, keinen Abbruch, keine Reihenfolge (L102 §4) — die Maschine meldet
+  darüber und steuert nicht. Die Pacht gegen zwei Tabs ist keine Feldangabe,
+  sondern EINE readwrite-Transaktion; §6 misst mit zwei echten Fenstern. Der
+  Versuch zählt beim NEHMEN, nicht beim Scheitern — sonst liefe ein Auftrag,
+  der zuverlässig abstürzt, ewig. Ein Entwurfsfehler, den die Prüfläufe
+  sofort zeigten: `auftraege` immer unter `fehlt` zu nennen machte „nichts
+  fehlt" unmöglich; genannt wird es jetzt nur bei wirklich offener Arbeit.
+  test280 neu (52); test85/95/96/100 auf Fassung 7 nachgezogen. Noch kein
+  Bereich angeschlossen und keine Anzeige — L103. sw v52.
