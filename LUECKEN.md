@@ -2811,7 +2811,7 @@ plus Wolke wirklich zusammen gemessen wird.
 Gefunden am 29. August 2026 (E254-Leser, Risiko 3).
 
 ================================================================================
-L76 — Wolke-Zustand nach Import „ersetzen" ist unentschieden
+L76 — Wolke-Zustand nach Import „ersetzen" ist unentschieden — GESCHLOSSEN
 ================================================================================
 
 E255 rettet die drei Lösch-Merklisten — Token, Bereich, Salz, Marken
@@ -2826,6 +2826,19 @@ als EIGENE Entscheidung geplant (Import-Dialog könnte fragen: „Konto
 behalten und Bestand neu abgleichen?"), nicht als Beifang.
 
 Gefunden am 29. August 2026 (beim Bau von E255).
+
+**GESCHLOSSEN am 31. August 2026 durch E279.** Und zwar genau so, wie es
+hier gefordert stand — als eigene Entscheidung, nicht als Beifang: die
+Identität des Geräts überlebt das Einspielen, die drei Marken gehen auf
+null, die `basis` wird geleert UND für die überlebenden Grabsteine neu
+gesät (ohne das Neusäen wären E254/E255 durch die Hintertür wieder offen
+gewesen). Danach hält Redion den Abgleich an und FRAGT, statt eine Richtung
+zu wählen. Die Frage steht in einem eigenen Meta-Schlüssel und nicht in
+`wolkeAbgleich` — dessen Rückfallweg liest die Marken, und die eben zu
+leeren hätte still „nur lokal" gewählt.
+
+Was E279 NICHT deckt, steht als L100: beim Dazulegen bleiben die Marken
+stehen.
 
 ================================================================================
 L77 — Was das Notizhefte-Regal (E264) bewusst noch nicht kann
