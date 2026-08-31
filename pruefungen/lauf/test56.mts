@@ -167,12 +167,14 @@ const pruef = (n: any, ist: any, soll: any) => {
       zeit: Store.now(), erledigt: false, antworten: [], reaktionen: {} }] });
 
     const treffer = Kommentare.anMich().find((m: any) => m.k.id === 'k3');
+    if (!treffer) return { gefunden: false, alterWegWaerDieSeite: true,
+                           offen: false, krume: '(kein Treffer)' };
     /* Der alte Weg, zum Vergleich: `parentId` ist NICHT die Seite. */
     const alterWeg = treffer.block.parentId;
     App.zeigeBlock(treffer.block.id);
     await new Promise(r => setTimeout(r, 400));
     return {
-      gefunden: !!treffer,
+      gefunden: true,
       alterWegWaerDieSeite: alterWeg === s2.id,
       offen: App.aktuelleSeite() === s2.id,
       krume: (document.getElementById('crumb')?.textContent || '').trim()

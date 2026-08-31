@@ -1931,3 +1931,11 @@ node pruefungen/lauf/test105.mjs
   dreimal, plus `App.zeigeBlock` seit E105). Beides stand in LUECKEN, weil
   ich geschrieben statt nachgesehen habe. test56 +4 Punkte.
 
+* E276 (L96, L99): `meldungenAlleGelesen()` als harmloser Zwilling zum
+  Leeren — es ändert ein Feld, statt wegzuwerfen; als Kantenknopf „Alle
+  gelesen" im Posteingang, sichtbar nur solange etwas ungelesen ist. Und
+  test105 §3: der volle Lauf typprüfte NICHT — `tsc` lief nur über
+  `tsconfig.bauen.json`, und `pruefungen/` steht dort nicht drin. Ein
+  Typfehler in test56.mts ging deshalb durch alle 235 Läufe auf main. Jetzt
+  läuft `tsc --noEmit` über das ganze Projekt, mit Gegenprobe und einmal
+  rot vorgeführt. sw v47.

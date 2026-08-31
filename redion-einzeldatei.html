@@ -67287,6 +67287,32 @@ const Werkzeuge = (() => {
         meldungenGeaendert();
     };
     const meldungenLeeren = () => { Store.setMeta('meldungen', []); meldungenGeaendert(); };
+    /**
+     * Alle Meldungen als gelesen markieren — der HARMLOSE Zwilling zu
+     * `meldungenLeeren` (E276, L96).
+     *
+     * Beide räumen den Punkt an der Glocke weg, und genau deshalb sehen sie
+     * aus wie dasselbe. Sie sind es nicht: `meldungenLeeren` WIRFT WEG. Was
+     * dort stand, ist danach nicht mehr da — auch die Zeile, die auf eine
+     * Seite zeigte, die man noch hätte ansehen wollen.
+     *
+     * An einen Knopf, den ein Klick ohne Rückfrage auslöst, gehört deshalb
+     * dieser hier und nicht jener. Er tut, was `meldungGelesen(id)` tut, nur
+     * über alle: er ändert ein Feld, er nimmt nichts.
+     *
+     * Gibt zurück, WIE VIELE ungelesen waren. Wer den Knopf zeigt, will das
+     * wissen — ohne offene Meldung hat er nichts zu tun und gehört nicht hin
+     * (§47).
+     */
+    const meldungenAlleGelesen = () => {
+        const liste = meldungen();
+        const offen = liste.filter((x) => !x.gelesen).length;
+        if (!offen)
+            return 0;
+        Store.setMeta('meldungen', liste.map((x) => x.gelesen ? x : { ...x, gelesen: true }));
+        meldungenGeaendert();
+        return offen;
+    };
     /* Wer den Zähler zeigt (die Glocke in der Kopfzeile, E251), erfährt es
        hier — als DOM-Ereignis, nicht als Direktaufruf: der Bereich kennt
        die Schale nicht (Regel 1). */
@@ -68793,7 +68819,7 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
         versionen, versionAutomatisch, sperren, entsperren, sperrAnsicht,
         fokus, praesentation, quelltext, alsMarkdown, ausMarkdown, ausHtml, statistik,
         formelBibliothek, formelBibliothekLesen, formelBibliothekAnwenden,
-        erinnerungSetzen, erinnerungen, erinnerungenPruefen, geraeteMeldung, posteingangMelden, meldungen, meldungGelesen, meldungenLeeren,
+        erinnerungSetzen, erinnerungen, erinnerungenPruefen, geraeteMeldung, posteingangMelden, meldungen, meldungGelesen, meldungenAlleGelesen, meldungenLeeren,
         weckrufLegen, naechsteErinnerung,
         ordnerSchreiben, ordnerLesen, dateienLesen, einzelDatei,
         htmlExport, drucken, seiteAlsHtml, verschiebenNach, verschiebe,
@@ -72009,6 +72035,40 @@ if (typeof Register !== 'undefined' && Register.kontext) {
             }));
         }
     });
+    /* ALLE GELESEN — und ausdrücklich NICHT „leeren" (E276, L96).
+       `meldungenLeeren` räumt denselben Punkt weg und wirft dabei alles fort.
+       An einem Kantenknopf, der ohne Rückfrage auslöst, hat das nichts zu
+       suchen; hier steht der Griff, der ein Feld ändert statt etwas zu
+       nehmen. Sichtbar nur, solange es überhaupt etwas Ungelesenes gibt —
+       sonst wäre es ein Knopf, der nichts tut (§47). */
+    K.melde({ bereich: 'posteingang', id: 'gelesen', name: 'Alle gelesen',
+        zeichen: 'checkCircle', rang: 50,
+        zeigen: () => {
+            if (!da(() => Werkzeuge.meldungenAlleGelesen))
+                return false;
+            try {
+                return (Werkzeuge.meldungen() || []).some((m) => !m.gelesen);
+            }
+            catch {
+                return false;
+            }
+        },
+        tun: () => {
+            let wie = 0;
+            try {
+                wie = Werkzeuge.meldungenAlleGelesen() || 0;
+            }
+            catch { /* … */ }
+            try {
+                UI.toast(wie === 1 ? '1 Meldung als gelesen markiert'
+                    : wie + ' Meldungen als gelesen markiert');
+            }
+            catch { /* … */ }
+            try {
+                Ansichten.posteingang();
+            }
+            catch { /* … */ }
+        } });
     /* --- KALENDER („Termine") ---------------------------------------------- */
     K.melde({ bereich: 'kalender', id: 'uebersicht', name: 'Übersicht',
         zeichen: 'calendar', rang: 10, tun: () => Ansichten.termine() });

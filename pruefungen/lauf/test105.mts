@@ -34,7 +34,8 @@
 import { fileURLToPath as _alsPfad } from 'node:url';
 import { dirname as _ordner, resolve as _loese, join as _dazu, relative as _rel } from 'node:path';
 import { readFileSync as _lies, existsSync as _da, mkdtempSync as _tmpOrdner,
-         rmSync as _weg, readdirSync as _liesOrdner, statSync as _stat } from 'node:fs';
+         rmSync as _weg, readdirSync as _liesOrdner, statSync as _stat,
+         writeFileSync as _schreib } from 'node:fs';
 import { execFileSync as _lauf } from 'node:child_process';
 import { tmpdir as _tmp } from 'node:os';
 
@@ -218,6 +219,60 @@ if (_da(swTs)) {
   p('sw.js warnt vor Änderungen von Hand',
     /NICHT VON HAND/i.test(swKopf) && /\.ts/.test(swKopf));
 }
+
+/* ==========================================================================
+ * 3 · DAS GANZE PROJEKT MUSS TYPPRUEFEN — auch die Prueflaeufe (E276)
+ * --------------------------------------------------------------------------
+ * Punkt 2 darueber laesst `tsc -p tsconfig.bauen.json` laufen. Der Bauplan
+ * kennt aber nur, was nach `quell/` ausgegeben wird — `pruefungen/lauf/`
+ * steht nicht darin, und `server/` auch nicht.
+ *
+ * Die Folge, gemessen am 31. August 2026: ein `.find(...)`-Ergebnis ohne
+ * Pruefung auf `undefined` in `pruefungen/lauf/test56.mts` ging durch ALLE
+ * 235 Laeufe und landete auf `main`. Node entfernt beim Ausfuehren die
+ * Typen, es PRUEFT sie nicht (CLAUDE.md §54.3) — der Lauf war gruen, und
+ * `npm run typecheck` war rot, nur rief ihn niemand.
+ *
+ * Ein Prueflauf, den man von Hand starten muss, ist kein Netz. Dieser Punkt
+ * ruft dasselbe, was `npm run typecheck` ruft: `tsc --noEmit` ueber das
+ * ganze Projekt.
+ * ========================================================================*/
+console.log('\n3 · Das ganze Projekt typprueft (auch die Prueflaeufe)');
+
+let typfehler: string | null = null;
+try {
+  _lauf(process.execPath, [TSC, '--noEmit'], { cwd: WURZEL, stdio: 'pipe' });
+} catch (e: unknown) {
+  const roh = String((e as { stdout?: string }).stdout ||
+                     (e instanceof Error ? e.message : String(e)));
+  /* Nur die Zeilen, die wirklich ein Fehler sind — die Ausgabe endet sonst
+     mit dem ganzen Aufrufpfad von execFileSync und sagt nichts. */
+  typfehler = roh.split('\n').filter(z => /error TS\d+/.test(z)).slice(0, 6).join(' | ')
+              || roh.slice(0, 300);
+}
+p('`npm run typecheck` läuft ohne Fehler durch', typfehler === null,
+  String(typfehler));
+
+/* GEGENPROBE (§55.2): kann dieser Punkt ueberhaupt rot werden?
+   Eine Datei mit einem echten Typfehler, in einem eigenen Ordner, mit
+   derselben Strenge wie das Projekt — `tsc` muss sie beanstanden. Faende
+   der Aufruf hier nichts, waere der Punkt darueber blind gruen. */
+const gegenOrdner = _tmpOrdner(_dazu(_tmp(), 'redion-typ-'));
+_schreib(_dazu(gegenOrdner, 'kaputt.ts'),
+  'const x: number = "eine Zeichenkette";\nexport {};\n');
+let gegenprobeSah = false;
+try {
+  _lauf(process.execPath, [TSC, '--noEmit', '--strict',
+                           _dazu(gegenOrdner, 'kaputt.ts')],
+        { cwd: WURZEL, stdio: 'pipe' });
+} catch (e: unknown) {
+  gegenprobeSah = /error TS\d+/.test(
+    String((e as { stdout?: string }).stdout ||
+           (e instanceof Error ? e.message : String(e))));
+}
+_weg(gegenOrdner, { recursive: true, force: true });
+p('Gegenprobe: ein echter Typfehler wird auch gesehen', gegenprobeSah,
+  'sonst sagt der Punkt darüber „grün", ohne etwas zu prüfen');
 
 console.log(`\n  Suite 70 — Erzeugtes JavaScript: ${ok} ok, ${weg} offen`);
 process.exit(weg ? 1 : 0);

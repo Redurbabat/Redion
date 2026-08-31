@@ -20551,3 +20551,44 @@ falsch daran war.
 **Geprüft:** test56 27 (vier neu, darunter die Gegenprobe „`parentId` ist
 hier NICHT die Seite" — ohne sie misst der Punkt darunter nichts).
 
+
+
+================================================================================
+E276 — Der harmlose Zwilling, und ein Netz mit einem Loch
+================================================================================
+31. August 2026
+
+### „Alle gelesen" statt „leeren" (L96)
+
+`meldungenLeeren()` und ein „alle gelesen"-Knopf räumen denselben Punkt an
+der Glocke weg. Deshalb sehen sie aus wie dasselbe. Sie sind es nicht: das
+eine WIRFT WEG — auch die Zeile, die auf eine Seite zeigte, die man noch
+hätte ansehen wollen.
+
+An einen Kantenknopf, den ein Klick ohne Rückfrage auslöst, gehört deshalb
+`meldungenAlleGelesen()`: es tut, was `meldungGelesen(id)` tut, nur über
+alle, und es nimmt nichts. Es gibt zurück, wie viele ungelesen waren — wer
+den Knopf zeigt, will das wissen, und ohne offene Meldung steht er nicht da
+(§47).
+
+### Und ein Loch im Netz, das ich gefunden habe, indem ich hineinfiel
+
+Beim Bauen von E275 habe ich in `pruefungen/lauf/test56.mts` das Ergebnis
+von `.find(...)` ohne `undefined`-Prüfung benutzt. Der volle Lauf war grün,
+alle 235, und es ging auf `main`.
+
+Der Grund ist die Bauart: Node ENTFERNT die Typen beim Ausführen, es prüft
+sie nicht (§54.3). Und `tsc` lief im ganzen Netz genau einmal — test105 mit
+`tsconfig.bauen.json`, und der Bauplan kennt nur, was nach `quell/`
+ausgegeben wird. `pruefungen/` steht nicht darin.
+
+`npm run typecheck` war die ganze Zeit rot. Nur rief ihn niemand.
+
+test105 §3 ruft ihn jetzt. Mit Gegenprobe, und einmal wirklich rot
+vorgeführt: ein eingeschleuster Fehler in test41.mts wurde mit Datei, Zeile
+und TS-Nummer gemeldet, danach zurückgenommen.
+
+Ein Prüflauf, den man von Hand starten muss, ist kein Netz — er ist eine
+Absicht.
+
+**Geprüft:** test105 57 (zwei neu) · test272 148 · test225 11. sw v47.

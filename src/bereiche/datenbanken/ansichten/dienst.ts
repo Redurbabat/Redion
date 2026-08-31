@@ -994,6 +994,28 @@ if (typeof Register !== 'undefined' && (Register as any).kontext) {
     }
   });
 
+  /* ALLE GELESEN — und ausdrücklich NICHT „leeren" (E276, L96).
+     `meldungenLeeren` räumt denselben Punkt weg und wirft dabei alles fort.
+     An einem Kantenknopf, der ohne Rückfrage auslöst, hat das nichts zu
+     suchen; hier steht der Griff, der ein Feld ändert statt etwas zu
+     nehmen. Sichtbar nur, solange es überhaupt etwas Ungelesenes gibt —
+     sonst wäre es ein Knopf, der nichts tut (§47). */
+  K.melde({ bereich: 'posteingang', id: 'gelesen', name: 'Alle gelesen',
+    zeichen: 'checkCircle', rang: 50,
+    zeigen: () => {
+      if (!da(() => Werkzeuge.meldungenAlleGelesen)) return false;
+      try { return (Werkzeuge.meldungen() || []).some((m: any) => !m.gelesen); }
+      catch { return false; }
+    },
+    tun: () => {
+      let wie = 0;
+      try { wie = Werkzeuge.meldungenAlleGelesen() || 0; } catch { /* … */ }
+      try { UI.toast(wie === 1 ? '1 Meldung als gelesen markiert'
+                               : wie + ' Meldungen als gelesen markiert'); }
+      catch { /* … */ }
+      try { Ansichten.posteingang(); } catch { /* … */ }
+    } });
+
   /* --- KALENDER („Termine") ---------------------------------------------- */
   K.melde({ bereich: 'kalender', id: 'uebersicht', name: 'Übersicht',
     zeichen: 'calendar', rang: 10, tun: () => Ansichten.termine() });

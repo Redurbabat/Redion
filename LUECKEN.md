@@ -3466,7 +3466,7 @@ sind Zeichenketten wie `▦`, `🧮`, `📅` und keines davon ein Symbolname.
 Gefunden am 31. August 2026 (E273, sechzehn Leser über acht Bereiche).
 
 --------------------------------------------------------------------------------
-L96 — „Benachrichtigungen leeren" hat keinen harmlosen Zwilling (E273)
+L96 — „Benachrichtigungen leeren" hat keinen harmlosen Zwilling (E273) — GESCHLOSSEN
 --------------------------------------------------------------------------------
 
 `Werkzeuge.meldungenLeeren()` setzt die Liste auf leer — es LÖSCHT. Als
@@ -3544,3 +3544,28 @@ muss IM Purge-Moment laufen, wenn der Zwischenspeicher schon leer ist — E254
 erklärt es). `Store.seiteVon` und `Links.seiteVon` sind dagegen dasselbe
 zweimal. Kein Schaden heute, aber §8.
 
+
+--------------------------------------------------------------------------------
+L99 — Ein Typfehler kam durch alle 235 Läufe (E276) — GESCHLOSSEN
+--------------------------------------------------------------------------------
+
+Gemessen am 31. August 2026: eine Zeile in `pruefungen/lauf/test56.mts`, die
+das Ergebnis von `.find(...)` ohne Prüfung auf `undefined` benutzte, ging
+durch den vollen Lauf und landete auf `main`.
+
+Der Grund ist die Bauart, nicht die Nachlässigkeit. Node ENTFERNT beim
+Ausführen die Typen, es prüft sie nicht (CLAUDE.md §54.3) — ein Prüflauf
+läuft also grün, auch wenn er nicht typprüft. Und `tsc` lief nur einmal im
+ganzen Netz: test105 ruft `tsc -p tsconfig.bauen.json`, und dieser Bauplan
+kennt nur, was nach `quell/` ausgegeben wird. `pruefungen/` steht nicht
+darin, `server/` auch nicht.
+
+`npm run typecheck` war rot. Nur rief ihn niemand.
+
+GESCHLOSSEN am 31. August 2026 (E276): test105 §3 ruft jetzt dasselbe wie
+`npm run typecheck` — `tsc --noEmit` über das ganze Projekt. Mit Gegenprobe
+(eine Wegwerfdatei mit echtem Typfehler muss beanstandet werden) und einmal
+wirklich rot vorgeführt: ein eingeschleuster Fehler in test41.mts wurde
+gemeldet, mit Datei, Zeile und TS-Nummer.
+
+Ein Prüflauf, den man von Hand starten muss, ist kein Netz.
