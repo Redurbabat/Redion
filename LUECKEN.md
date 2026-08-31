@@ -3403,3 +3403,81 @@ Panel NEBEN dem Inhalt und möglicherweise gar kein eigener Ort. Am Telefon
 ist die Liste unverändert da.
 
 Gefunden am 31. August 2026 (E273, beim Griffwechsel).
+
+--------------------------------------------------------------------------------
+L94 — Sechs Bildschirme meldeten ihren Ort nicht (E273) — GESCHLOSSEN
+--------------------------------------------------------------------------------
+
+`Ansichten.start/posteingang/seiten/termine/mehr/kompass` zeichneten sich
+selbst in `#page`, ohne `App.zeigeSonder`. `App.schauplatz()` blieb deshalb
+auf dem VORIGEN Bildschirm stehen — die Kontextkante zeigte auf „Start" die
+Knöpfe von „Meine Aufgaben".
+
+GESCHLOSSEN am 31. August 2026 (E273): die sechs gehen jetzt durch
+`bildschirm()` → `App.zeigeSonder`. test272 §16 prüft es für neun Wege, mit
+Gegenprobe.
+
+--------------------------------------------------------------------------------
+L95 — Die Datenbank kann keine Kontextkante haben (E273)
+--------------------------------------------------------------------------------
+
+Drei Dinge fehlen, und in dieser Reihenfolge:
+
+1. **Einen Schauplatz, den es gibt.** Eine Datenbank auf einer Seite ist
+   für `bereichJetzt()` der Editor. „Als ganze Seite öffnen" ruft
+   `App.zeigeSonder(coll.name)` — der Schauplatz ist dann der NAME der
+   Datenbank („projekte", „kunden"), je Datenbank ein anderer.
+   `Register.kontext.fuer()` vergleicht auf Gleichheit, es gibt kein
+   Muster. Der Weg wäre `bereichJetzt()` um den Fall „Seite zeigt eine
+   Datenbank" zu erweitern, so wie es für PDF schon geschieht.
+2. **Einen Griff auf die offene Datenbank.** `sammlungAufSeite(seiteId)`
+   liefert eine collectionId — weder den Block noch dessen `aktiveView`.
+   Ohne `{coll, view, block}` lässt sich keines der Panels aufrufen.
+3. **Ausgeführte Panels.** `filterMenue` (steuerung.ts:5032), `sortMenue`
+   (5251) und `eigenschaftenMenue` (5318) stehen NICHT im Rückgabeobjekt;
+   von aussen sind sie undefined. `sortMenue` und `gruppierenMenue` lesen
+   ausserdem sofort `anker.getBoundingClientRect()` — die Kante hätte kein
+   Ankerelement zu bieten.
+
+Dazu käme eine Abbildung der dreizehn Ansichtsarten aus
+`Register.ansichten` auf Namen aus `Register.symbole`: die Zeichen dort
+sind Zeichenketten wie `▦`, `🧮`, `📅` und keines davon ein Symbolname.
+
+Gefunden am 31. August 2026 (E273, sechzehn Leser über acht Bereiche).
+
+--------------------------------------------------------------------------------
+L96 — „Benachrichtigungen leeren" hat keinen harmlosen Zwilling (E273)
+--------------------------------------------------------------------------------
+
+`Werkzeuge.meldungenLeeren()` setzt die Liste auf leer — es LÖSCHT. Als
+Kantenknopf wäre das ein Klick ohne Rückfrage, der Daten wegnimmt; deshalb
+steht er nicht dort.
+
+Was fehlt, ist `meldungenAlleGelesen()`: dasselbe wie `meldungGelesen(id)`
+(werkzeuge.ts:1177), nur über alle. Das ist der Griff, der an eine Kante
+gehört — Zeichen `checkCircle`, sichtbar nur, solange etwas ungelesen ist.
+
+Gefunden am 31. August 2026 (E273).
+
+--------------------------------------------------------------------------------
+L97 — `today` war eine zweite Sonne (E273) — GESCHLOSSEN
+--------------------------------------------------------------------------------
+
+`today` und `sun` im Symbolregister waren fast strichgleich: ein Kreis mit
+acht Strahlen. Beide stehen in der Schale — `sun` für Hell/Dunkel und den
+Reiter „Ansicht", `today` für „Heute", „Start", „Tagesplan" und „Lernen &
+Alltag". An der Kalenderkante bedeutete die Sonne „Tagesplan", im Menüband
+„helles Aussehen".
+
+GESCHLOSSEN am 31. August 2026 (E273): `today` ist ein Kalenderblatt mit
+eingerahmtem Tag.
+
+Der eigentliche Punkt bleibt offen und steht deshalb hier: **es gibt keine
+Prüfung darauf, dass zwei Symbole verschieden aussehen.** `hat()` sagt ja,
+`fuelle` setzt etwas, jeder Punkt bleibt grün. Achtzig Zeichen, und ob zwei
+davon dasselbe Bild sind, sieht nur das Auge (§55.1). Eine Prüfung darauf
+müsste die gezeichneten Pfade vergleichen — machbar, aber sie bräuchte
+zuerst eine Antwort darauf, wie ähnlich zu ähnlich ist.
+
+Gefunden am 31. August 2026 (E273, auf dem Bild der Kalenderkante).
+

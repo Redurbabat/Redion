@@ -1608,3 +1608,26 @@ const Arbeitswelt = (() => {
     };
 })();
 window.Arbeitswelt = Arbeitswelt;
+/* Der Workspace meldet seine Kontextkante an (E273).
+   ZWEI KNÖPFE UND NICHT FÜNF. Aus dem Vorschlag gestrichen wurden „Neu"
+   (die Kennung gibt es im Fuss der Kante schon — App.erstellenBlatt, auf
+   JEDEM Schauplatz; eine zweite Tür 30 px darüber ist die doppelte Liste
+   aus §8) und „Suchen" (dieselbe Lupe steht im Menüband, auf jedem
+   Bildschirm — genau der Fund von E160).
+
+   Die Ansichtsnamen tragen im Register Emoji (`ansichten`, Zeile 209ff).
+   Die Lade nimmt deshalb `a.name` und NICHT `a.icon + a.name`: E202 hält
+   Emoji aus der Schale heraus, und eine Ladezeile ist Schale. */
+if (typeof Register !== 'undefined' && Register.kontext) {
+    const K = Register.kontext;
+    K.melde({ bereich: 'workspace', id: 'uebersicht', name: 'Übersicht',
+        zeichen: 'workspace', rang: 10,
+        tun: () => Arbeitswelt.oeffnen('uebersicht') });
+    K.melde({ bereich: 'workspace', id: 'ansichten', name: 'Ansichten',
+        zeichen: 'cards', rang: 20,
+        liefern: () => (Arbeitswelt.ansichten || []).map((a) => ({
+            id: 'a-' + a.id, name: String(a.name || a.id), zeichen: 'page',
+            tun: () => Arbeitswelt.oeffnen(a.id)
+        }))
+    });
+}

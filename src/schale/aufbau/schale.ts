@@ -686,14 +686,31 @@ const App = (() => {
    * zu.
    * ====================================================================== */
   const SCHAUPLATZ_NAMEN: Record<string, string> = {
-    'Lernen & Alltag': 'heute', 'Heute': 'heute', 'Lernzentrum': 'lernen',
+    'Lernen & Alltag': 'heute', 'Heute': 'heute', 'Start': 'heute',
+    'Lernzentrum': 'lernen',
     'Bibliothek': 'bibliothek', 'Alle Seiten': 'bibliothek',
-    'Dokumente': 'bibliothek', 'Notizhefte': 'notizhefte',
+    'Dokumente': 'bibliothek', 'Seiten': 'bibliothek',
+    'Notizhefte': 'notizhefte',
     'Workspace': 'workspace', 'Meine Aufgaben': 'aufgaben',
     'Aufgaben': 'aufgaben', 'Posteingang': 'posteingang',
     'Elektrotechnik': 'elektro', 'Elektro': 'elektro',
-    'Papierkorb': 'papierkorb', 'Kalender': 'kalender'
+    'Papierkorb': 'papierkorb', 'Kalender': 'kalender', 'Termine': 'kalender'
   };
+
+  /* DREI NAMEN KAMEN MIT E273 DAZU — UND WARUM SIE NÖTIG WAREN.
+     „Start", „Seiten" und „Termine" sind die Titel, unter denen
+     `Ansichten.start/seiten/termine` sich seit E273 über `zeigeSonder`
+     zeichnen. Ohne Eintrag hier bekämen sie aus dem Schnipsel unten die
+     Schauplätze „start", „seiten" und „termine" — drei Kennungen, auf die
+     sich niemand angemeldet hat, obwohl es dieselben Bildschirmfamilien
+     sind wie „heute", „bibliothek" und „kalender".
+
+     Umgekehrt gilt: 'Papierkorb' und 'Lernzentrum' stehen hier, ohne dass
+     sie heute jemand ruft. Sie sind kein Schaden — ein Titel, den niemand
+     benutzt, kostet nichts —, aber auch kein Beweis: wer eine Kante für
+     'papierkorb' anmeldet, meldet sie an einen Schauplatz an, den es im
+     Betrieb nicht gibt. Vorher nachsehen, wer `zeigeSonder` mit dem Titel
+     ruft (heute: acht Stellen). */
 
   const schauplatz = (): string => {
     if (seiteId) return 'seite';

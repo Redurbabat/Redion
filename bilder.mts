@@ -166,6 +166,67 @@ const ANSICHTEN: Record<string, { titel: string; bauen: () => void | Promise<voi
     }
   },
 
+  /* ── Die vier Bildschirme, die seit E273 ihren Ort kennen ──────────────── */
+  kantePosteingang: {
+    titel: 'Posteingang — Kante mit den drei Laden',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      Store.setMeta('bandZu', true);
+      Store.setMeta('bandZu:welt', true);
+      const s = Store.addPage(null, { text: 'Elektrotechnik — Skript' });
+      Store.addBlock(s.id, 'text', { text: 'U = R · I.' });
+      /* Die Erinnerung DIREKT in den Bestand — `erinnerungSetzen` öffnet
+         einen Dialog, und der stünde dann auf dem Bild statt der Lade. */
+      Store.setMeta('erinnerungen', [
+        { id: 'b1', pageId: s.id, zeit: '2026-09-02T08:00',
+          text: 'Zusammenfassung schreiben', erledigt: false },
+        { id: 'b2', pageId: s.id, zeit: '2026-09-05T14:30',
+          text: 'Aufgabenblatt 3 abgeben', erledigt: false },
+        { id: 'b3', pageId: s.id, zeit: '2026-08-28T09:15',
+          text: 'Laborbericht gegenlesen', erledigt: true }
+      ]);
+      Store.setMeta('meldungen', [
+        { id: 'm1', text: 'Klausurplan wurde geändert', seite: s.id, gelesen: false },
+        { id: 'm2', text: 'Sicherung erfolgreich', gelesen: true }
+      ]);
+      App.oeffne(s.id);
+      (window as any).Ansichten.posteingang();
+      await new Promise(f => setTimeout(f, 320));
+      document.querySelector<HTMLElement>('#kante .k-knopf[data-k="erinnerungen"]')?.click();
+      await new Promise(f => setTimeout(f, 220));
+    }
+  },
+
+  kanteKalender: {
+    titel: 'Termine — Kante mit Tagesplan und Wochenrückblick',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      Store.setMeta('bandZu', true);
+      Store.setMeta('bandZu:welt', true);
+      (window as any).Ansichten.termine();
+      await new Promise(f => setTimeout(f, 320));
+      document.querySelector<HTMLElement>('#kante .k-knopf[data-k="kommend"]')?.click();
+      await new Promise(f => setTimeout(f, 220));
+    }
+  },
+
+  kanteNotizhefte: {
+    titel: 'Notizhefte — Kante, die vorher leer war',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      Store.setMeta('bandZu', true);
+      Store.setMeta('bandZu:welt', true);
+      (window as any).Notebook.oeffnen();
+      await new Promise(f => setTimeout(f, 340));
+    }
+  },
+
   kanteBloecke: {
     titel: 'Die Kontextkante — Lade „Blöcke" offen',
     bauen: async () => {

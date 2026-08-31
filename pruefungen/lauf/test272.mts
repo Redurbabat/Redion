@@ -1291,6 +1291,85 @@ p('Gegenprobe: ein Weg mit leerem `tun` wird als wirkungslos erkannt',
   gegenWirkung.gemeldet && gegenWirkung.wirkt === false,
   JSON.stringify(gegenWirkung) + ' — waere er „wirksam", misst §15 nichts');
 
+/* ==========================================================================
+ * §16 — JEDER BILDSCHIRM SAGT, WO ER IST (E273)
+ * --------------------------------------------------------------------------
+ * `App.schauplatz()` ist die einzige Frage, die die Kontextkante stellt.
+ * Wer sie nicht beantwortet, bekommt keine leere Kante — er bekommt die des
+ * VORIGEN Bildschirms. Gemessen war das: von „Meine Aufgaben" auf „Start"
+ * geklickt, und links standen weiter Tagesplan, Wochenrueckblick und
+ * Faellig. Sechs Bildschirme in `bereiche/datenbanken/ansichten/dienst.ts`
+ * zeichneten sich selbst in `#page`, ohne `zeigeSonder`.
+ *
+ * Kein Pruefpunkt konnte das melden: die Kante war voll, die Knoepfe taten
+ * etwas, nichts warf. Nur der Ort war falsch.
+ *
+ * Dieser Punkt prueft es fuer JEDEN Weg: nach dem Klick muss der Schauplatz
+ * der sein, der zu diesem Bildschirm gehoert — und nicht der von vorher.
+ * ========================================================================*/
+console.log('\n§16 — Jeder Bildschirm sagt, wo er ist (E273)');
+
+const ORTE: Array<[string, string, string]> = [
+  /* Aufruf, erwarteter Schauplatz, Name fuer die Ausgabe */
+  ['Ansichten.start()',       'heute',       'Start'],
+  ['Ansichten.posteingang()', 'posteingang', 'Posteingang'],
+  ['Ansichten.termine()',     'kalender',    'Termine'],
+  ['Ansichten.seiten()',      'bibliothek',  'Seiten'],
+  ['Ansichten.kompass()',     'kompass',     'Kompass'],
+  ['Ansichten.mehr()',        'mehr',        'Mehr'],
+  ['Notebook.oeffnen()',      'notizhefte',  'Notizhefte'],
+  ['Bibliothek.oeffne()',     'bibliothek',  'Dokumente'],
+  ['Bibliothek.aufgaben()',   'aufgaben',    'Aufgaben']
+];
+
+for (const [ruf, soll, name] of ORTE) {
+  const r = await seite.evaluate(async (ruf: string) => {
+    /* IMMER VOM SELBEN ORT AUS STARTEN. Ohne diesen Schritt misst der Punkt
+       bei einem Bildschirm, der zufaellig schon richtig stand, nichts. */
+    try { (globalThis as any).Notebook.oeffnen(); } catch { /* … */ }
+    await new Promise(f => setTimeout(f, 180));
+    const vorher = String(App.schauplatz());
+    try { (0, eval)(ruf); } catch (e) { return { fehler: String(e) }; }
+    await new Promise(f => setTimeout(f, 240));
+    return { vorher, nachher: String(App.schauplatz()) };
+  }, ruf) as any;
+  p(name + ' meldet „' + soll + '"',
+    !r.fehler && r.nachher === soll,
+    r.fehler ? r.fehler : 'vorher ' + r.vorher + ', nachher ' + r.nachher);
+}
+
+/* GEGENPROBE (§55.2): ein Bildschirm, der sich selbst in `#page` zeichnet,
+   ohne `zeigeSonder` — genau die Bauart der sechs von vorher. Der Punkt
+   muss ihn als „steht noch auf dem alten Ort" erkennen. */
+const gegenOrt = await seite.evaluate(async () => {
+  try { (globalThis as any).Notebook.oeffnen(); } catch { /* … */ }
+  await new Promise(f => setTimeout(f, 180));
+  const vorher = String(App.schauplatz());
+  /* So sah `Ansichten.posteingang()` vor E273 aus. */
+  const wrap = document.getElementById('page');
+  if (wrap) { App.setzeSeite(null); wrap.innerHTML = '<div class="home"><h1>Falsch</h1></div>'; }
+  await new Promise(f => setTimeout(f, 240));
+  return { vorher, nachher: String(App.schauplatz()) };
+}) as any;
+p('Gegenprobe: ohne `zeigeSonder` bleibt der Schauplatz stehen',
+  gegenOrt.vorher === gegenOrt.nachher && gegenOrt.nachher === 'notizhefte',
+  JSON.stringify(gegenOrt) + ' — waere er hier schon richtig, misst §16 nichts');
+
+/* Und die Kante muss auf jedem dieser Orte wirklich etwas anbieten.
+   Ein Schauplatz ohne einen einzigen Knopf ist kein Fehler an sich — die
+   Kante zeigt dann nur ihren festen Fuss —, aber fuer die sechs oben war
+   genau das der Zustand, den E273 beheben sollte. */
+const kanten = await seite.evaluate(() => {
+  const raus: Record<string, number> = {};
+  for (const b of ['heute', 'posteingang', 'kalender', 'bibliothek',
+                   'kompass', 'mehr', 'notizhefte', 'aufgaben', 'workspace'])
+    raus[b] = (Register.kontext.fuer(b) || []).length;
+  return raus;
+}) as any;
+for (const b of Object.keys(kanten))
+  p('Die Kante von „' + b + '" hat Knöpfe', Number(kanten[b]) > 0,
+    String(kanten[b]));
+
 await browser.close();
 server.close();
 console.log('\n  Suite 272 — Kein Griff geht verloren: ' + ok + ' ok, ' + weg + ' offen');

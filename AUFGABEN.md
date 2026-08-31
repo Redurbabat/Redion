@@ -1887,3 +1887,22 @@ node pruefungen/lauf/test105.mjs
   eine messbare Wirkung haben; die erste Fassung kannte nur Überlagerungen
   und meldete vier Fehlalarme. Register.module bekommt nimmZurueck, damit
   Gegenproben aufräumen können. L93 neu (Chatverlauf ohne Zuhause).
+* E273 Teil B (Blockzeichen, L92): 💡 „Callout" war im Band ein gelber
+  Klecks, 🖼 „Bild" im Überlauf ein leeres Kästchen — die Schrift hat das
+  Zeichen gar nicht. Blockarten bekommen ein freiwilliges `zeichen` neben
+  `icon`; siebenundzwanzig nennen jetzt ein Strichzeichen, die
+  typografischen (¶ H₁ ☑ • 1. ▸ ❝ — ▦ ☰ ∑ ⌨) bleiben. Elf Symbole neu,
+  zusammen achtzig. test86 prüft, dass jedes `zeichen` ein Symbol nennt,
+  das es gibt.
+* E273 Teil C (der Ort, L94–L97): sechs Bildschirme in
+  ansichten/dienst.ts zeichneten sich selbst in #page, ohne zeigeSonder —
+  App.schauplatz() blieb auf dem VORIGEN stehen, und die Kante zeigte
+  dessen Knöpfe („Start" mit Tagesplan und Fällig). Sie gehen jetzt durch
+  bildschirm(); drei Titel neu in SCHAUPLATZ_NAMEN. Erst dadurch konnten
+  Kanten für posteingang (4), kalender (6), notizhefte (4), workspace (2)
+  und kompass/mehr (je 3) überhaupt gezeichnet werden. Vier Bereiche
+  bekommen KEINE, mit Gründen: datenbank (L95), lernen, ki, papierkorb.
+  Drei Vorschläge verworfen (§8/§47). `today` war fast strichgleich mit
+  `sun` und hiess an der Kalenderkante „Tagesplan", im Band „helles
+  Aussehen" — jetzt ein Kalenderblatt (L97). NEU test272 §16 mit
+  Gegenprobe. sw v44.

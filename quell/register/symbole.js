@@ -48,8 +48,26 @@ Register.symbole = (() => {
         /* --- Navigation ------------------------------------------------------ */
         search: '<circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/>',
         command: '<path d="M9 6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3z"/>',
-        today: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2' +
-            'M5.2 5.2l1.4 1.4M17.4 17.4l1.4 1.4M18.8 5.2l-1.4 1.4M6.6 17.4l-1.4 1.4"/>',
+        /* HIER STAND EINE ZWEITE SONNE (E273).
+           `today` war ein Kreis mit acht Strahlen — Strich für Strich fast
+           dasselbe Bild wie `sun` zwanzig Zeilen weiter unten. Beide stehen in
+           der Schale, und zwar nebeneinander: `sun` ist Hell/Dunkel und der
+           Reiter „Ansicht", `today` ist „Heute", „Start" und „Tagesplan".
+           An der Kalenderkante sass die Sonne damit direkt über einem
+           Balkendiagramm und bedeutete „Tagesplan" — im Menüband bedeutete
+           dieselbe Sonne „helles Aussehen".
+    
+           Zwei Namen, ein Bild, zwei Bedeutungen: das ist §38 in seiner
+           schärfsten Form — nicht zu wenig Unterschied, sondern gar keiner.
+           Gefunden hat es kein Prüflauf, sondern das Bild (§55.1).
+    
+           Jetzt ist es ein Kalenderblatt mit eingerahmtem Tag: verwandt mit
+           `calendar` (dieselbe Umrandung), unterscheidbar von ihm (der Kasten)
+           und von `sun` (keine Strahlen). Nur Striche, kein `fill` — kein
+           einziges Zeichen dieser Datei füllt eine Fläche. */
+        today: '<rect x="3.2" y="5" width="17.6" height="16" rx="2.6"/>' +
+            '<path d="M3.2 10h17.6M8.2 3v4M15.8 3v4"/>' +
+            '<rect x="9.4" y="13" width="5.2" height="4.6" rx="1.1"/>',
         learn: '<path d="M12 4 2.5 8.5 12 13l9.5-4.5z"/><path d="M6.5 10.8v4.4c0 .5 2.5 2.3 5.5 2.3' +
             's5.5-1.8 5.5-2.3v-4.4"/><path d="M21.5 8.5v5"/>',
         workspace: '<rect x="3" y="3" width="7.5" height="7.5" rx="1.6"/>' +

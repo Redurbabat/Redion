@@ -401,6 +401,31 @@ Die feineren Panels aus der Tabelle (Filter · Sortieren · Gruppieren in der
 Datenbank, Formelheft und Fachzeichen als eigene Laden) stehen noch aus —
 sie brauchen je einen eigenen Griff im Bereich und sind kein Schalen-Thema.
 
+### Nachtrag E273 — sechs weitere Bereiche, und vier, die es nicht werden
+
+Gemessen am 31. August 2026:
+
+    editor 6 · elektro 8 · pdf 2+ · heute 5 · leer 5 · aufgaben 4 ·
+    bibliothek 6 · posteingang 4 · kalender 6 · notizhefte 4 ·
+    workspace 2 · kompass 3 · mehr 3
+
+Möglich wurde das erst durch eine Reparatur weiter unten in der Kette:
+`Ansichten.start/posteingang/seiten/termine/mehr/kompass` zeichneten sich
+selbst in `#page`, ohne `App.zeigeSonder` — der Schauplatz blieb auf dem
+VORIGEN Bildschirm stehen, und die Kante zeigte dessen Knöpfe. Ein
+Provider auf `posteingang` wäre nie gezeichnet worden. Seit E273 gehen die
+sechs durch `bildschirm()`; drei Titel kamen in `SCHAUPLATZ_NAMEN` dazu
+(`Start → heute`, `Seiten → bibliothek`, `Termine → kalender`).
+
+Vier Bereiche bekommen KEINE Kante, und die Gründe sind gemessen:
+
+| Bereich | Warum nicht |
+|---|---|
+| datenbank | Der Schauplatz ist je Datenbank ihr NAME; `fuer()` vergleicht auf Gleichheit. Dazu fehlen ein Griff auf die offene `{coll,view,block}` und drei nicht ausgeführte Panels — L95 |
+| lernen | Das Lernzentrum öffnet als „Lernen & Alltag" und läuft damit unter `heute`; die Heute-Kante bedient es schon. `'Lernzentrum': 'lernen'` ist ein toter Eintrag |
+| ki | Ein Panel neben dem Inhalt, kein Ort — `kiPanel` lässt `sonder` und `seiteId` in Ruhe. Der Weg dorthin steht im FUSS der Kante, auf jedem Schauplatz |
+| papierkorb | `App.papierkorb()` ist ein Overlay, kein Bildschirm. Der Schauplatz kommt nie vor |
+
 **Die PDF-Kante existiert schon** — als Werkzeugspalte mitten im Dokumentmodus
 (im Bild von heute gut zu sehen: Schreiben · Auswahl · Stift · Marker · Linie ·
 Pfeil · Rechteck · Ellipse · Abdecken · Haftnotiz · Text · Fachzeichen ·

@@ -861,3 +861,34 @@ const Notebook = (() => {
     return { oeffnen, open: oeffnen, resume, render };
 })();
 window.Notebook = Notebook;
+/* Die Notizhefte melden ihre Kontextkante an (E273).
+   Bis hierher war die Kante auf diesem Schauplatz LEER — vier Griffe, die
+   es alle gibt, und keiner davon zu sehen. */
+if (typeof Register !== 'undefined' && Register.kontext) {
+    const K = Register.kontext;
+    K.melde({ bereich: 'notizhefte', id: 'regal', name: 'Regal',
+        zeichen: 'book', rang: 10, tun: () => Notebook.oeffnen() });
+    /* WEITERSCHREIBEN NUR MIT HEFT — UND DIE KENNUNG ALLEIN REICHT NICHT.
+       `resume` prüft beides (oben, Zeile 302-304): die Kennung UND ob der
+       Block noch lebt. Ein gelöschtes Heft hinterlässt die Kennung; wer nur
+       sie prüft, zeigt einen Knopf, der ins Regal fällt. */
+    K.melde({ bereich: 'notizhefte', id: 'weiter', name: 'Weiterschreiben',
+        zeichen: 'pencil', rang: 20,
+        zeigen: () => {
+            try {
+                const id = String(Store.getMeta('heft:zuletzt', '') || '');
+                const p = id ? Store.getBlock(id) : null;
+                return !!p && p.alive !== false;
+            }
+            catch {
+                return false;
+            }
+        },
+        tun: () => Notebook.resume() });
+    K.melde({ bereich: 'notizhefte', id: 'dokumente', name: 'Dokumente',
+        zeichen: 'library', rang: 30,
+        zeigen: () => typeof globalThis.Bibliothek?.oeffne === 'function',
+        tun: () => globalThis.Bibliothek.oeffne() });
+    K.melde({ bereich: 'notizhefte', id: 'papierkorb', name: 'Papierkorb',
+        zeichen: 'trash', rang: 40, tun: () => App.papierkorb() });
+}

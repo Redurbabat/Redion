@@ -26,6 +26,37 @@ const Ansichten = (() => {
         const crumb = document.getElementById('crumb');
         return wrap && crumb ? { wrap, crumb } : null;
     };
+    /* ==========================================================================
+     * EIN BILDSCHIRM SAGT, WO ER IST (E273)
+     * --------------------------------------------------------------------------
+     * Sechs Ansichten in dieser Datei — Start, Posteingang, Seiten, Termine,
+     * Mehr, Kompass — haben sich früher selbst in `#page` gezeichnet:
+     * `flaeche()` holen, `App.setzeSeite(null)`, Krume schreiben, malen.
+     *
+     * Das ging, solange niemand fragte, WO man ist. Seit E272 fragt die
+     * Kontextkante genau das. Und `App.schauplatz()` (schale.ts:698) kennt nur
+     * zwei Dinge: eine offene Seite oder ein `sonder`, das `zeigeSonder`
+     * gesetzt hat. Wer keins von beidem setzt, ändert den Schauplatz NICHT —
+     * er bleibt auf dem letzten stehen.
+     *
+     * Gemessen war das kein leerer Rand, sondern ein FALSCHER: von „Meine
+     * Aufgaben" auf „Start" geklickt, und links standen weiter Tagesplan,
+     * Wochenrückblick und Fällig. Von „Notizhefte" auf „Posteingang", und die
+     * Kante blieb bei den Notizheften. Sechs Bildschirme logen über ihren Ort.
+     *
+     * Der Weg dahin führt nicht über einen zweiten Melder, sondern über den,
+     * den alle anderen sieben Bildschirme schon nehmen: `App.zeigeSonder`.
+     * Es setzt `sonder`, ruft den Zeichner, meldet den Schauplatz und schreibt
+     * die Krume aus dem Titel — deshalb steht sie hier nicht mehr in jeder
+     * Ansicht, und deshalb sind die Emoji daraus verschwunden (E202).
+     *
+     * `flaeche()` bleibt: es ist die Probe, ob die Schale überhaupt steht.
+     */
+    const bildschirm = (titel, malen) => {
+        if (!flaeche())
+            return;
+        App.zeigeSonder(titel, malen);
+    };
     /** Das angeklickte Element — oder nichts, wenn es kein Element war. */
     const elVon = (e) => e.target instanceof Element ? e.target : null;
     const gruss = () => {
@@ -138,13 +169,7 @@ const Ansichten = (() => {
             }).join('') +
             '</div>';
     };
-    const start = () => {
-        const f = flaeche();
-        if (!f)
-            return;
-        const { wrap, crumb } = f;
-        App.setzeSeite(null);
-        crumb.innerHTML = '<a>🏠 Start</a>';
+    const start = () => bildschirm('Start', (wrap) => {
         const zuletzt = Object.values(Store.cache.blocks)
             .filter(b => b.type === 'page' && b.alive && b.parentTable !== 'collection' && !b.system)
             .sort((a, b) => (b.edited || '').localeCompare(a.edited || '')).slice(0, 6);
@@ -276,9 +301,9 @@ const Ansichten = (() => {
                     .catch(() => fertig(false));
             }
         };
-    };
+    });
     const zahl = (n, name) => `<div class="hz"><b>${n}</b><span>${name}</span></div>`;
-    const posteingang = () => {
+    const posteingang = () => bildschirm('Posteingang', (wrap) => {
         const erinner = Werkzeuge.erinnerungen();
         const meld = Werkzeuge.meldungen();
         const kommentare = [];
@@ -288,12 +313,6 @@ const Ansichten = (() => {
         const geaendert = Object.values(Store.cache.blocks)
             .filter(b => b.type === 'page' && b.alive && b.parentTable !== 'collection')
             .sort((a, b) => (b.edited || '').localeCompare(a.edited || '')).slice(0, 8);
-        const f = flaeche();
-        if (!f)
-            return;
-        const { wrap, crumb } = f;
-        App.setzeSeite(null);
-        crumb.innerHTML = '<a>📥 Posteingang</a>';
         wrap.className = '';
         const nichts = !erinner.length && !kommentare.length && !meld.length && !anMich.length;
         wrap.innerHTML =
@@ -366,7 +385,7 @@ const Ansichten = (() => {
             if (ziel?.closest('[data-filter]'))
                 posteingangFilter(ziel);
         };
-    };
+    });
     /** Was soll im Posteingang auftauchen? */
     const posteingangFilter = (anker) => {
         const jetzt = Store.getMeta('posteingangFilter', { erinnerungen: true, kommentare: true, geaendert: true });
@@ -399,13 +418,7 @@ const Ansichten = (() => {
      * leerer Abschnitt mit Überschrift ist eine Behauptung ohne Inhalt; er
      * kostet Platz und sagt nichts.
      * ========================================================================*/
-    const seiten = () => {
-        const f = flaeche();
-        if (!f)
-            return;
-        const { wrap, crumb } = f;
-        App.setzeSeite(null);
-        crumb.innerHTML = '<a>📄 Seiten</a>';
+    const seiten = () => bildschirm('Seiten', (wrap) => {
         const alle = Object.values(Store.cache.blocks)
             .filter(b => b.type === 'page' && b.alive && b.parentTable !== 'collection' && !b.system);
         const kuerzlich = [...alle]
@@ -504,7 +517,7 @@ const Ansichten = (() => {
             else if (a.dataset.a === 'papierkorb')
                 App.papierkorb();
         };
-    };
+    });
     /* ========================================================================
      * TERMINE — der dritte Bereich am Telefon
      * ------------------------------------------------------------------------
@@ -522,13 +535,7 @@ const Ansichten = (() => {
      * nur angetippt, wenn es sie gibt; fehlt eines, fehlt die Zeile und nicht
      * die Ansicht.
      * ========================================================================*/
-    const termine = () => {
-        const f = flaeche();
-        if (!f)
-            return;
-        const { wrap, crumb } = f;
-        App.setzeSeite(null);
-        crumb.innerHTML = '<a>📅 Termine</a>';
+    const termine = () => bildschirm('Termine', (wrap) => {
         const kommend = (() => {
             try {
                 return App.kommendeTermine(12) || [];
@@ -582,7 +589,7 @@ const Ansichten = (() => {
             else if (a.dataset.a === 'mtg')
                 window.Meeting?.panel?.();
         };
-    };
+    });
     /* ========================================================================
      * MEHR — die Werkzeuge, geordnet und mit einem Satz dazu
      * ------------------------------------------------------------------------
@@ -629,13 +636,7 @@ const Ansichten = (() => {
                 { z: 'ℹ', t: 'Über Redion', s: 'Fassung, Hilfe und Angaben zum Projekt.', a: 'ueber' }
             ] }
     ];
-    const mehr = () => {
-        const f = flaeche();
-        if (!f)
-            return;
-        const { wrap, crumb } = f;
-        App.setzeSeite(null);
-        crumb.innerHTML = '<a>🧭 Mehr</a>';
+    const mehr = () => bildschirm('Mehr', (wrap) => {
         wrap.className = '';
         wrap.innerHTML =
             '<div class="home">' +
@@ -684,7 +685,7 @@ const Ansichten = (() => {
             else if (a === 'ueber')
                 App.einstellungen('ueber');
         };
-    };
+    });
     /* ========================================================================
      * KOMPASS — was diese App kann, an einer Stelle
      * ------------------------------------------------------------------------
@@ -702,13 +703,7 @@ const Ansichten = (() => {
      * Datei. Eine von Hand gepflegte Aufzählung erzählt nach dem dritten
      * neuen Befehl von einer App, die es nicht mehr gibt.
      * ======================================================================*/
-    const kompass = () => {
-        const f = flaeche();
-        if (!f)
-            return;
-        const { wrap, crumb } = f;
-        App.setzeSeite(null);
-        crumb.innerHTML = '<a>🧭 Kompass</a>';
+    const kompass = () => bildschirm('Kompass', (wrap) => {
         const aufbau = [
             ['Start', 'Armaturenbrett mit Schnellkarten, Sicherungsstand und zuletzt Bearbeitetem.'],
             ['Seiten', 'Alles Geschriebene: kürzlich, Favoriten, privat, Datenbanken, Vorlagen.'],
@@ -777,7 +772,7 @@ const Ansichten = (() => {
             if (el?.closest('[data-a="sichern"]'))
                 App.sicherungSpeichern();
         };
-    };
+    });
     /* ========================================================================
      * DAS SKELETT — was dasteht, bevor etwas dasteht (Vorgabe §23, E46)
      * ------------------------------------------------------------------------
@@ -864,5 +859,206 @@ if (typeof Register !== 'undefined' && Register.kontext) {
                 }));
             }
         });
+    }
+}
+/* ============================================================================
+ * DIE KANTEN DER VIER ÜBRIGEN BILDSCHIRME DIESER DATEI (E273)
+ * ----------------------------------------------------------------------------
+ * „Heute" und „leer" stehen oben. Posteingang, Kalender, Kompass und Mehr
+ * standen bis E273 NICHT hier, und der Grund war kein Versäumnis: es gab die
+ * Schauplätze nicht. Die vier Bildschirme zeichneten sich selbst in `#page`,
+ * ohne `zeigeSonder`, und `App.schauplatz()` blieb auf dem letzten stehen.
+ * Ein Knopf mit `bereich: 'posteingang'` wäre nie gezeichnet worden.
+ *
+ * Seit `bildschirm()` weiter oben gibt es die Schauplätze wirklich. Erst
+ * deshalb steht das hier.
+ * ==========================================================================*/
+if (typeof Register !== 'undefined' && Register.kontext) {
+    const K = Register.kontext;
+    const da = (pfad) => {
+        try {
+            return typeof pfad() === 'function';
+        }
+        catch {
+            return false;
+        }
+    };
+    /* --- POSTEINGANG ------------------------------------------------------- */
+    K.melde({ bereich: 'posteingang', id: 'uebersicht', name: 'Übersicht',
+        zeichen: 'inbox', rang: 10, tun: () => Ansichten.posteingang() });
+    /* Die drei Listen sind Laden und keine Knöpfe: sie ändern sich, während
+       man hinsieht, und dürfen deshalb erst beim Öffnen entstehen. */
+    K.melde({ bereich: 'posteingang', id: 'meldungen', name: 'Benachrichtigungen',
+        zeichen: 'bell', rang: 20,
+        zeigen: () => da(() => Werkzeuge.meldungen),
+        liefern: () => {
+            let liste = [];
+            try {
+                liste = Werkzeuge.meldungen() || [];
+            }
+            catch {
+                liste = [];
+            }
+            if (!liste.length)
+                return [{ id: 'keine', name: 'Nichts Neues.', tun: () => { } }];
+            /* Dreissig, wie im Posteingang selbst. Eine Lade, die vierhundert
+               Zeilen zeichnet, macht den Klick langsam und niemanden klüger. */
+            return liste.slice(0, 30).map((m, i) => ({
+                id: 'm-' + (m.id ?? i), name: String(m.text || 'Meldung'),
+                ...(m.gelesen ? {} : { unter: 'ungelesen' }),
+                zeichen: m.gelesen ? 'checkCircle' : 'bell',
+                tun: () => {
+                    try {
+                        if (m.id)
+                            Werkzeuge.meldungGelesen(m.id);
+                    }
+                    catch { /* … */ }
+                    try {
+                        if (m.seite)
+                            App.oeffne(m.seite);
+                        else
+                            Ansichten.posteingang();
+                    }
+                    catch { /* … */ }
+                }
+            }));
+        }
+    });
+    K.melde({ bereich: 'posteingang', id: 'erinnerungen', name: 'Erinnerungen',
+        zeichen: 'clock', rang: 30,
+        zeigen: () => da(() => Werkzeuge.erinnerungen),
+        liefern: () => {
+            let liste = [];
+            try {
+                liste = Werkzeuge.erinnerungen() || [];
+            }
+            catch {
+                liste = [];
+            }
+            if (!liste.length)
+                return [{ id: 'keine', name: 'Keine Erinnerungen.', tun: () => { } }];
+            /* DIE ZEIT IST DAS EINZIGE, WOFÜR EINE ERINNERUNG DA IST.
+               Sie steht deshalb im zweiten Satz, und die nächste steht oben. */
+            return [...liste]
+                .sort((a, b) => String(b.zeit || '').localeCompare(String(a.zeit || '')))
+                .slice(0, 30)
+                .map((e, i) => {
+                let wann = '';
+                try {
+                    wann = Werkzeuge.zeitKurz(e.zeit) || '';
+                }
+                catch {
+                    wann = '';
+                }
+                return {
+                    id: 'e-' + (e.id ?? i), name: String(e.text || 'Erinnerung'),
+                    ...(wann ? { unter: wann } : {}),
+                    zeichen: e.erledigt ? 'checkCircle' : 'clock',
+                    tun: () => { try {
+                        if (e.pageId)
+                            App.oeffne(e.pageId);
+                    }
+                    catch { /* … */ } }
+                };
+            });
+        }
+    });
+    K.melde({ bereich: 'posteingang', id: 'anmich', name: 'An dich gerichtet',
+        zeichen: 'comment', rang: 40,
+        zeigen: () => da(() => globalThis.Kommentare?.anMich),
+        liefern: () => {
+            let liste = [];
+            try {
+                liste = globalThis.Kommentare.anMich() || [];
+            }
+            catch {
+                liste = [];
+            }
+            if (!liste.length)
+                return [{ id: 'keine', name: 'Nichts an dich.', tun: () => { } }];
+            /* `id` und `name` SIND PFLICHT — `zeilen()` (register/context.ts:177)
+               wirft jede Zeile ohne sie lautlos weg. `anMich` liefert
+               `{ block, k }`, also weder das eine noch das andere; wer die Liste
+               durchreicht, bekommt eine leere Lade und keinen Fehler. */
+            return liste.slice(0, 30).map((m, i) => ({
+                id: 'am-' + (m?.k?.id ?? i),
+                name: String(m?.k?.text || 'Kommentar'),
+                unter: String(m?.k?.autor || 'jemand'),
+                zeichen: 'comment',
+                tun: () => {
+                    try {
+                        App.oeffne(m?.block?.parentId || m?.block?.id);
+                    }
+                    catch { /* … */ }
+                }
+            }));
+        }
+    });
+    /* --- KALENDER („Termine") ---------------------------------------------- */
+    K.melde({ bereich: 'kalender', id: 'uebersicht', name: 'Übersicht',
+        zeichen: 'calendar', rang: 10, tun: () => Ansichten.termine() });
+    K.melde({ bereich: 'kalender', id: 'kommend', name: 'Kommende Termine',
+        zeichen: 'clock', rang: 20,
+        liefern: () => {
+            let liste = [];
+            try {
+                liste = App.kommendeTermine(12) || [];
+            }
+            catch {
+                liste = [];
+            }
+            if (!liste.length)
+                return [{ id: 'keine', name: 'Nichts steht an.', tun: () => { } }];
+            return liste.map((t, i) => ({
+                id: 't-' + (t.id ?? i), name: String(t.text || 'Termin'),
+                ...(t.wann ? { unter: String(t.wann) } : {}),
+                zeichen: 'calendar',
+                tun: () => { try {
+                    if (t.id)
+                        App.oeffne(t.id);
+                }
+                catch { /* … */ } }
+            }));
+        }
+    });
+    K.melde({ bereich: 'kalender', id: 'tagesplan', name: 'Tagesplan',
+        zeichen: 'today', rang: 30,
+        zeigen: () => da(() => globalThis.Plan?.tagesplan),
+        tun: () => globalThis.Plan.tagesplan() });
+    K.melde({ bereich: 'kalender', id: 'woche', name: 'Wochenrückblick',
+        zeichen: 'chart', rang: 40,
+        zeigen: () => da(() => globalThis.Plan?.wochenrueckblick),
+        tun: () => globalThis.Plan.wochenrueckblick() });
+    K.melde({ bereich: 'kalender', id: 'verbinden', name: 'Kalender verbinden',
+        zeichen: 'link', rang: 50,
+        zeigen: () => da(() => globalThis.Kalender?.dialog),
+        tun: () => globalThis.Kalender.dialog() });
+    /* ABGLEICHEN NUR MIT ABO. `alleAbosHolen` steigt ohne eines sofort wieder
+       aus — der Knopf täte dann sichtbar nichts (§47). */
+    K.melde({ bereich: 'kalender', id: 'abgleichen', name: 'Jetzt abgleichen',
+        zeichen: 'redo', rang: 60,
+        zeigen: () => {
+            if (!da(() => globalThis.Kalender?.alleAbosHolen))
+                return false;
+            try {
+                return (globalThis.Kalender.abos() || []).length > 0;
+            }
+            catch {
+                return false;
+            }
+        },
+        tun: () => { void globalThis.Kalender.alleAbosHolen(); } });
+    /* --- KOMPASS und MEHR --------------------------------------------------
+       Zwei Übersichtsseiten. Sie brauchen keine eigenen Werkzeuge — sie SIND
+       das Werkzeug —, aber ohne einen einzigen Knopf stünde die Kante leer da
+       und sähe aus wie ein Fehler. Die drei Wege sind die, die von einer
+       Übersicht aus wirklich weiterführen. */
+    for (const b of ['kompass', 'mehr']) {
+        K.melde({ bereich: b, id: 'start', name: 'Start',
+            zeichen: 'today', rang: 10, tun: () => Ansichten.start() });
+        K.melde({ bereich: b, id: 'kompass', name: 'Kompass',
+            zeichen: 'compass', rang: 20, tun: () => Ansichten.kompass() });
+        K.melde({ bereich: b, id: 'mehr', name: 'Mehr',
+            zeichen: 'menu', rang: 30, tun: () => Ansichten.mehr() });
     }
 }

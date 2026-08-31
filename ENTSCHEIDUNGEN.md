@@ -20263,3 +20263,114 @@ genau so einen Block an, um zu sehen, dass der Punkt ihn findet (§55.2).
 
 **Geprüft:** test86 61 (drei neu) · test247 106 · test272 129 · test87 152 ·
 test105 55 · test109 20 — kein roter Punkt. sw v44, Einzeldatei 7393 KB.
+
+### Sechs Bildschirme, die über ihren Ort logen (L94)
+
+Nach L92 stand die zweite Hälfte von E273 an: Kontextkanten für die
+Bereiche, die noch keine haben. Sechzehn Leser haben dafür acht Bereiche
+abgesucht — und der Befund war nicht „hier fehlen Knöpfe", sondern etwas
+anderes.
+
+**`App.schauplatz()` war auf sechs Bildschirmen falsch.** Nicht leer:
+FALSCH. Gemessen, nicht gelesen:
+
+    Bildschirm       Schauplatz    Kante zeigte
+    ─────────────────────────────────────────────────────────────
+    Meine Aufgaben   aufgaben      Übersicht · Tagesplan · Fällig
+    → Start          aufgaben      Übersicht · Tagesplan · Fällig
+    Notizhefte       notizhefte    (leer)
+    → Posteingang    notizhefte    (leer)
+
+Der Grund steht in `bereiche/datenbanken/ansichten/dienst.ts`: `start`,
+`posteingang`, `seiten`, `termine`, `mehr` und `kompass` zeichneten sich
+selbst in `#page` — `flaeche()` holen, `App.setzeSeite(null)`, Krume
+schreiben, malen. Kein `zeigeSonder`. Und `schauplatz()` kennt nur zwei
+Dinge: eine offene Seite oder ein `sonder`. Wer keins von beidem setzt,
+ändert den Ort nicht — er bleibt auf dem letzten stehen.
+
+Das ging elf Fassungen lang gut, weil niemand fragte, wo man ist. Seit
+E272 fragt die Kontextkante bei jedem Wechsel.
+
+**Erst der Ort, dann die Knöpfe.** Ein `K.melde({ bereich: 'posteingang' })`
+vor dieser Reparatur wäre nie gezeichnet worden — der Schauplatz kam im
+Betrieb nicht vor. Die sechs gehen deshalb jetzt durch `bildschirm()`, das
+`App.zeigeSonder` ruft wie die anderen sieben Bildschirme auch. Die Krume
+kommt seitdem aus dem Titel, und die Emoji darin (🏠 📥 📄 📅 🧭) sind damit
+von selbst verschwunden — E202 im Vorbeigehen.
+
+Drei Titel kamen in `SCHAUPLATZ_NAMEN` dazu: `Start → heute`,
+`Seiten → bibliothek`, `Termine → kalender`. Ohne sie hätten die drei aus
+dem Schnipsel eigene Kennungen bekommen, obwohl es dieselben
+Bildschirmfamilien sind.
+
+**Was gebaut wurde — und was nicht.** Vier Bereiche haben jetzt eine Kante:
+
+    posteingang   Übersicht · Benachrichtigungen · Erinnerungen ·
+                  An dich gerichtet          (drei davon Laden)
+    kalender      Übersicht · Kommende Termine · Tagesplan ·
+                  Wochenrückblick · Verbinden · Abgleichen
+    notizhefte    Regal · Weiterschreiben · Dokumente · Papierkorb
+    workspace     Übersicht · Ansichten
+
+    kompass/mehr  Start · Kompass · Mehr — zwei Übersichtsseiten, die
+                  keine eigenen Werkzeuge haben, aber ohne einen einzigen
+                  Knopf aussähen wie ein Fehler.
+
+Vier Bereiche haben KEINE bekommen, und das ist kein Rest, sondern das
+Ergebnis:
+
+  · **datenbank** — es gibt den Schauplatz nicht und kann ihn so nicht
+    geben: eine Datenbank auf einer Seite ist für die Kante der Editor,
+    und „als ganze Seite" heisst `zeigeSonder(coll.name)` — der Schauplatz
+    ist dann der NAME der Datenbank, je Datenbank ein anderer.
+    `Register.kontext.fuer()` vergleicht auf Gleichheit; darauf kann sich
+    niemand anmelden. Dazu sind `filterMenue`, `sortMenue` und
+    `eigenschaftenMenue` gar nicht ausgeführt, und es fehlt ein Griff auf
+    die offene `{coll, view, block}`. Das ist ein eigener Bogen (L95).
+  · **lernen** — der Schauplatz entsteht nie: das Lernzentrum öffnet unter
+    dem Titel „Lernen & Alltag", und der bildet auf `heute` ab. Die
+    Heute-Kante bedient es also schon. `'Lernzentrum': 'lernen'` in
+    `SCHAUPLATZ_NAMEN` ist ein toter Eintrag.
+  · **ki** — die KI ist ein PANEL neben dem Inhalt, kein Ort. `kiPanel`
+    schaltet eine Klasse auf `#ai` und lässt `sonder` und `seiteId` in
+    Ruhe; wer das Fenster öffnet, steht weiter da, wo er war. Der Weg
+    dorthin steht ausserdem im FUSS der Kante, auf jedem Schauplatz. Ein
+    zweiter wäre §8.
+  · **papierkorb** — derselbe Fall wie `lernen`: `App.papierkorb()` ist ein
+    Overlay, kein Bildschirm. Der Schauplatz kommt nie vor.
+
+**Und drei Vorschläge wurden ausdrücklich verworfen**, obwohl die Griffe
+existieren: „Neu" im Workspace (die Kennung gibt es im Fuss schon, auf
+jedem Schauplatz — §8), „Suchen" im Workspace (dieselbe Lupe steht im
+Menüband, auf jedem Bildschirm — der Fund von E160) und „Benachrichtigungen
+leeren" (`meldungenLeeren` LÖSCHT; ein Knopf, der ohne Rückfrage Daten
+wegnimmt, gehört nicht an eine Kante — L96).
+
+### Und eine zweite Sonne (L97)
+
+Auf dem Bild der Kalenderkante sass über dem Balkendiagramm eine Sonne und
+bedeutete „Tagesplan". Im Menüband bedeutet dieselbe Sonne „helles
+Aussehen".
+
+`today` und `sun` waren Strich für Strich fast dasselbe Zeichen — ein Kreis
+mit acht Strahlen. Zwei Namen, ein Bild, zwei Bedeutungen, und beide in der
+Schale: `sun` für Hell/Dunkel und den Reiter „Ansicht", `today` für
+„Heute", „Start", „Tagesplan" und „Lernen & Alltag".
+
+Das ist §38 in seiner schärfsten Form. Nicht zu wenig Unterschied — gar
+keiner. Und wieder hat es kein Prüflauf gefunden, sondern das Bild:
+`Register.symbole.hat('today')` sagt ja, `fuelle` setzt etwas, jeder Punkt
+bleibt grün.
+
+`today` ist jetzt ein Kalenderblatt mit eingerahmtem Tag: verwandt mit
+`calendar` (dieselbe Umrandung), unterscheidbar von ihm (der Kasten) und
+von `sun` (keine Strahlen).
+
+### test272 §16 — der Punkt, den es vorher nicht gab
+
+Neun Wege, jeder von demselben Ausgangsort aus, jeder mit dem Schauplatz,
+den er melden muss. Die Gegenprobe zeichnet danach von Hand in `#page`,
+genau wie die sechs es vorher taten, und muss sehen, dass der Ort
+stehenbleibt. Dazu neun Zeilen, die prüfen, dass jede dieser Kanten
+wirklich Knöpfe hat.
+
