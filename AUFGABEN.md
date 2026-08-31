@@ -2025,3 +2025,89 @@ node pruefungen/lauf/test105.mjs
   mit `.nh-form{margin-left:auto}`, sonst rutschte sie als einziges Kind der
   Zeile nach links. Und test265 verliess sich an FÜNF Stellen still auf die
   Wurzel; alle fünf sagen es jetzt über `anDieWurzel()`.
+* E284 (Redurs Punkt 5, VORGEZOGEN): Der Import hält jetzt etwas aus. Ein
+  `__proto__` in einer eingespielten Sicherung funktionierte — `Object.assign`
+  schreibt über `[[Set]]`, also über den geerbten Setzer, und danach gab
+  `getMeta` für jeden ungesetzten Schlüssel das zurück, was in der fremden
+  Datei stand: `wolkeAbgleich`, `agent:notaus`, jeder `api:`-Schlüssel. Neu
+  `core/import/sicherheit.ts` (prototyplose Verzeichnisse statt einer
+  Filterliste, eigener Stapel statt Rekursion, Tiefengrenze mit Meldung) und
+  `core/import/validierung.ts` (liest endlich die Fassung, die der Export seit
+  jeher schreibt). Beides gibt einen BEFUND zurück, keinen stillen Eingriff.
+  test278 neu (37) — das erste feindliche Einspielen überhaupt; die anderen
+  vierzehn Import-Prüfläufe spielen alle eine Sicherung ein, die Redion selbst
+  geschrieben hat. Dabei eine Prüfung, die grün war und trotzdem falsch: sie
+  hielt ein leeres `versions`-Fach für einen Hinweis auf eine abgeschnittene
+  Datei — `enthaelt` spricht aber über das Format, nicht über den Inhalt.
+  Vorschau, Anhangs-Transaktion und die Sicherheitskopie vor dem Ersetzen
+  bleiben offen (L101). Was die Bestandsaufnahme sonst fand, steht als L102 —
+  darunter zwei Dinge, die schlimmer sind als eine Lücke: der Kalender wirft
+  BYDAY wortlos weg und liefert falsche Termine, und die Rechteprüfung der
+  Agenten fragt die gerade offene Seite statt der, auf die geschrieben wird.
+  sw v50.
+* E285 (Redurs Punkt 3): `core/knowledge/rank.ts` — PageRank auf Redions
+  vorhandenem Graphen. Reine Funktion, speichert nichts, jederzeit neu
+  ausrechenbar; 5000 Knoten unter einer Sekunde gemessen. Zwei Dinge, die die
+  abgeschriebene Fassung falsch macht: drei von vier Kantenarten sind in
+  Redion GAR NICHT gerichtet (`addEdge` sortiert sie nach Kennung), und
+  Sackgassen verschlucken Gewicht — die nachgebaute falsche Rechnung kommt
+  auf 0,15 statt 1. Beides prüft test279 mit Gegenprobe. Dabei ein eigener
+  Irrtum, der als Kommentar stehenbleibt: mein erstes §4 wollte zeigen, dass
+  drei starke Zeiger sechs schwache schlagen, und mass das Gegenteil — zu
+  Recht, denn „Qualität schlägt Menge" gilt erst, wenn die Wenigen wirklich
+  stark sind. Und die Falle beim Bauen: `tsconfig.bauen.json` führt eine
+  Aufzählung der core-Ordner, kein `**`; ein neuer Ordner muss eingetragen
+  werden. test279 neu (40). sw v51.
+* E286 (Redurs Punkt 1): Die Auftragsmaschine. Fach `auftraege` (Fassung 7),
+  `core/jobs/modell.ts` mit den REGELN (reine Funktionen, keine Uhr — die
+  Zeit kommt als Zahl herein, deshalb prüft test280 §1 die ganze
+  Zustandsmaschine ohne eine Sekunde zu warten) und `kern/auftraege/` mit der
+  WIRKUNG. Der Auftrag wird VOR der Arbeit geschrieben; nach einem Neustart
+  setzt er beim letzten FERTIGEN Schritt an. Genau das misst §4: die Seite
+  wird mitten in der Arbeit neu geladen, und der Auftrag macht bei Schritt 2
+  weiter statt von vorn. Redurs Bus-Regel gilt für den zweiten Teil (kein
+  Bereich kennt einen anderen), nicht für den ersten: Redions Bus kann kein
+  async, keinen Abbruch, keine Reihenfolge (L102 §4) — die Maschine meldet
+  darüber und steuert nicht. Die Pacht gegen zwei Tabs ist keine Feldangabe,
+  sondern EINE readwrite-Transaktion; §6 misst mit zwei echten Fenstern. Der
+  Versuch zählt beim NEHMEN, nicht beim Scheitern — sonst liefe ein Auftrag,
+  der zuverlässig abstürzt, ewig. Ein Entwurfsfehler, den die Prüfläufe
+  sofort zeigten: `auftraege` immer unter `fehlt` zu nennen machte „nichts
+  fehlt" unmöglich; genannt wird es jetzt nur bei wirklich offener Arbeit.
+  test280 neu (52); test85/95/96/100 auf Fassung 7 nachgezogen. Noch kein
+  Bereich angeschlossen und keine Anzeige — L103. sw v52.
+* E287 (Redurs Punkt 2): Die KI sagt, was sie kostet, BEVOR sie ruft.
+  `core/ai/kosten.ts` RECHNET (reine Funktionen — 33 der 48 Prüfpunkte
+  brauchen keinen Browser), `bereiche/ki/buch.ts` WEISS (Grenzen aus `meta`,
+  Buch in `meta`, Ja oder Nein). Vier Grenzen der Reihe nach — je Aufruf, je
+  Lauf, je Tag, je Monat —, jede mit 0 abschaltbar, und der Satz nennt beide
+  Zahlen statt nur „nein". Geschätzt wird mit 3,6 Zeichen je Token statt 4
+  (deutsche Komposita) plus 35 % Aufschlag, und geprüft wird gegen
+  `hoechstens`: eine Grenze, die man im Mittel einhält, hält man in der
+  Hälfte der Fälle nicht ein. Ein unbekanntes Modell wird DURCHGELASSEN und
+  nicht gesperrt — die Preisliste trägt ein Datum, und eine Sperre, die bei
+  jedem neuen Modellnamen zuschlägt, ist §47 von der anderen Seite. Lokale
+  Modelle werden gar nicht angefasst. `stapelSchaetzen` gibt es, weil
+  `embeddingsBauen` in einer Schleife ruft: 2000 Seiten sehen einzeln
+  harmlos aus und kosten zusammen 2 Mio Token. Die Prüfung sitzt an EINER
+  Stelle, im Wolken-Zweig von `dienst.ts`. test281 neu (48); test72 auf
+  Fassung 7 nachgezogen; test280 §2 auf die E286-Entscheidung nachgezogen
+  und um die Gegenprobe erweitert (55). Das Buch führt Schätzungen, keine
+  gezählten Token, und es gibt keine Oberfläche dafür — L104. sw v53.
+* E288 (Redurs Punkt 4): Wissenslücken. `core/knowledge/gaps.ts` FINDET
+  (reine Regeln, `jetzt` kommt als Zahl herein), `bereiche/wissen/luecken.ts`
+  SAMMELT und ZEIGT. Sechs Arten: Geisterverweise, mehrdeutige Verweise,
+  wichtig-aber-verstaubt, offene Fragen, Inseln, dünne Themen. Die zweite
+  gibt es bei BABAT-RED nicht und ist die wertvollste — Redions Auflöser
+  meldet Mehrdeutigkeit seit jeher, und niemand hat je danach gefragt.
+  Zugleich bekommt E285 seine erste Aufgabe: der Wissensrang war gebaut und
+  von niemandem benutzt. Gegen die Falle, in die diese Sorte Funktion immer
+  läuft (eine Lückenliste findet IMMER etwas — dieselbe Falle wie E284 und
+  E286, diese Woche zum dritten Mal): jeder Fund trägt eine Stärke, gezählt
+  wird nur, was über der Schwelle liegt, und der Schnitt je Art nennt sich
+  selbst. Was das HINSEHEN fand und keine Prüfung finden konnte (§55.1):
+  Markdown-Sternchen mitten im Titel, dieselbe Frage zweimal untereinander,
+  und — das Wichtigste — 26 der 33 gezählten Lücken waren Zeilen, die eine
+  Frage zitieren und gleich beantworten. Aus 33 wurden 10. test282 neu (57).
+  Kein Escape-Griff für die anderen Overlays, kein „erledigt", und die
+  Ansicht rechnet bei jedem Öffnen neu — L105. sw v54.

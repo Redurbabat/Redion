@@ -21312,3 +21312,568 @@ Annahme — sie fiel nur nicht auf.
 **Geprüft:** test277 neu (43 Punkte, drei Gegenproben) · test265 38/38 ·
 test276 22/22 · test272 153/0 · typecheck grün · Einzeldatei neu gebaut ·
 Bilder vom Band und vom offenen Fach.
+
+================================================================================
+E284 — Der Import hält jetzt auch etwas aus (Redurs Punkt 5, vorgezogen)
+================================================================================
+31. August 2026
+
+Redur hat nach einem tiefen Abgleich mit den anderen Repositories zwölf
+Arbeiten in einer Reihenfolge vorgeschlagen. Die Import-Härtung stand darin
+an fünfter Stelle. Sie steht jetzt an erster, und das ist der einzige Punkt,
+an dem ich seiner Reihenfolge widersprochen habe.
+
+Der Grund ist §46: Import-Härtung ist kein Feature, sondern ein Loch. Ein
+`__proto__` in einer eingespielten Sicherung funktionierte, und zwar heute,
+in der ausgelieferten Fassung.
+
+### Was gemessen wurde, bevor etwas gebaut wurde
+
+Zehn Leser sind durch `src/` gegangen, und zu jedem Befund „das fehlt" lief
+ein zweiter Durchgang, der ihn zu WIDERLEGEN versuchte — mit deutschen
+Suchwörtern statt englischer. Genau daran war eine frühere Übersicht
+gescheitert: sie hatte nach „Job" gesucht, wo „Auftrag" steht.
+
+Acht von zehn Befunden hielten. Zwei fielen, und beide gehören hierher
+notiert, weil sie zeigen, dass die Gegenprobe ihr Geld wert war:
+
+  · `src/kern/ablage/nachbarn.ts` IST der fachneutrale Zwei-Tab-Kanal.
+    Mein Leser hatte nur Stores eigenen Zuhörer angesehen und den Filter
+    dort für den Kanal gehalten.
+  · `Umzuege.FASSUNGEN` IST das Fächer-Register. Es liegt nur nicht unter
+    `src/register/`, und dort war gesucht worden.
+
+Für die Import-Sicherheit dagegen hielten ALLE ACHT Punkte.
+
+### Der Angriff, und warum er funktionierte
+
+`JSON.parse('{"__proto__":{"a":1}}')` erzeugt eine EIGENE Eigenschaft namens
+`__proto__`. Das allein ist harmlos. `Object.assign` reicht sie weiter, und
+zwar über `[[Set]]` — also über den geerbten `__proto__`-SETZER:
+
+    Object.assign(cache.meta, neu.meta);      // zusammenfuehren
+    cache.meta = neu.meta;                    // ersetzen
+
+Danach hatte `cache.meta` einen fremden Prototyp. Und `getMeta(k)` liest
+`cache.meta[k]`. Also gab jeder Schlüssel, der heute NICHT gesetzt ist,
+plötzlich das zurück, was in der fremden Datei stand:
+
+    wolkeAbgleich        der Abgleich schaltet sich selbst ein
+    agent:notaus         der Notaus lässt sich abschalten
+    api:*                ein Schlüssel, der nie eingegeben wurde
+    theme, jede Vorgabe  irgendetwas
+
+Dasselbe für `cache.blocks[id]`: eine Kennung, die es nicht gibt, hätte
+einen Block geliefert.
+
+Der zweite Weg ist der stumpfere: beim „ersetzen" wird gar nicht kopiert —
+das geparste Objekt WIRD der Zwischenspeicher. Ein Schlüssel `constructor`
+steht dann als gewöhnlicher Eintrag darin, und jeder Code der Form
+`if (verzeichnis[k])` geht darauf herein.
+
+### Die Antwort: prototyplose Verzeichnisse, nicht eine Filterliste
+
+`Object.create(null)` hat keinen `__proto__`-Setzer, den man auslösen
+könnte, und `verzeichnis['constructor']` ist ehrlich `undefined`. Das ist
+keine Filterung, die man an einer Stelle vergessen kann — es ist eine Form,
+die das Problem nicht hat.
+
+Die drei Namen fliegen ZUSÄTZLICH beim Kopieren raus. Zwei Wälle statt
+einem, weil der erste an einer Stelle vergessen werden kann, an die heute
+niemand denkt.
+
+**Warum kein `reviver` bei `JSON.parse`.** Das ist der übliche Rat und hier
+zu wenig: er säubert die Werte, ändert aber nichts daran, dass `cache.meta`
+ein gewöhnliches `{}` mit `Object.prototype` bleibt. Der nächste
+`Object.assign` aus einer anderen Quelle stünde wieder offen.
+
+**Warum ein eigener Stapel statt Rekursion.** Die Tiefe ist begrenzt (100),
+die BREITE nicht — eine Sicherung mit zweihunderttausend Blöcken soll den
+Aufrufstapel nicht anfassen. Jenseits der Tiefengrenze wird abgeschnitten
+und gemeldet, nicht durchgereicht: ungeprüft durchreichen wäre genau das
+Loch.
+
+### Und die Fassung, die seit jeher geschrieben und nie gelesen wurde
+
+`exportAll` schreibt `version: VERSION` ins Manifest (indexdb.ts:1713). Beim
+Einspielen las das niemand. Eine Sicherung aus einer NEUEREN Redion-Fassung
+lief still durch und verlor dabei genau das, was sie neu hatte.
+
+`ImportValidierung.pruefen` liest sie jetzt und gibt einen BEFUND zurück,
+keinen Fehler: eine neuere Fassung ist ein Grund zum Nachfragen, kein Grund
+zum Verweigern. Nur was gar keine Sicherung sein KANN, wird hart abgewiesen.
+
+### Eine Prüfung, die grün war und trotzdem falsch
+
+Beim ersten Lauf gegen Redions EIGENEN Export wurde §5 rot — die Stelle, die
+sicherstellt, dass die Härtung keine gültige Sicherung beschädigt.
+
+Der Grund war meine eigene Regel: „das Manifest nennt `versions` unter
+`enthaelt`, aber das Fach ist leer, also ist die Datei abgeschnitten."
+`enthaelt` ist aber eine Aussage über das FORMAT, nicht über den Inhalt —
+`exportAll` schreibt die fünf Namen fest hin, und ein frischer
+Arbeitsbereich hat legitim null Fassungen.
+
+Die Prüfung dieser Regel in test278 war grün. Die Regel war trotzdem falsch.
+Beides ist weg, und an beiden Stellen steht, warum — eine Warnung, die bei
+gewöhnlichem Gebrauch anspringt, bringt Menschen bei, Warnungen
+wegzuklicken, und ist damit schlimmer als keine.
+
+### Was diese Entscheidung NICHT deckt
+
+Die Vorschau. Was es heute gibt, ist eine ZÄHLUNG („1247 Blöcke"), keine
+Vorschau — sie sagt nicht, WAS sich ändert. Ebenso: die Transaktion deckt
+die Anhänge nicht ab (fünf Fächer alles-oder-nichts, die Anhänge kommen
+danach einzeln), und der offene Weg schreibt vor dem Ersetzen keine
+Sicherheitskopie, während der Krypto-Weg das sehr wohl tut. Beides steht als
+L101 in LUECKEN.md.
+
+**Geprüft:** test278 neu (37 Punkte, mit dem ersten feindlichen Einspielen
+überhaupt) · test96, test100, test261, test273 unverändert grün ·
+typecheck grün · sw v50.
+
+================================================================================
+E285 — Der Wissensrang: nicht wie viele zeigen her, sondern wer (Redurs Punkt 3)
+================================================================================
+31. August 2026
+
+Redions Wissensgraph war reich und stumm. Fünf Knotenarten, vier
+Kantenarten, Rückverweise, unverlinkte Erwähnungen, Alias-Auflösung — und
+keine Aussage darüber, welcher Knoten WICHTIG ist.
+
+Was es gab, ist `analyzeKnowledgeGraph` (`verweise.ts:709`). Es zählt
+Kanten und nennt die Zwölf mit den meisten „Naben". Das ist der Grad, und
+der Grad ist eine schwache Auskunft: eine Seite, auf die zwanzig
+Wegwerfnotizen zeigen, steht damit über einer, auf die drei zentrale Seiten
+zeigen.
+
+### Der Fund, der die naive Fassung widerlegt
+
+**DREI VON VIER KANTENARTEN SIND GAR NICHT GERICHTET.**
+
+`addEdge` (`verweise.ts:533`) normalisiert:
+
+    const undirected = kind !== 'link';
+    const first  = undirected && source > target ? target : source;
+    const second = undirected && source > target ? source : target;
+
+Bei `relation`, `tag` und `tree` ist `source` also schlicht die lexikalisch
+kleinere Kennung. Wer diese Kanten als gerichtet nimmt — und das tut jede
+PageRank-Fassung, die man abschreibt —, rechnet eine Rangfolge aus, die
+davon abhängt, wie die Zufallskennungen ausfallen.
+
+Das Ergebnis sähe vollkommen plausibel aus. Eine Liste von Seiten mit
+Zahlen daneben wirkt immer richtig; es gibt kein „das sieht falsch aus".
+Genau deshalb sagt der Aufrufer jetzt AUSDRÜCKLICH, welche Arten eine
+Richtung tragen. Eine Vorgabe gibt es, aber sie steht als Wert da und nicht
+als Annahme im Rechenweg. test279 §3 führt beide Fassungen nebeneinander
+vor.
+
+### Und der zweite: Sackgassen verschlucken Gewicht
+
+Ein Knoten ohne ausgehende Kante hat nichts, wohin er sein Gewicht
+weitergeben könnte. Wer das nicht behandelt, verliert in jeder Runde Masse.
+In Redion ist das kein Randfall, sondern der Normalfall: jede Seite ohne
+ausgehenden Link ist eine Sackgasse, und das sind die meisten.
+
+Die Prüfung baut die falsche Rechnung nach und misst sie: sie kommt nach
+vierzig Runden auf **0,15 statt 1**. Danach sind die Zahlen untereinander
+nicht mehr vergleichbar — und man sieht es der Liste nicht an.
+
+Die Summe muss 1 sein. Das ist die eine Eigenschaft, die einen kaputten
+PageRank zuverlässig verrät, und sie wird in jedem Abschnitt mitgemessen.
+
+### Was ich beim Prüfen selbst falsch hatte
+
+Der erste Aufbau von §4 sollte zeigen, dass „drei starke Zeiger sechs
+schwache schlagen". Gemessen gewann die Menge: 0,2775 gegen 0,1347.
+
+**Und das war richtig.** Sechs Zeiger SIND mehr Gewicht als drei, wenn die
+drei selbst nur Grundgewicht tragen. Mein „dichter Kern" aus drei Knoten
+verstärkte sich zwar gegenseitig, bekam aber von aussen nichts, und
+dritteltе obendrein seinen Ausfluss.
+
+„Qualität schlägt Menge" ist keine Eigenschaft, die PageRank immer hat. Es
+ist eine, die er hat, WENN die Wenigen wirklich stark sind. Der Aufbau
+steht jetzt so da: hinter jeder der drei Naben stehen zehn Seiten, und jede
+Nabe hat genau einen Ausgang. Dann dreht sich das Ergebnis um, und der
+Grad sagt weiterhin das Gegenteil.
+
+Der Irrtum bleibt als Kommentar in der Prüfung stehen. Er ist die
+nützlichste Zeile darin.
+
+### Von 0 bis 100, und warum mit Wurzel
+
+Der reine PageRank ist bei tausend Knoten eine Zahl um 0,001 und sagt einem
+Menschen nichts. Eine gerade Umrechnung gäbe dem Zweitplatzierten 8 von
+100 — PageRank ist extrem schief verteilt. Mit der Wurzel wird aus der
+Rangfolge etwas, das man lesen kann.
+
+Frische und Stern kommen dazu, und beide sind Meinung und nicht Mathematik.
+Deshalb stehen sie in einer eigenen Funktion, die man weglassen kann. Die
+Frische fällt linear über ein halbes Jahr auf null und zieht nie ab — ein
+Zuschlag, der negativ werden kann, wäre eine Bestrafung für Bestand, und
+Bestand ist der Sinn eines Wissensspeichers.
+
+Bewusst NICHT dabei ist die Knotenart. Eine Entscheidung ist nicht per se
+wichtiger als eine Seite; das hängt vom Menschen ab und nicht vom Typ. Wer
+es anders will, reicht `artGewicht` herein.
+
+### Und die Falle beim Bauen
+
+`tsconfig.bauen.json` führt eine AUFZÄHLUNG der Ordner unter `src/core/`,
+kein `src/core/**` — weil `src/core/types/` nichts ausgeben darf. Ein neuer
+Ordner muss dort eingetragen werden, sonst entsteht das `.js` nie.
+
+Die Datei warnt selbst davor („Wer einen neuen Ordner unter src/core/
+anlegt, trägt ihn hier ein"), und ich bin trotzdem hineingelaufen: der
+Prüflauf brach ab, weil `KnowledgeRank` im Browser nicht existierte.
+`test105` hätte es beim nächsten vollen Lauf gemeldet.
+
+### Was diese Entscheidung NICHT tut
+
+Sie speichert nichts. Kein Fach, kein Meta-Schlüssel, keine zweite
+Datenbank — genau Redurs Regel. Der Rang ist ABGELEITET und jederzeit neu
+ausrechenbar; bei 5000 Knoten und 10000 Kanten dauert das gemessen unter
+einer Sekunde.
+
+Und sie zeigt noch nichts an. Der Rang liegt als Rechnung bereit; wo er
+sichtbar wird — Suche, KI-Kontext, „das solltest du wieder ansehen" —, ist
+die nächste Entscheidung und nicht diese.
+
+**Geprüft:** test279 neu (40 Punkte, mit von Hand nachgerechneten Werten und
+vier Gegenproben) · test105 grün · typecheck grün · sw v51.
+
+================================================================================
+E286 — Die Auftragsmaschine: Arbeit, die einen Neustart überlebt (Redurs Punkt 1)
+================================================================================
+31. August 2026
+
+Redion konnte lange Arbeit TUN — PDF einlesen, OCR, grosser Import,
+Sicherung, Embeddings bauen. Was es nicht konnte, ist sie ÜBERLEBEN. Jede
+dieser Arbeiten lag im Arbeitsspeicher: Tab zu, Arbeit weg.
+
+Beim Datei-Upload war es schlimmer als „weg": der Fehlerpfad löschte die
+schon geschriebenen Stücke (`dateien/ablage.ts:176`), und `verwaist()`
+erklärte jeden unfertigen Upload zum Müll, den `aufraeumen()` endgültig
+entfernte. Ein abgebrochener Upload einer 400-MB-Datei liess also nichts
+zurück, womit man hätte weitermachen können.
+
+### Was es schon gab, und warum es nicht reichte
+
+Die Bestandsaufnahme fand durchaus Bausteine: die Zustandsmaschine der
+Datei-Uploads (`wartet`/`laeuft`/`fertig`), zwei echte Merklisten für
+Löschabsichten (`wolkeDateienWeg`, `wolkeBloeckeWeg` — ein
+Outbox-Muster mit Wiederholung), Wiederaufnahme-Marken für den Abgleich,
+und beim PDF-Einlesen sogar eine echte Wiederaufnahme — allerdings durch
+NEU-HERLEITUNG aus dem Bestand, nicht aus einem Auftragssatz.
+
+Was fehlte, ist die gemeinsame Form: ein Fach, ein Typ, ein Modul, ein
+Versuchszähler, eine Fehlerablage, eine Absprache zwischen zwei Tabs.
+
+### Die Arbeitsteilung, und warum sie zwei Dateien ist
+
+    core/jobs/modell.ts     die REGELN. Reine Funktionen, keine Uhr, keine
+                            Ablage. Die Zeit kommt als Zahl herein.
+    kern/auftraege/         die WIRKUNG. Ablage, Takt, Meldung.
+
+Das ist nicht Sauberkeit um ihrer selbst willen. Eine Regel, die auf die
+echte Uhr wartet, lässt sich nur mit echtem Warten prüfen — und dann prüft
+man sie eben nicht. test280 §1 rechnet die ganze Zustandsmaschine mit einer
+erfundenen Zeit durch: Pacht, Wartezeiten, drei Fehlversuche, Reihenfolge,
+Aufräumregeln. Ohne eine Sekunde zu warten.
+
+### Redurs Bus-Regel war richtig, und trotzdem geht es nicht so
+
+„Die Auftragsmaschine muss auf Redions Ereignissystem aufsetzen und darf
+nicht Fachbereiche direkt verkabeln." Der zweite Teil gilt und wird
+eingehalten: kein Bereich importiert einen anderen, jeder meldet seine Art
+an und weiss von den übrigen nichts.
+
+Der erste Teil geht nicht, und das ist gemessen (L102 §4):
+
+  · `melde` verwirft den Rückgabewert. Ein Auftrag, der etwas mit
+    IndexedDB tut, kann darüber nicht sagen, wann er fertig ist.
+  · `frage` sammelt Promises als ROHE WERTE ein, statt sie abzuwarten.
+  · Kein Abbruch, kein Veto, keine Reihenfolge, kein Nachreichen.
+  · Von 42 Namen in `ARTEN` wird genau EINER je benutzt.
+
+Die Maschine benutzt den Bus deshalb zum MELDEN und nie zum Steuern
+(`auftrag.angelegt`, `.beginnt`, `.schritt`, `.beendet`, `.fehler`). Das
+ist keine Umgehung, sondern die Anerkennung dessen, was er ist: ein
+Rufsystem, kein Steuerwerk.
+
+### Die Pacht — und warum das Feld nicht die Sperre ist
+
+Zwei Tabs ohne Absprache nähmen denselben Auftrag: doppeltes OCR, doppelte
+Kosten, doppelte Daten. Ein Auftrag trägt deshalb, wer ihn hält (`geraet`)
+und bis wann (`bisWann`).
+
+**Die Sperre entsteht nicht durch das Feld.** Sie entsteht dadurch, dass
+`Store.auftragNehmen` Lesen und Schreiben in EINE `readwrite`-Transaktion
+legt. IndexedDB serialisiert die; der zweite Tab sieht die Pacht des
+ersten. Läge das Lesen in einer eigenen Transaktion, sähen beide „frei" und
+beide schrieben ihre Pacht hinein. test280 §6 misst das mit zwei echten
+Fenstern auf derselben Ablage.
+
+### Der Versuch wird beim NEHMEN gezählt, nicht beim Scheitern
+
+Ein Tab, der mitten in der Arbeit abstürzt, meldet nichts mehr — er kann
+gar nicht mehr zählen. Zählte man erst beim Scheitern, liefe ein Auftrag,
+der zuverlässig abstürzt, ewig weiter: jeder Start nimmt ihn, jeder Start
+stirbt daran, der Zähler bleibt auf null.
+
+Aus demselben Grund kommt ein verwaister Auftrag beim Neustart mit
+WARTEZEIT zurück und nicht sofort.
+
+### Der Fehler bleibt liegen
+
+Sind die Versuche aufgebraucht, geht der Auftrag auf `fehler` und wird
+NICHT weggeräumt. Ein Auftrag, der nach dem dritten Fehlschlag still
+verschwindet, ist die Sorte Fehler, die niemand meldet — der Mensch denkt,
+das OCR laufe noch. `aufraeumen()` fasst nur `fertig` und `abgebrochen` an,
+und auch die erst nach einer Frist.
+
+### Ein Entwurfsfehler, den die Prüfläufe sofort zeigten
+
+Aufträge reisen nicht in der Sicherung mit: ein halb erledigter Auftrag ist
+Arbeit an DIESEM Gerät, und seine Eingaben — eine Datei in Stücken, ein
+bestimmter Block — gibt es woanders vielleicht gar nicht.
+
+Mein erster Entwurf nannte `auftraege` deshalb IMMER unter `fehlt`. test96
+und test100 wurden sofort rot, und zu Recht: eine Sicherung eines
+gewöhnlichen Bestands hätte damit nie wieder „nichts fehlt" sagen können.
+Ein `fehlt`, das immer etwas enthält, bringt Menschen bei, es zu überlesen
+— derselbe Fehler wie die Warnung, die bei gewöhnlichem Gebrauch anspringt
+(E284, dieselbe Woche, dieselbe Falle).
+
+Genannt wird es jetzt nur, wenn wirklich Arbeit offensteht. Dann ist die
+Angabe auch etwas wert: „drei Aufträge standen beim Sichern noch offen."
+
+### Und beim Einspielen mit „Ersetzen"
+
+Die Aufträge gehen mit. Sie zeigen auf Blöcke und Dateien, die es danach
+nicht mehr gibt; ein Auftrag, der eine verschwundene Datei sucht,
+scheitert dreimal und landet in der Fehlerablage — für nichts. Beim
+Zusammenführen bleiben sie stehen, denn dort bleiben die Blöcke ja auch.
+
+### Was diese Entscheidung NICHT tut
+
+Sie arbeitet nicht selbst. Sie kennt keine PDFs, kein OCR, keine Sicherung
+— sie nimmt Läufer entgegen und ruft sie auf. Und es ist noch **kein
+Bereich angeschlossen**: das ist bewusst der nächste Bogen. Eine
+Auftragsmaschine unter das OCR zu schieben, bevor sie bewiesen ist, wäre
+genau die Art Umbau, die §45 verbietet.
+
+Solange kein Läufer angemeldet ist, liest ihr Takt nicht einmal das Fach.
+Zweihundertvierzig Prüfläufe starten die App, und keiner soll einen Takt
+bezahlen, der nichts tun kann.
+
+**Geprüft:** test280 neu (52 Punkte; §4 reisst die Seite mitten in der
+Arbeit weg und misst, dass der Auftrag bei Schritt 2 weitermacht und nicht
+von vorn) · test85, test95, test96, test100 auf Fassung 7 nachgezogen —
+alle vier waren rot, und alle vier sollten es sein · test99 (zwei Fenster)
+unverändert grün · typecheck grün · sw v52.
+
+
+================================================================================
+E287 — Was ein KI-Aufruf kostet, BEVOR er läuft (Redurs Punkt 2)
+================================================================================
+31. August 2026
+
+Redion konnte bis heute jede Menge Geld ausgeben, ohne es je zu erwähnen.
+Wer einen Cloud-Anbieter eingetragen hatte, konnte einen Agenten losschicken
+und stellte die Rechnung erst beim Anbieter fest. Es gab keine Grenze, keine
+Schätzung, keinen Stand, kein Buch. Bei einem Werkzeug, das in Schleifen
+ruft — der Agent, das Embeddings-Bauen — ist das kein Schönheitsfehler.
+
+### Zwei Dateien, und warum
+
+    core/ai/kosten.ts       RECHNET. Reine Funktionen: Token schätzen,
+                            Preis rechnen, Grenze prüfen, Stand ausrechnen.
+                            Keine Ablage, keine Uhr von innen, kein `Store`.
+    bereiche/ki/buch.ts     WEISS. Liest die Grenzen aus `meta`, führt das
+                            Buch, ruft die Rechnung, sagt Ja oder Nein.
+
+Dieselbe Teilung wie bei E286 (`modell.ts` gegen `maschine.ts`), aus
+demselben Grund: die Rechnung lässt sich mit erfundenen Zahlen prüfen, ohne
+einen Browser, eine Ablage oder ein Datum zu stellen. Von den 48 Punkten in
+test281 messen 33 nur die Rechnung.
+
+### Die Schätzung sagt, dass sie eine Schätzung ist
+
+3,6 Zeichen je Token, nicht 4. Der übliche Daumenwert 4 stammt aus
+englischem Text; deutsche Komposita („Hintergrundhelligkeit") zerfallen in
+mehr Stücke. 3,6 schätzt also bewusst zu HOCH — bei einer Bremse ist das die
+richtige Richtung.
+
+Dazu ein Aufschlag von 35 % (`unsicherheit()`), und geprüft wird gegen
+`hoechstens`, nicht gegen den wahrscheinlichen Betrag. Eine Grenze, die man
+im Mittel einhält, hält man in der Hälfte der Fälle nicht ein.
+
+### Ein unbekanntes Modell wird DURCHGELASSEN
+
+Der naheliegende Entwurf sperrt, was er nicht kennt. Er ist falsch: die
+Preisliste trägt ein Datum (`STAND`), Anbieter benennen Modelle laufend um,
+und ein `gpt-4o-2026-11` würde jeden Aufruf blockieren, bis jemand eine
+Zeile pflegt. Das ist §47 von der anderen Seite — eine Sperre, die nicht
+schützt, sondern nur im Weg steht.
+
+Also: `bekannt: false`, KEINE geratene Zahl, ein Satz, der das Modell und
+das Alter der Liste nennt, und der Aufruf läuft. Was nicht bekannt ist, wird
+auch nicht verbucht — eine erfundene Zahl im Buch wäre schlimmer als eine
+Lücke, weil man ihr ansieht, dass sie eine Zahl ist.
+
+### Vier Grenzen, der Reihe nach, jede mit Namen
+
+    jeAufruf   0,50 USD   der eine Ausrutscher
+    jeLauf     2,00 USD   der Agent in der Schleife — nur im Speicher
+    jeTag      5,00 USD   der schlechte Tag
+    jeMonat   20,00 USD   die Rechnung
+
+Sie werden in dieser Reihenfolge geprüft, die erste gewinnt, und der Satz
+nennt BEIDE Zahlen („dieser Aufruf kostet höchstens 0,72 USD, die Grenze je
+Aufruf liegt bei 0,50 USD"). Ein „Nein" ohne Zahlen zwingt zum Raten, was
+man ändern muss.
+
+Alle vier sind mit 0 abschaltbar. Die Grenzen gehören dem Menschen; Redion
+hat kein Recht, ihm seine eigene Rechnung zu verbieten.
+
+### Lokale Modelle werden nicht angefasst
+
+Ollama und WebLLM kosten nichts. Eine Kostenprüfung davor wäre Reibung ohne
+Gegenwert — und der zuverlässigste Weg, eine Sicherung unbeliebt zu machen,
+ist, sie dort einzubauen, wo sie nichts schützt. `pruefen({lokal: true})`
+gibt sofort frei.
+
+### Das Kontingent ist keine Währung
+
+`kontingentBuchen`/`kontingentFrei`/`kontingentWartet` zählen Aufrufe oder
+Token in einem gleitenden Fenster — für Anbieter, die nach Menge und nicht
+nach Geld begrenzen, und für lokale Modelle, wo Geld gar keine Rolle spielt.
+Es sagt auch, wie lange man warten muss, statt nur „nein".
+
+### Der Stapel, nicht der Einzelfall
+
+`stapelSchaetzen` gibt es, weil `embeddingsBauen` in einer Schleife ruft.
+Einzeln sieht jeder dieser Aufrufe harmlos aus — 2000 Seiten kosten
+zusammen aber 0,04 USD und 2 Mio Token, und genau diese Summe soll man
+sehen, bevor man Ja sagt. Die Frage stellt `Dialog.wahl` mit zwei benannten
+Knöpfen und der Summe im Text.
+
+### Wo die Prüfung sitzt
+
+An EINER Stelle: `bereiche/ki/dienst.ts`, im Wolken-Zweig, direkt vor dem
+Aufruf. Nicht an jeder Aufrufstelle — das wäre die Sorte Prüfung, die man
+beim nächsten neuen Weg vergisst.
+
+**Geprüft:** test281 neu (48 Punkte, davon 33 ohne Browser-Zustand; §2 die
+Gegenprobe, dass ein unbekanntes Modell durchkommt; §6 dass dieselbe riesige
+Anfrage in der Wolke gebremst und auf dem Gerät durchgelassen wird; §7 dass
+der einzelne Aufruf harmlos aussieht und der Stapel nicht) · test72 auf
+Fassung 7 nachgezogen · test280 §2 auf die E286-Entscheidung nachgezogen und
+um die Gegenprobe erweitert (55 Punkte) · typecheck grün · sw v53.
+
+
+================================================================================
+E288 — Wissenslücken: was FEHLT, verrät der Bestand selbst (Redurs Punkt 4)
+================================================================================
+31. August 2026
+
+Redion konnte sagen, was in einem Bestand steht: suchen, verweisen, zählen,
+seit E285 auch ranken. Es konnte nicht sagen, was NICHT darin steht.
+
+Und E285 hatte ein zweites Problem: der Wissensrang wurde gebaut und danach
+von niemandem benutzt. Vierhundert Zeilen gerechneter PageRank, den kein
+Mensch je zu sehen bekam. E288 gibt ihm seine erste Aufgabe — „wichtig, aber
+lange nicht angefasst" lässt sich ohne ihn gar nicht stellen. Der Grad täte
+es nicht: eine Seite, auf die zwanzig Wegwerfnotizen zeigen, ist nicht
+wichtig.
+
+### Sechs Arten, und woher jede kommt
+
+    Geisterverweise    [[Ziel]], das auf nichts zeigt
+    Mehrdeutige        [[Ziel]], das auf mehrere Seiten passt
+    Wichtig+verstaubt  hoher Rang (E285) und lange nicht angefasst
+    Offene Fragen      selbst aufgeschrieben, nie beantwortet
+    Inseln             kein Verweis hin, keiner weg
+    Dünne Themen       ein Schlagwort an genau einer Seite
+
+Die zweite ist die einzige, die es bei BABAT-RED nicht gibt, und sie ist die
+wertvollste: Redions Auflöser MELDET Mehrdeutigkeit schon lange
+(`loeseSeitenverweis` gibt `status: 'mehrdeutig'`), und niemand hat je
+danach gefragt. Ein Verweis, der irgendwohin führt, ist schlimmer als einer,
+der nirgendwohin führt — beim ersten merkt man es nicht.
+
+### Die Falle, in die diese Sorte Funktion IMMER läuft
+
+Eine Lückenliste findet immer etwas. Wer fünf Listen aneinanderhängt und die
+Längen addiert, zeigt einem frischen Bestand mit drei Seiten „14
+Wissenslücken" — und bringt dem Menschen bei, die Anzeige zu überlesen.
+
+Genau dieser Fehler ist mir in derselben Woche zweimal passiert: die
+Import-Warnung, die bei gewöhnlichem Gebrauch anspringt (E284), und das
+`fehlt`, das nie leer sein kann (E286). Beim dritten Mal habe ich ihn
+vorher eingebaut statt hinterher gefunden.
+
+Jeder Fund trägt deshalb eine STÄRKE von 0 bis 100, und GEZÄHLT wird nur,
+was darüber liegt. Ein Geist, auf den fünf Seiten zeigen, ist ein Fund. Ein
+Schlagwort, das einmal vorkommt, ist eine Beobachtung. Beide stehen da, nur
+eines zählt. test282 §3 misst beide Richtungen: ein gesunder Bestand zählt
+null, und ein einziger Geist mit zwei Quellen macht daraus eins.
+
+### Was das Hinsehen fand, und keine Prüfung finden konnte (§55.1)
+
+Das Fenster war fertig, 50 von 50 Punkten grün. Dann habe ich es
+aufgemacht, und da standen 33 Lücken — davon 26 offene Fragen. Drei Fehler
+auf einen Blick:
+
+**1 · Auszeichnung im Titel.** Wörtlich: `Statusübergänge** — von welchem
+Wert darf man zu welchem springen?` und `*„Was würde Notion 10 000-mal
+besser machen?`. Die Funde stimmten, sie waren nur unlesbar. Kein Prüflauf
+konnte das melden — er hätte prüfen müssen, was er selbst erwartet.
+
+**2 · Dieselbe Frage zweimal untereinander.** Beide Funde stimmten (die
+Frage stand wirklich auf zwei Seiten), und es sah trotzdem aus wie ein
+Fehler. Zusammengefasst wie die Geister ist es eine Auskunft mehr statt
+einer Zeile mehr.
+
+**3 · Und der wichtigste: 26 der 33 gezählten Lücken waren Zitate.**
+Zeilen der Art „Die Antwort auf die Frage „Was würde X besser machen?"" —
+also Sätze, die eine Frage ZITIEREN und gleich beantworten. Eine Liste, die
+zu vier Fünfteln aus Fehlalarm besteht, wird nicht gelesen.
+
+Die Antwort darauf ist nicht, solche Zeilen wegzuwerfen (manchmal steht
+dort wirklich eine offene Frage), sondern der Unterschied zwischen einer
+GESTELLTEN und einer ERWÄHNTEN Frage: steht sie allein auf ihrer Zeile,
+zählt sie voll; steht sie mitten im Satz, bleibt sie als schwache
+Beobachtung stehen. Aus 33 wurden 10 — sieben Geister und drei wirklich
+offene Fragen.
+
+### Der Schnitt nennt sich
+
+Je Art werden höchstens dreissig Funde gezeigt. Der erste Entwurf brach
+beim Sammeln ab und behielt die ersten dreissig in der Reihenfolge, in der
+die Seiten zufällig kamen. Der Prüflauf zeigte es sofort: die eben angelegte
+Frage tauchte gar nicht auf, weil der Demobestand die dreissig schon
+aufgebraucht hatte.
+
+Jetzt wird erst gesammelt, dann nach Stärke geordnet, dann geschnitten —
+und der Satz oben sagt, wie viele nicht dastehen. Ein Schnitt, der sich
+verschweigt, liest sich wie Vollständigkeit.
+
+### Zwei Dateien, wie bei E286 und E287
+
+    core/knowledge/gaps.ts     FINDET. Reine Regeln, keine Uhr, keine
+                               Ablage. `jetzt` kommt als Zahl herein.
+    bereiche/wissen/luecken.ts SAMMELT und ZEIGT.
+
+Der Auflöser bleibt, wo er hingehört: `Links.alleSeitenverweise()` ist neu
+und baut den Seitenindex EINMAL statt einmal je Verweis. Vorher hätte ein
+Bestand mit 400 Verweisen und 900 Seiten 360 000 Durchläufe gebraucht für
+eine Auskunft, die einer genügt.
+
+**Geprüft:** test282 neu (57 Punkte; §3 die beiden Richtungen der Schwelle,
+§5 die Auszeichnung und der Unterschied gestellt/erwähnt, §6 dieselbe Frage
+als Karteikarte und als Absatz, §9 der Schnitt, der sich nennt) · typecheck
+grün · Bilder in hell, dunkel und am Telefon angesehen · sw v54.

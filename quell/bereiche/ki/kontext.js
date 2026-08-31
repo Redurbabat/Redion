@@ -590,6 +590,50 @@ const Kontext = (() => {
             gemerkt[e.id].stand !== String(e.geaendert));
         if (!offen.length)
             return { neu: 0, gesamt: Object.keys(gemerkt).length };
+        /* --- EIN KLICK, ZWEITAUSEND AUFRUFE (E287) --------------------------
+           Das hier war die konkreteste Kostengefahr in ganz Redion: jede Seite
+           geht einzeln an eine kostenpflichtige API, ohne dass vorher eine
+           Zahl fällt, ohne Obergrenze, ohne Abbruch.
+    
+           Geschätzt wird der GANZE Stapel, nicht der einzelne Aufruf. Die
+           einzelne Anfrage ist harmlos; zweitausend davon sind es nicht, und
+           genau diesen Unterschied sieht eine Prüfung je Aufruf nicht.
+    
+           Gefragt wird EINMAL, vorher. Eine Rückfrage je Seite wäre
+           zweitausend Rückfragen — also keine. */
+        const modellName = Store.getMeta('ki:embeddingModell', '') ||
+            (Store.getMeta('ki:embedding', '') === 'gemini'
+                ? 'text-embedding-004' : 'text-embedding-3-small');
+        if (typeof KiBuch !== 'undefined') {
+            const texte = offen.map((e) => e.titel + '\n' + e.text.slice(0, 3000));
+            const s = KiBuch.stapelSchaetzen(modellName, texte);
+            if (s.bekannt && !s.frei && s.betrag > 0 && typeof Dialog !== 'undefined') {
+                /* `Dialog.wahl` und nicht `confirm`: beide Antworten sind
+                   vertretbar, und jede bekommt einen Hinweis darunter, damit
+                   niemand raten muss, was „Abbrechen" hier bedeutet. */
+                const antwort = await Dialog.wahl({
+                    titel: 'Vektoren für ' + offen.length + ' Seite(n) bauen?',
+                    text: 'Jede Seite geht einzeln an ' + modellName + '.\n\n' + s.satz +
+                        '\n\nDie Preisliste ist vom ' + KiKosten.STAND + '.',
+                    knoepfe: [
+                        { id: 'nein', text: 'Abbrechen',
+                            hinweis: 'Es wird nichts gesendet und nichts berechnet.' },
+                        { id: 'ja', text: 'Bauen',
+                            hinweis: 'Die semantische Suche wird danach besser.' }
+                    ]
+                });
+                if (antwort !== 'ja') {
+                    return { neu: 0, gesamt: Object.keys(gemerkt).length, abgebrochen: true };
+                }
+            }
+            /* Und die Grenzen gelten auch hier — nicht nur die Rückfrage. */
+            const urteil = KiKosten.pruefen(s, KiBuch.grenzen(), KiBuch.stand());
+            if (!urteil.erlaubt)
+                throw new Error(urteil.satz);
+            if (s.bekannt && !s.frei) {
+                KiBuch.buchen(modellName, 'embedding', s.tokenEin, 0, false);
+            }
+        }
         let n = 0;
         for (let i = 0; i < offen.length; i += 8) {
             const gruppe = offen.slice(i, i + 8);

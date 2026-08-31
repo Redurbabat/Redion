@@ -142,6 +142,17 @@ const Store = (() => {
                aus Blöcken und Sammlungen neu gebaut werden. */
             if (!d.objectStoreNames.contains('suchindex'))
                 d.createObjectStore('suchindex', { keyPath: 'id' });
+            /* Version 7: Aufträge für lange Hintergrundarbeit (E286).
+               Der Auftrag wird VOR der Arbeit geschrieben; nach einem Neustart
+               weiss die App dadurch, was offenstand. Zwei Indizes, weil die
+               Maschine genau zwei Fragen stellt: „was ist offen?" (Zustand) und
+               „was ist von dieser Art?" (Art). Ohne sie liefe jeder Takt über
+               alle Aufträge, auch über die längst fertigen. */
+            if (!d.objectStoreNames.contains('auftraege')) {
+                const au = d.createObjectStore('auftraege', { keyPath: 'id' });
+                au.createIndex('zustand', 'zustand');
+                au.createIndex('art', 'art');
+            }
         };
         req.onsuccess = () => {
             db = req.result;
@@ -1706,6 +1717,11 @@ const Store = (() => {
                 'Blick in die Freigaben.';
         /* Und derselbe Satz für die Zugangsdaten. Er nennt die Zahl und den
            Weg zurück: eine verschlüsselte Sicherung nimmt sie mit. */
+        const ueberAuftraege = !exportAuftraegeOffen ? ''
+            : ' ' + exportAuftraegeOffen + ' Auftrag/Aufträge standen beim Sichern ' +
+                'noch offen (z. B. ein laufendes Einlesen). Sie reisen NICHT mit: ' +
+                'ihre Eingaben liegen auf diesem Gerät. Auf diesem Gerät laufen sie ' +
+                'weiter.';
         const ueberGeheimnisse = !geheimAusgelassen.length ? ''
             : ' ' + geheimAusgelassen.length + ' Zugangsdaten (' +
                 geheimAusgelassen.join(', ') + ') sind bewusst NICHT dabei: eine ' +
@@ -1718,7 +1734,17 @@ const Store = (() => {
             /* Was drin ist — damit ein Einleser es nachsehen kann, statt zu raten. */
             enthaelt: ['blocks', 'collections', 'views', 'meta', 'versions']
                 .concat(mitAnhaengen && echteImArchiv ? ['dateien', 'stuecke'] : []),
+            /* `auftraege` reist NIE mit (E286): ein halb erledigter Auftrag ist
+               Arbeit an DIESEM Gerät, und seine Eingaben — eine Datei in
+               Stücken, ein bestimmter Block — gibt es woanders vielleicht gar
+               nicht. Ihn mitzuschicken hiesse, auf dem anderen Gerät eine
+               Arbeit zu beginnen, die nicht laufen kann.
+      
+               GENANNT wird er aber nur, wenn wirklich etwas offensteht. Ein
+               leeres Auftragsfach lässt nichts aus, und ein `fehlt`, das immer
+               etwas enthält, bringt Menschen bei, es zu überlesen. */
             fehlt: (fehlenAnhaenge ? ['dateien', 'stuecke'] : [])
+                .concat(exportAuftraegeOffen ? ['auftraege'] : [])
                 .concat(nurHierAusgelassen)
                 .concat(geheimAusgelassen),
             /* Wie viele Dateien absichtlich draussen blieben — als Zahl, damit ein
@@ -1733,7 +1759,7 @@ const Store = (() => {
                         '„dateien" desselben Archivs.' + ueberAbgeleitete
                     : abgeleitetDa
                         ? 'Dieser Bestand hat nur abgeleitete Dateien.' + ueberAbgeleitete
-                        : 'Vollständig: dieser Bestand hat keine Dateianhänge.') + ueberOrdner + ueberGeteilt + ueberGeheimnisse,
+                        : 'Vollständig: dieser Bestand hat keine Dateianhänge.') + ueberOrdner + ueberGeteilt + ueberGeheimnisse + ueberAuftraege,
             blocks: cache.blocks,
             collections: cache.collections,
             views: cache.views,
@@ -1745,6 +1771,9 @@ const Store = (() => {
        Zwischenspeicher, damit er den Arbeitsspeicher nicht belastet. */
     let exportVersionen = [];
     let exportDateien = 0;
+    /* Wie viele Aufträge beim Sichern noch offenstanden — siehe
+       `exportVorbereiten`. Nur dann nennt das Manifest sie. */
+    let exportAuftraegeOffen = 0;
     /* WIE VIELE DAVON ABGELEITET SIND. Seit E103 packt das `.redion` nicht mehr
        jede Datei ein: gerasterte PDF-Seitenbilder bleiben draussen, weil sie
        sich aus dem mitgesicherten Original neu rechnen lassen. Das Manifest
@@ -1768,8 +1797,26 @@ const Store = (() => {
         const alleDateien = await all('dateien');
         exportDateien = alleDateien.length;
         exportAbgeleitet = alleDateien.filter((d) => d && d.abgeleitet).length;
+        /* OFFENE AUFTRÄGE ZÄHLEN (E286).
+           Nicht: `auftraege` immer unter `fehlt` nennen. Der erste Entwurf tat
+           genau das, und die Prüfläufe zeigten sofort, was daran falsch ist:
+           eine Sicherung eines gewöhnlichen Bestands könnte dann NIE mehr
+           „nichts fehlt" sagen. Ein `fehlt`, das immer etwas enthält, bringt
+           Menschen bei, es zu überlesen — derselbe Fehler wie die Warnung, die
+           bei gewöhnlichem Gebrauch anspringt (E284).
+    
+           Genannt wird es also nur, wenn wirklich Arbeit offensteht. Dann ist
+           die Angabe auch etwas wert: „drei Aufträge laufen noch und reisen
+           nicht mit". */
+        try {
+            const auftraege = await all('auftraege');
+            exportAuftraegeOffen = (auftraege || []).filter((a) => a && (a.zustand === 'wartet' || a.zustand === 'laeuft')).length;
+        }
+        catch {
+            exportAuftraegeOffen = 0;
+        }
         return { versionen: exportVersionen.length, dateien: exportDateien,
-            abgeleitet: exportAbgeleitet };
+            abgeleitet: exportAbgeleitet, auftraegeOffen: exportAuftraegeOffen };
     };
     /**
      * Eine Sicherung einspielen.
@@ -1805,18 +1852,47 @@ const Store = (() => {
         /* Erst landen lassen, was noch unterwegs ist — sonst löscht ein
            Aufräumen von vorhin in den neuen Bestand hinein (siehe `settled`). */
         await settled();
-        const d = JSON.parse(json);
-        if (!d.blocks)
-            throw new Error('Das sieht nicht nach einer Sicherung dieser App aus.');
+        /* --- ERST ENTSCHÄRFEN, DANN PRÜFEN, DANN EINSPIELEN (E284) ----------
+           Hier stand ein blankes `JSON.parse(json)`, und das Ergebnis ging
+           unbesehen weiter — beim Zusammenführen über `Object.assign`, beim
+           Ersetzen sogar als Zwischenspeicher SELBST.
+    
+           `Object.assign` schreibt über `[[Set]]`, also über den geerbten
+           `__proto__`-SETZER. Ein `{"__proto__":{"wolkeAbgleich":true}}` in
+           einer fremden Sicherung gab `cache.meta` damit einen fremden
+           Prototyp — und danach lieferte `getMeta('wolkeAbgleich')` nicht mehr
+           die Vorgabe, sondern das, was der Angreifer hineingelegt hatte.
+           Dasselbe für `cache.blocks[id]`: eine Kennung, die es nicht gibt,
+           hätte plötzlich einen Block geliefert.
+    
+           `ImportSicherheit.lesen` gibt prototyplose Verzeichnisse zurück, aus
+           denen die drei Namen entfernt sind. Der Fund wird MITGEREICHT, nicht
+           verschluckt (§35): eine Sicherung, die still verändert wurde, ist die
+           gefährlichste Sorte.
+    
+           Die Reihenfolge ist nicht beliebig. Entschärfen kommt VOR dem Prüfen,
+           weil die Prüfung sonst selbst über ein `constructor` stolpern könnte,
+           und beides kommt vor dem ersten Schreibzugriff. */
+        const gelesen = ImportSicherheit.lesen(json);
+        const d = gelesen.wert;
         if (art !== 'ersetzen' && art !== 'zusammenfuehren')
             throw new Error('Beim Einspielen muss feststehen, was geschehen soll: ' +
                 '„ersetzen" wirft weg, was nicht in der Sicherung steht, ' +
                 '„zusammenfuehren" legt sie dazu. Ohne Angabe wird nichts getan.');
+        const befund = ImportValidierung.pruefen(d, VERSION);
+        if (!befund.taugt) {
+            throw new Error(befund.punkte[0]?.text ||
+                'Das sieht nicht nach einer Sicherung dieser App aus.');
+        }
+        /* Die Verzeichnisse bleiben prototyplos — auch die leeren Ersatzwerte.
+           Ein `{}` an dieser Stelle hätte die Lücke an genau der Stelle wieder
+           aufgemacht, an der ein Fach in der Sicherung fehlt. */
+        const leer = () => Object.create(null);
         const neu = {
-            blocks: d.blocks || {},
-            collections: d.collections || {},
-            views: d.views || {},
-            meta: d.meta || {}
+            blocks: ImportSicherheit.verzeichnis(d.blocks) || leer(),
+            collections: ImportSicherheit.verzeichnis(d.collections) || leer(),
+            views: ImportSicherheit.verzeichnis(d.views) || leer(),
+            meta: ImportSicherheit.verzeichnis(d.meta) || leer()
         };
         /* --- DER ORDNERZUGRIFF ÜBERLEBT BEIDE ARTEN (E270) ------------------
            `sicherungOrdner` hält einen echten Verzeichniszugriff, den ein
@@ -2104,6 +2180,18 @@ const Store = (() => {
            er beantworten muss, ist ohnehin nur die eine Frage: hat der Server
            diesen Satz je gesehen? */
         if (art === 'ersetzen') {
+            /* --- DIE AUFTRÄGE GEHEN MIT (E286) ----------------------------
+               Sie zeigen auf Blöcke und Dateien, die es nach dem Ersetzen
+               nicht mehr gibt. Ein Auftrag, der eine verschwundene Datei
+               sucht, scheitert dreimal und landet in der Fehlerablage — für
+               nichts. Direkt über das Fach, nicht über `Auftraege`: das Modul
+               lädt NACH dieser Datei, und ein `typeof`-Wächter hier wäre eine
+               Abhängigkeit, die nur manchmal da ist. */
+            try {
+                for (const a of (await all('auftraege')) || [])
+                    await del('auftraege', a.id);
+            }
+            catch { /* das Fach gibt es erst ab Fassung 7 */ }
             await basisLeeren();
             const grabsteine = getMeta('wolkeBloeckeWeg', []) || [];
             for (const e of grabsteine)
@@ -2149,7 +2237,16 @@ const Store = (() => {
             /* Steht danach eine Entscheidung offen? Die Schale sagt es
                dem Menschen — sonst wartet die Frage, ohne dass jemand
                weiss, dass sie wartet. */
-            frage: !!getMeta('wolkeNeuAbgleich', '') };
+            frage: !!getMeta('wolkeNeuAbgleich', ''),
+            /* --- WAS BEIM ENTSCHÄRFEN UND PRÜFEN AUFFIEL (E284) --------
+               Beides reist MIT dem Ergebnis, statt in der Konsole zu
+               enden. Eine Sicherung, die still verändert oder still als
+               „aus einer neueren Fassung" erkannt wurde, ist genau die
+               Sorte Fehler, die man erst Wochen später sieht. */
+            entschaerft: gelesen.fund.entfernt,
+            entschaerftSatz: ImportSicherheit.satz(gelesen.fund),
+            befund: befund.punkte,
+            fassung: befund.fassung };
     };
     /* ========================================================================
      * SEITENBAUM ALS DATENPAKET
@@ -2570,6 +2667,50 @@ const Store = (() => {
     const vorratHolen = (id) => get('vorrat', id);
     const vorratWeg = (id) => del('vorrat', id);
     const vorratAlle = () => all('vorrat');
+    /* --- Aufträge (E286) ---------------------------------------------------
+       Vier gewöhnliche Wege plus EINER, der es nicht ist: `auftragNehmen`
+       liest und schreibt in DERSELBEN Transaktion. Das ist der Unterschied
+       zwischen einer Absichtserklärung und einer Sperre.
+  
+       Zwei Tabs, die gleichzeitig denselben Auftrag nehmen wollen, laufen
+       durch dieselbe `readwrite`-Transaktion auf demselben Fach — und die
+       serialisiert IndexedDB. Der zweite sieht die Pacht des ersten und geht
+       weiter. Läge das Lesen in einer eigenen Transaktion, sähen beide
+       „frei" und beide schrieben ihre Pacht. */
+    const auftragPut = (satz) => put('auftraege', satz);
+    const auftragHolen = (id) => get('auftraege', id);
+    const auftragWeg = (id) => del('auftraege', id);
+    const auftragAlle = () => all('auftraege');
+    /**
+     * Einen Auftrag nehmen — Lesen und Schreiben in EINER Transaktion.
+     *
+     * @param waehle  bekommt alle Aufträge und gibt den geänderten zurück,
+     *                oder `null`. Die Regel steht in `JobModell`; hier steht
+     *                nur, dass sie unter einer Transaktion läuft.
+     */
+    const auftragNehmen = (waehle) => new Promise((ok2, fail2) => {
+        if (!db) {
+            ok2(null);
+            return;
+        }
+        let genommen = null;
+        const t = db.transaction('auftraege', 'readwrite');
+        const laden = t.objectStore('auftraege').getAll();
+        laden.onsuccess = () => {
+            try {
+                genommen = waehle(laden.result || []);
+            }
+            catch (e) {
+                /* Eine werfende Regel darf die Transaktion nicht offen lassen. */
+                genommen = null;
+            }
+            if (genommen)
+                t.objectStore('auftraege').put(genommen);
+        };
+        t.oncomplete = () => ok2(genommen);
+        t.onerror = () => fail2(t.error);
+        t.onabort = () => fail2(t.error || new Error('Auftrag nehmen abgebrochen.'));
+    });
     /* --- Persistenter Suchindex ------------------------------------------- */
     /**
      * Schreibt nur den Such-Cache. Diese Wege berühren absichtlich weder
@@ -2681,6 +2822,7 @@ const Store = (() => {
         dateiGrabstein, dateiGrabsteine, dateiGrabsteinWeg,
         basisPut, basisHolen, basisWeg, basisAlle, basisLeeren,
         vorratPut, vorratHolen, vorratWeg, vorratAlle,
+        auftragPut, auftragHolen, auftragWeg, auftragAlle, auftragNehmen,
         suchindexAendern, suchindexErsetzen, suchindexLeeren,
         stueckPut, stueckHolen, stueckWeg, stueckeVon,
         speichertNicht: () => nurSpeicher,

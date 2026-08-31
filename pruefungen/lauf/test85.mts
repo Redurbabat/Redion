@@ -299,8 +299,14 @@ r = await seite.evaluate(() => ({
    Handlung sein, und dieser Prüfpunkt ist der Ort, an dem sie bewusst wird.
    Fassung 6 und das Fach `suchindex` kamen mit dem inkrementellen
    Suchindex dazu. */
-p('Alle sechs Fassungen beschrieben', r.fassungen === 6 && r.jetzige === 6, JSON.stringify(r));
-p('Zehn Fächer insgesamt',         r.faecher === 10, String(r.faecher));
+/* Die Zahlen wachsen mit jedem neuen Fach. Sie stehen trotzdem als ZAHL
+   da und nicht als `Umzuege.FASSUNGEN.length`: eine Prüfung, die ihre
+   Erwartung aus derselben Quelle holt, die sie prüft, kann nie rot werden
+   (§55.2). Wer ein Fach hinzufügt, ändert hier zwei Ziffern — und wird
+   dabei daran erinnert, dass exportAll/importAll und `wipe()` es auch
+   kennen müssen. Genau dafür sind sie da. */
+p('Alle sieben Fassungen beschrieben', r.fassungen === 7 && r.jetzige === 7, JSON.stringify(r));
+p('Elf Fächer insgesamt',          r.faecher === 11, String(r.faecher));
 p('Der Weg von 3 nach 5',          JSON.stringify(r.zwischen) === '[4,5]', JSON.stringify(r.zwischen));
 p('Eine zu alte App bekommt einen Satz', /neueren Fassung/.test(r.hinweis ?? ''), r.hinweis);
 p('Die Umzüge sind gelaufen',      r.gelaufen >= 2, String(r.gelaufen));

@@ -2902,6 +2902,12 @@ const App = (() => {
        die Seitenleiste sichtbar — kein Absturz. */
     if (typeof Kontextkante !== 'undefined') Kontextkante.binde();
 
+    /* DIE AUFTRAGSMASCHINE (E286). Nach der Ablage, weil sie sie braucht,
+       und nach den Bereichen, weil die ihre Läufer anmelden. Ohne einen
+       einzigen angemeldeten Läufer tut ihr Takt gar nichts — sie liest
+       dann nicht einmal das Fach. */
+    if (typeof Auftraege !== 'undefined') { void Auftraege.start(); }
+
     /* ----------------------------------------------------------------------
      * FEHLER SICHTBAR MACHEN — aber nur, wenn die Meldung etwas wert ist
      * ----------------------------------------------------------------------

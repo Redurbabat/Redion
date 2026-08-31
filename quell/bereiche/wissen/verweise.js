@@ -288,6 +288,45 @@ const Links = (() => {
     /* ========================================================================
      * SCHLAGWÖRTER
      * ======================================================================*/
+    /* ------------------------------------------------------------------------
+     * ALLE SEITENVERWEISE AUF EINMAL (E288)
+     *
+     * `loeseSeitenverweis` baut den Seitenindex bei JEDEM Aufruf neu. Für
+     * einen einzelnen Verweis ist das richtig — er soll den Stand von jetzt
+     * sehen. Wer aber alle Verweise eines Bestands durchgehen will, baut
+     * damit den Index einmal je Verweis: bei 400 Verweisen und 900 Seiten
+     * sind das 360 000 Durchläufe für eine Auskunft, die einer genügt hätte.
+     *
+     * Deshalb steht die Schleife hier und nicht beim Aufrufer: das Auflösen
+     * eines `[[Ziels]]` — mit Aliasen, Pfaden, Überschriften-Anhängseln und
+     * Mehrdeutigkeit — ist die Sache dieses Moduls, und niemand sonst soll
+     * das Muster noch einmal schreiben müssen.
+     * ---------------------------------------------------------------------- */
+    const alleSeitenverweise = () => {
+        const index = baueSeitenIndex();
+        const out = [];
+        Object.values(Store.cache.blocks).forEach(b => {
+            if (!b || !b.alive || !b.text)
+                return;
+            const treffer = [...String(b.text).matchAll(/\[\[([^\[\]\n|]{1,240})(?:\|[^\]\n]*)?\]\]/g)];
+            if (!treffer.length)
+                return;
+            const quelle = seiteVon(b.id);
+            if (!quelle)
+                return;
+            for (const t of treffer) {
+                const ziel = (t[1] || '').trim();
+                if (!ziel)
+                    continue;
+                const urteil = loeseSeitenverweisMitIndex(ziel, index);
+                out.push({
+                    vonId: quelle.id, vonTitel: quelle.text || 'Ohne Titel', blockId: b.id,
+                    ziel, status: urteil.status, kandidaten: urteil.candidates.length
+                });
+            }
+        });
+        return out;
+    };
     const alleTags = () => {
         const map = new Map(); /* tag -> Set von Seiten-IDs */
         Object.values(Store.cache.blocks).forEach(b => {
@@ -1399,7 +1438,8 @@ const Links = (() => {
     return {
         start, inline, seiten, seiteMitTitel, seitenMitTitelOderAlias, loeseSeitenverweis,
         aliasesVon, aliasesSetzen, referenzFuerSeite, seiteVon, oeffneOderAnlegen,
-        verweiseAuf, unverlinkt, alleTags, fusszeile, graphVorbereiten, graph, tagRegister
+        verweiseAuf, unverlinkt, alleTags, alleSeitenverweise,
+        fusszeile, graphVorbereiten, graph, tagRegister
     };
 })();
 window.Links = Links;

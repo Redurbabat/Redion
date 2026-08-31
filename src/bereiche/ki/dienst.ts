@@ -555,6 +555,30 @@ const KI = (() => {
     }
 
     if (zustand.quelle === 'wolke') {
+      /* --- DIE KOSTENPRÜFUNG SITZT HIER, UND ZWAR NUR HIER (E287) --------
+         `frage` ist das einzige Tor: `frageKurz` geht durch, die
+         Agentenschleife geht durch, der Chat geht durch. Eine Prüfung an
+         drei Stellen wäre dreimal zu pflegen und zweimal zu vergessen.
+
+         NUR für die Wolke. Ollama und WebLLM kosten nichts; eine Bremse
+         davor wäre Reibung ohne Gegenwert.
+
+         Und sie prüft VOR dem Aufruf. Danach zu zählen wäre eine
+         Buchhaltung, keine Grenze. */
+      if (typeof KiBuch !== 'undefined') {
+        const urteil = KiBuch.pruefen(zustand.modell, n, { lokal: false });
+        if (!urteil.erlaubt) throw new Error(urteil.satz);
+        /* Verbucht wird mit der SCHÄTZUNG, weil Redion die echte
+           Tokenzahl heute nicht ausliest — der Streaming-Leser wirft
+           alles weg, was kein `delta.content` ist. Das Buch merkt sich
+           deshalb `gezaehlt: false`, damit später niemand die Zahlen für
+           gemessen hält (L104). */
+        const s = urteil.schaetzung;
+        if (s && s.bekannt && !s.frei) {
+          KiBuch.buchen(zustand.modell, zustand.anbieter || '',
+                        s.tokenEin, s.tokenAus, false);
+        }
+      }
       for await (const t of wolkeFragen(n, zustand.modell, optionen?.signal)) beiText(t);
       return;
     }

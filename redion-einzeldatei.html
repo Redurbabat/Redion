@@ -3111,6 +3111,78 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
 }
 .wb-griffpunkt{cursor:nwse-resize}
 
+/* ==========================================================================
+   WISSENSLÜCKEN (E288)
+
+   Die Stärke steht als ZAHL im Kreis und nicht nur als Farbe — §38 verlangt,
+   dass keine Auskunft allein über die Farbe läuft. Wer die Farben nicht
+   unterscheiden kann, liest 82 gegen 25.
+   ========================================================================== */
+.wl-box .wl-kopf{
+  padding:12px 14px; border-bottom:1px solid var(--line);
+  font-size:13.5px; color:var(--text-dim); line-height:1.5;
+}
+.wl-zaehlung{display:flex; flex-wrap:wrap; gap:6px 12px; margin-top:8px}
+.wl-zaehler{
+  font-size:12px; color:var(--text-dim);
+  display:inline-flex; align-items:center; gap:4px;
+}
+.wl-zaehler em{
+  font-style:normal; font-weight:700; color:var(--text);
+  font-variant-numeric:tabular-nums;
+}
+.wl-liste{max-height:min(58vh,520px); overflow:auto}
+.wl-ul{list-style:none; margin:0; padding:0}
+.wl-fund{
+  display:flex; gap:10px; align-items:flex-start;
+  padding:10px 14px; border-bottom:1px solid var(--line);
+}
+.wl-fund:last-child{border-bottom:none}
+.wl-zeichen{font-size:18px; line-height:1.3; flex:0 0 auto}
+.wl-mitte{flex:1; min-width:0}
+.wl-titel{
+  font-size:14px; font-weight:600; color:var(--text);
+  overflow-wrap:anywhere;
+}
+.wl-satz{font-size:12.5px; color:var(--text-dim); margin-top:2px; line-height:1.45}
+.wl-quellen{display:flex; flex-wrap:wrap; gap:4px; margin-top:6px; align-items:center}
+.wl-quelle{
+  border:1px solid var(--line); background:transparent; cursor:pointer;
+  border-radius:4px; padding:2px 7px; font-size:11.5px; color:var(--text-dim);
+  max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.wl-quelle:hover{background:var(--bg-hover); color:var(--text)}
+.wl-mehr{font-size:11.5px; color:var(--text-faint)}
+.wl-rechts{
+  display:flex; flex-direction:column; align-items:flex-end; gap:6px;
+  flex:0 0 auto;
+}
+.wl-staerke{
+  display:inline-flex; align-items:center; justify-content:center;
+  min-width:34px; height:22px; padding:0 6px; border-radius:11px;
+  font-size:12px; font-weight:700; font-variant-numeric:tabular-nums;
+  border:1px solid var(--line); color:var(--text-dim);
+}
+.wl-hoch{border-color:#d9534f; color:#c9302c}
+.wl-mittel{border-color:#e0a800; color:#a67c00}
+.wl-schwach{opacity:.75}
+.wl-tun{font-size:12px; padding:3px 9px; min-height:26px}
+.wl-leer{padding:20px 16px; color:var(--text-faint); font-size:14px}
+.wl-schwach summary{
+  cursor:pointer; padding:10px 14px; font-size:12.5px; color:var(--text-dim);
+  border-top:1px solid var(--line);
+}
+.wl-schwach summary:hover{color:var(--text)}
+
+/* Am Telefon steht die rechte Spalte unter dem Text — nebeneinander bleibt
+   von beidem nichts übrig (§37). */
+@media (max-width:560px){
+  .wl-fund{flex-wrap:wrap}
+  .wl-rechts{flex-direction:row; width:100%; justify-content:flex-start; margin-top:2px}
+  .wl-tun{min-height:36px}
+  .wl-quelle{min-height:32px}
+}
+
 </style>
 <style>
 /* ===== quell/schale/stil/ansichten.css ===== */
@@ -17374,6 +17446,1977 @@ window.Csv = Csv;
 
 </script>
 <script>
+/* ===== quell/core/ai/kosten.js ===== */
+"use strict";
+/* ============================================================================
+ * core/ai/kosten.ts — was ein KI-Aufruf kostet, BEVOR er läuft
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/core/ai/kosten.ts`. `npm run bauen:ts` schreibt daraus
+ * `quell/core/ai/kosten.js`. Wer das .js bearbeitet, verliert die Änderung
+ * beim nächsten Bauen; `pruefungen/lauf/test105.mts` meldet es vorher.
+ * ----------------------------------------------------------------------------
+ * WARUM ES DIESE LÜCKE GAB — und sie war ausgesprochen, nicht vergessen.
+ *
+ * `agenten.ts:26` sagt es wörtlich:
+ *
+ *     „Das ist die ehrliche Version eines Kostenlimits — hier zählt es
+ *      Schritte statt Geld, weil die lokale KI nichts kostet."
+ *
+ * Die Annahme stimmte, als sie geschrieben wurde. Damals war Redions KI
+ * Ollama und WebLLM. Heute stehen sechs Anbieter in der Liste, zwei davon
+ * ausdrücklich `frei: false` — OpenAI und Anthropic. Die Begründung ist
+ * stehengeblieben und die Welt darunter hat sich gedreht.
+ *
+ * ─── DIE DREI KONKRETEN GEFAHREN, GEMESSEN ──────────────────────────────────
+ *
+ * 1. `embeddingsBauen` schickt JEDE Seite einzeln an eine kostenpflichtige
+ *    API. Ein Klick. Keine Zahl vorher, keine Obergrenze, kein Abbruch.
+ *    Bei zweitausend Seiten sind das zweitausend Aufrufe.
+ * 2. Der normale Chat hat GAR KEIN Limit — weder Tageslimit noch Notaus
+ *    noch Zähler. Beides hängt allein an `Agent.laufen`.
+ * 3. Bis zu vier Versuche je Anfrage, und `frageKurz` steckt in der
+ *    Agentenschleife: dreissig Schritte mal vier Anfragen ist der
+ *    Extremfall.
+ *
+ * ─── WAS DIESE DATEI TUT, UND WAS SIE BEWUSST NICHT TUT ─────────────────────
+ *
+ * Sie SCHÄTZT und sie RECHNET. Sie ruft nichts auf, sie speichert nichts,
+ * sie kennt keinen Anbieter — die Preise kommen als Daten herein.
+ *
+ * Sie behauptet ausdrücklich NICHT, genau zu sein. Eine Schätzung, die sich
+ * als Rechnung ausgibt, ist schlimmer als keine: wer „0,42 CHF" liest und
+ * 0,71 bezahlt, glaubt der Zahl nie wieder. Jede Schätzung trägt deshalb
+ * ihre Unsicherheit mit, und für ein unbekanntes Modell gibt es KEINE Zahl
+ * statt einer geratenen.
+ *
+ * ─── WARUM DIE PREISLISTE EIN DATUM TRÄGT ───────────────────────────────────
+ *
+ * Preise ändern sich, und eine Liste im Code veraltet still. Sie trägt
+ * deshalb `STAND` — und wer die Zahlen anzeigt, kann sagen, von wann sie
+ * sind. Das ist derselbe Gedanke wie `fehlt` im Sicherungs-Manifest: eine
+ * Angabe, die nicht sagt, wie sicher sie ist, ist die gefährlichere.
+ * ==========================================================================*/
+const KiKosten = (() => {
+    /**
+     * Wann diese Preise nachgesehen wurden.
+     *
+     * Wer sie anzeigt, nennt dieses Datum dazu. Eine Zahl ohne Datum liest
+     * sich wie eine Tatsache und ist eine Momentaufnahme.
+     */
+    const STAND = '2026-08-31';
+    /** Die Währung, in der hier gerechnet wird. */
+    const WAEHRUNG = 'USD';
+    /**
+     * Preis je Million Token, getrennt nach Eingabe und Ausgabe.
+     *
+     * Die Schlüssel sind Modellnamen, wie die Anbieter sie schreiben. Ein
+     * Modell, das hier fehlt, bekommt KEINE Schätzung — siehe `schaetzen`.
+     *
+     * `0` heisst wirklich null und ist kein „unbekannt": die Modelle mit
+     * `:free` und die lokalen kosten nichts.
+     */
+    const PREISE = {
+        /* --- kostenlos, aber mit Kontingent ------------------------------- */
+        'llama-3.3-70b-versatile': { ein: 0, aus: 0 },
+        'llama-3.1-8b-instant': { ein: 0, aus: 0 },
+        'gemma2-9b-it': { ein: 0, aus: 0 },
+        'meta-llama/llama-3.3-70b-instruct:free': { ein: 0, aus: 0 },
+        'google/gemma-2-9b-it:free': { ein: 0, aus: 0 },
+        'mistralai/mistral-7b-instruct:free': { ein: 0, aus: 0 },
+        'gemini-2.0-flash': { ein: 0, aus: 0 },
+        'gemini-2.0-flash-lite': { ein: 0, aus: 0 },
+        /* --- kostenpflichtig ---------------------------------------------- */
+        'gpt-4o-mini': { ein: 0.15, aus: 0.60 },
+        'gpt-4o': { ein: 2.50, aus: 10.00 },
+        'claude-3-5-haiku-latest': { ein: 0.80, aus: 4.00 },
+        'claude-sonnet-4-5': { ein: 3.00, aus: 15.00 },
+        /* --- Embeddings ---------------------------------------------------- */
+        'text-embedding-3-small': { ein: 0.02, aus: 0 },
+        'text-embedding-004': { ein: 0, aus: 0 }
+    };
+    /**
+     * Aus Text eine Tokenzahl SCHÄTZEN.
+     *
+     * Vier Zeichen je Token ist die übliche Faustregel für Englisch. Für
+     * Deutsch ist sie zu optimistisch — Zusammensetzungen wie
+     * „Leitungsdimensionierung" zerfallen in mehr Stücke, als ihre Länge
+     * vermuten lässt. Für Code ebenso.
+     *
+     * Deshalb wird mit 3,6 gerechnet und nicht mit 4: lieber zu viel
+     * schätzen als zu wenig. Eine Schätzung, die regelmässig unter dem
+     * echten Wert liegt, ist genau die, der man am Monatsende nicht mehr
+     * glaubt.
+     *
+     * Das bleibt eine Schätzung. `unsicherheit()` sagt, wie sehr.
+     */
+    const ZEICHEN_JE_TOKEN = 3.6;
+    const tokenSchaetzen = (text) => {
+        const s = String(text ?? '');
+        if (!s)
+            return 0;
+        return Math.ceil(s.length / ZEICHEN_JE_TOKEN);
+    };
+    /** Dieselbe Schätzung für eine ganze Nachrichtenliste. */
+    const tokenAusNachrichten = (nachrichten) => {
+        if (!Array.isArray(nachrichten))
+            return tokenSchaetzen(nachrichten);
+        let n = 0;
+        for (const m of nachrichten) {
+            if (!m)
+                continue;
+            n += tokenSchaetzen(m.content);
+            /* Jede Nachricht kostet ein paar Token an Gerüst (Rolle, Trenner).
+               Vier ist der übliche Aufschlag; er fällt bei langen Nachrichten
+               nicht ins Gewicht und bei zwanzig kurzen sehr wohl. */
+            n += 4;
+        }
+        return n;
+    };
+    /**
+     * Wie unsicher eine Schätzung ist, als Faktor nach oben.
+     *
+     * 1,35 heisst: es kann bis zu 35 % mehr werden. Der Wert ist nicht aus
+     * der Luft gegriffen, sondern der übliche Abstand zwischen der
+     * Zeichenregel und echten Tokenizern bei gemischtem Text. Wer eine Zahl
+     * anzeigt, zeigt eine SPANNE.
+     */
+    const unsicherheit = () => 1.35;
+    /**
+     * Was ein Aufruf kosten dürfte.
+     *
+     * @param modell    der Modellname, wie der Anbieter ihn schreibt
+     * @param tokenEin  geschätzte Eingabe-Token
+     * @param tokenAus  geschätzte Ausgabe-Token (die Deckelung, nicht die
+     *                  Hoffnung — man weiss vorher nicht, wie lang die
+     *                  Antwort wird)
+     * @param preise    zum Überschreiben in Prüfläufen; sonst `PREISE`
+     */
+    const schaetzen = (modell, tokenEin, tokenAus, preise = PREISE) => {
+        const p = preise[modell];
+        if (!p) {
+            /* KEINE geratene Zahl. Ein unbekanntes Modell bekommt ein ehrliches
+               „weiss ich nicht" — und der Aufrufer entscheidet, ob er trotzdem
+               will. Eine erfundene Zahl wäre hier das Schlimmste: sie sähe
+               genauso aus wie eine echte. */
+            return {
+                bekannt: false, modell, tokenEin, tokenAus,
+                betrag: 0, hoechstens: 0, waehrung: WAEHRUNG, frei: false,
+                satz: 'Für „' + modell + '" ist hier kein Preis hinterlegt. Was der ' +
+                    'Aufruf kostet, lässt sich nicht sagen — die Preisliste ist vom ' +
+                    STAND + '.'
+            };
+        }
+        const frei = p.ein === 0 && p.aus === 0;
+        const betrag = (tokenEin / 1e6) * p.ein + (tokenAus / 1e6) * p.aus;
+        const hoechstens = betrag * unsicherheit();
+        return {
+            bekannt: true, modell, tokenEin, tokenAus,
+            betrag, hoechstens, waehrung: WAEHRUNG, frei,
+            satz: frei
+                ? 'Dieses Modell kostet nichts. (Ein Kontingent kann es trotzdem haben.)'
+                : 'Schätzung: rund ' + geld(betrag) + ', höchstens etwa ' + geld(hoechstens) +
+                    '. Die Tokenzahl ist aus der Textlänge geschätzt, nicht gezählt.'
+        };
+    };
+    /** Ein Betrag als Text. Kleine Beträge brauchen mehr Stellen. */
+    const geld = (betrag, waehrung = WAEHRUNG) => {
+        if (!Number.isFinite(betrag))
+            return '–';
+        if (betrag === 0)
+            return '0.00 ' + waehrung;
+        if (betrag < 0.01)
+            return '< 0.01 ' + waehrung;
+        return betrag.toFixed(betrag < 1 ? 3 : 2) + ' ' + waehrung;
+    };
+    const VORGABE_GRENZEN = {
+        jeAufruf: 0.50, jeLauf: 2.00, jeTag: 5.00, jeMonat: 20.00
+    };
+    const GRENZ_NAME = {
+        jeAufruf: 'für einen einzelnen Aufruf',
+        jeLauf: 'für einen Agentenlauf',
+        jeTag: 'für heute',
+        jeMonat: 'für diesen Monat'
+    };
+    /**
+     * Darf dieser Aufruf laufen?
+     *
+     * Geprüft wird mit `hoechstens`, nicht mit `betrag`. Das ist der
+     * Unterschied zwischen einer Grenze und einer Empfehlung: wer bei 5,00
+     * deckelt und mit dem wahrscheinlichen Wert rechnet, gibt regelmässig
+     * 6,50 aus.
+     *
+     * Ein UNBEKANNTES Modell wird durchgelassen — mit gesetztem Hinweis. Es
+     * zu sperren hiesse, jeden neuen Modellnamen zu blockieren, bis jemand
+     * die Preisliste pflegt; das wäre §47 von der anderen Seite. Der Mensch
+     * erfährt aber, dass niemand weiss, was es kostet.
+     */
+    const pruefen = (schaetzung, grenzen, stand) => {
+        if (!schaetzung.bekannt || schaetzung.frei) {
+            return { erlaubt: true, grenze: '', satz: schaetzung.satz, schaetzung };
+        }
+        const k = schaetzung.hoechstens;
+        const pruefungen = [
+            ['jeAufruf', grenzen.jeAufruf, k],
+            ['jeLauf', grenzen.jeLauf, stand.lauf + k],
+            ['jeTag', grenzen.jeTag, stand.heute + k],
+            ['jeMonat', grenzen.jeMonat, stand.monat + k]
+        ];
+        for (const [name, grenze, waere] of pruefungen) {
+            if (!grenze || grenze <= 0)
+                continue;
+            if (waere <= grenze)
+                continue;
+            return {
+                erlaubt: false, grenze: name, schaetzung,
+                satz: 'Dieser Aufruf würde die Grenze ' + GRENZ_NAME[name] + ' ' +
+                    'überschreiten: er käme auf ' + geld(waere) + ' gegen ' +
+                    geld(grenze) + '. Die Grenzen stehen unter Einstellungen → KI.'
+            };
+        }
+        return { erlaubt: true, grenze: '', satz: schaetzung.satz, schaetzung };
+    };
+    /**
+     * Ein Kontingent fortschreiben.
+     *
+     * Läuft das Fenster ab, beginnt es von vorn. Das ist die ganze Logik,
+     * und sie steht hier, damit sie geprüft werden kann, ohne eine Minute zu
+     * warten — `jetzt` kommt herein.
+     */
+    const kontingentBuchen = (k, wieviel, jetzt, fensterMs) => {
+        if (!k || jetzt >= k.bis) {
+            return { verbraucht: wieviel, grenze: k ? k.grenze : 0, bis: jetzt + fensterMs };
+        }
+        return { ...k, verbraucht: k.verbraucht + wieviel };
+    };
+    /** Ist noch Platz im Kontingent? */
+    const kontingentFrei = (k, wieviel, jetzt) => {
+        if (!k || !k.grenze || k.grenze <= 0)
+            return true;
+        if (jetzt >= k.bis)
+            return true;
+        return k.verbraucht + wieviel <= k.grenze;
+    };
+    /** Wie lange noch, bis das Fenster wieder aufgeht? In Sekunden. */
+    const kontingentWartet = (k, jetzt) => {
+        if (!k || jetzt >= k.bis)
+            return 0;
+        return Math.ceil((k.bis - jetzt) / 1000);
+    };
+    /**
+     * Aus einer Liste Buchungen den Stand rechnen.
+     *
+     * @param tag    der heutige Tag als `2026-08-31`
+     * @param monat  der Monat als `2026-08`
+     */
+    const standAus = (buchungen, tag, monat, lauf = 0) => {
+        let heute = 0, imMonat = 0;
+        for (const b of buchungen || []) {
+            if (!b || !Number.isFinite(b.betrag))
+                continue;
+            if (b.tag === tag)
+                heute += b.betrag;
+            if (String(b.tag || '').slice(0, 7) === monat)
+                imMonat += b.betrag;
+        }
+        return { heute, monat: imMonat, lauf };
+    };
+    /** Was je Anbieter zusammenkam — für die Anzeige. */
+    const jeAnbieter = (buchungen, monat) => {
+        const aus = Object.create(null);
+        for (const b of buchungen || []) {
+            if (!b || !Number.isFinite(b.betrag))
+                continue;
+            if (monat && String(b.tag || '').slice(0, 7) !== monat)
+                continue;
+            const a = b.anbieter || 'unbekannt';
+            aus[a] = (aus[a] || 0) + b.betrag;
+        }
+        return aus;
+    };
+    /**
+     * Alte Buchungen wegwerfen.
+     *
+     * Ein Buch, das ewig wächst, ist irgendwann selbst das Problem. Behalten
+     * wird, was in den Monatsstand einfliessen kann — der Rest ist Historie
+     * und gehört nicht in `meta`.
+     */
+    const kuerzen = (buchungen, abTag) => (buchungen || []).filter(b => b && String(b.tag || '') >= abTag);
+    return {
+        STAND, WAEHRUNG, PREISE, VORGABE_GRENZEN, ZEICHEN_JE_TOKEN,
+        tokenSchaetzen, tokenAusNachrichten, unsicherheit,
+        schaetzen, pruefen, geld,
+        kontingentBuchen, kontingentFrei, kontingentWartet,
+        standAus, jeAnbieter, kuerzen
+    };
+})();
+window.KiKosten = KiKosten;
+
+</script>
+<script>
+/* ===== quell/core/jobs/modell.js ===== */
+"use strict";
+/* ============================================================================
+ * core/jobs/modell.ts — was ein Auftrag ist und wann er was darf
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/core/jobs/modell.ts`. `npm run bauen:ts` schreibt daraus
+ * `quell/core/jobs/modell.js`. Wer das .js bearbeitet, verliert die Änderung
+ * beim nächsten Bauen; `pruefungen/lauf/test105.mts` meldet es vorher.
+ * ----------------------------------------------------------------------------
+ * WARUM DIESE DATEI VON DER MASCHINE GETRENNT IST.
+ *
+ * Eine Auftragsmaschine hat zwei Hälften, die man leicht verwechselt:
+ *
+ *   DIE REGELN   Wann darf ein Auftrag laufen? Wie lange wartet er nach
+ *                einem Fehler? Wann ist Schluss? Das ist Rechnen.
+ *   DIE ARBEIT   Ablage öffnen, Transaktion, Zeit messen, Ereignis melden.
+ *                Das ist Wirkung.
+ *
+ * Hier stehen nur die REGELN. Keine Ablage, keine Uhr, kein `Date.now()` —
+ * die Zeit kommt als Zahl herein. Das ist nicht Sauberkeit um ihrer selbst
+ * willen: eine Regel, die auf die echte Uhr wartet, lässt sich nur mit
+ * echtem Warten prüfen, und dann prüft man sie eben nicht.
+ *
+ * Alles hier ist eine reine Funktion. Der Prüflauf dazu braucht keinen
+ * Browser.
+ *
+ * ─── DIE ZUSTÄNDE, UND WARUM ES FÜNF SIND ───────────────────────────────────
+ *
+ *   wartet       angelegt, noch nicht dran. Auch: nach einem Fehler, der
+ *                sich wiederholen lässt.
+ *   laeuft       jemand hat ihn genommen und hält eine PACHT darauf.
+ *   fertig       durch. Bleibt eine Weile liegen, damit man es sieht.
+ *   fehler       endgültig gescheitert — die Versuche sind aufgebraucht.
+ *                Bleibt LIEGEN und wird nicht weggeräumt: ein Auftrag, der
+ *                still verschwindet, ist genau der Fehler, den niemand
+ *                meldet.
+ *   abgebrochen  ein Mensch hat abgebrochen. Kein Fehler.
+ *
+ * Es gibt bewusst KEINEN Zustand „pausiert". Wer pausieren will, bricht ab
+ * und legt neu an; ein vierter Weg, der fast dasselbe tut, kostet mehr
+ * Verwirrung als er bringt.
+ *
+ * ─── DIE PACHT, UND WARUM ES SIE GIBT ───────────────────────────────────────
+ *
+ * Redion kann in mehreren Tabs offen sein (§16). Ohne Absprache nähmen zwei
+ * Tabs denselben Auftrag und täten die Arbeit doppelt — bei einem OCR-Lauf
+ * heisst das doppelte Kosten, bei einem Import doppelte Daten.
+ *
+ * Ein Auftrag trägt deshalb, wer ihn hält (`geraet`) und bis wann
+ * (`bisWann`). Wer ihn nehmen will, prüft beides. Und wenn ein Tab
+ * abstürzt, läuft die Pacht ab und ein anderer darf.
+ *
+ * Das ist keine Sperre im strengen Sinn — die entsteht erst dadurch, dass
+ * die Maschine Lesen und Schreiben in EINE IndexedDB-Transaktion legt.
+ * Diese Datei sagt nur, was gilt; das Durchsetzen steht in `maschine.ts`.
+ * ==========================================================================*/
+const JobModell = (() => {
+    /** Wie lange eine Pacht gilt, wenn niemand etwas anderes sagt. */
+    const PACHT_MS = 30000;
+    /** Wie oft es versucht wird, bevor endgültig Schluss ist. */
+    const MAX_VERSUCHE = 3;
+    /**
+     * Ein neuer Auftrag.
+     *
+     * `jetzt` kommt herein, statt hier `Date.now()` zu rufen — siehe Kopf.
+     */
+    const anlegen = (id, art, eingabe, jetzt, zeitText, opt = {}) => ({
+        id, art, zustand: 'wartet', eingabe,
+        schritt: 0, schritte: opt.schritte || 0, stand: null,
+        versuche: 0, maxVersuche: opt.maxVersuche || MAX_VERSUCHE,
+        geraet: '', bisWann: 0, nachher: jetzt,
+        angelegt: zeitText, begonnen: '', beendet: '',
+        fehler: '', text: opt.text || ''
+    });
+    /**
+     * Darf dieser Auftrag JETZT genommen werden?
+     *
+     * Drei Fälle sagen ja, und der dritte ist der wichtige:
+     *   · er wartet und seine Wartezeit ist um
+     *   · er läuft, aber die Pacht ist abgelaufen — der Halter ist weg
+     *   · er läuft und ICH bin der Halter (Neustart desselben Tabs)
+     */
+    const nehmbar = (a, jetzt, geraet) => {
+        if (!a)
+            return false;
+        if (a.zustand === 'wartet')
+            return a.nachher <= jetzt;
+        if (a.zustand !== 'laeuft')
+            return false;
+        return a.bisWann <= jetzt || a.geraet === geraet;
+    };
+    /**
+     * Der genommene Auftrag.
+     *
+     * `versuche` steigt HIER, nicht beim Scheitern. Das ist Absicht: ein Tab,
+     * der mitten in der Arbeit abstürzt, meldet nichts mehr — er kann gar
+     * nicht mehr zählen. Zählt man erst beim Scheitern, läuft ein Auftrag,
+     * der zuverlässig abstürzt, ewig weiter.
+     */
+    const nehmen = (a, jetzt, geraet, zeitText, pachtMs = PACHT_MS) => ({
+        ...a,
+        zustand: 'laeuft',
+        versuche: a.versuche + 1,
+        geraet,
+        bisWann: jetzt + pachtMs,
+        begonnen: a.begonnen || zeitText
+    });
+    /**
+     * Die Pacht verlängern, während gearbeitet wird.
+     *
+     * Ein OCR-Lauf über achtzig Seiten dauert länger als jede vernünftige
+     * Pacht. Ohne Verlängerung nähme ein zweiter Tab ihn mitten in der Arbeit
+     * weg — und beide liefen weiter.
+     */
+    const halten = (a, jetzt, pachtMs = PACHT_MS) => ({ ...a, bisWann: jetzt + pachtMs });
+    /**
+     * Ein Schritt ist fertig.
+     *
+     * Das ist der Wiederaufsetzpunkt: was hier geschrieben wird, überlebt
+     * einen Absturz. Wer erst am Ende schreibt, hat nach achtzig Seiten OCR
+     * und einem Stromausfall nichts.
+     */
+    const schrittFertig = (a, stand, jetzt, text, pachtMs = PACHT_MS) => ({
+        ...a,
+        schritt: a.schritt + 1,
+        stand,
+        bisWann: jetzt + pachtMs,
+        text: text === undefined ? a.text : text
+    });
+    const fertig = (a, zeitText, text) => ({
+        ...a,
+        zustand: 'fertig', geraet: '', bisWann: 0,
+        beendet: zeitText, fehler: '',
+        text: text === undefined ? a.text : text
+    });
+    const abbrechen = (a, zeitText) => ({
+        ...a,
+        zustand: 'abgebrochen', geraet: '', bisWann: 0, beendet: zeitText
+    });
+    /**
+     * Wie lange nach dem n-ten Fehlversuch gewartet wird.
+     *
+     * Verdoppelnd ab einer Sekunde, gedeckelt bei fünf Minuten. Der Deckel
+     * ist nötig: ohne ihn wartet der zehnte Versuch siebzehn Minuten, und
+     * niemand sieht mehr, ob die Maschine noch lebt.
+     *
+     * Kein Zufallsanteil („jitter"): der wäre gegen einen Serverandrang durch
+     * viele Geräte gedacht, und Redions Aufträge laufen auf EINEM Gerät.
+     * Ein Zufallsanteil machte hier nur die Prüfung unzuverlässig.
+     */
+    const wartezeit = (versuche) => Math.min(300000, 1000 * Math.pow(2, Math.max(0, versuche - 1)));
+    /**
+     * Der Auftrag ist gescheitert.
+     *
+     * Sind die Versuche aufgebraucht, geht er auf `fehler` und BLEIBT LIEGEN.
+     * Ein Auftrag, der nach dem dritten Fehlschlag still verschwindet, ist
+     * die Sorte Fehler, die niemand meldet — der Mensch denkt, das OCR läuft
+     * noch.
+     */
+    const gescheitert = (a, meldung, jetzt, zeitText) => {
+        const aus = a.versuche >= a.maxVersuche;
+        return {
+            ...a,
+            zustand: aus ? 'fehler' : 'wartet',
+            geraet: '', bisWann: 0,
+            nachher: aus ? a.nachher : jetzt + wartezeit(a.versuche),
+            beendet: aus ? zeitText : '',
+            fehler: String(meldung || 'Unbekannter Fehler')
+        };
+    };
+    /**
+     * Nach einem Neustart: was stand offen?
+     *
+     * Ein Auftrag auf `laeuft`, dessen Pacht abgelaufen ist, hat seinen
+     * Halter verloren. Er geht zurück auf `wartet` — mit einer WARTEZEIT,
+     * nicht sofort. Sofort hiesse: ein Auftrag, der den Tab zum Absturz
+     * bringt, bringt ihn beim nächsten Start gleich wieder zum Absturz.
+     */
+    const zurueckstellen = (a, jetzt, zeitText) => {
+        if (a.zustand !== 'laeuft')
+            return a;
+        if (a.versuche >= a.maxVersuche) {
+            return { ...a, zustand: 'fehler', geraet: '', bisWann: 0,
+                beendet: zeitText,
+                fehler: a.fehler || 'Nach einem Neustart nicht fortgesetzt — ' +
+                    'die Versuche waren aufgebraucht.' };
+        }
+        return { ...a, zustand: 'wartet', geraet: '', bisWann: 0,
+            nachher: jetzt + wartezeit(a.versuche) };
+    };
+    /** Ist der Auftrag zu Ende — egal wie? */
+    const beendet = (a) => a.zustand === 'fertig' || a.zustand === 'fehler' || a.zustand === 'abgebrochen';
+    /**
+     * Wie weit ist er, von 0 bis 1?
+     *
+     * Ohne bekannte Schrittzahl gibt es KEINE Zahl — dann `-1`. Ein
+     * erfundener Fortschrittsbalken, der bei 90 % stehenbleibt, ist
+     * schlimmer als gar keiner.
+     */
+    const fortschritt = (a) => {
+        if (a.zustand === 'fertig')
+            return 1;
+        if (!a.schritte || a.schritte <= 0)
+            return -1;
+        return Math.min(1, Math.max(0, a.schritt / a.schritte));
+    };
+    /**
+     * Welcher Auftrag ist als nächstes dran?
+     *
+     * Die Reihenfolge ist ausdrücklich: wer länger wartet, kommt zuerst.
+     * Keine Prioritäten — die verleiten dazu, alles als wichtig zu
+     * markieren, und dann ist wieder nichts wichtig. Wer etwas vorziehen
+     * will, bricht das andere ab.
+     */
+    const naechster = (alle, jetzt, geraet) => {
+        let best = null;
+        for (const a of alle) {
+            if (!nehmbar(a, jetzt, geraet))
+                continue;
+            if (!best || a.angelegt < best.angelegt ||
+                (a.angelegt === best.angelegt && a.id < best.id))
+                best = a;
+        }
+        return best;
+    };
+    /**
+     * Was beim Aufräumen weg darf.
+     *
+     * NUR `fertig` und `abgebrochen`, und auch die erst nach einer Weile.
+     * `fehler` bleibt immer — das ist der ganze Punkt einer Fehlerablage.
+     */
+    const aufraeumbar = (a, jetzt, haltenMs) => {
+        if (a.zustand !== 'fertig' && a.zustand !== 'abgebrochen')
+            return false;
+        if (!a.beendet)
+            return false;
+        const t = Date.parse(a.beendet);
+        if (!Number.isFinite(t))
+            return false;
+        return jetzt - t > haltenMs;
+    };
+    return {
+        anlegen, nehmbar, nehmen, halten, schrittFertig, fertig, abbrechen,
+        gescheitert, zurueckstellen, beendet, fortschritt, naechster,
+        aufraeumbar, wartezeit,
+        PACHT_MS, MAX_VERSUCHE
+    };
+})();
+window.JobModell = JobModell;
+
+</script>
+<script>
+/* ===== quell/kern/auftraege/maschine.js ===== */
+"use strict";
+/* ============================================================================
+ * kern/auftraege/maschine.ts — die Auftragsmaschine
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/kern/auftraege/maschine.ts`. `npm run bauen:ts` schreibt
+ * daraus `quell/kern/auftraege/maschine.js`.
+ * ----------------------------------------------------------------------------
+ * WOFÜR ES SIE GIBT.
+ *
+ * Redion kann heute lange Arbeit tun — PDF einlesen, OCR, grosser Import,
+ * Sicherung, Embeddings bauen. Was es nicht konnte, ist sie ÜBERLEBEN.
+ * Jede dieser Arbeiten lag im Arbeitsspeicher: Tab zu, Arbeit weg. Beim
+ * Datei-Upload wurden im Fehlerfall sogar die schon geschriebenen Stücke
+ * gelöscht (`dateien/ablage.ts:176`), und `verwaist()` erklärte jeden
+ * unfertigen Upload zum Müll.
+ *
+ * Der Auftrag wird jetzt VOR der Arbeit geschrieben. Nach einem Neustart
+ * weiss die App, was offenstand, und setzt beim letzten FERTIGEN Schritt
+ * an — nicht von vorn.
+ *
+ * ─── DIE ARBEITSTEILUNG ─────────────────────────────────────────────────────
+ *
+ *   `core/jobs/modell.ts`   die REGELN. Reine Funktionen, keine Uhr, keine
+ *                           Ablage. Ohne Browser prüfbar.
+ *   diese Datei             die WIRKUNG. Ablage, Zeit, Takt, Meldung.
+ *
+ * ─── WARUM SIE NICHT AUF DEM EREIGNISBUS AUFSETZT ───────────────────────────
+ *
+ * Redurs Regel war richtig: keine Bereiche direkt verkabeln, alles über den
+ * Bus. Nur kann Redions Bus das hier nicht tragen, und das ist gemessen
+ * (LUECKEN.md L102 §4):
+ *
+ *   · `melde` verwirft den Rückgabewert. Ein Auftrag, der etwas mit
+ *     IndexedDB tut, kann so nicht sagen, wann er fertig ist.
+ *   · `frage` sammelt Promises als ROHE WERTE ein, statt sie abzuwarten.
+ *   · Kein Abbruch, kein Veto, keine Reihenfolge, kein Nachreichen.
+ *
+ * Die Maschine benutzt den Bus deshalb zum MELDEN und nie zum Steuern. Wer
+ * eine Arbeit beisteuert, meldet einen Läufer an (`anmelden`) — eine
+ * gewöhnliche Funktion, die ein Promise gibt. Das ist keine Umgehung des
+ * Busses, sondern die Anerkennung dessen, was er ist: ein Rufsystem, kein
+ * Steuerwerk.
+ *
+ * Kein Bereich importiert einen anderen. Ein Bereich meldet seine Art an
+ * und weiss von den anderen nichts (§5).
+ *
+ * ─── ZWEI TABS ──────────────────────────────────────────────────────────────
+ *
+ * Ohne Absprache nähmen zwei Tabs denselben Auftrag: doppeltes OCR,
+ * doppelte Kosten, doppelte Daten. Ein Auftrag trägt deshalb eine PACHT —
+ * wer ihn hält und bis wann.
+ *
+ * Die Sperre entsteht NICHT durch das Feld, sondern dadurch, dass
+ * `Store.auftragNehmen` Lesen und Schreiben in EINE `readwrite`-Transaktion
+ * legt. IndexedDB serialisiert die; der zweite Tab sieht die Pacht des
+ * ersten. Läge das Lesen in einer eigenen Transaktion, sähen beide „frei".
+ *
+ * ─── UND WAS SIE NICHT TUT ──────────────────────────────────────────────────
+ *
+ * Sie arbeitet nicht selbst. Sie kennt keine PDFs, kein OCR, keine
+ * Sicherung. Sie nimmt Läufer entgegen und ruft sie auf.
+ * ==========================================================================*/
+const Auftraege = (() => {
+    /** Wie oft nachgesehen wird, ob etwas zu tun ist. */
+    const TAKT_MS = 4000;
+    /** Wie lange ein fertiger Auftrag noch liegenbleibt, damit man ihn sieht. */
+    const AUFHEBEN_MS = 24 * 3600 * 1000;
+    /** Wie oft die Pacht während der Arbeit verlängert wird. */
+    const HALTEN_MS = 10000;
+    /**
+     * Wer dieses Fenster ist.
+     *
+     * Nicht gespeichert: die Kennung soll je Tab verschieden sein, und ein
+     * gemerkter Wert wäre nach `öffnen im neuen Tab` derselbe. Genau dann
+     * bräuchte man sie aber.
+     */
+    const ICH = 'w' + Math.random().toString(36).slice(2, 10) + '-' + String(Date.now() % 100000);
+    const werkzeuge = new Map();
+    const abbrueche = new Set();
+    let takt = null;
+    let laeuftGerade = false;
+    let bereit = false;
+    const jetzt = () => Date.now();
+    const zeitText = () => (typeof Store !== 'undefined' && Store.now) ? Store.now() : new Date().toISOString();
+    const melde = (name, daten) => {
+        if (typeof Ereignisse === 'undefined' || !Ereignisse.melde)
+            return;
+        try {
+            Ereignisse.melde(name, daten);
+        }
+        catch { /* ein Horcher darf nichts anhalten */ }
+    };
+    /* ========================================================================
+     * ANMELDEN UND ANLEGEN
+     * ======================================================================*/
+    /**
+     * Eine Auftragsart und ihren Läufer anmelden.
+     *
+     * @returns eine Funktion zum Abmelden — sonst hinge der Läufer eines
+     *          entladenen Bereichs für immer.
+     */
+    const anmelden = (art, werkzeug) => {
+        if (!art || typeof werkzeug !== 'function') {
+            throw new Error('Eine Auftragsart braucht einen Namen und einen Läufer.');
+        }
+        werkzeuge.set(art, werkzeug);
+        return () => { werkzeuge.delete(art); };
+    };
+    /** Welche Arten kennt diese Fassung? Für §47: was es nicht gibt, wird nicht angeboten. */
+    const arten = () => [...werkzeuge.keys()];
+    /**
+     * Einen Auftrag anlegen. Er ist damit DAUERHAFT da, auch ohne dass die
+     * Arbeit begonnen hat — genau das ist der Sinn.
+     */
+    const anlegen = async (art, eingabe, opt = {}) => {
+        if (typeof Store === 'undefined' || !Store.auftragPut) {
+            throw new Error('Die Ablage steht noch nicht — Aufträge brauchen sie.');
+        }
+        const id = opt.id || Store.uid();
+        const a = JobModell.anlegen(id, art, eingabe, jetzt(), zeitText(), opt);
+        await Store.auftragPut(a);
+        melde('auftrag.angelegt', { id, art });
+        /* Nicht auf den nächsten Takt warten: wer etwas anstösst, will es
+           laufen sehen. `void`, weil `anlegen` nicht auf die ganze Arbeit
+           warten soll. */
+        void takten();
+        return a;
+    };
+    const alle = async () => (typeof Store !== 'undefined' && Store.auftragAlle) ? (await Store.auftragAlle()) || [] : [];
+    const einer = async (id) => (typeof Store !== 'undefined' && Store.auftragHolen) ? await Store.auftragHolen(id) : null;
+    /** Die offenen — für die Anzeige. */
+    const offen = async () => (await alle()).filter(a => !JobModell.beendet(a));
+    /**
+     * Abbrechen.
+     *
+     * Zwei Wege, und beide werden gebraucht: ein WARTENDER Auftrag wird
+     * sofort umgeschrieben; ein LAUFENDER bekommt eine Marke, die sein Läufer
+     * beim nächsten `abgebrochen()` sieht. Einen laufenden hart zu beenden
+     * ginge nicht — er steckt vielleicht mitten in einer Transaktion.
+     */
+    const abbrechen = async (id) => {
+        const a = await einer(id);
+        if (!a || JobModell.beendet(a))
+            return false;
+        abbrueche.add(id);
+        if (a.zustand === 'wartet') {
+            await Store.auftragPut(JobModell.abbrechen(a, zeitText()));
+            melde('auftrag.beendet', { id, art: a.art, zustand: 'abgebrochen' });
+            abbrueche.delete(id);
+        }
+        return true;
+    };
+    /* ========================================================================
+     * DER TAKT
+     * ======================================================================*/
+    /**
+     * Einmal nachsehen und höchstens EINEN Auftrag laufen lassen.
+     *
+     * Höchstens einen, und das ist Absicht: zwei parallele Aufträge auf
+     * demselben Gerät konkurrieren um dieselbe IndexedDB und dieselbe CPU,
+     * und der Nutzer tippt daneben. Ein Auftrag nach dem anderen ist
+     * langsamer und fühlt sich schneller an.
+     *
+     * `laeuftGerade` verhindert, dass zwei Takte einander überholen — der
+     * Takt ist ausdrücklich idempotent.
+     */
+    const takten = async () => {
+        if (laeuftGerade || !bereit)
+            return false;
+        if (typeof Store === 'undefined' || !Store.auftragNehmen)
+            return false;
+        /* KEIN LÄUFER, KEINE TRANSAKTION. Solange kein Bereich eine Art
+           angemeldet hat, kann kein Auftrag laufen — dann muss auch nicht alle
+           vier Sekunden das Fach gelesen werden. Das ist nicht nur sparsam:
+           zweihundertvierzig Prüfläufe starten die App, und keiner von ihnen
+           soll einen Takt bezahlen, der nichts tun kann. */
+        if (!werkzeuge.size)
+            return false;
+        laeuftGerade = true;
+        try {
+            const t = jetzt();
+            /* Lesen und Pacht schreiben in EINER Transaktion — siehe Kopf. */
+            const genommen = await Store.auftragNehmen((liste) => {
+                const kandidaten = liste.filter(a => werkzeuge.has(a.art));
+                const naechst = JobModell.naechster(kandidaten, t, ICH);
+                if (!naechst)
+                    return null;
+                return JobModell.nehmen(naechst, t, ICH, zeitText());
+            });
+            if (!genommen)
+                return false;
+            await arbeiten(genommen);
+            return true;
+        }
+        catch (e) {
+            /* Ein Fehler im TAKT darf die Maschine nicht anhalten — sonst
+               genügte ein kaputter Auftrag, damit nie wieder einer läuft. */
+            melde('auftrag.fehler', { fehler: String(e && e.message || e) });
+            return false;
+        }
+        finally {
+            laeuftGerade = false;
+        }
+    };
+    /** Einen genommenen Auftrag wirklich ausführen. */
+    const arbeiten = async (a) => {
+        const werkzeug = werkzeuge.get(a.art);
+        if (!werkzeug)
+            return;
+        melde('auftrag.beginnt', { id: a.id, art: a.art, versuch: a.versuche });
+        let stand = a;
+        const schreiben = async (neu) => {
+            stand = neu;
+            await Store.auftragPut(neu);
+        };
+        const hilfe = {
+            schritt: async (wert, text) => {
+                await schreiben(JobModell.schrittFertig(stand, wert, jetzt(), text, HALTEN_MS));
+                melde('auftrag.schritt', {
+                    id: a.id, art: a.art, schritt: stand.schritt,
+                    schritte: stand.schritte, text: stand.text
+                });
+            },
+            abgebrochen: () => abbrueche.has(a.id),
+            lebt: async () => {
+                await schreiben(JobModell.halten(stand, jetzt(), HALTEN_MS));
+            }
+        };
+        try {
+            const ergebnis = await werkzeug(stand, hilfe);
+            if (abbrueche.has(a.id)) {
+                abbrueche.delete(a.id);
+                await schreiben(JobModell.abbrechen(stand, zeitText()));
+                melde('auftrag.beendet', { id: a.id, art: a.art, zustand: 'abgebrochen' });
+                return;
+            }
+            await schreiben(JobModell.fertig({ ...stand, stand: ergebnis === undefined ? stand.stand : ergebnis }, zeitText()));
+            melde('auftrag.beendet', { id: a.id, art: a.art, zustand: 'fertig' });
+        }
+        catch (e) {
+            abbrueche.delete(a.id);
+            const meldung = String(e && e.message || e);
+            const danach = JobModell.gescheitert(stand, meldung, jetzt(), zeitText());
+            await schreiben(danach);
+            melde(danach.zustand === 'fehler' ? 'auftrag.beendet' : 'auftrag.fehler', { id: a.id, art: a.art, zustand: danach.zustand,
+                fehler: meldung, versuche: danach.versuche });
+        }
+    };
+    /* ========================================================================
+     * START UND WIEDERAUFNAHME
+     * ======================================================================*/
+    /**
+     * Was beim letzten Mal offenstand.
+     *
+     * Aufträge auf `laeuft`, deren Pacht abgelaufen ist, haben ihren Halter
+     * verloren — der Tab ist zu. Sie gehen zurück auf `wartet`, aber MIT
+     * Wartezeit: sofort hiesse, dass ein Auftrag, der den Tab zum Absturz
+     * bringt, ihn beim nächsten Start gleich wieder zum Absturz bringt.
+     *
+     * Ein Auftrag DIESES Fensters wird nicht angefasst — beim ersten Start
+     * gibt es keinen, und ein zweiter Aufruf soll nichts kaputtmachen.
+     */
+    const wiederaufnehmen = async () => {
+        const t = jetzt();
+        let n = 0;
+        for (const a of await alle()) {
+            if (a.zustand !== 'laeuft')
+                continue;
+            if (a.geraet === ICH)
+                continue;
+            if (a.bisWann > t)
+                continue;
+            const neu = JobModell.zurueckstellen(a, t, zeitText());
+            if (neu === a)
+                continue;
+            await Store.auftragPut(neu);
+            n++;
+            melde('auftrag.wiederaufgenommen', {
+                id: a.id, art: a.art, schritt: a.schritt, zustand: neu.zustand
+            });
+        }
+        return n;
+    };
+    /** Fertige und abgebrochene Aufträge, die lange genug lagen. */
+    const aufraeumen = async (haltenMs = AUFHEBEN_MS) => {
+        const t = jetzt();
+        let n = 0;
+        for (const a of await alle()) {
+            if (!JobModell.aufraeumbar(a, t, haltenMs))
+                continue;
+            await Store.auftragWeg(a.id);
+            n++;
+        }
+        return n;
+    };
+    /**
+     * Die Maschine anwerfen.
+     *
+     * Reihenfolge: erst wiederaufnehmen, dann aufräumen, dann takten. Wer
+     * zuerst aufräumt, könnte einen Auftrag wegwerfen, den die
+     * Wiederaufnahme gerade gebraucht hätte.
+     */
+    const start = async () => {
+        if (bereit)
+            return;
+        bereit = true;
+        try {
+            await wiederaufnehmen();
+            await aufraeumen();
+        }
+        catch (e) {
+            melde('auftrag.fehler', { fehler: String(e && e.message || e) });
+        }
+        if (takt)
+            clearInterval(takt);
+        takt = setInterval(() => { void takten(); }, TAKT_MS);
+        void takten();
+    };
+    /** Anhalten — für Prüfläufe und für das Schliessen. */
+    const stopp = () => {
+        if (takt)
+            clearInterval(takt);
+        takt = null;
+        bereit = false;
+    };
+    /**
+     * Alles wegwerfen.
+     *
+     * Wird beim Einspielen mit „Ersetzen" gebraucht: die Aufträge zeigen auf
+     * Blöcke und Dateien, die es danach nicht mehr gibt. Ein Auftrag, der
+     * eine verschwundene Datei sucht, scheitert dreimal und landet in der
+     * Fehlerablage — für nichts.
+     */
+    const leeren = async () => {
+        let n = 0;
+        for (const a of await alle()) {
+            await Store.auftragWeg(a.id);
+            n++;
+        }
+        return n;
+    };
+    return {
+        start, stopp, takten, anmelden, arten, anlegen, abbrechen,
+        alle, offen, einer, wiederaufnehmen, aufraeumen, leeren,
+        ICH, TAKT_MS, AUFHEBEN_MS
+    };
+})();
+window.Auftraege = Auftraege;
+
+</script>
+<script>
+/* ===== quell/core/knowledge/rank.js ===== */
+"use strict";
+/* ============================================================================
+ * core/knowledge/rank.ts — welche Seiten das Netz trägt
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/core/knowledge/rank.ts`. `npm run bauen:ts` schreibt
+ * daraus `quell/core/knowledge/rank.js`. Wer das .js bearbeitet, verliert die
+ * Änderung beim nächsten Bauen; `pruefungen/lauf/test105.mts` meldet es vorher.
+ * ----------------------------------------------------------------------------
+ * WAS BISHER DA WAR, UND WAS NICHT (E285).
+ *
+ * Redions Wissensgraph ist reich: fünf Knotenarten, vier Kantenarten,
+ * Rückverweise, unverlinkte Erwähnungen, Alias-Auflösung. Was er nicht
+ * hatte, ist eine Aussage darüber, welcher Knoten WICHTIG ist.
+ *
+ * `analyzeKnowledgeGraph` zählt Kanten (`verweise.ts:709`) und nennt die
+ * Zwölf mit den meisten „Naben". Das ist der Grad, und der Grad ist eine
+ * schwache Auskunft: eine Seite, auf die zwanzig Wegwerfnotizen zeigen,
+ * steht damit über einer, auf die drei zentrale Seiten zeigen.
+ *
+ * PageRank beantwortet genau diese Frage anders: nicht „wie viele zeigen
+ * her", sondern „wie wichtig sind die, die herzeigen". Die Wichtigkeit
+ * ergibt sich aus sich selbst, und man rechnet sie aus, indem man das
+ * Verteilen so lange wiederholt, bis sich nichts mehr ändert.
+ *
+ * ─── DER FEHLER, DEN DIE NAIVE FASSUNG MACHT ────────────────────────────────
+ *
+ * DREI VON VIER KANTENARTEN SIND GAR NICHT GERICHTET.
+ *
+ * `addEdge` in `verweise.ts:533` normalisiert:
+ *
+ *     const undirected = kind !== 'link';
+ *     const first  = undirected && source > target ? target : source;
+ *     const second = undirected && source > target ? source : target;
+ *
+ * Bei `relation`, `tag` und `tree` ist `source` also schlicht die
+ * lexikalisch kleinere Kennung. Wer diese Kanten als gerichtet nimmt,
+ * rechnet eine Rangfolge aus, die davon abhängt, wie die Zufallskennungen
+ * ausfallen. Das Ergebnis sähe vollkommen plausibel aus und wäre Unsinn —
+ * die schlimmste Sorte Fehler.
+ *
+ * Deshalb sagt der Aufrufer AUSDRÜCKLICH, welche Arten eine Richtung
+ * tragen. Eine Vorgabe gibt es, aber sie steht als Wert da und nicht als
+ * Annahme im Code.
+ *
+ * ─── UND DER ZWEITE: SACKGASSEN VERSCHLUCKEN GEWICHT ────────────────────────
+ *
+ * Ein Knoten ohne ausgehende Kante („dangling node") hat nichts, wohin er
+ * sein Gewicht weitergeben könnte. Wer das nicht behandelt, verliert in
+ * jeder Runde Masse; nach dreissig Runden ist die Summe nicht mehr 1,
+ * sondern 0,4, und die Zahlen sind untereinander nicht mehr vergleichbar.
+ *
+ * In Redion ist das kein Randfall, sondern der Normalfall: jede Seite ohne
+ * ausgehenden Link ist eine Sackgasse, und das sind die meisten.
+ *
+ * Ihr Gewicht wird deshalb gleichmässig auf ALLE verteilt — so, als führe
+ * von ihnen eine Kante zu jedem. Die Prüfung misst genau das: die Summe
+ * muss 1 bleiben. Das ist die eine Eigenschaft, die einen kaputten
+ * PageRank zuverlässig verrät.
+ *
+ * ─── WAS DIESE DATEI NICHT TUT ──────────────────────────────────────────────
+ *
+ * Sie speichert nichts. Kein Fach, kein Meta-Schlüssel, keine zweite
+ * Datenbank. Sie bekommt Knoten und Kanten, sie gibt Zahlen zurück. Der
+ * Rang ist ABGELEITET und jederzeit neu ausrechenbar — genau wie Redurs
+ * Regel für die Vorschaubilder.
+ *
+ * Sie kennt auch keinen Bereich. `verweise.ts` reicht seinen Graph hinein;
+ * dass es Seiten, Zeilen und Entscheidungen gibt, erfährt sie nur als
+ * Zeichenkette in `kind`.
+ * ==========================================================================*/
+const KnowledgeRank = (() => {
+    const VORGABE_GEWICHT = {
+        link: 1.0, relation: 0.8, tree: 0.5, tag: 0.3
+    };
+    /**
+     * Der Rang jedes Knotens.
+     *
+     * @param nodes  alle Knoten. Doppelte Kennungen gewinnen zuletzt.
+     * @param edges  alle Kanten. Kanten auf unbekannte Knoten fallen weg.
+     */
+    const rank = (nodes, edges, opt = {}) => {
+        const gerichtet = new Set(opt.gerichtet || ['link']);
+        const gewicht = opt.gewicht || VORGABE_GEWICHT;
+        const d = typeof opt.daempfung === 'number' ? opt.daempfung : 0.85;
+        const maxRunden = opt.runden || 100;
+        const toleranz = typeof opt.toleranz === 'number' ? opt.toleranz : 1e-8;
+        const ohne = new Set(opt.ohne || []);
+        /* --- Knoten auf Zahlen abbilden ---------------------------------------
+           Maps mit Zeichenketten-Schlüsseln in einer Schleife, die millionenfach
+           läuft, sind der teuerste Teil. Einmal umschreiben, danach nur noch
+           Zahlen. */
+        const ids = [];
+        const index = new Map();
+        for (const n of nodes) {
+            if (!n || !n.id)
+                continue;
+            if (n.kind && ohne.has(n.kind))
+                continue;
+            if (index.has(n.id))
+                continue;
+            index.set(n.id, ids.length);
+            ids.push(n.id);
+        }
+        const N = ids.length;
+        if (!N) {
+            return { liste: [], nachId: Object.create(null), runden: 0,
+                rest: 0, summe: 0, sackgassen: 0 };
+        }
+        /* --- Kanten in eine gerichtete Form bringen ---------------------------
+           Eine ungerichtete Kante wird zu ZWEI gerichteten. Das ist nicht
+           dasselbe wie „Richtung ignorieren": das Gewicht fliesst dann wirklich
+           in beide Richtungen, und ein Knoten mit einer einzigen ungerichteten
+           Kante ist keine Sackgasse mehr. */
+        const vonListe = new Array(N);
+        const gewListe = new Array(N);
+        for (let i = 0; i < N; i++) {
+            vonListe[i] = [];
+            gewListe[i] = [];
+        }
+        const lege = (a, b, w) => {
+            vonListe[a].push(b);
+            gewListe[a].push(w);
+        };
+        for (const e of edges) {
+            if (!e)
+                continue;
+            const a = index.get(e.source);
+            const b = index.get(e.target);
+            if (a === undefined || b === undefined || a === b)
+                continue;
+            const art = e.kind || '';
+            const w = typeof gewicht[art] === 'number' ? gewicht[art] : 1;
+            if (w <= 0)
+                continue;
+            lege(a, b, w);
+            if (!gerichtet.has(art))
+                lege(b, a, w);
+        }
+        /* Die Summe der ausgehenden Gewichte je Knoten — einmal, nicht je Runde. */
+        const ausSumme = new Float64Array(N);
+        let sackgassen = 0;
+        for (let i = 0; i < N; i++) {
+            let s = 0;
+            const g = gewListe[i];
+            for (let k = 0; k < g.length; k++)
+                s += g[k];
+            ausSumme[i] = s;
+            if (s === 0)
+                sackgassen++;
+        }
+        /* --- Die Iteration ---------------------------------------------------- */
+        let r = new Float64Array(N);
+        let neu = new Float64Array(N);
+        r.fill(1 / N);
+        let runden = 0;
+        let rest = 0;
+        for (; runden < maxRunden; runden++) {
+            /* Was die Sackgassen halten, wird gleichmässig verteilt — sonst
+               verschwindet es, und die Summe fällt unter 1. */
+            let hAngig = 0;
+            for (let i = 0; i < N; i++)
+                if (ausSumme[i] === 0)
+                    hAngig += r[i];
+            const grund = (1 - d) / N + (d * hAngig) / N;
+            neu.fill(grund);
+            for (let i = 0; i < N; i++) {
+                const s = ausSumme[i];
+                if (s === 0)
+                    continue;
+                const anteil = (d * r[i]) / s;
+                const ziel = vonListe[i];
+                const g = gewListe[i];
+                for (let k = 0; k < ziel.length; k++) {
+                    /* `noUncheckedIndexedAccess` verlangt die Zwischenvariable: bei
+                       `neu[ziel[k]!] += …` hält TypeScript das Ziel für vielleicht
+                       `undefined`, obwohl `Float64Array` immer eine Zahl gibt. */
+                    const j = ziel[k];
+                    neu[j] = neu[j] + anteil * g[k];
+                }
+            }
+            rest = 0;
+            for (let i = 0; i < N; i++)
+                rest += Math.abs(neu[i] - r[i]);
+            const tausch = r;
+            r = neu;
+            neu = tausch;
+            if (rest < toleranz) {
+                runden++;
+                break;
+            }
+        }
+        /* --- Ausgeben --------------------------------------------------------- */
+        let summe = 0;
+        for (let i = 0; i < N; i++)
+            summe += r[i];
+        const liste = new Array(N);
+        for (let i = 0; i < N; i++)
+            liste[i] = { id: ids[i], rang: r[i], platz: 0 };
+        /* Bei gleichem Rang nach Kennung, damit die Reihenfolge zwischen zwei
+           Läufen dieselbe ist. Ein Wissensrang, der sich beim Neuladen
+           umsortiert, sieht aus wie ein Fehler. */
+        liste.sort((a, b) => b.rang - a.rang || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+        const nachId = Object.create(null);
+        for (let i = 0; i < liste.length; i++) {
+            liste[i].platz = i + 1;
+            nachId[liste[i].id] = liste[i].rang;
+        }
+        return { liste, nachId, runden, rest, summe, sackgassen };
+    };
+    /**
+     * Aus dem Rang eine Zahl von 0 bis 100.
+     *
+     * Der Höchste bekommt immer 100 — die Zahl ist ein VERGLEICH innerhalb
+     * dieses Bestands, keine absolute Note. Bei einem einzigen Knoten ist das
+     * ebenso richtig wie bei zehntausend.
+     *
+     * Die Wurzel dazwischen ist Absicht: PageRank ist extrem schief verteilt,
+     * und eine gerade Umrechnung gäbe dem Zweitplatzierten 8 von 100. Mit der
+     * Wurzel wird aus der Rangfolge etwas, das man lesen kann.
+     */
+    const punkte = (erg, nodes, opt = {}) => {
+        const frischeStaerke = typeof opt.frische === 'number' ? opt.frische : 0.25;
+        const frischeTage = opt.frischeTage || 180;
+        const sternStaerke = typeof opt.stern === 'number' ? opt.stern : 0.15;
+        const artGewicht = opt.artGewicht || {};
+        const jetzt = typeof opt.jetzt === 'number' ? opt.jetzt : Date.now();
+        const info = new Map();
+        for (const n of nodes)
+            if (n && n.id)
+                info.set(n.id, n);
+        const roh = [];
+        for (const r of erg.liste) {
+            const n = info.get(r.id);
+            /* Die Wurzel macht aus der schiefen Verteilung eine lesbare. */
+            let wert = Math.sqrt(Math.max(0, r.rang));
+            if (n) {
+                if (frischeStaerke > 0 && n.edited) {
+                    const t = Date.parse(n.edited);
+                    if (Number.isFinite(t)) {
+                        const tage = (jetzt - t) / 86400000;
+                        /* Linear auf null über `frischeTage`; älter gibt nichts, aber
+                           zieht auch nichts ab. Ein Zuschlag, der negativ werden kann,
+                           wäre eine Bestrafung für Bestand — und Bestand ist der Sinn
+                           eines Wissensspeichers. */
+                        const frisch = Math.max(0, 1 - Math.max(0, tage) / frischeTage);
+                        wert *= (1 + frischeStaerke * frisch);
+                    }
+                }
+                if (sternStaerke > 0 && n.favorite)
+                    wert *= (1 + sternStaerke);
+                if (n.kind && typeof artGewicht[n.kind] === 'number') {
+                    wert *= artGewicht[n.kind];
+                }
+            }
+            roh.push({ id: r.id, wert, rang: r.rang });
+        }
+        const hoechst = roh.reduce((m, x) => Math.max(m, x.wert), 0);
+        roh.sort((a, b) => b.wert - a.wert || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+        return roh.map((x, i) => ({
+            id: x.id,
+            punkte: hoechst > 0 ? Math.round((x.wert / hoechst) * 100) : 0,
+            platz: i + 1,
+            rang: x.rang
+        }));
+    };
+    return { rank, punkte, VORGABE_GEWICHT };
+})();
+window.KnowledgeRank = KnowledgeRank;
+
+</script>
+<script>
+/* ===== quell/core/knowledge/gaps.js ===== */
+"use strict";
+/* ============================================================================
+ * core/knowledge/gaps.ts — was FEHLT, nicht was da ist
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/core/knowledge/gaps.ts`. `npm run bauen:ts` schreibt
+ * daraus `quell/core/knowledge/gaps.js`.
+ * ----------------------------------------------------------------------------
+ * Redion kann heute sagen, was in einem Bestand steht: suchen, verweisen,
+ * zählen, seit E285 auch ranken. Es kann nicht sagen, was NICHT darin steht.
+ * Diese Datei beantwortet die zweite Frage, und zwar nur aus dem Bestand
+ * selbst — keine KI, kein Netz, keine fremde Liste von „das sollte man
+ * wissen". Was fehlt, verrät der Bestand durch die Löcher, die er schlägt.
+ *
+ * ─── DIE GEFAHR BEI GENAU DIESER SORTE FUNKTION ─────────────────────────────
+ *
+ * Eine Lückenliste findet IMMER etwas. Wer fünf Listen aneinanderhängt und
+ * die Länge addiert, zeigt einem frischen Bestand mit drei Seiten „14
+ * Wissenslücken" — und bringt dem Menschen bei, die Anzeige zu überlesen.
+ * Genau dieser Fehler ist mir in derselben Woche zweimal passiert: die
+ * Warnung, die bei gewöhnlichem Gebrauch anspringt (E284), und das `fehlt`,
+ * das nie leer sein kann (E286).
+ *
+ * Deshalb trägt hier JEDER Fund eine STÄRKE von 0 bis 100, und gezählt wird
+ * nur, was über der Schwelle liegt. Ein Geisterverweis, auf den fünf Seiten
+ * zeigen, ist ein Fund. Ein Schlagwort, das einmal vorkommt, ist eine
+ * Beobachtung. Beide werden gezeigt, aber nur der erste wird gezählt.
+ *
+ * ─── WAS SIE NICHT TUT ──────────────────────────────────────────────────────
+ *
+ * Sie liest nichts und schreibt nichts. Sie kennt weder `Store` noch die
+ * Uhr — `jetzt` kommt als Zahl herein, damit sich „seit 200 Tagen nicht
+ * angefasst" prüfen lässt, ohne 200 Tage zu warten. Sie kennt auch keinen
+ * Bereich: der Aufrufer löst die Verweise auf (das kann nur `Links`, mit
+ * Aliasen und Pfaden) und reicht das Ergebnis herein.
+ * ==========================================================================*/
+const KnowledgeGaps = (() => {
+    const VORGABE = {
+        schwelle: 40, verstaubtTage: 90, verstaubtRang: 45, jeArt: 30
+    };
+    const TAG_MS = 86400000;
+    /** Tage zwischen einer ISO-Zeit und jetzt. Ohne Zeit: sehr lange her. */
+    const tageSeit = (iso, jetzt) => {
+        if (!iso)
+            return 9999;
+        const d = Date.parse(String(iso));
+        if (!Number.isFinite(d))
+            return 9999;
+        return Math.max(0, Math.round((jetzt - d) / TAG_MS));
+    };
+    /* ------------------------------------------------------------------------
+     * FRAGEN AUS EINEM TEXT
+     *
+     * Eine Frage im eigenen Text ist der ehrlichste Hinweis auf eine Lücke:
+     * man hat sie selbst aufgeschrieben. Drei Sorten Text müssen aber
+     * draussen bleiben, sonst besteht die Liste aus lauter Nicht-Lücken:
+     *
+     *   Überschriften        „## Warum kippt die Spannung?" ist die Gliederung
+     *                        eines Textes, der die Antwort enthält.
+     *   Code                 ein `?` in einem Ausdruck ist keine Frage.
+     *   Karteikarten         eine Karteikarte IST eine Frage. Sie hier zu
+     *                        listen hiesse, jedem Lernenden seine eigene
+     *                        Kartei als Wissenslücke vorzuwerfen — der
+     *                        sicherste Weg, die Liste unbrauchbar zu machen.
+     *
+     * Die ersten beiden erkennt diese Datei am Text. Die dritte kann sie
+     * nicht: welcher Block eine Karteikarte ist, weiss nur der Aufrufer. Er
+     * lässt solche Blöcke deshalb schon beim Sammeln weg.
+     * ---------------------------------------------------------------------- */
+    /**
+     * Auszeichnungszeichen aus einem Text nehmen.
+     *
+     * Beim ERSTEN Hinsehen auf das fertige Fenster stand da wörtlich
+     * „Statusübergänge** — von welchem Wert darf man zu welchem springen?"
+     * und „*„Was würde Notion 10 000-mal besser machen?". Kein Prüflauf
+     * konnte das melden: die Funde waren richtig, nur unlesbar. Genau dafür
+     * ist §55.1 da.
+     */
+    const ohneMarkierung = (t) => String(t || '')
+        .replace(/`([^`]*)`/g, '$1')
+        .replace(/__(.+?)__/g, '$1')
+        .replace(/[*~]/g, '')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+    const fragenAus = (text) => {
+        const gefunden = new Map();
+        const merken = (roh, ganzeZeile) => {
+            const t = ohneMarkierung(roh);
+            if (t.length < 8)
+                return;
+            const alt = gefunden.get(t);
+            /* Steht dieselbe Frage einmal allein und einmal eingebettet, gilt die
+               stärkere Auskunft. */
+            if (!alt || (ganzeZeile && !alt.ganzeZeile))
+                gefunden.set(t, { text: t, ganzeZeile });
+        };
+        let inCode = false;
+        for (const roh of String(text || '').split(/\r?\n/)) {
+            const zeile = roh.replace(/^[\s>*+\-]+/, '').trim();
+            if (/^```/.test(zeile)) {
+                inCode = !inCode;
+                continue;
+            }
+            if (inCode || !zeile || zeile.startsWith('#'))
+                continue;
+            if (zeile.length >= 8 && zeile.length <= 200 && zeile.endsWith('?')) {
+                merken(zeile, true);
+                continue;
+            }
+            /* Eine Frage mitten im Fliesstext: beginnt gross, endet auf `?`.
+               Sie zählt WENIGER — siehe `staerkeFrage`. */
+            for (const treffer of zeile.matchAll(/([A-ZÄÖÜ][^.?!\n]{6,180}\?)/g))
+                merken(treffer[1] || '', false);
+        }
+        return [...gefunden.values()];
+    };
+    /* ------------------------------------------------------------------------
+     * DIE STÄRKEN
+     *
+     * Sie stehen hier zusammen und nicht verstreut, weil sie das Einzige
+     * sind, was diese Datei WERTET. Jede ist eine Behauptung, die man
+     * bestreiten kann, und deshalb soll man sie an einer Stelle finden.
+     * ---------------------------------------------------------------------- */
+    /** Ein Geist: je mehr Seiten auf ihn zeigen, desto sicherer fehlt er. */
+    const staerkeGeist = (referenzen) => Math.min(100, 40 + 20 * Math.max(0, referenzen - 1));
+    /**
+     * Ein mehrdeutiger Verweis ist immer stark. Er ist kein Hinweis, sondern
+     * ein FEHLER: der Verweis führt irgendwohin, und niemand weiss wohin.
+     * Ein falscher Weg ist schlimmer als ein fehlender.
+     */
+    const staerkeMehrdeutig = (kandidaten) => Math.min(100, 80 + 5 * Math.max(0, kandidaten - 2));
+    /**
+     * Ein Schlagwort mit einer einzigen Seite ist eine Beobachtung, keine
+     * Lücke — man hat etwas angefangen. Absichtlich unter der Schwelle:
+     * es wird gezeigt, aber nicht mitgezählt.
+     */
+    const staerkeThema = () => 25;
+    /**
+     * Eine Frage: je ausführlicher sie gestellt ist, desto eher war sie
+     * ernst gemeint. „Wie geht das?" ist im Vorbeigehen hingeschrieben, ein
+     * ganzer Satz nicht.
+     *
+     * Die Zahlen sind so gewählt, dass die Grenze bei rund dreissig Zeichen
+     * liegt — das ist ungefähr die Länge, ab der ein deutscher Fragesatz ein
+     * Satz ist und keine Einwendung. Mein erster Entwurf teilte durch sechs
+     * und liess damit auch eine ausformulierte Frage unter der Schwelle: die
+     * Art hätte es dann zwar gegeben, aber gezählt worden wäre sie nie.
+     */
+    const staerkeFrage = (laenge, ganzeZeile = true) => {
+        const roh = Math.max(20, Math.min(70, 25 + Math.round(laenge / 2)));
+        /* EINE FRAGE MITTEN IM SATZ IST MEIST KEINE OFFENE FRAGE.
+           Das Fenster zeigte beim ersten Hinsehen dreimal Zeilen der Form
+           „Die Antwort auf die Frage „Was würde X besser machen?" — also einen
+           Satz, der die Frage ZITIERT und gleich beantwortet. Sie ganz
+           wegzuwerfen wäre falsch (manchmal steht dort wirklich eine offene
+           Frage), sie voll zu zählen aber auch: 26 der 33 gezählten Lücken
+           waren solche Zeilen, und eine Liste, die zu vier Fünfteln aus
+           Fehlalarm besteht, wird nicht gelesen.
+           Sie bleibt also stehen — als schwache Beobachtung. */
+        return ganzeZeile ? roh : Math.min(30, Math.round(roh / 2));
+    };
+    /**
+     * Wichtig und lange nicht angefasst. Beides zählt: der Rang bestimmt,
+     * wie hoch es geht, die Zeit, wie weit dorthin.
+     */
+    const staerkeVerstaubt = (rang, tage, grenzeTage) => {
+        const ueber = Math.max(0, tage - grenzeTage);
+        const zeit = Math.min(1, ueber / (grenzeTage * 2));
+        return Math.round(Math.min(100, rang * (0.6 + 0.4 * zeit)));
+    };
+    /**
+     * Eine Insel ist verdächtig, aber gewöhnlich: jede frisch angelegte
+     * Seite ist eine. Erst wenn sie ALT ist und immer noch niemand auf sie
+     * zeigt, ist sie ein Fund.
+     */
+    const staerkeInsel = (tage) => tage < 7 ? 10 : Math.min(55, 20 + Math.round(tage / 10));
+    /* ---------------------------------------------------------------------- */
+    const finden = (seiten, verweise, themen, opt = {}) => {
+        const jetzt = typeof opt.jetzt === 'number' ? opt.jetzt : Date.now();
+        const schwelle = typeof opt.schwelle === 'number' ? opt.schwelle : VORGABE.schwelle;
+        const verstaubtTage = typeof opt.verstaubtTage === 'number'
+            ? opt.verstaubtTage : VORGABE.verstaubtTage;
+        const verstaubtRang = typeof opt.verstaubtRang === 'number'
+            ? opt.verstaubtRang : VORGABE.verstaubtRang;
+        const jeArtMax = typeof opt.jeArt === 'number' ? opt.jeArt : VORGABE.jeArt;
+        const funde = [];
+        const alleSeiten = (seiten || []).filter(s => s && s.id);
+        /* Wieviel der Schnitt je Art weggelassen hat. Ein Schnitt, der sich
+           verschweigt, liest sich wie Vollständigkeit — §35. */
+        let abgeschnitten = 0;
+        /* --- Geisterverweise: gemeinsam gezählt, nicht je Vorkommen ---------- */
+        const geister = new Map();
+        for (const v of verweise || []) {
+            if (!v || v.status !== 'fehlt')
+                continue;
+            const schluessel = String(v.ziel || '').trim().toLocaleLowerCase('de');
+            if (!schluessel)
+                continue;
+            if (!geister.has(schluessel))
+                geister.set(schluessel, { ziel: String(v.ziel).trim(), von: new Map() });
+            geister.get(schluessel).von.set(v.vonId, v.vonTitel || 'Ohne Titel');
+        }
+        abgeschnitten += Math.max(0, geister.size - jeArtMax);
+        [...geister.values()]
+            .sort((a, b) => b.von.size - a.von.size || a.ziel.localeCompare(b.ziel, 'de'))
+            .slice(0, jeArtMax)
+            .forEach(g => {
+            const quellen = [...g.von.entries()].map(([id, titel]) => ({ id, titel }));
+            funde.push({
+                art: 'geist', titel: g.ziel, staerke: staerkeGeist(quellen.length),
+                quellen,
+                satz: quellen.length === 1
+                    ? '„' + g.ziel + '" wird erwähnt, aber es gibt keine Seite dazu.'
+                    : quellen.length + ' Seiten verweisen auf „' + g.ziel +
+                        '" — die Seite gibt es nicht.'
+            });
+        });
+        /* --- Mehrdeutige Verweise ------------------------------------------- */
+        const mehrdeutig = new Map();
+        for (const v of verweise || []) {
+            if (!v || v.status !== 'mehrdeutig')
+                continue;
+            const schluessel = String(v.ziel || '').trim().toLocaleLowerCase('de');
+            if (!schluessel)
+                continue;
+            if (!mehrdeutig.has(schluessel))
+                mehrdeutig.set(schluessel, {
+                    ziel: String(v.ziel).trim(),
+                    kandidaten: Math.max(2, v.kandidaten || 2), von: new Map()
+                });
+            mehrdeutig.get(schluessel).von.set(v.vonId, v.vonTitel || 'Ohne Titel');
+        }
+        abgeschnitten += Math.max(0, mehrdeutig.size - jeArtMax);
+        [...mehrdeutig.values()]
+            .sort((a, b) => b.von.size - a.von.size || a.ziel.localeCompare(b.ziel, 'de'))
+            .slice(0, jeArtMax)
+            .forEach(m => funde.push({
+            art: 'mehrdeutig', titel: m.ziel,
+            staerke: staerkeMehrdeutig(m.kandidaten),
+            quellen: [...m.von.entries()].map(([id, titel]) => ({ id, titel })),
+            satz: '„' + m.ziel + '" passt auf ' + m.kandidaten +
+                ' Seiten. Der Verweis führt irgendwohin — welche gemeint ist, ' +
+                'steht nirgends.'
+        }));
+        /* --- Dünne Themen ---------------------------------------------------- */
+        const duenn = (themen || []).filter(t => t && Array.isArray(t.seiten) && t.seiten.length === 1);
+        abgeschnitten += Math.max(0, duenn.length - jeArtMax);
+        duenn
+            .slice(0, jeArtMax)
+            .forEach(t => funde.push({
+            art: 'thema', titel: '#' + t.tag, staerke: staerkeThema(),
+            seiteId: String(t.seiten[0] || ''),
+            satz: 'Das Schlagwort #' + t.tag + ' steht an genau einer Seite. ' +
+                'Angefangen und nicht weitergeführt.'
+        }));
+        /* --- Offene Fragen ----------------------------------------------------
+           Erst ALLE sammeln, dann nach Stärke ordnen, dann schneiden.
+    
+           Mein erster Entwurf brach die Schleife bei dreissig ab und behielt
+           damit die ersten dreissig in der Reihenfolge, in der die Seiten
+           zufällig kamen — eine ausführliche Frage auf der letzten Seite fiel
+           weg, eine hingeworfene auf der ersten blieb. Der Prüflauf zeigte es
+           sofort: die frisch angelegte Frage tauchte gar nicht auf, weil der
+           Demobestand die dreissig schon aufgebraucht hatte.
+    
+           Ein Schnitt ist in Ordnung. Ein Schnitt, der nach Zufall statt nach
+           Stärke schneidet, ist es nicht. */
+        /* DIESELBE FRAGE AUF ZWEI SEITEN IST EIN FUND MIT ZWEI QUELLEN.
+           Im Demobestand stand ein Satz auf zwei Seiten, und das Fenster
+           zeigte ihn zweimal untereinander — es sah aus wie ein Fehler, obwohl
+           beide Funde stimmten. Zusammengefasst wie die Geister ist es eine
+           Auskunft mehr statt einer Zeile mehr. */
+        const jeFrage = new Map();
+        for (const s of alleSeiten) {
+            for (const frage of fragenAus(s.text || '')) {
+                const schluessel = frage.text.toLocaleLowerCase('de');
+                const da = jeFrage.get(schluessel);
+                if (da) {
+                    da.von.set(s.id, s.titel);
+                    if (frage.ganzeZeile)
+                        da.ganzeZeile = true;
+                }
+                else {
+                    jeFrage.set(schluessel, {
+                        text: frage.text, ganzeZeile: frage.ganzeZeile,
+                        von: new Map([[s.id, s.titel]])
+                    });
+                }
+            }
+        }
+        const fragenFunde = [...jeFrage.values()].map(f => {
+            const quellen = [...f.von.entries()].map(([id, titel]) => ({ id, titel }));
+            const ersteId = quellen[0] ? quellen[0].id : '';
+            const ersterTitel = quellen[0] ? quellen[0].titel : '';
+            return {
+                art: 'frage', titel: f.text,
+                staerke: staerkeFrage(f.text.length, f.ganzeZeile),
+                seiteId: ersteId, quellen,
+                satz: quellen.length === 1
+                    ? 'Offene Frage auf „' + ersterTitel + '".'
+                    : 'Dieselbe offene Frage steht auf ' + quellen.length + ' Seiten.'
+            };
+        });
+        fragenFunde.sort((a, b) => b.staerke - a.staerke ||
+            a.titel.localeCompare(b.titel, 'de'));
+        abgeschnitten += Math.max(0, fragenFunde.length - jeArtMax);
+        for (const f of fragenFunde.slice(0, jeArtMax))
+            funde.push(f);
+        /* --- Wichtig, aber verstaubt ------------------------------------------ */
+        const staubig = alleSeiten
+            .map(s => ({ s, tage: tageSeit(s.edited, jetzt), rang: s.rang || 0 }))
+            .filter(e => e.rang >= verstaubtRang && e.tage >= verstaubtTage)
+            .sort((a, b) => b.rang - a.rang || b.tage - a.tage);
+        abgeschnitten += Math.max(0, staubig.length - jeArtMax);
+        staubig
+            .slice(0, jeArtMax)
+            .forEach(e => funde.push({
+            art: 'verstaubt', titel: e.s.titel,
+            staerke: staerkeVerstaubt(e.rang, e.tage, verstaubtTage),
+            seiteId: e.s.id,
+            satz: '„' + e.s.titel + '" trägt viel im Netz (Rang ' + Math.round(e.rang) +
+                '), wurde aber seit ' + e.tage + ' Tagen nicht angefasst.'
+        }));
+        /* --- Inseln ------------------------------------------------------------ */
+        const inseln = alleSeiten
+            .filter(s => (s.grad || 0) === 0)
+            .map(s => ({ s, tage: tageSeit(s.edited, jetzt) }))
+            .sort((a, b) => b.tage - a.tage);
+        abgeschnitten += Math.max(0, inseln.length - jeArtMax);
+        inseln
+            .slice(0, jeArtMax)
+            .forEach(e => funde.push({
+            art: 'insel', titel: e.s.titel, staerke: staerkeInsel(e.tage),
+            seiteId: e.s.id,
+            satz: '„' + e.s.titel + '" hängt an nichts: kein Verweis hin, keiner weg.'
+        }));
+        /* --- Sortieren: nach STÄRKE, nicht nach Art -------------------------- */
+        funde.sort((a, b) => b.staerke - a.staerke ||
+            a.titel.localeCompare(b.titel, 'de'));
+        const stark = funde.filter(f => f.staerke >= schwelle);
+        const jeArt = {};
+        for (const f of stark)
+            jeArt[f.art] = (jeArt[f.art] || 0) + 1;
+        return {
+            funde, gezaehlt: stark.length, gesamt: funde.length, jeArt, abgeschnitten,
+            satz: satzZu(stark.length, funde.length, abgeschnitten)
+        };
+    };
+    /**
+     * Der Satz oben. Er sagt AUCH etwas, wenn nichts Zählbares da ist —
+     * „nichts gefunden" ist eine Auskunft, keine leere Seite.
+     */
+    const satzZu = (gezaehlt, gesamt, abgeschnitten = 0) => {
+        const rest = gesamt - gezaehlt;
+        /* Der Schnitt wird IMMER genannt, wenn er zugeschlagen hat. Eine Liste,
+           die dreissig zeigt und schweigend zweihundert weglässt, liest sich
+           wie Vollständigkeit. */
+        const mehr = abgeschnitten
+            ? ' Weitere ' + abgeschnitten + ' sind nicht aufgeführt — je Art werden ' +
+                'höchstens die stärksten gezeigt.' : '';
+        if (!gesamt)
+            return 'Keine Lücken gefunden. Der Bestand hängt zusammen.' + mehr;
+        if (!gezaehlt)
+            return 'Nichts Auffälliges. ' + gesamt +
+                ' schwache Beobachtungen stehen unten — sie sind zu unsicher zum Zählen.' + mehr;
+        const wort = gezaehlt === 1 ? 'eine Lücke' : gezaehlt + ' Lücken';
+        return 'Deutlich: ' + wort +
+            (rest ? ', dazu ' + rest + ' schwächere Beobachtung' + (rest === 1 ? '' : 'en') : '') +
+            '.' + mehr;
+    };
+    return {
+        finden, fragenAus, ohneMarkierung, tageSeit, satzZu,
+        staerkeGeist, staerkeMehrdeutig, staerkeThema, staerkeFrage,
+        staerkeVerstaubt, staerkeInsel, VORGABE
+    };
+})();
+window.KnowledgeGaps = KnowledgeGaps;
+
+</script>
+<script>
+/* ===== quell/core/import/sicherheit.js ===== */
+"use strict";
+/* ============================================================================
+ * core/import/sicherheit.ts — fremde Sicherungen entschärfen
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/core/import/sicherheit.ts`. `npm run bauen:ts` schreibt
+ * daraus `quell/core/import/sicherheit.js`. Wer das .js bearbeitet, verliert
+ * die Änderung beim nächsten Bauen; `pruefungen/lauf/test105.mts` meldet es
+ * vorher.
+ * ----------------------------------------------------------------------------
+ * WAS HIER SCHIEFGING, BEVOR ES DIESE DATEI GAB (E284).
+ *
+ * `importAll` las eine fremde Sicherung mit einem blanken `JSON.parse` und
+ * legte das Ergebnis unbesehen in den Zwischenspeicher:
+ *
+ *     const d = JSON.parse(json);
+ *     if (!d.blocks) throw new Error('Das sieht nicht nach einer Sicherung …');
+ *     …
+ *     Object.assign(cache.meta, neu.meta);      // zusammenfuehren
+ *     cache.meta = neu.meta;                    // ersetzen
+ *
+ * Das sind zwei verschiedene Löcher, und das erste ist das gemeinere.
+ *
+ * ─── LOCH 1: `Object.assign` ruft Setzer auf ────────────────────────────────
+ *
+ * `JSON.parse('{"__proto__":{"a":1}}')` erzeugt ein Objekt mit einer EIGENEN
+ * Eigenschaft namens `__proto__`. Das ist harmlos, solange niemand sie
+ * weiterreicht. `Object.assign` reicht sie weiter — und zwar über `[[Set]]`,
+ * also über den geerbten `__proto__`-SETZER. Damit bekommt `cache.meta`
+ * einen fremden Prototyp.
+ *
+ * Danach gibt `getMeta('irgendwas')` nicht mehr `undefined` zurück, sondern
+ * das, was der Angreifer hineingelegt hat. `wolkeAbgleich`, `wolkeToken`,
+ * `theme`, `agent:notaus` — alles, was über `cache.meta[k]` gelesen wird und
+ * heute nicht gesetzt ist. Dasselbe für `cache.blocks[id]`: eine Kennung,
+ * die es nicht gibt, liefert plötzlich einen Block.
+ *
+ * ─── LOCH 2: das geparste Objekt WIRD der Zwischenspeicher ──────────────────
+ *
+ * Beim „ersetzen" wird gar nicht kopiert — `cache.meta = neu.meta` macht das
+ * geparste Objekt selbst zum Verzeichnis. Ein Schlüssel `constructor` oder
+ * `prototype` steht dann als gewöhnlicher Eintrag darin und bringt jeden
+ * Code durcheinander, der `if (verzeichnis[k])` schreibt: `{}.constructor`
+ * ist wahr, auch wenn nichts gesetzt wurde.
+ *
+ * ─── DIE ANTWORT: PROTOTYPLOSE VERZEICHNISSE ────────────────────────────────
+ *
+ * Ein Verzeichnis, das aus `Object.create(null)` kommt, hat keinen
+ * `__proto__`-Setzer, den man auslösen könnte, und `verzeichnis['constructor']`
+ * ist ehrlich `undefined`. Das ist keine Filterung, die man vergessen kann —
+ * es ist eine Form, die das Problem nicht hat.
+ *
+ * Zusätzlich fliegen die drei Namen beim Kopieren raus. Zwei Wälle statt
+ * einem, weil der erste an einer Stelle vergessen werden kann, an die heute
+ * niemand denkt.
+ *
+ * ─── WARUM NICHT EIN `reviver` BEI `JSON.parse` ─────────────────────────────
+ *
+ * Ein `reviver`, der `__proto__` verwirft, ist der übliche Rat und er wäre
+ * hier zu wenig: er säubert die WERTE, aber er ändert nichts daran, dass
+ * `cache.meta` ein gewöhnliches `{}` mit `Object.prototype` bleibt. Der
+ * nächste `Object.assign` aus einer anderen Quelle stünde wieder offen.
+ *
+ * ─── WAS DIESE DATEI NICHT TUT ──────────────────────────────────────────────
+ *
+ * Sie prüft nicht, ob die Sicherung inhaltlich stimmt — das ist
+ * `validierung.ts`. Sie sagt nicht, was sich ändern wird — das ist die
+ * Vorschau. Hier geht es einzig darum, dass fremde Schlüssel nichts
+ * übernehmen können.
+ * ==========================================================================*/
+const ImportSicherheit = (() => {
+    /* Die drei Namen, über die ein fremdes Objekt Einfluss auf Code nimmt, den
+       es nie gesehen hat. `__proto__` ist der Setzer, `constructor` und
+       `prototype` sind die Wege dorthin über Umwege. */
+    const GEFAEHRLICH = ['__proto__', 'constructor', 'prototype'];
+    /** Ist dieser Schlüssel einer der drei? */
+    const istGefaehrlich = (schluessel) => GEFAEHRLICH.indexOf(schluessel) !== -1;
+    const leererFund = () => ({ entfernt: 0, wege: [], zuTief: false });
+    /* Eine Sicherung darf verschachtelt sein, aber nicht beliebig. Hundert
+       Ebenen sind mehr, als jedes echte Redion-Objekt braucht (der tiefste
+       Fall ist ein Block mit `props` mit einer Liste mit Objekten — vier).
+       Ohne Grenze wäre eine böswillig tiefe Datei ein Weg, den Stapel zu
+       sprengen, bevor irgendeine Prüfung greift. */
+    const MAX_TIEFE = 100;
+    /* Wie viele Wege im Bericht stehen. Mehr hilft niemandem beim Lesen. */
+    const MAX_WEGE = 20;
+    /**
+     * Ein Wert, aus dem alle gefährlichen Schlüssel entfernt sind — und in dem
+     * jedes Verzeichnis prototyplos ist.
+     *
+     * Arbeitet mit einem eigenen Stapel statt mit Rekursion: die Tiefe ist
+     * begrenzt, aber die BREITE ist es nicht, und eine Sicherung mit
+     * zweihunderttausend Blöcken soll den Stapel nicht anfassen.
+     *
+     * @param roh   frisch aus `JSON.parse`
+     * @param fund  wird mitgeschrieben; `leererFund()` übergeben
+     */
+    const entgiften = (roh, fund) => {
+        let ergebnis = undefined;
+        const stapel = [
+            { quelle: roh, setzen: (w) => { ergebnis = w; }, tiefe: 0, weg: '' }
+        ];
+        while (stapel.length) {
+            const a = stapel.pop();
+            const q = a.quelle;
+            /* Alles, was kein Objekt ist, kann keinen Prototyp tragen. */
+            if (q === null || typeof q !== 'object') {
+                a.setzen(q);
+                continue;
+            }
+            if (a.tiefe >= MAX_TIEFE) {
+                /* Nicht weiterlaufen und auch nicht durchreichen: ab hier ist
+                   nichts geprüft, und ungeprüft durchreichen wäre genau das Loch.
+                   `null` ist ehrlicher als ein halb geprüfter Ast. */
+                fund.zuTief = true;
+                a.setzen(null);
+                continue;
+            }
+            if (Array.isArray(q)) {
+                const neu = new Array(q.length);
+                a.setzen(neu);
+                for (let i = 0; i < q.length; i++) {
+                    stapel.push({
+                        quelle: q[i],
+                        setzen: (w) => { neu[i] = w; },
+                        tiefe: a.tiefe + 1,
+                        weg: a.weg + '[' + i + ']'
+                    });
+                }
+                continue;
+            }
+            /* PROTOTYPLOS. Das ist der eigentliche Schutz — nicht die Liste
+               unten, sondern diese Zeile. */
+            const neu = Object.create(null);
+            a.setzen(neu);
+            /* `Object.keys` liefert nur EIGENE, aufzählbare Schlüssel. Ein
+               geerbtes `toString` steht also gar nicht zur Debatte. */
+            for (const k of Object.keys(q)) {
+                if (istGefaehrlich(k)) {
+                    fund.entfernt++;
+                    if (fund.wege.length < MAX_WEGE) {
+                        fund.wege.push((a.weg ? a.weg + '.' : '') + k);
+                    }
+                    continue;
+                }
+                stapel.push({
+                    quelle: q[k],
+                    setzen: (w) => { neu[k] = w; },
+                    tiefe: a.tiefe + 1,
+                    weg: a.weg ? a.weg + '.' + k : k
+                });
+            }
+        }
+        return ergebnis;
+    };
+    /**
+     * Ein Verzeichnis aus fremden Daten — prototyplos, ohne die drei Namen.
+     *
+     * Für die Stellen, die schon ein Objekt haben und nur ein sicheres
+     * Verzeichnis daraus brauchen (`neu.blocks`, `neu.meta` …). Der Inhalt
+     * wird dabei MIT entgiftet: ein Block, dessen `props` einen `__proto__`
+     * trägt, ist genauso ein Problem wie das Verzeichnis selbst.
+     */
+    const verzeichnis = (roh, fund) => {
+        const f = fund || leererFund();
+        const sauber = entgiften(roh, f);
+        if (sauber === null || typeof sauber !== 'object' || Array.isArray(sauber)) {
+            return Object.create(null);
+        }
+        return sauber;
+    };
+    /**
+     * `JSON.parse` mit Wächter.
+     *
+     * Gibt Wert UND Fund zurück, nie nur den Wert: wer den Fund nicht
+     * anschaut, soll ihn wenigstens in der Hand halten.
+     *
+     * @throws wenn der Text kein JSON ist — mit einem Satz, den ein Mensch
+     *         lesen kann statt „Unexpected token < in JSON at position 0".
+     */
+    const lesen = (text) => {
+        let roh;
+        try {
+            roh = JSON.parse(text);
+        }
+        catch {
+            throw new Error('Die Datei ist keine gültige Sicherung — sie lässt sich ' +
+                'nicht als JSON lesen. Vielleicht ist es eine .redion-Datei? ' +
+                'Die gehört in „Sicherung einspielen" und nicht hierher.');
+        }
+        const fund = leererFund();
+        const wert = entgiften(roh, fund);
+        return { wert, fund };
+    };
+    /**
+     * Ein Satz für den Menschen, wenn etwas entfernt wurde — sonst leer.
+     *
+     * Bewusst kein Abbruch: eine Sicherung mit einem `__proto__` darin ist
+     * nicht zwingend ein Angriff. Sie kann aus einem Werkzeug stammen, das
+     * Objekte falsch serialisiert. Weggenommen wird es trotzdem, und gesagt
+     * wird es auch.
+     */
+    const satz = (fund) => {
+        if (!fund.entfernt && !fund.zuTief)
+            return '';
+        const teile = [];
+        if (fund.entfernt) {
+            teile.push(fund.entfernt === 1
+                ? 'Ein gefährlicher Schlüssel wurde aus der Sicherung entfernt'
+                : fund.entfernt + ' gefährliche Schlüssel wurden aus der Sicherung entfernt');
+            if (fund.wege.length) {
+                teile.push('(' + fund.wege.slice(0, 5).join(', ') +
+                    (fund.entfernt > 5 ? ' …' : '') + ')');
+            }
+        }
+        if (fund.zuTief) {
+            teile.push('Ein Teil der Datei war tiefer verschachtelt als ' + MAX_TIEFE +
+                ' Ebenen und wurde ausgelassen.');
+        }
+        return teile.join(' ') + '.';
+    };
+    return {
+        lesen, entgiften, verzeichnis, leererFund, satz,
+        istGefaehrlich, GEFAEHRLICH, MAX_TIEFE
+    };
+})();
+window.ImportSicherheit = ImportSicherheit;
+
+</script>
+<script>
+/* ===== quell/core/import/validierung.js ===== */
+"use strict";
+/* ============================================================================
+ * core/import/validierung.ts — sagt VOR dem Einspielen, was in der Datei steht
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/core/import/validierung.ts`. `npm run bauen:ts` schreibt
+ * daraus `quell/core/import/validierung.js`. Wer das .js bearbeitet, verliert
+ * die Änderung beim nächsten Bauen; `pruefungen/lauf/test105.mts` meldet es
+ * vorher.
+ * ----------------------------------------------------------------------------
+ * DIE PRÜFUNG WAR EIN FELDTEST (E284).
+ *
+ * Der gesamte Prüfumfang für Blöcke, Sammlungen, Ansichten, Meta und Verlauf
+ * war eine Zeile:
+ *
+ *     if (!d.blocks) throw new Error('Das sieht nicht nach einer Sicherung …');
+ *
+ * Das reicht, um eine Urlaubsfotoliste abzuweisen. Es reicht nicht, um
+ * irgendetwas darüber zu sagen, was gleich in die Ablage geschrieben wird.
+ *
+ * ─── DIE FASSUNG WIRD GESCHRIEBEN UND NIE GELESEN ───────────────────────────
+ *
+ * `exportAll` schreibt seit jeher `version: VERSION` ins Manifest
+ * (indexdb.ts:1713). Beim Einspielen liest das niemand. Eine Sicherung aus
+ * einer NEUEREN Redion-Fassung — mit einem Feld, das dieses Gerät nicht
+ * kennt, oder einem Fach, das es noch nicht gibt — läuft still durch und
+ * verliert dabei genau das, was sie neu hatte.
+ *
+ * Das ist die Sorte Datenverlust, die §46 meint: nicht laut, sondern
+ * unbemerkt, und man sieht es erst Wochen später an einer Seite, die
+ * anders aussieht als vorher.
+ *
+ * ─── WAS HIER GEPRÜFT WIRD, UND WAS NICHT ───────────────────────────────────
+ *
+ * Geprüft wird die FORM: gibt es die Fächer, sind es Verzeichnisse, ist die
+ * Fassung lesbar, passen die Zählungen zum Manifest.
+ *
+ * NICHT geprüft wird der Inhalt jedes einzelnen Blocks. Das wäre bei
+ * zweihunderttausend Blöcken teuer und würde eine leicht abweichende
+ * Sicherung abweisen, die sich problemlos einspielen liesse. Redion ist
+ * nachsichtig gegenüber fremden Feldern (ein unbekanntes Feld bleibt
+ * stehen) — die Prüfung soll das nicht umkehren.
+ *
+ * ─── UND WARUM SIE NICHT WIRFT ──────────────────────────────────────────────
+ *
+ * Sie gibt einen BEFUND zurück, keinen Fehler. Wer einspielt, soll
+ * entscheiden dürfen: eine Sicherung aus einer neueren Fassung ist ein
+ * Grund zum Nachfragen, kein Grund zum Verweigern. Nur was gar keine
+ * Sicherung sein KANN, wird hart abgewiesen — dafür steht `taugt`.
+ * ==========================================================================*/
+const ImportValidierung = (() => {
+    /** Die Fächer, die eine Sicherung dieser App führt. */
+    const FAECHER = ['blocks', 'collections', 'views', 'meta', 'versions'];
+    const zahl = (w) => (typeof w === 'number' && Number.isFinite(w)) ? w : 0;
+    const istVerzeichnis = (w) => !!w && typeof w === 'object' && !Array.isArray(w);
+    /**
+     * Was steht in dieser Datei?
+     *
+     * @param d        der bereits ENTGIFTETE Wert aus `ImportSicherheit.lesen`.
+     *                 Rohes `JSON.parse` gehört hier nicht herein — die
+     *                 Reihenfolge ist entschärfen, dann prüfen.
+     * @param jetzige  die Formatfassung DIESES Geräts (`Umzuege.JETZIGE`).
+     */
+    const pruefen = (d, jetzige) => {
+        const punkte = [];
+        const zahlen = {};
+        if (!istVerzeichnis(d)) {
+            return {
+                taugt: false, fassung: 0, exportiert: '', fehlt: [], zahlen,
+                punkte: [{ stufe: 'fehler',
+                        text: 'Die Datei enthält kein Objekt — eine Sicherung dieser ' +
+                            'App beginnt immer mit einem Objekt.' }]
+            };
+        }
+        const o = d;
+        /* --- Das Mindeste: gibt es überhaupt Blöcke? ---------------------- */
+        if (!istVerzeichnis(o['blocks'])) {
+            return {
+                taugt: false, fassung: zahl(o['version']),
+                exportiert: String(o['exportiert'] ?? ''), fehlt: [], zahlen,
+                punkte: [{ stufe: 'fehler',
+                        text: 'Das sieht nicht nach einer Sicherung dieser App aus — ' +
+                            'es fehlt das Fach „blocks".' }]
+            };
+        }
+        /* --- Die Fächer zählen, statt sie zu glauben ---------------------- */
+        for (const f of FAECHER) {
+            const w = o[f];
+            if (f === 'versions') {
+                zahlen[f] = Array.isArray(w) ? w.length : 0;
+                if (w !== undefined && !Array.isArray(w)) {
+                    punkte.push({ stufe: 'warnen',
+                        text: 'Das Fach „versions" ist keine Liste und wird ausgelassen.' });
+                }
+            }
+            else {
+                zahlen[f] = istVerzeichnis(w) ? Object.keys(w).length : 0;
+                if (w !== undefined && !istVerzeichnis(w)) {
+                    punkte.push({ stufe: 'warnen',
+                        text: 'Das Fach „' + f + '" ist kein Verzeichnis und wird ausgelassen.' });
+                }
+            }
+        }
+        /* --- Die Fassung, die bisher niemand las -------------------------- */
+        const fassung = zahl(o['version']);
+        if (!fassung) {
+            punkte.push({ stufe: 'hinweis',
+                text: 'Die Sicherung nennt keine Formatfassung. Sie ist vermutlich ' +
+                    'älter als die Fassungszählung — das ist kein Problem, ' +
+                    'nur nicht überprüfbar.' });
+        }
+        else if (fassung > jetzige) {
+            punkte.push({ stufe: 'warnen',
+                text: 'Diese Sicherung stammt aus einer NEUEREN Redion-Fassung ' +
+                    '(' + fassung + ' gegen ' + jetzige + ' hier). Was sie an ' +
+                    'Neuem enthält, kennt dieses Gerät nicht und geht beim ' +
+                    'Einspielen verloren. Besser zuerst Redion aktualisieren.' });
+        }
+        else if (fassung < jetzige) {
+            punkte.push({ stufe: 'hinweis',
+                text: 'Ältere Formatfassung (' + fassung + ' gegen ' + jetzige +
+                    '). Die Umzüge laufen beim Einspielen mit.' });
+        }
+        /* --- Was das Manifest selbst über sich sagt ----------------------- */
+        const fehltRoh = o['fehlt'];
+        const fehlt = Array.isArray(fehltRoh)
+            ? fehltRoh.map(x => String(x)).filter(x => x)
+            : [];
+        if (fehlt.length) {
+            punkte.push({ stufe: 'hinweis',
+                text: 'Die Sicherung sagt selbst, dass sie Folgendes auslässt: ' +
+                    fehlt.join(', ') + '.' });
+        }
+        /* HIER STAND EINE PRÜFUNG, DIE FALSCH WAR — und sie ist stehengeblieben
+           als Erklärung, damit sie niemand wieder einbaut.
+    
+           Der Gedanke war: „das Manifest nennt `versions` unter `enthaelt`,
+           aber das Fach ist leer — die Datei ist wohl abgeschnitten." Beim
+           ersten Lauf gegen Redions EIGENEN Export wurde sie sofort rot.
+    
+           Der Grund: `enthaelt` ist eine Aussage über das FORMAT, nicht über
+           den Inhalt. `exportAll` schreibt die fünf Namen fest hin
+           (indexdb.ts:1717), und ein frischer Arbeitsbereich hat legitim null
+           Fassungen, null Sammlungen, null Ansichten. Die Prüfung konnte
+           „rechtmässig leer" von „abgeschnitten" gar nicht unterscheiden.
+    
+           Eine Warnung, die bei gewöhnlichem Gebrauch anspringt, ist schlimmer
+           als keine: sie bringt Menschen bei, Warnungen wegzuklicken. Deshalb
+           ist sie weg und nicht abgeschwächt. */
+        /* --- Ein leerer Bestand ist erlaubt, aber erwähnenswert ----------- */
+        if (zahlen['blocks'] === 0) {
+            punkte.push({ stufe: 'warnen',
+                text: 'Diese Sicherung enthält keine einzige Seite. Mit ' +
+                    '„Ersetzen" eingespielt bliebe nichts übrig.' });
+        }
+        return {
+            taugt: true, fassung,
+            exportiert: String(o['exportiert'] ?? ''),
+            fehlt, zahlen, punkte
+        };
+    };
+    /** Gibt es einen Punkt, der ein Nachfragen wert ist? */
+    const brauchtRueckfrage = (b) => b.punkte.some(p => p.stufe === 'fehler' || p.stufe === 'warnen');
+    /** Alle Punkte einer Stufe, als Sätze. */
+    const saetze = (b, stufe) => b.punkte.filter(p => !stufe || p.stufe === stufe).map(p => p.text);
+    return { pruefen, brauchtRueckfrage, saetze, FAECHER };
+})();
+window.ImportValidierung = ImportValidierung;
+
+</script>
+<script>
 /* ===== quell/core/import/spaltentyp.js ===== */
 "use strict";
 /* ============================================================================
@@ -18115,7 +20158,17 @@ const Umzuege = (() => {
             warum: 'Vorbereitete Suchwörter je Seite und Datenbankzeile. Auch dieses ' +
                 'Fach ist nur ein Cache: Redions Blöcke und Sammlungen bleiben die ' +
                 'Wahrheit. Fehlt der Index oder ist er beschädigt, wird er aus ihnen ' +
-                'neu aufgebaut.' }
+                'neu aufgebaut.' },
+        { nr: 7, was: 'Aufträge für lange Hintergrundarbeit',
+            faecher: ['auftraege'],
+            warum: 'Ein OCR-Lauf über achtzig Seiten, ein grosser Import, eine ' +
+                'Sicherung: Arbeiten, die länger dauern als ein Tab offen bleibt. ' +
+                'Der Auftrag wird VOR der Arbeit geschrieben und trägt seinen ' +
+                'eigenen Fortschritt — nach einem Neustart weiss die App, was ' +
+                'offenstand, und setzt beim letzten fertigen Schritt an. ' +
+                'Dieses Fach reist NICHT in der Sicherung mit: ein halb ' +
+                'erledigter Auftrag auf einem anderen Gerät hätte seine ' +
+                'Eingaben nicht (E286).' }
     ];
     /* Die letzte Fassung — und die Liste ist nie leer, sonst gäbe es keine
        Ablage. `?.nr ?? 0` schreibt genau das hin, statt es anzunehmen. */
@@ -20661,6 +22714,10 @@ Register.menueband = (() => {
         { reiter: 'ueberpruefen', gruppe: 'Wiederfinden', id: 'w-tags', name: 'Schlagwörter',
             zeichen: 'tag', kurz: 'Strg ⇧ T', hinweis: 'Alle #Schlagwörter',
             tun: () => Links.tagRegister(), zeigen: () => kann(() => Links.tagRegister) },
+        { reiter: 'ueberpruefen', gruppe: 'Wiederfinden', id: 'w-luecken', name: 'Wissenslücken',
+            zeichen: 'compass', hinweis: 'Was fehlt, verrät der Bestand selbst',
+            tun: () => Wissensluecken.zeigen(),
+            zeigen: () => kann(() => Wissensluecken.zeigen) },
         { reiter: 'ueberpruefen', gruppe: 'Nachsehen', id: 'u-statistik', name: 'Statistik',
             zeichen: 'chart', hinweis: 'Wörter, Zeichen, Lesedauer dieser Seite',
             tun: () => Werkzeuge.statistik(seiteJetzt()),
@@ -29646,6 +31703,17 @@ const Store = (() => {
                aus Blöcken und Sammlungen neu gebaut werden. */
             if (!d.objectStoreNames.contains('suchindex'))
                 d.createObjectStore('suchindex', { keyPath: 'id' });
+            /* Version 7: Aufträge für lange Hintergrundarbeit (E286).
+               Der Auftrag wird VOR der Arbeit geschrieben; nach einem Neustart
+               weiss die App dadurch, was offenstand. Zwei Indizes, weil die
+               Maschine genau zwei Fragen stellt: „was ist offen?" (Zustand) und
+               „was ist von dieser Art?" (Art). Ohne sie liefe jeder Takt über
+               alle Aufträge, auch über die längst fertigen. */
+            if (!d.objectStoreNames.contains('auftraege')) {
+                const au = d.createObjectStore('auftraege', { keyPath: 'id' });
+                au.createIndex('zustand', 'zustand');
+                au.createIndex('art', 'art');
+            }
         };
         req.onsuccess = () => {
             db = req.result;
@@ -31210,6 +33278,11 @@ const Store = (() => {
                 'Blick in die Freigaben.';
         /* Und derselbe Satz für die Zugangsdaten. Er nennt die Zahl und den
            Weg zurück: eine verschlüsselte Sicherung nimmt sie mit. */
+        const ueberAuftraege = !exportAuftraegeOffen ? ''
+            : ' ' + exportAuftraegeOffen + ' Auftrag/Aufträge standen beim Sichern ' +
+                'noch offen (z. B. ein laufendes Einlesen). Sie reisen NICHT mit: ' +
+                'ihre Eingaben liegen auf diesem Gerät. Auf diesem Gerät laufen sie ' +
+                'weiter.';
         const ueberGeheimnisse = !geheimAusgelassen.length ? ''
             : ' ' + geheimAusgelassen.length + ' Zugangsdaten (' +
                 geheimAusgelassen.join(', ') + ') sind bewusst NICHT dabei: eine ' +
@@ -31222,7 +33295,17 @@ const Store = (() => {
             /* Was drin ist — damit ein Einleser es nachsehen kann, statt zu raten. */
             enthaelt: ['blocks', 'collections', 'views', 'meta', 'versions']
                 .concat(mitAnhaengen && echteImArchiv ? ['dateien', 'stuecke'] : []),
+            /* `auftraege` reist NIE mit (E286): ein halb erledigter Auftrag ist
+               Arbeit an DIESEM Gerät, und seine Eingaben — eine Datei in
+               Stücken, ein bestimmter Block — gibt es woanders vielleicht gar
+               nicht. Ihn mitzuschicken hiesse, auf dem anderen Gerät eine
+               Arbeit zu beginnen, die nicht laufen kann.
+      
+               GENANNT wird er aber nur, wenn wirklich etwas offensteht. Ein
+               leeres Auftragsfach lässt nichts aus, und ein `fehlt`, das immer
+               etwas enthält, bringt Menschen bei, es zu überlesen. */
             fehlt: (fehlenAnhaenge ? ['dateien', 'stuecke'] : [])
+                .concat(exportAuftraegeOffen ? ['auftraege'] : [])
                 .concat(nurHierAusgelassen)
                 .concat(geheimAusgelassen),
             /* Wie viele Dateien absichtlich draussen blieben — als Zahl, damit ein
@@ -31237,7 +33320,7 @@ const Store = (() => {
                         '„dateien" desselben Archivs.' + ueberAbgeleitete
                     : abgeleitetDa
                         ? 'Dieser Bestand hat nur abgeleitete Dateien.' + ueberAbgeleitete
-                        : 'Vollständig: dieser Bestand hat keine Dateianhänge.') + ueberOrdner + ueberGeteilt + ueberGeheimnisse,
+                        : 'Vollständig: dieser Bestand hat keine Dateianhänge.') + ueberOrdner + ueberGeteilt + ueberGeheimnisse + ueberAuftraege,
             blocks: cache.blocks,
             collections: cache.collections,
             views: cache.views,
@@ -31249,6 +33332,9 @@ const Store = (() => {
        Zwischenspeicher, damit er den Arbeitsspeicher nicht belastet. */
     let exportVersionen = [];
     let exportDateien = 0;
+    /* Wie viele Aufträge beim Sichern noch offenstanden — siehe
+       `exportVorbereiten`. Nur dann nennt das Manifest sie. */
+    let exportAuftraegeOffen = 0;
     /* WIE VIELE DAVON ABGELEITET SIND. Seit E103 packt das `.redion` nicht mehr
        jede Datei ein: gerasterte PDF-Seitenbilder bleiben draussen, weil sie
        sich aus dem mitgesicherten Original neu rechnen lassen. Das Manifest
@@ -31272,8 +33358,26 @@ const Store = (() => {
         const alleDateien = await all('dateien');
         exportDateien = alleDateien.length;
         exportAbgeleitet = alleDateien.filter((d) => d && d.abgeleitet).length;
+        /* OFFENE AUFTRÄGE ZÄHLEN (E286).
+           Nicht: `auftraege` immer unter `fehlt` nennen. Der erste Entwurf tat
+           genau das, und die Prüfläufe zeigten sofort, was daran falsch ist:
+           eine Sicherung eines gewöhnlichen Bestands könnte dann NIE mehr
+           „nichts fehlt" sagen. Ein `fehlt`, das immer etwas enthält, bringt
+           Menschen bei, es zu überlesen — derselbe Fehler wie die Warnung, die
+           bei gewöhnlichem Gebrauch anspringt (E284).
+    
+           Genannt wird es also nur, wenn wirklich Arbeit offensteht. Dann ist
+           die Angabe auch etwas wert: „drei Aufträge laufen noch und reisen
+           nicht mit". */
+        try {
+            const auftraege = await all('auftraege');
+            exportAuftraegeOffen = (auftraege || []).filter((a) => a && (a.zustand === 'wartet' || a.zustand === 'laeuft')).length;
+        }
+        catch {
+            exportAuftraegeOffen = 0;
+        }
         return { versionen: exportVersionen.length, dateien: exportDateien,
-            abgeleitet: exportAbgeleitet };
+            abgeleitet: exportAbgeleitet, auftraegeOffen: exportAuftraegeOffen };
     };
     /**
      * Eine Sicherung einspielen.
@@ -31309,18 +33413,47 @@ const Store = (() => {
         /* Erst landen lassen, was noch unterwegs ist — sonst löscht ein
            Aufräumen von vorhin in den neuen Bestand hinein (siehe `settled`). */
         await settled();
-        const d = JSON.parse(json);
-        if (!d.blocks)
-            throw new Error('Das sieht nicht nach einer Sicherung dieser App aus.');
+        /* --- ERST ENTSCHÄRFEN, DANN PRÜFEN, DANN EINSPIELEN (E284) ----------
+           Hier stand ein blankes `JSON.parse(json)`, und das Ergebnis ging
+           unbesehen weiter — beim Zusammenführen über `Object.assign`, beim
+           Ersetzen sogar als Zwischenspeicher SELBST.
+    
+           `Object.assign` schreibt über `[[Set]]`, also über den geerbten
+           `__proto__`-SETZER. Ein `{"__proto__":{"wolkeAbgleich":true}}` in
+           einer fremden Sicherung gab `cache.meta` damit einen fremden
+           Prototyp — und danach lieferte `getMeta('wolkeAbgleich')` nicht mehr
+           die Vorgabe, sondern das, was der Angreifer hineingelegt hatte.
+           Dasselbe für `cache.blocks[id]`: eine Kennung, die es nicht gibt,
+           hätte plötzlich einen Block geliefert.
+    
+           `ImportSicherheit.lesen` gibt prototyplose Verzeichnisse zurück, aus
+           denen die drei Namen entfernt sind. Der Fund wird MITGEREICHT, nicht
+           verschluckt (§35): eine Sicherung, die still verändert wurde, ist die
+           gefährlichste Sorte.
+    
+           Die Reihenfolge ist nicht beliebig. Entschärfen kommt VOR dem Prüfen,
+           weil die Prüfung sonst selbst über ein `constructor` stolpern könnte,
+           und beides kommt vor dem ersten Schreibzugriff. */
+        const gelesen = ImportSicherheit.lesen(json);
+        const d = gelesen.wert;
         if (art !== 'ersetzen' && art !== 'zusammenfuehren')
             throw new Error('Beim Einspielen muss feststehen, was geschehen soll: ' +
                 '„ersetzen" wirft weg, was nicht in der Sicherung steht, ' +
                 '„zusammenfuehren" legt sie dazu. Ohne Angabe wird nichts getan.');
+        const befund = ImportValidierung.pruefen(d, VERSION);
+        if (!befund.taugt) {
+            throw new Error(befund.punkte[0]?.text ||
+                'Das sieht nicht nach einer Sicherung dieser App aus.');
+        }
+        /* Die Verzeichnisse bleiben prototyplos — auch die leeren Ersatzwerte.
+           Ein `{}` an dieser Stelle hätte die Lücke an genau der Stelle wieder
+           aufgemacht, an der ein Fach in der Sicherung fehlt. */
+        const leer = () => Object.create(null);
         const neu = {
-            blocks: d.blocks || {},
-            collections: d.collections || {},
-            views: d.views || {},
-            meta: d.meta || {}
+            blocks: ImportSicherheit.verzeichnis(d.blocks) || leer(),
+            collections: ImportSicherheit.verzeichnis(d.collections) || leer(),
+            views: ImportSicherheit.verzeichnis(d.views) || leer(),
+            meta: ImportSicherheit.verzeichnis(d.meta) || leer()
         };
         /* --- DER ORDNERZUGRIFF ÜBERLEBT BEIDE ARTEN (E270) ------------------
            `sicherungOrdner` hält einen echten Verzeichniszugriff, den ein
@@ -31608,6 +33741,18 @@ const Store = (() => {
            er beantworten muss, ist ohnehin nur die eine Frage: hat der Server
            diesen Satz je gesehen? */
         if (art === 'ersetzen') {
+            /* --- DIE AUFTRÄGE GEHEN MIT (E286) ----------------------------
+               Sie zeigen auf Blöcke und Dateien, die es nach dem Ersetzen
+               nicht mehr gibt. Ein Auftrag, der eine verschwundene Datei
+               sucht, scheitert dreimal und landet in der Fehlerablage — für
+               nichts. Direkt über das Fach, nicht über `Auftraege`: das Modul
+               lädt NACH dieser Datei, und ein `typeof`-Wächter hier wäre eine
+               Abhängigkeit, die nur manchmal da ist. */
+            try {
+                for (const a of (await all('auftraege')) || [])
+                    await del('auftraege', a.id);
+            }
+            catch { /* das Fach gibt es erst ab Fassung 7 */ }
             await basisLeeren();
             const grabsteine = getMeta('wolkeBloeckeWeg', []) || [];
             for (const e of grabsteine)
@@ -31653,7 +33798,16 @@ const Store = (() => {
             /* Steht danach eine Entscheidung offen? Die Schale sagt es
                dem Menschen — sonst wartet die Frage, ohne dass jemand
                weiss, dass sie wartet. */
-            frage: !!getMeta('wolkeNeuAbgleich', '') };
+            frage: !!getMeta('wolkeNeuAbgleich', ''),
+            /* --- WAS BEIM ENTSCHÄRFEN UND PRÜFEN AUFFIEL (E284) --------
+               Beides reist MIT dem Ergebnis, statt in der Konsole zu
+               enden. Eine Sicherung, die still verändert oder still als
+               „aus einer neueren Fassung" erkannt wurde, ist genau die
+               Sorte Fehler, die man erst Wochen später sieht. */
+            entschaerft: gelesen.fund.entfernt,
+            entschaerftSatz: ImportSicherheit.satz(gelesen.fund),
+            befund: befund.punkte,
+            fassung: befund.fassung };
     };
     /* ========================================================================
      * SEITENBAUM ALS DATENPAKET
@@ -32074,6 +34228,50 @@ const Store = (() => {
     const vorratHolen = (id) => get('vorrat', id);
     const vorratWeg = (id) => del('vorrat', id);
     const vorratAlle = () => all('vorrat');
+    /* --- Aufträge (E286) ---------------------------------------------------
+       Vier gewöhnliche Wege plus EINER, der es nicht ist: `auftragNehmen`
+       liest und schreibt in DERSELBEN Transaktion. Das ist der Unterschied
+       zwischen einer Absichtserklärung und einer Sperre.
+  
+       Zwei Tabs, die gleichzeitig denselben Auftrag nehmen wollen, laufen
+       durch dieselbe `readwrite`-Transaktion auf demselben Fach — und die
+       serialisiert IndexedDB. Der zweite sieht die Pacht des ersten und geht
+       weiter. Läge das Lesen in einer eigenen Transaktion, sähen beide
+       „frei" und beide schrieben ihre Pacht. */
+    const auftragPut = (satz) => put('auftraege', satz);
+    const auftragHolen = (id) => get('auftraege', id);
+    const auftragWeg = (id) => del('auftraege', id);
+    const auftragAlle = () => all('auftraege');
+    /**
+     * Einen Auftrag nehmen — Lesen und Schreiben in EINER Transaktion.
+     *
+     * @param waehle  bekommt alle Aufträge und gibt den geänderten zurück,
+     *                oder `null`. Die Regel steht in `JobModell`; hier steht
+     *                nur, dass sie unter einer Transaktion läuft.
+     */
+    const auftragNehmen = (waehle) => new Promise((ok2, fail2) => {
+        if (!db) {
+            ok2(null);
+            return;
+        }
+        let genommen = null;
+        const t = db.transaction('auftraege', 'readwrite');
+        const laden = t.objectStore('auftraege').getAll();
+        laden.onsuccess = () => {
+            try {
+                genommen = waehle(laden.result || []);
+            }
+            catch (e) {
+                /* Eine werfende Regel darf die Transaktion nicht offen lassen. */
+                genommen = null;
+            }
+            if (genommen)
+                t.objectStore('auftraege').put(genommen);
+        };
+        t.oncomplete = () => ok2(genommen);
+        t.onerror = () => fail2(t.error);
+        t.onabort = () => fail2(t.error || new Error('Auftrag nehmen abgebrochen.'));
+    });
     /* --- Persistenter Suchindex ------------------------------------------- */
     /**
      * Schreibt nur den Such-Cache. Diese Wege berühren absichtlich weder
@@ -32185,6 +34383,7 @@ const Store = (() => {
         dateiGrabstein, dateiGrabsteine, dateiGrabsteinWeg,
         basisPut, basisHolen, basisWeg, basisAlle, basisLeeren,
         vorratPut, vorratHolen, vorratWeg, vorratAlle,
+        auftragPut, auftragHolen, auftragWeg, auftragAlle, auftragNehmen,
         suchindexAendern, suchindexErsetzen, suchindexLeeren,
         stueckPut, stueckHolen, stueckWeg, stueckeVon,
         speichertNicht: () => nurSpeicher,
@@ -34746,6 +36945,45 @@ const Links = (() => {
     /* ========================================================================
      * SCHLAGWÖRTER
      * ======================================================================*/
+    /* ------------------------------------------------------------------------
+     * ALLE SEITENVERWEISE AUF EINMAL (E288)
+     *
+     * `loeseSeitenverweis` baut den Seitenindex bei JEDEM Aufruf neu. Für
+     * einen einzelnen Verweis ist das richtig — er soll den Stand von jetzt
+     * sehen. Wer aber alle Verweise eines Bestands durchgehen will, baut
+     * damit den Index einmal je Verweis: bei 400 Verweisen und 900 Seiten
+     * sind das 360 000 Durchläufe für eine Auskunft, die einer genügt hätte.
+     *
+     * Deshalb steht die Schleife hier und nicht beim Aufrufer: das Auflösen
+     * eines `[[Ziels]]` — mit Aliasen, Pfaden, Überschriften-Anhängseln und
+     * Mehrdeutigkeit — ist die Sache dieses Moduls, und niemand sonst soll
+     * das Muster noch einmal schreiben müssen.
+     * ---------------------------------------------------------------------- */
+    const alleSeitenverweise = () => {
+        const index = baueSeitenIndex();
+        const out = [];
+        Object.values(Store.cache.blocks).forEach(b => {
+            if (!b || !b.alive || !b.text)
+                return;
+            const treffer = [...String(b.text).matchAll(/\[\[([^\[\]\n|]{1,240})(?:\|[^\]\n]*)?\]\]/g)];
+            if (!treffer.length)
+                return;
+            const quelle = seiteVon(b.id);
+            if (!quelle)
+                return;
+            for (const t of treffer) {
+                const ziel = (t[1] || '').trim();
+                if (!ziel)
+                    continue;
+                const urteil = loeseSeitenverweisMitIndex(ziel, index);
+                out.push({
+                    vonId: quelle.id, vonTitel: quelle.text || 'Ohne Titel', blockId: b.id,
+                    ziel, status: urteil.status, kandidaten: urteil.candidates.length
+                });
+            }
+        });
+        return out;
+    };
     const alleTags = () => {
         const map = new Map(); /* tag -> Set von Seiten-IDs */
         Object.values(Store.cache.blocks).forEach(b => {
@@ -35857,7 +38095,8 @@ const Links = (() => {
     return {
         start, inline, seiten, seiteMitTitel, seitenMitTitelOderAlias, loeseSeitenverweis,
         aliasesVon, aliasesSetzen, referenzFuerSeite, seiteVon, oeffneOderAnlegen,
-        verweiseAuf, unverlinkt, alleTags, fusszeile, graphVorbereiten, graph, tagRegister
+        verweiseAuf, unverlinkt, alleTags, alleSeitenverweise,
+        fusszeile, graphVorbereiten, graph, tagRegister
     };
 })();
 window.Links = Links;
@@ -35898,6 +38137,260 @@ if (typeof Register !== 'undefined' && Register.kontext) {
         }
     });
 }
+
+</script>
+<script>
+/* ===== quell/bereiche/wissen/luecken.js ===== */
+"use strict";
+/* ============================================================================
+ * bereiche/wissen/luecken.ts — die Lückenansicht
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/bereiche/wissen/luecken.ts`. `npm run bauen:ts` schreibt
+ * daraus `quell/bereiche/wissen/luecken.js`.
+ * ----------------------------------------------------------------------------
+ * `core/knowledge/gaps.ts` FINDET. Diese Datei SAMMELT und ZEIGT: sie holt
+ * Seiten, Verweise, Schlagwörter und den Rang aus dem Bestand, reicht sie
+ * hinein und stellt das Ergebnis dar.
+ *
+ * ─── UND SIE MACHT E285 ENDLICH SICHTBAR ────────────────────────────────────
+ *
+ * Der Wissensrang wurde gebaut und danach von niemandem benutzt — 400 Zeilen
+ * gerechneter PageRank, den kein Mensch je zu sehen bekam. Hier bekommt er
+ * seine erste Aufgabe: „wichtig, aber lange nicht angefasst" lässt sich ohne
+ * ihn gar nicht stellen. Der Grad täte es nicht; eine Seite, auf die zwanzig
+ * Wegwerfnotizen zeigen, ist nicht wichtig.
+ *
+ * ─── WAS BEIM SAMMELN WEGGELASSEN WIRD, UND WARUM ───────────────────────────
+ *
+ * Karteikarten. Eine Karteikarte IST eine Frage — sie hier als „offene
+ * Frage" zu listen hiesse, jedem Lernenden seine eigene Kartei als
+ * Wissenslücke vorzuwerfen. Bei einem Bestand mit dreihundert Karten wäre
+ * die Liste damit unbrauchbar, und zwar auf die schlimmste Art: sie sähe
+ * voll und fleissig aus.
+ *
+ * Dasselbe gilt für Prüfungsfragen, Umfragen und alles andere, wo die Frage
+ * der Inhalt ist. Die Liste steht als Wert in `FRAGE_IST_INHALT`.
+ * ==========================================================================*/
+const Wissensluecken = (() => {
+    const esc = (s) => String(s ?? '')
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    /**
+     * Blockarten, in denen eine Frage der INHALT ist und keine Lücke.
+     * Als Wert und nicht als `if` im Code, damit eine neue Blockart hier
+     * eingetragen werden kann, ohne die Sammelschleife zu verstehen.
+     */
+    const FRAGE_IST_INHALT = ['flashcard', 'quiz', 'pruefungsfrage', 'umfrage', 'code'];
+    /** Was jede Fundart im Kopf trägt: Zeichen, Name, ein Satz zur Art. */
+    const ARTEN = {
+        geist: { zeichen: '👻', name: 'Geisterverweise',
+            was: 'Erwähnt, aber nie geschrieben.' },
+        mehrdeutig: { zeichen: '🔀', name: 'Mehrdeutige Verweise',
+            was: 'Der Verweis passt auf mehrere Seiten.' },
+        verstaubt: { zeichen: '🕸', name: 'Wichtig, aber verstaubt',
+            was: 'Trägt viel im Netz und wurde lange nicht angefasst.' },
+        frage: { zeichen: '❓', name: 'Offene Fragen',
+            was: 'Selbst aufgeschrieben und nie beantwortet.' },
+        insel: { zeichen: '🏝', name: 'Inseln',
+            was: 'Hängt an nichts.' },
+        thema: { zeichen: '🌱', name: 'Dünne Themen',
+            was: 'Ein Schlagwort an genau einer Seite.' }
+    };
+    /* ------------------------------------------------------------------------
+     * SAMMELN
+     * ---------------------------------------------------------------------- */
+    /** Der Text einer Seite mitsamt ihren Blöcken — ohne die Frage-Blockarten. */
+    const seitentext = (seiteId) => {
+        const teile = [];
+        const gesehen = new Set();
+        const gehe = (id, tiefe) => {
+            if (tiefe > 40 || gesehen.has(id))
+                return;
+            gesehen.add(id);
+            const b = Store.getBlock(id);
+            if (!b || b.alive === false)
+                return;
+            if (id !== seiteId && FRAGE_IST_INHALT.includes(String(b.type)))
+                return;
+            if (b.text)
+                teile.push(String(b.text));
+            for (const kind of (b.content || []))
+                gehe(kind, tiefe + 1);
+        };
+        gehe(seiteId, 0);
+        return teile.join('\n');
+    };
+    /**
+     * Alles zusammentragen, was `KnowledgeGaps.finden` braucht.
+     * Getrennt vom Zeichnen, damit die Prüfung es ohne Fenster messen kann.
+     */
+    const sammeln = () => {
+        const vorbereitet = Links.graphVorbereiten();
+        const index = vorbereitet.index;
+        /* Der Rang: erst rechnen, dann in Punkte von 0 bis 100 umsetzen. */
+        const knoten = [...index.nodes.values()].filter((n) => n.kind !== 'tag')
+            .map((n) => ({ id: n.id, kind: n.kind, edited: n.edited }));
+        const kanten = index.edges.filter((e) => e.kind !== 'tag')
+            .map((e) => ({ source: e.source, target: e.target, kind: e.kind }));
+        const ergebnis = KnowledgeRank.rank(knoten, kanten);
+        const punkte = KnowledgeRank.punkte(ergebnis, knoten);
+        const rangNach = Object.create(null);
+        for (const p of punkte)
+            rangNach[p.id] = p.punkte;
+        /* Der Grad — ohne Schlagwortkanten, denn ein Tag verbindet alles mit
+           allem und würde jede Insel zur Halbinsel machen. */
+        const grad = Object.create(null);
+        for (const e of kanten) {
+            grad[e.source] = (grad[e.source] || 0) + 1;
+            grad[e.target] = (grad[e.target] || 0) + 1;
+        }
+        const seiten = knoten.map((n) => {
+            const b = Store.getBlock(n.id);
+            return {
+                id: n.id,
+                titel: (b && b.text) || (index.nodes.get(n.id) || {}).name || 'Ohne Titel',
+                text: seitentext(n.id),
+                edited: (b && (b.edited || b.created)) || n.edited || '',
+                grad: grad[n.id] || 0,
+                rang: rangNach[n.id] || 0
+            };
+        });
+        const verweise = Links.alleSeitenverweise().map((v) => ({
+            vonId: v.vonId, vonTitel: v.vonTitel, ziel: v.ziel,
+            status: v.status, kandidaten: v.kandidaten
+        }));
+        const themen = Links.alleTags().map((t) => ({
+            tag: t.tag, seiten: t.seiten.map((p) => p.id)
+        }));
+        return { seiten, verweise, themen };
+    };
+    /** Der Befund von jetzt. */
+    const befund = (opt = {}) => {
+        const { seiten, verweise, themen } = sammeln();
+        return KnowledgeGaps.finden(seiten, verweise, themen, opt);
+    };
+    /* ------------------------------------------------------------------------
+     * ZEIGEN
+     * ---------------------------------------------------------------------- */
+    const fundHtml = (f, nr) => {
+        const art = ARTEN[f.art] || { zeichen: '•', name: f.art, was: '' };
+        /* Die Stärke steht als ZAHL da und nicht nur als Balkenlänge — §38:
+           keine Auskunft nur über Farbe oder Form. */
+        const stufe = f.staerke >= 70 ? 'hoch' : f.staerke >= 40 ? 'mittel' : 'schwach';
+        const wort = stufe === 'hoch' ? 'deutlich'
+            : stufe === 'mittel' ? 'wahrscheinlich' : 'schwach';
+        const quellen = (f.quellen || []).slice(0, 4);
+        return '<li class="wl-fund" data-nr="' + nr + '">' +
+            '<span class="wl-zeichen" aria-hidden="true">' + art.zeichen + '</span>' +
+            '<div class="wl-mitte">' +
+            '<div class="wl-titel">' + esc(f.titel) + '</div>' +
+            '<div class="wl-satz">' + esc(f.satz) + '</div>' +
+            (quellen.length
+                ? '<div class="wl-quellen">' + quellen.map((q) => '<button type="button" class="wl-quelle" data-open="' + esc(q.id) + '">' +
+                    esc(q.titel) + '</button>').join('') +
+                    ((f.quellen || []).length > quellen.length
+                        ? '<span class="wl-mehr">+' + ((f.quellen || []).length - quellen.length) + '</span>'
+                        : '') +
+                    '</div>'
+                : '') +
+            '</div>' +
+            '<div class="wl-rechts">' +
+            '<span class="wl-staerke wl-' + stufe + '" title="Sicherheit: ' + wort + '">' +
+            f.staerke + '</span>' +
+            (f.art === 'geist'
+                ? '<button type="button" class="rb wl-tun" data-anlegen="' + esc(f.titel) + '">' +
+                    'Seite anlegen</button>'
+                : f.seiteId
+                    ? '<button type="button" class="rb wl-tun" data-open="' + esc(f.seiteId) + '">' +
+                        'Öffnen</button>'
+                    : '') +
+            '</div>' +
+            '</li>';
+    };
+    const zeigen = () => {
+        const b = befund();
+        const o = document.createElement('div');
+        o.className = 'overlay';
+        const zaehlung = Object.entries(b.jeArt)
+            .sort((x, y) => y[1] - x[1])
+            .map(([art, n]) => '<span class="wl-zaehler">' +
+            (ARTEN[art] ? ARTEN[art].zeichen + ' ' + ARTEN[art].name : esc(art)) +
+            ' <em>' + n + '</em></span>').join('');
+        o.innerHTML =
+            '<div class="finder wl-box" role="dialog" aria-modal="true" ' +
+                'aria-labelledby="wl-titel" style="width:min(760px,94vw)">' +
+                '<div class="fh" id="wl-titel">Wissenslücken <em>' + b.gezaehlt + '</em></div>' +
+                '<div class="wl-kopf">' + esc(b.satz) +
+                (zaehlung ? '<div class="wl-zaehlung">' + zaehlung + '</div>' : '') +
+                '</div>' +
+                '<div class="res wl-liste" id="wl-res"></div>' +
+                '<div class="hint">Alles hier kommt aus deinem eigenen Bestand — ' +
+                'keine KI, kein Netz. Die Zahl rechts sagt, wie sicher der Fund ist.</div>' +
+                '</div>';
+        document.body.appendChild(o);
+        const res = o.querySelector('#wl-res');
+        if (res) {
+            if (!b.funde.length) {
+                res.innerHTML = '<div class="wl-leer">Nichts gefunden. ' +
+                    'Der Bestand hängt zusammen — oder es ist noch zu wenig darin.</div>';
+            }
+            else {
+                const stark = b.funde.filter((f) => f.staerke >= KnowledgeGaps.VORGABE.schwelle);
+                const schwach = b.funde.filter((f) => f.staerke < KnowledgeGaps.VORGABE.schwelle);
+                res.innerHTML =
+                    (stark.length ? '<ul class="wl-ul">' +
+                        stark.map((f, i) => fundHtml(f, i)).join('') + '</ul>' : '') +
+                        (schwach.length
+                            ? '<details class="wl-schwach"><summary>' + schwach.length +
+                                ' schwächere Beobachtung' + (schwach.length === 1 ? '' : 'en') +
+                                ' — zu unsicher zum Zählen</summary><ul class="wl-ul">' +
+                                schwach.map((f, i) => fundHtml(f, stark.length + i)).join('') +
+                                '</ul></details>'
+                            : '');
+            }
+        }
+        /* Escape schliesst (§38). Das ist hier ausdrücklich hingeschrieben, weil
+           Redion KEINEN gemeinsamen Escape-Griff für `.overlay` hat — der Graph
+           und das Schlagwortregister schliessen deshalb bis heute nicht auf
+           Escape. Das ist eine eigene Lücke (L105) und keine Ausrede, ein neues
+           Fenster ohne den Griff zu bauen. */
+        const aufEscape = (e) => {
+            if (e.key !== 'Escape')
+                return;
+            e.preventDefault();
+            o.remove();
+        };
+        document.addEventListener('keydown', aufEscape);
+        const wegRaeumen = new MutationObserver(() => {
+            if (!document.body.contains(o)) {
+                document.removeEventListener('keydown', aufEscape);
+                wegRaeumen.disconnect();
+            }
+        });
+        wegRaeumen.observe(document.body, { childList: true });
+        o.addEventListener('click', e => {
+            const ziel = e.target;
+            const anlegen = ziel?.closest('[data-anlegen]');
+            if (anlegen) {
+                const name = anlegen.dataset.anlegen || '';
+                o.remove();
+                Links.oeffneOderAnlegen(name);
+                return;
+            }
+            const auf = ziel?.closest('[data-open]');
+            if (auf) {
+                o.remove();
+                App.oeffne(auf.dataset.open);
+                return;
+            }
+            if (e.target === o)
+                o.remove();
+        });
+    };
+    return { zeigen, befund, sammeln, seitentext, ARTEN, FRAGE_IST_INHALT };
+})();
+window.Wissensluecken = Wissensluecken;
 
 </script>
 <script>
@@ -77824,6 +80317,156 @@ window.Clipper = Clipper;
 
 </script>
 <script>
+/* ===== quell/bereiche/ki/buch.js ===== */
+"use strict";
+/* ============================================================================
+ * bereiche/ki/buch.ts — das Kassenbuch der KI
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/bereiche/ki/buch.ts`. `npm run bauen:ts` schreibt daraus
+ * `quell/bereiche/ki/buch.js`.
+ * ----------------------------------------------------------------------------
+ * `core/ai/kosten.ts` RECHNET. Diese Datei WEISS — sie liest die Grenzen aus
+ * den Einstellungen, führt das Buch in `meta` und sagt Ja oder Nein.
+ *
+ * ─── WAS SIE ABSICHTLICH NICHT TUT ──────────────────────────────────────────
+ *
+ * Sie fasst LOKALE Modelle nicht an. Ollama und WebLLM kosten nichts, und
+ * eine Kostenprüfung davor wäre Reibung ohne Gegenwert — der häufigste Weg,
+ * eine Sicherung unbeliebt zu machen, ist, sie dort einzubauen, wo sie
+ * nichts schützt.
+ *
+ * Sie hält auch nichts auf, was der Mensch gerade ausdrücklich angestossen
+ * hat und dessen Kosten er gesehen hat. Die Grenze ist eine Bremse gegen
+ * Unfälle — vor allem gegen Agenten in Schleifen —, kein Vormund.
+ *
+ * ─── DIE GRENZEN GEHÖREN DEM MENSCHEN ───────────────────────────────────────
+ *
+ * Alle vier sind abschaltbar (0 = keine Grenze), und die Vorgaben sind
+ * bewusst niedrig genug, dass ein Unfall auffällt, und hoch genug, dass
+ * gewöhnliche Arbeit nicht anschlägt. Wer sie ändern will, findet sie unter
+ * Einstellungen → KI.
+ * ==========================================================================*/
+const KiBuch = (() => {
+    /* Die Meta-Schlüssel. Sie stehen hier oben zusammen, damit man sie
+       findet — verstreute `getMeta('irgendwas')` sind die Sorte Wissen, die
+       nur im Kopf des Autors existiert. */
+    const SCHL_GRENZEN = 'ki:grenzen';
+    const SCHL_BUCH = 'ki:buch';
+    /** Wie lange Buchungen aufgehoben werden. Länger als der Monatsstand. */
+    const BEHALTEN_TAGE = 70;
+    const tagVon = (d) => d.toISOString().slice(0, 10);
+    const monatVon = (d) => d.toISOString().slice(0, 7);
+    const heute = () => tagVon(new Date());
+    const monat = () => monatVon(new Date());
+    /** Die Grenzen, wie sie gerade gelten. */
+    const grenzen = () => {
+        const g = Store.getMeta(SCHL_GRENZEN, null);
+        if (!g || typeof g !== 'object')
+            return { ...KiKosten.VORGABE_GRENZEN };
+        /* Feld für Feld, nicht `Object.assign`: ein fremder Schlüssel in `meta`
+           soll keine neue Grenze erfinden. */
+        const v = KiKosten.VORGABE_GRENZEN;
+        const zahl = (w, vorgabe) => (typeof w === 'number' && Number.isFinite(w) && w >= 0) ? w : vorgabe;
+        return {
+            jeAufruf: zahl(g.jeAufruf, v.jeAufruf),
+            jeLauf: zahl(g.jeLauf, v.jeLauf),
+            jeTag: zahl(g.jeTag, v.jeTag),
+            jeMonat: zahl(g.jeMonat, v.jeMonat)
+        };
+    };
+    const grenzenSetzen = (neu) => {
+        const g = grenzen();
+        const zahl = (w, alt) => (typeof w === 'number' && Number.isFinite(w) && w >= 0) ? w : alt;
+        const gesetzt = {
+            jeAufruf: zahl(neu?.jeAufruf, g.jeAufruf),
+            jeLauf: zahl(neu?.jeLauf, g.jeLauf),
+            jeTag: zahl(neu?.jeTag, g.jeTag),
+            jeMonat: zahl(neu?.jeMonat, g.jeMonat)
+        };
+        Store.setMeta(SCHL_GRENZEN, gesetzt);
+        return gesetzt;
+    };
+    const buchungen = () => {
+        const b = Store.getMeta(SCHL_BUCH, []);
+        return Array.isArray(b) ? b : [];
+    };
+    /** Was in diesem Agentenlauf schon ausgegeben wurde — nur im Speicher. */
+    let laufStand = 0;
+    const laufBeginnen = () => { laufStand = 0; };
+    const laufAusgabe = () => laufStand;
+    /** Der Stand: heute, diesen Monat, in diesem Lauf. */
+    const stand = () => KiKosten.standAus(buchungen(), heute(), monat(), laufStand);
+    /**
+     * Darf dieser Aufruf laufen?
+     *
+     * @param modell      wie der Anbieter ihn schreibt
+     * @param nachrichten die Nachrichtenliste — daraus wird geschätzt
+     * @param opt.aus     erwartete Ausgabe-Token. Ohne Angabe 2000 — das ist
+     *                    Redions Deckelung bei Anthropic und eine
+     *                    vernünftige Annahme dort, wo es keine gibt.
+     * @param opt.lokal   true = Ollama/WebLLM, kostet nichts, wird durchgelassen
+     */
+    const pruefen = (modell, nachrichten, opt = {}) => {
+        if (opt.lokal) {
+            return { erlaubt: true, grenze: '', satz: '',
+                schaetzung: { bekannt: true, frei: true, betrag: 0, hoechstens: 0,
+                    modell, tokenEin: 0, tokenAus: 0,
+                    waehrung: KiKosten.WAEHRUNG, satz: '' } };
+        }
+        const ein = KiKosten.tokenAusNachrichten(nachrichten);
+        const aus = typeof opt.aus === 'number' ? opt.aus : 2000;
+        const s = KiKosten.schaetzen(modell, ein, aus);
+        return KiKosten.pruefen(s, grenzen(), stand());
+    };
+    /**
+     * Eine Ausgabe verbuchen.
+     *
+     * @param gezaehlt true = die Tokenzahl kam vom Anbieter. Das ist der
+     *                 Unterschied zwischen „so viel war es" und „so viel war
+     *                 es vermutlich", und er gehört ins Buch, damit man ihn
+     *                 später noch weiss.
+     */
+    const buchen = (modell, anbieter, tokenEin, tokenAus, gezaehlt = false) => {
+        const s = KiKosten.schaetzen(modell, tokenEin, tokenAus);
+        const betrag = s.bekannt ? s.betrag : 0;
+        laufStand += betrag;
+        const eintrag = {
+            tag: heute(), modell, anbieter,
+            tokenEin, tokenAus, betrag, gezaehlt
+        };
+        const alt = new Date(Date.now() - BEHALTEN_TAGE * 86400000);
+        const liste = KiKosten.kuerzen(buchungen().concat([eintrag]), tagVon(alt));
+        Store.setMeta(SCHL_BUCH, liste);
+        return eintrag;
+    };
+    /**
+     * Was ein Stapel Aufrufe zusammen kosten dürfte.
+     *
+     * Für `embeddingsBauen` und alles, was in einer Schleife ruft: die
+     * einzelne Anfrage ist harmlos, zweitausend davon sind es nicht. Wer
+     * einen Stapel anstösst, soll die SUMME sehen und nicht den Einzelpreis.
+     */
+    const stapelSchaetzen = (modell, texte, jeAus = 0) => {
+        let ein = 0;
+        for (const t of texte || [])
+            ein += KiKosten.tokenSchaetzen(t);
+        return KiKosten.schaetzen(modell, ein, jeAus * (texte || []).length);
+    };
+    /** Für die Anzeige: was je Anbieter diesen Monat zusammenkam. */
+    const monatJeAnbieter = () => KiKosten.jeAnbieter(buchungen(), monat());
+    /** Alles vergessen — für den Menschen, der das Buch nicht führen will. */
+    const leeren = () => { Store.setMeta(SCHL_BUCH, []); laufStand = 0; };
+    return {
+        grenzen, grenzenSetzen, stand, pruefen, buchen, stapelSchaetzen,
+        monatJeAnbieter, buchungen, leeren, laufBeginnen, laufAusgabe,
+        SCHL_GRENZEN, SCHL_BUCH, BEHALTEN_TAGE
+    };
+})();
+window.KiBuch = KiBuch;
+
+</script>
+<script>
 /* ===== quell/bereiche/ki/kontext.js ===== */
 "use strict";
 /* ============================================================================
@@ -78417,6 +81060,50 @@ const Kontext = (() => {
             gemerkt[e.id].stand !== String(e.geaendert));
         if (!offen.length)
             return { neu: 0, gesamt: Object.keys(gemerkt).length };
+        /* --- EIN KLICK, ZWEITAUSEND AUFRUFE (E287) --------------------------
+           Das hier war die konkreteste Kostengefahr in ganz Redion: jede Seite
+           geht einzeln an eine kostenpflichtige API, ohne dass vorher eine
+           Zahl fällt, ohne Obergrenze, ohne Abbruch.
+    
+           Geschätzt wird der GANZE Stapel, nicht der einzelne Aufruf. Die
+           einzelne Anfrage ist harmlos; zweitausend davon sind es nicht, und
+           genau diesen Unterschied sieht eine Prüfung je Aufruf nicht.
+    
+           Gefragt wird EINMAL, vorher. Eine Rückfrage je Seite wäre
+           zweitausend Rückfragen — also keine. */
+        const modellName = Store.getMeta('ki:embeddingModell', '') ||
+            (Store.getMeta('ki:embedding', '') === 'gemini'
+                ? 'text-embedding-004' : 'text-embedding-3-small');
+        if (typeof KiBuch !== 'undefined') {
+            const texte = offen.map((e) => e.titel + '\n' + e.text.slice(0, 3000));
+            const s = KiBuch.stapelSchaetzen(modellName, texte);
+            if (s.bekannt && !s.frei && s.betrag > 0 && typeof Dialog !== 'undefined') {
+                /* `Dialog.wahl` und nicht `confirm`: beide Antworten sind
+                   vertretbar, und jede bekommt einen Hinweis darunter, damit
+                   niemand raten muss, was „Abbrechen" hier bedeutet. */
+                const antwort = await Dialog.wahl({
+                    titel: 'Vektoren für ' + offen.length + ' Seite(n) bauen?',
+                    text: 'Jede Seite geht einzeln an ' + modellName + '.\n\n' + s.satz +
+                        '\n\nDie Preisliste ist vom ' + KiKosten.STAND + '.',
+                    knoepfe: [
+                        { id: 'nein', text: 'Abbrechen',
+                            hinweis: 'Es wird nichts gesendet und nichts berechnet.' },
+                        { id: 'ja', text: 'Bauen',
+                            hinweis: 'Die semantische Suche wird danach besser.' }
+                    ]
+                });
+                if (antwort !== 'ja') {
+                    return { neu: 0, gesamt: Object.keys(gemerkt).length, abgebrochen: true };
+                }
+            }
+            /* Und die Grenzen gelten auch hier — nicht nur die Rückfrage. */
+            const urteil = KiKosten.pruefen(s, KiBuch.grenzen(), KiBuch.stand());
+            if (!urteil.erlaubt)
+                throw new Error(urteil.satz);
+            if (s.bekannt && !s.frei) {
+                KiBuch.buchen(modellName, 'embedding', s.tokenEin, 0, false);
+            }
+        }
         let n = 0;
         for (let i = 0; i < offen.length; i += 8) {
             const gruppe = offen.slice(i, i + 8);
@@ -112665,6 +115352,30 @@ const KI = (() => {
             return;
         }
         if (zustand.quelle === 'wolke') {
+            /* --- DIE KOSTENPRÜFUNG SITZT HIER, UND ZWAR NUR HIER (E287) --------
+               `frage` ist das einzige Tor: `frageKurz` geht durch, die
+               Agentenschleife geht durch, der Chat geht durch. Eine Prüfung an
+               drei Stellen wäre dreimal zu pflegen und zweimal zu vergessen.
+      
+               NUR für die Wolke. Ollama und WebLLM kosten nichts; eine Bremse
+               davor wäre Reibung ohne Gegenwert.
+      
+               Und sie prüft VOR dem Aufruf. Danach zu zählen wäre eine
+               Buchhaltung, keine Grenze. */
+            if (typeof KiBuch !== 'undefined') {
+                const urteil = KiBuch.pruefen(zustand.modell, n, { lokal: false });
+                if (!urteil.erlaubt)
+                    throw new Error(urteil.satz);
+                /* Verbucht wird mit der SCHÄTZUNG, weil Redion die echte
+                   Tokenzahl heute nicht ausliest — der Streaming-Leser wirft
+                   alles weg, was kein `delta.content` ist. Das Buch merkt sich
+                   deshalb `gezaehlt: false`, damit später niemand die Zahlen für
+                   gemessen hält (L104). */
+                const s = urteil.schaetzung;
+                if (s && s.bekannt && !s.frei) {
+                    KiBuch.buchen(zustand.modell, zustand.anbieter || '', s.tokenEin, s.tokenAus, false);
+                }
+            }
             for await (const t of wolkeFragen(n, zustand.modell, optionen?.signal))
                 beiText(t);
             return;
@@ -121677,6 +124388,13 @@ const App = (() => {
            die Seitenleiste sichtbar — kein Absturz. */
         if (typeof Kontextkante !== 'undefined')
             Kontextkante.binde();
+        /* DIE AUFTRAGSMASCHINE (E286). Nach der Ablage, weil sie sie braucht,
+           und nach den Bereichen, weil die ihre Läufer anmelden. Ohne einen
+           einzigen angemeldeten Läufer tut ihr Takt gar nichts — sie liest
+           dann nicht einmal das Fach. */
+        if (typeof Auftraege !== 'undefined') {
+            void Auftraege.start();
+        }
         /* ----------------------------------------------------------------------
          * FEHLER SICHTBAR MACHEN — aber nur, wenn die Meldung etwas wert ist
          * ----------------------------------------------------------------------

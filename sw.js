@@ -34,7 +34,7 @@ const ich = self;
 /** Der Name der Ablage. Muss `KONSTANTEN.ABLAGE_NAME` gleichen — siehe
  *  die Erklärung bei `faelligeErinnerungen`. `test143` rechnet es nach. */
 const ABLAGE_NAME = 'notizen';
-const VERSION = 'notizen-v49';
+const VERSION = 'notizen-v54';
 const ABLAGE = VERSION;
 /* Was beim ersten Besuch gleich mitgenommen wird. */
 const GRUNDSTOCK = [
@@ -61,6 +61,13 @@ const GRUNDSTOCK = [
     './quell/core/spreadsheet/address.js',
     './quell/core/spreadsheet/engine.js',
     './quell/core/spreadsheet/csv.js',
+    './quell/core/ai/kosten.js',
+    './quell/core/jobs/modell.js',
+    './quell/kern/auftraege/maschine.js',
+    './quell/core/knowledge/rank.js',
+    './quell/core/knowledge/gaps.js',
+    './quell/core/import/sicherheit.js',
+    './quell/core/import/validierung.js',
     './quell/core/import/spaltentyp.js',
     './quell/kern/sicherheit/pruefen.js',
     './quell/kern/ablage/formen.js',
@@ -96,6 +103,7 @@ const GRUNDSTOCK = [
     './quell/kern/suche/query.js',
     './quell/bereiche/datenbanken/formeln/laufzeit.js',
     './quell/bereiche/wissen/verweise.js',
+    './quell/bereiche/wissen/luecken.js',
     './quell/bereiche/bloecke/arten/zeichenflaeche.js',
     './quell/fremd/pdfjs/daten.js',
     './quell/fremd/pdfjs/laden.js',
@@ -140,6 +148,7 @@ const GRUNDSTOCK = [
     './quell/bereiche/datenbanken/spiegel/dienst.js',
     './quell/bereiche/verbinden/mail.js',
     './quell/bereiche/verbinden/clipper.js',
+    './quell/bereiche/ki/buch.js',
     './quell/bereiche/ki/kontext.js',
     './quell/bereiche/ki/agenten.js',
     './quell/bereiche/verbinden/besprechung.js',

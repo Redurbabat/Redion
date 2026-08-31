@@ -59,7 +59,17 @@ const Umzuege = (() => {
             warum: 'Vorbereitete Suchwörter je Seite und Datenbankzeile. Auch dieses ' +
                 'Fach ist nur ein Cache: Redions Blöcke und Sammlungen bleiben die ' +
                 'Wahrheit. Fehlt der Index oder ist er beschädigt, wird er aus ihnen ' +
-                'neu aufgebaut.' }
+                'neu aufgebaut.' },
+        { nr: 7, was: 'Aufträge für lange Hintergrundarbeit',
+            faecher: ['auftraege'],
+            warum: 'Ein OCR-Lauf über achtzig Seiten, ein grosser Import, eine ' +
+                'Sicherung: Arbeiten, die länger dauern als ein Tab offen bleibt. ' +
+                'Der Auftrag wird VOR der Arbeit geschrieben und trägt seinen ' +
+                'eigenen Fortschritt — nach einem Neustart weiss die App, was ' +
+                'offenstand, und setzt beim letzten fertigen Schritt an. ' +
+                'Dieses Fach reist NICHT in der Sicherung mit: ein halb ' +
+                'erledigter Auftrag auf einem anderen Gerät hätte seine ' +
+                'Eingaben nicht (E286).' }
     ];
     /* Die letzte Fassung — und die Liste ist nie leer, sonst gäbe es keine
        Ablage. `?.nr ?? 0` schreibt genau das hin, statt es anzunehmen. */
