@@ -3273,22 +3273,13 @@ const App = (() => {
                            Produktwelten.lernen('heute'); handyLeiste(); });
     an('hl-lernen', () => { PWA.schubladeZu && PWA.schubladeZu();
                             Produktwelten.lernen('lernen'); handyLeiste(); });
-    /* „Seiten" statt „Chats" (E38): Redion ist keine Chat-App. Die KI bleibt
-       unten in der Leiste erreichbar und im R-Blatt, aber der Platz oben
-       gehört dem, was man täglich sucht — den eigenen Seiten.
-
-       DIESER KNOPF STEHT HEUTE IN KEINEM MARKUP (gemessen: die Leiste oben
-       führt `hl-dok`, `hl-start`, `hl-lernen`, `hl-bespr`, `hl-mehr`).
-       `an()` auf eine fehlende Kennung tut nichts, die Zeile kostet also
-       nichts — und sie ist die einzige Stelle, an der steht, was der Knopf
-       TÄTE. E272 Phase J hätte sie ausgeräumt; sie bleibt stehen, bis
-       Redur sagt, dass der Weg wirklich weg soll (§47 gilt auch für
-       Absichten). */
-    an('hl-seiten', () => { PWA.schubladeZu && PWA.schubladeZu();
-                            /* Erst den Reiter setzen, dann zeichnen: `handyLeiste`
-                               liest ihn, und ohne ihn bliebe die Pille auf „Start"
-                               stehen, während daneben schon die Seiten stünden. */
-                            Produktwelten.workspace('start'); handyLeiste(); });
+    /* HIER STAND `an('hl-seiten', …)` — bis E280 (L86).
+       Der Knopf war seit E236 in keinem Markup mehr; die Zeile blieb als
+       Erklärung stehen, „bis Redur sagt, dass der Weg wirklich weg soll".
+       Er hat es in E277 gesagt.
+       Der Weg selbst bleibt: `Produktwelten.workspace('start')` steht in
+       `register/navigation.ts` (Knopf `btn-workspace`), in der
+       Befehlspalette und in der Mehr-Kante. */
     /* AM TELEFON AUF DIE BÜHNE, am Rechner in die Seitenleiste. Vorher zog
        dieser Reiter auch am Telefon die Schublade auf — also die
        Seitenleiste des Rechners auf 390 px geschoben, samt Baum und
@@ -3317,12 +3308,10 @@ const App = (() => {
      * Am Rechner bleibt es bei der Schublade — dort ist die Seitenleiste
      * richtig, und ein Blatt von unten wäre dort der Fremdkörper.
      * -------------------------------------------------------------------- */
-    /* Der R-Kreis stand links oben in der Reiterleiste. Seit E236 steht
-       er rechts in der Menüleiste (`mb-konto`) und im Mehr-Blatt — die
-       ENTSCHEIDUNG, was er tut, steht aber weiter nur hier. Genau deshalb
-       bleibt die Zeile, obwohl `hl-konto` in keinem Markup mehr steht:
-       sie kostet nichts und ist die Erklärung (E272 Phase J). */
-    an('hl-konto', () => arbeitsbereich());
+    /* UND HIER STAND `an('hl-konto', …)` — ebenfalls bis E280 (L86).
+       Der R-Kreis steht seit E236 rechts in der Menüleiste; sein Klick
+       hängt an `mb-konto` in `menueband.ts` und ruft dort `App.arbeitsbereich()`.
+       Die Zeile hier band an nichts. */
     /* „Mehr" statt „Eingang" (E42 §6): Werkzeuge, Hilfe, Sicherung, Import,
        Papierkorb und Einstellungen brauchen einen Platz oben — ein
        Posteingang, der meistens leer ist, nicht. Er wohnt jetzt als Zeile

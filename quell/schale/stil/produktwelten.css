@@ -74,13 +74,19 @@ body[data-produktwelt="workspace"]:not(:has(#sidebar .side-item[aria-current="pa
 .produkt-welt button{touch-action:manipulation}
 
 @media(max-width:760px){
-  .weltwechsel{display:none}
-  #handy-oben #hl-konto{order:0}
+  /* DIE REIHENFOLGE DER FÜNF WEGE UNTEN (E280 / L86).
+     Hier standen sechs Zeilen für sechs Knöpfe — zwei davon (`hl-konto`,
+     `hl-seiten`) gibt es seit E236 nicht mehr, und `.weltwechsel` seit
+     E206 nicht. Sie sind weg.
+     `hl-dok` stand nie hier und war trotzdem richtig — aber nur aus
+     Versehen: `order` ist ohne Angabe 0, und 0 kommt vor 1. Wer die Liste
+     später umsortiert, hätte einen Knopf, der sich nicht mitbewegt, weil
+     er gar nicht mitgezählt wird. Jetzt steht er mit drin. */
+  #handy-oben #hl-dok{order:0}
   #handy-oben #hl-start{order:1}
   #handy-oben #hl-lernen{order:2}
-  #handy-oben #hl-seiten{order:3}
-  #handy-oben #hl-bespr{order:4}
-  #handy-oben #hl-mehr{order:5}
+  #handy-oben #hl-bespr{order:3}
+  #handy-oben #hl-mehr{order:4}
   #page.produkt-welt,
   .produkt-welt{padding:10px 12px calc(112px + env(safe-area-inset-bottom))}
   .produkt-bereiche-dialog{width:100vw;max-height:82dvh;margin-top:auto;border-radius:18px 18px 0 0}
@@ -89,7 +95,6 @@ body[data-produktwelt="workspace"]:not(:has(#sidebar .side-item[aria-current="pa
 }
 
 @media(min-width:761px) and (max-width:1000px){
-  .weltwechsel button b{font-size:10.5px}
   #page.produkt-welt,
   .produkt-welt{padding-inline:18px}
 }

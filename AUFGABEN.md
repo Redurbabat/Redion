@@ -1963,3 +1963,15 @@ node pruefungen/lauf/test105.mjs
   und auf der Kontoseite. test273 neu (34, jeder Abschnitt mit Gegenprobe),
   test261 §11 umgeschrieben (21). L100 offen: beim Dazulegen bleiben die
   Marken stehen. sw v49.
+* E280 (E277 Teil 3 — L86): Drei Verdrahtungen, die an nichts hingen
+  (`hl-seiten`, `hl-konto` in schale.ts, `weltwechsel` in produktwelten.ts),
+  plus die CSS-Leiche `#handy-unten` — rund vierzig Zeilen für eine Leiste,
+  die mit E236 wegfiel. Keine Handlung geht verloren; jeder Ersatzweg
+  nachgemessen. Neu `test274`: der Wächter liest ZWEI Sammelstellen, weil
+  `hl-seiten` nur über `an()` und `weltwechsel` nur über `element()` läuft.
+  Er muss Kommentare streichen, sonst meldet er aufgeräumte Wege als tot —
+  passiert beim Schreiben zweimal, einmal davon in meiner eigenen Prüfung.
+  Nebenfund: `#hl-dok` hatte keine `order`-Regel und stand nur zufällig
+  richtig. Und eine Berichtigung: die Suiten melden teils mit ❌, teils mit
+  ✗ — `alle.mts` liest beide, ich hatte nur eins gegrept und Redur deshalb
+  eine falsche Zuordnung gemeldet. Keine Code-Lücke, ein Lesefehler.

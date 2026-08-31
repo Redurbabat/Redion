@@ -4587,13 +4587,19 @@ body[data-produktwelt="workspace"]:not(:has(#sidebar .side-item[aria-current="pa
 .produkt-welt button{touch-action:manipulation}
 
 @media(max-width:760px){
-  .weltwechsel{display:none}
-  #handy-oben #hl-konto{order:0}
+  /* DIE REIHENFOLGE DER FÜNF WEGE UNTEN (E280 / L86).
+     Hier standen sechs Zeilen für sechs Knöpfe — zwei davon (`hl-konto`,
+     `hl-seiten`) gibt es seit E236 nicht mehr, und `.weltwechsel` seit
+     E206 nicht. Sie sind weg.
+     `hl-dok` stand nie hier und war trotzdem richtig — aber nur aus
+     Versehen: `order` ist ohne Angabe 0, und 0 kommt vor 1. Wer die Liste
+     später umsortiert, hätte einen Knopf, der sich nicht mitbewegt, weil
+     er gar nicht mitgezählt wird. Jetzt steht er mit drin. */
+  #handy-oben #hl-dok{order:0}
   #handy-oben #hl-start{order:1}
   #handy-oben #hl-lernen{order:2}
-  #handy-oben #hl-seiten{order:3}
-  #handy-oben #hl-bespr{order:4}
-  #handy-oben #hl-mehr{order:5}
+  #handy-oben #hl-bespr{order:3}
+  #handy-oben #hl-mehr{order:4}
   #page.produkt-welt,
   .produkt-welt{padding:10px 12px calc(112px + env(safe-area-inset-bottom))}
   .produkt-bereiche-dialog{width:100vw;max-height:82dvh;margin-top:auto;border-radius:18px 18px 0 0}
@@ -4602,7 +4608,6 @@ body[data-produktwelt="workspace"]:not(:has(#sidebar .side-item[aria-current="pa
 }
 
 @media(min-width:761px) and (max-width:1000px){
-  .weltwechsel button b{font-size:10.5px}
   #page.produkt-welt,
   .produkt-welt{padding-inline:18px}
 }
@@ -8591,7 +8596,9 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
  * die KI fragen, etwas Neues schreiben. Sie schweben über dem Inhalt statt
  * in einer Leiste zu sitzen — der Bildschirm bleibt dadurch ganz.
  * ========================================================================== */
-#handy-oben, #handy-unten{ display:none }
+/* `#handy-unten` stand hier mit drin — die schwebende Leiste fiel mit
+   E236 weg, ihr Stil blieb bis E280 (L86). */
+#handy-oben{ display:none }
 
 @media(max-width:760px){
 
@@ -8878,51 +8885,14 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
   }
   #handy-oben button.an .hl-punkt{ border-color:var(--bg-hover) }
 
-  /* --- UNTEN: suchen · KI fragen · schreiben --------------------------- */
-  /* UNTEN: Suche, KI fragen, Neu — die drei Griffe, die immer da sind.
-     56 px hohe Tasten und 28 px Rand nach der Telefon-Vorgabe (E37). */
-  #handy-unten{
-    display:flex; align-items:center; gap:12px;
-    position:fixed; left:0; right:0; bottom:0; z-index:400;
-    padding:12px 28px calc(12px + env(safe-area-inset-bottom));
-    background:linear-gradient(to top, var(--bg) 58%, transparent);
-    pointer-events:none;
-  }
-  #handy-unten > *{ pointer-events:auto }
-
-  @media(max-width:380px){ #handy-unten{ padding-left:22px; padding-right:22px } }
-
-  #handy-unten button{
-    height:56px;
-    border-radius:999px;
-    border:1px solid var(--line);
-    background:var(--bg-side);
-    color:var(--text-dim);
-    display:flex; align-items:center; justify-content:center;
-    font-size:19px;
-    backdrop-filter:saturate(140%) blur(12px);
-  }
-  #handy-unten button:active{ background:var(--bg-hover) }
-  #handy-unten #hu-suche, #handy-unten #hu-neu{ width:56px; flex:0 0 56px }
-
-  /* Die Mitte ist die breiteste und die einzige mit Text — nach ihr greift
-     man am häufigsten. */
-  #handy-unten #hu-ki{
-    flex:1 1 auto; min-width:0;
-    justify-content:flex-start; gap:10px;
-    padding:0 14px 0 6px;
-  }
-  #handy-unten .hu-av{
-    width:38px; height:38px; border-radius:50%; flex:none;
-    background:var(--bg-hover);
-    display:flex; align-items:center; justify-content:center; font-size:17px;
-  }
-  #handy-unten #hu-ki b{
-    flex:1; text-align:left; font-size:16px; font-weight:400;
-    color:var(--text-faint);
-    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-  }
-  #handy-unten .hu-mik{ font-style:normal; font-size:17px; flex:none }
+  /* --- HIER STAND DIE SCHWEBENDE LEISTE — bis E280 (L86) --------------- */
+  /* `#handy-unten` mit `hu-suche`, `hu-ki` und `hu-neu`: drei Griffe, die
+     über dem Inhalt schwebten. Sie sind mit E236 weggefallen — zwei
+     Leisten am unteren Rand wären eine zu viel gewesen —, und `schale.ts`
+     hat damals auch ihre Bindungen ausgeräumt. Nur der Stil blieb: rund
+     vierzig Zeilen für ein Element, das in keinem Markup mehr steht.
+     Die drei Wege sind nicht weg: Suche und KI stehen rechts in der
+     Menüleiste (`mb-suche`, `mb-ki`), „Neu" im Regal und im Mehr-Blatt. */
 
   /* --- Platz für beide ------------------------------------------------- */
   /* Oben die Pillenleiste, unten die drei Knöpfe: der Inhalt dazwischen
@@ -9335,16 +9305,18 @@ table.pivot tbody tr:hover td{ background:var(--bg-hover); }
     margin-left:auto; position:sticky; right:0;
     background:var(--bg-side); box-shadow:-6px 0 6px var(--bg-side);
   }
-  /* Solange die Formatleiste da ist, tritt die Reiterleiste zurück.
-     Hier stand `#handy-leiste` — ein Element, das es nicht mehr gibt
-     (siehe den Kommentar bei der Schubladen-Höhe weiter unten). Die
-     echte untere Leiste heisst `#handy-unten`, und weil die Regel ins
-     Leere zielte, ragten ihre Knopfkreise hinter der Formatleiste
-     hervor. */
   /* Beim Schreiben tritt die Leiste am unteren Rand zurück — sonst läge
-     sie zwischen Text und Tastatur. Sie heisst seit E236 `#handy-oben`
-     (der Name stammt aus der Zeit, als sie oben stand); die alte
-     schwebende `#handy-unten` gibt es nicht mehr. */
+     sie zwischen Text und Tastatur. Sie heisst `#handy-oben`; der Name
+     stammt aus der Zeit, als sie wirklich oben stand.
+
+     Hier standen zwei Kommentare übereinander, und der erste war
+     überholt: er nannte `#handy-unten` die „echte untere Leiste". Die
+     gibt es seit E236 nicht mehr, und seit E280 auch ihren Stil nicht.
+     Davor stand hier `#handy-leiste` — ein Name, den es schon länger
+     nicht gab; die Regel zielte ins Leere, und die Knopfkreise ragten
+     hinter der Formatleiste hervor. Zweimal derselbe Fehler an
+     derselben Zeile: ein Kommentar, der einen Namen nennt, den es nicht
+     mehr gibt. */
   body.schreibt #handy-oben{ display:none; }
 
   /* Ziehen mit dem Finger (E83): langes Drücken hebt den Block — er wird
@@ -10695,7 +10667,6 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   .home-karten .hk,
   .home-liste button,
   #handy-oben button,
-  #handy-unten > *,
   #r-blatt .rm-gruppe button,
   .kp-wolke span{
     transition: transform var(--motion-fast) var(--ease-standard),
@@ -10707,7 +10678,6 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
     background: var(--bg-hover);
   }
   #handy-oben button:active,
-  #handy-unten > *:active,
   #r-blatt .rm-gruppe button:active{
     transform: scale(var(--press-scale));
   }
@@ -111818,16 +111788,15 @@ const Produktwelten = (() => {
         if (gestartet)
             return;
         gestartet = true;
-        /* Der Produktwelt-Schalter ist der einzige Zuhörer hier. Die übrigen
-           Ziele bindet App.start(), damit jeder Knopf genau einen Besitzer hat. */
-        element('weltwechsel')?.addEventListener('click', ereignis => {
-            const ziel = ereignis.target instanceof Element
-                ? ereignis.target.closest('[data-welt]') : null;
-            if (ziel?.dataset.welt === 'workspace')
-                workspace();
-            else if (ziel?.dataset.welt === 'lernen')
-                lernen('heute');
-        });
+        /* HIER STAND DER ZUHÖRER AM `weltwechsel` — bis E280 (L86).
+           Den Umschalter gibt es seit E206 nicht mehr: `index.html` erklärt in
+           einem eigenen Absatz, warum er wegfiel („ein dritter Weg zu zwei
+           Orten, ganz oben, in der auffälligsten Zeile"). Der Zuhörer blieb
+           und hing an nichts — `element('weltwechsel')` gab seither `null`,
+           und `?.` schluckte es still.
+           `Produktwelten.markieren()` läuft weiter über `[data-welt]`; findet
+           es keins, geht `forEach` über eine leere Liste. Das war schon in
+           E206 die ganze Rechnung. */
     };
     return {
         start, aktiv, markieren, wechseln: weltSetzen, zurAktivenWelt,
@@ -121773,25 +121742,13 @@ const App = (() => {
             Produktwelten.lernen('lernen');
             handyLeiste();
         });
-        /* „Seiten" statt „Chats" (E38): Redion ist keine Chat-App. Die KI bleibt
-           unten in der Leiste erreichbar und im R-Blatt, aber der Platz oben
-           gehört dem, was man täglich sucht — den eigenen Seiten.
-    
-           DIESER KNOPF STEHT HEUTE IN KEINEM MARKUP (gemessen: die Leiste oben
-           führt `hl-dok`, `hl-start`, `hl-lernen`, `hl-bespr`, `hl-mehr`).
-           `an()` auf eine fehlende Kennung tut nichts, die Zeile kostet also
-           nichts — und sie ist die einzige Stelle, an der steht, was der Knopf
-           TÄTE. E272 Phase J hätte sie ausgeräumt; sie bleibt stehen, bis
-           Redur sagt, dass der Weg wirklich weg soll (§47 gilt auch für
-           Absichten). */
-        an('hl-seiten', () => {
-            PWA.schubladeZu && PWA.schubladeZu();
-            /* Erst den Reiter setzen, dann zeichnen: `handyLeiste`
-               liest ihn, und ohne ihn bliebe die Pille auf „Start"
-               stehen, während daneben schon die Seiten stünden. */
-            Produktwelten.workspace('start');
-            handyLeiste();
-        });
+        /* HIER STAND `an('hl-seiten', …)` — bis E280 (L86).
+           Der Knopf war seit E236 in keinem Markup mehr; die Zeile blieb als
+           Erklärung stehen, „bis Redur sagt, dass der Weg wirklich weg soll".
+           Er hat es in E277 gesagt.
+           Der Weg selbst bleibt: `Produktwelten.workspace('start')` steht in
+           `register/navigation.ts` (Knopf `btn-workspace`), in der
+           Befehlspalette und in der Mehr-Kante. */
         /* AM TELEFON AUF DIE BÜHNE, am Rechner in die Seitenleiste. Vorher zog
            dieser Reiter auch am Telefon die Schublade auf — also die
            Seitenleiste des Rechners auf 390 px geschoben, samt Baum und
@@ -121823,12 +121780,10 @@ const App = (() => {
          * Am Rechner bleibt es bei der Schublade — dort ist die Seitenleiste
          * richtig, und ein Blatt von unten wäre dort der Fremdkörper.
          * -------------------------------------------------------------------- */
-        /* Der R-Kreis stand links oben in der Reiterleiste. Seit E236 steht
-           er rechts in der Menüleiste (`mb-konto`) und im Mehr-Blatt — die
-           ENTSCHEIDUNG, was er tut, steht aber weiter nur hier. Genau deshalb
-           bleibt die Zeile, obwohl `hl-konto` in keinem Markup mehr steht:
-           sie kostet nichts und ist die Erklärung (E272 Phase J). */
-        an('hl-konto', () => arbeitsbereich());
+        /* UND HIER STAND `an('hl-konto', …)` — ebenfalls bis E280 (L86).
+           Der R-Kreis steht seit E236 rechts in der Menüleiste; sein Klick
+           hängt an `mb-konto` in `menueband.ts` und ruft dort `App.arbeitsbereich()`.
+           Die Zeile hier band an nichts. */
         /* „Mehr" statt „Eingang" (E42 §6): Werkzeuge, Hilfe, Sicherung, Import,
            Papierkorb und Einstellungen brauchen einen Platz oben — ein
            Posteingang, der meistens leer ist, nicht. Er wohnt jetzt als Zeile

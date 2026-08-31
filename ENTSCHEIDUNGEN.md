@@ -20873,3 +20873,93 @@ Beim „Dazulegen" bleiben die Marken stehen — steht als L100 in LUECKEN.md.
 
 **Geprüft:** test273 neu (7 Abschnitte, jeder mit Gegenprobe) · test261 §11
 umgeschrieben, weil es das alte Verhalten als Erwartung festhielt.
+
+================================================================================
+E280 — Drei tote Griffe, eine CSS-Leiche, und ein Wächter dagegen (L86)
+================================================================================
+31. August 2026
+
+Redurs neunter Punkt aus E277: tote Bindings und CSS entfernen (hl-seiten,
+hl-konto, weltwechsel) und einen DOM-ID-Wächter bauen.
+
+### Was tot war, und warum es so lange stehenblieb
+
+`an('x', …)` in der Schale und `document.getElementById('x')` überall sonst
+binden STILL, wenn es `x` nicht gibt. Das ist bequem und genau deshalb
+gefährlich: eine Zeile, die aussieht wie ein Weg, kann monatelang an nichts
+hängen, ohne dass etwas kaputtgeht. Es passiert einfach nichts.
+
+    hl-seiten     seit E236 in keinem Markup   schale.ts
+    hl-konto      seit E236 in keinem Markup   schale.ts
+    weltwechsel   seit E206 in keinem Markup   produktwelten.ts
+
+Alle drei trugen einen Kommentar, der erklärte, warum sie bleiben durften —
+`hl-seiten` sogar wörtlich: „sie bleibt stehen, bis Redur sagt, dass der Weg
+wirklich weg soll". Er hat es gesagt.
+
+Dazu die CSS-Leiche `#handy-unten`: rund vierzig Zeilen für die schwebende
+Leiste, die mit E236 wegfiel. Ihr Stil blieb, samt Übergängen an zwei
+weiteren Stellen. Sie stand in L86 ausdrücklich mit im Auftrag.
+
+**Keine Handlung geht verloren**, nachgemessen statt angenommen:
+`Produktwelten.workspace('start')` steht in `register/navigation.ts`
+(`btn-workspace`), in der Befehlspalette und in der Mehr-Kante;
+`App.arbeitsbereich()` hängt an `mb-konto` in `menueband.ts`; Suche und KI
+stehen rechts in der Menüleiste.
+
+### Ein Nebenfund, den erst das Aufräumen sichtbar machte
+
+`#handy-dok` hatte gar keine `order`-Regel und stand trotzdem richtig — aber
+nur, weil `order` ohne Angabe 0 ist und 0 vor 1 kommt. Alle anderen vier
+Knöpfe waren numeriert. Wer die Leiste später umsortiert, hätte einen Knopf,
+der sich nicht mitbewegt, weil er gar nicht mitgezählt wird. Jetzt stehen
+alle fünf da, durchnumeriert 0 bis 4.
+
+### Der Wächter (test274)
+
+Er liest ZWEI Sammelstellen, und beide braucht es: `an('…')` in `schale.ts`
+findet `hl-seiten` und `hl-konto`, `getElementById('…')`/`element('…')` in
+ganz `src/` findet `weltwechsel`. Ein Lauf mit nur einer der beiden hätte je
+nachdem zwei von drei oder eins von drei gefunden.
+
+**Die Falle, und sie hat beim Schreiben zweimal zugeschlagen.** Ohne
+Kommentar-Streichung fand der erste Durchlauf ein viertes, `btn-suche-mitte`
+— das steht in `schale.ts` nur noch im Kommentar über sein eigenes
+Aufräumen. Ein Wächter, der aufgeräumte Wege als tot meldet, macht sich beim
+ersten Blick unglaubwürdig.
+
+Und dann noch einmal, in meiner eigenen Prüfung: der Punkt „`weltwechsel`
+ist wirklich weg" suchte im ROHEN Quelltext und wurde rot, weil der
+Kommentar über den Abbau den Aufruf zitiert. Derselbe Fehler, zwei
+Abschnitte unter der Warnung davor. Er steht jetzt als Gegenprobe (c) im
+Lauf.
+
+**Eine Ausnahme, mit Grund:** `mb-konto` sieht verwaist aus, ist es nicht —
+`menueband.ts` setzt `b.id = id` aus der `RECHTS`-Tabelle, die Kennung steht
+also nirgends als `id="…"`. Der Lauf prüft ausserdem, dass JEDE Ausnahme
+einen geschriebenen Grund trägt; eine leere Zeile dort wäre keine Ausnahme,
+sondern eine unbeantwortete Frage.
+
+Gemessen am Baum von VOR diesem Umbau: 26 Bindungen und 142
+Nachschlagestellen, davon genau die drei verwaist, die Redur benannt hat.
+Der Wächter kann also nachweislich rot werden — er war es viermal.
+
+### Und eine Berichtigung in eigener Sache
+
+Beim Lesen des vollen Laufs habe ich Redur „234 von 237 grün" gemeldet und
+zwei der drei roten Läufe falsch zugeordnet. Grund: die Suiten melden teils
+mit `❌` (test31–test79, 48 Stück), teils mit `✗` (189 Stück), und ich habe
+nur nach einem der beiden gesucht.
+
+**Der Prüfstand selbst war richtig.** `alle.mts:158` prüft
+`/^\s*(❌|✗)\s/` — beide Zeichen, mit einem eigenen Kommentar darüber, warum
+er die Ausgabe überhaupt liest. Seine Zusammenfassung nannte die drei
+gescheiterten Läufe korrekt beim Namen.
+
+Es gibt hier also KEINE Lücke einzutragen, und eine zu erfinden wäre
+dasselbe wie die falsche L98-Zeile aus E275. Die Lehre ist eine über das
+Arbeiten: die Zusammenfassung des Prüfstands lesen, nicht das Protokoll
+grepen.
+
+**Geprüft:** test274 neu (11 Punkte, vier Gegenproben) · test272 · test114 ·
+test67 · typecheck grün · Einzeldatei neu gebaut.

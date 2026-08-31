@@ -3117,7 +3117,7 @@ gibt. Das ist die Begründung von `zeigen()` im Menüband (§47), und sie gilt f
 Backstage genauso.
 
 --------------------------------------------------------------------------------
-L86 — Drei tote Verdrahtungen in der Schale (E272, Phase A gefunden)
+L86 — Drei tote Verdrahtungen in der Schale (E272, Phase A gefunden) — GESCHLOSSEN
 --------------------------------------------------------------------------------
 
 `schale.ts:3050` bindet Knöpfe mit
@@ -3146,6 +3146,18 @@ Der eigentliche Punkt ist aber allgemeiner und bleibt danach offen: SOLANGE
 `an()` still bindet, entsteht die nächste tote Zeile genauso unbemerkt. Ein
 Prüflauf, der jede in `schale.ts` verdrahtete Kennung gegen `index.html` hält,
 gibt es nicht.
+
+**GESCHLOSSEN am 31. August 2026 durch E280** — beide Hälften. Die drei
+Verdrahtungen und die CSS-Leiche `#handy-unten` sind weg (keine Handlung
+dabei verloren, jede nachgemessen). Und den fehlenden Prüflauf gibt es jetzt:
+`test274` liest ZWEI Sammelstellen — `an('…')` in der Schale und
+`getElementById('…')`/`element('…')` in ganz `src/` —, weil eine allein nur
+zwei der drei gefunden hätte. Gemessen am Baum von vorher: 26 Bindungen, 142
+Nachschlagestellen, genau drei verwaist.
+
+Nebenfund beim Aufräumen: `#hl-dok` hatte gar keine `order`-Regel und stand
+nur zufällig richtig (`order` ist ohne Angabe 0). Jetzt stehen alle fünf
+Knöpfe durchnumeriert da.
 
 --------------------------------------------------------------------------------
 L87 — melde() prüft, meldeLieferant() nicht (E272, Phase A gefunden) — GESCHLOSSEN

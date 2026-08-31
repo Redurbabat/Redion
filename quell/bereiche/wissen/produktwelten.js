@@ -302,16 +302,15 @@ const Produktwelten = (() => {
         if (gestartet)
             return;
         gestartet = true;
-        /* Der Produktwelt-Schalter ist der einzige Zuhörer hier. Die übrigen
-           Ziele bindet App.start(), damit jeder Knopf genau einen Besitzer hat. */
-        element('weltwechsel')?.addEventListener('click', ereignis => {
-            const ziel = ereignis.target instanceof Element
-                ? ereignis.target.closest('[data-welt]') : null;
-            if (ziel?.dataset.welt === 'workspace')
-                workspace();
-            else if (ziel?.dataset.welt === 'lernen')
-                lernen('heute');
-        });
+        /* HIER STAND DER ZUHÖRER AM `weltwechsel` — bis E280 (L86).
+           Den Umschalter gibt es seit E206 nicht mehr: `index.html` erklärt in
+           einem eigenen Absatz, warum er wegfiel („ein dritter Weg zu zwei
+           Orten, ganz oben, in der auffälligsten Zeile"). Der Zuhörer blieb
+           und hing an nichts — `element('weltwechsel')` gab seither `null`,
+           und `?.` schluckte es still.
+           `Produktwelten.markieren()` läuft weiter über `[data-welt]`; findet
+           es keins, geht `forEach` über eine leere Liste. Das war schon in
+           E206 die ganze Rechnung. */
     };
     return {
         start, aktiv, markieren, wechseln: weltSetzen, zurAktivenWelt,
