@@ -18455,6 +18455,48 @@ Register.symbole = (() => {
         arrowR: '<path d="M4 12h15.6"/><path d="m14 5.6 6 6.4-6 6.4"/>',
         bell: '<path d="M18 9a6 6 0 1 0-12 0c0 5.2-2 6.7-2 6.7h16S18 14.2 18 9z"/>' +
             '<path d="M13.7 19.2a2 2 0 0 1-3.4 0"/>',
+        /* --- Elf fuer den Reiter „Einfuegen" (E273) --------------------------
+           Der Blockkatalog fuehrt bei jedem Eintrag ein `icon`, und bei rund
+           zwei Dutzend ist das ein Emoji. Im Band sah man es: „Callout" stand
+           als gelbe Gluehbirne zwischen lauter einfarbigen Zeichen, und „Bild"
+           war ein leeres Kaestchen — die Schrift dieses Systems kennt 🖼 gar
+           nicht. Das ist E202 mit anderen Vorzeichen: nicht nur andersfarbig,
+           sondern stellenweise ueberhaupt nicht da.
+    
+           Die typografischen Zeichen bleiben, wie sie sind: ¶, H₁, ☑, •, 1.,
+           ▸, ❝, — nehmen die Farbe ihrer Zeile an, sitzen auf der Grundlinie
+           und sind besser als jede Zeichnung, die man dafuer erfinden koennte.
+           Ersetzt wird nur, was ein Emoji IST. */
+        image: '<rect x="3.2" y="4.8" width="17.6" height="14.4" rx="2.4"/>' +
+            '<circle cx="8.6" cy="10" r="1.7"/>' +
+            '<path d="m3.6 17.2 4.9-4.4a1.8 1.8 0 0 1 2.4 0l3.5 3.2' +
+            'a1.8 1.8 0 0 0 2.4 0l3.6-3.2"/>',
+        video: '<rect x="2.8" y="5.4" width="12.8" height="13.2" rx="2.4"/>' +
+            '<path d="m15.6 10.4 5.6-3.2v9.6l-5.6-3.2z"/>',
+        audio: '<path d="M4 9.4h3.2L12 5.2v13.6L7.2 14.6H4z"/>' +
+            '<path d="M15.6 9.6a3.6 3.6 0 0 1 0 4.8"/>' +
+            '<path d="M18 7a7 7 0 0 1 0 10"/>',
+        paperclip: '<path d="M19.6 11.4 12 19a4.6 4.6 0 0 1-6.5-6.5l8-8a3 3 0 0 1 4.3 4.3' +
+            'l-8 8a1.5 1.5 0 0 1-2.1-2.1l7.2-7.2"/>',
+        bookmark: '<path d="M6.4 3.8h11.2a1.6 1.6 0 0 1 1.6 1.6v14.8L12 16.4l-7.2 3.8V5.4' +
+            'a1.6 1.6 0 0 1 1.6-1.6z"/>',
+        lightbulb: '<path d="M9.4 18.4h5.2"/><path d="M10 21.2h4"/>' +
+            '<path d="M8.2 14.6a6 6 0 1 1 7.6 0c-.9.7-1.4 1.5-1.5 2.4h-4.6' +
+            'c-.1-.9-.6-1.7-1.5-2.4z"/>',
+        palette: '<path d="M12 3.2a8.8 8.8 0 0 0 0 17.6c1 0 1.8-.8 1.8-1.8 0-.5-.2-.9-.5-1.2' +
+            '-.3-.3-.5-.7-.5-1.2 0-1 .8-1.8 1.8-1.8h2.1a4.9 4.9 0 0 0 4.9-4.9' +
+            'C21.6 6.1 17.3 3.2 12 3.2z"/>' +
+            '<circle cx="7.6" cy="11.4" r="1.1"/><circle cx="10.2" cy="7.4" r="1.1"/>' +
+            '<circle cx="15" cy="7.6" r="1.1"/>',
+        smile: '<circle cx="12" cy="12" r="8.8"/>' +
+            '<path d="M8.4 13.8a4.4 4.4 0 0 0 7.2 0"/>' +
+            '<path d="M9.2 9.4h.01M14.8 9.4h.01"/>',
+        move: '<path d="M12 3.6v16.8M3.6 12h16.8"/>' +
+            '<path d="m9.2 6.4 2.8-2.8 2.8 2.8M9.2 17.6l2.8 2.8 2.8-2.8"/>' +
+            '<path d="m6.4 9.2-2.8 2.8 2.8 2.8M17.6 9.2l2.8 2.8-2.8 2.8"/>',
+        grid: '<rect x="3.4" y="3.4" width="17.2" height="17.2" rx="2.2"/>' +
+            '<path d="M3.4 9.2h17.2M3.4 14.8h17.2M9.2 3.4v17.2M14.8 3.4v17.2"/>',
+        circleDot: '<circle cx="12" cy="12" r="8.8"/><circle cx="12" cy="12" r="3.2"/>',
         /* --- Fuenf fuer die Kontextkante (E272 Phase F) ----------------------
            Ein Knopf ohne Zeichen ist in einer 54 Pixel breiten Spalte ein
            leeres Quadrat — dasselbe, was in Phase B mit `clock` passiert ist
@@ -19109,20 +19151,20 @@ Register.bloecke = (() => {
         { id: 'toggle-h2', name: 'Toggle-Überschrift 2', icon: '▸H₂', gruppe: 'Grundlegend', cmd: ['toggle h2', 'einklappbare ueberschrift 2'], stufe: 2 },
         { id: 'toggle-h3', name: 'Toggle-Überschrift 3', icon: '▸H₃', gruppe: 'Grundlegend', cmd: ['toggle h3', 'einklappbare ueberschrift 3'], stufe: 3 },
         { id: 'quote', name: 'Zitat', icon: '❝', gruppe: 'Grundlegend', cmd: ['quote', 'zitat'], md: '"', ph: 'Zitat' },
-        { id: 'callout', name: 'Callout', icon: '💡', gruppe: 'Grundlegend', cmd: ['callout', 'hinweis'], ph: 'Hinweis' },
+        { id: 'callout', name: 'Callout', icon: '💡', zeichen: 'lightbulb', gruppe: 'Grundlegend', cmd: ['callout', 'hinweis'], ph: 'Hinweis' },
         { id: 'divider', name: 'Trennlinie', icon: '—', gruppe: 'Grundlegend', cmd: ['divider', 'trennlinie', 'hr', 'div'], md: ['---', '***', '___'] },
         /* --- Datenbanken ---------------------------------------------------- */
         { id: 'db-table', name: 'Tabelle', icon: '▦', gruppe: 'Datenbank', cmd: ['tabelle', 'table', 'datenbank'] },
         { id: 'db-board', name: 'Board', icon: '▤', gruppe: 'Datenbank', cmd: ['board', 'kanban'] },
         { id: 'db-list', name: 'Liste', icon: '☰', gruppe: 'Datenbank', cmd: ['listenansicht', 'list'] },
         { id: 'db-gallery', name: 'Galerie', icon: '▩', gruppe: 'Datenbank', cmd: ['galerie', 'gallery'] },
-        { id: 'db-calendar', name: 'Kalender', icon: '📅', gruppe: 'Datenbank', cmd: ['kalender', 'calendar'] },
+        { id: 'db-calendar', name: 'Kalender', icon: '📅', zeichen: 'calendar', gruppe: 'Datenbank', cmd: ['kalender', 'calendar'] },
         /* --- Medien ---------------------------------------------------------- */
-        { id: 'image', name: 'Bild', icon: '🖼', gruppe: 'Medien', cmd: ['bild', 'image', 'foto'] },
-        { id: 'video', name: 'Video', icon: '🎬', gruppe: 'Medien', cmd: ['video'] },
-        { id: 'audio', name: 'Audio', icon: '🔊', gruppe: 'Medien', cmd: ['audio', 'ton'] },
-        { id: 'file', name: 'Datei', icon: '📎', gruppe: 'Medien', cmd: ['datei', 'file', 'anhang', 'pdf'] },
-        { id: 'bookmark', name: 'Lesezeichen', icon: '🔖', gruppe: 'Medien', cmd: ['bookmark', 'lesezeichen', 'link', 'book'] },
+        { id: 'image', name: 'Bild', icon: '🖼', zeichen: 'image', gruppe: 'Medien', cmd: ['bild', 'image', 'foto'] },
+        { id: 'video', name: 'Video', icon: '🎬', zeichen: 'video', gruppe: 'Medien', cmd: ['video'] },
+        { id: 'audio', name: 'Audio', icon: '🔊', zeichen: 'audio', gruppe: 'Medien', cmd: ['audio', 'ton'] },
+        { id: 'file', name: 'Datei', icon: '📎', zeichen: 'paperclip', gruppe: 'Medien', cmd: ['datei', 'file', 'anhang', 'pdf'] },
+        { id: 'bookmark', name: 'Lesezeichen', icon: '🔖', zeichen: 'bookmark', gruppe: 'Medien', cmd: ['bookmark', 'lesezeichen', 'link', 'book'] },
         { id: 'embed', name: 'Einbetten', icon: '⧉', gruppe: 'Medien', cmd: ['embed', 'einbetten', 'iframe'] },
         /* --- Erweitert -------------------------------------------------------- */
         { id: 'code', name: 'Code', icon: '⌨', gruppe: 'Erweitert', cmd: ['code'], kurz: 'Ctrl+Shift+8', md: '```', ph: 'Code' },
@@ -19132,31 +19174,31 @@ Register.bloecke = (() => {
            darueber, die nur Text in Kaestchen haelt. Deshalb steht er bei den
            Datenbanken und nicht bei den Erweiterungen: wer hier landet, sucht
            eine Rechnung. */
-        { id: 'spreadsheet', name: 'Kalkulationstabelle', icon: '🧮', gruppe: 'Datenbank',
+        { id: 'spreadsheet', name: 'Kalkulationstabelle', icon: '🧮', zeichen: 'grid', gruppe: 'Datenbank',
             cmd: ['kalkulation', 'spreadsheet', 'excel', 'rechnen', 'tabelle rechnen', 'summe'] },
         { id: 'toc', name: 'Inhaltsverzeichnis', icon: '≡', gruppe: 'Erweitert', cmd: ['inhaltsverzeichnis', 'toc'] },
         { id: 'breadcrumb', name: 'Pfad', icon: '⌂', gruppe: 'Erweitert', cmd: ['pfad', 'breadcrumb', 'bread'] },
         { id: 'columns', name: 'Zwei Spalten', icon: '⫿', gruppe: 'Erweitert', cmd: ['spalten', 'columns'] },
         { id: 'columns3', name: 'Drei Spalten', icon: '⫼', gruppe: 'Erweitert', cmd: ['dreispalten', 'columns3'] },
-        { id: 'page', name: 'Unterseite', icon: '📄', gruppe: 'Erweitert', cmd: ['seite', 'page', 'unterseite'], kurz: 'Ctrl+Shift+9' },
+        { id: 'page', name: 'Unterseite', icon: '📄', zeichen: 'page', gruppe: 'Erweitert', cmd: ['seite', 'page', 'unterseite'], kurz: 'Ctrl+Shift+9' },
         { id: 'pageref', name: 'Link zu Seite', icon: '↗', gruppe: 'Erweitert', cmd: ['link zu seite', 'verweis', 'klon', 'pageref'] },
         { id: 'synced', name: 'Synchronisierter Block', icon: '⇄', gruppe: 'Erweitert', cmd: ['synced', 'synchron', 'spiegel'] },
         { id: 'linkeddb', name: 'Verknüpfte Ansicht', icon: '⧉', gruppe: 'Datenbank', cmd: ['verknuepfte ansicht', 'linked', 'ansicht einer datenbank'] },
-        { id: 'button', name: 'Knopf', icon: '🔘', gruppe: 'Erweitert', cmd: ['button', 'knopf', 'vorlagenknopf', 'template'] },
+        { id: 'button', name: 'Knopf', icon: '🔘', zeichen: 'circleDot', gruppe: 'Erweitert', cmd: ['button', 'knopf', 'vorlagenknopf', 'template'] },
         { id: 'html', name: 'HTML', icon: '</>', gruppe: 'Erweitert', cmd: ['html'] },
         /* --- Wissen ------------------------------------------------------------ */
-        { id: 'flashcard', name: 'Karteikarte', icon: '🎴', gruppe: 'Wissen', cmd: ['karteikarte', 'flashcard', 'lernen'], ph: 'Frage :: Antwort' },
-        { id: 'blatt', name: 'A4-Blatt', icon: '📄', gruppe: 'Wissen', cmd: ['blatt', 'a4', 'papier', 'schreiben', 'malen'] },
-        { id: 'whiteboard', name: 'Whiteboard', icon: '🖍', gruppe: 'Wissen', cmd: ['whiteboard', 'zeichnen', 'canvas', 'skizze'] },
-        { id: 'schaltplan', name: 'Schaltplan', icon: '⚡', gruppe: 'Wissen', cmd: ['schaltplan', 'elektro', 'stromlauf', 'fachzeichen', 'schema'] },
-        { id: 'chart', name: 'Diagramm', icon: '📊', gruppe: 'Wissen', cmd: ['diagramm', 'chart', 'balken', 'torte'] },
-        { id: 'backlinks', name: 'Rückverweise', icon: '🔙', gruppe: 'Wissen', cmd: ['rueckverweise', 'backlinks'] },
+        { id: 'flashcard', name: 'Karteikarte', icon: '🎴', zeichen: 'cards', gruppe: 'Wissen', cmd: ['karteikarte', 'flashcard', 'lernen'], ph: 'Frage :: Antwort' },
+        { id: 'blatt', name: 'A4-Blatt', icon: '📄', zeichen: 'page', gruppe: 'Wissen', cmd: ['blatt', 'a4', 'papier', 'schreiben', 'malen'] },
+        { id: 'whiteboard', name: 'Whiteboard', icon: '🖍', zeichen: 'pencil', gruppe: 'Wissen', cmd: ['whiteboard', 'zeichnen', 'canvas', 'skizze'] },
+        { id: 'schaltplan', name: 'Schaltplan', icon: '⚡', zeichen: 'bolt', gruppe: 'Wissen', cmd: ['schaltplan', 'elektro', 'stromlauf', 'fachzeichen', 'schema'] },
+        { id: 'chart', name: 'Diagramm', icon: '📊', zeichen: 'chart', gruppe: 'Wissen', cmd: ['diagramm', 'chart', 'balken', 'torte'] },
+        { id: 'backlinks', name: 'Rückverweise', icon: '🔙', zeichen: 'arrowL', gruppe: 'Wissen', cmd: ['rueckverweise', 'backlinks'] },
         /* --- KI --------------------------------------------------------------- */
-        { id: 'ai-write', name: 'KI: Text schreiben', icon: '✨', gruppe: 'KI', cmd: ['ki', 'ai', 'schreiben'] },
-        { id: 'ai-summary', name: 'KI: Zusammenfassen', icon: '✨', gruppe: 'KI', cmd: ['zusammenfassen', 'summary'] },
-        { id: 'ai-todo', name: 'KI: Aufgaben ableiten', icon: '✨', gruppe: 'KI', cmd: ['aufgaben', 'actionitems'] },
-        { id: 'ai-translate', name: 'KI: Übersetzen', icon: '✨', gruppe: 'KI', cmd: ['uebersetzen', 'translate'] },
-        { id: 'ai-improve', name: 'KI: Text verbessern', icon: '✨', gruppe: 'KI', cmd: ['verbessern', 'umschreiben', 'improve'] },
+        { id: 'ai-write', name: 'KI: Text schreiben', icon: '✨', zeichen: 'sparkle', gruppe: 'KI', cmd: ['ki', 'ai', 'schreiben'] },
+        { id: 'ai-summary', name: 'KI: Zusammenfassen', icon: '✨', zeichen: 'sparkle', gruppe: 'KI', cmd: ['zusammenfassen', 'summary'] },
+        { id: 'ai-todo', name: 'KI: Aufgaben ableiten', icon: '✨', zeichen: 'sparkle', gruppe: 'KI', cmd: ['aufgaben', 'actionitems'] },
+        { id: 'ai-translate', name: 'KI: Übersetzen', icon: '✨', zeichen: 'sparkle', gruppe: 'KI', cmd: ['uebersetzen', 'translate'] },
+        { id: 'ai-improve', name: 'KI: Text verbessern', icon: '✨', zeichen: 'sparkle', gruppe: 'KI', cmd: ['verbessern', 'umschreiben', 'improve'] },
         /* --- Aktionen -------------------------------------------------------
          * Notions Slash-Menü kann mehr als Blöcke einfügen: es kann den Block
          * auch umwandeln, färben, duplizieren, verschieben und löschen, und es
@@ -19165,25 +19207,25 @@ Register.bloecke = (() => {
          * ------------------------------------------------------------------ */
         { id: 'a-turn', name: 'Umwandeln in …', icon: '⇄', gruppe: 'Aktionen', aktion: 'turn',
             cmd: ['turn', 'umwandeln', 'wechseln'] },
-        { id: 'a-color', name: 'Farbe ändern', icon: '🎨', gruppe: 'Aktionen', aktion: 'color',
+        { id: 'a-color', name: 'Farbe ändern', icon: '🎨', zeichen: 'palette', gruppe: 'Aktionen', aktion: 'color',
             cmd: ['color', 'farbe', 'highlight', 'hintergrund', 'blue', 'blau', 'rot', 'red', 'gruen', 'green', 'gelb', 'yellow'] },
         { id: 'a-default', name: 'Farbe entfernen', icon: '▢', gruppe: 'Aktionen', aktion: 'default',
             cmd: ['default', 'standard', 'farbe entfernen'] },
         { id: 'a-dup', name: 'Block duplizieren', icon: '⧉', gruppe: 'Aktionen', aktion: 'dup',
             kurz: 'Ctrl+D', cmd: ['duplicate', 'duplizieren', 'kopieren'] },
-        { id: 'a-moveto', name: 'Verschieben nach …', icon: '➦', gruppe: 'Aktionen', aktion: 'moveto',
+        { id: 'a-moveto', name: 'Verschieben nach …', icon: '➦', zeichen: 'move', gruppe: 'Aktionen', aktion: 'moveto',
             cmd: ['moveto', 'verschieben', 'move'] },
-        { id: 'a-del', name: 'Block löschen', icon: '🗑', gruppe: 'Aktionen', aktion: 'del',
+        { id: 'a-del', name: 'Block löschen', icon: '🗑', zeichen: 'trash', gruppe: 'Aktionen', aktion: 'del',
             kurz: 'Entf', cmd: ['delete', 'loeschen', 'entfernen'] },
         { id: 'a-mention', name: 'Person oder Seite erwähnen', icon: '@', gruppe: 'Aktionen', aktion: 'mention',
             kurz: '@', cmd: ['mention', 'erwaehnen', 'erwaehnung'] },
-        { id: 'a-date', name: 'Datum einfügen', icon: '📆', gruppe: 'Aktionen', aktion: 'date',
+        { id: 'a-date', name: 'Datum einfügen', icon: '📆', zeichen: 'calendar', gruppe: 'Aktionen', aktion: 'date',
             kurz: '@Datum', cmd: ['date', 'datum', 'heute', 'today'] },
-        { id: 'a-remind', name: 'Erinnerung', icon: '⏰', gruppe: 'Aktionen', aktion: 'remind',
+        { id: 'a-remind', name: 'Erinnerung', icon: '⏰', zeichen: 'clock', gruppe: 'Aktionen', aktion: 'remind',
             kurz: '@remind', cmd: ['reminder', 'remind', 'erinnerung'] },
-        { id: 'a-emoji', name: 'Emoji', icon: '🙂', gruppe: 'Aktionen', aktion: 'emoji',
+        { id: 'a-emoji', name: 'Emoji', icon: '🙂', zeichen: 'smile', gruppe: 'Aktionen', aktion: 'emoji',
             kurz: ':', cmd: ['emoji', 'smiley'] },
-        { id: 'a-komm', name: 'Kommentar', icon: '💬', gruppe: 'Aktionen', aktion: 'komm',
+        { id: 'a-komm', name: 'Kommentar', icon: '💬', zeichen: 'comment', gruppe: 'Aktionen', aktion: 'komm',
             kurz: 'Ctrl+Shift+M', cmd: ['comment', 'kommentar'] }
     ];
     /* ========================================================================
@@ -19920,7 +19962,7 @@ Register.menueband = (() => {
             return {
                 reiter: 'einfuegen', gruppe: 'Im Text', id: 'akt-' + was,
                 name: KURZNAME[was] ?? String(b.name || was),
-                zeichen: String(b.icon || '▫'),
+                zeichen: String(b.zeichen || b.icon || '▫'),
                 hinweis: (LANGNAME[was] ?? String(b.name || was)) + ' — hängt sich ans Ende der Seite',
                 tun: () => { Blocks.aktionAmEnde(was); },
                 zeigen: () => kann(() => Blocks.aktionAmEnde) && !!seiteJetzt()
@@ -19957,7 +19999,11 @@ Register.menueband = (() => {
             .map((b) => ({
             reiter: 'einfuegen', gruppe: String(b.gruppe || 'Weiteres'),
             id: 'blk-' + b.id, name: String(b.name || b.id),
-            zeichen: String(b.icon || '▫'),
+            /* `zeichen` vor `icon`: im Band stehen gezeichnete Striche, und
+               ein Emoji fällt dazwischen heraus — 🖼 fehlte der Schrift sogar
+               ganz. Welcher Block welches Symbol bekommt, sagt das Register
+               (E273); wer keines nennt, behält sein Schriftzeichen. */
+            zeichen: String(b.zeichen || b.icon || '▫'),
             ...(b.kurz ? { kurz: String(b.kurz) } : {}),
             hinweis: String(b.name || b.id) + ' einfügen',
             tun: () => Blocks.einfuegenAmEnde(b.id),

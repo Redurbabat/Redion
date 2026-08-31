@@ -3336,7 +3336,7 @@ herüber. Drei Dinge sind damit trotzdem am Rechner nicht mehr erreichbar:
 Gefunden am 30. August 2026 (E272 Phase F, beim Durchgehen der Wächter).
 
 --------------------------------------------------------------------------------
-L92 — Blockarten haben kein Strichzeichen (E272 Phase F)
+L92 — Blockarten haben kein Strichzeichen (E272 Phase F) — GESCHLOSSEN
 --------------------------------------------------------------------------------
 
 Die Lade „Blöcke" der Kontextkante zeigt den echten Bestand aus
@@ -3354,6 +3354,31 @@ Bis dahin ist die Liste eine reine Textliste. Das ist nicht falsch — nur
 weniger, als sie sein könnte.
 
 Gefunden am 30. August 2026 (E272 Phase F, auf dem Bild).
+
+GESCHLOSSEN am 31. August 2026 (E273). Es wurden nicht dreiundvierzig
+Striche, sondern siebenundzwanzig: die typografischen Zeichen — `¶`, `H₁`,
+`☑`, `•`, `1.`, `▸`, `❝`, `—`, `▦`, `☰`, `∑`, `⌨` — sind einfarbig, tragen
+die Farbe ihrer Zeile und sehen im Band genau richtig aus. Sie bleiben.
+Ersetzt wurden die echten Emoji.
+
+Zwei davon waren auf dem Bild als Fehler zu sehen, und beide hätte keine
+Messung gefunden (§55.1):
+
+  · 💡 „Callout" war ein GELBER KLECKS in einer Reihe einfarbiger Zeichen.
+  · 🖼 „Bild" war im Überlauf ein LEERES KÄSTCHEN — die Schrift hat das
+    Zeichen gar nicht.
+
+Elf Symbole kamen dafür neu ins Symbolregister (image · video · audio ·
+paperclip · bookmark · lightbulb · palette · smile · move · grid ·
+circleDot), zusammen achtzig. Das Feld heisst `zeichen`, ist freiwillig,
+und `einfuegenEintraege` liest `zeichen ?? icon` — wer keines nennt,
+behält sein Schriftzeichen.
+
+test86 hat einen neuen Abschnitt: jedes `zeichen` muss ein Symbol nennen,
+das es wirklich gibt. Ohne ihn wäre ein Tippfehler unsichtbar — `zeichenIn`
+setzt einen unbekannten Namen als TEXT, und im Band stünde klein und grau
+das Wort „lightbolb". Die Gegenprobe daneben meldet genau so einen Block
+an und sieht ihn auffallen.
 
 --------------------------------------------------------------------------------
 L93 — Der Chatverlauf hat am Rechner kein Zuhause (E273)

@@ -20227,3 +20227,39 @@ messen jetzt die Fläche, die aufgeht.
 
 **Geprüft:** test272 129 (§15 neu) · test247 106 · test248 45 · test222 51 ·
 test86 58 · test87 152 · test105 55 · test61 36 — kein roter Punkt.
+
+### Blockzeichen: elf neue Striche, aber nicht dreiundvierzig (L92)
+
+Die Blockarten führten `icon` — ein Schriftzeichen. Im Band steht der Block
+seit E272 neben gezeichneten Strichzeichen, und zwei Emoji fielen auf dem
+Bild sofort heraus: 💡 „Callout" als gelber Klecks zwischen einfarbigen
+Zeichen, und 🖼 „Bild" im Überlauf als LEERES KÄSTCHEN — die Schrift hat
+das Zeichen gar nicht.
+
+L92 hatte dreiundvierzig neue Striche veranschlagt. Es sind
+siebenundzwanzig geworden, und der Unterschied ist die eigentliche
+Entscheidung: die typografischen Zeichen — `¶`, `H₁`, `☑`, `•`, `1.`, `▸`,
+`❝`, `—`, `▦`, `☰`, `∑`, `⌨` — sind einfarbig, nehmen die Farbe ihrer
+Zeile an und sehen genau richtig aus. Sie durch gezeichnete Symbole zu
+ersetzen wäre Arbeit gegen ein funktionierendes Bild gewesen. Ersetzt wurde
+nur, was wirklich Emoji ist.
+
+Das Feld heisst `zeichen`, steht neben `icon` statt an seiner Stelle, und
+ist freiwillig. Das ist kein Zaudern: `icon` wird an gut dreissig Stellen
+als TEXT gesetzt — Slash-Menü, Umwandeln-Menü, Suche, Vorschau —, und dort
+ist ein Schriftzeichen richtig. Nur `einfuegenEintraege` liest
+`zeichen ?? icon`. Genau so hält es `Register.module` seit E272 Phase E.
+
+Elf Symbole kamen dafür neu ins Register (image · video · audio ·
+paperclip · bookmark · lightbulb · palette · smile · move · grid ·
+circleDot), zusammen achtzig.
+
+**Und ein Punkt, der rot werden kann.** Ein Tippfehler in `zeichen` ist
+nicht sichtbar wie ein Fehler: `zeichenIn` fragt `Register.symbole.hat()`,
+und bei einem unbekannten Namen setzt es ihn als Text — im Band stünde
+klein und grau das Wort „lightbolb". test86 prüft jetzt, dass jedes
+`zeichen` ein Symbol nennt, das es gibt, und die Gegenprobe daneben meldet
+genau so einen Block an, um zu sehen, dass der Punkt ihn findet (§55.2).
+
+**Geprüft:** test86 61 (drei neu) · test247 106 · test272 129 · test87 152 ·
+test105 55 · test109 20 — kein roter Punkt. sw v44, Einzeldatei 7393 KB.

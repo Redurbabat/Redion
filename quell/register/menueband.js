@@ -238,7 +238,7 @@ Register.menueband = (() => {
             return {
                 reiter: 'einfuegen', gruppe: 'Im Text', id: 'akt-' + was,
                 name: KURZNAME[was] ?? String(b.name || was),
-                zeichen: String(b.icon || '▫'),
+                zeichen: String(b.zeichen || b.icon || '▫'),
                 hinweis: (LANGNAME[was] ?? String(b.name || was)) + ' — hängt sich ans Ende der Seite',
                 tun: () => { Blocks.aktionAmEnde(was); },
                 zeigen: () => kann(() => Blocks.aktionAmEnde) && !!seiteJetzt()
@@ -275,7 +275,11 @@ Register.menueband = (() => {
             .map((b) => ({
             reiter: 'einfuegen', gruppe: String(b.gruppe || 'Weiteres'),
             id: 'blk-' + b.id, name: String(b.name || b.id),
-            zeichen: String(b.icon || '▫'),
+            /* `zeichen` vor `icon`: im Band stehen gezeichnete Striche, und
+               ein Emoji fällt dazwischen heraus — 🖼 fehlte der Schrift sogar
+               ganz. Welcher Block welches Symbol bekommt, sagt das Register
+               (E273); wer keines nennt, behält sein Schriftzeichen. */
+            zeichen: String(b.zeichen || b.icon || '▫'),
             ...(b.kurz ? { kurz: String(b.kurz) } : {}),
             hinweis: String(b.name || b.id) + ' einfügen',
             tun: () => Blocks.einfuegenAmEnde(b.id),

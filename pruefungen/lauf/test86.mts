@@ -66,6 +66,45 @@ p('Nachschlagen geht',           r.text === 'Text' && r.unbekannt === null, JSON
 p('Markdown-Kürzel finden ihren Block', r.md === 'h1' && r.mdListe === 'bullet', JSON.stringify(r));
 p('Suche über Name und Kurzwort', (r.suche ?? '').includes('todo'), JSON.stringify(r.suche));
 
+/* ─────────────────────────────────────────────────────────────────────────
+   DIE GEZEICHNETEN BLOCKZEICHEN (E273, L92)
+
+   `icon` ist ein Schriftzeichen, `zeichen` der Name eines Strichzeichens
+   aus `Register.symbole` — das Menüband liest `zeichen ?? icon`.
+
+   Ein Tippfehler darin ist NICHT sichtbar wie ein Fehler: `zeichenIn`
+   (schale/aufbau/menueband.ts:207) fragt `symbole.hat(name)`, und wenn es
+   den Namen nicht gibt, setzt es ihn als TEXT. Im Band stünde dann das
+   Wort „lightbolb" statt einer Glühbirne — klein, grau, und niemandem
+   fällt es auf.
+
+   Genau das prüft dieser Punkt. Die Gegenprobe darunter meldet einen
+   Block mit einem erfundenen Namen an; sähe der Punkt ihn nicht, wäre er
+   nutzlos (§55.2). */
+console.log('\n— Blockzeichen zeigen auf echte Symbole —');
+r = await seite.evaluate(() => {
+  const mit = (Register.bloecke.benannt() as any[])
+    .filter(b => b && b.zeichen)
+    .map(b => ({ id: String(b.id), zeichen: String(b.zeichen) }));
+  const kaputt = mit.filter(x => !Register.symbole.hat(x.zeichen));
+  /* Gegenprobe: ein erfundener Name muss auffallen. */
+  Register.bloecke.melde({ id: 'probe-zeichen', name: 'Probe',
+    icon: '⚠', zeichen: 'gibtesnichtimregister', gruppe: 'Grundlegend' });
+  const jetzt = (Register.bloecke.benannt() as any[])
+    .filter(b => b && b.zeichen && !Register.symbole.hat(String(b.zeichen)))
+    .map(b => String(b.id));
+  Register.bloecke.nimmZurueck('probe-zeichen');
+  return { wieviele: mit.length, kaputt: kaputt.map(x => x.id + '→' + x.zeichen),
+           gegenprobe: jetzt };
+});
+p('Es gibt gezeichnete Blockzeichen', Number(r.wieviele ?? 0) >= 20,
+  String(r.wieviele) + ' Blockarten mit `zeichen`');
+p('Und jedes nennt ein Symbol, das es gibt', (r.kaputt ?? []).length === 0,
+  'unbekannt: ' + (r.kaputt ?? []).join(', '));
+p('Gegenprobe: ein erfundener Name fällt auf',
+  (r.gegenprobe ?? []).length === 1 && r.gegenprobe[0] === 'probe-zeichen',
+  JSON.stringify(r.gegenprobe));
+
 console.log('\n— Eine neue Blockart anmelden —');
 r = await seite.evaluate(() => {
   const vorher = Register.bloecke.anzahl();

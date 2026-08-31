@@ -174,6 +174,48 @@ Register.symbole = (() => {
         arrowR: '<path d="M4 12h15.6"/><path d="m14 5.6 6 6.4-6 6.4"/>',
         bell: '<path d="M18 9a6 6 0 1 0-12 0c0 5.2-2 6.7-2 6.7h16S18 14.2 18 9z"/>' +
             '<path d="M13.7 19.2a2 2 0 0 1-3.4 0"/>',
+        /* --- Elf fuer den Reiter „Einfuegen" (E273) --------------------------
+           Der Blockkatalog fuehrt bei jedem Eintrag ein `icon`, und bei rund
+           zwei Dutzend ist das ein Emoji. Im Band sah man es: „Callout" stand
+           als gelbe Gluehbirne zwischen lauter einfarbigen Zeichen, und „Bild"
+           war ein leeres Kaestchen — die Schrift dieses Systems kennt 🖼 gar
+           nicht. Das ist E202 mit anderen Vorzeichen: nicht nur andersfarbig,
+           sondern stellenweise ueberhaupt nicht da.
+    
+           Die typografischen Zeichen bleiben, wie sie sind: ¶, H₁, ☑, •, 1.,
+           ▸, ❝, — nehmen die Farbe ihrer Zeile an, sitzen auf der Grundlinie
+           und sind besser als jede Zeichnung, die man dafuer erfinden koennte.
+           Ersetzt wird nur, was ein Emoji IST. */
+        image: '<rect x="3.2" y="4.8" width="17.6" height="14.4" rx="2.4"/>' +
+            '<circle cx="8.6" cy="10" r="1.7"/>' +
+            '<path d="m3.6 17.2 4.9-4.4a1.8 1.8 0 0 1 2.4 0l3.5 3.2' +
+            'a1.8 1.8 0 0 0 2.4 0l3.6-3.2"/>',
+        video: '<rect x="2.8" y="5.4" width="12.8" height="13.2" rx="2.4"/>' +
+            '<path d="m15.6 10.4 5.6-3.2v9.6l-5.6-3.2z"/>',
+        audio: '<path d="M4 9.4h3.2L12 5.2v13.6L7.2 14.6H4z"/>' +
+            '<path d="M15.6 9.6a3.6 3.6 0 0 1 0 4.8"/>' +
+            '<path d="M18 7a7 7 0 0 1 0 10"/>',
+        paperclip: '<path d="M19.6 11.4 12 19a4.6 4.6 0 0 1-6.5-6.5l8-8a3 3 0 0 1 4.3 4.3' +
+            'l-8 8a1.5 1.5 0 0 1-2.1-2.1l7.2-7.2"/>',
+        bookmark: '<path d="M6.4 3.8h11.2a1.6 1.6 0 0 1 1.6 1.6v14.8L12 16.4l-7.2 3.8V5.4' +
+            'a1.6 1.6 0 0 1 1.6-1.6z"/>',
+        lightbulb: '<path d="M9.4 18.4h5.2"/><path d="M10 21.2h4"/>' +
+            '<path d="M8.2 14.6a6 6 0 1 1 7.6 0c-.9.7-1.4 1.5-1.5 2.4h-4.6' +
+            'c-.1-.9-.6-1.7-1.5-2.4z"/>',
+        palette: '<path d="M12 3.2a8.8 8.8 0 0 0 0 17.6c1 0 1.8-.8 1.8-1.8 0-.5-.2-.9-.5-1.2' +
+            '-.3-.3-.5-.7-.5-1.2 0-1 .8-1.8 1.8-1.8h2.1a4.9 4.9 0 0 0 4.9-4.9' +
+            'C21.6 6.1 17.3 3.2 12 3.2z"/>' +
+            '<circle cx="7.6" cy="11.4" r="1.1"/><circle cx="10.2" cy="7.4" r="1.1"/>' +
+            '<circle cx="15" cy="7.6" r="1.1"/>',
+        smile: '<circle cx="12" cy="12" r="8.8"/>' +
+            '<path d="M8.4 13.8a4.4 4.4 0 0 0 7.2 0"/>' +
+            '<path d="M9.2 9.4h.01M14.8 9.4h.01"/>',
+        move: '<path d="M12 3.6v16.8M3.6 12h16.8"/>' +
+            '<path d="m9.2 6.4 2.8-2.8 2.8 2.8M9.2 17.6l2.8 2.8 2.8-2.8"/>' +
+            '<path d="m6.4 9.2-2.8 2.8 2.8 2.8M17.6 9.2l2.8 2.8-2.8 2.8"/>',
+        grid: '<rect x="3.4" y="3.4" width="17.2" height="17.2" rx="2.2"/>' +
+            '<path d="M3.4 9.2h17.2M3.4 14.8h17.2M9.2 3.4v17.2M14.8 3.4v17.2"/>',
+        circleDot: '<circle cx="12" cy="12" r="8.8"/><circle cx="12" cy="12" r="3.2"/>',
         /* --- Fuenf fuer die Kontextkante (E272 Phase F) ----------------------
            Ein Knopf ohne Zeichen ist in einer 54 Pixel breiten Spalte ein
            leeres Quadrat — dasselbe, was in Phase B mit `clock` passiert ist
