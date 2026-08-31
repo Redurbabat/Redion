@@ -68,6 +68,7 @@
     "src/core/sheet/**/*.ts",
     "src/core/spreadsheet/**/*.ts",
     "src/core/import/**/*.ts",
+    "src/core/knowledge/**/*.ts",
     "src/bereiche/**/*.ts",
     "src/fremd/**/*.ts",
     "src/kern/**/*.ts",

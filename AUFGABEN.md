@@ -2045,3 +2045,16 @@ node pruefungen/lauf/test105.mjs
   BYDAY wortlos weg und liefert falsche Termine, und die Rechteprüfung der
   Agenten fragt die gerade offene Seite statt der, auf die geschrieben wird.
   sw v50.
+* E285 (Redurs Punkt 3): `core/knowledge/rank.ts` — PageRank auf Redions
+  vorhandenem Graphen. Reine Funktion, speichert nichts, jederzeit neu
+  ausrechenbar; 5000 Knoten unter einer Sekunde gemessen. Zwei Dinge, die die
+  abgeschriebene Fassung falsch macht: drei von vier Kantenarten sind in
+  Redion GAR NICHT gerichtet (`addEdge` sortiert sie nach Kennung), und
+  Sackgassen verschlucken Gewicht — die nachgebaute falsche Rechnung kommt
+  auf 0,15 statt 1. Beides prüft test279 mit Gegenprobe. Dabei ein eigener
+  Irrtum, der als Kommentar stehenbleibt: mein erstes §4 wollte zeigen, dass
+  drei starke Zeiger sechs schwache schlagen, und mass das Gegenteil — zu
+  Recht, denn „Qualität schlägt Menge" gilt erst, wenn die Wenigen wirklich
+  stark sind. Und die Falle beim Bauen: `tsconfig.bauen.json` führt eine
+  Aufzählung der core-Ordner, kein `**`; ein neuer Ordner muss eingetragen
+  werden. test279 neu (40). sw v51.

@@ -21431,3 +21431,115 @@ L101 in LUECKEN.md.
 **Geprüft:** test278 neu (37 Punkte, mit dem ersten feindlichen Einspielen
 überhaupt) · test96, test100, test261, test273 unverändert grün ·
 typecheck grün · sw v50.
+
+================================================================================
+E285 — Der Wissensrang: nicht wie viele zeigen her, sondern wer (Redurs Punkt 3)
+================================================================================
+31. August 2026
+
+Redions Wissensgraph war reich und stumm. Fünf Knotenarten, vier
+Kantenarten, Rückverweise, unverlinkte Erwähnungen, Alias-Auflösung — und
+keine Aussage darüber, welcher Knoten WICHTIG ist.
+
+Was es gab, ist `analyzeKnowledgeGraph` (`verweise.ts:709`). Es zählt
+Kanten und nennt die Zwölf mit den meisten „Naben". Das ist der Grad, und
+der Grad ist eine schwache Auskunft: eine Seite, auf die zwanzig
+Wegwerfnotizen zeigen, steht damit über einer, auf die drei zentrale Seiten
+zeigen.
+
+### Der Fund, der die naive Fassung widerlegt
+
+**DREI VON VIER KANTENARTEN SIND GAR NICHT GERICHTET.**
+
+`addEdge` (`verweise.ts:533`) normalisiert:
+
+    const undirected = kind !== 'link';
+    const first  = undirected && source > target ? target : source;
+    const second = undirected && source > target ? source : target;
+
+Bei `relation`, `tag` und `tree` ist `source` also schlicht die lexikalisch
+kleinere Kennung. Wer diese Kanten als gerichtet nimmt — und das tut jede
+PageRank-Fassung, die man abschreibt —, rechnet eine Rangfolge aus, die
+davon abhängt, wie die Zufallskennungen ausfallen.
+
+Das Ergebnis sähe vollkommen plausibel aus. Eine Liste von Seiten mit
+Zahlen daneben wirkt immer richtig; es gibt kein „das sieht falsch aus".
+Genau deshalb sagt der Aufrufer jetzt AUSDRÜCKLICH, welche Arten eine
+Richtung tragen. Eine Vorgabe gibt es, aber sie steht als Wert da und nicht
+als Annahme im Rechenweg. test279 §3 führt beide Fassungen nebeneinander
+vor.
+
+### Und der zweite: Sackgassen verschlucken Gewicht
+
+Ein Knoten ohne ausgehende Kante hat nichts, wohin er sein Gewicht
+weitergeben könnte. Wer das nicht behandelt, verliert in jeder Runde Masse.
+In Redion ist das kein Randfall, sondern der Normalfall: jede Seite ohne
+ausgehenden Link ist eine Sackgasse, und das sind die meisten.
+
+Die Prüfung baut die falsche Rechnung nach und misst sie: sie kommt nach
+vierzig Runden auf **0,15 statt 1**. Danach sind die Zahlen untereinander
+nicht mehr vergleichbar — und man sieht es der Liste nicht an.
+
+Die Summe muss 1 sein. Das ist die eine Eigenschaft, die einen kaputten
+PageRank zuverlässig verrät, und sie wird in jedem Abschnitt mitgemessen.
+
+### Was ich beim Prüfen selbst falsch hatte
+
+Der erste Aufbau von §4 sollte zeigen, dass „drei starke Zeiger sechs
+schwache schlagen". Gemessen gewann die Menge: 0,2775 gegen 0,1347.
+
+**Und das war richtig.** Sechs Zeiger SIND mehr Gewicht als drei, wenn die
+drei selbst nur Grundgewicht tragen. Mein „dichter Kern" aus drei Knoten
+verstärkte sich zwar gegenseitig, bekam aber von aussen nichts, und
+dritteltе obendrein seinen Ausfluss.
+
+„Qualität schlägt Menge" ist keine Eigenschaft, die PageRank immer hat. Es
+ist eine, die er hat, WENN die Wenigen wirklich stark sind. Der Aufbau
+steht jetzt so da: hinter jeder der drei Naben stehen zehn Seiten, und jede
+Nabe hat genau einen Ausgang. Dann dreht sich das Ergebnis um, und der
+Grad sagt weiterhin das Gegenteil.
+
+Der Irrtum bleibt als Kommentar in der Prüfung stehen. Er ist die
+nützlichste Zeile darin.
+
+### Von 0 bis 100, und warum mit Wurzel
+
+Der reine PageRank ist bei tausend Knoten eine Zahl um 0,001 und sagt einem
+Menschen nichts. Eine gerade Umrechnung gäbe dem Zweitplatzierten 8 von
+100 — PageRank ist extrem schief verteilt. Mit der Wurzel wird aus der
+Rangfolge etwas, das man lesen kann.
+
+Frische und Stern kommen dazu, und beide sind Meinung und nicht Mathematik.
+Deshalb stehen sie in einer eigenen Funktion, die man weglassen kann. Die
+Frische fällt linear über ein halbes Jahr auf null und zieht nie ab — ein
+Zuschlag, der negativ werden kann, wäre eine Bestrafung für Bestand, und
+Bestand ist der Sinn eines Wissensspeichers.
+
+Bewusst NICHT dabei ist die Knotenart. Eine Entscheidung ist nicht per se
+wichtiger als eine Seite; das hängt vom Menschen ab und nicht vom Typ. Wer
+es anders will, reicht `artGewicht` herein.
+
+### Und die Falle beim Bauen
+
+`tsconfig.bauen.json` führt eine AUFZÄHLUNG der Ordner unter `src/core/`,
+kein `src/core/**` — weil `src/core/types/` nichts ausgeben darf. Ein neuer
+Ordner muss dort eingetragen werden, sonst entsteht das `.js` nie.
+
+Die Datei warnt selbst davor („Wer einen neuen Ordner unter src/core/
+anlegt, trägt ihn hier ein"), und ich bin trotzdem hineingelaufen: der
+Prüflauf brach ab, weil `KnowledgeRank` im Browser nicht existierte.
+`test105` hätte es beim nächsten vollen Lauf gemeldet.
+
+### Was diese Entscheidung NICHT tut
+
+Sie speichert nichts. Kein Fach, kein Meta-Schlüssel, keine zweite
+Datenbank — genau Redurs Regel. Der Rang ist ABGELEITET und jederzeit neu
+ausrechenbar; bei 5000 Knoten und 10000 Kanten dauert das gemessen unter
+einer Sekunde.
+
+Und sie zeigt noch nichts an. Der Rang liegt als Rechnung bereit; wo er
+sichtbar wird — Suche, KI-Kontext, „das solltest du wieder ansehen" —, ist
+die nächste Entscheidung und nicht diese.
+
+**Geprüft:** test279 neu (40 Punkte, mit von Hand nachgerechneten Werten und
+vier Gegenproben) · test105 grün · typecheck grün · sw v51.
