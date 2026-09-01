@@ -1055,7 +1055,7 @@ const KI = (() => {
           else if (/^#{3}\s/.test(t)) { typ = 'h3'; t = t.replace(/^###\s/, ''); }
           else if (/^[-*]\s/.test(t)) { typ = 'bullet'; t = t.replace(/^[-*]\s/, ''); }
           else if (/^\d+\.\s/.test(t)){ typ = 'number'; t = t.replace(/^\d+\.\s/, ''); }
-          Store.addBlock(App.aktuelleSeite(), typ, { text: t });
+          Store.addBlock(App.aktuelleSeite(), typ, { text: t, herkunft: 'ki' });
         });
         App.zeichneSeite();
         UI.toast('In die Seite eingefügt');
@@ -1267,7 +1267,7 @@ const KI = (() => {
     const neueIds: any[] = [];
     plan.bloecke.slice(0, 30).forEach((b: any) => {
       const typ = erlaubt.includes(b.typ) ? b.typ : 'text';
-      const n = Store.addBlock(seite, typ, { text: b.text || '' });
+      const n = Store.addBlock(seite, typ, { text: b.text || '', herkunft: 'ki' });
       neueIds.push(n.id);
     });
     if (plan.titel && !Store.getBlock(seite).text) Store.updateBlock(seite, { text: plan.titel });
@@ -1347,8 +1347,9 @@ const KI = (() => {
         if (!elVon(e)?.closest<HTMLElement>('[data-a="ein"]')) return;
         const seite = App.aktuelleSeite();
         if (!seite) return;
-        Store.addBlock(seite, 'quote', { text: t.text });
-        Store.addBlock(seite, 'text', { text: 'Quelle: [' + t.titel + '](' + t.link + ')' });
+        Store.addBlock(seite, 'quote', { text: t.text, herkunft: 'ki' });
+        Store.addBlock(seite, 'text', { text: 'Quelle: [' + t.titel + '](' + t.link + ')',
+          herkunft: 'ki' });
         App.zeichneSeite();
         UI.toast('Eingefügt');
       });
@@ -1525,7 +1526,7 @@ const KI = (() => {
     /* Eine angefangene Tabelle abschliessen, bevor etwas anderes kommt. */
     const tabelleAbschliessen = () => {
       if (!tabelle) return;
-      Store.addBlock(seite, 'table', { rows: tabelle.rows, kopfZeile: true });
+      Store.addBlock(seite, 'table', { rows: tabelle.rows, kopfZeile: true, herkunft: 'ki' });
       tabelle = null;
     };
 
@@ -1550,7 +1551,7 @@ const KI = (() => {
       else if (/^\d+\.\s/.test(t)){ typ = 'number'; t = t.replace(/^\d+\.\s/, ''); }
       else if (/^>\s/.test(t))    { typ = 'quote'; t = t.replace(/^>\s/, ''); }
       else if (/^\[[ x]\]\s/i.test(t)) { typ = 'todo'; t = t.replace(/^\[[ x]\]\s/i, ''); }
-      Store.addBlock(seite, typ, { text: t });
+      Store.addBlock(seite, typ, { text: t, herkunft: 'ki' });
     });
     tabelleAbschliessen();
 

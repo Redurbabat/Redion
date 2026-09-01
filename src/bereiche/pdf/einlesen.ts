@@ -231,7 +231,12 @@ const PdfEinlesen = (() => {
         const b = Store.addBlock(wohin, 'pdfseite', {
           text: '', suchtext: seitenText, nr: n, vonSeiten: gesamt,
           bw: geo.bw, bh: geo.bh, dreh: geo.dreh,
-          quelleId: quelle.id, raumVersion: SheetSpace.RAUM_VERSION
+          quelleId: quelle.id, raumVersion: SheetSpace.RAUM_VERSION,
+          /* Aus einem fremden Dokument, nicht selbst geschrieben (E307).
+             `quelleId` sagt schon, WELCHES — `herkunft` sagt, dass es
+             überhaupt eines ist, und das ist die Frage, die man beim
+             Wiederlesen stellt. */
+          herkunft: 'quelle'
         });
         nachher();
         const satz = await Dateien.ablegen(

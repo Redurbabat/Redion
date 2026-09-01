@@ -5451,3 +5451,23 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
      nichts mehr und braucht auch keine eigene Regel. */
   .els-kachel{ padding:12px 13px }
 }
+
+
+/* WOHER EINE ZEILE KOMMT (E307, Redurs Punkt 9).
+
+   Nur was NICHT von einem selbst stammt, bekommt eine Marke — der
+   Normalfall bleibt unberührt. Eine Marke an jeder Zeile wäre nach zwei
+   Minuten unsichtbar, und dann hätte man den Platz ausgegeben und nichts
+   dafür bekommen.
+
+   Ein schmaler Streifen links, kein Symbol im Text: er stört das Lesen
+   nicht und ist trotzdem da, wenn man die Frage stellt. Die Farbe allein
+   trägt die Bedeutung NICHT (§38) — der Titel am Block sagt sie in Worten,
+   und das Blockmenü nennt sie auch. */
+.blk[data-herkunft]{position:relative}
+.blk[data-herkunft]::before{
+  content:""; position:absolute; left:-10px; top:4px; bottom:4px; width:3px;
+  border-radius:2px; opacity:.65}
+.blk[data-herkunft="ki"]::before{background:#8b6ce0}
+.blk[data-herkunft="quelle"]::before{background:#4a90d9}
+.blk[data-herkunft="fremd"]::before{background:#d99a4a}

@@ -184,7 +184,7 @@ const Agent = (() => {
         (a.bloecke || []).forEach((b: any) => {
           const typ = ['h1','h2','h3','text','bullet','number','todo','quote','callout','divider','code']
             .includes(b.typ) ? b.typ : 'text';
-          Store.addBlock(p.id, typ, { text: b.text || '' });
+          Store.addBlock(p.id, typ, { text: b.text || '', herkunft: 'ki' });
         });
         protokoll.ids.push(p.id);
         App.zeichneBaum();

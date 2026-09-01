@@ -1077,7 +1077,7 @@ const KI = (() => {
                         typ = 'number';
                         t = t.replace(/^\d+\.\s/, '');
                     }
-                    Store.addBlock(App.aktuelleSeite(), typ, { text: t });
+                    Store.addBlock(App.aktuelleSeite(), typ, { text: t, herkunft: 'ki' });
                 });
                 App.zeichneSeite();
                 UI.toast('In die Seite eingefügt');
@@ -1293,7 +1293,7 @@ const KI = (() => {
         const neueIds = [];
         plan.bloecke.slice(0, 30).forEach((b) => {
             const typ = erlaubt.includes(b.typ) ? b.typ : 'text';
-            const n = Store.addBlock(seite, typ, { text: b.text || '' });
+            const n = Store.addBlock(seite, typ, { text: b.text || '', herkunft: 'ki' });
             neueIds.push(n.id);
         });
         if (plan.titel && !Store.getBlock(seite).text)
@@ -1383,8 +1383,9 @@ const KI = (() => {
                 const seite = App.aktuelleSeite();
                 if (!seite)
                     return;
-                Store.addBlock(seite, 'quote', { text: t.text });
-                Store.addBlock(seite, 'text', { text: 'Quelle: [' + t.titel + '](' + t.link + ')' });
+                Store.addBlock(seite, 'quote', { text: t.text, herkunft: 'ki' });
+                Store.addBlock(seite, 'text', { text: 'Quelle: [' + t.titel + '](' + t.link + ')',
+                    herkunft: 'ki' });
                 App.zeichneSeite();
                 UI.toast('Eingefügt');
             });
@@ -1568,7 +1569,7 @@ const KI = (() => {
         const tabelleAbschliessen = () => {
             if (!tabelle)
                 return;
-            Store.addBlock(seite, 'table', { rows: tabelle.rows, kopfZeile: true });
+            Store.addBlock(seite, 'table', { rows: tabelle.rows, kopfZeile: true, herkunft: 'ki' });
             tabelle = null;
         };
         zeilen.forEach(roh => {
@@ -1617,7 +1618,7 @@ const KI = (() => {
                 typ = 'todo';
                 t = t.replace(/^\[[ x]\]\s/i, '');
             }
-            Store.addBlock(seite, typ, { text: t });
+            Store.addBlock(seite, typ, { text: t, herkunft: 'ki' });
         });
         tabelleAbschliessen();
         App.zeichneSeite();

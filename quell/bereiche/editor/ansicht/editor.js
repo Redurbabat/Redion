@@ -425,6 +425,26 @@ const Blocks = (() => {
         el.className = 'blk b-' + block.type;
         el.dataset.id = block.type;
         el.dataset.bid = block.id;
+        /* WOHER DIESE ZEILE KOMMT (E307, Redurs Punkt 9).
+         *
+         * `erstelltVon` steht seit jeher an jedem Block — aber es hält den
+         * NAMEN eines Menschen (`Store.getMeta('nutzer')`), nicht die Art der
+         * Herkunft. Was die KI geschrieben hat, steht dort ebenfalls als „Ich",
+         * weil sie unter dem angemeldeten Namen anlegt. Genau die Unterscheidung
+         * fehlte: eine Aussage, die ein Modell erzeugt hat, sah aus wie eine aus
+         * dem Skript.
+         *
+         * `herkunft` fehlt bei allem Selbstgeschriebenen — und das ist Absicht.
+         * Der Normalfall bekommt kein Feld, keine Marke und keinen Platz; eine
+         * Marke an jeder Zeile wäre nach zwei Minuten unsichtbar. Sichtbar ist
+         * nur, was NICHT von einem selbst stammt. */
+        if (block.herkunft) {
+            el.dataset.herkunft = String(block.herkunft);
+            el.title = { ki: 'Von der KI geschrieben',
+                quelle: 'Aus einem eingelesenen Dokument',
+                fremd: 'Aus einem verbundenen Dienst'
+            }[String(block.herkunft)] || '';
+        }
         /* Die Stufe für `h1`/`h2`/`h3` — gesetzt wird sie weiter unten auf dem
            TEXTFELD, nicht auf diesem Kasten. Siehe `machText`. */
         const stufe = { h1: '2', h2: '3', h3: '4' }[block.type];
@@ -3072,7 +3092,19 @@ const Blocks = (() => {
             ['default', 'Standard'], ['gray', 'Grau'], ['brown', 'Braun'], ['orange', 'Orange'], ['yellow', 'Gelb'],
             ['green', 'Grün'], ['blue', 'Blau'], ['purple', 'Lila'], ['pink', 'Pink'], ['red', 'Rot']
         ];
-        const html = '<button data-a="turn"><span class="mi">⇄</span>Umwandeln in<span class="ms">▸</span></button>' +
+        /* WOHER DIESE ZEILE KOMMT (E307) — in Worten, nicht nur als Farbe (§38).
+           Nur wenn es etwas zu sagen gibt: bei Selbstgeschriebenem steht hier
+           nichts, und das ist der Normalfall. */
+        const HERKUNFT = {
+            ki: 'Von der KI geschrieben',
+            quelle: 'Aus einem eingelesenen Dokument',
+            fremd: 'Aus einem verbundenen Dienst'
+        };
+        const woher = HERKUNFT[String(b.herkunft || '')] || '';
+        const html = (woher ? '<div class="menu-herkunft" style="padding:7px 12px; font-size:12px; ' +
+            'color:var(--text-dim); border-bottom:1px solid var(--line)">' +
+            esc(woher) + '</div>' : '') +
+            '<button data-a="turn"><span class="mi">⇄</span>Umwandeln in<span class="ms">▸</span></button>' +
             '<button data-a="color"><span class="mi">🎨</span>Farbe<span class="ms">▸</span></button>' +
             '<button data-a="groesse"><span class="mi">🔠</span>Schriftgrösse<span class="ms">▸</span></button>' +
             '<button data-a="schrift"><span class="mi">✍</span>Schriftart<span class="ms">▸</span></button>' +

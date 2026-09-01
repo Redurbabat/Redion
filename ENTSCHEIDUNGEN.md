@@ -23184,3 +23184,78 @@ genau der Doppelbelegung oben.
 Mitgelaufen: test111 81/81, test198 17/17, test227 29/29, test192 25/25,
 test294 10/10.
 typecheck grün · sw v67 · Einzeldatei 7728 KB.
+
+
+E307 — Woher eine Zeile kommt (Redurs Punkt 9)
+================================================================================
+1. September 2026
+
+Redurs Punkt 9: „Trust-Layer — Herkunft und Verlässlichkeit einer Aussage."
+
+Nachgemessen, was Redion hatte: `erstelltVon` steht seit jeher an jedem
+Block. Es hält aber den NAMEN eines Menschen (`Store.getMeta('nutzer')`) und
+nicht die Art der Herkunft — was die KI schreibt, steht dort ebenfalls als
+„Ich", weil sie unter dem angemeldeten Namen anlegt.
+
+Genau diese Unterscheidung fehlte, und sie ist beim Lernen die wichtigste:
+eine Aussage, die ein Modell erzeugt hat, sah aus wie eine aus dem Skript.
+Drei Wochen später weiss niemand mehr, welche Zeile er selbst geschrieben
+hat und welche ihm jemand hingeschrieben hat.
+
+
+Ein Feld, das im Normalfall FEHLT
+--------------------------------------------------------------------------------
+`herkunft` steht nur an dem, was NICHT von einem selbst stammt: `'ki'`,
+`'quelle'` (aus einem eingelesenen Dokument), `'fremd'` (aus einem
+verbundenen Dienst). Selbstgeschriebenes bekommt kein Feld, keine Marke,
+keinen Platz.
+
+Das ist dieselbe Überlegung, die diese Woche schon fünfmal getragen hat:
+eine Marke an JEDER Zeile wäre nach zwei Minuten unsichtbar, und dann hätte
+man den Platz ausgegeben und nichts dafür bekommen. Sichtbar ist nur, was
+eine Frage beantwortet, die man wirklich stellt.
+
+Gezeigt wird es als schmaler Streifen links vom Block — er stört das Lesen
+nicht und ist da, wenn man hinsieht. Die Farbe trägt die Bedeutung NICHT
+allein (§38): der Block sagt sie als Titel, und das Blockmenü nennt sie
+oben in Worten, aber auch nur dort, wo es etwas zu sagen gibt.
+
+
+Wo es gesetzt wird — und wo ausdrücklich nicht
+--------------------------------------------------------------------------------
+Gesetzt: an jedem Block, den die KI anlegt (`ki/dienst.ts` an sechs Stellen,
+`ki/agenten.ts` an einer), und an jeder eingelesenen PDF-Seite
+(`pdf/einlesen.ts`).
+
+NICHT gesetzt: im Editor. Wer tippt, schreibt selbst — stünde dort etwas,
+wäre die Marke wertlos. test301 §1 misst genau das als Gegenprobe.
+
+Und es reist mit der Sicherung, weil es ein gewöhnliches Blockfeld ist. Das
+ist der Grund, warum es eines geworden ist und keine zweite Tabelle: eine
+zweite Tabelle hätte einen eigenen Weg durch Export, Import, Papierkorb und
+Abgleich gebraucht, und jeder davon eine eigene Stelle zum Vergessen.
+
+
+Was das NICHT ist
+--------------------------------------------------------------------------------
+Keine Verlässlichkeitsnote. Redion sagt, WOHER etwas kommt, nicht, ob es
+stimmt — das kann es nicht wissen, und eine erfundene Prozentzahl daneben
+wäre schlimmer als gar keine. Die Verlässlichkeit steht an zwei anderen
+Stellen und ist dort gemessen: die Lern-Evidenz (E289, „stark, aus 47
+Antworten") und die Quellenliste unter jeder KI-Antwort (E305).
+
+Und: was einmal von der KI kam, bleibt so vermerkt, auch wenn man es
+danach umschreibt. Eine Zeile, die man selbst überarbeitet hat, ist keine
+Zeile mehr, die man selbst geschrieben hat — und für die Frage „muss ich das
+nochmal nachlesen?" ist das die richtige Antwort. Wer den Vermerk loswerden
+will, schreibt die Zeile neu.
+
+
+Geprüft
+--------------------------------------------------------------------------------
+test301 17/17 — die drei Herkünfte, die Marke in Worten und Farbe, der
+Rundlauf durch die Sicherung, und als wichtigster Arm die Gegenprobe, dass
+Selbstgeschriebenes unberührt bleibt.
+
+Mitgelaufen: test192 25/25, test119 19/19, test290 13/13.
+typecheck grün · sw v68 · Einzeldatei 7732 KB.
