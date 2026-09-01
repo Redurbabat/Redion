@@ -3233,7 +3233,7 @@ Offen: dieselbe Prüfung in `alle()` ziehen (dann prüfen beide Wege gleich), un
 `nimmZurueckLieferant` ergänzen.
 
 --------------------------------------------------------------------------------
-L88 — Zwei Wächter waren schon rot, bevor E272 anfing
+L88 — Zwei Wächter waren schon rot, bevor E272 anfing — GESCHLOSSEN
 --------------------------------------------------------------------------------
 
 Beim Ausgangsmessen für die Premium-Schale (Phase A) liefen alle Schalen-Wächter
@@ -3380,7 +3380,7 @@ das gehört in einen eigenen Bogen und nicht in eine Schalen-Phase.
 Gefunden am 30. August 2026 (E272 Phase G, auf dem Bild).
 
 --------------------------------------------------------------------------------
-L91 — Die Seitenleiste ist am Rechner weg, und mit ihr drei Kleinigkeiten
+L91 — Die Seitenleiste ist am Rechner weg, und mit ihr drei Kleinigkeiten — GESCHLOSSEN
 --------------------------------------------------------------------------------
 
 E272 Phase F stellt `#sidebar` am Rechner auf `display:none`. Die Leiste
@@ -3408,6 +3408,17 @@ herüber. Drei Dinge sind damit trotzdem am Rechner nicht mehr erreichbar:
      aus.
 
 Gefunden am 30. August 2026 (E272 Phase F, beim Durchgehen der Wächter).
+
+GESCHLOSSEN am 1. September 2026, nachgemessen statt behauptet:
+
+  Punkt 1  war schon mit E277/E283 beantwortet.
+  Punkt 2  der Weg lebt weiter — „Datei → Konto → Arbeitsbereich" und der
+           Kontokreis im Band, beide gebaut.
+  Punkt 3  die zwei Einträge stehen im Menüband unter „Gehen → Verbinden"
+           (`register/menueband.ts:697` und `:702`) und rufen
+           `Agent.panel()` bzw. `Meeting.panel()`. Beide Ziele gibt es
+           (`bereiche/verbinden/besprechung.ts:544`). Das war genau der
+           Commit, den der Plan noch vorsah.
 
 --------------------------------------------------------------------------------
 L92 — Blockarten haben kein Strichzeichen (E272 Phase F) — GESCHLOSSEN
