@@ -3845,6 +3845,15 @@ Grund:
    jedes in einer eigenen Transaktion. Bricht es dort ab, sind Blöcke und
    Anhänge auseinander.
 
+   **GESCHLOSSEN am 1. September 2026 durch E317** — nicht, indem die
+   Transaktion ausgedehnt wurde (das bliebe falsch: ein grosses Video würde
+   die Ablage minutenlang blockieren, §10), sondern indem das SCHWEIGEN
+   aufhört. Die zwei stillen `continue` sind weg; `anhaengeEinspielen` gibt
+   `{ da, erwartet, fehlend }` zurück, jeder Anhang steht in seinem eigenen
+   `try`, und die Meldung nennt die fehlenden beim Namen samt Grund — aber
+   nur, wenn welche fehlen. Ein Loch bricht die Schleife nicht mehr ab: wer
+   neunzig von hundert retten kann, rettet neunzig. test311, 11 Punkte.
+
 3. **Der offene Weg schreibt vor dem Ersetzen keine Sicherheitskopie.** Der
    Krypto-Dialog tut es (`krypto.ts:935 await sicherungSchreiben()`), der
    normale Weg nicht. Das ist genau umgekehrt zur Gefahr: den offenen Weg

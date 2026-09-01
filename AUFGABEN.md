@@ -2288,3 +2288,16 @@ node pruefungen/lauf/test105.mjs
   „meine?". Und was nicht geschieht, steht nicht da: keine Null, kein Wort
   von Verschwinden beim Dazulegen. `wolkeVersion` zählt nicht mit, sonst
   wäre nach jedem Abgleich jeder Satz „geändert". test310 neu (23). sw v71.
+* E317 (L101 Punkt 2): Ein fehlender Anhang wird genannt. Die Anhänge
+  kommen nach der Transaktion, jeder einzeln — das bleibt so, ein grosses
+  Video in einer Transaktion würde die Ablage minutenlang blockieren (§10).
+  Weg musste das Schweigen daneben: zweimal `continue`, und am Ende meldete
+  Redion nur, wie viele es GESCHAFFT haben. Ein Block zeigte danach auf eine
+  Datei, die es nicht gibt, und niemand hatte etwas gesagt. Jetzt gibt
+  `anhaengeEinspielen` `{ da, erwartet, fehlend }` zurück, nennt jeden
+  fehlenden beim Namen samt Grund, und jeder Anhang steht in seinem eigenen
+  `try` — ein Loch nahm vorher alle FOLGENDEN mit. Wer neunzig von hundert
+  retten kann, rettet neunzig. Gegenprobe: im guten Fall kein Wort von
+  Fehlen. Nebenbei gelernt, und es kostete zwei Anläufe: `App` steht
+  absichtlich nicht auf `window` (src/global.d.ts), in `page.evaluate`
+  erreicht man es nur beim blossen Namen. test311 neu (11). sw v72.

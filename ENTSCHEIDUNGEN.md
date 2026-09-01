@@ -24042,3 +24042,64 @@ wirklich weg, der Dialog fragt den Kern.
 
 Mitgelaufen: test287 9/9, test152 11/11, test105 102/102.
 sw v71 · Einzeldatei 7804 KB.
+
+================================================================================
+E317 — Ein fehlender Anhang wird genannt (L101 Punkt 2)
+================================================================================
+1. September 2026
+
+Die Alles-oder-nichts-Zusage von `importAll` gilt für fünf Fächer. Die
+ANHÄNGE folgen danach, jeder in einer eigenen Transaktion — ein grosses
+Video in einer einzigen würde die Ablage minutenlang blockieren (§10). Das
+bleibt so, und es ist richtig so.
+
+Nicht richtig war das SCHWEIGEN daneben. In `anhaengeEinspielen` stand
+zweimal dieselbe Zeile:
+
+    const name = nachName[satz.id];
+    if (!name) continue;                    /* nicht im Archiv */
+    const roh2 = await zip.alsBlob(name);
+    if (!roh2) continue;                    /* liess sich nicht lesen */
+
+Fehlte ein Eintrag, wurde er übersprungen. Am Ende meldete Redion, wie viele
+es GESCHAFFT haben — nie, wie viele nicht. Ein Block zeigte danach auf eine
+Datei, die es nicht gibt, und niemand hatte etwas gesagt. Das ist §35 in
+seiner unangenehmsten Form: nicht eine bekannte Lücke, sondern ein stiller
+Fehler.
+
+Jetzt zählt die Schleife mit und benennt jeden Fall:
+
+    nichtGeschafft(satz, 'steht nicht im Archiv')
+    nichtGeschafft(satz, 'liess sich nicht lesen')
+
+und jeder Anhang steht zusätzlich in seinem eigenen `try`. Das ist der
+zweite Teil und der wichtigere: eine Ausnahme mitten in der Schleife nahm
+vorher alle FOLGENDEN Anhänge mit. Wer neunzig von hundert retten kann, soll
+neunzig retten.
+
+`anhaengeEinspielen` gibt seither `{ da, erwartet, fehlend }` zurück, und
+die Meldung nennt das Fehlende — aber nur, wenn es welches gibt:
+
+    3 von 12 Anhängen fehlen: eins.bin (steht nicht im Archiv), … .
+    Die Sicherung liegt noch — du kannst sie erneut einspielen.
+
+Der zweite Satz gehört dazu. Eine Meldung, die ein Problem nennt und keinen
+Weg, ist eine Meldung, die man wegklickt.
+
+DIE GEGENPROBE, wie diese Woche jedes Mal: im guten Fall steht kein Wort von
+Fehlen. Eine Anzeige, die immer anzeigt, wird nicht gelesen.
+
+NEBENBEI GELERNT, und es kostete zwei Anläufe: `App` steht absichtlich NICHT
+auf `window` — es ist ein gewöhnliches `const` auf oberster Ebene, wie
+`Store`. `src/global.d.ts` sagt das ausdrücklich. In einem `page.evaluate`
+erreicht man es deshalb nur beim blossen Namen; `w.App` ist `undefined`.
+test287 machte es längst richtig vor. Der Griff wurde für diesen Bogen aus
+`App` herausgegeben, weil der Weg dorthin sonst über einen Dateiwähler führt
+— und den kann kein Prüflauf antippen.
+
+test311, 11 Punkte: der gute Fall, ein Archiv mit Loch, das Loch bricht den
+Rest nicht ab, und die Gegenprobe im Quelltext, dass kein stilles `continue`
+zurückkommt.
+
+Mitgelaufen: test100 32/32, test148 13/13, test180 36/36, test287 9/9.
+sw v72 · Einzeldatei 7806 KB.

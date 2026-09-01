@@ -1936,22 +1936,46 @@ const App = (() => {
    * In Stücke zerlegt wird wieder, weil die Ablage es so hält: `blob.slice`
    * schneidet, ohne zu lesen — auch bei einem halben Gigabyte.
    */
+  /**
+   * DIE ANHÄNGE KOMMEN NACH DEN BLÖCKEN — UND EINZELN (L101 Punkt 2, E317).
+   *
+   * Die Alles-oder-nichts-Zusage von `importAll` gilt für fünf Fächer. Die
+   * Anhänge folgen danach, jeder in einer eigenen Transaktion; ein grosses
+   * Video in EINER Transaktion würde die Ablage minutenlang blockieren
+   * (§10), und daran ändert dieser Bogen nichts.
+   *
+   * Was er ändert, ist das SCHWEIGEN. Vorher stand hier zweimal `continue`
+   * — fehlte ein Eintrag im Archiv oder liess er sich nicht lesen, wurde er
+   * übersprungen, und am Ende meldete Redion nur, wie viele es geschafft
+   * haben. Ein Block zeigte danach auf eine Datei, die es nicht gibt, und
+   * niemand hatte etwas gesagt.
+   *
+   * Jetzt wird gezählt, was FEHLT, und beim Namen genannt. Und ein einzelner
+   * Fehler bricht nicht mehr den Rest ab: wer neunzig von hundert Anhängen
+   * retten kann, soll neunzig retten und die zehn benennen.
+   */
   const anhaengeEinspielen = async (zip: any, art: string) => {
+    const leer = { da: 0, erwartet: 0, fehlend: [] as string[] };
     const roh = await zip.text('dateien.json');
-    if (!roh) return 0;
+    if (!roh) return leer;
     let karte;
-    try { karte = JSON.parse(roh); } catch { return 0; }
+    try { karte = JSON.parse(roh); } catch { return leer; }
 
     const STUECK = (typeof KONSTANTEN !== 'undefined') ? KONSTANTEN.STUECK : 1024 * 1024;
     const nachName: Record<string, string> = {};
     Object.entries<any>(karte.zuordnung || {}).forEach(([name, id]) => { nachName[id] = name; });
 
     let wieViele = 0;
+    const fehlend: string[] = [];
+    const nichtGeschafft = (satz: any, warum: string): void => {
+      fehlend.push(String(satz?.name || satz?.id || 'ohne Namen') + ' (' + warum + ')');
+    };
     for (const satz of (karte.saetze || [])) {
+     try {
       const name = nachName[satz.id];
-      if (!name) continue;
+      if (!name) { nichtGeschafft(satz, 'steht nicht im Archiv'); continue; }
       const roh2 = await zip.alsBlob(name);
-      if (!roh2) continue;
+      if (!roh2) { nichtGeschafft(satz, 'liess sich nicht lesen'); continue; }
       /* `alsBlob` hat die Bytes nie gelesen — hier bleibt es dabei. Der Typ
          kommt aus dem Dateisatz, nicht aus dem Archiv: ein ZIP kennt keine
          Medientypen, und ohne ihn zeigt der Browser ein Bild als Download. */
@@ -1972,6 +1996,12 @@ const App = (() => {
       await Store.dateiPut(Object.assign({}, satz, {
         teile, angekommen: teile, zustand: 'fertig', groesse: blob.size }));
       wieViele++;
+     } catch (e: unknown) {
+       /* EIN ANHANG BRICHT NICHT DEN REST AB. Voller Speicher, ein
+          beschädigtes Stück, ein Blob, den der Browser nicht mag — das
+          betrifft diese eine Datei, nicht die neunzig danach. */
+       nichtGeschafft(satz, e instanceof Error ? e.message.slice(0, 60) : 'Fehler');
+     }
     }
 
     /* ERSETZEN heisst: der Bestand sieht danach aus wie die Sicherung. Für
@@ -1995,7 +2025,7 @@ const App = (() => {
         Dateien.adresseWeg(alt.id);
       }
     }
-    return wieViele;
+    return { da: wieViele, erwartet: (karte.saetze || []).length, fehlend };
   };
 
   const sicherungLaden = (danach?: any) => {
@@ -2122,7 +2152,8 @@ const App = (() => {
         /* Die Anhänge NACH den Blöcken. Andersherum stünden die Dateien in
            der Ablage und würden beim „Ersetzen" gleich wieder mit gelöscht —
            `ersetzen` räumt weg, was nicht in der Sicherung steht. */
-        let anhaenge = 0;
+        let anhaenge: { da: number; erwartet: number; fehlend: string[] } =
+          { da: 0, erwartet: 0, fehlend: [] };
         if (zip) anhaenge = await anhaengeEinspielen(zip, wahl);
         danach && danach();
         zeichneBaum(); zeichneSeite();
@@ -2138,7 +2169,16 @@ const App = (() => {
                  (kopie ? ' (der alte Stand liegt als Sicherheitskopie im ' +
                           'Download-Ordner)' : '') +
                  (erg.versionen ? ', ' + erg.versionen + ' Fassungen' : '') +
-                 (anhaenge ? ', ' + anhaenge + ' Anhang/Anhänge' : '') +
+                 (anhaenge.da ? ', ' + anhaenge.da + ' Anhang/Anhänge' : '') +
+                 /* WAS NICHT ANKAM, WIRD GENANNT (L101 Punkt 2, E317). Und
+                    nur dann — „0 fehlen" ist eine Zeile, über die man
+                    hinwegliest. */
+                 (anhaenge.fehlend.length
+                   ? '. ' + anhaenge.fehlend.length + ' von ' + anhaenge.erwartet +
+                     ' Anhängen fehlen: ' + anhaenge.fehlend.slice(0, 3).join(', ') +
+                     (anhaenge.fehlend.length > 3 ? ' …' : '') +
+                     '. Die Sicherung liegt noch — du kannst sie erneut einspielen.'
+                   : '') +
                  (erg.frage
                    ? '. Der Abgleich mit der Wolke steht still: dort liegt noch ' +
                      'der Stand von vorher. Entscheide unter „Mehr → Wolke", ob ' +
@@ -3760,6 +3800,10 @@ const App = (() => {
     schauplatz,
     ABSCHNITTE, abschnittAn, abschnittSchalten, abschnitteAnpassen, reiterWechseln,
     sicherungSpeichern, sicherungPaketBauen, sicherungLaden, zurueck, vorwaerts, arbeitsbereich,
+    /* Seit E317 auch einzeln: nur so lässt sich messen, was ein Archiv mit
+       Loch macht — der Weg dorthin führt sonst über einen Dateiwähler, und
+       den kann kein Prüflauf antippen. */
+    anhaengeEinspielen,
     /* HERAUSGEGEBEN SEIT E236. Das Blatt „Neu erstellen" war eine interne
        Funktion hinter dem Stift am Telefon — und damit unerreichbar für den
        „+ Neu"-Knopf im Regal und für alles am Rechner. Es ist derselbe
