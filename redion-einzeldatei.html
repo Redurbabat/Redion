@@ -42587,9 +42587,22 @@ const PdfEinlesen = (() => {
                schon einmal verlassen hat, steht danach auf `false`, und ein
                zweites Einlesen holt ihn nicht zurueck. Eine Ansicht, die sich
                gegen die Entscheidung des Nutzers wieder einschaltet, ist keine
-               Hilfe (§47). */
+               Hilfe (§47).
+      
+               UND NICHT BEI „NEBENEINANDER". Das ist die dritte Bedingung, und
+               sie kam erst durch drei Pruefungen dazu, die genau darueber fielen
+               (test177, test178, test228 im vollen Lauf).
+      
+               Wer oben „Seite und Notizblatt nebeneinander" waehlt, sagt damit:
+               ich will beim Lesen daneben schreiben. Der Dokumentmodus zeigt aber
+               EINE Seite und keine Spalten — die eben getroffene Wahl waere
+               unsichtbar geworden, ohne Meldung. Eine Ansicht, die die Antwort auf
+               ihre eigene Frage ueberschreibt, ist schlimmer als gar keine Frage.
+      
+               Bei „Nur die Seiten" gilt das nicht: dort ist genau das gemeint,
+               was der Dokumentmodus zeigt. */
             const zielSeite = typeof Links !== 'undefined' ? Links.seiteVon(elternId) : null;
-            if (bis > 0 && zielSeite && zielSeite.dokumentModus === undefined)
+            if (bis > 0 && !daneben && zielSeite && zielSeite.dokumentModus === undefined)
                 Store.updateBlock(zielSeite.id, { dokumentModus: true });
             App.zeichneSeite();
             UI.toast(bis + ' von ' + gesamt + ' Seiten aus „' + datei.name + '" vorbereitet');

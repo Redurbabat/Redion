@@ -483,6 +483,25 @@ p('Der erste Punkt liegt bei rund einem Viertel der Seitenbreite',
   'ist ' + nachDemMalen.ersterX);
 p('Die Raumfassung steht am Block', Number(nachDemMalen.raum) >= 1);
 
+/* ERST AUS DEM DOKUMENTMODUS HERAUS (E296).
+   Seit E296 steht eine frisch eingelesene PDF als DOKUMENT offen, und dort
+   hängt die Blattbreite an der HÖHE: sie wird so gerechnet, dass die ganze
+   Seite ins Bild passt. Zwischen 1400×900 und 390×900 ändert sich die Höhe
+   aber kaum — gemessen 432 px gegen 354 px statt 708 gegen 334.
+
+   Für diesen Abschnitt ist das die falsche Umgebung. Er will beweisen, dass
+   die Marken in BLATTKOORDINATEN gespeichert sind und nicht in
+   Bildschirmpunkten, und dafür braucht die Gegenprobe unten zwei DEUTLICH
+   verschiedene Blattbreiten. Die gibt es auf der gewöhnlichen Seite, wo die
+   Breite mit dem Fenster geht. Dass es im Dokumentmodus auch stimmt, misst
+   der Zusatz ganz am Ende dieses Abschnitts. */
+await seite.evaluate(() => {
+  const p = Store.getBlock(App.aktuelleSeite());
+  if (p) Store.updateBlock(p.id, { dokumentModus: false });
+  App.zeichneSeite();
+});
+await seite.waitForTimeout(500);
+
 /* Jetzt auf Telefonbreite und NEU ZEICHNEN.
    700 px wäre die falsche Wahl gewesen: dort klappt die Seitenleiste zu, und
    die Blattfläche wird dadurch fast so breit wie bei 1400 (644 gegen 708 px
@@ -528,6 +547,42 @@ p('Gegenprobe: auf dem Bildschirm liegt er jetzt woanders',
 p('Und zwar ungefähr im Verhältnis der zwei Breiten',
   Math.abs(schmal.aufDemSchirm / nachDemMalen.aufDemSchirm -
            schmal.breiteAufDemSchirm / nachDemMalen.breiteAufDemSchirm) < 0.08);
+
+/* UND IM DOKUMENTMODUS GILT DASSELBE (E296).
+   Der Abschnitt oben misst auf der gewöhnlichen Seite, weil er dort zwei
+   stark verschiedene Breiten bekommt. Die zweite Umgebung darf deshalb
+   nicht ungeprüft bleiben — dort liegt seit E296 eine frisch eingelesene
+   PDF, also der Normalfall. Dieselbe Marke, dritte Breite, gespeicherter
+   Wert unverändert. */
+await seite.setViewportSize({ width: 1400, height: 900 });
+const imDokument = await seite.evaluate(async () => {
+  const p = Store.getBlock(App.aktuelleSeite());
+  if (p) Store.updateBlock(p.id, { dokumentModus: true });
+  App.zeichneSeite();
+  await new Promise(r => setTimeout(r, 700));
+  const b = Object.values(Store.cache.blocks || {})
+    .find((x: any) => x.type === 'pdfseite' && x.nr === 1) as any;
+  const pfad = document.querySelector('.document-stage .blatt-marken path[data-sid]');
+  const svg = document.querySelector('.document-stage .blatt-marken') as SVGSVGElement | null;
+  return {
+    imModus: !!document.querySelector('.document-workspace'),
+    ersterX: (b?.marken || [])[0]?.pts?.[0]?.[0],
+    gezeichnet: !!pfad,
+    box: svg?.getAttribute('viewBox') || '',
+    breite: Math.round(svg?.getBoundingClientRect().width || 0)
+  };
+});
+
+p('Im Dokumentmodus steht der Arbeitsraum', imDokument.imModus);
+p('Der Strich ist auch dort gezeichnet', imDokument.gezeichnet);
+gleich('Und der gespeicherte Punkt ist immer noch derselbe',
+  imDokument.ersterX, nachDemMalen.ersterX);
+gleich('Die Schicht spannt dort denselben Blattraum auf',
+  imDokument.box, '0 0 595 842');
+p('Bei einer dritten, wieder anderen Breite',
+  imDokument.breite > 0 &&
+  Math.abs(imDokument.breite - schmal.breiteAufDemSchirm) > 20,
+  `${imDokument.breite} px gegen ${schmal.breiteAufDemSchirm} px`);
 p('Gemessen in Seitenpunkten liegt er gleich',
   Number(schmal.ersterX) === Number(nachDemMalen.ersterX));
 

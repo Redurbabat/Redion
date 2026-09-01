@@ -160,11 +160,19 @@ p('Noch ist keine Breite am Block vermerkt', vorher.bildBreite === null,
  * ========================================================================*/
 console.log('\n2 · Der Knopf ist da, und er rechnet wirklich feiner');
 
+/* `[data-bid=...]` OHNE `.blk` DAVOR (E296). Im Dokumentmodus traegt die
+   Buehne selbst die Blockkennung, aber nicht die Klasse `.blk` — sie ist
+   die Huelle EINES Blocks und kein Block in einer Liste. Und seit E296
+   steht eine frisch eingelesene PDF genau dort.
+
+   `data-bid` war ohnehin der richtige Anker; `document-mode.ts` sagt das
+   im Kommentar selbst: „Deep-Links, Rollen und Hervorheben suchen
+   absichtlich nach `data-bid`". Die Klasse davor war Beiwerk. */
 const knopfDa = await seite.evaluate((bid: string) =>
-  !!document.querySelector(`.blk[data-bid="${bid}"] [data-a="feiner"]`), vorher.id);
+  !!document.querySelector(`[data-bid="${bid}"] [data-a="feiner"]`), vorher.id);
 p('An der Seite steht ein Knopf zum feiner Rechnen', knopfDa);
 
-await seite.click(`.blk[data-bid="${vorher.id}"] [data-a="feiner"]`);
+await seite.click(`[data-bid="${vorher.id}"] [data-a="feiner"]`);
 await seite.waitForFunction(
   (bid: string) => (Store.getBlock(bid) || {}).bildBreite === 3308,
   vorher.id, { timeout: 90000 });
@@ -232,7 +240,7 @@ const markenProbe = await seite.evaluate(async (bid: string) => {
     breite: 3, punkte: [[100, 200], [300, 400]] }] });
   App.zeichneSeite();
   await new Promise(r => setTimeout(r, 500));
-  const svgVor = document.querySelector(`.blk[data-bid="${bid}"] .blatt-marken`);
+  const svgVor = document.querySelector(`[data-bid="${bid}"] .blatt-marken`);
   const boxVor = svgVor ? svgVor.getAttribute('viewBox') : '';
   const punkteVor = JSON.stringify(Store.getBlock(bid).marken[0].punkte);
 
@@ -240,7 +248,7 @@ const markenProbe = await seite.evaluate(async (bid: string) => {
      ist erreicht. Der Zustand darf sich dabei nicht ändern. */
   const erg = await PdfEinlesen.schaerfer(Store.getBlock(bid));
   await new Promise(r => setTimeout(r, 400));
-  const svgNach = document.querySelector(`.blk[data-bid="${bid}"] .blatt-marken`);
+  const svgNach = document.querySelector(`[data-bid="${bid}"] .blatt-marken`);
   return {
     boxVor, boxNach: svgNach ? svgNach.getAttribute('viewBox') : '',
     punkteVor, punkteNach: JSON.stringify(Store.getBlock(bid).marken[0].punkte),
@@ -264,7 +272,7 @@ p('Und zwar mit einem Satz, den ein Mensch versteht',
 gleich('Die Breite bleibt, wo sie war', markenProbe.breiteNoch, 3308);
 
 const knopfWeg = await seite.evaluate((bid: string) =>
-  !document.querySelector(`.blk[data-bid="${bid}"] [data-a="feiner"]`), vorher.id);
+  !document.querySelector(`[data-bid="${bid}"] [data-a="feiner"]`), vorher.id);
 p('Und der Knopf ist fort — er hätte nichts mehr zu tun', knopfWeg);
 
 /* ==========================================================================

@@ -22080,6 +22080,42 @@ auf `false`, und ein zweites Einlesen holt ihn nicht zurück. Eine Ansicht,
 die sich gegen die Entscheidung des Nutzers wieder einschaltet, ist keine
 Hilfe (§47).
 
+NACHTRAG VOM SELBEN TAG — UND NICHT BEI „NEBENEINANDER".
+
+Der volle Lauf fand vier Rote, und drei davon hatten dieselbe Ursache:
+test177, test178 und test228 sahen nach dem Einlesen etwas anderes als
+erwartet. Beim Nachsehen war es kein Fehler der Prüfungen, sondern einer
+in Punkt 5.
+
+Wer beim Einlesen „Seite und Notizblatt nebeneinander" wählt, sagt damit:
+ich will beim Lesen daneben schreiben. Der Dokumentmodus zeigt aber EINE
+Seite und keine Spalten — die eben getroffene Wahl wurde damit unsichtbar,
+ohne Meldung. Eine Ansicht, die die Antwort auf ihre eigene Frage
+überschreibt, ist schlimmer als gar keine Frage.
+
+Die Umschaltung gilt seither nur bei „Nur die Seiten". Dort ist genau das
+gemeint, was der Dokumentmodus zeigt.
+
+Zwei der drei Prüfungen mussten trotzdem nachziehen, und beide sind dabei
+stärker geworden:
+
+  · `test228` ankerte an `.blk[data-bid=…]`. Im Dokumentmodus trägt die
+    Bühne die Blockkennung, aber nicht die Klasse `.blk` — sie ist die
+    Hülle EINES Blocks und kein Block in einer Liste. `data-bid` war
+    ohnehin der richtige Anker; `document-mode.ts` sagt das in seinem
+    eigenen Kommentar.
+  · `test177` misst, dass Marken in BLATTKOORDINATEN gespeichert sind und
+    nicht in Bildschirmpunkten. Die Gegenprobe dazu braucht zwei deutlich
+    verschiedene Blattbreiten — im Dokumentmodus hängt die Breite an der
+    HÖHE, und zwischen 1400×900 und 390×900 ändert die sich kaum (432 px
+    gegen 354 statt 708 gegen 334). Der Abschnitt verlässt den
+    Dokumentmodus deshalb ausdrücklich, und ein NEUER Arm am Ende prüft
+    dieselbe Marke dann noch einmal darin: gespeicherter Wert unverändert,
+    Blattraum `0 0 595 842`, dritte Breite. Aus 64 Punkten wurden 69.
+
+Der vierte Rote, `test247`, lief einzeln grün durch — ein Flackern im
+Gesamtlauf, kein Befund.
+
 WAS DAS HINSEHEN GEFUNDEN HAT, UND KEIN PRÜFLAUF HÄTTE.
 
 Drei Fehler, alle erst im Bild sichtbar:
