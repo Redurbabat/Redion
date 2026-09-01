@@ -22116,3 +22116,221 @@ Behauptung „der Platz gehört dem Dokument" geworden, mit dem Öffnen als
 zweitem Arm) und test221 §5 (kein Kopf im Dokumentmodus — und die alte
 Randmessung dort, wo es noch einen Kopf gibt). typecheck grün · sw v57 ·
 Einzeldatei neu gebaut.
+
+
+================================================================================
+E291 — Die Rechteprüfung der Agenten trifft ihr Ziel (L102)
+================================================================================
+1. September 2026
+
+Selbst nachgemessen, und schärfer, als die Lücke sagte.
+
+`kern/zugang/sitzung.ts:154`:
+
+    const darf = (was, seiteId?) => {
+      const id = seiteId || App.aktuelleSeite();   // ohne Angabe: die OFFENE
+      if (!id) return true;                        // ohne Seite: ALLES
+      return rolle(rolleAuf(id, '')).darf.includes(was);
+    };
+
+`bereiche/ki/agenten.ts:802` rief das OHNE Seitenkennung. Zwei Folgen:
+
+  1. Mit offener Seite wurden die Werkzeuge gegen DIESE Seite geprüft — nicht
+     gegen die, die sie anfassen werden.
+  2. Ohne offene Seite kam `true` heraus. Genau das ist seit E132 der
+     Normalfall: die Startansicht ist das Heute-Dashboard, und das ist keine
+     Seite. Auf dem Startbildschirm liess der Filter jedes Schreibwerkzeug
+     durch.
+
+Von zwölf Werkzeugen prüfte genau EINES später richtig nach (`seiteLesen`,
+mit `p.id`). `zeileAnlegen` und `feldFuellen` schreiben in eine Datenbank,
+die sie sich per NAMEN suchen — und hingen allein an dem Tor, das ins Leere
+greift.
+
+WAS SICH ÄNDERT. Das Vorab-Tor bleibt als grobe Vorauswahl und verspricht
+nichts mehr; der Kommentar dort sagt das jetzt auch. Die verbindliche Prüfung
+sitzt IM Werkzeug, gegen das Ziel, das es wirklich meint.
+
+Dafür kommt `Konten.darfAnSammlung(was, collectionId)` dazu. Es findet über
+`seiteZuSammlung` den Ort, an dem die Rechte hängen — den Weg über den
+unverknüpften Datenbankblock nach oben, denn eine Zeile hat als Elternteil
+die Sammlung und keinen Block.
+
+DREI ANTWORTEN STATT ZWEI. `true`, `false` — und `null`, wenn sich zu der
+Datenbank keine Seite finden lässt. Eine Rechteprüfung, die ihr Ziel nicht
+findet, darf nicht heimlich sperren und nicht heimlich erlauben; sie muss es
+sagen, und der Aufrufer tut das im Klartext.
+
+Prüfung: `pruefungen/lauf/test286.mts`, 16 Punkte. §3 und §4 waren vor E291
+rot — ohne offene Seite legte der Agent die Zeile an, gleich welche Rolle das
+Konto auf der Datenbank hatte. §6 ist die Gegenprobe: mit Recht geht alles
+durch, sonst wäre der Lauf auch mit einem `return false` grün. §1 hält
+ausdrücklich fest, dass das Tor weiterhin ins Leere greift und das RICHTIG
+ist — „darf ich überhaupt bearbeiten" ist keine Ortsfrage.
+
+Beim Bauen der Prüfung selbst gelernt: die KONTOROLLE ist die Obergrenze,
+nicht die Antwort. `rolleAuf` rechnet `strenger(Seitenfreigabe, Kontorolle)`;
+mit einem Konto der Rolle „lesen" wäre jede Seite gesperrt gewesen, und die
+Gegenprobe hätte nichts zu zeigen gehabt.
+
+
+================================================================================
+E292 — Vor dem Ersetzen ein Netz (L101 Punkt 3)
+================================================================================
+1. September 2026
+
+Der VERSCHLÜSSELTE Einspielweg schreibt seit jeher eine Sicherheitskopie,
+bevor er ersetzt (`krypto.ts:935`, „Netz unter dem Seil"). Der OFFENE Weg tat
+es nicht. Das ist genau verkehrt herum zur Gefahr: den offenen Weg benutzen
+mehr Leute, und „Ersetzen" löscht alles, was nicht in der Sicherung steht.
+
+Nur beim ERSETZEN, denn nur dort wird gelöscht. Beim Dazulegen bleibt alles
+stehen, und eine Kopie, die niemand braucht, ist eine Datei im Download-
+Ordner, die man nicht bestellt hat.
+
+`sicherungSpeichern` UND NICHT `Krypto.sicherungSchreiben`. Der vorbereitete
+Entwurf nahm das zweite; beim Nachlesen des Einspielwegs zeigte sich, dass er
+auch ein `.redion` annimmt — und bei einem `.redion` löscht das Ersetzen auch
+ANHÄNGE. Eine Kopie in reinem JSON hätte die Anhänge nicht: ein Netz mit
+Löchern genau dort, wo die grössten Dateien fallen.
+
+Schlägt das Schreiben fehl, wird NICHT eingespielt. Ein Netz, das reisst, ist
+schlimmer als keines — man hätte sich darauf verlassen.
+
+Prüfung: `pruefungen/lauf/test287.mts`, 9 Punkte.
+
+Und eine Lehre über Prüfungen, die hier fällig war: die erste Fassung las
+`sicherung:zuletzt` aus `meta` und war rot, obwohl die Kopie geschrieben
+wurde. Der Grund ist derselbe Vorgang, um den es geht — „Ersetzen" ersetzt
+AUCH `meta` und überschreibt die Marke unmittelbar wieder. Gemessen wird
+seither die Datei selbst, über Playwrights `download`-Ereignis.
+
+
+================================================================================
+E293 — Zwei Wächter für Fehler, die nicht wie Fehler aussehen (L90, L82 P9)
+================================================================================
+1. September 2026
+
+Beide Lücken haben denselben Bau: etwas ist falsch, und es sieht nicht falsch
+aus. Beide wurden seinerzeit auf einem BILD gefunden, nicht von einem
+Prüflauf (§55.1). Beide bekommen jetzt einen.
+
+── L82 PUNKT 9 · Sieht ein Knopf wie ein Knopf aus? ────────────────────────
+
+`grund.css:210` nimmt jedem Knopf sein Aussehen:
+
+    button{font:inherit; color:inherit; background:none; border:none;
+           cursor:pointer}
+
+Das ist richtig so — Redion setzt sein Aussehen über Klassen. Der Preis: ein
+Knopf OHNE Klasse ist von gewöhnlichem Text nicht zu unterscheiden. Genau das
+war beim Wolke-Fenster passiert (E270): „Mit GitHub anmelden" stand als
+nackte Zeile da.
+
+`test289` misst: ein sichtbarer Knopf mit einem WORT muss sich von
+gewöhnlichem Fliesstext in mindestens einem Punkt unterscheiden — Rahmen,
+Hintergrund, Unterstreichung, Farbe oder Schriftstärke. Reine Zeichen-Knöpfe
+bleiben draussen; sie tragen ihre Bedeutung im Bild, und Redions
+Werkzeugleisten bestehen daraus.
+
+ER HAT SOFORT ETWAS GEFUNDEN, und das ist der Sinn: die Trefferliste im
+Schlagwortregister hatte keine Klasse und stand als nackter Text da. Sie
+heisst jetzt `.tagtreffer` und sieht aus wie eine Liste.
+
+Ein zweiter Fund war KEINER, und das hat die Messung verbessert: die
+Backstage-Zeile trägt ihre Auszeichnung in den Kindern (fetter Titel, Pfeil
+rechts, Hover-Fläche). Auf dem Bildschirm ist das dasselbe Signal. Wer nur
+den Knopf selbst misst, meldet ein sauber gestaltetes Listenmuster als nackt
+— und wird dafür abgeschaltet statt gelesen. Die Messung schaut seither auch
+auf die Nachkommen.
+
+Und ein dritter: der Arm für das Wolke-Fenster rief `WolkeFenster.zeigen()`,
+was es nicht gibt. Er meldete „liess sich nicht öffnen" und zählte trotzdem
+als bestanden — ausgerechnet für die Stelle, an der der Fehler überhaupt
+gefunden worden war. Es heisst `dialog()`.
+
+── L90 · Kein Namensraum ohne Verzeichnis ──────────────────────────────────
+
+`bs-` gehört seit dem Formelbuch der Buchseite. Die Datei-Fläche griff beim
+ersten Entwurf danach und erbte prompt `font-weight:700` in ihre Unterzeilen.
+Sie heisst seither `bst-`.
+
+L90 hält fest, dass DAS NICHT DIE LÜCKE IST, sondern dass nichts davor warnt:
+„Redion hat rund vierzig CSS-Namensräume mit zwei bis vier Buchstaben, und
+keiner ist irgendwo aufgeschrieben."
+
+Es sind nicht vierzig. Es sind 143. Sie stehen jetzt in
+`doku/CSS-NAMENSRAEUME.md`, und `test290` hält das Verzeichnis mit dem
+echten Stil zusammen.
+
+WAS NICHT GEMESSEN WIRD, UND WARUM. Der erste Entwurf verlangte, dass jedes
+Präfix GENAU EINER Stildatei gehört. Gemessen ergab das 21 „Verstösse" — und
+keiner war einer: `db` steht in vier Dateien, weil der Datenbank-Bereich in
+vier Dateien wohnt. Redions Stildateien sind nach Thema geschnitten, nicht
+nach Präfix. Eine Prüfung, die das als Fehler meldet, ist rot, ohne dass
+jemand etwas falsch gemacht hätte — und wird abgeschaltet statt gelesen.
+
+Gemessen wird stattdessen genau das, was L90 verlangt: dass die Namen
+AUFGESCHRIEBEN sind. Ein neues Präfix im Stil, das nicht im Verzeichnis
+steht, macht den Lauf rot — und wer es einträgt, sieht dabei die Liste, auf
+der sein Wunschname vielleicht schon steht. Dazu die Gegenrichtung: ein
+Verzeichniseintrag ohne Stil ist eine Karteileiche, und eine falsche
+Hauptdatei zeigt, dass ein Bereich unbemerkt umgezogen ist.
+
+
+================================================================================
+E294 — Der Abdruck der Ordner-Sicherung bemerkt Anhänge (L82 Punkt 5)
+================================================================================
+1. September 2026
+
+Die Ordner-Sicherung fragt alle fünf Minuten, ob sich etwas getan hat. Sie
+liest dafür den Spiegel im Arbeitsspeicher — und der hält `blocks`,
+`collections`, `views`, `meta`, `suchindex`, aber KEINE Dateien
+(`indexdb.ts:255`). Wer nur einen Anhang austauschte, änderte nichts, was der
+Abdruck sehen konnte. Es wurde nicht gesichert, bis irgendwann etwas anderes
+sich änderte.
+
+Die Dateien dafür alle fünf Minuten aus der Ablage zu lesen wäre teurer als
+die Sicherung selbst — genau das lehnt `standAbdruck` ausdrücklich ab. Also
+hinterlässt die Dateischicht eine Marke (`dateien:stand`, gehoben bei jedem
+`dateiPut` und `dateiWeg`), und der Abdruck liest DIESE EINE.
+
+Nicht `meta` als Ganzes: dort schreibt die Sicherung selbst zwei Marken hin,
+und der Abdruck wäre nach jedem Sichern sofort ein anderer — Redion sicherte
+dann für immer. `test288` §5 hält genau das fest.
+
+Prüfung: `pruefungen/lauf/test288.mts`, 8 Punkte. §4 ist die Gegenprobe.
+
+
+================================================================================
+E295 — Zwei stumme Stellen sagen jetzt etwas (L104 P2, L106 P7)
+================================================================================
+1. September 2026
+
+Zwei Dinge waren gebaut, geprüft und richtig — und schlugen im Alltag
+trotzdem nie an.
+
+L104 PUNKT 2 · `KiBuch.laufBeginnen()` wurde nie gerufen. `KiBuch` führt vier
+Grenzen: je Aufruf, je Lauf, je Tag, je Monat. Die zweite war die einzige,
+die im Alltag nie anschlug — `laufStand` begann beim Laden der Seite bei null
+und lief dann durch, weil niemand ihn zurücksetzte. Sie FUNKTIONIERTE
+(test281 §3 misst das); sie hatte nur nie einen Anfang. Der Anfang ist jetzt
+der Start der Agentenschleife — genau der Fall, für den die Grenze gedacht
+ist: viele Aufrufe hintereinander, jeder für sich harmlos.
+
+L106 PUNKT 7 · Der Kalender-Hinweis erreichte die Oberfläche nicht. Seit E290
+trägt jeder Termin `regelUnklar`, wenn an seiner Wiederholungsregel etwas
+nicht gelesen werden konnte. Angezeigt wurde es nirgends — und ein Hinweis,
+den niemand sieht, ist derselbe Stillstand wie vorher.
+
+GESAMMELT UND EINMAL GENANNT, nicht je Termin. Bei einem Kalender mit vierzig
+Wochenterminen stünde derselbe Satz vierzigmal da, und ab dem dritten liest
+ihn keiner mehr. Das ist die Regel, die diese Woche fünfmal zugeschnappt hat
+(E284, E286, E288, E289, E290): eine Anzeige, die IMMER etwas anzeigt, wird
+nicht gelesen.
+
+Prüfung: `pruefungen/lauf/test291.mts`, 13 Punkte. §2 war vor E295 rot — kein
+einziger Aufruf von `laufBeginnen` stand ausserhalb von `buch.ts`, und
+gemessen wird am ERZEUGTEN JavaScript, weil der Browser `quell/` lädt und
+eine Zeile, die nur in `src/` steht, nicht wirkt. §4 ist die Gegenprobe: eine
+gewöhnliche Regel meldet nichts.

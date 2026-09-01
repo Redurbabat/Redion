@@ -151,10 +151,63 @@ const Konten = (() => {
     return strenger(Store.getMeta('rolleStandard', 'voll'), kontoRolle);
   };
 
+  /**
+   * Darf ich das?
+   *
+   * OHNE SEITENANGABE FÄLLT DIE FRAGE AUF DIE OFFENE SEITE ZURÜCK, und ohne
+   * offene Seite lautet die Antwort `true`. Das ist für die meisten Aufrufer
+   * richtig — „darf ich überhaupt bearbeiten" ist eine Frage nach der Rolle,
+   * nicht nach einem Ort.
+   *
+   * Es ist aber die falsche Frage, sobald der Aufrufer WEISS, was er anfassen
+   * wird. Dann gehört die Kennung hinein. Wer eine Datenbank meint, nimmt
+   * `darfAnSammlung` — sonst prüft er die Seite, die gerade zufällig offen
+   * ist, oder seit E132 (Startansicht ist das Heute-Dashboard, und das ist
+   * keine Seite) überhaupt nichts.
+   */
   const darf = (was: string, seiteId?: string): boolean => {
     const id = seiteId || App.aktuelleSeite();
     if (!id) return true;
     return rolle(rolleAuf(id, '')).darf.includes(was);
+  };
+
+  /**
+   * Die Seite, auf der eine Datenbank lebt — dort hängen ihre Rechte.
+   *
+   * Eine Zeile hat als Elternteil die SAMMLUNG, nicht einen Block; der Weg
+   * nach oben führt deshalb über den Datenbankblock. Verknüpfte Ansichten
+   * derselben Sammlung gibt es mehrfach — die echte ist die unverknüpfte.
+   *
+   * Steht hier `''`, ist die Datenbank an keiner Seite zu finden. Dann gilt
+   * sie als frei: eine Rechteprüfung, die kein Ziel findet, darf nicht
+   * heimlich sperren — sie muss es sagen, und das tut der Aufrufer.
+   */
+  const seiteZuSammlung = (collectionId: string): string => {
+    if (!collectionId) return '';
+    const ansichten = Object.values<any>(Store.cache.blocks).filter(
+      (b: any) => b && b.alive !== false && b.type === 'database' &&
+                  b.collectionId === collectionId);
+    const echte = ansichten.find((b: any) => !b.verknuepft) || ansichten[0];
+    if (!echte) return '';
+    let cur: any = echte, n = 0;
+    while (cur && n++ < 50) {
+      if (cur.type === 'page' && cur.parentTable !== 'collection') return String(cur.id);
+      cur = cur.parentId ? Store.getBlock(cur.parentId) : null;
+    }
+    return '';
+  };
+
+  /**
+   * Darf ich das an DIESER Datenbank?
+   *
+   * Findet sich keine Seite dazu, wird nicht heimlich erlaubt und nicht
+   * heimlich gesperrt — die Antwort ist `null`, und der Aufrufer sagt dem
+   * Menschen, dass er es nicht entscheiden konnte.
+   */
+  const darfAnSammlung = (was: string, collectionId: string): boolean | null => {
+    const seite = seiteZuSammlung(collectionId);
+    if (!seite) return null;
+    return rolle(rolleAuf(seite, '')).darf.includes(was);
   };
 
   const setzeFreigabe = (seiteId: string, kontoId: string, rolleId: string | null): void => {
@@ -370,7 +423,8 @@ const Konten = (() => {
   };
 
   return { ROLLEN, RANG, strenger, rolle, alle, aktiv, anlegen, anmelden, entfernen,
-           rolleAuf, darf, setzeFreigabe, freigabenVon, freigeben, verwalten, matrix };
+           rolleAuf, darf, darfAnSammlung, seiteZuSammlung,
+           setzeFreigabe, freigabenVon, freigeben, verwalten, matrix };
 })();
 
 (window as any).Konten = Konten;

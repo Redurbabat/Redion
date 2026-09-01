@@ -2992,6 +2992,13 @@ L82 — Was der Geräte-Abgleich und die Ordner-Sicherung (E270) noch nicht kön
    Blöcke, Sammlungen und Ansichten. Wer nur eine Datei austauscht, ohne
    dass ein Block sich ändert, löst keine Sicherung aus — bis zur
    nächsten echten Änderung.
+
+   **GESCHLOSSEN am 1. September 2026 durch E294.** Die Dateischicht hebt
+   bei jedem `dateiPut` und `dateiWeg` die Marke `dateien:stand`, und der
+   Abdruck liest diese EINE — nicht `meta` als Ganzes, denn dort schreibt
+   die Sicherung selbst zwei Marken hin und der Abdruck wäre nach jedem
+   Sichern sofort ein anderer. `test288`, 8 Punkte, mit beiden
+   Gegenproben.
 6. **Kein Fortschritt beim Schreiben.** Ein 500-MB-Paket wird still
    geschrieben; man sieht nur hinterher, dass es da ist. Für die Grössen,
    um die es heute geht, reicht das.
@@ -3008,6 +3015,15 @@ L82 — Was der Geräte-Abgleich und die Ordner-Sicherung (E270) noch nicht kön
    fragt, ob ein Knopf wie einer aussieht — und andere Fenster mit
    demselben Muster sind ungeprüft. Wer das nächste baut, gibt ihm eine
    Klasse.
+
+   **GESCHLOSSEN am 1. September 2026 durch E293.** `test289` fragt es:
+   ein sichtbarer Knopf mit einem WORT muss sich von gewöhnlichem
+   Fliesstext in mindestens einem Punkt unterscheiden — Rahmen,
+   Hintergrund, Unterstreichung, Farbe oder Schriftstärke, am Knopf selbst
+   oder an einem seiner Nachkommen. Geprüft werden sechs Fenster, das
+   Menüband und die Kopfleiste. Er hat sofort etwas gefunden: die
+   Trefferliste im Schlagwortregister stand als nackter Text da und heisst
+   jetzt `.tagtreffer`.
 
 Gefunden am 30. August 2026 (beim Bau von E270, beim Ansehen der Bilder).
 
@@ -3359,6 +3375,23 @@ kaputt sein, damit dieser Punkt rot wird, und kann das im gemessenen Zustand
 --------------------------------------------------------------------------------
 L90 — Der Namensraum `bs-` ist doppelt vergeben (E272 Phase G)
 --------------------------------------------------------------------------------
+
+**GESCHLOSSEN am 1. September 2026 durch E293.** Nicht die eine Stelle war
+die Lücke, sondern dass nichts davor warnte — das steht unten ausdrücklich
+so. Beides ist jetzt da: `doku/CSS-NAMENSRAEUME.md` führt alle **143**
+Präfixe (nicht vierzig, wie hier geschätzt), und `test290` hält Verzeichnis
+und Stil zusammen. Ein neues Präfix, das nicht eingetragen ist, macht den
+Lauf rot; wer es einträgt, sieht dabei die Liste und merkt, wenn sein
+Wunschname schon vergeben ist. Die Gegenrichtung ist mitgeprüft: ein
+Verzeichniseintrag ohne Stil ist eine Karteileiche, eine falsche Hauptdatei
+zeigt einen unbemerkten Umzug.
+
+Was NICHT gemessen wird und warum: „ein Präfix gehört genau einer Stildatei"
+ergab 21 Treffer, von denen keiner ein Fehler war — `db` steht in vier
+Dateien, weil der Datenbank-Bereich in vier Dateien wohnt. Redions
+Stildateien sind nach Thema geschnitten, nicht nach Präfix.
+
+Der Text darunter bleibt als Beleg stehen.
 
 `bs-` gehört seit dem Formelbuch der BUCHSEITE: `.bs-zeile`, `.bs-kopf`,
 `.bs-inhalt`, `.bs-groessen`, `.bs-formel` und ein Dutzend mehr stehen in
@@ -3713,6 +3746,12 @@ Grund:
    normale Weg nicht. Das ist genau umgekehrt zur Gefahr: den offenen Weg
    benutzen mehr Leute.
 
+   **GESCHLOSSEN am 1. September 2026 durch E292.** Der offene Weg schreibt
+   beim Ersetzen vorher eine Sicherheitskopie — über `sicherungSpeichern`,
+   also MIT Anhängen, weil dieser Weg auch ein `.redion` annimmt und das
+   Ersetzen dort auch Anhänge löscht. Klappt sie nicht, wird nicht
+   eingespielt. `test287`, 9 Punkte, misst die Datei selbst.
+
 4. **Die Sicherheit ist insgesamt verkehrt herum verteilt.** Der
    VERSCHLÜSSELTE `.redion`-Weg ist streng — Manifestfassung, KDF-Parameter,
    Pfad-Regex, keine undeklarierten ZIP-Einträge, Bytegrössen, vollständiger
@@ -3725,6 +3764,13 @@ Gefunden am 31. August 2026 (E284, bei der gemessenen Bestandsaufnahme).
 ================================================================================
 L102 — Was die Bestandsaufnahme vom 31. August sonst noch fand
 ================================================================================
+
+**PUNKT 1 GESCHLOSSEN am 31. August 2026 durch E290** (`core/calendar/
+wiederholung.ts` liest BYDAY, BYMONTHDAY, BYMONTH, BYSETPOS, WKST, EXDATE,
+RDATE; `test284`, 49 Punkte).
+**PUNKT 2 GESCHLOSSEN am 1. September 2026 durch E291** (`darfAnSammlung`
+prüft gegen die Datenbank, die das Werkzeug wirklich meint; `test286`,
+16 Punkte).
 
 Zehn Leser sind durch `src/` gegangen, jeder Befund von einem zweiten Agenten
 angegriffen. Was dabei auffiel und NICHT zu E284 gehört, steht hier, damit es
@@ -3868,6 +3914,11 @@ Drei weitere Dinge, die E287 bewusst offenlässt:
    FUNKTIONIERT (test281 §3 misst es), sie wird nur nicht zurückgesetzt.
    Der Aufruf gehört in `agenten.ts` an den Start einer Schleife.
 
+   **GESCHLOSSEN am 1. September 2026 durch E295.** Der Aufruf steht am
+   Start der Agentenschleife. `test291` §2 misst ihn am ERZEUGTEN
+   JavaScript — der Browser lädt `quell/`, und eine Zeile, die nur in
+   `src/` steht, wirkt nicht.
+
 3. **Die Preisliste altert von selbst.** `STAND` sagt, von wann sie ist,
    und der Satz bei einem unbekannten Modell nennt das Datum. Aber niemand
    erinnert daran, sie zu pflegen; in einem Jahr rechnet sie mit Preisen
@@ -3960,6 +4011,13 @@ L106 — Was die Lern-Evidenz (E289) und der Kalender (E290) noch nicht können
    nicht.** Der Termin trägt `regelUnklar` und `regelSatz` mit — angezeigt
    wird beides nirgends. Das ist §47 von der leisen Seite und der nächste
    kleine Schritt.
+
+   **GESCHLOSSEN am 1. September 2026 durch E295.** Der Kalender sammelt
+   die ungelesenen Teile über alle Termine in eine Menge und nennt sie
+   EINMAL in einem Banner — nicht je Termin: bei vierzig Wochenterminen
+   stünde derselbe Satz vierzigmal da, und ab dem dritten liest ihn keiner
+   mehr. `test291` §3 und §4, mit der Gegenprobe, dass eine gewöhnliche
+   Regel schweigt.
 
 8. **Kein Schreiben von BYDAY.** `icsSchreiben` erzeugt keine
    Wiederholungsregeln. Was Redion einliest, kann es nicht wieder ausgeben —

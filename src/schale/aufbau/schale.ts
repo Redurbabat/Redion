@@ -2038,7 +2038,8 @@ const App = (() => {
         knoepfe: [
           { id: 'ersetzen', text: 'Ersetzen',
             hinweis: 'Der Bestand sieht danach aus wie die Sicherung. Was ' +
-                     'nicht darin steht, wird gelöscht.' },
+                     'nicht darin steht, wird gelöscht. Vorher lädt Redion ' +
+                     'eine Sicherheitskopie des jetzigen Standes herunter.' },
           { id: 'zusammenfuehren', text: 'Dazulegen',
             hinweis: 'Nichts wird gelöscht. Bei gleicher Kennung gewinnt die ' +
                      'Sicherung.' },
@@ -2046,6 +2047,36 @@ const App = (() => {
         ]
       });
       if (!wahl) return;
+
+      /* DAS NETZ UNTER DEM SEIL (E292, L101 Punkt 3).
+         Der VERSCHLÜSSELTE Weg schreibt seit jeher eine Sicherheitskopie,
+         bevor er ersetzt (`krypto.ts:935`, dort steht derselbe Satz). Der
+         offene Weg tat es nicht — und das ist genau verkehrt herum zur
+         Gefahr, denn den offenen Weg benutzen mehr Leute.
+
+         Nur beim ERSETZEN, denn nur dort wird gelöscht. Beim Dazulegen
+         bliebe alles stehen, und eine Kopie, die niemand braucht, ist eine
+         Datei im Download-Ordner, die man nicht bestellt hat.
+
+         `sicherungSpeichern` und nicht `Krypto.sicherungSchreiben`: dieser
+         Weg nimmt auch ein `.redion`, und bei einem `.redion` löscht das
+         Ersetzen auch ANHÄNGE (`anhaengeEinspielen` weiter unten). Eine
+         Kopie in reinem JSON hätte die Anhänge nicht — ein Netz mit Löchern
+         genau dort, wo die grössten Dateien fallen. `sicherungSpeichern`
+         baut dieselbe Sicherung wie der Knopf „Sicherung speichern": mit
+         Anhängen, wenn es welche gibt.
+
+         Schlägt das Schreiben fehl, wird NICHT eingespielt. Ein Netz, das
+         reisst, ist schlimmer als keines: man hätte sich darauf verlassen. */
+      let kopie = false;
+      if (wahl === 'ersetzen') {
+        kopie = await sicherungSpeichern();
+        if (!kopie) {
+          alert('Es wurde NICHTS eingespielt — dein Bestand steht unverändert.\n\n' +
+                'Ohne Sicherheitskopie wäre das Ersetzen ein Sprung ohne Netz.');
+          return;
+        }
+      }
 
       try {
         const erg = await Store.importAll(text, wahl);
@@ -2065,6 +2096,8 @@ const App = (() => {
            sie wartet, ist ein stehender Abgleich ohne Grund — und der
            fällt erst auf, wenn das andere Gerät nichts mehr bekommt. */
         UI.toast('Sicherung geladen — ' + erg.bloecke + ' Blöcke' +
+                 (kopie ? ' (der alte Stand liegt als Sicherheitskopie im ' +
+                          'Download-Ordner)' : '') +
                  (erg.versionen ? ', ' + erg.versionen + ' Fassungen' : '') +
                  (anhaenge ? ', ' + anhaenge + ' Anhang/Anhänge' : '') +
                  (erg.frage

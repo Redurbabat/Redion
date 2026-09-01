@@ -370,10 +370,14 @@ const Kalender = (() => {
     if (!liste.length) { UI.toast('Kein Kalender abonniert'); return; }
     const coll = zielDatenbank(seiteId);
     let neu = 0, frisch = 0, schief = [];
+    /* Für den Sammelhinweis unten — die Termine selbst wandern in die
+       Datenbank und sind danach nicht mehr in der Hand. */
+    const alleTermine: any[] = [];
     for (const a of liste) {
       try {
         const k = await aboHolen(a);
         const e = uebernehmen(coll, k.termine, a.name || k.name);
+        alleTermine.push(...k.termine);
         neu += e.neu; frisch += e.frisch;
         a.zuletzt = Store.now();
       } catch (err) {
@@ -384,6 +388,22 @@ const Kalender = (() => {
     aboSpeichern(abos());
     App.zeichneSeite();
     if (schief.length) UI.banner('Nicht geklappt — ' + schief.join(' · '), 'warn');
+
+    /* WAS AN DEN REGELN NICHT GELESEN WERDEN KONNTE, WIRD GESAGT (E295,
+       L106 Punkt 7). E290 gibt es jedem Termin mit — angezeigt hat es
+       bis jetzt niemand, und ein Hinweis, den niemand sieht, ist derselbe
+       Stillstand wie vorher.
+
+       Gesammelt und EINMAL genannt, nicht je Termin: bei einem Kalender
+       mit vierzig Wochenterminen stünde derselbe Satz vierzigmal da, und
+       ab dem dritten liest ihn keiner mehr. */
+    const unklar = new Set<string>();
+    for (const t of alleTermine)
+      for (const x of (t.regelUnklar || [])) unklar.add(String(x));
+    if (unklar.size)
+      UI.banner('Ein Teil der Wiederholungsregeln blieb ungelesen: ' +
+        [...unklar].join(', ') + '. Die Termine daraus fehlen.', 'warn');
+
     UI.toast(neu + ' neu, ' + frisch + ' aufgefrischt');
   };
 

@@ -189,6 +189,14 @@ const Agent = (() => {
                 const c = Object.values(Store.cache.collections).find(x => (x.name || '').toLowerCase() === String(a.datenbank || '').toLowerCase());
                 if (!c)
                     return 'Keine Datenbank namens „' + a.datenbank + '".';
+                /* Erst hier steht fest, WOHIN geschrieben wird — also erst hier lässt
+                   sich das Recht dazu prüfen (E291). */
+                const darfHier = Konten.darfAnSammlung('bearbeiten', c.id);
+                if (darfHier === false)
+                    return 'In „' + c.name + '" darfst du nichts anlegen.';
+                if (darfHier === null)
+                    return 'Zu „' + c.name + '" liess sich keine Seite finden, also auch ' +
+                        'kein Recht daran. Nichts angelegt.';
                 const props = {};
                 let titel = '';
                 Object.entries(a.werte || {}).forEach(([n, v]) => {
@@ -234,6 +242,16 @@ const Agent = (() => {
                 const k = Object.keys(c.schema).find(x => c.schema[x].name.toLowerCase() === String(a.spalte || '').toLowerCase());
                 if (!k)
                     return 'Keine Spalte namens „' + a.spalte + '".';
+                /* Wie bei `zeileAnlegen`: geprüft wird die Datenbank, die wirklich
+                   gemeint ist — und BEVOR der Auftrag ins Schema geschrieben wird
+                   (E291). Andersherum bliebe die Spaltenanweisung stehen, obwohl
+                   nichts gefüllt werden durfte. */
+                const darfFuellen = Konten.darfAnSammlung('bearbeiten', c.id);
+                if (darfFuellen === false)
+                    return 'In „' + c.name + '" darfst du nichts ändern.';
+                if (darfFuellen === null)
+                    return 'Zu „' + c.name + '" liess sich keine Seite finden, also auch ' +
+                        'kein Recht daran. Nichts gefüllt.';
                 c.schema[k].auftrag = a.auftrag || c.schema[k].auftrag;
                 Store.updateCollection(c.id, { schema: c.schema });
                 const zeilen = Store.rowsOf(c.id).slice(0, 15);
@@ -710,6 +728,17 @@ const Agent = (() => {
             id, agentId: protokoll.agentId, controller: new AbortController(),
             worker: new Set(), protokoll, reserviert: { objekte: 0, bytes: 0 }
         };
+        /* DIE LAUFGRENZE BEGINNT HIER (E295, L104 Punkt 2).
+           `KiBuch` führt vier Grenzen: je Aufruf, je Lauf, je Tag, je Monat.
+           Die zweite war die einzige, die im Alltag nie anschlug — `laufStand`
+           begann beim Laden der Seite bei null und lief dann durch, weil
+           niemand `laufBeginnen()` rief. Sie FUNKTIONIERTE (test281 §3 misst
+           es), sie wurde nur nie zurückgesetzt.
+    
+           Ein Agentenlauf ist genau das, wofür sie gedacht ist: viele Aufrufe
+           hintereinander, jeder für sich harmlos. */
+        if (typeof KiBuch !== 'undefined' && KiBuch.laufBeginnen)
+            KiBuch.laufBeginnen();
         let gespeichert = false;
         let hatFehler = false;
         const sichern = () => {
@@ -743,7 +772,18 @@ const Agent = (() => {
             return vorStartAblehnen('Das Tageslimit von ' + tagesgrenze() + ' Schritten ist aufgebraucht. ' +
                 'Morgen geht es weiter, oder du hebst die Grenze unter 🤖 Agent → Grenzen an.');
         /* Berechtigungsschicht: kein Werkzeug, das der angemeldete Mensch selbst
-           nicht dürfte. Der Agent kann nicht mehr als du. */
+           nicht dürfte. Der Agent kann nicht mehr als du.
+    
+           DIESE ZEILE IST EINE GROBE VORAUSWAHL UND VERSPRICHT NICHTS (E291).
+           `Konten.darf` ohne Seitenkennung fragt die gerade OFFENE Seite; ist
+           keine offen — und seit E132 ist die Startansicht das Heute-Dashboard,
+           also keine Seite —, antwortet sie `true`. Das ist hier auch richtig
+           so, denn WELCHE Seite ein Werkzeug anfassen wird, steht erst fest,
+           wenn seine Argumente da sind.
+    
+           Die verbindliche Prüfung sitzt deshalb IM Werkzeug, gegen das Ziel,
+           das es wirklich meint: `seiteLesen` macht es seit jeher vor,
+           `zeileAnlegen` und `feldFuellen` seit E291. */
         let nutzbar = erlaubt.filter((n) => Konten.darf(WERKZEUGE[n].recht));
         let gesperrt = erlaubt.filter((n) => !nutzbar.includes(n));
         if (ohneAufsicht && !a.darfAllein) {

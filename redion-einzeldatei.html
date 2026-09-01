@@ -2414,6 +2414,18 @@ a.bl:hover{color:var(--text)}
 .tagpill:hover{background:var(--bg-hover); color:var(--text)}
 .tagpill.on{border-color:var(--accent-text); color:var(--text)}
 .tagpill em{font-style:normal; color:var(--text-faint); font-size:11.5px; margin-left:3px}
+/* E293 · DIE TREFFER SIND KNÖPFE UND SEHEN AUCH SO AUS.
+   Sie hatten keine Klasse, und `grund.css` nimmt jedem Knopf ohne Klasse
+   sein Aussehen — die Liste stand als nackter Text da. Gefunden von
+   test289, das genau danach sucht (L82 Punkt 9). */
+.tagtreffer{display:flex; align-items:center; gap:8px; width:100%;
+  min-height:38px; padding:7px 10px; margin-top:4px;
+  border:1px solid var(--border); border-radius:8px;
+  background:var(--bg-card); color:var(--text); text-align:left; cursor:pointer}
+.tagtreffer:hover{background:var(--bg-hover); border-color:var(--accent-text)}
+.tagtreffer .tt-name{flex:1; min-width:0; overflow:hidden;
+  text-overflow:ellipsis; white-space:nowrap; font-weight:500}
+.tagtreffer .tt-pfeil{flex:none; color:var(--text-faint)}
 
 /* --- Schnellnotizen --------------------------------------------------------- */
 .memo-neu{padding:12px 16px; display:flex; gap:8px; align-items:flex-end; border-bottom:1px solid var(--line)}
@@ -34902,13 +34914,41 @@ const Store = (() => {
         if (satz && satz.id)
             dateiNamen.set(String(satz.id), String(satz.name || ''));
     };
-    const dateiPut = (satz) => { dateiNameMerken(satz); return put('dateien', satz); };
+    /**
+     * EINE MARKE, DIE SICH ÄNDERT, WENN SICH EINE DATEI ÄNDERT (E294).
+     *
+     * Die Ordner-Sicherung fragt alle fünf Minuten, ob sich etwas getan hat.
+     * Sie liest dafür den Spiegel im Arbeitsspeicher — und der hält `blocks`,
+     * `collections`, `views`, `meta`, `suchindex`, aber KEINE Dateien
+     * (`indexdb.ts:255`). Wer nur einen Anhang austauschte, änderte deshalb
+     * nichts, was der Abdruck sehen konnte, und es wurde nicht gesichert
+     * (L82 Punkt 5).
+     *
+     * Die Dateien dafür alle fünf Minuten aus der Ablage zu lesen wäre teurer
+     * als die Sicherung selbst — genau das lehnt `standAbdruck` ab. Also
+     * hinterlässt die Dateischicht eine Marke, und der Abdruck liest DIESE
+     * EINE. Nicht `meta` als Ganzes: dort schreibt die Sicherung selbst zwei
+     * Marken hin, und der Abdruck wäre nach jedem Sichern sofort ein anderer.
+     */
+    const dateiStandHeben = () => {
+        const alt = Number(getMeta('dateien:stand', 0)) || 0;
+        setMeta('dateien:stand', alt + 1);
+    };
+    const dateiPut = (satz) => {
+        dateiNameMerken(satz);
+        dateiStandHeben();
+        return put('dateien', satz);
+    };
     const dateiHolen = async (id) => {
         const satz = await get('dateien', id);
         dateiNameMerken(satz);
         return satz;
     };
-    const dateiWeg = (id) => { dateiNamen.delete(String(id)); return del('dateien', id); };
+    const dateiWeg = (id) => {
+        dateiNamen.delete(String(id));
+        dateiStandHeben();
+        return del('dateien', id);
+    };
     /* --- DATEI-GRABSTEINE (E249/L6) ----------------------------------------
        Lokales Löschen erreichte den Server nie: dateiWeg entfernt hart, und
        nichts merkte sich die Absicht. Diese drei Helfer führen die Merkliste
@@ -38781,8 +38821,15 @@ const Links = (() => {
             res.innerHTML =
                 '<div class="tagwolke">' + tags.map(t => `<button class="tagpill${t.tag === aktiv ? ' on' : ''}" data-t="${esc(t.tag)}">` +
                     `#${esc(t.tag)} <em>${t.seiten.length}</em></button>`).join('') + '</div>' +
-                    (aktiv ? (tags.find(t => t.tag === aktiv)?.seiten || []).map(p => `<button data-open="${p.id}"><span>${esc(p.icon || '📄')}</span>` +
-                        `<span style="flex:1">${esc(p.text || 'Ohne Titel')}</span></button>`).join('') : '');
+                    /* MIT KLASSE, DAMIT DER TREFFER WIE EIN TREFFER AUSSIEHT (E293).
+                       `grund.css` nimmt jedem Knopf sein Aussehen — richtig so, Redion
+                       setzt es über Klassen. Diese hier hatten keine, und die Liste stand
+                       als nackter Text da: zwei Zeilen, die man anklicken kann, ohne es
+                       zu wissen. Gefunden von test289, das genau danach sucht. */
+                    (aktiv ? (tags.find(t => t.tag === aktiv)?.seiten || []).map(p => `<button class="tagtreffer" data-open="${p.id}">` +
+                        `<span>${esc(p.icon || '📄')}</span>` +
+                        `<span class="tt-name">${esc(p.text || 'Ohne Titel')}</span>` +
+                        `<span class="tt-pfeil">›</span></button>`).join('') : '');
         };
         zeichne(vorgewaehlt || (tags[0] && tags[0].tag));
         o.addEventListener('click', e => {
@@ -78393,11 +78440,65 @@ const Konten = (() => {
             return strenger('voll', kontoRolle);
         return strenger(Store.getMeta('rolleStandard', 'voll'), kontoRolle);
     };
+    /**
+     * Darf ich das?
+     *
+     * OHNE SEITENANGABE FÄLLT DIE FRAGE AUF DIE OFFENE SEITE ZURÜCK, und ohne
+     * offene Seite lautet die Antwort `true`. Das ist für die meisten Aufrufer
+     * richtig — „darf ich überhaupt bearbeiten" ist eine Frage nach der Rolle,
+     * nicht nach einem Ort.
+     *
+     * Es ist aber die falsche Frage, sobald der Aufrufer WEISS, was er anfassen
+     * wird. Dann gehört die Kennung hinein. Wer eine Datenbank meint, nimmt
+     * `darfAnSammlung` — sonst prüft er die Seite, die gerade zufällig offen
+     * ist, oder seit E132 (Startansicht ist das Heute-Dashboard, und das ist
+     * keine Seite) überhaupt nichts.
+     */
     const darf = (was, seiteId) => {
         const id = seiteId || App.aktuelleSeite();
         if (!id)
             return true;
         return rolle(rolleAuf(id, '')).darf.includes(was);
+    };
+    /**
+     * Die Seite, auf der eine Datenbank lebt — dort hängen ihre Rechte.
+     *
+     * Eine Zeile hat als Elternteil die SAMMLUNG, nicht einen Block; der Weg
+     * nach oben führt deshalb über den Datenbankblock. Verknüpfte Ansichten
+     * derselben Sammlung gibt es mehrfach — die echte ist die unverknüpfte.
+     *
+     * Steht hier `''`, ist die Datenbank an keiner Seite zu finden. Dann gilt
+     * sie als frei: eine Rechteprüfung, die kein Ziel findet, darf nicht
+     * heimlich sperren — sie muss es sagen, und das tut der Aufrufer.
+     */
+    const seiteZuSammlung = (collectionId) => {
+        if (!collectionId)
+            return '';
+        const ansichten = Object.values(Store.cache.blocks).filter((b) => b && b.alive !== false && b.type === 'database' &&
+            b.collectionId === collectionId);
+        const echte = ansichten.find((b) => !b.verknuepft) || ansichten[0];
+        if (!echte)
+            return '';
+        let cur = echte, n = 0;
+        while (cur && n++ < 50) {
+            if (cur.type === 'page' && cur.parentTable !== 'collection')
+                return String(cur.id);
+            cur = cur.parentId ? Store.getBlock(cur.parentId) : null;
+        }
+        return '';
+    };
+    /**
+     * Darf ich das an DIESER Datenbank?
+     *
+     * Findet sich keine Seite dazu, wird nicht heimlich erlaubt und nicht
+     * heimlich gesperrt — die Antwort ist `null`, und der Aufrufer sagt dem
+     * Menschen, dass er es nicht entscheiden konnte.
+     */
+    const darfAnSammlung = (was, collectionId) => {
+        const seite = seiteZuSammlung(collectionId);
+        if (!seite)
+            return null;
+        return rolle(rolleAuf(seite, '')).darf.includes(was);
     };
     const setzeFreigabe = (seiteId, kontoId, rolleId) => {
         const b = Store.getBlock(seiteId);
@@ -78641,7 +78742,8 @@ const Konten = (() => {
         });
     };
     return { ROLLEN, RANG, strenger, rolle, alle, aktiv, anlegen, anmelden, entfernen,
-        rolleAuf, darf, setzeFreigabe, freigabenVon, freigeben, verwalten, matrix };
+        rolleAuf, darf, darfAnSammlung, seiteZuSammlung,
+        setzeFreigabe, freigabenVon, freigeben, verwalten, matrix };
 })();
 window.Konten = Konten;
 
@@ -79488,10 +79590,14 @@ const Kalender = (() => {
         }
         const coll = zielDatenbank(seiteId);
         let neu = 0, frisch = 0, schief = [];
+        /* Für den Sammelhinweis unten — die Termine selbst wandern in die
+           Datenbank und sind danach nicht mehr in der Hand. */
+        const alleTermine = [];
         for (const a of liste) {
             try {
                 const k = await aboHolen(a);
                 const e = uebernehmen(coll, k.termine, a.name || k.name);
+                alleTermine.push(...k.termine);
                 neu += e.neu;
                 frisch += e.frisch;
                 a.zuletzt = Store.now();
@@ -79505,6 +79611,21 @@ const Kalender = (() => {
         App.zeichneSeite();
         if (schief.length)
             UI.banner('Nicht geklappt — ' + schief.join(' · '), 'warn');
+        /* WAS AN DEN REGELN NICHT GELESEN WERDEN KONNTE, WIRD GESAGT (E295,
+           L106 Punkt 7). E290 gibt es jedem Termin mit — angezeigt hat es
+           bis jetzt niemand, und ein Hinweis, den niemand sieht, ist derselbe
+           Stillstand wie vorher.
+    
+           Gesammelt und EINMAL genannt, nicht je Termin: bei einem Kalender
+           mit vierzig Wochenterminen stünde derselbe Satz vierzigmal da, und
+           ab dem dritten liest ihn keiner mehr. */
+        const unklar = new Set();
+        for (const t of alleTermine)
+            for (const x of (t.regelUnklar || []))
+                unklar.add(String(x));
+        if (unklar.size)
+            UI.banner('Ein Teil der Wiederholungsregeln blieb ungelesen: ' +
+                [...unklar].join(', ') + '. Die Termine daraus fehlen.', 'warn');
         UI.toast(neu + ' neu, ' + frisch + ' aufgefrischt');
     };
     /* ========================================================================
@@ -82310,6 +82431,14 @@ const Agent = (() => {
                 const c = Object.values(Store.cache.collections).find(x => (x.name || '').toLowerCase() === String(a.datenbank || '').toLowerCase());
                 if (!c)
                     return 'Keine Datenbank namens „' + a.datenbank + '".';
+                /* Erst hier steht fest, WOHIN geschrieben wird — also erst hier lässt
+                   sich das Recht dazu prüfen (E291). */
+                const darfHier = Konten.darfAnSammlung('bearbeiten', c.id);
+                if (darfHier === false)
+                    return 'In „' + c.name + '" darfst du nichts anlegen.';
+                if (darfHier === null)
+                    return 'Zu „' + c.name + '" liess sich keine Seite finden, also auch ' +
+                        'kein Recht daran. Nichts angelegt.';
                 const props = {};
                 let titel = '';
                 Object.entries(a.werte || {}).forEach(([n, v]) => {
@@ -82355,6 +82484,16 @@ const Agent = (() => {
                 const k = Object.keys(c.schema).find(x => c.schema[x].name.toLowerCase() === String(a.spalte || '').toLowerCase());
                 if (!k)
                     return 'Keine Spalte namens „' + a.spalte + '".';
+                /* Wie bei `zeileAnlegen`: geprüft wird die Datenbank, die wirklich
+                   gemeint ist — und BEVOR der Auftrag ins Schema geschrieben wird
+                   (E291). Andersherum bliebe die Spaltenanweisung stehen, obwohl
+                   nichts gefüllt werden durfte. */
+                const darfFuellen = Konten.darfAnSammlung('bearbeiten', c.id);
+                if (darfFuellen === false)
+                    return 'In „' + c.name + '" darfst du nichts ändern.';
+                if (darfFuellen === null)
+                    return 'Zu „' + c.name + '" liess sich keine Seite finden, also auch ' +
+                        'kein Recht daran. Nichts gefüllt.';
                 c.schema[k].auftrag = a.auftrag || c.schema[k].auftrag;
                 Store.updateCollection(c.id, { schema: c.schema });
                 const zeilen = Store.rowsOf(c.id).slice(0, 15);
@@ -82831,6 +82970,17 @@ const Agent = (() => {
             id, agentId: protokoll.agentId, controller: new AbortController(),
             worker: new Set(), protokoll, reserviert: { objekte: 0, bytes: 0 }
         };
+        /* DIE LAUFGRENZE BEGINNT HIER (E295, L104 Punkt 2).
+           `KiBuch` führt vier Grenzen: je Aufruf, je Lauf, je Tag, je Monat.
+           Die zweite war die einzige, die im Alltag nie anschlug — `laufStand`
+           begann beim Laden der Seite bei null und lief dann durch, weil
+           niemand `laufBeginnen()` rief. Sie FUNKTIONIERTE (test281 §3 misst
+           es), sie wurde nur nie zurückgesetzt.
+    
+           Ein Agentenlauf ist genau das, wofür sie gedacht ist: viele Aufrufe
+           hintereinander, jeder für sich harmlos. */
+        if (typeof KiBuch !== 'undefined' && KiBuch.laufBeginnen)
+            KiBuch.laufBeginnen();
         let gespeichert = false;
         let hatFehler = false;
         const sichern = () => {
@@ -82864,7 +83014,18 @@ const Agent = (() => {
             return vorStartAblehnen('Das Tageslimit von ' + tagesgrenze() + ' Schritten ist aufgebraucht. ' +
                 'Morgen geht es weiter, oder du hebst die Grenze unter 🤖 Agent → Grenzen an.');
         /* Berechtigungsschicht: kein Werkzeug, das der angemeldete Mensch selbst
-           nicht dürfte. Der Agent kann nicht mehr als du. */
+           nicht dürfte. Der Agent kann nicht mehr als du.
+    
+           DIESE ZEILE IST EINE GROBE VORAUSWAHL UND VERSPRICHT NICHTS (E291).
+           `Konten.darf` ohne Seitenkennung fragt die gerade OFFENE Seite; ist
+           keine offen — und seit E132 ist die Startansicht das Heute-Dashboard,
+           also keine Seite —, antwortet sie `true`. Das ist hier auch richtig
+           so, denn WELCHE Seite ein Werkzeug anfassen wird, steht erst fest,
+           wenn seine Argumente da sind.
+    
+           Die verbindliche Prüfung sitzt deshalb IM Werkzeug, gegen das Ziel,
+           das es wirklich meint: `seiteLesen` macht es seit jeher vor,
+           `zeileAnlegen` und `feldFuellen` seit E291. */
         let nutzbar = erlaubt.filter((n) => Konten.darf(WERKZEUGE[n].recht));
         let gesperrt = erlaubt.filter((n) => !nutzbar.includes(n));
         if (ohneAufsicht && !a.darfAllein) {
@@ -94890,7 +95051,19 @@ const OrdnerSicherung = (() => {
                     streu = (streu * 31 + wort.charCodeAt(i)) | 0;
             }
         }
-        return zahl + ':' + juengste + ':' + (streu >>> 0).toString(36);
+        /* UND DIE DATEIEN (E294). Sie stehen nicht im Spiegel, also wird nicht
+           über sie gelaufen — die Dateischicht hebt bei jedem Schreiben und
+           Löschen `dateien:stand` (`indexdb.ts`, `dateiStandHeben`). Diese EINE
+           Marke kommt in den Abdruck. Genau diese eine, nicht `meta` als
+           Ganzes: dort landen nach jedem Sichern zwei eigene Marken, und der
+           Abdruck wäre sofort wieder ein anderer.
+    
+           Ohne sie fiel der häufigste Fall durch: eine Datei austauschen, ohne
+           einen Block anzufassen. Es wurde nicht gesichert, bis irgendwann
+           etwas anderes sich änderte. */
+        const dateien = String(Store.getMeta
+            ? (Store.getMeta('dateien:stand', 0) ?? 0) : 0);
+        return zahl + ':' + juengste + ':' + (streu >>> 0).toString(36) + ':d' + dateien;
     };
     /** Zwei Ziffern, immer. */
     const zw = (n) => (n < 10 ? '0' : '') + n;
@@ -124434,7 +124607,8 @@ const App = (() => {
                 knoepfe: [
                     { id: 'ersetzen', text: 'Ersetzen',
                         hinweis: 'Der Bestand sieht danach aus wie die Sicherung. Was ' +
-                            'nicht darin steht, wird gelöscht.' },
+                            'nicht darin steht, wird gelöscht. Vorher lädt Redion ' +
+                            'eine Sicherheitskopie des jetzigen Standes herunter.' },
                     { id: 'zusammenfuehren', text: 'Dazulegen',
                         hinweis: 'Nichts wird gelöscht. Bei gleicher Kennung gewinnt die ' +
                             'Sicherung.' },
@@ -124443,6 +124617,35 @@ const App = (() => {
             });
             if (!wahl)
                 return;
+            /* DAS NETZ UNTER DEM SEIL (E292, L101 Punkt 3).
+               Der VERSCHLÜSSELTE Weg schreibt seit jeher eine Sicherheitskopie,
+               bevor er ersetzt (`krypto.ts:935`, dort steht derselbe Satz). Der
+               offene Weg tat es nicht — und das ist genau verkehrt herum zur
+               Gefahr, denn den offenen Weg benutzen mehr Leute.
+      
+               Nur beim ERSETZEN, denn nur dort wird gelöscht. Beim Dazulegen
+               bliebe alles stehen, und eine Kopie, die niemand braucht, ist eine
+               Datei im Download-Ordner, die man nicht bestellt hat.
+      
+               `sicherungSpeichern` und nicht `Krypto.sicherungSchreiben`: dieser
+               Weg nimmt auch ein `.redion`, und bei einem `.redion` löscht das
+               Ersetzen auch ANHÄNGE (`anhaengeEinspielen` weiter unten). Eine
+               Kopie in reinem JSON hätte die Anhänge nicht — ein Netz mit Löchern
+               genau dort, wo die grössten Dateien fallen. `sicherungSpeichern`
+               baut dieselbe Sicherung wie der Knopf „Sicherung speichern": mit
+               Anhängen, wenn es welche gibt.
+      
+               Schlägt das Schreiben fehl, wird NICHT eingespielt. Ein Netz, das
+               reisst, ist schlimmer als keines: man hätte sich darauf verlassen. */
+            let kopie = false;
+            if (wahl === 'ersetzen') {
+                kopie = await sicherungSpeichern();
+                if (!kopie) {
+                    alert('Es wurde NICHTS eingespielt — dein Bestand steht unverändert.\n\n' +
+                        'Ohne Sicherheitskopie wäre das Ersetzen ein Sprung ohne Netz.');
+                    return;
+                }
+            }
             try {
                 const erg = await Store.importAll(text, wahl);
                 /* Die Anhänge NACH den Blöcken. Andersherum stünden die Dateien in
@@ -124463,6 +124666,8 @@ const App = (() => {
                    sie wartet, ist ein stehender Abgleich ohne Grund — und der
                    fällt erst auf, wenn das andere Gerät nichts mehr bekommt. */
                 UI.toast('Sicherung geladen — ' + erg.bloecke + ' Blöcke' +
+                    (kopie ? ' (der alte Stand liegt als Sicherheitskopie im ' +
+                        'Download-Ordner)' : '') +
                     (erg.versionen ? ', ' + erg.versionen + ' Fassungen' : '') +
                     (anhaenge ? ', ' + anhaenge + ' Anhang/Anhänge' : '') +
                     (erg.frage

@@ -2552,13 +2552,41 @@ const Store = (() => {
         if (satz && satz.id)
             dateiNamen.set(String(satz.id), String(satz.name || ''));
     };
-    const dateiPut = (satz) => { dateiNameMerken(satz); return put('dateien', satz); };
+    /**
+     * EINE MARKE, DIE SICH ÄNDERT, WENN SICH EINE DATEI ÄNDERT (E294).
+     *
+     * Die Ordner-Sicherung fragt alle fünf Minuten, ob sich etwas getan hat.
+     * Sie liest dafür den Spiegel im Arbeitsspeicher — und der hält `blocks`,
+     * `collections`, `views`, `meta`, `suchindex`, aber KEINE Dateien
+     * (`indexdb.ts:255`). Wer nur einen Anhang austauschte, änderte deshalb
+     * nichts, was der Abdruck sehen konnte, und es wurde nicht gesichert
+     * (L82 Punkt 5).
+     *
+     * Die Dateien dafür alle fünf Minuten aus der Ablage zu lesen wäre teurer
+     * als die Sicherung selbst — genau das lehnt `standAbdruck` ab. Also
+     * hinterlässt die Dateischicht eine Marke, und der Abdruck liest DIESE
+     * EINE. Nicht `meta` als Ganzes: dort schreibt die Sicherung selbst zwei
+     * Marken hin, und der Abdruck wäre nach jedem Sichern sofort ein anderer.
+     */
+    const dateiStandHeben = () => {
+        const alt = Number(getMeta('dateien:stand', 0)) || 0;
+        setMeta('dateien:stand', alt + 1);
+    };
+    const dateiPut = (satz) => {
+        dateiNameMerken(satz);
+        dateiStandHeben();
+        return put('dateien', satz);
+    };
     const dateiHolen = async (id) => {
         const satz = await get('dateien', id);
         dateiNameMerken(satz);
         return satz;
     };
-    const dateiWeg = (id) => { dateiNamen.delete(String(id)); return del('dateien', id); };
+    const dateiWeg = (id) => {
+        dateiNamen.delete(String(id));
+        dateiStandHeben();
+        return del('dateien', id);
+    };
     /* --- DATEI-GRABSTEINE (E249/L6) ----------------------------------------
        Lokales Löschen erreichte den Server nie: dateiWeg entfernt hart, und
        nichts merkte sich die Absicht. Diese drei Helfer führen die Merkliste

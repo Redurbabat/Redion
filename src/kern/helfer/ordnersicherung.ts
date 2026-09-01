@@ -159,7 +159,20 @@ const OrdnerSicherung = (() => {
           streu = (streu * 31 + wort.charCodeAt(i)) | 0;
       }
     }
-    return zahl + ':' + juengste + ':' + (streu >>> 0).toString(36);
+    /* UND DIE DATEIEN (E294). Sie stehen nicht im Spiegel, also wird nicht
+       über sie gelaufen — die Dateischicht hebt bei jedem Schreiben und
+       Löschen `dateien:stand` (`indexdb.ts`, `dateiStandHeben`). Diese EINE
+       Marke kommt in den Abdruck. Genau diese eine, nicht `meta` als
+       Ganzes: dort landen nach jedem Sichern zwei eigene Marken, und der
+       Abdruck wäre sofort wieder ein anderer.
+
+       Ohne sie fiel der häufigste Fall durch: eine Datei austauschen, ohne
+       einen Block anzufassen. Es wurde nicht gesichert, bis irgendwann
+       etwas anderes sich änderte. */
+    const dateien = String((Store as any).getMeta
+      ? ((Store as any).getMeta('dateien:stand', 0) ?? 0) : 0);
+
+    return zahl + ':' + juengste + ':' + (streu >>> 0).toString(36) + ':d' + dateien;
   };
 
   /** Zwei Ziffern, immer. */

@@ -1312,9 +1312,16 @@ const Links = (() => {
         '<div class="tagwolke">' + tags.map(t =>
           `<button class="tagpill${t.tag === aktiv ? ' on' : ''}" data-t="${esc(t.tag)}">` +
           `#${esc(t.tag)} <em>${t.seiten.length}</em></button>`).join('') + '</div>' +
+        /* MIT KLASSE, DAMIT DER TREFFER WIE EIN TREFFER AUSSIEHT (E293).
+           `grund.css` nimmt jedem Knopf sein Aussehen — richtig so, Redion
+           setzt es über Klassen. Diese hier hatten keine, und die Liste stand
+           als nackter Text da: zwei Zeilen, die man anklicken kann, ohne es
+           zu wissen. Gefunden von test289, das genau danach sucht. */
         (aktiv ? (tags.find(t => t.tag === aktiv)?.seiten || []).map(p =>
-          `<button data-open="${p.id}"><span>${esc(p.icon || '📄')}</span>` +
-          `<span style="flex:1">${esc(p.text || 'Ohne Titel')}</span></button>`).join('') : '');
+          `<button class="tagtreffer" data-open="${p.id}">` +
+          `<span>${esc(p.icon || '📄')}</span>` +
+          `<span class="tt-name">${esc(p.text || 'Ohne Titel')}</span>` +
+          `<span class="tt-pfeil">›</span></button>`).join('') : '');
     };
     zeichne(vorgewaehlt || (tags[0] && tags[0].tag));
 
