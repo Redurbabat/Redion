@@ -10,8 +10,11 @@
  * Drei Dinge, die man an Notion am Windows-PC vermisst:
  *
  *   REITER — Notions Desktop-App hat sie erst seit 2023 und nur dort. Hier
- *     gibt es sie überall, auch im Browser: Strg+T neuer Reiter, Strg+W zu,
- *     Strg+Tab weiter, Strg+1…9 direkt hin. Sie überleben den Neustart.
+ *     gibt es sie überall, auch im Browser: Strg+Alt+N neuer Reiter,
+ *     Strg+Alt+W zu, Strg+Tab weiter, Strg+1…9 direkt hin. (Strg+T und
+ *     Strg+W gehören dem Browser — die Begründung steht unten bei `tasten`.)
+ *     Sie überleben den Neustart. Und seit E300 bekommt jedes DOKUMENT
+ *     seinen eigenen Reiter, so wie in GoodNotes.
  *
  *   GETEILTE ANSICHT — zwei Seiten nebeneinander, die Trennlinie lässt sich
  *     ziehen. In Notion geht das nur in der Desktop-App und nur zu zweit;
@@ -72,10 +75,31 @@ const Fenster = (() => {
         }
         leiste.style.display = '';
         leiste.innerHTML = reiter.map((t, i) => `<div class="rt-tab${i === aktiv ? ' an' : ''}" data-i="${i}" role="tab" ` +
-            `draggable="true" title="${esc(titelVon(t.id))}">` +
+            `aria-selected="${i === aktiv}" draggable="true" title="${esc(titelVon(t.id))}">` +
             `<span>${esc(titelVon(t.id))}</span>` +
-            `<button data-zu="${i}" title="Reiter schliessen (Strg + W)">✕</button></div>`).join('') +
-            '<button class="rt-plus" title="Neuer Reiter (Strg + T)">＋</button>';
+            `<button type="button" data-zu="${i}" aria-label="${esc(titelVon(t.id))} schliessen" ` +
+            `title="Reiter schliessen (Strg + Alt + W)">✕</button></div>`).join('') +
+            '<button type="button" class="rt-plus" aria-label="Neuer Reiter" ' +
+            'title="Neuer Reiter (Strg + Alt + N)">＋</button>';
+        /* DER AKTIVE REITER MUSS ZU SEHEN SEIN (E300). Am Telefon passen zwei
+           Reiter nicht nebeneinander — der zweite stand halb ausserhalb des
+           Bildschirms, mit abgeschnittenem Namen. Gefunden auf dem Bild, nicht
+           im Prüflauf: die Zeile selbst endete brav am Rand, nur ihr Inhalt
+           nicht (§55.1, derselbe Fehler wie die abgeschnittene Zahl im
+           Tabellenblock).
+    
+           Gerechnet wird über die Bildschirmrechtecke und nicht über
+           `offsetLeft`: die Zeile ist nicht positioniert, also zählt
+           `offsetLeft` an ihr vorbei zum nächsten positionierten Vorfahren. */
+        const an = leiste.querySelector('.rt-tab.an');
+        if (an) {
+            const tr = an.getBoundingClientRect();
+            const lr = leiste.getBoundingClientRect();
+            if (tr.left < lr.left)
+                leiste.scrollLeft += tr.left - lr.left - 8;
+            else if (tr.right > lr.right)
+                leiste.scrollLeft += tr.right - lr.right + 8;
+        }
     };
     const wechseln = (i) => {
         if (i < 0 || i >= reiter.length)
@@ -115,7 +139,27 @@ const Fenster = (() => {
         sichern();
         wechseln(aktiv);
     };
-    /** App.oeffne meldet sich hier: der aktive Reiter zeigt jetzt woandershin. */
+    /** Zeigt diese Seite ein Dokument — eine PDF, ein Heft, eine Mappe? */
+    const istDokument = (id) => !!(id && Store.getBlock(id)?.dokumentModus);
+    /**
+     * App.oeffne meldet sich hier: der aktive Reiter zeigt jetzt woandershin.
+     *
+     * WANN EIN NEUER REITER ENTSTEHT (E300). Bis hierher gab es nur einen Fall:
+     * der aktive Reiter wurde überschrieben. Damit konnte gar keine Reiterzeile
+     * entstehen — wer eine zweite PDF öffnete, verlor die erste aus der Zeile,
+     * und der Weg zwischen zwei Dokumenten führte jedes Mal übers Regal.
+     *
+     * Die Regel ist ein Satz: *ein Dokument wird nicht verdrängt.* Zeigt der
+     * aktive Reiter ein Dokument und kommt etwas anderes, bekommt das Neue
+     * einen eigenen Reiter daneben. In allen anderen Fällen bleibt es beim
+     * Überschreiben.
+     *
+     * Was das nicht tut — und das ist der Grund für genau diesen Zuschnitt:
+     * gewöhnliche Seiten lösen einander weiterhin ab. Sonst hätte jeder Klick
+     * im Baum einen Reiter erzeugt und die Zeile wäre nach zehn Minuten
+     * unbrauchbar. Zwei PDFs und eine Notiz ergeben drei Reiter; zwanzig
+     * Notizen nacheinander ergeben einen.
+     */
     const gemerkt = (id) => {
         /* Beim Hochfahren öffnet die App die zuletzt gesehene Seite, bevor die
            Reiter gelesen sind. Ohne diese Sperre würde das die Liste löschen. */
@@ -124,6 +168,22 @@ const Fenster = (() => {
         if (!reiter.length) {
             reiter = [{ id }];
             aktiv = 0;
+            sichern();
+            zeichnen();
+            return;
+        }
+        /* Schon offen? Dann dorthin, nicht ein zweites Mal. Vorher stand hier
+           nur das Überschreiben: wer von Reiter 1 aus die Seite öffnete, die in
+           Reiter 2 lag, hatte danach zweimal dieselbe Seite in der Zeile. */
+        const schon = reiter.findIndex(t => t.id === id);
+        if (schon >= 0) {
+            aktiv = schon;
+            sichern();
+            zeichnen();
+            return;
+        }
+        if (istDokument(reiter[aktiv]?.id ?? '')) {
+            reiter.splice(++aktiv, 0, { id });
         }
         else
             reiter[aktiv] = { id };

@@ -9897,13 +9897,26 @@ button[disabled]{opacity:.4; cursor:not-allowed}
         border-radius:var(--radius-md) var(--radius-md) 0 0; font-size:12.5px;
         color:var(--text-dim);
         cursor:pointer; max-width:210px; white-space:nowrap; user-select:none}
-.rt-tab span{overflow:hidden; text-overflow:ellipsis}
+/* `overflow:hidden` IST HIER TRAGEND, nicht nur Kosmetik: es setzt die
+   automatische Mindestbreite eines Flex-Elements auf null. Ohne das würde
+   sich der Name weigern, unter seine Textbreite zu schrumpfen, und ein
+   langer Dateiname schöbe das Schliesskreuz aus dem Reiter hinaus.
+   `flex:0 0 auto` am Kreuz ist die Gegenrichtung: schrumpfen darf der Name,
+   nicht der Knopf. (E300 — nachgemessen mit einem 68 Zeichen langen Titel;
+   test292 §5 hält es fest.) */
+.rt-tab span{overflow:hidden; text-overflow:ellipsis; flex:1 1 auto}
+.rt-tab button{flex:0 0 auto}
 .rt-tab:hover{background:var(--bg-hover)}
 .rt-tab.an{background:var(--bg); color:var(--text); border-color:var(--line);
            margin-bottom:-1px; padding-bottom:6px}
 .rt-tab button{border:0; background:transparent; color:var(--text-faint); cursor:pointer;
                font-size:11px; padding:0 3px; border-radius:3px; opacity:0}
 .rt-tab:hover button, .rt-tab.an button{opacity:1}
+/* OHNE MAUS GIBT ES KEIN „HOVER" (E300). Auf einem Touchgerät blieb das
+   Kreuz jedes nicht-aktiven Reiters bei `opacity:0` stehen — ein Knopf, den
+   man treffen, aber nicht sehen kann. Wer keinen Zeiger hat, sieht sie alle. */
+@media(hover:none){ .rt-tab button{opacity:1} }
+.rt-tab button:focus-visible{opacity:1}
 .rt-tab button:hover{background:var(--bg-card); color:var(--text)}
 .rt-plus{border:0; background:transparent; color:var(--text-faint); cursor:pointer;
          font-size:14px; padding:0 9px; align-self:center; border-radius:5px}
@@ -9941,7 +9954,24 @@ button[disabled]{opacity:.4; cursor:not-allowed}
 .lv-fuss{border-top:1px solid var(--line); margin-top:7px; padding-top:6px;
          font-size:11px; color:var(--text-faint)}
 @media(max-width:760px){
-  #reiterleiste{display:none !important}
+  /* DIE REITERZEILE BLEIBT AM TELEFON (E300). Hier stand
+     `display:none !important` — mit der Begründung, dass am Telefon der
+     Platz fehlt. Das stimmt für eine Zeile, in der nie etwas steht: bis
+     E300 wurde der aktive Reiter beim Öffnen überschrieben, also gab es
+     nie zwei. Seit ein Dokument nicht mehr verdrängt wird, ist sie genau
+     das, was in GoodNotes oben steht — der einzige Weg von einer PDF zur
+     nächsten, ohne den Umweg übers Regal.
+
+     Die Masse sind Fingermasse (§37): die Zeile 48, jeder Reiter 44 hoch,
+     das Kreuz 44 breit. Ein Reiter nimmt höchstens zwei Drittel des
+     Bildschirms, damit der nächste sichtbar hineinragt und man sieht, dass
+     es weitergeht. Gescrollt wird waagerecht, ohne Balken. */
+  #reiterleiste{min-height:48px; padding:4px 6px 0; scrollbar-width:none;
+                -webkit-overflow-scrolling:touch; overscroll-behavior-inline:contain}
+  #reiterleiste::-webkit-scrollbar{display:none}
+  .rt-tab{min-height:44px; font-size:14px; max-width:66vw; padding:5px 4px 5px 12px}
+  .rt-tab button{min-width:44px; min-height:40px; font-size:15px}
+  .rt-plus{min-width:44px; min-height:44px; font-size:18px; padding:0}
   #main.geteilt{flex-direction:column}
   #teil{flex-basis:45% !important; border-left:0; border-top:1px solid var(--line)}
   .linkvorschau{display:none}
@@ -70338,8 +70368,13 @@ const Werkzeuge = (() => {
             c('Seite', 'Fassungen vergleichen', '', () => Vergleich.dialog(p));
         c('Ansicht', 'Aussehen: Farben, Schrift, Tastenkürzel', '', () => Aussehen.dialog());
         c('Ansicht', 'Tempo messen', '', () => Tempo.dialog());
-        c('Ansicht', 'Neuer Reiter', 'Strg T', () => Fenster.neuerReiter());
-        c('Ansicht', 'Reiter schliessen', 'Strg W', () => Fenster.schliessen(Fenster.aktiv()));
+        /* Strg T und Strg W standen hier bis E300 — beide gehören dem Browser
+           und werden von Redion gar nicht gebunden (die Begründung steht in
+           `reiter.ts` bei `tasten`). Wer sie hier las und drückte, schloss sein
+           Browserfenster; das ist ein Kürzel, das etwas anderes tut als
+           angeschrieben. */
+        c('Ansicht', 'Neuer Reiter', 'Strg Alt N', () => Fenster.neuerReiter());
+        c('Ansicht', 'Reiter schliessen', 'Strg Alt W', () => Fenster.schliessen(Fenster.aktiv()));
         c('Ansicht', 'Geteilte Ansicht ein oder aus', 'Strg Alt S', () => Fenster.geteilt() ? Fenster.teilenAus() : Fenster.teilen());
         c('Ansicht', 'Datenmodell ansehen', '', () => Schema.ansicht());
         c('Ansicht', 'Kennzahlen-Tafel', '', () => Schema.tafel());
@@ -90656,8 +90691,11 @@ window.KiBau = KiBau;
  * Drei Dinge, die man an Notion am Windows-PC vermisst:
  *
  *   REITER — Notions Desktop-App hat sie erst seit 2023 und nur dort. Hier
- *     gibt es sie überall, auch im Browser: Strg+T neuer Reiter, Strg+W zu,
- *     Strg+Tab weiter, Strg+1…9 direkt hin. Sie überleben den Neustart.
+ *     gibt es sie überall, auch im Browser: Strg+Alt+N neuer Reiter,
+ *     Strg+Alt+W zu, Strg+Tab weiter, Strg+1…9 direkt hin. (Strg+T und
+ *     Strg+W gehören dem Browser — die Begründung steht unten bei `tasten`.)
+ *     Sie überleben den Neustart. Und seit E300 bekommt jedes DOKUMENT
+ *     seinen eigenen Reiter, so wie in GoodNotes.
  *
  *   GETEILTE ANSICHT — zwei Seiten nebeneinander, die Trennlinie lässt sich
  *     ziehen. In Notion geht das nur in der Desktop-App und nur zu zweit;
@@ -90718,10 +90756,31 @@ const Fenster = (() => {
         }
         leiste.style.display = '';
         leiste.innerHTML = reiter.map((t, i) => `<div class="rt-tab${i === aktiv ? ' an' : ''}" data-i="${i}" role="tab" ` +
-            `draggable="true" title="${esc(titelVon(t.id))}">` +
+            `aria-selected="${i === aktiv}" draggable="true" title="${esc(titelVon(t.id))}">` +
             `<span>${esc(titelVon(t.id))}</span>` +
-            `<button data-zu="${i}" title="Reiter schliessen (Strg + W)">✕</button></div>`).join('') +
-            '<button class="rt-plus" title="Neuer Reiter (Strg + T)">＋</button>';
+            `<button type="button" data-zu="${i}" aria-label="${esc(titelVon(t.id))} schliessen" ` +
+            `title="Reiter schliessen (Strg + Alt + W)">✕</button></div>`).join('') +
+            '<button type="button" class="rt-plus" aria-label="Neuer Reiter" ' +
+            'title="Neuer Reiter (Strg + Alt + N)">＋</button>';
+        /* DER AKTIVE REITER MUSS ZU SEHEN SEIN (E300). Am Telefon passen zwei
+           Reiter nicht nebeneinander — der zweite stand halb ausserhalb des
+           Bildschirms, mit abgeschnittenem Namen. Gefunden auf dem Bild, nicht
+           im Prüflauf: die Zeile selbst endete brav am Rand, nur ihr Inhalt
+           nicht (§55.1, derselbe Fehler wie die abgeschnittene Zahl im
+           Tabellenblock).
+    
+           Gerechnet wird über die Bildschirmrechtecke und nicht über
+           `offsetLeft`: die Zeile ist nicht positioniert, also zählt
+           `offsetLeft` an ihr vorbei zum nächsten positionierten Vorfahren. */
+        const an = leiste.querySelector('.rt-tab.an');
+        if (an) {
+            const tr = an.getBoundingClientRect();
+            const lr = leiste.getBoundingClientRect();
+            if (tr.left < lr.left)
+                leiste.scrollLeft += tr.left - lr.left - 8;
+            else if (tr.right > lr.right)
+                leiste.scrollLeft += tr.right - lr.right + 8;
+        }
     };
     const wechseln = (i) => {
         if (i < 0 || i >= reiter.length)
@@ -90761,7 +90820,27 @@ const Fenster = (() => {
         sichern();
         wechseln(aktiv);
     };
-    /** App.oeffne meldet sich hier: der aktive Reiter zeigt jetzt woandershin. */
+    /** Zeigt diese Seite ein Dokument — eine PDF, ein Heft, eine Mappe? */
+    const istDokument = (id) => !!(id && Store.getBlock(id)?.dokumentModus);
+    /**
+     * App.oeffne meldet sich hier: der aktive Reiter zeigt jetzt woandershin.
+     *
+     * WANN EIN NEUER REITER ENTSTEHT (E300). Bis hierher gab es nur einen Fall:
+     * der aktive Reiter wurde überschrieben. Damit konnte gar keine Reiterzeile
+     * entstehen — wer eine zweite PDF öffnete, verlor die erste aus der Zeile,
+     * und der Weg zwischen zwei Dokumenten führte jedes Mal übers Regal.
+     *
+     * Die Regel ist ein Satz: *ein Dokument wird nicht verdrängt.* Zeigt der
+     * aktive Reiter ein Dokument und kommt etwas anderes, bekommt das Neue
+     * einen eigenen Reiter daneben. In allen anderen Fällen bleibt es beim
+     * Überschreiben.
+     *
+     * Was das nicht tut — und das ist der Grund für genau diesen Zuschnitt:
+     * gewöhnliche Seiten lösen einander weiterhin ab. Sonst hätte jeder Klick
+     * im Baum einen Reiter erzeugt und die Zeile wäre nach zehn Minuten
+     * unbrauchbar. Zwei PDFs und eine Notiz ergeben drei Reiter; zwanzig
+     * Notizen nacheinander ergeben einen.
+     */
     const gemerkt = (id) => {
         /* Beim Hochfahren öffnet die App die zuletzt gesehene Seite, bevor die
            Reiter gelesen sind. Ohne diese Sperre würde das die Liste löschen. */
@@ -90770,6 +90849,22 @@ const Fenster = (() => {
         if (!reiter.length) {
             reiter = [{ id }];
             aktiv = 0;
+            sichern();
+            zeichnen();
+            return;
+        }
+        /* Schon offen? Dann dorthin, nicht ein zweites Mal. Vorher stand hier
+           nur das Überschreiben: wer von Reiter 1 aus die Seite öffnete, die in
+           Reiter 2 lag, hatte danach zweimal dieselbe Seite in der Zeile. */
+        const schon = reiter.findIndex(t => t.id === id);
+        if (schon >= 0) {
+            aktiv = schon;
+            sichern();
+            zeichnen();
+            return;
+        }
+        if (istDokument(reiter[aktiv]?.id ?? '')) {
+            reiter.splice(++aktiv, 0, { id });
         }
         else
             reiter[aktiv] = { id };

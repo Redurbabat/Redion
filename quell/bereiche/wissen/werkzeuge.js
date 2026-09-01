@@ -272,8 +272,13 @@ const Werkzeuge = (() => {
             c('Seite', 'Fassungen vergleichen', '', () => Vergleich.dialog(p));
         c('Ansicht', 'Aussehen: Farben, Schrift, Tastenkürzel', '', () => Aussehen.dialog());
         c('Ansicht', 'Tempo messen', '', () => Tempo.dialog());
-        c('Ansicht', 'Neuer Reiter', 'Strg T', () => Fenster.neuerReiter());
-        c('Ansicht', 'Reiter schliessen', 'Strg W', () => Fenster.schliessen(Fenster.aktiv()));
+        /* Strg T und Strg W standen hier bis E300 — beide gehören dem Browser
+           und werden von Redion gar nicht gebunden (die Begründung steht in
+           `reiter.ts` bei `tasten`). Wer sie hier las und drückte, schloss sein
+           Browserfenster; das ist ein Kürzel, das etwas anderes tut als
+           angeschrieben. */
+        c('Ansicht', 'Neuer Reiter', 'Strg Alt N', () => Fenster.neuerReiter());
+        c('Ansicht', 'Reiter schliessen', 'Strg Alt W', () => Fenster.schliessen(Fenster.aktiv()));
         c('Ansicht', 'Geteilte Ansicht ein oder aus', 'Strg Alt S', () => Fenster.geteilt() ? Fenster.teilenAus() : Fenster.teilen());
         c('Ansicht', 'Datenmodell ansehen', '', () => Schema.ansicht());
         c('Ansicht', 'Kennzahlen-Tafel', '', () => Schema.tafel());

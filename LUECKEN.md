@@ -4058,3 +4058,34 @@ Einlesen (E104): dort steht rechts ein A4-Blatt, auf dem man frei schreibt.
 Das ist nicht dasselbe, aber es ist da und es verliert nichts.
 
 Gefunden am 1. September 2026 (beim Bau von E299).
+
+
+================================================================================
+L108 — Jedes Telefonbild vor dem 1. September zeigte ein Gerät mit Maus
+================================================================================
+
+Gefunden beim Bau von E300, und es betrifft nicht nur E300.
+
+`bilder.mts` hat das Telefon über die BILDGRÖSSE nachgestellt — 390×844,
+deviceScaleFactor 2 — und sonst nichts. Damit galt in jedem Telefonbild
+`hover:hover`. Alles, was in Redion erst beim Überfahren erscheint, war
+darauf zu sehen, obwohl es auf einem echten Telefon niemand zu sehen bekommt.
+
+Aufgefallen an einer Kleinigkeit: im Bild fehlte das Schliesskreuz des nicht
+aktiven Reiters, während der Prüflauf an derselben Stelle `opacity: 1` mass.
+Beide hatten recht. Sie sahen zwei verschiedene Geräte an.
+
+`isMobile`/`hasTouch` sind seit E300 gesetzt. Offen bleibt der Rückblick:
+
+  · Welche `:hover`-Regeln in Redion haben KEINE Entsprechung für Tastgeräte?
+    Eine gezählte Antwort gibt es nicht — nur die eine, die E300 gefunden hat.
+  · Bilder, die vor dem 1. September entstanden sind, taugen für diese Frage
+    nicht mehr. Sie liegen ohnehin nicht im Verzeichnis (§55.4), aber die
+    Schlüsse, die aus ihnen gezogen wurden, stehen in der Doku.
+
+Der kleinste nächste Schritt wäre ein Wächter, der jede `:hover`-Regel in
+`quell/schale/stil/` daraufhin ansieht, ob sie etwas SICHTBAR macht — also
+`opacity`, `display` oder `visibility` setzt — und nicht nur färbt. Nur die
+erste Sorte kann auf einem Telefon einen Griff verstecken.
+
+Gefunden am 1. September 2026 (beim Bau von E300).

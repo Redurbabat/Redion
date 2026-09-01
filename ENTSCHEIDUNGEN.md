@@ -22450,3 +22450,130 @@ Rolle sind mehrere Papiere gezeichnet — `.first()`), `test178` §1 (der Anhang
 zählt bei der Anordnungsfrage nicht mit). test177 69/69, test210 31/31,
 test221 33/33, test228 24/24, test204 41/41.
 typecheck grün · sw v60 · Einzeldatei 7672 KB.
+
+
+E300 — Eine Reiterzeile für die offenen Dokumente
+================================================================================
+1. September 2026
+
+Redur hat ein Bild aus GoodNotes geschickt — oben eine Zeile mit den offenen
+Dokumenten, „Kap. 8 – Sc…" und „Unbenanntes…", jedes mit einem Kreuz — und
+dazu geschrieben:
+
+    „Für handy ansich sollte so sein ich sollte wie auf dem zwischen die
+     pdfs direk gehen können für laptop auch so"
+
+Nachgesehen, was Redion dafür hat. Der Fund war zweiteilig und das erste Teil
+überraschend:
+
+DIE REITERZEILE GIBT ES SEIT LANGEM. `quell/schale/aufbau/reiter.js` kann
+alles, was dazugehört — umsortieren mit der Maus, Strg+1…9, Neustartfestigkeit
+über `Store.setMeta('reiter', …)`. Sie ist nur nie zu sehen gewesen, aus einem
+einzigen Grund: `gemerkt()` hatte genau eine Zeile.
+
+    reiter[aktiv] = { id }
+
+Jedes Öffnen ÜBERSCHRIEB den aktiven Reiter. Wer eine zweite PDF öffnete,
+verlor die erste aus der Zeile; und weil die Zeile sich unter zwei Reitern
+absichtlich verbirgt, kam sie nie zum Vorschein. Ein fertiges Möbelstück,
+verstellt von einer Zuweisung.
+
+UND AM TELEFON stand `#reiterleiste{display:none !important}`, mit dem
+Argument, dort sei kein Platz. Für eine Zeile, in der nie etwas steht, war
+das sogar richtig.
+
+
+Die Regel, die jetzt gilt
+--------------------------------------------------------------------------------
+Ein Satz:
+
+    Ein Dokument wird nicht verdrängt.
+
+Zeigt der aktive Reiter ein Dokument und kommt etwas anderes, bekommt das
+Neue einen eigenen Reiter DANEBEN — nicht hinten angehängt, sondern direkt
+neben dem, aus dem es geöffnet wurde, wie in jedem Browser. In allen anderen
+Fällen bleibt es beim Überschreiben.
+
+Was diese Regel nicht tut, ist der Grund für genau diesen Zuschnitt: gewöhn-
+liche Seiten lösen einander weiter ab. Sonst hätte jeder Klick im Baum einen
+Reiter erzeugt, und die Zeile wäre nach zehn Minuten unbrauchbar — dann stünde
+Redur wieder vor demselben Problem, nur mit dreissig Kästchen statt zwei.
+Zwei PDFs und eine Notiz ergeben drei Reiter; zwanzig Notizen nacheinander
+ergeben einen. test292 §2 misst genau das.
+
+Dazu kam ein zweiter, kleinerer Fund an derselben Stelle: `gemerkt()` hat
+auch dann überschrieben, wenn die Seite schon in einem ANDEREN Reiter lag.
+Danach stand sie zweimal in der Zeile. Jetzt springt der Zeiger dorthin.
+
+
+Am Telefon
+--------------------------------------------------------------------------------
+Die Zeile bleibt stehen. Die Masse sind Fingermasse (§37): die Zeile 48 px,
+jeder Reiter 44, das Schliesskreuz 44 breit, der Plusknopf 44×44. Ein Reiter
+nimmt höchstens zwei Drittel der Breite, damit der nächste sichtbar
+hineinragt und man sieht, dass es weitergeht. Gescrollt wird waagerecht,
+ohne Balken.
+
+Und ohne Maus gibt es kein „hover": `.rt-tab button{opacity:0}` liess das
+Kreuz jedes nicht aktiven Reiters unsichtbar. Auf einem Tastgerät ist das ein
+Knopf, den man treffen, aber nicht sehen kann. `@media(hover:none)` zeigt sie
+jetzt alle.
+
+
+Drei Dinge, die erst das Bild gezeigt hat (§55.1)
+--------------------------------------------------------------------------------
+1. DER AKTIVE REITER STAND HALB AUSSERHALB DES BILDSCHIRMS. Zwei Reiter zu je
+   höchstens 257 px passen auf 390 px nicht nebeneinander. Die ZEILE endete
+   brav am Rand — das misst sich leicht und war grün —, nur ihr Inhalt nicht.
+   `zeichnen()` rollt den aktiven Reiter jetzt ins Bild, gerechnet über die
+   Bildschirmrechtecke: `offsetLeft` zählt an einer nicht positionierten
+   Zeile vorbei zum nächsten positionierten Vorfahren.
+
+2. DAS BILDWERKZEUG SELBST HAT GELOGEN. Im Telefonbild fehlte das Kreuz des
+   nicht aktiven Reiters, während der Prüflauf `opacity: 1` mass. Beide
+   hatten recht — sie sahen zwei verschiedene Geräte an: `bilder.mts` hat das
+   Telefon nur über die BILDGRÖSSE nachgestellt, ohne `hasTouch`. Damit galt
+   in jedem Telefonbild `hover:hover`, und alles, was erst beim Überfahren
+   erscheint, war darauf zu sehen. Seit E300 ist das Telefon dort ein
+   Tastgerät. Das betrifft nicht nur die Reiter, sondern jedes Telefonbild,
+   das seither entstanden ist.
+
+3. EIN LANGER NAME SCHIEBT DAS KREUZ HINAUS — aber nur ohne `overflow:hidden`
+   am Namen. Diese Eigenschaft ist dort nicht Kosmetik: sie setzt die
+   automatische Mindestbreite eines Flex-Elements auf null, und ohne sie
+   weigert sich der Name zu schrumpfen. Nachgemessen mit einem 68 Zeichen
+   langen Titel — Redurs Dateien heissen so —: ohne sie wächst der Reiter auf
+   257 px und das Kreuz liegt draussen. Mit „Formelsammlung" wäre die
+   Behauptung dagegen immer wahr gewesen; eine Prüfung mit dem kurzen Namen
+   hätte nichts bewiesen (§55.2).
+
+
+Nebenher: drei Kürzel, die etwas anderes taten als angeschrieben
+--------------------------------------------------------------------------------
+Am Schliesskreuz stand „Strg + W", am Plusknopf „Strg + T", und in der
+Befehlsliste „Strg T" und „Strg W". Redion bindet beide bewusst NICHT — sie
+gehören dem Browser, `preventDefault` bleibt dort wirkungslos, und die
+Begründung steht seit Langem in `reiter.ts` bei `tasten`. Wer sie las und
+drückte, schloss sein Browserfenster. Sie heissen jetzt überall
+Strg + Alt + N und Strg + Alt + W, so wie sie wirklich liegen.
+
+Dazu zwei kleine Dinge für Screenreader: das Kreuz sagt jetzt, WELCHEN Reiter
+es schliesst (`aria-label`), und die Zeile meldet über `aria-selected`,
+welcher gewählt ist — vorher unterschied sie das nur über die Farbe (§38).
+
+
+Geprüft
+--------------------------------------------------------------------------------
+test292 45/45 — und dreimal gegengeprüft, dass er rot werden KANN: mit dem
+alten `gemerkt()` fällt §1, ohne das Nachrollen fällt „Der aktive Reiter steht
+ganz im Bild" ([245, 442] bei 390 px), ohne `overflow:hidden` fällt „Das
+Schliesskreuz wird davon nicht hinausgeschoben".
+
+Ein vierter Punkt wurde WIEDER ENTFERNT, weil er das nicht konnte: „jedes
+Kreuz liegt innerhalb seines Reiters" blieb bei jedem Gegenversuch grün — ein
+Flex-Geschwister liegt immer im Kasten, der Kasten wächst eben mit. Erst mit
+dem langen Namen hatte die Frage Zähne.
+
+Mitgelaufen: test46 35/35, test134 37/37, test272 153/153, test248 45/45,
+test285 52/52.
+typecheck grün · sw v61 · Einzeldatei 7678 KB.

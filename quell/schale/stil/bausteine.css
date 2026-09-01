@@ -2710,13 +2710,26 @@ button[disabled]{opacity:.4; cursor:not-allowed}
         border-radius:var(--radius-md) var(--radius-md) 0 0; font-size:12.5px;
         color:var(--text-dim);
         cursor:pointer; max-width:210px; white-space:nowrap; user-select:none}
-.rt-tab span{overflow:hidden; text-overflow:ellipsis}
+/* `overflow:hidden` IST HIER TRAGEND, nicht nur Kosmetik: es setzt die
+   automatische Mindestbreite eines Flex-Elements auf null. Ohne das würde
+   sich der Name weigern, unter seine Textbreite zu schrumpfen, und ein
+   langer Dateiname schöbe das Schliesskreuz aus dem Reiter hinaus.
+   `flex:0 0 auto` am Kreuz ist die Gegenrichtung: schrumpfen darf der Name,
+   nicht der Knopf. (E300 — nachgemessen mit einem 68 Zeichen langen Titel;
+   test292 §5 hält es fest.) */
+.rt-tab span{overflow:hidden; text-overflow:ellipsis; flex:1 1 auto}
+.rt-tab button{flex:0 0 auto}
 .rt-tab:hover{background:var(--bg-hover)}
 .rt-tab.an{background:var(--bg); color:var(--text); border-color:var(--line);
            margin-bottom:-1px; padding-bottom:6px}
 .rt-tab button{border:0; background:transparent; color:var(--text-faint); cursor:pointer;
                font-size:11px; padding:0 3px; border-radius:3px; opacity:0}
 .rt-tab:hover button, .rt-tab.an button{opacity:1}
+/* OHNE MAUS GIBT ES KEIN „HOVER" (E300). Auf einem Touchgerät blieb das
+   Kreuz jedes nicht-aktiven Reiters bei `opacity:0` stehen — ein Knopf, den
+   man treffen, aber nicht sehen kann. Wer keinen Zeiger hat, sieht sie alle. */
+@media(hover:none){ .rt-tab button{opacity:1} }
+.rt-tab button:focus-visible{opacity:1}
 .rt-tab button:hover{background:var(--bg-card); color:var(--text)}
 .rt-plus{border:0; background:transparent; color:var(--text-faint); cursor:pointer;
          font-size:14px; padding:0 9px; align-self:center; border-radius:5px}
@@ -2754,7 +2767,24 @@ button[disabled]{opacity:.4; cursor:not-allowed}
 .lv-fuss{border-top:1px solid var(--line); margin-top:7px; padding-top:6px;
          font-size:11px; color:var(--text-faint)}
 @media(max-width:760px){
-  #reiterleiste{display:none !important}
+  /* DIE REITERZEILE BLEIBT AM TELEFON (E300). Hier stand
+     `display:none !important` — mit der Begründung, dass am Telefon der
+     Platz fehlt. Das stimmt für eine Zeile, in der nie etwas steht: bis
+     E300 wurde der aktive Reiter beim Öffnen überschrieben, also gab es
+     nie zwei. Seit ein Dokument nicht mehr verdrängt wird, ist sie genau
+     das, was in GoodNotes oben steht — der einzige Weg von einer PDF zur
+     nächsten, ohne den Umweg übers Regal.
+
+     Die Masse sind Fingermasse (§37): die Zeile 48, jeder Reiter 44 hoch,
+     das Kreuz 44 breit. Ein Reiter nimmt höchstens zwei Drittel des
+     Bildschirms, damit der nächste sichtbar hineinragt und man sieht, dass
+     es weitergeht. Gescrollt wird waagerecht, ohne Balken. */
+  #reiterleiste{min-height:48px; padding:4px 6px 0; scrollbar-width:none;
+                -webkit-overflow-scrolling:touch; overscroll-behavior-inline:contain}
+  #reiterleiste::-webkit-scrollbar{display:none}
+  .rt-tab{min-height:44px; font-size:14px; max-width:66vw; padding:5px 4px 5px 12px}
+  .rt-tab button{min-width:44px; min-height:40px; font-size:15px}
+  .rt-plus{min-width:44px; min-height:44px; font-size:18px; padding:0}
   #main.geteilt{flex-direction:column}
   #teil{flex-basis:45% !important; border-left:0; border-top:1px solid var(--line)}
   .linkvorschau{display:none}

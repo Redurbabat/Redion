@@ -1159,6 +1159,71 @@ const ANSICHTEN: Record<string, { titel: string; bauen: () => void | Promise<voi
     }
   },
 
+  /* --- Die Reiterzeile über den Dokumenten (E300) --------------------------
+     Redurs Bild aus GoodNotes zeigte oben eine Zeile mit den offenen
+     Dokumenten. Damit hier etwas zu sehen ist, müssen ZWEI offen sein — bei
+     einem einzelnen bleibt die Zeile absichtlich verborgen. */
+
+  dokumentreiter: {
+    titel: 'Zwischen zwei PDFs wechseln — die Reiterzeile (E300)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+
+      const blattBild = async (titel: string, nr: number): Promise<Blob> => {
+        const c = document.createElement('canvas');
+        c.width = 595; c.height = 842;
+        const g = c.getContext('2d');
+        if (!g) throw new Error('Kein Zeichenkontext');
+        g.fillStyle = '#fdfdfb'; g.fillRect(0, 0, c.width, c.height);
+        g.fillStyle = '#1c1c1c';
+        g.font = '600 28px system-ui, sans-serif';
+        g.fillText(titel, 56, 96);
+        g.font = '17px system-ui, sans-serif';
+        g.fillStyle = '#4a4a48';
+        g.fillText('Seite ' + nr, 56, 132);
+        g.font = '15px system-ui, sans-serif';
+        ['Der elektrische Widerstand eines Leiters hängt von seinem',
+         'Werkstoff, seiner Länge und seinem Querschnitt ab:',
+         'R = ρ · l / A.',
+         '',
+         'Aus dem ohmschen Gesetz U = R · I folgt die Leistung',
+         'P = U · I und daraus P = R · I².'
+        ].forEach((z, i) => g.fillText(z, 56, 190 + i * 27));
+        g.strokeStyle = '#d7d7d3';
+        g.strokeRect(56, 420, 483, 200);
+        return await new Promise<Blob>(fertig =>
+          c.toBlob(blob => fertig(blob as Blob), 'image/png'));
+      };
+
+      const mach = async (titel: string, symbol: string): Promise<string> => {
+        const seite = Store.addPage(null, { text: titel, icon: symbol });
+        for (let nr = 1; nr <= 2; nr++) {
+          const block = Store.addBlock(seite.id, 'pdfseite', {
+            text: '', suchtext: 'Ohmsches Gesetz', nr, vonSeiten: 2,
+            bw: 595, bh: 842, quelleId: 'q-' + seite.id
+          });
+          const satz = await Dateien.ablegen(
+            new File([await blattBild(titel, nr)], 'blatt.png', { type: 'image/png' }),
+            { blockId: block.id, abgeleitet: true });
+          Store.updateBlock(block.id, { bildDateiId: satz.id });
+        }
+        Store.updateBlock(seite.id, { dokumentModus: true });
+        return seite.id;
+      };
+
+      const eins = await mach('Kapitel 8 – Schaltungen', '📕');
+      const zwei = await mach('Formelsammlung', '📗');
+      await Store.flush();
+      App.oeffne(eins);
+      await new Promise(r => setTimeout(r, 900));
+      App.oeffne(zwei);
+      await new Promise(r => setTimeout(r, 1500));
+    }
+  },
+
   /* --- Die Notizhefte (E264) ----------------------------------------------
      Das Regal und ein offenes Heft. Die Daten sind bewusst drei Hefte mit
      DREI verschiedenen Papieren — die Deckel-Muster im Regal unterscheiden
@@ -1436,9 +1501,19 @@ for (const name of ansichten) {
          Bilder, und niemand sieht sich zwölf Bilder an. */
       if (g !== 'rechner' && thema === 'light') continue;
 
+      /* DAS TELEFON IST EIN TASTGERÄT (E300). Hier stand nur die Bildgrösse.
+         Damit galt in jedem Telefonbild `hover:hover` — und alles, was erst
+         beim Überfahren erscheint, war darauf zu sehen, obwohl es auf einem
+         echten Telefon niemand zu sehen bekommt.
+
+         Aufgefallen an der Reiterzeile: das Schliesskreuz des nicht aktiven
+         Reiters fehlte im Bild, während `getComputedStyle` im Prüflauf
+         `opacity: 1` meldete. Beide hatten recht — sie sahen zwei
+         verschiedene Geräte an. */
       const seite = await browser.newPage({
         viewport: { width: geraet.breite, height: geraet.hoehe },
-        deviceScaleFactor: 2
+        deviceScaleFactor: 2,
+        ...(g === 'rechner' ? {} : { isMobile: true, hasTouch: true })
       });
       await seite.goto(`http://localhost:${PORT}/index.html`);
       await seite.waitForFunction(
