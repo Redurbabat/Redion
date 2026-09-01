@@ -278,6 +278,84 @@ const Kompetenz = (() => {
   };
 
   /**
+   * WAS ZUERST AUFFRISCHEN (L106 Punkt 2, E325).
+   *
+   * Die Haltbarkeit wird seit E289 gerechnet und im Satz genannt — „davon
+   * dürfte heute noch 62 % sitzen". Damit lässt sich nichts anfangen: es
+   * gibt keine Reihenfolge, keine Liste, keinen Weg von der Zahl zur
+   * Handlung. L106 sagt es selbst: „Genau das wäre der Nutzen."
+   *
+   * DIE REIHENFOLGE IST NICHT EINFACH „am wenigsten haltbar". Ein Thema mit
+   * drei Karten, von denen nichts mehr sitzt, ist weniger dringend als eins
+   * mit vierzig, von denen die Hälfte weg ist — man verliert dort mehr. Das
+   * Mass ist deshalb, WIE VIEL Wissen zerfallen ist:
+   *
+   *     verlust = karten × (1 − haltbarkeit)
+   *
+   * FÄLLIGE KARTEN WIEGEN MIT IHREM ZERFALL, nicht mit ihrer Zahl. Der
+   * erste Entwurf addierte `faellig` roh, und das Bild zeigte sofort, was
+   * dabei herauskommt: „Deutsch, 98 % sitzt noch" stand vor „Mathematik,
+   * 81 %", weil Deutsch vierzehn fällige Karten hatte. Vierzehn Karten
+   * aufzufrischen, die noch sitzen, ist beinahe verschenkte Zeit — und die
+   * Überschrift versprach „am meisten verblasst". Eine Liste, deren
+   * Reihenfolge etwas anderes tut als ihre Überschrift sagt, ist eine
+   * falsche Auskunft, auch wenn jede Zahl darin stimmt.
+   *
+   * Fällig heisst deshalb: dieser Teil des Zerfalls lässt sich SOFORT
+   * zurückholen, ohne auf den Plan zu warten. Er zählt doppelt, aber eben
+   * der Zerfall und nicht die Karte.
+   *
+   * DIE SCHWELLE IST EINE GANZE KARTE. Weniger ist Rauschen: ein Thema mit
+   * einem halben Kartenwert Zerfall gehört nicht auf eine Liste, die zum
+   * Handeln auffordert. Ohne sie wäre die Liste nie leer, und eine Liste,
+   * die nie leer wird, wird nicht gelesen.
+   *
+   * NUR THEMEN MIT GENUG BELEGEN. Ein Thema mit zwei Antworten hat keine
+   * Haltbarkeit, die diesen Namen verdient; es hier einzureihen wäre eine
+   * Zahl ohne Grundlage, und genau davor warnt E289.
+   */
+  const auffrischen = (themen: any[], opt: { hoechstens?: number } = {}): any[] => {
+    const grenze = typeof opt.hoechstens === 'number' ? opt.hoechstens : 5;
+    return (themen || [])
+      .filter(t => t && t.genug && t.karten > 0 && t.haltbarkeit < 1)
+      .map(t => {
+        const zerfall = 1 - t.haltbarkeit;
+        const verlust = t.karten * zerfall;
+        /* Was sich heute schon zurückholen lässt. */
+        const sofort = (t.faellig || 0) * zerfall;
+        return {
+          thema: t.thema,
+          karten: t.karten,
+          faellig: t.faellig || 0,
+          haltbarkeit: t.haltbarkeit,
+          verlust,
+          dringend: verlust + sofort,
+          satz: auffrischSatz(t)
+        };
+      })
+      /* Die Winzigkeit ist kein Schlupfloch, sondern Fliesskomma: zehn
+         Karten zu 90 % ergeben 10 × (1 − 0,9) = 0,9999999999999998, und das
+         IST eine ganze Karte. Ohne die Toleranz fiele genau der Randfall
+         heraus, den die Schwelle beschreibt. */
+      .filter(e => e.dringend >= 1 - 1e-9)
+      .sort((a, b) => b.dringend - a.dringend ||
+                      a.thema.localeCompare(b.thema, 'de'))
+      .slice(0, Math.max(1, grenze));
+  };
+
+  /** Ein Satz je Vorschlag — was zu tun ist, nicht was schlecht steht. */
+  const auffrischSatz = (t: any): string => {
+    const weg = Math.round(t.karten * (1 - t.haltbarkeit));
+    const p = Math.round(t.haltbarkeit * 100);
+    if (t.faellig > 0)
+      return t.faellig + (t.faellig === 1 ? ' Karte ist' : ' Karten sind') +
+             ' fällig — ' + p + ' % sitzt noch.';
+    return 'Nichts fällig, aber rechnerisch ' +
+           (weg === 1 ? 'eine Karte' : weg + ' Karten') +
+           ' verblasst — ' + p + ' % sitzt noch.';
+  };
+
+  /**
    * Der Satz im Klartext.
    *
    * Bei zu wenig Belegen sagt er, WIE VIELE noch fehlen. „Zu wenig Daten"
@@ -328,6 +406,7 @@ const Kompetenz = (() => {
 
   return {
     jeThema, gesamt, karteAus, wilson, haltbarkeit, stufeVon, verlaufVon,
+    auffrischen, auffrischSatz,
     MINDEST_BELEGE, STUFEN
   };
 })();

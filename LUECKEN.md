@@ -4214,6 +4214,13 @@ L106 — Was die Lern-Evidenz (E289) und der Kalender (E290) noch nicht können
    Sortieren danach, keine Liste „was zuerst auffrischen". Genau das wäre
    der Nutzen.
 
+   **GESCHLOSSEN am 1. September 2026 durch E325.** Ein Abschnitt „Zuerst
+   auffrischen" über dem Themenfortschritt, sortiert nach `karten × zerfall
+   + faellig × zerfall`. Fällig zählt mit seinem ZERFALL und nicht mit
+   seiner Zahl — der erste Entwurf addierte roh, und das Bild zeigte
+   „Deutsch, 98 % sitzt noch" vor „Mathematik, 81 %". Schwelle: eine ganze
+   verblasste Karte. Ohne Verblasstes kein Abschnitt. test318, 18 Punkte.
+
 3. **`fensterTage` wird nirgends benutzt.** Die Rechnung kann „nur die
    letzten 90 Tage", und keine Aufrufstelle fragt danach. Für „bin ich
    BESSER geworden" wäre es das richtige Werkzeug.

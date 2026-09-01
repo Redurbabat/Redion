@@ -808,6 +808,69 @@ const Learning = (() => {
     return 'in ' + exam.days + ' Tagen';
   };
 
+  /**
+   * ZUERST AUFFRISCHEN (L106 Punkt 2, E325).
+   *
+   * Die Haltbarkeit wird seit E289 gerechnet und in jedem Themensatz
+   * genannt — „davon dürfte heute noch 62 % sitzen". Damit liess sich
+   * nichts anfangen: keine Reihenfolge, keine Liste, kein Weg von der Zahl
+   * zur Handlung. L106 sagt es selbst: „Genau das wäre der Nutzen."
+   *
+   * ER STEHT NUR DA, WENN ES ETWAS ZU TUN GIBT. Wer nichts vergessen hat,
+   * bekommt keine leere Überschrift „Zuerst auffrischen" — eine Liste, die
+   * immer da ist, wird nicht gelesen, und beim Lernen ist sie zusätzlich
+   * eine Ermahnung ohne Anlass.
+   */
+  const auffrischSection = (allCards = cards(), now = Date.now()): HTMLElement | null => {
+    const K = (window as any).Kompetenz;
+    if (!K || typeof K.auffrischen !== 'function') return null;
+    const themen = [...kompetenzJeThema(allCards, now).values()];
+    const liste = K.auffrischen(themen, { hoechstens: 4 });
+    if (!liste.length) return null;
+
+    const section = document.createElement('section');
+    section.style.marginTop = '20px';
+    const title = document.createElement('h3');
+    title.textContent = 'Zuerst auffrischen';
+    title.style.marginBottom = '4px';
+    const unter = document.createElement('p');
+    unter.style.cssText = 'margin:0 0 10px; font-size:12.5px; color:var(--text-faint)';
+    /* Die Reihenfolge sagt, wonach sie geordnet ist. Eine sortierte Liste
+       ohne genanntes Mass ist eine Behauptung (§38 sinngemäss: nicht nur
+       über die Stelle in der Liste). */
+    unter.textContent = 'Nach dem, was rechnerisch am meisten verblasst ist. ' +
+      'Fälliges zählt doppelt, weil es sich sofort zurückholen lässt — und ' +
+      'nur Themen, bei denen mindestens eine ganze Karte verblasst ist.';
+    section.append(title, unter);
+
+    const list = document.createElement('div');
+    list.style.cssText = 'display:grid; gap:8px';
+    liste.forEach((e: any) => {
+      const row = document.createElement('div');
+      row.style.cssText = 'padding:9px 11px; border:1px solid var(--line); ' +
+        'border-radius:9px; display:flex; justify-content:space-between; ' +
+        'gap:12px; align-items:baseline';
+      const links = document.createElement('div');
+      const name = document.createElement('strong');
+      name.textContent = e.thema;
+      const satz = document.createElement('small');
+      satz.style.cssText = 'display:block; margin-top:2px; color:var(--text-dim)';
+      satz.textContent = e.satz;
+      links.append(name, satz);
+      /* Die Zahl rechts ist der Anteil, der noch sitzt — nicht nur Farbe
+         oder Reihenfolge (§38). */
+      const rechts = document.createElement('span');
+      rechts.style.cssText = 'white-space:nowrap; font-variant-numeric:tabular-nums; ' +
+        'color:var(--text-faint); font-size:13px';
+      rechts.textContent = Math.round(e.haltbarkeit * 100) + ' %';
+      rechts.title = 'Anteil des Themas, der heute rechnerisch noch sitzt';
+      row.append(links, rechts);
+      list.appendChild(row);
+    });
+    section.appendChild(list);
+    return section;
+  };
+
   const topicSection = (topics: TopicProgress[]): HTMLElement => {
     const section = document.createElement('section');
     section.style.marginTop = '20px';
@@ -988,7 +1051,10 @@ const Learning = (() => {
       }
       satzSetzen(jetzt);
       algorithm.append(titel, reihe, satz);
-      view.body.append(grid, exam, explanation, actions, details, topicSection(stats.topics), next, algorithm);
+      const auffrisch = auffrischSection();
+      view.body.append(grid, exam, explanation, actions, details,
+                       ...(auffrisch ? [auffrisch] : []),
+                       topicSection(stats.topics), next, algorithm);
     };
 
     const renderSession = (): void => {

@@ -24567,3 +24567,64 @@ wie er den Lückenschreiber in die Irre führte.
 
 test317, 25 Punkte. Mitgelaufen: test288 8/8, test296 17/17.
 sw v78 · Einzeldatei 7857 KB.
+
+================================================================================
+E325 — Was zuerst auffrischen (L106 Punkt 2)
+================================================================================
+1. September 2026
+
+Die Haltbarkeit wird seit E289 gerechnet und in jedem Themensatz genannt —
+„davon dürfte heute noch 62 % sitzen". Damit liess sich nichts anfangen:
+keine Reihenfolge, keine Liste, kein Weg von der Zahl zur Handlung. L106
+sagt es selbst: „Genau das wäre der Nutzen."
+
+Ein Abschnitt „Zuerst auffrischen" über dem Themenfortschritt — er ist die
+Handlung, der Fortschritt ist der Bericht.
+
+─── DIE REIHENFOLGE IST DIE GANZE ARBEIT ───────────────────────────────────
+
+Nicht „am wenigsten haltbar". Ein Thema mit drei Karten, von denen nichts
+mehr sitzt, ist weniger dringend als eins mit vierzig, von denen die Hälfte
+weg ist — dort verliert man mehr. Also `karten × (1 − haltbarkeit)`.
+
+UND DANN ZEIGTE DAS BILD, DASS DAS NOCH NICHT REICHTE. Der erste Entwurf
+addierte die fälligen Karten roh dazu, und im Bild stand:
+
+    Elektrotechnik  62 %   24 Karten fällig
+    Deutsch         98 %   14 Karten fällig      ← vor Mathematik
+    Mathematik      81 %    9 Karten fällig
+
+Deutsch mit 98 % vor Mathematik mit 81 %, weil es fünf fällige Karten mehr
+hat. Vierzehn Karten aufzufrischen, die noch sitzen, ist beinahe verschenkte
+Zeit — und die Überschrift versprach „am meisten verblasst". Eine Liste,
+deren Reihenfolge etwas anderes tut als ihre Überschrift sagt, ist eine
+falsche Auskunft, auch wenn jede einzelne Zahl darin stimmt.
+
+Fällig zählt seither mit seinem ZERFALL statt mit seiner Zahl:
+
+    dringend = karten × zerfall  +  faellig × zerfall
+
+Deutsch fällt damit ganz heraus, und das ist richtig: es braucht kein
+Auffrischen, sondern seine gewöhnliche Wiederholung.
+
+DIE SCHWELLE IST EINE GANZE KARTE. Weniger ist Rauschen, und ohne sie wäre
+die Liste nie leer. Sie hat eine Fliesskomma-Toleranz, und die ist kein
+Schlupfloch: zehn Karten zu 90 % ergeben 0,9999999999999998, und das IST
+eine ganze Karte.
+
+NUR THEMEN MIT GENUG BELEGEN. Eine Haltbarkeit aus zwei Antworten ist eine
+Zahl ohne Grundlage — genau davor warnt E289.
+
+GEGENPROBE: wer nichts vergessen hat, bekommt keinen Abschnitt. Beim Lernen
+ist eine Liste, die immer dasteht, eine Ermahnung ohne Anlass.
+
+─── UND EINE PRÜFUNG, DIE SICH SELBST FING ─────────────────────────────────
+
+§5 mass zuerst nur die Abwesenheit („keine Überschrift, wenn nichts
+verblasst ist") — und war grün, ohne je ein Fenster gesehen zu haben: der
+erste Anlauf rief `Lernwelt.karteikarten()`, das es nicht gibt. Gefangen hat
+das der Begleitpunkt daneben („der Themenfortschritt steht trotzdem da"),
+der dann rot war. Seither prüft §5 beide Richtungen — sonst wäre auch ein
+toter Abschnitt grün gewesen.
+
+test318, 18 Punkte. sw v79 · Einzeldatei neu gebaut.

@@ -2388,3 +2388,14 @@ node pruefungen/lauf/test105.mjs
   breit — dieselbe Spezifitätsfalle wie E320 und E321, beim dritten Mal als
   L111 aufgeschrieben. Und ein Kommentar, der die von E302 widerlegte
   Escape-Behauptung wiederholte, ist berichtigt. test317 neu (25). sw v78.
+* E325 (L106 Punkt 2): Was zuerst auffrischen. Die Haltbarkeit wurde seit
+  E289 gerechnet und genannt, aber man konnte nichts damit anfangen. Jetzt
+  ein Abschnitt über dem Themenfortschritt — die Handlung über dem Bericht.
+  Die Reihenfolge war die ganze Arbeit: nicht „am wenigsten haltbar",
+  sondern „am meisten verloren". Und das Bild zeigte, dass auch das noch
+  nicht reichte: mit roh addierten fälligen Karten stand „Deutsch, 98 %
+  sitzt noch" vor „Mathematik, 81 %" — vierzehn Karten aufzufrischen, die
+  noch sitzen, ist verschenkte Zeit, und die Überschrift versprach etwas
+  anderes. Fällig zählt jetzt mit seinem Zerfall. Schwelle: eine ganze
+  verblasste Karte, mit Fliesskomma-Toleranz, weil 10 × (1 − 0,9) eben
+  0,9999999999999998 ergibt. test318 neu (18). sw v79.

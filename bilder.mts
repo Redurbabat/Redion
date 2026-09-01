@@ -366,6 +366,44 @@ const ANSICHTEN: Record<string, { titel: string; bauen: () => void | Promise<voi
     }
   },
 
+  auffrischen: {
+    titel: 'Lernen → „Zuerst auffrischen" (E325)',
+    bauen: async () => {
+      const w = window as any;
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelectorAll('.overlay').forEach(o => o.remove());
+
+      /* Drei Fächer, verschieden stark verblasst — genau die Reihenfolge,
+         die der Kern rechnen soll. */
+      const bau = (fach: string, wieViele: number, tageHer: number, intervall: number) => {
+        const seite = Store.addPage(null, { text: fach });
+        const zuletzt = new Date(Date.now() - tageHer * 86400000).toISOString();
+        for (let i = 0; i < wieViele; i++) {
+          const k = Store.addBlock(seite.id, 'flashcard',
+            { text: fach + ' Frage ' + (i + 1) + ' :: Antwort' });
+          Store.updateBlock(k.id, {
+            sr: { ease: 2.5, intervall, wdh: 4, zuletzt, faellig: zuletzt },
+            reviewVerlauf: Array.from({ length: 6 }, (_, n) => ({
+              at: new Date(Date.now() - (tageHer + 20 - n * 3) * 86400000).toISOString(),
+              rating: n % 4 === 0 ? 2 : 3
+            }))
+          });
+        }
+      };
+      bau('Elektrotechnik', 24, 55, 12);
+      bau('Mathematik', 9, 40, 20);
+      bau('Deutsch', 14, 6, 30);
+      await Store.flush();
+
+      w.Learning.open();
+      await new Promise(r => setTimeout(r, 1100));
+      const h = [...document.querySelectorAll('.overlay h3')]
+        .find(x => /Zuerst auffrischen/.test(x.textContent || ''));
+      h?.scrollIntoView({ block: 'start' });
+      await new Promise(r => setTimeout(r, 400));
+    }
+  },
+
   luecken: {
     titel: 'Wissenslücken mit „erledigt" (E324)',
     bauen: async () => {
