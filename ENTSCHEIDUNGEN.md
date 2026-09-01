@@ -26351,3 +26351,69 @@ rot werden kann.
 test337 neu, 24 Punkte. Belegt rot: die Anmeldung in `aufgabenQuellen`
 weggelassen (§2 fällt), immer eine Tabelle angelegt (§6 fällt zweifach) und
 `aufgWer` doch geschrieben (§5 fällt).
+
+
+E346 — Bilder kommen in der .docx an (L72 Rest)
+════════════════════════════════════════════════════════════════════════════
+
+L72 nannte den letzten Verlust und gleich den Weg dahin:
+
+    „Bilder bleiben Platzhaltertext. Dafür bräuchte es Medienteile und
+     Beziehungen im Archiv (`word/media/`, `document.xml.rels`), also
+     denselben Umbau wie bei .pptx — machbar mit dem vorhandenen
+     ZIP-Schreiber, aber ein eigener Bogen."
+
+Ein Export, der Bilder verschweigt, ist §13. Der Platzhalter `[Bild]` war
+ehrlich — aber eine Seite mit einem Schaltplan kam als leeres Blatt beim
+Lehrer an.
+
+EIN VORLAUF, KEINE ASYNCHRONE BAUMWANDERUNG. `wortInhalt` baut den Text
+synchron; die Bilder kommen aus der Dateiablage als Promise. Sie werden
+deshalb VORHER eingesammelt und beim Bauen nur nachgeschlagen. Die Absätze
+asynchron zu bauen hiesse, ihre Reihenfolge der Ladegeschwindigkeit zu
+überlassen.
+
+DIE NUMMERIERUNG MUSS ZWEIMAL DIESELBE SEIN: `wBild` zählt in der
+Reihenfolge der Blöcke, und die Medienteile werden in derselben Reihenfolge
+ins Archiv gelegt. Ein Bild an der falschen Beziehung ist ein
+Word-Dokument, das sich gar nicht mehr öffnet. §4 misst genau das mit zwei
+verschieden grossen Bildern — an ihrer Bytelänge zu erkennen.
+
+`wp:inline` UND NICHT `wp:anchor`: das Bild steht in der Zeile wie ein sehr
+grosser Buchstabe. Ein verankertes Bild schwebt und verschiebt sich beim
+Bearbeiten — für einen Export, den jemand weiterschreibt, ist die Zeile die
+ruhigere Wahl.
+
+DAS MASS WIRD GEMESSEN, NICHT GERATEN. `createImageBitmap` liest die echte
+Grösse; ein Bild breiter als die Textspalte wird gestutzt und behält sein
+Verhältnis. Und wenn sich die Grösse NICHT messen lässt, bleibt der
+Platzhalter — ein Bild mit erfundenen Massen wäre schlimmer als keines.
+
+UND DER PLATZHALTER SAGT JETZT, WARUM (§35). `[Bild]` liess offen, ob
+Redion es nicht konnte oder die Datei fehlt. Es heisst jetzt „[Bild:
+Zeichnung — SVG, kommt in Word nicht mit]" oder „— kein Bild hinterlegt"
+oder „— liess sich nicht lesen".
+
+WAS DAS NACHMESSEN GEFUNDEN HAT, und es ist dieselbe Lehre wie bei E342s
+unsichtbarem Schalter: DIE LISTE ERLAUBTER TYPEN WAR NICHT DAS, WAS
+SCHÜTZT. Nimmt man SVG in sie auf, bleibt §5 trotzdem grün — denn
+`createImageBitmap` bekommt ein SVG gar nicht erst vermessen, und ohne Mass
+gibt es keinen Medienteil. Die Liste war für diesen Fall gar nicht
+zuständig.
+
+WebP ist der Gegenfall und steht deshalb jetzt im Prüflauf: Chromium liest
+und misst es mühelos, Word nimmt es nicht an. Hier — und nur hier — ist die
+Liste das Einzige, was zwischen einem lesbaren Bild und einem
+Word-Dokument steht, das sich nicht öffnen lässt. Mit WebP in der Liste
+fällt §5 dreifach.
+
+test338 neu, 34 Punkte, davon §1 mit einem Byte-für-Byte-Vergleich: das PNG
+wird im Browser gezeichnet, ausgegeben, aus dem Archiv geholt und Byte für
+Byte verglichen. Belegt rot in drei Richtungen: die Medienteile weggelassen
+(§1 und §4 fallen), der Content-Types-Eintrag weggelassen (§3 fällt) und
+WebP in die Liste genommen (§5 fällt).
+
+WAS OFFEN BLEIBT: SVG. Word braucht daneben ein PNG als Rückfallebene,
+sonst zeigen ältere Fassungen ein leeres Kästchen — ein PNG daraus zu
+rechnen ist ein eigener Schritt. Bis dahin steht der Platzhalter da und
+sagt es.

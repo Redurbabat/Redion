@@ -2782,10 +2782,29 @@ ES BLEIBEN ZWEI BENANNTE VERLUSTE, beide gemessen statt vermutet:
   · Ein Redion-Seitenverweis (`[[Seite]]`) hat in Word keine Entsprechung
     und kommt als gewöhnlicher Text an. Für einen Leser richtig, für den
     Rundlauf ein Verlust — test309 §5b misst ihn ausdrücklich.
-  · Bilder bleiben Platzhaltertext. Dafür bräuchte es Medienteile und
-    Beziehungen im Archiv (`word/media/`, `document.xml.rels`), also
-    denselben Umbau wie bei .pptx — machbar mit dem vorhandenen
-    ZIP-Schreiber, aber ein eigener Bogen.
+  · ~~Bilder bleiben Platzhaltertext.~~ — **GESCHLOSSEN am 1. September 2026
+    durch E346**, auf genau dem hier beschriebenen Weg: Medienteile unter
+    `word/media/`, je eine Beziehung in `document.xml.rels`, ein `Default`
+    je Endung in den Content-Types. Der ZIP-Schreiber konnte es schon.
+
+    Ein Vorlauf sammelt die Bilder, bevor der Text gebaut wird — sonst
+    hinge die Reihenfolge der Absätze an der Ladegeschwindigkeit. Das Mass
+    wird mit `createImageBitmap` GEMESSEN und auf die Textspalte gestutzt;
+    lässt es sich nicht messen, bleibt der Platzhalter, denn ein Bild mit
+    erfundenen Massen wäre schlimmer als keines.
+
+    Und der Platzhalter sagt jetzt, WARUM (§35): „SVG, kommt in Word nicht
+    mit", „kein Bild hinterlegt", „liess sich nicht lesen".
+
+    WAS OFFEN BLEIBT: SVG. Word braucht daneben ein PNG als Rückfallebene,
+    sonst zeigen ältere Fassungen ein leeres Kästchen. Bis dahin steht der
+    Platzhalter da und sagt es.
+
+    test338, 34 Punkte, §1 mit einem Byte-für-Byte-Vergleich. Belegt rot in
+    drei Richtungen — darunter eine, die beim Nachmessen erst entstand: die
+    Liste erlaubter Typen schützte gar nicht vor SVG (das scheitert schon
+    an der Messung), sondern vor WebP, das der Browser liest und Word nicht
+    annimmt. Der Prüflauf misst jetzt den Fall, für den die Liste da ist.
 
 
 L73 — Der Block-Grabstein hat zwei eigene Löcher — GESCHLOSSEN

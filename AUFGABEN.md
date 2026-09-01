@@ -2644,6 +2644,19 @@ node pruefungen/lauf/test105.mjs
   `padding` ist vier Erklärungen, nicht eine, und §2/§3 zählten absolut
   statt den Unterschied zum Bestand.
   test332 neu (14), belegt rot. test258 19/19.
+* E346 (L72 Rest, geschlossen): Bilder kommen in der .docx an. Bis eben
+  stand dort `[Bild]` — eine Seite mit einem Schaltplan kam als leeres
+  Blatt beim Lehrer an (§13). Jetzt: Medienteile unter `word/media/`, je
+  eine Beziehung, ein `Default` je Endung.
+  Ein Vorlauf sammelt die Bilder vor dem Bauen (sonst hinge die Reihenfolge
+  der Absätze an der Ladegeschwindigkeit), das Mass wird gemessen statt
+  geraten und auf die Textspalte gestutzt, und der Platzhalter sagt jetzt,
+  warum etwas fehlt.
+  Das Nachmessen fand dieselbe Lehre wie bei E342s unsichtbarem Schalter:
+  die Liste erlaubter Typen schützte gar nicht vor SVG (das scheitert schon
+  an der Messung), sondern vor WebP — das liest der Browser und Word nimmt
+  es nicht. Der Prüflauf misst jetzt den Fall, für den die Liste da ist.
+  test338 neu (34), §1 Byte für Byte, belegt rot in drei Richtungen.
 * E345 (L106 Punkt 6 Rest, geschlossen): Aufgaben aus dem Kalender landen
   in Aufgaben. L106 sagte, sie dürften nicht in die Kalendertabelle — der
   Einwand galt der falschen TABELLE, nicht der Sache. Redion hat ein

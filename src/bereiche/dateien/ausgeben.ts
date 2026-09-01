@@ -357,9 +357,174 @@ const Austausch = (() => {
       '</w:tr>').join('') +
     '</w:tbl>';
 
+  /* ========================================================================
+   * BILDER IN DER .DOCX (E346, L72 Rest)
+   * ------------------------------------------------------------------------
+   * Bis hierher stand im Word-Dokument `[Bild]` — ein Platzhalter. L72 nannte
+   * den Grund und den Weg: „Dafür bräuchte es Medienteile und Beziehungen im
+   * Archiv (`word/media/`, `document.xml.rels`), also denselben Umbau wie bei
+   * .pptx — machbar mit dem vorhandenen ZIP-Schreiber, aber ein eigener
+   * Bogen."
+   *
+   * Ein Export, der Bilder verschweigt, ist §13: „Export darf nicht Daten
+   * verschweigen." Der Platzhalter war ehrlich — aber eine Seite mit einem
+   * Schaltplan kommt so als leeres Blatt beim Lehrer an.
+   *
+   * ─── WARUM ES EINEN VORLAUF BRAUCHT ────────────────────────────────────
+   *
+   * `wortInhalt` baut den Text synchron zusammen. Die Bilder liegen in der
+   * Dateiablage und kommen als Promise. Statt die ganze Baumwanderung
+   * asynchron zu machen — und damit die Reihenfolge der Absätze der
+   * Netzgeschwindigkeit zu überlassen —, werden sie VORHER eingesammelt und
+   * beim Bauen nur nachgeschlagen.
+   *
+   * ─── WAS NICHT MITKOMMT, UND WAS DANN DASTEHT ──────────────────────────
+   *
+   * SVG bleibt Platzhalter. Word akzeptiert es nicht als gewöhnliches `blip`
+   * (es braucht daneben ein PNG als Rückfallebene, sonst zeigen ältere
+   * Fassungen ein leeres Kästchen), und ein PNG daraus zu rechnen ist ein
+   * eigener Schritt. Ein Bild, das sich nicht laden lässt, bleibt ebenfalls
+   * Platzhalter — und der Platzhalter SAGT jetzt, warum (§35): „[Bild —
+   * SVG, kommt in Word nicht mit]" statt bloss „[Bild]".
+   * ======================================================================*/
+
+  /** Ein Bild in seinen Bytes, so wie es ins Archiv geht. */
+  type WortBild = { bytes: Uint8Array; endung: string; typ: string;
+                    breite: number; hoehe: number };
+
+  /** Was Word als gewöhnliches Bild annimmt. SVG steht bewusst nicht dabei. */
+  const WORT_BILDTYPEN: Record<string, string> = {
+    'image/png': 'png', 'image/jpeg': 'jpg', 'image/gif': 'gif',
+    'image/bmp': 'bmp', 'image/tiff': 'tiff'
+  };
+
+  /** Die nutzbare Textbreite auf A4 mit den Rändern von `alsWord`, in EMU. */
+  const WORT_BREITE_EMU = 5715000;   /* 21 cm − 2 × 2 cm ≈ 15,9 cm */
+  const EMU_JE_PIXEL = 9525;         /* 914400 EMU je Zoll, 96 dpi */
+
+  /**
+   * Wie gross ist dieses Bild wirklich?
+   *
+   * `createImageBitmap` misst es, ohne es zu zeichnen. Geht es nicht — ein
+   * kaputtes Bild, ein Format, das der Browser nicht kennt —, wird NICHT
+   * geraten, sondern `null` gemeldet: dann bleibt der Platzhalter, und der
+   * sagt es. Ein Bild mit erfundenen Massen wäre schlimmer als keines.
+   */
+  const bildMasse = async (blob: Blob): Promise<{ b: number; h: number } | null> => {
+    const f: any = (globalThis as any).createImageBitmap;
+    if (typeof f !== 'function') return null;
+    try {
+      const bm = await f(blob);
+      const b = Number(bm.width), h = Number(bm.height);
+      if (bm.close) bm.close();
+      if (!(b > 0 && h > 0)) return null;
+      return { b, h };
+    } catch { return null; }
+  };
+
+  /** Eine Data-URL in Bytes. `null`, wenn sie keine ist. */
+  const ausDatenUrl = (roh: unknown): { bytes: Uint8Array; typ: string } | null => {
+    const m = /^data:([^;,]+)(;base64)?,(.*)$/s.exec(String(roh || ''));
+    if (!m) return null;
+    const typ = String(m[1] || '').toLowerCase();
+    try {
+      const roh2 = m[2] ? atob(String(m[3] || '')) : decodeURIComponent(String(m[3] || ''));
+      const bytes = new Uint8Array(roh2.length);
+      for (let i = 0; i < roh2.length; i++) bytes[i] = roh2.charCodeAt(i);
+      return { bytes, typ };
+    } catch { return null; }
+  };
+
+  /**
+   * Alle Bilder einer Seite einsammeln — vor dem Bauen.
+   *
+   * Der Schlüssel ist die Blockkennung. Ein Block, dessen Bild sich nicht
+   * lesen lässt, taucht hier gar nicht auf; `wortInhalt` schreibt dann den
+   * Platzhalter samt Grund.
+   */
+  const wortBilder = async (seite: any): Promise<Map<string, WortBild>> => {
+    const raus = new Map<string, WortBild>();
+    const bloecke: any[] = [];
+    const lauf = (id: string) => {
+      Store.childrenOf(id).forEach((b: any) => {
+        if (b.type === 'image') bloecke.push(b);
+        if (Store.childrenOf(b.id).length) lauf(b.id);
+      });
+    };
+    lauf(seite.id);
+
+    for (const b of bloecke) {
+      let blob: Blob | null = null;
+      let typ = '';
+      if (b.dateiId && typeof Dateien !== 'undefined' && Dateien.alsBlob) {
+        try { blob = await Dateien.alsBlob(b.dateiId); } catch { blob = null; }
+        if (blob) typ = String(blob.type || '').toLowerCase();
+      }
+      if (!blob) {
+        const ausUrl = ausDatenUrl(b.src);
+        if (ausUrl) {
+          typ = ausUrl.typ;
+          blob = new Blob([ausUrl.bytes as any], { type: typ });
+        }
+      }
+      if (!blob) continue;
+      const endung = WORT_BILDTYPEN[typ];
+      if (!endung) continue;              /* SVG und Unbekanntes: Platzhalter */
+      const masse = await bildMasse(blob);
+      if (!masse) continue;               /* Lieber Platzhalter als Ratemass */
+      const bytes = new Uint8Array(await blob.arrayBuffer());
+      raus.set(b.id, { bytes, endung, typ, breite: masse.b, hoehe: masse.h });
+    }
+    return raus;
+  };
+
+  /** Warum dieses Bild nicht mitkommt — für den Platzhalter (§35). */
+  const wortBildGrund = (b: any): string => {
+    const typ = String((b && b.src && (ausDatenUrl(b.src) || {}).typ) || '').toLowerCase();
+    if (typ === 'image/svg+xml' || /\.svg$/i.test(String(b && b.name || '')))
+      return 'SVG, kommt in Word nicht mit';
+    if (!b || (!b.dateiId && !b.src)) return 'kein Bild hinterlegt';
+    return 'liess sich nicht lesen';
+  };
+
+  /**
+   * Ein Bild als Word-Absatz.
+   *
+   * `wp:inline` und nicht `wp:anchor`: das Bild steht in der Zeile, wie ein
+   * sehr grosser Buchstabe. Ein verankertes Bild schwebt und verschiebt sich
+   * beim Bearbeiten — für einen Export, den jemand weiterschreibt, ist die
+   * Zeile die ruhigere Wahl.
+   */
+  const wBild = (relId: string, nr: number, breite: number, hoehe: number,
+                 beschriftung: string): string => {
+    const cx = Math.min(WORT_BREITE_EMU, Math.round(breite * EMU_JE_PIXEL));
+    const cy = Math.max(1, Math.round(cx * (hoehe / breite)));
+    const name = esc(beschriftung || ('Bild ' + nr));
+    return '<w:p><w:r><w:drawing>' +
+      '<wp:inline distT="0" distB="0" distL="0" distR="0" ' +
+        'xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing">' +
+      '<wp:extent cx="' + cx + '" cy="' + cy + '"/>' +
+      '<wp:docPr id="' + nr + '" name="' + name + '" descr="' + name + '"/>' +
+      '<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">' +
+      '<a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">' +
+      '<pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">' +
+      '<pic:nvPicPr><pic:cNvPr id="' + nr + '" name="' + name + '"/><pic:cNvPicPr/></pic:nvPicPr>' +
+      '<pic:blipFill>' +
+      '<a:blip xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" ' +
+        'r:embed="' + relId + '"/>' +
+      '<a:stretch><a:fillRect/></a:stretch></pic:blipFill>' +
+      '<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="' + cx + '" cy="' + cy + '"/></a:xfrm>' +
+      '<a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr>' +
+      '</pic:pic></a:graphicData></a:graphic></wp:inline>' +
+      '</w:drawing></w:r></w:p>';
+  };
+
   /** Alle Blöcke einer Seite als Word-Inhalt. */
-  const wortInhalt = (seite: any) => {
+  const wortInhalt = (seite: any, bilder?: Map<string, WortBild>) => {
     const raus: any[] = [];
+    /* Läuft mit den Bildern MIT: die Nummer ist zugleich die Nummer des
+       Medienteils im Archiv und die der Beziehung. */
+    let bildNr = 0;
     const lauf = (id: string, tiefe: number) => {
       Store.childrenOf(id).forEach((b: any) => {
         const t = b.text || '';
@@ -384,7 +549,23 @@ const Austausch = (() => {
           return;
         }
         if (b.type === 'divider') { raus.push(wAbsatz('', null)); return; }
-        if (b.type === 'image')   { raus.push(wAbsatz('[Bild' + (b.caption ? ': ' + b.caption : '') + ']', null)); return; }
+        if (b.type === 'image') {
+          /* DAS ECHTE BILD, WENN ES DA IST (E346). Der Vorlauf hat es
+             eingesammelt; hier wird nur nachgeschlagen. Und wenn nicht:
+             der Platzhalter sagt, WARUM — „[Bild]" allein liess offen, ob
+             Redion es nicht konnte oder die Datei fehlt. */
+          const bild = bilder && bilder.get(b.id);
+          if (bild) {
+            bildNr++;
+            raus.push(wBild('rIdBild' + bildNr, bildNr + 100,
+                            bild.breite, bild.hoehe, b.caption || ''));
+            if (b.caption) raus.push(wAbsatz(b.caption, 'Quote'));
+            return;
+          }
+          raus.push(wAbsatz('[Bild' + (b.caption ? ': ' + b.caption : '') +
+                            ' — ' + wortBildGrund(b) + ']', null));
+          return;
+        }
         const stil = (W_STIL as Record<string, string>)[b.type] || null;
         const punkt = ['bullet','todo','number'].includes(b.type);
         const vorne = b.type === 'todo' ? (b.checked ? '☑ ' : '☐ ')
@@ -398,12 +579,32 @@ const Austausch = (() => {
   };
 
   const alsWord = async (seite: any) => {
+    /* ERST DIE BILDER, DANN DER TEXT (E346). Siehe den Kopf bei
+       `wortBilder`: der Baum wird synchron gebaut, damit die Reihenfolge der
+       Absätze nicht von der Ladegeschwindigkeit abhängt. */
+    const bilder = await wortBilder(seite);
+    /* Die Reihenfolge im Archiv MUSS der beim Bauen entsprechen — `wBild`
+       nummeriert in der Reihenfolge der Blöcke, also wird hier genauso
+       gezählt. Ein Bild an der falschen Beziehung ist ein Word-Dokument,
+       das sich gar nicht mehr öffnet. */
+    const bildListe: WortBild[] = [];
+    const inBaum = (id: string) => {
+      Store.childrenOf(id).forEach((b: any) => {
+        if (b.type === 'image') {
+          const t = bilder.get(b.id);
+          if (t) bildListe.push(t);
+        }
+        if (Store.childrenOf(b.id).length) inBaum(b.id);
+      });
+    };
+    inBaum(seite.id);
+
     const inhalt =
       '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
       '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">' +
       '<w:body>' +
         wAbsatz(seite.text || 'Ohne Titel', 'Title') +
-        wortInhalt(seite) +
+        wortInhalt(seite, bilder) +
         '<w:sectPr><w:pgSz w:w="11906" w:h="16838"/>' +
         '<w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134"/></w:sectPr>' +
       '</w:body></w:document>';
@@ -445,6 +646,12 @@ const Austausch = (() => {
         '<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>' +
         '<Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>' +
         '<Override PartName="/word/numbering.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml"/>' +
+        /* JE ENDUNG EINMAL, nicht je Bild: `Default` gilt für die ganze
+           Endung, und zwei gleiche Einträge machen das Archiv ungültig. */
+        [...new Set(bildListe.map(b => b.endung))].map(e =>
+          '<Default Extension="' + e + '" ContentType="' +
+          (bildListe.find(b => b.endung === e) || { typ: 'image/png' }).typ +
+          '"/>').join('') +
         '</Types>' },
       { name: '_rels/.rels', inhalt:
         '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
@@ -456,10 +663,16 @@ const Austausch = (() => {
         '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
         '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>' +
         '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/numbering" Target="numbering.xml"/>' +
+        bildListe.map((b, i) =>
+          '<Relationship Id="rIdBild' + (i + 1) + '" ' +
+          'Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" ' +
+          'Target="media/bild' + (i + 1) + '.' + b.endung + '"/>').join('') +
         '</Relationships>' },
       { name: 'word/document.xml',  inhalt },
       { name: 'word/styles.xml',    inhalt: stile },
-      { name: 'word/numbering.xml', inhalt: nummern }
+      { name: 'word/numbering.xml', inhalt: nummern },
+      ...bildListe.map((b, i) => ({
+        name: 'word/media/bild' + (i + 1) + '.' + b.endung, inhalt: b.bytes }))
     ];
 
     const blob = await zipSchreiben(dateien);
