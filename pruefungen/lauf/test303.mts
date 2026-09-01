@@ -66,7 +66,12 @@ type Regel = { datei: string; zeile: number; media: string; sel: string; koerper
  * scheinbar für alle Geräte da, und der Lauf meldete eine Falle, die keine
  * ist. Ein Wächter, der sich seine Funde ausdenkt, ist keiner.
  */
-const regelnVon = (text: string, datei: string): Regel[] => {
+const regelnVon = (roh: string, datei: string): Regel[] => {
+  /* Kommentare raus, sonst gehört alles zwischen der vorigen schliessenden
+     Klammer und der Regel zum Selektor — samt Kommas darin, die dann als
+     Alternativen zählen und eine Falle fälschlich „retten". */
+  const text = roh.replace(/\/\*[\s\S]*?\*\//g,
+    (k: string) => k.replace(/[^\n]/g, ' '));   /* Zeilenzahl bleibt gleich */
   const raus: Regel[] = [];
   const stapel: string[] = [];
   const re = /@([a-z-]+)([^{}]*)\{|([^{}]+)\{([^{}]*)\}|\}/g;

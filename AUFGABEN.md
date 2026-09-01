@@ -2208,3 +2208,12 @@ node pruefungen/lauf/test105.mjs
   `@keyframes` als Ende eines Medienzweigs, und seine erste Messung lief
   gegen ein selbst gebautes HTML, in dem eine nachweislich passende Regel
   ohne erkennbaren Grund nicht wirkte.
+* E310 (L109 geschlossen, am selben Tag): Die Meldung unten deckte am Telefon
+  die Knöpfe eines offenen Fensters zu — gemessen auf 390 × 844: Fuss
+  670–789, Meldung 730–773, beide Knöpfe weg. Am Rechner nicht (Fuss
+  542–604, Meldung 835–878), also steht die Regel nur im Telefon-Zweig. Der
+  Toast geht dort nach OBEN statt ein Stück höher: eine vierte Zahl im
+  Stapel der schwebenden Meldungen hiesse, alle Kombinationen aus vier
+  Dingen zu pflegen. test304 neu (12); §5 misst, dass die Meldung oben
+  wirklich zu SEHEN ist — „deckt nichts mehr zu" wäre sonst auch dann wahr,
+  wenn sie gar nicht mehr erschiene.

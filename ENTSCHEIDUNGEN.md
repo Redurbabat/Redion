@@ -23495,3 +23495,68 @@ Griffe da, am Rechner ohne Maus alle neun weg. Ohne den zweiten Teil hiesse
 „am Telefon sichtbar" womöglich nur „immer sichtbar".
 
 Einzeldatei 7762 KB.
+
+
+================================================================================
+E310 — Die Meldung deckt am Telefon keinen Knopf mehr zu (L109 geschlossen)
+================================================================================
+1. September 2026
+
+Auf dem Bild zu E308 lag „📕 1 Karteikarte ist fällig" genau über „Als Seite
+anlegen" und „Schliessen". Nachgemessen auf 390 × 844 mit offenem Tagesplan:
+
+    Fuss des Fensters   670 – 789
+    Meldung             730 – 773     beide Knöpfe verdeckt
+
+Am Rechner nicht: dort steht der Fuss bei 542 – 604 und die Meldung bei
+835 – 878. Das war die offene Frage in L109 („verdeckt sie auch am Rechner
+etwas?"), und sie ist jetzt gemessen statt vermutet. Die Regel steht deshalb
+im Telefon-Zweig und nur dort.
+
+
+Der vierte, an den niemand gedacht hat
+--------------------------------------------------------------------------------
+
+`bausteine.css` hat seit E236 einen sorgfältig durchdachten Stapel für die
+DREI schwebenden Dinge am unteren Rand — Toast, Offline-Streifen,
+Rundgang-Einladung. Der Kommentar dort hält sogar fest, warum sie an EINER
+Stelle stehen müssen: drei Zahlen in drei Dateien liefen auseinander, als die
+untere Leiste von 72 auf 59 px schrumpfte.
+
+Ein offenes Fenster war nie Teil dieser Rechnung. Es ist aber genau dasselbe
+Problem: etwas Wichtiges am unteren Rand, das die Meldung nicht zudecken
+darf.
+
+
+Warum der Toast nach OBEN geht und nicht ein Stück höher
+--------------------------------------------------------------------------------
+
+Eine vierte Zahl in den Stapel zu rechnen hiesse, alle Kombinationen aus vier
+Dingen zu pflegen — Fenster mal Streifen mal Einladung —, und die Regel
+darunter hätte doch wieder eine erraten. Genau davor warnt der Kommentar von
+E236.
+
+Oben ist der Toast aus dem Stapel heraus. Er deckt dort eine Überschrift zu
+statt einen Knopf, und zwei Sekunden Überschrift kann man verschmerzen; einen
+Knopf, den es nicht gibt, nicht.
+
+Zwei Zeilen, nicht eine: `#toast.show` wiegt (1,1,0), `body:has(.overlay)
+#toast` wiegt (1,1,1). Ohne die zweite Zeile bliebe der Toast in seiner
+Schiebestellung stehen — die Regel wäre da und die Meldung trotzdem
+unsichtbar. Das ist die stillste Art, diese Prüfung zu bestehen, und §5 des
+Laufs misst genau dagegen: Deckkraft, Lage, im Bild.
+
+
+Geprüft
+--------------------------------------------------------------------------------
+test304 neu, 12/12. §3 ist die Gegenprobe: dieselbe Messung mit erzwungener
+alter Lage findet die Überdeckung wieder — der Wächter KANN also rot werden.
+§4 hält fest, dass am Rechner nichts anders wurde. §5 misst, dass die Meldung
+oben wirklich zu sehen ist und nicht bloss aus dem Weg.
+
+Nebenbei berichtigt: test303s Regelleser liess Kommentare stehen. Ein Komma
+in einem Kommentar vor einer Regel hätte als Selektor-Alternative gezählt und
+eine Falle fälschlich „gerettet". Beide Leser schneiden Kommentare jetzt weg
+— zeilenerhaltend, damit die gemeldeten Zeilennummern stimmen.
+
+Einzeldatei 7764 KB.

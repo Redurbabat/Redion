@@ -3541,6 +3541,29 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   body:has(#rg-einladung):has(#offline-streifen) #toast{
     bottom:calc(var(--hunten, 59px) + 122px);
   }
+
+  /* ── UND EIN VIERTER, AN DEN NIEMAND GEDACHT HAT (L109, E310) ───────────
+     Ein offenes Fenster hat unten seine Knöpfe. Gemessen am 1. September
+     auf 390 × 844, Tagesplan offen: der Fuss lag bei 670–789, der Toast bei
+     730–773 — „Als Seite anlegen" und „Schliessen" waren BEIDE verdeckt.
+
+     Am Rechner nicht: dort steht der Fuss bei 542–604 und der Toast bei
+     835–878. Deshalb steht diese Regel im Telefon-Zweig und nur dort.
+
+     Der Toast rückt nicht ein Stück höher, sondern nach OBEN. Eine vierte
+     Zahl in diesen Stapel zu rechnen hiesse, alle Kombinationen aus vier
+     Dingen zu pflegen — und die Regel darunter hätte doch wieder eine
+     erraten. Oben ist der Toast aus dem Stapel heraus, und er deckt dort
+     eine Überschrift zu statt einen Knopf. Zwei Sekunden Überschrift kann
+     man verschmerzen; einen Knopf, den es nicht gibt, nicht.
+
+     Die zweite Zeile ist nicht wegzulassen: `#toast.show` wiegt (1,1,0),
+     `body:has(.overlay) #toast` wiegt (1,1,1) — ohne sie bliebe der Toast
+     in seiner Schiebestellung stehen und wäre gar nicht zu sehen. */
+  body:has(.overlay) #toast{
+    top:12px; bottom:auto; transform:translateY(-80px);
+  }
+  body:has(.overlay) #toast.show{ transform:translateY(0) }
 }
 
 /* ===========================================================================

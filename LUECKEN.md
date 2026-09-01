@@ -4198,12 +4198,17 @@ offen ist, ist eine Änderung an jedem Dialog gleichzeitig — und der einzige
 Beleg dafür, dass es danach überall besser aussieht, wären Bilder von jedem
 Dialog. Das ist ein eigener Bogen, kein Nebensatz.
 
-Der kleinste nächste Schritt: `body:has(.overlay) .toast{bottom:…}` und
-danach ein Durchgang über die Fenster, die eine Fussleiste haben —
-Tagesplan, Wochenrückblick, Sicherung, Einstellungen, Import.
+GESCHLOSSEN am 1. September 2026 mit E310 — am selben Tag, an dem sie
+aufgeschrieben wurde. Der Toast geht am Telefon nach OBEN, sobald ein
+`.overlay` offen ist; ein Stück höher hätte bedeutet, alle Kombinationen aus
+vier schwebenden Dingen zu pflegen.
 
-Vorher zu klären: verdeckt sie auch am Rechner etwas? Dort ist unten viel
-Platz, aber das ist eine Vermutung und keine Messung.
+Die offene Frage ist beantwortet, und zwar gemessen: am Rechner verdeckt sie
+nichts. Fuss 542 – 604, Meldung 835 – 878. Die Regel steht deshalb nur im
+Telefon-Zweig.
+
+test304 prüft drei Fenster mit Fussleiste und misst mit erzwungener alter
+Lage nach, dass der Wächter rot werden KANN.
 
 
 ================================================================================
