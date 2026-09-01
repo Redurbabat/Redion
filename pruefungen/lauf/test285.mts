@@ -180,65 +180,126 @@ p('Und der Arbeitsraum ist dann weg',
 p('Zurück im Dokumentmodus steht die Kopfzeile wieder', gegen.docTitelDanach);
 
 /* ==========================================================================
- * §2 · Die ganze Seite passt ins Bild
+ * §2 · DIE ROLLE: alle Seiten untereinander, die Breite gibt das Mass (E299)
  * --------------------------------------------------------------------------
- * Das ist die Frage, die eine Dokumentansicht beantworten muss: sehe ich ein
- * Blatt oder ein Drittel davon. Vorher stand `stage.style.width = zoom + '%'`
- * — Prozent der Mittelbreite. Bei 1360 px Mitte wäre eine A4-Seite gut 1900
- * Pixel hoch geworden, in einem 748 Pixel hohen Kasten.
+ * DIESER ABSCHNITT HAT SEINE BEHAUPTUNG GEWECHSELT, und das ist der Punkt.
  *
- * §55.2 — der zweite Arm ist der Beleg, dass die Messung überhaupt anschlagen
- * KANN: mit dem Zoom auf 180 % MUSS gerollt werden. Eine Prüfung auf „es
- * rollt nie" wäre sonst eine Prüfung auf nichts.
+ * E296 baute den Dokumentmodus so, dass EINE Seite ganz ins Bild passt und
+ * `‹ ›` die naechste holt. Redur hat danach gesagt, was er wirklich will:
+ *
+ *     „ich sollte wie one note unendlich schrolen haben … pdf sollte ich
+ *      weder nach unten noch nach rechts die seite wechseln koennen … die
+ *      pdf seiten sollte wie goodnotes sich ganz oeffnen komplett wie one
+ *      note so"
+ *
+ * Ein Skript liest man durch. Die Rolle traegt deshalb ALLE Seiten
+ * untereinander, und die BREITE gibt das Mass — auf Fensterhoehe geschrumpft
+ * (432 px von 1360) liest sich kein Text.
+ *
+ * DIE SEITEN, DIE MAN NICHT SIEHT, WERDEN NICHT GEZEICHNET. Achtzig
+ * Zeichenschichten auf einmal sind kein Dokument mehr, sondern ein stehender
+ * Browser. Jede bekommt zuerst nur ihren Platz in der richtigen Hoehe.
+ *
+ * §55.2 — kann das rot werden? Jeder Punkt hier war vor E299 rot: es gab
+ * genau einen `.document-stage`, die Rollhoehe war die Fensterhoehe, und das
+ * Blatt hatte 432 px statt 1324.
  * ========================================================================*/
-console.log('\n2 · Die ganze Seite passt ins Bild');
+console.log('\n2 · Die Rolle: alle Seiten untereinander');
 
 const zwei = await pc.evaluate(() => {
   const mitte = document.querySelector('.document-center') as HTMLElement | null;
   const papier = document.querySelector('.document-stage .blatt-papier') as HTMLElement | null;
   const leiste = document.querySelector('.document-stage .blatt-reihe') as HTMLElement | null;
   return {
+    staende: document.querySelectorAll('.document-stage').length,
+    gezeichnet: document.querySelectorAll('.document-stage .blatt-papier').length,
     mitteHoch: mitte?.clientHeight || 0,
+    mitteBreit: mitte?.clientWidth || 0,
     rollHoch: mitte?.scrollHeight || 0,
     papierHoch: Math.round(papier?.getBoundingClientRect().height || 0),
     papierBreit: Math.round(papier?.getBoundingClientRect().width || 0),
-    leisteHoch: Math.round(leiste?.getBoundingClientRect().height || 0)
+    leisteHoch: Math.round(leiste?.getBoundingClientRect().height || 0),
+    original: (document.querySelector('.document-original')?.textContent || '').trim()
   };
 });
 
+gleich('Für jede der vier Seiten steht ein Platz in der Rolle', zwei.staende, 4);
+gleich('Gezeichnet ist aber nur die erste — der Rest wartet auf den Blick',
+  zwei.gezeichnet, 1);
 p('Es gibt ein Blatt mit echter Ausdehnung',
   zwei.papierHoch > 200 && zwei.papierBreit > 140, JSON.stringify(zwei));
 p('Das Seitenverhältnis stimmt noch (A4)',
   Math.abs(zwei.papierBreit / zwei.papierHoch - 595 / 842) < 0.02,
   `${zwei.papierBreit}/${zwei.papierHoch}`);
-p('Und die Mitte muss nicht gerollt werden',
-  zwei.rollHoch <= zwei.mitteHoch + 2,
+p('Die BREITE gibt das Mass — das Blatt füllt die Mitte fast ganz',
+  zwei.papierBreit >= zwei.mitteBreit - 60,
+  `${zwei.papierBreit} px von ${zwei.mitteBreit} px`);
+p('Und man rollt wirklich: die Rolle ist höher als das Fenster',
+  zwei.rollHoch > zwei.mitteHoch * 2,
   `Inhalt ${zwei.rollHoch}, sichtbar ${zwei.mitteHoch}`);
+p('Ganz oben steht das Original', /Original/.test(zwei.original), zwei.original);
 p('Die Zeichenleiste passt in eine oder zwei Zeilen',
   zwei.leisteHoch > 0 && zwei.leisteHoch < 130, `${zwei.leisteHoch} px`);
 
+/* Und beim Rollen wird nachgezogen — das ist der Kern des Ganzen. */
+const gerollt = await pc.evaluate(async () => {
+  const mitte = document.querySelector('.document-center') as HTMLElement;
+  mitte.scrollTop = mitte.scrollHeight * 0.6;
+  await new Promise(r => setTimeout(r, 800));
+  return {
+    gezeichnet: document.querySelectorAll('.document-stage .blatt-papier').length,
+    position: (document.querySelector('.document-position')?.textContent || ''),
+    markiert: (document.querySelector('.document-thumbnail.is-selected')?.textContent || '').trim()
+  };
+});
+
+p('Beim Rollen kommen weitere Seiten dazu', gerollt.gezeichnet > 1,
+  String(gerollt.gezeichnet));
+p('Die Seitenzahl folgt dem Blick — ohne dass man geblättert hätte',
+  !/Seite 1\//.test(gerollt.position), gerollt.position);
+p('Und die Miniatur daneben auch', /Seite [2-9]/.test(gerollt.markiert),
+  gerollt.markiert);
+
+/* `‹ ›` wechseln nichts mehr, sie SPRINGEN. */
+const gesprungen = await pc.evaluate(async () => {
+  const mitte = document.querySelector('.document-center') as HTMLElement;
+  mitte.scrollTop = 0;
+  await new Promise(r => setTimeout(r, 400));
+  const vorRoll = mitte.scrollTop;
+  (document.querySelector('[data-document-action="next"]') as HTMLElement)?.click();
+  await new Promise(r => setTimeout(r, 900));
+  return { vorRoll, nachRoll: mitte.scrollTop,
+           staende: document.querySelectorAll('.document-stage').length,
+           position: (document.querySelector('.document-position')?.textContent || '') };
+});
+
+p('Das › rollt zur nächsten Seite, statt die Ansicht zu wechseln',
+  gesprungen.nachRoll > gesprungen.vorRoll + 100,
+  `${gesprungen.vorRoll} → ${gesprungen.nachRoll}`);
+gleich('Und alle vier Plätze stehen dabei weiter da', gesprungen.staende, 4);
+p('Die Anzeige sagt jetzt Seite 2', /Seite 2\//.test(gesprungen.position),
+  gesprungen.position);
+
 const gezoomt = await pc.evaluate(async () => {
+  const mitte = document.querySelector('.document-center') as HTMLElement;
+  mitte.scrollTop = 0;
   const regler = document.querySelector('[data-document-zoom]') as HTMLInputElement | null;
   if (!regler) return null;
-  regler.value = '180';
+  const vorher = Math.round(
+    document.querySelector('.blatt-papier')!.getBoundingClientRect().width);
+  regler.value = '60';
   regler.dispatchEvent(new Event('input', { bubbles: true }));
-  await new Promise(r => setTimeout(r, 200));
-  const mitte = document.querySelector('.document-center') as HTMLElement | null;
-  const papier = document.querySelector('.document-stage .blatt-papier') as HTMLElement | null;
-  /* ERST MESSEN, DANN ZURUECKDREHEN. Die erste Fassung las `scrollHeight`
-     nach dem Zuruecksetzen auf 100 % — und bekam natuerlich wieder 748. */
-  const gemessen = { breit: Math.round(papier?.getBoundingClientRect().width || 0),
-    rollHoch: mitte?.scrollHeight || 0, mitteHoch: mitte?.clientHeight || 0 };
+  await new Promise(r => setTimeout(r, 300));
+  const gemessen = { vorher, schmal: Math.round(
+    document.querySelector('.blatt-papier')!.getBoundingClientRect().width) };
   regler.value = '100';
   regler.dispatchEvent(new Event('input', { bubbles: true }));
-  await new Promise(r => setTimeout(r, 200));
+  await new Promise(r => setTimeout(r, 300));
   return gemessen;
 });
 
-p('GEGENPROBE: mit 180 % wird das Blatt breiter', !!gezoomt &&
-  gezoomt.breit > zwei.papierBreit + 20, JSON.stringify(gezoomt));
-p('… und DANN muss gerollt werden — die Messung kann also anschlagen',
-  !!gezoomt && gezoomt.rollHoch > gezoomt.mitteHoch + 2, JSON.stringify(gezoomt));
+p('GEGENPROBE: mit 60 % wird das Blatt schmaler', !!gezoomt &&
+  gezoomt.schmal < gezoomt.vorher - 100, JSON.stringify(gezoomt));
 gleich('Der Zoom hat die Dokumentkoordinate nicht angefasst',
   await pc.evaluate(() => Store.childrenOf(
     document.querySelector<HTMLElement>('.document-workspace')!.dataset['pageId']!)[0].bw), 595);

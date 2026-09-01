@@ -113,26 +113,33 @@ pruefe('Inspector bietet Quelle, Ausschnitt und Erkennung an',
   ['source-actions', 'select-region', 'recognize'].every(action => dokumentStart.inspector.includes(action)),
   JSON.stringify(dokumentStart.inspector));
 
+/* SEIT E299 WECHSELT `›` DIE ANSICHT NICHT, SONDERN ROLLT HIN. Die Rolle
+   traegt alle Seiten; der Knopf springt zur naechsten. Das Rollen ist weich,
+   also braucht die Messung etwas mehr Zeit als die 180 ms von vorher. */
 await seite.locator('[data-document-action="next"]').click();
-await seite.waitForTimeout(180);
-gleich('Der echte Weiter-Knopf zeigt die zweite PDF-Seite',
+await seite.waitForTimeout(900);
+gleich('Der echte Weiter-Knopf rollt zur zweiten PDF-Seite',
   await seite.locator('.document-position').textContent(), 'Seite 2/2');
-gleich('Im Zentrum steht danach genau die PDF-Seite',
+gleich('Und die PDF-Seite ist dabei gezeichnet',
   await seite.locator('.document-stage .pdfs').count(), 1);
 
-/* SEIT E296 IST DER ZOOM EIN FAKTOR AUF EIN PASSMASS, keine Prozentbreite
-   der Mitte mehr: die Grundstellung rechnet aus der verfuegbaren HOEHE und
-   dem Seitenverhaeltnis, damit die ganze Seite ins Bild passt. Gemessen wird
-   deshalb das Papier in Pixeln — und dass die Dokumentkoordinate dabei
-   unangetastet bleibt, was die eigentliche Behauptung war. */
-const papierVorher = await seite.locator('.document-stage .blatt-papier')
+/* SEIT E296 IST DER ZOOM EIN FAKTOR AUF EIN PASSMASS und keine Prozentbreite
+   der Buehne mehr; seit E299 rechnet dieses Mass aus der verfuegbaren
+   BREITE, weil die Rolle alle Seiten untereinander traegt und man ohnehin
+   rollt. Gemessen wird deshalb das Papier in Pixeln — und dass die
+   Dokumentkoordinate dabei unangetastet bleibt, was die eigentliche
+   Behauptung war.
+
+   `.first()`: in der Rolle sind mehrere Seiten gezeichnet, sobald sie in
+   Sichtweite kommen. Gemeint ist die erste. */
+const papierVorher = await seite.locator('.document-stage .blatt-papier').first()
   .evaluate(el => Math.round(el.getBoundingClientRect().width));
 await seite.locator('[data-document-zoom]').evaluate(element => {
   const input = element as HTMLInputElement;
   input.value = '130'; input.dispatchEvent(new Event('input', { bubbles: true }));
 });
 await seite.waitForTimeout(120);
-const papierNachher = await seite.locator('.document-stage .blatt-papier')
+const papierNachher = await seite.locator('.document-stage .blatt-papier').first()
   .evaluate(el => Math.round(el.getBoundingClientRect().width));
 pruefe('Zoom ändert nur die Ansichtsbreite — das Papier wird breiter',
   papierVorher > 40 && papierNachher > papierVorher + 20,

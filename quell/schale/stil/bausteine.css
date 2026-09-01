@@ -4155,8 +4155,30 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   justify-content:center; overflow:hidden; background:#fff; border:1px solid #cfd1d4;border-radius:4px}
 .document-thumbnail-preview img{width:100%;height:100%;object-fit:contain}
 .document-thumbnail-blank{color:#444;font-size:28px}.document-thumbnail-label{font-size:12px}
-.document-center{min-width:0; overflow:auto; padding:18px; background:var(--bg-subtle,var(--bg-hover))}
-.document-stage{min-width:360px; max-width:none; margin:0 auto; transform-origin:top center}
+/* E299 · `position:relative` ist hier KEIN Beiwerk: die Rolle rechnet mit
+   `offsetTop`, und der zaehlt zum naechsten positionierten Vorfahren. Ohne
+   diese eine Angabe zeigte er an einem Element weiter aussen vorbei, und die
+   Seitenzahl blieb beim Rollen auf 1 stehen. */
+.document-center{min-width:0; overflow:auto; padding:18px; position:relative;
+  background:var(--bg-subtle,var(--bg-hover))}
+/* E299 · DIE ROLLE. Alle Seiten untereinander, mit Luft dazwischen — man
+   liest ein Skript durch und blättert es nicht. Der Abstand ist der
+   sichtbare Schnitt zwischen zwei Seiten; ohne ihn klebt der Ausdruck
+   aneinander und man weiss beim Rollen nicht, wo die eine aufhört. */
+.document-stage{min-width:360px; max-width:none; margin:0 auto 26px;
+  transform-origin:top center}
+.document-stage:last-child{margin-bottom:0}
+/* E299 · Das Original ganz oben, wie in OneNote der Anhang über dem
+   Ausdruck. Eine Zeile, kein Kasten: sie soll den Blick nicht aufhalten. */
+.document-original{display:flex; align-items:center; gap:10px; width:100%;
+  max-width:var(--doc-blatt,720px); min-height:44px; margin:0 auto 20px;
+  padding:8px 14px; border:1px solid var(--border); border-radius:10px;
+  background:var(--bg-card); color:var(--text); text-align:left; cursor:pointer}
+.document-original:hover{border-color:var(--accent-text); background:var(--bg-hover)}
+.document-original .do-zeichen{flex:none; font-size:18px}
+.document-original .do-name{flex:1; min-width:0; overflow:hidden;
+  text-overflow:ellipsis; white-space:nowrap; font-weight:600}
+.document-original .do-wort{flex:none; color:var(--text-dim); font-size:12.5px}
 /* E296 · DIE ZEICHENLEISTE BLEIBT OBEN STEHEN, wie in GoodNotes. Sie gehoert
    zum Blatt und rollte mit ihm weg: wer unten auf einer A4-Seite schrieb,
    musste zum Wechsel der Farbe erst wieder ganz nach oben. Nur im

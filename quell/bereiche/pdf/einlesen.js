@@ -237,6 +237,30 @@ const PdfEinlesen = (() => {
             }
             if (melder && melder.remove)
                 melder.remove();
+            /* ══ DAS ORIGINAL BLEIBT OBEN STEHEN (E299) ═══════════════════════════
+               Redur: „ganz oben sollte immer die orginale pdf dort stehen und die
+               anderen als eien kopier dort ausdrucken". Genau so macht es OneNote:
+               die Datei als Anhang, darunter der Ausdruck.
+      
+               Bis hierher gab es sie nur als `quelleId` an jeder Seite — die Bytes
+               lagen in der Ablage, aber nichts auf der Seite zeigte darauf. Wer die
+               Datei weiterschicken oder auf einem anderen Rechner oeffnen wollte,
+               kam nicht an sie heran, obwohl sie da war.
+      
+               An Stelle 0, also VOR den Seiten. Und der Dateisatz zeigt auf DIESEN
+               Block: sonst ueberlebte er das Loeschen des Anhangs (E99). */
+            let anhang = '';
+            if (bis > 0) {
+                try {
+                    const a = Store.addBlock(elternId, 'file', {
+                        text: datei.name, dateiId: quelle.id, typ: datei.type,
+                        groesse: datei.size, original: true
+                    }, 0);
+                    anhang = a.id;
+                    await Store.dateiPut({ ...quelle, blockId: a.id });
+                }
+                catch { /* ohne Anhang bleiben wenigstens die Seiten */ }
+            }
             /* UND DANN GEHT DIE PDF AUCH ALS DOKUMENT AUF (E296).
                Bisher landeten die Seitenbloecke in der laufenden Notizseite:
                zwischen Text und Werkzeugzeile, in Spaltenbreite, unter einem
@@ -272,7 +296,7 @@ const PdfEinlesen = (() => {
                 Store.updateBlock(zielSeite.id, { dokumentModus: true });
             App.zeichneSeite();
             UI.toast(bis + ' von ' + gesamt + ' Seiten aus „' + datei.name + '" vorbereitet');
-            return { seiten: bis, gesamt, quelle, bloecke: gemacht };
+            return { seiten: bis, gesamt, quelle, bloecke: gemacht, anhang };
         }
         catch (e) {
             melder.remove();

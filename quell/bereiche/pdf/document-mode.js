@@ -387,10 +387,89 @@ const DocumentMode = (() => {
         documents.forEach((block, index) => thumbnails.appendChild(thumbnail(block, index, index === state.index)));
         const center = document.createElement('main');
         center.className = 'document-center';
-        const stage = document.createElement('div');
-        stage.className = 'document-stage';
-        renderDocument(stage, current);
-        center.appendChild(stage);
+        /* ══ DIE ROLLE (E299) ══════════════════════════════════════════════════
+           ALLE SEITEN UNTEREINANDER, NICHT EINE ZUM BLAETTERN.
+    
+           Bis E296 zeigte der Dokumentmodus genau eine Seite, und `‹ ›` wechselte
+           sie. Redur wollte es anders und hat es genau gesagt: „ich sollte wie
+           one note unendlich schrolen haben … pdf sollte ich weder nach unten
+           noch nach rechts die seite wechseln koennen". Ein Skript liest man
+           durch, man blaettert es nicht.
+    
+           DIE SEITEN, DIE MAN NICHT SIEHT, WERDEN NICHT GEZEICHNET. Ein
+           Vorlesungsskript hat achtzig Seiten; achtzig Zeichenschichten und
+           achtzig Bilder auf einmal sind kein Dokument mehr, sondern ein
+           stehender Browser. Jede Seite bekommt deshalb zuerst nur ihren Platz
+           — die Hoehe folgt aus `bw`/`bh`, also stimmt der Rollbalken von
+           Anfang an — und wird gezeichnet, sobald sie in die Naehe kommt.
+    
+           `‹ ›` und die Miniaturen wechseln nichts mehr, sie SPRINGEN. */
+        /* ══ DAS ORIGINAL GANZ OBEN (E299) ════════════════════════════════════
+           Wie in OneNote: die Datei selbst als erste Zeile, der Ausdruck
+           darunter. Gesucht wird der `file`-Block, den `PdfEinlesen` an Stelle 0
+           anlegt — und ersatzweise die `quelleId` der ersten Seite, damit auch
+           aeltere Dokumente ihre Datei zeigen.
+    
+           Nur ein Weg zur Datei, kein zweiter Speicher: geklickt wird `Dateien`,
+           dieselbe Stelle wie beim Datei-Block auf der gewoehnlichen Seite. */
+        const originalBlock = Store.childrenOf(page.id)
+            .find((b) => b && b.alive !== false && b.type === 'file' && b.dateiId &&
+            (b.original || /\.pdf$/i.test(String(b.text || ''))));
+        const quelleId = originalBlock?.dateiId ||
+            documents.map(d => d.quelleId).find(Boolean) || '';
+        if (quelleId) {
+            const zeile = document.createElement('button');
+            zeile.type = 'button';
+            zeile.className = 'document-original';
+            zeile.dataset.documentOriginal = String(quelleId);
+            const zeichen = document.createElement('span');
+            zeichen.className = 'do-zeichen';
+            zeichen.textContent = '📕';
+            const name = document.createElement('span');
+            name.className = 'do-name';
+            name.textContent = String(originalBlock?.text || 'Original-PDF');
+            const wort = document.createElement('span');
+            wort.className = 'do-wort';
+            wort.textContent = 'Original öffnen';
+            zeile.append(zeichen, name, wort);
+            zeile.title = 'Die unveränderte PDF-Datei — darunter steht ihr Ausdruck.';
+            center.appendChild(zeile);
+        }
+        /* WELCHE SEITE GERADE GILT, IST BEWEGLICH GEWORDEN (E299). Vorher stand
+           sie beim Zeichnen fest — es gab ja nur eine. In der Rolle wandert sie
+           mit dem Blick, und „Ausschnitt", „Erkennen" und der Inspector müssen
+           die meinen, die man ansieht. */
+        const jetzt = () => documents[Math.max(0, Math.min(state.index, documents.length - 1))] || current;
+        const staende = [];
+        const gezeichnet = new Set();
+        const zeichneStand = (i) => {
+            if (gezeichnet.has(i))
+                return;
+            const stand = staende[i];
+            const block = documents[i];
+            if (!stand || !block)
+                return;
+            gezeichnet.add(i);
+            stand.style.removeProperty('height');
+            renderDocument(stand, block);
+        };
+        documents.forEach((block, i) => {
+            const stand = document.createElement('div');
+            stand.className = 'document-stage';
+            stand.dataset.standNr = String(i);
+            /* Der Platzhalter in der richtigen Hoehe. Ohne ihn springt der
+               Rollbalken bei jeder nachgezeichneten Seite. */
+            const bw = Number(block.bw) || Number(block.blattBreite) || SheetSpace.A4_BREITE;
+            const bh = Number(block.bh) || Number(block.blattHoehe) || SheetSpace.A4_HOEHE;
+            /* Der Platzhalter in der Hoehe, die die Seite wirklich bekommen wird —
+               sonst springt der Rollbalken, sobald sie gezeichnet ist. */
+            if (bw > 0 && bh > 0)
+                stand.style.height = Math.round(Math.max(200, center.clientWidth - 36) * (bh / bw)) + 'px';
+            staende.push(stand);
+            center.appendChild(stand);
+        });
+        /* Die erste Seite sofort, damit nie ein leeres Fenster dasteht. */
+        zeichneStand(Math.max(0, Math.min(state.index, documents.length - 1)));
         const inspector = document.createElement('aside');
         inspector.className = 'document-inspector' + (state.inspectorOpen ? ' is-open' : '');
         renderInspector(inspector, page, current);
@@ -431,16 +510,19 @@ const DocumentMode = (() => {
         const passen = () => {
             if (!workspace.isConnected)
                 return;
-            const bw = Number(current.bw) || Number(current.blattBreite) || SheetSpace.A4_BREITE;
-            const bh = Number(current.bh) || Number(current.blattHoehe) || SheetSpace.A4_HOEHE;
-            if (!(bw > 0) || !(bh > 0))
+            const raum = center.clientWidth;
+            if (raum < 120)
                 return;
-            const raum = center.clientHeight;
-            const leiste = stage.querySelector('.blatt-reihe')?.offsetHeight || 0;
-            if (raum < 80)
-                return;
-            const hoch = Math.max(200, raum - leiste - 56);
-            const breit = Math.round(hoch * (bw / bh) * (state.zoom / 100));
+            /* ══ IN DER ROLLE GIBT DIE BREITE DAS MASS (E299) ═════════════════════
+               Bis hierher wurde aus der HOEHE gerechnet, damit eine ganze Seite
+               ins Bild passt. Das war fuer das Blaettern richtig und ist fuers
+               Rollen falsch: man rollt ja ohnehin, und Redur will die Seiten
+               „ganz oeffnen komplett wie one note" — also gross und lesbar, nicht
+               auf Fensterhoehe geschrumpft.
+      
+               Gemessen auf 1440 px war die Seite mit der Hoehenrechnung 432 px
+               breit; die Mitte hatte 1360. Ein Skript liest sich so nicht. */
+            const breit = Math.round((raum - 36) * (state.zoom / 100));
             /* DAS MASS GEHT ANS PAPIER, NICHT AN DIE BUEHNE. Die Zeichenleiste
                gehoert zum Blatt und steht in derselben Huelle; haette die Buehne
                das Passmass, waere die Leiste so schmal wie die Seite — gemessen:
@@ -449,8 +531,17 @@ const DocumentMode = (() => {
                die Leiste passt in eine Zeile, und nur das Papier wird gestellt.
                Die Zeichenschicht haengt IM Papier (E100) und geht in Blattmassen
                statt in Pixeln — sie folgt von selbst mit. */
-            stage.style.width = '100%';
-            stage.style.setProperty('--doc-blatt', Math.max(120, Math.min(breit, center.clientWidth - 36)) + 'px');
+            /* AN DIE MITTE, NICHT AN EINE BUEHNE (E299). Seit die Rolle alle
+               Seiten traegt, gibt es nicht mehr die eine. Das Mass steht deshalb
+               am gemeinsamen Elternteil und vererbt sich an jede.
+      
+               OHNE DECKEL NACH OBEN. Der erste Entwurf begrenzte auf die Breite
+               der Mitte — und damit tat der Zoom ueber 100 % gar nichts mehr
+               (gemessen: 1250 px bei 100 % und bei 130 %). Wer hineinzoomt, will
+               Einzelheiten gross sehen und nimmt das seitliche Rollen dafuer in
+               Kauf; das ist etwas anderes als ein Seitenwechsel nach rechts, den
+               es hier nicht gibt. */
+            center.style.setProperty('--doc-blatt', Math.max(120, breit) + 'px');
         };
         const beiGroesse = () => {
             if (!workspace.isConnected) {
@@ -459,23 +550,126 @@ const DocumentMode = (() => {
             }
             hoeheSetzen();
             passen();
+            nachziehen();
         };
         window.addEventListener('resize', beiGroesse, { passive: true });
+        /* WAS IN DIE NAEHE KOMMT, WIRD GEZEICHNET (E299).
+           Ein Fenster von einer Bildhoehe nach oben und unten: so ist die
+           naechste Seite schon da, wenn man sie erreicht, und die achtzigste
+           bleibt ein Platzhalter, solange niemand hinrollt. */
+        /* NACH EINEM SPRUNG SCHWEIGT DAS NACHZIEHEN KURZ.
+           Beide wollen die Seitenzahl setzen: `springe` sagt „Seite 2", und das
+           weiche Rollen laeuft danach noch — bei einer kurzen Rolle ist Seite 1
+           dabei weiter in der Fenstermitte, also setzte `nachziehen` sofort auf
+           1 zurueck. Auf dem Bildschirm sprang die Zahl hin und her; test202
+           fiel darueber („ist Seite 1/2, soll Seite 2/2").
+    
+           Eine Sperre, keine feste Wartezeit: sie faellt, sobald das Rollen an
+           der gewuenschten Stelle steht. */
+        let springtZu = -1;
+        const nachziehen = () => {
+            if (!center.isConnected)
+                return;
+            const oben = center.scrollTop - center.clientHeight;
+            const unten = center.scrollTop + 2 * center.clientHeight;
+            let sichtbar = state.index;
+            staende.forEach((stand, i) => {
+                const y = stand.offsetTop, h = stand.offsetHeight;
+                if (y + h >= oben && y <= unten)
+                    zeichneStand(i);
+                /* Und die Seitenzahl folgt dem Blick: was die Mitte des Fensters
+                   kreuzt, ist die Seite, auf der man gerade ist. */
+                if (y <= center.scrollTop + center.clientHeight / 2 &&
+                    y + h > center.scrollTop + center.clientHeight / 2)
+                    sichtbar = i;
+            });
+            if (springtZu >= 0) {
+                const ziel = staende[springtZu]?.offsetTop ?? 0;
+                if (Math.abs(center.scrollTop - ziel) > 4)
+                    return;
+                springtZu = -1;
+            }
+            if (sichtbar !== state.index) {
+                state.index = sichtbar;
+                position.textContent = 'Seite ' + (sichtbar + 1) + '/' + documents.length;
+                thumbnails.querySelectorAll('.document-thumbnail.is-selected')
+                    .forEach(el => el.classList.remove('is-selected'));
+                thumbnails.querySelector('[data-document-index="' + sichtbar + '"]')
+                    ?.classList.add('is-selected');
+                /* Der Inspector zeigt, was mit DIESER Stelle verbunden ist — also
+                   muss er mitwandern. Nur wenn er offen ist: sonst wäre es Arbeit
+                   für einen Kasten, den niemand sieht. */
+                if (state.inspectorOpen)
+                    renderInspector(inspector, page, jetzt());
+            }
+        };
+        let rollWartet = false;
+        center.addEventListener('scroll', () => {
+            if (rollWartet)
+                return;
+            rollWartet = true;
+            requestAnimationFrame(() => { rollWartet = false; nachziehen(); });
+        }, { passive: true });
         requestAnimationFrame(() => {
             hoeheSetzen();
             passen();
+            /* Zur zuletzt gelesenen Seite, ohne Rollbewegung — beim Oeffnen soll
+               nichts fahren. */
+            if (state.index > 0 && staende[state.index])
+                center.scrollTop = staende[state.index].offsetTop;
+            nachziehen();
             thumbnails.querySelector('.document-thumbnail.is-selected')
                 ?.scrollIntoView({ block: 'nearest' });
             activateVisibleThumbnails(thumbnails);
         });
+        /* Zu einer Seite springen — zeichnen, hinrollen, Stand merken. Kein
+           Neuaufbau: ein Sprung, der die ganze Seite neu zeichnet, verlöre
+           jeden angefangenen Strich und jede offene Textstelle. */
+        const springe = (i, weich = true) => {
+            const nr = Math.max(0, Math.min(documents.length - 1, i));
+            state.index = nr;
+            zeichneStand(nr);
+            /* NUR DIE MITTE ROLLEN, NICHT DAS FENSTER. `scrollIntoView` schiebt
+               JEDEN rollbaren Vorfahren — auch das Dokument selbst, und dann
+               wandert der ganze Arbeitsraum nach oben aus dem Bild. Gemessen:
+               der Raum endete danach 60 px über dem Fensterrand statt 12.
+      
+               `offsetTop` ist der Abstand zum naechsten positionierten Vorfahren,
+               und das ist `.document-center` (`position:relative` in der CSS,
+               genau dafuer gesetzt). */
+            const stand = staende[nr];
+            if (stand) {
+                springtZu = nr;
+                if (weich && typeof center.scrollTo === 'function')
+                    center.scrollTo({ top: stand.offsetTop, behavior: 'smooth' });
+                else
+                    center.scrollTop = stand.offsetTop;
+            }
+            position.textContent = 'Seite ' + (nr + 1) + '/' + documents.length;
+            thumbnails.querySelectorAll('.document-thumbnail.is-selected')
+                .forEach(el => el.classList.remove('is-selected'));
+            thumbnails.querySelector('[data-document-index="' + nr + '"]')
+                ?.classList.add('is-selected');
+            passen();
+        };
         const rerender = () => App.zeichneSeite();
         workspace.addEventListener('click', event => {
             const element = event.target instanceof Element ? event.target : null;
             const thumb = element?.closest('[data-document-index]');
             if (thumb?.dataset.documentIndex) {
-                state.index = Number(thumb.dataset.documentIndex) || 0;
-                state.thumbnailsOpen = false;
-                rerender();
+                springe(Number(thumb.dataset.documentIndex) || 0);
+                return;
+            }
+            const original = element?.closest('[data-document-original]');
+            if (original?.dataset.documentOriginal) {
+                const id = original.dataset.documentOriginal;
+                Dateien.adresse(id).then((url) => {
+                    if (!url) {
+                        UI.toast('Die Originaldatei ist nicht mehr in der Ablage.');
+                        return;
+                    }
+                    window.open(url, '_blank', 'noopener');
+                }).catch(() => UI.toast('Die Originaldatei liess sich nicht öffnen.'));
                 return;
             }
             const open = element?.closest('[data-document-open]');
@@ -491,14 +685,10 @@ const DocumentMode = (() => {
             const action = element?.closest('[data-document-action]')?.dataset.documentAction;
             if (!action)
                 return;
-            if (action === 'previous') {
-                state.index = Math.max(0, state.index - 1);
-                rerender();
-            }
-            if (action === 'next') {
-                state.index = Math.min(documents.length - 1, state.index + 1);
-                rerender();
-            }
+            if (action === 'previous')
+                springe(state.index - 1);
+            if (action === 'next')
+                springe(state.index + 1);
             if (action === 'thumbnails') {
                 state.thumbnailsOpen = !state.thumbnailsOpen;
                 rerender();
@@ -518,21 +708,26 @@ const DocumentMode = (() => {
             if (action === 'exit')
                 toggle(page, false);
             if (action === 'source-actions')
-                openSourceActions(page, current);
+                openSourceActions(page, jetzt());
             if (action === 'select-region' || action === 'recognize') {
-                const paper = stage.querySelector('.blatt-papier');
-                if (!paper)
+                /* AM STAND DER SEITE, DIE MAN ANSIEHT (E299). Vorher gab es genau
+                   eine Bühne; in der Rolle ist es die, auf der der Blick steht. */
+                const stand = staende[state.index];
+                const paper = stand?.querySelector('.blatt-papier');
+                if (!paper) {
+                    UI.toast('Diese Seite ist gerade nicht gezeichnet.');
                     return;
-                selectRegion(paper, current, region => {
+                }
+                selectRegion(paper, jetzt(), region => {
                     if (action === 'recognize') {
                         const recognition = window.Recognition;
                         if (recognition?.fromSource)
-                            recognition.fromSource(page, current, region);
+                            recognition.fromSource(page, jetzt(), region);
                         else
                             UI.toast('Die Erkennung ist noch nicht geladen.');
                     }
                     else
-                        openSourceActions(page, current, region);
+                        openSourceActions(page, jetzt(), region);
                 });
             }
         });

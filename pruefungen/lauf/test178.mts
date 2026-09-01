@@ -191,7 +191,13 @@ const baum = async (sid: string) => seite.evaluate((s: string) => {
     };
   };
   return (Store.getBlock(s)?.content || []).map(lies).filter(Boolean)
-    .filter((x: any) => !(x.typ === 'text' && !x.text && !x.kinder.length));
+    .filter((x: any) => !(x.typ === 'text' && !x.text && !x.kinder.length))
+    /* DAS ORIGINAL OBEN ZAEHLT NICHT MIT (E299). Seit Redurs Wunsch „ganz
+       oben sollte immer die orginale pdf dort stehen" legt `alsSeiten` die
+       eingelesene Datei als `file`-Block an Stelle 0. Dieser Abschnitt misst
+       die ANORDNUNG der Seiten — nebeneinander oder untereinander. Der
+       Anhang gehoert nicht zu dieser Frage; dass er da ist, prueft §6. */
+    .filter((x: any) => x.typ !== 'file');
 }, sid);
 
 /* ==========================================================================
@@ -631,6 +637,35 @@ p('Die Wahl wird gemerkt, aber jedes Mal gefragt',
   /Dialog\.wahl\(/.test(quelle));
 
 p('Keine Fehler auf der Seite', fehler.length === 0, fehler.join(' | '));
+
+/* ==========================================================================
+ * §6 · Und ganz oben steht die Originaldatei (E299)
+ * --------------------------------------------------------------------------
+ * Redur: „ganz oben sollte immer die orginale pdf dort stehen und die
+ * anderen als eien kopier dort ausdrucken". Bis dahin lagen die Bytes zwar
+ * in der Ablage — an jeder Seite als `quelleId` —, aber nichts auf der Seite
+ * zeigte darauf. Wer die Datei weiterschicken oder auf einem anderen Rechner
+ * oeffnen wollte, kam nicht an sie heran, obwohl sie da war.
+ *
+ * §55.2 — vor E299 gab es diesen Block bei erfolgreichem Einlesen gar nicht:
+ * `nurAnhaengen` legte ihn nur an, WENN das Einlesen scheiterte.
+ * ========================================================================*/
+console.log('\n6 · Und ganz oben steht die Originaldatei');
+
+const oben = await seite.evaluate((s: string) => {
+  const kinder = (Store.getBlock(s)?.content || [])
+    .map((id: string) => Store.getBlock(id)).filter(Boolean);
+  const erst = kinder[0];
+  return { typ: erst?.type || '', name: String(erst?.text || ''),
+           hatDatei: !!erst?.dateiId, alsOriginal: erst?.original === true,
+           wieViele: kinder.filter((b: any) => b?.type === 'file').length };
+}, sidA) as any;
+
+gleich('Das erste Kind der Seite ist eine Datei', oben.typ, 'file');
+p('Sie trägt den Namen der eingelesenen PDF', /\.pdf$/i.test(oben.name), oben.name);
+p('Und zeigt auf einen echten Dateisatz', oben.hatDatei);
+p('Sie ist als Original gekennzeichnet', oben.alsOriginal);
+gleich('Genau eine — nicht bei jedem Einlesen eine weitere', oben.wieViele, 1);
 
 await browser.close();
 server.close();

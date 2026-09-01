@@ -4024,3 +4024,37 @@ L106 — Was die Lern-Evidenz (E289) und der Kalender (E290) noch nicht können
    der Rundlauf ist einseitig.
 
 Gefunden am 31. August 2026 (beim Bau von E289 und E290).
+
+
+================================================================================
+L107 — Neben den Seiten zeichnen, wie in OneNote (E299)
+================================================================================
+
+Redur hat es beim Auftrag zur Rolle mitgesagt: „ich sollte so neben das pdf
+direk zeichnen können wie one note". Die Rolle steht (E299), das Zeichnen
+NEBEN den Seiten nicht.
+
+Warum es nicht nebenbei ging: die Zeichenschicht hängt im Papier und rechnet
+in Blattkoordinaten — `viewBox="0 0 595 842"` bei einer A4-Seite. Ein Strich
+ist als Punkt IN DIESEM RAUM gespeichert, und genau das macht ihn
+breitenunabhängig (E100, geprüft von test177). Die Schicht zu verbreitern
+heisst, diesen Raum zu ändern — und damit läge jede schon gezeichnete Marke
+an einer anderen Stelle.
+
+Das ist eine Datenfrage und kein Aussehen. §46: lieber langsamer als ein
+verrutschter Strich in einem Skript, das jemand vor der Prüfung durchgeht.
+
+Was zu klären ist, bevor gebaut wird:
+
+  · Bekommt das Papier einen Randbereich mit EIGENEM Koordinatenraum, oder
+    wächst der vorhandene? Nur das erste lässt alte Marken unberührt.
+  · Wandert eine Randnotiz mit, wenn die Seite später feiner gerechnet wird
+    (`schaerfer`, E173)?
+  · Was passiert beim Drucken und beim Markdown-Rundlauf mit dem, was neben
+    der Seite steht?
+
+Bis dahin gibt es den Weg über „Seite und Notizblatt nebeneinander" beim
+Einlesen (E104): dort steht rechts ein A4-Blatt, auf dem man frei schreibt.
+Das ist nicht dasselbe, aber es ist da und es verliert nichts.
+
+Gefunden am 1. September 2026 (beim Bau von E299).

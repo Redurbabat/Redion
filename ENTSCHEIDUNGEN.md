@@ -22370,3 +22370,83 @@ einziger Aufruf von `laufBeginnen` stand ausserhalb von `buch.ts`, und
 gemessen wird am ERZEUGTEN JavaScript, weil der Browser `quell/` lädt und
 eine Zeile, die nur in `src/` steht, nicht wirkt. §4 ist die Gegenprobe: eine
 gewöhnliche Regel meldet nichts.
+
+
+================================================================================
+E299 — Die Rolle: alle Seiten untereinander, das Original oben
+================================================================================
+1. September 2026
+
+E296 hat den Dokumentmodus so gebaut, dass EINE Seite ganz ins Bild passt und
+`‹ ›` die nächste holt. Redur hat danach mit zwei Bildern aus OneNote gesagt,
+was er wirklich will:
+
+    „ich sollte wie one note unendlich schrolen haben, ich sollte so neben
+     das pdf direk zeichnen können wie one note und pdf sollte ich weder nach
+     unten noch nach rechts die seite wechseln könenn, dann die pdf seiten
+     sollte wie goodnotes sich ganz öfnnen komplet wie one note so … und ganz
+     oben sollte immer die orginale pdf dort stehen und die anderen als eien
+     kopier dort ausdrucken"
+
+Ein Skript liest man durch. Man blättert es nicht.
+
+1 · DIE ROLLE. Der Arbeitsraum trägt alle Seiten untereinander. `‹ ›` und die
+Miniaturen wechseln nichts mehr — sie SPRINGEN, also rollen sie hin. Die
+Seitenzahl folgt dem Blick: was die Fenstermitte kreuzt, ist die Seite, auf
+der man ist.
+
+2 · DIE BREITE GIBT DAS MASS. E296 rechnete aus der HÖHE, damit eine ganze
+Seite ins Bild passt. Das war fürs Blättern richtig und fürs Rollen falsch:
+gemessen auf 1440 px war die Seite 432 px breit, die Mitte hatte 1360. So
+liest sich kein Text. Jetzt füllt das Blatt die Mitte (1324 von 1360), und
+der Zoom skaliert davon — OHNE Deckel nach oben, denn wer hineinzoomt, will
+Einzelheiten gross sehen und nimmt das seitliche Rollen in Kauf. Das ist
+etwas anderes als ein Seitenwechsel nach rechts, den es hier nicht gibt.
+
+3 · WAS MAN NICHT SIEHT, WIRD NICHT GEZEICHNET. Ein Vorlesungsskript hat
+achtzig Seiten; achtzig Zeichenschichten und achtzig Bilder auf einmal sind
+kein Dokument mehr, sondern ein stehender Browser. Jede Seite bekommt zuerst
+nur ihren Platz — die Höhe folgt aus `bw`/`bh`, also stimmt der Rollbalken
+von Anfang an — und wird gezeichnet, sobald sie in die Nähe kommt. Gemessen
+mit zwölf Seiten: eine gezeichnet beim Öffnen, Rollhöhe 5454 px; nach dem
+Rollen auf 45 % drei gezeichnet, Anzeige „Seite 4/12".
+
+4 · DAS ORIGINAL GANZ OBEN. `alsSeiten` legt die eingelesene Datei als
+`file`-Block an Stelle 0 an, und die Rolle zeigt sie als erste Zeile. Bis
+hierher lagen die Bytes zwar in der Ablage — an jeder Seite als `quelleId` —,
+aber nichts auf der Seite zeigte darauf. Wer die Datei weiterschicken oder
+auf einem anderen Rechner öffnen wollte, kam nicht an sie heran, obwohl sie
+da war.
+
+DREI FEHLER FAND ERST DAS MESSEN, und alle drei hätte man beim Benutzen
+gemerkt:
+
+  · `offsetTop` zählt zum nächsten POSITIONIERTEN Vorfahren. `.document-
+    center` hatte kein `position:relative`, also zeigte er an einem Element
+    weiter aussen vorbei — die Seitenzahl blieb beim Rollen auf 1 stehen.
+  · `scrollIntoView` schiebt JEDEN rollbaren Vorfahren, auch das Dokument
+    selbst. Der Arbeitsraum wanderte dabei nach oben aus dem Bild und endete
+    60 px über dem Fensterrand statt 12. Gerollt wird jetzt nur die Mitte.
+  · Springen und Nachziehen wollten beide die Seitenzahl setzen. Bei einer
+    kurzen Rolle war Seite 1 nach dem Sprung noch in der Fenstermitte, also
+    setzte das Nachziehen sofort zurück — die Zahl sprang hin und her.
+    `test202` fiel darüber. Eine Sperre hält still, bis das Rollen an der
+    gewünschten Stelle steht.
+
+Und ein vierter, den erst eine Prüfung fand: der Zoom über 100 % tat gar
+nichts, weil die Breite auf die Mitte gedeckelt war (1250 px bei 100 % wie
+bei 130 %).
+
+WAS NOCH FEHLT, und das gehört gesagt: NEBEN den Seiten zeichnen, wie in
+OneNote. Die Zeichenschicht hängt heute im Papier und rechnet in
+Blattkoordinaten (`0 0 595 842`); sie zu verbreitern hiesse, die Bedeutung
+gespeicherter Marken zu verschieben. Das ist eine Datenfrage und kein
+Aussehen, also bekommt sie einen eigenen Bogen mit eigener Prüfung (§46).
+Steht in LUECKEN.md.
+
+Prüfungen: `test285` §2 misst die Rolle (52/52), `test178` §6 das Original
+oben (74/74). Mitgezogen: `test202` (der Weiter-Knopf rollt jetzt, und in der
+Rolle sind mehrere Papiere gezeichnet — `.first()`), `test178` §1 (der Anhang
+zählt bei der Anordnungsfrage nicht mit). test177 69/69, test210 31/31,
+test221 33/33, test228 24/24, test204 41/41.
+typecheck grün · sw v60 · Einzeldatei 7672 KB.
