@@ -91,7 +91,17 @@ const server = createServer((a, b) => {
 /* `bauen` darf ein Versprechen zurückgeben. `page.evaluate` wartet darauf,
    und die Produktwelten zeichnen asynchron — ohne das Warten stünde auf dem
    Bild der Zustand von davor. */
-const ANSICHTEN: Record<string, { titel: string; bauen: () => void | Promise<void> }> = {
+const ANSICHTEN: Record<string, {
+  titel: string;
+  bauen: () => void | Promise<void>;
+  /* GANZE SEITE STATT AUSSCHNITT. Manche Ansichten sind länger als jeder
+     Bildschirm — die Lernzentrale hat unter „Fortschritt" vier Blöcke
+     übereinander, und was zählt, steht im dritten. Rollen half nicht: die
+     Ansicht zeichnet nach dem Aufbau noch einmal und setzt die Rollhöhe
+     zurück, und drei Anläufe mit Rollen bewegten das Bild kein Pixel.
+     `fullPage` nimmt einfach alles. */
+  ganzeSeite?: boolean;
+}> = {
 
   /* --- Die Schale selbst (E272) ------------------------------------------
      Bis hierher zeigte jede Ansicht einen INHALT und die Schale nur
@@ -479,6 +489,53 @@ const ANSICHTEN: Record<string, { titel: string; bauen: () => void | Promise<voi
         .find(h => /Kosten und Grenzen/.test(h.textContent || ''));
       ziel?.scrollIntoView({ block: 'start' });
       await new Promise(r => setTimeout(r, 400));
+    }
+  },
+
+  /* E339: der Kompetenzsatz, wenn die Belege aus ZWEI Quellen kommen. Ohne
+     Simulation nennt er die Herkunft gar nicht — genau das soll man auch
+     sehen können, deshalb baut diese Ansicht beides. */
+  belege: {
+    titel: 'Woher die Belege für Können kommen (E339)',
+    ganzeSeite: true,
+    bauen: async () => {
+      const w = window as any;
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const fach = Store.addPage(null, { text: 'Elektrotechnik' });
+      const jetzt = Date.now();
+      for (const q of ['Ohmsches Gesetz :: U = R · I', 'Leistung :: P = U · I',
+                       'Arbeit :: W = P · t']) {
+        const k = Store.addBlock(fach.id, 'flashcard',
+          { text: q, lernThema: 'Ohmsches Gesetz' });
+        const v: any = {};
+        for (let j = 0; j < 5; j++)
+          v['r' + j] = { at: new Date(jetzt - (j + 1) * 86400000).toISOString(),
+                         rating: j === 2 ? 1 : 4 };
+        Store.updateBlock(k.id, { reviewVerlauf: v, sr: {
+          wdh: 3, intervall: 10,
+          zuletzt: new Date(jetzt - 86400000).toISOString(),
+          faellig: new Date(jetzt + 5 * 86400000).toISOString() } });
+      }
+      const konto = w.Konten && w.Konten.aktiv ? w.Konten.aktiv() : null;
+      Store.setMeta('lernwelt:' + ((konto && konto.id) || 'lokal') + ':simulationen', [{
+        id: 'sim-1', titel: 'Probeklausur', beendet: new Date(jetzt).toISOString(),
+        richtig: 8, gesamt: 10, dauerMin: 20,
+        themen: [{ thema: 'Ohmsches Gesetz', gesamt: 10, fehler: 2 }]
+      }]);
+      w.Produktwelten.lernen('lernen');
+      await new Promise(r => setTimeout(r, 1100));
+      /* DER SATZ STEHT IN DER KLASSISCHEN LERNANSICHT, nicht in der
+         Lernzentrale. Drei Anläufe gingen daneben, bevor das gemessen
+         statt geraten wurde: die Lernzentrale hat einen eigenen Block
+         „Themenfortschritt" (neben „Wochenverlauf"), und der ist NICHT
+         der aus `learning.ts`. Der Kopf, den E289 und E339 füllen, kommt
+         erst hinter „Klassische Lernansicht". */
+      const knopf = [...document.querySelectorAll('button, a')]
+        .find(b => /Klassische Lernansicht/.test(b.textContent || '')) as HTMLElement | undefined;
+      knopf?.click();
+      await new Promise(r => setTimeout(r, 1000));
     }
   },
 
@@ -1864,7 +1921,7 @@ for (const name of ansichten) {
       await seite.waitForTimeout(450);
 
       const datei = join(ZIEL, `${name}-${g}-${thema === 'light' ? 'hell' : 'dunkel'}.png`);
-      await seite.screenshot({ path: datei });
+      await seite.screenshot({ path: datei, fullPage: !!ansicht.ganzeSeite });
       await seite.close();
       gemacht.push(datei);
       console.log('  ✓ ' + datei.replace(WURZEL + '/', ''));
