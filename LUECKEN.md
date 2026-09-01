@@ -4049,7 +4049,9 @@ Gefunden am 31. August 2026 (beim Bau von E289 und E290).
 
 
 ================================================================================
-L107 — Neben den Seiten zeichnen, wie in OneNote (E299)
+L107 — ~~Neben den Seiten zeichnen, wie in OneNote~~ — GESCHLOSSEN am
+1. September 2026 (E301). Die Begründung unten war ein DENKFEHLER; wie er
+sich auflöst, steht am Ende dieses Eintrags.
 ================================================================================
 
 Redur hat es beim Auftrag zur Rolle mitgesagt: „ich sollte so neben das pdf
@@ -4080,6 +4082,31 @@ Einlesen (E104): dort steht rechts ein A4-Blatt, auf dem man frei schreibt.
 Das ist nicht dasselbe, aber es ist da und es verliert nichts.
 
 Gefunden am 1. September 2026 (beim Bau von E299).
+
+
+WIE ES SICH AUFLÖSTE (E301, wenige Stunden später)
+--------------------------------------------------------------------------------
+Der Satz oben — „die Schicht zu verbreitern heisst, diesen Raum zu ändern" —
+stimmt nur unter einer Bedingung, die hier nicht gilt: dass die Seite auf dem
+Bildschirm ihre Breite BEHÄLT, während die Box wächst. Dann wird jede Einheit
+kleiner, und ja, dann läge alles woanders.
+
+Wächst die Box dagegen nur nach RECHTS, und behält die Seite ihren ANTEIL an
+der Fläche, ändert sich keine einzige gespeicherte Zahl. Eine Marke bei x=300
+ist weiterhin 300 Einheiten vom linken Seitenrand entfernt. Es braucht also
+weder einen zweiten Koordinatenraum noch ein zweites Feld — und als Zugabe
+darf ein Strich von der Seite in den Rand DURCHLAUFEN, was mit zwei Räumen
+gar nicht ginge.
+
+Die drei Fragen, die hier standen, beantworten sich damit von selbst: der
+Raum wächst, ohne dass alte Marken sich bewegen (test295 §1 misst es); eine
+Randnotiz wandert beim feineren Rechnen genauso mit wie jede andere Marke,
+weil sie dieselbe Sorte Marke IST; und Druck und Rundlauf sehen ein
+Markenfeld, nicht zwei.
+
+Der Weg über „Seite und Notizblatt nebeneinander" (E104) bleibt daneben
+bestehen — er ist etwas anderes: ein eigenes Blatt mit eigenem Text, nicht
+ein Rand am Skript.
 
 
 ================================================================================

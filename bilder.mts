@@ -1159,6 +1159,73 @@ const ANSICHTEN: Record<string, { titel: string; bauen: () => void | Promise<voi
     }
   },
 
+  /* --- Der Randstreifen neben der Seite (E301, L107) -----------------------
+     Redur: „ich sollte so neben das pdf direk zeichnen können wie one note."
+     Das Bild muss zeigen, dass die Seite links steht, der Rand rechts, und
+     ein Strich über die Kante durchläuft. */
+
+  randstreifen: {
+    titel: 'Neben der Seite schreiben — der Randstreifen (E301)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+
+      const blattBild = async (nr: number): Promise<Blob> => {
+        const c = document.createElement('canvas');
+        c.width = 595; c.height = 842;
+        const g = c.getContext('2d');
+        if (!g) throw new Error('Kein Zeichenkontext');
+        g.fillStyle = '#fdfdfb'; g.fillRect(0, 0, c.width, c.height);
+        g.fillStyle = '#1c1c1c'; g.font = '600 26px system-ui, sans-serif';
+        g.fillText('Reihen- und Parallelschaltung', 52, 88);
+        g.fillStyle = '#4a4a48'; g.font = '15px system-ui, sans-serif';
+        ['In einer Reihenschaltung addieren sich die Widerstände:',
+         'R = R₁ + R₂ + R₃.',
+         '',
+         'In einer Parallelschaltung addieren sich die Leitwerte:',
+         '1/R = 1/R₁ + 1/R₂ + 1/R₃.',
+         '',
+         'Die Spannung teilt sich in der Reihenschaltung im',
+         'Verhältnis der Widerstände auf.'
+        ].forEach((z, i) => g.fillText(z, 52, 150 + i * 26));
+        g.strokeStyle = '#c8c8c4'; g.strokeRect(52, 400, 490, 200);
+        g.fillStyle = '#9b9a97'; g.font = '13px system-ui, sans-serif';
+        g.fillText('Abb. ' + nr, 52, 625);
+        return await new Promise<Blob>(f => c.toBlob(b => f(b as Blob), 'image/png'));
+      };
+
+      const seite = Store.addPage(null, { text: 'Elektrotechnik – Skript', icon: '📕' });
+      const ids: string[] = [];
+      for (let nr = 1; nr <= 2; nr++) {
+        const block = Store.addBlock(seite.id, 'pdfseite', {
+          text: '', suchtext: 'Reihenschaltung', nr, vonSeiten: 2,
+          bw: 595, bh: 842, quelleId: 'skript-rand'
+        });
+        ids.push(block.id);
+        const satz = await Dateien.ablegen(
+          new File([await blattBild(nr)], 'rand-s' + nr + '.png', { type: 'image/png' }),
+          { blockId: block.id, abgeleitet: true });
+        Store.updateBlock(block.id, { bildDateiId: satz.id });
+      }
+      /* Ein Strich, der auf der Seite anfängt und im Rand weitergeht — genau
+         das, was ohne Rand gar nicht ginge. */
+      Store.updateBlock(ids[0]!, { marken: [
+        { id: 'e301a', art: 'stroke', farbe: '#2f6fd0', breite: 3,
+          pts: [[430, 470], [520, 470], [640, 430], [790, 430]] },
+        { id: 'e301b', art: 'stroke', farbe: '#2f6fd0', breite: 3,
+          pts: [[640, 470], [830, 470]] },
+        { id: 'e301c', art: 'stroke', farbe: '#2f6fd0', breite: 3,
+          pts: [[640, 510], [760, 510]] }
+      ]});
+      Store.updateBlock(seite.id, { dokumentModus: true, randBreite: 0.45 });
+      await Store.flush();
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 1800));
+    }
+  },
+
   /* --- Die Reiterzeile über den Dokumenten (E300) --------------------------
      Redurs Bild aus GoodNotes zeigte oben eine Zeile mit den offenen
      Dokumenten. Damit hier etwas zu sehen ist, müssen ZWEI offen sein — bei

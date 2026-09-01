@@ -34,7 +34,15 @@ const PdfSeite = (() => {
         const hoehe = Number(block.bh) || 841.89;
         const w = document.createElement('div');
         w.className = 'blatt-huelle pdfs';
-        const schicht = Marken.schicht(block, breite, hoehe, 0);
+        /* WIE BREIT DER RAND IST, steht an der SEITE und nicht am Seitenblock:
+           wer neben seinem Skript schreibt, will das für das ganze Skript und
+           nicht Seite für Seite (E301). Null heisst aus, und das ist die
+           Vorgabe — ein Rand, den niemand bestellt hat, nimmt nur Platz. */
+        const seite = (typeof Links !== 'undefined' && Links.seiteVon)
+            ? Links.seiteVon(block.id) : null;
+        const randAnteil = Math.max(0, Math.min(1.5, Number(seite?.randBreite) || 0));
+        const rand = Math.round(breite * randAnteil);
+        const schicht = Marken.schicht(block, breite, hoehe, 0, rand);
         /* Die Leiste bekommt rechts die Seitenzahl — sie beantwortet die Frage
            „wo bin ich", ohne dass man zählen muss — und daneben den ANKER: einen
            Verweis auf genau diese Seite. Bei einem Skript mit achtzig Seiten ist
@@ -107,7 +115,31 @@ const PdfSeite = (() => {
         const papier = document.createElement('div');
         papier.className = 'blatt-papier pdfs-papier';
         papier.style.setProperty('aspect-ratio', breite + ' / ' + hoehe);
-        w.appendChild(papier);
+        /* OHNE RAND BLEIBT DER AUFBAU, WIE ER WAR. Zwei Formen sind mehr Code
+           als eine, aber die Alternative wäre, den Aufbau JEDER Seite zu ändern,
+           auch der Millionen ohne Rand — und daran hängen fünfzehn Prüfläufe,
+           die Masse am Papier nehmen. */
+        let flur = null;
+        if (rand > 0) {
+            flur = document.createElement('div');
+            flur.className = 'blatt-flur';
+            /* Der Anteil der Seite an der ganzen Fläche. Genau dieser Anteil hält
+               die Einheit auf dem Bildschirm gleich gross wie ohne Rand — und
+               darum liegt jede alte Marke danach an derselben Stelle. */
+            flur.style.setProperty('--seiten-anteil', (100 * breite / (breite + rand)).toFixed(4) + '%');
+            /* Dieselbe Zahl als Faktor, für das Telefon: dort wird der Flur breiter
+               als die Spalte gemacht und waagrecht gerollt, statt die Seite
+               schmaler zu machen (E301, auf dem Bild gefunden). */
+            flur.style.setProperty('--flur-faktor', ((breite + rand) / breite).toFixed(4));
+            const randfeld = document.createElement('div');
+            randfeld.className = 'blatt-randfeld';
+            flur.appendChild(papier);
+            flur.appendChild(randfeld);
+            w.appendChild(flur);
+        }
+        else {
+            w.appendChild(papier);
+        }
         /* Das Bild: Adresse beim Zeichnen aus der Kennung holen, nie speichern
            (E98). Fehlt sie noch, steht ein Satz da statt eines leeren Kastens. */
         const bild = document.createElement('img');
@@ -262,7 +294,9 @@ const PdfSeite = (() => {
                     (e instanceof Error ? e.message : String(e)));
             }
         };
-        papier.appendChild(schicht.flaeche);
+        /* Die Fläche spannt über Seite UND Rand, sonst könnte kein Strich über
+           die Kante laufen. Ohne Rand liegt sie wie immer auf dem Papier. */
+        (flur ?? papier).appendChild(schicht.flaeche);
         return w;
     };
     return { zeichne };

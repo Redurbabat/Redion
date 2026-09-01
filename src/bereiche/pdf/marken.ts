@@ -255,7 +255,26 @@ const Marken = (() => {
     });
   }
 
-  const schicht = (block: any, breite: number, hoehe: number, umbruch = 0) => {
+  /**
+   * Die Zeichenfläche zu einem Block.
+   *
+   * DER RAND WÄCHST NACH RECHTS, UND KEINE MARKE ZIEHT MIT (E301, L107).
+   * L107 hat angenommen, dass ein breiterer Raum jede gespeicherte Marke
+   * verschiebt. Das stimmt nur, wenn die Seite auf dem Bildschirm ihre
+   * Breite BEHÄLT und die Box wächst — dann wird jede Einheit kleiner.
+   * Wächst die Box dagegen nur nach rechts, während die Seite ihren Anteil
+   * an der Fläche behält, ändert sich keine einzige gespeicherte Zahl: eine
+   * Marke bei x=300 ist weiterhin 300 Einheiten vom linken Seitenrand
+   * entfernt.
+   *
+   * Deshalb braucht es hier KEIN zweites Feld und KEINEN zweiten Raum. Ein
+   * Strich darf sogar von der Seite in den Rand durchlaufen — und genau das
+   * ist der Griff, den Redur an OneNote meint.
+   *
+   * @param rand Zusatzbreite RECHTS, in denselben Einheiten wie `breite`.
+   */
+  const schicht = (block: any, breite: number, hoehe: number, umbruch = 0,
+                   rand = 0) => {
     const R = SheetSpace;
     const marks: any[] = Array.isArray(block.marken) ? clone(block.marken) : [];
     let tool = 'schreiben';
@@ -270,8 +289,16 @@ const Marken = (() => {
     const historyRedo: any[][] = [];
     const stateListeners = new Set<(state: any) => void>();
 
-    const flaeche = svg('svg', { class: 'blatt-marken', viewBox: `0 0 ${breite} ${hoehe}`,
+    const randBreit = Math.max(0, Number(rand) || 0);
+    const flaeche = svg('svg', { class: 'blatt-marken',
+      viewBox: `0 0 ${breite + randBreit} ${hoehe}`,
       preserveAspectRatio: 'none', 'data-tool': tool }) as SVGSVGElement;
+    /* Die Kante zwischen Seite und Rand — gestrichelt, damit sie nicht wie
+       ein gezeichneter Strich aussieht. Nur wenn es einen Rand gibt. */
+    if (randBreit > 0)
+      flaeche.appendChild(svg('line', { x1: breite, x2: breite, y1: 0, y2: hoehe,
+        stroke: 'currentColor', 'stroke-width': 0.7, 'stroke-dasharray': '4 5',
+        opacity: 0.3, class: 'blatt-randkante' }));
     for (let page = 1; umbruch > 0 && page * umbruch < hoehe; page++) {
       flaeche.appendChild(svg('line', { x1: 0, x2: breite, y1: page * umbruch, y2: page * umbruch,
         stroke: 'currentColor', 'stroke-width': 0.5, 'stroke-dasharray': '6 6',

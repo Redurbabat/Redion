@@ -1991,7 +1991,14 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
         return { adressen, ausgelassen };
     };
     /** Die Striche eines Blocks als SVG-Text. */
-    const markenAlsSvg = (block, breite, hoehe) => {
+    /**
+     * Die Striche eines Blocks als SVG-Text.
+     *
+     * @param rand Zusatzbreite rechts (E301). Ohne sie wäre alles, was neben
+     *        der Seite steht, auf dem Ausdruck abgeschnitten — und das merkt
+     *        man erst, wenn das Blatt aus dem Drucker kommt.
+     */
+    const markenAlsSvg = (block, breite, hoehe, rand = 0) => {
         const marken = Array.isArray(block.marken) ? block.marken : [];
         if (!marken.length || typeof Marken === 'undefined')
             return '';
@@ -2002,7 +2009,7 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
             .join('');
         if (!teile)
             return '';
-        return `<svg class="marken" viewBox="0 0 ${breite} ${hoehe}" ` +
+        return `<svg class="marken" viewBox="0 0 ${breite + Math.max(0, rand)} ${hoehe}" ` +
             `preserveAspectRatio="none">${teile}</svg>`;
     };
     const DRUCK_STIL = '.blatt-druck{position:relative; width:100%; margin:0 0 8mm; ' +
@@ -2012,6 +2019,10 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
         '.blatt-druck .blatt-text{padding:9.5%; font-size:11pt}' +
         '.blatt-druck .marken{position:absolute; inset:0; width:100%; height:100%; ' +
         'color:#111}' +
+        /* Der Randstreifen auf Papier: das Bild nimmt seinen Anteil, der Rest
+           bleibt weiss, und die Striche liegen über beidem (E301). */
+        '.blatt-druck.mit-rand img{width:var(--seiten-anteil,100%)}' +
+        '.blatt-druck.mit-rand{background:#fff}' +
         '.blatt-druck .fehlt{padding:30mm 10mm; text-align:center; color:#666; ' +
         'border:1px dashed #bbb}';
     const drucken = async (p) => {
@@ -2044,10 +2055,16 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
                         'für das Seitenbild drucke das Dokument in Abschnitten.'
                     : `Seite ${esc(b.nr || '')} — das Bild fehlt in diesem Bestand. ` +
                         'Hol es in Redion aus dem Original zurück.';
-                return '<figure class="blatt-druck">' +
+                /* MIT RANDSTREIFEN WIRD DAS BILD SCHMALER, NICHT DIE SEITE BREITER
+                   (E301). Sonst stünde auf dem Papier alles, was daneben steht,
+                   ausserhalb — und gemerkt hätte man es erst am Drucker. */
+                const randDruck = Math.round(bw * Math.max(0, Math.min(1.5, Number(p.randBreite) || 0)));
+                const anteil = (100 * bw / (bw + randDruck)).toFixed(4) + '%';
+                return '<figure class="blatt-druck' + (randDruck ? ' mit-rand' : '') +
+                    '" style="--seiten-anteil:' + anteil + '">' +
                     (adr ? `<img src="${esc(adr)}" alt="Seite ${esc(b.nr || '')}">`
                         : `<div class="fehlt">${fehlt}</div>`) +
-                    markenAlsSvg(b, bw, bh) + '</figure>';
+                    markenAlsSvg(b, bw, bh, randDruck) + '</figure>';
             }
             if (b.type === 'blatt') {
                 const bw = Number(b.blattBreite) || 595.28;

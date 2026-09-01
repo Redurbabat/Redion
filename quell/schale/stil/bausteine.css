@@ -3763,8 +3763,43 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-inhalt, .blatt-inhalt *{color:#111 !important}
 .blatt-inhalt .ct:empty::before{color:#999 !important}
 
+/* DER FLUR: SEITE UND RAND NEBENEINANDER (E301, L107).
+
+   Das Papier behält seinen Anteil an der Fläche — genau deshalb bleibt eine
+   Einheit auf dem Bildschirm gleich gross wie ohne Rand, und genau deshalb
+   liegt jede schon gezeichnete Marke danach noch dort, wo sie war.
+
+   Die Fläche darüber (`.blatt-marken`) spannt über BEIDES: nur so kann ein
+   Strich über die Kante laufen, und das ist der ganze Sinn der Sache. */
+.blatt-flur{position:relative; display:flex; align-items:stretch;
+            min-width:0; width:100%}
+.blatt-flur > .blatt-papier{flex:0 0 var(--seiten-anteil,100%); min-width:0;
+                            border-radius:0 0 0 8px}
+.blatt-randfeld{flex:1 1 auto; min-width:0; background:var(--paper,#fff);
+                border:1px solid var(--rand); border-left:0;
+                border-radius:0 0 8px 0;
+                box-shadow:0 2px 10px rgba(0,0,0,.18)}
 .blatt-marken{position:absolute; inset:0; width:100%; height:100%; z-index:2;
               color:#111; touch-action:none}
+/* AM TELEFON WIRD GEROLLT, NICHT GESTAPELT — und das ist ein Fund vom Bild,
+   nicht aus einer Messung (§55.1).
+
+   Der erste Entwurf stellte den Rand am Telefon UNTER die Seite
+   (`flex-direction:column`), damit die Seite ihre volle Breite behält. Auf
+   dem Bild lief die gestrichelte Kante dann MITTEN DURCH DIE SEITE: die
+   Fläche darüber hat weiterhin eine Box von 863×842 und wird mit
+   `preserveAspectRatio:none` über den Kasten gezogen — in der Spaltenform
+   ist der aber nur so breit wie die Seite. Alles Gezeichnete wurde
+   waagrecht gestaucht, ein Strich bei x=300 landete bei x=207.
+
+   Genau der Fehler, vor dem L107 gewarnt hat, nur an einer anderen Stelle:
+   EIN Raum, EIN Seitenverhältnis. Also bleibt der Rand auch am Telefon
+   RECHTS; die Seite behält ihre lesbare Breite, und der Rand steht draussen,
+   bis man dorthin rollt. So macht es GoodNotes auch. */
+@media(max-width:760px){
+  .blatt-flur{width:calc(100% * var(--flur-faktor, 1))}
+  .document-center{overflow-x:auto; overscroll-behavior-inline:contain}
+}
 .blatt-marken[data-tool="select"]{cursor:default}
 .blatt-auswahlrahmen{fill:rgba(47,126,216,.08); stroke:#2f7ed8;
                      stroke-width:1.5; stroke-dasharray:5 4;

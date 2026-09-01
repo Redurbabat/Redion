@@ -22732,3 +22732,101 @@ Und der neue Kern musste in die Liste des Dienst-Skripts (`sw.ts`). Ohne das
 hätte Redion ihn im Offline-Betrieb nicht gehabt — der Export wäre dann still
 an einem fehlenden `Folien` gescheitert. `test105` hat ausserdem gemeldet, dass
 der Kopf der Datei die Warnung vor Änderungen von Hand nicht trug.
+
+
+E301 — Der Randstreifen: neben der Seite schreiben (L107)
+================================================================================
+1. September 2026
+
+Redur hat es beim Auftrag zur Rolle mitgesagt: „ich sollte so neben das pdf
+direk zeichnen können wie one note." Die Rolle kam mit E299, das Schreiben
+daneben nicht — L107 hielt fest, warum:
+
+    „Die Schicht zu verbreitern heisst, diesen Raum zu ändern — und damit
+     läge jede schon gezeichnete Marke an einer anderen Stelle."
+
+
+Der Satz war falsch, und zwar auf eine lehrreiche Art
+--------------------------------------------------------------------------------
+Er stimmt unter einer Bedingung, die ich mitgedacht und nicht aufgeschrieben
+hatte: dass die Seite auf dem Bildschirm ihre Breite BEHÄLT, während die Box
+wächst. Dann wird jede Einheit kleiner, und dann verschiebt sich alles.
+
+Wächst die Box dagegen nur nach RECHTS, und behält die Seite ihren ANTEIL an
+der Fläche, ändert sich keine einzige gespeicherte Zahl. Eine Marke bei x=300
+ist weiterhin 300 Einheiten vom linken Seitenrand entfernt.
+
+Also: kein zweiter Koordinatenraum, kein zweites Feld, keine Migration. Und
+als Zugabe darf ein Strich von der Seite in den Rand DURCHLAUFEN — mit zwei
+getrennten Räumen wäre genau das unmöglich gewesen.
+
+Der Aufbau ist ein Kasten mehr:
+
+    .blatt-huelle
+      .blatt-reihe            Werkzeugleiste
+      .blatt-flur             nur wenn es einen Rand gibt
+        .blatt-papier         die Seite, mit ihrem Anteil an der Breite
+        .blatt-randfeld       der leere Streifen
+        .blatt-marken         spannt über BEIDE, Box 0 0 (b+r) h
+
+Ohne Rand bleibt der Aufbau, wie er war — zwei Formen sind mehr Code als
+eine, aber die Alternative wäre gewesen, den Aufbau jeder Seite zu ändern,
+auch jeder ohne Rand, und daran hängen fünfzehn Prüfläufe, die Masse am
+Papier nehmen.
+
+Der Schalter (`⇥`) steht in der Dokumentleiste und gilt fürs ganze Dokument:
+wer neben seinem Skript schreibt, will das für das ganze Skript. Aus ist die
+Vorgabe. Die Breite ist 45 % der Seite — an A4 gemessen rund acht Zentimeter,
+und damit passt eine Zeile Handschrift daneben.
+
+
+Zwei Dinge, die die MESSUNG anders sah als ich
+--------------------------------------------------------------------------------
+1. DER ERSTE PRÜFPUNKT WAR ROT, und er hatte unrecht. Er mass die
+   BILDSCHIRMposition der alten Marke: 308..753 ohne Rand, 238..545 mit. Der
+   Grund ist banal — das Fenster wird nicht breiter, wenn ein Rand dazukommt,
+   also wird die Seite kleiner. Das ist richtig so: die Alternative wäre, die
+   Seite gross zu lassen und den Rand aus dem Fenster ragen zu lassen, und
+   dann müsste man am Rechner zum Schreiben erst waagrecht rollen.
+
+   Gemessen wird jetzt der ANTEIL an der Seitenbreite. Der muss gleich
+   bleiben, und das tut er auf drei Stellen genau. Die Seite wird kleiner —
+   das ist Zoom und kein Datenverlust.
+
+2. AM TELEFON WAR ES EIN ECHTER FEHLER, und gefunden hat ihn das Bild (§55.1).
+   Der erste Entwurf stellte den Rand am Telefon UNTER die Seite, damit die
+   Seite ihre volle Breite behält. Die Kästen sassen richtig, der Prüfpunkt
+   „es steht unter der Seite" war grün — und auf dem Bild lief die
+   gestrichelte Kante MITTEN DURCH DIE SEITE.
+
+   Der Grund: die Fläche darüber behält ihre Box von 863×842 und wird mit
+   `preserveAspectRatio:none` über ihren Kasten gezogen. In der Spaltenform
+   ist der nur so breit wie die Seite — also wurde alles Gezeichnete waagrecht
+   gestaucht. Ein Strich bei x=300 landete bei x=207. Genau der Fehler, vor
+   dem L107 gewarnt hat, nur an einer Stelle, an der ich ihn nicht gesucht
+   habe.
+
+   Am Telefon wird deshalb GEROLLT statt gestapelt: die Seite behält ihre
+   lesbare Breite, der Rand steht rechts daneben ausserhalb des Bildes, und
+   man rollt hin. So macht es GoodNotes auch.
+
+   Kein Kasten-Mass hätte das gemeldet. Der Anteil an der Seitenbreite tut es.
+
+
+Der Ausdruck
+--------------------------------------------------------------------------------
+`markenAlsSvg` bekommt die Randbreite und weitet seine Box; das Bild wird
+dafür schmaler. Ohne das stünde auf dem Papier alles, was daneben steht,
+ausserhalb — und gemerkt hätte man es erst am Drucker.
+
+Der Vortragsmodus bleibt unberührt: eine Folie ist keine Seite mit Rand.
+
+
+Geprüft
+--------------------------------------------------------------------------------
+test295 24/24. Gegengeprüft: ohne die Telefonregel fällt „die Seite behält
+ihre Breite" (354 → 255 px) und „man kommt waagrecht dorthin".
+
+Mitgelaufen: test177 69/69, test192 25/25, test228 24/24, test285 52/52,
+test292 45/45.
+typecheck grün · sw v63 · Einzeldatei 7706 KB.

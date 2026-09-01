@@ -330,6 +330,16 @@ const DocumentMode = (() => {
             return button;
         };
         top.append(topButton('thumbnails', '☰', 'Seitenübersicht öffnen'), topButton('previous', '‹', 'Vorherige Seite'), topButton('next', '›', 'Nächste Seite'));
+        /* DER RANDSTREIFEN (E301, L107). Ein Schalter für das ganze Dokument,
+           nicht für die einzelne Seite: wer neben seinem Skript schreibt, will
+           das für das ganze Skript. Aus ist die Vorgabe — ein Rand, den niemand
+           bestellt hat, nimmt der Seite Platz weg. */
+        const randKnopf = topButton('rand', '⇥', 'Randstreifen zum Schreiben neben der Seite');
+        randKnopf.classList.add('document-rand-knopf');
+        if (Number(page.randBreite) > 0)
+            randKnopf.classList.add('an');
+        randKnopf.setAttribute('aria-pressed', Number(page.randBreite) > 0 ? 'true' : 'false');
+        top.append(randKnopf);
         const position = document.createElement('span');
         position.className = 'document-position';
         position.textContent = 'Seite ' + (state.index + 1) + '/' + documents.length;
@@ -704,6 +714,18 @@ const DocumentMode = (() => {
             if (action === 'inspector-close') {
                 state.inspectorOpen = false;
                 rerender();
+            }
+            if (action === 'rand') {
+                /* 45 % der Seitenbreite — gemessen an einer A4-Seite sind das rund
+                   acht Zentimeter, und damit passt eine Zeile Handschrift daneben.
+                   Der Wert steht an der SEITE, also am Dokument, und überlebt damit
+                   den Neustart wie jede andere Einstellung. */
+                const an = Number(page.randBreite) > 0;
+                Store.updateBlock(page.id, { randBreite: an ? 0 : 0.45 });
+                page.randBreite = an ? 0 : 0.45;
+                UI.toast(an ? 'Randstreifen aus' : 'Randstreifen an — schreib daneben');
+                App.zeichneSeite();
+                return;
             }
             if (action === 'exit')
                 toggle(page, false);

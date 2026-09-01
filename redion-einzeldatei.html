@@ -10950,8 +10950,43 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-inhalt, .blatt-inhalt *{color:#111 !important}
 .blatt-inhalt .ct:empty::before{color:#999 !important}
 
+/* DER FLUR: SEITE UND RAND NEBENEINANDER (E301, L107).
+
+   Das Papier behält seinen Anteil an der Fläche — genau deshalb bleibt eine
+   Einheit auf dem Bildschirm gleich gross wie ohne Rand, und genau deshalb
+   liegt jede schon gezeichnete Marke danach noch dort, wo sie war.
+
+   Die Fläche darüber (`.blatt-marken`) spannt über BEIDES: nur so kann ein
+   Strich über die Kante laufen, und das ist der ganze Sinn der Sache. */
+.blatt-flur{position:relative; display:flex; align-items:stretch;
+            min-width:0; width:100%}
+.blatt-flur > .blatt-papier{flex:0 0 var(--seiten-anteil,100%); min-width:0;
+                            border-radius:0 0 0 8px}
+.blatt-randfeld{flex:1 1 auto; min-width:0; background:var(--paper,#fff);
+                border:1px solid var(--rand); border-left:0;
+                border-radius:0 0 8px 0;
+                box-shadow:0 2px 10px rgba(0,0,0,.18)}
 .blatt-marken{position:absolute; inset:0; width:100%; height:100%; z-index:2;
               color:#111; touch-action:none}
+/* AM TELEFON WIRD GEROLLT, NICHT GESTAPELT — und das ist ein Fund vom Bild,
+   nicht aus einer Messung (§55.1).
+
+   Der erste Entwurf stellte den Rand am Telefon UNTER die Seite
+   (`flex-direction:column`), damit die Seite ihre volle Breite behält. Auf
+   dem Bild lief die gestrichelte Kante dann MITTEN DURCH DIE SEITE: die
+   Fläche darüber hat weiterhin eine Box von 863×842 und wird mit
+   `preserveAspectRatio:none` über den Kasten gezogen — in der Spaltenform
+   ist der aber nur so breit wie die Seite. Alles Gezeichnete wurde
+   waagrecht gestaucht, ein Strich bei x=300 landete bei x=207.
+
+   Genau der Fehler, vor dem L107 gewarnt hat, nur an einer anderen Stelle:
+   EIN Raum, EIN Seitenverhältnis. Also bleibt der Rand auch am Telefon
+   RECHTS; die Seite behält ihre lesbare Breite, und der Rand steht draussen,
+   bis man dorthin rollt. So macht es GoodNotes auch. */
+@media(max-width:760px){
+  .blatt-flur{width:calc(100% * var(--flur-faktor, 1))}
+  .document-center{overflow-x:auto; overscroll-behavior-inline:contain}
+}
 .blatt-marken[data-tool="select"]{cursor:default}
 .blatt-auswahlrahmen{fill:rgba(47,126,216,.08); stroke:#2f7ed8;
                      stroke-width:1.5; stroke-dasharray:5 4;
@@ -41353,7 +41388,25 @@ const Marken = (() => {
                     layer.abschliessen();
         });
     }
-    const schicht = (block, breite, hoehe, umbruch = 0) => {
+    /**
+     * Die Zeichenfläche zu einem Block.
+     *
+     * DER RAND WÄCHST NACH RECHTS, UND KEINE MARKE ZIEHT MIT (E301, L107).
+     * L107 hat angenommen, dass ein breiterer Raum jede gespeicherte Marke
+     * verschiebt. Das stimmt nur, wenn die Seite auf dem Bildschirm ihre
+     * Breite BEHÄLT und die Box wächst — dann wird jede Einheit kleiner.
+     * Wächst die Box dagegen nur nach rechts, während die Seite ihren Anteil
+     * an der Fläche behält, ändert sich keine einzige gespeicherte Zahl: eine
+     * Marke bei x=300 ist weiterhin 300 Einheiten vom linken Seitenrand
+     * entfernt.
+     *
+     * Deshalb braucht es hier KEIN zweites Feld und KEINEN zweiten Raum. Ein
+     * Strich darf sogar von der Seite in den Rand durchlaufen — und genau das
+     * ist der Griff, den Redur an OneNote meint.
+     *
+     * @param rand Zusatzbreite RECHTS, in denselben Einheiten wie `breite`.
+     */
+    const schicht = (block, breite, hoehe, umbruch = 0, rand = 0) => {
         const R = SheetSpace;
         const marks = Array.isArray(block.marken) ? clone(block.marken) : [];
         let tool = 'schreiben';
@@ -41367,8 +41420,16 @@ const Marken = (() => {
         const historyUndo = [];
         const historyRedo = [];
         const stateListeners = new Set();
-        const flaeche = svg('svg', { class: 'blatt-marken', viewBox: `0 0 ${breite} ${hoehe}`,
+        const randBreit = Math.max(0, Number(rand) || 0);
+        const flaeche = svg('svg', { class: 'blatt-marken',
+            viewBox: `0 0 ${breite + randBreit} ${hoehe}`,
             preserveAspectRatio: 'none', 'data-tool': tool });
+        /* Die Kante zwischen Seite und Rand — gestrichelt, damit sie nicht wie
+           ein gezeichneter Strich aussieht. Nur wenn es einen Rand gibt. */
+        if (randBreit > 0)
+            flaeche.appendChild(svg('line', { x1: breite, x2: breite, y1: 0, y2: hoehe,
+                stroke: 'currentColor', 'stroke-width': 0.7, 'stroke-dasharray': '4 5',
+                opacity: 0.3, class: 'blatt-randkante' }));
         for (let page = 1; umbruch > 0 && page * umbruch < hoehe; page++) {
             flaeche.appendChild(svg('line', { x1: 0, x2: breite, y1: page * umbruch, y2: page * umbruch,
                 stroke: 'currentColor', 'stroke-width': 0.5, 'stroke-dasharray': '6 6',
@@ -42315,7 +42376,15 @@ const PdfSeite = (() => {
         const hoehe = Number(block.bh) || 841.89;
         const w = document.createElement('div');
         w.className = 'blatt-huelle pdfs';
-        const schicht = Marken.schicht(block, breite, hoehe, 0);
+        /* WIE BREIT DER RAND IST, steht an der SEITE und nicht am Seitenblock:
+           wer neben seinem Skript schreibt, will das für das ganze Skript und
+           nicht Seite für Seite (E301). Null heisst aus, und das ist die
+           Vorgabe — ein Rand, den niemand bestellt hat, nimmt nur Platz. */
+        const seite = (typeof Links !== 'undefined' && Links.seiteVon)
+            ? Links.seiteVon(block.id) : null;
+        const randAnteil = Math.max(0, Math.min(1.5, Number(seite?.randBreite) || 0));
+        const rand = Math.round(breite * randAnteil);
+        const schicht = Marken.schicht(block, breite, hoehe, 0, rand);
         /* Die Leiste bekommt rechts die Seitenzahl — sie beantwortet die Frage
            „wo bin ich", ohne dass man zählen muss — und daneben den ANKER: einen
            Verweis auf genau diese Seite. Bei einem Skript mit achtzig Seiten ist
@@ -42388,7 +42457,31 @@ const PdfSeite = (() => {
         const papier = document.createElement('div');
         papier.className = 'blatt-papier pdfs-papier';
         papier.style.setProperty('aspect-ratio', breite + ' / ' + hoehe);
-        w.appendChild(papier);
+        /* OHNE RAND BLEIBT DER AUFBAU, WIE ER WAR. Zwei Formen sind mehr Code
+           als eine, aber die Alternative wäre, den Aufbau JEDER Seite zu ändern,
+           auch der Millionen ohne Rand — und daran hängen fünfzehn Prüfläufe,
+           die Masse am Papier nehmen. */
+        let flur = null;
+        if (rand > 0) {
+            flur = document.createElement('div');
+            flur.className = 'blatt-flur';
+            /* Der Anteil der Seite an der ganzen Fläche. Genau dieser Anteil hält
+               die Einheit auf dem Bildschirm gleich gross wie ohne Rand — und
+               darum liegt jede alte Marke danach an derselben Stelle. */
+            flur.style.setProperty('--seiten-anteil', (100 * breite / (breite + rand)).toFixed(4) + '%');
+            /* Dieselbe Zahl als Faktor, für das Telefon: dort wird der Flur breiter
+               als die Spalte gemacht und waagrecht gerollt, statt die Seite
+               schmaler zu machen (E301, auf dem Bild gefunden). */
+            flur.style.setProperty('--flur-faktor', ((breite + rand) / breite).toFixed(4));
+            const randfeld = document.createElement('div');
+            randfeld.className = 'blatt-randfeld';
+            flur.appendChild(papier);
+            flur.appendChild(randfeld);
+            w.appendChild(flur);
+        }
+        else {
+            w.appendChild(papier);
+        }
         /* Das Bild: Adresse beim Zeichnen aus der Kennung holen, nie speichern
            (E98). Fehlt sie noch, steht ein Satz da statt eines leeren Kastens. */
         const bild = document.createElement('img');
@@ -42543,7 +42636,9 @@ const PdfSeite = (() => {
                     (e instanceof Error ? e.message : String(e)));
             }
         };
-        papier.appendChild(schicht.flaeche);
+        /* Die Fläche spannt über Seite UND Rand, sonst könnte kein Strich über
+           die Kante laufen. Ohne Rand liegt sie wie immer auf dem Papier. */
+        (flur ?? papier).appendChild(schicht.flaeche);
         return w;
     };
     return { zeichne };
@@ -51411,6 +51506,16 @@ const DocumentMode = (() => {
             return button;
         };
         top.append(topButton('thumbnails', '☰', 'Seitenübersicht öffnen'), topButton('previous', '‹', 'Vorherige Seite'), topButton('next', '›', 'Nächste Seite'));
+        /* DER RANDSTREIFEN (E301, L107). Ein Schalter für das ganze Dokument,
+           nicht für die einzelne Seite: wer neben seinem Skript schreibt, will
+           das für das ganze Skript. Aus ist die Vorgabe — ein Rand, den niemand
+           bestellt hat, nimmt der Seite Platz weg. */
+        const randKnopf = topButton('rand', '⇥', 'Randstreifen zum Schreiben neben der Seite');
+        randKnopf.classList.add('document-rand-knopf');
+        if (Number(page.randBreite) > 0)
+            randKnopf.classList.add('an');
+        randKnopf.setAttribute('aria-pressed', Number(page.randBreite) > 0 ? 'true' : 'false');
+        top.append(randKnopf);
         const position = document.createElement('span');
         position.className = 'document-position';
         position.textContent = 'Seite ' + (state.index + 1) + '/' + documents.length;
@@ -51785,6 +51890,18 @@ const DocumentMode = (() => {
             if (action === 'inspector-close') {
                 state.inspectorOpen = false;
                 rerender();
+            }
+            if (action === 'rand') {
+                /* 45 % der Seitenbreite — gemessen an einer A4-Seite sind das rund
+                   acht Zentimeter, und damit passt eine Zeile Handschrift daneben.
+                   Der Wert steht an der SEITE, also am Dokument, und überlebt damit
+                   den Neustart wie jede andere Einstellung. */
+                const an = Number(page.randBreite) > 0;
+                Store.updateBlock(page.id, { randBreite: an ? 0 : 0.45 });
+                page.randBreite = an ? 0 : 0.45;
+                UI.toast(an ? 'Randstreifen aus' : 'Randstreifen an — schreib daneben');
+                App.zeichneSeite();
+                return;
             }
             if (action === 'exit')
                 toggle(page, false);
@@ -72256,7 +72373,14 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
         return { adressen, ausgelassen };
     };
     /** Die Striche eines Blocks als SVG-Text. */
-    const markenAlsSvg = (block, breite, hoehe) => {
+    /**
+     * Die Striche eines Blocks als SVG-Text.
+     *
+     * @param rand Zusatzbreite rechts (E301). Ohne sie wäre alles, was neben
+     *        der Seite steht, auf dem Ausdruck abgeschnitten — und das merkt
+     *        man erst, wenn das Blatt aus dem Drucker kommt.
+     */
+    const markenAlsSvg = (block, breite, hoehe, rand = 0) => {
         const marken = Array.isArray(block.marken) ? block.marken : [];
         if (!marken.length || typeof Marken === 'undefined')
             return '';
@@ -72267,7 +72391,7 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
             .join('');
         if (!teile)
             return '';
-        return `<svg class="marken" viewBox="0 0 ${breite} ${hoehe}" ` +
+        return `<svg class="marken" viewBox="0 0 ${breite + Math.max(0, rand)} ${hoehe}" ` +
             `preserveAspectRatio="none">${teile}</svg>`;
     };
     const DRUCK_STIL = '.blatt-druck{position:relative; width:100%; margin:0 0 8mm; ' +
@@ -72277,6 +72401,10 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
         '.blatt-druck .blatt-text{padding:9.5%; font-size:11pt}' +
         '.blatt-druck .marken{position:absolute; inset:0; width:100%; height:100%; ' +
         'color:#111}' +
+        /* Der Randstreifen auf Papier: das Bild nimmt seinen Anteil, der Rest
+           bleibt weiss, und die Striche liegen über beidem (E301). */
+        '.blatt-druck.mit-rand img{width:var(--seiten-anteil,100%)}' +
+        '.blatt-druck.mit-rand{background:#fff}' +
         '.blatt-druck .fehlt{padding:30mm 10mm; text-align:center; color:#666; ' +
         'border:1px dashed #bbb}';
     const drucken = async (p) => {
@@ -72309,10 +72437,16 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
                         'für das Seitenbild drucke das Dokument in Abschnitten.'
                     : `Seite ${esc(b.nr || '')} — das Bild fehlt in diesem Bestand. ` +
                         'Hol es in Redion aus dem Original zurück.';
-                return '<figure class="blatt-druck">' +
+                /* MIT RANDSTREIFEN WIRD DAS BILD SCHMALER, NICHT DIE SEITE BREITER
+                   (E301). Sonst stünde auf dem Papier alles, was daneben steht,
+                   ausserhalb — und gemerkt hätte man es erst am Drucker. */
+                const randDruck = Math.round(bw * Math.max(0, Math.min(1.5, Number(p.randBreite) || 0)));
+                const anteil = (100 * bw / (bw + randDruck)).toFixed(4) + '%';
+                return '<figure class="blatt-druck' + (randDruck ? ' mit-rand' : '') +
+                    '" style="--seiten-anteil:' + anteil + '">' +
                     (adr ? `<img src="${esc(adr)}" alt="Seite ${esc(b.nr || '')}">`
                         : `<div class="fehlt">${fehlt}</div>`) +
-                    markenAlsSvg(b, bw, bh) + '</figure>';
+                    markenAlsSvg(b, bw, bh, randDruck) + '</figure>';
             }
             if (b.type === 'blatt') {
                 const bw = Number(b.blattBreite) || 595.28;
