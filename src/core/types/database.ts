@@ -32,12 +32,57 @@ export interface Column {
   options?: Array<{ name: string; color?: string }>;
   /** Bei `formula`: der Ausdruck. Wird nie mit `eval` ausgewertet. */
   formel?: string;
+
+  /* ── Verknüpfung ──────────────────────────────────────────────────────
+     NACHGESEHEN, NICHT GERATEN (E298). Hier standen bis zum 1. September
+     2026 `zielCollection`, `rollupRelation`, `rollupZiel` und `rollupArt`.
+     Keines dieser vier Felder gibt es — nirgends im Bestand, in keiner
+     gespeicherten Datenbank. Gemessen wurden die echten in
+     `bereiche/datenbanken/steuerung.ts` (Zeilen 1355, 5362, 6021-6023).
+
+     Das ist genau der Fehler, vor dem CLAUDE.md 52.8 warnt, und er stand
+     in der Datei, die dafür die Wahrheit sein soll. Ein englischer Name
+     ist eine Verbesserung; ein falscher Feldname ist eine falsche
+     Behauptung über gespeicherte Daten. */
+
   /** Bei `relation`: die Datenbank am anderen Ende. */
-  zielCollection?: CollectionId;
-  /** Bei `rollup`: worüber gerechnet wird. */
-  rollupRelation?: string;
-  rollupZiel?: string;
-  rollupArt?: string;
+  ziel?: CollectionId;
+  /** Bei `relation`: der Schlüssel der Gegenspalte dort. */
+  gegen?: string;
+  /** Bei `relation`: wie viele Verknüpfungen erlaubt sind. `0` = beliebig. */
+  limit?: number;
+
+  /* ── Rollup ───────────────────────────────────────────────────────────
+     Drei Felder, und alle drei heissen anders als bisher behauptet. */
+
+  /** Bei `rollup`: über welche Verknüpfungsspalte gerechnet wird. */
+  relation?: string;
+  /** Bei `rollup`: welche Spalte der anderen Datenbank gelesen wird. */
+  zielKey?: string;
+  /** Bei `rollup`: wie zusammengefasst wird — ein Wort aus `ROLLUP_ARTEN`. */
+  rollup?: string;
+
+  /* ── Was eine Spalte sonst noch tragen kann ───────────────────────────
+     Auch das gemessen: diese acht kommen im Bestand vor und fehlten hier
+     vollständig. Eine unvollständige Wahrheit ist die leiser gefährliche:
+     wer den Typ liest, hält sie für vollständig. */
+
+  /** Ein Vorgabewert für neue Zeilen. */
+  standard?: unknown;
+  /** Ob die Spalte ausgefüllt sein muss. */
+  pflicht?: boolean;
+  /** Ob der Wert in dieser Datenbank nur einmal vorkommen darf. */
+  eindeutig?: boolean;
+  /** Ob die Spalte von Hand angelegt wurde (und nicht aus einem Import kam). */
+  eigen?: boolean;
+  /** Bei den KI-Typen: der Auftrag an die KI. */
+  auftrag?: string;
+  /** Bei `button`: die Beschriftung. */
+  knopfText?: string;
+  /** Bei `uid`: die Vorsilbe vor der laufenden Nummer. */
+  praefix?: string;
+  /** Bei `number`, `formula`, `rollup`: wie der Wert angezeigt wird. */
+  anzeige?: string;
 }
 
 /** Das Schema einer Datenbank: Spaltenschlüssel → Spalte. */

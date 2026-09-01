@@ -22577,3 +22577,80 @@ dem langen Namen hatte die Frage Zähne.
 Mitgelaufen: test46 35/35, test134 37/37, test272 153/153, test248 45/45,
 test285 52/52.
 typecheck grün · sw v61 · Einzeldatei 7678 KB.
+
+
+
+
+================================================================================
+E298 — Die Typen sagen die Wahrheit über den Bestand
+================================================================================
+1. September 2026
+
+CLAUDE.md 52.8 sagt es selbst, und es steht dort, weil es schon einmal
+passiert ist:
+
+    „Nicht raten, welche Felder es gibt. Nachsehen. Diese Beispiele zeigten
+     hier einmal createdAt, updatedAt, properties, children und deleted.
+     Vier davon gibt es nicht."
+
+Beim Nachmessen für Redurs Punkt 12 (Typed Relations) fiel auf: in
+`src/core/types/` steht es wieder.
+
+`database.ts` behauptete `zielCollection`, `rollupRelation`, `rollupZiel`
+und `rollupArt`. Keines dieser vier Felder gibt es — nicht im Code, nicht in
+einer gespeicherten Datenbank. Die echten heissen `ziel`, `relation`,
+`zielKey` und `rollup` (`bereiche/datenbanken/steuerung.ts:1355, 5362,
+6021-6023). Und acht Felder, die es wirklich gibt, fehlten ganz: `gegen`,
+`limit`, `standard`, `pflicht`, `eindeutig`, `eigen`, `auftrag`,
+`knopfText`, dazu `praefix` und `anzeige`.
+
+`storage.ts` behauptete `belegt` und `zugeteilt`. Der Bestand gibt
+`{ benutzt, verfuegbar }` (`indexdb.ts:2782`).
+
+`formula.ts` beschrieb die Zweitnamen-Tabelle als Paare aus `deutsch` und
+`intern`. Im Bestand ist sie ein OBJEKT: `laufzeit.ts` schreibt
+`F.summe = F.sum`, der deutsche Name ist der SCHLÜSSEL. Der Name bleibt, die
+Form wird wahr — gelöscht wurde nichts.
+
+WARUM DAS NICHT NUR UNORDNUNG IST. Ein Typ ist die Stelle, an der man
+nachsieht, statt zu raten — genau das verlangt die Regel. Steht dort etwas
+Falsches, ist es schlimmer als gar nichts: man sieht nach, glaubt es, und
+schreibt ein Feld, das niemand liest. Eine unvollständige Wahrheit ist die
+leiser gefährliche, weil sie sich nicht als Lücke zu erkennen gibt.
+
+DER WÄCHTER. `test294` liest die Typdateien und hält jedes Feld gegen den
+echten Quelltext. Ein Feld, das dort nirgends vorkommt — weder als Zugriff
+noch als Schlüssel noch als Zeichenkette —, ist eine Behauptung ohne
+Grundlage.
+
+§55.2, und hier ist es besonders schön belegt: der Wächter war gegen den
+Stand von heute Morgen ROT, mit genau den sechs Feldern, die oben stehen.
+Er wurde geschrieben, bevor die Berichtigung eingebaut war.
+
+WELCHE DATEIEN AUSGENOMMEN SIND, UND WARUM. `spreadsheet.ts` sagt in ihrem
+eigenen Kopf: „Diese Datei beschreibt etwas, das es noch nicht gibt … wer
+hier etwas ändert, darf das ohne Messung." Sie hält eine Absicht fest,
+keinen Zustand. `excel.ts` beschreibt die Berührungsflächen zu Excel und
+nennt ausdrücklich Dinge, die in Excel stehen und nicht in Redion. `id.ts`
+und `index.ts` führen keine Felder.
+
+Beide sind nicht ausgenommen, weil sie stören, sondern weil die Behauptung
+dieses Laufs auf sie nicht zutrifft. Ein Wächter, der sie mitmisst, ist rot,
+ohne dass jemand etwas falsch gemacht hat — und wird dafür abgeschaltet
+statt gelesen. Dieselbe Lehre wie bei den CSS-Namensräumen in E293.
+
+Und ein Fehler des Wächters selbst, gleich beim ersten Lauf gefunden: der
+erste Entwurf las jede Zeile mit `wort:` und fing damit deutsche
+Kommentarwörter — „Zustands: den Spreadsheet-Block" wurde zu einem Feld
+namens `Zustands`. Er zählt seither Klammern und liest nur innerhalb eines
+Blocks. Ein Wächter, der sich seine eigenen Fehler ausdenkt, ist keiner.
+
+UND EIN ZWEITER FEHLER DES WÄCHTERS, gefunden beim Einbau: die Gegenprobe
+erfindet einen Feldnamen und behauptet, dass es ihn im Bestand nirgends gibt.
+Der Bestand ist `src/`, `pruefungen/` und `server/` — also auch die Datei, in
+der die Behauptung steht. Der Wächter fand seinen eigenen erfundenen Namen
+und meldete ihn als echt. Er nimmt sich jetzt über `import.meta.filename`
+selbst aus.
+
+Das ist dieselbe Lehre wie oben, nur eine Ebene höher: eine Messung, die ihr
+eigenes Messwerkzeug mitmisst, misst nicht.

@@ -231,9 +231,11 @@ export interface FormulaCatalogEntry {
  * zufrieden. So kamen elf falsche Zuordnungen durch. Gefunden hat sie erst
  * eine Prüfung gegen feste erwartete Werte (`test106` Abschnitt 4e).
  */
-export interface FormulaAlias {
-  /** Wie ein Mensch aus Excel es tippt: `SUMME`. */
-  deutsch: FormulaName;
-  /** Worauf es intern zeigt: `sum`. */
-  intern: FormulaName;
-}
+/* NACHGESEHEN (E298). Hier stand ein `interface` mit den Feldern `deutsch`
+   und `intern`. Beide gibt es nirgends: im Bestand ist die Zweitnamen-Tabelle
+   ein OBJEKT, und `laufzeit.ts` schreibt `F.summe = F.sum` — der deutsche
+   Name ist der SCHLÜSSEL, nicht ein Feld.
+
+   Der Name bleibt, die Form wird wahr. Der Warnsatz darüber gilt
+   unverändert und ist der Grund, warum diese Datei überhaupt so genau ist. */
+export type FormulaAlias = Record<string, FormulaName>;
