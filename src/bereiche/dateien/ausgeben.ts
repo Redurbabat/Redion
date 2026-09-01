@@ -2036,7 +2036,235 @@ const Austausch = (() => {
     });
   };
 
-  return { zipSchreiben, crc32, laden, alsWord, alsExcel, datenbankAlsExcel,
+
+  /* ========================================================================
+   * .pptx — eine echte PowerPoint-Datei, ohne fremde Pakete
+   * ------------------------------------------------------------------------
+   * DERSELBE ZIP-SCHREIBER WIE BEI .docx UND .xlsx (L69). Der Aufwand liegt
+   * im Folien-XML, nicht im Behälter — das steht so schon in der Lücke, und
+   * es hat gestimmt.
+   *
+   * WO DIE FOLIEN HERKOMMEN. Aus `Folien.teilen`, demselben Kern, den auch
+   * der Vortragsmodus benutzt. Eine zweite Teilung hier wäre die zweite
+   * Wahrheit darüber, wo eine Folie anfängt — und sie liefe irgendwann von
+   * der ersten weg. Gemerkt hätte man es in der Schule.
+   *
+   * WAS EINE PPTX MINDESTENS BRAUCHT, damit PowerPoint sie öffnet: einen
+   * Folienmaster, ein Layout und ein Thema. Keines davon ist optional; eine
+   * Datei mit nur Folien darin wird als beschädigt gemeldet. Deshalb steht
+   * hier mehr Gerüst als Inhalt.
+   *
+   * WAS NICHT NACHGEMESSEN IST, und das gehört dazugesagt: dass PowerPoint
+   * selbst sie öffnet. `test292` prüft die Struktur streng — jede Beziehung
+   * zeigt auf eine Datei, die es gibt; jeder Teil hat seinen Content-Type;
+   * jedes XML ist wohlgeformt —, aber ein echtes PowerPoint gibt es hier
+   * nicht, und LibreOffice läuft im Prüfcontainer nicht (nachgemessen: es
+   * lädt dort nicht einmal eine .txt). Das steht auch in LUECKEN.md.
+   * ======================================================================*/
+
+  /** 16:9 in EMU — Englische Metrische Einheiten, 914400 je Zoll. */
+  const FOLIE_BREITE = 12192000, FOLIE_HOEHE = 6858000;
+
+  const pptxThema = (): string =>
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    '<a:theme xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" name="Redion">' +
+    '<a:themeElements>' +
+    '<a:clrScheme name="Redion">' +
+    '<a:dk1><a:sysClr val="windowText" lastClr="000000"/></a:dk1>' +
+    '<a:lt1><a:sysClr val="window" lastClr="FFFFFF"/></a:lt1>' +
+    '<a:dk2><a:srgbClr val="1F2430"/></a:dk2><a:lt2><a:srgbClr val="F5F5F3"/></a:lt2>' +
+    '<a:accent1><a:srgbClr val="2E6BE6"/></a:accent1><a:accent2><a:srgbClr val="E6A82E"/></a:accent2>' +
+    '<a:accent3><a:srgbClr val="4CAF50"/></a:accent3><a:accent4><a:srgbClr val="E64C4C"/></a:accent4>' +
+    '<a:accent5><a:srgbClr val="8E6BE6"/></a:accent5><a:accent6><a:srgbClr val="2EB8B8"/></a:accent6>' +
+    '<a:hlink><a:srgbClr val="2E6BE6"/></a:hlink><a:folHlink><a:srgbClr val="8E6BE6"/></a:folHlink>' +
+    '</a:clrScheme>' +
+    '<a:fontScheme name="Redion">' +
+    '<a:majorFont><a:latin typeface="Calibri Light"/><a:ea typeface=""/><a:cs typeface=""/></a:majorFont>' +
+    '<a:minorFont><a:latin typeface="Calibri"/><a:ea typeface=""/><a:cs typeface=""/></a:minorFont>' +
+    '</a:fontScheme>' +
+    /* Drei Einträge je Liste — die Zahl steht so im Schema, und ein Leser,
+       der den zweiten oder dritten sucht, findet sonst nichts. */
+    '<a:fmtScheme name="Redion">' +
+    '<a:fillStyleLst>' + '<a:solidFill><a:schemeClr val="phClr"/></a:solidFill>'.repeat(3) +
+    '</a:fillStyleLst>' +
+    '<a:lnStyleLst>' +
+    [6350, 12700, 19050].map(w =>
+      '<a:ln w="' + w + '" cap="flat" cmpd="sng" algn="ctr">' +
+      '<a:solidFill><a:schemeClr val="phClr"/></a:solidFill>' +
+      '<a:prstDash val="solid"/></a:ln>').join('') +
+    '</a:lnStyleLst>' +
+    '<a:effectStyleLst>' + '<a:effectStyle><a:effectLst/></a:effectStyle>'.repeat(3) +
+    '</a:effectStyleLst>' +
+    '<a:bgFillStyleLst>' + '<a:solidFill><a:schemeClr val="phClr"/></a:solidFill>'.repeat(3) +
+    '</a:bgFillStyleLst>' +
+    '</a:fmtScheme></a:themeElements></a:theme>';
+
+  const pptxBaum = (formen: string): string =>
+    '<p:spTree>' +
+    '<p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>' +
+    '<p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/>' +
+    '<a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr>' +
+    formen + '</p:spTree>';
+
+  const PPTX_NS = 'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" ' +
+    'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" ' +
+    'xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"';
+
+  const pptxMaster = (): string =>
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    '<p:sldMaster ' + PPTX_NS + '>' +
+    '<p:cSld><p:bg><p:bgPr><a:solidFill><a:schemeClr val="lt1"/></a:solidFill>' +
+    '<a:effectLst/></p:bgPr></p:bg>' + pptxBaum('') + '</p:cSld>' +
+    '<p:clrMap bg1="lt1" tx1="dk1" bg2="lt2" tx2="dk2" accent1="accent1" accent2="accent2" ' +
+    'accent3="accent3" accent4="accent4" accent5="accent5" accent6="accent6" ' +
+    'hlink="hlink" folHlink="folHlink"/>' +
+    '<p:sldLayoutIdLst><p:sldLayoutId id="2147483649" r:id="rId1"/></p:sldLayoutIdLst>' +
+    /* `txStyles` ist im Schema Pflicht am Master. Ohne ihn melden manche
+       Leser die Datei als beschädigt, statt einfach die Vorgabe zu nehmen. */
+    '<p:txStyles><p:titleStyle/><p:bodyStyle/><p:otherStyle/></p:txStyles>' +
+    '</p:sldMaster>';
+
+  const pptxLayout = (): string =>
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    '<p:sldLayout ' + PPTX_NS + ' type="blank" preserve="1">' +
+    '<p:cSld name="Leer">' + pptxBaum('') + '</p:cSld>' +
+    '<p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sldLayout>';
+
+  /** Eine Folie: Titel oben, Text darunter. Zwei Formen, mehr nicht. */
+  const pptxFolie = (titel: string, zeilen: any[]): string => {
+    const rahmen = (x: number, y: number, cx: number, cy: number) =>
+      '<a:off x="' + x + '" y="' + y + '"/><a:ext cx="' + cx + '" cy="' + cy + '"/>';
+    const form = (id: number, name: string, x: number, y: number,
+                  cx: number, cy: number, inhalt: string) =>
+      '<p:sp><p:nvSpPr><p:cNvPr id="' + id + '" name="' + esc(name) + '"/>' +
+      '<p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr><p:nvPr/></p:nvSpPr>' +
+      '<p:spPr><a:xfrm>' + rahmen(x, y, cx, cy) + '</a:xfrm>' +
+      '<a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr>' +
+      '<p:txBody><a:bodyPr wrap="square"><a:normAutofit/></a:bodyPr><a:lstStyle/>' +
+      inhalt + '</p:txBody></p:sp>';
+
+    const rand = 838200;
+    let id = 2, formen = '';
+    if (titel) {
+      formen += form(id++, 'Titel', rand, 457200, FOLIE_BREITE - 2 * rand, 1200000,
+        '<a:p><a:pPr algn="l"/><a:r><a:rPr lang="de-DE" sz="4000" b="1" dirty="0"/>' +
+        '<a:t>' + esc(titel) + '</a:t></a:r></a:p>');
+    }
+    const oben = titel ? 1828800 : 685800;
+    const absaetze = zeilen.length
+      ? zeilen.map((z: any) =>
+          '<a:p><a:pPr lvl="' + Math.max(0, Math.min(8, Number(z.tiefe) || 0)) + '"/>' +
+          '<a:r><a:rPr lang="de-DE" sz="' + (z.art === 'kopf' ? 2800 : 2000) + '"' +
+          (z.art === 'kopf' ? ' b="1"' : '') + ' dirty="0"/>' +
+          '<a:t>' + esc(z.text) + '</a:t></a:r></a:p>').join('')
+      /* Eine leere Folie braucht trotzdem einen Absatz — ein Textkörper
+         ohne `a:p` ist nach Schema ungültig. */
+      : '<a:p><a:endParaRPr lang="de-DE"/></a:p>';
+    formen += form(id++, 'Inhalt', rand, oben, FOLIE_BREITE - 2 * rand,
+      FOLIE_HOEHE - oben - 457200, absaetze);
+
+    return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<p:sld ' + PPTX_NS + '>' +
+      '<p:cSld>' + pptxBaum(formen) + '</p:cSld>' +
+      '<p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sld>';
+  };
+
+  const REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/';
+  const rels = (eintraege: string): string =>
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+    '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+    eintraege + '</Relationships>';
+  const rel = (id: string, art: string, ziel: string): string =>
+    '<Relationship Id="' + id + '" Type="' + REL + art + '" Target="' + ziel + '"/>';
+
+  /**
+   * Die Teile einer .pptx — ohne ZIP, damit ein Prüflauf sie einzeln
+   * ansehen kann, ohne ein Archiv aufzumachen.
+   */
+  const pptxTeile = (folien: any[]): any[] => {
+    const n = Math.max(1, folien.length);
+    const nr: number[] = [];
+    for (let i = 1; i <= n; i++) nr.push(i);
+    const PML = 'application/vnd.openxmlformats-officedocument.presentationml.';
+
+    const dateien: any[] = [
+      { name: '[Content_Types].xml', inhalt:
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+        '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
+        '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
+        '<Default Extension="xml" ContentType="application/xml"/>' +
+        '<Override PartName="/ppt/presentation.xml" ContentType="' + PML + 'presentation.main+xml"/>' +
+        '<Override PartName="/ppt/slideMasters/slideMaster1.xml" ContentType="' + PML + 'slideMaster+xml"/>' +
+        '<Override PartName="/ppt/slideLayouts/slideLayout1.xml" ContentType="' + PML + 'slideLayout+xml"/>' +
+        '<Override PartName="/ppt/theme/theme1.xml" ContentType="application/vnd.openxmlformats-officedocument.theme+xml"/>' +
+        nr.map(i => '<Override PartName="/ppt/slides/slide' + i + '.xml" ContentType="' +
+          PML + 'slide+xml"/>').join('') +
+        '</Types>' },
+
+      { name: '_rels/.rels', inhalt:
+        rels(rel('rId1', 'officeDocument', 'ppt/presentation.xml')) },
+
+      { name: 'ppt/presentation.xml', inhalt:
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+        '<p:presentation ' + PPTX_NS + '>' +
+        '<p:sldMasterIdLst><p:sldMasterId id="2147483648" r:id="rId1"/></p:sldMasterIdLst>' +
+        '<p:sldIdLst>' + nr.map(i =>
+          '<p:sldId id="' + (255 + i) + '" r:id="rId' + (i + 1) + '"/>').join('') +
+        '</p:sldIdLst>' +
+        '<p:sldSz cx="' + FOLIE_BREITE + '" cy="' + FOLIE_HOEHE + '"/>' +
+        '<p:notesSz cx="' + FOLIE_HOEHE + '" cy="' + FOLIE_BREITE + '"/>' +
+        '</p:presentation>' },
+
+      { name: 'ppt/_rels/presentation.xml.rels', inhalt:
+        rels(rel('rId1', 'slideMaster', 'slideMasters/slideMaster1.xml') +
+             nr.map(i => rel('rId' + (i + 1), 'slide', 'slides/slide' + i + '.xml')).join('') +
+             rel('rId' + (n + 2), 'theme', 'theme/theme1.xml')) },
+
+      { name: 'ppt/slideMasters/slideMaster1.xml', inhalt: pptxMaster() },
+      { name: 'ppt/slideMasters/_rels/slideMaster1.xml.rels', inhalt:
+        rels(rel('rId1', 'slideLayout', '../slideLayouts/slideLayout1.xml') +
+             rel('rId2', 'theme', '../theme/theme1.xml')) },
+
+      { name: 'ppt/slideLayouts/slideLayout1.xml', inhalt: pptxLayout() },
+      { name: 'ppt/slideLayouts/_rels/slideLayout1.xml.rels', inhalt:
+        rels(rel('rId1', 'slideMaster', '../slideMasters/slideMaster1.xml')) },
+
+      { name: 'ppt/theme/theme1.xml', inhalt: pptxThema() }
+    ];
+
+    nr.forEach(i => {
+      const f = folien[i - 1] || { titel: '', zeilen: [] };
+      dateien.push({ name: 'ppt/slides/slide' + i + '.xml',
+        inhalt: pptxFolie(String(f.titel || ''), f.zeilen || []) });
+      dateien.push({ name: 'ppt/slides/_rels/slide' + i + '.xml.rels',
+        inhalt: rels(rel('rId1', 'slideLayout', '../slideLayouts/slideLayout1.xml')) });
+    });
+    return dateien;
+  };
+
+  /**
+   * EINE SEITE ALS POWERPOINT (L69).
+   *
+   * Die Berufsschule verlangt oft eine Abgabe: eine Datei hochladen oder auf
+   * dem Schul-PC öffnen. Der Vortragsmodus reicht dafür nicht — er lebt in
+   * Redion.
+   */
+  const alsPowerPoint = async (seite: any): Promise<any> => {
+    if (!seite || !seite.id) throw new Error('Ohne Seite gibt es nichts zu zeigen.');
+    if (typeof Folien === 'undefined')
+      throw new Error('Der Folien-Kern ist nicht geladen.');
+
+    const roh = Folien.teilen(seite, (id: string) => Store.childrenOf(id));
+    const folien = roh.map((f: any) => ({
+      titel: f.titel, zeilen: Folien.alsZeilen(f, (id: string) => Store.childrenOf(id))
+    }));
+    const blob = await zipSchreiben(pptxTeile(folien));
+    laden(blob, (seite.text || 'Vortrag').replace(/[\\/:*?"<>|]/g, '-') + '.pptx');
+    return { blob, folien: folien.length };
+  };
+
+  return { zipSchreiben, crc32, laden, alsWord, alsPowerPoint, pptxTeile, alsExcel,
+           datenbankAlsExcel,
            allesAlsExcel, alsOds, datenbankAlsOds, odsBlatt, blattXml, spaltenName, wortInhalt,
            ausTrello, ausEvernote, ausAsana, ausAppleNotes, htmlZuMarkdown,
            ausMarkdownOrdner, alsObsidianVault, ausNotionZip, ausNotionJson,

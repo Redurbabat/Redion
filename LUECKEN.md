@@ -2626,7 +2626,8 @@ Zwei Wege wären denkbar, beide ungeprüft:
 Gemessen am 28. August 2026 auf 390 × 844.
 
 
-L69 — Es gibt keinen Weg zu einer .pptx-Datei
+L69 — ~~Es gibt keinen Weg zu einer .pptx-Datei~~ — die .pptx STEHT seit dem
+1. September 2026 (E297). OFFEN BLEIBT das Folien-PDF; siehe unten.
 ================================================================================
 
 Der Vortragsmodus ist gebaut und geprüft (test183, test35): eine Seite
@@ -2651,6 +2652,27 @@ Was ein Anfang wäre, in dieser Reihenfolge:
     ausgeben.ts). Der Aufwand liegt im Folien-XML, nicht im Container.
 
 Gemessen am 28. August 2026 (Visionskarte, Leser „PowerPoint").
+
+
+WAS AM 1. SEPTEMBER 2026 GESCHAH (E297)
+--------------------------------------------------------------------------------
+Der zweite Punkt ist gebaut, und die Schätzung darin hat gestimmt: der
+Aufwand lag im Folien-XML. „Exportieren → Diese Seite → PowerPoint (.pptx)"
+in der Backstage. Die Trennregel liegt seither in `src/core/slides/folien.ts`
+und wird vom Vortragsmodus UND vom Export benutzt — zwei Teilungen, die
+auseinanderlaufen, wären schlimmer als eine gewesen.
+
+DER ERSTE PUNKT STEHT WEITER OFFEN. Der Druckweg setzt nach wie vor die Seite
+als Fliesstext; ein Handout „eine Folie = eine Seite quer" gibt es nicht.
+
+UND EINES IST NICHT NACHGEMESSEN, das gehört dazu: dass PowerPoint selbst die
+Datei öffnet. Ein echtes PowerPoint gibt es hier nicht, und LibreOffice läuft
+im Prüfcontainer nicht — nachgemessen: es lädt dort nicht einmal eine `.txt`
+(„source file could not be loaded"). test293 prüft deshalb die STRUKTUR, und
+zwar streng: jede Beziehung zeigt auf eine Datei, die es gibt; jeder Teil hat
+seinen Content-Type; jedes XML ist wohlgeformt; und der ganze Weg wird mit
+Redions eigenem ZIP-Leser wieder aufgemacht. Das ist nicht dasselbe wie ein
+Doppelklick in der Schule, und es soll auch nicht so klingen.
 
 
 L70 — ~~Hinter dem Knopf „Stundenplan" steht kein Stundenplan~~ — GESCHLOSSEN am 28. August 2026 (E243)

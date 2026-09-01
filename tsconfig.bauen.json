@@ -73,6 +73,7 @@
     "src/core/knowledge/**/*.ts",
     "src/core/learning/**/*.ts",
     "src/core/calendar/**/*.ts",
+    "src/core/slides/**/*.ts",
     "src/bereiche/**/*.ts",
     "src/fremd/**/*.ts",
     "src/kern/**/*.ts",

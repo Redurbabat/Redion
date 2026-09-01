@@ -285,7 +285,11 @@ const Backstage = (() => {
                 if (p)
                     aus += gruppe('Diese Seite', zeile('exp:md', 'Als Markdown speichern', String(p.text || 'Ohne Titel')) +
                         (kann(() => holen('Werkzeuge')?.htmlExport)
-                            ? zeile('exp:html', 'Als HTML speichern', '') : ''));
+                            ? zeile('exp:html', 'Als HTML speichern', '') : '') +
+                        /* L69: die Berufsschule verlangt oft eine Abgabe, und der
+                           Vortragsmodus lebt nur in Redion. */
+                        (kann(() => holen('Austausch')?.alsPowerPoint)
+                            ? zeile('exp:pptx', 'Als PowerPoint speichern', 'Die Folien dieser Seite als .pptx') : ''));
                 aus += gruppe('Alles', (kann(() => holen('Werkzeuge')?.einzelDatei)
                     ? zeile('exp:einzel', 'Alles als eine HTML-Datei', 'Zum Lesen ohne Redion') : '') +
                     (kann(() => holen('Werkzeuge')?.ordnerSchreiben)
@@ -385,6 +389,17 @@ const Backstage = (() => {
                 const p = seiteJetzt();
                 if (p)
                     zuUnd(() => holen('Werkzeuge')?.htmlExport?.(p));
+            },
+            'exp:pptx': () => {
+                const p = seiteJetzt();
+                if (p)
+                    zuUnd(() => {
+                        void holen('Austausch')?.alsPowerPoint?.(p)
+                            .then((e) => UI.toast(e.folien + (e.folien === 1 ? ' Folie' : ' Folien') +
+                            ' gespeichert'))
+                            .catch((f) => UI.toast('Die PowerPoint-Datei kam nicht zustande: ' +
+                            (f instanceof Error ? f.message : String(f))));
+                    });
             },
             'exp:einzel': () => zuUnd(() => holen('Werkzeuge')?.einzelDatei?.()),
             'exp:ordner': () => zuUnd(() => holen('Werkzeuge')?.ordnerSchreiben?.()),

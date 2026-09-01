@@ -971,44 +971,37 @@ const Werkzeuge = (() => {
         /* Die Seitenbilder vorher holen — `folieBlock` zeichnet synchron. Für
            den Bildschirm genügen blob-Adressen (E109). */
         const bilder = (await bilderSammeln(p, false)).adressen;
-        const folien = [];
-        let aktuell = { titel: p.text || '', bloecke: [] };
-        /* Eine neue Folie beginnt bei einer Trennlinie und bei jeder
-           Überschrift 1 oder 2 — so wie in HedgeDoc und Marp. */
-        const trennt = (b) => b.type === 'divider' || b.type === 'h1' || b.type === 'h2';
-        const sammle = (id, tiefe) => {
-            Store.childrenOf(id).forEach((b) => {
-                if (trennt(b)) {
-                    const leerAmAnfang = !aktuell.bloecke.length && !folien.length && aktuell.titel === p.text;
-                    if (!leerAmAnfang)
-                        folien.push(aktuell);
-                    aktuell = { titel: b.type === 'divider' ? '' : (b.text || ''), bloecke: [] };
-                    return;
-                }
-                /* SPALTEN BLEIBEN SPALTEN. Vorher stieg `sammle` in einen
-                   Spaltenblock gar nicht hinab, und eine Schulaufgabe — die seit
-                   E104 immer in Spalten liegt — war als Vortrag vollständig leer.
-                   Untereinander wäre auch falsch: eine Folie ist breit und flach,
-                   zwei hochkante Blätter übereinander passen nicht darauf und
-                   schieben die Überschrift aus dem Bild (mit Augen gesehen, §55).
-                   Nebeneinander ist genau das, was das Dokument sagt. */
-                aktuell.bloecke.push({ b, tiefe });
-                /* Diese drei zeichnen ihren Inhalt selbst — sonst stünde er zweimal
-                   da, einmal darin und einmal daneben. */
-                if (['columns', 'columns3', 'blatt'].includes(b.type))
-                    return;
-                if (['bullet', 'number', 'todo', 'toggle'].includes(b.type))
-                    sammle(b.id, tiefe + 1);
-            });
-        };
-        sammle(p.id, 0);
-        folien.push(aktuell);
+        /* WO EINE FOLIE ANFÄNGT, STEHT IM KERN (E297).
+           Die Regel — eine neue Folie bei jeder Trennlinie und jeder Überschrift
+           1 oder 2, wie in HedgeDoc und Marp — stand bis hierher NUR an dieser
+           Stelle. Der .pptx-Weg hätte sie abschreiben müssen, und zwei
+           Teilungen, die auseinanderlaufen, sind schlimmer als eine: der Vortrag
+           zeigte dann etwas anderes als die abgegebene Datei, und gemerkt hätte
+           man es in der Schule.
+    
+           Was der Kern mitbringt und hier vorher stand: SPALTEN BLEIBEN SPALTEN
+           (vorher stieg die Sammlung gar nicht hinab, und eine Schulaufgabe war
+           als Vortrag vollständig leer), und die drei Blockarten, die ihren
+           Inhalt selbst zeichnen, werden nicht ein zweites Mal aufgeklappt. */
+        const folien = Folien.teilen(p, (id) => Store.childrenOf(id))
+            .map((f) => ({ titel: f.titel,
+            bloecke: f.eintraege.map((e) => ({ b: e.block, tiefe: e.tiefe })) }));
         const o = document.createElement('div');
         o.className = 'praesi';
         document.body.appendChild(o);
         let i = 0;
         const zeichne = () => {
             const f = folien[i];
+            /* Eine Seite ohne einen einzigen Block ergibt keine Folie. Vorher wäre
+               hier `f.titel` an `undefined` gelaufen und der Vortrag mit einem
+               leeren schwarzen Bild stehen geblieben — mitten in der Klasse die
+               unangenehmste Sorte Fehler (§47: kein Weg, der ins Leere führt). */
+            if (!f) {
+                o.innerHTML = '<div class="folie"><h1>Nichts zu zeigen</h1>' +
+                    '<p>Auf dieser Seite steht noch kein Inhalt.</p></div>' +
+                    '<div class="praesi-leiste"><button data-a="zu">Beenden (Esc)</button></div>';
+                return;
+            }
             o.innerHTML =
                 '<div class="folie">' +
                     (f.titel ? `<h1>${Blocks.inline(f.titel)}</h1>` : '') +

@@ -19867,6 +19867,175 @@ window.Wiederholung = Wiederholung;
 
 </script>
 <script>
+/* ===== quell/core/slides/folien.js ===== */
+"use strict";
+/* ============================================================================
+ * core/slides/folien.ts — wo eine Folie anfängt und was darauf steht
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/core/slides/folien.ts`. `npm run bauen:ts` schreibt
+ * daraus `quell/core/slides/folien.js`.
+ * ----------------------------------------------------------------------------
+ * REIN: kennt weder DOM noch Ablage. Die Kinder eines Blocks kommen als
+ * Funktion herein, die Zeit gar nicht vor. Damit lässt sich die Regel prüfen,
+ * ohne einen Browser zu starten — und, wichtiger, sie steht nur EINMAL da.
+ *
+ * Vorher lag sie im Vortragsmodus (`wissen/werkzeuge.ts`, `praesentation`)
+ * und wäre für jede zweite Ausgabe abgeschrieben worden. Zwei Teilungen, die
+ * auseinanderlaufen, sind schlimmer als eine, die man an einer Stelle ändert:
+ * der Vortrag zeigte dann etwas anderes als die abgegebene Datei, und
+ * gemerkt hätte man es in der Schule.
+ * ==========================================================================*/
+const Folien = (() => {
+    /** Eine neue Folie beginnt hier — wie in HedgeDoc und Marp. */
+    const TRENNT = ['divider', 'h1', 'h2'];
+    /** Diese zeichnen ihren Inhalt selbst; wer hier absteigt, hat ihn zweimal. */
+    const EIGENE_KINDER = ['columns', 'columns3', 'blatt'];
+    /** Und diese tragen ihre Kinder als eingerückte Zeilen. */
+    const MIT_KINDERN = ['bullet', 'number', 'todo', 'toggle'];
+    /**
+     * Eine Seite in Folien teilen.
+     *
+     * @param wurzel     Der Seitenblock. Sein Text ist der Titel der ersten Folie.
+     * @param kinderVon  Liefert die Kinder eines Blocks in Reihenfolge.
+     */
+    const teilen = (wurzel, kinderVon) => {
+        if (!wurzel || !wurzel.id)
+            return [];
+        const raus = [];
+        let aktuell = { titel: String(wurzel.text || ''), eintraege: [] };
+        const gesehen = new Set();
+        const sammle = (id, tiefe) => {
+            /* Eine Schranke gegen einen Bestand, der im Kreis zeigt. Sie ist
+               hier billig und rettet den ganzen Vortrag; ohne sie hinge der
+               Browser, und niemand wüsste warum (dieselbe Vorsicht wie in
+               `verweise.ts:seiteVon`). */
+            if (tiefe > 12 || gesehen.has(id))
+                return;
+            gesehen.add(id);
+            for (const b of kinderVon(id) || []) {
+                if (!b || !b.type)
+                    continue;
+                if (TRENNT.includes(b.type)) {
+                    /* Eine leere erste Folie entsteht, wenn die Seite mit einer
+                       Überschrift beginnt. Sie wäre eine Titelfolie ohne Inhalt und
+                       gehört weg — aber nur GANZ am Anfang. */
+                    const leerAmAnfang = !aktuell.eintraege.length && !raus.length &&
+                        aktuell.titel === String(wurzel.text || '');
+                    if (!leerAmAnfang)
+                        raus.push(aktuell);
+                    aktuell = { titel: b.type === 'divider' ? '' : String(b.text || ''),
+                        eintraege: [] };
+                    continue;
+                }
+                aktuell.eintraege.push({ block: b, tiefe });
+                if (EIGENE_KINDER.includes(b.type))
+                    continue;
+                if (MIT_KINDERN.includes(b.type))
+                    sammle(b.id, tiefe + 1);
+            }
+        };
+        sammle(wurzel.id, 0);
+        raus.push(aktuell);
+        return raus;
+    };
+    /** Auszeichnung weg — PowerPoint bekommt Text, keine Sterne. */
+    const ohneMarkierung = (t) => String(t ?? '')
+        .replace(/`([^`]*)`/g, '$1')
+        .replace(/\*\*(.+?)\*\*/g, '$1')
+        .replace(/__(.+?)__/g, '$1')
+        .replace(/\[\[([^\]|]+)(?:\|[^\]]*)?\]\]/g, '$1')
+        .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+        .replace(/[*~]/g, '')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+    /**
+     * Eine Folie als flache Textzeilen — für PPTX und für ein Handout.
+     *
+     * Was KEIN Text ist, wird benannt statt weggelassen: ein Bild als
+     * „[Bild]", eine Tabelle mit ihrer Zeilenzahl. Eine Folie, auf der
+     * schweigend die Hälfte fehlt, ist die schlimmere Ausgabe — man merkt es
+     * erst beim Vortrag.
+     */
+    const alsZeilen = (folie, kinderVon) => {
+        const raus = [];
+        const nimm = (text, tiefe, art) => {
+            const t = ohneMarkierung(text);
+            if (t)
+                raus.push({ text: t, tiefe: Math.max(0, Math.min(8, tiefe)), art });
+        };
+        const eins = ({ block: b, tiefe }) => {
+            switch (b.type) {
+                case 'h3':
+                case 'h4':
+                    nimm(b.text || '', tiefe, 'kopf');
+                    return;
+                case 'bullet':
+                    nimm('• ' + (b.text || ''), tiefe, 'punkt');
+                    return;
+                case 'number':
+                    nimm(b.text || '', tiefe, 'nummer');
+                    return;
+                case 'todo':
+                    nimm((b.checked ? '☑ ' : '☐ ') + (b.text || ''), tiefe, 'aufgabe');
+                    return;
+                case 'quote':
+                    nimm('„' + (b.text || '') + '"', tiefe, 'zitat');
+                    return;
+                case 'code':
+                    nimm(b.text || '', tiefe, 'code');
+                    return;
+                case 'callout':
+                    nimm((b.icon || '💡') + ' ' + (b.text || ''), tiefe, 'hinweis');
+                    return;
+                case 'equation':
+                    nimm(b.text || '', tiefe, 'formel');
+                    return;
+                case 'image':
+                    nimm('[Bild' + (b.text ? ': ' + b.text : '') + ']', tiefe, 'bild');
+                    return;
+                case 'pdfseite':
+                    nimm('[PDF-Seite ' + (Number(b.nr) || 1) + ']', tiefe, 'bild');
+                    return;
+                case 'blatt':
+                    nimm('[A4-Blatt]', tiefe, 'bild');
+                    return;
+                case 'file':
+                    nimm('[Datei: ' + (b.text || 'ohne Namen') + ']', tiefe, 'datei');
+                    return;
+                case 'table': {
+                    const zeilen = (kinderVon(b.id) || []).length;
+                    nimm('[Tabelle' + (zeilen ? ', ' + zeilen + ' Zeilen' : '') + ']', tiefe, 'tabelle');
+                    return;
+                }
+                case 'database':
+                    nimm('[Datenbank' + (b.text ? ': ' + b.text : '') + ']', tiefe, 'tabelle');
+                    return;
+                case 'columns':
+                case 'columns3': {
+                    /* SPALTEN WERDEN FLACH. Eine Folie ist breit und flach; zwei
+                       Textsäulen nebeneinander gehen in PowerPoint nur mit zwei
+                       Formen, und dann stimmt die Reihenfolge beim Vorlesen nicht
+                       mehr. Untereinander ist ehrlicher als eine halbe Spalte. */
+                    for (const sp of kinderVon(b.id) || []) {
+                        const inhalt = sp.type === 'spalte' ? (kinderVon(sp.id) || []) : [sp];
+                        for (const k of inhalt)
+                            eins({ block: k, tiefe: tiefe + 1 });
+                    }
+                    return;
+                }
+                default: nimm(b.text || '', tiefe, 'text');
+            }
+        };
+        folie.eintraege.forEach(eins);
+        return raus;
+    };
+    return { teilen, alsZeilen, ohneMarkierung, TRENNT, EIGENE_KINDER, MIT_KINDERN };
+})();
+window.Folien = Folien;
+
+</script>
+<script>
 /* ===== quell/core/import/sicherheit.js ===== */
 "use strict";
 /* ============================================================================
@@ -71067,44 +71236,37 @@ const Werkzeuge = (() => {
         /* Die Seitenbilder vorher holen — `folieBlock` zeichnet synchron. Für
            den Bildschirm genügen blob-Adressen (E109). */
         const bilder = (await bilderSammeln(p, false)).adressen;
-        const folien = [];
-        let aktuell = { titel: p.text || '', bloecke: [] };
-        /* Eine neue Folie beginnt bei einer Trennlinie und bei jeder
-           Überschrift 1 oder 2 — so wie in HedgeDoc und Marp. */
-        const trennt = (b) => b.type === 'divider' || b.type === 'h1' || b.type === 'h2';
-        const sammle = (id, tiefe) => {
-            Store.childrenOf(id).forEach((b) => {
-                if (trennt(b)) {
-                    const leerAmAnfang = !aktuell.bloecke.length && !folien.length && aktuell.titel === p.text;
-                    if (!leerAmAnfang)
-                        folien.push(aktuell);
-                    aktuell = { titel: b.type === 'divider' ? '' : (b.text || ''), bloecke: [] };
-                    return;
-                }
-                /* SPALTEN BLEIBEN SPALTEN. Vorher stieg `sammle` in einen
-                   Spaltenblock gar nicht hinab, und eine Schulaufgabe — die seit
-                   E104 immer in Spalten liegt — war als Vortrag vollständig leer.
-                   Untereinander wäre auch falsch: eine Folie ist breit und flach,
-                   zwei hochkante Blätter übereinander passen nicht darauf und
-                   schieben die Überschrift aus dem Bild (mit Augen gesehen, §55).
-                   Nebeneinander ist genau das, was das Dokument sagt. */
-                aktuell.bloecke.push({ b, tiefe });
-                /* Diese drei zeichnen ihren Inhalt selbst — sonst stünde er zweimal
-                   da, einmal darin und einmal daneben. */
-                if (['columns', 'columns3', 'blatt'].includes(b.type))
-                    return;
-                if (['bullet', 'number', 'todo', 'toggle'].includes(b.type))
-                    sammle(b.id, tiefe + 1);
-            });
-        };
-        sammle(p.id, 0);
-        folien.push(aktuell);
+        /* WO EINE FOLIE ANFÄNGT, STEHT IM KERN (E297).
+           Die Regel — eine neue Folie bei jeder Trennlinie und jeder Überschrift
+           1 oder 2, wie in HedgeDoc und Marp — stand bis hierher NUR an dieser
+           Stelle. Der .pptx-Weg hätte sie abschreiben müssen, und zwei
+           Teilungen, die auseinanderlaufen, sind schlimmer als eine: der Vortrag
+           zeigte dann etwas anderes als die abgegebene Datei, und gemerkt hätte
+           man es in der Schule.
+    
+           Was der Kern mitbringt und hier vorher stand: SPALTEN BLEIBEN SPALTEN
+           (vorher stieg die Sammlung gar nicht hinab, und eine Schulaufgabe war
+           als Vortrag vollständig leer), und die drei Blockarten, die ihren
+           Inhalt selbst zeichnen, werden nicht ein zweites Mal aufgeklappt. */
+        const folien = Folien.teilen(p, (id) => Store.childrenOf(id))
+            .map((f) => ({ titel: f.titel,
+            bloecke: f.eintraege.map((e) => ({ b: e.block, tiefe: e.tiefe })) }));
         const o = document.createElement('div');
         o.className = 'praesi';
         document.body.appendChild(o);
         let i = 0;
         const zeichne = () => {
             const f = folien[i];
+            /* Eine Seite ohne einen einzigen Block ergibt keine Folie. Vorher wäre
+               hier `f.titel` an `undefined` gelaufen und der Vortrag mit einem
+               leeren schwarzen Bild stehen geblieben — mitten in der Klasse die
+               unangenehmste Sorte Fehler (§47: kein Weg, der ins Leere führt). */
+            if (!f) {
+                o.innerHTML = '<div class="folie"><h1>Nichts zu zeigen</h1>' +
+                    '<p>Auf dieser Seite steht noch kein Inhalt.</p></div>' +
+                    '<div class="praesi-leiste"><button data-a="zu">Beenden (Esc)</button></div>';
+                return;
+            }
             o.innerHTML =
                 '<div class="folie">' +
                     (f.titel ? `<h1>${Blocks.inline(f.titel)}</h1>` : '') +
@@ -94086,7 +94248,194 @@ const Austausch = (() => {
             inp.click();
         });
     };
-    return { zipSchreiben, crc32, laden, alsWord, alsExcel, datenbankAlsExcel,
+    /* ========================================================================
+     * .pptx — eine echte PowerPoint-Datei, ohne fremde Pakete
+     * ------------------------------------------------------------------------
+     * DERSELBE ZIP-SCHREIBER WIE BEI .docx UND .xlsx (L69). Der Aufwand liegt
+     * im Folien-XML, nicht im Behälter — das steht so schon in der Lücke, und
+     * es hat gestimmt.
+     *
+     * WO DIE FOLIEN HERKOMMEN. Aus `Folien.teilen`, demselben Kern, den auch
+     * der Vortragsmodus benutzt. Eine zweite Teilung hier wäre die zweite
+     * Wahrheit darüber, wo eine Folie anfängt — und sie liefe irgendwann von
+     * der ersten weg. Gemerkt hätte man es in der Schule.
+     *
+     * WAS EINE PPTX MINDESTENS BRAUCHT, damit PowerPoint sie öffnet: einen
+     * Folienmaster, ein Layout und ein Thema. Keines davon ist optional; eine
+     * Datei mit nur Folien darin wird als beschädigt gemeldet. Deshalb steht
+     * hier mehr Gerüst als Inhalt.
+     *
+     * WAS NICHT NACHGEMESSEN IST, und das gehört dazugesagt: dass PowerPoint
+     * selbst sie öffnet. `test292` prüft die Struktur streng — jede Beziehung
+     * zeigt auf eine Datei, die es gibt; jeder Teil hat seinen Content-Type;
+     * jedes XML ist wohlgeformt —, aber ein echtes PowerPoint gibt es hier
+     * nicht, und LibreOffice läuft im Prüfcontainer nicht (nachgemessen: es
+     * lädt dort nicht einmal eine .txt). Das steht auch in LUECKEN.md.
+     * ======================================================================*/
+    /** 16:9 in EMU — Englische Metrische Einheiten, 914400 je Zoll. */
+    const FOLIE_BREITE = 12192000, FOLIE_HOEHE = 6858000;
+    const pptxThema = () => '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+        '<a:theme xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" name="Redion">' +
+        '<a:themeElements>' +
+        '<a:clrScheme name="Redion">' +
+        '<a:dk1><a:sysClr val="windowText" lastClr="000000"/></a:dk1>' +
+        '<a:lt1><a:sysClr val="window" lastClr="FFFFFF"/></a:lt1>' +
+        '<a:dk2><a:srgbClr val="1F2430"/></a:dk2><a:lt2><a:srgbClr val="F5F5F3"/></a:lt2>' +
+        '<a:accent1><a:srgbClr val="2E6BE6"/></a:accent1><a:accent2><a:srgbClr val="E6A82E"/></a:accent2>' +
+        '<a:accent3><a:srgbClr val="4CAF50"/></a:accent3><a:accent4><a:srgbClr val="E64C4C"/></a:accent4>' +
+        '<a:accent5><a:srgbClr val="8E6BE6"/></a:accent5><a:accent6><a:srgbClr val="2EB8B8"/></a:accent6>' +
+        '<a:hlink><a:srgbClr val="2E6BE6"/></a:hlink><a:folHlink><a:srgbClr val="8E6BE6"/></a:folHlink>' +
+        '</a:clrScheme>' +
+        '<a:fontScheme name="Redion">' +
+        '<a:majorFont><a:latin typeface="Calibri Light"/><a:ea typeface=""/><a:cs typeface=""/></a:majorFont>' +
+        '<a:minorFont><a:latin typeface="Calibri"/><a:ea typeface=""/><a:cs typeface=""/></a:minorFont>' +
+        '</a:fontScheme>' +
+        /* Drei Einträge je Liste — die Zahl steht so im Schema, und ein Leser,
+           der den zweiten oder dritten sucht, findet sonst nichts. */
+        '<a:fmtScheme name="Redion">' +
+        '<a:fillStyleLst>' + '<a:solidFill><a:schemeClr val="phClr"/></a:solidFill>'.repeat(3) +
+        '</a:fillStyleLst>' +
+        '<a:lnStyleLst>' +
+        [6350, 12700, 19050].map(w => '<a:ln w="' + w + '" cap="flat" cmpd="sng" algn="ctr">' +
+            '<a:solidFill><a:schemeClr val="phClr"/></a:solidFill>' +
+            '<a:prstDash val="solid"/></a:ln>').join('') +
+        '</a:lnStyleLst>' +
+        '<a:effectStyleLst>' + '<a:effectStyle><a:effectLst/></a:effectStyle>'.repeat(3) +
+        '</a:effectStyleLst>' +
+        '<a:bgFillStyleLst>' + '<a:solidFill><a:schemeClr val="phClr"/></a:solidFill>'.repeat(3) +
+        '</a:bgFillStyleLst>' +
+        '</a:fmtScheme></a:themeElements></a:theme>';
+    const pptxBaum = (formen) => '<p:spTree>' +
+        '<p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>' +
+        '<p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/>' +
+        '<a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr>' +
+        formen + '</p:spTree>';
+    const PPTX_NS = 'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" ' +
+        'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" ' +
+        'xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"';
+    const pptxMaster = () => '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+        '<p:sldMaster ' + PPTX_NS + '>' +
+        '<p:cSld><p:bg><p:bgPr><a:solidFill><a:schemeClr val="lt1"/></a:solidFill>' +
+        '<a:effectLst/></p:bgPr></p:bg>' + pptxBaum('') + '</p:cSld>' +
+        '<p:clrMap bg1="lt1" tx1="dk1" bg2="lt2" tx2="dk2" accent1="accent1" accent2="accent2" ' +
+        'accent3="accent3" accent4="accent4" accent5="accent5" accent6="accent6" ' +
+        'hlink="hlink" folHlink="folHlink"/>' +
+        '<p:sldLayoutIdLst><p:sldLayoutId id="2147483649" r:id="rId1"/></p:sldLayoutIdLst>' +
+        /* `txStyles` ist im Schema Pflicht am Master. Ohne ihn melden manche
+           Leser die Datei als beschädigt, statt einfach die Vorgabe zu nehmen. */
+        '<p:txStyles><p:titleStyle/><p:bodyStyle/><p:otherStyle/></p:txStyles>' +
+        '</p:sldMaster>';
+    const pptxLayout = () => '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+        '<p:sldLayout ' + PPTX_NS + ' type="blank" preserve="1">' +
+        '<p:cSld name="Leer">' + pptxBaum('') + '</p:cSld>' +
+        '<p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sldLayout>';
+    /** Eine Folie: Titel oben, Text darunter. Zwei Formen, mehr nicht. */
+    const pptxFolie = (titel, zeilen) => {
+        const rahmen = (x, y, cx, cy) => '<a:off x="' + x + '" y="' + y + '"/><a:ext cx="' + cx + '" cy="' + cy + '"/>';
+        const form = (id, name, x, y, cx, cy, inhalt) => '<p:sp><p:nvSpPr><p:cNvPr id="' + id + '" name="' + esc(name) + '"/>' +
+            '<p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr><p:nvPr/></p:nvSpPr>' +
+            '<p:spPr><a:xfrm>' + rahmen(x, y, cx, cy) + '</a:xfrm>' +
+            '<a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr>' +
+            '<p:txBody><a:bodyPr wrap="square"><a:normAutofit/></a:bodyPr><a:lstStyle/>' +
+            inhalt + '</p:txBody></p:sp>';
+        const rand = 838200;
+        let id = 2, formen = '';
+        if (titel) {
+            formen += form(id++, 'Titel', rand, 457200, FOLIE_BREITE - 2 * rand, 1200000, '<a:p><a:pPr algn="l"/><a:r><a:rPr lang="de-DE" sz="4000" b="1" dirty="0"/>' +
+                '<a:t>' + esc(titel) + '</a:t></a:r></a:p>');
+        }
+        const oben = titel ? 1828800 : 685800;
+        const absaetze = zeilen.length
+            ? zeilen.map((z) => '<a:p><a:pPr lvl="' + Math.max(0, Math.min(8, Number(z.tiefe) || 0)) + '"/>' +
+                '<a:r><a:rPr lang="de-DE" sz="' + (z.art === 'kopf' ? 2800 : 2000) + '"' +
+                (z.art === 'kopf' ? ' b="1"' : '') + ' dirty="0"/>' +
+                '<a:t>' + esc(z.text) + '</a:t></a:r></a:p>').join('')
+            /* Eine leere Folie braucht trotzdem einen Absatz — ein Textkörper
+               ohne `a:p` ist nach Schema ungültig. */
+            : '<a:p><a:endParaRPr lang="de-DE"/></a:p>';
+        formen += form(id++, 'Inhalt', rand, oben, FOLIE_BREITE - 2 * rand, FOLIE_HOEHE - oben - 457200, absaetze);
+        return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+            '<p:sld ' + PPTX_NS + '>' +
+            '<p:cSld>' + pptxBaum(formen) + '</p:cSld>' +
+            '<p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sld>';
+    };
+    const REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/';
+    const rels = (eintraege) => '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+        '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+        eintraege + '</Relationships>';
+    const rel = (id, art, ziel) => '<Relationship Id="' + id + '" Type="' + REL + art + '" Target="' + ziel + '"/>';
+    /**
+     * Die Teile einer .pptx — ohne ZIP, damit ein Prüflauf sie einzeln
+     * ansehen kann, ohne ein Archiv aufzumachen.
+     */
+    const pptxTeile = (folien) => {
+        const n = Math.max(1, folien.length);
+        const nr = [];
+        for (let i = 1; i <= n; i++)
+            nr.push(i);
+        const PML = 'application/vnd.openxmlformats-officedocument.presentationml.';
+        const dateien = [
+            { name: '[Content_Types].xml', inhalt: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+                    '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
+                    '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
+                    '<Default Extension="xml" ContentType="application/xml"/>' +
+                    '<Override PartName="/ppt/presentation.xml" ContentType="' + PML + 'presentation.main+xml"/>' +
+                    '<Override PartName="/ppt/slideMasters/slideMaster1.xml" ContentType="' + PML + 'slideMaster+xml"/>' +
+                    '<Override PartName="/ppt/slideLayouts/slideLayout1.xml" ContentType="' + PML + 'slideLayout+xml"/>' +
+                    '<Override PartName="/ppt/theme/theme1.xml" ContentType="application/vnd.openxmlformats-officedocument.theme+xml"/>' +
+                    nr.map(i => '<Override PartName="/ppt/slides/slide' + i + '.xml" ContentType="' +
+                        PML + 'slide+xml"/>').join('') +
+                    '</Types>' },
+            { name: '_rels/.rels', inhalt: rels(rel('rId1', 'officeDocument', 'ppt/presentation.xml')) },
+            { name: 'ppt/presentation.xml', inhalt: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+                    '<p:presentation ' + PPTX_NS + '>' +
+                    '<p:sldMasterIdLst><p:sldMasterId id="2147483648" r:id="rId1"/></p:sldMasterIdLst>' +
+                    '<p:sldIdLst>' + nr.map(i => '<p:sldId id="' + (255 + i) + '" r:id="rId' + (i + 1) + '"/>').join('') +
+                    '</p:sldIdLst>' +
+                    '<p:sldSz cx="' + FOLIE_BREITE + '" cy="' + FOLIE_HOEHE + '"/>' +
+                    '<p:notesSz cx="' + FOLIE_HOEHE + '" cy="' + FOLIE_BREITE + '"/>' +
+                    '</p:presentation>' },
+            { name: 'ppt/_rels/presentation.xml.rels', inhalt: rels(rel('rId1', 'slideMaster', 'slideMasters/slideMaster1.xml') +
+                    nr.map(i => rel('rId' + (i + 1), 'slide', 'slides/slide' + i + '.xml')).join('') +
+                    rel('rId' + (n + 2), 'theme', 'theme/theme1.xml')) },
+            { name: 'ppt/slideMasters/slideMaster1.xml', inhalt: pptxMaster() },
+            { name: 'ppt/slideMasters/_rels/slideMaster1.xml.rels', inhalt: rels(rel('rId1', 'slideLayout', '../slideLayouts/slideLayout1.xml') +
+                    rel('rId2', 'theme', '../theme/theme1.xml')) },
+            { name: 'ppt/slideLayouts/slideLayout1.xml', inhalt: pptxLayout() },
+            { name: 'ppt/slideLayouts/_rels/slideLayout1.xml.rels', inhalt: rels(rel('rId1', 'slideMaster', '../slideMasters/slideMaster1.xml')) },
+            { name: 'ppt/theme/theme1.xml', inhalt: pptxThema() }
+        ];
+        nr.forEach(i => {
+            const f = folien[i - 1] || { titel: '', zeilen: [] };
+            dateien.push({ name: 'ppt/slides/slide' + i + '.xml',
+                inhalt: pptxFolie(String(f.titel || ''), f.zeilen || []) });
+            dateien.push({ name: 'ppt/slides/_rels/slide' + i + '.xml.rels',
+                inhalt: rels(rel('rId1', 'slideLayout', '../slideLayouts/slideLayout1.xml')) });
+        });
+        return dateien;
+    };
+    /**
+     * EINE SEITE ALS POWERPOINT (L69).
+     *
+     * Die Berufsschule verlangt oft eine Abgabe: eine Datei hochladen oder auf
+     * dem Schul-PC öffnen. Der Vortragsmodus reicht dafür nicht — er lebt in
+     * Redion.
+     */
+    const alsPowerPoint = async (seite) => {
+        if (!seite || !seite.id)
+            throw new Error('Ohne Seite gibt es nichts zu zeigen.');
+        if (typeof Folien === 'undefined')
+            throw new Error('Der Folien-Kern ist nicht geladen.');
+        const roh = Folien.teilen(seite, (id) => Store.childrenOf(id));
+        const folien = roh.map((f) => ({
+            titel: f.titel, zeilen: Folien.alsZeilen(f, (id) => Store.childrenOf(id))
+        }));
+        const blob = await zipSchreiben(pptxTeile(folien));
+        laden(blob, (seite.text || 'Vortrag').replace(/[\\/:*?"<>|]/g, '-') + '.pptx');
+        return { blob, folien: folien.length };
+    };
+    return { zipSchreiben, crc32, laden, alsWord, alsPowerPoint, pptxTeile, alsExcel,
+        datenbankAlsExcel,
         allesAlsExcel, alsOds, datenbankAlsOds, odsBlatt, blattXml, spaltenName, wortInhalt,
         ausTrello, ausEvernote, ausAsana, ausAppleNotes, htmlZuMarkdown,
         ausMarkdownOrdner, alsObsidianVault, ausNotionZip, ausNotionJson,
@@ -121828,7 +122177,11 @@ const Backstage = (() => {
                 if (p)
                     aus += gruppe('Diese Seite', zeile('exp:md', 'Als Markdown speichern', String(p.text || 'Ohne Titel')) +
                         (kann(() => holen('Werkzeuge')?.htmlExport)
-                            ? zeile('exp:html', 'Als HTML speichern', '') : ''));
+                            ? zeile('exp:html', 'Als HTML speichern', '') : '') +
+                        /* L69: die Berufsschule verlangt oft eine Abgabe, und der
+                           Vortragsmodus lebt nur in Redion. */
+                        (kann(() => holen('Austausch')?.alsPowerPoint)
+                            ? zeile('exp:pptx', 'Als PowerPoint speichern', 'Die Folien dieser Seite als .pptx') : ''));
                 aus += gruppe('Alles', (kann(() => holen('Werkzeuge')?.einzelDatei)
                     ? zeile('exp:einzel', 'Alles als eine HTML-Datei', 'Zum Lesen ohne Redion') : '') +
                     (kann(() => holen('Werkzeuge')?.ordnerSchreiben)
@@ -121928,6 +122281,17 @@ const Backstage = (() => {
                 const p = seiteJetzt();
                 if (p)
                     zuUnd(() => holen('Werkzeuge')?.htmlExport?.(p));
+            },
+            'exp:pptx': () => {
+                const p = seiteJetzt();
+                if (p)
+                    zuUnd(() => {
+                        void holen('Austausch')?.alsPowerPoint?.(p)
+                            .then((e) => UI.toast(e.folien + (e.folien === 1 ? ' Folie' : ' Folien') +
+                            ' gespeichert'))
+                            .catch((f) => UI.toast('Die PowerPoint-Datei kam nicht zustande: ' +
+                            (f instanceof Error ? f.message : String(f))));
+                    });
             },
             'exp:einzel': () => zuUnd(() => holen('Werkzeuge')?.einzelDatei?.()),
             'exp:ordner': () => zuUnd(() => holen('Werkzeuge')?.ordnerSchreiben?.()),

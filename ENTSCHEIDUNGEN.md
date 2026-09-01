@@ -22654,3 +22654,81 @@ selbst aus.
 
 Das ist dieselbe Lehre wie oben, nur eine Ebene höher: eine Messung, die ihr
 eigenes Messwerkzeug mitmisst, misst nicht.
+
+
+
+
+================================================================================
+E297 — Die Folien bekommen eine Regel, und einen Weg nach draussen (L69)
+================================================================================
+1. September 2026
+
+L69: „Es gibt keinen Weg zu einer .pptx-Datei." Der Vortragsmodus ist gebaut
+und geprüft — eine Seite wird im Vollbild als Folien gezeigt. Aber die
+Berufsschule verlangt oft eine ABGABE: eine Datei hochladen oder auf dem
+Schul-PC öffnen. Dafür gab es nichts.
+
+ZUERST DIE REGEL, DANN DIE DATEI.
+
+Wo eine Folie anfängt — bei jeder Trennlinie und jeder Überschrift 1 oder 2,
+wie in HedgeDoc und Marp — stand NUR im Vortragsmodus, mitten in einer
+Funktion, die gleichzeitig zeichnet. Der neue Weg hätte sie abschreiben
+müssen. Zwei Teilungen, die auseinanderlaufen, sind schlimmer als eine: der
+Vortrag zeigte dann etwas anderes als die abgegebene Datei, und gemerkt hätte
+man es in der Schule.
+
+Sie steht jetzt in `src/core/slides/folien.ts` — rein, ohne DOM und ohne
+Ablage: die Kinder eines Blocks kommen als Funktion herein. Damit lässt sie
+sich prüfen, ohne einen Browser zu starten, und der Vortragsmodus holt sie
+dort ab wie der Export.
+
+Was der Kern mitgenommen hat und was vorher schon richtig war: Spalten
+bleiben Spalten (vorher stieg die Sammlung gar nicht hinab, und eine
+Schulaufgabe war als Vortrag vollständig leer — E118), und die drei
+Blockarten, die ihren Inhalt selbst zeichnen, werden nicht ein zweites Mal
+aufgeklappt.
+
+DAZU `alsZeilen`: eine Folie als flacher Text, für PowerPoint und für ein
+Handout. WAS KEIN TEXT IST, WIRD BENANNT statt weggelassen — ein Bild als
+„[Bild: Schaltbild]", eine Tabelle mit ihrer Zeilenzahl. Eine Folie, auf der
+schweigend die Hälfte fehlt, ist die schlimmere Ausgabe: man merkt es erst
+beim Vortrag.
+
+DIE DATEI. `.pptx` ist wie `.docx` und `.xlsx` ein ZIP mit XML, und den
+eigenen ZIP-Schreiber gibt es seit E91. Die Lücke hat richtig geschätzt: der
+Aufwand liegt im Folien-XML, nicht im Behälter.
+
+Was eine PPTX mindestens braucht, damit sie überhaupt geöffnet wird: einen
+Folienmaster, ein Layout und ein Thema. Keines davon ist optional — eine
+Datei mit nur Folien darin wird als beschädigt gemeldet. Deshalb steht im
+Code mehr Gerüst als Inhalt.
+
+WAS NICHT NACHGEMESSEN IST, und das gehört dazugesagt (§35): dass PowerPoint
+selbst sie öffnet. Ein echtes PowerPoint gibt es hier nicht, und LibreOffice
+läuft im Prüfcontainer nicht — nachgemessen: es lädt dort nicht einmal eine
+`.txt` („source file could not be loaded"). `test293` §4 prüft deshalb die
+STRUKTUR, und zwar streng: jede Beziehung zeigt auf eine Datei, die es gibt
+(mit aufgelösten `../`-Pfaden); jeder XML-Teil hat seinen Content-Type; jedes
+XML ist wohlgeformt. §5 geht den ganzen Weg — echte Seite, echtes Archiv,
+mit Redions eigenem ZIP-Leser wieder aufgemacht, der Text darin gefunden.
+
+Der Weg zur Datei liegt in der Backstage unter „Exportieren → Diese Seite",
+neben Markdown und HTML.
+
+Prüfung: `pruefungen/lauf/test293.mts`. §1 und §2 haben je eine Gegenprobe —
+eine Seite ohne Trenner ergibt EINE Folie, ein leerer Block erzeugt KEINE
+Zeile. §3 misst am erzeugten JavaScript, dass der Vortragsmodus wirklich den
+Kern ruft und seine alte Regel nicht mehr trägt.
+
+NACHTRAG BEIM EINBAU, zwei Dinge:
+
+Der Vortragsmodus lief mit `noUncheckedIndexedAccess` auf einen echten Fall:
+eine Seite ohne einen einzigen Block ergibt KEINE Folie, und `folien[0]` wäre
+`undefined` gewesen. Vorher wäre der Vortrag mit einem leeren schwarzen Bild
+stehen geblieben — mitten in der Klasse die unangenehmste Sorte Fehler. Jetzt
+steht dort ein Satz und der Beenden-Knopf.
+
+Und der neue Kern musste in die Liste des Dienst-Skripts (`sw.ts`). Ohne das
+hätte Redion ihn im Offline-Betrieb nicht gehabt — der Export wäre dann still
+an einem fehlenden `Folien` gescheitert. `test105` hat ausserdem gemeldet, dass
+der Kopf der Datei die Warnung vor Änderungen von Hand nicht trug.
