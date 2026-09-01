@@ -71,18 +71,105 @@ const pruef = (n: any, ist: any, soll: any) => {
   /* --- Tagesplan -------------------------------------------------------- */
   await p.evaluate(() => Plan.tagesplan());
   await p.waitForTimeout(350);
-  const plan = await p.evaluate(() => ({
-    karten: [...document.querySelectorAll<HTMLElement>('.wr-k b')].map(x => x.textContent),
-    ueberschriften: [...document.querySelectorAll<HTMLElement>('.wr-titel')].map(x => x.textContent),
-    zeilen: [...document.querySelectorAll<HTMLElement>('.wr-z span:nth-child(2)')].map(x => x.textContent),
-    spaeterKnoepfe: document.querySelectorAll('.wr-spaeter').length
-  }));
-  pruef('Eine Aufgabe heute fällig',  plan.karten[0], '1');
-  pruef('Eine überfällig',            plan.karten[1], '1');
-  pruef('Schätzung wird gerechnet',   /^\d+h \d+m$/.test(plan.karten[2] ?? ''), true);
-  pruef('Überfälliges wird zuerst gezeigt',
-        plan.ueberschriften[0], 'Überfällig');
-  pruef('Die überfällige Aufgabe steht drin', plan.zeilen[0], 'Gestern fällig');
+  /* DIE KACHELN WERDEN AM SCHILD GELESEN, NICHT AN DER STELLE (E320).
+     Hier stand einmal `plan.karten[0]`, `[1]`, `[2]`. Als E308 den Tagesplan
+     zum Zeitbudget-Planer machte, tauschten die Kacheln Inhalt und Reihen-
+     folge — und die Prüfung meldete vier Fehler, von denen keiner sagte, was
+     wirklich los war: sie las weiter Stelle 0 und bekam eine andere Zahl.
+
+     Ein Schild ist der stabile Teil. Wer die Kachel „überfällig" umbenennt
+     oder entfernt, bekommt EINEN klaren Fehler an der richtigen Stelle. */
+  const plan = await p.evaluate(() => {
+    const kachel: Record<string, string> = {};
+    document.querySelectorAll<HTMLElement>('.wr-k').forEach(k => {
+      const schild = k.querySelector('span')?.textContent?.trim() || '';
+      if (schild) kachel[schild] = k.querySelector('b')?.textContent?.trim() || '';
+    });
+    return {
+      kachel,
+      ueberschriften: [...document.querySelectorAll<HTMLElement>('.wr-titel')].map(x => x.textContent),
+      zeilen: [...document.querySelectorAll<HTMLElement>('.wr-z span:nth-child(2)')].map(x => x.textContent),
+      /* Die Zeilen NACH Gruppen, in der Reihenfolge, in der sie stehen. Nur
+         so lässt sich eine Kachel gegen die wirklich gezeichnete Liste
+         halten statt gegen dieselbe Zahl an zweiter Stelle. */
+      gruppen: (() => {
+        const g: { titel: string; zeilen: number }[] = [];
+        document.querySelectorAll<HTMLElement>('.wr-titel, .wr-z').forEach(el => {
+          if (el.classList.contains('wr-titel')) {
+            g.push({ titel: el.textContent || '', zeilen: 0 });
+          } else if (g.length) { g[g.length - 1]!.zeilen++; }
+        });
+        return g;
+      })(),
+      spaeterKnoepfe: document.querySelectorAll('.wr-spaeter').length,
+      budget: Number((document.querySelector('#pl-b') as HTMLInputElement)?.value || 0),
+      breiteBudget: document.querySelector('#pl-b')?.getBoundingClientRect().width ?? 0,
+      breiteDauer:  document.querySelector('#pl-d')?.getBoundingClientRect().width ?? 0
+    };
+  });
+
+  /* Die vier Kacheln des Planers, jede an ihrem Schild. */
+  pruef('Kachel „verplant" ist eine Dauer',
+        /(Min\.|Std)/.test(plan.kachel['verplant'] ?? ''), true);
+  pruef('Kachel „noch frei" ist eine Dauer',
+        /(Min\.|Std)/.test(plan.kachel['noch frei'] ?? ''), true);
+  pruef('Eine überfällig',            plan.kachel['überfällig'], '1');
+  /* KEINE MAGISCHE ZAHL HIER. Wie viele heute nicht mehr passen, hängt am
+     Feinschliff der Verteilung — eine Aufgabe mit sechs Tagen Frist nimmt
+     heute nur eine Scheibe —, und genau das prüft test302 mit 64 Punkten.
+     Hier zählt die Kachel gegen die GEZEICHNETE Liste.
+
+     UND NICHT GEGEN DIE ÜBERSCHRIFT DANEBEN: die liest `draussen.length`,
+     dieselbe Zahl wie die Kachel. Eine Prüfung, die zwei Ausgaben desselben
+     Ausdrucks vergleicht, kann nicht rot werden — genau der Fall, den L89
+     festhält. Die gezeichneten Zeilen kommen dagegen aus der Schleife
+     darunter: fällt dort eine weg oder eine doppelt hinein, sagen Kachel und
+     Liste Verschiedenes. */
+  const raus = plan.gruppen.find(g => /Heute nicht mehr/.test(g.titel));
+  pruef('Die Kachel stimmt mit der gezeichneten Liste überein',
+        plan.kachel['passt nicht mehr'], String(raus ? raus.zeilen : 0));
+
+  /* Und keine Aufgabe fällt zwischen die Stühle: was im Tag steht plus was
+     draussen bleibt, ist alles, was offen ist. */
+  pruef('Jede offene Aufgabe steht in genau einer Gruppe',
+        plan.gruppen.reduce((n, g) => n + g.zeilen, 0), gesammelt.offen);
+
+  /* SCHÄRFER ALS DIE ALTE PRÜFUNG: verplant und frei müssen das Budget
+     ergeben. Acht Aufgaben zu 30 Minuten gegen 90 Minuten Budget — es passen
+     drei, der Rest bleibt draussen, und frei bleibt nichts. Diese Beziehung
+     hatte vorher keine Prüfung, und sie kann rot werden: verrechnet sich der
+     Planer um einen Posten, stimmt die Summe nicht mehr. */
+  const min = (t: string): number => {
+    const std = /(\d+)\s*Std/.exec(t); const m = /(\d+)\s*Min/.exec(t);
+    const rest = /Std\s+(\d+)/.exec(t);
+    return (std ? Number(std[1]) * 60 : 0) + (rest ? Number(rest[1]) : 0) +
+           (m && !std ? Number(m[1]) : 0);
+  };
+  pruef('Verplant und frei ergeben zusammen das Budget',
+        min(plan.kachel['verplant'] ?? '') + min(plan.kachel['noch frei'] ?? ''),
+        plan.budget);
+
+  /* ZWEI ZAHLENFELDER, DIE DASSELBE TUN, MÜSSEN GLEICH AUSSEHEN (E320).
+     Das Budgetfeld war 479 px breit für eine zweistellige Zahl — nicht durch
+     Absicht, sondern weil `.finder label input{width:100%}` in werkzeuge.css
+     gegen `.pl-budget input{width:76px}` gewann: ein Klassenname plus zwei
+     Elemente schlägt einen plus eines. Sein Zwilling `#pl-d` sass in einem
+     `span` statt in einem `label` und behielt seine 62 px.
+
+     KANN ER ROT WERDEN? Gemessen: mit der alten Regel 479 gegen 62. Der Punkt
+     hat also einen Zustand, in dem er fällt, und den hatte er bis heute. */
+  pruef('Das Budgetfeld ist ein Zahlenfeld, kein Textfeld',
+        plan.breiteBudget > 0 && plan.breiteBudget <= 120, true);
+  pruef('Und es ist so breit wie sein Zwilling im Fuss',
+        Math.abs(plan.breiteBudget - plan.breiteDauer) <= 20, true);
+
+  pruef('Der Tag hat eine Überschrift', plan.ueberschriften[0], 'Dein Tag');
+  /* ÜBERFÄLLIGES ZUERST — das ist die Zusage, und sie steht jetzt in der
+     Reihenfolge statt in einer eigenen Überschrift. Der Planer verteilt nach
+     Frist; wer gestern fällig war, steht oben. */
+  pruef('Die überfällige Aufgabe steht ganz oben', plan.zeilen[0], 'Gestern fällig');
+  pruef('Und die heute fällige darunter, vor allem Späteren',
+        plan.zeilen.indexOf('Heute fällig') < plan.zeilen.indexOf('Nächste Woche'), true);
   pruef('Zurückstellen an jeder Zeile', Number(plan.spaeterKnoepfe ?? -1) >= 3, true);
 
   /* --- Zurückstellen ---------------------------------------------------- */

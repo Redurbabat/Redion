@@ -24255,3 +24255,72 @@ sechsmal `null`.
 test313, 25 Punkte. Mitgelaufen: test281 48/48, test291 13/13,
 test105 105/105 (drei Punkte mehr — der neue Kern zählt mit).
 sw v74 · Einzeldatei 7824 KB.
+
+================================================================================
+E320 — Der volle Lauf war rot, und beide Funde waren echt
+================================================================================
+1. September 2026
+
+270 Läufe, zwei rot. Keiner davon war ein Zufall, und keiner war ein Fehler
+im Produkt — aber beide zeigten auf etwas, das repariert gehörte.
+
+─── test290: ein Namensraum ohne Eintrag ───────────────────────────────────
+
+E308 nahm für den Zeitbudget-Planer das Präfix `pl-` und trug es nicht in
+`doku/CSS-NAMENSRAEUME.md` ein. Genau dafür gibt es das Verzeichnis (E293,
+L90), und genau so soll der Wächter zuschlagen. Eingetragen: `pl  15
+bausteine.css`.
+
+─── test51: vier Fehler, von denen keiner sagte, was los war ───────────────
+
+E308 machte aus dem Tagesplan einen Zeitbudget-Planer, und die Kacheln
+wechselten dabei Inhalt UND Reihenfolge — aus „heute fällig / überfällig /
+Schätzung" wurde „verplant / noch frei / überfällig / passt nicht mehr".
+test51 las weiter Stelle 0, 1, 2 und meldete vier Abweichungen, die alle
+dasselbe bedeuteten und keine davon so aussah.
+
+Nachgemessen ist das Produkt in allen vier Punkten RICHTIG: 90 Minuten
+Budget, acht Aufgaben zu je 30 Minuten, davon passen drei — „1 Std 30
+verplant, 0 Min. frei" stimmt. Und überfällig kommt weiterhin zuerst; es
+steht nur nicht mehr unter einer eigenen Überschrift, sondern ganz oben in
+„Dein Tag", weil der Planer nach Frist verteilt.
+
+DIE LEHRE IST NICHT „test51 anpassen", sondern WARUM es vier statt einem
+Fehler waren: die Kacheln wurden über ihre STELLE gelesen. Jetzt über ihr
+SCHILD. Wer eine Kachel umbenennt, bekommt einen klaren Fehler an der
+richtigen Stelle; wer sie umsortiert, gar keinen — und das ist richtig so.
+
+Dabei zwei Punkte, die es vorher nicht gab und die schärfer sind als die
+alten:
+
+  · verplant + frei ergeben das Budget. Verrechnet sich der Planer um einen
+    Posten, stimmt die Summe nicht mehr.
+  · die Kachel „passt nicht mehr" gegen die GEZEICHNETE Liste.
+
+Der zweite stand zuerst gegen die Überschrift daneben — und die liest
+`draussen.length`, dieselbe Zahl wie die Kachel. Zwei Ausgaben desselben
+Ausdrucks zu vergleichen kann nicht rot werden; das ist wörtlich der Fall,
+den L89 festhält, und er wäre um ein Haar neu entstanden. Gegen die
+gezeichneten Zeilen kann er rot werden, und das wurde gemessen: Kachel
+künstlich um eins erhöht → rot, zurückgenommen → grün.
+
+─── UND WAS NUR DAS BILD FAND (§55.1) ──────────────────────────────────────
+
+Das Budgetfeld war 479 px breit für eine zweistellige Zahl und las sich wie
+ein Textfeld. Der Grund war keine Absicht, sondern ein Spezifitätskampf:
+
+    .finder label input { width:100% }     werkzeuge.css   (0,1,2)
+    .pl-budget   input { width:76px  }     bausteine.css   (0,1,1)
+
+Ein Klassenname plus zwei Elemente schlägt einen plus eines. Sein Zwilling
+`#pl-d` im Fuss sass in einem `span` statt in einem `label`, wurde von der
+Regel nicht getroffen und behielt seine 62 px — dieser Unterschied im selben
+Bild machte den Fehler erst sichtbar. Die Regel heisst jetzt
+`.finder .pl-budget input`.
+
+Gemessen wird seither die Breite selbst, und zwar zweimal: absolut (≤ 120 px)
+und gegen den Zwilling (± 20 px). Beide waren mit der alten Regel rot.
+
+Zusammen 41 Punkte in test51 (vorher 35), test290 wieder 13/13.
+Mitgelaufen: test302 64/64, test272 153/153.
+sw v74 · Einzeldatei 7825 KB.

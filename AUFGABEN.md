@@ -2328,3 +2328,19 @@ node pruefungen/lauf/test105.mjs
   ein 400 wäre teurer als eine ungenaue Zahl. Dazu L104 Punkt 3: die
   Preisliste sagt nach einem halben Jahr, dass sie alt ist, und schweigt
   vorher. test313 neu (25). sw v74.
+* E320: Der volle Lauf war rot, und beide Funde waren echt. test290 sah, dass
+  E308 das Präfix `pl-` nahm und nicht ins Verzeichnis eintrug — genau dafür
+  gibt es das Verzeichnis. test51 meldete vier Abweichungen im Tagesplan, die
+  alle dasselbe bedeuteten: E308 hatte die Kacheln inhaltlich UND in der
+  Reihenfolge getauscht, und test51 las sie über ihre STELLE. Nachgemessen
+  ist das Produkt in allen vier Punkten richtig. Die Kacheln werden jetzt
+  über ihr SCHILD gelesen, dazu zwei schärfere Punkte: verplant + frei ergibt
+  das Budget, und die Kachel „passt nicht mehr" gegen die gezeichnete Liste
+  (nicht gegen die Überschrift daneben — die liest dieselbe Zahl, und ein
+  Vergleich zweier Ausgaben desselben Ausdrucks kann nicht rot werden, L89).
+  Rot-Probe gemessen: Kachel künstlich um eins erhöht → rot.
+  Und was nur das Bild fand: das Budgetfeld war 479 px breit für eine
+  zweistellige Zahl, weil `.finder label input{width:100%}` gegen
+  `.pl-budget input{width:76px}` gewann. Sein Zwilling im Fuss sass in einem
+  `span` statt einem `label` und behielt 62 px — der Unterschied im selben
+  Bild machte es sichtbar. test51 41 Punkte (vorher 35). sw v74.
