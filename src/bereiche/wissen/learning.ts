@@ -935,10 +935,59 @@ const Learning = (() => {
       next.textContent = stats.nextAt
         ? 'Nächster geplanter Termin: ' + new Date(String(stats.nextAt)).toLocaleString('de-DE')
         : 'Noch kein weiterer Termin geplant.';
-      const algorithm = document.createElement('p');
-      algorithm.style.color = 'var(--text-dim)';
-      algorithm.style.fontSize = '12px';
-      algorithm.textContent = 'Lernplan: SM-2 bleibt der Standard. Es findet keine automatische FSRS-Migration statt.';
+      /* DER SATZ WIRD ZUR WAHL (E303). Hier stand: „SM-2 bleibt der Standard.
+         Es findet keine automatische FSRS-Migration statt." Beides gilt
+         weiter — nur gibt es das zweite Verfahren jetzt wirklich, und dann
+         ist eine Auskunft ohne Griff eine Anzeige ohne Knopf (§47). */
+      const algorithm = document.createElement('div');
+      algorithm.className = 'lern-verfahren';
+      const jetzt = String(Store.getMeta('lernVerfahren', 'sm2'));
+      const titel = document.createElement('p');
+      titel.style.fontSize = '13px';
+      titel.style.margin = '0 0 6px';
+      titel.textContent = 'Lernplan';
+      const reihe = document.createElement('div');
+      reihe.style.display = 'flex';
+      reihe.style.gap = '6px';
+      reihe.style.flexWrap = 'wrap';
+      const satz = document.createElement('p');
+      satz.style.color = 'var(--text-dim)';
+      satz.style.fontSize = '12px';
+      satz.style.margin = '8px 0 0';
+      const satzSetzen = (art: string): void => {
+        satz.textContent = art === 'fsrs'
+          ? 'FSRS rechnet, wie wahrscheinlich du eine Karte noch kannst, und ' +
+            'setzt den Termin dorthin, wo sie unter deine Zielrate fällt. ' +
+            'Schon geplante Termine bleiben, wie sie sind — umgestellt wird ' +
+            'jede Karte erst bei ihrer nächsten Antwort, und im Verlauf steht ' +
+            'dann, dass ihr Startwert aus SM-2 geschätzt wurde.'
+          : 'SM-2 ist das Verfahren von Anki: leichter beantwortet = längerer ' +
+            'Abstand. Es bleibt die Vorgabe, und es findet keine automatische ' +
+            'Umstellung statt.';
+      };
+      const WAHL: ReadonlyArray<readonly [string, string]> =
+        [['sm2', 'SM-2 (Anki)'], ['fsrs', 'FSRS 4.5']];
+      for (const [wert, name] of WAHL) {
+        const k = document.createElement('button');
+        k.type = 'button';
+        k.className = 'lern-verfahren-knopf' + (jetzt === wert ? ' on' : '');
+        k.textContent = name;
+        k.setAttribute('aria-pressed', jetzt === wert ? 'true' : 'false');
+        k.dataset.verfahren = wert;
+        k.addEventListener('click', () => {
+          Store.setMeta('lernVerfahren', wert);
+          reihe.querySelectorAll<HTMLElement>('[data-verfahren]').forEach(x => {
+            const an = x.dataset.verfahren === wert;
+            x.classList.toggle('on', an);
+            x.setAttribute('aria-pressed', an ? 'true' : 'false');
+          });
+          satzSetzen(wert);
+          UI.toast(wert === 'fsrs' ? 'Ab jetzt plant FSRS' : 'Ab jetzt plant SM-2');
+        });
+        reihe.appendChild(k);
+      }
+      satzSetzen(jetzt);
+      algorithm.append(titel, reihe, satz);
       view.body.append(grid, exam, explanation, actions, details, topicSection(stats.topics), next, algorithm);
     };
 

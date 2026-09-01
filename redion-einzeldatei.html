@@ -3195,6 +3195,20 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
   .wl-quelle{min-height:32px}
 }
 
+
+/* DER LERNPLAN-SCHALTER (E303). Zwei Knöpfe, einer davon an — dieselbe Form
+   wie überall sonst in Redion, damit man nicht raten muss, was gerade gilt.
+   44 px hoch, weil das auch am Telefon getroffen werden muss (§37). */
+.lern-verfahren{margin-top:16px}
+.lern-verfahren-knopf{min-height:44px; padding:8px 16px; border-radius:8px;
+  border:1px solid var(--rand); background:none; color:var(--text);
+  font-size:13px; cursor:pointer}
+.lern-verfahren-knopf:hover{background:var(--bg-hover)}
+.lern-verfahren-knopf.on{background:var(--accent); color:var(--auf-accent);
+  border-color:var(--accent)}
+.lern-verfahren-knopf:focus-visible{outline:2px solid var(--accent);
+  outline-offset:2px}
+
 </style>
 <style>
 /* ===== quell/schale/stil/ansichten.css ===== */
@@ -19474,6 +19488,179 @@ const Kompetenz = (() => {
     };
 })();
 window.Kompetenz = Kompetenz;
+
+</script>
+<script>
+/* ===== quell/core/learning/fsrs.js ===== */
+"use strict";
+/* ============================================================================
+ * core/learning/fsrs.ts — der freie Wiederholungsplaner (FSRS 4.5)
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/core/learning/fsrs.ts`. `npm run bauen:ts` schreibt
+ * daraus `quell/core/learning/fsrs.js`.
+ * ----------------------------------------------------------------------------
+ * REIN: kennt weder Uhr noch Ablage noch DOM. Die verstrichene Zeit kommt als
+ * Zahl herein, das Ergebnis geht als Zahl hinaus. Damit lässt sich jede
+ * Behauptung darüber ohne Browser prüfen — und das ist bei einem Verfahren,
+ * das über Monate wirkt, der einzige Weg, es überhaupt zu prüfen.
+ *
+ * WARUM ÜBERHAUPT EIN ZWEITES VERFAHREN
+ *
+ * SM-2 (Anki, Redion bis heute) kennt zwei Zahlen je Karte: einen Abstand und
+ * eine „Leichtigkeit". Es weiss nicht, wie WAHRSCHEINLICH man eine Karte
+ * gerade noch kann — es rechnet einen Abstand fort und hofft. Wer eine Karte
+ * nach drei Monaten wiedersieht und sie kann, bekommt denselben Zuschlag wie
+ * jemand, der sie nach drei Tagen konnte.
+ *
+ * FSRS führt drei Zahlen: STABILITÄT (nach wie vielen Tagen ist die
+ * Erinnerung auf 90 % gefallen), SCHWIERIGKEIT (wie zäh ist diese Karte für
+ * diesen Menschen) und daraus die ABRUFBARKEIT zu jedem Zeitpunkt. Der
+ * nächste Termin ist dann keine Fortschreibung, sondern eine Antwort auf die
+ * Frage: wann fällt die Erinnerung unter das, was ich noch will?
+ *
+ * VON HAND UND NICHT ALS PAKET (§6). `ts-fsrs` wäre eine Abhängigkeit für
+ * siebzehn Gewichte und zwei Dutzend Zeilen Rechnung. Die Formeln stehen
+ * offen; die Rechnung steht hier.
+ *
+ * WAS HIER NICHT PASSIERT: eine Umstellung. SM-2 bleibt die Vorgabe, und eine
+ * Karte wechselt das Verfahren nur, wenn ein Mensch es sagt. Der Grund steht
+ * in ENTSCHEIDUNGEN.md — ein Verfahren, das rückwirkend alle Termine
+ * verschiebt, ist genau die Sorte Änderung, die man erst merkt, wenn die
+ * Prüfung schon vorbei ist.
+ * ==========================================================================*/
+const Fsrs = (() => {
+    /* Die siebzehn Gewichte von FSRS 4.5. Sie stammen aus der Anpassung an
+       rund siebzig Millionen Wiederholungen und sind die Vorgabe, solange
+       niemand eigene rechnet. Wer sie ändert, ändert jeden künftigen Termin —
+       deshalb stehen sie an genau einer Stelle. */
+    const W = [
+        0.4872, 1.4003, 3.7145, 13.8206, 5.1618, 1.2298, 0.8975, 0.0310,
+        1.6474, 0.1367, 1.0461, 2.1072, 0.0793, 0.3246, 1.5870, 0.2272, 2.8755
+    ];
+    /* Die Vergessenskurve. `DECAY` und `FACTOR` gehören zusammen: FACTOR ist so
+       gewählt, dass R nach genau S Tagen auf 0,9 steht. Das ist die Definition
+       von Stabilität, und sie steht hier, weil sie sonst nirgends steht. */
+    const DECAY = -0.5;
+    const FACTOR = 19 / 81;
+    const grenze = (x, min, max) => Math.min(max, Math.max(min, x));
+    /**
+     * Wie wahrscheinlich ist die Erinnerung nach `tage` Tagen noch da?
+     * Bei `tage === stabilitaet` kommt 0,9 heraus — das ist die Definition.
+     */
+    const abrufbarkeit = (tage, stabilitaet) => {
+        const s = Math.max(0.01, stabilitaet);
+        return Math.pow(1 + FACTOR * Math.max(0, tage) / s, DECAY);
+    };
+    /**
+     * Nach wie vielen Tagen fällt die Erinnerung auf `ziel`?
+     * Die Umkehrung von `abrufbarkeit`, und damit der nächste Termin.
+     */
+    const abstand = (stabilitaet, ziel = 0.9) => {
+        const z = grenze(ziel, 0.7, 0.99);
+        return (stabilitaet / FACTOR) * (Math.pow(z, 1 / DECAY) - 1);
+    };
+    /**
+     * Der Stand nach der ALLERERSTEN Antwort auf eine Karte.
+     *
+     * DIE SCHWIERIGKEIT WIRD LINEAR GERECHNET, und das ist kein Detail: FSRS 5
+     * nimmt an dieser Stelle `w4 - e^(w5*(G-1)) + 1`, FSRS 4.5 die Gerade
+     * `w4 - (G-3)*w5`. Die zwei Formeln gehören zu ZWEI VERSCHIEDENEN
+     * GEWICHTSSÄTZEN — 4.5 hat siebzehn Gewichte, 5 hat neunzehn.
+     *
+     * Der erste Entwurf hier hat die Formel von 5 mit den Gewichten von 4.5
+     * gemischt. Nachgerechnet ergab das für „gut" und „leicht" beide Male den
+     * Anschlag 1: 5,16 - e^2,46 + 1 = -5,5. Jede neue Karte wäre als
+     * kinderleicht eingestuft worden, und ihre Abstände wären sofort
+     * auseinandergelaufen. Aufgefallen ist es an §3 des Prüflaufs — an einer
+     * Behauptung über die REIHENFOLGE, nicht über eine Zahl.
+     */
+    const ersterStand = (note) => ({
+        stabilitaet: Math.max(0.1, W[note - 1] ?? 1),
+        schwierigkeit: grenze((W[4] ?? 5) - (note - 3) * (W[5] ?? 1), 1, 10)
+    });
+    /** Die Schwierigkeit wandert langsam zur Schwierigkeit einer „leichten". */
+    const neueSchwierigkeit = (alt, note) => {
+        const linear = alt - (W[6] ?? 1) * (note - 3);
+        /* Dämpfung: nahe 10 bewegt sich fast nichts mehr, nahe 1 viel. Ohne sie
+           liefe eine Karte nach ein paar schweren Antworten an den Anschlag und
+           käme nie zurück. */
+        const gedaempft = alt + (linear - alt) * (10 - alt) / 9;
+        const zurueck = ersterStand(4).schwierigkeit;
+        return grenze((W[7] ?? 0) * zurueck + (1 - (W[7] ?? 0)) * gedaempft, 1, 10);
+    };
+    /** Die Stabilität, wenn die Karte GEKONNT wurde (Note 2, 3 oder 4). */
+    const stabilitaetNachKoennen = (s, d, r, note) => {
+        const schwerBremse = note === 2 ? (W[15] ?? 1) : 1;
+        const leichtBonus = note === 4 ? (W[16] ?? 1) : 1;
+        const zuwachs = Math.exp(W[8] ?? 0) * (11 - d) * Math.pow(s, -(W[9] ?? 0)) *
+            (Math.exp((W[10] ?? 0) * (1 - r)) - 1) * schwerBremse * leichtBonus;
+        return Math.max(0.1, s * (1 + zuwachs));
+    };
+    /**
+     * Die Stabilität nach einem FEHLER.
+     *
+     * Sie fällt, aber nicht auf null: was einmal gesessen hat, sitzt beim
+     * zweiten Mal schneller wieder. Und sie kann nie ÜBER der alten liegen —
+     * ein Fehler darf einen Termin nicht nach hinten schieben.
+     */
+    const stabilitaetNachFehler = (s, d, r) => {
+        const neu = (W[11] ?? 0) * Math.pow(d, -(W[12] ?? 0)) *
+            (Math.pow(s + 1, W[13] ?? 0) - 1) * Math.exp((W[14] ?? 0) * (1 - r));
+        return grenze(neu, 0.1, s);
+    };
+    /**
+     * Eine Antwort verrechnen.
+     *
+     * @param stand  was bisher galt, oder `null` für die erste Antwort
+     * @param note   1 nochmal, 2 schwer, 3 gut, 4 leicht
+     * @param tage   wie viele Tage seit der letzten Antwort vergangen sind
+     * @param ziel   welche Abrufbarkeit beim nächsten Termin gelten soll
+     */
+    const antworten = (stand, note, tage, ziel = 0.9) => {
+        if (!stand) {
+            const s = ersterStand(note);
+            return { stand: s, abstandTage: Math.max(0, abstand(s.stabilitaet, ziel)),
+                abrufbarkeitVorher: 1, fehler: note === 1 };
+        }
+        const r = abrufbarkeit(tage, stand.stabilitaet);
+        const d = neueSchwierigkeit(stand.schwierigkeit, note);
+        const s = note === 1
+            ? stabilitaetNachFehler(stand.stabilitaet, stand.schwierigkeit, r)
+            : stabilitaetNachKoennen(stand.stabilitaet, stand.schwierigkeit, r, note);
+        return { stand: { stabilitaet: s, schwierigkeit: d },
+            abstandTage: Math.max(0, abstand(s, ziel)),
+            abrufbarkeitVorher: r, fehler: note === 1 };
+    };
+    /**
+     * Aus einem SM-2-Stand einen FSRS-Stand schätzen — für den Übergang.
+     *
+     * SCHÄTZEN UND NICHT RECHNEN, und das gehört dazugesagt: SM-2 führt keine
+     * Stabilität, es gibt keine verlustfreie Umrechnung. Der letzte Abstand ist
+     * der beste Anhaltspunkt, den es gibt (er WAR ja ein Abstand, bei dem die
+     * Karte noch sass), und die Leichtigkeit sagt grob, wie zäh sie war.
+     *
+     * Deshalb ist das kein stiller Schritt: wer umstellt, bekommt es gesagt,
+     * und im Protokoll steht `algorithm: 'fsrs'` ab genau dieser Antwort.
+     */
+    const ausSm2 = (intervall, ease) => ({
+        stabilitaet: Math.max(0.1, Number(intervall) || 1),
+        /* Zwei Punkte legen die Gerade fest, und beide sind bekannt: ease 2,5 ist
+           SM-2s Vorgabe und heisst „durchschnittlich" — das ist FSRS-Schwierigkeit
+           5, die Mitte. ease 1,3 ist SM-2s Anschlag nach unten und heisst „so zäh
+           wie es geht" — das ist 10.
+    
+           Der erste Entwurf schrieb `11 - ease * 3,5`. Nachgerechnet ergab das
+           für eine ganz gewöhnliche Karte mit ease 2,5 die Schwierigkeit 2,25 —
+           also „fast geschenkt", und ihre Abstände wären sofort auseinander-
+           gelaufen. Zwei bekannte Punkte auszurechnen ist billiger, als es
+           hinterher zu merken. */
+        schwierigkeit: grenze(10 - ((Number(ease) || 2.5) - 1.3) * (5 / 1.2), 1, 10)
+    });
+    return { W, DECAY, FACTOR, abrufbarkeit, abstand, ersterStand,
+        neueSchwierigkeit, antworten, ausSm2 };
+})();
+globalThis.Fsrs = Fsrs;
 
 </script>
 <script>
@@ -69821,7 +70008,27 @@ const WissenDienst = (() => {
     /* --------------------------------------------------------------------------
      * DAS WIEDERHOLUNGSVERFAHREN der Karteikarten (SM-2, wie Anki)
      * ----------------------------------------------------------------------- */
-    /** SM-2 in kurz: leichter beantwortet = längerer Abstand. */
+    /** Welches Verfahren gilt gerade? SM-2, solange niemand etwas anderes sagt. */
+    const verfahren = () => (typeof Fsrs !== 'undefined' && Store.getMeta('lernVerfahren', 'sm2') === 'fsrs')
+        ? 'fsrs' : 'sm2';
+    /**
+     * SM-2 in kurz: leichter beantwortet = längerer Abstand.
+     *
+     * SEIT E303 GIBT ES EIN ZWEITES VERFAHREN, und drei Dinge daran sind
+     * Absicht:
+     *
+     *   SM-2 BLEIBT DIE VORGABE. Eine Karte wechselt nur, wenn ein Mensch es
+     *   sagt. Ein Verfahren, das rückwirkend alle Termine verschiebt, ist genau
+     *   die Sorte Änderung, die man erst merkt, wenn die Prüfung vorbei ist.
+     *
+     *   DER ÜBERGANG WIRD PROTOKOLLIERT. Eine Karte mit SM-2-Vergangenheit hat
+     *   keine Stabilität; sie wird aus dem letzten Abstand GESCHÄTZT. Das steht
+     *   als `uebergang: true` im Verlauf, damit man später weiss, ab wann die
+     *   Zahlen gerechnet und ab wann sie geraten sind.
+     *
+     *   `ease` UND `wdh` BLEIBEN STEHEN, solange FSRS läuft. Wer zurückschaltet,
+     *   landet auf seinem letzten SM-2-Stand statt auf der Vorgabe.
+     */
     const planen = (k, note) => {
         const sr = Object.assign({ ease: 2.5, intervall: 0, wdh: 0 }, k.sr || {});
         /* Der Verlauf ist additiv. Die Rechnung darunter bleibt absichtlich
@@ -69834,7 +70041,32 @@ const WissenDienst = (() => {
             ease: Number(sr.ease) || 2.5,
             repetitions: Number(sr.wdh) || 0
         };
-        if (note < 3) {
+        const art = verfahren();
+        let uebergang = false;
+        if (art === 'fsrs') {
+            /* Wie viele Tage sind seit der letzten Antwort vergangen? Ohne letzte
+               Antwort ist es die erste — dann kennt der Kern den Fall selbst. */
+            const zuletzt = sr.zuletzt ? new Date(String(sr.zuletzt)).getTime() : 0;
+            const tage = zuletzt ? Math.max(0, (Date.now() - zuletzt) / 86400000) : 0;
+            let stand = (sr.fsrs && typeof sr.fsrs === 'object' &&
+                Number(sr.fsrs.stabilitaet) > 0)
+                ? { stabilitaet: Number(sr.fsrs.stabilitaet),
+                    schwierigkeit: Number(sr.fsrs.schwierigkeit) || 5 }
+                : null;
+            if (!stand && (Number(sr.intervall) > 0 || Number(sr.wdh) > 0)) {
+                stand = Fsrs.ausSm2(Number(sr.intervall) || 1, Number(sr.ease) || 2.5);
+                uebergang = true;
+            }
+            const ziel = Math.min(0.97, Math.max(0.8, Number(Store.getMeta('lernZielrate', 0.9)) || 0.9));
+            const erg = Fsrs.antworten(stand, Math.max(1, Math.min(4, Number(note))), tage, ziel);
+            sr.fsrs = { stabilitaet: erg.stand.stabilitaet,
+                schwierigkeit: erg.stand.schwierigkeit };
+            /* Der Abstand wird auf ganze Tage gerundet, weil ein Termin ein Tag
+               ist. Unter einem Tag heisst „gleich nochmal" — dieselben zehn
+               Minuten wie bei SM-2, damit sich der Rest der App nicht ändert. */
+            sr.intervall = erg.abstandTage < 1 ? 0 : Math.round(erg.abstandTage);
+        }
+        else if (note < 3) {
             sr.wdh = 0;
             sr.intervall = note === 1 ? 0 : 1;
         }
@@ -69866,7 +70098,9 @@ const WissenDienst = (() => {
             version: 1,
             at: sr.zuletzt,
             rating: Number(note),
-            algorithm: 'sm2',
+            algorithm: art,
+            ...(uebergang ? { uebergang: true } : {}),
+            ...(art === 'fsrs' ? { fsrs: { ...sr.fsrs } } : {}),
             lapse: note < 3,
             before: vorher,
             after: {
@@ -69880,7 +70114,10 @@ const WissenDienst = (() => {
             .sort((a, b) => String(a.at || '').localeCompare(String(b.at || '')) || String(a.id || '').localeCompare(String(b.id || '')))
             .slice(-500);
         const reviewVerlauf = Object.fromEntries(behalten.map(entry => [String(entry.id), entry]));
-        Store.updateBlock(k.id, { sr, reviewVerlauf, lernAlgorithmus: 'sm2' });
+        /* `lernAlgorithmus` stand hier fest auf `'sm2'` — und wäre seit E303
+           eine Lüge am Block gewesen: die Karte lief nach FSRS und behauptete
+           SM-2. Gefunden vom Anschluss-Prüflauf, nicht beim Schreiben. */
+        Store.updateBlock(k.id, { sr, reviewVerlauf, lernAlgorithmus: art });
         return sr;
     };
     /* --------------------------------------------------------------------------
@@ -74175,10 +74412,58 @@ const Learning = (() => {
             next.textContent = stats.nextAt
                 ? 'Nächster geplanter Termin: ' + new Date(String(stats.nextAt)).toLocaleString('de-DE')
                 : 'Noch kein weiterer Termin geplant.';
-            const algorithm = document.createElement('p');
-            algorithm.style.color = 'var(--text-dim)';
-            algorithm.style.fontSize = '12px';
-            algorithm.textContent = 'Lernplan: SM-2 bleibt der Standard. Es findet keine automatische FSRS-Migration statt.';
+            /* DER SATZ WIRD ZUR WAHL (E303). Hier stand: „SM-2 bleibt der Standard.
+               Es findet keine automatische FSRS-Migration statt." Beides gilt
+               weiter — nur gibt es das zweite Verfahren jetzt wirklich, und dann
+               ist eine Auskunft ohne Griff eine Anzeige ohne Knopf (§47). */
+            const algorithm = document.createElement('div');
+            algorithm.className = 'lern-verfahren';
+            const jetzt = String(Store.getMeta('lernVerfahren', 'sm2'));
+            const titel = document.createElement('p');
+            titel.style.fontSize = '13px';
+            titel.style.margin = '0 0 6px';
+            titel.textContent = 'Lernplan';
+            const reihe = document.createElement('div');
+            reihe.style.display = 'flex';
+            reihe.style.gap = '6px';
+            reihe.style.flexWrap = 'wrap';
+            const satz = document.createElement('p');
+            satz.style.color = 'var(--text-dim)';
+            satz.style.fontSize = '12px';
+            satz.style.margin = '8px 0 0';
+            const satzSetzen = (art) => {
+                satz.textContent = art === 'fsrs'
+                    ? 'FSRS rechnet, wie wahrscheinlich du eine Karte noch kannst, und ' +
+                        'setzt den Termin dorthin, wo sie unter deine Zielrate fällt. ' +
+                        'Schon geplante Termine bleiben, wie sie sind — umgestellt wird ' +
+                        'jede Karte erst bei ihrer nächsten Antwort, und im Verlauf steht ' +
+                        'dann, dass ihr Startwert aus SM-2 geschätzt wurde.'
+                    : 'SM-2 ist das Verfahren von Anki: leichter beantwortet = längerer ' +
+                        'Abstand. Es bleibt die Vorgabe, und es findet keine automatische ' +
+                        'Umstellung statt.';
+            };
+            const WAHL = [['sm2', 'SM-2 (Anki)'], ['fsrs', 'FSRS 4.5']];
+            for (const [wert, name] of WAHL) {
+                const k = document.createElement('button');
+                k.type = 'button';
+                k.className = 'lern-verfahren-knopf' + (jetzt === wert ? ' on' : '');
+                k.textContent = name;
+                k.setAttribute('aria-pressed', jetzt === wert ? 'true' : 'false');
+                k.dataset.verfahren = wert;
+                k.addEventListener('click', () => {
+                    Store.setMeta('lernVerfahren', wert);
+                    reihe.querySelectorAll('[data-verfahren]').forEach(x => {
+                        const an = x.dataset.verfahren === wert;
+                        x.classList.toggle('on', an);
+                        x.setAttribute('aria-pressed', an ? 'true' : 'false');
+                    });
+                    satzSetzen(wert);
+                    UI.toast(wert === 'fsrs' ? 'Ab jetzt plant FSRS' : 'Ab jetzt plant SM-2');
+                });
+                reihe.appendChild(k);
+            }
+            satzSetzen(jetzt);
+            algorithm.append(titel, reihe, satz);
             view.body.append(grid, exam, explanation, actions, details, topicSection(stats.topics), next, algorithm);
         };
         const renderSession = () => {

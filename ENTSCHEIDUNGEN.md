@@ -22888,3 +22888,86 @@ eigener Griff, ein Escape — es schliesst genau eines.
 Fiele diese Reihenfolge einmal anders aus, wäre es die zwei Zeilen wert. Sie
 jetzt zu schreiben hiesse, eine Vorsichtsmassnahme gegen einen Fall zu bauen,
 den es nicht gibt — und niemand könnte sie rot bekommen.
+
+
+E303 — FSRS: der Planer weiss, was du noch kannst (Redurs Punkt 8)
+================================================================================
+1. September 2026
+
+Redurs Punkt 8: „FSRS additiv."
+
+Redion plant Karteikarten seit jeher mit SM-2, dem Verfahren von Anki. Es
+führt zwei Zahlen je Karte: einen Abstand und eine „Leichtigkeit". Was es
+NICHT weiss, ist, wie wahrscheinlich man eine Karte gerade noch kann — es
+schreibt einen Abstand fort und hofft. Wer eine Karte nach drei Monaten
+wiedersieht und sie kann, bekommt denselben Zuschlag wie jemand, der sie nach
+drei Tagen konnte.
+
+FSRS führt drei Zahlen: STABILITÄT (nach wie vielen Tagen ist die Erinnerung
+auf 90 % gefallen), SCHWIERIGKEIT (wie zäh ist diese Karte für diesen
+Menschen) und daraus die ABRUFBARKEIT zu jedem Zeitpunkt. Der nächste Termin
+ist dann keine Fortschreibung, sondern die Antwort auf eine Frage: wann fällt
+die Erinnerung unter das, was ich noch will?
+
+
+Von Hand, nicht als Paket
+--------------------------------------------------------------------------------
+`ts-fsrs` wäre eine Abhängigkeit für siebzehn Gewichte und zwei Dutzend Zeilen
+Rechnung (§6). Die Formeln stehen offen; die Rechnung steht in
+`src/core/learning/fsrs.ts` — rein, ohne Uhr, ohne Ablage, ohne DOM. Die
+verstrichene Zeit kommt als Zahl herein.
+
+Das ist bei einem Verfahren, das über MONATE wirkt, nicht Kür, sondern die
+einzige Möglichkeit, es überhaupt zu prüfen: test297 rechnet zweihundert
+Antworten durch und misst, dass nichts aus seinen Grenzen läuft — ohne
+Browser, in Millisekunden.
+
+
+Additiv heisst additiv
+--------------------------------------------------------------------------------
+SM-2 bleibt die Vorgabe. Eine Karte wechselt das Verfahren nur, wenn ein
+Mensch den Schalter umlegt, und auch dann wird KEIN geplanter Termin
+nachträglich verschoben — umgestellt wird jede Karte erst bei ihrer nächsten
+Antwort.
+
+Der Übergang wird protokolliert. Eine Karte mit SM-2-Vergangenheit hat keine
+Stabilität; sie wird aus dem letzten Abstand GESCHÄTZT, und im Verlauf steht
+dann `uebergang: true`. Damit lässt sich später sagen, ab wann die Zahlen
+gerechnet und ab wann sie geraten sind — ohne diesen Vermerk sähe eine
+geschätzte Stabilität aus wie eine gemessene.
+
+`ease` und `wdh` bleiben stehen, solange FSRS läuft. Wer zurückschaltet,
+landet auf seinem letzten SM-2-Stand statt auf der Vorgabe.
+
+
+Zwei Fehler, und beide fand die Prüfung
+--------------------------------------------------------------------------------
+1. DIE FORMEL VON FSRS 5 MIT DEN GEWICHTEN VON 4.5. Die Schwierigkeit einer
+   neuen Karte rechnet 4.5 linear (`w4 - (G-3)*w5`), 5 exponentiell
+   (`w4 - e^(w5*(G-1)) + 1`) — und die zwei Formeln gehören zu zwei
+   verschiedenen Gewichtssätzen (siebzehn gegen neunzehn). Gemischt ergab das
+   für „gut" und „leicht" beide Male den Anschlag 1: 5,16 - e^2,46 + 1 = -5,5.
+   Jede neue Karte wäre als kinderleicht eingestuft worden, und ihre Abstände
+   wären sofort auseinandergelaufen.
+
+   Aufgefallen ist es an einer Behauptung über die REIHENFOLGE — „leicht ist
+   die kleinste Schwierigkeit" —, nicht an einer über eine Zahl. Eine Prüfung,
+   die nur Zahlen vergleicht, hätte hier nichts zu vergleichen gehabt.
+
+2. DER BLOCK HÄTTE GELOGEN. `Store.updateBlock(k.id, { …, lernAlgorithmus:
+   'sm2' })` stand fest verdrahtet. Eine Karte wäre nach FSRS geplant worden
+   und hätte am Block SM-2 behauptet. Gefunden vom Anschluss-Abschnitt des
+   Prüflaufs, nicht beim Schreiben.
+
+Und eine Rechnung, die ich zuerst hingeschrieben und dann nachgerechnet habe:
+die Umrechnung von SM-2s `ease` auf FSRS' Schwierigkeit. `11 - ease * 3,5`
+gab für eine ganz gewöhnliche Karte mit ease 2,5 die Schwierigkeit 2,25 —
+also „fast geschenkt". Zwei bekannte Punkte auszurechnen (ease 2,5 = die
+Mitte 5, ease 1,3 = der Anschlag 10) ist billiger, als es hinterher zu merken.
+
+
+Geprüft
+--------------------------------------------------------------------------------
+test297 50/50 — Kern und Anschluss, ohne Browser. Mitgelaufen: test89 98/98,
+test202 84/84, test204 41/41, test283 35/35.
+typecheck grün · sw v64 · Einzeldatei 7721 KB.

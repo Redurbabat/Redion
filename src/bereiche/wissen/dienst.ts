@@ -94,7 +94,29 @@ const WissenDienst = (() => {
   /* --------------------------------------------------------------------------
    * DAS WIEDERHOLUNGSVERFAHREN der Karteikarten (SM-2, wie Anki)
    * ----------------------------------------------------------------------- */
-  /** SM-2 in kurz: leichter beantwortet = längerer Abstand. */
+  /** Welches Verfahren gilt gerade? SM-2, solange niemand etwas anderes sagt. */
+  const verfahren = (): 'sm2' | 'fsrs' =>
+    (typeof Fsrs !== 'undefined' && Store.getMeta('lernVerfahren', 'sm2') === 'fsrs')
+      ? 'fsrs' : 'sm2';
+
+  /**
+   * SM-2 in kurz: leichter beantwortet = längerer Abstand.
+   *
+   * SEIT E303 GIBT ES EIN ZWEITES VERFAHREN, und drei Dinge daran sind
+   * Absicht:
+   *
+   *   SM-2 BLEIBT DIE VORGABE. Eine Karte wechselt nur, wenn ein Mensch es
+   *   sagt. Ein Verfahren, das rückwirkend alle Termine verschiebt, ist genau
+   *   die Sorte Änderung, die man erst merkt, wenn die Prüfung vorbei ist.
+   *
+   *   DER ÜBERGANG WIRD PROTOKOLLIERT. Eine Karte mit SM-2-Vergangenheit hat
+   *   keine Stabilität; sie wird aus dem letzten Abstand GESCHÄTZT. Das steht
+   *   als `uebergang: true` im Verlauf, damit man später weiss, ab wann die
+   *   Zahlen gerechnet und ab wann sie geraten sind.
+   *
+   *   `ease` UND `wdh` BLEIBEN STEHEN, solange FSRS läuft. Wer zurückschaltet,
+   *   landet auf seinem letzten SM-2-Stand statt auf der Vorgabe.
+   */
   const planen = (k: any, note: number): any => {
     const sr = Object.assign({ ease: 2.5, intervall: 0, wdh: 0 }, k.sr || {});
     /* Der Verlauf ist additiv. Die Rechnung darunter bleibt absichtlich
@@ -107,7 +129,33 @@ const WissenDienst = (() => {
       ease: Number(sr.ease) || 2.5,
       repetitions: Number(sr.wdh) || 0
     };
-    if (note < 3) { sr.wdh = 0; sr.intervall = note === 1 ? 0 : 1; }
+    const art = verfahren();
+    let uebergang = false;
+    if (art === 'fsrs') {
+      /* Wie viele Tage sind seit der letzten Antwort vergangen? Ohne letzte
+         Antwort ist es die erste — dann kennt der Kern den Fall selbst. */
+      const zuletzt = sr.zuletzt ? new Date(String(sr.zuletzt)).getTime() : 0;
+      const tage = zuletzt ? Math.max(0, (Date.now() - zuletzt) / 86400000) : 0;
+      let stand = (sr.fsrs && typeof sr.fsrs === 'object' &&
+                   Number(sr.fsrs.stabilitaet) > 0)
+        ? { stabilitaet: Number(sr.fsrs.stabilitaet),
+            schwierigkeit: Number(sr.fsrs.schwierigkeit) || 5 }
+        : null;
+      if (!stand && (Number(sr.intervall) > 0 || Number(sr.wdh) > 0)) {
+        stand = Fsrs.ausSm2(Number(sr.intervall) || 1, Number(sr.ease) || 2.5);
+        uebergang = true;
+      }
+      const ziel = Math.min(0.97, Math.max(0.8,
+        Number(Store.getMeta('lernZielrate', 0.9)) || 0.9));
+      const erg = Fsrs.antworten(stand, Math.max(1, Math.min(4, Number(note))) as any,
+        tage, ziel);
+      sr.fsrs = { stabilitaet: erg.stand.stabilitaet,
+                  schwierigkeit: erg.stand.schwierigkeit };
+      /* Der Abstand wird auf ganze Tage gerundet, weil ein Termin ein Tag
+         ist. Unter einem Tag heisst „gleich nochmal" — dieselben zehn
+         Minuten wie bei SM-2, damit sich der Rest der App nicht ändert. */
+      sr.intervall = erg.abstandTage < 1 ? 0 : Math.round(erg.abstandTage);
+    } else if (note < 3) { sr.wdh = 0; sr.intervall = note === 1 ? 0 : 1; }
     else {
       sr.wdh++;
       sr.intervall = sr.wdh === 1 ? 1 : sr.wdh === 2 ? 6 : Math.round(sr.intervall * sr.ease);
@@ -134,7 +182,9 @@ const WissenDienst = (() => {
       version: 1,
       at: sr.zuletzt,
       rating: Number(note),
-      algorithm: 'sm2',
+      algorithm: art,
+      ...(uebergang ? { uebergang: true } : {}),
+      ...(art === 'fsrs' ? { fsrs: { ...sr.fsrs } } : {}),
       lapse: note < 3,
       before: vorher,
       after: {
@@ -148,7 +198,10 @@ const WissenDienst = (() => {
       .sort((a, b) => String(a.at || '').localeCompare(String(b.at || '')) || String(a.id || '').localeCompare(String(b.id || '')))
       .slice(-500);
     const reviewVerlauf = Object.fromEntries(behalten.map(entry => [String(entry.id), entry]));
-    Store.updateBlock(k.id, { sr, reviewVerlauf, lernAlgorithmus: 'sm2' });
+    /* `lernAlgorithmus` stand hier fest auf `'sm2'` — und wäre seit E303
+       eine Lüge am Block gewesen: die Karte lief nach FSRS und behauptete
+       SM-2. Gefunden vom Anschluss-Prüflauf, nicht beim Schreiben. */
+    Store.updateBlock(k.id, { sr, reviewVerlauf, lernAlgorithmus: art });
     return sr;
   };
 
