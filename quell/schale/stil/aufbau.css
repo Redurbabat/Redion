@@ -846,3 +846,14 @@ body[data-ruhig="an"] #topbar [data-ruhig="mehr"]{ display:none }
    Er darf nicht schrumpfen: sonst quetscht die rechte Gruppe die Reiter
    zusammen, statt dass die Zeile rollt. */
 .mb-tabs{ display:flex; align-items:stretch; gap:var(--space-1); flex:0 0 auto }
+
+/* ============================================================================
+ * L108 — die Zeilengriffe im Baum sind am Telefon sonst nicht da
+ * ----------------------------------------------------------------------------
+ * `.row .act` steht auf `opacity:0`; zurück kommt es allein über
+ * `.row:hover`. Die Ruhig-Fassungen weiter unten (Zeile 785 ff.) haben
+ * `:focus-visible` als zweiten Weg — dieser Grundfall hatte keinen.
+ * ==========================================================================*/
+@media(hover:none){
+  .row .act{opacity:1}
+}

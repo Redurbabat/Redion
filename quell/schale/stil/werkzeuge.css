@@ -977,3 +977,25 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
   border-color:var(--accent)}
 .lern-verfahren-knopf:focus-visible{outline:2px solid var(--accent);
   outline-offset:2px}
+
+/* ============================================================================
+ * L108 — der Knopfblock liess sich am Telefon nicht einstellen
+ * ----------------------------------------------------------------------------
+ * `.knopf-set` — das Zahnrad eines Knopf-Blocks — stand auf `opacity:0` und
+ * kam allein über `.knopf-blk:hover` zurück. Wer den Block auf dem Telefon
+ * anlegte, konnte ihm nie sagen, was er tun soll.
+ * ==========================================================================*/
+@media(hover:none){
+  .knopf-blk .knopf-set{opacity:1}
+}
+
+/* ============================================================================
+ * L108 (Nachtrag) — die Lineal-Werkzeuge waren am Telefon auch nicht da
+ * ----------------------------------------------------------------------------
+ * `.stab-tools{opacity:0}` und zurück allein über `.stab-wrap:hover`. Der
+ * Wächter (test303) hat diesen neunten Fall gefunden, nachdem die ersten
+ * acht schon zu waren — genau dafür ist er da.
+ * ==========================================================================*/
+@media(hover:none){
+  .stab-wrap .stab-tools{opacity:1}
+}

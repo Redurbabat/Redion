@@ -584,3 +584,19 @@ tr.mail-jetzt > td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
   }
   .einst-inhalt h2{ padding-right:44px }
 }
+
+/* ============================================================================
+ * L108 — das Kästchen, das man erst sieht, wenn man es angehakt hat
+ * ----------------------------------------------------------------------------
+ * `input.zeilen-aus` steht auf `display:none`. Sichtbar wird es über
+ * `tr:hover` — oder über `:checked`. Der zweite Weg hilft nicht: um zu
+ * haken, muss man es sehen. Am Telefon war die Zeilenauswahl damit
+ * unerreichbar.
+ *
+ * `.stab-griff` sind die Lineale der Zeichenfläche
+ * (`bloecke/arten/zeichenflaeche.ts:1166`); sie standen auf `opacity:0`.
+ * ==========================================================================*/
+@media(hover:none){
+  td.td-aus input.zeilen-aus{display:inline}
+  .stab-griff{opacity:.75}
+}

@@ -2196,3 +2196,15 @@ node pruefungen/lauf/test105.mjs
 **Damit sind Redurs zwölf Punkte alle abgearbeitet** — 1 (E286), 2 (E287),
 3 (E285), 4 (E288), 5 (E284), 6 (E289), 7 (E308), 8 (E303), 9 (E307),
 10 (E290), 11 (E305), 12 (E306).
+* E309 (L108 geschlossen): Neun Griffe, die es am Telefon nicht gab. Von 327
+  `:hover`-Regeln machen 39 etwas sichtbar; bei neun war der Grundzustand
+  ganz weg und `:hover` der einzige Weg zurück — darunter „⤢ Öffnen" in der
+  Datenbanktabelle, die Werkzeugleiste eines Bildes (ein Bild war am Telefon
+  unveränderlich), das Anheften einer KI-Antwort und das Zahnrad eines
+  Knopf-Blocks. Alle neun haben jetzt einen `@media(hover:none)`-Zweig.
+  test303 neu (16); §6 misst in der echten Seite in zwei Browser-
+  Zusammenhängen — am Telefon alle neun da, am Rechner alle neun weg.
+  Zwei Fehler steckten im Wächter selbst: sein Regelleser zählte
+  `@keyframes` als Ende eines Medienzweigs, und seine erste Messung lief
+  gegen ein selbst gebautes HTML, in dem eine nachweislich passende Regel
+  ohne erkennbaren Grund nicht wirkte.

@@ -1829,6 +1829,17 @@ body[data-ruhig="an"] #topbar [data-ruhig="mehr"]{ display:none }
    zusammen, statt dass die Zeile rollt. */
 .mb-tabs{ display:flex; align-items:stretch; gap:var(--space-1); flex:0 0 auto }
 
+/* ============================================================================
+ * L108 — die Zeilengriffe im Baum sind am Telefon sonst nicht da
+ * ----------------------------------------------------------------------------
+ * `.row .act` steht auf `opacity:0`; zurück kommt es allein über
+ * `.row:hover`. Die Ruhig-Fassungen weiter unten (Zeile 785 ff.) haben
+ * `:focus-visible` als zweiten Weg — dieser Grundfall hatte keinen.
+ * ==========================================================================*/
+@media(hover:none){
+  .row .act{opacity:1}
+}
+
 </style>
 <style>
 /* ===== quell/schale/stil/anatomie.css ===== */
@@ -3209,6 +3220,28 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
 .lern-verfahren-knopf:focus-visible{outline:2px solid var(--accent);
   outline-offset:2px}
 
+/* ============================================================================
+ * L108 — der Knopfblock liess sich am Telefon nicht einstellen
+ * ----------------------------------------------------------------------------
+ * `.knopf-set` — das Zahnrad eines Knopf-Blocks — stand auf `opacity:0` und
+ * kam allein über `.knopf-blk:hover` zurück. Wer den Block auf dem Telefon
+ * anlegte, konnte ihm nie sagen, was er tun soll.
+ * ==========================================================================*/
+@media(hover:none){
+  .knopf-blk .knopf-set{opacity:1}
+}
+
+/* ============================================================================
+ * L108 (Nachtrag) — die Lineal-Werkzeuge waren am Telefon auch nicht da
+ * ----------------------------------------------------------------------------
+ * `.stab-tools{opacity:0}` und zurück allein über `.stab-wrap:hover`. Der
+ * Wächter (test303) hat diesen neunten Fall gefunden, nachdem die ersten
+ * acht schon zu waren — genau dafür ist er da.
+ * ==========================================================================*/
+@media(hover:none){
+  .stab-wrap .stab-tools{opacity:1}
+}
+
 </style>
 <style>
 /* ===== quell/schale/stil/ansichten.css ===== */
@@ -3393,6 +3426,21 @@ table.grid tr.unterzeile td{background:var(--bg-side)}
 .banner.fehler{background:var(--b-red); color:var(--text)}
 html[data-theme="light"] .banner{color:#37352f}
 
+
+/* ============================================================================
+ * L108 — was nur beim Überfahren erscheint, gibt es am Telefon nicht
+ * ----------------------------------------------------------------------------
+ * `⤢ Öffnen` steht auf `opacity:0` und kommt allein über `tr:hover` zurück.
+ * Auf einem Tastgerät gibt es kein Überfahren: der Knopf ist dort nicht
+ * schwer zu finden, sondern gar nicht da — und er ist in der Tabelle der
+ * Weg in die Vorschau (`datenbanken/steuerung.ts:868`).
+ *
+ * .75 und nicht 1: er soll sichtbar und antippbar sein, ohne dass in jeder
+ * Zeile ein Knopf schreit.
+ * ==========================================================================*/
+@media(hover:none){
+  table.grid td.tt .tt-auf{opacity:.75}
+}
 
 </style>
 <style>
@@ -3982,6 +4030,22 @@ tr.mail-jetzt > td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
     width:44px; height:44px; font-size:18px; z-index:2;
   }
   .einst-inhalt h2{ padding-right:44px }
+}
+
+/* ============================================================================
+ * L108 — das Kästchen, das man erst sieht, wenn man es angehakt hat
+ * ----------------------------------------------------------------------------
+ * `input.zeilen-aus` steht auf `display:none`. Sichtbar wird es über
+ * `tr:hover` — oder über `:checked`. Der zweite Weg hilft nicht: um zu
+ * haken, muss man es sehen. Am Telefon war die Zeilenauswahl damit
+ * unerreichbar.
+ *
+ * `.stab-griff` sind die Lineale der Zeichenfläche
+ * (`bloecke/arten/zeichenflaeche.ts:1166`); sie standen auf `opacity:0`.
+ * ==========================================================================*/
+@media(hover:none){
+  td.td-aus input.zeilen-aus{display:inline}
+  .stab-griff{opacity:.75}
 }
 
 </style>
@@ -12704,6 +12768,25 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 .blk[data-herkunft="ki"]::before{background:#8b6ce0}
 .blk[data-herkunft="quelle"]::before{background:#4a90d9}
 .blk[data-herkunft="fremd"]::before{background:#d99a4a}
+
+/* ============================================================================
+ * L108 — drei Griffe, die es auf einem Tastgerät nicht gab
+ * ----------------------------------------------------------------------------
+ * Alle drei standen auf `display:none` beziehungsweise `opacity:0` und kamen
+ * allein über `:hover` zurück. Ohne Maus heisst das: gar nicht.
+ *
+ *   .bild-werk   die Werkzeugleiste eines Bildes. Am Telefon war ein Bild
+ *                damit unveränderlich — kein Zuschnitt, keine Beschriftung.
+ *   .bild-griff  der Griff zum Ziehen der Breite.
+ *   .ki-pin      Anheften und Wegnehmen einer KI-Antwort. `.ki-pin.on` zeigt
+ *   .ki-weg      sich zwar von selbst — aber erst, NACHDEM man angeheftet
+ *                hat, und genau das ging nicht.
+ * ==========================================================================*/
+@media(hover:none){
+  .bild-rahmen .bild-werk{display:flex}
+  .bild-rahmen .bild-griff{opacity:.5}
+  .ki-chat .ki-pin, .ki-chat .ki-weg{display:inline-flex}
+}
 
 </style>
 <!-- DIE PREMIUM-SCHALE (E272). Sie steht ABSICHTLICH als letzte: sie ordnet,

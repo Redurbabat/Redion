@@ -179,3 +179,18 @@ table.grid tr.unterzeile td{background:var(--bg-side)}
 .banner.fehler{background:var(--b-red); color:var(--text)}
 html[data-theme="light"] .banner{color:#37352f}
 
+
+/* ============================================================================
+ * L108 — was nur beim Überfahren erscheint, gibt es am Telefon nicht
+ * ----------------------------------------------------------------------------
+ * `⤢ Öffnen` steht auf `opacity:0` und kommt allein über `tr:hover` zurück.
+ * Auf einem Tastgerät gibt es kein Überfahren: der Knopf ist dort nicht
+ * schwer zu finden, sondern gar nicht da — und er ist in der Tabelle der
+ * Weg in die Vorschau (`datenbanken/steuerung.ts:868`).
+ *
+ * .75 und nicht 1: er soll sichtbar und antippbar sein, ohne dass in jeder
+ * Zeile ein Knopf schreit.
+ * ==========================================================================*/
+@media(hover:none){
+  table.grid td.tt .tt-auf{opacity:.75}
+}

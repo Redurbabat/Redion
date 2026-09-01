@@ -23388,3 +23388,110 @@ zweiten Rechenweg, und zweimal die Gegenprobe: im Kern UND im echten Fenster
 steht bei gewöhnlicher Last kein Wort.
 
 typecheck grün · sw v69 · Einzeldatei 7758 KB.
+
+
+================================================================================
+E309 — Neun Griffe, die es am Telefon nicht gab (L108 geschlossen)
+================================================================================
+1. September 2026
+
+E300 fand es an einer Kleinigkeit: im Telefonbild fehlte das Schliesskreuz
+eines Reiters, während der Prüflauf an derselben Stelle `opacity: 1` mass.
+Beide hatten recht — sie sahen zwei verschiedene Geräte an. `bilder.mts`
+hatte das Telefon nur über die Bildgrösse nachgestellt, also galt dort
+`hover: hover`.
+
+L108 stellte die Frage, die daraus folgt: WIE VIELE solche Stellen gibt es?
+Eine gezählte Antwort gab es nicht. Jetzt gibt es sie.
+
+
+Was gezählt wurde, und was davon zählt
+--------------------------------------------------------------------------------
+
+327 Regeln in `quell/schale/stil/` enthalten `:hover`. 39 davon machen
+überhaupt etwas sichtbar. Die meisten sind harmlos: ein Griff, der von 55 %
+auf 100 % geht, ist ohne Maus einfach nur blasser.
+
+Eine FALLE ist es, wenn drei Dinge zusammenkommen:
+
+  1 · der Grundzustand ist ganz weg — `opacity:0`, `display:none`,
+      `visibility:hidden`,
+  2 · sichtbar wird es NUR über `:hover`,
+  3 · und es gibt keinen zweiten Weg: kein `:focus-visible`, keine
+      Zustandsklasse, kein Telefon-Zweig.
+
+Dann ist der Griff auf einem Tastgerät nicht schwer zu finden, sondern nicht
+vorhanden. Neunmal war er das:
+
+    .tt-auf      „⤢ Öffnen" in der Datenbanktabelle — der Weg in die
+                 Vorschau. Am Telefon gab es ihn nicht.
+    .act         die Zeilengriffe im Baum.
+    .bild-werk   die Werkzeugleiste eines Bildes. Ein Bild war am Telefon
+                 damit unveränderlich — kein Zuschnitt, keine Beschriftung.
+    .bild-griff  der Griff für die Breite.
+    .ki-pin      Anheften und Wegnehmen einer KI-Antwort. `.ki-pin.on` zeigt
+    .ki-weg      sich zwar von selbst — aber erst, NACHDEM man angeheftet
+                 hat, und genau das ging nicht.
+    .zeilen-aus  das Kästchen der Zeilenauswahl in den Einstellungen. Es
+                 zeigt sich auch bei `:checked` — was nicht hilft: um zu
+                 haken, muss man es sehen.
+    .stab-griff  die Lineale der Zeichenfläche.
+    .stab-tools  ihre Werkzeuge. Diesen neunten fand der Wächter selbst,
+                 nachdem die ersten acht schon zu waren — genau dafür ist er
+                 da.
+    .knopf-set   das Zahnrad eines Knopf-Blocks. Wer den Block am Telefon
+                 anlegte, konnte ihm nie sagen, was er tun soll.
+
+Die Reparatur ist überall dieselbe und die kleinstmögliche: ein
+`@media(hover:none)`-Zweig, der den Griff sichtbar macht. Am Rechner ändert
+sich nichts.
+
+
+Was KEINE Falle ist, und warum das wichtig war
+--------------------------------------------------------------------------------
+
+Drei Kandidaten sind Entscheidungen, keine Versehen: `#side-griff`,
+`.blk > .handles` und `.fh-groesse` werden im Telefon-Zweig ausdrücklich
+WEGGENOMMEN. Eine Seitenleiste am Telefon in der Breite zu ziehen ergibt
+keinen Sinn.
+
+Der Wächter zählt einen `max-width`-Zweig deshalb mit — sowohl wenn er den
+Griff zeigt als auch wenn er ihn wegnimmt. `max-width` ist nicht dasselbe
+wie `hover:none`, aber Redion schreibt seinen Telefon-Zweig fast überall so,
+und die Frage lautet nicht „ist es exakt ein Tastgerät", sondern „hat für
+dieses Element überhaupt jemand ans Telefon gedacht".
+
+
+Zwei Fehler im Wächter selbst, und beide waren die gefährliche Sorte
+--------------------------------------------------------------------------------
+
+1 · Der Regelleser legte nur `@media` auf den Stapel, zählte aber JEDE
+    schliessende Klammer als Ende. Ein `@keyframes einblenden{…}` mitten im
+    Telefon-Zweig beendete ihn damit vorzeitig — `#side-griff{display:none}`
+    stand danach scheinbar für alle Geräte da, und der Lauf meldete eine
+    Falle, die keine ist. Jetzt kommt jede geschweifte At-Regel auf den
+    Stapel.
+
+2 · Die Browser-Messung lief zuerst gegen ein kleines, selbst gebautes
+    HTML, das nur die Stildateien lädt. Es war schneller — und es log:
+    `table.grid td.tt .tt-auf` stand dort als Regel im Blatt, `el.matches()`
+    sagte ja, `r.style.opacity` war „0", und die berechnete Deckkraft war
+    trotzdem 1. Dieselbe Erklärung als `<style>` im Kopf wirkte sofort.
+    Woran es lag, ist bis heute nicht geklärt.
+
+    Genau deshalb ist das Gerüst weg. Ein Wächter, dessen Messung man nicht
+    erklären kann, ist keine Messung — er ist eine zweite Sache, die man
+    prüfen müsste. Gemessen wird jetzt in `index.html`, also in dem Stil,
+    den Redur wirklich sieht.
+
+
+Geprüft
+--------------------------------------------------------------------------------
+test303 neu, 16/16. §2 und §3 sind Gegenproben am erfundenen Fall: eine
+gebaute Falle WIRD gemeldet (in beiden Fassungen, `opacity` und `display`),
+und jede der drei Rettungsarten lässt sie verschwinden. §6 misst in der
+echten Seite, in zwei Browser-Zusammenhängen: am Telefon sind alle neun
+Griffe da, am Rechner ohne Maus alle neun weg. Ohne den zweiten Teil hiesse
+„am Telefon sichtbar" womöglich nur „immer sichtbar".
+
+Einzeldatei 7762 KB.

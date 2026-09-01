@@ -4155,9 +4155,22 @@ Beide hatten recht. Sie sahen zwei verschiedene Geräte an.
     nicht mehr. Sie liegen ohnehin nicht im Verzeichnis (§55.4), aber die
     Schlüsse, die aus ihnen gezogen wurden, stehen in der Doku.
 
-Der kleinste nächste Schritt wäre ein Wächter, der jede `:hover`-Regel in
-`quell/schale/stil/` daraufhin ansieht, ob sie etwas SICHTBAR macht — also
-`opacity`, `display` oder `visibility` setzt — und nicht nur färbt. Nur die
+GESCHLOSSEN am 1. September 2026 mit E309. Der Wächter unten wurde gebaut
+(test303), hat NEUN Fallen gefunden, und alle neun haben einen
+`@media(hover:none)`-Zweig bekommen: `.tt-auf`, `.act`, `.bild-werk`,
+`.bild-griff`, `.ki-pin`/`.ki-weg`, `.zeilen-aus`, `.stab-griff`,
+`.stab-tools`, `.knopf-set`. Von 327 `:hover`-Regeln machen 39 etwas
+sichtbar; die übrigen 30 heben nur hervor, was ohnehin dasteht, oder nehmen
+den Griff am Telefon ausdrücklich weg — beides ist eine Entscheidung.
+
+Der zweite Punkt oben bleibt richtig und ist nicht nachholbar: Schlüsse aus
+Bildern vor dem 1. September stehen weiter in der Doku. Sie fallen auf,
+sobald jemand dieselbe Stelle noch einmal ansieht.
+
+Der Wächter, wie er geplant war und jetzt steht: er sieht jede
+`:hover`-Regel in `quell/schale/stil/` daraufhin an, ob sie etwas SICHTBAR
+macht — also `opacity`, `display` oder `visibility` setzt — und nicht nur
+färbt. Nur die
 erste Sorte kann auf einem Telefon einen Griff verstecken.
 
 Gefunden am 1. September 2026 (beim Bau von E300).
