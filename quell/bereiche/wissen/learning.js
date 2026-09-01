@@ -131,13 +131,42 @@ const Learning = (() => {
      * konsekutive Wiederholungen = 100 %. Ein Fehler setzt `wdh` wie bisher
      * zurück und wird dadurch sofort sichtbar, ohne eine zweite Fortschrittszahl.
      */
+    /**
+     * Die Kompetenz je Thema, aus `core/learning/kompetenz.ts`.
+     *
+     * Der Schlüssel ist derselbe wie in `topicProgress` — `topicLabel(card)`
+     * kleingeschrieben —, damit sich beide ohne zweite Zuordnung treffen.
+     * Fehlt das Modul, kommt eine leere Karte zurück und die Anzeige lässt
+     * die Zahl weg, statt eine zu erfinden.
+     */
+    const kompetenzJeThema = (allCards, now) => {
+        const K = window.Kompetenz;
+        if (!K || typeof K.jeThema !== 'function')
+            return new Map();
+        const liste = allCards.map((card) => ({
+            id: String(card?.id || ''),
+            thema: topicLabel(card),
+            titel: String(card?.text || '').slice(0, 60),
+            sr: card?.sr,
+            reviewVerlauf: card?.reviewVerlauf
+        })).filter(c => c.id);
+        const out = new Map();
+        for (const e of K.jeThema(liste, { jetzt: now }))
+            out.set(String(e.thema).toLocaleLowerCase('de-CH'), e);
+        return out;
+    };
     const topicProgress = (allCards = cards(), now = Date.now()) => {
+        const kompetenz = kompetenzJeThema(allCards, now);
         const groups = new Map();
         allCards.forEach(card => {
             const label = topicLabel(card);
             const id = label.toLocaleLowerCase('de-CH');
+            /* Die vier E289-Felder stehen hier mit, weil der Sammelbehälter denselben
+               Typ trägt wie das Ergebnis. Gefüllt werden sie erst unten aus der
+               Kompetenzrechnung — hier sind es nur Platzhalter. */
             const group = groups.get(id) || {
-                id, label, total: 0, learned: 0, stable: 0, due: 0, errors: 0, progress: 0, points: 0
+                id, label, total: 0, learned: 0, stable: 0, due: 0, errors: 0, progress: 0,
+                belege: 0, sicherheit: 0, stufe: '', kompetenzSatz: '', points: 0
             };
             const repetitions = Math.max(0, Math.floor(Number(card?.sr?.wdh) || 0));
             group.total++;
@@ -152,16 +181,25 @@ const Learning = (() => {
             group.points += Math.min(2, repetitions);
             groups.set(id, group);
         });
-        return [...groups.values()].map(group => ({
-            id: group.id,
-            label: group.label,
-            total: group.total,
-            learned: group.learned,
-            stable: group.stable,
-            due: group.due,
-            errors: group.errors,
-            progress: group.total ? Math.round(group.points / (group.total * 2) * 100) : 0
-        })).sort((left, right) => right.errors - left.errors || right.due - left.due ||
+        return [...groups.values()].map(group => {
+            const k = kompetenz.get(group.id);
+            return {
+                id: group.id,
+                label: group.label,
+                total: group.total,
+                learned: group.learned,
+                stable: group.stable,
+                due: group.due,
+                errors: group.errors,
+                progress: group.total ? Math.round(group.points / (group.total * 2) * 100) : 0,
+                belege: k ? k.belege : 0,
+                /* Nur wenn genug Belege da sind. Sonst 0 UND leere Stufe — eine
+                   Zahl ohne Grundlage ist schlimmer als keine. */
+                sicherheit: k && k.genug ? Math.round(k.sicherheit * 100) : 0,
+                stufe: k ? k.stufe : '',
+                kompetenzSatz: k ? k.satz : ''
+            };
+        }).sort((left, right) => right.errors - left.errors || right.due - left.due ||
             left.label.localeCompare(right.label, 'de-CH'));
     };
     const nextExam = (nowValue = new Date()) => {
@@ -232,6 +270,14 @@ const Learning = (() => {
     const due = () => dailyQueue(Number.MAX_SAFE_INTEGER).all;
     const statistics = (queue = dailyQueue()) => {
         const allCards = cards();
+        /* E289: dieselbe Rechnung wie je Thema, nur über alles. */
+        const K = window.Kompetenz;
+        const gesamtKompetenz = K && typeof K.gesamt === 'function'
+            ? K.gesamt(allCards.map((card) => ({
+                id: String(card?.id || ''), thema: 'alles',
+                sr: card?.sr, reviewVerlauf: card?.reviewVerlauf
+            })).filter((c) => c.id))
+            : null;
         const logs = allCards.flatMap(reviewLog);
         const today = localDay(null);
         const todayLogs = logs.filter(entry => localDay(entry.at) === today);
@@ -252,6 +298,10 @@ const Learning = (() => {
             againRate: rated.length ? Math.round(againReviews / rated.length * 100) : 0,
             againRateToday: todayRated.length ? Math.round(todayAgain / todayRated.length * 100) : 0,
             successRate: rated.length ? Math.round(successful / rated.length * 100) : 0,
+            belege: gesamtKompetenz ? gesamtKompetenz.belege : rated.length,
+            sicherheit: gesamtKompetenz && gesamtKompetenz.genug
+                ? Math.round(gesamtKompetenz.sicherheit * 100) : 0,
+            kompetenzSatz: gesamtKompetenz ? gesamtKompetenz.satz : '',
             nextAt: queue.nextAt,
             topics: topicProgress(allCards)
         };
@@ -673,6 +723,9 @@ const Learning = (() => {
             const percent = document.createElement('span');
             percent.textContent = topic.progress + ' %';
             percent.style.whiteSpace = 'nowrap';
+            /* Die Zahl sagt nicht, was sie misst — der Titel schon (E289). */
+            percent.title = 'Abdeckung: wie viele Karten mindestens zweimal sassen. ' +
+                'Keine Aussage darüber, wie sicher der Stoff sitzt.';
             heading.append(label, percent);
             const progress = document.createElement('progress');
             progress.max = 100;
@@ -683,7 +736,7 @@ const Learning = (() => {
             progress.style.margin = '8px 0 5px';
             const detail = document.createElement('small');
             detail.style.color = 'var(--text-dim)';
-            const parts = [topic.learned + ' von ' + topic.total + ' begonnen',
+            const parts = ['Abdeckung: ' + topic.learned + ' von ' + topic.total + ' begonnen',
                 topic.stable + ' stabil'];
             if (topic.due)
                 parts.push(topic.due + ' fällig');
@@ -691,6 +744,17 @@ const Learning = (() => {
                 parts.push(topic.errors + ' Fehler');
             detail.textContent = parts.join(' · ');
             row.append(heading, progress, detail);
+            /* E289: darunter die Aussage über das KÖNNEN, mit ihrer Grundlage.
+               Sie steht nur da, wenn es sie gibt — ein leerer Satz wäre eine
+               Zeile, die nichts sagt. */
+            if (topic.kompetenzSatz) {
+                const koennen = document.createElement('small');
+                koennen.style.display = 'block';
+                koennen.style.marginTop = '3px';
+                koennen.style.color = topic.stufe ? 'var(--text)' : 'var(--text-faint)';
+                koennen.textContent = topic.kompetenzSatz;
+                row.appendChild(koennen);
+            }
             list.appendChild(row);
         });
         section.appendChild(list);

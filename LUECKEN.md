@@ -3771,6 +3771,18 @@ nicht verlorengeht:
 Gefunden am 31. August 2026 (gemessene Bestandsaufnahme vor E284).
 
 ================================================================================
+
+--------------------------------------------------------------------------------
+NACHTRAG vom selben Tag: der Kalenderpunkt ist ERLEDIGT (E290).
+
+`wiederholungen()` liest jetzt die ganze Regel — BYDAY samt Ordnungszahl,
+BYMONTHDAY, BYMONTH, BYSETPOS, WKST — dazu EXDATE und RDATE, die der
+Einleser bis dahin nicht einmal aufgriff. Was übrig bleibt, wird GENANNT
+statt verschwiegen. test284 (49 Punkte).
+
+Offen aus diesem Abschnitt bleibt der zweite Fund: die Agentenrechte fragen
+die gerade offene Seite (`agenten.ts:773`) statt die Seite, um die es geht.
+
 L103 — Was die Auftragsmaschine (E286) noch nicht kann
 ================================================================================
 
@@ -3853,6 +3865,11 @@ Drei weitere Dinge, die E287 bewusst offenlässt:
 
 Gefunden am 31. August 2026 (beim Bau von E287).
 
+NACHTRAG (E289): Punkt 1 hat einen Ort bekommen. `KiBuch.stand()` steht
+weiterhin ohne Oberfläche da, aber die LERN-Statistik zeigt jetzt vor, wie
+eine ehrliche Zahl aussieht — mit ihrer Belegzahl daneben. Wer die
+KI-Kosten anzeigt, soll es genauso tun.
+
 
 ================================================================================
 L105 — Was die Lückenansicht (E288) noch nicht kann
@@ -3890,3 +3907,51 @@ L105 — Was die Lückenansicht (E288) noch nicht kann
    entfallen.
 
 Gefunden am 31. August 2026 (beim Bau von E288).
+
+
+================================================================================
+L106 — Was die Lern-Evidenz (E289) und der Kalender (E290) noch nicht können
+================================================================================
+
+**Zur Lern-Evidenz (E289):**
+
+1. **Die Karteikarten sind die einzige Quelle.** Prüfungsergebnisse,
+   Elektro-Aufgaben, der Lernpfad und die Simulationen sind auch Belege für
+   Können, und keiner davon zählt mit. `Kompetenz.jeThema` nimmt jede Liste
+   mit `sr` und `reviewVerlauf` — der Anschluss ist Arbeit an den
+   Bereichen, nicht am Kern.
+
+2. **Die Haltbarkeit steht nicht in der Anzeige.** Der Satz nennt sie
+   („davon dürfte heute noch 62 % sitzen"), aber es gibt keinen Balken, kein
+   Sortieren danach, keine Liste „was zuerst auffrischen". Genau das wäre
+   der Nutzen.
+
+3. **`fensterTage` wird nirgends benutzt.** Die Rechnung kann „nur die
+   letzten 90 Tage", und keine Aufrufstelle fragt danach. Für „bin ich
+   BESSER geworden" wäre es das richtige Werkzeug.
+
+4. **Kein Vergleich über Zeit.** Es gibt keinen Verlauf der Sicherheit,
+   also auch keine Antwort auf „geht es aufwärts". Das Protokoll trüge es
+   (500 Einträge je Karte), gerechnet wird es nicht.
+
+**Zum Kalender (E290):**
+
+5. **Keine Zeitzonen.** TZID wird gelesen und weitergereicht, nicht
+   umgerechnet. Ein Termin aus einem fremden Kalender in einer anderen
+   Zeitzone steht damit zur falschen Uhrzeit da. Das ist bewusst so
+   (eine halbe Zeitzonenrechnung ist schlimmer als keine), aber es ist eine
+   Lücke und keine Lösung.
+
+6. **VTODO wird nicht gelesen.** Der Einleser kennt nur VEVENT. Aufgaben
+   aus einem fremden Kalender kommen gar nicht an.
+
+7. **Der Hinweis „das kenne ich nicht" erreicht die Oberfläche noch
+   nicht.** Der Termin trägt `regelUnklar` und `regelSatz` mit — angezeigt
+   wird beides nirgends. Das ist §47 von der leisen Seite und der nächste
+   kleine Schritt.
+
+8. **Kein Schreiben von BYDAY.** `icsSchreiben` erzeugt keine
+   Wiederholungsregeln. Was Redion einliest, kann es nicht wieder ausgeben —
+   der Rundlauf ist einseitig.
+
+Gefunden am 31. August 2026 (beim Bau von E289 und E290).

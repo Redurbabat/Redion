@@ -142,6 +142,20 @@ const Kalender = (() => {
                 case 'RRULE':
                     jetzt.regel = inhalt;
                     break;
+                /* EXDATE UND RDATE WURDEN BIS E290 GAR NICHT GELESEN.
+                   Eine abgesagte Stunde kam damit bei jedem Einlesen zurück, und
+                   ein zusätzlich angesetzter Termin fehlte. Beide dürfen mehrfach
+                   vorkommen und mehrere Daten mit Komma tragen. */
+                case 'EXDATE':
+                    jetzt.exdate = (jetzt.exdate || [])
+                        .concat(inhalt.split(',').map((x) => x.trim())
+                        .filter(Boolean));
+                    break;
+                case 'RDATE':
+                    jetzt.rdate = (jetzt.rdate || [])
+                        .concat(inhalt.split(',').map((x) => x.trim())
+                        .filter(Boolean));
+                    break;
                 case 'DTSTART':
                     jetzt.start = icsZeit(inhalt, parameter);
                     jetzt.ganzerTag = jetzt.start.length === 10;
@@ -166,51 +180,42 @@ const Kalender = (() => {
         });
         return { name: kalenderName, termine };
     };
-    /** Wiederholungen ausrollen — so weit, wie der Kalender reicht. */
+    /**
+     * Wiederholungen ausrollen.
+     *
+     * BIS E290 STAND HIER EINE EIGENE, VIEL ZU KLEINE RECHNUNG. Sie las vier
+     * Teile der Regel — FREQ, INTERVAL, UNTIL, COUNT — und warf alles andere
+     * STILL weg. Für den häufigsten Stundenplan der Welt,
+     * `FREQ=WEEKLY;BYDAY=MO,WE,FR`, wurden aus drei Terminen je Woche einer,
+     * am Wochentag des Starts. Kein Hinweis, keine Meldung; man sah einen
+     * Kalender, der plausibel aussah und falsch war.
+     *
+     * Die Rechnung steht jetzt in `core/calendar/wiederholung.ts` und sagt
+     * ausserdem, was sie NICHT verstanden hat. Fehlt das Modul (eine alte
+     * Einzeldatei), bleibt der Termin einzeln stehen — das ist die sichere
+     * Auslegung von „ich kann die Wiederholung nicht lesen".
+     */
     const wiederholungen = (termin, bisTage = 400) => {
         if (!termin.regel)
             return [termin];
-        const teile = {};
-        termin.regel.split(';').forEach((x) => {
-            const [k, v] = x.split('=');
-            if (k)
-                teile[k.toUpperCase()] = v;
+        const W = window.Wiederholung;
+        if (!W || typeof W.ausrollen !== 'function')
+            return [termin];
+        const erg = W.ausrollen(termin.start, termin.regel, {
+            bisTage,
+            exdate: termin.exdate || [],
+            rdate: termin.rdate || [],
+            ganzerTag: !!termin.ganzerTag
         });
-        const takt = (teile.FREQ || '').toUpperCase();
-        if (!takt)
+        if (!erg.termine.length)
             return [termin];
-        const schritt = Number(teile.INTERVAL) || 1;
-        const grenze = new Date();
-        grenze.setDate(grenze.getDate() + bisTage);
-        const ende = teile.UNTIL ? new Date(icsZeit(teile.UNTIL)) : grenze;
-        const wieOft = Number(teile.COUNT) || 0;
-        const raus = [];
-        const start = new Date(termin.start.length === 10 ? termin.start + 'T12:00' : termin.start);
-        if (isNaN(start.getTime()))
-            return [termin];
-        let d = new Date(start);
-        let n = 0;
-        while (d <= ende && d <= grenze && n < 500) {
-            if (wieOft && n >= wieOft)
-                break;
-            const iso = termin.ganzerTag
-                ? d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate())
-                : d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()) +
-                    'T' + p2(d.getHours()) + ':' + p2(d.getMinutes());
-            raus.push(Object.assign({}, termin, { start: iso, ende: '', folge: n > 0 }));
-            n++;
-            if (takt === 'DAILY')
-                d.setDate(d.getDate() + schritt);
-            else if (takt === 'WEEKLY')
-                d.setDate(d.getDate() + 7 * schritt);
-            else if (takt === 'MONTHLY')
-                d.setMonth(d.getMonth() + schritt);
-            else if (takt === 'YEARLY')
-                d.setFullYear(d.getFullYear() + schritt);
-            else
-                break;
-        }
-        return raus.length ? raus : [termin];
+        return erg.termine.map((iso, i) => Object.assign({}, termin, {
+            start: iso, ende: '', folge: i > 0,
+            /* Was an der Regel nicht gelesen werden konnte, reist MIT. Der
+               Aufrufer zeigt es an, statt dass es hier verschwindet. */
+            regelUnklar: erg.nichtVerstanden.length ? erg.nichtVerstanden : undefined,
+            regelSatz: erg.satz || undefined
+        }));
     };
     /* ========================================================================
      * 2. ICS SCHREIBEN
@@ -387,7 +392,7 @@ const Kalender = (() => {
             throw new Error('Unter dieser Adresse liegt kein Kalender.');
         const gelesen = icsLesen(text);
         const alle = [];
-        gelesen.termine.forEach(t => wiederholungen(t).forEach(x => alle.push(x)));
+        gelesen.termine.forEach(t => wiederholungen(t).forEach((x) => alle.push(x)));
         return { name: gelesen.name || abo.name || 'Abo', termine: alle };
     };
     const alleAbosHolen = async (seiteId) => {
@@ -642,7 +647,7 @@ const Kalender = (() => {
                             const text = await f.text();
                             const k = icsLesen(text);
                             const alle = [];
-                            k.termine.forEach(t => wiederholungen(t).forEach(x => alle.push(x)));
+                            k.termine.forEach(t => wiederholungen(t).forEach((x) => alle.push(x)));
                             const erg = uebernehmen(coll, alle, k.name || f.name.replace(/\.ics$/i, ''));
                             neu += erg.neu;
                             frisch += erg.frisch;

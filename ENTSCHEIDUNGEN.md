@@ -21877,3 +21877,147 @@ eine Auskunft, die einer genügt.
 §5 die Auszeichnung und der Unterschied gestellt/erwähnt, §6 dieselbe Frage
 als Karteikarte und als Absatz, §9 der Schnitt, der sich nennt) · typecheck
 grün · Bilder in hell, dunkel und am Telefon angesehen · sw v54.
+
+
+================================================================================
+E289 — Die Zahl über das eigene Können bekommt ihre Grundlage (Redurs Punkt 6)
+================================================================================
+31. August 2026
+
+Redion hat eine Fortschrittszahl, und sie ist nicht falsch — sie misst nur
+etwas anderes, als man beim Ansehen denkt.
+
+`topicProgress` (`learning.ts:206`) rechnet `min(2, wdh)` je Karte durch
+`total * 2`: keine Wiederholung 0 %, eine 50 %, zwei oder mehr 100 %. Der
+Kommentar darüber sagt das ausdrücklich, und als ABDECKUNG — wie weit man
+durch den Stoff ist — stimmt die Zahl. Nur steht sie ohne Beschriftung da,
+und EINE zweimal beantwortete Karte ergibt „100 %".
+
+E289 stellt keine zweite Fortschrittszahl daneben (davor warnt derselbe
+Kommentar), sondern eine Zahl ANDERER ART.
+
+### Was aus RED-KURD kommt
+
+RED-KURD führt ein Fertigkeitsprofil und legt neben jeden Prozentwert die
+ZAHL DER KARTEN, aus der er stammt (`erkennen` und `erkennenAnzahl`,
+`lernstand.d.ts:222`). Das ist die Übernahme, und sie ist die ganze Idee:
+ein Prozentwert ohne seine Grundlage ist eine Behauptung.
+
+NICHT übernommen sind die vier Fertigkeiten (erkennen/abrufen/schreiben/
+hoeren). Für Vokabeln sind sie richtig, für Redion falsch: hier wird nicht
+eine Vokabel viermal geübt, sondern eine Frage einmal. Redions Einheit ist
+das Thema.
+
+### Warum Wilson und nicht „richtig durch gesamt"
+
+Drei von drei richtig sind nicht 100 %. Sie sind „irgendwo zwischen 44 %
+und 100 %". Genau das rechnet die untere Schranke des Wilson-Intervalls,
+und sie tut es von selbst richtig: bei drei Antworten 0,44, bei zwanzig
+0,84, bei zweihundert 0,98.
+
+Der naive Bruch behauptet in allen drei Fällen dasselbe. Er ist der Grund,
+warum Lern-Apps Anfängern „100 % gemeistert" anzeigen.
+
+### Zwei Zahlen, weil es zwei Fragen sind
+
+    Sicherheit    wie belastbar die Aussage ist — aus der ZAHL der Belege
+    Haltbarkeit   was heute vermutlich noch sitzt — aus dem SM-2-Abstand
+
+Die Haltbarkeit ist `0,9 ^ (Tage / Abstand)`: SM-2 wählt den Abstand so,
+dass am Fälligkeitstag rund 90 % sitzen, und daraus lässt sich der heutige
+Stand zurückrechnen. Das erfindet keinen zweiten Algorithmus neben SM-2 —
+es liest den vorhandenen.
+
+Getrennt bleiben sie, weil sie Verschiedenes sagen. Eine Karte, die vor
+einem halben Jahr fünfzehnmal richtig war: Können hoch, Haltbarkeit tief.
+Zusammengerechnet ergäbe sich eine Zahl, die weder das eine noch das
+andere ist.
+
+### Unter fünf Belegen wird gar nichts behauptet
+
+Keine Stufe, keine Prozentzahl — stattdessen der Satz, wie viele Antworten
+noch fehlen. „Zu wenig Daten" ist eine Absage; „noch drei Antworten, dann
+sagt Redion etwas dazu" ist eine Anleitung.
+
+Das ist dieselbe Regel wie in E284, E286 und E288, zum vierten Mal in
+derselben Woche: eine Anzeige, die immer etwas anzeigt, wird nicht gelesen.
+
+**Geprüft:** test283 neu (35 Punkte; §1 misst die vorhandene Rechnung und
+hält fest, was sie WIRKLICH sagt — 0 % / 50 % / 100 % nach Wiederholungen;
+§2 die drei Wilson-Werte von Hand nachgerechnet; §4 beide Richtungen der
+Fünf-Belege-Grenze) · typecheck grün · sw v55.
+
+
+================================================================================
+E290 — Wiederholungsregeln, die wirklich gelesen werden (L102, Redurs Punkt 10)
+================================================================================
+31. August 2026
+
+Der Anlass ist ein FALSCHES Datum, nicht ein fehlendes.
+
+`verbinden/kalender.ts:145` las aus einer Wiederholungsregel vier Teile:
+FREQ, INTERVAL, UNTIL, COUNT. Alles andere fiel STILL weg. Für den
+häufigsten Stundenplan der Welt —
+
+    RRULE:FREQ=WEEKLY;BYDAY=MO,WE,FR
+
+— hiess das: aus drei Terminen je Woche wurde EINER, am Wochentag des
+Starts. Und niemand erfuhr es. Ein fehlender Termin ist ärgerlich; ein
+Kalender, der die falschen Tage anzeigt, ist schlimmer, weil man ihm
+glaubt.
+
+Genauso still verschwanden:
+
+    EXDATE      eine abgesagte Stunde kam bei jedem Einlesen zurück
+    RDATE       ein zusätzlich angesetzter Termin fehlte
+    BYMONTHDAY  „jeden 15."
+    BYSETPOS    „letzter Werktag im Monat"
+    WKST        wo die Woche beginnt
+
+EXDATE und RDATE wurden vom Einleser nicht einmal GELESEN — die Zeilen
+fielen aus dem `switch` heraus.
+
+### Was jetzt gilt
+
+`core/calendar/wiederholung.ts` rechnet, `verbinden/kalender.ts` ruft. Die
+Regel wird vollständig gelesen: FREQ, INTERVAL, COUNT, UNTIL, BYDAY (auch
+mit Ordnungszahl wie `2TU` und `-1FR`), BYMONTHDAY (auch von hinten),
+BYMONTH, BYSETPOS, WKST — dazu EXDATE und RDATE aus dem Termin.
+
+### Und was sie nicht kann, SAGT sie
+
+`nichtVerstanden` führt jeden Teil der Regel auf, der nicht ausgewertet
+werden konnte, und der Termin trägt ihn mit. Stillschweigen ist bei
+Terminen die gefährlichste Antwort.
+
+Der Hinweis erscheint NUR, wenn wirklich etwas fehlt — eine gewöhnliche
+Regel meldet nichts. Ein Hinweis, der bei jedem Termin erscheint, wird nach
+dem dritten Mal überlesen (dieselbe Regel wie E284/E286/E288/E289).
+
+### Zwei Entscheidungen im Zweifel
+
+**Der Start ist immer dabei**, auch wenn er nicht zur Regel passt (Dienstag
+bei `BYDAY=MO,WE,FR`). Ein Termin zu viel ist weniger schlimm als der
+fehlende erste.
+
+**Der 31. in einem Monat ohne 31. fällt AUS**, statt auf den 3. März zu
+wandern. Das ist die Regel des Formats und die weniger überraschende.
+
+**Keine Zeitzonen.** TZID wird weitergereicht, nicht umgerechnet. Eine
+halbe Zeitzonenrechnung ist schlimmer als gar keine: sie verschiebt Termine
+um Stunden, und man sieht es erst im Sommer.
+
+### Ein Denkfehler, den der Prüflauf fand
+
+Mein erster Entwurf strich EXDATE-Termine, BEVOR er zählte. `COUNT=4` mit
+einer Absage lieferte damit vier Termine. Das Format ist eindeutig: die
+Regel erzeugt eine Menge, EXDATE streicht DANACH daraus — es sind drei. Der
+Unterschied fällt nur auf, wenn beides zusammenkommt, und dann verschiebt
+er jeden folgenden Termin.
+
+**Geprüft:** test284 neu (49 Punkte). §1 misst `Kalender.wiederholungen` —
+die Funktion, die der Import wirklich ruft, nicht nur den neuen Kern; bis
+E290 stand dort ein einziger Wochentag, und dass der Abschnitt von rot auf
+grün gekippt ist, ist sein eigener Beleg (§55.2). §9 zeigt beide
+Richtungen des Hinweises. §10 hält den 31. Februar fest. typecheck grün ·
+sw v56.

@@ -2111,3 +2111,27 @@ node pruefungen/lauf/test105.mjs
   Frage zitieren und gleich beantworten. Aus 33 wurden 10. test282 neu (57).
   Kein Escape-Griff für die anderen Overlays, kein „erledigt", und die
   Ansicht rechnet bei jedem Öffnen neu — L105. sw v54.
+* E289 (Redurs Punkt 6, aus RED-KURD): Die Zahl über das eigene Können
+  bekommt ihre Grundlage. `core/learning/kompetenz.ts`: die untere Schranke
+  des Wilson-Intervalls statt `richtig/gesamt` (drei von drei sind 44 %,
+  nicht 100 %), die Haltbarkeit `0,9 ^ (Tage/Abstand)` aus dem vorhandenen
+  SM-2-Stand, und unter fünf Belegen wird GAR NICHTS behauptet — stattdessen
+  steht da, wie viele Antworten noch fehlen. Übernommen aus RED-KURD ist
+  genau eine Idee: die Belegzahl gehört neben den Prozentwert. Nicht
+  übernommen sind die vier Fertigkeiten — für Vokabeln richtig, für Redion
+  falsch. Die vorhandene `progress`-Zahl bleibt; sie misst ABDECKUNG, sagt
+  das jetzt im Titel, und bekommt die Kompetenz als Satz darunter.
+  test283 neu (35). Nur Karteikarten als Quelle, keine Haltbarkeits-Anzeige
+  — L106. sw v55.
+* E290 (L102, Redurs Punkt 10): Wiederholungsregeln, die wirklich gelesen
+  werden. `verbinden/kalender.ts` las vier Teile einer Regel und warf alles
+  andere STILL weg: aus `FREQ=WEEKLY;BYDAY=MO,WE,FR` wurde ein Termin je
+  Woche statt drei. EXDATE und RDATE griff der Einleser nicht einmal auf —
+  eine abgesagte Stunde kam bei jedem Einlesen zurück.
+  `core/calendar/wiederholung.ts` liest jetzt FREQ, INTERVAL, COUNT, UNTIL,
+  BYDAY (auch `2TU`, `-1FR`), BYMONTHDAY (auch von hinten), BYMONTH,
+  BYSETPOS, WKST, EXDATE, RDATE — und NENNT, was es nicht versteht, aber nur
+  dann. Ein Denkfehler, den der Prüflauf fand: COUNT zählt, was die Regel
+  ERZEUGT; EXDATE streicht danach. test284 neu (49); §1 misst den Weg, den
+  der Import wirklich geht. Keine Zeitzonen, kein VTODO, der Hinweis
+  erreicht die Oberfläche noch nicht — L106. sw v56.
