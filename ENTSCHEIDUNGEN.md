@@ -24628,3 +24628,104 @@ der dann rot war. Seither prüft §5 beide Richtungen — sonst wäre auch ein
 toter Abschnitt grün gewesen.
 
 test318, 18 Punkte. sw v79 · Einzeldatei neu gebaut.
+
+
+E326 — VTODO wird gelesen, und der Streifen ist lesbar (L106 Punkt 6)
+════════════════════════════════════════════════════════════════════════════
+
+L106 Punkt 6 hielt fest, dass Redions ICS-Leser nur VEVENT kennt. Wer sein
+Nextcloud oder Thunderbird abonniert, bekommt seine Termine — seine
+Aufgaben bleiben unsichtbar, ohne dass irgendwo steht, dass welche da
+wären. Das ist §35 in Reinform: eine bekannte Lücke ist besser als ein
+stiller Fehler, aber hier war es der stille Fehler.
+
+WAS JETZT GELESEN WIRD
+
+`icsLesen` führt eine Art mit (`termin` oder `aufgabe`), versteht
+`BEGIN:VTODO` und `END:VTODO` und legt Aufgaben in eine EIGENE Liste. Die
+Rückgabe ist `{name, termine, aufgaben}`.
+
+Vier Felder gehören der Aufgabe und werden nur dort gelesen:
+
+    DUE                 die Frist          -> faellig
+    COMPLETED           wann erledigt      -> erledigtAm
+    PERCENT-COMPLETE    wie weit           -> anteil
+    PRIORITY            wie dringend       -> prioritaet
+
+`STATUS` gilt für beide, heisst bei einer Aufgabe aber etwas anderes:
+`COMPLETED` ist der EINZIGE Wert, der „fertig" bedeutet. `CANCELLED` heisst
+abgesagt, `IN-PROCESS` heisst angefangen. Beide als fertig zu zählen wäre
+die bequeme und falsche Lesart.
+
+Und der Leser prüft bei VTODO auf `titel || uid`, nicht auf `start`. Eine
+Aufgabe ohne Frist ist eine gültige Aufgabe — ein Termin ohne Anfang ist
+keiner. Mit der Termin-Bedingung wäre „Steuererklärung" durchgefallen.
+
+WAS ABSICHTLICH NICHT PASSIERT
+
+Aufgaben landen NICHT in der Kalendertabelle. Eine Aufgabe mit Fälligkeit
+als Termin auszugeben hiesse, sie als Verabredung zu behaupten — genau die
+stille Falschaussage, die E290 beim Kalender abgeräumt hat. Stattdessen
+zählt `alleAbosHolen` die offenen und sagt einen Satz:
+
+    3 offene Aufgaben aus „Schule" — Redion zeigt sie noch nicht in der
+    Tabelle.
+
+Damit ist L106 Punkt 6 HALB zu: gelesen und genannt, ja. In ein
+Aufgabenmodell einsortiert, nein — das ist ein eigener Bogen und steht so
+auch im Kommentar am Code.
+
+GEGENPROBE: ohne VTODO ist die Liste leer und der Satz kommt nicht. Der
+Hinweis steht hinter `if (offeneAufgaben)`, nicht davor — eine Anzeige, die
+immer anzeigt, wird nicht gelesen.
+
+─── UND DANN DAS BILD (§55.1) ──────────────────────────────────────────────
+
+Der Satz braucht einen Streifen, und `art: 'info'` schien keinen Hintergrund
+zu haben. Gemessen: ein nacktes `.banner` ist wirklich durchsichtig. Also
+eine Regel nach `ansichten.css`, neben `warn` und `fehler`. Prüfung grün.
+
+Das Bild sagte etwas anderes: die Schrift im blauen Streifen war BLAU, die
+in den anderen beiden weiss. Zwei Funde dahinter, und beide waren schwerer
+als der Bogen selbst:
+
+ERSTENS war die neue Regel TOT. `.banner.info` gab es längst — in
+`bausteine.css`, zweimal sogar, mit `color: var(--c-blue)`. `bausteine.css`
+lädt nach `ansichten.css` (index.html Zeile 68 gegen 61), beide Selektoren
+sind gleich stark, also gewinnt die spätere. Die Prüfung war grün, WEIL
+`bausteine.css` schon einen Hintergrund setzte — sie wäre auch ohne die
+neue Regel grün gewesen. L111 zum vierten Mal an einem Tag.
+
+ZWEITENS, und das ist der eigentliche Fund: nachgemessen ergab
+`--c-blue` auf `--b-blue` im dunklen Thema 3.11:1. §38 verlangt für
+Fliesstext 4.5. Zum Vergleich `warn` 6.65 und `fehler` 8.31 — nur `info`
+war zu blass, und nur im Dunkeln: im hellen Thema gewinnt
+`html[data-theme="light"] .banner` mit höherer Stärke und setzt ohnehin
+`#37352f`, was 10.84 ergibt. Ein Kontrastfehler, der sich in genau einem
+der zwei Themen zeigt, ist der, den man am längsten hat.
+
+Mit `color: var(--text)` sind es 8.38:1. Geändert wurden BEIDE Zeilen in
+`bausteine.css` — die zweite hätte die erste sonst still überstimmt.
+Gelöscht wurde die Verdopplung nicht; das ist Redurs Entscheidung.
+
+In `ansichten.css` steht jetzt statt der toten Regel ein Wegweiser: dass
+`.banner.info` hier NICHT hingehört und warum. Ein Kommentar, der eine
+Falle beschreibt, ist mehr wert als eine Regel, die sie stellt.
+
+─── WAS DIE PRÜFUNG DARAUS GELERNT HAT ─────────────────────────────────────
+
+§6 mass zuerst „hat `info` einen Hintergrund". Diese Frage war nach dem
+ersten Wurf schon mit Ja beantwortet — die Prüfung konnte nicht rot werden.
+Sie misst jetzt den KONTRAST, beide Themen, alle drei Arten, gegen die 4.5
+aus §38. Belegt rot: mit `--c-blue` fallen zwei Punkte um (3.11 und „info
+ist die blasseste der drei"). Dazu ein Wächter, dass keine tote
+`.banner.info` nach `ansichten.css` zurückkehrt.
+
+Und §1 hing an der Uhr des prüfenden Rechners: `icsZeit` rechnet ein `Z`
+richtigerweise in Ortszeit um, also ergab `DUE:20260912T235900Z` im
+UTC-Container 23:59 und auf Redurs Rechner 01:59. Derselbe Lauf wäre
+einmal grün und einmal rot gewesen. Die Seite bekommt ihre Zone jetzt
+gesagt (`timezoneId: 'Europe/Berlin'`), und damit KANN der Punkt rot
+werden: nimmt man die Umrechnung weg, steht dort 23:59 statt 01:59.
+
+test319, 26 Punkte. sw v80 · Einzeldatei neu gebaut.

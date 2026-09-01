@@ -2399,3 +2399,21 @@ node pruefungen/lauf/test105.mjs
   anderes. Fällig zählt jetzt mit seinem Zerfall. Schwelle: eine ganze
   verblasste Karte, mit Fliesskomma-Toleranz, weil 10 × (1 − 0,9) eben
   0,9999999999999998 ergibt. test318 neu (18). sw v79.
+* E326 (L106 Punkt 6, halb): VTODO wird gelesen, und der Streifen ist lesbar.
+  Der ICS-Leser kannte nur VEVENT — wer sein Nextcloud abonnierte, bekam
+  seine Termine und wusste nicht, dass Aufgaben mitgeliefert wurden. Jetzt
+  eine eigene Liste mit DUE, COMPLETED, PERCENT-COMPLETE und PRIORITY;
+  `COMPLETED` ist der einzige Status, der „fertig" heisst, denn `CANCELLED`
+  heisst abgesagt. Geprüft wird bei VTODO auf den Titel und nicht auf den
+  Anfang: eine Aufgabe ohne Frist ist gültig, ein Termin ohne Anfang nicht.
+  In die Kalendertabelle kommen sie absichtlich NICHT — das wäre die
+  Falschaussage, die E290 gerade abgeräumt hat; stattdessen zählt ein
+  Streifen die offenen. Und dann fand das Bild zwei Dinge, die schwerer
+  wogen als der Bogen: die neue `.banner.info`-Regel war TOT (es gab sie
+  schon in bausteine.css, die später lädt), und die gewinnende hatte im
+  dunklen Thema 3.11:1 — unter den 4.5 aus §38, während warn 6.65 und
+  fehler 8.31 hatten. Jetzt 8.38. L111 zum vierten Mal. Die Prüfung mass
+  zuerst „hat info einen Hintergrund" und konnte gar nicht rot werden; sie
+  misst jetzt den Kontrast in beiden Themen. Dazu hing §1 an der Zeitzone
+  des prüfenden Rechners — die Seite bekommt sie jetzt gesagt.
+  test319 neu (26). sw v80.

@@ -4237,8 +4237,17 @@ L106 — Was die Lern-Evidenz (E289) und der Kalender (E290) noch nicht können
    (eine halbe Zeitzonenrechnung ist schlimmer als keine), aber es ist eine
    Lücke und keine Lösung.
 
-6. **VTODO wird nicht gelesen.** Der Einleser kennt nur VEVENT. Aufgaben
-   aus einem fremden Kalender kommen gar nicht an.
+6. **VTODO wird nicht gelesen.** — **HALB GESCHLOSSEN (E326).**
+   `icsLesen` versteht seit E326 `BEGIN:VTODO`, führt eine Art mit
+   (`termin`/`aufgabe`) und liefert Aufgaben in einer eigenen Liste, mit
+   `DUE`, `COMPLETED`, `PERCENT-COMPLETE` und `PRIORITY`. Ein Streifen
+   nennt beim Abholen die Zahl der offenen.
+
+   WAS OFFEN BLEIBT: die Aufgaben landen in keinem Aufgabenmodell. Sie
+   werden gelesen und genannt, aber nicht einsortiert — bewusst, denn eine
+   Aufgabe mit Fälligkeit als Termin in die Kalendertabelle zu schreiben
+   wäre die stille Falschaussage, die E290 gerade abgeräumt hat. Der
+   Anschluss an Redions eigene Aufgaben ist ein eigener Bogen.
 
 7. **Der Hinweis „das kenne ich nicht" erreicht die Oberfläche noch
    nicht.** Der Termin trägt `regelUnklar` und `regelSatz` mit — angezeigt
@@ -4463,11 +4472,26 @@ WAS ES DREIMAL GEKOSTET HAT:
     Fehler geworden.
   · E324 — der Haken der Lückenliste war so breit wie „Seite anlegen".
     Wieder auf einem Bild gefunden.
+  · E326 — DIE VIERTE VARIANTE, und die gefährlichste: hier war es keine
+    Breite, sondern eine ganze Regel. `.banner.info` wurde nach
+    `ansichten.css` geschrieben, obwohl es sie in `bausteine.css` schon
+    gab. Gleiche Stärke, spätere Datei gewinnt — die neue Regel war TOT.
+    Die Prüfung war trotzdem grün, weil sie das Ergebnis mass und nicht
+    die Herkunft. Dahinter lag der eigentliche Fehler: die gewinnende
+    Regel setzte `--c-blue` auf `--b-blue`, im dunklen Thema 3.11:1 gegen
+    die 4.5 aus §38. Auch das fand das Bild, nicht der Prüflauf.
 
 WARUM ES KEIN PRÜFLAUF FINDET: es ist kein Fehler, sondern gültiges CSS mit
 einem unerwarteten Ausgang. Ein Wächter müsste jede neue Klasse gegen alle
 breiten Regeln stellen — machbar, aber er würde Dutzende gewollter Fälle
 melden.
+
+DIE VIERTE HAT EINE EIGENE LEHRE: nicht nur „meine Regel könnte
+verlieren", sondern „meine Regel könnte es schon geben". Vor einer neuen
+Regel für eine Klasse, die es vielleicht schon gibt, hilft ein Blick, der
+zehn Sekunden kostet:
+
+    grep -n "\.banner\.info" quell/schale/stil/*.css
 
 DIE KLEINE ANTWORT, die dreimal funktioniert hat: eine neue Regel in einem
 `.finder`- oder `.ez-`-Fenster bekommt den Vorfahren mit davor
@@ -4479,4 +4503,4 @@ meinen — `.finder .res > button` statt `.finder .res button`. Das ist ein
 eigener Bogen mit einem Bild je Fenster, denn es ändert bestehende
 Oberflächen, und die Wirkung sieht man erst beim Hinsehen.
 
-Gefunden am 1. September 2026 (E320, E321, E324).
+Gefunden am 1. September 2026 (E320, E321, E324, E326).

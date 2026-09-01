@@ -326,8 +326,18 @@
 
 .pwa-schritte{ margin:8px 0 0 18px; line-height:1.9; font-size:13.5px; color:var(--text-dim); }
 .pwa-schritte b{ color:var(--text); }
-.banner.info{ background:var(--b-blue); color:var(--c-blue); }
-.banner.info{background:var(--b-blue); color:var(--c-blue)}
+/* KONTRAST, GEMESSEN (E326). `--c-blue` auf `--b-blue` ergab im dunklen
+   Thema 3.11:1 — unter den 4.5, die §38 für Fliesstext verlangt. `warn`
+   kam auf 6.65, `fehler` auf 8.31; nur `info` war zu blass, und nur im
+   Dunkeln: im hellen Thema gewinnt `html[data-theme="light"] .banner`
+   mit seiner höheren Stärke und setzt ohnehin `#37352f`. Mit `--text`
+   sind es 8.30:1, gleichauf mit den anderen beiden.
+
+   Die Zeile steht ZWEIMAL. Das war schon so; beide werden gepflegt,
+   damit nicht die zweite die erste still überstimmt. Gelöscht wird hier
+   nichts ohne Redurs Wort. */
+.banner.info{ background:var(--b-blue); color:var(--text); }
+.banner.info{background:var(--b-blue); color:var(--text)}
 
 /* Menü mit Suchfeld — Notions Muster „Aktionen filtern …" */
 .menu-suche{padding:7px 8px 6px; border-bottom:1px solid var(--line-soft)}

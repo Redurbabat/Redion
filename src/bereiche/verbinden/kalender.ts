@@ -76,20 +76,45 @@ const Kalender = (() => {
     return `${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}`;
   };
 
-  /** Ein ICS-Text wird zu einer Liste Termine. */
+  /**
+   * Ein ICS-Text wird zu einer Liste Termine — UND einer Liste Aufgaben.
+   *
+   * ─── VTODO WURDE BIS E326 GAR NICHT GELESEN (L106 Punkt 6) ──────────────
+   *
+   * Der Leser kannte nur VEVENT. Alles zwischen `BEGIN:VTODO` und
+   * `END:VTODO` fiel durch — die Zeilen darin sahen aus wie Zeilen ausserhalb
+   * eines Blocks und wurden übersprungen. Wer einen Kalender abonnierte, in
+   * dem Termine UND Aufgaben stehen, bekam die Aufgaben nie zu sehen und
+   * erfuhr auch nicht, dass es sie gibt.
+   *
+   * SIE LANDEN NOCH NICHT IN DER KALENDERTABELLE, und das ist Absicht: eine
+   * Aufgabe mit Fälligkeit ist kein Termin. Sie mit `start` in dieselbe
+   * Tabelle zu schreiben hiesse, sie als Verabredung auszugeben — genau die
+   * Sorte stille Falschaussage, die E290 beim Kalender abgeräumt hat. Wohin
+   * sie gehören, ist eine eigene Entscheidung; gelesen und gezählt werden
+   * sie ab jetzt, und der Einleser SAGT, wie viele er gefunden hat (§35).
+   */
   const icsLesen = (text: string) => {
     const zeilen = zeilenFalten(text).split('\n');
     const termine: any[] = [];
+    const aufgaben: any[] = [];
     let kalenderName = '';
     let jetzt: any = null;
     let inAlarm = false;
+    /* 'termin' oder 'aufgabe' — welche Art gerade gelesen wird. */
+    let art = '';
 
     zeilen.forEach(z => {
       const roh = z.trim();
       if (!roh) return;
 
-      if (roh === 'BEGIN:VEVENT') { jetzt = { alarme: [] }; return; }
-      if (roh === 'END:VEVENT')   { if (jetzt && jetzt.start) termine.push(jetzt); jetzt = null; return; }
+      if (roh === 'BEGIN:VEVENT') { jetzt = { alarme: [] }; art = 'termin'; return; }
+      if (roh === 'END:VEVENT')   { if (jetzt && jetzt.start) termine.push(jetzt); jetzt = null; art = ''; return; }
+      /* EINE AUFGABE BRAUCHT KEIN DATUM. „Steuererklärung" ohne Frist ist
+         eine gültige Aufgabe; ein Termin ohne Anfang ist keiner. Deshalb
+         wird hier auf den TITEL geprüft und nicht auf `start`. */
+      if (roh === 'BEGIN:VTODO')  { jetzt = { alarme: [], art: 'aufgabe' }; art = 'aufgabe'; return; }
+      if (roh === 'END:VTODO')    { if (jetzt && (jetzt.titel || jetzt.uid)) aufgaben.push(jetzt); jetzt = null; art = ''; return; }
       if (roh === 'BEGIN:VALARM') { inAlarm = true; return; }
       if (roh === 'END:VALARM')   { inAlarm = false; return; }
 
@@ -134,7 +159,18 @@ const Kalender = (() => {
                              jetzt.ganzerTag = jetzt.start.length === 10; break;
         case 'DTEND':        jetzt.ende = icsZeit(inhalt, parameter); break;
         case 'DURATION':     jetzt.dauer = inhalt; break;
+        /* --- Nur bei Aufgaben (E326) --------------------------------- */
+        case 'DUE':          if (art === 'aufgabe') jetzt.faellig = icsZeit(inhalt, parameter); break;
+        case 'COMPLETED':    if (art === 'aufgabe') jetzt.erledigtAm = icsZeit(inhalt, parameter); break;
+        case 'PERCENT-COMPLETE':
+                             if (art === 'aufgabe') jetzt.anteil = Math.max(0, Math.min(100, +inhalt || 0)); break;
+        case 'PRIORITY':     if (art === 'aufgabe') jetzt.prioritaet = +inhalt || 0; break;
       }
+      /* `STATUS` gilt für beide, heisst bei einer Aufgabe aber etwas
+         anderes. COMPLETED ist der einzige Wert, der „fertig" bedeutet —
+         CANCELLED heisst abgesagt und IN-PROCESS heisst angefangen. */
+      if (art === 'aufgabe' && name === 'STATUS')
+        jetzt.fertig = /^COMPLETED$/i.test(inhalt.trim());
     });
 
     /* Bei ganztägigen Terminen zeigt DTEND auf den Tag danach — das
@@ -148,7 +184,7 @@ const Kalender = (() => {
       }
     });
 
-    return { name: kalenderName, termine };
+    return { name: kalenderName, termine, aufgaben };
   };
 
   /**
@@ -362,7 +398,8 @@ const Kalender = (() => {
     const gelesen = icsLesen(text);
     const alle: any[] = [];
     gelesen.termine.forEach(t => wiederholungen(t).forEach((x: any) => alle.push(x)));
-    return { name: gelesen.name || abo.name || 'Abo', termine: alle };
+    return { name: gelesen.name || abo.name || 'Abo', termine: alle,
+             aufgaben: gelesen.aufgaben };
   };
 
   const alleAbosHolen = async (seiteId?: string) => {
@@ -373,11 +410,19 @@ const Kalender = (() => {
     /* Für den Sammelhinweis unten — die Termine selbst wandern in die
        Datenbank und sind danach nicht mehr in der Hand. */
     const alleTermine: any[] = [];
+    /* AUFGABEN AUS DEM ABO (L106 Punkt 6, E326). Sie werden seit E326
+       gelesen, landen aber noch nicht in der Kalendertabelle — eine Aufgabe
+       mit Fälligkeit ist kein Termin, und sie mit `start` dort einzutragen
+       hiesse, sie als Verabredung auszugeben. Verschwiegen werden sie
+       trotzdem nicht: bis E326 fielen sie stumm durch, und niemand erfuhr,
+       dass der Kalender überhaupt welche enthält (§35). */
+    let offeneAufgaben = 0;
     for (const a of liste) {
       try {
         const k = await aboHolen(a);
         const e = uebernehmen(coll, k.termine, a.name || k.name);
         alleTermine.push(...k.termine);
+        offeneAufgaben += (k.aufgaben || []).filter((x: any) => !x.fertig).length;
         neu += e.neu; frisch += e.frisch;
         a.zuletzt = Store.now();
       } catch (err) {
@@ -403,6 +448,17 @@ const Kalender = (() => {
     if (unklar.size)
       UI.banner('Ein Teil der Wiederholungsregeln blieb ungelesen: ' +
         [...unklar].join(', ') + '. Die Termine daraus fehlen.', 'warn');
+
+    /* UND DIE AUFGABEN, wenn welche da sind. Nur dann: ein Kalender ohne
+       VTODO ist der Normalfall, und „0 Aufgaben" wäre die Zeile, die man
+       nach dem zweiten Mal nicht mehr liest. */
+    if (offeneAufgaben)
+      UI.banner(offeneAufgaben + (offeneAufgaben === 1
+          ? ' offene Aufgabe steht im Kalender'
+          : ' offene Aufgaben stehen im Kalender') +
+        ' — Redion liest sie, legt sie aber noch nicht an. ' +
+        'Eine Aufgabe ist kein Termin, und sie hier einzutragen hiesse, ' +
+        'sie als Verabredung auszugeben.', 'info');
 
     UI.toast(neu + ' neu, ' + frisch + ' aufgefrischt');
   };

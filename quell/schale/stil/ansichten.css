@@ -177,6 +177,13 @@ table.grid tr.unterzeile td{background:var(--bg-side)}
 .banner button:hover{opacity:1}
 .banner.warn{background:var(--b-yellow); color:var(--text)}
 .banner.fehler{background:var(--b-red); color:var(--text)}
+/* `.banner.info` STEHT NICHT HIER, sondern in `bausteine.css`. Das ist
+   kein Versehen, sondern eine Warnung an den Nächsten: `bausteine.css`
+   lädt nach dieser Datei (index.html Zeile 68 gegen 61), und beide
+   Selektoren wären gleich stark. Eine `info`-Regel an dieser Stelle wäre
+   tot — sie sähe richtig aus, änderte aber nichts. Genau das war der
+   erste Wurf von E326, und gefunden hat es kein Prüflauf, sondern das
+   Bild: die Schrift war blau, wo sie weiss sein sollte. L111. */
 html[data-theme="light"] .banner{color:#37352f}
 
 
