@@ -23874,3 +23874,97 @@ geschickt wird — nicht, dass es vorher liegengeblieben wäre.
 die Marke ohnehin leert und eine zweite Liste nur Ballast wäre.
 
 Einzeldatei 7786 KB.
+
+
+================================================================================
+E315 — Fett bleibt fett bis nach Word und zurück (L72 Teil 2)
+================================================================================
+1. September 2026
+
+Der Word-Export schrieb den ROHEN Blocktext:
+
+    `<w:r><w:t xml:space="preserve">${esc(text)}</w:t></w:r>`   ausgeben.ts:321
+
+In Word stand danach `**fett**` wörtlich da, mit Sternchen. Wer eine Arbeit
+abgibt, gibt sie so ab. Der Einleser hatte dieselbe Lücke in der
+Gegenrichtung: er sammelte `w:t` und warf `w:rPr` weg — eine eingelesene
+Word-Datei wurde zur grauen Wand.
+
+
+Ein Kern, weil es zwei Richtungen sind
+--------------------------------------------------------------------------------
+
+`core/text/inline.ts` zerlegt Redions Blocktext in LÄUFE — Stücke mit ihren
+Eigenschaften — und setzt sie wieder zusammen. Beide Richtungen benutzen
+ihn; das ist der ganze Grund, warum er einer ist. Stünde die Regel zweimal
+da, liefen sie auseinander, und der Rundlauf verlöre genau das, was die eine
+kann und die andere nicht. Gemerkt hätte man es an der abgegebenen Datei.
+Dieselbe Begründung wie bei `core/slides` (E297).
+
+Erkannt werden `**fett**`, `__fett__`, `*kursiv*`, `_kursiv_`, `` `code` ``,
+`~~durch~~`, `[Text](Ziel)` und `[[Seite]]`. Die Reihenfolge der Muster ist
+Bedeutung: `**` muss vor `*` stehen, sonst frisst der einfache Stern die
+erste Hälfte des doppelten und macht aus `**fett**` ein kursives `*fett*`.
+
+NICHT erkannt wird Verschachteltes über eine Ebene hinaus. Das ist Absicht:
+ein vollständiger Auszeichnungsbaum bringt für den Weg nach Word nichts, was
+ein Mensch bemerkt.
+
+
+Drei Dinge, die der Prüflauf gefunden hat
+--------------------------------------------------------------------------------
+
+1 · DIE FESTE BREITE FEHLTE IN DER GEGENRICHTUNG. Der Export schreibt für
+    `code` ein `w:rFonts w:ascii="Consolas"`; der erste Einleser las nur
+    `w:b`, `w:i`, `w:strike`. Beim Rundlauf ging genau die Auszeichnung
+    verloren, die der Kern zusammenhalten sollte. Erkannt wird jetzt die
+    FAMILIE (Consolas, Courier, Menlo, …) und nicht der eine Name, den
+    Redion selbst schreibt.
+
+2 · WORD ZERSCHNEIDET EINEN SATZ IN FÜNF LÄUFE, auch wenn sie gleich
+    ausgezeichnet sind. Ohne Zusammenlegen wäre daraus `**a****b**`
+    geworden. Nachbarn mit denselben Eigenschaften werden deshalb
+    zusammengeführt.
+
+3 · `w:b w:val="0"` HEISST AUSDRÜCKLICH NICHT FETT. Word schreibt das, wenn
+    eine Vorlage fett ist und ein Lauf es zurücknimmt. Ein blosses „gibt es
+    das Element" hätte solche Läufe fett gemacht.
+
+
+Was in Word nicht ankommt, und es steht jetzt gemessen da
+--------------------------------------------------------------------------------
+
+Ein Redion-Seitenverweis hat in Word keine Entsprechung. `[[Ohmsches
+Gesetz]]` kommt dort als gewöhnlicher Text an — für einen Leser richtig, für
+den Rundlauf ein Verlust. test309 §5b misst das ausdrücklich, statt es
+auszulassen: steht es dort, ist es eine Grenze; stünde es nirgends, wäre es
+ein stiller Verlust (§35). Bilder bleiben Platzhaltertext; das ist der Rest
+von L72 und braucht Beziehungen und Medienteile im Archiv.
+
+
+Eine Prüfung, deren Name nicht mehr stimmte
+--------------------------------------------------------------------------------
+
+test252 §3 hiess „Was verloren geht, geht nicht still verloren" und hielt
+fest, dass `**fett**` in Word wörtlich mit Sternchen dasteht. Der Punkt ist
+NACH E315 immer noch grün — aber aus dem umgekehrten Grund: der Text kommt
+identisch zurück, nicht weil nichts passiert ist, sondern weil beide
+Richtungen dasselbe können.
+
+Er wäre grün geblieben, ohne dass es jemandem auffällt. Genau davor warnt
+L97. Der Abschnitt heisst jetzt, was er misst.
+
+
+Geprüft
+--------------------------------------------------------------------------------
+test309 neu, 25/25. §2 fährt neun Beispiele durch `lesen → schreiben` und
+noch einmal herum. §3 sieht in die erzeugte Word-Datei: fetter Lauf,
+kursiver Lauf, feste Breite — und keine Sternchen mehr im Text. §5 fährt
+ganz herum, Redion → Word → Redion, Satz für Satz.
+
+§6 ist die Gegenprobe, und sie ist nicht wegzulassen: ein Export, der JEDEM
+Lauf ein leeres `<w:rPr/>` mitgäbe, bestünde §3 mühelos und wäre trotzdem
+falsch — Word öffnet die Datei, aber die Vorlagen greifen nicht mehr.
+
+Mitgelaufen: test49 50/50, test252 15/15.
+sw v70 · Einzeldatei 7796 KB.

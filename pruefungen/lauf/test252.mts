@@ -137,7 +137,19 @@ pr('w:numPr ohne Stilnamen wird ein Listenpunkt',
 pr('Der gewöhnliche Absatz bleibt gewöhnlich',
   fremd.some((x: any) => (x.typ === 'text' || x.typ === 'p') && x.text === 'Ein ganz gewöhnlicher Absatz.'));
 
-console.log('\n3 · Was verloren geht, geht nicht still verloren');
+/* SEIT E315 GEHT HIER NICHTS MEHR VERLOREN, und dieser Abschnitt sagt es
+   jetzt auch. Er hiess „Was verloren geht, geht nicht still verloren" und
+   hielt fest, dass `**fett**` in Word wörtlich mit Sternchen dasteht.
+   Der Export schreibt seit L72 Teil 2 echte `w:rPr`-Läufe, der Einleser
+   liest sie zurück — der Text kommt IDENTISCH zurück, aber aus dem
+   umgekehrten Grund: nicht weil nichts passiert ist, sondern weil beide
+   Richtungen dasselbe können.
+
+   Der Punkt wäre grün geblieben, ohne dass jemand es merkt. Genau davor
+   warnt L97: eine Prüfung, deren Name nicht mehr stimmt, prüft etwas
+   anderes als das, was dort steht. Dass die Sternchen INNERHALB der Datei
+   verschwunden sind, misst test309 §3. */
+console.log('\n3 · Auszeichnung überlebt den Rundlauf (seit E315)');
 const fett = await p.evaluate(async () => {
   const s = Store.addPage(null, { text: 'Formatprobe' });
   Store.addBlock(s.id, 'p', { text: 'Hier steht **fett** und *kursiv* im Text.' });
@@ -146,7 +158,7 @@ const fett = await p.evaluate(async () => {
     { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }), undefined);
   return Store.childrenOf(erg.seite.id).map((x: any) => String(x.text || '')).join(' | ');
 });
-pr('Der Text überlebt vollständig — die Sternchen stehen wörtlich da (L72, bekannt und dokumentiert)',
+pr('Fett und kursiv kommen als Auszeichnung zurück (E315, vorher als Sternchen)',
   fett.includes('**fett**') && fett.includes('*kursiv*'), fett.slice(0, 120));
 
 pr('Keine Fehler auf der Seite', fehler.length === 0, fehler.join(' | '));

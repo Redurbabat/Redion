@@ -2264,3 +2264,17 @@ node pruefungen/lauf/test105.mjs
   die Merkliste gehört diesem Gerät (`NUR_HIER`, wie L76). test308 neu (15)
   — mit einem winzigen Abgleich-Server im Lauf, der misst, ob die alten
   Sätze WIRKLICH ankommen.
+* E315 (L72 Teil 2, bis auf die Bilder): Fett bleibt fett bis nach Word und
+  zurück. Der Export schrieb den ROHEN Blocktext — in Word stand `**fett**`
+  wörtlich mit Sternchen da, und wer eine Arbeit abgibt, gibt sie so ab.
+  Neu `core/text/inline.ts`: ein Kern für beide Richtungen, weil zwei
+  Fassungen derselben Regel auseinanderlaufen und man es erst an der
+  abgegebenen Datei merkt. Der Prüflauf fand drei Dinge: die feste Breite
+  fehlte in der Gegenrichtung, Word zerschneidet einen Satz in fünf gleich
+  ausgezeichnete Läufe (`**a****b**`), und `w:b w:val="0"` heisst
+  ausdrücklich NICHT fett. test309 neu (25). Zwei benannte Verluste
+  bleiben, beide gemessen: ein Seitenverweis wird in Word zu seinem Text,
+  Bilder bleiben Platzhalter.
+  Und eine Prüfung, deren Name nicht mehr stimmte: test252 §3 hiess „die
+  Sternchen stehen wörtlich da" und war NACH E315 immer noch grün — aus dem
+  umgekehrten Grund. sw v70.

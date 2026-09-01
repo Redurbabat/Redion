@@ -20810,6 +20810,137 @@ window.Budget = Budget;
 
 </script>
 <script>
+/* ===== quell/core/text/inline.js ===== */
+"use strict";
+/* ============================================================================
+ * core/text/inline.ts — Auszeichnung im Fliesstext, in beide Richtungen
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/core/text/inline.ts`. `npm run bauen:ts` schreibt daraus
+ * `quell/core/text/inline.js`.
+ * ----------------------------------------------------------------------------
+ * REIN: keine Uhr, keine Ablage, kein DOM. Herein kommt Redions Blocktext,
+ * heraus kommen LÄUFE — Stücke mit ihren Eigenschaften.
+ *
+ * ─── WOFÜR ──────────────────────────────────────────────────────────────────
+ *
+ * Der Word-Export schrieb bis E315 den ROHEN Blocktext:
+ *
+ *     `<w:r><w:t>${esc(text)}</w:t></w:r>`   ausgeben.ts:321
+ *
+ * In Word stand danach `**fett**` wörtlich da, mit Sternchen. Wer eine
+ * Arbeit abgibt, gibt sie so ab. Der Einleser hat dieselbe Lücke in der
+ * Gegenrichtung: er sammelt `w:t` und wirft `w:rPr` weg.
+ *
+ * ─── WARUM EIN EIGENER KERN UND NICHT ZWEIMAL EIN AUSDRUCK ──────────────────
+ *
+ * Weil es zwei Richtungen sind und sie zueinander passen müssen. Steht die
+ * Regel zweimal da, laufen sie auseinander, und der Rundlauf verliert
+ * genau das, was die eine kann und die andere nicht — gemerkt hätte man es
+ * an der abgegebenen Datei. Dieselbe Begründung wie bei `core/slides`
+ * (E297).
+ *
+ * ─── WAS ERKANNT WIRD, UND WAS NICHT ────────────────────────────────────────
+ *
+ *   **fett**      __fett__       fett
+ *   *kursiv*      _kursiv_       kursiv
+ *   `code`                       feste Breite
+ *   ~~durch~~                    durchgestrichen
+ *   [Text](Ziel)                 Verweis mit Ziel
+ *   [[Seite]]  [[Seite|Text]]    Verweis auf eine Redion-Seite
+ *
+ * NICHT erkannt wird Verschachteltes über eine Ebene hinaus — `**a *b* c**`
+ * gibt einen fetten Lauf mit dem Text `a *b* c`. Das ist Absicht: eine
+ * vollständige Auszeichnungssprache wäre ein Parser mit eigenem Baum, und
+ * für den Weg nach Word bringt sie nichts, was ein Mensch bemerkt.
+ * ==========================================================================*/
+const Inline = (() => {
+    /**
+     * Die Reihenfolge ist Bedeutung.
+     *
+     * `**` muss vor `*` stehen, sonst frisst der einfache Stern die erste
+     * Hälfte des doppelten und macht aus `**fett**` ein kursives `*fett*`.
+     * Dasselbe für `__` vor `_`.
+     */
+    const MUSTER = [
+        [/^`([^`]+)`/, m => ({ text: m[1], code: true })],
+        [/^\*\*([\s\S]+?)\*\*/, m => ({ text: m[1], fett: true })],
+        [/^__([\s\S]+?)__/, m => ({ text: m[1], fett: true })],
+        [/^~~([\s\S]+?)~~/, m => ({ text: m[1], durch: true })],
+        [/^\*([^*\n]+)\*/, m => ({ text: m[1], kursiv: true })],
+        [/^_([^_\n]+)_/, m => ({ text: m[1], kursiv: true })],
+        [/^\[\[([^\]|]+)\|([^\]]+)\]\]/, m => ({ text: m[2], ziel: m[1] })],
+        [/^\[\[([^\]|]+)\]\]/, m => ({ text: m[1], ziel: m[1] })],
+        [/^\[([^\]]*)\]\(([^)]*)\)/, m => ({ text: m[1], ziel: m[2] })]
+    ];
+    /** Text in Läufe zerlegen. Ohne Auszeichnung ist es genau einer. */
+    const lesen = (roh) => {
+        const text = String(roh ?? '');
+        if (!text)
+            return [];
+        const raus = [];
+        let rest = text;
+        let klar = '';
+        const klarWeg = () => { if (klar) {
+            raus.push({ text: klar });
+            klar = '';
+        } };
+        while (rest) {
+            let getroffen = false;
+            for (const [re, bau] of MUSTER) {
+                const m = re.exec(rest);
+                if (!m || !m[0])
+                    continue;
+                klarWeg();
+                raus.push(bau(m));
+                rest = rest.slice(m[0].length);
+                getroffen = true;
+                break;
+            }
+            if (!getroffen) {
+                klar += rest[0];
+                rest = rest.slice(1);
+            }
+        }
+        klarWeg();
+        return raus;
+    };
+    /**
+     * Läufe zurück in Redions Text.
+     *
+     * Die Gegenrichtung von `lesen`, und sie muss es wirklich sein: was der
+     * Word-Einleser findet, kommt so wieder in einen Block. `lesen(schreiben(x))`
+     * gibt dieselben Läufe — test309 misst es über einen ganzen Satz Beispiele.
+     */
+    const schreiben = (laeufe) => (laeufe || []).map(l => {
+        let t = String(l?.text ?? '');
+        if (!t)
+            return '';
+        /* Code zuerst und allein: in fester Breite gilt keine weitere
+           Auszeichnung, und ein `**` darin wäre wörtlich gemeint. */
+        if (l.code)
+            return '`' + t + '`';
+        if (l.durch)
+            t = '~~' + t + '~~';
+        if (l.fett)
+            t = '**' + t + '**';
+        if (l.kursiv)
+            t = '*' + t + '*';
+        if (l.ziel) {
+            /* Ein Ziel, das genauso heisst wie der Text, ist ein Seitenverweis —
+               die kurze Form ist die, die auch ein Mensch schreibt. */
+            t = l.ziel === t ? '[[' + t + ']]' : '[' + t + '](' + l.ziel + ')';
+        }
+        return t;
+    }).join('');
+    /** Ohne jede Auszeichnung — für Stellen, die nur Text vertragen. */
+    const nurText = (roh) => lesen(roh).map(l => l.text).join('');
+    return { lesen, schreiben, nurText, MUSTER };
+})();
+window.Inline = Inline;
+
+</script>
+<script>
 /* ===== quell/core/import/sicherheit.js ===== */
 "use strict";
 /* ============================================================================
@@ -79843,6 +79974,72 @@ const Einlesen = (() => {
     /* ========================================================================
      * WORD
      * ======================================================================*/
+    /**
+     * EIN ABSATZ MIT SEINER AUSZEICHNUNG (L72 Teil 2, E315).
+     *
+     * Hier stand `[...getElementsByTagName('w:t')].map(…).join('')` — nur der
+     * Text. Fett und kursiv standen in `w:rPr` daneben und wurden
+     * weggeworfen; wer eine Word-Datei einlas, bekam eine graue Wand.
+     *
+     * Gelesen wird je LAUF, und zurückgeschrieben über denselben Kern, den
+     * der Export benutzt (`core/text/inline.ts`). Damit passen die beiden
+     * Richtungen zusammen — das ist der ganze Grund, warum der Kern
+     * überhaupt einer ist.
+     *
+     * `w:tab` und `w:br` sind keine Läufe, sondern Zeichen: ohne sie klebt
+     * das Wort davor am Wort danach.
+     */
+    const absatzText = (absatz) => {
+        const laeufe = [];
+        for (const r of absatz.getElementsByTagName('w:r')) {
+            const eig = r.getElementsByTagName('w:rPr')[0];
+            /* `w:b w:val="0"` heisst AUSDRÜCKLICH nicht fett — Word schreibt das,
+               wenn eine Vorlage fett ist und ein Lauf es zurücknimmt. */
+            const an = (name) => {
+                const e = eig?.getElementsByTagName('w:' + name)[0];
+                if (!e)
+                    return false;
+                const v = e.getAttribute('w:val');
+                return v !== '0' && v !== 'false' && v !== 'none';
+            };
+            let text = '';
+            for (const kind of r.children) {
+                if (kind.tagName === 'w:t')
+                    text += kind.textContent || '';
+                else if (kind.tagName === 'w:tab')
+                    text += '\t';
+                else if (kind.tagName === 'w:br')
+                    text += ' ';
+            }
+            if (!text)
+                continue;
+            /* FESTE BREITE IST AUCH EINE AUSZEICHNUNG. Der Export schreibt für
+               `code` ein `w:rFonts w:ascii="Consolas"`; wer sie hier nicht
+               zurückliest, verliert sie beim Rundlauf — und die beiden
+               Richtungen laufen genau da auseinander, wo der gemeinsame Kern sie
+               zusammenhalten sollte.
+               Erkannt wird die FAMILIE, nicht der eine Name: eine Word-Datei aus
+               fremder Hand schreibt „Courier New" oder „Consolas", nicht das,
+               was Redion schreibt. */
+            const schrift = String(eig?.getElementsByTagName('w:rFonts')[0]
+                ?.getAttribute('w:ascii') || '');
+            const fest = /consol|courier|mono|menlo|liberation mono/i.test(schrift);
+            laeufe.push({ text, fett: an('b'), kursiv: an('i'), durch: an('strike'),
+                code: fest });
+        }
+        /* Gleich ausgezeichnete Nachbarn zusammenlegen: Word zerschneidet einen
+           Satz gern in fünf Läufe, und `**a****b**` wäre daraus geworden. */
+        const glatt = [];
+        for (const l of laeufe) {
+            const vor = glatt[glatt.length - 1];
+            if (vor && vor.fett === l.fett && vor.kursiv === l.kursiv &&
+                vor.durch === l.durch && vor.code === l.code)
+                vor.text += l.text;
+            else
+                glatt.push({ ...l });
+        }
+        return Inline.schreiben(glatt).trim();
+    };
     const docxLesen = async (puffer) => {
         const zip = await zipLesen(puffer);
         const t = await zip.text('word/document.xml');
@@ -79854,7 +80051,7 @@ const Einlesen = (() => {
         for (const knoten of koerper.children) {
             const tag = knoten.tagName;
             if (tag === 'w:p') {
-                const text = [...knoten.getElementsByTagName('w:t')].map(x => x.textContent).join('').trim();
+                const text = absatzText(knoten);
                 const stil = knoten.getElementsByTagName('w:pStyle')[0]?.getAttribute('w:val') || '';
                 const nummeriert = knoten.getElementsByTagName('w:numPr').length > 0;
                 if (!text)
@@ -93808,12 +94005,32 @@ const Austausch = (() => {
         quote: 'Quote', code: 'Code'
     };
     /** Ein Absatz in Word-XML. */
+    /**
+     * EIN LAUF MIT SEINEN EIGENSCHAFTEN (L72 Teil 2, E315).
+     *
+     * Hier stand `<w:r><w:t>${esc(text)}</w:t></w:r>` — der ROHE Blocktext.
+     * In Word stand danach `**fett**` wörtlich da, mit Sternchen. Wer eine
+     * Arbeit abgibt, gibt sie so ab.
+     *
+     * Die Reihenfolge in `w:rPr` ist nicht beliebig: Word erwartet sie nach
+     * seinem Schema (b, i, strike, rFonts). Falsch sortiert öffnet die Datei
+     * zwar, aber Word beschwert sich beim Speichern — und das schiebt der
+     * Mensch dann auf Redion.
+     */
+    const wLauf = (l) => {
+        const eig = (l.fett ? '<w:b/>' : '') +
+            (l.kursiv ? '<w:i/>' : '') +
+            (l.durch ? '<w:strike/>' : '') +
+            (l.code ? '<w:rFonts w:ascii="Consolas" w:hAnsi="Consolas"/>' : '');
+        return '<w:r>' + (eig ? `<w:rPr>${eig}</w:rPr>` : '') +
+            `<w:t xml:space="preserve">${esc(l.text)}</w:t></w:r>`;
+    };
     const wAbsatz = (text, stil, aufzaehlung) => '<w:p>' +
         '<w:pPr>' +
         (stil ? `<w:pStyle w:val="${stil}"/>` : '') +
         (aufzaehlung ? '<w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr>' : '') +
         '</w:pPr>' +
-        (text ? `<w:r><w:t xml:space="preserve">${esc(text)}</w:t></w:r>` : '') +
+        (text ? Inline.lesen(text).map(wLauf).join('') : '') +
         '</w:p>';
     const wTabelle = (zeilen) => '<w:tbl><w:tblPr><w:tblStyle w:val="TableGrid"/>' +
         '<w:tblW w:w="5000" w:type="pct"/><w:tblBorders>' +

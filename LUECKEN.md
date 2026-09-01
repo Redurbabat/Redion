@@ -2767,9 +2767,25 @@ Tabellenzeilen bleiben, kΩ und äöüß überleben), eine handgebaute
 DEUTSCHE Word-Datei (Stil-IDs „berschrift2" und „Zitat", Nummerierung
 über w:numPr — die toleranten Erkennungswege, die der Rundlauf nie
 berührt), und die Verlust-Ehrlichkeit: `**fett**` steht wörtlich da.
-Zwei Gegenproben einzeln rot. OFFEN BLEIBT Teil 2: echte w:rPr-Läufe
-in beide Richtungen — fett/kursiv als Formatierung statt Sternchen,
-Bilder statt Platzhaltertext.
+Zwei Gegenproben einzeln rot.
+
+TEIL 2 GESCHLOSSEN am 1. September 2026 (E315), bis auf die Bilder.
+`core/text/inline.ts` zerlegt Redions Blocktext in Läufe und setzt sie
+wieder zusammen; beide Richtungen benutzen denselben Kern. Fett, kursiv,
+durchgestrichen und feste Breite gehen als `w:rPr` hinaus und kommen als
+Auszeichnung zurück — in Word stehen keine Sternchen mehr. test309 (25)
+misst den ganzen Weg, §6 hält fest, dass gewöhnlicher Text KEIN `w:rPr`
+bekommt (sonst greifen Words Vorlagen nicht mehr).
+
+ES BLEIBEN ZWEI BENANNTE VERLUSTE, beide gemessen statt vermutet:
+
+  · Ein Redion-Seitenverweis (`[[Seite]]`) hat in Word keine Entsprechung
+    und kommt als gewöhnlicher Text an. Für einen Leser richtig, für den
+    Rundlauf ein Verlust — test309 §5b misst ihn ausdrücklich.
+  · Bilder bleiben Platzhaltertext. Dafür bräuchte es Medienteile und
+    Beziehungen im Archiv (`word/media/`, `document.xml.rels`), also
+    denselben Umbau wie bei .pptx — machbar mit dem vorhandenen
+    ZIP-Schreiber, aber ein eigener Bogen.
 
 
 L73 — Der Block-Grabstein hat zwei eigene Löcher — GESCHLOSSEN
@@ -2857,6 +2873,15 @@ eigene Sätze statt als EINE Meta-Liste — erst angehen, wenn Multi-Tab
 plus Wolke wirklich zusammen gemessen wird.
 
 Gefunden am 29. August 2026 (E254-Leser, Risiko 3).
+
+**Nachtrag vom 1. September 2026 (E314):** es ist jetzt eine Liste mehr.
+`wolkeNachtrag` merkt sich die Kennungen einer dazugelegten Sicherung und
+wird nach dem Versand gestrichen — dasselbe Lesen-Ändern-Schreiben, dieselbe
+Restlücke. Und derselbe Trost: ein doppelt geschickter Satz ist serverseitig
+harmlos, ein verlorener Eintrag bedeutet nur, dass der nächste
+Vollabgleich ihn holt. Die Bedingung von oben gilt unverändert — ein echter
+Verbund braucht Merklisten als eigene Sätze, und das lohnt erst, wenn
+Multi-Tab plus Wolke wirklich zusammen gemessen wird.
 
 ================================================================================
 L76 — Wolke-Zustand nach Import „ersetzen" ist unentschieden — GESCHLOSSEN

@@ -312,13 +312,35 @@ const Austausch = (() => {
   };
 
   /** Ein Absatz in Word-XML. */
+  /**
+   * EIN LAUF MIT SEINEN EIGENSCHAFTEN (L72 Teil 2, E315).
+   *
+   * Hier stand `<w:r><w:t>${esc(text)}</w:t></w:r>` — der ROHE Blocktext.
+   * In Word stand danach `**fett**` wörtlich da, mit Sternchen. Wer eine
+   * Arbeit abgibt, gibt sie so ab.
+   *
+   * Die Reihenfolge in `w:rPr` ist nicht beliebig: Word erwartet sie nach
+   * seinem Schema (b, i, strike, rFonts). Falsch sortiert öffnet die Datei
+   * zwar, aber Word beschwert sich beim Speichern — und das schiebt der
+   * Mensch dann auf Redion.
+   */
+  const wLauf = (l: any): string => {
+    const eig =
+      (l.fett ? '<w:b/>' : '') +
+      (l.kursiv ? '<w:i/>' : '') +
+      (l.durch ? '<w:strike/>' : '') +
+      (l.code ? '<w:rFonts w:ascii="Consolas" w:hAnsi="Consolas"/>' : '');
+    return '<w:r>' + (eig ? `<w:rPr>${eig}</w:rPr>` : '') +
+           `<w:t xml:space="preserve">${esc(l.text)}</w:t></w:r>`;
+  };
+
   const wAbsatz = (text: string, stil?: any, aufzaehlung?: any) =>
     '<w:p>' +
       '<w:pPr>' +
         (stil ? `<w:pStyle w:val="${stil}"/>` : '') +
         (aufzaehlung ? '<w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr>' : '') +
       '</w:pPr>' +
-      (text ? `<w:r><w:t xml:space="preserve">${esc(text)}</w:t></w:r>` : '') +
+      (text ? Inline.lesen(text).map(wLauf).join('') : '') +
     '</w:p>';
 
   const wTabelle = (zeilen: any) =>

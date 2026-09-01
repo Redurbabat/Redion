@@ -87,7 +87,6 @@ await pc.waitForTimeout(2800);
  * danach auf heute. Genau der Fall aus L100.
  */
 const vorbereiten = async () => pc.evaluate(async () => {
-  const w = globalThis as any;
   Store.setMeta('rundgangGesehen', true);
   document.querySelectorAll('.overlay').forEach(o => o.remove());
   Store.setMeta('wolkeNachtrag', []);
@@ -113,7 +112,7 @@ const vorbereiten = async () => pc.evaluate(async () => {
   return { alt, marke: Store.getMeta('wolkeMarkeHoch', '') };
 });
 
-const stand = await vorbereiten();
+await vorbereiten();
 
 /* ------------------------------------------------------------------------ */
 console.log('\n1 · Der Fehler, wie er war');
@@ -155,7 +154,6 @@ p('Ohne die grobe Marke „alles" zu setzen', jetzt.alles !== true, String(jetzt
 console.log('\n3 · GEGENPROBE: beim Ersetzen wird nichts vorgemerkt');
 
 const beimErsetzen = await pc.evaluate(async () => {
-  const w = globalThis as any;
   Store.setMeta('wolkeNachtrag', []);
   const alt = new Date(Date.now() - 90 * 86400000).toISOString();
   const sicherung = {
@@ -200,6 +198,7 @@ p('Und die Marke „alles" auch', nachFehler.alles === true, String(nachFehler.a
    Umweg, sondern derselbe Fall wie in §1 — nur diesmal bis zum Server. */
 const nachErfolg = await pc.evaluate(async (port: number) => {
   const w = globalThis as any;
+  void w;
   const alt = new Date(Date.now() - 90 * 86400000).toISOString();
   await Store.importAll(JSON.stringify({
     version: 4,

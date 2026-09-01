@@ -764,6 +764,67 @@ const Einlesen = (() => {
   /* ========================================================================
    * WORD
    * ======================================================================*/
+  /**
+   * EIN ABSATZ MIT SEINER AUSZEICHNUNG (L72 Teil 2, E315).
+   *
+   * Hier stand `[...getElementsByTagName('w:t')].map(…).join('')` — nur der
+   * Text. Fett und kursiv standen in `w:rPr` daneben und wurden
+   * weggeworfen; wer eine Word-Datei einlas, bekam eine graue Wand.
+   *
+   * Gelesen wird je LAUF, und zurückgeschrieben über denselben Kern, den
+   * der Export benutzt (`core/text/inline.ts`). Damit passen die beiden
+   * Richtungen zusammen — das ist der ganze Grund, warum der Kern
+   * überhaupt einer ist.
+   *
+   * `w:tab` und `w:br` sind keine Läufe, sondern Zeichen: ohne sie klebt
+   * das Wort davor am Wort danach.
+   */
+  const absatzText = (absatz: any): string => {
+    const laeufe: any[] = [];
+    for (const r of absatz.getElementsByTagName('w:r')) {
+      const eig = r.getElementsByTagName('w:rPr')[0];
+      /* `w:b w:val="0"` heisst AUSDRÜCKLICH nicht fett — Word schreibt das,
+         wenn eine Vorlage fett ist und ein Lauf es zurücknimmt. */
+      const an = (name: string): boolean => {
+        const e = eig?.getElementsByTagName('w:' + name)[0];
+        if (!e) return false;
+        const v = e.getAttribute('w:val');
+        return v !== '0' && v !== 'false' && v !== 'none';
+      };
+      let text = '';
+      for (const kind of r.children) {
+        if (kind.tagName === 'w:t') text += kind.textContent || '';
+        else if (kind.tagName === 'w:tab') text += '\t';
+        else if (kind.tagName === 'w:br') text += ' ';
+      }
+      if (!text) continue;
+      /* FESTE BREITE IST AUCH EINE AUSZEICHNUNG. Der Export schreibt für
+         `code` ein `w:rFonts w:ascii="Consolas"`; wer sie hier nicht
+         zurückliest, verliert sie beim Rundlauf — und die beiden
+         Richtungen laufen genau da auseinander, wo der gemeinsame Kern sie
+         zusammenhalten sollte.
+         Erkannt wird die FAMILIE, nicht der eine Name: eine Word-Datei aus
+         fremder Hand schreibt „Courier New" oder „Consolas", nicht das,
+         was Redion schreibt. */
+      const schrift = String(eig?.getElementsByTagName('w:rFonts')[0]
+        ?.getAttribute('w:ascii') || '');
+      const fest = /consol|courier|mono|menlo|liberation mono/i.test(schrift);
+      laeufe.push({ text, fett: an('b'), kursiv: an('i'), durch: an('strike'),
+                    code: fest });
+    }
+    /* Gleich ausgezeichnete Nachbarn zusammenlegen: Word zerschneidet einen
+       Satz gern in fünf Läufe, und `**a****b**` wäre daraus geworden. */
+    const glatt: any[] = [];
+    for (const l of laeufe) {
+      const vor = glatt[glatt.length - 1];
+      if (vor && vor.fett === l.fett && vor.kursiv === l.kursiv &&
+          vor.durch === l.durch && vor.code === l.code)
+        vor.text += l.text;
+      else glatt.push({ ...l });
+    }
+    return Inline.schreiben(glatt).trim();
+  };
+
   const docxLesen = async (puffer: ArrayBuffer): Promise<any> => {
     const zip = await zipLesen(puffer);
     const t = await zip.text('word/document.xml');
@@ -777,7 +838,7 @@ const Einlesen = (() => {
       const tag = knoten.tagName;
 
       if (tag === 'w:p') {
-        const text = [...knoten.getElementsByTagName('w:t')].map(x => x.textContent).join('').trim();
+        const text = absatzText(knoten);
         const stil = knoten.getElementsByTagName('w:pStyle')[0]?.getAttribute('w:val') || '';
         const nummeriert = knoten.getElementsByTagName('w:numPr').length > 0;
         if (!text) continue;
