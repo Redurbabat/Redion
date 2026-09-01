@@ -138,23 +138,43 @@ const Konten = (() => {
         return strenger(Store.getMeta('rolleStandard', 'voll'), kontoRolle);
     };
     /**
+     * Darf DIESES KONTO das überhaupt — ohne jeden Ort?
+     *
+     * Die Rolle allein, ohne Freigaben, ohne Seite. Für Handlungen, die
+     * keinen Ort haben: einen fremden Worker starten, eine Sicherung
+     * einspielen, das Konto wechseln. Wer einen Ort hat, fragt `darf` mit
+     * seiner Kennung oder `darfAnSammlung`.
+     */
+    const darfUeberhaupt = (was) => rolle(aktiv().rolle || 'voll').darf.includes(was);
+    /**
      * Darf ich das?
      *
-     * OHNE SEITENANGABE FÄLLT DIE FRAGE AUF DIE OFFENE SEITE ZURÜCK, und ohne
-     * offene Seite lautet die Antwort `true`. Das ist für die meisten Aufrufer
-     * richtig — „darf ich überhaupt bearbeiten" ist eine Frage nach der Rolle,
-     * nicht nach einem Ort.
+     * OHNE SEITENANGABE FÄLLT DIE FRAGE AUF DIE OFFENE SEITE ZURÜCK. Und ohne
+     * offene Seite auf die ROLLE — seit E331. Vorher lautete die Antwort dort
+     * schlicht `true`.
      *
-     * Es ist aber die falsche Frage, sobald der Aufrufer WEISS, was er anfassen
+     * Der Kommentar an dieser Stelle sagte schon immer, was richtig wäre:
+     * „‚darf ich überhaupt bearbeiten' ist eine Frage nach der Rolle, nicht
+     * nach einem Ort." Der Code beantwortete sie trotzdem nicht mit der Rolle,
+     * sondern mit Ja. Solange die Startansicht eine Seite war, fiel das nicht
+     * auf; seit E132 ist sie das Heute-Dashboard, und damit war der Normalfall
+     * beim Start: keine Seite, also alles erlaubt — für JEDES Konto, auch für
+     * eines mit der Rolle `lesen`.
+     *
+     * Fünf Aufrufer fragen ohne Kennung, und alle fünf meinen genau die
+     * Rollenfrage (`ki/werkzeuge.ts:192`, `ki/agenten.ts:813`,
+     * `zugang/lesefrage.ts:56` und zweimal das Muster
+     * `pageId ? darf(x, pageId) : darf(x)`). Für alle fünf ist die Rolle die
+     * richtige Antwort, und für keinen war es das Ja.
+     *
+     * Es bleibt die falsche Frage, sobald der Aufrufer WEISS, was er anfassen
      * wird. Dann gehört die Kennung hinein. Wer eine Datenbank meint, nimmt
-     * `darfAnSammlung` — sonst prüft er die Seite, die gerade zufällig offen
-     * ist, oder seit E132 (Startansicht ist das Heute-Dashboard, und das ist
-     * keine Seite) überhaupt nichts.
+     * `darfAnSammlung`.
      */
     const darf = (was, seiteId) => {
         const id = seiteId || App.aktuelleSeite();
         if (!id)
-            return true;
+            return darfUeberhaupt(was);
         return rolle(rolleAuf(id, '')).darf.includes(was);
     };
     /**
@@ -439,7 +459,7 @@ const Konten = (() => {
         });
     };
     return { ROLLEN, RANG, strenger, rolle, alle, aktiv, anlegen, anmelden, entfernen,
-        rolleAuf, darf, darfAnSammlung, seiteZuSammlung,
+        rolleAuf, darf, darfUeberhaupt, darfAnSammlung, seiteZuSammlung,
         setzeFreigabe, freigabenVon, freigeben, verwalten, matrix };
 })();
 window.Konten = Konten;

@@ -25117,3 +25117,102 @@ man sie aus dem Abdruck, sind zwei Zustände ununterscheidbar, in denen sich
 ein Block bewegt hat.
 
 test322 19/19, test317 25/25, test282 57/57. sw v84 · Einzeldatei neu gebaut.
+
+
+E331 — Ohne Ort zählt die Rolle (L102 Punkt 2, zweite Hälfte)
+════════════════════════════════════════════════════════════════════════════
+
+Die Bestandsaufnahme vom 31. August fand: „Die Rechteprüfung der Agenten
+fragt die falsche Seite. `agenten.ts:773` ruft `Konten.darf(recht)` OHNE
+Seiten-ID; `sitzung.ts` setzt dann `seiteId || App.aktuelleSeite()`."
+
+E291 hat die eine Hälfte geschlossen: `zeileAnlegen` und `feldFuellen`
+prüfen seither mit `darfAnSammlung` gegen die Datenbank, die sie wirklich
+meinen. NACHGEZÄHLT, statt es dabei zu belassen — von dreizehn Werkzeugen
+haben vier `recht: 'bearbeiten'`, und zwei davon prüften gar nichts:
+
+    seiteLesen        seit jeher   darf('lesen', p.id)
+    zeileAnlegen      E291         darfAnSammlung('bearbeiten', c.id)
+    feldFuellen       E291         darfAnSammlung('bearbeiten', c.id)
+    seiteAnlegen      —            NICHTS                  ← schreibt
+    datenbankAnlegen  —            NICHTS                  ← schreibt
+    datenbankLesen    —            NICHTS
+    worker            —            NICHTS                  ← fremder Code
+
+DER WURZELFEHLER LAG TIEFER, und er stand im Kommentar von `darf` schon
+richtig beschrieben:
+
+    „‚darf ich überhaupt bearbeiten' ist eine Frage nach der Rolle,
+     nicht nach einem Ort."
+
+Der Code beantwortete sie trotzdem nicht mit der Rolle:
+
+    const darf = (was, seiteId) => {
+      const id = seiteId || App.aktuelleSeite();
+      if (!id) return true;                       ← hier
+      return rolle(rolleAuf(id, '')).darf.includes(was);
+    };
+
+Solange die Startansicht eine SEITE war, fiel das nie auf. Seit E132 ist
+sie das Heute-Dashboard, und das ist keine Seite — der Normalfall beim
+Start war damit: kein Ort, also alles erlaubt. Für jedes Konto, auch für
+eines mit der Rolle `lesen`.
+
+Ein Kommentar, der beschreibt, was der Code tun SOLLTE, ist gefährlicher
+als gar keiner: er liest sich wie eine Zusicherung.
+
+WAS GEÄNDERT WURDE
+
+`darf(was)` ohne Ort fragt jetzt die Rolle. Nachgezählt gibt es genau fünf
+Aufrufer ohne Kennung — `ki/werkzeuge.ts:192`, `ki/agenten.ts:813`,
+`zugang/lesefrage.ts:56` und zweimal das Muster
+`pageId ? darf(x, pageId) : darf(x)` — und alle fünf meinen genau die
+Rollenfrage. Für alle fünf ist die Rolle die richtige Antwort, und für
+keinen war es das Ja. Deshalb reicht die eine Zeile; es braucht keinen
+Umbau der Aufrufer.
+
+Dazu `darfUeberhaupt(was)`: die Rolle allein, auch wenn eine Seite offen
+ist. Für Handlungen, die keinen Ort HABEN — einen fremden Worker starten
+ist die erste davon.
+
+Und die vier Werkzeuge:
+
+    seiteAnlegen      darf('bearbeiten', offene Seite)   — dort entsteht sie
+    datenbankAnlegen  darf('bearbeiten', offene Seite)   — dort entsteht sie
+    datenbankLesen    darfAnSammlung('lesen', c.id)      — der Zwilling zu E291
+    worker            darfUeberhaupt('bearbeiten')       — hat keinen Ort
+
+`suchen` bekam KEINE. `Kontext.finden` wirft seit jeher heraus, was nicht
+gelesen werden darf (`kontext.ts:432`). Nachgesehen, nicht angenommen —
+der erste Entwurf dieses Bogens wollte ihm eine geben.
+
+─── WAS DIE PRÜFUNG ÜBER SICH SELBST LERNTE ────────────────────────────────
+
+test324, 22 Punkte, und sie brauchte zwei Anläufe, beide lehrreich.
+
+ERSTENS rief sie `Store.addCollection` — den Griff gibt es nicht, er heisst
+`addDatabase` und nimmt die Elternseite. `datenbankLesen` antwortete
+folgerichtig „Keine Datenbank gefunden", und der Punkt war rot, ohne dass
+am Erzeugnis etwas falsch war.
+
+ZWEITENS, und das ist der eigentliche Fehler: gemessen wurde mit einem
+Konto der Rolle `lesen` — und das DARF lesen. Die Prüfung erwartete eine
+Absage von einer Prüfung, die richtigerweise Ja sagt. Wer messen will, dass
+eine Rechteprüfung bindet, braucht einen Fall, in dem sie NEIN sagen muss:
+eine Freigabe `kein` auf der Seite, auf der die Datenbank wohnt.
+
+Beides zeigt dasselbe: eine rote Prüfung ist erst dann ein Fund, wenn man
+weiss, WER unrecht hat.
+
+BELEGT ROT, zwei Mutationen:
+  · `if (!id) return true` zurück → §1 fällt.
+  · Die Prüfung in `seiteAnlegen` heraus → §3 fällt, und die Meldung sagt
+    „Seite „Verbotene Seite" angelegt" samt gestiegener Blockzahl. Das ist
+    der Schaden, um den es geht.
+
+§4 ist die Gegenprobe, ohne die §3 auch mit einem Wächter grün wäre, der
+einfach alles verbietet: ein volles Konto legt weiterhin an und liest
+weiterhin.
+
+test286 16/16, test287 9/9, test272 153, test192 25, test215 50, test206 66.
+sw v85 · Einzeldatei neu gebaut.

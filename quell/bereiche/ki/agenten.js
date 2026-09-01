@@ -155,7 +155,15 @@ const Agent = (() => {
             beschreibung: 'Legt eine Seite an. Argument: ' +
                 '{"titel":"…","icon":"📄","bloecke":[{"typ":"h1|h2|text|bullet|todo|quote|callout","text":"…"}]}',
             lauf: async (a, protokoll) => {
-                const p = Store.addPage(App.aktuelleSeite(), { text: a.titel || 'Neue Seite', icon: a.icon || '📄' });
+                /* DIE VERBINDLICHE PRÜFUNG, gegen den Ort, an dem wirklich
+                   geschrieben wird (E331). Eine neue Seite entsteht UNTER der
+                   gerade offenen; wer dort nur lesen darf, darf dort auch nichts
+                   anlegen. Ohne offene Seite entsteht sie oben — dann ist es eine
+                   Frage der Rolle, und genau die beantwortet `darf` seit E331. */
+                const unter = App.aktuelleSeite();
+                if (!Konten.darf('bearbeiten', unter))
+                    return 'Hier darfst du nichts anlegen.';
+                const p = Store.addPage(unter, { text: a.titel || 'Neue Seite', icon: a.icon || '📄' });
                 (a.bloecke || []).forEach((b) => {
                     const typ = ['h1', 'h2', 'h3', 'text', 'bullet', 'number', 'todo', 'quote', 'callout', 'divider', 'code']
                         .includes(b.typ) ? b.typ : 'text';
@@ -173,7 +181,12 @@ const Agent = (() => {
                 '{"name":"…","spalten":[{"name":"…","typ":"Text|Zahl|Auswahl|Datum|Kontrollkästchen|Formel",' +
                 '"optionen":["…"],"formel":"…"}],"zeilen":[{"Titel":"…","Spalte":"Wert"}]}',
             lauf: async (a, protokoll) => {
-                const erg = KI.datenbankBauenAus(a, App.aktuelleSeite());
+                /* Wie bei `seiteAnlegen`: die Datenbank entsteht auf der offenen
+                   Seite, also entscheidet deren Freigabe (E331). */
+                const unter = App.aktuelleSeite();
+                if (!Konten.darf('bearbeiten', unter))
+                    return 'Hier darfst du nichts anlegen.';
+                const erg = KI.datenbankBauenAus(a, unter);
                 if (erg && erg.blockId)
                     protokoll.ids.push(erg.blockId);
                 return erg ? ('Datenbank „' + a.name + '" mit ' + erg.spalten + ' Spalten und ' +
@@ -225,6 +238,12 @@ const Agent = (() => {
                 const c = Object.values(Store.cache.collections).find(x => (x.name || '').toLowerCase().includes(String(a.name || '').toLowerCase()));
                 if (!c)
                     return 'Keine Datenbank gefunden zu „' + a.name + '".';
+                /* AUCH LESEN BRAUCHT EIN RECHT (E331). `zeileAnlegen` und
+                   `feldFuellen` prüfen seit E291 gegen die Datenbank, die sie
+                   wirklich meinen — hier fehlte der Zwilling dazu, und eine
+                   Datenbank, die man nicht sehen darf, kam als Tabelle zurück. */
+                if (!Konten.darfAnSammlung('lesen', c.id))
+                    return 'Diese Datenbank darfst du nicht lesen.';
                 const keys = Object.keys(c.schema);
                 const kopf = keys.map(k => c.schema[k].name).join(' | ');
                 const zeilen = Store.rowsOf(c.id).slice(0, a.grenze || 30).map((r) => keys.map(k => Formula.anzeige(Datenbank.wert(r, k, c))).join(' | '));
@@ -332,6 +351,13 @@ const Agent = (() => {
             recht: 'bearbeiten',
             beschreibung: 'Führt einen gespeicherten Worker aus. Argument: {"name":"…","eingabe":{}}',
             lauf: async (a, protokoll, lauf) => {
+                /* EIN WORKER HAT KEINEN ORT — sein Code ist fremd, und was er
+                   anfasst, weiss vorher niemand. Also bleibt die Rolle, und die
+                   wird hier ausdrücklich gefragt statt auf die Vorauswahl zu
+                   vertrauen: sie hing bis E331 an der zufällig offenen Seite und
+                   antwortete ohne eine solche mit Ja. */
+                if (!Konten.darfUeberhaupt('bearbeiten'))
+                    return 'Deine Rolle erlaubt kein Ausführen von Workern.';
                 const w = worker().find((x) => x.name === a.name);
                 if (!w)
                     return 'Keinen Worker namens „' + a.name + '“ gefunden. Vorhanden: ' +
@@ -776,14 +802,27 @@ const Agent = (() => {
     
            DIESE ZEILE IST EINE GROBE VORAUSWAHL UND VERSPRICHT NICHTS (E291).
            `Konten.darf` ohne Seitenkennung fragt die gerade OFFENE Seite; ist
-           keine offen — und seit E132 ist die Startansicht das Heute-Dashboard,
-           also keine Seite —, antwortet sie `true`. Das ist hier auch richtig
-           so, denn WELCHE Seite ein Werkzeug anfassen wird, steht erst fest,
-           wenn seine Argumente da sind.
+           keine offen, fragt sie seit E331 die ROLLE — vorher antwortete sie
+           dort schlicht `true`, und seit E132 (Startansicht ist das
+           Heute-Dashboard) war das der Normalfall beim Start.
     
-           Die verbindliche Prüfung sitzt deshalb IM Werkzeug, gegen das Ziel,
-           das es wirklich meint: `seiteLesen` macht es seit jeher vor,
-           `zeileAnlegen` und `feldFuellen` seit E291. */
+           Grob bleibt sie trotzdem, und das ist richtig so: WELCHE Seite ein
+           Werkzeug anfassen wird, steht erst fest, wenn seine Argumente da
+           sind. Die verbindliche Prüfung sitzt deshalb IM Werkzeug, gegen das
+           Ziel, das es wirklich meint — und seit E331 in ALLEN, die eines
+           haben:
+    
+             seiteLesen        seit jeher   darf('lesen', p.id)
+             zeileAnlegen      E291         darfAnSammlung('bearbeiten', c.id)
+             feldFuellen       E291         darfAnSammlung('bearbeiten', c.id)
+             seiteAnlegen      E331         darf('bearbeiten', offene Seite)
+             datenbankAnlegen  E331         darf('bearbeiten', offene Seite)
+             datenbankLesen    E331         darfAnSammlung('lesen', c.id)
+             worker            E331         darfUeberhaupt('bearbeiten')
+    
+           `suchen` braucht keine: `Kontext.finden` wirft seit jeher heraus,
+           was nicht gelesen werden darf (`kontext.ts:432`). Nachgesehen, nicht
+           angenommen. */
         let nutzbar = erlaubt.filter((n) => Konten.darf(WERKZEUGE[n].recht));
         let gesperrt = erlaubt.filter((n) => !nutzbar.includes(n));
         if (ohneAufsicht && !a.darfAllein) {

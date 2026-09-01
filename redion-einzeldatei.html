@@ -82009,23 +82009,43 @@ const Konten = (() => {
         return strenger(Store.getMeta('rolleStandard', 'voll'), kontoRolle);
     };
     /**
+     * Darf DIESES KONTO das überhaupt — ohne jeden Ort?
+     *
+     * Die Rolle allein, ohne Freigaben, ohne Seite. Für Handlungen, die
+     * keinen Ort haben: einen fremden Worker starten, eine Sicherung
+     * einspielen, das Konto wechseln. Wer einen Ort hat, fragt `darf` mit
+     * seiner Kennung oder `darfAnSammlung`.
+     */
+    const darfUeberhaupt = (was) => rolle(aktiv().rolle || 'voll').darf.includes(was);
+    /**
      * Darf ich das?
      *
-     * OHNE SEITENANGABE FÄLLT DIE FRAGE AUF DIE OFFENE SEITE ZURÜCK, und ohne
-     * offene Seite lautet die Antwort `true`. Das ist für die meisten Aufrufer
-     * richtig — „darf ich überhaupt bearbeiten" ist eine Frage nach der Rolle,
-     * nicht nach einem Ort.
+     * OHNE SEITENANGABE FÄLLT DIE FRAGE AUF DIE OFFENE SEITE ZURÜCK. Und ohne
+     * offene Seite auf die ROLLE — seit E331. Vorher lautete die Antwort dort
+     * schlicht `true`.
      *
-     * Es ist aber die falsche Frage, sobald der Aufrufer WEISS, was er anfassen
+     * Der Kommentar an dieser Stelle sagte schon immer, was richtig wäre:
+     * „‚darf ich überhaupt bearbeiten' ist eine Frage nach der Rolle, nicht
+     * nach einem Ort." Der Code beantwortete sie trotzdem nicht mit der Rolle,
+     * sondern mit Ja. Solange die Startansicht eine Seite war, fiel das nicht
+     * auf; seit E132 ist sie das Heute-Dashboard, und damit war der Normalfall
+     * beim Start: keine Seite, also alles erlaubt — für JEDES Konto, auch für
+     * eines mit der Rolle `lesen`.
+     *
+     * Fünf Aufrufer fragen ohne Kennung, und alle fünf meinen genau die
+     * Rollenfrage (`ki/werkzeuge.ts:192`, `ki/agenten.ts:813`,
+     * `zugang/lesefrage.ts:56` und zweimal das Muster
+     * `pageId ? darf(x, pageId) : darf(x)`). Für alle fünf ist die Rolle die
+     * richtige Antwort, und für keinen war es das Ja.
+     *
+     * Es bleibt die falsche Frage, sobald der Aufrufer WEISS, was er anfassen
      * wird. Dann gehört die Kennung hinein. Wer eine Datenbank meint, nimmt
-     * `darfAnSammlung` — sonst prüft er die Seite, die gerade zufällig offen
-     * ist, oder seit E132 (Startansicht ist das Heute-Dashboard, und das ist
-     * keine Seite) überhaupt nichts.
+     * `darfAnSammlung`.
      */
     const darf = (was, seiteId) => {
         const id = seiteId || App.aktuelleSeite();
         if (!id)
-            return true;
+            return darfUeberhaupt(was);
         return rolle(rolleAuf(id, '')).darf.includes(was);
     };
     /**
@@ -82310,7 +82330,7 @@ const Konten = (() => {
         });
     };
     return { ROLLEN, RANG, strenger, rolle, alle, aktiv, anlegen, anmelden, entfernen,
-        rolleAuf, darf, darfAnSammlung, seiteZuSammlung,
+        rolleAuf, darf, darfUeberhaupt, darfAnSammlung, seiteZuSammlung,
         setzeFreigabe, freigabenVon, freigeben, verwalten, matrix };
 })();
 window.Konten = Konten;
@@ -86128,7 +86148,15 @@ const Agent = (() => {
             beschreibung: 'Legt eine Seite an. Argument: ' +
                 '{"titel":"…","icon":"📄","bloecke":[{"typ":"h1|h2|text|bullet|todo|quote|callout","text":"…"}]}',
             lauf: async (a, protokoll) => {
-                const p = Store.addPage(App.aktuelleSeite(), { text: a.titel || 'Neue Seite', icon: a.icon || '📄' });
+                /* DIE VERBINDLICHE PRÜFUNG, gegen den Ort, an dem wirklich
+                   geschrieben wird (E331). Eine neue Seite entsteht UNTER der
+                   gerade offenen; wer dort nur lesen darf, darf dort auch nichts
+                   anlegen. Ohne offene Seite entsteht sie oben — dann ist es eine
+                   Frage der Rolle, und genau die beantwortet `darf` seit E331. */
+                const unter = App.aktuelleSeite();
+                if (!Konten.darf('bearbeiten', unter))
+                    return 'Hier darfst du nichts anlegen.';
+                const p = Store.addPage(unter, { text: a.titel || 'Neue Seite', icon: a.icon || '📄' });
                 (a.bloecke || []).forEach((b) => {
                     const typ = ['h1', 'h2', 'h3', 'text', 'bullet', 'number', 'todo', 'quote', 'callout', 'divider', 'code']
                         .includes(b.typ) ? b.typ : 'text';
@@ -86146,7 +86174,12 @@ const Agent = (() => {
                 '{"name":"…","spalten":[{"name":"…","typ":"Text|Zahl|Auswahl|Datum|Kontrollkästchen|Formel",' +
                 '"optionen":["…"],"formel":"…"}],"zeilen":[{"Titel":"…","Spalte":"Wert"}]}',
             lauf: async (a, protokoll) => {
-                const erg = KI.datenbankBauenAus(a, App.aktuelleSeite());
+                /* Wie bei `seiteAnlegen`: die Datenbank entsteht auf der offenen
+                   Seite, also entscheidet deren Freigabe (E331). */
+                const unter = App.aktuelleSeite();
+                if (!Konten.darf('bearbeiten', unter))
+                    return 'Hier darfst du nichts anlegen.';
+                const erg = KI.datenbankBauenAus(a, unter);
                 if (erg && erg.blockId)
                     protokoll.ids.push(erg.blockId);
                 return erg ? ('Datenbank „' + a.name + '" mit ' + erg.spalten + ' Spalten und ' +
@@ -86198,6 +86231,12 @@ const Agent = (() => {
                 const c = Object.values(Store.cache.collections).find(x => (x.name || '').toLowerCase().includes(String(a.name || '').toLowerCase()));
                 if (!c)
                     return 'Keine Datenbank gefunden zu „' + a.name + '".';
+                /* AUCH LESEN BRAUCHT EIN RECHT (E331). `zeileAnlegen` und
+                   `feldFuellen` prüfen seit E291 gegen die Datenbank, die sie
+                   wirklich meinen — hier fehlte der Zwilling dazu, und eine
+                   Datenbank, die man nicht sehen darf, kam als Tabelle zurück. */
+                if (!Konten.darfAnSammlung('lesen', c.id))
+                    return 'Diese Datenbank darfst du nicht lesen.';
                 const keys = Object.keys(c.schema);
                 const kopf = keys.map(k => c.schema[k].name).join(' | ');
                 const zeilen = Store.rowsOf(c.id).slice(0, a.grenze || 30).map((r) => keys.map(k => Formula.anzeige(Datenbank.wert(r, k, c))).join(' | '));
@@ -86305,6 +86344,13 @@ const Agent = (() => {
             recht: 'bearbeiten',
             beschreibung: 'Führt einen gespeicherten Worker aus. Argument: {"name":"…","eingabe":{}}',
             lauf: async (a, protokoll, lauf) => {
+                /* EIN WORKER HAT KEINEN ORT — sein Code ist fremd, und was er
+                   anfasst, weiss vorher niemand. Also bleibt die Rolle, und die
+                   wird hier ausdrücklich gefragt statt auf die Vorauswahl zu
+                   vertrauen: sie hing bis E331 an der zufällig offenen Seite und
+                   antwortete ohne eine solche mit Ja. */
+                if (!Konten.darfUeberhaupt('bearbeiten'))
+                    return 'Deine Rolle erlaubt kein Ausführen von Workern.';
                 const w = worker().find((x) => x.name === a.name);
                 if (!w)
                     return 'Keinen Worker namens „' + a.name + '“ gefunden. Vorhanden: ' +
@@ -86749,14 +86795,27 @@ const Agent = (() => {
     
            DIESE ZEILE IST EINE GROBE VORAUSWAHL UND VERSPRICHT NICHTS (E291).
            `Konten.darf` ohne Seitenkennung fragt die gerade OFFENE Seite; ist
-           keine offen — und seit E132 ist die Startansicht das Heute-Dashboard,
-           also keine Seite —, antwortet sie `true`. Das ist hier auch richtig
-           so, denn WELCHE Seite ein Werkzeug anfassen wird, steht erst fest,
-           wenn seine Argumente da sind.
+           keine offen, fragt sie seit E331 die ROLLE — vorher antwortete sie
+           dort schlicht `true`, und seit E132 (Startansicht ist das
+           Heute-Dashboard) war das der Normalfall beim Start.
     
-           Die verbindliche Prüfung sitzt deshalb IM Werkzeug, gegen das Ziel,
-           das es wirklich meint: `seiteLesen` macht es seit jeher vor,
-           `zeileAnlegen` und `feldFuellen` seit E291. */
+           Grob bleibt sie trotzdem, und das ist richtig so: WELCHE Seite ein
+           Werkzeug anfassen wird, steht erst fest, wenn seine Argumente da
+           sind. Die verbindliche Prüfung sitzt deshalb IM Werkzeug, gegen das
+           Ziel, das es wirklich meint — und seit E331 in ALLEN, die eines
+           haben:
+    
+             seiteLesen        seit jeher   darf('lesen', p.id)
+             zeileAnlegen      E291         darfAnSammlung('bearbeiten', c.id)
+             feldFuellen       E291         darfAnSammlung('bearbeiten', c.id)
+             seiteAnlegen      E331         darf('bearbeiten', offene Seite)
+             datenbankAnlegen  E331         darf('bearbeiten', offene Seite)
+             datenbankLesen    E331         darfAnSammlung('lesen', c.id)
+             worker            E331         darfUeberhaupt('bearbeiten')
+    
+           `suchen` braucht keine: `Kontext.finden` wirft seit jeher heraus,
+           was nicht gelesen werden darf (`kontext.ts:432`). Nachgesehen, nicht
+           angenommen. */
         let nutzbar = erlaubt.filter((n) => Konten.darf(WERKZEUGE[n].recht));
         let gesperrt = erlaubt.filter((n) => !nutzbar.includes(n));
         if (ohneAufsicht && !a.darfAllein) {

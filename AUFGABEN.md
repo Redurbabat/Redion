@@ -2481,3 +2481,17 @@ node pruefungen/lauf/test105.mjs
   wäre er blind gegen zwei Änderungen in derselben Millisekunde — belegt
   rot. Gerechnet ab 2020, damit die Summe bei zehntausend Blöcken nicht die
   Genauigkeit einer Fliesskommazahl übersteigt. test323 neu (14). sw v84.
+* E331 (L102 Punkt 2, zweite Hälfte): Ohne Ort zählt die Rolle. E291 hatte
+  die halbe Lücke geschlossen; nachgezählt blieben vier Agentenwerkzeuge
+  ohne verbindliche Prüfung, darunter zwei, die schreiben, und eines, das
+  fremden Code ausführt. Der Wurzelfehler lag tiefer und stand im Kommentar
+  von `darf` schon richtig: „eine Frage nach der Rolle, nicht nach einem
+  Ort" — der Code antwortete trotzdem mit `true`. Solange die Startansicht
+  eine Seite war, fiel das nie auf; seit E132 ist sie das Heute-Dashboard,
+  und damit war der Normalfall beim Start: kein Ort, alles erlaubt, auch
+  für ein Konto mit der Rolle `lesen`. Ein Kommentar, der beschreibt was
+  der Code tun SOLLTE, ist gefährlicher als gar keiner. Jetzt fragt `darf`
+  ohne Ort die Rolle (fünf Aufrufer, alle fünf meinen genau das), es gibt
+  `darfUeberhaupt` für ortlose Handlungen, und die vier Werkzeuge prüfen
+  gegen ihr Ziel. `suchen` bekam keine — `Kontext.finden` filtert seit
+  jeher. test324 neu (22), zwei Mutationen belegt rot. sw v85.

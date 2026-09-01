@@ -3927,11 +3927,21 @@ nicht verlorengeht:
 
    Das ist schlimmer als „fehlt" und gehört vor die Ausbaupunkte.
 
-2. **Die Rechteprüfung der Agenten fragt die falsche Seite.**
-   `agenten.ts:773` ruft `Konten.darf(recht)` OHNE Seiten-ID;
-   `sitzung.ts:153-156` setzt dann `seiteId || App.aktuelleSeite()`. Ob ein
-   Agent schreiben darf, entscheidet also die gerade OFFENE Seite —
-   geschrieben wird woanders.
+2. **Die Rechteprüfung der Agenten fragt die falsche Seite.** — **GANZ
+   GESCHLOSSEN am 1. September 2026: die eine Hälfte durch E291, die andere
+   durch E331.**
+
+   E291 gab `zeileAnlegen` und `feldFuellen` ihre verbindliche Prüfung.
+   Nachgezählt blieben vier Werkzeuge ohne, darunter zwei, die SCHREIBEN
+   (`seiteAnlegen`, `datenbankAnlegen`) und eines, das fremden Code
+   ausführt (`worker`).
+
+   DER WURZELFEHLER LAG TIEFER: `darf(was)` ohne Ort antwortete `true`,
+   obwohl sein eigener Kommentar sagte, es sei „eine Frage nach der Rolle".
+   Seit E132 ist die Startansicht das Heute-Dashboard und damit keine
+   Seite — der Normalfall beim Start war also: kein Ort, alles erlaubt, für
+   jedes Konto. Jetzt zählt dort die Rolle, und es gibt `darfUeberhaupt`
+   für Handlungen, die gar keinen Ort haben.
 
 3. **Der ganze Vektorweg ist toter Code.** `findenMitVektoren` ist definiert
    und exportiert (`kontext.ts:620`, Export `:636`), und im gesamten
@@ -3978,8 +3988,10 @@ BYMONTHDAY, BYMONTH, BYSETPOS, WKST — dazu EXDATE und RDATE, die der
 Einleser bis dahin nicht einmal aufgriff. Was übrig bleibt, wird GENANNT
 statt verschwiegen. test284 (49 Punkte).
 
-Offen aus diesem Abschnitt bleibt der zweite Fund: die Agentenrechte fragen
-die gerade offene Seite (`agenten.ts:773`) statt die Seite, um die es geht.
+NACHTRAG vom 1. September: auch der zweite Fund ist zu (E331). Der
+Nachsatz oben stand einen Tag lang im Widerspruch zur Kopfzeile dieses
+Abschnitts, die E291 schon als Abschluss meldete — beide hatten halb
+recht, und nachgezählt hat es erst E331.
 
 L103 — Was die Auftragsmaschine (E286) noch nicht kann
 ================================================================================
