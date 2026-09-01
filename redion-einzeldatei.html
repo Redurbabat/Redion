@@ -20090,6 +20090,7 @@ const Kompetenz = (() => {
             ? Date.parse(String(k.sr.faellig)) <= jetzt : false;
         return {
             id: k.id, thema: k.thema || '(ohne Thema)', titel: k.titel || '',
+            quelle: String(k.quelle || 'karte'),
             gesamt, richtig, haltbarkeit: h, faellig,
             ersteZeit, letzteZeit,
             intervall: Number(k.sr && k.sr.intervall) || 0
@@ -20111,12 +20112,17 @@ const Kompetenz = (() => {
             if (!g) {
                 g = { thema: e.thema, karten: 0, gesamt: 0, richtig: 0,
                     haltbarSumme: 0, haltbarZahl: 0, faellig: 0,
-                    ersteZeit: 0, letzteZeit: 0 };
+                    ersteZeit: 0, letzteZeit: 0, quellen: {} };
                 gruppen.set(e.thema, g);
             }
-            g.karten++;
+            /* NUR ECHTE KARTEN ZÄHLEN ALS KARTEN (E339). Eine Prüfungsantwort
+               ist ein Beleg, aber keine Karte. */
+            if (e.quelle === 'karte')
+                g.karten++;
             g.gesamt += e.gesamt;
             g.richtig += e.richtig;
+            if (e.gesamt)
+                g.quellen[e.quelle] = (g.quellen[e.quelle] || 0) + e.gesamt;
             /* Nur Karten mit Abstand tragen zur Haltbarkeit bei. Eine nie geübte
                Karte ist keine Null, sondern eine Unbekannte — sie mit 0 in den
                Mittelwert zu nehmen, machte aus „noch nicht geübt" ein
@@ -20140,6 +20146,9 @@ const Kompetenz = (() => {
                 thema: g.thema,
                 karten: g.karten,
                 belege: g.gesamt,
+                /* Woher die Belege kommen, in Zahlen. Der Satz nennt es nur, wenn
+                   es mehr als eine Art ist — siehe `quellenTeil`. */
+                quellen: { ...g.quellen },
                 richtig: g.richtig,
                 /* Die Zahl, die man verantworten kann. */
                 sicherheit: w.unten,
@@ -20153,7 +20162,7 @@ const Kompetenz = (() => {
                 satz: satzZu({
                     thema: g.thema, belege: g.gesamt, unten: w.unten, roh: g.gesamt ? g.richtig / g.gesamt : 0,
                     haltbar, genug, mindest, karten: g.karten, faellig: g.faellig, jetzt,
-                    letzteZeit: g.letzteZeit
+                    letzteZeit: g.letzteZeit, quellen: g.quellen
                 })
             };
         }).sort((a, b) => (b.genug ? 1 : 0) - (a.genug ? 1 : 0) ||
@@ -20342,6 +20351,48 @@ const Kompetenz = (() => {
             ' — ' + (richtung === 'auf' ? 'aufwärts' : 'abwärts') + ', ' +
             punkte + ' Punkte ' + zeitraum + '.';
     };
+    /**
+     * Wie eine Belegart auf Deutsch heisst.
+     *
+     * DER KERN KENNT DIE ARTEN NICHT — er rechnet mit allen gleich. Diese
+     * Tabelle gibt es nur für den SATZ, den ein Mensch liest, und was hier
+     * fehlt, wird beim eigenen Namen genannt statt verschwiegen (§35).
+     */
+    const QUELLEN_NAME = {
+        karte: 'Karteikarten',
+        pruefung: 'Prüfungssimulationen'
+    };
+    /**
+     * „ Die Belege: 40 aus Karteikarten und 22 aus Prüfungssimulationen."
+     * — oder nichts.
+     *
+     * NICHTS BEI EINER EINZIGEN ART, und das ist der Punkt: solange alles
+     * aus Karteikarten kommt, wäre „62 aus Karteikarten" eine Zeile, die
+     * nichts sagt und die man nach dem zweiten Mal überliest. Genannt wird
+     * die Herkunft erst, wenn sie eine Frage beantwortet.
+     *
+     * EIN EIGENER SATZ AM ENDE, und nicht in Klammern mitten hinein. Der
+     * erste Wurf hängte ihn hinter die Zahl, und auf dem Bildschirm standen
+     * dann ZWEI Klammern hintereinander: „75 % aus 25 Antworten (15 aus
+     * Karteikarten, 10 aus Prüfungssimulationen) (roh 92 % — …)". Beides
+     * gültig, beides richtig, zusammen unlesbar. Gesehen hat das kein
+     * Prüflauf, sondern der Blick auf den fertigen Satz (§55.1).
+     */
+    const quellenTeil = (quellen) => {
+        const paare = Object.entries(quellen || {})
+            .filter(([, n]) => Number(n) > 0)
+            .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+        if (paare.length < 2)
+            return '';
+        const teile = paare.map(([q, n]) => n + ' aus ' + (QUELLEN_NAME[q] || q));
+        const letzter = teile.pop();
+        /* „Die Belege:" UND NICHT „Davon" — der Satz davor endet auf „Davon
+           dürfte heute noch X % sitzen", und zwei „Davon" hintereinander
+           liest sich, als wäre das eine die Erklärung des anderen. Auch das
+           stand erst auf dem Bildschirm. */
+        return ' Die Belege: ' + (teile.length ? teile.join(', ') + ' und ' : '') +
+            letzter + '.';
+    };
     const satzZu = (x) => {
         if (!x.belege) {
             return x.karten === 1
@@ -20352,7 +20403,8 @@ const Kompetenz = (() => {
             const fehlt = x.mindest - x.belege;
             return x.belege + (x.belege === 1 ? ' Antwort' : ' Antworten') +
                 ' — zu wenig für eine Aussage. Noch ' + fehlt +
-                (fehlt === 1 ? ' Antwort' : ' Antworten') + ', dann sagt Redion etwas dazu.';
+                (fehlt === 1 ? ' Antwort' : ' Antworten') + ', dann sagt Redion etwas dazu.' +
+                quellenTeil(x.quellen);
         }
         const prozent = Math.round(x.unten * 100);
         const rohProzent = Math.round(x.roh * 100);
@@ -20369,16 +20421,18 @@ const Kompetenz = (() => {
             : tage < 30 ? 'zuletzt vor ' + tage + ' Tagen'
                 : 'zuletzt vor ' + Math.round(tage / 30) + ' Monaten';
         return stufeVon(x.unten) + ' — ' + prozent + ' % aus ' + x.belege +
-            ' Antworten' + rohTeil + '. Davon dürfte heute noch ' + haltbarProzent +
+            ' Antworten' + rohTeil +
+            '. Davon dürfte heute noch ' + haltbarProzent +
             ' % sitzen; ' + zeitTeil + '.' +
-            (x.faellig ? ' ' + x.faellig + ' fällig.' : '');
+            (x.faellig ? ' ' + x.faellig + ' fällig.' : '') +
+            quellenTeil(x.quellen);
     };
     /** Ein Gesamtbild über alle Themen — dieselben Regeln, eine Gruppe. */
     const gesamt = (karten, opt = {}) => {
         const alle = (karten || []).map(k => ({ ...k, thema: 'alles' }));
         const eins = jeThema(alle, opt);
         return eins[0] || {
-            thema: 'alles', karten: 0, belege: 0, richtig: 0, sicherheit: 0,
+            thema: 'alles', karten: 0, belege: 0, richtig: 0, sicherheit: 0, quellen: {},
             roh: 0, haltbarkeit: 0, faellig: 0, genug: false, stufe: '',
             seit: '', zuletzt: '', satz: 'Noch keine Karten.'
         };
@@ -20654,6 +20708,105 @@ const Lerntempo = (() => {
     return { jeKarte, minutenFuer, satz, PAUSE_MS, KURZ_MS, GENUG };
 })();
 window.Lerntempo = Lerntempo;
+
+</script>
+<script>
+/* ===== quell/core/learning/belege.js ===== */
+"use strict";
+/* ============================================================================
+ * core/learning/belege.ts — andere Belege für Können als Karteikarten
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/core/learning/belege.ts`. `npm run bauen:ts` schreibt
+ * daraus `quell/core/learning/belege.js`.
+ * ----------------------------------------------------------------------------
+ * L106 Punkt 1: „Die Karteikarten sind die einzige Quelle. Prüfungsergebnisse,
+ * Elektro-Aufgaben, der Lernpfad und die Simulationen sind auch Belege für
+ * Können, und keiner davon zählt mit. `Kompetenz.jeThema` nimmt jede Liste mit
+ * `sr` und `reviewVerlauf` — der Anschluss ist Arbeit an den Bereichen, nicht
+ * am Kern."
+ *
+ * Das stimmte, und dieses Modul ist der Anschluss. Es rechnet nichts aus: es
+ * ÜBERSETZT, was ein Bereich schon aufhebt, in die Form, die `kompetenz.ts`
+ * seit E289 versteht.
+ *
+ * ─── WARUM EINE PRÜFUNGSSIMULATION ÜBERHAUPT EIN BELEG IST ──────────────────
+ *
+ * Sie ist sogar der bessere. Eine Karteikarte wird SELBST BEWERTET — man sagt
+ * sich selbst, ob man es wusste. Eine Simulation zählt richtig und falsch,
+ * ohne dass man sich etwas vormachen kann. Sie nicht mitzuzählen hiesse, die
+ * härtere Auskunft wegzuwerfen und die weichere zu behalten.
+ *
+ * ─── UND WARUM SIE TROTZDEM KEINE KARTE IST ─────────────────────────────────
+ *
+ * Jeder erzeugte Satz trägt `quelle: 'pruefung'`. `kompetenz.ts` zählt nur
+ * echte Karten als Karten — sonst stünde „20 Karten" bei zwölf Karten, und
+ * das wäre genau die stille Falschaussage, gegen die E289 gebaut wurde.
+ *
+ * Reine Rechnung: keine Ablage, keine Uhr, kein DOM.
+ * ==========================================================================*/
+const Belege = (() => {
+    'use strict';
+    /**
+     * DIE NOTEN SIND DIE DER KARTEIKARTEN, damit beides vergleichbar bleibt.
+     * `kompetenz.ts` zählt ab 3 als richtig (`karteAus`); 4 heisst „leicht",
+     * 1 heisst „nochmal". Eine Prüfungsantwort ist richtig oder falsch, also
+     * gibt es nur diese beiden Werte — eine erfundene Abstufung dazwischen
+     * wäre eine Behauptung über etwas, das gar nicht gemessen wurde.
+     */
+    const RICHTIG = 4;
+    const FALSCH = 1;
+    /** Wie `topicLabel` in `bereiche/wissen/learning.ts`. */
+    const THEMA_MAX = 120;
+    const themaAus = (roh) => {
+        const t = String(roh ?? '').trim().slice(0, THEMA_MAX);
+        return t || 'Ohne Thema';
+    };
+    /**
+     * Prüfungssimulationen in Belege übersetzen.
+     *
+     * EIN SATZ JE (SIMULATION, THEMA) und nicht je Antwort: mehr Sätze wären
+     * mehr Rechnung ohne mehr Aussage, denn `jeThema` summiert sie ohnehin.
+     * Die Kennung trägt beides, damit zwei Simulationen über dasselbe Thema
+     * nicht zu einer verschmelzen.
+     *
+     * OHNE DATUM KEIN BELEG. `kompetenz.ts` ordnet Antworten in Zeitfenster
+     * ein (`fensterTage`, E328); ein Eintrag ohne Zeit fiele dort still
+     * heraus und zählte hier trotzdem mit — der Vergleich „letzte 90 Tage
+     * gegen die 90 davor" ergäbe dann zwei verschiedene Grundgesamtheiten.
+     */
+    const ausSimulationen = (liste) => {
+        const raus = [];
+        for (const s of (Array.isArray(liste) ? liste : [])) {
+            if (!s || typeof s !== 'object')
+                continue;
+            const wann = String(s.beendet || '');
+            if (!wann || !Number.isFinite(Date.parse(wann)))
+                continue;
+            const simId = String(s.id || wann);
+            for (const t of (Array.isArray(s.themen) ? s.themen : [])) {
+                const gesamt = Math.max(0, Math.floor(Number(t?.gesamt) || 0));
+                if (!gesamt)
+                    continue;
+                const fehler = Math.min(gesamt, Math.max(0, Math.floor(Number(t?.fehler) || 0)));
+                const thema = themaAus(t?.thema);
+                const verlauf = [];
+                for (let i = 0; i < gesamt; i++)
+                    verlauf.push({ id: simId + ':' + thema + ':' + i, at: wann,
+                        rating: i < gesamt - fehler ? RICHTIG : FALSCH });
+                raus.push({
+                    id: 'sim:' + simId + ':' + thema,
+                    thema, titel: String(s.titel || 'Prüfungssimulation'),
+                    quelle: 'pruefung',
+                    reviewVerlauf: verlauf
+                });
+            }
+        }
+        return raus;
+    };
+    return { ausSimulationen, themaAus, RICHTIG, FALSCH, THEMA_MAX };
+})();
+window.Belege = Belege;
 
 </script>
 <script>
@@ -76252,6 +76405,38 @@ const Learning = (() => {
      * Fehlt das Modul, kommt eine leere Karte zurück und die Anzeige lässt
      * die Zahl weg, statt eine zu erfinden.
      */
+    /**
+     * Die anderen Belege für Können (L106 Punkt 1, E339).
+     *
+     * Bis E339 waren die Karteikarten die einzige Quelle. Eine
+     * Prüfungssimulation ist aber der HÄRTERE Beleg: eine Karteikarte wird
+     * selbst bewertet, eine Simulation zählt richtig und falsch. Sie nicht
+     * mitzuzählen hiess, die härtere Auskunft wegzuwerfen.
+     *
+     * DIE THEMEN MÜSSEN SICH TREFFEN, und das ist die einzige Stelle, an der
+     * es schiefgehen kann: `learning.ts` nennt ein Thema über `topicLabel`,
+     * `lernwelt.ts` über `themaVon`. Beide bevorzugen dasselbe (`quiz.topic`,
+     * `lernThema`, `topic`) und fallen auf denselben Seitentitel zurück; sie
+     * unterscheiden sich nur darin, dass `topicLabel` auf 120 Zeichen kürzt.
+     * `Belege.themaAus` kürzt genauso — damit treffen sie sich, ausser bei
+     * einem Seitentitel über 120 Zeichen, dessen erste 120 nicht eindeutig
+     * sind. Steht als bekannte Grenze in L106.
+     */
+    const andereBelege = () => {
+        const B = window.Belege;
+        const LW = window.Lernwelt;
+        if (!B || typeof B.ausSimulationen !== 'function')
+            return [];
+        let sims = [];
+        try {
+            if (LW && LW.modelle && typeof LW.modelle.simulationen === 'function')
+                sims = LW.modelle.simulationen();
+        }
+        catch {
+            sims = [];
+        }
+        return B.ausSimulationen(sims);
+    };
     const kompetenzJeThema = (allCards, now) => {
         const K = window.Kompetenz;
         if (!K || typeof K.jeThema !== 'function')
@@ -76262,7 +76447,7 @@ const Learning = (() => {
             titel: String(card?.text || '').slice(0, 60),
             sr: card?.sr,
             reviewVerlauf: card?.reviewVerlauf
-        })).filter(c => c.id);
+        })).filter(c => c.id).concat(andereBelege());
         const out = new Map();
         for (const e of K.jeThema(liste, { jetzt: now }))
             out.set(String(e.thema).toLocaleLowerCase('de-CH'), e);
@@ -76389,7 +76574,7 @@ const Learning = (() => {
             ? K.gesamt(allCards.map((card) => ({
                 id: String(card?.id || ''), thema: 'alles',
                 sr: card?.sr, reviewVerlauf: card?.reviewVerlauf
-            })).filter((c) => c.id))
+            })).filter((c) => c.id).concat(andereBelege()))
             : null;
         const logs = allCards.flatMap(reviewLog);
         const today = localDay(null);
@@ -117103,6 +117288,12 @@ const Lernwelt = (() => {
             bereiche,
             warteschlange,
             statistik,
+            /* SEIT E339 FRAGT `learning.ts` DANACH. Die Ergebnisse liegen unter
+               einem Schlüssel, der den Lernenden enthält (`metaSchluessel`) —
+               wer sie von aussen lesen will, muss ihn entweder nachbauen oder
+               hier danach fragen. Nachbauen wäre dieselbe Wahrheit an zwei
+               Stellen, und die zweite geht irgendwann auseinander. */
+            simulationen,
             fehler: fehlerListe,
             pruefungen,
             aufgaben: sichtbareAufgaben,

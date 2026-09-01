@@ -2611,3 +2611,19 @@ node pruefungen/lauf/test105.mjs
   Quelle) und 5 (Zeitzonen, ausdrücklich so gewollt).
   test330 neu (35), viermal belegt rot. test329 39/39 (§6 zog mit),
   test327 30/30, test328 31/31, test284 49/49, test319 26/26.
+* E339 (L106 Punkt 1, halb geschlossen): Nicht nur Karteikarten. Eine
+  Prüfungssimulation ist der BESSERE Beleg — eine Karteikarte wird selbst
+  bewertet, eine Simulation zählt richtig und falsch. Sie nicht mitzuzählen
+  hiess, die härtere Auskunft wegzuwerfen. `core/learning/belege.ts`
+  übersetzt ein Ergebnis je Thema in Belege mit Datum und Noten in
+  derselben Skala. Der Kern zählt sie als Belege, aber NICHT als Karten —
+  sonst stünde „20 Karten" bei zwölf, genau die stille Falschaussage, gegen
+  die E289 gebaut wurde. Und der Satz nennt die Herkunft, aber nur bei mehr
+  als einer Art.
+  ZWEIMAL HAT DER BLICK AUF DEN FERTIGEN SATZ etwas gefunden, das kein
+  Prüflauf hatte: erst zwei Klammern hintereinander, dann zwei „Davon".
+  Beide sind jetzt eigene Prüfzeilen. Offen bleiben Elektro-Aufgaben und
+  Lernpfad — sie heben kein Ergebnis mit Thema und Datum auf, dort ist
+  zuerst das AUFHEBEN zu bauen.
+  test331 neu (40), dreimal belegt rot. test283 35/35, test318 18/18,
+  test281 48/48, test105 108 ok.

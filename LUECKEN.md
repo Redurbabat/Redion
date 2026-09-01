@@ -4284,6 +4284,23 @@ L106 — Was die Lern-Evidenz (E289) und der Kalender (E290) noch nicht können
    mit `sr` und `reviewVerlauf` — der Anschluss ist Arbeit an den
    Bereichen, nicht am Kern.
 
+   **HALB GESCHLOSSEN am 1. September 2026 durch E339.** Die
+   PRÜFUNGSSIMULATIONEN zählen mit, und sie sind der bessere Beleg: eine
+   Karteikarte wird selbst bewertet, eine Simulation zählt richtig und
+   falsch. `core/learning/belege.ts` übersetzt ein Ergebnis je Thema in
+   Belege mit Datum; der Kern zählt sie als Belege, aber NICHT als Karten,
+   und der Satz nennt die Herkunft — aber nur, wenn es mehr als eine Art
+   ist. test331, 40 Punkte.
+
+   WAS OFFEN BLEIBT: Elektro-Aufgaben und der Lernpfad. Sie führen kein
+   Ergebnis mit Thema und Datum, wie die Simulationen es tun — dort ist
+   zuerst das AUFHEBEN zu bauen, nicht das Anschliessen. Und eine bekannte
+   Grenze beim Anschliessen selbst: `learning.ts` nennt ein Thema über
+   `topicLabel` (gekürzt auf 120 Zeichen), `lernwelt.ts` über `themaVon`
+   (ungekürzt). `Belege.themaAus` kürzt genauso, also treffen sie sich —
+   ausser bei einem Seitentitel über 120 Zeichen, dessen erste 120 nicht
+   eindeutig sind. Dann landete der Beleg unter einem zweiten Thema.
+
 2. **Die Haltbarkeit steht nicht in der Anzeige.** Der Satz nennt sie
    („davon dürfte heute noch 62 % sitzen"), aber es gibt keinen Balken, kein
    Sortieren danach, keine Liste „was zuerst auffrischen". Genau das wäre

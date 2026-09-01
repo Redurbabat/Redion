@@ -180,6 +180,7 @@ const Kompetenz = (() => {
             ? Date.parse(String(k.sr.faellig)) <= jetzt : false;
         return {
             id: k.id, thema: k.thema || '(ohne Thema)', titel: k.titel || '',
+            quelle: String(k.quelle || 'karte'),
             gesamt, richtig, haltbarkeit: h, faellig,
             ersteZeit, letzteZeit,
             intervall: Number(k.sr && k.sr.intervall) || 0
@@ -201,12 +202,17 @@ const Kompetenz = (() => {
             if (!g) {
                 g = { thema: e.thema, karten: 0, gesamt: 0, richtig: 0,
                     haltbarSumme: 0, haltbarZahl: 0, faellig: 0,
-                    ersteZeit: 0, letzteZeit: 0 };
+                    ersteZeit: 0, letzteZeit: 0, quellen: {} };
                 gruppen.set(e.thema, g);
             }
-            g.karten++;
+            /* NUR ECHTE KARTEN ZÄHLEN ALS KARTEN (E339). Eine Prüfungsantwort
+               ist ein Beleg, aber keine Karte. */
+            if (e.quelle === 'karte')
+                g.karten++;
             g.gesamt += e.gesamt;
             g.richtig += e.richtig;
+            if (e.gesamt)
+                g.quellen[e.quelle] = (g.quellen[e.quelle] || 0) + e.gesamt;
             /* Nur Karten mit Abstand tragen zur Haltbarkeit bei. Eine nie geübte
                Karte ist keine Null, sondern eine Unbekannte — sie mit 0 in den
                Mittelwert zu nehmen, machte aus „noch nicht geübt" ein
@@ -230,6 +236,9 @@ const Kompetenz = (() => {
                 thema: g.thema,
                 karten: g.karten,
                 belege: g.gesamt,
+                /* Woher die Belege kommen, in Zahlen. Der Satz nennt es nur, wenn
+                   es mehr als eine Art ist — siehe `quellenTeil`. */
+                quellen: { ...g.quellen },
                 richtig: g.richtig,
                 /* Die Zahl, die man verantworten kann. */
                 sicherheit: w.unten,
@@ -243,7 +252,7 @@ const Kompetenz = (() => {
                 satz: satzZu({
                     thema: g.thema, belege: g.gesamt, unten: w.unten, roh: g.gesamt ? g.richtig / g.gesamt : 0,
                     haltbar, genug, mindest, karten: g.karten, faellig: g.faellig, jetzt,
-                    letzteZeit: g.letzteZeit
+                    letzteZeit: g.letzteZeit, quellen: g.quellen
                 })
             };
         }).sort((a, b) => (b.genug ? 1 : 0) - (a.genug ? 1 : 0) ||
@@ -432,6 +441,48 @@ const Kompetenz = (() => {
             ' — ' + (richtung === 'auf' ? 'aufwärts' : 'abwärts') + ', ' +
             punkte + ' Punkte ' + zeitraum + '.';
     };
+    /**
+     * Wie eine Belegart auf Deutsch heisst.
+     *
+     * DER KERN KENNT DIE ARTEN NICHT — er rechnet mit allen gleich. Diese
+     * Tabelle gibt es nur für den SATZ, den ein Mensch liest, und was hier
+     * fehlt, wird beim eigenen Namen genannt statt verschwiegen (§35).
+     */
+    const QUELLEN_NAME = {
+        karte: 'Karteikarten',
+        pruefung: 'Prüfungssimulationen'
+    };
+    /**
+     * „ Die Belege: 40 aus Karteikarten und 22 aus Prüfungssimulationen."
+     * — oder nichts.
+     *
+     * NICHTS BEI EINER EINZIGEN ART, und das ist der Punkt: solange alles
+     * aus Karteikarten kommt, wäre „62 aus Karteikarten" eine Zeile, die
+     * nichts sagt und die man nach dem zweiten Mal überliest. Genannt wird
+     * die Herkunft erst, wenn sie eine Frage beantwortet.
+     *
+     * EIN EIGENER SATZ AM ENDE, und nicht in Klammern mitten hinein. Der
+     * erste Wurf hängte ihn hinter die Zahl, und auf dem Bildschirm standen
+     * dann ZWEI Klammern hintereinander: „75 % aus 25 Antworten (15 aus
+     * Karteikarten, 10 aus Prüfungssimulationen) (roh 92 % — …)". Beides
+     * gültig, beides richtig, zusammen unlesbar. Gesehen hat das kein
+     * Prüflauf, sondern der Blick auf den fertigen Satz (§55.1).
+     */
+    const quellenTeil = (quellen) => {
+        const paare = Object.entries(quellen || {})
+            .filter(([, n]) => Number(n) > 0)
+            .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+        if (paare.length < 2)
+            return '';
+        const teile = paare.map(([q, n]) => n + ' aus ' + (QUELLEN_NAME[q] || q));
+        const letzter = teile.pop();
+        /* „Die Belege:" UND NICHT „Davon" — der Satz davor endet auf „Davon
+           dürfte heute noch X % sitzen", und zwei „Davon" hintereinander
+           liest sich, als wäre das eine die Erklärung des anderen. Auch das
+           stand erst auf dem Bildschirm. */
+        return ' Die Belege: ' + (teile.length ? teile.join(', ') + ' und ' : '') +
+            letzter + '.';
+    };
     const satzZu = (x) => {
         if (!x.belege) {
             return x.karten === 1
@@ -442,7 +493,8 @@ const Kompetenz = (() => {
             const fehlt = x.mindest - x.belege;
             return x.belege + (x.belege === 1 ? ' Antwort' : ' Antworten') +
                 ' — zu wenig für eine Aussage. Noch ' + fehlt +
-                (fehlt === 1 ? ' Antwort' : ' Antworten') + ', dann sagt Redion etwas dazu.';
+                (fehlt === 1 ? ' Antwort' : ' Antworten') + ', dann sagt Redion etwas dazu.' +
+                quellenTeil(x.quellen);
         }
         const prozent = Math.round(x.unten * 100);
         const rohProzent = Math.round(x.roh * 100);
@@ -459,16 +511,18 @@ const Kompetenz = (() => {
             : tage < 30 ? 'zuletzt vor ' + tage + ' Tagen'
                 : 'zuletzt vor ' + Math.round(tage / 30) + ' Monaten';
         return stufeVon(x.unten) + ' — ' + prozent + ' % aus ' + x.belege +
-            ' Antworten' + rohTeil + '. Davon dürfte heute noch ' + haltbarProzent +
+            ' Antworten' + rohTeil +
+            '. Davon dürfte heute noch ' + haltbarProzent +
             ' % sitzen; ' + zeitTeil + '.' +
-            (x.faellig ? ' ' + x.faellig + ' fällig.' : '');
+            (x.faellig ? ' ' + x.faellig + ' fällig.' : '') +
+            quellenTeil(x.quellen);
     };
     /** Ein Gesamtbild über alle Themen — dieselben Regeln, eine Gruppe. */
     const gesamt = (karten, opt = {}) => {
         const alle = (karten || []).map(k => ({ ...k, thema: 'alles' }));
         const eins = jeThema(alle, opt);
         return eins[0] || {
-            thema: 'alles', karten: 0, belege: 0, richtig: 0, sicherheit: 0,
+            thema: 'alles', karten: 0, belege: 0, richtig: 0, sicherheit: 0, quellen: {},
             roh: 0, haltbarkeit: 0, faellig: 0, genug: false, stufe: '',
             seit: '', zuletzt: '', satz: 'Noch keine Karten.'
         };

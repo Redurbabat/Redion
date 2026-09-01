@@ -139,6 +139,38 @@ const Learning = (() => {
      * Fehlt das Modul, kommt eine leere Karte zurück und die Anzeige lässt
      * die Zahl weg, statt eine zu erfinden.
      */
+    /**
+     * Die anderen Belege für Können (L106 Punkt 1, E339).
+     *
+     * Bis E339 waren die Karteikarten die einzige Quelle. Eine
+     * Prüfungssimulation ist aber der HÄRTERE Beleg: eine Karteikarte wird
+     * selbst bewertet, eine Simulation zählt richtig und falsch. Sie nicht
+     * mitzuzählen hiess, die härtere Auskunft wegzuwerfen.
+     *
+     * DIE THEMEN MÜSSEN SICH TREFFEN, und das ist die einzige Stelle, an der
+     * es schiefgehen kann: `learning.ts` nennt ein Thema über `topicLabel`,
+     * `lernwelt.ts` über `themaVon`. Beide bevorzugen dasselbe (`quiz.topic`,
+     * `lernThema`, `topic`) und fallen auf denselben Seitentitel zurück; sie
+     * unterscheiden sich nur darin, dass `topicLabel` auf 120 Zeichen kürzt.
+     * `Belege.themaAus` kürzt genauso — damit treffen sie sich, ausser bei
+     * einem Seitentitel über 120 Zeichen, dessen erste 120 nicht eindeutig
+     * sind. Steht als bekannte Grenze in L106.
+     */
+    const andereBelege = () => {
+        const B = window.Belege;
+        const LW = window.Lernwelt;
+        if (!B || typeof B.ausSimulationen !== 'function')
+            return [];
+        let sims = [];
+        try {
+            if (LW && LW.modelle && typeof LW.modelle.simulationen === 'function')
+                sims = LW.modelle.simulationen();
+        }
+        catch {
+            sims = [];
+        }
+        return B.ausSimulationen(sims);
+    };
     const kompetenzJeThema = (allCards, now) => {
         const K = window.Kompetenz;
         if (!K || typeof K.jeThema !== 'function')
@@ -149,7 +181,7 @@ const Learning = (() => {
             titel: String(card?.text || '').slice(0, 60),
             sr: card?.sr,
             reviewVerlauf: card?.reviewVerlauf
-        })).filter(c => c.id);
+        })).filter(c => c.id).concat(andereBelege());
         const out = new Map();
         for (const e of K.jeThema(liste, { jetzt: now }))
             out.set(String(e.thema).toLocaleLowerCase('de-CH'), e);
@@ -276,7 +308,7 @@ const Learning = (() => {
             ? K.gesamt(allCards.map((card) => ({
                 id: String(card?.id || ''), thema: 'alles',
                 sr: card?.sr, reviewVerlauf: card?.reviewVerlauf
-            })).filter((c) => c.id))
+            })).filter((c) => c.id).concat(andereBelege()))
             : null;
         const logs = allCards.flatMap(reviewLog);
         const today = localDay(null);

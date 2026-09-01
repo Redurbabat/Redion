@@ -3054,6 +3054,12 @@ const Lernwelt = (() => {
             bereiche,
             warteschlange,
             statistik,
+            /* SEIT E339 FRAGT `learning.ts` DANACH. Die Ergebnisse liegen unter
+               einem Schlüssel, der den Lernenden enthält (`metaSchluessel`) —
+               wer sie von aussen lesen will, muss ihn entweder nachbauen oder
+               hier danach fragen. Nachbauen wäre dieselbe Wahrheit an zwei
+               Stellen, und die zweite geht irgendwann auseinander. */
+            simulationen,
             fehler: fehlerListe,
             pruefungen,
             aufgaben: sichtbareAufgaben,

@@ -25802,3 +25802,90 @@ zweimal, an beiden Stellen.
 test329 39/39 (§6 zog mit: die Reihe geht jetzt als EIN Termin hinaus, und
 die Zusage wird schärfer gemessen als vorher). test327 30/30, test328 31/31,
 test284 49/49, test319 26/26.
+
+
+E339 — Nicht nur Karteikarten (L106 Punkt 1)
+════════════════════════════════════════════════════════════════════════════
+
+„Die Karteikarten sind die einzige Quelle. Prüfungsergebnisse,
+Elektro-Aufgaben, der Lernpfad und die Simulationen sind auch Belege für
+Können, und keiner davon zählt mit."
+
+EINE PRÜFUNGSSIMULATION IST SOGAR DER BESSERE BELEG. Eine Karteikarte wird
+SELBST BEWERTET — man sagt sich selbst, ob man es wusste (E333 hat genau
+dafür die Überschrift berichtigt). Eine Simulation zählt richtig und
+falsch, ohne dass man sich etwas vormachen kann. Sie nicht mitzuzählen
+hiess, die härtere Auskunft wegzuwerfen und die weichere zu behalten.
+
+WAS GEBAUT WURDE, UND WAS NICHT
+
+Die Lücke sagte es selbst: „`Kompetenz.jeThema` nimmt jede Liste mit `sr`
+und `reviewVerlauf` — der Anschluss ist Arbeit an den Bereichen, nicht am
+Kern." Das stimmte. `core/learning/belege.ts` rechnet nichts aus, es
+ÜBERSETZT: aus einem Simulationsergebnis wird je Thema ein Satz Belege, mit
+Datum und mit Noten in derselben Skala wie die Karteikarten.
+
+Die Noten sind bewusst nur 4 und 1 — richtig und falsch. Eine erfundene
+Abstufung dazwischen wäre eine Behauptung über etwas, das gar nicht
+gemessen wurde.
+
+EIN BELEG IST KEINE KARTE, und das ist der Teil, der ohne Absicht falsch
+geworden wäre. Der Kern zählt jetzt `karten` nur für echte Karten;
+sonst stünde „20 Karten" bei zwölf Karten — genau die stille
+Falschaussage, gegen die E289 gebaut wurde. Der Kern kennt die Arten NICHT
+beim Namen und rechnet mit allen gleich; er hält nur auseinander, was
+gezählt wird.
+
+UND DER SATZ SAGT, WOHER DIE ZAHL KOMMT
+
+    Fortgeschritten — 75 % aus 25 Antworten (roh 92 % — …). Davon dürfte
+    heute noch 88 % sitzen; zuletzt heute. Die Belege: 15 aus
+    Karteikarten und 10 aus Prüfungssimulationen.
+
+NUR BEI MEHR ALS EINER ART. Solange alles aus Karteikarten kommt, wäre
+„Die Belege: 15 aus Karteikarten" die Zeile, die man nach dem zweiten Mal
+überliest. Genannt wird die Herkunft erst, wenn sie eine Frage beantwortet
+— dieselbe Regel wie bei jedem Hinweis dieser Woche.
+
+ZWEIMAL HAT DER BLICK AUF DEN FERTIGEN SATZ ETWAS GEFUNDEN
+
+Beim ersten Wurf hing die Herkunft hinter der Zahl, und auf dem Bildschirm
+standen ZWEI Klammern hintereinander:
+
+    75 % aus 25 Antworten (15 aus Karteikarten, 10 aus …) (roh 92 % — …)
+
+Beides gültig, beides richtig, zusammen unlesbar. Verschoben ans Ende —
+und dann standen zwei „Davon" hintereinander, weil der Satz davor auf
+„Davon dürfte heute noch X % sitzen" endet. Heisst jetzt „Die Belege:".
+
+Kein Prüflauf hat das gefunden; beide Male war es der Blick auf den
+fertigen Satz (§55.1). Beide sind jetzt als eigene Zeilen festgehalten,
+damit sie nicht zurückkommen.
+
+DIE EINE STELLE, AN DER ES SCHIEFGEHEN KANN
+
+`learning.ts` nennt ein Thema über `topicLabel`, `lernwelt.ts` über
+`themaVon`. Beide bevorzugen dasselbe (`quiz.topic`, `lernThema`, `topic`)
+und fallen auf denselben Seitentitel zurück; sie unterscheiden sich nur
+darin, dass `topicLabel` auf 120 Zeichen kürzt. `Belege.themaAus` kürzt
+genauso. Nachgemessen mit einer Karte OHNE eigenes Thema — dem Fall, in
+dem der Seitentitel entscheidet: der Beleg landet im selben Thema, und es
+entsteht kein zweites daneben.
+
+Was bleibt, ist ein Seitentitel über 120 Zeichen, dessen erste 120 nicht
+eindeutig sind. Steht als bekannte Grenze in L106.
+
+UND DIE SIMULATIONEN KOMMEN ÜBER EINEN GRIFF, nicht über einen nachgebauten
+Schlüssel. Sie liegen unter `lernwelt:<Lernender>:simulationen`; wer sie von
+aussen lesen will, müsste den Schlüssel nachbauen, und das wäre dieselbe
+Wahrheit an zwei Stellen. `Lernwelt.modelle.simulationen` gibt es jetzt.
+
+WAS NOCH NICHT MITZÄHLT: Elektro-Aufgaben und der Lernpfad. Sie führen
+kein Ergebnis mit Thema und Datum, wie die Simulationen es tun — dort ist
+zuerst das Aufheben zu bauen, nicht das Anschliessen. L106 Punkt 1 bleibt
+dafür offen und ist entsprechend umgeschrieben.
+
+test331 neu, 40 Punkte. Belegt rot dreimal: die Belege abschalten kostet
+sieben Punkte; einen Beleg wieder als Karte zählen einen; die Herkunft
+immer nennen zwei.
+test283 35/35, test318 18/18, test281 48/48, test105 108 ok.
