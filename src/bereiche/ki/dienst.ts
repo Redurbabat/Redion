@@ -185,7 +185,13 @@ const KI = (() => {
    * genauso erscheint wie bei den lokalen Modellen.
    */
   const wolkeFragen = async function* (nachrichten: any, modell: any,
-                                       signal?: AbortSignal) {
+                                       signal?: AbortSignal,
+                                       /* WOHIN DIE GEZÄHLTE TOKENZAHL GEHT (L104, E319).
+                                          Ein Generator liefert Textstücke; die Abrechnung
+                                          ist kein Textstück und hätte in `yield` nichts zu
+                                          suchen. Sie kommt deshalb über ein Fach heraus,
+                                          das der Aufrufer hinhält. */
+                                       abrechnung?: { ein?: number; aus?: number }) {
     const a = anbieter(zustand.anbieter);
     const key = schluessel(a.id);
     const url = a.id === 'eigen' ? Store.getMeta('api:eigenUrl', '') : a.url;
@@ -208,7 +214,13 @@ const KI = (() => {
     const koerper = istAnthropic
       ? { model: modell, max_tokens: 2000, stream: true,
           system: sys ? sys.content : undefined, messages: rest }
-      : { model: modell, messages: nachrichten, stream: true };
+      : { model: modell, messages: nachrichten, stream: true,
+          /* NUR WO ES SICHER IST. „Eigener Server" ist eine Adresse, die
+             der Mensch einträgt — ein Server, der unbekannte Felder
+             ablehnt, scheiterte daran mit 400. Eine kaputte Antwort gegen
+             eine genauere Zahl zu tauschen wäre ein schlechtes Geschäft. */
+          ...(KiAbrechnung.willAbrechnung(a.id)
+                ? { stream_options: { include_usage: true } } : {}) };
 
     const r = await holen(url,
       { method: 'POST', headers: kopf, body: JSON.stringify(koerper), signal: signal ?? null },
@@ -238,6 +250,22 @@ const KI = (() => {
         if (rohdaten === '[DONE]') return;
         try {
           const d = JSON.parse(rohdaten);
+          /* HIER FIEL DIE ABRECHNUNG BISHER HERUNTER. Jedes Ereignis, das
+             kein Textstück war, ging in den Papierkorb — auch das eine,
+             das sagt, wie viele Token es wirklich waren (L104). */
+          if (abrechnung) {
+            const teil = KiAbrechnung.ausEreignis(d, istAnthropic);
+            if (teil) {
+              const zus = KiAbrechnung.zusammen(
+                { ...(abrechnung.ein !== undefined ? { ein: abrechnung.ein } : {}),
+                  ...(abrechnung.aus !== undefined ? { aus: abrechnung.aus } : {}) },
+                teil);
+              if (zus) {
+                if (zus.ein !== undefined) abrechnung.ein = zus.ein;
+                if (zus.aus !== undefined) abrechnung.aus = zus.aus;
+              }
+            }
+          }
           const stueck = istAnthropic
             ? (d.delta && d.delta.text) || ''
             : (d.choices && d.choices[0] && d.choices[0].delta && d.choices[0].delta.content) || '';
@@ -565,21 +593,36 @@ const KI = (() => {
 
          Und sie prüft VOR dem Aufruf. Danach zu zählen wäre eine
          Buchhaltung, keine Grenze. */
+      /* ZUERST SCHÄTZEN, DANACH BERICHTIGEN (L104, E319).
+         Die Grenze muss VOR dem Aufruf prüfen — danach zu zählen wäre eine
+         Buchhaltung, keine Grenze. Die wirkliche Tokenzahl kommt aber erst
+         am Ende des Stroms. Also wird geschätzt, gebucht, und wenn der
+         Anbieter am Ende sagt, wie viele es waren, wird die Buchung
+         ersetzt statt verdoppelt. */
+      let gebucht: any = null;
       if (typeof KiBuch !== 'undefined') {
         const urteil = KiBuch.pruefen(zustand.modell, n, { lokal: false });
         if (!urteil.erlaubt) throw new Error(urteil.satz);
-        /* Verbucht wird mit der SCHÄTZUNG, weil Redion die echte
-           Tokenzahl heute nicht ausliest — der Streaming-Leser wirft
-           alles weg, was kein `delta.content` ist. Das Buch merkt sich
-           deshalb `gezaehlt: false`, damit später niemand die Zahlen für
-           gemessen hält (L104). */
         const s = urteil.schaetzung;
         if (s && s.bekannt && !s.frei) {
-          KiBuch.buchen(zustand.modell, zustand.anbieter || '',
-                        s.tokenEin, s.tokenAus, false);
+          gebucht = KiBuch.buchen(zustand.modell, zustand.anbieter || '',
+                                  s.tokenEin, s.tokenAus, false);
         }
       }
-      for await (const t of wolkeFragen(n, zustand.modell, optionen?.signal)) beiText(t);
+      const abrechnung: { ein?: number; aus?: number } = {};
+      try {
+        for await (const t of wolkeFragen(n, zustand.modell, optionen?.signal, abrechnung))
+          beiText(t);
+      } finally {
+        /* IM `finally`, UND DAS IST DER PUNKT. Wer mitten in einer langen
+           Antwort abbricht, hat die Eingabetoken trotzdem bezahlt — und
+           Anthropic schickt die schon im ERSTEN Ereignis. Eine Berichtigung
+           nur im Erfolgsfall liesse gerade den Abbruch zu hoch gebucht
+           stehen, also genau den Fall, den man später sucht. */
+        if (gebucht && KiAbrechnung.vollstaendig(abrechnung)) {
+          KiBuch.berichtigen(gebucht.id, abrechnung.ein, abrechnung.aus);
+        }
+      }
       return;
     }
 

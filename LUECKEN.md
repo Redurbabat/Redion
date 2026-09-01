@@ -4042,6 +4042,17 @@ Parameter genau dafür, und `standAus` könnte gezählte und geschätzte
 Beträge getrennt ausweisen. Was fehlt, ist das Auslesen im Strom-Leser — an
 zwei Stellen, je Anbieter eine.
 
+**GESCHLOSSEN am 1. September 2026 durch E319.** `core/ai/abrechnung.ts`
+liest beide Dialekte — OpenAI-artig ein Schlussereignis mit `usage`,
+Anthropic zwei Ereignisse, die zusammengelegt werden. Gebucht wird weiter
+zuerst die Schätzung (eine Grenze, die nach dem Aufruf prüft, ist keine
+Grenze), danach ERSETZT `KiBuch.berichtigen` sie durch die gezählte Zahl —
+im `finally`, damit auch ein Abbruch nicht zu hoch gebucht stehen bleibt.
+`stream_options` geht nur an die vier Anbieter, deren Adresse in Redion
+steht; „Eigener Server" bekommt es nicht, weil ein Server, der unbekannte
+Felder ablehnt, daran mit 400 scheiterte. Wo nichts kommt, bleibt die
+Schätzung — als Schätzung gekennzeichnet. test313, 25 Punkte.
+
 Drei weitere Dinge, die E287 bewusst offenlässt:
 
 1. **Keine Oberfläche.** `KiBuch.stand()`, `monatJeAnbieter()` und
@@ -4065,6 +4076,12 @@ Drei weitere Dinge, die E287 bewusst offenlässt:
    erinnert daran, sie zu pflegen; in einem Jahr rechnet sie mit Preisen
    von heute weiter. Ein Hinweis, wenn die Liste älter als ein halbes Jahr
    ist, wäre die kleine Antwort darauf.
+
+   **GESCHLOSSEN am 1. September 2026 durch E319.** `KiKosten.listeAlt`
+   und `standSatz` — nach 182 Tagen sagt Redion, dass die Beträge nach
+   alten Preisen gerechnet sind, und vorher schweigt es. Die Zeit kommt als
+   Zahl herein, damit sich „in einem Jahr" prüfen lässt, ohne die Systemuhr
+   zu verstellen.
 
 Gefunden am 31. August 2026 (beim Bau von E287).
 

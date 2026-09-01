@@ -24174,3 +24174,84 @@ test312, 18 Punkte, davon fünf allein für das Schweigen.
 Mitgelaufen: test311 11/11, test100 32/32, test287 9/9, test310 23/23,
 test180 36/36, test148 13/13.
 sw v73 · Einzeldatei 7811 KB.
+
+================================================================================
+E319 — Das KI-Buch zählt, statt zu schätzen (L104)
+================================================================================
+1. September 2026
+
+Jeder Anbieter schickt am Ende, wie viele Token es wirklich waren. Redion
+las es nicht. Der Strom-Leser suchte in jedem Ereignis nach `delta.content`
+und warf alles andere weg — auch die Abrechnung, die zuletzt mitkommt.
+
+Verbucht wurde deshalb die SCHÄTZUNG, und die greift mit 3,6 Zeichen je
+Token bewusst zu hoch. Für eine Bremse ist das die harmlose Richtung; für
+die Frage „was habe ich diesen Monat wirklich ausgegeben" ist es die
+falsche — und die Antwort war systematisch zu hoch, in bekannter Richtung,
+während die richtige Zahl über die Leitung kam und weggeworfen wurde.
+
+─── ZUERST SCHÄTZEN, DANACH BERICHTIGEN ────────────────────────────────────
+
+Die Reihenfolge ist erzwungen und nicht bequem: die Grenze muss VOR dem
+Aufruf prüfen — danach zu zählen wäre eine Buchhaltung, keine Grenze —, die
+wirkliche Zahl kommt aber erst am Ende des Stroms. Also wird geschätzt,
+gebucht, und danach ersetzt.
+
+ERSETZT, NICHT ADDIERT. `KiBuch.berichtigen(id, ein, aus)` verschiebt
+`laufStand` um die DIFFERENZ und setzt `gezaehlt: true`. Jede Buchung
+bekommt dafür seit heute eine Kennung; „die letzte Buchung dieses Modells"
+wäre bei zwei gleichzeitig laufenden Anfragen die falsche. Ältere Buchungen
+haben keine Kennung, werden also nie berichtigt — und brauchen keine
+Migration.
+
+UND IM `finally`. Wer mitten in einer langen Antwort abbricht, hat die
+Eingabetoken trotzdem bezahlt, und Anthropic schickt sie schon im ersten
+Ereignis. Eine Berichtigung nur im Erfolgsfall liesse gerade den Abbruch zu
+hoch gebucht stehen — also genau den Fall, den man später sucht.
+
+─── ZWEI DIALEKTE, EIN KERN ────────────────────────────────────────────────
+
+`core/ai/abrechnung.ts` rechnet und kennt weder Uhr noch Netz.
+
+OpenAI-artig: ein letztes Ereignis mit leerem `choices` und
+`usage.prompt_tokens` / `usage.completion_tokens`.
+
+Anthropic: ZWEI Ereignisse — `message_start` trägt `input_tokens`,
+`message_delta` trägt `output_tokens`. Daher `zusammen()`. Dort gewinnt der
+GRÖSSERE Wert und nicht der spätere: manche Modelle schicken die Eingabe im
+`message_delta` ein zweites Mal, gelegentlich als 0. Ein „später gewinnt"
+machte aus 4000 Eingabetoken stillschweigend null — falsch in die andere
+Richtung ist nicht besser.
+
+─── WARUM NICHT JEDER ANBIETER GEFRAGT WIRD ────────────────────────────────
+
+OpenAI-artige Server schicken die Abrechnung beim Streamen nur auf
+`stream_options: { include_usage: true }`. Das geht an vier Anbieter, deren
+Adresse in Redion steht. NICHT an „Eigener Server": das ist eine Adresse,
+die der Mensch einträgt — LM Studio, llama.cpp, ein Proxy —, und ein Server,
+der unbekannte Felder ablehnt, scheiterte daran mit einem 400. Eine kaputte
+Antwort gegen eine genauere Zahl zu tauschen wäre ein schlechtes Geschäft
+(§46). Anthropic braucht es nicht, es schickt ungefragt.
+
+Wo nichts kommt, bleibt die Schätzung — als Schätzung gekennzeichnet, nicht
+als Messung getarnt. Das ist der Grund, warum `gezaehlt` überhaupt im Buch
+steht.
+
+─── UND DIE PREISLISTE ALTERT (L104 Punkt 3) ───────────────────────────────
+
+`KiKosten.listeAlt(jetztMs)` und `standSatz(jetztMs)`. Nach einem halben
+Jahr sagt Redion, dass die Beträge nach alten Preisen gerechnet sind. Vorher
+schweigt es — ein Hinweis, der von Anfang an dasteht, ist nach einer Woche
+unsichtbar und hilft genau dann nicht, wenn er endlich stimmt. Die Zeit
+kommt als Zahl herein, damit sich „in einem Jahr" prüfen lässt, ohne die
+Systemuhr zu verstellen.
+
+DIE GEGENPROBE, und sie ist hier der eigentliche Prüfstein: gewöhnliche
+Ereignisse liefern NICHTS. Ein Leser, der überall eine Abrechnung zu sehen
+glaubt, macht aus einer Antwort mit 300 Ereignissen 300 Berichtigungen — und
+die letzte gewinnt. test313 misst sechs solche Ereignisse und verlangt
+sechsmal `null`.
+
+test313, 25 Punkte. Mitgelaufen: test281 48/48, test291 13/13,
+test105 105/105 (drei Punkte mehr — der neue Kern zählt mit).
+sw v74 · Einzeldatei 7824 KB.

@@ -2314,3 +2314,17 @@ node pruefungen/lauf/test105.mjs
   Ablage geht, bei geladenem Gegenmodul. Drei echte Normalfälle schweigen,
   und fünf der 18 Punkte prüfen genau dieses Schweigen. test312 neu (18).
   sw v73.
+* E319 (L104): Das KI-Buch zählt, statt zu schätzen. Jeder Anbieter schickt
+  am Ende die wirkliche Tokenzahl; der Strom-Leser suchte nach
+  `delta.content` und warf alles andere weg — auch die Abrechnung. Verbucht
+  wurde die Schätzung, und die greift bewusst zu hoch: für eine Bremse die
+  harmlose Richtung, für „was habe ich diesen Monat ausgegeben" die falsche.
+  `core/ai/abrechnung.ts` liest beide Dialekte (Anthropic schickt Ein und
+  Aus in zwei Ereignissen, deshalb `zusammen` — und dort gewinnt der
+  grössere Wert, nicht der spätere). Gebucht wird weiter zuerst die
+  Schätzung, danach ERSETZT `berichtigen` sie; im `finally`, damit auch ein
+  Abbruch nicht zu hoch stehen bleibt. `stream_options` geht nur an die vier
+  Anbieter mit fester Adresse — „Eigener Server" ist eine fremde Adresse und
+  ein 400 wäre teurer als eine ungenaue Zahl. Dazu L104 Punkt 3: die
+  Preisliste sagt nach einem halben Jahr, dass sie alt ist, und schweigt
+  vorher. test313 neu (25). sw v74.

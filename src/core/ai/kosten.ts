@@ -58,6 +58,39 @@ const KiKosten = (() => {
    */
   const STAND = '2026-08-31';
 
+  /** Ab wann eine Preisliste als alt gilt. Ein halbes Jahr. */
+  const ALT_NACH_TAGEN = 182;
+
+  /**
+   * Ist die Preisliste alt genug, um sie zu erwähnen? (L104 Punkt 3, E319)
+   *
+   * Die Liste altert von selbst, und niemand erinnert daran. In einem Jahr
+   * rechnet sie mit den Preisen von heute weiter, und die angezeigte Summe
+   * ist dann still falsch — die unangenehmste Sorte (§35).
+   *
+   * DIE ZEIT KOMMT ALS ZAHL HEREIN, nicht aus der Uhr: dieser Kern rechnet
+   * und kennt weder Uhr noch Ablage. Nur so lässt sich der Fall „in einem
+   * Jahr" prüfen, ohne die Systemzeit zu verstellen.
+   */
+  const listeAlt = (jetztMs: number): boolean => {
+    const standMs = Date.parse(STAND + 'T00:00:00Z');
+    if (!Number.isFinite(standMs) || !Number.isFinite(jetztMs)) return false;
+    return (jetztMs - standMs) > ALT_NACH_TAGEN * 86400000;
+  };
+
+  /**
+   * Ein Satz dazu — oder LEER, solange die Liste frisch ist.
+   *
+   * Leer ist der Normalfall und bleibt es ein halbes Jahr lang. Ein Hinweis,
+   * der von Anfang an dasteht, ist nach einer Woche unsichtbar und hilft
+   * genau dann nicht, wenn er endlich stimmt.
+   */
+  const standSatz = (jetztMs: number): string =>
+    listeAlt(jetztMs)
+      ? 'Die Preisliste ist vom ' + STAND + ' und damit über ein halbes Jahr ' +
+        'alt. Die Beträge sind Schätzungen nach alten Preisen.'
+      : '';
+
   /** Die Währung, in der hier gerechnet wird. */
   const WAEHRUNG = 'USD';
 
@@ -391,7 +424,8 @@ const KiKosten = (() => {
     (buchungen || []).filter(b => b && String(b.tag || '') >= abTag);
 
   return {
-    STAND, WAEHRUNG, PREISE, VORGABE_GRENZEN, ZEICHEN_JE_TOKEN,
+    STAND, ALT_NACH_TAGEN, listeAlt, standSatz,
+    WAEHRUNG, PREISE, VORGABE_GRENZEN, ZEICHEN_JE_TOKEN,
     tokenSchaetzen, tokenAusNachrichten, unsicherheit,
     schaetzen, pruefen, geld,
     kontingentBuchen, kontingentFrei, kontingentWartet,

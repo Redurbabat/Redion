@@ -128,6 +128,12 @@ const KiBuch = (() => {
     const betrag = s.bekannt ? s.betrag : 0;
     laufStand += betrag;
     const eintrag = {
+      /* SEIT E319 EINE KENNUNG. Ohne sie liesse sich eine Schätzung später
+         nicht wiederfinden, um sie durch die gezählte Zahl zu ersetzen —
+         und „die letzte Buchung dieses Modells" wäre bei zwei gleichzeitig
+         laufenden Anfragen die falsche. Ältere Buchungen haben keine; sie
+         werden schlicht nie berichtigt, und das braucht keine Migration. */
+      id: 'b' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
       tag: heute(), modell, anbieter,
       tokenEin, tokenAus, betrag, gezaehlt
     };
@@ -135,6 +141,46 @@ const KiBuch = (() => {
     const liste = KiKosten.kuerzen(buchungen().concat([eintrag]), tagVon(alt));
     Store.setMeta(SCHL_BUCH, liste);
     return eintrag;
+  };
+
+  /**
+   * Eine geschätzte Buchung durch die GEZÄHLTE Zahl ersetzen (L104, E319).
+   *
+   * Der Anbieter schickt die wirkliche Tokenzahl erst am Ende des Stroms —
+   * da ist längst gebucht, denn eine Grenze, die nach dem Aufruf prüft, ist
+   * keine Grenze. Also wird zuerst geschätzt und danach berichtigt.
+   *
+   * ERSETZT, NICHT ADDIERT: `laufStand` wird um die DIFFERENZ verschoben,
+   * und die Buchung bekommt `gezaehlt: true`. Wer später fragt, was der
+   * Monat gekostet hat, bekommt eine Zahl aus Messungen, wo es Messungen
+   * gab, und aus Schätzungen, wo es keine gab — und kann beides
+   * auseinanderhalten.
+   *
+   * Gibt die berichtigte Buchung zurück, oder `null`, wenn es nichts zu
+   * berichtigen gab: keine Kennung, Buchung nicht mehr da (die 70 Tage sind
+   * um), oder die Zahlen sind keine Zahlen. Alle drei sind stumm — ein
+   * Fehler wäre hier ein Fehler ÜBER die Buchhaltung, mitten in einer
+   * Antwort, die der Mensch gerade liest.
+   */
+  const berichtigen = (id: unknown, tokenEin: unknown, tokenAus: unknown): any => {
+    if (typeof id !== 'string' || !id) return null;
+    if (typeof tokenEin !== 'number' || !Number.isFinite(tokenEin) || tokenEin < 0) return null;
+    if (typeof tokenAus !== 'number' || !Number.isFinite(tokenAus) || tokenAus < 0) return null;
+
+    const liste = buchungen();
+    const i = liste.findIndex((b: any) => b && b.id === id);
+    if (i < 0) return null;
+    const vorher = liste[i];
+
+    const s = KiKosten.schaetzen(vorher.modell, tokenEin, tokenAus);
+    const betrag = s.bekannt ? s.betrag : 0;
+    laufStand += betrag - (Number(vorher.betrag) || 0);
+
+    const nachher = { ...vorher, tokenEin, tokenAus, betrag, gezaehlt: true,
+                      geschaetztWar: vorher.betrag };
+    liste[i] = nachher;
+    Store.setMeta(SCHL_BUCH, liste);
+    return nachher;
   };
 
   /**
@@ -158,7 +204,7 @@ const KiBuch = (() => {
   const leeren = (): void => { Store.setMeta(SCHL_BUCH, []); laufStand = 0; };
 
   return {
-    grenzen, grenzenSetzen, stand, pruefen, buchen, stapelSchaetzen,
+    grenzen, grenzenSetzen, stand, pruefen, buchen, berichtigen, stapelSchaetzen,
     monatJeAnbieter, buchungen, leeren, laufBeginnen, laufAusgabe,
     SCHL_GRENZEN, SCHL_BUCH, BEHALTEN_TAGE
   };
