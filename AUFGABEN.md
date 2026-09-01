@@ -2644,6 +2644,21 @@ node pruefungen/lauf/test105.mjs
   `padding` ist vier Erklärungen, nicht eine, und §2/§3 zählten absolut
   statt den Unterschied zum Bestand.
   test332 neu (14), belegt rot. test258 19/19.
+* E343 (L112 Rest, geschlossen): Das Abo bekommt ein Gedächtnis. E336 hat
+  die Reihen abgeräumt; für den einzelnen gestrichenen Termin stand in L112,
+  dass sich „über einen Einzeltermin nichts sagen" lässt — und gleich
+  darunter, was fehlte: ein Vermerk am Abo, WELCHE Kennungen es zuletzt
+  geliefert hat. Genau das ist es.
+  Der Gewinn ist grösser als die Frage: was von Hand angelegt wurde, stand
+  nie in der Liste. Es braucht keine Heuristik, die es zu erraten versucht.
+  Drei Sperren, jede nachgemessen — ohne alte Liste passiert nichts, ein
+  leerer Lauf räumt nicht auf (sonst leert ein Netzwackler den Kalender),
+  und nur Kennungen aus der eigenen Liste.
+  Zwei Fehler lagen im PRÜFSTAND: Redions Dienst-Skript merkte sich den
+  Kalender (es lässt nur Fremdes in Ruhe — ein echtes Abo liegt bei einem
+  fremden Rechner, der Prüfstand serviert jetzt auf einem zweiten Tor), und
+  §7 mass eine fremde Tabelle. Beide gefunden durch Messen, nicht Raten.
+  test335 neu (30), belegt rot in vier Richtungen.
 * E342 (L103 Punkt 5, geschlossen): Heute Nacht, am Strom, nicht über
   Mobilfunk. Die Maschine aus E286 konnte lange Arbeit überleben, aber
   nicht warten WOLLEN. `core/jobs/zeitplan.ts` rechnet (kennt weder Uhr

@@ -4784,5 +4784,31 @@ müsste mitreisen).
 WAS BIS DAHIN GILT: die Lücke ist genannt und nicht still. Das ist der
 Unterschied zwischen einer bekannten Grenze und einem Fehler (§35).
 
+**GESCHLOSSEN am 1. September 2026 durch E343 — auf genau dem hier
+beschriebenen Weg.** Das Abo merkt sich in `geliefert`, welche Kennungen es
+beim letzten Mal gebracht hat. Steht eine darin und kommt sie diesmal nicht
+mehr, ist „die Quelle hat ihn gestrichen" belegt statt geraten, und der
+Termin wandert in den Papierkorb.
+
+Der Gewinn ist grösser als die eine Frage: die Liste lässt die schwierigen
+Fälle gar nicht erst entstehen. Ein von Hand angelegter Termin stand nie
+darin, ein eingelesener auch nicht — es braucht keine Heuristik, die „sieht
+von Hand angelegt aus" rät.
+
+Drei Sperren, jede nachgemessen: ohne alte Liste passiert nichts (der erste
+Lauf nach der Umstellung SCHREIBT sie nur); ein leerer Lauf räumt nicht auf
+(ohne diese Sperre leert der nächste Netzwackler den ganzen Kalender —
+gemessen); und nur Kennungen aus der eigenen Liste, damit zwei Abos in einer
+Tabelle einander nicht abräumen.
+
+Die Liste reist mit der Sicherung, weil `ics:abos` weder in `NUR_HIER` noch
+in `GERAETEIGEN` steht — im Prüflauf nachgemessen, nicht angenommen.
+
+Was es kostet, steht in E343: ein Abo, das plötzlich ein kürzeres
+Zeitfenster liefert, schiebt die Termine ausserhalb in den Papierkorb.
+Derselbe Handel wie bei E336.
+
+test335, 30 Punkte, belegt rot in vier Richtungen.
+
 Gefunden am 1. September 2026 (E335), für Reihen geschlossen am selben Tag
 (E336).

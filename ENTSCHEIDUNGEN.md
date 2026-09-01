@@ -26164,3 +26164,74 @@ test334 neu, 55 Punkte. Belegt rot in fünf Richtungen: `null` als „nein"
 gelesen (§2 fällt), der Filter im Takt entfernt (§4 fällt vierfach), der
 Grund im Fenster weggelassen (§6 fällt), ein Grund für JEDEN Auftrag (§3
 und §6 fallen) und die erfundene CSS-Klasse zurück (§9 fällt).
+
+
+E343 — Das Abo bekommt ein Gedächtnis (L112 Rest)
+════════════════════════════════════════════════════════════════════════════
+
+E336 hat die REIHEN abgeräumt. Für den einzelnen gestrichenen Termin stand
+in L112 der Satz, warum es nicht ging:
+
+    „über einen Einzeltermin lässt sich nichts sagen. Er kann von Hand
+     angelegt worden sein, er kann aus einer Datei stammen, er kann zu
+     einem Abo gehören, das gerade nur ein kürzeres Zeitfenster liefert."
+
+Und gleich darunter, was fehlte: „einen Vermerk am Abo, WELCHE Kennungen es
+beim letzten Mal geliefert hat."
+
+Genau das ist E343, und es ist nicht nur die Antwort auf die Frage — es
+lässt die schwierigen Fälle GAR NICHT ERST ENTSTEHEN. Ein von Hand
+angelegter Termin stand nie in der Liste. Ein eingelesener auch nicht. Es
+braucht keine Heuristik, die „sieht von Hand angelegt aus" rät; die Frage
+stellt sich nicht.
+
+DREI SPERREN, JEDE EINZELN NACHGEMESSEN:
+
+  · Ohne alte Liste passiert nichts. Jedes Abo, das es heute gibt, hat noch
+    keine — der erste Lauf nach dieser Fassung SCHREIBT sie nur. Ohne diese
+    Sperre räumte ausgerechnet die Umstellung alles weg, was die Quelle
+    gerade nicht liefert.
+  · Ein leerer Lauf räumt nicht auf. Dieselbe Sperre wie bei E336: „die
+    Quelle hat nichts mehr" und „ich habe nichts gehört" sehen gleich aus.
+    Der Prüflauf zeigt, was sie wert ist — nimmt man sie heraus, leert der
+    nächste Netzwackler den ganzen Kalender.
+  · Nur Kennungen aus der EIGENEN alten Liste. Zwei Abos in derselben
+    Tabelle räumen einander nicht ab.
+
+WAS ES KOSTET, und es ist benannt: liefert ein Abo plötzlich ein kürzeres
+Zeitfenster, wandern die Termine ausserhalb in den Papierkorb. Derselbe
+Handel wie bei E336, und wieder in den Papierkorb, nicht ins Nichts.
+
+DIE LISTE REIST MIT DER SICHERUNG, weil sie in `ics:abos` steht und das
+weder in `NUR_HIER` noch in `GERAETEIGEN` ist. Nachgemessen im Prüflauf,
+nicht angenommen — ohne sie wäre der erste Lauf nach einem Einspielen
+wieder einer ohne Gedächtnis.
+
+ZWEI FEHLER LAGEN IM PRÜFSTAND, NICHT IM PRODUKT, und beide hätten sich
+stundenlang wegdiskutieren lassen:
+
+  · §7 meldete, das Gedächtnis ziehe nicht nach. Der Prüfserver lieferte
+    nachweislich den KURZEN Kalender, und oben kamen trotzdem drei Termine
+    an. Der Grund war Redions eigenes Dienst-Skript: es merkt sich jede
+    GET-Anfrage an die EIGENE Herkunft und lässt Fremdes ausdrücklich in
+    Ruhe. `Cache-Control: no-store` half nichts, weil es vor dem Netz
+    sitzt. Ein echtes Kalender-Abo liegt bei einem fremden Rechner — der
+    Prüfstand serviert es jetzt auf einem zweiten Tor und bildet damit ab,
+    was es draussen gibt.
+  · §7 mass eine fremde Tabelle. Es suchte die erste Sammlung, deren Name
+    auf „Termine" passt, und §1 bis §5 hatten fünf davon angelegt. Die
+    Tabelle wird jetzt gemerkt statt gesucht.
+
+Beide gefunden, indem gemessen wurde, was über die Leitung kommt und welche
+Tabelle gelesen wird — statt zu raten, warum die Zeile rot ist.
+
+UND WAS §1 WIRKLICH TRÄGT, ist auch nachgemessen: nicht eine Zeile, sondern
+zwei. Die Bedingung vor der Schleife und der Herkunftsnachweis darin sichern
+denselben Fall, jede allein genügt, und der Abschnitt wird erst rot, wenn
+BEIDE fallen. Doppelt gesichert ist hier richtig — aber es soll niemand
+glauben, eine der beiden Zeilen sei durch diesen Abschnitt gedeckt.
+
+test335 neu, 30 Punkte. Belegt rot: der Herkunftsnachweis entfernt (§3 und
+§5 fallen — die zwei Abschnitte, die den ganzen Bogen tragen), beide
+Wächter entfernt (§1 fällt), die Leerlauf-Sperre entfernt (§4 fällt, und
+zwar so, dass der ganze Kalender leer ist).

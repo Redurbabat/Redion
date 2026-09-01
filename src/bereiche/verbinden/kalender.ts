@@ -622,7 +622,8 @@ const Kalender = (() => {
    * aufgefrischt statt doppelt angelegt — sonst wächst die Liste bei
    * jedem Abgleich.
    */
-  const uebernehmen = (coll: any, termine: any, quelle?: any) => {
+  const uebernehmen = (coll: any, termine: any, quelle?: any,
+                       vorherGeliefert?: string[]) => {
     const vorhanden = new Map();
     /* DER ZWEITE INDEX IST DER UMZUGSWEG (E335). Jede Zeile, die vor E335
        aus einer Reihe entstanden ist, trägt die nackte Reihenkennung —
@@ -667,8 +668,11 @@ const Kalender = (() => {
        zwei Folgen wieder in derselben Zeile landen — genau der Fehler,
        den dieser Bogen abräumt, nur eine Ebene tiefer. */
     const belegt = new Set<string>();
+    /* Und wie sie HEISSEN — das Gedächtnis des Abos (E343, siehe unten). */
+    const belegtSchluessel = new Set<string>();
     termine.forEach((t: any) => {
       const schluessel = terminSchluessel(t);
+      belegtSchluessel.add(schluessel);
       const props: Record<string, unknown> = {
         start: t.start || '', ende: t.ende || '',
         ort: t.ort ? { name: t.ort } : null,
@@ -748,7 +752,54 @@ const Kalender = (() => {
       });
     }
 
-    return { neu, frisch, umgezogen, entfallen };
+    /* ─── UND DER EINZELNE GESTRICHENE TERMIN (E343, L112 Rest) ──────────
+       E336 hat die Reihen abgeräumt. Für einen Termin, der zu keiner Reihe
+       gehört, stand in L112: „über einen Einzeltermin lässt sich nichts
+       sagen. Er kann von Hand angelegt worden sein, er kann aus einer Datei
+       stammen, er kann zu einem Abo gehören, das gerade nur ein kürzeres
+       Zeitfenster liefert."
+
+       Das stimmte, SOLANGE man nur die Zeile ansieht. Was gefehlt hat, war
+       ein Gedächtnis: WELCHE Kennungen hat dieses Abo beim letzten Mal
+       geliefert? Steht eine Kennung in dieser Liste und kommt sie diesmal
+       nicht mehr, dann — und nur dann — ist der Satz „die Quelle hat ihn
+       gestrichen" belegt statt geraten.
+
+       DIE LISTE MACHT DIE HEIKELSTEN FÄLLE VON SELBST SICHER, und das ist
+       der eigentliche Gewinn: ein von Hand angelegter Termin war NIE in
+       ihr, ein eingelesener auch nicht. Es braucht keine Heuristik, die
+       „sieht von Hand angelegt aus" rät — die Frage stellt sich gar nicht.
+
+       DREI SPERREN:
+
+         · Ohne alte Liste passiert nichts. Jedes Abo, das es heute gibt,
+           hat noch keine — der erste Lauf nach dieser Fassung SCHREIBT sie
+           nur. Ohne diese Sperre räumte genau dieser erste Lauf alles weg,
+           was gerade nicht geliefert wird.
+         · Ein leerer Lauf räumt nicht auf. Dieselbe Sperre wie oben bei den
+           Reihen, und aus demselben Grund: „die Quelle hat nichts mehr" und
+           „ich habe nichts gehört" sehen gleich aus und sind es nicht.
+         · Nur Kennungen aus der EIGENEN alten Liste. Zwei Abos in derselben
+           Tabelle räumen einander nicht ab.
+
+       WAS ES KOSTET, und es ist benannt: liefert ein Abo plötzlich ein
+       kürzeres Zeitfenster, wandern die Termine ausserhalb in den
+       Papierkorb. Das ist derselbe Handel, den E336 für Reihen eingegangen
+       ist — und wieder in den Papierkorb, nicht ins Nichts (§9, §13). */
+    const geliefert = [...belegtSchluessel];
+    if (termine.length && vorherGeliefert && vorherGeliefert.length) {
+      const jetztDa = new Set(geliefert);
+      const frueher = new Set(vorherGeliefert);
+      Store.rowsOf(coll.id).forEach((r: any) => {
+        if (belegt.has(r.id)) return;
+        const u = String((r.props || {}).uid || '');
+        if (!u || jetztDa.has(u) || !frueher.has(u)) return;
+        Store.trashBlock(r.id);
+        entfallen++;
+      });
+    }
+
+    return { neu, frisch, umgezogen, entfallen, geliefert };
   };
 
   /* ========================================================================
@@ -798,7 +849,24 @@ const Kalender = (() => {
     for (const a of liste) {
       try {
         const k = await aboHolen(a);
-        const e = uebernehmen(coll, k.termine, a.name || k.name);
+        /* DAS GEDÄCHTNIS DES ABOS (E343, L112 Rest). Was dieses Abo beim
+           letzten Mal geliefert hat, geht hinein; was es diesmal liefert,
+           kommt heraus und wird gemerkt. Nur so lässt sich von einem
+           EINZELNEN Termin sagen, dass die Quelle ihn gestrichen hat —
+           statt es zu raten.
+
+           Die Liste hängt am Abo und nicht an der Tabelle: zwei Abos in
+           derselben Kalendertabelle sollen einander nicht abräumen. Und
+           sie steht in `ics:abos`, also reist sie mit der Sicherung (§11)
+           — ohne sie wäre nach einem Einspielen der erste Lauf wieder ein
+           Lauf ohne Gedächtnis, und das ist zwar harmlos, aber unnötig. */
+        const e = uebernehmen(coll, k.termine, a.name || k.name,
+                              Array.isArray(a.geliefert) ? a.geliefert : undefined);
+        /* NUR NACH EINEM LAUF, DER WIRKLICH ETWAS BRACHTE. Eine leere
+           Antwort darf das Gedächtnis nicht löschen — beim nächsten Mal
+           wäre sonst alles „neu geliefert" und nichts mehr aufräumbar.
+           Der Fehlerfall kommt hier ohnehin nicht an; er liegt im `catch`. */
+        if (k.termine.length) a.geliefert = e.geliefert;
         alleTermine.push(...k.termine);
         offeneAufgaben += (k.aufgaben || []).filter((x: any) => !x.fertig).length;
         neu += e.neu; frisch += e.frisch; entfallen += e.entfallen || 0;
