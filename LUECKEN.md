@@ -4189,12 +4189,29 @@ L105 — Was die Lückenansicht (E288) noch nicht kann
    Satz nennt, wieviel abgehakt ist — aber nur, wenn es welches gibt.
    test317, 25 Punkte.
 
-3. **Die Ansicht rechnet bei jedem Öffnen neu.** PageRank über den ganzen
-   Graphen, alle Verweise auflösen, jede Seite nach Fragen durchsuchen.
-   Bei Redions Demobestand sind das Millisekunden; bei zehntausend Seiten
-   wird es spürbar, und es gibt keinen Fortschrittsbalken. Genau dafür gibt
-   es seit E286 die Auftragsmaschine — der Anschluss wäre ein guter erster
-   echter Auftrag (L103 Punkt 1).
+3. **Die Ansicht rechnet bei jedem Öffnen neu.** — **GESCHLOSSEN am
+   1. September 2026 durch E330, aber ANDERS als hier vorgeschlagen.**
+
+   Erst gemessen: von 173 ms bei 1763 Seiten liegen 145 im SAMMELN (Graph,
+   Rang, Seitentext) und 28 im Finden. Hochgerechnet auf die zehntausend
+   aus dieser Zeile wäre es rund EINE SEKUNDE — spürbar, aber keine Arbeit,
+   die einen Auftrag braucht. Ein Auftrag lohnt bei Minuten; er kostet
+   einen Satz in der Ablage, einen Takt, ein Fenster, einen Abbrechen-Knopf
+   und die Frage, was gilt, solange er läuft.
+
+   Also ein Merker: das Sammeln wird gemerkt, das Finden läuft immer. Der
+   Abdruck ist Zahl der Blöcke, neuester Zeitstempel und Summe aller
+   Stempel — ohne die Summe wäre er blind gegen zwei Änderungen in
+   derselben Millisekunde.
+
+   Und der wirkliche Gewinn stand nicht in dieser Zeile: `befund()` läuft
+   auch nach JEDEM Haken (E324), und ein Haken ändert nur `erledigt` — was
+   gar nicht ins Sammeln eingeht. 157 ms kalt gegen 31 ms mit Merker.
+
+   WAS OFFEN BLEIBT: bei wirklich zehntausend Seiten bleibt es rund eine
+   Sekunde beim ersten Öffnen. Wenn das jemand einmal wirklich hat, ist der
+   Auftrag der nächste Schritt — dann aber mit einer gemessenen Zahl
+   dahinter statt mit einer geschätzten.
 
 4. **„Wichtig, aber verstaubt" kennt keine Absicht.** — **GESCHLOSSEN am
    1. September 2026 durch E329, und der zweite Satz hier war falsch.**

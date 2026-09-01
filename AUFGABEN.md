@@ -2468,3 +2468,16 @@ node pruefungen/lauf/test105.mjs
   mit der Begründung „nie stärker als ein Geist", und `staerkeGeist(1)` ist
   40. Der Prüflauf sagte es sofort. test322 neu (19), beide Zusagen belegt
   rot. sw v83.
+* E330 (L105 Punkt 3): Ein Merker statt einer Maschine. Die Lücke schlug
+  einen Auftrag vor — nach E327 wäre der Weg getreten gewesen. Erst
+  gemessen: 173 ms bei 1763 Seiten, davon 86 % im Sammeln. Auf zehntausend
+  Seiten hochgerechnet rund eine Sekunde, und eine Sekunde rechtfertigt
+  keinen Auftrag mit Ablage, Takt, Fenster und Abbrechen-Knopf. Also wird
+  das SAMMELN gemerkt und das Finden läuft immer — `erledigt` und die Zeit
+  gehen ins Finden, ein gemerkter Befund wäre nach einem Tag falsch. Der
+  eigentliche Gewinn stand nicht in der Lücke: `befund()` läuft auch nach
+  jedem Haken (E324), und ein Haken ändert nur `erledigt`. 157 ms kalt
+  gegen 31 ms gemerkt. Der Abdruck trägt eine SUMME aller Zeitstempel, sonst
+  wäre er blind gegen zwei Änderungen in derselben Millisekunde — belegt
+  rot. Gerechnet ab 2020, damit die Summe bei zehntausend Blöcken nicht die
+  Genauigkeit einer Fliesskommazahl übersteigt. test323 neu (14). sw v84.

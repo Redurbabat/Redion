@@ -126,6 +126,84 @@ const Wissensluecken = (() => {
         }));
         return { seiten, verweise, themen };
     };
+    /* ==========================================================================
+     * DER MERKER (L105 Punkt 3, E330)
+     * --------------------------------------------------------------------------
+     * L105 sagte: „Die Ansicht rechnet bei jedem Öffnen neu. PageRank über den
+     * ganzen Graphen, alle Verweise auflösen, jede Seite nach Fragen
+     * durchsuchen. Bei Redions Demobestand sind das Millisekunden; bei
+     * zehntausend Seiten wird es spürbar, und es gibt keinen
+     * Fortschrittsbalken. Genau dafür gibt es seit E286 die Auftragsmaschine."
+     *
+     * GEMESSEN, BEVOR GEBAUT WURDE (§55.2 sinngemäss — erst nachsehen, ob es
+     * das Problem gibt, das man lösen will):
+     *
+     *     Seiten   sammeln   finden
+     *         63     28 ms    12 ms
+     *        263     43 ms    12 ms
+     *        763     88 ms    19 ms
+     *       1763    173 ms    28 ms
+     *
+     * Zwei Dinge stehen darin, und beide ändern den Plan.
+     *
+     * ERSTENS: sechsundachtzig Prozent der Zeit liegen im SAMMELN, nicht im
+     * Finden. Zwischenzuspeichern ist also das Sammeln, und das ist die
+     * billigere Hälfte der Arbeit — kein Auftrag, keine Maschine, kein
+     * Fortschrittsbalken.
+     *
+     * ZWEITENS: 173 ms bei 1763 Seiten. Hochgerechnet auf die zehntausend aus
+     * der Lücke wäre es ungefähr eine Sekunde. Das ist spürbar, aber es ist
+     * KEINE Arbeit, die einen Auftrag braucht — ein Auftrag lohnt bei Minuten,
+     * nicht bei einer Sekunde. Was L105 vorschlug, wäre also mehr Maschinerie
+     * gewesen als das Problem gross ist. Die Zahl steht deshalb in der Lücke,
+     * und der Auftrag bleibt ungebaut.
+     *
+     * WAS DER MERKER WIRKLICH BRINGT, und das steht so nicht in der Lücke:
+     * `befund()` wird nicht nur beim Öffnen gerufen, sondern auch nach JEDEM
+     * Haken (E324). Ein Haken ändert `erledigt` — und `erledigt` geht gar
+     * nicht ins Sammeln ein. Vorher kostete jeder Haken den ganzen Graphen
+     * noch einmal.
+     * ========================================================================*/
+    /**
+     * Ein Fingerabdruck des Bestands: WIE VIELE Blöcke, WELCHER ist der
+     * neueste, und die SUMME aller Zeitstempel.
+     *
+     * Die Summe ist nicht Zierde. Ohne sie wäre der Abdruck aus Zahl und
+     * neuestem Stempel blind gegen zwei Änderungen in derselben Millisekunde
+     * an verschiedenen Blöcken: die Zahl bliebe gleich, der neueste auch. Mit
+     * ihr nicht, denn ein Block kann seinen Stempel nur vorwärts bewegen.
+     *
+     * Gerechnet wird ab 2020, damit die Summe klein bleibt: rohe Millisekunden
+     * seit 1970 ergäben bei zehntausend Blöcken 1,7 · 10^16 und damit mehr,
+     * als eine Fliesskommazahl noch genau hält.
+     */
+    const BASIS = Date.UTC(2020, 0, 1);
+    const abdruck = () => {
+        const bl = (typeof Store !== 'undefined' && Store.cache && Store.cache.blocks) || {};
+        let n = 0, neuste = '', summe = 0;
+        for (const id in bl) {
+            n++;
+            const b = bl[id];
+            const t = (b && (b.edited || b.created)) || '';
+            if (t > neuste)
+                neuste = t;
+            const ms = Date.parse(t);
+            if (Number.isFinite(ms))
+                summe += ms - BASIS;
+        }
+        return n + '|' + neuste + '|' + summe;
+    };
+    let merker = null;
+    /** Den Merker wegwerfen. Für Prüfläufe und für alles, was am Bestand rüttelt. */
+    const vergessen = () => { merker = null; };
+    const gesammelt = () => {
+        const jetzt = abdruck();
+        if (merker && merker.abdruck === jetzt)
+            return merker.wert;
+        const wert = sammeln();
+        merker = { abdruck: jetzt, wert };
+        return wert;
+    };
     /* ------------------------------------------------------------------------
      * ERLEDIGTES (L105 Punkt 2, E324)
      * ------------------------------------------------------------------------
@@ -160,9 +238,17 @@ const Wissensluecken = (() => {
         Store.setMeta(SCHL_ERLEDIGT, []);
         return n;
     };
-    /** Der Befund von jetzt. */
+    /**
+     * Der Befund von jetzt.
+     *
+     * Das SAMMELN kommt aus dem Merker, wenn sich am Bestand nichts geändert
+     * hat; das FINDEN läuft immer. Das ist kein Geiz, sondern die Trennlinie:
+     * `erledigt` und `jetzt` gehen ins Finden ein und nicht ins Sammeln. Ein
+     * zwischengespeicherter Befund wäre falsch, sobald ein Tag vergeht — ein
+     * zwischengespeicherter Graph nicht.
+     */
     const befund = (opt = {}) => {
-        const { seiten, verweise, themen } = sammeln();
+        const { seiten, verweise, themen } = gesammelt();
         return KnowledgeGaps.finden(seiten, verweise, themen, { erledigt: erledigte(), ...opt });
     };
     /* ------------------------------------------------------------------------
@@ -336,7 +422,8 @@ const Wissensluecken = (() => {
                 o.remove();
         });
     };
-    return { zeigen, befund, sammeln, seitentext, ARTEN, FRAGE_IST_INHALT,
+    return { zeigen, befund, sammeln, gesammelt, abdruck, vergessen,
+        seitentext, ARTEN, FRAGE_IST_INHALT,
         erledigte, abhaken, wiederZeigen, SCHL_ERLEDIGT };
 })();
 window.Wissensluecken = Wissensluecken;

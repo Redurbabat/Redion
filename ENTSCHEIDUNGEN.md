@@ -25039,3 +25039,81 @@ test322, 19 Punkte, und beide Zusagen sind belegt rot:
 direkt zu fragen ist ohnehin die geradere Messung.
 
 test317 25/25, test282 57/57. sw v83 · Einzeldatei neu gebaut.
+
+
+E330 — Ein Merker statt einer Maschine (L105 Punkt 3)
+════════════════════════════════════════════════════════════════════════════
+
+L105 sagte: „Die Ansicht rechnet bei jedem Öffnen neu. PageRank über den
+ganzen Graphen, alle Verweise auflösen, jede Seite nach Fragen durchsuchen.
+Bei Redions Demobestand sind das Millisekunden; bei zehntausend Seiten wird
+es spürbar, und es gibt keinen Fortschrittsbalken. Genau dafür gibt es seit
+E286 die Auftragsmaschine — der Anschluss wäre ein guter erster echter
+Auftrag."
+
+Nach E327 ist der erste echte Auftrag gebaut, und der Weg dahin ist
+getreten. Es wäre also leicht gewesen, hier denselben Weg noch einmal zu
+gehen. ERST GEMESSEN:
+
+    Seiten   sammeln   finden
+        63     28 ms    12 ms
+       263     43 ms    12 ms
+       763     88 ms    19 ms
+      1763    173 ms    28 ms
+
+Zwei Zahlen darin ändern den Plan.
+
+ERSTENS liegen sechsundachtzig Prozent der Zeit im SAMMELN — Graph, Rang,
+Seitentext — und nicht im Finden. Was zwischenzuspeichern ist, steht damit
+fest, und es ist die Hälfte, die weder `erledigt` noch die Uhr kennt.
+
+ZWEITENS sind 173 ms bei 1763 Seiten. Hochgerechnet auf die zehntausend aus
+der Lücke wäre es rund eine Sekunde. Das ist spürbar — und es ist trotzdem
+KEINE Arbeit, die einen Auftrag braucht. Ein Auftrag lohnt bei Minuten: er
+kostet einen Satz in der Ablage, einen Takt, ein Fenster, einen
+Abbrechen-Knopf und die Frage, was gilt, wenn er noch läuft. Für eine
+Sekunde ist das mehr Maschinerie, als das Problem gross ist.
+
+Die Lücke schlug den Auftrag vor. Der Vorschlag war nicht falsch gedacht,
+nur ungemessen — und eine gemessene Sekunde beantwortet ihn.
+
+WAS DER MERKER WIRKLICH BRINGT, und das steht so nicht in der Lücke:
+`befund()` wird nicht nur beim Öffnen gerufen, sondern auch nach JEDEM
+Haken (E324). Ein Haken ändert `erledigt`, und `erledigt` geht gar nicht
+ins Sammeln ein. Vorher kostete jeder Haken den ganzen Graphen noch einmal.
+Gemessen bei 1763 Seiten: 157 ms kalt, 31 ms mit Merker, und nach einer
+echten Änderung wieder 130 ms.
+
+DER ABDRUCK: Zahl der Blöcke, neuester Zeitstempel, SUMME aller Stempel.
+
+Die Summe ist nicht Zierde. Ohne sie wäre der Abdruck blind gegen zwei
+Änderungen in derselben Millisekunde an verschiedenen Blöcken — die Zahl
+bliebe gleich, der neueste auch. Im Alltag selten; beim Abgleich, der einen
+Schwung Blöcke mit demselben Stempel schreibt, gewöhnlich. Mit der Summe
+kann das nicht passieren, denn ein Block bewegt seinen Stempel nur vorwärts.
+
+Gerechnet wird ab 2020, damit die Summe klein bleibt: rohe Millisekunden
+seit 1970 ergäben bei zehntausend Blöcken 1,7 · 10^16 und damit mehr, als
+eine Fliesskommazahl noch genau hält. Ein Abdruck, der ab einer gewissen
+Grösse aufhört, Unterschiede zu sehen, wäre schlimmer als keiner.
+
+WAS NICHT GEMERKT WIRD: der Befund selbst. `erledigt` und `jetzt` gehen ins
+FINDEN, und die Zeit ändert die Funde — „verstaubt seit 90 Tagen" ist
+morgen etwas anderes als heute. Ein gemerkter Befund wäre nach einem Tag
+schlicht falsch; ein gemerkter Graph nicht.
+
+─── DIE PRÜFUNG ────────────────────────────────────────────────────────────
+
+test323, 14 Punkte, und sie misst vor allem das VERFALLEN. Ein Merker ist
+eine Gefahr und kein Gewinn, wenn er zu lange hält: er zeigt dann Funde zu
+einem Bestand, den es nicht mehr gibt.
+
+§1 vergleicht auf DASSELBE OBJEKT und nicht auf gleichen Inhalt — ein
+Inhaltsvergleich wäre auch dann grün, wenn jedes Mal neu gerechnet würde,
+also blind für genau das Gemessene.
+
+§3 ist der Punkt, der die Summe rechtfertigt, und er ist belegt rot: nimmt
+man sie aus dem Abdruck, sind zwei Zustände ununterscheidbar, in denen sich
+ein Block bewegt hat.
+
+test322 19/19, test317 25/25, test282 57/57. sw v84 · Einzeldatei neu gebaut.
