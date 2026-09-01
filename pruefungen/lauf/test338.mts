@@ -229,19 +229,21 @@ const r5 = await wordAus([
   { type: 'image', caption: 'Ohne alles' },
   ...(webp ? [{ type: 'image', src: webp, caption: 'Foto' }] : [])
 ]);
-gleich('Kein Medienteil', Object.keys(r5.medien).length, 0);
-p('Das SVG steht als Platzhalter da', /\[Bild: Zeichnung — SVG, kommt in Word nicht mit\]/
-  .test(String(r5.doc)), (/\[Bild[^\]]*\]/.exec(String(r5.doc)) || [''])[0]);
-p('Und das leere sagt seinen eigenen Grund',
+/* DAS SVG WIRD SEIT E347 GERASTERT und ist damit ein gewöhnliches PNG im
+   Archiv. E346 liess es als Platzhalter stehen und nannte den Grund; die
+   Maschine dafür kam mit dem Schaltplan. */
+gleich('Aus dem SVG wurde ein PNG', Object.keys(r5.medien), ['word/media/bild1.png']);
+p('Und kein Platzhalter mehr für das SVG', !/\[Bild: Zeichnung/.test(String(r5.doc)),
+  (/\[Bild: Zeichnung[^\]]*\]/.exec(String(r5.doc)) || [''])[0]);
+p('Das leere sagt seinen eigenen Grund',
   /\[Bild: Ohne alles — kein Bild hinterlegt\]/.test(String(r5.doc)),
   (/\[Bild: Ohne alles[^\]]*\]/.exec(String(r5.doc)) || [''])[0]);
 p('Und das WebP ebenso — der Browser liest es, Word nicht',
   !webp || /\[Bild: Foto — liess sich nicht lesen\]/.test(String(r5.doc)),
   webp ? (/\[Bild: Foto[^\]]*\]/.exec(String(r5.doc)) || ['nichts gefunden'])[0]
        : 'dieser Browser kann kein WebP');
-gleich('Keine Bild-Beziehung', (String(r5.rels).match(/rIdBild/g) || []).length, 0);
-gleich('Und kein `Default` für eine Bildendung',
-  (String(r5.typen).match(/<Default Extension="(png|jpg|gif|bmp|tiff)"/g) || []).length, 0);
+gleich('Genau eine Bild-Beziehung — für das gerasterte SVG',
+  (String(r5.rels).match(/rIdBild/g) || []).length, 1);
 
 /* ========================================================================
  * 6 · Ohne Bild kein Medienordner

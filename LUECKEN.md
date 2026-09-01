@@ -2796,9 +2796,25 @@ ES BLEIBEN ZWEI BENANNTE VERLUSTE, beide gemessen statt vermutet:
     Und der Platzhalter sagt jetzt, WARUM (§35): „SVG, kommt in Word nicht
     mit", „kein Bild hinterlegt", „liess sich nicht lesen".
 
-    WAS OFFEN BLEIBT: SVG. Word braucht daneben ein PNG als Rückfallebene,
-    sonst zeigen ältere Fassungen ein leeres Kästchen. Bis dahin steht der
-    Platzhalter da und sagt es.
+    ~~WAS OFFEN BLEIBT: SVG.~~ — **GESCHLOSSEN am 1. September 2026 durch
+    E347.** Beim Nachmessen des Blocks, um den es Redur geht, fand sich
+    Schlimmeres als ein Platzhalter: ein `schaltplan`-Block kam in Word
+    als NICHTS an — Seitentitel und Beschriftung, keine Zeichnung, keine
+    Meldung. Er ist kein `image`-Block und hatte im Export keinen Weg.
+
+    Jetzt rastert Redion, was es selbst zeichnet, zu einem PNG: derselbe
+    Zeichner wie am Bildschirm (`Schaltplan.alsSvg`), doppelte Auflösung
+    bei logischem Mass, weisser Grund. SVG-Dateien in `image`-Blöcken gehen
+    denselben Weg. WebP bleibt Platzhalter.
+
+    Zwei Fallen, beide erst beim Zählen der Pixel sichtbar: ein SVG im
+    `<img>` ist ein eigenes Dokument — ohne `xmlns` lädt es nicht, und
+    `var(--text)` wird dort zu `none`, also zu einem weissen Blatt, das
+    keinen Fehler auslöst. `svgAlleinstehend` trägt Namensraum und Farben
+    nach (Schwarz, nicht die Bildschirmfarbe: die Vorgabe ist dunkel).
+
+    test339, 31 Punkte, zählt dunkle Pixel im Medienteil und misst Hell
+    und Dunkel gegeneinander. Belegt rot in drei Richtungen, jede einzeln.
 
     test338, 34 Punkte, §1 mit einem Byte-für-Byte-Vergleich. Belegt rot in
     drei Richtungen — darunter eine, die beim Nachmessen erst entstand: die

@@ -2644,6 +2644,19 @@ node pruefungen/lauf/test105.mjs
   `padding` ist vier Erklärungen, nicht eine, und §2/§3 zählten absolut
   statt den Unterschied zum Bestand.
   test332 neu (14), belegt rot. test258 19/19.
+* E347 (L72, der Rest vom Rest, geschlossen): Der Schaltplan kommt in der
+  .docx an. Gemessen: eine Seite mit einem `schaltplan`-Block ergab in Word
+  nur Titel und Beschriftung — keine Zeichnung, kein Platzhalter, keine
+  Meldung. Der Block ist kein `image` und hatte im Export keinen Weg.
+  Jetzt rastert Redion, was es selbst zeichnet: derselbe Zeichner wie am
+  Bildschirm, PNG in doppelter Auflösung bei logischem Mass, weisser Grund.
+  SVG-Dateien gehen denselben Weg; WebP bleibt Platzhalter.
+  Die erste Fassung kam beim Prüflauf trotzdem als `medien: []` an — zwei
+  Fallen, die nur das Zählen von Pixeln findet: ein SVG im `<img>` ist ein
+  eigenes Dokument, ohne `xmlns` lädt es nicht, und `var(--text)` wird
+  dort zu `none` — ein weisses Blatt ohne Fehler. `svgAlleinstehend` trägt
+  beides nach; Schwarz statt Bildschirmfarbe, denn die Vorgabe ist dunkel.
+  test339 neu (31), zählt Pixel, belegt rot in drei Richtungen.
 * E346 (L72 Rest, geschlossen): Bilder kommen in der .docx an. Bis eben
   stand dort `[Bild]` — eine Seite mit einem Schaltplan kam als leeres
   Blatt beim Lehrer an (§13). Jetzt: Medienteile unter `word/media/`, je

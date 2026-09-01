@@ -447,13 +447,26 @@ const Austausch = (() => {
     const bloecke: any[] = [];
     const lauf = (id: string) => {
       Store.childrenOf(id).forEach((b: any) => {
-        if (b.type === 'image') bloecke.push(b);
+        /* `schaltplan` steht seit E347 mit in der Reihe: Redion zeichnet
+           ihn, Word hält ihn nicht — also wird er gerastert. */
+        if (b.type === 'image' || b.type === 'schaltplan') bloecke.push(b);
         if (Store.childrenOf(b.id).length) lauf(b.id);
       });
     };
     lauf(seite.id);
 
     for (const b of bloecke) {
+      /* ERST DAS, WAS REDION SELBST ZEICHNET (E347). Ein Schaltplan hat
+         keine Datei und keine Data-URL — er hat einen Plan, und daraus
+         wird das Bild gemacht. */
+      const eigenSvg = blockAlsSvg(b);
+      if (eigenSvg) {
+        const gerastert = await svgAlsPng(eigenSvg);
+        if (gerastert) raus.set(b.id, gerastert);
+        continue;
+      }
+      if (b.type === 'schaltplan') continue;   /* ohne Plan: Platzhalter */
+
       let blob: Blob | null = null;
       let typ = '';
       if (b.dateiId && typeof Dateien !== 'undefined' && Dateien.alsBlob) {
@@ -468,8 +481,17 @@ const Austausch = (() => {
         }
       }
       if (!blob) continue;
+      /* EIN SVG-BILD WIRD JETZT GERASTERT (E347). E346 liess es als
+         Platzhalter stehen und nannte den Grund; die Maschine dafür gibt
+         es seit dem Schaltplan, also gilt derselbe Weg. */
+      if (typ === 'image/svg+xml') {
+        const text = await blob.text();
+        const gerastert = await svgAlsPng(text);
+        if (gerastert) raus.set(b.id, gerastert);
+        continue;
+      }
       const endung = WORT_BILDTYPEN[typ];
-      if (!endung) continue;              /* SVG und Unbekanntes: Platzhalter */
+      if (!endung) continue;              /* Unbekanntes: Platzhalter */
       const masse = await bildMasse(blob);
       if (!masse) continue;               /* Lieber Platzhalter als Ratemass */
       const bytes = new Uint8Array(await blob.arrayBuffer());
@@ -478,11 +500,160 @@ const Austausch = (() => {
     return raus;
   };
 
+  /* ────────────────────────────────────────────────────────────────────
+   * WAS REDION ZEICHNEN KANN UND WORD NICHT HÄLT (E347)
+   *
+   * Ein `schaltplan`-Block kam in der .docx als NICHTS an. Nicht als
+   * Platzhalter — als nichts. Gemessen: eine Seite mit einem Schaltplan
+   * ergab `|Elektro|Reihenschaltung|`, also den Seitentitel und die
+   * Beschriftung des Blocks. Die Zeichnung war weg, und nichts sagte es.
+   *
+   * Das ist schlimmer als der `[Bild]`-Platzhalter aus E346, den L72
+   * beklagt hat: den sah man wenigstens. Für Redur, der Elektrotechnik
+   * lernt, ist der Schaltplan das eigentliche Ergebnis — und der Lehrer
+   * bekam ein leeres Blatt.
+   *
+   * REDION ZEICHNET IHN SCHON, und zwar als SVG: `Schaltplan.alsSvg` ist
+   * derselbe Zeichner, den der Bildschirm benutzt (siehe
+   * `elektro/skizzen.ts`: „Kein zweiter Zeichner"). Was fehlte, war der
+   * Weg von dort in ein Format, das Word annimmt.
+   *
+   * ─── WARUM GERASTERT UND NICHT ALS SVG EINGEBETTET ────────────────────
+   *
+   * Word nimmt SVG erst seit 2016 an, und auch dann nur mit einem PNG
+   * daneben als Rückfallebene — sonst zeigen ältere Fassungen ein leeres
+   * Kästchen. Das PNG braucht es also ohnehin. Es allein zu schreiben ist
+   * die Fassung, die überall aufgeht; das SVG zusätzlich einzubetten ist
+   * ein eigener, kleinerer Schritt.
+   *
+   * ─── ZWEIMAL SO VIELE PIXEL, GLEICHE GRÖSSE ───────────────────────────
+   *
+   * Gezeichnet wird mit doppelter Auflösung, angegeben wird die einfache.
+   * Ein Schaltplan, der auf dem Bildschirm 800 px breit ist, wird als
+   * 1600-px-Bild geschrieben und mit der Breite von 800 px eingesetzt —
+   * am Bildschirm sieht man keinen Unterschied, gedruckt schon.
+   * ────────────────────────────────────────────────────────────────────*/
+
+  /** Wie fein gerastert wird. Mehr kostet nur Platz, weniger sieht man. */
+  const RASTER_FAKTOR = 2;
+
+  /**
+   * Die Masse aus einem SVG lesen — erst `width`/`height`, sonst `viewBox`.
+   *
+   * `null`, wenn beides fehlt: dann wüsste niemand, wie gross das Bild
+   * werden soll, und ein geratenes Mass ist schlechter als ein Platzhalter
+   * (dieselbe Regel wie bei `bildMasse` in E346).
+   */
+  const svgMasse = (svg: string): { b: number; h: number } | null => {
+    const zahl = (roh: string | undefined) => {
+      const n = parseFloat(String(roh || ''));
+      return Number.isFinite(n) && n > 0 ? n : 0;
+    };
+    const b1 = zahl((/\swidth="([^"]+)"/.exec(svg) || [])[1]);
+    const h1 = zahl((/\sheight="([^"]+)"/.exec(svg) || [])[1]);
+    if (b1 && h1) return { b: b1, h: h1 };
+    const vb = (/viewBox="([^"]+)"/.exec(svg) || [])[1];
+    if (vb) {
+      const t = vb.trim().split(/[\s,]+/).map(Number);
+      if (t.length === 4 && (t[2] ?? 0) > 0 && (t[3] ?? 0) > 0)
+        return { b: t[2] as number, h: t[3] as number };
+    }
+    return null;
+  };
+
+  /**
+   * Ein SVG so herrichten, dass es ALLEIN steht.
+   *
+   * Auf dem Bildschirm sitzt der Schaltplan in Redions Seite: das
+   * Stylesheet kennt `--text`, und `<svg>` ohne `xmlns` ist im HTML
+   * erlaubt. In einem `<img>` ist das SVG ein eigenes Dokument, und dort
+   * gilt beides nicht mehr — GEMESSEN, nicht vermutet:
+   *
+   *   · Ohne `xmlns="http://www.w3.org/2000/svg"` lädt das Bild gar nicht.
+   *     `onerror`, kein Medienteil, Platzhalter „liess sich nicht zeichnen".
+   *     Die erste Fassung von E347 kam genau so beim Prüflauf an.
+   *   · `stroke="var(--text)"` zeigt auf eine Variable, die es dort nicht
+   *     gibt. Dann fällt `stroke` auf `none` zurück, und jede Leitung ist
+   *     unsichtbar — das Bild lädt, ist aber ein weisses Blatt. Das ist
+   *     der schlimmere Fall, weil ihn niemand meldet.
+   *
+   * Also: `xmlns` nachtragen, wenn es fehlt, und jede Variable auflösen.
+   * Hat sie einen Ersatzwert (`var(--x, #abc)`), gilt der. Hat sie
+   * keinen, wird es Schwarz — nicht die Farbe des Bildschirms: im
+   * Dunkelmodus wäre `--text` fast weiss, und auf dem weissen Blatt
+   * (siehe `svgAlsPng`) ebenso unsichtbar wie `none`.
+   */
+  const svgAlleinstehend = (svg: string): string => {
+    let s = svg;
+    if (!/<svg[^>]*\sxmlns=/.test(s))
+      s = s.replace(/<svg\b/, '<svg xmlns="http://www.w3.org/2000/svg"');
+    s = s.replace(/var\(\s*--[\w-]+\s*,\s*([^()]+?)\s*\)/g, '$1');
+    s = s.replace(/var\(\s*--[\w-]+\s*\)/g, '#000000');
+    return s;
+  };
+
+  /**
+   * Ein SVG in ein PNG verwandeln.
+   *
+   * `null` heisst „ging nicht" und nie „ist leer": ein SVG, das auf etwas
+   * Fremdes zeigt, macht die Zeichenfläche unlesbar und `toBlob` wirft.
+   * Dann bleibt der Platzhalter, und der sagt es.
+   */
+  const svgAlsPng = async (roh: string): Promise<WortBild | null> => {
+    const masse = svgMasse(roh);
+    if (!masse) return null;
+    const svg = svgAlleinstehend(roh);
+    const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
+    try {
+      const bild: HTMLImageElement = await new Promise((ok, nein) => {
+        const i = new Image();
+        i.onload = () => ok(i);
+        i.onerror = () => nein(new Error('SVG liess sich nicht laden'));
+        i.src = url;
+      });
+      const c = document.createElement('canvas');
+      c.width = Math.max(1, Math.round(masse.b * RASTER_FAKTOR));
+      c.height = Math.max(1, Math.round(masse.h * RASTER_FAKTOR));
+      const g = c.getContext('2d');
+      if (!g) return null;
+      /* WEISSER GRUND, und das ist kein Schönheitsfehler: ein Schaltplan
+         ist schwarz auf durchsichtig gezeichnet. Auf Words weissem Blatt
+         geht das gut — in einer dunklen Vorlage wäre er unsichtbar. Ein
+         Bild, das man nur bei einer bestimmten Formatvorlage sieht, ist
+         kein Bild. */
+      g.fillStyle = '#ffffff';
+      g.fillRect(0, 0, c.width, c.height);
+      g.drawImage(bild, 0, 0, c.width, c.height);
+      const blob: Blob | null = await new Promise(ok => c.toBlob(b => ok(b), 'image/png'));
+      if (!blob) return null;
+      const bytes = new Uint8Array(await blob.arrayBuffer());
+      /* Die LOGISCHE Grösse zurück, nicht die gerasterte — siehe Kopf. */
+      return { bytes, endung: 'png', typ: 'image/png',
+               breite: masse.b, hoehe: masse.h };
+    } catch { return null; }
+    finally { URL.revokeObjectURL(url); }
+  };
+
+  /** Der SVG-Text eines Blocks, den Redion selbst zeichnet — oder ''. */
+  const blockAlsSvg = (b: any): string => {
+    if (!b) return '';
+    if (b.type === 'schaltplan' && b.plan && typeof Schaltplan !== 'undefined' &&
+        Schaltplan.alsSvg) {
+      /* OHNE RASTER UND OHNE ANSCHLUSSPUNKTE. Beides sind Hilfen beim
+         Zeichnen, nicht Teil der Zeichnung — auf dem abgegebenen Blatt
+         hätten sie nichts zu suchen. Die Betriebsmittelkennzeichen (`bmk`)
+         schon: ohne sie weiss niemand, welcher Widerstand R2 ist. */
+      try { return String(Schaltplan.alsSvg(b.plan,
+              { raster: false, anschluesse: false, bmk: true }) || ''); }
+      catch { return ''; }
+    }
+    return '';
+  };
+
   /** Warum dieses Bild nicht mitkommt — für den Platzhalter (§35). */
   const wortBildGrund = (b: any): string => {
-    const typ = String((b && b.src && (ausDatenUrl(b.src) || {}).typ) || '').toLowerCase();
-    if (typ === 'image/svg+xml' || /\.svg$/i.test(String(b && b.name || '')))
-      return 'SVG, kommt in Word nicht mit';
+    if (b && b.type === 'schaltplan')
+      return b.plan ? 'liess sich nicht zeichnen' : 'noch nichts gezeichnet';
     if (!b || (!b.dateiId && !b.src)) return 'kein Bild hinterlegt';
     return 'liess sich nicht lesen';
   };
@@ -549,6 +720,23 @@ const Austausch = (() => {
           return;
         }
         if (b.type === 'divider') { raus.push(wAbsatz('', null)); return; }
+        if (b.type === 'schaltplan') {
+          /* DERSELBE WEG WIE BEIM BILD (E347) — nur die Quelle ist eine
+             andere. Und wenn er nicht gerastert werden konnte, steht ein
+             Platzhalter da statt gar nichts: bis E347 fiel der Schaltplan
+             STILL heraus, und das ist der schlimmere Fehler (§13, §35). */
+          const gezeichnet = bilder && bilder.get(b.id);
+          if (gezeichnet) {
+            bildNr++;
+            raus.push(wBild('rIdBild' + bildNr, bildNr + 100,
+                            gezeichnet.breite, gezeichnet.hoehe, t || 'Schaltplan'));
+            if (t) raus.push(wAbsatz(t, 'Quote'));
+            return;
+          }
+          raus.push(wAbsatz('[Schaltplan' + (t ? ': ' + t : '') +
+                            ' — ' + wortBildGrund(b) + ']', null));
+          return;
+        }
         if (b.type === 'image') {
           /* DAS ECHTE BILD, WENN ES DA IST (E346). Der Vorlauf hat es
              eingesammelt; hier wird nur nachgeschlagen. Und wenn nicht:
@@ -590,7 +778,7 @@ const Austausch = (() => {
     const bildListe: WortBild[] = [];
     const inBaum = (id: string) => {
       Store.childrenOf(id).forEach((b: any) => {
-        if (b.type === 'image') {
+        if (b.type === 'image' || b.type === 'schaltplan') {
           const t = bilder.get(b.id);
           if (t) bildListe.push(t);
         }

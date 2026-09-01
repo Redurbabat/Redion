@@ -26417,3 +26417,80 @@ WAS OFFEN BLEIBT: SVG. Word braucht daneben ein PNG als Rückfallebene,
 sonst zeigen ältere Fassungen ein leeres Kästchen — ein PNG daraus zu
 rechnen ist ein eigener Schritt. Bis dahin steht der Platzhalter da und
 sagt es.
+
+
+E347 — Der Schaltplan kommt in der .docx an (L72, der Rest vom Rest)
+════════════════════════════════════════════════════════════════════════════
+
+E346 schloss L72 mit einer Nachbemerkung: SVG bleibt Platzhalter, weil Word
+daneben ein PNG braucht. Beim Nachmessen des Blocks, um den es Redur
+eigentlich geht, war es schlimmer als ein Platzhalter:
+
+    Eine Seite mit einem `schaltplan`-Block ergab in Word
+    `|Elektro|Reihenschaltung|` — Seitentitel und Beschriftung.
+    Die Zeichnung fehlte, und NICHTS sagte es.
+
+Der Schaltplan ist kein `image`-Block; er hat keine Datei, sondern einen
+Plan, den Redion selbst zeichnet. `wortBilder` sammelte nur `image`, und
+`wortInhalt` kannte die Blockart nicht. Für Redur, der Elektrotechnik
+lernt, ist der Schaltplan das Ergebnis — der Lehrer bekam ein leeres Blatt.
+
+KEIN ZWEITER ZEICHNER. `Schaltplan.alsSvg` ist derselbe Zeichner, den der
+Bildschirm benutzt (E-Reihe, `elektro/skizzen.ts`). Er liefert ein SVG;
+was fehlte, war der Weg von dort in etwas, das Word annimmt.
+
+GERASTERT, NICHT EINGEBETTET. Word nimmt SVG erst seit 2016 und dann nur
+mit einem PNG als Rückfallebene. Das PNG braucht es also ohnehin; es allein
+zu schreiben ist die Fassung, die überall aufgeht. Gerastert wird mit dem
+DOPPELTEN der logischen Grösse (`RASTER_FAKTOR`), aber `<wp:extent>` trägt
+die logische — sonst stünde ein 800-Pixel-Plan als 1600 Pixel breit und
+würde auf die Textspalte gestutzt, obwohl er hineinpasste.
+
+WEISSER GRUND, und das ist kein Schönheitsfehler: der Plan ist schwarz auf
+durchsichtig gezeichnet. Auf Words weissem Blatt geht das gut — in einer
+dunklen Vorlage wäre er unsichtbar. Ein Bild, das man nur bei einer
+bestimmten Formatvorlage sieht, ist kein Bild.
+
+DASSELBE FÜR SVG-DATEIEN. Ein `image`-Block mit einer SVG-Datei geht jetzt
+denselben Weg; „SVG, kommt in Word nicht mit" ist als Platzhalter
+verschwunden. WebP bleibt Platzhalter (E346, §5 in test338).
+
+─── WAS DAS NACHMESSEN FAND, UND WARUM ES ZWEI FALLEN WAREN ───────────────
+
+Die erste Fassung war fertig, typgeprüft, gebaut — und kam beim Prüflauf
+als `medien: []` an. Der Schaltplan fiel immer noch still durch, nur eine
+Schicht tiefer. Ein SVG, das aus einem `<img>` geladen wird, ist ein
+EIGENES DOKUMENT, und dort gilt zweierlei nicht mehr, was auf dem
+Bildschirm gilt:
+
+  1. Ohne `xmlns="http://www.w3.org/2000/svg"` lädt das Bild gar nicht.
+     Im HTML ist `<svg>` ohne Namensraum erlaubt; `Schaltplan.alsSvg`
+     schreibt keinen. Ergebnis: `onerror`, kein Medienteil, Platzhalter
+     „liess sich nicht zeichnen".
+
+  2. `stroke="var(--text)"` zeigt auf eine Variable aus Redions
+     Stylesheet, die es im eigenen Dokument nicht gibt. Dann fällt `stroke`
+     auf `none` zurück — das Bild LÄDT, ist aber ein weisses Blatt. Das ist
+     die schlimmere Falle, weil sie keinen Fehler auslöst.
+
+`svgAlleinstehend` trägt beides nach: den Namensraum, wenn er fehlt, und
+jede Variable aufgelöst — auf ihren Ersatzwert (`var(--x, #abc)`), sonst
+auf SCHWARZ. Nicht auf die Farbe des Bildschirms: Redions Vorgabe ist
+der Dunkelmodus, `--text` ist dort fast weiss, und auf dem weissen Grund
+wäre das genau so unsichtbar wie `none`.
+
+DIE LEHRE, zum dritten Mal in dieser Reihe (E342, E346, jetzt): eine
+Messung, die den Text der .docx prüft, hat den Schaltplan nicht gesehen —
+weder sein Fehlen noch das weisse Blatt. Gemessen werden muss das
+ERZEUGNIS: das Medienteil aus dem Archiv holen, mit `createImageBitmap`
+öffnen, die dunklen Pixel ZÄHLEN. Erst diese Messung war rot.
+
+test339 neu, 31 Punkte, PORT 9343. §2 zählt Pixel: mehr als tausend dunkle,
+unter einem Fünftel der Fläche, die Ecke weiss und deckend. §6 wechselt
+zwischen Hell und Dunkel und verlangt dieselbe Zahl. Belegt rot in drei
+Richtungen, jede einzeln: Namensraum weggelassen — 8/27, kein Medienteil;
+Schwarz-Ersatz weggelassen — 28/31, das Bild lädt und §2/§6 zählen null;
+`schaltplan` aus dem Sammler genommen — 12/27.
+
+test338 33/33 (§5 erwartet jetzt PNG aus SVG), test309 25/25, test252 15,
+test315 25/25, test105 114.
