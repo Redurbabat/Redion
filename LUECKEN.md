@@ -3764,7 +3764,24 @@ Prüfung, also steht es hier und nicht als halbe Umsetzung im Code.
 
 **Betroffen:** `src/kern/ablage/indexdb.ts` (`importAll`, Zweig
 `zusammenfuehren`), `src/kern/abgleich/maschine.ts` (`zuSchicken`).
-**Beschlossen:** offen. **Gefunden:** beim Umsetzen von L76 (E279).
+**Gefunden:** beim Umsetzen von L76 (E279).
+
+**GESCHLOSSEN am 1. September 2026 mit E314** — genau auf dem hier
+beschriebenen engen Weg. `wolkeNachtrag` hält die dazugelegten Kennungen,
+`zuSchicken` nimmt sie mit, und was angekommen ist, wird gestrichen. Über
+20 000 Sätzen steht statt der Liste die Marke `wolkeNachtragAlles`.
+
+Drei Dinge, die beim Bauen dazukamen und die hier fehlten:
+
+  · Ein FEHLGESCHLAGENER Versand darf die Liste nicht leeren. Sonst wären
+    die Sätze für immer weg — derselbe Fehler eine Ebene tiefer. Das
+    Aufräumen steht deshalb nach der Schleife und nicht in einem `finally`.
+  · Kennungen, zu denen es keinen Satz mehr gibt, werden gestrichen.
+  · Die Merkliste steht in `NUR_HIER`: sie gehört diesem Gerät, wie der
+    Ordnerzugriff und die Freigabeliste.
+
+test308 misst mit einem winzigen Abgleich-Server im Lauf selbst, ob die drei
+Monate alten Sätze wirklich ankommen.
 
 ================================================================================
 L101 — Was die Import-Härtung (E284) bewusst noch nicht deckt

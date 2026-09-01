@@ -34958,7 +34958,14 @@ const Store = (() => {
        Deshalb hier der Unterschied zu `GERAETEIGEN`: dort sticht der lebende
        Wert nur, WENN es ihn gibt (sonst käme ein frisches Gerät nie an seine
        Anmeldung). Hier sticht er IMMER, auch wenn er leer ist. */
-    const NUR_HIER = ['sicherungOrdner', 'wolkeGeteilt'];
+    /* `wolkeNachtrag` und `wolkeNachtragAlles` (L100, E314) gehören auch
+       hierher, und zwar aus demselben Grund wie der Ordnerzugriff: sie sind
+       die Merkliste DIESES Geräts für den nächsten Versand. Eine fremde
+       Liste wäre nicht gefährlich, aber falsch — sie nennt Kennungen, die
+       hier nie dazugelegt wurden, und ihr Fehlen liesse die eigenen
+       verschwinden. Der lebende Wert sticht deshalb immer, auch der leere. */
+    const NUR_HIER = ['sicherungOrdner', 'wolkeGeteilt',
+        'wolkeNachtrag', 'wolkeNachtragAlles'];
     const istNurHier = (k) => NUR_HIER.includes(k);
     const GERAETEIGEN = ['sicherungOrdnerName',
         'wolkeToken', 'wolkeKonto', 'wolkeBereich',
@@ -35518,6 +35525,44 @@ const Store = (() => {
             Object.assign(cache.collections, neu.collections);
             Object.assign(cache.views, neu.views);
             Object.assign(cache.meta, neu.meta);
+            /* --- DAS DAZUGELEGTE WIRD FÜR DEN VERSAND VORGEMERKT (L100, E314) ---
+               `Wolke.zuSchicken()` überspringt jeden Satz mit `edited <= marke`.
+               Wer eine Sicherung von vor drei Monaten dazulegt, bringt Sätze mit
+               einem `edited` von vor drei Monaten mit; die Marke steht auf heute.
+               Der nächste Abgleich sieht sie also NIE — auf den anderen Geräten
+               fehlen sie, und nirgends wird etwas rot. Genau die stille Sorte.
+      
+               Der naheliegende Weg wäre, die Marken zu leeren. Der Preis wäre ein
+               Vollabgleich bei JEDEM Dazulegen, auch wenn eine einzige Seite
+               dazukommt — auf einem grossen Bestand minutenlang.
+      
+               Also enger: nur die Kennungen vormerken, die wirklich dazukamen.
+               `zuSchicken` nimmt sie mit, egal wie alt ihr `edited` ist, und
+               streicht jede wieder, sobald sie angekommen ist.
+      
+               Die Liste ist begrenzt. Wer eine Sicherung mit 200 000 Sätzen
+               dazulegt, braucht ohnehin einen Vollabgleich; dann steht das hier
+               als Marke, statt eine Liste zu führen, die grösser ist als der
+               Nutzen. `zuSchicken` liest beides. */
+            const dazu = [...Object.keys(neu.blocks || {}),
+                ...Object.keys(neu.collections || {}),
+                ...Object.keys(neu.views || {})];
+            const GRENZE = 20000;
+            if (dazu.length > GRENZE) {
+                cache.meta['wolkeNachtragAlles'] = true;
+            }
+            else {
+                const alt = Array.isArray(cache.meta['wolkeNachtrag'])
+                    ? cache.meta['wolkeNachtrag'] : [];
+                const zusammen = [...new Set([...alt, ...dazu])];
+                if (zusammen.length > GRENZE)
+                    cache.meta['wolkeNachtragAlles'] = true;
+                else
+                    cache.meta['wolkeNachtrag'] = zusammen;
+            }
+            await setMeta('wolkeNachtrag', cache.meta['wolkeNachtrag'] || []);
+            if (cache.meta['wolkeNachtragAlles'])
+                await setMeta('wolkeNachtragAlles', true);
         }
         /* --- DER GEMEINSAME STAND WIRD VERGESSEN — ABER NICHT GANZ ----------
            `basis` merkt sich je Satz, wie er aussah, als beide Seiten ihn
@@ -107252,26 +107297,64 @@ const Wolke = (() => {
      * gesehen hat.
      * ======================================================================*/
     /** Welche Sätze haben sich seit dem letzten Mal geändert? */
+    /**
+     * DAS DAZUGELEGTE KOMMT MIT, SO ALT ES AUCH IST (L100, E314).
+     *
+     * Der Filter `edited <= marke` ist richtig für alles, was auf diesem
+     * Gerät entstanden ist: was älter ist als der letzte Versand, wurde schon
+     * geschickt. Für eine EINGESPIELTE Sicherung stimmt er nicht — deren
+     * Sätze sind alt, aber hier neu.
+     *
+     * `importAll` merkt sie deshalb beim Zusammenführen vor. Ist die
+     * Sicherung sehr gross, steht statt der Liste eine Marke: dann ist ein
+     * Vollabgleich ohnehin billiger als ein Verzeichnis mit
+     * hunderttausend Einträgen.
+     */
+    const nachtrag = () => {
+        if (Store.getMeta('wolkeNachtragAlles', false) === true)
+            return { alles: true, ids: new Set() };
+        const w = Store.getMeta('wolkeNachtrag', []);
+        return { alles: false, ids: new Set(Array.isArray(w) ? w.map(String) : []) };
+    };
     const zuSchicken = () => {
         const marke = Store.getMeta('wolkeMarkeHoch', '');
+        const nach = nachtrag();
+        /** Nimmt die Marke ihn schon mit — oder ist er nachgetragen? */
+        const dran = (id, zeit) => zeit > marke || nach.alles || nach.ids.has(String(id));
         const raus = [];
         Object.values(Store.cache.blocks).forEach(b => {
-            if (String(b.edited || b.created || '') <= marke)
+            if (!dran(b.id, String(b.edited || b.created || '')))
                 return;
             raus.push({ id: b.id, tabelle: 'blocks', satz: b,
                 seite: seiteVon(b), geloescht: b.alive === false });
         });
         Object.values(Store.cache.collections).forEach(c => {
-            if (String(c.edited || c.created || '') <= marke)
+            if (!dran(c.id, String(c.edited || c.created || '')))
                 return;
             raus.push({ id: c.id, tabelle: 'collections', satz: c, seite: c.id, geloescht: false });
         });
         Object.values(Store.cache.views).forEach(v => {
-            if (String(v.edited || v.created || '') <= marke)
+            if (!dran(v.id, String(v.edited || v.created || '')))
                 return;
             raus.push({ id: v.id, tabelle: 'views', satz: v, seite: v.collectionId, geloescht: false });
         });
         return raus;
+    };
+    /**
+     * Was angekommen ist, muss nicht mehr nachgetragen werden.
+     *
+     * Ohne dieses Streichen bliebe die Liste für immer stehen, und JEDER
+     * spätere Abgleich schickte dieselben Sätze noch einmal — eine Anzeige,
+     * die immer anzeigt, nur als Netzverkehr.
+     */
+    const nachtragStreichen = (ids) => {
+        const w = Store.getMeta('wolkeNachtrag', []);
+        if (!Array.isArray(w) || !w.length)
+            return;
+        const weg = new Set(ids.map(String));
+        const rest = w.filter((x) => !weg.has(String(x)));
+        if (rest.length !== w.length)
+            Store.setMeta('wolkeNachtrag', rest);
     };
     /** Zu welcher Seite gehört dieser Block? Für die Rechteprüfung am Server. */
     const seiteVon = (b) => {
@@ -107371,8 +107454,36 @@ const Wolke = (() => {
                „jetzt", sonst fielen alle Änderungen dazwischen unter den Tisch. */
             const letzte = paket[paket.length - 1];
             Store.setMeta('wolkeMarkeHoch', letzte ? letzte.geaendert : Store.now());
+            /* Und die Nachgetragenen dieser Runde von der Liste streichen — sonst
+               reisen sie bei jedem Abgleich wieder mit (L100, E314). */
+            nachtragStreichen(dran.filter(e => !nein.has(e.id)).map(e => String(e.id)));
             if (liste.length <= dran.length)
                 break;
+        }
+        /* --- DIE MERKLISTE AUFRÄUMEN (L100, E314) --------------------------
+           Die Schleife ist durch: was zu schicken war, ist geschickt. Zwei
+           Dinge bleiben sonst für immer stehen und lassen jeden weiteren
+           Abgleich dasselbe noch einmal senden —
+    
+             · die Marke „alles nachtragen" (bei einer sehr grossen Sicherung
+               steht sie statt einer Liste),
+             · und Kennungen, zu denen es gar keinen Satz mehr gibt: gelöscht,
+               ersetzt, oder aus einer Sicherung, deren Sätze beim nächsten
+               Ersetzen wieder verschwunden sind.
+    
+           Beides wird hier gestrichen. Was der Server abgelehnt hat, bleibt
+           auf der Liste — es soll ja noch hin. */
+        if (Store.getMeta('wolkeNachtragAlles', false) === true)
+            Store.setMeta('wolkeNachtragAlles', false);
+        const rest = Store.getMeta('wolkeNachtrag', []);
+        if (Array.isArray(rest) && rest.length) {
+            const lebt = rest.filter((id) => {
+                const k = String(id);
+                return !!(Store.cache.blocks[k] || Store.cache.collections[k] ||
+                    Store.cache.views[k]);
+            });
+            if (lebt.length !== rest.length)
+                Store.setMeta('wolkeNachtrag', lebt);
         }
         zustand.hoch += angenommen;
         if (angepasst.length) {

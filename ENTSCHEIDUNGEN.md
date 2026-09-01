@@ -23802,4 +23802,75 @@ Datei, und die Adresse muss mit `blob:` anfangen — eine Data-URL wäre §14.
 eine Kennung ohne Datei hinterlässt kein kaputtes Bildzeichen, sondern gar
 keins.
 
-Einzeldatei 7780 KB.
+Einzeldatei 7786 KB.
+
+
+================================================================================
+E314 — Eine dazugelegte Sicherung erreicht den Server (L100 geschlossen)
+================================================================================
+1. September 2026
+
+`Wolke.zuSchicken()` überspringt jeden Satz mit `edited <= marke`. Für alles,
+was auf diesem Gerät entstanden ist, ist das richtig: was älter ist als der
+letzte Versand, wurde schon geschickt.
+
+Für eine EINGESPIELTE Sicherung stimmt es nicht. Wer eine Sicherung von vor
+drei Monaten DAZULEGT, bringt Sätze mit einem `edited` von vor drei Monaten
+mit; die Marke steht auf heute. Der nächste Abgleich sieht sie also nie — auf
+den anderen Geräten fehlen sie, und nirgends wird etwas rot.
+
+Es sieht aus wie ein geglückter Vorgang. Das ist die schlimmste Sorte Fehler,
+die diese App haben kann, und dieser Satz steht schon in `importAll` selbst.
+
+
+Warum nicht einfach die Marken leeren
+--------------------------------------------------------------------------------
+
+Das ist der naheliegende Weg, und L100 hat seinen Preis schon benannt: JEDES
+Dazulegen löste dann einen Vollabgleich aus, auch das, bei dem eine einzige
+Seite dazukommt. Auf einem grossen Bestand ist das minutenlang, und zwar bei
+jedem Mal.
+
+Also enger: `importAll` merkt sich beim Zusammenführen die Kennungen, die
+wirklich dazukamen (`wolkeNachtrag`). `zuSchicken` nimmt sie mit, egal wie
+alt ihr `edited` ist. Was angekommen ist, wird gestrichen.
+
+
+Drei Dinge, die sonst wieder still schiefgingen
+--------------------------------------------------------------------------------
+
+1 · DIE LISTE HAT EINE GRENZE. Wer eine Sicherung mit zweihunderttausend
+    Sätzen dazulegt, braucht ohnehin einen Vollabgleich; darüber steht
+    deshalb die Marke `wolkeNachtragAlles` statt einer Liste, die grösser
+    wäre als ihr Nutzen. `zuSchicken` liest beides.
+
+2 · EIN FEHLSCHLAG DARF NICHTS LÖSCHEN. Das Aufräumen steht NACH der
+    Versandschleife, nicht in einem `finally`. Bräche der Versand ab und
+    die Liste wäre trotzdem leer, wären die Sätze für immer weg — genau der
+    Fehler, gegen den dieser Bogen geschrieben ist, nur eine Ebene tiefer.
+    test308 §4 misst zuerst den Fehlschlag und erst dann den Erfolg.
+
+3 · DIE MERKLISTE GEHÖRT DIESEM GERÄT. Sie steht in `NUR_HIER`, wie der
+    Ordnerzugriff und die Freigabeliste (L76/E279): der lebende Wert sticht
+    immer, auch der leere. Eine fremde Liste wäre nicht gefährlich, aber
+    falsch — sie nennt Kennungen, die hier nie dazugelegt wurden, und ihr
+    Fehlen liesse die eigenen verschwinden.
+
+Und aufgeräumt wird auch, was es nicht mehr gibt: eine Kennung ohne Satz
+bliebe sonst für immer stehen.
+
+
+Geprüft
+--------------------------------------------------------------------------------
+test308 neu, 15/15, mit einem winzigen Abgleich-Server im Lauf selbst — §4
+misst nicht, ob eine Merkliste leer wird, sondern ob die drei Monate alten
+Sätze WIRKLICH beim Server ankommen.
+
+§1 ist die Rekonstruktion des Fehlers: mit dem alten Filter allein wäre die
+alte Seite nie gefahren. Ohne diesen Abschnitt bewiese §2 nur, dass etwas
+geschickt wird — nicht, dass es vorher liegengeblieben wäre.
+
+§3 ist die Gegenprobe: beim Ersetzen wird nichts vorgemerkt, weil L76 dort
+die Marke ohnehin leert und eine zweite Liste nur Ballast wäre.
+
+Einzeldatei 7786 KB.

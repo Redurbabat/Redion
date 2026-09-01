@@ -1587,7 +1587,14 @@ const Store = (() => {
      Deshalb hier der Unterschied zu `GERAETEIGEN`: dort sticht der lebende
      Wert nur, WENN es ihn gibt (sonst käme ein frisches Gerät nie an seine
      Anmeldung). Hier sticht er IMMER, auch wenn er leer ist. */
-  const NUR_HIER = ['sicherungOrdner', 'wolkeGeteilt'];
+  /* `wolkeNachtrag` und `wolkeNachtragAlles` (L100, E314) gehören auch
+     hierher, und zwar aus demselben Grund wie der Ordnerzugriff: sie sind
+     die Merkliste DIESES Geräts für den nächsten Versand. Eine fremde
+     Liste wäre nicht gefährlich, aber falsch — sie nennt Kennungen, die
+     hier nie dazugelegt wurden, und ihr Fehlen liesse die eigenen
+     verschwinden. Der lebende Wert sticht deshalb immer, auch der leere. */
+  const NUR_HIER = ['sicherungOrdner', 'wolkeGeteilt',
+                    'wolkeNachtrag', 'wolkeNachtragAlles'];
   const istNurHier = (k: string) => NUR_HIER.includes(k);
 
   const GERAETEIGEN = ['sicherungOrdnerName',
@@ -2127,6 +2134,42 @@ const Store = (() => {
       Object.assign(cache.collections, neu.collections);
       Object.assign(cache.views, neu.views);
       Object.assign(cache.meta, neu.meta);
+
+      /* --- DAS DAZUGELEGTE WIRD FÜR DEN VERSAND VORGEMERKT (L100, E314) ---
+         `Wolke.zuSchicken()` überspringt jeden Satz mit `edited <= marke`.
+         Wer eine Sicherung von vor drei Monaten dazulegt, bringt Sätze mit
+         einem `edited` von vor drei Monaten mit; die Marke steht auf heute.
+         Der nächste Abgleich sieht sie also NIE — auf den anderen Geräten
+         fehlen sie, und nirgends wird etwas rot. Genau die stille Sorte.
+
+         Der naheliegende Weg wäre, die Marken zu leeren. Der Preis wäre ein
+         Vollabgleich bei JEDEM Dazulegen, auch wenn eine einzige Seite
+         dazukommt — auf einem grossen Bestand minutenlang.
+
+         Also enger: nur die Kennungen vormerken, die wirklich dazukamen.
+         `zuSchicken` nimmt sie mit, egal wie alt ihr `edited` ist, und
+         streicht jede wieder, sobald sie angekommen ist.
+
+         Die Liste ist begrenzt. Wer eine Sicherung mit 200 000 Sätzen
+         dazulegt, braucht ohnehin einen Vollabgleich; dann steht das hier
+         als Marke, statt eine Liste zu führen, die grösser ist als der
+         Nutzen. `zuSchicken` liest beides. */
+      const dazu = [...Object.keys(neu.blocks || {}),
+                    ...Object.keys(neu.collections || {}),
+                    ...Object.keys(neu.views || {})];
+      const GRENZE = 20000;
+      if (dazu.length > GRENZE) {
+        cache.meta['wolkeNachtragAlles'] = true;
+      } else {
+        const alt = Array.isArray(cache.meta['wolkeNachtrag'])
+          ? cache.meta['wolkeNachtrag'] : [];
+        const zusammen = [...new Set([...alt, ...dazu])];
+        if (zusammen.length > GRENZE) cache.meta['wolkeNachtragAlles'] = true;
+        else cache.meta['wolkeNachtrag'] = zusammen;
+      }
+      await setMeta('wolkeNachtrag', cache.meta['wolkeNachtrag'] || []);
+      if (cache.meta['wolkeNachtragAlles'])
+        await setMeta('wolkeNachtragAlles', true);
     }
 
 

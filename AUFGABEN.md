@@ -2251,3 +2251,16 @@ node pruefungen/lauf/test105.mjs
   wirklich ANKOMMT. Offen bleibt genau ein Fall: ein von Hand beschriebenes
   leeres Blatt hat keine Datei.
   Nebenbei: L64 war seit E212 erledigt, stand aber noch als offen im Titel.
+* E314 (L100 geschlossen): Eine dazugelegte Sicherung erreicht den Server.
+  `zuSchicken()` überspringt jeden Satz mit `edited <= marke` — richtig für
+  hier Entstandenes, falsch für eine eingespielte Sicherung: wer eine von
+  vor drei Monaten dazulegt, dessen Sätze sieht der nächste Abgleich NIE,
+  und nirgends wird etwas rot. Nicht die Marken leeren (das hiesse
+  Vollabgleich bei jedem Dazulegen), sondern eng: `wolkeNachtrag` hält die
+  dazugelegten Kennungen, `zuSchicken` nimmt sie mit, Angekommenes wird
+  gestrichen. Über 20 000 Sätzen steht eine Marke statt einer Liste. Drei
+  Dinge kamen beim Bauen dazu: ein Fehlschlag darf nichts löschen (sonst
+  derselbe Fehler eine Ebene tiefer), tote Kennungen werden gestrichen, und
+  die Merkliste gehört diesem Gerät (`NUR_HIER`, wie L76). test308 neu (15)
+  — mit einem winzigen Abgleich-Server im Lauf, der misst, ob die alten
+  Sätze WIRKLICH ankommen.
