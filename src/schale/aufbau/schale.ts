@@ -1953,22 +1953,74 @@ const App = (() => {
    * Jetzt wird gezählt, was FEHLT, und beim Namen genannt. Und ein einzelner
    * Fehler bricht nicht mehr den Rest ab: wer neunzig von hundert Anhängen
    * retten kann, soll neunzig retten und die zehn benennen.
+   *
+   * ─── UND WAS ANKAM, IST NICHT ZWINGEND GANZ (L101 Punkt 4, E318) ─────────
+   *
+   * Der verschlüsselte Weg vergleicht die angekündigte Bytezahl mit der
+   * gelieferten und nennt einen Eintrag „fehlt oder ist abgeschnitten"
+   * (`krypto.ts`). Der offene Weg hatte dieselbe Zahl vorliegen — jeder
+   * Dateisatz führt seine `groesse` mit — und sah nicht hin. Er schrieb die
+   * TATSÄCHLICHE Länge in den Satz und stempelte `zustand: 'fertig'`. Ein
+   * halbes Video hiess danach vollständig, und der einzige Hinweis war das
+   * Video selbst.
+   *
+   * Weggeworfen wird deswegen nichts (§46): neunzig Prozent eines Fotos sind
+   * neunzig Prozent, und im offenen Archiv ist eine Verkürzung viel eher
+   * eine unvollständige Sicherung als ein Angriff — der verschlüsselte Weg
+   * kann das über den AEAD-Anhänger unterscheiden, dieser nicht. Gesagt wird
+   * es trotzdem, und in einer EIGENEN Liste: „fehlt" und „kam verkürzt an"
+   * sind zwei verschiedene Sätze mit zwei verschiedenen Folgen.
    */
   const anhaengeEinspielen = async (zip: any, art: string) => {
-    const leer = { da: 0, erwartet: 0, fehlend: [] as string[] };
+    const leer = { da: 0, erwartet: 0, fehlend: [] as string[],
+                   unvollstaendig: [] as string[] };
     const roh = await zip.text('dateien.json');
     if (!roh) return leer;
-    let karte;
-    try { karte = JSON.parse(roh); } catch { return leer; }
+
+    /* NICHT `JSON.parse` (E318). `dateien.json` ist genauso fremd wie
+       `daten.json`, und ihr Inhalt geht gleich durch `Object.assign` in die
+       Ablage — das ist wörtlich das Loch, das E284 für die fünf Fächer
+       geschlossen hat. Hier stand es noch offen, ein Stockwerk tiefer. */
+    let karte: any;
+    try { karte = ImportSicherheit.lesen(roh).wert; } catch { return leer; }
+    if (!karte || typeof karte !== 'object') return leer;
 
     const STUECK = (typeof KONSTANTEN !== 'undefined') ? KONSTANTEN.STUECK : 1024 * 1024;
-    const nachName: Record<string, string> = {};
+    /* Prototyplos, aus demselben Grund: eine Kennung `constructor` aus der
+       Datei gäbe sonst `Object` zurück statt `undefined`, und die Prüfung
+       „steht nicht im Archiv" verfehlte genau den Fall, für den sie da ist. */
+    const nachName: Record<string, string> = Object.create(null);
     Object.entries<any>(karte.zuordnung || {}).forEach(([name, id]) => { nachName[id] = name; });
 
     let wieViele = 0;
     const fehlend: string[] = [];
+    const unvollstaendig: string[] = [];
     const nichtGeschafft = (satz: any, warum: string): void => {
       fehlend.push(String(satz?.name || satz?.id || 'ohne Namen') + ' (' + warum + ')');
+    };
+
+    /**
+     * Sagt, um wie viele Bytes ein Anhang zu kurz ankam — oder 0.
+     *
+     * SCHWEIGT IN DREI FÄLLEN, und jeder einzelne ist ein echter Normalfall,
+     * kein Nachlassen:
+     *
+     *   · Die Sicherung nennt keine Grösse. Ältere `.redion` und fremde
+     *     Werkzeuge tun das; ohne Zahl gibt es nichts zu vergleichen.
+     *   · Der Satz war schon beim Sichern unfertig (`zustand` nicht
+     *     `fertig`, oder `angekommen < teile`). Dann sind die kurzen Bytes
+     *     genau das, was dasteht — ein laufender Upload zur Sicherungszeit.
+     *   · Es kam MEHR an als angekündigt. Das ist keine Verkürzung; es wäre
+     *     eine andere Frage, und eine Warnung dafür hätte hier nichts zu
+     *     suchen.
+     */
+    const zuKurz = (satz: any, hat: number): number => {
+      const soll = satz?.groesse;
+      if (typeof soll !== 'number' || !Number.isFinite(soll) || soll <= 0) return 0;
+      if (satz.zustand && satz.zustand !== 'fertig') return 0;
+      if (typeof satz.angekommen === 'number' && typeof satz.teile === 'number' &&
+          satz.angekommen < satz.teile) return 0;
+      return hat < soll ? soll - hat : 0;
     };
     for (const satz of (karte.saetze || [])) {
      try {
@@ -1992,6 +2044,15 @@ const App = (() => {
         const von = nr * STUECK;
         await Store.stueckPut({ id: satz.id + ':' + nr, dateiId: satz.id, nr,
                                 blob: blob.slice(von, Math.min(von + STUECK, blob.size)) });
+      }
+      /* DIE ANGEKÜNDIGTE LÄNGE GEGEN DIE GELIEFERTE (E318). Geschrieben wird
+         die TATSÄCHLICHE — ein Satz, der eine Länge behauptet, die seine
+         Stücke nicht hergeben, wäre die nächste stille Lüge. Gesagt wird die
+         Differenz stattdessen. */
+      const fehlt = zuKurz(satz, blob.size);
+      if (fehlt > 0) {
+        unvollstaendig.push(String(satz.name || satz.id) +
+          ' (' + Dateien.groesseText(fehlt) + ' fehlen)');
       }
       await Store.dateiPut(Object.assign({}, satz, {
         teile, angekommen: teile, zustand: 'fertig', groesse: blob.size }));
@@ -2025,7 +2086,8 @@ const App = (() => {
         Dateien.adresseWeg(alt.id);
       }
     }
-    return { da: wieViele, erwartet: (karte.saetze || []).length, fehlend };
+    return { da: wieViele, erwartet: (karte.saetze || []).length,
+             fehlend, unvollstaendig };
   };
 
   const sicherungLaden = (danach?: any) => {
@@ -2152,8 +2214,9 @@ const App = (() => {
         /* Die Anhänge NACH den Blöcken. Andersherum stünden die Dateien in
            der Ablage und würden beim „Ersetzen" gleich wieder mit gelöscht —
            `ersetzen` räumt weg, was nicht in der Sicherung steht. */
-        let anhaenge: { da: number; erwartet: number; fehlend: string[] } =
-          { da: 0, erwartet: 0, fehlend: [] };
+        let anhaenge: { da: number; erwartet: number; fehlend: string[];
+                        unvollstaendig: string[] } =
+          { da: 0, erwartet: 0, fehlend: [], unvollstaendig: [] };
         if (zip) anhaenge = await anhaengeEinspielen(zip, wahl);
         danach && danach();
         zeichneBaum(); zeichneSeite();
@@ -2178,6 +2241,17 @@ const App = (() => {
                      ' Anhängen fehlen: ' + anhaenge.fehlend.slice(0, 3).join(', ') +
                      (anhaenge.fehlend.length > 3 ? ' …' : '') +
                      '. Die Sicherung liegt noch — du kannst sie erneut einspielen.'
+                   : '') +
+                 /* UND WAS VERKÜRZT ANKAM (L101 Punkt 4, E318). Eine eigene
+                    Zeile, weil es eine andere Nachricht ist: die Datei IST
+                    da, sie ist nur nicht ganz. Wer „fehlt" liest, sucht die
+                    Datei; wer das hier liest, sieht sie und traut ihr nicht. */
+                 (anhaenge.unvollstaendig.length
+                   ? '. ' + anhaenge.unvollstaendig.length + ' Anhang/Anhänge ' +
+                     'kamen verkürzt an: ' +
+                     anhaenge.unvollstaendig.slice(0, 3).join(', ') +
+                     (anhaenge.unvollstaendig.length > 3 ? ' …' : '') +
+                     '. Sie wurden trotzdem übernommen — was da ist, ist da.'
                    : '') +
                  (erg.frage
                    ? '. Der Abgleich mit der Wolke steht still: dort liegt noch ' +

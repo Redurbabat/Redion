@@ -3812,8 +3812,13 @@ Monate alten Sätze wirklich ankommen.
 L101 — Was die Import-Härtung (E284) bewusst noch nicht deckt
 ================================================================================
 
+**VOLLSTÄNDIG GESCHLOSSEN am 1. September 2026.** Alle vier Punkte sind
+abgearbeitet — Punkt 1 durch E316, Punkt 2 durch E317, Punkt 3 durch E292,
+Punkt 4 durch E318. Der Abschnitt bleibt stehen, weil er beschreibt, WARUM
+jeder einzelne so gelöst wurde und was bewusst NICHT übernommen wurde.
+
 E284 hat das Loch geschlossen — fremde Prototypen kommen nicht mehr durch,
-und die Formatfassung wird endlich gelesen. Vier Dinge bleiben, jedes mit
+und die Formatfassung wird endlich gelesen. Vier Dinge blieben, jedes mit
 Grund:
 
 1. **Die „Vorschau" ist eine ZÄHLUNG.** `schale.ts:2012` zählt
@@ -3871,6 +3876,29 @@ Grund:
    Trockenlauf vor dem ersten Schreibzugriff (`krypto.ts:404-693`). Der
    offene Weg hatte bis E284 einen einzigen Feldtest. E284 hat ihn
    angehoben, aber nicht auf dieselbe Höhe.
+
+   **GESCHLOSSEN am 1. September 2026 durch E318**, und beim Nachmessen
+   blieben von der Liste zwei Dinge übrig, die wirklich übertragbar sind:
+
+   · **Die angekündigte Bytezahl wurde nie gelesen.** Jeder Dateisatz führt
+     seine `groesse` mit, der offene Weg sah nicht hin und schrieb die
+     tatsächliche Länge mit `zustand: 'fertig'` in die Ablage. Ein halbes
+     Video hiess danach vollständig. Jetzt wird die Differenz genannt — in
+     einer eigenen Liste, weil „fehlt" und „kam verkürzt an" zwei
+     verschiedene Nachrichten sind. Übernommen wird der Anhang trotzdem
+     (§46), und drei echte Normalfälle schweigen: keine Grösse angegeben,
+     Satz beim Sichern noch unfertig, mehr Bytes als angekündigt.
+
+   · **`dateien.json` ging an E284 vorbei.** Ein blankes `JSON.parse` auf
+     eine fremde Datei, deren Inhalt gleich darauf durch `Object.assign` in
+     die Ablage geht — wörtlich das Loch, das E284 für die fünf Fächer
+     geschlossen hat, ein Stockwerk tiefer, bei geladenem Gegenmodul. Jetzt
+     `ImportSicherheit.lesen`, und die Namenskarte prototyplos.
+
+   Der Rest der Liste ist NICHT übertragbar, und das ist kein Nachlassen:
+   KDF-Parameter gibt es ohne Verschlüsselung nicht, und ein Pfad-Regex
+   schützt im Browser vor nichts — ein ZIP-Eintragsname ist dort ein
+   Schlüssel in einer Map, kein Dateipfad. test312, 18 Punkte.
 
 Gefunden am 31. August 2026 (E284, bei der gemessenen Bestandsaufnahme).
 

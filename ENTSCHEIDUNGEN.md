@@ -24103,3 +24103,74 @@ zurückkommt.
 
 Mitgelaufen: test100 32/32, test148 13/13, test180 36/36, test287 9/9.
 sw v72 · Einzeldatei 7806 KB.
+
+================================================================================
+E318 — Der offene Weg wird so streng wie der verschlüsselte (L101 Punkt 4)
+================================================================================
+1. September 2026
+
+L101 Punkt 4 sagte, die Sicherheit sei verkehrt herum verteilt: der
+VERSCHLÜSSELTE `.redion`-Weg ist streng — Manifestfassung, KDF-Parameter,
+Pfad-Regex, keine undeklarierten Einträge, Bytegrössen —, der offene hatte
+bis E284 einen einzigen Feldtest. Nachgemessen bleiben davon zwei Dinge, die
+wirklich übertragbar sind. Die anderen sind es nicht: KDF-Parameter gibt es
+ohne Verschlüsselung nicht, und ein Pfad-Regex schützt im Browser vor nichts
+— ein ZIP-Eintragsname ist dort ein Schlüssel in einer Map, kein Dateipfad.
+
+─── ERSTENS: DIE ANGEKÜNDIGTE LÄNGE WURDE NIE GELESEN ──────────────────────
+
+Der verschlüsselte Weg:
+
+    if (!blob || blob.size !== e.bytes)
+      throw new Error(`Der Eintrag „${e.pfad}" fehlt oder ist abgeschnitten.`);
+
+Der offene Weg hatte dieselbe Zahl vorliegen — jeder Dateisatz führt seine
+`groesse` mit, und der Exporter schreibt sie in jede `.redion`, die Redion je
+geschrieben hat. Gelesen wurde sie nicht. Stattdessen:
+
+    await Store.dateiPut(Object.assign({}, satz, {
+      teile, angekommen: teile, zustand: 'fertig', groesse: blob.size }));
+
+Die TATSÄCHLICHE Länge wurde eingetragen und `fertig` daraufgestempelt. Ein
+halbes Video hiess danach vollständig, und der einzige Hinweis war das Video
+selbst. Das ist derselbe Fehler wie E317, eine Ebene tiefer: dort fehlte ein
+Anhang unbemerkt, hier kommt einer unbemerkt verkürzt an.
+
+WEGGEWORFEN WIRD DESWEGEN NICHTS. Im offenen Archiv ist eine Verkürzung viel
+eher eine unvollständige Sicherung als ein Angriff — der verschlüsselte Weg
+kann das über den AEAD-Anhänger unterscheiden, dieser nicht. Und neunzig
+Prozent eines Fotos sind neunzig Prozent (§46). Gesagt wird es trotzdem, in
+einer EIGENEN Liste `unvollstaendig`: „fehlt" und „kam verkürzt an" sind zwei
+verschiedene Sätze mit zwei verschiedenen Folgen. Wer „fehlt" liest, sucht
+die Datei; wer das andere liest, sieht sie und traut ihr nicht.
+
+DREI AUSNAHMEN SCHWEIGEN, und jede ist ein echter Normalfall:
+
+  · Die Sicherung nennt keine Grösse — ältere `.redion` und fremde Werkzeuge.
+  · Der Satz war schon beim Sichern unfertig (`zustand` nicht `fertig`, oder
+    `angekommen < teile`). Die kurzen Bytes sind dann genau das, was dasteht.
+  · Es kam MEHR an als angekündigt. Das ist keine Verkürzung.
+
+Ohne diese drei spränge die Warnung bei jeder zweiten Sicherung an — und
+würde dann auch beim dritten Mal weggeklickt, wenn sie recht hat.
+
+─── ZWEITENS: `dateien.json` GING AN E284 VORBEI ───────────────────────────
+
+    let karte;
+    try { karte = JSON.parse(roh); } catch { return leer; }
+
+Ein blankes `JSON.parse` auf eine fremde Datei, deren Inhalt gleich darauf
+durch `Object.assign` in die Ablage geht. Das ist wörtlich das Loch, das
+E284 für die fünf Fächer geschlossen hat — der eigene Kopf von
+`core/import/sicherheit.ts` beschreibt es. Für `dateien.json` stand es noch
+offen, ein Stockwerk tiefer, und das Modul dagegen war längst geladen.
+
+Jetzt `ImportSicherheit.lesen(roh).wert`. Und die Namenskarte kommt aus
+`Object.create(null)`: eine Kennung `constructor` aus der Datei gab sonst
+`Object` zurück statt `undefined` — die Prüfung „steht nicht im Archiv"
+verfehlte genau den Fall, für den sie da ist.
+
+test312, 18 Punkte, davon fünf allein für das Schweigen.
+Mitgelaufen: test311 11/11, test100 32/32, test287 9/9, test310 23/23,
+test180 36/36, test148 13/13.
+sw v73 · Einzeldatei 7811 KB.

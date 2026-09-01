@@ -2301,3 +2301,16 @@ node pruefungen/lauf/test105.mjs
   Fehlen. Nebenbei gelernt, und es kostete zwei Anläufe: `App` steht
   absichtlich nicht auf `window` (src/global.d.ts), in `page.evaluate`
   erreicht man es nur beim blossen Namen. test311 neu (11). sw v72.
+* E318 (L101 Punkt 4 — und damit L101 ganz): Der offene Weg wird so streng
+  wie der verschlüsselte. Nachgemessen blieben von der Liste zwei Dinge, die
+  wirklich übertragbar sind. Erstens: die angekündigte Bytezahl wurde nie
+  gelesen. Jeder Dateisatz führt seine `groesse` mit, der offene Weg sah
+  nicht hin und schrieb die tatsächliche Länge mit `zustand: 'fertig'` in
+  die Ablage — ein halbes Video hiess danach vollständig. Jetzt wird die
+  Differenz genannt, in einer eigenen Liste, weil „fehlt" und „kam verkürzt
+  an" zwei verschiedene Nachrichten sind; übernommen wird er trotzdem (§46).
+  Zweitens: `dateien.json` ging an E284 vorbei — ein blankes `JSON.parse`
+  auf eine fremde Datei, deren Inhalt gleich durch `Object.assign` in die
+  Ablage geht, bei geladenem Gegenmodul. Drei echte Normalfälle schweigen,
+  und fünf der 18 Punkte prüfen genau dieses Schweigen. test312 neu (18).
+  sw v73.
