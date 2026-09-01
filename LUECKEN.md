@@ -4567,10 +4567,33 @@ WAS ES DREIMAL GEKOSTET HAT:
     Regel setzte `--c-blue` auf `--b-blue`, im dunklen Thema 3.11:1 gegen
     die 4.5 aus §38. Auch das fand das Bild, nicht der Prüflauf.
 
+  · E334 — DIE FÜNFTE, und die einzige, gegen die es jetzt einen Wächter
+    gibt. Hier war der Verlierer keine eigene Regel, sondern die des
+    BROWSERS: `[hidden]{display:none}` gegen `.mb-rechts-knopf{display:grid}`.
+    Die Autoren-Regel gewinnt, und `hidden` bedeutet dann gar nichts mehr.
+
+    E251 hatte das schon einmal repariert — mit `#mb-glocke[hidden]`, also
+    an einer KENNUNG. E322 hängte dreizehn Bögen später den nächsten Knopf
+    mit derselben Klasse daneben, und der Fehler war zurück: `hidden`,
+    trotzdem 44 px, Reitergruppe 190 → 234 px, über der Reserve der
+    Reiterzeile (`scroll-padding-inline-end: 200px`). Gefunden hat es
+    test247 — an einer BREITE, nicht an dem Knopf.
+
 WARUM ES KEIN PRÜFLAUF FINDET: es ist kein Fehler, sondern gültiges CSS mit
 einem unerwarteten Ausgang. Ein Wächter müsste jede neue Klasse gegen alle
 breiten Regeln stellen — machbar, aber er würde Dutzende gewollter Fälle
 melden.
+
+FÜR DIE FÜNFTE GEHT ES ABER DOCH, und zwar billig: `hidden` hat genau EINE
+gewollte Bedeutung. Ein Element, das es trägt und trotzdem gezeichnet wird,
+ist immer ein Fehler — es gibt keinen Fall, in dem man das will. test258 §9
+geht deshalb über ALLES mit `hidden`, am Telefon und am Rechner, und
+verlangt `display:none`. Gemessen: 14 bzw. 15 solche Elemente, keines
+sichtbar. Nimmt man die Klassenregel wieder heraus, meldet er
+`mb-auftraege.mb-rechts-knopf → grid 44×44`.
+
+Das ist der Unterschied zwischen den fünf Fällen: bei Breiten gibt es
+gewollte Ausnahmen, bei `hidden` nicht.
 
 DIE VIERTE HAT EINE EIGENE LEHRE: nicht nur „meine Regel könnte
 verlieren", sondern „meine Regel könnte es schon geben". Vor einer neuen
@@ -4589,4 +4612,4 @@ meinen — `.finder .res > button` statt `.finder .res button`. Das ist ein
 eigener Bogen mit einem Bild je Fenster, denn es ändert bestehende
 Oberflächen, und die Wirkung sieht man erst beim Hinsehen.
 
-Gefunden am 1. September 2026 (E320, E321, E324, E326).
+Gefunden am 1. September 2026 (E320, E321, E324, E326, E334).

@@ -2526,3 +2526,25 @@ node pruefungen/lauf/test105.mjs
   fand die Zeile beim Nachbarn, und der erste Mutationsversuch änderte gar
   nichts. Eine Mutation ohne Beleg, dass sie ankam, beweist so wenig wie
   eine Prüfung, die nicht rot werden kann. test326 neu (28). sw v87.
+* E334 (Nachlauf zu voll7, 281/284): Ein Pflaster je Kennung deckt den
+  nächsten Knopf nicht. Drei Rote, und zwei davon waren PRÜFUNGEN, die der
+  Umbau blind gemacht hatte. Der echte Fehler: `#mb-auftraege` trug `hidden`
+  und nahm trotzdem 44 px, weil `.mb-rechts-knopf{display:grid}` die
+  `[hidden]`-Regel des Browsers schlägt. E251 hatte das für die Glocke schon
+  einmal repariert — an der KENNUNG. E322 hängte den nächsten Knopf daneben,
+  und der Fehler war zurück: Reitergruppe 190 → 234 px gegen 200 px Reserve,
+  der gewählte Reiter lag am Telefon unter dem Klapp-Knopf. Jetzt an der
+  KLASSE, gemessen 188 px. test247 wieder 106/106.
+  Und die beiden Blinden: seit E327 ist `neuBerechnen` ein Auftrag, der
+  SOFORT zurückkommt. test228 zählte die Bilder, bevor sie da waren; test189
+  horchte auf `#toast`, wo seither nichts mehr ankommt — grün, für immer.
+  Beide warten jetzt auf `JobModell.beendet`, und test189 sammelt den
+  Fortschritt aus `auftrag.schritt`. Dabei fiel auf, dass meine eigene
+  Behauptung falsch war: zwei gleichzeitige Klicks FINDEN einander nicht
+  (beide lesen die Ablage, bevor einer angelegt hat) — es schützt die
+  Kennung plus die Pacht. Der serielle Fall misst die Nachfrage jetzt
+  eigens, mit angehaltener Maschine, damit er nicht an der Uhr hängt.
+  NEU DAZU: test258 §9 geht über ALLES mit `hidden` und verlangt
+  `display:none` — der einzige Fall der L111-Familie, für den ein billiger
+  Wächter geht, weil `hidden` keine gewollte Ausnahme kennt.
+  test189 38/38, test228 24/24, test247 106/106, test258 19/19. sw v88.

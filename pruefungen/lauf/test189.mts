@@ -261,7 +261,54 @@ const doppelt = await seite.evaluate(async () => {
     PdfEinlesen.neuBerechnen(satz.id),
     PdfEinlesen.neuBerechnen(satz.id),
   ]);
-  await new Promise(r => setTimeout(r, 400));
+  /* SEIT E327 IST DAS EIN AUFTRAG, und die Sperre gegen zwei gleichzeitige
+     Läufe steckt jetzt in seiner KENNUNG statt in einer Map im Tab —
+     `pdfbild-` + Kennung des Originals. Zwei Klicks finden denselben
+     Auftrag, und `Store.auftragNehmen` gibt ihn nur einem. Der Fall, den
+     dieser Abschnitt misst, ist damit strenger geworden: er hält jetzt auch
+     zwischen zwei TABS. */
+  const auftragsId = a?.auftrag?.id || b?.auftrag?.id || '';
+  if (auftragsId) {
+    const bis = Date.now() + 90000;
+    for (;;) {
+      const j = await Auftraege.einer(auftragsId);
+      if (j && JobModell.beendet(j)) break;
+      if (Date.now() > bis) throw new Error('Auftrag wurde nicht fertig');
+      await new Promise(r => setTimeout(r, 120));
+    }
+  }
+  await new Promise(r => setTimeout(r, 300));
+
+  /* ZWEITER TEIL, und er misst die ANDERE Hälfte. Oben schlug die Nachfrage
+     nicht an; hier muss sie es. Damit das nicht an der Uhr hängt, steht die
+     Maschine still: dann bleibt der erste Auftrag auf `wartet` liegen, und
+     der zweite Aufruf hat gar keine Wahl, als ihn zu finden. */
+  Auftraege.stopp();
+  const zwei = (Object.values(Store.cache.blocks) as any[])
+    .find(b => b.type === 'pdfseite' && b.quelleId === satz.id && Number(b.nr) === 2);
+  /* Das alte Bild WIRKLICH wegräumen und nicht nur die Verweisung kappen.
+     Sonst legt die Gerüststange selbst die Leiche, gegen die dieser
+     Abschnitt misst — und die Zeile „Keine Dateileiche“ wäre rot aus dem
+     falschen Grund. Beim echten Fall (`.json`-Sicherung ohne Anhänge) ist
+     die Datei ohnehin fort. */
+  if (zwei) {
+    if (zwei.bildDateiId) await Dateien.weg(zwei.bildDateiId);
+    Store.updateBlock(zwei.id, { bildDateiId: null });
+  }
+  const c = await PdfEinlesen.neuBerechnen(satz.id);
+  const d = await PdfEinlesen.neuBerechnen(satz.id);
+  await Auftraege.start();
+  const idCD = c?.auftrag?.id || '';
+  if (idCD) {
+    const bis2 = Date.now() + 90000;
+    for (;;) {
+      const j = await Auftraege.einer(idCD);
+      if (j && JobModell.beendet(j)) break;
+      if (Date.now() > bis2) throw new Error('Zweiter Auftrag wurde nicht fertig');
+      await new Promise(r => setTimeout(r, 120));
+    }
+  }
+  await new Promise(r => setTimeout(r, 300));
 
   const alle = await Store.dateiAlle();
   const bilder = alle.filter((d: any) => d.abgeleitet);
@@ -270,7 +317,12 @@ const doppelt = await seite.evaluate(async () => {
   const benutzt = new Set(bloecke.map(b => b.bildDateiId).filter(Boolean));
   return {
     vorherDateien,
-    seitenA: a?.seiten, seitenB: b?.seiten,
+    /* Beide Aufrufe meinen DENSELBEN Auftrag — das ist der Nachweis,
+       den vorher `seiten` erbrachte. */
+    idA: a?.auftrag?.id || '', idB: b?.auftrag?.id || '',
+    /* Und der serielle Fall: der erste legt an, der zweite findet. */
+    idC: c?.auftrag?.id || '', idD: d?.auftrag?.id || '',
+    ersterLegteAn: !c?.schon, zweiterFandIhn: !!d?.schon,
     /* Zwei Seiten, also genau zwei abgeleitete Dateien. */
     bilder: bilder.length,
     /* Und jede davon wird von einem Block auch WIRKLICH benutzt. */
@@ -283,50 +335,106 @@ gleich('Es gab vorher nur das Original', doppelt.vorherDateien, 1);
 gleich('Beide Seiten haben ein Bild bekommen', doppelt.mitBild, 2);
 gleich('Und es entstanden genau zwei Seitenbilder', doppelt.bilder, 2);
 gleich('Keine Dateileiche', doppelt.leichen, 0);
-p('Beide Aufrufe melden dasselbe Ergebnis',
-  doppelt.seitenA === doppelt.seitenB,
-  doppelt.seitenA + ' / ' + doppelt.seitenB);
+p('Beide Aufrufe meinen denselben Auftrag',
+  !!doppelt.idA && doppelt.idA === doppelt.idB,
+  doppelt.idA + ' / ' + doppelt.idB);
+/* NACHGEMESSEN STATT BEHAUPTET, und die erste Fassung dieser Zeile lag
+   falsch: sie erwartete, dass einer der beiden gleichzeitigen Aufrufe den
+   anderen FINDET. Tut er nicht. Beide fragen `Auftraege.einer` — eine
+   Ablage-Lesung —, bevor einer von beiden angelegt hat, und beide legen
+   an. Was hier schützt, ist die KENNUNG: zweimal `anlegen` unter
+   `pdfbild-<Original>` ergibt EINEN Satz, und die Pacht in
+   `Store.auftragNehmen` gibt ihn nur einem Läufer. Der Beleg dafür steht
+   darüber — zwei Bilder, keine Leiche. */
+p('Der serielle Fall dagegen findet: der erste legt an',
+  doppelt.ersterLegteAn, JSON.stringify(doppelt.ersterLegteAn));
+p('Und der zweite hat ihn GEFUNDEN, nicht neu angelegt',
+  doppelt.zweiterFandIhn, JSON.stringify(doppelt.zweiterFandIhn));
+p('Auch sie meinen denselben Auftrag',
+  !!doppelt.idC && doppelt.idC === doppelt.idD,
+  doppelt.idC + ' / ' + doppelt.idD);
 
 /* ==========================================================================
- * §5 · Der Fortschritt zählt EINE Sache (E116)
+ * §5 · Der Fortschritt zählt EINE Sache (E116, seit E327 am Auftrag)
+ * --------------------------------------------------------------------------
+ * E116 räumte „Seite 80 von 1" ab: gezählt wurden zwei verschiedene Dinge
+ * gegeneinander — die Nummer der Seite IM DOKUMENT gegen die Länge der
+ * RESTLISTE. Die Zusage seither: beide Zahlen meinen dasselbe.
+ *
+ * WO DER SATZ HEUTE STEHT, hat sich mit E327 geändert. Vorher schrieb
+ * `neuBerechnen` ihn selbst in einen Melder am Bildschirm; seither ist das
+ * Zurückholen ein Auftrag, und sein Läufer schweigt mit Absicht — er läuft
+ * dort, wo die Pacht liegt, und das muss nicht der Tab sein, in dem geklickt
+ * wurde. Der Text reist als `auftrag.schritt` durch den Ereignisbus und wird
+ * in JEDEM Tab angezeigt (Fenster aus E322).
+ *
+ * Diese Prüfung horcht deshalb dort, wo der Satz wirklich entsteht. Am
+ * `#toast` zu lauschen wäre seit E327 grün gewesen, weil dort NIE etwas
+ * ankommt — eine Prüfung, die nichts mehr messen kann, ist schlimmer als
+ * keine.
  * ========================================================================*/
 console.log('\n5 · Der Fortschritt zählt EINE Sache');
 
 const zaehlung = await seite.evaluate(async () => {
-  /* Mitschreiben, was der Melder sagt — der Balken selbst ist geteilt. */
+  /* Mitschreiben, was der Läufer meldet. `auftrag.schritt` trägt
+     `{id, art, schritt, schritte, text}` (maschine.ts:316). */
   const gesehen: string[] = [];
-  const echt = document.getElementById('toast');
-  const beob = new MutationObserver(() => {
-    const t = echt?.textContent || '';
-    if (t && gesehen[gesehen.length - 1] !== t) gesehen.push(t);
+  const ab = Ereignisse.horche('auftrag.schritt', (d: any) => {
+    if (d && d.art === 'pdf-bilder' && d.text) gesehen.push(String(d.text));
   });
-  if (echt) beob.observe(echt, { childList: true, characterData: true, subtree: true });
 
   const s = (Object.values(Store.cache.blocks) as any[])
     .find(b => b.type === 'pdfseite' && b.quelleId && b.bildDateiId);
-  if (!s) return { keine: true, gesehen: [] };
+  if (!s) { ab(); return { keine: true, gesehen: [], name: '' }; }
   /* Das Bild der ZWEITEN Seite wegnehmen — dann ist genau eine offen, und
-     ihre Nummer im Dokument ist 2. Genau die Lage, in der „Seite 2 von 1"
-     stand. */
+     ihre Nummer im Dokument ist 2, die Restliste aber 1 lang. Genau die
+     Lage, in der „Seite 2 von 1" stand. */
   const zwei = (Object.values(Store.cache.blocks) as any[])
     .find(b => b.type === 'pdfseite' && b.quelleId === s.quelleId && Number(b.nr) === 2);
   if (zwei) Store.updateBlock(zwei.id, { bildDateiId: null });
-  await PdfEinlesen.neuBerechnen(s.quelleId);
-  await new Promise(r => setTimeout(r, 200));
-  beob.disconnect();
-  return { keine: false, gesehen };
+
+  const erg = await PdfEinlesen.neuBerechnen(s.quelleId);
+  const auftragsId = erg?.auftrag?.id || '';
+  if (auftragsId) {
+    const bis = Date.now() + 90000;
+    for (;;) {
+      const j = await Auftraege.einer(auftragsId);
+      if (j && JobModell.beendet(j)) break;
+      if (Date.now() > bis) { ab(); throw new Error('Auftrag wurde nicht fertig'); }
+      await new Promise(r => setTimeout(r, 120));
+    }
+  }
+  await new Promise(r => setTimeout(r, 120));
+  ab();
+  const satz = await Store.dateiHolen(s.quelleId);
+  return { keine: false, gesehen, name: String(satz?.name || '') };
 });
 
 p('Es gab eine Seite zum Rechnen', !zaehlung.keine);
-const fortschritt = (zaehlung.gesehen || []).filter((t: string) => /^Seite \d+ von \d+/.test(t));
-p('Der Fortschritt hat gemeldet', fortschritt.length >= 1, JSON.stringify(zaehlung.gesehen));
+const fortschritt = (zaehlung.gesehen || [])
+  .filter((t: string) => /Seite \d+ von \d+/.test(t));
+p('Der Fortschritt hat gemeldet', fortschritt.length >= 1,
+  JSON.stringify(zaehlung.gesehen));
 p('Und nie mehr gezählt, als es zu rechnen gab',
-  fortschritt.every((t: string) => {
-    const m = t.match(/^Seite (\d+) von (\d+)/);
+  fortschritt.length >= 1 && fortschritt.every((t: string) => {
+    const m = t.match(/Seite (\d+) von (\d+)/);
     return !!m && Number(m[1]) <= Number(m[2]);
   }), fortschritt.join(' | '));
-gleich('Die eine offene Seite hiess „Seite 1 von 1"',
-  fortschritt[0], 'Seite 1 von 1 wird gerechnet …');
+/* DIE EINE OFFENE SEITE IST DIE ZWEITE VON ZWEIEN. Beide Zahlen sind die
+   des Dokuments — die Restliste (1 lang) taucht in keiner davon auf. Diese
+   Zeile ist der eigentliche Beleg gegen „Seite 2 von 1": wäre die zweite
+   Zahl wieder die Restlistenlänge, stünde hier „von 1". */
+gleich('Sie hiess „Seite 2 von 2"',
+  fortschritt[0]?.replace(/^.*?Seite /, 'Seite '), 'Seite 2 von 2');
+/* UND DER NAME DES DOKUMENTS STEHT IN JEDEM SCHRITT, nicht nur im ersten
+   (E327). `hilfe.schritt(stand, text)` ERSETZT den Text; ohne diese Zusage
+   stand im Auftragsfenster nach der ersten Seite nur noch eine nackte
+   Zählung, und bei zwei laufenden Skripten sind zwei solche Zeilen nicht
+   auseinanderzuhalten. Gefunden auf dem Bild, nicht von einem Prüflauf. */
+p('Und jeder Schritt nennt das Dokument beim Namen',
+  !!zaehlung.name && fortschritt.length >= 1 &&
+  fortschritt.every((t: string) => t.includes(zaehlung.name)),
+  zaehlung.name + ' — ' + fortschritt.join(' | '));
 
 /* ==========================================================================
  * §6 · Scheitert es, kommt der Knopf zurück (E116)
@@ -373,9 +481,21 @@ p('Der eine, den es gibt, steht ausserhalb von `schicht`',
   mk.indexOf("addEventListener('pagehide'") + ' vs ' + mk.indexOf('const schicht ='));
 p('Es gibt ein Verzeichnis der lebenden Schichten',
   /const lebende = new Set/.test(mk));
-p('Und `neuBerechnen` merkt sich, was läuft',
-  /const laufendeRechnungen = new Map/.test(el) &&
-  /laufendeRechnungen\.get\(quelleId\)/.test(el));
+/* DIESE ZEILE PRÜFTE BIS E327 EINE MAP IM TAB — `laufendeRechnungen`. Die
+   gibt es nicht mehr, und sie fehlt nicht: eine Sperre im Arbeitsspeicher
+   eines Tabs hält gegen den zweiten Tab gar nichts. Seither steckt sie in
+   der KENNUNG des Auftrags, und die liegt in der Ablage. Die Prüfung ist
+   damit strenger geworden, nicht schwächer — aber sie musste mitziehen,
+   sonst hätte sie nach dem Umbau nur noch das Fehlen von totem Code
+   gemeldet. */
+p('Der laufende Auftrag hängt an einer festen Kennung',
+  /const auftragsId = \(quelleId: string\): string =>/.test(el) &&
+  /'pdfbild-' \+ quelleId/.test(el));
+p('Und `neuBerechnen` fragt sie ab, bevor es anlegt',
+  /const schon = await Auftraege\.einer\(id\);/.test(el) &&
+  /if \(schon && !JobModell\.beendet\(schon\)\) return \{ auftrag: schon, schon: true \};/.test(el));
+p('Es gibt keine Sperre im Arbeitsspeicher mehr',
+  !/laufendeRechnungen/.test(el));
 
 p('Keine Fehler auf der Seite', fehler.length === 0, fehler.join(' | '));
 

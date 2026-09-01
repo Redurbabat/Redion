@@ -12,6 +12,8 @@
  *
  *   node pruefungen/lauf/test228.mts
  * ==========================================================================*/
+declare const Store: any; declare const App: any; declare const Dateien: any;
+declare const PdfEinlesen: any; declare const Auftraege: any; declare const JobModell: any;
 import { chromium } from 'playwright';
 import http from 'node:http';
 import type { IncomingMessage, ServerResponse } from 'node:http';
@@ -291,12 +293,26 @@ const zurueck = await seite.evaluate(async (bid: string) => {
      steht am Block, die Datei ist nicht mitgekommen. */
   await Dateien.weg(bisher);
   Store.updateBlock(bid, { bildDateiId: bisher });
+  /* SEIT E327 IST DAS ZURÜCKHOLEN EIN AUFTRAG. `neuBerechnen` kommt
+     zurück, sobald er ANGELEGT ist — nicht wenn er fertig ist. Also auf
+     das Ende warten, so wie es ein Mensch am Auftragsfenster auch tut. */
   const erg = await PdfEinlesen.neuBerechnen(b.quelleId);
-  await new Promise(r => setTimeout(r, 600));
+  const auftragsId = erg?.auftrag?.id || '';
+  if (auftragsId) {
+    const bis = Date.now() + 90000;
+    for (;;) {
+      const a = await Auftraege.einer(auftragsId);
+      if (a && JobModell.beendet(a)) break;
+      if (Date.now() > bis) throw new Error('Auftrag wurde nicht fertig');
+      await new Promise(r => setTimeout(r, 120));
+    }
+  }
+  await new Promise(r => setTimeout(r, 200));
   const nach = Store.getBlock(bid);
   const blob = await Dateien.alsBlob(nach.bildDateiId);
   const bild = blob ? await createImageBitmap(blob) : null;
-  return { seiten: erg.seiten, px: bild ? bild.width : 0, breite: nach.bildBreite };
+  return { seiten: erg?.auftrag?.stand?.seiten ?? erg?.seiten ?? (auftragsId ? 1 : 0),
+           px: bild ? bild.width : 0, breite: nach.bildBreite };
 }, vorher.id);
 
 gleich('Die Seite ist neu gerechnet worden', zurueck.seiten, 1);

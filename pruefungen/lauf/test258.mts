@@ -179,6 +179,48 @@ pr('Mit Ungelesenem erscheint die Glocke auch am Telefon',
 pr('Und sie ist mindestens 44 px gross (§37)',
   handy.hoehe >= 44 && handy.breite >= 44, JSON.stringify(handy));
 
+console.log('\n9 · Kein `hidden` bedeutet gar nichts (E334)');
+
+/* §1 misst DIE GLOCKE. Das reichte nicht: E322 hängte einen zweiten Knopf
+   mit derselben Klasse daneben, und die Reparatur von E251 hing an der
+   Kennung `#mb-glocke`. Also nahm `#mb-auftraege` mit `hidden` weiter
+   44 px, die Reitergruppe wuchs von 190 auf 234 px und lag damit über der
+   Reserve der Reiterzeile (`scroll-padding-inline-end: 200px`). Gefunden
+   hat es test247, dreizehn Bögen später und an einer ganz anderen Stelle.
+
+   DIESE ZEILE FRAGT NICHT MEHR NACH NAMEN. Sie geht über ALLES, was
+   `hidden` trägt, und verlangt, dass es auch wirklich weg ist. Der nächste
+   Knopf mit demselben Fehler fällt hier auf, nicht dreizehn Bögen später
+   an einer Breite. */
+const versteckte = async (): Promise<any> => p.evaluate(() => {
+  const raus: string[] = [];
+  document.querySelectorAll('[hidden]').forEach(e => {
+    if (getComputedStyle(e).display === 'none') return;
+    const k = e.getBoundingClientRect();
+    raus.push((e.id || e.tagName.toLowerCase()) + '.' +
+      String(e.className || '').split(' ')[0] + ' → ' +
+      getComputedStyle(e).display + ' ' +
+      Math.round(k.width) + '×' + Math.round(k.height));
+  });
+  return { gesamt: document.querySelectorAll('[hidden]').length, raus };
+});
+
+const hTelefon = await versteckte();
+/* GEGENPROBE ZUR MESSUNG SELBST: gäbe es gar kein `hidden`-Element, wäre
+   die Zeile darunter grün, ohne irgendetwas geprüft zu haben. */
+pr('Am Telefon tragen überhaupt Elemente `hidden`', hTelefon.gesamt >= 5,
+  String(hTelefon.gesamt));
+pr('Und keines davon wird trotzdem gezeichnet',
+  hTelefon.raus.length === 0, hTelefon.raus.join(' | '));
+
+await p.setViewportSize({ width: 1280, height: 860 });
+await p.waitForTimeout(400);
+const hRechner = await versteckte();
+pr('Am Rechner ebenso — Elemente mit `hidden` gibt es',
+  hRechner.gesamt >= 5, String(hRechner.gesamt));
+pr('Und auch dort wird keines gezeichnet',
+  hRechner.raus.length === 0, hRechner.raus.join(' | '));
+
 pr('Keine Fehler auf der Seite', fehler.length === 0, fehler.join(' | '));
 await b.close(); server.close();
 console.log(`\n${ok} bestanden, ${weg} durchgefallen`);

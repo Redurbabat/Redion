@@ -25380,3 +25380,110 @@ eine Prüfung, die nicht rot werden kann.
 
 test326, 28 Punkte. test305 23/23, test287 9/9.
 sw v87 · Einzeldatei neu gebaut.
+
+
+E334 — Ein Pflaster je Kennung deckt den nächsten Knopf nicht
+════════════════════════════════════════════════════════════════════════════
+
+Der volle Lauf voll7 ergab 281 von 284. Die drei Roten hingen alle an
+Bögen dieser Woche, und zwei davon waren PRÜFUNGEN, die nach dem Umbau
+nicht mehr messen konnten, was sie messen sollten. Der dritte war ein
+echter Fehler in der Oberfläche — dreizehn Bögen alt und von keinem Auge
+gesehen.
+
+─── DER ECHTE FEHLER: 234 PX GEGEN 200 PX RESERVE ──────────────────────────
+
+test247 misst am Telefon, dass der gewählte Reiter der Dokumentzeile nicht
+unter dem Knopfblock rechts oben verschwindet. Er lag darunter.
+
+BISEZIERT STATT GERATEN: `ad1c2fb0` rot, `89a5a595` grün — E322, die
+Auftragsmaschine mit ihrem Fenster. Sie hängte einen zweiten Knopf in die
+Gruppe oben rechts, `#mb-auftraege`, mit derselben Klasse wie die Glocke
+daneben.
+
+Der Knopf trägt `hidden`, solange kein Auftrag läuft. Er nahm trotzdem
+44 px. Der Grund ist die Regel, die seit L111 im Haus bekannt ist:
+
+    .mb-rechts-knopf{ display:grid }     <- eine Autoren-Regel
+    [hidden]{ display:none }             <- die Regel des Browsers
+
+Die Autoren-Regel gewinnt. `hidden` bedeutet dann gar nichts mehr.
+
+E251 hatte das für die Glocke schon einmal repariert — mit
+`#mb-glocke[hidden]{ display:none }`. Ein Pflaster auf EINER Stelle, mit
+einer Kennung als Anker. Es galt für die Glocke und für nichts sonst, und
+als E322 den nächsten Knopf danebenhängte, war der Fehler wieder da.
+
+GEMESSEN, WAS DAS KOSTETE: die Gruppe wuchs von 190 auf 234 px. Die
+Reiterzeile reserviert `scroll-padding-inline-end: 200px`. 234 ist mehr als
+200, also lag der gewählte Reiter darunter. Nach der Änderung an der
+KLASSE — `.mb-rechts-knopf[hidden]{ display:none }` — sind es 188 px, und
+der Reiter endet bei 202.
+
+Das ist dieselbe Lehre wie L90 und L111, zum dritten Mal: wer eine
+Klassenregel mit einer Kennungsregel repariert, repariert den Fall von
+heute. Die Klasse ist der Ort, an dem der Fehler ENTSTEHT.
+
+─── UND ZWEI PRÜFUNGEN, DIE DER UMBAU BLIND GEMACHT HAT ────────────────────
+
+E327 machte aus `neuBerechnen` einen Auftrag. Damit wurde aus einem Aufruf,
+der erst zurückkommt, wenn alles gerechnet ist, einer, der SOFORT
+zurückkommt und die Arbeit einem Läufer überlässt. Zwei Prüfungen hingen an
+der alten Form, und beide gingen nicht etwa rot — sie maßen ins Leere:
+
+    test228   zählte die Bilder, bevor sie da waren.
+    test189   horchte auf `#toast`, wo seit E327 nichts mehr ankommt.
+
+Der zweite Fall ist der gefährlichere. Eine Prüfung, die auf einen Ort
+horcht, an dem niemand mehr spricht, ist GRÜN — und zwar für immer. Wäre
+die eine rote Zeile daneben nicht gewesen, hätte sie den Umbau überlebt und
+weiterhin bestätigt, was sie längst nicht mehr sehen konnte.
+
+Beide horchen jetzt dort, wo die Arbeit wirklich stattfindet: sie warten
+auf `JobModell.beendet`, und test189 sammelt die Fortschrittsmeldungen aus
+`auftrag.schritt` statt aus dem Bildschirm.
+
+DAS HAT DIE PRÜFUNG STRENGER GEMACHT, nicht schwächer. Der Satz, den E116
+zusicherte, lautete „die Zählung meint EINE Sache" — vorher zählte der
+Melder die RESTLISTE (`Seite 1 von 1`), seit E327 zählt der Läufer im
+DOKUMENT (`Seite 2 von 2`). Beide Fassungen halten die Zusage; die zweite
+ist die, die ein Mensch braucht, wenn er wissen will, wo er ist.
+
+Belegt rot, drei Mutationen: die zweite Zahl auf `offen.length`
+zurückgedreht ergibt sofort wieder „Seite 2 von 1"; den Dokumentnamen aus
+dem Schritt-Text genommen fällt die E327-Zeile; die Nachfrage aus
+`neuBerechnen` entfernt fällt der serielle Fall.
+
+─── UND EINE BEHAUPTUNG, DIE ICH SELBST FALSCH AUFGESTELLT HATTE ───────────
+
+test189 §4 klickt zweimal im selben Augenblick (`Promise.all`). Meine erste
+Fassung erwartete, dass einer der beiden Aufrufe den Auftrag des anderen
+FINDET. Das tut er nicht, und der Prüflauf sagte es sofort.
+
+Beide fragen `Auftraege.einer` — eine Lesung aus der Ablage —, bevor einer
+von beiden angelegt hat. Beide legen an. Was hier schützt, ist die
+KENNUNG: zweimal `anlegen` unter `pdfbild-<Original>` ergibt EINEN Satz,
+und die Pacht in `Store.auftragNehmen` gibt ihn nur einem Läufer.
+
+Die Nachfrage schützt den anderen Fall — zwei Klicks NACHEINANDER. Damit
+das nicht an der Uhr hängt, hält der Prüflauf die Maschine dafür an: dann
+bleibt der erste Auftrag auf `wartet` liegen, und der zweite Aufruf hat
+keine Wahl, als ihn zu finden. Zwei Fälle, zwei Zeilen, jede kann für ihren
+eigenen Grund rot werden.
+
+Und §7 prüfte bis eben, dass es `laufendeRechnungen` gibt — die Map im
+Arbeitsspeicher des Tabs, die E327 abgeschafft hat. Sie fehlt nicht: eine
+Sperre im Speicher EINES Tabs hält gegen den zweiten Tab gar nichts. Die
+Prüfung zieht mit und misst jetzt die Kennung, die in der Ablage liegt.
+
+─── DIE GERÜSTSTANGE, DIE SICH SELBST IM WEG STAND ─────────────────────────
+
+Der neue serielle Fall nimmt einer Seite ihr Bild, um etwas zu rechnen zu
+haben. Der erste Wurf kappte dafür nur die Verweisung — und legte damit
+selbst die Dateileiche, gegen die derselbe Abschnitt misst: „ist 3, soll 2".
+
+Nicht das Erzeugnis war schuld, sondern das Gerüst. Es räumt die alte Datei
+jetzt wirklich weg (`Dateien.weg`), so wie es im echten Fall ohnehin ist:
+eine `.json`-Sicherung kennt keine Anhänge, da ist das Bild schon fort.
+
+test189 38/38, test228 24/24.

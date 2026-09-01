@@ -3407,6 +3407,18 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    das Bild nicht. Genau daran ist schon der erste Anlauf gescheitert
    (test40 fand den Knopf trotz hidden). */
 #mb-glocke[hidden]{ display:none }
+/* UND FÜR JEDEN KNOPF DER GRUPPE, nicht nur für die Glocke (E334).
+   Die Zeile darüber steht seit E251 und ist ein Pflaster auf EINER Stelle.
+   E322 hängte einen zweiten Knopf mit derselben Klasse daneben — er trug
+   `hidden`, nahm aber weiter 44 px, und die Reitergruppe wuchs von 190 auf
+   234 px. Damit reichte die reservierte Breite der Reiterzeile
+   (`scroll-padding-inline-end: 200px`) nicht mehr, und der gewählte Reiter
+   lag am Telefon unter dem Klapp-Knopf. Gefunden hat es test247, dreizehn
+   Bögen später.
+
+   Ein Pflaster je Kennung deckt den NÄCHSTEN Knopf nicht. Also an der
+   Klasse, wo der Fehler entsteht — dieselbe Lehre wie L90 und L111. */
+.mb-rechts-knopf[hidden]{ display:none }
 .glocke-zahl{ position:absolute; top:1px; right:0; min-width:15px; height:15px;
   padding:0 3px; border-radius:8px; background:var(--gefahr); color:#fff;
   font-size:9.5px; font-weight:700; line-height:15px; text-align:center;
