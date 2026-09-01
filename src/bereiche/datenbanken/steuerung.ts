@@ -1298,13 +1298,78 @@ const Datenbank = (() => {
       const liste = (z.props?.[def.gegen] || []).filter((x: any) => x !== row.id);
       Store.setProp(id, def.gegen, liste);
     });
-    /* Bei den Neuen eintragen */
+    /* Bei den Neuen eintragen.
+     *
+     * DIE GEGENSEITE HAT IHRE EIGENE GRENZE, und die galt bis E306 nicht
+     * (Redurs Punkt 12). Hier stand `[...liste, row.id]` — angehängt, ohne
+     * zu fragen, wie viele drüben erlaubt sind. Eine Verknüpfung, die auf
+     * beiden Seiten „nur eine" heisst, wurde damit auf der Gegenseite
+     * stillschweigend zu „beliebig viele": zwei Zeilen konnten dieselbe
+     * Zielzeile für sich beanspruchen, und beide sahen richtig aus.
+     *
+     * Jetzt gilt drüben, was drüben eingestellt ist. Ist die Gegenseite auf
+     * eine begrenzt und schon belegt, wird die alte Verbindung GELÖST — das
+     * ist, was „genau eine" heisst — und zwar auf BEIDEN Seiten. Ein
+     * Verdrängter, der weiterhin auf sein altes Ziel zeigt, während das Ziel
+     * ihn nicht mehr kennt, wäre der schlechtere Zustand: die Ansicht zeigt
+     * dann je nach Blickrichtung etwas anderes (§46). */
+    const gegenDef = ziel.schema[def.gegen] || {};
     grenze.filter((id: any) => !alt2.includes(id)).forEach((id: any) => {
       const z = Store.getBlock(id);
       if (!z) return;
       const liste = z.props?.[def.gegen] || [];
-      if (!liste.includes(row.id)) Store.setProp(id, def.gegen, [...liste, row.id]);
+      if (liste.includes(row.id)) return;
+      if (gegenDef.limit === 1) {
+        /* Die Verdrängten aus IHRER Spalte austragen, bevor die Zielzeile
+           umgehängt wird — sonst zeigen sie ins Leere. */
+        liste.filter((x: any) => x !== row.id).forEach((verdraengt: any) => {
+          const v = Store.getBlock(verdraengt);
+          if (!v) return;
+          const seine = (v.props?.[key] || []).filter((x: any) => x !== id);
+          Store.setProp(verdraengt, key, seine);
+        });
+        Store.setProp(id, def.gegen, [row.id]);
+      } else {
+        Store.setProp(id, def.gegen, [...liste, row.id]);
+      }
     });
+  };
+
+  /** Was die Art im Klartext heisst — ein Satz, kein Fachwort. */
+  const relationsartSatz = (art: string): string => ({
+    '1:1': 'Genau eine, und die gehört dann nur hierher. Trägst du sie ' +
+           'woanders ein, wird sie hier gelöst.',
+    '1:n': 'Hier eine, drüben beliebig viele.',
+    'n:1': 'Hier beliebig viele, drüben nur eine.',
+    'n:n': 'Beliebig viele auf beiden Seiten.',
+    'einseitig': 'Nur in diese Richtung — die Gegenseite weiss nichts davon.',
+    'einseitig, eine': 'Nur in diese Richtung, und höchstens eine.'
+  } as Record<string, string>)[art] || 'Noch kein Ziel gewählt.';
+
+  /**
+   * Die ART einer Verknüpfung, abgelesen aus den zwei Grenzen (E306,
+   * Redurs Punkt 12).
+   *
+   * Redion hat die Art nie geführt, sondern nur je Seite eine Grenze. Das
+   * ist dasselbe in klein — man muss es nur aussprechen, damit man beim
+   * Einrichten sieht, was man gerade baut. Eine Fachlehrerin und ihr Fach
+   * sind etwas anderes als ein Fach und seine Karteikarten, und wer das erst
+   * merkt, wenn zwei Zeilen dieselbe Lehrerin für sich beanspruchen, hat es
+   * zu spät gemerkt.
+   *
+   * Ohne Gegenrichtung gibt es keine Art — dann ist es ein einseitiger
+   * Verweis, und das steht dann auch da.
+   */
+  const relationsart = (coll: any, key: string): string => {
+    const def = coll?.schema?.[key];
+    if (!def || def.type !== 'relation') return '';
+    if (!def.gegen) return def.limit === 1 ? 'einseitig, eine' : 'einseitig';
+    const ziel = Store.getCollection(def.ziel);
+    const gegen = ziel?.schema?.[def.gegen];
+    if (!gegen) return def.limit === 1 ? 'einseitig, eine' : 'einseitig';
+    const hier  = def.limit === 1 ? '1' : 'n';
+    const dort  = gegen.limit === 1 ? '1' : 'n';
+    return hier + ':' + dort;
   };
 
   /** Richtet eine Verknüpfung ein: Ziel, Gegenrichtung, Limit. */
@@ -1332,6 +1397,14 @@ const Datenbank = (() => {
           '<div style="font-size:12.5px; color:var(--text-faint); line-height:1.5">' +
             'Wechselseitig heisst: Trägst du hier etwas ein, steht es auf der anderen Seite ' +
             'automatisch auch. Rollups brauchen das nicht, funktionieren damit aber sauberer.</div>' +
+          /* DIE ART STEHT DA, WÄHREND MAN SIE EINSTELLT (E306). Sie ergibt
+             sich aus den zwei Grenzen und wurde deshalb nie ausgesprochen —
+             und wer sie nicht ausspricht, merkt erst beim dritten Eintrag,
+             dass er etwas anderes gebaut hat, als er meinte. */
+          '<div class="rel-art" style="font-size:12.5px; line-height:1.5">' +
+            'Art dieser Verknüpfung: <b>' + esc(relationsart(coll, key) || '—') + '</b>' +
+            '<span style="color:var(--text-faint)"> — ' +
+            esc(relationsartSatz(relationsart(coll, key))) + '</span></div>' +
         '</div>' +
         '<div class="fbtns"><button data-a="ok" class="prim">Übernehmen</button></div>' +
       '</div>';
@@ -9275,6 +9348,7 @@ const Datenbank = (() => {
            /* `zelleBearbeiten` war nicht ausgeführt — der Mail-Bereich wollte
               es und griff deshalb ins Leere. */
            zelleBearbeiten,
+           relationsart, relationsartSatz,
            automationenMenue, automationenLaufen, automationAbbrechen,
            automationsLaeufe: () => [...aktiveAutomationsLaeufe.values()].map(x => ({ ...x })),
            fuerJedeZeilen, gewaehlteZeilen,

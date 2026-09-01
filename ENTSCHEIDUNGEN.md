@@ -23110,3 +23110,77 @@ drei Punkte.
 
 Mitgelaufen: test281 48/48, test287 9/9.
 typecheck grün · sw v66 · Einzeldatei 7724 KB.
+
+
+E306 — Verknüpfungen haben eine Art, und die Gegenseite gilt (Redurs Punkt 12)
+================================================================================
+1. September 2026
+
+Redurs Punkt 12: „Typed Relations."
+
+Nachgemessen, was Redion hat: die Spalte `relation` kennt ein Ziel (`ziel`),
+eine Gegenspalte (`gegen`) und je Seite eine Grenze (`limit`). Das IST eine
+Art — man muss sie nur aussprechen. 1:1, 1:n, n:1, n:n ergeben sich aus den
+zwei Grenzen, und wer sie nicht ausspricht, merkt erst beim dritten Eintrag,
+dass er etwas anderes gebaut hat, als er meinte.
+
+Beim Aussprechen kam ein Fehler heraus, den vorher niemand sehen konnte.
+
+
+Die Gegenseite hatte ihre eigene Grenze, und sie galt nicht
+--------------------------------------------------------------------------------
+In `relationSetzen` stand für die Gegenrichtung:
+
+    Store.setProp(id, def.gegen, [...liste, row.id]);
+
+Angehängt, ohne zu fragen, wie viele drüben erlaubt sind. Eine Verknüpfung,
+die auf BEIDEN Seiten „nur eine" heisst, wurde damit auf der Gegenseite
+stillschweigend zu „beliebig viele".
+
+Gemessen an Redurs eigenem Fall — ein Fach hat genau eine Fachlehrerin, eine
+Fachlehrerin unterrichtet genau ein Fach: trägt man Frau Meier erst bei
+Elektrotechnik und dann bei Mathematik ein, stand danach bei ihr
+
+    fach: ["Elektrotechnik", "Mathematik"]
+
+Beide Fächer beanspruchten dieselbe Lehrerin, und beide sahen richtig aus.
+Die Ansicht zeigte je nach Blickrichtung etwas anderes.
+
+Jetzt gilt drüben, was drüben eingestellt ist. Ist die Gegenseite auf eine
+begrenzt und schon belegt, wird die alte Verbindung GELÖST — das ist, was
+„genau eine" heisst — und zwar auf BEIDEN Seiten. Der zweite Teil ist der,
+den man beim Reparieren vergisst: ein Fach, das weiterhin auf seine Lehrerin
+zeigt, während die Lehrerin es nicht mehr kennt, ist der schlechtere Zustand
+(§46).
+
+
+Die Art steht da, während man sie einstellt
+--------------------------------------------------------------------------------
+Im Einrichten-Fenster steht jetzt „Art dieser Verknüpfung: 1:1" mit einem
+Satz im Klartext: „Genau eine, und die gehört dann nur hierher. Trägst du sie
+woanders ein, wird sie hier gelöst."
+
+Kein Fachwort ohne Erklärung. Wer „1:1" liest und nicht weiss, was daraus
+folgt, hat nichts gewonnen — und was daraus folgt, ist genau das Lösen, das
+oben repariert wurde.
+
+
+Was NICHT dazukam
+--------------------------------------------------------------------------------
+Kein neues Feld am Schema. Die Art wird ABGELESEN, nicht gespeichert. Ein
+zweites Feld neben den zwei Grenzen wäre eine zweite Wahrheit über dieselbe
+Sache, und die beiden liefen irgendwann auseinander — dieselbe Überlegung wie
+bei der Folien-Trennregel in E297.
+
+
+Geprüft
+--------------------------------------------------------------------------------
+test300 17/17, darunter die Gegenprobe, dass n:n weiter sammelt — ohne diesen
+Arm wäre der 1:1-Punkt auch grün, wenn die Gegenseite IMMER auf einen Eintrag
+zusammengestrichen würde, und das wäre kein 1:1, sondern eine kaputte
+Verknüpfung. Gegengeprüft gegen den alten Stand: zwei Punkte fallen, mit
+genau der Doppelbelegung oben.
+
+Mitgelaufen: test111 81/81, test198 17/17, test227 29/29, test192 25/25,
+test294 10/10.
+typecheck grün · sw v67 · Einzeldatei 7728 KB.
