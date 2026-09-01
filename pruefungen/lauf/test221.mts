@@ -172,23 +172,37 @@ p('Auch dort rollt nichts waagerecht',
   !r.normal.waagerecht && !r.breit.waagerecht);
 
 /* ==========================================================================
- * §5 · Im Dokumentmodus bleibt der Kopf im Bild
+ * §5 · Im Dokumentmodus gibt es keinen Kopf mehr — und daneben schon (E296)
  * --------------------------------------------------------------------------
- * `padding-inline:0` ist für die Arbeitsfläche richtig: eine PDF-Seite soll
- * am Telefon von Kante zu Kante gehen. Zeichen, Titel und Werkzeugzeile
- * stehen aber im selben Kasten und verloren ihren Rand mit.
+ * WAS HIER FRUEHER STAND, und warum es nicht falsch war: `padding-inline:0`
+ * ist fuer die Arbeitsflaeche richtig — eine PDF-Seite soll am Telefon von
+ * Kante zu Kante gehen. Zeichen, Titel und Werkzeugzeile standen aber im
+ * selben Kasten und verloren ihren Rand mit. Gemessen am 25. August auf
+ * 390 px: die TINTE des Titels begann bei x = 0, die Werkzeugzeile reichte
+ * bis 408.
  *
- * Gemessen am 25. August auf 390 px: die TINTE des Titels begann bei x = 0,
- * die Werkzeugzeile reichte bis 408. Genau das zeigte das Bildschirmfoto,
- * und ich hatte es zuerst für einen Lesefehler gehalten — die erste Messung
- * nahm eine gewöhnliche Seite und fand 28 px. Der Dokumentmodus hat eine
- * eigene Regel.
+ * MIT E296 IST DIE FRAGE EINE ANDERE. Im Dokumentmodus gibt es diesen Kopf
+ * nicht mehr: er frass ein Drittel des Bildes fuer ein Symbol, einen Titel
+ * und drei Knoepfe, die alle auch woanders stehen. Der Titel ist in die
+ * Kopfzeile des Dokuments gewandert, die Knoepfe waren dort schon.
  *
- * GEMESSEN WIRD DIE TINTE, NICHT DER KASTEN. Ein Innenabstand verschiebt den
- * Inhalt, nicht das Rechteck — `getBoundingClientRect` sähe weiterhin 0 und
- * bliebe grün. Derselbe Fehler wie `clientWidth` in E148, nur andersherum.
+ * Also pruefen beide Haelften dieses Abschnitts weiter, was sie sollen:
+ *
+ *   A · Im Dokumentmodus haengt unter `#page` genau ein Kind — der
+ *       Arbeitsraum —, und der geht von Kante zu Kante.
+ *   B · Auf derselben Seite OHNE Dokumentmodus gibt es den Kopf, und dort
+ *       gilt die alte Messung unveraendert: kein Teil ueber den rechten
+ *       Rand, keine Tinte am Bildschirmrand.
+ *
+ * GEMESSEN WIRD DIE TINTE, NICHT DER KASTEN. Ein Innenabstand verschiebt
+ * den Inhalt, nicht das Rechteck — `getBoundingClientRect` saehe weiterhin
+ * 0 und bliebe gruen. Derselbe Fehler wie `clientWidth` in E148, nur
+ * andersherum.
+ *
+ * §55.2 — A war vor E296 rot (vier Kinder statt einem), B ist die alte
+ * Messung an der Stelle, an der sie noch etwas bedeutet.
  * ========================================================================*/
-console.log('\n5 · Im Dokumentmodus bleibt der Kopf im Bild');
+console.log('\n5 · Im Dokumentmodus gibt es keinen Kopf mehr — und daneben schon');
 
 const dok = await telefon.evaluate(async () => {
   const s = Store.addPage(null, { text: 'Elektrotechnik – Skript', icon: '📕' });
@@ -197,6 +211,7 @@ const dok = await telefon.evaluate(async () => {
   await Store.flush();
   App.oeffne(s.id);
   await new Promise(r => setTimeout(r, 1300));
+  (window as any).__t221seite = s.id;
 
   const tinte = (el: Element): number => {
     const kn = [...el.childNodes].find(n => n.nodeType === 3 && (n.textContent || '').trim())
@@ -212,6 +227,8 @@ const dok = await telefon.evaluate(async () => {
   const seite = document.getElementById('page');
   return {
     imDokumentmodus: /document-page/.test(seite?.className || ''),
+    titelBreit: Math.round(document.querySelector('.document-title')
+      ?.getBoundingClientRect().width || 0),
     fenster: document.documentElement.clientWidth,
     teile: [...(seite?.children || [])].map(el => {
       const k = el.getBoundingClientRect();
@@ -223,22 +240,72 @@ const dok = await telefon.evaluate(async () => {
 });
 
 p('Die Seite ist wirklich im Dokumentmodus', dok.imDokumentmodus);
-const kopf = dok.teile.filter((x: any) => x.name !== 'document-workspace');
-p('Es gibt einen Kopf zu prüfen', kopf.length >= 3,
-  dok.teile.map((x: any) => x.name).join(', '));
-gleich('Keines seiner Teile steht über den rechten Rand hinaus',
-  kopf.filter((x: any) => x.r > dok.fenster + 1).map((x: any) => `${x.name}:${x.r}`), []);
-gleich('Und keines fängt am Bildschirmrand an',
-  kopf.filter((x: any) => x.tinte >= 0 && x.tinte < 12).map((x: any) => `${x.name}:${x.tinte}`), []);
+gleich('A · Unter der Seite hängt genau ein Kind: der Arbeitsraum',
+  dok.teile.map((x: any) => x.name), ['document-workspace']);
 /* Die Gegenrichtung: die Arbeitsfläche SOLL randlos sein. */
 const flaeche = dok.teile.find((x: any) => x.name === 'document-workspace');
-p('Die Arbeitsfläche selbst geht von Kante zu Kante',
+p('Und der geht von Kante zu Kante',
   flaeche && flaeche.l <= 1 && flaeche.r >= dok.fenster - 1,
   JSON.stringify(flaeche));
+/* AM TELEFON STEHT ER NICHT DA, und das ist die Absicht: auf 390 px
+   blieben ihm rund dreissig Pixel, und er stand als „E." im Bild. Der Name
+   steht eine Zeile darueber im Pfad. Dass er am RECHNER in der Kopfzeile
+   steht, prueft test210 §1. */
+/* GEMESSEN WIRD DIE BREITE, NICHT DER TEXT. Der Titel wird am Telefon per
+   CSS ausgeblendet, und `textContent` liefert bei `display:none` weiter den
+   ganzen Namen — eine Pruefung darauf waere immer rot gewesen, egal was auf
+   dem Bildschirm steht. Derselbe Fehler wie `clientWidth` in E148. */
+gleich('Am Telefon steht kein abgeschnittener Titel in der Kopfzeile',
+  dok.titelBreit, 0);
+
+/* ---- B · Dieselbe Seite ohne Dokumentmodus: dort gilt die alte Messung -- */
+const ohneDok = await telefon.evaluate(async () => {
+  const id = (window as any).__t221seite as string;
+  Store.updateBlock(id, { dokumentModus: false });
+  App.zeichneSeite();
+  await new Promise(r => setTimeout(r, 700));
+
+  const tinte = (el: Element): number => {
+    const kn = [...el.childNodes].find(n => n.nodeType === 3 && (n.textContent || '').trim())
+      || el.firstElementChild;
+    if (!kn) return -1;
+    if (kn.nodeType === 3) {
+      const rg = document.createRange();
+      rg.setStart(kn, 0); rg.setEnd(kn, Math.min(1, (kn.textContent || '').length));
+      return Math.round(rg.getBoundingClientRect().left);
+    }
+    return Math.round((kn as Element).getBoundingClientRect().left);
+  };
+  const seite = document.getElementById('page');
+  return {
+    fenster: document.documentElement.clientWidth,
+    teile: [...(seite?.children || [])].map(el => {
+      const k = el.getBoundingClientRect();
+      return { name: (el as HTMLElement).id || String((el as HTMLElement).className).split(' ')[0],
+        l: Math.round(k.left), r: Math.round(k.right), tinte: tinte(el),
+        scroll: (el as HTMLElement).scrollWidth, klar: (el as HTMLElement).clientWidth };
+    })
+  };
+});
+
+/* NUR DIE KOPFTEILE. Unter `#page` haengen ohne Dokumentmodus auch die
+   Bloecke der Seite, und eine PDF-Seite SOLL am Telefon randlos sein — sie
+   meldet Tinte bei x = 0, voellig zu Recht. Die alte Fassung dieses
+   Abschnitts hat das nicht getrennt, weil im Dokumentmodus gar keine Bloecke
+   unter `#page` standen. Jetzt tun sie es, also wird benannt, wer gemeint
+   ist: Cover, Symbol, Titel, Sperrhinweis und Werkzeugzeile. */
+const KOPFTEILE = ['cover', 'pg-icon', 'title', 'sperrhinweis', 'pg-tools'];
+const kopf = ohneDok.teile.filter((x: any) => KOPFTEILE.includes(x.name));
+p('B · Ohne Dokumentmodus gibt es einen Kopf zu prüfen', kopf.length >= 3,
+  ohneDok.teile.map((x: any) => x.name).join(', '));
+gleich('Keines seiner Teile steht über den rechten Rand hinaus',
+  kopf.filter((x: any) => x.r > ohneDok.fenster + 1).map((x: any) => `${x.name}:${x.r}`), []);
+gleich('Und keines fängt am Bildschirmrand an',
+  kopf.filter((x: any) => x.tinte >= 0 && x.tinte < 12).map((x: any) => `${x.name}:${x.tinte}`), []);
 /* Und was nicht hineinpasst, ist zu schieben statt abgeschnitten. */
-const werkzeuge = dok.teile.find((x: any) => x.name === 'pg-tools');
+const werkzeuge = kopf.find((x: any) => x.name === 'pg-tools');
 p('Die Werkzeugzeile ist rollbar, nicht abgeschnitten',
-  !werkzeuge || werkzeuge.scroll <= werkzeuge.klar || werkzeuge.r <= dok.fenster + 1,
+  !werkzeuge || werkzeuge.scroll <= werkzeuge.klar || werkzeuge.r <= ohneDok.fenster + 1,
   JSON.stringify(werkzeuge));
 
 /* ==========================================================================

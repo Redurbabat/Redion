@@ -120,12 +120,23 @@ gleich('Der echte Weiter-Knopf zeigt die zweite PDF-Seite',
 gleich('Im Zentrum steht danach genau die PDF-Seite',
   await seite.locator('.document-stage .pdfs').count(), 1);
 
+/* SEIT E296 IST DER ZOOM EIN FAKTOR AUF EIN PASSMASS, keine Prozentbreite
+   der Mitte mehr: die Grundstellung rechnet aus der verfuegbaren HOEHE und
+   dem Seitenverhaeltnis, damit die ganze Seite ins Bild passt. Gemessen wird
+   deshalb das Papier in Pixeln — und dass die Dokumentkoordinate dabei
+   unangetastet bleibt, was die eigentliche Behauptung war. */
+const papierVorher = await seite.locator('.document-stage .blatt-papier')
+  .evaluate(el => Math.round(el.getBoundingClientRect().width));
 await seite.locator('[data-document-zoom]').evaluate(element => {
   const input = element as HTMLInputElement;
   input.value = '130'; input.dispatchEvent(new Event('input', { bubbles: true }));
 });
-gleich('Zoom ändert nur die Ansichtsbreite',
-  await seite.locator('.document-stage').evaluate(element => (element as HTMLElement).style.width), '130%');
+await seite.waitForTimeout(120);
+const papierNachher = await seite.locator('.document-stage .blatt-papier')
+  .evaluate(el => Math.round(el.getBoundingClientRect().width));
+pruefe('Zoom ändert nur die Ansichtsbreite — das Papier wird breiter',
+  papierVorher > 40 && papierNachher > papierVorher + 20,
+  `${papierVorher} px → ${papierNachher} px`);
 gleich('Der Zoom verändert keine Dokumentkoordinate',
   await seite.evaluate((id: string) => Store.getBlock(id).bw, dokument.pdfId), 595.28);
 

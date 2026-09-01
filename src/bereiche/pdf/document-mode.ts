@@ -21,9 +21,11 @@ const DocumentMode = (() => {
   const stateFor = (pageId: string): DocumentState => {
     const known = states.get(pageId);
     if (known) return known;
-    const kompakt = typeof window !== 'undefined' && typeof window.matchMedia === 'function' &&
-      window.matchMedia('(max-width: 1100px)').matches;
-    const created = { index: 0, zoom: 100, thumbnailsOpen: false, inspectorOpen: !kompakt };
+    /* BEIDE SEITENSPALTEN SIND ZU, AUCH AM RECHNER (E296). Der Inspector
+       stand dort bisher offen, weil Platz da war — 280 px, dauerhaft, fuer
+       eine Liste, die bei einem frisch eingelesenen PDF leer ist. Wer sie
+       braucht, holt sie mit `ⓘ`; wer liest, liest. */
+    const created = { index: 0, zoom: 100, thumbnailsOpen: false, inspectorOpen: false };
     states.set(pageId, created);
     return created;
   };
@@ -342,12 +344,43 @@ const DocumentMode = (() => {
     zoom.setAttribute('aria-label', 'Dokumentzoom');
     const zoomLabel = document.createElement('span');
     zoomLabel.className = 'document-zoom-label'; zoomLabel.textContent = state.zoom + ' %';
-    top.append(position, zoom, zoomLabel,
+
+    /* DER TITEL STEHT JETZT HIER (E296). Der grosse Seitenkopf faellt im
+       Dokumentmodus weg; ohne diese Zeile hiesse das offene Dokument
+       nirgends mehr beim Namen. `textContent`, nicht `innerHTML` — der Titel
+       ist Nutzertext (§19). */
+    const titel = document.createElement('div');
+    titel.className = 'document-title';
+    titel.textContent = page.text || 'Ohne Titel';
+    titel.title = page.text || 'Ohne Titel';
+    top.append(position, titel);
+
+    /* UND DER EINE HINWEIS AUS DEM KOPF, DER HIER WEITER GILT. Eine gegen
+       Bearbeiten gesperrte Seite sagte das oben in einer eigenen Zeile. Die
+       ist mit dem Kopf weg — das Schloss bleibt, mit Wort statt nur Zeichen
+       (§38) und mit dem Weg zurueck in der Sprechblase. */
+    if (page.gesperrt) {
+      const schloss = document.createElement('span');
+      schloss.className = 'document-locked';
+      schloss.textContent = '🔏 Gesperrt';
+      schloss.title = 'Diese Seite ist gegen Bearbeiten gesperrt. ' +
+        'Über „Normale Seite" lässt sie sich wieder freigeben.';
+      top.append(schloss);
+    }
+
+    top.append(zoom, zoomLabel,
       topButton('inspector', 'ⓘ', 'Notizen und Verknüpfungen öffnen'),
       topButton('exit', 'Normale Seite', 'Dokumentmodus verlassen'));
 
+    /* WELCHE SPALTEN ES GIBT, STEHT AM KASTEN (E296). Vorher war das Raster
+       fest — 190 px links, 280 px rechts, bei jeder Fensterbreite ueber
+       1100 px. Auf 1440 px blieben der Seite damit rund 900, obwohl beide
+       Spalten meistens nichts zu sagen hatten. Grundstellung ist jetzt eine
+       einzige Spalte; jede Seitenspalte kommt, wenn sie geoeffnet wird. */
     const body = document.createElement('div');
-    body.className = 'document-body';
+    body.className = 'document-body' +
+      (state.thumbnailsOpen ? ' with-thumbnails' : '') +
+      (state.inspectorOpen ? ' with-inspector' : '');
     const thumbnails = document.createElement('aside');
     thumbnails.className = 'document-thumbnails' + (state.thumbnailsOpen ? ' is-open' : '');
     const thumbHeader = document.createElement('div');
@@ -361,7 +394,6 @@ const DocumentMode = (() => {
     center.className = 'document-center';
     const stage = document.createElement('div');
     stage.className = 'document-stage';
-    stage.style.width = state.zoom + '%';
     renderDocument(stage, current);
     center.appendChild(stage);
 
@@ -371,7 +403,69 @@ const DocumentMode = (() => {
     body.append(thumbnails, center, inspector);
     workspace.append(top, body);
     wrap.appendChild(workspace);
+
+    /* DIE HOEHE MISST SICH SELBST (E296). In der CSS stand `calc(100vh -
+       150px)`; die 150 waren der Seitenkopf plus die Leisten darueber. Der
+       Kopf ist weg, also waere jede feste Zahl ab jetzt eine andere Luecke —
+       und sie waere auch vorher schon falsch gewesen, sobald das Menueband
+       einmal umbricht. Der Arbeitsraum fragt stattdessen, wo er anfaengt,
+       und hoert zwoelf Pixel ueber dem unteren Fensterrand auf.
+
+       In Pixeln statt in `vh`: `100vh` meint am Telefon das Fenster MIT der
+       Adresszeile, `window.innerHeight` das ohne — und genau das ist die
+       Zahl, die zaehlt. Ein `resize` bringt beides wieder zusammen. */
+    const hoeheSetzen = (): void => {
+      if (!workspace.isConnected) return;
+      const oben = Math.round(workspace.getBoundingClientRect().top);
+      if (oben < 0 || oben >= window.innerHeight) return;
+      workspace.style.height = Math.max(240, window.innerHeight - oben - 12) + 'px';
+    };
+
+    /* DIE GANZE SEITE PASST INS BILD (E296) — das ist bei GoodNotes die
+       Grundstellung, und es ist die Frage, die eine Dokumentansicht
+       beantworten muss: sehe ich ein Blatt oder ein Drittel davon.
+
+       Vorher stand hier `stage.style.width = zoom + '%'`. Prozent WOVON —
+       von der Breite der Mitte. Seit die Mitte nicht mehr 900, sondern 1360
+       Pixel breit ist, waere eine A4-Seite bei 100 % gut 1900 Pixel hoch
+       geworden: in einem 750 Pixel hohen Kasten sieht man davon ein Drittel.
+
+       Also wird ab der HOEHE gerechnet und das Seitenverhaeltnis gibt die
+       Breite. Der Zoom bleibt genau das, was er war — ein Faktor auf die
+       Ansicht; `bw`/`bh` des Blocks werden nicht angefasst. Die Leiste zaehlt
+       mit, weil sie im Fluss ueber dem Papier steht (auch als klebende). */
+    const passen = (): void => {
+      if (!workspace.isConnected) return;
+      const bw = Number(current.bw) || Number(current.blattBreite) || SheetSpace.A4_BREITE;
+      const bh = Number(current.bh) || Number(current.blattHoehe) || SheetSpace.A4_HOEHE;
+      if (!(bw > 0) || !(bh > 0)) return;
+      const raum = center.clientHeight;
+      const leiste = stage.querySelector<HTMLElement>('.blatt-reihe')?.offsetHeight || 0;
+      if (raum < 80) return;
+      const hoch = Math.max(200, raum - leiste - 56);
+      const breit = Math.round(hoch * (bw / bh) * (state.zoom / 100));
+      /* DAS MASS GEHT ANS PAPIER, NICHT AN DIE BUEHNE. Die Zeichenleiste
+         gehoert zum Blatt und steht in derselben Huelle; haette die Buehne
+         das Passmass, waere die Leiste so schmal wie die Seite — gemessen:
+         21 Werkzeuge in 447 px ergaben eine 332 px HOHE Leiste, die mehr
+         Platz nahm als das Papier darunter. Die Buehne bleibt also breit,
+         die Leiste passt in eine Zeile, und nur das Papier wird gestellt.
+         Die Zeichenschicht haengt IM Papier (E100) und geht in Blattmassen
+         statt in Pixeln — sie folgt von selbst mit. */
+      stage.style.width = '100%';
+      stage.style.setProperty('--doc-blatt',
+        Math.max(120, Math.min(breit, center.clientWidth - 36)) + 'px');
+    };
+
+    const beiGroesse = (): void => {
+      if (!workspace.isConnected) { window.removeEventListener('resize', beiGroesse); return; }
+      hoeheSetzen(); passen();
+    };
+    window.addEventListener('resize', beiGroesse, { passive: true });
+
     requestAnimationFrame(() => {
+      hoeheSetzen();
+      passen();
       thumbnails.querySelector<HTMLElement>('.document-thumbnail.is-selected')
         ?.scrollIntoView({ block: 'nearest' });
       activateVisibleThumbnails(thumbnails);
@@ -416,7 +510,7 @@ const DocumentMode = (() => {
     });
     zoom.addEventListener('input', () => {
       state.zoom = Number(zoom.value) || 100;
-      stage.style.width = state.zoom + '%'; zoomLabel.textContent = state.zoom + ' %';
+      passen(); zoomLabel.textContent = state.zoom + ' %';
     });
     return true;
   };

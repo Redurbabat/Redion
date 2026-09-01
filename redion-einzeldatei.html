@@ -11269,7 +11269,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    Übersicht verwendet kleine vorhandene Vorschaubilder; Inhalte werden
    weder kopiert noch in einem zweiten Dokumentmodell gespeichert. */
 .document-page{max-width:none!important; padding-inline:12px!important}
-.document-workspace{height:calc(100vh - 150px); min-height:520px; display:flex;
+.document-workspace{height:calc(100vh - 96px); min-height:320px; display:flex;
   flex-direction:column; overflow:hidden; border:1px solid var(--border);
   border-radius:12px; background:var(--bg); box-shadow:var(--shadow-sm)}
 .document-topbar{min-height:48px; display:flex; align-items:center; gap:6px;
@@ -11278,15 +11278,50 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   min-height:36px; border:1px solid var(--border); border-radius:8px;
   background:var(--bg); color:var(--text); cursor:pointer}
 .document-topbar button{padding:6px 10px}.document-position{margin-left:4px;font-weight:650}
-.document-topbar input[type=range]{width:min(150px,18vw); margin-left:auto}
+/* E296 · DER TITEL STEHT IN DER KOPFZEILE, weil der Seitenkopf darueber
+   weggefallen ist. Er nimmt den freien Platz (und schiebt damit Zoom,
+   Inspector und Ausgang nach rechts, wofuer vorher `margin-left:auto` am
+   Regler stand), kuerzt mit drei Punkten statt die Zeile zu sprengen, und
+   der ganze Name steht in der Sprechblase. */
+.document-title{flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis;
+  white-space:nowrap; padding-inline:12px; font-weight:650; color:var(--text)}
+.document-locked{flex:none; padding:3px 8px; border-radius:999px; font-size:12px;
+  background:var(--bg-hover); color:var(--text-dim); white-space:nowrap}
+.document-topbar input[type=range]{width:min(150px,18vw)}
 .document-zoom-label{min-width:48px;color:var(--text-dim);font-size:12px}
-.document-body{min-height:0; flex:1; display:grid; grid-template-columns:190px minmax(0,1fr) 280px}
-.document-thumbnails,.document-inspector{min-width:0; overflow:auto; background:var(--bg-card)}
+/* E296 · DIE GRUNDSTELLUNG IST EINE SPALTE.
+   Vorher: `190px minmax(0,1fr) 280px`, fest, bei jeder Breite ueber 1100 px.
+   Der Seite blieben auf einem 1440er Bildschirm rund 900 Pixel, obwohl die
+   Miniaturen und der Inspector meistens nichts zu sagen hatten — beim frisch
+   eingelesenen PDF ist die Verknuepfungsliste leer.
+   Jetzt sagt der Kasten selbst, welche Spalten es gerade gibt; `document-mode
+   .ts` haengt `with-thumbnails`/`with-inspector` an, wenn sie offen sind. */
+.document-body{min-height:0; flex:1; display:grid; grid-template-columns:0 minmax(0,1fr) 0}
+.document-body.with-thumbnails{grid-template-columns:200px minmax(0,1fr) 0}
+.document-body.with-inspector{grid-template-columns:0 minmax(0,1fr) 300px}
+.document-body.with-thumbnails.with-inspector{grid-template-columns:200px minmax(0,1fr) 300px}
+.document-thumbnails,.document-inspector{display:none; min-width:0; overflow:auto;
+  background:var(--bg-card)}
+.document-thumbnails.is-open,.document-inspector.is-open{display:block}
+/* JEDES TEIL NENNT SEINE SPALTE, statt sich auf die Reihenfolge zu verlassen.
+   Ohne diese drei Zeilen sass die Mitte in der NULL BREITEN ERSTEN Spalte:
+   `display:none` nimmt ein Element aus dem Rasterfluss, und was danach kommt,
+   rutscht eine Spalte nach vorn. Gemessen auf 1440 px: die mittlere Spalte
+   war 1360 px breit, `.document-center` darin 36 — die reinen Innenabstaende.
+   Auf dem Bildschirm war die PDF-Seite auf 360 px gequetscht und die
+   Zeichenleiste 620 px hoch umgebrochen. Kein Prueflauf hatte das; das Bild
+   hatte es sofort (§55.1). */
+.document-thumbnails{grid-column:1}
+.document-center{grid-column:2}
+.document-inspector{grid-column:3}
 .document-thumbnails{padding:8px; border-right:1px solid var(--border)}
 .document-inspector{padding:10px; border-left:1px solid var(--border)}
 .document-panel-header,.document-inspector-heading{display:flex; align-items:center;
   justify-content:space-between; gap:8px; margin-bottom:8px}
-.document-panel-header button,.document-inspector-heading button{display:none;width:36px;padding:0}
+/* Der Schliessknopf war am Rechner ausgeblendet, weil die Spalten dort
+   dauerhaft standen und es nichts zu schliessen gab. Jetzt holt man sie —
+   und muss sie auch wieder weglegen koennen (§47). */
+.document-panel-header button,.document-inspector-heading button{display:block;width:36px;padding:0}
 .document-thumbnail{width:100%; display:flex; flex-direction:column; gap:4px; padding:7px;
   margin-bottom:8px; border:1px solid transparent; border-radius:9px; background:transparent;
   color:var(--text); text-align:left; cursor:pointer}
@@ -11297,6 +11332,20 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .document-thumbnail-blank{color:#444;font-size:28px}.document-thumbnail-label{font-size:12px}
 .document-center{min-width:0; overflow:auto; padding:18px; background:var(--bg-subtle,var(--bg-hover))}
 .document-stage{min-width:360px; max-width:none; margin:0 auto; transform-origin:top center}
+/* E296 · DIE ZEICHENLEISTE BLEIBT OBEN STEHEN, wie in GoodNotes. Sie gehoert
+   zum Blatt und rollte mit ihm weg: wer unten auf einer A4-Seite schrieb,
+   musste zum Wechsel der Farbe erst wieder ganz nach oben. Nur im
+   Dokumentmodus — auf einer gewoehnlichen Seite stehen mehrere Blaetter
+   untereinander, und drei klebende Leisten waeren schlimmer als keine. */
+.document-page .document-stage>.blatt-huelle>.blatt-reihe{
+  position:sticky; top:0; z-index:6; background:var(--bg-card);
+  border-radius:0 0 10px 10px; box-shadow:0 3px 10px rgba(0,0,0,.14)}
+/* Und das Blatt selbst bekommt sein Passmass — `--doc-blatt` rechnet
+   `document-mode.ts` aus der verfuegbaren HOEHE und dem Seitenverhaeltnis,
+   damit die ganze Seite ins Bild passt statt ein Drittel davon. */
+.document-page .document-stage{width:100%}
+.document-page .document-stage>.blatt-huelle>.blatt-papier{
+  width:var(--doc-blatt, 100%); margin-inline:auto}
 .document-stage>.blatt-huelle,.document-stage>.blk{margin-inline:auto}
 .document-inspector-source{font-size:13px;color:var(--text-dim);margin-bottom:10px}
 .document-inspector-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px}
@@ -11311,11 +11360,15 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   pointer-events:none}
 
 @media (max-width:1100px){
-  .document-body{grid-template-columns:170px minmax(0,1fr)}
-  .document-inspector{display:none;position:fixed;z-index:95;right:12px;top:82px;bottom:12px;
+  /* Schmaler Bildschirm: die Miniaturen schieben weiter, der Inspector legt
+     sich darueber — sonst blieben dem Dokument keine 500 px. Die Spalte des
+     Inspectors muss dann 0 sein, sonst stuende sie leer im Raster. */
+  .document-body.with-thumbnails,
+  .document-body.with-thumbnails.with-inspector{grid-template-columns:170px minmax(0,1fr) 0}
+  .document-body.with-inspector{grid-template-columns:0 minmax(0,1fr) 0}
+  .document-inspector.is-open{position:fixed;z-index:95;right:12px;top:82px;bottom:12px;
     width:min(340px,calc(100vw - 24px));border:1px solid var(--border);border-radius:12px;
     box-shadow:var(--shadow-lg)}
-  .document-inspector.is-open{display:block}.document-inspector-heading button{display:block}
 }
 @media (max-width:760px){
   /* RANDLOS GILT FÜR DAS DOKUMENT, NICHT FÜR DEN KOPF DARÜBER.
@@ -11342,12 +11395,24 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   .document-page>.pg-tools{
     margin-inline:0;
     overflow-x:auto; overscroll-behavior-inline:contain; scrollbar-width:thin; }
-  .document-workspace{height:calc(100dvh - 116px);
-    min-height:420px;border-inline:0;border-radius:0}
+  .document-workspace{height:calc(100dvh - 62px);
+    min-height:320px;border-inline:0;border-radius:0}
   .document-topbar{min-height:52px;position:relative}.document-topbar button{min-width:44px;min-height:44px;padding:6px}
   .document-topbar button:last-child{font-size:0}.document-topbar button:last-child::after{content:'✕';font-size:18px}
   .document-topbar input[type=range]{display:none}.document-zoom-label{margin-left:auto;min-width:40px}
-  .document-position{font-size:12px;white-space:nowrap}.document-body{display:block}
+  .document-position{font-size:12px;white-space:nowrap;margin-right:auto}
+  /* ZWEI DINGE FALLEN AM TELEFON WEG, und beide aus einem gemessenen Grund.
+     Der TITEL, weil dort kein Platz fuer ihn ist: auf 390 px blieben ihm
+     rund dreissig Pixel, und er stand als „E." da — ein abgeschnittener Name
+     ist schlimmer als keiner (§55.2, derselbe Fehler wie die abgeschnittene
+     Zahl beim Tabellenblock). Er steht ohnehin unmittelbar darueber im Pfad.
+     Das ZOOM-LABEL, weil der Regler dazu am Telefon ausgeblendet ist: eine
+     Prozentzahl neben einem Regler, den es nicht gibt, ist eine Anzeige ohne
+     Griff (§47). */
+  .document-title{display:none}
+  .document-zoom-label{display:none}
+  .document-body,.document-body.with-thumbnails,.document-body.with-inspector,
+  .document-body.with-thumbnails.with-inspector{display:block}
   .document-center{height:100%;padding:10px}.document-stage{min-width:280px}
   .document-thumbnails{display:none;position:fixed;z-index:96;left:0;right:0;bottom:0;
     max-height:68dvh;padding:12px 14px calc(14px + env(safe-area-inset-bottom));
@@ -42459,6 +42524,26 @@ const PdfEinlesen = (() => {
             }
             if (melder && melder.remove)
                 melder.remove();
+            /* UND DANN GEHT DIE PDF AUCH ALS DOKUMENT AUF (E296).
+               Bisher landeten die Seitenbloecke in der laufenden Notizseite:
+               zwischen Text und Werkzeugzeile, in Spaltenbreite, unter einem
+               Seitenkopf, der ein Drittel des Bildes nahm. Wer eine Vorlesungs-PDF
+               einliest, will sie lesen — nicht einen Absatz darin.
+      
+               ZWEI BEDINGUNGEN, UND BEIDE SIND WICHTIG:
+      
+               `bis > 0` — ohne Seiten gaebe es nichts zu zeigen, und der
+               Dokumentmodus liesse sich gar nicht einschalten (`available()`
+               zaehlt die Dokumentbloecke).
+      
+               `dokumentModus === undefined` — nur beim ERSTEN Mal. Wer den Modus
+               schon einmal verlassen hat, steht danach auf `false`, und ein
+               zweites Einlesen holt ihn nicht zurueck. Eine Ansicht, die sich
+               gegen die Entscheidung des Nutzers wieder einschaltet, ist keine
+               Hilfe (§47). */
+            const zielSeite = typeof Links !== 'undefined' ? Links.seiteVon(elternId) : null;
+            if (bis > 0 && zielSeite && zielSeite.dokumentModus === undefined)
+                Store.updateBlock(zielSeite.id, { dokumentModus: true });
             App.zeichneSeite();
             UI.toast(bis + ' von ' + gesamt + ' Seiten aus „' + datei.name + '" vorbereitet');
             return { seiten: bis, gesamt, quelle, bloecke: gemacht };
@@ -50703,9 +50788,11 @@ const DocumentMode = (() => {
         const known = states.get(pageId);
         if (known)
             return known;
-        const kompakt = typeof window !== 'undefined' && typeof window.matchMedia === 'function' &&
-            window.matchMedia('(max-width: 1100px)').matches;
-        const created = { index: 0, zoom: 100, thumbnailsOpen: false, inspectorOpen: !kompakt };
+        /* BEIDE SEITENSPALTEN SIND ZU, AUCH AM RECHNER (E296). Der Inspector
+           stand dort bisher offen, weil Platz da war — 280 px, dauerhaft, fuer
+           eine Liste, die bei einem frisch eingelesenen PDF leer ist. Wer sie
+           braucht, holt sie mit `ⓘ`; wer liest, liest. */
+        const created = { index: 0, zoom: 100, thumbnailsOpen: false, inspectorOpen: false };
         states.set(pageId, created);
         return created;
     };
@@ -51033,9 +51120,37 @@ const DocumentMode = (() => {
         const zoomLabel = document.createElement('span');
         zoomLabel.className = 'document-zoom-label';
         zoomLabel.textContent = state.zoom + ' %';
-        top.append(position, zoom, zoomLabel, topButton('inspector', 'ⓘ', 'Notizen und Verknüpfungen öffnen'), topButton('exit', 'Normale Seite', 'Dokumentmodus verlassen'));
+        /* DER TITEL STEHT JETZT HIER (E296). Der grosse Seitenkopf faellt im
+           Dokumentmodus weg; ohne diese Zeile hiesse das offene Dokument
+           nirgends mehr beim Namen. `textContent`, nicht `innerHTML` — der Titel
+           ist Nutzertext (§19). */
+        const titel = document.createElement('div');
+        titel.className = 'document-title';
+        titel.textContent = page.text || 'Ohne Titel';
+        titel.title = page.text || 'Ohne Titel';
+        top.append(position, titel);
+        /* UND DER EINE HINWEIS AUS DEM KOPF, DER HIER WEITER GILT. Eine gegen
+           Bearbeiten gesperrte Seite sagte das oben in einer eigenen Zeile. Die
+           ist mit dem Kopf weg — das Schloss bleibt, mit Wort statt nur Zeichen
+           (§38) und mit dem Weg zurueck in der Sprechblase. */
+        if (page.gesperrt) {
+            const schloss = document.createElement('span');
+            schloss.className = 'document-locked';
+            schloss.textContent = '🔏 Gesperrt';
+            schloss.title = 'Diese Seite ist gegen Bearbeiten gesperrt. ' +
+                'Über „Normale Seite" lässt sie sich wieder freigeben.';
+            top.append(schloss);
+        }
+        top.append(zoom, zoomLabel, topButton('inspector', 'ⓘ', 'Notizen und Verknüpfungen öffnen'), topButton('exit', 'Normale Seite', 'Dokumentmodus verlassen'));
+        /* WELCHE SPALTEN ES GIBT, STEHT AM KASTEN (E296). Vorher war das Raster
+           fest — 190 px links, 280 px rechts, bei jeder Fensterbreite ueber
+           1100 px. Auf 1440 px blieben der Seite damit rund 900, obwohl beide
+           Spalten meistens nichts zu sagen hatten. Grundstellung ist jetzt eine
+           einzige Spalte; jede Seitenspalte kommt, wenn sie geoeffnet wird. */
         const body = document.createElement('div');
-        body.className = 'document-body';
+        body.className = 'document-body' +
+            (state.thumbnailsOpen ? ' with-thumbnails' : '') +
+            (state.inspectorOpen ? ' with-inspector' : '');
         const thumbnails = document.createElement('aside');
         thumbnails.className = 'document-thumbnails' + (state.thumbnailsOpen ? ' is-open' : '');
         const thumbHeader = document.createElement('div');
@@ -51050,7 +51165,6 @@ const DocumentMode = (() => {
         center.className = 'document-center';
         const stage = document.createElement('div');
         stage.className = 'document-stage';
-        stage.style.width = state.zoom + '%';
         renderDocument(stage, current);
         center.appendChild(stage);
         const inspector = document.createElement('aside');
@@ -51059,7 +51173,73 @@ const DocumentMode = (() => {
         body.append(thumbnails, center, inspector);
         workspace.append(top, body);
         wrap.appendChild(workspace);
+        /* DIE HOEHE MISST SICH SELBST (E296). In der CSS stand `calc(100vh -
+           150px)`; die 150 waren der Seitenkopf plus die Leisten darueber. Der
+           Kopf ist weg, also waere jede feste Zahl ab jetzt eine andere Luecke —
+           und sie waere auch vorher schon falsch gewesen, sobald das Menueband
+           einmal umbricht. Der Arbeitsraum fragt stattdessen, wo er anfaengt,
+           und hoert zwoelf Pixel ueber dem unteren Fensterrand auf.
+    
+           In Pixeln statt in `vh`: `100vh` meint am Telefon das Fenster MIT der
+           Adresszeile, `window.innerHeight` das ohne — und genau das ist die
+           Zahl, die zaehlt. Ein `resize` bringt beides wieder zusammen. */
+        const hoeheSetzen = () => {
+            if (!workspace.isConnected)
+                return;
+            const oben = Math.round(workspace.getBoundingClientRect().top);
+            if (oben < 0 || oben >= window.innerHeight)
+                return;
+            workspace.style.height = Math.max(240, window.innerHeight - oben - 12) + 'px';
+        };
+        /* DIE GANZE SEITE PASST INS BILD (E296) — das ist bei GoodNotes die
+           Grundstellung, und es ist die Frage, die eine Dokumentansicht
+           beantworten muss: sehe ich ein Blatt oder ein Drittel davon.
+    
+           Vorher stand hier `stage.style.width = zoom + '%'`. Prozent WOVON —
+           von der Breite der Mitte. Seit die Mitte nicht mehr 900, sondern 1360
+           Pixel breit ist, waere eine A4-Seite bei 100 % gut 1900 Pixel hoch
+           geworden: in einem 750 Pixel hohen Kasten sieht man davon ein Drittel.
+    
+           Also wird ab der HOEHE gerechnet und das Seitenverhaeltnis gibt die
+           Breite. Der Zoom bleibt genau das, was er war — ein Faktor auf die
+           Ansicht; `bw`/`bh` des Blocks werden nicht angefasst. Die Leiste zaehlt
+           mit, weil sie im Fluss ueber dem Papier steht (auch als klebende). */
+        const passen = () => {
+            if (!workspace.isConnected)
+                return;
+            const bw = Number(current.bw) || Number(current.blattBreite) || SheetSpace.A4_BREITE;
+            const bh = Number(current.bh) || Number(current.blattHoehe) || SheetSpace.A4_HOEHE;
+            if (!(bw > 0) || !(bh > 0))
+                return;
+            const raum = center.clientHeight;
+            const leiste = stage.querySelector('.blatt-reihe')?.offsetHeight || 0;
+            if (raum < 80)
+                return;
+            const hoch = Math.max(200, raum - leiste - 56);
+            const breit = Math.round(hoch * (bw / bh) * (state.zoom / 100));
+            /* DAS MASS GEHT ANS PAPIER, NICHT AN DIE BUEHNE. Die Zeichenleiste
+               gehoert zum Blatt und steht in derselben Huelle; haette die Buehne
+               das Passmass, waere die Leiste so schmal wie die Seite — gemessen:
+               21 Werkzeuge in 447 px ergaben eine 332 px HOHE Leiste, die mehr
+               Platz nahm als das Papier darunter. Die Buehne bleibt also breit,
+               die Leiste passt in eine Zeile, und nur das Papier wird gestellt.
+               Die Zeichenschicht haengt IM Papier (E100) und geht in Blattmassen
+               statt in Pixeln — sie folgt von selbst mit. */
+            stage.style.width = '100%';
+            stage.style.setProperty('--doc-blatt', Math.max(120, Math.min(breit, center.clientWidth - 36)) + 'px');
+        };
+        const beiGroesse = () => {
+            if (!workspace.isConnected) {
+                window.removeEventListener('resize', beiGroesse);
+                return;
+            }
+            hoeheSetzen();
+            passen();
+        };
+        window.addEventListener('resize', beiGroesse, { passive: true });
         requestAnimationFrame(() => {
+            hoeheSetzen();
+            passen();
             thumbnails.querySelector('.document-thumbnail.is-selected')
                 ?.scrollIntoView({ block: 'nearest' });
             activateVisibleThumbnails(thumbnails);
@@ -51134,7 +51314,7 @@ const DocumentMode = (() => {
         });
         zoom.addEventListener('input', () => {
             state.zoom = Number(zoom.value) || 100;
-            stage.style.width = state.zoom + '%';
+            passen();
             zoomLabel.textContent = state.zoom + ' %';
         });
         return true;
@@ -122942,7 +123122,23 @@ const App = (() => {
             return;
         }
         if (DocumentMode.active(p)) {
+            /* DAS DOKUMENT IST DIE SEITE, NICHT EIN KASTEN AUF DER SEITE (E296).
+               Bis hierher stand ueber dem Arbeitsraum noch der ganze Seitenkopf:
+               Cover, das grosse Symbol, der Titel in Ueberschriftsgroesse und die
+               Werkzeugzeile „Cover · Volle Breite · Dokumentmodus". Auf 1440x900
+               gemessen frass das die oberen 380 der 900 Pixel — die PDF-Seite
+               bekam, was uebrig blieb, und darunter standen dann noch ZWEI
+               Werkzeugleisten uebereinander.
+      
+               Der Kopf wird trotzdem erst gezeichnet und dann weggeraeumt, denn an
+               ihm haengen zwei Dinge, die auch hier gelten: der Sperrbildschirm
+               einer verschluesselten Seite (er gibt `false` zurueck, dann sind wir
+               eine Zeile darueber schon heraus) und der Fenstertitel. Verloren
+               geht dabei nichts, was man braucht — der Titel steht ab jetzt in der
+               Kopfzeile des Dokuments, und der Hinweis auf eine gegen Bearbeiten
+               gesperrte Seite ebenso. */
             wrap.className = 'wide document-page';
+            wrap.innerHTML = '';
             DocumentMode.render(wrap, p);
         }
         else {

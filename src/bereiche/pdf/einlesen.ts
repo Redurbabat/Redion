@@ -245,6 +245,28 @@ const PdfEinlesen = (() => {
       }
 
       if (melder && melder.remove) melder.remove();
+
+      /* UND DANN GEHT DIE PDF AUCH ALS DOKUMENT AUF (E296).
+         Bisher landeten die Seitenbloecke in der laufenden Notizseite:
+         zwischen Text und Werkzeugzeile, in Spaltenbreite, unter einem
+         Seitenkopf, der ein Drittel des Bildes nahm. Wer eine Vorlesungs-PDF
+         einliest, will sie lesen — nicht einen Absatz darin.
+
+         ZWEI BEDINGUNGEN, UND BEIDE SIND WICHTIG:
+
+         `bis > 0` — ohne Seiten gaebe es nichts zu zeigen, und der
+         Dokumentmodus liesse sich gar nicht einschalten (`available()`
+         zaehlt die Dokumentbloecke).
+
+         `dokumentModus === undefined` — nur beim ERSTEN Mal. Wer den Modus
+         schon einmal verlassen hat, steht danach auf `false`, und ein
+         zweites Einlesen holt ihn nicht zurueck. Eine Ansicht, die sich
+         gegen die Entscheidung des Nutzers wieder einschaltet, ist keine
+         Hilfe (§47). */
+      const zielSeite = typeof Links !== 'undefined' ? Links.seiteVon(elternId) : null;
+      if (bis > 0 && zielSeite && zielSeite.dokumentModus === undefined)
+        Store.updateBlock(zielSeite.id, { dokumentModus: true });
+
       App.zeichneSeite();
       UI.toast(bis + ' von ' + gesamt + ' Seiten aus „' + datei.name + '" vorbereitet');
       return { seiten: bis, gesamt, quelle, bloecke: gemacht };

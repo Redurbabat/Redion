@@ -22021,3 +22021,98 @@ E290 stand dort ein einziger Wochentag, und dass der Abschnitt von rot auf
 grün gekippt ist, ist sein eigener Beleg (§55.2). §9 zeigt beide
 Richtungen des Hinweises. §10 hält den 31. Februar fest. typecheck grün ·
 sw v56.
+
+
+================================================================================
+E296 — Das Dokument ist die Seite, nicht ein Kasten auf der Seite
+================================================================================
+1. September 2026
+
+Redurs Satz war: „Ich will das die PDF nicht im Bereich sich öffnet, es
+sollte so wie GoodNotes die PDF öffnen."
+
+WAS IM BILD STAND. Nachgesehen statt geraten (§55.1), auf 1440×900:
+
+  · Über dem Arbeitsraum stand der ganze Seitenkopf — ein Symbol in
+    Emoji-Größe, der Titel als Überschrift, die Werkzeugzeile „Cover ·
+    Volle Breite · Dokumentmodus". Das nahm die oberen 380 der 900 Pixel.
+  · Darunter lag ein FESTES Dreispaltenraster: `190px minmax(0,1fr) 280px`,
+    bei jeder Fensterbreite über 1100 px. Die Miniaturen und der Inspector
+    standen auch dann, wenn sie nichts zu sagen hatten — bei einer frisch
+    eingelesenen PDF ist die Verknüpfungsliste leer.
+  · Und die Bühne war `width: <zoom>%` der Mittelbreite. Bei 100 % wäre
+    eine A4-Seite so hoch geworden wie die Mitte breit ist: gut 1900 Pixel
+    in einem 748 Pixel hohen Kasten. Man sah ein Drittel einer Seite.
+  · Zwei Werkzeugleisten übereinander: die des Seitenkopfs und die des
+    Blattes.
+
+WAS SICH ÄNDERT — fünf Dinge, und jedes hat seinen eigenen Grund.
+
+1 · KEIN SEITENKOPF im Dokumentmodus. `schale.ts` zeichnet ihn weiter und
+räumt ihn dann weg, denn an ihm hängen zwei Dinge, die auch hier gelten:
+der Sperrbildschirm einer verschlüsselten Seite (`Kopfleiste.zeichne` gibt
+dafür `false` zurück) und der Fenstertitel. Verloren geht nichts: der Name
+steht ab jetzt in der Kopfzeile des Dokuments, und der Hinweis auf eine
+gegen Bearbeiten gesperrte Seite als Schloss daneben — mit Wort, nicht nur
+als Zeichen (§38), und mit dem Weg zurück in der Sprechblase.
+
+2 · EINE SPALTE als Grundstellung. Der Kasten sagt selbst, welche Spalten
+es gerade gibt: `document-mode.ts` hängt `with-thumbnails`/`with-inspector`
+an, wenn sie offen sind. Beide sind zu, auch am Rechner — der Inspector
+stand dort bisher offen, weil Platz da war. Dazu wird der Schließknopf in
+den Panels sichtbar; er war am Rechner ausgeblendet, weil es dort nichts zu
+schließen gab (§47).
+
+3 · DIE GANZE SEITE PASST INS BILD. Gerechnet wird ab der verfügbaren HÖHE,
+das Seitenverhältnis gibt die Breite. Der Zoom bleibt genau das, was er war
+— ein Faktor auf die Ansicht; `bw`/`bh` des Blocks werden nicht angefasst.
+
+4 · DIE HÖHE MISST SICH SELBST. In der CSS stand `calc(100vh - 150px)`; die
+150 waren der Seitenkopf plus die Leisten darüber. Der Kopf ist weg, also
+wäre jede feste Zahl ab jetzt eine andere Lücke — und sie wäre auch vorher
+falsch geworden, sobald das Menüband einmal umbricht. Gerechnet wird in
+Pixeln statt in `vh`: `100vh` meint am Telefon das Fenster MIT der
+Adresszeile, `window.innerHeight` das ohne, und das ist die Zahl, die zählt.
+
+5 · EINE FRISCH EINGELESENE PDF ÖFFNET ALS DOKUMENT. Nur beim ersten Mal:
+`dokumentModus === undefined`. Wer den Modus einmal verlassen hat, steht
+auf `false`, und ein zweites Einlesen holt ihn nicht zurück. Eine Ansicht,
+die sich gegen die Entscheidung des Nutzers wieder einschaltet, ist keine
+Hilfe (§47).
+
+WAS DAS HINSEHEN GEFUNDEN HAT, UND KEIN PRÜFLAUF HÄTTE.
+
+Drei Fehler, alle erst im Bild sichtbar:
+
+  · `display:none` NIMMT EIN ELEMENT AUS DEM RASTERFLUSS. Mit den zwei
+    zugeklappten Panels rutschte die Mitte in die null Pixel breite ERSTE
+    Spalte. Gemessen: die mittlere Spalte 1360 px, `.document-center` darin
+    36 — die reinen Innenabstände. Auf dem Bildschirm war die PDF-Seite auf
+    360 px gequetscht und die Zeichenleiste 620 px hoch umgebrochen.
+    Die Reparatur sind drei Zeilen: jedes Teil nennt seine `grid-column`.
+  · DAS PASSMASS GEHÖRT ANS PAPIER, NICHT AN DIE BÜHNE. Die Zeichenleiste
+    steht in derselben Hülle wie das Blatt; mit dem Passmaß an der Bühne
+    wurde sie so schmal wie die Seite — 21 Werkzeuge in 447 px ergaben eine
+    332 px HOHE Leiste, die mehr Platz nahm als das Papier darunter.
+  · AM TELEFON STAND DER TITEL ALS „E." DA. Auf 390 px blieben ihm rund
+    dreißig Pixel. Ein abgeschnittener Name ist schlimmer als keiner —
+    derselbe Fehler wie die abgeschnittene Zahl beim Tabellenblock, wo aus
+    634,2166666667 eine gültig aussehende 34,2166666667 wurde. Er steht
+    ohnehin eine Zeile darüber im Pfad, also entfällt er dort. Dabei fiel
+    ein zweiter auf: das Zoom-Label „100 %" stand am Telefon neben einem
+    Regler, den es dort gar nicht gibt (§47).
+
+Dateien: `src/schale/aufbau/schale.ts`, `src/bereiche/pdf/document-mode.ts`,
+`src/bereiche/pdf/einlesen.ts`, `quell/schale/stil/bausteine.css`.
+
+Prüfung: `pruefungen/lauf/test285.mts`, 43 Punkte. Jeder Abschnitt hat
+seine Gegenprobe, und §55.2 ist überall mitgedacht: §2 belegt mit dem Zoom
+auf 180 %, dass die Rollmessung überhaupt anschlagen KANN; §3 verkleinert
+das Fenster und misst erneut; §5 prüft, dass der Modus nach dem Verlassen
+NICHT wiederkommt; §6 zeigt, dass das Schloss bei einer gewöhnlichen Seite
+schweigt. Mitgezogen: test202 (Zoom misst jetzt das Papier in Pixeln),
+test210 §1 (die alte Behauptung „drei Bereiche nebeneinander" ist zur
+Behauptung „der Platz gehört dem Dokument" geworden, mit dem Öffnen als
+zweitem Arm) und test221 §5 (kein Kopf im Dokumentmodus — und die alte
+Randmessung dort, wo es noch einen Kopf gibt). typecheck grün · sw v57 ·
+Einzeldatei neu gebaut.

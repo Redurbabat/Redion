@@ -879,7 +879,23 @@ const App = (() => {
             return;
         }
         if (DocumentMode.active(p)) {
+            /* DAS DOKUMENT IST DIE SEITE, NICHT EIN KASTEN AUF DER SEITE (E296).
+               Bis hierher stand ueber dem Arbeitsraum noch der ganze Seitenkopf:
+               Cover, das grosse Symbol, der Titel in Ueberschriftsgroesse und die
+               Werkzeugzeile „Cover · Volle Breite · Dokumentmodus". Auf 1440x900
+               gemessen frass das die oberen 380 der 900 Pixel — die PDF-Seite
+               bekam, was uebrig blieb, und darunter standen dann noch ZWEI
+               Werkzeugleisten uebereinander.
+      
+               Der Kopf wird trotzdem erst gezeichnet und dann weggeraeumt, denn an
+               ihm haengen zwei Dinge, die auch hier gelten: der Sperrbildschirm
+               einer verschluesselten Seite (er gibt `false` zurueck, dann sind wir
+               eine Zeile darueber schon heraus) und der Fenstertitel. Verloren
+               geht dabei nichts, was man braucht — der Titel steht ab jetzt in der
+               Kopfzeile des Dokuments, und der Hinweis auf eine gegen Bearbeiten
+               gesperrte Seite ebenso. */
             wrap.className = 'wide document-page';
+            wrap.innerHTML = '';
             DocumentMode.render(wrap, p);
         }
         else {

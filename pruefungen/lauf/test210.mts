@@ -83,12 +83,31 @@ const AUFBAU = `(async () => {
 })()`;
 
 /* ==========================================================================
- * §1 · Am Rechner stehen die drei Bereiche nebeneinander
+ * §1 · Am Rechner gehoert der Platz dem Dokument (E296)
  * --------------------------------------------------------------------------
- * Gegenprobe: mit `dokumentModus` auf `false` gibt es weder Miniaturen noch
- * Inspector — gemessen 0 und 0, und die drei ersten Punkte fallen.
+ * DIESER ABSCHNITT HAT SEINE BEHAUPTUNG GEWECHSELT, und das ist der Punkt.
+ *
+ * Bis E296 stand hier „am Rechner stehen die drei Bereiche nebeneinander":
+ * 190 px Miniaturen, das Dokument, 280 px Inspector — fest, bei jeder Breite
+ * ueber 1100 px. Auf einem 1440er Bildschirm bekam die PDF-Seite damit rund
+ * 900 Pixel, und darueber stand noch der ganze Seitenkopf.
+ *
+ * Redurs Satz dazu war „die PDF soll sich nicht im Bereich oeffnen, sondern
+ * wie GoodNotes". Also misst dieser Abschnitt jetzt zwei Dinge:
+ *
+ *   1. In der Grundstellung ist der Kasten EINE Spalte, und das Dokument
+ *      bekommt fast das ganze Fenster. Ueber ihm steht kein Seitenkopf mehr.
+ *   2. Beide Spalten sind trotzdem da — auf Zuruf, und dann an der
+ *      richtigen Seite. Zugeklappt ist nur richtig, wenn man sie
+ *      wiederbekommt (dieselbe Regel wie am Telefon in §3).
+ *
+ * §55.2 — KANN DAS ROT WERDEN? Beides war vor E296 rot: (1) fiel, weil die
+ * Mitte nur 900 von 1440 px hatte und `#page` vier Kopfteile trug; (2) haette
+ * nichts zu oeffnen gehabt, weil beide Spalten schon offen standen. Die
+ * Punkte 3 und 4 der alten Fassung stehen unveraendert weiter unten — sie
+ * pruefen dieselbe Anordnung, nur nach dem Oeffnen.
  * ========================================================================*/
-console.log('\n1 · Am Rechner stehen die drei Bereiche nebeneinander');
+console.log('\n1 · Am Rechner gehört der Platz dem Dokument');
 
 const pc = await browser.newPage({ viewport: { width: 1440, height: 950 } });
 pc.on('pageerror', e => fehler.push('PAGEERROR (Rechner): ' + e.message.slice(0, 140)));
@@ -97,15 +116,56 @@ await pc.waitForTimeout(2700);
 await pc.evaluate(AUFBAU);
 await pc.waitForTimeout(400);
 
-const raum = await pc.evaluate(() => {
-  const kasten = (wahl: string) => {
-    const el = document.querySelector(wahl) as HTMLElement | null;
-    if (!el) return null;
-    const r = el.getBoundingClientRect();
-    return { links: Math.round(r.left), rechts: Math.round(r.right), breit: Math.round(r.width) };
-  };
+const kastenLeser = `(wahl) => {
+  const el = document.querySelector(wahl);
+  if (!el) return null;
+  const r = el.getBoundingClientRect();
+  return { links: Math.round(r.left), rechts: Math.round(r.right), breit: Math.round(r.width) };
+}`;
+
+const zu = await pc.evaluate(`(() => {
+  const kasten = ${kastenLeser};
+  const seite = document.getElementById('page');
   return {
     arbeitsraum: !!document.querySelector('.document-workspace'),
+    kinder: [...(seite?.children || [])].map(el => el.id || String(el.className).split(' ')[0]),
+    miniaturen: document.querySelectorAll('.document-thumbnail').length,
+    miniSichtbar: (document.querySelector('.document-thumbnail')?.getBoundingClientRect().width || 0) > 4,
+    inspektorSichtbar: (document.querySelector('.document-inspector-heading')?.getBoundingClientRect().width || 0) > 4,
+    mitte: kasten('.document-center'),
+    raum: kasten('.document-workspace'),
+    titel: (document.querySelector('.document-title')?.textContent || '').trim(),
+    fenster: window.innerWidth
+  };
+})()`) as any;
+
+p('Der Arbeitsraum steht', zu.arbeitsraum);
+gleich('Über dem Dokument steht nichts mehr — nur der Arbeitsraum',
+  zu.kinder, ['document-workspace']);
+gleich('Vier Miniaturen sind angelegt, eine je Seite', zu.miniaturen, 4);
+gleich('Aber keine liegt offen', zu.miniSichtbar, false);
+gleich('Und der Inspector auch nicht', zu.inspektorSichtbar, false);
+/* GEMESSEN WIRD GEGEN DEN ARBEITSRAUM, NICHT GEGEN DAS FENSTER. Links steht
+   die App-Schiene (66 px), aussen der Seitenrand — die gehoeren nicht dem
+   Dokument, und sie waren auch vorher nicht das Problem. Das Problem waren
+   die 190 + 280 Pixel Seitenspalten INNERHALB des Arbeitsraums: von 1360 px
+   blieben dem Dokument 890. Genau das misst diese Zeile. */
+p('Das Dokument bekommt dadurch den ganzen Arbeitsraum',
+  !!zu.mitte && !!zu.raum && zu.mitte.breit >= zu.raum.breit - 4,
+  `Mitte ${JSON.stringify(zu.mitte)} im Raum ${JSON.stringify(zu.raum)}`);
+p('Und heißt trotzdem beim Namen — der Titel steht in der Kopfzeile',
+  /Elektrotechnik/.test(zu.titel), zu.titel);
+
+/* Und jetzt beide holen. Der erste Knopf ist ☰, der vorletzte ⓘ — dieselbe
+   Zaehlung wie am Telefon in §3. */
+const raum = await pc.evaluate(`(async () => {
+  const kasten = ${kastenLeser};
+  const knopf = (wahl) => document.querySelector(wahl);
+  knopf('.document-topbar [data-document-action="thumbnails"]')?.click();
+  await new Promise(r => setTimeout(r, 400));
+  knopf('.document-topbar [data-document-action="inspector"]')?.click();
+  await new Promise(r => setTimeout(r, 400));
+  return {
     miniaturen: document.querySelectorAll('.document-thumbnail').length,
     mini: kasten('.document-thumbnail'),
     mitte: kasten('.document-center'),
@@ -114,10 +174,9 @@ const raum = await pc.evaluate(() => {
     zaehler: [...document.querySelectorAll('.document-inspector-summary')]
       .map(x => (x.textContent || '').replace(/\s+/g, ' ').trim()).join(' | ')
   };
-});
+})()`) as any;
 
-p('Der Arbeitsraum steht', raum.arbeitsraum);
-gleich('Vier Miniaturen, eine je Seite', raum.miniaturen, 4);
+gleich('Nach dem Öffnen sind die vier Miniaturen da', raum.miniaturen, 4);
 p('Die Miniaturen stehen links vom Dokument',
   !!raum.mini && !!raum.mitte && raum.mini.rechts <= raum.mitte.links + 2,
   `${JSON.stringify(raum.mini)} vs ${JSON.stringify(raum.mitte)}`);
