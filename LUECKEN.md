@@ -4351,7 +4351,17 @@ L106 — Was die Lern-Evidenz (E289) und der Kalender (E290) noch nicht können
    Wiederholungsregeln. Was Redion einliest, kann es nicht wieder ausgeben —
    der Rundlauf ist einseitig.
 
-   **BLEIBT OFFEN, aber mit klarerem Bild (E335).** Beim Nachmessen fiel
+   **GESCHLOSSEN am 1. September 2026 durch E338.** Die Regel liegt jetzt in
+   einer Spalte „Wiederholung" an der ERSTEN Folge, und der Export schreibt
+   sie als `RRULE` an den Kopf; eine gestrichene Folge wird zu `EXDATE`, eine
+   verschobene zu einem Ersatz mit `RECURRENCE-ID`. Gemessen: aus fünf
+   Stunden und einem Zahnarzt werden zwei Termine statt sechs, und nach dem
+   Zurücklesen steht derselbe Stundenplan da — die verlegte Stunde an ihrer
+   neuen Stelle, einmal und nicht zweimal. Dafür musste `RECURRENCE-ID` auch
+   GELESEN werden; das tat Redion bis dahin nicht, was nie auffiel, weil es
+   selbst nie eines schrieb. test330, 35 Punkte.
+
+   Der Weg dahin, unterwegs notiert (E335, E337): Beim Nachmessen fiel
    auf, dass die GEGENRICHTUNG kaputt war und nicht nur unvollständig —
    siehe E335 und L112. Für das Ausgeben selbst kam dabei heraus, warum es
    nicht die kleine Zeile ist, nach der es aussieht: eine Reihe korrekt

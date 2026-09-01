@@ -2595,3 +2595,19 @@ node pruefungen/lauf/test105.mjs
   Vortag. Der Abschnitt misst jetzt auf zwei Seiten.
   test329 neu (37), dreimal belegt rot. test327 30/30, test328 31/31,
   test284 49/49, test319 26/26.
+* E338 (L106 Punkt 8, GESCHLOSSEN): Der Rundlauf schliesst sich. Aus einem
+  wöchentlichen Stundenplan wurden beim Ausgeben vierzig Einzeltermine.
+  Fünf Zeilen mit demselben `RRULE` wären schlimmer gewesen als keins — der
+  Empfänger sähe fünf unendliche Reihen. Also wie ICS es vorsieht: der Kopf
+  mit `RRULE`, eine gestrichene Folge als `EXDATE`, eine verschobene als
+  Ersatz mit `RECURRENCE-ID`, alle übrigen gar nicht. Die Regel liegt in
+  einer neuen Spalte „Wiederholung" und NUR an der ersten Folge; an einer
+  alten Tabelle kommt die Spalte leer nach (§9 — eine Spalte nachtragen ist
+  das einzige, was hier gefahrlos geht). `RECURRENCE-ID` musste auch
+  GELESEN werden: ein Ersatz stand sonst doppelt da, einmal verlegt und
+  einmal aus der Regel. Und der dreimal wörtlich gleiche Ausroll-Schritt
+  heisst jetzt `ausrollenAlle`.
+  Damit bleiben von L106 zwei Punkte: 1 (Karteikarten sind die einzige
+  Quelle) und 5 (Zeitzonen, ausdrücklich so gewollt).
+  test330 neu (35), viermal belegt rot. test329 39/39 (§6 zog mit),
+  test327 30/30, test328 31/31, test284 49/49, test319 26/26.

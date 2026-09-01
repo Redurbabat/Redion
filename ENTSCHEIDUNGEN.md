@@ -25728,3 +25728,77 @@ test329 neu, 37 Punkte. Belegt rot dreimal: das Ende wieder wegwerfen
 kostet neun Punkte; den `DURATION`-Weg abschalten drei; ganztägig in
 Ortszeit rechnen zwei — und die nur auf der New-Yorker Seite.
 test327 30/30, test328 31/31, test284 49/49, test319 26/26.
+
+
+E338 — Der Rundlauf schliesst sich (L106 Punkt 8)
+════════════════════════════════════════════════════════════════════════════
+
+„`icsSchreiben` erzeugt keine Wiederholungsregeln. Was Redion einliest,
+kann es nicht wieder ausgeben — der Rundlauf ist einseitig."
+
+Aus einem wöchentlichen Stundenplan wurden beim Ausgeben vierzig
+Einzeltermine, und die Reihe war fort. Wer die Datei in seinen Kalender
+zog, bekam vierzig Einträge, die niemand mehr gemeinsam verschieben oder
+absagen kann.
+
+WARUM ES NICHT DIE EINE ZEILE IST, NACH DER ES AUSSIEHT
+
+Fünf Zeilen mit demselben `RRULE` auszugeben wäre schlimmer als gar keins:
+der Empfänger sähe fünf unendliche Reihen. Eine Reihe korrekt auszugeben
+heisst, den KOPF mit der Regel zu schreiben und die Folgen zu unterdrücken
+— ausser denen, die abweichen. Also so, wie ICS es vorsieht:
+
+    die erste Folge      VEVENT mit `RRULE`
+    eine verschobene     VEVENT mit `RECURRENCE-ID` (die URSPRÜNGLICHE Zeit)
+    eine gestrichene     `EXDATE` am Kopf
+    alle übrigen         gar nicht — sie stehen in der Regel
+
+Gemessen: aus fünf Stunden und einem Zahnarzt werden ZWEI Termine. Nach dem
+Verschieben einer Stunde und dem Streichen einer anderen sind es drei, mit
+einem `EXDATE` und einem `RECURRENCE-ID`.
+
+WO DIE REGEL LIEGT
+
+In einer neuen Spalte „Wiederholung", und NUR an der ersten Folge. Sie gilt
+für die ganze Reihe; an jeder Folge stünde fünfmal dieselbe Wahrheit, und
+beim Ausgeben wären es fünf Reihen statt einer.
+
+Roh und nicht als Satz, weil sie beim Ausgeben wieder gebraucht wird — der
+lesbare Satz entsteht daraus jederzeit neu. Das ist dieselbe Sorte Wert wie
+die Kennung, die schon als „Kennung" in der Tabelle steht.
+
+UND SIE KOMMT AN EINER ALTEN TABELLE NACH. Eine Spalte nachzutragen ist das
+einzige, was hier gefahrlos geht (§9): sie kommt leer dazu, keine vorhandene
+Zeile ändert sich, und wer sie nicht will, löscht sie wie jede andere. Eine
+Spalte UMzubenennen oder ihren Typ zu ändern wäre etwas ganz anderes — das
+wäre eine Datenmigration und bräuchte einen eigenen Bogen.
+
+DIE ANDERE RICHTUNG MUSSTE MIT
+
+`RECURRENCE-ID` wurde bis eben gar nicht gelesen. Ein Termin, der eine
+Folge ersetzt, kam damit als gewöhnlicher Termin herein und stand DOPPELT
+da: einmal verlegt und einmal an der alten Stelle aus der Regel. Das fiel
+nie auf, weil Redion selbst nie einen schrieb — bis heute.
+
+Belegt: nimmt man die eine Lesezeile heraus, meldet die Prüfung sechs
+Termine statt fünf und zeigt beide Stellen nebeneinander.
+
+UND DREIMAL DASSELBE WURDE EINMAL
+
+Der Schritt „Reihen ausrollen" stand dreimal wörtlich im Code — Abo holen,
+Datei einlesen, und einmal in der Prüfung. Mit dem Einsetzen der Ersätze
+kam ein zusätzlicher Handgriff dazu, und dreimal denselben zusätzlichen
+Handgriff einzutragen ist der Anfang davon, dass er an einer der drei
+Stellen fehlt. Heisst jetzt `ausrollenAlle`.
+
+WAS DAMIT ZU L106 GEHÖRT: Punkt 8 ist zu. Von den acht Punkten bleiben zwei
+— Punkt 1 (die Karteikarten sind die einzige Quelle für Können) und Punkt 5
+(keine Zeitzonen-Umrechnung, ausdrücklich so gewollt).
+
+test330 neu, 35 Punkte. Belegt rot viermal: die Reihen-Ausgabe ganz aus
+kostet acht Punkte, `EXDATE` aus vier, `RECURRENCE-ID` beim Schreiben
+sieben, beim Lesen vier — und die letzte zeigt die verlegte Stunde
+zweimal, an beiden Stellen.
+test329 39/39 (§6 zog mit: die Reihe geht jetzt als EIN Termin hinaus, und
+die Zusage wird schärfer gemessen als vorher). test327 30/30, test328 31/31,
+test284 49/49, test319 26/26.

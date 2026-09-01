@@ -261,30 +261,38 @@ p('Und keine davon hat ein Ende', ohne.every((x: any) => x.e === ''),
 /* ------------------------------------------------------------------------ */
 console.log('\n6 · Und der Export gibt die Dauer wieder heraus');
 
+/* SEIT E338 GEHT DIE REIHE ALS EINE HINAUS, mit `RRULE` statt fünfmal
+   dasselbe. Diese Prüfung mass vorher fünf `DTEND` und wurde davon rot —
+   zu Recht, denn das Erzeugnis hatte sich geändert. Die ZUSAGE ist
+   dieselbe geblieben und wird hier schärfer gemessen als vorher: nicht,
+   wie viele Endzeiten in der Datei stehen, sondern ob nach dem
+   Zurücklesen wieder fünf Stunden mit je 90 Minuten dastehen. */
 const rund = await pc.evaluate(async (ics: string) => {
   const K = (globalThis as any).Kalender;
-  const g = K.icsLesen(ics); const r: any[] = [];
-  g.termine.forEach((t: any) => K.wiederholungen(t).forEach((x: any) => r.push(x)));
+  const r = K.ausrollenAlle(K.icsLesen(ics).termine);
   const s = Store.addPage(null, { text: 'Rundlauf' });
   const coll = K.zielDatenbank(s.id, 'Termine rundlauf');
   K.uebernehmen(coll, r, 'Schule');
   const raus = K.icsSchreiben(coll, Store.getView(coll.viewIds[0]));
-  const zurueck = K.icsLesen(raus);
+  const zurueck = K.ausrollenAlle(K.icsLesen(raus).termine);
   return { vevents: (raus.match(/BEGIN:VEVENT/g) || []).length,
+           rrule: (raus.match(/^RRULE:/gm) || []).length,
            dtends: (raus.match(/^DTEND/gm) || []).length,
-           zurueck: zurueck.termine.map((t: any) => ({ s: t.start, e: t.ende })) };
+           zurueck: zurueck.map((x: any) => ({ s: x.start, e: x.ende })) };
 }, ['BEGIN:VCALENDAR', 'VERSION:2.0',
     'BEGIN:VEVENT', 'UID:m@s', 'SUMMARY:Mathematik',
     'DTSTART:20260907T080000Z', 'DTEND:20260907T093000Z',
     'RRULE:FREQ=WEEKLY;BYDAY=MO;COUNT=5', 'END:VEVENT',
     'END:VCALENDAR'].join('\r\n'));
 
-gleich('Fünf Termine gehen hinaus', rund.vevents, 5);
-/* VORHER WAR DAS NULL. Jede Stunde ging ohne Ende hinaus, und jeder
+gleich('Die Reihe geht als EIN Termin hinaus', rund.vevents, 1);
+gleich('Mit ihrer Regel', rund.rrule, 1);
+/* VORHER WAR DAS NULL. Der eine Termin ging ohne Ende hinaus, und jeder
    empfangende Kalender riet sich etwas zurecht. */
-gleich('Und jeder mit seinem Ende', rund.dtends, 5);
-p('Nach dem Zurücklesen dauert jede wieder 90 Minuten',
-  rund.zurueck.length === 5 && rund.zurueck.every((x: any) => x.e &&
+gleich('Und mit seinem Ende', rund.dtends, 1);
+gleich('Zurückgelesen sind es wieder fünf', rund.zurueck.length, 5);
+p('Und jede dauert wieder 90 Minuten',
+  rund.zurueck.every((x: any) => x.e &&
     new Date(x.e).getTime() - new Date(x.s).getTime() === 90 * 60000),
   JSON.stringify(rund.zurueck));
 

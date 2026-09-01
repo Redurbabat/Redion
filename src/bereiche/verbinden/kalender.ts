@@ -158,6 +158,13 @@ const Kalender = (() => {
         case 'DTSTART':      jetzt.start = icsZeit(inhalt, parameter);
                              jetzt.ganzerTag = jetzt.start.length === 10; break;
         case 'DTEND':        jetzt.ende = icsZeit(inhalt, parameter); break;
+        /* EIN TERMIN, DER EINE FOLGE ERSETZT (E338). Er trägt dieselbe
+           Kennung wie die Reihe und dazu die URSPRÜNGLICHE Zeit der Folge,
+           die er ablöst — so schreibt es jeder Kalender, wenn man eine
+           einzelne Stunde verlegt. Bis E338 fiel er still durch: er wurde
+           als gewöhnlicher Termin gelesen und stand DOPPELT da, einmal
+           verlegt und einmal an der alten Stelle aus der Regel. */
+        case 'RECURRENCE-ID': jetzt.ersetzt = icsZeit(inhalt, parameter); break;
         case 'DURATION':     jetzt.dauer = inhalt; break;
         /* --- Nur bei Aufgaben (E326) --------------------------------- */
         case 'DUE':          if (art === 'aufgabe') jetzt.faellig = icsZeit(inhalt, parameter); break;
@@ -304,6 +311,42 @@ const Kalender = (() => {
   };
 
   /**
+   * Eine ganze Kalenderdatei ausrollen — Reihen zu Folgen, und Ersätze an
+   * die Stelle der Folge, die sie meinen.
+   *
+   * DIESER SCHRITT STAND DREIMAL WÖRTLICH IM CODE (Abo holen, Datei
+   * einlesen, Google). Seit E338 gibt es einen zusätzlichen Handgriff, und
+   * dreimal denselben zusätzlichen Handgriff einzutragen ist der Anfang
+   * davon, dass er an einer der drei Stellen fehlt.
+   */
+  const ausrollenAlle = (termine: any[], bisTage = 400): any[] => {
+    const raus: any[] = [];
+    const ersaetze: any[] = [];
+    for (const t of termine || []) {
+      if (t && t.ersetzt) { ersaetze.push(t); continue; }
+      for (const x of wiederholungen(t, bisTage)) raus.push(x);
+    }
+    for (const e of ersaetze) {
+      /* AN DIE STELLE, NICHT DANEBEN. Wer eine Stunde verlegt, hat eine
+         Stunde — nicht zwei. */
+      const i = raus.findIndex((x: any) =>
+        String(x.uid || '') === String(e.uid || '') &&
+        String(x.start || '') === String(e.ersetzt || ''));
+      if (i >= 0) {
+        const alt = raus[i];
+        raus[i] = Object.assign({}, alt, e,
+          { folgeNr: alt.folgeNr, folge: alt.folge, ersetzt: undefined });
+      } else {
+        /* Kennt niemand — etwa weil die Reihe gar nicht mitgeliefert wurde
+           oder die Regel bis dahin nicht reicht. Dann ist er ein eigener
+           Termin; ihn wegzuwerfen wäre der stille Verlust (§35). */
+        raus.push(e);
+      }
+    }
+    return raus;
+  };
+
+  /**
    * Der Schlüssel einer Zeile in der Termintabelle.
    *
    * ────────────────────────────────────────────────────────────────────────
@@ -387,7 +430,60 @@ const Kalender = (() => {
                     'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
                     'X-WR-CALNAME:' + maskieren(coll.name)];
 
-    Store.rowsOf(coll.id).forEach((r: any) => {
+    /* ─── REIHEN ERKENNEN (E338, L106 Punkt 8) ──────────────────────────
+       Bis hier gab jede Zeile einen eigenen VEVENT ohne Regel. Was Redion
+       einlas, konnte es nicht wieder ausgeben: aus einem wöchentlichen
+       Stundenplan wurden vierzig Einzeltermine, und die Reihe war fort.
+
+       FÜNF ZEILEN MIT DEMSELBEN `RRULE` AUSZUGEBEN WÄRE SCHLIMMER als gar
+       keins — der empfangende Kalender sähe fünf unendliche Reihen. Also
+       so, wie ICS es vorsieht:
+
+         die erste Folge      als VEVENT mit `RRULE`
+         eine verschobene     als VEVENT mit `RECURRENCE-ID` (die URSPRÜNGLICHE
+                              Zeit) und der neuen `DTSTART`
+         eine fehlende        als `EXDATE` am Kopf
+         alle übrigen         gar nicht — sie stehen in der Regel
+
+       WANN GAR NICHT: ohne Regel am Kopf, ohne Kopf, oder ohne das Modul
+       `Wiederholung`. Dann bleibt es beim alten Weg, und der ist nicht
+       falsch, nur ausführlich. */
+    const alleZeilen = Store.rowsOf(coll.id);
+    const regelKey = coll.schema && coll.schema.regel ? 'regel' : '';
+    /* Reihenkennung -> { kopf, folgen: Map<Nr, Zeile> } */
+    const reihen = new Map<string, { kopf: any; folgen: Map<number, any> }>();
+    if (regelKey) {
+      alleZeilen.forEach((r: any) => {
+        const u = String((r.props || {}).uid || '');
+        const raute = u.lastIndexOf('#');
+        if (raute <= 0 || !/^\d+$/.test(u.slice(raute + 1))) return;
+        const id = u.slice(0, raute);
+        const nr = Number(u.slice(raute + 1));
+        let e = reihen.get(id);
+        if (!e) { e = { kopf: null, folgen: new Map() }; reihen.set(id, e); }
+        e.folgen.set(nr, r);
+        if (nr === 0) e.kopf = r;
+      });
+      /* Eine Reihe ohne Kopf oder ohne Regel am Kopf ist keine, mit der
+         sich etwas anfangen lässt — die Zeilen gehen einzeln hinaus. */
+      for (const [id, e] of [...reihen])
+        if (!e.kopf || !String(Datenbank.wert(e.kopf, 'regel', coll) || '').trim())
+          reihen.delete(id);
+    }
+
+    /* Welche Zeile wird von einer Regel schon abgedeckt? */
+    const inReihe = new Map<string, { id: string; nr: number }>();
+    for (const [id, e] of reihen)
+      for (const [nr, r] of e.folgen) inReihe.set(r.id, { id, nr });
+
+    const W = (window as any).Wiederholung;
+
+    /**
+     * Einen VEVENT schreiben. `zusatz` trägt, was diese Zeile zusätzlich
+     * braucht: die Regel am Kopf, die ursprüngliche Zeit an einer
+     * verschobenen Folge.
+     */
+    const schreibeTermin = (r: any, uid: string, zusatz: string[] = []): void => {
       const start = Datenbank.wert(r, dk, coll);
       if (!start) return;
       const ganz = String(start).length <= 10;
@@ -404,20 +500,73 @@ const Kalender = (() => {
       }
 
       zeilen.push('BEGIN:VEVENT');
-      zeilen.push('UID:' + r.id + '@notizen');
+      zeilen.push('UID:' + uid);
       zeilen.push('DTSTAMP:' + alsIcsZeit(new Date().toISOString(), false));
       zeilen.push('DTSTART' + (ganz ? ';VALUE=DATE:' : ':') + alsIcsZeit(start, ganz));
       if (dtEnde) zeilen.push('DTEND' + (ganz ? ';VALUE=DATE:' : ':') + alsIcsZeit(dtEnde, ganz));
       zeilen.push('SUMMARY:' + maskieren(r.text || 'Ohne Titel'));
       if (ort) zeilen.push('LOCATION:' + maskieren(ort));
+      for (const z of zusatz) zeilen.push(z);
 
-      /* Alles andere kommt in die Beschreibung, damit nichts verloren geht */
+      /* Alles andere kommt in die Beschreibung, damit nichts verloren geht.
+         DIE REGEL NICHT — sie steht seit E338 als `RRULE` da, wo sie
+         hingehört, und zweimal dieselbe Angabe ist eine zu viel. */
       const rest = Object.keys(coll.schema)
-        .filter(k => k !== dk && k !== endeKey && coll.schema[k].type !== 'title')
+        .filter(k => k !== dk && k !== endeKey && k !== regelKey &&
+                     coll.schema[k].type !== 'title')
         .map(k => coll.schema[k].name + ': ' + Formula.anzeige(Datenbank.wert(r, k, coll)))
         .filter(x => !/: *$|: *—$/.test(x));
       if (rest.length) zeilen.push('DESCRIPTION:' + maskieren(rest.join('\n')));
       zeilen.push('END:VEVENT');
+    };
+
+    /* ── ZUERST DIE REIHEN ──────────────────────────────────────────────── */
+    for (const [id, e] of reihen) {
+      const regel = String(Datenbank.wert(e.kopf, 'regel', coll) || '').trim();
+      const kopfStart = String(Datenbank.wert(e.kopf, dk, coll) || '');
+      const ganz = kopfStart.length <= 10;
+
+      /* WAS DIE REGEL ERGEBEN WÜRDE — dagegen wird verglichen. Ohne das
+         Modul lässt sich nichts vergleichen; dann geht der Kopf mit seiner
+         Regel hinaus und die Folgen einzeln, was ausführlich, aber nicht
+         falsch ist. */
+      const soll: string[] = (W && typeof W.ausrollen === 'function')
+        ? (W.ausrollen(kopfStart, regel, { bisTage: 4000, ganzerTag: ganz })
+             .termine || [])
+        : [];
+
+      const fehlend: string[] = [];
+      const verschoben: Array<{ r: any; ur: string }> = [];
+      soll.forEach((ur: string, nr: number) => {
+        const zeile = e.folgen.get(nr);
+        /* NICHT DA HEISST GESTRICHEN, und das gehört als `EXDATE` an den
+           Kopf. Ohne diese Zeile käme jede von Hand gelöschte Stunde beim
+           Empfänger zurück — genau der Fehler, den E290 beim EINLESEN
+           abgeräumt hat, nur in der anderen Richtung. */
+        if (!zeile) { fehlend.push(ur); return; }
+        if (nr === 0) return;                    /* der Kopf selbst */
+        const ist = String(Datenbank.wert(zeile, dk, coll) || '');
+        if (ist && ist !== ur) verschoben.push({ r: zeile, ur });
+      });
+
+      const zusatz = ['RRULE:' + regel];
+      for (const ur of fehlend)
+        zusatz.push('EXDATE' + (ganz ? ';VALUE=DATE:' : ':') + alsIcsZeit(ur, ganz));
+      schreibeTermin(e.kopf, id, zusatz);
+
+      /* Eine verschobene Folge trägt DIESELBE Kennung und dazu die
+         URSPRÜNGLICHE Zeit — daran erkennt der Empfänger, welche der
+         Reihe sie ersetzt. Ohne `RECURRENCE-ID` wäre es ein zweiter
+         Termin neben dem alten. */
+      for (const v of verschoben)
+        schreibeTermin(v.r, id,
+          ['RECURRENCE-ID' + (ganz ? ';VALUE=DATE:' : ':') + alsIcsZeit(v.ur, ganz)]);
+    }
+
+    /* ── UND DANN ALLES, WAS ZU KEINER REIHE GEHÖRT ──────────────────────── */
+    alleZeilen.forEach((r: any) => {
+      if (inReihe.has(r.id)) return;
+      schreibeTermin(r, r.id + '@notizen');
     });
 
     zeilen.push('END:VCALENDAR');
@@ -435,14 +584,32 @@ const Kalender = (() => {
     quelle:{ name: 'Kalender', type: 'select', options: [] },
     text:  { name: 'Notiz',    type: 'text' },
     uid:   { name: 'Kennung',  type: 'text' },
-    link:  { name: 'Link',     type: 'url' }
+    link:  { name: 'Link',     type: 'url' },
+    /* DIE WIEDERHOLUNGSREGEL, roh wie sie in der Datei steht (E338). Sie
+       steht nur an der ERSTEN Folge einer Reihe — sie gilt für die ganze,
+       und fünfmal dieselbe Regel wäre fünfmal dieselbe Wahrheit. Roh und
+       nicht als Satz, weil sie beim Ausgeben wieder gebraucht wird; der
+       lesbare Satz entsteht daraus jederzeit neu (`Wiederholung.lesen`). */
+    regel: { name: 'Wiederholung', type: 'text' }
   });
 
   /** Legt die Termin-Datenbank an oder findet die vorhandene wieder. */
   const zielDatenbank = (seiteId?: string, name = 'Termine') => {
     const da = Object.values<any>(Store.cache.collections)
       .find(c => c.name === name && c.schema.uid && c.schema.start);
-    if (da) return da;
+    if (da) {
+      /* EINE SPALTE NACHTRAGEN IST DAS EINZIGE, WAS HIER GEFAHRLOS GEHT
+         (E338, §9). Sie kommt leer dazu, keine vorhandene Zeile ändert
+         sich, und wer sie nicht will, löscht sie wie jede andere. Eine
+         Spalte UMzubenennen oder ihren Typ zu ändern wäre etwas ganz
+         anderes — das wäre eine Datenmigration und bräuchte einen eigenen
+         Bogen. */
+      if (!da.schema.regel) {
+        da.schema.regel = { name: 'Wiederholung', type: 'text' };
+        Store.updateCollection(da.id, { schema: da.schema });
+      }
+      return da;
+    }
     const { collectionId } = Store.addDatabase(seiteId || App.aktuelleSeite(), name, SCHEMA(), 'calendar');
     const c = Store.getCollection(collectionId);
     const v = Store.getView(c.viewIds[0]);
@@ -502,12 +669,19 @@ const Kalender = (() => {
     const belegt = new Set<string>();
     termine.forEach((t: any) => {
       const schluessel = terminSchluessel(t);
-      const props = {
+      const props: Record<string, unknown> = {
         start: t.start || '', ende: t.ende || '',
         ort: t.ort ? { name: t.ort } : null,
         quelle: quelle || '', text: t.text || '',
         uid: schluessel, link: t.url || ''
       };
+      /* DIE REGEL NUR AN DIE ERSTE FOLGE (E338). Sie gilt für die ganze
+         Reihe; an jeder Folge stünde fünfmal dieselbe Wahrheit, und beim
+         Ausgeben wären es fünf Reihen statt einer. Und nur, wenn die
+         Tabelle die Spalte überhaupt führt — eine Sammlung, die jemand von
+         Hand gebaut hat, bekommt sie nicht untergeschoben. */
+      if (coll.schema && coll.schema.regel)
+        props.regel = (t.regel && Number(t.folgeNr) === 0) ? String(t.regel) : '';
       let alt = vorhanden.get(schluessel);
       if (alt && belegt.has(alt.id)) alt = null;
       if (!alt) {
@@ -601,8 +775,7 @@ const Kalender = (() => {
     }
     if (!/BEGIN:VCALENDAR/i.test(text)) throw new Error('Unter dieser Adresse liegt kein Kalender.');
     const gelesen = icsLesen(text);
-    const alle: any[] = [];
-    gelesen.termine.forEach(t => wiederholungen(t).forEach((x: any) => alle.push(x)));
+    const alle = ausrollenAlle(gelesen.termine);
     return { name: gelesen.name || abo.name || 'Abo', termine: alle,
              aufgaben: gelesen.aufgaben };
   };
@@ -884,8 +1057,7 @@ const Kalender = (() => {
             for (const f of Array.from(inp.files ?? [])) {
               const text = await f.text();
               const k = icsLesen(text);
-              const alle: any[] = [];
-              k.termine.forEach(t => wiederholungen(t).forEach((x: any) => alle.push(x)));
+              const alle = ausrollenAlle(k.termine);
               const erg = uebernehmen(coll, alle, k.name || f.name.replace(/\.ics$/i, ''));
               neu += erg.neu; frisch += erg.frisch; entfallen += erg.entfallen || 0;
             }
@@ -930,8 +1102,8 @@ const Kalender = (() => {
     });
   };
 
-  return { icsLesen, icsSchreiben, icsZeit, wiederholungen, terminSchluessel,
-           dauerInMs, terminLaenge, endeAus,
+  return { icsLesen, icsSchreiben, icsZeit, wiederholungen, ausrollenAlle,
+           terminSchluessel, dauerInMs, terminLaenge, endeAus,
            zielDatenbank, uebernehmen,
            abos, aboHolen, alleAbosHolen, adresseGerade,
            googleKalender, googleTermine, nachGoogle, dialog };
