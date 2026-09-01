@@ -113,7 +113,11 @@ const Wissensluecken = (() => {
         text: seitentext(n.id),
         edited: (b && (b.edited || b.created)) || n.edited || '',
         grad: grad[n.id] || 0,
-        rang: rangNach[n.id] || 0
+        rang: rangNach[n.id] || 0,
+        /* DIE ABSICHT (E329, L105 Punkt 4). `gesperrt` ist das einzige
+           Zeichen, mit dem ein Mensch Redion sagt „hier bin ich fertig" —
+           und die Lückensuche fragte nie danach. */
+        gesperrt: !!(b && b.gesperrt)
       };
     });
 

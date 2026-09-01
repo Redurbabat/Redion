@@ -2453,3 +2453,18 @@ node pruefungen/lauf/test105.mjs
   Das Bild fand, dass der Satz das Thema wiederholte, das schon fett darüber
   stand — `auffrischSatz` machte es seit E325 richtig, jetzt beide gleich.
   test321 neu (28), belegt rot mit 6 statt 0. sw v82.
+* E329 (L105 Punkt 4 und 5): Die Lückensuche lernt Absicht und Alter. Zwei
+  schwache Fundarten, beiden fehlte eine Angabe, die es längst gab.
+  „Verstaubt" kannte keine Absicht — und die Lücke behauptete, ein Feld
+  dafür gebe es nicht. Gibt es: `gesperrt`, seit langem, gelesen vom Editor
+  und geschaltet in den Einstellungen. Wer eine Seite gegen Bearbeiten
+  sperrt, sagt „hier bin ich fertig"; sie danach zu mahnen ist eine Mahnung
+  an jemanden, der schon geantwortet hat. Bei den INSELN gilt das
+  ausdrücklich nicht: fertig heisst nicht auffindbar. Die dünnen Themen
+  hatten die feste Stärke 25 bei einer Schwelle von 40 — sie konnten also
+  nie gezählt werden, „beinahe Zierde". Jetzt entscheidet das Alter: unter
+  einem Vierteljahr angefangen, darüber liegengeblieben. Der Deckel ist an
+  der Insel geeicht (55) und nicht am Geist — der erste Entwurf stand bei 70
+  mit der Begründung „nie stärker als ein Geist", und `staerkeGeist(1)` ist
+  40. Der Prüflauf sagte es sofort. test322 neu (19), beide Zusagen belegt
+  rot. sw v83.

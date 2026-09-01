@@ -24958,3 +24958,84 @@ Und §6 misst, dass das Lernfenster überhaupt aufging, bevor es darin sucht
 — genau die Falle, in die test318 §5 einmal lief.
 
 test283 35/35, test318 18/18. sw v82 · Einzeldatei neu gebaut.
+
+
+E329 — Die Lückensuche lernt Absicht und Alter (L105 Punkt 4 und 5)
+════════════════════════════════════════════════════════════════════════════
+
+Zwei der sechs Fundarten waren schwach, und beide aus demselben Grund:
+ihnen fehlte eine Angabe, die es längst gab.
+
+PUNKT 4 — „VERSTAUBT" KENNT KEINE ABSICHT
+
+L105 sagte: „Ein Archiv ist verstaubt, weil es ein Archiv ist. Redion weiss
+nicht, welche Seiten fertig sind; ein Feld dafür gibt es nicht."
+
+Der zweite Satz stimmt nicht. `gesperrt` gibt es seit langem — `editor.ts`
+liest es (Zeile 477, „Ist die Seite gegen Bearbeiten gesperrt? Dann nur
+lesen"), und in den Einstellungen steht der Schalter „Seite gegen
+Bearbeiten gesperrt". Nur fragte die Lückensuche nie danach.
+
+Das ist das EINZIGE Zeichen von Absicht, das Redion an einer Seite hat, und
+es ist ein starkes: kein abgeleitetes Merkmal, sondern ein Schalter, den
+ein Mensch bewusst umgelegt hat. „Verstaubt" heisst „du wolltest hier
+wahrscheinlich weiterarbeiten"; wer gesperrt hat, hat genau das Gegenteil
+gesagt. Ihn danach zu mahnen ist eine Mahnung an jemanden, der schon
+geantwortet hat.
+
+NUR BEI „VERSTAUBT" UND AUSDRÜCKLICH NICHT BEI DEN INSELN. Eine gesperrte
+Insel bleibt eine Insel: dass eine Seite fertig ist, heisst nicht, dass
+irgendwer sie findet. Der Fund sagt „hier führt kein Weg hin", und darauf
+antwortet eine Sperre nicht.
+
+PUNKT 5 — DIE DÜNNEN THEMEN WAREN ZIERDE
+
+`staerkeThema()` gab die feste Zahl 25 zurück. Die Schwelle liegt bei 40,
+also lag die Art IMMER darunter und wurde NIE gezählt. L105 nannte es beim
+Namen: „entweder sie bekommen eine bessere Regel (etwa: ein Schlagwort, das
+einmal vorkommt UND älter als ein Vierteljahr ist), oder sie entfallen."
+
+Genau diese Regel steht jetzt da, und sie trifft den Unterschied, um den es
+geht: ein Schlagwort, das HEUTE an einer Seite steht, ist eine angefangene
+Sache — morgen steht es an dreien. Eines, das seit einem Vierteljahr allein
+dort steht, ist eine liegengebliebene.
+
+Unter der Grenze bleibt es bei 25: gezeigt, nicht gezählt. Darüber beginnt
+es bei der Schwelle und wächst langsam. Und die dünnen Themen werden jetzt
+NACH ALTER geordnet, bevor bei dreissig geschnitten wird — sonst wirft der
+Schnitt gerade die liegengebliebenen weg und behält die frischen.
+
+─── WORAN DER DECKEL GEEICHT GEHÖRT ────────────────────────────────────────
+
+Der erste Entwurf deckelte bei 70, mit der Begründung „damit ein einsames
+Schlagwort nie einen Geistverweis überholt". Der Prüflauf sagte sofort,
+dass die Begründung falsch ist: `staerkeGeist(1)` ist 40, nicht mehr. Ein
+Geist mit EINER Quelle ist selbst eine schwache Aussage.
+
+Geeicht gehört es an die INSEL (`staerkeInsel`, gedeckelt bei 55), denn
+beide sagen dasselbe: hier liegt etwas, und niemand kümmert sich. Ein Geist
+dagegen ist ein FEHLER — ein Verweis, der ins Leere zeigt — und steigt mit
+jeder weiteren Quelle bis 100. Ab zwei Quellen (60) liegt er über allem,
+was ein einsames Schlagwort je erreichen kann, und das ist die Ordnung, die
+gemeint war.
+
+Ein Deckel ist eine Behauptung über eine Rangfolge. Wer ihn setzt, muss
+sagen können, WOGEGEN — sonst ist es eine Zahl, die gut aussieht.
+
+─── DIE PRÜFUNG ────────────────────────────────────────────────────────────
+
+test322, 19 Punkte, und beide Zusagen sind belegt rot:
+
+  · Ohne den `gesperrt`-Filter verstauben BEIDE Seiten („Fertiges Archiv"
+    und „Liegengeblieben") — sie sind gleich alt und gleich wichtig, der
+    einzige Unterschied ist die Sperre.
+  · Mit der festen 25 fallen drei Punkte in §3 und §4.
+
+§6 misst nicht den Kern, sondern was der BEREICH übergibt. Der Kern kann
+`gesperrt` lesen, und es hilft nichts, wenn `sammeln()` es nie hineinlegt
+— genau der Fehler, den E93 einmal gekostet hat. Der erste Anlauf fing dazu
+`KnowledgeGaps.finden` ab und griff daneben, weil das Modul
+`Wissensluecken` heisst und nicht `Luecken`. `Wissensluecken.sammeln()`
+direkt zu fragen ist ohnehin die geradere Messung.
+
+test317 25/25, test282 57/57. sw v83 · Einzeldatei neu gebaut.

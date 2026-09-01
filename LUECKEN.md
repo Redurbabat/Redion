@@ -4196,15 +4196,28 @@ L105 — Was die Lückenansicht (E288) noch nicht kann
    es seit E286 die Auftragsmaschine — der Anschluss wäre ein guter erster
    echter Auftrag (L103 Punkt 1).
 
-4. **„Wichtig, aber verstaubt" kennt keine Absicht.** Ein Archiv ist
-   verstaubt, weil es ein Archiv ist. Redion weiss nicht, welche Seiten
-   fertig sind; ein Feld dafür gibt es nicht.
+4. **„Wichtig, aber verstaubt" kennt keine Absicht.** — **GESCHLOSSEN am
+   1. September 2026 durch E329, und der zweite Satz hier war falsch.**
+   Ein Feld gibt es sehr wohl: `gesperrt`, seit langem, gelesen von
+   `editor.ts` und geschaltet in den Einstellungen („Seite gegen Bearbeiten
+   gesperrt"). Nur fragte die Lückensuche nie danach. Eine gesperrte Seite
+   verstaubt jetzt nicht mehr — sie ist fertig, nicht liegengeblieben.
 
-5. **Die dünnen Themen sind die schwächste Art.** Sie stehen absichtlich
-   unter der Schwelle und werden nie gezählt. Damit sind sie beinahe
-   Zierde — entweder sie bekommen eine bessere Regel (etwa: ein Schlagwort,
-   das einmal vorkommt UND älter als ein Vierteljahr ist), oder sie
-   entfallen.
+   NICHT bei den Inseln: eine gesperrte Insel bleibt eine Insel. Fertig
+   heisst nicht auffindbar.
+
+5. **Die dünnen Themen sind die schwächste Art.** — **GESCHLOSSEN am
+   1. September 2026 durch E329**, und zwar mit genau der hier
+   vorgeschlagenen Regel. Ein Schlagwort, das heute an einer Seite steht,
+   ist eine angefangene Sache; eines, das seit einem Vierteljahr allein
+   dort steht, eine liegengebliebene. Unter der Grenze bleibt es bei 25
+   (gezeigt, nicht gezählt), darüber beginnt es bei der Schwelle. Geordnet
+   wird nach Alter, damit der Schnitt bei dreissig nicht die
+   liegengebliebenen wegwirft.
+
+   Der Deckel ist an der INSEL geeicht (55), nicht am Geist — der erste
+   Entwurf stand bei 70 mit der Begründung „nie stärker als ein Geist", und
+   `staerkeGeist(1)` ist 40.
 
 Gefunden am 31. August 2026 (beim Bau von E288).
 

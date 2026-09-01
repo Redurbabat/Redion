@@ -48,6 +48,18 @@ const KnowledgeGaps = (() => {
     grad?: number;
     /** Der Rang aus `KnowledgeRank.punkte`, 0..100. Fehlt er, gilt 0. */
     rang?: number;
+    /**
+     * Gegen Bearbeiten gesperrt — das einzige Zeichen von ABSICHT, das
+     * Redion an einer Seite hat (E329, L105 Punkt 4).
+     *
+     * L105 sagte: „Ein Archiv ist verstaubt, weil es ein Archiv ist. Redion
+     * weiss nicht, welche Seiten fertig sind; ein Feld dafür gibt es
+     * nicht." Das zweite stimmte nicht: `gesperrt` gibt es seit langem
+     * (`editor.ts:477` liest es, und in den Einstellungen steht der
+     * Schalter „Seite gegen Bearbeiten gesperrt"). Nur fragte die
+     * Lückensuche nie danach.
+     */
+    gesperrt?: boolean;
   };
 
   /**
@@ -220,11 +232,43 @@ const KnowledgeGaps = (() => {
     Math.min(100, 80 + 5 * Math.max(0, kandidaten - 2));
 
   /**
-   * Ein Schlagwort mit einer einzigen Seite ist eine Beobachtung, keine
-   * Lücke — man hat etwas angefangen. Absichtlich unter der Schwelle:
-   * es wird gezeigt, aber nicht mitgezählt.
+   * Ein Schlagwort mit einer einzigen Seite — UND SEIT WANN (E329,
+   * L105 Punkt 5).
+   *
+   * Vorher gab diese Funktion die feste Zahl 25 zurück. Die Schwelle liegt
+   * bei 40, also lag die Art IMMER darunter und wurde NIE gezählt. L105
+   * nannte das beim Namen: „Damit sind sie beinahe Zierde — entweder sie
+   * bekommen eine bessere Regel (etwa: ein Schlagwort, das einmal vorkommt
+   * UND älter als ein Vierteljahr ist), oder sie entfallen."
+   *
+   * Genau diese Regel steht jetzt hier, und sie ist die richtige, weil sie
+   * den Unterschied trifft, um den es geht: ein Schlagwort, das heute an
+   * einer Seite steht, ist eine ANGEFANGENE Sache — morgen steht es an
+   * dreien. Eines, das seit einem Vierteljahr an genau einer Seite steht,
+   * ist eine liegengebliebene.
+   *
+   * Unter der Grenze bleibt es bei 25: gezeigt, nicht gezählt. Darüber
+   * beginnt es bei der Schwelle und wächst langsam.
+   *
+   * DER DECKEL IST 55, UND ER IST AN DER INSEL GEEICHT — nicht am Geist.
+   * Der erste Entwurf stand bei 70 mit der Begründung „damit ein einsames
+   * Schlagwort nie einen Geistverweis überholt". Die Begründung war falsch,
+   * und der Prüflauf sagte es sofort: `staerkeGeist(1)` ist 40, nicht mehr.
+   * Ein Geist mit EINER Quelle ist eben auch nur eine schwache Aussage.
+   *
+   * Geeicht gehört es an die Insel (`staerkeInsel`, gedeckelt bei 55), denn
+   * beide sagen dasselbe: hier liegt etwas, und niemand kümmert sich. Ein
+   * Geist dagegen ist ein FEHLER — ein Verweis, der ins Leere zeigt — und
+   * steigt mit jeder weiteren Quelle bis 100. Ab zwei Quellen (60) liegt er
+   * über allem, was hier je herauskommen kann, und das ist die Ordnung, die
+   * gemeint war.
    */
-  const staerkeThema = (): number => 25;
+  const THEMA_TAGE = 90;
+
+  const staerkeThema = (tage: number): number => {
+    if (!(tage >= THEMA_TAGE)) return 25;
+    return Math.min(55, 40 + 5 * Math.floor((tage - THEMA_TAGE) / 30));
+  };
 
   /**
    * Eine Frage: je ausführlicher sie gestellt ist, desto eher war sie
@@ -343,16 +387,34 @@ const KnowledgeGaps = (() => {
               'steht nirgends.'
       }));
 
-    /* --- Dünne Themen ---------------------------------------------------- */
-    const duenn = (themen || []).filter(t => t && Array.isArray(t.seiten) && t.seiten.length === 1);
+    /* --- Dünne Themen ----------------------------------------------------
+       MIT DEM ALTER DER SEITE, an der das Schlagwort hängt (E329). Ein
+       Schlagwort, das heute an einer Seite steht, ist eine angefangene
+       Sache; eines, das seit einem Vierteljahr dort allein steht, eine
+       liegengebliebene. Vorher war die Stärke eine feste 25 und die Art
+       damit unzählbar — siehe `staerkeThema`.
+
+       Die ältesten zuerst, damit der Schnitt bei dreissig nicht die
+       liegengebliebenen wegwirft und die frischen behält. */
+    const seitenNachId = new Map(alleSeiten.map(s => [s.id, s]));
+    const duenn = (themen || [])
+      .filter(t => t && Array.isArray(t.seiten) && t.seiten.length === 1)
+      .map(t => {
+        const seite = seitenNachId.get(String(t.seiten[0] || ''));
+        return { t, tage: seite ? tageSeit(seite.edited, jetzt) : 0 };
+      })
+      .sort((a, b) => b.tage - a.tage);
     abgeschnitten += Math.max(0, duenn.length - jeArtMax);
     duenn
       .slice(0, jeArtMax)
-      .forEach(t => funde.push({
-        art: 'thema', titel: '#' + t.tag, staerke: staerkeThema(),
+      .forEach(({ t, tage }) => funde.push({
+        art: 'thema', titel: '#' + t.tag, staerke: staerkeThema(tage),
         seiteId: String(t.seiten[0] || ''),
-        satz: 'Das Schlagwort #' + t.tag + ' steht an genau einer Seite. ' +
-              'Angefangen und nicht weitergeführt.'
+        satz: tage >= THEMA_TAGE
+          ? 'Das Schlagwort #' + t.tag + ' steht seit ' + tage + ' Tagen an ' +
+            'genau einer Seite. Angefangen und liegengeblieben.'
+          : 'Das Schlagwort #' + t.tag + ' steht an genau einer Seite. ' +
+            'Angefangen und nicht weitergeführt.'
       }));
 
     /* --- Offene Fragen ----------------------------------------------------
@@ -408,10 +470,20 @@ const KnowledgeGaps = (() => {
     abgeschnitten += Math.max(0, fragenFunde.length - jeArtMax);
     for (const f of fragenFunde.slice(0, jeArtMax)) funde.push(f);
 
-    /* --- Wichtig, aber verstaubt ------------------------------------------ */
+    /* --- Wichtig, aber verstaubt ------------------------------------------
+       EINE GESPERRTE SEITE IST NICHT VERSTAUBT, SONDERN FERTIG (E329).
+       „Verstaubt" heisst: du wolltest hier wahrscheinlich weiterarbeiten.
+       Wer eine Seite gegen Bearbeiten gesperrt hat, hat genau das Gegenteil
+       gesagt — und zwar ausdrücklich, mit einem Schalter. Sie danach zu
+       mahnen, weil sie seit neunzig Tagen nicht angefasst wurde, ist eine
+       Mahnung an jemanden, der schon geantwortet hat.
+
+       NUR HIER UND NICHT BEI DEN INSELN: eine gesperrte Insel bleibt eine
+       Insel. Dass eine Seite fertig ist, heisst nicht, dass irgendwer sie
+       findet. */
     const staubig = alleSeiten
       .map(s => ({ s, tage: tageSeit(s.edited, jetzt), rang: s.rang || 0 }))
-      .filter(e => e.rang >= verstaubtRang && e.tage >= verstaubtTage)
+      .filter(e => !e.s.gesperrt && e.rang >= verstaubtRang && e.tage >= verstaubtTage)
       .sort((a, b) => b.rang - a.rang || b.tage - a.tage);
     abgeschnitten += Math.max(0, staubig.length - jeArtMax);
     staubig
@@ -513,7 +585,7 @@ const KnowledgeGaps = (() => {
   return {
     finden, kennung, fragenAus, ohneMarkierung, tageSeit, satzZu,
     staerkeGeist, staerkeMehrdeutig, staerkeThema, staerkeFrage,
-    staerkeVerstaubt, staerkeInsel, VORGABE
+    staerkeVerstaubt, staerkeInsel, VORGABE, THEMA_TAGE
   };
 })();
 
