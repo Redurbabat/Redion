@@ -189,7 +189,35 @@ const PdfSeite = (() => {
                     k.disabled = false;
                     k.textContent = 'Aus dem Original zurückholen';
                 };
-                PdfEinlesen.neuBerechnen(block.quelleId).then(zurueck, zurueck);
+                /* SEIT E327 IST DAS EIN AUFTRAG, und `neuBerechnen` kommt zurück,
+                   sobald er ANGELEGT ist — nicht wenn er fertig ist. Auf sein Ende
+                   zu warten ginge hier gar nicht: er läuft womöglich in einem
+                   anderen Tab, und dessen Ereignisse erreichen diesen nie.
+        
+                   Also wartet dieser Knopf nicht mehr, sondern HÖRT ZU. Das Ende
+                   zeichnet die Seite neu (einlesen.ts), womit er meist verschwindet;
+                   bleibt er stehen, weil das Bild nicht kam, wird er wieder
+                   anfassbar. Genau die Zusage von E116, nur nicht mehr an einem
+                   Versprechen hängend. */
+                const aus = [];
+                const fertig = (d) => {
+                    if (!d || d.art !== 'pdf-bilder')
+                        return;
+                    aus.forEach(f => f());
+                    aus.length = 0;
+                    zurueck();
+                };
+                if (typeof Ereignisse !== 'undefined' && Ereignisse.horche) {
+                    aus.push(Ereignisse.horche('auftrag.beendet', fertig));
+                    aus.push(Ereignisse.horche('auftrag.fehler', fertig));
+                }
+                PdfEinlesen.neuBerechnen(block.quelleId).then((e) => {
+                    /* Nichts angelegt heisst: nichts wird kommen. Ein Knopf, der auf
+                       ein Ereignis wartet, das niemand auslöst, ist der Knopf von
+                       E116 mit mehr Schritten davor. */
+                    if (!e || !e.auftrag)
+                        fertig({ art: 'pdf-bilder' });
+                }, () => fertig({ art: 'pdf-bilder' }));
             });
             hinweis.appendChild(k);
         };

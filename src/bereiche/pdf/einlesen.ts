@@ -379,59 +379,112 @@ const PdfEinlesen = (() => {
    * Die fehlenden Seitenbilder eines Dokuments neu rechnen.
    * @param quelleId Kennung des abgelegten Originals
    */
-  /* WER RECHNET GERADE AN WELCHEM DOKUMENT (E116).
-     Jede bildlose Seite bekommt einen eigenen Knopf, und jeder Knopf sperrte
-     bisher nur SICH SELBST. Ein zweiter Klick auf einer anderen Seite startete
-     einen vollständigen zweiten Lauf über dieselbe Liste: beide legen für
-     denselben Block eine Datei ab, aber nur die zuletzt geschriebene steht
-     danach in `bildDateiId`. Die andere bleibt als fertiger Datei-Satz mit
-     LEBENDEM `blockId` liegen — und `Dateien.verwaist()` sucht nach Sätzen
-     ohne Block, findet diesen also grundsätzlich nie. Eine Dateileiche, die
-     niemand mehr wegräumen kann.
-     Der Schlüssel ist die Kennung des Originals: zwei verschiedene Dokumente
-     dürfen sehr wohl nebeneinander rechnen. */
-  const laufendeRechnungen = new Map<string, Promise<any>>();
+  /* ==========================================================================
+   * DAS ZURÜCKHOLEN IST EIN AUFTRAG (E327, L103 Punkt 1)
+   * --------------------------------------------------------------------------
+   * Bis hierher rechnete das Zurückholen im Tab, in dem geklickt wurde.
+   * Drei Dinge folgten daraus, und das dritte ist ein Datenschaden:
+   *
+   *   · WER DEN TAB SCHLIESST, verliert den Lauf. Die schon gerechneten
+   *     Seiten bleiben — der Rest fängt beim nächsten Klick wieder an.
+   *   · WER ZUSIEHT, sieht einen Toast und sonst nichts. Kein Abbrechen,
+   *     kein Stand, kein Wiederfinden nach einem Wechsel der Ansicht.
+   *   · ZWEI TABS RECHNETEN BEIDE. `laufendeRechnungen` war eine Map IM
+   *     TAB — sie schützte genau den einen. Der Kommentar darüber
+   *     beschrieb die Gefahr schon richtig: beide legen für denselben
+   *     Block eine Datei ab, nur die zuletzt geschriebene steht danach in
+   *     `bildDateiId`, und die andere bleibt als fertiger Satz mit
+   *     LEBENDEM `blockId` liegen. `Dateien.verwaist()` sucht Sätze OHNE
+   *     Block und findet sie darum nie. Eine Dateileiche, die niemand mehr
+   *     wegräumen kann — und sie entstand, sobald jemand Redion zweimal
+   *     offen hatte.
+   *
+   * Die Auftragsmaschine (E286) beantwortet alle drei mit einer Sache: der
+   * Auftrag steht in der Ablage, nicht im Tab. Seine Kennung leitet sich
+   * aus dem Dokument ab, also gibt es je Dokument höchstens einen; wer ihn
+   * genommen hat, hält eine Pacht, und seit E323 sprechen sich die Tabs
+   * über `navigator.locks` ab.
+   *
+   * DIE WIEDERAUFNAHME KOSTET NICHTS, weil sie schon da war: `ohneBild`
+   * leitet bei jedem Lauf neu her, was noch fehlt. Genau deshalb nennt
+   * L103 dieses Stück als ersten Anschluss und nicht das Einlesen selbst.
+   * ========================================================================*/
 
-  const neuBerechnen = (quelleId: string): Promise<any> => {
-    const schon = laufendeRechnungen.get(quelleId);
-    if (schon) return schon;
-    const lauf = neuBerechnenWirklich(quelleId)
-      .finally(() => { laufendeRechnungen.delete(quelleId); });
-    laufendeRechnungen.set(quelleId, lauf);
-    return lauf;
-  };
+  /** Die Art, unter der die Maschine diesen Läufer kennt. */
+  const AUFTRAG_ART = 'pdf-bilder';
 
-  const neuBerechnenWirklich = async (quelleId: string): Promise<any> => {
+  /**
+   * Die Kennung eines Auftrags LEITET SICH AB, sie wird nicht gewürfelt.
+   *
+   * Das ist die ganze Absprache zwischen zwei Tabs und zwei Klicks: wer
+   * denselben Auftrag meint, kommt auf dieselbe Kennung, und
+   * `Store.auftragNehmen` gibt ihn nur einem.
+   */
+  const auftragsId = (quelleId: string): string => 'pdfbild-' + quelleId;
+
+  /**
+   * KEINE WIEDERHOLUNGEN. Der Vorgabewert der Maschine ist drei, und der
+   * ist für Aufträge gedacht, die an einem Netz hängen. Hier ist KEIN
+   * Fehlschlag vorübergehend: fehlt das Original, fehlt es auch in dreissig
+   * Sekunden; lässt sich das PDF nicht öffnen, lässt es sich nie öffnen.
+   * Dreimal zu warten hiesse nur, die Meldung dreimal so spät zu zeigen.
+   * Ein neuer Versuch ist ein Klick, und der leitet ohnehin neu her.
+   */
+  const MAX_VERSUCHE = 1;
+
+  /**
+   * Der Läufer.
+   *
+   * Er bekommt den Auftrag und die drei Griffe der Maschine: einen Schritt
+   * festschreiben, fragen ob abgebrochen wurde, die Pacht halten.
+   *
+   * WAS ER NICHT TUT: er zeigt nichts an. Ein Läufer, der Toasts wirft,
+   * wirft sie im falschen Tab — er läuft dort, wo die Pacht liegt, und das
+   * muss nicht der sein, in dem geklickt wurde. Angezeigt wird aus den
+   * Ereignissen (siehe `beiAuftragEreignis` weiter unten) und im
+   * Auftragsfenster (E322).
+   */
+  const bilderLaeufer = async (auftrag: any, hilfe: any): Promise<unknown> => {
+    const quelleId = String(auftrag?.eingabe?.quelleId || '');
+    if (!quelleId) throw new Error('Dem Auftrag fehlt die Kennung des Originals.');
+
+    /* NEU HERGELEITET, NICHT AUS DEM STAND GELESEN. Beim Wiederaufnehmen
+       nach einem Neustart wäre eine gespeicherte Liste von Block-Kennungen
+       eine Behauptung über die Vergangenheit — Blöcke können inzwischen im
+       Papierkorb liegen, Bilder können von Hand gelöscht worden sein.
+       `ohneBild` fragt den Bestand. */
     const offen = await ohneBild(quelleId);
     if (!offen.length) return { seiten: 0, grund: 'nichts offen' };
 
     const roh = await Dateien.alsBlob(quelleId);
     if (!roh) {
-      /* Das kann echt vorkommen: eine `.json`-Sicherung kennt keine Anhänge,
-         also fehlt auch das Original. Dann hilft nur die Datei selbst. */
-      UI.toast('Das Original fehlt in diesem Bestand — zieh die PDF-Datei ' +
-               'noch einmal herein.');
-      return { seiten: 0, grund: 'ohne Original' };
+      /* Das kann echt vorkommen: eine `.json`-Sicherung kennt keine
+         Anhänge, also fehlt auch das Original. Kein Fehler der Maschine,
+         sondern eine Auskunft an den Menschen — und weil sie ihn erreichen
+         muss, ist es hier eine Ausnahme und kein stilles `return`. */
+      throw new Error('Das Original fehlt in diesem Bestand — zieh die PDF-Datei ' +
+                      'noch einmal herein.');
     }
 
-    /* Der Name steht am Datei-Satz, nicht am Block: ein `pdfseite`-Block
-       trägt keinen Text. */
+    /* DER NAME DES DOKUMENTS GEHÖRT IN JEDEN SCHRITT-TEXT, nicht nur in den
+       ersten. `hilfe.schritt(stand, text)` ERSETZT den Text — der schöne
+       Satz von `anlegen` („„elektro.pdf": Seitenbilder werden zurückgeholt")
+       war nach der ersten Seite fort, und im Fenster stand nur noch „Seite 7
+       von 14". Bei zwei Skripten gleichzeitig sind zwei solche Zeilen nicht
+       auseinanderzuhalten. Auch das fand das Bild und kein Prüflauf. */
     const satzQuelle = await Store.dateiHolen(quelleId);
     const name = String(satzQuelle?.name || 'dem Original');
-    const melder = UI.toast('„' + name + '": Seitenbilder werden neu gerechnet …', 120000);
+
     let griff: any = null;
     let fertig = 0;
     try {
       griff = await PdfLeser.oeffne(new Uint8Array(await roh.arrayBuffer()));
       for (const b of offen) {
+        /* IN JEDER SCHLEIFE FRAGEN — so verlangt es die Maschine, und so
+           kommt der Abbrechen-Knopf aus E322 überhaupt zum Zug. */
+        if (hilfe.abgebrochen()) break;
         const n = Number(b.nr) || 1;
         if (n > griff.seiten) continue;   /* Seite gibt es im Original nicht */
-        /* Links wie rechts dieselbe Zählung. Vorher stand links die
-             Seitennummer IM DOKUMENT und rechts die Anzahl der noch zu
-             rechnenden Seiten — bei Seite 80 eines Skripts, von dem eine
-             fehlt, las man „Seite 80 von 1" (E116). */
-        melder.textContent = 'Seite ' + (fertig + 1) + ' von ' + offen.length +
-          ' wird gerechnet …';
         /* Wer diese Seite einmal schärfer gerechnet hat, will sie nicht
            beim nächsten Zurückholen wieder grob haben. Die Breite steht am
            Block und kommt mit in die Sicherung (E173). */
@@ -445,29 +498,114 @@ const PdfEinlesen = (() => {
         if (!b.suchtext) nach.suchtext = await griff.text(n);
         Store.updateBlock(b.id, nach);
         fertig++;
+        /* DER WIEDERAUFSETZPUNKT. Nach diesem Aufruf steht in der Ablage,
+           dass diese Seite fertig ist — ein Absturz eine Zeile später
+           kostet höchstens diese eine. Die Zählung im Text ist die des
+           DOKUMENTS und nicht die der Restliste: „Seite 80 von 1" war
+           genau der Fehler, den E116 abgeräumt hat. */
+        await hilfe.schritt({ quelleId, fertig },
+          '„' + name + '": Seite ' + n + ' von ' +
+          (Number(b.vonSeiten) || griff.seiten));
+        /* Dem Browser Luft lassen — sonst steht die Oberfläche still. */
         await new Promise(r => setTimeout(r, 0));
       }
-      melder.remove();
-      App.zeichneSeite();
-      UI.toast('„' + name + '": ' + (fertig === 1 ? 'eine Seite ist wieder da'
-                                              : fertig + ' Seiten sind wieder da'));
-      return { seiten: fertig };
-    } catch (e: unknown) {
-      melder.remove();
-      /* AUCH HIER NEU ZEICHNEN (E116). Bricht es bei Seite 40 von 80 ab,
-         sind vierzig Bilder fertig und stehen am Block — sie erschienen nur
-         nicht, weil das Neuzeichnen allein am Erfolgsweg hing. Und der Knopf,
-         über den man es erneut versuchen würde, stand für immer auf „wird
-         gerechnet …". Beides erledigt dieser eine Aufruf. */
-      App.zeichneSeite();
-      UI.toast('Die Seiten liessen sich nicht neu rechnen: ' +
-               (e instanceof Error ? e.message : String(e)));
-      return { seiten: fertig, fehler: true };
+      return { seiten: fertig, quelleId };
     } finally {
       if (griff) griff.schliessen();
     }
   };
 
+  /* Anmelden, sobald das Modul geladen ist. Die Maschine steht in
+     index.html vor diesem Bereich (Zeile 456 gegen 510), also ist sie hier
+     immer da; der Wächter gilt Prüfläufen, die einzelne Dateien laden. */
+  if (typeof Auftraege !== 'undefined' && Auftraege.anmelden)
+    Auftraege.anmelden(AUFTRAG_ART, bilderLaeufer, 'Seitenbilder zurückholen');
+
+  /* ── WAS DER MENSCH DAVON SIEHT ─────────────────────────────────────────
+     Der Läufer schweigt (siehe oben). Angezeigt wird HIER, aus den
+     Ereignissen — und zwar in jedem Tab, auch in dem, der nicht rechnet.
+
+     ZWEIMAL NEU ZEICHNEN, und beide Male mit Grund: nach dem Ende, weil
+     dann die letzten Bilder da sind, UND nach einem Fehler, weil bei einem
+     Abbruch auf Seite 40 vierzig Bilder fertig am Block stehen und nur
+     nicht erschienen. Genau das hat E116 einmal von Hand geflickt; jetzt
+     hängt es an einer Stelle statt an zweien. */
+  /**
+   * WÄHREND DES LAUFS AUCH — aber gedrosselt.
+   *
+   * Auf dem Bild stand ein vierzehnseitiges Skript eine halbe Minute lang
+   * grau da, während der Auftrag brav Seite für Seite rechnete. Das war
+   * schon vorher so, und schon vorher falsch: der Kopf dieser Datei
+   * verspricht „Sichtbarer Fortschritt — wer nicht sieht, dass etwas
+   * geschieht, drückt noch einmal". Als Auftrag wiegt es schwerer, weil er
+   * nun auch im Hintergrund läuft und länger dauern darf.
+   *
+   * Vierzehnmal neu zu zeichnen wäre die andere Übertreibung. Höchstens
+   * alle anderthalb Sekunden, und nur wenn überhaupt eine PDF-Seite auf
+   * dem Schirm ist — läuft der Auftrag zu einem Dokument, das gerade
+   * niemand ansieht, gibt es nichts aufzufrischen.
+   */
+  const ZEICHEN_ABSTAND_MS = 1500;
+  let zuletztGezeichnet = 0;
+
+  const beiAuftragEreignis = (name: string, daten: any): void => {
+    if (!daten || daten.art !== AUFTRAG_ART) return;
+    const zeichne = (): void => {
+      if (typeof App !== 'undefined' && App.zeichneSeite) App.zeichneSeite();
+      zuletztGezeichnet = Date.now();
+    };
+    if (name === 'auftrag.schritt') {
+      if (Date.now() - zuletztGezeichnet < ZEICHEN_ABSTAND_MS) return;
+      if (!document.querySelector('.pdfs, .pdfs-bild')) return;
+      zeichne();
+      return;
+    }
+    if (name === 'auftrag.beendet' || name === 'auftrag.fehler') {
+      zeichne();
+      if (daten.fehler) UI.toast(String(daten.fehler));
+    }
+  };
+  if (typeof Ereignisse !== 'undefined' && Ereignisse.horche) {
+    Ereignisse.horche('auftrag.schritt',  (d: any) => beiAuftragEreignis('auftrag.schritt', d));
+    Ereignisse.horche('auftrag.beendet', (d: any) => beiAuftragEreignis('auftrag.beendet', d));
+    Ereignisse.horche('auftrag.fehler',  (d: any) => beiAuftragEreignis('auftrag.fehler', d));
+  }
+
+  /**
+   * Die fehlenden Seitenbilder eines Dokuments neu rechnen — als Auftrag.
+   *
+   * Gibt den Auftrag zurück, nicht das Ergebnis. Das ist der Unterschied,
+   * den dieser Bogen ausmacht: der Aufrufer wartet nicht mehr auf achtzig
+   * Seiten, er stösst etwas an, das auch ohne ihn zu Ende geht.
+   *
+   * @param quelleId Kennung des abgelegten Originals
+   */
+  const neuBerechnen = async (quelleId: string): Promise<any> => {
+    if (typeof Auftraege === 'undefined') {
+      UI.toast('Die Auftragsmaschine steht nicht — Seitenbilder lassen sich ' +
+               'gerade nicht zurückholen.');
+      return { auftrag: null, grund: 'ohne Maschine' };
+    }
+    const offen = await ohneBild(quelleId);
+    if (!offen.length) return { auftrag: null, seiten: 0, grund: 'nichts offen' };
+
+    const id = auftragsId(quelleId);
+    /* SCHON UNTERWEGS? Dann NICHT neu anlegen. `Auftraege.anlegen` schreibt
+       den Satz mit `auftragPut` — auf einen laufenden angewandt setzte es
+       ihn zurück auf `wartet`, mit Schritt 0 und ohne Halter, während sein
+       Läufer noch rechnet. Zwei Läufer auf einem Auftrag ist genau der
+       Zustand, den dieser Bogen abschafft. */
+    const schon = await Auftraege.einer(id);
+    if (schon && !JobModell.beendet(schon)) return { auftrag: schon, schon: true };
+
+    const satzQuelle = await Store.dateiHolen(quelleId);
+    const name = String(satzQuelle?.name || 'dem Original');
+    const auftrag = await Auftraege.anlegen(AUFTRAG_ART, { quelleId }, {
+      id, schritte: offen.length, maxVersuche: MAX_VERSUCHE,
+      text: '„' + name + '": Seitenbilder werden zurückgeholt'
+    });
+    return { auftrag, seiten: offen.length };
+  };
   /* ========================================================================
    * EINE SEITE SCHÄRFER RECHNEN (L37, E173)
    * ------------------------------------------------------------------------

@@ -95,6 +95,8 @@ const Auftraege = (() => {
   ) => Promise<unknown>;
 
   const werkzeuge = new Map<string, Werkzeug>();
+  /** art -> wie es ein Mensch nennt. Siehe `anmelden`. */
+  const namen = new Map<string, string>();
   const abbrueche = new Set<string>();
   let takt: any = null;
   let laeuftGerade = false;
@@ -119,16 +121,29 @@ const Auftraege = (() => {
    * @returns eine Funktion zum Abmelden — sonst hinge der Läufer eines
    *          entladenen Bereichs für immer.
    */
-  const anmelden = (art: string, werkzeug: Werkzeug): (() => void) => {
+  const anmelden = (art: string, werkzeug: Werkzeug, name?: string): (() => void) => {
     if (!art || typeof werkzeug !== 'function') {
       throw new Error('Eine Auftragsart braucht einen Namen und einen Läufer.');
     }
     werkzeuge.set(art, werkzeug);
-    return () => { werkzeuge.delete(art); };
+    /* DER MENSCHLICHE NAME KOMMT VON DEM, DER DIE ART ANMELDET (E327).
+       Vorher stand er in einer Liste im Fenster (`ueberlagerung/auftraege.ts`)
+       — geraten, für fünf Arten, die es noch gar nicht gab. Die erste, die
+       es dann wirklich gab, stand nicht darin, und im Fenster erschien ihr
+       technischer Bezeichner: „pdf-bilder", als Überschrift, für einen
+       Menschen. Gefunden auf einem Bild.
+       Wer die Art anmeldet, weiss ihren Namen; die Schale muss ihn nicht
+       raten, und §5 Regel 1 bleibt heil — der Bereich meldet ihn dem Kern,
+       nicht der Schale. */
+    if (name) namen.set(art, name);
+    return () => { werkzeuge.delete(art); namen.delete(art); };
   };
 
   /** Welche Arten kennt diese Fassung? Für §47: was es nicht gibt, wird nicht angeboten. */
   const arten = (): string[] => [...werkzeuge.keys()];
+
+  /** Der menschliche Name einer Art — leer, wenn sie keinen mitgebracht hat. */
+  const artName = (art: string): string => namen.get(art) || '';
 
   /**
    * Einen Auftrag anlegen. Er ist damit DAUERHAFT da, auch ohne dass die
@@ -420,7 +435,7 @@ const Auftraege = (() => {
   };
 
   return {
-    start, stopp, takten, anmelden, arten, anlegen, abbrechen,
+    start, stopp, takten, anmelden, arten, artName, anlegen, abbrechen,
     nurEiner, SCHLOSS,
     alle, offen, einer, wiederaufnehmen, aufraeumen, leeren,
     ICH, TAKT_MS, AUFHEBEN_MS

@@ -24729,3 +24729,136 @@ gesagt (`timezoneId: 'Europe/Berlin'`), und damit KANN der Punkt rot
 werden: nimmt man die Umrechnung weg, steht dort 23:59 statt 01:59.
 
 test319, 26 Punkte. sw v80 · Einzeldatei neu gebaut.
+
+
+E327 — Der erste Bereich hängt an der Auftragsmaschine (L103 Punkt 1)
+════════════════════════════════════════════════════════════════════════════
+
+E286 baute die Auftragsmaschine, E322 gab ihr ein Fenster, E323 die
+Absprache zwischen Tabs. Was fehlte, war ein Bereich, der sie BENUTZT:
+`Auftraege.arten()` gab eine leere Liste zurück, und ein Takt, der keine
+Art kennt, steigt sofort wieder aus. Eine Maschine, die nichts tut, ist
+§47 in seiner grössten Form — kein Knopf ins Leere, sondern ein ganzes
+Werk.
+
+WARUM DAS ZURÜCKHOLEN UND NICHT DAS EINLESEN
+
+L103 nennt das PDF-Einlesen als besten Kandidaten, „weil es schon eine
+Wiederaufnahme hat, nur durch Neu-Herleitung statt aus einem Auftragssatz".
+Angeschlossen ist die risikoärmere Hälfte davon: das ZURÜCKHOLEN der
+Seitenbilder aus dem Original.
+
+Der Unterschied ist wichtig. Das Einlesen LEGT BLÖCKE AN — Spalten,
+Notizblätter, Seiten. Ein halb gelaufener Auftrag müsste wissen, welche er
+schon gebaut hat, und das wäre eine neue Zustandsführung mitten in §46.
+Das Zurückholen legt nichts an; es füllt fehlende `bildDateiId` nach. Und
+`ohneBild(quelleId)` fragt bei jedem Lauf den BESTAND, was noch fehlt —
+die Wiederaufnahme war also schon fertig, bevor der Auftrag sie brauchte.
+
+WAS DER ANSCHLUSS BRINGT — drei Dinge, und das dritte ist ein Datenschaden
+
+  · WER DEN TAB SCHLIESST, verliert den Lauf nicht mehr. Der Auftrag steht
+    in der Ablage; beim nächsten Start nimmt ihn irgendein Tab wieder auf.
+  · WER ZUSIEHT, sieht mehr als einen Toast: Zeile, Balken, Stand und
+    Abbrechen im Fenster aus E322.
+  · ZWEI TABS RECHNETEN BEIDE DASSELBE. `laufendeRechnungen` war eine Map
+    IM TAB. Der Kommentar darüber beschrieb die Gefahr schon richtig: beide
+    legen für denselben Block eine Datei ab, nur die zuletzt geschriebene
+    steht danach in `bildDateiId`, und die andere bleibt als fertiger Satz
+    mit LEBENDEM `blockId` liegen. `Dateien.verwaist()` sucht Sätze OHNE
+    Block und findet sie darum nie. Eine Dateileiche, die niemand mehr
+    wegräumen kann — und sie entstand, sobald jemand Redion zweimal offen
+    hatte. Der Schutz galt nur innerhalb eines Tabs.
+
+Die Kennung des Auftrags LEITET SICH AB (`pdfbild-` + Kennung des
+Originals) statt gewürfelt zu werden. Das ist die ganze Absprache: wer
+denselben Auftrag meint, kommt auf dieselbe Kennung, und
+`Store.auftragNehmen` gibt ihn nur einem. Ein zweiter Klick legt keinen
+zweiten an — er FINDET den laufenden und lässt ihn in Ruhe. `anlegen`
+würde ihn sonst mit `auftragPut` überschreiben und mitten im Lauf auf
+`wartet` zurücksetzen.
+
+KEINE WIEDERHOLUNGEN. Der Vorgabewert der Maschine ist drei Versuche; der
+ist für Aufträge an einem Netz gedacht. Hier ist kein Fehlschlag
+vorübergehend: fehlt das Original, fehlt es auch in dreissig Sekunden.
+Dreimal zu warten hiesse nur, die Meldung dreimal so spät zu zeigen. Ein
+neuer Versuch ist ein Klick, und der leitet ohnehin neu her.
+
+DER LÄUFER ZEIGT NICHTS AN. Er läuft dort, wo die Pacht liegt, und das
+muss nicht der Tab sein, in dem geklickt wurde — ein Toast von ihm
+erschiene im falschen Fenster. Angezeigt wird aus den Ereignissen, in
+jedem Tab. Damit hängt auch das Neuzeichnen an EINER Stelle statt an
+zweien: E116 hatte es von Hand sowohl in den Erfolgs- als auch in den
+Fehlerweg geschrieben, weil sonst vierzig fertige Seiten unsichtbar
+blieben.
+
+UND DER KNOPF WARTET NICHT MEHR. `PdfEinlesen.neuBerechnen` kommt zurück,
+sobald der Auftrag ANGELEGT ist. Auf sein Ende zu warten ginge gar nicht —
+er läuft womöglich woanders. Der Knopf hört stattdessen zu, und wenn
+nichts angelegt wurde, macht er sich selbst wieder anfassbar: ein Knopf,
+der auf ein Ereignis wartet, das niemand auslöst, wäre der Knopf von E116
+mit mehr Schritten davor.
+
+─── ZWEI FUNDE VOM BILD (§55.1) ────────────────────────────────────────────
+
+Das Fenster zeigte als Überschrift: „pdf-bilder".
+
+Der Grund lag in E322: dort steht eine Liste menschlicher Namen für die
+Arten — geraten, für fünf Arten, die es noch gar nicht gab (`ocr`,
+`pdf-einlesen`, `sicherung`, `embeddings`, `import`). Die ERSTE, die es
+dann wirklich gab, stand nicht darin, und der Rückfall ist der technische
+Bezeichner. Nicht falsch gedacht, nur an der falschen Stelle: die Schale
+kann die Namen der Bereiche nicht kennen.
+
+Seither gibt der Bereich den Namen beim Anmelden mit
+(`Auftraege.anmelden(art, laeufer, 'Seitenbilder zurückholen')`), die
+Maschine merkt ihn sich, und das Fenster fragt sie zuerst. §5 Regel 1
+bleibt heil — der Bereich meldet nach unten an den Kern, nicht seitwärts
+an die Schale. Die Liste in der Schale bleibt als Rückfall stehen.
+
+Und der zweite: der Satz „„elektro.pdf": Seitenbilder werden zurückgeholt"
+war nach der ersten Seite fort. `hilfe.schritt(stand, text)` ERSETZT den
+Text — im Fenster stand nur noch „Seite 7 von 14". Bei zwei Skripten
+gleichzeitig wären zwei solche Zeilen nicht auseinanderzuhalten. Der Name
+steht jetzt in JEDEM Schritt-Text.
+
+Dazu eine dritte Sache, die das Bild zeigte und die schon vorher galt: ein
+vierzehnseitiges Skript stand eine halbe Minute lang GRAU da, während der
+Auftrag brav rechnete. Der Kopf von `einlesen.ts` verspricht „Sichtbarer
+Fortschritt — wer nicht sieht, dass etwas geschieht, drückt noch einmal".
+Jetzt wird auch während des Laufs neu gezeichnet, höchstens alle
+anderthalb Sekunden und nur, wenn überhaupt eine PDF-Seite auf dem Schirm
+ist.
+
+─── DIE PRÜFUNG, UND WARUM SIE ROT WERDEN KANN ─────────────────────────────
+
+Die Zusage dieses Bogens ist „weiter, nicht von vorn". Die naheliegende
+Messung — „am Ende sind alle Bilder da" — kann das nicht zeigen: sie gilt
+für beide. Gemessen wird deshalb die ZAHL DER DATEISÄTZE je Block. Wer von
+vorn rechnet, legt für die schon fertigen Seiten ein ZWEITES Bild ab, und
+das ist genau die Dateileiche von oben.
+
+Belegt: mit einem Läufer, der `ohneBild` übergeht und alle Seiten neu
+rechnet, steht dort `[2,2]` statt `[1,1]` — und „alle vier Seiten haben
+ein Bild" blieb dabei GRÜN. Ohne die Zählung wäre der Abschnitt blind
+gewesen.
+
+Zwei Dinge fing die Prüfung an sich selbst:
+
+  · Der erste Anlauf hielt die Maschine mit `Auftraege.stopp()` an, um von
+    Hand zu takten — und mass lauter Nullen, weil `takten()` bei `!bereit`
+    sofort aussteigt. Der Umweg war ohnehin keiner: `anlegen` stösst selbst
+    einen Takt an.
+  · `Store.dateienAmBlock` ist modulintern und von aussen nicht zu haben.
+    Gezählt wird über `dateiAlle()`.
+
+Und einer traf einen ALTEN Prüflauf: test180 §6 schnitt den Quelltext ab
+`const neuBerechnen` bis ans Ende und suchte darin nach dem Innehalten
+zwischen zwei Seiten. Die Schleife steht jetzt in `bilderLaeufer`, und der
+steht davor — der Ausschnitt sah sie nicht mehr und meldete, es werde
+nicht mehr Seite für Seite gerechnet, obwohl genau das unverändert
+geschieht. Dieselbe Falle, die dort schon einmal kommentiert steht, nur
+andersherum: nicht ein zweiter Treffer, sondern ein verschobener. Der
+Ausschnitt geht jetzt von `bilderLaeufer` bis zum Schärferrechnen.
+
+test320, 35 Punkte. sw v81 · Einzeldatei neu gebaut.

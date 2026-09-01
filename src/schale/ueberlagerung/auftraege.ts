@@ -36,8 +36,14 @@
 
 const AuftragsAnzeige = (() => {
 
-  /* Menschliche Namen für die Arten, die es gibt. Was hier fehlt, wird mit
-     seinem technischen Namen gezeigt — besser der als gar keiner. */
+  /* MENSCHLICHE NAMEN — ZWEITE WAHL SEIT E327.
+     Zuerst wird die Maschine gefragt: wer eine Art anmeldet, gibt ihren
+     Namen mit (`Auftraege.anmelden(art, laeufer, name)`). Diese Liste hier
+     bleibt als Rückfall für Arten, die noch keinen mitbringen — sie
+     entstand, als es noch gar keine gab, und ihre fünf Einträge sind
+     Vorgriffe. Genau daran fiel der Fehler auf: die ERSTE Art, die es
+     wirklich gab, stand nicht darin, und im Fenster erschien „pdf-bilder"
+     als Überschrift für einen Menschen. */
   const NAMEN: Record<string, string> = {
     'ocr': 'Text aus Bildern lesen',
     'pdf-einlesen': 'PDF einlesen',
@@ -50,7 +56,11 @@ const AuftragsAnzeige = (() => {
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 
-  const artWort = (art: string): string => NAMEN[art] || String(art || 'Auftrag');
+  const artWort = (art: string): string => {
+    const vonDerArt = (typeof Auftraege !== 'undefined' && Auftraege.artName)
+      ? Auftraege.artName(art) : '';
+    return vonDerArt || NAMEN[art] || String(art || 'Auftrag');
+  };
 
   /**
    * Wie weit ist er — oder null, wenn es keinen ehrlichen Balken gibt.

@@ -3986,13 +3986,25 @@ L103 — Was die Auftragsmaschine (E286) noch nicht kann
 
 Die Maschine steht und ist geprüft. Fünf Dinge fehlen ihr, jedes mit Grund:
 
-1. **Kein Bereich ist angeschlossen.** OCR, PDF-Einlesen, grosser Import,
-   Sicherung, Embeddings — alle laufen weiter wie bisher, im
-   Arbeitsspeicher. Das ist Absicht: eine Auftragsmaschine unter das OCR zu
-   schieben, bevor sie bewiesen ist, wäre der Umbau, den §45 verbietet.
-   Der erste Anschluss ist ein eigener Bogen, und der beste Kandidat ist
-   das PDF-Einlesen — es hat schon eine Wiederaufnahme, nur durch
-   Neu-Herleitung statt aus einem Auftragssatz.
+1. **Kein Bereich ist angeschlossen.** — **GESCHLOSSEN am 1. September 2026
+   durch E327.** Angeschlossen ist das ZURÜCKHOLEN der PDF-Seitenbilder,
+   nicht das Einlesen selbst: das Einlesen legt Blöcke an, das Zurückholen
+   füllt nur fehlende `bildDateiId` nach, und seine Wiederaufnahme war mit
+   `ohneBild` schon fertig, bevor der Auftrag sie brauchte.
+
+   Der Anschluss brachte drei Dinge, und das dritte war ein Datenschaden:
+   der Lauf übersteht jetzt einen Neustart; er zeigt Stand, Balken und
+   Abbrechen im Fenster aus E322; und ZWEI TABS rechnen nicht mehr beide
+   dasselbe. Der bisherige Schutz war eine Map im Tab — bei zwei offenen
+   Fenstern legten beide für denselben Block eine Datei ab, und die
+   unterlegene blieb als Satz mit LEBENDEM `blockId` liegen, den
+   `Dateien.verwaist()` grundsätzlich nie findet.
+
+   WAS OFFEN BLEIBT: OCR, grosser Import, Sicherung und Embeddings laufen
+   weiter im Arbeitsspeicher. Der Weg dahin ist jetzt aber getreten und
+   gemessen — und beim Anschliessen kam heraus, dass der menschliche Name
+   einer Art zu ihr gehört und nicht in eine geratene Liste in der Schale
+   (siehe E327).
 
 2. **Kein Web Worker.** Ein Auftrag läuft im selben Faden wie die
    Oberfläche. Bei einem OCR über achtzig Seiten heisst das: die App

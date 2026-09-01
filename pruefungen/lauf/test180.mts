@@ -425,8 +425,20 @@ const quelle = ohneKommentare(
    `split` teilt an JEDER Fundstelle, und seit E116 gibt es zwei: den kleinen
    Vorbau mit der Sperre und `neuBerechnenWirklich` dahinter. `[1]` war
    danach der Vorbau — drei Zeugen, die plötzlich nichts mehr sahen und rot
-   wurden, ohne dass am Geprüften etwas falsch war. */
-const abZurueckholen = quelle.slice(quelle.indexOf('const neuBerechnen'));
+   wurden, ohne dass am Geprüften etwas falsch war.
+
+   UND SEIT E327 IST DER ANKER EIN ANDERER. Das Zurückholen ist ein Auftrag;
+   die Schleife über die Seiten steht in `bilderLaeufer`, und der steht VOR
+   `neuBerechnen`. Ein Ausschnitt ab `neuBerechnen` sah die Schleife nicht
+   mehr und meldete, es werde nicht mehr Seite für Seite gerechnet — obwohl
+   genau das unverändert geschieht. Dieselbe Falle wie oben, nur andersherum:
+   nicht ein zweiter Treffer, sondern ein verschobener.
+
+   Also von `bilderLaeufer` bis zum Schärferrechnen — das ist genau das
+   Zurückholen und nichts sonst. */
+const abZurueckholen = quelle.slice(
+  quelle.indexOf('const bilderLaeufer'),
+  quelle.indexOf('const schaerfer'));
 p('Es gibt das Zurückholen überhaupt', abZurueckholen.length > 200,
   String(abZurueckholen.length));
 p('Das Zurückholen nimmt die Masse vom BLOCK, nicht aus einer neuen Messung',

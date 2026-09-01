@@ -2417,3 +2417,25 @@ node pruefungen/lauf/test105.mjs
   misst jetzt den Kontrast in beiden Themen. Dazu hing §1 an der Zeitzone
   des prüfenden Rechners — die Seite bekommt sie jetzt gesagt.
   test319 neu (26). sw v80.
+* E327 (L103 Punkt 1): Der erste Bereich hängt an der Auftragsmaschine. Sie
+  stand seit E286 fertig da und `Auftraege.arten()` gab eine leere Liste —
+  eine Maschine, die nichts tut, ist §47 in seiner grössten Form.
+  Angeschlossen ist das ZURÜCKHOLEN der PDF-Seitenbilder und nicht das
+  Einlesen: das Einlesen legt Blöcke an, das Zurückholen füllt nur fehlende
+  Kennungen nach, und seine Wiederaufnahme war mit `ohneBild` schon fertig.
+  Der Lauf übersteht jetzt einen Neustart, zeigt Stand und Abbrechen im
+  Fenster aus E322 — und zwei Tabs rechnen nicht mehr beide dasselbe. Das
+  war der eigentliche Fund: der bisherige Schutz war eine Map IM TAB, und
+  bei zwei offenen Fenstern blieb je Block ein zweiter Dateisatz mit
+  lebendem `blockId` liegen, den `Dateien.verwaist()` nie findet. Die
+  Auftragskennung leitet sich aus dem Dokument ab, also gibt es je Dokument
+  höchstens einen. Vom Bild kamen zwei weitere Fehler: das Fenster zeigte
+  „pdf-bilder" als Überschrift für einen Menschen (die Namensliste in der
+  Schale war für fünf Arten geraten, die es gar nicht gibt — der Name gehört
+  zur Art und wird jetzt beim Anmelden mitgegeben), und der Dokumentname
+  verschwand nach dem ersten Schritt, weil `schritt(stand, text)` den Text
+  ersetzt. Dazu zeichnet die Seite jetzt schon WÄHREND des Laufs nach,
+  gedrosselt auf anderthalb Sekunden. Die Prüfung misst „weiter statt von
+  vorn" an der Zahl der Dateisätze — belegt rot mit `[2,2]` statt `[1,1]`,
+  während „alle vier haben ein Bild" dabei grün blieb. test320 neu (35),
+  test180 §6 auf den neuen Anker gesetzt. sw v81.
