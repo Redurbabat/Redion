@@ -124,9 +124,21 @@ const ohne = await messe();
 p('Ohne Rand gibt es keinen Flur', !ohne.flurDa && !ohne.randfeld);
 p('Und die Box ist so breit wie die Seite', ohne.box === '0 0 595 842', ohne.box);
 p('Der alte Strich ist zu sehen', !!ohne.strich, JSON.stringify(ohne.strich));
-p('Die Fläche liegt genau über dem Papier',
+/* ZWEI PIXEL SIND DER RAHMEN, NICHT EIN FEHLER.
+ *
+ * Gemessen am 1. September: Papier 85 – 1409, Fläche 86 – 1408. Links eins
+ * hinein, rechts eins hinein — das ist der 1-px-Rahmen des Papiers, und die
+ * Zeichenfläche liegt richtigerweise DARIN. Man malt nicht auf den Rahmen.
+ *
+ * Vorher stimmten die Zahlen auf den Pixel, und zwar aus dem falschen
+ * Grund: der Rahmen war unsichtbar, weil er `var(--rand)` benutzte — eine
+ * Farbe, die es nicht gibt, und ein ungültiges `var()` macht die ganze
+ * Erklärung ungültig (E304). Seit der Rahmen wieder da ist, sind es zwei
+ * Pixel. Die Schranke ist deshalb 3 und nicht 1: sie soll ein verrutschtes
+ * Blatt fangen, und das verrutscht um hunderte. */
+p('Die Fläche liegt über dem Papier, innerhalb seines Rahmens',
   !!ohne.flaeche && !!ohne.papier &&
-  Math.abs(ohne.flaeche[2]! - ohne.papier[2]!) <= 1,
+  Math.abs(ohne.flaeche[2]! - ohne.papier[2]!) <= 3,
   `${JSON.stringify(ohne.flaeche)} vs ${JSON.stringify(ohne.papier)}`);
 
 /* Und jetzt der Schalter. */

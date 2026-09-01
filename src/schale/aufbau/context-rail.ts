@@ -75,10 +75,20 @@ const Kontextkante = (() => {
    * Der Schauplatz, für die Kante übersetzt.
    *
    * `App.schauplatz()` kennt nur „seite". Was für eine Seite es ist, steht
-   * im gezeichneten Baum: der Dokumentmodus setzt `body.dokument`, eine
-   * PDF-Seite zeichnet `.pdfseite`, ein Blatt `.blattraum`. Gefragt wird
-   * der Baum und nicht der Bestand — eine Seite mit einem PDF-Block, die
-   * gerade als Text gelesen wird, ist der Editor und nicht die PDF.
+   * im gezeichneten Baum. Gefragt wird der Baum und nicht der Bestand —
+   * eine Seite mit einem PDF-Block, die gerade als Text gelesen wird, ist
+   * der Editor und nicht die PDF.
+   *
+   * HIER STANDEN ZWEI TOTE SELEKTOREN (E312). `#page .pdfseite` und
+   * `#page .blattraum` haben nie etwas getroffen: der Editor zeichnet
+   * `el.className = 'blk b-' + block.type` (editor.ts:433), ein PDF-Block
+   * heisst also `.blk.b-pdfseite` und ein Blatt `.blk.b-blatt`. Die Klassen
+   * `pdfseite` und `blattraum` gibt es im ganzen Bestand nur hier.
+   *
+   * Sie sind weg und nicht berichtigt, und zwar mit Absicht: die Zeile
+   * darüber beschreibt, was gelten SOLL — nur der Dokumentmodus ist die
+   * PDF —, und genau das galt durch den Fehler ohnehin schon. Sie
+   * „richtig" zu machen hätte das Verhalten geändert, nicht repariert.
    */
   const bereichJetzt = (): string => {
     let wo = 'leer';
@@ -86,7 +96,16 @@ const Kontextkante = (() => {
     if (wo !== 'seite') return wo;
     try {
       if (document.body.classList.contains('dokument')) return 'pdf';
-      if (document.querySelector('#page .pdfseite, #page .blattraum')) return 'pdf';
+      /* EINE SEITE, DIE NUR EINE DATENBANK ZEIGT, IST EINE DATENBANK (L95).
+         Und eine Seite mit Text davor und danach ist es NICHT — dort will
+         man den Editor, und die Kante darf ihn nicht wegnehmen. Gemessen
+         wird deshalb nicht „ist eine Datenbank da", sondern „ist ausser ihr
+         nichts da": jeder Block der Seite trägt eine.
+         Nachgemessen am 1. September: reine Datenbankseite 1 Block / 1 mit
+         Datenbank, Mischung 3 / 1, reine Textseite 1 / 0. */
+      const bloecke = [...document.querySelectorAll('#page .blk')];
+      const mitDb = bloecke.filter(b => b.querySelector('.db'));
+      if (mitDb.length && mitDb.length === bloecke.length) return 'datenbank';
     } catch { /* ohne Baum bleibt es der Editor */ }
     return 'editor';
   };
@@ -297,10 +316,13 @@ const Kontextkante = (() => {
       if (typeof k.liefern === 'function' || k.id === 'seiten') {
         if (offenerKnopf === String(k.id)) { ladeZu(); return; }
         ladeAuf(k, b);
-        if (typeof k.tun === 'function') { try { k.tun(); } catch { /* … */ } }
+        if (typeof k.tun === 'function') { try { (k.tun as any)(b); } catch { /* … */ } }
         return;
       }
-      try { k.tun(); } catch { /* ein toter Griff lässt die Kante stehen */ }
+      /* DER KNOPF GIBT SICH SELBST MIT (L95). Ein Menü braucht einen Ort,
+         an dem es aufgeht, und den kennt die Kante — nicht der Bereich.
+         Wer das Argument nicht braucht, merkt nichts davon. */
+      try { (k.tun as any)(b); } catch { /* ein toter Griff lässt die Kante stehen */ }
     });
     return b;
   };

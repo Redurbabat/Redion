@@ -3605,6 +3605,22 @@ sind Zeichenketten wie `▦`, `🧮`, `📅` und keines davon ein Symbolname.
 
 Gefunden am 31. August 2026 (E273, sechzehn Leser über acht Bereiche).
 
+GESCHLOSSEN am 1. September 2026 mit E312. Alle drei stehen, dazu die
+Abbildung und zwei neue Zeichen (`filter`, `sort`). Beim Bauen kamen zwei
+weitere Gründe ans Licht, die niemand vermutet hatte:
+
+  4 · `sortMenue` und `gruppierenMenue` hätten ohne Anker geworfen. Die
+      Kante gibt jetzt ihren eigenen Knopf an `tun` weiter.
+  5 · `schauplatzMelden()` meldete nur bei einer Änderung von
+      `App.schauplatz()` — von Seite zu Seite bleibt der „seite". Die Kante
+      zeichnete sich beim Seitenwechsel also NIE neu. Das betraf auch die
+      PDF-Kante und war seit E272 Phase F da.
+
+Und zwei tote Selektoren: `#page .pdfseite` und `#page .blattraum` trafen
+nie etwas (der Editor zeichnet `.blk.b-pdfseite`). Sie sind weg, nicht
+berichtigt — der Kommentar darüber beschreibt, was gelten soll, und das galt
+durch den Fehler ohnehin schon.
+
 --------------------------------------------------------------------------------
 L96 — „Benachrichtigungen leeren" hat keinen harmlosen Zwilling (E273) — GESCHLOSSEN
 --------------------------------------------------------------------------------

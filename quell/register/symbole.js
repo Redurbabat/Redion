@@ -234,6 +234,16 @@ Register.symbole = (() => {
         grid: '<rect x="3.4" y="3.4" width="17.2" height="17.2" rx="2.2"/>' +
             '<path d="M3.4 9.2h17.2M3.4 14.8h17.2M9.2 3.4v17.2M14.8 3.4v17.2"/>',
         circleDot: '<circle cx="12" cy="12" r="8.8"/><circle cx="12" cy="12" r="3.2"/>',
+        /* --- Zwei fuer die Datenbank-Kante (L95, E312) -----------------------
+           Ein Trichter und drei Balken. Beide gibt es sonst nirgends: die
+           Kante wollte „Filter" und „Sortieren", und ohne eigenes Zeichen
+           waere dort zweimal derselbe Strich gestanden — also zweimal nichts
+           (L97: dass zwei Zeichen gleich aussehen, sieht nur das Auge).
+           Absichtlich verschieden gebaut: der eine faellt nach unten
+           zusammen, der andere steht als Treppe. */
+        filter: '<path d="M3.8 5.2h16.4l-6.3 7.4v5.8l-3.8 2.2v-8z"/>',
+        sort: '<path d="M4 6.4h9.6M4 12h6.4M4 17.6h3.2"/>' +
+            '<path d="M17.6 5.6v12.8"/><path d="m14.6 15.4 3 3 3-3"/>',
         /* --- Fuenf fuer die Kontextkante (E272 Phase F) ----------------------
            Ein Knopf ohne Zeichen ist in einer 54 Pixel breiten Spalte ein
            leeres Quadrat — dasselbe, was in Phase B mit `clock` passiert ist

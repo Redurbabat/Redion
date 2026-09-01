@@ -734,10 +734,27 @@ const App = (() => {
   };
 
   let letzterSchauplatz = '';
+  /**
+   * DIE SEITE ZÄHLT MIT (L95, E312).
+   *
+   * Bis hierher wurde nur gemeldet, wenn sich `schauplatz()` änderte. Von
+   * einer Seite auf eine andere bleibt der aber „seite" — es kam also kein
+   * Signal, und die Kontextkante zeichnete sich nicht neu.
+   *
+   * Das fiel erst mit der Datenbank-Kante auf, war aber schon vorher da:
+   * `bereichJetzt()` verfeinert „seite" zu editor/pdf/datenbank, und beim
+   * Wechsel von einer PDF auf eine Textseite blieben die PDF-Griffe stehen.
+   * Ein Griff, der zur offenen Seite nicht gehört, ist schlimmer als keiner.
+   *
+   * Der `detail` bleibt der Schauplatz — wer nur ihn liest, merkt nichts.
+   * Die zusätzlichen Meldungen kosten ein Neuzeichnen der Kante, und das
+   * geschieht beim Seitenwechsel ohnehin schon zweimal.
+   */
   const schauplatzMelden = (): void => {
     const jetzt = schauplatz();
-    if (jetzt === letzterSchauplatz) return;
-    letzterSchauplatz = jetzt;
+    const merkmal = jetzt + '|' + String(seiteId || '');
+    if (merkmal === letzterSchauplatz) return;
+    letzterSchauplatz = merkmal;
     try {
       window.dispatchEvent(new CustomEvent('redion:schauplatz', { detail: jetzt }));
     } catch { /* ohne CustomEvent bleibt der Rest */ }

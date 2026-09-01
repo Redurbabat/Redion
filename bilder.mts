@@ -1216,6 +1216,38 @@ const ANSICHTEN: Record<string, { titel: string; bauen: () => void | Promise<voi
     }
   },
 
+  /* --- Die Kontextkante der Datenbank (L95, E312) -------------------------
+     Sie war der einzige Schauplatz ohne eigene Kante: eine Datenbankseite
+     zeigte die Griffe des Editors. Das Bild muss zeigen, dass rechts jetzt
+     Ansicht, Filter, Sortieren, Gruppieren und Spalten stehen. */
+
+  datenbankkante: {
+    titel: 'Kontextkante der Datenbank (E312, L95)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+      const seite = Store.addPage(null, { text: 'Projekte', icon: '📋' });
+      const { collectionId } = Store.addDatabase(seite.id, 'Projekte', {
+        titel:  { name: 'Projekt', type: 'title' },
+        status: { name: 'Status', type: 'status',
+                  options: [{ name: 'Offen' }, { name: 'Läuft' }, { name: 'Fertig' }] },
+        wann:   { name: 'Frist', type: 'date' }
+      });
+      for (const [t, st] of [['Schaltplan zeichnen', 'Läuft'],
+                             ['Messprotokoll', 'Offen'],
+                             ['Abgabe vorbereiten', 'Offen'],
+                             ['Bericht Kapitel 1', 'Fertig']]) {
+        const r = Store.addRow(collectionId, { title: String(t) });
+        Store.setProp(r.id, 'status', st);
+      }
+      await Store.flush();
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 900));
+    }
+  },
+
   lernplan: {
     titel: 'SM-2 oder FSRS — der Lernplan-Schalter (E303)',
     bauen: async () => {

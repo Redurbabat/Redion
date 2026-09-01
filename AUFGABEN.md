@@ -2227,3 +2227,15 @@ node pruefungen/lauf/test105.mjs
   „gemessen aus 29 Antworten" statt „geschätzt". Unter zwölf Abständen
   bleibt es bei der bisherigen Minute — dann ändert sich nur die
   Ehrlichkeit des Untertitels. test305 neu (23).
+* E312 (L95 geschlossen): Die Datenbank bekommt ihre Kontextkante — sie war
+  seit E272 Phase F der einzige Schauplatz ohne eigene. Fünf Griffe:
+  Ansicht, Filter, Sortieren, Gruppieren, Spalten. Die drei Gründe aus L95
+  sind behoben (Schauplatz, `offeneSammlung()` statt einer blossen Kennung,
+  vier nicht ausgeführte Menüs), und beim Bauen kamen zwei weitere ans
+  Licht: `sortMenue` hätte ohne Anker geworfen (die Kante gibt jetzt ihren
+  Knopf an `tun` weiter), und `schauplatzMelden()` meldete nur bei einer
+  Änderung von `App.schauplatz()` — von Seite zu Seite bleibt der „seite",
+  die Kante zeichnete sich also NIE neu. Das betraf auch die PDF-Kante.
+  Dazu zwei tote Selektoren entfernt (`.pdfseite`, `.blattraum` trafen nie
+  etwas) und zwei neue Zeichen (`filter`, `sort`). test306 neu (21); §4
+  klickt jeden Griff wirklich an, statt zu behaupten, dass er dasteht.

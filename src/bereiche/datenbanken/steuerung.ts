@@ -9333,6 +9333,34 @@ const Datenbank = (() => {
   /* Automationen an den Speicher hängen — einmal beim Laden. */
   automationenEinklinken();
 
+  /**
+   * Die offene Datenbank samt Ansicht und Block — für die Kontextkante (L95).
+   *
+   * `sammlungAufSeite` gab nur eine Kennung zurück. Damit lässt sich keines
+   * der Menüs aufrufen: sie wollen alle drei Stücke, und die Ansicht ist die,
+   * die der Block gerade zeigt — nicht einfach die erste.
+   */
+  const offeneSammlung = (seiteId?: string) => {
+    let id = String(seiteId || '');
+    if (!id) { try { id = String(App.aktuelleSeite() || ''); } catch { id = ''; } }
+    const s = id ? Store.getBlock(id) : null;
+    if (!s) return null;
+    const block = s.collectionId ? s
+      : (s.content || []).map((k: any) => Store.getBlock(k))
+          .find((b: any) => b && b.collectionId && b.alive !== false);
+    if (!block) return null;
+    const coll = Store.cache.collections[block.collectionId];
+    if (!coll) return null;
+    const ids: string[] = coll.viewIds || [];
+    /* `aktiveView` kann auf eine gelöschte Ansicht zeigen — dann gilt die
+       erste, statt dass alles danach `undefined` liest. */
+    const viewId = block.aktiveView && ids.includes(block.aktiveView)
+      ? block.aktiveView : ids[0];
+    const view = viewId ? Store.cache.views[viewId] : null;
+    if (!view) return null;
+    return { coll, view, block };
+  };
+
   /** Welche Sammlung liegt auf dieser Seite? Für Befehle, die eine brauchen. */
   const sammlungAufSeite = (seiteId: string) => {
     const s = Store.getBlock(seiteId);
@@ -9344,7 +9372,11 @@ const Datenbank = (() => {
     return kind ? kind.collectionId : null;
   };
 
-  return { render, sammlungAufSeite, spaltenMenue, TYPEN, propTyp, wert, wertFrisch, zeilen, zelle, OPERATOREN, ROLLUP_ARTEN,
+  return { render, sammlungAufSeite, offeneSammlung, spaltenMenue, TYPEN, propTyp, wert, wertFrisch, zeilen, zelle, OPERATOREN, ROLLUP_ARTEN,
+           /* Die vier Menüs standen nicht im Rückgabeobjekt — von aussen
+              waren sie `undefined`, und genau daran scheiterte die
+              Kontextkante der Datenbank (L95, dritter Punkt). */
+           filterMenue, sortMenue, eigenschaftenMenue,   /* `gruppierenMenue` steht schon weiter unten */
            /* `zelleBearbeiten` war nicht ausgeführt — der Mail-Bereich wollte
               es und griff deshalb ins Leere. */
            zelleBearbeiten,
@@ -9369,3 +9401,86 @@ const Datenbank = (() => {
            unterElementeAn, abhaengigkeitenAn, blockiertDurch, UNTER_KEYS, ABH_KEYS,
            weitereEinstellungen, quellenVerwalten, seitenLayoutPanel, dbMenue };
 })();
+
+/* ============================================================================
+ * DIE KONTEXTKANTE DER DATENBANK (L95, E312)
+ * ----------------------------------------------------------------------------
+ * Drei Dinge fehlten, und alle drei stehen jetzt:
+ *
+ *   1 · Ein Schauplatz. `bereichJetzt()` kennt seit E312 „datenbank" —
+ *       aber nur, wenn die Seite AUSSER der Datenbank nichts zeigt. Eine
+ *       Seite mit Text davor und danach bleibt der Editor; dort will man
+ *       ihn, und die Kante darf ihn nicht wegnehmen.
+ *   2 · Ein Griff. `offeneSammlung()` liefert `{coll, view, block}` statt
+ *       nur einer Kennung — ohne alle drei lässt sich kein Menü aufrufen.
+ *   3 · Ausgeführte Menüs. Die vier standen nicht im Rückgabeobjekt und
+ *       waren von aussen `undefined`.
+ *
+ * Und der Anker: die Kante gibt ihren Knopf an `tun` weiter (context-rail.ts).
+ * `sortMenue` und `gruppierenMenue` lesen sofort `getBoundingClientRect()` —
+ * ohne Anker hätten sie geworfen, und ein Knopf, der wirft, ist ein Knopf,
+ * der nichts tut (§47).
+ * ==========================================================================*/
+if (typeof Register !== 'undefined' && (Register as any).kontext) {
+  const K = (Register as any).kontext;
+
+  /** Die dreizehn Ansichtsarten auf Strichzeichen. Emoji stehen im
+      Ansichtenregister; an der Kante sind sie verboten (E202). */
+  const ANSICHT_ZEICHEN: Record<string, string> = {
+    table: 'grid', raster: 'grid', board: 'boxChecked', timeline: 'chart',
+    calendar: 'calendar', list: 'pages', gallery: 'image', chart: 'chart',
+    feed: 'history', map: 'compass', dashboard: 'graph', pivot: 'grid',
+    form: 'clipboard'
+  };
+
+  /** Die offene Datenbank — oder nichts. Jeder Griff fragt zuerst hier. */
+  const jetzt = (): any => {
+    try { return Datenbank.offeneSammlung(); } catch { return null; }
+  };
+  const da = (): boolean => !!jetzt();
+
+  /** Ein Menü öffnen, das drei Stücke und einen Anker braucht. */
+  const menue = (fn: (a: any, c: any, v: any, b: any) => void) =>
+    (anker?: HTMLElement): void => {
+      const o = jetzt();
+      if (!o || !anker) return;
+      try { fn(anker, o.coll, o.view, o.block); } catch { /* … */ }
+    };
+
+  K.melde({ bereich: 'datenbank', id: 'db-ansicht', name: 'Ansicht',
+    zeichen: 'grid', rang: 10,
+    zeigen: da,
+    liefern: () => {
+      const o = jetzt();
+      if (!o) return [{ id: 'keine', name: 'Keine Datenbank offen.', tun: () => {} }];
+      const ids: string[] = o.coll.viewIds || [];
+      if (!ids.length) return [{ id: 'keine', name: 'Diese Datenbank hat keine Ansicht.',
+                                 tun: () => {} }];
+      return ids.map((id: string) => {
+        const v = Store.cache.views[id];
+        const art = String(v?.type || 'table');
+        return {
+          id: 'v-' + id,
+          name: String(v?.name || 'Ohne Namen'),
+          unter: (Register.ansichten?.alle?.() || [])
+            .find((x: any) => x[0] === art)?.[2] || art,
+          zeichen: ANSICHT_ZEICHEN[art] || 'grid',
+          an: id === o.view.id,
+          tun: () => {
+            Store.updateBlock(o.block.id, { aktiveView: id });
+            try { App.oeffne(App.aktuelleSeite()); } catch { /* … */ }
+          }
+        };
+      });
+    }
+  });
+
+  K.melde({ bereich: 'datenbank', id: 'db-filter', name: 'Filter',
+    zeichen: 'filter', rang: 20, zeigen: da, tun: menue(Datenbank.filterMenue) });
+  K.melde({ bereich: 'datenbank', id: 'db-sort', name: 'Sortieren',
+    zeichen: 'sort', rang: 30, zeigen: da, tun: menue(Datenbank.sortMenue) });
+  K.melde({ bereich: 'datenbank', id: 'db-gruppe', name: 'Gruppieren',
+    zeichen: 'pages', rang: 40, zeigen: da, tun: menue(Datenbank.gruppierenMenue) });
+  K.melde({ bereich: 'datenbank', id: 'db-spalten', name: 'Spalten',
+    zeichen: 'eye', rang: 50, zeigen: da, tun: menue(Datenbank.eigenschaftenMenue) });
+}

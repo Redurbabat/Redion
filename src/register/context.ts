@@ -68,8 +68,10 @@ interface KontextKnopf {
   rang?: number;
   /** Fehlt sie, ist der Knopf immer da. */
   zeigen?: () => boolean;
-  /** Handelt sofort. */
-  tun?: () => void;
+  /** Handelt sofort. Bekommt den Knopf, an dem geklickt wurde — ein Menü
+      braucht einen Ort, und den kennt die Kante (L95). Wer ihn nicht
+      braucht, schreibt weiterhin `() => …`. */
+  tun?: (anker?: HTMLElement) => void;
   /** Füllt die Lade. */
   liefern?: () => KontextZeile[];
 }

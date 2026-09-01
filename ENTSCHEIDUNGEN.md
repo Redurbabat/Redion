@@ -23622,3 +23622,110 @@ im Fenster beides — frischer Arbeitsbereich sagt „geschätzt", dreissig
 Antworten später „gemessen", und die Lernzeit ist 10 statt 30 Minuten.
 
 Einzeldatei 7765 KB.
+
+
+================================================================================
+E312 — Die Datenbank bekommt ihre Kontextkante (L95 geschlossen)
+================================================================================
+1. September 2026
+
+Seit E272 Phase F hat jeder Schauplatz eine Kante rechts. Die Datenbank war
+der einzige ohne: eine Seite, die nur eine Datenbank zeigt, bekam die Griffe
+des Editors. E273 hat nachgemessen, warum — drei Gründe, und beim Bauen kamen
+zwei weitere dazu, die niemand vermutet hatte.
+
+
+Die drei aus L95
+--------------------------------------------------------------------------------
+
+1 · DEN SCHAUPLATZ GAB ES NICHT. `bereichJetzt()` verfeinert „seite" zu
+    editor oder pdf; „datenbank" fehlte. Es gibt ihn jetzt — aber nur, wenn
+    die Seite AUSSER der Datenbank nichts zeigt. Eine Seite mit Text davor
+    und danach bleibt der Editor; dort will man ihn, und die Kante darf ihn
+    nicht wegnehmen. Gemessen wird nicht „ist eine Datenbank da", sondern
+    „ist ausser ihr nichts da": jeder Block der Seite trägt eine. Am
+    1. September nachgemessen — reine Datenbankseite 1 Block / 1 mit
+    Datenbank, Mischung 3 / 1, reine Textseite 1 / 0.
+
+2 · ES GAB KEINEN GRIFF. `sammlungAufSeite()` gab nur eine Kennung.
+    `offeneSammlung()` gibt `{coll, view, block}` — und die Ansicht ist die,
+    die der Block gerade zeigt, nicht einfach die erste. Zeigt `aktiveView`
+    auf eine gelöschte Ansicht, gilt wieder die erste, statt dass alles
+    danach `undefined` liest.
+
+3 · DIE MENÜS WAREN VON AUSSEN `undefined`. `filterMenue`, `sortMenue`,
+    `gruppierenMenue` und `eigenschaftenMenue` standen nicht im
+    Rückgabeobjekt. Jetzt schon.
+
+
+Der vierte: ein Menü braucht einen Ort
+--------------------------------------------------------------------------------
+
+`sortMenue` und `gruppierenMenue` lesen sofort `anker.getBoundingClientRect()`.
+Ein Kantenknopf hatte nichts zu bieten — der Aufruf hätte geworfen, und die
+Kante wäre stehen geblieben, als sei nichts gewesen. Ein Knopf, der wirft,
+ist ein Knopf, der nichts tut (§47).
+
+Die Kante gibt deshalb ihren eigenen Knopf an `tun` weiter. Sie weiss, wo er
+steht; der Bereich weiss es nicht und soll es nicht wissen. Wer das Argument
+nicht braucht, schreibt weiterhin `() => …` und merkt nichts davon.
+
+
+Der fünfte, und er war schon lange kaputt
+--------------------------------------------------------------------------------
+
+`schauplatzMelden()` meldete nur, wenn sich `App.schauplatz()` änderte. Von
+einer Seite auf eine andere bleibt der aber „seite" — es kam also KEIN
+Signal, und die Kante zeichnete sich beim Seitenwechsel nie neu.
+
+Das fiel erst mit der Datenbank-Kante auf (im Prüflauf standen die
+Datenbankgriffe noch da, nachdem eine Textseite geöffnet war), war aber
+schon vorher da: `bereichJetzt()` verfeinert „seite", und die Verfeinerung
+wurde nach dem ersten Mal nie wieder gefragt. Jetzt zählt die offene Seite
+mit. Der `detail` bleibt der Schauplatz — wer nur ihn liest, merkt nichts.
+
+
+Und zwei tote Selektoren, gefunden beim Prüfen desselben Wegs
+--------------------------------------------------------------------------------
+
+`bereichJetzt()` fragte `#page .pdfseite, #page .blattraum`. Beide treffen
+nichts: der Editor zeichnet `el.className = 'blk b-' + block.type`
+(editor.ts:433), ein PDF-Block heisst also `.blk.b-pdfseite`. Die Klassen
+`pdfseite` und `blattraum` gab es im ganzen Bestand nur an dieser Stelle.
+
+Sie sind WEG und nicht berichtigt, und das ist die Entscheidung: der
+Kommentar darüber beschreibt, was gelten soll — nur der Dokumentmodus ist
+die PDF —, und genau das galt durch den Fehler ohnehin schon. Sie „richtig"
+zu machen hätte das Verhalten geändert, nicht repariert.
+
+
+Zwei neue Zeichen
+--------------------------------------------------------------------------------
+
+`filter` (ein Trichter) und `sort` (drei Balken mit Pfeil). Beide gab es
+nicht, und ohne eigenes Zeichen wären an der Kante zweimal derselbe Strich
+gestanden — also zweimal nichts. Absichtlich verschieden gebaut: der eine
+fällt nach unten zusammen, der andere steht als Treppe (L97: dass zwei
+Zeichen dasselbe Bild sind, sieht nur das Auge).
+
+Die dreizehn Ansichtsarten sind auf Zeichennamen abgebildet. Im
+Ansichtenregister stehen `▦`, `📅`, `🧮` — an der Kante sind das leere
+Quadrate oder bunte Fremdkörper (E202).
+
+
+Geprüft
+--------------------------------------------------------------------------------
+test306 neu, 21/21. §4 ist der Kern: jeder der vier Griffe wird ANGEKLICKT,
+und danach muss etwas offen sein, das auch das richtige Wort trägt — nicht
+„der Knopf steht da". §2 ist die Gegenprobe in beide Richtungen: mit Text
+drumherum bleibt es der Editor, und die Knopfliste der Datenbankseite darf
+nicht dieselbe sein wie die der Textseite (das ist der Wächter gegen den
+fünften Fund).
+
+Nebenbei berichtigt: test295 §1 verlangte, dass Zeichenfläche und Papier auf
+einen Pixel gleich breit sind. Sie sind zwei schmaler — links eins hinein,
+rechts eins hinein. Das ist der 1-px-Rahmen des Papiers, den E304
+zurückgebracht hat (vorher war er wegen `var(--rand)` unsichtbar), und die
+Fläche liegt richtigerweise darin. Man malt nicht auf den Rahmen.
+
+Einzeldatei 7774 KB.
