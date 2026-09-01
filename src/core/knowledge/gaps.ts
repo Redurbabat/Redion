@@ -81,9 +81,13 @@ const KnowledgeGaps = (() => {
     seiteId?: string;
     /** Die Seiten, von denen aus der Fund sichtbar wurde. */
     quellen?: Array<{ id: string; titel: string }>;
+    /** Stabil über Neuberechnungen — siehe `kennung` (E324). */
+    id?: string;
   };
 
   type Optionen = {
+    /** Kennungen abgehakter Funde — sie werden ausgelassen (E324). */
+    erledigt?: string[];
     /** Jetzt, in Millisekunden. Kommt herein, damit sich Zeit prüfen lässt. */
     jetzt?: number;
     /** Ab welcher Stärke ein Fund GEZÄHLT wird. Vorgabe 40. */
@@ -106,6 +110,8 @@ const KnowledgeGaps = (() => {
     jeArt: Record<string, number>;
     /** Wieviele Funde der Schnitt je Art weggelassen hat. */
     abgeschnitten: number;
+    /** Wieviele als erledigt abgehakt und deshalb nicht dabei sind (E324). */
+    versteckt: number;
     /** Ein Satz im Klartext über das Ganze. */
     satz: string;
   };
@@ -436,39 +442,76 @@ const KnowledgeGaps = (() => {
     funde.sort((a, b) => b.staerke - a.staerke ||
                          a.titel.localeCompare(b.titel, 'de'));
 
-    const stark = funde.filter(f => f.staerke >= schwelle);
+    /* Jeder Fund bekommt seine Kennung, bevor irgendwer filtert. */
+    for (const f of funde) f.id = kennung(f);
+
+    /* --- ERLEDIGTES AUSSORTIEREN (L105 Punkt 2, E324) ------------------- */
+    const erledigt = new Set((opt.erledigt || []).map(String));
+    const versteckt = erledigt.size
+      ? funde.filter(f => erledigt.has(f.id!)).length : 0;
+    const sichtbar = versteckt ? funde.filter(f => !erledigt.has(f.id!)) : funde;
+
+    const stark = sichtbar.filter(f => f.staerke >= schwelle);
     const jeArt: Record<string, number> = {};
     for (const f of stark) jeArt[f.art] = (jeArt[f.art] || 0) + 1;
 
     return {
-      funde, gezaehlt: stark.length, gesamt: funde.length, jeArt, abgeschnitten,
-      satz: satzZu(stark.length, funde.length, abgeschnitten)
+      funde: sichtbar, gezaehlt: stark.length, gesamt: sichtbar.length,
+      jeArt, abgeschnitten, versteckt,
+      satz: satzZu(stark.length, sichtbar.length, abgeschnitten, versteckt)
     };
   };
+
+  /**
+   * DIE KENNUNG EINES FUNDS (L105 Punkt 2, E324).
+   *
+   * Sie muss zwei Dinge zugleich können, und das zweite ist der Grund,
+   * warum sie so aussieht:
+   *
+   *   · Über Neuberechnungen hinweg GLEICH bleiben. Sonst käme ein
+   *     erledigter Fund beim nächsten Öffnen als neuer zurück.
+   *   · Sich ÄNDERN, wenn sich der Fund ändert. Wer seine offene Frage
+   *     umformuliert, hat eine andere Frage — und die soll wieder
+   *     auftauchen. Ein „erledigt" gilt dem Fund, nicht der Zeile.
+   *
+   * Deshalb Art, Seite und Titel zusammen. Kleinschreibung und
+   * zusammengezogene Leerzeichen, damit ein nachträglich eingefügtes
+   * Leerzeichen keine neue Frage erfindet.
+   */
+  const kennung = (f: Fund): string =>
+    String(f.art) + '|' + String(f.seiteId || '') + '|' +
+    String(f.titel || '').trim().replace(/\s+/g, ' ').toLocaleLowerCase('de');
 
   /**
    * Der Satz oben. Er sagt AUCH etwas, wenn nichts Zählbares da ist —
    * „nichts gefunden" ist eine Auskunft, keine leere Seite.
    */
-  const satzZu = (gezaehlt: number, gesamt: number, abgeschnitten = 0): string => {
+  const satzZu = (gezaehlt: number, gesamt: number, abgeschnitten = 0,
+                  versteckt = 0): string => {
     const rest = gesamt - gezaehlt;
+    /* ABGEHAKTES WIRD GENANNT, aber nur wenn es welches gibt. Eine Liste,
+       die schweigend etwas weglässt, liest sich wie Vollständigkeit — und
+       „0 erledigt" wäre die Zeile, die man nach dem zweiten Mal überliest. */
+    const ab = versteckt
+      ? ' ' + versteckt + (versteckt === 1 ? ' Fund ist' : ' Funde sind') +
+        ' abgehakt und nicht dabei.' : '';
     /* Der Schnitt wird IMMER genannt, wenn er zugeschlagen hat. Eine Liste,
        die dreissig zeigt und schweigend zweihundert weglässt, liest sich
        wie Vollständigkeit. */
     const mehr = abgeschnitten
       ? ' Weitere ' + abgeschnitten + ' sind nicht aufgeführt — je Art werden ' +
         'höchstens die stärksten gezeigt.' : '';
-    if (!gesamt) return 'Keine Lücken gefunden. Der Bestand hängt zusammen.' + mehr;
+    if (!gesamt) return 'Keine Lücken gefunden. Der Bestand hängt zusammen.' + mehr + ab;
     if (!gezaehlt) return 'Nichts Auffälliges. ' + gesamt +
-      ' schwache Beobachtungen stehen unten — sie sind zu unsicher zum Zählen.' + mehr;
+      ' schwache Beobachtungen stehen unten — sie sind zu unsicher zum Zählen.' + mehr + ab;
     const wort = gezaehlt === 1 ? 'eine Lücke' : gezaehlt + ' Lücken';
     return 'Deutlich: ' + wort +
       (rest ? ', dazu ' + rest + ' schwächere Beobachtung' + (rest === 1 ? '' : 'en') : '') +
-      '.' + mehr;
+      '.' + mehr + ab;
   };
 
   return {
-    finden, fragenAus, ohneMarkierung, tageSeit, satzZu,
+    finden, kennung, fragenAus, ohneMarkierung, tageSeit, satzZu,
     staerkeGeist, staerkeMehrdeutig, staerkeThema, staerkeFrage,
     staerkeVerstaubt, staerkeInsel, VORGABE
   };

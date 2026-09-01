@@ -24505,3 +24505,65 @@ deshalb zuerst den ganz gewöhnlichen Weg und war grün, ohne etwas zu prüfen.
 
 test316, 15 Punkte. Mitgelaufen: test280 55/55, test315 25/25.
 sw v77 · Einzeldatei 7850 KB.
+
+================================================================================
+E324 — Ein abgehakter Fund bleibt weg (L105 Punkt 2)
+================================================================================
+1. September 2026
+
+Wer einen Fund gesehen und für unwichtig befunden hat, sah ihn beim nächsten
+Öffnen wieder. Für Geister ist das richtig — sie verschwinden von selbst,
+sobald die Seite da ist. Für offene Fragen und Inseln nicht: manche Frage
+bleibt absichtlich offen, und eine Liste, die einen beharrlich auf dieselbe
+Stelle stösst, hört man nach dem dritten Mal nicht mehr.
+
+─── DIE KENNUNG WAR DIE GANZE FRAGE ────────────────────────────────────────
+
+L105 hatte es vorausgesehen: „die Kennung müsste dafür aber stabil sein, und
+die Frage-Kennung ist heute der Text selbst." Sie muss ZWEI Dinge zugleich
+können, und das zweite ist der Grund für ihre Form:
+
+  · über Neuberechnungen GLEICH bleiben — sonst käme ein abgehakter Fund
+    beim nächsten Öffnen als neuer zurück;
+  · sich ÄNDERN, wenn sich der Fund ändert. Wer seine offene Frage
+    umformuliert, hat eine andere Frage, und die soll wieder auftauchen.
+    Abgehakt ist der FUND, nicht die Zeile.
+
+`kennung(f)` = Art + Seite + Titel, kleingeschrieben, Leerzeichen
+zusammengezogen. Ein nachträglich eingefügtes Leerzeichen erfindet damit
+keine neue Frage, eine echte Umformulierung schon. Der Text ALS Kennung ist
+also nicht der Notbehelf, den L105 vermutete — er ist die richtige Antwort,
+sobald man ihn normalisiert.
+
+─── UND ES WIRD GESAGT ─────────────────────────────────────────────────────
+
+Der Befund führt `versteckt`, und der Satz nennt es: „1 Fund ist abgehakt
+und nicht dabei." Dieselbe Regel wie beim Schnitt je Art (E288): eine Liste,
+die schweigend etwas weglässt, liest sich wie Vollständigkeit.
+
+GEGENPROBE: ohne Abgehaktes steht kein Wort davon da, und keine
+Zurück-Zeile. „0 abgehakt · wieder zeigen" stünde bei jedem Öffnen und wäre
+nach dem zweiten Mal unsichtbar.
+
+ZURÜCK GEHT IMMER. Gemerkt wird eine Kennung, nie ein Fund; gelöscht wird
+nichts. Ein Klick auf „wieder zeigen" holt alles zurück, und ein Toast sagt
+wie viele.
+
+─── ZUM DRITTEN MAL AN EINEM TAG: DIE SPEZIFITÄTSFALLE ─────────────────────
+
+Der Haken war zuerst 71 px breit — genau so breit wie „Seite anlegen"
+darüber, weil `.finder .res button{width:100%}` jede einzelne Klasse
+schlägt. Dasselbe wie beim Budgetfeld in E320 und beim Grenzfeld in E321.
+Beim dritten Mal ist es keine Nachlässigkeit mehr, sondern eine Eigenschaft
+dieses Stils, und sie steht jetzt als L111 aufgeschrieben — mit der kleinen
+Antwort (den Vorfahren mit davor) und der grösseren (die breiten Regeln auf
+`>` verengen), die ein eigener Bogen mit einem Bild je Fenster wäre.
+
+NEBENBEI BERICHTIGT: in `luecken.ts` stand ein Kommentar, Redion habe keinen
+gemeinsamen Escape-Griff. Genau diese Behauptung hat E302 widerlegt — sie
+war aus dem Gedächtnis geschrieben, nicht gemessen. Ein Kommentar, der eine
+widerlegte Tatsache behauptet, führt den nächsten Leser genauso in die Irre
+wie er den Lückenschreiber in die Irre führte.
+
+test317, 25 Punkte. Mitgelaufen: test288 8/8, test296 17/17.
+sw v78 · Einzeldatei 7857 KB.

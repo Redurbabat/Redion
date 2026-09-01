@@ -366,6 +366,29 @@ const ANSICHTEN: Record<string, { titel: string; bauen: () => void | Promise<voi
     }
   },
 
+  luecken: {
+    titel: 'Wissenslücken mit „erledigt" (E324)',
+    bauen: async () => {
+      const w = window as any;
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelectorAll('.overlay').forEach(o => o.remove());
+      Store.setMeta('wissen:luecken:erledigt', []);
+
+      /* Ein paar echte Löcher: Geisterverweise und offene Fragen. */
+      const s1 = Store.addPage(null, { text: 'Elektrotechnik' });
+      Store.addBlock(s1.id, 'text', { text: 'Siehe [[Blindleistung]] und [[Scheinleistung]].' });
+      Store.addBlock(s1.id, 'text', { text: 'Warum brummt der Trafo bei Teillast?' });
+      const s2 = Store.addPage(null, { text: 'Messtechnik' });
+      Store.addBlock(s2.id, 'text', { text: 'Auch [[Blindleistung]] fehlt hier noch.' });
+      Store.addBlock(s2.id, 'text', { text: 'Wie genau ist ein Zangenamperemeter wirklich?' });
+      Store.addPage(null, { text: 'Loses Blatt ohne Verweise' });
+      await Store.flush();
+
+      w.Wissensluecken.zeigen();
+      await new Promise(r => setTimeout(r, 700));
+    }
+  },
+
   auftraege: {
     titel: 'Was gerade läuft — die Auftragsanzeige (E322)',
     bauen: async () => {

@@ -3190,6 +3190,22 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
 .wl-mittel{border-color:#e0a800; color:#a67c00}
 .wl-schwach{opacity:.75}
 .wl-tun{font-size:12px; padding:3px 9px; min-height:26px}
+/* Der Haken (E324). Zurückhaltend, weil er nichts löscht — er legt einen
+   Fund beiseite, und der Weg zurück steht oben im Kopf. */
+/* `.finder .res button{width:100%}` weiter oben ist spezifischer als eine
+   einzelne Klasse — deshalb steht `.finder .res` hier mit davor. Ohne das
+   wäre der Haken so breit wie „Seite anlegen" darüber: ein Häkchen in einem
+   71-px-Kasten. Derselbe Kampf wie beim Budgetfeld in E320; er ist in diesem
+   Stil eine Falle und steht deshalb als L108. */
+.finder .res .wl-hak{background:none; border:1px solid var(--line);
+  border-radius:6px; color:var(--text-faint); cursor:pointer; font-size:13px;
+  line-height:1; padding:4px 8px; min-height:26px;
+  width:auto; align-self:flex-end}
+.finder .res .wl-hak:hover{color:var(--c-gruen, #2a8); border-color:var(--c-gruen, #2a8)}
+.wl-zurueck{margin-top:8px; font-size:12px; color:var(--text-faint)}
+.wl-zurueck button{background:none; border:none; padding:0 0 0 4px;
+  color:var(--accent-text); cursor:pointer; font:inherit;
+  text-decoration:underline}
 .wl-leer{padding:20px 16px; color:var(--text-faint); font-size:14px}
 .wl-schwach summary{
   cursor:pointer; padding:10px 14px; font-size:12.5px; color:var(--text-dim);
@@ -3203,6 +3219,9 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
   .wl-fund{flex-wrap:wrap}
   .wl-rechts{flex-direction:row; width:100%; justify-content:flex-start; margin-top:2px}
   .wl-tun{min-height:36px}
+  /* §37: am Telefon gehört der Haken dem Daumen. */
+  .finder .res .wl-hak{min-height:44px; min-width:44px}
+  .wl-zurueck button{min-height:44px}
   .wl-quelle{min-height:32px}
 }
 
@@ -19710,21 +19729,54 @@ const KnowledgeGaps = (() => {
         /* --- Sortieren: nach STÄRKE, nicht nach Art -------------------------- */
         funde.sort((a, b) => b.staerke - a.staerke ||
             a.titel.localeCompare(b.titel, 'de'));
-        const stark = funde.filter(f => f.staerke >= schwelle);
+        /* Jeder Fund bekommt seine Kennung, bevor irgendwer filtert. */
+        for (const f of funde)
+            f.id = kennung(f);
+        /* --- ERLEDIGTES AUSSORTIEREN (L105 Punkt 2, E324) ------------------- */
+        const erledigt = new Set((opt.erledigt || []).map(String));
+        const versteckt = erledigt.size
+            ? funde.filter(f => erledigt.has(f.id)).length : 0;
+        const sichtbar = versteckt ? funde.filter(f => !erledigt.has(f.id)) : funde;
+        const stark = sichtbar.filter(f => f.staerke >= schwelle);
         const jeArt = {};
         for (const f of stark)
             jeArt[f.art] = (jeArt[f.art] || 0) + 1;
         return {
-            funde, gezaehlt: stark.length, gesamt: funde.length, jeArt, abgeschnitten,
-            satz: satzZu(stark.length, funde.length, abgeschnitten)
+            funde: sichtbar, gezaehlt: stark.length, gesamt: sichtbar.length,
+            jeArt, abgeschnitten, versteckt,
+            satz: satzZu(stark.length, sichtbar.length, abgeschnitten, versteckt)
         };
     };
+    /**
+     * DIE KENNUNG EINES FUNDS (L105 Punkt 2, E324).
+     *
+     * Sie muss zwei Dinge zugleich können, und das zweite ist der Grund,
+     * warum sie so aussieht:
+     *
+     *   · Über Neuberechnungen hinweg GLEICH bleiben. Sonst käme ein
+     *     erledigter Fund beim nächsten Öffnen als neuer zurück.
+     *   · Sich ÄNDERN, wenn sich der Fund ändert. Wer seine offene Frage
+     *     umformuliert, hat eine andere Frage — und die soll wieder
+     *     auftauchen. Ein „erledigt" gilt dem Fund, nicht der Zeile.
+     *
+     * Deshalb Art, Seite und Titel zusammen. Kleinschreibung und
+     * zusammengezogene Leerzeichen, damit ein nachträglich eingefügtes
+     * Leerzeichen keine neue Frage erfindet.
+     */
+    const kennung = (f) => String(f.art) + '|' + String(f.seiteId || '') + '|' +
+        String(f.titel || '').trim().replace(/\s+/g, ' ').toLocaleLowerCase('de');
     /**
      * Der Satz oben. Er sagt AUCH etwas, wenn nichts Zählbares da ist —
      * „nichts gefunden" ist eine Auskunft, keine leere Seite.
      */
-    const satzZu = (gezaehlt, gesamt, abgeschnitten = 0) => {
+    const satzZu = (gezaehlt, gesamt, abgeschnitten = 0, versteckt = 0) => {
         const rest = gesamt - gezaehlt;
+        /* ABGEHAKTES WIRD GENANNT, aber nur wenn es welches gibt. Eine Liste,
+           die schweigend etwas weglässt, liest sich wie Vollständigkeit — und
+           „0 erledigt" wäre die Zeile, die man nach dem zweiten Mal überliest. */
+        const ab = versteckt
+            ? ' ' + versteckt + (versteckt === 1 ? ' Fund ist' : ' Funde sind') +
+                ' abgehakt und nicht dabei.' : '';
         /* Der Schnitt wird IMMER genannt, wenn er zugeschlagen hat. Eine Liste,
            die dreissig zeigt und schweigend zweihundert weglässt, liest sich
            wie Vollständigkeit. */
@@ -19732,17 +19784,17 @@ const KnowledgeGaps = (() => {
             ? ' Weitere ' + abgeschnitten + ' sind nicht aufgeführt — je Art werden ' +
                 'höchstens die stärksten gezeigt.' : '';
         if (!gesamt)
-            return 'Keine Lücken gefunden. Der Bestand hängt zusammen.' + mehr;
+            return 'Keine Lücken gefunden. Der Bestand hängt zusammen.' + mehr + ab;
         if (!gezaehlt)
             return 'Nichts Auffälliges. ' + gesamt +
-                ' schwache Beobachtungen stehen unten — sie sind zu unsicher zum Zählen.' + mehr;
+                ' schwache Beobachtungen stehen unten — sie sind zu unsicher zum Zählen.' + mehr + ab;
         const wort = gezaehlt === 1 ? 'eine Lücke' : gezaehlt + ' Lücken';
         return 'Deutlich: ' + wort +
             (rest ? ', dazu ' + rest + ' schwächere Beobachtung' + (rest === 1 ? '' : 'en') : '') +
-            '.' + mehr;
+            '.' + mehr + ab;
     };
     return {
-        finden, fragenAus, ohneMarkierung, tageSeit, satzZu,
+        finden, kennung, fragenAus, ohneMarkierung, tageSeit, satzZu,
         staerkeGeist, staerkeMehrdeutig, staerkeThema, staerkeFrage,
         staerkeVerstaubt, staerkeInsel, VORGABE
     };
@@ -41032,10 +41084,44 @@ const Wissensluecken = (() => {
         }));
         return { seiten, verweise, themen };
     };
+    /* ------------------------------------------------------------------------
+     * ERLEDIGTES (L105 Punkt 2, E324)
+     * ------------------------------------------------------------------------
+     * Wer einen Fund gesehen und für unwichtig befunden hat, sah ihn beim
+     * nächsten Öffnen wieder. Für Geister ist das richtig — sie verschwinden
+     * von selbst, sobald die Seite da ist. Für offene Fragen und Inseln nicht:
+     * manche Frage bleibt absichtlich offen, und eine Liste, die einen
+     * beharrlich auf dieselbe Stelle stösst, hört man nach dem dritten Mal
+     * nicht mehr.
+     *
+     * GEMERKT WIRD NUR EINE KENNUNG, nie ein Fund. Wer eine Seite löscht und
+     * neu anlegt, bekommt seinen Haken zurück; wer seine Frage umformuliert,
+     * bekommt sie wieder vorgelegt. Beides ist richtig so — abgehakt ist der
+     * FUND, nicht die Zeile.
+     * ---------------------------------------------------------------------- */
+    const SCHL_ERLEDIGT = 'wissen:luecken:erledigt';
+    const erledigte = () => {
+        const l = Store.getMeta(SCHL_ERLEDIGT, []);
+        return Array.isArray(l) ? l.filter((x) => typeof x === 'string') : [];
+    };
+    const abhaken = (id) => {
+        if (!id)
+            return;
+        const l = erledigte();
+        if (l.indexOf(id) >= 0)
+            return;
+        Store.setMeta(SCHL_ERLEDIGT, l.concat([id]));
+    };
+    /** Alles wieder hervorholen. Rückgängig, immer — nichts wurde gelöscht. */
+    const wiederZeigen = () => {
+        const n = erledigte().length;
+        Store.setMeta(SCHL_ERLEDIGT, []);
+        return n;
+    };
     /** Der Befund von jetzt. */
     const befund = (opt = {}) => {
         const { seiten, verweise, themen } = sammeln();
-        return KnowledgeGaps.finden(seiten, verweise, themen, opt);
+        return KnowledgeGaps.finden(seiten, verweise, themen, { erledigt: erledigte(), ...opt });
     };
     /* ------------------------------------------------------------------------
      * ZEIGEN
@@ -41072,8 +41158,60 @@ const Wissensluecken = (() => {
                     ? '<button type="button" class="rb wl-tun" data-open="' + esc(f.seiteId) + '">' +
                         'Öffnen</button>'
                     : '') +
+            /* Abhaken, und der Titel sagt, dass es zurückgeht (E324). */
+            '<button type="button" class="wl-hak" data-hak="' + esc(f.id || '') + '" ' +
+            'title="Abhaken — kommt nicht wieder, bis du sie wieder zeigst" ' +
+            'aria-label="„' + esc(f.titel) + '" abhaken">✓</button>' +
             '</div>' +
             '</li>';
+    };
+    /** Kopf und Liste neu füllen — nach jedem Haken. */
+    const fuellen = (o) => {
+        const b = befund();
+        const kopf = o.querySelector('.wl-kopf');
+        const titelZahl = o.querySelector('#wl-titel em');
+        if (titelZahl)
+            titelZahl.textContent = String(b.gezaehlt);
+        if (kopf) {
+            const zaehlung = Object.entries(b.jeArt)
+                .sort((x, y) => y[1] - x[1])
+                .map(([art, n]) => '<span class="wl-zaehler">' +
+                (ARTEN[art] ? ARTEN[art].zeichen + ' ' + ARTEN[art].name : esc(art)) +
+                ' <em>' + n + '</em></span>').join('');
+            kopf.innerHTML = esc(b.satz) +
+                (zaehlung ? '<div class="wl-zaehlung">' + zaehlung + '</div>' : '') +
+                /* DER WEG ZURÜCK, und nur wenn es einen zu gehen gibt. Ein „0
+                   abgehakt · wieder zeigen" stünde bei jedem Öffnen da und wäre nach
+                   dem zweiten Mal unsichtbar. */
+                (b.versteckt
+                    ? '<div class="wl-zurueck">' + b.versteckt +
+                        (b.versteckt === 1 ? ' Fund ist abgehakt' : ' Funde sind abgehakt') +
+                        ' <button type="button" class="wl-wieder">wieder zeigen</button></div>'
+                    : '');
+        }
+        const res = o.querySelector('#wl-res');
+        if (!res)
+            return;
+        if (!b.funde.length) {
+            res.innerHTML = '<div class="wl-leer">' +
+                (b.versteckt
+                    ? 'Alles abgehakt. Nichts steht mehr offen.'
+                    : 'Nichts gefunden. Der Bestand hängt zusammen — oder es ist noch ' +
+                        'zu wenig darin.') + '</div>';
+            return;
+        }
+        const stark = b.funde.filter((f) => f.staerke >= KnowledgeGaps.VORGABE.schwelle);
+        const schwach = b.funde.filter((f) => f.staerke < KnowledgeGaps.VORGABE.schwelle);
+        res.innerHTML =
+            (stark.length ? '<ul class="wl-ul">' +
+                stark.map((f, i) => fundHtml(f, i)).join('') + '</ul>' : '') +
+                (schwach.length
+                    ? '<details class="wl-schwach"><summary>' + schwach.length +
+                        ' schwächere Beobachtung' + (schwach.length === 1 ? '' : 'en') +
+                        ' — zu unsicher zum Zählen</summary><ul class="wl-ul">' +
+                        schwach.map((f, i) => fundHtml(f, stark.length + i)).join('') +
+                        '</ul></details>'
+                    : '');
     };
     const zeigen = () => {
         const b = befund();
@@ -41096,32 +41234,17 @@ const Wissensluecken = (() => {
                 'keine KI, kein Netz. Die Zahl rechts sagt, wie sicher der Fund ist.</div>' +
                 '</div>';
         document.body.appendChild(o);
-        const res = o.querySelector('#wl-res');
-        if (res) {
-            if (!b.funde.length) {
-                res.innerHTML = '<div class="wl-leer">Nichts gefunden. ' +
-                    'Der Bestand hängt zusammen — oder es ist noch zu wenig darin.</div>';
-            }
-            else {
-                const stark = b.funde.filter((f) => f.staerke >= KnowledgeGaps.VORGABE.schwelle);
-                const schwach = b.funde.filter((f) => f.staerke < KnowledgeGaps.VORGABE.schwelle);
-                res.innerHTML =
-                    (stark.length ? '<ul class="wl-ul">' +
-                        stark.map((f, i) => fundHtml(f, i)).join('') + '</ul>' : '') +
-                        (schwach.length
-                            ? '<details class="wl-schwach"><summary>' + schwach.length +
-                                ' schwächere Beobachtung' + (schwach.length === 1 ? '' : 'en') +
-                                ' — zu unsicher zum Zählen</summary><ul class="wl-ul">' +
-                                schwach.map((f, i) => fundHtml(f, stark.length + i)).join('') +
-                                '</ul></details>'
-                            : '');
-            }
-        }
-        /* Escape schliesst (§38). Das ist hier ausdrücklich hingeschrieben, weil
-           Redion KEINEN gemeinsamen Escape-Griff für `.overlay` hat — der Graph
-           und das Schlagwortregister schliessen deshalb bis heute nicht auf
-           Escape. Das ist eine eigene Lücke (L105) und keine Ausrede, ein neues
-           Fenster ohne den Griff zu bauen. */
+        fuellen(o);
+        /* Escape schliesst (§38).
+    
+           HIER STAND EINMAL, Redion habe KEINEN gemeinsamen Escape-Griff für
+           `.overlay`. Das war falsch und wurde am 1. September 2026 mit E302
+           widerlegt: der Griff steht seit E272 Phase G in `schale.ts` und nimmt
+           das oberste Fenster. L105 Punkt 1 hält den Irrtum fest — er entstand
+           aus dem Gedächtnis statt aus einer Messung.
+    
+           Der eigene Griff hier bleibt trotzdem stehen und schadet nicht: beide
+           zusammen schliessen genau ein Fenster, und test296 misst das. */
         const aufEscape = (e) => {
             if (e.key !== 'Escape')
                 return;
@@ -41145,6 +41268,22 @@ const Wissensluecken = (() => {
                 Links.oeffneOderAnlegen(name);
                 return;
             }
+            const hak = ziel?.closest('[data-hak]');
+            if (hak) {
+                abhaken(hak.dataset.hak || '');
+                fuellen(o);
+                return;
+            }
+            if (ziel?.closest('.wl-wieder')) {
+                const n = wiederZeigen();
+                fuellen(o);
+                try {
+                    UI.toast(n === 1 ? 'Ein Fund ist wieder da.'
+                        : n + ' Funde sind wieder da.');
+                }
+                catch { /* egal */ }
+                return;
+            }
             const auf = ziel?.closest('[data-open]');
             if (auf) {
                 o.remove();
@@ -41155,7 +41294,8 @@ const Wissensluecken = (() => {
                 o.remove();
         });
     };
-    return { zeigen, befund, sammeln, seitentext, ARTEN, FRAGE_IST_INHALT };
+    return { zeigen, befund, sammeln, seitentext, ARTEN, FRAGE_IST_INHALT,
+        erledigte, abhaken, wiederZeigen, SCHL_ERLEDIGT };
 })();
 window.Wissensluecken = Wissensluecken;
 

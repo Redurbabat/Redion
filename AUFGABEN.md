@@ -2379,3 +2379,12 @@ node pruefungen/lauf/test105.mjs
   Takte sich mit 160-ms-Fenstern fast nie treffen. §2b erzwingt die
   Gleichzeitigkeit und meldet ohne Schloss zwölf Überschneidungen.
   test316 neu (15). sw v77.
+* E324 (L105 Punkt 2): Ein abgehakter Fund bleibt weg. Die Kennung war die
+  ganze Frage — sie muss über Neuberechnungen gleich bleiben UND sich
+  ändern, wenn sich der Fund ändert: wer seine Frage umformuliert, hat eine
+  andere Frage. Art + Seite + Titel, normalisiert. Der Satz nennt, wieviel
+  abgehakt ist, aber nur wenn es welches gibt; zurück geht immer, denn
+  gemerkt wird eine Kennung und nie ein Fund. Der Haken war zuerst 71 px
+  breit — dieselbe Spezifitätsfalle wie E320 und E321, beim dritten Mal als
+  L111 aufgeschrieben. Und ein Kommentar, der die von E302 widerlegte
+  Escape-Behauptung wiederholte, ist berichtigt. test317 neu (25). sw v78.

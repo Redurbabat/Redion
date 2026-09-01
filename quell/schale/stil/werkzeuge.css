@@ -948,6 +948,22 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
 .wl-mittel{border-color:#e0a800; color:#a67c00}
 .wl-schwach{opacity:.75}
 .wl-tun{font-size:12px; padding:3px 9px; min-height:26px}
+/* Der Haken (E324). Zurückhaltend, weil er nichts löscht — er legt einen
+   Fund beiseite, und der Weg zurück steht oben im Kopf. */
+/* `.finder .res button{width:100%}` weiter oben ist spezifischer als eine
+   einzelne Klasse — deshalb steht `.finder .res` hier mit davor. Ohne das
+   wäre der Haken so breit wie „Seite anlegen" darüber: ein Häkchen in einem
+   71-px-Kasten. Derselbe Kampf wie beim Budgetfeld in E320; er ist in diesem
+   Stil eine Falle und steht deshalb als L108. */
+.finder .res .wl-hak{background:none; border:1px solid var(--line);
+  border-radius:6px; color:var(--text-faint); cursor:pointer; font-size:13px;
+  line-height:1; padding:4px 8px; min-height:26px;
+  width:auto; align-self:flex-end}
+.finder .res .wl-hak:hover{color:var(--c-gruen, #2a8); border-color:var(--c-gruen, #2a8)}
+.wl-zurueck{margin-top:8px; font-size:12px; color:var(--text-faint)}
+.wl-zurueck button{background:none; border:none; padding:0 0 0 4px;
+  color:var(--accent-text); cursor:pointer; font:inherit;
+  text-decoration:underline}
 .wl-leer{padding:20px 16px; color:var(--text-faint); font-size:14px}
 .wl-schwach summary{
   cursor:pointer; padding:10px 14px; font-size:12.5px; color:var(--text-dim);
@@ -961,6 +977,9 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
   .wl-fund{flex-wrap:wrap}
   .wl-rechts{flex-direction:row; width:100%; justify-content:flex-start; margin-top:2px}
   .wl-tun{min-height:36px}
+  /* §37: am Telefon gehört der Haken dem Daumen. */
+  .finder .res .wl-hak{min-height:44px; min-width:44px}
+  .wl-zurueck button{min-height:44px}
   .wl-quelle{min-height:32px}
 }
 

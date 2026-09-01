@@ -4168,6 +4168,15 @@ L105 — Was die Lückenansicht (E288) noch nicht kann
    `meta` je Fund-Kennung wäre die kleine Antwort — die Kennung müsste
    dafür aber stabil sein, und die Frage-Kennung ist heute der Text selbst.
 
+   **GESCHLOSSEN am 1. September 2026 durch E324**, und die Kennung war
+   genau die Frage. `KnowledgeGaps.kennung(f)` nimmt Art, Seite und Titel
+   zusammen, kleingeschrieben und mit zusammengezogenen Leerzeichen. Sie
+   bleibt über Neuberechnungen gleich UND ändert sich, wenn sich der Fund
+   ändert: wer seine Frage umformuliert, hat eine andere Frage und bekommt
+   sie wieder vorgelegt. Ein Haken je Fund, ein Weg zurück im Kopf, und der
+   Satz nennt, wieviel abgehakt ist — aber nur, wenn es welches gibt.
+   test317, 25 Punkte.
+
 3. **Die Ansicht rechnet bei jedem Öffnen neu.** PageRank über den ganzen
    Graphen, alle Verweise auflösen, jede Seite nach Fragen durchsuchen.
    Bei Redions Demobestand sind das Millisekunden; bei zehntausend Seiten
@@ -4417,3 +4426,50 @@ der zweite der beiden Wege:
 Nicht beides halb. test305 §2 hält fest, dass keiner der vier Namen mehr in
 ausführbarem Code steht — samt Gegenprobe, dass ein echter Feldname sehr
 wohl gefunden würde.
+
+
+================================================================================
+L111 — `.finder .res button{width:100%}` schlägt jede einzelne Klasse
+================================================================================
+
+Dreimal an einem Tag dieselbe Falle, und beim dritten Mal war klar, dass es
+keine Nachlässigkeit ist, sondern eine Eigenschaft dieses Stils.
+
+Redions Fensterstil setzt breite Regeln auf Nachfahren:
+
+    .finder label input, .finder label select { width:100% }   werkzeuge.css
+    .finder .res button                       { width:100% }   werkzeuge.css
+    .ez-steuer select, .ez-steuer input       { min-width:150px } einstellungen.css
+
+Alle drei haben Spezifität (0,1,2) oder (0,1,1) mit einem Element mehr als
+eine gewöhnliche Einzelklasse. Wer danach `.mein-feld{width:76px}` schreibt,
+verliert — nicht sichtbar, nicht mit einer Warnung, sondern still. Das
+Ergebnis sieht aus wie Absicht: ein Eingabefeld über die halbe Zeile, ein
+Häkchen so breit wie ein Knopf.
+
+WAS ES DREIMAL GEKOSTET HAT:
+
+  · E320 — das Budgetfeld des Tagesplans war 479 px breit für eine
+    zweistellige Zahl. Gefunden auf einem Bild, nicht von einem Prüflauf.
+  · E321 — beim Grenzfeld der KI-Kosten von vornherein umgangen, WEIL E320
+    am selben Tag danebenlag. Ohne diese Erinnerung wäre es der zweite
+    Fehler geworden.
+  · E324 — der Haken der Lückenliste war so breit wie „Seite anlegen".
+    Wieder auf einem Bild gefunden.
+
+WARUM ES KEIN PRÜFLAUF FINDET: es ist kein Fehler, sondern gültiges CSS mit
+einem unerwarteten Ausgang. Ein Wächter müsste jede neue Klasse gegen alle
+breiten Regeln stellen — machbar, aber er würde Dutzende gewollter Fälle
+melden.
+
+DIE KLEINE ANTWORT, die dreimal funktioniert hat: eine neue Regel in einem
+`.finder`- oder `.ez-`-Fenster bekommt den Vorfahren mit davor
+(`.finder .res .wl-hak`, `.ez-steuer input.ez-grenze`). Kostet drei Zeichen
+und nimmt die Frage weg.
+
+DIE GRÖSSERE ANTWORT wäre, die breiten Regeln auf das zu verengen, was sie
+meinen — `.finder .res > button` statt `.finder .res button`. Das ist ein
+eigener Bogen mit einem Bild je Fenster, denn es ändert bestehende
+Oberflächen, und die Wirkung sieht man erst beim Hinsehen.
+
+Gefunden am 1. September 2026 (E320, E321, E324).
