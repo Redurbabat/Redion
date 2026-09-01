@@ -3943,10 +3943,16 @@ nicht verlorengeht:
    jedes Konto. Jetzt zählt dort die Rolle, und es gibt `darfUeberhaupt`
    für Handlungen, die gar keinen Ort haben.
 
-3. **Der ganze Vektorweg ist toter Code.** `findenMitVektoren` ist definiert
-   und exportiert (`kontext.ts:620`, Export `:636`), und im gesamten
-   Verzeichnis ruft es niemand auf. Die semantische Suche existiert also als
-   Code und nicht als Weg (§47).
+3. **Der ganze Vektorweg ist toter Code.** — **GESCHLOSSEN am 1. September
+   2026 durch E333.** Verdrahtet in `bauenFuerFrage`, aber nicht naiv: die
+   Funktion schickt für jede Frage eine Einbettung an eine kostenpflichtige
+   API. Der Schalter ist das VORHANDENSEIN der Vektoren — wer sie gebaut
+   hat, hat mit E287 einmal mit Betrag Ja gesagt; wer nicht, zahlt nichts
+   und sucht wie vorher.
+
+   BEIM VERDRAHTEN WÄRE BEINAHE EIN LECK ENTSTANDEN: `nurSeite` achtete der
+   Vektorweg nicht, weil ihn nie jemand rief. Toter Code ist nicht nur
+   ungenutzt, sondern auch ungeprüft.
 
 4. **Der Ereignisbus kann kein async.** `melde` verwirft den Rückgabewert,
    `frage` sammelt Promises als rohe Werte ein, statt sie abzuwarten. Kein
@@ -3972,19 +3978,24 @@ nicht verlorengeht:
    `enthaelt` kommt jetzt aus derselben Liste; vorher stand es zweimal da.
    test325 (20 Punkte), belegt rot.
 
-6. **Das Fehlerzentrum zeigt ein Feld, das nie gefüllt wird.**
-   `lernwelt.ts:1041` liest `letzteAntwort` aus vier möglichen Feldern und
-   zeigt es unter „Letzte falsche Antwort" — gespeichert wird keines davon,
-   es steht dort immer „nicht gespeichert".
+6. **Das Fehlerzentrum zeigt ein Feld, das nie gefüllt wird.** —
+   **GESCHLOSSEN am 1. September 2026 durch E333.** Vier tote Feldnamen
+   weg. Der Grund war nicht Vergesslichkeit, sondern das Modell: eine
+   Karteikarte wird nicht getippt, sondern SELBST BEWERTET — es gibt keine
+   falsche Antwort, sondern eine Note. Die Überschrift heisst jetzt „Letzte
+   Selbstbewertung" und der Wert „1 von 4 (nochmal)". Dieselbe Sorte wie
+   E311, zwei Bildschirme weiter oben in derselben Datei.
 
-7. **Der normale KI-Chat hat GAR KEIN Limit** — weder Tageslimit noch
-   Notaus noch Zähler. Beides hängt allein an `Agent.laufen`.
-   `embeddingsBauen` schickt zusätzlich JEDE Seite einzeln an eine
-   kostenpflichtige API: ein Klick, keine Zahl vorher, keine Obergrenze.
-   Der Grund steht ausgesprochen im Code (`agenten.ts:26`: „hier zählt es
-   Schritte statt Geld, weil die lokale KI nichts kostet") — die Annahme
-   stimmte, als sie geschrieben wurde, und stimmt seit sechs Cloud-Anbietern
-   nicht mehr.
+7. **Der normale KI-Chat hat GAR KEIN Limit** — **WAR AM 1. SEPTEMBER
+   SCHON ZU, nachgemessen in E333.** Der Satz stimmte am 31. August. E287
+   kam einen Tag später und setzte die Prüfung an das EINE Tor, durch das
+   alles geht: `frageKurz`, die Agentenschleife und der Chat. Sie prüft VOR
+   dem Aufruf, bucht die Schätzung und berichtigt sie im `finally`. Auch
+   `embeddingsBauen` fragt seither einmal mit Betrag und bucht, was es
+   ausgibt.
+
+   Die Messung steht in test326 §5 — eine Lücke ohne Messung zu schliessen
+   wäre eine Behauptung mit Datum.
 
 Gefunden am 31. August 2026 (gemessene Bestandsaufnahme vor E284).
 

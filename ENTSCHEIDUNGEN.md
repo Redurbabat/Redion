@@ -25296,3 +25296,87 @@ test325, 20 Punkte. Belegt rot: nimmt man `vorrat` aus der Liste der
 bewusst Ausgelassenen, meldet die laufende Ablage es sofort als unerklärt.
 
 test100 32, test111 81. sw v86 · Einzeldatei neu gebaut.
+
+
+E333 — Der Nachlauf zur Bestandsaufnahme (L102 Punkt 3, 6 und 7)
+════════════════════════════════════════════════════════════════════════════
+
+Drei Funde vom 31. August, und sie brauchten drei verschiedene Antworten:
+einen bauen, einen berichtigen, einen nur nachmessen.
+
+PUNKT 3 — DER VEKTORWEG WAR TOTER CODE
+
+„`findenMitVektoren` ist definiert und exportiert, und im gesamten
+Verzeichnis ruft es niemand auf. Die semantische Suche existiert also als
+Code und nicht als Weg (§47)."
+
+DIE NAHELIEGENDE VERDRAHTUNG WÄRE FALSCH GEWESEN. Diese Funktion schickt
+für JEDE Frage eine Einbettung an eine kostenpflichtige API. Sie einfach an
+den Chat zu hängen hiesse: jede Chatnachricht kostet still Geld — genau der
+Zustand, den E287 abgeräumt hat, nur an einer anderen Stelle.
+
+DER SCHALTER IST DESHALB DAS VORHANDENSEIN DER VEKTOREN. Wer sie gebaut
+hat, hat einmal ausdrücklich Ja gesagt — E287 fragt mit Betrag. Wer nicht,
+merkt von alledem nichts und zahlt nichts: dann fällt die Suche auf
+`finden` zurück, wie sie es immer tat. Und die eine Anfrage je Frage geht
+durch dieselbe Kasse wie alles andere; reicht das Kontingent nicht, wird
+weder heimlich gespart noch heimlich ausgegeben, sondern gesucht wie vorher.
+
+UND BEIM VERDRAHTEN WÄRE BEINAHE EIN LECK ENTSTANDEN. `bauenFuerFrage`
+reicht `nurSeite` durch, wenn der Aufrufer eine bestimmte Seite meint;
+`finden` achtet das seit jeher (`kontext.ts:433`). Der Vektorweg tat es
+nicht — weil ihn niemand rief, hatte es nie jemand gebraucht. Ohne die
+nachgezogene Zeile hätte das Modell nach dem Anschliessen den ganzen
+Bestand gesehen, wo es eine Seite sehen sollte.
+
+Toter Code ist nicht nur ungenutzt. Er ist auch UNGEPRÜFT — und was nie
+lief, hat auch nie gezeigt, was ihm fehlt.
+
+PUNKT 6 — EIN FELD, DAS NIE GEFÜLLT WIRD
+
+`lernwelt.ts` klopfte vier Feldnamen ab — `answer`, `antwort`, `input`,
+`eingabe` — und keinen davon schreibt irgendwer. Der Verlaufseintrag trägt
+`at`, `rating`, `algorithm`, `lapse`, `before`, `after`
+(`wissen/dienst.ts:180-196`) und sonst nichts.
+
+Der Grund ist nicht Vergesslichkeit, sondern das Modell: eine Karteikarte
+in Redion wird nicht getippt, sondern SELBST BEWERTET. Es gibt keine
+falsche Antwort, die man aufheben könnte — es gibt eine Note, die man sich
+gegeben hat. Die Überschrift „Letzte falsche Antwort" versprach also etwas,
+das es in diesem Modell gar nicht gibt.
+
+Also: vier tote Namen weg, Überschrift „Letzte Selbstbewertung", und der
+Wert sagt, was er ist — „1 von 4 (nochmal)". Dieselbe Sorte wie E311, zwei
+Bildschirme weiter oben in derselben Datei; dort war es `durationMs`.
+
+PUNKT 7 — WAR SCHON ZU
+
+„Der normale KI-Chat hat GAR KEIN Limit — weder Tageslimit noch Notaus noch
+Zähler." Das stimmte am 31. August. E287 kam am 1. September und setzte die
+Prüfung an das eine Tor, durch das alles geht: `frageKurz`, die
+Agentenschleife und der Chat. Auch der Embedding-Stapel fragt seither
+einmal mit Betrag und bucht, was er ausgibt.
+
+NACHGEMESSEN STATT GEGLAUBT — beide Richtungen. Der Prüflauf hält fest, wo
+die Prüfung sitzt, dass sie VOR dem Aufruf greift, dass sie bucht und dass
+die Berichtigung im `finally` steht. Eine Lücke, die man ohne Messung
+schliesst, ist eine Behauptung mit Datum.
+
+─── UND EINE PRÜFUNG, DIE SICH SELBST FING ─────────────────────────────────
+
+§3 war beim ersten Wurf BLIND, und die Mutation zeigte es: nimmt man die
+`nurSeite`-Zeile aus dem Vektorweg, blieb alles grün.
+
+Der Grund: die Prüfung suchte das Muster in der GANZEN Datei, und `finden`
+trägt dieselbe Zeile. Sie fand sie jedes Mal beim Nachbarn.
+
+Und beinahe wäre auch das durchgegangen: der erste Mutationsversuch
+ersetzte einen Textblock, der so nicht dastand, und änderte gar nichts —
+grün, aus dem falschen Grund. Erst ein `assert` auf das Muster machte
+sichtbar, dass die Mutation selbst wirkungslos war.
+
+Eine Mutation ohne Beleg, dass sie angekommen ist, beweist so wenig wie
+eine Prüfung, die nicht rot werden kann.
+
+test326, 28 Punkte. test305 23/23, test287 9/9.
+sw v87 · Einzeldatei neu gebaut.

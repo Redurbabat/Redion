@@ -983,7 +983,7 @@ const KI = (() => {
     let quellen = [];
     if (mitKontext && Store.getMeta('kiKontext', true)) {
       ziel.textContent = 'Sucht im Arbeitsbereich …';
-      const k = Kontext.bauenFuerFrage(text, { anzahl: 6 });
+      const k = await Kontext.bauenFuerFrage(text, { anzahl: 6 });
       quellen = k.quellen;
 
       /* NUR-QUELLEN-MODUS (E305, Redurs Punkt 11). Findet sich nichts, wird

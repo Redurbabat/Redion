@@ -81,7 +81,8 @@ type LernweltFehler = {
   card: any;
   frage: string;
   antwort: string;
-  letzteAntwort: string;
+  /* Wie streng man sich selbst bewertet hat (E333) — siehe `letzteNote`. */
+  letzteNote: string;
   fach: string;
   thema: string;
   quelle: string;
@@ -1065,8 +1066,26 @@ const Lernwelt = (() => {
       card,
       frage,
       antwort,
-      letzteAntwort: String(letzter?.answer || letzter?.antwort || letzter?.input ||
-        letzter?.eingabe || (bewertung(letzter) ? 'Bewertung ' + bewertung(letzter) : 'nicht gespeichert')),
+      /* WAS HIER STAND, WAR EINE FRAGE AN DIE FALSCHE STELLE (E333, L102
+         Punkt 6). Vier Feldnamen wurden abgeklopft — `answer`, `antwort`,
+         `input`, `eingabe` —, und keinen davon schreibt irgendwer. Der
+         Verlaufseintrag trägt `at`, `rating`, `algorithm`, `lapse`,
+         `before`, `after` (`wissen/dienst.ts:180-196`) und sonst nichts.
+
+         Der Grund ist nicht Vergesslichkeit, sondern das Modell: eine
+         Karteikarte in Redion wird nicht getippt, sondern SELBST BEWERTET.
+         Es GIBT keine falsche Antwort, die man aufheben könnte — es gibt
+         eine Note, die man sich gegeben hat.
+
+         Also weg mit den vier toten Namen, und die Überschrift sagt, was
+         die Zahl ist. Dieselbe Sorte wie E311, zwei Bildschirme weiter
+         oben in derselben Datei: dort war es `durationMs`. */
+      letzteNote: (() => {
+        const n = bewertung(letzter);
+        return n === null ? 'nicht bewertet'
+          : n + ' von 4' + (n === 1 ? ' (nochmal)' : n === 2 ? ' (schwer)'
+              : n === 3 ? ' (gut)' : ' (leicht)');
+      })(),
       fach: fachVon(card),
       thema: themaVon(card),
       quelle,
@@ -1686,7 +1705,7 @@ const Lernwelt = (() => {
             '<article class="' + (item.stabil ? 'is-stable' : 'is-open') + '"><header><div><span>' +
               esc(item.fach) + '</span><h3>' + kartenText(item.frage) + '</h3></div><strong>' +
               (item.stabil ? '✓ stabil' : item.anzahl + (item.anzahl === 1 ? ' Fehler' : ' Fehler')) +
-              '</strong></header><dl><div><dt>Letzte falsche Antwort</dt><dd>' + esc(item.letzteAntwort) +
+              '</strong></header><dl><div><dt>Letzte Selbstbewertung</dt><dd>' + esc(item.letzteNote) +
               '</dd></div><div><dt>Richtige Antwort</dt><dd>' + kartenText(item.antwort) +
               '</dd></div><div><dt>Thema</dt><dd>' + esc(item.thema) +
               '</dd></div><div><dt>Quelle</dt><dd>' + esc(item.quelle) +

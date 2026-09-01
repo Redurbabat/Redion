@@ -2510,3 +2510,19 @@ node pruefungen/lauf/test105.mjs
   `faecherUnbekannt` über eine Liste, die man ihr geben kann — dieselbe
   Bauform, die die Datei bei der Fassungsregel schon begründet.
   test325 neu (20), belegt rot. sw v86.
+* E333 (L102 Punkt 3, 6 und 7): Der Nachlauf zur Bestandsaufnahme — drei
+  Funde, drei verschiedene Antworten. Der Vektorweg war toter Code und ist
+  jetzt verdrahtet, aber nicht naiv: er schickt für JEDE Frage eine
+  Einbettung an eine kostenpflichtige API, also ist der Schalter das
+  Vorhandensein der Vektoren — wer sie gebaut hat, hat mit E287 einmal mit
+  Betrag Ja gesagt. Beim Verdrahten wäre beinahe ein Leck entstanden:
+  `nurSeite` achtete der Vektorweg nicht, weil ihn nie jemand rief. Toter
+  Code ist nicht nur ungenutzt, sondern auch ungeprüft. Das Fehlerzentrum
+  klopfte vier Feldnamen ab, die niemand schreibt — eine Karteikarte wird
+  nicht getippt, sondern selbst bewertet, also heisst die Überschrift jetzt
+  „Letzte Selbstbewertung". Und der fehlende KI-Chat-Limit war schon zu:
+  E287 kam einen Tag nach der Bestandsaufnahme; nachgemessen statt geglaubt.
+  Die Prüfung fing sich selbst zweimal: §3 suchte in der ganzen Datei und
+  fand die Zeile beim Nachbarn, und der erste Mutationsversuch änderte gar
+  nichts. Eine Mutation ohne Beleg, dass sie ankam, beweist so wenig wie
+  eine Prüfung, die nicht rot werden kann. test326 neu (28). sw v87.

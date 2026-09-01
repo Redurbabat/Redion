@@ -85903,7 +85903,7 @@ const Kontext = (() => {
     /* ------------------------------------------------------------------------
      * DER FERTIGE KONTEXT FÜR DAS MODELL
      * ----------------------------------------------------------------------*/
-    const bauenFuerFrage = (frage, opt = {}) => {
+    const bauenFuerFrage = async (frage, opt = {}) => {
         const q = quellen();
         const teile = [];
         const quellenListe = [];
@@ -85919,7 +85919,11 @@ const Kontext = (() => {
         }
         /* 2. Der Rest des Arbeitsbereichs — gesucht, nicht komplett */
         if (q.arbeitsbereich || q.datenbanken) {
-            const treffer = finden(frage, { anzahl: opt.anzahl || 6, nurSeite: opt.nurSeite });
+            /* HIER HÄNGT DER VEKTORWEG (E333, L102 Punkt 3). `findenMitVektoren`
+               fällt selbst auf `finden` zurück, wenn keine Vektoren da sind, das
+               Kontingent nicht reicht oder der Aufruf scheitert — der gewöhnliche
+               Weg bleibt also der gewöhnliche. */
+            const treffer = await findenMitVektoren(frage, opt.anzahl || 6, { nurSeite: opt.nurSeite });
             treffer.forEach((t) => {
                 if (t.seiteId === App.aktuelleSeite() && q.aktuelleSeite)
                     return;
@@ -86043,17 +86047,70 @@ const Kontext = (() => {
         }
         return { neu: n, gesamt: Object.keys(gemerkt).length };
     };
-    const findenMitVektoren = async (frage, anzahl = 8) => {
+    /**
+     * DIE SEMANTISCHE SUCHE — UND WARUM SIE BIS E333 NIEMAND RIEF.
+     *
+     * L102 Punkt 3: „Der ganze Vektorweg ist toter Code. `findenMitVektoren`
+     * ist definiert und exportiert, und im gesamten Verzeichnis ruft es
+     * niemand auf. Die semantische Suche existiert also als Code und nicht
+     * als Weg (§47)."
+     *
+     * DIE NAHELIEGENDE VERDRAHTUNG WÄRE FALSCH GEWESEN. Diese Funktion
+     * schickt für JEDE Frage eine Einbettung an eine kostenpflichtige API.
+     * Sie einfach an den Chat zu hängen hiesse: jede Chatnachricht kostet
+     * still Geld — genau der Zustand, den E287 abgeräumt hat, nur an einer
+     * anderen Stelle.
+     *
+     * DER SCHALTER IST DESHALB DAS VORHANDENSEIN DER VEKTOREN. Wer sie
+     * gebaut hat, hat dafür einmal ausdrücklich Ja gesagt (E287 fragt mit
+     * Betrag). Wer nicht, merkt von alledem nichts und zahlt nichts: dann
+     * fällt die Suche auf `finden` zurück, wie sie es schon immer tat.
+     *
+     * UND DIE EINE ANFRAGE GEHT DURCH DIE KASSE wie jede andere. Reicht das
+     * Kontingent nicht, wird nicht heimlich gespart und nicht heimlich
+     * ausgegeben — es wird gesucht wie vorher.
+     */
+    const findenMitVektoren = async (frage, anzahl = 8, opt = {}) => {
+        const wieBisher = () => finden(frage, { anzahl, nurSeite: opt.nurSeite });
         const gemerkt = Store.getMeta('ki:vektoren', {}) || {};
         if (!Object.keys(gemerkt).length)
-            return finden(frage, { anzahl });
-        const [fv] = await embeddingHolen([frage]);
+            return wieBisher();
+        /* Die Frage selbst kostet eine Einbettung. Erst fragen, dann buchen,
+           und bei Nein den gewöhnlichen Weg gehen — eine Suche, die wegen
+           eines Kontingents GAR NICHT sucht, wäre die schlechtere Antwort. */
+        const modellName = Store.getMeta('ki:embeddingModell', '') ||
+            (Store.getMeta('ki:embAnbieter', 'gemini') === 'gemini'
+                ? 'text-embedding-004' : 'text-embedding-3-small');
+        if (typeof KiBuch !== 'undefined') {
+            const s = KiBuch.stapelSchaetzen(modellName, [frage]);
+            const urteil = KiKosten.pruefen(s, KiBuch.grenzen(), KiBuch.stand());
+            if (!urteil.erlaubt)
+                return wieBisher();
+            if (s.bekannt && !s.frei)
+                KiBuch.buchen(modellName, 'embedding', s.tokenEin, 0, false);
+        }
+        let fv;
+        try {
+            [fv] = await embeddingHolen([frage]);
+        }
+        catch {
+            return wieBisher();
+        }
+        if (!fv || !fv.length)
+            return wieBisher();
         const ix = holen();
         const raus = ix.eintraege.map((e) => {
             const g = gemerkt[e.id];
             if (!g)
                 return null;
             if (!Konten.darf('lesen', e.seiteId))
+                return null;
+            /* UND `nurSeite` GILT AUCH HIER (E333). `finden` achtet es seit
+               jeher (Zeile 433); der Vektorweg tat es nicht, weil ihn niemand
+               rief. Beim Verdrahten wäre daraus ein Leck geworden: `bauenFuerFrage`
+               reicht `nurSeite` durch, wenn der Aufrufer eine Seite meint, und
+               ohne diese Zeile hätte das Modell den ganzen Bestand gesehen. */
+            if (opt.nurSeite && e.seiteId !== opt.nurSeite && !istUnter(e.seiteId, opt.nurSeite))
                 return null;
             return { ...e, punkte: cosinus(fv, g.v) * 10 };
         }).filter(Boolean);
@@ -114475,8 +114532,26 @@ const Lernwelt = (() => {
             card,
             frage,
             antwort,
-            letzteAntwort: String(letzter?.answer || letzter?.antwort || letzter?.input ||
-                letzter?.eingabe || (bewertung(letzter) ? 'Bewertung ' + bewertung(letzter) : 'nicht gespeichert')),
+            /* WAS HIER STAND, WAR EINE FRAGE AN DIE FALSCHE STELLE (E333, L102
+               Punkt 6). Vier Feldnamen wurden abgeklopft — `answer`, `antwort`,
+               `input`, `eingabe` —, und keinen davon schreibt irgendwer. Der
+               Verlaufseintrag trägt `at`, `rating`, `algorithm`, `lapse`,
+               `before`, `after` (`wissen/dienst.ts:180-196`) und sonst nichts.
+      
+               Der Grund ist nicht Vergesslichkeit, sondern das Modell: eine
+               Karteikarte in Redion wird nicht getippt, sondern SELBST BEWERTET.
+               Es GIBT keine falsche Antwort, die man aufheben könnte — es gibt
+               eine Note, die man sich gegeben hat.
+      
+               Also weg mit den vier toten Namen, und die Überschrift sagt, was
+               die Zahl ist. Dieselbe Sorte wie E311, zwei Bildschirme weiter
+               oben in derselben Datei: dort war es `durationMs`. */
+            letzteNote: (() => {
+                const n = bewertung(letzter);
+                return n === null ? 'nicht bewertet'
+                    : n + ' von 4' + (n === 1 ? ' (nochmal)' : n === 2 ? ' (schwer)'
+                        : n === 3 ? ' (gut)' : ' (leicht)');
+            })(),
             fach: fachVon(card),
             thema: themaVon(card),
             quelle,
@@ -115062,7 +115137,7 @@ const Lernwelt = (() => {
                 ? '<div class="lw-error-list">' + fehler.map(item => '<article class="' + (item.stabil ? 'is-stable' : 'is-open') + '"><header><div><span>' +
                     esc(item.fach) + '</span><h3>' + kartenText(item.frage) + '</h3></div><strong>' +
                     (item.stabil ? '✓ stabil' : item.anzahl + (item.anzahl === 1 ? ' Fehler' : ' Fehler')) +
-                    '</strong></header><dl><div><dt>Letzte falsche Antwort</dt><dd>' + esc(item.letzteAntwort) +
+                    '</strong></header><dl><div><dt>Letzte Selbstbewertung</dt><dd>' + esc(item.letzteNote) +
                     '</dd></div><div><dt>Richtige Antwort</dt><dd>' + kartenText(item.antwort) +
                     '</dd></div><div><dt>Thema</dt><dd>' + esc(item.thema) +
                     '</dd></div><div><dt>Quelle</dt><dd>' + esc(item.quelle) +
@@ -121385,7 +121460,7 @@ const KI = (() => {
         let quellen = [];
         if (mitKontext && Store.getMeta('kiKontext', true)) {
             ziel.textContent = 'Sucht im Arbeitsbereich …';
-            const k = Kontext.bauenFuerFrage(text, { anzahl: 6 });
+            const k = await Kontext.bauenFuerFrage(text, { anzahl: 6 });
             quellen = k.quellen;
             /* NUR-QUELLEN-MODUS (E305, Redurs Punkt 11). Findet sich nichts, wird
                das Modell GAR NICHT GEFRAGT. Der Satz darunter — „sag das offen,
