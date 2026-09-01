@@ -165,6 +165,55 @@ const Auftraege = (() => {
      * `laeuftGerade` verhindert, dass zwei Takte einander überholen — der
      * Takt ist ausdrücklich idempotent.
      */
+    /** Der Name des Schlosses, unter dem sich die Tabs absprechen. */
+    const SCHLOSS = 'redion-auftraege';
+    /**
+     * NUR EIN TAB ARBEITET GLEICHZEITIG (L103 Punkt 4, E323).
+     *
+     * Die Pacht verhindert, dass zwei Tabs DENSELBEN Auftrag nehmen. Sie
+     * verhindert nicht, dass jeder von ihnen einen ANDEREN nimmt — und auf
+     * einem schwachen Gerät ist das doppelt so viel Last wie nötig, während
+     * die Oberfläche in beiden Tabs ruckelt.
+     *
+     * `navigator.locks` mit `ifAvailable` ist dafür das richtige Werkzeug,
+     * und ZWAR JE TAKT und nicht als dauerhafte Wahl eines Anführers.
+     * Der Unterschied ist der Ausfall:
+     *
+     *   · Anführerwahl (ein Schloss für immer halten): wird es aus
+     *     irgendeinem Grund nie erteilt, arbeitet NIE WIEDER ein Tab. Ein
+     *     Zustand, aus dem man ohne Neustart nicht herauskommt.
+     *   · Je Takt: wer es nicht bekommt, überspringt diesen einen Takt und
+     *     versucht es in vier Sekunden wieder. Stirbt der Halter mitten im
+     *     Takt, gibt der Browser das Schloss frei, und der nächste nimmt es.
+     *
+     * OHNE `navigator.locks` bleibt alles wie bisher. Das ist die ehrliche
+     * Rückfallebene: doppelte Last ist unschön, aber nichts geht verloren —
+     * die Pacht schützt weiterhin gegen den doppelten Auftrag. Ein Browser,
+     * der die API nicht kennt, soll keine Aufträge verlieren.
+     */
+    const nurEiner = async (tun) => {
+        const schloesser = globalThis.navigator?.locks;
+        if (!schloesser || typeof schloesser.request !== 'function')
+            return tun();
+        let erg = false, gelaufen = false;
+        try {
+            await schloesser.request(SCHLOSS, { ifAvailable: true }, async (s) => {
+                /* `null` heisst: ein anderer Tab arbeitet gerade. Kein Fehler,
+                   sondern genau der Fall, für den das hier da ist. */
+                if (!s)
+                    return;
+                gelaufen = true;
+                erg = await tun();
+            });
+        }
+        catch {
+            /* Versagt das Schloss selbst, wird gearbeitet. Lieber doppelte Last
+               als eine Maschine, die stillsteht (§46). */
+            if (!gelaufen)
+                erg = await tun();
+        }
+        return erg;
+    };
     const takten = async () => {
         if (laeuftGerade || !bereit)
             return false;
@@ -176,6 +225,14 @@ const Auftraege = (() => {
            zweihundertvierzig Prüfläufe starten die App, und keiner von ihnen
            soll einen Takt bezahlen, der nichts tun kann. */
         if (!werkzeuge.size)
+            return false;
+        /* Erst das Schloss, dann die Sperre im eigenen Tab: `laeuftGerade`
+           hält zwei Takte DESSELBEN Tabs auseinander, das Schloss zwei Tabs. */
+        return nurEiner(taktenJetzt);
+    };
+    /** Ein Takt, wenn dieser Tab an der Reihe ist. */
+    const taktenJetzt = async () => {
+        if (laeuftGerade)
             return false;
         laeuftGerade = true;
         try {
@@ -342,6 +399,7 @@ const Auftraege = (() => {
     };
     return {
         start, stopp, takten, anmelden, arten, anlegen, abbrechen,
+        nurEiner, SCHLOSS,
         alle, offen, einer, wiederaufnehmen, aufraeumen, leeren,
         ICH, TAKT_MS, AUFHEBEN_MS
     };

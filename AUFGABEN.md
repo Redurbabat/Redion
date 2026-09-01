@@ -2367,3 +2367,15 @@ node pruefungen/lauf/test105.mjs
   Wahrheit ist — das fand erst das Bild. Beim Bau kollidierte der erste
   Namensraum `auf-` mit dem der Aufgaben, wörtlich L90; das Verzeichnis aus
   E293 hat es gefangen, heisst jetzt `arb-`. test315 neu (25). sw v76.
+* E323 (L103 Punkt 4): Nur ein Tab arbeitet. Die Pacht schützte gegen
+  denselben Auftrag in zwei Tabs, nicht gegen zwei verschiedene —
+  doppelte Last auf schwachen Geräten. Jetzt `navigator.locks` mit
+  `ifAvailable`, je Takt statt als Anführerwahl: eine Wahl, die nie erteilt
+  wird, hiesse „nie wieder arbeitet ein Tab". Ohne die API bleibt alles wie
+  bisher. Der erste Prüflauf war rot und das Produkt hatte recht — die App
+  taktet selbst alle vier Sekunden und nimmt dasselbe Schloss, der Aufruf
+  von Hand verlor das Rennen. Und dann war die Messung selbst blind: mit
+  ausgehängtem Schloss blieb sie grün, weil zwei unabhängige 4-Sekunden-
+  Takte sich mit 160-ms-Fenstern fast nie treffen. §2b erzwingt die
+  Gleichzeitigkeit und meldet ohne Schloss zwölf Überschneidungen.
+  test316 neu (15). sw v77.

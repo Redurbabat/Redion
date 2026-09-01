@@ -24447,3 +24447,61 @@ nicht) sind der Prüfstein; beide waren vor diesem Bogen rot, und §3 wäre
 ohne das Bild gar nicht geschrieben worden.
 Mitgelaufen: test272 153/153, test248 45/45, test290 13/13, test105 105/105.
 sw v76 · Einzeldatei 7847 KB.
+
+================================================================================
+E323 — Nur ein Tab arbeitet (L103 Punkt 4)
+================================================================================
+1. September 2026
+
+Die Pacht (E286) verhindert, dass zwei Tabs DENSELBEN Auftrag nehmen —
+`Store.auftragNehmen` legt Lesen und Schreiben in eine Transaktion, und
+IndexedDB serialisiert die. Sie verhindert nicht, dass jeder von ihnen einen
+ANDEREN nimmt. Auf einem schwachen Gerät ist das doppelt so viel Last wie
+nötig, und die Oberfläche ruckelt in beiden Tabs.
+
+`navigator.locks` mit `ifAvailable`, und ZWAR JE TAKT statt als dauerhafte
+Wahl eines Anführers. Der Unterschied ist der Ausfall:
+
+  · Anführerwahl (ein Schloss für immer halten): wird es aus irgendeinem
+    Grund nie erteilt, arbeitet NIE WIEDER ein Tab — ein Zustand, aus dem
+    man ohne Neustart nicht herauskommt.
+  · Je Takt: wer es nicht bekommt, überspringt diesen einen Takt und
+    versucht es in vier Sekunden wieder. Stirbt der Halter mitten im Takt,
+    gibt der Browser das Schloss frei.
+
+Ohne `navigator.locks` bleibt alles wie bisher. Doppelte Last ist unschön;
+ein Auftrag, der nie läuft, ist Datenverlust auf Raten (§46).
+
+─── DER ERSTE PRÜFLAUF WAR ROT, UND DAS PRODUKT HATTE RECHT ────────────────
+
+Er rief `Auftraege.takten()` von Hand und zählte, wer gearbeitet hat — und
+mass überall null. Gemessen ergab sich der Grund: die App taktet SELBST alle
+vier Sekunden, dieser Takt nimmt dasselbe Schloss, und der Aufruf von Hand
+verlor das Rennen. Vor diesem Bogen liefen beide nebeneinander, weil es
+nichts gab, was sie trennte. Der rote Lauf war also der erste Beweis, dass
+das Schloss wirkt.
+
+Gemessen wird seither das ERGEBNIS: Aufträge anlegen, warten, und fragen, ob
+jeder genau einmal lief.
+
+─── UND DANN WAR DIE MESSUNG SELBST BLIND ──────────────────────────────────
+
+Gegenprobe nach §55.2: Schloss ausgehängt, Lauf wiederholt — die
+Überschneidungsprüfung blieb GRÜN. Der Grund ist keine Nachsicht, sondern
+Statistik: jeder Tab taktet für sich alle vier Sekunden, die Phasen sind
+unabhängig, und zwei Arbeitsfenster von 160 ms treffen sich fast nie. Eine
+Prüfung, die nur bei Glück rot wird, ist keine Prüfung (L89).
+
+Dazu kam §2b: beide Tabs greifen im SELBEN Augenblick nach demselben
+Schloss, sechs Runden lang. Mit ausgehängtem Schloss meldet dieser Abschnitt
+zwölf Überschneidungen, mit Schloss keine. Das ist die Gegenprobe, die §2
+nicht sein konnte.
+
+Zwei falsche Fährten unterwegs, beide durch Messen widerlegt statt durch
+Nachdenken: IndexedDB in einem `locks`-Rückruf funktioniert einwandfrei
+(vermutet war ein Verklemmen), und `delete navigator.locks` tut NICHTS —
+`locks` ist ein Getter auf `Navigator.prototype`, kein eigenes Feld. §4 mass
+deshalb zuerst den ganz gewöhnlichen Weg und war grün, ohne etwas zu prüfen.
+
+test316, 15 Punkte. Mitgelaufen: test280 55/55, test315 25/25.
+sw v77 · Einzeldatei 7850 KB.

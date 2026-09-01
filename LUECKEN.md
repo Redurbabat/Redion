@@ -4026,6 +4026,14 @@ Die Maschine steht und ist geprüft. Fünf Dinge fehlen ihr, jedes mit Grund:
    verschiedene Aufträge und arbeiten beide; auf einem schwachen Gerät ist
    das doppelt so viel Last wie nötig.
 
+   **GESCHLOSSEN am 1. September 2026 durch E323.** `navigator.locks` mit
+   `ifAvailable`, JE TAKT statt als dauerhafte Anführerwahl: wer es nicht
+   bekommt, überspringt diesen Takt. Eine Anführerwahl hätte einen Ausfall,
+   aus dem man ohne Neustart nicht herauskommt. Ohne die API bleibt alles
+   wie bisher — doppelte Last ist unschön, ein Auftrag, der nie läuft, ist
+   Datenverlust auf Raten. test316, 15 Punkte, davon zwei Abschnitte allein
+   für die Frage, ob die Messung überhaupt rot werden kann.
+
 5. **Kein Zeitplan.** Ein Auftrag läuft, sobald er dran ist. Es gibt kein
    „heute Nacht", kein „wenn das Gerät am Strom hängt", kein „nur im
    WLAN". Für OCR und Embeddings wäre genau das die richtige Antwort.
