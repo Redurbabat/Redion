@@ -3720,6 +3720,11 @@ table.grid th.fixiert{position:sticky; left:38px; z-index:3; background:var(--bg
   font-size:12.5px; line-height:1.6;
 }
 .ez-steuer input[type="password"]{font-family:var(--mono); font-size:12.5px; min-width:210px}
+/* Die KI-Grenzen sind kurze Beträge, keine Sätze (E321). `.ez-steuer input`
+   setzt min-width:150px — nötig ist eine Klasse MEHR, sonst gewinnt die
+   allgemeine Regel, genau wie beim Budgetfeld in E320. */
+.ez-steuer input.ez-grenze{min-width:104px; width:104px; text-align:right;
+                           font-variant-numeric:tabular-nums}
 
 /* --- Kartenansicht ------------------------------------------------------------ */
 .karte-w{width:100%}
@@ -4015,6 +4020,10 @@ tr.mail-jetzt > td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
   .ez-zeile{ flex-wrap:wrap; gap:10px; padding:14px 0 }
   .ez-zeile .ez-text{ flex:1 1 100% }
   .ez-zeile .ez-steuer{ flex:1 1 100%; flex-wrap:wrap }
+  /* Auch das schmale Grenzfeld wird am Telefon voll breit — sonst hinge es
+     allein in einer Zeile, die es für sich hat. Die Klasse muss hier mit,
+     weil Spezifität und nicht Reihenfolge entscheidet (E320, E321). */
+  .ez-steuer input.ez-grenze{ flex:1 1 auto; width:auto; min-width:0; text-align:left }
   .ez-steuer select, .ez-steuer input{
     flex:1 1 auto; min-width:0; width:100%;
     min-height:44px; font-size:16px;   /* 16 px, sonst zoomt iOS beim Tippen */
@@ -18019,11 +18028,20 @@ const KiKosten = (() => {
     const geld = (betrag, waehrung = WAEHRUNG) => {
         if (!Number.isFinite(betrag))
             return '–';
+        /* KOMMA, NICHT PUNKT (E321). Diese Zeichenkette liest ein Mensch — in
+           den Einstellungen, in der Bremsmeldung —, und Redion spricht mit
+           Menschen deutsch (§3, §53.2). Gefunden auf dem Bild der neuen
+           Kostenübersicht: dort stand „0.153 USD" mitten in deutschem Text.
+           Die Zahlenfelder daneben behalten den Punkt, weil ein
+           `<input type="number">` seinen Wert unabhängig von der Sprache
+           hält — ein Komma darin wäre kein deutscher Wert, sondern ein
+           ungültiger. */
+        const komma = (n, stellen) => n.toFixed(stellen).replace('.', ',');
         if (betrag === 0)
-            return '0.00 ' + waehrung;
+            return '0,00 ' + waehrung;
         if (betrag < 0.01)
-            return '< 0.01 ' + waehrung;
-        return betrag.toFixed(betrag < 1 ? 3 : 2) + ' ' + waehrung;
+            return '< 0,01 ' + waehrung;
+        return komma(betrag, betrag < 1 ? 3 : 2) + ' ' + waehrung;
     };
     const VORGABE_GRENZEN = {
         jeAufruf: 0.50, jeLauf: 2.00, jeTag: 5.00, jeMonat: 20.00
@@ -18117,6 +18135,55 @@ const KiKosten = (() => {
         }
         return { heute, monat: imMonat, lauf };
     };
+    /**
+     * WIE VIEL DES MONATS WIRKLICH GEZÄHLT IST (L104 Punkt 1, E321).
+     *
+     * Seit E319 liest Redion die echte Tokenzahl aus dem Antwortstrom, wo der
+     * Anbieter sie schickt. Wo er es nicht tut — ein eigener Server, ein alter
+     * Endpunkt —, bleibt die Schätzung. Beides steht im Buch, unterschieden
+     * durch `gezaehlt`.
+     *
+     * Eine Summe, die beides verschweigt, ist wieder das Problem, das E289 für
+     * die Lernzahlen gelöst hat: eine Zahl ohne ihre Grundlage liest sich wie
+     * eine Tatsache. Also wird die Grundlage mitgeliefert.
+     */
+    const belegLage = (buchungen, monat) => {
+        let gezaehlt = 0, geschaetzt = 0, anzahl = 0, gezaehlteAnzahl = 0;
+        for (const b of buchungen || []) {
+            if (!b || !Number.isFinite(b.betrag))
+                continue;
+            if (monat && String(b.tag || '').slice(0, 7) !== monat)
+                continue;
+            anzahl++;
+            if (b.gezaehlt) {
+                gezaehlt += b.betrag;
+                gezaehlteAnzahl++;
+            }
+            else
+                geschaetzt += b.betrag;
+        }
+        const summe = gezaehlt + geschaetzt;
+        return { gezaehlt, geschaetzt, summe, anzahl, gezaehlteAnzahl,
+            anteil: summe > 0 ? gezaehlt / summe : 0 };
+    };
+    /**
+     * Ein Satz zur Grundlage — oder LEER, wenn es nichts zu sagen gibt.
+     *
+     * Leer ist der Normalfall für jeden, der lokal arbeitet: ohne Buchung gibt
+     * es keine Summe, und „0,00 — 0 % gezählt" wäre eine Zeile, die nichts
+     * behauptet und trotzdem Platz nimmt.
+     */
+    const belegSatz = (lage) => {
+        if (!lage || !lage.anzahl)
+            return '';
+        if (lage.gezaehlteAnzahl === lage.anzahl)
+            return 'Alle ' + lage.anzahl + ' Aufrufe mit gezählten Token vom Anbieter.';
+        if (lage.gezaehlteAnzahl === 0)
+            return 'Geschätzt — kein Anbieter hat eine Tokenzahl zurückgemeldet. ' +
+                'Die Schätzung greift bewusst zu hoch.';
+        return lage.gezaehlteAnzahl + ' von ' + lage.anzahl + ' Aufrufen gezählt, ' +
+            'der Rest geschätzt (bewusst zu hoch).';
+    };
     /** Was je Anbieter zusammenkam — für die Anzeige. */
     const jeAnbieter = (buchungen, monat) => {
         const aus = Object.create(null);
@@ -18144,7 +18211,7 @@ const KiKosten = (() => {
         tokenSchaetzen, tokenAusNachrichten, unsicherheit,
         schaetzen, pruefen, geld,
         kontingentBuchen, kontingentFrei, kontingentWartet,
-        standAus, jeAnbieter, kuerzen
+        standAus, jeAnbieter, belegLage, belegSatz, kuerzen
     };
 })();
 window.KiKosten = KiKosten;
@@ -78732,6 +78799,45 @@ const Einstellungen = (() => {
                 knopf('agent-worker', 'Bearbeiten')) +
             zeile('Besprechungsnotizen', 'Aufnehmen, mitschreiben, auswerten', `<span class="ez-grau">${Meeting.kannZuhoeren() ? 'Mitschreiben geht' : 'nur Aufnahme'}` +
                 `</span> ` + knopf('meet-einst', 'Einstellungen')) +
+            /* --- Kosten und Grenzen (L104 Punkt 1, E321) ------------------------
+               Das Buch gab es seit E287, die Griffe `stand()`, `monatJeAnbieter()`
+               und `grenzenSetzen()` auch — nur sah man nichts davon. Wer seine
+               Grenzen ändern wollte, konnte es allein über die Konsole. Das ist
+               §47 von der leisen Seite: eine Bremse, die wirkt, aber die niemand
+               einstellen kann, ist eine fremde Entscheidung. */
+            (() => {
+                const lage = KiKosten.belegLage(KiBuch.buchungen(), new Date().toISOString().slice(0, 7));
+                const stand = KiBuch.stand();
+                const g = KiBuch.grenzen();
+                const jeAnb = KiBuch.monatJeAnbieter();
+                const alt = KiKosten.standSatz(Date.now());
+                const grenzfeld = (k, wert) => `<input type="number" min="0" step="0.01" class="ez-grenze" ` +
+                    `data-grenze="${k}" value="${esc(String(wert))}"> ` +
+                    `<span class="ez-grau">${esc(KiKosten.WAEHRUNG)}</span>`;
+                return kopf('Kosten und Grenzen', 'Gilt nur für Wolken-Modelle mit eigenem Schlüssel. Ollama und WebLLM ' +
+                    'kosten nichts und werden nicht gebremst.') +
+                    /* DIE ZAHL MIT IHRER GRUNDLAGE, wie E289 es für die Lernzahlen
+                       vormacht. Und ohne Buchung steht hier nichts — „0,00 $, 0 %
+                       gezählt" wäre eine Zeile, die nichts behauptet. */
+                    (lage.anzahl
+                        ? zeile('Diesen Monat', esc(KiKosten.belegSatz(lage)), `<b>${esc(KiKosten.geld(stand.monat))}</b>`) +
+                            zeile('Heute', '', `<span class="ez-grau">${esc(KiKosten.geld(stand.heute))}</span>`) +
+                            /* NUR ANBIETER, DIE ETWAS GEKOSTET HABEN. Groq mit einem
+                               freien Modell steht sonst mit „0,00 USD" da — eine Zeile,
+                               die nichts behauptet und trotzdem Platz nimmt. Wer wissen
+                               will, wohin das Geld geht, will die sehen, die welches
+                               gekostet haben. */
+                            Object.keys(jeAnb).filter(a => (jeAnb[a] ?? 0) > 0).sort().map(a => zeile(esc(a), '', `<span class="ez-grau">${esc(KiKosten.geld(jeAnb[a] ?? 0))}</span>`)).join('')
+                        : zeile('Diesen Monat', 'Noch kein Wolken-Aufruf verbucht.', '<span class="ez-grau">—</span>')) +
+                    zeile('Höchstens je Aufruf', 'Darüber fragt Redion nicht an', grenzfeld('jeAufruf', g.jeAufruf)) +
+                    zeile('Höchstens je Agentenlauf', 'Eine Schleife, die entgleist, kostet nichts weiter', grenzfeld('jeLauf', g.jeLauf)) +
+                    zeile('Höchstens am Tag', '', grenzfeld('jeTag', g.jeTag)) +
+                    zeile('Höchstens im Monat', '', grenzfeld('jeMonat', g.jeMonat)) +
+                    /* Der Hinweis zur alternden Preisliste kommt erst nach einem
+                       halben Jahr (E319). Bis dahin steht hier nur das Datum. */
+                    zeile('Preisliste', alt ? '<b>' + esc(alt) + '</b>'
+                        : 'Stand: ' + esc(KiKosten.STAND), knopf('ki-buch-leeren', 'Buch leeren'));
+            })() +
             /* --- Datenschutz --------------------------------------------------- */
             kopf('Datenschutz', '') +
             zeile('Daten zur Verbesserung freigeben', 'Es gibt niemanden, an den etwas ginge', '<span class="ez-grau">aus — dauerhaft</span>') +
@@ -78985,6 +79091,24 @@ const Einstellungen = (() => {
                     App.zeichneSeite();
             });
         });
+        /* KI-Grenzen (L104 Punkt 1, E321).
+           Eigene Verdrahtung und kein `data-set`: die vier Grenzen liegen
+           ZUSAMMEN in einem Eintrag `ki:grenzen`, nicht als vier Schlüssel.
+           Ein `data-set` schriebe vier neue Einträge und die Bremse läse
+           weiter die alten — ein Regler, der sich bewegt und nichts bewirkt
+           (§47). */
+        o.querySelectorAll('[data-grenze]').forEach((el) => {
+            const uebernehmen = () => {
+                const wert = Number(el.value);
+                if (!Number.isFinite(wert) || wert < 0) {
+                    el.value = String(KiBuch.grenzen()[el.dataset.grenze]);
+                    return;
+                }
+                KiBuch.grenzenSetzen({ [el.dataset.grenze]: wert });
+            };
+            el.addEventListener('change', uebernehmen);
+            el.addEventListener('blur', uebernehmen);
+        });
         /* Bereiche löschen */
         o.querySelectorAll('[data-bereich-weg]').forEach((b) => {
             b.addEventListener('click', () => {
@@ -79025,6 +79149,18 @@ const Einstellungen = (() => {
     };
     const tun = async (was, o) => {
         const seite = App.aktuelleSeite() ? Store.getBlock(App.aktuelleSeite()) : null;
+        if (was === 'ki-buch-leeren') {
+            /* GEFRAGT WIRD VORHER. Das Buch ist die einzige Auskunft darüber, was
+               die Wolke bisher gekostet hat — weg ist weg, und die 70 Tage
+               Historie kommen nicht zurück (§46). */
+            if (!confirm('Alle verbuchten KI-Kosten löschen? Die Übersicht beginnt ' +
+                'danach wieder bei null. Die Grenzen bleiben.'))
+                return;
+            KiBuch.leeren();
+            UI.toast('Das KI-Buch ist leer.');
+            o.neuZeichnen && o.neuZeichnen();
+            return;
+        }
         if (was === 'index-neu') {
             const ix = Kontext.bauen();
             UI.toast('Suchindex neu gebaut: ' + ix.anzahl + ' Einträge');

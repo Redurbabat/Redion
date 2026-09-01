@@ -366,6 +366,32 @@ const ANSICHTEN: Record<string, { titel: string; bauen: () => void | Promise<voi
     }
   },
 
+  kikosten: {
+    titel: 'Einstellungen → KI: Kosten und Grenzen (E321)',
+    bauen: async () => {
+      const w = window as any;
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelectorAll('.overlay').forEach(o => o.remove());
+
+      /* Ein paar echte Buchungen, damit die Summe etwas zu zeigen hat —
+         gemischt gezählt und geschätzt, denn genau das soll man sehen. */
+      Store.setMeta(w.KiBuch.SCHL_BUCH, []);
+      const b1 = w.KiBuch.buchen('gpt-4o-mini', 'openai', 128000, 41000, false);
+      w.KiBuch.berichtigen(b1.id, 96400, 30100);
+      const b2 = w.KiBuch.buchen('gpt-4o', 'openai', 22000, 8000, false);
+      w.KiBuch.berichtigen(b2.id, 19800, 7100);
+      w.KiBuch.buchen('llama-3.3-70b-versatile', 'groq', 340000, 90000, false);
+
+      w.Einstellungen.oeffne('ki');
+      await new Promise(r => setTimeout(r, 700));
+      /* Bis zum neuen Abschnitt scrollen — er steht weit unten. */
+      const ziel = [...document.querySelectorAll('.overlay h2')]
+        .find(h => /Kosten und Grenzen/.test(h.textContent || ''));
+      ziel?.scrollIntoView({ block: 'start' });
+      await new Promise(r => setTimeout(r, 400));
+    }
+  },
+
   lernzentrale: {
     titel: 'Die Lernzentrale mit ihren vier Startkacheln',
     bauen: async () => {

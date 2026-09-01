@@ -24324,3 +24324,65 @@ und gegen den Zwilling (± 20 px). Beide waren mit der alten Regel rot.
 Zusammen 41 Punkte in test51 (vorher 35), test290 wieder 13/13.
 Mitgelaufen: test302 64/64, test272 153/153.
 sw v74 · Einzeldatei 7825 KB.
+
+================================================================================
+E321 — Die KI-Grenzen sind endlich einstellbar (L104 Punkt 1)
+================================================================================
+1. September 2026
+
+Das Buch gab es seit E287, `stand()`, `monatJeAnbieter()` und
+`grenzenSetzen()` auch. Sichtbar war nichts davon. Wer seine Grenzen ändern
+wollte, konnte es allein über die Konsole — und ausgerechnet die Meldung,
+die zuschlägt, endete mit dem Satz „Die Grenzen stehen unter Einstellungen →
+KI." Dort stand nichts. Das ist §47 von der leisen Seite: eine Bremse, die
+wirkt, die man aber nicht einstellen kann, ist eine fremde Entscheidung.
+
+Unter Einstellungen → KI steht jetzt „Kosten und Grenzen": der Monatsbetrag,
+der Tagesbetrag, die Anbieter, die vier Grenzen als Felder und ein Weg, das
+Buch zu leeren.
+
+─── DIE ZAHL MIT IHRER GRUNDLAGE ───────────────────────────────────────────
+
+`KiKosten.belegLage()` und `belegSatz()` sagen, wie viel des Monats wirklich
+gezählt ist: „2 von 3 Aufrufen gezählt, der Rest geschätzt (bewusst zu
+hoch)." Seit E319 kann Redion das unterscheiden, und E289 hat für die
+Lernzahlen vorgemacht, warum es zählt — eine Zahl ohne ihre Grundlage liest
+sich wie eine Tatsache.
+
+DIE GEGENPROBE: ohne eine einzige Buchung steht kein Betrag da, sondern
+„Noch kein Wolken-Aufruf verbucht." Wer lokal arbeitet, soll keine
+Geldübersicht sehen, die es nicht gibt. Die vier Grenzen sind trotzdem
+einstellbar — sie gelten für den ersten Aufruf, nicht erst für den zweiten.
+
+─── EIGENE VERDRAHTUNG STATT `data-set` ────────────────────────────────────
+
+Die vier Grenzen liegen ZUSAMMEN in einem Eintrag `ki:grenzen`. Ein
+`data-set` schriebe vier neue Einträge, und die Bremse läse weiter die alten
+— ein Regler, der sich bewegt und nichts bewirkt. Eine negative Eingabe wird
+zurückgenommen statt übernommen: eine negative Grenze verböte jeden Aufruf,
+und der Grund stünde nirgends.
+
+─── UND WAS ERST DAS BILD FAND (§55.1) ─────────────────────────────────────
+
+Drei Dinge, und keins davon hätte ein Prüflauf von sich aus gemeldet:
+
+  · „0.153 USD" mit englischem Punkt mitten in deutschem Text. `geld()`
+    schrieb seit E287 so, und test281s eigene PROSA schrieb daneben schon
+    „0,45 USD" — der Autor dachte deutsch, der Code schrieb englisch. Jetzt
+    Komma (§3, §53.2). Die Zahlenfelder behalten den Punkt: ein
+    `<input type="number">` mit „0,5" hat einen ungültigen Wert und liest
+    sich als leer zurück. Das wäre keine Eindeutschung, sondern ein kaputtes
+    Feld.
+  · Eine Zeile „groq — 0,00 USD". Ein freies Modell kostet nichts; die
+    Zeile behauptet nichts und nimmt Platz. Anbieter ohne Kosten fallen weg.
+  · Am Telefon stand „USD" auf einer eigenen Zeile unter dem Feld.
+
+Und ein viertes, das E320 vorweggenommen hatte: `.ez-steuer input` setzt
+`min-width:150px`. Ein Betragsfeld braucht eine Klasse MEHR, sonst gewinnt
+die allgemeine Regel — genau der Kampf, den E320 beim Budgetfeld verloren
+vorfand. Diesmal von Anfang an `.ez-steuer input.ez-grenze`.
+
+test314, 20 Punkte, davon fünf für die Gegenprobe.
+Mitgelaufen: test281 48/48 (eine Behauptung auf Komma umgestellt),
+test313 25/25, test105 105/105.
+sw v75 · Einzeldatei neu gebaut.

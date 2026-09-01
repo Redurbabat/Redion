@@ -127,8 +127,8 @@ p('Zwei Nachrichten: 2×10 Token plus 2×4 Gerüst = 28',
 p('Die Preisliste trägt ihr Datum', /^\d{4}-\d{2}-\d{2}$/.test(schaetzung.stand),
   schaetzung.stand);
 p('Kleine Beträge werden nicht als 0.00 verschwiegen',
-  schaetzung.geldKlein === '< 0.01 USD', schaetzung.geldKlein);
-p('… und null ist wirklich null', schaetzung.geldNull === '0.00 USD',
+  schaetzung.geldKlein === '< 0,01 USD', schaetzung.geldKlein);
+p('… und null ist wirklich null', schaetzung.geldNull === '0,00 USD',
   schaetzung.geldNull + ' / ' + schaetzung.geldMittel + ' / ' + schaetzung.geldGross);
 
 /* ------------------------------------------------------------------------ */
@@ -190,7 +190,11 @@ p('Ohne enge Grenzen läuft der Aufruf', grenzen.frei === true);
 p('`jeAufruf` schlägt zu und nennt sich', grenzen.aufruf.erlaubt === false &&
   grenzen.aufruf.grenze === 'jeAufruf', JSON.stringify(grenzen.aufruf.grenze));
 p('… und der Satz nennt BEIDE Zahlen, nicht nur „nein"',
-  /gegen/.test(grenzen.aufruf.satz) && /0\.6/.test(grenzen.aufruf.satz),
+  /* Komma seit E321: der Satz liest ein Mensch, und Redion spricht mit
+     Menschen deutsch (§3). Geprüft wird beides — dass die Zahl dasteht UND
+     dass sie deutsch geschrieben ist. */
+  /gegen/.test(grenzen.aufruf.satz) && /0,6/.test(grenzen.aufruf.satz) &&
+  !/0\.6/.test(grenzen.aufruf.satz),
   grenzen.aufruf.satz);
 p('`jeLauf` schlägt zu — der Lauf zählt mit', grenzen.lauf.erlaubt === false &&
   grenzen.lauf.grenze === 'jeLauf');

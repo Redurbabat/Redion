@@ -232,9 +232,19 @@ const KiKosten = (() => {
   /** Ein Betrag als Text. Kleine Beträge brauchen mehr Stellen. */
   const geld = (betrag: number, waehrung = WAEHRUNG): string => {
     if (!Number.isFinite(betrag)) return '–';
-    if (betrag === 0) return '0.00 ' + waehrung;
-    if (betrag < 0.01) return '< 0.01 ' + waehrung;
-    return betrag.toFixed(betrag < 1 ? 3 : 2) + ' ' + waehrung;
+    /* KOMMA, NICHT PUNKT (E321). Diese Zeichenkette liest ein Mensch — in
+       den Einstellungen, in der Bremsmeldung —, und Redion spricht mit
+       Menschen deutsch (§3, §53.2). Gefunden auf dem Bild der neuen
+       Kostenübersicht: dort stand „0.153 USD" mitten in deutschem Text.
+       Die Zahlenfelder daneben behalten den Punkt, weil ein
+       `<input type="number">` seinen Wert unabhängig von der Sprache
+       hält — ein Komma darin wäre kein deutscher Wert, sondern ein
+       ungültiger. */
+    const komma = (n: number, stellen: number) =>
+      n.toFixed(stellen).replace('.', ',');
+    if (betrag === 0) return '0,00 ' + waehrung;
+    if (betrag < 0.01) return '< 0,01 ' + waehrung;
+    return komma(betrag, betrag < 1 ? 3 : 2) + ' ' + waehrung;
   };
 
   /* ==========================================================================
@@ -401,6 +411,50 @@ const KiKosten = (() => {
     return { heute, monat: imMonat, lauf };
   };
 
+  /**
+   * WIE VIEL DES MONATS WIRKLICH GEZÄHLT IST (L104 Punkt 1, E321).
+   *
+   * Seit E319 liest Redion die echte Tokenzahl aus dem Antwortstrom, wo der
+   * Anbieter sie schickt. Wo er es nicht tut — ein eigener Server, ein alter
+   * Endpunkt —, bleibt die Schätzung. Beides steht im Buch, unterschieden
+   * durch `gezaehlt`.
+   *
+   * Eine Summe, die beides verschweigt, ist wieder das Problem, das E289 für
+   * die Lernzahlen gelöst hat: eine Zahl ohne ihre Grundlage liest sich wie
+   * eine Tatsache. Also wird die Grundlage mitgeliefert.
+   */
+  const belegLage = (buchungen: Buchung[], monat?: string): any => {
+    let gezaehlt = 0, geschaetzt = 0, anzahl = 0, gezaehlteAnzahl = 0;
+    for (const b of buchungen || []) {
+      if (!b || !Number.isFinite(b.betrag)) continue;
+      if (monat && String(b.tag || '').slice(0, 7) !== monat) continue;
+      anzahl++;
+      if ((b as any).gezaehlt) { gezaehlt += b.betrag; gezaehlteAnzahl++; }
+      else geschaetzt += b.betrag;
+    }
+    const summe = gezaehlt + geschaetzt;
+    return { gezaehlt, geschaetzt, summe, anzahl, gezaehlteAnzahl,
+             anteil: summe > 0 ? gezaehlt / summe : 0 };
+  };
+
+  /**
+   * Ein Satz zur Grundlage — oder LEER, wenn es nichts zu sagen gibt.
+   *
+   * Leer ist der Normalfall für jeden, der lokal arbeitet: ohne Buchung gibt
+   * es keine Summe, und „0,00 — 0 % gezählt" wäre eine Zeile, die nichts
+   * behauptet und trotzdem Platz nimmt.
+   */
+  const belegSatz = (lage: any): string => {
+    if (!lage || !lage.anzahl) return '';
+    if (lage.gezaehlteAnzahl === lage.anzahl)
+      return 'Alle ' + lage.anzahl + ' Aufrufe mit gezählten Token vom Anbieter.';
+    if (lage.gezaehlteAnzahl === 0)
+      return 'Geschätzt — kein Anbieter hat eine Tokenzahl zurückgemeldet. ' +
+             'Die Schätzung greift bewusst zu hoch.';
+    return lage.gezaehlteAnzahl + ' von ' + lage.anzahl + ' Aufrufen gezählt, ' +
+           'der Rest geschätzt (bewusst zu hoch).';
+  };
+
   /** Was je Anbieter zusammenkam — für die Anzeige. */
   const jeAnbieter = (buchungen: Buchung[], monat?: string): Record<string, number> => {
     const aus: Record<string, number> = Object.create(null);
@@ -429,7 +483,7 @@ const KiKosten = (() => {
     tokenSchaetzen, tokenAusNachrichten, unsicherheit,
     schaetzen, pruefen, geld,
     kontingentBuchen, kontingentFrei, kontingentWartet,
-    standAus, jeAnbieter, kuerzen
+    standAus, jeAnbieter, belegLage, belegSatz, kuerzen
   };
 })();
 

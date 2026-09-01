@@ -2344,3 +2344,14 @@ node pruefungen/lauf/test105.mjs
   `.pl-budget input{width:76px}` gewann. Sein Zwilling im Fuss sass in einem
   `span` statt einem `label` und behielt 62 px — der Unterschied im selben
   Bild machte es sichtbar. test51 41 Punkte (vorher 35). sw v74.
+* E321 (L104 Punkt 1): Die KI-Grenzen sind endlich einstellbar. Das Buch gab
+  es seit E287, die Griffe auch — sichtbar war nichts, und die Bremsmeldung
+  endete ausgerechnet mit „Die Grenzen stehen unter Einstellungen → KI", wo
+  nichts stand. Jetzt steht dort „Kosten und Grenzen" mit Monatsbetrag,
+  Anbietern, vier Feldern und einem Weg zum Leeren. Die Summe nennt ihre
+  Grundlage („2 von 3 Aufrufen gezählt") — möglich erst seit E319. Ohne
+  Buchung kein Betrag, die Grenzen aber trotzdem einstellbar. Drei Dinge fand
+  erst das Bild: „0.153 USD" mit englischem Punkt im deutschen Text (test281s
+  eigene Prosa schrieb daneben längst „0,45 USD"), eine Zeile „groq — 0,00
+  USD", die nichts behauptet, und am Telefon das „USD" auf eigener Zeile.
+  test314 neu (20). sw v75.

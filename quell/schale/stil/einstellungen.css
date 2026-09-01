@@ -273,6 +273,11 @@ table.grid th.fixiert{position:sticky; left:38px; z-index:3; background:var(--bg
   font-size:12.5px; line-height:1.6;
 }
 .ez-steuer input[type="password"]{font-family:var(--mono); font-size:12.5px; min-width:210px}
+/* Die KI-Grenzen sind kurze Beträge, keine Sätze (E321). `.ez-steuer input`
+   setzt min-width:150px — nötig ist eine Klasse MEHR, sonst gewinnt die
+   allgemeine Regel, genau wie beim Budgetfeld in E320. */
+.ez-steuer input.ez-grenze{min-width:104px; width:104px; text-align:right;
+                           font-variant-numeric:tabular-nums}
 
 /* --- Kartenansicht ------------------------------------------------------------ */
 .karte-w{width:100%}
@@ -568,6 +573,10 @@ tr.mail-jetzt > td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
   .ez-zeile{ flex-wrap:wrap; gap:10px; padding:14px 0 }
   .ez-zeile .ez-text{ flex:1 1 100% }
   .ez-zeile .ez-steuer{ flex:1 1 100%; flex-wrap:wrap }
+  /* Auch das schmale Grenzfeld wird am Telefon voll breit — sonst hinge es
+     allein in einer Zeile, die es für sich hat. Die Klasse muss hier mit,
+     weil Spezifität und nicht Reihenfolge entscheidet (E320, E321). */
+  .ez-steuer input.ez-grenze{ flex:1 1 auto; width:auto; min-width:0; text-align:left }
   .ez-steuer select, .ez-steuer input{
     flex:1 1 auto; min-width:0; width:100%;
     min-height:44px; font-size:16px;   /* 16 px, sonst zoomt iOS beim Tippen */

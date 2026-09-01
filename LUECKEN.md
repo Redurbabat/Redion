@@ -4060,6 +4060,18 @@ Drei weitere Dinge, die E287 bewusst offenlässt:
    Wer seine Grenzen ändern will, kann es heute nur über die Konsole. Das
    ist §47 von der leisen Seite — dieselbe Lücke wie L103 Punkt 3.
 
+   **GESCHLOSSEN am 1. September 2026 durch E321.** Unter Einstellungen → KI
+   steht „Kosten und Grenzen": Monatsbetrag, Tagesbetrag, Anbieter, die vier
+   Grenzen als Felder, ein Weg zum Leeren. Die Summe nennt ihre Grundlage
+   („2 von 3 Aufrufen gezählt") — möglich erst seit E319. Ohne Buchung steht
+   kein Betrag da, sondern „Noch kein Wolken-Aufruf verbucht"; die Grenzen
+   sind trotzdem einstellbar. Eigene Verdrahtung statt `data-set`, weil die
+   vier Grenzen ZUSAMMEN in einem Eintrag liegen — vier neue Schlüssel wären
+   ein Regler, der sich bewegt und nichts bewirkt. test314, 20 Punkte.
+
+   Ausgerechnet die Bremsmeldung endete schon vorher mit „Die Grenzen stehen
+   unter Einstellungen → KI." Jetzt stimmt der Satz.
+
 2. **Der Agentenlauf ruft `laufBeginnen()` nicht.** `jeLauf` ist damit die
    einzige der vier Grenzen, die im Alltag nie anschlägt: `laufStand`
    beginnt beim Laden der Seite bei null und läuft dann durch. Sie

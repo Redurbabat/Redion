@@ -608,6 +608,61 @@ const Einstellungen = (() => {
             `<span class="ez-grau">${Meeting.kannZuhoeren() ? 'Mitschreiben geht' : 'nur Aufnahme'}` +
             `</span> ` + knopf('meet-einst', 'Einstellungen')) +
 
+      /* --- Kosten und Grenzen (L104 Punkt 1, E321) ------------------------
+         Das Buch gab es seit E287, die Griffe `stand()`, `monatJeAnbieter()`
+         und `grenzenSetzen()` auch — nur sah man nichts davon. Wer seine
+         Grenzen ändern wollte, konnte es allein über die Konsole. Das ist
+         §47 von der leisen Seite: eine Bremse, die wirkt, aber die niemand
+         einstellen kann, ist eine fremde Entscheidung. */
+      (() => {
+        const lage = KiKosten.belegLage(KiBuch.buchungen(),
+                                        new Date().toISOString().slice(0, 7));
+        const stand = KiBuch.stand();
+        const g = KiBuch.grenzen();
+        const jeAnb = KiBuch.monatJeAnbieter();
+        const alt = KiKosten.standSatz(Date.now());
+
+        const grenzfeld = (k: string, wert: number) =>
+          `<input type="number" min="0" step="0.01" class="ez-grenze" ` +
+          `data-grenze="${k}" value="${esc(String(wert))}"> ` +
+          `<span class="ez-grau">${esc(KiKosten.WAEHRUNG)}</span>`;
+
+        return kopf('Kosten und Grenzen',
+          'Gilt nur für Wolken-Modelle mit eigenem Schlüssel. Ollama und WebLLM ' +
+          'kosten nichts und werden nicht gebremst.') +
+
+          /* DIE ZAHL MIT IHRER GRUNDLAGE, wie E289 es für die Lernzahlen
+             vormacht. Und ohne Buchung steht hier nichts — „0,00 $, 0 %
+             gezählt" wäre eine Zeile, die nichts behauptet. */
+          (lage.anzahl
+            ? zeile('Diesen Monat', esc(KiKosten.belegSatz(lage)),
+                    `<b>${esc(KiKosten.geld(stand.monat))}</b>`) +
+              zeile('Heute', '', `<span class="ez-grau">${esc(KiKosten.geld(stand.heute))}</span>`) +
+              /* NUR ANBIETER, DIE ETWAS GEKOSTET HABEN. Groq mit einem
+                 freien Modell steht sonst mit „0,00 USD" da — eine Zeile,
+                 die nichts behauptet und trotzdem Platz nimmt. Wer wissen
+                 will, wohin das Geld geht, will die sehen, die welches
+                 gekostet haben. */
+              Object.keys(jeAnb).filter(a => (jeAnb[a] ?? 0) > 0).sort().map(a =>
+                zeile(esc(a), '', `<span class="ez-grau">${esc(KiKosten.geld(jeAnb[a] ?? 0))}</span>`)
+              ).join('')
+            : zeile('Diesen Monat', 'Noch kein Wolken-Aufruf verbucht.',
+                    '<span class="ez-grau">—</span>')) +
+
+          zeile('Höchstens je Aufruf', 'Darüber fragt Redion nicht an',
+                grenzfeld('jeAufruf', g.jeAufruf)) +
+          zeile('Höchstens je Agentenlauf', 'Eine Schleife, die entgleist, kostet nichts weiter',
+                grenzfeld('jeLauf', g.jeLauf)) +
+          zeile('Höchstens am Tag', '', grenzfeld('jeTag', g.jeTag)) +
+          zeile('Höchstens im Monat', '', grenzfeld('jeMonat', g.jeMonat)) +
+
+          /* Der Hinweis zur alternden Preisliste kommt erst nach einem
+             halben Jahr (E319). Bis dahin steht hier nur das Datum. */
+          zeile('Preisliste', alt ? '<b>' + esc(alt) + '</b>'
+                                  : 'Stand: ' + esc(KiKosten.STAND),
+                knopf('ki-buch-leeren', 'Buch leeren'));
+      })() +
+
       /* --- Datenschutz --------------------------------------------------- */
       kopf('Datenschutz', '') +
       zeile('Daten zur Verbesserung freigeben', 'Es gibt niemanden, an den etwas ginge',
@@ -935,6 +990,22 @@ const Einstellungen = (() => {
       });
     });
 
+    /* KI-Grenzen (L104 Punkt 1, E321).
+       Eigene Verdrahtung und kein `data-set`: die vier Grenzen liegen
+       ZUSAMMEN in einem Eintrag `ki:grenzen`, nicht als vier Schlüssel.
+       Ein `data-set` schriebe vier neue Einträge und die Bremse läse
+       weiter die alten — ein Regler, der sich bewegt und nichts bewirkt
+       (§47). */
+    o.querySelectorAll('[data-grenze]').forEach((el: any) => {
+      const uebernehmen = () => {
+        const wert = Number(el.value);
+        if (!Number.isFinite(wert) || wert < 0) { el.value = String(KiBuch.grenzen()[el.dataset.grenze]); return; }
+        KiBuch.grenzenSetzen({ [el.dataset.grenze]: wert });
+      };
+      el.addEventListener('change', uebernehmen);
+      el.addEventListener('blur', uebernehmen);
+    });
+
     /* Bereiche löschen */
     o.querySelectorAll('[data-bereich-weg]').forEach((b: any) => {
       b.addEventListener('click', () => {
@@ -977,6 +1048,18 @@ const Einstellungen = (() => {
 
   const tun = async (was: any, o: any) => {
     const seite = App.aktuelleSeite() ? Store.getBlock(App.aktuelleSeite()) : null;
+
+    if (was === 'ki-buch-leeren') {
+      /* GEFRAGT WIRD VORHER. Das Buch ist die einzige Auskunft darüber, was
+         die Wolke bisher gekostet hat — weg ist weg, und die 70 Tage
+         Historie kommen nicht zurück (§46). */
+      if (!confirm('Alle verbuchten KI-Kosten löschen? Die Übersicht beginnt ' +
+                   'danach wieder bei null. Die Grenzen bleiben.')) return;
+      KiBuch.leeren();
+      UI.toast('Das KI-Buch ist leer.');
+      o.neuZeichnen && o.neuZeichnen();
+      return;
+    }
 
     if (was === 'index-neu') {
       const ix = Kontext.bauen();
