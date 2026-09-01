@@ -4234,11 +4234,14 @@ Abstand zwischen zwei Antworten ist die Dauer der zweiten
 (`core/learning/lerntempo.ts`). Damit ist die Frage für den Planer
 beantwortet, für `lernwelt.ts` aber nicht.
 
-Zwei Wege, und der zweite ist wahrscheinlich der richtige:
+GESCHLOSSEN am 1. September 2026 mit E311, am selben Tag. Genommen wurde
+der zweite der beiden Wege:
 
   1 · beim Antworten wirklich eine Dauer schreiben (`dauerMs` am Eintrag).
       Dann stimmen beide Stellen, aber alte Einträge haben sie nicht.
   2 · `lernwelt.ts:873` auf `Lerntempo` umstellen und die vier toten
-      Feldnamen entfernen. Dann gibt es EINE Rechnung statt zwei.
+      Feldnamen entfernen. Dann gibt es EINE Rechnung statt zwei.  ← so
 
-Nicht beides halb.
+Nicht beides halb. test305 §2 hält fest, dass keiner der vier Namen mehr in
+ausführbarem Code steht — samt Gegenprobe, dass ein echter Feldname sehr
+wohl gefunden würde.

@@ -19,9 +19,10 @@
  * Antwort einen Zeitpunkt (`at`). Der Abstand zwischen zwei Antworten
  * DERSELBEN Sitzung ist die Zeit, die die zweite Karte gekostet hat.
  *
- * (`lernwelt.ts:873` liest `durationMs` und `dauerSekunden` — beide schreibt
- * niemand. Diese Datei nimmt deshalb den Weg über die Zeitpunkte, die es
- * wirklich gibt.)
+ * (`lernwelt.ts` las bis E311 `durationMs` und `dauerSekunden` — beide
+ * schreibt niemand, die Rechnung landete also immer im Ersatzzweig und sah
+ * dabei aus, als benutzte sie eine Messung. Sie nimmt jetzt denselben Weg
+ * wie diese Datei: über die Zeitpunkte, die es wirklich gibt.)
  *
  * ─── WARUM MEDIAN UND NICHT MITTELWERT ──────────────────────────────────────
  *

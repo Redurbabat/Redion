@@ -23560,3 +23560,65 @@ eine Falle fälschlich „gerettet". Beide Leser schneiden Kommentare jetzt weg
 — zeilenerhaltend, damit die gemeldeten Zeilennummern stimmen.
 
 Einzeldatei 7764 KB.
+
+
+================================================================================
+E311 — Die Lernzeit wird gemessen, nicht geraten (L110 geschlossen)
+================================================================================
+1. September 2026
+
+`lernwelt.ts:873` rechnete die Lernzeit so:
+
+    const ms  = zahl(eintrag.durationMs ?? eintrag.dauerMs, 0);
+    const sek = zahl(eintrag.durationSeconds ?? eintrag.dauerSekunden, 0);
+    minuten += ms > 0 ? ms / 60000 : sek > 0 ? sek / 60 : 1;
+
+Alle vier Feldnamen kamen im ganzen Bestand genau an dieser Stelle vor.
+Niemand schreibt sie. Die Rechnung landete also IMMER im dritten Zweig — eine
+Minute je Wiederholung — und sah dabei aus, als benutzte sie eine Messung.
+
+Das ist die gefährliche Sorte: nicht falsch genug, um aufzufallen, und zu
+genau aussehend, um geprüft zu werden. Aufgefallen ist es nur, weil E308
+dieselbe Frage von der anderen Seite stellte („was kosten dreissig fällige
+Karten an Minuten?") und beim Suchen über diese Zeile stolperte.
+
+
+Die Entscheidung: EINE Rechnung, und die misst
+--------------------------------------------------------------------------------
+
+L110 nannte zwei Wege. Der erste — beim Antworten wirklich eine Dauer
+schreiben — hätte zwei Rechnungen nebeneinander gelassen und alte Einträge
+ohne Dauer zurückgelassen. Genommen ist der zweite: `lernwelt.ts` nimmt
+denselben Weg wie E308, über `core/learning/lerntempo.ts`, und die vier
+toten Feldnamen sind weg.
+
+Damit gibt es eine Stelle, an der steht, wie lange eine Karte dauert. Sie
+steht in einem reinen Kern, sie kennt keine Uhr, und sie sagt dazu, worauf
+sie beruht.
+
+
+Was sich für Redur ändert
+--------------------------------------------------------------------------------
+
+Vorher: dreissig Antworten = „~30 Min. Lernzeit", Untertitel „aus
+Lernaktivitäten geschätzt".
+
+Jetzt: dreissig Antworten im gemessenen Abstand von zwanzig Sekunden =
+„~10 Min. Lernzeit", Untertitel „gemessen aus 29 Antworten".
+
+Und solange es weniger als zwölf Abstände gibt, bleibt es bei der bisherigen
+Minute je Karte — dann ändert sich nichts ausser der Ehrlichkeit des
+Untertitels: „geschätzt — erst 4 von 12 Messungen".
+
+
+Geprüft
+--------------------------------------------------------------------------------
+test305 neu, 23/23. §1 rechnet den Kern nach (auch: eine Unterbrechung von
+vier Minuten verschiebt den Median nicht — dafür ist er da). §2 misst, dass
+keiner der vier toten Namen mehr in ausführbarem Code steht, mit der
+Gegenprobe, dass ein echter Feldname sehr wohl gefunden würde. §3 ist die
+Gegenprobe gegen die Behauptung: ohne Belege wird nichts behauptet. §4 misst
+im Fenster beides — frischer Arbeitsbereich sagt „geschätzt", dreissig
+Antworten später „gemessen", und die Lernzeit ist 10 statt 30 Minuten.
+
+Einzeldatei 7765 KB.

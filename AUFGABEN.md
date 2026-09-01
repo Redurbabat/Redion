@@ -2217,3 +2217,13 @@ node pruefungen/lauf/test105.mjs
   Dingen zu pflegen. test304 neu (12); §5 misst, dass die Meldung oben
   wirklich zu SEHEN ist — „deckt nichts mehr zu" wäre sonst auch dann wahr,
   wenn sie gar nicht mehr erschiene.
+* E311 (L110 geschlossen, am selben Tag): Die Lernzeit wird gemessen statt
+  geraten. `lernwelt.ts` las `durationMs`/`dauerMs`/`durationSeconds`/
+  `dauerSekunden` — alle vier schreibt niemand, die Rechnung landete also
+  immer im Ersatzzweig (eine Minute je Wiederholung) und sah dabei aus, als
+  benutzte sie eine Messung. Jetzt derselbe Weg wie E308, über
+  `core/learning/lerntempo.ts`: dreissig Antworten im gemessenen Abstand von
+  zwanzig Sekunden sind ~10 Min. statt ~30, und der Untertitel sagt
+  „gemessen aus 29 Antworten" statt „geschätzt". Unter zwölf Abständen
+  bleibt es bei der bisherigen Minute — dann ändert sich nur die
+  Ehrlichkeit des Untertitels. test305 neu (23).

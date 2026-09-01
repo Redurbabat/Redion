@@ -701,15 +701,38 @@ const Lernwelt = (() => {
         const stats = statistik();
         const logs = liste(stats.logs);
         const tage = new Map();
-        let minuten = 0;
+        const zeiten = [];
         logs.forEach(eintrag => {
             const key = tag(eintrag.at);
             if (key)
                 tage.set(key, (tage.get(key) || 0) + 1);
-            const ms = zahl(eintrag.durationMs ?? eintrag.dauerMs, 0);
-            const sek = zahl(eintrag.durationSeconds ?? eintrag.dauerSekunden, 0);
-            minuten += ms > 0 ? ms / 60000 : sek > 0 ? sek / 60 : 1;
+            const t = datum(eintrag.at)?.getTime() || 0;
+            if (t > 0)
+                zeiten.push(t);
         });
+        /* DIE LERNZEIT WIRD GEMESSEN, NICHT GERATEN (L110, E311).
+         *
+         * Hier stand:
+         *
+         *     const ms  = zahl(eintrag.durationMs ?? eintrag.dauerMs, 0);
+         *     const sek = zahl(eintrag.durationSeconds ?? eintrag.dauerSekunden, 0);
+         *     minuten += ms > 0 ? ms / 60000 : sek > 0 ? sek / 60 : 1;
+         *
+         * Alle vier Feldnamen kamen im ganzen Bestand genau an dieser Stelle
+         * vor. Niemand schreibt sie. Die Rechnung landete also IMMER im dritten
+         * Zweig — eine Minute je Wiederholung —, und sie sah dabei aus, als
+         * benutzte sie eine Messung. Das ist die gefährliche Sorte: nicht
+         * falsch genug, um aufzufallen, und zu genau aussehend, um geprüft zu
+         * werden.
+         *
+         * Der Zeitpunkt `at` steht dagegen wirklich an jeder Antwort
+         * (`wissen/dienst.ts:183`), und der Abstand zwischen zwei Antworten
+         * derselben Sitzung IST die Dauer der zweiten. `Lerntempo` nimmt den
+         * Median davon und sagt dazu, worauf die Zahl steht. Solange es zu
+         * wenige Abstände gibt, bleibt es bei der bisherigen Minute — dann
+         * ändert sich nichts ausser der Ehrlichkeit des Untertitels. */
+        const tempo = Lerntempo.jeKarte(zeiten, 60);
+        const minuten = (logs.length * tempo.sekunden) / 60;
         const heute = tagesStart();
         const wochentag = (heute.getDay() + 6) % 7;
         const wochenstart = new Date(heute);
@@ -732,6 +755,10 @@ const Lernwelt = (() => {
             woche,
             monat,
             minuten: Math.round(minuten),
+            /* Die Grundlage reist mit — sonst steht auf der Karte eine Zahl und
+               darunter ein Wort, das nichts über sie sagt (E289). */
+            tempoSekunden: tempo.sekunden,
+            tempoSatz: Lerntempo.satz(tempo),
             streak,
             xp,
             level,
@@ -1259,7 +1286,7 @@ const Lernwelt = (() => {
                Drei Entschuldigungen standen auf derselben Karte — die Marke oben,
                „kein Wissensstand" und „Motivation, nicht Fachfortschritt". Es
                bleibt die oben; sie gilt für die ganze Karte. */
-            kennzahl('~' + spiel.minuten + ' Min.', 'Lernzeit', 'aus Lernaktivitäten geschätzt') +
+            kennzahl('~' + spiel.minuten + ' Min.', 'Lernzeit', spiel.tempoSatz) +
             kennzahl(spiel.woche + ' / ' + ziel * 7, 'Wochenziel') +
             kennzahl(spiel.streak + (spiel.streak === 1 ? ' Tag' : ' Tage'), 'Streak') +
             kennzahl('Level ' + spiel.level, 'Aktivität', spiel.xp + ' XP') +
@@ -2310,7 +2337,8 @@ const Lernwelt = (() => {
             kennzahl(stats.nextAt ? datumText(stats.nextAt, true) : '—', 'nächster Termin') + '</div></section>' +
             '<section class="lw-engagement"><header><div><p>Aktivität</p><h3>Routine &amp; Motivation</h3></div>' +
             '<span>kein fachlicher Nachweis</span></header><div class="lw-metrics">' +
-            kennzahl('~' + spiel.minuten + ' Min.', 'Lernzeit') + kennzahl(String(spiel.woche), 'Wiederholungen diese Woche') +
+            kennzahl('~' + spiel.minuten + ' Min.', 'Lernzeit', spiel.tempoSatz) +
+            kennzahl(String(spiel.woche), 'Wiederholungen diese Woche') +
             kennzahl(spiel.streak + ' Tage', 'Streak') + kennzahl(String(spiel.xp), 'Aktivitäts-XP') +
             kennzahl(String(spiel.level), 'Level') + '</div>' + fortschritt(spiel.wochenProzent, 'Wochenziel') + '</section>' +
             '<div class="lw-dashboard-grid">' +
