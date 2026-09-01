@@ -36,7 +36,7 @@ const ich = self as unknown as ServiceWorkerGlobalScope;
  *  die Erklärung bei `faelligeErinnerungen`. `test143` rechnet es nach. */
 const ABLAGE_NAME = 'notizen';
 
-const VERSION = 'notizen-v68';
+const VERSION = 'notizen-v69';
 const ABLAGE = VERSION;
 
 /* Was beim ersten Besuch gleich mitgenommen wird. */
@@ -71,8 +71,10 @@ const GRUNDSTOCK = [
   './quell/core/knowledge/gaps.js',
   './quell/core/learning/kompetenz.js',
   './quell/core/learning/fsrs.js',
+  './quell/core/learning/lerntempo.js',
   './quell/core/calendar/wiederholung.js',
   './quell/core/slides/folien.js',
+  './quell/core/planning/budget.js',
   './quell/core/import/sicherheit.js',
   './quell/core/import/validierung.js',
   './quell/core/import/spaltentyp.js',

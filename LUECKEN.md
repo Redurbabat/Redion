@@ -4161,3 +4161,66 @@ Der kleinste nächste Schritt wäre ein Wächter, der jede `:hover`-Regel in
 erste Sorte kann auf einem Telefon einen Griff verstecken.
 
 Gefunden am 1. September 2026 (beim Bau von E300).
+
+
+================================================================================
+L109 — Die Meldung unten deckt am Telefon die Knöpfe eines Fensters zu
+================================================================================
+1. September 2026, auf dem Bild zu E308 gefunden
+
+Am Telefon lag „📕 1 Karteikarte ist fällig" (E184) genau über den beiden
+Knöpfen im Fuss des Tagesplans — „Als Seite anlegen" und „Schliessen" waren
+beide verdeckt. Die Meldung sitzt fest am unteren Rand (`bottom:14px`), der
+Fuss eines Fensters sitzt am unteren Rand des Fensters, und auf einem
+390 px breiten Schirm ist das derselbe Ort.
+
+Das ist NICHT von E308 verursacht — es trifft jedes Fenster mit Fussleiste
+und jede Meldung, die währenddessen kommt. Nur gesehen hat es bisher
+niemand, weil die Telefonbilder erst seit E300 wirklich Telefonbilder sind
+(L108).
+
+Warum es hier nicht mitrepariert wurde: die Meldung ist ein Teil der Schale
+und erscheint über der ganzen App. Sie höher zu setzen, während ein Fenster
+offen ist, ist eine Änderung an jedem Dialog gleichzeitig — und der einzige
+Beleg dafür, dass es danach überall besser aussieht, wären Bilder von jedem
+Dialog. Das ist ein eigener Bogen, kein Nebensatz.
+
+Der kleinste nächste Schritt: `body:has(.overlay) .toast{bottom:…}` und
+danach ein Durchgang über die Fenster, die eine Fussleiste haben —
+Tagesplan, Wochenrückblick, Sicherung, Einstellungen, Import.
+
+Vorher zu klären: verdeckt sie auch am Rechner etwas? Dort ist unten viel
+Platz, aber das ist eine Vermutung und keine Messung.
+
+
+================================================================================
+L110 — `durationMs` wird gelesen und nirgends geschrieben
+================================================================================
+1. September 2026, beim Bau von E308 nachgemessen
+
+`lernwelt.ts:873` rechnet mit der Dauer einer Antwort:
+
+    const ms  = zahl(eintrag.durationMs ?? eintrag.dauerMs, 0);
+    const sek = zahl(eintrag.durationSeconds ?? eintrag.dauerSekunden, 0);
+
+Alle vier Feldnamen kommen im ganzen Bestand genau hier vor. Niemand
+schreibt sie. Die Zeile rechnet also immer mit 0 und tut das still.
+
+Was daraus folgt, ist nicht schlimm — die Lernzeit wird anderswo geschätzt
+—, aber es ist die gefährliche Sorte: eine Rechnung, die aussieht, als
+benutzte sie eine Messung.
+
+E308 hat für seinen eigenen Zweck den anderen Weg genommen: der Zeitpunkt
+`at` steht wirklich an jeder Antwort (`wissen/dienst.ts:183`), und der
+Abstand zwischen zwei Antworten ist die Dauer der zweiten
+(`core/learning/lerntempo.ts`). Damit ist die Frage für den Planer
+beantwortet, für `lernwelt.ts` aber nicht.
+
+Zwei Wege, und der zweite ist wahrscheinlich der richtige:
+
+  1 · beim Antworten wirklich eine Dauer schreiben (`dauerMs` am Eintrag).
+      Dann stimmen beide Stellen, aber alte Einträge haben sie nicht.
+  2 · `lernwelt.ts:873` auf `Lerntempo` umstellen und die vier toten
+      Feldnamen entfernen. Dann gibt es EINE Rechnung statt zwei.
+
+Nicht beides halb.

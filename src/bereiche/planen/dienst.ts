@@ -178,6 +178,7 @@ const Plan = (() => {
       const seite = Store.getBlock(b.parentId);
       raus.push({ id: b.id, text: b.text, fertig: !!b.checked,
                   wo: seite ? (seite.text || 'Ohne Titel') : '', datum: null,
+                  minuten: null,
                   art: 'block', erledigtAm: b.erledigtAm || null });
     });
 
@@ -189,6 +190,11 @@ const Plan = (() => {
                           (c.schema[k].options || []).some((o: any) => /erledigt|fertig|done/i.test(o.name)));
       const hakenKey  = keys.find(k => c.schema[k].type === 'checkbox');
       const datumKey  = keys.find(k => c.schema[k].type === 'date');
+      /* Eine Zahlenspalte, die nach Aufwand klingt, ist die einzige
+         Schätzung, die nicht geraten ist: sie steht dort, weil jemand sie
+         hingeschrieben hat. Ohne sie gilt die Vorgabe aus `planDauer`. */
+      const dauerKey  = keys.find(k => c.schema[k].type === 'number' &&
+        /dauer|minute|aufwand|zeitbedarf/i.test(String(c.schema[k].name || k)));
       if (!statusKey && !hakenKey) return;
       Store.rowsOf(c.id).forEach((r: any) => {
         if (r.archiviert) return;
@@ -198,6 +204,7 @@ const Plan = (() => {
         raus.push({ id: r.id, text: r.text || 'Ohne Titel', fertig,
                     wo: c.name || 'Datenbank',
                     datum: datumKey ? Datenbank.wert(r, datumKey, c) : null,
+                    minuten: dauerKey ? (Number(Datenbank.wert(r, dauerKey, c)) || null) : null,
                     art: 'zeile', status: wert, erledigtAm: r.erledigtAm || r.edited });
       });
     });
@@ -318,16 +325,85 @@ const Plan = (() => {
   /* ========================================================================
    * 4. TAGESPLAN
    * ======================================================================*/
-  const tagesplan = (): void => {
-    const alle = aufgaben().filter(a => !a.fertig);
-    const heuteStr = heute().toDateString();
-    const heutige = alle.filter(a => a.datum && new Date(a.datum).toDateString() === heuteStr);
-    const spaet   = alle.filter(a => a.datum && new Date(a.datum) < heute());
-    const ohne    = alle.filter(a => !a.datum);
+  /** Tage von heute bis zu einem Datum. Der Planer rechnet nur mit Zahlen. */
+  const tageBis = (d: unknown): number | null => {
+    const x = new Date(d as any);
+    if (isNaN(x.getTime())) return null;
+    x.setHours(0, 0, 0, 0);
+    return Math.round((x.getTime() - heute().getTime()) / 86400000);
+  };
 
+  /**
+   * Wie lange eine Karteikarte dauert — gemessen, solange es genug Belege
+   * gibt. Die Zeitpunkte stehen im Antwortprotokoll (`at`), der Abstand
+   * zwischen zwei Antworten ist die Dauer der zweiten.
+   */
+  const kartentempo = (): any => {
+    const vorgabe = Number(Store.getMeta('kartenSekunden', 30)) || 30;
+    try {
+      if (typeof Learning === 'undefined' || !Learning.cards)
+        return Lerntempo.jeKarte([], vorgabe);
+      const zeiten: number[] = [];
+      Learning.cards().forEach((k: any) => {
+        (Learning.reviewLog(k) || []).forEach((e: any) => {
+          const t = new Date(String(e?.at || '')).getTime();
+          if (!isNaN(t)) zeiten.push(t);
+        });
+      });
+      return Lerntempo.jeKarte(zeiten, vorgabe);
+    } catch { return Lerntempo.jeKarte([], vorgabe); }
+  };
+
+  /**
+   * Alles, was heute Zeit kostet, als Posten für `core/planning/budget.ts`.
+   *
+   * Fällige Karten sind EIN Posten und nicht dreissig Zeilen: sie werden am
+   * Stück gelernt, und dreissig Einzeiler wären keine Liste mehr, sondern
+   * eine Wand.
+   */
+  const posten = (): any[] => {
+    const vorgabe = Math.max(1, Number(Store.getMeta('planDauer', 30)) || 30);
+    const raus: any[] = aufgaben().filter(a => !a.fertig).map(a => ({
+      id: a.id, titel: a.text, art: a.art, wo: a.wo,
+      minuten: Math.max(1, Number(a.minuten) || vorgabe),
+      frist: a.datum ? tageBis(a.datum) : null
+    }));
+    try {
+      if (typeof Learning !== 'undefined' && Learning.dailyQueue) {
+        const q = Learning.dailyQueue();
+        const n = (q.errors?.length || 0) + (q.due?.length || 0);
+        if (n) raus.push({
+          id: 'karten', art: 'karten', frist: 0, wo: 'Lernen',
+          titel: n + (n === 1 ? ' Karteikarte' : ' Karteikarten') + ' wiederholen',
+          minuten: Lerntempo.minutenFuer(n, kartentempo())
+        });
+      }
+    } catch { /* Ohne den Lernbereich plant der Tag trotzdem. */ }
+    return raus;
+  };
+
+  /* ------------------------------------------------------------------------
+   * DER TAGESPLAN
+   *
+   * Vorher stand hier `(heute.length + spaet.length) * geschaetzt` und eine
+   * Warnung ab acht Stunden. Beides ist die stille Fassung von „ich weiss es
+   * nicht": sieben Aufgaben ergaben immer 3 h 30 min, und die Schranke sprang
+   * erst bei sechzehn an — also nie.
+   *
+   * Jetzt kommt die Zeit vom Nutzer („Ich habe heute 90 Minuten"), die Dauer
+   * je Posten aus einer Spalte oder der Vorgabe, und der Kern rechnet zwei
+   * Dinge getrennt: was HEUTE hineinpasst, und ob sich die Fristen der
+   * nächsten Tage überhaupt ausgehen. Nur das zweite ist eine Nachricht.
+   * ----------------------------------------------------------------------*/
+  const tagesplan = (): void => {
+    const budget    = Math.max(0, Math.round(Number(Store.getMeta('zeitbudget', 90)) || 0));
     const geschaetzt = Store.getMeta('planDauer', 30);
-    const minuten = (heutige.length + spaet.length) * geschaetzt;
-    const stunden = Math.floor(minuten / 60), rest = minuten % 60;
+    const alle      = posten();
+    const tag       = Budget.verteilen(alle, budget);
+    const eng       = Budget.machbarkeit(alle, budget);
+    const warnung   = Budget.satz(eng);
+    const tempo     = kartentempo();
+    const hatKarten = alle.some((x: any) => x.id === 'karten');
 
     const o = document.createElement('div');
     o.className = 'overlay';
@@ -336,31 +412,41 @@ const Plan = (() => {
         `<div class="fh">☀ Tagesplan<span class="wr-zeit">${tagText(new Date())}</span>` +
           '<button class="icon-btn" data-a="zu">✕</button></div>' +
         '<div class="wr-koerper">' +
+          '<label class="pl-budget">Heute habe ich <input type="number" id="pl-b" ' +
+            `value="${budget}" min="0" step="15" inputmode="numeric"> Minuten Zeit</label>` +
           '<div class="wr-karten">' +
-            `<div class="wr-k"><b>${heutige.length}</b><span>heute fällig</span></div>` +
-            `<div class="wr-k${spaet.length ? ' schlecht' : ''}"><b>${spaet.length}</b>` +
+            `<div class="wr-k"><b>${Budget.dauerKurz(tag.verplant)}</b><span>verplant</span></div>` +
+            `<div class="wr-k"><b>${Budget.dauerKurz(tag.rest)}</b><span>noch frei</span></div>` +
+            `<div class="wr-k${eng.ueberfaellig ? ' schlecht' : ''}"><b>${eng.ueberfaellig}</b>` +
               '<span>überfällig</span></div>' +
-            `<div class="wr-k"><b>${stunden}h ${rest}m</b><span>grob geschätzt</span></div>` +
-            `<div class="wr-k"><b>${ohne.length}</b><span>ohne Datum</span></div>` +
+            `<div class="wr-k"><b>${tag.draussen.length}</b><span>passt nicht mehr</span></div>` +
           '</div>' +
-          (minuten > 8 * 60
-            ? '<div class="pl-warnung">Das passt nicht in einen Arbeitstag. ' +
-              'Etwas davon sollte zurückgestellt werden.</div>' : '') +
-          (spaet.length
-            ? '<div class="wr-titel">Überfällig</div><div class="wr-liste">' +
-              spaet.map(a => zeileHtml(a, true)).join('') + '</div>' : '') +
-          '<div class="wr-titel">Heute</div>' +
-          (heutige.length
-            ? '<div class="wr-liste">' + heutige.map(a => zeileHtml(a)).join('') + '</div>'
+          /* HIER STEHT IM NORMALFALL NICHTS. Dass heute nicht alles
+             hineinpasst, ist kein Ereignis; dass eine FRIST reisst, schon. */
+          (warnung ? `<div class="pl-warnung">⚠ ${esc(warnung)}</div>` : '') +
+          (tag.ueberzogen
+            ? '<div class="pl-warnung">Feste Termine belegen heute schon ' +
+              esc(Budget.dauerWort(tag.festMinuten)) + ' — ' +
+              esc(Budget.dauerWort(tag.ueberzogen)) + ' mehr, als du eingetragen hast.</div>'
+            : '') +
+          '<div class="wr-titel">Dein Tag</div>' +
+          (tag.zuteilung.length
+            ? '<div class="wr-liste">' + tag.zuteilung.map(planZeileHtml).join('') + '</div>'
             : '<div class="pf-gut">Für heute steht nichts an.</div>') +
-          (ohne.length
-            ? '<div class="wr-titel">Ohne Datum — ' + ohne.length + ' Stück, die ersten zehn</div>' +
-              '<div class="wr-liste">' + ohne.slice(0, 10).map(a => zeileHtml(a)).join('') + '</div>'
+          (tag.draussen.length
+            ? '<div class="wr-titel">Heute nicht mehr — ' + tag.draussen.length + ' Stück</div>' +
+              '<div class="wr-liste">' + tag.draussen.slice(0, 10).map((d: any) =>
+                planZeileHtml({ posten: d.posten, minuten: 0, ganz: false, grund: d.grund })).join('') +
+              '</div>'
+            : '') +
+          (hatKarten
+            ? '<div class="pl-quelle">Karteikarten: ' +
+              esc(String(tempo.sekunden)) + ' Sek. je Karte, ' + esc(Lerntempo.satz(tempo)) + '.</div>'
             : '') +
         '</div>' +
         '<div class="fbtns">' +
-          `<span class="pl-dauer">Aufgabe dauert etwa <input type="number" id="pl-d" ` +
-            `value="${geschaetzt}" min="5" step="5"> Minuten</span>` +
+          '<span class="pl-dauer">Aufgabe ohne Angabe: <input type="number" id="pl-d" ' +
+            `value="${geschaetzt}" min="5" step="5" inputmode="numeric"> Min.</span>` +
           '<button data-a="seite">Als Seite anlegen</button>' +
           '<button data-a="zu" class="prim">Schliessen</button></div>' +
       '</div>';
@@ -368,33 +454,55 @@ const Plan = (() => {
 
     o.addEventListener('change', e => {
       const feld = e.target instanceof HTMLInputElement ? e.target : null;
-      if (feld?.id === 'pl-d') { Store.setMeta('planDauer', +feld.value || 30);
-                                    o.remove(); tagesplan(); }
+      if (!feld) return;
+      if (feld.id === 'pl-d') Store.setMeta('planDauer', +feld.value || 30);
+      else if (feld.id === 'pl-b') Store.setMeta('zeitbudget', Math.max(0, +feld.value || 0));
+      else return;
+      o.remove();
+      tagesplan();
     });
     o.addEventListener('click', e => {
       if (e.target === o || elVon(e)?.closest<HTMLElement>('[data-a="zu"]')) { o.remove(); return; }
       const sp = elVon(e)?.closest<HTMLElement>('[data-spaeter]');
       if (sp?.dataset["spaeter"]) { menue(sp, sp.dataset["spaeter"]); return; }
       const z = elVon(e)?.closest<HTMLElement>('[data-id]');
-      if (z) { o.remove(); App.oeffne(z.dataset["id"]); return; }
+      if (z && z.dataset["id"] !== 'karten') { o.remove(); App.oeffne(z.dataset["id"]); return; }
       if (elVon(e)?.closest<HTMLElement>('[data-a="seite"]')) {
         const s = Store.addBlock(null, 'page', { text: 'Tagesplan ' + tagText(new Date()), icon: '☀' });
         Werkzeuge.ausMarkdown(s,
-          '## Heute\n\n' + [...spaet, ...heutige].map(a => `- [ ] ${a.text}`).join('\n') +
-          '\n\n## Wenn Zeit bleibt\n\n' + ohne.slice(0, 5).map(a => `- [ ] ${a.text}`).join('\n'));
+          '## Heute — ' + Budget.dauerWort(budget) + '\n\n' +
+          tag.zuteilung.map((x: any) =>
+            `- [ ] ${x.posten.titel} (${Budget.dauerWort(x.minuten)}` +
+            (x.ganz ? '' : ' von ' + Budget.dauerWort(x.posten.minuten)) + ')').join('\n') +
+          (warnung ? '\n\n> ' + warnung : '') +
+          (tag.draussen.length
+            ? '\n\n## Heute nicht mehr\n\n' +
+              tag.draussen.slice(0, 10).map((d: any) => `- [ ] ${d.posten.titel}`).join('\n')
+            : ''));
         o.remove(); App.zeichneBaum(); App.oeffne(s.id);
       }
     });
   };
 
-  const zeileHtml = (a: any, warnung?: boolean): string =>
-    `<div class="wr-z" data-id="${a.id}">` +
-    `<span class="wr-p${warnung ? '' : ''}">${warnung ? '⚠' : '☐'}</span>` +
-    `<span>${esc(a.text)}</span>` +
-    `<span class="wr-wo">${esc(a.wo)}</span>` +
-    (a.datum ? `<span class="wr-d">${tagText(a.datum)}</span>` : '') +
-    `<button class="wr-spaeter" data-spaeter="${a.id}" title="Zurückstellen">⏰</button>` +
-    '</div>';
+  /** Eine Zeile des Plans: was, wo, wie lange — und warum so lange. */
+  const planZeileHtml = (z: any): string => {
+    const p = z.posten;
+    const zeichen = z.grund === 'überfällig' ? '⚠' : z.grund === 'fest' ? '🔒' : '☐';
+    const zeit = z.minuten
+      ? (z.ganz ? Budget.dauerWort(z.minuten)
+                : Budget.dauerWort(z.minuten) + ' von ' + Budget.dauerWort(p.minuten))
+      : Budget.dauerWort(p.minuten);
+    return `<div class="wr-z pl-z" data-id="${esc(p.id)}">` +
+      `<span class="wr-p">${zeichen}</span>` +
+      `<span>${esc(p.titel)}</span>` +
+      `<span class="wr-wo">${esc(p.wo || '')}</span>` +
+      `<span class="wr-d">${esc(zeit)}</span>` +
+      (p.frist === null || p.frist === undefined ? ''
+        : `<span class="wr-d pl-frist">${esc(Budget.tagWort(p.frist))}</span>`) +
+      (p.id === 'karten' ? ''
+        : `<button class="wr-spaeter" data-spaeter="${esc(p.id)}" title="Zurückstellen">⏰</button>`) +
+      '</div>';
+  };
 
   /* ========================================================================
    * START
@@ -405,7 +513,8 @@ const Plan = (() => {
   };
 
   return { start, zurueckstellen, holen, faellige, pruefen, menue, uebersicht,
-           aufgaben, wochenDaten, wochenrueckblick, tagesplan, liste, FRISTEN };
+           aufgaben, wochenDaten, wochenrueckblick, tagesplan, liste, FRISTEN,
+           posten, tageBis, kartentempo };
 })();
 
 (window as any).Plan = Plan;

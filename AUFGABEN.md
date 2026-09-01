@@ -2135,3 +2135,64 @@ node pruefungen/lauf/test105.mjs
   ERZEUGT; EXDATE streicht danach. test284 neu (49); §1 misst den Weg, den
   der Import wirklich geht. Keine Zeitzonen, kein VTODO, der Hinweis
   erreicht die Oberfläche noch nicht — L106. sw v56.
+* E296 (L82): Ein PDF öffnet wie in GoodNotes — Doppelklick auf das Deckblatt,
+  Seiten untereinander, Schreibschicht darüber. sw v60.
+* E297 (L69, erste Hälfte): `core/slides/folien.ts` — die Regel, wo eine Folie
+  anfängt, stand im Vortragsmodus und wäre für jede zweite Ausgabe
+  abgeschrieben worden. Sie steht jetzt einmal da, und `.pptx` fällt aus
+  demselben ZIP-Schreiber wie DOCX und XLSX. test293 neu (26). sw v61.
+* E298: `src/core/types/database.ts` behauptete vier Felder, die es nicht
+  gibt (`zielCollection`, `rollupRelation`, `rollupZiel`, `rollupArt`), und
+  liess acht echte weg; `storage.ts` nannte `belegt`/`zugeteilt` statt
+  `benutzt`/`verfuegbar`. Genau der Fehler, den CLAUDE.md §52.8 beschreibt —
+  ein Typ ist die Stelle, an der man nachsieht statt zu raten. test294 neu
+  (10) misst jetzt jedes Feld gegen den Bestand.
+* E300 (Redurs Bild aus GoodNotes): Reiterzeile für offene Dokumente, am
+  Telefon wie am Laptop. Ein Dokument verdrängt kein anderes mehr, der
+  aktive Reiter scrollt sich selbst ins Bild. test292 neu (45). sw v64.
+  Dabei L108 gefunden: `bilder.mts` hat das Telefon bis dahin ohne Tastsinn
+  nachgestellt — jedes Telefonbild zeigte Griffe, die es dort nicht gibt.
+* E301 (L107): Randstreifen neben der Seite („neben das PDF direkt zeichnen
+  wie in OneNote"). Am Telefon wird gescrollt statt gestapelt — gestapelt
+  quetschte die Zeichenschicht waagerecht zusammen, und ein Strich bei x=300
+  landete bei x=207. Auf dem Bild gefunden. test295 neu (24). sw v65.
+* E302 (L105 Punkt 1): Die Lücke war schon zu — `schale.ts` hat seit E272
+  Phase G einen gemeinsamen Escape-Griff. Schlimmer: mein erster Wächter und
+  mein erstes Modul teilten denselben blinden Fleck (`offsetParent` ist bei
+  `position:fixed` immer null, und `.overlay` ist fixed) — der Prüflauf sah
+  null Fenster und war grün. Modul zurückgebaut, Wächter berichtigt.
+* E303 (Redurs Punkt 8): FSRS-4.5 als reiner Kern, von Hand gerechnet statt
+  als Abhängigkeit (§6). Additiv: SM-2 bleibt die Vorgabe, der Übergang
+  einer Karte wird im Protokoll vermerkt. Ein Fehler, den nur eine
+  REIHENFOLGE-Behauptung fand: die Schwierigkeitsformel aus FSRS-5 mit den
+  Gewichten von 4.5 gemischt — Note 3 und 4 landeten beide auf 1.
+  test297 neu (59). sw v66.
+* E304: Neun CSS-Regeln benutzten `var(--rand)` und eine `var(--hover)` —
+  beide gibt es nicht. Ein ungültiges `var()` macht die GANZE Erklärung
+  ungültig, also stand dort `border-top-width: 0`. Auf dem Bild gefunden.
+* E305 (Redurs Punkt 11): Nur-Quellen-Modus. Die KI antwortet dann
+  ausschliesslich aus den eingestellten Quellen und schweigt, wenn nichts
+  passt, statt zu raten. test299 neu (19).
+* E306 (Redurs Punkt 12): Beziehungsarten in der Datenbank (1:1, 1:n, n:m).
+  Die Gegenrichtung wird jetzt wirklich durchgesetzt — vorher konnte eine
+  1:1-Beziehung auf einer Seite mehrfach hängen. test300 neu (17).
+* E307 (Redurs Punkt 9): Woher eine Zeile kommt. `herkunft: 'ki' | 'quelle'`
+  am Block, als Streifen UND in Worten (§38), und sie überlebt die
+  Sicherung. Kein erfundener Verlässlichkeitswert daneben. test301 neu (17).
+* E308 (Redurs Punkt 7): Der Zeitbudget-Planer. Der Tagesplan rechnete
+  `Anzahl × 30 Minuten` und warnte ab acht Stunden — also nie.
+  `core/planning/budget.ts` verteilt jetzt ein eingegebenes Budget nach
+  Fristen, mit Tagesrate statt Alles-oder-nichts, und prüft getrennt, ob die
+  nächsten Tage überhaupt reichen. Diese zweite Rechnung ist die einzige,
+  die redet — und sie ist die notwendige und hinreichende EDF-Bedingung,
+  nicht ein geratener Schwellwert. Die Dauer einer Karteikarte wird
+  gemessen (`core/learning/lerntempo.ts`), nicht geschätzt. test302 neu (64,
+  darunter zweihundert Fälle gegen einen zweiten Rechenweg). sw v69.
+  Auf dem Bild gefunden: zwei Punkte hintereinander, eine umbrechende
+  Kennzahl, ein am Telefon abgeschnittener Titel. Neu offen: L109 (die
+  Meldung unten deckt am Telefon die Knöpfe eines Fensters zu), L110
+  (`durationMs` wird gelesen und nirgends geschrieben).
+
+**Damit sind Redurs zwölf Punkte alle abgearbeitet** — 1 (E286), 2 (E287),
+3 (E285), 4 (E288), 5 (E284), 6 (E289), 7 (E308), 8 (E303), 9 (E307),
+10 (E290), 11 (E305), 12 (E306).

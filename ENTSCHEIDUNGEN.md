@@ -23259,3 +23259,132 @@ Selbstgeschriebenes unberührt bleibt.
 
 Mitgelaufen: test192 25/25, test119 19/19, test290 13/13.
 typecheck grün · sw v68 · Einzeldatei 7732 KB.
+
+
+================================================================================
+E308 — Der Zeitbudget-Planer (Redurs Punkt 7)
+================================================================================
+1. September 2026
+
+Redurs siebter Punkt war „ein Planer, der ein Zeitbudget verteilt". Redion
+hatte einen Tagesplan, und der rechnete so:
+
+    const minuten = (heutige.length + spaet.length) * geschaetzt;
+                                            planen/dienst.ts:329, bis heute
+
+Jede Aufgabe dauert gleich lang. Sieben Aufgaben ergaben immer 3 Std. 30
+Min., ob es sieben Häkchen waren oder sieben Aufsätze. Gewarnt wurde ab
+acht Stunden — das sind sechzehn Aufgaben; die Schranke ist in einem
+Schuljahr nie angesprungen, und wenn sie es täte, wäre es zu spät.
+
+Beides ist die stille Fassung von „ich weiss es nicht".
+
+
+Die Entscheidung: ZWEI Rechnungen, und nur eine davon redet
+--------------------------------------------------------------------------------
+
+`src/core/planning/budget.ts` rechnet getrennt:
+
+    verteilen()    was von heute in die vorhandenen Minuten passt
+    machbarkeit()  ob sich die Fristen der nächsten Tage überhaupt ausgehen
+
+Die Trennung ist der ganze Punkt. Dass heute nicht alles hineinpasst, ist
+der Normalfall — es passt nie alles in einen Tag. Eine Anzeige, die das
+meldet, wird nach dem zweiten Mal nicht mehr gelesen (dieselbe Regel wie bei
+E284, E286, E288, E289, E290).
+
+Eine Nachricht ist erst: „Bis morgen fehlen 1 Std. 55 Min. Nötig wären
+2 Std. 28 Min. am Tag." Dann ist eine Frist in Gefahr, und dagegen kann man
+HEUTE etwas tun, statt es am Donnerstagabend zu merken.
+
+Deshalb gibt `Budget.satz()` im guten Fall eine LEERE Zeichenkette, und die
+Oberfläche zeichnet dann gar nichts.
+
+
+Warum die Machbarkeit wirklich stimmt und nicht geraten ist
+--------------------------------------------------------------------------------
+
+Sie ist die bekannte Machbarkeitsbedingung für „earliest deadline first" auf
+einer Maschine mit unterbrechbarer Arbeit:
+
+    Ein Satz Arbeiten mit Fristen ist genau dann zu schaffen, wenn für JEDE
+    Frist gilt: die gesamte bis dahin fällige Arbeit passt in die bis dahin
+    vorhandene Zeit.
+
+Beide Voraussetzungen liegen hier vor: Lernen und Aufgaben lassen sich
+unterbrechen und am nächsten Tag fortsetzen, und es gibt einen Menschen und
+nicht zwei. Die Bedingung ist damit nicht nur hinreichend, sondern
+NOTWENDIG — was sie meldet, ist wirklich unmöglich, und was sie durchlässt,
+geht sich wirklich aus.
+
+Genau deshalb darf diese Anzeige schweigen, ohne etwas zu verschweigen.
+
+test302 §6 hält das nicht mit drei Beispielen fest, sondern mit einem
+zweiten, absichtlich stumpf gebauten Tagessimulator, der Minute für Minute
+verteilt — über zweihundert zufällige Fälle, alle einig.
+
+
+Die Tagesrate: nicht alles auf heute
+--------------------------------------------------------------------------------
+
+Ein Referat über 200 Minuten, fällig in vier Tagen, gehört weder ganz auf
+heute noch gar nicht. Es gehört mit 40 Minuten hinein. Das ist der
+Unterschied zwischen einem Planer und einer Liste, und es ist der Grund,
+warum im Plan „45 Min. von 4 Std." steht statt eines Hakens.
+
+Feste Termine (Unterricht) nehmen ihre Zeit zuerst — sie finden statt, ob
+geplant oder nicht, und sind in der Machbarkeit keine Arbeit, sondern
+fehlende Kapazität. Splitter unter zehn Minuten entstehen nicht: wer sich
+sieben Minuten Rest als „Aufsatz schreiben" notiert, schreibt ihn nicht.
+
+
+Woher die Minuten kommen — und was gemessen statt geraten wird
+--------------------------------------------------------------------------------
+
+Drei Quellen, in dieser Reihenfolge:
+
+  1 · eine Zahlenspalte der Datenbank, die nach Aufwand klingt („Dauer",
+      „Minuten", „Aufwand"). Sie steht dort, weil ein Mensch sie
+      hingeschrieben hat — die einzige Schätzung, die keine ist.
+  2 · sonst `planDauer`, die Vorgabe im Fuss des Fensters.
+  3 · für die fälligen Karteikarten: GEMESSEN.
+
+Punkt 3 war der eigentliche Fund. `wissen/dienst.ts:183` schreibt zu jeder
+Antwort einen Zeitpunkt; der Abstand zwischen zwei Antworten derselben
+Sitzung IST die Dauer der zweiten. `core/learning/lerntempo.ts` nimmt den
+Median davon (nicht den Mittelwert — ein Telefonat zwischen zwei Karten hebt
+den Mittelwert von zwanzig Karten um zwölf Sekunden) und liefert die Zahl
+der Belege gleich mit. Unter zwölf Messungen heisst es ausdrücklich
+„geschätzt", darüber „gemessen aus N Antworten". Dieselbe Regel wie bei
+E289: eine Zahl ohne ihre Grundlage ist eine Behauptung.
+
+Nebenbei gefunden: `lernwelt.ts:873` liest `durationMs` und `dauerSekunden`
+— beide schreibt niemand. Steht als L110.
+
+
+Zwei Dinge, die nur das Bild gezeigt hat
+--------------------------------------------------------------------------------
+
+  · „Bis morgen fehlen 1 Std. 55 Min.." — zwei Punkte. `dauerWort` endet auf
+    eine Abkürzung und bringt seinen Punkt schon mit.
+  · „1 Std. 30 Min." brach in der Kennzahlkarte auf zwei Zeilen um und schob
+    die Beschriftung nach unten hinaus. Dafür gibt es jetzt `dauerKurz` —
+    „1 Std 30", wie eine Uhrzeit.
+
+Und am Telefon: von „Matheblatt Seite 34" blieb „Mathe…", weil daneben
+„15 Min. von 25 Min." stand. Der Titel bekommt dort jetzt die erste Zeile
+allein, Dauer und Frist rücken darunter; das Kästchen steht absolut aussen,
+damit beide denselben linken Rand haben. Ein `.wr-d:first-of-type` hätte es
+nicht getan — `first-of-type` zählt Spans, und der erste Span ist das
+Kästchen.
+
+
+Geprüft
+--------------------------------------------------------------------------------
+test302 64/64 — die Reinheit des Kerns (keine Uhr, keine Ablage, kein DOM),
+die Tagesrate, die festen Termine, die Machbarkeit von Hand nachgerechnet,
+`noetigProTag` als beweisbar kleinste Zahl, zweihundert Fälle gegen den
+zweiten Rechenweg, und zweimal die Gegenprobe: im Kern UND im echten Fenster
+steht bei gewöhnlicher Last kein Wort.
+
+typecheck grün · sw v69 · Einzeldatei 7758 KB.

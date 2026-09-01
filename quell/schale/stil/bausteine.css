@@ -2974,6 +2974,38 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
           display:flex; gap:6px; align-items:center}
 .pl-dauer input{width:62px; background:var(--bg-input); border:1px solid var(--line);
                 border-radius:5px; padding:3px 6px; color:var(--text)}
+/* Der Zeitbudget-Planer (E308). Das Budget steht OBEN und nicht in der
+   Fussleiste: es ist die Eingabe, aus der alles andere folgt, und zwei
+   Zahlenfelder nebeneinander im Fuss passen am Telefon nicht. */
+.pl-budget{display:flex; gap:7px; align-items:center; font-size:13px; margin-bottom:12px;
+           padding:9px 12px; background:var(--bg-card); border:1px solid var(--line);
+           border-radius:7px}
+.pl-budget input{width:76px; background:var(--bg-input); border:1px solid var(--line);
+                 border-radius:5px; padding:4px 7px; color:var(--text); font-size:14px}
+.pl-quelle{font-size:11.5px; color:var(--text-faint); margin-top:10px}
+.pl-frist{min-width:82px}
+@media(max-width:640px){
+  /* §37: Zahlenfelder und der Zurückstellen-Griff sind Griffe. */
+  .pl-budget input, .pl-dauer input{min-height:44px}
+  .pl-z .wr-spaeter{min-width:44px; min-height:44px}
+  /* Der Ort einer Aufgabe ist am Telefon das erste, was weichen darf. */
+  .pl-z .wr-wo{display:none}
+  /* AUF DEM BILD GEFUNDEN: in einer Zeile blieb vom Titel „Mathe…" übrig,
+     weil „15 Min. von 25 Min." daneben stand. Der Titel bekommt deshalb den
+     Rest der ERSTEN Zeile, Dauer und Frist rücken darunter — die Angabe geht
+     nicht verloren, sie zieht um.
+
+     `calc(100% - 25px)` und nicht `100%`: mit voller Breite drängte der
+     Titel das Kästchen auf eine eigene Zeile, und aus einer Zeile wurden
+     drei (zweites Bild). 16 px Kästchen plus 9 px Abstand. */
+  .pl-z{flex-wrap:wrap; row-gap:0; position:relative; padding-left:36px}
+  .pl-z > span:nth-child(2){flex:1 1 100%; white-space:normal}
+  /* Das Kästchen steht aussen, damit Titel UND Angaben denselben linken
+     Rand haben. Ein `.wr-d:first-of-type` täte es nicht: `first-of-type`
+     zählt Spans, und der erste Span ist das Kästchen. */
+  .pl-z .wr-p{position:absolute; left:12px; top:7px}
+  .pl-z .wr-d{min-width:0; text-align:left; font-size:11px}
+}
 
 /* Verbindungsanzeige */
 #offline-streifen{position:fixed; left:50%; transform:translateX(-50%); bottom:14px;

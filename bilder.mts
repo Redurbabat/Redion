@@ -1173,6 +1173,49 @@ const ANSICHTEN: Record<string, { titel: string; bauen: () => void | Promise<voi
      und der Unterschied ist beim ersten Bildversuch aufgefallen: gerollt
      wurde in der falschen Ansicht. */
 
+  /* --- Der Zeitbudget-Planer (E308, Redurs Punkt 7) -----------------------
+     Vorher rechnete der Tagesplan `Anzahl × 30 Minuten`. Das Bild muss
+     zeigen: eine Zeitangabe oben, je Zeile eine ECHTE Dauer, und den einen
+     Satz, der nur dann dasteht, wenn eine Frist wirklich reisst. */
+
+  tagesplan: {
+    titel: 'Zeitbudget-Planer — was in 90 Minuten passt (E308)',
+    bauen: async () => {
+      const w = window as any;
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+      Store.setMeta('zeitbudget', 90);
+
+      const tag = (n: number): string => {
+        const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() + n);
+        return d.toISOString().slice(0, 10);
+      };
+      const { collectionId } = Store.addDatabase(null, 'Schulaufgaben', {
+        titel:  { name: 'Aufgabe', type: 'title' },
+        wann:   { name: 'Fällig',  type: 'date' },
+        dauer:  { name: 'Dauer (Min.)', type: 'number' },
+        fertig: { name: 'Erledigt', type: 'checkbox' }
+      });
+      const zeilen: [string, number, number][] = [
+        ['Referat Energieverteilung vorbereiten', 1, 240],
+        ['Matheblatt Seite 34',                   1, 25],
+        ['Vokabeln Französisch',                  2, 15],
+        ['Elektro-Protokoll abgeben',             4, 90],
+        ['Lektüre Kapitel 7',                     6, 45]
+      ];
+      for (const [t, wann, dauer] of zeilen) {
+        const r = Store.addRow(collectionId, { title: t });
+        Store.setProp(r.id, 'wann', tag(wann));
+        Store.setProp(r.id, 'dauer', dauer);
+      }
+      await Store.flush();
+      w.Plan.tagesplan();
+      await new Promise(r => setTimeout(r, 700));
+    }
+  },
+
   lernplan: {
     titel: 'SM-2 oder FSRS — der Lernplan-Schalter (E303)',
     bauen: async () => {
