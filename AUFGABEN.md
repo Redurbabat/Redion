@@ -2495,3 +2495,18 @@ node pruefungen/lauf/test105.mjs
   `darfUeberhaupt` für ortlose Handlungen, und die vier Werkzeuge prüfen
   gegen ihr Ziel. `suchen` bekam keine — `Kontext.finden` filtert seit
   jeher. test324 neu (22), zwei Mutationen belegt rot. sw v85.
+* E332 (L102 Punkt 5): Ein Fach, das niemand erklärt hat. `wipe()` fragt die
+  Ablage selbst, `exportAll` trug getippte Listen — ein neues Fach wäre
+  gelöscht, aber nie gesichert worden. Nachgezählt: elf Fächer, sieben
+  gesichert, vier mit Grund draussen; heute stimmt es, die Gefahr ist das
+  zwölfte. Dynamisch sichern ginge nicht (Blobs, Filter, eigene Regeln), also
+  eine Erklärung, gegen die sich die Ablage abgleicht: was in keiner Liste
+  steht, landet im Manifest unter `fehlt`, mit einem Satz, der den ORT der
+  Entscheidung nennt. Jedes ausgelassene Fach trägt seinen Grund daneben —
+  damit der Nächste daran vorbeimuss. `enthaelt` kommt jetzt aus derselben
+  Liste statt ein zweites Mal getippt zu sein. Die Prüfung legt bewusst KEIN
+  echtes Fach an: das entsteht beim Bauen, und zur Laufzeit zöge es der
+  laufenden App die Ablage weg (`onversionchange`). Also rechnet
+  `faecherUnbekannt` über eine Liste, die man ihr geben kann — dieselbe
+  Bauform, die die Datei bei der Fassungsregel schon begründet.
+  test325 neu (20), belegt rot. sw v86.

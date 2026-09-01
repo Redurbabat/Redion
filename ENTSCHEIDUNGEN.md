@@ -25216,3 +25216,83 @@ weiterhin.
 
 test286 16/16, test287 9/9, test272 153, test192 25, test215 50, test206 66.
 sw v85 · Einzeldatei neu gebaut.
+
+
+E332 — Ein Fach, das niemand erklärt hat (L102 Punkt 5)
+════════════════════════════════════════════════════════════════════════════
+
+L102 Punkt 5: „`exportAll`/`importAll` tragen drei hartkodierte Fachlisten,
+während `wipe()` seit dem Anhang-Vorfall die Ablage selbst fragt
+(`[...db.objectStoreNames]`, `indexdb.ts:2378`). Ein neues Fach würde also
+gelöscht, aber nie gesichert. Kein Prüflauf deckt das ab."
+
+NACHGEZÄHLT, BEVOR GEBAUT WURDE: es gibt elf Fächer.
+
+    blocks collections views meta versions       gesichert
+    dateien stuecke                              gesichert, mit Anhängen
+    auftraege basis vorrat suchindex             mit Grund draussen
+
+Heute stimmt es also. Die Gefahr liegt nicht bei diesen elf, sondern beim
+ZWÖLFTEN — dem, das jemand nächsten Monat anlegt und beim Sichern vergisst.
+`wipe()` würde es leeren, `exportAll` nie erwähnen. Genau der Vorfall, aus
+dem `wipe()` seine dynamische Liste bekommen hat, nur andersherum.
+
+WARUM NICHT DYNAMISCH SICHERN
+
+Das wäre die naheliegende Antwort und sie geht nicht: `stuecke` hält Blobs,
+die kein JSON verträgt; `meta` braucht Filter (Zugangsdaten, Ordnerzugriff,
+Freigabeliste — E270, E279); `versions` hat eine eigene Aufräumregel. Ein
+Fach zu sichern heisst zu wissen, was darin steht.
+
+Also eine ERKLÄRUNG statt einer Schleife: drei Listen, gegen die sich die
+Ablage abgleichen lässt. Was in keiner steht, ist unbekannt — und
+Unbekanntes wird GENANNT statt verschwiegen (§52.10, E111):
+
+    ACHTUNG: 1 Fach/Fächer der Ablage (erfindung) werden von dieser
+    Sicherung NICHT erfasst. Sie stehen in keiner der Listen in
+    `indexdb.ts` — wer sie angelegt hat, hat nicht entschieden, ob sie
+    mitreisen sollen. Beim Einspielen mit „Ersetzen" wären sie weg.
+
+Der Satz nennt den ORT der Entscheidung, nicht nur den Fehler. Wer das
+liest, weiss, wohin er greifen muss.
+
+JEDES AUSGELASSENE FACH TRÄGT SEINEN GRUND — im Code, neben dem Namen:
+
+    auftraege   ein halb erledigter Auftrag ist Arbeit an diesem Gerät (E286)
+    basis       der Abgleichsstand ist kein Inhalt, sondern ein Gedächtnis
+    vorrat      vorberechnete Werte — ein Beschleuniger, kein Inhalt
+    suchindex   entsteht beim Start neu
+
+Damit muss der Nächste, der ein Fach anlegt, an dieser Liste vorbei und
+sich entscheiden. Das ist der eigentliche Zweck: nicht die vier Gründe von
+heute, sondern die Frage von morgen.
+
+UND `enthaelt` KOMMT AUS DERSELBEN LISTE. Vorher stand es zweimal da —
+einmal als Liste im Code, einmal getippt im Manifest. Zwei Listen für
+dieselbe Sache gehen irgendwann auseinander, und dann sagt das Manifest
+etwas anderes, als die Sicherung enthält.
+
+─── WARUM DIE PRÜFUNG KEIN ECHTES FACH ANLEGT ──────────────────────────────
+
+Der erste Anlauf tat genau das: die Ablage mit erhöhter Fassungsnummer neu
+öffnen und ein Fach dazulegen. Er scheiterte, und zwar richtig.
+
+Ein neues Fach entsteht beim BAUEN — `Umzuege.JETZIGE` steigt, und
+`onupgradeneeded` legt es an. Zur Laufzeit ginge das nur von einer zweiten
+Verbindung aus, und dann greift `db.onversionchange` (`indexdb.ts:164`):
+die laufende App schliesst ihre Ablage und setzt `db = null`. Mit Absicht,
+seit langem — zwei Fassungen auf derselben Ablage sind schlimmer als ein
+Neuladen.
+
+Also rechnet `faecherUnbekannt` über eine LISTE, die man ihr geben kann,
+und ohne Angabe über die laufende Ablage. Genau die Bauform, die dieselbe
+Datei bei der Fassungsregel schon begründet: „Reine Rechnung, ohne Ablage
+und ohne Oberfläche — damit ein Prüflauf sie mit einer erfundenen Liste
+füttern kann." Und `satzZuUnbekannten` ist aus demselben Grund eine eigene
+Funktion: nur so lässt sich beides messen — dass er im Ernstfall dasteht
+UND dass er im Normalfall fehlt.
+
+test325, 20 Punkte. Belegt rot: nimmt man `vorrat` aus der Liste der
+bewusst Ausgelassenen, meldet die laufende Ablage es sofort als unerklärt.
+
+test100 32, test111 81. sw v86 · Einzeldatei neu gebaut.

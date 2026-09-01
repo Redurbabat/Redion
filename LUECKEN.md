@@ -3957,10 +3957,20 @@ nicht verlorengeht:
    Eine Auftragsmaschine, die auf diesem Bus aufsetzen soll, braucht ihn
    vorher erweitert. Das ist ein eigener kleiner Bogen, kein Detail darin.
 
-5. **`exportAll`/`importAll` tragen drei hartkodierte Fachlisten**, während
-   `wipe()` seit dem Anhang-Vorfall die Ablage selbst fragt
-   (`[...db.objectStoreNames]`, `indexdb.ts:2378`). Ein neues Fach würde
-   also gelöscht, aber nie gesichert. Kein Prüflauf deckt das ab.
+5. **`exportAll`/`importAll` tragen drei hartkodierte Fachlisten** —
+   **GESCHLOSSEN am 1. September 2026 durch E332.** Nachgezählt: elf
+   Fächer, sieben gesichert, vier mit Grund draussen — heute stimmt es. Die
+   Gefahr ist das zwölfte.
+
+   Dynamisch zu sichern ginge nicht (`stuecke` hält Blobs, `meta` braucht
+   Filter, `versions` hat eine eigene Regel). Stattdessen eine ERKLÄRUNG,
+   gegen die sich die Ablage abgleicht: was in keiner der drei Listen
+   steht, landet im Manifest unter `fehlt`, mit einem Satz, der den Ort der
+   Entscheidung nennt. Jedes ausgelassene Fach trägt seinen Grund neben dem
+   Namen — damit der Nächste daran vorbeimuss.
+
+   `enthaelt` kommt jetzt aus derselben Liste; vorher stand es zweimal da.
+   test325 (20 Punkte), belegt rot.
 
 6. **Das Fehlerzentrum zeigt ein Feld, das nie gefüllt wird.**
    `lernwelt.ts:1041` liest `letzteAntwort` aus vier möglichen Feldern und

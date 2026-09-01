@@ -1643,6 +1643,81 @@ const Store = (() => {
    * Sicherung, die nicht sagt, was sie auslässt, ist die gefährlichste Sorte:
    * man merkt es erst, wenn man sie braucht.
    */
+  /* ==========================================================================
+   * WELCHES FACH WIRD GESICHERT — UND WELCHES MIT ABSICHT NICHT (E332)
+   * --------------------------------------------------------------------------
+   * L102 Punkt 5: „`exportAll`/`importAll` tragen drei hartkodierte
+   * Fachlisten, während `wipe()` seit dem Anhang-Vorfall die Ablage selbst
+   * fragt (`[...db.objectStoreNames]`). Ein neues Fach würde also gelöscht,
+   * aber nie gesichert. Kein Prüflauf deckt das ab."
+   *
+   * NACHGEZÄHLT: es gibt elf Fächer, und heute stimmt es noch. Sieben werden
+   * gesichert, vier mit Grund nicht. Die Gefahr liegt nicht bei diesen elf,
+   * sondern beim ZWÖLFTEN — dem, das jemand nächsten Monat anlegt und beim
+   * Sichern vergisst. `wipe()` würde es leeren, `exportAll` nie erwähnen.
+   *
+   * Deshalb keine dynamische Sicherung — die ginge nicht: `stuecke` hält
+   * Blobs, `meta` braucht Filter, jedes Fach hat seine eigene Form. Sondern
+   * eine ERKLÄRUNG, gegen die sich die Ablage abgleichen lässt. Was in
+   * keiner der drei Listen steht, ist unbekannt, und Unbekanntes wird
+   * GENANNT statt verschwiegen (§52.10, E111).
+   * ========================================================================*/
+
+  /** Fächer, die immer in die Sicherung gehören. */
+  const FAECHER_IMMER = ['blocks', 'collections', 'views', 'meta', 'versions'];
+
+  /** Fächer, die nur mit Anhängen mitreisen. */
+  const FAECHER_MIT_ANHANG = ['dateien', 'stuecke'];
+
+  /**
+   * Fächer, die mit Absicht draussen bleiben — mit dem Grund dazu.
+   *
+   * Der Grund steht hier und nicht nur im Kopf dessen, der es entschieden
+   * hat: wer das nächste Fach anlegt, soll an dieser Liste vorbeikommen und
+   * sich entscheiden müssen.
+   */
+  const FAECHER_NIE: Record<string, string> = {
+    auftraege: 'ein halb erledigter Auftrag ist Arbeit an diesem Gerät (E286)',
+    basis:     'der Abgleichsstand ist kein Inhalt, sondern ein Gedächtnis',
+    vorrat:    'vorberechnete Werte — ein Beschleuniger, kein Inhalt',
+    suchindex: 'entsteht beim Start neu'
+  };
+
+  /**
+   * Welche Fächer stehen in keiner der drei Listen?
+   *
+   * Die Frage, die `wipe()` schon stellt, nur andersherum. Ohne Angabe
+   * fragt sie die laufende Ablage; MIT Angabe rechnet sie über eine
+   * erfundene Liste — genauso wie die Fassungsregel weiter unten, und aus
+   * demselben Grund: ein neues Fach entsteht beim BAUEN, nicht zur
+   * Laufzeit. Ein Prüflauf könnte es gar nicht anlegen, ohne die Ablage
+   * unter der laufenden App wegzuziehen (`onversionchange` schliesst sie
+   * dann, und zwar mit Absicht).
+   */
+  const faecherUnbekannt = (namen?: string[]): string[] => {
+    const liste = Array.isArray(namen) ? namen
+      : (db && db.objectStoreNames) ? [...db.objectStoreNames] as string[]
+      : [];
+    return liste.filter(n =>
+      !FAECHER_IMMER.includes(n) && !FAECHER_MIT_ANHANG.includes(n) &&
+      !(n in FAECHER_NIE)).sort();
+  };
+
+  /**
+   * Der Satz dazu — leer, wenn nichts unbekannt ist.
+   *
+   * Eigene Funktion, damit sich beides prüfen lässt: dass er im Ernstfall
+   * dasteht UND dass er im Normalfall fehlt. Ein Hinweis, der immer da ist,
+   * wird nicht gelesen.
+   */
+  const satzZuUnbekannten = (liste: string[]): string =>
+    !liste || !liste.length ? ''
+      : ' ACHTUNG: ' + liste.length + ' Fach/Fächer der Ablage (' +
+        liste.join(', ') + ') werden von dieser Sicherung NICHT erfasst. ' +
+        'Sie stehen in keiner der Listen in `indexdb.ts` — wer sie angelegt ' +
+        'hat, hat nicht entschieden, ob sie mitreisen sollen. Beim ' +
+        'Einspielen mit „Ersetzen" wären sie weg.';
+
   const exportAll = (mitAnhaengen = false, mitGeheimnissen = false) => {
     const dateienDa = zaehlerDateien();
     const abgeleitetDa = zaehlerAbgeleitet();
@@ -1726,6 +1801,10 @@ const Store = (() => {
         'noch offen (z. B. ein laufendes Einlesen). Sie reisen NICHT mit: ' +
         'ihre Eingaben liegen auf diesem Gerät. Auf diesem Gerät laufen sie ' +
         'weiter.';
+    /* Was die Ablage kennt und niemand erklärt hat (E332). Im Normalfall
+       leer — dann steht auch kein Wort davon in der Sicherung. */
+    const unbekannteFaecher = faecherUnbekannt();
+    const ueberUnbekannte = satzZuUnbekannten(unbekannteFaecher);
     const ueberGeheimnisse = !geheimAusgelassen.length ? ''
       : ' ' + geheimAusgelassen.length + ' Zugangsdaten (' +
         geheimAusgelassen.join(', ') + ') sind bewusst NICHT dabei: eine ' +
@@ -1736,8 +1815,8 @@ const Store = (() => {
       version: VERSION,
       exportiert: now(),
       /* Was drin ist — damit ein Einleser es nachsehen kann, statt zu raten. */
-      enthaelt: ['blocks', 'collections', 'views', 'meta', 'versions']
-        .concat(mitAnhaengen && echteImArchiv ? ['dateien', 'stuecke'] : []),
+      enthaelt: FAECHER_IMMER
+        .concat(mitAnhaengen && echteImArchiv ? FAECHER_MIT_ANHANG : []),
       /* `auftraege` reist NIE mit (E286): ein halb erledigter Auftrag ist
          Arbeit an DIESEM Gerät, und seine Eingaben — eine Datei in
          Stücken, ein bestimmter Block — gibt es woanders vielleicht gar
@@ -1747,10 +1826,15 @@ const Store = (() => {
          GENANNT wird er aber nur, wenn wirklich etwas offensteht. Ein
          leeres Auftragsfach lässt nichts aus, und ein `fehlt`, das immer
          etwas enthält, bringt Menschen bei, es zu überlesen. */
-      fehlt: (fehlenAnhaenge ? ['dateien', 'stuecke'] : [])
+      fehlt: (fehlenAnhaenge ? FAECHER_MIT_ANHANG : [])
         .concat(exportAuftraegeOffen ? ['auftraege'] : [])
         .concat(nurHierAusgelassen)
-        .concat(geheimAusgelassen),
+        .concat(geheimAusgelassen)
+        /* UND WAS NIEMAND ERKLÄRT HAT (E332). Ein Fach, das die Ablage
+           kennt und keine der drei Listen nennt, wird nicht gesichert —
+           `wipe()` würde es trotzdem leeren. Es hier zu nennen macht aus
+           einem stillen Verlust eine Zeile, die man liest. */
+        .concat(unbekannteFaecher),
       /* Wie viele Dateien absichtlich draussen blieben — als Zahl, damit ein
          Einleser es nachrechnen kann, statt einen Satz zu lesen. */
       abgeleitetAusgelassen: mitAnhaengen ? abgeleitetDa : 0,
@@ -1763,7 +1847,8 @@ const Store = (() => {
             '„dateien" desselben Archivs.' + ueberAbgeleitete
           : abgeleitetDa
             ? 'Dieser Bestand hat nur abgeleitete Dateien.' + ueberAbgeleitete
-            : 'Vollständig: dieser Bestand hat keine Dateianhänge.') + ueberOrdner + ueberGeteilt + ueberGeheimnisse + ueberAuftraege,
+            : 'Vollständig: dieser Bestand hat keine Dateianhänge.') + ueberOrdner + ueberGeteilt + ueberGeheimnisse + ueberAuftraege +
+            ueberUnbekannte,
       blocks: cache.blocks,
       collections: cache.collections,
       views: cache.views,
@@ -2837,6 +2922,9 @@ const Store = (() => {
     baum, baumEinfuegen, kinderLeeren,
     versionSpeichern, versionen, versionLoeschen, fassungenAusduennen,
     search, durchsuchbar, pfadText, exportAll, exportVorbereiten, importAll, wipe, usage,
+    /* Für den Wächter aus E332 — was gesichert wird und was nicht. */
+    faecherUnbekannt, satzZuUnbekannten,
+    FAECHER_IMMER, FAECHER_MIT_ANHANG, FAECHER_NIE,
     dateiPut, dateiHolen, dateiWeg, dateiAlle,
     blockGrabsteine, blockGrabstein, blockGrabsteinWeg,
     dateiGrabstein, dateiGrabsteine, dateiGrabsteinWeg,
