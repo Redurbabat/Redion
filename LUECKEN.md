@@ -4392,6 +4392,27 @@ L106 — Was die Lern-Evidenz (E289) und der Kalender (E290) noch nicht können
    (eine halbe Zeitzonenrechnung ist schlimmer als keine), aber es ist eine
    Lücke und keine Lösung.
 
+   **GESCHLOSSEN am 1. September 2026 durch E344 — und der Grund oben war
+   nie „es geht nicht", sondern „es geht nicht halb".** Das stimmte. Nur ist
+   die GANZE Rechnung seit Jahren im Browser eingebaut:
+   `Intl.DateTimeFormat` kennt die vollständige IANA-Datenbank samt aller
+   Umstellungen. Keine Bibliothek (§6), keine Tabelle, die veraltet.
+
+   `core/calendar/zeitzone.ts` rechnet ZWEIMAL, und das ist der ganze
+   Unterschied zwischen ganz und halb: `Intl` kann nur Augenblick →
+   Wandzeit, gebraucht wird die Umkehrung. Wer den Versatz nur an der rohen
+   Wandzeit misst, liegt in jeder Umstellungsnacht eine Stunde daneben.
+   test336 §2 misst es: 1:30 am 29. März 2026 wird ohne den zweiten
+   Durchgang zu 0:30 statt 1:30 Weltzeit.
+
+   WAS OFFEN BLEIBT, und zwar mit Absicht: Outlooks Windows-Namen
+   (`W. Europe Standard Time`) kennt `Intl` nicht. Übersetzt werden sie
+   nicht — eine Tabelle mit hundert Namen wäre genau die halbe Lösung, aus
+   der dieser Bogen herauskommt. Die Zeit bleibt dann, wie sie in der Datei
+   steht, und Redion sagt beim Abholen, welche Zonen es nicht kennt (§35).
+
+   test336, 33 Punkte, belegt rot in vier Richtungen.
+
 6. **VTODO wird nicht gelesen.** — **HALB GESCHLOSSEN (E326).**
    `icsLesen` versteht seit E326 `BEGIN:VTODO`, führt eine Art mit
    (`termin`/`aufgabe`) und liefert Aufgaben in einer eigenen Liste, mit

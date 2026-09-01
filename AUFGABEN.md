@@ -2644,6 +2644,20 @@ node pruefungen/lauf/test105.mjs
   `padding` ist vier Erklärungen, nicht eine, und §2/§3 zählten absolut
   statt den Unterschied zum Bestand.
   test332 neu (14), belegt rot. test258 19/19.
+* E344 (L106 Punkt 5, geschlossen): Eine fremde Zeitzone, ganz gerechnet.
+  `DTSTART;TZID=America/New_York:20260907T080000` stand in Berlin um 8 Uhr
+  statt um 14 — sechs Stunden falsch, ohne ein Wort.
+  L106 nannte es bewusst so, weil „eine halbe Zeitzonenrechnung schlimmer
+  ist als keine". Der Satz stimmt; die GANZE Rechnung ist nur seit Jahren
+  im Browser eingebaut. `core/calendar/zeitzone.ts` nutzt sie.
+  Zweimal gerechnet, und das ist der Unterschied zwischen ganz und halb:
+  `Intl` kann nur Augenblick → Wandzeit, gebraucht wird die Umkehrung. Wer
+  den Versatz nur an der rohen Wandzeit misst, liegt in jeder
+  Umstellungsnacht eine Stunde daneben — test336 §2 misst genau das.
+  Outlooks Windows-Namen werden NICHT übersetzt (eine Tabelle mit hundert
+  Namen wäre wieder die halbe Lösung), sondern beim Namen genannt (§35).
+  Und der Normalfall schweigt: ohne TZID ändert sich nichts.
+  test336 neu (33), belegt rot in vier Richtungen. sw auf notizen-v98.
 * E343 (L112 Rest, geschlossen): Das Abo bekommt ein Gedächtnis. E336 hat
   die Reihen abgeräumt; für den einzelnen gestrichenen Termin stand in L112,
   dass sich „über einen Einzeltermin nichts sagen" lässt — und gleich

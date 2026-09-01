@@ -26235,3 +26235,62 @@ test335 neu, 30 Punkte. Belegt rot: der Herkunftsnachweis entfernt (§3 und
 §5 fallen — die zwei Abschnitte, die den ganzen Bogen tragen), beide
 Wächter entfernt (§1 fällt), die Leerlauf-Sperre entfernt (§4 fällt, und
 zwar so, dass der ganze Kalender leer ist).
+
+
+E344 — Eine fremde Zeitzone, ganz gerechnet (L106 Punkt 5)
+════════════════════════════════════════════════════════════════════════════
+
+    DTSTART;TZID=America/New_York:20260907T080000
+
+Daraus las Redion `2026-09-07T08:00` und zeigte 8 Uhr an. Für jemanden in
+Berlin ist dieser Termin um 14 Uhr. SECHS STUNDEN FALSCH, ohne ein Wort —
+die Sorte stiller Fehler, die §46 an erste Stelle setzt.
+
+WARUM ES SO LANGE SO BLIEB, und der Grund war gut: L106 nannte es „bewusst
+so", weil „eine halbe Zeitzonenrechnung schlimmer ist als keine". Der Satz
+stimmt. Nur ist die GANZE Rechnung seit Jahren im Browser eingebaut:
+`Intl.DateTimeFormat` kennt die vollständige IANA-Datenbank samt aller
+Umstellungen, rückwirkend und im Voraus. Keine Bibliothek (§6), keine
+Tabelle, die veraltet.
+
+Der Grund war also nie „es geht nicht", sondern „es geht nicht halb". Und
+das war richtig — es musste nur jemand nachsehen, ob es ganz geht.
+
+ZWEIMAL GERECHNET, UND DAS IST WIEDER DER PUNKT (wie bei E341, aus einem
+anderen Grund). `Intl` kann nur eine Richtung: Augenblick → Wandzeit.
+Gebraucht wird die andere. Die Umkehrung nimmt die Wandzeit als UTC, misst
+dort den Versatz, zieht ihn ab — und misst DANN NOCH EINMAL. Denn der
+Versatz gilt für den Punkt, an dem gemessen wurde, und wenn der Abzug über
+eine Umstellung geführt hat, ist er dort ein anderer.
+
+Ohne den zweiten Durchgang ist jede Umstellungsnacht eine Stunde daneben.
+`test336` §2 misst genau das: 1:30 am 29. März 2026 wird ohne ihn zu
+0:30 statt 1:30 Weltzeit. Das ist die halbe Rechnung, vor der L106 warnt —
+sie steht jetzt als Prüfung da, nicht als Warnung.
+
+ZWEI STUNDEN IM JAHR GIBT ES KEINE EINDEUTIGE ANTWORT, und das liegt an der
+Welt, nicht am Verfahren: bei der Umstellung nach vorn existiert 2:30 nicht,
+bei der zurück gibt es sie zweimal. Beide liefern hier eine der beiden
+vertretbaren Antworten statt gar keiner. Ein Termin, der wegen einer
+mehrdeutigen Stunde verschwindet, wäre schlimmer (§46).
+
+UND DIE GRENZE, DIE IN DER PRAXIS ZÄHLT: Outlook schreibt
+`TZID=W. Europe Standard Time`. Das ist ein Windows-Name und steht in keiner
+IANA-Datenbank; `Intl` lehnt ihn ab (nachgemessen, nicht angenommen).
+
+Übersetzt wird er NICHT. Eine Tabelle mit hundert Windows-Namen wäre genau
+die halbe Lösung, die veraltet und die niemand pflegt — dieselbe Falle, aus
+der dieser Bogen gerade herauskommt. Stattdessen bleibt die Zeit, wie sie in
+der Datei steht, und Redion sagt beim Abholen, welche Zonen es nicht kennt
+(§35). Gesammelt und EINMAL genannt: bei vierzig Terminen aus derselben Zone
+stünde derselbe Satz sonst vierzigmal da.
+
+UND DER NORMALFALL SCHWEIGT. Ein Kalender ohne `TZID` oder mit `Z` verhält
+sich Zeichen für Zeichen wie vorher, und es erscheint kein Hinweis. §4 misst
+das mit zwei Geräten in zwei Zonen — ohne diesen Abschnitt wäre §3 auch dann
+grün, wenn der Bogen jeden Kalender verstellte.
+
+test336 neu, 33 Punkte. Belegt rot: der zweite Durchgang entfernt (§2 fällt,
+um genau eine Stunde), TZID gar nicht ausgewertet (§3 fällt dreifach), die
+unbekannte Zone verschwiegen (§5 fällt) und die Sammlung nicht geleert (§6
+fällt).

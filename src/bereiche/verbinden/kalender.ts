@@ -57,6 +57,16 @@ const Kalender = (() => {
     .replace(/\\n/gi, '\n').replace(/\\,/g, ',').replace(/\\;/g, ';').replace(/\\\\/g, '\\');
 
   /** „20260815T140000Z", „20260815", „2026-08-15T14:00:00" → ISO-Text. */
+  /**
+   * Zonen, die dieser Browser nicht kennt (E344).
+   *
+   * Gesammelt statt sofort gemeldet: ein Kalender mit vierzig Terminen aus
+   * einer unbekannten Zone soll den Satz EINMAL sagen, nicht vierzigmal.
+   * Wird von `icsLesen` vor jedem Durchgang geleert und danach
+   * mitgeliefert; die Anzeige übernimmt `alleAbosHolen`.
+   */
+  const unbekannteZonen = new Set<string>();
+
   const icsZeit = (roh: any, parameter?: any): string => {
     const v = String(roh || '').trim();
     const ganzerTag = /^\d{8}$/.test(v) || /VALUE=DATE(?!-TIME)/i.test(parameter || '');
@@ -72,6 +82,33 @@ const Kalender = (() => {
                                   +(m[4] ?? 0), +(m[5] ?? 0), +(m[6] ?? 0)));
       return d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()) +
              'T' + p2(d.getHours()) + ':' + p2(d.getMinutes());
+    }
+    /* ─── EINE FREMDE ZEITZONE (E344, L106 Punkt 5) ────────────────────
+       `DTSTART;TZID=America/New_York:20260907T080000` hiess hier bis eben
+       `2026-09-07T08:00`. Für jemanden in Berlin ist dieser Termin um 14
+       Uhr. Sechs Stunden falsch, ohne ein Wort — genau die Sorte stiller
+       Fehler, die §46 an erste Stelle setzt.
+
+       L106 nannte es „bewusst so", weil „eine halbe Zeitzonenrechnung
+       schlimmer ist als keine". Der Satz stimmt; die GANZE Rechnung ist
+       nur seit Jahren im Browser eingebaut. Sie steht in
+       `core/calendar/zeitzone.ts`, samt der Erklärung, warum sie zweimal
+       rechnen muss.
+
+       KENNT DER BROWSER DIE ZONE NICHT — und Outlooks
+       `W. Europe Standard Time` kennt er nicht —, bleibt alles, wie es
+       war, und `zoneUnklar` sagt es weiter. Eine Tabelle mit hundert
+       Windows-Namen wäre die halbe Lösung, vor der L106 gewarnt hat. */
+    const tz = /TZID=([^;:]+)/i.exec(String(parameter || ''));
+    if (tz && tz[1]) {
+      const zone = tz[1].trim().replace(/^"|"$/g, '');
+      if (typeof Zeitzone !== 'undefined' && Zeitzone.kennt(zone)) {
+        const um = Zeitzone.alsOrtszeit(+(m[1] ?? 0), +(m[2] ?? 1), +(m[3] ?? 1),
+                                        +(m[4] ?? 0), +(m[5] ?? 0), zone);
+        if (um) return um;
+      } else if (zone) {
+        unbekannteZonen.add(zone);
+      }
     }
     return `${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}`;
   };
@@ -95,6 +132,9 @@ const Kalender = (() => {
    * sie ab jetzt, und der Einleser SAGT, wie viele er gefunden hat (§35).
    */
   const icsLesen = (text: string) => {
+    /* Frisch je Durchgang (E344) — sonst trüge der zweite Kalender die
+       unbekannten Zonen des ersten mit sich herum. */
+    unbekannteZonen.clear();
     const zeilen = zeilenFalten(text).split('\n');
     const termine: any[] = [];
     const aufgaben: any[] = [];
@@ -191,7 +231,8 @@ const Kalender = (() => {
       }
     });
 
-    return { name: kalenderName, termine, aufgaben };
+    return { name: kalenderName, termine, aufgaben,
+             zonenUnklar: [...unbekannteZonen] };
   };
 
   /**
@@ -828,7 +869,7 @@ const Kalender = (() => {
     const gelesen = icsLesen(text);
     const alle = ausrollenAlle(gelesen.termine);
     return { name: gelesen.name || abo.name || 'Abo', termine: alle,
-             aufgaben: gelesen.aufgaben };
+             aufgaben: gelesen.aufgaben, zonenUnklar: gelesen.zonenUnklar || [] };
   };
 
   const alleAbosHolen = async (seiteId?: string) => {
@@ -846,6 +887,10 @@ const Kalender = (() => {
        trotzdem nicht: bis E326 fielen sie stumm durch, und niemand erfuhr,
        dass der Kalender überhaupt welche enthält (§35). */
     let offeneAufgaben = 0;
+    /* Zeitzonen, die dieser Browser nicht kennt (E344). Gesammelt und
+       EINMAL genannt — bei vierzig Terminen aus derselben Outlook-Zone
+       stünde derselbe Satz sonst vierzigmal da. */
+    const fremdeZonen = new Set<string>();
     for (const a of liste) {
       try {
         const k = await aboHolen(a);
@@ -869,6 +914,7 @@ const Kalender = (() => {
         if (k.termine.length) a.geliefert = e.geliefert;
         alleTermine.push(...k.termine);
         offeneAufgaben += (k.aufgaben || []).filter((x: any) => !x.fertig).length;
+        for (const z of (k.zonenUnklar || [])) fremdeZonen.add(String(z));
         neu += e.neu; frisch += e.frisch; entfallen += e.entfallen || 0;
         a.zuletzt = Store.now();
       } catch (err) {
@@ -888,6 +934,17 @@ const Kalender = (() => {
        Gesammelt und EINMAL genannt, nicht je Termin: bei einem Kalender
        mit vierzig Wochenterminen stünde derselbe Satz vierzigmal da, und
        ab dem dritten liest ihn keiner mehr. */
+    /* WAS AN ZEITZONEN NICHT GELESEN WERDEN KONNTE (E344, L106 Punkt 5).
+       Outlook schreibt `TZID=W. Europe Standard Time` — ein Windows-Name,
+       den keine IANA-Datenbank kennt. Die Zeiten daraus stehen dann so da,
+       wie sie in der Datei stehen, und das ist ein Unterschied, den man
+       wissen muss. Nur wenn es wirklich einen gibt: der Normalfall ist ein
+       Kalender mit `Z` oder mit einer richtigen Zone, und der schweigt. */
+    if (fremdeZonen.size)
+      UI.banner('Diese Zeitzonen kennt dein Browser nicht: ' +
+        [...fremdeZonen].join(', ') + '. Die Termine daraus stehen mit der ' +
+        'Uhrzeit da, die in der Datei steht — ohne Umrechnung.', 'warn');
+
     const unklar = new Set<string>();
     for (const t of alleTermine)
       for (const x of (t.regelUnklar || [])) unklar.add(String(x));
