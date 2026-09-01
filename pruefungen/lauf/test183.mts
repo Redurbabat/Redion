@@ -252,8 +252,22 @@ const ohneKommentare = (t: string): string =>
 const werk = ohneKommentare(
   fs.readFileSync(path.join(WURZEL, 'src/bereiche/wissen/werkzeuge.ts'), 'utf8'));
 
-p('Spalten bleiben Spalten und zeichnen ihren Inhalt selbst',
-  /\['columns','columns3','blatt'\]\.includes\(b\.type\)/.test(werk));
+/* DIE REGEL IST UMGEZOGEN (E297), und dieser Punkt mit ihr. Bis dahin stand
+   sie mitten im Vortragsmodus in `werkzeuge.ts`; seit es einen zweiten Weg
+   gibt — den .pptx-Export —, steht sie in `src/core/slides/folien.ts` und
+   wird von beiden geholt. Zwei Teilungen, die auseinanderlaufen, wären
+   schlimmer als eine gewesen.
+
+   Der Punkt prüft deshalb ZWEI Dinge statt einem: dass die Regel im Kern
+   steht, und dass der Vortragsmodus sie dort abholt statt eine eigene zu
+   führen. Nur das zusammen ist die Zusage, die hier gemeint war. */
+const kern = ohneKommentare(
+  fs.readFileSync(path.join(WURZEL, 'src/core/slides/folien.ts'), 'utf8'));
+p('Spalten bleiben Spalten und zeichnen ihren Inhalt selbst — im Kern',
+  /\['columns', 'columns3', 'blatt'\]/.test(kern) ||
+  /\['columns','columns3','blatt'\]/.test(kern));
+p('Und der Vortragsmodus holt die Regel dort ab',
+  /Folien\.teilen\(/.test(werk));
 p('Und `folieBlock` weiss, wie eine Spalte aussieht',
   /folie-spalten/.test(werk) && /folie-spalte/.test(werk));
 p('Die Striche kommen auch hier aus einer Stelle',
