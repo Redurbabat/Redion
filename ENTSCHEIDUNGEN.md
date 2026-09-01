@@ -26294,3 +26294,60 @@ test336 neu, 33 Punkte. Belegt rot: der zweite Durchgang entfernt (§2 fällt,
 um genau eine Stunde), TZID gar nicht ausgewertet (§3 fällt dreifach), die
 unbekannte Zone verschwiegen (§5 fällt) und die Sammlung nicht geleert (§6
 fällt).
+
+
+E345 — Aufgaben aus dem Kalender landen in Aufgaben (L106 Punkt 6 Rest)
+════════════════════════════════════════════════════════════════════════════
+
+E326 hat `VTODO` lesbar gemacht. Seitdem stand in L106:
+
+    „die Aufgaben landen in keinem Aufgabenmodell. Sie werden gelesen und
+     genannt, aber nicht einsortiert — bewusst, denn eine Aufgabe mit
+     Fälligkeit als Termin in die Kalendertabelle zu schreiben wäre die
+     stille Falschaussage, die E290 gerade abgeräumt hat."
+
+DER EINWAND GALT DER FALSCHEN TABELLE, NICHT DER SACHE. Redion hat ein
+Aufgabenmodell: eine Sammlung mit `istAufgaben` und einem Eintrag in
+`aufgabenQuellen` erscheint unter „Meine Apps → Meine Aufgaben". Dorthin
+gehören sie, und dorthin gehen sie jetzt.
+
+ZWEI DINGE MACHEN DIE TABELLE ZU EINER AUFGABENQUELLE, und nur eines davon
+ist offensichtlich. `istAufgaben: true` an der Sammlung ist das eine. Das
+andere ist der Eintrag in `aufgabenQuellen` — ohne ihn fragt „Meine
+Aufgaben" die Tabelle NIE ab. Eine Tabelle, die aussieht wie Aufgaben und
+nirgends auftaucht, ist §47 von der leisen Seite; `test337` §2 misst beide
+einzeln.
+
+DIE SPALTEN HEISSEN, WIE DAS MODELL SIE ERWARTET — `aufgFertig`,
+`aufgFrist`, `aufgWer`, genau wie `steuerung.ts` sie beim Umschalten von
+Hand anlegt. Ein eigener Satz Namen wäre wieder eine Tabelle, die aussieht
+wie Aufgaben und keine ist.
+
+DIE TRENNLINIE ZWISCHEN QUELLE UND MENSCH ist an einem Feld sichtbar:
+`aufgWer` wird beim Abgleich NICHT geschrieben. Wer zuständig ist,
+entscheidet der Mensch — die Quelle weiss es nicht, und ein Feld, das bei
+jedem Abgleich zurückgesetzt wird, ist schlimmer als ein leeres (§9). Der
+HAKEN dagegen folgt der Quelle, denn den führt sie. §5 misst beides
+zusammen, damit die Linie an einer Stelle steht und nicht an zweien.
+
+UND SIE ENTSTEHT NUR, WENN ES WIRKLICH AUFGABEN GIBT. Eine leere
+Aufgabentabelle, die bei jedem Termin-Abo mit angelegt wird, ist genau die
+Anzeige, die immer etwas anzeigt und deshalb nicht gelesen wird — die Falle
+aus E284, E286, E288, E289 und E290. §6 ist die Gegenprobe zu §1.
+
+NICHT AUFGERÄUMT WIRD. Eine Aufgabe, die die Quelle nicht mehr liefert,
+bleibt stehen. Das Gedächtnis aus E343 zählt Termine; es auf Aufgaben
+auszuweiten ist ein eigener Schritt und kein Beifang.
+
+UND EINE PRÜFUNG WURDE DABEI BESSER, WEIL SIE ROT WURDE: `test319` verlangte
+wörtlich `if (offeneAufgaben)` vor dem Banner. E345 hat die Bedingung
+VERSCHÄRFT — sie fragt jetzt, ob wirklich Aufgaben geschrieben wurden, nicht
+nur, ob welche gezählt wurden — und die Prüfung fiel durch, obwohl das
+Produkt besser geworden war. Eine Prüfung, die an einem Bezeichner hängt,
+misst den Bezeichner. Sie prüft jetzt die Absicht: vor dem Banner steht eine
+Bedingung, und die handelt von Aufgaben. Nachgemessen, dass sie weiterhin
+rot werden kann.
+
+test337 neu, 24 Punkte. Belegt rot: die Anmeldung in `aufgabenQuellen`
+weggelassen (§2 fällt), immer eine Tabelle angelegt (§6 fällt zweifach) und
+`aufgWer` doch geschrieben (§5 fällt).

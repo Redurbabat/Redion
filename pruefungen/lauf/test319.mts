@@ -263,12 +263,22 @@ p('Keine tote `.banner.info`-Regel in der früher ladenden Datei',
   !/^\s*\.banner\.info\s*\{/m.test(ansichten),
   'ansichten.css lädt vor bausteine.css und verlöre bei gleicher Stärke');
 
-/* Und im Quelltext: der Hinweis kommt nur, wenn es Aufgaben gibt. */
+/* Und im Quelltext: der Hinweis kommt nur, wenn es Aufgaben gibt.
+
+   GEPRÜFT WIRD DIE ABSICHT, NICHT DER NAME. Diese Zeile hiess bis E345
+   `if (offeneAufgaben)` und verlangte genau diese Buchstaben. E345 hat die
+   Bedingung VERSCHÄRFT — sie fragt jetzt, ob wirklich Aufgaben geschrieben
+   wurden, nicht nur, ob welche gezählt wurden — und die Prüfung fiel durch,
+   obwohl das Produkt besser geworden war.
+
+   Eine Prüfung, die an einem Bezeichner hängt, misst den Bezeichner. Was
+   sie messen SOLL, ist: vor dem Banner steht eine Bedingung, und die
+   handelt von Aufgaben. */
 const quelle = fs.readFileSync(
   path.join(WURZEL, 'src/bereiche/verbinden/kalender.ts'), 'utf-8');
 p('Der Hinweis steht hinter einer Bedingung, nicht davor',
-  /if \(offeneAufgaben\)\s*\n\s*UI\.banner/.test(quelle),
-  'kein `if (offeneAufgaben)` vor dem Banner');
+  /\n\s*if \([^)\n]*aufg[^)\n]*\)\s*\n\s*UI\.banner\(/i.test(quelle),
+  'vor dem Aufgaben-Banner steht kein `if (…aufg…)`');
 
 p('Keine JS-Fehler', fehler.length === 0, fehler.join(' | '));
 

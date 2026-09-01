@@ -658,6 +658,122 @@ const Kalender = (() => {
     return c;
   };
 
+  /* ========================================================================
+   * AUFGABEN AUS DEM KALENDER (E345, L106 Punkt 6 Rest)
+   * ------------------------------------------------------------------------
+   * E326 hat `VTODO` lesbar gemacht. Seitdem stand in L106:
+   *
+   *     „die Aufgaben landen in keinem Aufgabenmodell. Sie werden gelesen
+   *      und genannt, aber nicht einsortiert — bewusst, denn eine Aufgabe
+   *      mit Fälligkeit als Termin in die Kalendertabelle zu schreiben wäre
+   *      die stille Falschaussage, die E290 gerade abgeräumt hat."
+   *
+   * Der Einwand galt der falschen TABELLE, nicht der Sache. Redion hat ein
+   * Aufgabenmodell — eine Sammlung mit `istAufgaben` und einem Eintrag in
+   * `aufgabenQuellen` erscheint unter „Meine Apps → Meine Aufgaben"
+   * (`datenbanken/steuerung.ts`, `wissen/bibliothek.ts`). Dorthin gehören
+   * sie, und dorthin gehen sie jetzt.
+   *
+   * DIE SPALTEN HEISSEN, WIE DAS AUFGABENMODELL SIE ERWARTET —
+   * `aufgFertig`, `aufgFrist`, `aufgWer`. Ein eigener Satz Namen wäre eine
+   * Tabelle, die aussieht wie Aufgaben und in „Meine Aufgaben" nicht
+   * auftaucht: §47 von der leisen Seite.
+   *
+   * UND SIE ENTSTEHT NUR, WENN ES WIRKLICH AUFGABEN GIBT. Eine leere
+   * Aufgabentabelle, die bei jedem Kalender-Abo mit angelegt wird, ist
+   * genau die Anzeige, die immer etwas anzeigt und deshalb nichts sagt —
+   * die Falle, in die E284, E286, E288, E289 und E290 gelaufen sind.
+   * ======================================================================*/
+
+  const AUFGABEN_SCHEMA = () => ({
+    title:      { name: 'Aufgabe',   type: 'title' },
+    aufgFertig: { name: 'Fertig',    type: 'checkbox' },
+    aufgFrist:  { name: 'Frist',     type: 'date' },
+    aufgWer:    { name: 'Zuständig', type: 'person' },
+    quelle:     { name: 'Kalender',  type: 'select', options: [] },
+    text:       { name: 'Notiz',     type: 'text' },
+    uid:        { name: 'Kennung',   type: 'text' }
+  });
+
+  /**
+   * Die Aufgabentabelle — angelegt, wenn es sie noch nicht gibt.
+   *
+   * Sie wird in `aufgabenQuellen` eingetragen, denn ohne diesen Eintrag
+   * fragt „Meine Aufgaben" sie nie ab. Die Sammlung allein genügt nicht;
+   * das ist genau die Verdrahtung, die `steuerung.ts` beim Umschalten von
+   * Hand vornimmt.
+   */
+  const aufgabenDatenbank = (seiteId?: string, name = 'Kalender-Aufgaben') => {
+    const anmelden = (c: any) => {
+      const q = Store.getMeta('aufgabenQuellen', null) || [];
+      if (!q.includes(c.id)) Store.setMeta('aufgabenQuellen', [...q, c.id]);
+      return c;
+    };
+    const da = Object.values<any>(Store.cache.collections)
+      .find(c => c.name === name && c.schema.uid && c.schema.aufgFertig);
+    if (da) return anmelden(da);
+    const { collectionId } = Store.addDatabase(
+      seiteId || App.aktuelleSeite(), name, AUFGABEN_SCHEMA(), 'check');
+    const c = Store.getCollection(collectionId);
+    Store.updateCollection(c.id, { istAufgaben: true });
+    return anmelden(Store.getCollection(c.id));
+  };
+
+  /**
+   * Aufgaben übernehmen — derselbe Bau wie `uebernehmen` für Termine:
+   * über die Kennung wiederfinden, auffrischen statt doppeln.
+   *
+   * OHNE AUFRÄUMEN. Eine Aufgabe, die die Quelle nicht mehr liefert, bleibt
+   * stehen. Das ist nicht Nachlässigkeit, sondern derselbe Grund wie bei
+   * L112: ohne ein Gedächtnis am Abo lässt sich nicht sagen, ob sie
+   * gestrichen wurde. Das Gedächtnis aus E343 zählt Termine; es auf
+   * Aufgaben auszuweiten ist ein eigener Schritt und kein Beifang.
+   */
+  const aufgabenUebernehmen = (coll: any, aufgaben: any[], quelle?: string) => {
+    const vorhanden = new Map<string, any>();
+    Store.rowsOf(coll.id).forEach((r: any) => {
+      const u = (r.props || {}).uid;
+      if (u) vorhanden.set(String(u), r);
+    });
+
+    if (quelle && coll.schema.quelle) {
+      const opts = coll.schema.quelle.options || [];
+      if (!opts.some((o: any) => o.name === quelle)) {
+        const farben = ['blue','green','orange','purple','pink','red','yellow','brown'];
+        opts.push({ name: quelle, color: farben[opts.length % farben.length] });
+        coll.schema.quelle.options = opts;
+        Store.updateCollection(coll.id, { schema: coll.schema });
+      }
+    }
+
+    let neu = 0, frisch = 0;
+    aufgaben.forEach((a: any) => {
+      const u = String(a.uid || ((a.titel || '') + '|' + (a.faellig || '')));
+      const props: Record<string, unknown> = {
+        aufgFertig: !!a.fertig,
+        aufgFrist: a.faellig || '',
+        quelle: quelle || '',
+        text: a.text || '',
+        uid: u
+      };
+      const alt = vorhanden.get(u);
+      if (alt) {
+        /* `aufgWer` wird NICHT geschrieben. Wer zuständig ist, entscheidet
+           der Mensch hier — die Quelle weiss es nicht, und ein Feld, das
+           bei jedem Abgleich zurückgesetzt wird, ist schlimmer als ein
+           leeres (§9). */
+        Object.entries<any>(props).forEach(([k, w]) => Store.setProp(alt.id, k, w));
+        Store.updateBlock(alt.id, { text: a.titel || 'Ohne Titel' });
+        frisch++;
+      } else {
+        const r = Store.addRow(coll.id, props);
+        Store.updateBlock(r.id, { text: a.titel || 'Ohne Titel' });
+        neu++;
+      }
+    });
+    return { neu, frisch };
+  };
+
   /**
    * Termine übernehmen. Was schon da ist (gleiche Kennung), wird
    * aufgefrischt statt doppelt angelegt — sonst wächst die Liste bei
@@ -891,6 +1007,7 @@ const Kalender = (() => {
        EINMAL genannt — bei vierzig Terminen aus derselben Outlook-Zone
        stünde derselbe Satz sonst vierzigmal da. */
     const fremdeZonen = new Set<string>();
+    let aufgNeu = 0, aufgFrisch = 0;
     for (const a of liste) {
       try {
         const k = await aboHolen(a);
@@ -915,6 +1032,14 @@ const Kalender = (() => {
         alleTermine.push(...k.termine);
         offeneAufgaben += (k.aufgaben || []).filter((x: any) => !x.fertig).length;
         for (const z of (k.zonenUnklar || [])) fremdeZonen.add(String(z));
+        /* DIE AUFGABEN IN IHRE EIGENE TABELLE (E345). Erst hier, und nur
+           wenn dieser Kalender welche hat — eine leere Aufgabentabelle bei
+           jedem Termin-Abo wäre die Anzeige, die immer etwas anzeigt. */
+        if ((k.aufgaben || []).length) {
+          const ac = aufgabenDatenbank(seiteId);
+          const ae = aufgabenUebernehmen(ac, k.aufgaben, a.name || k.name);
+          aufgNeu += ae.neu; aufgFrisch += ae.frisch;
+        }
         neu += e.neu; frisch += e.frisch; entfallen += e.entfallen || 0;
         a.zuletzt = Store.now();
       } catch (err) {
@@ -955,13 +1080,22 @@ const Kalender = (() => {
     /* UND DIE AUFGABEN, wenn welche da sind. Nur dann: ein Kalender ohne
        VTODO ist der Normalfall, und „0 Aufgaben" wäre die Zeile, die man
        nach dem zweiten Mal nicht mehr liest. */
-    if (offeneAufgaben)
-      UI.banner(offeneAufgaben + (offeneAufgaben === 1
-          ? ' offene Aufgabe steht im Kalender'
-          : ' offene Aufgaben stehen im Kalender') +
-        ' — Redion liest sie, legt sie aber noch nicht an. ' +
-        'Eine Aufgabe ist kein Termin, und sie hier einzutragen hiesse, ' +
-        'sie als Verabredung auszugeben.', 'info');
+    /* WOHIN DIE AUFGABEN GEGANGEN SIND (E345). Bis eben stand hier „Redion
+       liest sie, legt sie aber noch nicht an" — richtig gesagt und
+       trotzdem eine Sackgasse. Jetzt sagt der Satz, WO sie sind.
+
+       Und er nennt die offenen, nicht alle: eine Aufgabe, die die Quelle
+       schon als erledigt liefert, ist keine, die jemanden interessiert. */
+    if (aufgNeu || aufgFrisch)
+      UI.banner(
+        (aufgNeu ? aufgNeu + (aufgNeu === 1 ? ' Aufgabe neu' : ' Aufgaben neu') : '') +
+        (aufgNeu && aufgFrisch ? ', ' : '') +
+        (aufgFrisch ? aufgFrisch + ' aufgefrischt' : '') +
+        ' — unter <b>Meine Aufgaben</b>, nicht im Kalender. Eine Aufgabe mit ' +
+        'Frist ist kein Termin, und sie in die Kalendertabelle zu schreiben ' +
+        'hiesse, sie als Verabredung auszugeben.' +
+        (offeneAufgaben ? ' Davon ' + offeneAufgaben +
+          (offeneAufgaben === 1 ? ' noch offen.' : ' noch offen.') : ''), 'info');
 
     /* WAS DIE QUELLE GESTRICHEN HAT, WIRD GESAGT — und nur dann (E336).
        „0 entfallen" wäre die Zeile, die man nach dem zweiten Mal nicht
@@ -1231,6 +1365,7 @@ const Kalender = (() => {
            terminSchluessel, dauerInMs, terminLaenge, endeAus,
            zielDatenbank, uebernehmen,
            abos, aboHolen, alleAbosHolen, adresseGerade,
+           aufgabenDatenbank, aufgabenUebernehmen,
            googleKalender, googleTermine, nachGoogle, dialog };
 })();
 

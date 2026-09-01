@@ -4425,6 +4425,28 @@ L106 — Was die Lern-Evidenz (E289) und der Kalender (E290) noch nicht können
    wäre die stille Falschaussage, die E290 gerade abgeräumt hat. Der
    Anschluss an Redions eigene Aufgaben ist ein eigener Bogen.
 
+   **GESCHLOSSEN am 1. September 2026 durch E345 — und der Einwand oben galt
+   der falschen TABELLE, nicht der Sache.** Redion hat ein Aufgabenmodell:
+   eine Sammlung mit `istAufgaben` plus Eintrag in `aufgabenQuellen`
+   erscheint unter „Meine Apps → Meine Aufgaben". Dorthin gehen sie jetzt,
+   mit den Spaltennamen, die das Modell erwartet.
+
+   Zwei Dinge machen die Tabelle zu einer Quelle, und nur eines ist
+   offensichtlich: die Markierung an der Sammlung UND der Eintrag in
+   `aufgabenQuellen`. Ohne den zweiten fragt „Meine Aufgaben" sie nie ab —
+   eine Tabelle, die aussieht wie Aufgaben und nirgends auftaucht (§47).
+
+   `aufgWer` wird beim Abgleich NICHT geschrieben: wer zuständig ist,
+   entscheidet der Mensch. Der Haken folgt der Quelle, denn den führt sie.
+
+   Und die Tabelle entsteht nur, wenn der Kalender wirklich Aufgaben hat.
+
+   NICHT AUFGERÄUMT WIRD: eine Aufgabe, die die Quelle nicht mehr liefert,
+   bleibt stehen. Das Gedächtnis aus E343 zählt Termine; es auf Aufgaben
+   auszuweiten ist ein eigener Schritt.
+
+   test337, 24 Punkte, belegt rot in drei Richtungen.
+
 7. **Der Hinweis „das kenne ich nicht" erreicht die Oberfläche noch
    nicht.** Der Termin trägt `regelUnklar` und `regelSatz` mit — angezeigt
    wird beides nirgends. Das ist §47 von der leisen Seite und der nächste

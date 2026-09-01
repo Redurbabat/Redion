@@ -2644,6 +2644,20 @@ node pruefungen/lauf/test105.mjs
   `padding` ist vier Erklärungen, nicht eine, und §2/§3 zählten absolut
   statt den Unterschied zum Bestand.
   test332 neu (14), belegt rot. test258 19/19.
+* E345 (L106 Punkt 6 Rest, geschlossen): Aufgaben aus dem Kalender landen
+  in Aufgaben. L106 sagte, sie dürften nicht in die Kalendertabelle — der
+  Einwand galt der falschen TABELLE, nicht der Sache. Redion hat ein
+  Aufgabenmodell (`istAufgaben` + `aufgabenQuellen`); dorthin gehen sie.
+  Zwei Dinge machen eine Tabelle zur Aufgabenquelle, und nur eines ist
+  offensichtlich — ohne den Eintrag in `aufgabenQuellen` fragt „Meine
+  Aufgaben" sie nie ab (§47).
+  `aufgWer` wird beim Abgleich nicht geschrieben (der Mensch entscheidet),
+  der Haken schon (den führt die Quelle). Und die Tabelle entsteht nur,
+  wenn der Kalender wirklich Aufgaben hat.
+  Dabei wurde `test319` besser, weil sie rot wurde: sie verlangte wörtlich
+  `if (offeneAufgaben)` und fiel durch, als die Bedingung VERSCHÄRFT wurde.
+  Sie prüft jetzt die Absicht statt den Bezeichner.
+  test337 neu (24), belegt rot in drei Richtungen.
 * E344 (L106 Punkt 5, geschlossen): Eine fremde Zeitzone, ganz gerechnet.
   `DTSTART;TZID=America/New_York:20260907T080000` stand in Berlin um 8 Uhr
   statt um 14 — sechs Stunden falsch, ohne ein Wort.
