@@ -25581,3 +25581,88 @@ derselbe Schluss: wenn eine Prüfung rot wird, ist zuerst zu entscheiden,
 ob das Erzeugnis oder die Prüfung irrt.
 
 test284 49/49, test319 26/26.
+
+
+E336 — Was die Quelle gestrichen hat (L112, am Tag ihrer Entstehung)
+════════════════════════════════════════════════════════════════════════════
+
+L112 entstand beim Bau von E335 und war gemessen, nicht vermutet:
+
+    Die Schule streicht die letzten zwei Stunden vor den Ferien.
+    `COUNT=5` wird zu `COUNT=3`.
+    Danach standen weiter FÜNF Zeilen im Stundenplan.
+
+Zwei Stunden, die es nicht mehr gibt, und nichts sagte es. Genau die Sorte,
+die E335 gerade abgeräumt hat — nur von der anderen Seite.
+
+DIE ANTWORT IST NICHT „LÖSCHEN, WAS NICHT KAM"
+
+Das wäre die gefährlichere Hälfte. Ein Abo, das bei einer Netzstörung leer
+antwortet, hätte damit den ganzen Kalender geleert. Aufgeräumt wird nur
+INNERHALB einer Reihe, die dieser Lauf wirklich geliefert hat — der
+Unterschied zwischen „die Reihe ist kürzer" und „ich habe nichts gehört".
+
+Belegt: nimmt man diese Sperre heraus, räumt schon das Einlesen von Deutsch
+die Mathematikstunden weg. Die Prüfung meldet dann sechs erwartete Zeilen
+gegen drei gefundene, noch bevor der eigentliche Fall an der Reihe ist.
+
+UND ES WIRD NICHT GELÖSCHT, SONDERN IN DEN PAPIERKORB GELEGT
+
+Eine Zeile kann eigene Notizen tragen, eigene Spalten, eine Verknüpfung zu
+einer Seite (§9, §13). `trashBlock` nimmt sie aus der Ansicht — `rowsOf`
+filtert `alive` — und lässt alles stehen: Titel, Spalten, Zeitstempel. Ein
+Klick im Papierkorb holt sie zurück, und seit E250 erreicht das auch den
+Server.
+
+Das ist auch der Grund, warum dafür nichts Neues gebaut wurde. Der
+Papierkorb kann genau das seit E208, und eine zweite Art, eine Zeile
+beiseitezulegen, wäre ein zweiter Katalog für dieselbe Sache (§8).
+
+DIE DRITTE SPERRE WAR FALSCH, UND DER PRÜFLAUF HAT SIE ERLEGT
+
+Sie hiess „nur Zeilen DIESER Quelle" und klang vernünftig: zwei Kalender
+könnten dieselbe Kennung führen. Der Abschnitt, der das messen sollte,
+erwartete zehn Zeilen und zählte fünf — den Fall gibt es gar nicht.
+`uebernehmen` findet die Zeile über die Kennung, ganz gleich welcher Name
+danebensteht, also entsteht für dieselbe Kennung nie eine zweite Zeile.
+
+Was die Sperre stattdessen bewirkte, war ein Schaden. BENENNT jemand sein
+Abo um — ein Klick —, tragen die aufgefrischten Zeilen den neuen Namen und
+die überzähligen den alten. Die wären damit für immer unaufräumbar gewesen.
+
+Eine Sperre gegen einen Fall, den es nicht gibt, sperrt am Ende den, den es
+gibt.
+
+UND EINE SPERRE, DIE ES GIBT, ABER NICHT GEMESSEN WURDE
+
+Nach dem Streichen der dritten blieben zwei. Die Mutation zeigte: die
+zweite — „nie ein Einzeltermin" — liess sich herausnehmen, ohne dass etwas
+rot wurde. Der Zahnarzt im Prüflauf hat keine Raute in der Kennung, also
+fängt ihn schon die erste Sperre.
+
+Gebraucht wird sie für den Fall, den es wirklich gibt: Kennungen in ICS
+sind undurchsichtige Zeichenketten, und ein fremder Kalender darf dort eine
+Raute schreiben. Steht davor ausgerechnet die Kennung einer Reihe, die
+dieser Lauf liefert, wäre der Termin ohne die ZIFFERNPRÜFUNG als „Folge"
+gelesen und weggeräumt worden. Der Prüflauf trägt jetzt genau so einen
+Termin — `plan@s#raum2` —, und ohne die Ziffernprüfung verschwindet er.
+
+Eine Sperre, die man herausnehmen kann, ohne dass etwas rot wird, ist
+entweder überflüssig oder ungeprüft. Beides muss man wissen (§55.2).
+
+DER SATZ STEHT NUR, WENN WIRKLICH ETWAS ENTFALLEN IST
+
+„0 entfallen" wäre die Zeile, die man nach dem zweiten Mal nicht mehr
+liest — und der Normalfall ist genau das. Der Satz nennt ausserdem, WO die
+Termine hin sind: im Papierkorb, nicht im Nichts.
+
+WAS OFFEN BLEIBT: ein einzelner Termin, den die Quelle streicht, bleibt
+stehen. Über ihn lässt sich nichts sagen — er kann von Hand angelegt worden
+sein, und ein Abgleich, der von Hand Angelegtes wegräumt, wäre schlimmer
+als eine Karteileiche. L112 bleibt dafür offen und ist entsprechend
+umgeschrieben.
+
+test328 neu, 31 Punkte. Belegt rot dreimal: ohne das Aufräumen fallen zwölf
+Punkte; ohne die erste Sperre fällt §3 (die Netzstörung); ohne die
+Ziffernprüfung fällt §4.
+test327 30/30, test284 49/49, test319 26/26.

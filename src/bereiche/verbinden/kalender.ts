@@ -411,6 +411,16 @@ const Kalender = (() => {
       }
     }
 
+    /* WELCHE REIHEN DIESER LAUF ÜBERHAUPT GELIEFERT HAT (E336). Nur für
+       die darf hinterher aufgeräumt werden — siehe unten. Eine Reihe, die
+       gar nicht kam, sagt nichts darüber, ob es sie noch gibt. */
+    const reihenImLauf = new Set<string>();
+    termine.forEach((t: any) => {
+      const k = terminSchluessel(t);
+      const raute = k.lastIndexOf('#');
+      if (raute > 0) reihenImLauf.add(k.slice(0, raute));
+    });
+
     let neu = 0, frisch = 0, umgezogen = 0;
     /* Was in DIESEM Durchgang schon beschrieben wurde. Ohne das könnten
        zwei Folgen wieder in derselben Zeile landen — genau der Fehler,
@@ -444,7 +454,53 @@ const Kalender = (() => {
         neu++;
       }
     });
-    return { neu, frisch, umgezogen };
+    /* ─── WAS DIE QUELLE NICHT MEHR HAT (E336, L112) ────────────────────
+       Verkürzt die Schule eine Reihe — die letzten zwei Stunden vor den
+       Ferien fallen aus —, blieben die überzähligen Zeilen bisher mit
+       ihren alten Daten stehen. Im Stundenplan standen zwei Stunden, die
+       es nicht mehr gibt, und nichts sagte es.
+
+       ZWEI SPERREN, UND JEDE EINZELNE IST NÖTIG:
+
+         · Nur Zeilen einer Reihe, die DIESER Lauf geliefert hat. Kommt
+           eine Reihe gar nicht — Netzstörung, leere Antwort, Abo
+           abgeschaltet —, wird nichts angefasst. Das ist der Unterschied
+           zwischen „die Reihe ist kürzer" und „ich habe nichts gehört",
+           und ohne ihn hätte ein Wackler im WLAN den Kalender geleert.
+         · Nie ein Einzeltermin. Der trägt keine Folgenummer, also lässt
+           sich über ihn gar nichts sagen — er kann von Hand angelegt
+           worden sein.
+
+       EINE DRITTE SPERRE STAND HIER KURZ und war falsch: „nur Zeilen
+       DIESER Quelle". Sie klang vernünftig — zwei Kalender könnten
+       dieselbe Kennung führen. Der Prüflauf zeigte, dass es diesen Fall
+       gar nicht gibt: `uebernehmen` findet die Zeile über die Kennung,
+       ganz gleich welcher Name danebensteht, also entsteht für dieselbe
+       Kennung nie eine zweite Zeile. Was die Sperre stattdessen bewirkte,
+       war ein Schaden: BENENNT jemand sein Abo um, tragen die
+       aufgefrischten Zeilen den neuen Namen und die überzähligen den
+       alten — und wären damit für immer unaufräumbar. Eine Sperre gegen
+       einen Fall, den es nicht gibt, sperrt am Ende den, den es gibt.
+
+       UND ES WIRD NICHT GELÖSCHT, SONDERN IN DEN PAPIERKORB GELEGT. Eine
+       Zeile kann eigene Notizen tragen, eigene Spalten, eine Verknüpfung
+       zu einer Seite (§9, §13). `trashBlock` nimmt sie aus der Ansicht
+       (`rowsOf` filtert `alive`), lässt aber alles stehen und ist mit
+       einem Klick rückgängig — und seit E250 erreicht es auch den Server. */
+    let entfallen = 0;
+    if (reihenImLauf.size) {
+      Store.rowsOf(coll.id).forEach((r: any) => {
+        if (belegt.has(r.id)) return;
+        const u = String((r.props || {}).uid || '');
+        const raute = u.lastIndexOf('#');
+        if (raute <= 0 || !/^\d+$/.test(u.slice(raute + 1))) return;
+        if (!reihenImLauf.has(u.slice(0, raute))) return;
+        Store.trashBlock(r.id);
+        entfallen++;
+      });
+    }
+
+    return { neu, frisch, umgezogen, entfallen };
   };
 
   /* ========================================================================
@@ -481,7 +537,7 @@ const Kalender = (() => {
     const liste = abos().filter((a: any) => a.an !== false);
     if (!liste.length) { UI.toast('Kein Kalender abonniert'); return; }
     const coll = zielDatenbank(seiteId);
-    let neu = 0, frisch = 0, schief = [];
+    let neu = 0, frisch = 0, entfallen = 0, schief = [];
     /* Für den Sammelhinweis unten — die Termine selbst wandern in die
        Datenbank und sind danach nicht mehr in der Hand. */
     const alleTermine: any[] = [];
@@ -498,7 +554,7 @@ const Kalender = (() => {
         const e = uebernehmen(coll, k.termine, a.name || k.name);
         alleTermine.push(...k.termine);
         offeneAufgaben += (k.aufgaben || []).filter((x: any) => !x.fertig).length;
-        neu += e.neu; frisch += e.frisch;
+        neu += e.neu; frisch += e.frisch; entfallen += e.entfallen || 0;
         a.zuletzt = Store.now();
       } catch (err) {
         schief.push((a.name || a.url) + ': ' +
@@ -534,6 +590,17 @@ const Kalender = (() => {
         ' — Redion liest sie, legt sie aber noch nicht an. ' +
         'Eine Aufgabe ist kein Termin, und sie hier einzutragen hiesse, ' +
         'sie als Verabredung auszugeben.', 'info');
+
+    /* WAS DIE QUELLE GESTRICHEN HAT, WIRD GESAGT — und nur dann (E336).
+       „0 entfallen" wäre die Zeile, die man nach dem zweiten Mal nicht
+       mehr liest, und der Normalfall ist genau das. Der Satz nennt auch,
+       WO die Termine hin sind: in den Papierkorb, nicht ins Nichts. */
+    if (entfallen)
+      UI.banner(entfallen + (entfallen === 1
+          ? ' Termin steht nicht mehr im Kalender der Quelle und liegt jetzt '
+          : ' Termine stehen nicht mehr im Kalender der Quelle und liegen jetzt ') +
+        'im Papierkorb. Von dort holst du sie zurück, falls das ein Irrtum war.',
+        'info');
 
     UI.toast(neu + ' neu, ' + frisch + ' aufgefrischt');
   };
@@ -739,16 +806,19 @@ const Kalender = (() => {
           inp.type = 'file'; inp.accept = '.ics,text/calendar'; inp.multiple = true;
           inp.addEventListener('change', async () => {
             const coll = zielDatenbank();
-            let neu = 0, frisch = 0;
+            let neu = 0, frisch = 0, entfallen = 0;
             for (const f of Array.from(inp.files ?? [])) {
               const text = await f.text();
               const k = icsLesen(text);
               const alle: any[] = [];
               k.termine.forEach(t => wiederholungen(t).forEach((x: any) => alle.push(x)));
               const erg = uebernehmen(coll, alle, k.name || f.name.replace(/\.ics$/i, ''));
-              neu += erg.neu; frisch += erg.frisch;
+              neu += erg.neu; frisch += erg.frisch; entfallen += erg.entfallen || 0;
             }
             App.zeichneSeite();
+            if (entfallen)
+              UI.banner(entfallen + (entfallen === 1 ? ' Termin liegt' : ' Termine liegen') +
+                ' jetzt im Papierkorb — die Datei führt sie nicht mehr.', 'info');
             UI.toast(neu + ' Termine übernommen, ' + frisch + ' aufgefrischt');
           });
           inp.click();

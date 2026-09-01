@@ -4625,7 +4625,9 @@ Gefunden am 1. September 2026 (E320, E321, E324, E326, E334).
 
 
 ================================================================================
-L112 — Eine verkürzte Reihe lässt Geisterstunden stehen
+L112 — ~~Eine verkürzte Reihe lässt Geisterstunden stehen~~ — GESCHLOSSEN am
+1. September 2026 (E336). Was für EINZELNE Termine noch offen ist, steht
+unten.
 ================================================================================
 
 Gefunden beim Bau von E335, gemessen und nicht vermutet.
@@ -4640,6 +4642,14 @@ Schule streicht die letzten beiden Stunden vor den Ferien. Danach:
 Die beiden überzähligen bleiben mit ihren alten Daten stehen. Im
 Stundenplan stehen zwei Stunden, die es nicht mehr gibt.
 
+**GESCHLOSSEN für Reihen am 1. September 2026 durch E336.** Aufgeräumt wird
+nur INNERHALB einer Reihe, die dieser Lauf wirklich geliefert hat — und in
+den Papierkorb, nicht ins Nichts. Zwei Sperren, beide belegt rot: eine
+Reihe, die gar nicht kam, wird nicht angefasst (sonst hätte eine
+Netzstörung den Kalender geleert), und ein Einzeltermin nie. Eine dritte
+Sperre („nur Zeilen dieser Quelle") hat der Prüflauf als falsch erlegt —
+sie hätte ein umbenanntes Abo für immer unaufräumbar gemacht.
+
 WARUM ES SO IST: `uebernehmen` löscht grundsätzlich nichts. Das ist keine
 Nachlässigkeit, sondern eine Regel (§9, §13) — eine Zeile kann inzwischen
 eigene Notizen tragen, eigene Spalten, eine Verknüpfung zu einer Seite. Ein
@@ -4652,18 +4662,24 @@ DIE GLEICHE LAGE GILT FÜR EINEN GESTRICHENEN EINZELTERMIN. E290 hat den
 häufigeren Fall abgeräumt — eine per `EXDATE` abgesagte Stunde kommt nicht
 mehr JEDES MAL zurück. Was schon angelegt war, bleibt aber liegen.
 
-ZWEI MÖGLICHE ANTWORTEN, beide ein eigener Bogen:
+WAS OFFEN BLEIBT: EIN EINZELNER GESTRICHENER TERMIN
 
-  · MARKIEREN STATT LÖSCHEN. Eine Zeile, die die Quelle nicht mehr
-    liefert, bekommt einen sichtbaren Vermerk („nicht mehr im Kalender")
-    und verschwindet aus der Kalenderansicht, ohne dass Daten weg sind.
-    Braucht eine Spalte im Schema und eine Entscheidung in der Ansicht.
-  · NUR INNERHALB EINER REIHE AUFRÄUMEN. Kommt eine Reihe mit weniger
-    Folgen zurück als beim letzten Mal, sind die Folgen mit höherer Nummer
-    eindeutig fort — dort ist Löschen sicherer als anderswo. Aber auch dort
-    kann eine eigene Notiz dranhängen.
+Streicht die Quelle einen Termin, der zu keiner Reihe gehört, bleibt er
+stehen. Das ist mit Absicht so und keine halbe Arbeit: über einen
+Einzeltermin lässt sich nichts sagen. Er kann von Hand angelegt worden
+sein, er kann aus einer Datei stammen, die man einmal eingelesen hat, er
+kann zu einem Abo gehören, das gerade nur ein kürzeres Zeitfenster
+liefert. Ein Abgleich, der von Hand Angelegtes wegräumt, wäre schlimmer als
+eine Karteileiche.
+
+Eine Antwort dafür bräuchte etwas, das es noch nicht gibt: einen Vermerk am
+Abo, WELCHE Kennungen es beim letzten Mal geliefert hat. Dann — und nur
+dann — liesse sich sagen „diese Kennung kam von diesem Abo und kommt nicht
+mehr". Das ist ein eigener Bogen, und er berührt die Sicherung (die Liste
+müsste mitreisen).
 
 WAS BIS DAHIN GILT: die Lücke ist genannt und nicht still. Das ist der
 Unterschied zwischen einer bekannten Grenze und einem Fehler (§35).
 
-Gefunden am 1. September 2026 (E335).
+Gefunden am 1. September 2026 (E335), für Reihen geschlossen am selben Tag
+(E336).

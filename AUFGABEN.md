@@ -2565,3 +2565,18 @@ node pruefungen/lauf/test105.mjs
   grundsätzlich nichts löscht (§9, §13) — genannt statt still.
   test327 neu (30), belegt rot in beide Richtungen. test284 49/49,
   test319 26/26.
+* E336 (L112, am Tag ihrer Entstehung): Was die Quelle gestrichen hat. Eine
+  verkürzte Reihe liess bis eben Geisterstunden im Stundenplan stehen.
+  Aufgeräumt wird jetzt — aber nur INNERHALB einer Reihe, die dieser Lauf
+  wirklich geliefert hat, und in den PAPIERKORB, nicht ins Nichts: eine
+  Zeile kann eigene Notizen tragen (§9, §13), und `trashBlock` kann das
+  seit E208 samt Rückweg und Server (E250). Der Prüflauf hat dabei eine
+  meiner eigenen Sperren erlegt: „nur Zeilen dieser Quelle" schützte gegen
+  einen Fall, den es nicht gibt, und hätte ein UMBENANNTES Abo für immer
+  unaufräumbar gemacht. Und eine zweite Sperre liess sich zunächst
+  herausnehmen, ohne dass etwas rot wurde — sie hat jetzt den Termin, der
+  sie bindet (`plan@s#raum2`, eine Raute in der Kennung). Offen bleibt ein
+  gestrichener EINZELtermin: über ihn lässt sich nichts sagen, solange kein
+  Abo mitschreibt, welche Kennungen es zuletzt lieferte.
+  test328 neu (31), dreimal belegt rot. test327 30/30, test284 49/49,
+  test319 26/26.
