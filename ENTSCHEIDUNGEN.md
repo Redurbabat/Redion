@@ -24386,3 +24386,64 @@ test314, 20 Punkte, davon fünf für die Gegenprobe.
 Mitgelaufen: test281 48/48 (eine Behauptung auf Komma umgestellt),
 test313 25/25, test105 105/105.
 sw v75 · Einzeldatei neu gebaut.
+
+================================================================================
+E322 — Was gerade läuft, sieht man auch (L103 Punkt 3)
+================================================================================
+1. September 2026
+
+Die Auftragsmaschine (E286) meldet seit ihrem ersten Tag `auftrag.schritt`
+mit Schritt, Schrittzahl und einem Satz für den Menschen. Zugehört hat
+niemand. `Auftraege.offen()` und `Auftraege.abbrechen(id)` gab es auch —
+benutzt hat sie keine Oberfläche.
+
+Das ist §47 von der leisen Seite. Nicht ein Knopf, der nichts tut, sondern
+umgekehrt: eine Arbeit, die läuft, minutenlang dauern kann und über die die
+App schweigt. Wer nicht weiss, dass etwas läuft, hält die App für hängen —
+und wer nicht abbrechen kann, schliesst den Reiter.
+
+Ein Knopf oben rechts, neben Glocke, Suche und Konto, dahinter ein Fenster
+mit einer Zeile je Auftrag: Name, Satz, Balken, Stand, Abbrechen.
+
+─── ER ERSCHEINT NUR, WENN ETWAS LÄUFT ─────────────────────────────────────
+
+Derselbe Grundsatz wie bei der Glocke (E251): ohne offene Aufträge ist der
+Knopf `hidden`. Ein dauerhaftes „0 Aufträge" wäre die Anzeige, die immer
+anzeigt und deshalb nicht gelesen wird — und in einer Zeile, die am Telefon
+ohnehin rollt, kostete sie einen Platz umsonst. Die Zahl erscheint erst ab
+ZWEI: bei einem einzigen Auftrag sagt der kreisende Ring schon alles.
+
+─── DER BALKEN LÜGT NICHT, UND ZWEIMAL FEHLT ER ────────────────────────────
+
+`schritte: 0` heisst im Modell „unbekannt viele". Ein Balken daraus wäre
+erfunden; stattdessen steht die Zahl der fertigen Schritte da.
+
+Der zweite Fall fiel erst AUF DEM BILD auf: ein Auftrag im Zustand `wartet`
+bekam einen leeren Balken, und darunter stand „wartet". Zwei Angaben, die
+sich widersprechen — der Balken sagt „0 % fertig", also Arbeit, die läuft
+und nicht vorankommt; die Wahrheit ist „hat noch nicht angefangen". Jetzt
+gibt es dort keinen Balken. Drei Zustände, drei verschiedene und jeweils
+ehrliche Anzeigen.
+
+─── UND DER NAMENSRAUM STIESS ZUSAMMEN ─────────────────────────────────────
+
+Der erste Entwurf hiess `auf-` — für „Auftrag". `auf-` gehört seit langem
+den Aufgaben (`.auf-datum`, `.auf-haken`, `.auf-status`, `.auf-zeile` …),
+und `.auf-leer` war bereits vergeben. Das ist wörtlich L90, und es fiel nur
+auf, weil E293 das Verzeichnis angelegt hat: ein Blick in
+`doku/CSS-NAMENSRAEUME.md` vor dem Schreiben, und der Zusammenstoss stand
+schwarz auf weiss. Ohne die Datei wäre es wieder ein Stil geworden, den
+niemand bestellt hat — die Unterzeile von damals war `font-weight:600`
+statt `400`, und gefunden wurde sie auf einem Bild.
+
+Heisst jetzt `arb-`, eingetragen mit 24 Verwendungen.
+
+DIE ANMELDUNG AM BUS GESCHIEHT EINMAL. Die Menüleiste wird bei jedem
+Reiterwechsel neu gebaut; ein Horcher je Aufbau hiesse nach zehn Wechseln
+zehn Auffrischungen für jeden einzelnen Schritt.
+
+test315, 25 Punkte. §1 (ohne Auftrag kein Knopf) und §3 (der Balken lügt
+nicht) sind der Prüfstein; beide waren vor diesem Bogen rot, und §3 wäre
+ohne das Bild gar nicht geschrieben worden.
+Mitgelaufen: test272 153/153, test248 45/45, test290 13/13, test105 105/105.
+sw v76 · Einzeldatei 7847 KB.

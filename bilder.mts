@@ -366,6 +366,35 @@ const ANSICHTEN: Record<string, { titel: string; bauen: () => void | Promise<voi
     }
   },
 
+  auftraege: {
+    titel: 'Was gerade läuft — die Auftragsanzeige (E322)',
+    bauen: async () => {
+      const w = window as any;
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelectorAll('.overlay').forEach(o => o.remove());
+
+      /* Drei Aufträge in drei verschiedenen Zuständen — genau die drei
+         Fälle, die der Balken auseinanderhalten muss. */
+      await w.Auftraege.anlegen('ocr', { seiten: 80 },
+        { schritte: 80, text: 'Seite 34 von 80 — „Reihenschaltung"' });
+      await w.Auftraege.anlegen('embeddings', { texte: 1200 },
+        { schritte: 0, text: 'Gedächtnis wird gebaut' });
+      await w.Auftraege.anlegen('sicherung', {},
+        { schritte: 4, text: 'Anhänge werden geprüft' });
+
+      /* Zwei davon ein Stück weit vorschieben, damit der Balken etwas zeigt. */
+      const alle = await w.Auftraege.alle();
+      for (const a of alle) {
+        if (a.art === 'ocr') await Store.auftragPut({ ...a, zustand: 'laeuft', schritt: 34 });
+        if (a.art === 'embeddings') await Store.auftragPut({ ...a, zustand: 'laeuft', schritt: 7 });
+      }
+
+      await w.AuftragsAnzeige.knopfFrisch();
+      w.AuftragsAnzeige.oeffnen();
+      await new Promise(r => setTimeout(r, 600));
+    }
+  },
+
   kikosten: {
     titel: 'Einstellungen → KI: Kosten und Grenzen (E321)',
     bauen: async () => {

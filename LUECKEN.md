@@ -4008,6 +4008,18 @@ Die Maschine steht und ist geprüft. Fünf Dinge fehlen ihr, jedes mit Grund:
    sind. Das ist §47 von der leisen Seite: nicht ein Knopf, der nichts tut,
    sondern eine Sache, die läuft und die niemand sieht.
 
+   **GESCHLOSSEN am 1. September 2026 durch E322.** Ein Knopf oben rechts,
+   dahinter ein Fenster mit einer Zeile je Auftrag: Name, Satz, Balken,
+   Stand, Abbrechen. Er erscheint NUR, solange etwas läuft (wie die Glocke,
+   E251), und die Zahl erst ab zwei. Der Balken fehlt in zwei Fällen, und
+   beide sind richtig so: bei unbekannter Gesamtzahl (`schritte: 0`) wäre er
+   erfunden, und bei `wartet` sagte er „0 % fertig", wo „hat noch nicht
+   angefangen" die Wahrheit ist — das fiel erst auf dem Bild auf.
+   test315, 25 Punkte.
+
+   Beim Bau kollidierte der erste Namensraum `auf-` mit dem der Aufgaben —
+   wörtlich L90, gefangen vom Verzeichnis aus E293. Heisst jetzt `arb-`.
+
 4. **Die Pacht ist kein `navigator.locks`.** Sie beruht darauf, dass
    IndexedDB Transaktionen serialisiert — das reicht gegen zwei Tabs, aber
    es gibt keine Absprache, wer arbeiten SOLL. Zwei Tabs nehmen

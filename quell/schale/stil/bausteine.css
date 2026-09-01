@@ -5575,3 +5575,57 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   .bild-rahmen .bild-griff{opacity:.5}
   .ki-chat .ki-pin, .ki-chat .ki-weg{display:inline-flex}
 }
+
+
+/* --- Was gerade läuft (L103 Punkt 3, E322) ----------------------------------
+   Der Knopf steht in der Menüleiste neben Glocke, Suche und Konto — er ist
+   `hidden`, solange nichts läuft, und trägt seine Zahl erst ab zwei. */
+.mb-arbeit{ position:relative }
+.arb-kreisel{ display:inline-block; width:13px; height:13px; border-radius:50%;
+  border:2px solid var(--line); border-top-color:var(--accent-text);
+  animation:arb-dreh 900ms linear infinite }
+@keyframes arb-dreh{ to{ transform:rotate(360deg) } }
+/* §38: wer Bewegung abgestellt hat, bekommt keine. Der Ring bleibt sichtbar
+   und sagt dasselbe — die Bewegung war nie die Information. */
+@media (prefers-reduced-motion: reduce){
+  .arb-kreisel{ animation:none; border-top-color:var(--accent-text) }
+}
+
+.arb-fenster{ display:flex; align-items:flex-start; justify-content:flex-end;
+  padding:44px 14px 0 }
+.arb-kasten{ background:var(--bg-card); border:1px solid var(--line);
+  border-radius:12px; box-shadow:0 12px 40px rgba(0,0,0,.28);
+  width:min(380px, 94vw); max-height:70vh; overflow:auto }
+.arb-titel{ display:flex; align-items:center; justify-content:space-between;
+  padding:12px 14px; font-weight:600; font-size:14px;
+  border-bottom:1px solid var(--line); position:sticky; top:0;
+  background:var(--bg-card) }
+.arb-zu{ background:none; border:none; color:var(--text-faint); cursor:pointer;
+  font-size:20px; line-height:1; padding:0 4px }
+.arb-zu:hover{ color:var(--text) }
+.arb-liste{ padding:6px 0 }
+.arb-z{ padding:11px 14px; border-bottom:1px solid var(--line) }
+.arb-z:last-child{ border-bottom:none }
+.arb-kopf{ display:flex; align-items:center; justify-content:space-between; gap:10px }
+.arb-kopf b{ font-size:13.5px }
+.arb-stopp{ background:none; border:1px solid var(--line); border-radius:6px;
+  color:var(--text-faint); cursor:pointer; font-size:12px; padding:3px 9px }
+.arb-stopp:hover{ color:var(--c-rot, #d24); border-color:var(--c-rot, #d24) }
+.arb-stopp[disabled]{ opacity:.55; cursor:default }
+.arb-text{ font-size:12.5px; color:var(--text-faint); margin-top:4px }
+.arb-balken{ height:5px; background:var(--bg-hover); border-radius:3px;
+  margin-top:7px; overflow:hidden }
+.arb-balken i{ display:block; height:100%; background:var(--accent-text);
+  border-radius:3px; transition:width 220ms ease }
+.arb-stand{ font-size:11.5px; color:var(--text-faint); margin-top:5px;
+  font-variant-numeric:tabular-nums }
+.arb-leer{ padding:18px 14px; font-size:13px; color:var(--text-faint);
+  text-align:center }
+
+@media (max-width: 760px){
+  /* Am Telefon volle Breite und 44 px für den Daumen (§37). */
+  .arb-fenster{ justify-content:center; padding:56px 10px 0 }
+  .arb-kasten{ width:100% }
+  .arb-stopp{ min-height:44px; padding:3px 14px }
+  .arb-zu{ min-width:44px; min-height:44px }
+}

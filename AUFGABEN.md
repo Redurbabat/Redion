@@ -2355,3 +2355,15 @@ node pruefungen/lauf/test105.mjs
   eigene Prosa schrieb daneben längst „0,45 USD"), eine Zeile „groq — 0,00
   USD", die nichts behauptet, und am Telefon das „USD" auf eigener Zeile.
   test314 neu (20). sw v75.
+* E322 (L103 Punkt 3): Was gerade läuft, sieht man auch. Die
+  Auftragsmaschine meldet seit E286 jeden Schritt — zugehört hat niemand,
+  und `offen()`/`abbrechen()` benutzte keine Oberfläche. §47 von der leisen
+  Seite: eine Arbeit, die minutenlang läuft und über die die App schweigt.
+  Jetzt ein Knopf oben rechts, der NUR erscheint, solange etwas läuft (wie
+  die Glocke aus E251), dahinter eine Zeile je Auftrag mit Name, Satz,
+  Balken, Stand und Abbrechen. Der Balken fehlt in zwei Fällen, und beide
+  sind richtig: bei unbekannter Gesamtzahl wäre er erfunden, und bei
+  „wartet" sagte er „0 % fertig", wo „hat noch nicht angefangen" die
+  Wahrheit ist — das fand erst das Bild. Beim Bau kollidierte der erste
+  Namensraum `auf-` mit dem der Aufgaben, wörtlich L90; das Verzeichnis aus
+  E293 hat es gefangen, heisst jetzt `arb-`. test315 neu (25). sw v76.

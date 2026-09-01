@@ -846,6 +846,40 @@ const Menueband = (() => {
     });
     rechts.appendChild(glocke);
 
+    /* ── WAS GERADE LÄUFT (L103 Punkt 3, E322) ──────────────────────────
+       Dieselbe Regel wie bei der Glocke daneben: ohne offene Aufträge ist
+       der Knopf `hidden`. Ein dauerhaftes „0 Aufträge" wäre die Anzeige,
+       die immer anzeigt und deshalb nicht gelesen wird.
+
+       Die Zahl erscheint erst ab ZWEI. Bei einem einzigen Auftrag sagt das
+       kreisende Zeichen schon alles, und eine „1" daneben ist Schmuck. */
+    const arbeit = document.createElement('button');
+    arbeit.type = 'button';
+    arbeit.id = 'mb-auftraege';
+    arbeit.className = 'mb-rechts-knopf mb-arbeit';
+    arbeit.hidden = true;
+    arbeit.setAttribute('aria-label', 'Was gerade läuft');
+    arbeit.title = 'Was gerade läuft';
+    const arbeitZeichen = document.createElement('i');
+    arbeitZeichen.className = 'arb-kreisel';
+    arbeitZeichen.setAttribute('aria-hidden', 'true');
+    arbeit.appendChild(arbeitZeichen);
+    const arbeitZahl = document.createElement('b');
+    arbeitZahl.className = 'glocke-zahl';
+    arbeitZahl.hidden = true;
+    arbeitZahl.setAttribute('aria-hidden', 'true');
+    arbeit.appendChild(arbeitZahl);
+    arbeit.addEventListener('click', () => {
+      try { AuftragsAnzeige.oeffnen(); } catch { /* ohne Anzeige bleibt die Leiste */ }
+    });
+    rechts.appendChild(arbeit);
+    /* Anmelden ist gegen Mehrfachaufruf gesichert; auffrischen muss NACH
+       jedem Aufbau sein, weil die Leiste bei jedem Reiterwechsel neu
+       entsteht und ein frisch gebauter Knopf sonst bis zum nächsten
+       Schritt versteckt bliebe. */
+    try { AuftragsAnzeige.anmelden(); void AuftragsAnzeige.knopfFrisch(); }
+    catch { /* ohne Auftragsmaschine bleibt die Leiste */ }
+
     RECHTS.forEach(([id, zeichen, titel, tun]) => {
       const b = document.createElement('button');
       b.type = 'button';
