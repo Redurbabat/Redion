@@ -4025,6 +4025,10 @@ Gefunden am 31. August 2026 (beim Bau von E286).
 L104 — Das KI-Buch führt Schätzungen, keine gezählten Token (E287)
 ================================================================================
 
+**VOLLSTÄNDIG GESCHLOSSEN am 1. September 2026.** Der Hauptpunkt durch E319,
+Punkt 1 durch E321, Punkt 2 durch E295, Punkt 3 durch E319. Der Abschnitt
+bleibt stehen, weil er beschreibt, WARUM jedes einzelne so gelöst wurde.
+
 Jeder Anbieter schickt die WIRKLICHE Tokenzahl zurück — OpenAI im Feld
 `usage`, Anthropic in `message_start`/`message_delta`. Redion liest sie
 nicht. Der Strom-Leser in `bereiche/ki/dienst.ts` sucht in jedem Ereignis
