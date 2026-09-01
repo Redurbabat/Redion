@@ -942,12 +942,32 @@ const KI = (() => {
       ziel.textContent = 'Sucht im Arbeitsbereich …';
       const k = Kontext.bauenFuerFrage(text, { anzahl: 6 });
       quellen = k.quellen;
+
+      /* NUR-QUELLEN-MODUS (E305, Redurs Punkt 11). Findet sich nichts, wird
+         das Modell GAR NICHT GEFRAGT. Der Satz darunter — „sag das offen,
+         statt etwas zu erfinden" — ist eine Bitte, und ein Modell ohne
+         Vorlage antwortet trotzdem. Wer vor einer Prüfung sitzt, braucht
+         keine Bitte, sondern eine Zusage. */
+      const tor = Kontext.darfFragen(k);
+      if (!tor.ok) {
+        ziel.textContent = tor.grund;
+        ziel.classList.add('msg-ohne-quelle');
+        zustand.verlauf.push({ role: 'user', content: text });
+        zustand.verlauf.push({ role: 'assistant', content: tor.grund });
+        chatSichern();
+        return;
+      }
+
       if (!k.leer) system += '\n\nDas hier steht in seinem Arbeitsbereich dazu:\n\n' + k.text;
       else system += '\n\nIm Arbeitsbereich wurde nichts Passendes gefunden. Sag das offen, ' +
                      'statt etwas zu erfinden.';
+      if (Kontext.nurQuellen()) system += Kontext.nurQuellenAnweisung();
 
-      /* Websuche nur, wenn sie eingeschaltet ist — und nur zusätzlich. */
-      if (Kontext.quellen().web) {
+      /* Websuche nur, wenn sie eingeschaltet ist — und nur zusätzlich.
+         IM NUR-QUELLEN-MODUS GAR NICHT: „meine Quellen" heisst die eigenen
+         Unterlagen. Eine Wikipedia-Zusammenfassung ist keine davon, und sie
+         wäre die eine Zeile, die den ganzen Modus wieder aushebelt. */
+      if (Kontext.quellen().web && !Kontext.nurQuellen()) {
         try {
           const begriff = (text.split(/[?.!]/)[0] ?? '').slice(0, 60);
           const w = await wikipedia(begriff);

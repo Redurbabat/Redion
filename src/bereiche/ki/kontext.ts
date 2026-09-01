@@ -509,6 +509,52 @@ const Kontext = (() => {
   const quellen = () => Object.assign({}, QUELLEN_STANDARD,
     Store.getMeta('ki:quellen', {}) || {});
 
+  /* ------------------------------------------------------------------------
+   * NUR AUS DEINEN QUELLEN (E305, Redurs Punkt 11)
+   * ------------------------------------------------------------------------
+   * Der gewöhnliche Modus gibt dem Modell die gefundenen Stellen MIT und
+   * bittet es, nichts zu erfinden. Das ist eine Bitte. Wer vor einer Prüfung
+   * sitzt, will keine Bitte, sondern eine Zusage: entweder es steht in meinen
+   * Unterlagen, oder ich bekomme keine Antwort.
+   *
+   * Der Unterschied ist nicht die Formulierung der Anweisung — es ist, dass
+   * bei leerem Fund GAR NICHT GEFRAGT wird. Ein Modell, das nichts vorliegen
+   * hat, antwortet trotzdem; das ist seine Natur, und keine Anweisung ändert
+   * daran zuverlässig etwas. Also fragt Redion es dann nicht.
+   * ----------------------------------------------------------------------*/
+  const nurQuellen = (): boolean => !!Store.getMeta('ki:nurQuellen', false);
+
+  const nurQuellenSetzen = (an: unknown): void =>
+    Store.setMeta('ki:nurQuellen', !!an);
+
+  /**
+   * Darf diese Frage überhaupt ans Modell?
+   *
+   * Gibt zurück, was zu tun ist — und im Fall `nein` gleich den Satz, der
+   * stattdessen dasteht. Der Satz gehört hierher und nicht in die Oberfläche:
+   * die Agenten (`ki/agenten.ts`) brauchen dieselbe Entscheidung, und zwei
+   * Fassungen davon liefen irgendwann auseinander.
+   */
+  const darfFragen = (k: { leer?: boolean; quellen?: any[] }): {
+    ok: boolean; grund: string;
+  } => {
+    if (!nurQuellen()) return { ok: true, grund: '' };
+    if (k && k.leer === false && (k.quellen || []).length > 0)
+      return { ok: true, grund: '' };
+    return { ok: false, grund:
+      'Dazu finde ich nichts in deinen Unterlagen. Der Nur-Quellen-Modus ist ' +
+      'an — Redion fragt das Modell dann gar nicht erst, statt eine Antwort ' +
+      'zu bekommen, die nirgends nachzulesen ist. Schalte ihn in den ' +
+      'KI-Einstellungen aus, wenn du trotzdem fragen willst.' };
+  };
+
+  /** Die Anweisung, die im Nur-Quellen-Modus vor die Auszüge kommt. */
+  const nurQuellenAnweisung = (): string =>
+    '\n\nWICHTIG — NUR-QUELLEN-MODUS: Antworte AUSSCHLIESSLICH aus den ' +
+    'Auszügen oben. Steht die Antwort dort nicht, sage genau das und rate ' +
+    'nicht. Nenne zu jeder Aussage, aus welcher der Quellen sie stammt. ' +
+    'Ergänze nichts aus deinem eigenen Wissen, auch nichts Naheliegendes.';
+
   const quelleSetzen = (k: string, an: unknown): void => {
     const q = quellen();
     q[k] = an;
@@ -679,6 +725,7 @@ const Kontext = (() => {
   return { bauen, abgleichen, reparieren, holen, warten, status, kandidaten,
            finden, findenMitVektoren, ausschnitt, bauenFuerFrage,
            quellen, quelleSetzen, QUELLEN_STANDARD, zerlegen, stamm, erweitern,
+           nurQuellen, nurQuellenSetzen, darfFragen, nurQuellenAnweisung,
            embeddingsAn, embeddingsBauen, embeddingHolen, cosinus, textVonSeite };
 })();
 

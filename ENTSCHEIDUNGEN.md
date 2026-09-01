@@ -23043,3 +23043,70 @@ test298 8/8. Mitgelaufen: test272 153/153, test290 13/13 (nach Eintrag des
 neuen Präfixes `lern` ins Namensraum-Verzeichnis), test248 45/45,
 test177 69/69.
 typecheck grün · sw v65 · Einzeldatei 7722 KB.
+
+
+E305 — Nur aus meinen Quellen (Redurs Punkt 11)
+================================================================================
+1. September 2026
+
+Redurs Punkt 11: „lokale Embeddings + Nur-Quellen-Modus."
+
+Die Hälfte stand schon. Redion sucht die passenden Stellen im eigenen
+Arbeitsbereich heraus, schickt sie mit und nennt unter jeder Antwort ihre
+Quellen (`ki/kontext.ts`, seit E177). Was fehlte, ist die ZUSAGE.
+
+Bisher stand in der Systemnachricht bei leerem Fund:
+
+    „Im Arbeitsbereich wurde nichts Passendes gefunden. Sag das offen, statt
+     etwas zu erfinden."
+
+Das ist eine BITTE. Ein Modell, dem nichts vorliegt, antwortet trotzdem — das
+ist seine Natur, und keine Formulierung ändert daran zuverlässig etwas. Wer
+vor einer Prüfung sitzt und wissen will, was in SEINEM Skript steht, braucht
+keine Bitte.
+
+
+Der Unterschied ist nicht die Anweisung
+--------------------------------------------------------------------------------
+Er ist, dass GAR NICHT GEFRAGT WIRD. Ist der Modus an und findet sich nichts,
+steht dort ein Satz von Redion selbst, und das Modell sieht die Frage nie.
+
+Das spart nebenbei Geld und Zeit, aber darum geht es nicht: eine Antwort, die
+nirgends nachzulesen ist, ist beim Lernen schlimmer als keine. Sie sieht
+genauso aus wie eine richtige.
+
+Findet sich etwas, geht die Frage hinaus — mit einer Anweisung, die
+ausdrücklich verbietet, eigenes Wissen zu ergänzen, und zu jeder Aussage die
+Quelle verlangt.
+
+DIE ENTSCHEIDUNG LIEGT AN EINER STELLE (`Kontext.darfFragen`), weil die
+Agenten (`ki/agenten.ts`) dieselbe brauchen. Zwei Fassungen davon liefen
+irgendwann auseinander, und dann hielte der Chat die Zusage und der Agent
+nicht.
+
+UND DIE WEBSUCHE IST IN DIESEM MODUS AUS. Sie war die eine Zeile, die alles
+wieder ausgehebelt hätte: „meine Quellen" heisst die eigenen Unterlagen, und
+eine Wikipedia-Zusammenfassung ist keine davon.
+
+
+Was der Modus NICHT ist
+--------------------------------------------------------------------------------
+Er ist keine Garantie, dass das Modell sich an die Anweisung hält, wenn
+Auszüge vorliegen. Diese Zusage kann Redion nicht geben — sie hinge an einem
+fremden Programm. Was Redion zusagen kann, ist der Fall davor: ohne Fund
+keine Frage. Genau das steht auch im Text des Schalters, damit niemand mehr
+hineinliest, als drinsteht.
+
+Aus ist die Vorgabe. Ein Modus, der ungefragt Antworten verweigert, wäre die
+unangenehmere Überraschung.
+
+
+Geprüft
+--------------------------------------------------------------------------------
+test299 19/19, darunter die Gegenprobe, dass bei AUSGESCHALTETEM Modus alles
+bleibt wie bisher — ein Tor, das immer zumacht, wäre keine Zusage, sondern
+eine kaputte KI. Gegengeprüft: lässt sich der Modus nicht einschalten, fallen
+drei Punkte.
+
+Mitgelaufen: test281 48/48, test287 9/9.
+typecheck grün · sw v66 · Einzeldatei 7724 KB.

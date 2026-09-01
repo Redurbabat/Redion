@@ -77373,6 +77373,12 @@ const Einstellungen = (() => {
             zeile('Verbundene Dienste', 'Was über Verbindungen hereingeholt wurde', schalter('q:verbindungen', Kontext.quellen().verbindungen)) +
             zeile('Websuche', 'Wikipedia nachschlagen — dabei verlässt der Suchbegriff den Rechner', schalter('q:web', Kontext.quellen().web)) +
             zeile('Vor jeder Webanfrage nachfragen', 'Sicherheitshalber einmal bestätigen', schalter('ki:webFragen', V('ki:webFragen', true))) +
+            /* NUR-QUELLEN-MODUS (E305). Er steht bewusst UNTER den Quellen und
+               nicht bei den Antwortlängen: er ist keine Geschmacksfrage, sondern
+               die Zusage, dass nichts kommt, was nicht in den eingeschalteten
+               Quellen steht. */
+            zeile('Nur aus meinen Quellen antworten', 'Findet sich nichts, wird das Modell gar nicht erst gefragt — statt ' +
+                'einer Antwort, die nirgends nachzulesen ist', schalter('ki:nurQuellen', V('ki:nurQuellen', false))) +
             /* --- Gedächtnis --------------------------------------------------- */
             kopf('Gedächtnis', 'Die KI erinnert sich nicht wie ein Mensch. Sie findet wieder, ' +
                 'was du gespeichert hast. Der Suchindex ist dieses Gedächtnis.') +
@@ -82935,6 +82941,44 @@ const Kontext = (() => {
         web: false
     };
     const quellen = () => Object.assign({}, QUELLEN_STANDARD, Store.getMeta('ki:quellen', {}) || {});
+    /* ------------------------------------------------------------------------
+     * NUR AUS DEINEN QUELLEN (E305, Redurs Punkt 11)
+     * ------------------------------------------------------------------------
+     * Der gewöhnliche Modus gibt dem Modell die gefundenen Stellen MIT und
+     * bittet es, nichts zu erfinden. Das ist eine Bitte. Wer vor einer Prüfung
+     * sitzt, will keine Bitte, sondern eine Zusage: entweder es steht in meinen
+     * Unterlagen, oder ich bekomme keine Antwort.
+     *
+     * Der Unterschied ist nicht die Formulierung der Anweisung — es ist, dass
+     * bei leerem Fund GAR NICHT GEFRAGT wird. Ein Modell, das nichts vorliegen
+     * hat, antwortet trotzdem; das ist seine Natur, und keine Anweisung ändert
+     * daran zuverlässig etwas. Also fragt Redion es dann nicht.
+     * ----------------------------------------------------------------------*/
+    const nurQuellen = () => !!Store.getMeta('ki:nurQuellen', false);
+    const nurQuellenSetzen = (an) => Store.setMeta('ki:nurQuellen', !!an);
+    /**
+     * Darf diese Frage überhaupt ans Modell?
+     *
+     * Gibt zurück, was zu tun ist — und im Fall `nein` gleich den Satz, der
+     * stattdessen dasteht. Der Satz gehört hierher und nicht in die Oberfläche:
+     * die Agenten (`ki/agenten.ts`) brauchen dieselbe Entscheidung, und zwei
+     * Fassungen davon liefen irgendwann auseinander.
+     */
+    const darfFragen = (k) => {
+        if (!nurQuellen())
+            return { ok: true, grund: '' };
+        if (k && k.leer === false && (k.quellen || []).length > 0)
+            return { ok: true, grund: '' };
+        return { ok: false, grund: 'Dazu finde ich nichts in deinen Unterlagen. Der Nur-Quellen-Modus ist ' +
+                'an — Redion fragt das Modell dann gar nicht erst, statt eine Antwort ' +
+                'zu bekommen, die nirgends nachzulesen ist. Schalte ihn in den ' +
+                'KI-Einstellungen aus, wenn du trotzdem fragen willst.' };
+    };
+    /** Die Anweisung, die im Nur-Quellen-Modus vor die Auszüge kommt. */
+    const nurQuellenAnweisung = () => '\n\nWICHTIG — NUR-QUELLEN-MODUS: Antworte AUSSCHLIESSLICH aus den ' +
+        'Auszügen oben. Steht die Antwort dort nicht, sage genau das und rate ' +
+        'nicht. Nenne zu jeder Aussage, aus welcher der Quellen sie stammt. ' +
+        'Ergänze nichts aus deinem eigenen Wissen, auch nichts Naheliegendes.';
     const quelleSetzen = (k, an) => {
         const q = quellen();
         q[k] = an;
@@ -83103,6 +83147,7 @@ const Kontext = (() => {
     return { bauen, abgleichen, reparieren, holen, warten, status, kandidaten,
         finden, findenMitVektoren, ausschnitt, bauenFuerFrage,
         quellen, quelleSetzen, QUELLEN_STANDARD, zerlegen, stamm, erweitern,
+        nurQuellen, nurQuellenSetzen, darfFragen, nurQuellenAnweisung,
         embeddingsAn, embeddingsBauen, embeddingHolen, cosinus, textVonSeite };
 })();
 window.Kontext = Kontext;
@@ -118010,13 +118055,32 @@ const KI = (() => {
             ziel.textContent = 'Sucht im Arbeitsbereich …';
             const k = Kontext.bauenFuerFrage(text, { anzahl: 6 });
             quellen = k.quellen;
+            /* NUR-QUELLEN-MODUS (E305, Redurs Punkt 11). Findet sich nichts, wird
+               das Modell GAR NICHT GEFRAGT. Der Satz darunter — „sag das offen,
+               statt etwas zu erfinden" — ist eine Bitte, und ein Modell ohne
+               Vorlage antwortet trotzdem. Wer vor einer Prüfung sitzt, braucht
+               keine Bitte, sondern eine Zusage. */
+            const tor = Kontext.darfFragen(k);
+            if (!tor.ok) {
+                ziel.textContent = tor.grund;
+                ziel.classList.add('msg-ohne-quelle');
+                zustand.verlauf.push({ role: 'user', content: text });
+                zustand.verlauf.push({ role: 'assistant', content: tor.grund });
+                chatSichern();
+                return;
+            }
             if (!k.leer)
                 system += '\n\nDas hier steht in seinem Arbeitsbereich dazu:\n\n' + k.text;
             else
                 system += '\n\nIm Arbeitsbereich wurde nichts Passendes gefunden. Sag das offen, ' +
                     'statt etwas zu erfinden.';
-            /* Websuche nur, wenn sie eingeschaltet ist — und nur zusätzlich. */
-            if (Kontext.quellen().web) {
+            if (Kontext.nurQuellen())
+                system += Kontext.nurQuellenAnweisung();
+            /* Websuche nur, wenn sie eingeschaltet ist — und nur zusätzlich.
+               IM NUR-QUELLEN-MODUS GAR NICHT: „meine Quellen" heisst die eigenen
+               Unterlagen. Eine Wikipedia-Zusammenfassung ist keine davon, und sie
+               wäre die eine Zeile, die den ganzen Modus wieder aushebelt. */
+            if (Kontext.quellen().web && !Kontext.nurQuellen()) {
                 try {
                     const begriff = (text.split(/[?.!]/)[0] ?? '').slice(0, 60);
                     const w = await wikipedia(begriff);

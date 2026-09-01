@@ -453,6 +453,12 @@ const Einstellungen = (() => {
             zeile('Verbundene Dienste', 'Was über Verbindungen hereingeholt wurde', schalter('q:verbindungen', Kontext.quellen().verbindungen)) +
             zeile('Websuche', 'Wikipedia nachschlagen — dabei verlässt der Suchbegriff den Rechner', schalter('q:web', Kontext.quellen().web)) +
             zeile('Vor jeder Webanfrage nachfragen', 'Sicherheitshalber einmal bestätigen', schalter('ki:webFragen', V('ki:webFragen', true))) +
+            /* NUR-QUELLEN-MODUS (E305). Er steht bewusst UNTER den Quellen und
+               nicht bei den Antwortlängen: er ist keine Geschmacksfrage, sondern
+               die Zusage, dass nichts kommt, was nicht in den eingeschalteten
+               Quellen steht. */
+            zeile('Nur aus meinen Quellen antworten', 'Findet sich nichts, wird das Modell gar nicht erst gefragt — statt ' +
+                'einer Antwort, die nirgends nachzulesen ist', schalter('ki:nurQuellen', V('ki:nurQuellen', false))) +
             /* --- Gedächtnis --------------------------------------------------- */
             kopf('Gedächtnis', 'Die KI erinnert sich nicht wie ein Mensch. Sie findet wieder, ' +
                 'was du gespeichert hast. Der Suchindex ist dieses Gedächtnis.') +
