@@ -2580,3 +2580,18 @@ node pruefungen/lauf/test105.mjs
   Abo mitschreibt, welche Kennungen es zuletzt lieferte.
   test328 neu (31), dreimal belegt rot. test327 30/30, test284 49/49,
   test319 26/26.
+* E337 (gefunden neben L106 Punkt 8): Jede Stunde dauert 90 Minuten.
+  `wiederholungen` nahm jeder Folge ihr Ende — auch der ersten, bei der es
+  gestimmt hätte. Im Stundenplan stand jede Stunde ohne Dauer, und der
+  Export gab Termine ganz ohne `DTEND` ab. Der alte Grund war ein guter:
+  `DTEND` ist in einer Reihe ein absoluter Zeitpunkt und gilt nur für die
+  erste Folge — ihn auf alle zu schreiben hiesse, die Stunde im Oktober
+  endet im September. Die richtige Antwort steht in ICS selbst: nicht das
+  Ende wiederholt sich, sondern die DAUER. Jetzt einmal bestimmt (aus
+  `DTEND − DTSTART` oder aus `DURATION`) und an jede Folge gehängt.
+  Die Prüfung hat sich dabei fast selbst verschluckt: „ganztägig mit
+  Ortszeit rechnen" blieb in Berlin GRÜN, weil UTC-Mitternacht dort zwei
+  Uhr morgens desselben Tages ist. In New York ist es zwanzig Uhr am
+  Vortag. Der Abschnitt misst jetzt auf zwei Seiten.
+  test329 neu (37), dreimal belegt rot. test327 30/30, test328 31/31,
+  test284 49/49, test319 26/26.

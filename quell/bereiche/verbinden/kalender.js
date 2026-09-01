@@ -254,6 +254,71 @@ const Kalender = (() => {
      * Einzeldatei), bleibt der Termin einzeln stehen — das ist die sichere
      * Auslegung von „ich kann die Wiederholung nicht lesen".
      */
+    /**
+     * Wie lange ein Termin dauert, in Millisekunden — oder `null`.
+     *
+     * ────────────────────────────────────────────────────────────────────────
+     * BIS E337 VERLOR JEDE WIEDERHOLUNG IHRE DAUER. `wiederholungen` setzte
+     * `ende: ''` für ALLE Folgen, auch für die erste, bei der das Ende
+     * richtig gelesen worden war.
+     *
+     * Der Grund war ein guter: `DTEND` in einer Reihe ist ein absoluter
+     * Zeitpunkt und gilt nur für die erste Folge. Ihn unverändert auf alle
+     * fünf zu schreiben hiesse, dass die Mathematikstunde am 5. Oktober um
+     * 11:30 am 7. SEPTEMBER endet — schlimmer als gar kein Ende.
+     *
+     * Nur ist „gar kein Ende" auch falsch. Im Stundenplan stand jede Stunde
+     * ohne Dauer da; wer sie exportierte, gab einen Termin ohne `DTEND` ab,
+     * und jeder empfangende Kalender rät sich dann etwas zurecht.
+     *
+     * Die richtige Antwort steht in ICS selbst: nicht das ENDE wiederholt
+     * sich, sondern die DAUER. Also einmal die Länge bestimmen — aus
+     * `DTEND − DTSTART` oder aus `DURATION` — und sie an jede Folge hängen.
+     *
+     * Reine Rechnung ohne Ablage und ohne Uhr.
+     */
+    const DAUER_MUSTER = /^([+-])?P(?:(\d+)W)?(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?$/;
+    /** `PT1H30M` → 5400000. Unlesbares, Null und Negatives geben `null`. */
+    const dauerInMs = (text) => {
+        const m = DAUER_MUSTER.exec(String(text ?? '').trim().toUpperCase());
+        if (!m)
+            return null;
+        /* EIN MINUSZEICHEN IST KEIN FEHLER, SONDERN ETWAS ANDERES: negative
+           Dauern gibt es in ICS, aber nur für Erinnerungen („15 Minuten
+           VORHER"). Ein Termin, der vor seinem Anfang endet, ist keiner. */
+        if (m[1] === '-')
+            return null;
+        const ms = ((+(m[2] ?? 0) * 7 + +(m[3] ?? 0)) * 86400 +
+            +(m[4] ?? 0) * 3600 + +(m[5] ?? 0) * 60 + +(m[6] ?? 0)) * 1000;
+        return ms > 0 ? ms : null;
+    };
+    const terminLaenge = (t) => {
+        if (t && t.start && t.ende) {
+            const a = new Date(String(t.start)).getTime();
+            const b = new Date(String(t.ende)).getTime();
+            if (Number.isFinite(a) && Number.isFinite(b) && b > a)
+                return b - a;
+        }
+        /* `DURATION` ist der Zwilling von `DTEND` — ICS erlaubt genau eines
+           von beiden, und manche Kalender schreiben lieber die Dauer. */
+        return dauerInMs(t && t.dauer);
+    };
+    /** Beginn + Länge, im selben Format wie der Beginn. */
+    const endeAus = (startIso, laenge, ganzerTag) => {
+        if (!laenge || !startIso)
+            return '';
+        const d = new Date(startIso);
+        if (!Number.isFinite(d.getTime()))
+            return '';
+        d.setTime(d.getTime() + laenge);
+        /* Ganztägig wird ohne Uhrzeit gelesen und geschrieben — und eine
+           Datumszeichenkette ohne Zeit ist Weltzeit, in beide Richtungen.
+           Ortszeit-Getter würden hier je nach Zeitzone einen Tag danebenliegen. */
+        if (ganzerTag)
+            return d.toISOString().slice(0, 10);
+        return d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()) +
+            'T' + p2(d.getHours()) + ':' + p2(d.getMinutes());
+    };
     const wiederholungen = (termin, bisTage = 400) => {
         if (!termin.regel)
             return [termin];
@@ -268,12 +333,20 @@ const Kalender = (() => {
         });
         if (!erg.termine.length)
             return [termin];
+        /* EINMAL bestimmt, nicht je Folge — die Länge gehört dem Termin und
+           nicht dem Tag. */
+        const laenge = terminLaenge(termin);
         return erg.termine.map((iso, i) => Object.assign({}, termin, {
             /* `folgeNr` IST DER SCHLÜSSEL DER ZEILE, nicht nur eine Zählung —
                siehe `terminSchluessel` weiter unten. Die Kennung eines Termins
                gilt in ICS für die GANZE Reihe; ohne eine zweite Zahl daneben
                sind fünf Mathematikstunden fünfmal dasselbe. */
-            start: iso, ende: '', folge: i > 0, folgeNr: i,
+            start: iso, folge: i > 0, folgeNr: i,
+            /* Die erste Folge behält ihr gelesenes Ende WÖRTLICH, wenn sie
+               wirklich am Anfang steht — dann ist nichts zu rechnen und nichts
+               zu runden. Alle anderen bekommen Beginn + Länge. */
+            ende: (iso === termin.start && termin.ende) ? termin.ende
+                : endeAus(iso, laenge, !!termin.ganzerTag),
             /* Was an der Regel nicht gelesen werden konnte, reist MIT. Der
                Aufrufer zeigt es an, statt dass es hier verschwindet. */
             regelUnklar: erg.nichtVerstanden.length ? erg.nichtVerstanden : undefined,
@@ -942,6 +1015,7 @@ const Kalender = (() => {
         });
     };
     return { icsLesen, icsSchreiben, icsZeit, wiederholungen, terminSchluessel,
+        dauerInMs, terminLaenge, endeAus,
         zielDatenbank, uebernehmen,
         abos, aboHolen, alleAbosHolen, adresseGerade,
         googleKalender, googleTermine, nachGoogle, dialog };

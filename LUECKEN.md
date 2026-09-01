@@ -4360,6 +4360,13 @@ L106 — Was die Lern-Evidenz (E289) und der Kalender (E290) noch nicht können
    mit demselben `RRULE` auszugeben wäre schlimmer als gar keins: der
    empfangende Kalender sähe fünf unendliche Reihen.
 
+   **UND DER RUNDLAUF IST BEIM MESSEN UM EINE HALBE SACHE BESSER GEWORDEN
+   (E337).** Er gab bis dahin auch kein `DTEND` aus, weil `wiederholungen`
+   jeder Folge das Ende wegnahm — im Stundenplan stand jede Stunde ohne
+   Dauer. Jetzt wiederholt sich die DAUER statt des Endes, und der Export
+   trägt fünf von fünf Endzeiten statt null. Was fehlt, ist nur noch die
+   Regel selbst.
+
 Gefunden am 31. August 2026 (beim Bau von E289 und E290).
 
 

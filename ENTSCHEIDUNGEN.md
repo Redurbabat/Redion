@@ -25666,3 +25666,65 @@ test328 neu, 31 Punkte. Belegt rot dreimal: ohne das Aufräumen fallen zwölf
 Punkte; ohne die erste Sperre fällt §3 (die Netzstörung); ohne die
 Ziffernprüfung fällt §4.
 test327 30/30, test284 49/49, test319 26/26.
+
+
+E337 — Jede Stunde dauert 90 Minuten (gefunden neben L106 Punkt 8)
+════════════════════════════════════════════════════════════════════════════
+
+Beim Nachmessen des Rundlaufs für L106 Punkt 8 — was der Export ausgibt und
+was davon zurückkommt — fiel etwas auf, das grösser war als die gesuchte
+Lücke:
+
+    `RRULE:FREQ=WEEKLY;COUNT=5`, DTSTART 8:00, DTEND 9:30.
+    `icsLesen` liest das Ende richtig: 11:30 Ortszeit.
+    `wiederholungen` warf es weg — für ALLE fünf Folgen,
+    auch für die erste, bei der es gestimmt hätte.
+
+Im Stundenplan stand jede Stunde ohne Dauer. Und wer ihn exportierte, gab
+Termine ganz ohne `DTEND` ab; jeder empfangende Kalender rät sich dann
+etwas zurecht — eine Stunde, eine halbe, ein Punkt ohne Ausdehnung.
+
+DER ALTE GRUND WAR EIN GUTER
+
+`DTEND` in einer Reihe ist ein absoluter Zeitpunkt und gilt nur für die
+erste Folge. Ihn unverändert auf alle fünf zu schreiben hiesse, dass die
+Mathematikstunde am 5. Oktober am 7. SEPTEMBER endet. Das wäre schlimmer
+als gar kein Ende, und `ende: ''` war die sichere Auslegung.
+
+Nur ist die sichere Auslegung hier auch die falsche. Die richtige Antwort
+steht in ICS selbst: nicht das ENDE wiederholt sich, sondern die DAUER.
+Also einmal die Länge bestimmen — aus `DTEND − DTSTART` oder aus
+`DURATION`, dem Zwilling, den manche Kalender lieber schreiben — und sie an
+jede Folge hängen.
+
+DREI STELLEN, AN DENEN ES SCHIEFGEHEN KANN, und alle drei sind gemessen:
+
+  · `PT0S` ist keine Dauer, sondern wie keine Angabe. Ein Termin, der
+    null Millisekunden dauert, ist kein Termin.
+  · Eine NEGATIVE Dauer gibt es in ICS wirklich — aber nur für
+    Erinnerungen („15 Minuten VORHER"). Ein Termin, der vor seinem Anfang
+    endet, ist eine kaputte Datei und keine Länge.
+  · Ganztägig wird OHNE Uhrzeit gelesen und geschrieben, und eine
+    Datumszeichenkette ohne Zeit ist Weltzeit — in beide Richtungen.
+
+DIE DRITTE HAT DIE PRÜFUNG BEINAHE VERSCHLUCKT
+
+Die Mutation „ganztägig mit Ortszeit-Gettern rechnen" blieb GRÜN. Der Grund
+ist die Zeitzone der Prüfseite: in Berlin ist UTC-Mitternacht zwei Uhr
+morgens desselben Tages, also kommt dasselbe Datum heraus. Westlich von
+Greenwich nicht — in New York ist es zwanzig Uhr am VORTAG, und die
+Projektwoche endete einen Tag zu früh.
+
+Der Abschnitt misst jetzt auf zwei Seiten, eine in Berlin und eine in New
+York. Erst die zweite macht ihn rot. Eine Prüfung, die nur an einem Ort
+misst, misst die halbe Erde nicht — und dieselbe Falle stand schon bei
+test319 und test327, dort nur mit dem umgekehrten Vorzeichen.
+
+WAS L106 PUNKT 8 SELBST ANGEHT: der Export gibt jetzt wieder `DTEND` aus
+(gemessen: fünf von fünf statt null von fünf), aber weiterhin kein `RRULE`.
+Das bleibt offen und steht dort.
+
+test329 neu, 37 Punkte. Belegt rot dreimal: das Ende wieder wegwerfen
+kostet neun Punkte; den `DURATION`-Weg abschalten drei; ganztägig in
+Ortszeit rechnen zwei — und die nur auf der New-Yorker Seite.
+test327 30/30, test328 31/31, test284 49/49, test319 26/26.
