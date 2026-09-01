@@ -25487,3 +25487,97 @@ jetzt wirklich weg (`Dateien.weg`), so wie es im echten Fall ohnehin ist:
 eine `.json`-Sicherung kennt keine Anhänge, da ist das Bild schon fort.
 
 test189 38/38, test228 24/24.
+
+
+E335 — Fünf Stunden, eine Kennung (L106 Punkt 8, und was darunter lag)
+════════════════════════════════════════════════════════════════════════════
+
+L106 Punkt 8 sagte: „`icsSchreiben` erzeugt keine Wiederholungsregeln. Was
+Redion einliest, kann es nicht wieder ausgeben — der Rundlauf ist
+einseitig." Beim Nachmessen kam etwas Schlimmeres heraus, und es stand auf
+der ANDEREN Seite des Rundlaufs.
+
+DER FUND
+
+In ICS gilt `UID` für die GANZE Reihe. Alle fünf Mathematikstunden eines
+`RRULE:FREQ=WEEKLY;COUNT=5` tragen dieselbe Kennung — und `uebernehmen`
+suchte die vorhandene Zeile allein darüber:
+
+    const alt = vorhanden.get(props.uid);
+
+Also fanden alle fünf Folgen DIESELBE Zeile und schrieben nacheinander
+hinein. Vier Schreibvorgänge gingen ins Nichts, der fünfte blieb stehen.
+
+WARUM ES NIEMAND MERKTE. Beim ersten Abgleich gab es noch keine Zeile —
+also wurden fünf angelegt, und alles sah richtig aus. Beim zweiten auch,
+solange sich nichts geändert hatte: die letzte Folge schrieb genau das
+hinein, was schon dastand. Der Schaden zeigt sich nur in dem einen Fall,
+für den ein Abgleich überhaupt da ist:
+
+    Die Schule verlegt Mathematik von 8:00 auf 9:00.
+    Danach standen VIER Stunden weiter auf 8:00 und EINE auf 9:00.
+    Gemeldet wurden „5 aufgefrischt".
+
+Wer dem Kalender glaubt, steht viermal eine Stunde zu früh vor der Tür.
+Genau die Sorte Fehler, die §46 meint: kein Absturz, sondern eine Anzeige,
+die ruhig etwas Falsches behauptet — und eine Zahl daneben, die das
+Gegenteil verspricht.
+
+DIE ZWEITE ZAHL IST DIE FOLGENUMMER, NICHT DAS DATUM
+
+Der Schlüssel ist jetzt `UID#Folgenummer`. Naheliegender wäre das Datum
+gewesen — ICS sieht dafür sogar ein eigenes Feld vor (`RECURRENCE-ID`).
+Es hilft hier aber nicht: verschiebt die Quelle die Reihe, ändern sich ALLE
+Daten, kein Schlüssel passt mehr, und aus fünf verschobenen Stunden würden
+fünf neue neben fünf alten. Die Nummer bleibt, und genau der Fall, der den
+Fehler aufdeckte, ist der, den sie löst.
+
+Ein EINZELNER Termin behält seine nackte Kennung. Das ist keine Feinheit,
+sondern der halbe Bogen: jede Zeile, die vor heute entstanden ist, trägt
+genau diesen Wert.
+
+DER UMZUGSWEG — OHNE IHN WÄRE DIE REPARATUR DER SCHADEN GEWESEN
+
+Jede Zeile aus einer Reihe von vor E335 trägt die nackte Reihenkennung.
+Über den neuen Schlüssel findet sie niemand — beim ersten Abgleich nach
+dem Wechsel stünde alles ZWEIMAL da. Wer zwanzig Wochen Stundenplan
+abonniert hat, hätte vierzig Zeilen.
+
+Also ein zweiter Index: Reihenkennung + Beginn. Er trifft die eine Zeile,
+die diese Folge wirklich meint, ganz gleich wie sie geschlüsselt war, und
+schreibt ihr im Vorbeigehen den neuen Schlüssel. Gemessen: fünf alte
+Zeilen, danach fünf — nicht zehn —, und alle fünf umgezogen.
+
+Der Umzug wird NICHT gemeldet. Ein Hinweis „5 Termine umgezogen" wäre
+Rauschen: für den Menschen hat sich nichts geändert, und es gibt nichts zu
+tun. Die Zahl steht im Rückgabewert, damit ein Prüflauf sie messen kann.
+
+UND EINE DRITTE SPERRE, EINE EBENE TIEFER
+
+`belegt` merkt sich, welche Zeile in DIESEM Durchgang schon beschrieben
+wurde. Ohne das könnten zwei Folgen wieder in derselben Zeile landen —
+derselbe Fehler, nur über den Umzugsweg statt über den Schlüssel.
+
+WAS OFFEN BLEIBT — und es ist gemessen, nicht vermutet
+
+Verkürzt die Quelle eine Reihe (COUNT von 5 auf 3), bleiben die zwei
+überzähligen Zeilen mit ihren alten Daten stehen. `uebernehmen` löscht
+grundsätzlich nichts, und das ist eine bewusste Regel (§9, §13) — nur ist
+das Ergebnis hier eine Geisterstunde im Stundenplan. Steht als L112.
+
+WAS L106 PUNKT 8 SELBST ANGEHT: `icsSchreiben` kann weiterhin kein RRULE.
+Das bleibt offen, und zwar mit einem klareren Bild als vorher — eine Reihe
+korrekt AUSZUGEBEN heisst, den Kopf mit der Regel zu schreiben und die
+Folgen zu unterdrücken, ausser denen, die abweichen. Fünf Zeilen mit
+demselben RRULE auszugeben wäre schlimmer als gar keins: der empfangende
+Kalender sähe fünf unendliche Reihen.
+
+test327 neu, 30 Punkte. Belegt rot in beide Richtungen: den Schlüssel
+zurückgedreht fällt §4 mit zehn Zeilen statt fünf; den Umzugsweg
+abgeschaltet fällt NUR §5, mit allem doppelt.
+Und die Prüfung lag beim ersten Wurf selbst falsch — sie erwartete UTC,
+wo die Seite auf Europe/Berlin steht. Dieselbe Stelle wie test319, und
+derselbe Schluss: wenn eine Prüfung rot wird, ist zuerst zu entscheiden,
+ob das Erzeugnis oder die Prüfung irrt.
+
+test284 49/49, test319 26/26.

@@ -4351,6 +4351,15 @@ L106 — Was die Lern-Evidenz (E289) und der Kalender (E290) noch nicht können
    Wiederholungsregeln. Was Redion einliest, kann es nicht wieder ausgeben —
    der Rundlauf ist einseitig.
 
+   **BLEIBT OFFEN, aber mit klarerem Bild (E335).** Beim Nachmessen fiel
+   auf, dass die GEGENRICHTUNG kaputt war und nicht nur unvollständig —
+   siehe E335 und L112. Für das Ausgeben selbst kam dabei heraus, warum es
+   nicht die kleine Zeile ist, nach der es aussieht: eine Reihe korrekt
+   auszugeben heisst, den KOPF mit der Regel zu schreiben und die Folgen zu
+   unterdrücken, ausser denen, die abweichen (`RECURRENCE-ID`). Fünf Zeilen
+   mit demselben `RRULE` auszugeben wäre schlimmer als gar keins: der
+   empfangende Kalender sähe fünf unendliche Reihen.
+
 Gefunden am 31. August 2026 (beim Bau von E289 und E290).
 
 
@@ -4613,3 +4622,48 @@ eigener Bogen mit einem Bild je Fenster, denn es ändert bestehende
 Oberflächen, und die Wirkung sieht man erst beim Hinsehen.
 
 Gefunden am 1. September 2026 (E320, E321, E324, E326, E334).
+
+
+================================================================================
+L112 — Eine verkürzte Reihe lässt Geisterstunden stehen
+================================================================================
+
+Gefunden beim Bau von E335, gemessen und nicht vermutet.
+
+Die Quelle verkürzt eine Reihe — `COUNT=5` wird zu `COUNT=3`, oder die
+Schule streicht die letzten beiden Stunden vor den Ferien. Danach:
+
+    vorher      5 Zeilen, 7.9. bis 5.10.
+    Abgleich    neu: 0, frisch: 3
+    nachher     5 Zeilen, 7.9. bis 5.10.
+
+Die beiden überzähligen bleiben mit ihren alten Daten stehen. Im
+Stundenplan stehen zwei Stunden, die es nicht mehr gibt.
+
+WARUM ES SO IST: `uebernehmen` löscht grundsätzlich nichts. Das ist keine
+Nachlässigkeit, sondern eine Regel (§9, §13) — eine Zeile kann inzwischen
+eigene Notizen tragen, eigene Spalten, eine Verknüpfung zu einer Seite. Ein
+Abgleich, der wegräumt, was die Quelle gerade nicht liefert, ist genau der
+Datenverlust, den §46 an erste Stelle setzt. Ein Abo, das bei einer
+Netzstörung eine leere Antwort liefert, hätte damit den ganzen Kalender
+gelöscht.
+
+DIE GLEICHE LAGE GILT FÜR EINEN GESTRICHENEN EINZELTERMIN. E290 hat den
+häufigeren Fall abgeräumt — eine per `EXDATE` abgesagte Stunde kommt nicht
+mehr JEDES MAL zurück. Was schon angelegt war, bleibt aber liegen.
+
+ZWEI MÖGLICHE ANTWORTEN, beide ein eigener Bogen:
+
+  · MARKIEREN STATT LÖSCHEN. Eine Zeile, die die Quelle nicht mehr
+    liefert, bekommt einen sichtbaren Vermerk („nicht mehr im Kalender")
+    und verschwindet aus der Kalenderansicht, ohne dass Daten weg sind.
+    Braucht eine Spalte im Schema und eine Entscheidung in der Ansicht.
+  · NUR INNERHALB EINER REIHE AUFRÄUMEN. Kommt eine Reihe mit weniger
+    Folgen zurück als beim letzten Mal, sind die Folgen mit höherer Nummer
+    eindeutig fort — dort ist Löschen sicherer als anderswo. Aber auch dort
+    kann eine eigene Notiz dranhängen.
+
+WAS BIS DAHIN GILT: die Lücke ist genannt und nicht still. Das ist der
+Unterschied zwischen einer bekannten Grenze und einem Fehler (§35).
+
+Gefunden am 1. September 2026 (E335).

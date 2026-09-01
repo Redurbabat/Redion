@@ -2548,3 +2548,20 @@ node pruefungen/lauf/test105.mjs
   `display:none` — der einzige Fall der L111-Familie, für den ein billiger
   Wächter geht, weil `hidden` keine gewollte Ausnahme kennt.
   test189 38/38, test228 24/24, test247 106/106, test258 19/19. sw v88.
+* E335 (L106 Punkt 8, und was darunter lag): Fünf Stunden, eine Kennung.
+  Die Lücke sagte „`icsSchreiben` kann kein RRULE"; beim Nachmessen war die
+  GEGENRICHTUNG kaputt. In ICS gilt `UID` für die ganze Reihe, und
+  `uebernehmen` suchte die Zeile allein darüber — also fanden alle fünf
+  Folgen dieselbe Zeile und schrieben nacheinander hinein. Sichtbar wurde
+  es nur im einzigen Fall, für den ein Abgleich da ist: die Schule verlegt
+  Mathematik von 8:00 auf 9:00, danach standen VIER Stunden auf 8:00 und
+  EINE auf 9:00 — gemeldet als „5 aufgefrischt". Der Schlüssel ist jetzt
+  `UID#Folgenummer` und nicht das Datum: verschiebt die Quelle die Reihe,
+  ändern sich alle Daten, und aus fünf verschobenen Stunden würden fünf
+  neue neben fünf alten. Dazu ein Umzugsweg über Kennung+Beginn — ohne ihn
+  wäre die Reparatur der Schaden gewesen, weil jede Zeile von vorher die
+  nackte Kennung trägt und alles doppelt dagestanden hätte. Offen bleibt
+  L112: eine verkürzte Reihe lässt Geisterstunden stehen, weil `uebernehmen`
+  grundsätzlich nichts löscht (§9, §13) — genannt statt still.
+  test327 neu (30), belegt rot in beide Richtungen. test284 49/49,
+  test319 26/26.

@@ -269,12 +269,61 @@ const Kalender = (() => {
         if (!erg.termine.length)
             return [termin];
         return erg.termine.map((iso, i) => Object.assign({}, termin, {
-            start: iso, ende: '', folge: i > 0,
+            /* `folgeNr` IST DER SCHLÜSSEL DER ZEILE, nicht nur eine Zählung —
+               siehe `terminSchluessel` weiter unten. Die Kennung eines Termins
+               gilt in ICS für die GANZE Reihe; ohne eine zweite Zahl daneben
+               sind fünf Mathematikstunden fünfmal dasselbe. */
+            start: iso, ende: '', folge: i > 0, folgeNr: i,
             /* Was an der Regel nicht gelesen werden konnte, reist MIT. Der
                Aufrufer zeigt es an, statt dass es hier verschwindet. */
             regelUnklar: erg.nichtVerstanden.length ? erg.nichtVerstanden : undefined,
             regelSatz: erg.satz || undefined
         }));
+    };
+    /**
+     * Der Schlüssel einer Zeile in der Termintabelle.
+     *
+     * ────────────────────────────────────────────────────────────────────────
+     * DAS WAR EIN ECHTER DATENSCHADEN, und er sah harmlos aus.
+     *
+     * In ICS gilt `UID` für die GANZE Reihe: alle fünf Mathematikstunden
+     * eines `RRULE:FREQ=WEEKLY;COUNT=5` tragen dieselbe. `uebernehmen`
+     * suchte die vorhandene Zeile allein über diese Kennung — also fanden
+     * alle fünf Folgen DIESELBE Zeile und schrieben nacheinander hinein.
+     *
+     * Beim ersten Abgleich fiel das nicht auf: es gab noch keine Zeile, also
+     * wurden fünf angelegt. Beim zweiten auch nicht, solange sich nichts
+     * geändert hatte — die letzte Folge schrieb genau das hinein, was schon
+     * dastand. Gemessen wurde der Schaden erst im Fall, für den ein Abgleich
+     * überhaupt da ist:
+     *
+     *     Die Schule verlegt Mathematik von 8:00 auf 9:00.
+     *     Danach standen VIER Stunden weiter auf 8:00 und EINE auf 9:00.
+     *     Gemeldet wurden „5 aufgefrischt".
+     *
+     * Wer dem Kalender glaubt, steht viermal eine Stunde zu früh da. Genau
+     * die Sorte Fehler, die §46 meint: nicht ein Absturz, sondern eine
+     * Anzeige, die ruhig etwas Falsches behauptet.
+     *
+     * DIE ZWEITE ZAHL IST DIE FOLGENUMMER und nicht das Datum. Beides wäre
+     * möglich, und das Datum wäre sogar das, was ICS dafür vorsieht
+     * (`RECURRENCE-ID`). Es hilft hier aber nicht: verschiebt die Quelle die
+     * Reihe, ändern sich ALLE Daten, kein Schlüssel passt mehr, und aus fünf
+     * verschobenen Stunden würden fünf neue neben fünf alten. Die Nummer
+     * bleibt.
+     *
+     * Reine Rechnung, ohne Ablage — damit ein Prüflauf sie mit erfundenen
+     * Terminen füttern kann.
+     */
+    const terminSchluessel = (t) => {
+        const uid = String(t?.uid || ((t?.titel || '') + '|' + (t?.start || '')));
+        /* Ein einzelner Termin behält seine Kennung unverändert. Das ist keine
+           Feinheit, sondern die Rückwärtsverträglichkeit: jede Zeile, die vor
+           heute angelegt wurde, trägt genau diesen Wert. */
+        const nr = Number(t?.folgeNr);
+        if (!Number.isFinite(nr) || nr < 0)
+            return uid;
+        return uid + '#' + nr;
     };
     /* ========================================================================
      * 2. ICS SCHREIBEN
@@ -388,10 +437,23 @@ const Kalender = (() => {
      */
     const uebernehmen = (coll, termine, quelle) => {
         const vorhanden = new Map();
+        /* DER ZWEITE INDEX IST DER UMZUGSWEG (E335). Jede Zeile, die vor E335
+           aus einer Reihe entstanden ist, trägt die nackte Reihenkennung —
+           fünf Zeilen, fünfmal derselbe Wert. Über `terminSchluessel` findet
+           sie niemand mehr, und ohne diesen zweiten Griff bekäme jeder
+           Nutzer beim nächsten Abgleich seine Termine DOPPELT.
+           Kennung + Beginn ist dafür genau richtig: es trifft die eine Zeile,
+           die diese Folge wirklich meint, ganz gleich wie sie geschlüsselt war. */
+        const nachBeginn = new Map();
         Store.rowsOf(coll.id).forEach((r) => {
             const u = (r.props || {}).uid;
-            if (u)
-                vorhanden.set(u, r);
+            if (!u)
+                return;
+            vorhanden.set(u, r);
+            const roh = String(u).replace(/#\d+$/, '');
+            const beg = (r.props || {}).start || '';
+            if (beg)
+                nachBeginn.set(roh + '|' + beg, r);
         });
         /* Die Quelle als Option führen, damit man filtern kann */
         if (quelle && coll.schema.quelle) {
@@ -403,27 +465,45 @@ const Kalender = (() => {
                 Store.updateCollection(coll.id, { schema: coll.schema });
             }
         }
-        let neu = 0, frisch = 0;
+        let neu = 0, frisch = 0, umgezogen = 0;
+        /* Was in DIESEM Durchgang schon beschrieben wurde. Ohne das könnten
+           zwei Folgen wieder in derselben Zeile landen — genau der Fehler,
+           den dieser Bogen abräumt, nur eine Ebene tiefer. */
+        const belegt = new Set();
         termine.forEach((t) => {
+            const schluessel = terminSchluessel(t);
             const props = {
                 start: t.start || '', ende: t.ende || '',
                 ort: t.ort ? { name: t.ort } : null,
                 quelle: quelle || '', text: t.text || '',
-                uid: t.uid || (t.titel + '|' + t.start), link: t.url || ''
+                uid: schluessel, link: t.url || ''
             };
-            const alt = vorhanden.get(props.uid);
+            let alt = vorhanden.get(schluessel);
+            if (alt && belegt.has(alt.id))
+                alt = null;
+            if (!alt) {
+                /* Der Umzugsweg: eine Zeile von vor E335 finden. */
+                const roh = String(t.uid || ((t.titel || '') + '|' + (t.start || '')));
+                const kandidat = nachBeginn.get(roh + '|' + (t.start || ''));
+                if (kandidat && !belegt.has(kandidat.id)) {
+                    alt = kandidat;
+                    umgezogen++;
+                }
+            }
             if (alt) {
+                belegt.add(alt.id);
                 Object.entries(props).forEach(([k, w]) => Store.setProp(alt.id, k, w));
                 Store.updateBlock(alt.id, { text: t.titel || 'Ohne Titel' });
                 frisch++;
             }
             else {
                 const r = Store.addRow(coll.id, props);
+                belegt.add(r.id);
                 Store.updateBlock(r.id, { text: t.titel || 'Ohne Titel' });
                 neu++;
             }
         });
-        return { neu, frisch };
+        return { neu, frisch, umgezogen };
     };
     /* ========================================================================
      * 4. ABOS
@@ -789,7 +869,8 @@ const Kalender = (() => {
             }
         });
     };
-    return { icsLesen, icsSchreiben, icsZeit, wiederholungen, zielDatenbank, uebernehmen,
+    return { icsLesen, icsSchreiben, icsZeit, wiederholungen, terminSchluessel,
+        zielDatenbank, uebernehmen,
         abos, aboHolen, alleAbosHolen, adresseGerade,
         googleKalender, googleTermine, nachGoogle, dialog };
 })();
