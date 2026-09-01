@@ -24862,3 +24862,99 @@ andersherum: nicht ein zweiter Treffer, sondern ein verschobener. Der
 Ausschnitt geht jetzt von `bilderLaeufer` bis zum Schärferrechnen.
 
 test320, 35 Punkte. sw v81 · Einzeldatei neu gebaut.
+
+
+E328 — Geht es aufwärts? (L106 Punkt 3 und 4)
+════════════════════════════════════════════════════════════════════════════
+
+Zwei Lücken, eine Antwort, und sie gehören zusammen:
+
+  Punkt 3: „`fensterTage` wird nirgends benutzt. Die Rechnung kann ‚nur die
+           letzten 90 Tage', und keine Aufrufstelle fragt danach. Für ‚bin
+           ich BESSER geworden' wäre es das richtige Werkzeug."
+  Punkt 4: „Kein Vergleich über Zeit. Es gibt keinen Verlauf der
+           Sicherheit, also auch keine Antwort auf ‚geht es aufwärts'."
+
+Punkt 3 ist §47 in seiner leisesten Form: ein Schalter, den niemand umlegt.
+Punkt 4 sagt, wofür er da wäre. Also legt ihn jetzt jemand um.
+
+DER VERGLEICH ZWEIER FENSTER, NICHT EINE KURVE
+
+Eine Kurve über die Sicherheit sähe klüger aus und wäre unehrlicher: bei
+fünf Antworten je Punkt wackelt sie so stark, dass jeder Ausschlag nach
+Fortschritt aussieht. Zwei Zeiträume, jeder mit genug Belegen, beantworten
+die Frage, die gestellt wurde: die letzten 90 Tage gegen die 90 davor.
+
+DER FRÜHERE ZEITRAUM ENTSTEHT DURCH ZURÜCKSTELLEN DER UHR — dieselbe
+Rechnung mit `jetzt` um ein Fenster zurück. Kein zweiter Weg durch dieselben
+Daten, also auch keine zweite Wahrheit.
+
+DAFÜR MUSSTE DAS FENSTER ERST NACH OBEN SCHLIESSEN, und das war ein echter
+Fehler, kein Vorbau:
+
+    if (fenster > 0 && wann < ab) continue;     ← nur nach unten
+
+Das Fenster war `[jetzt−fenster, ∞)`. Mit `jetzt = Date.now()` fällt das nie
+auf, denn da gibt es kein Danach. Es fällt auf, sobald man die Uhr
+zurückstellt: dann lagen ALLE seitherigen Antworten mit im alten Fenster,
+und der Vergleich verglich einen Zeitraum mit sich selbst plus dem Rest.
+Ohne Fenster ändert sich nichts — dann gibt es gar keine Schranke.
+
+WAS EIN THEMA BRAUCHT, UM VERGLICHEN ZU WERDEN
+
+Genug Belege in BEIDEN Zeiträumen. Ein Thema, das es vor drei Monaten noch
+nicht gab, ist nicht „besser geworden" — es ist neu. Das ohne Grundlage zu
+behaupten wäre derselbe Fehler, den E289 an der Sicherheit abgeräumt hat.
+
+UND EINE SCHWELLE von fünf Prozentpunkten. Wilson-Schranken bei zwanzig
+Antworten wandern schon durch eine einzige andere Antwort um mehr als das;
+eine Anzeige, die IMMER eine Richtung zeigt, zeigt keine. Darunter heisst
+es „gleich geblieben", und der Satz behauptet dann auch nichts anderes.
+
+BEIDE RICHTUNGEN, und die grösste Veränderung zuerst — auch die nach unten.
+Wer schlechter geworden ist, will das zuerst wissen und nicht zuletzt. Eine
+Anzeige, die nur Fortschritt kennt, ist Werbung.
+
+PROZENTPUNKTE, NICHT PROZENT. „Von 60 auf 70" sind zehn Punkte und nicht
+siebzehn Prozent; beides ist richtig gerechnet, aber nur eines ist das, was
+jemand hören will.
+
+§38: NICHT NUR FARBE. Neben Grün und Rot stehen ein Zeichen (▲ ▼ =) und die
+Zahl mit Vorzeichen. Ohne Vorzeichen wäre „44 Punkte" keine Richtung.
+
+WO ER STEHT: hinter dem Themenfortschritt. Erst was zu TUN ist
+(auffrischen, E325), dann wo man STEHT (Fortschritt), dann wohin es GEHT.
+Die Richtung beantwortet eine Frage, die man erst stellt, wenn man den
+Stand gesehen hat.
+
+WANN ER SCHWEIGT: sobald `Kompetenz.verlauf` nichts liefert, gibt es KEINEN
+Abschnitt — nicht „0 % Veränderung", nicht eine Überschrift über einer
+leeren Liste. Wer erst seit vier Wochen lernt, sieht ihn gar nicht.
+
+─── WAS DAS BILD FAND (§55.1) ──────────────────────────────────────────────
+
+Der Satz begann mit „Mathematik: 28 % → 72 % …", und darüber stand
+„Mathematik" schon als fette Überschrift. `auffrischSatz` macht es seit
+E325 richtig und nennt das Thema NICHT — die Zeile trägt es bereits. Zwei
+Muster für dieselbe Sache in derselben Ansicht sind eine Unstimmigkeit, die
+niemand benennen kann und jeder sieht. Jetzt beide gleich.
+
+(Und ein Fehler im PRÜFAUFBAU, nicht im Erzeugnis: das erste Bild zeigte
+drei Karten unter einem einzigen Thema „Lernkarten". `topicLabel` liest
+`lernThema`, `quiz.topic` oder die Quellseite — ein Feld `thema` am Block
+kennt es nicht. Auch das sah man erst auf dem Bild.)
+
+─── DIE PRÜFUNG ────────────────────────────────────────────────────────────
+
+test321, 28 Punkte. Der Kern des Bogens ist §1: mit zurückgestellter Uhr
+darf keine der späteren Antworten zählen. Belegt rot — nimmt man die neue
+Zeile weg, steht dort 6 statt 0, und acht Punkte fallen.
+
+Dazu die Gegenprobe, dass OHNE Fenster gar nichts anders wird, und §5: ein
+Thema mit sechzehn Antworten, aber allen aus dem jetzigen Zeitraum, steht
+NICHT in der Liste.
+
+Und §6 misst, dass das Lernfenster überhaupt aufging, bevor es darin sucht
+— genau die Falle, in die test318 §5 einmal lief.
+
+test283 35/35, test318 18/18. sw v82 · Einzeldatei neu gebaut.

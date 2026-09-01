@@ -155,6 +155,16 @@ const Kompetenz = (() => {
                 continue;
             if (fenster > 0 && wann < ab)
                 continue;
+            /* UND NACH OBEN AUCH (E328). Ein Fenster ist [jetzt−fenster, jetzt];
+               ohne diese Zeile war es [jetzt−fenster, ∞) und liess alles durch,
+               was danach kam. Bei `jetzt = Date.now()` fällt das nie auf — da
+               gibt es kein Danach. Es fällt auf, sobald man `jetzt` ZURÜCKSTELLT,
+               um zu fragen „wie sah es vor drei Monaten aus": dann lagen alle
+               seitherigen Antworten mit im alten Fenster, und der Vergleich
+               verglich einen Zeitraum mit sich selbst plus dem Rest.
+               Ohne Fenster ändert sich nichts — dann gibt es keine Schranke. */
+            if (fenster > 0 && Number.isFinite(wann) && wann > jetzt)
+                continue;
             gesamt++;
             if ((Number(e.rating) || 0) >= 3)
                 richtig++;
@@ -322,6 +332,106 @@ const Kompetenz = (() => {
      * Bei zu wenig Belegen sagt er, WIE VIELE noch fehlen. „Zu wenig Daten"
      * allein ist eine Absage; „noch drei Antworten" ist eine Anleitung.
      */
+    /* ==========================================================================
+     * GEHT ES AUFWÄRTS? (L106 Punkt 3 UND 4, E328)
+     * --------------------------------------------------------------------------
+     * Zwei Lücken, eine Antwort.
+     *
+     *   Punkt 3: „`fensterTage` wird nirgends benutzt. Die Rechnung kann
+     *            ‚nur die letzten 90 Tage', und keine Aufrufstelle fragt
+     *            danach. Für ‚bin ich BESSER geworden' wäre es das richtige
+     *            Werkzeug."
+     *   Punkt 4: „Kein Vergleich über Zeit. Es gibt keinen Verlauf der
+     *            Sicherheit, also auch keine Antwort auf ‚geht es aufwärts'."
+     *
+     * Punkt 3 ist §47 in seiner leisesten Form: ein Schalter, den niemand
+     * umlegt. Punkt 4 sagt, wofür er da wäre. Also legt ihn jetzt jemand um.
+     *
+     * DIE RECHNUNG IST EIN VERGLEICH ZWEIER FENSTER, nicht eine Kurve. Eine
+     * Kurve über die Sicherheit sähe klüger aus und wäre unehrlicher: bei
+     * fünf Antworten je Punkt wackelt sie so stark, dass jeder Ausschlag
+     * nach Fortschritt aussieht. Zwei Zeiträume, jeder mit genug Belegen,
+     * beantworten die Frage, die gestellt wurde.
+     *
+     * DER FRÜHERE ZEITRAUM ENTSTEHT DURCH ZURÜCKSTELLEN DER UHR — dieselbe
+     * Rechnung, nur mit `jetzt` um ein Fenster zurück. Kein zweiter Weg
+     * durch dieselben Daten, also auch keine zweite Wahrheit. Genau dafür
+     * musste das Fenster erst nach oben schliessen (siehe `karteAus`).
+     *
+     * WAS EIN THEMA BRAUCHT, UM ÜBERHAUPT VERGLICHEN ZU WERDEN: genug Belege
+     * in BEIDEN Zeiträumen. Ein Thema, das es vor drei Monaten noch nicht
+     * gab, ist nicht „besser geworden" — es ist neu. Das ohne Grundlage zu
+     * behaupten wäre derselbe Fehler, den E289 an der Sicherheit abgeräumt
+     * hat.
+     *
+     * UND EINE SCHWELLE, damit nicht jedes Rauschen als Richtung erscheint:
+     * unter fünf Prozentpunkten Unterschied heisst es „gleich geblieben".
+     * Wilson-Schranken bei zwanzig Antworten wandern schon durch eine
+     * einzige andere Antwort um mehr als das; eine Anzeige, die IMMER eine
+     * Richtung zeigt, zeigt keine.
+     * ========================================================================*/
+    /** Ab hier heisst es „aufwärts" oder „abwärts", darunter „gleich". */
+    const RICHTUNG_SCHWELLE = 0.05;
+    /** Standardfenster, wenn keines genannt wird: ein Vierteljahr. */
+    const FENSTER_TAGE = 90;
+    const verlauf = (karten, opt = {}) => {
+        const jetzt = typeof opt.jetzt === 'number' ? opt.jetzt : Date.now();
+        const tage = typeof opt.fensterTage === 'number' && opt.fensterTage > 0
+            ? opt.fensterTage : FENSTER_TAGE;
+        const gemeinsam = { ...opt, fensterTage: tage };
+        const jetztFenster = jeThema(karten, { ...gemeinsam, jetzt });
+        const davor = jeThema(karten, { ...gemeinsam, jetzt: jetzt - tage * TAG_MS });
+        const vorher = new Map(davor.map(t => [t.thema, t]));
+        const erg = [];
+        for (const t of jetztFenster) {
+            const v = vorher.get(t.thema);
+            /* BEIDE Zeiträume müssen tragen. Sonst behauptet man eine Änderung
+               gegen eine Zahl, die es nicht gab. */
+            if (!t.genug || !v || !v.genug)
+                continue;
+            const unterschied = t.sicherheit - v.sicherheit;
+            const richtung = unterschied >= RICHTUNG_SCHWELLE ? 'auf'
+                : unterschied <= -RICHTUNG_SCHWELLE ? 'ab' : 'gleich';
+            erg.push({
+                thema: t.thema, tage,
+                jetzt: t.sicherheit, vorher: v.sicherheit,
+                unterschied, richtung,
+                belegeJetzt: t.belege, belegeVorher: v.belege,
+                satz: verlaufSatz(t.sicherheit, v.sicherheit, unterschied, richtung, tage)
+            });
+        }
+        /* Die grösste Veränderung zuerst — in BEIDE Richtungen. Wer schlechter
+           geworden ist, will das zuerst wissen, nicht zuletzt. */
+        return erg.sort((a, b) => Math.abs(b.unterschied) - Math.abs(a.unterschied) ||
+            a.thema.localeCompare(b.thema, 'de'));
+    };
+    const prozent = (x) => Math.round(x * 100) + ' %';
+    /**
+     * OHNE DAS THEMA VORNEWEG, und das stand erst anders da.
+     *
+     * Der erste Wurf begann mit „Mathematik: 28 % → 72 % …". Auf dem Bild
+     * stand dann „Mathematik" als fette Überschrift und direkt darunter
+     * noch einmal „Mathematik:". `auffrischSatz` macht es seit E325 richtig
+     * und nennt das Thema NICHT — die Zeile trägt es schon. Zwei Muster für
+     * dieselbe Sache in derselben Ansicht wären eine Unstimmigkeit, die
+     * niemand benennen kann und jeder sieht.
+     */
+    const verlaufSatz = (jetztWert, vorherWert, unterschied, richtung, tage) => {
+        const zeitraum = tage === 90 ? 'in den letzten drei Monaten'
+            : tage === 30 ? 'im letzten Monat'
+                : 'in den letzten ' + tage + ' Tagen';
+        if (richtung === 'gleich') {
+            return prozent(jetztWert) + ' — ' + zeitraum +
+                ' etwa gleich geblieben (vorher ' + prozent(vorherWert) + ').';
+        }
+        /* Prozentpunkte, nicht Prozent. „von 60 auf 70" sind zehn Punkte und
+           nicht siebzehn Prozent; beides ist richtig gerechnet, aber nur eines
+           ist das, was jemand hören will. */
+        const punkte = Math.round(Math.abs(unterschied) * 100);
+        return prozent(vorherWert) + ' → ' + prozent(jetztWert) +
+            ' — ' + (richtung === 'auf' ? 'aufwärts' : 'abwärts') + ', ' +
+            punkte + ' Punkte ' + zeitraum + '.';
+    };
     const satzZu = (x) => {
         if (!x.belege) {
             return x.karten === 1
@@ -366,7 +476,8 @@ const Kompetenz = (() => {
     return {
         jeThema, gesamt, karteAus, wilson, haltbarkeit, stufeVon, verlaufVon,
         auffrischen, auffrischSatz,
-        MINDEST_BELEGE, STUFEN
+        verlauf, verlaufSatz,
+        MINDEST_BELEGE, STUFEN, RICHTUNG_SCHWELLE, FENSTER_TAGE
     };
 })();
 window.Kompetenz = Kompetenz;

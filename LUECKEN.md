@@ -4233,13 +4233,24 @@ L106 — Was die Lern-Evidenz (E289) und der Kalender (E290) noch nicht können
    „Deutsch, 98 % sitzt noch" vor „Mathematik, 81 %". Schwelle: eine ganze
    verblasste Karte. Ohne Verblasstes kein Abschnitt. test318, 18 Punkte.
 
-3. **`fensterTage` wird nirgends benutzt.** Die Rechnung kann „nur die
-   letzten 90 Tage", und keine Aufrufstelle fragt danach. Für „bin ich
-   BESSER geworden" wäre es das richtige Werkzeug.
+3. **`fensterTage` wird nirgends benutzt.** — **GESCHLOSSEN am 1. September
+   2026 durch E328.** `Kompetenz.verlauf` ist der Aufrufer, und beim
+   Anschliessen kam heraus, dass das Fenster gar keins war: es schloss nur
+   nach unten (`[jetzt−fenster, ∞)`). Mit der echten Uhr fällt das nie auf;
+   mit zurückgestellter zählte alles Spätere mit.
 
-4. **Kein Vergleich über Zeit.** Es gibt keinen Verlauf der Sicherheit,
-   also auch keine Antwort auf „geht es aufwärts". Das Protokoll trüge es
-   (500 Einträge je Karte), gerechnet wird es nicht.
+4. **Kein Vergleich über Zeit.** — **GESCHLOSSEN am 1. September 2026 durch
+   E328.** Der Abschnitt „Geht es aufwärts?" vergleicht die letzten 90 Tage
+   mit den 90 davor, je Thema, in beide Richtungen und mit der grössten
+   Veränderung zuerst. Nur Themen mit genug Belegen in BEIDEN Zeiträumen —
+   wer erst seit acht Wochen lernt, ist nicht besser geworden, sondern neu.
+   Unter fünf Prozentpunkten heisst es „gleich"; eine Anzeige, die immer
+   eine Richtung zeigt, zeigt keine.
+
+   WAS OFFEN BLEIBT: es ist ein Vergleich zweier Fenster und keine Kurve.
+   Das ist Absicht — bei fünf Antworten je Punkt wackelt eine Kurve so
+   stark, dass jeder Ausschlag nach Fortschritt aussieht. Wer mehr will,
+   braucht zuerst mehr Belege, nicht mehr Punkte.
 
 **Zum Kalender (E290):**
 

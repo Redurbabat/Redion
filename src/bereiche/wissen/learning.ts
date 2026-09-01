@@ -871,6 +871,79 @@ const Learning = (() => {
     return section;
   };
 
+  /**
+   * GEHT ES AUFWÄRTS? (L106 Punkt 3 und 4, E328)
+   *
+   * Der Themenfortschritt sagt, wo man STEHT. Er sagt nicht, wohin es
+   * geht — und das ist die Frage, die man sich nach drei Monaten Lernen
+   * wirklich stellt.
+   *
+   * WANN DIESER ABSCHNITT SCHWEIGT, und das ist der wichtigere Teil:
+   * `Kompetenz.verlauf` gibt nur Themen zurück, die in BEIDEN Zeiträumen
+   * genug Belege haben. Wer erst seit vier Wochen lernt, bekommt hier
+   * nichts — nicht „0 % Veränderung", sondern gar keinen Abschnitt. Eine
+   * Überschrift „Geht es aufwärts?" über einer leeren Antwort ist eine
+   * Frage, die sich selbst nicht beantworten kann.
+   */
+  const verlaufSection = (allCards = cards(), now = Date.now()): HTMLElement | null => {
+    const K = (window as any).Kompetenz;
+    if (!K || typeof K.verlauf !== 'function') return null;
+    const liste = allCards.map((card: any) => ({
+      id: String(card?.id || ''), thema: topicLabel(card),
+      titel: String(card?.text || '').slice(0, 60),
+      sr: card?.sr, reviewVerlauf: card?.reviewVerlauf
+    })).filter((c: any) => c.id);
+    const reihen = K.verlauf(liste, { jetzt: now });
+    if (!reihen.length) return null;
+
+    const section = document.createElement('section');
+    section.style.marginTop = '20px';
+    const title = document.createElement('h3');
+    title.textContent = 'Geht es aufwärts?';
+    title.style.marginBottom = '4px';
+    const unter = document.createElement('p');
+    unter.style.cssText = 'margin:0 0 10px; font-size:12.5px; color:var(--text-faint)';
+    unter.textContent = 'Die letzten ' + (reihen[0].tage) + ' Tage gegen die ' +
+      reihen[0].tage + ' davor. Nur Themen, die in BEIDEN Zeiträumen genug ' +
+      'Antworten haben — sonst wäre es ein Vergleich mit nichts.';
+    section.append(title, unter);
+
+    const list = document.createElement('div');
+    list.style.cssText = 'display:grid; gap:8px';
+    reihen.forEach((e: any) => {
+      const row = document.createElement('div');
+      row.style.cssText = 'padding:9px 11px; border:1px solid var(--line); ' +
+        'border-radius:9px; display:flex; justify-content:space-between; ' +
+        'gap:12px; align-items:baseline';
+      const links = document.createElement('div');
+      const name = document.createElement('strong');
+      name.textContent = e.thema;
+      const satz = document.createElement('small');
+      satz.style.cssText = 'display:block; margin-top:2px; color:var(--text-dim)';
+      satz.textContent = e.satz;
+      links.append(name, satz);
+
+      /* §38: nicht nur Farbe. Das Zeichen sagt die Richtung, die Zahl sagt
+         wieviel, und beide stehen auch ohne Farbe da. Vorzeichen inklusive
+         — „5 Punkte" ohne Vorzeichen ist keine Richtung. */
+      const rechts = document.createElement('span');
+      const punkte = Math.round(e.unterschied * 100);
+      const zeichen = e.richtung === 'auf' ? '▲' : e.richtung === 'ab' ? '▼' : '=';
+      const farbe = e.richtung === 'auf' ? 'var(--c-green)'
+                  : e.richtung === 'ab' ? 'var(--c-red)' : 'var(--text-faint)';
+      rechts.style.cssText = 'white-space:nowrap; font-variant-numeric:tabular-nums; ' +
+        'font-size:13px; color:' + farbe;
+      rechts.textContent = e.richtung === 'gleich'
+        ? '= gleich'
+        : zeichen + ' ' + (punkte > 0 ? '+' : '') + punkte + ' Punkte';
+      rechts.title = 'Unterschied der Sicherheit in Prozentpunkten';
+      row.append(links, rechts);
+      list.appendChild(row);
+    });
+    section.appendChild(list);
+    return section;
+  };
+
   const topicSection = (topics: TopicProgress[]): HTMLElement => {
     const section = document.createElement('section');
     section.style.marginTop = '20px';
@@ -1052,9 +1125,16 @@ const Learning = (() => {
       satzSetzen(jetzt);
       algorithm.append(titel, reihe, satz);
       const auffrisch = auffrischSection();
+      const richtung = verlaufSection();
+      /* REIHENFOLGE: erst was zu TUN ist (auffrischen), dann wo man STEHT
+         (Themenfortschritt), dann wohin es GEHT (Verlauf). Die Richtung
+         steht bewusst hinter dem Stand: sie beantwortet eine Frage, die
+         man erst stellt, wenn man den Stand gesehen hat. */
       view.body.append(grid, exam, explanation, actions, details,
                        ...(auffrisch ? [auffrisch] : []),
-                       topicSection(stats.topics), next, algorithm);
+                       topicSection(stats.topics),
+                       ...(richtung ? [richtung] : []),
+                       next, algorithm);
     };
 
     const renderSession = (): void => {

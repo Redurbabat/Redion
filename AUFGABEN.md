@@ -2439,3 +2439,17 @@ node pruefungen/lauf/test105.mjs
   vorn" an der Zahl der Dateisätze — belegt rot mit `[2,2]` statt `[1,1]`,
   während „alle vier haben ein Bild" dabei grün blieb. test320 neu (35),
   test180 §6 auf den neuen Anker gesetzt. sw v81.
+* E328 (L106 Punkt 3 und 4): Geht es aufwärts? Zwei Lücken, eine Antwort —
+  `fensterTage` konnte „nur die letzten 90 Tage" und niemand fragte danach,
+  und es gab keinen Vergleich über Zeit. Jetzt: die letzten 90 Tage gegen
+  die 90 davor, je Thema, beide Richtungen, grösste Veränderung zuerst. Der
+  frühere Zeitraum entsteht durch Zurückstellen der Uhr — dieselbe Rechnung,
+  kein zweiter Weg durch dieselben Daten. Dafür musste das Fenster erst nach
+  OBEN schliessen: es war [jetzt−90, ∞) und liess alles durch, was danach
+  kam. Mit der echten Uhr fällt das nie auf. Verglichen wird nur, was in
+  BEIDEN Zeiträumen genug Belege hat, und unter fünf Prozentpunkten heisst
+  es „gleich" — eine Anzeige, die immer eine Richtung zeigt, zeigt keine.
+  Nicht nur Farbe: Zeichen und Zahl mit Vorzeichen stehen daneben (§38).
+  Das Bild fand, dass der Satz das Thema wiederholte, das schon fett darüber
+  stand — `auffrischSatz` machte es seit E325 richtig, jetzt beide gleich.
+  test321 neu (28), belegt rot mit 6 statt 0. sw v82.
