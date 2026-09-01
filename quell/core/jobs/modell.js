@@ -70,7 +70,11 @@ const JobModell = (() => {
         versuche: 0, maxVersuche: opt.maxVersuche || MAX_VERSUCHE,
         geraet: '', bisWann: 0, nachher: jetzt,
         angelegt: zeitText, begonnen: '', beendet: '',
-        fehler: '', text: opt.text || ''
+        fehler: '', text: opt.text || '',
+        /* `?? null` und nicht `|| null`: eine Bedingung ist ein Objekt, und
+           ein leeres wäre mit `||` durchgefallen. Hier fällt gar nichts durch
+           — `sauber()` in `zeitplan.ts` entscheidet, was eine ist. */
+        bedingung: opt.bedingung ?? null
     });
     /**
      * Darf dieser Auftrag JETZT genommen werden?

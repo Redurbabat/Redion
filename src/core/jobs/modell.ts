@@ -86,6 +86,15 @@ const JobModell = (() => {
     fehler: string;
     /** Ein Satz für den Menschen, was gerade geschieht. */
     text: string;
+    /**
+     * Wann er laufen darf — heute Nacht, am Strom, nicht über Mobilfunk
+     * (E342, L103 Punkt 5). `null` heisst „jederzeit" und ist der Normalfall.
+     *
+     * Die REGEL dazu steht in `zeitplan.ts`, nicht hier: sie braucht die
+     * Lage des Geräts, und die ist keine Eigenschaft des Auftrags. Hier
+     * steht nur, was er sich wünscht.
+     */
+    bedingung: unknown;
   };
 
   /** Wie lange eine Pacht gilt, wenn niemand etwas anderes sagt. */
@@ -102,14 +111,19 @@ const JobModell = (() => {
   const anlegen = (
     id: string, art: string, eingabe: unknown,
     jetzt: number, zeitText: string,
-    opt: { schritte?: number; maxVersuche?: number; text?: string } = {}
+    opt: { schritte?: number; maxVersuche?: number; text?: string;
+           bedingung?: unknown } = {}
   ): Auftrag => ({
     id, art, zustand: 'wartet', eingabe,
     schritt: 0, schritte: opt.schritte || 0, stand: null,
     versuche: 0, maxVersuche: opt.maxVersuche || MAX_VERSUCHE,
     geraet: '', bisWann: 0, nachher: jetzt,
     angelegt: zeitText, begonnen: '', beendet: '',
-    fehler: '', text: opt.text || ''
+    fehler: '', text: opt.text || '',
+    /* `?? null` und nicht `|| null`: eine Bedingung ist ein Objekt, und
+       ein leeres wäre mit `||` durchgefallen. Hier fällt gar nichts durch
+       — `sauber()` in `zeitplan.ts` entscheidet, was eine ist. */
+    bedingung: opt.bedingung ?? null
   });
 
   /**

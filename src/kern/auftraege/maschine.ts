@@ -112,6 +112,125 @@ const Auftraege = (() => {
   };
 
   /* ========================================================================
+   * DIE LAGE DES GERÄTS (E342, L103 Punkt 5)
+   *
+   * `zeitplan.ts` nebenan rechnet, ob ein Auftrag jetzt laufen darf. Es
+   * kennt weder Uhr noch `navigator` — beides steht hier. Dieselbe
+   * Arbeitsteilung wie zwischen `modell.ts` und dieser Datei.
+   * ======================================================================*/
+
+  /**
+   * Lädt das Gerät? `null`, solange es niemand sagen kann.
+   *
+   * `getBattery()` ist ein Promise und darf den Takt nicht aufhalten, also
+   * wird der Wert EINMAL geholt und danach gepflegt. Bis die erste Antwort
+   * da ist, steht `null` — und `null` erlaubt (siehe `zeitplan.ts`). Ein
+   * Auftrag, der auf die erste Batterieauskunft wartet, wäre genau die
+   * Sorte Auftrag, die nie läuft.
+   *
+   * Firefox und Safari haben die API nicht. Dort bleibt es für immer `null`,
+   * und „nur am Strom" ist dort wirkungslos — das steht so in den
+   * Einstellungen, statt still zu geschehen.
+   */
+  let laedt: boolean | null = null;
+  let stromGefragt = false;
+
+  const stromBeobachten = (): void => {
+    if (stromGefragt) return;
+    stromGefragt = true;
+    const nav: any = (globalThis as any).navigator;
+    if (!nav || typeof nav.getBattery !== 'function') return;
+    try {
+      nav.getBattery().then((akku: any) => {
+        if (!akku) return;
+        laedt = !!akku.charging;
+        /* Beim Einstecken sofort nachsehen, statt bis zu vier Sekunden zu
+           warten. Der Horcher hängt am Akku-Objekt, das so lange lebt wie
+           die Seite — nichts abzumelden. */
+        try {
+          akku.addEventListener('chargingchange', () => {
+            laedt = !!akku.charging;
+            void takten();
+          });
+        } catch { /* ein Browser ohne Horcher liefert wenigstens den Wert */ }
+      }).catch(() => { /* abgelehnt heisst unbekannt, und unbekannt erlaubt */ });
+    } catch { /* dito */ }
+  };
+
+  /**
+   * Kostet die Verbindung Geld? `null`, wenn es niemand sagt.
+   *
+   * NICHT `effectiveType`. Die misst Geschwindigkeit, nicht Kosten — ein
+   * langsames WLAN im Keller sähe damit aus wie ein Mobilfunkvertrag, und
+   * der Auftrag wartete auf etwas, das nie eintritt. Gemessen werden die
+   * zwei Dinge, die wirklich „das kostet" heissen: der Datensparmodus und
+   * eine Mobilfunkverbindung.
+   */
+  const teuerJetzt = (): boolean | null => {
+    const nav: any = (globalThis as any).navigator;
+    const v = nav && (nav.connection || nav.mozConnection || nav.webkitConnection);
+    if (!v) return null;
+    if (v.saveData === true) return true;
+    if (typeof v.type === 'string') return v.type === 'cellular';
+    /* Es gibt eine `connection`, aber weder `saveData` noch `type`. Dann
+       weiss man es eben nicht — und das zu behaupten ist ehrlicher, als
+       `false` zu raten. */
+    return null;
+  };
+
+  /** Wie es jetzt aussieht, in der Form, die `zeitplan.ts` versteht. */
+  const lage = (): { minute: number; laedt: boolean | null; teuer: boolean | null } => {
+    const d = new Date();
+    return { minute: d.getHours() * 60 + d.getMinutes(), laedt, teuer: teuerJetzt() };
+  };
+
+  /**
+   * Warum dieser Auftrag gerade nicht darf — oder leer.
+   *
+   * Für das Fenster aus E322. Öffentlich, weil die Schale sonst
+   * `Zeitplan.darf` selbst rufen und dafür die Lage kennen müsste; die Lage
+   * gehört aber hierher (§5).
+   */
+  const wartetAuf = (a: any): string => {
+    if (!a || a.zustand !== 'wartet') return '';
+    if (typeof Zeitplan === 'undefined') return '';
+    return Zeitplan.darf(a.bedingung, lage()).grund;
+  };
+
+  /** Der Schlüssel, unter dem der eingestellte Zeitplan liegt. */
+  const PLAN_SCHLUESSEL = 'auftragPlan';
+
+  /**
+   * Was der Mensch unter Einstellungen → Speicher eingestellt hat.
+   *
+   * Gilt für JEDEN neuen Auftrag, der nicht ausdrücklich etwas anderes
+   * sagt. Ohne Einstellung: `null` — und damit alles genau wie vor E342.
+   */
+  const standardBedingung = (): unknown => {
+    if (typeof Zeitplan === 'undefined') return null;
+    if (typeof Store === 'undefined' || !Store.getMeta) return null;
+    try { return Zeitplan.sauber(Store.getMeta(PLAN_SCHLUESSEL, null)); }
+    catch { return null; }
+  };
+
+  /** Den eingestellten Zeitplan lesen — für die Einstellungen. */
+  const plan = (): unknown => standardBedingung();
+
+  /**
+   * Den Zeitplan setzen. `null` löscht ihn.
+   *
+   * ER WIRKT NUR AUF NEUE AUFTRÄGE, und das ist Absicht: einen laufenden
+   * OCR-Lauf um Mitternacht anzuhalten, weil jemand gerade „nur nachts"
+   * einschaltet, wäre die Überraschung, die niemand will. Was liegt, liegt.
+   */
+  const planSetzen = async (roh: unknown): Promise<unknown> => {
+    if (typeof Zeitplan === 'undefined') return null;
+    const b = Zeitplan.sauber(roh);
+    if (typeof Store !== 'undefined' && Store.setMeta) await Store.setMeta(PLAN_SCHLUESSEL, b);
+    return b;
+  };
+
+  /* ========================================================================
    * ANMELDEN UND ANLEGEN
    * ======================================================================*/
 
@@ -151,12 +270,22 @@ const Auftraege = (() => {
    */
   const anlegen = async (art: string, eingabe: unknown,
                          opt: { schritte?: number; maxVersuche?: number;
-                                text?: string; id?: string } = {}): Promise<any> => {
+                                text?: string; id?: string;
+                                bedingung?: unknown } = {}): Promise<any> => {
     if (typeof Store === 'undefined' || !Store.auftragPut) {
       throw new Error('Die Ablage steht noch nicht — Aufträge brauchen sie.');
     }
     const id = opt.id || Store.uid();
-    const a = JobModell.anlegen(id, art, eingabe, jetzt(), zeitText(), opt);
+    /* DIE BEDINGUNG KOMMT VOM AUFRUFER ODER AUS DEN EINSTELLUNGEN (E342).
+       Wer keine mitgibt, bekommt die, die der Mensch unter Einstellungen →
+       Speicher eingestellt hat — und wer ausdrücklich `null` mitgibt,
+       bekommt keine. Das ist der Unterschied zwischen „ist mir gleich" und
+       „dieser hier nicht": `undefined` fragt nach, `null` sagt nein. */
+    const bedingung = 'bedingung' in opt
+      ? (typeof Zeitplan !== 'undefined' ? Zeitplan.sauber(opt.bedingung) : null)
+      : standardBedingung();
+    const a = JobModell.anlegen(id, art, eingabe, jetzt(), zeitText(),
+                                { ...opt, bedingung });
     await Store.auftragPut(a);
     melde('auftrag.angelegt', { id, art });
     /* Nicht auf den nächsten Takt warten: wer etwas anstösst, will es
@@ -279,8 +408,17 @@ const Auftraege = (() => {
     try {
       const t = jetzt();
       /* Lesen und Pacht schreiben in EINER Transaktion — siehe Kopf. */
+      const jetztLage = lage();
       const genommen = await Store.auftragNehmen((liste: any[]) => {
-        const kandidaten = liste.filter(a => werkzeuge.has(a.art));
+        /* ZWEI FILTER, UND SIE MEINEN VERSCHIEDENES. `werkzeuge.has` heisst
+           „diese Fassung kann das nicht" — der Auftrag wartet auf ein
+           anderes Fenster oder eine spätere Fassung. `Zeitplan.darf` heisst
+           „nicht jetzt" — er wartet auf die Nacht, den Strom, das WLAN.
+           Beide werden übersprungen, und beide sagen es im Fenster (E322):
+           der erste durch sein Schweigen, der zweite durch seinen Grund. */
+        const kandidaten = liste.filter(a =>
+          werkzeuge.has(a.art) &&
+          (typeof Zeitplan === 'undefined' || Zeitplan.darf(a.bedingung, jetztLage).ok));
         const naechst = JobModell.naechster(kandidaten, t, ICH);
         if (!naechst) return null;
         return JobModell.nehmen(naechst, t, ICH, zeitText());
@@ -402,6 +540,9 @@ const Auftraege = (() => {
   const start = async (): Promise<void> => {
     if (bereit) return;
     bereit = true;
+    /* Die Batterie EINMAL fragen, und zwar hier: `getBattery()` ist ein
+       Promise, und der Takt darf nicht darauf warten (E342). */
+    stromBeobachten();
     try {
       await wiederaufnehmen();
       await aufraeumen();
@@ -438,6 +579,7 @@ const Auftraege = (() => {
     start, stopp, takten, anmelden, arten, artName, anlegen, abbrechen,
     nurEiner, SCHLOSS,
     alle, offen, einer, wiederaufnehmen, aufraeumen, leeren,
+    wartetAuf, lage, plan, planSetzen, PLAN_SCHLUESSEL,
     ICH, TAKT_MS, AUFHEBEN_MS
   };
 })();

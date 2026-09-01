@@ -26070,3 +26070,97 @@ dieser Prüfung gar nicht in die Quere kämen.
 
 test333 neu, 16 Punkte. Belegt rot: `metaListeAendern` auf den
 Zwischenspeicher-Weg zurückgedreht, und §2 und §5 fallen.
+
+
+E342 — Heute Nacht, am Strom, nicht über Mobilfunk (L103 Punkt 5)
+════════════════════════════════════════════════════════════════════════════
+
+L103 Punkt 5 stand seit dem 31. August:
+
+    „Ein Auftrag läuft, sobald er dran ist. Es gibt kein „heute Nacht",
+     kein „wenn das Gerät am Strom hängt", kein „nur im WLAN". Für OCR
+     und Embeddings wäre genau das die richtige Antwort."
+
+Die Maschine aus E286 konnte lange Arbeit ÜBERLEBEN. Was sie nicht konnte,
+ist WARTEN WOLLEN.
+
+DIE ARBEITSTEILUNG, wie bei `modell.ts` nebenan: `core/jobs/zeitplan.ts`
+rechnet und kennt weder Uhr noch `navigator` — die Lage kommt als Zahl und
+drei Wahrheitswerte herein. `kern/auftraege/maschine.ts` beschafft sie.
+
+UNBEKANNT HEISST JA, und das ist die wichtigste Entscheidung des Bogens.
+
+`navigator.getBattery()` gibt es in Firefox und Safari nicht.
+`navigator.connection` gibt es in Safari und Firefox nicht. Wer `null` als
+„nein" liest, baut auf genau diesen Geräten einen Auftrag, der NIE läuft.
+E323 hat den Satz schon geschrieben, und er gilt hier wörtlich: doppelte
+Last ist unschön, ein Auftrag, der nie läuft, ist Datenverlust auf Raten.
+
+Der Prüflauf hat dafür einen eigenen Abschnitt (§2), weil dieser eine
+Fehler auf keinem Entwicklungsrechner auffiele — Chromium kennt beide APIs.
+
+„NUR IM WLAN" HEISST HIER NICHT SO, und der Grund ist eine Falle.
+`navigator.connection.type === 'wifi'` gibt es fast nirgends. Messbar sind
+zwei andere Dinge: `saveData` und `type === 'cellular'`. Die dritte
+Versuchung wäre `effectiveType` — und die misst GESCHWINDIGKEIT, nicht
+KOSTEN. Ein langsames WLAN im Keller sähe damit aus wie ein
+Mobilfunkvertrag, und der Auftrag wartete auf etwas, das nie eintritt. Die
+Bedingung heisst deshalb, was sie misst: nicht über eine TEURE Verbindung.
+
+„VON 22:00 BIS 22:00" IST KEIN FENSTER, SONDERN KEINS. Null Minuten (läuft
+nie) und volle 24 Stunden (läuft immer) sind beide vertretbare Lesarten —
+und weil sie es sind, darf man nicht raten. Es gilt die harmlose (§46).
+
+ÜBER MITTERNACHT ist der Fall, um den es geht: 22:00 bis 06:00 ist das
+Fenster, das jemand meint, wenn er „nachts" sagt, und genau das, bei dem
+`von <= m && m < bis` falsch antwortet. Das Ende ist ausschliessend, sonst
+gehörte 06:00 gleichzeitig zu 22–06 und zu 06–08.
+
+ER WIRKT NUR AUF NEUE AUFTRÄGE. Einen laufenden OCR-Lauf um Mitternacht
+anzuhalten, weil jemand gerade „nur nachts" einschaltet, wäre die
+Überraschung, die niemand will. Was liegt, liegt.
+
+UND `undefined` IST NICHT `null`: wer beim Anlegen nichts sagt, bekommt die
+Einstellung; wer ausdrücklich `null` mitgibt, bekommt keine. „Ist mir
+gleich" und „dieser hier nicht" sind zwei verschiedene Sätze.
+
+ERREICHBAR IST ER AUCH (§47). Unter Einstellungen → Speicher steht „Lange
+Arbeiten": zwei Zeitfelder, zwei Schalter, und darüber der eingestellte
+Zeitplan als Satz — der aber NUR, wenn es einen gibt. Eigene Verdrahtung
+statt `data-set`, aus demselben Grund wie bei E321: die vier Werte liegen
+ZUSAMMEN in einem Eintrag `auftragPlan`.
+
+UND IM FENSTER STEHT, WORAUF. „wartet" allein sieht aus wie „gleich", und
+in Wahrheit sind es acht Stunden. Der Satz kommt aus dem Kern, weil dort
+die Lage des Geräts liegt — und er ist LEER, wenn es keinen gibt.
+
+DREI DINGE FAND ERST DAS BILD (§55.1), und keines hätte eine Prüfung
+gefunden, die es damals gab:
+
+  · Die Schalter waren UNSICHTBAR. Der erste Wurf schrieb
+    `class="ez-schalter"` — eine Klasse, die es nirgends gibt. Der Knopf
+    stand mit 0 × 0 Pixel da, farblos, untreffbar. §47 in Reinform.
+  · Der Satz trug zwei „und": „zwischen 22:00 und 06:00 und nur am Strom".
+    Das erste trennte zwei Uhrzeiten, das zweite zwei Wünsche. Heisst jetzt
+    „von 22:00 bis 06:00 und nur am Strom".
+  · Die Zeile hiess „Nur zwischen … und …", während der Satz zwei Zeilen
+    darüber „von … bis …" sagte.
+
+UND DIE LEHRE FÜR DIE PRÜFUNG, die dieselbe ist wie in §55.2: die Messung
+prüft die GRÖSSE der Schalter, nicht ihr `display`. Nachgemessen mit der
+erfundenen Klasse zurückgedreht — `display` blieb `inline-block`, also
+„sichtbar"; nur die Grösse fiel auf 0 × 0. Eine Prüfung, die bloss
+`display` liest, hätte den Fehler durchgelassen.
+
+WAS KEIN FEHLER IST: das Zeitfeld zeigt „10:00 PM" statt „22:00", wenn der
+Browser englisch eingestellt ist. Nachgemessen: ein `<input type="time">`
+folgt der Sprache des BROWSERS, und `lang="de"` am Feld ändert daran
+nichts. Das bleibt so — ein eigenes Feld verlöre die Uhr zum Antippen, die
+Tastaturbedienung und das Rad am Telefon (§37, §38), und wer seinen Browser
+auf Englisch stellt, ERWARTET „10:00 PM". Der Satz darüber sagt es
+zusätzlich immer auf Deutsch.
+
+test334 neu, 55 Punkte. Belegt rot in fünf Richtungen: `null` als „nein"
+gelesen (§2 fällt), der Filter im Takt entfernt (§4 fällt vierfach), der
+Grund im Fenster weggelassen (§6 fällt), ein Grund für JEDEN Auftrag (§3
+und §6 fallen) und die erfundene CSS-Klasse zurück (§9 fällt).

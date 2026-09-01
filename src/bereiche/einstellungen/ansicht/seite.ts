@@ -759,7 +759,75 @@ const Einstellungen = (() => {
             'danach eine je Monat. Von Hand gesicherte bleiben alle',
             knopf('versionen-aufraeumen', 'Aufräumen')) +
       zeile('Speicher dauerhaft anfordern', 'Der Browser räumt die Daten dann nicht von selbst weg',
-            knopf('speicher-sichern', 'Anfordern')),
+            knopf('speicher-sichern', 'Anfordern')) +
+
+      /* --- Lange Arbeiten (L103 Punkt 5, E342) ---------------------------
+         OCR über achtzig Seiten, ein grosser Import, ein Embedding-Lauf.
+         Die Auftragsmaschine konnte sie seit E286 überleben, aber nicht
+         WARTEN WOLLEN — sie liefen, sobald sie dran waren. Ohne diesen
+         Abschnitt wäre der Zeitplan da und niemand käme heran (§47), wie
+         die KI-Grenzen vor E321. */
+      (() => {
+        const b: any = (typeof Auftraege !== 'undefined' && Auftraege.plan)
+          ? Auftraege.plan() : null;
+        const l: any = (typeof Auftraege !== 'undefined' && Auftraege.lage)
+          ? Auftraege.lage() : { laedt: null, teuer: null };
+        /* DIE UHRZEIT ZEIGT DER BROWSER, NICHT REDION. Ein
+           `<input type="time">` folgt der Spracheinstellung des BROWSERS,
+           nicht dem `lang` des Dokuments — nachgemessen: `lang="de"` am
+           Feld ändert gar nichts. Auf einem englisch eingestellten Browser
+           steht dort „10:00 PM", während der Satz darüber „22:00" sagt.
+
+           Das bleibt so, und zwar mit Absicht: ein eigenes Feld verlöre die
+           Uhr zum Antippen, die Tastaturbedienung und das Rad am Telefon
+           (§37, §38). Wer seinen Browser auf Englisch stellt, ERWARTET
+           „10:00 PM". Der Satz darüber sagt es zusätzlich auf Deutsch. */
+        const zeit = (k: string, wert: any) =>
+          `<input type="time" class="ez-plan-zeit" data-plan="${k}" ` +
+          `value="${esc(Zeitplan.uhr(wert) || '')}">`;
+        /* `schalter`, NICHT `ez-schalter`. Der erste Wurf erfand die zweite
+           Klasse, und weil es dazu kein Stück CSS gibt, stand dort ein
+           Knopf ohne Grösse, ohne Farbe, ohne alles — ein Schalter, den
+           niemand sehen und niemand treffen kann (§47). Kein Prüflauf
+           hatte etwas dagegen; gefunden auf dem Bild (§55.1). */
+        const haken = (k: string, an: boolean) =>
+          `<button type="button" class="schalter${an ? ' an' : ''}" ` +
+          `data-plan-an="${k}" aria-pressed="${an ? 'true' : 'false'}"><i></i></button>`;
+
+        return kopf('Lange Arbeiten',
+          'Gilt für neue Aufträge — Seitenbilder, OCR, grosse Sicherungen. ' +
+          'Was schon läuft, läuft weiter.') +
+
+          /* DER SATZ NUR, WENN ES EINEN GIBT. Ohne Zeitplan steht hier
+             nichts — eine Zeile „kein Zeitplan eingestellt" wäre eine
+             Zeile, die nichts behauptet (E321, gleiche Stelle). */
+          (Zeitplan.hatBedingung(b)
+            ? zeile('Eingestellt', '', `<b>${esc(Zeitplan.satz(b))}</b>`)
+            : '') +
+
+          /* „Nur von … bis …" und nicht „zwischen … und …" — damit die Zeile
+             dieselben Wörter benutzt wie der Satz zwei Zeilen darüber. */
+          zeile('Nur von', 'Leer lassen heisst: zu jeder Zeit',
+                zeit('von', b && b.vonMinute) + ' <span class="ez-grau">bis</span> ' +
+                zeit('bis', b && b.bisMinute)) +
+
+          /* WAS DER BROWSER NICHT WEISS, STEHT DABEI. Firefox und Safari
+             kennen `getBattery` nicht; dort wirkt „nur am Strom" nicht,
+             und das gehört an den Schalter geschrieben statt still zu
+             geschehen. Ein Auftrag wartet deswegen trotzdem nie ewig:
+             unbekannt heisst ja (siehe `core/jobs/zeitplan.ts`). */
+          zeile('Nur am Strom',
+                l.laedt === null
+                  ? 'Dieser Browser sagt nicht, ob geladen wird — der Schalter bleibt dann wirkungslos'
+                  : (l.laedt ? 'Das Gerät lädt gerade' : 'Das Gerät lädt gerade nicht'),
+                haken('amStrom', !!(b && b.amStrom))) +
+
+          zeile('Nicht über eine teure Verbindung',
+                l.teuer === null
+                  ? 'Dieser Browser sagt nichts über die Verbindung — der Schalter bleibt dann wirkungslos'
+                  : (l.teuer ? 'Die Verbindung kostet gerade' : 'Die Verbindung kostet gerade nichts'),
+                haken('nichtTeuer', !!(b && b.nichtTeuer)));
+      })(),
 
     abrechnung: () =>
       kopf('Abrechnung') +
@@ -1004,6 +1072,42 @@ const Einstellungen = (() => {
       };
       el.addEventListener('change', uebernehmen);
       el.addEventListener('blur', uebernehmen);
+    });
+
+    /* Zeitplan für lange Arbeiten (L103 Punkt 5, E342).
+       Wieder eigene Verdrahtung, und aus demselben Grund wie eine Zeile
+       weiter oben: die vier Werte liegen ZUSAMMEN in einem Eintrag
+       `auftragPlan`. Vier `data-set`-Schlüssel wären vier Regler, die sich
+       bewegen und nichts bewirken (§47). */
+    const planSchreiben = async (aendern: (b: any) => void) => {
+      const b: any = { ...(Auftraege.plan() as any || {}) };
+      aendern(b);
+      await Auftraege.planSetzen(b);
+      /* Neu zeichnen, weil der Satz oben („zwischen 22:00 und 06:00 und
+         nur am Strom") sich mitändert. */
+      (o as any).neuZeichnen && (o as any).neuZeichnen();
+    };
+    const ausUhr = (text: string): number | null => {
+      const m = /^(\d{1,2}):(\d{2})$/.exec(String(text || '').trim());
+      if (!m) return null;
+      const h = Number(m[1]), min = Number(m[2]);
+      if (!(h >= 0 && h < 24 && min >= 0 && min < 60)) return null;
+      return h * 60 + min;
+    };
+    o.querySelectorAll('[data-plan]').forEach((el: any) => {
+      el.addEventListener('change', () => {
+        const k = el.dataset.plan === 'von' ? 'vonMinute' : 'bisMinute';
+        void planSchreiben(b => { 
+          const wert = ausUhr(el.value);
+          if (wert === null) delete b[k]; else b[k] = wert;
+        });
+      });
+    });
+    o.querySelectorAll('[data-plan-an]').forEach((el: any) => {
+      el.addEventListener('click', () => {
+        const k = el.dataset.planAn;
+        void planSchreiben(b => { b[k] = !b[k]; });
+      });
     });
 
     /* Bereiche löschen */

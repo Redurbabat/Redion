@@ -539,6 +539,52 @@ const ANSICHTEN: Record<string, {
     }
   },
 
+  zeitplan: {
+    titel: 'Der Zeitplan für lange Arbeiten (E342) — Einstellungen → Speicher',
+    ganzeSeite: true,
+    bauen: async () => {
+      const w = window as any;
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      /* Einen Zeitplan setzen, damit auch die Zeile „Eingestellt" im Bild
+         steht — ohne sie zeigte das Bild nur den leeren Fall. */
+      await w.Auftraege.planSetzen({ vonMinute: 1320, bisMinute: 360, amStrom: true });
+      /* `oeffne`, nicht `oeffnen` — nachgesehen, nicht geraten (§E21). */
+      w.Einstellungen.oeffne('speicher');
+      await new Promise(r => setTimeout(r, 800));
+      /* Bis ganz nach unten: die Abteilung steht am Ende der Seite. Der
+         Kasten mit dem Rollbalken heisst `#ei`. */
+      const kasten = document.getElementById('ei');
+      if (kasten) kasten.scrollTop = kasten.scrollHeight;
+      await new Promise(r => setTimeout(r, 400));
+    }
+  },
+
+  auftragsfenster: {
+    titel: 'Wartet worauf? Das Auftragsfenster mit dem Grund (E342)',
+    bauen: async () => {
+      const w = window as any;
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      w.Auftraege.stopp();
+      await w.Auftraege.leeren();
+      w.Auftraege.anmelden('bild-ocr', async () => true, 'Text aus Seitenbildern');
+      w.Auftraege.anmelden('bild-sicher', async () => true, 'Sicherung');
+      const d = new Date();
+      const jetztMin = d.getHours() * 60 + d.getMinutes();
+      await w.Auftraege.anlegen('bild-ocr', { n: 1 },
+        { text: 'Skript Elektrotechnik, 84 Seiten',
+          schritte: 84,
+          bedingung: { vonMinute: (jetztMin + 120) % 1440, bisMinute: (jetztMin + 480) % 1440 } });
+      await w.Auftraege.anlegen('bild-sicher', { n: 2 },
+        { text: 'Vollständige Sicherung', bedingung: null });
+      (document.getElementById('mb-auftraege') as HTMLElement | null)?.click();
+      await new Promise(r => setTimeout(r, 600));
+    }
+  },
+
   lernzentrale: {
     titel: 'Die Lernzentrale mit ihren vier Startkacheln',
     bauen: async () => {

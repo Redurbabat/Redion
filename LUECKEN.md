@@ -4109,6 +4109,32 @@ Die Maschine steht und ist geprüft. Fünf Dinge fehlen ihr, jedes mit Grund:
    „heute Nacht", kein „wenn das Gerät am Strom hängt", kein „nur im
    WLAN". Für OCR und Embeddings wäre genau das die richtige Antwort.
 
+   **GESCHLOSSEN am 1. September 2026 durch E342.** `core/jobs/zeitplan.ts`
+   rechnet, `kern/auftraege/maschine.ts` beschafft die Lage, und unter
+   Einstellungen → Speicher steht „Lange Arbeiten" — zwei Zeitfelder, zwei
+   Schalter (§47).
+
+   Die wichtigste Entscheidung ist eine, die nur auf fremden Browsern
+   auffiele: UNBEKANNT HEISST JA. Firefox und Safari kennen `getBattery`
+   nicht, Safari und Firefox `connection` auch nicht — wer dort `null` als
+   „nein" liest, baut einen Auftrag, der NIE läuft. Das ist, mit E323s
+   Worten, Datenverlust auf Raten. `test334` §2 hält es fest.
+
+   „Nur im WLAN" heisst deshalb auch nicht so: `connection.type === 'wifi'`
+   gibt es fast nirgends, und `effectiveType` misst Geschwindigkeit statt
+   Kosten — ein langsames WLAN im Keller sähe damit aus wie ein
+   Mobilfunkvertrag. Gemessen werden `saveData` und `type === 'cellular'`,
+   und die Bedingung heisst, was sie misst.
+
+   Der Zeitplan wirkt nur auf NEUE Aufträge; und im Auftragsfenster steht
+   seit E342, WORAUF gewartet wird — „wartet" allein sieht aus wie
+   „gleich", und in Wahrheit sind es acht Stunden. Steht dort nichts
+   Besonderes, steht dort auch nichts. test334, 55 Punkte, belegt rot in
+   fünf Richtungen.
+
+   OFFEN BLEIBT Punkt 2 (kein Web Worker) — der ist von diesem unberührt:
+   ein Auftrag, der nachts läuft, läuft nachts trotzdem im selben Faden.
+
 Gefunden am 31. August 2026 (beim Bau von E286).
 
 

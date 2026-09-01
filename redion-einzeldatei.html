@@ -18565,7 +18565,11 @@ const JobModell = (() => {
         versuche: 0, maxVersuche: opt.maxVersuche || MAX_VERSUCHE,
         geraet: '', bisWann: 0, nachher: jetzt,
         angelegt: zeitText, begonnen: '', beendet: '',
-        fehler: '', text: opt.text || ''
+        fehler: '', text: opt.text || '',
+        /* `?? null` und nicht `|| null`: eine Bedingung ist ein Objekt, und
+           ein leeres wäre mit `||` durchgefallen. Hier fällt gar nichts durch
+           — `sauber()` in `zeitplan.ts` entscheidet, was eine ist. */
+        bedingung: opt.bedingung ?? null
     });
     /**
      * Darf dieser Auftrag JETZT genommen werden?
@@ -18745,6 +18749,208 @@ window.JobModell = JobModell;
 
 </script>
 <script>
+/* ===== quell/core/jobs/zeitplan.js ===== */
+"use strict";
+/* ============================================================================
+ * core/jobs/zeitplan.ts — wann ein Auftrag laufen DARF
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/core/jobs/zeitplan.ts`. `npm run bauen:ts` schreibt
+ * daraus `quell/core/jobs/zeitplan.js`. Wer das .js bearbeitet, verliert die
+ * Änderung beim nächsten Bauen; `pruefungen/lauf/test105.mts` meldet es vorher.
+ * ----------------------------------------------------------------------------
+ * WOFÜR ES SIE GIBT (L103 Punkt 5).
+ *
+ * Die Auftragsmaschine kann seit E286 lange Arbeit überleben. Was sie nicht
+ * konnte, ist WARTEN WOLLEN. Ein Auftrag lief, sobald er dran war — und für
+ * ein OCR über achtzig Seiten oder einen Embedding-Lauf ist „sobald er dran
+ * ist" die falsche Antwort. Die richtige heisst: heute Nacht. Oder: wenn das
+ * Gerät am Strom hängt. Oder: nicht über die Mobilfunkkarte.
+ *
+ * Hier stehen NUR die Regeln, wie in `modell.ts` nebenan. Keine Uhr, kein
+ * `navigator`, keine Ablage — die Lage kommt als Zahl und als drei Wahrheits-
+ * werte herein. Wer eine Regel prüfen will, die auf die echte Uhr wartet,
+ * prüft sie eben nicht.
+ *
+ * ─── DIE WICHTIGSTE ENTSCHEIDUNG: UNBEKANNT HEISST JA ────────────────────────
+ *
+ * `navigator.getBattery()` gibt es in Firefox und Safari nicht.
+ * `navigator.connection` gibt es in Safari und Firefox nicht. Auf genau
+ * diesen Geräten wüsste Redion nie, ob der Strom hängt oder die Verbindung
+ * kostet.
+ *
+ * Ein Auftrag, der auf eine Auskunft wartet, die nie kommt, läuft NIE. E323
+ * hat denselben Satz schon für `navigator.locks` geschrieben, und er gilt
+ * hier genauso: doppelte Last ist unschön, ein Auftrag, der nie läuft, ist
+ * Datenverlust auf Raten.
+ *
+ * Also: `null` heisst JA. Und der Grundsatz steht nicht nur hier, sondern
+ * auch in dem Satz, den der Mensch liest — wer „nur am Strom" einschaltet
+ * und es passiert nichts dergleichen, soll erfahren, warum.
+ *
+ * ─── WARUM „NUR IM WLAN" HIER NICHT SO HEISST ───────────────────────────────
+ *
+ * `navigator.connection.type === 'wifi'` gibt es fast nirgends. Was messbar
+ * ist, sind zwei andere Dinge: `saveData` (der Mensch hat den Datensparmodus
+ * eingeschaltet) und `type === 'cellular'`.
+ *
+ * `effectiveType` wäre die dritte Versuchung und ist eine Falle: sie misst
+ * GESCHWINDIGKEIT, nicht KOSTEN. Ein langsames WLAN im Keller sähe damit aus
+ * wie ein Mobilfunkvertrag, und der Auftrag wartete auf etwas, das nie
+ * eintritt. Die Bedingung heisst deshalb, was sie misst: nicht über eine
+ * TEURE Verbindung.
+ * ==========================================================================*/
+const Zeitplan = (() => {
+    const MINUTEN_AM_TAG = 24 * 60;
+    const ganzeMinute = (wert) => {
+        const n = Number(wert);
+        if (!Number.isFinite(n))
+            return null;
+        const m = Math.floor(n);
+        if (m < 0 || m >= MINUTEN_AM_TAG)
+            return null;
+        return m;
+    };
+    /** „22:00" aus 1320. Leer, wenn die Zahl keine Tagesminute ist. */
+    const uhr = (minute) => {
+        const m = ganzeMinute(minute);
+        if (m === null)
+            return '';
+        return String(Math.floor(m / 60)).padStart(2, '0') + ':' +
+            String(m % 60).padStart(2, '0');
+    };
+    /**
+     * Liegt `minute` im Fenster von…bis?
+     *
+     * ÜBER MITTERNACHT ist der eigentliche Fall. 22:00 bis 06:00 ist das
+     * Fenster, das jemand meint, wenn er „nachts" sagt, und es ist genau das,
+     * bei dem `von <= minute && minute < bis` falsch antwortet. Also zwei
+     * Lesarten, und welche gilt, entscheidet die Reihenfolge der beiden Werte.
+     *
+     * Das Ende ist AUSSCHLIESSEND: 22:00–06:00 endet um 05:59, nicht um 06:00.
+     * Sonst gehörte die Minute 06:00 gleichzeitig zum Fenster 22–06 und zum
+     * Fenster 06–08.
+     */
+    const imFenster = (von, bis, minute) => {
+        const a = ganzeMinute(von), b = ganzeMinute(bis), m = ganzeMinute(minute);
+        if (a === null || b === null || m === null)
+            return true;
+        /* GLEICH HEISST KEIN FENSTER, und das ist eine Entscheidung, keine
+           Nachlässigkeit: „von 22:00 bis 22:00" liesse sich als null Minuten
+           lesen (der Auftrag läuft nie) oder als volle 24 Stunden (er läuft
+           immer). Beides ist vertretbar — und weil es das ist, darf man nicht
+           raten. Ein Auftrag, der nie läuft, ist der teurere Irrtum (§46), also
+           gilt die harmlose Lesart. `satz()` sagt es dem Menschen dazu. */
+        if (a === b)
+            return true;
+        if (a < b)
+            return m >= a && m < b;
+        /* Über Mitternacht: alles ab `von` ODER alles vor `bis`. */
+        return m >= a || m < b;
+    };
+    /** Wünscht sich dieser Auftrag überhaupt etwas? */
+    const hatBedingung = (b) => {
+        if (!b || typeof b !== 'object')
+            return false;
+        const x = b;
+        if (x.amStrom === true || x.nichtTeuer === true)
+            return true;
+        const a = ganzeMinute(x.vonMinute), z = ganzeMinute(x.bisMinute);
+        return a !== null && z !== null && a !== z;
+    };
+    /**
+     * Darf dieser Auftrag JETZT laufen — und wenn nein, warum nicht?
+     *
+     * Der Grund ist ein ganzer Satz für einen Menschen, kein Bezeichner. Er
+     * landet im Auftragsfenster (E322), und dort ist er der Unterschied
+     * zwischen „wartet" (wartet worauf?) und einer Auskunft.
+     *
+     * OHNE BEDINGUNG IST ER LEER. Das ist die Gegenprobe zu sich selbst: ein
+     * Grund, der immer dasteht, wird nicht gelesen — dieselbe Falle, in die
+     * E284, E286, E288, E289 und E290 gelaufen sind.
+     */
+    const darf = (b, lage) => {
+        if (!hatBedingung(b))
+            return { ok: true, grund: '' };
+        const x = b;
+        const von = ganzeMinute(x.vonMinute), bis = ganzeMinute(x.bisMinute);
+        if (von !== null && bis !== null && von !== bis &&
+            !imFenster(von, bis, lage.minute)) {
+            /* „läuft erst …" und nicht „wartet auf …": im Fenster steht der Satz
+               dort, wo sonst das blosse Wort „wartet" steht — „wartet wartet auf"
+               wäre doppelt. Und er beantwortet die Frage, die man wirklich hat. */
+            return { ok: false,
+                grund: 'läuft erst zwischen ' + uhr(von) + ' und ' + uhr(bis) };
+        }
+        /* `=== false` und nicht `!lage.laedt`: `null` heisst unbekannt und
+           erlaubt (siehe Kopf). `!null` wäre `true` und hielte den Auftrag auf
+           jedem Firefox für immer an. */
+        if (x.amStrom === true && lage.laedt === false) {
+            return { ok: false, grund: 'läuft erst, wenn das Gerät am Strom hängt' };
+        }
+        if (x.nichtTeuer === true && lage.teuer === true) {
+            return { ok: false, grund: 'läuft erst über eine Verbindung, die nichts kostet' };
+        }
+        return { ok: true, grund: '' };
+    };
+    /**
+     * Was sich dieser Auftrag wünscht, als Satz.
+     *
+     * Für die Einstellungen und für das Fenster, SOLANGE er läuft — dann ist
+     * `darf().grund` leer und trotzdem soll erkennbar sein, dass er eine
+     * Bedingung hat. Ohne Bedingung: leer.
+     */
+    const satz = (b) => {
+        if (!hatBedingung(b))
+            return '';
+        const x = b;
+        const teile = [];
+        const von = ganzeMinute(x.vonMinute), bis = ganzeMinute(x.bisMinute);
+        /* „von … bis …" und nicht „zwischen … und …": mit zwei Wünschen stünde
+           sonst „zwischen 22:00 und 06:00 und nur am Strom" da — zwei „und" in
+           einer Zeile, die Verschiedenes trennen. Auf dem Bild gesehen (§55.1),
+           nicht in einer Prüfung. */
+        if (von !== null && bis !== null && von !== bis) {
+            teile.push('von ' + uhr(von) + ' bis ' + uhr(bis));
+        }
+        if (x.amStrom === true)
+            teile.push('nur am Strom');
+        if (x.nichtTeuer === true)
+            teile.push('nicht über eine teure Verbindung');
+        if (teile.length < 2)
+            return teile[0] || '';
+        return teile.slice(0, -1).join(', ') + ' und ' + teile[teile.length - 1];
+    };
+    /**
+     * Aus einer Bedingung das machen, was gespeichert wird.
+     *
+     * Rohes Zeug kommt aus den Einstellungen und aus alten Sicherungen. Was
+     * hier herausfällt, ist entweder eine saubere Bedingung oder `null` —
+     * und `null` heisst „keine", nicht „kaputte". Ein Auftrag mit einer
+     * unlesbaren Bedingung soll laufen, nicht liegenbleiben (§46).
+     */
+    const sauber = (roh) => {
+        if (!roh || typeof roh !== 'object')
+            return null;
+        const x = roh;
+        const aus = {};
+        const von = ganzeMinute(x.vonMinute), bis = ganzeMinute(x.bisMinute);
+        if (von !== null && bis !== null && von !== bis) {
+            aus.vonMinute = von;
+            aus.bisMinute = bis;
+        }
+        if (x.amStrom === true)
+            aus.amStrom = true;
+        if (x.nichtTeuer === true)
+            aus.nichtTeuer = true;
+        return hatBedingung(aus) ? aus : null;
+    };
+    return { darf, imFenster, hatBedingung, satz, uhr, sauber, MINUTEN_AM_TAG };
+})();
+window.Zeitplan = Zeitplan;
+
+</script>
+<script>
 /* ===== quell/kern/auftraege/maschine.js ===== */
 "use strict";
 /* ============================================================================
@@ -18842,6 +19048,133 @@ const Auftraege = (() => {
         catch { /* ein Horcher darf nichts anhalten */ }
     };
     /* ========================================================================
+     * DIE LAGE DES GERÄTS (E342, L103 Punkt 5)
+     *
+     * `zeitplan.ts` nebenan rechnet, ob ein Auftrag jetzt laufen darf. Es
+     * kennt weder Uhr noch `navigator` — beides steht hier. Dieselbe
+     * Arbeitsteilung wie zwischen `modell.ts` und dieser Datei.
+     * ======================================================================*/
+    /**
+     * Lädt das Gerät? `null`, solange es niemand sagen kann.
+     *
+     * `getBattery()` ist ein Promise und darf den Takt nicht aufhalten, also
+     * wird der Wert EINMAL geholt und danach gepflegt. Bis die erste Antwort
+     * da ist, steht `null` — und `null` erlaubt (siehe `zeitplan.ts`). Ein
+     * Auftrag, der auf die erste Batterieauskunft wartet, wäre genau die
+     * Sorte Auftrag, die nie läuft.
+     *
+     * Firefox und Safari haben die API nicht. Dort bleibt es für immer `null`,
+     * und „nur am Strom" ist dort wirkungslos — das steht so in den
+     * Einstellungen, statt still zu geschehen.
+     */
+    let laedt = null;
+    let stromGefragt = false;
+    const stromBeobachten = () => {
+        if (stromGefragt)
+            return;
+        stromGefragt = true;
+        const nav = globalThis.navigator;
+        if (!nav || typeof nav.getBattery !== 'function')
+            return;
+        try {
+            nav.getBattery().then((akku) => {
+                if (!akku)
+                    return;
+                laedt = !!akku.charging;
+                /* Beim Einstecken sofort nachsehen, statt bis zu vier Sekunden zu
+                   warten. Der Horcher hängt am Akku-Objekt, das so lange lebt wie
+                   die Seite — nichts abzumelden. */
+                try {
+                    akku.addEventListener('chargingchange', () => {
+                        laedt = !!akku.charging;
+                        void takten();
+                    });
+                }
+                catch { /* ein Browser ohne Horcher liefert wenigstens den Wert */ }
+            }).catch(() => { });
+        }
+        catch { /* dito */ }
+    };
+    /**
+     * Kostet die Verbindung Geld? `null`, wenn es niemand sagt.
+     *
+     * NICHT `effectiveType`. Die misst Geschwindigkeit, nicht Kosten — ein
+     * langsames WLAN im Keller sähe damit aus wie ein Mobilfunkvertrag, und
+     * der Auftrag wartete auf etwas, das nie eintritt. Gemessen werden die
+     * zwei Dinge, die wirklich „das kostet" heissen: der Datensparmodus und
+     * eine Mobilfunkverbindung.
+     */
+    const teuerJetzt = () => {
+        const nav = globalThis.navigator;
+        const v = nav && (nav.connection || nav.mozConnection || nav.webkitConnection);
+        if (!v)
+            return null;
+        if (v.saveData === true)
+            return true;
+        if (typeof v.type === 'string')
+            return v.type === 'cellular';
+        /* Es gibt eine `connection`, aber weder `saveData` noch `type`. Dann
+           weiss man es eben nicht — und das zu behaupten ist ehrlicher, als
+           `false` zu raten. */
+        return null;
+    };
+    /** Wie es jetzt aussieht, in der Form, die `zeitplan.ts` versteht. */
+    const lage = () => {
+        const d = new Date();
+        return { minute: d.getHours() * 60 + d.getMinutes(), laedt, teuer: teuerJetzt() };
+    };
+    /**
+     * Warum dieser Auftrag gerade nicht darf — oder leer.
+     *
+     * Für das Fenster aus E322. Öffentlich, weil die Schale sonst
+     * `Zeitplan.darf` selbst rufen und dafür die Lage kennen müsste; die Lage
+     * gehört aber hierher (§5).
+     */
+    const wartetAuf = (a) => {
+        if (!a || a.zustand !== 'wartet')
+            return '';
+        if (typeof Zeitplan === 'undefined')
+            return '';
+        return Zeitplan.darf(a.bedingung, lage()).grund;
+    };
+    /** Der Schlüssel, unter dem der eingestellte Zeitplan liegt. */
+    const PLAN_SCHLUESSEL = 'auftragPlan';
+    /**
+     * Was der Mensch unter Einstellungen → Speicher eingestellt hat.
+     *
+     * Gilt für JEDEN neuen Auftrag, der nicht ausdrücklich etwas anderes
+     * sagt. Ohne Einstellung: `null` — und damit alles genau wie vor E342.
+     */
+    const standardBedingung = () => {
+        if (typeof Zeitplan === 'undefined')
+            return null;
+        if (typeof Store === 'undefined' || !Store.getMeta)
+            return null;
+        try {
+            return Zeitplan.sauber(Store.getMeta(PLAN_SCHLUESSEL, null));
+        }
+        catch {
+            return null;
+        }
+    };
+    /** Den eingestellten Zeitplan lesen — für die Einstellungen. */
+    const plan = () => standardBedingung();
+    /**
+     * Den Zeitplan setzen. `null` löscht ihn.
+     *
+     * ER WIRKT NUR AUF NEUE AUFTRÄGE, und das ist Absicht: einen laufenden
+     * OCR-Lauf um Mitternacht anzuhalten, weil jemand gerade „nur nachts"
+     * einschaltet, wäre die Überraschung, die niemand will. Was liegt, liegt.
+     */
+    const planSetzen = async (roh) => {
+        if (typeof Zeitplan === 'undefined')
+            return null;
+        const b = Zeitplan.sauber(roh);
+        if (typeof Store !== 'undefined' && Store.setMeta)
+            await Store.setMeta(PLAN_SCHLUESSEL, b);
+        return b;
+    };
+    /* ========================================================================
      * ANMELDEN UND ANLEGEN
      * ======================================================================*/
     /**
@@ -18881,7 +19214,15 @@ const Auftraege = (() => {
             throw new Error('Die Ablage steht noch nicht — Aufträge brauchen sie.');
         }
         const id = opt.id || Store.uid();
-        const a = JobModell.anlegen(id, art, eingabe, jetzt(), zeitText(), opt);
+        /* DIE BEDINGUNG KOMMT VOM AUFRUFER ODER AUS DEN EINSTELLUNGEN (E342).
+           Wer keine mitgibt, bekommt die, die der Mensch unter Einstellungen →
+           Speicher eingestellt hat — und wer ausdrücklich `null` mitgibt,
+           bekommt keine. Das ist der Unterschied zwischen „ist mir gleich" und
+           „dieser hier nicht": `undefined` fragt nach, `null` sagt nein. */
+        const bedingung = 'bedingung' in opt
+            ? (typeof Zeitplan !== 'undefined' ? Zeitplan.sauber(opt.bedingung) : null)
+            : standardBedingung();
+        const a = JobModell.anlegen(id, art, eingabe, jetzt(), zeitText(), { ...opt, bedingung });
         await Store.auftragPut(a);
         melde('auftrag.angelegt', { id, art });
         /* Nicht auf den nächsten Takt warten: wer etwas anstösst, will es
@@ -19001,8 +19342,16 @@ const Auftraege = (() => {
         try {
             const t = jetzt();
             /* Lesen und Pacht schreiben in EINER Transaktion — siehe Kopf. */
+            const jetztLage = lage();
             const genommen = await Store.auftragNehmen((liste) => {
-                const kandidaten = liste.filter(a => werkzeuge.has(a.art));
+                /* ZWEI FILTER, UND SIE MEINEN VERSCHIEDENES. `werkzeuge.has` heisst
+                   „diese Fassung kann das nicht" — der Auftrag wartet auf ein
+                   anderes Fenster oder eine spätere Fassung. `Zeitplan.darf` heisst
+                   „nicht jetzt" — er wartet auf die Nacht, den Strom, das WLAN.
+                   Beide werden übersprungen, und beide sagen es im Fenster (E322):
+                   der erste durch sein Schweigen, der zweite durch seinen Grund. */
+                const kandidaten = liste.filter(a => werkzeuge.has(a.art) &&
+                    (typeof Zeitplan === 'undefined' || Zeitplan.darf(a.bedingung, jetztLage).ok));
                 const naechst = JobModell.naechster(kandidaten, t, ICH);
                 if (!naechst)
                     return null;
@@ -19125,6 +19474,9 @@ const Auftraege = (() => {
         if (bereit)
             return;
         bereit = true;
+        /* Die Batterie EINMAL fragen, und zwar hier: `getBattery()` ist ein
+           Promise, und der Takt darf nicht darauf warten (E342). */
+        stromBeobachten();
         try {
             await wiederaufnehmen();
             await aufraeumen();
@@ -19164,6 +19516,7 @@ const Auftraege = (() => {
         start, stopp, takten, anmelden, arten, artName, anlegen, abbrechen,
         nurEiner, SCHLOSS,
         alle, offen, einer, wiederaufnehmen, aufraeumen, leeren,
+        wartetAuf, lage, plan, planSetzen, PLAN_SCHLUESSEL,
         ICH, TAKT_MS, AUFHEBEN_MS
     };
 })();
@@ -34473,8 +34826,20 @@ const AuftragsAnzeige = (() => {
      * wahr, aber „wartet" ist die Auskunft, die man sucht.
      */
     const standSatz = (a) => {
-        if (a?.zustand === 'wartet')
-            return 'wartet';
+        if (a?.zustand === 'wartet') {
+            /* WARTET WORAUF? (E342, L103 Punkt 5)
+               Seit ein Auftrag „nur nachts" oder „nur am Strom" sagen darf, ist
+               das blosse Wort „wartet" die schlechteste Antwort von allen: es
+               sieht aus wie „gleich", und in Wahrheit sind es acht Stunden.
+               Der Grund kommt aus dem Kern, weil dort die Lage des Geräts liegt.
+      
+               UND ER IST LEER, WENN ES KEINEN GIBT. Ein Auftrag ohne Bedingung
+               steht wie bisher da. Ein Zusatz, der immer erscheint, wird nicht
+               gelesen — dieselbe Falle wie bei E284, E286, E288, E289, E290. */
+            const grund = (typeof Auftraege !== 'undefined' && Auftraege.wartetAuf)
+                ? Auftraege.wartetAuf(a) : '';
+            return grund || 'wartet';
+        }
         if (a?.zustand === 'fehler')
             return 'Fehler — wird erneut versucht';
         const ganz = Number(a?.schritte);
@@ -80447,7 +80812,61 @@ const Einstellungen = (() => {
                 ['90', 'nach 90 Tagen'], ['0', 'nie']], String(V('papierkorbTage', 30)))) +
             zeile('Alte Versionen aufräumen', 'Dünnt aus statt abzuschneiden: die jüngsten bleiben, danach eine je Tag, ' +
                 'danach eine je Monat. Von Hand gesicherte bleiben alle', knopf('versionen-aufraeumen', 'Aufräumen')) +
-            zeile('Speicher dauerhaft anfordern', 'Der Browser räumt die Daten dann nicht von selbst weg', knopf('speicher-sichern', 'Anfordern')),
+            zeile('Speicher dauerhaft anfordern', 'Der Browser räumt die Daten dann nicht von selbst weg', knopf('speicher-sichern', 'Anfordern')) +
+            /* --- Lange Arbeiten (L103 Punkt 5, E342) ---------------------------
+               OCR über achtzig Seiten, ein grosser Import, ein Embedding-Lauf.
+               Die Auftragsmaschine konnte sie seit E286 überleben, aber nicht
+               WARTEN WOLLEN — sie liefen, sobald sie dran waren. Ohne diesen
+               Abschnitt wäre der Zeitplan da und niemand käme heran (§47), wie
+               die KI-Grenzen vor E321. */
+            (() => {
+                const b = (typeof Auftraege !== 'undefined' && Auftraege.plan)
+                    ? Auftraege.plan() : null;
+                const l = (typeof Auftraege !== 'undefined' && Auftraege.lage)
+                    ? Auftraege.lage() : { laedt: null, teuer: null };
+                /* DIE UHRZEIT ZEIGT DER BROWSER, NICHT REDION. Ein
+                   `<input type="time">` folgt der Spracheinstellung des BROWSERS,
+                   nicht dem `lang` des Dokuments — nachgemessen: `lang="de"` am
+                   Feld ändert gar nichts. Auf einem englisch eingestellten Browser
+                   steht dort „10:00 PM", während der Satz darüber „22:00" sagt.
+        
+                   Das bleibt so, und zwar mit Absicht: ein eigenes Feld verlöre die
+                   Uhr zum Antippen, die Tastaturbedienung und das Rad am Telefon
+                   (§37, §38). Wer seinen Browser auf Englisch stellt, ERWARTET
+                   „10:00 PM". Der Satz darüber sagt es zusätzlich auf Deutsch. */
+                const zeit = (k, wert) => `<input type="time" class="ez-plan-zeit" data-plan="${k}" ` +
+                    `value="${esc(Zeitplan.uhr(wert) || '')}">`;
+                /* `schalter`, NICHT `ez-schalter`. Der erste Wurf erfand die zweite
+                   Klasse, und weil es dazu kein Stück CSS gibt, stand dort ein
+                   Knopf ohne Grösse, ohne Farbe, ohne alles — ein Schalter, den
+                   niemand sehen und niemand treffen kann (§47). Kein Prüflauf
+                   hatte etwas dagegen; gefunden auf dem Bild (§55.1). */
+                const haken = (k, an) => `<button type="button" class="schalter${an ? ' an' : ''}" ` +
+                    `data-plan-an="${k}" aria-pressed="${an ? 'true' : 'false'}"><i></i></button>`;
+                return kopf('Lange Arbeiten', 'Gilt für neue Aufträge — Seitenbilder, OCR, grosse Sicherungen. ' +
+                    'Was schon läuft, läuft weiter.') +
+                    /* DER SATZ NUR, WENN ES EINEN GIBT. Ohne Zeitplan steht hier
+                       nichts — eine Zeile „kein Zeitplan eingestellt" wäre eine
+                       Zeile, die nichts behauptet (E321, gleiche Stelle). */
+                    (Zeitplan.hatBedingung(b)
+                        ? zeile('Eingestellt', '', `<b>${esc(Zeitplan.satz(b))}</b>`)
+                        : '') +
+                    /* „Nur von … bis …" und nicht „zwischen … und …" — damit die Zeile
+                       dieselben Wörter benutzt wie der Satz zwei Zeilen darüber. */
+                    zeile('Nur von', 'Leer lassen heisst: zu jeder Zeit', zeit('von', b && b.vonMinute) + ' <span class="ez-grau">bis</span> ' +
+                        zeit('bis', b && b.bisMinute)) +
+                    /* WAS DER BROWSER NICHT WEISS, STEHT DABEI. Firefox und Safari
+                       kennen `getBattery` nicht; dort wirkt „nur am Strom" nicht,
+                       und das gehört an den Schalter geschrieben statt still zu
+                       geschehen. Ein Auftrag wartet deswegen trotzdem nie ewig:
+                       unbekannt heisst ja (siehe `core/jobs/zeitplan.ts`). */
+                    zeile('Nur am Strom', l.laedt === null
+                        ? 'Dieser Browser sagt nicht, ob geladen wird — der Schalter bleibt dann wirkungslos'
+                        : (l.laedt ? 'Das Gerät lädt gerade' : 'Das Gerät lädt gerade nicht'), haken('amStrom', !!(b && b.amStrom))) +
+                    zeile('Nicht über eine teure Verbindung', l.teuer === null
+                        ? 'Dieser Browser sagt nichts über die Verbindung — der Schalter bleibt dann wirkungslos'
+                        : (l.teuer ? 'Die Verbindung kostet gerade' : 'Die Verbindung kostet gerade nichts'), haken('nichtTeuer', !!(b && b.nichtTeuer)));
+            })(),
         abrechnung: () => kopf('Abrechnung') +
             '<div class="ez-plan"><b>Kostenlos, für immer</b>' +
             '<span>Keine Stufen, kein Abo, keine Begrenzung auf Blöcke, Gäste oder Dateigrössen. ' +
@@ -80650,6 +81069,46 @@ const Einstellungen = (() => {
             };
             el.addEventListener('change', uebernehmen);
             el.addEventListener('blur', uebernehmen);
+        });
+        /* Zeitplan für lange Arbeiten (L103 Punkt 5, E342).
+           Wieder eigene Verdrahtung, und aus demselben Grund wie eine Zeile
+           weiter oben: die vier Werte liegen ZUSAMMEN in einem Eintrag
+           `auftragPlan`. Vier `data-set`-Schlüssel wären vier Regler, die sich
+           bewegen und nichts bewirken (§47). */
+        const planSchreiben = async (aendern) => {
+            const b = { ...(Auftraege.plan() || {}) };
+            aendern(b);
+            await Auftraege.planSetzen(b);
+            /* Neu zeichnen, weil der Satz oben („zwischen 22:00 und 06:00 und
+               nur am Strom") sich mitändert. */
+            o.neuZeichnen && o.neuZeichnen();
+        };
+        const ausUhr = (text) => {
+            const m = /^(\d{1,2}):(\d{2})$/.exec(String(text || '').trim());
+            if (!m)
+                return null;
+            const h = Number(m[1]), min = Number(m[2]);
+            if (!(h >= 0 && h < 24 && min >= 0 && min < 60))
+                return null;
+            return h * 60 + min;
+        };
+        o.querySelectorAll('[data-plan]').forEach((el) => {
+            el.addEventListener('change', () => {
+                const k = el.dataset.plan === 'von' ? 'vonMinute' : 'bisMinute';
+                void planSchreiben(b => {
+                    const wert = ausUhr(el.value);
+                    if (wert === null)
+                        delete b[k];
+                    else
+                        b[k] = wert;
+                });
+            });
+        });
+        o.querySelectorAll('[data-plan-an]').forEach((el) => {
+            el.addEventListener('click', () => {
+                const k = el.dataset.planAn;
+                void planSchreiben(b => { b[k] = !b[k]; });
+            });
         });
         /* Bereiche löschen */
         o.querySelectorAll('[data-bereich-weg]').forEach((b) => {

@@ -92,7 +92,20 @@ const AuftragsAnzeige = (() => {
    * wahr, aber „wartet" ist die Auskunft, die man sucht.
    */
   const standSatz = (a: any): string => {
-    if (a?.zustand === 'wartet') return 'wartet';
+    if (a?.zustand === 'wartet') {
+      /* WARTET WORAUF? (E342, L103 Punkt 5)
+         Seit ein Auftrag „nur nachts" oder „nur am Strom" sagen darf, ist
+         das blosse Wort „wartet" die schlechteste Antwort von allen: es
+         sieht aus wie „gleich", und in Wahrheit sind es acht Stunden.
+         Der Grund kommt aus dem Kern, weil dort die Lage des Geräts liegt.
+
+         UND ER IST LEER, WENN ES KEINEN GIBT. Ein Auftrag ohne Bedingung
+         steht wie bisher da. Ein Zusatz, der immer erscheint, wird nicht
+         gelesen — dieselbe Falle wie bei E284, E286, E288, E289, E290. */
+      const grund = (typeof Auftraege !== 'undefined' && Auftraege.wartetAuf)
+        ? Auftraege.wartetAuf(a) : '';
+      return grund || 'wartet';
+    }
     if (a?.zustand === 'fehler') return 'Fehler — wird erneut versucht';
     const ganz = Number(a?.schritte);
     const fertig = Number(a?.schritt) || 0;

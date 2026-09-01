@@ -2644,6 +2644,23 @@ node pruefungen/lauf/test105.mjs
   `padding` ist vier Erklärungen, nicht eine, und §2/§3 zählten absolut
   statt den Unterschied zum Bestand.
   test332 neu (14), belegt rot. test258 19/19.
+* E342 (L103 Punkt 5, geschlossen): Heute Nacht, am Strom, nicht über
+  Mobilfunk. Die Maschine aus E286 konnte lange Arbeit überleben, aber
+  nicht warten WOLLEN. `core/jobs/zeitplan.ts` rechnet (kennt weder Uhr
+  noch `navigator` — die Lage kommt herein), `maschine.ts` beschafft die
+  Lage, Einstellungen → Speicher stellt sie ein, und das Auftragsfenster
+  sagt jetzt, WORAUF gewartet wird statt bloss „wartet".
+  Die wichtigste Entscheidung fiele auf keinem Entwicklungsrechner auf:
+  UNBEKANNT HEISST JA. Firefox kennt `getBattery` nicht — wer dort `null`
+  als „nein" liest, baut einen Auftrag, der nie läuft.
+  „Nur im WLAN" heisst nicht so: `effectiveType` misst Geschwindigkeit,
+  nicht Kosten. Gemessen werden `saveData` und `cellular`.
+  Drei Fehler fand erst das Bild (§55.1): unsichtbare Schalter (eine
+  erfundene CSS-Klasse, 0 × 0 px), zwei „und" in einem Satz, und zwei
+  Wortpaare für dieselbe Sache. §9 misst deshalb die GRÖSSE der Schalter —
+  `display` blieb bei der erfundenen Klasse `inline-block`, also
+  „sichtbar", und hätte den Fehler durchgelassen.
+  test334 neu (55), belegt rot in fünf Richtungen.
 * E341 (L75, halb geschlossen): Zwei Tabs, eine Merkliste. L75 sagte seit
   drei Tagen „KANN Einträge überschreiben" — gemessen wurde es nie, und
   beim Nachmessen war es kein „kann": zwei Seiten auf derselben Ablage
