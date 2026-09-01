@@ -970,7 +970,7 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
    44 px hoch, weil das auch am Telefon getroffen werden muss (§37). */
 .lern-verfahren{margin-top:16px}
 .lern-verfahren-knopf{min-height:44px; padding:8px 16px; border-radius:8px;
-  border:1px solid var(--rand); background:none; color:var(--text);
+  border:1px solid var(--line); background:none; color:var(--text);
   font-size:13px; cursor:pointer}
 .lern-verfahren-knopf:hover{background:var(--bg-hover)}
 .lern-verfahren-knopf.on{background:var(--accent); color:var(--auf-accent);

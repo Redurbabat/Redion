@@ -53,7 +53,10 @@ import { dirname, join } from 'node:path';
 
 const WURZEL: string = dirname(fileURLToPath(import.meta.url));
 const ZIEL = join(WURZEL, 'bilder');
-const PORT = 8891;
+/* Der Port lässt sich überschreiben. Grund: ein voller Prüflauf belegt eine
+   ganze Reihe Ports, und wer währenddessen ein Bild machen will, steht sonst
+   vor „address already in use" — gemessen am 1. September. */
+const PORT = Number(process.env['REDION_BILD_PORT']) || 8891;
 
 const TYP: Record<string, string> = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
@@ -383,6 +386,11 @@ const ANSICHTEN: Record<string, { titel: string; bauen: () => void | Promise<voi
       Store.setProp(zeile.id, 'wann', in5.toISOString().slice(0, 10));
       w.Produktwelten.lernen('lernen');
       await new Promise(r => setTimeout(r, 900));
+      /* Bis zum Lernplan-Schalter herunterrollen (E303) — er steht am Fuss
+         der Übersicht, und ein Bild vom oberen Drittel zeigt ihn nicht. */
+      document.querySelector('.lern-verfahren')
+        ?.scrollIntoView({ block: 'center' });
+      await new Promise(r => setTimeout(r, 400));
     }
   },
 
@@ -1156,6 +1164,34 @@ const ANSICHTEN: Record<string, { titel: string; bauen: () => void | Promise<voi
       await Store.flush();
       App.oeffne(seite.id);
       await new Promise(r => setTimeout(r, 1400));
+    }
+  },
+
+  /* --- Der Lernplan-Schalter (E303) ----------------------------------------
+     Er steht am Fuss der LERNZENTRALE — das ist die Überlagerung aus
+     `learning.ts`, nicht die Lernwelt-Seite. Zwei verschiedene Bildschirme,
+     und der Unterschied ist beim ersten Bildversuch aufgefallen: gerollt
+     wurde in der falschen Ansicht. */
+
+  lernplan: {
+    titel: 'SM-2 oder FSRS — der Lernplan-Schalter (E303)',
+    bauen: async () => {
+      const w = window as any;
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+      Store.setMeta('lernVerfahren', 'sm2');
+      const seite = Store.addPage(null, { text: 'Elektrotechnik – Karten', icon: '🃏' });
+      for (const [v, r] of [['Ohmsches Gesetz', 'U = R · I'],
+                            ['Leistung', 'P = U · I'],
+                            ['Reihenschaltung', 'R = R₁ + R₂ + R₃']])
+        Store.addBlock(seite.id, 'flashcard', { text: v, rueck: r });
+      await Store.flush();
+      w.Learning.open();
+      await new Promise(r => setTimeout(r, 1000));
+      document.querySelector('.lern-verfahren')?.scrollIntoView({ block: 'center' });
+      await new Promise(r => setTimeout(r, 400));
     }
   },
 

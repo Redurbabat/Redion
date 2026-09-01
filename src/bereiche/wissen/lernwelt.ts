@@ -1543,7 +1543,14 @@ const Lernwelt = (() => {
       '</div>' +
       '<div class="lw-dashboard-grid">' +
         sektion('Warum diese Reihenfolge?', '<ol class="lw-explanation"><li><strong>Fehler zuerst</strong><span>Unsichere Inhalte bekommen unmittelbar Aufmerksamkeit.</span></li>' +
-          '<li><strong>Fälligkeit danach</strong><span>Der gespeicherte SM-2-Termin bestimmt den Zeitpunkt.</span></li>' +
+          /* NICHT MEHR „SM-2-Termin" (E303). Seit es zwei Verfahren gibt,
+             wäre das die halbe Wahrheit — und zwar genau für den, der
+             umgestellt hat und sich fragt, warum die Erklärung nicht zu
+             seinen Terminen passt. Der Satz nennt jetzt, was gilt. */
+          '<li><strong>Fälligkeit danach</strong><span>Der gespeicherte Termin ' +
+          'bestimmt den Zeitpunkt — gerechnet nach ' +
+          (String(Store.getMeta('lernVerfahren', 'sm2')) === 'fsrs'
+            ? 'FSRS' : 'SM-2') + '.</span></li>' +
           '<li><strong>Neues zum Schluss</strong><span>So verdrängen neue Karten keine Wiederholung.</span></li></ol>',
           'Planung bleibt nachvollziehbar') +
         sektion('Letzte 7 Tage', historie(liste(stats.logs), 7), stats.reviewedToday + ' Wiederholungen heute') +

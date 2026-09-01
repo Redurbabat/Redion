@@ -3201,7 +3201,7 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
    44 px hoch, weil das auch am Telefon getroffen werden muss (§37). */
 .lern-verfahren{margin-top:16px}
 .lern-verfahren-knopf{min-height:44px; padding:8px 16px; border-radius:8px;
-  border:1px solid var(--rand); background:none; color:var(--text);
+  border:1px solid var(--line); background:none; color:var(--text);
   font-size:13px; cursor:pointer}
 .lern-verfahren-knopf:hover{background:var(--bg-hover)}
 .lern-verfahren-knopf.on{background:var(--accent); color:var(--auf-accent);
@@ -10506,7 +10506,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 #auswahl-leiste button{
   font-size:12.5px; padding:5px 10px; border-radius:6px;
   border:1px solid var(--line); color:var(--text-dim); background:transparent }
-#auswahl-leiste button:hover{ background:var(--hover) }
+#auswahl-leiste button:hover{ background:var(--bg-hover) }
 #auswahl-leiste button.rot{ color:var(--rot,#d64545) }
 @media(max-width:760px){
   #auswahl-leiste{ left:8px; right:8px; transform:none; bottom:74px;
@@ -10908,7 +10908,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    stünde der feste Teil rechts ausserhalb des Kastens (E103). */
 .blatt-reihe{display:flex; align-items:stretch; min-width:0;
              background:var(--bg-card); border-radius:8px 8px 0 0;
-             border:1px solid var(--rand); border-bottom:none}
+             border:1px solid var(--line); border-bottom:none}
 .blatt-werk{display:flex; flex-wrap:wrap; align-items:center; gap:4px;
             padding:6px 8px; min-width:0; flex:1 1 auto}
 .blatt-fest{display:flex; align-items:center; gap:4px; flex:0 0 auto;
@@ -10949,7 +10949,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-reihe[data-mehr="beides"] .blatt-fest{
   box-shadow:-14px 0 14px -8px rgba(0,0,0,.5)}
 
-.blatt-trenn{width:1px; height:20px; background:var(--rand); margin:0 4px}
+.blatt-trenn{width:1px; height:20px; background:var(--line); margin:0 4px}
 .blatt-farbe{width:22px; height:22px; padding:0 !important; border-radius:50%;
              border:2px solid transparent}
 .blatt-farbe.on{border-color:var(--accent-text); box-shadow:0 0 0 2px var(--bg-card) inset}
@@ -10957,7 +10957,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-strich i{display:block; width:16px; background:currentColor; border-radius:3px}
 
 .blatt-papier{position:relative; width:100%; background:var(--paper,#fff); color:#111;
-              border:1px solid var(--rand); border-radius:0 0 8px 8px;
+              border:1px solid var(--line); border-radius:0 0 8px 8px;
               box-shadow:0 2px 10px rgba(0,0,0,.18); overflow:hidden}
 .blatt-inhalt{position:relative; z-index:1; height:100%; overflow:auto}
 /* Der Text auf dem Papier ist schwarz — auch im Dunkelmodus. */
@@ -10977,7 +10977,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-flur > .blatt-papier{flex:0 0 var(--seiten-anteil,100%); min-width:0;
                             border-radius:0 0 0 8px}
 .blatt-randfeld{flex:1 1 auto; min-width:0; background:var(--paper,#fff);
-                border:1px solid var(--rand); border-left:0;
+                border:1px solid var(--line); border-left:0;
                 border-radius:0 0 8px 0;
                 box-shadow:0 2px 10px rgba(0,0,0,.18)}
 .blatt-marken{position:absolute; inset:0; width:100%; height:100%; z-index:2;
@@ -11057,7 +11057,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-papierwahl{padding:3px !important; width:26px; height:26px;
                   display:inline-flex; align-items:center; justify-content:center}
 .blatt-papierwahl i{display:block; width:100%; height:100%; border-radius:3px;
-                    background-color:#fff; border:1px solid var(--rand)}
+                    background-color:#fff; border:1px solid var(--line)}
 /* Auch hier stand `--akzent`, das es nicht gibt (gefunden beim Bau des
    Schaltplans). Der Ersatzwert rettete vor der Unsichtbarkeit — aber die
    gewählte Papierart leuchtete seit E100 immer blau, in keinem der beiden
@@ -11615,7 +11615,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   .blatt-reihe{ flex-wrap:wrap }
   .blatt-werk{ flex:1 1 100%; min-width:100% }
   .blatt-fest{ flex:1 1 100%; justify-content:flex-end;
-               padding:0 8px 6px; border-top:1px solid var(--rand) }
+               padding:0 8px 6px; border-top:1px solid var(--line) }
 }
 
 /* --- „50 von 300 Zeilen" (L22, E180) --------------------------------------
@@ -11626,7 +11626,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   padding:8px 4px 2px; font-size:13px; color:var(--text-faint) }
 .db-grenze button{ padding:3px 10px; border-radius:6px; font-size:13px;
   color:var(--text); background:var(--bg-hover) }
-.db-grenze button:hover{ background:var(--rand) }
+.db-grenze button:hover{ background:var(--line) }
 
 /* ============================================================================
  * SCHALTPLAN (Punkte 11–40)
@@ -111622,7 +111622,14 @@ const Lernwelt = (() => {
             '</div>' +
             '<div class="lw-dashboard-grid">' +
             sektion('Warum diese Reihenfolge?', '<ol class="lw-explanation"><li><strong>Fehler zuerst</strong><span>Unsichere Inhalte bekommen unmittelbar Aufmerksamkeit.</span></li>' +
-                '<li><strong>Fälligkeit danach</strong><span>Der gespeicherte SM-2-Termin bestimmt den Zeitpunkt.</span></li>' +
+                /* NICHT MEHR „SM-2-Termin" (E303). Seit es zwei Verfahren gibt,
+                   wäre das die halbe Wahrheit — und zwar genau für den, der
+                   umgestellt hat und sich fragt, warum die Erklärung nicht zu
+                   seinen Terminen passt. Der Satz nennt jetzt, was gilt. */
+                '<li><strong>Fälligkeit danach</strong><span>Der gespeicherte Termin ' +
+                'bestimmt den Zeitpunkt — gerechnet nach ' +
+                (String(Store.getMeta('lernVerfahren', 'sm2')) === 'fsrs'
+                    ? 'FSRS' : 'SM-2') + '.</span></li>' +
                 '<li><strong>Neues zum Schluss</strong><span>So verdrängen neue Karten keine Wiederholung.</span></li></ol>', 'Planung bleibt nachvollziehbar') +
             sektion('Letzte 7 Tage', historie(liste(stats.logs), 7), stats.reviewedToday + ' Wiederholungen heute') +
             sektion('Kartenarten', '<dl class="lw-card-types">' + [...artZaehler.entries()].map(([art, anzahl]) => '<div><dt>' + esc(art) + '</dt><dd>' + anzahl + '</dd></div>').join('') + '</dl>', stats.total + ' Karten mit Quellen') +

@@ -21,6 +21,7 @@
  *
  *   node pruefungen/lauf/test297.mts
  * ==========================================================================*/
+declare const Learning: any;
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -236,5 +237,93 @@ p('Der Block trägt bei SM-2 auch `sm2`', geschrieben['k1']?.lernAlgorithmus ===
 p('Und bei FSRS auch `fsrs`', geschrieben['k2']?.lernAlgorithmus === 'fsrs',
   JSON.stringify(geschrieben['k2']?.lernAlgorithmus));
 
-console.log(`\n${ok} von ${ok + weg} — Suite 297 (E303: FSRS-Kern und Anschluss)`);
+/* ==========================================================================
+ * §9 · Der Schalter ist wirklich ein Schalter
+ * --------------------------------------------------------------------------
+ * §47: eine Auskunft ohne Griff ist eine Anzeige ohne Knopf. Hier stand bis
+ * E303 ein Satz — „SM-2 bleibt der Standard, es findet keine automatische
+ * FSRS-Migration statt" —, und das zweite Verfahren gab es gar nicht.
+ *
+ * Dieser Abschnitt braucht als einziger einen Browser, deshalb steht er am
+ * Ende: wer nur den Kern prüfen will, hat sein Ergebnis vorher.
+ * ========================================================================*/
+console.log('\n9 · Der Schalter ist wirklich ein Schalter');
+
+const { chromium } = await import('playwright');
+const http = await import('node:http');
+const TYP: Record<string, string> = {
+  '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css',
+  '.png': 'image/png', '.json': 'application/json',
+  '.webmanifest': 'application/manifest+json', '.ico': 'image/x-icon'
+};
+const PORT = 9097;
+const server = http.createServer((a: any, b: any) => {
+  const rein = decodeURIComponent((a.url ?? '/').split('?')[0] ?? '/');
+  const pfad = path.join(WURZEL, rein === '/' ? 'index.html' : rein.slice(1));
+  if (!pfad.startsWith(WURZEL) || !fs.existsSync(pfad) || fs.statSync(pfad).isDirectory()) {
+    b.writeHead(404); b.end(); return;
+  }
+  b.writeHead(200, { 'Content-Type': TYP[path.extname(pfad)] ?? 'application/octet-stream' });
+  b.end(fs.readFileSync(pfad));
+});
+await new Promise<void>(f => { server.listen(PORT, () => f()); });
+const browser = await chromium.launch();
+const seite = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+const seitenFehler: string[] = [];
+seite.on('pageerror', (e: any) => seitenFehler.push(String(e.message).slice(0, 120)));
+await seite.goto(`http://localhost:${PORT}/index.html`);
+await seite.waitForTimeout(2800);
+await seite.evaluate(async () => {
+  Store.setMeta('rundgangGesehen', true);
+  document.querySelectorAll('.overlay').forEach(o => o.remove());
+  document.getElementById('rg-willkommen')?.remove();
+  document.getElementById('rg-einladung')?.remove();
+  Store.setMeta('lernVerfahren', 'sm2');
+  const seiteK = Store.addPage(null, { text: 'Karten', icon: '🃏' });
+  Store.addBlock(seiteK.id, 'flashcard', { text: 'Ohm', rueck: 'U = R · I' });
+  await Store.flush();
+  Learning.open();
+  await new Promise(r => setTimeout(r, 900));
+});
+await seite.waitForTimeout(600);
+
+const schalter = await seite.evaluate(() => {
+  const kn = [...document.querySelectorAll<HTMLElement>('.lern-verfahren-knopf')];
+  return { anzahl: kn.length, texte: kn.map(k => k.textContent || ''),
+           an: kn.filter(k => k.classList.contains('on')).map(k => k.dataset.verfahren),
+           hoch: kn.map(k => Math.round(k.getBoundingClientRect().height)),
+           satz: (document.querySelector('.lern-verfahren p:last-of-type')?.textContent || '')
+             .slice(0, 40) };
+});
+p('Es gibt zwei Knöpfe', schalter.anzahl === 2, JSON.stringify(schalter.texte));
+p('Genau einer ist an, und es ist SM-2',
+  JSON.stringify(schalter.an) === '["sm2"]', JSON.stringify(schalter.an));
+p('Beide sind 44 px hoch (§37)', schalter.hoch.every(h => h >= 44),
+  JSON.stringify(schalter.hoch));
+p('Und ein Satz erklärt, was gerade gilt', /SM-2 ist das Verfahren/.test(schalter.satz),
+  schalter.satz);
+
+await seite.click('.lern-verfahren-knopf[data-verfahren="fsrs"]');
+await seite.waitForTimeout(500);
+const nachher2 = await seite.evaluate(() => ({
+  gespeichert: Store.getMeta('lernVerfahren', 'sm2'),
+  an: [...document.querySelectorAll<HTMLElement>('.lern-verfahren-knopf')]
+    .filter(k => k.classList.contains('on')).map(k => k.dataset.verfahren),
+  gedrueckt: [...document.querySelectorAll<HTMLElement>('.lern-verfahren-knopf')]
+    .map(k => k.getAttribute('aria-pressed')),
+  satz: (document.querySelector('.lern-verfahren p:last-of-type')?.textContent || '').slice(0, 30)
+}));
+p('Ein Klick stellt wirklich um', nachher2.gespeichert === 'fsrs', String(nachher2.gespeichert));
+p('Der andere Knopf ist jetzt an', JSON.stringify(nachher2.an) === '["fsrs"]',
+  JSON.stringify(nachher2.an));
+p('Und ein Vorleseprogramm erfährt es auch (§38)',
+  JSON.stringify(nachher2.gedrueckt) === '["false","true"]',
+  JSON.stringify(nachher2.gedrueckt));
+p('Der Satz wechselt mit', /FSRS rechnet/.test(nachher2.satz), nachher2.satz);
+p('Keine Seitenfehler', seitenFehler.length === 0, seitenFehler.join(' | '));
+
+await browser.close();
+server.close();
+
+console.log(`\n${ok} von ${ok + weg} — Suite 297 (E303: FSRS-Kern, Anschluss, Schalter)`);
 process.exit(weg ? 1 : 0);

@@ -22971,3 +22971,75 @@ Geprüft
 test297 50/50 — Kern und Anschluss, ohne Browser. Mitgelaufen: test89 98/98,
 test202 84/84, test204 41/41, test283 35/35.
 typecheck grün · sw v64 · Einzeldatei 7721 KB.
+
+
+E304 — Acht Kanten, die es gar nicht gab
+================================================================================
+1. September 2026
+
+Gefunden auf dem Bild des Lernplan-Schalters (E303): der nicht gewählte Knopf
+hatte keinen Rand — er sah aus wie Text neben einem Knopf. Nachgemessen im
+laufenden Programm:
+
+    border: 1px solid var(--rand)   →   border-top-width: 0px
+
+`--rand` ist in Redion NIRGENDS definiert. Und ein `var()` ohne Wert und ohne
+Ersatzwert macht nicht etwa die Farbe schwarz oder erbt sie — es macht die
+GANZE Eigenschaft ungültig. Bei `border` heisst das: gar kein Rand. Bei
+`background`: durchsichtig.
+
+Betroffen waren acht Stellen, sieben davon älter als dieser Tag:
+
+    .blatt-reihe        der Rand der Werkzeugleiste über dem Papier
+    .blatt-papier       der Rand des Papiers selbst
+    .blatt-trenn        der Trennstrich zwischen den Werkzeugen (unsichtbar)
+    .blatt-randfeld     der Rand des Randstreifens (E301, von heute)
+    .db-grenze          eine Datenbankkante und ihr Überfahr-Hintergrund
+    .lern-verfahren     der Knopf, an dem es auffiel (von heute)
+    …und ein Kartenrand in der Bausteine-Datei
+
+Und ein neunter Fall derselben Sorte, den der Wächter danach fand:
+`#auswahl-leiste button:hover{ background: var(--hover) }`. Die Variable
+heisst `--bg-hover`. Die Knöpfe der Auswahlleiste hatten also überhaupt keine
+Rückmeldung beim Überfahren.
+
+Alle neun heissen jetzt `--line` beziehungsweise `--bg-hover`.
+
+
+Warum das niemandem auffiel
+--------------------------------------------------------------------------------
+Weil ein fehlender Rand aussieht wie eine Gestaltungsentscheidung. Ein
+falsches Wort im Text liest man; eine Kante, die nicht da ist, sieht man
+nicht — man sieht nur eine Fläche ohne Kante und denkt sich nichts dabei.
+
+Genau deshalb hat es fünf Monate überlebt, obwohl es an der auffälligsten
+Stelle der App sass: am Rand jedes Blattes.
+
+
+Der Wächter
+--------------------------------------------------------------------------------
+`test298` liest alle achtzehn Stilblätter, sammelt jede Variable, die
+irgendwo GESETZT wird — in CSS als `--x: wert` oder im Code als
+`setProperty('--x', …)` —, und meldet jede, die BENUTZT wird und aus keiner
+dieser beiden Quellen kommt. Ein `var(--x, ersatz)` ist ausdrücklich in
+Ordnung: dort steht ja, was gelten soll.
+
+Zwei Dinge musste er dazulernen, und beide beim ersten Lauf:
+
+  · Die Papiermasse (`--blatt-karo-quer` und sechs Geschwister) stehen im
+    TypeScript als Objektschlüssel in Anführungszeichen. Der erste Entwurf
+    meldete sie als quellenlos — sie stehen dort sehr wohl.
+  · Der erfundene Name der Gegenprobe wird zusammengesetzt statt
+    hingeschrieben, damit er sich nicht selbst findet. Derselbe Fehler wie
+    bei E298s Wächter, eine Woche später wieder.
+
+Gegengeprüft: eine erfundene Variable wird gemeldet, dieselbe mit Ersatzwert
+nicht.
+
+
+Geprüft
+--------------------------------------------------------------------------------
+test298 8/8. Mitgelaufen: test272 153/153, test290 13/13 (nach Eintrag des
+neuen Präfixes `lern` ins Namensraum-Verzeichnis), test248 45/45,
+test177 69/69.
+typecheck grün · sw v65 · Einzeldatei 7722 KB.
