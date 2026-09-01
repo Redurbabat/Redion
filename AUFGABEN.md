@@ -2239,3 +2239,15 @@ node pruefungen/lauf/test105.mjs
   Dazu zwei tote Selektoren entfernt (`.pdfseite`, `.blattraum` trafen nie
   etwas) und zwei neue Zeichen (`filter`, `sort`). test306 neu (21); §4
   klickt jeden Griff wirklich an, statt zu behaupten, dass er dasteht.
+* E313 (L61 geschlossen): Der Deckel zeigt die Seite. Vorher stand auf dem
+  Deckel eines eingelesenen PDF ein weisses Blatt mit dem Wort „PDF" — bei
+  Redur die Mehrheit der Dokumente. Nicht auf dem in L61 vorgeschlagenen Weg
+  (ein Vorschaubild mitschreiben), sondern auf dem kürzeren: die Seite HAT
+  das Bild schon, als echte Datei (`bildDateiId`, `dateiId`).
+  `Vorschau.bildDatei()` nimmt die erste in Lesereihenfolge. Keine
+  Speicheränderung, keine Migration, und es kann nicht veralten — ein
+  mitgeschriebenes Bild von gestern zeigt die Seite von gestern.
+  test307 neu (13); §3 misst `naturalWidth` und `blob:`, also ob ein Bild
+  wirklich ANKOMMT. Offen bleibt genau ein Fall: ein von Hand beschriebenes
+  leeres Blatt hat keine Datei.
+  Nebenbei: L64 war seit E212 erledigt, stand aber noch als offen im Titel.

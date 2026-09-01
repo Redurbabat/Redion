@@ -692,6 +692,29 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 .bib-deckel:hover .bib-deckel-blatt{ box-shadow:var(--shadow-3) }
 .bib-deckel:active .bib-deckel-blatt{ transform:scale(.985) }
 /* Der Auslauf nach unten — dasselbe Papier wie im Heftregal. */
+/* DAS ECHTE BILD AUF DEM DECKEL (L61, E313).
+   Es füllt das Blatt ganz aus und wird beschnitten statt verzerrt — ein
+   gestauchtes Titelbild sieht man sofort, und dann glaubt man dem Deckel
+   nicht mehr. `top:0` überschreibt das Innenmass des Blattes, denn das ist
+   für Textzeilen gedacht, nicht für ein Bild. */
+.bib-deckel-bild{
+  position:absolute; inset:0; width:100%; height:100%;
+  object-fit:cover; object-position:top center;
+  border-radius:5px; background:var(--bg-card)
+}
+/* ÜBER EINEM BILD ZIEHT DIE MARKE NACH UNTEN.
+   Auf dem Bild vom 1. September sass „PDF" links oben auf dem Titel der
+   Seite — genau auf der Zeile, die man lesen will. Oben steht bei einem
+   Skript die Überschrift; unten links ist der leerste Fleck einer
+   Textseite. Und einen eigenen Grund braucht sie dort ohnehin, sonst
+   steht sie auf dunklem Papier unlesbar da. */
+.bib-deckel-bild ~ .bib-deckel-marke{
+  top:auto; bottom:6px; left:6px; border-radius:4px;
+  background:var(--bg-card); border:1px solid var(--line); color:var(--text-dim)
+}
+/* Der Verlauf unten verdeckt abgeschnittenen TEXT. Über einem Bild hat er
+   nichts zu suchen — er würde dessen untere Zeile ausbleichen. */
+.bib-deckel-blatt:has(.bib-deckel-bild)::after{ display:none }
 .bib-deckel-blatt::after{
   content:""; position:absolute; right:0; bottom:0; left:0; height:38px;
   background:linear-gradient(to bottom, transparent, var(--bg-card));

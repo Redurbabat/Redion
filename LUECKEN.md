@@ -2336,8 +2336,19 @@ Streifen mit Zeichen und Namen aus `Register.bloecke`.
 
 WAS OFFEN BLEIBT, und zwar zweierlei:
 
-1. Das eigentliche Vorschau-BILD. Unverändert eine Speicheränderung mit
-   eigenem Plan.
+1. ~~Das eigentliche Vorschau-BILD.~~ GESCHLOSSEN am 1. September 2026 mit
+   E313 — auf einem anderen Weg als hier vorgeschlagen, und das ist der
+   Punkt: nicht mitschreiben, sondern zeigen, was schon da ist. Eine
+   eingelesene PDF-Seite trägt `bildDateiId`, ein Bildblock `dateiId`;
+   `Vorschau.bildDatei()` nimmt die erste in Lesereihenfolge, und der Deckel
+   zeigt sie. Keine Speicheränderung, keine Migration, und es kann nicht
+   veralten — ein mitgeschriebenes Bild von gestern zeigt die Seite von
+   gestern.
+
+   ES BLEIBT GENAU EIN FALL: ein leeres A4-Blatt, auf das nur von Hand
+   gezeichnet wurde, hat keine Datei. Sein Deckel bleibt weiss. Dafür
+   bräuchte es das Rendern — und dann auch den eigenen Plan, den dieser
+   Absatz ursprünglich verlangt hat.
 2. ~~`pdfseite` und `zeichenflaeche` haben nirgends einen deutschen Namen.~~
    GESCHLOSSEN mit E239 — und es waren FÜNF, nicht zwei: `database`,
    `pdfseite`, `spalte`, `tabelle`, `zeichenflaeche`.
@@ -2400,7 +2411,7 @@ Ereignisbus zur vollen Auswahl mit Suchfeld.
 Die anderen acht Aktionen bleiben im Slash-Menü — sie handeln von EINEM
 bestimmten Block, und ohne Schreibzeiger gibt es keinen.
 
-L64 — Die echten Zeichenwerkzeuge fehlen im Reiter „Zeichnen"
+L64 — Die echten Zeichenwerkzeuge fehlen im Reiter „Zeichnen" — GESCHLOSSEN
 --------------------------------------------------------------------------------
 Auf einem Bildschirmfoto der PDF-Seite steht eine vollständige Zeichenleiste:
 Schreiben, Auswahl, Stift, Marker, Linie, Pfeil, Rechteck, Ellipse, Text,

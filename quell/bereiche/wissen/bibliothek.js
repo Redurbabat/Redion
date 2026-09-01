@@ -387,13 +387,23 @@ const Bibliothek = (() => {
     const MIT_TEXT = new Set(['seite', 'karten', 'db']);
     const deckelKarte = (p) => {
         const art = artVon(p);
-        const bild = MIT_TEXT.has(art.id) ? (Vorschau.miniatur(p.id, 5) || '') : '';
+        /* DAS ECHTE BILD GEHT VOR (L61, E313). Eine eingelesene PDF-Seite und
+           ein Bildblock tragen ihre Datei bei sich; die zeigt der Deckel, statt
+           eine weisse Fläche mit dem Wort „PDF" darauf. Erst wenn es keine
+           gibt, kommt die Textvorschau — und die nur bei den Arten, bei denen
+           im Text etwas steht. */
+        const datei = Vorschau.bildDatei ? Vorschau.bildDatei(p.id) : null;
+        const bild = datei
+            ? `<img class="bib-deckel-bild" data-vorschau="${esc(datei)}" alt="" loading="lazy">`
+            : (MIT_TEXT.has(art.id) ? (Vorschau.miniatur(p.id, 5) || '') : '');
         const wann = wannText(p.zuletztGeoeffnet || p.edited || p.created);
         return `<button class="bib-deckel" data-id="${esc(p.id)}" data-art="${esc(art.id)}" ` +
             `title="${esc(p.text || 'Ohne Titel')}">` +
             `<span class="bib-deckel-blatt mini-zeilen${bild ? '' : ' is-leer'}">` +
             '<i class="bib-papier" aria-hidden="true"></i>' +
             (bild || '') +
+            /* Die Marke bleibt: sie sagt, WAS es ist, und das sagt ein Bild
+               der ersten Seite nicht. Sie sitzt in der Ecke, nicht davor. */
             (art.id === 'pdf' ? '<i class="bib-deckel-marke">PDF</i>' : '') +
             `<i class="bib-deckel-stern${p.favorite ? ' an' : ''}" aria-hidden="true">` +
             (p.favorite ? '\u2605' : '\u2606') + '</i>' +
@@ -661,6 +671,10 @@ const Bibliothek = (() => {
             Register.symbole.fuelle(wrap);
         binde(wrap);
         platzNachtragen(wrap);
+        /* Die Adressen der Vorschaubilder kommen aus der Ablage und damit
+           später als die Karte (E313). */
+        if (Vorschau.bilderNachtragen)
+            Vorschau.bilderNachtragen(wrap);
     };
     /**
      * Der Kopf der Deckelansicht: Titel, „+ Neu", Formwahl.

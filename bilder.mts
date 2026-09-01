@@ -1248,6 +1248,51 @@ const ANSICHTEN: Record<string, { titel: string; bauen: () => void | Promise<voi
     }
   },
 
+  /* --- Vorschaubild auf dem Deckel (L61, E313) ----------------------------
+     Vorher stand auf dem Deckel eines eingelesenen PDF ein weisses Blatt
+     mit dem Wort „PDF". Das Bild muss zeigen, dass dort jetzt die erste
+     Seite steht — und dass die Marke daneben trotzdem lesbar bleibt. */
+
+  deckelbild: {
+    titel: 'Der Deckel zeigt die Seite (E313, L61)',
+    bauen: async () => {
+      const w = window as any;
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      document.getElementById('rg-einladung')?.remove();
+
+      /* Ein gezeichnetes Blatt als „eingelesene Seite" — echte Bytes, kein
+         Platzhalter: nur so zeigt das Bild wirklich den Weg durch die
+         Dateiablage. */
+      const male = (text: string, farbe: string): Promise<Blob> => {
+        const c = document.createElement('canvas');
+        c.width = 595; c.height = 842;
+        const g = c.getContext('2d')!;
+        g.fillStyle = '#fff'; g.fillRect(0, 0, 595, 842);
+        g.fillStyle = farbe; g.fillRect(0, 0, 595, 96);
+        g.fillStyle = '#fff'; g.font = 'bold 34px sans-serif';
+        g.fillText(text, 34, 62);
+        g.fillStyle = '#333'; g.font = '19px sans-serif';
+        for (let i = 0; i < 14; i++)
+          g.fillText('Zeile ' + (i + 1) + ' des Skripts \u2014 Elektrotechnik', 34, 150 + i * 32);
+        return new Promise(r => c.toBlob(b => r(b!), 'image/png'));
+      };
+
+      for (const [titel, farbe] of [['Grundlagen Elektrotechnik', '#2563eb'],
+                                    ['Messtechnik', '#059669'],
+                                    ['Installationsnormen', '#b45309']]) {
+        const seite = Store.addPage(null, { text: String(titel), icon: '\u{1F4D5}' });
+        const blob = await male(String(titel), String(farbe));
+        const datei = await w.Dateien.ablegen(blob, { name: titel + '.png', blockId: seite.id });
+        Store.addBlock(seite.id, 'pdfseite', { nr: 1, bildDateiId: datei.id });
+      }
+      await Store.flush();
+      w.Bibliothek.oeffne();
+      await new Promise(r => setTimeout(r, 1400));
+    }
+  },
+
   lernplan: {
     titel: 'SM-2 oder FSRS — der Lernplan-Schalter (E303)',
     bauen: async () => {

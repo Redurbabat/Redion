@@ -252,6 +252,98 @@ const Vorschau = (() => {
     };
     /** Wie viele lebende Blöcke hängen an dieser Seite? Eine Ebene, gezählt. */
     const umfang = (seiteId) => kinder(seiteId).length;
-    return { klartext, anriss, miniatur, umfang };
+    /* ==========================================================================
+     * DAS BILD EINER SEITE (L61, E313)
+     * --------------------------------------------------------------------------
+     * `miniatur` liest TEXT. Genau die Seiten, die man am Bild am schnellsten
+     * wiedererkennt — ein eingelesenes PDF, ein Foto, ein beschriebenes
+     * Blatt —, haben kaum welchen; ihr Deckel stand deshalb weiss da, mit dem
+     * Wort „PDF" darauf.
+     *
+     * ─── WARUM HIER NICHTS GERENDERT UND NICHTS GESPEICHERT WIRD ─────────────
+     *
+     * L61 schlug vor, beim Speichern ein kleines Bild MITZUSCHREIBEN. Das
+     * wäre eine Speicheränderung mit eigenem Plan (§9), und sie hätte einen
+     * zweiten Bestand erzeugt, der veralten kann: ein Vorschaubild von
+     * gestern zeigt die Seite von gestern.
+     *
+     * Der kürzere Weg: die allermeisten dieser Seiten HABEN das Bild schon.
+     * Eine eingelesene PDF-Seite trägt `bildDateiId`, ein Bildblock `dateiId`
+     * — beides sind echte Dateien in der Ablage. Die Vorschau zeigt also den
+     * INHALT und nicht eine Kopie davon: sie kann nicht veralten, sie kostet
+     * kein Byte, und sie reist mit der Sicherung mit, weil die Datei es tut.
+     *
+     * Was damit NICHT geht, steht in LUECKEN.md: ein leeres Blatt, auf das
+     * nur von Hand gezeichnet wurde, hat keine Datei. Dafür bräuchte es das
+     * Rendern — und dann auch den eigenen Plan.
+     */
+    /** Blockarten, die ihr Bild als Datei tragen, und unter welchem Feld. */
+    const BILDFELD = {
+        pdfseite: 'bildDateiId',
+        image: 'dateiId',
+        bild: 'dateiId'
+    };
+    /**
+     * Die Kennung der Datei, die eine Seite am besten zeigt — oder nichts.
+     *
+     * Genommen wird die ERSTE gefundene in Lesereihenfolge: bei einem
+     * eingelesenen PDF ist das Seite 1, und das ist die Seite, die ein Mensch
+     * als Deckel erwartet.
+     */
+    const bildDatei = (seiteId, tiefe = 3) => {
+        const gesehen = new Set();
+        const suche = (id, rest) => {
+            if (!id || rest < 0 || gesehen.has(id))
+                return null;
+            gesehen.add(id);
+            const b = Store.getBlock(id);
+            if (!b)
+                return null;
+            const feld = BILDFELD[String(b.type || '')];
+            if (feld && b[feld])
+                return String(b[feld]);
+            for (const k of b.content || []) {
+                const kind = Store.getBlock(k);
+                if (!kind || kind.alive === false)
+                    continue;
+                const treffer = suche(k, rest - 1);
+                if (treffer)
+                    return treffer;
+            }
+            return null;
+        };
+        return suche(seiteId, tiefe);
+    };
+    /**
+     * Die Adressen aller `[data-vorschau]` in einem Baumstück nachtragen.
+     *
+     * Die Karten entstehen als Zeichenkette; eine Adresse aus der Ablage
+     * kommt aber erst später. Deshalb steht im `img` zuerst nur die Kennung,
+     * und dieser Griff füllt `src` nach — wer kein Bild bekommt, verliert
+     * seines wieder, statt als kaputtes Bildzeichen stehen zu bleiben.
+     */
+    const bilderNachtragen = (wurzel) => {
+        if (!wurzel || typeof Dateien === 'undefined')
+            return;
+        wurzel.querySelectorAll('img[data-vorschau]').forEach(el => {
+            const id = el.dataset['vorschau'] || '';
+            if (!id)
+                return;
+            const da = Dateien.adresseBekannt ? Dateien.adresseBekannt(id) : null;
+            if (da) {
+                el.src = da;
+                return;
+            }
+            Dateien.adresse(id).then((u) => {
+                if (!el.isConnected)
+                    return;
+                if (u)
+                    el.src = u;
+                else
+                    el.remove();
+            }, () => { el.remove(); });
+        });
+    };
+    return { klartext, anriss, miniatur, umfang, bildDatei, bilderNachtragen };
 })();
 window.Vorschau = Vorschau;

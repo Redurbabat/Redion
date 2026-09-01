@@ -23729,3 +23729,77 @@ zurückgebracht hat (vorher war er wegen `var(--rand)` unsichtbar), und die
 Fläche liegt richtigerweise darin. Man malt nicht auf den Rahmen.
 
 Einzeldatei 7774 KB.
+
+
+================================================================================
+E313 — Der Deckel zeigt die Seite (L61 geschlossen)
+================================================================================
+1. September 2026
+
+`Vorschau.miniatur` liest TEXT. Genau die Seiten, die man am Bild am
+schnellsten wiedererkennt — ein eingelesenes PDF, ein Foto —, haben kaum
+welchen. In der Bibliothek stand ihr Deckel deshalb weiss da, mit dem Wort
+„PDF" darauf. Bei Redur ist das die Mehrheit der Dokumente.
+
+
+Die Entscheidung: nichts rendern, nichts speichern
+--------------------------------------------------------------------------------
+
+L61 schlug vor, beim Speichern einer Seite ein kleines Bild MITZUSCHREIBEN —
+stückweise in die Dateiablage, mit eigenem Plan und Prüflauf, weil es eine
+Speicheränderung ist (§9, §30).
+
+Nicht genommen, und zwar aus einem inhaltlichen Grund und nicht aus
+Bequemlichkeit: ein mitgeschriebenes Vorschaubild ist ein ZWEITER Bestand,
+und der kann veralten. Ein Bild von gestern zeigt die Seite von gestern, und
+man merkt es nicht — dieselbe Sorte Fehler wie das `durationMs` aus E311.
+
+Der kürzere Weg: die allermeisten dieser Seiten HABEN das Bild schon. Eine
+eingelesene PDF-Seite trägt `bildDateiId`, ein Bildblock `dateiId`, und
+beides sind echte Dateien in der Ablage. `Vorschau.bildDatei(seiteId)` sucht
+die erste in Lesereihenfolge — bei einem Skript ist das Seite 1, und genau
+die erwartet ein Mensch als Deckel.
+
+Damit zeigt die Vorschau den INHALT und nicht eine Kopie davon:
+
+  · sie kann nicht veralten,
+  · sie kostet kein zusätzliches Byte,
+  · sie reist mit der Sicherung mit, weil die Datei es tut,
+  · und sie braucht keine Migration.
+
+Die Adresse kommt aus der Ablage und damit später als die Karte. Im `img`
+steht deshalb zuerst nur die Kennung; `Vorschau.bilderNachtragen(wurzel)`
+füllt `src` nach — und entfernt das `img`, wenn keine Adresse kommt. Ein
+kaputtes Bildzeichen auf dem Deckel wäre schlechter als gar keines.
+
+
+Was offen bleibt, und es ist genau ein Fall
+--------------------------------------------------------------------------------
+
+Ein leeres A4-Blatt, auf das nur von Hand gezeichnet wurde, hat keine Datei.
+Sein Deckel bleibt weiss. Dafür bräuchte es das Rendern — und dann auch den
+eigenen Plan, den L61 dafür verlangt. Das steht dort jetzt als das, was es
+ist: ein Fall, nicht die ganze Lücke.
+
+
+Auf dem Bild gefunden
+--------------------------------------------------------------------------------
+
+Die Marke „PDF" sass links oben — genau auf der Zeile, die man lesen will,
+denn oben steht bei einem Skript die Überschrift. Sie zieht über einem Bild
+nach unten links, auf den leersten Fleck einer Textseite, und bekommt einen
+eigenen Grund; auf dunklem Papier war sie sonst unlesbar. Und der
+Verlaufsschleier am Fuss des Deckels, der abgeschnittenen TEXT weich macht,
+hat über einem Bild nichts zu suchen — er bleicht dessen untere Zeile aus.
+
+
+Geprüft
+--------------------------------------------------------------------------------
+test307 neu, 13/13. §3 misst nicht, ob ein `img` im Baum steht, sondern ob
+ein Bild ANKOMMT: `naturalWidth` ist die Breite der wirklich geladenen
+Datei, und die Adresse muss mit `blob:` anfangen — eine Data-URL wäre §14.
+§2 und §4 sind die Gegenproben: eine reine Textseite bekommt keines, und
+eine Kennung ohne Datei hinterlässt kein kaputtes Bildzeichen, sondern gar
+keins.
+
+Einzeldatei 7780 KB.

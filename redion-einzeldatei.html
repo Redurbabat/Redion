@@ -7957,6 +7957,29 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 .bib-deckel:hover .bib-deckel-blatt{ box-shadow:var(--shadow-3) }
 .bib-deckel:active .bib-deckel-blatt{ transform:scale(.985) }
 /* Der Auslauf nach unten — dasselbe Papier wie im Heftregal. */
+/* DAS ECHTE BILD AUF DEM DECKEL (L61, E313).
+   Es füllt das Blatt ganz aus und wird beschnitten statt verzerrt — ein
+   gestauchtes Titelbild sieht man sofort, und dann glaubt man dem Deckel
+   nicht mehr. `top:0` überschreibt das Innenmass des Blattes, denn das ist
+   für Textzeilen gedacht, nicht für ein Bild. */
+.bib-deckel-bild{
+  position:absolute; inset:0; width:100%; height:100%;
+  object-fit:cover; object-position:top center;
+  border-radius:5px; background:var(--bg-card)
+}
+/* ÜBER EINEM BILD ZIEHT DIE MARKE NACH UNTEN.
+   Auf dem Bild vom 1. September sass „PDF" links oben auf dem Titel der
+   Seite — genau auf der Zeile, die man lesen will. Oben steht bei einem
+   Skript die Überschrift; unten links ist der leerste Fleck einer
+   Textseite. Und einen eigenen Grund braucht sie dort ohnehin, sonst
+   steht sie auf dunklem Papier unlesbar da. */
+.bib-deckel-bild ~ .bib-deckel-marke{
+  top:auto; bottom:6px; left:6px; border-radius:4px;
+  background:var(--bg-card); border:1px solid var(--line); color:var(--text-dim)
+}
+/* Der Verlauf unten verdeckt abgeschnittenen TEXT. Über einem Bild hat er
+   nichts zu suchen — er würde dessen untere Zeile ausbleichen. */
+.bib-deckel-blatt:has(.bib-deckel-bild)::after{ display:none }
 .bib-deckel-blatt::after{
   content:""; position:absolute; right:0; bottom:0; left:0; height:38px;
   background:linear-gradient(to bottom, transparent, var(--bg-card));
@@ -96647,7 +96670,99 @@ const Vorschau = (() => {
     };
     /** Wie viele lebende Blöcke hängen an dieser Seite? Eine Ebene, gezählt. */
     const umfang = (seiteId) => kinder(seiteId).length;
-    return { klartext, anriss, miniatur, umfang };
+    /* ==========================================================================
+     * DAS BILD EINER SEITE (L61, E313)
+     * --------------------------------------------------------------------------
+     * `miniatur` liest TEXT. Genau die Seiten, die man am Bild am schnellsten
+     * wiedererkennt — ein eingelesenes PDF, ein Foto, ein beschriebenes
+     * Blatt —, haben kaum welchen; ihr Deckel stand deshalb weiss da, mit dem
+     * Wort „PDF" darauf.
+     *
+     * ─── WARUM HIER NICHTS GERENDERT UND NICHTS GESPEICHERT WIRD ─────────────
+     *
+     * L61 schlug vor, beim Speichern ein kleines Bild MITZUSCHREIBEN. Das
+     * wäre eine Speicheränderung mit eigenem Plan (§9), und sie hätte einen
+     * zweiten Bestand erzeugt, der veralten kann: ein Vorschaubild von
+     * gestern zeigt die Seite von gestern.
+     *
+     * Der kürzere Weg: die allermeisten dieser Seiten HABEN das Bild schon.
+     * Eine eingelesene PDF-Seite trägt `bildDateiId`, ein Bildblock `dateiId`
+     * — beides sind echte Dateien in der Ablage. Die Vorschau zeigt also den
+     * INHALT und nicht eine Kopie davon: sie kann nicht veralten, sie kostet
+     * kein Byte, und sie reist mit der Sicherung mit, weil die Datei es tut.
+     *
+     * Was damit NICHT geht, steht in LUECKEN.md: ein leeres Blatt, auf das
+     * nur von Hand gezeichnet wurde, hat keine Datei. Dafür bräuchte es das
+     * Rendern — und dann auch den eigenen Plan.
+     */
+    /** Blockarten, die ihr Bild als Datei tragen, und unter welchem Feld. */
+    const BILDFELD = {
+        pdfseite: 'bildDateiId',
+        image: 'dateiId',
+        bild: 'dateiId'
+    };
+    /**
+     * Die Kennung der Datei, die eine Seite am besten zeigt — oder nichts.
+     *
+     * Genommen wird die ERSTE gefundene in Lesereihenfolge: bei einem
+     * eingelesenen PDF ist das Seite 1, und das ist die Seite, die ein Mensch
+     * als Deckel erwartet.
+     */
+    const bildDatei = (seiteId, tiefe = 3) => {
+        const gesehen = new Set();
+        const suche = (id, rest) => {
+            if (!id || rest < 0 || gesehen.has(id))
+                return null;
+            gesehen.add(id);
+            const b = Store.getBlock(id);
+            if (!b)
+                return null;
+            const feld = BILDFELD[String(b.type || '')];
+            if (feld && b[feld])
+                return String(b[feld]);
+            for (const k of b.content || []) {
+                const kind = Store.getBlock(k);
+                if (!kind || kind.alive === false)
+                    continue;
+                const treffer = suche(k, rest - 1);
+                if (treffer)
+                    return treffer;
+            }
+            return null;
+        };
+        return suche(seiteId, tiefe);
+    };
+    /**
+     * Die Adressen aller `[data-vorschau]` in einem Baumstück nachtragen.
+     *
+     * Die Karten entstehen als Zeichenkette; eine Adresse aus der Ablage
+     * kommt aber erst später. Deshalb steht im `img` zuerst nur die Kennung,
+     * und dieser Griff füllt `src` nach — wer kein Bild bekommt, verliert
+     * seines wieder, statt als kaputtes Bildzeichen stehen zu bleiben.
+     */
+    const bilderNachtragen = (wurzel) => {
+        if (!wurzel || typeof Dateien === 'undefined')
+            return;
+        wurzel.querySelectorAll('img[data-vorschau]').forEach(el => {
+            const id = el.dataset['vorschau'] || '';
+            if (!id)
+                return;
+            const da = Dateien.adresseBekannt ? Dateien.adresseBekannt(id) : null;
+            if (da) {
+                el.src = da;
+                return;
+            }
+            Dateien.adresse(id).then((u) => {
+                if (!el.isConnected)
+                    return;
+                if (u)
+                    el.src = u;
+                else
+                    el.remove();
+            }, () => { el.remove(); });
+        });
+    };
+    return { klartext, anriss, miniatur, umfang, bildDatei, bilderNachtragen };
 })();
 window.Vorschau = Vorschau;
 
@@ -109188,13 +109303,23 @@ const Bibliothek = (() => {
     const MIT_TEXT = new Set(['seite', 'karten', 'db']);
     const deckelKarte = (p) => {
         const art = artVon(p);
-        const bild = MIT_TEXT.has(art.id) ? (Vorschau.miniatur(p.id, 5) || '') : '';
+        /* DAS ECHTE BILD GEHT VOR (L61, E313). Eine eingelesene PDF-Seite und
+           ein Bildblock tragen ihre Datei bei sich; die zeigt der Deckel, statt
+           eine weisse Fläche mit dem Wort „PDF" darauf. Erst wenn es keine
+           gibt, kommt die Textvorschau — und die nur bei den Arten, bei denen
+           im Text etwas steht. */
+        const datei = Vorschau.bildDatei ? Vorschau.bildDatei(p.id) : null;
+        const bild = datei
+            ? `<img class="bib-deckel-bild" data-vorschau="${esc(datei)}" alt="" loading="lazy">`
+            : (MIT_TEXT.has(art.id) ? (Vorschau.miniatur(p.id, 5) || '') : '');
         const wann = wannText(p.zuletztGeoeffnet || p.edited || p.created);
         return `<button class="bib-deckel" data-id="${esc(p.id)}" data-art="${esc(art.id)}" ` +
             `title="${esc(p.text || 'Ohne Titel')}">` +
             `<span class="bib-deckel-blatt mini-zeilen${bild ? '' : ' is-leer'}">` +
             '<i class="bib-papier" aria-hidden="true"></i>' +
             (bild || '') +
+            /* Die Marke bleibt: sie sagt, WAS es ist, und das sagt ein Bild
+               der ersten Seite nicht. Sie sitzt in der Ecke, nicht davor. */
             (art.id === 'pdf' ? '<i class="bib-deckel-marke">PDF</i>' : '') +
             `<i class="bib-deckel-stern${p.favorite ? ' an' : ''}" aria-hidden="true">` +
             (p.favorite ? '\u2605' : '\u2606') + '</i>' +
@@ -109462,6 +109587,10 @@ const Bibliothek = (() => {
             Register.symbole.fuelle(wrap);
         binde(wrap);
         platzNachtragen(wrap);
+        /* Die Adressen der Vorschaubilder kommen aus der Ablage und damit
+           später als die Karte (E313). */
+        if (Vorschau.bilderNachtragen)
+            Vorschau.bilderNachtragen(wrap);
     };
     /**
      * Der Kopf der Deckelansicht: Titel, „+ Neu", Formwahl.
