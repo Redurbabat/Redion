@@ -159,11 +159,16 @@ const ueberlappt = alleLaeufe.filter((x: any) => alleLaeufe.some((y: any) =>
 gleich('Kein Lauf aus Tab A überschneidet einen aus Tab B',
   ueberlappt.length, 0);
 
-/* Beide Tabs haben etwas getan — sonst hätte einer nur zugesehen, und das
-   Schloss wäre eine Anführerwahl, keine Abwechslung. */
-p('Und beide Tabs kamen zum Zug',
-  laeufe[0].length > 0 && laeufe[1].length > 0,
-  `a=${laeufe[0].length} b=${laeufe[1].length}`);
+/* HIER STEHT KEINE BEHAUPTUNG ÜBER GERECHTIGKEIT, und das ist Absicht.
+   Sie stand einmal da — „beide Tabs kamen zum Zug" — und fiel unter Last
+   einmal um: wenn die Takte der beiden Tabs ungünstig zueinander liegen,
+   holt einer alle sechs. Das ist kein Fehler, denn `ifAvailable` verspricht
+   AUSSCHLUSS, keine Abwechslung. Eine Prüfung, die mehr behauptet als das
+   Produkt zusagt, wird irgendwann rot und hat trotzdem niemandem geholfen.
+   Was zählt, steht darüber: jeder Auftrag genau einmal, keine
+   Überschneidung. */
+console.log('    (zur Kenntnis: a=' + laeufe[0].length +
+            ' b=' + laeufe[1].length + ' — Abwechslung ist nicht zugesagt)');
 
 /* ------------------------------------------------------------------------ */
 console.log('\n2b · Und der Ausschluss, ERZWUNGEN statt abgewartet');
@@ -203,7 +208,10 @@ const gleichzeitig = async (): Promise<any[]> => {
   ];
 };
 const gz = await gleichzeitig();
-p('Beide Tabs haben in den sechs Runden gearbeitet', gz.length >= 6,
+/* Der Name sagt, was gemessen wird: die SUMME der Läufe, nicht dass beide
+   Tabs dabei waren. Ein Punkt, dessen Name mehr verspricht als seine
+   Messung, ist eine falsche Auskunft — auch wenn er grün ist. */
+p('In den sechs Runden wurde sechsmal gearbeitet', gz.length >= 6,
   String(gz.length));
 const gzUeberlappt = gz.filter((x: any) => gz.some((y: any) =>
   x !== y && x.tab !== y.tab && x.von < y.bis && y.von < x.bis));
