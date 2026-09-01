@@ -4627,7 +4627,21 @@ einem unerwarteten Ausgang. Ein Wächter müsste jede neue Klasse gegen alle
 breiten Regeln stellen — machbar, aber er würde Dutzende gewollter Fälle
 melden.
 
-FÜR DIE FÜNFTE GEHT ES ABER DOCH, und zwar billig: `hidden` hat genau EINE
+FÜR DIE VIERTE GEHT ES DOCH, und zwar ohne Fehlalarm (E340): zwei
+Erklärungen für DASSELBE in ZWEI Dateien, wo die frühere nie zum Zug kommt,
+sind immer ein Versehen. Nachgezählt vor dem Bauen: 45 637 Erklärungen,
+davon 27 tot — darunter ein fünfspaltiges Raster mit 56px-Knöpfen, das
+niemand je gesehen hat. Alle 27 sind fort, und dass das folgenlos ist,
+wurde gemessen statt behauptet: der gerechnete Stil von 21 320 Elementen in
+zwanzig Lagen, vorher gegen nachher, null Unterschiede. test332 hält es
+fest.
+
+Nicht gemeldet wird dabei: zweimal derselbe WERT (unschön, aber verlustfrei
+— und wer das meldete, meldete Dutzende gewollter Fälle mit) und zweimal
+dasselbe in EINER Datei (das ist eine Umschaltung und liest sich von oben
+nach unten richtig).
+
+FÜR DIE FÜNFTE GEHT ES EBENSO, und zwar billig: `hidden` hat genau EINE
 gewollte Bedeutung. Ein Element, das es trägt und trotzdem gezeichnet wird,
 ist immer ein Fehler — es gibt keinen Fall, in dem man das will. test258 §9
 geht deshalb über ALLES mit `hidden`, am Telefon und am Rechner, und
@@ -4635,8 +4649,10 @@ verlangt `display:none`. Gemessen: 14 bzw. 15 solche Elemente, keines
 sichtbar. Nimmt man die Klassenregel wieder heraus, meldet er
 `mb-auftraege.mb-rechts-knopf → grid 44×44`.
 
-Das ist der Unterschied zwischen den fünf Fällen: bei Breiten gibt es
-gewollte Ausnahmen, bei `hidden` nicht.
+Das ist der Unterschied zwischen den fünf Fällen: bei BREITEN gibt es
+gewollte Ausnahmen — dort bleibt es bei der kleinen Antwort. Bei `hidden`
+und bei doppelt erklärten Regeln nicht, und dort steht jetzt je ein
+Wächter.
 
 DIE VIERTE HAT EINE EIGENE LEHRE: nicht nur „meine Regel könnte
 verlieren", sondern „meine Regel könnte es schon geben". Vor einer neuen
@@ -4655,7 +4671,8 @@ meinen — `.finder .res > button` statt `.finder .res button`. Das ist ein
 eigener Bogen mit einem Bild je Fenster, denn es ändert bestehende
 Oberflächen, und die Wirkung sieht man erst beim Hinsehen.
 
-Gefunden am 1. September 2026 (E320, E321, E324, E326, E334).
+Gefunden am 1. September 2026 (E320, E321, E324, E326, E334);
+zwei der fünf haben seit E334 und E340 einen Wächter.
 
 
 ================================================================================

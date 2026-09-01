@@ -229,7 +229,9 @@ a.bl:hover{color:var(--text)}
 .k-quelle:hover{color:var(--accent-text)}
 .lern-btns{justify-content:center}
 .fkarte{width:100%; border:1px solid var(--line); border-radius:8px; padding:10px 12px; margin:6px 0}
-.fk-kopf{font-size:11.5px; color:var(--text-faint); display:flex; gap:8px; margin-bottom:5px}
+/* Abstand und unteres Mass kommen aus `bausteine.css` und gewinnen dort;
+   Schriftgrösse und Farbe stehen NUR hier (E340). */
+.fk-kopf{font-size:11.5px; color:var(--text-faint); display:flex}
 .fk-status{margin-left:auto}
 .fk-vor{margin-top:8px; padding-top:8px; border-top:1px dashed var(--line); font-size:14px}
 .fk-vor b{display:block; margin-bottom:3px}
@@ -618,8 +620,11 @@ table.stab td:focus, table.stab th:focus{box-shadow:inset 0 0 0 2px var(--accent
   margin-top:5px; width:100%; padding:8px 10px; background:var(--bg-input);
   border:1px solid var(--line); border-radius:7px; outline:none; color:var(--text); font-size:14px;
 }
-.cover-gitter{display:grid; grid-template-columns:repeat(5,1fr); gap:8px; padding:16px}
-.cover-gitter button{height:56px; border-radius:7px; border:1px solid var(--line)}
+/* SPALTEN, ABSTAND UND KNOPFMASS STEHEN IN `bausteine.css` und gewinnen
+   dort — fünf feste Spalten und 56px hohe Knöpfe waren hier seit jeher tot
+   (E340). Das Innenmass gibt es nur hier. */
+.cover-gitter{display:grid; padding:16px}
+.cover-gitter button{border:1px solid var(--line)}
 .cover-gitter button:hover{outline:2px solid var(--accent)}
 
 /* --- Suchen auf der Seite ------------------------------------------------------------------------ */

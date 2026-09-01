@@ -25889,3 +25889,92 @@ test331 neu, 40 Punkte. Belegt rot dreimal: die Belege abschalten kostet
 sieben Punkte; einen Beleg wieder als Karte zählen einen; die Herkunft
 immer nennen zwei.
 test283 35/35, test318 18/18, test281 48/48, test105 108 ok.
+
+
+E340 — Siebenundzwanzig Regeln, die nie zum Zug kamen (L111, vierte Variante)
+════════════════════════════════════════════════════════════════════════════
+
+L111 sammelt seit dem 1. September eine Falle in fünf Varianten. Die vierte
+hat eine eigene Lehre, und sie ist die einzige, für die ein Wächter billig
+ist:
+
+    Nicht nur „meine Regel könnte verlieren".
+    Sondern: „meine Regel könnte es schon geben."
+
+E326 schrieb `.banner.info` nach `ansichten.css`, obwohl es sie in
+`bausteine.css` schon gab. Gleiche Stärke, spätere Datei gewinnt — die neue
+Regel war TOT, und die alte setzte im dunklen Thema 3.11:1 gegen die 4.5
+aus §38. Kein Prüflauf hatte etwas davon; gefunden hat es das Bild.
+
+NACHGEZÄHLT, BEVOR GEBAUT WURDE
+
+45 637 Erklärungen in 45 385 Gruppen. Davon tot: SIEBENUNDZWANZIG.
+
+    · die Bewegungssperre, zweimal (grund.css 1ms, bausteine.css .001ms)
+    · `.top-btn.on` — aufbau.css setzt Akzent, werkzeuge.css Gelb
+    · `.menu button .sub` — aufbau.css 12px, bausteine.css 11.5px
+    · `.leer-zustand` — anatomie.css `--space-7`, werkzeuge.css 34px 20px
+    · `.fk-kopf` — Abstand und unteres Mass
+    · `.cover-gitter` — FÜNF FESTE SPALTEN und 56px hohe Knöpfe, gegen
+      `auto-fill minmax(120px)` und 74px
+    · `.fr-zeile` — Abstand und Innenmass
+
+Der `.cover-gitter`-Fall ist der sprechendste: jemand hat ein fünfspaltiges
+Raster mit 56px-Knöpfen entworfen, und niemand hat es je gesehen.
+
+DASS ES FOLGENLOS IST, WURDE NICHT BEHAUPTET, SONDERN GEMESSEN
+
+Eine tote Erklärung zu entfernen KANN nichts ändern — aber „kann nicht" ist
+kein Beleg. Also der gerechnete Stil JEDES Elements in zwanzig Lagen: fünf
+Ansichten × hell und dunkel × Rechner und Telefon. 21 320 Elemente, vorher
+und nachher, je 30 Eigenschaften und die Kastenmasse.
+
+    Unterschiede: 0
+
+Und ein Umweg gehört dazu: der erste Vergleich meldete 18 Unterschiede. Es
+waren dieselben drei Breiten in anderer REIHENFOLGE — das Regal listet
+Dokumente nicht in fester Ordnung. Der Vergleich zählt jetzt als Menge und
+nicht als Liste. Eine Messung, die die Reihenfolge mitmisst, misst etwas
+anderes, als sie behauptet.
+
+ENTFERNT WIRD IMMER DER VERLIERER, nie der Gewinner. Bei der
+Bewegungssperre ist es andersherum gelaufen, und mit Absicht: die beiden
+Werte (1ms und .001ms) meinen dasselbe, aber der Platz neben den
+`--motion-*`-Marken in `grund.css` ist der bessere. Also steht dort jetzt
+der GEWINNENDE Wert, und die zweite Fassung ist fort — das gerechnete
+Ergebnis ist Zeichen für Zeichen dasselbe.
+
+UND EIN WÄCHTER, DER DAS ACHTUNDZWANZIGSTE FÄNGT
+
+test332 liest die CSSOM in der Reihenfolge, in der `index.html` lädt, und
+meldet jede Erklärung, die eine spätere DATEI bei gleichem Wähler und
+gleicher Medienlage erschlägt. Gemessen wird im Browser und nicht mit einer
+eigenen Spezifitätsrechnung — ein Nachbau rechnet irgendwann anders als der
+Browser, und dann meldet er das Falsche.
+
+WARUM NUR ÜBER DATEIGRENZEN: zweimal dasselbe in EINER Datei ist eine
+Umschaltung („erst allgemein, dann für diesen Fall") und liest sich von oben
+nach unten richtig. Über Dateigrenzen hinweg sieht es niemand.
+
+WARUM NICHT BEI GLEICHEM WERT: zweimal dasselbe zu sagen ist unschön, aber
+es geht nichts verloren — und wer das meldete, meldete Dutzende gewollter
+Fälle mit. Das ist der Unterschied zu den Breiten-Varianten von L111, für
+die ein Wächter genau deshalb nicht geht.
+
+UND DIE PRÜFUNG HAT SICH SELBST BERICHTIGT, zweimal
+
+Erstens erwartete §2 „zwei erfundene Regeln, zwei Meldungen" und bekam
+fünf: `padding` ist eine KURZSCHREIBWEISE für vier. Gezählt wird je
+Eigenschaft, und das ist auch das Richtige — eine Regel kann bei einer
+Eigenschaft gewinnen und bei der nächsten verlieren, und genau so lag der
+`.fk-kopf`-Fall.
+
+Zweitens zählten §2 und §3 ABSOLUT. Als die Mutation für §1 eine tote Regel
+zurückbrachte, fielen beide gleich mit, obwohl an ihnen nichts falsch war.
+Sie zählen jetzt den UNTERSCHIED zum Bestand. Eine Prüfung, die nur bei
+sauberem Bestand etwas aussagt, sagt genau dann nichts, wenn man sie
+braucht.
+
+test332 neu, 14 Punkte. Belegt rot: die `.cover-gitter`-Regel
+zurückgebracht, und §1 nennt alle drei toten Erklärungen beim Namen —
+während §2 und §3 grün bleiben.

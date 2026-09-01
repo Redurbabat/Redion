@@ -2627,3 +2627,20 @@ node pruefungen/lauf/test105.mjs
   zuerst das AUFHEBEN zu bauen.
   test331 neu (40), dreimal belegt rot. test283 35/35, test318 18/18,
   test281 48/48, test105 108 ok.
+* E340 (L111, vierte Variante): Siebenundzwanzig Regeln, die nie zum Zug
+  kamen. Nachgezählt vor dem Bauen: 45 637 CSS-Erklärungen, davon 27 tot —
+  eine spätere Datei erschlägt sie bei gleichem Wähler. Darunter ein
+  fünfspaltiges `.cover-gitter` mit 56px-Knöpfen, das niemand je gesehen
+  hat. Alle 27 sind fort, und dass das FOLGENLOS ist, wurde gemessen statt
+  behauptet: der gerechnete Stil jedes Elements in zwanzig Lagen (fünf
+  Ansichten × hell/dunkel × Rechner/Telefon), 21 320 Elemente vorher gegen
+  nachher — null Unterschiede. Der erste Vergleich meldete 18; es waren
+  dieselben Breiten in anderer REIHENFOLGE, das Regal listet nicht in
+  fester Ordnung. Jetzt als Menge verglichen.
+  Dazu test332 als Wächter für das achtundzwanzigste. Er liest die CSSOM
+  im Browser statt eine eigene Spezifitätsrechnung zu bauen, und er meldet
+  NUR über Dateigrenzen und NUR bei verschiedenem Wert — sonst meldete er
+  Dutzende gewollter Fälle. Er hat sich zweimal selbst berichtigt:
+  `padding` ist vier Erklärungen, nicht eine, und §2/§3 zählten absolut
+  statt den Unterschied zum Bestand.
+  test332 neu (14), belegt rot. test258 19/19.

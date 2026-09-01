@@ -176,7 +176,9 @@ table.grid th.fixiert{position:sticky; left:38px; z-index:3; background:var(--bg
 .fg-kopf button{font-size:12px; padding:3px 8px; border-radius:5px; border:1px solid var(--line)}
 .fg-kopf button:hover{background:var(--bg-hover)}
 .fg-leer{font-size:12.5px; color:var(--text-faint); padding:6px 0}
-.fr-zeile{display:flex; align-items:center; gap:7px; padding:5px 0; flex-wrap:wrap}
+/* Abstand und Innenmass kommen aus `bausteine.css`; `flex-wrap` steht nur
+   hier (E340). */
+.fr-zeile{display:flex; align-items:center; flex-wrap:wrap}
 .fr-wo{font-size:12.5px; color:var(--text-faint); width:58px; flex:0 0 58px}
 .fg-op{
   font-size:12px; padding:3px 10px; border-radius:5px; border:1px solid var(--line);

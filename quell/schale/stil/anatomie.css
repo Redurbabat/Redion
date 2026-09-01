@@ -75,7 +75,9 @@
    nur in der Lernwelt (E204); jetzt kann jeder Bereich sie tragen. */
 .leer-zustand{
   display:grid; justify-items:center; align-content:center;
-  gap:var(--space-3); padding:var(--space-7);
+  /* KEIN `padding` (E340): `werkzeuge.css` setzt `34px 20px` und lädt
+     später — das Mass hier war tot. */
+  gap:var(--space-3);
   color:var(--text-dim); text-align:center;
 }
 .leer-zeichen{

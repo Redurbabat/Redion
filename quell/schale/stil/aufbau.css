@@ -132,7 +132,8 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
    dieselbe Zeile schon anderswo; hier fehlte sie. */
 .top-btn[hidden]{display:none}
 .top-btn:hover{background:var(--bg-hover); color:var(--text)}
-.top-btn.on{color:var(--accent-text)}
+/* `.top-btn.on` steht in `werkzeuge.css` (gelb) und für die Kopfzeile in
+   `grund.css` (#topbar, Akzent). Die Zeile hier war seit jeher tot (E340). */
 
 #scroll{flex:1; overflow-y:auto}
 #page{max-width:900px; margin:0 auto; padding:0 96px 40vh}
@@ -233,7 +234,8 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
 .menu button:hover, .menu button.on{background:var(--bg-hover)}
 .menu button .mi{width:22px; text-align:center; flex:0 0 22px; font-size:15px}
 .menu button .ms{color:var(--text-faint); font-size:11.5px; margin-left:auto; font-family:var(--mono)}
-.menu button .sub{font-size:12px; color:var(--text-faint); display:block}
+/* `.menu button .sub` steht vollständig in `bausteine.css`; alle drei
+   Angaben hier wurden überschrieben (E340). */
 .menu hr{border:none; border-top:1px solid var(--line); margin:5px 0}
 .swatches{display:grid; grid-template-columns:repeat(5,1fr); gap:5px; padding:6px}
 .swatches button{

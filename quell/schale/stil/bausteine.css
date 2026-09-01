@@ -2415,12 +2415,8 @@ table.pivot tbody tr:hover td{ background:var(--bg-hover); }
 .blk [contenteditable]:focus-visible{ outline-offset:0; }
 
 /* 2. Wer keine Bewegung mag, bekommt keine. */
-@media (prefers-reduced-motion: reduce){
-  *, *::before, *::after{
-    animation-duration:.001ms !important; animation-iteration-count:1 !important;
-    transition-duration:.001ms !important; scroll-behavior:auto !important;
-  }
-}
+/* Die Bewegungssperre stand hier ein zweites Mal und steht jetzt nur noch
+   in `grund.css`, bei den `--motion-*`-Marken (E340). */
 body[data-bewegung="ruhig"] *, body[data-bewegung="ruhig"] *::before{
   animation:none !important; transition:none !important;
 }

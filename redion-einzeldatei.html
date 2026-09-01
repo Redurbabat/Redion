@@ -655,10 +655,14 @@ html[data-theme="light"]{
     --motion-normal:  1ms;
     --motion-slow:    1ms;
   }
+  /* .001ms UND NICHT 1ms (E340). Dieselbe Sperre stand bis eben ZWEIMAL da,
+     hier mit 1ms und in `bausteine.css` mit .001ms — und weil bausteine
+     später lädt, galt immer die zweite. Der Wert steht jetzt hier, wo auch
+     die `--motion-*`-Marken stehen, und die zweite ist fort. */
   *, *::before, *::after{
-    animation-duration: 1ms !important;
+    animation-duration: .001ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 1ms !important;
+    transition-duration: .001ms !important;
     scroll-behavior: auto !important;
   }
 }
@@ -1114,7 +1118,8 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
    dieselbe Zeile schon anderswo; hier fehlte sie. */
 .top-btn[hidden]{display:none}
 .top-btn:hover{background:var(--bg-hover); color:var(--text)}
-.top-btn.on{color:var(--accent-text)}
+/* `.top-btn.on` steht in `werkzeuge.css` (gelb) und für die Kopfzeile in
+   `grund.css` (#topbar, Akzent). Die Zeile hier war seit jeher tot (E340). */
 
 #scroll{flex:1; overflow-y:auto}
 #page{max-width:900px; margin:0 auto; padding:0 96px 40vh}
@@ -1215,7 +1220,8 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
 .menu button:hover, .menu button.on{background:var(--bg-hover)}
 .menu button .mi{width:22px; text-align:center; flex:0 0 22px; font-size:15px}
 .menu button .ms{color:var(--text-faint); font-size:11.5px; margin-left:auto; font-family:var(--mono)}
-.menu button .sub{font-size:12px; color:var(--text-faint); display:block}
+/* `.menu button .sub` steht vollständig in `bausteine.css`; alle drei
+   Angaben hier wurden überschrieben (E340). */
 .menu hr{border:none; border-top:1px solid var(--line); margin:5px 0}
 .swatches{display:grid; grid-template-columns:repeat(5,1fr); gap:5px; padding:6px}
 .swatches button{
@@ -1920,7 +1926,9 @@ body[data-ruhig="an"] #topbar [data-ruhig="mehr"]{ display:none }
    nur in der Lernwelt (E204); jetzt kann jeder Bereich sie tragen. */
 .leer-zustand{
   display:grid; justify-items:center; align-content:center;
-  gap:var(--space-3); padding:var(--space-7);
+  /* KEIN `padding` (E340): `werkzeuge.css` setzt `34px 20px` und lädt
+     später — das Mass hier war tot. */
+  gap:var(--space-3);
   color:var(--text-dim); text-align:center;
 }
 .leer-zeichen{
@@ -2471,7 +2479,9 @@ a.bl:hover{color:var(--text)}
 .k-quelle:hover{color:var(--accent-text)}
 .lern-btns{justify-content:center}
 .fkarte{width:100%; border:1px solid var(--line); border-radius:8px; padding:10px 12px; margin:6px 0}
-.fk-kopf{font-size:11.5px; color:var(--text-faint); display:flex; gap:8px; margin-bottom:5px}
+/* Abstand und unteres Mass kommen aus `bausteine.css` und gewinnen dort;
+   Schriftgrösse und Farbe stehen NUR hier (E340). */
+.fk-kopf{font-size:11.5px; color:var(--text-faint); display:flex}
 .fk-status{margin-left:auto}
 .fk-vor{margin-top:8px; padding-top:8px; border-top:1px dashed var(--line); font-size:14px}
 .fk-vor b{display:block; margin-bottom:3px}
@@ -2860,8 +2870,11 @@ table.stab td:focus, table.stab th:focus{box-shadow:inset 0 0 0 2px var(--accent
   margin-top:5px; width:100%; padding:8px 10px; background:var(--bg-input);
   border:1px solid var(--line); border-radius:7px; outline:none; color:var(--text); font-size:14px;
 }
-.cover-gitter{display:grid; grid-template-columns:repeat(5,1fr); gap:8px; padding:16px}
-.cover-gitter button{height:56px; border-radius:7px; border:1px solid var(--line)}
+/* SPALTEN, ABSTAND UND KNOPFMASS STEHEN IN `bausteine.css` und gewinnen
+   dort — fünf feste Spalten und 56px hohe Knöpfe waren hier seit jeher tot
+   (E340). Das Innenmass gibt es nur hier. */
+.cover-gitter{display:grid; padding:16px}
+.cover-gitter button{border:1px solid var(--line)}
 .cover-gitter button:hover{outline:2px solid var(--accent)}
 
 /* --- Suchen auf der Seite ------------------------------------------------------------------------ */
@@ -3649,7 +3662,9 @@ table.grid th.fixiert{position:sticky; left:38px; z-index:3; background:var(--bg
 .fg-kopf button{font-size:12px; padding:3px 8px; border-radius:5px; border:1px solid var(--line)}
 .fg-kopf button:hover{background:var(--bg-hover)}
 .fg-leer{font-size:12.5px; color:var(--text-faint); padding:6px 0}
-.fr-zeile{display:flex; align-items:center; gap:7px; padding:5px 0; flex-wrap:wrap}
+/* Abstand und Innenmass kommen aus `bausteine.css`; `flex-wrap` steht nur
+   hier (E340). */
+.fr-zeile{display:flex; align-items:center; flex-wrap:wrap}
 .fr-wo{font-size:12.5px; color:var(--text-faint); width:58px; flex:0 0 58px}
 .fg-op{
   font-size:12px; padding:3px 10px; border-radius:5px; border:1px solid var(--line);
@@ -9715,12 +9730,8 @@ table.pivot tbody tr:hover td{ background:var(--bg-hover); }
 .blk [contenteditable]:focus-visible{ outline-offset:0; }
 
 /* 2. Wer keine Bewegung mag, bekommt keine. */
-@media (prefers-reduced-motion: reduce){
-  *, *::before, *::after{
-    animation-duration:.001ms !important; animation-iteration-count:1 !important;
-    transition-duration:.001ms !important; scroll-behavior:auto !important;
-  }
-}
+/* Die Bewegungssperre stand hier ein zweites Mal und steht jetzt nur noch
+   in `grund.css`, bei den `--motion-*`-Marken (E340). */
 body[data-bewegung="ruhig"] *, body[data-bewegung="ruhig"] *::before{
   animation:none !important; transition:none !important;
 }
