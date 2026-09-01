@@ -22830,3 +22830,61 @@ ihre Breite" (354 → 255 px) und „man kommt waagrecht dorthin".
 Mitgelaufen: test177 69/69, test192 25/25, test228 24/24, test285 52/52,
 test292 45/45.
 typecheck grün · sw v63 · Einzeldatei 7706 KB.
+
+
+E302 — Die Lücke war falsch: den Escape-Griff gibt es längst
+================================================================================
+1. September 2026
+
+L105 Punkt 1 sagte: „Redion hat KEINEN gemeinsamen Escape-Griff für
+`.overlay`. Der Wissensgraph und das Schlagwortregister schliessen bis heute
+nicht auf Escape." §38 verlangt es ausdrücklich, also wurde gebaut: ein
+Modul `schale/ueberlagerung/flucht.ts`, mit zwei Zuhörern, damit eigene
+Griffe Vorrang behalten.
+
+Beim Nachmessen: ES GIBT IHN LÄNGST. `schale.ts` bindet seit E272 Phase G
+einen Griff, der das letzte `.menu`, sonst das letzte `.overlay` schliesst —
+mit einer ausführlichen Begründung, warum das LETZTE und nicht das erste.
+
+Das Modul wurde wieder ausgebaut. Zwei Zuständigkeiten für dieselbe Sache
+sind schlimmer als eine.
+
+
+Drei Dinge, die dabei sichtbar wurden
+--------------------------------------------------------------------------------
+1. DIE LÜCKE WAR AUS DEM GEDÄCHTNIS GESCHRIEBEN. `verweise.ts` hat zwei
+   Treffer auf „Escape", beide in der Linkvorschau. Daraus wurde „der Graph
+   schliesst nicht" — ohne die Schale anzusehen. Genau das, wovor CLAUDE.md
+   52.8 warnt, nur eine Ebene höher: nicht raten, nachsehen.
+
+2. DAS NEUE MODUL HÄTTE GAR NICHTS GETAN, und der Prüflauf hätte es nicht
+   gemerkt. Beide fragten `offsetParent !== null`, um zu wissen, ob ein
+   Fenster sichtbar ist. Für ein Element mit `position:fixed` ist
+   `offsetParent` IMMER null — und `.overlay` ist fixed. Das Modul fand nie
+   ein Fenster; die Prüfung zählte immer null offene, „Escape schliesst es"
+   war 0 === 0 und grün.
+
+   Aufgefallen ist es nur, weil vier ANDERE Punkte derselben Prüfung rot
+   waren („der Wissensgraph geht auf — 0"). Eine Prüfung, die den Fehler des
+   Geprüften teilt, sieht ihn nicht — sie bestätigt ihn.
+
+3. AN DER STELLE HING KEIN WÄCHTER. Ein Verhalten, das seit E272 besteht und
+   das niemand misst, kann in einer Lückenliste als „gibt es nicht" landen,
+   ohne dass etwas rot wird. `test296` misst es jetzt: das oberste Fenster,
+   genau eines, und mit einem eigenen Griff zusammen trotzdem nur eines.
+   Gegengeprüft — ohne die vier Zeilen in `schale.ts` fallen sieben von
+   siebzehn Punkten.
+
+
+Was OFFEN bleibt
+--------------------------------------------------------------------------------
+Der bestehende Griff prüft `e.defaultPrevented` nicht und merkt sich nicht,
+welches Fenster beim Tastendruck oben lag. In der Praxis geht das gut, weil
+er beim Start gebunden wird und damit VOR den Griffen läuft, die ein Fenster
+beim Öffnen mitbringt — er nimmt das oberste, der eigene Griff räumt danach
+denselben, schon entfernten Knoten. Gemessen (test296 §3): zwei Fenster, ein
+eigener Griff, ein Escape — es schliesst genau eines.
+
+Fiele diese Reihenfolge einmal anders aus, wäre es die zwei Zeilen wert. Sie
+jetzt zu schreiben hiesse, eine Vorsichtsmassnahme gegen einen Fall zu bauen,
+den es nicht gibt — und niemand könnte sie rot bekommen.

@@ -3959,12 +3959,35 @@ KI-Kosten anzeigt, soll es genauso tun.
 L105 — Was die Lückenansicht (E288) noch nicht kann
 ================================================================================
 
-1. **Kein Escape für die anderen Fenster.** Redion hat KEINEN gemeinsamen
-   Escape-Griff für `.overlay`. Der Wissensgraph und das Schlagwortregister
-   schliessen bis heute nicht auf Escape — man muss danebenklicken. §38
-   verlangt es ausdrücklich („Escape schliesst passende Overlays"). Die
-   Lückenansicht bringt ihren eigenen Griff mit; richtig wäre einer für
-   alle, in `schale/`.
+1. ~~**Kein Escape für die anderen Fenster.**~~ — **DIESE LÜCKE WAR FALSCH**,
+   berichtigt am 1. September 2026 (E302).
+
+   Hier stand: „Redion hat KEINEN gemeinsamen Escape-Griff für `.overlay`.
+   Der Wissensgraph und das Schlagwortregister schliessen bis heute nicht auf
+   Escape — man muss danebenklicken."
+
+   Beim Bau des Griffs stellte sich heraus: ES GIBT IHN LÄNGST. Er steht seit
+   E272 Phase G in `schale.ts` und nimmt das LETZTE `.menu`, sonst das letzte
+   `.overlay`; die Begründung dort ist sogar ausführlich („die oberste, nicht
+   die erste"). Nachgemessen am laufenden Programm: der Wissensgraph geht auf
+   und ist nach einem Escape zu, das Schlagwortregister ebenso.
+
+   WIE DER IRRTUM ENTSTAND, und das ist der lehrreiche Teil: die Lücke wurde
+   aus dem Gedächtnis geschrieben, nicht gemessen. `verweise.ts` hat zwei
+   Treffer auf „Escape", und beide stehen in der Linkvorschau. Daraus wurde
+   „der Graph schliesst nicht" — ohne die Schale anzusehen, wo der Griff
+   hängt. Genau das, wovor CLAUDE.md 52.8 warnt: nicht raten, nachsehen.
+
+   Der gebaute zweite Griff wurde wieder ausgebaut. Zwei Zuständigkeiten für
+   dieselbe Sache sind schlimmer als eine, und der neue hätte den alten nicht
+   ersetzt, sondern danebengestanden.
+
+   GEBLIEBEN IST EIN WÄCHTER: `test296` misst den bestehenden Griff — dass er
+   das oberste Fenster nimmt, genau eines, und dass er mit einem eigenen
+   Griff zusammen trotzdem nur eines schliesst. Gegengeprüft: nimmt man die
+   vier Zeilen aus `schale.ts`, fallen sieben von siebzehn Punkten. Vorher
+   bewachte diese Stelle nichts — deshalb konnte die Lücke behaupten, es gäbe
+   sie gar nicht.
 
 2. **Kein „erledigt".** Wer einen Fund gesehen und für unwichtig befunden
    hat, sieht ihn beim nächsten Öffnen wieder. Für Geister ist das richtig
