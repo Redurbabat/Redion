@@ -2196,23 +2196,45 @@ const App = (() => {
                 alert('Diese Datei ist keine Sicherung — sie lässt sich nicht lesen.');
                 return;
             }
-            const wieViele = Object.keys(vorschau.blocks || {}).length;
-            const jetzt = Object.keys(Store.cache.blocks || {}).length;
+            /* --- WAS SICH ÄNDERT, NICHT WIE GROSS DIE DATEI IST (L101, E316) ---
+               Hier stand: „Die Datei enthält 1247 Blöcke. In diesem Bestand
+               liegen gerade 1180." Das sagt, wie GROSS die Sicherung ist, nicht
+               was sie tut. Wer wissen will, ob die eigene Seite von gestern
+               überlebt, erfuhr es erst danach — und dann war sie weg.
+      
+               Es ist die letzte Stelle vor einem Vorgang, der löscht. Genau dort
+               gehört die Frage beantwortet, die ein Mensch wirklich hat.
+      
+               Gerechnet wird für BEIDE Wege getrennt, denn sie tun Verschiedenes:
+               beim Dazulegen verschwindet nichts, beim Ersetzen schon. Der Satz
+               steht deshalb am jeweiligen Knopf und nicht darüber. */
+            const faecherJetzt = {
+                blocks: Store.cache.blocks || {},
+                collections: Store.cache.collections || {},
+                views: Store.cache.views || {}
+            };
+            const faecherDatei = {
+                blocks: vorschau.blocks || {},
+                collections: vorschau.collections || {},
+                views: vorschau.views || {}
+            };
+            const beimErsetzen = ImportVergleich.rechnen(faecherJetzt, faecherDatei, 'ersetzen');
+            const beimDazu = ImportVergleich.rechnen(faecherJetzt, faecherDatei, 'zusammenfuehren');
             const wahl = await Dialog.wahl({
                 titel: 'Sicherung einspielen',
-                text: 'Die Datei enthält ' + wieViele + ' Blöcke' +
+                text: 'Die Datei enthält ' +
+                    Object.keys(vorschau.blocks || {}).length + ' Blöcke' +
                     (Array.isArray(vorschau.versions) ? ' und ' + vorschau.versions.length +
-                        ' Fassungen aus dem Verlauf' : '') + '. ' +
-                    'In diesem Bestand liegen gerade ' + jetzt + ' Blöcke.' +
+                        ' Fassungen aus dem Verlauf' : '') + '.' +
                     (vorschau.hinweis ? '\n\n' + vorschau.hinweis : ''),
                 knoepfe: [
                     { id: 'ersetzen', text: 'Ersetzen',
-                        hinweis: 'Der Bestand sieht danach aus wie die Sicherung. Was ' +
-                            'nicht darin steht, wird gelöscht. Vorher lädt Redion ' +
-                            'eine Sicherheitskopie des jetzigen Standes herunter.' },
+                        hinweis: ImportVergleich.satz(beimErsetzen) +
+                            ' Vorher lädt Redion eine Sicherheitskopie des jetzigen ' +
+                            'Standes herunter.' },
                     { id: 'zusammenfuehren', text: 'Dazulegen',
-                        hinweis: 'Nichts wird gelöscht. Bei gleicher Kennung gewinnt die ' +
-                            'Sicherung.' },
+                        hinweis: ImportVergleich.satz(beimDazu) +
+                            ' Es wird nichts gelöscht.' },
                     { id: '', text: 'Abbrechen' }
                 ]
             });

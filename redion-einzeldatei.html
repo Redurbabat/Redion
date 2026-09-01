@@ -21172,6 +21172,156 @@ window.ImportSicherheit = ImportSicherheit;
 
 </script>
 <script>
+/* ===== quell/core/import/vergleich.js ===== */
+"use strict";
+/* ============================================================================
+ * core/import/vergleich.ts — was sich beim Einspielen WIRKLICH ändert
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/core/import/vergleich.ts`. `npm run bauen:ts` schreibt
+ * daraus `quell/core/import/vergleich.js`.
+ * ----------------------------------------------------------------------------
+ * REIN: keine Uhr, keine Ablage, kein DOM. Herein kommen zwei Verzeichnisse,
+ * heraus kommt, was der eine mit dem anderen macht.
+ *
+ * ─── WAS VORHER DASTAND ─────────────────────────────────────────────────────
+ *
+ *     'Die Datei enthält ' + wieViele + ' Blöcke. ' +
+ *     'In diesem Bestand liegen gerade ' + jetzt + ' Blöcke.'
+ *                                                    schale.ts:2047
+ *
+ * „Die Datei enthält 1247 Blöcke, hier liegen 1180." Das sagt, wie GROSS die
+ * Sicherung ist, nicht was sie tut. Wer wissen will, ob die eigene Seite von
+ * gestern überlebt, erfährt es erst danach — und dann ist sie weg.
+ *
+ * Es ist die letzte Stelle vor einem Vorgang, der löscht. Genau dort gehört
+ * die Frage beantwortet, die ein Mensch wirklich hat.
+ *
+ * ─── DIE VIER GRUPPEN ───────────────────────────────────────────────────────
+ *
+ *   neu           steht in der Sicherung und hier nicht.
+ *   ersetzt       steht in beiden, aber ANDERS.
+ *   gleich        steht in beiden und ist dasselbe.
+ *   verschwindet  steht hier und nicht in der Sicherung.
+ *
+ * Nur die vierte ist gefährlich, und nur beim ERSETZEN gibt es sie: beim
+ * Dazulegen wird nichts gelöscht, dort ist sie immer leer. Genau deshalb ist
+ * sie eine Nachricht, wenn sie NICHT leer ist — und sonst keine.
+ *
+ * ─── WARUM NAMEN UND NICHT NUR ZAHLEN ───────────────────────────────────────
+ *
+ * „7 Seiten verschwinden" beantwortet nicht die Frage, die man hat. Die
+ * Frage ist „MEINE?". Deshalb kommen ein paar Titel mit — die zuletzt
+ * geänderten zuerst, denn an die erinnert man sich.
+ * ==========================================================================*/
+const ImportVergleich = (() => {
+    /** So viele Titel je Gruppe — mehr liest in einem Dialog niemand. */
+    const TITEL = 5;
+    /**
+     * Zwei Sätze sind gleich, wenn ihr Inhalt gleich ist.
+     *
+     * `wolkeVersion` und `folge` sind Buchhaltung des Geräts, kein Inhalt:
+     * stünden sie mit im Vergleich, wäre nach einem Abgleich JEDER Satz
+     * „geändert", und die Anzeige sagte wieder nichts. Dieselbe Überlegung wie
+     * bei den Sync-Marken.
+     */
+    const OHNE = ['wolkeVersion', 'folge', 'basis'];
+    const kern = (s) => {
+        if (!s || typeof s !== 'object')
+            return String(s);
+        const schluessel = Object.keys(s).filter(k => !OHNE.includes(k)).sort();
+        return JSON.stringify(schluessel.map(k => [k, s[k]]));
+    };
+    const titelVon = (s) => {
+        const t = String(s?.text ?? s?.name ?? '').trim();
+        if (t)
+            return t.length > 40 ? t.slice(0, 39) + '…' : t;
+        return String(s?.type || s?.id || 'Ohne Titel');
+    };
+    /** Die zuletzt geänderten zuerst — an die erinnert man sich. */
+    const gruppe = (saetze) => ({
+        anzahl: saetze.length,
+        titel: saetze
+            .slice()
+            .sort((a, b) => String(b?.edited || b?.created || '')
+            .localeCompare(String(a?.edited || a?.created || '')))
+            .slice(0, TITEL)
+            .map(titelVon)
+    });
+    /**
+     * Was macht die Sicherung mit dem Bestand?
+     *
+     * @param hier      Was jetzt da ist, je Fach.
+     * @param sicherung Was in der Datei steht, je Fach.
+     * @param art       'ersetzen' löscht, was fehlt; 'zusammenfuehren' nicht.
+     */
+    const rechnen = (hier, sicherung, art) => {
+        const ersetzen = art === 'ersetzen';
+        const neu = [], ersetzt = [], gleich = [], verschwindet = [];
+        const faecher = [...new Set([...Object.keys(hier || {}),
+                ...Object.keys(sicherung || {})])];
+        for (const fach of faecher) {
+            const a = (hier || {})[fach] || {};
+            const b = (sicherung || {})[fach] || {};
+            for (const id of Object.keys(b)) {
+                if (!Object.prototype.hasOwnProperty.call(a, id)) {
+                    neu.push(b[id]);
+                    continue;
+                }
+                if (kern(a[id]) === kern(b[id]))
+                    gleich.push(b[id]);
+                else
+                    ersetzt.push(b[id]);
+            }
+            if (ersetzen) {
+                for (const id of Object.keys(a))
+                    if (!Object.prototype.hasOwnProperty.call(b, id))
+                        verschwindet.push(a[id]);
+            }
+        }
+        const daHier = faecher.reduce((s, f) => s + Object.keys((hier || {})[f] || {}).length, 0);
+        return {
+            art: ersetzen ? 'ersetzen' : 'zusammenfuehren',
+            neu: gruppe(neu), ersetzt: gruppe(ersetzt),
+            gleich: gruppe(gleich), verschwindet: gruppe(verschwindet),
+            danach: ersetzen ? neu.length + ersetzt.length + gleich.length
+                : daHier + neu.length
+        };
+    };
+    const zaehlwort = (n, eins, viele) => n + ' ' + (n === 1 ? eins : viele);
+    /**
+     * Der Satz für den Dialog.
+     *
+     * Was NICHT geschieht, steht nicht da. „0 verschwinden" ist keine
+     * Beruhigung, sondern eine Zeile, über die man hinwegliest — und beim
+     * nächsten Mal auch über die, in der eine 7 steht.
+     */
+    const satz = (e) => {
+        if (!e)
+            return '';
+        const teile = [];
+        if (e.neu.anzahl)
+            teile.push(zaehlwort(e.neu.anzahl, 'Satz kommt dazu', 'Sätze kommen dazu'));
+        if (e.ersetzt.anzahl)
+            teile.push(zaehlwort(e.ersetzt.anzahl, 'Satz wird überschrieben', 'Sätze werden überschrieben'));
+        if (!teile.length && !e.verschwindet.anzahl)
+            return 'Diese Sicherung ändert nichts — sie ist derselbe Stand.';
+        let t = teile.join(', ') + '.';
+        if (e.verschwindet.anzahl) {
+            t += ' ' + zaehlwort(e.verschwindet.anzahl, 'Satz verschwindet', 'Sätze verschwinden') + ':';
+            t += ' ' + e.verschwindet.titel.join(', ') +
+                (e.verschwindet.anzahl > e.verschwindet.titel.length ? ' …' : '') + '.';
+        }
+        return t;
+    };
+    /** Ist etwas dabei, das ein Mensch gesehen haben MUSS? */
+    const warnt = (e) => !!e && e.verschwindet.anzahl > 0;
+    return { rechnen, satz, warnt, kern, titelVon, TITEL };
+})();
+window.ImportVergleich = ImportVergleich;
+
+</script>
+<script>
 /* ===== quell/core/import/validierung.js ===== */
 "use strict";
 /* ============================================================================
@@ -127222,23 +127372,45 @@ const App = (() => {
                 alert('Diese Datei ist keine Sicherung — sie lässt sich nicht lesen.');
                 return;
             }
-            const wieViele = Object.keys(vorschau.blocks || {}).length;
-            const jetzt = Object.keys(Store.cache.blocks || {}).length;
+            /* --- WAS SICH ÄNDERT, NICHT WIE GROSS DIE DATEI IST (L101, E316) ---
+               Hier stand: „Die Datei enthält 1247 Blöcke. In diesem Bestand
+               liegen gerade 1180." Das sagt, wie GROSS die Sicherung ist, nicht
+               was sie tut. Wer wissen will, ob die eigene Seite von gestern
+               überlebt, erfuhr es erst danach — und dann war sie weg.
+      
+               Es ist die letzte Stelle vor einem Vorgang, der löscht. Genau dort
+               gehört die Frage beantwortet, die ein Mensch wirklich hat.
+      
+               Gerechnet wird für BEIDE Wege getrennt, denn sie tun Verschiedenes:
+               beim Dazulegen verschwindet nichts, beim Ersetzen schon. Der Satz
+               steht deshalb am jeweiligen Knopf und nicht darüber. */
+            const faecherJetzt = {
+                blocks: Store.cache.blocks || {},
+                collections: Store.cache.collections || {},
+                views: Store.cache.views || {}
+            };
+            const faecherDatei = {
+                blocks: vorschau.blocks || {},
+                collections: vorschau.collections || {},
+                views: vorschau.views || {}
+            };
+            const beimErsetzen = ImportVergleich.rechnen(faecherJetzt, faecherDatei, 'ersetzen');
+            const beimDazu = ImportVergleich.rechnen(faecherJetzt, faecherDatei, 'zusammenfuehren');
             const wahl = await Dialog.wahl({
                 titel: 'Sicherung einspielen',
-                text: 'Die Datei enthält ' + wieViele + ' Blöcke' +
+                text: 'Die Datei enthält ' +
+                    Object.keys(vorschau.blocks || {}).length + ' Blöcke' +
                     (Array.isArray(vorschau.versions) ? ' und ' + vorschau.versions.length +
-                        ' Fassungen aus dem Verlauf' : '') + '. ' +
-                    'In diesem Bestand liegen gerade ' + jetzt + ' Blöcke.' +
+                        ' Fassungen aus dem Verlauf' : '') + '.' +
                     (vorschau.hinweis ? '\n\n' + vorschau.hinweis : ''),
                 knoepfe: [
                     { id: 'ersetzen', text: 'Ersetzen',
-                        hinweis: 'Der Bestand sieht danach aus wie die Sicherung. Was ' +
-                            'nicht darin steht, wird gelöscht. Vorher lädt Redion ' +
-                            'eine Sicherheitskopie des jetzigen Standes herunter.' },
+                        hinweis: ImportVergleich.satz(beimErsetzen) +
+                            ' Vorher lädt Redion eine Sicherheitskopie des jetzigen ' +
+                            'Standes herunter.' },
                     { id: 'zusammenfuehren', text: 'Dazulegen',
-                        hinweis: 'Nichts wird gelöscht. Bei gleicher Kennung gewinnt die ' +
-                            'Sicherung.' },
+                        hinweis: ImportVergleich.satz(beimDazu) +
+                            ' Es wird nichts gelöscht.' },
                     { id: '', text: 'Abbrechen' }
                 ]
             });

@@ -2278,3 +2278,13 @@ node pruefungen/lauf/test105.mjs
   Und eine Prüfung, deren Name nicht mehr stimmte: test252 §3 hiess „die
   Sternchen stehen wörtlich da" und war NACH E315 immer noch grün — aus dem
   umgekehrten Grund. sw v70.
+* E316 (L101 Punkt 1): Die Vorschau sagt, was sich ändert. Vor dem
+  Einspielen stand „Die Datei enthält 1247 Blöcke, hier liegen 1180" — das
+  sagt, wie GROSS die Sicherung ist, nicht was sie tut, und es ist die
+  letzte Stelle vor einem Vorgang, der löscht. `core/import/vergleich.ts`
+  liefert vier Gruppen (neu, ersetzt, gleich, verschwindet), für beide Wege
+  getrennt gerechnet. Was verschwindet, wird beim NAMEN genannt — „7 Sätze
+  verschwinden" beantwortet die Frage nicht, die man hat; die Frage ist
+  „meine?". Und was nicht geschieht, steht nicht da: keine Null, kein Wort
+  von Verschwinden beim Dazulegen. `wolkeVersion` zählt nicht mit, sonst
+  wäre nach jedem Abgleich jeder Satz „geändert". test310 neu (23). sw v71.

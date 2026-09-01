@@ -3827,6 +3827,19 @@ Grund:
    vor), aber es ist Oberfläche und gehört in einen eigenen Bogen mit einem
    Bild dazu.
 
+   **GESCHLOSSEN am 1. September 2026 durch E316**, und zwar genau so:
+   `core/import/vergleich.ts` stellt beide Verzeichnisse gegeneinander und
+   liefert vier Gruppen — neu, ersetzt, gleich, verschwindet. Gerechnet wird
+   für beide Wege getrennt; der Satz steht am jeweiligen Knopf, weil die
+   zwei Knöpfe Verschiedenes tun.
+
+   Was verschwindet, wird beim NAMEN genannt (fünf Titel, die zuletzt
+   geänderten zuerst) — „7 Sätze verschwinden" beantwortet die Frage nicht,
+   die man hat; die Frage ist „meine?". Und was nicht geschieht, steht nicht
+   da: keine Null, kein Wort von Verschwinden beim Dazulegen. `wolkeVersion`
+   und `folge` zählen nicht mit, sonst wäre nach jedem Abgleich jeder Satz
+   „geändert". test310, 23 Punkte.
+
 2. **Die Transaktion deckt die ANHÄNGE nicht ab.** Die Alles-oder-nichts-
    Zusage gilt für fünf Fächer; die Anhänge kommen danach, Stück für Stück,
    jedes in einer eigenen Transaktion. Bricht es dort ab, sind Blöcke und

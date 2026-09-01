@@ -23968,3 +23968,77 @@ falsch — Word öffnet die Datei, aber die Vorlagen greifen nicht mehr.
 
 Mitgelaufen: test49 50/50, test252 15/15.
 sw v70 · Einzeldatei 7796 KB.
+
+
+================================================================================
+E316 — Die Vorschau sagt, was sich ändert (L101 Punkt 1)
+================================================================================
+1. September 2026
+
+Vor dem Einspielen stand:
+
+    'Die Datei enthält ' + wieViele + ' Blöcke. ' +
+    'In diesem Bestand liegen gerade ' + jetzt + ' Blöcke.'   schale.ts:2047
+
+„1247 Blöcke, hier liegen 1180." Das sagt, wie GROSS die Sicherung ist, nicht
+was sie tut. Wer wissen will, ob die eigene Seite von gestern überlebt,
+erfuhr es erst danach — und dann war sie weg.
+
+Es ist die letzte Stelle vor einem Vorgang, der löscht. Genau dort gehört die
+Frage beantwortet, die ein Mensch wirklich hat.
+
+
+Vier Gruppen, und nur eine ist gefährlich
+--------------------------------------------------------------------------------
+
+`core/import/vergleich.ts` stellt beide Verzeichnisse gegeneinander:
+
+    neu           steht in der Sicherung und hier nicht.
+    ersetzt       steht in beiden, aber ANDERS.
+    gleich        steht in beiden und ist dasselbe.
+    verschwindet  steht hier und nicht in der Sicherung.
+
+Die vierte gibt es nur beim ERSETZEN; beim Dazulegen ist sie immer leer.
+Gerechnet wird deshalb für beide Wege getrennt, und der Satz steht am
+jeweiligen Knopf statt darüber — die zwei Knöpfe tun Verschiedenes, also
+sagen sie Verschiedenes.
+
+
+Warum Namen und nicht nur Zahlen
+--------------------------------------------------------------------------------
+
+„7 Sätze verschwinden" beantwortet nicht die Frage, die man hat. Die Frage
+ist „MEINE?". Deshalb kommen fünf Titel mit, die zuletzt geänderten zuerst —
+an die erinnert man sich. Sind es mehr, sagt ein Auslassungszeichen das dazu.
+
+
+Und was NICHT geschieht, steht nicht da
+--------------------------------------------------------------------------------
+
+„0 Sätze verschwinden" ist keine Beruhigung, sondern eine Zeile, über die man
+hinwegliest — und beim nächsten Mal auch über die, in der eine 7 steht. Die
+Warnung steht deshalb nur da, wenn wirklich etwas verschwindet. Bei einer
+Sicherung, die denselben Stand enthält, steht der ehrlichste Satz von allen:
+„Diese Sicherung ändert nichts — sie ist derselbe Stand."
+
+
+Ein Detail, das die Anzeige sonst wertlos gemacht hätte
+--------------------------------------------------------------------------------
+
+`wolkeVersion` und `folge` zählen nicht mit. Wären sie Teil des Vergleichs,
+wäre nach jedem Abgleich JEDER Satz „geändert" — und die neue Anzeige sagte
+genauso wenig wie die alte, nur mit mehr Wörtern.
+
+
+Geprüft
+--------------------------------------------------------------------------------
+test310 neu, 23/23. §5 ist die Gegenprobe und der eigentliche Punkt: kein
+Wort von Verschwinden, wenn nichts verschwindet, und keine Null.
+
+§6 misst im Fenster mit einem eigenen Bestand und einer fremden Sicherung:
+beim Ersetzen steht „Meine Prüfungsvorbereitung" namentlich da, beim
+Dazulegen nicht. Und im Quelltext: der alte Satz mit den zwei Zahlen ist
+wirklich weg, der Dialog fragt den Kern.
+
+Mitgelaufen: test287 9/9, test152 11/11, test105 102/102.
+sw v71 · Einzeldatei 7804 KB.
