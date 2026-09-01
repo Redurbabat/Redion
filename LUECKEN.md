@@ -2874,6 +2874,32 @@ plus Wolke wirklich zusammen gemessen wird.
 
 Gefunden am 29. August 2026 (E254-Leser, Risiko 3).
 
+**HALB GESCHLOSSEN am 1. September 2026 durch E341 — und zuerst GEMESSEN.**
+Das „kann" oben war drei Tage lang eine Vermutung. Nachgemessen mit zwei
+Seiten auf derselben Ablage: beide hängen einen Grabstein an, danach steht
+EINER da. Kein „kann", sondern ein „tut".
+
+`metaListeAendern` liest die Liste aus der ABLAGE, lässt sie ändern und
+schreibt zurück — in EINER Transaktion, die IndexedDB auch über Tabs hinweg
+hintereinander reiht. Danach überleben beide. Die fünf Schreibstellen der
+drei Merklisten gehen darüber; test333 hält es fest, samt der Gegenprobe,
+dass der ALTE Weg im selben Aufbau einen verliert.
+
+Gerechnet wird ZWEIMAL: einmal sofort gegen den Zwischenspeicher, damit ein
+Lesen unmittelbar nach dem Schreiben stimmt, und einmal in der Transaktion
+gegen den echten Stand — der zweite gewinnt. Der erste Wurf liess das erste
+weg und riss damit fünf bestehende Zusagen ein (test256 zweimal, test261
+sechsmal): `purgeTief` liest die Liste im nächsten Atemzug wieder. Deshalb
+muss jede Änderungsfunktion, die hier hineingegeben wird, zweimal aufrufbar
+sein, ohne dass es etwas ausmacht.
+
+WAS OFFEN BLEIBT, und die Bedingung von oben gilt unverändert: die Liste
+ist weiterhin EIN Satz. Zwei GERÄTE über die Wolke bringt das nicht
+zusammen — dafür braucht jede Merknotiz einen eigenen Satz, und das lohnt
+erst, wenn Multi-Tab plus Wolke wirklich zusammen gemessen wird. Ebenso
+offen: der Tab-Schluss unmittelbar nach einem Sofort-Löschen, bei dem der
+Flush nicht mehr durchkommt.
+
 **Nachtrag vom 1. September 2026 (E314):** es ist jetzt eine Liste mehr.
 `wolkeNachtrag` merkt sich die Kennungen einer dazugelegten Sicherung und
 wird nach dem Versand gestrichen — dasselbe Lesen-Ändern-Schreiben, dieselbe

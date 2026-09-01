@@ -2644,3 +2644,20 @@ node pruefungen/lauf/test105.mjs
   `padding` ist vier Erklärungen, nicht eine, und §2/§3 zählten absolut
   statt den Unterschied zum Bestand.
   test332 neu (14), belegt rot. test258 19/19.
+* E341 (L75, halb geschlossen): Zwei Tabs, eine Merkliste. L75 sagte seit
+  drei Tagen „KANN Einträge überschreiben" — gemessen wurde es nie, und
+  beim Nachmessen war es kein „kann": zwei Seiten auf derselben Ablage
+  hängen je einen Grabstein an, danach steht EINER da. Still, ohne Fehler.
+  Das kostet einen Block, der lokal gelöscht ist und auf dem anderen Gerät
+  weiterlebt — genau das, wogegen es die Merklisten gibt.
+  `metaListeAendern` liest aus der ABLAGE, ändert und schreibt zurück, in
+  EINER Transaktion; IndexedDB reiht die auch über Tabs hinweg. Gerechnet
+  wird zweimal — sofort gegen den Zwischenspeicher, damit ein Lesen
+  unmittelbar danach stimmt, und noch einmal in der Transaktion gegen den
+  echten Stand. Der erste Wurf liess das erste weg und riss fünf bestehende
+  Zusagen ein (test256, test261). Die fünf
+  Schreibstellen der drei Merklisten gehen darüber. Offen bleibt der „echte
+  Verbund" (jede Merknotiz ein eigener Satz) — der lohnt erst mit der
+  Wolke, und die braucht Redur.
+  test333 neu (16), belegt rot. §3 stellt den alten Weg nach und verlangt,
+  dass er einen verliert — ohne den misst §2 nichts.

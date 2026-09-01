@@ -35873,6 +35873,102 @@ const Store = (() => {
        Anmerkung liest TypeScript aus `= null` „immer null" und meldet jeden
        der rund neunzig Aufrufe im Rest der App. */
     const getMeta = (k, fallback = null) => (k in cache.meta ? cache.meta[k] : fallback);
+    /**
+     * Einen Eintrag an eine Meta-LISTE hängen, ohne den anderen Tab zu
+     * überschreiben.
+     *
+     * ────────────────────────────────────────────────────────────────────────
+     * L75 SAGTE „KANN", UND ES WURDE GEMESSEN: es TUT.
+     *
+     * Die Merklisten (`wolkeBloeckeWeg` seit E254, `wolkeDateienWeg` seit
+     * E249, `wolkeNachtrag` seit E314) werden mit Lesen-Ändern-Schreiben
+     * gepflegt:
+     *
+     *     const alt = getMeta(k, []);
+     *     setMeta(k, alt.concat([neu]));
+     *
+     * `getMeta` liest aus dem Zwischenspeicher DIESES Tabs. Zwei Tabs haben
+     * zwei davon. Gemessen mit zwei Seiten auf derselben Ablage: beide
+     * hängten je einen Eintrag an, danach stand EINER da. Der andere war
+     * fort — still, ohne Fehler, ohne Meldung.
+     *
+     * Was das kostet: ein Grabstein, der nie zum Server geht. Der Block ist
+     * lokal gelöscht und lebt auf dem anderen Gerät weiter (E249/E254 gab es
+     * genau dagegen).
+     *
+     * WAS DIESE FUNKTION ANDERS MACHT: sie liest die Liste aus der ABLAGE,
+     * hängt an und schreibt zurück — alles in EINER Transaktion. IndexedDB
+     * reiht Transaktionen auf dasselbe Fach hintereinander, auch über Tabs
+     * hinweg; damit sieht die zweite, was die erste geschrieben hat.
+     *
+     * WAS SIE NICHT LÖST, und das bleibt als L75 stehen: die Liste ist
+     * weiterhin EIN Satz. Zwei Geräte über die Wolke bringt das nicht
+     * zusammen — dafür bräuchte jede Merknotiz einen eigenen Satz, und das
+     * ist ein eigener Bogen, der erst lohnt, wenn Multi-Tab plus Wolke
+     * wirklich zusammen gemessen wird.
+     *
+     * `aendern` bekommt eine Liste und gibt die neue zurück — oder `null`,
+     * wenn nichts zu tun ist. Damit deckt derselbe Griff alle drei Fälle ab:
+     * anhängen, ersetzen, austragen. Massgeblich geschrieben wird das, was
+     * gegen die ABLAGE gerechnet wurde; warum es trotzdem zweimal läuft,
+     * steht gleich darunter.
+     *
+     * ZWEIMAL GERECHNET, UND DAS IST DER PUNKT.
+     *
+     * Der erste Wurf rechnete NUR in der Transaktion — und der Prüflauf
+     * zeigte sofort, was das kostet: fünf bestehende Zusagen fielen, alle mit
+     * derselben Ursache. `purgeTief` schreibt einen Grabstein und liest ihn
+     * eine Zeile später wieder; dazwischen war der Zwischenspeicher noch alt.
+     * Eine seltene Kollision zwischen zwei Tabs gegen ein sicheres
+     * Danebenlesen in jedem Tab einzutauschen ist kein guter Handel.
+     *
+     * Also beides:
+     *
+     *   1 · SOFORT gegen den Zwischenspeicher rechnen und ihn setzen. Wer
+     *       gleich danach `getMeta` fragt, sieht seinen Eintrag — wie immer.
+     *   2 · In der TRANSAKTION noch einmal rechnen, diesmal gegen das, was
+     *       wirklich in der Ablage steht, und DAS schreiben.
+     *
+     * `aendern` muss dafür rein sein: es wird zweimal gerufen und darf nichts
+     * anfassen ausser der Liste, die es bekommt.
+     */
+    const metaListeAendern = (k, aendern) => {
+        /* Schritt 1 — sofort, damit ein Lesen unmittelbar danach stimmt. */
+        const imSpeicher = Array.isArray(cache.meta[k]) ? cache.meta[k] : [];
+        const sofort = aendern(imSpeicher);
+        if (sofort)
+            cache.meta[k] = sofort;
+        /* Ohne Ablage bleibt es dabei — das alte Verhalten, und immer noch
+           besser als gar nichts. */
+        if (!db)
+            return Promise.resolve(sofort || imSpeicher);
+        /* Schritt 2 — dauerhaft, gegen den echten Stand. */
+        return new Promise((ok, fail) => {
+            try {
+                const t = tx(['meta'], 'readwrite');
+                const fach = t.objectStore('meta');
+                const holen = fach.get(k);
+                holen.onsuccess = () => {
+                    const satz = holen.result;
+                    const alt = Array.isArray(satz && satz.v) ? satz.v : [];
+                    const neu = aendern(alt);
+                    if (!neu) {
+                        ok(cache.meta[k] || alt);
+                        return;
+                    }
+                    const legen = fach.put({ k, v: neu });
+                    legen.onsuccess = () => { cache.meta[k] = neu; ok(neu); };
+                    legen.onerror = () => fail(legen.error);
+                };
+                holen.onerror = () => fail(holen.error);
+            }
+            catch (err) {
+                fail(err);
+            }
+        });
+    };
+    /** Der häufigste Fall von `metaListeAendern`: hinten anhängen. */
+    const metaListeAnhaengen = (k, eintrag) => metaListeAendern(k, alt => alt.concat([eintrag]));
     /* ========================================================================
      * ZWEI FENSTER, EINE ABLAGE
      * ------------------------------------------------------------------------
@@ -37497,17 +37593,19 @@ const Store = (() => {
         const kennung = String(id || '');
         if (!kennung)
             return;
-        const oben = new Set(getMeta('wolkeDateienOben', []) || []);
-        if (!oben.has(kennung))
+        if (!new Set(getMeta('wolkeDateienOben', []) || []).has(kennung))
             return;
-        oben.delete(kennung);
-        setMeta('wolkeDateienOben', [...oben]);
-        const weg2 = new Set(dateiGrabsteine());
-        weg2.add(kennung);
-        setMeta('wolkeDateienWeg', [...weg2]);
+        /* BEIDE LISTEN ATOMAR (E341/L75). Vorher las das den Zwischenspeicher
+           DIESES Tabs und schrieb ihn zurück — zwei Tabs überschrieben einander
+           still. Gemessen: von zwei angehängten Einträgen überlebte einer.
+           Kein `await`: der Aufrufer ist synchron und liest die Liste nicht
+           gleich wieder. */
+        void metaListeAendern('wolkeDateienOben', alt => alt.includes(kennung) ? alt.filter((x) => x !== kennung) : null);
+        void metaListeAendern('wolkeDateienWeg', alt => alt.includes(kennung) ? null : alt.concat([kennung]));
     };
     const dateiGrabsteinWeg = (id) => {
-        setMeta('wolkeDateienWeg', dateiGrabsteine().filter(x => x !== String(id)));
+        const k = String(id);
+        void metaListeAendern('wolkeDateienWeg', alt => alt.includes(k) ? alt.filter((x) => x !== k) : null);
     };
     /* --- BLOCK-GRABSTEINE (E254/L73 Teil 2) --------------------------------
        Das Sofort-Muster `trashBlock(id); purgeBlock(id)` entfernt den Satz
@@ -37533,15 +37631,14 @@ const Store = (() => {
         if (!getMeta('wolkeMarkeHoch', ''))
             return;
         const kopie = Object.assign({}, satz, { alive: false, edited: now() });
-        const liste = blockGrabsteine().filter(e => !e || e.id !== satz.id);
-        liste.push({ id: satz.id, tabelle, seite: String(seite || satz.id), satz: kopie });
-        setMeta('wolkeBloeckeWeg', liste);
+        const eintrag = { id: satz.id, tabelle, seite: String(seite || satz.id), satz: kopie };
+        /* ATOMAR (E341/L75) — und die Entdopplung gehört MIT hinein: sie liest
+           dieselbe Liste, die sie gleich schreibt. */
+        void metaListeAendern('wolkeBloeckeWeg', alt => alt.filter((e) => !e || e.id !== satz.id).concat([eintrag]));
     };
     const blockGrabsteinWeg = (id) => {
-        const liste = blockGrabsteine();
-        if (!liste.some(e => e && e.id === id))
-            return;
-        setMeta('wolkeBloeckeWeg', liste.filter(e => e && e.id !== id));
+        void metaListeAendern('wolkeBloeckeWeg', alt => alt.some((e) => e && e.id === id)
+            ? alt.filter((e) => e && e.id !== id) : null);
     };
     const dateiAlle = async () => {
         const alle = await all('dateien');
@@ -37729,7 +37826,7 @@ const Store = (() => {
         addDatabase, getCollection, getView, updateCollection, updateView, addView, removeView,
         rohSetzen,
         addRow, rowsOf, setProp,
-        setMeta, getMeta, flush, settled,
+        setMeta, getMeta, metaListeAendern, metaListeAnhaengen, flush, settled,
         baum, baumEinfuegen, kinderLeeren,
         versionSpeichern, versionen, versionLoeschen, fassungenAusduennen,
         search, durchsuchbar, pfadText, exportAll, exportVorbereiten, importAll, wipe, usage,

@@ -25978,3 +25978,95 @@ braucht.
 test332 neu, 14 Punkte. Belegt rot: die `.cover-gitter`-Regel
 zurückgebracht, und §1 nennt alle drei toten Erklärungen beim Namen —
 während §2 und §3 grün bleiben.
+
+
+E341 — Zwei Tabs, eine Merkliste (L75, gemessen statt vermutet)
+════════════════════════════════════════════════════════════════════════════
+
+L75 stand seit dem 29. August mit einem Wörtchen darin, das drei Monate
+lang niemandem aufgefallen ist:
+
+    „Lesen-Ändern-Schreiben derselben Liste in zwei Tabs KANN Einträge
+     des jeweils anderen überschreiben."
+
+KANN. Gemessen wurde es nie. Beim Nachmessen war es kein „kann":
+
+    Zwei Seiten auf derselben Ablage, beide hängen einen Grabstein an.
+    Danach steht EINER da. Der andere ist fort.
+    Still, ohne Fehler, ohne Meldung.
+
+WAS DAS KOSTET, steht in E249 und E254: ein Grabstein, der nie zum Server
+geht, heisst ein Block, der lokal gelöscht ist und auf dem anderen Gerät
+weiterlebt. Genau dagegen gibt es die Merklisten überhaupt.
+
+WARUM ES PASSIERT
+
+    const alt = getMeta(k, []);        // aus dem Zwischenspeicher
+    setMeta(k, alt.concat([neu]));     // den ganzen Stand zurück
+
+`getMeta` liest den Zwischenspeicher DIESES Tabs. Zwei Tabs haben zwei
+davon, und keiner weiss vom anderen. Der zweite Flush gewinnt.
+
+WAS GEBAUT WURDE, UND WAS AUSDRÜCKLICH NICHT
+
+`metaListeAendern(k, aendern)` liest die Liste aus der ABLAGE, lässt sie
+ändern und schreibt zurück — alles in EINER Transaktion. IndexedDB reiht
+Transaktionen auf dasselbe Fach hintereinander, auch über Tabs hinweg;
+damit sieht die zweite, was die erste geschrieben hat. Gemessen: beide
+Einträge überleben.
+
+Die Änderungsfunktion bekommt die Liste, wie sie in der Ablage steht, und
+gibt die neue zurück — oder `null` für „nichts zu tun". Damit deckt
+derselbe Griff alle drei Fälle ab, und die ENTDOPPLUNG liegt mit drin:
+`blockGrabstein` filtert erst den alten Eintrag heraus und hängt dann an,
+und beides passiert jetzt gegen dieselbe gelesene Liste.
+
+NICHT GEBAUT wurde der „echte Verbund", den L75 fordert — jede Merknotiz
+als eigener Satz. Der lohnt erst, wenn Multi-Tab plus WOLKE zusammen
+gemessen wird, und die Wolke braucht Redur. L75 bleibt dafür stehen, mit
+der Messung statt der Vermutung.
+
+ZWEIMAL GERECHNET, UND DAS IST DER PUNKT
+
+Der erste Wurf rechnete NUR in der Transaktion. Das war sauber gedacht und
+falsch, und der Prüflauf hat es sofort gezeigt: `test256` fiel zweimal
+durch, `test261` sechsmal. Fünf bestehende Zusagen — alle von derselben
+Sorte:
+
+    schreiben, und die Liste im nächsten Atemzug wieder lesen.
+
+`purgeTief` tut genau das. Zwischen dem Schreiben und dem Lesen liegt keine
+Millisekunde Wartezeit, sondern gar keine — der Aufrufer ist synchron, die
+Transaktion ist es nicht. Wer den Zwischenspeicher erst NACH der Transaktion
+nachzieht, gibt diesen Lesern den alten Stand zurück. Der Preis war nicht,
+wie ich geschrieben hatte, „ein paar Millisekunden" — er war ein Grabstein,
+der für den unmittelbar folgenden Leser noch nicht existierte.
+
+Deshalb rechnet `metaListeAendern` ZWEIMAL:
+
+    1 · SOFORT gegen den Zwischenspeicher, und setzt ihn. Damit stimmt ein
+        Lesen unmittelbar danach.
+    2 · In der TRANSAKTION noch einmal, diesmal gegen das, was wirklich in
+        der Ablage steht — und DAS wird geschrieben.
+
+Die Änderungsfunktion muss dafür zweimal aufrufbar sein, ohne dass es etwas
+ausmacht. Alle fünf sind es: filtern und anhängen, gegen welche Liste auch
+immer. Das ist keine zufällige Eigenschaft, sondern die Bedingung, unter der
+dieser Griff überhaupt benutzt werden darf — sie steht als Satz über der
+Funktion.
+
+Der zweite Durchgang gewinnt: was in der Ablage steht, ist die Wahrheit, der
+Zwischenspeicher nur die Abkürzung dorthin. Nach der Transaktion wird er auf
+das gesetzt, was tatsächlich geschrieben wurde.
+
+Nachgemessen: `test256` 16 von 16, `test261` 21 von 21, `test100` 32 von 32.
+
+UND DIE PRÜFUNG TRÄGT IHRE EIGENE GEGENPROBE
+
+§3 stellt das alte Muster nach — `getMeta` plus `setMeta`, in denselben
+zwei Tabs — und verlangt, dass dabei genau EINER überlebt. Ohne diesen
+Abschnitt misst §2 nichts: er wäre auch dann grün, wenn zwei Tabs sich in
+dieser Prüfung gar nicht in die Quere kämen.
+
+test333 neu, 16 Punkte. Belegt rot: `metaListeAendern` auf den
+Zwischenspeicher-Weg zurückgedreht, und §2 und §5 fallen.
