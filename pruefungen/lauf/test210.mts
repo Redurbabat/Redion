@@ -291,7 +291,12 @@ const rollen = await handy.evaluate(async () => {
   const leiste = document.querySelector('.blatt-werk') as HTMLElement | null;
   const reihe = leiste?.closest('.blatt-reihe') as HTMLElement | null;
   if (!leiste || !reihe) return null;
-  const knoepfe = [...leiste.querySelectorAll<HTMLElement>('button')];
+  /* Seit E356 zeigt die Leiste nur die Gruppen des gewaehlten Werkzeugs;
+     die anderen sind `display:none` und haben zu Recht keine Breite.
+     Gemessen wird, was da ist — wie test174 §6 (gefunden von voll17 auf
+     E358, eingetragen in E359). */
+  const knoepfe = [...leiste.querySelectorAll<HTMLElement>('button')]
+    .filter(k => getComputedStyle(k).display !== 'none');
   const anfang = reihe.dataset['mehr'] || '(nichts)';
   leiste.scrollLeft = Math.round(leiste.scrollWidth / 2);
   await new Promise(r => setTimeout(r, 260));
@@ -309,7 +314,7 @@ const rollen = await handy.evaluate(async () => {
 });
 p('Die Leiste ist da', !!rollen);
 if (rollen) {
-  p('Alle Werkzeuge sind gebaut', rollen.knoepfe >= 20, `${rollen.knoepfe}`);
+  p('Alle Werkzeuge sind gebaut (die sichtbaren; das Zubehör anderer Werkzeuge ist seit E356 weg)', rollen.knoepfe >= 14, `${rollen.knoepfe}`);
   gleich('Und keines ist auf Breite null gesetzt', rollen.ohneBreite, 0);
   p('Sie nimmt mehr als ein Drittel der Fensterbreite',
     rollen.breit >= 290, `${rollen.breit} von 390 px`);

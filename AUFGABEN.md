@@ -2644,6 +2644,14 @@ node pruefungen/lauf/test105.mjs
   `padding` ist vier Erklärungen, nicht eine, und §2/§3 zählten absolut
   statt den Unterschied zum Bestand.
   test332 neu (14), belegt rot. test258 19/19.
+* E359 (L115 Punkt 9 erledigt): Die Blattleiste am Rechner — statt fünf
+  Zeilen zwei: oben die Werkzeuge, darunter nur das Zubehör des gewählten
+  (die E356-Regel gilt jetzt überall), ein Zeilenbruch-Element, Wörter nach
+  Breite der Leiste (`@container`, unter 1150 px nur Sinnbilder), und die
+  Papierwahl als Klappe (ein Knopf, fünf Vorlagen darunter, Escape und Tipp
+  daneben schliessen). 84 statt rund 220 px. test351 neu (25), belegt rot
+  in sechs Richtungen; test348 §6 als Wächter der alten Entscheidung
+  umgeschrieben. Bilder angesehen.
 * E358 (L115 Punkt 7 erledigt): Zurück fasst nur an, was sich änderte —
   `redraw` gleicht Knoten und Marken über die gemerkte Fassung je Kennung
   ab (gleich bleibt, anders geflickt, überzählig weg, fehlend neu, Folge =

@@ -27459,6 +27459,10 @@ dieselbe Idee: es zeigt, was zum Werkzeug gehört, und stellt es daneben.
 
   5. AM RECHNER ÄNDERT SICH NICHTS. Dort ist Platz, und dort ist die ganze
      Leiste auf einen Blick mehr wert als eine kurze.
+     NACHTRAG (E359, am selben Tag): Das stimmte nur bei voller Breite. Als
+     Spalte (706 px bei 1360 px Fenster) stand die Leiste nach E355 und
+     E357 in FÜNF Zeilen. Seit E359 gilt die Gruppenregel bei jeder
+     Breite; der Rechner bekommt zwei Zeilen, kein Rollen.
 
   6. Eine Zeile bleibt eine Zeile (test174 §6 misst weiter „unter 60 px");
      nur kürzer.
@@ -27750,3 +27754,119 @@ die Leiste das Blatt wieder nach unten — ein Rollen vor §6 allein half
 darum nicht. Der Prüflauf rollt jetzt nach jedem Klick zum Blatt und
 nimmt den Kasten frisch: 16/16. Die Sache selbst — fünf Zeilen Leiste am
 Rechner — steht als L115 Punkt 9.
+
+
+E359 — Die Blattleiste am Rechner: zwei Zeilen, nur das Zubehör des Werkzeugs, Papier als Klappe (L115 Punkt 9)
+════════════════════════════════════════════════════════════════════════════
+
+BEFUND (gefunden durch test267 §6, E358): bei 1360 px Fenster ist die Seite
+706 px breit, und die Leiste über dem Blatt stand nach E355 (Formen) und
+E357 (Bild) mit 22 Knöpfen in FÜNF Zeilen — rund 220 px Leiste über dem
+Papier, das Blatt begann bei 537 px. E356 hatte die Gruppenregel nur am
+Telefon eingeführt: „am Rechner ist Platz". Das galt bei voller Breite,
+nicht in der Spalte, die der Normalfall ist. Dazu nahm der feste Teil
+rechts (fünf Papier-Vorlagen, „Seite") 210 px, die der Leiste fehlten:
+sie hatte 456 px für 22 Knöpfe.
+
+─── WAS GEBAUT WURDE ───────────────────────────────────────────────────────
+
+  1. DIE GRUPPENREGEL GILT ÜBERALL. Der Block aus E356 (`data-tool` gegen
+     `data-gruppe`) steht nicht mehr im Telefon-Medienblock, sondern davor:
+     Werkzeuge und Verlauf immer, alles andere nur beim Werkzeug, zu dem es
+     gehört. Die Anordnung (`order`, Rollen zum Werkzeug) bleibt Sache des
+     Telefons.
+
+  2. AM RECHNER ZWEI ZEILEN. Ein leeres Element mit voller Breite hinter dem
+     letzten Werkzeug (`.blatt-zeilenbruch`, `flex:1 0 100%`, Höhe null) —
+     Flexbox kennt keinen Umbruch-Befehl. Oben die vierzehn Werkzeuge in
+     einer Zeile, darunter das Zubehör des gewählten. Am Telefon und in der
+     Spalte (`.spalte`, E140) ist das Element weg: dort rollt die Leiste
+     in einer Zeile, und ein Element von Bildschirmbreite wäre eine Lücke.
+
+  3. WÖRTER NACH BREITE DER LEISTE, NICHT DES FENSTERS. Vierzehn Werkzeuge
+     mit Wort brauchen rund 1130 px, ohne Wort 556. Gemessen wird mit
+     `@container` an der Leiste selbst (`.blatt-werk`): unter 1150 px nur
+     Sinnbilder, mit `title` und `aria-label` (§38). Dieselbe Leiste ist in
+     derselben Fensterbreite einmal Spalte (620 px) und einmal volle Breite
+     (1074 px bei 1360) — darum der Behälter und nicht das Fenster. Erst
+     ab rund 1450 px Fenster stehen die Wörter. Der feste Teil rechts
+     lässt seine Wörter unter 1400 px Reihe.
+
+  4. DIE PAPIERWAHL ALS KLAPPE. Ein Knopf zeigt das Papier, das gilt (das
+     Muster, wie auf den Vorlagen); die fünf Vorlagen liegen darunter, bis
+     man sie braucht — GoodNotes hat seine Vorlagen auch hinter einem
+     Knopf. Escape und ein Tipp daneben schliessen (§38); der Horcher am
+     Dokument wird beim Aufmachen angemeldet und beim Zumachen abgemeldet.
+     Die Knöpfe selbst bleiben, wie sie waren (`data-papier`, `aria-pressed`,
+     ihr Muster) — test207 fand keinen Unterschied. Der feste Teil ist
+     damit rund 100 statt 210 px breit; die Leiste hat 620.
+
+  5. Gemessen danach (test351): Werkzeuge in einer Zeile, Zubehör darunter,
+     Leiste 84 px hoch statt rund 220; in der Spalte eines Zweispalters
+     eine rollende Zeile ohne Lücke; am Telefon unverändert eine Zeile
+     unter 60 px.
+
+─── WAS NICHT GEBAUT WURDE ────────────────────────────────────────────────
+
+Am Telefon steht der feste Teil weiter in einer eigenen Zeile unter der
+rollenden Leiste (`min-width:100%`, E140) — mit zwei Knöpfen statt sieben
+passte er wohl daneben; nicht gemessen, nicht geändert. Keine Klappe unter
+dem Werkzeug wie GoodNotes' Popover (L115). Vierzehn Werkzeuge sind viele —
+Linie, Pfeil, Rechteck und Ellipse als EIN Formen-Werkzeug mit Unterwahl
+wären GoodNotes näher; das ist ein eigener Bogen.
+
+─── PRÜFUNG ────────────────────────────────────────────────────────────────
+
+test351 neu, 25 Punkte, PORT 9355, sieben Abschnitte: zwei Zeilen unter
+100 px (§1), das Zubehör je Werkzeug am Rechner (§2), Wörter nach Breite
+der Leiste — Spalte, volle Breite bei 1360, Fenster 1600 (§3), die
+Papierklappe mit Escape und Tipp daneben (§4), die Spalte eines
+Zweispalters (§5), das Telefon (§6), keine Seitenfehler (§7). Belegt rot
+in sechs Richtungen, jede einzeln zurückgedreht und wiederhergestellt:
+
+a — der Zeilenbruch ohne Breite (bausteine.css, `flex:0 0 0`): 23/25. Das
+    Zubehör rückt in die Werkzeugzeile hoch.
+b — die Gruppenregel zeigt statt zu verstecken (bausteine.css): 20/25.
+    Radiermodus beim Stift, Farben beim Radierer, 120 px hoch.
+c — die Wortgrenze bei 150 statt 1150 px (bausteine.css): 20/25. In der
+    Spalte stehen die Wörter, die Werkzeuge brechen in drei Zeilen, 156 px.
+d — kein Zeilenbruch-Element (marken.js): 23/25. Dasselbe Bild wie a, von
+    der anderen Seite.
+e — die Klappe geht nie auf (blatt.js): ein rot, dann bricht die Suite ab —
+    ohne Klappe gibt es nichts zu wählen.
+f — der Tipp daneben schliesst nicht (blatt.js): 24/25.
+
+test348 §6 („am Rechner bleibt alles sichtbar") war der Wächter der alten
+Entscheidung und wurde zu Recht rot; er prüft jetzt, dass am Rechner
+dieselbe Gruppenregel gilt.
+
+Die Kette danach fand vier Wächter rot, und jeder hatte recht:
+
+· test174 („Das Blatt hält keine zweite Zeichenschicht mehr") — der erste
+  Entwurf der Klappe horchte auf den ZEIGER; test174 liest blatt.ts und
+  hält fest, dass dort kein Zeigerweg entsteht. Die Klappe horcht jetzt
+  auf `click`; sie ist ein Menü, kein Malen. 25/25.
+· test201 (Ink V2) — sein Zug lag mit dem Ende ausserhalb des Fensters
+  (916 von 900 px), weil das Blatt jetzt 140 px höher beginnt; die Probe
+  prüfte nur die Mitte des Zugs. Jetzt müssen beide Enden im Bild sein.
+  32/32.
+· test343 §8 und test344 §8 — Stil- und Modus-Knopf standen am Rechner
+  nicht mehr ohne ihr Werkzeug; sie wählen es jetzt, wie schon am Telefon
+  (E356). 30/30 und 50/50.
+· test210 §4 (der PDF-Arbeitsplatz am Telefon) — gefunden von voll17 auf
+  E358 (313 von 314 grün, dieser eine rot): „keines auf Breite null" zählte
+  auch die seit E356 ausgeblendeten Gruppen (16 mit `display:none`).
+  Gemessen wird jetzt, was da ist, wie test174 §6. 31/31.
+
+Dazu grün: test114 (Fingergrössen) 153/153, test207 (Papiervorlagen)
+37/37, test266 (Abdeckband) 12/12, test267 (Haftnotiz) 16/16, test345
+43/43, test346 31/31, test347 31/31, test348 (§6 angepasst) 33/33, test349
+30/30, test350 14/14, test351 25/25, test247 (Menüband) 106/106, test248
+45/45, test87 152/152, test105 117/117, test109 20/20, test290 13/13,
+test332 14/14, test225 11/11. Einzeldatei neu gebaut (8129 KB).
+
+BILDER angesehen (§55): die Leiste bei der Auswahl am Rechner — oben die
+vierzehn Sinnbilder, darunter Zurück, Vor, Löschen, Kopieren, Einsetzen,
+die Tupfer, die Breiten, rechts „+" und der Papierknopf; die offene
+Klappe mit den fünf Vorlagen unter dem Knopf; die volle Breite mit dem
+Stift; das Telefon unverändert.

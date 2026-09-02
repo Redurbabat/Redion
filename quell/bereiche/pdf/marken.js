@@ -1674,6 +1674,11 @@ const Marken = (() => {
                    ein Tipp oeffnet den Waehler, danach fuehrt die Auswahl. */
                 button('bild', '🖼', 'Bild', 'Ein Foto oder Bild auf das Blatt legen — danach verschieben und ziehen wie jede Marke') +
                 button('radierer', '⌫', 'Radieren', 'Radieren — über Marken streichen; der Knopf daneben wählt Ganz, Teil oder Marker') +
+                /* DER ZEILENBRUCH (E359): am Rechner stehen die Werkzeuge in einer
+                   Zeile und ihr Zubehoer darunter; dieses leere Element mit voller
+                   Breite ist der Umbruch. Am Telefon und in der Spalte blendet das
+                   CSS es aus — dort rollt die Leiste in einer Zeile. */
+                '<span class="blatt-zeilenbruch" aria-hidden="true"></span>' +
                 /* DER RADIERER (E352): ein Knopf, der durch Ganz, Teil und Marker
                    wechselt und sagt, was der Radierer gerade tut. */
                 (() => {

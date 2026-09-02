@@ -226,12 +226,21 @@ gleich('… und beim Radierer verschwindet er mit den anderen Farben', await pgH
 await ktxH.close();
 
 /* ======================================================================== */
-console.log('\n6 · Am Rechner bleibt alles sichtbar');
+console.log('\n6 · Am Rechner gilt dieselbe Regel — in zwei Zeilen (E359)');
+/* E356 hatte den Rechner ausgenommen („dort ist Platz"). Gemessen stimmte
+   das nur bei voller Breite: als Spalte (706 px) stand die Leiste in fünf
+   Zeilen. Seit E359 blendet auch der Rechner fremde Gruppen aus; was am
+   Rechner anders ist — zwei Zeilen statt Rollen, Wörter nach Breite der
+   Leiste — misst test351. Hier zählt nur: Werkzeuge immer, Zubehör nach
+   Werkzeug. */
+const ERWARTET: Record<string, string[]> = {
+  schreiben: ['verlauf'], stift: ['breite', 'farbe', 'formen', 'stil', 'verlauf'], radierer: ['radierer', 'verlauf'] };
 const { ktx: ktxR, pg: pgR } = await kontext(false);
 for (const wz of ['schreiben', 'stift', 'radierer']) {
   await werkzeug(pgR, wz);
   const z = (await leiste(pgR))!;
-  gleich(`${wz}: alle Knöpfe sichtbar`, z.sichtbar, z.gesamt);
+  gleich(`${wz}: alle Werkzeuge sichtbar, die Gruppen wie am Telefon`,
+    [z.werkzeugeSichtbar, z.gruppen], [true, ERWARTET[wz]]);
 }
 await ktxR.close();
 

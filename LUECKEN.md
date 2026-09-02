@@ -5073,15 +5073,14 @@ mit dem Grund, warum jeder Punkt ein eigener Bogen ist:
    und die Leiste rollt hin (732 statt 1539 px beim Schreiben). test348.
    Was bleibt: keine Klappe unter dem Werkzeug wie in GoodNotes.
 
-9. **Am Rechner steht die Leiste über dem Blatt in fünf Zeilen.** Gemessen
-   bei 1360 px Fenster, wo die Seite 706 px breit ist: seit E355 (Formen)
-   und E357 (Bild) hat die Leiste 22 Knöpfe und bricht in fünf Zeilen um,
-   rund 220 px über dem Papier — GoodNotes hat eine. E356 hat die fremden
-   Gruppen nur am Telefon ausgeblendet („am Rechner ist Platz"), und das
-   stimmt bei voller Breite, nicht in der Spalte. Gefunden durch test267
-   §6, das deshalb rot wurde (E358). Der Weg: dieselbe Regel wie am Telefon
-   auch am Rechner, oder eine Zeile mit Rollen wie in der Spalte (E140) —
-   eine Gestaltungsentscheidung, Bilder zuerst.
+9. ~~**Am Rechner steht die Leiste über dem Blatt in fünf Zeilen.**~~
+   ERLEDIGT in E359: die Gruppenregel aus E356 gilt bei jeder Breite, am
+   Rechner zwei Zeilen (Werkzeuge, darunter ihr Zubehör) über einen
+   Zeilenbruch, Wörter nach Breite der Leiste (`@container`), und die
+   Papierwahl ist eine Klappe (100 statt 210 px). 84 statt rund 220 px.
+   test351. Was bleibt: am Telefon steht der feste Teil weiter in einer
+   eigenen Zeile; vierzehn Werkzeuge sind viele (Linie, Pfeil, Rechteck,
+   Ellipse als ein Formen-Werkzeug wäre GoodNotes näher).
 
 Nicht auf der Liste, weil es Format wäre: eine Marke bleibt `{id, art,
 farbe, breite, pts, pressure, stil?}`. Jeder Punkt oben lässt sich ohne

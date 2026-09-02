@@ -149,7 +149,12 @@ const marken = (pg: Seite, blattId: string) => pg.evaluate((id: string) => {
 }, blattId);
 
 const werkzeug = (pg: Seite, wz: string) => pg.click(`.blatt-werk [data-wz="${wz}"]`);
-const modusKnopf = (pg: Seite) => pg.click('.blatt-werk [data-act="radiermodus"]');
+/* Seit E359 zeigt auch der Rechner nur das Zubehoer des Werkzeugs: der
+   Modus-Knopf steht erst beim Radierer — also erst den waehlen (wie §8). */
+const modusKnopf = async (pg: Seite) => {
+  await pg.click('.blatt-werk [data-wz="radierer"]');
+  await pg.click('.blatt-werk [data-act="radiermodus"]');
+};
 const modus = (pg: Seite) => pg.evaluate(() => ({
   knopf: document.querySelector<HTMLElement>('.blatt-werk [data-act="radiermodus"]')?.dataset.modus ?? null,
   meta: Store.getMeta('zeichnen:radierer') ?? null,

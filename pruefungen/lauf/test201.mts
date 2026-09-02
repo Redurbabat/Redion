@@ -137,7 +137,13 @@ const draw = async (from: [number, number], to: [number, number], steps = 8): Pr
 
   let lage = await punkte();
   const mitte = (lage.start.y + lage.end.y) / 2;
-  if (mitte < rand || mitte > hoehe - rand) {
+  /* BEIDE ENDEN MUESSEN IM BILD SEIN, nicht nur die Mitte (E359 gefunden):
+     seit die Leiste zwei statt fuenf Zeilen hat, beginnt das Blatt bei 396
+     statt 537 px — die Mitte des Zugs lag damit knapp im Fenster (836 von
+     860), sein Ende nicht (916 von 900), und gerollt wurde nicht. */
+  const oben = Math.min(lage.start.y, lage.end.y);
+  const unten = Math.max(lage.start.y, lage.end.y);
+  if (oben < rand || unten > hoehe - rand) {
     await page.evaluate((d: number) => {
       const s2 = document.getElementById('scroll') || document.scrollingElement;
       if (s2) s2.scrollTop += d;
