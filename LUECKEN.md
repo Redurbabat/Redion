@@ -5046,9 +5046,18 @@ mit dem Grund, warum jeder Punkt ein eigener Bogen ist:
    bekannten Adresse — synchron, damit Druck und Folien es sehen —, sonst
    einen Platzhalter; mittig, halb so breit, im Seitenverhältnis, danach
    gewählt. Skalieren hält das Verhältnis, der Radierer lässt es stehen,
-   Kopieren teilt die Datei. test349. Was bleibt — der TEXT: die
-   `text`-Marke hat weder Schriftwahl noch Grösse noch Rahmen und steht
-   nur dort, wo getippt wurde. Und am Bild: eine gelöschte Bildmarke lässt
+   Kopieren teilt die Datei. test349. Der TEXT ist ERLEDIGT in E360: ein
+   Tipp fragt mehrzeilig, der Text wird ein Kasten (`breiteBox`, 40 % der
+   Blattbreite) mit Zeilen aus `InkGeometry.textLayout` — deterministisch,
+   ohne DOM, dieselben Zeilen für Bildschirm, Druck und Auswahlkasten —,
+   mit Schriftart (die fünf aus E101), Stufen (A−/A+), Fett und Rahmen aus
+   der Leiste; mit Auswahl gilt es der Auswahl. Alte einzeilige Marken
+   bleiben einzeilig. test352. Was am Text bleibt: keine Ausrichtung
+   (links/mitte/rechts), keine Farbe je Wort, kein Kursiv, keine
+   Hintergrundfüllung; die Zeichenbreiten sind Schätzungen je Familie, kein
+   Schriftmass — ein Wort kann in einer Schrift etwas früher oder später
+   brechen, als das Auge es täte, aber überall gleich; die Höhe des Kastens
+   folgt dem Inhalt, man zieht nur die Breite. Und am Bild: eine gelöschte Bildmarke lässt
    ihre Datei am Blatt zurück (sie geht erst mit dem Blatt); ein Bild
    kommt nur aus dem Dateiwähler, nicht per Ziehen-und-Ablegen oder aus
    der Zwischenablage des Systems; kein Drehen, kein Zuschneiden; eine

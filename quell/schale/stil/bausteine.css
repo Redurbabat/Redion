@@ -4036,6 +4036,10 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   background-size:8px 100%, 100% 8px, 2px 100%, 100% 2px}
 
 .blatt-werk .zeichen{margin-right:5px}
+/* Die Schrift-Knoepfe (E360): das Muster zeigt die Familie, das F ist fett. */
+.blatt-werk [data-act="schriftart"] .zeichen{font-size:15px}
+.blatt-werk [data-act="fett"] .zeichen{font-weight:800}
+.blatt-textrahmen{vector-effect:non-scaling-stroke}
 .blatt-farbe .zeichen, .blatt-strich .zeichen{margin:0}
 
 /* ── Die schmale Leiste ────────────────────────────────────────────────────
@@ -4107,6 +4111,8 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-werk[data-tool="ellipse"] > [data-gruppe="breite"],
 .blatt-werk[data-tool="abdeck"] > [data-gruppe="farbe"],
 .blatt-werk[data-tool="zettel"] > [data-gruppe="farbe"],
+.blatt-werk[data-tool="text"] > [data-gruppe="schrift"],
+.blatt-werk[data-tool="select"] > [data-gruppe="schrift"],
 .blatt-werk[data-tool="text"] > [data-gruppe="farbe"],
 .blatt-werk[data-tool="zeichen"] > [data-gruppe="farbe"]{display:inline-flex}
 .blatt-werk[data-tool] > span.blatt-trenn[data-gruppe]{display:none}
@@ -4175,6 +4181,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   /* Innerhalb der Gruppen: erst der Stift-Stil, dann Farben, dann Breiten,
      dann die Schalter — wie GoodNotes es aufklappt. */
   .blatt-werk[data-tool] > [data-gruppe="stil"],
+  .blatt-werk[data-tool] > [data-gruppe="schrift"],
   .blatt-werk[data-tool] > [data-gruppe="radierer"],
   .blatt-werk[data-tool] > [data-gruppe="auswahl"]{order:calc(var(--platz, 0) + 1)}
   .blatt-werk[data-tool] > [data-gruppe="farbe"]{order:calc(var(--platz, 0) + 2)}

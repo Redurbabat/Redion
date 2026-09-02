@@ -40,6 +40,34 @@ const Marken = (() => {
     ];
     const STIL_VORGABE = 'fueller';
     const HOECHSTENS_EIGENE_FARBEN = 4;
+    /* DIE SCHRIFT AUF DEM BLATT (E360, L115 Punkt 6): dieselben fuenf Familien
+       wie am Block (E101, Register.textstile), hier als Stapel fuer SVG —
+       Attribute kennen keine CSS-Variablen, und der Druck liest sie roh.
+       Die Stufen sind die Leiter, auf der A− und A+ gehen. */
+    const SCHRIFTEN = [
+        { id: 'standard', name: 'Standard', stapel: "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" },
+        { id: 'serif', name: 'Serifen', stapel: "Georgia, 'Times New Roman', serif" },
+        { id: 'mono', name: 'Schreibmaschine', stapel: 'ui-monospace, Menlo, Consolas, monospace' },
+        { id: 'hand', name: 'Handschrift', stapel: "'Segoe Print', 'Bradley Hand', 'Comic Sans MS', cursive" },
+        { id: 'schmal', name: 'Schmal', stapel: "'Arial Narrow', 'Roboto Condensed', 'Helvetica Neue', sans-serif" }
+    ];
+    const SCHRIFT_STUFEN = [11, 13, 16, 20, 26, 34];
+    const SCHRIFT_VORGABE = { familie: 'standard', groesse: 16, fett: false, rahmen: false };
+    const schriftStapel = (id) => (SCHRIFTEN.find(x => x.id === String(id)) || SCHRIFTEN[0]).stapel;
+    const schriftLesen = () => {
+        const roh = typeof Store !== 'undefined' ? Store.getMeta('zeichnen:schrift') : null;
+        const s = roh && typeof roh === 'object' ? roh : {};
+        return {
+            familie: SCHRIFTEN.some(x => x.id === s.familie) ? String(s.familie) : SCHRIFT_VORGABE.familie,
+            groesse: SCHRIFT_STUFEN.includes(Number(s.groesse)) ? Number(s.groesse) : SCHRIFT_VORGABE.groesse,
+            fett: !!s.fett, rahmen: !!s.rahmen
+        };
+    };
+    const naechsteStufe = (jetzt, richtung) => {
+        if (richtung > 0)
+            return SCHRIFT_STUFEN.find(v => v > jetzt) ?? SCHRIFT_STUFEN[SCHRIFT_STUFEN.length - 1];
+        return [...SCHRIFT_STUFEN].reverse().find(v => v < jetzt) ?? SCHRIFT_STUFEN[0];
+    };
     /** Der Breitenfaktor eines Punkts nach Druck und Stift. */
     const druckFaktor = (stil, p) => {
         const d = Math.max(0.05, Math.min(1, Number.isFinite(p) ? p : 0.5));
@@ -170,13 +198,46 @@ const Marken = (() => {
             return gruppe;
         }
         if (art === 'text') {
+            const layout = InkGeometry.textLayout(mark);
+            if (layout) {
+                /* DER TEXTKASTEN (E360): `point` ist die linke obere Ecke, die
+                   Zeilen kommen aus `InkGeometry.textLayout` — dieselben Zeilen,
+                   die auch der Auswahlkasten kennt. Ein Rahmen, wenn die Marke
+                   einen will; sonst eine unsichtbare Flaeche, damit der Kasten
+                   auch zwischen den Woertern greifbar ist. */
+                const gruppe = svg('g', { 'pointer-events': 'all' });
+                gruppe.appendChild(mark.rahmen
+                    ? svg('rect', { x: layout.x, y: layout.y, width: layout.width, height: layout.height, rx: 3,
+                        fill: 'none', stroke: color, 'stroke-width': Math.max(0.6, layout.fontSize / 16).toFixed(2),
+                        class: 'blatt-textrahmen' })
+                    : svg('rect', { x: layout.x, y: layout.y, width: layout.width, height: layout.height,
+                        fill: 'transparent', stroke: 'none' }));
+                const textKnoten = svg('text', {
+                    x: layout.x + layout.pad, y: layout.y + layout.pad + layout.fontSize * 0.85, fill: color,
+                    'font-size': layout.fontSize, 'font-family': schriftStapel(layout.family),
+                    'font-weight': layout.bold ? 700 : 400
+                });
+                layout.lines.forEach((zeile, index) => {
+                    const stueck = svg('tspan', { x: layout.x + layout.pad, dy: index === 0 ? 0 : layout.zeile });
+                    stueck.textContent = zeile || ' ';
+                    textKnoten.appendChild(stueck);
+                });
+                gruppe.appendChild(textKnoten);
+                gruppe.setAttribute('data-sid', idOf(mark));
+                gruppe.setAttribute('data-ink-art', art);
+                gruppe.setAttribute('data-kasten', '1');
+                return gruppe;
+            }
+            /* Die einzeilige Textmarke von frueher (E100) bleibt, wie sie war —
+               nur Schrift und Fett hoert sie jetzt auch. */
             const point = InkGeometry.points([mark.point])[0];
             if (!point)
                 return null;
             element = svg('text', {
                 x: point[0], y: point[1], fill: color,
                 'font-size': Math.max(8, Number(mark.fontSize) || 18),
-                'font-family': 'system-ui, sans-serif', 'dominant-baseline': 'alphabetic'
+                'font-family': schriftStapel(mark.schrift), 'font-weight': mark.fett ? 700 : 400,
+                'dominant-baseline': 'alphabetic'
             });
             element.textContent = String(mark.text || '').replace(/[\r\n]+/g, ' ');
         }
@@ -463,6 +524,8 @@ const Marken = (() => {
            Neuladen hinweg, wie das Papier eines Hefts (E351). */
         let stil = (typeof Store !== 'undefined' && STIFTE.some(st => st.id === Store.getMeta('zeichnen:stift')))
             ? String(Store.getMeta('zeichnen:stift')) : STIL_VORGABE;
+        /* Die Schrift fuer den naechsten Text (E360) — gemerkt in `zeichnen:schrift`. */
+        let schrift = schriftLesen();
         let running = null;
         let runningNode = null;
         let beforeRunning = null;
@@ -1083,17 +1146,31 @@ const Marken = (() => {
             redraw();
             commit(before);
         };
+        /* DER TEXT (E360, L115 Punkt 6): ein Tipp fragt mehrzeilig — Enter ist
+           eine neue Zeile, wie in GoodNotes' Textfeld —, und der Text wird ein
+           KASTEN an der getippten Stelle: 40 % der Blattbreite, mindestens 120,
+           nie ueber den rechten Rand. Schrift, Groesse, Fett und Rahmen kommen
+           aus der Leiste. Ein Tipp auf einen vorhandenen Text bearbeitet ihn;
+           leer gemacht heisst weg. Alte einzeilige Marken bleiben einzeilig. */
         const editText = async (point, targetId = '') => {
             const current = targetId ? marks.find(mark => idOf(mark) === targetId && mark.art === 'text') : null;
-            const answer = await Dialog.frage(current ? 'Textanmerkung bearbeiten' : 'Textanmerkung', current ? String(current.text || '') : '');
+            const answer = await Dialog.mehrzeilig(current ? 'Text bearbeiten' : 'Text', current ? String(current.text || '') : '');
             if (answer === null || (!current && !answer.trim()))
                 return;
             const before = snapshot();
-            if (current)
-                current.text = answer;
-            else
-                marks.push({ id: typeof Ids !== 'undefined' ? Ids.short(8) : String(marks.length + 1),
-                    art: 'text', point, text: answer, farbe: color, fontSize: Math.max(14, width * 7) });
+            if (current) {
+                if (!answer.trim())
+                    marks.splice(marks.indexOf(current), 1);
+                else
+                    current.text = answer;
+            }
+            else {
+                const x = Math.round(Math.max(0, Math.min(point[0] ?? 0, breite - 120)) * 100) / 100;
+                const y = Math.round(Math.max(0, Math.min(point[1] ?? 0, hoehe - 40)) * 100) / 100;
+                const breiteBox = Math.max(120, Math.min(Math.round(breite * 0.4), Math.round(breite - x - 8)));
+                marks.push({ id: frischeId(), art: 'text', point: [x, y], text: answer, farbe: color,
+                    fontSize: schrift.groesse, breiteBox, schrift: schrift.familie, fett: schrift.fett, rahmen: schrift.rahmen });
+            }
             redraw();
             commit(before);
         };
@@ -1570,6 +1647,47 @@ const Marken = (() => {
                 Store.setMeta('zeichnen:stift', next);
         };
         const stilVon = () => stil;
+        /* SCHRIFT MIT AUSWAHL GILT DER AUSWAHL (E360), wie Farbe und Strich
+           (E353): wer einen Text waehlt und A+ tippt, macht DIESEN groesser —
+           jede gewaehlte Marke eine Stufe von ihrer eigenen Groesse aus — und
+           schreibt danach groesser weiter. Ein Schritt im Verlauf. */
+        const setzeSchrift = (aenderung) => {
+            const schritt = Number(aenderung.schritt) || 0;
+            schrift = {
+                familie: aenderung.familie !== undefined && SCHRIFTEN.some(x => x.id === aenderung.familie)
+                    ? String(aenderung.familie) : schrift.familie,
+                groesse: schritt ? naechsteStufe(schrift.groesse, schritt)
+                    : (aenderung.groesse !== undefined ? Math.max(8, Number(aenderung.groesse) || schrift.groesse) : schrift.groesse),
+                fett: aenderung.fett !== undefined ? !!aenderung.fett : schrift.fett,
+                rahmen: aenderung.rahmen !== undefined ? !!aenderung.rahmen : schrift.rahmen
+            };
+            if (typeof Store !== 'undefined')
+                Store.setMeta('zeichnen:schrift', schrift);
+            if (!selection.size)
+                return;
+            const before = snapshot();
+            let geaendert = false;
+            for (const mark of marks)
+                if (selection.has(idOf(mark)) && mark.art === 'text') {
+                    if (schritt)
+                        mark.fontSize = naechsteStufe(Math.max(8, Number(mark.fontSize) || 18), schritt);
+                    else if (aenderung.groesse !== undefined)
+                        mark.fontSize = schrift.groesse;
+                    if (aenderung.familie !== undefined)
+                        mark.schrift = schrift.familie;
+                    if (aenderung.fett !== undefined)
+                        mark.fett = schrift.fett;
+                    if (aenderung.rahmen !== undefined)
+                        mark.rahmen = schrift.rahmen;
+                    updateNode(nodeFor(idOf(mark)), mark);
+                    geaendert = true;
+                }
+            if (geaendert) {
+                renderSelection();
+                commit(before);
+            }
+        };
+        const schriftVon = () => ({ ...schrift });
         const setzeRadierModus = (next) => {
             if (!RADIERER.some(r => r.id === next))
                 return;
@@ -1597,7 +1715,8 @@ const Marken = (() => {
         };
         const formenAn = () => formen;
         const steuerung = { flaeche, setzeWerkzeug, setzeFarbe, setzeStrich, setzeStil, stilVon, setzeRadierModus, radierModusVon, copySelection, paste, marken: marks,
-            undo, redo, deleteSelection, beiAenderung, state, setzeLineal, linealAn, setzeFormen, formenAn, bildEinfuegen };
+            undo, redo, deleteSelection, beiAenderung, state, setzeLineal, linealAn, setzeFormen, formenAn, bildEinfuegen,
+            setzeSchrift, schriftVon };
         return steuerung;
     };
     /** Die zuletzt gewaehlten eigenen Farben — hoechstens vier, gemerkt als Meta. */
@@ -1708,6 +1827,23 @@ const Marken = (() => {
                 `${controls.formenAn && controls.formenAn() ? ' class="on"' : ''} ` +
                 'title="Formen erkennen: einen Kreis, ein Rechteck oder eine Linie ziehen und am Ende kurz halten">' +
                 '<span class="zeichen">◯</span><span class="wort">Formen</span></button>' +
+                /* DIE SCHRIFT (E360): Familie, Groesse, Fett, Rahmen — beim Text und
+                   bei der Auswahl; wirkt auf Gewaehltes und auf den naechsten Text. */
+                (() => {
+                    const s = (controls.schriftVon ? controls.schriftVon() : SCHRIFT_VORGABE);
+                    const fam = SCHRIFTEN.find(x => x.id === s.familie) || SCHRIFTEN[0];
+                    return `<button data-act="schriftart" data-gruppe="schrift" data-schrift="${fam.id}" ` +
+                        `title="Schriftart: ${fam.name} — antippen wechselt: ${SCHRIFTEN.map(x => x.name).join(' → ')}">` +
+                        `<span class="zeichen" style="font-family:${fam.stapel}">Aa</span><span class="wort">${fam.name}</span></button>` +
+                        '<button data-act="kleiner" data-gruppe="schrift" title="Schrift kleiner">' +
+                        '<span class="zeichen">A−</span><span class="wort">Kleiner</span></button>' +
+                        `<button data-act="groesser" data-gruppe="schrift" title="Schrift grösser (jetzt ${s.groesse} px)">` +
+                        '<span class="zeichen">A+</span><span class="wort">Grösser</span></button>' +
+                        `<button data-act="fett" data-gruppe="schrift" aria-pressed="${s.fett ? 'true' : 'false'}"${s.fett ? ' class="on"' : ''} title="Fett">` +
+                        '<span class="zeichen">F</span><span class="wort">Fett</span></button>' +
+                        `<button data-act="rahmen" data-gruppe="schrift" aria-pressed="${s.rahmen ? 'true' : 'false'}"${s.rahmen ? ' class="on"' : ''} title="Rahmen um den Text">` +
+                        '<span class="zeichen">▭</span><span class="wort">Rahmen</span></button>';
+                })() +
                 /* DER STIFT (E351): ein Knopf, der durch Fueller, Kugelschreiber und
                    Pinsel wechselt und sagt, welcher gerade fuehrt. */
                 (() => {
@@ -1938,6 +2074,32 @@ const Marken = (() => {
                     feld.addEventListener('change', uebernehmen, { once: true });
                     feld.addEventListener('cancel', () => feld.remove(), { once: true });
                     feld.click();
+                    return;
+                }
+                /* DIE SCHRIFT (E360): Familie im Kreis, Groesse eine Stufe, Fett
+                   und Rahmen als Schalter — alles ueber `setzeSchrift`, das auch
+                   die Auswahl anfasst. */
+                if (target.dataset.act === 'schriftart' && controls.setzeSchrift) {
+                    const jetzt = SCHRIFTEN.findIndex(x => x.id === target.dataset.schrift);
+                    const naechste = SCHRIFTEN[(jetzt + 1) % SCHRIFTEN.length];
+                    controls.setzeSchrift({ familie: naechste.id });
+                    target.dataset.schrift = naechste.id;
+                    target.title = `Schriftart: ${naechste.name} — antippen wechselt: ${SCHRIFTEN.map(x => x.name).join(' → ')}`;
+                    target.innerHTML = `<span class="zeichen" style="font-family:${naechste.stapel}">Aa</span><span class="wort">${naechste.name}</span>`;
+                    return;
+                }
+                if ((target.dataset.act === 'groesser' || target.dataset.act === 'kleiner') && controls.setzeSchrift) {
+                    controls.setzeSchrift({ schritt: target.dataset.act === 'groesser' ? 1 : -1 });
+                    const groesser = tools.querySelector('[data-act="groesser"]');
+                    if (groesser && controls.schriftVon)
+                        groesser.title = `Schrift grösser (jetzt ${controls.schriftVon().groesse} px)`;
+                    return;
+                }
+                if ((target.dataset.act === 'fett' || target.dataset.act === 'rahmen') && controls.setzeSchrift) {
+                    const an = target.getAttribute('aria-pressed') !== 'true';
+                    controls.setzeSchrift(target.dataset.act === 'fett' ? { fett: an } : { rahmen: an });
+                    target.setAttribute('aria-pressed', an ? 'true' : 'false');
+                    target.classList.toggle('on', an);
                     return;
                 }
                 if (target.dataset.act === 'lineal' && controls.setzeLineal) {

@@ -27870,3 +27870,126 @@ vierzehn Sinnbilder, darunter Zurück, Vor, Löschen, Kopieren, Einsetzen,
 die Tupfer, die Breiten, rechts „+" und der Papierknopf; die offene
 Klappe mit den fünf Vorlagen unter dem Knopf; die volle Breite mit dem
 Stift; das Telefon unverändert.
+
+
+E360 — Text wie GoodNotes: ein Kasten mit Umbruch, Schriftart, Grösse, Fett und Rahmen (L115 Punkt 6, der Text)
+════════════════════════════════════════════════════════════════════════════
+
+BEFUND (L115 Punkt 6, zweite Hälfte): die `text`-Marke (E100) war EINE
+Zeile an der getippten Stelle — `prompt`-artig gefragt, Zeilenumbrüche zu
+Leerzeichen gemacht, ohne Schriftwahl, ohne Grösse, ohne Rahmen. GoodNotes'
+Textfeld ist ein Kasten, der umbricht, mit Schrift, Grösse, Fett und einem
+Rahmen, und man zieht ihn breiter. Redurs Auftrag („Schrift … alles fertig
+wie GoodNotes") meint genau das.
+
+─── WAS GEBAUT WURDE ───────────────────────────────────────────────────────
+
+  1. DER KASTEN. Eine neue Textmarke trägt `breiteBox` (40 % der
+     Blattbreite, mindestens 120, nie über den rechten Rand), dazu
+     `schrift`, `fett`, `rahmen`; `point` ist die linke obere Ecke. Alles
+     optional: eine Marke OHNE `breiteBox` ist die alte einzeilige, und sie
+     wird weiter so gezeichnet — kein Bestand ändert sich (§53.3).
+
+  2. DIE ZEILEN RECHNET DER KERN. `InkGeometry.textLayout` (mit `textLines`
+     und `textWidth`) bricht den Text an der Kastenbreite — ohne DOM, ohne
+     Schriftmessung: die Breite eines Zeichens ist eine SCHÄTZUNG je
+     Familie (in em, schmale und breite Buchstaben getrennt, Fett ein
+     Sechstel breiter). Sie muss nicht stimmen, sie muss überall dieselbe
+     sein: Bildschirm, Druck (`markenAlsSvg` liest `outerHTML` synchron),
+     Auswahlkasten (`bounds`), Treffer (Radierer, Lasso, Kasten). Ein
+     echtes Schriftmass (`canvas.measureText`) hätte den Auswahlkasten von
+     der Geometrie getrennt und den Druck an das Dokument gebunden.
+
+  3. GEZEICHNET als `<g data-ink-art="text" data-kasten>`: eine
+     Greiffläche (unsichtbares Rechteck — der Kasten ist auch zwischen den
+     Wörtern zu fassen), bei `rahmen` ein sichtbares, dann `<text>` mit
+     einer `<tspan>` je Zeile, Schriftstapel und Gewicht als Attribute
+     (Attribute kennen keine CSS-Variablen, und der Druck liest sie roh).
+
+  4. DIE SCHRIFT: die fünf Familien aus E101 (Standard, Serifen,
+     Schreibmaschine, Handschrift, Schmal — `Register.textstile`), sechs
+     Stufen (11, 13, 16, 20, 26, 34 px), Fett, Rahmen. Gemerkt in
+     `zeichnen:schrift`. In der Leiste als Gruppe „schrift" — Aa im Kreis,
+     A−, A+, F, ▭ — beim Text UND bei der Auswahl.
+
+  5. MIT AUSWAHL GILT ES DER AUSWAHL, wie Farbe und Strich seit E353: A+
+     auf einen gewählten Text hebt IHN eine Stufe (von seiner eigenen
+     Grösse aus, nicht von der Vorgabe), die Familie wechselt ihn um, Fett
+     und Rahmen schalten ihn — ein Schritt im Verlauf —, und der nächste
+     Text kommt so.
+
+  6. DER GRIFF zieht den Kasten breiter: `InkGeometry.scale` skaliert
+     `breiteBox` mit der Breite, die Schrift mit dem Mittel (wie `breite`
+     und `fontSize` seit E353). Die Zeilen folgen; die Höhe folgt dem
+     Inhalt — man zieht nur die Breite.
+
+  7. DER TIPP fragt mehrzeilig (`Dialog.mehrzeilig`, wie die Haftnotiz):
+     Enter ist eine neue Zeile, Strg+Enter übernimmt. Ein Tipp auf einen
+     vorhandenen Text bearbeitet ihn; leer gemacht heisst weg.
+
+─── WAS NICHT GEBAUT WURDE ────────────────────────────────────────────────
+
+Keine Ausrichtung (links, mitte, rechts), kein Kursiv, keine Farbe je
+Wort, keine Hintergrundfüllung, keine Höhe zum Ziehen. Die Zeichenbreiten
+sind Schätzungen — ein Wort kann in einer Schrift etwas früher oder
+später brechen, als das Auge es täte, aber überall gleich. Kein Knopf im
+Menüband-Reiter „Zeichnen" (fünfzehn Plätze, E272). Alles in L115.
+
+─── PRÜFUNG ────────────────────────────────────────────────────────────────
+
+test352 neu, 38 Punkte, PORT 9361, acht Abschnitte: der Tipp und der
+Kasten mit Zeilen — dieselben Zeilen wie `textLayout`, keine Zeile
+breiter als der Kasten innen, kein Wort verloren (§1); die Leiste und der
+nächste Text (§2); mit Auswahl, mit Zurück (§3); der Griff (§4); alte
+Marken bleiben einzeilig (§5); der Druckweg (§6); das Telefon — Fingerknöpfe
+beim Text und bei der Auswahl, weg beim Stift (§7); keine Seitenfehler
+(§8). Eine Probe in §1 war im ersten Wurf eine Tautologie (`|| true`) und
+konnte nie rot werden (§55.2); sie misst jetzt die breiteste Zeile gegen
+die Innenbreite nach derselben Rechnung. Belegt rot in sieben Richtungen,
+jede einzeln zurückgedreht und wiederhergestellt:
+
+a — der Umbruch bricht nie (geometry.js, `passt` immer wahr): 35/38 —
+    zwei Zeilen statt vier, die breiteste 593 von 226 px innen (§1, §3).
+b — A+ lässt die Auswahl aus (marken.js): 34/38 (§3: 16 statt 20 px,
+    keine neue Zeile, kein wachsender Rahmen).
+c — kein Rahmen-Rechteck (marken.js): 36/38 (§2, §6).
+d — der Griff skaliert `breiteBox` nicht (geometry.js): 36/38 (§4: 238
+    nach 238, und die Schrift wächst, also MEHR Zeilen — 6 nach 5).
+e — alte Marken werden Kästen (marken.js): 35/38 (§5: eine Gruppe mit
+    zwei tspan-Zeilen, „AltZeile" ohne Leerzeichen).
+f — die Gruppe fehlt beim Text (bausteine.css): ein rot, dann bricht die
+    Suite ab — ohne Knöpfe gibt es nichts zu tippen (§2).
+g — die Familie wird nicht übernommen (marken.js): 32/38 (§2: gemerkt
+    bleibt „standard", der nächste Text kommt in Standard, §3).
+
+test201 §4 (die Textanmerkung ist sicher) las `textContent` und
+`children` des Textknotens — mit dem Kasten ist der Knoten eine Gruppe
+mit Greiffläche und tspan-Zeilen. Er liest jetzt den `<text>` darin, fügt
+die Zeilen zusammen und zählt, was KEIN tspan ist: dieselbe Frage, am
+neuen Knoten. 32/32.
+
+test348 (die Gruppen der Leiste, E356) kannte die Gruppe „schrift" nicht:
+drei Punkte rot — die Liste der Gruppen, die Gruppen bei der Auswahl und
+beim Text. Alle drei sagen jetzt „schrift" dazu; 33/33.
+
+Dazu: test174 (A4-Blatt) 25/25, test201 (Ink V2, §4 angepasst) 32/32,
+test207 (Papiervorlagen) 37/37, test266 (Abdeckband) 12/12, test267
+(Haftnotiz) 16/16, test343 (Stifte) 30/30, test344 (Radierer) 50/50,
+test345 (Auswahl) 43/43, test346 (Handballen) 31/31, test347 (Formen)
+31/31, test349 (Bild) 30/30, test350 (Zurück) 14/14, test351 (Leiste am
+Rechner) 25/25, test247 (Menüband) 106/106, test248 (ruhige Fassung)
+45/45, test87 (Quelltext) 152/152, test105 (erzeugtes JavaScript)
+117/117, test109 (kein neues JavaScript) 20/20, test143 (Bündelgrenzen,
+Grundstock) 23/23, test99 (zwei Fenster, Fassung) 23/23, test290 (CSS-
+Namensräume) 13/13, test332 (CSS über Dateigrenzen) 14/14, test225
+(Quellenangaben) 11/11 — alle grün. Ein Lauf von test247 in der Kette war
+104/106: „PDF einlesen" öffnete binnen vier Sekunden keinen Dateiwähler —
+während nebenan der volle Lauf lief und der Rechner kurz darauf neu
+startete; allein noch einmal gelaufen 106/106, und E360 rührt diesen Weg
+nicht an. Vermerkt, nicht verschwiegen.
+
+BILDER angesehen (§55): am Rechner drei Kästen auf dem linierten Blatt —
+ein umbrechender Standardtext, ein roter Merksatz in Serifen, fett, mit
+Rahmen, eine Formel in Schreibmaschine —, darüber die Leiste mit dem
+Text-Werkzeug und der Gruppe Aa, A−, A+, F, ▭; der gewählte Kasten mit
+Griffen; am Telefon dieselbe Gruppe neben dem T.

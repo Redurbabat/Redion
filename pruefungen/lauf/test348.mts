@@ -122,7 +122,7 @@ p('Jeder Knopf ausser den Werkzeugen und dem Papier trägt eine Gruppe', await p
   [...document.querySelectorAll<HTMLElement>('.blatt-werk button')].every(b => !!b.dataset.wz || !!b.dataset.gruppe)));
 gleich('Die Gruppen heissen, wie sie heissen', await pgH.evaluate(() =>
   [...new Set([...document.querySelectorAll<HTMLElement>('.blatt-werk [data-gruppe]')].map(b => b.dataset.gruppe!))].sort()),
-  ['auswahl', 'breite', 'farbe', 'formen', 'lineal', 'radierer', 'stil', 'verlauf']);
+  ['auswahl', 'breite', 'farbe', 'formen', 'lineal', 'radierer', 'schrift', 'stil', 'verlauf']);
 
 /* ======================================================================== */
 console.log('\n2 · Am Telefon zeigt jedes Werkzeug seine Gruppen — und die Leiste ist kürzer');
@@ -138,13 +138,14 @@ const radierer = (await leiste(pgH))!;
 gleich('Beim Radierer: sein Modus und der Verlauf', radierer.gruppen, ['radierer', 'verlauf']);
 await werkzeug(pgH, 'select');
 const auswahl = (await leiste(pgH))!;
-gleich('Bei der Auswahl: Auswahl, Breite, Farbe, Verlauf', auswahl.gruppen, ['auswahl', 'breite', 'farbe', 'verlauf']);
+/* Seit E360 auch die Schrift: Gewaehltes laesst sich umschreiben wie umfaerben. */
+gleich('Bei der Auswahl: Auswahl, Breite, Farbe, Schrift, Verlauf', auswahl.gruppen, ['auswahl', 'breite', 'farbe', 'schrift', 'verlauf']);
 await werkzeug(pgH, 'marker');
 gleich('Beim Marker: Breite, Farbe, Lineal, Verlauf', (await leiste(pgH))!.gruppen, ['breite', 'farbe', 'lineal', 'verlauf']);
 await werkzeug(pgH, 'line');
 gleich('Bei der Linie: Breite, Farbe, Lineal, Verlauf', (await leiste(pgH))!.gruppen, ['breite', 'farbe', 'lineal', 'verlauf']);
 await werkzeug(pgH, 'text');
-gleich('Beim Text: Farbe und Verlauf', (await leiste(pgH))!.gruppen, ['farbe', 'verlauf']);
+gleich('Beim Text: Farbe, Schrift und Verlauf (E360)', (await leiste(pgH))!.gruppen, ['farbe', 'schrift', 'verlauf']);
 /* Die Länge: gemessen gegen die ganze Leiste ohne Regel. */
 const alles = await pgH.evaluate(() => {
   const w = document.querySelector<HTMLElement>('.blatt-werk')!;

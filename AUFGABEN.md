@@ -2644,6 +2644,14 @@ node pruefungen/lauf/test105.mjs
   `padding` ist vier Erklärungen, nicht eine, und §2/§3 zählten absolut
   statt den Unterschied zum Bestand.
   test332 neu (14), belegt rot. test258 19/19.
+* E360 (L115 Punkt 6, der Text): Text wie GoodNotes — ein Tipp fragt
+  mehrzeilig, der Text wird ein Kasten mit Umbruch (`breiteBox`, Zeilen aus
+  `InkGeometry.textLayout`, deterministisch ohne DOM), Schriftart (die fünf
+  aus E101), Stufen A−/A+, Fett und Rahmen in der Leiste (Gruppe „schrift"
+  beim Text und bei der Auswahl); mit Auswahl gilt es der Auswahl, ein
+  Schritt im Verlauf; der Griff zieht den Kasten breiter. Alte einzeilige
+  Marken bleiben einzeilig. test352 neu (38), belegt rot in sieben
+  Richtungen; test201 §4 liest den Kasten. Bilder angesehen.
 * E359 (L115 Punkt 9 erledigt): Die Blattleiste am Rechner — statt fünf
   Zeilen zwei: oben die Werkzeuge, darunter nur das Zubehör des gewählten
   (die E356-Regel gilt jetzt überall), ein Zeilenbruch-Element, Wörter nach
