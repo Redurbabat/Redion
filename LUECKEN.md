@@ -5007,14 +5007,12 @@ Tempo als Ersatz, Marker am Lineal, eigene Farben. GoodNotes kann mehr, und
 das hier ist die Liste — in der Reihenfolge, in der sie gebaut werden soll,
 mit dem Grund, warum jeder Punkt ein eigener Bogen ist:
 
-1. **Der Radierer nimmt eine ganze Marke je Tipp.** `marken.ts` sucht beim
-   Tipp die Marke unter dem Zeiger und entfernt sie. Kein Streichen über
-   mehrere Marken in einem Zug, kein Teil-Radieren (ein Strich wird nicht
-   in zwei geteilt), kein „nur den Marker radieren". Das Teil-Radieren
-   braucht eine Schnittfunktion Kreis × Polylinie und das Aufteilen von
-   `pts` UND `pressure` an derselben Stelle. Dazu gehört der Rückknopf des
-   Stifts (`event.button === 5` / `buttons & 32`), der in GoodNotes den
-   Radierer hält, solange er gedrückt ist.
+1. ~~**Der Radierer nimmt eine ganze Marke je Tipp.**~~ ERLEDIGT in E352:
+   Streichen, drei Arten (Ganz, Teil, Marker), Kreis × Polylinie in
+   `InkGeometry.splitByCircle` mit `pts` UND `pressure`, Rückknopf und
+   Seitenknopf des Stifts, Ring beim Ziehen — test344. Was bleibt: die
+   Zeichenfläche des Whiteboards (`zeichenflaeche.ts`) hat ihren eigenen
+   Radierer, der weiter eine Form je Tipp nimmt.
 
 2. **Das Lasso fehlt, und die Auswahl kann nicht skalieren oder kopieren.**
    Es gibt die Rechteck-Auswahl (Werkzeug „Auswahl") mit Bewegen und

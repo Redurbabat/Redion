@@ -199,7 +199,109 @@ const InkGeometry = (() => {
     left.x <= right.x + right.width && left.x + left.width >= right.x &&
     left.y <= right.y + right.height && left.y + left.height >= right.y;
 
-  return { points, simplify, simplifyIndices, outline, path, rectangle, bounds, move, intersects };
+  /** Der kleinste Abstand eines Punktes zu einem Linienzug (ein Punkt: zu ihm). */
+  const distanceToPolyline = (raw: unknown, point: InkPoint): number => {
+    const input = points(raw);
+    if (!input.length) return Infinity;
+    if (input.length === 1) return Math.hypot(point[0] - input[0]![0], point[1] - input[0]![1]);
+    let best = Infinity;
+    for (let i = 1; i < input.length; i++)
+      best = Math.min(best, distanceToSegment(point, input[i - 1]!, input[i]!));
+    return best;
+  };
+
+  /**
+   * TRIFFT DER RADIERER DIESE MARKE? (E352)
+   * Linienzuege (Stift, Marker, Linie, Pfeil) werden am Weg gemessen, die
+   * halbe Strichbreite als Zugabe; alles andere (Rechteck, Ellipse, Band,
+   * Zettel, Text, Zeichen) am Kasten, den `bounds` kennt.
+   */
+  const touchesCircle = (mark: any, center: InkPoint, radius: number, halfWidth = 0): boolean => {
+    const art = String(mark?.art || '');
+    const linie = art === 'stift' || art === 'marker' || art === 'line' || art === 'arrow';
+    if (linie && Array.isArray(mark?.pts) && mark.pts.length)
+      return distanceToPolyline(mark.pts, center) <= radius + Math.max(0, finite(halfWidth));
+    const box = bounds(mark);
+    const dx = Math.max(box.x - center[0], 0, center[0] - (box.x + box.width));
+    const dy = Math.max(box.y - center[1], 0, center[1] - (box.y + box.height));
+    return dx * dx + dy * dy <= radius * radius;
+  };
+
+  /** Die Parameter t (aufsteigend), an denen die Strecke a→b den Kreis
+      schneidet — oder null, wenn ihre Gerade den Kreis verfehlt. */
+  const circleCuts = (a: InkPoint, b: InkPoint, center: InkPoint, radius: number): [number, number] | null => {
+    const dx = b[0] - a[0], dy = b[1] - a[1];
+    const fx = a[0] - center[0], fy = a[1] - center[1];
+    const qa = dx * dx + dy * dy;
+    if (!qa) return null;
+    const qb = 2 * (fx * dx + fy * dy);
+    const qc = fx * fx + fy * fy - radius * radius;
+    const disc = qb * qb - 4 * qa * qc;
+    if (disc < 0) return null;
+    const wurzel = Math.sqrt(disc);
+    return [(-qb - wurzel) / (2 * qa), (-qb + wurzel) / (2 * qa)];
+  };
+
+  /**
+   * TEIL-RADIEREN (E352): ein Linienzug minus ein Kreis. Uebrig bleiben
+   * null, ein oder mehrere Stuecke — jedes mit seinen Druckwerten, an den
+   * Schnittpunkten linear dazwischen gerechnet. Ein Stueck braucht zwei
+   * Punkte; ein einzelner Rest faellt weg. Punkte, die der Kreis nicht
+   * beruehrt, bleiben exakt, was sie waren.
+   */
+  const splitByCircle = (raw: unknown, pressures: unknown, center: InkPoint, radius: number):
+      Array<{ pts: InkPoint[]; pressure: number[] }> => {
+    const input = points(raw);
+    const druck = Array.isArray(pressures) ? pressures.map(finite) : [];
+    const druckBei = (i: number): number =>
+      druck.length ? (druck[Math.min(i, druck.length - 1)] as number) : 0.5;
+    const r2 = (v: number): number => Math.round(v * 100) / 100;
+    const inside = (p: InkPoint): boolean => Math.hypot(p[0] - center[0], p[1] - center[1]) <= radius;
+    const zwischen = (a: InkPoint, b: InkPoint, t: number): InkPoint =>
+      [r2(a[0] + (b[0] - a[0]) * t), r2(a[1] + (b[1] - a[1]) * t)];
+    const stuecke: Array<{ pts: InkPoint[]; pressure: number[] }> = [];
+    let aktuell: { pts: InkPoint[]; pressure: number[] } = { pts: [], pressure: [] };
+    const ablegen = (): void => {
+      if (aktuell.pts.length >= 2) stuecke.push(aktuell);
+      aktuell = { pts: [], pressure: [] };
+    };
+    if (!input.length) return stuecke;
+    if (!inside(input[0]!)) { aktuell.pts.push(input[0]!); aktuell.pressure.push(r2(druckBei(0))); }
+    for (let i = 1; i < input.length; i++) {
+      const a = input[i - 1]!, b = input[i]!;
+      const aDrin = inside(a), bDrin = inside(b);
+      const da = druckBei(i - 1), db = druckBei(i);
+      const cuts = circleCuts(a, b, center, radius);
+      const klemm = (t: number): number => Math.max(0, Math.min(1, t));
+      if (aDrin && bDrin) continue;
+      if (!aDrin && bDrin) {
+        /* hinein: das Stueck endet am Eintrittspunkt */
+        const t = klemm(cuts ? cuts[0] : 0);
+        aktuell.pts.push(zwischen(a, b, t)); aktuell.pressure.push(r2(da + (db - da) * t));
+        ablegen();
+        continue;
+      }
+      if (aDrin && !bDrin) {
+        /* heraus: ein neues Stueck beginnt am Austrittspunkt */
+        const t = klemm(cuts ? cuts[1] : 1);
+        aktuell = { pts: [zwischen(a, b, t)], pressure: [r2(da + (db - da) * t)] };
+        aktuell.pts.push(b); aktuell.pressure.push(r2(db));
+        continue;
+      }
+      /* beide draussen: kreuzt die Strecke den Kreis mittendrin? */
+      if (cuts && cuts[0] > 0 && cuts[0] < 1 && cuts[1] > 0 && cuts[1] < 1) {
+        aktuell.pts.push(zwischen(a, b, cuts[0])); aktuell.pressure.push(r2(da + (db - da) * cuts[0]));
+        ablegen();
+        aktuell = { pts: [zwischen(a, b, cuts[1])], pressure: [r2(da + (db - da) * cuts[1])] };
+      }
+      aktuell.pts.push(b); aktuell.pressure.push(r2(db));
+    }
+    ablegen();
+    return stuecke;
+  };
+
+  return { points, simplify, simplifyIndices, outline, path, rectangle, bounds, move, intersects,
+    distanceToPolyline, touchesCircle, splitByCircle };
 })();
 
 (window as any).InkGeometry = InkGeometry;

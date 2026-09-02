@@ -11319,6 +11319,11 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   .document-center{overflow-x:auto; overscroll-behavior-inline:contain}
 }
 .blatt-marken[data-tool="select"]{cursor:default}
+.blatt-marken[data-tool="radierer"]{cursor:cell}
+/* Der Radierkreis (E352): beim Streichen sieht man, wie gross der Radierer
+   ist — GoodNotes zeigt denselben Ring. Nur Anzeige, greift nichts ab. */
+.blatt-radierkreis{fill:rgba(0,0,0,.05); stroke:#444; stroke-width:1; stroke-dasharray:3 3;
+                   vector-effect:non-scaling-stroke; pointer-events:none}
 .blatt-auswahlrahmen{fill:rgba(47,126,216,.08); stroke:#2f7ed8;
                      stroke-width:1.5; stroke-dasharray:5 4;
                      vector-effect:non-scaling-stroke; pointer-events:none}
@@ -16588,7 +16593,116 @@ const InkGeometry = (() => {
     };
     const intersects = (left, right) => left.x <= right.x + right.width && left.x + left.width >= right.x &&
         left.y <= right.y + right.height && left.y + left.height >= right.y;
-    return { points, simplify, simplifyIndices, outline, path, rectangle, bounds, move, intersects };
+    /** Der kleinste Abstand eines Punktes zu einem Linienzug (ein Punkt: zu ihm). */
+    const distanceToPolyline = (raw, point) => {
+        const input = points(raw);
+        if (!input.length)
+            return Infinity;
+        if (input.length === 1)
+            return Math.hypot(point[0] - input[0][0], point[1] - input[0][1]);
+        let best = Infinity;
+        for (let i = 1; i < input.length; i++)
+            best = Math.min(best, distanceToSegment(point, input[i - 1], input[i]));
+        return best;
+    };
+    /**
+     * TRIFFT DER RADIERER DIESE MARKE? (E352)
+     * Linienzuege (Stift, Marker, Linie, Pfeil) werden am Weg gemessen, die
+     * halbe Strichbreite als Zugabe; alles andere (Rechteck, Ellipse, Band,
+     * Zettel, Text, Zeichen) am Kasten, den `bounds` kennt.
+     */
+    const touchesCircle = (mark, center, radius, halfWidth = 0) => {
+        const art = String(mark?.art || '');
+        const linie = art === 'stift' || art === 'marker' || art === 'line' || art === 'arrow';
+        if (linie && Array.isArray(mark?.pts) && mark.pts.length)
+            return distanceToPolyline(mark.pts, center) <= radius + Math.max(0, finite(halfWidth));
+        const box = bounds(mark);
+        const dx = Math.max(box.x - center[0], 0, center[0] - (box.x + box.width));
+        const dy = Math.max(box.y - center[1], 0, center[1] - (box.y + box.height));
+        return dx * dx + dy * dy <= radius * radius;
+    };
+    /** Die Parameter t (aufsteigend), an denen die Strecke a→b den Kreis
+        schneidet — oder null, wenn ihre Gerade den Kreis verfehlt. */
+    const circleCuts = (a, b, center, radius) => {
+        const dx = b[0] - a[0], dy = b[1] - a[1];
+        const fx = a[0] - center[0], fy = a[1] - center[1];
+        const qa = dx * dx + dy * dy;
+        if (!qa)
+            return null;
+        const qb = 2 * (fx * dx + fy * dy);
+        const qc = fx * fx + fy * fy - radius * radius;
+        const disc = qb * qb - 4 * qa * qc;
+        if (disc < 0)
+            return null;
+        const wurzel = Math.sqrt(disc);
+        return [(-qb - wurzel) / (2 * qa), (-qb + wurzel) / (2 * qa)];
+    };
+    /**
+     * TEIL-RADIEREN (E352): ein Linienzug minus ein Kreis. Uebrig bleiben
+     * null, ein oder mehrere Stuecke — jedes mit seinen Druckwerten, an den
+     * Schnittpunkten linear dazwischen gerechnet. Ein Stueck braucht zwei
+     * Punkte; ein einzelner Rest faellt weg. Punkte, die der Kreis nicht
+     * beruehrt, bleiben exakt, was sie waren.
+     */
+    const splitByCircle = (raw, pressures, center, radius) => {
+        const input = points(raw);
+        const druck = Array.isArray(pressures) ? pressures.map(finite) : [];
+        const druckBei = (i) => druck.length ? druck[Math.min(i, druck.length - 1)] : 0.5;
+        const r2 = (v) => Math.round(v * 100) / 100;
+        const inside = (p) => Math.hypot(p[0] - center[0], p[1] - center[1]) <= radius;
+        const zwischen = (a, b, t) => [r2(a[0] + (b[0] - a[0]) * t), r2(a[1] + (b[1] - a[1]) * t)];
+        const stuecke = [];
+        let aktuell = { pts: [], pressure: [] };
+        const ablegen = () => {
+            if (aktuell.pts.length >= 2)
+                stuecke.push(aktuell);
+            aktuell = { pts: [], pressure: [] };
+        };
+        if (!input.length)
+            return stuecke;
+        if (!inside(input[0])) {
+            aktuell.pts.push(input[0]);
+            aktuell.pressure.push(r2(druckBei(0)));
+        }
+        for (let i = 1; i < input.length; i++) {
+            const a = input[i - 1], b = input[i];
+            const aDrin = inside(a), bDrin = inside(b);
+            const da = druckBei(i - 1), db = druckBei(i);
+            const cuts = circleCuts(a, b, center, radius);
+            const klemm = (t) => Math.max(0, Math.min(1, t));
+            if (aDrin && bDrin)
+                continue;
+            if (!aDrin && bDrin) {
+                /* hinein: das Stueck endet am Eintrittspunkt */
+                const t = klemm(cuts ? cuts[0] : 0);
+                aktuell.pts.push(zwischen(a, b, t));
+                aktuell.pressure.push(r2(da + (db - da) * t));
+                ablegen();
+                continue;
+            }
+            if (aDrin && !bDrin) {
+                /* heraus: ein neues Stueck beginnt am Austrittspunkt */
+                const t = klemm(cuts ? cuts[1] : 1);
+                aktuell = { pts: [zwischen(a, b, t)], pressure: [r2(da + (db - da) * t)] };
+                aktuell.pts.push(b);
+                aktuell.pressure.push(r2(db));
+                continue;
+            }
+            /* beide draussen: kreuzt die Strecke den Kreis mittendrin? */
+            if (cuts && cuts[0] > 0 && cuts[0] < 1 && cuts[1] > 0 && cuts[1] < 1) {
+                aktuell.pts.push(zwischen(a, b, cuts[0]));
+                aktuell.pressure.push(r2(da + (db - da) * cuts[0]));
+                ablegen();
+                aktuell = { pts: [zwischen(a, b, cuts[1])], pressure: [r2(da + (db - da) * cuts[1])] };
+            }
+            aktuell.pts.push(b);
+            aktuell.pressure.push(r2(db));
+        }
+        ablegen();
+        return stuecke;
+    };
+    return { points, simplify, simplifyIndices, outline, path, rectangle, bounds, move, intersects,
+        distanceToPolyline, touchesCircle, splitByCircle };
 })();
 window.InkGeometry = InkGeometry;
 
@@ -44414,6 +44528,19 @@ const Marken = (() => {
     const BREITEN = [1.2, 2.4, 5];
     const MARKER_FARBE = '#e0a419';
     const HISTORY_LIMIT = 100;
+    /* DER RADIERER (E352): drei Arten, wie in GoodNotes — die ganze Marke,
+       nur den beruehrten Teil eines Strichs, nur Marker. Die Wahl liegt in
+       `zeichnen:radierer` und ueberlebt den Neustart. */
+    const RADIERER = [
+        { id: 'ganz', name: 'Ganz', zeichen: '●', titel: 'Radierer: ganze Marken' },
+        { id: 'teil', name: 'Teil', zeichen: '½', titel: 'Radierer: nur den berührten Teil eines Strichs' },
+        { id: 'marker', name: 'Marker', zeichen: '▰', titel: 'Radierer: nur Marker' }
+    ];
+    const RADIER_VORGABE = 'ganz';
+    const radierModusLesen = () => {
+        const wert = typeof Store !== 'undefined' ? String(Store.getMeta('zeichnen:radierer') || '') : '';
+        return RADIERER.some(r => r.id === wert) ? wert : RADIER_VORGABE;
+    };
     /* DIE STIFTE (E351). `kugel` ist der Strich, den es seit E100 gibt — eine
        Breite je Strich. `fueller` und `pinsel` zeichnen eine Flaeche, deren
        Breite dem Druck folgt: der Fueller massvoll, der Pinsel kraeftig.
@@ -44736,6 +44863,8 @@ const Marken = (() => {
         let tool = 'schreiben';
         let color = FARBEN[0];
         let width = BREITEN[1];
+        let radierModus = radierModusLesen();
+        let radierStrich = null;
         /* Der Stift, mit dem der naechste Strich entsteht — gemerkt ueber
            Neuladen hinweg, wie das Papier eines Hefts (E351). */
         let stil = (typeof Store !== 'undefined' && STIFTE.some(st => st.id === Store.getMeta('zeichnen:stift')))
@@ -44863,6 +44992,66 @@ const Marken = (() => {
             redraw();
             commit(before);
         };
+        /* Der Radierer ist ein Kreis; seine Groesse haengt an der gewaehlten
+           Strichstaerke — duenn, mittel, dick, wie beim Stift. */
+        const radierRadius = () => Math.max(5, width * 3);
+        const frischeId = () => typeof Ids !== 'undefined' ? Ids.short(8) : 'm' + Math.random().toString(36).slice(2, 10);
+        /* EIN RADIERSCHRITT (E352): alles, was der Kreis um `center` beruehrt.
+           „ganz" nimmt die Marke, „marker" nur Marker, „teil" schneidet Stift
+           und Marker am Kreis auf und laesst den Rest stehen — Formen, Text und
+           Zeichen gehen auch dort ganz, wie in GoodNotes. Die Knoten werden
+           einzeln getauscht, nicht die ganze Schicht neu gezeichnet. */
+        /* EINE Marke radieren — nach der gewaehlten Art. Gibt zurueck, ob sich
+           etwas geaendert hat. */
+        const radiereEine = (index, center, r) => {
+            const mark = marks[index];
+            if (!mark)
+                return false;
+            if (radierModus === 'marker' && mark.art !== 'marker')
+                return false;
+            const id = idOf(mark);
+            const teilbar = radierModus === 'teil' && (mark.art === 'stift' || mark.art === 'marker');
+            const stuecke = teilbar
+                ? InkGeometry.splitByCircle(mark.pts, mark.pressure, center, r) : [];
+            /* Nur am Rand gestreift, nichts abgeschnitten: dann bleibt die Marke.
+               Verglichen werden die PUNKTE, nicht ihre Zahl — ein Endpunkt im
+               Kreis wird durch den Eintrittspunkt ersetzt, die Zahl bleibt gleich,
+               die Marke nicht (gefunden von test344 §2: die Luecke war 2,7 statt 7,2). */
+            if (teilbar && stuecke.length === 1 && JSON.stringify(stuecke[0].pts) === JSON.stringify(mark.pts))
+                return false;
+            nodeFor(id)?.remove();
+            selection.delete(id);
+            const ersatz = stuecke.map((stueck, n) => ({ ...clone(mark), id: n === 0 ? id : frischeId(), pts: stueck.pts, pressure: stueck.pressure }));
+            marks.splice(index, 1, ...ersatz);
+            ersatz.forEach(neu => { const node = zeichneMarke(neu); if (node)
+                flaeche.appendChild(node); });
+            return true;
+        };
+        const radiereBei = (roh) => {
+            const center = [roh[0] ?? 0, roh[1] ?? 0];
+            const r = radierRadius();
+            let getroffen = false;
+            for (let index = marks.length - 1; index >= 0; index--) {
+                const mark = marks[index];
+                if (radierModus === 'marker' && mark.art !== 'marker')
+                    continue;
+                if (!InkGeometry.touchesCircle(mark, center, r, strokeWidth(mark) / 2))
+                    continue;
+                if (radiereEine(index, center, r))
+                    getroffen = true;
+            }
+            return getroffen;
+        };
+        /* EIN TIPP AUF EINE MARKE MEINT DIESE MARKE (E352, gefunden von test174 §5):
+           drei Striche uebereinander, ein Tipp auf den obersten — der Kreis
+           haette alle drei genommen. Erst die Marke unter dem Zeiger; erst wenn
+           dort nichts ist oder nichts geschieht, sucht der Kreis. */
+        const radiereMarke = (id, roh) => {
+            const index = marks.findIndex(mark => idOf(mark) === id);
+            if (index < 0)
+                return false;
+            return radiereEine(index, [roh[0] ?? 0, roh[1] ?? 0], radierRadius());
+        };
         const pressureOf = (event) => {
             const pressure = Number(event.pressure);
             return pressure > 0 ? Math.max(0.05, Math.min(1, pressure)) : 0.5;
@@ -44902,6 +45091,16 @@ const Marken = (() => {
             running.pressure.push(druckAus(event, point));
         };
         const finish = () => {
+            if (radierStrich) {
+                const strich = radierStrich;
+                radierStrich = null;
+                strich.kreis?.remove();
+                if (!strich.geaendert)
+                    return false;
+                renderSelection();
+                commit(strich.before);
+                return true;
+            }
             if (selectDrag) {
                 const drag = selectDrag;
                 selectDrag = null;
@@ -45126,7 +45325,16 @@ const Marken = (() => {
                 }
                 catch { /* egal */ }
             }
-            if (tool === 'schreiben' || !e.isPrimary || e.button !== 0)
+            if (tool === 'schreiben' || !e.isPrimary)
+                return;
+            /* DER RUECKKNOPF DES STIFTS RADIERT (E352): das Radierende (button 5,
+               buttons 32) und der Seitenknopf (button 2) eines Stifts halten den
+               Radierer, solange sie gedrueckt sind — das gewaehlte Werkzeug
+               bleibt, wie in GoodNotes und OneNote. Eine Maus mit rechter Taste
+               radiert nicht: `pointerType` muss `pen` sein. */
+            const stiftRadiert = e.pointerType === 'pen' &&
+                (e.button === 5 || e.button === 2 || (e.buttons & 32) !== 0);
+            if (e.button !== 0 && !stiftRadiert)
                 return;
             const point = R.zuBlatt(flaeche, e);
             if (!point)
@@ -45135,15 +45343,26 @@ const Marken = (() => {
             flaeche.focus({ preventScroll: true });
             const target = event.target?.closest?.('[data-sid]');
             const targetId = target?.getAttribute('data-sid') || '';
-            if (tool === 'radierer') {
-                const index = marks.findIndex(mark => idOf(mark) === targetId);
-                if (index < 0)
-                    return;
-                const before = snapshot();
-                marks.splice(index, 1);
-                target?.remove();
-                selection.delete(targetId);
-                commit(before);
+            if (tool === 'radierer' || stiftRadiert) {
+                /* STREICHEN STATT TIPPEN (E352): der Radierer ist ein Kreis, der
+                   mit dem Zeiger wandert; ein Tipp ohne Bewegung ist der Sonderfall
+                   mit einem einzigen Schritt. Ein Zug ist EIN Schritt im Verlauf. */
+                radierStrich = { before: snapshot(), geaendert: false, letzter: point, kreis: null };
+                const kreis = svg('circle', { cx: point[0], cy: point[1], r: radierRadius(),
+                    class: 'blatt-radierkreis', 'data-ink-ui': 'radierer' });
+                flaeche.appendChild(kreis);
+                radierStrich.kreis = kreis;
+                const getroffen = (targetId && radiereMarke(targetId, point)) || radiereBei(point);
+                /* Sofort sichern, nicht erst beim Loslassen: ein Tipp ist fertig,
+                   wenn er da ist (der Verlauf bekommt seinen Schritt in `finish`). */
+                if (getroffen) {
+                    radierStrich.geaendert = true;
+                    save();
+                }
+                try {
+                    flaeche.setPointerCapture(event.pointerId);
+                }
+                catch { /* optional */ }
                 return;
             }
             if (tool === 'text') {
@@ -45222,6 +45441,24 @@ const Marken = (() => {
             const point = R.zuBlatt(flaeche, event);
             if (!point)
                 return;
+            if (radierStrich) {
+                /* Zwischen zwei Ereignissen kann der Zeiger weit springen; damit
+                   kein Strich in der Luecke ueberlebt, wird der Weg in Schritten
+                   von einem halben Radius abgefahren. */
+                const vx = radierStrich.letzter[0] ?? 0, vy = radierStrich.letzter[1] ?? 0;
+                const px = point[0] ?? 0, py = point[1] ?? 0;
+                const abstand = Math.hypot(px - vx, py - vy);
+                const n = Math.max(1, Math.ceil(abstand / Math.max(1, radierRadius() / 2)));
+                for (let i = 1; i <= n; i++) {
+                    const zw = [vx + (px - vx) * i / n, vy + (py - vy) * i / n];
+                    if (radiereBei(zw))
+                        radierStrich.geaendert = true;
+                }
+                radierStrich.letzter = point;
+                radierStrich.kreis?.setAttribute('cx', String(point[0]));
+                radierStrich.kreis?.setAttribute('cy', String(point[1]));
+                return;
+            }
             if (selectDrag) {
                 selectDrag.end = point;
                 if (selectDrag.mode === 'move') {
@@ -45262,6 +45499,10 @@ const Marken = (() => {
         flaeche.addEventListener('pointerup', finish);
         flaeche.addEventListener('pointercancel', finish);
         flaeche.addEventListener('pointerleave', finish);
+        /* Der Seitenknopf eines Stifts ist fuer den Browser eine rechte Taste —
+           ohne diese Zeile spraenge beim Radieren das Kontextmenue auf. */
+        flaeche.addEventListener('contextmenu', event => { if (tool !== 'schreiben')
+            event.preventDefault(); });
         /* Aufdecken per Tipp — NUR im Schreiben-Modus. Die Fläche selbst ist
            dort durchlässig (pointer-events:none), das Band bleibt greifbar,
            weil sein Knoten `pointer-events:all` trägt. In jedem Werkzeug-
@@ -45315,6 +45556,14 @@ const Marken = (() => {
                 Store.setMeta('zeichnen:stift', next);
         };
         const stilVon = () => stil;
+        const setzeRadierModus = (next) => {
+            if (!RADIERER.some(r => r.id === next))
+                return;
+            radierModus = next;
+            if (typeof Store !== 'undefined')
+                Store.setMeta('zeichnen:radierer', next);
+        };
+        const radierModusVon = () => radierModus;
         const beiAenderung = (listener) => {
             stateListeners.add(listener);
             listener(state());
@@ -45327,7 +45576,7 @@ const Marken = (() => {
            einem Knopf, der auf nichts wirkt. */
         const setzeLineal = (an) => { lineal = !!an; };
         const linealAn = () => lineal;
-        const steuerung = { flaeche, setzeWerkzeug, setzeFarbe, setzeStrich, setzeStil, stilVon, marken: marks,
+        const steuerung = { flaeche, setzeWerkzeug, setzeFarbe, setzeStrich, setzeStil, stilVon, setzeRadierModus, radierModusVon, marken: marks,
             undo, redo, deleteSelection, beiAenderung, state, setzeLineal, linealAn };
         return steuerung;
     };
@@ -45390,7 +45639,14 @@ const Marken = (() => {
                 button('zettel', '🗒', 'Haftnotiz', 'Einen Zettel aufziehen und beschriften; Antippen mit dem Werkzeug bearbeitet ihn') +
                 button('text', 'T', 'Text', 'Textanmerkung') +
                 button('zeichen', '⚡', 'Fachzeichen', 'Ein elektrotechnisches Symbol auf die Seite setzen') +
-                button('radierer', '⌫', 'Radieren', 'Eine Marke entfernen') +
+                button('radierer', '⌫', 'Radieren', 'Radieren — über Marken streichen; der Knopf daneben wählt Ganz, Teil oder Marker') +
+                /* DER RADIERER (E352): ein Knopf, der durch Ganz, Teil und Marker
+                   wechselt und sagt, was der Radierer gerade tut. */
+                (() => {
+                    const jetzt = RADIERER.find(r => r.id === (controls.radierModusVon ? controls.radierModusVon() : RADIER_VORGABE)) || RADIERER[0];
+                    return `<button data-act="radiermodus" data-modus="${jetzt.id}" title="${jetzt.titel} — antippen wechselt: ${RADIERER.map(r => r.name).join(' → ')}">` +
+                        `<span class="zeichen">${jetzt.zeichen}</span><span class="wort">${jetzt.name}</span></button>`;
+                })() +
                 '<span class="blatt-trenn"></span>' +
                 '<button data-act="undo" title="Rückgängig" disabled><span class="zeichen">↶</span><span class="wort">Zurück</span></button>' +
                 '<button data-act="redo" title="Wiederholen" disabled><span class="zeichen">↷</span><span class="wort">Vor</span></button>' +
@@ -45546,6 +45802,24 @@ const Marken = (() => {
                     }
                     return;
                 }
+                if (target.dataset.act === 'radiermodus' && controls.setzeRadierModus) {
+                    const jetzt = RADIERER.findIndex(r => r.id === target.dataset.modus);
+                    const naechster = RADIERER[(jetzt + 1) % RADIERER.length];
+                    controls.setzeRadierModus(naechster.id);
+                    target.dataset.modus = naechster.id;
+                    target.title = `${naechster.titel} — antippen wechselt: ${RADIERER.map(r => r.name).join(' → ')}`;
+                    target.innerHTML = `<span class="zeichen">${naechster.zeichen}</span><span class="wort">${naechster.name}</span>`;
+                    /* Wer den Radierer einstellt, will radieren. */
+                    if (Zeichenziel.werkzeugVon?.(controls) !== 'radierer') {
+                        controls.setzeWerkzeug('radierer');
+                        try {
+                            Zeichenziel.uebernehme(controls, 'radierer');
+                        }
+                        catch { /* egal */ }
+                        tools.querySelectorAll('[data-wz]').forEach(node => node.classList.toggle('on', node.dataset.wz === 'radierer'));
+                    }
+                    return;
+                }
                 if (target.dataset.act === 'farbe') {
                     /* Der Farbwaehler des Browsers — kein eigener Regler. Der Wert
                        kommt als #rrggbb, genau das Format der Katalogfarben. */
@@ -45627,7 +45901,7 @@ const Marken = (() => {
         }
         return row;
     };
-    return { schicht, leiste, zeichneMarke, FARBEN, BREITEN, STIFTE, druckFaktor };
+    return { schicht, leiste, zeichneMarke, FARBEN, BREITEN, STIFTE, druckFaktor, RADIERER };
 })();
 window.Marken = Marken;
 

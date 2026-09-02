@@ -2644,6 +2644,15 @@ node pruefungen/lauf/test105.mjs
   `padding` ist vier Erklärungen, nicht eine, und §2/§3 zählten absolut
   statt den Unterschied zum Bestand.
   test332 neu (14), belegt rot. test258 19/19.
+* E352 (Redurs Punkt 3, zweiter Bogen; L115 Punkt 1 erledigt): Der Radierer
+  streicht statt zu tippen — ein Kreis am Zeiger, ein Zug ein Schritt im
+  Verlauf, ein Ring beim Ziehen. Drei Arten in `zeichnen:radierer`: Ganz,
+  Teil (`InkGeometry.splitByCircle` schneidet `pts` und `pressure` an den
+  Schnittpunkten, das erste Stück behält die Kennung), Marker. Radierende
+  und Seitenknopf eines Stifts halten den Radierer, das Werkzeug bleibt;
+  die rechte Maustaste nicht. Knoten werden einzeln getauscht. test344 neu
+  (49), fand beim ersten Lauf die Punktzahl-Falle, belegt rot in sechs
+  Richtungen.
 * E351 (Redurs Punkt 3, erster Bogen; L115 offen): Der Stift schreibt wie
   eine Hand. Drei Stifte (Füller, Kugelschreiber, Pinsel) in `zeichnen:stift`,
   der Druck wandert durchs Vereinfachen mit (`simplifyIndices` statt

@@ -27022,3 +27022,115 @@ alte Gleichmässigkeit.
 Der wichtigste Satz: Ein Feld, das schon da war, bekommt seine Bedeutung
 zurück. `pressure` wurde seit E100 aufgenommen und beim Speichern
 weggemittelt — die Daten für den Füller lagen die ganze Zeit im Strich.
+
+
+E352 — Der Radierer streicht, teilt und kennt den Rückknopf des Stifts (Redurs Punkt 3, zweiter Bogen)
+════════════════════════════════════════════════════════════════════════════
+
+L115 Punkt 1, gemessen und gelesen: Der Radierer nahm EINE ganze Marke je
+Tipp — und nur, wenn der Tipp den SVG-Knoten selbst traf (`closest('[data-sid]')`).
+Ein Strich von einem Pixel Breite war damit kaum zu treffen, ein Zug über
+drei Striche nahm den ersten, und einen Teil eines Strichs konnte man gar
+nicht wegnehmen. GoodNotes: der Radierer ist ein Kreis, der mit der Hand
+wandert; er hat drei Arten (ganze Striche, nur den berührten Teil, nur
+Marker), und das Radierende des Stifts ruft ihn, solange es aufliegt.
+
+─── WAS GEBAUT WURDE ───────────────────────────────────────────────────────
+
+  1. STREICHEN. `pointerdown` mit dem Radierer beginnt einen Radierzug;
+     jede Bewegung fährt den Weg vom letzten Punkt in Schritten von einem
+     halben Radius ab und ruft `radiereBei` — so überlebt kein Strich in
+     der Lücke zwischen zwei Ereignissen. Der Radius hängt an der
+     Strichstärke (`max(5, Breite · 3)`: 5 / 7,2 / 15 Blatteinheiten). Ein
+     Zug ist EIN Schritt im Verlauf: Momentaufnahme beim Aufsetzen,
+     `commit` beim Loslassen. Ein Ring (`.blatt-radierkreis`) zeigt, wie
+     gross der Radierer ist, solange man zieht.
+
+  2. DREI ARTEN, in `RADIERER`, gemerkt in `zeichnen:radierer`:
+     · GANZ nimmt jede berührte Marke — Linienzüge am Weg gemessen (mit
+       halber Strichbreite als Zugabe), Formen, Zettel, Text und Zeichen am
+       Kasten (`InkGeometry.touchesCircle`).
+     · TEIL schneidet Stift und Marker am Kreis auf: `InkGeometry.splitByCircle`
+       rechnet die Schnittpunkte Strecke × Kreis, setzt dort neue Endpunkte
+       und den Druck linear dazwischen. Das erste Stück behält die Kennung,
+       jedes weitere bekommt eine neue — Verweise auf die Marke (Auswahl,
+       Knoten) bleiben am ersten Stück gültig. Formen gehen auch hier ganz:
+       es gibt kein halbes Rechteck.
+     · MARKER nimmt nur Marker — der Weg, eine Hervorhebung wegzunehmen,
+       ohne die Schrift darunter anzurühren.
+
+  3. DER RÜCKKNOPF DES STIFTS. Das Radierende (`button 5`, `buttons & 32`)
+     und der Seitenknopf (`button 2`) eines Zeigers mit `pointerType: 'pen'`
+     halten den Radierer, solange sie gedrückt sind; das gewählte Werkzeug
+     bleibt. Eine Maus mit rechter Taste radiert NICHT — sie ist kein
+     Stift. Und weil der Seitenknopf für den Browser eine rechte Taste ist,
+     hält die Fläche das Kontextmenü zu (`contextmenu` → `preventDefault`,
+     ausser im Schreiben-Modus).
+
+  4. DER KNOPF. Neben „Radieren" steht ein Knopf, der durch Ganz → Teil →
+     Marker wechselt (wie der Stift-Knopf aus E351) und dabei auf den
+     Radierer schaltet — wer den Radierer einstellt, will radieren. Das
+     Zeichen für „Teil" war zuerst ein Halbkreis (◐) und auf BEIDEN Bildern
+     winzig; jetzt ist es „½".
+
+  5. EIN TIPP AUF EINE MARKE MEINT DIESE MARKE. test174 §5 (E100) legt
+     drei Striche übereinander und tippt auf den obersten; der Kreis nahm
+     alle drei. Jetzt gilt beim Aufsetzen erst die Marke unter dem Zeiger
+     (`closest('[data-sid]')`, der alte Weg), und erst wenn dort nichts ist
+     oder nichts geschieht, der Kreis — beim Ziehen immer der Kreis. Und
+     der erste Schritt sichert sofort (`save`), nicht erst beim Loslassen:
+     ein Tipp ist fertig, wenn er da ist; der Verlauf bekommt seinen Schritt
+     in `finish`.
+
+  6. DIE KNOTEN WERDEN EINZELN GETAUSCHT, nicht die Schicht neu gezeichnet:
+     der getroffene Knoten geht, die Stücke kommen als neue Knoten dazu.
+     Bei tausend Marken kostet ein Radierzug damit nur die berührten.
+
+  7. Kein neues Markenfeld. `{id, art, farbe, breite, pts, pressure, stil?}`
+     bleibt; Teil-Radieren erzeugt Marken derselben Form.
+
+─── WAS NICHT GEBAUT WURDE ────────────────────────────────────────────────
+
+Die Zeichenfläche des Whiteboards (`zeichenflaeche.ts`) hat ihren eigenen
+Radierer, der weiter eine Form je Tipp nimmt — sie teilt sich mit der
+Blattschicht nur die Geometrie, nicht den Zeichner (L115 Punkt 1, Rest).
+Kein „Auto-Radierer" für Striche, die man durchstreicht (GoodNotes:
+Kritzel-Löschen) — das ist Formerkennung, L115 Punkt 5.
+
+─── PRÜFUNG ────────────────────────────────────────────────────────────────
+
+test344 neu, 49 Punkte, PORT 9348, neun Abschnitte an Rechner und Telefon.
+Die Züge sind echte `PointerEvent`s mit `pointerType`, `button` und
+`buttons`; gemessen wird an den Marken im Block UND an den Knoten in der
+Schicht. Der Wächter fand beim ersten Lauf einen echten Fehler: die Lücke
+beim Teil-Radieren war 2,7 statt 7,2 breit, weil „nichts abgeschnitten"
+an der PUNKTZAHL gemessen wurde — ein Endpunkt im Kreis wird durch den
+Eintrittspunkt ersetzt, die Zahl bleibt, die Marke nicht. Jetzt werden die
+Punkte verglichen. Belegt rot in sechs Richtungen, jede einzeln
+zurückgedreht und wiederhergestellt:
+
+a — Streichen abgeschaltet, nur der Tipp bleibt (marken.js): 31/49.
+b — Teil-Radieren nimmt wieder die ganze Marke (marken.js): 43/49.
+c — der Marker-Filter fehlt (marken.js): 47/49. Der Stift unter dem
+    Marker geht mit.
+d — Rückknopf und Seitenknopf des Stifts ignoriert (marken.js): 45/49.
+e — der Modus wird nicht gemerkt (marken.js): 45/49.
+f — „nichts abgeschnitten" wieder an der Punktzahl gemessen (marken.js):
+    48/49 — genau der Fehler vom ersten Lauf.
+
+Dazu: test201 (Ink V2 auf Blatt und PDF) 32/32, test174 (das A4-Blatt) 25/25
+— nach dem Tipp-zuerst-Umbau; davor 23/25, siehe Punkt 5 —, test207
+(Papiervorlagen) 37/37, test266 (Abdeckband) 12/12, test267 (Haftnotiz und
+Lineal) 16/16, test295 (Randstreifen) 24/24, test343 (die Stifte) 30/30,
+test247 (Menüband) 106/106, test248 (die ruhige Fassung) 45/45, test272
+(kein Griff geht verloren) 153/153, test225 (Quellenangaben) 11/11, test87
+(Quelltext) 152/152, test105 (erzeugtes JavaScript) 114/114, test109 (kein
+neues JavaScript) 20/20 — alle grün.
+
+BILDER angesehen (§55): vier Wellen, die zweite mit einer Lücke, die vierte
+mit zwei, der Marker unversehrt, der Ring am Zeiger; die Leiste mit
+„Radieren" und „½ Teil"; beides am Telefon. Das Halbkreis-Zeichen wurde
+dabei ersetzt (oben, Punkt 4). Ein zweiter Fund erwies sich als keiner:
+„Dokumente" schien in der unteren Leiste links abgeschnitten — das war der
+Ausschnitt des Elementbilds (`.blatt-huelle` beginnt nicht am Rand), nicht
+die Leiste; mit 10,5 px passt der Name in seine 78 px (E236).

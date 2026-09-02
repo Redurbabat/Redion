@@ -3918,6 +3918,11 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   .document-center{overflow-x:auto; overscroll-behavior-inline:contain}
 }
 .blatt-marken[data-tool="select"]{cursor:default}
+.blatt-marken[data-tool="radierer"]{cursor:cell}
+/* Der Radierkreis (E352): beim Streichen sieht man, wie gross der Radierer
+   ist — GoodNotes zeigt denselben Ring. Nur Anzeige, greift nichts ab. */
+.blatt-radierkreis{fill:rgba(0,0,0,.05); stroke:#444; stroke-width:1; stroke-dasharray:3 3;
+                   vector-effect:non-scaling-stroke; pointer-events:none}
 .blatt-auswahlrahmen{fill:rgba(47,126,216,.08); stroke:#2f7ed8;
                      stroke-width:1.5; stroke-dasharray:5 4;
                      vector-effect:non-scaling-stroke; pointer-events:none}
