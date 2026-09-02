@@ -138,7 +138,7 @@ await vorbereiten(pc);
 /* ---------------------------------------------------------------------------
  * §1 Schlagwortpillen
  * ------------------------------------------------------------------------- */
-console.log('\n§1 Die Schlagwortpillen sind Pillen, der Treffer eine Zeile');
+console.log('\n1 · Die Schlagwortpillen sind Pillen, der Treffer eine Zeile');
 await pc.evaluate(() => { Links.tagRegister('echt'); });
 await pc.waitForTimeout(400);
 {
@@ -159,7 +159,7 @@ await zu(pc);
 /* ---------------------------------------------------------------------------
  * §2 Sprungziele sind keine Schlagwörter
  * ------------------------------------------------------------------------- */
-console.log('\n§2 Ein Markdown-Sprungziel ist kein Schlagwort');
+console.log('\n2 · Ein Markdown-Sprungziel ist kein Schlagwort');
 {
   const tags: string[] = await pc.evaluate(() => Links.alleTags().map((t: any) => t.tag));
   p('#echt ist da', tags.includes('echt'), tags.join(','));
@@ -173,7 +173,7 @@ console.log('\n§2 Ein Markdown-Sprungziel ist kein Schlagwort');
 /* ---------------------------------------------------------------------------
  * §3 Notion-Formate
  * ------------------------------------------------------------------------- */
-console.log('\n§3 Notion-Formate: Knöpfe mit Rand, Ausgabe ohne Schwund');
+console.log('\n3 · Notion-Formate: Knöpfe mit Rand, Ausgabe ohne Schwund');
 await pc.evaluate(() => { NotionFormat.dialog(); });
 await pc.waitForTimeout(400);
 {
@@ -203,7 +203,7 @@ await zu(pc);
 /* ---------------------------------------------------------------------------
  * §4 Schnittstelle und Transaktionen
  * ------------------------------------------------------------------------- */
-console.log('\n§4 Schnittstelle und Transaktionen: dieselben Klassen, dieselben Masse');
+console.log('\n4 · Schnittstelle und Transaktionen: dieselben Klassen, dieselben Masse');
 await oeffne(pc, 'Schnittstelle /v1/ und Token');
 {
   const res = await resBreite(pc);
@@ -242,7 +242,7 @@ await zu(pc);
 /* ---------------------------------------------------------------------------
  * §5 Elektro-Arbeitsplatz
  * ------------------------------------------------------------------------- */
-console.log('\n§5 Elektro-Arbeitsplatz: das Antwortfeld hat seinen Rand');
+console.log('\n5 · Elektro-Arbeitsplatz: das Antwortfeld hat seinen Rand');
 await oeffne(pc, 'Elektro: Arbeitsplatz');
 await pc.click('.finder .ea-art[data-art="umrechnen"]').catch(() => {});
 await pc.waitForTimeout(400);
@@ -257,7 +257,7 @@ await zu(pc);
 /* ---------------------------------------------------------------------------
  * §6 Protokoll
  * ------------------------------------------------------------------------- */
-console.log('\n§6 Protokoll: Suchfeld und Auswahl mit Rand');
+console.log('\n6 · Protokoll: Suchfeld und Auswahl mit Rand');
 await pc.evaluate(() => { Protokoll.dialog(); });
 await pc.waitForTimeout(400);
 {
@@ -274,7 +274,7 @@ await zu(pc);
 /* ---------------------------------------------------------------------------
  * §7 Tempo — der Haken
  * ------------------------------------------------------------------------- */
-console.log('\n§7 Tempo: der Haken ist ein Haken');
+console.log('\n7 · Tempo: der Haken ist ein Haken');
 await pc.evaluate(() => { Tempo.dialog(); });
 await pc.waitForTimeout(400);
 {
@@ -289,7 +289,7 @@ await zu(pc);
 /* ---------------------------------------------------------------------------
  * §9 Tagesplan (am Rechner — am Telefon gelten 16 px für alle Felder)
  * ------------------------------------------------------------------------- */
-console.log('\n§9 Tagesplan: „Aufgabe ohne Angabe" nennt seine 14 px selbst');
+console.log('\n9 · Tagesplan: „Aufgabe ohne Angabe" nennt seine 14 px selbst');
 await pc.evaluate(() => { Plan.tagesplan(); });
 await pc.waitForTimeout(500);
 {
@@ -303,7 +303,7 @@ await zu(pc);
 /* ---------------------------------------------------------------------------
  * §10 Die Palette selbst
  * ------------------------------------------------------------------------- */
-console.log('\n§10 Die Palette bleibt die Palette');
+console.log('\n10 · Die Palette bleibt die Palette');
 await pc.evaluate(() => { Werkzeuge.palette(''); });
 await pc.waitForTimeout(400);
 {
@@ -323,7 +323,7 @@ await zu(pc);
 /* ---------------------------------------------------------------------------
  * §8 Protokoll am Telefon
  * ------------------------------------------------------------------------- */
-console.log('\n§8 Protokoll am Telefon: der Hinweis bekommt die Zeile, die Knöpfe bleiben Knöpfe');
+console.log('\n8 · Protokoll am Telefon: der Hinweis bekommt die Zeile, die Knöpfe bleiben Knöpfe');
 const ktx = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
 const ph = await ktx.newPage();
 await vorbereiten(ph);
