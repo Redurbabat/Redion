@@ -891,8 +891,13 @@ p('Es heisst „Neu erstellen"', blattNeu?.titel === 'Neu erstellen', blattNeu?.
    Die Zahl steht hier absichtlich hart: wächst das Blatt weiter, soll
    jemand diese Zeile lesen und entscheiden, ob es noch ein Wegweiser ist
    oder schon eine Liste. */
-p('Es führt zu neunzehn Sachen inklusive Scanner, nicht zu einer',
-  (blattNeu?.wege.length ?? 0) === 19 && (blattNeu?.wege ?? []).includes('scan'),
+/* ZWANZIG SEIT E350: „ZIP entpacken" steht bei „Hereinholen" neben PDF,
+   Scanner und Datei — ein Weg, der vorher fehlte (eine ZIP im Regal ging
+   nirgends hin). Die Frage von oben, Wegweiser oder Liste, ist gestellt und
+   beantwortet: sechs Gruppen, und jede Gruppe bleibt kurz. */
+p('Es führt zu zwanzig Sachen inklusive Scanner und ZIP, nicht zu einer',
+  (blattNeu?.wege.length ?? 0) === 20 && (blattNeu?.wege ?? []).includes('scan') &&
+  (blattNeu?.wege ?? []).includes('zip'),
   (blattNeu?.wege ?? []).join(', '));
 p('Die neuen Wege von E236 sind alle dabei',
   ['pdf', 'umzug', 'journal', 'ordner', 'blatt', 'plan', 'diagramm', 'lernen']

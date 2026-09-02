@@ -148,12 +148,16 @@ import http from 'node:http';
        Produktwelt — und zusätzlich, ob der Bestand wirklich gelesen wurde.
        Ein leerer Bildschirm fiele bei beidem durch. */
     produktwelt: !!document.querySelector('.lernwelt, .arbeitswelt'),
+    /* SEIT E349 IST DIE STARTANSICHT DAS REGAL (die Bibliothek mit ihren
+       Deckeln) — auch das zeichnet keine `.blk`-Blöcke. Gemessen wird,
+       ob das Regal steht: mit Deckeln, mit Heften oder als „noch nichts". */
+    regal: !!document.querySelector('.bib-gitter, .bib-regal, .bib-leer'),
     imBestand: (() => { try { return Object.keys(Store.cache.blocks).length; }
                         catch { return 0; } })()
   }));
   console.log('   Offline:', JSON.stringify(offline));
   ok('App startet ohne Server', offline.seitenleiste && offline.store &&
-     (offline.bloecke > 0 || offline.produktwelt) && offline.imBestand > 0);
+     (offline.bloecke > 0 || offline.produktwelt || offline.regal) && offline.imBestand > 0);
 
   /* --- 4) Telefon-Oberfläche ------------------------------------------ */
   await p.setViewportSize({ width: 428, height: 926 });   /* iPhone 13 Pro Max */

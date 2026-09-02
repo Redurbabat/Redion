@@ -26783,6 +26783,19 @@ geht verloren) 153/153, test189 (nach dem Erfolgsfall) 38/38, test147
 (Zurücknehmen, Mitnehmen, Aufschreiben) 17/17, test225 (Quellenangaben)
 11/11 — alle grün.
 
+NACHTRAG (voller Lauf voll14 auf E349–E352, 2. September): 305 von 308
+Läufen grün, drei Wächter rot — alle drei zu Recht, keiner ein Fehler im
+Bau. test31 mass „App startet ohne Server" an Blöcken oder Produktwelt;
+seit E349 ist der Start das Regal, jetzt zählt auch `.bib-gitter`. test59
+verglich „Favoriten vor Kürzlich" mit -1 < n, weil ohne Favorit der
+Abschnitt gar nicht dastand — seit E349 fehlt auch „Kürzlich" beim frischen
+Start, und aus wahr-ohne-Messung wurde falsch. Jetzt legt der Wächter einen
+Favoriten an und besucht eine Seite; erst dann vergleicht er. test114
+zählte neunzehn Wege im „+ Neu"-Blatt; E350 hat den zwanzigsten gebracht
+(ZIP entpacken) — die Zeile war absichtlich hart und hat ihre Frage
+gestellt: sechs Gruppen, jede kurz, es bleibt ein Wegweiser. Alle drei
+danach grün (35/35, 21/21, 153).
+
 
 E350 — Eine ZIP kommt so ins Regal, wie sie ist (Redurs Punkt 2)
 ════════════════════════════════════════════════════════════════════════════

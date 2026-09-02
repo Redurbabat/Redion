@@ -107,6 +107,17 @@ const pruef = (n: any, ist: any, soll: any) => {
         vorher.slice(0, 2), ['Werkzeuge', 'Agenten']);
 
   const nachher = await p.evaluate(async () => {
+    /* FAVORITEN UND KÜRZLICH GIBT ES NUR MIT INHALT (seitenleiste.ts:
+       beide Abschnitte fehlen, wenn ihre Liste leer ist). Bis E348 lieferte
+       der Start den Besuch stillschweigend mit, und ohne Favorit stand
+       „Favoriten" gar nicht da — der Vergleich unten war -1 < n und damit
+       wahr, ohne etwas zu messen. Seit E349 zählt der Start nicht mehr als
+       Besuch. Jetzt bekommt die Messung beides: einen Favoriten und eine
+       besuchte Seite. */
+    const lieb = Store.addPage(null, { text: 'Lieblingsseite' });
+    Store.updateBlock(lieb.id, { favorite: true });
+    App.oeffne(lieb.id);
+    await new Promise(r => setTimeout(r, 300));
     Store.setMeta('sidebarFolge', ['apps', 'privat', 'werkzeuge', 'favoriten', 'kuerzlich']);
     App.zeichneBaum();
     await new Promise(r => setTimeout(r, 350));
@@ -115,6 +126,8 @@ const pruef = (n: any, ist: any, soll: any) => {
   });
   pruef('Meine Apps steht jetzt oben', nachher[0], 'Meine Apps');
   pruef('Privat danach',               nachher[1], 'Privat');
+  pruef('Favoriten und Kürzlich stehen beide da',
+        nachher.includes('Favoriten') && nachher.includes('Kürzlich verwendet'), true);
   pruef('Favoriten vor Kürzlich',
         nachher.indexOf('Favoriten') < nachher.indexOf('Kürzlich verwendet'), true);
 
