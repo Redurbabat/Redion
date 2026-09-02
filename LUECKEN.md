@@ -5022,19 +5022,17 @@ mit dem Grund, warum jeder Punkt ein eigener Bogen ist:
    ist am Telefon drei Pixel klein (das Trefffeld ist 22 Einheiten, der
    Punkt nicht); keine Systemzwischenablage.
 
-3. **Kein Handballen-Schutz.** Wer mit dem Stift schreibt und die Hand auf
-   dem Bildschirm ablegt, zeichnet mit der Hand. Die Schicht unterscheidet
-   `pointerType` nur für den Druck (E351), nicht für die Frage, ob der
-   Zeiger zeichnen darf. Regel für den Bogen: sobald ein `pen` gesehen
-   wurde, zeichnen `touch`-Zeiger für einige Sekunden nicht — sie rollen.
-   Braucht eine Prüfung mit zwei gleichzeitigen Zeigern.
+3. ~~**Kein Handballen-Schutz.**~~ ERLEDIGT in E354: `data-stift` mit vier
+   Sekunden Fingersperre, ein Zug gehört seinem Zeiger, der Stift nimmt
+   der aufliegenden Hand den Strich, ein zweiter Finger verwirft den
+   Fingerzug — test346 mit Schrittfolgen mehrerer Zeiger. Was bleibt: die
+   vier Sekunden sind Erfahrung, kein Mass.
 
-4. **Kein Zoom mit zwei Fingern, kein Strg+Rad auf dem Blatt.** Das Blatt
-   hat seinen Blattraum (E100), aber die Ansicht ist die des Browsers.
-   GoodNotes-Nutzer erwarten, ins Blatt zu zoomen und dort feiner zu
-   schreiben. Das ist eine Transformation auf der Fläche plus die
-   Umrechnung in `zuBlatt` — und die Werkzeugleiste darf dabei nicht
-   mitwandern.
+4. ~~**Kein Zoom mit zwei Fingern, kein Strg+Rad.**~~ ERLEDIGT in E354 für
+   das DOKUMENT: Strg+Rad und Kneifen schreiben in den Zoomregler, beides
+   in dessen Grenzen. Was bleibt: das Kneifen zoomt um die Mitte, nicht um
+   den Punkt zwischen den Fingern; das Blatt in einer gewöhnlichen Seite
+   hat weiterhin keinen Zoom.
 
 5. **Keine Formerkennung.** Ein gezogener Kreis bleibt ein gezogener Kreis.
    GoodNotes rastet nach kurzem Halten am Ende des Strichs auf Kreis,

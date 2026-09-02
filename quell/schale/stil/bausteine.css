@@ -3919,6 +3919,9 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 }
 .blatt-marken[data-tool="select"]{cursor:default}
 .blatt-marken[data-tool="radierer"]{cursor:cell}
+/* HANDBALLEN-SCHUTZ (E354): solange ein Stift zuletzt geschrieben hat,
+   darf ein Finger rollen und kneifen statt zu zeichnen. */
+.blatt-marken[data-stift="an"]{touch-action:pan-x pan-y pinch-zoom}
 /* Der Radierkreis (E352): beim Streichen sieht man, wie gross der Radierer
    ist — GoodNotes zeigt denselben Ring. Nur Anzeige, greift nichts ab. */
 .blatt-radierkreis{fill:rgba(0,0,0,.05); stroke:#444; stroke-width:1; stroke-dasharray:3 3;
@@ -4355,6 +4358,9 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    `offsetTop`, und der zaehlt zum naechsten positionierten Vorfahren. Ohne
    diese eine Angabe zeigte er an einem Element weiter aussen vorbei, und die
    Seitenzahl blieb beim Rollen auf 1 stehen. */
+/* Zwei Finger kneifen das DOKUMENT (E354), nicht die ganze Seite des
+   Browsers — die Geste gehoert der Dokumentansicht. */
+.document-center{touch-action:pan-x pan-y}
 .document-center{min-width:0; overflow:auto; padding:18px; position:relative;
   background:var(--bg-subtle,var(--bg-hover))}
 /* E299 · DIE ROLLE. Alle Seiten untereinander, mit Luft dazwischen — man

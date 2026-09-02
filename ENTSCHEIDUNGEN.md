@@ -27242,3 +27242,93 @@ mit vier Griffen darum, Marker und dritte Welle unberührt; die Leiste mit
 Löschen, Kopieren und Einsetzen (Einsetzen erst nach dem Kopieren
 anfassbar); dasselbe am Telefon, wo die Leiste bis zu den drei Knöpfen
 gerollt ist.
+
+
+E354 — Handballen und zwei Finger: der Stift geht vor, Finger rollen, Kneifen zoomt (L115 Punkte 3 und 4)
+════════════════════════════════════════════════════════════════════════════
+
+BEFUND, gelesen und gemessen: Die Zeichenschicht unterschied `pointerType`
+seit E351 nur für den Druck. Ob ein Zeiger zeichnen DARF, fragte sie nicht
+— wer mit dem Stift schrieb und die Hand aufs Glas legte, zeichnete mit der
+Hand, und die Bewegungen der Hand landeten im Strich des Stifts, weil
+`pointermove` jeden ersten Zeiger seiner Art nahm. Das Dokument kannte zum
+Zoomen nur den Regler: kein Strg+Rad, kein Kneifen mit zwei Fingern — auf
+dem Tablett die erste Geste, die jeder macht.
+
+─── WAS GEBAUT WURDE ───────────────────────────────────────────────────────
+
+  1. HANDBALLEN-SCHUTZ. Sobald ein Stift die Fläche berührt oder über sie
+     fährt, steht `data-stift="an"` an der Schicht, und Finger zeichnen
+     vier Sekunden lang nicht (`STIFT_SPERRE_MS`). Der gesperrte Finger
+     bekommt kein `preventDefault` — er darf rollen, und das CSS sagt es
+     dem Browser: `touch-action: pan-x pan-y pinch-zoom` (Chromium nennt
+     das `manipulation`), solange die Marke steht. Ohne Stift bleibt alles,
+     wie es war: `touch-action: none`, der Finger zeichnet.
+
+  2. EIN ZUG GEHÖRT SEINEM ZEIGER. `aktiverZeiger` merkt, wer den Zug
+     begonnen hat; Bewegungen und Loslassen anderer Zeiger gehen ihn nichts
+     an. Vorher hätte die abhebende Hand den Stiftstrich beendet.
+
+  3. DER STIFT GEHT VOR. Liegt die Hand schon auf und zeichnet (weil kein
+     Stift in Sicht war), nimmt der Stift ihr den Strich weg: der
+     angefangene Handstrich wird VERWORFEN — kein Knoten, kein Schritt im
+     Verlauf, als hätte es ihn nie gegeben. Dafür trägt der laufende Zug
+     seine Zeigerart (`zeigerArt`); `finish` streift sie ab, in den Daten
+     steht sie nie.
+
+  4. EIN ZWEITER FINGER macht aus dem Fingerzug eine Geste: der angefangene
+     Strich verschwindet, die Finger dürfen rollen oder kneifen.
+
+  5. STRG+RAD UND KNEIFEN im Dokument. `zoomSetzen` schreibt in den Regler
+     (Wert, Zahl, `passen`) — der Regler bleibt die eine Wahrheit, damit
+     Regler, Zahl und Ansicht nie auseinanderlaufen. Strg+Rad geht in
+     Zehnerschritten, das Kneifen stetig (Verhältnis der Fingerabstände zum
+     Zoom beim Aufsetzen), beides in den Grenzen des Reglers (60 bis 180).
+     Das Rad ohne Strg rollt wie immer; das Kneifen zählt nur Finger, nie
+     Maus oder Stift. `.document-center` bekommt `touch-action: pan-x pan-y`,
+     damit zwei Finger das Dokument kneifen und nicht die Browserseite.
+
+─── WAS NICHT GEBAUT WURDE ────────────────────────────────────────────────
+
+Das Kneifen zoomt um die Mitte des Dokuments, nicht um den Punkt zwischen
+den Fingern; das Blatt in einer gewöhnlichen Seite (ausserhalb des
+Dokumentmodus) hat keinen Zoom; die vier Sekunden sind eine Zahl aus der
+Erfahrung, kein Mass. Steht in L115.
+
+─── PRÜFUNG ────────────────────────────────────────────────────────────────
+
+test346 neu, 31 Punkte, PORT 9350, sieben Abschnitte. Die Züge sind
+Schrittfolgen mehrerer Zeiger durcheinander (Stift 7, Hand 11, zweiter
+Finger 32 …), so wie die Ereignisse auf dem Glas ankommen; gemessen wird an
+den Marken, an den Knoten, am Verlauf, an `data-stift`, am Zoomregler und
+an der berechneten `touch-action`. Belegt rot in sechs Richtungen, jede
+einzeln zurückgedreht und wiederhergestellt:
+
+a — die Fingersperre fehlt (marken.js): 28/31. Der Finger zeichnet
+    während des Stifts und kurz danach.
+b — der Stift nimmt der Hand den Strich nicht (marken.js): 30/31. Zwei
+    Striche statt einem, der Handstrich bleibt.
+c — der zweite Finger verwirft nichts (marken.js): 27/31. Aus der Geste
+    wird ein Strich, mit Knoten und Schritt.
+d — Strg+Rad zoomt nicht (document-mode.js): 27/31.
+e — das Kneifen setzt immer den alten Zoom (document-mode.js): 28/31.
+f — der Zug gehört nicht seinem Zeiger (marken.js, beide Stellen): 29/31.
+    Die Hand bewegt den Stiftstrich mit, und ihr Abheben beendet ihn.
+
+test344 §8 wurde durch E354 rot — zu Recht: der Wächter zog den Strich mit
+dem Stift und radierte ihn gleich darauf mit dem Finger, und genau dieser
+Finger ist seit E354 vier Sekunden lang eine Hand. Jetzt zieht er den
+Strich mit dem Finger (kein Stift im Spiel) und radiert ihn mit dem Finger.
+test345 §6 dasselbe: der Finger zog das Lasso um einen Stiftstrich und war
+dabei eine Hand — jetzt zieht der Finger auch den Strich. 50/50 und 43/43.
+
+Dazu: test201 (Ink V2) 32/32, test174 (A4-Blatt) 25/25, test177 (ein
+PDF wird zu Seiten) 69/69, test285 (das Dokument ist die Seite) 52/52,
+test292 (Reiterzeile) 45/45, test295 (Randstreifen) 24/24, test341 (der
+Start) 37/37, test343 (Stifte) 30/30, test344 (Radierer) 50/50, test345
+(Auswahl) 43/43, test87 (Quelltext) 152/152, test105 (erzeugtes JavaScript)
+114/114, test109 (kein neues JavaScript) 20/20, test225 (Quellenangaben)
+11/11 — alle grün.
+
+Kein Bild zu diesem Bogen: nichts sieht anders aus, es verhält sich anders.
+Was zu sehen wäre — ein Strich, der NICHT entsteht —, misst test346.

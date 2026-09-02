@@ -347,7 +347,11 @@ const masse = await pgH.evaluate(() => {
 });
 p('Der Modus-Knopf ist mindestens 44 × 44', !!masse && masse.w >= 44 && masse.h >= 44, JSON.stringify(masse));
 await werkzeug(pgH, 'stift');
-await strich(pgH, [100, 100], [300, 100]);
+/* MIT DEM FINGER gezogen, nicht mit dem Stift: seit E354 ist ein Finger
+   nach einem Stift vier Sekunden lang eine Hand und radiert nicht. Hier
+   gibt es keinen Stift — der Finger zeichnet und radiert. */
+await zug(pgH, Array.from({ length: 21 }, (_v, i) => [100 + i * 10, 100] as [number, number]), { art: 'touch' });
+gleich('Der Finger hat gezeichnet', (await marken(pgH, blattH)).length, 1);
 await werkzeug(pgH, 'radierer');
 await modusSetzen(pgH, 'ganz');
 await zug(pgH, [[200, 80], [200, 120]], { art: 'touch' });

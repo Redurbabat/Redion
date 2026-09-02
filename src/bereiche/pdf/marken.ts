@@ -329,6 +329,17 @@ const Marken = (() => {
     let color: string = FARBEN[0];
     let width: number = BREITEN[1];
     let radierModus: string = radierModusLesen();
+    /* HANDBALLEN-SCHUTZ (E354): sobald ein Stift die Flaeche beruehrt hat,
+       zeichnen Finger vier Sekunden lang nicht — sie rollen. So darf die
+       Hand beim Schreiben auf dem Glas liegen wie auf Papier. Die Sperre
+       steht als `data-stift` an der Flaeche, damit auch das CSS weiss, dass
+       ein Finger jetzt rollen darf (touch-action). Und ein Zug gehoert dem
+       Zeiger, der ihn begonnen hat: Bewegungen und Loslassen anderer Zeiger
+       gehen ihn nichts an. */
+    const STIFT_SPERRE_MS = 4000;
+    let stiftZuletzt = 0;
+    let stiftTimer: ReturnType<typeof setTimeout> | null = null;
+    let aktiverZeiger: number | null = null;
     let radierStrich: { before: any[]; geaendert: boolean; letzter: number[]; kreis: SVGElement | null } | null = null;
     /* Der Stift, mit dem der naechste Strich entsteht — gemerkt ueber
        Neuladen hinweg, wie das Papier eines Hefts (E351). */
@@ -589,6 +600,21 @@ const Marken = (() => {
       running.zuletzt = { t: jetzt, p: point, d: druck };
       return Math.round(druck * 100) / 100;
     };
+    const stiftGesehen = (): void => {
+      stiftZuletzt = Date.now();
+      flaeche.setAttribute('data-stift', 'an');
+      if (stiftTimer) clearTimeout(stiftTimer);
+      stiftTimer = setTimeout(() => { flaeche.removeAttribute('data-stift'); stiftTimer = null; }, STIFT_SPERRE_MS);
+    };
+    const fingerGesperrt = (event: PointerEvent): boolean =>
+      event.pointerType === 'touch' &&
+      (Date.now() - stiftZuletzt < STIFT_SPERRE_MS || (running !== null && running.zeigerArt === 'pen'));
+    /* Einen angefangenen Strich VERWERFEN: kein Knoten, kein Schritt im
+       Verlauf — als haette es ihn nie gegeben. */
+    const verwerfen = (): void => {
+      if (running) { runningNode?.remove(); running = null; runningNode = null; beforeRunning = null; }
+      aktiverZeiger = null;
+    };
     const addSample = (event: PointerEvent): void => {
       if (!running) return;
       const point = R.zuBlatt(flaeche, event);
@@ -599,6 +625,7 @@ const Marken = (() => {
       running.pressure.push(druckAus(event, point));
     };
     const finish = (): boolean => {
+      aktiverZeiger = null;
       if (radierStrich) {
         const strich = radierStrich;
         radierStrich = null;
@@ -638,6 +665,7 @@ const Marken = (() => {
       const node = runningNode;
       const before = beforeRunning || snapshot();
       running = null; runningNode = null; beforeRunning = null;
+      delete mark.zeigerArt;
       if (mark.art === 'stift' || mark.art === 'marker') {
         if (mark.pts.length < 2) { node?.remove(); return false; }
         delete mark.zuletzt;
@@ -812,7 +840,21 @@ const Marken = (() => {
       if (typeof Zeichenziel !== 'undefined') {
         try { Zeichenziel.beruehrt(steuerung); } catch { /* egal */ }
       }
-      if (tool === 'schreiben' || !e.isPrimary) return;
+      if (e.pointerType === 'pen') stiftGesehen();
+      if (tool === 'schreiben') return;
+      /* EIN ZWEITER FINGER macht aus dem Fingerzug eine Geste (Rollen,
+         Kneifen): der angefangene Strich verschwindet, kein Schritt im
+         Verlauf (E354). */
+      if (e.pointerType === 'touch' && !e.isPrimary) {
+        if (running && running.zeigerArt === 'touch') verwerfen();
+        return;
+      }
+      if (!e.isPrimary) return;
+      /* Der gesperrte Finger bekommt kein preventDefault — er darf rollen. */
+      if (fingerGesperrt(e)) return;
+      /* DER STIFT GEHT VOR: liegt der Handballen schon auf und zeichnet,
+         nimmt der Stift ihm den Strich weg (E354). */
+      if (e.pointerType === 'pen' && running && running.zeigerArt === 'touch') verwerfen();
       /* DER RUECKKNOPF DES STIFTS RADIERT (E352): das Radierende (button 5,
          buttons 32) und der Seitenknopf (button 2) eines Stifts halten den
          Radierer, solange sie gedrueckt sind — das gewaehlte Werkzeug
@@ -824,6 +866,7 @@ const Marken = (() => {
       const point = R.zuBlatt(flaeche, e);
       if (!point) return;
       event.preventDefault();
+      aktiverZeiger = e.pointerId;
       flaeche.focus({ preventScroll: true });
       const target = (event.target as Element)?.closest?.('[data-sid]') as SVGElement | null;
       const targetId = target?.getAttribute('data-sid') || '';
@@ -892,7 +935,7 @@ const Marken = (() => {
       const id = typeof Ids !== 'undefined' ? Ids.short(8) : String(marks.length + 1);
       if (tool === 'stift' || tool === 'marker') {
         running = { id, art: tool, farbe: tool === 'marker' && color === FARBEN[0] ? MARKER_FARBE : color,
-          breite: width, pts: [point], pressure: [] };
+          breite: width, pts: [point], pressure: [], zeigerArt: e.pointerType };
         if (tool === 'stift' && stil !== 'kugel') running.stil = stil;
         running.pressure.push(druckAus(event, point));
         const p0 = running.pressure[0];
@@ -903,7 +946,7 @@ const Marken = (() => {
            Handgriff wie beim Marker vier Zeilen höher). */
         const flaechenFarbe = tool === 'zettel' && color === FARBEN[0]
           ? MARKER_FARBE : color;
-        running = { id, art: tool, farbe: flaechenFarbe, breite: width, pts: [point, point] };
+        running = { id, art: tool, farbe: flaechenFarbe, breite: width, pts: [point, point], zeigerArt: e.pointerType };
         runningNode = zeichneMarke(running);
       }
       if (runningNode) flaeche.appendChild(runningNode);
@@ -912,6 +955,9 @@ const Marken = (() => {
 
     flaeche.addEventListener('pointermove', (event: PointerEvent) => {
       if (!event.isPrimary) return;
+      if (event.pointerType === 'pen') stiftGesehen();
+      /* Nur der Zeiger, der den Zug begonnen hat, fuehrt ihn (E354). */
+      if (aktiverZeiger !== null && event.pointerId !== aktiverZeiger) return;
       const point = R.zuBlatt(flaeche, event);
       if (!point) return;
       if (radierStrich) {
@@ -982,9 +1028,13 @@ const Marken = (() => {
         ? { ...running, pts: running.pts.length > 1 ? running.pts : [running.pts[0], running.pts[0]] }
         : running);
     });
-    flaeche.addEventListener('pointerup', finish);
-    flaeche.addEventListener('pointercancel', finish);
-    flaeche.addEventListener('pointerleave', finish);
+    const beiEnde = (event: PointerEvent): void => {
+      if (aktiverZeiger !== null && event.pointerId !== aktiverZeiger) return;
+      finish();
+    };
+    flaeche.addEventListener('pointerup', beiEnde);
+    flaeche.addEventListener('pointercancel', beiEnde);
+    flaeche.addEventListener('pointerleave', beiEnde);
     /* Der Seitenknopf eines Stifts ist fuer den Browser eine rechte Taste —
        ohne diese Zeile spraenge beim Radieren das Kontextmenue auf. */
     flaeche.addEventListener('contextmenu', event => { if (tool !== 'schreiben') event.preventDefault(); });

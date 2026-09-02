@@ -745,6 +745,46 @@ const DocumentMode = (() => {
       state.zoom = Number(zoom.value) || 100;
       passen(); zoomLabel.textContent = state.zoom + ' %';
     });
+    /* ZOOM MIT STRG+RAD UND MIT ZWEI FINGERN (E354), wie in GoodNotes. Der
+       Regler bleibt die Wahrheit: beide Wege schreiben in ihn hinein, damit
+       Regler, Zahl und Ansicht nie auseinanderlaufen. Ohne Strg rollt das
+       Rad wie immer; das Kneifen zaehlt nur Finger, nie Stift oder Maus. */
+    const zoomSetzen = (wert: number): void => {
+      const neu = Math.max(60, Math.min(180, Math.round(wert)));
+      if (neu === state.zoom) return;
+      state.zoom = neu;
+      zoom.value = String(neu);
+      zoomLabel.textContent = neu + ' %';
+      passen();
+    };
+    center.addEventListener('wheel', (event: WheelEvent) => {
+      if (!event.ctrlKey && !event.metaKey) return;
+      event.preventDefault();
+      zoomSetzen(state.zoom + (event.deltaY < 0 ? 10 : -10));
+    }, { passive: false });
+    const finger = new Map<number, [number, number]>();
+    let kneifen: { abstand: number; zoom: number } | null = null;
+    center.addEventListener('pointerdown', (event: PointerEvent) => {
+      if (event.pointerType !== 'touch') return;
+      finger.set(event.pointerId, [event.clientX, event.clientY]);
+      if (finger.size === 2) {
+        const [a, b] = [...finger.values()] as [[number, number], [number, number]];
+        kneifen = { abstand: Math.hypot(a[0] - b[0], a[1] - b[1]) || 1, zoom: state.zoom };
+      }
+    }, true);
+    center.addEventListener('pointermove', (event: PointerEvent) => {
+      if (!kneifen || !finger.has(event.pointerId)) return;
+      finger.set(event.pointerId, [event.clientX, event.clientY]);
+      const [a, b] = [...finger.values()] as [[number, number], [number, number]];
+      const abstand = Math.hypot(a[0] - b[0], a[1] - b[1]) || 1;
+      zoomSetzen(kneifen.zoom * abstand / kneifen.abstand);
+    }, true);
+    const fingerWeg = (event: PointerEvent): void => {
+      finger.delete(event.pointerId);
+      if (finger.size < 2) kneifen = null;
+    };
+    center.addEventListener('pointerup', fingerWeg, true);
+    center.addEventListener('pointercancel', fingerWeg, true);
     return true;
   };
 

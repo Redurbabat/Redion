@@ -2644,6 +2644,13 @@ node pruefungen/lauf/test105.mjs
   `padding` ist vier Erklärungen, nicht eine, und §2/§3 zählten absolut
   statt den Unterschied zum Bestand.
   test332 neu (14), belegt rot. test258 19/19.
+* E354 (L115 Punkte 3 und 4 erledigt): Handballen-Schutz — nach einem
+  Stift zeichnen Finger vier Sekunden nicht, sie rollen (`data-stift`,
+  `touch-action`); ein Zug gehört seinem Zeiger; der Stift nimmt der
+  aufliegenden Hand den Strich (verworfen, kein Schritt); ein zweiter
+  Finger verwirft den Fingerzug. Im Dokument zoomen Strg+Rad und Kneifen
+  über den Regler (60–180). Kein neues Markenfeld. test346 neu (31), belegt
+  rot in sechs Richtungen. Kein Bild: es sieht nicht anders aus.
 * E353 (E269, L115 Punkt 2 erledigt): Die Auswahl wie in GoodNotes — Lasso
   (`InkGeometry.insidePolygon`, Schlinge nur mit Fläche, sonst der Kasten),
   vier Griffe zum Skalieren um die Gegenecke (`InkGeometry.scale`, Breite
