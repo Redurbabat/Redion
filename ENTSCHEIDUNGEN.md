@@ -28108,3 +28108,119 @@ Die Einzeldatei trägt stand.js mit.
 BILD angesehen (§55): „Über diese App" mit der Zeile „Stand — v113 ·
 gebaut 2. September 2026 · örtlicher Server (start.bat)" unter dem
 Speicherort.
+
+
+E362 — Der Ereignisbus kann async: frageAsync, meldeAsync, Nachreichen, Veto (L102 Punkt 4)
+════════════════════════════════════════════════════════════════════════════
+
+BEFUND (L102 Punkt 4, als zweiter Bogen empfohlen, weil er still FALSCH
+rechnet, §46): `frage` sammelte Promises als ROHE Werte ein. Wer die Liste
+las, hielt ein Promise-Objekt für eine Antwort — kein Fehler, kein Hinweis,
+nur ein Wert, der keiner war. `melde` verwarf Rückgaben, und die Ablehnung
+eines asynchronen Zuhörers versandete als „unhandled rejection" in der
+Konsole. Kein Veto, kein Nachreichen für spät Angemeldete. E286 (die
+Auftragsmaschine) hat den Bus deshalb umgangen statt ihn zu reparieren.
+
+Nachgemessen vor dem Bau: `Ereignisse.frage` hat im Bestand KEINEN
+Aufrufer, `melde` sechs, `horche` acht, kein Zuhörer ist `async`. Der
+falsche Wert war also noch nie in einer Rechnung — aber der Bus ist die
+Stelle, an der weitere Bereiche andocken sollen, und ein Bus, der bei der
+ersten asynchronen Antwort still falsch wird, ist ein Loch, das auf den
+Ersten wartet, der hineinfällt.
+
+UND EIN ZWEITER BEFUND, beim Lesen der acht Zuhörer: der EINZIGE auf
+`ablageGeladen` (Menüband, seit E212: „nach dem Laden der Ablage noch
+einmal zeichnen") horchte auf die Zeichenkette `'ablageGeladen'`. Gemeldet
+wird `ARTEN.ablageGeladen`, und das ist `'ablage.geladen'`. Er hat nie
+etwas gehört — genau der Tippfehler, vor dem `arten.ts` in seiner
+Kopfzeile warnt („sieht aus wie: das Modul tut nichts"). Der Absatz über
+der Zeile sagt sogar: „gemessen greift das nicht" und schreibt es der
+Startreihenfolge zu. Die Reihenfolge war ein Grund; der Name war der
+andere, und den hat niemand gesehen, weil ein nie gehörtes Ereignis keinen
+Fehler macht.
+
+─── WAS GEBAUT WURDE ───────────────────────────────────────────────────────
+
+  1. `frage` ZÄHLT KEINE PROMISE. Antwortet ein Zuhörer mit einem
+     Thenable, wird das gemeldet (Konsole und `Pflege.fehlerMerken`, mit
+     dem Hinweis auf `frageAsync`) und nicht in die Liste getan; die
+     Promise bekommt einen Fänger, damit ihr Scheitern nicht als zweite
+     Meldung versandet. Synchron bleibt synchron — nur ehrlich.
+
+  2. `frageAsync(name, daten)` wartet jede Antwort ab — synchrone wie
+     asynchrone —, `Promise.allSettled`, und die Liste steht in der
+     REIHENFOLGE DER ANMELDUNG, nicht in der des Eintreffens (test354 §3:
+     „langsam" vor „sofort"). Was scheitert, ist gemeldet und fehlt;
+     `undefined` und `null` fallen heraus wie bei `frage`.
+
+  3. `meldeAsync(name, daten)` wartet, bis jeder Zuhörer fertig ist, und
+     gibt zurück, wie viele es ohne Fehler wurden. Ein Wurf VOR der
+     Promise (synchron) zählt wie eine Ablehnung.
+
+  4. `melde` bleibt synchron, aber ein asynchroner Zuhörer darf jetzt
+     scheitern, ohne dass es niemand erfährt: seine Ablehnung geht
+     denselben Weg wie ein synchroner Wurf (`fehlerMelden` — ein Weg, den
+     es vorher zweimal wörtlich gab).
+
+  5. NACHREICHEN. Der Bus merkt sich je Name die letzte Meldung
+     (`gemeldet`); `horche(name, fn, {nachreichen: true})` ruft den
+     Zuhörer sofort mit ihr — mit demselben Fehlerweg wie eine frische.
+     `schonGemeldet(name)` sagt, ob und womit. `leeren` vergisst es (nur
+     Prüfläufe).
+
+  6. VETO. `darf(name, daten)` fragt und sagt Nein, sobald EIN Zuhörer
+     `false` antwortet; `darfAsync` dasselbe abgewartet. Kein „Abbruch"
+     (ein Zuhörer hält die weiteren an) — absichtlich: ein Bus, in dem
+     einer die anderen anhalten kann, ist wieder das Knäuel, das der Bus
+     auflösen sollte.
+
+  7. DAS MENÜBAND horcht jetzt über `ARTEN.ablageGeladen` und mit
+     `nachreichen: true`: ist die Ablage beim Anmelden längst geladen (der
+     gemessene Normalfall), kommt die Meldung sofort.
+
+  8. E361 HAT SICH ZUM ERSTEN MAL BEWÄHRT: `npm run bauen:ts` meldete
+     „Dienststand v114: Inhalt geändert" und hob die Fassung von selbst —
+     niemand musste an `sw.ts` denken.
+
+─── WAS NICHT GEBAUT WURDE ────────────────────────────────────────────────
+
+Kein Umbau der sechs `melde`-Aufrufer auf `meldeAsync` — keiner braucht
+es. Von 42 Namen in `ARTEN` wird weiter nur einer benutzt; die anderen
+sieben Zuhörer horchen auf freie Zeichenketten (`'auftrag.schritt'`,
+`'emojiWaehlen'`, …), die nicht im Register stehen — ein Wächter, der
+jede gemeldete oder gehörte Zeichenkette gegen `ARTEN` hält, wäre der
+nächste Schritt (L102). Die Auftragsmaschine bleibt, wie E286 sie gebaut
+hat.
+
+─── PRÜFUNG ────────────────────────────────────────────────────────────────
+
+test354 neu, 33 Punkte, OHNE Browser (`bus.js` wie in test88 mit
+`new Function` geladen; `window`, `console` und `Pflege` sind Attrappen,
+die mitschreiben), acht Abschnitte: die Griffe (§1); `frage` ohne Promise,
+mit Meldung (§2); `frageAsync` in Anmeldereihenfolge, Gescheiterte
+gemeldet (§3); `meldeAsync` (§4); `melde` mit asynchronem Zuhörer — keine
+unbehandelte Ablehnung, gemessen mit `process.on('unhandledRejection')`
+(§5); Nachreichen, `schonGemeldet`, `leeren`, auch nach `meldeAsync` (§6);
+das Veto (§7); das Menüband am richtigen Namen (§8, am Quelltext). Belegt
+rot in sieben Richtungen, jede einzeln zurückgedreht und wiederhergestellt:
+
+a — `frage` zählt die Promise wieder (bus.js): 30/33 — `[1, {}, 3]`, das
+    leere Objekt ist die Promise, und gemeldet wird nichts (§2). Genau der
+    Befund.
+b — `frageAsync` wartet nicht (bus.js): drei rot, dann bricht die Suite ab
+    — sechs leere Objekte statt drei Wörter (§3).
+c — `meldeAsync` verschluckt die Ablehnung (bus.js): 32/33 (§4).
+d — kein Nachreichen (bus.js): 29/33 (§6, viermal).
+e — Reihenfolge des Eintreffens statt der Anmeldung (bus.js, `reverse`):
+    31/33 (§3: „schnell, sofort, langsam").
+f — das Menüband wieder auf der Zeichenkette (menueband.ts): 31/33 (§8).
+g — `melde` fängt die Ablehnung nicht (bus.js): 31/33 — eine unbehandelte
+    Ablehnung, keine Meldung (§5).
+
+Dazu: test87 (Quelltext) 152/152, test105 (erzeugtes JavaScript) 117/117,
+test109 (kein neues JavaScript) 20/20, test143 (Bündelgrenzen) 23/23,
+test99 (zwei Fenster, Fassung v114) 23/23, test353 (Dienststand — der
+Stempel stimmt nach dem Bau) 39/39, test247 (Menüband) 106/106, test41
+24/24, test71 59/59, test85 (Kern) 82/82, test272, test313, test315,
+test320 (die Suiten, die den Bus berühren) und test225 (Quellenangaben)
+11/11 — alle grün. Einzeldatei neu gebaut.

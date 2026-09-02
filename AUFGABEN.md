@@ -2644,6 +2644,15 @@ node pruefungen/lauf/test105.mjs
   `padding` ist vier Erklärungen, nicht eine, und §2/§3 zählten absolut
   statt den Unterschied zum Bestand.
   test332 neu (14), belegt rot. test258 19/19.
+* E362 (L102 Punkt 4 erledigt): Der Ereignisbus kann async — `frage`
+  zählt keine Promise (sie wird gemeldet), `frageAsync`/`meldeAsync` warten
+  in Anmeldereihenfolge und melden Gescheitertes, `melde` fängt die
+  Ablehnung asynchroner Zuhörer, `horche(…, {nachreichen})` reicht die
+  letzte Meldung nach, `darf`/`darfAsync` als Veto. Dabei gefunden und
+  behoben: das Menüband horchte auf den falschen Namen (`'ablageGeladen'`
+  statt `ARTEN.ablageGeladen`) und hat nie etwas gehört. test354 neu (33,
+  ohne Browser), belegt rot in sieben Richtungen. Erster Bogen, dessen
+  Fassung E361 von selbst gehoben hat (v114).
 * E361 (L83 Punkte 1, 2, 3 erledigt): Der Dienststand folgt dem Inhalt —
   `dienststand.mts` rechnet bei `npm run bauen:ts` einen Stempel über den
   Grundstock und hebt `VERSION` in `sw.ts` von selbst; `stand.ts` trägt

@@ -14359,12 +14359,25 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
  * kann, ohne drei andere zu lesen. Ein Bus macht daraus einen Stern: jeder
  * redet mit der Mitte, keiner mit dem Nachbarn.
  *
- * Bewusst klein gehalten — vier Funktionen:
+ * Bewusst klein gehalten — vier Funktionen, und seit E362 ihre
+ * asynchronen Zwillinge (L102 Punkt 4):
  *
- *      horche(name, fn)     zuhören, gibt eine Abmeldefunktion zurück
+ *      horche(name, fn, {nachreichen})  zuhören, gibt eine Abmeldefunktion
+ *                                       zurück; mit `nachreichen` bekommt
+ *                                       ein spät Angemeldeter die letzte
+ *                                       Meldung sofort nachgereicht
  *      einmal(name, fn)     einmal zuhören, dann von selbst abmelden
  *      melde(name, daten)   sagen, dass etwas geschehen ist
- *      frage(name, daten)   fragen und die Antworten einsammeln
+ *      frage(name, daten)   fragen und die Antworten einsammeln — SYNCHRON:
+ *                           wer eine Promise zurückgibt, wird gemeldet
+ *                           und nicht gezählt (siehe frageAsync)
+ *      meldeAsync(name, daten)  wie melde, wartet aber die Zuhörer ab und
+ *                           meldet, was dabei scheitert
+ *      frageAsync(name, daten)  wie frage, wartet aber jede Antwort ab —
+ *                           in der Reihenfolge der Anmeldung
+ *      darf(name, daten) / darfAsync  ein Veto: fragt, und ein einziges
+ *                           `false` heisst Nein
+ *      schonGemeldet(name)  ob (und womit) ein Ereignis schon gemeldet wurde
  *
  * `melde` ist eine Aussage („die Seite wurde gespeichert"), `frage` eine
  * Frage („was gehört in die Seitenleiste?"). Der Unterschied ist wichtig:
@@ -14377,6 +14390,25 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 const Ereignisse = (() => {
     /* name -> Set von Zuhörern */
     const zuhoerer = new Map();
+    /* DIE LETZTE MELDUNG JE NAME (E362): wer sich nach dem Ereignis anmeldet,
+       kann sie sich nachreichen lassen. Der Fall ist nicht erfunden — das
+       Menüband horchte auf `ablageGeladen`, und die Ablage war beim Anmelden
+       längst geladen: ein Zuhörer, der nie etwas hört, sieht aus wie einer,
+       der nichts zu tun hat. */
+    const gemeldet = new Map();
+    const istVersprechen = (wert) => !!wert && (typeof wert === 'object' || typeof wert === 'function') &&
+        typeof wert.then === 'function';
+    /* Ein kaputtes Modul hält die anderen nicht auf — aber still bleibt es
+       auch nicht. Derselbe Weg für synchrone Würfe, abgelehnte Promises und
+       die falsche Antwortart. */
+    const fehlerMelden = (art, name, e) => {
+        console.error(art + ' „' + name + '": ' + (e instanceof Error ? e.message : String(e)), e);
+        if (typeof Pflege !== 'undefined' && Pflege.fehlerMerken)
+            try {
+                Pflege.fehlerMerken(e, art + ' ' + name);
+            }
+            catch { }
+    };
     /* Die letzten Meldungen — nur für die Fehlersuche, nicht für die Logik. */
     const MAX_SPUR = 200;
     const spur = [];
@@ -14385,7 +14417,7 @@ const Ereignisse = (() => {
      * Auf ein Ereignis hören.
      * Gibt das Abmelden zurück — immer aufheben.
      */
-    const horche = (name, fn) => {
+    const horche = (name, fn, opt) => {
         if (typeof fn !== 'function')
             return () => { };
         const f = fn;
@@ -14395,6 +14427,18 @@ const Ereignisse = (() => {
             zuhoerer.set(name, s);
         }
         s.add(f);
+        /* Nachreichen: die letzte Meldung sofort, mit demselben Fehlerweg wie
+           eine frische. Eine abgelehnte Promise wird gemeldet, nicht verloren. */
+        if (opt && opt.nachreichen && gemeldet.has(name)) {
+            try {
+                const r = f(gemeldet.get(name));
+                if (istVersprechen(r))
+                    r.then(undefined, e => fehlerMelden('Ereignis', name, e));
+            }
+            catch (e) {
+                fehlerMelden('Ereignis', name, e);
+            }
+        }
         return () => { zuhoerer.get(name)?.delete(f); };
     };
     /** Einmal hören, dann von selbst abmelden. */
@@ -14415,6 +14459,7 @@ const Ereignisse = (() => {
      */
     const melde = (name, daten) => {
         notieren(name, daten);
+        gemeldet.set(name, daten);
         const s = zuhoerer.get(name);
         if (!s || !s.size)
             return 0;
@@ -14422,20 +14467,45 @@ const Ereignisse = (() => {
         /* Über eine Kopie laufen: ein Zuhörer darf sich beim Zuhören abmelden. */
         [...s].forEach(fn => {
             try {
-                fn(daten);
+                const r = fn(daten);
                 n++;
+                /* Ein asynchroner Zuhörer darf hier zuhören — nur sein Scheitern
+                   darf nicht als „unhandled rejection" in der Konsole versanden. */
+                if (istVersprechen(r))
+                    r.then(undefined, e => fehlerMelden('Ereignis', name, e));
             }
             catch (e) {
-                /* Ein kaputtes Modul hält die anderen nicht auf — aber still bleibt
-                   es auch nicht. */
-                console.error('Ereignis „' + name + '": ' +
-                    (e instanceof Error ? e.message : String(e)), e);
-                if (typeof Pflege !== 'undefined' && Pflege.fehlerMerken)
-                    try {
-                        Pflege.fehlerMerken(e, 'Ereignis ' + name);
-                    }
-                    catch { }
+                fehlerMelden('Ereignis', name, e);
             }
+        });
+        return n;
+    };
+    /**
+     * Wie `melde`, aber es wartet: erst wenn jeder Zuhörer fertig ist — auch
+     * die asynchronen —, geht es weiter. Zurück kommt, wie viele ohne Fehler
+     * fertig wurden; was scheiterte, ist gemeldet.
+     */
+    const meldeAsync = async (name, daten) => {
+        notieren(name, daten);
+        gemeldet.set(name, daten);
+        const s = zuhoerer.get(name);
+        if (!s || !s.size)
+            return 0;
+        const laufend = [...s].map(fn => {
+            try {
+                return Promise.resolve(fn(daten));
+            }
+            catch (e) {
+                return Promise.reject(e);
+            }
+        });
+        const ergebnisse = await Promise.allSettled(laufend);
+        let n = 0;
+        ergebnisse.forEach(erg => {
+            if (erg.status === 'fulfilled')
+                n++;
+            else
+                fehlerMelden('Ereignis', name, erg.reason);
         });
         return n;
     };
@@ -14452,16 +14522,60 @@ const Ereignisse = (() => {
         [...s].forEach(fn => {
             try {
                 const a = fn(daten);
+                /* EINE PROMISE IST KEINE ANTWORT (E362, L102 Punkt 4): vorher lag
+                   sie als rohes Objekt in der Liste, und wer die Liste las, rechnete
+                   mit einem Wert, der keiner war — still falsch. Jetzt wird sie
+                   gemeldet und NICHT gezählt; wer asynchron antwortet, gehört zu
+                   `frageAsync`. Ihr Scheitern versandet nicht. */
+                if (istVersprechen(a)) {
+                    a.then(undefined, () => { });
+                    fehlerMelden('Frage', name, new Error('ein Zuhörer antwortet asynchron — dafür gibt es frageAsync'));
+                    return;
+                }
                 if (a !== undefined && a !== null)
                     raus.push(a);
             }
             catch (e) {
-                console.error('Frage „' + name + '": ' +
-                    (e instanceof Error ? e.message : String(e)), e);
+                fehlerMelden('Frage', name, e);
             }
         });
         return raus;
     };
+    /**
+     * Wie `frage`, aber jede Antwort wird abgewartet — synchrone wie
+     * asynchrone —, und die Liste steht in der REIHENFOLGE DER ANMELDUNG,
+     * nicht in der des Eintreffens. Was scheitert, ist gemeldet und fehlt.
+     */
+    const frageAsync = async (name, daten) => {
+        notieren(name, daten);
+        const s = zuhoerer.get(name);
+        if (!s || !s.size)
+            return [];
+        const laufend = [...s].map(fn => {
+            try {
+                return Promise.resolve(fn(daten));
+            }
+            catch (e) {
+                return Promise.reject(e);
+            }
+        });
+        const ergebnisse = await Promise.allSettled(laufend);
+        const raus = [];
+        ergebnisse.forEach(erg => {
+            if (erg.status === 'rejected') {
+                fehlerMelden('Frage', name, erg.reason);
+                return;
+            }
+            if (erg.value !== undefined && erg.value !== null)
+                raus.push(erg.value);
+        });
+        return raus;
+    };
+    /** Ein Veto: gefragt wird wie bei `frage`, und ein einziges `false` heisst Nein. */
+    const darf = (name, daten) => !frage(name, daten).includes(false);
+    const darfAsync = async (name, daten) => !(await frageAsync(name, daten)).includes(false);
+    /** Wurde `name` schon gemeldet — und womit? */
+    const schonGemeldet = (name) => ({ da: gemeldet.has(name), daten: gemeldet.get(name) });
     /** Wer hört gerade worauf? Für die Fehlersuche und die Übersicht. */
     const uebersicht = () => [...zuhoerer.entries()]
         .map(([name, s]) => ({ name, zuhoerer: s.size }))
@@ -14470,9 +14584,9 @@ const Ereignisse = (() => {
         spur.length = 0; };
     const letzte = (n = 50) => spur.slice(-n);
     /** Alles vergessen — nur für Prüfläufe. */
-    const leeren = () => { zuhoerer.clear(); spur.length = 0; };
-    return { horche, einmal, melde, frage, uebersicht, mitschneiden, letzte, leeren,
-        anzahl: () => zuhoerer.size };
+    const leeren = () => { zuhoerer.clear(); spur.length = 0; gemeldet.clear(); };
+    return { horche, einmal, melde, frage, meldeAsync, frageAsync, darf, darfAsync, schonGemeldet,
+        uebersicht, mitschneiden, letzte, leeren, anzahl: () => zuhoerer.size };
 })();
 window.Ereignisse = Ereignisse;
 
@@ -15757,7 +15871,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 113, inhalt: '22b79b208e59c5f1', gebaut: '2026-09-02T21:33:12.288Z' };
+const Stand = { fassung: 114, inhalt: '2c46aea9f44d74e7', gebaut: '2026-09-02T21:45:03.243Z' };
 window.Stand = Stand;
 
 </script>
@@ -130201,9 +130315,18 @@ const Menueband = (() => {
            und wenn die Startreihenfolge sich einmal ändert, ist der Unterschied
            ein Band, das den gemerkten Reiter vergisst — ein Fehler, den niemand
            meldet, weil er wie eine Vorgabe aussieht. */
+        /* DER NAME WAR FALSCH (E362, gefunden beim Bau von L102 Punkt 4): hier
+           stand die Zeichenkette 'ablageGeladen', gemeldet wird aber
+           `ARTEN.ablageGeladen` = 'ablage.geladen'. Der Zuhörer hat also nie
+           etwas gehört — genau der Fehler, vor dem arten.ts warnt, und genau
+           der, den der Absatz darüber „von niemandem gemeldet" nennt. Jetzt der
+           Name aus dem Register, und mit `nachreichen`: ist die Ablage beim
+           Anmelden längst geladen, kommt die Meldung sofort — der Grund, warum
+           die Zeile „gemessen nicht griff", war nicht nur die Reihenfolge. */
         if (typeof Ereignisse !== 'undefined' && typeof Ereignisse.horche === 'function') {
+            const name = typeof ARTEN !== 'undefined' && ARTEN.ablageGeladen ? ARTEN.ablageGeladen : 'ablage.geladen';
             try {
-                Ereignisse.horche('ablageGeladen', () => zeichne());
+                Ereignisse.horche(name, () => zeichne(), { nachreichen: true });
             }
             catch { /* dann eben nicht */ }
         }

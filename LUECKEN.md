@@ -4020,14 +4020,19 @@ nicht verlorengeht:
    Vektorweg nicht, weil ihn nie jemand rief. Toter Code ist nicht nur
    ungenutzt, sondern auch ungeprüft.
 
-4. **Der Ereignisbus kann kein async.** `melde` verwirft den Rückgabewert,
-   `frage` sammelt Promises als rohe Werte ein, statt sie abzuwarten. Kein
-   Abbruch, kein Veto, keine Reihenfolge, kein Nachreichen für spät
-   Angemeldete. Und von 42 Namen in `ARTEN` wird genau EINER je benutzt
-   (`ablageGeladen`).
-
-   Eine Auftragsmaschine, die auf diesem Bus aufsetzen soll, braucht ihn
-   vorher erweitert. Das ist ein eigener kleiner Bogen, kein Detail darin.
+4. ~~**Der Ereignisbus kann kein async.**~~ ERLEDIGT in E362: `frage`
+   zählt eine Promise nicht mehr als Antwort, sondern meldet sie;
+   `frageAsync` und `meldeAsync` warten ab, in der Reihenfolge der
+   Anmeldung, und melden, was scheitert; ein asynchroner Zuhörer von
+   `melde` versandet nicht mehr als „unhandled rejection"; `horche(name,
+   fn, {nachreichen: true})` reicht spät Angemeldeten die letzte Meldung
+   nach; `darf`/`darfAsync` sind das Veto. test354. Dabei gefunden: der
+   EINZIGE Zuhörer auf `ablageGeladen` (Menüband) horchte auf die
+   Zeichenkette `'ablageGeladen'`, gemeldet wird `'ablage.geladen'` — er
+   hat nie etwas gehört. Was bleibt: von 42 Namen in `ARTEN` wird weiter
+   nur einer benutzt; „Abbruch" (ein Zuhörer stoppt die weiteren) gibt es
+   nicht — bewusst: ein Bus, in dem einer die anderen anhalten kann, ist
+   wieder das Knäuel.
 
 5. **`exportAll`/`importAll` tragen drei hartkodierte Fachlisten** —
    **GESCHLOSSEN am 1. September 2026 durch E332.** Nachgezählt: elf
