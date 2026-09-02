@@ -27415,3 +27415,108 @@ BILDER angesehen (§55): derselbe krumme Kreis zweimal — ohne Halten ein
 Strich mit Ecken, gehalten ein Kreis; darunter ein Rechteck und eine Linie,
 beide gehalten und beide gerade; „Formen" in der Leiste an. Am Telefon
 dasselbe.
+
+
+E356 — Die Blattleiste am Telefon zeigt nur die Gruppen des gewählten Werkzeugs (L115 Punkt 8)
+════════════════════════════════════════════════════════════════════════════
+
+BEFUND, gemessen bei 390 px: die Leiste über dem Blatt war nach E351 bis
+E355 1539 px lang — Stift-Stil, Radiermodus, Formen, Kopieren, Einsetzen
+und bis zu fünf Tupfer mehr, einer nach dem anderen, in einer Reihe. Vier
+Bildschirmbreiten zum Rollen, und die Farben standen ganz hinten: wer am
+Telefon rot schreiben wollte, rollte dreimal. GoodNotes klappt Farben und
+Breiten unter dem gewählten Werkzeug auf. Redion hat keine Klappe, aber
+dieselbe Idee: es zeigt, was zum Werkzeug gehört, und stellt es daneben.
+
+─── WAS GEBAUT WURDE ───────────────────────────────────────────────────────
+
+  1. JEDER KNOPF KENNT SEINE GRUPPE (`data-gruppe`): verlauf (Zurück, Vor),
+     auswahl (Löschen, Kopieren, Einsetzen), radierer (der Modus), stil,
+     formen, lineal, farbe (Tupfer, eigene Tupfer, „+"), breite. Auch der
+     Tupfer, den der Farbwähler später anlegt, bekommt seine Gruppe.
+
+  2. DIE LEISTE KENNT IHR WERKZEUG (`data-tool`) — gesetzt beim Tipp in der
+     Leiste, beim Wechsel über das Menüband (derselbe `markiere`-Weg aus
+     E212, der auch die Markierung nachzieht) und von den Knöpfen, die das
+     Werkzeug mit umschalten (Stift-Stil, Radiermodus).
+
+  3. AM TELEFON (≤ 760 px) LIEST DAS CSS BEIDES: Werkzeuge und Verlauf
+     stehen immer; alles andere nur, wo es gebraucht wird — beim Stift Stil,
+     Farben, Breiten, Formen; beim Marker, bei Linie und Pfeil Farben,
+     Breiten, Lineal; beim Radierer sein Modus; bei der Auswahl Löschen,
+     Kopieren, Einsetzen, Farben, Breiten; bei Text, Zettel, Zeichen und
+     Band die Farben; beim Schreiben nichts. Gemessen: beim Schreiben 732
+     statt 1539 px, beim Radierer 780, beim Stift 1260.
+
+  4. … UND SIE STEHEN DIREKT HINTER DEM WERKZEUG. Die Werkzeuge bekommen
+     Plätze in Zehnerschritten (`order`), die Gruppen den Platz gleich
+     hinter dem gewählten (`--platz` plus eins bis fünf: erst Stil, dann
+     Farben, Breiten, Formen, Lineal). Die Reihenfolge im DOM bleibt —
+     Tastatur, Vorleser und Rechner sehen sie wie bisher; nur die Anordnung
+     am Telefon wandert. Und die Leiste ROLLT ZUM WERKZEUG: nach dem Tipp
+     steht der Stift links im Bild, daneben Füller, daneben die Tupfer.
+     Ein Tipp, und alles ist da, was zu ihm gehört.
+
+  5. AM RECHNER ÄNDERT SICH NICHTS. Dort ist Platz, und dort ist die ganze
+     Leiste auf einen Blick mehr wert als eine kurze.
+
+  6. Eine Zeile bleibt eine Zeile (test174 §6 misst weiter „unter 60 px");
+     nur kürzer.
+
+─── WAS NICHT GEBAUT WURDE ────────────────────────────────────────────────
+
+Keine Klappe unter dem Werkzeug (GoodNotes' Popover); das Papier und
+„Seite" (`.blatt-fest`) bleiben, wo sie sind. Steht in L115.
+
+─── PRÜFUNG ────────────────────────────────────────────────────────────────
+
+test348 neu, 33 Punkte, PORT 9352, sieben Abschnitte: die Gruppen je
+Werkzeug am Telefon, die Längen gegen die Leiste ohne Regel (das
+`data-tool` wird dafür kurz abgenommen), eine Zeile und Fingerknöpfe, der
+Weg über `Zeichenziel.setze`, der später angelegte Tupfer, die Lage —
+Stift links im Bild, Stil direkt daneben, erster Tupfer ohne Rollen, der
+Marker erst nach den Gruppen — und der Rechner, an dem alles sichtbar
+bleibt. Belegt rot in sechs Richtungen, jede einzeln zurückgedreht und
+wiederhergestellt:
+
+a — `markiere` schreibt kein `data-tool` (marken.js): zwei rot, dann
+    bricht die Suite ab — der Weg über das Menüband lässt die Leiste beim
+    alten Werkzeug.
+b — die Ausblende-Regel zeigt statt zu verstecken (bausteine.css): 20/33.
+    Alles steht wieder in einer Reihe.
+c — der später angelegte Tupfer bekommt keine Gruppe (marken.js): 31/33.
+    Er bleibt beim Radierer stehen.
+d — die Leiste rollt nicht zum Werkzeug (marken.js): 32/33. Der Stift
+    steht nach dem Tipp nicht im Bild.
+e — die Farben fehlen beim Stift (bausteine.css): 31/33.
+f — die Gruppen stehen nicht hinter dem Werkzeug (bausteine.css, `order`):
+    32/33. Der Stil-Knopf ist wieder drei Bildschirme entfernt.
+
+Eine siebte Probe blieb GRÜN, und das ist der Grund, warum sie nicht in
+der Liste steht: das `data-tool` beim Tipp in der Leiste zu streichen
+änderte nichts, weil derselbe Tipp über `Zeichenziel` auch `markiere`
+ruft, und das setzt es ebenfalls. Der Griff im Tipp bleibt für den Fall
+ohne Kern; als Beleg taugt er nicht.
+
+Drei Wächter wurden durch E356 rot, alle zu Recht: test174 §6 mass am
+Telefon ALLE Knöpfe der Leiste, auch die nun ausgeblendeten (0 × 0) — jetzt
+misst er, was da ist; test343 §8 mass Stift-Stil und Farbe, ohne den Stift
+zu wählen; test344 §8 den Modus-Knopf, ohne den Radierer zu wählen; test347
+§7 den Formen-Schalter, ohne den Stift. Alle drei wählen jetzt ihr
+Werkzeug, wie ein Mensch es täte.
+
+Dazu: test174 (A4-Blatt, §6 angepasst) 25/25, test114 (Fingergrössen)
+153/153, test201 (Ink V2) 32/32, test343 (Stifte, §8 angepasst) 30/30,
+test344 (Radierer, §8 angepasst) 50/50, test345 (Auswahl) 43/43, test346
+(Handballen) 31/31, test347 (Formen, §7 angepasst) 31/31, test247
+(Menüband) 106/106, test248 (ruhige Fassung) 45/45, test87 (Quelltext)
+152/152, test105 (erzeugtes JavaScript) 117/117, test109 (kein neues
+JavaScript) 20/20, test225 (Quellenangaben) 11/11 — alle grün.
+
+BILDER angesehen (§55): die Leiste am Telefon beim Schreiben (nur
+Werkzeuge), beim Stift (Stift, Füller, Tupfer nebeneinander), beim
+Radierer (Radierer, Modus, Zurück, Vor) und bei der Auswahl (Auswahl,
+Löschen, Kopieren, Einsetzen, Tupfer); am Rechner die unveränderte Leiste.
+Das erste Radierer-Bild zeigte einen Schwebezustand auf „Linie", weil das
+Bildskript zurückgerollt hatte und der Zeiger dort stehen blieb — das
+Skript rollt jetzt nicht mehr, die App tut es.

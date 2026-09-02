@@ -340,6 +340,8 @@ p('InkGeometry.splitByCircle rechnet den Druck am Schnittpunkt dazwischen', awai
 /* ======================================================================== */
 console.log('\n8 · Am Telefon ist der Knopf ein Fingerknopf, und der Finger radiert');
 const { ktx: ktxH, pg: pgH, blattId: blattH } = await kontext(true);
+/* Seit E356 steht der Modus-Knopf am Telefon nur beim Radierer. */
+await werkzeug(pgH, 'radierer');
 const masse = await pgH.evaluate(() => {
   const k = document.querySelector<HTMLElement>('.blatt-werk [data-act="radiermodus"]');
   const r = k?.getBoundingClientRect();

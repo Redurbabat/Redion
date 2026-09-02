@@ -4060,6 +4060,70 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   .blatt-farbe{width:30px; height:30px; min-width:30px}
   .blatt-farbe-neu{width:30px; height:30px; min-width:30px}
   .blatt-strich{min-width:38px}
+  /* NUR DIE GRUPPEN DES GEWAEHLTEN WERKZEUGS (E356). Gemessen vor E356:
+     bei 390 px war die Leiste 1539 px lang — vier Bildschirmbreiten zum
+     Rollen, und die Farben standen am Ende. Jetzt liest das CSS
+     `data-tool` der Leiste gegen `data-gruppe` der Knoepfe: Werkzeuge und
+     der Verlauf stehen immer, alles andere nur, wo es gebraucht wird. Am
+     Rechner bleibt alles sichtbar — dort ist Platz. */
+  .blatt-werk[data-tool] > [data-gruppe]{display:none}
+  .blatt-werk[data-tool] > [data-gruppe="verlauf"]{display:inline-flex}
+  .blatt-werk[data-tool="select"] > [data-gruppe="auswahl"],
+  .blatt-werk[data-tool="select"] > [data-gruppe="farbe"],
+  .blatt-werk[data-tool="select"] > [data-gruppe="breite"],
+  .blatt-werk[data-tool="radierer"] > [data-gruppe="radierer"],
+  .blatt-werk[data-tool="stift"] > [data-gruppe="stil"],
+  .blatt-werk[data-tool="stift"] > [data-gruppe="formen"],
+  .blatt-werk[data-tool="stift"] > [data-gruppe="farbe"],
+  .blatt-werk[data-tool="stift"] > [data-gruppe="breite"],
+  .blatt-werk[data-tool="marker"] > [data-gruppe="lineal"],
+  .blatt-werk[data-tool="marker"] > [data-gruppe="farbe"],
+  .blatt-werk[data-tool="marker"] > [data-gruppe="breite"],
+  .blatt-werk[data-tool="line"] > [data-gruppe="lineal"],
+  .blatt-werk[data-tool="line"] > [data-gruppe="farbe"],
+  .blatt-werk[data-tool="line"] > [data-gruppe="breite"],
+  .blatt-werk[data-tool="arrow"] > [data-gruppe="lineal"],
+  .blatt-werk[data-tool="arrow"] > [data-gruppe="farbe"],
+  .blatt-werk[data-tool="arrow"] > [data-gruppe="breite"],
+  .blatt-werk[data-tool="rectangle"] > [data-gruppe="farbe"],
+  .blatt-werk[data-tool="rectangle"] > [data-gruppe="breite"],
+  .blatt-werk[data-tool="ellipse"] > [data-gruppe="farbe"],
+  .blatt-werk[data-tool="ellipse"] > [data-gruppe="breite"],
+  .blatt-werk[data-tool="abdeck"] > [data-gruppe="farbe"],
+  .blatt-werk[data-tool="zettel"] > [data-gruppe="farbe"],
+  .blatt-werk[data-tool="text"] > [data-gruppe="farbe"],
+  .blatt-werk[data-tool="zeichen"] > [data-gruppe="farbe"]{display:inline-flex}
+  .blatt-werk[data-tool] > span.blatt-trenn[data-gruppe]{display:none}
+  /* … UND SIE STEHEN DIREKT HINTER DEM WERKZEUG. Die Werkzeuge bekommen
+     Plaetze in Zehnerschritten, die Gruppen den Platz gleich hinter dem
+     gewaehlten — so liegen Farben und Breiten neben dem Stift, nicht drei
+     Bildschirme weiter rechts. Die Reihenfolge im DOM bleibt (Tastatur,
+     Vorleser, Rechner); nur die Anordnung am Telefon wandert. */
+  .blatt-werk > [data-wz="schreiben"]{order:10} .blatt-werk > [data-wz="select"]{order:20}
+  .blatt-werk > [data-wz="stift"]{order:30} .blatt-werk > [data-wz="marker"]{order:40}
+  .blatt-werk > [data-wz="line"]{order:50} .blatt-werk > [data-wz="arrow"]{order:60}
+  .blatt-werk > [data-wz="rectangle"]{order:70} .blatt-werk > [data-wz="ellipse"]{order:80}
+  .blatt-werk > [data-wz="abdeck"]{order:90} .blatt-werk > [data-wz="zettel"]{order:100}
+  .blatt-werk > [data-wz="text"]{order:110} .blatt-werk > [data-wz="zeichen"]{order:120}
+  .blatt-werk > [data-wz="radierer"]{order:130}
+  .blatt-werk > [data-gruppe="verlauf"]{order:200}
+  .blatt-werk[data-tool="schreiben"]{--platz:10} .blatt-werk[data-tool="select"]{--platz:20}
+  .blatt-werk[data-tool="stift"]{--platz:30} .blatt-werk[data-tool="marker"]{--platz:40}
+  .blatt-werk[data-tool="line"]{--platz:50} .blatt-werk[data-tool="arrow"]{--platz:60}
+  .blatt-werk[data-tool="rectangle"]{--platz:70} .blatt-werk[data-tool="ellipse"]{--platz:80}
+  .blatt-werk[data-tool="abdeck"]{--platz:90} .blatt-werk[data-tool="zettel"]{--platz:100}
+  .blatt-werk[data-tool="text"]{--platz:110} .blatt-werk[data-tool="zeichen"]{--platz:120}
+  .blatt-werk[data-tool="radierer"]{--platz:130}
+  /* Innerhalb der Gruppen: erst der Stift-Stil, dann Farben, dann Breiten,
+     dann die Schalter — wie GoodNotes es aufklappt. */
+  .blatt-werk[data-tool] > [data-gruppe="stil"],
+  .blatt-werk[data-tool] > [data-gruppe="radierer"],
+  .blatt-werk[data-tool] > [data-gruppe="auswahl"]{order:calc(var(--platz, 0) + 1)}
+  .blatt-werk[data-tool] > [data-gruppe="farbe"]{order:calc(var(--platz, 0) + 2)}
+  .blatt-werk[data-tool] > [data-gruppe="breite"]{order:calc(var(--platz, 0) + 3)}
+  .blatt-werk[data-tool] > [data-gruppe="formen"]{order:calc(var(--platz, 0) + 4)}
+  .blatt-werk[data-tool] > [data-gruppe="lineal"]{order:calc(var(--platz, 0) + 5)}
+  .blatt-werk[data-tool] > [data-gruppe="verlauf"]{order:200}
   /* Der Schatten zeigt, dass links davon noch etwas liegt — sonst sieht
      eine abgeschnittene Leiste aus wie eine vollständige (E103). */
   .blatt-fest{box-shadow:-10px 0 10px -7px rgba(0,0,0,.45); padding-left:8px}

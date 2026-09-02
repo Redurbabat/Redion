@@ -2644,6 +2644,13 @@ node pruefungen/lauf/test105.mjs
   `padding` ist vier Erklärungen, nicht eine, und §2/§3 zählten absolut
   statt den Unterschied zum Bestand.
   test332 neu (14), belegt rot. test258 19/19.
+* E356 (L115 Punkt 8 erledigt): Die Blattleiste am Telefon zeigt nur die
+  Gruppen des gewählten Werkzeugs — jeder Knopf trägt `data-gruppe`, die
+  Leiste `data-tool` (Tipp, Menüband, Stil- und Modus-Knopf), das CSS
+  blendet ≤ 760 px die fremden Gruppen aus, stellt die eigenen per `order`
+  direkt hinter das Werkzeug, und die Leiste rollt hin. 732 statt 1539 px
+  beim Schreiben. Rechner unverändert. test348 neu (33), belegt rot in
+  sechs Richtungen; eine siebte blieb grün und steht mit Grund in E356.
 * E355 (L115 Punkt 5 erledigt): Formerkennung — ziehen, 450 ms halten, und
   der Stiftstrich wird Linie, Kreis/Ellipse oder Rechteck (`InkShapes.recognize`
   in `src/core/ink/shapes.ts`, ohne DOM und Zeit). Nur der Stift, nie der

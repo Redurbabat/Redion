@@ -5050,10 +5050,11 @@ mit dem Grund, warum jeder Punkt ein eigener Bogen ist:
    Kennung → Knoten würde nur die betroffene Marke anfassen. Noch kein
    Nutzer hat tausend Marken gemeldet — gemessen ist es nicht.
 
-8. **Am Telefon steht die Leiste in einer langen Reihe.** Nach E351 hat sie
-   einen Knopf mehr (Stift) und bis zu fünf Tupfer mehr (eigene Farben und
-   „+"). Sie rollt waagerecht (E240), aber gruppiert ist sie nicht:
-   GoodNotes klappt Farben und Breiten unter dem gewählten Werkzeug auf.
+8. ~~**Am Telefon steht die Leiste in einer langen Reihe.**~~ ERLEDIGT in
+   E356: jeder Knopf trägt seine Gruppe, die Leiste ihr Werkzeug, und am
+   Telefon zeigt das CSS nur die Gruppen des Werkzeugs — direkt dahinter,
+   und die Leiste rollt hin (732 statt 1539 px beim Schreiben). test348.
+   Was bleibt: keine Klappe unter dem Werkzeug wie in GoodNotes.
 
 Nicht auf der Liste, weil es Format wäre: eine Marke bleibt `{id, art,
 farbe, breite, pts, pressure, stil?}`. Jeder Punkt oben lässt sich ohne

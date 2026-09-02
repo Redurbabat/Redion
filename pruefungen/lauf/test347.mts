@@ -232,6 +232,8 @@ gleich('Vor bringt sie als Form zurück', (await marken(pg, blattId))[0]?.art, '
 /* ======================================================================== */
 console.log('\n7 · Am Telefon ist der Schalter ein Fingerknopf');
 const { ktx: ktxH, pg: pgH, blattId: blattH } = await kontext(true);
+/* Seit E356 steht der Formen-Schalter am Telefon nur beim Stift. */
+await werkzeug(pgH, 'stift');
 const masse = await pgH.evaluate(() => {
   const k = document.querySelector<HTMLElement>('.blatt-werk [data-act="formen"]');
   const r = k?.getBoundingClientRect();

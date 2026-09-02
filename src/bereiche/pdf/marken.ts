@@ -1204,6 +1204,15 @@ const Marken = (() => {
     row.className = 'blatt-reihe';
     const tools = document.createElement('div');
     tools.className = 'blatt-werk';
+    tools.dataset.tool = 'schreiben';
+    /* AM TELEFON ROLLT DIE LEISTE ZUM WERKZEUG (E356): die Gruppen stehen
+       gleich dahinter, also ist mit einem Tipp alles im Bild, was zu ihm
+       gehoert. Am Rechner rollt nichts — dort passt alles. */
+    const zumWerkzeugRollen = (wz: string): void => {
+      if (!window.matchMedia || !window.matchMedia('(max-width:760px)').matches) return;
+      const knopf = tools.querySelector<HTMLElement>(`[data-wz="${wz}"]`);
+      if (knopf) tools.scrollLeft = Math.max(0, knopf.offsetLeft - 6);
+    };
     const button = (tool: string, icon: string, word: string, title: string) =>
       `<button data-wz="${tool}"${tool === 'schreiben' ? ' class="on"' : ''} title="${title}">` +
       `<span class="zeichen">${icon}</span><span class="wort">${word}</span></button>`;
@@ -1228,24 +1237,28 @@ const Marken = (() => {
          wechselt und sagt, was der Radierer gerade tut. */
       (() => {
         const jetzt = RADIERER.find(r => r.id === (controls.radierModusVon ? controls.radierModusVon() : RADIER_VORGABE)) || RADIERER[0];
-        return `<button data-act="radiermodus" data-modus="${jetzt.id}" title="${jetzt.titel} — antippen wechselt: ${RADIERER.map(r => r.name).join(' → ')}">` +
+        return `<button data-act="radiermodus" data-gruppe="radierer" data-modus="${jetzt.id}" title="${jetzt.titel} — antippen wechselt: ${RADIERER.map(r => r.name).join(' → ')}">` +
           `<span class="zeichen">${jetzt.zeichen}</span><span class="wort">${jetzt.name}</span></button>`;
       })() +
-      '<span class="blatt-trenn"></span>' +
-      '<button data-act="undo" title="Rückgängig" disabled><span class="zeichen">↶</span><span class="wort">Zurück</span></button>' +
-      '<button data-act="redo" title="Wiederholen" disabled><span class="zeichen">↷</span><span class="wort">Vor</span></button>' +
-      '<button data-act="delete" title="Auswahl löschen" disabled><span class="zeichen">🗑</span><span class="wort">Löschen</span></button>' +
+      /* JEDER KNOPF KENNT SEINE GRUPPE (E356): am Telefon zeigt die Leiste
+         nur die Gruppen des gewaehlten Werkzeugs — Farben und Breiten beim
+         Stift, den Modus beim Radierer, Kopieren und Loeschen bei der
+         Auswahl. Das CSS liest `data-gruppe` gegen `data-tool` der Leiste. */
+      '<span class="blatt-trenn" data-gruppe="verlauf"></span>' +
+      '<button data-act="undo" data-gruppe="verlauf" title="Rückgängig" disabled><span class="zeichen">↶</span><span class="wort">Zurück</span></button>' +
+      '<button data-act="redo" data-gruppe="verlauf" title="Wiederholen" disabled><span class="zeichen">↷</span><span class="wort">Vor</span></button>' +
+      '<button data-act="delete" data-gruppe="auswahl" title="Auswahl löschen" disabled><span class="zeichen">🗑</span><span class="wort">Löschen</span></button>' +
       /* KOPIEREN UND EINSETZEN (E353) — auch ohne Tastatur, am Telefon. */
-      '<button data-act="copy" title="Auswahl kopieren (Strg+C)" disabled><span class="zeichen">⧉</span><span class="wort">Kopieren</span></button>' +
-      '<button data-act="paste" title="Kopiertes einsetzen (Strg+V)" disabled><span class="zeichen">📋</span><span class="wort">Einsetzen</span></button>' +
+      '<button data-act="copy" data-gruppe="auswahl" title="Auswahl kopieren (Strg+C)" disabled><span class="zeichen">⧉</span><span class="wort">Kopieren</span></button>' +
+      '<button data-act="paste" data-gruppe="auswahl" title="Kopiertes einsetzen (Strg+V)" disabled><span class="zeichen">📋</span><span class="wort">Einsetzen</span></button>' +
       /* Das Lineal ist ein SCHALTER neben den Werkzeugen: solange es
          anliegt, rasten Linie und Pfeil auf 15°-Schritte (E267). */
-      '<button data-act="lineal" aria-pressed="false" ' +
+      '<button data-act="lineal" data-gruppe="lineal" aria-pressed="false" ' +
       'title="Lineal: Linie und Pfeil rasten auf 15°-Schritte">' +
       '<span class="zeichen">📐</span><span class="wort">Lineal</span></button>' +
       /* FORMEN (E355): ein Schalter wie das Lineal — an, und ein gehaltener
          Strich wird zur Linie, zum Kreis, zum Rechteck. */
-      `<button data-act="formen" aria-pressed="${controls.formenAn ? (controls.formenAn() ? 'true' : 'false') : 'true'}"` +
+      `<button data-act="formen" data-gruppe="formen" aria-pressed="${controls.formenAn ? (controls.formenAn() ? 'true' : 'false') : 'true'}"` +
       `${controls.formenAn && controls.formenAn() ? ' class="on"' : ''} ` +
       'title="Formen erkennen: einen Kreis, ein Rechteck oder eine Linie ziehen und am Ende kurz halten">' +
       '<span class="zeichen">◯</span><span class="wort">Formen</span></button>' +
@@ -1253,22 +1266,22 @@ const Marken = (() => {
          Pinsel wechselt und sagt, welcher gerade fuehrt. */
       (() => {
         const jetzt = STIFTE.find(st => st.id === (controls.stilVon ? controls.stilVon() : STIL_VORGABE)) || STIFTE[0];
-        return `<button data-act="stil" data-stil="${jetzt.id}" title="Stift wechseln: ${STIFTE.map(st => st.name).join(' → ')}">` +
+        return `<button data-act="stil" data-gruppe="stil" data-stil="${jetzt.id}" title="Stift wechseln: ${STIFTE.map(st => st.name).join(' → ')}">` +
           `<span class="zeichen">${jetzt.zeichen}</span><span class="wort">${jetzt.name}</span></button>`;
       })() +
-      '<span class="blatt-trenn"></span>' +
-      FARBEN.map((value, index) => `<button class="blatt-farbe${index === 0 ? ' on' : ''}" ` +
+      '<span class="blatt-trenn" data-gruppe="farbe"></span>' +
+      FARBEN.map((value, index) => `<button class="blatt-farbe${index === 0 ? ' on' : ''}" data-gruppe="farbe" ` +
         `data-c="${value}" style="background:${value}" title="Farbe"></button>`).join('') +
       /* EIGENE FARBEN (E351): die zuletzt gewaehlten stehen als Tupfer da,
          dahinter der Weg zum Farbwaehler des Browsers. */
-      eigeneFarben().map(value => `<button class="blatt-farbe blatt-farbe-eigen" ` +
+      eigeneFarben().map(value => `<button class="blatt-farbe blatt-farbe-eigen" data-gruppe="farbe" ` +
         `data-c="${value}" style="background:${value}" title="Eigene Farbe ${value}"></button>`).join('') +
-      '<button class="blatt-farbe-neu" data-act="farbe" title="Andere Farbe wählen" aria-label="Andere Farbe wählen">+</button>' +
-      '<span class="blatt-trenn"></span>' +
+      '<button class="blatt-farbe-neu" data-act="farbe" data-gruppe="farbe" title="Andere Farbe wählen" aria-label="Andere Farbe wählen">+</button>' +
+      '<span class="blatt-trenn" data-gruppe="breite"></span>' +
       /* Doppelter Massstab wie im Menüband: mit der wahren Stärke sahen
          „dünn" (1,2 px) und „mittel" (2,4 px) gleich aus, weil der Boden
          von 2 px den ersten hochzog. Das Verhältnis 1 : 2 : 4 bleibt. */
-      BREITEN.map((value, index) => `<button class="blatt-strich${index === 1 ? ' on' : ''}" ` +
+      BREITEN.map((value, index) => `<button class="blatt-strich${index === 1 ? ' on' : ''}" data-gruppe="breite" ` +
         `data-b="${value}" title="Strichbreite ${String(value).replace('.', ',')}">` +
         `<i style="height:${Math.max(2, value * 2)}px"></i></button>`).join('');
 
@@ -1322,9 +1335,14 @@ const Marken = (() => {
     const markiere = (): void => {
       if (!tools.isConnected) { Zeichenziel.vergiss(markiere); return; }
       const wz = Zeichenziel.werkzeugVon(controls);
-      if (wz) tools.querySelectorAll<HTMLElement>('[data-wz]').forEach(node => {
-        node.classList.toggle('on', node.dataset.wz === wz);
-      });
+      if (wz) {
+        tools.querySelectorAll<HTMLElement>('[data-wz]').forEach(node => {
+          node.classList.toggle('on', node.dataset.wz === wz);
+        });
+        /* Die Leiste weiss, welches Werkzeug fuehrt — das CSS am Telefon
+           liest es (E356). */
+        if (tools.dataset.tool !== wz) { tools.dataset.tool = wz; zumWerkzeugRollen(wz); }
+      }
       const farbe = Zeichenziel.farbeVon(controls);
       if (farbe) tools.querySelectorAll<HTMLElement>('.blatt-farbe').forEach(node => {
         node.classList.toggle('on', node.dataset.c === farbe);
@@ -1360,6 +1378,8 @@ const Marken = (() => {
         }
         tools.querySelectorAll('[data-wz]').forEach(node => node.classList.remove('on'));
         target.classList.add('on');
+        tools.dataset.tool = target.dataset.wz;
+        zumWerkzeugRollen(target.dataset.wz);
         return;
       }
       if (target.dataset.act) {
@@ -1379,6 +1399,7 @@ const Marken = (() => {
             controls.setzeWerkzeug('stift');
             try { Zeichenziel.uebernehme(controls, 'stift'); } catch { /* egal */ }
             tools.querySelectorAll('[data-wz]').forEach(node => node.classList.toggle('on', (node as HTMLElement).dataset.wz === 'stift'));
+            tools.dataset.tool = 'stift';
           }
           return;
         }
@@ -1394,6 +1415,7 @@ const Marken = (() => {
             controls.setzeWerkzeug('radierer');
             try { Zeichenziel.uebernehme(controls, 'radierer'); } catch { /* egal */ }
             tools.querySelectorAll('[data-wz]').forEach(node => node.classList.toggle('on', (node as HTMLElement).dataset.wz === 'radierer'));
+            tools.dataset.tool = 'radierer';
           }
           return;
         }
@@ -1417,6 +1439,7 @@ const Marken = (() => {
             liste.slice().reverse().forEach(farbe => {
               const k = document.createElement('button');
               k.className = 'blatt-farbe blatt-farbe-eigen';
+              k.dataset.gruppe = 'farbe';
               k.dataset.c = farbe; k.style.background = farbe; k.title = 'Eigene Farbe ' + farbe;
               neuKnopf?.before(k);
             });
