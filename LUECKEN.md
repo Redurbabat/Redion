@@ -5034,12 +5034,10 @@ mit dem Grund, warum jeder Punkt ein eigener Bogen ist:
    den Punkt zwischen den Fingern; das Blatt in einer gewöhnlichen Seite
    hat weiterhin keinen Zoom.
 
-5. **Keine Formerkennung.** Ein gezogener Kreis bleibt ein gezogener Kreis.
-   GoodNotes rastet nach kurzem Halten am Ende des Strichs auf Kreis,
-   Rechteck, Linie, Dreieck. Redion hat die Formen als eigene Werkzeuge
-   (Rechteck, Ellipse, Linie, Pfeil); die Erkennung wäre ein Zusatz am
-   Ende von `finish`, mit einem Schwellwert, der nicht jede Schleife zum
-   Kreis macht.
+5. ~~**Keine Formerkennung.**~~ ERLEDIGT in E355 für Kreis, Ellipse,
+   Rechteck und Linie: ziehen, 450 ms halten, `InkShapes.recognize` —
+   test347. Was bleibt: kein Dreieck, kein Pfeil; keine Vorschau der Form
+   während des Haltens; die Schwellen sind Erfahrung, keine Masse.
 
 6. **Kein Bild- und kein Textwerkzeug auf der Zeichenschicht.** Ein Foto
    auf das Blatt legen, verschieben, skalieren — geht nur als Bildblock

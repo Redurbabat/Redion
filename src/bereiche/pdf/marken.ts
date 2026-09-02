@@ -337,6 +337,12 @@ const Marken = (() => {
        Zeiger, der ihn begonnen hat: Bewegungen und Loslassen anderer Zeiger
        gehen ihn nichts an. */
     const STIFT_SPERRE_MS = 4000;
+    /* FORMERKENNUNG (E355): wer einen Kreis zieht und am Ende kurz haelt,
+       bekommt einen Kreis — wie in GoodNotes. Das Halten ist die Absicht;
+       ohne Halten bleibt jeder Strich, was er ist. Abschaltbar, gemerkt in
+       `zeichnen:formen`. */
+    const HALTEN_MS = 450;
+    let formen: boolean = typeof Store !== 'undefined' ? Store.getMeta('zeichnen:formen') !== false : true;
     let stiftZuletzt = 0;
     let stiftTimer: ReturnType<typeof setTimeout> | null = null;
     let aktiverZeiger: number | null = null;
@@ -623,6 +629,7 @@ const Marken = (() => {
       if (last && Math.abs(last[0] - point[0]) < 0.6 && Math.abs(last[1] - point[1]) < 0.6) return;
       running.pts.push(point);
       running.pressure.push(druckAus(event, point));
+      running.bewegtUm = Date.now();
     };
     const finish = (): boolean => {
       aktiverZeiger = null;
@@ -666,6 +673,22 @@ const Marken = (() => {
       const before = beforeRunning || snapshot();
       running = null; runningNode = null; beforeRunning = null;
       delete mark.zeigerArt;
+      const gehalten = Date.now() - (Number(mark.bewegtUm) || 0) >= HALTEN_MS;
+      delete mark.bewegtUm;
+      /* GEHALTEN UND EINE FORM (E355): der Stift wird zur Linie, zum Kreis
+         oder zum Rechteck — als dieselbe Marke, mit Farbe und Breite; Druck
+         und Stil hat eine Form nicht. Der Marker bleibt Marker: wer
+         hervorhebt, will keine Geometrie. */
+      if (mark.art === 'stift' && formen && gehalten && typeof InkShapes !== 'undefined') {
+        const form = InkShapes.recognize(mark.pts);
+        if (form) {
+          mark.art = form.art;
+          mark.pts = form.pts;
+          delete mark.pressure;
+          delete mark.stil;
+          delete mark.zuletzt;
+        }
+      }
       if (mark.art === 'stift' || mark.art === 'marker') {
         if (mark.pts.length < 2) { node?.remove(); return false; }
         delete mark.zuletzt;
@@ -1127,9 +1150,14 @@ const Marken = (() => {
        einem Knopf, der auf nichts wirkt. */
     const setzeLineal = (an: boolean): void => { lineal = !!an; };
     const linealAn = (): boolean => lineal;
+    const setzeFormen = (an: boolean): void => {
+      formen = !!an;
+      if (typeof Store !== 'undefined') Store.setMeta('zeichnen:formen', formen);
+    };
+    const formenAn = (): boolean => formen;
 
     const steuerung = { flaeche, setzeWerkzeug, setzeFarbe, setzeStrich, setzeStil, stilVon, setzeRadierModus, radierModusVon, copySelection, paste, marken: marks,
-      undo, redo, deleteSelection, beiAenderung, state, setzeLineal, linealAn };
+      undo, redo, deleteSelection, beiAenderung, state, setzeLineal, linealAn, setzeFormen, formenAn };
     return steuerung;
   };
 
@@ -1215,6 +1243,12 @@ const Marken = (() => {
       '<button data-act="lineal" aria-pressed="false" ' +
       'title="Lineal: Linie und Pfeil rasten auf 15°-Schritte">' +
       '<span class="zeichen">📐</span><span class="wort">Lineal</span></button>' +
+      /* FORMEN (E355): ein Schalter wie das Lineal — an, und ein gehaltener
+         Strich wird zur Linie, zum Kreis, zum Rechteck. */
+      `<button data-act="formen" aria-pressed="${controls.formenAn ? (controls.formenAn() ? 'true' : 'false') : 'true'}"` +
+      `${controls.formenAn && controls.formenAn() ? ' class="on"' : ''} ` +
+      'title="Formen erkennen: einen Kreis, ein Rechteck oder eine Linie ziehen und am Ende kurz halten">' +
+      '<span class="zeichen">◯</span><span class="wort">Formen</span></button>' +
       /* DER STIFT (E351): ein Knopf, der durch Fueller, Kugelschreiber und
          Pinsel wechselt und sagt, welcher gerade fuehrt. */
       (() => {
@@ -1396,6 +1430,12 @@ const Marken = (() => {
         if (target.dataset.act === 'lineal' && controls.setzeLineal) {
           const an = !controls.linealAn?.();
           controls.setzeLineal(an);
+          target.setAttribute('aria-pressed', an ? 'true' : 'false');
+          target.classList.toggle('on', an);
+        }
+        if (target.dataset.act === 'formen' && controls.setzeFormen) {
+          const an = !controls.formenAn?.();
+          controls.setzeFormen(an);
           target.setAttribute('aria-pressed', an ? 'true' : 'false');
           target.classList.toggle('on', an);
         }

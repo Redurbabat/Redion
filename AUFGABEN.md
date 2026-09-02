@@ -2644,6 +2644,13 @@ node pruefungen/lauf/test105.mjs
   `padding` ist vier Erklärungen, nicht eine, und §2/§3 zählten absolut
   statt den Unterschied zum Bestand.
   test332 neu (14), belegt rot. test258 19/19.
+* E355 (L115 Punkt 5 erledigt): Formerkennung — ziehen, 450 ms halten, und
+  der Stiftstrich wird Linie, Kreis/Ellipse oder Rechteck (`InkShapes.recognize`
+  in `src/core/ink/shapes.ts`, ohne DOM und Zeit). Nur der Stift, nie der
+  Marker; dieselbe Marke mit Farbe und Breite, ohne Druck und Stil. Schalter
+  „Formen" in der Leiste, gemerkt in `zeichnen:formen`. test347 neu (31)
+  fand die Kreis-als-Rechteck-Falle im ersten Entwurf; belegt rot in sechs
+  Richtungen. Bilder angesehen.
 * E354 (L115 Punkte 3 und 4 erledigt): Handballen-Schutz — nach einem
   Stift zeichnen Finger vier Sekunden nicht, sie rollen (`data-stift`,
   `touch-action`); ein Zug gehört seinem Zeiger; der Stift nimmt der

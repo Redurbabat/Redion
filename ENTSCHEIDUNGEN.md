@@ -27332,3 +27332,86 @@ Start) 37/37, test343 (Stifte) 30/30, test344 (Radierer) 50/50, test345
 
 Kein Bild zu diesem Bogen: nichts sieht anders aus, es verhält sich anders.
 Was zu sehen wäre — ein Strich, der NICHT entsteht —, misst test346.
+
+
+E355 — Formerkennung: ziehen, halten, und der Kreis wird ein Kreis (L115 Punkt 5)
+════════════════════════════════════════════════════════════════════════════
+
+BEFUND: Ein gezogener Kreis blieb ein gezogener Kreis. GoodNotes rastet
+nach kurzem Halten am Strichende auf Kreis, Rechteck, Linie — und das ist
+beim Lernen mehr als Kosmetik: ein Schaltbild, ein Diagramm, ein Kasten um
+die Lösung sind mit der Hand krumm und mit dem Halten gerade.
+
+─── WAS GEBAUT WURDE ───────────────────────────────────────────────────────
+
+  1. DER KERN, `src/core/ink/shapes.ts` (Global `InkShapes`), kennt weder
+     DOM noch Zeit noch Store (E125, wie geometry.ts). `recognize(pts)` gibt
+     Linie, Ellipse oder Rechteck mit ihren zwei Punkten zurück — oder null.
+     · LINIE: die Sehne ist mindestens neun Zehntel des Wegs, und kein Punkt
+       liegt weiter als fünf Hundertstel des Wegs neben ihr.
+     · GESCHLOSSEN heisst: Anfang und Ende näher als ein Fünftel der
+       Diagonale, und der Weg länger als anderthalb Diagonalen — sonst ist
+       es ein Haken.
+     · RECHTECK: fünfundachtzig von hundert Punkten nahe an den Kanten des
+       Kastens UND jede Ecke wirklich besucht (acht Hundertstel der
+       Diagonale). Die Ecke ist das Mass: ein Kreis kommt seinen
+       Kastenecken nie näher als 0,41 mal seinen Radius. Der erste Entwurf
+       liess ihn mit achtzehn Hundertsteln hinein, und test347 §1 sah einen
+       Kreis als Rechteck — gefunden, bevor es ein Nutzer sah.
+     · ELLIPSE: die Punkte halten ihren Abstand zur Mitte, auf die
+       Halbachsen bezogen (mittlere Abweichung höchstens zwölf Hundertstel).
+       Ist der Kasten fast quadratisch, wird ein Kreis daraus: der Kasten
+       wird zum Quadrat um dieselbe Mitte.
+     Die Schwellen sind Erfahrung, keine Masse; test347 hält beide Seiten
+     fest — die erkannte Form und das in Ruhe gelassene Gekritzel.
+
+  2. DAS HALTEN IST DIE ABSICHT. Der laufende Zug merkt sich `bewegtUm`
+     (die Zeit des letzten echten Punkts); `finish` vergleicht mit dem
+     Loslassen. Ab 450 ms (`HALTEN_MS`) und nur beim STIFT wird gefragt;
+     der Marker bleibt Marker — wer hervorhebt, will keine Geometrie. Die
+     erkannte Form wird DIESELBE Marke mit derselben Kennung, Farbe und
+     Breite; Druck und Stil hat eine Form nicht, sie fallen weg. `bewegtUm`
+     und `zeigerArt` (E354) streift `finish` ab — in den Daten steht keins
+     von beiden.
+
+  3. DER SCHALTER „Formen" in der Leiste, ein Schalter wie das Lineal, ab
+     Werk an, gemerkt in `zeichnen:formen` — wer lieber alles krumm lässt,
+     schaltet ihn ab, und er bleibt ab.
+
+  4. Kein neues Markenfeld. Eine erkannte Form ist eine `line`, `ellipse`
+     oder `rectangle`, wie das jeweilige Werkzeug sie auch anlegt.
+
+─── WAS NICHT GEBAUT WURDE ────────────────────────────────────────────────
+
+Kein Dreieck, kein Pfeil, kein Fünfeck; keine Vorschau während des Haltens
+(GoodNotes zeigt die Form schon, bevor man loslässt); kein Nachbessern einer
+erkannten Form ausser über die Griffe aus E353. Steht in L115.
+
+─── PRÜFUNG ────────────────────────────────────────────────────────────────
+
+test347 neu, 31 Punkte, PORT 9351, acht Abschnitte an Rechner und Telefon.
+Die Züge sind Punktfolgen mit dem Zittern einer Hand; gehalten wird mit
+einem echten Warten vor dem Loslassen. §1 misst den Kern allein (Kreis,
+Ellipse, Rechteck, Linie, Gekritzel, offener Bogen, drei Punkte), §2 bis §7
+die Schicht. Belegt rot in sechs Richtungen, jede einzeln zurückgedreht und
+wiederhergestellt:
+
+a — die Form wird nie übernommen (marken.js): 22/31. Alles bleibt Strich.
+b — das Halten zählt nicht, jeder Strich wird geprüft (marken.js): 29/31.
+    Der Kreis ohne Halten wird zum Kreis — genau das, was niemand will.
+c — das Rechteck wird nicht erkannt (shapes.js): 24/31.
+d — der Schalter merkt sich nichts (marken.js): 28/31. Nach dem Neuladen
+    steht er wieder an.
+e — die Linie wird nicht erkannt (shapes.js): 27/31.
+f — auch der Marker wird zur Form (marken.js): 30/31.
+
+Dazu: test201 (Ink V2) 32/32, test174 (A4-Blatt) 25/25, test343 (Stifte)
+30/30, test344 (Radierer) 50/50, test345 (Auswahl) 43/43, test346
+(Handballen und Kneifen) 31/31, test87 (Quelltext) 152/152, test105
+(erzeugtes JavaScript, jetzt mit shapes.js) 117/117, test109 (kein neues
+JavaScript) 20/20, test225 (Quellenangaben) 11/11 — alle grün.
+
+BILDER angesehen (§55): derselbe krumme Kreis zweimal — ohne Halten ein
+Strich mit Ecken, gehalten ein Kreis; darunter ein Rechteck und eine Linie,
+beide gehalten und beide gerade; „Formen" in der Leiste an. Am Telefon
+dasselbe.
