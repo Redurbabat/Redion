@@ -5039,10 +5039,21 @@ mit dem Grund, warum jeder Punkt ein eigener Bogen ist:
    test347. Was bleibt: kein Dreieck, kein Pfeil; keine Vorschau der Form
    während des Haltens; die Schwellen sind Erfahrung, keine Masse.
 
-6. **Kein Bild- und kein Textwerkzeug auf der Zeichenschicht.** Ein Foto
-   auf das Blatt legen, verschieben, skalieren — geht nur als Bildblock
-   neben dem Blatt. Text gibt es als `text`-Marke, aber ohne Schriftwahl,
-   Grösse und Rahmen, und nur an der Stelle, an der getippt wurde.
+6. ~~**Kein Bild- und kein Textwerkzeug auf der Zeichenschicht.**~~ Das
+   BILD ist ERLEDIGT in E357: Werkzeug „Bild" in der Leiste öffnet den
+   Dateiwähler, die Datei geht in die Ablage (Stücke, das Blatt als Block),
+   die Marke `{id, art:'bild', dateiId, pts}` zeichnet ein `<image>` aus der
+   bekannten Adresse — synchron, damit Druck und Folien es sehen —, sonst
+   einen Platzhalter; mittig, halb so breit, im Seitenverhältnis, danach
+   gewählt. Skalieren hält das Verhältnis, der Radierer lässt es stehen,
+   Kopieren teilt die Datei. test349. Was bleibt — der TEXT: die
+   `text`-Marke hat weder Schriftwahl noch Grösse noch Rahmen und steht
+   nur dort, wo getippt wurde. Und am Bild: eine gelöschte Bildmarke lässt
+   ihre Datei am Blatt zurück (sie geht erst mit dem Blatt); ein Bild
+   kommt nur aus dem Dateiwähler, nicht per Ziehen-und-Ablegen oder aus
+   der Zwischenablage des Systems; kein Drehen, kein Zuschneiden; eine
+   Vorschau, die synchron in eine Leinwand zeichnet, sieht beim ersten
+   Mal den Platzhalter.
 
 7. **Undo verliert die Knoten-Zuordnung beim Neuzeichnen.** Jedes Undo
    zeichnet die ganze Schicht neu (`render`), eine Marke je SVG-Knoten.
@@ -5059,6 +5070,9 @@ mit dem Grund, warum jeder Punkt ein eigener Bogen ist:
 Nicht auf der Liste, weil es Format wäre: eine Marke bleibt `{id, art,
 farbe, breite, pts, pressure, stil?}`. Jeder Punkt oben lässt sich ohne
 Migration bauen; sobald einer das Format ändern will, ist das eine eigene
-Entscheidung.
+Entscheidung. (E357 kam mit einer neuen ART und einem neuen Feld daran —
+`bild` mit `dateiId`, wie `zettel` seinen `text` und `zeichen` seine
+`zeichenId` hat. Keine Migration: ein älteres Redion zeichnet eine
+unbekannte Art nicht, verliert sie aber auch nicht.)
 
 Gefunden am 2. September 2026 (E351).

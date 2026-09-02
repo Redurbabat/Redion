@@ -76,6 +76,46 @@ const Marken = (() => {
       `M${left[0]} ${left[1]} L${end[0]} ${end[1]} L${right[0]} ${right[1]}`;
   };
 
+  /* EIN BILD AUF DEM BLATT (E357, L115 Punkt 6). Die Datei liegt in der
+     Ablage — in Stuecken, nie als Data-URL in der Marke —, die Marke traegt
+     nur ihre Kennung und zwei Ecken. Die Adresse (eine Objekt-URL) kennt
+     `Dateien`; ist sie schon bekannt, zeichnet `zeichneMarke` das Bild
+     sofort, und genau darauf verlassen sich Druck und Folien, die synchron
+     lesen. Ist sie noch nicht da, steht ein Platzhalter, und die Adresse
+     kommt nach — oder sie kommt nicht, und der Platzhalter sagt es. */
+  const BILD_FEHLT = 'Bild fehlt';
+  const bildPlatzhalter = (box: InkBounds, wort = ''): SVGElement[] => {
+    const rahmen = svg('rect', { x: box.x, y: box.y, width: box.width, height: box.height,
+      rx: 2, class: 'blatt-bild-fehlt' });
+    if (!wort) return [rahmen];
+    const groesse = Math.max(7, Math.min(14, box.height / 6, box.width / 8));
+    const text = svg('text', { x: box.x + box.width / 2, y: box.y + box.height / 2,
+      'text-anchor': 'middle', 'dominant-baseline': 'middle', 'font-size': groesse,
+      'font-family': 'system-ui, sans-serif', class: 'blatt-bild-fehlt-wort' });
+    text.textContent = wort;
+    return [rahmen, text];
+  };
+  const bildNachladen = (dateiId: string, gruppe: SVGElement): void => {
+    if (typeof Dateien === 'undefined' || typeof Dateien.adresse !== 'function') return;
+    Promise.resolve(Dateien.adresse(dateiId)).then((url: string | null) => {
+      /* Der Kasten wird JETZT vom Platzhalter gelesen, nicht von damals:
+         beim Ziehen flickt `updateNode` seine Lage, und die Antwort soll
+         dort landen, wo das Bild inzwischen steht. Ohne Platzhalter ist
+         die Gruppe ersetzt worden — dann zeichnet der Ersatz selbst. */
+      const rahmen = gruppe.querySelector('.blatt-bild-fehlt');
+      if (!rahmen) return;
+      const box: InkBounds = { x: Number(rahmen.getAttribute('x')), y: Number(rahmen.getAttribute('y')),
+        width: Number(rahmen.getAttribute('width')), height: Number(rahmen.getAttribute('height')) };
+      gruppe.querySelectorAll('.blatt-bild-fehlt, .blatt-bild-fehlt-wort').forEach(node => node.remove());
+      if (url) {
+        gruppe.appendChild(svg('image', { x: box.x, y: box.y, width: box.width, height: box.height,
+          href: url, preserveAspectRatio: 'none' }));
+      } else {
+        bildPlatzhalter(box, BILD_FEHLT).forEach(node => gruppe.appendChild(node));
+      }
+    }).catch(() => { /* der Platzhalter bleibt stehen */ });
+  };
+
   /** Bildschirm, Druck und Praesentation rufen denselben Zeichner auf. */
   const zeichneMarke = (mark: any): SVGElement | null => {
     if (!mark || typeof mark !== 'object') return null;
@@ -205,6 +245,28 @@ const Marken = (() => {
       gruppe.setAttribute('data-sid', idOf(mark));
       gruppe.setAttribute('data-ink-art', art);
       return gruppe;
+    } else if (art === 'bild' && points.length >= 2) {
+      /* DAS BILD (E357): ein <image> zwischen den zwei Ecken, aus der
+         Ablage. `preserveAspectRatio: none` — die Ecken sind die Wahrheit;
+         das Seitenverhaeltnis haelt die Auswahl beim Ziehen (siehe dort),
+         nicht der Zeichner. Ohne bekannte Adresse ein Platzhalter, siehe
+         `bildNachladen`. Eigener Zweig mit Rueckgabe, wie Zettel und Band:
+         der Strich-Block unten wuerde die Gruppe mit Strichfarbe versehen. */
+      const box = InkGeometry.rectangle(points[0]!, points[1]!);
+      const gruppe = svg('g', { 'pointer-events': 'all' });
+      const dateiId = String(mark.dateiId || '');
+      const url = dateiId && typeof Dateien !== 'undefined' && typeof Dateien.adresseBekannt === 'function'
+        ? Dateien.adresseBekannt(dateiId) : null;
+      if (url) {
+        gruppe.appendChild(svg('image', { x: box.x, y: box.y, width: box.width, height: box.height,
+          href: url, preserveAspectRatio: 'none' }));
+      } else {
+        bildPlatzhalter(box, dateiId ? '' : BILD_FEHLT).forEach(node => gruppe.appendChild(node));
+        if (dateiId) bildNachladen(dateiId, gruppe);
+      }
+      gruppe.setAttribute('data-sid', idOf(mark));
+      gruppe.setAttribute('data-ink-art', art);
+      return gruppe;
     } else if (art === 'ellipse' && points.length >= 2) {
       const box = InkGeometry.rectangle(points[0]!, points[1]!);
       element = svg('ellipse', { cx: box.x + box.width / 2, cy: box.y + box.height / 2,
@@ -254,6 +316,25 @@ const Marken = (() => {
        nur Attribute und `textContent` übertragen, und ein <g> voller Pfade
        behielte damit seine alten Kinder. Beim Fachzeichen hiesse das: die
        Kennung ändert sich, das Bild nicht. */
+    /* EIN BILD WIRD GEFLICKT, NICHT ERSETZT (E357): beim Ziehen kaeme sonst
+       je Bewegung ein neues <image> mit derselben Adresse — und ein noch
+       ladendes Bild bekaeme seine Antwort nie, weil die Gruppe, auf die
+       sie wartet, laengst ausgetauscht waere. Gleiche Kinder, gleiche
+       Reihenfolge: dann wandern nur Lage und Mass. */
+    if (node && node.getAttribute('data-ink-art') === 'bild' && fresh.getAttribute('data-ink-art') === 'bild' &&
+        node.childElementCount === fresh.childElementCount &&
+        [...node.children].every((kind, n) => kind.tagName === fresh.children[n]?.tagName)) {
+      [...fresh.children].forEach((neu, n) => {
+        const alt = node.children[n];
+        if (!alt) return;
+        for (const name of ['x', 'y', 'width', 'height', 'font-size']) {
+          const wert = neu.getAttribute(name);
+          if (wert !== null) alt.setAttribute(name, wert);
+        }
+      });
+      node.setAttribute('data-sid', fresh.getAttribute('data-sid') || '');
+      return node;
+    }
     if (fresh.firstElementChild || node?.firstElementChild) {
       if (node?.parentNode) node.replaceWith(fresh);
       return fresh;
@@ -542,6 +623,9 @@ const Marken = (() => {
       const mark = marks[index];
       if (!mark) return false;
       if (radierModus === 'marker' && mark.art !== 'marker') return false;
+      /* Ein Bild radiert man nicht weg — wie in GoodNotes: der Radierer
+         gilt der Tinte, ein Bild geht ueber die Auswahl (E357). */
+      if (mark.art === 'bild') return false;
       const id = idOf(mark);
       const teilbar = radierModus === 'teil' && (mark.art === 'stift' || mark.art === 'marker');
       const stuecke: Array<{ pts: number[][]; pressure: number[] }> = teilbar
@@ -631,6 +715,81 @@ const Marken = (() => {
       running.pressure.push(druckAus(event, point));
       running.bewegtUm = Date.now();
     };
+    /* EIN BILD AUFS BLATT (E357, L115 Punkt 6). Der Weg: Dateiwaehler,
+       Datei in die Ablage (in Stuecken, mit dem Blatt als Block — so wandert
+       sie mit Sicherung, Abgleich und Papierkorb), Groesse aus dem Bild,
+       mittig gesetzt, halb so breit wie die Seite, dann gewaehlt und im
+       Auswahl-Werkzeug: man will es gleich schieben und ziehen. `mitte`
+       kommt vom Tipp mit dem Werkzeug; der Knopf in der Leiste hat keinen
+       Punkt und nimmt die Mitte der ersten Seite. */
+    const bildMass = (datei: Blob): Promise<{ w: number; h: number } | null> => new Promise(fertig => {
+      const url = URL.createObjectURL(datei);
+      const bild = new Image();
+      bild.onload = () => { fertig({ w: bild.naturalWidth, h: bild.naturalHeight }); URL.revokeObjectURL(url); };
+      bild.onerror = () => { fertig(null); URL.revokeObjectURL(url); };
+      bild.src = url;
+    });
+    const bildAblegen = async (datei: File, mitte?: number[]): Promise<boolean> => {
+      if (!datei || typeof Dateien === 'undefined' || typeof Dateien.ablegen !== 'function') return false;
+      const mass = await bildMass(datei);
+      const satz = await Dateien.ablegen(datei, { blockId: block.id, name: datei.name });
+      const dateiId = String(satz?.id || '');
+      if (!dateiId) return false;
+      const seite = umbruch > 0 ? Math.min(umbruch, hoehe) : hoehe;
+      const verhaeltnis = mass && mass.w > 0 && mass.h > 0 ? mass.h / mass.w : 3 / 4;
+      let w = breite / 2;
+      let h = w * verhaeltnis;
+      if (h > seite * 0.9) { h = seite * 0.9; w = h / verhaeltnis; }
+      const klemme = (wert: number, von: number, bis: number): number => Math.max(von, Math.min(bis, wert));
+      const cx = mitte ? klemme(mitte[0] ?? 0, w / 2, breite - w / 2) : breite / 2;
+      const cy = mitte ? klemme(mitte[1] ?? 0, h / 2, hoehe - h / 2) : seite / 2;
+      const r2 = (wert: number): number => Math.round(wert * 100) / 100;
+      const mark = { id: frischeId(), art: 'bild', dateiId,
+        pts: [[r2(cx - w / 2), r2(cy - h / 2)], [r2(cx + w / 2), r2(cy + h / 2)]] };
+      /* Die Adresse VOR dem Zeichnen holen: dann steht das Bild sofort da,
+         nicht erst ein Platzhalter, der gleich wieder weg ist. */
+      try { await Dateien.adresse(dateiId); } catch { /* dann eben der Platzhalter */ }
+      const before = snapshot();
+      marks.push(mark);
+      const node = zeichneMarke(mark);
+      if (node) flaeche.appendChild(node);
+      if (tool !== 'select') {
+        setzeWerkzeug('select');
+        if (typeof Zeichenziel !== 'undefined') {
+          try { Zeichenziel.uebernehme(steuerung, 'select'); } catch { /* egal */ }
+        }
+      }
+      selection = new Set([idOf(mark)]);
+      renderSelection();
+      commit(before);
+      return true;
+    };
+    const bildEinfuegen = (mitte?: number[]): Promise<boolean> => new Promise(fertig => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      /* Im Dokument, wie beim PDF-Waehler (einlesen.ts) — und danach weg. */
+      input.style.display = 'none';
+      document.body.appendChild(input);
+      let entschieden = false;
+      const auf = (): void => {
+        if (entschieden) return;
+        entschieden = true;
+        const datei = input.files?.[0];
+        input.remove();
+        if (!datei) { fertig(false); return; }
+        bildAblegen(datei, mitte).then(fertig, () => {
+          if (typeof UI !== 'undefined' && UI.toast) UI.toast('Das Bild liess sich nicht ablegen.');
+          fertig(false);
+        });
+      };
+      input.addEventListener('change', auf);
+      /* `cancel` kommt in neueren Browsern beim Abbrechen; sonst bleibt das
+         Feld unsichtbar stehen, bis das naechste kommt — kein Schaden. */
+      input.addEventListener('cancel', auf);
+      input.click();
+    });
+
     const finish = (): boolean => {
       aktiverZeiger = null;
       if (radierStrich) {
@@ -919,6 +1078,9 @@ const Marken = (() => {
         return;
       }
       if (tool === 'zeichen') { void setzeZeichen(point, targetId); return; }
+      /* Mit dem Bild-Werkzeug (ueber `Zeichenziel.setze`) oeffnet der Tipp
+         den Waehler, und das Bild kommt dorthin, wo getippt wurde (E357). */
+      if (tool === 'bild') { void bildEinfuegen(point); return; }
       if (tool === 'select') {
         /* EIN GRIFF AM RAHMEN SKALIERT DIE AUSWAHL (E353): die gegenueber-
            liegende Ecke bleibt stehen, die Marken wachsen zum Zeiger hin. */
@@ -1019,8 +1181,12 @@ const Marken = (() => {
           const dx0 = selectDrag.start[0] - ax, dy0 = selectDrag.start[1] - ay;
           let sx = Math.abs(dx0) < 1 ? 1 : (point[0] - ax) / dx0;
           let sy = Math.abs(dy0) < 1 ? 1 : (point[1] - ay) / dy0;
-          /* Mit Umschalt bleibt das Seitenverhaeltnis. */
-          if (event.shiftKey) { const s = (Math.abs(sx) + Math.abs(sy)) / 2; sx = s; sy = s; }
+          /* Mit Umschalt bleibt das Seitenverhaeltnis — bei einem BILD in
+             der Auswahl ist es umgekehrt (E357): ein Foto bleibt von sich
+             aus im Verhaeltnis, wie in GoodNotes, und Umschalt gibt es frei.
+             Ein verzerrtes Gesicht ist selten das, was man wollte. */
+          const bildDabei = [...selection].some(id => marks.find(mark => idOf(mark) === id)?.art === 'bild');
+          if (event.shiftKey !== bildDabei) { const s = (Math.abs(sx) + Math.abs(sy)) / 2; sx = s; sy = s; }
           sx = Math.max(0.05, Math.min(50, sx));
           sy = Math.max(0.05, Math.min(50, sy));
           selectDrag.moved = selectDrag.moved || Math.abs(sx - 1) > 0.01 || Math.abs(sy - 1) > 0.01;
@@ -1110,7 +1276,7 @@ const Marken = (() => {
       color = next;
       if (!selection.size) return;
       const before = snapshot();
-      for (const mark of marks) if (selection.has(idOf(mark))) {
+      for (const mark of marks) if (selection.has(idOf(mark)) && mark.art !== 'bild') {
         mark.farbe = next;
         updateNode(nodeFor(idOf(mark)), mark);
       }
@@ -1157,7 +1323,7 @@ const Marken = (() => {
     const formenAn = (): boolean => formen;
 
     const steuerung = { flaeche, setzeWerkzeug, setzeFarbe, setzeStrich, setzeStil, stilVon, setzeRadierModus, radierModusVon, copySelection, paste, marken: marks,
-      undo, redo, deleteSelection, beiAenderung, state, setzeLineal, linealAn, setzeFormen, formenAn };
+      undo, redo, deleteSelection, beiAenderung, state, setzeLineal, linealAn, setzeFormen, formenAn, bildEinfuegen };
     return steuerung;
   };
 
@@ -1231,6 +1397,10 @@ const Marken = (() => {
         'Einen Zettel aufziehen und beschriften; Antippen mit dem Werkzeug bearbeitet ihn') +
       button('text', 'T', 'Text', 'Textanmerkung') +
       button('zeichen', '⚡', 'Fachzeichen', 'Ein elektrotechnisches Symbol auf die Seite setzen') +
+      /* DAS BILD (E357): kein Werkzeug, das man haelt, sondern ein Weg —
+         ein Tipp oeffnet den Waehler, danach fuehrt die Auswahl. */
+      button('bild', '🖼', 'Bild',
+        'Ein Foto oder Bild auf das Blatt legen — danach verschieben und ziehen wie jede Marke') +
       button('radierer', '⌫', 'Radieren',
         'Radieren — über Marken streichen; der Knopf daneben wählt Ganz, Teil oder Marker') +
       /* DER RADIERER (E352): ein Knopf, der durch Ganz, Teil und Marker
@@ -1368,6 +1538,13 @@ const Marken = (() => {
     tools.addEventListener('click', event => {
       const target = (event.target as HTMLElement)?.closest?.('button') as HTMLButtonElement | null;
       if (!target || target.disabled) return;
+      /* DER BILD-KNOPF SCHALTET NICHT UM (E357): er oeffnet den
+         Dateiwaehler; das gewaehlte Werkzeug bleibt, bis das Bild da ist —
+         wer abbricht, hat nichts verloren. Danach fuehrt die Auswahl. */
+      if (target.dataset.wz === 'bild') {
+        if (controls.bildEinfuegen) void controls.bildEinfuegen();
+        return;
+      }
       if (target.dataset.wz) {
         controls.setzeWerkzeug(target.dataset.wz);
         /* Auch der Kern muss es wissen — sonst zeigt das Menüband weiter

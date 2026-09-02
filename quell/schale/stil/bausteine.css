@@ -3940,6 +3940,13 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
              vector-effect:non-scaling-stroke; pointer-events:none}
 .blatt-griff-feld{fill:transparent; pointer-events:all; cursor:nwse-resize}
 .blatt-griff-feld[data-griff="ne"], .blatt-griff-feld[data-griff="sw"]{cursor:nesw-resize}
+/* Ein Bild, dessen Datei fehlt oder noch laedt (E357): ein gestrichelter
+   Kasten in der Groesse der Marke — kein leerer Fleck, und greifbar bleibt
+   er auch. Das Wort kommt erst, wenn die Ablage wirklich nichts hat. */
+.blatt-bild-fehlt{fill:rgba(0,0,0,.04); stroke:#8a8a8a; stroke-width:1; stroke-dasharray:5 4;
+                  vector-effect:non-scaling-stroke}
+.blatt-bild-fehlt-wort{fill:#777; pointer-events:none}
+.blatt-marken[data-tool="bild"]{cursor:copy}
 /* Beim Malen soll der Finger nicht die Seite rollen und nichts markieren. */
 .blatt-papier.malt{cursor:crosshair; user-select:none}
 .blatt-papier.malt .blatt-inhalt{user-select:none}
@@ -4105,7 +4112,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   .blatt-werk > [data-wz="rectangle"]{order:70} .blatt-werk > [data-wz="ellipse"]{order:80}
   .blatt-werk > [data-wz="abdeck"]{order:90} .blatt-werk > [data-wz="zettel"]{order:100}
   .blatt-werk > [data-wz="text"]{order:110} .blatt-werk > [data-wz="zeichen"]{order:120}
-  .blatt-werk > [data-wz="radierer"]{order:130}
+  .blatt-werk > [data-wz="bild"]{order:125} .blatt-werk > [data-wz="radierer"]{order:130}
   .blatt-werk > [data-gruppe="verlauf"]{order:200}
   .blatt-werk[data-tool="schreiben"]{--platz:10} .blatt-werk[data-tool="select"]{--platz:20}
   .blatt-werk[data-tool="stift"]{--platz:30} .blatt-werk[data-tool="marker"]{--platz:40}
@@ -4113,7 +4120,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   .blatt-werk[data-tool="rectangle"]{--platz:70} .blatt-werk[data-tool="ellipse"]{--platz:80}
   .blatt-werk[data-tool="abdeck"]{--platz:90} .blatt-werk[data-tool="zettel"]{--platz:100}
   .blatt-werk[data-tool="text"]{--platz:110} .blatt-werk[data-tool="zeichen"]{--platz:120}
-  .blatt-werk[data-tool="radierer"]{--platz:130}
+  .blatt-werk[data-tool="bild"]{--platz:125} .blatt-werk[data-tool="radierer"]{--platz:130}
   /* Innerhalb der Gruppen: erst der Stift-Stil, dann Farben, dann Breiten,
      dann die Schalter — wie GoodNotes es aufklappt. */
   .blatt-werk[data-tool] > [data-gruppe="stil"],

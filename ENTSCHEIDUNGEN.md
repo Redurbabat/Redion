@@ -27520,3 +27520,122 @@ Löschen, Kopieren, Einsetzen, Tupfer); am Rechner die unveränderte Leiste.
 Das erste Radierer-Bild zeigte einen Schwebezustand auf „Linie", weil das
 Bildskript zurückgerollt hatte und der Zeiger dort stehen blieb — das
 Skript rollt jetzt nicht mehr, die App tut es.
+
+
+E357 — Bild aufs Blatt: ein Foto als Marke, verschieb- und skalierbar (L115 Punkt 6)
+════════════════════════════════════════════════════════════════════════════
+
+BEFUND (L115 Punkt 6): ein Foto auf das Blatt legen ging nur als Bildblock
+NEBEN dem Blatt — im Textfluss, nicht auf dem Papier. GoodNotes legt es
+aufs Papier, und man schiebt und zieht es wie jeden Strich, mit dem
+Lasso, mit den Griffen. Redurs Auftrag („alles fertig wie GoodNotes")
+meint genau das.
+
+─── WAS GEBAUT WURDE ───────────────────────────────────────────────────────
+
+  1. EINE NEUE MARKENART. `{id, art:'bild', dateiId, pts:[[x1,y1],[x2,y2]]}`
+     — zwei Ecken im Blattraum, sonst nichts. Kein Data-URL in der Marke
+     (§14: nur für Kleines und Altes), keine Bytes in `marken`. Die Art
+     kommt mit einem Feld, wie `zettel` seinen `text` und `zeichen` seine
+     `zeichenId` hat; keine Migration, ein älteres Redion zeichnet eine
+     unbekannte Art nicht und verliert sie nicht.
+
+  2. DIE DATEI LIEGT IN DER ABLAGE — `Dateien.ablegen(datei, {blockId})`,
+     in Stücken, mit dem BLATT als Block. So wandert sie mit der Sicherung
+     (`.redion` erhält Kennungen, §11), mit dem Abgleich und mit dem
+     Papierkorb, und `purgeAnhaenge` findet sie, wenn das Blatt endgültig
+     geht. doku/REDION-FORMAT.md sagt es.
+
+  3. DER ZEICHNER BLEIBT SYNCHRON. `zeichneMarke` fragt
+     `Dateien.adresseBekannt` — ist die Objekt-URL da, steht das `<image>`
+     sofort; darauf verlassen sich Druck (`markenAlsSvg` in werkzeuge.js)
+     und Folien, die `outerHTML` lesen. Ist sie nicht da, steht ein
+     gestrichelter PLATZHALTER in der Grösse der Marke, und `bildNachladen`
+     holt die Adresse; kommt keine, sagt der Platzhalter „Bild fehlt". Kein
+     leerer Fleck, kein Fehler, nichts wird stillschweigend gelöscht — eine
+     `.json`-Sicherung ohne Anhänge zeigt genau das.
+
+  4. DER WEG. Der Knopf „Bild" in der Leiste ist kein Werkzeug, das man
+     hält, sondern ein Weg: er öffnet den Dateiwähler (`image/*`), die
+     Datei geht in die Ablage, die Grösse kommt aus dem Bild (`Image` mit
+     Objekt-URL), es landet MITTIG auf der ersten Seite, halb so breit wie
+     das Blatt, im Seitenverhältnis der Datei (höchstens 90 % der Seite),
+     und ist danach GEWÄHLT, im Auswahl-Werkzeug — man will es gleich
+     schieben. Wer abbricht, hat nichts verloren; das gewählte Werkzeug
+     bleibt bis dahin. Über `Zeichenziel.setze('bild')` gibt es das Werkzeug
+     auch zum Halten: dann öffnet der Tipp den Wähler, und das Bild kommt
+     dorthin, wo getippt wurde (in die Seite geklemmt).
+
+  5. WIE JEDE MARKE. Verschieben, Lasso und Kasten (Mitte des Kastens),
+     Griffe, Kopieren (die Kopie teilt die Datei; frische Kennung),
+     Löschen (nur die Marke), Zurück und Vor — alles aus E353, nichts
+     Eigenes. Drei Unterschiede, alle wie in GoodNotes: der Griff hält das
+     SEITENVERHÄLTNIS (Umschalt gibt es frei — bei Strichen ist es
+     umgekehrt, E353), der RADIERER lässt ein Bild stehen (er gilt der
+     Tinte; ein Bild geht über die Auswahl), und Farbe und Breite lassen es
+     aus.
+
+  6. GEFLICKT STATT ERSETZT. `updateNode` tauschte Gruppen mit Kindern
+     bisher ganz aus. Beim Ziehen eines Bilds käme so je Bewegung ein
+     neues `<image>` mit derselben Adresse — und ein noch ladendes Bild
+     bekäme seine Antwort nie, weil die Gruppe, auf die sie wartet, längst
+     ausgetauscht wäre. Bei gleicher Kinderfolge wandern nur Lage und
+     Mass; `bildNachladen` liest den Kasten vom Platzhalter, wie er JETZT
+     steht, nicht wie er beim Anlegen stand.
+
+  7. AM TELEFON: der Knopf ist ein Fingerknopf (44 × 44), steht zwischen
+     Fachzeichen und Radierer (`order` 125, E356), und weil danach die
+     Auswahl führt, rollt die Leiste dorthin — Löschen, Kopieren, Einsetzen
+     neben dem Bild.
+
+─── WAS NICHT GEBAUT WURDE ────────────────────────────────────────────────
+
+Die TEXT-Hälfte von L115 Punkt 6 (Schriftwahl, Grösse, Rahmen an der
+`text`-Marke) — eigener Bogen. Eine gelöschte Bildmarke lässt ihre Datei
+am Blatt zurück; sie geht erst mit dem Blatt (eine Zählung, welche Datei
+noch eine Marke hat, wäre der nächste Schritt). Ein Bild kommt nur aus
+dem Dateiwähler — nicht per Ziehen-und-Ablegen aufs Papier, nicht aus der
+Zwischenablage des Systems, nicht von der Kamera. Kein Drehen, kein
+Zuschneiden. Kein Knopf im Menüband-Reiter „Zeichnen": der hat seine
+fünfzehn Plätze (E272), und test247/248 messen sie. Eine Vorschau, die
+synchron in eine Leinwand zeichnet, sieht beim allerersten Mal den
+Platzhalter. Alles in L115.
+
+─── PRÜFUNG ────────────────────────────────────────────────────────────────
+
+test349 neu, 30 Punkte, PORT 9353, neun Abschnitte: der Wähler und die
+Lage (§1), gewählt und Auswahl (§2), das `<image>` mit Blob-Adresse und die
+Datei am Blatt (§3), Verschieben, Griff im Verhältnis, zweimal Zurück, der
+Radierer, der es stehen lässt (§4), Kopieren mit geteilter Datei und
+Löschen der Kopie (§5), der Platzhalter ohne Datei (§6), der Druckweg (§7),
+der Fingerknopf (§8), keine Seitenfehler (§9). Das Foto ist ein echtes PNG
+(40 × 30, mit zlib geschrieben, ohne Bibliothek), der Wähler ein echter
+`filechooser`. Belegt rot in sieben Richtungen, jede einzeln zurückgedreht
+und wiederhergestellt (alle marken.js):
+
+a — der Zeichner fragt die bekannte Adresse nicht ab: 29/30. Auf dem
+    Bildschirm kommt das Bild dann eben nachgeladen; der DRUCKWEG (§7)
+    bekommt kein `<image>` — genau der Weg, den nur die synchrone Antwort
+    trägt.
+b — der Platzhalter trägt seine Klasse nicht: 29/30 (§6).
+c — ein Drittel statt halb so breit: 29/30 (§1: 198,5 von 595,3).
+d — danach nicht gewählt: 29/30 (§2: kein Rahmen).
+e — die Datei ohne Blatt (`blockId` null): 29/30 (§3).
+f — der Radierer nimmt Bilder: ein rot, dann bricht die Suite ab (§4) —
+    der nächste Tipp findet kein Bild mehr, das er wählen könnte.
+g — der Griff ohne Verhältnis: 29/30 (§4: 394 × 281 statt 4 : 3).
+
+Dazu: test174 (A4-Blatt) 25/25, test114 (Fingergrössen) 153/153, test201
+(Ink V2) 32/32, test343 (Stifte) 30/30, test344 (Radierer) 50/50, test345
+(Auswahl) 43/43, test346 (Handballen) 31/31, test347 (Formen) 31/31,
+test348 (Leiste am Telefon) 33/33, test247 (Menüband) 106/106, test248
+(ruhige Fassung) 45/45, test87 (Quelltext) 152/152, test105 (erzeugtes
+JavaScript) 117/117, test109 (kein neues JavaScript) 20/20, test290
+(CSS-Namensräume) 13/13, test332 (CSS über Dateigrenzen) 14/14, test225
+(Quellenangaben) 11/11 — alle grün. Einzeldatei neu gebaut (8120 KB).
+
+BILDER angesehen (§55): am Rechner das gewählte Bild mit Kasten und vier
+Griffen, mittig auf dem linierten Blatt, der Knopf „Bild" zwischen
+Fachzeichen und Radieren; am Telefon dasselbe, die Leiste beim
+Auswahl-Werkzeug mit Löschen, Kopieren, Einsetzen; und der Platzhalter —
+gestrichelt, „Bild fehlt" in der Mitte, in der Grösse der Marke.

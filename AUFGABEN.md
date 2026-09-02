@@ -2644,6 +2644,14 @@ node pruefungen/lauf/test105.mjs
   `padding` ist vier Erklärungen, nicht eine, und §2/§3 zählten absolut
   statt den Unterschied zum Bestand.
   test332 neu (14), belegt rot. test258 19/19.
+* E357 (L115 Punkt 6, das Bild): Bild aufs Blatt — Werkzeug „Bild" in der
+  Leiste öffnet den Dateiwähler, die Datei geht in die Ablage (Stücke, das
+  Blatt als Block), die Marke `{id, art:'bild', dateiId, pts}` zeichnet ein
+  `<image>` aus der bekannten Adresse (synchron, für Druck und Folien),
+  sonst einen Platzhalter „Bild fehlt"; mittig, halb so breit, im
+  Seitenverhältnis, danach gewählt. Skalieren hält das Verhältnis (Umschalt
+  gibt es frei), der Radierer lässt es stehen, Kopieren teilt die Datei.
+  test349 neu (30), belegt rot in sieben Richtungen. Bilder angesehen.
 * E356 (L115 Punkt 8 erledigt): Die Blattleiste am Telefon zeigt nur die
   Gruppen des gewählten Werkzeugs — jeder Knopf trägt `data-gruppe`, die
   Leiste `data-tool` (Tipp, Menüband, Stil- und Modus-Knopf), das CSS

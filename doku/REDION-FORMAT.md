@@ -234,6 +234,14 @@ PDF unter `dateien/` und die Anmerkungen im Block-Datensatz von
 `daten.json` (Feld `marken`, Koordinaten in PDF-Punkten). Die Seitenbilder
 fehlen dort — mit Absicht.
 
+**Ein Bild auf dem Blatt** (E357) ist eine Marke der Art `bild` mit einer
+`dateiId`; die Datei liegt wie jeder Anhang unter `dateien/`, ihr `blockId`
+ist das Blatt oder die Seite, auf der sie liegt. Weil Kennungen beim
+Einspielen erhalten bleiben (siehe unten), findet die Marke ihr Bild
+wieder. In einer `.json`-Sicherung ohne Anhänge bleibt die Marke stehen,
+und Redion zeigt an ihrer Stelle „Bild fehlt" — kein leerer Fleck, nichts
+Gelöschtes.
+
 Dieselbe Regel gilt für den Abgleich mit dem Server: Abgeleitetes wandert
 nicht hinauf.
 
