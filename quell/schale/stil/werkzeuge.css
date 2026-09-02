@@ -43,6 +43,64 @@
 .fbtns button:hover{background:var(--bg-hover)}
 .fbtns .prim{background:var(--accent); color:var(--auf-accent); border-color:transparent; font-weight:500}
 .fbtns .prim:hover{filter:brightness(1.1)}
+
+/* --- Knöpfe und Felder IM Fensterinhalt (E348, L111) ----------------------- */
+/* Bis E348 gab es für einen Knopf im Fensterinhalt genau eine Regel:
+   `.finder .res button{display:flex; width:100%}` — die Paletten-Zeile aus
+   `aufbau.css`. Sie galt für jeden Knopf in jeder Tiefe und schlug jede
+   einzelne Klasse; ein Knopf in einem Werkzeugfenster war deshalb eine
+   randlose Zeile über die ganze Breite, und `.btn` hatte gar keine Regel.
+   Seit E348 gilt die Zeile nur noch für DIREKTE Kinder von `.res`. Alles
+   andere braucht eine eigene Klasse — das hier sind die gewöhnlichen. */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:6px;
+  padding:7px 14px; min-height:34px; border:1px solid var(--line); border-radius:7px;
+  background:var(--bg); color:var(--text); font-size:14px; line-height:1.3; width:auto;
+}
+.btn:hover{background:var(--bg-hover)}
+.btn:disabled{opacity:.5; cursor:default}
+.btn.prim{background:var(--accent); color:var(--auf-accent); border-color:transparent; font-weight:500}
+.btn.prim:hover{filter:brightness(1.1)}
+.btn.rot{color:var(--c-red,#e03e3e); border-color:var(--c-red,#e03e3e)}
+.btn.rot.prim{background:var(--c-red,#e03e3e); color:#fff}
+.btn.klein{padding:4px 9px; min-height:28px; font-size:12.5px}
+/* Ein Feld im Fensterinhalt: Rand, Fläche, 14px — dasselbe Mass wie das
+   Feld in der Beschriftung weiter unten. */
+.fn-feld{
+  padding:8px 10px; background:var(--bg-input); border:1px solid var(--line);
+  border-radius:7px; outline:none; color:var(--text); font-size:14px; font-family:inherit;
+  min-width:0;
+}
+.fn-feld:focus{border-color:var(--accent)}
+.fn-feld.mono{font-family:var(--mono); font-size:12.5px}
+textarea.fn-feld{resize:vertical; line-height:1.5; width:100%}
+/* Eine Zeile aus Feldern und Knöpfen, die umbricht, wenn es eng wird. Das
+   Feld nimmt, was übrig ist; der Knopf bleibt so breit wie sein Text. */
+.fn-reihe{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
+.fn-reihe > .fn-feld{flex:1 1 200px}
+/* Die Ausgabe eines Werkzeugs. `flex:none`, weil ein scrollbares Element in
+   einer Flex-Spalte sonst auf eine Zeile zusammenfällt (E348, gesehen). */
+.fn-aus{
+  flex:none; margin:0; padding:11px; max-height:210px; overflow:auto;
+  font:12px/1.5 var(--mono); color:var(--text); background:var(--bg-hover);
+  border-radius:7px; white-space:pre-wrap; word-break:break-word;
+}
+/* Ein Fensterinhalt aus Abschnitten. Drei Klassen, weil `.finder .res` das
+   Polster mit (0,2,0) setzt und eine einzelne Klasse dagegen verlöre —
+   genau die Falle, die dieser Block schliesst. */
+.finder .res.fn-blatt{padding:16px; display:flex; flex-direction:column; gap:13px}
+.fn-blatt > *{flex:none}
+.fn-blatt label{display:block}
+.fn-blatt hr{border:none; border-top:1px solid var(--line); margin:2px 0}
+.fn-blatt p{margin:0; font-size:13px; color:var(--text-dim); line-height:1.5}
+/* Der Hinweis links neben den Knöpfen in der Fussleiste. `flex:1` allein
+   liess ihn am Telefon auf die Breite seines längsten Worts schrumpfen —
+   dreizehn Zeilen neben zwei turmhohen Knöpfen. Mit 220px Grundmass bricht
+   er dort auf eine eigene Zeile, am Rechner bleibt er neben den Knöpfen. */
+.fbtns .fn-hinweis{
+  flex:1 1 220px; min-width:0; align-self:center;
+  font-size:11.5px; color:var(--text-faint); line-height:1.45;
+}
 #mdq{
   width:100%; height:52vh; padding:16px 18px; background:var(--bg); border:none;
   border-bottom:1px solid var(--line); outline:none; resize:none;
@@ -616,7 +674,17 @@ table.stab td:focus, table.stab th:focus{box-shadow:inset 0 0 0 2px var(--accent
   border:1px solid var(--line); border-radius:7px; outline:none; color:var(--text); font-size:14px;
 }
 .finder label{font-size:13px; color:var(--text-dim)}
-.finder label input, .finder label select{
+/* Nur das Feld DIREKT in der Beschriftung — ein Feld, das tiefer sitzt,
+   hat seinen eigenen Grund und seine eigene Regel (E348, L111). Und kein
+   Haken: ein Kästchen mit `width:100%` schob im Tempo-Fenster seine
+   Beschriftung an den rechten Rand — seit jeher, auf dem Bild gesehen.
+   DIE AUSNAHME STEHT IN `:where()`, UND DAS IST KEIN SCHMUCK: `:not([type=
+   checkbox])` zählt wie das Attribut selbst, (0,1,0) je Stück. Ohne das
+   `:where()` hatte die Regel (0,3,2) und schlug damit sogar E320s Vorbau
+   `.finder .pl-budget input` — das Budgetfeld war wieder 480 px breit, und
+   test51 war rot. So hat die ganze Regel (0,0,1): jede Klasse gewinnt. */
+:where(.finder label) > input:where(:not([type=checkbox]):not([type=radio])),
+:where(.finder label) > select{
   margin-top:5px; width:100%; padding:8px 10px; background:var(--bg-input);
   border:1px solid var(--line); border-radius:7px; outline:none; color:var(--text); font-size:14px;
 }
@@ -955,16 +1023,17 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
 .wl-tun{font-size:12px; padding:3px 9px; min-height:26px}
 /* Der Haken (E324). Zurückhaltend, weil er nichts löscht — er legt einen
    Fund beiseite, und der Weg zurück steht oben im Kopf. */
-/* `.finder .res button{width:100%}` weiter oben ist spezifischer als eine
-   einzelne Klasse — deshalb steht `.finder .res` hier mit davor. Ohne das
-   wäre der Haken so breit wie „Seite anlegen" darüber: ein Häkchen in einem
-   71-px-Kasten. Derselbe Kampf wie beim Budgetfeld in E320; er ist in diesem
-   Stil eine Falle und steht deshalb als L108. */
-.finder .res .wl-hak{background:none; border:1px solid var(--line);
+/* Bis E348 stand hier `.finder .res .wl-hak`: die Trefferzeile der Palette
+   (`.finder .res button{width:100%}`) war spezifischer als eine einzelne
+   Klasse, und ohne den Vorbau wäre der Haken so breit gewesen wie „Seite
+   anlegen" darüber — ein Häkchen in einem 71-px-Kasten (L108). Seit E348
+   gilt die Trefferzeile nur für direkte Kinder der Liste; der Haken sitzt
+   tiefer und braucht keinen Vorbau mehr. test317 §6 misst ihn weiter. */
+.wl-hak{background:none; border:1px solid var(--line);
   border-radius:6px; color:var(--text-faint); cursor:pointer; font-size:13px;
   line-height:1; padding:4px 8px; min-height:26px;
   width:auto; align-self:flex-end}
-.finder .res .wl-hak:hover{color:var(--c-gruen, #2a8); border-color:var(--c-gruen, #2a8)}
+.wl-hak:hover{color:var(--c-gruen, #2a8); border-color:var(--c-gruen, #2a8)}
 .wl-zurueck{margin-top:8px; font-size:12px; color:var(--text-faint)}
 .wl-zurueck button{background:none; border:none; padding:0 0 0 4px;
   color:var(--accent-text); cursor:pointer; font:inherit;
@@ -983,7 +1052,7 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
   .wl-rechts{flex-direction:row; width:100%; justify-content:flex-start; margin-top:2px}
   .wl-tun{min-height:36px}
   /* §37: am Telefon gehört der Haken dem Daumen. */
-  .finder .res .wl-hak{min-height:44px; min-width:44px}
+  .wl-hak{min-height:44px; min-width:44px}
   .wl-zurueck button{min-height:44px}
   .wl-quelle{min-height:32px}
 }

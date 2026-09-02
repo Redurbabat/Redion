@@ -54,11 +54,13 @@
 .ez-text b{font-size:14px; font-weight:500; display:block}
 .ez-text span{font-size:12.5px; color:var(--text-dim); display:block; margin-top:2px; line-height:1.5}
 .ez-steuer{flex:0 0 auto; display:flex; gap:8px; align-items:center}
-.ez-steuer select, .ez-steuer input{
+/* Nur die Felder DIREKT in der Steuerung (E348, L111). Was tiefer sitzt —
+   etwa ein Kästchen in einer Beschriftung — bekommt keine 150 px von hier. */
+.ez-steuer > select, .ez-steuer > input{
   padding:7px 10px; background:var(--bg-input); border:1px solid var(--line);
   border-radius:7px; outline:none; color:var(--text); font-size:13.5px; min-width:150px;
 }
-.ez-steuer select:focus, .ez-steuer input:focus{border-color:var(--accent-text)}
+.ez-steuer > select:focus, .ez-steuer > input:focus{border-color:var(--accent-text)}
 .ez-grau{font-size:13px; color:var(--text-faint)}
 .ez-knopf{padding:6px 12px; border:1px solid var(--line); border-radius:7px; font-size:13.5px}
 .ez-knopf:hover{background:var(--bg-hover)}
@@ -579,7 +581,7 @@ tr.mail-jetzt > td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
      allein in einer Zeile, die es für sich hat. Die Klasse muss hier mit,
      weil Spezifität und nicht Reihenfolge entscheidet (E320, E321). */
   .ez-steuer input.ez-grenze{ flex:1 1 auto; width:auto; min-width:0; text-align:left }
-  .ez-steuer select, .ez-steuer input{
+  .ez-steuer > select, .ez-steuer > input{
     flex:1 1 auto; min-width:0; width:100%;
     min-height:44px; font-size:16px;   /* 16 px, sonst zoomt iOS beim Tippen */
   }

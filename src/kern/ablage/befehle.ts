@@ -449,30 +449,28 @@ const Transaktion = (() => {
     o.innerHTML =
       '<div class="finder" style="width:min(760px,95vw)">' +
         '<div class="fh">⚙ Interne Befehle <button class="icon-btn" data-a="zu">✕</button></div>' +
-        '<div class="res" style="padding:16px; display:flex; flex-direction:column; gap:13px">' +
-          '<div style="font-size:12.5px; color:var(--text-dim); line-height:1.6">' +
+        // Klassen statt Inline-Stil (E348, L111): siehe `.fn-blatt` in werkzeuge.css.
+        '<div class="res fn-blatt">' +
+          '<p>' +
             'Notions App schickt nie „speichere die Seite", sondern immer eine Liste ' +
             'kleiner Befehle: <code>set</code>, <code>update</code>, <code>listAfter</code>, ' +
             '<code>listBefore</code>, <code>listRemove</code>. Eine solche Liste ist genau ' +
             'eine Änderung — sie geht ganz durch oder gar nicht, und sie ist ein einziger ' +
             'Schritt beim Rückgängigmachen.' +
+          '</p>' +
+          '<label>Operationen (JSON)<br>' +
+            '<textarea id="tx-ops" rows="7" spellcheck="false" class="fn-feld mono"></textarea></label>' +
+          '<div class="fn-reihe" style="gap:7px">' +
+            '<button data-a="los" class="btn prim">Ausführen</button>' +
+            '<button data-bsp="titel" class="btn">Beispiel: Titel setzen</button>' +
+            '<button data-bsp="reihe" class="btn">Beispiel: Blöcke umsortieren</button>' +
+            '<button data-bsp="kaputt" class="btn">Beispiel: geht schief</button>' +
+            '<button data-a="chunk" class="btn">loadPageChunk</button>' +
           '</div>' +
-          '<label style="font-size:13px">Operationen (JSON)<br>' +
-            '<textarea id="tx-ops" rows="7" spellcheck="false" ' +
-              'style="font-family:monospace; font-size:12.5px"></textarea></label>' +
-          '<div style="display:flex; gap:7px; flex-wrap:wrap">' +
-            '<button data-a="los" class="prim">Ausführen</button>' +
-            '<button data-bsp="titel">Beispiel: Titel setzen</button>' +
-            '<button data-bsp="reihe">Beispiel: Blöcke umsortieren</button>' +
-            '<button data-bsp="kaputt">Beispiel: geht schief</button>' +
-            '<button data-a="chunk">loadPageChunk</button>' +
-          '</div>' +
-          '<pre id="tx-aus" style="font-size:12px; background:var(--bg-code,rgba(0,0,0,.05)); ' +
-            'padding:11px; border-radius:7px; max-height:250px; overflow:auto; ' +
-            'white-space:pre-wrap; margin:0">Noch nichts ausgeführt.</pre>' +
-          `<div style="font-size:12px; color:var(--text-faint)">Gemerkte Transaktionen: ` +
-            `<b id="tx-zahl">${verlauf.length}</b> — die letzte lässt sich noch einmal abspielen.</div>` +
-          '<button data-a="nochmal" style="align-self:flex-start">Letzte noch einmal</button>' +
+          '<pre id="tx-aus" class="fn-aus" style="max-height:250px">Noch nichts ausgeführt.</pre>' +
+          `<p>Gemerkte Transaktionen: ` +
+            `<b id="tx-zahl">${verlauf.length}</b> — die letzte lässt sich noch einmal abspielen.</p>` +
+          '<button data-a="nochmal" class="btn" style="align-self:flex-start">Letzte noch einmal</button>' +
         '</div>' +
       '</div>';
     document.body.appendChild(o);

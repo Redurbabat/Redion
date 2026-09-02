@@ -461,14 +461,14 @@ const WolkeFenster = (() => {
         '</div>' +
         '<div style="margin-bottom:14px">Die Notizen <b>auf diesem Gerät bleiben</b>. ' +
           'Sichere sie trotzdem vorher — eine Sicherung zu viel hat noch nie geschadet:</div>' +
-        '<button data-a="sichern" style="margin-bottom:16px">⬇ Alles als .redion sichern</button>' +
+        // `btn`/`fn-feld` statt Inline-Stil, seit die Paletten-Zeile nur noch
+        // direkte Kinder von `.res` trifft (E348, L111).
+        '<button data-a="sichern" class="btn" style="margin-bottom:16px">⬇ Alles als .redion sichern</button>' +
         '<div style="margin-bottom:8px">Zum Bestätigen die Mail-Adresse des Kontos eintippen:</div>' +
-        '<div style="display:flex; gap:8px">' +
-          '<input id="wo-mail-bestaetigen" placeholder="' + esc(k.mail || '') + '" ' +
-            'style="flex:1; min-width:0">' +
-          '<button data-a="endgueltig" class="prim" style="flex:none; width:auto; ' +
-            'white-space:nowrap; background:var(--rot,#d64545); ' +
-            'border-color:var(--rot,#d64545)">Endgültig löschen</button>' +
+        '<div class="fn-reihe">' +
+          '<input id="wo-mail-bestaetigen" class="fn-feld" placeholder="' + esc(k.mail || '') + '">' +
+          '<button data-a="endgueltig" class="btn rot prim" style="flex:none; white-space:nowrap">' +
+            'Endgültig löschen</button>' +
         '</div>' +
       '</div></div>';
     document.body.appendChild(o);

@@ -26494,3 +26494,157 @@ Schwarz-Ersatz weggelassen — 28/31, das Bild lädt und §2/§6 zählen null;
 
 test338 33/33 (§5 erwartet jetzt PNG aus SVG), test309 25/25, test252 15,
 test315 25/25, test105 114.
+
+
+E348 — Die breiten Fensterregeln treffen nur noch, was sie meinen (L111)
+════════════════════════════════════════════════════════════════════════════
+
+L111 nannte drei Regeln, die in jedem Fenster mit der Klasse `finder`
+galten, und gab die kleine Antwort: den Vorbau `.finder .res` vor die
+eigene Klasse. Viermal hat das funktioniert (E320, E324, E326, E334), und
+jedes Mal war es ein Umgehen. Die grössere Antwort — die Regeln auf das
+verengen, was sie meinen — stand als eigener Bogen da, „mit einem Bild je
+Fenster, denn es ändert bestehende Oberflächen". Das ist dieser Bogen.
+
+ZUERST GEMESSEN, DANN GEBAUT. Ein Messlauf öffnete alle 163 Befehle der
+Palette und die 19 Einstellungsbereiche, am Rechner (1280 × 900) und am
+Telefon (390 × 844), und verglich für jedes Element fünfzehn gerechnete
+Eigenschaften und sein Mass vor und nach der Verengung. Am Rechner
+änderten sich neun Fenster, am Telefon sechs, die Einstellungen in keinem
+der 19 Bereiche. Die Zahl je Fenster ist die Zahl der Elemente, die ihre
+Breite, ihren Rand oder ihre Schrift von der Palette bekamen statt von
+sich selbst:
+
+    Schlagwörter                117      Schnittstelle /v1/           18
+    Interne Befehle               9      Notion-Formate                8
+    Wolke                         8      Protokoll                     6
+    Tempo messen                  4      Elektro: Arbeitsplatz         3
+    Tagesplan                     1
+
+154 von 163 Fenstern blieben am Rechner exakt gleich. Die neun sind genau
+die, die es nötig hatten — und die Liste ist länger als die vier
+bekannten Fälle:
+
+  · Das Antwortfeld des Elektro-Arbeitsplatzes (`.ea-antwort`) trägt seit
+    jeher einen Rand in seiner Regel. Gesehen hat ihn nie jemand:
+    `.finder input{border:none}` gewann.
+  · Tagesplan und Tempo hatten 16 px Schrift — von `.finder input`, nicht
+    von sich selbst. Der Zwilling `.pl-budget` hatte seine 14 px aus
+    demselben Grund schon in E320 bekommen.
+  · Ein Haken im Tempo-Fenster war 496 px breit und schob seine
+    Beschriftung an den rechten Rand: `.finder label input{width:100%}`
+    fragt nicht, ob es ein Kästchen ist. Das fand kein Messlauf, sondern
+    das Bild.
+  · Notion-Formate, Schnittstelle und Interne Befehle: jeder Knopf war
+    eine randlose Trefferzeile über die ganze Breite, links ausgerichtet.
+    Die Klasse `btn`, die dort als Ausweg im Code stand, hatte in keiner
+    Stildatei eine Regel.
+  · Und die Schlagwortpillen des Registers waren 100 % breit — jede Pille
+    eine Zeile. Das Register ist das erste Fenster, das von der Verengung
+    lebt; 117 Elemente, alle Pillen.
+
+DER WAHRE ORT. L111 nannte `werkzeuge.css`. Die zwei Regeln, um die es
+geht, stehen in `aufbau.css` bei der Palette: `.finder input` und
+`.finder .res button` sind die Regeln für das SUCHFELD und die
+TREFFERZEILE der Befehlspalette. Zu Regeln für alles wurden sie, als mit
+E230 jedes Fenster die Klasse `finder` bekam.
+
+─── WAS GEBAUT WURDE ───────────────────────────────────────────────────────
+
+1. KIND STATT NACHFAHRE. `.finder > input` trifft nur das Suchfeld.
+   `:where(.finder .res) > button` trifft nur die Trefferzeilen — und
+   `:where()` nimmt der Regel die Spezifität ganz, (0,0,1): jede Klasse an
+   einem Knopf gewinnt, wie es sein soll. `:where(.finder label) > input`
+   lässt Kästchen und Radioknöpfe aus, ebenfalls mit (0,0,1). `.ez-steuer >
+   select, .ez-steuer > input` gilt nur für die Felder direkt in der
+   Steuerung, am Rechner wie am Telefon.
+
+2. GEWÖHNLICHE KLASSEN, wo es keine gab (`werkzeuge.css`): `.btn` mit
+   `prim`, `rot` und `klein`; `.fn-feld` (Rand, Fläche, 14 px; `mono`);
+   `.fn-reihe` (eine Zeile aus Feldern und Knöpfen, die umbricht);
+   `.fn-aus` (die Ausgabe eines Werkzeugs); `.fn-blatt` (ein Fensterinhalt
+   in Abschnitten); `.fbtns .fn-hinweis` (der Hinweis neben den Knöpfen
+   der Fussleiste).
+
+3. SECHS FENSTER von Inline-Stil auf diese Klassen: Notion-Formate,
+   Schnittstelle /v1/, Interne Befehle, Protokoll, das Löschen des
+   Wolke-Kontos und die Seiteninfo. Weniger Stil im Code (§39), und drei
+   Fenster, die sich vorher je ein eigenes Ausgabefeld zusammenschrieben,
+   teilen sich jetzt eines.
+
+4. DER VORBAU AUS E324 GEHT: `.finder .res .wl-hak` heisst wieder
+   `.wl-hak`; test317 §6 misst ihn weiter. Die Vorbauten von E320, E326
+   und E334 bleiben stehen — ohne die breite Regel sind sie gewöhnliche
+   Regeln, und eine Regel, die stimmt, wird nicht angefasst. Tagesplan
+   und Tempo nennen ihre 14 px selbst.
+
+5. NICHT ANGEFASST: die Palette. 16 px ohne Rand, Treffer über die ganze
+   Breite. test340 §10 misst, dass der Umbau das Original nicht verliert.
+   Und das Wolke-Fenster, das der Messlauf mit acht Elementen nannte,
+   sieht auf dem Bild vorher wie nachher aus — seine Knöpfe hatten seit
+   E293 eigene Regeln, die jetzt ohne Gegner gelten.
+
+─── ZWEI FUNDE IM SCHLAGWORTREGISTER ──────────────────────────────────────
+
+Das Register war das erste Fenster mit Pillen — und auf dem Bild stand
+`(#2-formeln`. Zwei Fehler in einem:
+
+  · `alleTags` las mit `match(/…/g)`. Mit dem g-Flag liefert `match` den
+    GANZEN Treffer samt Vorzeichen, nicht die Gruppe; ein `(#tag` wurde
+    nach `trim()` zum Schlagwort „(#tag". Jetzt `matchAll` und die Gruppe.
+  · `[Formeln](#2-formeln)` ist ein Markdown-Sprungziel, kein Schlagwort.
+    Alle drei Stellen, die `#wort` lesen — Anzeige, Register, Graph —
+    lassen ein `(` nach `]` jetzt aus (`(?<!\])\(`). Die Anker der
+    Hilfeseiten sind damit aus dem Register verschwunden; `(#klammer)` in
+    gewöhnlichem Text bleibt ein Schlagwort.
+
+─── VIER FALLEN BEIM BAUEN ─────────────────────────────────────────────────
+
+`:not()` ZÄHLT WIE SEIN INHALT. Die erste Fassung der Beschriftungsregel
+hiess `.finder label > input:not([type=checkbox]):not([type=radio])` — und
+hatte damit (0,3,2), denn `:not([type=…])` wiegt wie das Attribut selbst.
+Die Regel, die enger werden sollte, war die stärkste im ganzen Stil und
+schlug sogar E320s Vorbau `.finder .pl-budget input`: das Budgetfeld des
+Tagesplans war wieder 480 px breit. test51 war rot (39/41); test340 nicht,
+weil es das Budgetfeld nicht misst. Die Ausnahme steht jetzt in
+`:where()`, die Regel hat (0,0,1). Das ist der Grund, warum nach jedem
+Bogen die Suiten laufen, die dieselben Fenster messen — nicht nur die
+neue.
+
+DIE FLEX-SPALTE FRISST DIE AUSGABE. Ein scrollbares `<pre>` in einer
+Flex-Spalte mit `max-height` fällt auf eine Zeile zusammen, sobald der
+Inhalt das Fenster füllt — `flex-shrink` ist 1, und das Element hat keine
+Mindesthöhe. `.fn-aus{flex:none}` und `.fn-blatt > *{flex:none}`. Gesehen
+im Notion-Fenster, nachdem „Hin und zurück prüfen" gedrückt war.
+
+FLEX-KINDER WERDEN BLOCK. Ein `display:inline-flex` in einem Flex-Container
+wird zu `flex` berechnet. Der erste Wächter „der Knopf ist inline-flex" war
+deshalb rot, obwohl alles stimmte. Gemessen wird jetzt, was der Mensch
+sieht: `justify-content:center` und eine Breite unter der halben Zeile —
+eine Trefferzeile ist links und ganz breit.
+
+DER HINWEIS IN DER FUSSLEISTE. `flex:1` allein liess den Hinweistext des
+Protokolls am Telefon auf die Breite seines längsten Worts schrumpfen; er
+wurde turmhoch und zog die zwei Knöpfe daneben auf seine Höhe. Ein
+Grundmass von 220 px, am Telefon die ganze Zeile. Auf dem Bild gefunden,
+von keinem Wächter — jetzt misst test340 §8 die Knopfhöhe.
+
+─── PRÜFUNG ────────────────────────────────────────────────────────────────
+
+test340 neu, 52 Punkte, PORT 9344, zehn Abschnitte an Rechner und Telefon.
+Belegt rot in acht Richtungen, jede einzeln zurückgedreht und wieder
+hergestellt:
+
+    `.finder input` statt `.finder > input`             45/52
+    `.finder .res button` statt `> button`              46/52
+    `flex:none` weg                                     48/52
+    Kästchen-Ausnahme weg (der Haken wieder 496 px)     51/52
+    Telefon-`flex-basis` des Hinweises weg              50/52
+    Lookbehind weg (`2-formeln` samt Hilfe-Ankern)      51/52
+    `.btn`-Rand weg                                     49/52
+    14 px bei Tagesplan und Tempo weg                   50/52
+
+Dazu die Suiten, die dieselben Fenster messen: test51 41/41 (der
+E320-Wächter, rot mit der ersten Fassung), test66 111/111, test68 105/105,
+test70 83/83, test71 59/59, test114 105, test241 grün, test317 25/25.
+Typprüfung grün, Einzeldatei neu gebaut, sw v102.

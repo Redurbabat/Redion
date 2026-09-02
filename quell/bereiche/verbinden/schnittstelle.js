@@ -846,37 +846,34 @@ const Api = (() => {
         o.innerHTML =
             '<div class="finder" style="width:min(760px,95vw)">' +
                 '<div class="fh">🔌 Schnittstelle /v1/ <button class="icon-btn" data-a="zu">✕</button></div>' +
-                '<div class="res" style="padding:16px; display:flex; flex-direction:column; gap:13px">' +
-                '<div style="font-size:12.5px; color:var(--text-dim); line-height:1.6">' +
+                // Klassen statt Inline-Stil (E348, L111): siehe `.fn-blatt` in werkzeuge.css.
+                '<div class="res fn-blatt">' +
+                '<p>' +
                 'Dieselben Adressen, Formen und Fehlercodes wie Notions API — beantwortet ' +
                 'im Browser aus den Daten, die hier liegen. Ein <code>fetch(\'/v1/…\')</code> ' +
                 'aus einem Skript auf dieser Seite funktioniert wirklich.<br>' +
                 '<b>Was nicht geht:</b> Anfragen aus dem Internet. Dafür bräuchte es einen ' +
                 'Server — und dann lägen die Daten dort, nicht hier.' +
+                '</p>' +
+                '<div class="fn-reihe">' +
+                `<input id="api-token" readonly class="fn-feld mono" value="${esc(tokenHolen() || '— noch keines —')}">` +
+                '<button data-a="neu" class="btn">Neues Token</button>' +
+                '<button data-a="kopie" class="btn">Kopieren</button>' +
+                '<button data-a="weg" class="btn rot">Zurückziehen</button>' +
                 '</div>' +
-                '<div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">' +
-                '<input id="api-token" readonly style="flex:1; min-width:200px; font-family:monospace; ' +
-                `font-size:12px" value="${esc(tokenHolen() || '— noch keines —')}">` +
-                '<button data-a="neu">Neues Token</button>' +
-                '<button data-a="kopie">Kopieren</button>' +
-                '<button data-a="weg" class="rot">Zurückziehen</button>' +
-                '</div>' +
-                '<div style="display:flex; gap:7px; flex-wrap:wrap">' +
-                '<select id="api-m" style="width:96px">' +
+                '<div class="fn-reihe">' +
+                '<select id="api-m" class="fn-feld" style="flex:0 0 auto; width:96px">' +
                 ['GET', 'POST', 'PATCH', 'DELETE'].map(x => `<option>${x}</option>`).join('') +
                 '</select>' +
-                '<input id="api-p" style="flex:1; min-width:200px; font-family:monospace; font-size:12.5px" ' +
-                'value="/v1/users/me">' +
-                '<button data-a="los" class="prim">Absenden</button>' +
+                '<input id="api-p" class="fn-feld mono" value="/v1/users/me">' +
+                '<button data-a="los" class="btn prim">Absenden</button>' +
                 '</div>' +
-                '<div style="display:flex; gap:6px; flex-wrap:wrap">' +
-                BEISPIELE.map(([m, pf], i) => `<button data-bsp="${i}" style="font-size:12px; padding:4px 9px">${m} ${esc(pf)}</button>`).join('') +
+                '<div class="fn-reihe" style="gap:6px">' +
+                BEISPIELE.map(([m, pf], i) => `<button data-bsp="${i}" class="btn klein">${m} ${esc(pf)}</button>`).join('') +
                 '</div>' +
                 '<textarea id="api-k" rows="4" spellcheck="false" placeholder="JSON-Körper — bei GET leer lassen" ' +
-                'style="font-family:monospace; font-size:12.5px"></textarea>' +
-                '<pre id="api-aus" style="font-size:12px; background:var(--bg-code,rgba(0,0,0,.05)); ' +
-                'padding:11px; border-radius:7px; max-height:260px; overflow:auto; ' +
-                'white-space:pre-wrap; margin:0">Noch nichts abgeschickt.</pre>' +
+                'class="fn-feld mono"></textarea>' +
+                '<pre id="api-aus" class="fn-aus" style="max-height:260px">Noch nichts abgeschickt.</pre>' +
                 '</div>' +
                 '</div>';
         document.body.appendChild(o);

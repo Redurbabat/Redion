@@ -4704,7 +4704,8 @@ wohl gefunden würde.
 
 
 ================================================================================
-L111 — `.finder .res button{width:100%}` schlägt jede einzelne Klasse
+L111 — ~~`.finder .res button{width:100%}` schlägt jede einzelne Klasse~~ — GESCHLOSSEN am
+2. September 2026 (E348)
 ================================================================================
 
 Dreimal an einem Tag dieselbe Falle, und beim dritten Mal war klar, dass es
@@ -4803,6 +4804,36 @@ Oberflächen, und die Wirkung sieht man erst beim Hinsehen.
 
 Gefunden am 1. September 2026 (E320, E321, E324, E326, E334);
 zwei der fünf haben seit E334 und E340 einen Wächter.
+
+**GESCHLOSSEN am 2. September 2026 durch E348 — die grössere Antwort, und
+zuerst gemessen.** Ein Messlauf öffnete alle 163 Befehlsfenster und die 19
+Einstellungsbereiche, am Rechner (1280 × 900) und am Telefon (390 × 844),
+und verglich den gerechneten Stil jedes Elements vor und nach der
+Verengung. Am Rechner änderten sich neun Fenster, am Telefon sechs; die
+Einstellungen blieben in allen 19 Bereichen unverändert. Die neun waren
+genau die, die es nötig hatten — und zwei mehr, als diese Lücke kannte:
+das Antwortfeld des Elektro-Arbeitsplatzes hatte seit jeher einen Rand,
+den `.finder input{border:none}` verdeckte, und ein Haken im Tempo-Fenster
+war 496 px breit.
+
+BERICHTIGUNG: die zwei Regeln, um die es geht, stehen in `aufbau.css`,
+nicht in `werkzeuge.css`, wie oben steht — es sind die Regeln für
+Suchfeld und Trefferzeile der BEFEHLSPALETTE, die mit E230 zu Regeln für
+alles wurden. Jetzt `.finder > input`, `:where(.finder .res) > button` und
+`:where(.finder label) > input` mit (0,0,1) — jede Klasse gewinnt — und
+`.ez-steuer > select`. Die Fenster, die vorher von der Palettenzeile
+lebten, tragen gewöhnliche Klassen (`.btn`, `.fn-feld`, `.fn-reihe`,
+`.fn-aus`, `.fn-blatt`) statt Inline-Stil; der Vorbau aus E324 ist
+zurückgebaut, die übrigen drei bleiben als gewöhnliche Regeln stehen.
+
+Die kleine Antwort oben gilt damit nicht mehr als Pflicht, aber als
+Erinnerung: wer eine Regel für ein Fenster schreibt, sieht sich das
+Fenster an. Und `:not([type=…])` zählt wie ein Attribut — die erste
+Fassung der Verengung war deshalb die STÄRKSTE Regel im Stil und machte
+das Budgetfeld aus E320 wieder 480 px breit; test51 fing es, test340
+nicht. Steht in E348.
+
+test340, 52 Punkte, belegt rot in acht Richtungen.
 
 
 ================================================================================

@@ -119,8 +119,10 @@ const Links = (() => {
              `title="${esc(titel)}">${esc(anzeige)}</a>`;
     })
 
-    /* #stichwort — nur am Wortanfang, damit URLs mit # unberührt bleiben */
-    .replace(/(^|[\s(>])#([A-Za-z0-9ÄÖÜäöüß][\wÄÖÜäöüß\-\/]{1,40})/g,
+    /* #stichwort — nur am Wortanfang, damit URLs mit # unberührt bleiben.
+       Und nicht nach `](` — das ist ein Markdown-Sprungziel `[…](#abschnitt)`,
+       kein Schlagwort (E348). */
+    .replace(/(^|[\s>]|(?<!\])\()#([A-Za-z0-9ÄÖÜäöüß][\wÄÖÜäöüß\-\/]{1,40})/g,
       (_, vor, tag) => `${vor}<a class="tg" data-tag="${esc(tag)}">#${esc(tag)}</a>`);
 
   /* ========================================================================
@@ -410,12 +412,18 @@ const Links = (() => {
     const map = new Map();   /* tag -> Set von Seiten-IDs */
     Object.values<any>(Store.cache.blocks).forEach(b => {
       if (!b.alive || !b.text) return;
-      const gefunden = b.text.match(/(^|[\s(])#([A-Za-z0-9ÄÖÜäöüß][\wÄÖÜäöüß\-\/]{1,40})/g);
-      if (!gefunden) return;
+      // matchAll statt match: mit dem g-Flag liefert match() den GANZEN Treffer
+      // samt Vorzeichen, und `(#tag` wurde nach trim() zum Schlagwort „(#tag".
+      // Gesehen im Register als `(#2-formeln` — ein Markdown-Sprungziel aus den
+      // Hilfeseiten, das obendrein gar kein Schlagwort ist (E348).
+      const gefunden = [...String(b.text).matchAll(
+        /(^|[\s>]|(?<!\])\()#([A-Za-z0-9ÄÖÜäöüß][\wÄÖÜäöüß\-\/]{1,40})/g)];
+      if (!gefunden.length) return;
       const quelle = seiteVon(b.id);
       if (!quelle) return;
-      gefunden.forEach((g: any) => {
-        const tag = g.trim().replace(/^#/, '');
+      gefunden.forEach(m => {
+        const tag = m[2] || '';
+        if (!tag) return;
         if (!map.has(tag)) map.set(tag, new Set());
         map.get(tag).add(quelle.id);
       });
@@ -624,7 +632,7 @@ const Links = (() => {
         const targetOwner = ownerFor(match[1] || '');
         if (targetOwner) addEdge(owner.id, targetOwner.id, 'link');
       }
-      for (const match of String(block.text).matchAll(/(^|[\s(])#([A-Za-z0-9ÄÖÜäöüß][\wÄÖÜäöüß\-/]{1,40})/g)) {
+      for (const match of String(block.text).matchAll(/(^|[\s>]|(?<!\])\()#([A-Za-z0-9ÄÖÜäöüß][\wÄÖÜäöüß\-/]{1,40})/g)) {
         const shown = match[2] || '';
         const normalizedTag = normalizeGraphText(shown);
         if (!normalizedTag) continue;

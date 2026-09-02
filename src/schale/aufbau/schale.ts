@@ -349,7 +349,7 @@ const App = (() => {
           `<div>Angelegt: <b>${esc(Einstellungen.datum(new Date(p.created), true))}</b></div>` +
           `<div>Zuletzt bearbeitet: <b>${esc(Einstellungen.datum(new Date(p.edited || p.created), true))}</b>` +
           ` von <b>${esc(p.geaendertVon || p.erstelltVon || 'dir')}</b></div>` +
-          '<div style="margin-top:12px"><button data-a="verl" class="prim">Versionsverlauf öffnen</button></div>' +
+          '<div style="margin-top:12px"><button data-a="verl" class="btn prim">Versionsverlauf öffnen</button></div>' +
         '</div>' +
         '<div class="hint">Alle Zahlen stammen aus diesem Gerät — es wird nichts gemeldet.</div>' +
       '</div>';

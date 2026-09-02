@@ -2644,6 +2644,24 @@ node pruefungen/lauf/test105.mjs
   `padding` ist vier Erklärungen, nicht eine, und §2/§3 zählten absolut
   statt den Unterschied zum Bestand.
   test332 neu (14), belegt rot. test258 19/19.
+* E348 (L111, geschlossen): Die breiten Fensterregeln treffen nur noch,
+  was sie meinen. Zuerst gemessen: alle 163 Befehlsfenster und 19
+  Einstellungsbereiche, Rechner und Telefon, gerechneter Stil vorher gegen
+  nachher — neun Fenster anders, 154 exakt gleich. `.finder input` und
+  `.finder .res button` waren die Regeln für Suchfeld und Trefferzeile der
+  PALETTE (in `aufbau.css`, nicht `werkzeuge.css`) und galten seit E230
+  für jedes Fenster. Jetzt `.finder > input`, `:where(.finder .res) >
+  button` mit (0,0,1); sechs Fenster von Inline-Stil auf gewöhnliche
+  Klassen (`.btn`, `.fn-feld`, `.fn-reihe`, `.fn-aus`, `.fn-blatt`); der
+  Vorbau aus E324 zurückgebaut. Gefunden dabei: ein Rand am Elektro-
+  Antwortfeld, den nie jemand sah; ein 496-px-Haken im Tempo-Fenster;
+  `(#2-formeln` als Schlagwort (`match(/…/g)` liefert den ganzen Treffer,
+  und ein Markdown-Sprungziel ist kein Schlagwort). Vier Fallen beim
+  Bauen, die schwerste: `:not([type=checkbox])` zählt wie ein Attribut —
+  die Verengung war erst die STÄRKSTE Regel im Stil und machte das
+  Budgetfeld aus E320 wieder 480 px breit; test51 fing es. Jetzt `:where()`.
+  test340 neu (52), belegt rot in acht Richtungen. test51 41/41, test66,
+  test68, test70, test71, test114, test241, test317 grün. sw v102.
 * E347 (L72, der Rest vom Rest, geschlossen): Der Schaltplan kommt in der
   .docx an. Gemessen: eine Seite mit einem `schaltplan`-Block ergab in Word
   nur Titel und Beschriftung — keine Zeichnung, kein Platzhalter, keine

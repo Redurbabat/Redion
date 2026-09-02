@@ -1245,15 +1245,30 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
   width:min(640px,92vw); background:var(--bg-side); border:1px solid var(--line);
   border-radius:10px; box-shadow:var(--shadow); overflow:hidden;
 }
-.finder input{
+/* DAS SUCHFELD IST DAS DIREKTE KIND — und nur das (E348, L111).
+   `.finder input` traf jedes Eingabefeld in jedem Fenster, das die Klasse
+   `finder` trägt, und gab ihm 16 px Schrift ohne Rahmen. Gemessen über alle
+   163 Befehle der Palette: das Tagesplan-Feld „Aufgabe ohne Angabe" bekam so
+   seine Schriftgrösse von hier statt von seiner eigenen Regel. */
+.finder > input{
   width:100%; padding:16px 18px; background:none; border:none; outline:none; font-size:16px;
 }
 .finder .res{max-height:52vh; overflow-y:auto; border-top:1px solid var(--line); padding:6px}
-.finder .res button{
+/* DIE TREFFERZEILE DER PALETTE — als VORGABE, nicht als Gesetz (E348).
+   Vorher stand hier `.finder .res button` mit Spezifität (0,1,2): jeder
+   Knopf in jedem Fenster mit einer Ergebnisliste wurde 100 % breit, links
+   ausgerichtet, ohne Rahmen — und keine einzelne Klasse (0,1,0) kam dagegen
+   an. Vier Bögen haben das je einmal umgangen (E320, E324, E326, E334), und
+   jeder brauchte dazu `.finder .res` vor seiner eigenen Klasse (L108).
+   Jetzt gilt die Zeile nur noch für DIREKTE Kinder der Liste — das sind die
+   Treffer der Palette — und `:where()` nimmt ihr die Spezifität ganz: (0,0,1).
+   Eine Klasse am Knopf gewinnt damit immer, wie es sein soll. Die Schlag-
+   wortpillen im Register sind das erste Fenster, das davon lebt. */
+:where(.finder .res) > button{
   display:flex; align-items:center; gap:10px; width:100%; padding:9px 12px;
   border-radius:6px; text-align:left; font-size:14px;
 }
-.finder .res button:hover, .finder .res button.on{background:var(--bg-hover)}
+:where(.finder .res) > button:hover, :where(.finder .res) > button.on{background:var(--bg-hover)}
 /* Der Pfad sagt, WO der Treffer liegt — ohne ihn sind zwei gleichnamige
    Seiten nicht zu unterscheiden (E230). */
 .finder .res .pth{margin-left:auto; font-size:11.5px; color:var(--text-dim)}
@@ -2293,6 +2308,64 @@ body[data-small="1"] .b-text .ct{font-size:14px}
 .fbtns button:hover{background:var(--bg-hover)}
 .fbtns .prim{background:var(--accent); color:var(--auf-accent); border-color:transparent; font-weight:500}
 .fbtns .prim:hover{filter:brightness(1.1)}
+
+/* --- Knöpfe und Felder IM Fensterinhalt (E348, L111) ----------------------- */
+/* Bis E348 gab es für einen Knopf im Fensterinhalt genau eine Regel:
+   `.finder .res button{display:flex; width:100%}` — die Paletten-Zeile aus
+   `aufbau.css`. Sie galt für jeden Knopf in jeder Tiefe und schlug jede
+   einzelne Klasse; ein Knopf in einem Werkzeugfenster war deshalb eine
+   randlose Zeile über die ganze Breite, und `.btn` hatte gar keine Regel.
+   Seit E348 gilt die Zeile nur noch für DIREKTE Kinder von `.res`. Alles
+   andere braucht eine eigene Klasse — das hier sind die gewöhnlichen. */
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:6px;
+  padding:7px 14px; min-height:34px; border:1px solid var(--line); border-radius:7px;
+  background:var(--bg); color:var(--text); font-size:14px; line-height:1.3; width:auto;
+}
+.btn:hover{background:var(--bg-hover)}
+.btn:disabled{opacity:.5; cursor:default}
+.btn.prim{background:var(--accent); color:var(--auf-accent); border-color:transparent; font-weight:500}
+.btn.prim:hover{filter:brightness(1.1)}
+.btn.rot{color:var(--c-red,#e03e3e); border-color:var(--c-red,#e03e3e)}
+.btn.rot.prim{background:var(--c-red,#e03e3e); color:#fff}
+.btn.klein{padding:4px 9px; min-height:28px; font-size:12.5px}
+/* Ein Feld im Fensterinhalt: Rand, Fläche, 14px — dasselbe Mass wie das
+   Feld in der Beschriftung weiter unten. */
+.fn-feld{
+  padding:8px 10px; background:var(--bg-input); border:1px solid var(--line);
+  border-radius:7px; outline:none; color:var(--text); font-size:14px; font-family:inherit;
+  min-width:0;
+}
+.fn-feld:focus{border-color:var(--accent)}
+.fn-feld.mono{font-family:var(--mono); font-size:12.5px}
+textarea.fn-feld{resize:vertical; line-height:1.5; width:100%}
+/* Eine Zeile aus Feldern und Knöpfen, die umbricht, wenn es eng wird. Das
+   Feld nimmt, was übrig ist; der Knopf bleibt so breit wie sein Text. */
+.fn-reihe{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
+.fn-reihe > .fn-feld{flex:1 1 200px}
+/* Die Ausgabe eines Werkzeugs. `flex:none`, weil ein scrollbares Element in
+   einer Flex-Spalte sonst auf eine Zeile zusammenfällt (E348, gesehen). */
+.fn-aus{
+  flex:none; margin:0; padding:11px; max-height:210px; overflow:auto;
+  font:12px/1.5 var(--mono); color:var(--text); background:var(--bg-hover);
+  border-radius:7px; white-space:pre-wrap; word-break:break-word;
+}
+/* Ein Fensterinhalt aus Abschnitten. Drei Klassen, weil `.finder .res` das
+   Polster mit (0,2,0) setzt und eine einzelne Klasse dagegen verlöre —
+   genau die Falle, die dieser Block schliesst. */
+.finder .res.fn-blatt{padding:16px; display:flex; flex-direction:column; gap:13px}
+.fn-blatt > *{flex:none}
+.fn-blatt label{display:block}
+.fn-blatt hr{border:none; border-top:1px solid var(--line); margin:2px 0}
+.fn-blatt p{margin:0; font-size:13px; color:var(--text-dim); line-height:1.5}
+/* Der Hinweis links neben den Knöpfen in der Fussleiste. `flex:1` allein
+   liess ihn am Telefon auf die Breite seines längsten Worts schrumpfen —
+   dreizehn Zeilen neben zwei turmhohen Knöpfen. Mit 220px Grundmass bricht
+   er dort auf eine eigene Zeile, am Rechner bleibt er neben den Knöpfen. */
+.fbtns .fn-hinweis{
+  flex:1 1 220px; min-width:0; align-self:center;
+  font-size:11.5px; color:var(--text-faint); line-height:1.45;
+}
 #mdq{
   width:100%; height:52vh; padding:16px 18px; background:var(--bg); border:none;
   border-bottom:1px solid var(--line); outline:none; resize:none;
@@ -2866,7 +2939,17 @@ table.stab td:focus, table.stab th:focus{box-shadow:inset 0 0 0 2px var(--accent
   border:1px solid var(--line); border-radius:7px; outline:none; color:var(--text); font-size:14px;
 }
 .finder label{font-size:13px; color:var(--text-dim)}
-.finder label input, .finder label select{
+/* Nur das Feld DIREKT in der Beschriftung — ein Feld, das tiefer sitzt,
+   hat seinen eigenen Grund und seine eigene Regel (E348, L111). Und kein
+   Haken: ein Kästchen mit `width:100%` schob im Tempo-Fenster seine
+   Beschriftung an den rechten Rand — seit jeher, auf dem Bild gesehen.
+   DIE AUSNAHME STEHT IN `:where()`, UND DAS IST KEIN SCHMUCK: `:not([type=
+   checkbox])` zählt wie das Attribut selbst, (0,1,0) je Stück. Ohne das
+   `:where()` hatte die Regel (0,3,2) und schlug damit sogar E320s Vorbau
+   `.finder .pl-budget input` — das Budgetfeld war wieder 480 px breit, und
+   test51 war rot. So hat die ganze Regel (0,0,1): jede Klasse gewinnt. */
+:where(.finder label) > input:where(:not([type=checkbox]):not([type=radio])),
+:where(.finder label) > select{
   margin-top:5px; width:100%; padding:8px 10px; background:var(--bg-input);
   border:1px solid var(--line); border-radius:7px; outline:none; color:var(--text); font-size:14px;
 }
@@ -3205,16 +3288,17 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
 .wl-tun{font-size:12px; padding:3px 9px; min-height:26px}
 /* Der Haken (E324). Zurückhaltend, weil er nichts löscht — er legt einen
    Fund beiseite, und der Weg zurück steht oben im Kopf. */
-/* `.finder .res button{width:100%}` weiter oben ist spezifischer als eine
-   einzelne Klasse — deshalb steht `.finder .res` hier mit davor. Ohne das
-   wäre der Haken so breit wie „Seite anlegen" darüber: ein Häkchen in einem
-   71-px-Kasten. Derselbe Kampf wie beim Budgetfeld in E320; er ist in diesem
-   Stil eine Falle und steht deshalb als L108. */
-.finder .res .wl-hak{background:none; border:1px solid var(--line);
+/* Bis E348 stand hier `.finder .res .wl-hak`: die Trefferzeile der Palette
+   (`.finder .res button{width:100%}`) war spezifischer als eine einzelne
+   Klasse, und ohne den Vorbau wäre der Haken so breit gewesen wie „Seite
+   anlegen" darüber — ein Häkchen in einem 71-px-Kasten (L108). Seit E348
+   gilt die Trefferzeile nur für direkte Kinder der Liste; der Haken sitzt
+   tiefer und braucht keinen Vorbau mehr. test317 §6 misst ihn weiter. */
+.wl-hak{background:none; border:1px solid var(--line);
   border-radius:6px; color:var(--text-faint); cursor:pointer; font-size:13px;
   line-height:1; padding:4px 8px; min-height:26px;
   width:auto; align-self:flex-end}
-.finder .res .wl-hak:hover{color:var(--c-gruen, #2a8); border-color:var(--c-gruen, #2a8)}
+.wl-hak:hover{color:var(--c-gruen, #2a8); border-color:var(--c-gruen, #2a8)}
 .wl-zurueck{margin-top:8px; font-size:12px; color:var(--text-faint)}
 .wl-zurueck button{background:none; border:none; padding:0 0 0 4px;
   color:var(--accent-text); cursor:pointer; font:inherit;
@@ -3233,7 +3317,7 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
   .wl-rechts{flex-direction:row; width:100%; justify-content:flex-start; margin-top:2px}
   .wl-tun{min-height:36px}
   /* §37: am Telefon gehört der Haken dem Daumen. */
-  .finder .res .wl-hak{min-height:44px; min-width:44px}
+  .wl-hak{min-height:44px; min-width:44px}
   .wl-zurueck button{min-height:44px}
   .wl-quelle{min-height:32px}
 }
@@ -3540,11 +3624,13 @@ html[data-theme="light"] .banner{color:#37352f}
 .ez-text b{font-size:14px; font-weight:500; display:block}
 .ez-text span{font-size:12.5px; color:var(--text-dim); display:block; margin-top:2px; line-height:1.5}
 .ez-steuer{flex:0 0 auto; display:flex; gap:8px; align-items:center}
-.ez-steuer select, .ez-steuer input{
+/* Nur die Felder DIREKT in der Steuerung (E348, L111). Was tiefer sitzt —
+   etwa ein Kästchen in einer Beschriftung — bekommt keine 150 px von hier. */
+.ez-steuer > select, .ez-steuer > input{
   padding:7px 10px; background:var(--bg-input); border:1px solid var(--line);
   border-radius:7px; outline:none; color:var(--text); font-size:13.5px; min-width:150px;
 }
-.ez-steuer select:focus, .ez-steuer input:focus{border-color:var(--accent-text)}
+.ez-steuer > select:focus, .ez-steuer > input:focus{border-color:var(--accent-text)}
 .ez-grau{font-size:13px; color:var(--text-faint)}
 .ez-knopf{padding:6px 12px; border:1px solid var(--line); border-radius:7px; font-size:13.5px}
 .ez-knopf:hover{background:var(--bg-hover)}
@@ -4065,7 +4151,7 @@ tr.mail-jetzt > td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
      allein in einer Zeile, die es für sich hat. Die Klasse muss hier mit,
      weil Spezifität und nicht Reihenfolge entscheidet (E320, E321). */
   .ez-steuer input.ez-grenze{ flex:1 1 auto; width:auto; min-width:0; text-align:left }
-  .ez-steuer select, .ez-steuer input{
+  .ez-steuer > select, .ez-steuer > input{
     flex:1 1 auto; min-width:0; width:100%;
     min-height:44px; font-size:16px;   /* 16 px, sonst zoomt iOS beim Tippen */
   }
@@ -7577,6 +7663,10 @@ body[data-ruhig="an"] .lernwelt .lw-nav{ padding-right:264px }
   .finder{ width:96vw !important; max-height:88vh; }
   .fbtns{ flex-wrap:wrap; }
   .fbtns button{ flex:1 1 auto; min-height:42px; }
+  /* Der Hinweis in der Fussleiste bekommt am Telefon die ganze Zeile; die
+     Knöpfe teilen sich die nächste. Neben einem Knopf wurde er sonst vier
+     Zeilen hoch und zog den Knopf auf seine Höhe (E348, auf dem Bild). */
+  .fbtns .fn-hinweis{ flex-basis:100%; }
 
   /* ------------------------------------------------------------------------
    * DAS KI-FENSTER KOMMT VON UNTEN, NICHT VON DER SEITE (Vorgabe §19)
@@ -10272,7 +10362,7 @@ body[data-breite="voll"]   #page{max-width:none}
 .tp-hinweis{font-size:12.5px; color:var(--text-dim); margin-top:9px; display:flex;
             gap:8px; align-items:center}
 .tp-hinweis input{width:80px; background:var(--bg-input); border:1px solid var(--line);
-                  border-radius:5px; padding:3px 7px; color:var(--text)}
+                  border-radius:5px; padding:3px 7px; color:var(--text); font-size:14px}
 tr.vs-luft td{padding:0 !important; border:0 !important}
 
 /* Planen: Zurückstellen, Wochenrückblick, Tagesplan */
@@ -10316,8 +10406,11 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
             padding:9px 12px; font-size:13px; margin-top:12px}
 .pl-dauer{font-size:12px; color:var(--text-faint); margin-right:auto;
           display:flex; gap:6px; align-items:center}
+/* `font-size` steht hier, seit `.finder input` nur noch das Suchfeld der
+   Palette meint (E348) — vorher kamen 16px von dort, und der Zwilling
+   `.pl-budget` hat seine 14px aus demselben Grund (E320). */
 .pl-dauer input{width:62px; background:var(--bg-input); border:1px solid var(--line);
-                border-radius:5px; padding:3px 6px; color:var(--text)}
+                border-radius:5px; padding:3px 6px; color:var(--text); font-size:14px}
 /* Der Zeitbudget-Planer (E308). Das Budget steht OBEN und nicht in der
    Fussleiste: es ist die Eingabe, aus der alles andere folgt, und zwei
    Zahlenfelder nebeneinander im Fuss passen am Telefon nicht. */
@@ -40707,8 +40800,10 @@ const Links = (() => {
         return `<a class="wl${klasse}" data-wl="${esc(name)}" ` +
             `title="${esc(titel)}">${esc(anzeige)}</a>`;
     })
-        /* #stichwort — nur am Wortanfang, damit URLs mit # unberührt bleiben */
-        .replace(/(^|[\s(>])#([A-Za-z0-9ÄÖÜäöüß][\wÄÖÜäöüß\-\/]{1,40})/g, (_, vor, tag) => `${vor}<a class="tg" data-tag="${esc(tag)}">#${esc(tag)}</a>`);
+        /* #stichwort — nur am Wortanfang, damit URLs mit # unberührt bleiben.
+           Und nicht nach `](` — das ist ein Markdown-Sprungziel `[…](#abschnitt)`,
+           kein Schlagwort (E348). */
+        .replace(/(^|[\s>]|(?<!\])\()#([A-Za-z0-9ÄÖÜäöüß][\wÄÖÜäöüß\-\/]{1,40})/g, (_, vor, tag) => `${vor}<a class="tg" data-tag="${esc(tag)}">#${esc(tag)}</a>`);
     /* ========================================================================
      * NACHSCHLAGEN
      * ======================================================================*/
@@ -40986,14 +41081,20 @@ const Links = (() => {
         Object.values(Store.cache.blocks).forEach(b => {
             if (!b.alive || !b.text)
                 return;
-            const gefunden = b.text.match(/(^|[\s(])#([A-Za-z0-9ÄÖÜäöüß][\wÄÖÜäöüß\-\/]{1,40})/g);
-            if (!gefunden)
+            // matchAll statt match: mit dem g-Flag liefert match() den GANZEN Treffer
+            // samt Vorzeichen, und `(#tag` wurde nach trim() zum Schlagwort „(#tag".
+            // Gesehen im Register als `(#2-formeln` — ein Markdown-Sprungziel aus den
+            // Hilfeseiten, das obendrein gar kein Schlagwort ist (E348).
+            const gefunden = [...String(b.text).matchAll(/(^|[\s>]|(?<!\])\()#([A-Za-z0-9ÄÖÜäöüß][\wÄÖÜäöüß\-\/]{1,40})/g)];
+            if (!gefunden.length)
                 return;
             const quelle = seiteVon(b.id);
             if (!quelle)
                 return;
-            gefunden.forEach((g) => {
-                const tag = g.trim().replace(/^#/, '');
+            gefunden.forEach(m => {
+                const tag = m[2] || '';
+                if (!tag)
+                    return;
                 if (!map.has(tag))
                     map.set(tag, new Set());
                 map.get(tag).add(quelle.id);
@@ -41201,7 +41302,7 @@ const Links = (() => {
                 if (targetOwner)
                     addEdge(owner.id, targetOwner.id, 'link');
             }
-            for (const match of String(block.text).matchAll(/(^|[\s(])#([A-Za-z0-9ÄÖÜäöüß][\wÄÖÜäöüß\-/]{1,40})/g)) {
+            for (const match of String(block.text).matchAll(/(^|[\s>]|(?<!\])\()#([A-Za-z0-9ÄÖÜäöüß][\wÄÖÜäöüß\-/]{1,40})/g)) {
                 const shown = match[2] || '';
                 const normalizedTag = normalizeGraphText(shown);
                 if (!normalizedTag)
@@ -104562,32 +104663,31 @@ const NotionFormat = (() => {
         o.innerHTML =
             '<div class="finder" style="width:min(720px,95vw)">' +
                 '<div class="fh">🔁 Notion-Formate <button class="icon-btn" data-a="zu">✕</button></div>' +
-                '<div class="res" style="padding:16px; display:flex; flex-direction:column; gap:14px">' +
-                '<div style="font-size:12.5px; color:var(--text-dim); line-height:1.6">' +
+                // Klassen statt Inline-Stil, seit die Knöpfe hier nicht mehr von der
+                // Paletten-Zeile getroffen werden (E348, L111): `.fn-blatt` ist der
+                // Inhalt in Abschnitten, `.btn` der Knopf mit Rand, `.fn-aus` die Ausgabe.
+                '<div class="res fn-blatt">' +
+                '<p>' +
                 'Notion speichert Werte verschachtelt (<code>[["80"]]</code>) und Formeln als ' +
                 'Baum. Redion speichert beides flach. Hier lässt sich beides ineinander ' +
                 'übersetzen — nützlich beim Umzug in die eine oder die andere Richtung.' +
-                '</div>' +
-                '<label style="font-size:13px">Formel<br>' +
+                '</p>' +
+                '<label>Formel<br>' +
                 '<input id="nf-formel" spellcheck="false" ' +
                 'value=\'if(prop("Menge") * prop("Preis") > 100, "teuer", "günstig")\'></label>' +
-                '<div style="display:flex; gap:8px; flex-wrap:wrap">' +
-                '<button data-a="hin" class="prim">In Notions Baum</button>' +
-                '<button data-a="rund">Hin und zurück prüfen</button>' +
+                '<div class="fn-reihe">' +
+                '<button data-a="hin" class="btn prim">In Notions Baum</button>' +
+                '<button data-a="rund" class="btn">Hin und zurück prüfen</button>' +
                 '</div>' +
-                '<pre id="nf-aus" style="font-size:12px; background:var(--bg-code,rgba(0,0,0,.05)); ' +
-                'padding:11px; border-radius:7px; max-height:210px; overflow:auto; ' +
-                'white-space:pre-wrap; margin:0"></pre>' +
-                '<hr style="border:none;border-top:1px solid var(--line)">' +
-                '<label style="font-size:13px">Notions Wert<br>' +
+                '<pre id="nf-aus" class="fn-aus"></pre>' +
+                '<hr>' +
+                '<label>Notions Wert<br>' +
                 '<input id="nf-wert" spellcheck="false" value=\'[["Hallo",[["b"]]],[" Welt"]]\'></label>' +
-                '<div style="display:flex; gap:8px; flex-wrap:wrap">' +
-                '<button data-a="lesen">Flach lesen</button>' +
-                '<button data-a="md">Als Markdown</button>' +
+                '<div class="fn-reihe">' +
+                '<button data-a="lesen" class="btn">Flach lesen</button>' +
+                '<button data-a="md" class="btn">Als Markdown</button>' +
                 '</div>' +
-                '<pre id="nf-aus2" style="font-size:12px; background:var(--bg-code,rgba(0,0,0,.05)); ' +
-                'padding:11px; border-radius:7px; max-height:150px; overflow:auto; ' +
-                'white-space:pre-wrap; margin:0"></pre>' +
+                '<pre id="nf-aus2" class="fn-aus" style="max-height:150px"></pre>' +
                 '</div>' +
                 '</div>';
         document.body.appendChild(o);
@@ -105487,37 +105587,34 @@ const Api = (() => {
         o.innerHTML =
             '<div class="finder" style="width:min(760px,95vw)">' +
                 '<div class="fh">🔌 Schnittstelle /v1/ <button class="icon-btn" data-a="zu">✕</button></div>' +
-                '<div class="res" style="padding:16px; display:flex; flex-direction:column; gap:13px">' +
-                '<div style="font-size:12.5px; color:var(--text-dim); line-height:1.6">' +
+                // Klassen statt Inline-Stil (E348, L111): siehe `.fn-blatt` in werkzeuge.css.
+                '<div class="res fn-blatt">' +
+                '<p>' +
                 'Dieselben Adressen, Formen und Fehlercodes wie Notions API — beantwortet ' +
                 'im Browser aus den Daten, die hier liegen. Ein <code>fetch(\'/v1/…\')</code> ' +
                 'aus einem Skript auf dieser Seite funktioniert wirklich.<br>' +
                 '<b>Was nicht geht:</b> Anfragen aus dem Internet. Dafür bräuchte es einen ' +
                 'Server — und dann lägen die Daten dort, nicht hier.' +
+                '</p>' +
+                '<div class="fn-reihe">' +
+                `<input id="api-token" readonly class="fn-feld mono" value="${esc(tokenHolen() || '— noch keines —')}">` +
+                '<button data-a="neu" class="btn">Neues Token</button>' +
+                '<button data-a="kopie" class="btn">Kopieren</button>' +
+                '<button data-a="weg" class="btn rot">Zurückziehen</button>' +
                 '</div>' +
-                '<div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">' +
-                '<input id="api-token" readonly style="flex:1; min-width:200px; font-family:monospace; ' +
-                `font-size:12px" value="${esc(tokenHolen() || '— noch keines —')}">` +
-                '<button data-a="neu">Neues Token</button>' +
-                '<button data-a="kopie">Kopieren</button>' +
-                '<button data-a="weg" class="rot">Zurückziehen</button>' +
-                '</div>' +
-                '<div style="display:flex; gap:7px; flex-wrap:wrap">' +
-                '<select id="api-m" style="width:96px">' +
+                '<div class="fn-reihe">' +
+                '<select id="api-m" class="fn-feld" style="flex:0 0 auto; width:96px">' +
                 ['GET', 'POST', 'PATCH', 'DELETE'].map(x => `<option>${x}</option>`).join('') +
                 '</select>' +
-                '<input id="api-p" style="flex:1; min-width:200px; font-family:monospace; font-size:12.5px" ' +
-                'value="/v1/users/me">' +
-                '<button data-a="los" class="prim">Absenden</button>' +
+                '<input id="api-p" class="fn-feld mono" value="/v1/users/me">' +
+                '<button data-a="los" class="btn prim">Absenden</button>' +
                 '</div>' +
-                '<div style="display:flex; gap:6px; flex-wrap:wrap">' +
-                BEISPIELE.map(([m, pf], i) => `<button data-bsp="${i}" style="font-size:12px; padding:4px 9px">${m} ${esc(pf)}</button>`).join('') +
+                '<div class="fn-reihe" style="gap:6px">' +
+                BEISPIELE.map(([m, pf], i) => `<button data-bsp="${i}" class="btn klein">${m} ${esc(pf)}</button>`).join('') +
                 '</div>' +
                 '<textarea id="api-k" rows="4" spellcheck="false" placeholder="JSON-Körper — bei GET leer lassen" ' +
-                'style="font-family:monospace; font-size:12.5px"></textarea>' +
-                '<pre id="api-aus" style="font-size:12px; background:var(--bg-code,rgba(0,0,0,.05)); ' +
-                'padding:11px; border-radius:7px; max-height:260px; overflow:auto; ' +
-                'white-space:pre-wrap; margin:0">Noch nichts abgeschickt.</pre>' +
+                'class="fn-feld mono"></textarea>' +
+                '<pre id="api-aus" class="fn-aus" style="max-height:260px">Noch nichts abgeschickt.</pre>' +
                 '</div>' +
                 '</div>';
         document.body.appendChild(o);
@@ -106057,30 +106154,28 @@ const Transaktion = (() => {
         o.innerHTML =
             '<div class="finder" style="width:min(760px,95vw)">' +
                 '<div class="fh">⚙ Interne Befehle <button class="icon-btn" data-a="zu">✕</button></div>' +
-                '<div class="res" style="padding:16px; display:flex; flex-direction:column; gap:13px">' +
-                '<div style="font-size:12.5px; color:var(--text-dim); line-height:1.6">' +
+                // Klassen statt Inline-Stil (E348, L111): siehe `.fn-blatt` in werkzeuge.css.
+                '<div class="res fn-blatt">' +
+                '<p>' +
                 'Notions App schickt nie „speichere die Seite", sondern immer eine Liste ' +
                 'kleiner Befehle: <code>set</code>, <code>update</code>, <code>listAfter</code>, ' +
                 '<code>listBefore</code>, <code>listRemove</code>. Eine solche Liste ist genau ' +
                 'eine Änderung — sie geht ganz durch oder gar nicht, und sie ist ein einziger ' +
                 'Schritt beim Rückgängigmachen.' +
+                '</p>' +
+                '<label>Operationen (JSON)<br>' +
+                '<textarea id="tx-ops" rows="7" spellcheck="false" class="fn-feld mono"></textarea></label>' +
+                '<div class="fn-reihe" style="gap:7px">' +
+                '<button data-a="los" class="btn prim">Ausführen</button>' +
+                '<button data-bsp="titel" class="btn">Beispiel: Titel setzen</button>' +
+                '<button data-bsp="reihe" class="btn">Beispiel: Blöcke umsortieren</button>' +
+                '<button data-bsp="kaputt" class="btn">Beispiel: geht schief</button>' +
+                '<button data-a="chunk" class="btn">loadPageChunk</button>' +
                 '</div>' +
-                '<label style="font-size:13px">Operationen (JSON)<br>' +
-                '<textarea id="tx-ops" rows="7" spellcheck="false" ' +
-                'style="font-family:monospace; font-size:12.5px"></textarea></label>' +
-                '<div style="display:flex; gap:7px; flex-wrap:wrap">' +
-                '<button data-a="los" class="prim">Ausführen</button>' +
-                '<button data-bsp="titel">Beispiel: Titel setzen</button>' +
-                '<button data-bsp="reihe">Beispiel: Blöcke umsortieren</button>' +
-                '<button data-bsp="kaputt">Beispiel: geht schief</button>' +
-                '<button data-a="chunk">loadPageChunk</button>' +
-                '</div>' +
-                '<pre id="tx-aus" style="font-size:12px; background:var(--bg-code,rgba(0,0,0,.05)); ' +
-                'padding:11px; border-radius:7px; max-height:250px; overflow:auto; ' +
-                'white-space:pre-wrap; margin:0">Noch nichts ausgeführt.</pre>' +
-                `<div style="font-size:12px; color:var(--text-faint)">Gemerkte Transaktionen: ` +
-                `<b id="tx-zahl">${verlauf.length}</b> — die letzte lässt sich noch einmal abspielen.</div>` +
-                '<button data-a="nochmal" style="align-self:flex-start">Letzte noch einmal</button>' +
+                '<pre id="tx-aus" class="fn-aus" style="max-height:250px">Noch nichts ausgeführt.</pre>' +
+                `<p>Gemerkte Transaktionen: ` +
+                `<b id="tx-zahl">${verlauf.length}</b> — die letzte lässt sich noch einmal abspielen.</p>` +
+                '<button data-a="nochmal" class="btn" style="align-self:flex-start">Letzte noch einmal</button>' +
                 '</div>' +
                 '</div>';
         document.body.appendChild(o);
@@ -106425,18 +106520,19 @@ const Protokoll = (() => {
             '<div class="finder" style="width:min(760px,95vw)">' +
                 '<div class="fh">📜 Protokoll <em id="pr-zahl"></em>' +
                 '<button class="icon-btn" data-a="zu">✕</button></div>' +
-                '<div style="padding:12px 16px 0; display:flex; gap:7px; flex-wrap:wrap">' +
-                '<select id="pr-art"><option value="">Alle Arten</option>' +
+                // Die Felder tragen `fn-feld`, seit die breite `.finder input`-Regel nur
+                // noch das Suchfeld der Palette meint (E348, L111).
+                '<div class="fn-reihe" style="padding:12px 16px 0; gap:7px">' +
+                '<select id="pr-art" class="fn-feld" style="flex:0 0 auto"><option value="">Alle Arten</option>' +
                 ARTEN.map(([id, ic, n]) => `<option value="${id}">${ic} ${esc(n)}</option>`).join('') +
                 '</select>' +
-                '<select id="pr-wer"><option value="">Alle</option></select>' +
-                '<input id="pr-suche" placeholder="Suchen …" style="flex:1; min-width:130px">' +
-                '<input id="pr-von" type="date" title="ab diesem Tag">' +
+                '<select id="pr-wer" class="fn-feld" style="flex:0 0 auto"><option value="">Alle</option></select>' +
+                '<input id="pr-suche" class="fn-feld" placeholder="Suchen …" style="min-width:130px">' +
+                '<input id="pr-von" class="fn-feld" type="date" title="ab diesem Tag" style="flex:0 0 auto">' +
                 '</div>' +
                 '<div class="res" id="pr-liste" style="padding:10px 8px"></div>' +
                 '<div class="fbtns">' +
-                '<span id="pr-hinweis" style="flex:1; font-size:11.5px; color:var(--text-faint); ' +
-                'align-self:center; line-height:1.45"></span>' +
+                '<span id="pr-hinweis" class="fn-hinweis"></span>' +
                 '<button data-a="csv">Als CSV</button>' +
                 '<button data-a="leeren" class="rot">Leeren</button>' +
                 '</div>' +
@@ -112809,14 +112905,14 @@ const WolkeFenster = (() => {
             '</div>' +
             '<div style="margin-bottom:14px">Die Notizen <b>auf diesem Gerät bleiben</b>. ' +
             'Sichere sie trotzdem vorher — eine Sicherung zu viel hat noch nie geschadet:</div>' +
-            '<button data-a="sichern" style="margin-bottom:16px">⬇ Alles als .redion sichern</button>' +
+            // `btn`/`fn-feld` statt Inline-Stil, seit die Paletten-Zeile nur noch
+            // direkte Kinder von `.res` trifft (E348, L111).
+            '<button data-a="sichern" class="btn" style="margin-bottom:16px">⬇ Alles als .redion sichern</button>' +
             '<div style="margin-bottom:8px">Zum Bestätigen die Mail-Adresse des Kontos eintippen:</div>' +
-            '<div style="display:flex; gap:8px">' +
-            '<input id="wo-mail-bestaetigen" placeholder="' + esc(k.mail || '') + '" ' +
-            'style="flex:1; min-width:0">' +
-            '<button data-a="endgueltig" class="prim" style="flex:none; width:auto; ' +
-            'white-space:nowrap; background:var(--rot,#d64545); ' +
-            'border-color:var(--rot,#d64545)">Endgültig löschen</button>' +
+            '<div class="fn-reihe">' +
+            '<input id="wo-mail-bestaetigen" class="fn-feld" placeholder="' + esc(k.mail || '') + '">' +
+            '<button data-a="endgueltig" class="btn rot prim" style="flex:none; white-space:nowrap">' +
+            'Endgültig löschen</button>' +
             '</div>' +
             '</div></div>';
         document.body.appendChild(o);
@@ -129438,7 +129534,7 @@ const App = (() => {
                 `<div>Angelegt: <b>${esc(Einstellungen.datum(new Date(p.created), true))}</b></div>` +
                 `<div>Zuletzt bearbeitet: <b>${esc(Einstellungen.datum(new Date(p.edited || p.created), true))}</b>` +
                 ` von <b>${esc(p.geaendertVon || p.erstelltVon || 'dir')}</b></div>` +
-                '<div style="margin-top:12px"><button data-a="verl" class="prim">Versionsverlauf öffnen</button></div>' +
+                '<div style="margin-top:12px"><button data-a="verl" class="btn prim">Versionsverlauf öffnen</button></div>' +
                 '</div>' +
                 '<div class="hint">Alle Zahlen stammen aus diesem Gerät — es wird nichts gemeldet.</div>' +
                 '</div>';

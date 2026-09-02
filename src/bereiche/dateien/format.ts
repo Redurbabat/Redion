@@ -377,32 +377,31 @@ const NotionFormat = (() => {
     o.innerHTML =
       '<div class="finder" style="width:min(720px,95vw)">' +
         '<div class="fh">🔁 Notion-Formate <button class="icon-btn" data-a="zu">✕</button></div>' +
-        '<div class="res" style="padding:16px; display:flex; flex-direction:column; gap:14px">' +
-          '<div style="font-size:12.5px; color:var(--text-dim); line-height:1.6">' +
+        // Klassen statt Inline-Stil, seit die Knöpfe hier nicht mehr von der
+        // Paletten-Zeile getroffen werden (E348, L111): `.fn-blatt` ist der
+        // Inhalt in Abschnitten, `.btn` der Knopf mit Rand, `.fn-aus` die Ausgabe.
+        '<div class="res fn-blatt">' +
+          '<p>' +
             'Notion speichert Werte verschachtelt (<code>[["80"]]</code>) und Formeln als ' +
             'Baum. Redion speichert beides flach. Hier lässt sich beides ineinander ' +
             'übersetzen — nützlich beim Umzug in die eine oder die andere Richtung.' +
-          '</div>' +
-          '<label style="font-size:13px">Formel<br>' +
+          '</p>' +
+          '<label>Formel<br>' +
             '<input id="nf-formel" spellcheck="false" ' +
               'value=\'if(prop("Menge") * prop("Preis") > 100, "teuer", "günstig")\'></label>' +
-          '<div style="display:flex; gap:8px; flex-wrap:wrap">' +
-            '<button data-a="hin" class="prim">In Notions Baum</button>' +
-            '<button data-a="rund">Hin und zurück prüfen</button>' +
+          '<div class="fn-reihe">' +
+            '<button data-a="hin" class="btn prim">In Notions Baum</button>' +
+            '<button data-a="rund" class="btn">Hin und zurück prüfen</button>' +
           '</div>' +
-          '<pre id="nf-aus" style="font-size:12px; background:var(--bg-code,rgba(0,0,0,.05)); ' +
-            'padding:11px; border-radius:7px; max-height:210px; overflow:auto; ' +
-            'white-space:pre-wrap; margin:0"></pre>' +
-          '<hr style="border:none;border-top:1px solid var(--line)">' +
-          '<label style="font-size:13px">Notions Wert<br>' +
+          '<pre id="nf-aus" class="fn-aus"></pre>' +
+          '<hr>' +
+          '<label>Notions Wert<br>' +
             '<input id="nf-wert" spellcheck="false" value=\'[["Hallo",[["b"]]],[" Welt"]]\'></label>' +
-          '<div style="display:flex; gap:8px; flex-wrap:wrap">' +
-            '<button data-a="lesen">Flach lesen</button>' +
-            '<button data-a="md">Als Markdown</button>' +
+          '<div class="fn-reihe">' +
+            '<button data-a="lesen" class="btn">Flach lesen</button>' +
+            '<button data-a="md" class="btn">Als Markdown</button>' +
           '</div>' +
-          '<pre id="nf-aus2" style="font-size:12px; background:var(--bg-code,rgba(0,0,0,.05)); ' +
-            'padding:11px; border-radius:7px; max-height:150px; overflow:auto; ' +
-            'white-space:pre-wrap; margin:0"></pre>' +
+          '<pre id="nf-aus2" class="fn-aus" style="max-height:150px"></pre>' +
         '</div>' +
       '</div>';
     document.body.appendChild(o);

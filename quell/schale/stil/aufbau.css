@@ -259,15 +259,30 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
   width:min(640px,92vw); background:var(--bg-side); border:1px solid var(--line);
   border-radius:10px; box-shadow:var(--shadow); overflow:hidden;
 }
-.finder input{
+/* DAS SUCHFELD IST DAS DIREKTE KIND — und nur das (E348, L111).
+   `.finder input` traf jedes Eingabefeld in jedem Fenster, das die Klasse
+   `finder` trägt, und gab ihm 16 px Schrift ohne Rahmen. Gemessen über alle
+   163 Befehle der Palette: das Tagesplan-Feld „Aufgabe ohne Angabe" bekam so
+   seine Schriftgrösse von hier statt von seiner eigenen Regel. */
+.finder > input{
   width:100%; padding:16px 18px; background:none; border:none; outline:none; font-size:16px;
 }
 .finder .res{max-height:52vh; overflow-y:auto; border-top:1px solid var(--line); padding:6px}
-.finder .res button{
+/* DIE TREFFERZEILE DER PALETTE — als VORGABE, nicht als Gesetz (E348).
+   Vorher stand hier `.finder .res button` mit Spezifität (0,1,2): jeder
+   Knopf in jedem Fenster mit einer Ergebnisliste wurde 100 % breit, links
+   ausgerichtet, ohne Rahmen — und keine einzelne Klasse (0,1,0) kam dagegen
+   an. Vier Bögen haben das je einmal umgangen (E320, E324, E326, E334), und
+   jeder brauchte dazu `.finder .res` vor seiner eigenen Klasse (L108).
+   Jetzt gilt die Zeile nur noch für DIREKTE Kinder der Liste — das sind die
+   Treffer der Palette — und `:where()` nimmt ihr die Spezifität ganz: (0,0,1).
+   Eine Klasse am Knopf gewinnt damit immer, wie es sein soll. Die Schlag-
+   wortpillen im Register sind das erste Fenster, das davon lebt. */
+:where(.finder .res) > button{
   display:flex; align-items:center; gap:10px; width:100%; padding:9px 12px;
   border-radius:6px; text-align:left; font-size:14px;
 }
-.finder .res button:hover, .finder .res button.on{background:var(--bg-hover)}
+:where(.finder .res) > button:hover, :where(.finder .res) > button.on{background:var(--bg-hover)}
 /* Der Pfad sagt, WO der Treffer liegt — ohne ihn sind zwei gleichnamige
    Seiten nicht zu unterscheiden (E230). */
 .finder .res .pth{margin-left:auto; font-size:11.5px; color:var(--text-dim)}

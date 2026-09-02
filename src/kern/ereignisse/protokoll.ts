@@ -286,18 +286,19 @@ const Protokoll = (() => {
       '<div class="finder" style="width:min(760px,95vw)">' +
         '<div class="fh">📜 Protokoll <em id="pr-zahl"></em>' +
           '<button class="icon-btn" data-a="zu">✕</button></div>' +
-        '<div style="padding:12px 16px 0; display:flex; gap:7px; flex-wrap:wrap">' +
-          '<select id="pr-art"><option value="">Alle Arten</option>' +
+        // Die Felder tragen `fn-feld`, seit die breite `.finder input`-Regel nur
+        // noch das Suchfeld der Palette meint (E348, L111).
+        '<div class="fn-reihe" style="padding:12px 16px 0; gap:7px">' +
+          '<select id="pr-art" class="fn-feld" style="flex:0 0 auto"><option value="">Alle Arten</option>' +
             ARTEN.map(([id, ic, n]) => `<option value="${id}">${ic} ${esc(n)}</option>`).join('') +
           '</select>' +
-          '<select id="pr-wer"><option value="">Alle</option></select>' +
-          '<input id="pr-suche" placeholder="Suchen …" style="flex:1; min-width:130px">' +
-          '<input id="pr-von" type="date" title="ab diesem Tag">' +
+          '<select id="pr-wer" class="fn-feld" style="flex:0 0 auto"><option value="">Alle</option></select>' +
+          '<input id="pr-suche" class="fn-feld" placeholder="Suchen …" style="min-width:130px">' +
+          '<input id="pr-von" class="fn-feld" type="date" title="ab diesem Tag" style="flex:0 0 auto">' +
         '</div>' +
         '<div class="res" id="pr-liste" style="padding:10px 8px"></div>' +
         '<div class="fbtns">' +
-          '<span id="pr-hinweis" style="flex:1; font-size:11.5px; color:var(--text-faint); ' +
-            'align-self:center; line-height:1.45"></span>' +
+          '<span id="pr-hinweis" class="fn-hinweis"></span>' +
           '<button data-a="csv">Als CSV</button>' +
           '<button data-a="leeren" class="rot">Leeren</button>' +
         '</div>' +
