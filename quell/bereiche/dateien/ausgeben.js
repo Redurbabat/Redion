@@ -41,22 +41,9 @@ const Austausch = (() => {
      * Ohne Komprimierung (Methode 0). Word und Excel lesen das anstandslos,
      * und der Code bleibt kurz genug, um ihn zu überblicken.
      * ======================================================================*/
-    let crcTafel = null;
-    const crc32 = (daten) => {
-        if (!crcTafel) {
-            crcTafel = new Uint32Array(256);
-            for (let n = 0; n < 256; n++) {
-                let c = n;
-                for (let k = 0; k < 8; k++)
-                    c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
-                crcTafel[n] = c >>> 0;
-            }
-        }
-        let c = 0xFFFFFFFF;
-        for (let i = 0; i < daten.length; i++)
-            c = crcTafel[(c ^ daten[i]) & 0xFF] ^ (c >>> 8);
-        return (c ^ 0xFFFFFFFF) >>> 0;
-    };
+    /* Die Prüfsumme rechnet seit E363 der Kern (`ZipDetails`) — dieselbe
+       Tafel für Schreiber und Leser, damit beide dasselbe meinen. */
+    const crc32 = (daten) => ZipDetails.crc32(daten instanceof Uint8Array ? daten : new Uint8Array(daten));
     /**
      * Dieselbe Prüfsumme, aber häppchenweise — für einen Blob, der nicht in den
      * Arbeitsspeicher passt.
@@ -72,18 +59,14 @@ const Austausch = (() => {
      */
     const SCHEIBE = 1024 * 1024;
     const crc32Strom = async (blob, beiFortschritt) => {
-        if (!crcTafel)
-            crc32(new Uint8Array(0)); /* Tafel einmal bauen */
-        let c = 0xFFFFFFFF;
+        let c = ZipDetails.crc32Start();
         for (let von = 0; von < blob.size; von += SCHEIBE) {
             const bis = Math.min(von + SCHEIBE, blob.size);
-            const teil = new Uint8Array(await blob.slice(von, bis).arrayBuffer());
-            for (let i = 0; i < teil.length; i++)
-                c = (crcTafel[(c ^ (teil[i] ?? 0)) & 0xFF] ?? 0) ^ (c >>> 8);
+            c = ZipDetails.crc32Weiter(c, new Uint8Array(await blob.slice(von, bis).arrayBuffer()));
             if (beiFortschritt)
                 beiFortschritt(bis / blob.size);
         }
-        return (c ^ 0xFFFFFFFF) >>> 0;
+        return ZipDetails.crc32Fertig(c);
     };
     /* ------------------------------------------------------------------------
      * DIE DREI GRENZEN — und warum sie seit dem 6. August keine mehr sind
@@ -175,7 +158,7 @@ const Austausch = (() => {
             const kopf = new Uint8Array(30 + name.length + lokalExtra);
             schreibe32(kopf, 0, 0x04034b50);
             schreibe16(kopf, 4, grosseDatei ? 45 : 20); /* benötigte Fassung */
-            schreibe16(kopf, 6, 0); /* Flags             */
+            schreibe16(kopf, 6, ZipDetails.UTF8_BIT); /* Flags: Bit 11 — der Name ist UTF-8 (E363, L114 Punkt 5) */
             schreibe16(kopf, 8, 0); /* Methode: gespeichert */
             schreibe16(kopf, 10, 0); /* Uhrzeit           */
             schreibe16(kopf, 12, 0x21); /* Datum: 1. Jan 1980 */
@@ -210,7 +193,7 @@ const Austausch = (() => {
             schreibe32(eintrag, 0, 0x02014b50);
             schreibe16(eintrag, 4, 20);
             schreibe16(eintrag, 6, (grosseDatei || weitHinten) ? 45 : 20);
-            schreibe16(eintrag, 8, 0);
+            schreibe16(eintrag, 8, ZipDetails.UTF8_BIT);
             schreibe16(eintrag, 10, 0);
             schreibe16(eintrag, 12, 0);
             schreibe16(eintrag, 14, 0x21);

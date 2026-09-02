@@ -234,6 +234,15 @@ PDF unter `dateien/` und die Anmerkungen im Block-Datensatz von
 `daten.json` (Feld `marken`, Koordinaten in PDF-Punkten). Die Seitenbilder
 fehlen dort — mit Absicht.
 
+**Prüfsummen und Namen** (E363): der Schreiber trägt zu jedem Eintrag die
+CRC-32 seiner Bytes ein und setzt das UTF-8-Bit (Bit 11) in beiden Köpfen;
+der Leser rechnet die Prüfsumme nach dem Entpacken nach — scheibchenweise,
+ohne den Eintrag in den Speicher zu holen — und lehnt einen beschädigten
+Eintrag mit Grund ab, statt ihn als vollständige Datei durchzureichen.
+Fremde Archive ohne UTF-8-Bit werden als CP437 gelesen, wenn ihre Namen
+kein gültiges UTF-8 sind; verschlüsselte Einträge (Bit 0) kann Redion nicht
+lesen und sagt es.
+
 **Ein Bild auf dem Blatt** (E357) ist eine Marke der Art `bild` mit einer
 `dateiId`; die Datei liegt wie jeder Anhang unter `dateien/`, ihr `blockId`
 ist das Blatt oder die Seite, auf der sie liegt. Weil Kennungen beim

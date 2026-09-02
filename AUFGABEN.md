@@ -2644,6 +2644,14 @@ node pruefungen/lauf/test105.mjs
   `padding` ist vier Erklärungen, nicht eine, und §2/§3 zählten absolut
   statt den Unterschied zum Bestand.
   test332 neu (14), belegt rot. test258 19/19.
+* E363 (L114 Punkte 5 und 6 erledigt): Der ZIP-Leser sagt die Wahrheit —
+  `ZipDetails` (Kern) rechnet CRC-32, liest CP437 und erkennt
+  Verschlüsselung; beide Leser prüfen jeden Eintrag gegen seine Prüfsumme
+  und werfen mit Grund, der Import stellt Beschädigtes und Verschlüsseltes
+  zu den Übersprungenen; der eigene Schreiber setzt das UTF-8-Bit. Und die
+  ZIP erkennt sich beim zweiten Einlesen wieder (`importKennung` aus Name,
+  Grösse, Prüfsumme): nichts doppelt, „schon da (unverändert)", Geändertes
+  kommt daneben. test355 neu (34), belegt rot in sieben Richtungen.
 * E362 (L102 Punkt 4 erledigt): Der Ereignisbus kann async — `frage`
   zählt keine Promise (sie wird gemeldet), `frageAsync`/`meldeAsync` warten
   in Anmeldereihenfolge und melden Gescheitertes, `melde` fängt die

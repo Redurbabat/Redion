@@ -182,6 +182,8 @@ const ArchivImport = (() => {
             stuecke.push(e.anhaenge + (e.anhaenge === 1 ? ' Datei' : ' Dateien'));
         let s = '„' + zipName + '": ' + (stuecke.length ? stuecke.join(', ') : 'nichts Lesbares') +
             ' in ' + e.faecher + (e.faecher === 1 ? ' Fach' : ' Fächern');
+        if (e.unveraendert)
+            s += ' · ' + e.unveraendert + ' schon da (unverändert)';
         if (e.uebersprungen.length)
             s += ' · ' + e.uebersprungen.length + ' übersprungen';
         if (e.fehler.length)
@@ -214,7 +216,7 @@ const ArchivImport = (() => {
         const zip = await Einlesen.zipLesenAusBlob(datei);
         const ergebnis = {
             wurzelId: null, faecher: 0, dokumente: 0, pdfs: 0, bilder: 0, seiten: 0, anhaenge: 0,
-            uebersprungen: [], fehler: [], hinweis: ''
+            unveraendert: 0, uebersprungen: [], fehler: [], hinweis: ''
         };
         /* Erst sortieren, dann anlegen — ein unsicherer Pfad legt nichts an. */
         const gueltig = [];
@@ -273,14 +275,35 @@ const ArchivImport = (() => {
                     ergebnis.uebersprungen.push(dateiName + ' (grösser als ' + Dateien.groesseText(Dateien.GRENZE) + ')');
                     continue;
                 }
+                /* WAS DAS VERZEICHNIS SCHON WEISS (E363): verschlüsselt heisst
+                   übersprungen, bevor ein Byte gelesen ist; und aus Name, Grösse
+                   und Prüfsumme wird die Kennung, an der ein Dokument sich beim
+                   zweiten Einlesen wiedererkennt (L114 Punkt 6). Fächer werden
+                   weiterverwendet, ein unverändertes Dokument bleibt EINES —
+                   kein „ (2)" mehr für dieselbe Datei. Eine geänderte Datei ist
+                   eine andere Kennung und kommt daneben, wie bisher: nichts wird
+                   überschrieben, Anmerkungen am alten Dokument bleiben (§46). */
+                const details = zip.eintrag ? zip.eintrag(e.name) : null;
+                if (details && details.verschluesselt) {
+                    ergebnis.uebersprungen.push(dateiName + ' (verschlüsselt — Redion kann das nicht lesen)');
+                    continue;
+                }
+                const elternId = fachAusPfad(rel.slice(0, -1));
+                const kennung = details && Number.isFinite(Number(details.crc)) && roh >= 0
+                    ? 'zip:' + dateiName + '|' + roh + '|' + ZipDetails.crc32Hex(Number(details.crc)) : '';
+                if (kennung && geschwister(elternId).some((k) => String(k.importKennung || '') === kennung)) {
+                    ergebnis.unveraendert++;
+                    continue;
+                }
                 const blob = await zip.alsBlob(e.name);
                 if (!blob) {
                     ergebnis.uebersprungen.push(dateiName + ' (nicht lesbar)');
                     continue;
                 }
-                const elternId = fachAusPfad(rel.slice(0, -1));
                 const f = new File([blob], dateiName, { type: mimeVon(dateiName) });
                 const erg = await dateiAlsDokument(f, elternId, opt);
+                if (kennung && erg.seiteId)
+                    Store.updateBlock(erg.seiteId, { importKennung: kennung });
                 ergebnis.dokumente++;
                 if (erg.art === 'pdf')
                     ergebnis.pdfs++;
@@ -292,7 +315,13 @@ const ArchivImport = (() => {
                     ergebnis.anhaenge++;
             }
             catch (err) {
-                ergebnis.fehler.push(dateiName + ': ' + (err instanceof Error ? err.message : String(err)));
+                const text = err instanceof Error ? err.message : String(err);
+                /* Ein beschädigter Eintrag ist eine Eigenschaft der ZIP, kein Fehler
+                   von Redion — er steht bei den Übersprungenen, mit Grund. */
+                if (/beschädigt/.test(text))
+                    ergebnis.uebersprungen.push(dateiName + ' (beschädigt — die Prüfsumme stimmt nicht)');
+                else
+                    ergebnis.fehler.push(dateiName + ': ' + text);
             }
             /* Zwischen zwei Dateien einmal atmen — die Oberfläche bleibt bedienbar. */
             await new Promise(f => setTimeout(f, 0));

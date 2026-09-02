@@ -28224,3 +28224,108 @@ Stempel stimmt nach dem Bau) 39/39, test247 (Menüband) 106/106, test41
 24/24, test71 59/59, test85 (Kern) 82/82, test272, test313, test315,
 test320 (die Suiten, die den Bus berühren) und test225 (Quellenangaben)
 11/11 — alle grün. Einzeldatei neu gebaut.
+
+
+E363 — Der ZIP-Leser sagt die Wahrheit: Prüfsumme, CP437, verschlüsselt — und die ZIP erkennt sich wieder (L114 Punkte 5 und 6)
+════════════════════════════════════════════════════════════════════════════
+
+BEFUND (L114, aus der Bestandsaufnahme als §46-Fälle empfohlen): der
+ZIP-Leser las weder die Flags noch die Prüfsumme eines Eintrags — beide
+standen seit jeher im Verzeichnis, sechzehn und acht Byte vor dem Namen.
+Folgen: ein beschädigter Eintrag kam als vollständiges Dokument ins Regal
+(still); ein verschlüsselter scheiterte erst im Entpacker mit einer
+allgemeinen Meldung; ein Name aus einem alten Windows-Packer („Übung.txt"
+in CP437) kam als „�bung" an. Und wer dieselbe ZIP nach einer Korrektur
+noch einmal einlas, hatte jedes Dokument doppelt — „ (2)" für alles, auch
+für das, was sich nicht geändert hatte.
+
+─── WAS GEBAUT WURDE ───────────────────────────────────────────────────────
+
+  1. `ZipDetails` (src/core/import/zipdetails.ts, reiner Kern): die
+     CRC-32-Tafel EINMAL — fortlaufend (`crc32Start`, `crc32Weiter`,
+     `crc32Fertig`), damit ein Blob scheibchenweise geprüft werden kann;
+     `nameDecodieren(bytes, flags)`: Bit 11 heisst UTF-8; ohne Bit wird
+     gültiges UTF-8 als UTF-8 gelesen (viele Packer setzen das Bit nicht),
+     was kein UTF-8 ist, als CP437 — 0x9A ist Ü, 0xE1 ist ß;
+     `istVerschluesselt` (Bit 0). Der Schreiber (`Austausch.crc32`,
+     `crc32Strom`) rechnet seither mit derselben Tafel.
+
+  2. BEIDE LESER (`Einlesen.zipLesen` im Speicher, `zipLesenAusBlob`
+     stückweise) lesen Flags und Prüfsumme, geben `eintrag(name)` heraus
+     (Grösse, gepackt, CRC, Flags, verschlüsselt — BEVOR ein Byte gelesen
+     ist), werfen bei einem verschlüsselten Eintrag vor dem Entpacker und
+     rechnen nach dem Entpacken die Prüfsumme nach: stimmt sie nicht, gibt
+     es keine Datei, sondern „ist beschädigt — die Prüfsumme stimmt nicht".
+     Beim Blob in Scheiben von einem Megabyte, wie der Schreiber sie
+     rechnet — ein 500-MB-Video liegt dafür nie im Arbeitsspeicher.
+
+  3. DER IMPORT (E350) stellt Beschädigtes und Verschlüsseltes zu den
+     ÜBERSPRUNGENEN, mit Grund — es sind Eigenschaften der ZIP, keine
+     Fehler von Redion —, und der Hinweis zählt sie.
+
+  4. DIE WIEDERERKENNUNG: aus Name, Rohgrösse und Prüsumme des
+     Verzeichnisses wird `importKennung` („zip:Skript.pdf|18211|9f3e2a01"),
+     gesetzt auf das angelegte Dokument. Beim zweiten Einlesen wird eine
+     Datei, deren Kennung im selben Fach schon steht, übersprungen und als
+     „schon da (unverändert)" gezählt — VOR dem Entpacken. Eine geänderte
+     Datei ist eine andere Kennung und kommt als „ (2)" daneben, wie
+     bisher: nichts wird überschrieben, Anmerkungen am alten Dokument
+     bleiben (§46). Fächer wurden schon vorher wiederverwendet.
+
+  5. DER EIGENE SCHREIBER setzt das UTF-8-Bit in beiden Köpfen — das
+     Prüfmaterial tat es seit E350, `Austausch.zipSchreiben` nicht.
+
+  6. E361 hob die Fassung von selbst (v115): eine neue Kerndatei im
+     Grundstock, index.html und sw.ts geändert.
+
+─── WAS NICHT GEBAUT WURDE ────────────────────────────────────────────────
+
+Kein Ersetzen eines geänderten Dokuments durch die neue Fassung — bewusst
+(Anmerkungen). Die Kennung gilt je Fach: eine verschobene Datei wird nicht
+wiedererkannt. Der zweite Lesegang für die Prüfsumme kostet Zeit — bei
+einer grossen Sicherung spürbar; keine Abschaltung, kein Fortschritt dafür
+(L82 Punkt 6). Keine ZIP-Verschlüsselung — weder lesen noch schreiben.
+Alles in L114.
+
+─── PRÜFUNG ────────────────────────────────────────────────────────────────
+
+test355 neu, 34 Punkte, PORT 9365, acht Abschnitte: der Kern mit dem
+Prüfvektor des Standards („123456789" → cbf43926), fortlaufend, CP437, UTF-8
+mit und ohne Bit (§1); beide Leser — `eintrag`, beschädigt, verschlüsselt
+(§2); ein alter Packer mit CP437-Namen (§3); eine kaputte ZIP — das Gute
+kommt, das andere steht mit Grund bei den Übersprungenen, im Fach steht
+nur „gut" (§4); zweimal dieselbe ZIP (§5); eine geänderte Datei daneben
+(§6); der eigene Schreiber, in beiden Köpfen (§7); keine Seitenfehler
+(§8). Die ZIPs baut die Suite selbst, mit frei wählbaren Flags, Namensbytes
+und Prüfsummen. Zwei Punkte des ersten Wurfs waren auf der Seite der Suite
+falsch: die Sortierung (der Browser stellt „normal" vor „Öl") und der Name
+des Wurzelfachs (E350: der eine oberste Ordner, nicht die ZIP). Belegt rot
+in sieben Richtungen, jede einzeln zurückgedreht und wiederhergestellt:
+
+a — das Polynom der Tafel um ein Bit verdreht (zipdetails.js): drei rot,
+    dann bricht die Suite ab — jeder Eintrag gilt als beschädigt, auch das
+    Prüfmaterial (§1, §2).
+b — Namen immer als UTF-8 (zipdetails.js): 29/34 — „�bung", „Stra�e"
+    (§1, §2, §3).
+c — Bit 0 nie gesehen (zipdetails.js): 26/34 (§1, §2, §4: der
+    verschlüsselte Eintrag geht durch den Entpacker).
+d — die Prüfsumme nicht nachgerechnet (einlesen.js): 29/34 — kaputt.txt
+    kommt als Dokument ins Fach (§2, §4). Der Befund.
+e — keine Wiedererkennung (archiveImport.js): 29/34 — „a (2)", „b (2)",
+    „bild (2)" (§5). Der andere Befund.
+f — die Kennung aus dem Namen allein (archiveImport.js): 31/34 — die
+    geänderte Datei gilt als unverändert (§5, §6).
+g — der Schreiber ohne UTF-8-Bit (ausgeben.js): 33/34 (§7).
+
+Drei Nachbarn mussten nachgezogen werden, alle zu Recht: test342 (E350)
+erwartete beim zweiten Einlesen derselben ZIP „Kapitel 1 (2)" und
+„Notizen (2)" — das war die alte Entscheidung, und §3, §7 und §9 lesen
+jetzt die neue (§9 liest in ein frisches Fach, sonst gäbe es keine PDF zu
+lesen); test103 (ZIP-Grenzen, ohne Browser) lädt ausgeben.js und
+einlesen.js mit `new Function` und bekam `ZipDetails` nicht — der Kern
+steht jetzt als Text davor; test105 verlangte den Kopf „ERZEUGT — NICHT
+VON HAND ÄNDERN" auch in zipdetails.js. Danach: test342 42/42, test103
+36/36, test105 120/120, test100 (Anhänge in der Sicherung — der Leser
+prüft jetzt jede Datei) 32/32, test96 (die Sicherung) 18/18, test87
+152/152, test109 20/20, test143 23/23, test99 23/23, test353 (Dienststand
+v116) 39/39, test74 (Einzeldatei) 12/12, test225 11/11 — alle grün.

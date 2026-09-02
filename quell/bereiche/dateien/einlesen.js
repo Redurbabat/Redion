@@ -172,10 +172,13 @@ const Einlesen = (() => {
             if (d.getUint32(zeiger, true) !== 0x02014b50)
                 break;
             const methode = d.getUint16(zeiger + 10, true);
+            /* Flags und Prüfsumme standen hier immer — gelesen wurden sie nie (E363). */
+            const flags = d.getUint16(zeiger + 8, true);
+            const crc = d.getUint32(zeiger + 16, true);
             const nameLaenge = d.getUint16(zeiger + 28, true);
             const extra = d.getUint16(zeiger + 30, true);
             const kommentar = d.getUint16(zeiger + 32, true);
-            const name = new TextDecoder().decode(bytes.subarray(zeiger + 46, zeiger + 46 + nameLaenge));
+            const name = ZipDetails.nameDecodieren(bytes.subarray(zeiger + 46, zeiger + 46 + nameLaenge), flags);
             /* Erst die 32-Bit-Felder, dann die echten Zahlen aus dem Zusatz —
                aber nur für die Felder, die den Platzhalter tragen. */
             const echt = zip64Zusatz(d, zeiger + 46 + nameLaenge, extra, d.getUint32(zeiger + 24, true), d.getUint32(zeiger + 20, true), d.getUint32(zeiger + 42, true));
@@ -186,29 +189,45 @@ const Einlesen = (() => {
             const lokalExtra = d.getUint16(offset + 28, true);
             const start = offset + 30 + lokalName + lokalExtra;
             const roh = bytes.subarray(start, start + gepackt);
-            dateien.set(name, { methode, roh });
+            dateien.set(name, { methode, roh, flags, crc, groesse: echt.roh });
             zeiger += 46 + nameLaenge + extra + kommentar;
         }
         vollzaehlig(anzahl, dateien.size);
-        /* Entpacken übernimmt der Browser */
+        /* Entpacken übernimmt der Browser — und DANACH wird nachgerechnet (E363):
+           ein Eintrag, dessen Bytes nicht zur Prüfsumme passen, ist beschädigt
+           und kommt nicht als Datei heraus. Ein verschlüsselter kommt gar nicht
+           erst in den Entpacker. */
         const holen = async (name) => {
             const e = dateien.get(name);
             if (!e)
                 return null;
+            if (ZipDetails.istVerschluesselt(e.flags))
+                throw new Error('„' + name + '" ist verschlüsselt — Redion kann keine verschlüsselten ZIP-Einträge lesen.');
+            let ergebnis;
             if (e.methode === 0)
-                return new Uint8Array(e.roh);
-            if (e.methode !== 8)
-                throw new Error('Diese Packmethode kennt der Browser nicht.');
-            if (!self.DecompressionStream)
-                throw new Error('Dieser Browser kann kein ZIP entpacken.');
-            const strom = new Blob([e.roh]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
-            return new Uint8Array(await new Response(strom).arrayBuffer());
+                ergebnis = new Uint8Array(e.roh);
+            else {
+                if (e.methode !== 8)
+                    throw new Error('Diese Packmethode kennt der Browser nicht.');
+                if (!self.DecompressionStream)
+                    throw new Error('Dieser Browser kann kein ZIP entpacken.');
+                const strom = new Blob([e.roh]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+                ergebnis = new Uint8Array(await new Response(strom).arrayBuffer());
+            }
+            if (ZipDetails.crc32(ergebnis) !== (e.crc >>> 0))
+                throw new Error('„' + name + '" ist beschädigt — die Prüfsumme stimmt nicht.');
+            return ergebnis;
+        };
+        const eintrag = (name) => {
+            const e = dateien.get(name);
+            return e ? { methode: e.methode, groesse: e.groesse, crc: e.crc >>> 0, flags: e.flags,
+                verschluesselt: ZipDetails.istVerschluesselt(e.flags) } : null;
         };
         const text = async (name) => {
             const b = await holen(name);
             return b ? new TextDecoder().decode(b) : null;
         };
-        return { namen: [...dateien.keys()], holen, text };
+        return { namen: [...dateien.keys()], holen, text, eintrag };
     };
     /**
      * Dasselbe für ein Archiv, das nicht in den Arbeitsspeicher passt.
@@ -264,35 +283,56 @@ const Einlesen = (() => {
             if (zeiger + 46 > vz.byteLength || vz.getUint32(zeiger, true) !== 0x02014b50)
                 break;
             const methode = vz.getUint16(zeiger + 10, true);
+            const flags = vz.getUint16(zeiger + 8, true);
+            const crc = vz.getUint32(zeiger + 16, true);
             const nameLaenge = vz.getUint16(zeiger + 28, true);
             const extra = vz.getUint16(zeiger + 30, true);
             const kommentar = vz.getUint16(zeiger + 32, true);
-            const name = new TextDecoder().decode(vzBytes.subarray(zeiger + 46, zeiger + 46 + nameLaenge));
+            const name = ZipDetails.nameDecodieren(vzBytes.subarray(zeiger + 46, zeiger + 46 + nameLaenge), flags);
             const echt = zip64Zusatz(vz, zeiger + 46 + nameLaenge, extra, vz.getUint32(zeiger + 24, true), vz.getUint32(zeiger + 20, true), vz.getUint32(zeiger + 42, true));
-            dateien.set(name, { methode, gepackt: echt.gepackt, roh: echt.roh, offset: echt.versatz });
+            dateien.set(name, { methode, gepackt: echt.gepackt, roh: echt.roh, offset: echt.versatz, flags, crc });
             zeiger += 46 + nameLaenge + extra + kommentar;
         }
         vollzaehlig(anzahl, dateien.size);
         /* Die Längen der Zusatzfelder stehen am lokalen Kopf noch einmal, und
            zwar oft anders als im Verzeichnis. Wer das Verzeichnis glaubt, liest
            um ein paar Byte verschoben — und bekommt Daten, die fast stimmen. */
+        /* DIE PRÜFSUMME SCHEIBCHENWEISE (E363): ein Blob liegt beim Browser,
+           nicht im Arbeitsspeicher — geprüft wird er in Stücken von einem
+           Megabyte, wie der Schreiber ihn rechnet. Ein beschädigter Eintrag
+           kam vorher als vollständige Datei heraus, still. */
+        const SCHEIBE = 1024 * 1024;
+        const pruefsumme = async (name, b, soll) => {
+            let z = ZipDetails.crc32Start();
+            for (let von = 0; von < b.size; von += SCHEIBE)
+                z = ZipDetails.crc32Weiter(z, new Uint8Array(await b.slice(von, Math.min(von + SCHEIBE, b.size)).arrayBuffer()));
+            if (ZipDetails.crc32Fertig(z) !== (soll >>> 0))
+                throw new Error('„' + name + '" ist beschädigt — die Prüfsumme stimmt nicht.');
+        };
         const alsBlob = async (name) => {
             const e = dateien.get(name);
             if (!e)
                 return null;
+            if (ZipDetails.istVerschluesselt(e.flags))
+                throw new Error('„' + name + '" ist verschlüsselt — Redion kann keine verschlüsselten ZIP-Einträge lesen.');
             const k = new DataView(await blob.slice(e.offset, e.offset + 30).arrayBuffer());
             const lokalName = k.getUint16(26, true);
             const lokalExtra = k.getUint16(28, true);
             const start = e.offset + 30 + lokalName + lokalExtra;
             const roh = blob.slice(start, start + e.gepackt);
+            let ergebnis;
             if (e.methode === 0)
-                return roh;
-            if (e.methode !== 8)
-                throw new Error('Diese Packmethode kennt der Browser nicht.');
-            if (!self.DecompressionStream)
-                throw new Error('Dieser Browser kann kein ZIP entpacken.');
-            const strom = roh.stream().pipeThrough(new DecompressionStream('deflate-raw'));
-            return await new Response(strom).blob();
+                ergebnis = roh;
+            else {
+                if (e.methode !== 8)
+                    throw new Error('Diese Packmethode kennt der Browser nicht.');
+                if (!self.DecompressionStream)
+                    throw new Error('Dieser Browser kann kein ZIP entpacken.');
+                const strom = roh.stream().pipeThrough(new DecompressionStream('deflate-raw'));
+                ergebnis = await new Response(strom).blob();
+            }
+            await pruefsumme(name, ergebnis, e.crc);
+            return ergebnis;
         };
         const holen = async (name) => {
             const b = await alsBlob(name);
@@ -309,7 +349,13 @@ const Einlesen = (() => {
             const e = dateien.get(name);
             return e && Number.isFinite(Number(e.roh)) ? Number(e.roh) : -1;
         };
-        return { namen: [...dateien.keys()], alsBlob, holen, text, groesse };
+        /** Was das Verzeichnis über einen Eintrag sagt — vor dem ersten Byte (E363). */
+        const eintrag = (name) => {
+            const e = dateien.get(name);
+            return e ? { methode: e.methode, groesse: Number(e.roh), gepackt: Number(e.gepackt), crc: e.crc >>> 0,
+                flags: e.flags, verschluesselt: ZipDetails.istVerschluesselt(e.flags) } : null;
+        };
+        return { namen: [...dateien.keys()], alsBlob, holen, text, groesse, eintrag };
     };
     const xml = (t) => new DOMParser().parseFromString(t, 'application/xml');
     /* ========================================================================

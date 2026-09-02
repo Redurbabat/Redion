@@ -4988,16 +4988,28 @@ E350 holt eine ZIP so ins Regal, wie sie ist. Was bleibt, mit Grund:
    Das Ablegen funktioniert, man sieht es nur nicht kommen (L78 Punkt 1,
    mit Telefon).
 
-5. **Der Leser kennt CP437 nicht, keine verschlüsselten Einträge, keine
-   CRC-Prüfung.** Namen aus alten Windows-Packern ohne UTF-8-Bit kommen mit
-   Ersatzzeichen an; ein verschlüsselter Eintrag scheitert erst beim
-   Entpacken mit einer allgemeinen Meldung; ein beschädigter Eintrag wird
-   nicht erkannt. Der eigene Schreiber setzt seit E350 das UTF-8-Bit im
-   Prüfmaterial, `Austausch.zipSchreiben` noch nicht.
+5. ~~**Der Leser kennt CP437 nicht, keine verschlüsselten Einträge, keine
+   CRC-Prüfung.**~~ ERLEDIGT in E363: `ZipDetails` (Kern) rechnet die
+   CRC-32 fortlaufend, liest Namen ohne UTF-8-Bit als CP437 (gültiges
+   UTF-8 ohne Bit bleibt UTF-8) und erkennt Bit 0; beide Leser prüfen
+   jeden Eintrag nach dem Entpacken gegen seine Prüfsumme (scheibchenweise,
+   ohne ihn in den Speicher zu holen) und werfen bei Beschädigung und bei
+   Verschlüsselung mit Grund; der Import stellt beides zu den
+   Übersprungenen. `Austausch.zipSchreiben` setzt das UTF-8-Bit in beiden
+   Köpfen. test355. Was bleibt: die Prüfung kostet einen zweiten Lesegang
+   je Eintrag — bei einer 500-MB-Sicherung spürbar, aber ehrlich.
 
-6. **Keine Wiedererkennung beim zweiten Import.** Fächer werden
-   wiederverwendet, Dokumente bekommen „ (2)". Wer dieselbe ZIP nach einer
-   Korrektur noch einmal einliest, hat jedes Dokument doppelt. Eine
+6. ~~**Keine Wiedererkennung beim zweiten Import.**~~ ERLEDIGT in E363:
+   jedes Dokument aus einer ZIP trägt `importKennung` = Name, Rohgrösse und
+   Prüfsumme aus dem Verzeichnis; beim zweiten Einlesen wird eine Datei mit
+   derselben Kennung im selben Fach übersprungen und gezählt („3 schon da
+   (unverändert)"), eine geänderte kommt als „ (2)" daneben — nichts wird
+   überschrieben, Anmerkungen am alten Dokument bleiben. test355. Was
+   bleibt: eine Datei, die in ein anderes Fach verschoben wurde, wird nicht
+   wiedererkannt (die Kennung gilt je Fach); und die Frage, ob eine
+   geänderte Datei das alte Dokument ERSETZEN soll, ist bewusst mit Nein
+   beantwortet — das wäre der Weg, auf dem Anmerkungen verschwinden.
+   Der ursprüngliche Absatz stand so: Eine
    Kennung je Datei (Name + Grösse + Prüfsumme) könnte das ändern — das
    ist der Obsidian-Weg (redion-id), nur ohne Kennung im Archiv.
 

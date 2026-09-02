@@ -15871,7 +15871,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 114, inhalt: '2c46aea9f44d74e7', gebaut: '2026-09-02T21:45:03.243Z' };
+const Stand = { fassung: 116, inhalt: 'd4921105c286ed3e', gebaut: '2026-09-02T21:59:59.505Z' };
 window.Stand = Stand;
 
 </script>
@@ -23953,6 +23953,107 @@ const Spaltentyp = (() => {
     return { erkenne, wandle, name, alsZahl, alsDatum, alsJaNein };
 })();
 window.Spaltentyp = Spaltentyp;
+
+</script>
+<script>
+/* ===== quell/core/import/zipdetails.js ===== */
+"use strict";
+/* ============================================================================
+ * core/import/zipdetails.js — was ein ZIP-Eintrag über sich sagt (E363)
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/core/import/zipdetails.ts`. `npm run bauen:ts` schreibt
+ * daraus `quell/core/import/zipdetails.js`. Wer das .js bearbeitet, verliert
+ * die Änderung beim nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es
+ * vorher.
+ * ----------------------------------------------------------------------------
+ * Drei Dinge, die der Leser (bereiche/dateien/einlesen.ts) bisher überging
+ * (L114 Punkt 5), hier als reiner Kern ohne DOM und ohne Ablage:
+ *
+ *   · DIE PRÜFSUMME. Jeder Eintrag trägt eine CRC-32 seiner rohen Bytes.
+ *     Wer sie nicht nachrechnet, nimmt einen beschädigten Eintrag als
+ *     vollständiges Dokument an — still. Die Rechnung ist fortlaufend
+ *     (`crc32Weiter`), damit ein Blob scheibchenweise geprüft werden kann,
+ *     ohne je ganz im Arbeitsspeicher zu liegen.
+ *   · DER NAME. Bit 11 der Flags sagt „UTF-8". Fehlt es, stammt der Name
+ *     aus einem alten Windows-Packer und ist CP437 — „Übung" käme sonst mit
+ *     Ersatzzeichen an. Gültiges UTF-8 ohne Bit wird trotzdem als UTF-8
+ *     gelesen (viele Packer setzen das Bit nicht, schreiben aber UTF-8);
+ *     erst was kein UTF-8 ist, wird CP437.
+ *   · VERSCHLÜSSELT. Bit 0 der Flags. Redion kann das nicht lesen und
+ *     sagt es, statt beim Entpacken mit einer allgemeinen Meldung zu
+ *     scheitern.
+ *
+ * Der Schreiber (ausgeben.ts) nimmt dieselbe Prüfsumme; die Tafel steht
+ * damit nur noch einmal.
+ * ==========================================================================*/
+const ZipDetails = (() => {
+    const UTF8_BIT = 0x800;
+    const VERSCHLUESSELT_BIT = 0x1;
+    let tafel = null;
+    const crc32Tafel = () => {
+        if (tafel)
+            return tafel;
+        tafel = new Uint32Array(256);
+        for (let n = 0; n < 256; n++) {
+            let c = n;
+            for (let k = 0; k < 8; k++)
+                c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+            tafel[n] = c >>> 0;
+        }
+        return tafel;
+    };
+    /** Der Anfangswert einer fortlaufenden Rechnung. */
+    const crc32Start = () => 0xFFFFFFFF;
+    /** Ein Stück Bytes in die laufende Rechnung nehmen. */
+    const crc32Weiter = (zwischen, bytes) => {
+        const t = crc32Tafel();
+        let c = zwischen >>> 0;
+        for (let i = 0; i < bytes.length; i++)
+            c = (t[(c ^ (bytes[i] ?? 0)) & 0xFF] ?? 0) ^ (c >>> 8);
+        return c >>> 0;
+    };
+    /** Die Rechnung abschliessen. */
+    const crc32Fertig = (zwischen) => ((zwischen ^ 0xFFFFFFFF) >>> 0);
+    /** Alles auf einmal — für Bytes, die ohnehin im Speicher liegen. */
+    const crc32 = (bytes) => crc32Fertig(crc32Weiter(crc32Start(), bytes));
+    const crc32Hex = (n) => (n >>> 0).toString(16).padStart(8, '0');
+    /* CP437 — die obere Hälfte (0x80–0xFF), in der Reihenfolge der Tabelle. */
+    const CP437_OBEN = 'ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»' +
+        '░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀' +
+        'αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■ ';
+    const cp437 = (bytes) => {
+        let s = '';
+        for (let i = 0; i < bytes.length; i++) {
+            const b = bytes[i] ?? 0;
+            s += b < 0x80 ? String.fromCharCode(b) : (CP437_OBEN[b - 0x80] ?? '?');
+        }
+        return s;
+    };
+    /** Der Name eines Eintrags aus seinen Bytes und den Flags des Kopfs. */
+    const nameDecodieren = (bytes, flags) => {
+        if ((flags & UTF8_BIT) !== 0)
+            return new TextDecoder('utf-8').decode(bytes);
+        let nurAscii = true;
+        for (let i = 0; i < bytes.length; i++)
+            if ((bytes[i] ?? 0) >= 0x80) {
+                nurAscii = false;
+                break;
+            }
+        if (nurAscii)
+            return new TextDecoder('utf-8').decode(bytes);
+        try {
+            return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+        }
+        catch {
+            return cp437(bytes);
+        }
+    };
+    const istVerschluesselt = (flags) => (flags & VERSCHLUESSELT_BIT) !== 0;
+    return { UTF8_BIT, VERSCHLUESSELT_BIT, crc32Tafel, crc32Start, crc32Weiter, crc32Fertig, crc32, crc32Hex,
+        cp437, nameDecodieren, istVerschluesselt };
+})();
+window.ZipDetails = ZipDetails;
 
 </script>
 <script>
@@ -84208,10 +84309,13 @@ const Einlesen = (() => {
             if (d.getUint32(zeiger, true) !== 0x02014b50)
                 break;
             const methode = d.getUint16(zeiger + 10, true);
+            /* Flags und Prüfsumme standen hier immer — gelesen wurden sie nie (E363). */
+            const flags = d.getUint16(zeiger + 8, true);
+            const crc = d.getUint32(zeiger + 16, true);
             const nameLaenge = d.getUint16(zeiger + 28, true);
             const extra = d.getUint16(zeiger + 30, true);
             const kommentar = d.getUint16(zeiger + 32, true);
-            const name = new TextDecoder().decode(bytes.subarray(zeiger + 46, zeiger + 46 + nameLaenge));
+            const name = ZipDetails.nameDecodieren(bytes.subarray(zeiger + 46, zeiger + 46 + nameLaenge), flags);
             /* Erst die 32-Bit-Felder, dann die echten Zahlen aus dem Zusatz —
                aber nur für die Felder, die den Platzhalter tragen. */
             const echt = zip64Zusatz(d, zeiger + 46 + nameLaenge, extra, d.getUint32(zeiger + 24, true), d.getUint32(zeiger + 20, true), d.getUint32(zeiger + 42, true));
@@ -84222,29 +84326,45 @@ const Einlesen = (() => {
             const lokalExtra = d.getUint16(offset + 28, true);
             const start = offset + 30 + lokalName + lokalExtra;
             const roh = bytes.subarray(start, start + gepackt);
-            dateien.set(name, { methode, roh });
+            dateien.set(name, { methode, roh, flags, crc, groesse: echt.roh });
             zeiger += 46 + nameLaenge + extra + kommentar;
         }
         vollzaehlig(anzahl, dateien.size);
-        /* Entpacken übernimmt der Browser */
+        /* Entpacken übernimmt der Browser — und DANACH wird nachgerechnet (E363):
+           ein Eintrag, dessen Bytes nicht zur Prüfsumme passen, ist beschädigt
+           und kommt nicht als Datei heraus. Ein verschlüsselter kommt gar nicht
+           erst in den Entpacker. */
         const holen = async (name) => {
             const e = dateien.get(name);
             if (!e)
                 return null;
+            if (ZipDetails.istVerschluesselt(e.flags))
+                throw new Error('„' + name + '" ist verschlüsselt — Redion kann keine verschlüsselten ZIP-Einträge lesen.');
+            let ergebnis;
             if (e.methode === 0)
-                return new Uint8Array(e.roh);
-            if (e.methode !== 8)
-                throw new Error('Diese Packmethode kennt der Browser nicht.');
-            if (!self.DecompressionStream)
-                throw new Error('Dieser Browser kann kein ZIP entpacken.');
-            const strom = new Blob([e.roh]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
-            return new Uint8Array(await new Response(strom).arrayBuffer());
+                ergebnis = new Uint8Array(e.roh);
+            else {
+                if (e.methode !== 8)
+                    throw new Error('Diese Packmethode kennt der Browser nicht.');
+                if (!self.DecompressionStream)
+                    throw new Error('Dieser Browser kann kein ZIP entpacken.');
+                const strom = new Blob([e.roh]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+                ergebnis = new Uint8Array(await new Response(strom).arrayBuffer());
+            }
+            if (ZipDetails.crc32(ergebnis) !== (e.crc >>> 0))
+                throw new Error('„' + name + '" ist beschädigt — die Prüfsumme stimmt nicht.');
+            return ergebnis;
+        };
+        const eintrag = (name) => {
+            const e = dateien.get(name);
+            return e ? { methode: e.methode, groesse: e.groesse, crc: e.crc >>> 0, flags: e.flags,
+                verschluesselt: ZipDetails.istVerschluesselt(e.flags) } : null;
         };
         const text = async (name) => {
             const b = await holen(name);
             return b ? new TextDecoder().decode(b) : null;
         };
-        return { namen: [...dateien.keys()], holen, text };
+        return { namen: [...dateien.keys()], holen, text, eintrag };
     };
     /**
      * Dasselbe für ein Archiv, das nicht in den Arbeitsspeicher passt.
@@ -84300,35 +84420,56 @@ const Einlesen = (() => {
             if (zeiger + 46 > vz.byteLength || vz.getUint32(zeiger, true) !== 0x02014b50)
                 break;
             const methode = vz.getUint16(zeiger + 10, true);
+            const flags = vz.getUint16(zeiger + 8, true);
+            const crc = vz.getUint32(zeiger + 16, true);
             const nameLaenge = vz.getUint16(zeiger + 28, true);
             const extra = vz.getUint16(zeiger + 30, true);
             const kommentar = vz.getUint16(zeiger + 32, true);
-            const name = new TextDecoder().decode(vzBytes.subarray(zeiger + 46, zeiger + 46 + nameLaenge));
+            const name = ZipDetails.nameDecodieren(vzBytes.subarray(zeiger + 46, zeiger + 46 + nameLaenge), flags);
             const echt = zip64Zusatz(vz, zeiger + 46 + nameLaenge, extra, vz.getUint32(zeiger + 24, true), vz.getUint32(zeiger + 20, true), vz.getUint32(zeiger + 42, true));
-            dateien.set(name, { methode, gepackt: echt.gepackt, roh: echt.roh, offset: echt.versatz });
+            dateien.set(name, { methode, gepackt: echt.gepackt, roh: echt.roh, offset: echt.versatz, flags, crc });
             zeiger += 46 + nameLaenge + extra + kommentar;
         }
         vollzaehlig(anzahl, dateien.size);
         /* Die Längen der Zusatzfelder stehen am lokalen Kopf noch einmal, und
            zwar oft anders als im Verzeichnis. Wer das Verzeichnis glaubt, liest
            um ein paar Byte verschoben — und bekommt Daten, die fast stimmen. */
+        /* DIE PRÜFSUMME SCHEIBCHENWEISE (E363): ein Blob liegt beim Browser,
+           nicht im Arbeitsspeicher — geprüft wird er in Stücken von einem
+           Megabyte, wie der Schreiber ihn rechnet. Ein beschädigter Eintrag
+           kam vorher als vollständige Datei heraus, still. */
+        const SCHEIBE = 1024 * 1024;
+        const pruefsumme = async (name, b, soll) => {
+            let z = ZipDetails.crc32Start();
+            for (let von = 0; von < b.size; von += SCHEIBE)
+                z = ZipDetails.crc32Weiter(z, new Uint8Array(await b.slice(von, Math.min(von + SCHEIBE, b.size)).arrayBuffer()));
+            if (ZipDetails.crc32Fertig(z) !== (soll >>> 0))
+                throw new Error('„' + name + '" ist beschädigt — die Prüfsumme stimmt nicht.');
+        };
         const alsBlob = async (name) => {
             const e = dateien.get(name);
             if (!e)
                 return null;
+            if (ZipDetails.istVerschluesselt(e.flags))
+                throw new Error('„' + name + '" ist verschlüsselt — Redion kann keine verschlüsselten ZIP-Einträge lesen.');
             const k = new DataView(await blob.slice(e.offset, e.offset + 30).arrayBuffer());
             const lokalName = k.getUint16(26, true);
             const lokalExtra = k.getUint16(28, true);
             const start = e.offset + 30 + lokalName + lokalExtra;
             const roh = blob.slice(start, start + e.gepackt);
+            let ergebnis;
             if (e.methode === 0)
-                return roh;
-            if (e.methode !== 8)
-                throw new Error('Diese Packmethode kennt der Browser nicht.');
-            if (!self.DecompressionStream)
-                throw new Error('Dieser Browser kann kein ZIP entpacken.');
-            const strom = roh.stream().pipeThrough(new DecompressionStream('deflate-raw'));
-            return await new Response(strom).blob();
+                ergebnis = roh;
+            else {
+                if (e.methode !== 8)
+                    throw new Error('Diese Packmethode kennt der Browser nicht.');
+                if (!self.DecompressionStream)
+                    throw new Error('Dieser Browser kann kein ZIP entpacken.');
+                const strom = roh.stream().pipeThrough(new DecompressionStream('deflate-raw'));
+                ergebnis = await new Response(strom).blob();
+            }
+            await pruefsumme(name, ergebnis, e.crc);
+            return ergebnis;
         };
         const holen = async (name) => {
             const b = await alsBlob(name);
@@ -84345,7 +84486,13 @@ const Einlesen = (() => {
             const e = dateien.get(name);
             return e && Number.isFinite(Number(e.roh)) ? Number(e.roh) : -1;
         };
-        return { namen: [...dateien.keys()], alsBlob, holen, text, groesse };
+        /** Was das Verzeichnis über einen Eintrag sagt — vor dem ersten Byte (E363). */
+        const eintrag = (name) => {
+            const e = dateien.get(name);
+            return e ? { methode: e.methode, groesse: Number(e.roh), gepackt: Number(e.gepackt), crc: e.crc >>> 0,
+                flags: e.flags, verschluesselt: ZipDetails.istVerschluesselt(e.flags) } : null;
+        };
+        return { namen: [...dateien.keys()], alsBlob, holen, text, groesse, eintrag };
     };
     const xml = (t) => new DOMParser().parseFromString(t, 'application/xml');
     /* ========================================================================
@@ -85250,6 +85397,8 @@ const ArchivImport = (() => {
             stuecke.push(e.anhaenge + (e.anhaenge === 1 ? ' Datei' : ' Dateien'));
         let s = '„' + zipName + '": ' + (stuecke.length ? stuecke.join(', ') : 'nichts Lesbares') +
             ' in ' + e.faecher + (e.faecher === 1 ? ' Fach' : ' Fächern');
+        if (e.unveraendert)
+            s += ' · ' + e.unveraendert + ' schon da (unverändert)';
         if (e.uebersprungen.length)
             s += ' · ' + e.uebersprungen.length + ' übersprungen';
         if (e.fehler.length)
@@ -85282,7 +85431,7 @@ const ArchivImport = (() => {
         const zip = await Einlesen.zipLesenAusBlob(datei);
         const ergebnis = {
             wurzelId: null, faecher: 0, dokumente: 0, pdfs: 0, bilder: 0, seiten: 0, anhaenge: 0,
-            uebersprungen: [], fehler: [], hinweis: ''
+            unveraendert: 0, uebersprungen: [], fehler: [], hinweis: ''
         };
         /* Erst sortieren, dann anlegen — ein unsicherer Pfad legt nichts an. */
         const gueltig = [];
@@ -85341,14 +85490,35 @@ const ArchivImport = (() => {
                     ergebnis.uebersprungen.push(dateiName + ' (grösser als ' + Dateien.groesseText(Dateien.GRENZE) + ')');
                     continue;
                 }
+                /* WAS DAS VERZEICHNIS SCHON WEISS (E363): verschlüsselt heisst
+                   übersprungen, bevor ein Byte gelesen ist; und aus Name, Grösse
+                   und Prüfsumme wird die Kennung, an der ein Dokument sich beim
+                   zweiten Einlesen wiedererkennt (L114 Punkt 6). Fächer werden
+                   weiterverwendet, ein unverändertes Dokument bleibt EINES —
+                   kein „ (2)" mehr für dieselbe Datei. Eine geänderte Datei ist
+                   eine andere Kennung und kommt daneben, wie bisher: nichts wird
+                   überschrieben, Anmerkungen am alten Dokument bleiben (§46). */
+                const details = zip.eintrag ? zip.eintrag(e.name) : null;
+                if (details && details.verschluesselt) {
+                    ergebnis.uebersprungen.push(dateiName + ' (verschlüsselt — Redion kann das nicht lesen)');
+                    continue;
+                }
+                const elternId = fachAusPfad(rel.slice(0, -1));
+                const kennung = details && Number.isFinite(Number(details.crc)) && roh >= 0
+                    ? 'zip:' + dateiName + '|' + roh + '|' + ZipDetails.crc32Hex(Number(details.crc)) : '';
+                if (kennung && geschwister(elternId).some((k) => String(k.importKennung || '') === kennung)) {
+                    ergebnis.unveraendert++;
+                    continue;
+                }
                 const blob = await zip.alsBlob(e.name);
                 if (!blob) {
                     ergebnis.uebersprungen.push(dateiName + ' (nicht lesbar)');
                     continue;
                 }
-                const elternId = fachAusPfad(rel.slice(0, -1));
                 const f = new File([blob], dateiName, { type: mimeVon(dateiName) });
                 const erg = await dateiAlsDokument(f, elternId, opt);
+                if (kennung && erg.seiteId)
+                    Store.updateBlock(erg.seiteId, { importKennung: kennung });
                 ergebnis.dokumente++;
                 if (erg.art === 'pdf')
                     ergebnis.pdfs++;
@@ -85360,7 +85530,13 @@ const ArchivImport = (() => {
                     ergebnis.anhaenge++;
             }
             catch (err) {
-                ergebnis.fehler.push(dateiName + ': ' + (err instanceof Error ? err.message : String(err)));
+                const text = err instanceof Error ? err.message : String(err);
+                /* Ein beschädigter Eintrag ist eine Eigenschaft der ZIP, kein Fehler
+                   von Redion — er steht bei den Übersprungenen, mit Grund. */
+                if (/beschädigt/.test(text))
+                    ergebnis.uebersprungen.push(dateiName + ' (beschädigt — die Prüfsumme stimmt nicht)');
+                else
+                    ergebnis.fehler.push(dateiName + ': ' + text);
             }
             /* Zwischen zwei Dateien einmal atmen — die Oberfläche bleibt bedienbar. */
             await new Promise(f => setTimeout(f, 0));
@@ -99846,22 +100022,9 @@ const Austausch = (() => {
      * Ohne Komprimierung (Methode 0). Word und Excel lesen das anstandslos,
      * und der Code bleibt kurz genug, um ihn zu überblicken.
      * ======================================================================*/
-    let crcTafel = null;
-    const crc32 = (daten) => {
-        if (!crcTafel) {
-            crcTafel = new Uint32Array(256);
-            for (let n = 0; n < 256; n++) {
-                let c = n;
-                for (let k = 0; k < 8; k++)
-                    c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
-                crcTafel[n] = c >>> 0;
-            }
-        }
-        let c = 0xFFFFFFFF;
-        for (let i = 0; i < daten.length; i++)
-            c = crcTafel[(c ^ daten[i]) & 0xFF] ^ (c >>> 8);
-        return (c ^ 0xFFFFFFFF) >>> 0;
-    };
+    /* Die Prüfsumme rechnet seit E363 der Kern (`ZipDetails`) — dieselbe
+       Tafel für Schreiber und Leser, damit beide dasselbe meinen. */
+    const crc32 = (daten) => ZipDetails.crc32(daten instanceof Uint8Array ? daten : new Uint8Array(daten));
     /**
      * Dieselbe Prüfsumme, aber häppchenweise — für einen Blob, der nicht in den
      * Arbeitsspeicher passt.
@@ -99877,18 +100040,14 @@ const Austausch = (() => {
      */
     const SCHEIBE = 1024 * 1024;
     const crc32Strom = async (blob, beiFortschritt) => {
-        if (!crcTafel)
-            crc32(new Uint8Array(0)); /* Tafel einmal bauen */
-        let c = 0xFFFFFFFF;
+        let c = ZipDetails.crc32Start();
         for (let von = 0; von < blob.size; von += SCHEIBE) {
             const bis = Math.min(von + SCHEIBE, blob.size);
-            const teil = new Uint8Array(await blob.slice(von, bis).arrayBuffer());
-            for (let i = 0; i < teil.length; i++)
-                c = (crcTafel[(c ^ (teil[i] ?? 0)) & 0xFF] ?? 0) ^ (c >>> 8);
+            c = ZipDetails.crc32Weiter(c, new Uint8Array(await blob.slice(von, bis).arrayBuffer()));
             if (beiFortschritt)
                 beiFortschritt(bis / blob.size);
         }
-        return (c ^ 0xFFFFFFFF) >>> 0;
+        return ZipDetails.crc32Fertig(c);
     };
     /* ------------------------------------------------------------------------
      * DIE DREI GRENZEN — und warum sie seit dem 6. August keine mehr sind
@@ -99980,7 +100139,7 @@ const Austausch = (() => {
             const kopf = new Uint8Array(30 + name.length + lokalExtra);
             schreibe32(kopf, 0, 0x04034b50);
             schreibe16(kopf, 4, grosseDatei ? 45 : 20); /* benötigte Fassung */
-            schreibe16(kopf, 6, 0); /* Flags             */
+            schreibe16(kopf, 6, ZipDetails.UTF8_BIT); /* Flags: Bit 11 — der Name ist UTF-8 (E363, L114 Punkt 5) */
             schreibe16(kopf, 8, 0); /* Methode: gespeichert */
             schreibe16(kopf, 10, 0); /* Uhrzeit           */
             schreibe16(kopf, 12, 0x21); /* Datum: 1. Jan 1980 */
@@ -100015,7 +100174,7 @@ const Austausch = (() => {
             schreibe32(eintrag, 0, 0x02014b50);
             schreibe16(eintrag, 4, 20);
             schreibe16(eintrag, 6, (grosseDatei || weitHinten) ? 45 : 20);
-            schreibe16(eintrag, 8, 0);
+            schreibe16(eintrag, 8, ZipDetails.UTF8_BIT);
             schreibe16(eintrag, 10, 0);
             schreibe16(eintrag, 12, 0);
             schreibe16(eintrag, 14, 0x21);
