@@ -2644,6 +2644,13 @@ node pruefungen/lauf/test105.mjs
   `padding` ist vier Erklärungen, nicht eine, und §2/§3 zählten absolut
   statt den Unterschied zum Bestand.
   test332 neu (14), belegt rot. test258 19/19.
+* E361 (L83 Punkte 1, 2, 3 erledigt): Der Dienststand folgt dem Inhalt —
+  `dienststand.mts` rechnet bei `npm run bauen:ts` einen Stempel über den
+  Grundstock und hebt `VERSION` in `sw.ts` von selbst; `stand.ts` trägt
+  Fassung, Stempel und Bauzeit, die App zeigt sie unter „Über diese App"
+  samt Weg (Ordner, start.bat, Cloudflare); `holen.bat` fragt GitHub vor
+  dem Holen, ob der Stand geprüft ist; der schnelle CI-Job prüft den
+  Stempel. test353 neu (39), belegt rot in sieben Richtungen. Bild angesehen.
 * E360 (L115 Punkt 6, der Text): Text wie GoodNotes — ein Tipp fragt
   mehrzeilig, der Text wird ein Kasten mit Umbruch (`breiteBox`, Zeilen aus
   `InkGeometry.textLayout`, deterministisch ohne DOM), Schriftart (die fünf

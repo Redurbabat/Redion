@@ -1,0 +1,5 @@
+{
+  "extends": "./tsconfig.bauen.json",
+  "include": [],
+  "files": ["src/global.d.ts", "src/kern/einstellung/stand.ts"]
+}

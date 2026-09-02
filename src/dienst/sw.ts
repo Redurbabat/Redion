@@ -36,7 +36,7 @@ const ich = self as unknown as ServiceWorkerGlobalScope;
  *  die Erklärung bei `faelligeErinnerungen`. `test143` rechnet es nach. */
 const ABLAGE_NAME = 'notizen';
 
-const VERSION = 'notizen-v112';
+const VERSION = 'notizen-v113';
 const ABLAGE = VERSION;
 
 /* Was beim ersten Besuch gleich mitgenommen wird. */
@@ -45,6 +45,8 @@ const GRUNDSTOCK = [
   './index.html',
   './quell/kern/ereignisse/bus.js',
   './quell/kern/einstellung/konstanten.js',
+  /* Der Stand dieses Baus (E361) — bleibt aus dem Inhaltsstempel heraus, er traegt ihn. */
+  './quell/kern/einstellung/stand.js',
   './quell/core/helpers/reporter.js',
   './quell/core/helpers/ids.js',
   './quell/core/helpers/date.js',

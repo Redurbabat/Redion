@@ -27993,3 +27993,118 @@ ein umbrechender Standardtext, ein roter Merksatz in Serifen, fett, mit
 Rahmen, eine Formel in Schreibmaschine —, darüber die Leiste mit dem
 Text-Werkzeug und der Gruppe Aa, A−, A+, F, ▭; der gewählte Kasten mit
 Griffen; am Telefon dieselbe Gruppe neben dem T.
+
+
+E361 — Der Dienststand folgt dem Inhalt; holen.bat wartet auf Grün; die App nennt ihren Stand (L83 Punkte 1–3)
+════════════════════════════════════════════════════════════════════════════
+
+BEFUND (L83, gefunden beim Bau von E271; als nächster Bogen empfohlen, weil
+er ein FALSCHES Ergebnis erzeugt, §46): drei Löcher zwischen „gepusht" und
+„Redur sieht es".
+
+  1. `holen.bat` holte `main`, egal ob der Prüflauf rot war. Ein Stand mit
+     einem ungebauten `src/**.ts` zeigt das ALTE Verhalten — fehlerfrei,
+     ohne Meldung. Jede Messung, jedes Bild, jedes Urteil danach ist am
+     falschen Gegenstand gemacht.
+  3. Ohne erhöhte `VERSION` in `sw.ts` liefert der Dienst-Arbeiter jede
+     Datei einzeln nach und mischt Altes mit Neuem. Nichts erzwang die
+     Erhöhung: E357, E358, E359 und E360 haben sie je von Hand gesetzt —
+     viermal daran gedacht, und beim fünften Mal hätte es niemand gemerkt.
+  2. Drei Wege (Ordner, `start.bat`, Cloudflare), und keiner nannte sich.
+
+─── WAS GEBAUT WURDE ───────────────────────────────────────────────────────
+
+  1. DER STEMPEL. `dienststand.mts` (Wurzel, TypeScript, Node) liest den
+     Grundstock aus `sw.ts` — dieselbe Lesart wie test143 — und rechnet
+     SHA-256 über Pfad und Bytes jeder Datei, sortiert, sechzehn
+     Hexzeichen. Pfad UND Bytes: gleiche Bytes unter anderem Namen sind
+     ein anderer Stand. `stand.js` selbst bleibt heraus, es trägt den
+     Stempel.
+
+  2. DAS HEBEN. `npm run bauen:ts` ist jetzt `tsc bauen && node
+     dienststand.mts && tsc stand && tsc sw`: erst bauen, dann stempeln,
+     dann `stand.ts` noch einmal bauen (es wurde gerade geschrieben), dann
+     den Dienst-Arbeiter. Ändert sich der Stempel, steigt `VERSION` um
+     eins und `stand.ts` bekommt Fassung, Stempel und Bauzeit; ändert er
+     sich nicht, wird NICHTS geschrieben — kein neuer Zeitstempel, kein
+     Rauschen im Verzeichnis. Eine von Hand höher gesetzte Fassung bleibt
+     höher. `npm run stand` prüft nur (Rückgabe 1, wenn veraltet).
+
+  3. DER WÄCHTER. test353 §2 rechnet den Stempel nach: ändert jemand eine
+     Datei des Grundstocks und vergisst den Bau, sagt `stand.ts` einen
+     alten Stempel, und der Punkt wird rot — hier wie in der CI, wo der
+     schnelle Job (Sekunden, ohne Browser) `npm run stand` ruft. Das ist
+     der Teil, der den Fehler ERZWINGT statt ihn zu hoffen.
+
+  4. DER STAND IN DER APP. `src/kern/einstellung/stand.ts` (geladen vor
+     `app.js`, im Grundstock) trägt `{fassung, inhalt, gebaut}`; „Über
+     diese App" zeigt „Stand: v113 · gebaut 2. September 2026 · örtlicher
+     Server (start.bat)". Der Weg kommt aus der Adresse: `file:` ist der
+     Ordner, `localhost` der örtliche Server, `*.workers.dev` Cloudflare,
+     alles andere „Netz (Wirt)". Ohne Stand (Erstfassung `fassung: 0`)
+     steht „Stand unbekannt".
+
+  5. holen.bat FRAGT GITHUB. Vor `git fetch` holt PowerShell
+     `api.github.com/repos/Redurbabat/Redion/actions/runs?branch=main
+     &per_page=1` (öffentlich, ohne Anmeldung, 15 s Frist): grün wird mit
+     Kennung genannt; rot und „läuft noch" sagen es deutlich und fragen
+     (`choice`, nach 30 s Nein); ohne Antwort wird gewarnt und trotzdem
+     geholt — holen darf man immer, wissen muss man es. Nach dem Holen
+     vergleicht es `HEAD` mit der geprüften Kennung: ein neuerer Push auf
+     `main` heisst „geprüft wurde ein anderer Stand".
+
+  6. START-MIT-CLAUDE-CODE.md erklärt beides in Redurs Worten.
+
+─── WAS NICHT GEBAUT WURDE ────────────────────────────────────────────────
+
+`holen.bat` lief hier nicht — es gibt kein Windows in diesem Container;
+test353 §5 liest nur den Text, und der erste Doppelklick bei Redur ist die
+Probe (wie bei E271). Das Rennen der zwei Ladevorgänge bleibt; nur die
+Erhöhung, ohne die es ein Rennen ohne Ziel war, ist zugesichert. L83
+Punkte 4, 5, 7 (Rettungen aufräumen, Rückweg, `.sh`) bleiben offen. Die
+Bauzeit ist die des letzten INHALTSWECHSELS, nicht des letzten Baus —
+absichtlich, sonst änderte sich `stand.ts` bei jedem Bau ohne Grund.
+
+─── PRÜFUNG ────────────────────────────────────────────────────────────────
+
+test353 neu, 39 Punkte, PORT 9363, sieben Abschnitte: der Stempel in einem
+Wegwerfordner — bestimmt, bytegenau, pfadgenau, `stand.js` draussen (§1);
+der echte Stand — sw.ts, stand.ts, Grundstock, gebautes stand.js (§2); das
+Heben in einem Wegwerf-Repositorium — erste Fassung, unverändert, --pruefen
+schreibt nichts, Heben, von Hand höher (§3); der Bauweg — npm-Skript,
+index.html, Grundstock, CI-Schritt (§4); holen.bat — die Frage vor dem
+Holen, rot, läuft noch, unbekannt, der Vergleich danach, kein push (§5);
+die App — die Zeile „Stand" mit Fassung, Bauzeit und Weg (§6); keine
+Seitenfehler (§7). §3 fand beim ersten Lauf, dass der Ordner für
+`stand.ts` beim allerersten Schreiben fehlt — behoben. Belegt rot in
+sieben Richtungen, jede einzeln zurückgedreht und wiederhergestellt:
+
+a — der Stempel liest die Bytes nicht (dienststand.mts): 32/39 — ein
+    anderes Byte, derselbe Stempel (§1), und der echte Stand gilt als
+    veraltet (§2), weil der Stempel jetzt ein anderer ist.
+b — das Heben hebt nicht (dienststand.mts): 32/39 (§3: Fassung 7 statt 8,
+    sw.ts bleibt bei v7).
+c — der Bauweg ohne dienststand.mts (package.json): 38/39 (§4).
+d — die Frage im Rot-Zweig weg (holen.bat): beim ersten Mal 39/39 — GRÜN,
+    weil der Punkt irgendein `choice` in der Datei suchte und das aus dem
+    Läuft-noch-Zweig fand. Der Punkt fragt jetzt JE ZWEIG, zwischen der
+    Meldung und dem Weiter; dieselbe Probe danach 38/39 (§5). Eine Probe,
+    die nicht rot werden kann, ist keine (§55.2) — hier war sie es beinahe.
+e — index.html lädt stand.js nicht: 33/39 (§4, und §6 ohne Stand).
+f — die Zeile „Stand" fehlt (seite.js): 33/39 (§6).
+g — EIN BYTE in einer Datei des Grundstocks geändert, kein Bau
+    (geometry.js): 37/39 — §2 rot, `--pruefen` sagt veraltet. Das ist der
+    Fall, für den der Bogen gebaut wurde; e, f und g zeigen ihn dreimal.
+
+Dazu: test143 (Bündelgrenzen, Grundstock ↔ index.html) 23/23, test99
+(zwei Fenster, Fassung) 23/23, test105 (erzeugtes JavaScript — auch
+stand.js) 117/117, test109 (kein neues JavaScript) 20/20, test87
+(Quelltext) 152/152, test290 (CSS-Namensräume) 13/13, test235
+(Einstellungen) 71/71, test114 (Fingergrössen) 153/153, test128
+(Barrierefreiheit, Kontrast der neuen Zeile) 54/54, test247 (Menüband)
+106/106, test74 (Einzeldatei) 12/12, test225 (Quellenangaben) — alle grün.
+Die Einzeldatei trägt stand.js mit.
+
+BILD angesehen (§55): „Über diese App" mit der Zeile „Stand — v113 ·
+gebaut 2. September 2026 · örtlicher Server (start.bat)" unter dem
+Speicherort.

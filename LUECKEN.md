@@ -3150,20 +3150,24 @@ Gefunden am 30. August 2026 (beim Bau von E270, beim Ansehen der Bilder).
 L83 — Was zwischen „gepusht" und „Redur sieht es" noch fehlt (E271)
 ================================================================================
 
-1. **Der Prüflauf wird nicht abgewartet.** `holen.bat` holt `main`, egal ob
-   die GitHub-Aktion rot ist. Besonders: wurde ein `src/**.ts` ohne
-   `npm run bauen:ts` geschoben, bekommt Redur das ALTE Verhalten —
-   fehlerfrei und ohne jede Meldung. Nur `test105` fängt das, und zwar
-   drüben, nicht hier.
-2. **Kein Skript sagt, auf welchem Weg Redur gerade schaut.** Öffnet er die
-   Cloudflare-Adresse statt seines Ordners, ist `holen.bat` für das, was er
-   sieht, vollkommen irrelevant. Drei Wege (Ordner, `start.bat`, Cloudflare),
-   und keiner davon nennt sich.
-3. **Zweimal F5 ist ein Rennen, keine Zusicherung.** Ohne erhöhte `VERSION`
-   in `src/dienst/sw.ts` liefert der Dienst-Arbeiter jede Datei einzeln nach;
-   kommt der zweite Ladevorgang zu früh, mischen sich alte und neue. Und
-   nichts erzwingt die Erhöhung: `test99` prüft nur `fassung >= 11`,
-   `test143` nur die Form `notizen-v\d+`.
+1. ~~**Der Prüflauf wird nicht abgewartet.**~~ ERLEDIGT in E361: `holen.bat`
+   fragt vor dem Holen die GitHub-API nach dem letzten Lauf auf `main` —
+   grün wird genannt, rot und „läuft noch" fragen (nach 30 s ohne Antwort
+   Nein), ohne Antwort wird gewarnt und trotzdem geholt; danach vergleicht
+   es die Kennung des Geprüften mit der des Geholten. Nicht auf Windows
+   ausgeführt — test353 §5 liest nur den Text; der erste Doppelklick bei
+   Redur ist die Probe.
+2. ~~**Kein Skript sagt, auf welchem Weg Redur gerade schaut.**~~ ERLEDIGT
+   in E361: Einstellungen → „Über diese App" → „Stand" nennt Fassung,
+   Bauzeit und den Weg (Ordner, örtlicher Server, Cloudflare, Netz) — aus
+   `stand.ts` und der Adresse. test353 §6.
+3. ~~**Zweimal F5 ist ein Rennen, keine Zusicherung.**~~ ERLEDIGT in E361:
+   `dienststand.mts` rechnet beim Bauen einen Stempel über den Grundstock
+   und hebt `VERSION` in `sw.ts` von selbst, sobald er sich ändert;
+   test353 §2 rechnet ihn nach, und der schnelle CI-Job (`npm run stand`)
+   wird rot, wenn der Bau vergessen wurde. Das Rennen selbst bleibt (zwei
+   Ladevorgänge) — nur die Erhöhung, ohne die es ein Rennen ohne Ziel war,
+   ist jetzt zugesichert.
 4. **Die Rettungen häufen sich an.** Jeder Lauf von `holen.bat` mit eigener
    Arbeit legt einen `sicherung/`-Zweig und eine Ablage an. Niemand räumt sie
    je weg, und niemand fragt, ob sie noch gebraucht werden. `hochladen.bat`

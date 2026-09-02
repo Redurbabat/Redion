@@ -116,6 +116,15 @@ verlorene Arbeit.
 Der übliche Fall, seit Claude an einem anderen Rechner arbeitet. Danach hat
 dein Ordner genau den Stand von GitHub.
 
+**Es fragt zuerst GitHub, ob der Stand geprüft ist** (E361). Bei jedem Push
+laufen dort die Prüfläufe. Ist der letzte Lauf grün, sagt das Skript es und
+holt. Ist er rot oder läuft er noch, sagt es das deutlich und fragt, ob du
+trotzdem holen willst — nach 30 Sekunden ohne Antwort heisst die Antwort
+Nein. Ohne Netz oder ohne Antwort von GitHub holt es trotzdem und sagt nur,
+dass es nicht weiss, ob der Stand geprüft ist. Danach vergleicht es noch,
+ob das Geholte auch das Geprüfte ist; liegt inzwischen ein neuerer Commit
+auf `main`, sagt es das.
+
 **Es lädt nichts hoch, nie. Und es wirft nichts weg.** Liegt bei dir eigene
 Arbeit, wird sie vorher gesichert und benannt — eigene Commits auf einem
 Zweig `sicherung/vor-holen-<datum>`, geänderte und neue Dateien in Gits
@@ -131,9 +140,16 @@ musst du nicht — der Arbeiter übernimmt von selbst (`skipWaiting` und
 Sieht danach noch etwas seltsam aus, lade ein drittes Mal. Der Grund, ehrlich
 gesagt: nur wenn `VERSION` in `src/dienst/sw.ts` erhöht wurde, wird der alte
 Speicher komplett weggeworfen; sonst kommt jede Datei einzeln nach, und ein
-zu früher zweiter Ladevorgang kann Altes und Neues mischen. Hast du Redion
-über `oeffnen.bat` gestartet (also als Datei), läuft gar kein Dienst-Arbeiter
-— dann genügt einmal.
+zu früher zweiter Ladevorgang kann Altes und Neues mischen. Seit E361 steigt
+diese Fassung von selbst, sobald sich eine Datei des Grundstocks ändert
+(`dienststand.mts`, beim Bauen) — und ein Prüflauf wird rot, wenn das
+vergessen wurde. Hast du Redion über `oeffnen.bat` gestartet (also als
+Datei), läuft gar kein Dienst-Arbeiter — dann genügt einmal.
+
+**Welchen Stand siehst du gerade?** Einstellungen → „Über diese App" → Zeile
+„Stand": die Fassung, wann sie gebaut wurde, und ob du den Ordner,
+`start.bat` oder Cloudflare ansiehst. Wenn etwas „alt aussieht", ist das
+der erste Blick.
 
 ### `hochladen.bat` — deinen Stand zu GitHub bringen
 
