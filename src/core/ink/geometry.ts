@@ -300,8 +300,71 @@ const InkGeometry = (() => {
     return stuecke;
   };
 
+  /** Liegt der Punkt in dem geschlossenen Linienzug? Strahl nach rechts,
+      Kanten gezaehlt (E353, das Lasso). */
+  const insidePolygon = (point: InkPoint, polygon: unknown): boolean => {
+    const poly = points(polygon);
+    const n = poly.length;
+    if (n < 3) return false;
+    let inside = false;
+    for (let i = 0, j = n - 1; i < n; j = i++) {
+      const [xi, yi] = poly[i]!;
+      const [xj, yj] = poly[j]!;
+      const kreuzt = (yi > point[1]) !== (yj > point[1]) &&
+        point[0] < (xj - xi) * (point[1] - yi) / ((yj - yi) || 1e-9) + xi;
+      if (kreuzt) inside = !inside;
+    }
+    return inside;
+  };
+
+  /** Die Flaeche eines geschlossenen Linienzugs (Schnuerband-Formel, ohne Vorzeichen). */
+  const polygonArea = (polygon: unknown): number => {
+    const poly = points(polygon);
+    if (poly.length < 3) return 0;
+    let summe = 0;
+    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++)
+      summe += poly[j]![0] * poly[i]![1] - poly[i]![0] * poly[j]![1];
+    return Math.abs(summe) / 2;
+  };
+
+  /** Der gemeinsame Kasten mehrerer Kaesten; ohne Kaesten ein leerer. */
+  const union = (boxes: InkBounds[]): InkBounds => {
+    if (!boxes.length) return { x: 0, y: 0, width: 0, height: 0 };
+    const x0 = Math.min(...boxes.map(b => b.x));
+    const y0 = Math.min(...boxes.map(b => b.y));
+    const x1 = Math.max(...boxes.map(b => b.x + b.width));
+    const y1 = Math.max(...boxes.map(b => b.y + b.height));
+    return { x: x0, y: y0, width: x1 - x0, height: y1 - y0 };
+  };
+
+  /**
+   * SKALIEREN UM EINEN ANKER (E353): Punkte und Textpunkt wandern vom
+   * Anker weg oder zu ihm hin; Strichbreite und Schriftgroesse folgen mit
+   * dem geometrischen Mittel beider Faktoren, damit ein dreimal so grosser
+   * Schriftzug nicht mit haarduennem Strich dasteht. Aendert die Marke
+   * selbst und gibt sie zurueck, wie `move`.
+   */
+  const scale = (mark: any, anchor: InkPoint, sx: number, sy: number): any => {
+    if (!mark || typeof mark !== 'object') return mark;
+    const r2 = (v: number): number => Math.round(v * 100) / 100;
+    const fx = Number.isFinite(sx) ? sx : 1;
+    const fy = Number.isFinite(sy) ? sy : 1;
+    const f = (p: InkPoint): InkPoint =>
+      [r2(anchor[0] + (p[0] - anchor[0]) * fx), r2(anchor[1] + (p[1] - anchor[1]) * fy)];
+    if (Array.isArray(mark.pts)) mark.pts = points(mark.pts).map(f);
+    if (Array.isArray(mark.point)) mark.point = f(points([mark.point])[0] || [0, 0]);
+    const mittel = Math.sqrt(Math.abs(fx * fy)) || 1;
+    if (mark.breite !== undefined && Number.isFinite(Number(mark.breite)))
+      mark.breite = Math.max(0.3, r2(Number(mark.breite) * mittel));
+    if (mark.fontSize !== undefined && Number.isFinite(Number(mark.fontSize)))
+      mark.fontSize = Math.max(6, r2(Number(mark.fontSize) * mittel));
+    if (mark.groesse !== undefined && Number.isFinite(Number(mark.groesse)))
+      mark.groesse = Math.max(12, r2(Number(mark.groesse) * mittel));
+    return mark;
+  };
+
   return { points, simplify, simplifyIndices, outline, path, rectangle, bounds, move, intersects,
-    distanceToPolyline, touchesCircle, splitByCircle };
+    distanceToPolyline, touchesCircle, splitByCircle, insidePolygon, polygonArea, union, scale };
 })();
 
 (window as any).InkGeometry = InkGeometry;

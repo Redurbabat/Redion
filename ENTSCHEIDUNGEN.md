@@ -27147,3 +27147,98 @@ dabei ersetzt (oben, Punkt 4). Ein zweiter Fund erwies sich als keiner:
 „Dokumente" schien in der unteren Leiste links abgeschnitten — das war der
 Ausschnitt des Elementbilds (`.blatt-huelle` beginnt nicht am Rand), nicht
 die Leiste; mit 10,5 px passt der Name in seine 78 px (E236).
+
+
+E353 — Die Auswahl: Lasso, Griffe, Kopieren, Umfärben (E269, L115 Punkt 2)
+════════════════════════════════════════════════════════════════════════════
+
+E269 stand seit E265 in AUFGABEN.md („Auswahl-Feinschliff: Skalieren,
+Kopieren, Lasso") und in L115 Punkt 2. BEFUND: Das Werkzeug „Auswahl"
+konnte eine Marke antippen, mit Umschalt mehrere, einen Kasten aufziehen,
+bewegen und löschen. Kein Lasso, keine Griffe, kein Kopieren, und eine
+Farbe mit Auswahl zeichnete nur den nächsten Strich anders. GoodNotes hat
+all das, und Redur hat es unter „alles fertig wie GoodNotes" gemeint.
+
+─── WAS GEBAUT WURDE ───────────────────────────────────────────────────────
+
+  1. DAS LASSO. Ein Zug auf leerer Fläche zieht eine freie Schlinge (ein
+     `path` mit derselben Klasse wie der alte Kasten). Beim Loslassen zählt
+     `InkGeometry.insidePolygon` (Strahl nach rechts): ein Linienzug ist
+     drin, wenn mindestens die Hälfte seiner Punkte drin ist; Formen, Text,
+     Zettel und Zeichen mit der Mitte ihres Kastens. Eine Schlinge ist es
+     erst, wenn sie Fläche hat — mindestens ein Siebtel ihres Kastens
+     (`polygonArea`); ein fast gerader Zug, mit dem Zittern der Hand nie
+     ganz gerade, bleibt der Kasten von früher. Ohne diese Regel wählte ein
+     zittriger Strich einen Splitter, in dem nichts lag (test345 fand es).
+
+  2. DIE GRIFFE. Um alles Gewählte liegt ein Kasten (`blatt-auswahlkasten`)
+     mit vier Ecken; jede Ecke ist ein unsichtbares Trefffeld von 22
+     Einheiten mit einem kleinen sichtbaren Punkt darin. Ziehen skaliert um
+     die gegenüberliegende Ecke: `InkGeometry.scale` rechnet Punkte und
+     Textpunkt, und Strichbreite, Schriftgrösse und Zeichengrösse folgen
+     mit dem geometrischen Mittel beider Faktoren — ein dreimal so grosser
+     Schriftzug steht nicht mit haardünnem Strich da. Umschalt hält das
+     Seitenverhältnis. Der Druck je Punkt bleibt, was er war. Ein Zug ist
+     ein Schritt im Verlauf, wie das Bewegen.
+
+  3. KOPIEREN UND EINSETZEN. Strg+C, Strg+V und zwei Knöpfe in der Leiste
+     (am Telefon gibt es kein Strg). Die Zwischenablage ist EINE für alle
+     Flächen, nur im Speicher: was auf dem einen Blatt kopiert wurde, landet
+     auf dem nächsten. Eingesetzt wird um sechzehn Einheiten versetzt, mit
+     frischen Kennungen; die Ablage wandert mit, damit ein zweites Einsetzen
+     nicht auf dem ersten liegt. Eingesetztes ist danach die Auswahl, und
+     die Fläche schaltet dafür aufs Auswahl-Werkzeug (Menüband und Leiste
+     erfahren es über `Zeichenziel`).
+
+  4. FARBE UND STRICH MIT AUSWAHL gelten der Auswahl — drei Striche wählen,
+     Rot antippen, die drei sind rot, und der nächste Strich auch. Ein
+     Schritt im Verlauf, beide Wege (Leiste und Menüband), weil beide durch
+     `setzeFarbe` und `setzeStrich` der Fläche gehen.
+
+  5. ESCAPE hebt die Auswahl auf und läuft weiter zu den Fenstern (E302).
+
+  6. Kein neues Markenfeld. Kopien sind Marken derselben Form mit neuer
+     Kennung; Skalieren ändert Zahlen, keine Felder.
+
+─── WAS NICHT GEBAUT WURDE ────────────────────────────────────────────────
+
+Kein Drehen (GoodNotes hat einen Drehgriff), kein Ausschneiden als eigener
+Weg (Kopieren plus Löschen tut es), keine Systemzwischenablage (die Marken
+verlassen die App nicht — dafür gibt es Export). Der sichtbare Griffpunkt
+ist am Telefon drei Pixel klein; das Trefffeld ist gross, der Punkt nicht.
+Beides steht in L115.
+
+─── PRÜFUNG ────────────────────────────────────────────────────────────────
+
+test345 neu, 43 Punkte, PORT 9349, sieben Abschnitte an Rechner und Telefon.
+Das L-förmige Lasso in §1 ist der Beweis, dass die Schlinge zählt und nicht
+ihr Kasten: ein Strich liegt im Kasten des Lassos und ausserhalb der
+Schlinge, und er bleibt draussen. Belegt rot in fünf Richtungen, jede
+einzeln zurückgedreht und wiederhergestellt:
+
+a — die Schlinge zählt nie, immer der Kasten (marken.js): vier rot, dann
+    bricht die Suite ab — das L-Lasso wählt nichts, weil sein Kasten von
+    Anfang zu Anfang leer ist, und ohne Auswahl gibt es keinen Griff.
+b — der Griff bewegt nichts (`scale` ersetzt durch die Kopie, marken.js):
+    fünf rot, dann Abbruch — kein Wachsen, keine Breite, kein Kasten, und
+    das spätere Einsetzen findet keine vierte Marke.
+c — Einsetzen behält die Kennung (marken.js): 41/43. Zweimal dieselbe
+    Kennung im Block, und die Auswahl zeigt auf die falsche.
+d — die Farbe erreicht die Auswahl nicht (marken.js): zwei rot, dann
+    Abbruch — der gewählte Strich bleibt schwarz.
+e — die Breite wächst nicht mit (geometry.js): 41/43.
+
+Dazu: test201 (Ink V2 — mit Antippen, Umschalt-Klick, Bewegen, Löschen,
+Zurück) 32/32, test174 (A4-Blatt) 25/25, test207 (Papiervorlagen) 37/37,
+test266 (Abdeckband) 12/12, test267 (Haftnotiz und Lineal, mit dem
+Auswahl-Werkzeug am Zettel) 16/16, test295 (Randstreifen) 24/24, test343
+(Stifte) 30/30, test344 (Radierer) 49/49, test247 (Menüband) 106/106,
+test248 (ruhige Fassung) 45/45, test272 (kein Griff geht verloren) 153/153,
+test87 (Quelltext) 152/152, test105 (erzeugtes JavaScript) 114/114, test109
+(kein neues JavaScript) 20/20, test225 (Quellenangaben) 11/11 — alle grün.
+
+BILDER angesehen (§55): zwei gewählte Wellen mit ihren Rahmen, der Kasten
+mit vier Griffen darum, Marker und dritte Welle unberührt; die Leiste mit
+Löschen, Kopieren und Einsetzen (Einsetzen erst nach dem Kopieren
+anfassbar); dasselbe am Telefon, wo die Leiste bis zu den drei Knöpfen
+gerollt ist.

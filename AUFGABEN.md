@@ -2644,6 +2644,15 @@ node pruefungen/lauf/test105.mjs
   `padding` ist vier Erklärungen, nicht eine, und §2/§3 zählten absolut
   statt den Unterschied zum Bestand.
   test332 neu (14), belegt rot. test258 19/19.
+* E353 (E269, L115 Punkt 2 erledigt): Die Auswahl wie in GoodNotes — Lasso
+  (`InkGeometry.insidePolygon`, Schlinge nur mit Fläche, sonst der Kasten),
+  vier Griffe zum Skalieren um die Gegenecke (`InkGeometry.scale`, Breite
+  und Schrift folgen mit dem geometrischen Mittel, Umschalt hält das
+  Verhältnis), Kopieren und Einsetzen (Strg+C/V und Knöpfe, eine Ablage für
+  alle Flächen, versetzt, frische Kennungen), Farbe und Strich mit Auswahl
+  färben die Auswahl um, Escape hebt auf. Kein neues Markenfeld. test345
+  neu (43), das L-Lasso beweist Schlinge statt Kasten, belegt rot in fünf
+  Richtungen.
 * E352 (Redurs Punkt 3, zweiter Bogen; L115 Punkt 1 erledigt): Der Radierer
   streicht statt zu tippen — ein Kreis am Zeiger, ein Zug ein Schritt im
   Verlauf, ein Ring beim Ziehen. Drei Arten in `zeichnen:radierer`: Ganz,

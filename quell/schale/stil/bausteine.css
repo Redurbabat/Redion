@@ -3929,6 +3929,14 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-auswahlfeld{fill:rgba(47,126,216,.12); stroke:#2f7ed8;
                    stroke-width:1.5; stroke-dasharray:6 4;
                    vector-effect:non-scaling-stroke; pointer-events:none}
+/* Der Kasten um die ganze Auswahl und seine vier Griffe (E353). Das
+   Trefffeld ist unsichtbar und gross, der Punkt darin klein und sichtbar. */
+.blatt-auswahlkasten{fill:none; stroke:#2f7ed8; stroke-width:1;
+                     stroke-dasharray:4 3; vector-effect:non-scaling-stroke; pointer-events:none}
+.blatt-griff{fill:#fff; stroke:#2f7ed8; stroke-width:1.5;
+             vector-effect:non-scaling-stroke; pointer-events:none}
+.blatt-griff-feld{fill:transparent; pointer-events:all; cursor:nwse-resize}
+.blatt-griff-feld[data-griff="ne"], .blatt-griff-feld[data-griff="sw"]{cursor:nesw-resize}
 /* Beim Malen soll der Finger nicht die Seite rollen und nichts markieren. */
 .blatt-papier.malt{cursor:crosshair; user-select:none}
 .blatt-papier.malt .blatt-inhalt{user-select:none}

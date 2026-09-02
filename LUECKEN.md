@@ -5014,11 +5014,13 @@ mit dem Grund, warum jeder Punkt ein eigener Bogen ist:
    Zeichenfläche des Whiteboards (`zeichenflaeche.ts`) hat ihren eigenen
    Radierer, der weiter eine Form je Tipp nimmt.
 
-2. **Das Lasso fehlt, und die Auswahl kann nicht skalieren oder kopieren.**
-   Es gibt die Rechteck-Auswahl (Werkzeug „Auswahl") mit Bewegen und
-   Löschen. Kein Lasso, keine Griffe zum Skalieren, kein Kopieren/Einsetzen,
-   kein Umfärben der Auswahl. Das ist E269 (AUFGABEN, offen seit E265) —
-   dieselbe Liste, ein Bogen.
+2. ~~**Das Lasso fehlt, und die Auswahl kann nicht skalieren oder kopieren.**~~
+   ERLEDIGT in E353: Lasso (`insidePolygon`, Schlinge nur mit Fläche),
+   vier Griffe mit `InkGeometry.scale`, Kopieren und Einsetzen (Strg und
+   Knöpfe, eine Ablage für alle Flächen), Farbe und Strich mit Auswahl,
+   Escape — test345. Was bleibt: kein Drehgriff; der sichtbare Griffpunkt
+   ist am Telefon drei Pixel klein (das Trefffeld ist 22 Einheiten, der
+   Punkt nicht); keine Systemzwischenablage.
 
 3. **Kein Handballen-Schutz.** Wer mit dem Stift schreibt und die Hand auf
    dem Bildschirm ablegt, zeichnet mit der Hand. Die Schicht unterscheidet

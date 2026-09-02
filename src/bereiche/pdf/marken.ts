@@ -12,6 +12,10 @@ const Marken = (() => {
   const BREITEN = [1.2, 2.4, 5] as const;
   const MARKER_FARBE = '#e0a419';
   const HISTORY_LIMIT = 100;
+  /* DIE ZWISCHENABLAGE DER ZEICHENSCHICHT (E353): ein Ort fuer alle
+     Flaechen, damit Kopiertes von einem Blatt auf dem naechsten landet.
+     Nur im Speicher — nichts davon wird gesichert. */
+  let zwischenablage: any[] = [];
   /* DER RADIERER (E352): drei Arten, wie in GoodNotes — die ganze Marke,
      nur den beruehrten Teil eines Strichs, nur Marker. Die Wahl liegt in
      `zeichnen:radierer` und ueberlebt den Neustart. */
@@ -386,7 +390,7 @@ const Marken = (() => {
 
     const snapshot = (): any[] => clone(marks);
     const state = () => ({ undo: historyUndo.length > 0, redo: historyRedo.length > 0,
-      selected: selection.size });
+      selected: selection.size, clipboard: zwischenablage.length > 0 });
     const notifyState = (): void => stateListeners.forEach(listener => listener(state()));
     const save = (): void => Store.updateBlock(block.id, { marken: marks, raumVersion: R.RAUM_VERSION });
     const commit = (before: any[]): void => {
@@ -420,8 +424,17 @@ const Marken = (() => {
       if (!next) return;
       historyUndo.push(snapshot()); restore(next);
     };
+    /** Der gemeinsame Kasten der Auswahl, mit demselben Rand wie die Rahmen. */
+    const auswahlKasten = (): { x: number; y: number; width: number; height: number } => {
+      const boxes = [...selection]
+        .map(id => marks.find(item => idOf(item) === id))
+        .filter(Boolean)
+        .map(mark => InkGeometry.bounds(mark));
+      const box = InkGeometry.union(boxes);
+      return { x: box.x - 3, y: box.y - 3, width: box.width + 6, height: box.height + 6 };
+    };
     function renderSelection(): void {
-      flaeche.querySelectorAll('[data-ink-ui="selection"]').forEach(node => node.remove());
+      flaeche.querySelectorAll('[data-ink-ui="selection"],[data-ink-ui="griffe"]').forEach(node => node.remove());
       for (const id of selection) {
         const mark = marks.find(item => idOf(item) === id);
         if (!mark) continue;
@@ -430,14 +443,70 @@ const Marken = (() => {
           width: box.width + 6, height: box.height + 6,
           class: 'blatt-auswahlrahmen', 'data-ink-ui': 'selection' }));
       }
+      /* DIE GRIFFE (E353): ein Kasten um alles Gewaehlte, an jeder Ecke ein
+         Griff. Das Trefffeld ist groesser als der sichtbare Punkt — am
+         Telefon waere ein Griff von fuenf Einheiten sonst nicht zu fassen. */
+      if (selection.size) {
+        const k = auswahlKasten();
+        const g = svg('g', { 'data-ink-ui': 'griffe' });
+        g.appendChild(svg('rect', { x: k.x, y: k.y, width: k.width, height: k.height,
+          class: 'blatt-auswahlkasten' }));
+        const ecken: Array<[string, number, number]> = [
+          ['nw', k.x, k.y], ['ne', k.x + k.width, k.y],
+          ['sw', k.x, k.y + k.height], ['se', k.x + k.width, k.y + k.height]];
+        for (const [name, x, y] of ecken) {
+          g.appendChild(svg('circle', { cx: x, cy: y, r: 22, class: 'blatt-griff-feld', 'data-griff': name }));
+          g.appendChild(svg('circle', { cx: x, cy: y, r: 5, class: 'blatt-griff' }));
+        }
+        flaeche.appendChild(g);
+      }
       notifyState();
     }
+    /** Liegt die Marke im Lasso? Linienzuege mit der Haelfte ihrer Punkte,
+        alles andere mit der Mitte seines Kastens. */
+    const imLasso = (mark: any, schlinge: number[][]): boolean => {
+      const art = String(mark?.art || '');
+      const linie = art === 'stift' || art === 'marker' || art === 'line' || art === 'arrow';
+      if (linie && Array.isArray(mark.pts) && mark.pts.length) {
+        const drin = (mark.pts as number[][]).filter(p => InkGeometry.insidePolygon([p[0] ?? 0, p[1] ?? 0], schlinge)).length;
+        return drin * 2 >= mark.pts.length;
+      }
+      const box = InkGeometry.bounds(mark);
+      return InkGeometry.insidePolygon([box.x + box.width / 2, box.y + box.height / 2], schlinge);
+    };
     const deleteSelection = (): void => {
       if (!selection.size) return;
       const before = snapshot();
       for (let index = marks.length - 1; index >= 0; index--)
         if (selection.has(idOf(marks[index]))) marks.splice(index, 1);
       selection.clear(); redraw(); commit(before);
+    };
+    /* KOPIEREN UND EINSETZEN (E353). Eingesetzt wird um sechzehn Einheiten
+       versetzt, mit frischen Kennungen, und die Ablage wandert mit — ein
+       zweites Einsetzen legt sich nicht auf das erste. Eingesetztes ist
+       danach die Auswahl, im Auswahl-Werkzeug. */
+    const copySelection = (): number => {
+      const kopie = marks.filter(mark => selection.has(idOf(mark))).map(mark => clone(mark));
+      if (kopie.length) { zwischenablage = kopie; notifyState(); }
+      return kopie.length;
+    };
+    const paste = (): number => {
+      if (!zwischenablage.length) return 0;
+      if (tool !== 'select') {
+        setzeWerkzeug('select');
+        if (typeof Zeichenziel !== 'undefined') {
+          try { Zeichenziel.uebernehme(steuerung, 'select'); } catch { /* egal */ }
+        }
+      }
+      const before = snapshot();
+      const neue = zwischenablage.map(mark => InkGeometry.move({ ...clone(mark), id: frischeId() }, 16, 16));
+      marks.push(...neue);
+      neue.forEach(mark => { const node = zeichneMarke(mark); if (node) flaeche.appendChild(node); });
+      selection = new Set(neue.map(mark => idOf(mark)));
+      zwischenablage = neue.map(mark => clone(mark));
+      renderSelection();
+      commit(before);
+      return neue.length;
     };
 
     /* Der Radierer ist ein Kreis; seine Groesse haengt an der gewaehlten
@@ -543,11 +612,23 @@ const Marken = (() => {
         const drag = selectDrag;
         selectDrag = null;
         flaeche.querySelectorAll('[data-ink-ui="box"]').forEach(node => node.remove());
-        if (drag.mode === 'move' && drag.moved) { commit(drag.before); return true; }
-        if (drag.mode === 'box') {
-          const box = InkGeometry.rectangle(drag.start, drag.end || drag.start);
+        if ((drag.mode === 'move' || drag.mode === 'scale') && drag.moved) { commit(drag.before); return true; }
+        if (drag.mode === 'lasso') {
+          const pts = drag.pts as number[][];
           if (!drag.add) selection.clear();
-          marks.forEach(mark => { if (InkGeometry.intersects(box, InkGeometry.bounds(mark))) selection.add(idOf(mark)); });
+          /* Eine Schlinge ist es erst, wenn sie Flaeche hat: mindestens ein
+             Siebtel ihres Kastens. Ein fast gerader Zug — mit dem Zittern
+             der Hand nie ganz gerade — ist der Kasten von frueher (E352),
+             nicht ein Splitter, in dem nichts liegt. */
+          const huelle = InkGeometry.union(pts.map(q => ({ x: q[0] ?? 0, y: q[1] ?? 0, width: 0, height: 0 })));
+          const flaeche = InkGeometry.polygonArea(pts);
+          if (pts.length >= 3 && flaeche > 4 && flaeche >= 0.15 * huelle.width * huelle.height) {
+            marks.forEach(mark => { if (imLasso(mark, pts)) selection.add(idOf(mark)); });
+          } else if (pts.length >= 2) {
+            const a = pts[0]!, z = pts[pts.length - 1]!;
+            const box = InkGeometry.rectangle([a[0] ?? 0, a[1] ?? 0], [z[0] ?? 0, z[1] ?? 0]);
+            marks.forEach(mark => { if (InkGeometry.intersects(box, InkGeometry.bounds(mark))) selection.add(idOf(mark)); });
+          }
           renderSelection();
         }
         return false;
@@ -773,6 +854,20 @@ const Marken = (() => {
       }
       if (tool === 'zeichen') { void setzeZeichen(point, targetId); return; }
       if (tool === 'select') {
+        /* EIN GRIFF AM RAHMEN SKALIERT DIE AUSWAHL (E353): die gegenueber-
+           liegende Ecke bleibt stehen, die Marken wachsen zum Zeiger hin. */
+        const griff = (event.target as Element)?.closest?.('[data-griff]') as SVGElement | null;
+        if (griff && selection.size) {
+          const kasten = auswahlKasten();
+          const ecke = String(griff.getAttribute('data-griff') || 'se');
+          const anker: [number, number] = [
+            ecke.includes('e') ? kasten.x : kasten.x + kasten.width,
+            ecke.includes('s') ? kasten.y : kasten.y + kasten.height];
+          selectDrag = { mode: 'scale', start: point, anker, before: snapshot(), moved: false,
+            originals: new Map([...selection].map(id => [id, clone(marks.find(mark => idOf(mark) === id))])) };
+          try { flaeche.setPointerCapture(event.pointerId); } catch { /* optional */ }
+          return;
+        }
         if (targetId) {
           if (event.shiftKey) selection.has(targetId) ? selection.delete(targetId) : selection.add(targetId);
           else if (!selection.has(targetId)) selection = new Set([targetId]);
@@ -782,10 +877,12 @@ const Marken = (() => {
             originals: new Map([...selection].map(id => [id, clone(marks.find(mark => idOf(mark) === id))])) };
         } else {
           if (!event.shiftKey) { selection.clear(); renderSelection(); }
-          selectDrag = { mode: 'box', start: point, end: point, add: event.shiftKey };
-          const box = svg('rect', { x: point[0], y: point[1], width: 0, height: 0,
+          /* DAS LASSO (E353): ein freier Zug um die Marken, wie in GoodNotes.
+             Ein gerader Zug ohne Flaeche bleibt der Kasten von frueher. */
+          selectDrag = { mode: 'lasso', pts: [point], add: event.shiftKey };
+          const schlinge = svg('path', { d: `M${point[0]} ${point[1]}`,
             class: 'blatt-auswahlfeld', 'data-ink-ui': 'box' });
-          flaeche.appendChild(box);
+          flaeche.appendChild(schlinge);
         }
         try { flaeche.setPointerCapture(event.pointerId); } catch { /* optional */ }
         return;
@@ -848,10 +945,30 @@ const Marken = (() => {
             updateNode(nodeFor(id), marks[index]);
           }
           renderSelection();
+        } else if (selectDrag.mode === 'scale') {
+          const [ax, ay] = selectDrag.anker as [number, number];
+          const dx0 = selectDrag.start[0] - ax, dy0 = selectDrag.start[1] - ay;
+          let sx = Math.abs(dx0) < 1 ? 1 : (point[0] - ax) / dx0;
+          let sy = Math.abs(dy0) < 1 ? 1 : (point[1] - ay) / dy0;
+          /* Mit Umschalt bleibt das Seitenverhaeltnis. */
+          if (event.shiftKey) { const s = (Math.abs(sx) + Math.abs(sy)) / 2; sx = s; sy = s; }
+          sx = Math.max(0.05, Math.min(50, sx));
+          sy = Math.max(0.05, Math.min(50, sy));
+          selectDrag.moved = selectDrag.moved || Math.abs(sx - 1) > 0.01 || Math.abs(sy - 1) > 0.01;
+          for (const id of selection) {
+            const index = marks.findIndex(mark => idOf(mark) === id);
+            const original = selectDrag.originals.get(id);
+            if (index < 0 || !original) continue;
+            marks[index] = InkGeometry.scale(clone(original), [ax, ay], sx, sy);
+            updateNode(nodeFor(id), marks[index]);
+          }
+          renderSelection();
         } else {
-          const box = InkGeometry.rectangle(selectDrag.start, point);
-          const node = flaeche.querySelector<SVGRectElement>('[data-ink-ui="box"]');
-          if (node) Object.entries(box).forEach(([key, value]) => node.setAttribute(key, String(value)));
+          const pts = selectDrag.pts as number[][];
+          const last = pts[pts.length - 1]!;
+          if (Math.hypot(point[0] - (last[0] ?? 0), point[1] - (last[1] ?? 0)) >= 1) pts.push(point);
+          const node = flaeche.querySelector<SVGPathElement>('[data-ink-ui="box"]');
+          if (node) node.setAttribute('d', pts.map((q, i) => (i ? 'L' : 'M') + q[0] + ' ' + q[1]).join(' ') + ' Z');
         }
         return;
       }
@@ -887,10 +1004,19 @@ const Marken = (() => {
       abdeckAnwenden();
     });
     flaeche.addEventListener('keydown', (event: KeyboardEvent) => {
+      const strg = event.ctrlKey || event.metaKey;
+      const taste = event.key.toLowerCase();
       if ((event.key === 'Delete' || event.key === 'Backspace') && selection.size) {
         event.preventDefault(); deleteSelection();
-      } else if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') {
+      } else if (strg && taste === 'z') {
         event.preventDefault(); event.shiftKey ? redo() : undo();
+      } else if (strg && taste === 'c' && selection.size) {
+        event.preventDefault(); copySelection();
+      } else if (strg && taste === 'v' && zwischenablage.length) {
+        event.preventDefault(); paste();
+      } else if (event.key === 'Escape' && selection.size) {
+        /* Escape hebt die Auswahl auf — und laeuft weiter zu den Fenstern (E302). */
+        selection.clear(); renderSelection();
       }
     });
     registerLayer({ flaeche, abschliessen: finish });
@@ -904,8 +1030,30 @@ const Marken = (() => {
       flaeche.setAttribute('data-tool', tool);
       flaeche.setAttribute('tabindex', tool === 'schreiben' ? '-1' : '0');
     };
-    const setzeFarbe = (next: string): void => { color = next; };
-    const setzeStrich = (next: number): void => { width = next; };
+    /* FARBE UND STRICH MIT AUSWAHL GELTEN DER AUSWAHL (E353), wie in
+       GoodNotes: wer drei Striche waehlt und Rot antippt, faerbt die drei
+       um — und zeichnet danach rot weiter. Ein Schritt im Verlauf. */
+    const setzeFarbe = (next: string): void => {
+      color = next;
+      if (!selection.size) return;
+      const before = snapshot();
+      for (const mark of marks) if (selection.has(idOf(mark))) {
+        mark.farbe = next;
+        updateNode(nodeFor(idOf(mark)), mark);
+      }
+      commit(before);
+    };
+    const setzeStrich = (next: number): void => {
+      width = next;
+      if (!selection.size) return;
+      const before = snapshot();
+      for (const mark of marks) if (selection.has(idOf(mark)) && mark.breite !== undefined) {
+        mark.breite = next;
+        updateNode(nodeFor(idOf(mark)), mark);
+      }
+      renderSelection();
+      commit(before);
+    };
     const setzeStil = (next: string): void => {
       if (!STIFTE.some(st => st.id === next)) return;
       stil = next;
@@ -930,7 +1078,7 @@ const Marken = (() => {
     const setzeLineal = (an: boolean): void => { lineal = !!an; };
     const linealAn = (): boolean => lineal;
 
-    const steuerung = { flaeche, setzeWerkzeug, setzeFarbe, setzeStrich, setzeStil, stilVon, setzeRadierModus, radierModusVon, marken: marks,
+    const steuerung = { flaeche, setzeWerkzeug, setzeFarbe, setzeStrich, setzeStil, stilVon, setzeRadierModus, radierModusVon, copySelection, paste, marken: marks,
       undo, redo, deleteSelection, beiAenderung, state, setzeLineal, linealAn };
     return steuerung;
   };
@@ -1009,6 +1157,9 @@ const Marken = (() => {
       '<button data-act="undo" title="Rückgängig" disabled><span class="zeichen">↶</span><span class="wort">Zurück</span></button>' +
       '<button data-act="redo" title="Wiederholen" disabled><span class="zeichen">↷</span><span class="wort">Vor</span></button>' +
       '<button data-act="delete" title="Auswahl löschen" disabled><span class="zeichen">🗑</span><span class="wort">Löschen</span></button>' +
+      /* KOPIEREN UND EINSETZEN (E353) — auch ohne Tastatur, am Telefon. */
+      '<button data-act="copy" title="Auswahl kopieren (Strg+C)" disabled><span class="zeichen">⧉</span><span class="wort">Kopieren</span></button>' +
+      '<button data-act="paste" title="Kopiertes einsetzen (Strg+V)" disabled><span class="zeichen">📋</span><span class="wort">Einsetzen</span></button>' +
       /* Das Lineal ist ein SCHALTER neben den Werkzeugen: solange es
          anliegt, rasten Linie und Pfeil auf 15°-Schritte (E267). */
       '<button data-act="lineal" aria-pressed="false" ' +
@@ -1062,6 +1213,10 @@ const Marken = (() => {
       if (undo) undo.disabled = !next.undo;
       if (redo) redo.disabled = !next.redo;
       if (remove) remove.disabled = !next.selected;
+      const copy = tools.querySelector<HTMLButtonElement>('[data-act="copy"]');
+      const paste = tools.querySelector<HTMLButtonElement>('[data-act="paste"]');
+      if (copy) copy.disabled = !next.selected;
+      if (paste) paste.disabled = !next.clipboard;
     };
     controls.beiAenderung?.(updateState);
 
@@ -1127,6 +1282,8 @@ const Marken = (() => {
         if (target.dataset.act === 'undo') controls.undo();
         if (target.dataset.act === 'redo') controls.redo();
         if (target.dataset.act === 'delete') controls.deleteSelection();
+        if (target.dataset.act === 'copy' && controls.copySelection) controls.copySelection();
+        if (target.dataset.act === 'paste' && controls.paste) controls.paste();
         if (target.dataset.act === 'stil' && controls.setzeStil) {
           const jetzt = STIFTE.findIndex(st => st.id === target.dataset.stil);
           const naechster = STIFTE[(jetzt + 1) % STIFTE.length]!;
@@ -1222,7 +1379,8 @@ const Marken = (() => {
     return row;
   };
 
-  return { schicht, leiste, zeichneMarke, FARBEN, BREITEN, STIFTE, druckFaktor, RADIERER };
+  return { schicht, leiste, zeichneMarke, FARBEN, BREITEN, STIFTE, druckFaktor, RADIERER,
+    zwischenablage: (): any[] => zwischenablage.map(mark => clone(mark)) };
 })();
 
 (window as any).Marken = Marken;
