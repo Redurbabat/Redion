@@ -5055,17 +5055,33 @@ mit dem Grund, warum jeder Punkt ein eigener Bogen ist:
    Vorschau, die synchron in eine Leinwand zeichnet, sieht beim ersten
    Mal den Platzhalter.
 
-7. **Undo verliert die Knoten-Zuordnung beim Neuzeichnen.** Jedes Undo
-   zeichnet die ganze Schicht neu (`render`), eine Marke je SVG-Knoten.
-   Bei tausend Marken auf einer Seite ist das spürbar; eine Zuordnung
-   Kennung → Knoten würde nur die betroffene Marke anfassen. Noch kein
-   Nutzer hat tausend Marken gemeldet — gemessen ist es nicht.
+7. ~~**Undo verliert die Knoten-Zuordnung beim Neuzeichnen.**~~ ERLEDIGT
+   in E358. Erst gemessen (2. September 2026, unter Last): Zurück bei
+   100/1000/3000 Marken 7/59/155 ms, das Strichende 3/21/44 ms, der
+   Strichanfang 3/8/14 ms. Dann gebaut: `redraw` gleicht Knoten und Marken
+   über eine Merkliste der gezeichneten Fassung ab — gleich bleibt, anders
+   wird geflickt, überzählig geht, fehlend kommt, und die Knotenfolge ist
+   die Markenfolge. Zurück bei 1000 Marken: 24 ms (test350 §5). Was
+   bleibt: Strichanfang und Strichende kopieren weiter den ganzen Bestand
+   (`snapshot` für den Verlauf, zwei `JSON.stringify` in `commit`, dazu
+   `save`) — bei dreitausend Marken 14 und 44 ms; ein Verlauf aus
+   Änderungen statt aus Abbildern wäre der nächste Schritt.
 
 8. ~~**Am Telefon steht die Leiste in einer langen Reihe.**~~ ERLEDIGT in
    E356: jeder Knopf trägt seine Gruppe, die Leiste ihr Werkzeug, und am
    Telefon zeigt das CSS nur die Gruppen des Werkzeugs — direkt dahinter,
    und die Leiste rollt hin (732 statt 1539 px beim Schreiben). test348.
    Was bleibt: keine Klappe unter dem Werkzeug wie in GoodNotes.
+
+9. **Am Rechner steht die Leiste über dem Blatt in fünf Zeilen.** Gemessen
+   bei 1360 px Fenster, wo die Seite 706 px breit ist: seit E355 (Formen)
+   und E357 (Bild) hat die Leiste 22 Knöpfe und bricht in fünf Zeilen um,
+   rund 220 px über dem Papier — GoodNotes hat eine. E356 hat die fremden
+   Gruppen nur am Telefon ausgeblendet („am Rechner ist Platz"), und das
+   stimmt bei voller Breite, nicht in der Spalte. Gefunden durch test267
+   §6, das deshalb rot wurde (E358). Der Weg: dieselbe Regel wie am Telefon
+   auch am Rechner, oder eine Zeile mit Rollen wie in der Spalte (E140) —
+   eine Gestaltungsentscheidung, Bilder zuerst.
 
 Nicht auf der Liste, weil es Format wäre: eine Marke bleibt `{id, art,
 farbe, breite, pts, pressure, stil?}`. Jeder Punkt oben lässt sich ohne

@@ -2644,6 +2644,16 @@ node pruefungen/lauf/test105.mjs
   `padding` ist vier Erklärungen, nicht eine, und §2/§3 zählten absolut
   statt den Unterschied zum Bestand.
   test332 neu (14), belegt rot. test258 19/19.
+* E358 (L115 Punkt 7 erledigt): Zurück fasst nur an, was sich änderte —
+  `redraw` gleicht Knoten und Marken über die gemerkte Fassung je Kennung
+  ab (gleich bleibt, anders geflickt, überzählig weg, fehlend neu, Folge =
+  Markenfolge); `merke` hinter jedem direkten Knotenweg. Gemessen vorher
+  7/59/155 ms Zurück bei 100/1000/3000 Marken, nachher 24 ms bei 1000.
+  test350 neu (14) fand die stumme Merkliste beim Verschieben; belegt rot
+  in vier Richtungen. Keine Gestaltungsänderung, darum kein Bild. Nebenbei
+  war test267 §6 rot, seit E355/E357 die Leiste am Rechner auf fünf Zeilen
+  brachten und das Blatt unter das Fenster schoben — Prüflauf rollt jetzt
+  zum Blatt; die fünf Zeilen stehen als L115 Punkt 9.
 * E357 (L115 Punkt 6, das Bild): Bild aufs Blatt — Werkzeug „Bild" in der
   Leiste öffnet den Dateiwähler, die Datei geht in die Ablage (Stücke, das
   Blatt als Block), die Marke `{id, art:'bild', dateiId, pts}` zeichnet ein

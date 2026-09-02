@@ -456,7 +456,24 @@ const Marken = (() => {
         stroke: 'currentColor', 'stroke-width': 0.5, 'stroke-dasharray': '6 6',
         opacity: 0.35, class: 'blatt-umbruch' }));
     }
-    marks.forEach(mark => { const node = zeichneMarke(mark); if (node) flaeche.appendChild(node); });
+    /* DIE GEZEICHNETE FASSUNG JE MARKE (E358, L115 Punkt 7): ein JSON-Text
+       je Kennung, wie die Marke zuletzt in einen Knoten kam. `redraw`
+       vergleicht dagegen und fasst nur an, was anders ist. Wo der Text
+       fehlt (ein Strich oder ein Einsetzen haengt seinen Knoten direkt an),
+       wird einmal geflickt und dann gemerkt. */
+    const gezeichnet = new Map<string, string>();
+    const fassung = (mark: any): string => JSON.stringify(mark);
+    /* `merke` steht hinter JEDEM Weg, der einen Knoten direkt aendert oder
+       anhaengt — Ziehen, Griff, Umfaerben, Radieren, Strichende, Einsetzen,
+       Bild. Die Merkliste muss sagen, was der KNOTEN zeigt, nicht was die
+       Marke ist: nach einem Zurueck ist die Marke wieder die alte, der
+       Knoten aber noch der verschobene, und nur ein ehrlicher Eintrag
+       laesst `redraw` das sehen (gefunden von test350 §3). */
+    const merke = (mark: any): void => { gezeichnet.set(idOf(mark), fassung(mark)); };
+    marks.forEach(mark => {
+      const node = zeichneMarke(mark);
+      if (node) { flaeche.appendChild(node); merke(mark); }
+    });
 
     /* Welche Abdeckbänder GERADE aufgedeckt sind — nur Laufzeit, nie
        Ablage: nach Neuladen oder Neuzeichnen von aussen ist wieder alles
@@ -499,11 +516,38 @@ const Marken = (() => {
       save(); notifyState();
     };
     const nodeFor = (id: string): SVGElement | null =>
-      [...flaeche.querySelectorAll<SVGElement>('[data-sid]')]
-        .find(node => node.getAttribute('data-sid') === id) || null;
+      id ? flaeche.querySelector<SVGElement>(`[data-sid="${CSS.escape(id)}"]`) : null;
+    /* NEUZEICHNEN FASST NUR AN, WAS SICH GEAENDERT HAT (E358, L115 Punkt 7).
+       Bisher nahm `redraw` jeden Knoten weg und zeichnete alle neu — bei
+       tausend Marken 59 ms je Zurueck, bei dreitausend 155, gemessen.
+       Jetzt: gleiche Fassung, gleicher Knoten; andere Fassung, geflickt
+       (`updateNode`); Marke ohne Knoten, neu; Knoten ohne Marke, weg. Die
+       Reihenfolge der Marken bleibt die Reihenfolge der Knoten — sie ist
+       die Stapelung auf dem Papier; wo sie nicht stimmt, wird eingeordnet. */
     const redraw = (): void => {
-      flaeche.querySelectorAll('[data-sid],[data-ink-ui]').forEach(node => node.remove());
-      marks.forEach(mark => { const node = zeichneMarke(mark); if (node) flaeche.appendChild(node); });
+      flaeche.querySelectorAll('[data-ink-ui]').forEach(node => node.remove());
+      const knoten = new Map<string, SVGElement>();
+      flaeche.querySelectorAll<SVGElement>('[data-sid]').forEach(node => {
+        const id = node.getAttribute('data-sid') || '';
+        if (knoten.has(id)) node.remove(); else knoten.set(id, node);
+      });
+      const bleibt = new Set<string>();
+      let vorheriger: SVGElement | null = null;
+      for (const mark of marks) {
+        const id = idOf(mark);
+        if (!id || bleibt.has(id)) continue;
+        const jetzt = fassung(mark);
+        let node = knoten.get(id) || null;
+        if (!node) node = zeichneMarke(mark);
+        else if (gezeichnet.get(id) !== jetzt) node = updateNode(node, mark);
+        if (!node) { gezeichnet.delete(id); continue; }
+        bleibt.add(id);
+        gezeichnet.set(id, jetzt);
+        const platz: ChildNode | null = vorheriger ? vorheriger.nextSibling : flaeche.querySelector('[data-sid]');
+        if (node.parentNode !== flaeche || node !== platz) flaeche.insertBefore(node, platz);
+        vorheriger = node;
+      }
+      knoten.forEach((node, id) => { if (!bleibt.has(id)) { node.remove(); gezeichnet.delete(id); } });
       abdeckAnwenden();
       renderSelection();
     };
@@ -599,7 +643,7 @@ const Marken = (() => {
       const before = snapshot();
       const neue = zwischenablage.map(mark => InkGeometry.move({ ...clone(mark), id: frischeId() }, 16, 16));
       marks.push(...neue);
-      neue.forEach(mark => { const node = zeichneMarke(mark); if (node) flaeche.appendChild(node); });
+      neue.forEach(mark => { const node = zeichneMarke(mark); if (node) { flaeche.appendChild(node); merke(mark); } });
       selection = new Set(neue.map(mark => idOf(mark)));
       zwischenablage = neue.map(mark => clone(mark));
       renderSelection();
@@ -636,11 +680,12 @@ const Marken = (() => {
          die Marke nicht (gefunden von test344 §2: die Luecke war 2,7 statt 7,2). */
       if (teilbar && stuecke.length === 1 && JSON.stringify(stuecke[0]!.pts) === JSON.stringify(mark.pts)) return false;
       nodeFor(id)?.remove();
+      gezeichnet.delete(id);
       selection.delete(id);
       const ersatz = stuecke.map((stueck, n) =>
         ({ ...clone(mark), id: n === 0 ? id : frischeId(), pts: stueck.pts, pressure: stueck.pressure }));
       marks.splice(index, 1, ...ersatz);
-      ersatz.forEach(neu => { const node = zeichneMarke(neu); if (node) flaeche.appendChild(node); });
+      ersatz.forEach(neu => { const node = zeichneMarke(neu); if (node) { flaeche.appendChild(node); merke(neu); } });
       return true;
     };
     const radiereBei = (roh: number[]): boolean => {
@@ -752,7 +797,7 @@ const Marken = (() => {
       const before = snapshot();
       marks.push(mark);
       const node = zeichneMarke(mark);
-      if (node) flaeche.appendChild(node);
+      if (node) { flaeche.appendChild(node); merke(mark); }
       if (tool !== 'select') {
         setzeWerkzeug('select');
         if (typeof Zeichenziel !== 'undefined') {
@@ -884,6 +929,7 @@ const Marken = (() => {
       }
       marks.push(mark);
       runningNode = updateNode(node, mark);
+      merke(mark);
       commit(before);
       runningNode = null;
       /* Die frisch aufgezogene Haftnotiz fragt sofort nach ihrem Text —
@@ -1174,6 +1220,7 @@ const Marken = (() => {
             if (index < 0 || !original) continue;
             marks[index] = InkGeometry.move(clone(original), dx, dy);
             updateNode(nodeFor(id), marks[index]);
+            merke(marks[index]);
           }
           renderSelection();
         } else if (selectDrag.mode === 'scale') {
@@ -1196,6 +1243,7 @@ const Marken = (() => {
             if (index < 0 || !original) continue;
             marks[index] = InkGeometry.scale(clone(original), [ax, ay], sx, sy);
             updateNode(nodeFor(id), marks[index]);
+            merke(marks[index]);
           }
           renderSelection();
         } else {
@@ -1279,6 +1327,7 @@ const Marken = (() => {
       for (const mark of marks) if (selection.has(idOf(mark)) && mark.art !== 'bild') {
         mark.farbe = next;
         updateNode(nodeFor(idOf(mark)), mark);
+        merke(mark);
       }
       commit(before);
     };
@@ -1289,6 +1338,7 @@ const Marken = (() => {
       for (const mark of marks) if (selection.has(idOf(mark)) && mark.breite !== undefined) {
         mark.breite = next;
         updateNode(nodeFor(idOf(mark)), mark);
+        merke(mark);
       }
       renderSelection();
       commit(before);

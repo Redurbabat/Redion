@@ -27639,3 +27639,114 @@ Griffen, mittig auf dem linierten Blatt, der Knopf „Bild" zwischen
 Fachzeichen und Radieren; am Telefon dasselbe, die Leiste beim
 Auswahl-Werkzeug mit Löschen, Kopieren, Einsetzen; und der Platzhalter —
 gestrichelt, „Bild fehlt" in der Mitte, in der Grösse der Marke.
+
+
+E358 — Zurück fasst nur an, was sich änderte: `redraw` als Abgleich (L115 Punkt 7)
+════════════════════════════════════════════════════════════════════════════
+
+BEFUND, zuerst gemessen (2. September 2026, mit einem vollen Lauf daneben):
+
+    Marken        100     1000    3000
+    Strichanfang   3 ms     8 ms   14 ms   (`snapshot` — der Verlauf kopiert alles)
+    Strichende     3 ms    21 ms   44 ms   (`commit`: zweimal stringify, dann `save`)
+    Zurück         7 ms    59 ms  155 ms   (`restore`: alles weg, alles neu)
+    Vor            6 ms    47 ms  148 ms
+
+L115 Punkt 7 sagte „gemessen ist es nicht" — jetzt ist es das. Bei tausend
+Marken kostete jedes Zurück eine Sechzehntelsekunde, weil `redraw` jeden
+Knoten entfernte und jeden neu zeichnete; beim Füller heisst „neu zeichnen"
+die ganze Kontur rechnen. Und Zurück ist nicht selten: wer schreibt, nimmt
+alle paar Striche einen zurück.
+
+─── WAS GEBAUT WURDE ───────────────────────────────────────────────────────
+
+  1. EINE MERKLISTE DER GEZEICHNETEN FASSUNG. Je Kennung der JSON-Text der
+     Marke, wie sie zuletzt in einen Knoten kam (`gezeichnet`). Das ist die
+     ganze Datenstruktur — kein zweiter Baum, keine Kennung-zu-Knoten-
+     Tabelle, die aus dem Tritt geraten könnte: die Knoten findet `redraw`
+     im DOM selbst (`[data-sid]`, einmal je Aufruf).
+
+  2. `redraw` GLEICHT AB statt zu ersetzen: gleiche Fassung — der Knoten
+     bleibt, wie er ist; andere Fassung — `updateNode` flickt ihn (Pfade
+     behalten ihren Knoten, Gruppen wie Zettel und Bild werden getauscht,
+     E357); Marke ohne Knoten — neu; Knoten ohne Marke — weg. Und die
+     FOLGE der Knoten ist die Folge der Marken, weil sie die Stapelung auf
+     dem Papier ist: wo sie nicht stimmt, wird eingeordnet, sonst nicht
+     angerührt. Zwei Knoten mit einer Kennung (soll es nicht geben): der
+     zweite geht.
+
+  3. `merke` HINTER JEDEM DIREKTEN WEG. Ziehen, Griff, Umfärben, Breite,
+     Radieren, Strichende, Einsetzen, Bild — alle ändern Knoten, ohne durch
+     `redraw` zu gehen. Jeder trägt jetzt ein, was der Knoten zeigt. Die
+     Merkliste muss sagen, was der KNOTEN zeigt, nicht was die Marke ist:
+     test350 §3 fand den ersten Entwurf ohne das — nach Verschieben und
+     Zurück war die Marke wieder die alte, die Merkliste auch, der Knoten
+     aber noch der verschobene, und `redraw` sah „gleich" und liess ihn
+     stehen. Ein Zurück, das nichts zurücknimmt, wäre der schlimmste Fall
+     dieser Änderung gewesen.
+
+  4. `nodeFor` fragt das DOM (`querySelector` mit `CSS.escape`) statt alle
+     Knoten in eine Liste zu kopieren und zu durchsuchen — bei jedem
+     Ziehen je Marke je Bewegung.
+
+  5. Ergebnis: Zurück bei 1000 Marken 24 ms statt 59 (test350 §5, wieder
+     mit vollem Lauf daneben). Der Rest ist `clone` der Fassung, `save` und
+     das Stringifizieren für den Vergleich — kein Knoten wird mehr
+     angefasst, der nicht muss.
+
+─── WAS NICHT GEBAUT WURDE ────────────────────────────────────────────────
+
+Strichanfang und Strichende kopieren weiter den ganzen Bestand — `snapshot`
+für den Verlauf, zweimal `JSON.stringify` in `commit`, dann `save`. Bei
+dreitausend Marken sind das 14 und 44 ms. Ein Verlauf aus ÄNDERUNGEN
+(„Marke X hinzu", „Marke Y von A nach B") statt aus Abbildern würde das
+lösen, verlangt aber, dass keine Stelle mehr eine Marke in Ort ändert —
+`setzeFarbe`, `zettelText` und `radiereEine` tun es heute. Eigener Bogen,
+steht in L115. Keine Gestaltungsänderung, darum kein Bild (§55.3 gilt für
+Gestaltung und Neues; hier sieht man dasselbe, nur früher).
+
+─── PRÜFUNG ────────────────────────────────────────────────────────────────
+
+test350 neu, 14 Punkte, PORT 9354, sechs Abschnitte. Die Probe: 303 Marken
+(300 Striche, halb Füller, halb Kugel, dazu drei Zettel — die Gruppen, die
+`updateNode` tauschen MUSS), jeder Knoten bekommt ein Kennzeichen als
+JS-Eigenschaft (ein Attribut würde vom Flicken abgestreift), ein Strich
+dazu, Zurück: 303 Knoten, alle mit Kennzeichen (§1); Vor bringt den Strich
+als einzigen neuen (§2); Verschieben und Zurück: derselbe Knoten, der alte
+Pfad (§3); Löschen in der Mitte und Zurück: die Knotenfolge ist die
+Markenfolge (§4); gemessen bei 1000 Marken mit weicher Grenze (§5); keine
+Seitenfehler (§6). Belegt rot in vier Richtungen, jede einzeln
+zurückgedreht und wiederhergestellt (alle marken.js):
+
+a — jede Fassung gilt als „anders" (`else if (true)`): 9/14. Die drei
+    Zettel werden bei jedem Zurück getauscht, die Striche nicht — genau
+    das, was ohne Merkliste immer passiert wäre; und §3 sieht 301 statt
+    304 alte Knoten.
+b — nichts wird eingeordnet (kein `insertBefore`): 8/14. Ein neuer Knoten
+    kommt gar nicht erst ins DOM — Vor bringt keinen Strich (§2), Zurück
+    nach dem Löschen keine Marke (§4).
+c — überzählige Knoten bleiben (`if (false)`): 10/14. Nach dem Zurück
+    stehen 304 Knoten für 303 Marken (§1), und Gelöschtes steht noch da (§4).
+d — kein `merke` nach dem Verschieben: 13/14. Der Fund aus §3, noch
+    einmal: die Marke ist zurück, der Knoten nicht.
+
+Dazu: test174 (A4-Blatt) 25/25, test201 (Ink V2) 32/32, test266
+(Abdeckband) 12/12, test343 (Stifte) 30/30, test344 (Radierer) 50/50,
+test345 (Auswahl) 43/43, test346 (Handballen) 31/31, test347 (Formen) 31/31,
+test348 (Leiste am Telefon) 33/33, test349 (Bild) 30/30, test87 (Quelltext)
+152/152, test105 (erzeugtes JavaScript) 117/117, test109 (kein neues
+JavaScript) 20/20, test225 (Quellenangaben) 11/11 — alle grün. Einzeldatei
+neu gebaut (8123 KB).
+
+test267 §6 (Haftnotiz und Lineal) war ROT — und nicht durch E358: auf dem
+E357-Stand im Arbeitsbaum ebenso, in voll15 (E353) noch grün. Die Leiste
+über dem Blatt wuchs mit E355 (Formen) und E357 (Bild) um zwei Knöpfe und
+bei 706 px Breite um eine fünfte Zeile; das Blatt begann bei 537 px, und
+40 % seiner Höhe lagen bei 977 px — unter dem 950 px hohen Fenster. Die
+zweite Linie begann im Nichts, `pop()` fand die erste, und „gerastet" war
+„frei" (50,2° = 50,2°). Dazu rollt Playwright vor jedem Klick den Knopf
+ins Bild, und weil die Leiste ÜBER dem Blatt steht, schiebt jeder Klick in
+die Leiste das Blatt wieder nach unten — ein Rollen vor §6 allein half
+darum nicht. Der Prüflauf rollt jetzt nach jedem Klick zum Blatt und
+nimmt den Kasten frisch: 16/16. Die Sache selbst — fünf Zeilen Leiste am
+Rechner — steht als L115 Punkt 9.
