@@ -678,6 +678,7 @@ const Notebook = (() => {
       `<button data-w="fach"><span class="mi">🗂</span>Neues Fach</button>` +
       `<div class="sep"></div>` +
       weg('pdf', '📕', 'PDF einlesen') +
+      weg('zip', '🗜', 'ZIP entpacken') +
       weg('board', '🖍', 'Whiteboard') +
       weg('seite', '📄', 'Textseite') +
       `<div class="sep"></div>` +

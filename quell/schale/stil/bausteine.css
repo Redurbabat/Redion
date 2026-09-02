@@ -3862,6 +3862,13 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-farbe{width:22px; height:22px; padding:0 !important; border-radius:50%;
              border:2px solid transparent}
 .blatt-farbe.on{border-color:var(--accent-text); box-shadow:0 0 0 2px var(--bg-card) inset}
+/* Der Weg zu einer eigenen Farbe (E351): ein Tupfer mit Plus, so gross wie
+   die Farbtupfer, damit die Reihe gleichmässig bleibt. */
+.blatt-farbe-neu{width:22px; height:22px; min-width:22px; padding:0 !important; border-radius:50%;
+                 border:1px dashed var(--text-faint); color:var(--text-dim); font-size:14px; line-height:1;
+                 display:inline-flex; align-items:center; justify-content:center}
+.blatt-farbe-neu:hover{border-color:var(--accent-text); color:var(--text)}
+.blatt-farbe-eigen{border-color:var(--line)}
 .blatt-strich{display:flex; align-items:center; justify-content:center; width:30px}
 .blatt-strich i{display:block; width:16px; background:currentColor; border-radius:3px}
 
@@ -4035,6 +4042,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   .blatt-werk .wort{display:none}
   .blatt-werk .zeichen{margin:0; font-size:17px}
   .blatt-farbe{width:30px; height:30px; min-width:30px}
+  .blatt-farbe-neu{width:30px; height:30px; min-width:30px}
   .blatt-strich{min-width:38px}
   /* Der Schatten zeigt, dass links davon noch etwas liegt — sonst sieht
      eine abgeschnittene Leiste aus wie eine vollständige (E103). */

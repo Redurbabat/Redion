@@ -45,7 +45,7 @@ const PdfEinlesen = (() => {
     const OHNE_FRAGE = 30;
     /* `%PDF-` als Bytes — siehe `alsSeiten`. */
     const PDF_KOPF = [0x25, 0x50, 0x44, 0x46, 0x2d];
-    const alsSeiten = async (datei, elternId) => {
+    const alsSeiten = async (datei, elternId, vorgabe) => {
         if (typeof PdfLeser === 'undefined')
             throw new Error('Der PDF-Leser ist nicht geladen.');
         /* Jedes PDF beginnt mit `%PDF-`. Fünf Bytes lesen kostet nichts und
@@ -129,45 +129,53 @@ const PdfEinlesen = (() => {
                 hinweis: 'Seite für Seite untereinander. Schreiben und malen kannst ' +
                     'du auch direkt darauf.'
             };
-            const anordnung = typeof Dialog !== 'undefined'
-                ? await Dialog.wahl({
-                    titel: datei.name,
-                    text: 'Wie soll „' + datei.name + '" auf der Seite liegen?',
-                    knoepfe: [
-                        ...(zuletzt === 'untereinander' ? [knopfNur, knopfSeite]
-                            : [knopfSeite, knopfNur]),
-                        { id: '', text: 'Abbrechen',
-                            hinweis: 'Die Datei bleibt als Anhang liegen' }
-                    ]
-                })
-                : zuletzt;
+            /* OHNE RÜCKFRAGE, WENN DER AUFRUFER SIE SCHON BEANTWORTET HAT (E350).
+               Ein ZIP-Import mit vierzig PDFs darf nicht vierzig Fenster stellen;
+               er fragt einmal oder gar nicht und reicht die Antwort herein. Die
+               Merkregel `pdfAnordnung` bleibt dann unberührt — sie gehört dem
+               Menschen, nicht dem Massenimport. */
+            const anordnung = vorgabe && vorgabe.anordnung ? vorgabe.anordnung
+                : typeof Dialog !== 'undefined'
+                    ? await Dialog.wahl({
+                        titel: datei.name,
+                        text: 'Wie soll „' + datei.name + '" auf der Seite liegen?',
+                        knoepfe: [
+                            ...(zuletzt === 'untereinander' ? [knopfNur, knopfSeite]
+                                : [knopfSeite, knopfNur]),
+                            { id: '', text: 'Abbrechen',
+                                hinweis: 'Die Datei bleibt als Anhang liegen' }
+                        ]
+                    })
+                    : zuletzt;
             if (!anordnung) {
                 melder.remove();
                 return nurAnhaengen('liegt als Anhang auf der Seite.');
             }
-            Store.setMeta('pdfAnordnung', anordnung);
+            if (!(vorgabe && vorgabe.anordnung))
+                Store.setMeta('pdfAnordnung', anordnung);
             const daneben = anordnung === 'nebeneinander';
             let bis = gesamt;
             if (gesamt > OHNE_FRAGE) {
-                const antwort = typeof Dialog !== 'undefined'
-                    ? await Dialog.wahl({
-                        titel: datei.name,
-                        text: 'Dieses Dokument hat ' + gesamt + ' Seiten.\n\n' +
-                            'Jede Seite wird als Bild vorbereitet, damit du darauf ' +
-                            'schreiben kannst. Das kostet Zeit und Platz — bis zu ' +
-                            Math.max(1, Math.round(gesamt * 0.3)) + ' MB und etwa ' +
-                            Math.max(1, Math.round(gesamt * 0.35)) + ' Sekunden.\n\n' +
-                            'In die Sicherung kommen diese Bilder nicht; sie lassen ' +
-                            'sich jederzeit aus dem Original zurückholen.',
-                        knoepfe: [
-                            { id: 'alle', text: 'Alle ' + gesamt + ' Seiten vorbereiten',
-                                hinweis: 'Dauert am längsten, dafür ist alles fertig' },
-                            { id: 'erste', text: 'Nur die ersten ' + OHNE_FRAGE,
-                                hinweis: 'Der Rest bleibt als Anhang erhalten' },
-                            { id: '', text: 'Abbrechen', hinweis: 'Nur das Original wird angehängt' }
-                        ]
-                    })
-                    : 'alle';
+                const antwort = vorgabe && vorgabe.ueberGrenze ? vorgabe.ueberGrenze
+                    : typeof Dialog !== 'undefined'
+                        ? await Dialog.wahl({
+                            titel: datei.name,
+                            text: 'Dieses Dokument hat ' + gesamt + ' Seiten.\n\n' +
+                                'Jede Seite wird als Bild vorbereitet, damit du darauf ' +
+                                'schreiben kannst. Das kostet Zeit und Platz — bis zu ' +
+                                Math.max(1, Math.round(gesamt * 0.3)) + ' MB und etwa ' +
+                                Math.max(1, Math.round(gesamt * 0.35)) + ' Sekunden.\n\n' +
+                                'In die Sicherung kommen diese Bilder nicht; sie lassen ' +
+                                'sich jederzeit aus dem Original zurückholen.',
+                            knoepfe: [
+                                { id: 'alle', text: 'Alle ' + gesamt + ' Seiten vorbereiten',
+                                    hinweis: 'Dauert am längsten, dafür ist alles fertig' },
+                                { id: 'erste', text: 'Nur die ersten ' + OHNE_FRAGE,
+                                    hinweis: 'Der Rest bleibt als Anhang erhalten' },
+                                { id: '', text: 'Abbrechen', hinweis: 'Nur das Original wird angehängt' }
+                            ]
+                        })
+                        : 'alle';
                 if (!antwort) {
                     melder.remove();
                     return nurAnhaengen('liegt als Anhang auf der Seite.');

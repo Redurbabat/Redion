@@ -355,8 +355,11 @@ const Bibliothek = (() => {
         /* Eine Seite, die vor allem andere Seiten hält, ist ein Ordner. Das ist
            keine neue Datenart, sondern eine Beschreibung: `page` in `page`. */
         const unterseiten = kinder.filter((b) => b && b.alive !== false && b.type === 'page');
-        if (unterseiten.length >= 2 && unterseiten.length >= kinder.length - 1)
-            return { id: 'ordner', name: unterseiten.length + ' Sachen' };
+        /* Ein Fach (E265, `heftArt`) ist ein Ordner, auch mit einem einzigen
+           Dokument oder leer — sonst wäre ein Fach mit genau einer PDF aus
+           einer ZIP (E350) hier weder Ordner noch sichtbar. */
+        if (p.heftArt === 'fach' || (unterseiten.length >= 2 && unterseiten.length >= kinder.length - 1))
+            return { id: 'ordner', name: unterseiten.length + (unterseiten.length === 1 ? ' Sache' : ' Sachen') };
         return { id: 'seite', name: 'Seite' };
     };
     /** Die Filterzeile über dem Regal — sie filtert nach ART, nicht nach Ort. */

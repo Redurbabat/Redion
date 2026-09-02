@@ -2644,6 +2644,33 @@ node pruefungen/lauf/test105.mjs
   `padding` ist vier Erklärungen, nicht eine, und §2/§3 zählten absolut
   statt den Unterschied zum Bestand.
   test332 neu (14), belegt rot. test258 19/19.
+* E351 (Redurs Punkt 3, erster Bogen; L115 offen): Der Stift schreibt wie
+  eine Hand. Drei Stifte (Füller, Kugelschreiber, Pinsel) in `zeichnen:stift`,
+  der Druck wandert durchs Vereinfachen mit (`simplifyIndices` statt
+  Durchschnitt), ohne Drucksensor zählt das Tempo, der Strich ist eine
+  Fläche (`InkGeometry.outline`), der Marker am Lineal zieht gerade, eigene
+  Farben über den Farbwähler des Browsers (höchstens vier, `zeichnen:farben`).
+  Kein neues Feld, keine Migration — `pressure` gab es seit E100 und wurde
+  weggemittelt. test343 neu (30), Breite mit `isPointInFill` gemessen,
+  belegt rot in fünf Richtungen.
+* E350 (Redurs Punkt 2, L114 offen): Eine ZIP kommt so ins Regal, wie sie
+  ist. Neu `archiveImport.ts`: Ordner werden Fächer (verschachtelt,
+  wiederverwendet), jede Datei ein Dokument (PDF mit Seiten und Original,
+  Bild, Text, Office, sonst Anhang), stückweise über `zipLesenAusBlob`,
+  Grössenwache vor dem Entpacken (Rohgrösse aus dem Verzeichnis), `..` und
+  Beiwerk draussen, innere ZIP bleibt zu, Titel-Suffix statt Überschreiben,
+  keine Rückfrage je PDF (Vorgabe an `alsSeiten`). Drei Einstiege: „+ Neu →
+  ZIP entpacken", Ablegen im Regal (dort ging vorher NICHTS), Dateiwähler
+  mit .pdf/.zip. Ein Fach ist in der Bibliothek ein Ordner, auch mit einer
+  Sache. test342 neu (41), echtes Archiv, belegt rot in sieben Richtungen.
+* E349 (Redurs Punkt 1, L113 geschlossen): Der Start zeigt, wo man war.
+  Vier stille Löcher hinter E236: das Regal hielt einen Start, `#dokumente`
+  schaltete die Startansicht ab, der Papierkorb ging wieder auf, das
+  Onboarding setzte „Heute". Jetzt Marke `zuletztOrt`, Regal ohne Vorseite,
+  Hash nur als Ziel wenn die Seite lebt, einmalige Rückstellung von
+  „start"/„workspace", Onboarding schreibt nichts mehr; die zuletzt
+  angesehene Seite eines Dokuments bleibt (`dokSeite:<id>`). test341 neu
+  (37), Rechner und Telefon, belegt rot in sechs Richtungen. sw v103.
 * E348 (L111, geschlossen): Die breiten Fensterregeln treffen nur noch,
   was sie meinen. Zuerst gemessen: alle 163 Befehlsfenster und 19
   Einstellungsbereiche, Rechner und Telefon, gerechneter Stil vorher gegen

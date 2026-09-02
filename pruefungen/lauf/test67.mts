@@ -96,6 +96,17 @@ const pruef = (n: any, ist: any, soll: any) => {
   pruef('Und die Pfeile drehen sich',    klappen.alleZugeklappt, true);
   pruef('Alle aufklappen räumt wieder auf', klappen.nachher, 0);
 
+  /* SEIT E349 ZÄHLT DER START NICHT MEHR ALS BESUCH. Das Regal öffnet keine
+     Seite mehr nebenbei — bei einem frischen Profil ist „Kürzlich verwendet"
+     leer, und die Seitenleiste zeigt den Abschnitt dann gar nicht. §4 braucht
+     einen Besuch; bis E348 kam er stillschweigend vom alten Start. */
+  await p.evaluate(async () => {
+    const erste = Store.rootPages()[0];
+    if (erste) App.oeffne(erste.id);
+    await new Promise(r => setTimeout(r, 300));
+    App.zeichneBaum();
+    await new Promise(r => setTimeout(r, 350));
+  });
   /* --- 4 · Einen einzelnen Abschnitt zuklappen -------------------------- */
   const einzeln = await p.evaluate(async () => {
     document.querySelectorAll<HTMLElement>('.menu').forEach(m => m.remove());

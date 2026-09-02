@@ -18,6 +18,21 @@ const DocumentMode = (() => {
 
   const states = new Map<string, DocumentState>();
 
+  /* DIE ZULETZT ANGESEHENE SEITE BLEIBT (E349). GoodNotes öffnet ein
+     Dokument dort, wo man es verlassen hat; hier begann jedes Öffnen bei
+     Seite 1, weil der Zustand nur im Arbeitsspeicher lag. Gemerkt wird je
+     Dokument als Meta, nicht am Seitenblock — Blättern soll weder `edited`
+     anheben noch eine Fassung erzeugen. */
+  const SEITEN_MERKER = 'dokSeite:';
+  const gemerkteSeite = (pageId: string): number => {
+    const n = Number(Store.getMeta(SEITEN_MERKER + pageId));
+    return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
+  };
+  const seiteMerken = (pageId: string, index: number): void => {
+    if (Store.getMeta(SEITEN_MERKER + pageId) === index) return;
+    Store.setMeta(SEITEN_MERKER + pageId, index);
+  };
+
   const stateFor = (pageId: string): DocumentState => {
     const known = states.get(pageId);
     if (known) return known;
@@ -25,7 +40,7 @@ const DocumentMode = (() => {
        stand dort bisher offen, weil Platz da war — 280 px, dauerhaft, fuer
        eine Liste, die bei einem frisch eingelesenen PDF leer ist. Wer sie
        braucht, holt sie mit `ⓘ`; wer liest, liest. */
-    const created = { index: 0, zoom: 100, thumbnailsOpen: false, inspectorOpen: false };
+    const created = { index: gemerkteSeite(pageId), zoom: 100, thumbnailsOpen: false, inspectorOpen: false };
     states.set(pageId, created);
     return created;
   };
@@ -63,6 +78,7 @@ const DocumentMode = (() => {
     const index = documentsIn(page).findIndex(block => block.id === blockId);
     if (index < 0) return false;
     stateFor(page.id).index = index;
+    seiteMerken(page.id, index);
     return true;
   };
 
@@ -601,6 +617,7 @@ const DocumentMode = (() => {
       }
       if (sichtbar !== state.index) {
         state.index = sichtbar;
+        seiteMerken(page.id, sichtbar);
         position.textContent = 'Seite ' + (sichtbar + 1) + '/' + documents.length;
         thumbnails.querySelectorAll('.document-thumbnail.is-selected')
           .forEach(el => el.classList.remove('is-selected'));
@@ -638,6 +655,7 @@ const DocumentMode = (() => {
     const springe = (i: number, weich = true): void => {
       const nr = Math.max(0, Math.min(documents.length - 1, i));
       state.index = nr;
+      seiteMerken(page.id, nr);
       zeichneStand(nr);
       /* NUR DIE MITTE ROLLEN, NICHT DAS FENSTER. `scrollIntoView` schiebt
          JEDEN rollbaren Vorfahren — auch das Dokument selbst, und dann

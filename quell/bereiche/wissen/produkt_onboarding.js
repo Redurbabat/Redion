@@ -452,10 +452,11 @@ const ProduktOnboarding = (() => {
                         updatedAt: new Date().toISOString()
                     };
                     profilSchreiben(profil);
-                    if (welt === 'workspace')
-                        Store.setMeta('startAnsicht', 'workspace');
-                    else if (welt === 'lernen')
-                        Store.setMeta('startAnsicht', 'start');
+                    /* DIE WELT IST EIN EINSTIEG, KEINE STARTANSICHT (E349). Hier stand
+                       `startAnsicht` = 'workspace' bzw. 'start' — ungefragt, und damit
+                       sah, wer das Onboarding durchlief, nie mehr seine PDF beim Start,
+                       egal was E236 versprach. Der Start zeigt, wo man war; die Welt
+                       steht im Profil und in der Seitenleiste. */
                     beenden({ status: 'fertig', welt, bereichIds: profil.bereichIds });
                     /* Die Auswahl ist ein bevorzugter Einstieg, keine neue Datenwelt.
                        Nach dem Schliessen wird deshalb nur die gewünschte Sicht

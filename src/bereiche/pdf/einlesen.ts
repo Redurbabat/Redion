@@ -47,7 +47,8 @@ const PdfEinlesen = (() => {
   /* `%PDF-` als Bytes — siehe `alsSeiten`. */
   const PDF_KOPF = [0x25, 0x50, 0x44, 0x46, 0x2d];
 
-  const alsSeiten = async (datei: File, elternId: string): Promise<any> => {
+  type Vorgabe = { anordnung?: 'nebeneinander' | 'untereinander'; ueberGrenze?: 'alle' | 'erste' };
+  const alsSeiten = async (datei: File, elternId: string, vorgabe?: Vorgabe): Promise<any> => {
     if (typeof PdfLeser === 'undefined')
       throw new Error('Der PDF-Leser ist nicht geladen.');
 
@@ -132,7 +133,13 @@ const PdfEinlesen = (() => {
         id: 'untereinander', text: 'Nur die Seiten',
         hinweis: 'Seite für Seite untereinander. Schreiben und malen kannst ' +
                  'du auch direkt darauf.' };
-      const anordnung = typeof Dialog !== 'undefined'
+      /* OHNE RÜCKFRAGE, WENN DER AUFRUFER SIE SCHON BEANTWORTET HAT (E350).
+         Ein ZIP-Import mit vierzig PDFs darf nicht vierzig Fenster stellen;
+         er fragt einmal oder gar nicht und reicht die Antwort herein. Die
+         Merkregel `pdfAnordnung` bleibt dann unberührt — sie gehört dem
+         Menschen, nicht dem Massenimport. */
+      const anordnung = vorgabe && vorgabe.anordnung ? vorgabe.anordnung
+        : typeof Dialog !== 'undefined'
         ? await Dialog.wahl({
             titel: datei.name,
             text: 'Wie soll „' + datei.name + '" auf der Seite liegen?',
@@ -147,12 +154,13 @@ const PdfEinlesen = (() => {
         melder.remove();
         return nurAnhaengen('liegt als Anhang auf der Seite.');
       }
-      Store.setMeta('pdfAnordnung', anordnung);
+      if (!(vorgabe && vorgabe.anordnung)) Store.setMeta('pdfAnordnung', anordnung);
       const daneben = anordnung === 'nebeneinander';
 
       let bis = gesamt;
       if (gesamt > OHNE_FRAGE) {
-        const antwort = typeof Dialog !== 'undefined'
+        const antwort = vorgabe && vorgabe.ueberGrenze ? vorgabe.ueberGrenze
+          : typeof Dialog !== 'undefined'
           ? await Dialog.wahl({
               titel: datei.name,
               text: 'Dieses Dokument hat ' + gesamt + ' Seiten.\n\n' +

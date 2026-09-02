@@ -281,7 +281,7 @@ const Einlesen = (() => {
                                vz.getUint32(zeiger + 24, true),
                                vz.getUint32(zeiger + 20, true),
                                vz.getUint32(zeiger + 42, true));
-      dateien.set(name, { methode, gepackt: echt.gepackt, offset: echt.versatz });
+      dateien.set(name, { methode, gepackt: echt.gepackt, roh: echt.roh, offset: echt.versatz });
       zeiger += 46 + nameLaenge + extra + kommentar;
     }
     vollzaehlig(anzahl, dateien.size);
@@ -313,7 +313,15 @@ const Einlesen = (() => {
       return b ? await b.text() : null;
     };
 
-    return { namen: [...dateien.keys()], alsBlob, holen, text };
+    /* DIE ROHGRÖSSE VOR DEM ENTPACKEN (E350). Sie steht im Verzeichnis; wer
+       sie kennt, schickt einen Eintrag, der 1 KB gepackt und 10 GB roh ist,
+       gar nicht erst durch den Entpacker. -1 heisst: unbekannt. */
+    const groesse = (name: string): number => {
+      const e = dateien.get(name);
+      return e && Number.isFinite(Number(e.roh)) ? Number(e.roh) : -1;
+    };
+
+    return { namen: [...dateien.keys()], alsBlob, holen, text, groesse };
   };
 
   const xml = (t: string): Document => new DOMParser().parseFromString(t, 'application/xml');

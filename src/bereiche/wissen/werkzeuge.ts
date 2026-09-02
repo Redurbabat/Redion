@@ -1467,13 +1467,23 @@ const Werkzeuge = (() => {
   const dateienLesen = () => {
     const inp = document.createElement('input');
     inp.type = 'file';
-    inp.accept = '.md,.markdown,.txt,.csv,.tsv,.html,.htm,.xlsx,.xlsm,.ods,.docx,.epub,image/*';
+    inp.accept = '.md,.markdown,.txt,.csv,.tsv,.html,.htm,.xlsx,.xlsm,.ods,.docx,.epub,.pdf,.zip,image/*';
     inp.multiple = true;
     inp.addEventListener('change', async () => {
       let n = 0;
       for (const f of Array.from(inp.files ?? [])) {
         const name = f.name.toLowerCase();
         try {
+          if (/\.zip$/i.test(name) && typeof ArchivImport !== 'undefined') {
+            const erg = await ArchivImport.importZip(f, null, { still: true });
+            UI.toast(erg.hinweis, 9000); n++; continue;
+          }
+          /* PDF UND ALLES BINÄRE WERDEN DOKUMENTE (E350) — vorher wurde eine
+             über „Alle Dateien" gewählte PDF zur Textseite mit Binärsalat. */
+          const textig = /\.(html?|htm|csv|tsv|md|markdown|txt)$/i.test(name) || f.type.startsWith('text/');
+          if (!textig && !/\.(xlsx|xlsm|docx|epub)$/i.test(name) && typeof ArchivImport !== 'undefined') {
+            await ArchivImport.dateiAlsDokument(f, null); n++; continue;
+          }
           if (/\.(xlsx|xlsm|docx|epub)$/i.test(name)) {
             const erg = await Einlesen.datei(f);
             if (erg) { UI.toast(f.name + ': ' + erg.hinweis); n++; continue; }
@@ -1493,6 +1503,7 @@ const Werkzeuge = (() => {
           (err instanceof Error ? err.message : String(err)), 'fehler'); }
       }
       App.zeichneBaum();
+      if (typeof ArchivImport !== 'undefined') ArchivImport.ansichtAuffrischen();
       UI.toast(n + (n === 1 ? ' Datei eingelesen' : ' Dateien eingelesen'));
     });
     inp.click();
@@ -2443,7 +2454,33 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
       e.preventDefault();
       bereich.classList.remove('ablegen');
       const seite = App.aktuelleSeite();
-      if (!seite) { UI.toast('Erst eine Seite öffnen'); return; }
+      /* IM REGAL GIBT ES KEINE SEITE — ALSO WIRD JEDE DATEI EIN DOKUMENT (E350).
+         Bis hierher hiess es „Erst eine Seite öffnen", und genau dort, wo
+         die Dokumente liegen, ging nichts. Jetzt: eine ZIP wird entpackt,
+         wie sie ist, alles andere wird ein Dokument an der Wurzel — oder im
+         offenen Fach der Notizhefte. */
+      const ort = typeof App.schauplatz === 'function' ? App.schauplatz() : '';
+      const imRegal = !seite && (ort === 'bibliothek' || ort === 'notizhefte');
+      if (!seite && !imRegal) { UI.toast('Erst eine Seite öffnen'); return; }
+      if (imRegal) {
+        if (typeof ArchivImport === 'undefined') { UI.toast('Erst eine Seite öffnen'); return; }
+        const fach = String(Store.getMeta('heft:fach') || '');
+        const ziel = ort === 'notizhefte' && fach && Store.getBlock(fach) ? fach : null;
+        let n = 0;
+        for (const f of e.dataTransfer.files) {
+          try {
+            if (/\.zip$/i.test(f.name)) {
+              const erg = await ArchivImport.importZip(f, ziel, { still: true });
+              UI.toast(erg.hinweis, 9000);
+            } else { await ArchivImport.dateiAlsDokument(f, ziel); n++; }
+          } catch (err: unknown) {
+            UI.toast('„' + f.name + '" ging nicht: ' + (err instanceof Error ? err.message : String(err)));
+          }
+        }
+        if (n) UI.toast(n + (n === 1 ? ' Dokument angelegt' : ' Dokumente angelegt'));
+        ArchivImport.ansichtAuffrischen();
+        return;
+      }
 
       for (const f of e.dataTransfer.files) {
         const name = f.name.toLowerCase();
@@ -2462,7 +2499,22 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
           }
         }
 
-        const text = await f.text();
+        /* EINE ZIP WIRD ENTPACKT, WIE SIE IST (E350) — unter der offenen Seite. */
+        if (/\.zip$/i.test(name) && typeof ArchivImport !== 'undefined') {
+          try {
+            const erg = await ArchivImport.importZip(f, seite, { still: true });
+            UI.toast(erg.hinweis, 9000);
+          } catch (err: unknown) {
+            UI.toast('„' + f.name + '" ging nicht: ' + (err instanceof Error ? err.message : String(err)));
+          }
+          continue;
+        }
+
+        /* NUR TEXT WIRD ALS TEXT GELESEN (E350). Hier stand `await f.text()`
+           für ALLES, was bis hierher kam — auch für ein 400-MB-Video, das
+           gleich darauf ohnehin Anhang wurde. */
+        const istText = /\.(csv|tsv|html?|htm|md|markdown|txt)$/i.test(name);
+        const text = istText ? await f.text() : '';
 
         if (name.endsWith('.csv') || name.endsWith('.tsv')) {
           const zeilen = Datenbank.csvZerlegen(text.replace(/^﻿/, ''));

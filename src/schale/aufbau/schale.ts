@@ -763,7 +763,13 @@ const App = (() => {
   const zeigeSonder = (titel: string, zeichner: any) => {
     sonder = { titel, zeichner };
     seiteId = null;
-    location.hash = '#' + titel.toLowerCase().replace(/[^a-z]+/g, '-');
+    const ort = titel.toLowerCase().replace(/[^a-z]+/g, '-');
+    location.hash = '#' + ort;
+    /* WO MAN WAR, NICHT NUR WAS ZULETZT OFFEN WAR (E349). `letzte` zeigt
+       weiter auf die zuletzt geöffnete Seite — „Weiter wo du warst" braucht
+       sie. Ob der nächste Start diese Seite oder das Regal zeigt, entscheidet
+       dieser Ort: `seite`, oder der Name der Sonderansicht. */
+    Store.setMeta('zuletztOrt', ort);
     zeichneBaum();
     zeichneSeite();
     schauplatzMelden();
@@ -781,6 +787,7 @@ const App = (() => {
       if (p) Store.updateBlock(id, { aufrufe: (p.aufrufe || 0) + 1, zuletztGeoeffnet: Store.now() });
     }
     Store.setMeta('letzte', id);
+    Store.setMeta('zuletztOrt', id ? 'seite' : 'leer');
     if (id) kuerzlichMerken(id);
     location.hash = id || '';
     zeichneBaum();
@@ -2470,6 +2477,9 @@ const App = (() => {
       da: () => typeof Recognition !== 'undefined' && !!Recognition.scan },
     { gruppe: 'Hereinholen', id: 'datei', zeichen: '📎', name: 'Datei hochladen',
       sub: 'Bleibt auf diesem Gerät' },
+    { gruppe: 'Hereinholen', id: 'zip', zeichen: '🗜', name: 'ZIP entpacken',
+      sub: 'Ordner bleiben Ordner, PDFs werden Dokumente',
+      da: () => typeof ArchivImport !== 'undefined' && !!ArchivImport.waehlen },
     { gruppe: 'Hereinholen', id: 'umzug', zeichen: '⇤', name: 'Aus anderem Werkzeug',
       sub: 'Notion, Obsidian, Trello, Evernote, Anki …',
       da: () => typeof Austausch !== 'undefined' && !!Austausch.dialog },
@@ -2601,6 +2611,14 @@ const App = (() => {
     if (was === 'seite')        { neueSeite(); return; }
     if (was === 'memo')         { Werkzeuge.schnellnotizen(); return; }
     if (was === 'datei')        { Werkzeuge.dateienLesen(); return; }
+    if (was === 'zip') {
+      /* ZIP INS REGAL (E350): Ziel ist das offene Fach der Notizhefte, sonst
+         die Wurzel — dort, wo „Dokumente" seine Deckel zeigt. */
+      const fach = String(Store.getMeta('heft:fach') || '');
+      const ziel = schauplatz() === 'notizhefte' && fach && Store.getBlock(fach) ? fach : null;
+      void ArchivImport.waehlen(ziel);
+      return;
+    }
     if (was === 'scan')         { Recognition.scan(); return; }
     if (was === 'vorlage')      { Werkzeuge.vorlagen(); return; }
     if (was === 'karte')        { Werkzeuge.lernen(); return; }
@@ -3036,6 +3054,19 @@ const App = (() => {
     return m && m[1] ? decodeURIComponent(m[1]) : '';
   };
 
+  /* DIE ORTE, DIE DER START WIEDERHERSTELLT (E349). Wer die App im Regal
+     oder im Notizhefte-Regal verlassen hat, kommt dort wieder an. Alle
+     anderen Sonderansichten — „Meine Aufgaben", „Lernen & Alltag",
+     „Elektro" — führen zum Regal: das ist der Ort, an dem die Sachen
+     liegen, und Redurs Wunsch für „nichts offen". */
+  const SONDER_START: Record<string, () => void> = {
+    dokumente: () => Bibliothek.oeffne(),
+    notizhefte: () => {
+      const N = (globalThis as any).Notebook;
+      if (N && typeof N.oeffnen === 'function') N.oeffnen(); else Bibliothek.oeffne();
+    },
+  };
+
   const start = async () => {
     /* DIE ZEICHEN DER OBERFLÄCHE ZUERST (E200).
        `index.html` schreibt nur die Stellen — `<span data-sym="search">` —,
@@ -3267,10 +3298,19 @@ const App = (() => {
        Seite DES BLOCKS, und nicht der Hash selbst (E105). */
     const produktRoute = Produktwelten.routeAusHash(location.hash);
     const zielBlock = produktRoute ? '' : blockAusHash(location.hash);
+    const rohHash = location.hash.slice(1).split(':')[0] || '';
     const ausHash = produktRoute ? '' : zielBlock
       ? ((typeof Links !== 'undefined' && Links.seiteVon)
           ? (Links.seiteVon(zielBlock) || {}).id || '' : '')
-      : location.hash.slice(1).split(':')[0];
+      : rohHash;
+    /* NUR EINE SEITE IM HASH IST EIN ZIEL (E349). `#dokumente` steht nach
+       jedem Besuch des Regals in der Adresse (`zeigeSonder`), und beim
+       Neuladen sah der Start darin bisher eine Seitenkennung: die Bedingung
+       für die Startansicht wurde falsch, das Regal kam nicht — stattdessen
+       `letzte` oder die erste Wurzelseite. Ein Hash zählt nur, wenn es die
+       Seite gibt; der Hash einer Sonderansicht ist ein ORT. */
+    const hashSeite = (ausHash && Store.getBlock(ausHash)) ? ausHash : '';
+    const sonderHash = (!produktRoute && !zielBlock && rohHash in SONDER_START) ? rohHash : '';
     const zuletztOffen = Store.getMeta('letzte');
     /* HIER GEMERKT UND NICHT WEITER UNTEN GEFRAGT (E236).
        `oeffne()` schreibt `letzte` selbst — schon zwei Zeilen später zeigt
@@ -3279,13 +3319,41 @@ const App = (() => {
        zuletzt geöffnetes Dokument?", bekommt deshalb IMMER ja.
        Genau daran ist der erste Versuch gescheitert: das Regal ging nie
        auf, weil die Bedingung nie falsch wurde. */
-    const hatteDokument = !!(zuletztOffen && Store.getBlock(zuletztOffen));
-    const startSeite = (ausHash && Store.getBlock(ausHash)) ? ausHash
+    const zuletztBlock = zuletztOffen ? Store.getBlock(zuletztOffen) : null;
+    /* Eine Seite im Papierkorb ist kein Ort zum Weiterarbeiten (E349). */
+    const hatteDokument = !!(zuletztBlock && zuletztBlock.alive !== false);
+    /* WO MAN WAR (E349). `zuletztOrt` sagt, ob zuletzt eine Seite offen war
+       oder eine Sonderansicht; ein Bestand von vor E349 kennt den Ort nicht,
+       und dann gilt, was vorher galt: die zuletzt geöffnete Seite. */
+    const ortZuletzt = String(sonderHash || Store.getMeta('zuletztOrt', 'seite') || 'seite');
+    const wiederDokument = hatteDokument && ortZuletzt === 'seite';
+    /* EINMALIG (E349): „Heute" und „Workspace" als Startansicht stammten
+       fast immer aus dem Onboarding, das sie ungefragt setzte — wer es
+       durchlief, sah nie seine PDF, egal was E236 versprach. Beide fallen
+       einmal auf „dokument" zurück; wer sie danach in den Einstellungen neu
+       wählt, behält sie, denn die Marke steht dann schon. */
+    if (!Store.getMeta('startAnsichtE349')) {
+      const alt = Store.getMeta('startAnsicht');
+      if (alt === 'start' || alt === 'workspace') Store.setMeta('startAnsicht', 'dokument');
+      Store.setMeta('startAnsichtE349', true);
+    }
+    const wunsch = Store.getMeta('startAnsicht', 'dokument');
+    const dokumentStart = wunsch === 'dokument' || wunsch === 'letzte';
+    /* DAS REGAL BRAUCHT KEINE SEITE DAVOR (E349). Hier stand: keine Seite
+       gemerkt, dann die erste Wurzelseite öffnen — und `oeffne()` schrieb
+       sie als `letzte` und zählte einen Aufruf. Der ZWEITE Start zeigte
+       deshalb „Willkommen" statt des Regals; das Regal hielt genau einen
+       Start. Kommt das Regal, wird jetzt keine Seite geöffnet, keine Marke
+       geschrieben, kein Zähler erhöht. Die Fläche ist einen Wimpernschlag
+       leer, bis am Ende von start() das Regal steht. */
+    const startSeite = hashSeite ? hashSeite
+                : dokumentStart ? (wiederDokument ? zuletztOffen : '')
                 : hatteDokument ? zuletztOffen
                   : (Store.rootPages()[0] || {}).id;
 
     zeichneBaum();
-    oeffne(startSeite);
+    if (startSeite) oeffne(startSeite);
+    else { zeichneSeite(); schauplatzMelden(); }
 
     /* Kam der Start über einen Blocklink, steht jetzt die richtige Seite —
        aber oben. Also noch hinrollen. */
@@ -3371,7 +3439,6 @@ const App = (() => {
        Wer schon einmal etwas anderes gewählt hat, behält seine Wahl:
        `getMeta` gibt den gespeicherten Wert zurück und die Vorgabe nur,
        wenn keiner da ist. */
-    const wunsch = Store.getMeta('startAnsicht', 'dokument');
     let startAnsichtZeigen: (() => void) | null = null;
     /* DIE STARTANSICHT DARF NICHT ÜBERSCHREIBEN, WAS SCHON OFFEN IST (E138).
        Hier stand ein blankes `setTimeout(…, 60)`. Wer in diesen 60 ms eine
@@ -3409,7 +3476,7 @@ const App = (() => {
        kein Fehler in der Ansicht. Die Startansicht wird deshalb GEMERKT und
        ganz am Ende von `start()` ausgeführt, wenn alle Module stehen. Danach
        kommt jedes `oeffne()` von aussen garantiert später und gewinnt. */
-    if (!ausHash && !produktRoute) {
+    if (!hashSeite && !produktRoute) {
       /* „DOKUMENT": das zuletzt geöffnete, sonst das Regal.
          `startSeite` weiter oben zeigt bereits auf `Store.getMeta('letzte')`,
          wenn es den Block noch gibt — dann ist die Seite schon offen und
@@ -3421,8 +3488,8 @@ const App = (() => {
          Umweg „startAnsichtZeigen bleibt leer" zufällig zum richtigen
          Ergebnis — am Rechner. Am Telefon nicht: dort schickte der Block
          weiter oben JEDEN auf „Heute". */
-      if ((wunsch === 'dokument' || wunsch === 'letzte') && !hatteDokument)
-        startAnsichtZeigen = () => Bibliothek.oeffne();
+      if (dokumentStart && !wiederDokument)
+        startAnsichtZeigen = SONDER_START[ortZuletzt] || (() => Bibliothek.oeffne());
       if (wunsch === 'dokumente') startAnsichtZeigen = () => Bibliothek.oeffne();
       if (wunsch === 'start') startAnsichtZeigen = () => Produktwelten.lernen('heute');
       if (wunsch === 'workspace') startAnsichtZeigen = () => Produktwelten.workspace('start');

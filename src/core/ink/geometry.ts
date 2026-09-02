@@ -57,6 +57,88 @@ const InkGeometry = (() => {
     return input.filter((_point, index) => !!keep[index]);
   };
 
+  /** Wie `simplify`, aber als Liste der INDIZES, die bleiben — damit ein
+      zweiter Kanal (der Druck je Punkt) mitwandern kann, statt zum
+      Durchschnitt zu werden (E351). */
+  const simplifyIndices = (raw: unknown, tolerance = 0.8): number[] => {
+    const input = points(raw);
+    if (input.length <= 2) return input.map((_point, index) => index);
+    const keep = new Uint8Array(input.length);
+    keep[0] = 1; keep[input.length - 1] = 1;
+    const stack: Array<[number, number]> = [[0, input.length - 1]];
+    while (stack.length) {
+      const [first, last] = stack.pop() as [number, number];
+      let farthest = -1;
+      let index = -1;
+      for (let i = first + 1; i < last; i++) {
+        const distance = distanceToSegment(input[i]!, input[first]!, input[last]!);
+        if (distance > farthest) { farthest = distance; index = i; }
+      }
+      if (index > first && farthest > Math.max(0.05, tolerance)) {
+        keep[index] = 1;
+        stack.push([first, index], [index, last]);
+      }
+    }
+    const out: number[] = [];
+    for (let i = 0; i < input.length; i++) if (keep[i]) out.push(i);
+    return out;
+  };
+
+  /** Eine Seite des Umrisses als geglaettete Kurve (ohne das fuehrende M). */
+  const seite = (input: InkPoint[]): string => {
+    if (input.length < 2) return '';
+    if (input.length === 2) return ` L${input[1]![0]} ${input[1]![1]}`;
+    let output = '';
+    for (let i = 1; i < input.length - 1; i++) {
+      const middle: InkPoint = [
+        Math.round((input[i]![0] + input[i + 1]![0]) * 50) / 100,
+        Math.round((input[i]![1] + input[i + 1]![1]) * 50) / 100
+      ];
+      output += ` Q${input[i]![0]} ${input[i]![1]} ${middle[0]} ${middle[1]}`;
+    }
+    const last = input[input.length - 1]!;
+    return output + ` L${last[0]} ${last[1]}`;
+  };
+
+  /**
+   * DER UMRISS EINES STRICHS MIT VERAENDERLICHER BREITE (E351).
+   * Je Punkt eine halbe Breite; links und rechts der Mittellinie entsteht
+   * eine Kontur, vorn und hinten eine runde Kappe. Das Ergebnis ist eine
+   * FLAECHE (fill), kein Strich (stroke) — so kann ein Fueller anschwellen
+   * und auslaufen, wie es der Druck sagt. Die Punkte bleiben, was sie sind:
+   * die Mittellinie, die auch der alte Zeichner kennt.
+   */
+  const outline = (raw: unknown, halfWidths: number[]): string => {
+    const input = points(raw);
+    const n = input.length;
+    if (n < 2) return '';
+    const links: InkPoint[] = [];
+    const rechts: InkPoint[] = [];
+    const halb = (i: number): number => {
+      const w = Number(halfWidths[Math.min(i, halfWidths.length - 1)]);
+      return Math.max(0.15, Number.isFinite(w) ? w : 1);
+    };
+    const r2 = (v: number): number => Math.round(v * 100) / 100;
+    for (let i = 0; i < n; i++) {
+      const prev = input[Math.max(0, i - 1)]!;
+      const next = input[Math.min(n - 1, i + 1)]!;
+      let tx = next[0] - prev[0];
+      let ty = next[1] - prev[1];
+      const len = Math.hypot(tx, ty) || 1;
+      tx /= len; ty /= len;
+      const w = halb(i);
+      links.push([r2(input[i]![0] - ty * w), r2(input[i]![1] + tx * w)]);
+      rechts.push([r2(input[i]![0] + ty * w), r2(input[i]![1] - tx * w)]);
+    }
+    const ende = halb(n - 1);
+    const anfang = halb(0);
+    const rueck = [...rechts].reverse();
+    return `M${links[0]![0]} ${links[0]![1]}` + seite(links) +
+      ` A${r2(ende)} ${r2(ende)} 0 0 1 ${rueck[0]![0]} ${rueck[0]![1]}` +
+      seite(rueck) +
+      ` A${r2(anfang)} ${r2(anfang)} 0 0 1 ${links[0]![0]} ${links[0]![1]} Z`;
+  };
+
   /** Ein geglaetteter SVG-Pfad; zwei Punkte bleiben absichtlich eine Linie. */
   const path = (raw: unknown): string => {
     const input = points(raw);
@@ -117,7 +199,7 @@ const InkGeometry = (() => {
     left.x <= right.x + right.width && left.x + left.width >= right.x &&
     left.y <= right.y + right.height && left.y + left.height >= right.y;
 
-  return { points, simplify, path, rectangle, bounds, move, intersects };
+  return { points, simplify, simplifyIndices, outline, path, rectangle, bounds, move, intersects };
 })();
 
 (window as any).InkGeometry = InkGeometry;

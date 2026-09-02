@@ -1,0 +1,319 @@
+/* Suite 343 — Die Schrift: Füller, Kugelschreiber, Pinsel (E351)
+ * ============================================================================
+ * Redur: „dass du die Schrift, Linie und so alles fertig machst — es sollte
+ * wie GoodNotes sein."
+ *
+ * Bis E351 gab es EINEN Stift mit EINER Breite je Strich: der Druck aller
+ * Punkte wurde gemittelt, und nach dem Vereinfachen wurde ohnehin jeder
+ * Druckwert zum Durchschnitt. Ein Füller konnte nie anschwellen. Jetzt:
+ *
+ *   1 · DER FÜLLER FOLGT DEM DRUCK — je Punkt eine Breite, gezeichnet als
+ *       Fläche; der Druck überlebt das Vereinfachen.
+ *   2 · OHNE DRUCKSENSOR ZÄHLT DAS TEMPO — langsam ist dick, schnell dünn.
+ *   3 · ALTE MARKEN SEHEN AUS WIE IMMER (§53.3, E125).
+ *   4 · DREI STIFTE — der Knopf wechselt, der Kugelschreiber bleibt der alte
+ *       Strich, der Pinsel schwillt stärker, die Wahl überlebt das Neuladen.
+ *   5 · DER MARKER AM LINEAL ZIEHT GERADE.
+ *   6 · EIGENE FARBEN — der Farbwähler des Browsers, gemerkt als Tupfer.
+ *   7 · DER DRUCKWEG zeichnet den Füller genauso.
+ *   8 · AM TELEFON sind die neuen Knöpfe Fingerknöpfe.
+ *
+ *   node pruefungen/lauf/test343.mts
+ * ==========================================================================*/
+declare const Store: any; declare const App: any; declare const Marken: any;
+declare const Werkzeuge: any; declare const InkGeometry: any;
+import { chromium } from 'playwright';
+import http from 'node:http';
+import type { IncomingMessage, ServerResponse } from 'node:http';
+import fs from 'node:fs';
+import path from 'node:path';
+
+const WURZEL = path.resolve(import.meta.dirname, '../..');
+const PORT = 9347;
+
+let ok = 0, weg = 0;
+const p = (n: string, b: unknown, extra = ''): void => {
+  if (b) { ok++; console.log('  ✓ ' + n); }
+  else { weg++; console.log('  ✗ ' + n + (extra ? ' — ' + extra : '')); }
+};
+const gleich = (n: string, ist: unknown, soll: unknown): void =>
+  p(n, JSON.stringify(ist) === JSON.stringify(soll),
+    `ist ${JSON.stringify(ist)}, soll ${JSON.stringify(soll)}`);
+
+const TYP: Record<string, string> = {
+  '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css',
+  '.png': 'image/png', '.json': 'application/json', '.mjs': 'text/javascript',
+  '.webmanifest': 'application/manifest+json', '.ico': 'image/x-icon'
+};
+const server = http.createServer((a: IncomingMessage, b: ServerResponse) => {
+  const rein = decodeURIComponent((a.url ?? '/').split('?')[0] ?? '/');
+  const pfad = path.join(WURZEL, rein === '/' ? 'index.html' : rein.slice(1));
+  if (!pfad.startsWith(WURZEL) || !fs.existsSync(pfad) || fs.statSync(pfad).isDirectory()) {
+    b.writeHead(404); b.end(); return;
+  }
+  b.writeHead(200, { 'Content-Type': TYP[path.extname(pfad)] ?? 'application/octet-stream' });
+  b.end(fs.readFileSync(pfad));
+});
+await new Promise<void>(f => { server.listen(PORT, () => f()); });
+
+const browser = await chromium.launch();
+const fehler: string[] = [];
+type Seite = import('playwright').Page;
+
+const kontext = async (handy = false) => {
+  const ktx = await browser.newContext({
+    viewport: handy ? { width: 390, height: 844 } : { width: 1280, height: 900 },
+    isMobile: handy, hasTouch: handy, deviceScaleFactor: 1
+  });
+  const pg = await ktx.newPage();
+  pg.on('pageerror', e => fehler.push('PAGEERROR: ' + e.message.slice(0, 160)));
+  pg.on('dialog', d => d.dismiss().catch(() => {}));
+  await pg.goto(`http://localhost:${PORT}/index.html`);
+  await pg.waitForTimeout(2800);
+  /* Ein A4-Blatt auf einer Seite — die Zeichenschicht mit Leiste. */
+  const blattId = await pg.evaluate(async () => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+    document.getElementById('rg-willkommen')?.remove();
+    document.querySelectorAll('.overlay').forEach(o => o.remove());
+    const s = Store.addPage(null, { text: 'Schriftprobe', icon: '✍' });
+    const b = Store.addBlock(s.id, 'blatt', { text: '', papier: 'liniert' });
+    Store.addBlock(b.id, 'text', { text: '' });
+    await Store.flush();
+    App.oeffne(s.id);
+    await new Promise(f => setTimeout(f, 900));
+    return b.id as string;
+  });
+  return { ktx, pg, blattId };
+};
+
+/** Einen Strich mit synthetischen Zeigerereignissen ziehen — Punkte im
+    BLATTRAUM, Druck je Punkt, wahlweise als Stift oder Maus. Zwischen den
+    Punkten kann gewartet werden (Tempo). */
+const strich = (pg: Seite, punkte: Array<[number, number, number]>, art: 'pen' | 'mouse',
+                pause = 0) =>
+  pg.evaluate(async ([punkte, art, pause]: [Array<[number, number, number]>, string, number]) => {
+    const svg = document.querySelector<SVGSVGElement>('.blatt-marken');
+    if (!svg) throw new Error('keine Zeichenschicht');
+    const ctm = svg.getScreenCTM();
+    if (!ctm) throw new Error('kein CTM');
+    const zu = (x: number, y: number) => {
+      const pt = svg.createSVGPoint(); pt.x = x; pt.y = y;
+      const c = pt.matrixTransform(ctm);
+      return { clientX: c.x, clientY: c.y };
+    };
+    const ev = (typ: string, x: number, y: number, druck: number) =>
+      new PointerEvent(typ, { ...zu(x, y), pointerType: art, pressure: druck, isPrimary: true,
+        button: typ === 'pointerup' ? 0 : 0, buttons: typ === 'pointerup' ? 0 : 1,
+        pointerId: 7, bubbles: true, cancelable: true });
+    const [x0, y0, d0] = punkte[0]!;
+    svg.dispatchEvent(ev('pointerdown', x0, y0, d0));
+    for (let i = 1; i < punkte.length; i++) {
+      const [x, y, d] = punkte[i]!;
+      if (pause > 0) await new Promise(f => setTimeout(f, pause));
+      svg.dispatchEvent(ev('pointermove', x, y, d));
+    }
+    const [xe, ye, de] = punkte[punkte.length - 1]!;
+    svg.dispatchEvent(ev('pointerup', xe, ye, de));
+    await new Promise(f => setTimeout(f, 150));
+  }, [punkte, art, pause] as [Array<[number, number, number]>, string, number]);
+
+const letzteMarke = (pg: Seite, blattId: string) => pg.evaluate((id: string) => {
+  const b = Store.getBlock(id);
+  const m = (b.marken || [])[b.marken.length - 1] || null;
+  if (!m) return null;
+  const node = document.querySelector<SVGElement>(`.blatt-marken [data-sid="${m.id}"]`);
+  return {
+    art: m.art, stil: m.stil ?? null, farbe: m.farbe, n: m.pts.length,
+    druck: (m.pressure || []).map(Number),
+    tag: node?.tagName, fill: node?.getAttribute('fill'), stroke: node?.getAttribute('stroke'),
+    sw: node?.getAttribute('stroke-width'), inkStil: node?.getAttribute('data-ink-stil'),
+    opacity: node?.getAttribute('opacity')
+  };
+}, blattId);
+
+const werkzeug = (pg: Seite, wz: string) => pg.click(`.blatt-werk [data-wz="${wz}"]`);
+
+/* ======================================================================== */
+console.log('\n1 · Der Füller folgt dem Druck — je Punkt eine Breite, als Fläche');
+const { ktx, pg, blattId } = await kontext();
+await pg.evaluate(() => { Store.setMeta('zeichnen:stift', 'fueller'); App.zeichneSeite(); });
+await pg.waitForTimeout(500);
+await werkzeug(pg, 'stift');
+/* Ein Bogen: leicht → fest → leicht, 13 Punkte mit Stiftdruck. */
+const bogen: Array<[number, number, number]> = Array.from({ length: 13 }, (_v, i) => {
+  const t = i / 12;
+  return [120 + t * 300, 200 + Math.sin(t * Math.PI) * 60, 0.15 + Math.sin(t * Math.PI) * 0.8];
+});
+await strich(pg, bogen, 'pen');
+let m = await letzteMarke(pg, blattId);
+p('Ein Strich ist da', !!m && m.art === 'stift', JSON.stringify(m));
+gleich('… mit dem Stil „fueller"', m?.stil, 'fueller');
+p('Der Druck ist je Punkt erhalten: leicht am Anfang, fest in der Mitte', !!m && m.druck.length === m.n && Math.min(...m.druck) < 0.35 && Math.max(...m.druck) > 0.8, JSON.stringify(m?.druck));
+p('Gezeichnet als Fläche (fill), nicht als Strich', !!m && m.tag === 'path' && m.fill !== 'none' && m.fill === m.farbe, JSON.stringify({ fill: m?.fill, farbe: m?.farbe, stil: m?.inkStil }));
+gleich('… mit der Stilmarke am Knoten', m?.inkStil, 'fueller');
+/* Und die Fläche ist in der Mitte wirklich breiter als am Anfang: ein
+   Punkt neben der Mittellinie liegt in der Mitte IN der Fläche, am dünnen
+   Anfang daneben. */
+const breite = await pg.evaluate((id: string) => {
+  const b = Store.getBlock(id); const m = b.marken[b.marken.length - 1];
+  const node = document.querySelector<SVGGeometryElement>(`.blatt-marken [data-sid="${m.id}"]`);
+  const svg = document.querySelector<SVGSVGElement>('.blatt-marken');
+  if (!node || !svg) return null;
+  const drin = (x: number, y: number) => { const pt = svg.createSVGPoint(); pt.x = x; pt.y = y; return node.isPointInFill(pt); };
+  const anfang = m.pts[0], mitte = m.pts[Math.floor(m.pts.length / 2)];
+  const ab = Number(m.breite) * 0.9;   /* deutlich mehr als die halbe Grundbreite */
+  return { mitteDick: drin(mitte[0], mitte[1] - ab) || drin(mitte[0], mitte[1] + ab),
+           anfangDuenn: !drin(anfang[0], anfang[1] - ab) && !drin(anfang[0], anfang[1] + ab),
+           mitteMitte: drin(mitte[0], mitte[1]) };
+}, blattId);
+p('In der Mitte ist die Fläche breit, am leichten Anfang schmal', !!breite && breite.mitteDick && breite.anfangDuenn && breite.mitteMitte, JSON.stringify(breite));
+
+/* ======================================================================== */
+console.log('\n2 · Ohne Drucksensor zählt das Tempo — langsam dick, schnell dünn');
+/* Erste Hälfte: kleine Schritte mit Pause (langsam). Zweite Hälfte: grosse
+   Schritte ohne Pause (schnell). Die Maus meldet immer 0,5. */
+const langsam: Array<[number, number, number]> = Array.from({ length: 10 }, (_v, i) => [100 + i * 4, 400, 0.5]);
+await pg.evaluate(async ([punkte]: [Array<[number, number, number]>]) => {
+  const svg = document.querySelector<SVGSVGElement>('.blatt-marken')!;
+  const ctm = svg.getScreenCTM()!;
+  const zu = (x: number, y: number) => { const pt = svg.createSVGPoint(); pt.x = x; pt.y = y; const c = pt.matrixTransform(ctm); return { clientX: c.x, clientY: c.y }; };
+  const ev = (typ: string, x: number, y: number) => new PointerEvent(typ, { ...zu(x, y), pointerType: 'mouse', pressure: 0.5, isPrimary: true, button: 0, buttons: typ === 'pointerup' ? 0 : 1, pointerId: 9, bubbles: true, cancelable: true });
+  svg.dispatchEvent(ev('pointerdown', punkte[0]![0], punkte[0]![1]));
+  for (let i = 1; i < punkte.length; i++) { await new Promise(f => setTimeout(f, 16)); svg.dispatchEvent(ev('pointermove', punkte[i]![0], punkte[i]![1])); }
+  /* schnell: 10 Schritte à 30 Punkte, ohne Pause */
+  let x = punkte[punkte.length - 1]![0];
+  for (let i = 0; i < 10; i++) { x += 30; svg.dispatchEvent(ev('pointermove', x, 400)); }
+  svg.dispatchEvent(ev('pointerup', x, 400));
+  await new Promise(f => setTimeout(f, 150));
+}, [langsam] as [Array<[number, number, number]>]);
+m = await letzteMarke(pg, blattId);
+const halb = Math.floor((m?.druck.length ?? 0) / 2);
+const vorn = (m?.druck ?? []).slice(0, halb), hinten = (m?.druck ?? []).slice(halb);
+const mittel = (a: number[]) => a.length ? a.reduce((s, v) => s + v, 0) / a.length : 0;
+p('Der langsame Anfang ist dicker als das schnelle Ende', vorn.length > 1 && hinten.length > 1 && mittel(vorn) > mittel(hinten) + 0.15, `vorn ${mittel(vorn).toFixed(2)}, hinten ${mittel(hinten).toFixed(2)} · ${JSON.stringify(m?.druck)}`);
+p('… und keiner der Werte ist die tote 0,5 der Maus', !!m && m.druck.every((v: number) => Math.abs(v - 0.5) > 0.01), JSON.stringify(m?.druck));
+
+/* ======================================================================== */
+console.log('\n3 · Alte Marken sehen aus wie immer');
+const alt = await pg.evaluate((id: string) => {
+  const b = Store.getBlock(id);
+  const marke = { id: 'alt-e125', art: 'stift', farbe: '#2f7ed8', breite: 2.4,
+    pts: [[100, 600], [140, 610], [180, 590], [220, 620], [260, 600]], pressure: [0.2, 0.9, 0.2, 0.9, 0.2] };
+  Store.updateBlock(id, { marken: [...(b.marken || []), marke] });
+  App.zeichneSeite();
+  return new Promise(f => setTimeout(() => {
+    const node = document.querySelector<SVGElement>('.blatt-marken [data-sid="alt-e125"]');
+    f({ tag: node?.tagName, fill: node?.getAttribute('fill'), sw: node?.getAttribute('stroke-width'), stil: node?.getAttribute('data-ink-stil') });
+  }, 500));
+}, blattId);
+/* Erwartet: derselbe Strich wie seit E125 — Durchschnittsdruck 0,48 →
+   Faktor 0,65 + 0,48·0,7 = 0,986 → 2,4 · 0,986 = 2,366. */
+p('Ein Strich ohne Stil bleibt ein Strich: fill none, eine Breite', (alt as any).tag === 'path' && (alt as any).fill === 'none' && Math.abs(Number((alt as any).sw) - 2.366) < 0.01 && !(alt as any).stil, JSON.stringify(alt));
+
+/* ======================================================================== */
+console.log('\n4 · Drei Stifte — der Knopf wechselt, die Wahl bleibt');
+const knopf = await pg.evaluate(() => {
+  const k = document.querySelector<HTMLElement>('.blatt-werk [data-act="stil"]');
+  return { da: !!k, stil: k?.dataset.stil, wort: k?.textContent?.trim() };
+});
+p('Der Stift-Knopf steht in der Leiste und zeigt den Füller', knopf.da && knopf.stil === 'fueller' && /Füller/.test(String(knopf.wort)), JSON.stringify(knopf));
+await pg.click('.blatt-werk [data-act="stil"]');
+await pg.waitForTimeout(150);
+const nachKlick = await pg.evaluate(() => ({
+  stil: document.querySelector<HTMLElement>('.blatt-werk [data-act="stil"]')?.dataset.stil,
+  meta: Store.getMeta('zeichnen:stift'),
+  werkzeug: document.querySelector('.blatt-marken')?.getAttribute('data-tool')
+}));
+gleich('Ein Klick: Kugelschreiber', nachKlick.stil, 'kugel');
+gleich('… gemerkt', nachKlick.meta, 'kugel');
+gleich('… und der Stift ist das Werkzeug', nachKlick.werkzeug, 'stift');
+await strich(pg, bogen.map(([x, y, d]) => [x, y + 250, d] as [number, number, number]), 'pen');
+m = await letzteMarke(pg, blattId);
+p('Der Kugelschreiber schreibt den alten Strich: kein Stil, fill none', !!m && m.stil === null && m.fill === 'none', JSON.stringify(m));
+await pg.click('.blatt-werk [data-act="stil"]');
+await pg.waitForTimeout(150);
+await strich(pg, bogen.map(([x, y, d]) => [x, y + 400, d] as [number, number, number]), 'pen');
+m = await letzteMarke(pg, blattId);
+gleich('Noch ein Klick: der Pinsel', m?.stil, 'pinsel');
+p('… als Fläche mit leichter Transparenz', !!m && m.fill !== 'none' && Number(m.opacity) > 0.8 && Number(m.opacity) < 1, JSON.stringify(m));
+p('Der Pinsel schwillt stärker als der Füller', await pg.evaluate(() => Marken.druckFaktor('pinsel', 0.9) > Marken.druckFaktor('fueller', 0.9) && Marken.druckFaktor('pinsel', 0.1) < Marken.druckFaktor('fueller', 0.1)));
+await pg.evaluate(() => App.zeichneSeite());
+await pg.waitForTimeout(400);
+const nachNeu = await pg.evaluate(() => document.querySelector<HTMLElement>('.blatt-werk [data-act="stil"]')?.dataset.stil);
+gleich('Nach dem Neuzeichnen steht der Pinsel noch', nachNeu, 'pinsel');
+
+/* ======================================================================== */
+console.log('\n5 · Der Marker am Lineal zieht gerade');
+await werkzeug(pg, 'marker');
+await pg.click('.blatt-werk [data-act="lineal"]');
+const wackel: Array<[number, number, number]> = Array.from({ length: 12 }, (_v, i) => [100 + i * 25, 700 + (i % 2 ? 9 : -9), 0.5]);
+await strich(pg, wackel, 'pen');
+m = await letzteMarke(pg, blattId);
+p('Ein wackliger Marker mit Lineal hat genau zwei Punkte', !!m && m.art === 'marker' && m.n === 2, JSON.stringify({ art: m?.art, n: m?.n }));
+await pg.click('.blatt-werk [data-act="lineal"]');
+await strich(pg, wackel.map(([x, y, d]) => [x, y + 40, d] as [number, number, number]), 'pen');
+m = await letzteMarke(pg, blattId);
+p('Ohne Lineal bleibt der Marker Freihand', !!m && m.art === 'marker' && m.n > 2, JSON.stringify({ n: m?.n }));
+
+/* ======================================================================== */
+console.log('\n6 · Eigene Farben — der Farbwähler des Browsers, gemerkt als Tupfer');
+const farbe = await pg.evaluate(async () => {
+  document.querySelector<HTMLElement>('.blatt-werk [data-act="farbe"]')?.click();
+  await new Promise(f => setTimeout(f, 100));
+  const feld = document.querySelector<HTMLInputElement>('input[type="color"]');
+  if (!feld) return { feld: false };
+  feld.value = '#8e44ad';
+  feld.dispatchEvent(new Event('change', { bubbles: true }));
+  await new Promise(f => setTimeout(f, 150));
+  const tupfer = document.querySelector<HTMLElement>('.blatt-werk .blatt-farbe-eigen');
+  return { feld: true, tupfer: tupfer?.dataset.c, an: tupfer?.classList.contains('on'), meta: Store.getMeta('zeichnen:farben') };
+});
+p('Der Knopf öffnet einen Farbwähler', (farbe as any).feld, JSON.stringify(farbe));
+gleich('Die gewählte Farbe steht als Tupfer', (farbe as any).tupfer, '#8e44ad');
+p('… ist markiert und gemerkt', (farbe as any).an === true && Array.isArray((farbe as any).meta) && (farbe as any).meta.includes('#8e44ad'), JSON.stringify(farbe));
+await werkzeug(pg, 'stift');
+await strich(pg, [[100, 780, 0.5], [130, 790, 0.6], [160, 780, 0.5], [190, 790, 0.4]], 'pen');
+m = await letzteMarke(pg, blattId);
+gleich('Der nächste Strich trägt die eigene Farbe', m?.farbe, '#8e44ad');
+await pg.evaluate(() => App.zeichneSeite());
+await pg.waitForTimeout(400);
+const tupferNachNeu = await pg.evaluate(() => [...document.querySelectorAll<HTMLElement>('.blatt-werk .blatt-farbe-eigen')].map(t => t.dataset.c));
+gleich('Der Tupfer überlebt das Neuzeichnen', tupferNachNeu, ['#8e44ad']);
+
+/* ======================================================================== */
+console.log('\n7 · Der Druckweg zeichnet den Füller genauso');
+/* Der Ausdruck (werkzeuge.ts, `markenAlsSvg`) ruft denselben Zeichner
+   `Marken.zeichneMarke` wie der Bildschirm — hier wird der Zeichner mit
+   einer Füller-Marke gerufen, und der Quelltext des Druckwegs muss ihn
+   weiterhin benutzen. */
+const druck = await pg.evaluate(() => {
+  const node = Marken.zeichneMarke({ id: 'd1', art: 'stift', stil: 'fueller', farbe: '#2f7ed8', breite: 2.4,
+    pts: [[10, 10], [40, 20], [70, 10], [100, 25]], pressure: [0.2, 0.8, 0.9, 0.3] });
+  return { tag: node?.tagName, fill: node?.getAttribute('fill'), stil: node?.getAttribute('data-ink-stil'),
+           d: String(node?.getAttribute('d') || '').slice(0, 20) };
+});
+p('Der gemeinsame Zeichner liefert für den Füller eine gefüllte Fläche', druck.tag === 'path' && druck.fill === '#2f7ed8' && druck.stil === 'fueller' && /^M/.test(druck.d), JSON.stringify(druck));
+const druckQuelle = fs.readFileSync(path.join(WURZEL, 'quell/bereiche/wissen/werkzeuge.js'), 'utf8');
+p('Der Druckweg ruft weiterhin Marken.zeichneMarke', /markenAlsSvg[\s\S]{0,600}Marken\.zeichneMarke/.test(druckQuelle));
+await ktx.close();
+
+/* ======================================================================== */
+console.log('\n8 · Am Telefon sind die neuen Knöpfe Fingerknöpfe');
+{
+  const { ktx: k2, pg: p2 } = await kontext(true);
+  const masse = await p2.evaluate(() => {
+    const r = (sel: string) => { const e = document.querySelector<HTMLElement>(sel); const b = e?.getBoundingClientRect(); return b ? { w: Math.round(b.width), h: Math.round(b.height) } : null; };
+    return { stil: r('.blatt-werk [data-act="stil"]'), farbe: r('.blatt-werk [data-act="farbe"]') };
+  });
+  p('Der Stift-Knopf ist mindestens 44 px hoch', !!masse.stil && masse.stil.h >= 44, JSON.stringify(masse));
+  p('Der Farb-Knopf ist mindestens 30 px gross', !!masse.farbe && masse.farbe.w >= 30 && masse.farbe.h >= 30, JSON.stringify(masse));
+  await k2.close();
+}
+
+console.log('');
+p('Keine Seitenfehler', fehler.length === 0, fehler.join(' | '));
+await browser.close();
+server.close();
+console.log(`\n${ok}/${ok + weg} bestanden`);
+process.exit(weg ? 1 : 0);

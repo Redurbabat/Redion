@@ -26648,3 +26648,377 @@ Dazu die Suiten, die dieselben Fenster messen: test51 41/41 (der
 E320-Wächter, rot mit der ersten Fassung), test66 111/111, test68 105/105,
 test70 83/83, test71 59/59, test114 105, test241 grün, test317 25/25.
 Typprüfung grün, Einzeldatei neu gebaut, sw v102.
+
+NACHTRAG (voller Lauf voll12, 2. September): zwei Wächter wurden rot, beide
+zu Recht. test225 fand in E348 die Verweise „test340 §8/§10", die test340
+mit `§N`-Marken schrieb, die test225 nicht liest — die Marken heissen jetzt
+`N ·`. Und test290 fand das Präfix `fn-` (fn-feld, fn-reihe, fn-aus,
+fn-hinweis — fünfzehn Vorkommen in werkzeuge.css), das E348 eingeführt und
+nicht in doku/CSS-NAMENSRAEUME.md eingetragen hatte. Eingetragen. Beide
+Läufe danach grün (test225 11/11, test290 13/13).
+
+
+E349 — Der Start zeigt, wo man war: die PDF, sonst das Regal (Redurs Punkt 1)
+════════════════════════════════════════════════════════════════════════════
+
+Redur, 2. September 2026: „wenn ich die App öffne, es sollte wie GoodNotes
+immer die zuletzt geöffnete PDF öffnen, oder wenn nichts geöffnet ist, bei
+dem Dokument-Teil, also wo ich meine alle gespeicherten Daten sehe."
+
+E236 hat genau das versprochen, und test67 §12 misst es seither in zwei
+Fällen. Gemessen mit einer echten PDF (Rechner und Telefon): der einfache
+Fall stimmt — die PDF kommt beim Start ohne Adresse zurück. Beim Lesen des
+Starts fanden sich trotzdem vier Löcher, jedes still:
+
+  1. DAS REGAL HIELT GENAU EINEN START. Kam es, öffnete der Start davor
+     die erste Wurzelseite, „damit etwas dasteht" — und `oeffne()` schrieb
+     sie als `letzte`. Der zweite Start zeigte „Willkommen".
+  2. `#dokumente` STEHT NACH JEDEM REGALBESUCH IN DER ADRESSE. Beim
+     Neuladen galt es als Seitenkennung: die Bedingung für die Startansicht
+     wurde falsch, das Regal blieb aus, stattdessen `letzte` oder die erste
+     Wurzelseite. Jeder andere Hash, der keine Seite ist, tat dasselbe.
+  3. EINE SEITE IM PAPIERKORB ging beim Start wieder auf.
+  4. DAS ONBOARDING SETZTE DIE STARTANSICHT ungefragt auf „Heute" oder
+     „Workspace". Wer es durchlief, sah nie mehr seine PDF beim Start — egal
+     was E236 versprach. Das ist sehr wahrscheinlich, was Redur sah.
+
+Und eines, das GoodNotes ausmacht und hier fehlte: ein Dokument öffnete
+immer auf Seite 1. Der Seitenstand lag nur im Arbeitsspeicher.
+
+Redur öffnet Redion inzwischen als Webseite unter
+https://redion.redbbt7.workers.dev (Cloudflare Worker, `wrangler deploy`);
+die Startadresse einer installierten PWA trägt keinen Hash. Genau dieser
+Fall — Start ohne Adresse — ist der, der zählt.
+
+─── WAS GEBAUT WURDE ───────────────────────────────────────────────────────
+
+DER ORT, NICHT NUR DIE SEITE. Eine neue Marke `zuletztOrt`: `oeffne()`
+schreibt `seite`, `zeigeSonder()` den Namen der Sonderansicht (`dokumente`,
+`notizhefte`, …). `letzte` bleibt, was es war — die zuletzt geöffnete
+Seite, die „Weiter wo du warst" braucht. Beim Start gilt:
+
+    Seite im Hash, die es gibt        → diese Seite (gewinnt gegen alles)
+    Ort = seite, Seite lebt           → diese Seite (Dokumentmodus, wenn ihr Flag steht)
+    Ort = dokumente                   → das Regal
+    Ort = notizhefte                  → das Notizhefte-Regal
+    sonst (leer, Papierkorb, andere)  → das Regal
+    Bestand ohne Ort (vor E349)       → wie bisher: die zuletzt geöffnete Seite
+
+DAS REGAL BRAUCHT KEINE SEITE DAVOR. Kommt das Regal, öffnet der Start
+keine Seite mehr: keine Marke, kein Aufrufzähler, kein Eintrag in
+„kürzlich". Die Fläche ist einen Wimpernschlag leer, bis am Ende von
+`start()` das Regal steht — genau die Reihenfolge, die E138 festgelegt hat.
+
+EIN HASH IST NUR DANN EIN ZIEL, WENN ES DIE SEITE GIBT. Der Hash einer
+Sonderansicht ist ein Ort und wird als solcher gelesen; ein Hash ins Leere
+schaltet die Startansicht nicht mehr ab.
+
+EINMALIG: „start" und „workspace" fallen auf „dokument" zurück, mit einer
+Marke `startAnsichtE349`. Wer danach in den Einstellungen bewusst „Heute"
+wählt, behält es — die Marke steht dann schon. Das Onboarding schreibt die
+Startansicht nicht mehr; die Welt steht im Profil und in der Seitenleiste.
+
+DIE SEITE IM DOKUMENT BLEIBT. Der Dokumentmodus merkt sich je Dokument die
+zuletzt angesehene Seite als Meta `dokSeite:<Seitenkennung>` — geschrieben
+beim Blättern, beim Rollen und beim Sprung, gelesen beim Anlegen des
+Zustands. Als Meta und nicht am Seitenblock: Blättern soll weder `edited`
+anheben noch eine Fassung erzeugen. Das Hinrollen ohne Bewegung gab es
+schon (E296); es griff nur nie, weil der Stand immer 0 war.
+
+WAS ES NICHT TUT: eine PDF, deren Dokumentmodus einmal verlassen wurde,
+öffnet als gewöhnliche Seite — E296 Punkt 5 gilt weiter, eine Ansicht
+schaltet sich nicht gegen die Entscheidung des Menschen wieder ein. Die
+anderen Startansichten (Journal, Posteingang, Notizheft, Seite) bleiben,
+wie sie waren.
+
+─── ZWEI FALLEN BEIM MESSEN ────────────────────────────────────────────────
+
+VON `#a` NACH `#b` IST KEIN NEUSTART. `page.goto('index.html#dokumente')`
+von `index.html#<seite>` aus ist für den Browser ein Sprung im selben
+Dokument — die App startet nicht neu, und der Punkt mass den alten Zustand.
+Zwei Punkte waren deshalb rot, obwohl der Code stimmte. Jede Fahrt geht
+jetzt über `about:blank`. Wer das Startverhalten misst, muss wissen, dass
+der Browser einen Neustart verweigern kann.
+
+DER KNOPF HEISST `data-document-action`. Der erste Wächter suchte
+`data-action="next"` und wartete dreissig Sekunden auf einen Knopf, den es
+so nicht gibt. Nachgesehen, nicht geraten.
+
+─── PRÜFUNG ────────────────────────────────────────────────────────────────
+
+test341 neu, 37 Punkte, PORT 9345, acht Abschnitte an Rechner und Telefon:
+die PDF kommt auf Seite 3 zurück; das Regal auch beim ZWEITEN Start, ohne
+dass `letzte` oder ein Aufrufzähler sich rührt; `#dokumente` ist ein Ort;
+der Papierkorb kein Ziel; „start" ohne Marke wird „dokument", mit Marke
+bleibt es; das Notizhefte-Regal kommt zurück; das Onboarding schreibt
+nichts mehr. Belegt rot in sechs Richtungen, jede einzeln zurückgedreht:
+
+M1 — `gemerkteSeite` gibt immer 0 (document-mode.js): 35/37. Die PDF kommt
+     auf Seite 1 zurück statt auf Seite 3.
+M2 — der Start öffnet immer eine Seite, notfalls die erste Wurzelseite
+     (schale.js): 33/37. Das Regal ist weg, auch beim zweiten Start.
+M3 — `sonderHash` immer leer (schale.js): 36/37. `#dokumente` ist kein Ort
+     mehr, der Start geht zur zuletzt offenen Seite.
+M4 — `hatteDokument` ohne `alive`-Prüfung (schale.js): 36/37. Der
+     Papierkorb geht wieder auf.
+M5 — die Einmal-Migration übersprungen (schale.js): 34/37. „start" bleibt
+     „start", das Heute-Dashboard kommt zurück.
+M6 — `zuletztOrt` wird nicht geschrieben (schale.js): 30/37. Sechs Punkte
+     an Rechner und Telefon: das Regal kann nicht wiederkommen, weil
+     niemand weiss, dass man dort war.
+
+test67 §4 wurde durch E349 rot — und das ist die Entscheidung selbst: der
+Start zählt nicht mehr als Besuch, also ist „Kürzlich verwendet" bei einem
+frischen Profil leer und der Abschnitt gar nicht da. Der Wächter bekam den
+Besuch, den ihm bis E348 der alte Start stillschweigend gab (eine Seite
+öffnen, Baum neu zeichnen). 65/65.
+
+Dazu die Suiten, die denselben Start messen: test67 (Seitenleiste und
+die vier Bereiche am Telefon) 65/65, test264 (Notizhefte-Regal) 25/25,
+test265 (Heft-Bibliothek) 38/38, test285 (das Dokument ist die Seite, E296)
+52/52, test292 (Reiterzeile für offene Dokumente) 45/45, test307 (der Deckel
+zeigt die Seite) 13/13, test324 (ohne Ort zählt die Rolle) 22/22, test247
+(Menüband) 106/106, test248 (die ruhige Fassung) 45/45, test272 (kein Griff
+geht verloren) 153/153, test189 (nach dem Erfolgsfall) 38/38, test147
+(Zurücknehmen, Mitnehmen, Aufschreiben) 17/17, test225 (Quellenangaben)
+11/11 — alle grün.
+
+
+E350 — Eine ZIP kommt so ins Regal, wie sie ist (Redurs Punkt 2)
+════════════════════════════════════════════════════════════════════════════
+
+Redur: „wenn ich eine ZIP-Datei beim Dokument-Teil hochlade, es sollte
+Folgendes passieren: zuerst sollte die ZIP so, wie sie ist, alles
+herausholen — wenn eine Datei in einem Ordner ist, sollte sie dort bleiben,
+also gleich wie es ist."
+
+BEFUND, gemessen und gelesen: Es gab keinen ZIP-Import ins Regal. Eine auf
+eine Seite gezogene ZIP wurde ein Anhang — nachdem `f.text()` das ganze
+Archiv als Text in den Arbeitsspeicher gelesen hatte, wie jede Datei
+unbekannter Art. Im Regal selbst ging gar nichts: „Erst eine Seite öffnen".
+Der Dateiwähler kannte weder .zip noch .pdf und machte aus einer über
+„Alle Dateien" gewählten PDF eine Textseite mit Binärsalat. Der einzige
+Weg, der Ordner erhielt, war der Notion-Export — mit dem Archiv im RAM und
+jeder PDF als Anhang.
+
+─── WAS GEBAUT WURDE ───────────────────────────────────────────────────────
+
+`src/bereiche/dateien/archiveImport.ts`, Global `ArchivImport`, eine
+Maschine für drei Einstiege:
+
+  · „+ Neu → ZIP entpacken" im Katalog (auch im Neu-Menü der Notizhefte);
+    Ziel ist das offene Fach der Notizhefte, sonst die Wurzel.
+  · Ablegen im Regal: eine ZIP auf die Dokumente-Ansicht ziehen entpackt
+    sie, jede andere Datei wird ein Dokument an der Wurzel. Auf einer
+    offenen Seite landet die ZIP unter dieser Seite.
+  · „Datei hochladen" nimmt .zip und .pdf; alles Binäre wird ein Dokument
+    statt einer Textseite.
+
+DIE REGELN, jede mit Grund:
+
+  1. ORDNER WERDEN FÄCHER (`heftArt: 'fach'`), so tief verschachtelt wie
+     das Archiv. Ein Fach mit demselben Namen unter demselben Eltern wird
+     WIEDERVERWENDET — zweimal dieselbe ZIP legt keine Doppel-Fächer an.
+     Nur ein Fach zählt als Treffer; eine gleichnamige gewöhnliche Seite
+     könnte ein Dokument sein.
+  2. DAS WURZEL-FACH: liegt alles in einem obersten Ordner, ist der das
+     Fach („Elektro.zip" mit „Elektro/…" darin gibt EIN Fach „Elektro");
+     sonst heisst das Fach wie die ZIP.
+  3. JEDE DATEI WIRD EIN DOKUMENT, so wie GoodNotes es zeigt: eine PDF wird
+     über `PdfEinlesen.alsSeiten` zu Seiten mit Original und Dokumentmodus;
+     ein Bild eine Seite mit Bildblock; .md/.txt eine Textseite; HTML,
+     CSV, Word/Excel/ODS/EPUB gehen ihre eigenen Leser; alles andere wird
+     eine Seite mit Dateianhang. Aus einer ZIP kommt NIE eine Data-URL —
+     jedes Dokument liegt in Stücken und ist gleich sicherbar.
+  4. NICHTS WIRD ÜBERSCHRIEBEN (§46): ein Titel, den es im Fach schon gibt,
+     bekommt „ (2)", „ (3)". Der Dateisatz behält den echten Namen.
+  5. STÜCKWEISE. `Einlesen.zipLesenAusBlob` schneidet je Eintrag einen
+     Blob aus dem Archiv, `Dateien.ablegen` legt ihn in 1-MB-Stücken ab —
+     der Weg des .redion-Imports. Das Archiv liegt nie ganz im Speicher.
+  6. DIE GRÖSSENWACHE GREIFT VOR DEM ENTPACKEN. Der Leser kennt jetzt die
+     Rohgrösse eines Eintrags (`groesse(name)`, aus dem Verzeichnis); ein
+     Eintrag über `Dateien.GRENZE` wird übersprungen und genannt, bevor ein
+     Byte durch den Entpacker geht — 1 KB gepackt, 10 GB roh ist kein Fall
+     mehr.
+  7. EINTRAGSNAMEN SIND FREMDDATEN (§19, §40). `..`, `.` und leere Pfade
+     werden nicht angelegt, sondern gezählt und genannt; Backslashes gelten
+     als Trenner; `__MACOSX`, `.DS_Store`, `Thumbs.db`, `._foo` fliegen
+     still hinaus; Titel werden NFKC-normalisiert, ohne Steuerzeichen,
+     höchstens 120 Zeichen.
+  8. EINE ZIP IN DER ZIP WIRD NICHT ENTPACKT (Zip-Bombe), sondern als Datei
+     abgelegt.
+  9. KEINE RÜCKFRAGE JE PDF. `alsSeiten` nimmt eine Vorgabe (`anordnung`,
+     `ueberGrenze`); der Import reicht „nur die Seiten, alle Seiten"
+     herein. Die Merkregel `pdfAnordnung` des Menschen bleibt dabei
+     unberührt — sie gehört ihm, nicht dem Massenimport.
+ 10. NUR TEXT WIRD ALS TEXT GELESEN. Der Ablege-Weg liest `f.text()` nur
+     noch für .csv/.tsv/.html/.md/.txt — nicht mehr für ein 400-MB-Video,
+     das gleich darauf ohnehin Anhang wurde.
+ 11. EIN FACH IST IN DER BIBLIOTHEK EIN ORDNER, auch mit einer einzigen
+     Sache oder leer. Vorher brauchte ein Ordner zwei Unterseiten; ein Fach
+     mit genau einer PDF wäre weder Ordner noch sichtbar gewesen.
+
+Am Ende steht ein Satz, der zählt: „„Elektro.zip": 1 PDF, 1 Bild, 2
+Seiten, 2 Dateien in 4 Fächern · 1 übersprungen". Fehler je Datei werden
+gefangen, gezählt und genannt; der Rest läuft weiter.
+
+WAS ES NICHT TUT, und wo es steht: L114. Der Lauf ist noch kein Auftrag
+der Auftragsmaschine (ein geschlossener Tab bei Datei 40 hinterlässt einen
+halben Import); jedes Bild wird ein Deckel (500 Fotos sind 500 Deckel);
+das Notizhefte-Regal zeigt Fächer eine Ebene tief (L78) und PDFs gar nicht
+(L77) — die Bibliothek zeigt beides; CP437-Namen und verschlüsselte
+Einträge kennt der Leser weiterhin nicht.
+
+─── PRÜFUNG ────────────────────────────────────────────────────────────────
+
+test342 neu, 41 Punkte, PORT 9346. Das Archiv ist echt: ein eigener
+ZIP-Schreiber (Store und Deflate, UTF-8-Namen mit Bit 11), darin eine PDF,
+die durch denselben pdf.js geht wie Redurs Skripte, ein PNG, Markdown mit
+Umlauten im Dateinamen, eine innere ZIP, Binärdaten, `__MACOSX`,
+`.DS_Store` und `../boese.txt`. Gemessen: die Struktur (Elektro › Skript ›
+Kapitel 1 mit pdfseite und Original), die Zählung, der zweite Import ohne
+Doppel-Fächer, das Wurzel-Fach ohne Oberordner, der Ordner mit einer Sache
+im Regal, das Ablegen im Regal über ein echtes DragEvent, der Katalog und
+der Dateiwähler (nur .zip), die Grössenwache mit `Dateien.GRENZE` auf 10
+Byte, und dass kein Fenster den Import anhält. Belegt rot in sieben
+Richtungen:
+
+Z1 — die Pfadwache lässt `.` und `..` durch (archiveImport.js): acht rot,
+     dann bricht die Suite ab — es entsteht ein Fach „..", und „Skript" ist
+     kein Fach mehr, weil `../boese.txt` den Baum verschiebt.
+Z2 — ein Fach wird nie wiederverwendet (archiveImport.js): 37/41. Der
+     zweite Import legt „Elektro" und „Skript" ein zweites Mal an.
+Z3 — `freierTitel` gibt den Wunschnamen ohne Suffix (archiveImport.js):
+     39/41. Zwei Dokumente „Kapitel 1" im selben Fach.
+Z5 — ein Fach mit `heftArt` ist in der Bibliothek kein Ordner mehr
+     (bibliothek.js): 40/41. „Einzelfach" mit einer Sache wird zur Seite.
+Z6 — `imRegal` immer false (werkzeuge.js): 39/41. Das Ablegen im Regal
+     tut wieder nichts.
+Z7 — `alsSeiten` fragt trotz Vorgabe (einlesen.js): der Import kommt nicht
+     zurück (`zeitueberschreitung`), acht rot, dann Abbruch — genau der
+     Dialog, der bei vierzig PDFs vierzigmal käme.
+Z8 — die Grössenwache vor dem Entpacken entfernt (archiveImport.js):
+     40/41. Die 10-Byte-Grenze hält nichts mehr auf.
+
+Dazu: test49 (Word, Excel, Trello, Evernote, Obsidian, Notion-ZIP einlesen)
+50/50, test173 (Ziehen-und-Ablegen kennt nur eine Grenze) 11/11, test177
+(ein PDF wird zu Seiten) 69/69, test182 (eine beschriebene Seite weitergeben)
+36/36, test183 (Präsentation) 27/27, test242 (Fachzeichen auf dem PDF) 42/42,
+test33 105/105, test87 (Quelltext) 152/152, test109 (kein neues JavaScript)
+20/20, test105 (erzeugtes JavaScript passt zu seinem TypeScript) 114/114 —
+der letzte erst nach einer Typkorrektur in test343 (`v` ohne Typ in einem
+`every` über Prüfdaten). Alle grün.
+
+
+E351 — Der Stift schreibt wie eine Hand: Füller, Kugelschreiber, Pinsel (Redurs Punkt 3, erster Bogen)
+════════════════════════════════════════════════════════════════════════════
+
+Redur: „dann will ich, dass du die Schrift, Linie und so alles fertig
+machst — es sollte der Teil wie GoodNotes sein."
+
+BEFUND, gemessen und gelesen: Die Zeichenschicht (E100, E212) hatte EINEN
+Stift mit einer Breite. Der Druck wurde je Punkt aufgenommen und in
+`pressure` gespeichert — und beim Vereinfachen des Strichs (Douglas-Peucker
+in `InkGeometry.simplify`) zum DURCHSCHNITT gemittelt. Jeder Strich war am
+Ende gleichmässig dick; ein Füller konnte nie anschwellen, so fein der Stift
+auch drückte. Maus und Finger lieferten ohnehin immer 0,5. Farben: sieben
+feste Tupfer, keine eigene. Der Marker folgte der Hand auch bei
+eingeschaltetem Lineal — nur Linie und Pfeil rasteten ein.
+
+GoodNotes hat drei Stifte, und der Unterschied ist die Form des Strichs,
+nicht die Farbe: der Füller schwillt mit dem Druck, der Kugelschreiber
+bleibt gleich, der Pinsel schwingt weit. Genau das ist gebaut.
+
+─── WAS GEBAUT WURDE ───────────────────────────────────────────────────────
+
+  1. DREI STIFTE. `STIFTE` in marken.ts: Füller, Kugelschreiber, Pinsel.
+     Die Wahl liegt in `zeichnen:stift` und überlebt den Neustart; ein
+     Knopf in der Leiste wechselt der Reihe nach durch und schaltet dabei
+     auf den Stift, wenn gerade ein anderes Werkzeug gewählt war. Jede
+     Marke trägt ihren `stil` — der Kugelschreiber KEINEN, denn er ist der
+     alte Strich, und alte Marken haben auch keinen.
+
+  2. DER DRUCK WANDERT MIT. `InkGeometry.simplifyIndices` gibt die
+     Indizes der bleibenden Punkte zurück statt der Punkte selbst; `finish`
+     nimmt die Druckwerte GENAU dieser Punkte. Dasselbe Feld `pressure`,
+     dieselbe Länge wie `pts`, kein zweites Format, keine Migration. Die
+     Achtpunkte-Regel aus E115 bleibt: ein langer, fast gerader Strich
+     behält acht Stützen — jetzt mit ihren acht Druckwerten.
+
+  3. OHNE DRUCKSENSOR ZÄHLT DAS TEMPO. `druckAus`: liefert der Zeiger
+     echten Druck (`pointerType === 'pen'`, `pressure > 0`), gilt der.
+     Sonst ersetzt die Geschwindigkeit ihn — langsam ist dick, schnell ist
+     dünn, so schreibt auch die Hand: `0,85 − v · 0,4`, begrenzt auf
+     0,28 … 0,85, geglättet 60/40 gegen den Vorwert, damit kein Ruckeln der
+     Maus als Zittern im Strich landet. Ein Maus-Strich sieht damit aus wie
+     Schrift, nicht wie ein Draht.
+
+  4. DER STRICH ALS FLÄCHE. `InkGeometry.outline(points, halbBreiten)`
+     baut links und rechts der Mittellinie eine Kontur, deren Abstand dem
+     Druck folgt, mit runden Kappen an beiden Enden, und schliesst sie zu
+     einem gefüllten Pfad. `druckFaktor`: Füller `0,5 + d`, Pinsel
+     `0,3 + 1,7 · d` (und 92 % deckend). Ein `stroke-width` von 0,25 in
+     derselben Farbe deckt die Haarrisse zwischen den Segmenten. Marken
+     ohne `stil`, mit weniger als drei Punkten oder aus dem alten Bestand
+     nehmen weiter den gleichmässigen Strich — test343 §3 misst, dass eine
+     alte Marke noch dieselbe `stroke-width` (2,366) hat wie vor E351.
+
+  5. DER MARKER AM LINEAL ZIEHT GERADE. Erster und letzter Punkt, sonst
+     nichts, der Druck als Mittel beider — wie in GoodNotes. Ohne Lineal
+     folgt er wie bisher der Hand.
+
+  6. EIGENE FARBEN. Ein gestrichelter „+"-Tupfer öffnet den Farbwähler des
+     Browsers (`<input type=color>`, versteckt). Die Wahl wird sofort zur
+     Farbe und als Tupfer gemerkt: `zeichnen:farben`, höchstens vier,
+     die neueste zuerst, eine Farbe aus den festen sieben wird nicht
+     doppelt geführt. Kein eigener Farbkreis — der des Browsers hat
+     Pipette, Hex-Feld und Systemfarben, und er ist auf dem Telefon der
+     native.
+
+  7. AM TELEFON bleibt der Stift-Knopf ein Fingerknopf (≥ 44 px), die
+     Tupfer werden 30 px — test343 §8 misst beides.
+
+─── WAS NICHT GEBAUT WURDE ────────────────────────────────────────────────
+
+Der Rest von Redurs Punkt 3 steht in L115 mit Grund und Reihenfolge:
+Radierer mit Streichen und Teil-Radieren, Lasso mit Skalieren und Kopieren
+(E269), Handballen, Zoom mit zwei Fingern, Formerkennung, Bild- und
+Textwerkzeug auf der Zeichenschicht. Jeder davon ist ein eigener Bogen mit
+eigener Prüfung; keiner ändert das Format der Marken.
+
+─── PRÜFUNG ────────────────────────────────────────────────────────────────
+
+test343 neu, 30 Punkte, PORT 9347, acht Abschnitte an Rechner und Telefon.
+Die Striche sind echte `PointerEvent`s mit `pointerType: 'pen'` und
+Druckwerten auf dem SVG der Zeichenschicht (Koordinaten über
+`getScreenCTM`); die Breite wird nicht aus Attributen gelesen, sondern mit
+`isPointInFill` neben der Mittellinie GEMESSEN — links und rechts, am dünnen
+und am dicken Ende. Belegt rot in fünf Richtungen, jede einzeln
+zurückgedreht und wiederhergestellt:
+
+a — der Druck wird wieder zum Durchschnitt (marken.js): 27/30. Der Füller
+    ist am Ende so dick wie am Anfang.
+b — `druckAus` gibt auch der Maus nur `pressureOf` (marken.js): 28/30. Der
+    Maus-Strich ist ein Draht, langsam wie schnell.
+c — der Flächen-Zweig in `zeichneMarke` abgeschaltet (marken.js): 25/30.
+    Füller und Pinsel sind Kugelschreiber, auch über `Marken.zeichneMarke`.
+d — der Marker am Lineal folgt wieder der Hand (marken.js): 29/30. Drei
+    Punkte statt zwei.
+e — `eigeneFarbeMerken` schreibt nicht (marken.js): 28/30. Der Tupfer
+    fehlt nach dem Neuladen.
+
+Dazu: test174 (das A4-Blatt: ein Strich liegt überall gleich) 25/25,
+test201 (Ink V2 auf Blatt und PDF) 32/32, test207 (Papiervorlagen auf dem
+Blatt) 37/37, test266 (Abdeckband) 12/12, test267 (Haftnotiz und Lineal)
+16/16, test295 (Randstreifen neben der Seite) 24/24 — alle grün. Die alte
+Strichform ist damit an vier Stellen nachgemessen, nicht nur in test343 §3.
+
+BILDER angesehen (§55): Füller dünn → dick, Füller dick, Pinsel,
+Kugelschreiber und Marker nebeneinander; die Leiste mit dem Stift-Knopf,
+zwei eigenen Tupfern und dem „+"; beides am Telefon. Der Pinsel liegt
+sichtbar leichter auf dem Blatt als der Füller, der Kugelschreiber hat die
+alte Gleichmässigkeit.
+
+Der wichtigste Satz: Ein Feld, das schon da war, bekommt seine Bedeutung
+zurück. `pressure` wurde seit E100 aufgenommen und beim Speichern
+weggemittelt — die Daten für den Füller lagen die ganze Zeit im Strich.

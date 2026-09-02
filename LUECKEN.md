@@ -3999,7 +3999,8 @@ nicht verlorengeht:
 
    DER WURZELFEHLER LAG TIEFER: `darf(was)` ohne Ort antwortete `true`,
    obwohl sein eigener Kommentar sagte, es sei „eine Frage nach der Rolle".
-   Seit E132 ist die Startansicht das Heute-Dashboard und damit keine
+   Seit E132 war die Startansicht das Heute-Dashboard (seit E236 das
+   Regal, seit E349 der zuletzt gesehene Ort) und damit keine
    Seite — der Normalfall beim Start war also: kein Ort, alles erlaubt, für
    jedes Konto. Jetzt zählt dort die Rolle, und es gibt `darfUeberhaupt`
    für Handlungen, die gar keinen Ort haben.
@@ -4921,3 +4922,146 @@ test335, 30 Punkte, belegt rot in vier Richtungen.
 
 Gefunden am 1. September 2026 (E335), für Reihen geschlossen am selben Tag
 (E336).
+
+
+================================================================================
+L113 — ~~Der Start vergass das Regal, den Papierkorb und die Seite in der PDF~~ — GESCHLOSSEN am
+2. September 2026 (E349)
+================================================================================
+
+E236 versprach „das zuletzt geöffnete Dokument, sonst das Regal", und
+test67 §12 mass es in zwei Fällen. Beim Nachlesen für Redurs Wunsch
+(„immer die zuletzt geöffnete PDF, sonst der Dokumente-Teil") fanden sich
+vier stille Löcher: das Regal hielt genau einen Start, weil der Start
+davor die erste Wurzelseite öffnete und `letzte` überschrieb; `#dokumente`
+in der Adresse schaltete die Startansicht ab; eine Seite im Papierkorb ging
+wieder auf; das Onboarding setzte die Startansicht ungefragt auf „Heute"
+oder „Workspace" — wer es durchlief, sah nie mehr seine PDF. Und der
+Dokumentmodus begann jedes Mal auf Seite 1.
+
+**GESCHLOSSEN am 2. September 2026 durch E349.** Eine Marke `zuletztOrt`
+sagt, wo man war; das Regal kommt ohne Vorseite; ein Hash ist nur ein Ziel,
+wenn es die Seite gibt; der Papierkorb ist kein Ort; „start"/„workspace"
+fallen einmal auf „dokument" zurück (Marke `startAnsichtE349`); das
+Onboarding schreibt nichts mehr; die zuletzt angesehene Seite eines
+Dokuments steht als Meta `dokSeite:<id>`. test341, 37 Punkte, belegt rot
+in sechs Richtungen.
+
+Gefunden und geschlossen am 2. September 2026.
+
+
+================================================================================
+L114 — Was der ZIP-Import (E350) bewusst noch nicht kann
+================================================================================
+
+E350 holt eine ZIP so ins Regal, wie sie ist. Was bleibt, mit Grund:
+
+1. **Der Lauf ist kein Auftrag.** Er läuft im Tab, Datei für Datei mit
+   Fortschrittszeile. Wer den Tab bei Datei 40 von 87 schliesst, hat 39
+   Dokumente und kein Wissen darüber, was fehlt. Der Weg zur
+   Auftragsmaschine ist getreten (E327, L103 Punkt 1) — der Import gehört
+   als Nächster dorthin, mit Wiederaufnahme über „welche Einträge fehlen
+   noch im Fach".
+
+2. **Jedes Bild wird ein Deckel.** Das ist die GoodNotes-Lesart „eine Datei,
+   ein Dokument" — bei 500 Fotos in einem Ordner sind das 500 Deckel. Eine
+   Sammelseite je Ordner wäre die Alternative; sie bräuchte eine Regel,
+   ab wann ein Ordner „ein Fotoalbum" ist.
+
+3. **Zwei Regale, zwei Regeln.** Die Bibliothek zeigt Fächer und PDFs, das
+   Notizhefte-Regal zeigt Fächer nur eine Ebene tief (L78 Punkt 2) und
+   PDFs gar nicht (L77 Punkt 3). Ein Import mit `Schule/Physik/Skript.pdf`
+   ist in der Bibliothek vollständig, im Notizhefte-Regal steht nur das
+   Fach „Schule". Die Verschmelzung ist eine eigene Entscheidung.
+
+4. **Keine Ablegezone-Optik.** `#scroll` bekommt beim Ziehen die Klasse
+   `ablegen`; im Regal gibt es keine Fläche, die sagt „hier fallen lassen".
+   Das Ablegen funktioniert, man sieht es nur nicht kommen (L78 Punkt 1,
+   mit Telefon).
+
+5. **Der Leser kennt CP437 nicht, keine verschlüsselten Einträge, keine
+   CRC-Prüfung.** Namen aus alten Windows-Packern ohne UTF-8-Bit kommen mit
+   Ersatzzeichen an; ein verschlüsselter Eintrag scheitert erst beim
+   Entpacken mit einer allgemeinen Meldung; ein beschädigter Eintrag wird
+   nicht erkannt. Der eigene Schreiber setzt seit E350 das UTF-8-Bit im
+   Prüfmaterial, `Austausch.zipSchreiben` noch nicht.
+
+6. **Keine Wiedererkennung beim zweiten Import.** Fächer werden
+   wiederverwendet, Dokumente bekommen „ (2)". Wer dieselbe ZIP nach einer
+   Korrektur noch einmal einliest, hat jedes Dokument doppelt. Eine
+   Kennung je Datei (Name + Grösse + Prüfsumme) könnte das ändern — das
+   ist der Obsidian-Weg (redion-id), nur ohne Kennung im Archiv.
+
+7. **Viele grosse PDFs kosten Zeit.** Je Seite rund 0,35 s und 200 KB
+   Bild; vierzig Skripte à 80 Seiten sind rund zwanzig Minuten im Tab.
+   Der Fortschritt steht in der Zeile; eine Schätzung VOR dem Start fehlt.
+
+Gefunden am 2. September 2026 (E350).
+
+
+L115 — Was die Zeichenschicht nach E351 noch nicht kann (Redurs Punkt 3, Rest)
+================================================================================
+
+E351 hat die Stifte gebaut: Füller, Kugelschreiber, Pinsel, Druck je Punkt,
+Tempo als Ersatz, Marker am Lineal, eigene Farben. GoodNotes kann mehr, und
+das hier ist die Liste — in der Reihenfolge, in der sie gebaut werden soll,
+mit dem Grund, warum jeder Punkt ein eigener Bogen ist:
+
+1. **Der Radierer nimmt eine ganze Marke je Tipp.** `marken.ts` sucht beim
+   Tipp die Marke unter dem Zeiger und entfernt sie. Kein Streichen über
+   mehrere Marken in einem Zug, kein Teil-Radieren (ein Strich wird nicht
+   in zwei geteilt), kein „nur den Marker radieren". Das Teil-Radieren
+   braucht eine Schnittfunktion Kreis × Polylinie und das Aufteilen von
+   `pts` UND `pressure` an derselben Stelle. Dazu gehört der Rückknopf des
+   Stifts (`event.button === 5` / `buttons & 32`), der in GoodNotes den
+   Radierer hält, solange er gedrückt ist.
+
+2. **Das Lasso fehlt, und die Auswahl kann nicht skalieren oder kopieren.**
+   Es gibt die Rechteck-Auswahl (Werkzeug „Auswahl") mit Bewegen und
+   Löschen. Kein Lasso, keine Griffe zum Skalieren, kein Kopieren/Einsetzen,
+   kein Umfärben der Auswahl. Das ist E269 (AUFGABEN, offen seit E265) —
+   dieselbe Liste, ein Bogen.
+
+3. **Kein Handballen-Schutz.** Wer mit dem Stift schreibt und die Hand auf
+   dem Bildschirm ablegt, zeichnet mit der Hand. Die Schicht unterscheidet
+   `pointerType` nur für den Druck (E351), nicht für die Frage, ob der
+   Zeiger zeichnen darf. Regel für den Bogen: sobald ein `pen` gesehen
+   wurde, zeichnen `touch`-Zeiger für einige Sekunden nicht — sie rollen.
+   Braucht eine Prüfung mit zwei gleichzeitigen Zeigern.
+
+4. **Kein Zoom mit zwei Fingern, kein Strg+Rad auf dem Blatt.** Das Blatt
+   hat seinen Blattraum (E100), aber die Ansicht ist die des Browsers.
+   GoodNotes-Nutzer erwarten, ins Blatt zu zoomen und dort feiner zu
+   schreiben. Das ist eine Transformation auf der Fläche plus die
+   Umrechnung in `zuBlatt` — und die Werkzeugleiste darf dabei nicht
+   mitwandern.
+
+5. **Keine Formerkennung.** Ein gezogener Kreis bleibt ein gezogener Kreis.
+   GoodNotes rastet nach kurzem Halten am Ende des Strichs auf Kreis,
+   Rechteck, Linie, Dreieck. Redion hat die Formen als eigene Werkzeuge
+   (Rechteck, Ellipse, Linie, Pfeil); die Erkennung wäre ein Zusatz am
+   Ende von `finish`, mit einem Schwellwert, der nicht jede Schleife zum
+   Kreis macht.
+
+6. **Kein Bild- und kein Textwerkzeug auf der Zeichenschicht.** Ein Foto
+   auf das Blatt legen, verschieben, skalieren — geht nur als Bildblock
+   neben dem Blatt. Text gibt es als `text`-Marke, aber ohne Schriftwahl,
+   Grösse und Rahmen, und nur an der Stelle, an der getippt wurde.
+
+7. **Undo verliert die Knoten-Zuordnung beim Neuzeichnen.** Jedes Undo
+   zeichnet die ganze Schicht neu (`render`), eine Marke je SVG-Knoten.
+   Bei tausend Marken auf einer Seite ist das spürbar; eine Zuordnung
+   Kennung → Knoten würde nur die betroffene Marke anfassen. Noch kein
+   Nutzer hat tausend Marken gemeldet — gemessen ist es nicht.
+
+8. **Am Telefon steht die Leiste in einer langen Reihe.** Nach E351 hat sie
+   einen Knopf mehr (Stift) und bis zu fünf Tupfer mehr (eigene Farben und
+   „+"). Sie rollt waagerecht (E240), aber gruppiert ist sie nicht:
+   GoodNotes klappt Farben und Breiten unter dem gewählten Werkzeug auf.
+
+Nicht auf der Liste, weil es Format wäre: eine Marke bleibt `{id, art,
+farbe, breite, pts, pressure, stil?}`. Jeder Punkt oben lässt sich ohne
+Migration bauen; sobald einer das Format ändern will, ist das eine eigene
+Entscheidung.
+
+Gefunden am 2. September 2026 (E351).

@@ -12,6 +12,24 @@ const Marken = (() => {
     const BREITEN = [1.2, 2.4, 5];
     const MARKER_FARBE = '#e0a419';
     const HISTORY_LIMIT = 100;
+    /* DIE STIFTE (E351). `kugel` ist der Strich, den es seit E100 gibt — eine
+       Breite je Strich. `fueller` und `pinsel` zeichnen eine Flaeche, deren
+       Breite dem Druck folgt: der Fueller massvoll, der Pinsel kraeftig.
+       Alte Marken ohne `stil` bleiben, wie sie waren (§53.3). */
+    const STIFTE = [
+        { id: 'fueller', name: 'Füller', zeichen: '🖋' },
+        { id: 'kugel', name: 'Kugelschreiber', zeichen: '🖊' },
+        { id: 'pinsel', name: 'Pinsel', zeichen: '🖌' }
+    ];
+    const STIL_VORGABE = 'fueller';
+    const HOECHSTENS_EIGENE_FARBEN = 4;
+    /** Der Breitenfaktor eines Punkts nach Druck und Stift. */
+    const druckFaktor = (stil, p) => {
+        const d = Math.max(0.05, Math.min(1, Number.isFinite(p) ? p : 0.5));
+        if (stil === 'pinsel')
+            return 0.3 + d * 1.7;
+        return 0.5 + d * 1.0;
+    };
     const svg = (name, attributes = {}) => {
         const element = document.createElementNS(NS, name);
         Object.entries(attributes).forEach(([key, value]) => element.setAttribute(key, String(value)));
@@ -187,6 +205,22 @@ const Marken = (() => {
             element = svg('ellipse', { cx: box.x + box.width / 2, cy: box.y + box.height / 2,
                 rx: box.width / 2, ry: box.height / 2 });
         }
+        else if (art === 'stift' && (mark.stil === 'fueller' || mark.stil === 'pinsel') && points.length >= 3) {
+            /* DER STRICH ALS FLAECHE (E351): links und rechts der Mittellinie eine
+               Kontur, deren Abstand dem Druck folgt. Ohne Druckwerte je Punkt
+               (alter Bestand) bleibt es beim gleichmaessigen Strich unten. */
+            const base = Math.max(0.5, Number(mark.breite) || BREITEN[1]);
+            const druck = Array.isArray(mark.pressure) ? mark.pressure.map(Number) : [];
+            const halb = points.map((_p, i) => base / 2 * druckFaktor(String(mark.stil), druck[i] ?? druck[druck.length - 1] ?? 0.5));
+            element = svg('path', { d: InkGeometry.outline(points, halb), fill: color, stroke: color,
+                'stroke-width': 0.25, 'stroke-linejoin': 'round' });
+            if (mark.stil === 'pinsel')
+                element.setAttribute('opacity', '0.92');
+            element.setAttribute('data-sid', idOf(mark));
+            element.setAttribute('data-ink-art', art);
+            element.setAttribute('data-ink-stil', String(mark.stil));
+            return element;
+        }
         else if (points.length >= 2) {
             element = svg('path', { d: InkGeometry.path(points) });
         }
@@ -300,6 +334,10 @@ const Marken = (() => {
         let tool = 'schreiben';
         let color = FARBEN[0];
         let width = BREITEN[1];
+        /* Der Stift, mit dem der naechste Strich entsteht — gemerkt ueber
+           Neuladen hinweg, wie das Papier eines Hefts (E351). */
+        let stil = (typeof Store !== 'undefined' && STIFTE.some(st => st.id === Store.getMeta('zeichnen:stift')))
+            ? String(Store.getMeta('zeichnen:stift')) : STIL_VORGABE;
         let running = null;
         let runningNode = null;
         let beforeRunning = null;
@@ -427,6 +465,28 @@ const Marken = (() => {
             const pressure = Number(event.pressure);
             return pressure > 0 ? Math.max(0.05, Math.min(1, pressure)) : 0.5;
         };
+        /* DRUCK OHNE DRUCKSENSOR (E351). Maus und Finger melden 0,5 oder gar
+           nichts; ein Fueller, der darauf hoert, waere ein Kugelschreiber. Wer
+           keinen Stift fuehrt, bekommt das TEMPO als Ersatz: langsam ist dick,
+           schnell ist duenn — so schreibt auch die Hand. Geglaettet, damit
+           kein Ruckeln der Maus als Zittern im Strich landet. Der Wert landet
+           im selben Feld `pressure`: kein zweites Format, keine Migration. */
+        const druckAus = (event, point) => {
+            const echt = event.pointerType === 'pen' && Number(event.pressure) > 0;
+            if (echt || !running)
+                return pressureOf(event);
+            const jetzt = Number(event.timeStamp) || 0;
+            const z = running.zuletzt;
+            let druck = 0.6;
+            if (z && z.p) {
+                const dt = Math.max(1, jetzt - z.t);
+                const v = Math.hypot((point[0] ?? 0) - (z.p[0] ?? 0), (point[1] ?? 0) - (z.p[1] ?? 0)) / dt;
+                druck = Math.max(0.28, Math.min(0.85, 0.85 - v * 0.4));
+                druck = z.d * 0.6 + druck * 0.4;
+            }
+            running.zuletzt = { t: jetzt, p: point, d: druck };
+            return Math.round(druck * 100) / 100;
+        };
         const addSample = (event) => {
             if (!running)
                 return;
@@ -437,7 +497,7 @@ const Marken = (() => {
             if (last && Math.abs(last[0] - point[0]) < 0.6 && Math.abs(last[1] - point[1]) < 0.6)
                 return;
             running.pts.push(point);
-            running.pressure.push(pressureOf(event));
+            running.pressure.push(druckAus(event, point));
         };
         const finish = () => {
             if (selectDrag) {
@@ -471,17 +531,33 @@ const Marken = (() => {
                     node?.remove();
                     return false;
                 }
+                delete mark.zuletzt;
                 const original = mark.pts;
-                const simplified = InkGeometry.simplify(original, Math.max(0.55, Number(mark.breite) * 0.28));
-                /* Ein langer, beim Neuzeichnen geschlossener Strich darf nicht wie
-                   eine bloss konstruierte Zweipunktlinie aussehen (E115). Acht
-                   Stuetzpunkte halten Verlauf und Druck, auch wenn er fast gerade war. */
-                mark.pts = original.length >= 8 && simplified.length < 8
-                    ? Array.from({ length: 8 }, (_value, index) => original[Math.round(index * (original.length - 1) / 7)])
-                    : simplified;
-                if (Array.isArray(mark.pressure) && mark.pressure.length !== mark.pts.length) {
-                    const average = mark.pressure.reduce((sum, value) => sum + value, 0) / mark.pressure.length;
-                    mark.pressure = mark.pts.map(() => Math.round(average * 100) / 100);
+                const druckRoh = Array.isArray(mark.pressure) ? mark.pressure.map(Number) : [];
+                const mittel = druckRoh.length
+                    ? druckRoh.reduce((sum, value) => sum + value, 0) / druckRoh.length : 0.5;
+                /* EIN MARKER AM LINEAL ZIEHT GERADE (E351) — wie in GoodNotes: der
+                   erste und der letzte Punkt, dazwischen nichts. */
+                if (mark.art === 'marker' && lineal) {
+                    mark.pts = [original[0], original[original.length - 1]];
+                    mark.pressure = [mittel, mittel].map(v => Math.round(v * 100) / 100);
+                }
+                else {
+                    /* DER DRUCK WANDERT MIT (E351). Bis hierher wurde nach dem
+                       Vereinfachen jeder Druckwert zum Durchschnitt — ein Fueller
+                       haette nie anschwellen koennen. Jetzt bleiben die Werte der
+                       Punkte, die bleiben. */
+                    let indizes = InkGeometry.simplifyIndices(original, Math.max(0.55, Number(mark.breite) * 0.28));
+                    /* Ein langer, beim Neuzeichnen geschlossener Strich darf nicht wie
+                       eine bloss konstruierte Zweipunktlinie aussehen (E115). Acht
+                       Stuetzpunkte halten Verlauf und Druck, auch wenn er fast gerade war. */
+                    if (original.length >= 8 && indizes.length < 8)
+                        indizes = Array.from({ length: 8 }, (_value, index) => Math.round(index * (original.length - 1) / 7));
+                    mark.pts = indizes.map(i => original[i]);
+                    mark.pressure = indizes.map(i => {
+                        const v = druckRoh[i];
+                        return Math.round((Number.isFinite(v) ? v : mittel) * 100) / 100;
+                    });
                 }
             }
             else if (mark.pts.length < 2 ||
@@ -715,8 +791,12 @@ const Marken = (() => {
             const id = typeof Ids !== 'undefined' ? Ids.short(8) : String(marks.length + 1);
             if (tool === 'stift' || tool === 'marker') {
                 running = { id, art: tool, farbe: tool === 'marker' && color === FARBEN[0] ? MARKER_FARBE : color,
-                    breite: width, pts: [point], pressure: [pressureOf(event)] };
-                runningNode = zeichneMarke({ ...running, pts: [point, point], pressure: [pressureOf(event), pressureOf(event)] });
+                    breite: width, pts: [point], pressure: [] };
+                if (tool === 'stift' && stil !== 'kugel')
+                    running.stil = stil;
+                running.pressure.push(druckAus(event, point));
+                const p0 = running.pressure[0];
+                runningNode = zeichneMarke({ ...running, pts: [point, point], pressure: [p0, p0] });
             }
             else {
                 /* Ein schwarzer Zettel mit schwarzer Vorgabetinte wäre keiner —
@@ -825,6 +905,14 @@ const Marken = (() => {
         };
         const setzeFarbe = (next) => { color = next; };
         const setzeStrich = (next) => { width = next; };
+        const setzeStil = (next) => {
+            if (!STIFTE.some(st => st.id === next))
+                return;
+            stil = next;
+            if (typeof Store !== 'undefined')
+                Store.setMeta('zeichnen:stift', next);
+        };
+        const stilVon = () => stil;
         const beiAenderung = (listener) => {
             stateListeners.add(listener);
             listener(state());
@@ -837,9 +925,25 @@ const Marken = (() => {
            einem Knopf, der auf nichts wirkt. */
         const setzeLineal = (an) => { lineal = !!an; };
         const linealAn = () => lineal;
-        const steuerung = { flaeche, setzeWerkzeug, setzeFarbe, setzeStrich, marken: marks,
+        const steuerung = { flaeche, setzeWerkzeug, setzeFarbe, setzeStrich, setzeStil, stilVon, marken: marks,
             undo, redo, deleteSelection, beiAenderung, state, setzeLineal, linealAn };
         return steuerung;
+    };
+    /** Die zuletzt gewaehlten eigenen Farben — hoechstens vier, gemerkt als Meta. */
+    const eigeneFarben = () => {
+        if (typeof Store === 'undefined')
+            return [];
+        const roh = Store.getMeta('zeichnen:farben');
+        return Array.isArray(roh)
+            ? roh.map(String).filter(v => /^#[0-9a-f]{6}$/i.test(v)).slice(0, HOECHSTENS_EIGENE_FARBEN) : [];
+    };
+    const eigeneFarbeMerken = (wert) => {
+        const liste = [wert, ...eigeneFarben().filter(v => v.toLowerCase() !== wert.toLowerCase())]
+            .filter(v => !FARBEN.includes(v.toLowerCase()))
+            .slice(0, HOECHSTENS_EIGENE_FARBEN);
+        if (typeof Store !== 'undefined')
+            Store.setMeta('zeichnen:farben', liste);
+        return liste;
     };
     const leiste = (controls, extra = '') => {
         /* DIE FLÄCHE MELDET SICH IM KERN AN (E212).
@@ -894,9 +998,21 @@ const Marken = (() => {
                 '<button data-act="lineal" aria-pressed="false" ' +
                 'title="Lineal: Linie und Pfeil rasten auf 15°-Schritte">' +
                 '<span class="zeichen">📐</span><span class="wort">Lineal</span></button>' +
+                /* DER STIFT (E351): ein Knopf, der durch Fueller, Kugelschreiber und
+                   Pinsel wechselt und sagt, welcher gerade fuehrt. */
+                (() => {
+                    const jetzt = STIFTE.find(st => st.id === (controls.stilVon ? controls.stilVon() : STIL_VORGABE)) || STIFTE[0];
+                    return `<button data-act="stil" data-stil="${jetzt.id}" title="Stift wechseln: ${STIFTE.map(st => st.name).join(' → ')}">` +
+                        `<span class="zeichen">${jetzt.zeichen}</span><span class="wort">${jetzt.name}</span></button>`;
+                })() +
                 '<span class="blatt-trenn"></span>' +
                 FARBEN.map((value, index) => `<button class="blatt-farbe${index === 0 ? ' on' : ''}" ` +
                     `data-c="${value}" style="background:${value}" title="Farbe"></button>`).join('') +
+                /* EIGENE FARBEN (E351): die zuletzt gewaehlten stehen als Tupfer da,
+                   dahinter der Weg zum Farbwaehler des Browsers. */
+                eigeneFarben().map(value => `<button class="blatt-farbe blatt-farbe-eigen" ` +
+                    `data-c="${value}" style="background:${value}" title="Eigene Farbe ${value}"></button>`).join('') +
+                '<button class="blatt-farbe-neu" data-act="farbe" title="Andere Farbe wählen" aria-label="Andere Farbe wählen">+</button>' +
                 '<span class="blatt-trenn"></span>' +
                 /* Doppelter Massstab wie im Menüband: mit der wahren Stärke sahen
                    „dünn" (1,2 px) und „mittel" (2,4 px) gleich aus, weil der Boden
@@ -1011,6 +1127,61 @@ const Marken = (() => {
                     controls.redo();
                 if (target.dataset.act === 'delete')
                     controls.deleteSelection();
+                if (target.dataset.act === 'stil' && controls.setzeStil) {
+                    const jetzt = STIFTE.findIndex(st => st.id === target.dataset.stil);
+                    const naechster = STIFTE[(jetzt + 1) % STIFTE.length];
+                    controls.setzeStil(naechster.id);
+                    target.dataset.stil = naechster.id;
+                    target.innerHTML = `<span class="zeichen">${naechster.zeichen}</span><span class="wort">${naechster.name}</span>`;
+                    /* Ein Stift zeichnet — wer ihn wechselt, will ihn auch fuehren. */
+                    if (Zeichenziel.werkzeugVon?.(controls) !== 'stift') {
+                        controls.setzeWerkzeug('stift');
+                        try {
+                            Zeichenziel.uebernehme(controls, 'stift');
+                        }
+                        catch { /* egal */ }
+                        tools.querySelectorAll('[data-wz]').forEach(node => node.classList.toggle('on', node.dataset.wz === 'stift'));
+                    }
+                    return;
+                }
+                if (target.dataset.act === 'farbe') {
+                    /* Der Farbwaehler des Browsers — kein eigener Regler. Der Wert
+                       kommt als #rrggbb, genau das Format der Katalogfarben. */
+                    const feld = document.createElement('input');
+                    feld.type = 'color';
+                    feld.value = Zeichenziel.farbeVon?.(controls) || FARBEN[0];
+                    feld.style.position = 'fixed';
+                    feld.style.opacity = '0';
+                    feld.style.pointerEvents = 'none';
+                    document.body.appendChild(feld);
+                    const uebernehmen = () => {
+                        const wert = String(feld.value || '').toLowerCase();
+                        feld.remove();
+                        if (!/^#[0-9a-f]{6}$/.test(wert))
+                            return;
+                        const liste = eigeneFarbeMerken(wert);
+                        controls.setzeFarbe(wert);
+                        try {
+                            Zeichenziel.uebernehmeFarbe(controls, wert);
+                        }
+                        catch { /* egal */ }
+                        tools.querySelectorAll('.blatt-farbe-eigen').forEach(node => node.remove());
+                        const neuKnopf = tools.querySelector('.blatt-farbe-neu');
+                        liste.slice().reverse().forEach(farbe => {
+                            const k = document.createElement('button');
+                            k.className = 'blatt-farbe blatt-farbe-eigen';
+                            k.dataset.c = farbe;
+                            k.style.background = farbe;
+                            k.title = 'Eigene Farbe ' + farbe;
+                            neuKnopf?.before(k);
+                        });
+                        tools.querySelectorAll('.blatt-farbe').forEach(node => node.classList.toggle('on', node.dataset.c === wert));
+                    };
+                    feld.addEventListener('change', uebernehmen, { once: true });
+                    feld.addEventListener('cancel', () => feld.remove(), { once: true });
+                    feld.click();
+                    return;
+                }
                 if (target.dataset.act === 'lineal' && controls.setzeLineal) {
                     const an = !controls.linealAn?.();
                     controls.setzeLineal(an);
@@ -1054,6 +1225,6 @@ const Marken = (() => {
         }
         return row;
     };
-    return { schicht, leiste, zeichneMarke, FARBEN, BREITEN };
+    return { schicht, leiste, zeichneMarke, FARBEN, BREITEN, STIFTE, druckFaktor };
 })();
 window.Marken = Marken;
