@@ -215,11 +215,23 @@ console.log('\n3 · Side Peek öffnet mobil direkt, bleibt am Rechner ein Peek')
     const db = Store.addDatabase(s.id, 'Kunden', { title: { name: 'Name', type: 'title' } });
     const row = Store.addRow(db.collectionId, { title: 'Ada Lovelace' });
     Datenbank.zeilePeek(row, Store.getCollection(db.collectionId));
-    await new Promise(r => setTimeout(r, 250));
-    return { peek: !!document.querySelector('.peek'), titel: document.getElementById('title')?.textContent || '' };
+    await new Promise(r => setTimeout(r, 350));
+    const blatt = document.querySelector('.iblatt');
+    return { peek: !!document.querySelector('.peek'),
+             blatt: !!blatt,
+             titel: document.getElementById('title')?.textContent || '',
+             imBlatt: blatt?.textContent || '' };
   });
   gleich('390 px: kein gequetschter Peek entsteht', mobil.peek, false);
-  pruefe('390 px: die echte Zeilenseite wurde geöffnet', /Ada Lovelace/.test(mobil.titel), mobil.titel);
+  /* SEIT E371 IST DIE VORSCHAU AM TELEFON EIN BLATT, KEIN ABSPRUNG (L10).
+     Bis dahin öffnete `zeilePeek` am Telefon die echte Zeilenseite — und
+     genau das stand hier als Zusage. E371 hat es umgedreht: die Zeile wird
+     IM BLATT gezeigt, die offene Seite bleibt, wo sie war. Wer den Weg
+     ganz sehen will, findet ihn in test361. */
+  pruefe('390 px: die Zeile kommt als Blatt, nicht als Absprung',
+    mobil.blatt && /Ada Lovelace/.test(mobil.imBlatt),
+    JSON.stringify({ blatt: mobil.blatt, imBlatt: mobil.imBlatt.slice(0, 60) }));
+  pruefe('… und die offene Seite bleibt stehen', !/Ada Lovelace/.test(mobil.titel), mobil.titel);
   await kontext.close();
 
   const { kontext: dk, seite: ds } = await vorbereiten(1280, 850, false);

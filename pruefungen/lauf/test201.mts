@@ -100,10 +100,21 @@ const built = await page.evaluate(async () => {
   return { page: pageBlock.id, sheet: sheet.id };
 });
 
+/* SEIT E375 STEHEN LINIE, PFEIL, RECHTECK UND ELLIPSE HINTER EINEM KNOPF
+   (L115 Punkt 9): erst „Form", dann im Zubehör die Art. Ohne diesen Umweg
+   fand `selectTool('rectangle')` keinen Knopf, klickte still nichts, und
+   der dritte Zug entstand mit dem VORIGEN Werkzeug — der Lauf meldete
+   ["stift","marker","marker"] statt eines Rechtecks. */
+const FORM_ARTEN = ['line', 'arrow', 'rectangle', 'ellipse'];
 const selectTool = async (tool: string): Promise<void> => {
   await page.evaluate((value: string) => {
     ([...document.querySelectorAll<HTMLElement>('.blatt-werk button')]
       .find(button => button.dataset.wz === value))?.click();
+  }, FORM_ARTEN.includes(tool) ? 'formen' : tool);
+  if (!FORM_ARTEN.includes(tool)) return;
+  await page.evaluate((value: string) => {
+    document.querySelector<HTMLElement>(
+      `.blatt-werk [data-act="formart"][data-form="${value}"]`)?.click();
   }, tool);
 };
 /* ZUERST HINSCHAUEN, DANN ZIEHEN.
