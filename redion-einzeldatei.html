@@ -16075,7 +16075,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 209, inhalt: 'b40667d7b6a1f4a3', gebaut: '2026-09-03T10:27:00.305Z' };
+const Stand = { fassung: 214, inhalt: 'f5f0294703a99891', gebaut: '2026-09-03T10:49:02.115Z' };
 window.Stand = Stand;
 
 </script>
@@ -46983,13 +46983,80 @@ const Marken = (() => {
             return [anfang[0] + radius * Math.cos(winkel),
                 anfang[1] + radius * Math.sin(winkel)];
         };
-        const snapshot = () => clone(marks);
+        /* ---- DER MERKZETTEL FUERS ZURUECK (E378) -----------------------------
+         * Bis hierher klonte `snapshot()` die GANZE Seite — und zwar bei jedem
+         * Aufsetzen des Stifts. Gemessen auf einer vollen Seite Handschrift:
+         *
+         *     400 Striche   4,28 ms klonen + 3,74 ms vergleichen =  8,0 ms
+         *     800 Striche  11,96 ms klonen + 11,46 ms vergleichen = 23,4 ms
+         *
+         * 23 ms sind fast drei Bilder bei 120 Hz — jedes Mal, wenn der Stift das
+         * Papier beruehrt, und noch einmal, wenn er abhebt. Genau das fuehlt
+         * sich zaeh an, und zwar umso mehr, je voller die Seite ist.
+         *
+         * Der Merkzettel braucht die Marken gar nicht zu klonen. Er braucht nur
+         * die LISTE, wie sie war — solange keine Marke, die schon in `marks`
+         * steht, jemals von innen geaendert wird. Das ist die Regel dieses
+         * Bogens, und sie steht nicht nur als Satz da:
+         *
+         *   `snapshot()` FRIERT ein, was es weggibt. Wer danach eine Marke von
+         *   innen aendert, bekommt in `"use strict"` einen Fehler statt eines
+         *   stillen Datenverlusts. Und ein stiller Datenverlust waere es: der
+         *   Merkzettel zeigte dann schon die Aenderung, und „Zurueck" holte
+         *   nichts zurueck.
+         *
+         * Statt zu aendern wird ERSETZT — `marks[i] = { ...alt, farbe: neu }`.
+         * Genau so machen es `move` und `scale` seit E353 schon.
+         * -------------------------------------------------------------------- */
+        const snapshot = () => {
+            const liste = marks.slice();
+            for (const mark of liste) {
+                /* Auch die Punktlisten — sonst faenge `Object.freeze` nur ein
+                   `mark.farbe = …` ab und nicht ein `mark.pts.push(…)`, und genau
+                   das waere die stillere Haelfte des Datenverlusts. */
+                if (Array.isArray(mark?.pts))
+                    Object.freeze(mark.pts);
+                if (Array.isArray(mark?.pressure))
+                    Object.freeze(mark.pressure);
+                Object.freeze(mark);
+            }
+            return liste;
+        };
+        /** Der Platz einer Marke in `marks` — fuer das Ersetzen an Ort und Stelle. */
+        const platzVon = (id) => marks.findIndex(mark => idOf(mark) === id);
+        /** Eine Marke ersetzen, statt sie zu aendern (siehe `snapshot`). */
+        const ersetze = (index, neu) => {
+            if (index < 0 || index >= marks.length)
+                return null;
+            marks[index] = neu;
+            return neu;
+        };
         const state = () => ({ undo: historyUndo.length > 0, redo: historyRedo.length > 0,
             selected: selection.size, clipboard: zwischenablage.length > 0 });
         const notifyState = () => stateListeners.forEach(listener => listener(state()));
         const save = () => Store.updateBlock(block.id, { marken: marks, raumVersion: R.RAUM_VERSION });
+        /* ZWEI LISTEN VERGLEICHEN, OHNE SIE ZU SCHREIBEN (E378). Bis hierher
+           hiess das zweimal `JSON.stringify` ueber die ganze Seite — 11,5 ms bei
+           800 Strichen, nur um die Frage „hat sich etwas geaendert?" zu
+           beantworten. Seit `snapshot()` flach ist, sind unveraenderte Marken
+           DASSELBE Objekt, und der Vergleich bricht beim ersten Unterschied ab.
+           Die Zeichenkette bleibt als Rueckfall fuer den Fall, dass eine Marke
+           ersetzt wurde, ohne sich zu unterscheiden. */
+        const listenGleich = (a, b) => {
+            if (a === b)
+                return true;
+            if (a.length !== b.length)
+                return false;
+            for (let i = 0; i < a.length; i++) {
+                if (a[i] === b[i])
+                    continue;
+                if (fassung(a[i]) !== fassung(b[i]))
+                    return false;
+            }
+            return true;
+        };
         const commit = (before) => {
-            if (JSON.stringify(before) === JSON.stringify(marks))
+            if (listenGleich(before, marks))
                 return;
             historyUndo.push(before);
             if (historyUndo.length > HISTORY_LIMIT)
@@ -47047,7 +47114,9 @@ const Marken = (() => {
             renderSelection();
         };
         const restore = (next) => {
-            marks.splice(0, marks.length, ...clone(next));
+            /* Flach, aus demselben Grund wie `snapshot` (E378): die Marken werden
+               nicht geaendert, sondern ersetzt — also darf die Liste sie teilen. */
+            marks.splice(0, marks.length, ...next);
             selection = new Set([...selection].filter(id => marks.some(mark => idOf(mark) === id)));
             save();
             redraw();
@@ -47640,7 +47709,7 @@ const Marken = (() => {
                 }
                 return;
             }
-            zettel.text = antwort;
+            ersetze(platzVon(targetId), { ...zettel, text: antwort });
             redraw();
             commit(before);
         };
@@ -47660,7 +47729,7 @@ const Marken = (() => {
                 if (!answer.trim())
                     marks.splice(marks.indexOf(current), 1);
                 else
-                    current.text = answer;
+                    ersetze(marks.indexOf(current), { ...current, text: answer });
             }
             else {
                 const x = Math.round(Math.max(0, Math.min(point[0] ?? 0, breite - 120)) * 100) / 100;
@@ -47692,7 +47761,12 @@ const Marken = (() => {
                 ? marks.find(mark => idOf(mark) === targetId && mark.art === 'zeichen') : null;
             if (vorhanden) {
                 const before = snapshot();
-                vorhanden.drehung = ((Number(vorhanden.drehung) || 0) + 90) % 360;
+                /* Ersetzen statt aendern (E378) — der Merkzettel oben teilt sich die
+                   Marke mit `marks`, und ein gedrehtes Zeichen im Merkzettel waere
+                   ein „Zurueck", das nichts zurueckholt. Genau das hat der eingefrorene
+                   Merkzettel hier gefunden: test242 sah `Cannot assign to read only
+                   property 'drehung'`. */
+                ersetze(marks.indexOf(vorhanden), { ...vorhanden, drehung: ((Number(vorhanden.drehung) || 0) + 90) % 360 });
                 redraw();
                 commit(before);
                 return;
@@ -48125,12 +48199,17 @@ const Marken = (() => {
             if (!selection.size)
                 return;
             const before = snapshot();
-            for (const mark of marks)
-                if (selection.has(idOf(mark)) && mark.art !== 'bild') {
-                    mark.farbe = next;
-                    updateNode(nodeFor(idOf(mark)), mark);
-                    merke(mark);
-                }
+            /* ERSETZEN STATT AENDERN (E378) — sonst zeigte der Merkzettel schon
+               die neue Farbe, und „Zurueck" holte nichts zurueck. */
+            for (let i = 0; i < marks.length; i++) {
+                const alt = marks[i];
+                if (!selection.has(idOf(alt)) || alt.art === 'bild')
+                    continue;
+                const neu = { ...alt, farbe: next };
+                marks[i] = neu;
+                updateNode(nodeFor(idOf(neu)), neu);
+                merke(neu);
+            }
             commit(before);
         };
         const setzeStrich = (next) => {
@@ -48138,12 +48217,15 @@ const Marken = (() => {
             if (!selection.size)
                 return;
             const before = snapshot();
-            for (const mark of marks)
-                if (selection.has(idOf(mark)) && mark.breite !== undefined) {
-                    mark.breite = next;
-                    updateNode(nodeFor(idOf(mark)), mark);
-                    merke(mark);
-                }
+            for (let i = 0; i < marks.length; i++) {
+                const alt = marks[i];
+                if (!selection.has(idOf(alt)) || alt.breite === undefined)
+                    continue;
+                const neu = { ...alt, breite: next };
+                marks[i] = neu;
+                updateNode(nodeFor(idOf(neu)), neu);
+                merke(neu);
+            }
             renderSelection();
             commit(before);
         };
@@ -48175,21 +48257,25 @@ const Marken = (() => {
                 return;
             const before = snapshot();
             let geaendert = false;
-            for (const mark of marks)
-                if (selection.has(idOf(mark)) && mark.art === 'text') {
-                    if (schritt)
-                        mark.fontSize = naechsteStufe(Math.max(8, Number(mark.fontSize) || 18), schritt);
-                    else if (aenderung.groesse !== undefined)
-                        mark.fontSize = schrift.groesse;
-                    if (aenderung.familie !== undefined)
-                        mark.schrift = schrift.familie;
-                    if (aenderung.fett !== undefined)
-                        mark.fett = schrift.fett;
-                    if (aenderung.rahmen !== undefined)
-                        mark.rahmen = schrift.rahmen;
-                    updateNode(nodeFor(idOf(mark)), mark);
-                    geaendert = true;
-                }
+            for (let i = 0; i < marks.length; i++) {
+                const alt = marks[i];
+                if (!selection.has(idOf(alt)) || alt.art !== 'text')
+                    continue;
+                const neu = { ...alt };
+                if (schritt)
+                    neu.fontSize = naechsteStufe(Math.max(8, Number(alt.fontSize) || 18), schritt);
+                else if (aenderung.groesse !== undefined)
+                    neu.fontSize = schrift.groesse;
+                if (aenderung.familie !== undefined)
+                    neu.schrift = schrift.familie;
+                if (aenderung.fett !== undefined)
+                    neu.fett = schrift.fett;
+                if (aenderung.rahmen !== undefined)
+                    neu.rahmen = schrift.rahmen;
+                marks[i] = neu;
+                updateNode(nodeFor(idOf(neu)), neu);
+                geaendert = true;
+            }
             if (geaendert) {
                 renderSelection();
                 commit(before);

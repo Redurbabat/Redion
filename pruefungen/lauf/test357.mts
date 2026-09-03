@@ -196,8 +196,16 @@ gleich('Der Auftrag: sechs Schritte, noch keiner getan, wartet',
   [angelegt.auftrag.art, angelegt.auftrag.schritte, angelegt.auftrag.schritt, angelegt.auftrag.zustand],
   ['zip-import', 6, 0, 'wartet']);
 p('… und sagt, worum es geht', /Kurs\.zip/.test(String(angelegt.auftrag.text)), String(angelegt.auftrag.text));
+/* SEIT E373 TRAEGT DIE EINGABE AUCH DIE SCHAETZUNG (L114 Punkt 7): wie lange
+   der Import voraussichtlich dauert, damit der Anlauf es sagen kann. Die
+   Zahl wird hier NICHT festgenagelt — sie lernt aus jedem Lauf und waere
+   damit eine Zusage, die bei jedem Durchgang anders ausfaellt. Geprueft
+   wird, dass sie da und eine Zahl ist; was sie bedeutet, haelt test363. */
+const { schaetzungMs, ...eingabeOhneZeit } = angelegt.auftrag.eingabe as any;
 gleich('Die Eingabe trägt die Kennung der ZIP, das Ziel und die Anordnung',
-  angelegt.auftrag.eingabe, { dateiId: 'da', zipName: 'Kurs.zip', zielId: null, anordnung: 'untereinander' });
+  eingabeOhneZeit, { dateiId: 'da', zipName: 'Kurs.zip', zielId: null, anordnung: 'untereinander' });
+p('… und seit E373 die geschätzte Dauer', Number.isFinite(schaetzungMs) && schaetzungMs >= 0,
+  String(schaetzungMs));
 gleich('Die Arbeitskopie liegt in der Ablage: abgeleitet, ohne Block, fertig',
   angelegt.kopie, { name: 'Kurs.zip', abgeleitet: true, blockId: null, zustand: 'fertig' });
 p('Noch ist nichts angelegt — der Auftrag hat nur noch nicht gearbeitet', angelegt.seiten <= 2, String(angelegt.seiten));

@@ -5381,6 +5381,15 @@ wächst, statt bei jedem Zeigerereignis neu zu entstehen (9,2× über den
 Strich, 10,1× am Ende). Drei Dinge sind damit NICHT erledigt, und sie
 stehen hier, damit sie niemand für erledigt hält.
 
+0b. **Und der Merkzettel fürs Zurück auch — seit E378 zu.** Er klonte bei
+   jedem Aufsetzen des Stifts die ganze Seite; auf 800 Strichen 23,4 ms je
+   Strich, zweimal (Aufsetzen und Abheben). Jetzt nimmt er die Liste flach
+   und friert sie ein. Was DA noch offen ist: der Verlauf hält weiterhin
+   ganze Listen, nur flache. Ein Verlauf aus Änderungsstücken spart
+   SPEICHER (heute bis zu vierzig flache Listen je Blatt), nicht mehr Zeit
+   — und er müsste jede Handlung anfassen. Erst messen, ob der Speicher
+   irgendwo weh tut.
+
 0. **Der Radierer hatte denselben Fehler — das ist seit E377 zu.** Er fragte
    bei jedem Teilschritt jeden Strich der Seite ganz ab; ein schneller Wisch
    über 400 Striche kostete 8,27 ms je Zeigerereignis, ein ganzes Bild bei
@@ -5421,5 +5430,5 @@ stehen hier, damit sie niemand für erledigt hält.
    der Grund, warum an dieser Stelle nichts mehr ohne Messung geändert
    wird.
 
-Gefunden beim Bauen von E376 am 3. September 2026; Punkt 0 beim
-Nachmessen der Nachbarwege (E377) am selben Tag.
+Gefunden beim Bauen von E376 am 3. September 2026; die Punkte 0 und 0b
+beim Nachmessen der Nachbarwege (E377, E378) am selben Tag.

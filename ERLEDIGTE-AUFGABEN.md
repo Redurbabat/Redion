@@ -1795,7 +1795,7 @@ die Zeugnisnote je Semester (E242) und der echte Stundenplan (E243).
 
 <a id="boegen"></a>
 
-## Die Bögen E272–E376
+## Die Bögen E272–E378
 
 * E272 Phase A (Inventar): doku/PREMIUM-SHELL-MATRIX.md angelegt — jeder
   Bandeintrag, jedes Modul, jeder Schalenknopf mit seinem künftigen Ort.
@@ -3014,3 +3014,26 @@ die Zeugnisnote je Semester (E242) und der echte Stundenplan (E243).
   (test343), und ein geglätteter Strich endete drei Pixel vor der Stelle, an
   der die Hand abhob (test345, test346). Der Druck bekam den Median, das
   Strichende wird jetzt auf die wirkliche letzte Zeigerposition gezogen.
+
+* E377 (nach E376 nachgemessen): Erst der Kasten, dann der Weg.
+  `touchesCircle` ging bei jedem Stiftstrich sofort in die Punktschleife —
+  auch bei einem Strich am anderen Seitenende. Ein schneller Radierwisch
+  über 400 Striche kostete 8,27 ms je Zeigerereignis, ein GANZES Bild bei
+  120 Hz; mit einem allokationsfreien Kastenfilter davor 1,00 ms. test367
+  neu (19, ohne Browser), zwei Gegenproben rot. Nebenbei behoben: eine Marke
+  ohne Punkte galt als am Ursprung liegend und war dort radierbar.
+  Und eine Lehre: die Gegenprobe „Kasten ein Pixel zu eng" rutschte durch
+  alle zehntausend Zufallsfälle und wurde nur von zwei von Hand gesetzten
+  Grenzfällen gefunden.
+* E378 (der grösste Rest derselben Messreihe): Der Merkzettel fürs Zurück
+  klont nicht mehr, er friert ein. `snapshot()` kopierte bei jedem Aufsetzen
+  des Stifts die ganze Seite — 23,4 ms je Strich auf 800 Strichen, und der
+  Preis wuchs mit der Seite. Jetzt gilt: eine Marke in `marks` wird nie mehr
+  von innen geändert, sondern ersetzt; dann genügt die flache Liste
+  (0,56 ms beim ersten Mal, 57 µs danach), und der Vergleich in `commit()`
+  bricht beim ersten Unterschied ab (11,46 ms → 1 µs). Sechs Stellen mussten
+  vom Ändern aufs Ersetzen; fünf waren beim Durchsehen zu finden, **die
+  sechste hat das Einfrieren gefunden** — test242 brach sofort mit
+  `Cannot assign to read only property 'drehung'` ab. test368 neu (15, Port
+  9399). Dabei aufgefallen: test357 war seit E373 rot, weil der ZIP-Auftrag
+  seither `schaetzungMs` trägt.

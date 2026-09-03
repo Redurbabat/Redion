@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-373 Entscheidungen, E1 bis E377. Die Nummer ist die Ordnung: eine Entscheidung
+374 Entscheidungen, E1 bis E378. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -431,6 +431,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E375** — Ein Formen-Werkzeug statt vier (L115 Punkt 9, Rest)
 * **E376** — Der Stift zeichnet flüssig: der Umriss wächst, statt neu zu entstehen
 * **E377** — Erst der Kasten, dann der Weg: der Radierer fragt nicht mehr jeden Strich ganz
+* **E378** — Der Merkzettel fürs Zurück klont nicht mehr, er friert ein
 
 ---
 
@@ -30432,3 +30433,100 @@ test353 · test87 · test105.
 
 MUTATIONSPROBE, zweimal: Kasten nicht um `halfWidth` geweitet → §1 und §2
 rot. Kasten ein Pixel zu eng → §2 rot (und §1 NICHT, siehe oben).
+
+
+════════════════════════════════════════════════════════════════════════════
+E378 — Der Merkzettel fürs Zurück klont nicht mehr, er friert ein
+════════════════════════════════════════════════════════════════════════════
+
+Der dritte und grösste Fund derselben Messreihe. E376 hat den Stift flüssig
+gemacht, E377 den Radierer — und dann stand noch das hier:
+
+    `snapshot()` klonte die GANZE Seite. Bei JEDEM Aufsetzen des Stifts.
+    Und `commit()` schrieb sie danach zweimal als Zeichenkette aus, nur um
+    die Frage „hat sich etwas geändert?" zu beantworten.
+
+        400 Striche   4,28 ms klonen + 3,74 ms vergleichen =  8,0 ms
+        800 Striche  11,96 ms klonen + 11,46 ms vergleichen = 23,4 ms
+
+23 ms sind fast drei Bilder bei 120 Hz — beim Aufsetzen und noch einmal beim
+Abheben. Und der Preis wächst mit der Seite: **genau die Seite, auf der man
+am längsten geschrieben hat, wird am zähesten.** Eine Seite Handschrift hat
+in GoodNotes ohne Weiteres achthundert Striche.
+
+WAS ENTSCHIEDEN WURDE — EINE REGEL, KEINE OPTIMIERUNG
+─────────────────────────────────────────────────────
+> Eine Marke, die in `marks` steht, wird nie mehr von innen geändert.
+> Sie wird ERSETZT.
+
+Dann braucht der Merkzettel die Marken gar nicht zu klonen; er braucht nur
+die Liste, wie sie war. `marks.slice()` statt `clone(marks)`.
+
+    800 Striche:  11,96 ms  →  0,56 ms beim ersten Mal, 57 µs danach
+
+Und der Vergleich in `commit()` bricht beim ersten Unterschied ab, statt
+zweimal die ganze Seite auszuschreiben: unveränderte Marken sind jetzt
+DASSELBE Objekt, und `a[i] === b[i]` beantwortet die Frage in einem Takt.
+
+    800 Striche:  11,46 ms  →  1 µs
+
+DIE REGEL IST KEINE BEHAUPTUNG — `snapshot()` FRIERT EIN
+────────────────────────────────────────────────────────
+Eine Regel, die nur als Kommentar dasteht, hält den nächsten Bogen nicht
+aus. Deshalb friert `snapshot()` ein, was es weggibt — die Marke UND ihre
+Punktlisten. Wer danach doch von innen ändert, bekommt in `"use strict"`
+einen Fehler.
+
+Und ein Fehler ist hier das mildere Übel. Der stille Fall wäre: der
+Merkzettel zeigt schon die Änderung, „Zurück" holt nichts zurück, und
+niemand merkt es, bis er etwas zurückholen will. Das ist §51 in einem Satz.
+
+Das Einfrieren kostet fast nichts, weil ein bereits eingefrorenes Objekt
+beim zweiten Mal nur noch geprüft wird — daher die 57 µs im Dauerbetrieb
+gegenüber 0,56 ms beim ersten Aufsetzen.
+
+SECHS STELLEN MUSSTEN VOM ÄNDERN AUFS ERSETZEN
+──────────────────────────────────────────────
+`setzeFarbe`, `setzeStrich`, `setzeSchrift`, `zettelText`, `editText` und
+die Drehung eines Fachzeichens. Fünf davon waren beim Durchsehen zu finden.
+**Die sechste hat das Einfrieren gefunden**, und zwar sofort: `test242`
+brach mit `Cannot assign to read only property 'drehung'` ab. Ohne den
+eingefrorenen Merkzettel wäre sie stehen geblieben — als eine Stelle, an der
+„Zurück" seit E378 nichts mehr zurückgeholt hätte.
+
+Das ist der ganze Grund für das Einfrieren, an einem Tag belegt.
+
+WAS DAS EINFRIEREN SONST NOCH GEFUNDEN HAT
+──────────────────────────────────────────
+`test357` war schon vorher rot, seit **E373**: der ZIP-Auftrag trägt seither
+`schaetzungMs` in seiner Eingabe, und die Zusage dort zählte die Felder auf.
+Aufgefallen ist es nur, weil dieser Bogen alle Zeichenläufe zusammen
+gefahren hat. Die Zusage prüft jetzt die Felder ohne die Schätzung und die
+Schätzung getrennt — festgenagelt wird sie NICHT, denn sie lernt aus jedem
+Lauf (E373) und wäre sonst eine Zusage, die bei jedem Durchgang anders
+ausfällt.
+
+WAS ES KOSTET
+─────────────
+Die Regel gilt ab jetzt für jeden, der an der Zeichenschicht arbeitet. Wer
+`mark.farbe = x` schreibt, bekommt einen Fehler — und muss
+`marks[i] = { ...mark, farbe: x }` schreiben. Das ist eine Zeile mehr und
+eine Sorge weniger.
+
+`restore()` klont ebenfalls nicht mehr; damit ist auch „Zurück" selbst auf
+einer vollen Seite sofort da statt nach zwölf Millisekunden.
+
+WAS NICHT GEÄNDERT WURDE
+────────────────────────
+Das Format und der Verlauf. `historyUndo` hält weiterhin ganze Listen, nur
+eben flache. Ein Verlauf aus Änderungsstücken (Patches) wäre der nächste
+Schritt und ein viel grösserer Eingriff — er müsste jede Handlung anfassen,
+und der Gewinn wäre Speicher, nicht Zeit. Die Zeit ist mit diesem Bogen weg.
+
+PRÜFUNG: test368 15/15 (neu, Port 9399) · test242 42/42 · test357 36/36 ·
+test343–347, test349–353, test355–358, test360, test365, test366, test367 ·
+test87, test105.
+
+MUTATIONSPROBE, zweimal: der Textweg ändert wieder statt zu ersetzen → §2
+rot (zwei Punkte). Der Merkzettel klont wieder → §1 und §3 rot, und §3 zeigt
+den Befund direkt: 11 ms auf der leeren Seite, 97 ms auf der vollen.
