@@ -28818,7 +28818,7 @@ und ein Klick auf einen ausgeblendeten Reiter tut nichts. Auch hier wurde
 nicht die Zusage aufgeweicht, sondern der Zustand hergestellt, über den sie
 spricht: die Suite setzt in `seiteAuf` ausdrücklich die alte Fassung
 (`Ruhig.setzen(false)`), weil ihr Gegenstand der INHALT des Bandes ist. Dass
-die Reiter in der Ruhe weg sind und zurückkommen, hält `test359`.
+die Reiter in der Ruhe weg sind und zurückkommen, hält `test384`.
 
 DAS WORT AM PFEIL — DER FUND BEIM HINSEHEN (§55)
 ────────────────────────────────────────────────
@@ -28848,7 +28848,7 @@ aufgeweichte Zahl. Ein neuer sichtbarer Knopf („Werkzeuge"). Keine Daten,
 kein Feldname, keine Migration (§53.3). Kein JavaScript für die Regel
 selbst.
 
-PRÜFUNG: `test359` (neu, 37 Punkte) war nachweislich ROT, bevor die Regel
+PRÜFUNG: `test384` (neu, 40 Punkte) war nachweislich ROT, bevor die Regel
 da war — 28/34, alle „Reiter = 0"-Zusagen scheiterten bei 5 — und ist mit
 der Regel grün. Er prüft ausserdem, dass die Reiter über alle drei Wege
 zurückkommen (an den NAMEN, nicht an einer Zahl), dass Suche/KI/Konto in

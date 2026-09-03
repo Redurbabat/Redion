@@ -357,3 +357,39 @@ Dieser Auftrag ist Schritt 1 von 5. Die anderen vier, in Reihenfolge:
 5. Ein Prüflauf, der die Zahl der sichtbaren Bedienelemente je Zustand
    festhält, damit die Leiste nicht in einem halben Jahr wieder zuwächst.
    Sie ist ja nicht aus Absicht so geworden.
+
+---
+
+## Nachtrag nach der Ausführung (3. September 2026)
+
+Der Auftrag ist ausgeführt. Zwei Dinge weichen vom Text oben ab, und zwar
+mit Grund — der Text selbst bleibt unverändert stehen, weil er der Auftrag
+ist und nicht das Protokoll.
+
+**1. Der neue Prüflauf heisst `test384`, nicht `test359`.**
+Auf dem Zweig `claude/redion-head2-desktop-move-j47chf` ist `test359` seit
+E356 die Blattleiste am Telefon. Zwei verschiedene Läufe unter derselben
+Nummer wären beim Zusammenführen nicht mehr trennbar. Der Port bleibt 9371
+wie vorgesehen. Aus demselben Grund trägt die Entscheidung **E383** statt
+E367 und die Lücke **L121** statt L117.
+
+**2. Ein zweiter Prüflauf musste angefasst werden: `test247`.**
+Abschnitt 5 nannte nur `test248`. Tatsächlich fiel auch `test247` (das
+Menüband selbst, E210) — mit 47 von 106 Punkten, fast alles Folgefehler:
+die Suite klickt Reiter an, um den Bandinhalt zu prüfen, und ein Klick auf
+einen ausgeblendeten Reiter tut nichts. Behandelt wurde er nach demselben
+Grundsatz, den Redur für `test248` gewählt hat: nicht die Zusage aufweichen,
+sondern den Zustand herstellen, über den sie spricht (`Ruhig.setzen(false)`
+in `seiteAuf`). Danach 106/0.
+
+**Und der Fund beim Hinsehen, den Abschnitt 7 vorausgesehen hat:** der
+Klapp-Pfeil war allein an der rechten Kante nicht mehr als Weg erkennbar.
+Redur hat entschieden, ihm das Wort „Werkzeuge" zu geben. Dabei kam ein
+Fehler zutage, den das Auge kaum sieht und erst die Messung zeigte:
+`.mb-klapp` ist auf 32 px Breite festgesetzt, Wort und Pfeil ragten heraus,
+und der Pfeil lag ÜBER dem Suchknopf — ein Klick hätte das Falsche
+getroffen. Behoben mit `width:auto`, festgehalten mit drei Punkten in
+`test384`.
+
+Alles Übrige lief wie beschrieben: `test384` war vor der CSS-Zeile rot
+(28/34) und ist danach grün (40/40).

@@ -5258,14 +5258,14 @@ Reihenfolge:
 
 5. **Ein Prüflauf, der die Zahl der sichtbaren Bedienelemente je Zustand
    festhält** — damit die Leiste nicht in einem halben Jahr wieder zuwächst.
-   Sie ist ja nicht aus Absicht so geworden. `test359` hält heute nur den
+   Sie ist ja nicht aus Absicht so geworden. `test384` hält heute nur den
    einen Zustand des Menübandes; gemeint ist eine Decke über alle.
 
 UND EIN FUND AM RANDE, der zu Schritt 5 gehört: `.mb-klapp` ist auf 32 px
 Breite festgesetzt. Beim Einbau des Wortes ragten Wort und Pfeil aus dem
 Knopf heraus, und der Pfeil lag ÜBER dem Suchknopf — ein Klick hätte das
 Falsche getroffen. Gemessen, behoben (`width:auto`) und mit drei Punkten in
-`test359` festgehalten. Wer dem Knopf später etwas hinzufügt, muss dieselbe
+`test384` festgehalten. Wer dem Knopf später etwas hinzufügt, muss dieselbe
 Messung im Kopf haben: eine feste Breite und ein wachsender Inhalt vertragen
 sich nicht, und das Auge sieht es erst, wenn es sich überlappt.
 
