@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-375 Entscheidungen, E1 bis E379. Die Nummer ist die Ordnung: eine Entscheidung
+376 Entscheidungen, E1 bis E380. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -433,6 +433,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E377** — Erst der Kasten, dann der Weg: der Radierer fragt nicht mehr jeden Strich ganz
 * **E378** — Der Merkzettel fürs Zurück klont nicht mehr, er friert ein
 * **E379** — Neuzeichnen fragt nach der Identität, nicht nach dem Wortlaut
+* **E380** — Das Regal bekommt Ebenen: ein Ordner ist ein Ort, kein Etikett
 
 ---
 
@@ -30584,3 +30585,91 @@ test360, test365–368, test201, test242, test267, test194. Besonders
 `test350` §3, der den Fall hält, für den `gezeichnet` überhaupt gebaut
 wurde: nach einem Zurück ist die Marke wieder die alte, der Knoten aber
 noch der verschobene.
+
+
+E380 — Das Regal bekommt Ebenen: ein Ordner ist ein Ort, kein Etikett
+════════════════════════════════════════════════════════════════════════════
+
+Redur hat vier Fotos aus GoodNotes geschickt, und mit ihnen einen Satz, der
+das eigentliche Missverständnis benennt:
+
+    „wenn ich die zip entpacke sollte wie goodnotes sein — so meinte ich
+    nicht im Seiten oder im Bereich öffnet, schau wir GoodNotes es öffnet
+    gleich wie es"
+
+Auf den Fotos: die Wurzel zeigt EIN Notizbuch und EINEN Ordner („Redur
+Babat"). Ein Tipp auf den Ordner führt HINEIN — und dort stehen genau
+seine sechs Fächer, mit einer Kopfzeile, die den Ordner nennt, und einem
+Pfeil zurück. Noch ein Tipp, eine Ebene tiefer: ein Lernset, zwei PDFs,
+ein Unterordner. Immer derselbe Bildschirm, nur tiefer.
+
+WAS REDION STATTDESSEN TAT
+──────────────────────────
+Das Dokumente-Regal (`bibliothek.ts`, erreichbar über die untere Leiste
+am Telefon) zeigte ALLES flach. Ein Ordner war dort ein Etikett an einer
+Kachel, kein Ort, in den man hineingeht. Nach dem Entpacken einer ZIP
+landete man an derselben flachen Wurzel — mit fünfundzwanzig Kacheln
+nebeneinander statt in dem Ordner, den man gerade angelegt hatte.
+
+DER FUND, DER DIE ARBEIT KLEIN MACHTE
+──────────────────────────────────────
+Zwei Dinge, die es schon gab und die niemand nutzte:
+
+1. Redion hat begehbare Ordner bereits — aber im ANDEREN Regal,
+   `notebook.ts` („Notizhefte"), mit Brotkrume und `openFach`. Warum das
+   nicht einfach nach vorn gehängt wurde: `notebook.ts:heftArtig` verlangt
+   ein `blatt`-Kind und SCHLIESST `pdfseite` AUS. Ein PDF oder ein Lernset
+   ist kein Heft. Redurs Bestand ist voll davon. Also musste die Ebene ins
+   Dokumente-Regal, das jede Art zeigt — nicht das Heft-Regal davorgehängt.
+
+2. `importZip` gibt seit **E350** die Kennung des angelegten Wurzelfachs
+   zurück (`ergebnis.wurzelId`) — und KEIN Aufrufer hat sie je gelesen.
+   Der Draht lag da, angeschlossen war er nicht.
+
+WAS GEBAUT WURDE
+────────────────
+* Ein Reiter „Ablage" (🗂), der erste, der neue Vorgabe. Er filtert nach
+  Ebene: an der Wurzel die elternlosen Dokumente, in einem Ordner dessen
+  Kinder (`parentId === ordner`). Ordner zuerst, dann nach Namen — wie ein
+  Dateibrowser, nicht nach Zeit (eine Ablage soll stehen bleiben).
+* Hineingehen (`geheIn`), hochgehen (`geheHoch`), und eine Brotkrume
+  (`.bib-krume`), die den ganzen Weg nennt und an jeder Stufe zurückspringt.
+  An der Wurzel schweigt sie — ein Pfad mit einem Glied ist keiner.
+* Der offene Ordner wird gemerkt (`meta.bibOrdner`) und übersteht das
+  Neuladen. Ein gelöschter Ordner führt an die Wurzel, nicht ins Leere.
+* `ansichtAuffrischen(wurzelId)` liest endlich die Kennung: nach dem
+  Entpacken steht der Bildschirm IM entstandenen Ordner. Der
+  Hintergrundlauf der Auftragsmaschine holt sie aus dem fertigen Auftrag
+  (`stand.wurzelId`), der Direktlauf aus `ergebnis.wurzelId`.
+
+WAS BEWUSST FLACH BLEIBT
+────────────────────────
+„Kürzlich verwendet" und die übrigen Reiter fragen weiter über ALLE
+Ebenen. Das ist kein Versehen: „zuletzt geöffnet" ist eine Frage über den
+ganzen Bestand, nicht über eine Ebene. Nur die Ablage ist der Ort mit
+Ebenen. Deshalb gehört auch die L116-Zusage („60 von N") zum Reiter
+„Kürzlich", nicht zur Vorgabe — die Prüfung setzt den Reiter jetzt
+ausdrücklich (test359).
+
+PRÜFUNG (§55.2)
+───────────────
+`test369`, sieben Abschnitte, 36 Punkte: die Wurzel zeigt die Wurzel (nicht
+die sechs Fächer flach); ein Tipp führt hinein (und zeigt auch PDFs und
+Lernsets — was das Heft-Regal nicht kann); die Brotkrume nennt den Weg und
+führt zurück; der Ordner wird gemerkt; die übrigen Reiter bleiben flach;
+nach einem echten ZIP-Rundlauf (`Austausch.zipSchreiben` →
+`ArchivImport.importZip`) steht der Bildschirm im angelegten Ordner.
+
+Zwei Gegenproben, beide rot gesehen: den Ablage-Filter wieder flach machen
+→ §1/§2/§6 rot (7 Punkte); die `wurzelId` in `ansichtAuffrischen` fallen
+lassen → §6 rot (der Bildschirm bleibt an der Wurzel „Dokumente" statt in
+„Kurs 2027").
+
+WAS ES KOSTET
+─────────────
+Zwei Regale für dieselbe Sache bleiben vorerst nebeneinander (das
+Dokumente-Regal mit Ebenen, das Heft-Regal mit `openFach`) — der ehrlichere
+Weg wäre eines. Das steht als offene Lücke, nicht als erledigt. Die
+untere Leiste am Telefon (Dokumente · Heute · Lernen · Termine · Mehr)
+folgt noch nicht GoodNotes (Dokumente · Favoriten · Geteilt · Marketplace);
+auch das ist notiert, nicht gebaut.

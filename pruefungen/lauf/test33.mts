@@ -426,9 +426,20 @@ import { chromium } from 'playwright';
   console.log('   Bibliothek:', JSON.stringify(bib));
   ok('Bibliothek trägt ihren Titel', bib.titel === 'Bibliothek');
   ok('Vier Reiter plus „mehr"', bib.reiter.length === 5 && /mehr/.test(bib.reiter[4] ?? ''));
+  /* SEIT E380 STEHT „ABLAGE" VORNE, und damit ist „Privat" ins mehr-Menü
+     gerutscht. Die Zeile zeigt vier Reiter plus „N mehr" (bibliothek.ts:713)
+     — mit einem Reiter mehr muss einer weichen, und es ist der seltenste.
+     Die Ablage ist der Hauptweg: sie zeigt die Ordnerstruktur, und ein Tipp
+     auf einen Ordner führt hinein. Die Notion-Namen sind unverändert DA,
+     sie stehen nur eine Stelle weiter; deshalb prüft die Zusage jetzt, dass
+     es sie GIBT, und nicht mehr, an welcher Position. Wer sie sucht, findet
+     sie in der Zeile oder im mehr-Menü. */
+  const alleReiter = bib.reiter.join(' | ');
+  ok('Die Ablage steht vorne (E380)', (bib.reiter[0] ?? '').includes('Ablage'));
   ok('Reiter heissen wie bei Notion',
-     (bib.reiter[0] ?? '').includes('Kürzlich verwendet') && (bib.reiter[1] ?? '').includes('Favoriten') &&
-     (bib.reiter[2] ?? '').includes('Geteilt') && (bib.reiter[3] ?? '').includes('Privat'));
+     ['Kürzlich verwendet', 'Favoriten', 'Geteilt'].every(n => alleReiter.includes(n)));
+  ok('… und „Privat" ist über das mehr-Menü erreichbar',
+     /mehr/.test(bib.reiter[4] ?? '') && !alleReiter.includes('Privat'));
   ok('Vier Spalten wie im Bild',
      bib.spalten.length === 4 && (bib.spalten[0] ?? '').includes('Seitenbezeichnung') &&
      (bib.spalten[1] ?? '').includes('Erstellt von') && (bib.spalten[2] ?? '').includes('Quelle'));

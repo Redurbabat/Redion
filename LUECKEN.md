@@ -5445,3 +5445,47 @@ stehen hier, damit sie niemand für erledigt hält.
 
 Gefunden beim Bauen von E376 am 3. September 2026; die Punkte 0, 0b und 0c
 beim Nachmessen der Nachbarwege (E377, E378, E379) am selben Tag.
+
+
+L120 — Das Dokumente-Regal war flach; was nach E380 an GoodNotes noch fehlt
+================================================================================
+
+Redur hat vier GoodNotes-Fotos geschickt: die Wurzel zeigt wenige Einträge,
+ein Tipp auf einen Ordner führt HINEIN, dort stehen genau seine Kinder, eine
+Brotkrume führt zurück — und nach dem Entpacken einer ZIP steht man gleich
+IN dem angelegten Ordner.
+
+**Der Kern ist GESCHLOSSEN am 3. September 2026 durch E380.** Das
+Dokumente-Regal (`bibliothek.ts`) hat jetzt einen Reiter „Ablage" mit
+Ebenen: hineingehen, hochgehen, eine Brotkrume, ein gemerkter offener
+Ordner, und `ansichtAuffrischen(wurzelId)` stellt den Bildschirm nach dem
+Entpacken in den entstandenen Ordner. Belegt durch `test369` (36 Punkte,
+zwei Gegenproben rot gesehen). Der Fund dabei: begehbare Ordner gab es
+schon, aber im Heft-Regal (`notebook.ts`), dessen `heftArtig` PDFs und
+Lernsets ausschliesst — deshalb die Ebene ins Dokumente-Regal statt das
+Heft-Regal davor.
+
+Was NICHT erledigt ist und niemand für erledigt halten soll:
+
+a. **Zwei Regale für dieselbe Sache.** Das Dokumente-Regal
+   (`bibliothek.ts`, untere Leiste → „Dokumente") und das Heft-Regal
+   (`notebook.ts`, „Notizhefte") sind jetzt beide begehbar, nebeneinander.
+   Der ehrlichere Weg wäre eines. Solange beide stehen, muss jede
+   Regal-Änderung an zwei Stellen bedacht werden — genau die Art von
+   Doppelkatalog, vor der §8 warnt. Zusammenlegen ist ein eigener Bogen
+   (das Heft-Regal kann `openFach`, das Dokumente-Regal die Ebenen; keines
+   kann beides), nicht nebenbei.
+
+b. **Die untere Leiste am Telefon folgt noch nicht GoodNotes.** Sie zeigt
+   Dokumente · Heute · Lernen · Termine · Mehr; GoodNotes zeigt Dokumente ·
+   Favoriten · Geteilt · Marketplace. Redurs Leiste ist bewusst eine andere
+   — Redion ist kein GoodNotes-Klon —, aber „Favoriten" und „Geteilt" als
+   eigene Wege fehlen, und der Stern gibt es im Regal schon (E265). Ein
+   Reiter „Favoriten" wäre die kleinste Annäherung.
+
+c. **`openFach` ist modulprivat in `notebook.ts`.** Kein anderer Bereich
+   erreicht die begehbare Heft-Navigation von aussen. Das war mit ein Grund,
+   warum die Ebene neu ins Dokumente-Regal gebaut wurde, statt sie zu
+   teilen. Wenn a) angegangen wird, gehört das mit gelöst.
+
+Gefunden beim Bauen von E380 am 3. September 2026.

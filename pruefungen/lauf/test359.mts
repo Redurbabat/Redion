@@ -80,8 +80,31 @@ const anlegen = async (n: number, praefix = 'Kapitel'): Promise<void> => {
     for (let i = 1; i <= anz; i++) Store.addPage(null, { text: pre + ' ' + i });
   }, [n, praefix] as [number, string]);
 };
+/* DER REITER WIRD AUSDRÜCKLICH GESETZT (seit E380).
+   Die Zusage dieses Laufs gilt „Kürzlich verwendet" — dort greift die Decke
+   von sechzig, und dort ist „60 von N" die Ehrlichkeit, die L116 verlangt
+   hat. Bis E380 war dieser Reiter die VORGABE, und der Lauf verliess sich
+   darauf. Vorgabe ist jetzt die Ablage: sie zeigt eine Ebene und hat keine
+   Decke, weil eine Ebene so viele Sachen hat, wie sie hat. Was dort steht,
+   hält §5 dieses Laufs. */
+const reiterSetzen = async (id: string): Promise<void> => {
+  await seite.evaluate((r: string) => {
+    const b = document.querySelector<HTMLElement>('.bib-reiter [data-r="' + r + '"]');
+    if (b) { b.click(); return; }
+    /* In der Deckelansicht gibt es die Reiterzeile nicht — dort führt der
+       Weg über das Ortsmenü hinter dem Titel. */
+    document.querySelector<HTMLElement>('.bib-ort')?.click();
+  }, id);
+  await seite.waitForTimeout(250);
+  await seite.evaluate((r: string) => {
+    document.querySelector<HTMLElement>('.menu [data-x="' + r + '"]')?.click();
+  }, id);
+  await seite.waitForTimeout(350);
+};
 const kopfSatz = async (): Promise<string> => {
   await seite.evaluate(() => { Store.setMeta('bibForm', 'deckel'); Bibliothek.oeffne(); });
+  await seite.waitForTimeout(300);
+  await reiterSetzen('kuerzlich');
   await seite.waitForTimeout(400);
   return seite.evaluate(() =>
     (document.querySelector('.bib-ort')?.textContent || '').replace(/\s+/g, ' ')
@@ -89,6 +112,8 @@ const kopfSatz = async (): Promise<string> => {
 };
 const zahlenSatz = async (form: 'regal' | 'liste'): Promise<string> => {
   await seite.evaluate((f: string) => { Store.setMeta('bibForm', f); Bibliothek.oeffne(); }, form);
+  await seite.waitForTimeout(300);
+  await reiterSetzen('kuerzlich');
   await seite.waitForTimeout(400);
   return seite.evaluate(() =>
     (document.querySelector('.bib-zahlen')?.textContent || '').replace(/\s+/g, ' ').trim());

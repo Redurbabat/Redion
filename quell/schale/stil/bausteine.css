@@ -639,6 +639,36 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
   display:grid; grid-template-columns:minmax(0,1fr) auto auto;
   align-items:center; gap:6px 10px; margin:0 0 var(--space-4)
 }
+/* DIE BROTKRUME DER ABLAGE (E380).
+   Sie steht ÜBER dem Titel und über die ganze Breite — nicht daneben: der
+   Weg kann lang werden, der Titel darf davon nicht schmaler werden. An der
+   Wurzel wird sie gar nicht gezeichnet, dann rückt der Titel nach oben.
+   Der Zurück-Pfeil ist der einzige Knopf, den man am Telefon oft trifft;
+   er bekommt darum die volle Trefferfläche (§37). */
+.bib-krume{
+  grid-column:1 / -1; grid-row:1; min-width:0;
+  display:flex; align-items:center; gap:2px;
+  overflow-x:auto; scrollbar-width:none; white-space:nowrap;
+  margin:0 0 2px; font-size:13px; color:var(--fg-2)
+}
+.bib-krume::-webkit-scrollbar{ display:none }
+.bib-krume button{
+  flex:0 0 auto; min-height:32px; padding:0 6px; border:0; border-radius:8px;
+  background:transparent; color:var(--fg-2); font:inherit; cursor:pointer
+}
+.bib-krume button:hover{ background:var(--flaeche-2); color:var(--fg) }
+.bib-krume [data-hoch]{
+  /* Der Weg zurück ist ein Hauptweg: 44 px, ohne Ausnahme (§37). */
+  min-width:44px; min-height:44px; margin-inline-start:-6px;
+  font-size:22px; line-height:1; color:var(--fg)
+}
+.bib-krume b{ flex:0 0 auto; padding:0 6px; color:var(--fg); font-weight:600 }
+.bib-krume span{ flex:0 0 auto; opacity:.5 }
+.bib-dkopf:has(.bib-krume) h1{ grid-row:2 }
+.bib-dkopf:has(.bib-krume) .bib-neu{ grid-row:2 }
+.bib-dkopf:has(.bib-krume) .bib-form-knopf{ grid-row:2 }
+.bib-dkopf:has(.bib-krume) .bib-ort{ grid-row:3 }
+
 .bib-dkopf h1{
   grid-column:1; grid-row:1; min-width:0; margin:0;
   overflow:hidden; text-overflow:ellipsis; white-space:nowrap;

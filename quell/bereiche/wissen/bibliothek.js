@@ -100,6 +100,17 @@ const Bibliothek = (() => {
      * BIBLIOTHEK
      * ------------------------------------------------------------------ */
     const REITER = [
+        /* DIE ABLAGE IST DER ERSTE REITER UND DIE VORGABE (E380).
+           Redur hat vier Fotos aus GoodNotes geschickt: dort ist „Dokumente"
+           die ABLAGE — die Wurzel mit ihren Ordnern, und ein Tipp auf einen
+           Ordner führt eine Ebene tiefer. Redion zeigte an derselben Stelle
+           „Kürzlich verwendet", und das ist eine flache Liste über den GANZEN
+           Bestand: ein Ordner stand dort neben seinem eigenen Inhalt.
+    
+           Die übrigen Reiter bleiben absichtlich flach. „Kürzlich verwendet"
+           und „Favoriten" sind Fragen über alles, nicht über eine Ebene —
+           genau wie in GoodNotes, wo sie unten als eigene Wege stehen. */
+        { id: 'ablage', icon: '🗂', name: 'Ablage' },
         { id: 'kuerzlich', icon: '🕘', name: 'Kürzlich verwendet' },
         { id: 'favoriten', icon: '☆', name: 'Favoriten' },
         { id: 'geteilt', icon: '👥', name: 'Geteilt' },
@@ -146,7 +157,23 @@ const Bibliothek = (() => {
         const wahl = Store.getMeta('bibForm', 'deckel');
         return wahl === 'liste' ? 'liste' : wahl === 'regal' ? 'regal' : 'deckel';
     };
-    let zustand = { reiter: 'kuerzlich', sortier: 'wann', richtung: 'ab',
+    /** Wo das Regal gerade steht — null ist die Wurzel. Gemerkt über das
+     *  Neuladen hinweg, wie das offene Fach des Heftregals (E282). */
+    const ORDNER_SCHLUESSEL = 'bibOrdner';
+    const ordnerLesen = () => {
+        if (typeof Store === 'undefined' || !Store.getMeta)
+            return null;
+        const id = String(Store.getMeta(ORDNER_SCHLUESSEL, '') || '');
+        if (!id)
+            return null;
+        /* EIN GELÖSCHTER ORDNER FÜHRT AN DIE WURZEL, NICHT INS NICHTS.
+           Dieselbe Regel wie beim Heftregal (test276): ein gemerkter Ort, den
+           es nicht mehr gibt, ist kein Ort. */
+        const p = Store.getBlock(id);
+        return (p && p.alive !== false) ? id : null;
+    };
+    let zustand = { reiter: 'ablage', ordner: null,
+        sortier: 'wann', richtung: 'ab',
         suche: '', sucheOffen: false, spalten: SPALTEN.map(s => s.id),
         /* Der Artfilter der Deckelansicht (E236). Er steht NEBEN
            `reiter`, nicht darin: der Reiter fragt „wo liegt es",
@@ -297,6 +324,32 @@ const Bibliothek = (() => {
             return Array.isArray(entries) ? entries.length > 0 : Object.keys(entries).length > 0;
         };
         let liste = alle;
+        /* ---- DIE ABLAGE ZEIGT EINE EBENE (E380) -----------------------------
+         * Bis hierher zeigte JEDER Reiter den ganzen Bestand flach: ein Ordner
+         * stand neben seinem eigenen Inhalt, und ein Unterordner zwei Ebenen
+         * tiefer lag gleich daneben. Ein Ordner war damit ein Etikett, kein Ort.
+         *
+         * In der Ablage sind es jetzt nur die direkten Kinder des offenen
+         * Ordners — und an der Wurzel die Wurzelseiten. Die übrigen Reiter
+         * bleiben absichtlich flach: „Kürzlich verwendet" und „Favoriten" sind
+         * Fragen über ALLES, nicht über eine Ebene.
+         * -------------------------------------------------------------------- */
+        if (zustand.reiter === 'ablage') {
+            const ordner = zustand.ordner;
+            liste = ordner
+                ? alle.filter(p => p.parentId === ordner && p.parentTable !== 'collection')
+                : alle.filter(p => !p.parentId && p.parentTable !== 'collection');
+            /* Ordner zuerst, dann nach Namen — wie in einem Dateibrowser. Nach
+               Zeit zu sortieren wäre hier falsch: eine Ablage soll an derselben
+               Stelle stehen bleiben, sonst sucht man bei jedem Besuch neu. */
+            liste = liste.slice().sort((a, b) => {
+                const oa = artVon(a).id === 'ordner' ? 0 : 1;
+                const ob = artVon(b).id === 'ordner' ? 0 : 1;
+                if (oa !== ob)
+                    return oa - ob;
+                return String(a.text || '').localeCompare(String(b.text || ''), 'de', { sensitivity: 'base', numeric: true });
+            });
+        }
         if (zustand.reiter === 'kuerzlich')
             liste = alle.filter(p => p.zuletztGeoeffnet || p.edited)
                 .sort((a, b) => zeitZahl(b.zuletztGeoeffnet || b.edited) -
@@ -390,6 +443,59 @@ const Bibliothek = (() => {
         if (p.heftArt === 'fach' || (unterseiten.length >= 2 && unterseiten.length >= kinder.length - 1))
             return { id: 'ordner', name: unterseiten.length + (unterseiten.length === 1 ? ' Sache' : ' Sachen') };
         return { id: 'seite', name: 'Seite' };
+    };
+    /* ---- HINEIN UND ZURÜCK (E380) ------------------------------------- *
+     * Der ganze Unterschied zu vorher: ein Tipp auf einen Ordner ÖFFNET ihn
+     * nicht als Seite, sondern GEHT HINEIN — dieselbe Ansicht, eine Ebene
+     * tiefer. Das ist es, was Redur an GoodNotes gezeigt hat.
+     * ------------------------------------------------------------------- */
+    /** Der Weg von der Wurzel bis zum offenen Ordner — für die Brotkrume. */
+    const ordnerWeg = () => {
+        const weg = [];
+        let id = zustand.ordner;
+        const gesehen = new Set();
+        while (id && !gesehen.has(id)) {
+            gesehen.add(id);
+            const p = Store.getBlock(id);
+            if (!p || p.alive === false)
+                break;
+            weg.unshift(p);
+            id = p.parentTable === 'collection' ? null : (p.parentId || null);
+        }
+        return weg;
+    };
+    /** In einen Ordner gehen (null = zurück an die Wurzel). */
+    const geheIn = (id) => {
+        zustand.ordner = id;
+        zustand.reiter = 'ablage';
+        /* Der Artfilter gilt der Ebene, nicht dem Weg — wer in einen Ordner
+           geht, will sehen, was darin liegt, und nicht „von dieser Art gibt es
+           hier nichts". */
+        zustand.art = 'alle';
+        if (typeof Store !== 'undefined' && Store.setMeta)
+            Store.setMeta(ORDNER_SCHLUESSEL, id || '');
+        App.zeichneSeite();
+    };
+    /** Eine Ebene hoch. An der Wurzel tut sie nichts. */
+    const geheHoch = () => {
+        const weg = ordnerWeg();
+        const oben = weg.length >= 2 ? weg[weg.length - 2] : null;
+        geheIn(oben ? oben.id : null);
+    };
+    /** Die Brotkrume der Ablage. An der Wurzel schweigt sie — ein Pfad mit
+     *  genau einem Glied ist kein Pfad, sondern eine Zeile Luft. */
+    const ordnerKrume = () => {
+        const weg = ordnerWeg();
+        if (!weg.length)
+            return '';
+        return '<nav class="bib-krume" aria-label="Wo ich bin">' +
+            '<button data-hoch aria-label="Eine Ebene zurück">\u2039</button>' +
+            '<button data-ordner="">Dokumente</button>' +
+            weg.map((p, i) => '<span aria-hidden="true">\u203a</span>' +
+                (i === weg.length - 1
+                    ? '<b>' + esc(p.text || 'Ohne Titel') + '</b>'
+                    : `<button data-ordner="${esc(p.id)}">` + esc(p.text || 'Ohne Titel') + '</button>')).join('') +
+            '</nav>';
     };
     /** Die Filterzeile über dem Regal — sie filtert nach ART, nicht nach Ort. */
     const ART_FILTER = [
@@ -746,8 +852,14 @@ const Bibliothek = (() => {
      */
     const deckelKopf = (anzahl, gesamt = anzahl) => {
         const ort = REITER.find(r => r.id === zustand.reiter)?.name || 'Alle';
+        /* DER TITEL IST DER ORDNER, IN DEM MAN STEHT (E380) — wie in GoodNotes:
+           oben steht nicht die App, sondern wo man ist. An der Wurzel bleibt es
+           „Dokumente". */
+        const weg = zustand.reiter === 'ablage' ? ordnerWeg() : [];
+        const hier = weg.length ? String(weg[weg.length - 1].text || 'Ohne Titel') : 'Dokumente';
         return '<header class="bib-dkopf">' +
-            '<h1>Dokumente</h1>' +
+            ordnerKrume() +
+            '<h1>' + esc(hier) + '</h1>' +
             '<button class="bib-neu" data-neu-auf>' +
             '<b aria-hidden="true">+</b><span>Neu</span></button>' +
             '<button class="bib-form-knopf" data-form="liste" ' +
@@ -864,6 +976,8 @@ const Bibliothek = (() => {
             });
         }));
         wrap.querySelectorAll('[data-neu-auf]').forEach(b => b.addEventListener('click', () => App.erstellenBlatt()));
+        wrap.querySelectorAll('[data-hoch]').forEach(b => b.addEventListener('click', () => geheHoch()));
+        wrap.querySelectorAll('[data-ordner]').forEach(b => b.addEventListener('click', () => geheIn(b.dataset['ordner'] || null)));
         wrap.querySelectorAll('.bib-deckel[data-id]').forEach(k => {
             k.addEventListener('click', ereignis => {
                 /* Der Pfeil im Namen öffnet das Menü zum Stück, nicht das Stück. */
@@ -871,8 +985,18 @@ const Bibliothek = (() => {
                     ereignis.target.closest('.bib-deckel-mehr'))
                     return;
                 const id = k.dataset['id'];
-                if (id)
-                    App.oeffne(id);
+                if (!id)
+                    return;
+                /* EIN ORDNER IST EIN ORT, KEIN DOKUMENT (E380). Bis hierher ging
+                   auch er durch `App.oeffne` — und man landete in einer leeren
+                   Seite mit Cursor, weil `Inhaltsflaeche` einem Fach ohne Kinder
+                   sogar einen Textblock anlegt. Der Inhalt stand nur links im
+                   Baum. */
+                if (zustand.reiter === 'ablage' && k.dataset['art'] === 'ordner') {
+                    geheIn(id);
+                    return;
+                }
+                App.oeffne(id);
             });
             k.querySelector('.bib-deckel-mehr')?.addEventListener('click', ereignis => {
                 ereignis.stopPropagation();
@@ -1087,11 +1211,32 @@ const Bibliothek = (() => {
      * dieselbe Sache sind einer zu viel. Das Modul heisst weiter
      * `Bibliothek` — es ist der Ordner, nicht die Aufschrift.
      */
-    const oeffne = () => {
+    /**
+     * Das Regal öffnen — wahlweise in einem bestimmten Ordner (E380).
+     *
+     * Das Ziel ist der Draht, den der ZIP-Import gebraucht hat: `importZip`
+     * kennt seit E350 die Kennung des entstandenen Wurzelfachs, gab sie
+     * zurück — und niemand las sie. Jetzt springt der Bildschirm dorthin,
+     * statt den Menschen einen Toast lesen zu lassen.
+     */
+    const oeffne = (ordnerId) => {
         try {
             Seitenleiste.reiter('dokumente');
         }
         catch { /* ohne Leiste kein Reiter */ }
+        if (ordnerId !== undefined) {
+            zustand.reiter = 'ablage';
+            zustand.art = 'alle';
+            zustand.ordner = ordnerId || null;
+            if (typeof Store !== 'undefined' && Store.setMeta)
+                Store.setMeta(ORDNER_SCHLUESSEL, zustand.ordner || '');
+        }
+        else if (zustand.reiter === 'ablage' && zustand.ordner === null) {
+            /* Beim gewöhnlichen Öffnen den gemerkten Ordner aufnehmen — wer die
+               App zumacht, während er in einem Ordner steht, steht danach wieder
+               darin (wie das Heftregal seit E282). */
+            zustand.ordner = ordnerLesen();
+        }
         App.zeigeSonder('Dokumente', zeichnen);
     };
     /* ------------------------------------------------------------------ *

@@ -3046,3 +3046,30 @@ die Zeugnisnote je Semester (E242) und der echte Stundenplan (E243).
   als unverändert, jetzt wird neu gezeichnet — mehr Arbeit als nötig, nie
   zu wenig. Gegenprobe: der Abgleich hält jede Marke für unverändert →
   test350 rot, genau an dem Fall, für den `gezeichnet` gebaut wurde.
+
+* E380 (Redurs vier GoodNotes-Fotos, „es öffnet gleich wie es"): Das Regal
+  bekommt Ebenen — ein Ordner ist ein Ort, kein Etikett. Das Dokumente-Regal
+  (`bibliothek.ts`, untere Leiste → „Dokumente") zeigte alles flach; ein Tipp
+  auf einen Ordner tat nichts, und nach dem Entpacken einer ZIP landete man
+  an der flachen Wurzel. Jetzt: ein Reiter „Ablage" mit Filter nach Ebene
+  (`parentId === ordner`), Hineingehen (`geheIn`), Hochgehen (`geheHoch`),
+  eine Brotkrume (`.bib-krume`), ein gemerkter offener Ordner (`meta.bibOrdner`,
+  übersteht das Neuladen), und `ansichtAuffrischen(wurzelId)` stellt den
+  Bildschirm nach dem Entpacken in den entstandenen Ordner. Der Fund, der
+  die Arbeit klein machte: begehbare Ordner gab es schon — aber im Heft-Regal
+  (`notebook.ts`), dessen `heftArtig` PDFs und Lernsets ausschliesst; und
+  `importZip` gab die `wurzelId` seit E350 zurück, kein Aufrufer las sie.
+  Prüfung `test369` (36 Punkte, 7 Abschnitte, echter ZIP-Rundlauf über
+  `Austausch.zipSchreiben`). Zwei Gegenproben rot gesehen: den Ablage-Filter
+  wieder flach → §1/§2/§6 rot; die `wurzelId` fallen lassen → §6 rot (der
+  Bildschirm bleibt an „Dokumente" statt in „Kurs 2027"). Offen bleibt (L120):
+  zwei Regale für dieselbe Sache, und eine untere Leiste, die noch nicht
+  GoodNotes folgt.
+
+  Arbeitsnotiz zur Gegenprobe: `git checkout` auf die GEBAUTE `bibliothek.js`
+  hätte fast die unversionierte E380-Arbeit verworfen — die Datei ist Ausgabe
+  aus `src/`, der Checkout holte den Stand von HEAD (ohne E380). Gerettet, weil
+  die `.ts`-Quelle unberührt war und `npm run bauen:ts` sie neu erzeugt. Lehre:
+  eine Gegenprobe an der gebauten Datei wird danach mit `npm run bauen:ts`
+  zurückgeholt, nicht mit `git checkout` — auch nicht auf eine einzelne Datei
+  (§43).

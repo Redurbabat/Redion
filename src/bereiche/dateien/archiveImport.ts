@@ -225,12 +225,31 @@ const ArchivImport = (() => {
     return s;
   };
 
-  /** Die Ansicht neu zeichnen, in der man gerade steht — Regal, Notizhefte
-      oder die offene Seite. */
-  const ansichtAuffrischen = (): void => {
+  /**
+   * Die Ansicht neu zeichnen — und mit `wurzelId` DORTHIN GEHEN (E380).
+   *
+   * Bis hierher wurde nur aufgefrischt. Wer eine ZIP mit siebenundachtzig
+   * Dateien entpackte, sah danach denselben Bildschirm wie vorher und einen
+   * Toast, der neun Sekunden lang sagte, dass etwas passiert sei. Wo es
+   * hingekommen war, musste er selbst suchen — und im flachen Regal lag der
+   * neue Ordner zwischen sechzig frisch berührten Einzeldokumenten.
+   *
+   * Redur hat GoodNotes danebengehalten: dort ist man nach dem Entpacken
+   * IM Ordner. Die Kennung dafür gab es die ganze Zeit — `importZip` setzt
+   * sie seit E350 als `wurzelId` und niemand las sie.
+   */
+  const ansichtAuffrischen = (wurzelId?: string | null): void => {
     const ort = typeof App !== 'undefined' && App.schauplatz ? App.schauplatz() : '';
     const N = (globalThis as any).Notebook;
-    if (ort === 'bibliothek' && typeof Bibliothek !== 'undefined') Bibliothek.oeffne();
+    const ziel = wurzelId && typeof Store !== 'undefined' && Store.getBlock
+      && Store.getBlock(wurzelId) ? String(wurzelId) : null;
+    if (ziel && typeof Bibliothek !== 'undefined' && Bibliothek.oeffne) {
+      /* Auch wenn man gerade woanders steht: nach dem Entpacken will man
+         sehen, was entpackt wurde. Das ist keine Entführung, sondern die
+         Antwort auf die Handlung, die man selbst ausgelöst hat. */
+      Bibliothek.oeffne(ziel);
+    }
+    else if (ort === 'bibliothek' && typeof Bibliothek !== 'undefined') Bibliothek.oeffne();
     else if (ort === 'notizhefte' && N && N.oeffnen) N.oeffnen();
     else if (typeof App !== 'undefined') { App.zeichneSeite(); }
     if (typeof App !== 'undefined' && App.zeichneBaum) App.zeichneBaum();
@@ -513,7 +532,7 @@ const ArchivImport = (() => {
     if (!ergebnis.abgebrochen && ergebnis.dokumente > 0) lernen(buch);
     if (!opt.still && !opt.beiSchritt) {
       if (typeof UI !== 'undefined' && UI.toast) UI.toast(ergebnis.hinweis, 9000);
-      ansichtAuffrischen();
+      ansichtAuffrischen(ergebnis.wurzelId || null);
     }
     return ergebnis;
   };
@@ -599,7 +618,21 @@ const ArchivImport = (() => {
     try {
       Ereignisse.horche('auftrag.beendet', (d: any) => {
         if (!d || d.art !== AUFTRAG_ART) return;
-        ansichtAuffrischen();
+        /* WOHIN, STEHT IM FERTIGEN AUFTRAG (E380). Die Meldung selbst trägt
+           nur `{id, art, zustand}` — das Ergebnis des Läufers landet im
+           Auftrag unter `stand` (maschine.ts:474). Von dort kommt die
+           Kennung des entstandenen Wurzelfachs.
+
+           Ein ABGEBROCHENER Lauf springt nicht: dort ist die Hälfte da, und
+           den Bildschirm eines Menschen wegzuschieben, während er etwas
+           anderes tut, wäre keine Antwort, sondern eine Störung. */
+        if (d.zustand !== 'fertig') { ansichtAuffrischen(); return; }
+        const holen = (typeof Auftraege !== 'undefined' && Auftraege.einer)
+          ? Auftraege.einer(String(d.id)) : null;
+        Promise.resolve(holen).then((a: any) => {
+          const wurzel = a && a.stand && a.stand.wurzelId ? String(a.stand.wurzelId) : null;
+          ansichtAuffrischen(wurzel);
+        }).catch(() => ansichtAuffrischen());
       });
     } catch { /* ohne Bus frischt der nächste Klick auf */ }
   }
