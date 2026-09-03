@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-364 Entscheidungen, E1 bis E368. Die Nummer ist die Ordnung: eine Entscheidung
+366 Entscheidungen, E1 bis E370. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -402,7 +402,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E349** — Der Start zeigt, wo man war: die PDF, sonst das Regal (Redurs Punkt 1)
 * **E350** — Eine ZIP kommt so ins Regal, wie sie ist (Redurs Punkt 2)
 
-**E351–E368**
+**E351–E370**
 
 * **E351** — Der Stift schreibt wie eine Hand: Füller, Kugelschreiber, Pinsel (Redurs Punkt 3, erster Bogen)
 * **E352** — Der Radierer streicht, teilt und kennt den Rückknopf des Stifts (Redurs Punkt 3, zweiter Bogen)
@@ -422,6 +422,8 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E366** — Das Regal zeigt die ganze Schachtelung (L78 Punkt 2, L114 Punkt 3 halb)
 * **E367** — Die Zahl im Bibliothekskopf ist eine Zahl, keine Decke (L116)
 * **E368** — Ziehen und Ablegen im Regal (L78 Punkt 1, L114 Punkt 4)
+* **E369** — Die Spalte nimmt die Breite, die sie bekommt (Rückfall aus E359)
+* **E370** — CLAUDE.md aufgeräumt: Marken, Verzeichnis, und ein Zaun, der 891 Zeilen verschluckt hat
 
 ---
 
@@ -29463,3 +29465,171 @@ test178 §5 und §6 — beide waren VOR der Änderung rot und sind es nach dem
 Zurückdrehen wieder. Das ist die Gegenprobe, nur andersherum gelaufen als
 sonst: nicht die Prüfung gegen den Code, sondern der Code gegen eine
 Prüfung, die zwei Tage lang rot war.
+
+
+════════════════════════════════════════════════════════════════════════════
+E370 — CLAUDE.md aufgeräumt: Marken, Verzeichnis, und ein Zaun, der 891
+Zeilen verschluckt hat
+════════════════════════════════════════════════════════════════════════════
+
+BEFUND: Redur wollte CLAUDE.md, ENTSCHEIDUNGEN.md und AUFGABEN.md aufgeräumt
+haben, und er hat dazu eine Bedingung gestellt, die den ganzen Durchgang
+geprägt hat:
+
+    „du muss mir fragen welche regel streng sind welche unsicher und sonst
+     alles aufräumen ordnung geben und strukturiert, wenn es geht bischen
+     detalierter"
+
+Also nicht kürzen. Ordnen — und dabei sagen, was verbindlich ist und was
+nur der Normalfall.
+
+Beim Lesen der 2469 Zeilen kamen acht Dinge heraus, die nicht mehr stimmten.
+Sieben davon sind gewöhnliche Verwitterung. Das achte ist ein echter Fehler:
+
+DER ZAUN
+────────
+In der ganzen Datei stand **genau ein** Code-Zaun: ```txt in Zeile 1578,
+mitten in §52. Er wurde nie geschlossen. Alles danach — §52.1 bis §55.4,
+891 Zeilen, darunter die vollständige Sprachregel, die TypeScript-Phasen,
+die zentralen Typen und der ganze Abschnitt „Bilder machen, nicht nur Code
+lesen" — stand für jeden, der die Datei gerendert liest, in einem einzigen
+grauen Kasten.
+
+Das ist die Sorte Fehler, gegen die §55 geschrieben ist, und sie hat §55
+selbst getroffen. Niemand hat es bemerkt, weil CLAUDE.md meistens als
+Rohtext gelesen wird — und im Rohtext sieht ein offener Zaun aus wie eine
+Zeile mit drei Strichen.
+
+DIE ANDEREN SIEBEN
+──────────────────
+* §9 zählte neun Speicherfächer. Es sind elf: `suchindex` und `auftraege`
+  fehlten, seit E286 die Auftragsmaschine gebaut hat.
+* §30 und §31 nannten Prüfläufe als `.mjs`. Seit E28 gibt es im ganzen
+  Projekt keine einzige von Hand geschriebene `.mjs` mehr — die Läufe heissen
+  `.mts`, und der genannte Befehl lief ins Leere.
+* §52.6 zeigte eine Wunschkonfiguration. Die echte hat vier Schalter mehr,
+  darunter `noUnusedLocals` — der Schalter, der heute eine Mutationsprobe
+  am Bauen gehindert hat, weil das Herausnehmen einer Zeile die letzte
+  Verwendung einer Konstanten mitnahm.
+* §54.2 nannte `pruefungen/lauf/testNN.ts`. Die Dateien heissen `.mts`.
+* §54.4 sagte, `js-bestand.json` führe „jede von Hand geschriebene .js/.mjs,
+  die es heute gibt". Das Verzeichnis ist **leer**. Die Regel aus E28 ist
+  seit heute kein Vorsatz mehr, sondern ein Zustand — und das ist eine gute
+  Nachricht, die in der Datei nicht stand.
+* §55.1 nannte `node bilder.mjs`. Das Werkzeug heisst `bilder.mts`; §55.4
+  sagt es zwei Absätze später sogar selbst.
+* §49 empfahl vier „nächste Arbeiten", die alle erledigt sind — darunter
+  „doku/REDION-FORMAT.md erstellen" für eine Datei, die es gibt, und
+  „CLAUDE.md aktuell halten" in einer Datei, die es nicht war.
+* §52.19 stand hinter §53. §53 war irgendwann mitten in §52 eingefügt worden
+  und hatte dessen Schlusssatz abgehängt.
+
+WAS GEBAUT WURDE
+────────────────
+1. **Marken.** Jeder Abschnitt trägt jetzt **[hart]** oder **[Richtwert]**,
+   mit einer Legende ganz oben. Hart heisst: ein Verstoss ist ein Fehler,
+   kein Stil. Richtwert heisst: abweichen erlaubt, aber mit geschriebenem
+   Grund an Ort und Stelle — nicht stillschweigend.
+
+   Drei Abschnitte tragen **[hart im Kern]**, weil sie beides enthalten:
+   §37 (Telefon), §38 (Barrierefreiheit), §55 (Bilder). Dort steht, welcher
+   Teil welcher ist.
+
+2. **Vier Marken hat Redur selbst gesetzt**, und sie sind der eigentliche
+   Inhalt dieses Bogens:
+
+   §30 — Der volle Lauf läuft **in Stücken und wiederaufnehmbar**. Zehn
+   Läufe je Stück, eine Merkdatei. Bricht die Sitzung ab, geht das laufende
+   Stück verloren, nicht die Stunde davor. Das stand seit Wochen als Praxis
+   im Schattenverzeichnis und jetzt endlich als Regel in der Datei.
+
+   §37 — **44 px auf den Hauptwegen, 32 px auf Nebenwegen mit geschriebenem
+   Grund.** Der Absatz nennt auch, warum es die Ausnahme braucht: eine
+   44-px-Regel ohne Ausnahme macht eine fünfstufige Brotkrume höher als den
+   Inhalt darunter; eine 44-px-Regel mit STILLER Ausnahme führt dazu, dass
+   irgendwann der Speichern-Knopf 28 px hat.
+
+   §46 — **Rot zuerst. Fertige grüne Bögen dürfen landen. `main` bewegt sich
+   nicht.** Drei Sätze, die vorher nirgends zusammen standen, obwohl seit
+   Monaten danach gearbeitet wird.
+
+   §55.3 — **Ein Bild, wenn man etwas sehen kann; sonst eine Messung.** Die
+   alte Fassung verlangte ein Bild nach jeder Änderung, und genau das ist
+   der Fehler, den dieses Projekt fünfmal gemacht hat: eine Anzeige, die
+   IMMER etwas anzeigt, wird nicht gelesen. Zwanzig Bilder unveränderter
+   Seiten machen das eine Bild unsichtbar, auf dem die Werkzeugleiste aus
+   dem Bild ragt.
+
+3. **Ein Inhaltsverzeichnis** mit zwölf Teilen. Die Nummern bleiben, was sie
+   sind — §46 heisst weiter §46, weil ENTSCHEIDUNGEN.md, LUECKEN.md, die
+   Prüfläufe und die Kommentare im Quelltext darauf zeigen. Umgeschrieben
+   wurde, nicht umnummeriert.
+
+4. **Aus Wänden wurden Listen.** §1–§51 standen als Textwand da, jede Zeile
+   durch eine Leerzeile getrennt, ohne eine einzige Überschrift. Jetzt:
+   Überschriften, Tabellen, Listen. Der Inhalt ist derselbe — nachgeprüft
+   gegen 44 Stichwörter aus dem alten Text, von „Ereignisbus" über
+   „Pfad-Traversal" bis „Side Peek". Keins fehlt.
+
+5. **§47 ist eine Tabelle mit Verweisen geworden.** Sechzehn „nicht tun",
+   jedes mit dem Abschnitt, in dem der Grund steht. Eine Verbotsliste ohne
+   Begründung wird auswendig gelernt statt verstanden, und dann wird sie
+   umgangen, sobald sie unbequem ist.
+
+6. **„Offene Fragen an Redur"** am Ende: fünf Marken, die Claude gesetzt hat,
+   weil irgendetwas dastehen musste. Sie gehören ihm, und bis er etwas sagt,
+   gilt der Vorschlag. Eine Marke, die vorgibt entschieden zu sein, ist
+   schlimmer als eine, die zugibt, es nicht zu sein.
+
+WAS BEI DEN ANDEREN ZWEI DATEIEN GEMACHT WURDE
+──────────────────────────────────────────────
+Nach Redurs eigenen Antworten vom selben Tag:
+
+* **ENTSCHEIDUNGEN.md** — „Nur Inhaltsverzeichnis, Text bleibt." Also ein
+  Verzeichnis aller Einträge vorne, in Blöcken zu fünfzig. Kein Eintrag ist
+  umgezogen, keiner gekürzt.
+* **AUFGABEN.md** — „Gar nichts, nur ein Verweis." Von 2962 Zeilen bleiben
+  212: fünf offene Punkte, jeder nachgesehen. Die 2940 Zeilen Geschichte
+  stehen vollständig in der neuen `ERLEDIGTE-AUFGABEN.md`.
+
+  Beim Nachsehen kam heraus, dass **vier von sieben** „offenen" Punkten
+  längst gebaut waren — XLSX-Mehrblatt, ODS, XLSX-in-Datenbank und ZIP64
+  (letzteres bewusst nicht gebaut, mit Begründung). Das ist derselbe Fund
+  wie E21, nur in einer anderen Datei: ein Punkt, der als offen dasteht,
+  ohne dass jemand nachgesehen hat, lenkt die Arbeit auf etwas, das es
+  nicht mehr gibt.
+
+WAS NICHT GEMACHT WURDE
+───────────────────────
+**Nichts gelöscht.** Keine Regel ist verschwunden, auch keine, die
+überflüssig aussah. Wo zwei Abschnitte dasselbe sagten (§3 und §53 zur
+Sprache, §6 und §47 zu React), steht die kurze Fassung mit einem Verweis
+auf die lange — nicht eine statt der anderen.
+
+**Nicht umnummeriert.** Siehe oben, Punkt 3.
+
+**Die Datei ist nicht kürzer geworden**, und das war Absicht: 2469 → 2295
+Zeilen, bei deutlich mehr Struktur. Redur wollte „bischen detalierter", und
+das heisst mehr Erklärung je Regel, nicht weniger Text.
+
+WAS DARAUS FOLGT, ÜBER DIESEN FALL HINAUS
+─────────────────────────────────────────
+Eine Regeldatei verwittert schneller als Code, weil kein Prüflauf sie
+anfasst. `test109` liest genau EINEN Satz aus CLAUDE.md („kein neues
+JavaScript"); die anderen 2294 Zeilen könnten beliebigen Unsinn behaupten,
+und nichts würde rot.
+
+Deshalb steht am Ende der Datei jetzt ein Datum. Nicht als Zierde: Wer in
+sechs Monaten hineinsieht und dort „zuletzt durchgesehen am 3. September
+2026" liest, weiss, wie viel Vertrauen die Zahlen darin verdienen — und
+dass ein Abschnitt ohne dieses Datum überhaupt keins verdient.
+
+PRÜFUNG: test109 24/24 (liest CLAUDE.md), test225 11/11 (prüft jeden
+Quellenverweis der Doku auf eine Datei und jeden Abschnittsverweis auf einen
+Abschnitt, der es wirklich gibt). 44 Stichwörter aus dem alten Text gegen
+den neuen geprüft — keins fehlt. Die Zäune sind gerade: 36 statt 1.
+
+KEINE MUTATIONSPROBE: es gibt hier keinen neuen Wächter zu prüfen. Die
+Gegenprobe ist die Stichwortliste, und die war beim ersten Durchlauf rot —
+„Mobile Geräte beachten" aus §36 und das Wort „Tombstones" aus §25 waren
+tatsächlich verschwunden. Beide sind wieder drin.

@@ -1,1575 +1,1332 @@
-CLAUDE.md — Regeln für Redion
+# CLAUDE.md — Regeln für Redion
 
-Redion ist eine Notiz-, Datenbank- und Wissens-App im Stil von Notion.  
+Redion ist eine Notiz-, Datenbank- und Wissens-App im Stil von Notion.
+Sie ist local-first, läuft direkt im Browser, kann ohne Konto benutzt werden
+und lässt sich optional mit einem Server auf Cloudflare erweitern.
 
-Sie ist local-first, läuft direkt im Browser, kann ohne Konto benutzt werden und soll optional mit einem Server/Cloudflare erweitert werden.
+**Die fünf Ziele, aus denen alles Übrige folgt:**
 
-Die wichtigsten Ziele:
+1. **Daten gehören dem Nutzer.** Nicht dem Server, nicht dem Konto, nicht uns.
+2. **Die App läuft lokal, offline und ohne Server.** Das ist der Normalfall,
+   nicht der Notfall.
+3. **Ein Server darf mehr möglich machen** — Abgleich, Rechte, Teilen,
+   Sicherung in der Wolke — aber nie zur Bedingung werden.
+4. **Grosse Dateien dürfen nicht zu Datenverlust oder Speicherabsturz führen.**
+5. **Redion bleibt einfach startbar:** `index.html` doppelklicken oder
+   `redion-einzeldatei.html` öffnen. Kein Bauschritt, keine Installation.
 
-Daten gehören dem Nutzer.
+Und der Satz, der über allem steht (§51):
 
-Die App läuft lokal, offline und ohne Server.
+> Redion darf lieber langsamer neue Funktionen bekommen, als jemals
+> Nutzerdaten zu verlieren.
 
-Ein optionaler Server darf Sync, Rechte, Teilen und Cloud-Sicherung ermöglichen.
+---
 
-Große Dateien und Anhänge dürfen nicht zu Datenverlust oder Speicherabsturz führen.
+## Wie diese Datei zu lesen ist
 
-Redion bleibt einfach startbar: index.html öffnen oder redion-einzeldatei.html nutzen.
+**Jeder Abschnitt trägt eine Marke.** Sie sagt, was ein Verstoss bedeutet:
 
-Architektur bleibt modular: kern/, register/, schale/, bereiche/.
+| Marke | Bedeutung |
+|---|---|
+| **[hart]** | Nicht brechen. Ein Verstoss ist ein Fehler, kein Stil. Wenn es doch sein muss, entscheidet Redur, und die Entscheidung kommt in `ENTSCHEIDUNGEN.md`. |
+| **[Richtwert]** | Der Normalfall. Abweichen ist erlaubt — aber mit einem geschriebenen Grund an Ort und Stelle, nicht stillschweigend. |
 
-Kein Bereich darf einen anderen Bereich direkt abhängig machen.
+Die Marken sind ein Vorschlag, wo Redur nicht selbst entschieden hat. Vier
+hat er am 3. September 2026 selbst entschieden: §30, §37, §46 und §55.3.
+Was noch offen ist, steht am Ende unter „Offene Fragen an Redur".
 
-Jede Änderung muss testbar und sicher sein.
+**Die Abschnittsnummern sind fest.** `ENTSCHEIDUNGEN.md`, `LUECKEN.md`,
+Prüfläufe und Kommentare im Quelltext verweisen auf „§46" oder „§55.2".
+Umnummerieren würde all das ins Leere zeigen lassen — also wird
+umgeschrieben, aber nicht umnummeriert.
 
+**Wo was steht:**
 
+| Datei | Frage |
+|---|---|
+| `CLAUDE.md` | Nach welchen Regeln wird gearbeitet? |
+| `AUFGABEN.md` | Was ist noch zu tun? |
+| `ERLEDIGTE-AUFGABEN.md` | Was ist fertig, und was kam dabei heraus? |
+| `ENTSCHEIDUNGEN.md` | Warum wurde etwas so entschieden? (E1 … E369) |
+| `LUECKEN.md` | Was fehlt noch im Produkt? (L1 … L116) |
+| `doku/ARCHITEKTUR.md` | Wie ist es aufgebaut? |
+| `doku/REDION-FORMAT.md` | Wie sieht eine `.redion`-Sicherung von innen aus? |
+| `doku/TYPESCRIPT-MIGRATION.md` | In welcher Reihenfolge wird migriert? |
 
-1. Wichtigste Grundregel
+---
 
-Arbeite nur an Redion.
+## Inhalt
 
-Nicht an anderen Projekten arbeiten:
+Der Text steht in der Reihenfolge der Nummern; die Teile fassen zusammen, was
+zusammengehört.
 
-Nicht an BABAT-RED.
+**Teil I — Was Redion ist**
+[1](#1-wichtigste-grundregel--hart) Wichtigste Grundregel ·
+[2](#2-projektidentität--hart) Projektidentität ·
+[3](#3-sprache-und-stil--hart) Sprache und Stil
 
-Nicht an STRAN.
+**Teil II — Wie es gebaut ist**
+[4](#4-architektur-grundstruktur--hart) Grundstruktur ·
+[5](#5-die-drei-architekturregeln--hart) Die drei Architekturregeln ·
+[6](#6-kein-framework-zwang--hart) Kein Framework-Zwang ·
+[7](#7-startregel--hart) Startregel ·
+[8](#8-register-regeln--hart) Register-Regeln
 
-Nicht an RED-KURD.
+**Teil III — Daten, und warum sie das Wichtigste sind**
+[9](#9-speicherregeln--hart) Speicherregeln ·
+[10](#10-indexeddb-regeln--hart) IndexedDB ·
+[11](#11-backup-regeln--hart) Backup ·
+[12](#12-redion-format-dokumentieren--richtwert) Format dokumentieren ·
+[13](#13-export--und-import-regeln--hart) Export und Import ·
+[14](#14-datei--und-anhangsregeln--hart) Dateien und Anhänge ·
+[15](#15-versionsregeln--hart) Versionen ·
+[16](#16-multi-tab-regeln--hart) Mehrere Tabs ·
+[17](#17-datenmodell-regeln--hart) Datenmodell
 
-Nicht an musik-/RhythmVerse.
+**Teil IV — Was im Browser läuft**
+[18](#18-editor-regeln--richtwert) Editor ·
+[19](#19-sicherheitsregeln-browser--hart) Sicherheit im Browser ·
+[20](#20-formel-regeln--hart) Formeln ·
+[21](#21-ki-regeln--hart) KI
 
-Nicht an fremden Repositories.
+**Teil V — Server und Wolke, beide optional**
+[22](#22-server-regeln--hart) Server ·
+[23](#23-cloudflare-regeln--richtwert) Cloudflare ·
+[24](#24-konto-regeln--hart) Konto ·
+[25](#25-sync-regeln--hart) Abgleich ·
+[26](#26-rechte-regeln--hart) Rechte ·
+[27](#27-öffentliches-teilen--hart) Öffentliches Teilen
 
-Wenn unklar ist, ob eine Änderung zu Redion gehört, zuerst stoppen und prüfen.
+**Teil VI — Ausliefern und Prüfen**
+[28](#28-pwa--und-offline-regeln--hart) PWA und Offline ·
+[29](#29-einzeldatei-regeln--hart) Einzeldatei ·
+[30](#30-tests--prüfungen--hart) Prüfungen ·
+[31](#31-die-prüfläufe-die-man-kennen-muss--richtwert) Wichtige Prüfläufe
 
+**Teil VII — Was aufgeschrieben wird**
+[32](#32-doku-regeln--hart) Doku ·
+[33](#33-readme-regeln--richtwert) README ·
+[34](#34-entscheidungen-dokumentieren--hart) Entscheidungen ·
+[35](#35-lücken-dokumentieren--hart) Lücken
 
+**Teil VIII — Oberfläche für Menschen**
+[36](#36-performance-regeln--richtwert) Leistung ·
+[37](#37-mobile-regeln--hart-im-kern) Telefon ·
+[38](#38-barrierefreiheit--hart-im-kern) Barrierefreiheit ·
+[39](#39-css-regeln--richtwert) CSS
 
-2. Projektidentität
+**Teil IX — Sicherheit ausserhalb des Browsers**
+[40](#40-server-sicherheitsregeln--hart) Am Server ·
+[41](#41-bridge-regeln--hart) Bridge und Proxy ·
+[42](#42-secrets-regeln--hart) Secrets
 
-Redion ist:
+**Teil X — Wie gearbeitet wird**
+[43](#43-git-regeln--hart) Git ·
+[44](#44-pr-regeln--richtwert) Pull Requests ·
+[45](#45-reihenfolge-bei-arbeit--richtwert) Reihenfolge ·
+[46](#46-prioritäten--hart) Prioritäten ·
+[47](#47-nicht-tun--hart) Nicht tun ·
+[48](#48-wichtige-aktuelle-baustellen--richtwert) Baustellen ·
+[49](#49-empfohlene-nächste-arbeiten--richtwert) Nächste Arbeiten ·
+[50](#50-definition-von-fertig--hart) Definition von fertig ·
+[51](#51-wichtigster-satz--hart) Wichtigster Satz
 
-Notizen-App
+**Teil XI — TypeScript**
+[52](#52-typescript-ziel-und-code-stil) Ziel und Code-Stil ·
+[53](#53-code-sprache-und-typescript) Code-Sprache ·
+[54](#54-die-sprachen-dieses-projekts) Die Sprachen dieses Projekts
 
-Datenbank-App
+**Teil XII — Hinsehen**
+[55](#55-bilder-machen-nicht-nur-code-lesen) Bilder machen, nicht nur Code lesen
 
-Wissens-App
+---
+---
+---
 
-lokale Notion-Alternative
+# Teil I — Was Redion ist
 
-offline nutzbar
+## 1. Wichtigste Grundregel  **[hart]**
 
-optional cloudfähig
+**Arbeite nur an Redion.**
 
-exportierbar
+Nicht an anderen Projekten:
 
-sicherbar
+- nicht an BABAT-RED
+- nicht an STRAN
+- nicht an RED-KURD
+- nicht an musik- / RhythmVerse
+- nicht an fremden Repositories
 
-erweiterbar
+Amdion ist eine **Lesequelle** und wird nicht verändert
+(`doku/AMDION-UEBERNAHME.md`).
 
-Redion ist nicht:
+Wenn unklar ist, ob eine Änderung zu Redion gehört: **zuerst stoppen und
+fragen**, nicht anfangen und hinterher erklären.
 
-ein React-Projekt (E78 hat es kurz beschlossen, E80 hat es nach
-Ansicht des Rohbaus widerrufen — Redur braucht keine zweite Oberfläche)
+---
 
-ein schweres Framework-Projekt
+## 2. Projektidentität  **[hart]**
 
-eine Server-only-App
+**Redion ist:**
 
-eine reine Cloud-App
+- Notizen-App · Datenbank-App · Wissens-App
+- eine lokale Notion-Alternative
+- offline nutzbar, optional wolkenfähig
+- exportierbar, sicherbar, erweiterbar
 
-ein Projekt mit Pflichtkonto
+**Redion ist nicht:**
 
-ein Projekt mit Abo-Zwang
+- ein React-Projekt — E78 hat es am 8. August 2026 kurz beschlossen, E80 hat
+  es am 9. August nach Ansicht des Rohbaus widerrufen. Redur braucht keine
+  zweite Oberfläche.
+- ein schweres Framework-Projekt
+- eine Server-only-App oder eine reine Wolken-App
+- ein Projekt mit Pflichtkonto oder Abo-Zwang
+- ein Experimentierplatz für unnötige Abhängigkeiten
 
-ein Experimentierplatz für unnötige Dependencies
+---
 
+## 3. Sprache und Stil  **[hart]**
 
+Der ganze Abschnitt in einem Satz:
 
-3. Sprache und Stil
+> **Deutsch für Menschen. Englisch für Code.**
 
-Es gibt zwei Sprachen, und sie sind sauber getrennt. Die vollständige Regel
-steht in Abschnitt 53 und in ENTSCHEIDUNGEN.md unter E27; hier das Wichtigste:
+Ausführlich steht die Regel in **§53** und in `ENTSCHEIDUNGEN.md` unter E27 —
+dort auch die zwei harten Grenzen (Feldnamen sind Daten, keine Namen; keine
+Massenumbenennung). Hier nur das Nötigste:
 
-Deutsch für alles, was ein Mensch liest — Nutzertexte, Fehlermeldungen,
-Kommentare, Dokumentation.
+- **Deutsch** ist alles, was ein Mensch liest: Nutzertexte, Fehlermeldungen,
+  Kommentare, Dokumentation, Prüfnamen im Bericht.
+- **Englisch** ist neuer TypeScript-Code: Ordner, Dateien, Variablen,
+  Funktionen, Klassen, Interfaces, Typen, Testnamen im Code.
+- Der Bestand unter `quell/` ist deutsch benannt und **bleibt es**. Umbenannt
+  wird nur, was ohnehin migriert wird.
 
-Englisch für neuen TypeScript-Code — Ordner, Dateien, Variablen, Funktionen,
-Klassen, Interfaces, Typen, Enums, Tests.
+Weiter gilt für Namen aller Art:
 
-Der bestehende Bestand unter quell/ ist deutsch benannt und bleibt es. Er
-wird nicht massenhaft umbenannt, sondern nur dort, wo eine Datei ohnehin
-migriert wird.
+- klare, einfache Benennungen
+- keine englischen Marketingbegriffe
+- keine Abkürzungen ohne Grund
 
-klare, einfache Benennungen
+Die deutschen Ordnernamen des Bestands: `quell/`, `kern/`, `register/`,
+`bereiche/`, `ablage/`, `abgleich/`, `zugang/`, `sicherheit/`, `pruefungen/`,
+`doku/`.
 
-keine unnötig englischen Marketingbegriffe
+---
+---
 
-keine komplizierten Abkürzungen ohne Grund
+# Teil II — Wie es gebaut ist
 
-Beispiele:
+## 4. Architektur-Grundstruktur  **[hart]**
 
+```txt
+index.html                 lädt die App
 quell/
+  start.js                 der einzige Einstiegspunkt (§7)
+  kern/                    gemeinsame Logik, kennt keinen Bereich
+  register/                die zentralen Kataloge (§8)
+  schale/                  Aufbau, Seitenleiste, Dialoge, Layout, Stil
+  bereiche/                fachliche Bereiche (§5)
+src/                       neue TypeScript-Quelle (§52, §54)
+oeffentlich/               was ausgeliefert wird
+server/                    der optionale Server (§22, §23)
+doku/                      Architektur und Entscheidungen
+pruefungen/                echte Prüfungen gegen die echte App (§30)
+bauen.mts                  erzeugt redion-einzeldatei.html
+redion-einzeldatei.html    die App in einer Datei (§29)
+```
 
-kern/
+Bedeutung der vier Teile unter `quell/`:
 
-register/
+- **`kern/`** — gemeinsame Logik. Kennt keinen einzelnen Bereich und darf
+  keinen kennen.
+- **`register/`** — die zentralen Kataloge für Module, Navigation, Blöcke,
+  Eigenschaften, Ansichten, Formeln, Befehle, Tastenkürzel, Vorlagen und
+  Verbindungen.
+- **`schale/`** — App-Aufbau, Seitenleiste, Dialoge, Layout, globale
+  Oberfläche, Stil.
+- **`bereiche/`** — die fachlichen Bereiche: Editor, Datenbanken, Wissen, KI,
+  Dateien, Vorlagen, Kommentare, Erwähnungen, Seiten, Planen, Einstellungen,
+  Hilfe.
 
-bereiche/
+**Wo neuer Code hingehört**, kurz (ausführlich §53.4 und §54.2):
 
-ablage/
+| Was | Wohin | Was daraus wird |
+|---|---|---|
+| Code, den der Browser lädt | `src/…/name.ts` | `npm run bauen:ts` → `quell/…/name.js`, mitversioniert |
+| Code, den Node ausführt (Prüfläufe, Werkzeuge, Server) | `pruefungen/lauf/testNNN.mts`, `*.mts`, `server/**/*.ts` | nichts — Node führt die Datei unmittelbar aus |
 
-abgleich/
+---
 
-zugang/
+## 5. Die drei Architekturregeln  **[hart]**
 
-sicherheit/
+### Regel 1 — Bereiche importieren sich nicht gegenseitig
 
-pruefungen/
-
-doku/
-
-
-
-4. Architektur-Grundstruktur
-
-Die bestehende Struktur bleibt verbindlich:
-
-index.html
-quell/
-  start.js
-  kern/
-  register/
-  schale/
-  bereiche/
-oeffentlich/
-server/
-doku/
-pruefungen/
-bauen.mts
-redion-einzeldatei.html
-
-Bedeutung:
-
-index.html
-
-lädt die App.
-
-quell/start.js
-
-ist der einzige Einstiegspunkt.
-
-quell/kern/
-
-enthält gemeinsame Logik, die keinen Bereich kennt.
-
-quell/register/
-
-enthält zentrale Kataloge für Module, Navigation, Blöcke, Eigenschaften, Ansichten, Formeln, Befehle, Tastenkürzel, Vorlagen und Verbindungen.
-
-quell/schale/
-
-enthält App-Aufbau, Seitenleiste, Dialoge, Layout, globale Oberfläche und Stil.
-
-quell/bereiche/
-
-enthält fachliche Bereiche wie Editor, Datenbanken, Wissen, KI, Dateien, Vorlagen, Kommentare, Erwähnungen, Seiten, Planen, Einstellungen und Hilfe.
-
-server/
-
-enthält den optionalen Server für Cloudflare Workers/D1, Sync, Rechte und öffentliche Seiten.
-
-doku/
-
-enthält Architektur- und Entscheidungsdokumentation.
-
-pruefungen/
-
-enthält echte Prüfungen gegen die echte App.
-
-
-
-5. Die drei Architekturregeln
-
-Regel 1: Bereiche importieren sich nicht gegenseitig
-
-Ein Bereich darf nur verwenden:
-
-kern/
-register/
-eigene Dateien
-
-Ein Bereich darf nicht direkt aus einem anderen Bereich importieren.
+Ein Bereich darf verwenden: `kern/`, `register/`, eigene Dateien.
+**Sonst nichts.**
 
 Nicht erlaubt:
 
+```js
 import ... from "../datenbanken/..."
 import ... from "../editor/..."
 import ... from "../wissen/..."
+```
 
-Wenn ein Bereich etwas von einem anderen Bereich braucht:
+Wenn ein Bereich etwas von einem anderen braucht, gibt es drei Wege — in
+dieser Reihenfolge zu prüfen:
 
-Über Ereignisbus lösen.
+1. **Über den Ereignisbus** lösen.
+2. **Gemeinsame Logik nach `kern/`** verschieben.
+3. **Über `register/`** bekannt machen.
 
-Oder gemeinsame Logik nach kern/ verschieben.
+Der Wächter dafür ist `test87`.
 
-Oder über register/ bekannt machen.
-
-
-
-Regel 2: Neuer Bereich = zwei Register-Einträge
+### Regel 2 — Neuer Bereich = zwei Register-Einträge
 
 Ein neuer Bereich braucht grundsätzlich nur:
 
+```txt
 quell/register/module.js
 quell/register/navigation.js
+```
 
-Wenn mehr nötig ist, zuerst prüfen, ob der Bereich zu groß oder falsch geschnitten ist.
+Wenn mehr nötig scheint, ist zuerst zu prüfen, ob der Bereich zu gross oder
+falsch geschnitten ist.
 
+### Regel 3 — Neue Dinge sind Register-Objekte
 
+Eine neue Blockart, Ansicht, Eigenschaft, Formel, ein Befehl oder ein
+Tastenkürzel wird als **Objekt im passenden Register** eingetragen — nicht
+als Sonderfall irgendwo im Code verstreut.
 
-Regel 3: Neue Dinge sind Register-Objekte
+```txt
+register/bloecke.js      register/befehle.js       register/vorlagen.js
+register/eigenschaften.js register/tasten.js       register/verbindungen.js
+register/ansichten.js    register/formeln.js
+```
 
-Neue Blockart, Ansicht, Eigenschaft, Formel, Befehl oder Tastenkürzel werden als Objekt im passenden Register eingetragen.
+---
 
-Beispiele:
+## 6. Kein Framework-Zwang  **[hart]**
 
-register/bloecke.js
-register/eigenschaften.js
-register/ansichten.js
-register/formeln.js
-register/befehle.js
-register/tasten.js
-register/vorlagen.js
-register/verbindungen.js
+Redion läuft bewusst ohne Browser-Framework.
 
-Nicht überall verstreut neue Sonderfälle einbauen.
+Nicht einführen ohne sehr starken Grund und ohne eigene Entscheidung in
+`ENTSCHEIDUNGEN.md`: **React, Vue, Svelte, Angular, Next.js**, grosse
+UI-Bibliotheken, grosse State-Management-Bibliotheken, **Bündel-Zwang für die
+normale Nutzung**.
 
+Am 8. August 2026 wurde mit **E78** kurz eine React-Zielarchitektur
+beschlossen und als Rohbau begonnen. Redur hat sie am 9. August nach Ansicht
+des Rohbaus **widerrufen (E80)**. Diese Regel gilt damit unverändert weiter —
+und dieser Absatz steht hier, damit niemand den Versuch für eine offene Frage
+hält.
 
+Die App muss weiterhin auf **beiden** Wegen funktionieren:
 
-6. Kein Framework-Zwang
-
-Redion läuft bewusst ohne Browser-Framework. (Am 8. August 2026 wurde mit
-E78 kurz eine React-Zielarchitektur beschlossen und als Rohbau begonnen;
-Redur hat sie am 9. August nach Ansicht des Rohbaus widerrufen — E80. Die
-Regel hier gilt damit wieder unverändert.)
-
-Nicht einführen ohne sehr starken Grund:
-
-React
-
-Vue
-
-Svelte
-
-Angular
-
-Next.js
-
-große UI-Bibliotheken
-
-große State-Management-Libraries
-
-Bundler-Zwang für normale Nutzung
-
-Die App muss weiterhin funktionieren:
-
+```txt
 index.html doppelklicken
-
-und:
-
 redion-einzeldatei.html öffnen
+```
+
+Node und npm dürfen für Prüfungen, Bauen und Server genutzt werden — aber nie
+als Pflicht für die normale Nutzung.
 
-Node/npm darf für Prüfungen, Bauen und Server genutzt werden, aber nicht als Pflicht für normale Nutzung.
+---
 
+## 7. Startregel  **[hart]**
 
+`quell/start.js` bleibt der **einzige** Einstiegspunkt.
 
-7. Startregel
+Beim Start gilt:
 
-quell/start.js bleibt der einzige Einstiegspunkt.
+- DOM abwarten
+- App sauber initialisieren
+- Fehler abfangen — **keine stillen Abstürze**
+- keine doppelten Starts
+- **keine Bereichslogik in `start.js`**
 
-Beim Start:
+Wenn die Startlogik wächst, wandert sie in passende Dateien unter `kern/`
+oder `schale/`.
 
-DOM abwarten
+---
 
-App sauber initialisieren
+## 8. Register-Regeln  **[hart]**
 
-Fehler abfangen
+**Register sind die zentrale Wahrheit.** Bei einer neuen Funktion zuerst die
+Frage stellen, wohin sie gehört:
 
-keine stillen Abstürze
+| Was ist es? | Register |
+|---|---|
+| ein Block | `register/bloecke.js` |
+| eine Datenbankansicht | `register/ansichten.js` |
+| ein Eigenschaftstyp | `register/eigenschaften.js` |
+| ein Befehl | `register/befehle.js` |
+| ein Tastenkürzel | `register/tasten.js` |
+| eine Formel | `register/formeln.js` |
+| eine Vorlage | `register/vorlagen.js` |
+| eine Verbindung | `register/verbindungen.js` |
+| Navigation | `register/navigation.js` |
+| ein Bereich | `register/module.js` |
 
-keine doppelten Starts
+**Keine doppelten Kataloge einführen.** Ein zweiter Katalog für dasselbe
+läuft mit dem ersten auseinander, und niemand merkt, welcher gilt.
 
-keine Bereichslogik in start.js
+---
+---
 
-Wenn Startlogik wächst, in passende Dateien unter kern/ oder schale/ auslagern.
+# Teil III — Daten, und warum sie das Wichtigste sind
 
+## 9. Speicherregeln  **[hart]**
 
+Der lokale Speicher ist der Kern der App. **Elf Fächer** liegen heute in
+IndexedDB — nachgesehen in `src/kern/ablage/`, nicht erinnert:
 
-8. Register-Regeln
+| Fach | Was darin liegt |
+|---|---|
+| `blocks` | jeder Block, jede Seite, jede Datenbankzeile |
+| `collections` | die Datenbanken mit ihrem Schema |
+| `views` | die Ansichten auf die Datenbanken |
+| `meta` | Einstellungen und Kleinkram, Schlüssel `k` |
+| `versions` | der Versionsverlauf (§15) |
+| `dateien` | die Anhänge, ihre Angaben (§14) |
+| `stuecke` | die Stücke der Anhänge, damit nichts ganz in den RAM muss |
+| `basis` | der Bestand des Abgleichs |
+| `vorrat` | was noch zum Server hoch soll |
+| `suchindex` | der Index für die Suche |
+| `auftraege` | die Aufträge der Auftragsmaschine (E286) |
 
-Register sind die zentrale Wahrheit.
+**Die Regeln:**
 
-Neue Funktionen zuerst prüfen:
+- Keine Datenverluste riskieren.
+- Keine Migration ohne Prüflauf.
+- Keine Speicheränderung, ohne rückwärts zu denken: Was passiert mit Daten,
+  die vor der Änderung geschrieben wurden?
+- **Grosse Dateien nicht als riesige JSON-Zeichenketten behandeln.**
+- Blobs nicht blind mit `JSON.stringify()` sichern.
+- Kennungen nicht unnötig ändern.
+- Die Verweise zwischen Blöcken, Dateien und Datenbanken müssen stabil
+  bleiben.
+- **Ein Import darf vorhandene Daten nur löschen, wenn das Format diese Daten
+  wirklich abdeckt** (§11, §13).
+- Kaputte Daten müssen möglichst abgefangen werden, statt still zu wirken.
 
-Ist es ein Block? → register/bloecke.js
+---
 
-Ist es eine Datenbankansicht? → register/ansichten.js
+## 10. IndexedDB-Regeln  **[hart]**
 
-Ist es ein Eigenschaftstyp? → register/eigenschaften.js
+IndexedDB bleibt der Hauptspeicher im Browser. LocalStorage ersetzt ihn
+nicht (§47).
 
-Ist es ein Befehl? → register/befehle.js
+- Transaktionen klein halten.
+- Fehler sinnvoll melden, nicht verschlucken.
+- Schemaänderungen dokumentieren.
+- Migrationen **idempotent** bauen — zweimal laufen darf nicht zweimal wirken.
+- Keine langen Blockaden im UI-Faden.
+- Grosse Blobs stückweise verarbeiten (`stuecke`).
+- Datei-Stücke nicht unnötig vollständig in den Arbeitsspeicher laden.
+- Bei mehreren Tabs an Überschreibungen denken (§16).
 
-Ist es ein Tastenkürzel? → register/tasten.js
+---
 
-Ist es eine Formel? → register/formeln.js
+## 11. Backup-Regeln  **[hart]**
 
-Ist es eine Vorlage? → register/vorlagen.js
+Sicherung ist eine **Sicherheitsfunktion**. Sie darf niemals Daten gefährden.
 
-Ist es eine Verbindung? → register/verbindungen.js
+Redion kennt zwei Sicherungsarten, und der Unterschied zwischen ihnen ist
+keine Geschmacksfrage:
 
-Ist es Navigation? → register/navigation.js
+### `.json` — reine Daten ohne Anhänge
 
-Ist es ein Bereich? → register/module.js
+Lesbar, einfach, gut für Text, Seiten, Datenbanken, Einstellungen.
+Enthält **keine** echten Anhänge.
 
-Keine doppelten Kataloge einführen.
+> **Deshalb:** Wenn eine `.json`-Sicherung Anhänge nicht enthält, darf ihr
+> Import vorhandene Anhänge **nicht löschen.** Das ist der Fund aus `test96`,
+> und er ist der Grund, warum es das `.redion`-Format überhaupt gibt.
 
+### `.redion` — die vollständige Sicherung mit Anhängen
 
-
-9. Speicherregeln
-
-Der lokale Speicher ist Kern der App.
-
-Aktuelle wichtige Speicher:
-
-blocks
-collections
-views
-meta
-versions
-dateien
-stuecke
-basis
-vorrat
-
-Regeln:
-
-Keine Datenverluste riskieren.
-
-Keine Migration ohne Tests.
-
-Keine Speicheränderung ohne Rückwärtsdenken.
-
-Große Dateien nicht als riesige JSON-Strings behandeln.
-
-Blobs nicht blind mit JSON.stringify() sichern.
-
-IDs nicht unnötig ändern.
-
-Referenzen zwischen Blöcken, Dateien und Datenbanken müssen stabil bleiben.
-
-Import darf vorhandene Daten nur löschen, wenn das Format diese Daten wirklich abdeckt.
-
-Kaputte Daten müssen möglichst abgefangen werden.
-
-
-
-10. IndexedDB-Regeln
-
-IndexedDB bleibt Hauptspeicher im Browser.
-
-Beim Arbeiten an IndexedDB:
-
-Transaktionen klein halten.
-
-Fehler sinnvoll melden.
-
-Schemaänderungen dokumentieren.
-
-Migrationen idempotent bauen.
-
-Keine langen Blockaden im UI-Thread.
-
-Große Blobs stückweise verarbeiten.
-
-Datei-Stücke nicht unnötig vollständig in den Arbeitsspeicher laden.
-
-Bei Multi-Tab-Nutzung an Überschreibungen denken.
-
-
-
-11. Backup-Regeln
-
-Backup ist eine Sicherheitsfunktion. Es darf niemals Daten gefährden.
-
-Redion unterstützt zwei Sicherungsarten:
-
-.json
-.redion
-
-.json
-
-Für reine Daten ohne Anhänge.
-
-Eigenschaften:
-
-lesbar
-
-einfach
-
-gut für Text, Seiten, Datenbanken, Einstellungen
-
-enthält keine echten großen Anhänge
-
-Regel:
-
-Wenn eine .json-Sicherung Anhänge nicht enthält, darf der Import vorhandene Anhänge nicht löschen.
-
-Und seit L76/E279: Zugangsdaten gehören nur in die VERSCHLÜSSELTE Sicherung.
-wolkeToken, wolkeProbe und jeder api:*-Schlüssel fliegen aus der offenen
-.json und der .redion und werden im Manifest unter fehlt genannt. Der
-Ordnerzugriff und die Freigabeliste (wolkeGeteilt) reisen gar nicht mit —
-eine Sicherung kann keine Erlaubnis mitbringen. Und ein Einspielen mit
-„Ersetzen" ersetzt Inhalte, nicht die Kontoidentität des Geräts: danach
-hält Redion den Abgleich an und fragt, statt eine Richtung zu wählen.
-
-.redion
-
-Für vollständige Sicherungen mit Anhängen.
-
-Eigenschaften:
-
+```txt
 .redion = ZIP-artiges Paket
-daten.json
-dateien.json
-dateien/
+  daten.json
+  dateien.json
+  dateien/
+```
 
-Regeln:
+- Grosse Dateien **stückweise** verarbeiten. Kein vollständiges Video, kein
+  vollständiges Bild in den Arbeitsspeicher.
+- Echte Dateinamen erhalten; gleiche Namen eindeutig machen.
+- **Datei-Kennungen beim Import erhalten**, wenn Blöcke darauf verweisen.
+- Prüfsummen stückweise berechnen.
+- Über 4 GB eine klare Fehlermeldung statt eines kaputten Archivs (E39).
+- `.redion` **darf** beim Ersetzen alte fremde Anhänge entfernen — weil das
+  Format Anhänge abdeckt. `.json` darf das nicht.
 
-Große Dateien stückweise verarbeiten.
+### Zugangsdaten gehören nur in die verschlüsselte Sicherung
 
-Nicht vollständige Videos/Bilder in den Arbeitsspeicher laden.
+Seit **L76 / E279**: `wolkeToken`, `wolkeProbe` und jeder `api:*`-Schlüssel
+fliegen aus der offenen `.json` und aus der `.redion` heraus und werden im
+Manifest unter `fehlt` genannt.
 
-Echte Dateinamen erhalten.
+Der Ordnerzugriff und die Freigabeliste (`wolkeGeteilt`) reisen **gar nicht**
+mit — eine Sicherung kann keine Erlaubnis mitbringen.
 
-Gleiche Namen eindeutig machen.
+Und ein Einspielen mit „Ersetzen" ersetzt **Inhalte, nicht die
+Kontoidentität** des Geräts: danach hält Redion den Abgleich an und fragt,
+statt eine Richtung zu wählen.
 
-Datei-IDs beim Import erhalten, wenn Blöcke darauf verweisen.
+---
 
-Prüfsummen stückweise berechnen.
+## 12. .redion-Format dokumentieren  **[Richtwert]**
 
-Über 4 GB klare Fehlermeldung statt kaputtes Archiv.
+Wer am `.redion`-Format arbeitet, hält `doku/REDION-FORMAT.md` aktuell.
+Die Datei **gibt es** (sie war einmal die Nächste Arbeit 2 aus §49) und
+enthält:
 
-.redion darf beim Ersetzen alte fremde Anhänge entfernen, weil das Format Anhänge abdeckt.
+```txt
+Was ist .redion?          Dateinamen-Regeln
+Warum nicht nur JSON?     Kennungs-Regeln
+Aufbau des Archivs        Import-Regeln
+daten.json                Lösch-Regeln
+dateien.json              Speichergrenzen
+dateien/                  4-GB-Grenze, ZIP64-Entscheidung, Kompatibilität
+```
 
-.json darf das nicht.
+---
 
+## 13. Export- und Import-Regeln  **[hart]**
 
+**Export darf nicht:**
 
-12. .redion-Format dokumentieren
+- Daten verschweigen
+- Anhänge scheinbar sichern, aber leer speichern
+- bei grossen Dateien abstürzen
+- still beschädigte Archive erzeugen
+- nur auf starken Rechnern funktionieren
 
-Wenn am .redion-Format gearbeitet wird, die Dokumentation aktualisieren oder erstellen:
+**Import darf nicht:**
 
-doku/REDION-FORMAT.md
+- Datei-Kennungen brechen
+- Blöcke von ihren Anhängen trennen
+- vorhandene Anhänge löschen, wenn die Sicherung keine Anhänge kennt
+- unklare Versionen blind überschreiben
+- bei Fehlern halbe Zustände hinterlassen
 
-Diese Doku soll enthalten:
+**Und immer so prüfen:**
 
-Was ist .redion?
-Warum nicht nur JSON?
-Aufbau des Archivs
-daten.json
-dateien.json
-dateien/
-Dateinamen-Regeln
-ID-Regeln
-Import-Regeln
-Lösch-Regeln
-Speichergrenzen
-4-GB-Grenze
-ZIP64-Entscheidung
-Kompatibilität
+```txt
+exportieren  →  alles löschen  →  importieren  →  Byte für Byte vergleichen
+```
 
+Das ist `test100`. Wer es nur „sieht gut aus" prüft, prüft nichts.
 
+---
 
-13. Export-/Import-Regeln
+## 14. Datei- und Anhangsregeln  **[hart]**
 
-Export und Import müssen zuverlässig sein.
+Anhänge sind echte Nutzerdaten: Bilder, Videos, Audios, PDFs, alles andere.
 
-Export darf nicht:
+- Dateiname erhalten, wenn möglich.
+- MIME-Typ erhalten, wenn möglich.
+- Grösse speichern.
+- Kennung stabil halten.
+- **Blöcke müssen ihre Dateien nach dem Import wiederfinden.**
+- Grosse Dateien stückweise speichern und lesen (`stuecke`).
+- Data-URL nur für kleine Dateien und bestehende Logik — **nicht** als
+  Zukunftslösung für grosse Anhänge.
 
-Daten verschweigen
+**Zur 12-MB-Grenze:** Sie war einmal die Notbremse und ist es nicht mehr.
+E99 hat das Ziehen-und-Ablegen auf Stücke umgestellt; `werkzeuge.ts` hält an
+der Stelle ausdrücklich fest, dass die Zahl kein Endzustand ist. Wo
+`.redion` und der Stückspeicher grosse Dateien sauber können, ist eine feste
+Obergrenze eine Bequemlichkeit, keine Regel.
 
-Anhänge scheinbar sichern, aber leer speichern
+---
 
-bei großen Dateien abstürzen
+## 15. Versionsregeln  **[hart]**
 
-still beschädigte Archive erzeugen
+Versionen sind der Schutz gegen Fehler — die eigenen wie die des Nutzers.
 
-nur auf starken PCs funktionieren
+- Der Versionsverlauf darf nicht still unbegrenzt wachsen.
+- Mindestens die geplanten Fassungen müssen erhalten bleiben.
+- Automatische Fassungen dürfen Nutzerdaten nicht zerstören.
+- **Zwei Tabs dürfen einander nicht unbemerkt überschreiben** (§16).
+- Versionen müssen mit Import und Export zusammenpassen.
+- Alte Versionen dürfen nur nach einer klaren, geschriebenen Regel gelöscht
+  werden.
 
-Import darf nicht:
+Wer an Versionen arbeitet, prüft den Fall „zwei Tabs".
 
-Datei-IDs brechen
+---
 
-Blöcke von Anhängen trennen
+## 16. Multi-Tab-Regeln  **[hart]**
 
-vorhandene Anhänge löschen, wenn die Sicherung keine Anhänge kennt
+Redion kann in mehreren Tabs offen sein. Das ist kein Sonderfall — es ist
+der Alltag jedes Menschen mit einem Browser.
 
-unklare Versionen blind überschreiben
+- Änderungen aus Tab A dürfen Tab B nicht still überschreiben.
+- Der Speicherstand muss erkannt werden.
+- Konflikte müssen mindestens **erkannt** oder entschärft werden.
+- Versionen helfen, ersetzen aber keine saubere Konfliktlogik.
+- Prüfläufe für zwei Tabs sind wichtig und existieren.
 
-bei Fehlern halbe Zustände hinterlassen
+---
 
-Immer testen:
-
-exportieren
-alles löschen
-importieren
-Byte für Byte vergleichen
-
-
-
-14. Datei- und Anhangsregeln
-
-Anhänge sind echte Nutzerdaten.
-
-Dazu gehören:
-
-Bilder
-
-Videos
-
-Audios
-
-PDFs
-
-sonstige Dateien
-
-Regeln:
-
-Dateiname erhalten, wenn möglich.
-
-MIME-Typ erhalten, wenn möglich.
-
-Größe speichern.
-
-Kennung stabil halten.
-
-Blöcke müssen ihre Dateien nach Import wiederfinden.
-
-Große Dateien stückweise speichern und lesen.
-
-Data-URL nur für kleine Dateien und bestehende Logik, nicht als Zukunftslösung für große Anhänge.
-
-Keine willkürliche 12-MB-Grenze als endgültige Lösung betrachten, wenn .redion/Blob-Speicher große Dateien sauber kann.
-
-
-
-15. Versionsregeln
-
-Versionen sind Schutz gegen Fehler.
-
-Regeln:
-
-Versionsverlauf darf nicht still unbegrenzt wachsen.
-
-Mindestens die geplanten Fassungen müssen erhalten bleiben.
-
-Automatische Fassungen dürfen Nutzerdaten nicht zerstören.
-
-Zwei Tabs dürfen einander nicht unbemerkt überschreiben.
-
-Versionen müssen mit Import/Export zusammenpassen.
-
-Alte Versionen dürfen nur nach klarer Regel gelöscht werden.
-
-Wenn an Versionen gearbeitet wird, Multi-Tab-Fälle testen.
-
-
-
-16. Multi-Tab-Regeln
-
-Redion kann in mehreren Tabs geöffnet sein.
-
-Dabei gilt:
-
-Änderungen aus Tab A dürfen Tab B nicht still überschreiben.
-
-Speicherstand muss erkannt werden.
-
-Konflikte müssen mindestens erkannt oder entschärft werden.
-
-Versionen helfen, aber ersetzen keine saubere Konfliktlogik.
-
-Tests für zwei Tabs sind wichtig.
-
-
-
-17. Datenmodell-Regeln
+## 17. Datenmodell-Regeln  **[hart]**
 
 Blöcke, Seiten, Datenbanken und Zeilen müssen stabil bleiben.
 
-Regeln:
+- **Eine Zeile ist eine Seite.** (Derselbe Satz Felder, nur
+  `parentTable: 'collection'`.)
+- Datenbank-Ansichten zeigen auf ein Schema.
+- Blöcke behalten stabile Kennungen.
+- Beziehungen behalten stabile Kennungen.
+- **Rollups und Formeln führen keinen fremden Code aus** (§20).
+- Datenbankeigenschaften typgerecht speichern.
+- Import und Export müssen **alle** Typen berücksichtigen, nicht die
+  bekannten.
 
-Eine Zeile ist eine Seite.
+Die Typen dazu stehen in `src/core/types/` — und dort, nicht hier, ist die
+Wahrheit (§52.8).
 
-Datenbank-Ansichten zeigen auf ein Schema.
+---
+---
 
-Blöcke behalten stabile IDs.
+# Teil IV — Was im Browser läuft
 
-Beziehungen behalten stabile IDs.
+## 18. Editor-Regeln  **[Richtwert]**
 
-Rollups und Formeln dürfen nicht direkt fremden Code ausführen.
+Der Editor ist zentral und darf nicht weiter aufgebläht werden. Wo möglich,
+grosse Editor-Dateien aufteilen in:
 
-Datenbankeigenschaften müssen typgerecht gespeichert werden.
+```txt
+rendern · tastatur · auswahl · inline-format · slash-menue
+block-aktionen · einbettungen · kommentare · drag-drop
+```
 
-Import/Export muss alle Typen berücksichtigen.
+**Hart in diesem Abschnitt sind vier Punkte:**
 
+- Bestehende Tastenkürzel nicht brechen.
+- Blöcke müssen sich **ohne Datenverlust** umwandeln lassen.
+- **Unbekannte Blocktypen nicht löschen** — sie sind Daten eines Nutzers, der
+  eine neuere Fassung hatte.
+- HTML und Einbettungen sicher behandeln (§19).
 
+Richtwert bleibt der Rest: Slash-Menü stabil halten, Markdown-Kürzel prüfen,
+Inline-Formatierung prüfen.
 
-18. Editor-Regeln
+---
 
-Der Editor ist zentral und darf nicht unnötig weiter aufgebläht werden.
+## 19. Sicherheitsregeln Browser  **[hart]**
 
-Wenn möglich, große Editor-Dateien aufteilen in:
+**Niemals unsichere HTML-Ausgabe einbauen.**
 
-rendern
-tastatur
-auswahl
-inline-format
-slash-menue
-block-aktionen
-einbettungen
-kommentare
-drag-drop
+- Nutzertext immer escapen.
+- Kein rohes `innerHTML` mit ungeprüften Nutzerdaten.
+- Links prüfen.
+- Einbettungen nur aus bekannten sicheren Quellen oder mit klaren
+  Sandbox-Regeln.
+- Kein fremder Code aus Formeln. **Kein `eval()`.**
+- Keine geheimen Werte in LocalStorage, ausser bewusst verschlüsselte
+  Inhalte.
+- Verschlüsselte Seiten mit AES-GCM sauber behandeln.
+- **Passwort nie speichern.** Schlüssel nur im Speicher halten, wenn möglich.
 
-Regeln:
+Die Escape-Funktion muss wirklich escapen:
 
-Bestehende Tastenkürzel nicht brechen.
-
-Slash-Menü stabil halten.
-
-Markdown-Kürzel testen.
-
-Inline-Formatierung testen.
-
-Blöcke müssen ohne Datenverlust umwandelbar sein.
-
-Unbekannte Blocktypen nicht löschen.
-
-HTML und Einbettungen sicher behandeln.
-
-
-
-19. Sicherheitsregeln Browser
-
-Niemals unsichere HTML-Ausgabe einbauen.
-
-Regeln:
-
-Nutzertext immer escapen.
-
-Kein rohes innerHTML mit ungeprüften Nutzerdaten.
-
-Links prüfen.
-
-Einbettungen erlauben nur bekannte sichere Quellen oder klare Sandbox-Regeln.
-
-Kein fremder Code aus Formeln.
-
-Kein eval().
-
-Keine geheimen Werte in LocalStorage, außer bewusst verschlüsselte Inhalte.
-
-Verschlüsselte Seiten mit AES-GCM sauber behandeln.
-
-Passwort nie speichern.
-
-Schlüssel nur im Speicher halten, wenn möglich.
-
-Sichere Escape-Funktion muss wirklich escapen:
-
+```js
 const esc = (s) => String(s ?? '')
   .replace(/&/g, '&amp;')
   .replace(/</g, '&lt;')
   .replace(/>/g, '&gt;')
   .replace(/"/g, '&quot;')
   .replace(/'/g, '&#39;')
-
-Nicht falsch ersetzen:
-
-.replace(/</g, '<')
-.replace(/>/g, '>')
-
-
-
-20. Formel-Regeln
-
-Formeln sind keine JavaScript-Ausführung.
-
-Regeln:
-
-Kein eval().
-
-Kein Function().
-
-Eigener Tokenizer, Parser und Auswerter bleiben.
-
-Fehler müssen verständlich angezeigt werden.
-
-Live-Vorschau darf nicht abstürzen.
-
-Formeln dürfen keine Seiteneffekte haben.
-
-Listenfunktionen und Textfunktionen sauber trennen.
-
-+ für Textverkettung bleibt dokumentiert.
-
-concat() bleibt für Listen.
-
-Neue Formelfunktionen:
-
-im Register eintragen
-
-dokumentieren
-
-testen
-
-Grenzfälle prüfen
-
-
-
-21. KI-Regeln
-
-Redion nutzt lokale KI:
-
-Ollama
-WebLLM
-
-Regeln:
-
-Kein Text verlässt ungefragt den Rechner.
-
-Keine Cloud-KI ohne ausdrückliche Entscheidung.
-
-Keine API-Schlüssel im Repository.
-
-WebLLM-Modell-Download klar erklären.
-
-Ollama-Verbindung robust prüfen.
-
-KI-Funktionen müssen ohne KI sauber deaktiviert bleiben.
-
-KI darf Daten nicht verändern, ohne dass Nutzer es auslöst.
-
-KI-Ausgaben in Datenbanken/Seiten müssen als normale Änderungen behandelbar sein.
-
-KI-Felder in Datenbanken dürfen nicht blockieren.
-
-
-
-22. Server-Regeln
-
-Der Server ist optional.
-
-Server darf ermöglichen:
-
-Konto
-
-Sitzung
-
-Sync
-
-Rechte
-
-öffentliche Seiten
-
-Freigaben
-
-Feldrechte
-
-Protokoll
-
-Marken
-
-MCP/API
-
-Cloudflare Workers + D1
-
-Server darf nicht Voraussetzung sein für:
-
-lokale Notizen
-
-lokale Datenbanken
-
-lokale KI
-
-lokale Sicherung
-
-lokale Nutzung
-
-Wenn Server kaputt ist, muss lokale App weiter funktionieren.
-
-
-
-23. Cloudflare-Regeln
-
-Cloudflare ist optionaler Cloud-Modus.
-
-Mögliche Teile:
-
-Cloudflare Pages
-Cloudflare Workers
-Cloudflare D1
-Cloudflare R2
-KV optional
-Durable Objects später
-
-Regeln:
-
-D1 für strukturierte Sync-/Account-Daten.
-
-R2 für große Dateien und Anhänge.
-
-Keine großen Blobs in D1 speichern.
-
-R2-Objekte mit stabilen IDs.
-
-Uploads mit Größenprüfung.
-
-Downloads mit Berechtigungsprüfung.
-
-Öffentliche Seiten strikt von privaten Daten trennen.
-
-Cloud-Modus darf local-first nicht zerstören.
-
-Nutzer muss lokal bleiben können.
-
-
-
-24. Konto-Regeln
-
-Ein Konto ist optional.
-
-Regeln:
-
-App muss ohne Konto funktionieren.
-
-Konto darf nur aktiv werden, wenn Nutzer es will.
-
-Lokale Daten dürfen nicht automatisch hochgeladen werden.
-
-Nutzer muss wählen können:
-
-nur lokal
-lokal + Sync
-Cloud-Arbeitsbereich
-offline exportieren
-.redion herunterladen
-
-Logout darf lokale Daten nicht ohne Warnung löschen.
-
-Account-Daten und Workspace-Daten trennen.
-
-Sessions hashen.
-
-Tokens nicht im Klartext speichern, wenn vermeidbar.
-
-
-
-25. Sync-Regeln
-
-Sync ist schwierig und darf nicht leichtfertig geändert werden.
-
-Regeln:
-
-Jede Änderung braucht Version/Zeit/Gerät.
-
-Konflikte müssen erkannt werden.
-
-Gelöschte Daten brauchen Tombstones.
-
-Attachments separat syncen.
-
-Lokaler Stand bleibt führend, solange Nutzer nicht anders entscheidet.
-
-Offline-Änderungen müssen später zusammengeführt werden.
-
-Sync darf nicht still Daten verlieren.
-
-Tests für zwei Geräte / zwei Tabs / Konflikte schreiben.
-
-
-
-26. Rechte-Regeln
-
-Rechte müssen wirklich sperren.
-
-Rollen:
-
-voll
-edit
-komm
-lesen
-kein
-
-Regeln:
-
-UI-Rechte und Server-Rechte müssen übereinstimmen.
-
-Server entscheidet final.
-
-Kein Zugriff darf nicht versehentlich Rechtezeile löschen.
-
-Feldrechte dürfen nicht durch Export/Import kaputtgehen.
-
-Öffentliche Seiten nie private Daten mitliefern.
-
-Tests für Rechtefälle sind Pflicht.
-
-
-
-27. Öffentliches Teilen
-
-Ohne Server ist Teilen Export.
-
-Mit Server kann Teilen echte Freigabe sein.
-
-Regeln:
-
-Öffentliche Seiten nur explizit veröffentlichen.
-
-Private Blöcke nicht mitliefern.
-
-Anhänge öffentlicher Seiten brauchen eigene öffentliche Freigabe.
-
-Widerruf muss funktionieren.
-
-Teilen darf nicht versehentlich ganzen Arbeitsbereich veröffentlichen.
-
-Suchmaschinen/Crawler nur Demo oder veröffentlichte Inhalte sehen lassen.
-
-
-
-28. PWA- und Offline-Regeln
-
-Redion soll offline funktionieren.
-
-Regeln:
-
-App-Shell cachebar.
-
-Daten bleiben lokal.
-
-Service Worker darf keine alten kritischen Dateien endlos halten.
-
-Update-Hinweis anzeigen, wenn nötig.
-
-Offline-Export muss möglich bleiben.
-
-redion-einzeldatei.html bleibt wichtige Fallback-Form.
-
-Keine Online-Pflicht für Kernfunktionen.
-
-
-
-29. Einzeldatei-Regeln
-
-redion-einzeldatei.html ist wichtig.
-
-Regeln:
-
-node bauen.mts muss sie reproduzierbar erzeugen.
-
-Keine externen Laufzeitabhängigkeiten in der Einzeldatei.
-
-Größe beobachten.
-
-Nach Änderungen an Kern/Schale/Bereichen prüfen, ob Einzeldatei neu gebaut werden muss.
-
-CI darf erkennen, wenn Build-Artefakt nicht aktuell ist.
-
-Einzeldatei darf keine Secrets enthalten.
-
-
-
-30. Tests / Prüfungen
-
-Prüfungen sind Pflicht.
-
-Wichtige Befehle:
-
-npm install
-npx playwright install chromium
-npm run pruefen
-npm run pruefen -- --schnell
-node pruefungen/lauf/test87.mjs
-node bauen.mts
-
-Regeln:
-
-Jede Speicheränderung braucht Test.
-
-Jede Import/Export-Änderung braucht Test.
-
-Jede Rechteänderung braucht Test.
-
-Jede Formeländerung braucht Test.
-
-Jede Backup-Änderung braucht Test.
-
-Große-Datei-Fälle testen.
-
-Multi-Tab-Fälle testen, wenn betroffen.
-
-Keine Mocks, wenn echte App geprüft werden kann.
-
-Wenn ein Fehler gefunden wird, zuerst Test schreiben oder bestehenden Test erweitern.
-
-
-
-31. Aktuelle wichtige Tests
-
-Besonders wichtig:
-
-test87.mjs
-test96
-test100.mjs
-
-Bedeutung:
-
-test87.mjs
-
-prüft Architektur- und Sicherheitsgrenzen.
-
-test96
-
-hat gezeigt, dass Anhänge bei JSON-Backup fehlten oder leer wurden.
-
-test100.mjs
-
-prüft .redion-Sicherung mit echten Bytes, Anhängen, Löschen und Wiederherstellen.
-
-Diese Tests nicht entfernen. Bei Änderung an Backup/ZIP/Dateien zuerst diese Tests beachten.
-
-
-
-32. Doku-Regeln
-
-Dokumentation ist Teil des Produkts.
-
-Wichtige Dateien:
-
-README.md
-AUFGABEN.md
-LUECKEN.md
-ENTSCHEIDUNGEN.md
-CLOUDFLARE.md
-SERVER-EINRICHTEN.md
-START-MIT-CLAUDE-CODE.md
-doku/ARCHITEKTUR.md
-
-Regeln:
-
-Entscheidungen in ENTSCHEIDUNGEN.md festhalten.
-
-Lücken in LUECKEN.md festhalten.
-
-Aufgaben in AUFGABEN.md halten.
-
-Cloud/Server nicht nur im Kopf planen.
-
-.redion-Format dokumentieren.
-
-README nicht mit internen Details überladen, aber wichtige Nutzerfunktionen erwähnen.
-
-Keine falschen Versprechen.
-
-
-
-33. README-Regeln
-
-README soll Nutzern erklären:
-
-Was Redion ist.
-
-Wie man es startet.
-
-Was lokal ist.
-
-Was optional Server/Cloud ist.
-
-Wie man sichert.
-
-Was .redion ist.
-
-Was Grenzen sind.
-
-Wie man testet.
-
-Wo Code liegt.
-
-README soll nicht:
-
-unfertige Features als fertig verkaufen
-
-Cloudpflicht suggerieren
-
-lokale Nutzung kleinreden
-
-Sicherheitsrisiken verschweigen
-
-
-
-34. Entscheidungen dokumentieren
-
-Wenn eine technische Entscheidung getroffen wird, in ENTSCHEIDUNGEN.md dokumentieren.
-
-Beispiele:
-
-Warum .redion statt Base64-JSON?
-
-Warum keine ZIP64-Unterstützung?
-
-Warum .json vorhandene Anhänge nicht löscht?
-
-Warum IDs beim Import erhalten bleiben?
-
-Warum Server optional bleibt?
-
-Warum D1/R2 getrennt werden?
-
-
-
-35. Lücken dokumentieren
-
-Wenn etwas fehlt, nicht verstecken.
-
-In LUECKEN.md eintragen:
-
-fehlende Tests
-
-bekannte Grenzen
-
-offene Sicherheitsfragen
-
-fehlende UI
-
-Performance-Risiken
-
-Cloudflare-To-dos
-
-Rechte-Lücken
-
-Import/Export-Lücken
-
-Eine bekannte Lücke ist besser als ein stiller Fehler.
-
-
-
-36. Performance-Regeln
-
-Redion soll auch auf schwächeren Geräten laufen.
-
-Regeln:
-
-Große Dateien nicht vollständig in RAM laden.
-
-Lange Arbeit in Stücke teilen.
-
-UI nicht blockieren.
-
-Große Listen virtualisieren oder begrenzen, wenn nötig.
-
-Suchindizes nicht unnötig neu bauen.
-
-WebLLM nicht automatisch laden.
-
-Datenbankansichten nicht unnötig komplett neu rendern.
-
-Mobile Geräte beachten.
-
-Speicherverbrauch bei Export/Import messen.
-
-
-
-37. Mobile-Regeln
-
-Redion soll mobil nutzbar bleiben.
-
-Regeln:
-
-Touchflächen mindestens 44 px.
-
-Kein Desktop-only UI für Kernfunktionen.
-
-Dialoge müssen auf kleinen Bildschirmen passen.
-
-Side Peek darf mobil nicht unbedienbar werden.
-
-Toolbar darf nicht verdecken.
-
-Tastatur auf Mobile beachten.
-
-Große Datei-Backups dürfen Mobile nicht abstürzen lassen.
-
-
-
-38. Barrierefreiheit
-
-Regeln:
-
-Buttons mit Text oder aria-label.
-
-Fokus sichtbar.
-
-Tastaturbedienung erhalten.
-
-Kontrast im Hell- und Dunkelmodus prüfen.
-
-Keine Information nur über Farbe.
-
-Dialoge fokussierbar.
-
-Escape schließt passende Overlays.
-
-Screenreader nicht durch leere Icons verwirren.
-
-
-
-39. CSS-Regeln
-
-Stil bleibt in Stil-Dateien.
-
-Keine großen Inline-Style-Blöcke.
-
-Bestehende Struktur respektieren:
-
-quell/schale/stil/
-
-Regeln:
-
-Hell/Dunkel getrennt sauber halten.
-
-Gemeinsame Tokens nutzen, wenn vorhanden.
-
-Kein neues Designsystem ohne Grund.
-
-Notion-ähnliche Klarheit vor Effekten.
-
-Animationen sparsam.
-
-Reduced Motion respektieren.
-
-
-
-40. Server-Sicherheitsregeln
-
-Für Server/Cloudflare:
-
-Eingaben validieren.
-
-JSON-Größen begrenzen.
-
-Rate-Limits einplanen.
-
-CORS strikt halten.
-
-Keine offenen Admin-Endpunkte.
-
-Tokens hashen.
-
-Keine Secrets committen.
-
-Fehler nicht mit internen Details an Nutzer senden.
-
-D1-Queries sicher bauen.
-
-Rechte serverseitig prüfen.
-
-Öffentliche Seiten getrennt behandeln.
-
-Uploads scannen/validieren, soweit möglich.
-
-Dateinamen säubern.
-
-Pfad-Traversal verhindern.
-
-
-
-41. Bridge-Regeln
-
-Für Bridge/Proxy-Funktionen:
-
-Keine offene Proxy-Schleuder bauen.
-
-Nur erlaubte Hosts.
-
-Pfade prüfen.
-
-Header begrenzen.
-
-Auth-Header nicht unnötig weiterreichen.
-
-Keine privaten lokalen Ziele erlauben.
-
-Keine beliebigen URLs.
-
-CORS nicht wild öffnen.
-
-Tests für Allowlist.
-
-
-
-42. Secrets-Regeln
-
-Niemals ins Repository:
-
-API-Schlüssel
-
-Tokens
-
-Passwörter
-
-private URLs
-
-persönliche Zugangsdaten
-
-Cloudflare Secrets
-
-OAuth Client Secrets
-
-Nur Beispiele in:
-
-.env.beispiel
-
-Echte Secrets gehören in:
-
-lokale .env
-
-Cloudflare Secrets
-
-sichere Passwortverwaltung
-
-
-
-43. Git-Regeln
-
-Nicht direkt wild auf main arbeiten.
-
-Kleine Branches.
-
-Kleine PRs.
-
-Eine Änderung = ein klares Ziel.
-
-Tests nennen.
-
-Risiken nennen.
-
-Keine generierten Großdateien ändern, wenn nicht nötig.
-
-Wenn redion-einzeldatei.html neu gebaut wurde, sicherstellen, dass es zur Quelle passt.
-
-Keine fremden Projekte anfassen.
-
-
-
-44. PR-Regeln
-
-Jede PR soll beantworten:
-
-Was wurde geändert?
-Warum?
-Welche Dateien?
-Welche Tests?
-Welche Risiken?
-Welche Daten können betroffen sein?
-Ist Import/Export betroffen?
-Ist Server/Cloud betroffen?
-Ist redion-einzeldatei.html betroffen?
-
-Bei Daten-/Speicheränderungen zusätzlich:
-
-Wie wird Datenverlust verhindert?
-Wie werden alte Daten migriert?
-Wie wird Rückwärtskompatibilität behandelt?
-
-
-
-45. Reihenfolge bei Arbeit
-
-Immer so arbeiten:
-
-Bestehenden Code lesen.
-
-Bestehende Doku lesen.
-
-Relevante Tests finden.
-
-Kleinen Plan machen.
-
-Kleine Änderung machen.
-
-Tests ausführen.
-
-Doku aktualisieren, wenn nötig.
-
-Ergebnis kurz beschreiben.
-
-Nicht:
-
-zuerst groß umbauen
-
-Tests ignorieren
-
-Doku nachträglich vergessen
-
-mehrere Themen vermischen
-
-
-
-46. Prioritäten
-
-Priorität 1:
-
-Daten sicher halten
-
-Priorität 2:
-
-App startet zuverlässig
-
-Priorität 3:
-
-Import/Export/Backup vollständig
-
-Priorität 4:
-
-Editor und Datenbanken stabil
-
-Priorität 5:
-
-Server/Cloud optional und sicher
-
-Priorität 6:
-
-neue Features
-
-Neue Features sind weniger wichtig als Datenintegrität.
-
-
-
-47. Nicht tun
-
-Nicht tun:
-
-React einbauen (E80: der Versuch ist widerrufen)
-
-die App von einem Bauschritt abhängig machen
-
-IndexedDB durch LocalStorage ersetzen
-
-große Dateien in JSON/Base64 sichern
-
-eval() für Formeln verwenden
-
-Bereiche direkt koppeln
-
-Server zur Pflicht machen
-
-Cloud-Sync automatisch aktivieren
-
-private Daten ungefragt hochladen
-
-Anhänge bei JSON-Import löschen
-
-Datei-IDs beim Import brechen
-
-Sicherheitswarnungen entfernen
-
-Tests löschen, weil sie stören
-
-README Dinge versprechen, die nicht funktionieren
-
-Secrets committen
-
-
-
-48. Wichtige aktuelle Baustellen
-
-Aktuelle wichtige Punkte:
-
-CLAUDE.md war leer und muss diese Regeln enthalten.
-.redion-Backup ist wichtig und muss dokumentiert bleiben.
-README sollte .redion-Sicherung mit Anhängen erwähnen.
-doku/REDION-FORMAT.md sollte existieren oder erstellt werden.
-Cloudflare/R2-Plan sollte mit .redion und Anhängen zusammengedacht werden.
-Große Dateien über 4 GB brauchen klare Behandlung.
-
-
-
-49. Empfohlene nächste Arbeiten
-
-Nächste Arbeit 1: README ergänzen
-
-README um .redion erklären:
-
-vollständige Sicherung mit Anhängen
-ZIP-artiges Paket
-große Dateien speicherschonend
-JSON bleibt für Textdaten
-
-Nächste Arbeit 2: Format-Doku
-
-Erstellen:
-
-doku/REDION-FORMAT.md
-
-Nächste Arbeit 3: Cloud-Dateien
-
-Cloudflare/R2-Plan:
-
-D1 für Daten
-R2 für Anhänge
-.redion als Offline-Download
-
-Nächste Arbeit 4: CLAUDE.md aktuell halten
-
-Diese Regeln müssen mit neuen Entscheidungen wachsen.
-
-
-
-50. Definition von fertig
-
-Eine Änderung ist erst fertig, wenn:
-
-App startet.
-
-Relevante Tests laufen.
-
-Keine bekannten Datenverluste entstehen.
-
-Import/Export betroffen? Dann geprüft.
-
-Backup betroffen? Dann .json und .redion geprüft.
-
-Große Dateien betroffen? Dann großer Blob-Fall geprüft.
-
-Server betroffen? Dann Rechte/Sicherheit geprüft.
-
-Doku betroffen? Dann aktualisiert.
-
-Keine unnötigen Dependencies eingeführt.
-
-Architekturregeln eingehalten.
-
-
-
-51. Wichtigster Satz
-
-Redion darf lieber langsamer neue Funktionen bekommen, als jemals Nutzerdaten zu verlieren.
+```
+
+Und **nicht** so — das ist der Fehler, den es schon zweimal gab, weil er beim
+Lesen richtig aussieht:
+
+```js
+.replace(/</g, '<')      // ersetzt nichts
+.replace(/>/g, '>')      // ersetzt nichts
+```
 
 ---
 
-# 52. TypeScript-Ziel und Code-Stil
+## 20. Formel-Regeln  **[hart]**
+
+**Formeln sind keine JavaScript-Ausführung.**
+
+- Kein `eval()`. Kein `Function()`.
+- Eigener Tokenizer, Parser und Auswerter bleiben.
+- Fehler müssen verständlich angezeigt werden.
+- Die Live-Vorschau darf nicht abstürzen.
+- Formeln dürfen keine Seiteneffekte haben.
+- Listenfunktionen und Textfunktionen sauber trennen.
+- `+` bleibt Textverkettung und bleibt dokumentiert; `concat()` bleibt für
+  Listen.
+
+Eine neue Formelfunktion wird **im Register eingetragen, dokumentiert,
+geprüft** — und ihre Grenzfälle werden geprüft, nicht nur der Normalfall.
+
+---
+
+## 21. KI-Regeln  **[hart]**
+
+Redion nutzt lokale KI: **Ollama** und **WebLLM**.
+
+- **Kein Text verlässt ungefragt den Rechner.**
+- Keine Wolken-KI ohne ausdrückliche Entscheidung des Nutzers.
+- Keine API-Schlüssel im Repository (§42).
+- Den WebLLM-Modell-Download klar erklären; er ist gross.
+- Die Ollama-Verbindung robust prüfen.
+- KI-Funktionen müssen sich **ohne KI sauber deaktivieren** lassen.
+- KI darf Daten nicht verändern, ohne dass der Nutzer es auslöst.
+- KI-Ausgaben in Datenbanken und Seiten müssen wie normale Änderungen
+  behandelbar sein — rückgängig, versioniert, löschbar.
+- KI-Felder in Datenbanken dürfen nicht blockieren.
+
+---
+---
+
+# Teil V — Server und Wolke, beide optional
+
+## 22. Server-Regeln  **[hart]**
+
+Der Server ist **optional**. Das ist keine Absichtserklärung, sondern eine
+Prüfbedingung.
+
+**Der Server darf ermöglichen:** Konto, Sitzung, Abgleich, Rechte,
+öffentliche Seiten, Freigaben, Feldrechte, Protokoll, Marken, MCP/API,
+Cloudflare Workers und D1.
+
+**Der Server darf nicht Voraussetzung sein für:** lokale Notizen, lokale
+Datenbanken, lokale KI, lokale Sicherung, lokale Nutzung.
+
+> Wenn der Server kaputt ist, muss die lokale App weiterlaufen.
+
+---
+
+## 23. Cloudflare-Regeln  **[Richtwert]**
+
+Cloudflare ist der optionale Wolkenmodus. Mögliche Teile: Pages, Workers,
+D1, R2, KV optional, Durable Objects später.
+
+- **D1** für strukturierte Abgleich- und Kontodaten.
+- **R2** für grosse Dateien und Anhänge.
+- **Keine grossen Blobs in D1.** (Das ist der harte Punkt des Abschnitts.)
+- R2-Objekte mit stabilen Kennungen.
+- Uploads mit Grössenprüfung, Downloads mit Berechtigungsprüfung.
+- Öffentliche Seiten strikt von privaten Daten trennen.
+- Der Wolkenmodus darf local-first nicht zerstören. Der Nutzer muss lokal
+  bleiben können.
+
+Die `database_id` in `wrangler.toml` ist **kein Geheimnis** und gehört ins
+Repository; echte Geheimnisse kommen über `wrangler secret put` (§42).
+
+---
+
+## 24. Konto-Regeln  **[hart]**
+
+Ein Konto ist optional.
+
+- Die App muss ohne Konto funktionieren.
+- Ein Konto wird nur aktiv, wenn der Nutzer es will.
+- **Lokale Daten dürfen nicht automatisch hochgeladen werden** (E1/E34).
+- Der Nutzer muss wählen können: nur lokal · lokal + Abgleich ·
+  Wolken-Arbeitsbereich · offline exportieren · `.redion` herunterladen.
+- Abmelden darf lokale Daten nicht ohne Warnung löschen.
+- Kontodaten und Arbeitsbereichsdaten trennen.
+- Sitzungen hashen. Tokens nicht im Klartext speichern, wenn vermeidbar.
+
+---
+
+## 25. Sync-Regeln  **[hart]**
+
+Abgleich ist schwierig und darf nicht leichtfertig geändert werden.
+
+- Jede Änderung braucht **Version, Zeit und Gerät**.
+- Konflikte müssen erkannt werden.
+- Gelöschte Daten brauchen **Grabsteine** — Tombstones (E249, E254).
+- Anhänge getrennt abgleichen.
+- Der lokale Stand bleibt führend, solange der Nutzer nicht anders
+  entscheidet.
+- Offline-Änderungen müssen später zusammengeführt werden.
+- **Abgleich darf nicht still Daten verlieren.**
+
+Prüfläufe für zwei Geräte, zwei Tabs und Konflikte gehören dazu.
+
+---
+
+## 26. Rechte-Regeln  **[hart]**
+
+Rechte müssen **wirklich sperren**, nicht nur Knöpfe ausgrauen.
+
+Die Rollen: `voll` · `edit` · `komm` · `lesen` · `kein`.
+
+- Rechte in der Oberfläche und Rechte am Server müssen übereinstimmen.
+- **Der Server entscheidet final.**
+- „Kein Zugriff" darf nicht versehentlich die Rechtezeile löschen.
+- Feldrechte dürfen durch Export und Import nicht kaputtgehen.
+- Öffentliche Seiten liefern nie private Daten mit.
+- Prüfläufe für Rechtefälle sind Pflicht.
+
+Und der Fund aus L102, der teuer war: Ein Recht wird **gegen die Seite
+geprüft, die angefasst wird** — nicht gegen die gerade offene. Ein Tor, das
+ohne Seitenkennung befragt wird, sagt „ja".
+
+---
+
+## 27. Öffentliches Teilen  **[hart]**
+
+Ohne Server ist Teilen ein Export. Mit Server kann Teilen eine echte
+Freigabe sein.
+
+- Öffentliche Seiten nur **ausdrücklich** veröffentlichen.
+- Private Blöcke nicht mitliefern.
+- Anhänge öffentlicher Seiten brauchen eine eigene öffentliche Freigabe.
+- **Widerruf muss funktionieren** — und geprüft sein.
+- Teilen darf nicht versehentlich den ganzen Arbeitsbereich veröffentlichen.
+- Suchmaschinen sehen nur Demo oder wirklich veröffentlichte Inhalte.
+
+---
+---
+
+# Teil VI — Ausliefern und Prüfen
+
+## 28. PWA- und Offline-Regeln  **[hart]**
+
+Redion muss offline funktionieren.
+
+- Die App-Schale ist cachebar.
+- Die Daten bleiben lokal.
+- Der Service Worker darf keine alten kritischen Dateien endlos halten.
+- Update-Hinweis anzeigen, wenn nötig.
+- Offline-Export muss möglich bleiben.
+- `redion-einzeldatei.html` bleibt die wichtige Rückfallform.
+- **Keine Online-Pflicht für Kernfunktionen.**
+
+Der Stand des Dienstes wird nicht von Hand gepflegt: `dienststand.mts`
+rechnet eine Prüfsumme über den `GRUNDSTOCK` und hebt `VERSION` in
+`src/dienst/sw.ts` selbst an (E361, L83). Eine neue Skriptdatei braucht
+deshalb **zwei** Einträge: das `<script>` in `index.html` **und** die Zeile
+im `GRUNDSTOCK`.
+
+---
+
+## 29. Einzeldatei-Regeln  **[hart]**
+
+`redion-einzeldatei.html` ist wichtig — sie ist Redion ohne alles.
+
+- `node bauen.mts` muss sie **reproduzierbar** erzeugen.
+- Keine externen Laufzeitabhängigkeiten darin.
+- Die Grösse im Auge behalten.
+- Nach Änderungen an `kern/`, `schale/` oder `bereiche/` prüfen, ob sie neu
+  gebaut werden muss — meistens ja.
+- Die CI darf erkennen, wenn das Bau-Erzeugnis nicht aktuell ist.
+- **Die Einzeldatei darf keine Geheimnisse enthalten** (§42).
+
+---
+
+## 30. Tests / Prüfungen  **[hart]**
+
+**Prüfungen sind Pflicht.** Heute sind es 323 Läufe unter
+`pruefungen/lauf/testNNN.mts`.
+
+### Die Befehle
+
+```txt
+npm install                          einmalig
+npx playwright install chromium      einmalig
+npm run typecheck                    Typen (ändert nichts, prüft alles)
+npm run bauen:ts                     src/**.ts  →  quell/**.js
+npm run pruefen -- --schnell         ohne die Messläufe (~11 min)
+npm run pruefen                      alle 323 Läufe
+node pruefungen/alle.mts 87 100 105  einzelne Läufe, Nummern ohne "test"
+node bauen.mts                       redion-einzeldatei.html
+npm run stand                        prüft den Dienststand nach
+```
+
+Die Dateien heissen **`.mts`**, nicht `.mjs` — seit E28 gibt es keine von
+Hand geschriebene `.js` mehr im Projekt (§54).
+
+### Der volle Lauf läuft in Stücken
+
+Ein voller Lauf dauert länger, als eine Sitzung sicher steht. Er wird
+deshalb **in Stücken und wiederaufnehmbar** gefahren: zehn Läufe je Stück,
+eine Merkdatei hält fest, welche Stücke fertig sind. Bricht die Sitzung ab,
+geht nur das laufende Stück verloren, nicht die Stunde davor.
+
+Gefahren wird er in einem eigenen Arbeitsbaum (`git worktree`), damit im
+Hauptbaum weitergearbeitet werden kann, während er läuft. Das Vorspulen von
+`main` passiert dagegen **immer im Hauptbaum**.
+
+### Wann welche Prüfung Pflicht ist
+
+| Geändert wurde … | dann muss laufen |
+|---|---|
+| Speicher | ein Prüflauf dafür |
+| Import oder Export | `test100` und ein eigener |
+| Rechte | ein Rechtefall-Prüflauf |
+| Formeln | ein Formel-Prüflauf mit Grenzfällen |
+| Backup | `test96`, `test100` |
+| grosse Dateien | ein echter grosser-Blob-Fall |
+| etwas mit mehreren Tabs | ein Zwei-Tab-Fall |
+
+**Keine Mocks, wenn die echte App geprüft werden kann.**
+
+Und: Wenn ein Fehler gefunden wird, wird **zuerst** ein Prüflauf geschrieben
+oder ein bestehender erweitert — dann die Reparatur. Sonst weiss niemand, ob
+der Lauf die Sache wirklich hält (§55.2).
+
+---
+
+## 31. Die Prüfläufe, die man kennen muss  **[Richtwert]**
+
+Von 323 Läufen sind diese fünf die, die man beim Namen kennt:
+
+| Lauf | Was er hält |
+|---|---|
+| `test87` | die Architektur- und Sicherheitsgrenzen aus §5 und §19 |
+| `test96` | der Fund, dass Anhänge bei der JSON-Sicherung fehlten oder leer wurden |
+| `test100` | `.redion` mit echten Bytes: sichern, löschen, zurückholen, vergleichen |
+| `test105` | dass jede `.ts` ihr gebautes `.js` hat und `tsconfig.bauen.json` vollständig ist |
+| `test109` | dass kein neues JavaScript entsteht (§54) und `js-bestand.json` nur schrumpft |
+
+**Diese Läufe nicht entfernen.** Bei Änderungen an Backup, ZIP oder Dateien
+zuerst `test96` und `test100` ansehen.
+
+Der Rest ist nicht weniger wert — er ist nur zahlreicher als merkbar. Wer
+sucht, wo etwas geprüft wird, sucht im Quelltext, nicht in dieser Liste.
+
+---
+---
+
+# Teil VII — Was aufgeschrieben wird
+
+## 32. Doku-Regeln  **[hart]**
+
+**Dokumentation ist Teil des Produkts.**
+
+| Datei | Wofür |
+|---|---|
+| `README.md` | für den Nutzer (§33) |
+| `AUFGABEN.md` | **nur** was offen ist |
+| `ERLEDIGTE-AUFGABEN.md` | was fertig ist, mit Fund, Bau und Prüfung |
+| `LUECKEN.md` | was im Produkt fehlt (§35) |
+| `ENTSCHEIDUNGEN.md` | warum etwas so ist (§34) |
+| `CLOUDFLARE.md`, `SERVER-EINRICHTEN.md` | die Wolke einrichten |
+| `START-MIT-CLAUDE-CODE.md` | wie hier gearbeitet wird |
+| `doku/ARCHITEKTUR.md` | wie es aufgebaut ist |
+| `doku/REDION-FORMAT.md` | das `.redion`-Format von innen |
+| `doku/TYPESCRIPT-MIGRATION.md` | die Reihenfolge der Migration |
+
+Regeln:
+
+- Entscheidungen kommen in `ENTSCHEIDUNGEN.md`, Lücken in `LUECKEN.md`,
+  Aufgaben in `AUFGABEN.md`.
+- Wolke und Server nicht nur im Kopf planen.
+- Das `.redion`-Format dokumentieren.
+- Das README nicht mit internen Details überladen, aber wichtige
+  Nutzerfunktionen nennen.
+- **Keine falschen Versprechen.**
+
+---
+
+## 33. README-Regeln  **[Richtwert]**
+
+Das README soll erklären: was Redion ist · wie man es startet · was lokal
+ist · was optional Server und Wolke sind · wie man sichert · was `.redion`
+ist · wo die Grenzen sind · wie man prüft · wo der Code liegt.
+
+Es soll **nicht**: Unfertiges als fertig verkaufen · eine Wolkenpflicht
+suggerieren · die lokale Nutzung kleinreden · Sicherheitsrisiken
+verschweigen.
+
+---
+
+## 34. Entscheidungen dokumentieren  **[hart]**
+
+Jede technische Entscheidung kommt in `ENTSCHEIDUNGEN.md` — auch die, die
+sich beim Nachsehen als „war längst so" herausstellt.
+
+Der Eintrag beantwortet: **Was wurde entschieden? Warum? Was war die
+Alternative? Was kostet es?**
+
+Beispiele, die dort stehen:
+
+- Warum `.redion` statt Base64-JSON? (E38)
+- Warum kein ZIP64? (E39)
+- Warum löscht `.json` vorhandene Anhänge nicht? (E40)
+- Warum bleiben Kennungen beim Import erhalten?
+- Warum bleibt der Server optional?
+- Warum werden D1 und R2 getrennt?
+
+`ENTSCHEIDUNGEN.md` hat vorne ein **Inhaltsverzeichnis** aller Einträge.
+Ein neuer Eintrag kommt in beides: in das Verzeichnis und in den Text.
+
+---
+
+## 35. Lücken dokumentieren  **[hart]**
+
+Wenn etwas fehlt, wird es nicht versteckt, sondern in `LUECKEN.md`
+eingetragen: fehlende Prüfungen · bekannte Grenzen · offene
+Sicherheitsfragen · fehlende Oberfläche · Leistungsrisiken · Cloudflare-Reste
+· Rechte-Lücken · Import-/Export-Lücken.
+
+> **Eine bekannte Lücke ist besser als ein stiller Fehler.**
+
+Und eine geschlossene Lücke wird als **GESCHLOSSEN** eingetragen, mit Beleg
+— nicht gelöscht. Wer sie später sucht, soll finden, warum sie weg ist.
+
+---
+---
+
+# Teil VIII — Oberfläche für Menschen
+
+## 36. Performance-Regeln  **[Richtwert]**
+
+Redion soll auch auf schwächeren Geräten laufen.
+
+- Grosse Dateien nicht vollständig in den RAM laden.
+- Lange Arbeit in Stücke teilen.
+- Die Oberfläche nicht blockieren.
+- Grosse Listen virtualisieren oder begrenzen, wenn nötig.
+- Suchindizes nicht unnötig neu bauen.
+- **WebLLM nicht automatisch laden.**
+- Datenbankansichten nicht unnötig komplett neu rendern.
+- Speicherverbrauch bei Export und Import messen.
+- Mobile Geräte beachten: was auf dem Rechner flüssig ist, ist es dort
+  nicht (§37).
+
+**Und die Regel über den Regeln:** erst messen, dann bauen. L103 Punkt 2
+stand ein Jahr als „bei OCR über achtzig Seiten ruckelt die App" in der
+Liste — nachgemessen waren es flache 8 ms je Schritt, und nur 15 % davon
+überhaupt das, was ein Worker hätte übernehmen können. Eine Vermutung im
+Leistungskapitel kostet Wochen.
+
+---
+
+## 37. Mobile-Regeln  **[hart im Kern]**
+
+E37: **Das Telefon ist der Normalfall, nicht der Sonderfall.**
+
+**Hart:**
+
+- **44 px Mindestgrösse auf den Hauptwegen.** Was der Nutzer täglich trifft
+  — Werkzeuge, Hauptmenü, untere Leiste, Bestätigen und Abbrechen — misst
+  44 px, ohne Ausnahme.
+- Kein Desktop-only für Kernfunktionen.
+- Dialoge müssen auf kleine Bildschirme passen.
+- Die Werkzeugleiste darf nicht verdecken, was sie bedient.
+- Grosse Sicherungen dürfen das Telefon nicht abstürzen lassen.
+
+**Richtwert:**
+
+- **Nebenwege dürfen 32 px sein** — Brotkrume, Fusszeile, Zusatzzeichen in
+  einer Zeile, die man selten trifft. Aber: mit einem geschriebenen Grund an
+  Ort und Stelle, nicht stillschweigend. Wer 32 px setzt, schreibt daneben,
+  warum dieser Weg ein Nebenweg ist.
+- Side Peek darf mobil nicht unbedienbar werden.
+- Die Bildschirmtastatur beachten.
+
+Der Grund für die Trennung: Eine 44-px-Regel ohne Ausnahme führt dazu, dass
+eine Brotkrumenzeile mit fünf Stufen höher wird als der Inhalt darunter.
+Eine 44-px-Regel *mit* stiller Ausnahme führt dazu, dass irgendwann der
+Speichern-Knopf 28 px hat. Deshalb: Ausnahme ja, still nein.
+
+---
+
+## 38. Barrierefreiheit  **[hart im Kern]**
+
+**Hart:**
+
+- Jeder Knopf hat Text oder `aria-label`.
+- Der Fokus ist sichtbar.
+- Die Tastaturbedienung bleibt erhalten.
+- **Keine Information nur über Farbe.**
+- Escape schliesst das passende Overlay (E302 hat den gemeinsamen Griff
+  gebaut, L105 Punkt 1).
+
+**Richtwert:**
+
+- Kontrast im Hell- und Dunkelmodus prüfen.
+- Dialoge fokussierbar machen.
+- Screenreader nicht durch leere Zeichen verwirren.
+
+---
+
+## 39. CSS-Regeln  **[Richtwert]**
+
+Stil bleibt in Stil-Dateien unter `quell/schale/stil/`. **Keine grossen
+Inline-Style-Blöcke.**
+
+- Hell und Dunkel sauber getrennt halten.
+- **Gemeinsame Tokens nutzen — und nur die, die es gibt.** `--akzent`,
+  `--flaeche-2` und `--bg-2` wurden je zweimal erfunden und waren je zweimal
+  unsichtbar. Die echten Namen stehen in `bausteine.css`; wer einen neuen
+  braucht, legt ihn dort an, statt ihn zu erraten.
+- Kein neues Designsystem ohne Grund.
+- Notion-artige Klarheit vor Effekten.
+- Animationen sparsam; `prefers-reduced-motion` respektieren.
+- Namensräume trennen (`doku/CSS-NAMENSRAEUME.md`) — zwei Bereiche mit
+  demselben Klassenpräfix gewinnen abwechselnd, und niemand sieht es im Code.
+
+---
+---
+
+# Teil IX — Sicherheit ausserhalb des Browsers
+
+## 40. Server-Sicherheitsregeln  **[hart]**
+
+Für `server/` und Cloudflare:
+
+- Eingaben validieren.
+- JSON-Grössen begrenzen.
+- Rate-Limits einplanen.
+- CORS strikt halten.
+- **Keine offenen Admin-Endpunkte.**
+- Tokens hashen.
+- Keine Geheimnisse committen (§42).
+- Fehler nicht mit internen Details an den Nutzer senden.
+- D1-Abfragen sicher bauen (Parameter, keine Zeichenkettenklebe).
+- **Rechte serverseitig prüfen** (§26) — die Oberfläche ist kein Schloss.
+- Öffentliche Seiten getrennt behandeln.
+- Uploads validieren, soweit möglich.
+- Dateinamen säubern; **Pfad-Traversal verhindern.**
+
+---
+
+## 41. Bridge-Regeln  **[hart]**
+
+Für Bridge- und Proxy-Funktionen gilt eine einzige Leitfrage: *Kann jemand
+damit auf etwas zugreifen, das ihm nicht gehört?*
+
+- **Keine offene Proxy-Schleuder bauen.**
+- Nur erlaubte Hosts (Allowlist), Pfade prüfen, Header begrenzen.
+- Auth-Header nicht unnötig weiterreichen.
+- **Keine privaten lokalen Ziele erlauben** (`localhost`, `127.*`, `10.*`,
+  `192.168.*`, `169.254.*`).
+- Keine beliebigen URLs.
+- CORS nicht wild öffnen.
+- Prüfläufe für die Allowlist.
+
+---
+
+## 42. Secrets-Regeln  **[hart]**
+
+**Niemals ins Repository:** API-Schlüssel · Tokens · Passwörter · private
+URLs · persönliche Zugangsdaten · Cloudflare-Geheimnisse · OAuth Client
+Secrets.
+
+Beispiele gehören in `.env.beispiel`. Echte Geheimnisse gehören in eine
+lokale `.env`, in Cloudflare Secrets (`wrangler secret put`) oder in eine
+sichere Passwortverwaltung.
+
+**Was kein Geheimnis ist:** die `database_id` in `wrangler.toml`. Sie ist
+eine Adresse, kein Schlüssel, und sie gehört ins Repository — sonst kann
+niemand die Wolke aufsetzen.
+
+**Was das Repository nie sehen darf**, weil es öffentlich ist: `*.redion`,
+`.env.*`, `.dev.vars*`. Sie stehen in `.gitignore`, und dort bleiben sie.
+
+---
+---
+
+# Teil X — Wie gearbeitet wird
+
+## 43. Git-Regeln  **[hart]**
+
+- **Nicht wild auf `main` arbeiten.** Gearbeitet wird auf einem Zweig.
+- Kleine Zweige, kleine Änderungen. **Eine Änderung = ein klares Ziel.**
+- Prüfläufe nennen. Risiken nennen.
+- Keine generierten Grossdateien ändern, wenn nicht nötig.
+- Wenn `redion-einzeldatei.html` neu gebaut wurde: sicherstellen, dass sie
+  zur Quelle passt (§29).
+- **Keine fremden Projekte anfassen** (§1).
+- Kein `git push --force`. Kein `git reset --hard`, kein `git clean`, kein
+  `git restore .` — sie löschen Arbeit, die niemand mehr wiederbekommt.
+- **Nichts löschen ohne Rückfrage.** Auch keine Datei, die überflüssig
+  aussieht.
+
+`main` wird erst vorgespult, wenn ein **voller Lauf grün** ist (§46).
+
+---
+
+## 44. PR-Regeln  **[Richtwert]**
+
+Ein Pull Request wird nur geöffnet, wenn Redur ausdrücklich darum bittet.
+Wenn einer geöffnet wird, beantwortet er:
+
+```txt
+Was wurde geändert?          Welche Risiken?
+Warum?                       Welche Daten können betroffen sein?
+Welche Dateien?              Ist Import/Export betroffen?
+Welche Prüfläufe?            Ist Server/Wolke betroffen?
+                             Ist redion-einzeldatei.html betroffen?
+```
+
+Bei Daten- oder Speicheränderungen zusätzlich:
+
+```txt
+Wie wird Datenverlust verhindert?
+Wie werden alte Daten migriert?
+Wie wird Rückwärtskompatibilität behandelt?
+```
+
+---
+
+## 45. Reihenfolge bei Arbeit  **[Richtwert]**
+
+```txt
+1. Bestehenden Code lesen.
+2. Bestehende Doku lesen.
+3. Die zuständigen Prüfläufe finden.
+4. Einen kleinen Plan machen.
+5. Eine kleine Änderung machen.
+6. Prüfläufe ausführen.
+7. Doku aktualisieren.
+8. Das Ergebnis kurz beschreiben.
+```
+
+**Nicht:** zuerst gross umbauen · Prüfläufe ignorieren · Doku hinterher
+vergessen · mehrere Themen vermischen.
+
+Und der Schritt, der am häufigsten fehlt, ist Schritt 1. Der teuerste
+wiederkehrende Fehler dieses Projekts war, eine Schnittstelle **aus dem
+Gedächtnis** zu schreiben statt sie nachzuschlagen (E21). Der zweitteuerste
+war, eine Sache an einer Stelle zu reparieren und die Nachbarstelle nicht
+anzusehen.
+
+---
+
+## 46. Prioritäten  **[hart]**
+
+```txt
+1. Daten sicher halten
+2. App startet zuverlässig
+3. Import / Export / Backup vollständig
+4. Editor und Datenbanken stabil
+5. Server und Wolke optional und sicher
+6. neue Funktionen
+```
+
+**Neue Funktionen sind weniger wichtig als Datenintegrität.**
+
+### Und was gilt, wenn etwas rot ist
+
+**Rot zuerst.** Ein roter Prüflauf wird vor dem nächsten Bogen angesehen —
+nicht danach, nicht „wenn Zeit ist".
+
+Aber: **ein fertiger, grüner Bogen darf landen**, auch während anderswo
+etwas rot ist. Er auf dem Zweig festzuhalten macht das Rote nicht grüner,
+und je länger er wartet, desto schwerer wird sein Zusammenführen.
+
+**`main` bewegt sich nicht**, solange etwas rot ist. Der Zweig darf wachsen,
+`main` bleibt stehen, bis ein voller Lauf grün ist. So ist immer klar, was
+der letzte geprüfte Stand war — und `holen.bat` gibt genau den heraus (L83).
+
+---
+
+## 47. Nicht tun  **[hart]**
+
+Die Kurzliste. Jeder Punkt hat oben seinen Abschnitt:
+
+| Nicht tun | Warum, siehe |
+|---|---|
+| React einbauen | §6 (E80 hat den Versuch widerrufen) |
+| die App von einem Bauschritt abhängig machen | §6, §52.4 |
+| IndexedDB durch LocalStorage ersetzen | §10 |
+| grosse Dateien in JSON/Base64 sichern | §9, §11 |
+| `eval()` für Formeln verwenden | §20 |
+| Bereiche direkt koppeln | §5 Regel 1 |
+| den Server zur Pflicht machen | §22 |
+| Wolken-Abgleich automatisch aktivieren | §24 (E1/E34) |
+| private Daten ungefragt hochladen | §21, §24 |
+| Anhänge bei JSON-Import löschen | §11 (`test96`) |
+| Datei-Kennungen beim Import brechen | §14 |
+| Sicherheitswarnungen entfernen | §19 |
+| Prüfläufe löschen, weil sie stören | §30, §31 |
+| im README versprechen, was nicht läuft | §33 |
+| Geheimnisse committen | §42 |
+| etwas löschen ohne Rückfrage | §43 |
+
+---
+
+## 48. Wichtige aktuelle Baustellen  **[Richtwert]**
+
+Dieser Abschnitt ist bewusst **kurz**, weil er sonst mit der Wirklichkeit
+auseinanderläuft. Die gepflegte Liste steht in `AUFGABEN.md` (offen) und
+`LUECKEN.md` (Produktlücken).
+
+Stand 3. September 2026 ist das Grosse offen:
+
+1. **Cloudflare wirklich aufsetzen.** Geschrieben und geprüft ist alles;
+   gegen einen echten Dienst lief es nie. Braucht Redurs Konto — der einzige
+   Punkt, den kein Prüflauf im Container erledigen kann (L82 Punkt 1).
+2. **Der Rest am Telefon** (L10): Termine und Eingang mit eigenem Aufbau,
+   die übrigen Menüs als Bottom Sheets, Feinschliff im Editor.
+3. **Der Wolken-Arbeitsbereich als eigenes Konzept** (L7). Setzt Punkt 1
+   voraus.
+
+---
+
+## 49. Empfohlene nächste Arbeiten  **[Richtwert]**
+
+Die vier Arbeiten, die hier ein Jahr lang standen, **sind erledigt**:
+
+| Stand hier | Heute |
+|---|---|
+| README um `.redion` ergänzen | steht drin |
+| `doku/REDION-FORMAT.md` erstellen | gibt es |
+| Cloudflare/R2-Plan mit `.redion` zusammendenken | steht in `CLOUDFLARE.md` (D1 für Daten, R2 für Anhänge, `.redion` als Offline-Download) |
+| CLAUDE.md aktuell halten | dieser Durchgang |
+
+Der Absatz bleibt trotzdem stehen, und zwar als **Regel statt als Liste**:
+
+> Diese Datei muss mit den Entscheidungen wachsen. Eine Empfehlung, die
+> erledigt ist, wird als erledigt eingetragen — nicht stehen gelassen. Vier
+> Jahre alte „nächste Arbeiten" lenken die Arbeit auf etwas, das es nicht
+> mehr gibt.
+
+---
+
+## 50. Definition von fertig  **[hart]**
+
+Eine Änderung ist erst fertig, wenn:
+
+- die App startet;
+- die zuständigen Prüfläufe laufen;
+- keine bekannten Datenverluste entstehen;
+- bei Import/Export: **beides geprüft**;
+- bei Backup: **`.json` und `.redion` geprüft**;
+- bei grossen Dateien: ein echter grosser Blob geprüft;
+- bei Server: Rechte und Sicherheit geprüft;
+- bei Doku-Betroffenheit: die Doku aktualisiert;
+- bei Gestaltung: **ein Bild angesehen** (§55);
+- keine unnötigen Abhängigkeiten dazugekommen sind;
+- die Architekturregeln eingehalten sind (§5).
+
+Und wenn ein neuer Wächter gebaut wurde: **er ist rot gewesen.**
+Zurückdrehen, rot sehen, wieder einsetzen. Ein Wächter, der nie rot war,
+ist eine Behauptung (§55.2).
+
+---
+
+## 51. Wichtigster Satz  **[hart]**
+
+> **Redion darf lieber langsamer neue Funktionen bekommen, als jemals
+> Nutzerdaten zu verlieren.**
+
+---
+---
+
+# Teil XI — TypeScript
+
+## 52. TypeScript-Ziel und Code-Stil  **[Richtwert]**
 
 Redion soll langfristig vollständig auf TypeScript umgestellt werden — professionell, wartbar und ähnlich sauber wie BABAT-RED.
 
@@ -1585,12 +1342,13 @@ Cloudflare-kompatibel
 weiterhin local-first
 weiterhin offlinefähig
 weiterhin exportierbar
+```
 
 Wichtig: Die Migration darf Redion nicht kaputt machen. TypeScript ist Ziel, aber Datenintegrität ist wichtiger als Geschwindigkeit.
 
 
 
-52.1 Grundsatz
+### 52.1 Grundsatz
 
 Claude soll neuen Code bevorzugt in TypeScript schreiben.
 
@@ -1607,7 +1365,7 @@ Für normalen Redion-Code gilt:
 
 
 
-52.2 Migration nicht auf einmal
+### 52.2 Migration nicht auf einmal
 
 Nicht erlaubt:
 
@@ -1629,7 +1387,7 @@ dann Build-Ausgabe stabilisieren
 
 
 
-52.3 Zielstruktur mit TypeScript
+### 52.3 Zielstruktur mit TypeScript
 
 Langfristige Zielstruktur:
 
@@ -1716,7 +1474,7 @@ Aber neue TypeScript-Struktur soll geordnet aufgebaut werden.
 
 
 
-52.4 Kompatibilitätsregel
+### 52.4 Kompatibilitätsregel
 
 Solange Redion noch migriert wird, muss mindestens eine stabile Startart funktionieren:
 
@@ -1736,7 +1494,7 @@ Die gebaute App muss weiterhin ohne Entwicklungsserver nutzbar sein.
 
 
 
-52.5 Build-System
+### 52.5 Build-System
 
 TypeScript darf mit einem Build-System eingeführt werden.
 
@@ -1773,36 +1531,45 @@ Denn Redion ist nicht automatisch BABAT-RED. TypeScript ja, aber React nur nach 
 
 
 
-52.6 TypeScript-Konfiguration
+### 52.6 TypeScript-Konfiguration
 
-Ziel:
+Das hier ist kein Ziel mehr, sondern der Stand. `tsconfig.json` prüft und
+baut nichts (`noEmit`); gebaut wird nur über `tsconfig.bauen.json`.
 
-{
-  "compilerOptions": {
-    "target": "ES2022",
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "strict": true,
-    "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
-    "useUnknownInCatchVariables": true,
-    "noImplicitOverride": true,
-    "noFallthroughCasesInSwitch": true,
-    "skipLibCheck": true
-  }
-}
+```jsonc
+"target": "ES2022",
+"module": "ESNext",
+"moduleResolution": "Bundler",
+"noEmit": true,
 
-Strenge Typen sind erwünscht.
+"strict": true,
+"noUncheckedIndexedAccess": true,     // der teuerste Fehler dieser App
+"exactOptionalPropertyTypes": true,
+"useUnknownInCatchVariables": true,
+"noImplicitOverride": true,
+"noFallthroughCasesInSwitch": true,
+"noImplicitReturns": true,
+"noUnusedLocals": true,               // siehe unten
+"noUnusedParameters": true
+```
 
-Wenn eine Datei nicht sofort streng typisierbar ist:
+`noUncheckedIndexedAccess` ist die Einstellung, die den Fehler findet, der
+hier am meisten gekostet hat: auf ein Feld zugreifen, das es vielleicht
+nicht gibt, und mit `undefined` weiterrechnen.
 
-erst isolieren
-dann typisieren
-nicht überall any verteilen
+**`noUnusedLocals` hat eine Nebenwirkung, die man einmal erlebt haben muss.**
+Wer einen Wächter gegenprüft, indem er eine Zeile herausnimmt (§55.2), nimmt
+damit manchmal die letzte Verwendung einer Konstanten weg — und dann baut
+der Zweig gar nicht mehr. Eine Gegenprobe, die nicht baut, ist keine
+Gegenprobe: es muss die Konstante mit weg oder die Zeile anders verstümmelt
+werden.
+
+Wenn eine Datei nicht sofort streng typisierbar ist: erst isolieren, dann
+typisieren — und **nicht überall `any` verteilen** (§52.7).
 
 
 
-52.7 any-Regel
+### 52.7 any-Regel
 
 any ist nur als Übergang erlaubt.
 
@@ -1823,7 +1590,7 @@ Wenn any nötig ist, Kommentar schreiben:
 
 
 
-52.8 Zentrale Typen
+### 52.8 Zentrale Typen
 
 Zentrale Typen stehen in:
 
@@ -1896,7 +1663,7 @@ genau umgekehrt.
 
 
 
-52.9 Datenbank-Typen
+### 52.9 Datenbank-Typen
 
 Eine Datenbank hält die Spalten. Die Zeilen liegen nicht darin, sondern als
 Blöcke im Fach blocks, und zeigen über parentId hierher zurück.
@@ -1930,7 +1697,7 @@ pivot, form.
 
 
 
-52.10 .redion-Typen
+### 52.10 .redion-Typen
 
 Das Sicherungsformat muss typisiert sein. Backup-Code nie untypisiert lassen.
 
@@ -1960,7 +1727,7 @@ Sicherungen unlesbar machen.
 
 
 
-52.11 Async-Regel in TypeScript
+### 52.11 Async-Regel in TypeScript
 
 Asynchrone Funktionen müssen klar typisiert werden:
 
@@ -1978,7 +1745,7 @@ bei öffentlichen Kernfunktionen.
 
 
 
-52.12 Fehler-Typen
+### 52.12 Fehler-Typen
 
 Fehler sollen eigene Klassen oder klare Result-Typen nutzen.
 
@@ -1998,7 +1765,7 @@ throw new Error(...)
 
 
 
-52.13 DOM-Code in TypeScript
+### 52.13 DOM-Code in TypeScript
 
 DOM-Code soll typisiert werden.
 
@@ -2022,7 +1789,7 @@ wenn es vermeidbar ist.
 
 
 
-52.14 Sichere HTML-Ausgabe
+### 52.14 Sichere HTML-Ausgabe
 
 Auch mit TypeScript gilt:
 
@@ -2039,7 +1806,7 @@ Nutzertext niemals ungeprüft in innerHTML.
 
 
 
-52.15 Tests mit TypeScript
+### 52.15 Tests mit TypeScript
 
 Neue Tests bevorzugt in TypeScript, wenn Testsystem bereit ist:
 
@@ -2063,7 +1830,7 @@ Backup/Import/Export weiterhin mit echten Bytes testen
 
 
 
-52.16 Migrationsphasen
+### 52.16 Migrationsphasen
 
 Claude soll TypeScript in Phasen einführen.
 
@@ -2191,7 +1958,7 @@ Import/Export funktioniert
 
 
 
-52.17 Ziel wie BABAT-RED, aber Redion-Regeln bleiben
+### 52.17 Ziel wie BABAT-RED, aber Redion-Regeln bleiben
 
 BABAT-RED ist Vorbild für:
 
@@ -2217,7 +1984,7 @@ Nicht blind BABAT-RED kopieren.
 
 
 
-52.18 Neue Code-Regel
+### 52.18 Neue Code-Regel
 
 Ab jetzt gilt:
 
@@ -2228,7 +1995,18 @@ Alten JavaScript-Code nur anfassen, wenn nötig oder im Rahmen einer geplanten M
 
 
 
-53. Code-Sprache und TypeScript
+### 52.19 Wichtigster TypeScript-Satz
+
+> Redion soll vollständig TypeScript werden, aber niemals auf Kosten von
+> Datenverlust, kaputtem Backup oder zerstörter Offline-Nutzung.
+
+*(Dieser Absatz stand bis zum 3. September 2026 hinter §53 — §53 war mitten
+in §52 eingefügt worden. Der Text ist unverändert, nur wieder an seinem
+Platz.)*
+
+---
+
+## 53. Code-Sprache und TypeScript  **[hart]**
 
 Die Sprachregel in einem Satz:
 
@@ -2238,7 +2016,7 @@ Ausführlich steht sie in ENTSCHEIDUNGEN.md unter E27. Hier das, was beim
 Arbeiten gebraucht wird.
 
 
-53.1 Was englisch wird
+### 53.1 Was englisch wird
 
 Alles, was nur der Code liest — und nur in neuem TypeScript:
 
@@ -2253,7 +2031,7 @@ Enums und Unions      'wartet' | 'laeuft' | 'fertig' bleibt als Wert deutsch,
 Testnamen im Code     describe('createPage', …)
 
 
-53.2 Was deutsch bleibt
+### 53.2 Was deutsch bleibt
 
 Alles, was ein Mensch liest:
 
@@ -2268,7 +2046,7 @@ Eine englisch benannte Datei mit deutschen Kommentaren ist kein Widerspruch,
 sondern genau die Regel.
 
 
-53.3 Die zwei harten Grenzen
+### 53.3 Die zwei harten Grenzen
 
 Grenze 1: Feldnamen sind keine Namen, sondern Daten.
 
@@ -2289,7 +2067,7 @@ werden (so geschehen bei Kennungen → Ids). Ein Modul mit hundert Aufrufern
 nicht ohne eigenen Plan.
 
 
-53.4 Wo neuer Code hingehört
+### 53.4 Wo neuer Code hingehört
 
 src/                  TypeScript-Quelle, englisch benannt
   core/types/         nur Typen, keine Logik. Erzeugt nichts (noEmit).
@@ -2301,7 +2079,7 @@ ohne src/core/types/** auszuschliessen. Sonst werden leere .js-Dateien nach
 quell/ geschrieben.
 
 
-53.5 Was das nicht heisst
+### 53.5 Was das nicht heisst
 
 Kein React. TypeScript ja, React nur nach eigener Entscheidung in
 ENTSCHEIDUNGEN.md.
@@ -2314,27 +2092,20 @@ Kein grosser Umbau auf einmal. Die Phasen stehen in AUFGABEN.md.
 Keine Datenmigration nebenbei. Siehe 53.3, Grenze 1.
 
 
-53.6 Der wichtigste Satz dieses Abschnitts
+### 53.6 Der wichtigste Satz dieses Abschnitts
 
 Ein englischer Name ist eine Verbesserung. Ein falscher Feldname ist ein
 Datenverlust. Im Zweifel nachsehen, nicht übersetzen.
 
 
 
-52.19 Wichtigster TypeScript-Satz
-
-Redion soll vollständig TypeScript werden, aber niemals auf Kosten von Datenverlust, kaputtem Backup oder zerstörter Offline-Nutzung.
-
-
----
-
-54. Die Sprachen dieses Projekts
+## 54. Die Sprachen dieses Projekts  **[hart]**
 
 Beschlossen in ENTSCHEIDUNGEN.md E28. Der ganze Abschnitt in einem Satz:
 
     Es entsteht kein neues JavaScript.
 
-54.1 Was benutzt wird
+### 54.1 Was benutzt wird
 
 TypeScript   neuer Hauptcode, Typen, Kernlogik, neue Module
 JavaScript   nur der bestehende Redion-Code — migrieren, nicht vermehren
@@ -2350,7 +2121,7 @@ TOML         Wrangler
 Eine weitere Sprache kommt nur dazu, wenn sie vorher in E28 steht. Ein
 Python-Hilfsskript ist genau der Anfang, an dem eine Werkzeugkette entsteht.
 
-54.2 Wo eine neue Datei hingehört
+### 54.2 Wo eine neue Datei hingehört
 
 Code, den der BROWSER lädt:
 
@@ -2363,13 +2134,14 @@ es ist der Grund, warum die App weiterhin per Doppelklick startet.
 
 Code, den NODE ausführt — Prüfläufe, bauen, Server:
 
-    pruefungen/lauf/testNN.ts     und direkt starten:
-    node pruefungen/lauf/testNN.ts
+    pruefungen/lauf/testNNN.mts    und direkt starten:
+    node pruefungen/lauf/testNNN.mts
+    node pruefungen/alle.mts NNN     oder so, mit der Nummer allein
 
 Kein Übersetzer, kein Paket, kein Schritt zum Vergessen. Node entfernt die
 Typen seit 22.18 von selbst.
 
-54.3 Der Preis: löschbare Typen
+### 54.3 Der Preis: löschbare Typen
 
 Node ENTFERNT die Typen, es übersetzt nicht. Was zur Laufzeit etwas erzeugt,
 geht deshalb nicht:
@@ -2383,17 +2155,23 @@ und der Fehler kommt dann aus einer ganz anderen Ecke. test109 hält das fest.
 
 Und: Node PRÜFT dabei nicht. Das Prüfen bleibt npm run typecheck.
 
-54.4 Wie die Regel durchgesetzt wird
+### 54.4 Wie die Regel durchgesetzt wird
 
 pruefungen/js-bestand.json führt jede von Hand geschriebene .js/.mjs, die es
 heute gibt. Das Verzeichnis darf nur schrumpfen.
 
-    eine Datei migriert   -> aus dem Verzeichnis streichen
+    eine Datei migriert    -> aus dem Verzeichnis streichen
     eine neue .js angelegt -> test109 wird rot
+
+**Seit dem 3. September 2026 ist das Verzeichnis leer.** Keine von Hand
+geschriebene .js oder .mjs mehr im ganzen Projekt — die Regel aus E28 ist
+nicht mehr nur Absicht, sondern Zustand. Ein leeres Verzeichnis heisst
+deshalb nicht „gibt es nicht mehr", sondern „ab hier gibt es nichts mehr
+umsonst": die erste neue .js macht test109 rot.
 
 Erzeugtes JavaScript zählt nicht mit; test105 hält es an seiner .ts.
 
-54.5 Was das nicht heisst
+### 54.5 Was das nicht heisst
 
 Nicht: den Bestand in einem Zug übersetzen. Die Reihenfolge steht in
 doku/TYPESCRIPT-MIGRATION.md und beginnt dort, wo ein Fehler nichts kostet.
@@ -2402,22 +2180,22 @@ Nicht: einen Bauschritt für die App einführen. Das bleibt verboten (§6). Die
 zwei Wege oben kommen ohne aus, und genau deshalb sind es diese zwei.
 
 
-================================================================================
-# 55. Bilder machen, nicht nur Code lesen
-================================================================================
+# Teil XII — Hinsehen
+
+## 55. Bilder machen, nicht nur Code lesen  **[hart im Kern]**
 
 Beide Gestaltungs-Skills (`redion-ui-design-system`, `redion-mobile-ux`) sagen
 denselben Satz, und er ist der wichtigste in beiden:
 
     Öffne die Seite wirklich, statt nur den Code zu lesen.
 
-    node bilder.mjs                  alle Ansichten, Rechner und Telefon
-    node bilder.mjs tabelle          nur die Tabelle
-    node bilder.mjs tabelle handy    nur die Tabelle am Telefon
+    node bilder.mts                  alle Ansichten, Rechner und Telefon
+    node bilder.mts tabelle          nur die Tabelle
+    node bilder.mts tabelle handy    nur die Tabelle am Telefon
 
 Die Bilder landen in `bilder/` und werden nicht mitversioniert.
 
-55.1 Warum das keine Kür ist
+### 55.1 Warum das keine Kür ist
 
 Beim Tabellenblock fand das Hinsehen vier Fehler, die KEINE Prüfung hatte —
 und zwei davon konnte keine Prüfung haben, weil sie nur mit Augen sichtbar
@@ -2432,7 +2210,7 @@ sind:
   · Am Telefon stand die halbe Werkzeugleiste ausserhalb des Bildes — darunter
     der Weg zu „Als Excel speichern".
 
-55.2 Und die Lehre daraus für Prüfungen
+### 55.2 Und die Lehre daraus für Prüfungen
 
 Die erste Prüfung gegen die abgeschnittene Zahl mass `scrollWidth` gegen
 `clientWidth`. Gemessen ergab das für eine 21-stellige Zahl in einer 109 px
@@ -2445,13 +2223,29 @@ messen; abgeschnitten wird trotzdem.
 Eine Prüfung, die immer „passt schon" sagt, ist keine Prüfung. Wer eine neue
 schreibt, prüft zuerst, ob sie überhaupt rot werden KANN.
 
-55.3 Nach jeder Änderung ein Bild
+### 55.3 Ein Bild, wenn es etwas zu sehen gibt
 
-Redur will die Bilder direkt im Gespräch sehen — nach jeder Gestaltungs-
-änderung und nach jeder neuen Sache. Das ist keine Höflichkeit, sondern der
-kürzeste Weg zu den vier Fehlern oben.
+Redur will die Bilder direkt im Gespräch sehen. Die Regel, die er dazu am
+3. September 2026 entschieden hat, ist genauer als „nach jeder Änderung":
 
-55.4 Die Bilder gehen nie auf GitHub
+> **Ein Bild, wenn man etwas sehen kann. Eine Messung, wenn es reines
+> Rechnen ist.**
+
+Also ein Bild bei allem, was Augen hat: eine neue Ansicht, ein geänderter
+Aufbau, eine Leiste, ein Dialog, eine Karte, ein Zustand, den es vorher
+nicht gab. Und zwar **im Gespräch**, nicht nur auf der Platte — ein Bild,
+das niemand ansieht, hat nichts gefunden.
+
+Keine Bilder dagegen bei Dingen ohne Bild: ein Formelkern, ein ZIP-Leser,
+eine Rechteprüfung, eine Migration. Dort ist die Messung der Beweis, und
+ein Bildschirmfoto der unveränderten Seite wäre nur Beschäftigung.
+
+Der Grund für die Trennung ist derselbe wie überall hier: Eine Regel, die
+IMMER etwas verlangt, wird nicht mehr gelesen. Zwanzig Bilder von
+unveränderten Seiten machen das eine Bild unsichtbar, auf dem die
+Werkzeugleiste aus dem Bild ragt.
+
+### 55.4 Die Bilder gehen nie auf GitHub
 
 `bilder/` steht in `.gitignore`. Bildschirmfotos sind Arbeitsmaterial, keine
 Quelle: sie gehören auf den Rechner, an dem gearbeitet wird — nicht ins
@@ -2467,3 +2261,35 @@ Zwei Gründe, und der zweite ist der wichtigere:
 
 `bilder.mts` selbst gehört sehr wohl ins Verzeichnis. Es ist das Werkzeug,
 nicht das Ergebnis.
+
+---
+---
+
+# Offene Fragen an Redur
+
+Nicht jede Marke oben ist entschieden. Diese hier hat Claude gesetzt, weil
+irgendetwas dastehen musste — sie gehören Redur, und bis er etwas sagt,
+gilt der Vorschlag.
+
+| Abschnitt | Vorschlag | Die Frage dahinter |
+|---|---|---|
+| §18 Editor | Richtwert, vier harte Punkte | Ist „unbekannte Blocktypen nicht löschen" hart genug gefasst, oder gehört auch „Slash-Menü stabil" dazu? |
+| §23 Cloudflare | Richtwert | Nur „keine grossen Blobs in D1" steht als hart. Reicht das? |
+| §31 Prüfläufe | Richtwert | Fünf Läufe beim Namen — sollen es mehr sein, oder ist eine kurze Liste die ehrlichere? |
+| §39 CSS | Richtwert | Die Token-Regel könnte hart sein: erfundene Tokens sind dreimal unbemerkt durchgegangen. |
+| §44 PR | Richtwert | Zurzeit wird kein PR geöffnet, ausser Redur bittet darum. Soll das so bleiben? |
+
+**Vier Marken hat Redur selbst gesetzt** (3. September 2026), und die stehen
+fest:
+
+- **§30** — der volle Lauf läuft in Stücken und ist wiederaufnehmbar.
+- **§37** — 44 px auf den Hauptwegen, 32 px auf Nebenwegen mit geschriebenem
+  Grund.
+- **§46** — rot zuerst; fertige grüne Bögen dürfen landen; `main` bewegt
+  sich nicht.
+- **§55.3** — ein Bild, wenn man etwas sehen kann; sonst eine Messung.
+
+---
+
+*Zuletzt durchgesehen am 3. September 2026. Was dabei nicht mehr stimmte,
+steht in `ENTSCHEIDUNGEN.md` unter E370.*

@@ -156,21 +156,21 @@ node bauen.mts
 **Bei Backup, Import oder Export**
 
 ```
-node pruefungen/lauf/test100.mjs
+node pruefungen/alle.mts 96 100
 ```
 
 **Bei Architektur oder Sicherheit**
 
 ```
-node pruefungen/lauf/test87.mjs
+node pruefungen/alle.mts 87
 ```
 
 **Bei TypeScript**
 
 ```
 npm run typecheck
-npm run bauen:ts          wenn eine Datei unter src/core/helpers/ liegt
-node pruefungen/lauf/test105.mjs
+npm run bauen:ts          wenn eine Datei unter src/ liegt, die der Browser lädt
+node pruefungen/alle.mts 105 109
 ```
 
 **Vor jedem Push** die volle Runde: `npm run pruefen`.
