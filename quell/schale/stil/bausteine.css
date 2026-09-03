@@ -4373,7 +4373,22 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    stand ausserhalb des Fensters. Vierte Auflage derselben Falle nach E89,
    E100 und E102, und die erste, bei der die Abhilfe selbst danebenlag. */
 .spalten-block > *{min-width:0}
-.spalte{min-width:0; display:flex; flex-direction:column; gap:2px}
+/* DIE SPALTE NIMMT DIE BREITE, DIE SIE BEKOMMT (E369).
+   `width:100%` sah lange überflüssig aus: die Spalte ist ein Flex-Kind mit
+   `flex:0 1 auto` und schrumpfte auf ihren Inhalt — und der war breit genug,
+   solange die WERKZEUGLEISTE ihn aufspannte. Seit E359 grenzt
+   `container-type:inline-size` die Leiste ein, sie trägt nichts mehr zur
+   Eigenbreite bei, und die ganze Kette fiel auf 2 px zusammen: PDF-Seite,
+   Papier und Seitenbild (gemessen: Bild 1 px hoch statt 482). Gefunden hat
+   es test178 im vollen Lauf, nicht das Auge — man sah eine leere Spalte und
+   hätte sie für „noch nicht geladen" halten können.
+
+   Dass die Zeile fehlte, war schon vorher falsch, nur folgenlos: `.spalte >
+   .blk{width:100%}` rechnet mit einer festen Breite der Spalte. Und die
+   beiden Spalten waren nie gleich breit (342 gegen 276) — E104 hatte
+   „dieselben Masse wie die Seite" versprochen. Jetzt füllen beide ihre
+   Gitterspur und sind gleich hoch. */
+.spalte{min-width:0; width:100%; display:flex; flex-direction:column; gap:2px}
 .spalte > .blk{width:100%}
 
 /* ── PDF-Seite (E103) ──────────────────────────────────────────────────────

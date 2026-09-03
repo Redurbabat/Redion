@@ -19,6 +19,412 @@ Notion. Die wichtigsten Ziele sind:
 
 ---
 
+## Inhaltsverzeichnis
+
+364 Entscheidungen, E1 bis E368. Die Nummer ist die Ordnung: eine Entscheidung
+wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
+späteren widerrufen, und dann steht das in beiden.
+
+Gesucht wird am schnellsten mit der Nummer (`E207`), nicht mit dem Titel.
+
+**Vier Nummern haben keinen eigenen Eintrag:** E198, E199, E222, E269. Sie werden im Text
+zitiert, aber der Bogen dazu ist in einem Nachbareintrag aufgegangen (E269
+etwa in der Zeichenschicht-Reihe E352–E360). Sie stehen hier, damit niemand
+sie für verloren hält.
+
+Dieses Verzeichnis ist am 3. September 2026 angelegt worden. Wer eine
+Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
+
+**E1–E50**
+
+* **E1** — Redion bleibt local-first
+* **E2** — Redion bekommt optionale Cloudflare-Erweiterung
+* **E3** — Große Dateien gehören nicht in JSON
+* **E4** — `.redion` ist ein ZIP-artiges Sicherungspaket
+* **E5** — Import darf Anhänge nicht falsch löschen
+* **E6** — Redion wird vollständig TypeScript
+* **E7** — Kein React-Zwang
+* **E8** — Architektur bleibt modular
+* **E9** — Register bleiben die zentrale Wahrheit
+* **E10** — Keine SQL-Engine im Browser als Pflicht
+* **E11** — Formeln bleiben sicher
+* **E12** — Sicherheit vor Komfort
+* **E13** — Versionen werden ausgedünnt, nicht nur abgeschnitten
+* **E14** — Zwei Tabs werden aufgefrischt, aber nicht vollständig zusammengeführt
+* **E15** — Öffentliche Seiten dürfen private Daten nicht mitliefern
+* **E16** — Dokumentation ist Teil des Produkts
+* **E17** — Datenintegrität vor neuen Features
+* **E18** — Keine CSP im Dokument — wegen `file://`
+* **E19** — Die Schonfrist beim Sichtbarmachen des Papierkorbs
+* **E20** — Keine Marke ändert Rechte oder stellt Schlüssel aus
+* **E21** — Kataloge werden geladen und befragt, Schnittstellen nachgesehen
+* **E22** — Die Einstellungen im Register sind ein eigener Umbauschritt
+* **E23** — Die 62 Integrationen brauchen einen Server
+* **E24** — Excel-Probleme lösen, Excel nicht klonen
+* **E25** — Keine Makros, kein VBA
+* **E26** — Grosse Abhängigkeiten nur nach Prüfung
+* **E27** — Code-Sprache — Deutsch für Menschen, Englisch für Code
+* **E28** — Die Sprachen, die dieses Projekt benutzt
+* **E29** — Der Tabellenblock — was er ist und was er bewusst nicht ist
+* **E30** — Redion bleibt blau
+* **E31** — Ein strenger Modus für die Formelmaschine
+* **E32** — Der Worker heisst redion — die Datenbank weiter notizen
+* **E33** — Anhänge in der Wolke — Metadaten in D1, Bytes in R2
+* **E34** — Der Konto-Modus — anmelden ist nicht zustimmen
+* **E35** — Rechte, die wirklich sperren — und Rechte, die wirklich erlauben
+* **E36** — WENNFEHLER — der Fehler entsteht dort, wo jemand danach fragt
+* **E37** — Redion ist zuerst eine Telefon-Seite
+* **E38** — Die Telefon-Navigation: fünf Wege oben, die KI unten
+* **E39** — ZIP64 kommt — eine ehrliche Meldung ist keine Sicherung
+* **E40** — Meldungen gehören dem Dienst-Skript, nicht dem Fenster
+* **E41** — Ein Dienst-Skript gibt keine umgeleitete Antwort heraus
+* **E42** — „Mehr" statt „Eingang", und der Kompass gehört hinein
+* **E43** — Bewegung: drei Dauern, drei Kurven, keine Federn
+* **E44** — Nocturne — Redion bekommt eigene Farben
+* **E45** — Ein Blatt hinter dem Stift, statt sofort einer leeren Seite
+* **E46** — Ladeskelette statt Kreisel
+* **E47** — Zeilen kommen versetzt herein — aber nur die ersten neun
+* **E48** — Die Suchfilter sind am Telefon Marken, nicht Auswahlfelder
+* **E49** — Die Reiterpille wandert, statt zu springen
+* **E50** — Die obere Leiste: 56 px, und ihre Höhe steht an EINER Stelle
+
+**E51–E100**
+
+* **E51** — Dialoge werden an EINER Stelle zu Dialogen
+* **E52** — Grenzen für Agenten — und der gefährliche Fall ist der unbeaufsichtigte
+* **E53** — Bedingte Formatierung — im Tabellenblock, wo das Wort herkommt
+* **E54** — Web Push — und der Stoss trägt nichts
+* **E55** — Der Willkommensbildschirm — und die Frage, die niemand beantwortet hat
+* **E56** — Der Prüfstand übersah rote Punkte
+* **E57** — Die Sicherungskarte sagt, dass sie arbeitet — und der Fund daneben
+* **E58** — Einstellungen am Telefon: zwei Seiten statt zwei Spalten
+* **E59** — Markdown geht jetzt in beide Richtungen — und das Zeichen bleibt nicht stehen
+* **E60** — Symbole und Daten in der bedingten Formatierung — und wo „heute" anfängt
+* **E61** — Der Testlauf war keiner — er änderte die Daten
+* **E62** — „Kopiert" muss stimmen — und ein Ausschneiden, das nichts verliert
+* **E63** — Eine scharfe Kante liest sich als Ende der Zahl
+* **E64** — 40 ist auch nicht 44 — und eine Zahl, die an zwei Stellen steht
+* **E65** — Dieselbe Zahl an zwei Stellen, zum dritten Mal an einem Tag
+* **E66** — Ein Typ, der lügt, ist schlimmer als keiner
+* **E67** — Jede Grenze bekommt ein Zuhause — und wo das nicht geht, eine Prüfung
+* **E68** — Eine Telefongrenze, nicht drei
+* **E69** — Kataloge gehören ins Register — und was ohne Auffang verschwindet
+* **E70** — Was sich nicht teilen lässt, wird nachgerechnet
+* **E71** — Ein Lesefehler ist kein leerer Bestand
+* **E72** — Heilen heisst auffüllen, nicht überschreiben
+* **E73** — Eine Prüfung ruft die Funktion, nicht ihre Abschrift
+* **E74** — Ein halber Upload ist kein halbes Video
+* **E75** — Sechs Prüfpunkte, die nicht rot werden konnten
+* **E76** — Erfolg heisst: es ist passiert
+* **E77** — Zurücknehmen, Mitnehmen, Aufschreiben (D11, D12, D14, K1–K4)
+* **E78** — Die Zielarchitektur: React, Vite, Dexie, ProseMirror — als Strangler, nie als Big-Bang
+* **E79** — Einspielen ist ganz oder gar nicht
+* **E80** — Der React-Umbau ist widerrufen — Redur braucht keine zweite Oberfläche
+* **E81** — Die Formatleiste über der Tastatur — vier Fehler, die nur Augen fanden
+* **E82** — Der Prüfstand hungerte, nicht die App — die Pille wird malunabhängig gemessen
+* **E83** — Ziehen am Telefon — und zwei Altfehler, die die neue Prüfung fand
+* **E84** — Mehrfachauswahl am Telefon — und der Grund, der Tipps frass
+* **E85** — Automationen: der sonst-Zweig ist erstklassig
+* **E86** — Automationen drehen keine Kreisel — der Schleifenschutz
+* **E87** — Raster: Ausfüllen mit Strg+D und Strg+R — und der Klick, der die Tastatur verlor
+* **E88** — Markdown-Tabellen: Einfügen wird ein Tabellenblock, Kopieren schreibt ihn
+* **E89** — Der Tabellenblock am Telefon: Zeilen als Karten — ein Vorschlag mit Rückweg
+* **E90** — Die Blocktypen-Inventur: 76 statt „58 von 97", und vier Kandidaten gab es längst
+* **E91** — Excel-Mehrblatt: die ganze Mappe raus, jedes Blatt herein
+* **E92** — Pivot-Prozent: die Ränder rechnen mit
+* **E93** — ODS am Tabellenblock: Speichern und Öffnen
+* **E94** — Excel-Export mit Zellformat: Zahlen bleiben Zahlen
+* **E95** — ODS-Export mit Zellformat: der Zwilling zu E94
+* **E96** — Spaltenschlüssel dürfen nicht rein numerisch sein
+* **E97** — Zellformat beim Einlesen: die Gegenrichtung zu E94/E95
+* **E98** — Abgelegte Dateien überleben den Browser-Neustart
+* **E99** — Ziehen-und-Ablegen kennt nur noch eine Grenze
+* **E100** — Das A4-Blatt: schreiben und malen auf demselben Papier
+
+**E101–E150**
+
+* **E101** — Schriftgrösse und Schriftart je Block
+* **E102** — Spalten halten ihren Inhalt
+* **E103** — Ein PDF wird zu Seiten, auf die man schreiben kann
+* **E104** — Beim Einlesen steht das Notizblatt gleich daneben
+* **E105** — Ein Verweis führt wirklich hin
+* **E106** — Die Seitenbilder kommen aus dem Original zurück
+* **E107** — Der Text im PDF ist auffindbar
+* **E108** — Eine beschriebene Seite lässt sich weitergeben
+* **E109** — Die Präsentation kennt die neuen Blöcke — L38 geschlossen
+* **E110** — Ein geschütztes PDF fragt nach seinem Passwort
+* **E111** — Das Manifest der Sicherung log — gefunden im Archiv selbst
+* **E112** — Ein Dateiname ist kein HTML — drei Löcher aus derselben Familie
+* **E113** — „Quelltext ansehen" war ein Löschknopf
+* **E114** — `rows` heisst an zwei Blockarten etwas anderes
+* **E115** — Wer merkt, wann eine Zeichenschicht aufhört zu leben
+* **E116** — Der Weg daneben: zweimal geklickt, abgebrochen, lange gewartet
+* **E117** — Ein Ausdruck mit einer Grenze, die sich meldet
+* **E118** — Drei Wege, die ins Leere führten
+* **E119** — Die Frage an jede Blockart — und was sie NICHT beantwortet
+* **E120** — Einrückung ist Struktur
+* **E121** — Ein Stück-Lesefehler ist keine leere Datei
+* **E122** — Das verschlüsselte Paket angeschlossen — und wieder abgeklemmt
+* **E123** — Der Wettlauf beim Zurückholen — abgelöste Arbeit muss abwartbar sein
+* **E124** — Drei Suchen, zwei Antworten
+* **E125** — Ink V2 erweitert den Dokumentraum, nicht die Zahl der Zeichenmaschinen
+* **E126** — Dokumentmodus ist eine Ansicht, kein zweites Dokument
+* **E127** — Lernquellen und Wiederholungen bleiben Blockdaten
+* **E128** — Neue Audioaufnahmen sind Anhänge, keine Zeichenketten
+* **E129** — Ein Resolver für Titel, Aliasse und Vault-Pfade
+* **E130** — Erkennung ist ein Derivat mit Provenienz
+* **E131** — Ausbildung ist Vorlage plus bestehende Bibliothek
+* **E132** — Vierzigtausend Zeilen, die der Browser nie gesehen hat
+* **E133** — Eine Prüfung, die die Produktwelten wirklich öffnet
+* **E134** — Papiervorlagen — fünf Muster, kein zweites Dokumentformat
+* **E135** — Die Lernwelt rechnete falsch — zwei Ursachen, sieben falsche Zahlen
+* **E136** — Drei Dinge, die dastanden und nicht funktionierten
+* **E137** — Drei Wege, die nach dem Start nicht mehr stimmten
+* **E138** — Das Whiteboard ist eine Fläche, kein Fenster
+* **E139** — Die Palette konnte hingehen, aber nichts anlegen
+* **E140** — Vier Knöpfe ohne Umlaut — und die Prüfung, die das künftig sieht
+* **E141** — Der PDF-Arbeitsplatz am Telefon: 211 von 1059 Pixeln
+* **E142** — Weisse Schrift auf weissem Grund — und der Farbwert, der fehlte
+* **E143** — Die leere Wand stand auch vor vollen Regalen
+* **E144** — Drei Sachen, die L54 als fehlend festgehalten hat
+* **E145** — Eine Lücke, die es nicht gab
+* **E146** — Der Knopf „Geteilt öffnen" tat etwas, und man sah es nicht
+* **E147** — Die Suche findet Dateinamen und Quellenangaben — und beide Suchen dieselben
+* **E148** — Vier Sachen, die nur das Hinsehen fand — und die Ursache darunter
+* **E149** — Lernpfad und Arbeitssicht, endlich festgehalten
+* **E150** — Der Dienst hinter „⌁ Erkennen" liegt jetzt bei
+
+**E151–E200**
+
+* **E151** — Am Telefon stand der Startknopf 188 Pixel unter der Falz
+* **E152** — Die unverteilte Aufgabe war für niemanden da (§41)
+* **E153** — Wer sich einen Namen gab, verlor seine Aufgabenliste
+* **E154** — Der Obsidian-Rundlauf, endlich einmal ganz durchgelaufen (§43)
+* **E155** — Der Weg zurück zur Quelle (§44)
+* **E156** — Am Telefon fehlten die Ränder — an drei Stellen
+* **E157** — Ein Prüflauf, der wartet, sieht aus wie einer, der rechnet
+* **E158** — Sechs Bereiche standen in keinem Katalog (L51, §5 Regel 2)
+* **E159** — Ein schwarzer Schatten auf schwarzem Grund (L58)
+* **E160** — Ein Katalog, den niemand liest, wird still falsch (L51 Teil 2)
+* **E161** — Der Weg zurück in die Besprechung — und drei Sachen, die dabei auffielen (L57, §44)
+* **E162** — „Karten: 3, Lernstand 67 %" — für eine Prüfung ohne eine einzige Karte (L49)
+* **E163** — Zwanzig bewertete Aufgaben, weg mit einem Klick (L49)
+* **E164** — Ein Pfad, der ordnet — und einer, der nur so aussieht (L49)
+* **E165** — Ein Knopf, der aussieht, als täte er nichts — und die Farbe mitnimmt (L40)
+* **E166** — Zwanzig Apps, zwei Listen (L58, CLAUDE.md §5 Regel 2)
+* **E167** — Der Fuss der Seitenleiste, und was dort NICHT hingehört (L58)
+* **E168** — Sieben Quellenangaben, die ins Leere zeigten
+* **E169** — Was im Journal steht, war für den Workspace nicht da (L50)
+* **E170** — Der Weg zu einer Blockart ist nicht sie selbst — der Rest von L41
+* **E171** — Eine Datei, die noch jemand zeigt, darf nicht mitgelöscht werden (L43)
+* **E172** — Ein Spaltenschlüssel aus lauter Ziffern (L36)
+* **E173** — Eine PDF-Seite feiner rechnen (L37)
+* **E174** — Die Kennungen überleben den Quelltext-Rundlauf (L40)
+* **E175** — Eine Kennung ist keine Abfrage (L23)
+* **E176** — Was wäre, wenn (L28)
+* **E177** — Öffentlich, ohne dass Privates mitgeht (L31)
+* **E178** — Spalten aufräumen, mit Vorschau (L27)
+* **E179** — Zwei Regressionen, die der volle Lauf gefunden hat
+* **E180** — Was die Ansicht verschweigt (L22)
+* **E181** — Dieselbe Frage, zwei Antworten (L50, L21, L30)
+* **E182** — Der Knopf, der den Export kennt (L26)
+* **E183** — Die Liste rollte, ohne es zu zeigen
+* **E184** — Eine Erinnerung, die man schon kennt
+* **E185** — Das Dashboard sieht über den eigenen Rand (L17)
+* **E186** — Ein Menü, das mit dem Arbeitsbereich wächst
+* **E187** — Der Strom fliesst wirklich — eine Simulation, die rechnet
+* **E188** — Ein Formelheft, das offen bleibt, während man zeichnet
+* **E189** — Aufgaben, die sich selbst erzeugen
+* **E190** — Zwei Bilder, die mehr erklären als ein Absatz
+* **E191** — Fachzeichen auf dem PDF, und ein Ausschnitt als Lernkarte
+* **E192** — Drei Aufgaben, die den Schaltplan lesen
+* **E193** — In den Plan tippen, und der einzige Massstab dafür
+* **E194** — Redions eigenes Formelbuch, mit den Seitenzahlen des gedruckten
+* **E195** — Das ganze Heft, und warum der Abschnitt seine Zeilen selbst trägt
+* **E196** — Drei Dinge, die nur das Hinsehen fand
+* **E197** — Der Durchgang durch alle 33 Seiten
+* **E200** — Zeichen statt Emoji — die Oberfläche gehört Redion
+
+**E201–E250**
+
+* **E201** — Ein Knopf-System, und die Suche in die Mitte
+* **E202** — Die Lernwelt bekommt Redions Zeichen — und zwei rote Läufe waren schon rot
+* **E203** — Und die Schale selbst — sechzehn Emoji, die kein Bild je zeigte
+* **E204** — Die Heute-Ansicht bekommt eine Schattenleiter, und drei Regeln logen
+* **E205** — „Weiter wo du warst": neun gleiche Zeilen werden drei Seiten
+* **E206** — Links weniger Bereiche, und die zwei Welten haben nur noch einen Weg
+* **E207** — Die Bibliothek bekommt ein Regal, und die Vorschau zieht in den Kern
+* **E208** — Sicherung, Papierkorb und Platz: der Rest des Bibliothek-Entwurfs
+* **E209** — Der Lösungsweg: jede Rechnung zeigt ihre Schritte
+* **E210** — Das Menüband: Start, Einfügen, Zeichnen, Werkzeuge, Elektro, Ansicht
+* **E211** — Links die Bereiche, oben die Werkzeuge
+* **E212** — Zeichnen im Menüband: eine Frage, drei Fehler
+* **E213** — Farbe und Strichstärke gehören ins Menüband
+* **E214** — „PDF einlesen" im Band: der Wähler gehört in den Bereich (L62)
+* **E215** — „Im Text": zwei Slash-Aktionen ohne Schreibzeiger (L63)
+* **E216** — Eine Seite ohne Text ist nicht leer (L61, Teil 1)
+* **E217** — Zwei rote Punkte, die niemand gesehen hat
+* **E218** — Ruhig: dieselbe App, weniger gleichzeitig sichtbar
+* **E219** — Die ruhige Fassung ist gebaut: 52 Rahmenknöpfe werden 15
+* **E220** — Die Auswahlleiste bleibt, wo sie ist. Das Massband hat entschieden.
+* **E221** — Wer wenig zeigt, muss das Wenige richtig zeigen
+* **E223** — Was das Weglassen kaputt gemacht hat
+* **E224** — Die Mitte ist die Mitte des Arbeitsbereichs, nicht die des Fensters
+* **E225** — Eine Messung, die „ausgeblendet" und „verdeckt" nicht unterscheidet
+* **E226** — `offsetParent` ist keine Sichtbarkeit
+* **E227** — Die Kartenansicht hat nie ein Zellformat angewendet
+* **E228** — Sieben von acht Kacheln standen abgeschnitten da
+* **E229** — Ein Tag ist kein Zeitpunkt
+* **E230** — Was Bedeutung trägt, gehört nicht in die Beiwerk-Farbe
+* **E231** — Eins ist eine andere Zahl als zwei
+* **E232** — Eine Abwägung ohne Zahlen ist eine Vermutung
+* **E233** — Redion startet leise
+* **E234** — Ein Wettlauf zwischen Prüfung und App, den beide nicht verschuldet haben
+* **E235** — Der Kopf am Telefon: aus vier Bänken werden zwei
+* **E236** — Redion öffnet dort, wo die Sachen liegen
+* **E237** — Drei Zahlen, die eine Leiste beschrieben, die es nicht mehr gibt
+* **E238** — „Elektro" ist ein Ort geworden (L65)
+* **E239** — „Neue Tabelle" legte einen Block an, den niemand zeichnet
+* **E240** — Das Menüband am Telefon ist ein Menü, kein Zustand
+* **E241** — Noten: die Schulvorlage legte das Heft an, jetzt rechnet jemand
+* **E242** — Ein Semester ist kein Topf: die Zeugnisnote bekommt einen Zeitraum
+* **E243** — Der Stundenplan-Knopf hält sein Versprechen
+* **E244** — Der Ausdruck bekommt Kopfzeile, Datum und Seitenzahlen
+* **E245** — Der DOCX-Import bekommt seinen Prüflauf (L72, Teil 1)
+* **E246** — Die Rückverweis-Fusszeile bekommt ihren Prüflauf
+* **E247** — Der Diagramm-Block bekommt seinen Quellen-Wähler
+* **E248** — Die Prüfungssimulation bekommt eine Uhr
+* **E249** — Datei-Grabsteine: lokales Löschen erreicht den Server (L6)
+* **E250** — Der Papierkorb bekommt einen Zeitstempel (L73, Teil 1)
+
+**E251–E300**
+
+* **E251** — Glocke und Konto-Knopf: zwei Fertigteile werden sichtbar
+* **E252** — Kartentext sieht überall gleich aus
+* **E253** — Suchfeld im Wissensgraphen, und der Graph bekommt seinen Boden
+* **E254** — Block-Grabsteine: Sofort-Löschen erreicht den Server (L73 Teil 2)
+* **E255** — Die Wolke-Merklisten überleben das Ersetzen (L74)
+* **E256** — Hausaufgaben und Lernziele je Fach
+* **E257** — Die Randleiste zählt die Kopfzeile mit
+* **E258** — Amdion ist die Vorlage, Redion bleibt das Haus
+* **E259** — Bewegung wohnt nur noch in grund.css (Amdion Phase 1, Vorarbeit)
+* **E260** — Papier-Token und die ersten geteilten Anatomien (Amdion Phase 1)
+* **E261** — Der Klick auf die Schaltplan-Fläche landete am Block-Kasten
+* **E262** — „⚡ Schaltung": Netz, Türklingel und Co. — bereit zum Simulieren
+* **E263** — Der Hauptknopf-Verlauf und der Reiter, der einklinkt (Amdion Phase 1)
+* **E264** — Die Notizhefte: ein Regal, das sofort schreiben lässt
+* **E265** — Die Heft-Bibliothek aus dem GoodNotes-Dossier
+* **E266** — Das Abdeckband: zudecken, antippen, wissen
+* **E267** — Haftnotiz und Lineal auf der Zeichenschicht
+* **E268** — Der Zeitmesser: Lernzeit messen statt schätzen
+* **E270** — Deine Daten auf allen Geräten: der Server wird erreichbar, und ein
+* **E271** — Zwei Skripte, zwei Richtungen: holen und hochladen
+* **E272** — Die Premium-Schale: Menüband, Gehen, Kontextkante, Backstage
+* **E273** — Der Nachlauf zu E272: Griffe, die schweigend nichts taten
+* **E274** — Die untere Leiste am Telefon sagt jetzt, wo man IST
+* **E275** — Der Weg zum kommentierten Block, und eine berichtigte Lücke
+* **E276** — Der harmlose Zwilling, und ein Netz mit einem Loch
+* **E277** — Zwölf Entscheidungen, die Redur festgelegt hat
+* **E278** — Die ersten drei aus E277: L87, L68 und eine Gegenprobe, die rot wurde
+* **E279** — Einspielen ersetzt Inhalte, nicht die Identität (L76)
+* **E280** — Drei tote Griffe, eine CSS-Leiche, und ein Wächter dagegen (L86)
+* **E281** — Der Zählwort-Helfer wandert aus dem Bereich heraus (L67)
+* **E282** — Das Regal merkt sich, wo man war (L77 Punkt 1, L78 Punkte 3 und 6)
+* **E283** — Vollbild bauen, „volle Breite" zusammenziehen, zwei Punkte streichen
+* **E284** — Der Import hält jetzt auch etwas aus (Redurs Punkt 5, vorgezogen)
+* **E285** — Der Wissensrang: nicht wie viele zeigen her, sondern wer (Redurs Punkt 3)
+* **E286** — Die Auftragsmaschine: Arbeit, die einen Neustart überlebt (Redurs Punkt 1)
+* **E287** — Was ein KI-Aufruf kostet, BEVOR er läuft (Redurs Punkt 2)
+* **E288** — Wissenslücken: was FEHLT, verrät der Bestand selbst (Redurs Punkt 4)
+* **E289** — Die Zahl über das eigene Können bekommt ihre Grundlage (Redurs Punkt 6)
+* **E290** — Wiederholungsregeln, die wirklich gelesen werden (L102, Redurs Punkt 10)
+* **E291** — Die Rechteprüfung der Agenten trifft ihr Ziel (L102)
+* **E292** — Vor dem Ersetzen ein Netz (L101 Punkt 3)
+* **E293** — Zwei Wächter für Fehler, die nicht wie Fehler aussehen (L90, L82 P9)
+* **E294** — Der Abdruck der Ordner-Sicherung bemerkt Anhänge (L82 Punkt 5)
+* **E295** — Zwei stumme Stellen sagen jetzt etwas (L104 P2, L106 P7)
+* **E296** — Das Dokument ist die Seite, nicht ein Kasten auf der Seite
+* **E297** — Die Folien bekommen eine Regel, und einen Weg nach draussen (L69)
+* **E298** — Die Typen sagen die Wahrheit über den Bestand
+* **E299** — Die Rolle: alle Seiten untereinander, das Original oben
+* **E300** — Eine Reiterzeile für die offenen Dokumente
+
+**E301–E350**
+
+* **E301** — Der Randstreifen: neben der Seite schreiben (L107)
+* **E302** — Die Lücke war falsch: den Escape-Griff gibt es längst
+* **E303** — FSRS: der Planer weiss, was du noch kannst (Redurs Punkt 8)
+* **E304** — Acht Kanten, die es gar nicht gab
+* **E305** — Nur aus meinen Quellen (Redurs Punkt 11)
+* **E306** — Verknüpfungen haben eine Art, und die Gegenseite gilt (Redurs Punkt 12)
+* **E307** — Woher eine Zeile kommt (Redurs Punkt 9)
+* **E308** — Der Zeitbudget-Planer (Redurs Punkt 7)
+* **E309** — Neun Griffe, die es am Telefon nicht gab (L108 geschlossen)
+* **E310** — Die Meldung deckt am Telefon keinen Knopf mehr zu (L109 geschlossen)
+* **E311** — Die Lernzeit wird gemessen, nicht geraten (L110 geschlossen)
+* **E312** — Die Datenbank bekommt ihre Kontextkante (L95 geschlossen)
+* **E313** — Der Deckel zeigt die Seite (L61 geschlossen)
+* **E314** — Eine dazugelegte Sicherung erreicht den Server (L100 geschlossen)
+* **E315** — Fett bleibt fett bis nach Word und zurück (L72 Teil 2)
+* **E316** — Die Vorschau sagt, was sich ändert (L101 Punkt 1)
+* **E317** — Ein fehlender Anhang wird genannt (L101 Punkt 2)
+* **E318** — Der offene Weg wird so streng wie der verschlüsselte (L101 Punkt 4)
+* **E319** — Das KI-Buch zählt, statt zu schätzen (L104)
+* **E320** — Der volle Lauf war rot, und beide Funde waren echt
+* **E321** — Die KI-Grenzen sind endlich einstellbar (L104 Punkt 1)
+* **E322** — Was gerade läuft, sieht man auch (L103 Punkt 3)
+* **E323** — Nur ein Tab arbeitet (L103 Punkt 4)
+* **E324** — Ein abgehakter Fund bleibt weg (L105 Punkt 2)
+* **E325** — Was zuerst auffrischen (L106 Punkt 2)
+* **E326** — VTODO wird gelesen, und der Streifen ist lesbar (L106 Punkt 6)
+* **E327** — Der erste Bereich hängt an der Auftragsmaschine (L103 Punkt 1)
+* **E328** — Geht es aufwärts? (L106 Punkt 3 und 4)
+* **E329** — Die Lückensuche lernt Absicht und Alter (L105 Punkt 4 und 5)
+* **E330** — Ein Merker statt einer Maschine (L105 Punkt 3)
+* **E331** — Ohne Ort zählt die Rolle (L102 Punkt 2, zweite Hälfte)
+* **E332** — Ein Fach, das niemand erklärt hat (L102 Punkt 5)
+* **E333** — Der Nachlauf zur Bestandsaufnahme (L102 Punkt 3, 6 und 7)
+* **E334** — Ein Pflaster je Kennung deckt den nächsten Knopf nicht
+* **E335** — Fünf Stunden, eine Kennung (L106 Punkt 8, und was darunter lag)
+* **E336** — Was die Quelle gestrichen hat (L112, am Tag ihrer Entstehung)
+* **E337** — Jede Stunde dauert 90 Minuten (gefunden neben L106 Punkt 8)
+* **E338** — Der Rundlauf schliesst sich (L106 Punkt 8)
+* **E339** — Nicht nur Karteikarten (L106 Punkt 1)
+* **E340** — Siebenundzwanzig Regeln, die nie zum Zug kamen (L111, vierte Variante)
+* **E341** — Zwei Tabs, eine Merkliste (L75, gemessen statt vermutet)
+* **E342** — Heute Nacht, am Strom, nicht über Mobilfunk (L103 Punkt 5)
+* **E343** — Das Abo bekommt ein Gedächtnis (L112 Rest)
+* **E344** — Eine fremde Zeitzone, ganz gerechnet (L106 Punkt 5)
+* **E345** — Aufgaben aus dem Kalender landen in Aufgaben (L106 Punkt 6 Rest)
+* **E346** — Bilder kommen in der .docx an (L72 Rest)
+* **E347** — Der Schaltplan kommt in der .docx an (L72, der Rest vom Rest)
+* **E348** — Die breiten Fensterregeln treffen nur noch, was sie meinen (L111)
+* **E349** — Der Start zeigt, wo man war: die PDF, sonst das Regal (Redurs Punkt 1)
+* **E350** — Eine ZIP kommt so ins Regal, wie sie ist (Redurs Punkt 2)
+
+**E351–E368**
+
+* **E351** — Der Stift schreibt wie eine Hand: Füller, Kugelschreiber, Pinsel (Redurs Punkt 3, erster Bogen)
+* **E352** — Der Radierer streicht, teilt und kennt den Rückknopf des Stifts (Redurs Punkt 3, zweiter Bogen)
+* **E353** — Die Auswahl: Lasso, Griffe, Kopieren, Umfärben (E269, L115 Punkt 2)
+* **E354** — Handballen und zwei Finger: der Stift geht vor, Finger rollen, Kneifen zoomt (L115 Punkte 3 u…
+* **E355** — Formerkennung: ziehen, halten, und der Kreis wird ein Kreis (L115 Punkt 5)
+* **E356** — Die Blattleiste am Telefon zeigt nur die Gruppen des gewählten Werkzeugs (L115 Punkt 8)
+* **E357** — Bild aufs Blatt: ein Foto als Marke, verschieb- und skalierbar (L115 Punkt 6)
+* **E358** — Zurück fasst nur an, was sich änderte: `redraw` als Abgleich (L115 Punkt 7)
+* **E359** — Die Blattleiste am Rechner: zwei Zeilen, nur das Zubehör des Werkzeugs, Papier als Klappe (L1…
+* **E360** — Text wie GoodNotes: ein Kasten mit Umbruch, Schriftart, Grösse, Fett und Rahmen (L115 Punkt 6…
+* **E361** — Der Dienststand folgt dem Inhalt; holen.bat wartet auf Grün; die App nennt ihren Stand (L83 P…
+* **E362** — Der Ereignisbus kann async: frageAsync, meldeAsync, Nachreichen, Veto (L102 Punkt 4)
+* **E363** — Der ZIP-Leser sagt die Wahrheit: Prüfsumme, CP437, verschlüsselt — und die ZIP erkennt sich w…
+* **E364** — Vier kleine Löcher: Heft bleibt Heft beim Sperren, Fach bleibt Fach, wache Zeit, die Uhr über…
+* **E365** — Der ZIP-Import ist ein Auftrag: er überlebt den geschlossenen Tab (L114 Punkt 1)
+* **E366** — Das Regal zeigt die ganze Schachtelung (L78 Punkt 2, L114 Punkt 3 halb)
+* **E367** — Die Zahl im Bibliothekskopf ist eine Zahl, keine Decke (L116)
+* **E368** — Ziehen und Ablegen im Regal (L78 Punkt 1, L114 Punkt 4)
+
+---
+
 ## Grundregel
 
 Wenn eine Entscheidung Auswirkungen auf Daten, Speicher, Import, Export, Sync,
@@ -28972,3 +29378,88 @@ test272 153/153 · test216 32/32 (Werkzeuge, deren `verschiebe` das dritte
 Argument bekam) · test87 152/152 · test105 120/120 · test109 20/20 ·
 test353 39/39 · test225 11/11 · Einzeldatei neu gebaut · test74 ohne
 JS-Fehler. Alles grün.
+
+
+E369 — Die Spalte nimmt die Breite, die sie bekommt (Rückfall aus E359)
+════════════════════════════════════════════════════════════════════════════
+
+BEFUND: der volle Lauf auf E365 war bis auf eine Suite grün — test178, und
+allein reproduzierbar. Zwei Zusagen fielen: „am Rechner lagen sie NICHT
+untereinander" und „ein Strich auf der PDF-Seite". Beide zeigten auf
+dasselbe, und es war schlimmer als der Wortlaut vermuten liess.
+
+GEMESSEN, nebeneinander bei 1360 px Fensterbreite:
+
+    PDF-Seite     2 × 52 px      Seitenbild   1 px hoch
+    Blatt daneben 276 × 439 px
+
+Wer eine PDF neben ein leeres Blatt legt, sieht die PDF also NICHT — sie ist
+ein zwei Pixel breiter Streifen. Kein zu strenger Prüfsatz, sondern kaputt.
+
+ZURÜCKVERFOLGT: E358 (3d145c61) 74/74, E359 (e314ca72) 72/74, jeder spätere
+Stand rot. Ursache ist eine Zeile aus E359:
+
+    .blatt-reihe, .blatt-werk{container-type:inline-size}
+
+`container-type:inline-size` grenzt die Breite ein: sie wird OHNE Rücksicht
+auf den Inhalt gerechnet. Die Werkzeugleiste trägt seither nichts mehr zur
+Eigenbreite ihrer Umgebung bei.
+
+DIE EIGENTLICHE URSACHE IST ÄLTER
+─────────────────────────────────
+`.spalte` ist ein Flex-Kind mit `flex:0 1 auto` und schrumpfte auf ihren
+Inhalt. Das ging gut, solange irgendetwas darin eine Eigenbreite hatte — und
+das war die WERKZEUGLEISTE mit ihren zwanzig Knöpfen. Das Seitenbild taugte
+nie dafür: es ist `width:100%` und trägt selbst nichts bei.
+
+Die Breite einer PDF-Seite hing also an der Zahl der Knöpfe darüber. Das war
+schon vor E359 falsch, nur folgenlos. E359 hat den Zufall entfernt, nicht die
+Regel gebrochen.
+
+Dazu passt, was direkt danebenstand und niemandem auffiel: die beiden
+Spalten waren nie gleich breit — 342 gegen 276 in einer Gitterspur von
+zweimal 342. E104 hatte ausdrücklich „in DENSELBEN Massen wie die Seite"
+versprochen.
+
+DIE ANTWORT IST EINE ZEILE
+──────────────────────────
+    .spalte{min-width:0; width:100%; display:flex; …}
+
+Danach, gemessen: PDF-Seite 342 × 533, Seitenbild 482 px hoch, Blatt daneben
+342 × 533 — beide füllen ihre Spur und sind exakt gleich hoch. Die Zusage
+aus E104 stimmt damit zum ersten Mal.
+
+`.spalte > .blk{width:100%}` stand die ganze Zeit eine Zeile darunter und
+rechnete mit einer festen Breite der Spalte. Die fehlende Zeile war eine
+Lücke im selben Gedanken, nicht eine neue Idee.
+
+WAS NICHT GEMACHT WURDE
+───────────────────────
+Die Eingrenzung aus E359 bleibt. Sie ersatzlos zu streichen wäre der
+naheliegende Griff gewesen und hätte E359 rückgängig gemacht — die
+`@container`-Abfrage für `.blatt-fest` braucht `.blatt-reihe` als Container,
+weil `.blatt-fest` dessen Geschwister ist und nicht sein Kind. Ein Rückfall
+wird nicht dadurch behoben, dass man den Bogen davor aufhebt.
+
+WAS DARAUS FOLGT, ÜBER DIESEN FALL HINAUS
+─────────────────────────────────────────
+Eine Breite, die aus dem Inhalt kommt, ist eine Wette darauf, dass der
+Inhalt breit bleibt. Sie hält, bis jemand den Inhalt ändert — und dann
+fällt etwas ganz anderes um als das, was geändert wurde. Wo eine Fläche
+eine Breite BEKOMMT, soll sie sie nehmen.
+
+Und: gefunden hat es der volle Lauf, nicht das Auge. Auf dem Bildschirm sah
+die Spalte leer aus, und leer sieht aus wie „lädt noch". Das ist die
+Gegenrichtung zu §55 — es gibt Fehler, die nur eine Messung sieht, so wie es
+Fehler gibt, die nur ein Blick sieht. Man braucht beide.
+
+PRÜFUNG: test178 74/74 (vorher 72/74) · test351 25/25 (E359s eigener Lauf,
+unverändert grün — die Eingrenzung wirkt weiter) · test192 25/25 · test177
+69/69 · test207 37/37 · test201 32/32 · test350 14/14 · test272 153/153 ·
+test348 33/33 · test87 152/152. Einzeldatei neu gebaut.
+
+KEINE MUTATIONSPROBE, und das mit Grund: die Zusage, die hier hält, ist
+test178 §5 und §6 — beide waren VOR der Änderung rot und sind es nach dem
+Zurückdrehen wieder. Das ist die Gegenprobe, nur andersherum gelaufen als
+sonst: nicht die Prüfung gegen den Code, sondern der Code gegen eine
+Prüfung, die zwei Tage lang rot war.
