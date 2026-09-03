@@ -1021,6 +1021,14 @@ const Bibliothek = (() => {
       b.addEventListener('click', () => App.erstellenBlatt()));
     wrap.querySelectorAll<HTMLElement>('[data-hoch]').forEach(b =>
       b.addEventListener('click', () => geheHoch()));
+    /* Ist der Pfad länger als der Schirm (am Telefon schon ab der dritten
+       Ebene), zeigt die Brotkrume von sich aus die WURZEL und schneidet das
+       ab, wo man gerade steht. Genau umgekehrt gewollt: der aktuelle Ordner
+       ist das Wichtigste. Also ans Ende scrollen. Der Zurück-Pfeil klebt
+       links (CSS) und bleibt trotzdem sichtbar. (E381) */
+    wrap.querySelectorAll<HTMLElement>('.bib-krume').forEach(krume => {
+      krume.scrollLeft = krume.scrollWidth;
+    });
     wrap.querySelectorAll<HTMLElement>('[data-ordner]').forEach(b =>
       b.addEventListener('click', () => geheIn(b.dataset['ordner'] || null)));
     wrap.querySelectorAll<HTMLElement>('.bib-deckel[data-id]').forEach(k => {

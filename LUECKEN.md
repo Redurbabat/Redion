@@ -5488,4 +5488,11 @@ c. **`openFach` ist modulprivat in `notebook.ts`.** Kein anderer Bereich
    warum die Ebene neu ins Dokumente-Regal gebaut wurde, statt sie zu
    teilen. Wenn a) angegangen wird, gehört das mit gelöst.
 
+Nachtrag (E381): Beim Nachsehen am Telefon (390 px) fiel auf, dass die
+Brotkrume ab der dritten Ebene überlief und den AKTUELLEN Ordner abschnitt
+statt der Wurzel. GESCHLOSSEN durch E381 — der Zurück-Pfeil klebt links,
+die Krume scrollt ans Ende. Belegt mit test369 §8 (setzt 390 px, prüft
+zuerst den Überlauf) und einem Telefonbild. E380 war am Rechner gebaut; das
+ist genau der Fehler, den §37 meint: das Telefon ist der Normalfall.
+
 Gefunden beim Bauen von E380 am 3. September 2026.

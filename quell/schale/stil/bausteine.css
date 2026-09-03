@@ -658,9 +658,14 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 }
 .bib-krume button:hover{ background:var(--flaeche-2); color:var(--fg) }
 .bib-krume [data-hoch]{
-  /* Der Weg zurück ist ein Hauptweg: 44 px, ohne Ausnahme (§37). */
+  /* Der Weg zurück ist ein Hauptweg: 44 px, ohne Ausnahme (§37). Und er
+     bleibt am Telefon SICHTBAR, wenn der Pfad länger ist als der Schirm:
+     klebt links, mit eigener Fläche darunter, damit der Pfad hinter ihm
+     durchläuft statt ihn zu verdecken (E381). Sonst scrollt der einzige
+     oft getroffene Knopf aus dem Bild. */
+  position:sticky; left:0; z-index:1; flex:0 0 auto;
   min-width:44px; min-height:44px; margin-inline-start:-6px;
-  font-size:22px; line-height:1; color:var(--fg)
+  font-size:22px; line-height:1; color:var(--fg); background:var(--bg)
 }
 .bib-krume b{ flex:0 0 auto; padding:0 6px; color:var(--fg); font-weight:600 }
 .bib-krume span{ flex:0 0 auto; opacity:.5 }

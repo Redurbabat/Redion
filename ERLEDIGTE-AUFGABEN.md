@@ -3073,3 +3073,16 @@ die Zeugnisnote je Semester (E242) und der echte Stundenplan (E243).
   eine Gegenprobe an der gebauten Datei wird danach mit `npm run bauen:ts`
   zurückgeholt, nicht mit `git checkout` — auch nicht auf eine einzelne Datei
   (§43).
+
+* E381 (der Nachtrag zu E380, am Telefon gefunden): Die Brotkrume der Ablage
+  bleibt am Telefon brauchbar. E380 war bei 1360 px gebaut; auf Redurs
+  Telefonbildern (390 px) lief der Pfad ab der dritten Ebene über und schnitt
+  den Ordner ab, in dem man STEHT — die Wurzel blieb, der Standort verschwand.
+  Zwei Griffe: der Zurück-Pfeil klebt links (position: sticky, eigene Fläche,
+  44 px §37), die Krume scrollt nach jedem Zeichnen ans Ende
+  (scrollLeft = scrollWidth). Prüfung test369 §8, das ausdrücklich 390 px
+  setzt und ZUERST prüft, dass die Krume überläuft (sonst prüft es nichts,
+  §55.2). Gegenprobe: das Scrollen weglassen → §8 rot (scrollLeft 0, der
+  aktuelle Ordner ausserhalb), der klebende Pfeil bleibt grün, weil er aus
+  dem CSS kommt. Mit einem Telefonbild belegt (§55.3): vorher „…
+  BT-Arbeitssicherl", nachher „… BT-Arbeitssicherheit" ganz im Bild.

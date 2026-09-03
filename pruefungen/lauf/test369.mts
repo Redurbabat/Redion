@@ -274,6 +274,43 @@ p('Die Einzeldatei kennt die Ablage',
   fs.readFileSync(path.join(WURZEL, 'redion-einzeldatei.html'), 'utf-8').includes("id: 'ablage'"));
 p('Keine Fehler auf der Seite', fehler.length === 0, fehler.slice(0, 3).join(' | '));
 
+console.log('\n8 · Am Telefon bleibt die Brotkrume brauchbar (E381)');
+
+/* Redurs vier Fotos sind Telefonfotos. Bei 1360 px passt der Pfad; bei
+   390 px läuft er ab der dritten Ebene über den Rand. Dann muss die Krume
+   das zeigen, wo man STEHT — nicht die Wurzel — und der Zurück-Pfeil muss
+   sichtbar bleiben. Am Rechner oben wäre der Fall nie rot geworden. */
+await seite.setViewportSize({ width: 390, height: 844 });
+await seite.evaluate((id: string) => Bibliothek.oeffne(id), kennungen.bt);
+await seite.waitForTimeout(700);
+const krumeMass = await seite.evaluate(() => {
+  const krume = document.querySelector<HTMLElement>('.bib-krume');
+  if (!krume) return null;
+  const kr = krume.getBoundingClientRect();
+  const b = krume.querySelector('b');
+  const hoch = krume.querySelector<HTMLElement>('[data-hoch]');
+  const bnr = b ? b.getBoundingClientRect() : null;
+  const hnr = hoch ? hoch.getBoundingClientRect() : null;
+  return {
+    laeuftUeber: krume.scrollWidth > krume.clientWidth + 1,
+    scrollLeft: Math.round(krume.scrollLeft),
+    bText: b ? (b.textContent || '') : '',
+    bImBild: !!bnr && bnr.left >= kr.left - 1 && bnr.right <= kr.right + 1,
+    hochImBild: !!hnr && hnr.left >= kr.left - 1 && hnr.right <= kr.right + 1,
+    hochBreit: !!hnr && hnr.width >= 44 && hnr.height >= 44
+  };
+});
+p('Die Krume läuft am Telefon wirklich über — sonst prüft der Rest nichts',
+  !!krumeMass && krumeMass.laeuftUeber, JSON.stringify(krumeMass));
+p('… also ist sie ans Ende gescrollt, nicht an den Anfang',
+  !!krumeMass && krumeMass.scrollLeft > 0, JSON.stringify(krumeMass && krumeMass.scrollLeft));
+gleich('… und zeigt den Ordner, in dem man steht', krumeMass && krumeMass.bText,
+  'BT-Arbeitssicherheit');
+p('… der aktuelle Ordner steht ganz im Bild', !!krumeMass && krumeMass.bImBild);
+p('… und der Zurück-Pfeil klebt sichtbar links (§37)',
+  !!krumeMass && krumeMass.hochImBild && krumeMass.hochBreit,
+  JSON.stringify(krumeMass));
+
 console.log(`\n${ok}/${ok + weg} bestanden · ✗=${weg}`);
 await browser.close();
 server.close();

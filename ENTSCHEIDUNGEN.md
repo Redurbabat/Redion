@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-376 Entscheidungen, E1 bis E380. Die Nummer ist die Ordnung: eine Entscheidung
+377 Entscheidungen, E1 bis E381. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -434,6 +434,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E378** — Der Merkzettel fürs Zurück klont nicht mehr, er friert ein
 * **E379** — Neuzeichnen fragt nach der Identität, nicht nach dem Wortlaut
 * **E380** — Das Regal bekommt Ebenen: ein Ordner ist ein Ort, kein Etikett
+* **E381** — Die Brotkrume der Ablage bleibt am Telefon brauchbar
 
 ---
 
@@ -30673,3 +30674,49 @@ Weg wäre eines. Das steht als offene Lücke, nicht als erledigt. Die
 untere Leiste am Telefon (Dokumente · Heute · Lernen · Termine · Mehr)
 folgt noch nicht GoodNotes (Dokumente · Favoriten · Geteilt · Marketplace);
 auch das ist notiert, nicht gebaut.
+
+
+E381 — Die Brotkrume der Ablage bleibt am Telefon brauchbar
+════════════════════════════════════════════════════════════════════════════
+
+E380 wurde bei 1360 px gebaut und geprüft. Redurs vier Fotos sind aber
+TELEFONFOTOS — und beim Nachsehen bei 390 px (§55: hinsehen, nicht nur die
+Zahl lesen) zeigte sich der Fehler, den keine der 36 Prüfungen von E380 hatte:
+
+Ab der dritten Ebene läuft die Brotkrume über den Rand. Sie zeigte dann von
+sich aus die WURZEL („‹ Dokumente › Redur Babat › BT-Arbeitssicherl…") und
+schnitt genau den Ordner ab, in dem man STEHT. Das ist verkehrt herum: der
+aktuelle Ort ist das Wichtigste, die Wurzel das Entbehrlichste.
+
+DIE ENTSCHEIDUNG
+────────────────
+Zwei kleine Griffe, kein Umbau:
+
+1. Der Zurück-Pfeil klebt links (`position: sticky; left: 0`) mit eigener
+   Fläche darunter (`background: var(--bg)`). So bleibt der einzige Knopf,
+   den man am Telefon oft trifft, sichtbar und 44 px gross (§37) — auch
+   wenn der Pfad hinter ihm durchläuft.
+2. Nach jedem Zeichnen scrollt die Krume ans Ende
+   (`scrollLeft = scrollWidth`). Der aktuelle Ordner steht damit im Bild,
+   die Vorfahren sind nach links wegscrollbar.
+
+Verworfen: die mittleren Glieder einklappen („‹ … › BT-Arbeitssicherheit").
+Das wäre mehr Code für weniger Information — der ganze Pfad bleibt so
+erreichbar, nur die Blickrichtung stimmt jetzt.
+
+WARUM AM RECHNER NIE ROT
+─────────────────────────
+Bei 1360 px passt der dreistufige Pfad; die Krume läuft nicht über, es gibt
+nichts zu scrollen. Der Wächter (`test369` §8) setzt darum ausdrücklich das
+Telefonmass (390 px) und prüft ZUERST, dass die Krume überhaupt überläuft —
+sonst prüfte er nichts (§55.2). Gegenprobe: das Ans-Ende-Scrollen weglassen
+→ `scrollLeft` bleibt 0, der aktuelle Ordner steht rechts ausserhalb → §8
+rot (2 Punkte), während der klebende Pfeil grün bleibt, weil der aus dem
+CSS kommt, nicht aus dem Scrollen.
+
+WAS ES KOSTET
+─────────────
+Der halbe Wurzelname („umente") steht dann links am Pfeilrand. Das ist die
+übliche Erscheinung einer scrollbaren Brotkrume und der richtige Tausch:
+lieber ein abgeschnittener Vorfahr als ein abgeschnittener Standort.
+Belegt mit einem Telefonbild, nicht nur gemessen (§55.3).
