@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-372 Entscheidungen, E1 bis E376. Die Nummer ist die Ordnung: eine Entscheidung
+373 Entscheidungen, E1 bis E377. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -430,6 +430,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E374** — Der Deckel eines handbeschriebenen Hefts zeigt, was daraufsteht (L61 Rest)
 * **E375** — Ein Formen-Werkzeug statt vier (L115 Punkt 9, Rest)
 * **E376** — Der Stift zeichnet flüssig: der Umriss wächst, statt neu zu entstehen
+* **E377** — Erst der Kasten, dann der Weg: der Radierer fragt nicht mehr jeden Strich ganz
 
 ---
 
@@ -30339,3 +30340,95 @@ MUTATIONSPROBE, dreimal: Tangente aus i statt i-1 → §1 rot (zwei Punkte).
 Die Vorhersage landet in `punkte()` → §5 rot (drei Punkte). Und die
 Druckglättung als gleitendes Mittel → test343 29/30, was den Bogen
 überhaupt erst richtig gemacht hat.
+
+
+════════════════════════════════════════════════════════════════════════════
+E377 — Erst der Kasten, dann der Weg
+════════════════════════════════════════════════════════════════════════════
+
+Nach E376 war der Stift flüssig. Beim Nachmessen der übrigen Zeichenwege
+zeigte sich, dass DERSELBE Fehler noch einmal steckte, nur beim Radierer.
+
+    Der Radierer fährt den Weg zwischen zwei Zeigerereignissen in
+    Teilschritten von einem halben Radius ab und fragt bei JEDEM Schritt
+    JEDEN Strich der Seite, ob der Kreis ihn berührt.
+
+    `touchesCircle` ging bei einem Stiftstrich SOFORT in
+    `distanceToPolyline`: jeder Punkt, jede Wurzel, dazu eine frisch
+    gebaute Punktliste. Auch für einen Strich am anderen Ende der Seite.
+
+Gemessen bei 400 Strichen auf der Seite:
+
+    Sprung   8 px →  2 Teilschritte · 0,89 ms je Ereignis · 11 % eines Bildes
+    Sprung  33 px →  9 Teilschritte · 2,52 ms je Ereignis · 30 %
+    Sprung 120 px → 30 Teilschritte · 8,27 ms je Ereignis · 100 %
+
+Ein schneller Wisch über eine volle Seite kostete also ein GANZES Bild bei
+120 Hz — je Zeigerereignis. Das ist dieselbe Beschwerde wie beim Stift, nur
+mit einem anderen Werkzeug in der Hand.
+
+WAS ENTSCHIEDEN WURDE
+─────────────────────
+Ein Kreis kann eine Linie nur berühren, wenn er ihren KASTEN berührt. Also
+erst den Kasten prüfen, und nur bei einem Treffer den Weg abgehen.
+
+    Sprung 120 px:  8,27 ms  →  1,00 ms      8,3×
+
+WARUM NICHT `bounds()`
+──────────────────────
+Das war der naheliegende Griff und wäre falsch gewesen. `bounds()` baut mit
+`points()` eine neue Liste, legt zwei weitere für x und y an und lässt vier
+`Math.min`/`Math.max` über sie laufen — sieben Durchläufe und drei Listen.
+`distanceToPolyline` braucht EINEN Durchlauf. Ein Vorfilter, der teurer ist
+als das, was er filtert, bringt nichts.
+
+Der Kasten wird deshalb hier gerechnet, in einem Durchlauf und ohne eine
+einzige Liste. Das ist eine zweite Stelle, die dasselbe rechnet wie
+`bounds()` — der Preis, und er steht in test367.
+
+DER GEFÄHRLICHE TEIL IST NICHT DIE GESCHWINDIGKEIT
+──────────────────────────────────────────────────
+Ein Vorfilter, der einen Treffer verschluckt, macht einen Strich
+UNRADIERBAR — und man merkt es erst, wenn man ihn wegwischen will und er
+bleibt stehen. Deshalb steht in `test367` eine zweite, absichtlich dumme
+Rechnung desselben Ergebnisses, und beide werden über zehntausend zufällige
+Fälle verglichen.
+
+Der Kasten wird um `radius + halfWidth` geweitet — nicht nur um `radius`.
+Ohne das verschwände genau der Fall, in dem ein Kreis den Kasten verfehlt
+und den Strich trotzdem trifft, weil der Strich dick ist.
+
+UND EINE LEHRE ÜBER ZUFALLSPRÜFUNGEN
+────────────────────────────────────
+Von den zwei Gegenproben fand die erste (Kasten nicht um `halfWidth`
+geweitet) beide Abschnitte. Die zweite — der Kasten EIN PIXEL zu eng —
+rutschte durch alle zehntausend Zufallsfälle und wurde nur von zwei von
+Hand gesetzten Grenzfällen gefunden.
+
+    Zehntausend zufällige Fälle ersetzen keine Handvoll gewählter.
+
+Zufall trifft die Mitte der Verteilung. Ein Ein-Pixel-Fehler lebt genau auf
+dem Rand, und dorthin muss man zielen.
+
+WAS DER PRÜFLAUF NEBENBEI GEFUNDEN HAT
+──────────────────────────────────────
+Eine Marke OHNE Punkte hat keinen Ort. `bounds()` gibt ihr ersatzweise
+einen Kasten der Grösse null bei (0,0) — eine Notlösung, kein Ort. Damit
+„berührte" ein Radierer am linken oberen Rand der Seite JEDE leere Marke.
+Der Fall ist harmlos (eine leere Marke ist nichts wert), aber die Antwort
+war falsch, und falsche Antworten wachsen. Der Nullkasten lässt sich sicher
+erkennen: eine echte Marke bekommt in `bounds()` immer mindestens den Rand
+von zwei Pixeln, bei Text die Zeilenhöhe — also nie Breite UND Höhe null.
+
+WAS NICHT GEÄNDERT WURDE
+────────────────────────
+Die Antwort. `touchesCircle` sagt dasselbe wie vorher, nur schneller — das
+ist der ganze Sinn von §1 des Prüflaufs. Und der Weg für Rechteck, Ellipse
+und Haftnotiz geht weiter über `bounds()`, ohne `halfWidth`, genau wie
+bisher.
+
+PRÜFUNG: test367 19/19 (neu, ohne Browser) · test344 50/50 · test352 ·
+test353 · test87 · test105.
+
+MUTATIONSPROBE, zweimal: Kasten nicht um `halfWidth` geweitet → §1 und §2
+rot. Kasten ein Pixel zu eng → §2 rot (und §1 NICHT, siehe oben).

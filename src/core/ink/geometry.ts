@@ -280,12 +280,56 @@ const InkGeometry = (() => {
    * halbe Strichbreite als Zugabe; alles andere (Rechteck, Ellipse, Band,
    * Zettel, Text, Zeichen) am Kasten, den `bounds` kennt.
    */
+  /**
+   * ERST DER KASTEN, DANN DER WEG (E377).
+   *
+   * Bis hierher ging ein Strich SOFORT in `distanceToPolyline` — jeder Punkt,
+   * jede Wurzel, und dazu eine frisch gebaute Punktliste. Auch ein Strich am
+   * anderen Ende der Seite. Gemessen bei 400 Strichen und einem schnellen
+   * Radierzug (120 px zwischen zwei Ereignissen, 30 Teilschritte): 8,27 ms
+   * je Zeigerereignis — ein ganzes Bild bei 120 Hz.
+   *
+   * Ein Kreis kann eine Linie nur beruehren, wenn er ihren KASTEN beruehrt.
+   * Der Kasten wird hier in EINEM Durchlauf gerechnet, ohne eine Liste zu
+   * bauen — anders als `bounds()`, das sieben Durchlaeufe und drei Listen
+   * braucht und darum als Vorfilter nichts einbraechte.
+   *
+   * Der Kasten ist eine sichere Schranke, keine Naeherung: er wird um
+   * `radius + halfWidth` geweitet, also kann kein Treffer durch ihn
+   * verlorengehen. test367 prueft das gegen den alten Weg an zehntausend
+   * zufaelligen Faellen.
+   */
   const touchesCircle = (mark: any, center: InkPoint, radius: number, halfWidth = 0): boolean => {
+    const reichweite = radius + Math.max(0, finite(halfWidth));
     const art = String(mark?.art || '');
     const linie = art === 'stift' || art === 'marker' || art === 'line' || art === 'arrow';
-    if (linie && Array.isArray(mark?.pts) && mark.pts.length)
-      return distanceToPolyline(mark.pts, center) <= radius + Math.max(0, finite(halfWidth));
+    if (linie && Array.isArray(mark?.pts) && mark.pts.length) {
+      const roh = mark.pts as unknown[];
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      for (let i = 0; i < roh.length; i++) {
+        const q = roh[i] as number[] | undefined;
+        if (!Array.isArray(q) || q.length < 2) continue;
+        const x = finite(q[0]), y = finite(q[1]);
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+      if (minX === Infinity) return false;
+      const bx = Math.max(minX - center[0], 0, center[0] - maxX);
+      const by = Math.max(minY - center[1], 0, center[1] - maxY);
+      if (bx * bx + by * by > reichweite * reichweite) return false;
+      return distanceToPolyline(mark.pts, center) <= reichweite;
+    }
     const box = bounds(mark);
+    /* EINE MARKE OHNE PUNKTE HAT KEINEN ORT (E377, von test367 §2 gefunden).
+       `bounds()` gibt ihr ersatzweise einen Kasten der Groesse null bei
+       (0,0) — das ist eine Notloesung, kein Ort. Ohne diese Zeile
+       „beruehrt" ein Radierer am linken oberen Rand der Seite JEDE leere
+       Marke. Der Nullkasten laesst sich sicher erkennen: eine echte Marke
+       bekommt in `bounds()` immer mindestens den Rand von zwei Pixeln
+       (bei Text die Zeilenhoehe), also nie Breite UND Hoehe null. */
+    if (!box.x && !box.y && !box.width && !box.height) return false;
     const dx = Math.max(box.x - center[0], 0, center[0] - (box.x + box.width));
     const dy = Math.max(box.y - center[1], 0, center[1] - (box.y + box.height));
     return dx * dx + dy * dy <= radius * radius;

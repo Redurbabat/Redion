@@ -5381,6 +5381,13 @@ wächst, statt bei jedem Zeigerereignis neu zu entstehen (9,2× über den
 Strich, 10,1× am Ende). Drei Dinge sind damit NICHT erledigt, und sie
 stehen hier, damit sie niemand für erledigt hält.
 
+0. **Der Radierer hatte denselben Fehler — das ist seit E377 zu.** Er fragte
+   bei jedem Teilschritt jeden Strich der Seite ganz ab; ein schneller Wisch
+   über 400 Striche kostete 8,27 ms je Zeigerereignis, ein ganzes Bild bei
+   120 Hz. Mit einem Kastenfilter davor sind es 1,00 ms. Bleibt als Hinweis
+   stehen, weil die Stelle zeigt, wo man in dieser Schicht als Nächstes
+   suchen würde: überall dort, wo eine Schleife über ALLE Marken läuft.
+
 1. **Der letzte Rest ist die Zeichenkette selbst — 83 µs bei 600 Punkten.**
    Die Geometrie kostet nichts mehr; was bleibt, ist das Erzeugen einer
    17 kB langen `d`-Angabe je Bild. Das ist ein Prozent eines Bildes bei
@@ -5414,4 +5421,5 @@ stehen hier, damit sie niemand für erledigt hält.
    der Grund, warum an dieser Stelle nichts mehr ohne Messung geändert
    wird.
 
-Gefunden beim Bauen von E376 am 3. September 2026.
+Gefunden beim Bauen von E376 am 3. September 2026; Punkt 0 beim
+Nachmessen der Nachbarwege (E377) am selben Tag.
