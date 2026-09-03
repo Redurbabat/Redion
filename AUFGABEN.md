@@ -81,14 +81,30 @@ trennen will, kann es nicht.
 
 ### 3 · Der Rest am Telefon
 
-**Ziel** — Termine und Eingang bekommen ihren eigenen Aufbau, die übrigen
-Menüs werden Bottom Sheets, der Editor bekommt seinen Feinschliff.
+**Ziel** — gemeinsame Gestaltungswerte statt verstreuter Pixelzahlen, und
+eine Prüfung auf einem echten iPhone.
 
 **Warum** — E37: das Telefon ist der Normalfall, nicht der Sonderfall.
 
+**Was beim Nachsehen am 3. September schon gebaut war** — Termine und
+Eingang haben ihre eigenen Bereiche (E38), alle Menüs sind Blätter seit
+test155, und die Seitenvorschau ist seit E371 ein Blatt mit drei Höhen.
+Der Punkt stand hier drei Wochen falsch.
+
+**Was wirklich offen ist** — zwei Dinge:
+
+1. Die Masse stehen an einem Dutzend Stellen in `bausteine.css` und sind
+   schon zweimal auseinandergelaufen (28 gegen 18 beim Rand). Sie gehören
+   in Marken, wie `--touch-min` und `--sheet-radius` es vormachen.
+2. **Auf einem echten Gerät geprüft: nein.** Alles bisher gemessen mit
+   Playwright im Telefon-Bildmass. Das findet Grössen und Überdeckungen,
+   aber nicht das Verhalten von Safari — der Fehlerbalken aus E81 kam vom
+   iPhone, nicht aus einem Prüflauf. Das braucht Redur.
+
 **Wo** — `LUECKEN.md` L10.
 
-**Priorität** — hoch.
+**Priorität** — Punkt 1 mittel, Punkt 2 hoch, sobald Redur ein Gerät zur
+Hand hat.
 
 ---
 
@@ -119,8 +135,9 @@ dem Start**.
 Die Produktlücken stehen dort und werden dort gepflegt — sie hier zu
 wiederholen hiesse, zwei Listen zu führen, die auseinanderlaufen.
 
-Zuletzt geschlossen: L78 Punkt 1 und L114 Punkt 4 (E368), L116 (E367),
-L78 Punkt 2 (E366), L114 Punkte 1, 5 und 6 (E363, E365).
+Zuletzt geschlossen: L10 Side Peek (E371), L78 Punkt 1 und L114 Punkt 4
+(E368), L116 (E367), L78 Punkt 2 (E366), L114 Punkte 1, 5 und 6 (E363,
+E365).
 
 ---
 

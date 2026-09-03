@@ -360,8 +360,15 @@ p('… die Stücke gehen hoch und runter',
   /\/datei\/stueck/.test(maschine) && /\/datei\/runter/.test(maschine));
 p('… und zwar verschlüsselt wie die Sätze', /verschluesseleBytes/.test(maschine));
 
-const aufgaben = lies(dazu(WURZEL, 'AUFGABEN.md'), 'utf8');
-p('… und die Aufgabenliste kennt G2 und R2', /G2 —|G2 -/.test(aufgaben) && /R2/.test(aufgaben));
+/* SEIT DEM 3. SEPTEMBER 2026 STEHT DAS WOANDERS. `AUFGABEN.md` führt nur
+   noch, was OFFEN ist; die Geschichte — und damit auch G2 — ist nach
+   `ERLEDIGTE-AUFGABEN.md` gezogen (E370). Dieser Punkt ist deshalb
+   umgehängt, nicht gelockert: er sagt weiterhin, dass in der Doku steht,
+   wann und wie die Anhänge abgleichbar wurden. Wer den Eintrag dort
+   streicht, macht ihn rot. */
+const erledigt = lies(dazu(WURZEL, 'ERLEDIGTE-AUFGABEN.md'), 'utf8');
+p('… und die Doku hält fest, wann G2 und R2 gebaut wurden',
+  /G2 —|G2 -/.test(erledigt) && /R2/.test(erledigt));
 
 console.log(`\n  Suite 77 — Zwei Geräte: ${ok} ok, ${weg} offen`);
 process.exit(weg ? 1 : 0);

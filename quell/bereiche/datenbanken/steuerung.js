@@ -4109,32 +4109,16 @@ const Datenbank = (() => {
     /* ========================================================================
      * ZEILE ALS SEITENVORSCHAU  (Notions Side Peek)
      * ======================================================================*/
-    const zeilePeek = (row, coll) => {
-        document.querySelectorAll('.peek').forEach(p => p.remove());
-        /* Ein 560-px-Seitenfenster wird auf 390 px nicht zu einer Vorschau,
-           sondern zu einer gequetschten zweiten Editoroberfläche. Auf Telefonen
-           ist die Zeile ohnehin eine vollwertige Seite: direkt öffnen, dieselbe
-           Daten- und Editorlogik benutzen, keinen mobilen Zwilling bauen. Das
-           gilt auch im iPhone-Querformat über die gemeinsame Geräteerkennung. */
-        const telefon = typeof AppEinstellung !== 'undefined'
-            ? AppEinstellung.amTelefon()
-            : typeof Menue !== 'undefined' && Menue.amTelefon();
-        if (telefon) {
-            App.oeffne(row.id);
-            return;
-        }
-        const p = document.createElement('aside');
-        p.className = 'peek';
-        const kopf = document.createElement('div');
-        kopf.className = 'peek-kopf';
-        kopf.innerHTML =
-            '<button data-a="voll" title="Als ganze Seite öffnen">⤢</button>' +
-                '<div class="peek-pfad">' + esc(coll.name) + '</div>' +
-                '<button data-a="menu" title="Mehr">⋯</button>' +
-                '<button data-a="zu" title="Schliessen">✕</button>';
-        p.appendChild(kopf);
-        const koerper = document.createElement('div');
-        koerper.className = 'peek-koerper';
+    /**
+     * Der INHALT der Vorschau — Titel, Eigenschaften, Blöcke.
+     *
+     * Er steht hier für sich, weil ihn zwei Hüllen benutzen: das Seitenfenster
+     * am Rechner und das Blatt von unten am Telefon (E371). Einen mobilen
+     * Zwilling zu bauen wäre der teure Weg gewesen; ein Gefäss zu tauschen ist
+     * der billige. Gibt das Element zurück, in dem die Blöcke stehen — der
+     * Aufrufer muss `Blocks.bindeEditor` darauf rufen.
+     */
+    const peekInhalt = (koerper, row, coll) => {
         const titel = document.createElement('div');
         titel.className = 'peek-titel';
         titel.contentEditable = 'true';
@@ -4174,6 +4158,78 @@ const Datenbank = (() => {
             kinder.push(Store.addBlock(row.id, 'text'));
         kinder.forEach((b) => inhalt.appendChild(Blocks.render(b)));
         koerper.appendChild(inhalt);
+        return inhalt;
+    };
+    /**
+     * Die Vorschau am Telefon: ein Blatt von unten, das die Tabelle stehen
+     * lässt.
+     *
+     * BIS E371 SPRANG SIE ZUR GANZEN SEITE. Das war bequem gebaut — dieselbe
+     * Editorlogik, kein zweites Gefäss — und teuer benutzt: die Tabelle war
+     * weg, die Rollposition auch, und zurück ging es nur über die Navigation.
+     * Wer zehn Zeilen ansieht, navigiert zwanzig Mal. Ein 560-px-Seitenfenster
+     * auf 390 px zu quetschen wäre die andere falsche Antwort gewesen; die
+     * richtige ist die Form, die das Telefon dafür hat.
+     */
+    const zeilePeekBlatt = (row, coll) => {
+        /* Ohne das Modul bleibt der alte Weg — er ist schlechter, aber er
+           funktioniert. Eine Vorschau, die gar nichts tut, wäre schlimmer. */
+        if (typeof Sheet === 'undefined') {
+            App.oeffne(row.id);
+            return;
+        }
+        const knopf = (zeichen, was) => {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.textContent = zeichen;
+            b.title = was;
+            b.setAttribute('aria-label', was);
+            return b;
+        };
+        const voll = knopf('⤢', 'Als ganze Seite öffnen');
+        const mehr = knopf('⋯', 'Mehr');
+        Sheet.oeffne({
+            titel: coll.name,
+            hoehe: 'halb',
+            kopfKnoepfe: [voll, mehr],
+            aufbau: (koerper, griff) => {
+                const inhalt = peekInhalt(koerper, row, coll);
+                Blocks.bindeEditor(inhalt);
+                voll.addEventListener('click', () => { griff.schliessen(); App.oeffne(row.id); });
+                mehr.addEventListener('click', () => zeilenMenue(mehr, row, coll, () => griff.schliessen()));
+                /* Wer im Titel oder in einem Block schreibt, will Platz. Das Blatt
+                   zieht sich dann von selbst auf — sonst tippt man in einen
+                   Streifen von 58 %, während die Tastatur die Hälfte davon nimmt. */
+                koerper.addEventListener('focusin', e => {
+                    const z = e.target instanceof Element ? e.target : null;
+                    if (z?.closest('[contenteditable="true"], input, textarea'))
+                        griff.setzeHoehe('voll');
+                });
+            },
+        });
+    };
+    const zeilePeek = (row, coll) => {
+        document.querySelectorAll('.peek').forEach(p => p.remove());
+        const telefon = typeof AppEinstellung !== 'undefined'
+            ? AppEinstellung.amTelefon()
+            : typeof Menue !== 'undefined' && Menue.amTelefon();
+        if (telefon) {
+            zeilePeekBlatt(row, coll);
+            return;
+        }
+        const p = document.createElement('aside');
+        p.className = 'peek';
+        const kopf = document.createElement('div');
+        kopf.className = 'peek-kopf';
+        kopf.innerHTML =
+            '<button data-a="voll" title="Als ganze Seite öffnen">⤢</button>' +
+                '<div class="peek-pfad">' + esc(coll.name) + '</div>' +
+                '<button data-a="menu" title="Mehr">⋯</button>' +
+                '<button data-a="zu" title="Schliessen">✕</button>';
+        p.appendChild(kopf);
+        const koerper = document.createElement('div');
+        koerper.className = 'peek-koerper';
+        const inhalt = peekInhalt(koerper, row, coll);
         p.appendChild(koerper);
         document.body.appendChild(p);
         Blocks.bindeEditor(inhalt);

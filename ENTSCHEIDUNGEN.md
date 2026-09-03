@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-366 Entscheidungen, E1 bis E370. Die Nummer ist die Ordnung: eine Entscheidung
+367 Entscheidungen, E1 bis E371. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -402,7 +402,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E349** — Der Start zeigt, wo man war: die PDF, sonst das Regal (Redurs Punkt 1)
 * **E350** — Eine ZIP kommt so ins Regal, wie sie ist (Redurs Punkt 2)
 
-**E351–E370**
+**E351–E371**
 
 * **E351** — Der Stift schreibt wie eine Hand: Füller, Kugelschreiber, Pinsel (Redurs Punkt 3, erster Bogen)
 * **E352** — Der Radierer streicht, teilt und kennt den Rückknopf des Stifts (Redurs Punkt 3, zweiter Bogen)
@@ -424,6 +424,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E368** — Ziehen und Ablegen im Regal (L78 Punkt 1, L114 Punkt 4)
 * **E369** — Die Spalte nimmt die Breite, die sie bekommt (Rückfall aus E359)
 * **E370** — CLAUDE.md aufgeräumt: Marken, Verzeichnis, und ein Zaun, der 891 Zeilen verschluckt hat
+* **E371** — Die Vorschau am Telefon ist ein Blatt, kein Absprung (L10)
 
 ---
 
@@ -29633,3 +29634,139 @@ KEINE MUTATIONSPROBE: es gibt hier keinen neuen Wächter zu prüfen. Die
 Gegenprobe ist die Stichwortliste, und die war beim ersten Durchlauf rot —
 „Mobile Geräte beachten" aus §36 und das Wort „Tombstones" aus §25 waren
 tatsächlich verschwunden. Beide sind wieder drin.
+
+
+════════════════════════════════════════════════════════════════════════════
+E371 — Die Vorschau am Telefon ist ein Blatt, kein Absprung (L10)
+════════════════════════════════════════════════════════════════════════════
+
+BEFUND: `zeilePeek` — Notions „Side Peek", die Zeile als Seite neben der
+Tabelle — sprang am Telefon zur ganzen Seite. Der Kommentar an der Stelle
+war ehrlich und die Folgerung trotzdem falsch:
+
+    Ein 560-px-Seitenfenster wird auf 390 px nicht zu einer Vorschau,
+    sondern zu einer gequetschten zweiten Editoroberfläche. Auf Telefonen
+    ist die Zeile ohnehin eine vollwertige Seite: direkt öffnen.
+
+Der erste Satz stimmt. Der zweite übersieht, wofür eine Vorschau da ist. Sie
+zeigt nicht bloss den Inhalt einer Zeile — sie zeigt ihn, OHNE dass man
+seinen Platz verliert. Nach `App.oeffne` war die Tabelle weg, die
+Rollposition auch, die gewählte Ansicht ebenso, und zurück ging es über die
+Navigation. Zehn Zeilen ansehen hiess zwanzig Mal navigieren.
+
+Die dritte Antwort, die weder quetscht noch wegspringt, ist die Form, die
+das Telefon dafür hat: ein Blatt von unten.
+
+WAS GEBAUT WURDE
+────────────────
+**Ein neues Modul, `src/schale/ueberlagerung/sheet.ts`.** `menue.ts` macht
+seit E240 aus einem Menü am Telefon ein Blatt — für eine Liste von Knöpfen
+in EINER Höhe. Inhalt braucht mehr: drei Höhen, eine Geste dazwischen, und
+es darf nicht beim ersten Tipp verschwinden, weil man darin arbeitet.
+
+    zu     ganz unten, aus dem Bild
+    halb   58 % der sichtbaren Höhe — die Tabelle bleibt oben stehen
+    voll   sichtbare Höhe minus 44 px
+
+Die 44 px oben sind kein Rest, sondern der Zweck: ein Blatt, das den
+Bildschirm füllt, ist von einer Seite nicht mehr zu unterscheiden — und dann
+sucht man wieder den Zurück-Knopf, den es nicht gibt.
+
+**Der Inhalt ist EINER.** `peekInhalt()` baut Titel, Eigenschaften und
+Blöcke in ein beliebiges Gefäss; das Seitenfenster am Rechner und das Blatt
+am Telefon reichen ihm nur eine andere Hülle. Einen mobilen Zwilling zu
+bauen wäre der teure Weg gewesen — zwei Stellen, die auseinanderlaufen,
+sobald jemand eine davon anfasst. test361 §8 vergleicht deshalb beide
+Hüllen Feld für Feld gegeneinander.
+
+**Wer schreibt, bekommt Platz.** Ein `focusin` im Körper zieht das Blatt auf
+voll. Sonst tippt man in einen Streifen von 58 %, während die Tastatur die
+Hälfte davon nimmt.
+
+DREI DINGE, DIE DER PRÜFLAUF GEFUNDEN HAT
+─────────────────────────────────────────
+**1. Der Zug riss ab, still.** test361 §3 mass 490 px vor dem Ziehen und
+490 px danach — nichts war passiert, ohne Fehler, ohne Spur. Der Grund: das
+Blatt wächst nach oben, während der Finger nach oben zieht. Zieht er
+schneller, als es wächst, steht der Zeiger über dem, was DAHINTER liegt, und
+`pointermove` geht dorthin. `setPointerCapture` beim Übernehmen behebt es.
+Die Gegenprobe: ohne die Zeile fallen fünf Punkte.
+
+**2. Der Zug aus dem Körper heraus ging gar nicht.** Die erste Fassung wies
+jede Geste ab, die auf einem `contenteditable` begann — vernünftig
+klingend, in der Sache falsch: der halbe Körper IST der Editor, und wer
+oben im Blatt zu ziehen anfängt, fasst zwangsläufig den Titel an. Der Zug
+aus dem Körper war damit gebaut und unerreichbar.
+
+Die Reparatur ist nicht „die Abweisung streichen", sondern die Geste
+später übernehmen. Am Griff gehört sie uns sofort — dort gibt es nichts
+anderes zu tun. Im Körper erst, wenn der Finger sich um mehr als 12 px nach
+unten bewegt hat. Ein Tipp in einen Textblock setzt damit weiterhin den
+Schreibzeiger; ein Zug zieht.
+
+**3. Ein Prüfpunkt bediente sich an seinem eigenen Kommentar.** §10 prüfte
+mit `/touchmove[\s\S]{0,220}preventDefault/`, ob der Griff aus E368 im
+erzeugten `sheet.js` steht. Er blieb grün, als die Zeile entfernt wurde —
+der Kommentar DARÜBER nennt beide Wörter. Jetzt werden Kommentare vor der
+Prüfung entfernt. Das ist §55.2 in Reinform, und diesmal hat es die eigene
+Prüfung getroffen.
+
+**4. Und einer, den kein Prüflauf gefunden hat.** `.menu` steht auf
+z-index 600, das Blatt auf 780. Ein Menü, das AUS dem Blatt heraus aufgeht
+— der „⋯"-Knopf im Kopf — wäre dahinter verschwunden. Der Knopf hätte
+scheinbar nichts getan, und das ist die unangenehmste Sorte Fehler: kein
+Absturz, keine Meldung, nur ein Knopf, dem man nicht mehr traut.
+
+Gefunden beim Lesen der Stapelordnung, nicht beim Messen. Die Reparatur ist
+eine Marke am Body (`body.iblatt-auf`), die Menüs anhebt, SOLANGE ein Blatt
+offen ist — nicht eine feste höhere Zahl in `.menu`, denn dann stiege jedes
+Menü der App über alles andere. §10 hält es jetzt fest, samt der Reihenfolge
+beim Escape: erst das Menü, dann das Blatt.
+
+WAS SICH ALS RICHTIG ERWIESEN HAT
+─────────────────────────────────
+Der `touchmove`-Griff mit `{ passive: false }` aus E368. Am Kopf steht
+`touch-action:none` im Stil, dort weiss der Browser schon beim `touchstart`
+Bescheid — der Körper muss rollen können und darf das nicht haben. Zieht man
+von dort nach unten, hat der Browser die Berührung längst für sich
+beansprucht. Die Gegenprobe zeigt es: ohne die Zeile bleibt das Blatt auf
+800 px stehen, statt sich schliessen zu lassen.
+
+WAS NICHT GEMACHT WURDE
+───────────────────────
+**Am Rechner wurde nichts geändert.** Das Seitenfenster steht, wo es stand,
+misst, was es mass, und test361 §7 hält beides fest.
+
+**Kein eigener Rückfall.** Fehlt das Modul, geht `zeilePeekBlatt` den alten
+Weg über `App.oeffne`. Er ist schlechter, und er funktioniert — eine
+Vorschau, die gar nichts tut, wäre schlimmer.
+
+**Kein neues Merkmal erfunden.** Die Masse kommen aus `--touch-min`,
+`--sheet-radius`, `--visual-bottom`; §10 prüft, dass keins der dreimal
+erfundenen (`--akzent`, `--flaeche-2`, `--bg-2`) im neuen Stil auftaucht.
+
+WAS DARAUS FOLGT, ÜBER DIESEN FALL HINAUS
+─────────────────────────────────────────
+Wenn eine Oberfläche am Telefon nicht passt, gibt es drei Antworten, und die
+ersten zwei sind die falschen: quetschen, oder wegspringen. Die dritte ist,
+die Form zu nehmen, die das Gerät für diesen Zweck hat. Das kostet ein
+Gefäss mehr — aber nur ein Gefäss, wenn der Inhalt einer bleibt.
+
+Und: Beide echten Fehler kamen von der Frage „wem gehört diese Berührung?".
+Der Browser beantwortet sie früher, als man denkt, und er sagt es nicht.
+
+PRÜFUNG: test361 44/44 (neu, Port 9374) · test113 53/53 (siehe unten) ·
+test87 152/152 · test105 · test109 · test114 · test155 · test163 · test192,
+alle grün. Vier Bilder angesehen: Tabelle vorher, Blatt halb, Blatt voll,
+Rechner unverändert.
+
+MUTATIONSPROBE, dreimal: `setPointerCapture` heraus → 31/36. Der
+`touchmove`-Griff heraus → 34/36. Und beim ersten Versuch blieb genau dieser
+zweite Punkt grün — das war der Fund unter Punkt 3 oben.
+
+NACHTRAG ZU test113 §8. Der volle Lauf auf E369 fand einen roten Punkt, und
+er gehörte zum Aufräumen des Tages: test113 las `AUFGABEN.md` und verlangte,
+dass dort „G2" und „R2" stehen. Seit E370 führt diese Datei nur noch, was
+OFFEN ist; die Geschichte steht in `ERLEDIGTE-AUFGABEN.md`. Der Punkt ist
+deshalb umgehängt, nicht gelockert — die Gegenprobe (den Eintrag dort
+verfälschen) macht ihn weiterhin rot.

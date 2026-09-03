@@ -5825,3 +5825,60 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   .arb-stopp{ min-height:44px; padding:3px 14px }
   .arb-zu{ min-width:44px; min-height:44px }
 }
+
+/* ==========================================================================
+ * INHALTSBLATT — die Seitenvorschau am Telefon (E371, sheet.ts)
+ * --------------------------------------------------------------------------
+ * Der Unterschied zu `.menu.blatt` daneben ist nicht kosmetisch: dort steht
+ * eine Liste von Knöpfen in EINER Höhe, hier steht Inhalt in DREI. Deshalb
+ * setzt das Modul `height` in Pixeln und nicht `max-height` — eine Höhe, die
+ * sich ziehen lässt, muss eine Zahl sein, keine Grenze.
+ *
+ * `transition` gilt NICHT, solange gezogen wird (.zieht): sonst läuft die
+ * Fläche dem Finger hinterher, und das fühlt sich nach Gummiband an.
+ * ======================================================================== */
+.iblatt-grund{position:fixed; inset:0; z-index:770; background:rgba(0,0,0,.42)}
+.iblatt{
+  position:fixed; left:0; right:0; bottom:var(--visual-bottom, 0px); z-index:780;
+  height:0; background:var(--bg); color:var(--text);
+  border-top:1px solid var(--line); border-radius:var(--sheet-radius) var(--sheet-radius) 0 0;
+  box-shadow:0 -8px 30px rgba(0,0,0,.28);
+  display:flex; flex-direction:column; overflow:hidden;
+  transform:translateY(100%); transition:transform .22s cubic-bezier(.2,.8,.3,1), height .22s cubic-bezier(.2,.8,.3,1);
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.iblatt.auf{transform:translateY(0)}
+.iblatt.zieht{transition:none}
+
+/* Der Kopf ist der Griff. Er misst mit Polsterung über 44 px, weil er ein
+   Hauptweg ist (§37) — man greift ihn bei jedem Öffnen. */
+.iblatt-kopf{flex:none; cursor:grab; touch-action:none; padding-bottom:2px}
+.iblatt.zieht .iblatt-kopf{cursor:grabbing}
+.iblatt-griff{width:38px; height:4px; border-radius:3px; background:var(--line);
+  margin:9px auto 6px}
+.iblatt-zeile{display:flex; align-items:center; gap:6px; padding:0 8px 8px;
+  border-bottom:1px solid var(--line-soft)}
+.iblatt-titel{flex:1; min-width:0; font-size:15px; font-weight:600; padding-left:6px;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.iblatt-zeile button{min-width:var(--touch-min); min-height:var(--touch-min);
+  border-radius:9px; color:var(--text-dim); font-size:17px; background:none; border:none}
+.iblatt-zeile button:hover{background:var(--bg-hover); color:var(--text)}
+.iblatt-koerper{flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch; padding:16px 16px 30vh}
+
+/* Der Inhalt ist derselbe wie in der Vorschau am Rechner — nur die Hülle ist
+   eine andere. Deshalb stehen hier keine eigenen Regeln für Titel,
+   Eigenschaften oder Blöcke, sondern nur die Masse, die am Telefon anders
+   sein müssen. */
+.iblatt-koerper .peek-titel{font-size:24px}
+.iblatt-koerper .peek-prop{font-size:15px; padding:5px 0}
+.iblatt-koerper .pp-n{width:118px; flex:0 0 118px; font-size:14px}
+.iblatt-koerper .pp-w{min-height:var(--touch-min); display:flex; align-items:center}
+.iblatt-koerper .peek-inhalt .blk > .handles{display:none}
+
+/* Menüs, die AUS einem Inhaltsblatt heraus aufgehen, gehören darüber.
+   `.menu` liegt auf 600, das Blatt auf 780 — ohne diese Regel wäre das
+   „⋯"-Menü unsichtbar, und der Knopf hätte scheinbar nichts getan. Die
+   Regel gilt nur, solange ein Blatt offen ist (E371). */
+body.iblatt-auf .menu-grund{z-index:790}
+body.iblatt-auf .menu{z-index:794}

@@ -13289,6 +13289,63 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
   .arb-zu{ min-width:44px; min-height:44px }
 }
 
+/* ==========================================================================
+ * INHALTSBLATT — die Seitenvorschau am Telefon (E371, sheet.ts)
+ * --------------------------------------------------------------------------
+ * Der Unterschied zu `.menu.blatt` daneben ist nicht kosmetisch: dort steht
+ * eine Liste von Knöpfen in EINER Höhe, hier steht Inhalt in DREI. Deshalb
+ * setzt das Modul `height` in Pixeln und nicht `max-height` — eine Höhe, die
+ * sich ziehen lässt, muss eine Zahl sein, keine Grenze.
+ *
+ * `transition` gilt NICHT, solange gezogen wird (.zieht): sonst läuft die
+ * Fläche dem Finger hinterher, und das fühlt sich nach Gummiband an.
+ * ======================================================================== */
+.iblatt-grund{position:fixed; inset:0; z-index:770; background:rgba(0,0,0,.42)}
+.iblatt{
+  position:fixed; left:0; right:0; bottom:var(--visual-bottom, 0px); z-index:780;
+  height:0; background:var(--bg); color:var(--text);
+  border-top:1px solid var(--line); border-radius:var(--sheet-radius) var(--sheet-radius) 0 0;
+  box-shadow:0 -8px 30px rgba(0,0,0,.28);
+  display:flex; flex-direction:column; overflow:hidden;
+  transform:translateY(100%); transition:transform .22s cubic-bezier(.2,.8,.3,1), height .22s cubic-bezier(.2,.8,.3,1);
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.iblatt.auf{transform:translateY(0)}
+.iblatt.zieht{transition:none}
+
+/* Der Kopf ist der Griff. Er misst mit Polsterung über 44 px, weil er ein
+   Hauptweg ist (§37) — man greift ihn bei jedem Öffnen. */
+.iblatt-kopf{flex:none; cursor:grab; touch-action:none; padding-bottom:2px}
+.iblatt.zieht .iblatt-kopf{cursor:grabbing}
+.iblatt-griff{width:38px; height:4px; border-radius:3px; background:var(--line);
+  margin:9px auto 6px}
+.iblatt-zeile{display:flex; align-items:center; gap:6px; padding:0 8px 8px;
+  border-bottom:1px solid var(--line-soft)}
+.iblatt-titel{flex:1; min-width:0; font-size:15px; font-weight:600; padding-left:6px;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.iblatt-zeile button{min-width:var(--touch-min); min-height:var(--touch-min);
+  border-radius:9px; color:var(--text-dim); font-size:17px; background:none; border:none}
+.iblatt-zeile button:hover{background:var(--bg-hover); color:var(--text)}
+.iblatt-koerper{flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch; padding:16px 16px 30vh}
+
+/* Der Inhalt ist derselbe wie in der Vorschau am Rechner — nur die Hülle ist
+   eine andere. Deshalb stehen hier keine eigenen Regeln für Titel,
+   Eigenschaften oder Blöcke, sondern nur die Masse, die am Telefon anders
+   sein müssen. */
+.iblatt-koerper .peek-titel{font-size:24px}
+.iblatt-koerper .peek-prop{font-size:15px; padding:5px 0}
+.iblatt-koerper .pp-n{width:118px; flex:0 0 118px; font-size:14px}
+.iblatt-koerper .pp-w{min-height:var(--touch-min); display:flex; align-items:center}
+.iblatt-koerper .peek-inhalt .blk > .handles{display:none}
+
+/* Menüs, die AUS einem Inhaltsblatt heraus aufgehen, gehören darüber.
+   `.menu` liegt auf 600, das Blatt auf 780 — ohne diese Regel wäre das
+   „⋯"-Menü unsichtbar, und der Knopf hätte scheinbar nichts getan. Die
+   Regel gilt nur, solange ein Blatt offen ist (E371). */
+body.iblatt-auf .menu-grund{z-index:790}
+body.iblatt-auf .menu{z-index:794}
+
 </style>
 <!-- DIE PREMIUM-SCHALE (E272). Sie steht ABSICHTLICH als letzte: sie ordnet,
      was die Blätter darüber gebaut haben, und muss deshalb gewinnen. Alles
@@ -15951,7 +16008,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 162, inhalt: '5a12a1445f39a9f1', gebaut: '2026-09-03T06:05:28.663Z' };
+const Stand = { fassung: 171, inhalt: 'ea27366c663453db', gebaut: '2026-09-03T08:07:14.827Z' };
 window.Stand = Stand;
 
 </script>
@@ -35268,6 +35325,320 @@ const Menue = (() => {
     return { menu, menuMitSuche, amTelefon };
 })();
 window.Menue = Menue;
+
+</script>
+<script>
+/* ===== quell/schale/ueberlagerung/sheet.js ===== */
+"use strict";
+/* ============================================================================
+ * schale/ueberlagerung/sheet.js — das Blatt von unten, das Inhalt trägt
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/schale/ueberlagerung/sheet.ts`. `npm run bauen:ts`
+ * schreibt daraus diese Datei.
+ * ==========================================================================*/
+/* ===========================================================================
+ * BLATT MIT INHALT — die Vorschau am Telefon
+ * ===========================================================================
+ *
+ * WOZU DAS DA IST. `menue.ts` macht aus einem Menü am Telefon ein Blatt von
+ * unten. Das reicht für eine Liste von Knöpfen und ist genau richtig dafür.
+ * Für INHALT reicht es nicht: eine Seitenvorschau braucht drei Höhen statt
+ * einer, sie muss sich mit dem Finger dazwischen ziehen lassen, und sie darf
+ * nicht mit dem ersten Tipp verschwinden, weil man darin arbeitet.
+ *
+ * WARUM ES DAS ÜBERHAUPT BRAUCHT. Bis heute sprang die Vorschau am Telefon
+ * zur ganzen Seite (`App.oeffne`). Das ist bequem gebaut und teuer benutzt:
+ * die Tabelle darunter ist weg, die Rollposition auch, und der Weg zurück
+ * führt über die Navigation. Wer zehn Zeilen ansehen will, navigiert zwanzig
+ * Mal. Notion, GoodNotes und die Kontakte-App von iOS lösen das alle gleich
+ * — mit einem Blatt, das über dem bleibt, was man gerade angesehen hat.
+ *
+ * DIE DREI HÖHEN.
+ *
+ *     zu     ganz unten, aus dem Bild
+ *     halb   58 % der sichtbaren Höhe — die Tabelle bleibt oben sichtbar
+ *     voll   sichtbare Höhe minus KOPF_FREI, damit man SIEHT, dass etwas
+ *            dahinter liegt. Ein Blatt, das den Bildschirm füllt, ist von
+ *            einer Seite nicht mehr zu unterscheiden — und dann sucht man
+ *            wieder den Zurück-Knopf.
+ *
+ * DIE GESTE. Am Griff (und am Titel) zieht der Finger das Blatt mit. Beim
+ * Loslassen entscheidet nicht die Strecke allein, sondern auch die
+ * Geschwindigkeit: ein schneller kurzer Wisch nach unten schliesst, ein
+ * langsames Ziehen sucht die nächstliegende Höhe. Aus dem Körper heraus
+ * zieht es nur, wenn der Körper schon ganz oben steht — sonst wäre Rollen
+ * und Ziehen dieselbe Bewegung.
+ *
+ * DER FALLSTRICK, DEN E368 GEKOSTET HAT. `touch-action:none` allein genügt
+ * nicht. Der Browser entscheidet beim `touchstart`, ob die Berührung ihm
+ * gehört; wer erst später abbricht, bekommt ein `pointercancel` und sonst
+ * nichts. Deshalb hängt hier ein `touchmove` mit `{ passive: false }` daran,
+ * das `preventDefault()` ruft, solange gezogen wird.
+ */
+const Sheet = (() => {
+    const KOPF_FREI = 44; /* was oben stehen bleibt, in px */
+    const ANTEIL_HALB = 0.58; /* die mittlere Höhe, als Anteil */
+    const WISCH_PX = 70; /* ab hier gilt ein Zug als Absicht */
+    const SCHWELLE_PX = 12; /* ab hier ist eine Berührung im Körper ein Zug */
+    const WISCH_TEMPO = 0.55; /* px je ms — darüber zählt Schwung */
+    const sichtbareHoehe = () => {
+        const vv = window.visualViewport;
+        return Math.round(vv?.height || window.innerHeight || 640);
+    };
+    /* Die Höhe in px, die eine Stufe bedeutet. */
+    const hoeheVon = (h) => {
+        const ganz = sichtbareHoehe();
+        return h === 'voll'
+            ? Math.max(240, ganz - KOPF_FREI)
+            : Math.max(200, Math.round(ganz * ANTEIL_HALB));
+    };
+    let offen = null;
+    /**
+     * Ein Blatt mit Inhalt öffnen. Gibt den Griff zurück, damit der Aufrufer
+     * es später schliessen oder aufziehen kann.
+     */
+    const oeffne = (opt) => {
+        /* Zwei Inhaltsblätter übereinander ergeben keinen Sinn: das zweite
+           verdeckt das erste vollständig, und der Grund darunter zählt doppelt. */
+        if (offen)
+            offen.remove();
+        const grund = document.createElement('div');
+        grund.className = 'iblatt-grund';
+        grund.setAttribute('aria-hidden', 'true');
+        const el = document.createElement('div');
+        el.className = 'iblatt';
+        el.setAttribute('role', 'dialog');
+        el.setAttribute('aria-modal', 'true');
+        if (opt.titel)
+            el.setAttribute('aria-label', opt.titel.slice(0, 80));
+        let stufe = opt.hoehe || 'halb';
+        const kopf = document.createElement('div');
+        kopf.className = 'iblatt-kopf';
+        const griffEl = document.createElement('div');
+        griffEl.className = 'iblatt-griff';
+        griffEl.setAttribute('aria-hidden', 'true');
+        kopf.appendChild(griffEl);
+        const zeile = document.createElement('div');
+        zeile.className = 'iblatt-zeile';
+        const titelEl = document.createElement('div');
+        titelEl.className = 'iblatt-titel';
+        titelEl.textContent = opt.titel || ''; /* nie als HTML (§19) */
+        zeile.appendChild(titelEl);
+        (opt.kopfKnoepfe || []).forEach(k => zeile.appendChild(k));
+        const zu = document.createElement('button');
+        zu.type = 'button';
+        zu.className = 'iblatt-zu';
+        zu.textContent = '✕';
+        zu.setAttribute('aria-label', 'Vorschau schliessen');
+        zeile.appendChild(zu);
+        kopf.appendChild(zeile);
+        el.appendChild(kopf);
+        const koerper = document.createElement('div');
+        koerper.className = 'iblatt-koerper';
+        el.appendChild(koerper);
+        let weg = false;
+        const schliessen = () => {
+            if (weg)
+                return;
+            weg = true;
+            el.classList.remove('auf');
+            el.style.height = '0px';
+            document.body.classList.remove('iblatt-auf');
+            document.removeEventListener('keydown', escape, true);
+            window.removeEventListener('resize', beiGroesse);
+            window.visualViewport?.removeEventListener('resize', beiGroesse);
+            grund.remove();
+            if (offen === el)
+                offen = null;
+            /* Erst nach der Bewegung aus dem Baum nehmen, sonst springt es weg,
+               statt zu gleiten. */
+            setTimeout(() => el.remove(), 230);
+            opt.beimSchliessen?.();
+        };
+        const escape = (e) => {
+            if (e.key !== 'Escape')
+                return;
+            /* Ein offenes Menü über dem Blatt gehört zuerst weg — sonst schliesst
+               Escape beides auf einmal, und der Nutzer verliert mehr als gemeint. */
+            if (document.querySelector('.menu'))
+                return;
+            e.stopPropagation();
+            schliessen();
+        };
+        const setzeHoehe = (h) => {
+            stufe = h;
+            el.style.height = hoeheVon(h) + 'px';
+            el.dataset.stufe = h;
+        };
+        const beiGroesse = () => { if (!weg)
+            el.style.height = hoeheVon(stufe) + 'px'; };
+        grund.addEventListener('click', schliessen);
+        zu.addEventListener('click', schliessen);
+        document.addEventListener('keydown', escape, true);
+        window.addEventListener('resize', beiGroesse);
+        window.visualViewport?.addEventListener('resize', beiGroesse);
+        /* ---- Ziehen ---------------------------------------------------------
+           `zug` ist null, solange nichts gezogen wird. `ausKoerper` merkt sich,
+           ob die Geste im Körper begann — von dort darf nur gezogen werden,
+           solange der Körper oben steht. */
+        let zug = null;
+        /* Den Zug wirklich übernehmen — erst ab hier gehört die Geste uns. */
+        const uebernehmen = (zeigerId) => {
+            if (!zug || zug.bereit)
+                return;
+            zug.bereit = true;
+            el.classList.add('zieht');
+            /* OHNE DAS HIER REISST DIE GESTE AB, UND ZWAR STILL.
+               Das Blatt wächst nach oben, während der Finger nach oben zieht —
+               zieht er schneller, als es wächst, steht der Zeiger über dem, was
+               DAHINTER liegt, und `pointermove` geht dorthin. Der Zug bleibt dann
+               auf halbem Weg stehen, ohne Fehler, ohne Spur. Gefunden hat es
+               test361 §3: 490 px vorher, 490 px nachher. */
+            try {
+                el.setPointerCapture(zeigerId);
+            }
+            catch { /* alte Browser */ }
+        };
+        const darfZiehen = (ziel) => {
+            const e = ziel instanceof Element ? ziel : null;
+            if (!e)
+                return null;
+            if (e.closest('.iblatt-kopf'))
+                return 'griff';
+            if (e.closest('.iblatt-koerper'))
+                return 'koerper';
+            return null;
+        };
+        el.addEventListener('pointerdown', e => {
+            if (e.button !== 0)
+                return;
+            const wo = darfZiehen(e.target);
+            if (!wo)
+                return;
+            /* Aus dem Körper heraus nur, wenn nichts mehr nach oben zu rollen ist. */
+            if (wo === 'koerper' && koerper.scrollTop > 0)
+                return;
+            /* Ein Knopf, ein Eingabefeld oder eine Auswahl will seine eigene
+               Geste — dort wird nicht gezogen. Ein `contenteditable` steht
+               BEWUSST nicht in dieser Liste: der halbe Körper ist der Editor,
+               und wer ihn ausschliesst, hat den Zug aus dem Körper gar nicht
+               gebaut. test361 §9 hat genau das gefunden — der Zug scheiterte am
+               Titel, den man ja anfasst, wenn man oben im Blatt beginnt. */
+            const el2 = e.target instanceof Element ? e.target : null;
+            if (el2?.closest('button, input, textarea, select'))
+                return;
+            zug = { y0: e.clientY, h0: el.getBoundingClientRect().height, t0: e.timeStamp,
+                ausKoerper: wo === 'koerper', bereit: false };
+            /* AM GRIFF gehört die Geste uns sofort — dort gibt es nichts anderes
+               zu tun. IM KÖRPER erst, wenn der Finger sich wirklich bewegt hat:
+               sonst wäre jeder Tipp in einen Textblock ein angefangener Zug, und
+               der Schreibzeiger käme nie dorthin, wo man hingetippt hat. */
+            if (!zug.ausKoerper)
+                uebernehmen(e.pointerId);
+        });
+        el.addEventListener('pointermove', e => {
+            if (!zug)
+                return;
+            const d = e.clientY - zug.y0;
+            /* Aus dem Körper heraus zählt nur nach unten — nach oben ist Rollen. */
+            if (zug.ausKoerper && d < 0) {
+                if (!zug.bereit)
+                    zug = null;
+                return;
+            }
+            if (!zug.bereit) {
+                if (d < SCHWELLE_PX)
+                    return;
+                uebernehmen(e.pointerId);
+            }
+            const ganz = sichtbareHoehe();
+            const neu = Math.max(60, Math.min(ganz - KOPF_FREI, zug.h0 - d));
+            el.style.height = neu + 'px';
+        });
+        /* Ohne das hier entscheidet der Browser beim ersten `touchstart`, dass
+           die Geste ihm gehört, und schickt danach nur noch `pointercancel`.
+           Das hat E368 einen halben Tag gekostet. */
+        el.addEventListener('touchmove', e => { if (zug?.bereit)
+            e.preventDefault(); }, { passive: false });
+        const losgelassen = (e) => {
+            if (!zug)
+                return;
+            /* Nie übernommen heisst: es war ein Tipp, kein Zug. Nichts tun. */
+            if (!zug.bereit) {
+                zug = null;
+                return;
+            }
+            const d = e.clientY - zug.y0;
+            const ms = Math.max(1, e.timeStamp - zug.t0);
+            const tempo = d / ms; /* px je ms, positiv = nach unten */
+            const gezogen = zug;
+            zug = null;
+            el.classList.remove('zieht');
+            try {
+                el.releasePointerCapture(e.pointerId);
+            }
+            catch { /* schon los */ }
+            /* Schwung schlägt Strecke: ein kurzer schneller Wisch nach unten
+               schliesst, auch wenn das Blatt kaum bewegt wurde. */
+            if (tempo > WISCH_TEMPO && d > 24) {
+                schliessen();
+                return;
+            }
+            if (tempo < -WISCH_TEMPO && d < -24) {
+                setzeHoehe('voll');
+                return;
+            }
+            const jetzt = el.getBoundingClientRect().height;
+            if (gezogen.h0 - jetzt > WISCH_PX && stufe === 'halb') {
+                schliessen();
+                return;
+            }
+            /* Sonst zur nächstliegenden Stufe — und „zu" ist eine davon. */
+            const kandidaten = [['zu', 0], ['halb', hoeheVon('halb')], ['voll', hoeheVon('voll')]];
+            let beste = kandidaten[0];
+            kandidaten.forEach(k => { if (Math.abs(k[1] - jetzt) < Math.abs(beste[1] - jetzt))
+                beste = k; });
+            if (beste[0] === 'zu')
+                schliessen();
+            else
+                setzeHoehe(beste[0]);
+        };
+        el.addEventListener('pointerup', losgelassen);
+        el.addEventListener('pointercancel', e => {
+            if (!zug)
+                return;
+            try {
+                el.releasePointerCapture(e.pointerId);
+            }
+            catch { /* schon los */ }
+            zug = null;
+            el.classList.remove('zieht');
+            setzeHoehe(stufe);
+        });
+        /* SOLANGE EIN INHALTSBLATT OFFEN IST, GEHÖREN MENÜS DARÜBER.
+           `.menu` liegt auf z-index 600, das Blatt auf 780 — ein Menü, das AUS
+           dem Blatt heraus geöffnet wird („⋯"), läge sonst dahinter und wäre
+           unsichtbar. Der Knopf hätte dann scheinbar nichts getan. Das steht
+           hier und nicht als feste Zahl in `.menu`, weil sonst jedes Menü der
+           App über alles andere stiege. */
+        document.body.classList.add('iblatt-auf');
+        document.body.appendChild(grund);
+        document.body.appendChild(el);
+        offen = el;
+        const griff = { setzeHoehe, schliessen };
+        opt.aufbau(koerper, griff);
+        /* Erst die Höhe setzen, dann im nächsten Bild aufgleiten lassen —
+           sonst gleitet es von 0 auf und ruckelt beim ersten Bild. */
+        setzeHoehe(stufe);
+        requestAnimationFrame(() => el.classList.add('auf'));
+        return griff;
+    };
+    const istOffen = () => !!offen;
+    const schliesseAlle = () => { offen?.querySelector('.iblatt-zu')?.click(); };
+    return { oeffne, istOffen, schliesseAlle, KOPF_FREI, ANTEIL_HALB };
+})();
+window.Sheet = Sheet;
 
 </script>
 <script>
@@ -69600,32 +69971,16 @@ const Datenbank = (() => {
     /* ========================================================================
      * ZEILE ALS SEITENVORSCHAU  (Notions Side Peek)
      * ======================================================================*/
-    const zeilePeek = (row, coll) => {
-        document.querySelectorAll('.peek').forEach(p => p.remove());
-        /* Ein 560-px-Seitenfenster wird auf 390 px nicht zu einer Vorschau,
-           sondern zu einer gequetschten zweiten Editoroberfläche. Auf Telefonen
-           ist die Zeile ohnehin eine vollwertige Seite: direkt öffnen, dieselbe
-           Daten- und Editorlogik benutzen, keinen mobilen Zwilling bauen. Das
-           gilt auch im iPhone-Querformat über die gemeinsame Geräteerkennung. */
-        const telefon = typeof AppEinstellung !== 'undefined'
-            ? AppEinstellung.amTelefon()
-            : typeof Menue !== 'undefined' && Menue.amTelefon();
-        if (telefon) {
-            App.oeffne(row.id);
-            return;
-        }
-        const p = document.createElement('aside');
-        p.className = 'peek';
-        const kopf = document.createElement('div');
-        kopf.className = 'peek-kopf';
-        kopf.innerHTML =
-            '<button data-a="voll" title="Als ganze Seite öffnen">⤢</button>' +
-                '<div class="peek-pfad">' + esc(coll.name) + '</div>' +
-                '<button data-a="menu" title="Mehr">⋯</button>' +
-                '<button data-a="zu" title="Schliessen">✕</button>';
-        p.appendChild(kopf);
-        const koerper = document.createElement('div');
-        koerper.className = 'peek-koerper';
+    /**
+     * Der INHALT der Vorschau — Titel, Eigenschaften, Blöcke.
+     *
+     * Er steht hier für sich, weil ihn zwei Hüllen benutzen: das Seitenfenster
+     * am Rechner und das Blatt von unten am Telefon (E371). Einen mobilen
+     * Zwilling zu bauen wäre der teure Weg gewesen; ein Gefäss zu tauschen ist
+     * der billige. Gibt das Element zurück, in dem die Blöcke stehen — der
+     * Aufrufer muss `Blocks.bindeEditor` darauf rufen.
+     */
+    const peekInhalt = (koerper, row, coll) => {
         const titel = document.createElement('div');
         titel.className = 'peek-titel';
         titel.contentEditable = 'true';
@@ -69665,6 +70020,78 @@ const Datenbank = (() => {
             kinder.push(Store.addBlock(row.id, 'text'));
         kinder.forEach((b) => inhalt.appendChild(Blocks.render(b)));
         koerper.appendChild(inhalt);
+        return inhalt;
+    };
+    /**
+     * Die Vorschau am Telefon: ein Blatt von unten, das die Tabelle stehen
+     * lässt.
+     *
+     * BIS E371 SPRANG SIE ZUR GANZEN SEITE. Das war bequem gebaut — dieselbe
+     * Editorlogik, kein zweites Gefäss — und teuer benutzt: die Tabelle war
+     * weg, die Rollposition auch, und zurück ging es nur über die Navigation.
+     * Wer zehn Zeilen ansieht, navigiert zwanzig Mal. Ein 560-px-Seitenfenster
+     * auf 390 px zu quetschen wäre die andere falsche Antwort gewesen; die
+     * richtige ist die Form, die das Telefon dafür hat.
+     */
+    const zeilePeekBlatt = (row, coll) => {
+        /* Ohne das Modul bleibt der alte Weg — er ist schlechter, aber er
+           funktioniert. Eine Vorschau, die gar nichts tut, wäre schlimmer. */
+        if (typeof Sheet === 'undefined') {
+            App.oeffne(row.id);
+            return;
+        }
+        const knopf = (zeichen, was) => {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.textContent = zeichen;
+            b.title = was;
+            b.setAttribute('aria-label', was);
+            return b;
+        };
+        const voll = knopf('⤢', 'Als ganze Seite öffnen');
+        const mehr = knopf('⋯', 'Mehr');
+        Sheet.oeffne({
+            titel: coll.name,
+            hoehe: 'halb',
+            kopfKnoepfe: [voll, mehr],
+            aufbau: (koerper, griff) => {
+                const inhalt = peekInhalt(koerper, row, coll);
+                Blocks.bindeEditor(inhalt);
+                voll.addEventListener('click', () => { griff.schliessen(); App.oeffne(row.id); });
+                mehr.addEventListener('click', () => zeilenMenue(mehr, row, coll, () => griff.schliessen()));
+                /* Wer im Titel oder in einem Block schreibt, will Platz. Das Blatt
+                   zieht sich dann von selbst auf — sonst tippt man in einen
+                   Streifen von 58 %, während die Tastatur die Hälfte davon nimmt. */
+                koerper.addEventListener('focusin', e => {
+                    const z = e.target instanceof Element ? e.target : null;
+                    if (z?.closest('[contenteditable="true"], input, textarea'))
+                        griff.setzeHoehe('voll');
+                });
+            },
+        });
+    };
+    const zeilePeek = (row, coll) => {
+        document.querySelectorAll('.peek').forEach(p => p.remove());
+        const telefon = typeof AppEinstellung !== 'undefined'
+            ? AppEinstellung.amTelefon()
+            : typeof Menue !== 'undefined' && Menue.amTelefon();
+        if (telefon) {
+            zeilePeekBlatt(row, coll);
+            return;
+        }
+        const p = document.createElement('aside');
+        p.className = 'peek';
+        const kopf = document.createElement('div');
+        kopf.className = 'peek-kopf';
+        kopf.innerHTML =
+            '<button data-a="voll" title="Als ganze Seite öffnen">⤢</button>' +
+                '<div class="peek-pfad">' + esc(coll.name) + '</div>' +
+                '<button data-a="menu" title="Mehr">⋯</button>' +
+                '<button data-a="zu" title="Schliessen">✕</button>';
+        p.appendChild(kopf);
+        const koerper = document.createElement('div');
+        koerper.className = 'peek-koerper';
+        const inhalt = peekInhalt(koerper, row, coll);
         p.appendChild(koerper);
         document.body.appendChild(p);
         Blocks.bindeEditor(inhalt);

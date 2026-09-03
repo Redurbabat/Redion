@@ -412,10 +412,19 @@ liefert die Feldnamen, Formeln stehen ausgerechnet da, ⊞/☰ schalten je
 Block ins Raster und zurück, am Rechner ändert sich nichts (test163).
 Redur entscheidet am Bild; kippt er den Standard, ist das eine Zeile.
 
-**Fehlt ausserdem:** Side Peek auf kleinen
-Bildschirmen · gemeinsame Gestaltungswerte statt verstreuter Pixelzahlen —
-die Masse stehen an einem Dutzend Stellen in `bausteine.css` und wurden
-schon zweimal auseinandergeschrieben (28 gegen 18 beim Rand).
+**Die Vorschau ist seit E371 ein Blatt** — Side Peek am Telefon war der
+letzte grosse offene Punkt dieser Lücke. Bis dahin sprang eine angetippte
+Zeile zur ganzen Seite, und die Tabelle darunter war weg: zehn Zeilen
+ansehen hiess zwanzig Mal navigieren. Jetzt kommt ein Blatt von unten mit
+drei Höhen (zu · halb · voll), das die Tabelle stehen lässt; am Rechner
+bleibt es das Seitenfenster, und der Inhalt wird nur einmal gebaut
+(`peekInhalt`). `test361` hält es mit 36 Punkten, darunter zwei echte
+Berührungen über CDP.
+
+**Fehlt ausserdem:** gemeinsame Gestaltungswerte statt verstreuter
+Pixelzahlen — die Masse stehen an einem Dutzend Stellen in `bausteine.css`
+und wurden schon zweimal auseinandergeschrieben (28 gegen 18 beim Rand).
+Das ist der Rest von L10 und jetzt sein grösster Punkt.
 
 **Geprüft auf echtem Gerät** — nein. Alles bisher gemessen mit Playwright
 im Telefon-Bildmass. Das findet Grössen und Überdeckungen, aber nicht das
