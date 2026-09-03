@@ -4682,6 +4682,30 @@ body[data-dokument="an"] #handy-oben{display:none}
 .document-original .do-name{flex:1; min-width:0; overflow:hidden;
   text-overflow:ellipsis; white-space:nowrap; font-weight:600}
 .document-original .do-wort{flex:none; color:var(--text-dim); font-size:12.5px}
+/* ══════════════════════════════════════════════════════════════════════════
+   AUDIT F03 · NUR DIE AKTIVE SEITE ZEIGT WERKZEUGE
+   --------------------------------------------------------------------------
+   GEMESSEN am 3. September: bei DREI PDF-Seiten standen DREI Werkzeug-
+   leisten im Dokument, jede mit eigenem Zustand — `test386` §2 fand es
+   daran, dass sich drei Knöpfe gleichzeitig als gedrückt meldeten. Bei
+   achtzig Seiten sind es achtzig.
+
+   Der Prüfbericht nennt zwei Folgen, und beide stimmen: auf kleinen
+   Bildschirmen geht sehr viel Fläche verloren, und man weiss nicht sicher,
+   welche Seite gerade gilt. Genau das beantwortet die Leiste jetzt — sie
+   steht nur bei der Seite, auf der man ist.
+
+   WAS HIER NICHT PASSIERT: das Rollen bleibt. E299 hat es ausdrücklich
+   eingeführt, weil Redur die Seiten „ganz öffnen komplett wie one note"
+   wollte. Eine Wahl zwischen Einzelseite und Fortlaufend wäre eine eigene
+   Entscheidung und steht in L123.
+
+   `[data-aktiv]` setzt `document-mode.ts` an die Bühne, nicht an die
+   Leiste: die Leiste gehört zum Blatt und wird von `PdfSeite`/`Blatt`
+   gebaut, die vom Dokument nichts wissen (§5 Regel 1). */
+body[data-dokument="an"] .document-stage:not([data-aktiv]) .blatt-reihe{
+  display:none }
+
 /* E296 · DIE ZEICHENLEISTE BLEIBT OBEN STEHEN, wie in GoodNotes. Sie gehoert
    zum Blatt und rollte mit ihm weg: wer unten auf einer A4-Seite schrieb,
    musste zum Wechsel der Farbe erst wieder ganz nach oben. Nur im

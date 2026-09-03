@@ -5591,13 +5591,16 @@ b. **F02 · P1 · Vier Navigationslogiken nebeneinander** — Menüband „Gehen
    ist die primäre? Der Bericht schlägt vor: Rechner = Seitenleiste, Telefon
    = fünf Pillen, Menüband nur für dokumentbezogene Werkzeuge.
 
-c. **F03 · P1 · Jede PDF-Seite trägt ihre eigene Werkzeugleiste.** GEMESSEN
-   am 3. September: bei drei Seiten drei Leisten (`test386` §2 hält die Zahl
-   fest). Bei hundert Seiten sind es hundert. Der Bericht will „Einzelseite
-   oder Fortlaufend" als Wahl und im fortlaufenden Modus genau EINE
-   schwebende Leiste. Achtung: E299 hat das Rollen ausdrücklich eingeführt,
-   weil Redur „ganz öffnen komplett wie one note" wollte — die Wahl darf das
-   nicht zurücknehmen, nur ergänzen.
+c. **F03 · P1 · zur Hälfte ZU (E387).** „Nur die aktive Seite zeigt
+   Werkzeuge" ist gebaut und gemessen: von drei gebauten Leisten ist genau
+   eine sichtbar, und genau eine Bühne trägt `data-aktiv`. Der DOM-Teil war
+   schon durch E299 zu (ungesehene Seiten werden nicht gezeichnet).
+
+   OFFEN BLEIBT die Wahl „Einzelseite / Fortlaufend" mit Einzelseite als
+   Vorgabe am Telefon. Das ist keine Reparatur mehr, sondern eine
+   Entscheidung gegen E299: Redur wollte dort ausdrücklich „ganz öffnen
+   komplett wie one note". Braucht seine Zustimmung, bevor jemand daran
+   geht.
 
 d. **F08 · P2 · Das KI-Seitenfeld nimmt dauerhaft Arbeitsbreite.** Im
    Dokumentmodus soll es eingeklappt starten, am Telefon als Bottom Sheet.

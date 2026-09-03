@@ -118,7 +118,10 @@ handy.on('pageerror', e => fehler.push('PAGEERROR (Telefon): ' + e.message.slice
 await handy.goto(`http://localhost:${PORT}/index.html`);
 await handy.waitForTimeout(2700);
 await handy.evaluate(AUFBAU);
-await handy.waitForSelector('.blatt-werk', { timeout: 20000 });
+/* Auf die SICHTBARE Leiste warten, nicht auf die erste im DOM: seit F03
+   sind die Leisten der übrigen Seiten ausgeblendet, und `waitForSelector`
+   nimmt sonst die erste und wartet ewig darauf, dass sie erscheint. */
+await handy.waitForSelector('.document-stage[data-aktiv] .blatt-werk', { timeout: 20000 });
 await handy.waitForTimeout(500);
 
 console.log('\n2 · F04 · Die Werkzeuge heissen nach ihrer Aufgabe, nicht nach ihrem Zeichen');
@@ -198,13 +201,28 @@ const nachher = await handy.evaluate(`(() => {
 })()`) as string[];
 gleich('Nach dem Umschalten meldet sich der Stift', nachher, ['stift']);
 
-/* WAS DIESE MESSUNG NEBENBEI FAND (F03): drei PDF-Seiten, drei
-   Werkzeugleisten. Der Punkt steht hier als ZAHL, damit die Reparatur
-   in F03 einen Beleg hat, gegen den sie misst — und damit ein Rückfall
-   auffällt. Er wird mit F03 auf 1 gestellt. */
-const leisten = await handy.evaluate(
-  `document.querySelectorAll('.blatt-werk').length`) as number;
-console.log('  · Werkzeugleisten bei 3 PDF-Seiten: ' + leisten + '  (F03 macht daraus 1)');
+/* ══ F03 · NUR DIE AKTIVE SEITE ZEIGT WERKZEUGE ═══════════════════════════
+   Diese Messung fand den Befund: drei PDF-Seiten, drei Werkzeugleisten,
+   und drei Knöpfe meldeten sich gleichzeitig als gedrückt. Jetzt steht
+   die Leiste nur bei der Seite, auf der man ist.
+
+   GEMESSEN WIRD, WAS SICHTBAR IST, nicht was im DOM steht: die Leisten
+   der übrigen Seiten bleiben gebaut (sie gehören zum Blatt und wissen vom
+   Dokument nichts) und werden ausgeblendet. §55.2 — die Gegenprobe ist
+   die CSS-Regel: nimmt man sie weg, stehen wieder drei da. */
+const leisten = await handy.evaluate(`(() => {
+  const alle = [...document.querySelectorAll('.blatt-werk')];
+  return { gebaut: alle.length,
+           sichtbar: alle.filter(w => w.getBoundingClientRect().height > 4).length,
+           buehnen: document.querySelectorAll('.document-stage').length,
+           aktiv: document.querySelectorAll('.document-stage[data-aktiv]').length };
+})()`) as any;
+console.log('  · Bühnen: ' + leisten.buehnen + ' · Leisten gebaut: ' + leisten.gebaut +
+            ' · sichtbar: ' + leisten.sichtbar);
+p('Es sind wirklich mehrere Seiten da (sonst prüft der Punkt nichts)',
+  leisten.buehnen >= 3, String(leisten.buehnen));
+gleich('Genau EINE Werkzeugleiste ist sichtbar', leisten.sichtbar, 1);
+gleich('Und genau eine Bühne ist als aktiv markiert', leisten.aktiv, 1);
 
 await handy.close();
 

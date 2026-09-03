@@ -3162,3 +3162,33 @@ die Zeugnisnote je Semester (E242) und der echte Stundenplan (E243).
   BETROFFENEN Läufe gefahren wurden. Marken, Masse und Namensräume prüfen
   aber nichts an einer bestimmten Stelle — sie prüfen das GANZE, und deshalb
   weiss man vorher nie, dass man sie braucht.
+
+* E386 + E387 (UX-Prüfbericht vom 3. September): Der Sofort-Block und der
+  erste P1 des Sprints. Redur hat einen Audit mit 18 Befunden geschickt,
+  geprüft gegen `main` auf E353 — dieser Zweig stand auf E385. Jeder Befund
+  wurde deshalb zuerst gegen den HEUTIGEN Stand nachgemessen.
+
+  E386 · F05 der Sicherheitsbefund: `OLLAMA_ORIGINS=*` stand an vier Stellen
+  und erlaubt JEDER Webseite den Zugriff auf das lokale Ollama. Jetzt der
+  Befehl mit der echten Herkunft, zum Kopieren, plus Warnung — und der
+  Sonderfall `file://` wird gesagt statt verschwiegen. · F04 die Werkzeuge
+  hiessen wie ihr Zeichen, weil `.wort` am Telefon `display:none` war; statt
+  25 aria-label die Wurzel: `aria-hidden` am Zeichen (21 Stellen) und das
+  Wort weggeklemmt statt entfernt, dazu `aria-pressed`. · F06 Dateiname wird
+  Titel, nur wenn keiner da ist. · F07 Zoom je Dokument gemerkt wie schon
+  die Seite (E349). · F15 Zurück/Vorwärts `disabled` bei leerem Verlauf. ·
+  F16 Workspace→Arbeitsbereich, Elektro→Elektrotechnik, alte Namen als
+  Alias.
+
+  E387 · F03: von drei PDF-Seiten trugen drei eine Werkzeugleiste. Gefunden
+  hat es nicht das Auge, sondern eine Messung, die etwas anderes wollte —
+  `test386` §2 meldete `["stift","schreiben","schreiben"]`. Jetzt markiert
+  `data-aktiv` die Seite, auf der man ist, und die CSS blendet die übrigen
+  Leisten aus. Gemessen: 3 gebaut, 1 sichtbar.
+
+  ZWEI LEHREN. (a) Eine Prüfung, die `textContent` liest, misst das DOM und
+  behauptet den Zugänglichkeitsbaum: die Gegenprobe zu F04 blieb erst grün,
+  weil ein `display:none`-Element weiter Text hat. Mit `getComputedStyle`
+  davor meldet sie 13 Knöpfe mit leerem Namen. (b) Ein Zustand, der sich beim
+  Öffnen nicht ÄNDERT, wird von einer Änderungs-Behandlung nie gesetzt — die
+  aktive Seite war beim ersten Versuch nur nach dem ersten Rollen markiert.

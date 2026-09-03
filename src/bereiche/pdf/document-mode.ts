@@ -640,7 +640,7 @@ const DocumentMode = (() => {
 
     const beiGroesse = (): void => {
       if (!workspace.isConnected) { window.removeEventListener('resize', beiGroesse); return; }
-      hoeheSetzen(); passen(); nachziehen();
+      hoeheSetzen(); passen(); aktivMarkieren(); nachziehen();
     };
     window.addEventListener('resize', beiGroesse, { passive: true });
 
@@ -658,6 +658,29 @@ const DocumentMode = (() => {
        Eine Sperre, keine feste Wartezeit: sie faellt, sobald das Rollen an
        der gewuenschten Stelle steht. */
     let springtZu = -1;
+    /* NUR DIE AKTIVE SEITE ZEIGT WERKZEUGE (Audit F03).
+       Gemessen am 3. September: bei DREI PDF-Seiten standen DREI
+       Werkzeugleisten im Dokument, jede mit eigenem Zustand — `test386` §2
+       fand es daran, dass sich drei Knöpfe gleichzeitig als gedrückt
+       meldeten. Bei achtzig Seiten sind es achtzig Leisten.
+
+       Der DOM-Teil des Befundes war schon zu: E299 zeichnet nur, was in die
+       Nähe kommt. Was blieb, sind die GEZEICHNETEN — und davon stehen immer
+       mehrere gleichzeitig im Bild, weil eine Seite eben höher ist als das
+       Fenster. Wer dann eine Leiste antippt, weiss nicht, welcher Seite sie
+       gehört.
+
+       Die Marke steht an der Bühne, nicht an der Leiste: die Leiste gehört
+       zum Blatt und wird von `PdfSeite`/`Blatt` gebaut, die vom Dokument
+       nichts wissen und nichts wissen sollen (§5 Regel 1). Das CSS liest
+       `[data-aktiv]` und blendet die übrigen aus. */
+    const aktivMarkieren = (): void => {
+      staende.forEach((stand, i) => {
+        if (i === state.index) stand.setAttribute('data-aktiv', '');
+        else stand.removeAttribute('data-aktiv');
+      });
+    };
+
     const nachziehen = (): void => {
       if (!center.isConnected) return;
       const oben = center.scrollTop - center.clientHeight;
@@ -679,6 +702,7 @@ const DocumentMode = (() => {
       if (sichtbar !== state.index) {
         state.index = sichtbar;
         seiteMerken(page.id, sichtbar);
+        aktivMarkieren();                     /* F03 */
         position.textContent = 'Seite ' + (sichtbar + 1) + '/' + documents.length;
         thumbnails.querySelectorAll('.document-thumbnail.is-selected')
           .forEach(el => el.classList.remove('is-selected'));
@@ -704,6 +728,12 @@ const DocumentMode = (() => {
          nichts fahren. */
       if (state.index > 0 && staende[state.index])
         center.scrollTop = staende[state.index]!.offsetTop;
+      /* UND DIE AKTIVE SEITE MARKIEREN (F03), BEVOR `nachziehen` laeuft.
+         `nachziehen` markiert nur, wenn sich der Stand AENDERT — beim
+         Oeffnen aendert er sich nicht, und dann traegt keine einzige Buehne
+         die Marke. Gemessen: der Prueflauf wartete zwanzig Sekunden auf
+         eine sichtbare Leiste, die es nicht gab. */
+      aktivMarkieren();
       nachziehen();
       thumbnails.querySelector<HTMLElement>('.document-thumbnail.is-selected')
         ?.scrollIntoView({ block: 'nearest' });
@@ -718,6 +748,7 @@ const DocumentMode = (() => {
       state.index = nr;
       seiteMerken(page.id, nr);
       zeichneStand(nr);
+      aktivMarkieren();                       /* F03 */
       /* NUR DIE MITTE ROLLEN, NICHT DAS FENSTER. `scrollIntoView` schiebt
          JEDEN rollbaren Vorfahren — auch das Dokument selbst, und dann
          wandert der ganze Arbeitsraum nach oben aus dem Bild. Gemessen:

@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-381 Entscheidungen, E1 bis E386 (E383 liegt auf dem Zweig
+382 Entscheidungen, E1 bis E387 (E383 liegt auf dem Zweig
 `claude/region-detailed-analysis-pzqqb4`). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
@@ -31162,3 +31162,66 @@ die Umbenennung korrekt gefangen und sagt jetzt „Elektrotechnik".
 typecheck grün · test386 38/38 · test114 153 ok · test206 66 ok · test210
 31/31 · test222 51/51 · test247 106/106 · test248 45/45 · test285 53/53 ·
 test341 37/37 · test348 33/33 · test385 37/37.
+
+================================================================================
+E387 — Nur die aktive Seite zeigt Werkzeuge (Audit F03)
+================================================================================
+3. September 2026
+
+Der Prüfbericht, Befund F03 (P1): „Bei Seite 2 bleibt Seite 1 mit eigener
+Werkzeugleiste im Scrollbereich sichtbar. Navigation und Scrollposition
+konkurrieren. Auf kleinen Bildschirmen geht sehr viel Fläche verloren;
+Nutzer wissen nicht sicher, welche Seite aktiv ist."
+
+WIE ES GEFUNDEN WURDE — nicht durch Lesen, sondern durch eine Messung, die
+etwas anderes wollte. `test386` §2 prüfte die Werkzeugnamen und meldete beim
+Umschalten auf den Stift DREI gedrückte Knöpfe statt einem:
+
+    ["stift", "schreiben", "schreiben"]
+
+Nicht der Zustand war falsch, die Anzahl: bei drei PDF-Seiten stehen drei
+Werkzeugleisten im Dokument, jede mit eigenem Zustand. Bei achtzig Seiten
+wären es achtzig.
+
+WAS SCHON ZU WAR. Der Bericht verlangt auch „Bei 100 PDF-Seiten bleiben
+DOM-Größe und Scrollen flüssig". Das hat E299 bereits gelöst: was nicht in
+die Nähe kommt, wird gar nicht gezeichnet — die achtzigste Seite bleibt ein
+Platzhalter, bis jemand hinrollt. Der Rest des Befundes betrifft die
+GEZEICHNETEN, und davon stehen immer mehrere gleichzeitig im Bild, weil eine
+A4-Seite höher ist als das Fenster.
+
+WAS SICH ÄNDERT. `document-mode.ts` setzt `data-aktiv` an die Bühne der
+Seite, auf der man gerade ist; die CSS blendet die Leisten der übrigen aus.
+
+DREI STELLEN, WEIL ES DREI WEGE ZUR AKTIVEN SEITE GIBT: beim Öffnen, beim
+Rollen (`nachziehen`) und beim Springen (`springe`). Die erste war beim
+ersten Versuch vergessen — `nachziehen` markiert nur, wenn sich der Stand
+ÄNDERT, und beim Öffnen ändert er sich nicht. Der Prüflauf wartete daraufhin
+zwanzig Sekunden auf eine sichtbare Leiste, die es nicht gab.
+
+DIE MARKE STEHT AN DER BÜHNE, NICHT AN DER LEISTE. Die Leiste gehört zum
+Blatt und wird von `PdfSeite`/`Blatt` gebaut, die vom Dokument nichts wissen
+und nichts wissen sollen (§5 Regel 1). Der Dokumentmodus markiert seine
+eigene Hülle; das Blatt merkt davon nichts.
+
+WAS HIER NICHT PASSIERT — und das ist wichtig. Der Bericht schlägt zusätzlich
+eine Wahl zwischen „Einzelseite" und „Fortlaufend" vor, mit Einzelseite als
+Vorgabe am Telefon. Das Rollen hat E299 aber ausdrücklich eingeführt, weil
+Redur die Seiten „ganz oeffnen komplett wie one note" wollte. Eine Vorgabe,
+die das zurücknimmt, wäre eine eigene Entscheidung und keine Reparatur — sie
+steht als offener Punkt in L123.
+
+Gemessen (drei Seiten, 390×844):
+
+                        vorher   jetzt
+  Bühnen                     3       3
+  Leisten gebaut             3       3
+  Leisten SICHTBAR           3       1
+  Bühnen mit `data-aktiv`    0       1
+
+Dateien: `src/bereiche/pdf/document-mode.ts`, `quell/schale/stil/bausteine.css`.
+
+Prüfung: `pruefungen/lauf/test386.mts`, jetzt 41 Punkte. Zwei Mutationen rot
+gesehen (§55.2): die CSS-Regel weg → drei sichtbare Leisten; das Markieren
+beim Öffnen weg → gar keine sichtbare Leiste, der Lauf läuft in den Timeout.
+Mit einem Telefonbild belegt (§55.3): Seite 2 fängt jetzt mit dem Papier an.
