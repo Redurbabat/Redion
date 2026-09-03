@@ -5118,9 +5118,25 @@ E350 holt eine ZIP so ins Regal, wie sie ist. Was bleibt, mit Grund:
    Kennung je Datei (Name + Grösse + Prüfsumme) könnte das ändern — das
    ist der Obsidian-Weg (redion-id), nur ohne Kennung im Archiv.
 
-7. **Viele grosse PDFs kosten Zeit.** Je Seite rund 0,35 s und 200 KB
-   Bild; vierzig Skripte à 80 Seiten sind rund zwanzig Minuten im Tab.
-   Der Fortschritt steht in der Zeile; eine Schätzung VOR dem Start fehlt.
+7. ~~**Viele grosse PDFs kosten Zeit.**~~ ERLEDIGT in E373: die Schätzung
+   steht jetzt VOR dem Start. `core/jobs/estimate.ts` rechnet aus Name und
+   Rohgrösse jedes ZIP-Eintrags — beides steht im Verzeichnis, es muss
+   nichts entpackt und keine Seite gerendert werden —, und der Anlauf sagt
+   „Semester.zip: 12 Dateien · 96 PDF-Seiten — rund 9 Minuten".
+
+   Zwei Dinge daran sind wichtiger als die Zahl selbst. Erstens: **unter
+   zwanzig Sekunden sagt sie gar nichts.** Drei Bilder und zwei Notizen
+   hören nichts über Minuten — sonst läse den Satz nach der dritten ZIP
+   niemand mehr (die Lehre aus E284, E286, E288, E289 und E290). Zweitens:
+   **sie lernt.** Redion misst beim Arbeiten mit, je Art und je PDF-Seite,
+   und rechnet die nächste Schätzung daraus; der erste Lauf zählt ganz,
+   nach acht Läufen verschiebt einer noch ein Achtel. Solange kein echter
+   Lauf eingegangen ist, steht „(geschätzt, noch ohne Messung)" dabei.
+   test363, 57 Punkte.
+
+   Die Zahl 0,35 s je Seite steht weiterhin als Startwert im Kern — mit
+   dem Vermerk, dass sie aus DIESER Zeile stammt und nicht aus einer
+   eigenen Messung (siehe L117).
 
 Gefunden am 2. September 2026 (E350).
 
@@ -5279,3 +5295,36 @@ zweistellige Zahl zeigte (§55).
    deshalb durfte sie bleiben. Zweitens: eine Bremse braucht es hier
    trotzdem nicht; wer zehntausend Seiten hat, wird sie merken, aber das
    ist L22 und nicht L116. Punkt 2 ist damit beantwortet, nicht offen.
+
+
+
+L117 — Die PDF-Umwandlung lässt sich im Prüfcontainer nicht messen
+================================================================================
+
+Beim Bau von E373 sollte der Startwert „0,35 s je PDF-Seite" nachgemessen
+werden, statt ihn aus L114 Punkt 7 zu übernehmen. Der Versuch ist
+gescheitert: ein gebautes Prüf-PDF mit vier Seiten kam über
+`PdfEinlesen.alsSeiten` in **zwei Minuten nicht durch** — dieselbe Grenze bei
+zehn und bei vierundzwanzig Seiten, also kein Zeitproblem, sondern ein
+Stillstand.
+
+Zwei Erklärungen sind offen, und beide sind unangenehm:
+
+1. **Der kopflose Browser** kann etwas nicht, was pdf.js braucht — das wäre
+   harmlos für Redur und lästig für die Prüfläufe.
+2. **Das gebaute Prüf-PDF** ist für pdf.js nicht lesbar genug. Dann sagt der
+   Versuch nichts über echte PDFs — aber es hiesse auch, dass ein PDF, das
+   pdf.js nicht mag, den Import STEHEN LÄSST, statt mit einem Satz
+   abzubrechen. Das wäre ein echter Fehler.
+
+Was dagegen spricht, dass es der zweite Fall ist: `test177`, `test178`,
+`test180`, `test181` und `test184` bauen ihre PDFs auf demselben Weg und
+laufen grün. Was dafür spricht: sie legen die Datei über den Anhang-Weg ab,
+nicht über `alsSeiten` mit vielen Seiten.
+
+**Was fehlt:** eine Messung, die den Unterschied entscheidet — ein Lauf, der
+`alsSeiten` mit einem Zeitlimit aufruft und sagt, WORAN er hängt. Solange
+das offen ist, steht der Startwert im Kern mit dem Vermerk, woher er kommt,
+und die Lernkurve ersetzt ihn nach dem ersten echten Import.
+
+Gefunden am 3. September 2026 (E373).

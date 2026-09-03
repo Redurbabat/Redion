@@ -252,6 +252,96 @@ const ArchivImport = (() => {
             return 0;
         return planen(await Einlesen.zipLesenAusBlob(blob), zipName).gueltig.length;
     };
+    /* ========================================================================
+     * WAS ES KOSTEN WIRD (E373, L114 Punkt 7)
+     * ------------------------------------------------------------------------
+     * Der Fortschritt in der Zeile sagt, WO man ist. Er sagt nicht, wie lange
+     * es noch dauert — und das ist die Frage, die man vor dem Anfangen hat.
+     * Vierzig Skripte à achtzig Seiten sind zwanzig Minuten; wer das vorher
+     * weiss, holt Kaffee statt zu warten.
+     *
+     * Der Kern (`core/jobs/estimate.ts`) rechnet; hier wird nur gesammelt und
+     * aufbewahrt. Die Erfahrung steht in `meta` unter `importErfahrung` und
+     * wächst mit jedem Lauf.
+     * ======================================================================*/
+    const ERFAHRUNG_SCHLUESSEL = 'importErfahrung';
+    const leeresMessbuch = () => ({ jeArt: {}, pdf: { seiten: 0, bytes: 0, ms: 0 } });
+    const buchen = (buch, art, ms, pdf) => {
+        if (!buch)
+            return;
+        const e = buch.jeArt[art] || (buch.jeArt[art] = { dateien: 0, ms: 0 });
+        e.dateien += 1;
+        /* Bei einer PDF gehört die SEITENZEIT nicht zur Datei — sonst zählte
+           eine mit 300 Seiten wie eine mit zwei. Der Datei bleibt der Aufschlag
+           fürs Öffnen, der Rest geht auf die Seiten. */
+        if (pdf && pdf.seiten > 0) {
+            const jeSeiteRoh = ms / pdf.seiten;
+            buch.pdf.seiten += pdf.seiten;
+            buch.pdf.bytes += pdf.bytes;
+            buch.pdf.ms += ms;
+            e.ms += Math.max(0, ms - jeSeiteRoh * pdf.seiten);
+        }
+        else {
+            e.ms += ms;
+        }
+    };
+    const erfahrungLesen = () => {
+        if (typeof Schaetzer === 'undefined')
+            return null;
+        try {
+            return Schaetzer.ausAblage(Store.getMeta(ERFAHRUNG_SCHLUESSEL, null));
+        }
+        catch {
+            return Schaetzer.frisch();
+        }
+    };
+    /** Die Posten einer ZIP, wie der Schätzer sie braucht: Art und Rohgrösse.
+        Die Grösse steht im ZIP-Verzeichnis — dafür muss nichts entpackt
+        werden. */
+    const posten = (zip, gueltig) => {
+        if (typeof Schaetzer === 'undefined')
+            return [];
+        const groesse = (name) => {
+            try {
+                const e = zip && typeof zip.eintrag === 'function' ? zip.eintrag(name) : null;
+                return Math.max(0, Number(e?.groesse ?? 0) || 0);
+            }
+            catch {
+                return 0;
+            }
+        };
+        return gueltig.map(e => ({ art: Schaetzer.artVon(e.name), bytes: groesse(e.name) }));
+    };
+    /**
+     * Was der Import kosten wird — Satz und Zahlen, oder null.
+     *
+     * LEER IST DER NORMALFALL: unter zwanzig Sekunden gibt der Kern keinen
+     * Satz heraus, und dann steht hier nichts. Eine Anzeige, die immer etwas
+     * anzeigt, wird nicht gelesen (E288).
+     */
+    const schaetzung = async (blob, zipName) => {
+        if (typeof Schaetzer === 'undefined' || typeof Einlesen === 'undefined' ||
+            !Einlesen.zipLesenAusBlob)
+            return null;
+        try {
+            const zip = await Einlesen.zipLesenAusBlob(blob);
+            const plan = planen(zip, zipName);
+            const s = Schaetzer.schaetze(posten(zip, plan.gueltig), erfahrungLesen());
+            return { ...s, satz: Schaetzer.satz(s) };
+        }
+        catch {
+            return null;
+        }
+    };
+    /** Was wirklich gebraucht wurde, in die Erfahrung einrechnen. */
+    const lernen = (gemessen) => {
+        if (typeof Schaetzer === 'undefined')
+            return;
+        try {
+            Store.setMeta(ERFAHRUNG_SCHLUESSEL, Schaetzer.lerne(erfahrungLesen(), gemessen));
+        }
+        catch { /* ohne Ablage lernt es eben nicht */ }
+    };
     const importZip = async (datei, zielId, opt = {}) => {
         if (typeof Einlesen === 'undefined' || !Einlesen.zipLesenAusBlob)
             throw new Error('Der ZIP-Leser ist nicht geladen.');
@@ -290,6 +380,7 @@ const ArchivImport = (() => {
             faecher.set(schluessel, f.id);
             return f.id;
         };
+        const buch = leeresMessbuch();
         const melder = !opt.still && !opt.beiSchritt && typeof UI !== 'undefined' && UI.toast
             ? UI.toast('„' + datei.name + '" wird entpackt …', 600000) : null;
         let nr = abBei;
@@ -336,7 +427,20 @@ const ArchivImport = (() => {
                 return;
             }
             const f = new File([blob], dateiName, { type: mimeVon(dateiName) });
+            /* GEMESSEN WIRD HIER, nicht hinterher geschätzt (E373). Eine
+               Schätzung, die aus ihrer eigenen Schätzung lernt, wird nur
+               selbstsicherer, nicht besser. */
+            const t0 = (typeof performance !== 'undefined' ? performance.now() : 0);
             const erg = await dateiAlsDokument(f, elternId, opt);
+            const gebraucht = (typeof performance !== 'undefined' ? performance.now() : 0) - t0;
+            if (erg.art === 'pdf') {
+                const kinder = erg.seiteId ? Store.childrenOf(erg.seiteId) : [];
+                const seiten = kinder.filter((k) => k && k.type === 'pdfseite').length;
+                buchen(buch, 'pdf', gebraucht, { seiten, bytes: Math.max(0, roh > 0 ? roh : blob.size) });
+            }
+            else {
+                buchen(buch, typeof Schaetzer !== 'undefined' ? Schaetzer.artVon(dateiName) : 'sonst', gebraucht);
+            }
             if (kennung && erg.seiteId)
                 Store.updateBlock(erg.seiteId, { importKennung: kennung });
             ergebnis.dokumente++;
@@ -392,6 +496,11 @@ const ArchivImport = (() => {
         if (melder && melder.remove)
             melder.remove();
         ergebnis.hinweis = hinweisText(ergebnis, datei.name || 'Archiv');
+        /* Gelernt wird NUR aus einem Lauf, der auch etwas getan hat. Ein
+           Abbruch nach drei Dateien würde die Zahlen sonst mit einer
+           Stichprobe verschieben, die nichts über den Rest sagt. */
+        if (!ergebnis.abgebrochen && ergebnis.dokumente > 0)
+            lernen(buch);
         if (!opt.still && !opt.beiSchritt) {
             if (typeof UI !== 'undefined' && UI.toast)
                 UI.toast(ergebnis.hinweis, 9000);
@@ -503,6 +612,7 @@ const ArchivImport = (() => {
                     ' — sie wird hier im Fenster entpackt, bitte offen lassen.', 8000);
             return { auftrag: null, grund: 'zu gross', ergebnis: await importZip(datei, zielId, opt) };
         }
+        const vorab = await schaetzung(datei, name);
         const schritte = await umfang(datei, name);
         if (!schritte) {
             const ergebnis = await importZip(datei, zielId, opt);
@@ -511,11 +621,20 @@ const ArchivImport = (() => {
         /* Die Arbeitskopie: abgeleitet, ohne Block — sie gehört keinem Dokument,
            sondern dem Auftrag. */
         const satz = await Dateien.ablegen(datei, { name, abgeleitet: true });
-        const auftrag = await Auftraege.anlegen(AUFTRAG_ART, { dateiId: satz.id, zipName: name, zielId: zielId || null, anordnung: opt.anordnung || 'untereinander' }, { schritte, text: '„' + name + '" wird entpackt' });
-        if (!opt.still && typeof UI !== 'undefined' && UI.toast)
-            UI.toast('„' + name + '": ' + schritte + (schritte === 1 ? ' Datei' : ' Dateien') +
-                ' — läuft im Hintergrund weiter, auch wenn du weggehst.', 7000);
-        return { auftrag };
+        const auftrag = await Auftraege.anlegen(AUFTRAG_ART, { dateiId: satz.id, zipName: name, zielId: zielId || null,
+            anordnung: opt.anordnung || 'untereinander',
+            /* Die Schätzung reist mit dem Auftrag: sie steht auch dann noch da,
+               wenn der Tab dazwischen zu war (E365). */
+            schaetzungMs: vorab && vorab.ms ? vorab.ms : 0 }, { schritte, text: '„' + name + '" wird entpackt' });
+        /* DER SATZ ÜBER DIE ZEIT KOMMT NUR, WENN ES EINEN GIBT. Unter zwanzig
+           Sekunden gibt der Schätzer nichts heraus, und dann steht hier auch
+           nichts — sonst läse ihn nach der dritten ZIP niemand mehr (E288). */
+        if (!opt.still && typeof UI !== 'undefined' && UI.toast) {
+            const zeit = vorab && vorab.satz ? ' · ' + vorab.satz : '';
+            UI.toast('„' + name + '": ' + schritte + (schritte === 1 ? ' Datei' : ' Dateien') + zeit +
+                ' — läuft im Hintergrund weiter, auch wenn du weggehst.', zeit ? 9000 : 7000);
+        }
+        return { auftrag, schaetzung: vorab };
     };
     /** Der Dateiwähler — wie `PdfEinlesen.waehlen`, aber für eine ZIP.
         Seit E365 legt er einen AUFTRAG an; zurück kommt, was `alsAuftrag`
@@ -564,6 +683,7 @@ const ArchivImport = (() => {
        abgebrochen heraus, und noch einmal hinein. Die Maschine ruft ihn
        ohnehin — hier ist er nur benennbar. */
     return { importZip, alsAuftrag, zipLaeufer, umfang, planen, AUFTRAG_ART, dateiAlsDokument, waehlen,
-        ansichtAuffrischen, segmente, istBeiwerk, sauber };
+        ansichtAuffrischen, segmente, istBeiwerk, sauber,
+        schaetzung, lernen, erfahrungLesen, ERFAHRUNG_SCHLUESSEL };
 })();
 window.ArchivImport = ArchivImport;

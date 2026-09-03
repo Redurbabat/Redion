@@ -125,10 +125,12 @@ ein Worker überhaupt übernehmen könnte.
 **Fertig wenn** — der Auftrag, für den der Worker gebaut wird, VORHER
 gemessen ist und die Messung ihn rechtfertigt.
 
-**Priorität** — niedrig. Der ehrlichere Kandidat steht in L114 Punkt 7:
-rund 0,35 s je PDF-Seite, vierzig Skripte à 80 Seiten sind zwanzig
-Minuten. Dort liegt die Zeit, und dort fehlt zuerst eine **Schätzung vor
-dem Start**.
+**Priorität** — niedrig. Der ehrlichere Kandidat war L114 Punkt 7 (eine
+Schätzung vor dem Start), und der ist seit **E373** gebaut: der Anlauf
+sagt „12 Dateien · 96 PDF-Seiten — rund 9 Minuten", schweigt aber unter
+zwanzig Sekunden und lernt aus jedem Lauf. Was am Worker offen bleibt,
+ist damit wieder nur das, was oben steht: eine Messung, die ihn
+rechtfertigt.
 
 ---
 
@@ -137,7 +139,7 @@ dem Start**.
 Die Produktlücken stehen dort und werden dort gepflegt — sie hier zu
 wiederholen hiesse, zwei Listen zu führen, die auseinanderlaufen.
 
-Zuletzt geschlossen: L10 Marken (E372), L10 Side Peek (E371), L78 Punkt 1 und L114 Punkt 4
+Zuletzt geschlossen: L114 Punkt 7 (E373), L10 Marken (E372), L10 Side Peek (E371), L78 Punkt 1 und L114 Punkt 4
 (E368), L116 (E367), L78 Punkt 2 (E366), L114 Punkte 1, 5 und 6 (E363,
 E365).
 

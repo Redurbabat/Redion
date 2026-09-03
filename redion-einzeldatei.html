@@ -16031,7 +16031,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 172, inhalt: 'd68e81e84c232bfa', gebaut: '2026-09-03T08:14:10.261Z' };
+const Stand = { fassung: 178, inhalt: '298334bd69f7de59', gebaut: '2026-09-03T08:34:18.108Z' };
 window.Stand = Stand;
 
 </script>
@@ -19949,6 +19949,188 @@ const Zeitplan = (() => {
     return { darf, imFenster, hatBedingung, satz, uhr, sauber, MINUTEN_AM_TAG };
 })();
 window.Zeitplan = Zeitplan;
+
+</script>
+<script>
+/* ===== quell/core/jobs/estimate.js ===== */
+"use strict";
+/* ============================================================================
+ * core/jobs/estimate.js — was ein langer Auftrag kosten wird
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/core/jobs/estimate.ts`. `npm run bauen:ts` schreibt
+ * daraus diese Datei.
+ * ==========================================================================*/
+const Schaetzer = (() => {
+    /* Unter dieser Dauer wird nichts über Zeit gesagt. Zwanzig Sekunden sind
+       die Grenze, ab der ein Mensch anfängt, auf die Uhr zu sehen. */
+    const SCHWELLE_MS = 20_000;
+    /* Wie stark ein neuer Lauf die Erfahrung verschiebt. Beim ersten zählt er
+       ganz, danach immer weniger — nach acht Läufen ändert einer noch ein
+       Achtel. So folgt die Zahl einem neuen Gerät schnell und zappelt bei
+       einem Ausreisser nicht. */
+    const GEDAECHTNIS = 8;
+    /* DIE STARTWERTE, UND WOHER JEDER KOMMT.
+       Das ist keine Formalie: eine Zahl ohne Herkunft ist eine Erfindung, und
+       eine Erfindung in einer Schätzung merkt niemand.
+  
+         text: 3.4      GEMESSEN am 3. September 2026 im Prüfcontainer —
+                        20/60/120 Markdown-Dateien in einer ZIP ergaben
+                        3.6 / 3.1 / 3.5 ms je Datei, also flach.
+         jeSeite: 350   NICHT selbst gemessen. Die Zahl stammt aus der
+         bytesJeSeite   Beobachtung, die beim Bau von E350 in LUECKEN.md L114
+                        Punkt 7 festgehalten wurde („je Seite rund 0,35 s und
+                        200 KB"). Der Versuch, sie hier nachzumessen, ist
+                        GESCHEITERT: die PDF-Umwandlung kam im Container auch
+                        bei vier Seiten in zwei Minuten nicht durch. Ob das an
+                        der Kopflosigkeit liegt oder am gebauten Prüf-PDF, ist
+                        offen und steht in L117.
+         bild/tabelle/  Aus dem Verhältnis zu `text` geschätzt. Sie sind die
+         office/sonst   unwichtigsten Zahlen hier — ihr Anteil an einem langen
+                        Import ist klein, und der erste echte Lauf ersetzt sie.
+  
+       Genau deshalb lernt dieser Kern. Ein Startwert muss nicht stimmen, er
+       muss nur einen Anfang machen, den die Wirklichkeit korrigiert — und
+       `gemessen: false` sagt der Oberfläche, dass sie das dazuschreiben soll,
+       solange noch kein Lauf eingegangen ist. */
+    const STARTWERT = {
+        jeDatei: { pdf: 40, bild: 25, text: 3.4, tabelle: 12, office: 60, sonst: 8 },
+        jeSeite: 350,
+        bytesJeSeite: 200 * 1024,
+        laeufe: 0,
+    };
+    const frisch = () => ({
+        jeDatei: { ...STARTWERT.jeDatei },
+        jeSeite: STARTWERT.jeSeite,
+        bytesJeSeite: STARTWERT.bytesJeSeite,
+        laeufe: 0,
+    });
+    /** Eine gespeicherte Erfahrung wieder brauchbar machen — fehlende Felder
+        kommen aus dem Startwert, unsinnige ebenso. Eine Zahl aus der Ablage
+        ist eine Behauptung, kein Versprechen (E284). */
+    const ausAblage = (roh) => {
+        const e = frisch();
+        if (!roh || typeof roh !== 'object')
+            return e;
+        const r = roh;
+        const zahl = (w, ersatz) => {
+            const n = Number(w);
+            return Number.isFinite(n) && n > 0 && n < 3_600_000 ? n : ersatz;
+        };
+        const jd = (r['jeDatei'] || {});
+        Object.keys(e.jeDatei).forEach(a => {
+            e.jeDatei[a] = zahl(jd[a], e.jeDatei[a]);
+        });
+        e.jeSeite = zahl(r['jeSeite'], e.jeSeite);
+        e.bytesJeSeite = zahl(r['bytesJeSeite'], e.bytesJeSeite);
+        const l = Number(r['laeufe']);
+        e.laeufe = Number.isFinite(l) && l > 0 ? Math.min(Math.floor(l), 9999) : 0;
+        return e;
+    };
+    /** Die Art aus dem Dateinamen. Nur der Name — die Bytes kennt der
+        Aufrufer, den Inhalt kennt hier niemand. */
+    const artVon = (name) => {
+        const n = String(name || '').toLowerCase();
+        if (/\.pdf$/.test(n))
+            return 'pdf';
+        if (/\.(png|jpe?g|gif|webp|svg|bmp|avif)$/.test(n))
+            return 'bild';
+        if (/\.(md|markdown|txt|html?|htm)$/.test(n))
+            return 'text';
+        if (/\.(csv|tsv)$/.test(n))
+            return 'tabelle';
+        if (/\.(xlsx|xlsm|ods|docx|epub|pptx)$/.test(n))
+            return 'office';
+        return 'sonst';
+    };
+    /** Wie viele Seiten in einem PDF dieser Grösse zu erwarten sind.
+        Mindestens eine — ein PDF ohne Seite gibt es nicht. */
+    const seitenAus = (bytes, e) => Math.max(1, Math.round(bytes / Math.max(1024, e.bytesJeSeite)));
+    const schaetze = (posten, erfahrung) => {
+        const e = erfahrung || frisch();
+        let ms = 0, seiten = 0;
+        for (const p of posten) {
+            const art = (p && p.art) in e.jeDatei ? p.art : 'sonst';
+            ms += e.jeDatei[art];
+            if (art === 'pdf') {
+                const s = seitenAus(Math.max(0, Number(p.bytes) || 0), e);
+                seiten += s;
+                ms += s * e.jeSeite;
+            }
+        }
+        return { ms: Math.round(ms), seiten, dateien: posten.length, gemessen: e.laeufe > 0 };
+    };
+    /* --- Der Satz für Menschen ---------------------------------------------
+       Deutsch, gerundet, und ohne Nachkommastellen: „rund 4 Minuten" hilft,
+       „3,7 Minuten" tut nur so. Über einer Stunde wird in Stunden gerundet,
+       denn dort ist die Minute ohnehin nicht mehr die Frage. */
+    const dauerSatz = (ms) => {
+        if (ms < SCHWELLE_MS)
+            return '';
+        const s = Math.round(ms / 1000);
+        if (s < 90)
+            return 'rund eine halbe Minute';
+        const min = Math.round(s / 60);
+        if (min < 60)
+            return 'rund ' + min + ' Minuten';
+        const std = ms / 3_600_000;
+        if (std < 1.75)
+            return 'gut eine Stunde';
+        return 'rund ' + Math.round(std) + ' Stunden';
+    };
+    /**
+     * Der ganze Satz für die Oberfläche, oder eine leere Zeichenkette.
+     *
+     * LEER IST DER NORMALFALL. Drei Bilder und zwei Notizen sagen nichts über
+     * Zeit — und genau deshalb wird der Satz gelesen, wenn er einmal dasteht.
+     */
+    const satz = (s) => {
+        const dauer = dauerSatz(s.ms);
+        if (!dauer)
+            return '';
+        const kern = s.seiten > 0
+            ? s.seiten + (s.seiten === 1 ? ' PDF-Seite' : ' PDF-Seiten') + ' — ' + dauer
+            : dauer;
+        /* Ohne einen einzigen echten Lauf ist es eine Vermutung, und das gehört
+           dazu. Eine Zahl ohne ihre Grundlage ist die Sorte Anzeige, die man
+           ein Mal glaubt und danach nicht mehr (E289). */
+        return s.gemessen ? kern : kern + ' (geschätzt, noch ohne Messung)';
+    };
+    /**
+     * Aus einem gelaufenen Import lernen.
+     *
+     * `gemessen` trägt, was WIRKLICH passiert ist: je Art die Zahl der Dateien
+     * und die dafür gebrauchte Zeit, dazu die PDF-Seiten und ihre Bytes. Was
+     * nicht vorkam, bleibt unverändert — ein Lauf ohne PDFs darf die
+     * Seitenzahl nicht anfassen.
+     */
+    const lerne = (erfahrung, gemessen) => {
+        const e = erfahrung ? ausAblage(erfahrung) : frisch();
+        const gewicht = 1 / Math.min(e.laeufe + 1, GEDAECHTNIS);
+        const misch = (alt, neu) => Number.isFinite(neu) && neu > 0 ? alt + (neu - alt) * gewicht : alt;
+        const jeArt = gemessen.jeArt || {};
+        Object.keys(e.jeDatei).forEach(a => {
+            const m = jeArt[a];
+            if (m && m.dateien > 0)
+                e.jeDatei[a] = misch(e.jeDatei[a], m.ms / m.dateien);
+        });
+        /* Die PDF-Zeit steckt in `jeSeite`, nicht in `jeDatei.pdf` — sonst
+           zählte eine 300-Seiten-Datei wie eine mit zwei Seiten. Deshalb
+           kommt die reine Seitenzeit herein, und `jeDatei.pdf` bleibt der
+           Aufschlag fürs Öffnen. */
+        const pdf = gemessen.pdf;
+        if (pdf && pdf.seiten > 0) {
+            e.jeSeite = misch(e.jeSeite, pdf.ms / pdf.seiten);
+            if (pdf.bytes > 0)
+                e.bytesJeSeite = misch(e.bytesJeSeite, pdf.bytes / pdf.seiten);
+        }
+        e.laeufe = Math.min(e.laeufe + 1, 9999);
+        return e;
+    };
+    return { schaetze, satz, dauerSatz, lerne, artVon, seitenAus,
+        frisch, ausAblage, SCHWELLE_MS, GEDAECHTNIS, STARTWERT };
+})();
+globalThis.Schaetzer = Schaetzer;
 
 </script>
 <script>
@@ -86020,6 +86202,96 @@ const ArchivImport = (() => {
             return 0;
         return planen(await Einlesen.zipLesenAusBlob(blob), zipName).gueltig.length;
     };
+    /* ========================================================================
+     * WAS ES KOSTEN WIRD (E373, L114 Punkt 7)
+     * ------------------------------------------------------------------------
+     * Der Fortschritt in der Zeile sagt, WO man ist. Er sagt nicht, wie lange
+     * es noch dauert — und das ist die Frage, die man vor dem Anfangen hat.
+     * Vierzig Skripte à achtzig Seiten sind zwanzig Minuten; wer das vorher
+     * weiss, holt Kaffee statt zu warten.
+     *
+     * Der Kern (`core/jobs/estimate.ts`) rechnet; hier wird nur gesammelt und
+     * aufbewahrt. Die Erfahrung steht in `meta` unter `importErfahrung` und
+     * wächst mit jedem Lauf.
+     * ======================================================================*/
+    const ERFAHRUNG_SCHLUESSEL = 'importErfahrung';
+    const leeresMessbuch = () => ({ jeArt: {}, pdf: { seiten: 0, bytes: 0, ms: 0 } });
+    const buchen = (buch, art, ms, pdf) => {
+        if (!buch)
+            return;
+        const e = buch.jeArt[art] || (buch.jeArt[art] = { dateien: 0, ms: 0 });
+        e.dateien += 1;
+        /* Bei einer PDF gehört die SEITENZEIT nicht zur Datei — sonst zählte
+           eine mit 300 Seiten wie eine mit zwei. Der Datei bleibt der Aufschlag
+           fürs Öffnen, der Rest geht auf die Seiten. */
+        if (pdf && pdf.seiten > 0) {
+            const jeSeiteRoh = ms / pdf.seiten;
+            buch.pdf.seiten += pdf.seiten;
+            buch.pdf.bytes += pdf.bytes;
+            buch.pdf.ms += ms;
+            e.ms += Math.max(0, ms - jeSeiteRoh * pdf.seiten);
+        }
+        else {
+            e.ms += ms;
+        }
+    };
+    const erfahrungLesen = () => {
+        if (typeof Schaetzer === 'undefined')
+            return null;
+        try {
+            return Schaetzer.ausAblage(Store.getMeta(ERFAHRUNG_SCHLUESSEL, null));
+        }
+        catch {
+            return Schaetzer.frisch();
+        }
+    };
+    /** Die Posten einer ZIP, wie der Schätzer sie braucht: Art und Rohgrösse.
+        Die Grösse steht im ZIP-Verzeichnis — dafür muss nichts entpackt
+        werden. */
+    const posten = (zip, gueltig) => {
+        if (typeof Schaetzer === 'undefined')
+            return [];
+        const groesse = (name) => {
+            try {
+                const e = zip && typeof zip.eintrag === 'function' ? zip.eintrag(name) : null;
+                return Math.max(0, Number(e?.groesse ?? 0) || 0);
+            }
+            catch {
+                return 0;
+            }
+        };
+        return gueltig.map(e => ({ art: Schaetzer.artVon(e.name), bytes: groesse(e.name) }));
+    };
+    /**
+     * Was der Import kosten wird — Satz und Zahlen, oder null.
+     *
+     * LEER IST DER NORMALFALL: unter zwanzig Sekunden gibt der Kern keinen
+     * Satz heraus, und dann steht hier nichts. Eine Anzeige, die immer etwas
+     * anzeigt, wird nicht gelesen (E288).
+     */
+    const schaetzung = async (blob, zipName) => {
+        if (typeof Schaetzer === 'undefined' || typeof Einlesen === 'undefined' ||
+            !Einlesen.zipLesenAusBlob)
+            return null;
+        try {
+            const zip = await Einlesen.zipLesenAusBlob(blob);
+            const plan = planen(zip, zipName);
+            const s = Schaetzer.schaetze(posten(zip, plan.gueltig), erfahrungLesen());
+            return { ...s, satz: Schaetzer.satz(s) };
+        }
+        catch {
+            return null;
+        }
+    };
+    /** Was wirklich gebraucht wurde, in die Erfahrung einrechnen. */
+    const lernen = (gemessen) => {
+        if (typeof Schaetzer === 'undefined')
+            return;
+        try {
+            Store.setMeta(ERFAHRUNG_SCHLUESSEL, Schaetzer.lerne(erfahrungLesen(), gemessen));
+        }
+        catch { /* ohne Ablage lernt es eben nicht */ }
+    };
     const importZip = async (datei, zielId, opt = {}) => {
         if (typeof Einlesen === 'undefined' || !Einlesen.zipLesenAusBlob)
             throw new Error('Der ZIP-Leser ist nicht geladen.');
@@ -86058,6 +86330,7 @@ const ArchivImport = (() => {
             faecher.set(schluessel, f.id);
             return f.id;
         };
+        const buch = leeresMessbuch();
         const melder = !opt.still && !opt.beiSchritt && typeof UI !== 'undefined' && UI.toast
             ? UI.toast('„' + datei.name + '" wird entpackt …', 600000) : null;
         let nr = abBei;
@@ -86104,7 +86377,20 @@ const ArchivImport = (() => {
                 return;
             }
             const f = new File([blob], dateiName, { type: mimeVon(dateiName) });
+            /* GEMESSEN WIRD HIER, nicht hinterher geschätzt (E373). Eine
+               Schätzung, die aus ihrer eigenen Schätzung lernt, wird nur
+               selbstsicherer, nicht besser. */
+            const t0 = (typeof performance !== 'undefined' ? performance.now() : 0);
             const erg = await dateiAlsDokument(f, elternId, opt);
+            const gebraucht = (typeof performance !== 'undefined' ? performance.now() : 0) - t0;
+            if (erg.art === 'pdf') {
+                const kinder = erg.seiteId ? Store.childrenOf(erg.seiteId) : [];
+                const seiten = kinder.filter((k) => k && k.type === 'pdfseite').length;
+                buchen(buch, 'pdf', gebraucht, { seiten, bytes: Math.max(0, roh > 0 ? roh : blob.size) });
+            }
+            else {
+                buchen(buch, typeof Schaetzer !== 'undefined' ? Schaetzer.artVon(dateiName) : 'sonst', gebraucht);
+            }
             if (kennung && erg.seiteId)
                 Store.updateBlock(erg.seiteId, { importKennung: kennung });
             ergebnis.dokumente++;
@@ -86160,6 +86446,11 @@ const ArchivImport = (() => {
         if (melder && melder.remove)
             melder.remove();
         ergebnis.hinweis = hinweisText(ergebnis, datei.name || 'Archiv');
+        /* Gelernt wird NUR aus einem Lauf, der auch etwas getan hat. Ein
+           Abbruch nach drei Dateien würde die Zahlen sonst mit einer
+           Stichprobe verschieben, die nichts über den Rest sagt. */
+        if (!ergebnis.abgebrochen && ergebnis.dokumente > 0)
+            lernen(buch);
         if (!opt.still && !opt.beiSchritt) {
             if (typeof UI !== 'undefined' && UI.toast)
                 UI.toast(ergebnis.hinweis, 9000);
@@ -86271,6 +86562,7 @@ const ArchivImport = (() => {
                     ' — sie wird hier im Fenster entpackt, bitte offen lassen.', 8000);
             return { auftrag: null, grund: 'zu gross', ergebnis: await importZip(datei, zielId, opt) };
         }
+        const vorab = await schaetzung(datei, name);
         const schritte = await umfang(datei, name);
         if (!schritte) {
             const ergebnis = await importZip(datei, zielId, opt);
@@ -86279,11 +86571,20 @@ const ArchivImport = (() => {
         /* Die Arbeitskopie: abgeleitet, ohne Block — sie gehört keinem Dokument,
            sondern dem Auftrag. */
         const satz = await Dateien.ablegen(datei, { name, abgeleitet: true });
-        const auftrag = await Auftraege.anlegen(AUFTRAG_ART, { dateiId: satz.id, zipName: name, zielId: zielId || null, anordnung: opt.anordnung || 'untereinander' }, { schritte, text: '„' + name + '" wird entpackt' });
-        if (!opt.still && typeof UI !== 'undefined' && UI.toast)
-            UI.toast('„' + name + '": ' + schritte + (schritte === 1 ? ' Datei' : ' Dateien') +
-                ' — läuft im Hintergrund weiter, auch wenn du weggehst.', 7000);
-        return { auftrag };
+        const auftrag = await Auftraege.anlegen(AUFTRAG_ART, { dateiId: satz.id, zipName: name, zielId: zielId || null,
+            anordnung: opt.anordnung || 'untereinander',
+            /* Die Schätzung reist mit dem Auftrag: sie steht auch dann noch da,
+               wenn der Tab dazwischen zu war (E365). */
+            schaetzungMs: vorab && vorab.ms ? vorab.ms : 0 }, { schritte, text: '„' + name + '" wird entpackt' });
+        /* DER SATZ ÜBER DIE ZEIT KOMMT NUR, WENN ES EINEN GIBT. Unter zwanzig
+           Sekunden gibt der Schätzer nichts heraus, und dann steht hier auch
+           nichts — sonst läse ihn nach der dritten ZIP niemand mehr (E288). */
+        if (!opt.still && typeof UI !== 'undefined' && UI.toast) {
+            const zeit = vorab && vorab.satz ? ' · ' + vorab.satz : '';
+            UI.toast('„' + name + '": ' + schritte + (schritte === 1 ? ' Datei' : ' Dateien') + zeit +
+                ' — läuft im Hintergrund weiter, auch wenn du weggehst.', zeit ? 9000 : 7000);
+        }
+        return { auftrag, schaetzung: vorab };
     };
     /** Der Dateiwähler — wie `PdfEinlesen.waehlen`, aber für eine ZIP.
         Seit E365 legt er einen AUFTRAG an; zurück kommt, was `alsAuftrag`
@@ -86332,7 +86633,8 @@ const ArchivImport = (() => {
        abgebrochen heraus, und noch einmal hinein. Die Maschine ruft ihn
        ohnehin — hier ist er nur benennbar. */
     return { importZip, alsAuftrag, zipLaeufer, umfang, planen, AUFTRAG_ART, dateiAlsDokument, waehlen,
-        ansichtAuffrischen, segmente, istBeiwerk, sauber };
+        ansichtAuffrischen, segmente, istBeiwerk, sauber,
+        schaetzung, lernen, erfahrungLesen, ERFAHRUNG_SCHLUESSEL };
 })();
 window.ArchivImport = ArchivImport;
 

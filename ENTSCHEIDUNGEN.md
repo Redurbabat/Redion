@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-368 Entscheidungen, E1 bis E372. Die Nummer ist die Ordnung: eine Entscheidung
+369 Entscheidungen, E1 bis E373. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -402,7 +402,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E349** — Der Start zeigt, wo man war: die PDF, sonst das Regal (Redurs Punkt 1)
 * **E350** — Eine ZIP kommt so ins Regal, wie sie ist (Redurs Punkt 2)
 
-**E351–E372**
+**E351–E373**
 
 * **E351** — Der Stift schreibt wie eine Hand: Füller, Kugelschreiber, Pinsel (Redurs Punkt 3, erster Bogen)
 * **E352** — Der Radierer streicht, teilt und kennt den Rückknopf des Stifts (Redurs Punkt 3, zweiter Bogen)
@@ -426,6 +426,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E370** — CLAUDE.md aufgeräumt: Marken, Verzeichnis, und ein Zaun, der 891 Zeilen verschluckt hat
 * **E371** — Die Vorschau am Telefon ist ein Blatt, kein Absprung (L10)
 * **E372** — Die Telefonmarken sagen, was wirklich dasteht — zwei logen (L10)
+* **E373** — Was ein langer Import kostet, steht vorher da — und schweigt sonst (L114 Punkt 7)
 
 ---
 
@@ -29890,3 +29891,118 @@ Einzeldatei neu gebaut, Dienststand v172.
 MUTATIONSPROBE, dreimal: Marke zurück auf 46 → 15/18, und der Balken misst
 dann 54. Leistenmarke zurück auf 56 → 15/18. Rohe 56 zurück in die
 Medienabfrage → 15/18.
+
+
+════════════════════════════════════════════════════════════════════════════
+E373 — Was ein langer Import kostet, steht vorher da — und schweigt sonst
+       (L114 Punkt 7)
+════════════════════════════════════════════════════════════════════════════
+
+BEFUND, im Wortlaut aus L114 Punkt 7: „Je Seite rund 0,35 s und 200 KB Bild;
+vierzig Skripte à 80 Seiten sind rund zwanzig Minuten im Tab. Der Fortschritt
+steht in der Zeile; eine Schätzung VOR dem Start fehlt."
+
+Der Fortschritt sagt, WO man ist — Datei 40 von 87. Er sagt nicht, wie lange
+es noch dauert, und das ist die einzige Frage, die man vor dem Anfangen hat.
+Zwanzig Minuten sind der Unterschied zwischen „ich warte" und „ich hole
+Kaffee"; wer es nicht weiss, wartet.
+
+WAS GEBAUT WURDE
+────────────────
+**Ein reiner Kern, `src/core/jobs/estimate.ts`.** Er rechnet, und sonst
+nichts: keine Uhr, keine Ablage, kein DOM. Erfahrung kommt herein, Schätzung
+geht hinaus. Dieselbe Bauform wie `core/learning`, `core/calendar` und
+`core/planning` — sie hat sich sechsmal bewährt und ist der Grund, warum
+test363 §1 bis §6 ganz ohne Browser laufen.
+
+**Geschätzt wird aus dem, was im ZIP-VERZEICHNIS steht** — Name und
+Rohgrösse. Beides ist da, bevor ein Byte entpackt ist. Die Seitenzahl eines
+PDF kennt niemand, bevor es geöffnet ist; sie wird deshalb aus den Bytes
+gerechnet (200 KB je Seite), und diese Zahl lernt mit.
+
+**Und der Import misst beim Arbeiten mit.** Um jede Datei liegt eine
+Zeitnahme; das Messbuch trennt die Seitenzeit von der Dateizeit, denn sonst
+zählte eine PDF mit 300 Seiten wie eine mit zwei. Am Ende eines Laufs geht
+das Buch in die Erfahrung — als gleitender Mittelwert: der erste Lauf zählt
+ganz, nach acht Läufen verschiebt einer noch ein Achtel. So folgt die Zahl
+einem neuen Gerät schnell und zappelt bei einem Ausreisser nicht.
+
+DIE WICHTIGSTE ZUSAGE IST DAS SCHWEIGEN
+───────────────────────────────────────
+Unter zwanzig Sekunden gibt der Schätzer KEINEN Satz heraus.
+
+Das ist keine Feinheit, sondern die Lehre aus fünf Bögen dieser Woche —
+E284, E286, E288, E289 und E290 sind alle in dieselbe Falle gelaufen:
+
+    Eine Anzeige, die IMMER etwas anzeigt, wird nicht gelesen.
+
+Deshalb steht die Gegenprobe in test363 als §3, vor allen anderen: drei
+Bilder sagen nichts, fünfzig Notizen sagen nichts, eine kurze PDF sagt
+nichts. Erst vierzig Skripte sagen etwas — und dann liest man es.
+
+Die Mutationsprobe zeigt, was ohne die Schwelle passiert: bei `SCHWELLE_MS
+= 0` behauptet Redion für drei Bilder „rund eine halbe Minute". Sechs
+Prüfpunkte fallen, und der Satz ist ab da wertlos.
+
+UND DIE ZWEITE: DIE SCHÄTZUNG NENNT IHRE GRUNDLAGE
+──────────────────────────────────────────────────
+Solange kein echter Lauf eingegangen ist, steht „(geschätzt, noch ohne
+Messung)" dabei. Das ist E289 in klein: eine Zahl ohne ihre Grundlage
+glaubt man ein Mal und danach nicht mehr.
+
+WAS ICH NICHT MESSEN KONNTE, UND WARUM ES TROTZDEM DASTEHT
+──────────────────────────────────────────────────────────
+Die Startwerte sollten gemessen werden, nicht abgeschrieben. Für Textdateien
+ist das gelungen: 20, 60 und 120 Markdown-Dateien in einer ZIP ergaben
+3,6 / 3,1 / 3,5 ms je Datei — flach, ohne überproportionales Wachstum. Die
+3,4 im Kern sind diese Messung.
+
+Für PDFs ist es GESCHEITERT. Ein gebautes Prüf-PDF kam über
+`PdfEinlesen.alsSeiten` bei vier, zehn und vierundzwanzig Seiten je in zwei
+Minuten nicht durch — dieselbe Grenze bei jeder Grösse, also ein Stillstand
+und kein Zeitproblem. Ob das am kopflosen Browser liegt oder am gebauten
+PDF, ist offen und steht als **L117** in den Lücken; die zweite Erklärung
+wäre ein echter Fehler und muss geprüft werden.
+
+Also steht im Kern, was wirklich der Fall ist:
+
+    text: 3.4       GEMESSEN am 3. September 2026 im Prüfcontainer
+    jeSeite: 350    NICHT selbst gemessen — aus der Beobachtung in
+    bytesJeSeite    L114 Punkt 7, festgehalten beim Bau von E350
+    bild/office/…   aus dem Verhältnis geschätzt
+
+Eine erfundene Zahl in einer Schätzung merkt niemand — deshalb steht die
+Herkunft jedes einzelnen Werts im Quelltext, und test363 §10 prüft, dass sie
+dort steht. Und genau deshalb lernt der Kern: ein Startwert muss nicht
+stimmen, er muss nur einen Anfang machen, den die Wirklichkeit korrigiert.
+
+WAS NICHT GEMACHT WURDE
+───────────────────────
+**Keine Fortschrittsanzeige mit Restzeit.** Die Schätzung reist als
+`schaetzungMs` mit dem Auftrag mit, damit sie einen geschlossenen Tab
+überlebt — angezeigt wird sie beim Anlauf. Eine mitlaufende Restzeit wäre
+der nächste Schritt und ist keiner, den diese Lücke verlangt hat.
+
+**Nichts vom Import umgebaut.** Der einzige Eingriff im Läufer ist die
+Zeitnahme um `dateiAlsDokument`; alles andere bleibt, wie E365 es gebaut
+hat.
+
+**Gelernt wird nicht aus einem Abbruch.** Ein Lauf, der nach drei von
+achtzig Dateien abbricht, verschöbe die Zahlen mit einer Stichprobe, die
+über den Rest nichts sagt.
+
+WAS DARAUS FOLGT, ÜBER DIESEN FALL HINAUS
+─────────────────────────────────────────
+Wer eine Vorhersage baut, hat zwei Möglichkeiten, sie unehrlich zu machen:
+eine Konstante erfinden, oder sie aus ihrer eigenen Vorhersage lernen
+lassen. Beides sieht im Code gleich aus. Der Unterschied liegt darin, WO
+gemessen wird — hier an der Arbeitsstelle, mit `performance.now()` um die
+Datei herum, und nicht am Ende aus dem Ergebnis zurückgerechnet.
+
+PRÜFUNG: test363 57/57 (neu, Port 9387) · test355 · test357 · test363 gegen
+den echten Import mit einer gebauten ZIP. Einzeldatei neu gebaut,
+Dienststand v174.
+
+MUTATIONSPROBE, dreimal: Schwelle auf 0 → 51/57 (und Redion behauptet für
+drei Bilder „rund eine halbe Minute"). Seitenzeit falsch geteilt → 56/57.
+Aus abgebrochenen Läufen lernen → 56/57.
