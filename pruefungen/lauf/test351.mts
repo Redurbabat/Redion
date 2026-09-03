@@ -92,7 +92,15 @@ const kontext = async (handy: boolean, spalten = false) => {
   }, spalten);
   return { ktx, pg, seiteId };
 };
-const werkzeug = (pg: Seite, wz: string) => pg.click(`.blatt-werk [data-wz="${wz}"]`);
+/* SEIT E375 STEHEN VIER FORMEN UNTER EINEM KNOPF. Wer `line` will, tippt
+   erst auf „Form" und dann im Zubehör auf die Linie — genau der Weg, den
+   ein Mensch geht. Alles andere bleibt ein Knopf. */
+const FORM_ARTEN = ['line', 'arrow', 'rectangle', 'ellipse'];
+const werkzeug = async (pg: Seite, wz: string): Promise<void> => {
+  if (!FORM_ARTEN.includes(wz)) { await pg.click(`.blatt-werk [data-wz="${wz}"]`); return; }
+  await pg.click('.blatt-werk [data-wz="formen"]');
+  await pg.click(`.blatt-werk [data-act="formart"][data-form="${wz}"]`);
+};
 /** Masse der Leiste: Zeilen der Werkzeuge, Lage des Zubehörs, Höhe, Wörter. */
 const leiste = (pg: Seite) => pg.evaluate(() => {
   const w = document.querySelector<HTMLElement>('.blatt-werk')!;
@@ -105,6 +113,7 @@ const leiste = (pg: Seite) => pg.evaluate(() => {
   const bruch = w.querySelector<HTMLElement>('.blatt-zeilenbruch');
   return {
     werkzeugZeilen: tops.size,
+    werkzeuge: werkzeuge.length,
     zubehoerUnterhalb: zubehoer.every(k => k.getBoundingClientRect().top >= werkzeugUnten - 1),
     zubehoerSichtbar: zubehoer.length,
     hoehe: Math.round(w.getBoundingClientRect().height),
@@ -122,7 +131,11 @@ console.log('\n1 · Zwei Zeilen am Rechner: Werkzeuge oben, Zubehör darunter, u
 const { ktx, pg, seiteId } = await kontext(false);
 await werkzeug(pg, 'stift');
 let z = await leiste(pg);
-gleich('Alle vierzehn Werkzeuge auf EINER Höhe', z.werkzeugZeilen, 1);
+/* ELF, NICHT MEHR VIERZEHN (E375): Linie, Pfeil, Rechteck und Ellipse
+   stehen jetzt unter einem Knopf „Form". Die Zusage dieses Punktes ist
+   dieselbe geblieben — alle auf EINER Höhe —, nur ist die Zeile kürzer. */
+gleich('Alle elf Werkzeuge auf EINER Höhe', z.werkzeugZeilen, 1);
+gleich('Und es sind wirklich elf', z.werkzeuge, 11);
 p('Das Zubehör steht unter den Werkzeugen', z.zubehoerUnterhalb && z.zubehoerSichtbar > 0, JSON.stringify(z));
 p('Die Leiste ist unter 100 px hoch (vorher fünf Zeilen, rund 220)', z.hoehe < 100, `${z.hoehe} px bei ${z.breite} px Breite`);
 p('Der Zeilenbruch ist da und wirkt (volle Breite, keine Höhe)', z.bruch.da && z.bruch.sichtbar && (z.bruch as any).breite > z.breite * 0.8, JSON.stringify(z.bruch));
@@ -160,7 +173,7 @@ p('Volle Breite bei 1360 px Fenster: die Leiste hat rund 1070 px — noch keine 
 await pg.setViewportSize({ width: 1600, height: 950 });
 await pg.waitForTimeout(400);
 z = await leiste(pg);
-p('Bei 1600 px Fenster (Leiste über 1150 px) stehen die vierzehn Wörter', z.woerter === 14 && z.breite > 1150, `${z.woerter} Wörter bei ${z.breite} px`);
+p('Bei 1600 px Fenster (Leiste über 1150 px) stehen die elf Wörter', z.woerter === 11 && z.breite > 1150, `${z.woerter} Wörter bei ${z.breite} px`);
 gleich('… in einer Werkzeugzeile, das Zubehör darunter', [z.werkzeugZeilen, z.zubehoerUnterhalb], [1, true]);
 p('… und die Leiste bleibt unter 100 px', z.hoehe < 100, `${z.hoehe} px`);
 await ktx.close();

@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-370 Entscheidungen, E1 bis E374. Die Nummer ist die Ordnung: eine Entscheidung
+371 Entscheidungen, E1 bis E375. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -402,7 +402,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E349** — Der Start zeigt, wo man war: die PDF, sonst das Regal (Redurs Punkt 1)
 * **E350** — Eine ZIP kommt so ins Regal, wie sie ist (Redurs Punkt 2)
 
-**E351–E374**
+**E351–E375**
 
 * **E351** — Der Stift schreibt wie eine Hand: Füller, Kugelschreiber, Pinsel (Redurs Punkt 3, erster Bogen)
 * **E352** — Der Radierer streicht, teilt und kennt den Rückknopf des Stifts (Redurs Punkt 3, zweiter Bogen)
@@ -428,6 +428,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E372** — Die Telefonmarken sagen, was wirklich dasteht — zwei logen (L10)
 * **E373** — Was ein langer Import kostet, steht vorher da — und schweigt sonst (L114 Punkt 7)
 * **E374** — Der Deckel eines handbeschriebenen Hefts zeigt, was daraufsteht (L61 Rest)
+* **E375** — Ein Formen-Werkzeug statt vier (L115 Punkt 9, Rest)
 
 ---
 
@@ -30125,3 +30126,64 @@ NACHTRAG ZUM VOLLEN LAUF voll21 (33 Stücke auf E369): zwei rote Suiten.
 auf dem neueren Stand 39/39 — ein Ausreisser unter Last, kein Rückfall. Er
 steht als **L118** in den Lücken, damit er nicht das nächste Mal wieder als
 Überraschung kommt.
+
+
+════════════════════════════════════════════════════════════════════════════
+E375 — Ein Formen-Werkzeug statt vier (L115 Punkt 9, Rest)
+════════════════════════════════════════════════════════════════════════════
+
+BEFUND: L115 Punkt 9 wurde von E359 fast geschlossen — die Blattleiste am
+Rechner ist von rund 220 auf 84 px geschrumpft. Was blieb, stand als letzter
+Satz dort: „vierzehn Werkzeuge sind viele (Linie, Pfeil, Rechteck, Ellipse
+als ein Formen-Werkzeug wäre GoodNotes näher)."
+
+Vier Werkzeuge, die dasselbe TUN — zwei Punkte aufziehen — und sich nur im
+Ergebnis unterscheiden. Sie nebeneinander zu stellen ist so, als hätte man
+für jede Schriftgrösse einen eigenen Knopf.
+
+WAS GEBAUT WURDE
+────────────────
+**Ein Knopf „Form".** Er trägt das Zeichen der zuletzt gewählten Form,
+damit man ihn wiedererkennt, ohne ihn zu öffnen; ein Tipp führt sie. Welche
+es ist, steht im Zubehör darunter — dort, wo auch Farbe und Strichstärke
+stehen, und wo es nach der Regel aus E356 nur auftaucht, solange eine Form
+gewählt ist.
+
+**Elf Werkzeuge statt vierzehn.** Die erste Zeile ist um drei Knöpfe kürzer
+— am Telefon drei Rollbewegungen weniger.
+
+**Die Wahl wird gemerkt** (`meta`, `zeichnen:form`). Wer immer Pfeile
+zeichnet, will nicht jedes Mal die Linie wegklicken.
+
+**Und was NICHT geändert wurde: das Format.** Nach aussen heisst das
+Werkzeug weiter `line`, `arrow`, `rectangle`, `ellipse` — daran hängen der
+Zeichner, `data-tool`, das Menüband und jede gespeicherte Marke. E375 fasst
+die KNÖPFE zusammen, nicht die Sachen. test365 §4 prüft das an einer
+wirklich gezeichneten Marke: sie trägt `rectangle`, nicht `formen`.
+
+ZWEI STELLEN, DIE MAN LEICHT ÜBERSIEHT
+──────────────────────────────────────
+**Der Knopf muss bei allen vieren leuchten.** `markiere()` vergleicht das
+führende Werkzeug mit `data-wz` — und `rectangle` steht an keinem Knopf
+mehr. Ohne die Umsetzung `istForm(wz) → 'formen'` wäre beim Zeichnen eines
+Rechtecks KEIN Knopf hervorgehoben, und die Leiste sähe aus, als sei nichts
+gewählt. Die Gegenprobe zeigt es: 27/28.
+
+**Und das Zubehör muss bei allen vieren erscheinen.** Das CSS liest
+`data-tool` gegen `data-gruppe`; vier Regeln statt einer, weil `data-tool`
+weiter die konkrete Form trägt.
+
+WAS DER PRÜFLAUF SONST NOCH ANFASSEN MUSSTE
+───────────────────────────────────────────
+`test351` klickte `[data-wz="line"]` — den Knopf gibt es nicht mehr. Der
+Helfer dort geht jetzt den Weg, den ein Mensch geht: erst „Form", dann im
+Zubehör die Linie. Und zwei Zusagen mussten ihre Zahl ändern: „vierzehn
+Werkzeuge auf einer Höhe" heisst jetzt elf, mit einem Punkt daneben, der
+die Zahl auch wirklich zählt — vorher stand sie nur im Namen und hätte bei
+jeder Zahl gegolten.
+
+PRÜFUNG: test365 28/28 (neu, Port 9395) · test351 26/26 · test356 28/28.
+Zwei Bilder angesehen: Rechner und Telefon.
+
+MUTATIONSPROBE, zweimal: die Wahl nicht merken → 26/28. Der Formen-Knopf
+leuchtet nicht mit → 27/28.

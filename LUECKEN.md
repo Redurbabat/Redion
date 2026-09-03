@@ -5237,9 +5237,16 @@ mit dem Grund, warum jeder Punkt ein eigener Bogen ist:
    Rechner zwei Zeilen (Werkzeuge, darunter ihr Zubehör) über einen
    Zeilenbruch, Wörter nach Breite der Leiste (`@container`), und die
    Papierwahl ist eine Klappe (100 statt 210 px). 84 statt rund 220 px.
-   test351. Was bleibt: am Telefon steht der feste Teil weiter in einer
-   eigenen Zeile; vierzehn Werkzeuge sind viele (Linie, Pfeil, Rechteck,
-   Ellipse als ein Formen-Werkzeug wäre GoodNotes näher).
+   test351. ~~Was bleibt: vierzehn Werkzeuge sind viele (Linie, Pfeil,
+   Rechteck, Ellipse als ein Formen-Werkzeug wäre GoodNotes näher).~~
+   GESCHLOSSEN am 3. September 2026 mit E375: ein Knopf „Form", der die
+   zuletzt gewählte trägt, und die vier im Zubehör darunter. Elf Werkzeuge
+   statt vierzehn; die Kennungen der Marken bleiben `line`, `arrow`,
+   `rectangle`, `ellipse` — zusammengefasst sind die KNÖPFE, nicht das
+   Format. test365, 28 Punkte.
+
+   Was bleibt: am Telefon steht der feste Teil weiter in einer eigenen
+   Zeile.
 
 Nicht auf der Liste, weil es Format wäre: eine Marke bleibt `{id, art,
 farbe, breite, pts, pressure, stil?}`. Jeder Punkt oben lässt sich ohne

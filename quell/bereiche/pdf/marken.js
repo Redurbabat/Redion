@@ -25,6 +25,23 @@ const Marken = (() => {
         { id: 'marker', name: 'Marker', zeichen: '▰', titel: 'Radierer: nur Marker' }
     ];
     const RADIER_VORGABE = 'ganz';
+    /* DIE FORMEN (E375). Vier Werkzeuge, die dasselbe tun — zwei Punkte
+       aufziehen — und sich nur im Ergebnis unterscheiden. Sie stehen deshalb
+       als EIN Werkzeug in der Leiste und als vier im Zubehör. Die Kennungen
+       sind die alten (`line`, `arrow`, `rectangle`, `ellipse`): sie stehen so
+       in jeder gespeicherten Marke, und daran wird nichts geändert (§53.3). */
+    const FORMEN = [
+        { id: 'line', name: 'Linie', zeichen: '╱', titel: 'Gerade Linie' },
+        { id: 'arrow', name: 'Pfeil', zeichen: '→', titel: 'Pfeil' },
+        { id: 'rectangle', name: 'Rechteck', zeichen: '□', titel: 'Rechteck' },
+        { id: 'ellipse', name: 'Ellipse', zeichen: '○', titel: 'Ellipse' }
+    ];
+    const FORM_VORGABE = 'line';
+    const formArtLesen = () => {
+        const wert = typeof Store !== 'undefined' ? String(Store.getMeta('zeichnen:form') || '') : '';
+        return FORMEN.some(f => f.id === wert) ? wert : FORM_VORGABE;
+    };
+    const istForm = (was) => FORMEN.some(f => f.id === was);
     const radierModusLesen = () => {
         const wert = typeof Store !== 'undefined' ? String(Store.getMeta('zeichnen:radierer') || '') : '';
         return RADIERER.some(r => r.id === wert) ? wert : RADIER_VORGABE;
@@ -1736,6 +1753,12 @@ const Marken = (() => {
         return liste;
     };
     const leiste = (controls, extra = '') => {
+        /* WELCHE FORM DER FORMEN-KNOPF FÜHRT (E375). Das ist Zustand der
+           LEISTE, nicht der Fläche: die Fläche kennt nur `line` oder
+           `rectangle` und weiss nichts davon, dass beide unter einem Knopf
+           stehen. Gemerkt wird er in `meta`, damit er den Neustart überlebt —
+           wer immer Pfeile zeichnet, will nicht jedes Mal die Linie wegklicken. */
+        let formArt = formArtLesen();
         /* DIE FLÄCHE MELDET SICH IM KERN AN (E212).
     
            Bis hierher wusste nur diese Leiste, welche Fläche sie steuert. Der
@@ -1781,10 +1804,19 @@ const Marken = (() => {
                 button('select', '⌖', 'Auswahl', 'Marken auswählen, gemeinsam bewegen oder löschen') +
                 button('stift', '🖍', 'Stift', 'Freihand mit geglätteter Linie') +
                 button('marker', '▰', 'Marker', 'Transparenter Marker') +
-                button('line', '╱', 'Linie', 'Gerade Linie') +
-                button('arrow', '→', 'Pfeil', 'Pfeil') +
-                button('rectangle', '□', 'Rechteck', 'Rechteck') +
-                button('ellipse', '○', 'Ellipse', 'Ellipse') +
+                /* VIER WERKZEUGE WURDEN EINES (E375, L115 Punkt 9, Rest).
+                   Linie, Pfeil, Rechteck und Ellipse standen als vier Knöpfe
+                   nebeneinander — vierzehn Werkzeuge in einer Leiste, die am Telefon
+                   rollen muss. GoodNotes hat dafür EINEN Knopf; welche Form es wird,
+                   steht im Zubehör darunter, wo auch Farbe und Strichstärke stehen.
+                   Der Knopf trägt das Zeichen der zuletzt gewählten Form, damit man
+                   ihn wiedererkennt, ohne ihn zu öffnen. */
+                (() => {
+                    const jetzt = FORMEN.find(f => f.id === formArt) || FORMEN[0];
+                    return `<button data-wz="formen" data-form="${jetzt.id}" ` +
+                        `title="${jetzt.titel} — die Form wählst du darunter">` +
+                        `<span class="zeichen">${jetzt.zeichen}</span><span class="wort">Form</span></button>`;
+                })() +
                 button('abdeck', '▬', 'Abdecken', 'Abdeckband über Lösungen ziehen — Antippen im Schreiben-Modus deckt auf') +
                 button('zettel', '🗒', 'Haftnotiz', 'Einen Zettel aufziehen und beschriften; Antippen mit dem Werkzeug bearbeitet ihn') +
                 button('text', 'T', 'Text', 'Textanmerkung') +
@@ -1851,6 +1883,14 @@ const Marken = (() => {
                     return `<button data-act="stil" data-gruppe="stil" data-stil="${jetzt.id}" title="Stift wechseln: ${STIFTE.map(st => st.name).join(' → ')}">` +
                         `<span class="zeichen">${jetzt.zeichen}</span><span class="wort">${jetzt.name}</span></button>`;
                 })() +
+                /* DAS ZUBEHÖR ZUM FORMEN-WERKZEUG (E375). Es steht in derselben
+                   Zeile wie Farbe und Breite und erscheint nach der Gruppenregel aus
+                   E356 nur, wenn eine Form gewählt ist. */
+                '<span class="blatt-trenn" data-gruppe="form"></span>' +
+                FORMEN.map(f => `<button data-act="formart" data-gruppe="form" data-form="${f.id}"` +
+                    (f.id === formArt ? ' class="on"' : '') + ` aria-pressed="${f.id === formArt ? 'true' : 'false'}"` +
+                    ` title="${f.titel}"><span class="zeichen">${f.zeichen}</span>` +
+                    `<span class="wort">${f.name}</span></button>`).join('') +
                 '<span class="blatt-trenn" data-gruppe="farbe"></span>' +
                 FARBEN.map((value, index) => `<button class="blatt-farbe${index === 0 ? ' on' : ''}" data-gruppe="farbe" ` +
                     `data-c="${value}" style="background:${value}" title="Farbe"></button>`).join('') +
@@ -1923,8 +1963,12 @@ const Marken = (() => {
             }
             const wz = Zeichenziel.werkzeugVon(controls);
             if (wz) {
+                /* EINE FORM LÄSST DEN FORMEN-KNOPF LEUCHTEN (E375) — sonst wäre
+                   beim Zeichnen eines Rechtecks kein Knopf hervorgehoben, und die
+                   Leiste sähe aus, als sei nichts gewählt. */
+                const fuehrend = istForm(wz) ? 'formen' : wz;
                 tools.querySelectorAll('[data-wz]').forEach(node => {
-                    node.classList.toggle('on', node.dataset.wz === wz);
+                    node.classList.toggle('on', node.dataset.wz === fuehrend);
                 });
                 /* Die Leiste weiss, welches Werkzeug fuehrt — das CSS am Telefon
                    liest es (E356). */
@@ -1973,6 +2017,25 @@ const Marken = (() => {
                     void controls.bildEinfuegen();
                 return;
             }
+            /* DER FORMEN-KNOPF FÜHRT DIE ZULETZT GEWÄHLTE FORM (E375). Nach
+               aussen heisst das Werkzeug weiter `line`/`arrow`/`rectangle`/
+               `ellipse` — daran hängen der Zeichner, das Menüband und jede
+               gespeicherte Marke. Nur die LEISTE fasst sie zu einem Knopf. */
+            if (target.dataset.wz === 'formen') {
+                const wahl = formArt;
+                controls.setzeWerkzeug(wahl);
+                if (typeof Zeichenziel !== 'undefined') {
+                    try {
+                        Zeichenziel.uebernehme(controls, wahl);
+                    }
+                    catch { /* egal */ }
+                }
+                tools.querySelectorAll('[data-wz]').forEach(node => node.classList.remove('on'));
+                target.classList.add('on');
+                tools.dataset.tool = wahl;
+                zumWerkzeugRollen('formen');
+                return;
+            }
             if (target.dataset.wz) {
                 controls.setzeWerkzeug(target.dataset.wz);
                 /* Auch der Kern muss es wissen — sonst zeigt das Menüband weiter
@@ -2016,6 +2079,45 @@ const Marken = (() => {
                         tools.querySelectorAll('[data-wz]').forEach(node => node.classList.toggle('on', node.dataset.wz === 'stift'));
                         tools.dataset.tool = 'stift';
                     }
+                    return;
+                }
+                /* DIE FORM WÄHLEN (E375) — und sie sofort führen. Wer im Zubehör
+                   auf „Rechteck" tippt, will ein Rechteck zeichnen, nicht erst
+                   noch den Knopf darüber suchen. */
+                if (target.dataset.act === 'formart' && target.dataset.form) {
+                    const wahl = String(target.dataset.form);
+                    if (!istForm(wahl))
+                        return;
+                    formArt = wahl;
+                    if (typeof Store !== 'undefined') {
+                        try {
+                            Store.setMeta('zeichnen:form', wahl);
+                        }
+                        catch { /* dann eben nur diese Sitzung */ }
+                    }
+                    tools.querySelectorAll('[data-act="formart"]').forEach(node => {
+                        const an = node.dataset.form === wahl;
+                        node.classList.toggle('on', an);
+                        node.setAttribute('aria-pressed', an ? 'true' : 'false');
+                    });
+                    /* Der Knopf in der oberen Zeile trägt das Zeichen der Form. */
+                    const kopf = tools.querySelector('[data-wz="formen"]');
+                    const f = FORMEN.find(x => x.id === wahl);
+                    if (kopf && f) {
+                        kopf.dataset.form = wahl;
+                        kopf.title = f.titel + ' — die Form wählst du darunter';
+                        kopf.innerHTML = `<span class="zeichen">${f.zeichen}</span><span class="wort">Form</span>`;
+                        tools.querySelectorAll('[data-wz]').forEach(node => node.classList.remove('on'));
+                        kopf.classList.add('on');
+                    }
+                    controls.setzeWerkzeug(wahl);
+                    if (typeof Zeichenziel !== 'undefined') {
+                        try {
+                            Zeichenziel.uebernehme(controls, wahl);
+                        }
+                        catch { /* egal */ }
+                    }
+                    tools.dataset.tool = wahl;
                     return;
                 }
                 if (target.dataset.act === 'radiermodus' && controls.setzeRadierModus) {

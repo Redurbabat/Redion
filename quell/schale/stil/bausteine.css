@@ -4111,6 +4111,13 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-werk[data-tool="marker"] > [data-gruppe="lineal"],
 .blatt-werk[data-tool="marker"] > [data-gruppe="farbe"],
 .blatt-werk[data-tool="marker"] > [data-gruppe="breite"],
+/* DIE VIER FORMEN ZEIGEN ALLE IHRE FORMENWAHL (E375). `data-tool` bleibt
+   `line`/`arrow`/`rectangle`/`ellipse` — daran hängt der Zeichner —, aber
+   in der Leiste stehen sie unter einem Knopf, und ihr Zubehör ist dasselbe. */
+.blatt-werk[data-tool="line"] > [data-gruppe="form"],
+.blatt-werk[data-tool="arrow"] > [data-gruppe="form"],
+.blatt-werk[data-tool="rectangle"] > [data-gruppe="form"],
+.blatt-werk[data-tool="ellipse"] > [data-gruppe="form"],
 .blatt-werk[data-tool="line"] > [data-gruppe="lineal"],
 .blatt-werk[data-tool="line"] > [data-gruppe="farbe"],
 .blatt-werk[data-tool="line"] > [data-gruppe="breite"],
