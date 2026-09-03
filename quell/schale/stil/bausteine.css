@@ -1914,7 +1914,11 @@ body.kontrast button:focus-visible, body.kontrast [contenteditable]:focus-visibl
  * aus.
  * ======================================================================== */
 @media(max-width:760px){
-  #topbar{ min-height:56px; }
+  /* DIE ZAHL STEHT IN `marken.css`, NICHT HIER (E372). Sie stand an zwei
+     Stellen — hier als 56, und in `--mobile-topbar` als 46 — und die
+     zweite ist diejenige, aus der sich die Höhe MIT Kerbe rechnet. Am
+     iPhone war der Balken dadurch zehn Pixel zu flach. */
+  #topbar{ min-height:var(--mobile-topbar); }
 
   /* IN DER KOPFLEISTE WÄCHST NUR DIE HÖHE. Der erste Versuch gab auch
      `min-width:44px` — und damit war der Seitentitel weg: acht Knöpfe zu

@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-367 Entscheidungen, E1 bis E371. Die Nummer ist die Ordnung: eine Entscheidung
+368 Entscheidungen, E1 bis E372. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -402,7 +402,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E349** — Der Start zeigt, wo man war: die PDF, sonst das Regal (Redurs Punkt 1)
 * **E350** — Eine ZIP kommt so ins Regal, wie sie ist (Redurs Punkt 2)
 
-**E351–E371**
+**E351–E372**
 
 * **E351** — Der Stift schreibt wie eine Hand: Füller, Kugelschreiber, Pinsel (Redurs Punkt 3, erster Bogen)
 * **E352** — Der Radierer streicht, teilt und kennt den Rückknopf des Stifts (Redurs Punkt 3, zweiter Bogen)
@@ -425,6 +425,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E369** — Die Spalte nimmt die Breite, die sie bekommt (Rückfall aus E359)
 * **E370** — CLAUDE.md aufgeräumt: Marken, Verzeichnis, und ein Zaun, der 891 Zeilen verschluckt hat
 * **E371** — Die Vorschau am Telefon ist ein Blatt, kein Absprung (L10)
+* **E372** — Die Telefonmarken sagen, was wirklich dasteht — zwei logen (L10)
 
 ---
 
@@ -29770,3 +29771,122 @@ dass dort „G2" und „R2" stehen. Seit E370 führt diese Datei nur noch, was
 OFFEN ist; die Geschichte steht in `ERLEDIGTE-AUFGABEN.md`. Der Punkt ist
 deshalb umgehängt, nicht gelockert — die Gegenprobe (den Eintrag dort
 verfälschen) macht ihn weiterhin rot.
+
+
+════════════════════════════════════════════════════════════════════════════
+E372 — Die Telefonmarken sagen, was wirklich dasteht — zwei logen (L10)
+════════════════════════════════════════════════════════════════════════════
+
+BEFUND: L10 nennt seit Wochen einen Rest — „gemeinsame Gestaltungswerte
+statt verstreuter Pixelzahlen, die Masse stehen an einem Dutzend Stellen und
+wurden schon zweimal auseinandergeschrieben (28 gegen 18 beim Rand)". Vor
+dem Bauen erst einmal gezählt, denn „ein Dutzend Stellen" war eine Schätzung:
+
+    7172 rohe px-Werte in 18 Stildateien
+    davon 3616 allein in bausteine.css
+    die häufigsten: 5px (693×), 1px (674×), 8px (492×), 12px (441×)
+
+Daraus folgt zuerst, was NICHT zu tun ist. Siebentausend Zahlen in Marken zu
+verwandeln wäre ein Wochenwerk mit hohem Rückfallrisiko und wenig Ertrag:
+die meisten sind ein Polster oder eine Linie, die niemals mit einer anderen
+zusammen geändert werden soll. Eine Marke ist nur dort richtig, wo zwei
+Stellen dieselbe Zahl meinen MÜSSEN.
+
+Also andersherum gezählt — wie oft die acht Marken, die es schon gibt,
+überhaupt benutzt werden:
+
+    --touch-min           14×      daneben 113× die rohe 44px
+    --mobile-gutter        4×
+    --mobile-gutter-small  3×
+    --sheet-radius         4×
+    --mobile-topbar        1×
+    --table-row-touch      1×
+    --mobile-nav-height    0×
+
+Und dann gemessen, was die Marken behaupten, gegen das, was dasteht:
+
+    --mobile-topbar      sagt 46      der Balken misst  56
+    --mobile-nav-height  sagt 56      die Leiste misst  59
+
+ZWEI VON SIEBEN MARKEN WAREN FALSCH. Nicht ungenau — falsch.
+
+DER FEHLER MIT ZÄHNEN
+─────────────────────
+`--mobile-topbar` wurde genau einmal benutzt, und ausgerechnet dort, wo es
+weh tut — in der Regel für die Kerbe:
+
+    @media(max-width:760px){
+      #topbar{ padding-top:env(safe-area-inset-top);
+               height:calc(var(--mobile-topbar) + env(safe-area-inset-top)); }
+
+Vierzig Zeilen weiter unten stand, in derselben Datei, in einer zweiten
+Medienabfrage: `#topbar{ min-height:56px }`.
+
+OHNE KERBE geht das gut: `height` rechnet 46 + 0 = 46, `min-height` von 56
+gewinnt, der Balken misst 56. MIT KERBE nicht: am iPhone sind
+`env(safe-area-inset-top)` 47 px, `height` wird 93, und 93 schlägt die 56.
+Abzüglich der 47 px Polster bleiben dem Inhalt **46 statt 56 px**.
+
+Zehn Pixel zu flach — auf genau dem Gerät, für das die Regel geschrieben
+wurde, und nirgends sonst. Kein Prüflauf konnte das sehen: im Container gibt
+es keine Kerbe.
+
+Der Absatz, der diese Sorte Fehler beschreibt, steht vier Zeilen darunter im
+selben Block: „28 px, nicht 18. Die Zahl steht auch in `ki.css`, aber DIESE
+Regel gewinnt … Zwei Ränder in einer App sind einer zu viel." Dieselbe
+Krankheit, vier Zeilen entfernt, ungesehen.
+
+WAS GEBAUT WURDE
+────────────────
+1. **`--mobile-topbar: 56px`** — die Marke sagt jetzt, was dasteht.
+2. **`#topbar{ min-height:var(--mobile-topbar) }`** statt der rohen 56. Die
+   Zahl steht einmal. Und das ist mehr als Ordnung: mit der Kopplung bricht
+   ein falscher Wert SOFORT und ÜBERALL, statt nur auf dem Gerät mit Kerbe.
+   Die Gegenprobe zeigt es — Marke zurück auf 46, und der Balken misst im
+   Container 54 statt 56.
+3. **`--mobile-nav-height: 59px`**, mit der Rechnung dabei: 5 Polster oben +
+   48 Knopf + 5 Polster unten + 1 Linie. Wer eines davon ändert, macht
+   test362 rot und muss die Zahl nachziehen. Das ist der Zweck, nicht der
+   Preis.
+4. **`test362`, neu** — er misst die Marken gegen die echten Elemente in
+   zwei Bildmassen. Er rechnet nichts nach, was der Stil schon rechnet
+   (§55.2), sondern fragt die Seite, wie hoch die Dinge wirklich sind.
+5. **`pruefungen/marken-decke.json`** — ein Verzeichnis der rohen
+   Wiederholungen (44, 56, 46, 28, 22, 16), nach der Bauform von
+   `js-bestand.json`. Es steht auf GENAU dem heutigen Stand, nicht auf
+   „höchstens": eine Decke mit Luft ist keine Decke, sondern eine Zahl. Wer
+   eine rohe 44px durch die Marke ersetzt, sieht den Lauf rot und trägt die
+   kleinere Zahl nach.
+
+WAS NICHT GEMACHT WURDE
+───────────────────────
+**Die 113 rohen 44px wurden NICHT blind ersetzt.** Ein Zeichen, das zufällig
+44 px misst, meint keine Trefferfläche. Ein Verbot wäre entweder unehrlich
+oder unerfüllbar gewesen; das Verzeichnis ist beides nicht.
+
+**Keine Marke gelöscht**, auch die nicht, die niemand benutzte. Sie ist
+jetzt richtig und wird gemessen — das ist mehr wert als ihr Fehlen.
+
+**Kein Bild.** Nach §55.3 in Redurs Fassung: ein Bild, wenn man etwas sehen
+kann. Ohne Kerbe sieht man hier nichts, und eine Kerbe lässt sich im
+Container nicht echt herstellen — sie nachzubauen hiesse, die Rechnung zu
+prüfen, die man selbst geschrieben hat. Der Beleg ist die Messung.
+
+WAS DARAUS FOLGT, ÜBER DIESEN FALL HINAUS
+─────────────────────────────────────────
+Eine Marke, die niemand benutzt, ist keine Marke, sondern eine Behauptung
+ohne Leser — und Behauptungen ohne Leser sind irgendwann falsch. Beide
+falschen Werte hier gehörten zu den beiden am wenigsten benutzten Marken
+(1× und 0×). Das ist kein Zufall, sondern die Regel: was benutzt wird, wird
+korrigiert; was danebensteht, verwittert.
+
+Deshalb ist der eigentliche Bau dieses Bogens nicht die berichtigte Zahl,
+sondern die Kopplung. Eine Marke soll mindestens einmal so benutzt werden,
+dass ihr Fehler sichtbar wird.
+
+PRÜFUNG: test362 18/18 (neu, Port 9383) · test114 · test126, beide grün.
+Einzeldatei neu gebaut, Dienststand v172.
+
+MUTATIONSPROBE, dreimal: Marke zurück auf 46 → 15/18, und der Balken misst
+dann 54. Leistenmarke zurück auf 56 → 15/18. Rohe 56 zurück in die
+Medienabfrage → 15/18.

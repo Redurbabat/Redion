@@ -44,8 +44,27 @@
   --touch-min: 44px;
   --mobile-gutter: 28px;
   --mobile-gutter-small: 22px;
-  --mobile-topbar: 46px;
-  --mobile-nav-height: 56px;
+  /* 56, NICHT 46 (E372). Die Marke stand seit ihrer Einführung auf 46 und
+     wurde genau einmal benutzt — in der Regel für die Kerbe:
+
+         #topbar{ padding-top:env(safe-area-inset-top);
+                  height:calc(var(--mobile-topbar) + env(safe-area-inset-top)) }
+
+     Ohne Kerbe rettete `min-height:56px` vierzig Zeilen weiter unten den
+     Balken. MIT Kerbe nicht: 46 + 47 = 93 schlägt die 56, und was dem
+     Inhalt bleibt, sind 93 − 47 = 46 px. Zehn zu wenig, und zwar auf dem
+     einen Gerät, für das die Regel überhaupt geschrieben wurde.
+
+     Eine Marke, die niemand benutzt, kann jahrelang falsch sein. test362
+     misst sie deshalb gegen den echten Balken. */
+  --mobile-topbar: 56px;
+
+  /* 59 IST DIE SUMME, NICHT EINE WAHL: 5 Polster oben + 48 Knopf + 5
+     Polster unten + 1 Linie. Die Marke stand auf 56 und wurde NIRGENDS
+     benutzt — sie war eine Behauptung ohne Leser. Wer die Polster oder die
+     Knopfhöhe ändert, macht test362 rot und muss diese Zahl nachziehen;
+     das ist der Zweck. */
+  --mobile-nav-height: 59px;
   --sheet-radius: 16px;
   --sheet-max-height: 88vh;
   --table-row-touch: 44px;

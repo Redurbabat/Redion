@@ -93,9 +93,11 @@ Der Punkt stand hier drei Wochen falsch.
 
 **Was wirklich offen ist** — zwei Dinge:
 
-1. Die Masse stehen an einem Dutzend Stellen in `bausteine.css` und sind
-   schon zweimal auseinandergelaufen (28 gegen 18 beim Rand). Sie gehören
-   in Marken, wie `--touch-min` und `--sheet-radius` es vormachen.
+1. Die 113 rohen `44px` einzeln durchgehen: welche meinen eine
+   Trefferfläche (dann `var(--touch-min)`) und welche sind zufällig 44
+   (dann bleiben sie mit einem Wort dazu). Kleinarbeit ohne Risiko;
+   `pruefungen/marken-decke.json` misst den Fortschritt, weil die Zahl
+   darin nur sinken darf. Die zwei FALSCHEN Marken sind seit E372 weg.
 2. **Auf einem echten Gerät geprüft: nein.** Alles bisher gemessen mit
    Playwright im Telefon-Bildmass. Das findet Grössen und Überdeckungen,
    aber nicht das Verhalten von Safari — der Fehlerbalken aus E81 kam vom
@@ -135,7 +137,7 @@ dem Start**.
 Die Produktlücken stehen dort und werden dort gepflegt — sie hier zu
 wiederholen hiesse, zwei Listen zu führen, die auseinanderlaufen.
 
-Zuletzt geschlossen: L10 Side Peek (E371), L78 Punkt 1 und L114 Punkt 4
+Zuletzt geschlossen: L10 Marken (E372), L10 Side Peek (E371), L78 Punkt 1 und L114 Punkt 4
 (E368), L116 (E367), L78 Punkt 2 (E366), L114 Punkte 1, 5 und 6 (E363,
 E365).
 

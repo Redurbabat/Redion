@@ -421,10 +421,22 @@ bleibt es das Seitenfenster, und der Inhalt wird nur einmal gebaut
 (`peekInhalt`). `test361` hält es mit 36 Punkten, darunter zwei echte
 Berührungen über CDP.
 
-**Fehlt ausserdem:** gemeinsame Gestaltungswerte statt verstreuter
-Pixelzahlen — die Masse stehen an einem Dutzend Stellen in `bausteine.css`
-und wurden schon zweimal auseinandergeschrieben (28 gegen 18 beim Rand).
-Das ist der Rest von L10 und jetzt sein grösster Punkt.
+**Die Marken sind seit E372 gemessen, nicht behauptet.** Der Punkt hiess
+hier „gemeinsame Gestaltungswerte statt verstreuter Pixelzahlen"; gezählt
+sind es 7172 rohe px-Werte in 18 Stildateien, und die meisten davon sollen
+gar keine Marke werden — ein Polster ist kein gemeinsames Mass. Der echte
+Fund lag woanders: **zwei der sieben Telefonmarken waren falsch.**
+`--mobile-topbar` sagte 46 bei einem 56 px hohen Balken, und die eine
+Stelle, die sie benutzte, war die Kerbenregel — am iPhone war der Balken
+dadurch zehn Pixel zu flach. `--mobile-nav-height` sagte 56 bei 59 und
+wurde nirgends benutzt. `test362` misst jetzt jede Marke gegen ihr echtes
+Element in zwei Bildmassen; `pruefungen/marken-decke.json` hält die rohen
+Wiederholungen fest und darf nur schrumpfen.
+
+**Fehlt ausserdem:** die 113 rohen `44px` einzeln durchzugehen — welche
+davon eine Trefferfläche meinen (dann `var(--touch-min)`) und welche
+zufällig 44 sind (dann bleiben sie). Das ist Kleinarbeit ohne Risiko und
+der Rest von L10.
 
 **Geprüft auf echtem Gerät** — nein. Alles bisher gemessen mit Playwright
 im Telefon-Bildmass. Das findet Grössen und Überdeckungen, aber nicht das
