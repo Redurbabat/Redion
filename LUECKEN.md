@@ -3022,13 +3022,20 @@ L77 Punkt 4 (Deckelfarben) ist damit erledigt. Neu hingenommen:
    `#notizhefte` — ein Fach-Hash bräuchte einen zweiten Start-Leseweg
    und ist damit keine offene Lücke mehr, sondern eine bewusst nicht
    gebaute Zusatzform (ein Fach lässt sich nicht verlinken).
-4. Ein Heft, das ANDERSWO verschlüsselt wurde (Seitenmenü, Palette),
-   trägt kein `heftArt` und fehlt im Regal, bis es entsperrt wird —
-   werkzeuge.ts soll die Heft-Regel nicht kennen (eine Regel-Maschine).
-5. Ein Fach verliert seine Fach-Eigenschaft, wenn sein letztes Heft im
-   Papierkorb liegt und es ohne `heftArt:'fach'` angelegt wurde (z.B.
-   als gewöhnliche Seite entstand) — es lebt in Bibliothek und Baum
-   weiter, nur die Fach-Karte verschwindet.
+4. ~~Ein Heft, das ANDERSWO verschlüsselt wurde, fehlt im Regal~~ —
+   ERLEDIGT in E364: `Werkzeuge.sperren` FRAGT vor dem Verschlüsseln über
+   den Bus (`ARTEN.seiteWirdGesperrt`), was die Seite mitnehmen soll, und
+   das Regal antwortet „heftArt: heft", solange die Kinder lesbar sind.
+   werkzeuge.ts kennt die Heft-Regel weiter nicht — es trägt, was ihm
+   gesagt wird (die Regel-Maschine ist der Bus). test356 §1.
+5. ~~Ein Fach verliert seine Fach-Eigenschaft, wenn sein letztes Heft im
+   Papierkorb liegt~~ — ERLEDIGT in E364: beim Zeichnen des Regals wird
+   jedes abgeleitete Fach ohne Merker als `heftArt:'fach'` gemerkt; die
+   Karte bleibt, wenn das letzte Heft im Papierkorb liegt. Der Merker
+   lügt nicht (eine Seite mit eigenen Blättern fällt vorher heraus).
+   Was bleibt: ein Fach, dessen letztes Heft VOR E364 in den Papierkorb
+   kam und das seither nie im Regal stand, bekommt den Merker erst,
+   wenn das Heft zurückgeholt ist. test356 §2.
 6. ✅ Die Listenform lief volle Breite — seit E282 hört sie bei 92ch
    auf (`ch`, damit die Grenze an der Schrift hängt und nicht an einer
    Zahl), links ausgerichtet wie die Kopfzeile darüber.
@@ -3075,12 +3082,18 @@ L81 — Was der Zeitmesser (E268) bewusst noch nicht kann
    `zeit:sitzungen` bereit; die Auswertung gehört in die Lernwelt, wo
    der Ort dafür schon existiert (dort steht die Lernzeit bis heute
    als Schätzung).
-2. Läuft die Uhr, während der Rechner schläft, zählt sie die Schlafzeit
-   mit — gerechnet wird aus der Wanduhr, nicht aus wacher Zeit.
+2. ~~Läuft die Uhr, während der Rechner schläft, zählt sie die Schlafzeit
+   mit~~ — ERLEDIGT in E364: gezählt wird WACHE Zeit. Kommt ein Tick nach
+   mehr als dreissig Sekunden (Schlaf, eingeschläferte Registerkarte),
+   wird die Spanne gesehen und nicht gezählt; eine verborgene
+   Registerkarte zählt nicht; eine rückwärts gestellte Uhr zählt nicht
+   rückwärts. Das Feld nennt den nicht gezählten Schlaf. test356 §3.
 3. Kein Ton und keine Systemmeldung beim Ablauf, nur der Hinweis in
    der App. Wer wegklickt, sieht ihn beim Zurückkommen.
-4. Die Uhr überlebt kein Neuladen: sie ist Laufzeit, nicht Ablage.
-   Eine beendete Sitzung ist gemerkt, eine laufende geht verloren.
+4. ~~Die Uhr überlebt kein Neuladen~~ — ERLEDIGT in E364: der laufende
+   Stand geht alle fünf Sekunden (und bei Start, Pause, Ende) nach
+   `zeit:laufend`; beim Laden der Ablage wird er wieder aufgenommen — die
+   Spanne seit dem Sichern zählt nicht. Beenden vergisst ihn. test356 §4.
 5. Nur eine Uhr gleichzeitig; ein zweiter Start beendet die erste
    (und merkt sie, wenn sie lang genug lief).
 

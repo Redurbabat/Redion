@@ -28329,3 +28329,112 @@ VON HAND ÄNDERN" auch in zipdetails.js. Danach: test342 42/42, test103
 prüft jetzt jede Datei) 32/32, test96 (die Sicherung) 18/18, test87
 152/152, test109 20/20, test143 23/23, test99 23/23, test353 (Dienststand
 v116) 39/39, test74 (Einzeldatei) 12/12, test225 11/11 — alle grün.
+
+
+E364 — Vier kleine Löcher: Heft bleibt Heft beim Sperren, Fach bleibt Fach, wache Zeit, die Uhr überlebt (L78 Punkte 4 und 5, L81 Punkte 2 und 4)
+════════════════════════════════════════════════════════════════════════════
+
+BEFUND (aus der Bestandsaufnahme vom 2. September, Gruppe „falsches
+Ergebnis oder still nichts"):
+
+  · L78 Punkt 4: ein Heft, das über das Seitenmenü oder die Palette
+    verschlüsselt wurde, trug kein `heftArt` und fehlte im Regal, bis es
+    entsperrt war — für den Menschen sieht das aus wie Datenverlust. Nur
+    das Regal selbst (`sperrenHier`) setzte den Merker; werkzeuge.ts
+    sollte die Heft-Regel nicht kennen.
+  · L78 Punkt 5: eine gewöhnliche Seite, in der ein Heft lag, war ein
+    Fach — bis ihr letztes Heft im Papierkorb lag. Dann fiel sie aus dem
+    Regal, und mit ihr die Karte, in der man das Heft zurückholt.
+  · L81 Punkt 2: der Zeitmesser rechnete aus der Wanduhr. Ein Laptop, der
+    mit laufender Uhr zuklappt, schrieb die Nacht als Lernzeit ins Buch —
+    eine FALSCHE ZAHL (§46), und L81 Punkt 1 (die Auswertung) hätte darauf
+    aufgebaut.
+  · L81 Punkt 4: die laufende Uhr war Laufzeit; ein Neuladen verlor sie.
+
+─── WAS GEBAUT WURDE ───────────────────────────────────────────────────────
+
+  1. DIE FRAGE VOR DEM SPERREN. `ARTEN.seiteWirdGesperrt` ist eine Frage
+     (E362): `Werkzeuge.sperren` stellt sie, BEVOR es die Kinder
+     verschlüsselt, und trägt alles, was die Antworten sagen, mit ins
+     Sperren — ausser `locked` und `id`, das Schloss schreibt niemand um.
+     Das Regal (notebook.ts) hört zu und antwortet „heftArt: heft", wenn
+     die Seite heftartig ist — das lässt sich nur ableiten, solange die
+     Kinder lesbar sind; gesperrt zählt danach der Merker. werkzeuge.ts
+     kennt die Regel damit weiter nicht; der Bus ist die Regel-Maschine,
+     die L78 verlangte. `sperrenHier` bleibt als Gürtel zum Hosenträger.
+
+  2. DAS FACH MERKT SICH, DASS ES EINES IST. Beim Zeichnen des Regals
+     (`faecher()`) bekommt jedes abgeleitete Fach ohne Merker
+     `heftArt:'fach'` — einmal, nicht bei jedem Zeichnen. Danach bleibt
+     die Karte, auch wenn das letzte Heft im Papierkorb liegt. Der Merker
+     lügt nie: eine Seite, die selbst Blätter bekommt, fällt in `istFach`
+     schon vorher heraus (test356 §2 prüft genau das).
+
+  3. WACHE ZEIT. Der Tick kommt alle 500 ms. Kommt er nach mehr als
+     dreissig Sekunden, hat der Rechner geschlafen oder der Browser die
+     Registerkarte eingeschläfert — die Spanne wird GESEHEN
+     (`uebersprungenSek`) und nicht gezählt. Eine verborgene
+     Registerkarte zählt nicht (`document.visibilityState`): gezählt
+     wird, was man vor sich hat. Eine rückwärts gestellte Uhr (delta < 0)
+     zählt weder vor noch zurück. Das Feld sagt „1:23:00 Schlaf nicht
+     gezählt", sobald es eine Minute ist.
+
+  4. DIE UHR ÜBERLEBT. Alle fünf Sekunden, und bei Start, Pause und Ende,
+     geht der Stand nach `zeit:laufend`; Beenden schreibt null. Beim Laden
+     der Ablage nimmt `wiederaufnehmen` ihn wieder auf — die Spanne seit
+     dem Sichern zählt nicht (sie war Neuladen oder Schlaf). Angemeldet
+     über `Ereignisse.horche(ARTEN.ablageGeladen, …, {nachreichen: true})`
+     — die erste Verwendung des Nachreichens aus E362 ausserhalb des
+     Menübands; ohne es hinge der Zuhörer davon ab, ob die Ablage vor
+     oder nach zeitmesser.js geladen wird.
+
+  5. E361 hob die Fassung von selbst (v117).
+
+─── WAS NICHT GEBAUT WURDE ────────────────────────────────────────────────
+
+Kein Ton beim Ablauf (L81 Punkt 3), keine Auswertung (Punkt 1), weiter nur
+eine Uhr (Punkt 5). Ein Fach, dessen letztes Heft vor E364 in den
+Papierkorb kam und das seither nie im Regal stand, bekommt den Merker
+erst, wenn das Heft zurück ist. Die dreissig Sekunden sind eine Erfahrung,
+kein Mass: kürzer, und ein Browser, der eine verborgene Registerkarte
+auf einen Tick je Minute drosselt, würde als Schlaf gelten — was er in
+dem Fall auch ist.
+
+─── PRÜFUNG ────────────────────────────────────────────────────────────────
+
+test356 neu, PORT 9366, fünf Abschnitte: die Frage im Register, ein
+Zuhörer, die Antwort „heft" VOR dem Sperren, das Sperren über
+`Werkzeuge.sperren` (mit `prompt`-Attrappe) — gesperrt mit Merker, im
+Regal, entsperrt mit Blatt; eine gewöhnliche Seite bekommt keinen (§1);
+das Fach vor und nach dem ersten Zeichnen, nach dem Papierkorb, und die
+Seite, die selbst ein Blatt bekommt (§2); die Wanduhr um zwei Stunden
+vorgestellt, zurückgestellt, die Registerkarte verborgen und wieder
+sichtbar, das Feld (§3); Sichern, Neuladen, Weiterlaufen ohne die
+Ladezeit, Beenden, noch ein Neuladen (§4); keine Seitenfehler (§5).
+Belegt rot in sieben Richtungen, jede einzeln zurückgedreht und
+wiederhergestellt:
+
+a — das Regal antwortet nicht auf die Frage (notebook.js): 25/28 — das
+    Heft wird gesperrt und fehlt im Regal. Der Befund.
+b — `Werkzeuge.sperren` verwirft die Antworten (werkzeuge.js): 26/28 —
+    dasselbe Bild von der anderen Seite.
+c — kein `faecherMerken` (notebook.js): 26/28 — der Ordner bekommt keinen
+    Merker, und die Fach-Karte ist nach dem Papierkorb weg.
+d — die Wanduhr statt der wachen Zeit (zeitmesser.js): 25/28 — zwei
+    Stunden Schlaf stehen als 7202 s im Buch. Der andere Befund.
+e — die verborgene Registerkarte zählt mit (zeitmesser.js): 27/28. Beim
+    ersten Anlauf blieb diese Probe GRÜN: sie verbarg die Karte 1,2 s und
+    liess eine Sekunde Toleranz — das misst nichts (§55.2). Jetzt sind es
+    drei Sekunden ohne Toleranz, und die Probe wird rot (5 statt 2).
+f — der Stand wird nur bei Start und Ende gesichert (zeitmesser.js):
+    25/28 — nach dem Neuladen steht der Timer bei 0 gelaufenen Sekunden,
+    und die Sitzung fehlt im Verlauf.
+
+Eine siebte Probe blieb GRÜN, und sie steht mit Grund hier statt in der
+Liste: `{nachreichen: true}` am Zuhörer wegzunehmen ändert heute nichts,
+weil `ablage.geladen` erst gemeldet wird, wenn alle Skripte längst geladen
+sind — der Zuhörer hängt vorher. Der Griff bleibt für den Fall, dass sich
+die Startreihenfolge einmal ändert (genau der Fall, den E362 im Menüband
+gefunden hat); als Beleg taugt er nicht.
+
+KETTE_ERGEBNIS

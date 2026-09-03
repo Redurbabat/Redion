@@ -15806,6 +15806,9 @@ const ARTEN = Object.freeze({
     seiteInPapierkorb: 'seite.papierkorb',
     seiteZurueck: 'seite.zurueckgeholt',
     seiteEndgueltigWeg: 'seite.endgueltig-weg',
+    /* Eine FRAGE vor dem Verschlüsseln (E364): was soll die Seite mitnehmen,
+       solange ihre Kinder noch lesbar sind? Das Regal antwortet „heftArt". */
+    seiteWirdGesperrt: 'seite.wird-gesperrt',
     /* --- Blöcke ------------------------------------------------------------ */
     blockAngelegt: 'block.angelegt',
     blockGeaendert: 'block.geaendert',
@@ -15871,7 +15874,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 116, inhalt: 'd4921105c286ed3e', gebaut: '2026-09-02T21:59:59.505Z' };
+const Stand = { fassung: 121, inhalt: '333fe0df82181830', gebaut: '2026-09-03T04:25:44.779Z' };
 window.Stand = Stand;
 
 </script>
@@ -77001,8 +77004,26 @@ const Werkzeuge = (() => {
             alert('Verschlüsselung fehlgeschlagen — es wurde nichts verändert.');
             return;
         }
+        /* WAS ANDERE ÜBER DIESE SEITE WISSEN, BEVOR SIE ZU IST (E364, L78 Punkt 4):
+           gesperrt sind ihre Kinder Chiffretext — wer sie DANACH einordnen
+           will (das Regal: „ist das ein Heft?"), kann es nicht mehr. Also wird
+           vorher gefragt, über den Bus, und was die Antworten sagen, wandert
+           mit ins Sperren. Diese Datei kennt die Heft-Regel damit nicht; sie
+           trägt nur, was ihr gesagt wird. Das Schloss selbst darf keine
+           Antwort umschreiben. */
+        const mitgabe = {};
+        if (typeof Ereignisse !== 'undefined' && typeof ARTEN !== 'undefined' && ARTEN.seiteWirdGesperrt) {
+            try {
+                for (const a of Ereignisse.frage(ARTEN.seiteWirdGesperrt, { id: p.id }))
+                    if (a && typeof a === 'object')
+                        Object.assign(mitgabe, a);
+            }
+            catch { /* dann eben ohne Mitgabe */ }
+        }
+        delete mitgabe['locked'];
+        delete mitgabe['id'];
         Store.kinderLeeren(p.id);
-        Store.updateBlock(p.id, { locked: { salz, iv: b64(iv), daten: b64(chiffre), zeit: Store.now() } });
+        Store.updateBlock(p.id, { ...mitgabe, locked: { salz, iv: b64(iv), daten: b64(chiffre), zeit: Store.now() } });
         schluesselCache.delete(p.id);
         App.zeichneSeite();
         App.zeichneBaum();
@@ -121513,14 +121534,45 @@ const Notebook = (() => {
             return false;
         return kinder.some(isNotebook) || p.heftArt === 'fach';
     };
+    /** EIN FACH MERKT SICH, DASS ES EINES IST (E364, L78 Punkt 5). Eine
+     *  gewöhnliche Seite, in der ein Heft liegt, ist ein Fach — bis ihr
+     *  letztes Heft im Papierkorb liegt: dann fiel sie aus dem Regal, und
+     *  mit ihr die Karte, in der die Hefte zurückzuholen wären. Der Merker
+     *  wird beim Zeichnen des Regals gesetzt, für jedes abgeleitete Fach
+     *  ohne Merker — einmal, nicht bei jedem Zeichnen. Er kann nicht lügen:
+     *  eine Seite, die selbst Blätter bekommt, fällt in `istFach` schon
+     *  vorher heraus. */
+    const faecherMerken = () => {
+        Object.values(Store.cache.blocks).forEach(p => {
+            if (p && p.heftArt !== 'fach' && istFach(p) && Store.childrenOf(p.id).some(isNotebook))
+                Store.updateBlock(p.id, { heftArt: 'fach' });
+        });
+    };
+    /* DAS REGAL ANTWORTET, BEVOR EINE SEITE ZUGEHT (E364, L78 Punkt 4):
+       werkzeuge.ts fragt vor dem Verschlüsseln über den Bus, was die Seite
+       mitnehmen soll. Ist sie ein Heft — solange ihre Kinder lesbar sind,
+       lässt sich das ableiten —, sagt das Regal „heftArt: heft"; gesperrt
+       zählt dann der Merker, und das Heft bleibt in seiner Bibliothek.
+       Vorher wusste das nur das Regal selbst (`sperrenHier`); eine Seite,
+       die aus dem Seitenmenü oder der Palette verschlüsselt wurde, fehlte. */
+    if (typeof Ereignisse !== 'undefined' && typeof ARTEN !== 'undefined' && ARTEN.seiteWirdGesperrt) {
+        try {
+            Ereignisse.horche(ARTEN.seiteWirdGesperrt, (d) => {
+                const p = d && d.id ? Store.getBlock(String(d.id)) : null;
+                return p && !p.locked && heftArtig(p) ? { heftArt: 'heft' } : null;
+            });
+        }
+        catch { /* ohne Bus bleibt der Weg aus dem Regal */ }
+    }
     const notebookPages = () => Object.values(Store.cache.blocks)
         .filter(isNotebook)
         .sort((a, b) => String(b.edited || '').localeCompare(String(a.edited || '')));
     /** Alle Fächer, flach und nach Namen — auch ein Fach in einem Fach
      *  steht an der Wurzel (EINE Ebene zeigt das Regal; nichts geht
      *  verloren, die Grenze steht in LUECKEN.md). */
-    const faecher = () => Object.values(Store.cache.blocks)
-        .filter(istFach)
+    const faecher = () => (faecherMerken(),
+        Object.values(Store.cache.blocks)
+            .filter(istFach))
         .sort((a, b) => String(a.text || '').localeCompare(String(b.text || ''), 'de'));
     /** Hefte, deren Eltern-Seite KEIN Fach ist — sie liegen lose im Regal
      *  (Hefte in gewöhnlichen Seiten bleiben so sichtbar, wie seit E264). */
@@ -122456,6 +122508,23 @@ const Zeitmesser = (() => {
     const MERKGRENZE = 50;
     let lauf = null;
     let ticker = null;
+    /* WACHE ZEIT, NICHT WANDUHR (E364, L81 Punkt 2). Der Tick kommt alle
+       500 ms; kommt er nach mehr als dreissig Sekunden, hat der Rechner
+       geschlafen oder der Browser die Registerkarte eingeschläfert — die
+       Spanne wird gesehen, aber nicht gezählt. Eine verborgene Registerkarte
+       zählt auch nicht: gezählt wird, was man vor sich hat. Und alle fünf
+       Sekunden geht der Stand in die Ablage, damit die Uhr ein Neuladen
+       überlebt (Punkt 4). */
+    const SCHLAF_GRENZE_MS = 30 * 1000;
+    const SICHERN_ALLE_MS = 5 * 1000;
+    const LAUFEND = 'zeit:laufend';
+    const laufendSichern = () => {
+        if (typeof Store === 'undefined')
+            return;
+        Store.setMeta(LAUFEND, lauf ? { ...lauf } : null);
+        if (lauf)
+            lauf.gesichert = Date.now();
+    };
     const sitzungen = () => {
         const roh = Store.getMeta('zeit:sitzungen', []);
         return Array.isArray(roh) ? roh : [];
@@ -122494,16 +122563,26 @@ const Zeitmesser = (() => {
         if (!lauf)
             return;
         const jetzt = Date.now();
-        if (!lauf.pausiert)
-            lauf.vergangenSek += (jetzt - lauf.zuletzt) / 1000;
+        const delta = jetzt - lauf.zuletzt;
         lauf.zuletzt = jetzt;
+        const sichtbar = typeof document === 'undefined' || document.visibilityState !== 'hidden';
+        if (!lauf.pausiert) {
+            /* Eine rückwärts gestellte Uhr (delta < 0) zählt weder vor noch zurück. */
+            if (delta > 0 && delta <= SCHLAF_GRENZE_MS && sichtbar)
+                lauf.vergangenSek += delta / 1000;
+            else if (delta > 0)
+                lauf.uebersprungenSek += delta / 1000;
+        }
         if (lauf.art === 'timer' && lauf.sollSek - lauf.vergangenSek <= 0) {
             const name = lauf.seitenName;
             const minuten = Math.round(lauf.sollSek / 60);
             merken();
             lauf = null;
+            laufendSichern();
             UI.toast(`⏰ Zeit um — ${minuten} Min an „${name}".`);
         }
+        else if (jetzt - lauf.gesichert >= SICHERN_ALLE_MS)
+            laufendSichern();
         zeichneStand();
         if (!lauf && ticker !== null) {
             clearInterval(ticker);
@@ -122515,10 +122594,11 @@ const Zeitmesser = (() => {
             merken();
         const wo = seiteJetzt();
         lauf = { art, beginn: Date.now(), sollSek: art === 'timer' ? Math.max(1, sollSek) : 0,
-            vergangenSek: 0, zuletzt: Date.now(), pausiert: false,
+            vergangenSek: 0, uebersprungenSek: 0, zuletzt: Date.now(), gesichert: 0, pausiert: false,
             seiteId: wo.id, seitenName: wo.name };
         if (ticker === null)
             ticker = window.setInterval(tick, 500);
+        laufendSichern();
         zeichneStand();
     };
     const pause = () => {
@@ -122526,6 +122606,7 @@ const Zeitmesser = (() => {
             return;
         lauf.pausiert = !lauf.pausiert;
         lauf.zuletzt = Date.now();
+        laufendSichern();
         zeichneStand();
     };
     const stopp = () => {
@@ -122533,15 +122614,43 @@ const Zeitmesser = (() => {
             return;
         merken();
         lauf = null;
+        laufendSichern();
         if (ticker !== null) {
             clearInterval(ticker);
             ticker = null;
         }
         zeichneStand();
     };
+    /** DIE UHR ÜBERLEBT DAS NEULADEN (E364, L81 Punkt 4): der zuletzt
+     *  gesicherte Stand wird wieder aufgenommen — die Spanne seit dem
+     *  Sichern zählt nicht (sie war Schlaf oder Neuladen), die Uhr läuft von
+     *  dort weiter. Angestossen, sobald die Ablage da ist; war sie beim
+     *  Anmelden längst geladen, reicht der Bus die Meldung nach (E362). */
+    const wiederaufnehmen = () => {
+        if (lauf || typeof Store === 'undefined')
+            return;
+        const roh = Store.getMeta(LAUFEND);
+        if (!roh || typeof roh !== 'object' || (roh.art !== 'stoppuhr' && roh.art !== 'timer'))
+            return;
+        lauf = { art: roh.art, beginn: Number(roh.beginn) || Date.now(), sollSek: Number(roh.sollSek) || 0,
+            vergangenSek: Math.max(0, Number(roh.vergangenSek) || 0),
+            uebersprungenSek: Math.max(0, Number(roh.uebersprungenSek) || 0),
+            zuletzt: Date.now(), gesichert: Date.now(), pausiert: !!roh.pausiert,
+            seiteId: String(roh.seiteId || ''), seitenName: String(roh.seitenName || 'Ohne Seite') };
+        if (ticker === null)
+            ticker = window.setInterval(tick, 500);
+        zeichneStand();
+    };
+    if (typeof Ereignisse !== 'undefined' && typeof ARTEN !== 'undefined' && ARTEN.ablageGeladen) {
+        try {
+            Ereignisse.horche(ARTEN.ablageGeladen, wiederaufnehmen, { nachreichen: true });
+        }
+        catch { /* dann eben nur in dieser Sitzung */ }
+    }
     const stand = () => ({
         laeuft: !!lauf, pausiert: !!lauf?.pausiert,
         art: lauf?.art || '', sekunden: lauf ? Math.round(restSek()) : 0,
+        uebersprungenSek: lauf ? Math.round(lauf.uebersprungenSek) : 0,
         seite: lauf?.seitenName || ''
     });
     /* ------------------------------------------------------------------ *
@@ -122556,7 +122665,8 @@ const Zeitmesser = (() => {
             `<div class="zm-uhr" aria-live="off">${uhrText(s.sekunden)}</div>` +
             `<p class="zm-wo">${s.laeuft
                 ? (s.art === 'timer' ? 'Timer' : 'Stoppuhr') + ' · ' + esc(s.seite) +
-                    (s.pausiert ? ' · pausiert' : '')
+                    (s.pausiert ? ' · pausiert' : '') +
+                    (s.uebersprungenSek >= 60 ? ' · ' + esc(uhrText(s.uebersprungenSek)) + ' Schlaf nicht gezählt' : '')
                 : 'Misst die Zeit an der offenen Seite.'}</p>` +
             `<div class="zm-reihe">` +
             `<button class="rb" data-zm="stoppuhr">Stoppuhr</button>` +
@@ -122612,7 +122722,7 @@ const Zeitmesser = (() => {
         });
         document.body.appendChild(feld);
     };
-    return { panel, start, pause, stopp, stand };
+    return { panel, start, pause, stopp, stand, wiederaufnehmen };
 })();
 window.Zeitmesser = Zeitmesser;
 

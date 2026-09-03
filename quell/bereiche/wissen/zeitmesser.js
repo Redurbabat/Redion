@@ -27,6 +27,23 @@ const Zeitmesser = (() => {
     const MERKGRENZE = 50;
     let lauf = null;
     let ticker = null;
+    /* WACHE ZEIT, NICHT WANDUHR (E364, L81 Punkt 2). Der Tick kommt alle
+       500 ms; kommt er nach mehr als dreissig Sekunden, hat der Rechner
+       geschlafen oder der Browser die Registerkarte eingeschläfert — die
+       Spanne wird gesehen, aber nicht gezählt. Eine verborgene Registerkarte
+       zählt auch nicht: gezählt wird, was man vor sich hat. Und alle fünf
+       Sekunden geht der Stand in die Ablage, damit die Uhr ein Neuladen
+       überlebt (Punkt 4). */
+    const SCHLAF_GRENZE_MS = 30 * 1000;
+    const SICHERN_ALLE_MS = 5 * 1000;
+    const LAUFEND = 'zeit:laufend';
+    const laufendSichern = () => {
+        if (typeof Store === 'undefined')
+            return;
+        Store.setMeta(LAUFEND, lauf ? { ...lauf } : null);
+        if (lauf)
+            lauf.gesichert = Date.now();
+    };
     const sitzungen = () => {
         const roh = Store.getMeta('zeit:sitzungen', []);
         return Array.isArray(roh) ? roh : [];
@@ -65,16 +82,26 @@ const Zeitmesser = (() => {
         if (!lauf)
             return;
         const jetzt = Date.now();
-        if (!lauf.pausiert)
-            lauf.vergangenSek += (jetzt - lauf.zuletzt) / 1000;
+        const delta = jetzt - lauf.zuletzt;
         lauf.zuletzt = jetzt;
+        const sichtbar = typeof document === 'undefined' || document.visibilityState !== 'hidden';
+        if (!lauf.pausiert) {
+            /* Eine rückwärts gestellte Uhr (delta < 0) zählt weder vor noch zurück. */
+            if (delta > 0 && delta <= SCHLAF_GRENZE_MS && sichtbar)
+                lauf.vergangenSek += delta / 1000;
+            else if (delta > 0)
+                lauf.uebersprungenSek += delta / 1000;
+        }
         if (lauf.art === 'timer' && lauf.sollSek - lauf.vergangenSek <= 0) {
             const name = lauf.seitenName;
             const minuten = Math.round(lauf.sollSek / 60);
             merken();
             lauf = null;
+            laufendSichern();
             UI.toast(`⏰ Zeit um — ${minuten} Min an „${name}".`);
         }
+        else if (jetzt - lauf.gesichert >= SICHERN_ALLE_MS)
+            laufendSichern();
         zeichneStand();
         if (!lauf && ticker !== null) {
             clearInterval(ticker);
@@ -86,10 +113,11 @@ const Zeitmesser = (() => {
             merken();
         const wo = seiteJetzt();
         lauf = { art, beginn: Date.now(), sollSek: art === 'timer' ? Math.max(1, sollSek) : 0,
-            vergangenSek: 0, zuletzt: Date.now(), pausiert: false,
+            vergangenSek: 0, uebersprungenSek: 0, zuletzt: Date.now(), gesichert: 0, pausiert: false,
             seiteId: wo.id, seitenName: wo.name };
         if (ticker === null)
             ticker = window.setInterval(tick, 500);
+        laufendSichern();
         zeichneStand();
     };
     const pause = () => {
@@ -97,6 +125,7 @@ const Zeitmesser = (() => {
             return;
         lauf.pausiert = !lauf.pausiert;
         lauf.zuletzt = Date.now();
+        laufendSichern();
         zeichneStand();
     };
     const stopp = () => {
@@ -104,15 +133,43 @@ const Zeitmesser = (() => {
             return;
         merken();
         lauf = null;
+        laufendSichern();
         if (ticker !== null) {
             clearInterval(ticker);
             ticker = null;
         }
         zeichneStand();
     };
+    /** DIE UHR ÜBERLEBT DAS NEULADEN (E364, L81 Punkt 4): der zuletzt
+     *  gesicherte Stand wird wieder aufgenommen — die Spanne seit dem
+     *  Sichern zählt nicht (sie war Schlaf oder Neuladen), die Uhr läuft von
+     *  dort weiter. Angestossen, sobald die Ablage da ist; war sie beim
+     *  Anmelden längst geladen, reicht der Bus die Meldung nach (E362). */
+    const wiederaufnehmen = () => {
+        if (lauf || typeof Store === 'undefined')
+            return;
+        const roh = Store.getMeta(LAUFEND);
+        if (!roh || typeof roh !== 'object' || (roh.art !== 'stoppuhr' && roh.art !== 'timer'))
+            return;
+        lauf = { art: roh.art, beginn: Number(roh.beginn) || Date.now(), sollSek: Number(roh.sollSek) || 0,
+            vergangenSek: Math.max(0, Number(roh.vergangenSek) || 0),
+            uebersprungenSek: Math.max(0, Number(roh.uebersprungenSek) || 0),
+            zuletzt: Date.now(), gesichert: Date.now(), pausiert: !!roh.pausiert,
+            seiteId: String(roh.seiteId || ''), seitenName: String(roh.seitenName || 'Ohne Seite') };
+        if (ticker === null)
+            ticker = window.setInterval(tick, 500);
+        zeichneStand();
+    };
+    if (typeof Ereignisse !== 'undefined' && typeof ARTEN !== 'undefined' && ARTEN.ablageGeladen) {
+        try {
+            Ereignisse.horche(ARTEN.ablageGeladen, wiederaufnehmen, { nachreichen: true });
+        }
+        catch { /* dann eben nur in dieser Sitzung */ }
+    }
     const stand = () => ({
         laeuft: !!lauf, pausiert: !!lauf?.pausiert,
         art: lauf?.art || '', sekunden: lauf ? Math.round(restSek()) : 0,
+        uebersprungenSek: lauf ? Math.round(lauf.uebersprungenSek) : 0,
         seite: lauf?.seitenName || ''
     });
     /* ------------------------------------------------------------------ *
@@ -127,7 +184,8 @@ const Zeitmesser = (() => {
             `<div class="zm-uhr" aria-live="off">${uhrText(s.sekunden)}</div>` +
             `<p class="zm-wo">${s.laeuft
                 ? (s.art === 'timer' ? 'Timer' : 'Stoppuhr') + ' · ' + esc(s.seite) +
-                    (s.pausiert ? ' · pausiert' : '')
+                    (s.pausiert ? ' · pausiert' : '') +
+                    (s.uebersprungenSek >= 60 ? ' · ' + esc(uhrText(s.uebersprungenSek)) + ' Schlaf nicht gezählt' : '')
                 : 'Misst die Zeit an der offenen Seite.'}</p>` +
             `<div class="zm-reihe">` +
             `<button class="rb" data-zm="stoppuhr">Stoppuhr</button>` +
@@ -183,6 +241,6 @@ const Zeitmesser = (() => {
         });
         document.body.appendChild(feld);
     };
-    return { panel, start, pause, stopp, stand };
+    return { panel, start, pause, stopp, stand, wiederaufnehmen };
 })();
 window.Zeitmesser = Zeitmesser;

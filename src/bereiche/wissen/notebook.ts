@@ -127,6 +127,37 @@ const Notebook = (() => {
     return kinder.some(isNotebook) || p.heftArt === 'fach';
   };
 
+  /** EIN FACH MERKT SICH, DASS ES EINES IST (E364, L78 Punkt 5). Eine
+   *  gewöhnliche Seite, in der ein Heft liegt, ist ein Fach — bis ihr
+   *  letztes Heft im Papierkorb liegt: dann fiel sie aus dem Regal, und
+   *  mit ihr die Karte, in der die Hefte zurückzuholen wären. Der Merker
+   *  wird beim Zeichnen des Regals gesetzt, für jedes abgeleitete Fach
+   *  ohne Merker — einmal, nicht bei jedem Zeichnen. Er kann nicht lügen:
+   *  eine Seite, die selbst Blätter bekommt, fällt in `istFach` schon
+   *  vorher heraus. */
+  const faecherMerken = (): void => {
+    Object.values<any>(Store.cache.blocks).forEach(p => {
+      if (p && p.heftArt !== 'fach' && istFach(p) && Store.childrenOf(p.id).some(isNotebook))
+        Store.updateBlock(p.id, { heftArt: 'fach' });
+    });
+  };
+
+  /* DAS REGAL ANTWORTET, BEVOR EINE SEITE ZUGEHT (E364, L78 Punkt 4):
+     werkzeuge.ts fragt vor dem Verschlüsseln über den Bus, was die Seite
+     mitnehmen soll. Ist sie ein Heft — solange ihre Kinder lesbar sind,
+     lässt sich das ableiten —, sagt das Regal „heftArt: heft"; gesperrt
+     zählt dann der Merker, und das Heft bleibt in seiner Bibliothek.
+     Vorher wusste das nur das Regal selbst (`sperrenHier`); eine Seite,
+     die aus dem Seitenmenü oder der Palette verschlüsselt wurde, fehlte. */
+  if (typeof Ereignisse !== 'undefined' && typeof ARTEN !== 'undefined' && ARTEN.seiteWirdGesperrt) {
+    try {
+      Ereignisse.horche(ARTEN.seiteWirdGesperrt, (d: any) => {
+        const p = d && d.id ? Store.getBlock(String(d.id)) : null;
+        return p && !p.locked && heftArtig(p) ? { heftArt: 'heft' } : null;
+      });
+    } catch { /* ohne Bus bleibt der Weg aus dem Regal */ }
+  }
+
   const notebookPages = (): any[] =>
     Object.values<any>(Store.cache.blocks)
       .filter(isNotebook)
@@ -135,9 +166,9 @@ const Notebook = (() => {
   /** Alle Fächer, flach und nach Namen — auch ein Fach in einem Fach
    *  steht an der Wurzel (EINE Ebene zeigt das Regal; nichts geht
    *  verloren, die Grenze steht in LUECKEN.md). */
-  const faecher = (): any[] =>
+  const faecher = (): any[] => (faecherMerken(),
     Object.values<any>(Store.cache.blocks)
-      .filter(istFach)
+      .filter(istFach))
       .sort((a, b) => String(a.text || '').localeCompare(String(b.text || ''), 'de'));
 
   /** Hefte, deren Eltern-Seite KEIN Fach ist — sie liegen lose im Regal

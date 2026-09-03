@@ -2644,6 +2644,15 @@ node pruefungen/lauf/test105.mjs
   `padding` ist vier Erklärungen, nicht eine, und §2/§3 zählten absolut
   statt den Unterschied zum Bestand.
   test332 neu (14), belegt rot. test258 19/19.
+* E364 (L78 Punkte 4 und 5, L81 Punkte 2 und 4 erledigt): Vier kleine
+  Löcher — `Werkzeuge.sperren` fragt vor dem Verschlüsseln über den Bus
+  (`ARTEN.seiteWirdGesperrt`), das Regal antwortet „heftArt: heft", ein
+  anderswo gesperrtes Heft bleibt im Regal; ein abgeleitetes Fach wird
+  beim Zeichnen als `heftArt:'fach'` gemerkt und behält seine Karte, wenn
+  das letzte Heft im Papierkorb liegt; der Zeitmesser zählt wache Zeit
+  (Schlaf über 30 s, verborgene Registerkarte und rückwärts gestellte Uhr
+  zählen nicht) und überlebt das Neuladen (`zeit:laufend`, nachgereicht
+  über `ablageGeladen`). test356 neu, belegt rot in sieben Richtungen.
 * E363 (L114 Punkte 5 und 6 erledigt): Der ZIP-Leser sagt die Wahrheit —
   `ZipDetails` (Kern) rechnet CRC-32, liest CP437 und erkennt
   Verschlüsselung; beide Leser prüfen jeden Eintrag gegen seine Prüfsumme
