@@ -5509,7 +5509,7 @@ Heft-Gruppierung, kein Ordner-Browser.
 Gefunden beim Bauen von E380 am 3. September 2026.
 
 ================================================================================
-L122 — Zwei Zeilen in test210 §4 sind rot, und E384 hat sie nicht verursacht
+L122 — Zwei Zeilen in test210 §4 waren rot; beide Male war die Prüfung falsch  [ZU]
 ================================================================================
 3. September 2026 · gefunden beim Mitziehen von E384
 
@@ -5528,8 +5528,37 @@ Unter-Behauptungen zu prüfen. Der Abschnitt meldete stattdessen „Die Leiste i
 da ✗" und verdeckte damit die zwei echten Zeilen darunter. Ein Fehler, der
 einen anderen versteckt — genau die Sorte, die §55.2 meint.
 
-WAS ZU TUN IST. Nachmessen, ob die Erwartungen aus E356/E359 stammen und der
-Bestand sich seither geändert hat (E375 hat vier Formen-Werkzeuge zu einem
-zusammengezogen — das allein wären drei Knöpfe weniger), oder ob die Leiste
-wirklich zu wenig zeigt. Erst messen, dann entscheiden, welche Seite falsch
-ist: die Prüfung oder die Leiste. Nicht die Schranke senken, bis es passt.
+**GESCHLOSSEN am 3. September 2026, noch am selben Tag.** Nachgemessen statt
+geraten — beide Male war die PRÜFUNG falsch und die Leiste richtig.
+
+1 · DREIZEHN SIND VOLLSTÄNDIG. Ausgezählt, was mit dem Stift „Schreiben"
+   wirklich dasteht, jeder Knopf 44 px breit und keiner abgeschnitten:
+
+     Schreiben · Auswahl · Stift · Marker · Form · Abdecken · Haftnotiz ·
+     Text · Fachzeichen · Bild · Radieren · Zurück · Vor
+
+   Von 38 gebauten Knöpfen sind 13 sichtbar. Die Schranke „≥ 14" stammt aus
+   der Zeit vor **E375**, das Linie, Pfeil, Rechteck und Ellipse zu EINEM
+   „Form" zusammengezogen hat; die vier sind seither Zubehör dieses Werkzeugs
+   und nach E356 ausgeblendet, solange ein anderes gewählt ist. Eine Schranke,
+   die eine bewusste Vereinfachung als Verlust meldet, misst die Vergangenheit.
+   Jetzt `gleich(…, 13)` statt `>= 14` — genau, nicht mindestens.
+
+2 · DIE MITTE WAR FALSCH GERECHNET. Die Prüfung setzte
+   `scrollLeft = scrollWidth / 2`. Gemessen am Telefon: die Leiste ist 368 px
+   breit und hat 636 px Inhalt. `scrollWidth / 2` ist 318 — der grösste
+   mögliche `scrollLeft` aber `636 − 368 = 268`. Der Browser klemmt auf 268 ab,
+   und das ist das ENDE. Die Anzeige sagte deshalb völlig richtig „links", und
+   die Prüfung nannte das falsch. Die Mitte des ROLLWEGS ist
+   `(scrollWidth − clientWidth) / 2`.
+
+WARUM ES ERST JETZT AUFFIEL: bis zur Anker-Reparatur in §3 (E384) klickte sich
+der Lauf aus dem Dokument heraus, und §4 kam nie so weit, seine
+Unter-Behauptungen zu prüfen. Es meldete stattdessen „Die Leiste ist da ✗" und
+verdeckte damit die zwei echten Zeilen darunter. Ein Fehler, der einen anderen
+versteckt.
+
+BELEG: `test210` 31/31. Beide Wächter durch Mutation rot gesehen (§55.2) — ein
+Werkzeug aus der Leiste genommen → „ist 12, soll 13"; den Rollstand-Melder
+abgeschaltet → alle drei Rollpunkte „(nichts)". Die Mitte-Rechnung ist durch
+den Befund selbst belegt: mit `scrollWidth / 2` steht dort „links".

@@ -30924,13 +30924,20 @@ MITGEZOGEN, VIER SUITEN — und drei davon sind dabei stärker geworden:
     WIEDER ZUMACHT — offen nimmt er der Mitte 300 px, und alles danach misst
     Breiten am Papier.
 
-Was NICHT von E384 kommt und trotzdem rot ist: `test210` §4 meldet 13 statt
+Was NICHT von E384 kommt und trotzdem rot war: `test210` §4 meldete 13 statt
 ≥ 14 sichtbare Werkzeuge und „links" statt „beides" beim Rollstand. In einem
 Arbeitsbaum auf `da41dd78` — dem Stand VOR E384 — steht dasselbe Ergebnis,
-29/31 mit genau diesen zwei Zeilen. Ein Nachlauf von E356/E359, eingetragen
-als L122.
+29/31 mit genau diesen zwei Zeilen. Eingetragen als L122 und noch am selben Tag
+nachgemessen: beide Male war die PRÜFUNG falsch. Dreizehn Werkzeuge sind
+vollständig (E375 zog vier Formen zu einer zusammen), und die „Mitte" war als
+`scrollWidth / 2` gerechnet — 318 in einer Leiste, deren grösster `scrollLeft`
+268 ist, also das Ende. L122 ist zu, `test210` steht bei 31/31.
+
+Dass es überhaupt so lange unbemerkt blieb, liegt am Anker-Fehler oben: §4
+meldete „Die Leiste ist da ✗" und verdeckte damit die zwei echten Zeilen
+darunter. Ein Fehler, der einen anderen versteckt.
 
 typecheck grün · test385 37/37 · test177 69/69 · test178 74/74 · test202 84 ok
-· test204 41 ok · test210 29/31 (die zwei von L122) · test220 21/21 · test221
+· test204 41 ok · test210 31/31 (nach L122) · test220 21/21 · test221
 34/34 · test222 51/51 · test264 25/25 · test265 38/38 · test285 53/53 · test292
 45/45 · test295 24/24 · test341 37/37 · test342 42/42 · test346 31/31.

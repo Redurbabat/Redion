@@ -316,7 +316,13 @@ const rollen = await handy.evaluate(async () => {
   const knoepfe = [...leiste.querySelectorAll<HTMLElement>('button')]
     .filter(k => getComputedStyle(k).display !== 'none');
   const anfang = reihe.dataset['mehr'] || '(nichts)';
-  leiste.scrollLeft = Math.round(leiste.scrollWidth / 2);
+  /* DIE MITTE IST NICHT `scrollWidth / 2` (L122). Gemessen am Telefon: die
+     Leiste ist 368 px breit und hat 636 px Inhalt. `scrollWidth / 2` ist 318,
+     der groesste moegliche `scrollLeft` aber 636 - 368 = 268 — der Browser
+     klemmt auf 268 ab, und das ist das ENDE. Die Anzeige sagte deshalb
+     folgerichtig „links", und die Pruefung nannte das falsch.
+     Die Mitte des ROLLWEGS ist (scrollWidth - clientWidth) / 2. */
+  leiste.scrollLeft = Math.round((leiste.scrollWidth - leiste.clientWidth) / 2);
   await new Promise(r => setTimeout(r, 260));
   const mitte = reihe.dataset['mehr'] || '(nichts)';
   leiste.scrollLeft = leiste.scrollWidth;
@@ -332,7 +338,20 @@ const rollen = await handy.evaluate(async () => {
 });
 p('Die Leiste ist da', !!rollen);
 if (rollen) {
-  p('Alle Werkzeuge sind gebaut (die sichtbaren; das Zubehör anderer Werkzeuge ist seit E356 weg)', rollen.knoepfe >= 14, `${rollen.knoepfe}`);
+  /* DREIZEHN SIND VOLLSTAENDIG, NICHT VIERZEHN (L122). Die Schranke stammt aus
+   der Zeit vor E375. Nachgezaehlt, was mit dem Stift „Schreiben" wirklich
+   dasteht — jeder 44 px breit, keiner abgeschnitten:
+
+     Schreiben · Auswahl · Stift · Marker · Form · Abdecken · Haftnotiz ·
+     Text · Fachzeichen · Bild · Radieren · Zurueck · Vor
+
+   E375 hat Linie, Pfeil, Rechteck und Ellipse zu EINEM „Form" zusammengezogen;
+   die vier sind seither Zubehoer dieses Werkzeugs und nach E356 ausgeblendet,
+   solange ein anderes gewaehlt ist. Von 38 gebauten Knoepfen sind 13 sichtbar,
+   und das ist die richtige Zahl. Eine Schranke, die eine bewusste Vereinfachung
+   als Verlust meldet, misst die Vergangenheit. */
+gleich('Genau die dreizehn Werkzeuge des Stifts stehen da (E375 zog vier Formen zu einer zusammen)',
+  rollen.knoepfe, 13);
   gleich('Und keines ist auf Breite null gesetzt', rollen.ohneBreite, 0);
   p('Sie nimmt mehr als ein Drittel der Fensterbreite',
     rollen.breit >= 290, `${rollen.breit} von 390 px`);
