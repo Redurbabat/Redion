@@ -987,6 +987,20 @@ const Menueband = (() => {
         klapp.setAttribute('aria-expanded', zu ? 'false' : 'true');
         klapp.title = zu ? 'Menüband aufklappen' : 'Menüband zuklappen';
         klapp.setAttribute('aria-label', klapp.title);
+        /* EIN WORT, WENN SONST NICHTS MEHR DASTEHT (Auftrag 01).
+           Sobald die ruhige Fassung die Reiter ausblendet, steht der Pfeil
+           allein an der rechten Kante — und ein Pfeil ohne Nachbarn ist eine
+           Zierde, die niemand anklickt. Beim Hinsehen war das die ernsteste
+           der drei Fragen aus §55. Also bekommt er ein Wort.
+    
+           Es steht IMMER im Baum und wird nur vom CSS gezeigt, genau in dem
+           Zustand, in dem die Reiter fehlen — kein zweiter Zustand in
+           JavaScript, den man mitpflegen müsste. Solange die Reiter dastehen,
+           wäre das Wort Doppelung und bleibt weg. */
+        const wort = document.createElement('span');
+        wort.className = 'mb-klapp-wort';
+        wort.textContent = 'Werkzeuge';
+        klapp.appendChild(wort);
         const pfeil = document.createElement('span');
         /* Immer dasselbe Zeichen; die Richtung macht das CSS über eine Drehung
            (`#menueband:not(.ist-zu) .mb-klapp svg`). Zwei verschiedene Zeichen
