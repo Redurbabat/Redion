@@ -28735,3 +28735,124 @@ test342 42/42 und test357 35/35 (der ZIP-Import, dessen Ordner hier
 sichtbar werden) · test87 152/152 · test105 120/120 · test109 20/20 ·
 test353 39/39 · test225 11/11 · Einzeldatei neu gebaut · test74 ohne
 JS-Fehler. Alles grün.
+
+
+E383 — Das Menüband wird ruhig: die Reiterzeile verdient keinen ständigen Platz
+════════════════════════════════════════════════════════════════════════════
+
+ZUR NUMMER: E367 bis E382 sind auf dem Zweig
+`claude/redion-head2-desktop-move-j47chf` bereits vergeben (Stift, Regal,
+Ablage). Diese Entscheidung weicht deshalb auf E383 aus, damit beim
+Zusammenführen nicht zwei verschiedene Einträge dieselbe Nummer tragen —
+§34 sagt, Nummern werden nie umnummeriert, also darf auch keine doppelt
+vergeben werden. Die Lücke ist Absicht, kein Verlust.
+
+BEFUND: Neun Reiter und „Datei" standen auf JEDEM Bild — auch auf dem
+Startbild, auf dem drei von ihnen nichts tun können, weil sie eine offene
+Seite brauchen (`BRAUCHT_SEITE`). Gemessen bei 1440 × 900, Band zugeklappt:
+44 anklickbare Dinge auf dem Startbild.
+
+WAS ENTSCHIEDEN WURDE
+─────────────────────
+Bei `data-ruhig="an"` UND zugeklapptem Band verschwinden die Reiter und
+„Datei" — nicht mehr und nicht weniger:
+
+    body[data-ruhig="an"] #menueband.ist-zu #mb-datei,
+    body[data-ruhig="an"] #menueband.ist-zu .mb-tabs{ display:none }
+
+Eine Zeile CSS, kein JavaScript. Die Mechanik gab es schon: `ruhig.ts`
+(E218/E219) löst dasselbe Problem für die Seitenleiste, und dieser Bogen
+weitet sie nur aus — kein zweiter Schalter, keine zweite Liste (§8).
+
+NICHTS WIRD ENTFERNT. `.mb-rechts` bleibt stehen (dort hängen Suche, KI und
+Konto — die Suche gibt es sonst nirgends in der Kopfzeile), `.mb-marke`
+bleibt der Weg in die Backstage, der Klapp-Pfeil bleibt. Drei Wege holen die
+Reiter zurück: der Klapp-Pfeil, `Ruhig.setzen(false)`, und „Mehr"
+(`data-ruhig="offen"`).
+
+Der Gewinn ist die Zahl: 44 → 34. VERTIKAL GEWINNT DIESER SCHRITT NICHTS —
+die 36-px-Zeile bleibt, weil `.mb-rechts` darin steht. Wer mehr verspricht,
+misst falsch.
+
+DER WIDERSPRUCH, IM WORTLAUT
+────────────────────────────
+`test248` hielt bis hierher fest:
+
+    p('Über einer Startansicht bleiben fünf Reiter statt acht',
+      imRegal.reiter === 5, …)
+    p('Über einer offenen Seite sind es wieder acht',
+      beiOffenerSeite.reiter === 8, …)
+
+und der Kommentar darüber sagte:
+
+    Unveraendert ist das, worauf es hier ankommt: die drei Reiter, die IN
+    eine Seite schreiben, stehen ohne Seite nicht da (`BRAUCHT_SEITE`).
+
+E236/E272 sagen damit: *die Reiterzeile verdient ihren Platz, weil sie sich
+schon anpasst — fünf ohne Seite, acht mit.* Dieser Bogen sagt: *sie verdient
+keinen ständigen Platz.* Beides ist vertretbar. Beides gleichzeitig geht
+nicht. Nach der Änderung sind beide Zahlen 0.
+
+WIE ES AUFGELÖST WURDE — UND WARUM DIE ALTE AUSSAGE NICHT VERLOREN GEHT
+──────────────────────────────────────────────────────────────────────
+Redur hat entschieden: wie im Auftrag vorgeschlagen. Der Prüflauf wurde
+NICHT still weicher gemacht, sondern geteilt:
+
+* Die Zahlen 5 und 8 behalten ihren Wert, werden aber dort gemessen, wo sie
+  gelten — am AUFGEKLAPPTEN Band (`bandAuf()` vor der Messung).
+* Der neue Grundzustand bekommt seine eigene Zusicherung daneben: in der
+  Ruhe steht über einer Startansicht KEIN Reiter, und die Leiste ist
+  trotzdem nicht leer.
+
+Der Grund, warum das kein Verlust ist: die Aussage von E236/E272 ist,
+WELCHE Reiter dastehen, wenn sie dastehen — nicht DASS sie immer dastehen.
+Die drei Reiter, die eine offene Seite brauchen, fehlen ohne Seite nach wie
+vor, und genau das prüft die Zeile weiterhin an den NAMEN, nicht an einer
+Zahl.
+
+DER NACHBAR, DEN ES AUCH TRAF
+──────────────────────────────
+`test247` (das Menüband selbst, E210) fiel mit 47 von 106 Punkten — fast
+alles Folgefehler: die Suite klickt Reiter an, um den Bandinhalt zu prüfen,
+und ein Klick auf einen ausgeblendeten Reiter tut nichts. Auch hier wurde
+nicht die Zusage aufgeweicht, sondern der Zustand hergestellt, über den sie
+spricht: die Suite setzt in `seiteAuf` ausdrücklich die alte Fassung
+(`Ruhig.setzen(false)`), weil ihr Gegenstand der INHALT des Bandes ist. Dass
+die Reiter in der Ruhe weg sind und zurückkommen, hält `test359`.
+
+DAS WORT AM PFEIL — DER FUND BEIM HINSEHEN (§55)
+────────────────────────────────────────────────
+Von den drei Fragen, die der Auftrag ans Hinsehen stellte, war die dritte
+die ernsteste, und sie hat sich bestätigt: der Klapp-Pfeil war bisher das
+Ende einer Reihe. Allein an der rechten Kante, als eines von vier kleinen
+Zeichen, ist er eine Zierde, die niemand anklickt — nichts deutet darauf
+hin, dass sich dahinter Datei/Gehen/Start verbergen.
+
+Die Antwort ist NICHT, die Regel zurückzunehmen, sondern dem Pfeil ein Wort
+zu geben. Redur hat „Werkzeuge" gewählt. Es steht immer im Baum und wird
+vom CSS genau dort gezeigt, wo die Reiter fehlen — solange sie dastehen,
+wäre es Doppelung. Das ist der EINZIGE neue Knopf dieses Bogens, und er
+ersetzt zehn.
+
+WAS DIE ALTERNATIVE GEWESEN WÄRE
+────────────────────────────────
+Die Reiterzeile stehen lassen und bei Auftrag 03 anfangen (schwebende
+Stiftleiste, rund 120 px vertikaler Gewinn). Das war ausdrücklich als
+legitime Antwort vorgesehen; Redur hat sie nicht gewählt.
+
+WAS ES KOSTET
+─────────────
+Zwei Prüfläufe mussten ihren Zustand ausdrücklich herstellen, wo sie ihn
+vorher voraussetzten (test247, test248) — beide ohne eine einzige
+aufgeweichte Zahl. Ein neuer sichtbarer Knopf („Werkzeuge"). Keine Daten,
+kein Feldname, keine Migration (§53.3). Kein JavaScript für die Regel
+selbst.
+
+PRÜFUNG: `test359` (neu, 37 Punkte) war nachweislich ROT, bevor die Regel
+da war — 28/34, alle „Reiter = 0"-Zusagen scheiterten bei 5 — und ist mit
+der Regel grün. Er prüft ausserdem, dass die Reiter über alle drei Wege
+zurückkommen (an den NAMEN, nicht an einer Zahl), dass Suche/KI/Konto in
+JEDEM Zustand stehen, und mit `data-ruhig="aus"` die Gegenprobe, dass er
+überhaupt rot werden KANN (§55.2). Am Telefon ist das Band ohnehin immer zu
+(`zugeklappt() = amTelefon() || meta(…)`) — erwünscht seit E240 —, und der
+Weg zurück läuft dort über `fluechtig(false)`.

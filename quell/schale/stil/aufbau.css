@@ -846,6 +846,50 @@ body[data-ruhig="offen"] .side-nav .side-item:not([data-ruhig]){
    muss das andere sehen; deshalb steht der Grund an beiden Stellen. */
 body[data-ruhig="an"] #topbar [data-ruhig="mehr"]{ display:none }
 
+/* DIE MENÜLEISTE, WENN DAS BAND ZU IST (Auftrag 01).
+   Neun Reiter und „Datei" standen auf jedem Bild, auch auf dem Startbild,
+   auf dem drei davon nichts tun können. Sie verschwinden hier nicht: die
+   Bedingung ist `.ist-zu`, also genau der Zustand, in dem das Band ohnehin
+   nichts zeigt. Ein Klick auf den Klapp-Pfeil bringt beides zurück.
+
+   `.mb-rechts` bleibt ausdrücklich stehen — dort hängen Suche, KI und
+   Konto, und die Suche gibt es sonst nirgends in der Kopfzeile. Ebenso
+   bleibt `.mb-marke` (der Weg in die Backstage) und der Klapp-Pfeil selbst.
+   Deshalb wird auch NICHT `.mb-reiter` als Ganzes ausgeblendet: diese Zeile
+   trägt `.mb-rechts`.
+
+   Am Telefon greift die Regel immer, denn `zugeklappt()` in `menueband.ts`
+   lautet `amTelefon() || meta(...)`. Das ist erwünscht — E240 hält Redurs
+   vier iPhone-Fotos fest, auf denen das Band 371 von 844 px belegte. Der
+   Weg zurück läuft dort über `fluechtig(false)`, das `.ist-zu` als Klasse
+   nimmt; die Regel hängt an genau dieser Klasse.
+
+   Gehalten von test359. */
+body[data-ruhig="an"] #menueband.ist-zu #mb-datei,
+body[data-ruhig="an"] #menueband.ist-zu .mb-tabs{ display:none }
+
+/* UND DAS WORT AM PFEIL — die Antwort auf die dritte Frage aus §55.
+   Der Pfeil war bisher das Ende einer Reihe. Allein an der rechten Kante
+   ist er eine Zierde, die niemand anklickt; beim Hinsehen war genau das
+   der Fund. Also trägt er ein Wort — aber nur dort, wo die Reiter fehlen.
+   Solange sie dastehen, wäre „Werkzeuge" eine Doppelung.
+
+   Das ist der EINZIGE neue Knopf dieses Bogens, und er ersetzt zehn. */
+.mb-klapp-wort{ display:none }
+body[data-ruhig="an"] #menueband.ist-zu .mb-klapp-wort{
+  display:inline; font-size:13px; color:var(--text-dim); white-space:nowrap
+}
+/* `width:auto` IST HIER DER GANZE PUNKT, und er hat einen Messwert hinter
+   sich. `.mb-klapp` ist 32 px BREIT FESTGESETZT (oben, Zeile 421). Ein Wort
+   hineinzulegen, ohne das aufzuheben, sprengt den Knopf: gemessen stand das
+   Wort bei 1288–1354 und der Pfeil bei 1358–1373, während der Knopf selbst
+   nur von 1317 bis 1344 reichte — beide Kinder ragten heraus, und der Pfeil
+   lag ÜBER dem Suchknopf (1346–1374). Ein Klick hätte das Falsche getroffen.
+   Deshalb wächst der Knopf hier mit seinem Inhalt. */
+body[data-ruhig="an"] #menueband.ist-zu .mb-klapp{
+  width:auto; padding-inline:8px; gap:4px
+}
+
 
 /* WO BIN ICH — DIE MARKIERUNG (E221)
    `aria-current="page"` ist nicht bloss Zierde: Vorleseprogramme nennen

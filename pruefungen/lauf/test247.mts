@@ -144,7 +144,19 @@ const seiteAuf = async (breite = 1440, hoehe = 980) => {
     const s = Object.values(St.cache.blocks).find((b: any) => b?.type === 'page' && b.alive) as any;
     if (s) App.oeffne(s.id);
   });
-  await seite.waitForTimeout(900);
+  /* AUSGANGSLAGE SEIT AUFTRAG 01: die alte Fassung, ausdrücklich gesetzt.
+     Diese Suite prüft, WAS im Menüband steht und wie es sich bedienen
+     lässt (E210) — sie klickt dafür Reiter an. Seit Auftrag 01 blendet die
+     ruhige Fassung die Reiter aus, solange das Band zu ist; ein Klick auf
+     einen ausgeblendeten Reiter tut nichts, und alles danach misst einen
+     Zustand, den niemand hergestellt hat. (Gemessen: 47 von 106 Punkten
+     fielen so, fast alle als Folgefehler.)
+
+     Deshalb nicht die Zusagen aufweichen, sondern den Zustand herstellen,
+     über den sie sprechen. Dass die Reiter in der RUHE weg sind und über
+     drei Wege zurückkommen, hält test359 — dort gehört es hin. */
+  await seite.evaluate(() => { (globalThis as any).Ruhig?.setzen(false); });
+  await seite.waitForTimeout(400);
   return { seite, fehler };
 };
 
@@ -702,7 +714,10 @@ const ohneRuhig = await seite.evaluate(() => ({
 p('Ohne die ruhige Fassung steht dieselbe Reiterzeile da',
   ohneRuhig.reiter === 5 && ohneRuhig.hoch > 25 && ohneRuhig.zu === true,
   JSON.stringify(ohneRuhig));
-await seite.evaluate(() => { (globalThis as any).Ruhig?.setzen(true); });
+/* Zurück auf die Ausgangslage DIESER Suite — seit Auftrag 01 ist das die
+   alte Fassung (siehe `seiteAuf`), nicht die ruhige. Stünde hier wieder
+   `true`, liefe alles ab hier mit ausgeblendeten Reitern weiter. */
+await seite.evaluate(() => { (globalThis as any).Ruhig?.setzen(false); });
 await seite.waitForTimeout(300);
 
 /* VIER ANSICHTEN, NICHT EINE.
