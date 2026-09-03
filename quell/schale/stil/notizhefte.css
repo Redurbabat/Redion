@@ -21,6 +21,33 @@
   white-space:nowrap; font-size:26px; font-weight:760; letter-spacing:-.02em;
 }
 .nh-zurueck{ flex:none; min-height:44px }
+
+/* --- Die Brotkrume (E366): der ganze Weg, ab der zweiten Ebene ----------- *
+   Eigene Zeile, nicht in der Titelzeile: dort steht `h1{flex:1}`, und ein
+   zweites dehnbares Kind hätte den Titel gestaucht. Sie rollt waagerecht,
+   damit ein tiefer Weg die Seite nicht breiter macht (§37). */
+.nh-krume{
+  display:flex; align-items:center; gap:4px; min-width:0;
+  overflow-x:auto; scrollbar-width:none;
+  font-size:13px; color:var(--text-dim);
+}
+.nh-krume::-webkit-scrollbar{ display:none }
+.nh-krume > span{ flex:none; opacity:.55 }
+.nh-krume > b{ flex:none; color:var(--text); font-weight:650; padding:0 2px }
+.nh-krume button{
+  flex:none; min-height:32px; padding:0 6px; border:0; border-radius:var(--radius-sm);
+  background:transparent; color:var(--text-dim); font:inherit; cursor:pointer;
+  white-space:nowrap;
+}
+/* `--bg-hover`, nicht ein erfundenes `--flaeche-2`: dieselbe Marke, die
+   die Reiter darunter nehmen. Und KEINE eigene Fokusregel — die globale
+   in `bausteine.css` (`:focus-visible`) trifft diese Knöpfe längst; eine
+   zweite daneben war schon zweimal ein erfundenes `--akzent`. */
+.nh-krume button:hover{ background:var(--bg-hover); color:var(--text) }
+
+/* Der Weg am Ziel im Verschieben-Menü (E366) — zwei Fächer „Physik"
+   in verschiedenen Bäumen wären sonst nicht zu unterscheiden. */
+.nh-zielweg{ color:var(--text-dim); font-size:12px; margin-right:2px }
 .nh-neu-knopf{ flex:none; min-height:44px; font-weight:650 }
 
 /* Reiter und Formwahl: Wörter, keine Symbole (§38). Der aktive Reiter

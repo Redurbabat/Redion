@@ -2990,7 +2990,8 @@ Fünf hingenommene Grenzen der ersten Fassung, jede mit Grund:
    die Seite weiter in Bibliothek und Baum.
 3. Eine Seite mit PDF-Seiten UND Blättern zählt als PDF, nicht als
    Heft (PDF-Vorrang wie in der Bibliothek) — sie steht in der
-   Bibliothek, nicht im Regal.
+   Bibliothek, nicht im Regal. Bleibt offen und ist seit E366 die
+   verbliebene Hälfte von L114 Punkt 3.
 4. ✅ Keine Deckelfarben — seit E265 erledigt: `p.color` wird als
    Kante am Deckel gezeichnet, mit Whitelist.
 5. Kein Ziehen-Sortieren im Gitter; sortiert wird nach zuletzt
@@ -3006,10 +3007,19 @@ L77 Punkt 4 (Deckelfarben) ist damit erledigt. Neu hingenommen:
 
 1. Kein Ziehen-und-Ablegen ins Fach — verschieben geht über das
    Kontextmenü. Drag&Drop wäre ein eigener Bogen mit Telefon-Fassung.
-2. Das Regal zeigt EINE Fach-Ebene: ein Fach im Fach steht flach an
-   der Wurzel (nichts geht verloren, aber die Schachtelung sieht man
-   nur im Baum). Bleibt offen — Redur hat in E277 entschieden, dass
-   tiefe Verschachtelung ein eigener Bogen ist.
+2. ~~Das Regal zeigt EINE Fach-Ebene~~ — ERLEDIGT in E366, dem eigenen
+   Bogen, den Redur in E277 dafür verlangt hatte. Ein Fach ist jetzt auch
+   dann ein Fach, wenn nur ein FACH darin liegt (rekursiv, mit Tiefen- und
+   Ringbremse bei zwölf); die Wurzel zeigt nur die obersten, das offene
+   Fach seine Unterfächer, und eine Brotkrume nennt den ganzen Weg — ab
+   der zweiten Ebene, an einem Wurzelfach schweigt sie. Der Zurück-Knopf
+   führt EINE Ebene hoch und trägt den Namen des Ortes, an den er führt.
+   Das Verschieben-Menü kennt jedes Fach mit seinem Weg, nicht nur die
+   obersten. test358, 58 Punkte. Was bleibt: kein Ziehen-und-Ablegen
+   zwischen den Ebenen (Punkt 1), und ein Fach, das nur über ein
+   Unterfach eines ist, bekommt bewusst KEINEN `heftArt`-Merker — sonst
+   behauptete der Merker eine Zugehörigkeit, die es nach dem Löschen des
+   Unterfachs nicht mehr gibt.
 
    Nachtrag E283: Die Reiterzeile fehlt im offenen Fach weiterhin mit
    Absicht (die Brotkrume führt zurück, ein Reiterwechsel dort wäre
@@ -4124,11 +4134,47 @@ Die Maschine steht und ist geprüft. Fünf Dinge fehlen ihr, jedes mit Grund:
    (siehe E327).
 
 2. **Kein Web Worker.** Ein Auftrag läuft im selben Faden wie die
-   Oberfläche. Bei einem OCR über achtzig Seiten heisst das: die App
-   ruckelt, obwohl der Auftrag brav in Schritten arbeitet. Der
-   Agenten-Sandkasten (`agenten.ts:539`) zeigt, dass Redion Worker kann —
+   Oberfläche. Der Agenten-Sandkasten (`agenten.ts:583`) zeigt, dass
+   Redion Worker kann — über eine Blob-URL, also ohne Bauschritt (§6) —,
    ein Auftrag müsste dafür aber seinen Läufer als eigenständigen Code
    mitbringen, und das ist eine eigene Entscheidung.
+
+   **NACHGEMESSEN AM 3. SEPTEMBER 2026 (E366), UND DER SATZ OBEN WAR EINE
+   VERMUTUNG.** Hier stand: „Bei einem OCR über achtzig Seiten heisst das:
+   die App ruckelt." Gemessen worden war das nie. Also gemessen — am
+   einzigen schweren Auftrag, der wirklich angeschlossen ist, dem
+   ZIP-Import (E365):
+
+   · 120 Dateien à 18 KB (2 MB, ein Semester an Skripten): **1093 ms**
+     für den ganzen Auftrag, längste Bildlücke **149 ms**, EINE Lücke über
+     100 ms. Davon **165 ms** das reine Lesen der ZIP (Entpacken und
+     Prüfsumme) — der Teil, den ein Worker überhaupt übernehmen könnte,
+     ist also 15 % der Zeit.
+   · 300 Dateien: **2784 ms**, rund **8 ms je Schritt**, und zwar FLACH
+     über den ganzen Lauf (7,4 · 11,2 · 11,6 · 7,4 · 7,2 · 8,2 · 6,4 ·
+     8,8 · 9,5 · 7,4 · 7,2 · 6,7 · 10,3 · 7,2 · 7,6). Es wird nicht zäher,
+     je voller der Bestand ist.
+   · `ausMarkdown` selbst ist linear: 0,01 ms je Block, 68 ms für eine
+     Datei mit 5000 Absätzen, und 40 Dateien nacheinander kosten jede
+     gleich viel (3 ms).
+
+   Ein Ruckeln gibt es also — bei sehr grossem Einsatz. Der erste
+   Messlauf mit einer absichtlich unrealistischen ZIP (25 MB, 336 000
+   Blöcke) fror die Oberfläche einmal **7 Sekunden** ein und war nach
+   fünf Minuten nicht fertig. Das ist echt, aber es ist keine
+   Semesterablage, sondern ein Belastungsversuch.
+
+   WAS DARAUS FOLGT: Ein Worker für die Auftragsmaschine ist ein grosser
+   Umbau (jeder Läufer bräuchte eigenständigen Code und käme nicht mehr an
+   `Store`), und er würde 15 % einer Sekunde gewinnen. Er bleibt offen —
+   aber als Antwort auf eine GEMESSENE Not, nicht auf eine vermutete. Wer
+   ihn baut, misst vorher den Auftrag, für den er ihn baut. Die drei
+   Messskripte sind Wegwerfarbeit und stehen nicht im Verzeichnis; die
+   Zahlen oben sind das Ergebnis.
+
+   Und der eigentliche Kandidat ist ein anderer: L114 Punkt 7 — rund 0,35 s
+   je PDF-Seite, vierzig Skripte à 80 Seiten sind zwanzig Minuten. Dort
+   liegt die Zeit, und dort fehlt zuerst eine Schätzung VOR dem Start.
 
 3. **Kein Fortschritt in der Oberfläche.** Die Ereignisse (`auftrag.schritt`
    mit Schritt/Schrittzahl/Text) werden gemeldet, und niemand hört zu. Es
@@ -4997,11 +5043,18 @@ E350 holt eine ZIP so ins Regal, wie sie ist. Was bleibt, mit Grund:
    Sammelseite je Ordner wäre die Alternative; sie bräuchte eine Regel,
    ab wann ein Ordner „ein Fotoalbum" ist.
 
-3. **Zwei Regale, zwei Regeln.** Die Bibliothek zeigt Fächer und PDFs, das
-   Notizhefte-Regal zeigt Fächer nur eine Ebene tief (L78 Punkt 2) und
-   PDFs gar nicht (L77 Punkt 3). Ein Import mit `Schule/Physik/Skript.pdf`
-   ist in der Bibliothek vollständig, im Notizhefte-Regal steht nur das
-   Fach „Schule". Die Verschmelzung ist eine eigene Entscheidung.
+3. **Zwei Regale, zwei Regeln — HALB ERLEDIGT in E366.** Die eine Hälfte
+   war die Tiefe: das Notizhefte-Regal zeigte Fächer nur eine Ebene tief
+   (L78 Punkt 2). Das ist weg — die Schachtelung steht jetzt so da, wie
+   die ZIP sie gebracht hat.
+
+   Was bleibt, ist die andere Hälfte: das Notizhefte-Regal zeigt PDFs
+   nicht (L77 Punkt 3 — eine Seite mit PDF-Seiten zählt als PDF und lebt
+   in der Bibliothek). Ein Import mit `Schule/Physik/Skript.pdf` ist in
+   der Bibliothek vollständig; im Notizhefte-Regal steht das Fach mit
+   seinem Weg, aber ohne das Skript darin. Ob die beiden Regale zu einem
+   werden sollen, ist eine eigene Entscheidung und keine Lücke — es ist
+   die Frage, ob „Notizhefte" ein Filter oder ein Ort ist.
 
 4. **Keine Ablegezone-Optik.** `#scroll` bekommt beim Ziehen die Klasse
    `ablegen`; im Regal gibt es keine Fläche, die sagt „hier fallen lassen".

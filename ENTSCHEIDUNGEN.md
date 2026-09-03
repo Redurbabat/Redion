@@ -28572,3 +28572,166 @@ eingelesenen Dokumenten den Kopf „Kürzlich verwendet · 60 Dokumente". Die
 60 ist keine Zahl, sondern eine Decke (`bibliothek.ts`, `.slice(0, 60)`) —
 sie steht bei 61 Dokumenten genauso da wie bei 900. Als L116 Punkt 1
 eingetragen; ein eigener Bogen, kein Anhängsel an diesen (§45).
+
+
+E366 — Das Regal zeigt die ganze Schachtelung (L78 Punkt 2, L114 Punkt 3 halb)
+════════════════════════════════════════════════════════════════════════════
+
+BEFUND: das Notizhefte-Regal las seine Fach-Regel EINE Ebene tief. Ein Fach
+zählte nur, wenn direkt ein Heft darin lag:
+
+    const istFach = (p) => {
+      …
+      return kinder.some(isNotebook) || p.heftArt === 'fach';
+    };
+
+Bei `Schule/Physik/Mechanik/Kinematik` heisst das: „Mechanik" ist ein Fach
+(ein Heft darin), „Physik" auch (die Formelsammlung), „Mathematik" auch —
+und „Schule" ist KEINS, weil darin nur Fächer liegen. Das Regal zeigte
+also vier Fächer flach nebeneinander an der Wurzel, ohne das eine, das sie
+zusammenhält.
+
+Nichts ging dabei verloren, und genau das machte es leise: der Baum kannte
+die Schachtelung weiter, die Bibliothek auch. Nur das Regal, in dem man
+seine Hefte sucht, zeigte einen Bestand, den so niemand angelegt hat. Nach
+einem ZIP-Import mit Ordnern (E350/E365) ist das die halbe Struktur — und
+zwar die Hälfte, die der Nutzer selbst gemacht hat.
+
+L78 Punkt 2 hielt das seit dem 30. August fest, und Redur hat in E277
+entschieden, dass die tiefe Verschachtelung ein EIGENER Bogen ist. Das
+hier ist dieser Bogen.
+
+DIE REGEL, EIN WORT LÄNGER
+──────────────────────────
+Ein Fach ist ein Fach, wenn ein Heft ODER ein Fach darin liegt:
+
+    if (kinder.some(isNotebook)) return true;
+    if (tiefe >= FACH_TIEFE) return false;
+    …
+    return kinder.some(k => istFach(k, tiefe + 1, weg));
+
+Zwei Bremsen, und beide sind nicht theoretisch. `FACH_TIEFE = 12` gegen
+einen sehr tiefen Baum — ein Ordnerbaum aus einer ZIP ist selten tiefer
+als fünf, zwölf ist grosszügig und begrenzt zugleich die Arbeit auf einem
+kaputten Bestand. Und ein `gesehen`-Satz gegen einen RING in `content`:
+A hält B, B hält A. Ein solcher Ring wäre kaputt, aber er darf die App
+nicht aufhängen — lieber nichts anzeigen als hängen (§46). test358 §9 legt
+beide Fälle an und misst, dass die Antwort in Millisekunden kommt.
+
+WAS DARAUS FOLGT, UND ZWAR AN VIER STELLEN
+──────────────────────────────────────────
+1. `faecher()` gibt nur noch die OBERSTEN zurück (die, die in keinem Fach
+   liegen); `alleFaecher()` gibt jedes.
+2. Das offene Fach zeigt seine `unterFaecher()` — vorher waren die von
+   dort aus überhaupt nicht erreichbar.
+3. Eine BROTKRUME nennt den Weg, und der Zurück-Knopf führt EINE Ebene
+   hoch statt an die Wurzel. „← Notizhefte" war richtig, solange es nur
+   einen Ort gab, an den man zurückkonnte; drei Ebenen tief wäre derselbe
+   Knopf eine Lüge.
+4. Das VERSCHIEBEN-Menü nimmt `alleFaecher()`, nicht `faecher()`.
+
+Punkt 4 ist der, den man vergisst. `faecher()` gab vorher jedes Fach
+zurück, und das Menü hing daran. Hätte man nur die Anzeige umgestellt,
+wären ab sofort genau die Fächer nicht mehr als Ziel wählbar gewesen, die
+dieser Bogen sichtbar macht — ein Bogen, der eine Sache zeigt und
+gleichzeitig unerreichbar macht. Am Ziel steht jetzt sein Weg
+(„Schule / Physik / Mechanik"), sonst stünden zwei Fächer „Physik" aus
+verschiedenen Bäumen ununterscheidbar untereinander.
+
+DER SATZ AN DER FACH-KARTE
+──────────────────────────
+An jeder Fach-Karte stand „n Hefte" — auch an einem Fach, in dem gar keine
+Hefte liegen, sondern zwei Unterfächer. Dort stand dann „0 Hefte".
+
+Das ist die unangenehme Sorte falsch: es sieht aus wie „hier ist nichts",
+während der ganze Bestand eine Ebene tiefer liegt. Genannt wird jetzt, was
+WIRKLICH drin ist, und nur das — „2 Fächer", „2 Fächer · 1 Heft",
+„2 Hefte", „leer". Kein Teil, der immer da ist.
+
+Dasselbe gilt für die Brotkrume: sie erscheint erst ab der zweiten Ebene.
+An einem Wurzelfach stünde „Notizhefte / Schule" neben der Überschrift
+„Schule" und dem Knopf „← Notizhefte" — dreimal dasselbe. Eine Anzeige,
+die immer da ist, wird nicht gelesen; das ist die Regel, die bei E284,
+E286, E288, E289 und E290 fünfmal zugeschlagen hat.
+
+WAS BEWUSST NICHT PASSIERT
+──────────────────────────
+Ein Fach, das nur über ein UNTERFACH eines ist, bekommt keinen
+`heftArt:'fach'`-Merker. Der Merker aus E364 hält ein Fach sichtbar, wenn
+sein letztes Heft im Papierkorb liegt; er darf aber nur behaupten, was
+sich zum Zeitpunkt des Merkens ableiten liess. „Schule" ist ein Fach,
+solange „Physik" eines ist — verschwindet Physik, ist Schule eine
+gewöhnliche Seite, und ein Merker würde das Gegenteil behaupten.
+`faecherMerken` prüft deshalb weiter auf ein DIREKTES Heft.
+
+Und: PDFs stehen weiter nicht im Notizhefte-Regal (L77 Punkt 3). Das ist
+die verbliebene Hälfte von L114 Punkt 3 und eine eigene Entscheidung —
+die Frage, ob „Notizhefte" ein Filter ist oder ein Ort.
+
+HINGESEHEN (§55)
+────────────────
+Vier Bilder, Rechner und Telefon. Die Wurzel zeigt jetzt EINE Karte
+(„Schule · 2 Fächer") statt vier flacher; in „Physik" steht die Brotkrume
+`Notizhefte / Schule / Physik`, der Knopf „← Schule", darunter „Mechanik ·
+2 Hefte", „Optik · 1 Heft" und das Heft „Formelsammlung"; drei Ebenen tief
+in „Mechanik" dasselbe mit „← Physik". Am Telefon (390 px) passt der Weg
+`Notizhefte / Schule / Physik / Mechanik` in eine Zeile, weil die
+Brotkrume waagerecht rollt statt die Seite zu weiten.
+
+Beim Stil zwei Marken erfunden — `--flaeche-2` und `--akzent` —, die es
+beide nicht gibt. Das steht in `bausteine.css` an zwei Stellen als
+Kommentar, weil es dort schon zweimal passiert ist. Jetzt `--bg-hover`
+wie die Reiter darunter, und gar keine eigene Fokusregel: die globale
+`:focus-visible` trifft diese Knöpfe längst. test358 §11 hält beide Marken
+namentlich fest, damit die dritte Wiederholung rot wird.
+
+DER FEHLER, DEN DIESER BOGEN SELBST GEBAUT HAT
+──────────────────────────────────────────────
+Der erste Wurf zog `if (p.heftArt === 'fach') return true;` als billigen
+Vorab-Ausstieg an den Anfang von `istFach` — vor die Prüfung auf eigene
+Blätter. Das war genau die Lüge, gegen die E364 den Merker abgesichert
+hatte: ein gemerktes Fach, das selbst ein Blatt bekommt, wäre ein Fach
+GEBLIEBEN, und die Karte hätte behauptet, es sei ein Ordner, während man
+darin schreibt.
+
+Gefunden hat es test356 §2 — die Prüfung aus E364, drei Bögen alt, in der
+Nachbarschaftskette: 27 von 28. Nicht test358, das E366s eigener Prüflauf
+ist und den Fall nicht kannte. Er steht jetzt auch dort (§1), weil es
+E366s Fehler war und nicht E364s.
+
+Die Regel, die daraus bleibt: der Merker ERGÄNZT die abgeleitete Regel,
+er überstimmt sie nie. Was sich aus dem Bestand ablesen lässt, gilt.
+
+MUTATIONSPROBE (§55.2): zehn Richtungen, alle rot.
+
+a — die Regel wieder eine Ebene tief: 40/58 — achtzehn rot. Das ist der
+    Befund selbst; „Schule" ist dann kein Fach, die Wurzel zeigt vier
+    Fächer flach, die Brotkrume hat nichts zu nennen.
+b — `faecher()` gibt wieder alle flach zurück: 56/58 — an der Wurzel
+    stehen fünf Karten statt einer.
+c — das offene Fach zeigt seine Unterfächer nicht: 48/58 — zehn rot; ab
+    „Schule" kommt man nirgends mehr hin.
+d — keine Brotkrume: 51/58 — sieben rot, Rechner und Telefon.
+e — Zurück springt wieder an die Wurzel: 56/58 — aus „Mechanik" landet
+    man in „Notizhefte" statt in „Physik".
+f — der Inhaltssatz zählt wieder nur Hefte: 55/58 — „Schule" sagt
+    „0 Hefte", „Physik" verschweigt seine zwei Fächer.
+g — das Verschieben kennt nur die Wurzelfächer: 56/58 — „Mechanik" steht
+    nicht mehr zur Wahl. Das ist die Stelle, die man vergisst.
+h — keine TIEFENbremse (`FACH_TIEFE` weg): 57/58 — der 30 Ebenen tiefe
+    Baum gilt dann als Fach. Der Ring blieb dabei grün, und das ist
+    richtig: die Ringbremse (`gesehen`) ist die andere Zusage, und sie
+    stand noch. Zwei Bremsen, zwei Proben.
+i — die Suche lässt die Fächer stehen: 57/58 — beim Suchen steht
+    „Mechanik" zwischen den Treffern.
+j — die Brotkrume rollt nicht (`overflow-x` weg): 57/58 — das Regal wird
+    am Telefon breiter als 390 px.
+
+NACHBARSCHAFT: test358 60/60 · test265 38/38 und test264 25/25 (die
+beiden Regal-Bögen, die diese Regeln erfunden haben) · test282 57/57 und
+test283 35/35 (Regalzustand und Darstellungswahl) · test356 28/28 (E364 —
+erst 27/28, siehe oben) · test272 153/153 (kein Griff geht verloren) ·
+test342 42/42 und test357 35/35 (der ZIP-Import, dessen Ordner hier
+sichtbar werden) · test87 152/152 · test105 120/120 · test109 20/20 ·
+test353 39/39 · test225 11/11 · Einzeldatei neu gebaut · test74 ohne
+JS-Fehler. Alles grün.

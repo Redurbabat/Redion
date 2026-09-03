@@ -2905,3 +2905,21 @@ node pruefungen/lauf/test105.mjs
   Wolke, und die braucht Redur.
   test333 neu (16), belegt rot. §3 stellt den alten Weg nach und verlangt,
   dass er einen verliert — ohne den misst §2 nichts.
+
+* E366 (L78 Punkt 2 zu, L114 Punkt 3 halb): Das Regal zeigt die ganze
+  Schachtelung. Die Fach-Regel las EINE Ebene tief — ein Fach zählte nur
+  mit einem DIREKTEN Heft darin. Bei `Schule/Physik/Mechanik/Heft` stand
+  „Schule" damit gar nicht im Regal, und Mechanik, Optik, Physik,
+  Mathematik lagen flach nebeneinander an der Wurzel. Verloren ging
+  nichts — der Baum wusste es weiter —, und genau das machte es leise:
+  nach einem ZIP-Import mit Ordnern zeigte ausgerechnet das Regal einen
+  Bestand, den so niemand angelegt hat. Jetzt zählt auch ein Fach im Fach
+  (rekursiv, Tiefe 12, mit Ringbremse); die Wurzel zeigt nur die obersten,
+  das offene Fach seine Unterfächer, eine Brotkrume nennt den Weg und der
+  Zurück-Knopf führt EINE Ebene hoch. Die Stelle, die man dabei vergisst,
+  ist das Verschieben-Menü: es hing an `faecher()` und hätte ab sofort
+  genau die Fächer nicht mehr als Ziel angeboten, die dieser Bogen
+  sichtbar macht — es nimmt jetzt `alleFaecher()`, mit dem Weg am Ziel.
+  Nebenbei ehrlich geworden: „0 Hefte" an einem Fach mit zwei Unterfächern
+  heisst jetzt „2 Fächer".
+  test358 neu (58), belegt rot in zehn Richtungen.

@@ -115,16 +115,45 @@ const Notebook = (() => {
    *  Deckel-Art der Bibliothek. Grenzen stehen in LUECKEN.md. */
   const isNotebook = (p: any): boolean => !!p && p.alive !== false && heftArtig(p);
 
+  /** Wie tief die Fach-Regel schaut. Ein Ordnerbaum aus einer ZIP ist
+   *  selten tiefer als fünf; zwölf ist grosszügig und begrenzt zugleich
+   *  die Arbeit auf einem kaputten Bestand. */
+  const FACH_TIEFE = 12;
+
   /** Ein Fach: eine lebende Seite ohne eigene Blätter/PDF-Seiten, in der
-   *  mindestens ein Heft liegt — oder die als Fach angelegt wurde
-   *  (`heftArt:'fach'`), damit sie nicht unsichtbar ist, solange sie
-   *  leer ist. Eine verschlüsselte Seite ist nie ein Fach: was in ihr
-   *  liegt, ist von aussen nicht zu sehen. */
-  const istFach = (p: any): boolean => {
+   *  mindestens ein Heft ODER ein weiteres Fach liegt — oder die als Fach
+   *  angelegt wurde (`heftArt:'fach'`), damit sie nicht unsichtbar ist,
+   *  solange sie leer ist. Eine verschlüsselte Seite ist nie ein Fach:
+   *  was in ihr liegt, ist von aussen nicht zu sehen.
+   *
+   *  DAS „ODER EIN WEITERES FACH" IST E366 (L78 Punkt 2). Vorher zählte
+   *  nur ein DIREKTES Heft, und damit war „Schule" in
+   *  `Schule/Physik/Heft` gar kein Fach: „Physik" stand allein an der
+   *  Wurzel, und dass es zu „Schule" gehört, sah man nur im Baum. Nach
+   *  einem Import aus einer ZIP mit Ordnern war das die halbe Struktur.
+   *
+   *  Die Rekursion braucht zwei Bremsen, und beide sind nicht theoretisch:
+   *  `tiefe` gegen einen sehr tiefen Baum, `gesehen` gegen einen Ring in
+   *  `content` — ein solcher Ring wäre kaputt, aber er darf die App nicht
+   *  aufhängen (§46: lieber nichts anzeigen als hängen). */
+  const istFach = (p: any, tiefe = 0, gesehen?: Set<string>): boolean => {
     if (!p || p.type !== 'page' || p.alive === false || p.system || p.locked) return false;
     const kinder = Store.childrenOf(p.id);
+    /* DIESE ZEILE STEHT VOR DEM MERKER, UND DAS IST DER GANZE PUNKT.
+       Der erste Wurf von E366 zog `heftArt === 'fach'` als billigen
+       Vorab-Ausstieg nach oben — und machte damit genau die Lüge möglich,
+       gegen die E364 den Merker abgesichert hatte: ein gemerktes Fach, das
+       selbst ein Blatt bekommt, wäre ein Fach GEBLIEBEN. test356 §2 hat es
+       gefangen (27/28). Der Merker darf die abgeleitete Regel ergänzen,
+       nie überstimmen. */
     if (kinder.some((k: any) => k.type === 'blatt' || k.type === 'pdfseite')) return false;
-    return kinder.some(isNotebook) || p.heftArt === 'fach';
+    if (p.heftArt === 'fach') return true;
+    if (kinder.some(isNotebook)) return true;
+    if (tiefe >= FACH_TIEFE) return false;
+    const weg = gesehen || new Set<string>();
+    if (weg.has(p.id)) return false;
+    weg.add(p.id);
+    return kinder.some((k: any) => istFach(k, tiefe + 1, weg));
   };
 
   /** EIN FACH MERKT SICH, DASS ES EINES IST (E364, L78 Punkt 5). Eine
@@ -137,8 +166,13 @@ const Notebook = (() => {
    *  vorher heraus. */
   const faecherMerken = (): void => {
     Object.values<any>(Store.cache.blocks).forEach(p => {
-      if (p && p.heftArt !== 'fach' && istFach(p) && Store.childrenOf(p.id).some(isNotebook))
-        Store.updateBlock(p.id, { heftArt: 'fach' });
+      if (!p || p.heftArt === 'fach' || !istFach(p)) return;
+      /* Nur, was sich HEUTE ableiten lässt, wird gemerkt — ein Fach, das
+         nur über ein Unterfach eines ist, hängt an dessen Merker und
+         bekommt keinen eigenen. Sonst behauptete der Merker eine
+         Zugehörigkeit, die es nicht mehr gibt, sobald das Unterfach geht. */
+      const kinder = Store.childrenOf(p.id);
+      if (kinder.some(isNotebook)) Store.updateBlock(p.id, { heftArt: 'fach' });
     });
   };
 
@@ -163,13 +197,40 @@ const Notebook = (() => {
       .filter(isNotebook)
       .sort((a, b) => String(b.edited || '').localeCompare(String(a.edited || '')));
 
-  /** Alle Fächer, flach und nach Namen — auch ein Fach in einem Fach
-   *  steht an der Wurzel (EINE Ebene zeigt das Regal; nichts geht
-   *  verloren, die Grenze steht in LUECKEN.md). */
-  const faecher = (): any[] => (faecherMerken(),
-    Object.values<any>(Store.cache.blocks)
-      .filter(istFach))
-      .sort((a, b) => String(a.text || '').localeCompare(String(b.text || ''), 'de'));
+  const nachNamen = (a: any, b: any): number =>
+    String(a.text || '').localeCompare(String(b.text || ''), 'de');
+
+  /** JEDES Fach, egal wie tief — für das Verschieben-Menü, das sonst
+   *  genau die Fächer verlöre, die E366 erst sichtbar gemacht hat. */
+  const alleFaecher = (): any[] => (faecherMerken(),
+    Object.values<any>(Store.cache.blocks).filter((p: any) => istFach(p)).sort(nachNamen));
+
+  /** Das Fach, in dem dieses Fach liegt — oder null an der Wurzel. */
+  const elternFach = (f: any): any =>
+    (f && f.parentId && f.parentTable !== 'collection')
+      ? (istFach(Store.getBlock(f.parentId)) ? Store.getBlock(f.parentId) : null)
+      : null;
+
+  /** Die Fächer der obersten Ebene: die, die in keinem Fach liegen. */
+  const faecher = (): any[] => alleFaecher().filter(f => !elternFach(f));
+
+  /** Die Fächer DIREKT in einem Fach (E366). */
+  const unterFaecher = (fid: string): any[] =>
+    Store.childrenOf(fid).filter((k: any) => istFach(k)).sort(nachNamen);
+
+  /** Der Weg von der Wurzel bis zu diesem Fach — die Brotkrume (E366).
+   *  Mit Ringbremse, aus demselben Grund wie in `istFach`. */
+  const fachWeg = (fid: string): any[] => {
+    const weg: any[] = [];
+    const gesehen = new Set<string>();
+    let f = Store.getBlock(fid);
+    while (f && !gesehen.has(f.id) && weg.length < FACH_TIEFE + 1) {
+      gesehen.add(f.id);
+      weg.unshift(f);
+      f = elternFach(f);
+    }
+    return weg;
+  };
 
   /** Hefte, deren Eltern-Seite KEIN Fach ist — sie liegen lose im Regal
    *  (Hefte in gewöhnlichen Seiten bleiben so sichtbar, wie seit E264). */
@@ -179,6 +240,22 @@ const Notebook = (() => {
   const fachHefte = (fid: string): any[] =>
     Store.childrenOf(fid).filter(isNotebook)
       .sort((a: any, b: any) => String(b.edited || '').localeCompare(String(a.edited || '')));
+
+  /** WAS IN EINEM FACH LIEGT, IN EINEM SATZ (E366).
+   *
+   *  Vorher stand an jeder Fach-Karte „n Hefte" — auch an einem Fach, in
+   *  dem gar keine Hefte liegen, sondern zwei Unterfächer. Dort stand dann
+   *  „0 Hefte", und das ist die unangenehme Sorte falsch: es sieht aus wie
+   *  „hier ist nichts", während der ganze Bestand eine Ebene tiefer liegt.
+   *  Genannt wird deshalb, was WIRKLICH drin ist, und nur das. */
+  const fachInhaltSatz = (fid: string): string => {
+    const h = fachHefte(fid).length;
+    const f = unterFaecher(fid).length;
+    const teile: string[] = [];
+    if (f) teile.push(f === 1 ? '1 Fach' : f + ' Fächer');
+    if (h) teile.push(h === 1 ? '1 Heft' : h + ' Hefte');
+    return teile.length ? teile.join(' · ') : 'leer';
+  };
 
   /** Tote Hefte für den Papierkorb-Reiter. */
   const toteHefte = (): any[] => Store.trashed().filter(heftArtig);
@@ -427,14 +504,13 @@ const Notebook = (() => {
   /** Die Fach-Karte: Redions gezeichnete Ordner-Mappe (`data-art="ordner"`
    *  aus der Bibliotheks-Anatomie) mit Symbol und ehrlicher Zählung. */
   const fachCard = (f: any): string => {
-    const n = fachHefte(f.id).length;
     return `<div class="nh-karte nh-fach">` +
       `<button class="bib-deckel" data-fach="${esc(f.id)}" data-art="ordner" ` +
       `aria-label="Fach öffnen: ${esc(f.text || 'Ohne Namen')}">` +
       `<span class="bib-deckel-blatt is-leer">` +
       `<span class="nh-fach-icon" aria-hidden="true">${esc(f.icon || '🗂')}</span></span>` +
       `<span class="bib-deckel-name"><b>${esc(f.text || 'Ohne Namen')}</b></span>` +
-      `<small>${n === 1 ? '1 Heft' : n + ' Hefte'}</small>` +
+      `<small>${esc(fachInhaltSatz(f.id))}</small>` +
       `</button>` +
       `<button class="nh-mehr" data-mehr-fach="${esc(f.id)}" title="Mehr zu diesem Fach" ` +
       `aria-label="Mehr zu ${esc(f.text || 'diesem Fach')}">⋯</button></div>`;
@@ -462,12 +538,11 @@ const Notebook = (() => {
   };
 
   const fachRow = (f: any): string => {
-    const n = fachHefte(f.id).length;
     return `<div class="nh-zeile nh-fach">` +
       `<button class="nh-zeile-auf" data-fach="${esc(f.id)}">` +
       `<span class="nh-mini nh-mini-fach" aria-hidden="true">${esc(f.icon || '🗂')}</span>` +
       `<span class="nh-zeile-text"><b>${esc(f.text || 'Ohne Namen')}</b>` +
-      `<small>${n === 1 ? '1 Heft' : n + ' Hefte'}</small></span>` +
+      `<small>${esc(fachInhaltSatz(f.id))}</small></span>` +
       `</button>` +
       `<button class="nh-mehr" data-mehr-fach="${esc(f.id)}" title="Mehr zu diesem Fach" ` +
       `aria-label="Mehr zu ${esc(f.text || 'diesem Fach')}">⋯</button></div>`;
@@ -518,10 +593,37 @@ const Notebook = (() => {
 
   const kopfHtml = (): string => {
     const fach = fachId ? Store.getBlock(fachId) : null;
+    /* DIE BROTKRUME ZEIGT DEN GANZEN WEG (E366). Solange das Regal eine
+       Ebene tief war, genügte „← Notizhefte": es gab nur einen Ort, an
+       den man zurückkonnte. Mit Fächern in Fächern wäre derselbe Knopf
+       eine Lüge — er spränge über drei Ebenen hinweg an die Wurzel. Der
+       Zurück-Knopf führt deshalb EINE Ebene hoch und trägt den Namen des
+       Ortes, an den er führt; der ganze Weg steht in einer eigenen Zeile
+       darüber, jede Station anklickbar.
+
+       Die Zeile erscheint NUR ab der zweiten Ebene. An einem Wurzelfach
+       stünde dort „Notizhefte / Physik" neben der Überschrift „Physik"
+       und dem Knopf „← Notizhefte" — dreimal dasselbe. Eine Anzeige, die
+       immer da ist, wird nicht gelesen. */
+    const weg = fach ? fachWeg(fach.id) : [];
+    const oben = weg.length > 1 ? weg[weg.length - 2] : null;
+    const krumeHtml = weg.length > 1
+      ? `<nav class="nh-krume" aria-label="Wo Sie sind">` +
+        `<button data-zurueck>Notizhefte</button>` +
+        weg.slice(0, -1).map((f: any) =>
+          `<span aria-hidden="true"> / </span>` +
+          `<button data-fach="${esc(f.id)}">${esc(f.text || 'Ohne Namen')}</button>`
+        ).join('') +
+        `<span aria-hidden="true"> / </span>` +
+        `<b>${esc(fach.text || 'Ohne Namen')}</b></nav>`
+      : '';
     const zeile1 =
       `<div class="nh-kopf-zeile">` +
       (fach
-        ? `<button class="rb leise nh-zurueck" data-zurueck>← Notizhefte</button>` +
+        ? `<button class="rb leise nh-zurueck"` +
+          (oben ? ` data-fach="${esc(oben.id)}"` : ' data-zurueck') +
+          ` aria-label="Zurück zu ${esc(oben ? (oben.text || 'Ohne Namen') : 'Notizhefte')}">` +
+          `← ${esc(oben ? (oben.text || 'Ohne Namen') : 'Notizhefte')}</button>` +
           `<h1>${esc(fach.icon || '🗂')} ${esc(fach.text || 'Ohne Namen')}</h1>`
         : `<h1>Notizhefte</h1>`) +
       `<input class="nh-suche" type="search" placeholder="Heft suchen …" ` +
@@ -571,7 +673,8 @@ const Notebook = (() => {
       `</div>`;
     const zeile2 = (!reiterHtml && !formHtml) ? '' :
       `<div class="nh-kopf-zeile nh-kopf-zeile2">${reiterHtml}${formHtml}</div>`;
-    return `<header class="nh-kopf" data-kopfzeile="eigene">${zeile1}${zeile2}</header>`;
+    return `<header class="nh-kopf" data-kopfzeile="eigene">` +
+      `${krumeHtml}${zeile1}${zeile2}</header>`;
   };
 
   /* ------------------------------------------------------------------ *
@@ -608,19 +711,26 @@ const Notebook = (() => {
   const nichtsSatz = (): string =>
     `<p class="nh-nichts">Kein Heft heisst „${esc(searchText)}".</p>`;
 
-  const gitterHtml = (hefte: any[], mitNeu: boolean, mitFaechern: boolean): string =>
+  /** `faecherListe`: `true` heisst „die der obersten Ebene", ein Array
+   *  heisst „genau diese" (E366 — im offenen Fach sind es dessen
+   *  Unterfächer), `false` heisst „keine". */
+  type FachListe = boolean | any[];
+  const zuFaechern = (w: FachListe): any[] =>
+    Array.isArray(w) ? w : (w ? faecher() : []);
+
+  const gitterHtml = (hefte: any[], mitNeu: boolean, mitFaechern: FachListe): string =>
     `<div class="bib-gitter nh-gitter">` +
     (mitNeu
       ? `<button class="nh-neu" data-neu>` +
         `<span class="nh-neu-plus" aria-hidden="true">＋</span>` +
         `<span>Neues Heft</span></button>`
       : '') +
-    (mitFaechern ? faecher().map(fachCard).join('') : '') +
+    zuFaechern(mitFaechern).map(fachCard).join('') +
     hefte.map(coverCard).join('') + `</div>`;
 
-  const listeHtml = (hefte: any[], mitFaechern: boolean): string =>
+  const listeHtml = (hefte: any[], mitFaechern: FachListe): string =>
     `<div class="nh-liste">` +
-    (mitFaechern ? faecher().map(fachRow).join('') : '') +
+    zuFaechern(mitFaechern).map(fachRow).join('') +
     hefte.map(listRow).join('') + `</div>`;
 
   const korbHtml = (): string => {
@@ -647,9 +757,14 @@ const Notebook = (() => {
            : `<p class="nh-nichts">Noch kein Heft mit Stern — der Stern sitzt ` +
              `an jeder Karte.</p>`);
     } else if (fachId && Store.getBlock(fachId)) {
+      /* IM FACH STEHEN AUCH DIE UNTERFÄCHER (E366) — vorher zeigte das
+         offene Fach nur seine Hefte, und ein Fach darin war von hier aus
+         gar nicht erreichbar. Während einer Suche bleiben sie weg: dann
+         wird gesucht, nicht geblättert (dieselbe Regel wie an der Wurzel). */
       const hefte = gefiltert(fachHefte(fachId));
+      const unter = searchText.trim() ? [] : unterFaecher(fachId);
       inhalt = (searchText.trim() && !hefte.length) ? nichtsSatz()
-        : (form() === 'liste' ? listeHtml(hefte, false) : gitterHtml(hefte, true, false));
+        : (form() === 'liste' ? listeHtml(hefte, unter) : gitterHtml(hefte, true, unter));
     } else {
       if (fachId) fachId = null;     /* das Fach ist weg — zurück zur Wurzel */
       const alle = notebookPages();
@@ -757,13 +872,23 @@ const Notebook = (() => {
   const fachwahlMenue = (anker: HTMLElement, heftId: string): void => {
     const p = Store.getBlock(heftId);
     if (!p) return;
-    const ziele = faecher().filter(f => f.id !== heftId &&
+    /* JEDES Fach ist ein Ziel, nicht nur die der obersten Ebene (E366).
+       `faecher()` gibt seit diesem Bogen nur die Wurzelfächer zurück —
+       hier stünde damit genau die Schachtelung nicht zur Wahl, die das
+       Regal gerade sichtbar gemacht hat. Der Weg steht am Ziel, sonst
+       stehen zwei Fächer „Physik" ununterscheidbar untereinander. */
+    const ziele = alleFaecher().filter(f => f.id !== heftId &&
       !(typeof WissenDienst !== 'undefined' && WissenDienst.istUnter(f.id, heftId)));
     const imFach = istFach(p.parentId ? Store.getBlock(p.parentId) : null);
+    const wegText = (f: any): string => {
+      const weg = fachWeg(f.id).slice(0, -1).map((x: any) => String(x.text || 'Ohne Namen'));
+      return weg.length ? weg.join(' / ') + ' / ' : '';
+    };
     const r = anker.getBoundingClientRect();
     const m = UI.menu(
       ziele.map(f =>
         `<button data-z="${esc(f.id)}"><span class="mi">${esc(f.icon || '🗂')}</span>` +
+        (wegText(f) ? `<small class="nh-zielweg">${esc(wegText(f))}</small>` : '') +
         `${esc(f.text || 'Ohne Namen')}</button>`).join('') +
       (imFach ? `<button data-z=""><span class="mi">▤</span>Regal (ohne Fach)</button>` : '') +
       `<div class="sep"></div>` +
@@ -1024,7 +1149,11 @@ const Notebook = (() => {
     App.zeigeSonder('Notizhefte', render);
   };
 
-  return { oeffnen, open: oeffnen, resume, render };
+  /* Die Regeln kommen mit heraus, damit ein Prüflauf sie OHNE Fenster
+     messen kann — dieselbe Trennung wie bei `Wissensluecken.sammeln`. */
+  return { oeffnen, open: oeffnen, resume, render,
+           istFach, isNotebook, faecher, alleFaecher, unterFaecher, fachWeg,
+           fachHefte, loseHefte, fachInhaltSatz, FACH_TIEFE };
 })();
 
 (window as any).Notebook = Notebook;
