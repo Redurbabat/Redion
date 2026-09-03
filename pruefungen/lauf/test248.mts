@@ -238,12 +238,40 @@ const imRegal: any = await seite.evaluate(RAHMEN);
    eine Seite schreiben, stehen ohne Seite nicht da (`BRAUCHT_SEITE`). Das
    prueft die Zeile darunter ausdruecklich — an Namen, nicht an einer Zahl,
    damit sie beim naechsten Reiter nicht wieder nur ein Zaehlwerk ist. */
-p('Über einer Startansicht bleiben fünf Reiter statt acht',
-  imRegal.reiter === 5, `sind ${imRegal.reiter}`);
+/* AUFTRAG 01 HAT DIESE STELLE GETEILT, und zwar bewusst.
+   Bis dahin stand hier eine Zahl über den Grundzustand: „ohne Seite fünf
+   Reiter". Seit dem ruhigen Menüband ist der Grundzustand ein anderer —
+   bei zugeklapptem Band steht gar kein Reiter da. Die Aussage von E236/E272
+   ist damit NICHT hinfällig: sie sagt, WELCHE Reiter dastehen, wenn sie
+   dastehen, nicht DASS sie immer dastehen. Also wird sie dort gemessen, wo
+   sie gilt — am aufgeklappten Band —, und der neue Grundzustand bekommt
+   seine eigene Zusicherung daneben. Der Widerspruch steht im Wortlaut in
+   ENTSCHEIDUNGEN.md; still weicher gemacht wurde hier nichts. */
+p('In der Ruhe steht über einer Startansicht KEIN Reiter (Auftrag 01)',
+  imRegal.reiter === 0, `sind ${imRegal.reiter}`);
+
+/* Und jetzt die alte Aussage, an ihrem Ort: beim aufgeklappten Band. */
+const bandAuf = async (): Promise<void> => {
+  const zu = await seite.evaluate(() => !!document.querySelector('#menueband.ist-zu'));
+  if (zu) { await seite.click('#menueband .mb-klapp'); await seite.waitForTimeout(600); }
+};
+/* UND WIEDER ZU. Das aufgeklappte Band ist rund 200 px hoch und schiebt
+   alles darunter aus dem Bild — `#btn-mehr` in der Leiste war danach nicht
+   mehr anklickbar, und §2 lief in einen Zeitablauf. Was hier aufgeklappt
+   wird, wird hier auch wieder zugeklappt. */
+const bandZu = async (): Promise<void> => {
+  const auf = await seite.evaluate(() => !!document.querySelector('#menueband:not(.ist-zu)'));
+  if (auf) { await seite.click('#menueband .mb-klapp'); await seite.waitForTimeout(600); }
+};
+await bandAuf();
+const regalOffen: any = await seite.evaluate(RAHMEN);
+p('Aufgeklappt bleiben über einer Startansicht fünf Reiter statt acht',
+  regalOffen.reiter === 5, `sind ${regalOffen.reiter}`);
 p('Und es sind die, die ohne Seite etwas können',
-  !(imRegal.reiterNamen || []).some((n: string) =>
+  !(regalOffen.reiterNamen || []).some((n: string) =>
     ['start', 'einfuegen', 'zeichnen'].includes(n)),
-  (imRegal.reiterNamen || []).join(', '));
+  (regalOffen.reiterNamen || []).join(', '));
+await bandZu();
 p('Und die Leiste ist trotzdem nicht leer — Suche, KI und Konto stehen rechts',
   imRegal.band >= imRegal.reiter + 3,
   `Reiter ${imRegal.reiter}, Leiste gesamt ${imRegal.band}`);
@@ -262,8 +290,16 @@ p('Zusammen höchstens 24 statt 52',
 await seite.evaluate(() => { const s1 = Store.rootPages()[0]; if (s1) App.oeffne(s1.id); });
 await seite.waitForTimeout(900);
 const beiOffenerSeite: any = await seite.evaluate(RAHMEN);
-p('Über einer offenen Seite sind es wieder acht',
-  beiOffenerSeite.reiter === 8, `sind ${beiOffenerSeite.reiter}`);
+p('Auch über einer offenen Seite ist die Ruhe ruhig — kein Reiter',
+  beiOffenerSeite.reiter === 0, `sind ${beiOffenerSeite.reiter}`);
+/* Auch hier gilt seit Auftrag 01: erst aufklappen, dann zählen. Die
+   Gegenrichtung ist der eigentliche Zweck dieser Zeile — ohne sie wäre
+   „fünf" auch dann grün, wenn es NIE mehr als fünf gäbe. */
+await bandAuf();
+const seiteOffenBand: any = await seite.evaluate(RAHMEN);
+p('Über einer offenen Seite sind es aufgeklappt wieder acht',
+  seiteOffenBand.reiter === 8, `sind ${seiteOffenBand.reiter}`);
+await bandZu();
 
 /* ==========================================================================
  * §2 „Mehr" holt alles zurück

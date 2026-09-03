@@ -5508,6 +5508,49 @@ Heft-Gruppierung, kein Ordner-Browser.
 
 Gefunden beim Bauen von E380 am 3. September 2026.
 
+
+L121 — Die ruhige Schale: vier von fünf Schritten stehen noch aus
+================================================================================
+
+Auftrag 01 ist gebaut (E383): das Menüband trägt keine Reiterzeile mehr,
+solange es zugeklappt ist, und der Klapp-Pfeil heisst jetzt „Werkzeuge".
+Gemessen: 44 → 34 anklickbare Dinge auf dem Startbild.
+
+ZUR NUMMER: L117 bis L120 sind auf dem Zweig
+`claude/redion-head2-desktop-move-j47chf` vergeben; diese Nummer weicht aus,
+damit beim Zusammenführen nicht zwei Lücken dieselbe Nummer tragen.
+
+Das war Schritt 1 von 5. Die anderen vier stehen offen, in dieser
+Reihenfolge:
+
+2. **Die 17 Ortsknöpfe in die linke Leiste.** „Heute", „Bibliothek",
+   „Lernzentrum" und die übrigen stehen heute im Band unter „Gehen" — sie
+   sind aber Orte, keine Werkzeuge. Sie stehen ohnehin schon in
+   `register/navigation.ts` (39 Einträge), es ist also ein Umzug, keine
+   Neuschöpfung.
+
+3. **Die Stiftleiste zum Schweben bringen.** Der Schritt mit dem grössten
+   Raumgewinn: rund 120 px. Auftrag 01 hat vertikal AUSDRÜCKLICH nichts
+   gewonnen — die 36-px-Zeile bleibt, weil `.mb-rechts` darin steht. Wer
+   Platz will, holt ihn hier.
+
+4. **Die Heft-Leiste an den Fuss des Papiers**, wie in GoodNotes.
+
+5. **Ein Prüflauf, der die Zahl der sichtbaren Bedienelemente je Zustand
+   festhält** — damit die Leiste nicht in einem halben Jahr wieder zuwächst.
+   Sie ist ja nicht aus Absicht so geworden. `test384` hält heute nur den
+   einen Zustand des Menübandes; gemeint ist eine Decke über alle.
+
+UND EIN FUND AM RANDE, der zu Schritt 5 gehört: `.mb-klapp` ist auf 32 px
+Breite festgesetzt. Beim Einbau des Wortes ragten Wort und Pfeil aus dem
+Knopf heraus, und der Pfeil lag ÜBER dem Suchknopf — ein Klick hätte das
+Falsche getroffen. Gemessen, behoben (`width:auto`) und mit drei Punkten in
+`test384` festgehalten. Wer dem Knopf später etwas hinzufügt, muss dieselbe
+Messung im Kopf haben: eine feste Breite und ein wachsender Inhalt vertragen
+sich nicht, und das Auge sieht es erst, wenn es sich überlappt.
+
+Gefunden beim Bauen von Auftrag 01 am 3. September 2026.
+
 ================================================================================
 L122 — Zwei Zeilen in test210 §4 waren rot; beide Male war die Prüfung falsch  [ZU]
 ================================================================================
@@ -5628,7 +5671,7 @@ l. **F18** Visuelle Hierarchie — ein dominantes Arbeitsziel je Ansicht.
    E384 hat davon ein Stück vorweggenommen: im Dokumentmodus fällt die
    ganze Schale weg.
 
-WAS DER BERICHT NICHT WISSEN KONNTE: er prüfte E353. Seither sind E354–E386
+WAS DER BERICHT NICHT WISSEN KONNTE: er prüfte E353. Seither sind E354–E387
 dazugekommen, darunter E384 (das Dokument ist der ganze Bildschirm) und
 E296/E299 am PDF. Vor jedem dieser Punkte gehört deshalb eine Messung gegen
 den HEUTIGEN Stand, nicht gegen den Bericht.
