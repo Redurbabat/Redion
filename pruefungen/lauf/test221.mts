@@ -247,16 +247,28 @@ const flaeche = dok.teile.find((x: any) => x.name === 'document-workspace');
 p('Und der geht von Kante zu Kante',
   flaeche && flaeche.l <= 1 && flaeche.r >= dok.fenster - 1,
   JSON.stringify(flaeche));
-/* AM TELEFON STEHT ER NICHT DA, und das ist die Absicht: auf 390 px
-   blieben ihm rund dreissig Pixel, und er stand als „E." im Bild. Der Name
-   steht eine Zeile darueber im Pfad. Dass er am RECHNER in der Kopfzeile
-   steht, prueft test210 §1. */
-/* GEMESSEN WIRD DIE BREITE, NICHT DER TEXT. Der Titel wird am Telefon per
-   CSS ausgeblendet, und `textContent` liefert bei `display:none` weiter den
-   ganzen Namen — eine Pruefung darauf waere immer rot gewesen, egal was auf
-   dem Bildschirm steht. Derselbe Fehler wie `clientWidth` in E148. */
-gleich('Am Telefon steht kein abgeschnittener Titel in der Kopfzeile',
-  dok.titelBreit, 0);
+/* AM TELEFON STEHT ER SEIT E384 WIEDER DA — und das ist keine Rueckkehr
+   des Fehlers, sondern seine Behebung.
+
+   E296 hatte ihn hier ausgeblendet, mit dem Satz: auf 390 px blieben ihm
+   rund dreissig Pixel, er stand als „E." im Bild, und „der Name steht eine
+   Zeile darueber im Pfad". Dieser Pfad ist die Brotkrume in `#topbar`, und
+   die faellt seit E384 im Dokumentmodus weg. Ohne Gegenmassnahme hiesse das
+   offene Dokument am Telefon NIRGENDS mehr beim Namen.
+
+   E384 macht ihm deshalb Platz — `‹ ›` fallen am Telefon aus der Leiste —
+   und misst nach: 115 px statt der dreissig von E296. Die Schranke bleibt
+   also dieselbe Frage („steht da ein Name oder ein Buchstabe mit Punkt?"),
+   nur mit der Antwort auf der anderen Seite.
+
+   GEMESSEN WIRD DIE BREITE, NICHT DER TEXT — der Grund von damals gilt
+   unveraendert: `textContent` liefert bei `display:none` weiter den ganzen
+   Namen, eine Pruefung darauf saehe nie, was auf dem Bildschirm steht
+   (derselbe Fehler wie `clientWidth` in E148). */
+p('Am Telefon steht der Name des Dokuments in der Leiste',
+  dok.titelBreit > 0, 'Breite: ' + dok.titelBreit);
+p('Und er ist breit genug für einen Namen statt für „E."',
+  dok.titelBreit > 100, 'Breite: ' + dok.titelBreit);
 
 /* ---- B · Dieselbe Seite ohne Dokumentmodus: dort gilt die alte Messung -- */
 const ohneDok = await telefon.evaluate(async () => {

@@ -818,6 +818,24 @@ const App = (() => {
     const wrap = document.getElementById('page');
     if (!wrap) return;
 
+    /* EIN OFFENES DOKUMENT IST DER GANZE BILDSCHIRM (E384). Redurs Satz kam
+       ein zweites Mal: „ich will das die pdf nicht im bereichen sich öffnet
+       so wie goodnotes". E296 hatte den SEITENKOPF weggeraeumt — den Kasten
+       INNERHALB der Seite. Was stehen blieb, war die Schale um sie herum,
+       und genau die meint das Wort „Bereiche".
+
+       Gemessen auf 1440x900: Menueband 37 + Kopfzeile 54 + Dokumentleiste 47
+       + die Original-Karte 45 = die oberen 222 der 900 Pixel, bevor das
+       erste Blatt anfaengt. Am Telefon 232 von 844, und unten stand noch
+       die Reiterleiste. GoodNotes hat dort EINE Leiste und darunter Papier.
+
+       Die Flagge steht am `body`, weil Menueband, Kopfzeile und die untere
+       Leiste ausserhalb von `#page` liegen; ein Haken an `#page` erreicht
+       sie nicht. Geloescht wird sie hier, gesetzt nur im Dokumentzweig —
+       so faellt sie auch bei jedem fruehen Ausstieg zurueck (Sonderansicht,
+       leere Seite, Sperrbildschirm). */
+    delete document.body.dataset['dokument'];
+
     if (sonder) {
       wrap.className = 'wide';
       wrap.innerHTML = '';
@@ -861,6 +879,7 @@ const App = (() => {
          gesperrte Seite ebenso. */
       wrap.className = 'wide document-page';
       wrap.innerHTML = '';
+      document.body.dataset['dokument'] = 'an';
       DocumentMode.render(wrap, p);
     } else {
       Inhaltsflaeche.zeichne(wrap, p);

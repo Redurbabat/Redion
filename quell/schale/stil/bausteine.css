@@ -4511,6 +4511,50 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   background:var(--bg-hover); color:var(--text-dim); white-space:nowrap}
 .document-topbar input[type=range]{width:min(150px,18vw)}
 .document-zoom-label{min-width:48px;color:var(--text-dim);font-size:12px}
+/* ═════════════════════════════════════════════════════════════════════════
+   E384 · EIN OFFENES DOKUMENT IST DER GANZE BILDSCHIRM
+   -------------------------------------------------------------------------
+   Redurs Satz kam ein zweites Mal: „ich will das die pdf nicht im bereichen
+   sich öffnet so wie goodnotes". E296 hatte den SEITENKOPF weggeraeumt — den
+   Kasten INNERHALB der Seite. Was stehen blieb, war die Schale um sie herum,
+   und genau die meint das Wort „Bereiche".
+
+   GEMESSEN, bevor etwas geaendert wurde (§55.1):
+
+     1440x900   Menueband 0..37 · Kopfzeile 37..91 · Dokumentleiste 92..139
+                · Original-Karte 157..202 → das erste Blatt beginnt bei 222.
+                Das sind 24,7 % des Bildschirms, bevor Papier kommt.
+     390x844    Menueband 0..45 · Kopfzeile 45..101 · Dokumentleiste 102..157
+                · Original-Karte 167..212 → Blatt ab 232, und UNTEN stand
+                noch die Reiterleiste. 27,5 % oben plus rund 90 px unten.
+
+   GoodNotes hat dort eine Leiste und darunter Papier. Also faellt die Schale
+   weg, solange ein Dokument offen ist — und nur dann. Die Flagge steht am
+   `body`, weil Menueband, Kopfzeile und untere Leiste ausserhalb von `#page`
+   liegen (`schale.ts`, im Dokumentzweig gesetzt, bei jedem Zeichnen zuerst
+   geloescht).
+
+   DER PREIS, UND WIE ER BEZAHLT WIRD: mit der Kopfzeile geht der Zurueck-
+   Pfeil und die Brotkrume. Deshalb hat die Dokumentleiste seit E384 ihren
+   eigenen `‹ Dokumente`. Ohne ihn waere das ein Raum ohne Tuer.
+
+   UND DIE VIERTE, DIE ERST DAS BILD ZEIGTE: `#kante`, die Kontextkante aus
+   E272 Phase F — 54 px hoher Streifen mit zehn Zeichen, links neben dem
+   Papier. In der Messung stand sie nicht, weil sie waagerecht nichts
+   verdeckt; auf dem Bild sieht man sie sofort. Neben einem geoeffneten
+   Dokument hat sie nichts zu sagen: ihre Eintraege sind Wege zu ANDEREN
+   Ansichten, und dafuer ist jetzt `‹ Dokumente` da. Ihre Regel steht in
+   `premium.css` und nicht hier — dort wird auch die Rasterspalte eingezogen,
+   und dort gewinnt sie gegen `body[data-schale="premium"] #kante`. */
+body[data-dokument="an"] #menueband,
+body[data-dokument="an"] #topbar,
+body[data-dokument="an"] #handy-oben{display:none}
+/* Der Zurueck-Weg: Pfeil und Wort, wie bei GoodNotes. Der Knopf darf nicht
+   auf die 44-px-Quadratform der uebrigen fallen — das Wort gehoert dazu. */
+.document-topbar .document-zurueck{display:inline-flex; align-items:center; gap:4px;
+  width:auto; padding-inline:8px 12px; font-weight:600}
+.document-topbar .document-zurueck .dz-wort{font-size:13px}
+
 /* E296 · DIE GRUNDSTELLUNG IST EINE SPALTE.
    Vorher: `190px minmax(0,1fr) 280px`, fest, bei jeder Breite ueber 1100 px.
    Der Seite blieben auf einem 1440er Bildschirm rund 900 Pixel, obwohl die
@@ -4568,12 +4612,21 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .document-stage{min-width:360px; max-width:none; margin:0 auto 26px;
   transform-origin:top center}
 .document-stage:last-child{margin-bottom:0}
-/* E299 · Das Original ganz oben, wie in OneNote der Anhang über dem
-   Ausdruck. Eine Zeile, kein Kasten: sie soll den Blick nicht aufhalten. */
+/* E299 · Das Original als eine Zeile, kein Kasten — sie soll den Blick
+   nicht aufhalten. Seit E384 steht sie IM INSPECTOR und nicht mehr ueber
+   dem Papier: gebraucht wird sie selten, gesehen wurde sie immer, und die
+   45 px kostete sie am Telefon von 844. Deshalb faellt hier auch das
+   `max-width` der Blattbreite weg — im Inspector gilt dessen Breite. */
 .document-original{display:flex; align-items:center; gap:10px; width:100%;
-  max-width:var(--doc-blatt,720px); min-height:44px; margin:0 auto 20px;
+  min-height:44px; margin:0 0 10px;
   padding:8px 14px; border:1px solid var(--border); border-radius:10px;
   background:var(--bg-card); color:var(--text); text-align:left; cursor:pointer}
+/* E384 · DER RANDSTREIFEN-SCHALTER, jetzt hier statt in der Leiste. Er sagt
+   im Wort, was ein Druck bewirkt, und faerbt sich, wenn der Rand steht. */
+.document-inspector .document-rand-knopf{display:block; width:100%; min-height:40px;
+  margin-bottom:14px; padding:7px 12px; text-align:left; font-size:13px}
+.document-inspector .document-rand-knopf.an{border-color:var(--accent-text);
+  background:var(--bg-hover); font-weight:600}
 .document-original:hover{border-color:var(--accent-text); background:var(--bg-hover)}
 .document-original .do-zeichen{flex:none; font-size:18px}
 .document-original .do-name{flex:1; min-width:0; overflow:hidden;
@@ -4656,8 +4709,34 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
      Das ZOOM-LABEL, weil der Regler dazu am Telefon ausgeblendet ist: eine
      Prozentzahl neben einem Regler, den es nicht gibt, ist eine Anzeige ohne
      Griff (§47). */
-  .document-title{display:none}
+  /* E384 · DER NAME KOMMT ZURUECK — und `‹ ›` gehen dafuer.
+     E296 hatte den Titel am Telefon ausgeblendet, mit dem Satz „er steht
+     ohnehin unmittelbar darueber im Pfad". Dieser Pfad ist die Brotkrume in
+     `#topbar`, und die ist seit E384 weg. Ohne Gegenmassnahme hiesse das
+     offene Dokument am Telefon NIRGENDS mehr beim Namen.
+
+     Platz dafuer machen `‹ ›`. Zwei Gruende, und den zweiten sah erst das
+     Bild: seit E299 ROLLT der Dokumentmodus, statt zu blaettern — man
+     scrollt ohnehin, und `☰` springt eine Seite genau an. Und im Bild
+     standen ZWEI gleich aussehende `‹` nebeneinander (8..52 und 108..152),
+     die Verschiedenes tun: zurueck ins Regal und eine Seite zurueck. Zwei
+     gleiche Zeichen mit zwei Bedeutungen sind schlimmer als ein fehlender
+     Knopf.
+
+     Gerechnet: 44+6 doppelt gespart, dazu die 27 px, die frei standen —
+     der Titel bekommt rund 127 statt der 30, an denen E296 „E." mass. */
+  .document-topbar button[data-document-action="previous"],
+  .document-topbar button[data-document-action="next"]{display:none}
+  .document-title{display:block; flex:1 1 auto; min-width:60px;
+    padding-inline:8px; font-size:13.5px}
   .document-zoom-label{display:none}
+  /* E384 · AM TELEFON NUR DER PFEIL. Gemessen mit dem Wort: die Leiste war
+     411 px breit in einem 390 px breiten Fenster, und der Ausgang stand bei
+     367..411 — also 21 px AUSSERHALB des Bildschirms. Der Knopf faellt damit
+     auf die 44er Quadratform der uebrigen zurueck; das Wort stand ohnehin
+     als „‹ Doku" abgeschnitten da (§55.1, derselbe Fehler wie „E."). */
+  .document-topbar .document-zurueck{padding-inline:6px}
+  .document-topbar .document-zurueck .dz-wort{display:none}
   .document-body,.document-body.with-thumbnails,.document-body.with-inspector,
   .document-body.with-thumbnails.with-inspector{display:block}
   .document-center{height:100%;padding:10px}.document-stage{min-width:280px}

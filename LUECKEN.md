@@ -5495,6 +5495,11 @@ die Krume scrollt ans Ende. Belegt mit test369 §8 (setzt 390 px, prüft
 zuerst den Überlauf) und einem Telefonbild. E380 war am Rechner gebaut; das
 ist genau der Fehler, den §37 meint: das Telefon ist der Normalfall.
 
+Nachtrag (E384) zu b): Die untere Leiste ist im DOKUMENTMODUS jetzt ganz weg —
+GoodNotes zeigt beim offenen Dokument keine Bereichsreiter, und Redion seit
+E384 auch nicht mehr. Was b) meint, gilt weiter für das REGAL: dort fehlen
+„Favoriten" und „Geteilt" als eigene Wege.
+
 Nachtrag (E382): Die Ebenen waren zuerst nur in der Deckelansicht verdrahtet.
 In der Listenform öffnete ein Klick auf ein Fach es als leere Seite, und der
 Listenkopf hatte keine Brotkrume. GESCHLOSSEN durch E382 — die Liste ist jetzt
@@ -5502,3 +5507,29 @@ auch ein Ordner-Browser (test369 §9). Die Regalform bleibt absichtlich eine
 Heft-Gruppierung, kein Ordner-Browser.
 
 Gefunden beim Bauen von E380 am 3. September 2026.
+
+================================================================================
+L122 — Zwei Zeilen in test210 §4 sind rot, und E384 hat sie nicht verursacht
+================================================================================
+3. September 2026 · gefunden beim Mitziehen von E384
+
+`test210` §4 misst die Zeichenleiste am Telefon und meldet zwei Zeilen rot:
+
+    ✗ Alle Werkzeuge sind gebaut (die sichtbaren) — 13   (erwartet ≥ 14)
+    ✗ In der Mitte nach beiden Seiten — ist „links", soll „beides"
+
+BELEG, DASS ES NICHT VON E384 KOMMT. In einem eigenen Arbeitsbaum auf
+`da41dd78` — dem Stand VOR E384 — läuft dieselbe Suite mit **29/31 und genau
+diesen zwei Zeilen**. Die Zahlen sind identisch, 13 und „links".
+
+Warum es trotzdem erst jetzt auffiel: bis zur Reparatur der Anker in §3 klickte
+sich der Lauf aus dem Dokument heraus, und §4 kam nie so weit, seine
+Unter-Behauptungen zu prüfen. Der Abschnitt meldete stattdessen „Die Leiste ist
+da ✗" und verdeckte damit die zwei echten Zeilen darunter. Ein Fehler, der
+einen anderen versteckt — genau die Sorte, die §55.2 meint.
+
+WAS ZU TUN IST. Nachmessen, ob die Erwartungen aus E356/E359 stammen und der
+Bestand sich seither geändert hat (E375 hat vier Formen-Werkzeuge zu einem
+zusammengezogen — das allein wären drei Knöpfe weniger), oder ob die Leiste
+wirklich zu wenig zeigt. Erst messen, dann entscheiden, welche Seite falsch
+ist: die Prüfung oder die Leiste. Nicht die Schranke senken, bis es passt.

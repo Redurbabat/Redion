@@ -560,7 +560,12 @@ const telefon = await handy.evaluate(() => {
     titel: breit('.document-title'), zoomLabel: breit('.document-zoom-label'),
     regler: breit('[data-document-zoom]'),
     kopfRechts: Math.round(k?.right || 0), fenster: window.innerWidth,
+    /* NUR DIE SICHTBAREN (E384). Seit `‹ ›` am Telefon aus der Leiste
+       fallen, standen zwei Nullen in der Liste — und §37 misst Daumen-
+       flaechen, also das, was man wirklich treffen kann. Ein Knopf, den es
+       nicht gibt, ist kein zu kleiner Knopf. */
     knoepfe: [...document.querySelectorAll<HTMLElement>('.document-topbar button')]
+      .filter(b => b.offsetParent !== null)
       .map(b => Math.round(Math.min(b.getBoundingClientRect().width,
                                     b.getBoundingClientRect().height))),
     mitte: breit('.document-center'),
@@ -568,7 +573,17 @@ const telefon = await handy.evaluate(() => {
   };
 });
 
-gleich('Der Titel steht am Telefon gar nicht erst da', telefon.titel, 0);
+/* SEIT E384 STEHT ER DA — und das ist die Behebung, nicht der Rueckfall.
+   Hier stand `gleich(…, telefon.titel, 0)`, mit dem Grund von E296: auf
+   390 px blieben ihm dreissig Pixel, er stand als „E." im Bild, „und er
+   steht ohnehin eine Zeile darueber im Pfad". Dieser Pfad ist die Brotkrume
+   in `#topbar`, und die faellt seit E384 im Dokumentmodus weg — ohne
+   Gegenmassnahme hiesse das Dokument am Telefon nirgends mehr beim Namen.
+   E384 macht ihm Platz (`‹ ›` gehen dafuer) und misst 115 statt 30. */
+p('Der Name des Dokuments steht am Telefon in der Leiste',
+  telefon.titel > 0, 'Breite: ' + telefon.titel);
+p('Und breit genug für einen Namen statt für „E."',
+  telefon.titel > 100, 'Breite: ' + telefon.titel);
 gleich('Und das Zoom-Label auch nicht — es gibt keinen Regler dazu',
   [telefon.zoomLabel, telefon.regler], [0, 0]);
 p('Die Kopfzeile bleibt im Bild',

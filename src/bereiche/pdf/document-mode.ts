@@ -170,6 +170,40 @@ const DocumentMode = (() => {
     schedule();
   };
 
+  /* DIE ORIGINALDATEI IST EINE ANGABE, KEIN BAND UEBER DEM PAPIER (E384).
+     Sie stand als volle Zeile zwischen Werkzeugleiste und erstem Blatt und
+     kostete dort 45 Pixel — am Telefon von 844. Gebraucht wird sie selten
+     (einmal, wenn man das Original sucht), gesehen wurde sie immer. Sie
+     zieht deshalb in den Inspector, zu den uebrigen Angaben ueber das
+     Dokument; der Weg zur Datei bleibt derselbe (`Dateien`), nur der Platz
+     ist ein anderer.
+
+     Wie in OneNote: die Datei selbst als erste Zeile, der Ausdruck darunter.
+     Gesucht wird der `file`-Block, den `PdfEinlesen` an Stelle 0 anlegt —
+     und ersatzweise die `quelleId` der ersten Seite, damit auch aeltere
+     Dokumente ihre Datei zeigen. */
+  const originalKnopf = (page: any, documentBlock: any): HTMLElement | null => {
+    const originalBlock = Store.childrenOf(page.id)
+      .find((b: any) => b && b.alive !== false && b.type === 'file' && b.dateiId &&
+                        (b.original || /\.pdf$/i.test(String(b.text || ''))));
+    const quelleId = originalBlock?.dateiId || documentBlock?.quelleId || '';
+    if (!quelleId) return null;
+    const zeile = document.createElement('button');
+    zeile.type = 'button';
+    zeile.className = 'document-original';
+    zeile.dataset.documentOriginal = String(quelleId);
+    const zeichen = document.createElement('span');
+    zeichen.className = 'do-zeichen'; zeichen.textContent = '📕';
+    const name = document.createElement('span');
+    name.className = 'do-name';
+    name.textContent = String(originalBlock?.text || 'Original-PDF');
+    const wort = document.createElement('span');
+    wort.className = 'do-wort'; wort.textContent = 'Original öffnen';
+    zeile.append(zeichen, name, wort);
+    zeile.title = 'Die unveränderte PDF-Datei — darunter steht ihr Ausdruck.';
+    return zeile;
+  };
+
   const renderInspector = (container: HTMLElement, page: any, documentBlock: any): void => {
     const links = linkedObjects(page, documentBlock);
     const cards = links.filter(block => block.type === 'flashcard');
@@ -235,7 +269,23 @@ const DocumentMode = (() => {
       empty.textContent = 'Noch keine Notiz, Aufgabe oder Karte ist mit dieser Stelle verbunden.';
       list.appendChild(empty);
     }
-    container.append(heading, source, actions, summary, list);
+    /* DER RANDSTREIFEN (E301, L107; hierher E384). Ein Schalter fuer das
+       ganze Dokument: wer neben seinem Skript schreibt, will das fuer das
+       ganze Skript. Aus ist die Vorgabe — ein Rand, den niemand bestellt
+       hat, nimmt der Seite Platz weg. Mit Wort statt nur Zeichen (§38). */
+    const randAn = Number(page.randBreite) > 0;
+    const randKnopf = document.createElement('button');
+    randKnopf.type = 'button';
+    randKnopf.dataset.documentAction = 'rand';
+    randKnopf.className = 'document-rand-knopf' + (randAn ? ' an' : '');
+    randKnopf.textContent = '⇥ Randstreifen ' + (randAn ? 'aus' : 'an');
+    randKnopf.setAttribute('aria-pressed', randAn ? 'true' : 'false');
+    randKnopf.title = 'Ein Streifen zum Schreiben neben der Seite — für das ganze Dokument.';
+
+    const original = originalKnopf(page, documentBlock);
+    container.append(heading, source);
+    if (original) container.appendChild(original);
+    container.append(actions, randKnopf, summary, list);
   };
 
   const renderDocument = (container: HTMLElement, block: any): void => {
@@ -346,21 +396,35 @@ const DocumentMode = (() => {
       button.setAttribute('aria-label', label); button.textContent = text;
       return button;
     };
+    /* DER WEG ZURUECK STEHT IM DOKUMENT (E384). Solange Menueband und
+       Kopfzeile darueber standen, gab es dort einen Zurueck-Pfeil und eine
+       Brotkrume. Beide sind mit der Schale weg — also braucht das Dokument
+       seinen eigenen, sonst kommt man aus einem geoeffneten Skript nur noch
+       ueber „Normale Seite" heraus, und das ist etwas anderes: es SCHALTET
+       die Ansicht um, statt zurueckzugehen. Genau wie bei GoodNotes: `‹` und
+       das Wort, wohin es fuehrt.
+
+       Ueber `Register.navigation` und nicht ueber `Bibliothek.oeffne()` —
+       der PDF-Bereich darf den Wissensbereich nicht kennen (§5 Regel 1). */
+    const zurueck = topButton('regal', '‹', 'Zurück zu den Dokumenten');
+    zurueck.classList.add('document-zurueck');
+    const zurueckWort = document.createElement('span');
+    zurueckWort.className = 'dz-wort';
+    zurueckWort.textContent = 'Dokumente';
+    zurueck.append(zurueckWort);
     top.append(
+      zurueck,
       topButton('thumbnails', '☰', 'Seitenübersicht öffnen'),
       topButton('previous', '‹', 'Vorherige Seite'),
       topButton('next', '›', 'Nächste Seite')
     );
-    /* DER RANDSTREIFEN (E301, L107). Ein Schalter für das ganze Dokument,
-       nicht für die einzelne Seite: wer neben seinem Skript schreibt, will
-       das für das ganze Skript. Aus ist die Vorgabe — ein Rand, den niemand
-       bestellt hat, nimmt der Seite Platz weg. */
-    const randKnopf = topButton('rand', '⇥',
-      'Randstreifen zum Schreiben neben der Seite');
-    randKnopf.classList.add('document-rand-knopf');
-    if (Number(page.randBreite) > 0) randKnopf.classList.add('an');
-    randKnopf.setAttribute('aria-pressed', Number(page.randBreite) > 0 ? 'true' : 'false');
-    top.append(randKnopf);
+    /* DER RANDSTREIFEN STEHT SEIT E384 IM INSPECTOR (vorher hier, E301/L107).
+       Er ist ein Schalter fuer das GANZE Dokument — das sagte schon E301 —
+       und damit gehoert er zu den uebrigen Angaben ueber das Dokument, nicht
+       in die Leiste, die man bei jedem Blick sieht. Gemessen war die Leiste
+       am Telefon 411 px breit in einem 390 px breiten Fenster; jedes Zeichen
+       darin kostete den Ausgang. `randKnopf` steht jetzt in
+       `renderInspector` und heisst dort beim Namen statt nur `⇥`. */
     const position = document.createElement('span');
     position.className = 'document-position';
     position.textContent = 'Seite ' + (state.index + 1) + '/' + documents.length;
@@ -436,35 +500,11 @@ const DocumentMode = (() => {
        Anfang an — und wird gezeichnet, sobald sie in die Naehe kommt.
 
        `‹ ›` und die Miniaturen wechseln nichts mehr, sie SPRINGEN. */
-    /* ══ DAS ORIGINAL GANZ OBEN (E299) ════════════════════════════════════
-       Wie in OneNote: die Datei selbst als erste Zeile, der Ausdruck
-       darunter. Gesucht wird der `file`-Block, den `PdfEinlesen` an Stelle 0
-       anlegt — und ersatzweise die `quelleId` der ersten Seite, damit auch
-       aeltere Dokumente ihre Datei zeigen.
+    /* HIER STAND DIE ORIGINAL-KARTE — bis E384.
+       Sie liegt jetzt im Inspector (`originalKnopf`). Der Grund steht dort:
+       eine Zeile, die man selten braucht, darf nicht bei jedem Blick auf
+       das Papier 45 Pixel wegnehmen. */
 
-       Nur ein Weg zur Datei, kein zweiter Speicher: geklickt wird `Dateien`,
-       dieselbe Stelle wie beim Datei-Block auf der gewoehnlichen Seite. */
-    const originalBlock = Store.childrenOf(page.id)
-      .find((b: any) => b && b.alive !== false && b.type === 'file' && b.dateiId &&
-                        (b.original || /\.pdf$/i.test(String(b.text || ''))));
-    const quelleId = originalBlock?.dateiId ||
-      documents.map(d => d.quelleId).find(Boolean) || '';
-    if (quelleId) {
-      const zeile = document.createElement('button');
-      zeile.type = 'button';
-      zeile.className = 'document-original';
-      zeile.dataset.documentOriginal = String(quelleId);
-      const zeichen = document.createElement('span');
-      zeichen.className = 'do-zeichen'; zeichen.textContent = '📕';
-      const name = document.createElement('span');
-      name.className = 'do-name';
-      name.textContent = String(originalBlock?.text || 'Original-PDF');
-      const wort = document.createElement('span');
-      wort.className = 'do-wort'; wort.textContent = 'Original öffnen';
-      zeile.append(zeichen, name, wort);
-      zeile.title = 'Die unveränderte PDF-Datei — darunter steht ihr Ausdruck.';
-      center.appendChild(zeile);
-    }
 
     /* WELCHE SEITE GERADE GILT, IST BEWEGLICH GEWORDEN (E299). Vorher stand
        sie beim Zeichnen fest — es gab ja nur eine. In der Rolle wandert sie
@@ -722,6 +762,15 @@ const DocumentMode = (() => {
         page.randBreite = an ? 0 : 0.45;
         UI.toast(an ? 'Randstreifen aus' : 'Randstreifen an — schreib daneben');
         App.zeichneSeite();
+        return;
+      }
+      if (action === 'regal') {
+        /* Zurueck ins Regal, ohne den Dokumentmodus abzuschalten: wer das
+           Skript wieder aufmacht, will es wieder als Dokument sehen. */
+        const eintrag = typeof Register !== 'undefined' && (Register as any).navigation
+          ? (Register as any).navigation.eines('bibliothekOben') : null;
+        if (eintrag && typeof eintrag.tun === 'function') eintrag.tun();
+        else UI.toast('Das Regal ist gerade nicht erreichbar.');
         return;
       }
       if (action === 'exit') toggle(page, false);

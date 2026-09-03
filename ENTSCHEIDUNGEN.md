@@ -21,7 +21,8 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-378 Entscheidungen, E1 bis E382. Die Nummer ist die Ordnung: eine Entscheidung
+379 Entscheidungen, E1 bis E384 (E383 liegt auf dem Zweig
+`claude/region-detailed-analysis-pzqqb4`). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -30775,3 +30776,161 @@ WAS ES KOSTET
 ─────────────
 Keine Daten, kein Feld, keine Migration — `data-art` ist ein Anzeigewert,
 `geheIn` gab es schon. Einzeldatei neu gebaut.
+
+================================================================================
+E384 — Ein offenes Dokument ist der ganze Bildschirm, kein Kasten in der Schale
+================================================================================
+3. September 2026
+
+Redurs Satz kam ein ZWEITES Mal, fast wörtlich wie beim ersten:
+
+  „ich will das die pdf nocht im bereichen sich öfnnet so wie goodnotes
+   scheu wie ist es dort und mache es 1.1 so"
+
+E296 trägt denselben Satz von ihm im Kopf. Diese Arbeit war also schon gemacht
+— und er sagt es trotzdem wieder. Also stimmt etwas an ihr nicht, oder sie
+reicht nicht weit genug. Das durfte nicht geraten werden (§55.1).
+
+WAS DIE MESSUNG ERGAB, BEVOR ETWAS GEÄNDERT WURDE.
+
+  1440×900   Menüband        0..37    (37)
+             Kopfzeile      37..91    (54)
+             Dokumentleiste 92..139   (47)
+             Original-Karte 157..202  (45)
+             → das erste Blatt beginnt bei 222 von 900 — 24,7 %.
+             Dazu links `#kante`, 54 px breit über die ganze Höhe.
+
+  390×844    dieselben vier Bänder → erstes Blatt bei 232 von 844 — 27,5 %.
+             UND unten die Reiterleiste, rund 90 px. Von 844 Pixeln bekam das
+             Papier 522.
+
+E296 HATTE DEN SEITENKOPF WEGGERÄUMT — den Kasten INNERHALB der Seite: Cover,
+das grosse Symbol, den Titel als Überschrift, die Zeile „Cover · Volle Breite ·
+Dokumentmodus". Das war richtig und ist geblieben. Was E296 nie angefasst hat,
+ist die Schale UM die Seite herum, und genau die meint das Wort „Bereiche".
+Vier Bänder, die keinem Dokument dienen.
+
+WAS SICH ÄNDERT.
+
+1 · DIE SCHALE VERSCHWINDET, SOLANGE EIN DOKUMENT OFFEN IST. `schale.ts` setzt
+im Dokumentzweig `document.body.dataset.dokument = 'an'` und LÖSCHT die Marke
+am Anfang jedes Zeichnens — so fällt sie auch bei jedem frühen Ausstieg zurück
+(Sonderansicht, leere Seite, Sperrbildschirm). Am `body` und nicht an `#page`,
+weil Menüband, Kopfzeile und untere Leiste ausserhalb von `#page` liegen.
+
+2 · DER WEG ZURÜCK STEHT IM DOKUMENT. Mit der Kopfzeile gehen der Zurück-Pfeil
+und die Brotkrume. Ohne Ersatz wäre das ein Raum ohne Tür — „Normale Seite" ist
+etwas anderes, es SCHALTET die Ansicht um, statt zurückzugehen. Also `‹
+Dokumente` ganz links in der Dokumentleiste, wie bei GoodNotes.
+
+Über `Register.navigation.eines('bibliothekOben')` und nicht über
+`Bibliothek.oeffne()`: der PDF-Bereich darf den Wissensbereich nicht kennen
+(§5 Regel 1).
+
+3 · DIE ORIGINAL-KARTE ZIEHT IN DEN INSPECTOR. Sie stand als volle Zeile
+zwischen Werkzeugleiste und erstem Blatt. Gebraucht wird sie selten — einmal,
+wenn man das Original sucht —, gesehen wurde sie immer.
+
+4 · DER RANDSTREIFEN-SCHALTER AUCH. E301 sagt selbst, er gelte für das GANZE
+Dokument; damit gehört er zu den Angaben über das Dokument. Und er kostete
+Platz, den die Leiste am Telefon nicht hatte. Er heisst dort jetzt beim Namen
+statt nur `⇥` (§38): „⇥ Randstreifen an" / „⇥ Randstreifen aus".
+
+WAS DAS HINSEHEN FAND, UND KEINE MESSUNG.
+
+  · `#kante` STAND WEITER DA. In der Zahlenmessung tauchte sie nicht auf, weil
+    sie waagerecht nichts verdeckt — auf dem Bild sieht man sie sofort. Ihre
+    Regel musste nach `premium.css`: dort steht `body[data-schale="premium"]
+    #kante{display:flex}` mit derselben Spezifität (1,1,1), und premium.css
+    wird später geladen. Und sie braucht ZWEI Zeilen: `display:none` allein
+    liess die 54-px-SPALTE stehen, weil das Raster sie nur bei `#kante[hidden]`
+    einzieht. Das ist der E296-Fund („display:none nimmt ein Element aus dem
+    Rasterfluss"), diesmal andersherum.
+
+  · AM TELEFON LIEF DIE LEISTE ÜBER. Gemessen: `scrollWidth` 411 in einem
+    390 px breiten Fenster; der Ausgang `✕` stand bei 367..411, also 21 px
+    AUSSERHALB des Bildschirms. Und `‹ Dokumente` war zu „‹ Doku"
+    abgeschnitten — derselbe Fehler wie „E." bei E296.
+
+  · ZWEI GLEICH AUSSEHENDE `‹` NEBENEINANDER, die Verschiedenes tun: bei 8..52
+    zurück ins Regal, bei 108..152 eine Seite zurück. Zwei gleiche Zeichen mit
+    zwei Bedeutungen sind schlimmer als ein fehlender Knopf.
+
+DARAUS FOLGT DIE EINE ENTSCHEIDUNG, DIE ETWAS WEGNIMMT: `‹ ›` fallen am
+TELEFON aus der Leiste. Zwei Gründe. Seit E299 ROLLT der Dokumentmodus, statt
+zu blättern — man scrollt ohnehin, und `☰` springt eine Seite genau an. Und der
+Platz wird gebraucht: für den NAMEN des Dokuments, den E296 am Telefon
+ausgeblendet hatte mit der Begründung „er steht ohnehin eine Zeile darüber im
+Pfad". Dieser Pfad ist die Brotkrume in `#topbar`, und die ist jetzt weg. Ohne
+Gegenmassnahme hiesse das offene Dokument am Telefon NIRGENDS mehr beim Namen.
+Gemessen bekommt er jetzt 115 px statt der dreissig, an denen E296 „E." las.
+
+Am Rechner bleiben `‹ ›` stehen; dort ist der Platz da.
+
+WAS DABEI HERAUSKAM.
+
+                           vorher        jetzt
+  Rechner, Blatt ab        222 von 900   76 von 900
+  Rechner, Blattbreite     1324 px       1378 px
+  Telefon, Blatt ab        232 von 844   76 von 844
+  Telefon, untere Leiste   ~90 px        weg
+  Telefon, Leistenbreite   411 px        390 px (das Fenster)
+
+Dateien: `src/schale/aufbau/schale.ts`, `src/bereiche/pdf/document-mode.ts`,
+`quell/schale/stil/bausteine.css`, `quell/schale/stil/premium.css`.
+
+Prüfung: `pruefungen/lauf/test385.mts`, 37 Punkte in sieben Abschnitten. Jeder
+Wächter wurde durch Mutation rot gesehen (§55.2), acht Stück:
+
+  1. die Schale wieder sichtbar                       → 7 rot
+  2. die Kante-Regel raus                             → 3 rot
+  3. nur `display:none`, ohne die Rasterspalte        → 2 rot
+  4. die Original-Karte zurück über das Papier        → 2 rot
+  5. Titel weg und `‹ ›` zurück (Stand vor dem Bild)  → 3 rot
+  6. das Wort „Dokumente" auch am Telefon             → 2 rot
+  7. `‹ ›` zurück, aber MIT Titel                     → 3 rot
+  8. der Zurück-Knopf ohne Ziel im Register           → 2 rot
+
+Nummer 3 belegt, dass die zweite CSS-Zeile ein eigener Wächter ist und nicht
+Zierde. Nummer 7 belegt, dass die Überlaufmessung überhaupt anschlagen KANN:
+der Titel ist `flex` und schluckt sonst jeden Überschuss — eine Prüfung, die
+nie rot werden kann, ist keine (§55.2).
+
+§6 ist die Gegenprobe, die die Regel davor bewacht: auf einer gewöhnlichen
+Seite MUSS die Schale wieder stehen. Eine Regel, die immer ausblendet, hätte
+Redion die Schale ganz genommen und wäre ohne diesen Abschnitt grün gewesen.
+
+MITGEZOGEN, VIER SUITEN — und drei davon sind dabei stärker geworden:
+
+  · `test210` klickte `querySelector('.document-topbar button')`, also den
+    ERSTEN Knopf, weil das bis E384 das `☰` war. Seit E384 steht dort `‹
+    Dokumente`: der Lauf klickte sich aus dem Dokument HERAUS, und §3, §4 und
+    §5 fielen der Reihe nach um, ohne dass an ihnen etwas kaputt war. Jetzt am
+    Auftragsnamen verankert — dieselbe Lehre wie `test228` in E296, wo von
+    `.blk[data-bid=…]` auf `data-bid` umgestellt wurde. Und die Panels werden
+    danach wieder GESCHLOSSEN: offen nahmen sie der Mitte zwei Spalten, und §4
+    mass die Zeichenleiste in einem zu schmalen Raum.
+  · `test221` und `test285` behaupteten beide „am Telefon steht der Titel gar
+    nicht erst da", mit dem Grund von E296. Der Grund ist weggefallen, also
+    dreht sich die Behauptung um — mit derselben Frage („ein Name oder ein
+    Buchstabe mit Punkt?") und der Schranke bei 100 px.
+  · `test285` mass ausserdem die Knopfgrössen der Telefonleiste gegen 44 px und
+    fand `[44,44,0,0,44,44]`. Die zwei Nullen sind die ausgeblendeten `‹ ›`.
+    §37 misst Daumenflächen, also das, was man treffen kann — ein Knopf, den es
+    nicht gibt, ist kein zu kleiner Knopf. Gemessen werden jetzt nur die
+    sichtbaren.
+  · `test295` drückte den Randstreifen in der Leiste. Es geht jetzt über einen
+    Helfer, der den Inspector auf-, den Schalter drückt und den Inspector
+    WIEDER ZUMACHT — offen nimmt er der Mitte 300 px, und alles danach misst
+    Breiten am Papier.
+
+Was NICHT von E384 kommt und trotzdem rot ist: `test210` §4 meldet 13 statt
+≥ 14 sichtbare Werkzeuge und „links" statt „beides" beim Rollstand. In einem
+Arbeitsbaum auf `da41dd78` — dem Stand VOR E384 — steht dasselbe Ergebnis,
+29/31 mit genau diesen zwei Zeilen. Ein Nachlauf von E356/E359, eingetragen
+als L122.
+
+typecheck grün · test385 37/37 · test177 69/69 · test178 74/74 · test202 84 ok
+· test204 41 ok · test210 29/31 (die zwei von L122) · test220 21/21 · test221
+34/34 · test222 51/51 · test264 25/25 · test265 38/38 · test285 53/53 · test292
+45/45 · test295 24/24 · test341 37/37 · test342 42/42 · test346 31/31.

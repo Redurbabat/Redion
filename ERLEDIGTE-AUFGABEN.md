@@ -3098,3 +3098,37 @@ die Zeugnisnote je Semester (E242) und der echte Stundenplan (E243).
   Ordner-Browser. Prüfung test369 §9; Gegenprobe: den Fach-Zweig abschalten →
   der Klick öffnet das Fach als Seite (.bib-tab weg), §9 rot (4 Punkte). Mit
   einem Bild belegt.
+
+* E384 (Redurs Satz zum zweiten Mal): Ein offenes Dokument ist der ganze
+  Bildschirm, kein Kasten in der Schale. „ich will das die pdf nocht im
+  bereichen sich öfnnet so wie goodnotes" — E296 trägt denselben Satz im Kopf
+  und war also schon gemacht. Nachgesehen statt geraten (§55.1): E296 hatte den
+  SEITENKOPF geräumt, den Kasten INNERHALB der Seite. Was stehen blieb, war die
+  Schale drumherum — Menüband 37 + Kopfzeile 54 + Original-Karte 45 + links die
+  54 px breite Kante, am Telefon dazu die untere Reiterleiste. Das erste Blatt
+  begann bei 222 von 900 (Rechner) und 232 von 844 (Telefon). Jetzt bei 76 auf
+  beiden. `body[data-dokument="an"]`, im Dokumentzweig gesetzt und bei jedem
+  Zeichnen zuerst gelöscht; `‹ Dokumente` als Weg zurück (über
+  Register.navigation, nicht über Bibliothek — §5 Regel 1); Original-Karte und
+  Randstreifen-Schalter in den Inspector. Prüfung test385, 37 Punkte, ACHT
+  Mutationen rot gesehen. §6 ist die Gegenprobe: auf einer gewöhnlichen Seite
+  MUSS die Schale wieder stehen.
+
+  DREI FUNDE, DIE NUR DAS BILD HATTE. Die Kante stand weiter da (waagerecht
+  verdeckt sie nichts, also meldete keine Zahl sie); am Telefon lief die
+  Dokumentleiste 21 px über den Bildschirm hinaus, der Ausgang `✕` bei 367..411
+  in einem 390er Fenster; und ZWEI gleich aussehende `‹` standen nebeneinander
+  und taten Verschiedenes. Daraus folgte die einzige Wegnahme: `‹ ›` fallen am
+  Telefon aus der Leiste (seit E299 rollt die Ansicht, `☰` springt genau), und
+  der Platz geht an den NAMEN des Dokuments — den E296 dort ausgeblendet hatte,
+  weil er „ohnehin im Pfad darüber steht", und dieser Pfad ist mit der
+  Kopfzeile weg. 115 px statt der dreissig, an denen E296 „E." las.
+
+  ZWEI LEHREN FÜR DAS NÄCHSTE MAL. (a) Eine CSS-Regel gegen `premium.css`
+  braucht dort ihren Platz: gleiche Spezifität, und premium.css lädt später.
+  Und `display:none` allein zieht keine Rasterspalte ein — das ist der
+  E296-Fund, andersherum. (b) `querySelector('.document-topbar button')` als
+  Anker auf den ERSTEN Knopf hat test210 aus dem Dokument geklickt und drei
+  Abschnitte umgeworfen, an denen nichts kaputt war. Eine Stelle in einer Reihe
+  ist kein Anker, ein Auftragsname ist einer — dieselbe Lehre wie test228 in
+  E296.

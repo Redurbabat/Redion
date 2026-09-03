@@ -260,15 +260,33 @@ p('Und die Seite läuft nicht seitlich über', eng.ueberlauf <= 1, `${eng.ueberl
 
 /* Beide lassen sich öffnen — zugeklappt ist nur richtig, wenn man sie
    wiederbekommt. */
+/* AM AUFTRAG, NICHT AN DER STELLE (E384). Hier stand
+   `querySelector('.document-topbar button')` — also der ERSTE Knopf, weil
+   das bis E384 das `☰` war. Seit E384 steht dort `‹ Dokumente`: der Lauf
+   klickte sich aus dem Dokument HERAUS, und §3, §4 und §5 fielen der Reihe
+   nach um, ohne dass an ihnen etwas kaputt war.
+
+   Dieselbe Lehre wie in E296, wo `test228` von `.blk[data-bid=…]` auf
+   `data-bid` umgestellt wurde: eine Stelle in einer Reihe ist kein Anker,
+   ein Auftragsname ist einer. */
 const geoeffnet = await handy.evaluate(async () => {
-  const werkzeug = document.querySelector('.document-topbar button') as HTMLElement | null;
-  werkzeug?.click();
+  const griff = (was: string) =>
+    document.querySelector<HTMLElement>('.document-topbar [data-document-action="' + was + '"]');
+  griff('thumbnails')?.click();
   await new Promise(r => setTimeout(r, 500));
   const miniDa = document.querySelectorAll('.document-thumbnail').length;
-  const knoepfe = [...document.querySelectorAll<HTMLElement>('.document-topbar button')];
-  knoepfe[knoepfe.length - 2]?.click();
+  griff('inspector')?.click();
   await new Promise(r => setTimeout(r, 500));
-  return { miniDa, inspektorDa: !!document.querySelector('.document-inspector-heading') };
+  const inspektorDa = !!document.querySelector('.document-inspector-heading');
+  /* UND BEIDE WIEDER ZU. Sonst misst §4 die Zeichenleiste in einer Mitte,
+     die zwei Spalten abgeben musste: gemessen 13 sichtbare Werkzeuge statt
+     14 und „links" statt „beides" beim Rollstand. Der Abschnitt daneben
+     wäre rot geworden, ohne dass an ihm etwas kaputt ist — derselbe Fehler
+     wie beim offen gelassenen Menüband in test248. */
+  griff('inspector')?.click();
+  griff('thumbnails')?.click();
+  await new Promise(r => setTimeout(r, 500));
+  return { miniDa, inspektorDa };
 });
 p('Das ☰ holt die Miniaturen hervor', geoeffnet.miniDa >= 4, `${geoeffnet.miniDa}`);
 p('Und das ⓘ den Inspector', geoeffnet.inspektorDa);

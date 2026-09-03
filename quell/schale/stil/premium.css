@@ -469,6 +469,23 @@
     overflow: hidden;
   }
   body[data-schale="premium"] #kante[hidden]{ display: none }
+
+  /* ══ E384 · NEBEN EINEM OFFENEN DOKUMENT STEHT NICHTS ═══════════════════
+     Menueband, Kopfzeile und die untere Reiterleiste blendet `bausteine.css`
+     aus; die Kante braucht ihre Regel HIER, weil `body[data-schale=
+     "premium"] #kante{display:flex}` dieselbe Spezifitaet hat (1,1,1) und
+     premium.css spaeter geladen wird — die dortige Regel gewann, und die
+     Kante stand im Bild weiter da, obwohl die Messung sie nicht meldete
+     (sie verdeckt waagerecht nichts).
+
+     Zwei Zeilen, nicht eine: `display:none` allein laesst die 54-px-SPALTE
+     stehen, weil das Raster sie nur bei `#kante[hidden]` einzieht. Genau der
+     Fehler aus E296 („display:none nimmt ein Element aus dem Fluss") —
+     diesmal andersherum, und deshalb ausdruecklich mitgeschrieben. */
+  body[data-schale="premium"][data-dokument="an"] #kante{ display: none }
+  body[data-schale="premium"][data-dokument="an"] #main{
+    grid-template-columns: 0 minmax(0, 1fr);
+  }
   .k-oben, .k-unten{ display: flex; flex-direction: column; align-items: center; gap: 2px }
   .k-oben{ overflow-y: auto; scrollbar-width: none; min-height: 0 }
   .k-oben::-webkit-scrollbar{ display: none }

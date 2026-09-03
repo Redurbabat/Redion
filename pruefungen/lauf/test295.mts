@@ -141,13 +141,32 @@ p('Die Fläche liegt über dem Papier, innerhalb seines Rahmens',
   Math.abs(ohne.flaeche[2]! - ohne.papier[2]!) <= 3,
   `${JSON.stringify(ohne.flaeche)} vs ${JSON.stringify(ohne.papier)}`);
 
+/* ══ DER RANDSCHALTER STEHT SEIT E384 IM INSPECTOR ═════════════════════════
+   Bis dahin sass er als `⇥` in der Dokumentleiste. Er ist ein Schalter fuer
+   das GANZE Dokument — das sagte schon E301 — und gehoert damit zu den
+   Angaben ueber das Dokument. Der Anlass war eine Messung: mit ihm in der
+   Leiste war diese am Telefon 411 px breit in einem 390 px breiten Fenster,
+   und der Ausgang stand 21 px ausserhalb.
+
+   Der Helfer macht den Inspector auf, drueckt, und macht ihn WIEDER ZU —
+   offen nimmt er der Mitte 300 px, und alles danach misst Breiten am
+   Papier. */
+const randSchalten = async (seite: any): Promise<void> => {
+  await seite.click('.document-topbar [data-document-action="inspector"]');
+  await seite.waitForTimeout(500);
+  await seite.click('.document-inspector .document-rand-knopf');
+  await seite.waitForTimeout(600);
+  await seite.click('.document-topbar [data-document-action="inspector"]');
+  await seite.waitForTimeout(700);
+};
+
 /* Und jetzt der Schalter. */
 await pc.evaluate(() => {
   document.getElementById('rg-willkommen')?.remove();
   document.getElementById('rg-einladung')?.remove();
 });
-await pc.click('.document-topbar [data-document-action="rand"]');
-await pc.waitForTimeout(1200);
+await randSchalten(pc);
+await pc.waitForTimeout(600);
 
 const mit = await messe();
 p('Mit Rand gibt es den Flur und das Randfeld', mit.flurDa && mit.randfeld);
@@ -213,8 +232,8 @@ p('Die Fläche zeichnet ihn', drueber.gezeichnet);
  * ========================================================================*/
 console.log('\n3 · Gegenprobe — ausschalten stellt alles zurück');
 
-await pc.click('.document-topbar [data-document-action="rand"]');
-await pc.waitForTimeout(1200);
+await randSchalten(pc);
+await pc.waitForTimeout(600);
 const wieder = await messe();
 p('Kein Flur mehr', !wieder.flurDa && !wieder.randfeld);
 p('Die Box ist wieder so breit wie die Seite', wieder.box === '0 0 595 842', wieder.box);
@@ -263,8 +282,8 @@ const messeHandy = () => handy.evaluate(() => {
 });
 
 const hOhne = await messeHandy();
-await handy.click('.document-topbar [data-document-action="rand"]');
-await handy.waitForTimeout(1400);
+await randSchalten(handy);
+await handy.waitForTimeout(800);
 const hMit = await messeHandy();
 
 p('Das Randfeld ist auch am Telefon da', hMit.randfeld);

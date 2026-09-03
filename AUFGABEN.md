@@ -139,12 +139,17 @@ rechtfertigt.
 Die Produktlücken stehen dort und werden dort gepflegt — sie hier zu
 wiederholen hiesse, zwei Listen zu führen, die auseinanderlaufen.
 
-Zuletzt geschlossen: L120 Listenform (E382), L120 Telefon-Brotkrume (E381), L120 Kern (E380 — das Dokumente-Regal hat Ebenen),
+Zuletzt geschlossen: die PDF öffnet als ganzer Bildschirm (E384 — Redurs Satz
+zum zweiten Mal; E296 hatte den Seitenkopf geräumt, nicht die Schale drumherum),
+L120 Listenform (E382), L120 Telefon-Brotkrume (E381), L120 Kern (E380 — das Dokumente-Regal hat Ebenen),
 L115 Rest (E375), der flüssige Stift und seine Nachbarwege (E376–E379),
 L61 Rest (E374), L114 Punkt 7 (E373), L10 Marken (E372), L10 Side Peek
 (E371), L78 Punkt 1 und L114 Punkt 4 (E368), L116 (E367).
 
-Zuletzt AUFGEMACHT: **L120** — was nach E380 an GoodNotes noch fehlt.
+Zuletzt AUFGEMACHT: **L122** — zwei Zeilen in `test210` §4 sind rot, und ein
+Arbeitsbaum auf dem Stand VOR E384 zeigt dieselben zwei. Ein Nachlauf von
+E356/E359, kein Schaden von E384. Und **L120** — was nach E380 an GoodNotes
+noch fehlt.
 Der Kern (Ebenen im Regal, Hineingehen, nach dem Entpacken im Ordner
 stehen) ist zu; offen bleiben zwei Regale für dieselbe Sache
 (`bibliothek.ts` und `notebook.ts`) und eine untere Leiste, die noch nicht
