@@ -2366,10 +2366,18 @@ WAS OFFEN BLEIBT, und zwar zweierlei:
    veralten — ein mitgeschriebenes Bild von gestern zeigt die Seite von
    gestern.
 
-   ES BLEIBT GENAU EIN FALL: ein leeres A4-Blatt, auf das nur von Hand
-   gezeichnet wurde, hat keine Datei. Sein Deckel bleibt weiss. Dafür
-   bräuchte es das Rendern — und dann auch den eigenen Plan, den dieser
-   Absatz ursprünglich verlangt hat.
+   ~~ES BLEIBT GENAU EIN FALL: ein leeres A4-Blatt, auf das nur von Hand
+   gezeichnet wurde, hat keine Datei. Sein Deckel bleibt weiss.~~
+   GESCHLOSSEN am 3. September 2026 mit E374 — und ohne das Rendern, das
+   dieser Absatz noch verlangt hat. Die Striche liegen im Block
+   (`marken`); `core/ink/thumbnail.ts` rechnet daraus die Pfade,
+   `Vorschau.tinteSvg` macht ein SVG daraus, Regal und Bibliothek zeigen
+   es. Keine Datei, keine Migration, und es kann nicht veralten.
+
+   Der Deckel bekommt dabei WEISSES PAPIER unter die Tinte — sonst stünde
+   eine Handschrift in `#1a1a1a` im Dunkelmodus schwarz auf schwarz, und
+   genau das zeigte das erste Bild. Ein gesperrtes Heft zeigt nichts
+   (§26). test364, 54 Punkte.
 2. ~~`pdfseite` und `zeichenflaeche` haben nirgends einen deutschen Namen.~~
    GESCHLOSSEN mit E239 — und es waren FÜNF, nicht zwei: `database`,
    `pdfseite`, `spalte`, `tabelle`, `zeichenflaeche`.
@@ -5328,3 +5336,31 @@ das offen ist, steht der Startwert im Kern mit dem Vermerk, woher er kommt,
 und die Lernkurve ersetzt ihn nach dem ersten echten Import.
 
 Gefunden am 3. September 2026 (E373).
+
+
+L118 — test353 fällt unter Last aus, allein aber nicht
+================================================================================
+
+Im vollen Lauf voll21 (33 Stücke, 3. September 2026) war `test353` rot.
+Allein auf dem neueren Stand: 39/39. Zweimal nachgefahren, beide Male grün.
+
+Das ist die Sorte Befund, die man nicht ignorieren und nicht reparieren
+kann, solange man nicht weiss, WAS unter Last anders ist. Drei Kandidaten,
+und alle drei gab es hier schon einmal:
+
+1. **Ein Port, den sich zwei Läufe teilen.** Jeder Lauf bringt seinen
+   eigenen Server mit; zwei mit derselben Nummer im selben Stück wären ein
+   stiller Fehler mit genau diesem Muster.
+2. **Eine Zeitschranke, die auf einem ausgelasteten Rechner nicht reicht.**
+   `test353` ist die Auswahl der Zeichenschicht — Lasso, Griffe, Kopieren —
+   und misst nach Gesten.
+3. **Ein Nachzügler aus dem vorigen Lauf im selben Stück.** Der Fall stand
+   schon einmal in dieser Liste: „fünf Prüfläufe reichten ihren Rumpf als
+   Zeichenkette weiter und starben etwa jedes dritte Mal an einem
+   Socketfehler".
+
+**Was fehlt:** den Lauf mehrfach IM STÜCK fahren und die Ausgabe des roten
+Durchgangs aufheben — voll21 hat nur die Zusammenfassung behalten, nicht
+den Prüfpunkt, der fiel. Ohne den weiss niemand, welcher der drei es ist.
+
+Gefunden am 3. September 2026 (voll21, E374).

@@ -445,13 +445,19 @@ const Bibliothek = (() => {
        gibt, kommt die Textvorschau — und die nur bei den Arten, bei denen
        im Text etwas steht. */
     const datei = Vorschau.bildDatei ? Vorschau.bildDatei(p.id) : null;
+    /* UND WENN ES KEINE DATEI GIBT, ABER HANDSCHRIFT (E374, L61 Rest).
+       Ein A4-Blatt, auf das nur geschrieben wurde, hat keine Datei — sein
+       Deckel stand bis heute weiss da, und in einem Regal handgeschriebener
+       Hefte waren das alle. Die Striche liegen im Block; sie zu zeichnen
+       kostet keine Datei und kann nicht veralten. */
+    const tinte = !datei && Vorschau.tinteSvg ? Vorschau.tinteSvg(p.id) : '';
     const bild = datei
       ? `<img class="bib-deckel-bild" data-vorschau="${esc(datei)}" alt="" loading="lazy">`
-      : (MIT_TEXT.has(art.id) ? (Vorschau.miniatur(p.id, 5) || '') : '');
+      : (tinte || (MIT_TEXT.has(art.id) ? (Vorschau.miniatur(p.id, 5) || '') : ''));
     const wann = wannText(p.zuletztGeoeffnet || p.edited || p.created);
     return `<button class="bib-deckel" data-id="${esc(p.id)}" data-art="${esc(art.id)}" ` +
       `title="${esc(p.text || 'Ohne Titel')}">` +
-      `<span class="bib-deckel-blatt mini-zeilen${bild ? '' : ' is-leer'}">` +
+      `<span class="bib-deckel-blatt mini-zeilen${bild ? '' : ' is-leer'}${tinte ? ' hat-tinte' : ''}">` +
         '<i class="bib-papier" aria-hidden="true"></i>' +
         (bild || '') +
         /* Die Marke bleibt: sie sagt, WAS es ist, und das sagt ein Bild

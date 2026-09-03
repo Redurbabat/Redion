@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-369 Entscheidungen, E1 bis E373. Die Nummer ist die Ordnung: eine Entscheidung
+370 Entscheidungen, E1 bis E374. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -402,7 +402,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E349** — Der Start zeigt, wo man war: die PDF, sonst das Regal (Redurs Punkt 1)
 * **E350** — Eine ZIP kommt so ins Regal, wie sie ist (Redurs Punkt 2)
 
-**E351–E373**
+**E351–E374**
 
 * **E351** — Der Stift schreibt wie eine Hand: Füller, Kugelschreiber, Pinsel (Redurs Punkt 3, erster Bogen)
 * **E352** — Der Radierer streicht, teilt und kennt den Rückknopf des Stifts (Redurs Punkt 3, zweiter Bogen)
@@ -427,6 +427,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E371** — Die Vorschau am Telefon ist ein Blatt, kein Absprung (L10)
 * **E372** — Die Telefonmarken sagen, was wirklich dasteht — zwei logen (L10)
 * **E373** — Was ein langer Import kostet, steht vorher da — und schweigt sonst (L114 Punkt 7)
+* **E374** — Der Deckel eines handbeschriebenen Hefts zeigt, was daraufsteht (L61 Rest)
 
 ---
 
@@ -30006,3 +30007,121 @@ Dienststand v174.
 MUTATIONSPROBE, dreimal: Schwelle auf 0 → 51/57 (und Redion behauptet für
 drei Bilder „rund eine halbe Minute"). Seitenzeit falsch geteilt → 56/57.
 Aus abgebrochenen Läufen lernen → 56/57.
+
+
+════════════════════════════════════════════════════════════════════════════
+E374 — Der Deckel eines handbeschriebenen Hefts zeigt, was daraufsteht
+       (L61 Rest)
+════════════════════════════════════════════════════════════════════════════
+
+BEFUND: L61 war seit E313 fast zu. Es blieb genau ein Fall, und er stand
+dort im Wortlaut: „ein leeres A4-Blatt, auf das nur von Hand gezeichnet
+wurde, hat keine Datei. Sein Deckel bleibt weiss."
+
+In einem Regal voller handgeschriebener Hefte sind das ALLE Deckel. Und ein
+Regal aus leeren Rechtecken ist keine Bibliothek, sondern eine Liste ohne
+Namen — für einen Berufsschüler mit zwölf Mitschriften genau der Ort, an
+dem GoodNotes ihm überlegen war.
+
+DER WEG IST DERSELBE WIE BEI E313, UND DAS IST DER PUNKT
+────────────────────────────────────────────────────────
+L61 schlug ursprünglich vor, beim Speichern ein kleines Bild mitzuschreiben
+— „stückweise und in die Dateiablage, das ist eine Speicheränderung und
+braucht einen eigenen Plan". E313 hat für PDFs und Bilder den besseren Weg
+gefunden: nicht mitschreiben, sondern zeigen, was schon da ist.
+
+Für Handschrift gilt dasselbe. Die Striche liegen bereits im Block
+(`marken`, seit E100). Sie auf Deckelgrösse zu rechnen kostet nichts,
+braucht keine Datei, keine Migration — und kann nicht veralten. Ein
+mitgeschriebenes Vorschaubild von gestern zeigt die Seite von gestern.
+
+WAS GEBAUT WURDE
+────────────────
+**`src/core/ink/thumbnail.ts`** — ein reiner Kern: Marken und Zielgrösse
+herein, Pfade heraus. Skaliert mit Seitenverhältnis (ein gestauchtes Blatt
+sähe aus wie eine andere Handschrift), dünnt lange Striche auf 40 Punkte
+aus (ein Strich mit 900 Stützpunkten wird auf 160 px zu 900 identischen
+Koordinaten), deckelt bei 400 Marken und zieht keine Striche unter 0,6 px.
+
+**Gezeichnet wird nur, was von Hand geschrieben wurde** — Stift, Marker,
+Linie, Rechteck, Ellipse, Pfeil. Ein Bild hat seine eigene Datei (E313),
+Text und Zettel gäben im Deckel nur graue Klötzchen.
+
+**Die Farbe wird geprüft (§19).** Eine Marke kommt aus dem Block und damit
+aus einer Sicherung, die jemand anderes geschrieben haben kann; sie geht
+hier in ein SVG-Attribut. Erlaubt sind nur `#abc`, `#aabbcc`, `rgb(…)` und
+ein Farbname — alles andere fällt auf Schwarz. Und die Schale escapt danach
+noch einmal: zwei Schlösser an einer Tür, die auf fremde Daten zeigt, sind
+eines zu wenig.
+
+**Gesperrte Hefte zeigen nichts.** Wer ein Heft sperrt, will nicht, dass
+man von aussen liest, was darin steht (§26).
+
+WAS ERST DAS BILD GEFUNDEN HAT — DREIMAL
+────────────────────────────────────────
+Der Prüflauf war grün, und das Bild war falsch. §55 in Reinform.
+
+**1. Schwarz auf Schwarz.** Die Handschrift stand in `#1a1a1a` auf einem
+Deckel in `--bg-card`. Im Dunkelmodus sah man nur die blaue Kurve und das
+rote Rechteck — also genau die Striche, die ein Mensch NICHT als
+Handschrift schreibt. Die Tintenfarbe zu verbiegen wäre die falsche
+Antwort gewesen (dann zeigte der Deckel eine andere Schrift als die Seite);
+die richtige ist die, die GoodNotes auch nimmt: der Deckel zeigt die SEITE,
+und eine Seite ist aus Papier. Also weisses Papier unter der Tinte, in
+beiden Modi.
+
+**2. Die Reparatur tat nichts.** `.bib-deckel-blatt.hat-tinte` sind zwei
+Stufen; vierzig Zeilen weiter oben steht `.bib-deckel[data-art="blatt"]
+.bib-deckel-blatt{background:var(--bg-card)}` mit drei. Die drei gewinnen.
+Gefunden hat es nicht das Auge, sondern der Prüfpunkt, der die GERECHNETE
+Hintergrundfarbe misst statt das Vorhandensein einer Klasse — genau darum
+misst er sie.
+
+**3. Und dann war der Kommentar schuld.** Der zweite Versuch stand hinter
+einem `*/`, das ich beim Umschreiben stehen liess: die Regel war ab da
+CSS-Text in einem kaputten Kommentar und wurde nie geparst. Wieder rot,
+wieder derselbe Prüfpunkt. Ein Wächter, der die Farbe misst, findet drei
+verschiedene Ursachen für dasselbe Symptom; einer, der die Klasse prüft,
+hätte alle drei durchgelassen.
+
+**4. Der Auslauf sah nach Schmutz aus.** Am unteren Rand jedes Deckels
+liegt ein Verlauf gegen `--bg-card` — auf dunklem Grund unauffällig, auf
+weissem Papier ein grauer Schmierstreifen. Für Bilder ist er seit E313
+abgeschaltet, mit genau der richtigen Begründung im Kommentar: „Über einem
+Bild hat er nichts zu suchen — er würde dessen untere Zeile ausbleichen."
+Eine Handschrift ist derselbe Fall.
+
+UND EINE BEHAUPTUNG, DIE ICH FAST STEHEN GELASSEN HÄTTE
+───────────────────────────────────────────────────────
+Im Quelltext stand: „`!p.locked` — bei einem gesperrten Heft nicht (§26)".
+Die Gegenprobe hat es widerlegt: das `!p.locked` herausgenommen, und der
+Lauf blieb grün. Der Schutz ist nämlich gar nicht diese Bedingung, sondern
+der Zweig darunter — ein gesperrtes Heft bekommt den Schloss-Deckel und
+überhaupt keinen Inhalt.
+
+Die Bedingung bleibt trotzdem stehen, aber der Kommentar sagt jetzt die
+Wahrheit: sie spart die Rechnung und hält die Zusage, falls jemand den
+Zweig darunter umbaut. Ein zweites Schloss ist kein überflüssiges, solange
+man weiss, welches zuerst hält.
+
+WAS NICHT GEMACHT WURDE
+───────────────────────
+**Keine Datei, keine Migration, keine Speicheränderung.** Das war der
+teure Weg, den L61 vorschlug, und E313 hat gezeigt, dass es ihn nicht
+braucht.
+
+**Kein Rendern auf eine Leinwand.** Ein SVG aus den Pfaden ist kleiner,
+skaliert mit und braucht keinen zweiten Zeichenweg.
+
+PRÜFUNG: test364 54/54 (neu, Port 9389) · test356 · test359. Ein Bild
+angesehen — dreimal, und jedes Mal fand es etwas.
+
+MUTATIONSPROBE, dreimal: Farbprüfung ausgebaut → 49/51 (und
+`javascript:alert(1)` steht im Attribut). Verlauf wieder über die Tinte →
+53/54. `!p.locked` entfernt → blieb GRÜN, und das ist der Fund oben.
+
+NACHTRAG ZUM VOLLEN LAUF voll21 (33 Stücke auf E369): zwei rote Suiten.
+`test113` war das Aufräumen von E370 und ist behoben. `test353` lief allein
+auf dem neueren Stand 39/39 — ein Ausreisser unter Last, kein Rückfall. Er
+steht als **L118** in den Lücken, damit er nicht das nächste Mal wieder als
+Überraschung kommt.

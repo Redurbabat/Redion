@@ -727,8 +727,16 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
   background:var(--bg-card); border:1px solid var(--line); color:var(--text-dim)
 }
 /* Der Verlauf unten verdeckt abgeschnittenen TEXT. Über einem Bild hat er
-   nichts zu suchen — er würde dessen untere Zeile ausbleichen. */
-.bib-deckel-blatt:has(.bib-deckel-bild)::after{ display:none }
+   nichts zu suchen — er würde dessen untere Zeile ausbleichen.
+
+   UND ÜBER EINER HANDSCHRIFT GENAUSO WENIG (E374). Auf dem ersten Bild des
+   neuen Deckels war es sofort zu sehen: der Verlauf lief gegen
+   `--bg-card`, also im Dunkelmodus gegen Schwarz — auf dem weissen Papier
+   sah das nicht nach Auslauf aus, sondern nach Schmutz am unteren Rand.
+   Der Grund ist derselbe wie beim Bild: eine Handschrift ist kein
+   abgeschnittener Text, sondern ein Bild der Seite. */
+.bib-deckel-blatt:has(.bib-deckel-bild)::after,
+.bib-deckel-blatt:has(.vs-tinte)::after{ display:none }
 .bib-deckel-blatt::after{
   content:""; position:absolute; right:0; bottom:0; left:0; height:38px;
   background:linear-gradient(to bottom, transparent, var(--bg-card));

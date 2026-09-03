@@ -347,3 +347,32 @@ body.nh-zieht .nh-regal{ touch-action:none }
   background:var(--accent-schwach);
   border-radius:var(--radius-md);
 }
+
+/* Die Handschrift auf dem Deckel (E374, L61 Rest). Sie füllt das Blatt wie
+   ein Bild — der Kern rechnet schon mit Seitenverhältnis, hier wird nichts
+   mehr verzerrt. */
+.vs-tinte{display:block; width:100%; height:100%; object-fit:contain}
+.bib-deckel-blatt .vs-tinte{position:absolute; inset:0}
+
+/* PAPIER IST WEISS, AUCH IM DUNKELMODUS (E374, mit Augen gefunden).
+   Das erste Bild zeigte es sofort: eine Handschrift in #1a1a1a auf einem
+   Deckel in `--bg` ist im Dunkelmodus schwarz auf schwarz. Sichtbar waren
+   nur die blaue Kurve und das rote Rechteck — also genau die Striche, die
+   ein Mensch NICHT als Handschrift schreibt.
+
+   Die Farbe der Tinte zu verbiegen wäre die falsche Antwort: dann zeigte
+   der Deckel eine andere Schrift als die Seite. Die richtige ist die, die
+   GoodNotes auch nimmt — der Deckel zeigt die SEITE, und eine Seite ist
+   aus Papier.
+
+   UND EIN ZWEITES MAL MIT AUGEN GEFUNDEN: der erste Versuch stand als
+   `.bib-deckel-blatt.hat-tinte` da und tat NICHTS. Vierzig Zeilen weiter
+   oben in `bausteine.css` steht `.bib-deckel[data-art="blatt"]
+   .bib-deckel-blatt{background:var(--bg-card)}` — drei Stufen gegen zwei,
+   und die drei gewinnen. Deshalb hier vier: das Attribut ohne Wert zählt
+   voll mit und schlägt jede Deckelart, ohne eine davon zu nennen. */
+.bib-deckel[data-art] .bib-deckel-blatt.hat-tinte{
+  background:#fbfaf7;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.10);
+}
+.bib-deckel[data-art] .bib-deckel-blatt.hat-tinte .bib-papier{opacity:.5}

@@ -499,11 +499,32 @@ const Notebook = (() => {
     const sheet = Store.childrenOf(p.id).find((k: any) => k.type === 'blatt');
     const papier = String(sheet?.papier || 'blanko');
     const farbe = farbeVon(p);
+    /* DIE HANDSCHRIFT AUF DEM DECKEL (E374, L61 Rest). Bis hierher war
+       jeder Deckel im Regal leer: ein Heft, in das nur geschrieben wurde,
+       hat keine Datei, die man zeigen könnte — und ein Regal aus weissen
+       Rechtecken ist eine Liste ohne Namen. Die Striche liegen im Block;
+       sie zu zeichnen kostet keine Datei und kann nicht veralten.
+
+       BEI EINEM GESPERRTEN HEFT NICHT. Wer es sperrt, will nicht, dass man
+       von aussen liest, was darin steht — ein Deckel mit lesbarer
+       Handschrift wäre genau das (§26).
+
+       UND HIER STAND FAST EINE FALSCHE BEHAUPTUNG. Der Schutz ist NICHT
+       dieses `!p.locked`, sondern der Zweig darunter: ein gesperrtes Heft
+       bekommt den Schloss-Deckel und gar keinen Inhalt. Die Gegenprobe hat
+       es gezeigt — das `!p.locked` herausgenommen, und der Lauf blieb grün.
+       Es bleibt trotzdem stehen, aus zwei Gründen: es spart die Rechnung
+       für ein Heft, dessen Schrift ohnehin niemand sieht, und es hält die
+       Zusage auch dann, wenn jemand den Zweig darunter einmal umbaut. Ein
+       zweites Schloss ist kein überflüssiges, solange man weiss, welches
+       zuerst hält. */
+    const tinte = (!p.locked && typeof Vorschau !== 'undefined' && Vorschau.tinteSvg)
+      ? Vorschau.tinteSvg(p.id) : '';
     const deckelBlatt = p.locked
       ? `<span class="bib-deckel-blatt is-leer is-gesperrt">` +
         `<span class="nh-schloss" aria-hidden="true">🔒</span></span>`
-      : `<span class="bib-deckel-blatt is-leer" data-papier="${esc(papier)}">` +
-        `<i class="bib-papier" aria-hidden="true"></i></span>`;
+      : `<span class="bib-deckel-blatt${tinte ? ' hat-tinte' : ' is-leer'}" data-papier="${esc(papier)}">` +
+        `<i class="bib-papier" aria-hidden="true"></i>${tinte}</span>`;
     return `<div class="nh-karte">` +
       `<button class="bib-deckel" data-id="${esc(p.id)}" data-art="blatt"` +
       (farbe ? ` data-farbe="${esc(farbe)}" style="--deckel-farbe:var(--c-${esc(farbe)})"` : '') +

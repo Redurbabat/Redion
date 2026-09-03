@@ -314,6 +314,72 @@ const Vorschau = (() => {
         };
         return suche(seiteId, tiefe);
     };
+    /* ========================================================================
+     * DER DECKEL EINES HANDBESCHRIEBENEN BLATTES (E374, L61 Rest)
+     * ------------------------------------------------------------------------
+     * `bildDatei` findet nichts, wenn auf einem A4-Blatt NUR von Hand
+     * geschrieben wurde: eine handgeschriebene Seite hat keine Datei. In einem
+     * Regal voller solcher Hefte sind das alle Deckel, und ein Regal aus
+     * weissen Rechtecken ist eine Liste ohne Namen.
+     *
+     * Gerechnet wird im Kern (`core/ink/thumbnail.ts`); hier steht nur, wie
+     * daraus ein SVG wird — und dass jeder Wert aus den Nutzerdaten durch
+     * `esc` geht, bevor er in einem Attribut landet (§19).
+     * ======================================================================*/
+    /** Die Blattmasse, so wie `bereiche/pdf/marken.ts` sie schreibt. */
+    const TINTE_BLOCK = new Set(['blatt', 'pdfseite', 'zeichenflaeche']);
+    /** Der erste Block mit Handschrift in Lesereihenfolge, oder nichts. */
+    const tinteBlock = (seiteId, tiefe = 3) => {
+        const gesehen = new Set();
+        const suche = (id, rest) => {
+            if (!id || rest < 0 || gesehen.has(id))
+                return null;
+            gesehen.add(id);
+            const b = Store.getBlock(id);
+            if (!b)
+                return null;
+            if (TINTE_BLOCK.has(String(b.type || '')) &&
+                Array.isArray(b.marken) && b.marken.length)
+                return b;
+            for (const k of b.content || []) {
+                const kind = Store.getBlock(k);
+                if (!kind || kind.alive === false)
+                    continue;
+                const treffer = suche(k, rest - 1);
+                if (treffer)
+                    return treffer;
+            }
+            return null;
+        };
+        return suche(seiteId, tiefe);
+    };
+    /**
+     * Ein SVG mit der Handschrift einer Seite — oder eine leere Zeichenkette.
+     *
+     * LEER IST EIN ERGEBNIS, kein Fehler: eine Seite ohne Handschrift bekommt
+     * nichts, und der Deckel bleibt, was er war.
+     */
+    const tinteSvg = (seiteId, breite = 160, hoehe = 226) => {
+        if (typeof InkThumbnail === 'undefined')
+            return '';
+        const b = tinteBlock(seiteId);
+        if (!b)
+            return '';
+        const quelle = { breite: Number(b.blattBreite) || 794,
+            hoehe: Number(b.blattHoehe) || 1123 };
+        const d = InkThumbnail.deckel(b.marken, quelle, { breite, hoehe });
+        if (!InkThumbnail.hatInhalt(d))
+            return '';
+        /* `esc` auf jeden Wert, obwohl der Kern schon prüft. Zwei Schlösser an
+           einer Tür, die auf fremde Daten zeigt, sind eines zu wenig. */
+        const pfade = d.zuege.map((z) => '<path d="' + esc(z.d) + '" stroke="' + esc(z.farbe) +
+            '" stroke-width="' + esc(String(Math.round(z.breite * 10) / 10)) +
+            '" opacity="' + esc(String(z.deckkraft)) +
+            '" fill="none" stroke-linecap="round" stroke-linejoin="round"/>').join('');
+        return '<svg class="vs-tinte" viewBox="0 0 ' + breite + ' ' + hoehe + '" ' +
+            'width="100%" height="100%" aria-hidden="true" focusable="false">' +
+            pfade + '</svg>';
+    };
     /**
      * Die Adressen aller `[data-vorschau]` in einem Baumstück nachtragen.
      *
@@ -344,6 +410,7 @@ const Vorschau = (() => {
             }, () => { el.remove(); });
         });
     };
-    return { klartext, anriss, miniatur, umfang, bildDatei, bilderNachtragen };
+    return { klartext, anriss, miniatur, umfang, bildDatei, bilderNachtragen,
+        tinteSvg, tinteBlock };
 })();
 window.Vorschau = Vorschau;

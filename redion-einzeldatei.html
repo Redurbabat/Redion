@@ -7477,6 +7477,35 @@ body.nh-zieht .nh-regal{ touch-action:none }
   border-radius:var(--radius-md);
 }
 
+/* Die Handschrift auf dem Deckel (E374, L61 Rest). Sie füllt das Blatt wie
+   ein Bild — der Kern rechnet schon mit Seitenverhältnis, hier wird nichts
+   mehr verzerrt. */
+.vs-tinte{display:block; width:100%; height:100%; object-fit:contain}
+.bib-deckel-blatt .vs-tinte{position:absolute; inset:0}
+
+/* PAPIER IST WEISS, AUCH IM DUNKELMODUS (E374, mit Augen gefunden).
+   Das erste Bild zeigte es sofort: eine Handschrift in #1a1a1a auf einem
+   Deckel in `--bg` ist im Dunkelmodus schwarz auf schwarz. Sichtbar waren
+   nur die blaue Kurve und das rote Rechteck — also genau die Striche, die
+   ein Mensch NICHT als Handschrift schreibt.
+
+   Die Farbe der Tinte zu verbiegen wäre die falsche Antwort: dann zeigte
+   der Deckel eine andere Schrift als die Seite. Die richtige ist die, die
+   GoodNotes auch nimmt — der Deckel zeigt die SEITE, und eine Seite ist
+   aus Papier.
+
+   UND EIN ZWEITES MAL MIT AUGEN GEFUNDEN: der erste Versuch stand als
+   `.bib-deckel-blatt.hat-tinte` da und tat NICHTS. Vierzig Zeilen weiter
+   oben in `bausteine.css` steht `.bib-deckel[data-art="blatt"]
+   .bib-deckel-blatt{background:var(--bg-card)}` — drei Stufen gegen zwei,
+   und die drei gewinnen. Deshalb hier vier: das Attribut ohne Wert zählt
+   voll mit und schlägt jede Deckelart, ohne eine davon zu nennen. */
+.bib-deckel[data-art] .bib-deckel-blatt.hat-tinte{
+  background:#fbfaf7;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.10);
+}
+.bib-deckel[data-art] .bib-deckel-blatt.hat-tinte .bib-papier{opacity:.5}
+
 </style>
 <style>
 /* ===== quell/schale/stil/bausteine.css ===== */
@@ -8209,8 +8238,16 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
   background:var(--bg-card); border:1px solid var(--line); color:var(--text-dim)
 }
 /* Der Verlauf unten verdeckt abgeschnittenen TEXT. Über einem Bild hat er
-   nichts zu suchen — er würde dessen untere Zeile ausbleichen. */
-.bib-deckel-blatt:has(.bib-deckel-bild)::after{ display:none }
+   nichts zu suchen — er würde dessen untere Zeile ausbleichen.
+
+   UND ÜBER EINER HANDSCHRIFT GENAUSO WENIG (E374). Auf dem ersten Bild des
+   neuen Deckels war es sofort zu sehen: der Verlauf lief gegen
+   `--bg-card`, also im Dunkelmodus gegen Schwarz — auf dem weissen Papier
+   sah das nicht nach Auslauf aus, sondern nach Schmutz am unteren Rand.
+   Der Grund ist derselbe wie beim Bild: eine Handschrift ist kein
+   abgeschnittener Text, sondern ein Bild der Seite. */
+.bib-deckel-blatt:has(.bib-deckel-bild)::after,
+.bib-deckel-blatt:has(.vs-tinte)::after{ display:none }
 .bib-deckel-blatt::after{
   content:""; position:absolute; right:0; bottom:0; left:0; height:38px;
   background:linear-gradient(to bottom, transparent, var(--bg-card));
@@ -16031,7 +16068,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 178, inhalt: '298334bd69f7de59', gebaut: '2026-09-03T08:34:18.108Z' };
+const Stand = { fassung: 190, inhalt: '57c533efdde6d9ef', gebaut: '2026-09-03T08:53:22.300Z' };
 window.Stand = Stand;
 
 </script>
@@ -17401,6 +17438,122 @@ const InkShapes = (() => {
     return { recognize };
 })();
 window.InkShapes = InkShapes;
+
+</script>
+<script>
+/* ===== quell/core/ink/thumbnail.js ===== */
+"use strict";
+/* ============================================================================
+ * core/ink/thumbnail.js — der Deckel eines handbeschriebenen Blattes
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/core/ink/thumbnail.ts`. `npm run bauen:ts` schreibt
+ * daraus diese Datei.
+ * ==========================================================================*/
+const InkThumbnail = (() => {
+    /* Unter dieser Breite sieht man einen Strich im Deckel nicht mehr. Ein
+       Haar von 0,2 px ist auf einem Deckel dasselbe wie kein Strich. */
+    const MIN_BREITE = 0.6;
+    /* Mehr Punkte als das braucht ein Deckel nicht. Ein Strich mit 900
+       Stützpunkten wird auf 160 px zu einer Linie mit 900 identischen
+       Koordinaten — das kostet nur Speicher im DOM. */
+    const MAX_PUNKTE = 40;
+    /* Und mehr Marken als das ergeben kein Bild mehr, sondern eine Fläche. */
+    const MAX_MARKEN = 400;
+    /**
+     * Eine Farbe, die wirklich eine Farbe ist.
+     *
+     * NUTZERDATEN GEHEN HIER IN EIN ATTRIBUT (§19). Eine Marke kommt aus dem
+     * Block und damit aus einer Sicherung, die jemand anderes geschrieben
+     * haben kann. `fill:url(#x)` oder ein angehängtes `"/><script`  hätten in
+     * einem SVG-Attribut nichts zu suchen; erlaubt sind deshalb nur die drei
+     * Formen, die der Zeichner selbst schreibt.
+     */
+    const farbeSicher = (roh, ersatz = '#1a1a1a') => {
+        const s = String(roh ?? '').trim();
+        if (/^#[0-9a-fA-F]{3}$/.test(s) || /^#[0-9a-fA-F]{6}$/.test(s))
+            return s;
+        if (/^rgba?\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*(,\s*(0|1|0?\.\d+)\s*)?\)$/.test(s))
+            return s;
+        if (/^[a-z]{3,20}$/.test(s))
+            return s; /* black, red, cornflowerblue */
+        return ersatz;
+    };
+    /** Jeden n-ten Punkt, aber Anfang und Ende immer. */
+    const ausduennen = (pts, hoechstens) => {
+        if (pts.length <= hoechstens)
+            return pts;
+        const schritt = pts.length / hoechstens;
+        const raus = [];
+        for (let i = 0; i < hoechstens - 1; i++) {
+            const p = pts[Math.floor(i * schritt)];
+            if (p)
+                raus.push(p);
+        }
+        const letzter = pts[pts.length - 1];
+        if (letzter)
+            raus.push(letzter);
+        return raus;
+    };
+    /**
+     * Aus den Marken eines Blattes die Züge für einen Deckel rechnen.
+     *
+     * `quelle` ist die Grösse, in der gezeichnet wurde; `ziel` die des
+     * Deckels. Skaliert wird MIT SEITENVERHÄLTNIS — ein gestauchtes Blatt
+     * sähe aus wie eine andere Handschrift.
+     */
+    const deckel = (marken, quelle, ziel) => {
+        const liste = Array.isArray(marken) ? marken : [];
+        const qb = Math.max(1, Number(quelle?.breite) || 1);
+        const qh = Math.max(1, Number(quelle?.hoehe) || 1);
+        const zb = Math.max(1, Number(ziel?.breite) || 1);
+        const zh = Math.max(1, Number(ziel?.hoehe) || 1);
+        const faktor = Math.min(zb / qb, zh / qh);
+        /* Mittig setzen, wenn das Verhältnis nicht genau passt. */
+        const dx = (zb - qb * faktor) / 2;
+        const dy = (zh - qh * faktor) / 2;
+        const zuege = [];
+        let ausgelassen = 0;
+        for (const roh of liste.slice(0, MAX_MARKEN)) {
+            const m = (roh || {});
+            const art = String(m['art'] || '');
+            /* Ein Bild hat seine eigene Datei und wird woanders gezeigt (E313);
+               Text und Zettel bringen im Deckel nur graue Klötzchen. Gezeichnet
+               wird, was mit der Hand geschrieben wurde. */
+            if (art !== 'stift' && art !== 'marker' && art !== 'linie' &&
+                art !== 'rechteck' && art !== 'ellipse' && art !== 'pfeil') {
+                ausgelassen++;
+                continue;
+            }
+            const pts = Array.isArray(m['pts']) ? m['pts'] : [];
+            if (pts.length < 2) {
+                ausgelassen++;
+                continue;
+            }
+            const nutz = ausduennen(pts.filter(p => Array.isArray(p) && p.length >= 2), MAX_PUNKTE);
+            if (nutz.length < 2) {
+                ausgelassen++;
+                continue;
+            }
+            const runde = (w) => Math.round(w * 10) / 10;
+            const teile = nutz.map((p, i) => (i === 0 ? 'M' : 'L') + runde((Number(p[0]) || 0) * faktor + dx) +
+                ' ' + runde((Number(p[1]) || 0) * faktor + dy));
+            zuege.push({
+                d: teile.join(' '),
+                farbe: farbeSicher(m['farbe']),
+                breite: Math.max(MIN_BREITE, (Number(m['breite']) || 2) * faktor),
+                deckkraft: art === 'marker' ? 0.4 : 1,
+            });
+        }
+        return { zuege, marken: liste.length, ausgelassen: ausgelassen + Math.max(0, liste.length - MAX_MARKEN) };
+    };
+    /** Ob es überhaupt etwas zu zeigen gibt. Leer heisst: den Deckel lassen,
+        wie er war — ein leeres SVG ist schlechter als kein SVG. */
+    const hatInhalt = (d) => !!d && d.zuege.length > 0;
+    return { deckel, farbeSicher, ausduennen, hatInhalt,
+        MIN_BREITE, MAX_PUNKTE, MAX_MARKEN };
+})();
+globalThis.InkThumbnail = InkThumbnail;
 
 </script>
 <script>
@@ -104679,6 +104832,72 @@ const Vorschau = (() => {
         };
         return suche(seiteId, tiefe);
     };
+    /* ========================================================================
+     * DER DECKEL EINES HANDBESCHRIEBENEN BLATTES (E374, L61 Rest)
+     * ------------------------------------------------------------------------
+     * `bildDatei` findet nichts, wenn auf einem A4-Blatt NUR von Hand
+     * geschrieben wurde: eine handgeschriebene Seite hat keine Datei. In einem
+     * Regal voller solcher Hefte sind das alle Deckel, und ein Regal aus
+     * weissen Rechtecken ist eine Liste ohne Namen.
+     *
+     * Gerechnet wird im Kern (`core/ink/thumbnail.ts`); hier steht nur, wie
+     * daraus ein SVG wird — und dass jeder Wert aus den Nutzerdaten durch
+     * `esc` geht, bevor er in einem Attribut landet (§19).
+     * ======================================================================*/
+    /** Die Blattmasse, so wie `bereiche/pdf/marken.ts` sie schreibt. */
+    const TINTE_BLOCK = new Set(['blatt', 'pdfseite', 'zeichenflaeche']);
+    /** Der erste Block mit Handschrift in Lesereihenfolge, oder nichts. */
+    const tinteBlock = (seiteId, tiefe = 3) => {
+        const gesehen = new Set();
+        const suche = (id, rest) => {
+            if (!id || rest < 0 || gesehen.has(id))
+                return null;
+            gesehen.add(id);
+            const b = Store.getBlock(id);
+            if (!b)
+                return null;
+            if (TINTE_BLOCK.has(String(b.type || '')) &&
+                Array.isArray(b.marken) && b.marken.length)
+                return b;
+            for (const k of b.content || []) {
+                const kind = Store.getBlock(k);
+                if (!kind || kind.alive === false)
+                    continue;
+                const treffer = suche(k, rest - 1);
+                if (treffer)
+                    return treffer;
+            }
+            return null;
+        };
+        return suche(seiteId, tiefe);
+    };
+    /**
+     * Ein SVG mit der Handschrift einer Seite — oder eine leere Zeichenkette.
+     *
+     * LEER IST EIN ERGEBNIS, kein Fehler: eine Seite ohne Handschrift bekommt
+     * nichts, und der Deckel bleibt, was er war.
+     */
+    const tinteSvg = (seiteId, breite = 160, hoehe = 226) => {
+        if (typeof InkThumbnail === 'undefined')
+            return '';
+        const b = tinteBlock(seiteId);
+        if (!b)
+            return '';
+        const quelle = { breite: Number(b.blattBreite) || 794,
+            hoehe: Number(b.blattHoehe) || 1123 };
+        const d = InkThumbnail.deckel(b.marken, quelle, { breite, hoehe });
+        if (!InkThumbnail.hatInhalt(d))
+            return '';
+        /* `esc` auf jeden Wert, obwohl der Kern schon prüft. Zwei Schlösser an
+           einer Tür, die auf fremde Daten zeigt, sind eines zu wenig. */
+        const pfade = d.zuege.map((z) => '<path d="' + esc(z.d) + '" stroke="' + esc(z.farbe) +
+            '" stroke-width="' + esc(String(Math.round(z.breite * 10) / 10)) +
+            '" opacity="' + esc(String(z.deckkraft)) +
+            '" fill="none" stroke-linecap="round" stroke-linejoin="round"/>').join('');
+        return '<svg class="vs-tinte" viewBox="0 0 ' + breite + ' ' + hoehe + '" ' +
+            'width="100%" height="100%" aria-hidden="true" focusable="false">' +
+            pfade + '</svg>';
+    };
     /**
      * Die Adressen aller `[data-vorschau]` in einem Baumstück nachtragen.
      *
@@ -104709,7 +104928,8 @@ const Vorschau = (() => {
             }, () => { el.remove(); });
         });
     };
-    return { klartext, anriss, miniatur, umfang, bildDatei, bilderNachtragen };
+    return { klartext, anriss, miniatur, umfang, bildDatei, bilderNachtragen,
+        tinteSvg, tinteBlock };
 })();
 window.Vorschau = Vorschau;
 
@@ -117349,13 +117569,19 @@ const Bibliothek = (() => {
            gibt, kommt die Textvorschau — und die nur bei den Arten, bei denen
            im Text etwas steht. */
         const datei = Vorschau.bildDatei ? Vorschau.bildDatei(p.id) : null;
+        /* UND WENN ES KEINE DATEI GIBT, ABER HANDSCHRIFT (E374, L61 Rest).
+           Ein A4-Blatt, auf das nur geschrieben wurde, hat keine Datei — sein
+           Deckel stand bis heute weiss da, und in einem Regal handgeschriebener
+           Hefte waren das alle. Die Striche liegen im Block; sie zu zeichnen
+           kostet keine Datei und kann nicht veralten. */
+        const tinte = !datei && Vorschau.tinteSvg ? Vorschau.tinteSvg(p.id) : '';
         const bild = datei
             ? `<img class="bib-deckel-bild" data-vorschau="${esc(datei)}" alt="" loading="lazy">`
-            : (MIT_TEXT.has(art.id) ? (Vorschau.miniatur(p.id, 5) || '') : '');
+            : (tinte || (MIT_TEXT.has(art.id) ? (Vorschau.miniatur(p.id, 5) || '') : ''));
         const wann = wannText(p.zuletztGeoeffnet || p.edited || p.created);
         return `<button class="bib-deckel" data-id="${esc(p.id)}" data-art="${esc(art.id)}" ` +
             `title="${esc(p.text || 'Ohne Titel')}">` +
-            `<span class="bib-deckel-blatt mini-zeilen${bild ? '' : ' is-leer'}">` +
+            `<span class="bib-deckel-blatt mini-zeilen${bild ? '' : ' is-leer'}${tinte ? ' hat-tinte' : ''}">` +
             '<i class="bib-papier" aria-hidden="true"></i>' +
             (bild || '') +
             /* Die Marke bleibt: sie sagt, WAS es ist, und das sagt ein Bild
@@ -122960,11 +123186,32 @@ const Notebook = (() => {
         const sheet = Store.childrenOf(p.id).find((k) => k.type === 'blatt');
         const papier = String(sheet?.papier || 'blanko');
         const farbe = farbeVon(p);
+        /* DIE HANDSCHRIFT AUF DEM DECKEL (E374, L61 Rest). Bis hierher war
+           jeder Deckel im Regal leer: ein Heft, in das nur geschrieben wurde,
+           hat keine Datei, die man zeigen könnte — und ein Regal aus weissen
+           Rechtecken ist eine Liste ohne Namen. Die Striche liegen im Block;
+           sie zu zeichnen kostet keine Datei und kann nicht veralten.
+    
+           BEI EINEM GESPERRTEN HEFT NICHT. Wer es sperrt, will nicht, dass man
+           von aussen liest, was darin steht — ein Deckel mit lesbarer
+           Handschrift wäre genau das (§26).
+    
+           UND HIER STAND FAST EINE FALSCHE BEHAUPTUNG. Der Schutz ist NICHT
+           dieses `!p.locked`, sondern der Zweig darunter: ein gesperrtes Heft
+           bekommt den Schloss-Deckel und gar keinen Inhalt. Die Gegenprobe hat
+           es gezeigt — das `!p.locked` herausgenommen, und der Lauf blieb grün.
+           Es bleibt trotzdem stehen, aus zwei Gründen: es spart die Rechnung
+           für ein Heft, dessen Schrift ohnehin niemand sieht, und es hält die
+           Zusage auch dann, wenn jemand den Zweig darunter einmal umbaut. Ein
+           zweites Schloss ist kein überflüssiges, solange man weiss, welches
+           zuerst hält. */
+        const tinte = (!p.locked && typeof Vorschau !== 'undefined' && Vorschau.tinteSvg)
+            ? Vorschau.tinteSvg(p.id) : '';
         const deckelBlatt = p.locked
             ? `<span class="bib-deckel-blatt is-leer is-gesperrt">` +
                 `<span class="nh-schloss" aria-hidden="true">🔒</span></span>`
-            : `<span class="bib-deckel-blatt is-leer" data-papier="${esc(papier)}">` +
-                `<i class="bib-papier" aria-hidden="true"></i></span>`;
+            : `<span class="bib-deckel-blatt${tinte ? ' hat-tinte' : ' is-leer'}" data-papier="${esc(papier)}">` +
+                `<i class="bib-papier" aria-hidden="true"></i>${tinte}</span>`;
         return `<div class="nh-karte">` +
             `<button class="bib-deckel" data-id="${esc(p.id)}" data-art="blatt"` +
             (farbe ? ` data-farbe="${esc(farbe)}" style="--deckel-farbe:var(--c-${esc(farbe)})"` : '') +
