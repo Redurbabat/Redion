@@ -232,7 +232,10 @@ const handy = await seite.evaluate(() => {
   const leiste = document.querySelector<HTMLElement>('.blatt-werk');
   if (!leiste) return null;
   const k = leiste.getBoundingClientRect();
-  const knoepfe = [...leiste.querySelectorAll<HTMLElement>('button')];
+  /* SEIT E356 zeigt die Leiste am Telefon nur die Gruppen des gewählten
+     Werkzeugs; die anderen Knöpfe sind `display:none` und messen 0 × 0.
+     Gemessen wird, was da ist. */
+  const knoepfe = [...leiste.querySelectorAll<HTMLElement>('button')].filter(b => b.getClientRects().length > 0);
   const masse = knoepfe.map(b => {
     const r = b.getBoundingClientRect();
     return { h: Math.round(r.height), b: Math.round(r.width) };

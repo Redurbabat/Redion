@@ -8,7 +8,8 @@
     "bauen": "node bauen.mts",
     "pruefen": "node pruefungen/alle.mts",
     "typecheck": "tsc --noEmit",
-    "bauen:ts": "tsc -p tsconfig.bauen.json && tsc -p tsconfig.sw.json",
+    "bauen:ts": "tsc -p tsconfig.bauen.json && node dienststand.mts && tsc -p tsconfig.stand.json && tsc -p tsconfig.sw.json",
+    "stand": "node dienststand.mts --pruefen",
     "server": "node server/pruefserver.ts 8790",
     "veroeffentlichen": "npx wrangler deploy"
   },

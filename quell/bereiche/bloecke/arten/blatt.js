@@ -70,11 +70,25 @@ const Blatt = (() => {
             '--blatt-mm-zehn-hoch': hoch(10),
         };
     };
-    const waehler = (jetzt) => '<span class="blatt-trenn"></span>' +
-        PAPIERE.map(art => `<button class="blatt-papierwahl${art.id === jetzt ? ' on' : ''}" ` +
-            `data-papier="${art.id}" title="Papier: ${art.name}" aria-label="Papier: ${art.name}" ` +
-            `aria-pressed="${art.id === jetzt ? 'true' : 'false'}">` +
-            `<i data-vorschau="${art.id}"></i></button>`).join('');
+    /* DIE PAPIERWAHL ALS KLAPPE (E359). Vorher standen die fuenf Vorlagen in
+       der Reihe und nahmen 210 px — die der Leiste fehlten (L115 Punkt 9).
+       Jetzt zeigt EIN Knopf das Papier, das gilt; die fuenf liegen darunter,
+       bis man sie braucht. Die Knoepfe selbst bleiben, wie sie waren
+       (`data-papier`, `aria-pressed`, ihr Muster) — nur ihr Ort ist neu. */
+    const waehler = (jetzt) => {
+        const name = PAPIERE.find(x => x.id === jetzt)?.name || jetzt;
+        return '<span class="blatt-trenn"></span>' +
+            '<span class="blatt-papiermenue">' +
+            `<button class="blatt-papierknopf" data-a="papier" aria-haspopup="true" aria-expanded="false" ` +
+            `title="Papier: ${name} — antippen zum Wechseln" aria-label="Papier: ${name}">` +
+            `<i data-vorschau="${jetzt}"></i><span class="wort">Papier</span></button>` +
+            '<span class="blatt-papierliste" hidden>' +
+            PAPIERE.map(art => `<button class="blatt-papierwahl${art.id === jetzt ? ' on' : ''}" ` +
+                `data-papier="${art.id}" title="Papier: ${art.name}" aria-label="Papier: ${art.name}" ` +
+                `aria-pressed="${art.id === jetzt ? 'true' : 'false'}">` +
+                `<i data-vorschau="${art.id}"></i></button>`).join('') +
+            '</span></span>';
+    };
     const zeichne = (block) => {
         const R = SheetSpace;
         const hoehe = Number(block.blattHoehe) || R.A4_HOEHE;
@@ -98,10 +112,47 @@ const Blatt = (() => {
         for (const [name, wert] of Object.entries(masse(breite, hoehe)))
             papier.style.setProperty(name, wert);
         w.appendChild(papier);
+        /* Die Klappe: auf, zu, zu bei Tipp daneben, zu bei Escape (§38). Der
+           Tipp daneben wird beim Aufmachen angemeldet und beim Zumachen wieder
+           abgemeldet — kein Dauerhorcher am Dokument je Blatt. Gehorcht wird
+           auf `click`, nicht auf den Zeiger: das Blatt hat keine eigene
+           Zeichenschicht, und test174 haelt fest, dass hier kein Zeigerweg
+           entsteht — die Klappe ist ein Menue, kein Malen. */
+        const papierListe = werk.querySelector('.blatt-papierliste');
+        const papierKnopf = werk.querySelector('.blatt-papierknopf');
+        const nebenTipp = (e) => {
+            if (!e.target?.closest?.('.blatt-papiermenue'))
+                papierMenue(false);
+        };
+        const escTaste = (e) => {
+            if (e.key !== 'Escape')
+                return;
+            e.stopPropagation();
+            papierMenue(false);
+            papierKnopf?.focus();
+        };
+        const papierMenue = (an) => {
+            if (!papierListe || !papierKnopf)
+                return;
+            papierListe.hidden = !an;
+            papierKnopf.setAttribute('aria-expanded', an ? 'true' : 'false');
+            if (an) {
+                document.addEventListener('click', nebenTipp, true);
+                document.addEventListener('keydown', escTaste, true);
+            }
+            else {
+                document.removeEventListener('click', nebenTipp, true);
+                document.removeEventListener('keydown', escTaste, true);
+            }
+        };
         werk.addEventListener('click', e => {
             const b = e.target?.closest?.('button');
             if (!b)
                 return;
+            if (b.dataset.a === 'papier') {
+                papierMenue(papierListe ? papierListe.hidden : false);
+                return;
+            }
             if (b.dataset.papier) {
                 /* NUR DAS FELD, SONST NICHTS. Kein Neuzeichnen der Seite: der Text
                    steht in Kindblöcken, die Striche in der Zeichenschicht, und
@@ -119,6 +170,12 @@ const Blatt = (() => {
                     k.classList.toggle('on', an);
                     k.setAttribute('aria-pressed', an ? 'true' : 'false');
                 });
+                /* Der Knopf zeigt das neue Papier, und die Klappe geht zu. */
+                const name = PAPIERE.find(x => x.id === art)?.name || art;
+                papierKnopf?.querySelector('i')?.setAttribute('data-vorschau', art);
+                papierKnopf?.setAttribute('title', `Papier: ${name} — antippen zum Wechseln`);
+                papierKnopf?.setAttribute('aria-label', `Papier: ${name}`);
+                papierMenue(false);
                 return;
             }
             if (b.dataset.a !== 'seite')

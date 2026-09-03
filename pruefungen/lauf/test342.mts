@@ -268,13 +268,17 @@ p('Kein „boese", kein „.DS_Store", kein „__MACOSX" wurde angelegt', !alleT
 p('Der Hinweis nennt Zahlen', /1 PDF/.test(z.hinweis) && /4 Fächern/.test(z.hinweis), z.hinweis);
 
 /* ======================================================================== */
-console.log('\n3 · Zweimal dieselbe ZIP: Fächer bleiben eins, Dokumente bekommen „ (2)"');
+console.log('\n3 · Zweimal dieselbe ZIP: Fächer bleiben eins, und Unverändertes bleibt eins (E363)');
 const erg2 = await importieren(pg, ELEKTRO.toString('base64'), 'Elektro.zip');
 const wurzeln = await pg.evaluate(() => Store.rootPages().filter((r: any) => r.alive !== false && String(r.text) === 'Elektro').length);
 gleich('Immer noch EIN Fach „Elektro" an der Wurzel', wurzeln, 1);
 const e2 = await baum(pg, 'Elektro');
 gleich('… und ein Fach „Skript" darin', (e2?.kinder ?? []).filter(k => k.titel === 'Skript').length, 1);
-gleich('Das zweite Kapitel heisst „Kapitel 1 (2)"', (finde(e2, 'Skript')?.kinder ?? []).map(k => k.titel).sort(), ['Kapitel 1', 'Kapitel 1 (2)', 'Notizen', 'Notizen (2)']);
+/* Bis E363 bekam jedes Dokument beim zweiten Mal „ (2)". Seit E363 erkennt
+   sich eine unveraenderte Datei an Name, Groesse und Pruefsumme wieder und
+   bleibt EINS; gezaehlt wird sie als „schon da". */
+gleich('Kapitel 1 und Notizen stehen weiter je einmal — nichts wird „ (2)"', (finde(e2, 'Skript')?.kinder ?? []).map(k => k.titel).sort(), ['Kapitel 1', 'Notizen']);
+gleich('… jede Datei des ersten Laufs gezählt als „schon da (unverändert)", kein neues Dokument', [(erg2 as any).unveraendert, (erg2 as any).dokumente], [z.dokumente, 0]);
 gleich('Beim zweiten Mal entsteht kein neues Fach', (erg2 as any).faecher, 0);
 
 /* ======================================================================== */
@@ -354,7 +358,7 @@ if (chooser) {
     const s = w && Store.childrenOf(w.id).find((k: any) => String(k.text) === 'Skript');
     return s ? Store.childrenOf(s.id).map((k: any) => String(k.text)).filter((t: string) => /^Kapitel 1/.test(t)).sort() : [];
   });
-  gleich('Über den Wähler kam ein drittes Kapitel an — „Kapitel 1 (3)"', dritte, ['Kapitel 1', 'Kapitel 1 (2)', 'Kapitel 1 (3)']);
+  gleich('Über den Wähler kam dieselbe ZIP noch einmal an — und nichts wurde doppelt (E363)', dritte, ['Kapitel 1']);
 }
 
 /* ======================================================================== */
@@ -381,7 +385,10 @@ const merk = await pg.evaluate(async ([b64]: [string]) => {
   const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
   const f = new File([bytes], 'NochEine.zip', { type: 'application/zip' });
   const vorher = document.querySelectorAll('.overlay').length;
-  const lauf = ArchivImport.importZip(f, null, { still: true });
+  /* In ein FRISCHES Fach — im Fach „Elektro" wuerde die PDF seit E363 als
+     unveraendert erkannt und gar nicht erst eingelesen. */
+  const ziel = Store.addPage(null, { text: 'Neunter Abschnitt', icon: '🗂', heftArt: 'fach' });
+  const lauf = ArchivImport.importZip(f, ziel.id, { still: true });
   const wache = new Promise(r => setTimeout(() => r({ zeitueberschreitung: true }), 20000));
   const erg: any = await Promise.race([lauf, wache]);
   return { zeit: !!erg.zeitueberschreitung, overlays: document.querySelectorAll('.overlay').length - vorher, merk: Store.getMeta('pdfAnordnung'), pdfs: erg.pdfs };

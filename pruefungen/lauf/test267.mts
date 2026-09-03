@@ -157,8 +157,22 @@ const winkelVon = async (): Promise<number> => {
   return Math.abs(Math.atan2(b[1] - a[1], b[0] - a[0]) * 180 / Math.PI);
 };
 await seite.locator('.blatt-werk [data-wz="line"]').click();
-const lx = flaecheBox.x + flaecheBox.width * 0.55;
-const ly = flaecheBox.y + flaecheBox.height * 0.4;
+/* DAS BLATT NACH OBEN ROLLEN, DANN MESSEN — NACH JEDEM KLICK IN DIE LEISTE
+   (E358 gefunden): die Leiste über dem Blatt wuchs mit E355 und E357 um zwei
+   Knöpfe und damit um eine Zeile; das Blatt begann bei 537 px, und 40 %
+   seiner Höhe lagen bei 977 px — unter dem 950 px hohen Fenster. Die zweite
+   Linie begann im Nichts, `pop()` fand die erste, und „gerastet" war „frei".
+   Dazu rollt Playwright vor jedem Klick den Knopf ins Bild, und die Leiste
+   steht ÜBER dem Blatt: jeder Klick in die Leiste schiebt das Blatt wieder
+   nach unten. Also nach dem Klick rollen, dann den Kasten nehmen. */
+const zumBlatt = async () => {
+  await seite.evaluate(() => document.querySelector('.blatt-marken')?.scrollIntoView({ block: 'start' }));
+  await seite.waitForTimeout(250);
+  const b = await seite.locator('.blatt-marken').boundingBox();
+  if (!b) throw new Error('Keine Zeichenfläche.');
+  return { lx: b.x + b.width * 0.55, ly: b.y + b.height * 0.4 };
+};
+let { lx, ly } = await zumBlatt();
 /* ~50,2°: nahe genug an keinem 15°-Schritt (45 wäre 5° weg). */
 await seite.mouse.move(lx, ly);
 await seite.mouse.down();
@@ -167,6 +181,7 @@ await seite.mouse.up();
 await seite.waitForTimeout(300);
 const frei = await winkelVon();
 await seite.locator('.blatt-werk [data-act="lineal"]').click();
+({ lx, ly } = await zumBlatt());
 await seite.mouse.move(lx, ly + 40);
 await seite.mouse.down();
 await seite.mouse.move(lx + 100, ly + 160, { steps: 5 });

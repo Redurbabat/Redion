@@ -149,7 +149,12 @@ const marken = (pg: Seite, blattId: string) => pg.evaluate((id: string) => {
 }, blattId);
 
 const werkzeug = (pg: Seite, wz: string) => pg.click(`.blatt-werk [data-wz="${wz}"]`);
-const modusKnopf = (pg: Seite) => pg.click('.blatt-werk [data-act="radiermodus"]');
+/* Seit E359 zeigt auch der Rechner nur das Zubehoer des Werkzeugs: der
+   Modus-Knopf steht erst beim Radierer — also erst den waehlen (wie §8). */
+const modusKnopf = async (pg: Seite) => {
+  await pg.click('.blatt-werk [data-wz="radierer"]');
+  await pg.click('.blatt-werk [data-act="radiermodus"]');
+};
 const modus = (pg: Seite) => pg.evaluate(() => ({
   knopf: document.querySelector<HTMLElement>('.blatt-werk [data-act="radiermodus"]')?.dataset.modus ?? null,
   meta: Store.getMeta('zeichnen:radierer') ?? null,
@@ -340,6 +345,8 @@ p('InkGeometry.splitByCircle rechnet den Druck am Schnittpunkt dazwischen', awai
 /* ======================================================================== */
 console.log('\n8 · Am Telefon ist der Knopf ein Fingerknopf, und der Finger radiert');
 const { ktx: ktxH, pg: pgH, blattId: blattH } = await kontext(true);
+/* Seit E356 steht der Modus-Knopf am Telefon nur beim Radierer. */
+await werkzeug(pgH, 'radierer');
 const masse = await pgH.evaluate(() => {
   const k = document.querySelector<HTMLElement>('.blatt-werk [data-act="radiermodus"]');
   const r = k?.getBoundingClientRect();
@@ -347,7 +354,11 @@ const masse = await pgH.evaluate(() => {
 });
 p('Der Modus-Knopf ist mindestens 44 × 44', !!masse && masse.w >= 44 && masse.h >= 44, JSON.stringify(masse));
 await werkzeug(pgH, 'stift');
-await strich(pgH, [100, 100], [300, 100]);
+/* MIT DEM FINGER gezogen, nicht mit dem Stift: seit E354 ist ein Finger
+   nach einem Stift vier Sekunden lang eine Hand und radiert nicht. Hier
+   gibt es keinen Stift — der Finger zeichnet und radiert. */
+await zug(pgH, Array.from({ length: 21 }, (_v, i) => [100 + i * 10, 100] as [number, number]), { art: 'touch' });
+gleich('Der Finger hat gezeichnet', (await marken(pgH, blattH)).length, 1);
 await werkzeug(pgH, 'radierer');
 await modusSetzen(pgH, 'ganz');
 await zug(pgH, [[200, 80], [200, 120]], { art: 'touch' });

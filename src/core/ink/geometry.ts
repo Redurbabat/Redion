@@ -163,8 +163,72 @@ const InkGeometry = (() => {
     width: Math.abs(end[0] - start[0]), height: Math.abs(end[1] - start[1])
   });
 
+  /* DER TEXTKASTEN (E360, L115 Punkt 6): ein Text mit `breiteBox` bricht
+   * an dieser Breite um. Die Zeilen werden HIER gerechnet — deterministisch,
+   * ohne DOM und ohne Schriftmessung: dieselbe Rechnung fuer Bildschirm,
+   * Druck, Auswahlkasten und Treffer. Die Breite eines Zeichens ist eine
+   * Schaetzung je Schriftart (in em); sie muss nicht stimmen, sie muss
+   * ueberall dieselbe sein. Gebrochen wird an Leerzeichen, ein zu langes
+   * Wort an der Breite. */
+  const CHAR_EM: Record<string, number> = { standard: 0.55, serif: 0.52, mono: 0.6, hand: 0.58, schmal: 0.45 };
+  const TEXT_ZEILE = 1.25;
+  const charWidth = (ch: string, family: string, bold: boolean): number => {
+    const base = CHAR_EM[family] ?? 0.55;
+    let f = 1;
+    if (family !== 'mono') {
+      if (" .,:;'|!ijltIfr".includes(ch)) f = 0.55;
+      else if ('mwMW'.includes(ch)) f = 1.55;
+      else if ((ch >= 'A' && ch <= 'Z') || 'ÄÖÜ'.includes(ch)) f = 1.25;
+    }
+    return base * f * (bold ? 1.06 : 1);
+  };
+  const textWidth = (text: string, fontSize: number, family = 'standard', bold = false): number => {
+    let w = 0;
+    for (const ch of String(text ?? '')) w += charWidth(ch, family, bold);
+    return w * fontSize;
+  };
+  const textLines = (text: string, width: number, fontSize: number, family = 'standard', bold = false): string[] => {
+    const lines: string[] = [];
+    const max = Math.max(1, finite(width));
+    const passt = (probe: string): boolean => textWidth(probe, fontSize, family, bold) <= max;
+    for (const raw of String(text ?? '').split(/\r?\n/)) {
+      let line = '';
+      for (const word of raw.split(' ')) {
+        const probe = line ? line + ' ' + word : word;
+        if (passt(probe)) { line = probe; continue; }
+        if (line) { lines.push(line); line = ''; }
+        /* Ein Wort, das allein nicht passt, bricht an der Breite. */
+        let part = '';
+        for (const ch of word) {
+          if (part && !passt(part + ch)) { lines.push(part); part = ''; }
+          part += ch;
+        }
+        line = part;
+      }
+      lines.push(line);
+    }
+    return lines;
+  };
+  type TextLayout = { x: number; y: number; width: number; height: number; pad: number; zeile: number;
+    fontSize: number; family: string; bold: boolean; lines: string[] };
+  /** Kasten, Zeilen und Masse eines Textkastens — oder null fuer eine alte, einzeilige Textmarke. */
+  const textLayout = (mark: any): TextLayout | null => {
+    const width = finite(mark?.breiteBox);
+    if (!(width > 0)) return null;
+    const point = points([mark.point])[0] || [0, 0];
+    const fontSize = Math.max(8, finite(mark.fontSize) || 18);
+    const pad = Math.round(fontSize * 0.35);
+    const family = String(mark.schrift || 'standard');
+    const bold = !!mark.fett;
+    const lines = textLines(String(mark.text || ''), width - pad * 2, fontSize, family, bold);
+    return { x: point[0], y: point[1], width, height: pad * 2 + lines.length * fontSize * TEXT_ZEILE,
+      pad, zeile: fontSize * TEXT_ZEILE, fontSize, family, bold, lines };
+  };
+
   const bounds = (mark: any): InkBounds => {
     if (mark?.art === 'text') {
+      const layout = textLayout(mark);
+      if (layout) return { x: layout.x, y: layout.y, width: layout.width, height: layout.height };
       const point = points([mark.point])[0] || [0, 0];
       const fontSize = Math.max(8, finite(mark.fontSize) || 18);
       const width = Math.max(fontSize, String(mark.text || '').length * fontSize * 0.58);
@@ -360,11 +424,15 @@ const InkGeometry = (() => {
       mark.fontSize = Math.max(6, r2(Number(mark.fontSize) * mittel));
     if (mark.groesse !== undefined && Number.isFinite(Number(mark.groesse)))
       mark.groesse = Math.max(12, r2(Number(mark.groesse) * mittel));
+    /* Der Textkasten (E360) waechst in der Breite mit — die Schrift mit dem Mittel. */
+    if (mark.breiteBox !== undefined && Number.isFinite(Number(mark.breiteBox)))
+      mark.breiteBox = Math.max(24, r2(Number(mark.breiteBox) * Math.abs(fx)));
     return mark;
   };
 
   return { points, simplify, simplifyIndices, outline, path, rectangle, bounds, move, intersects,
-    distanceToPolyline, touchesCircle, splitByCircle, insidePolygon, polygonArea, union, scale };
+    distanceToPolyline, touchesCircle, splitByCircle, insidePolygon, polygonArea, union, scale,
+    textWidth, textLines, textLayout };
 })();
 
 (window as any).InkGeometry = InkGeometry;

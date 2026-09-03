@@ -43,9 +43,13 @@ const skip = (n: string, grund: string) => {
   console.log('  ↷ ' + n + ' — übersprungen: ' + grund);
 };
 
+/* Seit E363 rechnet der Kern `ZipDetails` die Prüfsumme — für Schreiber und
+   Leser dieselbe Tafel. Im Browser lädt index.html ihn vorher; hier kommt
+   er als Text davor, im selben Geltungsbereich. */
+const zipQuelle = _lies(_dazu(WURZEL, 'quell/core/import/zipdetails.js'), 'utf8');
 const quelle = _lies(_dazu(WURZEL, 'quell/bereiche/dateien/ausgeben.js'), 'utf8');
 const Austausch = new Function('window', 'document',
-  quelle + '\nreturn Austausch;')({}, {});
+  zipQuelle + '\n' + quelle + '\nreturn Austausch;')({}, {});
 
 /* ---------------------------------------------------------------------------
  * Ein Archiv aufmachen, ohne es zu glauben
@@ -223,7 +227,7 @@ console.log('\n4 · Ein ZIP64-Archiv wird erkannt, nicht stillschweigend geleert
 
 const einlesenQuelle = _lies(_dazu(WURZEL, 'quell/bereiche/dateien/einlesen.js'), 'utf8');
 const Einlesen = new Function('window', 'document', 'self',
-  einlesenQuelle + '\nreturn Einlesen;')({}, {}, {});
+  zipQuelle + '\n' + einlesenQuelle + '\nreturn Einlesen;')({}, {}, {});
 
 /** Ein Schlusssatz mit ZIP64-Platzhaltern, davor der Wegweiser. */
 const zip64Ende = () => {

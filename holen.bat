@@ -85,6 +85,57 @@ set "STEMPEL="
 for /f "usebackq delims=" %%s in (`powershell -NoProfile -Command "Get-Date -Format yyyyMMdd-HHmmss" 2^>nul`) do set "STEMPEL=%%s"
 if "%STEMPEL%"=="" set "STEMPEL=%RANDOM%%RANDOM%"
 
+REM --- Ist der Stand auf GitHub GEPRUEFT? (E361, L83 Punkt 1) ------------------
+REM  Die Pruefungen laufen auf GitHub bei jedem Push. Ein Stand, dessen Lauf
+REM  rot ist oder noch laeuft, kann ein ungebautes src/**.ts enthalten - dann
+REM  zeigt Redion das ALTE Verhalten, fehlerfrei und ohne Meldung. Also erst
+REM  fragen. Ohne Netz oder ohne Antwort: Warnung, kein Abbruch - holen darf
+REM  man immer, wissen muss man es. Bei Rot oder Laeuft-noch wird gefragt;
+REM  nach 30 Sekunden ohne Antwort ist die Antwort NEIN.
+set "LAUF="
+for /f "usebackq delims=" %%l in (`powershell -NoProfile -Command "try { $r = Invoke-RestMethod -Uri 'https://api.github.com/repos/Redurbabat/Redion/actions/runs?branch=main&per_page=1' -Headers @{ 'User-Agent' = 'redion-holen' } -TimeoutSec 15; $w = $r.workflow_runs[0]; if ($null -eq $w) { 'keiner - -' } else { $w.status + ' ' + $w.conclusion + ' ' + $w.head_sha } } catch { 'unbekannt - -' }" 2^>nul`) do set "LAUF=%%l"
+if "%LAUF%"=="" set "LAUF=unbekannt - -"
+set "LAUFSTATUS="
+set "LAUFERGEBNIS="
+set "LAUFSHA="
+for /f "tokens=1,2,3" %%a in ("%LAUF%") do (
+  set "LAUFSTATUS=%%a"
+  set "LAUFERGEBNIS=%%b"
+  set "LAUFSHA=%%c"
+)
+if "%LAUFSTATUS%"=="completed" if "%LAUFERGEBNIS%"=="success" (
+  echo   [OK] Der letzte Pruefungslauf auf GitHub ist GRUEN  ^(%LAUFSHA:~0,8%^).
+  goto lauf_geklaert
+)
+if "%LAUFSTATUS%"=="completed" (
+  echo.
+  echo   [X] Der letzte Pruefungslauf auf GitHub ist ROT  ^(%LAUFERGEBNIS%^).
+  echo       Dieser Stand ist NICHT geprueft. Er kann sich alt anfuehlen,
+  echo       obwohl er neu ist - das ist genau der Fehler, den man nicht sieht.
+  echo.
+  choice /c JN /t 30 /d N /m "      Trotzdem holen? (J/N, nach 30 s: N)"
+  if errorlevel 2 goto ende
+  goto lauf_geklaert
+)
+if "%LAUFSTATUS%"=="unbekannt" (
+  echo   [!] GitHub hat nicht gesagt, ob der Stand geprueft ist ^(kein Netz
+  echo       oder keine Antwort^). Geholt wird trotzdem - nur wissen sollst du es.
+  goto lauf_geklaert
+)
+if "%LAUFSTATUS%"=="keiner" (
+  echo   [!] Auf GitHub gibt es noch keinen Pruefungslauf fuer  main .
+  goto lauf_geklaert
+)
+echo.
+echo   [!] Der Pruefungslauf zu diesem Stand LAEUFT NOCH  ^(%LAUFSTATUS%^).
+echo       Was du jetzt holst, ist noch nicht geprueft. In ein paar Minuten
+echo       ist der Lauf durch - dann holen.bat noch einmal.
+echo.
+choice /c JN /t 30 /d N /m "      Trotzdem holen? (J/N, nach 30 s: N)"
+if errorlevel 2 goto ende
+:lauf_geklaert
+echo.
+
 REM --- Von GitHub holen ------------------------------------------------------
 echo   Frage GitHub ...
 git fetch origin main
@@ -210,6 +261,20 @@ if errorlevel 1 (
 echo.
 echo   [OK] Fertig. Der Ordner hat jetzt genau den Stand von GitHub.
 echo.
+
+REM --- Ist das, was jetzt hier liegt, auch das Geprüfte? (E361) --------------
+REM  Der gruene Lauf gehoert zu EINEM Commit. Liegt inzwischen ein neuerer
+REM  auf main, ist der geholte Stand ein anderer als der geprüfte.
+set "JETZT="
+for /f "delims=" %%n in ('git rev-parse HEAD 2^>nul') do set "JETZT=%%n"
+if not "%LAUFSHA%"=="-" if not "%LAUFSHA%"=="" if not "%JETZT%"=="%LAUFSHA%" (
+  echo   [!] Geprueft wurde ein anderer Stand ^(%LAUFSHA:~0,8%^), geholt ist
+  echo       %JETZT:~0,8% - der Lauf zu diesem Stand steht noch aus oder ist
+  echo       gerade erst gestartet. Sieht Redion danach seltsam aus: warten
+  echo       und holen.bat noch einmal.
+  echo.
+)
+
 
 if defined GERETTET (
   echo   ------------------------------------------------------------

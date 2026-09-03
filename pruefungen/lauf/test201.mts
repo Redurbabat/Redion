@@ -137,7 +137,13 @@ const draw = async (from: [number, number], to: [number, number], steps = 8): Pr
 
   let lage = await punkte();
   const mitte = (lage.start.y + lage.end.y) / 2;
-  if (mitte < rand || mitte > hoehe - rand) {
+  /* BEIDE ENDEN MUESSEN IM BILD SEIN, nicht nur die Mitte (E359 gefunden):
+     seit die Leiste zwei statt fuenf Zeilen hat, beginnt das Blatt bei 396
+     statt 537 px — die Mitte des Zugs lag damit knapp im Fenster (836 von
+     860), sein Ende nicht (916 von 900), und gerollt wurde nicht. */
+  const oben = Math.min(lage.start.y, lage.end.y);
+  const unten = Math.max(lage.start.y, lage.end.y);
+  if (oben < rand || unten > hoehe - rand) {
     await page.evaluate((d: number) => {
       const s2 = document.getElementById('scroll') || document.scrollingElement;
       if (s2) s2.scrollTop += d;
@@ -237,14 +243,21 @@ await page.mouse.click(paperBox.x + paperBox.width * 0.55, paperBox.y + paperBox
 await page.locator('#fq').fill('<img src=x onerror=1> Loesung');
 await page.locator('[data-a="ok"]').click();
 await page.waitForTimeout(150);
+/* Seit E360 ist ein neuer Text ein KASTEN: eine Gruppe aus Greifflaeche und
+   <text> mit einer <tspan> je Zeile. Gelesen wird der <text>-Knoten; die
+   Zeilen ergeben zusammen den Text, und ausser tspan darf darin nichts
+   stehen — genau das ist die Sicherheitsfrage dieses Abschnitts. */
 const textMark = await page.evaluate((id: string) => {
   const mark = ((Store.getBlock(id) || {}).marken || []).find((item: any) => item.art === 'text');
   const node = document.querySelector('[data-ink-art="text"]');
-  return { text: mark?.text, shown: node?.textContent, children: node?.children.length };
+  const text = node?.tagName === 'text' ? node : node?.querySelector('text');
+  const zeilen = [...(text?.querySelectorAll('tspan') ?? [])].map(z => z.textContent ?? '');
+  return { text: mark?.text, shown: zeilen.length ? zeilen.join(' ') : text?.textContent,
+    fremd: [...(text?.children ?? [])].filter(k => k.tagName !== 'tspan').length };
 }, built.sheet);
 equal('Text steht in den Daten und wortgleich im SVG', [textMark.text, textMark.shown],
   ['<img src=x onerror=1> Loesung', '<img src=x onerror=1> Loesung']);
-equal('Nutzertext erzeugt kein fremdes Element', textMark.children, 0);
+equal('Nutzertext erzeugt kein fremdes Element', textMark.fremd, 0);
 const textNode = page.locator('[data-ink-art="text"]');
 await textNode.evaluate((node: Element) => {
   const box = node.getBoundingClientRect();

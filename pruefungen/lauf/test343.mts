@@ -213,6 +213,9 @@ p('Ein Strich ohne Stil bleibt ein Strich: fill none, eine Breite', (alt as any)
 
 /* ======================================================================== */
 console.log('\n4 · Drei Stifte — der Knopf wechselt, die Wahl bleibt');
+/* Seit E359 zeigt auch der Rechner nur das Zubehoer des Werkzeugs: der
+   Stil-Knopf steht erst, wenn der Stift gewaehlt ist — wie am Telefon (§8). */
+await werkzeug(pg, 'stift');
 const knopf = await pg.evaluate(() => {
   const k = document.querySelector<HTMLElement>('.blatt-werk [data-act="stil"]');
   return { da: !!k, stil: k?.dataset.stil, wort: k?.textContent?.trim() };
@@ -302,6 +305,8 @@ await ktx.close();
 console.log('\n8 · Am Telefon sind die neuen Knöpfe Fingerknöpfe');
 {
   const { ktx: k2, pg: p2 } = await kontext(true);
+  /* Seit E356 stehen Stift-Stil und Farben am Telefon nur beim Stift. */
+  await werkzeug(p2, 'stift');
   const masse = await p2.evaluate(() => {
     const r = (sel: string) => { const e = document.querySelector<HTMLElement>(sel); const b = e?.getBoundingClientRect(); return b ? { w: Math.round(b.width), h: Math.round(b.height) } : null; };
     return { stil: r('.blatt-werk [data-act="stil"]'), farbe: r('.blatt-werk [data-act="farbe"]') };

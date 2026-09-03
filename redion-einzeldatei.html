@@ -7131,6 +7131,33 @@ body[data-ruhig="an"] .lernwelt .lw-nav{ padding-right:264px }
   white-space:nowrap; font-size:26px; font-weight:760; letter-spacing:-.02em;
 }
 .nh-zurueck{ flex:none; min-height:44px }
+
+/* --- Die Brotkrume (E366): der ganze Weg, ab der zweiten Ebene ----------- *
+   Eigene Zeile, nicht in der Titelzeile: dort steht `h1{flex:1}`, und ein
+   zweites dehnbares Kind hätte den Titel gestaucht. Sie rollt waagerecht,
+   damit ein tiefer Weg die Seite nicht breiter macht (§37). */
+.nh-krume{
+  display:flex; align-items:center; gap:4px; min-width:0;
+  overflow-x:auto; scrollbar-width:none;
+  font-size:13px; color:var(--text-dim);
+}
+.nh-krume::-webkit-scrollbar{ display:none }
+.nh-krume > span{ flex:none; opacity:.55 }
+.nh-krume > b{ flex:none; color:var(--text); font-weight:650; padding:0 2px }
+.nh-krume button{
+  flex:none; min-height:32px; padding:0 6px; border:0; border-radius:var(--radius-sm);
+  background:transparent; color:var(--text-dim); font:inherit; cursor:pointer;
+  white-space:nowrap;
+}
+/* `--bg-hover`, nicht ein erfundenes `--flaeche-2`: dieselbe Marke, die
+   die Reiter darunter nehmen. Und KEINE eigene Fokusregel — die globale
+   in `bausteine.css` (`:focus-visible`) trifft diese Knöpfe längst; eine
+   zweite daneben war schon zweimal ein erfundenes `--akzent`. */
+.nh-krume button:hover{ background:var(--bg-hover); color:var(--text) }
+
+/* Der Weg am Ziel im Verschieben-Menü (E366) — zwei Fächer „Physik"
+   in verschiedenen Bäumen wären sonst nicht zu unterscheiden. */
+.nh-zielweg{ color:var(--text-dim); font-size:12px; margin-right:2px }
 .nh-neu-knopf{ flex:none; min-height:44px; font-weight:650 }
 
 /* Reiter und Formwahl: Wörter, keine Symbole (§38). Der aktive Reiter
@@ -11320,6 +11347,9 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 }
 .blatt-marken[data-tool="select"]{cursor:default}
 .blatt-marken[data-tool="radierer"]{cursor:cell}
+/* HANDBALLEN-SCHUTZ (E354): solange ein Stift zuletzt geschrieben hat,
+   darf ein Finger rollen und kneifen statt zu zeichnen. */
+.blatt-marken[data-stift="an"]{touch-action:pan-x pan-y pinch-zoom}
 /* Der Radierkreis (E352): beim Streichen sieht man, wie gross der Radierer
    ist — GoodNotes zeigt denselben Ring. Nur Anzeige, greift nichts ab. */
 .blatt-radierkreis{fill:rgba(0,0,0,.05); stroke:#444; stroke-width:1; stroke-dasharray:3 3;
@@ -11338,6 +11368,13 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
              vector-effect:non-scaling-stroke; pointer-events:none}
 .blatt-griff-feld{fill:transparent; pointer-events:all; cursor:nwse-resize}
 .blatt-griff-feld[data-griff="ne"], .blatt-griff-feld[data-griff="sw"]{cursor:nesw-resize}
+/* Ein Bild, dessen Datei fehlt oder noch laedt (E357): ein gestrichelter
+   Kasten in der Groesse der Marke — kein leerer Fleck, und greifbar bleibt
+   er auch. Das Wort kommt erst, wenn die Ablage wirklich nichts hat. */
+.blatt-bild-fehlt{fill:rgba(0,0,0,.04); stroke:#8a8a8a; stroke-width:1; stroke-dasharray:5 4;
+                  vector-effect:non-scaling-stroke}
+.blatt-bild-fehlt-wort{fill:#777; pointer-events:none}
+.blatt-marken[data-tool="bild"]{cursor:copy}
 /* Beim Malen soll der Finger nicht die Seite rollen und nichts markieren. */
 .blatt-papier.malt{cursor:crosshair; user-select:none}
 .blatt-papier.malt .blatt-inhalt{user-select:none}
@@ -11388,24 +11425,37 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
                   display:inline-flex; align-items:center; justify-content:center}
 .blatt-papierwahl i{display:block; width:100%; height:100%; border-radius:3px;
                     background-color:#fff; border:1px solid var(--line)}
+/* Die Papierwahl als Klappe (E359): ein Knopf zeigt das Papier, das gilt,
+   die fuenf Vorlagen liegen darunter, bis man sie braucht. Vorher standen
+   sie in der Reihe und nahmen 210 px, die der Leiste fehlten. */
+.blatt-papiermenue{position:relative; display:inline-flex; align-items:center}
+.blatt-papierknopf{display:inline-flex; align-items:center; gap:6px}
+.blatt-papierknopf i{display:block; width:18px; height:18px; border-radius:3px;
+                     background-color:#fff; border:1px solid var(--line)}
+.blatt-papierknopf[aria-expanded="true"]{background:var(--bg-hover)}
+.blatt-papierliste{position:absolute; right:0; top:calc(100% + 4px); z-index:6;
+                   display:flex; gap:4px; padding:6px; background:var(--bg-card);
+                   border:1px solid var(--line); border-radius:8px;
+                   box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.blatt-papierliste[hidden]{display:none}
 /* Auch hier stand `--akzent`, das es nicht gibt (gefunden beim Bau des
    Schaltplans). Der Ersatzwert rettete vor der Unsichtbarkeit — aber die
    gewählte Papierart leuchtete seit E100 immer blau, in keinem der beiden
    Themen in der Akzentfarbe. Ein Ersatzwert verdeckt einen Tippfehler, er
    behebt ihn nicht. */
 .blatt-papierwahl.on i{border-color:var(--accent-text); box-shadow:0 0 0 1px var(--accent)}
-.blatt-papierwahl i[data-vorschau="liniert"]{
+.blatt-papierwahl i[data-vorschau="liniert"], .blatt-papierknopf i[data-vorschau="liniert"]{
   background-image:linear-gradient(to bottom, var(--blatt-linie, #b9c6d8) 0 1px, transparent 1px);
   background-size:100% 4px}
-.blatt-papierwahl i[data-vorschau="kariert"]{
+.blatt-papierwahl i[data-vorschau="kariert"], .blatt-papierknopf i[data-vorschau="kariert"]{
   background-image:
     linear-gradient(to right,  var(--blatt-linie, #b9c6d8) 0 1px, transparent 1px),
     linear-gradient(to bottom, var(--blatt-linie, #b9c6d8) 0 1px, transparent 1px);
   background-size:4px 100%, 100% 4px}
-.blatt-papierwahl i[data-vorschau="punkte"]{
+.blatt-papierwahl i[data-vorschau="punkte"], .blatt-papierknopf i[data-vorschau="punkte"]{
   background-image:radial-gradient(circle at center, #8ea3bd 0 1px, transparent 1.1px);
   background-size:4px 4px}
-.blatt-papierwahl i[data-vorschau="mm"]{
+.blatt-papierwahl i[data-vorschau="mm"], .blatt-papierknopf i[data-vorschau="mm"]{
   background-image:
     linear-gradient(to right,  #8ea3bd 0 1px, transparent 1px),
     linear-gradient(to bottom, #8ea3bd 0 1px, transparent 1px),
@@ -11414,6 +11464,10 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   background-size:8px 100%, 100% 8px, 2px 100%, 100% 2px}
 
 .blatt-werk .zeichen{margin-right:5px}
+/* Die Schrift-Knoepfe (E360): das Muster zeigt die Familie, das F ist fett. */
+.blatt-werk [data-act="schriftart"] .zeichen{font-size:15px}
+.blatt-werk [data-act="fett"] .zeichen{font-weight:800}
+.blatt-textrahmen{vector-effect:non-scaling-stroke}
 .blatt-farbe .zeichen, .blatt-strich .zeichen{margin:0}
 
 /* ── Die schmale Leiste ────────────────────────────────────────────────────
@@ -11447,17 +11501,122 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
                            background:none; cursor:pointer; font-size:15px}
 .spalte .pdfs-nr{font-size:11.5px}
 
+/* ── Die Leiste zeigt nur das Zubehör des gewählten Werkzeugs — ÜBERALL (E359).
+   E356 hat diese Regel am Telefon eingeführt und den Rechner ausgenommen
+   („dort ist Platz"). Gemessen war das falsch, sobald die Seite eine Spalte
+   ist: bei 1360 px Fenster ist sie 706 px breit, und die Leiste stand mit
+   22 Knöpfen in FÜNF Zeilen, 220 px über dem Papier (L115 Punkt 9). Die
+   Regel gilt jetzt bei jeder Breite; die Anordnung (`order`, Rollen) bleibt
+   Sache des Telefons, siehe unten. */
+/* NUR DIE GRUPPEN DES GEWAEHLTEN WERKZEUGS (E356). Gemessen vor E356:
+   bei 390 px war die Leiste 1539 px lang — vier Bildschirmbreiten zum
+   Rollen, und die Farben standen am Ende. Jetzt liest das CSS
+   `data-tool` der Leiste gegen `data-gruppe` der Knoepfe: Werkzeuge und
+   der Verlauf stehen immer, alles andere nur, wo es gebraucht wird. Am
+   Rechner bleibt alles sichtbar — dort ist Platz. */
+.blatt-werk[data-tool] > [data-gruppe]{display:none}
+.blatt-werk[data-tool] > [data-gruppe="verlauf"]{display:inline-flex}
+.blatt-werk[data-tool="select"] > [data-gruppe="auswahl"],
+.blatt-werk[data-tool="select"] > [data-gruppe="farbe"],
+.blatt-werk[data-tool="select"] > [data-gruppe="breite"],
+.blatt-werk[data-tool="radierer"] > [data-gruppe="radierer"],
+.blatt-werk[data-tool="stift"] > [data-gruppe="stil"],
+.blatt-werk[data-tool="stift"] > [data-gruppe="formen"],
+.blatt-werk[data-tool="stift"] > [data-gruppe="farbe"],
+.blatt-werk[data-tool="stift"] > [data-gruppe="breite"],
+.blatt-werk[data-tool="marker"] > [data-gruppe="lineal"],
+.blatt-werk[data-tool="marker"] > [data-gruppe="farbe"],
+.blatt-werk[data-tool="marker"] > [data-gruppe="breite"],
+.blatt-werk[data-tool="line"] > [data-gruppe="lineal"],
+.blatt-werk[data-tool="line"] > [data-gruppe="farbe"],
+.blatt-werk[data-tool="line"] > [data-gruppe="breite"],
+.blatt-werk[data-tool="arrow"] > [data-gruppe="lineal"],
+.blatt-werk[data-tool="arrow"] > [data-gruppe="farbe"],
+.blatt-werk[data-tool="arrow"] > [data-gruppe="breite"],
+.blatt-werk[data-tool="rectangle"] > [data-gruppe="farbe"],
+.blatt-werk[data-tool="rectangle"] > [data-gruppe="breite"],
+.blatt-werk[data-tool="ellipse"] > [data-gruppe="farbe"],
+.blatt-werk[data-tool="ellipse"] > [data-gruppe="breite"],
+.blatt-werk[data-tool="abdeck"] > [data-gruppe="farbe"],
+.blatt-werk[data-tool="zettel"] > [data-gruppe="farbe"],
+.blatt-werk[data-tool="text"] > [data-gruppe="schrift"],
+.blatt-werk[data-tool="select"] > [data-gruppe="schrift"],
+.blatt-werk[data-tool="text"] > [data-gruppe="farbe"],
+.blatt-werk[data-tool="zeichen"] > [data-gruppe="farbe"]{display:inline-flex}
+.blatt-werk[data-tool] > span.blatt-trenn[data-gruppe]{display:none}
+
+/* ── Am Rechner ZWEI Zeilen: oben die Werkzeuge, darunter ihr Zubehör (E359).
+   Der Zeilenbruch ist ein leeres Element mit voller Breite hinter dem
+   letzten Werkzeug — Flexbox kennt keinen Umbruch-Befehl. Am Telefon und in
+   der Spalte rollt die Leiste in EINER Zeile (E140, E356); dort wäre das
+   Element eine Lücke von Bildschirmbreite und ist deshalb weg. */
+.blatt-werk > .blatt-zeilenbruch{flex:1 0 100%; height:0; padding:0; margin:0}
+.spalte .blatt-werk > .blatt-zeilenbruch{display:none}
+/* Wörter nur, wenn die LEISTE breit genug ist — nicht das Fenster. Vierzehn
+   Werkzeuge mit Wort brauchen rund 1130 px in einer Zeile; ohne Wort 556.
+   Die Seite als Spalte gibt der Leiste rund 620 px, die volle Breite bei
+   1360 px Fenster rund 1100 — auch dort keine Wörter, erst darüber.
+   Gemessen wird am Behälter (`container`), weil dieselbe Leiste in
+   derselben Fensterbreite beides sein kann. Zwei Behälter: die Leiste
+   selbst für ihre Wörter, die Reihe für die Wörter des festen Teils
+   rechts (Seite, Papier), der schon bei 1400 px Reihe seine Wörter lässt. */
+.blatt-reihe, .blatt-werk{container-type:inline-size}
+@media (min-width:761px){
+  @container (max-width:1150px){
+    .blatt-werk .wort{display:none}
+    .blatt-werk .zeichen{margin:0; font-size:16px}
+    .blatt-werk button{min-width:36px; padding:4px 7px}
+  }
+  @container (max-width:1400px){
+    .blatt-fest .wort{display:none}
+    .blatt-fest .zeichen{margin:0; font-size:16px}
+    .blatt-fest button{min-width:36px; padding:4px 7px}
+  }
+}
+
 @media (max-width:760px){
   .blatt-werk{flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none;
               max-width:100%; -webkit-overflow-scrolling:touch}
   .blatt-werk::-webkit-scrollbar{display:none}
   .blatt-werk > *{flex:0 0 auto}
+  .blatt-werk > .blatt-zeilenbruch{display:none}
   .blatt-werk button{min-height:44px; min-width:44px; padding:4px 8px}
   .blatt-werk .wort{display:none}
   .blatt-werk .zeichen{margin:0; font-size:17px}
   .blatt-farbe{width:30px; height:30px; min-width:30px}
   .blatt-farbe-neu{width:30px; height:30px; min-width:30px}
   .blatt-strich{min-width:38px}
+  /* … UND SIE STEHEN DIREKT HINTER DEM WERKZEUG. Die Werkzeuge bekommen
+     Plaetze in Zehnerschritten, die Gruppen den Platz gleich hinter dem
+     gewaehlten — so liegen Farben und Breiten neben dem Stift, nicht drei
+     Bildschirme weiter rechts. Die Reihenfolge im DOM bleibt (Tastatur,
+     Vorleser, Rechner); nur die Anordnung am Telefon wandert. */
+  .blatt-werk > [data-wz="schreiben"]{order:10} .blatt-werk > [data-wz="select"]{order:20}
+  .blatt-werk > [data-wz="stift"]{order:30} .blatt-werk > [data-wz="marker"]{order:40}
+  .blatt-werk > [data-wz="line"]{order:50} .blatt-werk > [data-wz="arrow"]{order:60}
+  .blatt-werk > [data-wz="rectangle"]{order:70} .blatt-werk > [data-wz="ellipse"]{order:80}
+  .blatt-werk > [data-wz="abdeck"]{order:90} .blatt-werk > [data-wz="zettel"]{order:100}
+  .blatt-werk > [data-wz="text"]{order:110} .blatt-werk > [data-wz="zeichen"]{order:120}
+  .blatt-werk > [data-wz="bild"]{order:125} .blatt-werk > [data-wz="radierer"]{order:130}
+  .blatt-werk > [data-gruppe="verlauf"]{order:200}
+  .blatt-werk[data-tool="schreiben"]{--platz:10} .blatt-werk[data-tool="select"]{--platz:20}
+  .blatt-werk[data-tool="stift"]{--platz:30} .blatt-werk[data-tool="marker"]{--platz:40}
+  .blatt-werk[data-tool="line"]{--platz:50} .blatt-werk[data-tool="arrow"]{--platz:60}
+  .blatt-werk[data-tool="rectangle"]{--platz:70} .blatt-werk[data-tool="ellipse"]{--platz:80}
+  .blatt-werk[data-tool="abdeck"]{--platz:90} .blatt-werk[data-tool="zettel"]{--platz:100}
+  .blatt-werk[data-tool="text"]{--platz:110} .blatt-werk[data-tool="zeichen"]{--platz:120}
+  .blatt-werk[data-tool="bild"]{--platz:125} .blatt-werk[data-tool="radierer"]{--platz:130}
+  /* Innerhalb der Gruppen: erst der Stift-Stil, dann Farben, dann Breiten,
+     dann die Schalter — wie GoodNotes es aufklappt. */
+  .blatt-werk[data-tool] > [data-gruppe="stil"],
+  .blatt-werk[data-tool] > [data-gruppe="schrift"],
+  .blatt-werk[data-tool] > [data-gruppe="radierer"],
+  .blatt-werk[data-tool] > [data-gruppe="auswahl"]{order:calc(var(--platz, 0) + 1)}
+  .blatt-werk[data-tool] > [data-gruppe="farbe"]{order:calc(var(--platz, 0) + 2)}
+  .blatt-werk[data-tool] > [data-gruppe="breite"]{order:calc(var(--platz, 0) + 3)}
+  .blatt-werk[data-tool] > [data-gruppe="formen"]{order:calc(var(--platz, 0) + 4)}
+  .blatt-werk[data-tool] > [data-gruppe="lineal"]{order:calc(var(--platz, 0) + 5)}
+  .blatt-werk[data-tool] > [data-gruppe="verlauf"]{order:200}
   /* Der Schatten zeigt, dass links davon noch etwas liegt — sonst sieht
      eine abgeschnittene Leiste aus wie eine vollständige (E103). */
   .blatt-fest{box-shadow:-10px 0 10px -7px rgba(0,0,0,.45); padding-left:8px}
@@ -11756,6 +11915,9 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    `offsetTop`, und der zaehlt zum naechsten positionierten Vorfahren. Ohne
    diese eine Angabe zeigte er an einem Element weiter aussen vorbei, und die
    Seitenzahl blieb beim Rollen auf 1 stehen. */
+/* Zwei Finger kneifen das DOKUMENT (E354), nicht die ganze Seite des
+   Browsers — die Geste gehoert der Dokumentansicht. */
+.document-center{touch-action:pan-x pan-y}
 .document-center{min-width:0; overflow:auto; padding:18px; position:relative;
   background:var(--bg-subtle,var(--bg-hover))}
 /* E299 · DIE ROLLE. Alle Seiten untereinander, mit Luft dazwischen — man
@@ -14224,12 +14386,25 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
  * kann, ohne drei andere zu lesen. Ein Bus macht daraus einen Stern: jeder
  * redet mit der Mitte, keiner mit dem Nachbarn.
  *
- * Bewusst klein gehalten — vier Funktionen:
+ * Bewusst klein gehalten — vier Funktionen, und seit E362 ihre
+ * asynchronen Zwillinge (L102 Punkt 4):
  *
- *      horche(name, fn)     zuhören, gibt eine Abmeldefunktion zurück
+ *      horche(name, fn, {nachreichen})  zuhören, gibt eine Abmeldefunktion
+ *                                       zurück; mit `nachreichen` bekommt
+ *                                       ein spät Angemeldeter die letzte
+ *                                       Meldung sofort nachgereicht
  *      einmal(name, fn)     einmal zuhören, dann von selbst abmelden
  *      melde(name, daten)   sagen, dass etwas geschehen ist
- *      frage(name, daten)   fragen und die Antworten einsammeln
+ *      frage(name, daten)   fragen und die Antworten einsammeln — SYNCHRON:
+ *                           wer eine Promise zurückgibt, wird gemeldet
+ *                           und nicht gezählt (siehe frageAsync)
+ *      meldeAsync(name, daten)  wie melde, wartet aber die Zuhörer ab und
+ *                           meldet, was dabei scheitert
+ *      frageAsync(name, daten)  wie frage, wartet aber jede Antwort ab —
+ *                           in der Reihenfolge der Anmeldung
+ *      darf(name, daten) / darfAsync  ein Veto: fragt, und ein einziges
+ *                           `false` heisst Nein
+ *      schonGemeldet(name)  ob (und womit) ein Ereignis schon gemeldet wurde
  *
  * `melde` ist eine Aussage („die Seite wurde gespeichert"), `frage` eine
  * Frage („was gehört in die Seitenleiste?"). Der Unterschied ist wichtig:
@@ -14242,6 +14417,25 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 const Ereignisse = (() => {
     /* name -> Set von Zuhörern */
     const zuhoerer = new Map();
+    /* DIE LETZTE MELDUNG JE NAME (E362): wer sich nach dem Ereignis anmeldet,
+       kann sie sich nachreichen lassen. Der Fall ist nicht erfunden — das
+       Menüband horchte auf `ablageGeladen`, und die Ablage war beim Anmelden
+       längst geladen: ein Zuhörer, der nie etwas hört, sieht aus wie einer,
+       der nichts zu tun hat. */
+    const gemeldet = new Map();
+    const istVersprechen = (wert) => !!wert && (typeof wert === 'object' || typeof wert === 'function') &&
+        typeof wert.then === 'function';
+    /* Ein kaputtes Modul hält die anderen nicht auf — aber still bleibt es
+       auch nicht. Derselbe Weg für synchrone Würfe, abgelehnte Promises und
+       die falsche Antwortart. */
+    const fehlerMelden = (art, name, e) => {
+        console.error(art + ' „' + name + '": ' + (e instanceof Error ? e.message : String(e)), e);
+        if (typeof Pflege !== 'undefined' && Pflege.fehlerMerken)
+            try {
+                Pflege.fehlerMerken(e, art + ' ' + name);
+            }
+            catch { }
+    };
     /* Die letzten Meldungen — nur für die Fehlersuche, nicht für die Logik. */
     const MAX_SPUR = 200;
     const spur = [];
@@ -14250,7 +14444,7 @@ const Ereignisse = (() => {
      * Auf ein Ereignis hören.
      * Gibt das Abmelden zurück — immer aufheben.
      */
-    const horche = (name, fn) => {
+    const horche = (name, fn, opt) => {
         if (typeof fn !== 'function')
             return () => { };
         const f = fn;
@@ -14260,6 +14454,18 @@ const Ereignisse = (() => {
             zuhoerer.set(name, s);
         }
         s.add(f);
+        /* Nachreichen: die letzte Meldung sofort, mit demselben Fehlerweg wie
+           eine frische. Eine abgelehnte Promise wird gemeldet, nicht verloren. */
+        if (opt && opt.nachreichen && gemeldet.has(name)) {
+            try {
+                const r = f(gemeldet.get(name));
+                if (istVersprechen(r))
+                    r.then(undefined, e => fehlerMelden('Ereignis', name, e));
+            }
+            catch (e) {
+                fehlerMelden('Ereignis', name, e);
+            }
+        }
         return () => { zuhoerer.get(name)?.delete(f); };
     };
     /** Einmal hören, dann von selbst abmelden. */
@@ -14280,6 +14486,7 @@ const Ereignisse = (() => {
      */
     const melde = (name, daten) => {
         notieren(name, daten);
+        gemeldet.set(name, daten);
         const s = zuhoerer.get(name);
         if (!s || !s.size)
             return 0;
@@ -14287,20 +14494,45 @@ const Ereignisse = (() => {
         /* Über eine Kopie laufen: ein Zuhörer darf sich beim Zuhören abmelden. */
         [...s].forEach(fn => {
             try {
-                fn(daten);
+                const r = fn(daten);
                 n++;
+                /* Ein asynchroner Zuhörer darf hier zuhören — nur sein Scheitern
+                   darf nicht als „unhandled rejection" in der Konsole versanden. */
+                if (istVersprechen(r))
+                    r.then(undefined, e => fehlerMelden('Ereignis', name, e));
             }
             catch (e) {
-                /* Ein kaputtes Modul hält die anderen nicht auf — aber still bleibt
-                   es auch nicht. */
-                console.error('Ereignis „' + name + '": ' +
-                    (e instanceof Error ? e.message : String(e)), e);
-                if (typeof Pflege !== 'undefined' && Pflege.fehlerMerken)
-                    try {
-                        Pflege.fehlerMerken(e, 'Ereignis ' + name);
-                    }
-                    catch { }
+                fehlerMelden('Ereignis', name, e);
             }
+        });
+        return n;
+    };
+    /**
+     * Wie `melde`, aber es wartet: erst wenn jeder Zuhörer fertig ist — auch
+     * die asynchronen —, geht es weiter. Zurück kommt, wie viele ohne Fehler
+     * fertig wurden; was scheiterte, ist gemeldet.
+     */
+    const meldeAsync = async (name, daten) => {
+        notieren(name, daten);
+        gemeldet.set(name, daten);
+        const s = zuhoerer.get(name);
+        if (!s || !s.size)
+            return 0;
+        const laufend = [...s].map(fn => {
+            try {
+                return Promise.resolve(fn(daten));
+            }
+            catch (e) {
+                return Promise.reject(e);
+            }
+        });
+        const ergebnisse = await Promise.allSettled(laufend);
+        let n = 0;
+        ergebnisse.forEach(erg => {
+            if (erg.status === 'fulfilled')
+                n++;
+            else
+                fehlerMelden('Ereignis', name, erg.reason);
         });
         return n;
     };
@@ -14317,16 +14549,60 @@ const Ereignisse = (() => {
         [...s].forEach(fn => {
             try {
                 const a = fn(daten);
+                /* EINE PROMISE IST KEINE ANTWORT (E362, L102 Punkt 4): vorher lag
+                   sie als rohes Objekt in der Liste, und wer die Liste las, rechnete
+                   mit einem Wert, der keiner war — still falsch. Jetzt wird sie
+                   gemeldet und NICHT gezählt; wer asynchron antwortet, gehört zu
+                   `frageAsync`. Ihr Scheitern versandet nicht. */
+                if (istVersprechen(a)) {
+                    a.then(undefined, () => { });
+                    fehlerMelden('Frage', name, new Error('ein Zuhörer antwortet asynchron — dafür gibt es frageAsync'));
+                    return;
+                }
                 if (a !== undefined && a !== null)
                     raus.push(a);
             }
             catch (e) {
-                console.error('Frage „' + name + '": ' +
-                    (e instanceof Error ? e.message : String(e)), e);
+                fehlerMelden('Frage', name, e);
             }
         });
         return raus;
     };
+    /**
+     * Wie `frage`, aber jede Antwort wird abgewartet — synchrone wie
+     * asynchrone —, und die Liste steht in der REIHENFOLGE DER ANMELDUNG,
+     * nicht in der des Eintreffens. Was scheitert, ist gemeldet und fehlt.
+     */
+    const frageAsync = async (name, daten) => {
+        notieren(name, daten);
+        const s = zuhoerer.get(name);
+        if (!s || !s.size)
+            return [];
+        const laufend = [...s].map(fn => {
+            try {
+                return Promise.resolve(fn(daten));
+            }
+            catch (e) {
+                return Promise.reject(e);
+            }
+        });
+        const ergebnisse = await Promise.allSettled(laufend);
+        const raus = [];
+        ergebnisse.forEach(erg => {
+            if (erg.status === 'rejected') {
+                fehlerMelden('Frage', name, erg.reason);
+                return;
+            }
+            if (erg.value !== undefined && erg.value !== null)
+                raus.push(erg.value);
+        });
+        return raus;
+    };
+    /** Ein Veto: gefragt wird wie bei `frage`, und ein einziges `false` heisst Nein. */
+    const darf = (name, daten) => !frage(name, daten).includes(false);
+    const darfAsync = async (name, daten) => !(await frageAsync(name, daten)).includes(false);
+    /** Wurde `name` schon gemeldet — und womit? */
+    const schonGemeldet = (name) => ({ da: gemeldet.has(name), daten: gemeldet.get(name) });
     /** Wer hört gerade worauf? Für die Fehlersuche und die Übersicht. */
     const uebersicht = () => [...zuhoerer.entries()]
         .map(([name, s]) => ({ name, zuhoerer: s.size }))
@@ -14335,9 +14611,9 @@ const Ereignisse = (() => {
         spur.length = 0; };
     const letzte = (n = 50) => spur.slice(-n);
     /** Alles vergessen — nur für Prüfläufe. */
-    const leeren = () => { zuhoerer.clear(); spur.length = 0; };
-    return { horche, einmal, melde, frage, uebersicht, mitschneiden, letzte, leeren,
-        anzahl: () => zuhoerer.size };
+    const leeren = () => { zuhoerer.clear(); spur.length = 0; gemeldet.clear(); };
+    return { horche, einmal, melde, frage, meldeAsync, frageAsync, darf, darfAsync, schonGemeldet,
+        uebersicht, mitschneiden, letzte, leeren, anzahl: () => zuhoerer.size };
 })();
 window.Ereignisse = Ereignisse;
 
@@ -15557,6 +15833,9 @@ const ARTEN = Object.freeze({
     seiteInPapierkorb: 'seite.papierkorb',
     seiteZurueck: 'seite.zurueckgeholt',
     seiteEndgueltigWeg: 'seite.endgueltig-weg',
+    /* Eine FRAGE vor dem Verschlüsseln (E364): was soll die Seite mitnehmen,
+       solange ihre Kinder noch lesbar sind? Das Regal antwortet „heftArt". */
+    seiteWirdGesperrt: 'seite.wird-gesperrt',
     /* --- Blöcke ------------------------------------------------------------ */
     blockAngelegt: 'block.angelegt',
     blockGeaendert: 'block.geaendert',
@@ -15609,6 +15888,21 @@ const ARTEN = Object.freeze({
 const artKennt = (name) => Object.values(ARTEN).some(a => a === name);
 window.ARTEN = ARTEN;
 window.artKennt = artKennt;
+
+</script>
+<script>
+/* ===== quell/kern/einstellung/stand.js ===== */
+"use strict";
+/* kern/einstellung/stand.ts — DER STAND DIESES BAUS (E361, L83)
+ * ----------------------------------------------------------------------------
+ * Geschrieben von dienststand.mts bei `npm run bauen:ts` — von Hand nicht
+ * anfassen. `fassung` ist die Fassung des Dienst-Arbeiters (sw.ts),
+ * `inhalt` der Stempel über den Grundstock, `gebaut` der Augenblick, in
+ * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
+ * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
+ * ==========================================================================*/
+const Stand = { fassung: 135, inhalt: '8517c9b8ab4f8667', gebaut: '2026-09-03T05:14:15.215Z' };
+window.Stand = Stand;
 
 </script>
 <script>
@@ -16566,8 +16860,84 @@ const InkGeometry = (() => {
         x: Math.min(start[0], end[0]), y: Math.min(start[1], end[1]),
         width: Math.abs(end[0] - start[0]), height: Math.abs(end[1] - start[1])
     });
+    /* DER TEXTKASTEN (E360, L115 Punkt 6): ein Text mit `breiteBox` bricht
+     * an dieser Breite um. Die Zeilen werden HIER gerechnet — deterministisch,
+     * ohne DOM und ohne Schriftmessung: dieselbe Rechnung fuer Bildschirm,
+     * Druck, Auswahlkasten und Treffer. Die Breite eines Zeichens ist eine
+     * Schaetzung je Schriftart (in em); sie muss nicht stimmen, sie muss
+     * ueberall dieselbe sein. Gebrochen wird an Leerzeichen, ein zu langes
+     * Wort an der Breite. */
+    const CHAR_EM = { standard: 0.55, serif: 0.52, mono: 0.6, hand: 0.58, schmal: 0.45 };
+    const TEXT_ZEILE = 1.25;
+    const charWidth = (ch, family, bold) => {
+        const base = CHAR_EM[family] ?? 0.55;
+        let f = 1;
+        if (family !== 'mono') {
+            if (" .,:;'|!ijltIfr".includes(ch))
+                f = 0.55;
+            else if ('mwMW'.includes(ch))
+                f = 1.55;
+            else if ((ch >= 'A' && ch <= 'Z') || 'ÄÖÜ'.includes(ch))
+                f = 1.25;
+        }
+        return base * f * (bold ? 1.06 : 1);
+    };
+    const textWidth = (text, fontSize, family = 'standard', bold = false) => {
+        let w = 0;
+        for (const ch of String(text ?? ''))
+            w += charWidth(ch, family, bold);
+        return w * fontSize;
+    };
+    const textLines = (text, width, fontSize, family = 'standard', bold = false) => {
+        const lines = [];
+        const max = Math.max(1, finite(width));
+        const passt = (probe) => textWidth(probe, fontSize, family, bold) <= max;
+        for (const raw of String(text ?? '').split(/\r?\n/)) {
+            let line = '';
+            for (const word of raw.split(' ')) {
+                const probe = line ? line + ' ' + word : word;
+                if (passt(probe)) {
+                    line = probe;
+                    continue;
+                }
+                if (line) {
+                    lines.push(line);
+                    line = '';
+                }
+                /* Ein Wort, das allein nicht passt, bricht an der Breite. */
+                let part = '';
+                for (const ch of word) {
+                    if (part && !passt(part + ch)) {
+                        lines.push(part);
+                        part = '';
+                    }
+                    part += ch;
+                }
+                line = part;
+            }
+            lines.push(line);
+        }
+        return lines;
+    };
+    /** Kasten, Zeilen und Masse eines Textkastens — oder null fuer eine alte, einzeilige Textmarke. */
+    const textLayout = (mark) => {
+        const width = finite(mark?.breiteBox);
+        if (!(width > 0))
+            return null;
+        const point = points([mark.point])[0] || [0, 0];
+        const fontSize = Math.max(8, finite(mark.fontSize) || 18);
+        const pad = Math.round(fontSize * 0.35);
+        const family = String(mark.schrift || 'standard');
+        const bold = !!mark.fett;
+        const lines = textLines(String(mark.text || ''), width - pad * 2, fontSize, family, bold);
+        return { x: point[0], y: point[1], width, height: pad * 2 + lines.length * fontSize * TEXT_ZEILE,
+            pad, zeile: fontSize * TEXT_ZEILE, fontSize, family, bold, lines };
+    };
     const bounds = (mark) => {
         if (mark?.art === 'text') {
+            const layout = textLayout(mark);
+            if (layout)
+                return { x: layout.x, y: layout.y, width: layout.width, height: layout.height };
             const point = points([mark.point])[0] || [0, 0];
             const fontSize = Math.max(8, finite(mark.fontSize) || 18);
             const width = Math.max(fontSize, String(mark.text || '').length * fontSize * 0.58);
@@ -16772,12 +17142,135 @@ const InkGeometry = (() => {
             mark.fontSize = Math.max(6, r2(Number(mark.fontSize) * mittel));
         if (mark.groesse !== undefined && Number.isFinite(Number(mark.groesse)))
             mark.groesse = Math.max(12, r2(Number(mark.groesse) * mittel));
+        /* Der Textkasten (E360) waechst in der Breite mit — die Schrift mit dem Mittel. */
+        if (mark.breiteBox !== undefined && Number.isFinite(Number(mark.breiteBox)))
+            mark.breiteBox = Math.max(24, r2(Number(mark.breiteBox) * Math.abs(fx)));
         return mark;
     };
     return { points, simplify, simplifyIndices, outline, path, rectangle, bounds, move, intersects,
-        distanceToPolyline, touchesCircle, splitByCircle, insidePolygon, polygonArea, union, scale };
+        distanceToPolyline, touchesCircle, splitByCircle, insidePolygon, polygonArea, union, scale,
+        textWidth, textLines, textLayout };
 })();
 window.InkGeometry = InkGeometry;
+
+</script>
+<script>
+/* ===== quell/core/ink/shapes.js ===== */
+"use strict";
+/* ============================================================================
+ * core/ink/shapes.ts — Formerkennung fuer Freihandstriche (E355)
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/core/ink/shapes.ts`. `npm run bauen:ts` schreibt
+ * daraus `quell/core/ink/shapes.js`.
+ * ----------------------------------------------------------------------------
+ * Wer in GoodNotes einen Kreis zieht und am Ende kurz haelt, bekommt einen
+ * Kreis. Diese Datei beantwortet nur die geometrische Frage: Ist dieser
+ * Linienzug eine LINIE, eine ELLIPSE (ein Kreis) oder ein RECHTECK — und wenn
+ * ja, mit welchen zwei Punkten? Ob gehalten wurde, ob der Schalter an ist,
+ * welches Werkzeug fuehrte: das entscheidet die Zeichenschicht. Diese Datei
+ * kennt weder Store noch DOM noch Zeit (E125, wie geometry.ts).
+ *
+ * Die Schwellen sind Erfahrungswerte, keine Masse. Sie sind so gewaehlt, dass
+ * eine mit der Hand gezogene Form erkannt wird und ein Gekritzel nicht — die
+ * Prueflaeufe in test347 halten beide Seiten fest.
+ * ==========================================================================*/
+const InkShapes = (() => {
+    const points = (raw) => !Array.isArray(raw) ? [] : raw
+        .filter((point) => Array.isArray(point) && point.length >= 2)
+        .map((point) => [Number(point[0]) || 0, Number(point[1]) || 0]);
+    const distanceToSegment = (point, start, end) => {
+        const dx = end[0] - start[0];
+        const dy = end[1] - start[1];
+        if (!dx && !dy)
+            return Math.hypot(point[0] - start[0], point[1] - start[1]);
+        const amount = Math.max(0, Math.min(1, ((point[0] - start[0]) * dx + (point[1] - start[1]) * dy) / (dx * dx + dy * dy)));
+        return Math.hypot(point[0] - (start[0] + amount * dx), point[1] - (start[1] + amount * dy));
+    };
+    const pathLength = (input) => {
+        let sum = 0;
+        for (let i = 1; i < input.length; i++)
+            sum += Math.hypot(input[i][0] - input[i - 1][0], input[i][1] - input[i - 1][1]);
+        return sum;
+    };
+    const r2 = (value) => Math.round(value * 100) / 100;
+    /**
+     * ERKENNEN. Gibt die Form mit ihren zwei Punkten zurueck — Linie: Anfang
+     * und Ende; Ellipse und Rechteck: die zwei Ecken ihres Kastens — oder
+     * null, wenn der Zug keine der drei Formen ist.
+     *
+     *   Linie:    die Sehne ist fast der ganze Weg, und kein Punkt liegt weit
+     *             neben ihr.
+     *   Rechteck: der Zug ist geschlossen, fast alle Punkte liegen nahe an den
+     *             vier Kanten des Kastens, und jede Ecke ist besucht.
+     *   Ellipse:  der Zug ist geschlossen, und die Punkte halten ihren Abstand
+     *             zur Mitte (auf die Halbachsen bezogen). Ist der Kasten fast
+     *             quadratisch, wird ein Kreis daraus — der Kasten wird zum
+     *             Quadrat um dieselbe Mitte.
+     */
+    const recognize = (raw) => {
+        const input = points(raw);
+        const n = input.length;
+        if (n < 8)
+            return null;
+        const xs = input.map(p => p[0]);
+        const ys = input.map(p => p[1]);
+        const x0 = Math.min(...xs), x1 = Math.max(...xs);
+        const y0 = Math.min(...ys), y1 = Math.max(...ys);
+        const w = x1 - x0, h = y1 - y0;
+        const diag = Math.hypot(w, h);
+        if (diag < 12)
+            return null;
+        const first = input[0];
+        const last = input[n - 1];
+        const chord = Math.hypot(last[0] - first[0], last[1] - first[1]);
+        const length = pathLength(input);
+        if (length <= 0)
+            return null;
+        /* LINIE */
+        if (chord >= 0.9 * length) {
+            let worst = 0;
+            for (const p of input)
+                worst = Math.max(worst, distanceToSegment(p, first, last));
+            if (worst <= Math.max(3, 0.05 * length))
+                return { art: 'line', pts: [[r2(first[0]), r2(first[1])], [r2(last[0]), r2(last[1])]] };
+            return null;
+        }
+        /* GESCHLOSSEN? Anfang und Ende nahe beieinander, und der Weg ist
+           laenger als der Umfang eines Halbbogens — sonst ist es ein Haken. */
+        const closed = chord <= 0.2 * diag && length >= 1.5 * diag;
+        if (!closed)
+            return null;
+        /* RECHTECK: fast alle Punkte nahe an den Kanten, und jede Ecke wirklich
+           besucht. Die Ecke ist das Mass: ein Kreis kommt seinen Kastenecken nie
+           naeher als 0,41 mal seinen Radius — bei 0,08 der Diagonale bleibt er
+           draussen (der erste Entwurf liess ihn mit 0,18 hinein, und test347 §1
+           sah einen Kreis als Rechteck). */
+        const nah = 0.06 * diag;
+        const anKante = input.filter(p => Math.min(Math.abs(p[0] - x0), Math.abs(p[0] - x1), Math.abs(p[1] - y0), Math.abs(p[1] - y1)) <= nah).length;
+        const ecken = [[x0, y0], [x1, y0], [x0, y1], [x1, y1]];
+        const eckenBesucht = ecken.every(e => input.some(p => Math.hypot(p[0] - e[0], p[1] - e[1]) <= 0.08 * diag));
+        if (anKante >= 0.85 * n && eckenBesucht)
+            return { art: 'rectangle', pts: [[r2(x0), r2(y0)], [r2(x1), r2(y1)]] };
+        /* ELLIPSE: die Punkte halten ihren Abstand zur Mitte. */
+        const cx = x0 + w / 2, cy = y0 + h / 2;
+        const rx = Math.max(1, w / 2), ry = Math.max(1, h / 2);
+        let abweichung = 0;
+        for (const p of input)
+            abweichung += Math.abs(Math.hypot((p[0] - cx) / rx, (p[1] - cy) / ry) - 1);
+        abweichung /= n;
+        if (abweichung <= 0.12) {
+            if (Math.abs(w - h) <= 0.12 * Math.max(w, h)) {
+                const r = (w + h) / 4;
+                return { art: 'ellipse', pts: [[r2(cx - r), r2(cy - r)], [r2(cx + r), r2(cy + r)]] };
+            }
+            return { art: 'ellipse', pts: [[r2(x0), r2(y0)], [r2(x1), r2(y1)]] };
+        }
+        return null;
+    };
+    return { recognize };
+})();
+window.InkShapes = InkShapes;
 
 </script>
 <script>
@@ -23490,6 +23983,107 @@ const Spaltentyp = (() => {
     return { erkenne, wandle, name, alsZahl, alsDatum, alsJaNein };
 })();
 window.Spaltentyp = Spaltentyp;
+
+</script>
+<script>
+/* ===== quell/core/import/zipdetails.js ===== */
+"use strict";
+/* ============================================================================
+ * core/import/zipdetails.js — was ein ZIP-Eintrag über sich sagt (E363)
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/core/import/zipdetails.ts`. `npm run bauen:ts` schreibt
+ * daraus `quell/core/import/zipdetails.js`. Wer das .js bearbeitet, verliert
+ * die Änderung beim nächsten Bauen; `pruefungen/lauf/test105.mjs` meldet es
+ * vorher.
+ * ----------------------------------------------------------------------------
+ * Drei Dinge, die der Leser (bereiche/dateien/einlesen.ts) bisher überging
+ * (L114 Punkt 5), hier als reiner Kern ohne DOM und ohne Ablage:
+ *
+ *   · DIE PRÜFSUMME. Jeder Eintrag trägt eine CRC-32 seiner rohen Bytes.
+ *     Wer sie nicht nachrechnet, nimmt einen beschädigten Eintrag als
+ *     vollständiges Dokument an — still. Die Rechnung ist fortlaufend
+ *     (`crc32Weiter`), damit ein Blob scheibchenweise geprüft werden kann,
+ *     ohne je ganz im Arbeitsspeicher zu liegen.
+ *   · DER NAME. Bit 11 der Flags sagt „UTF-8". Fehlt es, stammt der Name
+ *     aus einem alten Windows-Packer und ist CP437 — „Übung" käme sonst mit
+ *     Ersatzzeichen an. Gültiges UTF-8 ohne Bit wird trotzdem als UTF-8
+ *     gelesen (viele Packer setzen das Bit nicht, schreiben aber UTF-8);
+ *     erst was kein UTF-8 ist, wird CP437.
+ *   · VERSCHLÜSSELT. Bit 0 der Flags. Redion kann das nicht lesen und
+ *     sagt es, statt beim Entpacken mit einer allgemeinen Meldung zu
+ *     scheitern.
+ *
+ * Der Schreiber (ausgeben.ts) nimmt dieselbe Prüfsumme; die Tafel steht
+ * damit nur noch einmal.
+ * ==========================================================================*/
+const ZipDetails = (() => {
+    const UTF8_BIT = 0x800;
+    const VERSCHLUESSELT_BIT = 0x1;
+    let tafel = null;
+    const crc32Tafel = () => {
+        if (tafel)
+            return tafel;
+        tafel = new Uint32Array(256);
+        for (let n = 0; n < 256; n++) {
+            let c = n;
+            for (let k = 0; k < 8; k++)
+                c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+            tafel[n] = c >>> 0;
+        }
+        return tafel;
+    };
+    /** Der Anfangswert einer fortlaufenden Rechnung. */
+    const crc32Start = () => 0xFFFFFFFF;
+    /** Ein Stück Bytes in die laufende Rechnung nehmen. */
+    const crc32Weiter = (zwischen, bytes) => {
+        const t = crc32Tafel();
+        let c = zwischen >>> 0;
+        for (let i = 0; i < bytes.length; i++)
+            c = (t[(c ^ (bytes[i] ?? 0)) & 0xFF] ?? 0) ^ (c >>> 8);
+        return c >>> 0;
+    };
+    /** Die Rechnung abschliessen. */
+    const crc32Fertig = (zwischen) => ((zwischen ^ 0xFFFFFFFF) >>> 0);
+    /** Alles auf einmal — für Bytes, die ohnehin im Speicher liegen. */
+    const crc32 = (bytes) => crc32Fertig(crc32Weiter(crc32Start(), bytes));
+    const crc32Hex = (n) => (n >>> 0).toString(16).padStart(8, '0');
+    /* CP437 — die obere Hälfte (0x80–0xFF), in der Reihenfolge der Tabelle. */
+    const CP437_OBEN = 'ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»' +
+        '░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀' +
+        'αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■ ';
+    const cp437 = (bytes) => {
+        let s = '';
+        for (let i = 0; i < bytes.length; i++) {
+            const b = bytes[i] ?? 0;
+            s += b < 0x80 ? String.fromCharCode(b) : (CP437_OBEN[b - 0x80] ?? '?');
+        }
+        return s;
+    };
+    /** Der Name eines Eintrags aus seinen Bytes und den Flags des Kopfs. */
+    const nameDecodieren = (bytes, flags) => {
+        if ((flags & UTF8_BIT) !== 0)
+            return new TextDecoder('utf-8').decode(bytes);
+        let nurAscii = true;
+        for (let i = 0; i < bytes.length; i++)
+            if ((bytes[i] ?? 0) >= 0x80) {
+                nurAscii = false;
+                break;
+            }
+        if (nurAscii)
+            return new TextDecoder('utf-8').decode(bytes);
+        try {
+            return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+        }
+        catch {
+            return cp437(bytes);
+        }
+    };
+    const istVerschluesselt = (flags) => (flags & VERSCHLUESSELT_BIT) !== 0;
+    return { UTF8_BIT, VERSCHLUESSELT_BIT, crc32Tafel, crc32Start, crc32Weiter, crc32Fertig, crc32, crc32Hex,
+        cp437, nameDecodieren, istVerschluesselt };
+})();
+window.ZipDetails = ZipDetails;
 
 </script>
 <script>
@@ -44629,6 +45223,34 @@ const Marken = (() => {
     ];
     const STIL_VORGABE = 'fueller';
     const HOECHSTENS_EIGENE_FARBEN = 4;
+    /* DIE SCHRIFT AUF DEM BLATT (E360, L115 Punkt 6): dieselben fuenf Familien
+       wie am Block (E101, Register.textstile), hier als Stapel fuer SVG —
+       Attribute kennen keine CSS-Variablen, und der Druck liest sie roh.
+       Die Stufen sind die Leiter, auf der A− und A+ gehen. */
+    const SCHRIFTEN = [
+        { id: 'standard', name: 'Standard', stapel: "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" },
+        { id: 'serif', name: 'Serifen', stapel: "Georgia, 'Times New Roman', serif" },
+        { id: 'mono', name: 'Schreibmaschine', stapel: 'ui-monospace, Menlo, Consolas, monospace' },
+        { id: 'hand', name: 'Handschrift', stapel: "'Segoe Print', 'Bradley Hand', 'Comic Sans MS', cursive" },
+        { id: 'schmal', name: 'Schmal', stapel: "'Arial Narrow', 'Roboto Condensed', 'Helvetica Neue', sans-serif" }
+    ];
+    const SCHRIFT_STUFEN = [11, 13, 16, 20, 26, 34];
+    const SCHRIFT_VORGABE = { familie: 'standard', groesse: 16, fett: false, rahmen: false };
+    const schriftStapel = (id) => (SCHRIFTEN.find(x => x.id === String(id)) || SCHRIFTEN[0]).stapel;
+    const schriftLesen = () => {
+        const roh = typeof Store !== 'undefined' ? Store.getMeta('zeichnen:schrift') : null;
+        const s = roh && typeof roh === 'object' ? roh : {};
+        return {
+            familie: SCHRIFTEN.some(x => x.id === s.familie) ? String(s.familie) : SCHRIFT_VORGABE.familie,
+            groesse: SCHRIFT_STUFEN.includes(Number(s.groesse)) ? Number(s.groesse) : SCHRIFT_VORGABE.groesse,
+            fett: !!s.fett, rahmen: !!s.rahmen
+        };
+    };
+    const naechsteStufe = (jetzt, richtung) => {
+        if (richtung > 0)
+            return SCHRIFT_STUFEN.find(v => v > jetzt) ?? SCHRIFT_STUFEN[SCHRIFT_STUFEN.length - 1];
+        return [...SCHRIFT_STUFEN].reverse().find(v => v < jetzt) ?? SCHRIFT_STUFEN[0];
+    };
     /** Der Breitenfaktor eines Punkts nach Druck und Stift. */
     const druckFaktor = (stil, p) => {
         const d = Math.max(0.05, Math.min(1, Number.isFinite(p) ? p : 0.5));
@@ -44662,6 +45284,49 @@ const Marken = (() => {
             end[1] - head * Math.sin(angle + Math.PI / 6)];
         return `M${start[0]} ${start[1]} L${end[0]} ${end[1]} ` +
             `M${left[0]} ${left[1]} L${end[0]} ${end[1]} L${right[0]} ${right[1]}`;
+    };
+    /* EIN BILD AUF DEM BLATT (E357, L115 Punkt 6). Die Datei liegt in der
+       Ablage — in Stuecken, nie als Data-URL in der Marke —, die Marke traegt
+       nur ihre Kennung und zwei Ecken. Die Adresse (eine Objekt-URL) kennt
+       `Dateien`; ist sie schon bekannt, zeichnet `zeichneMarke` das Bild
+       sofort, und genau darauf verlassen sich Druck und Folien, die synchron
+       lesen. Ist sie noch nicht da, steht ein Platzhalter, und die Adresse
+       kommt nach — oder sie kommt nicht, und der Platzhalter sagt es. */
+    const BILD_FEHLT = 'Bild fehlt';
+    const bildPlatzhalter = (box, wort = '') => {
+        const rahmen = svg('rect', { x: box.x, y: box.y, width: box.width, height: box.height,
+            rx: 2, class: 'blatt-bild-fehlt' });
+        if (!wort)
+            return [rahmen];
+        const groesse = Math.max(7, Math.min(14, box.height / 6, box.width / 8));
+        const text = svg('text', { x: box.x + box.width / 2, y: box.y + box.height / 2,
+            'text-anchor': 'middle', 'dominant-baseline': 'middle', 'font-size': groesse,
+            'font-family': 'system-ui, sans-serif', class: 'blatt-bild-fehlt-wort' });
+        text.textContent = wort;
+        return [rahmen, text];
+    };
+    const bildNachladen = (dateiId, gruppe) => {
+        if (typeof Dateien === 'undefined' || typeof Dateien.adresse !== 'function')
+            return;
+        Promise.resolve(Dateien.adresse(dateiId)).then((url) => {
+            /* Der Kasten wird JETZT vom Platzhalter gelesen, nicht von damals:
+               beim Ziehen flickt `updateNode` seine Lage, und die Antwort soll
+               dort landen, wo das Bild inzwischen steht. Ohne Platzhalter ist
+               die Gruppe ersetzt worden — dann zeichnet der Ersatz selbst. */
+            const rahmen = gruppe.querySelector('.blatt-bild-fehlt');
+            if (!rahmen)
+                return;
+            const box = { x: Number(rahmen.getAttribute('x')), y: Number(rahmen.getAttribute('y')),
+                width: Number(rahmen.getAttribute('width')), height: Number(rahmen.getAttribute('height')) };
+            gruppe.querySelectorAll('.blatt-bild-fehlt, .blatt-bild-fehlt-wort').forEach(node => node.remove());
+            if (url) {
+                gruppe.appendChild(svg('image', { x: box.x, y: box.y, width: box.width, height: box.height,
+                    href: url, preserveAspectRatio: 'none' }));
+            }
+            else {
+                bildPlatzhalter(box, BILD_FEHLT).forEach(node => gruppe.appendChild(node));
+            }
+        }).catch(() => { });
     };
     /** Bildschirm, Druck und Praesentation rufen denselben Zeichner auf. */
     const zeichneMarke = (mark) => {
@@ -44716,13 +45381,46 @@ const Marken = (() => {
             return gruppe;
         }
         if (art === 'text') {
+            const layout = InkGeometry.textLayout(mark);
+            if (layout) {
+                /* DER TEXTKASTEN (E360): `point` ist die linke obere Ecke, die
+                   Zeilen kommen aus `InkGeometry.textLayout` — dieselben Zeilen,
+                   die auch der Auswahlkasten kennt. Ein Rahmen, wenn die Marke
+                   einen will; sonst eine unsichtbare Flaeche, damit der Kasten
+                   auch zwischen den Woertern greifbar ist. */
+                const gruppe = svg('g', { 'pointer-events': 'all' });
+                gruppe.appendChild(mark.rahmen
+                    ? svg('rect', { x: layout.x, y: layout.y, width: layout.width, height: layout.height, rx: 3,
+                        fill: 'none', stroke: color, 'stroke-width': Math.max(0.6, layout.fontSize / 16).toFixed(2),
+                        class: 'blatt-textrahmen' })
+                    : svg('rect', { x: layout.x, y: layout.y, width: layout.width, height: layout.height,
+                        fill: 'transparent', stroke: 'none' }));
+                const textKnoten = svg('text', {
+                    x: layout.x + layout.pad, y: layout.y + layout.pad + layout.fontSize * 0.85, fill: color,
+                    'font-size': layout.fontSize, 'font-family': schriftStapel(layout.family),
+                    'font-weight': layout.bold ? 700 : 400
+                });
+                layout.lines.forEach((zeile, index) => {
+                    const stueck = svg('tspan', { x: layout.x + layout.pad, dy: index === 0 ? 0 : layout.zeile });
+                    stueck.textContent = zeile || ' ';
+                    textKnoten.appendChild(stueck);
+                });
+                gruppe.appendChild(textKnoten);
+                gruppe.setAttribute('data-sid', idOf(mark));
+                gruppe.setAttribute('data-ink-art', art);
+                gruppe.setAttribute('data-kasten', '1');
+                return gruppe;
+            }
+            /* Die einzeilige Textmarke von frueher (E100) bleibt, wie sie war —
+               nur Schrift und Fett hoert sie jetzt auch. */
             const point = InkGeometry.points([mark.point])[0];
             if (!point)
                 return null;
             element = svg('text', {
                 x: point[0], y: point[1], fill: color,
                 'font-size': Math.max(8, Number(mark.fontSize) || 18),
-                'font-family': 'system-ui, sans-serif', 'dominant-baseline': 'alphabetic'
+                'font-family': schriftStapel(mark.schrift), 'font-weight': mark.fett ? 700 : 400,
+                'dominant-baseline': 'alphabetic'
             });
             element.textContent = String(mark.text || '').replace(/[\r\n]+/g, ' ');
         }
@@ -44806,6 +45504,31 @@ const Marken = (() => {
             gruppe.setAttribute('data-ink-art', art);
             return gruppe;
         }
+        else if (art === 'bild' && points.length >= 2) {
+            /* DAS BILD (E357): ein <image> zwischen den zwei Ecken, aus der
+               Ablage. `preserveAspectRatio: none` — die Ecken sind die Wahrheit;
+               das Seitenverhaeltnis haelt die Auswahl beim Ziehen (siehe dort),
+               nicht der Zeichner. Ohne bekannte Adresse ein Platzhalter, siehe
+               `bildNachladen`. Eigener Zweig mit Rueckgabe, wie Zettel und Band:
+               der Strich-Block unten wuerde die Gruppe mit Strichfarbe versehen. */
+            const box = InkGeometry.rectangle(points[0], points[1]);
+            const gruppe = svg('g', { 'pointer-events': 'all' });
+            const dateiId = String(mark.dateiId || '');
+            const url = dateiId && typeof Dateien !== 'undefined' && typeof Dateien.adresseBekannt === 'function'
+                ? Dateien.adresseBekannt(dateiId) : null;
+            if (url) {
+                gruppe.appendChild(svg('image', { x: box.x, y: box.y, width: box.width, height: box.height,
+                    href: url, preserveAspectRatio: 'none' }));
+            }
+            else {
+                bildPlatzhalter(box, dateiId ? '' : BILD_FEHLT).forEach(node => gruppe.appendChild(node));
+                if (dateiId)
+                    bildNachladen(dateiId, gruppe);
+            }
+            gruppe.setAttribute('data-sid', idOf(mark));
+            gruppe.setAttribute('data-ink-art', art);
+            return gruppe;
+        }
         else if (art === 'ellipse' && points.length >= 2) {
             const box = InkGeometry.rectangle(points[0], points[1]);
             element = svg('ellipse', { cx: box.x + box.width / 2, cy: box.y + box.height / 2,
@@ -44859,6 +45582,27 @@ const Marken = (() => {
            nur Attribute und `textContent` übertragen, und ein <g> voller Pfade
            behielte damit seine alten Kinder. Beim Fachzeichen hiesse das: die
            Kennung ändert sich, das Bild nicht. */
+        /* EIN BILD WIRD GEFLICKT, NICHT ERSETZT (E357): beim Ziehen kaeme sonst
+           je Bewegung ein neues <image> mit derselben Adresse — und ein noch
+           ladendes Bild bekaeme seine Antwort nie, weil die Gruppe, auf die
+           sie wartet, laengst ausgetauscht waere. Gleiche Kinder, gleiche
+           Reihenfolge: dann wandern nur Lage und Mass. */
+        if (node && node.getAttribute('data-ink-art') === 'bild' && fresh.getAttribute('data-ink-art') === 'bild' &&
+            node.childElementCount === fresh.childElementCount &&
+            [...node.children].every((kind, n) => kind.tagName === fresh.children[n]?.tagName)) {
+            [...fresh.children].forEach((neu, n) => {
+                const alt = node.children[n];
+                if (!alt)
+                    return;
+                for (const name of ['x', 'y', 'width', 'height', 'font-size']) {
+                    const wert = neu.getAttribute(name);
+                    if (wert !== null)
+                        alt.setAttribute(name, wert);
+                }
+            });
+            node.setAttribute('data-sid', fresh.getAttribute('data-sid') || '');
+            return node;
+        }
         if (fresh.firstElementChild || node?.firstElementChild) {
             if (node?.parentNode)
                 node.replaceWith(fresh);
@@ -44941,11 +45685,30 @@ const Marken = (() => {
         let color = FARBEN[0];
         let width = BREITEN[1];
         let radierModus = radierModusLesen();
+        /* HANDBALLEN-SCHUTZ (E354): sobald ein Stift die Flaeche beruehrt hat,
+           zeichnen Finger vier Sekunden lang nicht — sie rollen. So darf die
+           Hand beim Schreiben auf dem Glas liegen wie auf Papier. Die Sperre
+           steht als `data-stift` an der Flaeche, damit auch das CSS weiss, dass
+           ein Finger jetzt rollen darf (touch-action). Und ein Zug gehoert dem
+           Zeiger, der ihn begonnen hat: Bewegungen und Loslassen anderer Zeiger
+           gehen ihn nichts an. */
+        const STIFT_SPERRE_MS = 4000;
+        /* FORMERKENNUNG (E355): wer einen Kreis zieht und am Ende kurz haelt,
+           bekommt einen Kreis — wie in GoodNotes. Das Halten ist die Absicht;
+           ohne Halten bleibt jeder Strich, was er ist. Abschaltbar, gemerkt in
+           `zeichnen:formen`. */
+        const HALTEN_MS = 450;
+        let formen = typeof Store !== 'undefined' ? Store.getMeta('zeichnen:formen') !== false : true;
+        let stiftZuletzt = 0;
+        let stiftTimer = null;
+        let aktiverZeiger = null;
         let radierStrich = null;
         /* Der Stift, mit dem der naechste Strich entsteht — gemerkt ueber
            Neuladen hinweg, wie das Papier eines Hefts (E351). */
         let stil = (typeof Store !== 'undefined' && STIFTE.some(st => st.id === Store.getMeta('zeichnen:stift')))
             ? String(Store.getMeta('zeichnen:stift')) : STIL_VORGABE;
+        /* Die Schrift fuer den naechsten Text (E360) — gemerkt in `zeichnen:schrift`. */
+        let schrift = schriftLesen();
         let running = null;
         let runningNode = null;
         let beforeRunning = null;
@@ -44969,8 +45732,27 @@ const Marken = (() => {
                 stroke: 'currentColor', 'stroke-width': 0.5, 'stroke-dasharray': '6 6',
                 opacity: 0.35, class: 'blatt-umbruch' }));
         }
-        marks.forEach(mark => { const node = zeichneMarke(mark); if (node)
-            flaeche.appendChild(node); });
+        /* DIE GEZEICHNETE FASSUNG JE MARKE (E358, L115 Punkt 7): ein JSON-Text
+           je Kennung, wie die Marke zuletzt in einen Knoten kam. `redraw`
+           vergleicht dagegen und fasst nur an, was anders ist. Wo der Text
+           fehlt (ein Strich oder ein Einsetzen haengt seinen Knoten direkt an),
+           wird einmal geflickt und dann gemerkt. */
+        const gezeichnet = new Map();
+        const fassung = (mark) => JSON.stringify(mark);
+        /* `merke` steht hinter JEDEM Weg, der einen Knoten direkt aendert oder
+           anhaengt — Ziehen, Griff, Umfaerben, Radieren, Strichende, Einsetzen,
+           Bild. Die Merkliste muss sagen, was der KNOTEN zeigt, nicht was die
+           Marke ist: nach einem Zurueck ist die Marke wieder die alte, der
+           Knoten aber noch der verschobene, und nur ein ehrlicher Eintrag
+           laesst `redraw` das sehen (gefunden von test350 §3). */
+        const merke = (mark) => { gezeichnet.set(idOf(mark), fassung(mark)); };
+        marks.forEach(mark => {
+            const node = zeichneMarke(mark);
+            if (node) {
+                flaeche.appendChild(node);
+                merke(mark);
+            }
+        });
         /* Welche Abdeckbänder GERADE aufgedeckt sind — nur Laufzeit, nie
            Ablage: nach Neuladen oder Neuzeichnen von aussen ist wieder alles
            zu, und genau das ist die ehrliche Vorgabe beim Lernen (E266). */
@@ -45015,12 +45797,51 @@ const Marken = (() => {
             save();
             notifyState();
         };
-        const nodeFor = (id) => [...flaeche.querySelectorAll('[data-sid]')]
-            .find(node => node.getAttribute('data-sid') === id) || null;
+        const nodeFor = (id) => id ? flaeche.querySelector(`[data-sid="${CSS.escape(id)}"]`) : null;
+        /* NEUZEICHNEN FASST NUR AN, WAS SICH GEAENDERT HAT (E358, L115 Punkt 7).
+           Bisher nahm `redraw` jeden Knoten weg und zeichnete alle neu — bei
+           tausend Marken 59 ms je Zurueck, bei dreitausend 155, gemessen.
+           Jetzt: gleiche Fassung, gleicher Knoten; andere Fassung, geflickt
+           (`updateNode`); Marke ohne Knoten, neu; Knoten ohne Marke, weg. Die
+           Reihenfolge der Marken bleibt die Reihenfolge der Knoten — sie ist
+           die Stapelung auf dem Papier; wo sie nicht stimmt, wird eingeordnet. */
         const redraw = () => {
-            flaeche.querySelectorAll('[data-sid],[data-ink-ui]').forEach(node => node.remove());
-            marks.forEach(mark => { const node = zeichneMarke(mark); if (node)
-                flaeche.appendChild(node); });
+            flaeche.querySelectorAll('[data-ink-ui]').forEach(node => node.remove());
+            const knoten = new Map();
+            flaeche.querySelectorAll('[data-sid]').forEach(node => {
+                const id = node.getAttribute('data-sid') || '';
+                if (knoten.has(id))
+                    node.remove();
+                else
+                    knoten.set(id, node);
+            });
+            const bleibt = new Set();
+            let vorheriger = null;
+            for (const mark of marks) {
+                const id = idOf(mark);
+                if (!id || bleibt.has(id))
+                    continue;
+                const jetzt = fassung(mark);
+                let node = knoten.get(id) || null;
+                if (!node)
+                    node = zeichneMarke(mark);
+                else if (gezeichnet.get(id) !== jetzt)
+                    node = updateNode(node, mark);
+                if (!node) {
+                    gezeichnet.delete(id);
+                    continue;
+                }
+                bleibt.add(id);
+                gezeichnet.set(id, jetzt);
+                const platz = vorheriger ? vorheriger.nextSibling : flaeche.querySelector('[data-sid]');
+                if (node.parentNode !== flaeche || node !== platz)
+                    flaeche.insertBefore(node, platz);
+                vorheriger = node;
+            }
+            knoten.forEach((node, id) => { if (!bleibt.has(id)) {
+                node.remove();
+                gezeichnet.delete(id);
+            } });
             abdeckAnwenden();
             renderSelection();
         };
@@ -45135,8 +45956,10 @@ const Marken = (() => {
             const before = snapshot();
             const neue = zwischenablage.map(mark => InkGeometry.move({ ...clone(mark), id: frischeId() }, 16, 16));
             marks.push(...neue);
-            neue.forEach(mark => { const node = zeichneMarke(mark); if (node)
-                flaeche.appendChild(node); });
+            neue.forEach(mark => { const node = zeichneMarke(mark); if (node) {
+                flaeche.appendChild(node);
+                merke(mark);
+            } });
             selection = new Set(neue.map(mark => idOf(mark)));
             zwischenablage = neue.map(mark => clone(mark));
             renderSelection();
@@ -45160,6 +45983,10 @@ const Marken = (() => {
                 return false;
             if (radierModus === 'marker' && mark.art !== 'marker')
                 return false;
+            /* Ein Bild radiert man nicht weg — wie in GoodNotes: der Radierer
+               gilt der Tinte, ein Bild geht ueber die Auswahl (E357). */
+            if (mark.art === 'bild')
+                return false;
             const id = idOf(mark);
             const teilbar = radierModus === 'teil' && (mark.art === 'stift' || mark.art === 'marker');
             const stuecke = teilbar
@@ -45171,11 +45998,14 @@ const Marken = (() => {
             if (teilbar && stuecke.length === 1 && JSON.stringify(stuecke[0].pts) === JSON.stringify(mark.pts))
                 return false;
             nodeFor(id)?.remove();
+            gezeichnet.delete(id);
             selection.delete(id);
             const ersatz = stuecke.map((stueck, n) => ({ ...clone(mark), id: n === 0 ? id : frischeId(), pts: stueck.pts, pressure: stueck.pressure }));
             marks.splice(index, 1, ...ersatz);
-            ersatz.forEach(neu => { const node = zeichneMarke(neu); if (node)
-                flaeche.appendChild(node); });
+            ersatz.forEach(neu => { const node = zeichneMarke(neu); if (node) {
+                flaeche.appendChild(node);
+                merke(neu);
+            } });
             return true;
         };
         const radiereBei = (roh) => {
@@ -45229,6 +46059,26 @@ const Marken = (() => {
             running.zuletzt = { t: jetzt, p: point, d: druck };
             return Math.round(druck * 100) / 100;
         };
+        const stiftGesehen = () => {
+            stiftZuletzt = Date.now();
+            flaeche.setAttribute('data-stift', 'an');
+            if (stiftTimer)
+                clearTimeout(stiftTimer);
+            stiftTimer = setTimeout(() => { flaeche.removeAttribute('data-stift'); stiftTimer = null; }, STIFT_SPERRE_MS);
+        };
+        const fingerGesperrt = (event) => event.pointerType === 'touch' &&
+            (Date.now() - stiftZuletzt < STIFT_SPERRE_MS || (running !== null && running.zeigerArt === 'pen'));
+        /* Einen angefangenen Strich VERWERFEN: kein Knoten, kein Schritt im
+           Verlauf — als haette es ihn nie gegeben. */
+        const verwerfen = () => {
+            if (running) {
+                runningNode?.remove();
+                running = null;
+                runningNode = null;
+                beforeRunning = null;
+            }
+            aktiverZeiger = null;
+        };
         const addSample = (event) => {
             if (!running)
                 return;
@@ -45240,8 +46090,103 @@ const Marken = (() => {
                 return;
             running.pts.push(point);
             running.pressure.push(druckAus(event, point));
+            running.bewegtUm = Date.now();
         };
+        /* EIN BILD AUFS BLATT (E357, L115 Punkt 6). Der Weg: Dateiwaehler,
+           Datei in die Ablage (in Stuecken, mit dem Blatt als Block — so wandert
+           sie mit Sicherung, Abgleich und Papierkorb), Groesse aus dem Bild,
+           mittig gesetzt, halb so breit wie die Seite, dann gewaehlt und im
+           Auswahl-Werkzeug: man will es gleich schieben und ziehen. `mitte`
+           kommt vom Tipp mit dem Werkzeug; der Knopf in der Leiste hat keinen
+           Punkt und nimmt die Mitte der ersten Seite. */
+        const bildMass = (datei) => new Promise(fertig => {
+            const url = URL.createObjectURL(datei);
+            const bild = new Image();
+            bild.onload = () => { fertig({ w: bild.naturalWidth, h: bild.naturalHeight }); URL.revokeObjectURL(url); };
+            bild.onerror = () => { fertig(null); URL.revokeObjectURL(url); };
+            bild.src = url;
+        });
+        const bildAblegen = async (datei, mitte) => {
+            if (!datei || typeof Dateien === 'undefined' || typeof Dateien.ablegen !== 'function')
+                return false;
+            const mass = await bildMass(datei);
+            const satz = await Dateien.ablegen(datei, { blockId: block.id, name: datei.name });
+            const dateiId = String(satz?.id || '');
+            if (!dateiId)
+                return false;
+            const seite = umbruch > 0 ? Math.min(umbruch, hoehe) : hoehe;
+            const verhaeltnis = mass && mass.w > 0 && mass.h > 0 ? mass.h / mass.w : 3 / 4;
+            let w = breite / 2;
+            let h = w * verhaeltnis;
+            if (h > seite * 0.9) {
+                h = seite * 0.9;
+                w = h / verhaeltnis;
+            }
+            const klemme = (wert, von, bis) => Math.max(von, Math.min(bis, wert));
+            const cx = mitte ? klemme(mitte[0] ?? 0, w / 2, breite - w / 2) : breite / 2;
+            const cy = mitte ? klemme(mitte[1] ?? 0, h / 2, hoehe - h / 2) : seite / 2;
+            const r2 = (wert) => Math.round(wert * 100) / 100;
+            const mark = { id: frischeId(), art: 'bild', dateiId,
+                pts: [[r2(cx - w / 2), r2(cy - h / 2)], [r2(cx + w / 2), r2(cy + h / 2)]] };
+            /* Die Adresse VOR dem Zeichnen holen: dann steht das Bild sofort da,
+               nicht erst ein Platzhalter, der gleich wieder weg ist. */
+            try {
+                await Dateien.adresse(dateiId);
+            }
+            catch { /* dann eben der Platzhalter */ }
+            const before = snapshot();
+            marks.push(mark);
+            const node = zeichneMarke(mark);
+            if (node) {
+                flaeche.appendChild(node);
+                merke(mark);
+            }
+            if (tool !== 'select') {
+                setzeWerkzeug('select');
+                if (typeof Zeichenziel !== 'undefined') {
+                    try {
+                        Zeichenziel.uebernehme(steuerung, 'select');
+                    }
+                    catch { /* egal */ }
+                }
+            }
+            selection = new Set([idOf(mark)]);
+            renderSelection();
+            commit(before);
+            return true;
+        };
+        const bildEinfuegen = (mitte) => new Promise(fertig => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            /* Im Dokument, wie beim PDF-Waehler (einlesen.ts) — und danach weg. */
+            input.style.display = 'none';
+            document.body.appendChild(input);
+            let entschieden = false;
+            const auf = () => {
+                if (entschieden)
+                    return;
+                entschieden = true;
+                const datei = input.files?.[0];
+                input.remove();
+                if (!datei) {
+                    fertig(false);
+                    return;
+                }
+                bildAblegen(datei, mitte).then(fertig, () => {
+                    if (typeof UI !== 'undefined' && UI.toast)
+                        UI.toast('Das Bild liess sich nicht ablegen.');
+                    fertig(false);
+                });
+            };
+            input.addEventListener('change', auf);
+            /* `cancel` kommt in neueren Browsern beim Abbrechen; sonst bleibt das
+               Feld unsichtbar stehen, bis das naechste kommt — kein Schaden. */
+            input.addEventListener('cancel', auf);
+            input.click();
+        });
         const finish = () => {
+            aktiverZeiger = null;
             if (radierStrich) {
                 const strich = radierStrich;
                 radierStrich = null;
@@ -45292,6 +46237,23 @@ const Marken = (() => {
             running = null;
             runningNode = null;
             beforeRunning = null;
+            delete mark.zeigerArt;
+            const gehalten = Date.now() - (Number(mark.bewegtUm) || 0) >= HALTEN_MS;
+            delete mark.bewegtUm;
+            /* GEHALTEN UND EINE FORM (E355): der Stift wird zur Linie, zum Kreis
+               oder zum Rechteck — als dieselbe Marke, mit Farbe und Breite; Druck
+               und Stil hat eine Form nicht. Der Marker bleibt Marker: wer
+               hervorhebt, will keine Geometrie. */
+            if (mark.art === 'stift' && formen && gehalten && typeof InkShapes !== 'undefined') {
+                const form = InkShapes.recognize(mark.pts);
+                if (form) {
+                    mark.art = form.art;
+                    mark.pts = form.pts;
+                    delete mark.pressure;
+                    delete mark.stil;
+                    delete mark.zuletzt;
+                }
+            }
             if (mark.art === 'stift' || mark.art === 'marker') {
                 if (mark.pts.length < 2) {
                     node?.remove();
@@ -45333,6 +46295,7 @@ const Marken = (() => {
             }
             marks.push(mark);
             runningNode = updateNode(node, mark);
+            merke(mark);
             commit(before);
             runningNode = null;
             /* Die frisch aufgezogene Haftnotiz fragt sofort nach ihrem Text —
@@ -45366,17 +46329,31 @@ const Marken = (() => {
             redraw();
             commit(before);
         };
+        /* DER TEXT (E360, L115 Punkt 6): ein Tipp fragt mehrzeilig — Enter ist
+           eine neue Zeile, wie in GoodNotes' Textfeld —, und der Text wird ein
+           KASTEN an der getippten Stelle: 40 % der Blattbreite, mindestens 120,
+           nie ueber den rechten Rand. Schrift, Groesse, Fett und Rahmen kommen
+           aus der Leiste. Ein Tipp auf einen vorhandenen Text bearbeitet ihn;
+           leer gemacht heisst weg. Alte einzeilige Marken bleiben einzeilig. */
         const editText = async (point, targetId = '') => {
             const current = targetId ? marks.find(mark => idOf(mark) === targetId && mark.art === 'text') : null;
-            const answer = await Dialog.frage(current ? 'Textanmerkung bearbeiten' : 'Textanmerkung', current ? String(current.text || '') : '');
+            const answer = await Dialog.mehrzeilig(current ? 'Text bearbeiten' : 'Text', current ? String(current.text || '') : '');
             if (answer === null || (!current && !answer.trim()))
                 return;
             const before = snapshot();
-            if (current)
-                current.text = answer;
-            else
-                marks.push({ id: typeof Ids !== 'undefined' ? Ids.short(8) : String(marks.length + 1),
-                    art: 'text', point, text: answer, farbe: color, fontSize: Math.max(14, width * 7) });
+            if (current) {
+                if (!answer.trim())
+                    marks.splice(marks.indexOf(current), 1);
+                else
+                    current.text = answer;
+            }
+            else {
+                const x = Math.round(Math.max(0, Math.min(point[0] ?? 0, breite - 120)) * 100) / 100;
+                const y = Math.round(Math.max(0, Math.min(point[1] ?? 0, hoehe - 40)) * 100) / 100;
+                const breiteBox = Math.max(120, Math.min(Math.round(breite * 0.4), Math.round(breite - x - 8)));
+                marks.push({ id: frischeId(), art: 'text', point: [x, y], text: answer, farbe: color,
+                    fontSize: schrift.groesse, breiteBox, schrift: schrift.familie, fett: schrift.fett, rahmen: schrift.rahmen });
+            }
             redraw();
             commit(before);
         };
@@ -45490,8 +46467,27 @@ const Marken = (() => {
                 }
                 catch { /* egal */ }
             }
-            if (tool === 'schreiben' || !e.isPrimary)
+            if (e.pointerType === 'pen')
+                stiftGesehen();
+            if (tool === 'schreiben')
                 return;
+            /* EIN ZWEITER FINGER macht aus dem Fingerzug eine Geste (Rollen,
+               Kneifen): der angefangene Strich verschwindet, kein Schritt im
+               Verlauf (E354). */
+            if (e.pointerType === 'touch' && !e.isPrimary) {
+                if (running && running.zeigerArt === 'touch')
+                    verwerfen();
+                return;
+            }
+            if (!e.isPrimary)
+                return;
+            /* Der gesperrte Finger bekommt kein preventDefault — er darf rollen. */
+            if (fingerGesperrt(e))
+                return;
+            /* DER STIFT GEHT VOR: liegt der Handballen schon auf und zeichnet,
+               nimmt der Stift ihm den Strich weg (E354). */
+            if (e.pointerType === 'pen' && running && running.zeigerArt === 'touch')
+                verwerfen();
             /* DER RUECKKNOPF DES STIFTS RADIERT (E352): das Radierende (button 5,
                buttons 32) und der Seitenknopf (button 2) eines Stifts halten den
                Radierer, solange sie gedrueckt sind — das gewaehlte Werkzeug
@@ -45505,6 +46501,7 @@ const Marken = (() => {
             if (!point)
                 return;
             event.preventDefault();
+            aktiverZeiger = e.pointerId;
             flaeche.focus({ preventScroll: true });
             const target = event.target?.closest?.('[data-sid]');
             const targetId = target?.getAttribute('data-sid') || '';
@@ -45543,6 +46540,12 @@ const Marken = (() => {
             }
             if (tool === 'zeichen') {
                 void setzeZeichen(point, targetId);
+                return;
+            }
+            /* Mit dem Bild-Werkzeug (ueber `Zeichenziel.setze`) oeffnet der Tipp
+               den Waehler, und das Bild kommt dorthin, wo getippt wurde (E357). */
+            if (tool === 'bild') {
+                void bildEinfuegen(point);
                 return;
             }
             if (tool === 'select') {
@@ -45597,7 +46600,7 @@ const Marken = (() => {
             const id = typeof Ids !== 'undefined' ? Ids.short(8) : String(marks.length + 1);
             if (tool === 'stift' || tool === 'marker') {
                 running = { id, art: tool, farbe: tool === 'marker' && color === FARBEN[0] ? MARKER_FARBE : color,
-                    breite: width, pts: [point], pressure: [] };
+                    breite: width, pts: [point], pressure: [], zeigerArt: e.pointerType };
                 if (tool === 'stift' && stil !== 'kugel')
                     running.stil = stil;
                 running.pressure.push(druckAus(event, point));
@@ -45610,7 +46613,7 @@ const Marken = (() => {
                    Handgriff wie beim Marker vier Zeilen höher). */
                 const flaechenFarbe = tool === 'zettel' && color === FARBEN[0]
                     ? MARKER_FARBE : color;
-                running = { id, art: tool, farbe: flaechenFarbe, breite: width, pts: [point, point] };
+                running = { id, art: tool, farbe: flaechenFarbe, breite: width, pts: [point, point], zeigerArt: e.pointerType };
                 runningNode = zeichneMarke(running);
             }
             if (runningNode)
@@ -45622,6 +46625,11 @@ const Marken = (() => {
         });
         flaeche.addEventListener('pointermove', (event) => {
             if (!event.isPrimary)
+                return;
+            if (event.pointerType === 'pen')
+                stiftGesehen();
+            /* Nur der Zeiger, der den Zug begonnen hat, fuehrt ihn (E354). */
+            if (aktiverZeiger !== null && event.pointerId !== aktiverZeiger)
                 return;
             const point = R.zuBlatt(flaeche, event);
             if (!point)
@@ -45657,6 +46665,7 @@ const Marken = (() => {
                             continue;
                         marks[index] = InkGeometry.move(clone(original), dx, dy);
                         updateNode(nodeFor(id), marks[index]);
+                        merke(marks[index]);
                     }
                     renderSelection();
                 }
@@ -45665,8 +46674,12 @@ const Marken = (() => {
                     const dx0 = selectDrag.start[0] - ax, dy0 = selectDrag.start[1] - ay;
                     let sx = Math.abs(dx0) < 1 ? 1 : (point[0] - ax) / dx0;
                     let sy = Math.abs(dy0) < 1 ? 1 : (point[1] - ay) / dy0;
-                    /* Mit Umschalt bleibt das Seitenverhaeltnis. */
-                    if (event.shiftKey) {
+                    /* Mit Umschalt bleibt das Seitenverhaeltnis — bei einem BILD in
+                       der Auswahl ist es umgekehrt (E357): ein Foto bleibt von sich
+                       aus im Verhaeltnis, wie in GoodNotes, und Umschalt gibt es frei.
+                       Ein verzerrtes Gesicht ist selten das, was man wollte. */
+                    const bildDabei = [...selection].some(id => marks.find(mark => idOf(mark) === id)?.art === 'bild');
+                    if (event.shiftKey !== bildDabei) {
                         const s = (Math.abs(sx) + Math.abs(sy)) / 2;
                         sx = s;
                         sy = s;
@@ -45681,6 +46694,7 @@ const Marken = (() => {
                             continue;
                         marks[index] = InkGeometry.scale(clone(original), [ax, ay], sx, sy);
                         updateNode(nodeFor(id), marks[index]);
+                        merke(marks[index]);
                     }
                     renderSelection();
                 }
@@ -45708,9 +46722,14 @@ const Marken = (() => {
                 ? { ...running, pts: running.pts.length > 1 ? running.pts : [running.pts[0], running.pts[0]] }
                 : running);
         });
-        flaeche.addEventListener('pointerup', finish);
-        flaeche.addEventListener('pointercancel', finish);
-        flaeche.addEventListener('pointerleave', finish);
+        const beiEnde = (event) => {
+            if (aktiverZeiger !== null && event.pointerId !== aktiverZeiger)
+                return;
+            finish();
+        };
+        flaeche.addEventListener('pointerup', beiEnde);
+        flaeche.addEventListener('pointercancel', beiEnde);
+        flaeche.addEventListener('pointerleave', beiEnde);
         /* Der Seitenknopf eines Stifts ist fuer den Browser eine rechte Taste —
            ohne diese Zeile spraenge beim Radieren das Kontextmenue auf. */
         flaeche.addEventListener('contextmenu', event => { if (tool !== 'schreiben')
@@ -45782,9 +46801,10 @@ const Marken = (() => {
                 return;
             const before = snapshot();
             for (const mark of marks)
-                if (selection.has(idOf(mark))) {
+                if (selection.has(idOf(mark)) && mark.art !== 'bild') {
                     mark.farbe = next;
                     updateNode(nodeFor(idOf(mark)), mark);
+                    merke(mark);
                 }
             commit(before);
         };
@@ -45797,6 +46817,7 @@ const Marken = (() => {
                 if (selection.has(idOf(mark)) && mark.breite !== undefined) {
                     mark.breite = next;
                     updateNode(nodeFor(idOf(mark)), mark);
+                    merke(mark);
                 }
             renderSelection();
             commit(before);
@@ -45809,6 +46830,47 @@ const Marken = (() => {
                 Store.setMeta('zeichnen:stift', next);
         };
         const stilVon = () => stil;
+        /* SCHRIFT MIT AUSWAHL GILT DER AUSWAHL (E360), wie Farbe und Strich
+           (E353): wer einen Text waehlt und A+ tippt, macht DIESEN groesser —
+           jede gewaehlte Marke eine Stufe von ihrer eigenen Groesse aus — und
+           schreibt danach groesser weiter. Ein Schritt im Verlauf. */
+        const setzeSchrift = (aenderung) => {
+            const schritt = Number(aenderung.schritt) || 0;
+            schrift = {
+                familie: aenderung.familie !== undefined && SCHRIFTEN.some(x => x.id === aenderung.familie)
+                    ? String(aenderung.familie) : schrift.familie,
+                groesse: schritt ? naechsteStufe(schrift.groesse, schritt)
+                    : (aenderung.groesse !== undefined ? Math.max(8, Number(aenderung.groesse) || schrift.groesse) : schrift.groesse),
+                fett: aenderung.fett !== undefined ? !!aenderung.fett : schrift.fett,
+                rahmen: aenderung.rahmen !== undefined ? !!aenderung.rahmen : schrift.rahmen
+            };
+            if (typeof Store !== 'undefined')
+                Store.setMeta('zeichnen:schrift', schrift);
+            if (!selection.size)
+                return;
+            const before = snapshot();
+            let geaendert = false;
+            for (const mark of marks)
+                if (selection.has(idOf(mark)) && mark.art === 'text') {
+                    if (schritt)
+                        mark.fontSize = naechsteStufe(Math.max(8, Number(mark.fontSize) || 18), schritt);
+                    else if (aenderung.groesse !== undefined)
+                        mark.fontSize = schrift.groesse;
+                    if (aenderung.familie !== undefined)
+                        mark.schrift = schrift.familie;
+                    if (aenderung.fett !== undefined)
+                        mark.fett = schrift.fett;
+                    if (aenderung.rahmen !== undefined)
+                        mark.rahmen = schrift.rahmen;
+                    updateNode(nodeFor(idOf(mark)), mark);
+                    geaendert = true;
+                }
+            if (geaendert) {
+                renderSelection();
+                commit(before);
+            }
+        };
+        const schriftVon = () => ({ ...schrift });
         const setzeRadierModus = (next) => {
             if (!RADIERER.some(r => r.id === next))
                 return;
@@ -45829,8 +46891,15 @@ const Marken = (() => {
            einem Knopf, der auf nichts wirkt. */
         const setzeLineal = (an) => { lineal = !!an; };
         const linealAn = () => lineal;
+        const setzeFormen = (an) => {
+            formen = !!an;
+            if (typeof Store !== 'undefined')
+                Store.setMeta('zeichnen:formen', formen);
+        };
+        const formenAn = () => formen;
         const steuerung = { flaeche, setzeWerkzeug, setzeFarbe, setzeStrich, setzeStil, stilVon, setzeRadierModus, radierModusVon, copySelection, paste, marken: marks,
-            undo, redo, deleteSelection, beiAenderung, state, setzeLineal, linealAn };
+            undo, redo, deleteSelection, beiAenderung, state, setzeLineal, linealAn, setzeFormen, formenAn, bildEinfuegen,
+            setzeSchrift, schriftVon };
         return steuerung;
     };
     /** Die zuletzt gewaehlten eigenen Farben — hoechstens vier, gemerkt als Meta. */
@@ -45877,6 +46946,17 @@ const Marken = (() => {
         row.className = 'blatt-reihe';
         const tools = document.createElement('div');
         tools.className = 'blatt-werk';
+        tools.dataset.tool = 'schreiben';
+        /* AM TELEFON ROLLT DIE LEISTE ZUM WERKZEUG (E356): die Gruppen stehen
+           gleich dahinter, also ist mit einem Tipp alles im Bild, was zu ihm
+           gehoert. Am Rechner rollt nichts — dort passt alles. */
+        const zumWerkzeugRollen = (wz) => {
+            if (!window.matchMedia || !window.matchMedia('(max-width:760px)').matches)
+                return;
+            const knopf = tools.querySelector(`[data-wz="${wz}"]`);
+            if (knopf)
+                tools.scrollLeft = Math.max(0, knopf.offsetLeft - 6);
+        };
         const button = (tool, icon, word, title) => `<button data-wz="${tool}"${tool === 'schreiben' ? ' class="on"' : ''} title="${title}">` +
             `<span class="zeichen">${icon}</span><span class="wort">${word}</span></button>`;
         tools.innerHTML =
@@ -45892,46 +46972,81 @@ const Marken = (() => {
                 button('zettel', '🗒', 'Haftnotiz', 'Einen Zettel aufziehen und beschriften; Antippen mit dem Werkzeug bearbeitet ihn') +
                 button('text', 'T', 'Text', 'Textanmerkung') +
                 button('zeichen', '⚡', 'Fachzeichen', 'Ein elektrotechnisches Symbol auf die Seite setzen') +
+                /* DAS BILD (E357): kein Werkzeug, das man haelt, sondern ein Weg —
+                   ein Tipp oeffnet den Waehler, danach fuehrt die Auswahl. */
+                button('bild', '🖼', 'Bild', 'Ein Foto oder Bild auf das Blatt legen — danach verschieben und ziehen wie jede Marke') +
                 button('radierer', '⌫', 'Radieren', 'Radieren — über Marken streichen; der Knopf daneben wählt Ganz, Teil oder Marker') +
+                /* DER ZEILENBRUCH (E359): am Rechner stehen die Werkzeuge in einer
+                   Zeile und ihr Zubehoer darunter; dieses leere Element mit voller
+                   Breite ist der Umbruch. Am Telefon und in der Spalte blendet das
+                   CSS es aus — dort rollt die Leiste in einer Zeile. */
+                '<span class="blatt-zeilenbruch" aria-hidden="true"></span>' +
                 /* DER RADIERER (E352): ein Knopf, der durch Ganz, Teil und Marker
                    wechselt und sagt, was der Radierer gerade tut. */
                 (() => {
                     const jetzt = RADIERER.find(r => r.id === (controls.radierModusVon ? controls.radierModusVon() : RADIER_VORGABE)) || RADIERER[0];
-                    return `<button data-act="radiermodus" data-modus="${jetzt.id}" title="${jetzt.titel} — antippen wechselt: ${RADIERER.map(r => r.name).join(' → ')}">` +
+                    return `<button data-act="radiermodus" data-gruppe="radierer" data-modus="${jetzt.id}" title="${jetzt.titel} — antippen wechselt: ${RADIERER.map(r => r.name).join(' → ')}">` +
                         `<span class="zeichen">${jetzt.zeichen}</span><span class="wort">${jetzt.name}</span></button>`;
                 })() +
-                '<span class="blatt-trenn"></span>' +
-                '<button data-act="undo" title="Rückgängig" disabled><span class="zeichen">↶</span><span class="wort">Zurück</span></button>' +
-                '<button data-act="redo" title="Wiederholen" disabled><span class="zeichen">↷</span><span class="wort">Vor</span></button>' +
-                '<button data-act="delete" title="Auswahl löschen" disabled><span class="zeichen">🗑</span><span class="wort">Löschen</span></button>' +
+                /* JEDER KNOPF KENNT SEINE GRUPPE (E356): am Telefon zeigt die Leiste
+                   nur die Gruppen des gewaehlten Werkzeugs — Farben und Breiten beim
+                   Stift, den Modus beim Radierer, Kopieren und Loeschen bei der
+                   Auswahl. Das CSS liest `data-gruppe` gegen `data-tool` der Leiste. */
+                '<span class="blatt-trenn" data-gruppe="verlauf"></span>' +
+                '<button data-act="undo" data-gruppe="verlauf" title="Rückgängig" disabled><span class="zeichen">↶</span><span class="wort">Zurück</span></button>' +
+                '<button data-act="redo" data-gruppe="verlauf" title="Wiederholen" disabled><span class="zeichen">↷</span><span class="wort">Vor</span></button>' +
+                '<button data-act="delete" data-gruppe="auswahl" title="Auswahl löschen" disabled><span class="zeichen">🗑</span><span class="wort">Löschen</span></button>' +
                 /* KOPIEREN UND EINSETZEN (E353) — auch ohne Tastatur, am Telefon. */
-                '<button data-act="copy" title="Auswahl kopieren (Strg+C)" disabled><span class="zeichen">⧉</span><span class="wort">Kopieren</span></button>' +
-                '<button data-act="paste" title="Kopiertes einsetzen (Strg+V)" disabled><span class="zeichen">📋</span><span class="wort">Einsetzen</span></button>' +
+                '<button data-act="copy" data-gruppe="auswahl" title="Auswahl kopieren (Strg+C)" disabled><span class="zeichen">⧉</span><span class="wort">Kopieren</span></button>' +
+                '<button data-act="paste" data-gruppe="auswahl" title="Kopiertes einsetzen (Strg+V)" disabled><span class="zeichen">📋</span><span class="wort">Einsetzen</span></button>' +
                 /* Das Lineal ist ein SCHALTER neben den Werkzeugen: solange es
                    anliegt, rasten Linie und Pfeil auf 15°-Schritte (E267). */
-                '<button data-act="lineal" aria-pressed="false" ' +
+                '<button data-act="lineal" data-gruppe="lineal" aria-pressed="false" ' +
                 'title="Lineal: Linie und Pfeil rasten auf 15°-Schritte">' +
                 '<span class="zeichen">📐</span><span class="wort">Lineal</span></button>' +
+                /* FORMEN (E355): ein Schalter wie das Lineal — an, und ein gehaltener
+                   Strich wird zur Linie, zum Kreis, zum Rechteck. */
+                `<button data-act="formen" data-gruppe="formen" aria-pressed="${controls.formenAn ? (controls.formenAn() ? 'true' : 'false') : 'true'}"` +
+                `${controls.formenAn && controls.formenAn() ? ' class="on"' : ''} ` +
+                'title="Formen erkennen: einen Kreis, ein Rechteck oder eine Linie ziehen und am Ende kurz halten">' +
+                '<span class="zeichen">◯</span><span class="wort">Formen</span></button>' +
+                /* DIE SCHRIFT (E360): Familie, Groesse, Fett, Rahmen — beim Text und
+                   bei der Auswahl; wirkt auf Gewaehltes und auf den naechsten Text. */
+                (() => {
+                    const s = (controls.schriftVon ? controls.schriftVon() : SCHRIFT_VORGABE);
+                    const fam = SCHRIFTEN.find(x => x.id === s.familie) || SCHRIFTEN[0];
+                    return `<button data-act="schriftart" data-gruppe="schrift" data-schrift="${fam.id}" ` +
+                        `title="Schriftart: ${fam.name} — antippen wechselt: ${SCHRIFTEN.map(x => x.name).join(' → ')}">` +
+                        `<span class="zeichen" style="font-family:${fam.stapel}">Aa</span><span class="wort">${fam.name}</span></button>` +
+                        '<button data-act="kleiner" data-gruppe="schrift" title="Schrift kleiner">' +
+                        '<span class="zeichen">A−</span><span class="wort">Kleiner</span></button>' +
+                        `<button data-act="groesser" data-gruppe="schrift" title="Schrift grösser (jetzt ${s.groesse} px)">` +
+                        '<span class="zeichen">A+</span><span class="wort">Grösser</span></button>' +
+                        `<button data-act="fett" data-gruppe="schrift" aria-pressed="${s.fett ? 'true' : 'false'}"${s.fett ? ' class="on"' : ''} title="Fett">` +
+                        '<span class="zeichen">F</span><span class="wort">Fett</span></button>' +
+                        `<button data-act="rahmen" data-gruppe="schrift" aria-pressed="${s.rahmen ? 'true' : 'false'}"${s.rahmen ? ' class="on"' : ''} title="Rahmen um den Text">` +
+                        '<span class="zeichen">▭</span><span class="wort">Rahmen</span></button>';
+                })() +
                 /* DER STIFT (E351): ein Knopf, der durch Fueller, Kugelschreiber und
                    Pinsel wechselt und sagt, welcher gerade fuehrt. */
                 (() => {
                     const jetzt = STIFTE.find(st => st.id === (controls.stilVon ? controls.stilVon() : STIL_VORGABE)) || STIFTE[0];
-                    return `<button data-act="stil" data-stil="${jetzt.id}" title="Stift wechseln: ${STIFTE.map(st => st.name).join(' → ')}">` +
+                    return `<button data-act="stil" data-gruppe="stil" data-stil="${jetzt.id}" title="Stift wechseln: ${STIFTE.map(st => st.name).join(' → ')}">` +
                         `<span class="zeichen">${jetzt.zeichen}</span><span class="wort">${jetzt.name}</span></button>`;
                 })() +
-                '<span class="blatt-trenn"></span>' +
-                FARBEN.map((value, index) => `<button class="blatt-farbe${index === 0 ? ' on' : ''}" ` +
+                '<span class="blatt-trenn" data-gruppe="farbe"></span>' +
+                FARBEN.map((value, index) => `<button class="blatt-farbe${index === 0 ? ' on' : ''}" data-gruppe="farbe" ` +
                     `data-c="${value}" style="background:${value}" title="Farbe"></button>`).join('') +
                 /* EIGENE FARBEN (E351): die zuletzt gewaehlten stehen als Tupfer da,
                    dahinter der Weg zum Farbwaehler des Browsers. */
-                eigeneFarben().map(value => `<button class="blatt-farbe blatt-farbe-eigen" ` +
+                eigeneFarben().map(value => `<button class="blatt-farbe blatt-farbe-eigen" data-gruppe="farbe" ` +
                     `data-c="${value}" style="background:${value}" title="Eigene Farbe ${value}"></button>`).join('') +
-                '<button class="blatt-farbe-neu" data-act="farbe" title="Andere Farbe wählen" aria-label="Andere Farbe wählen">+</button>' +
-                '<span class="blatt-trenn"></span>' +
+                '<button class="blatt-farbe-neu" data-act="farbe" data-gruppe="farbe" title="Andere Farbe wählen" aria-label="Andere Farbe wählen">+</button>' +
+                '<span class="blatt-trenn" data-gruppe="breite"></span>' +
                 /* Doppelter Massstab wie im Menüband: mit der wahren Stärke sahen
                    „dünn" (1,2 px) und „mittel" (2,4 px) gleich aus, weil der Boden
                    von 2 px den ersten hochzog. Das Verhältnis 1 : 2 : 4 bleibt. */
-                BREITEN.map((value, index) => `<button class="blatt-strich${index === 1 ? ' on' : ''}" ` +
+                BREITEN.map((value, index) => `<button class="blatt-strich${index === 1 ? ' on' : ''}" data-gruppe="breite" ` +
                     `data-b="${value}" title="Strichbreite ${String(value).replace('.', ',')}">` +
                     `<i style="height:${Math.max(2, value * 2)}px"></i></button>`).join('');
         /* SICHTBAR MACHEN, DASS DIE LEISTE ROLLT (E140, §55.1).
@@ -45990,10 +47105,17 @@ const Marken = (() => {
                 return;
             }
             const wz = Zeichenziel.werkzeugVon(controls);
-            if (wz)
+            if (wz) {
                 tools.querySelectorAll('[data-wz]').forEach(node => {
                     node.classList.toggle('on', node.dataset.wz === wz);
                 });
+                /* Die Leiste weiss, welches Werkzeug fuehrt — das CSS am Telefon
+                   liest es (E356). */
+                if (tools.dataset.tool !== wz) {
+                    tools.dataset.tool = wz;
+                    zumWerkzeugRollen(wz);
+                }
+            }
             const farbe = Zeichenziel.farbeVon(controls);
             if (farbe)
                 tools.querySelectorAll('.blatt-farbe').forEach(node => {
@@ -46026,6 +47148,14 @@ const Marken = (() => {
             const target = event.target?.closest?.('button');
             if (!target || target.disabled)
                 return;
+            /* DER BILD-KNOPF SCHALTET NICHT UM (E357): er oeffnet den
+               Dateiwaehler; das gewaehlte Werkzeug bleibt, bis das Bild da ist —
+               wer abbricht, hat nichts verloren. Danach fuehrt die Auswahl. */
+            if (target.dataset.wz === 'bild') {
+                if (controls.bildEinfuegen)
+                    void controls.bildEinfuegen();
+                return;
+            }
             if (target.dataset.wz) {
                 controls.setzeWerkzeug(target.dataset.wz);
                 /* Auch der Kern muss es wissen — sonst zeigt das Menüband weiter
@@ -46038,6 +47168,8 @@ const Marken = (() => {
                 }
                 tools.querySelectorAll('[data-wz]').forEach(node => node.classList.remove('on'));
                 target.classList.add('on');
+                tools.dataset.tool = target.dataset.wz;
+                zumWerkzeugRollen(target.dataset.wz);
                 return;
             }
             if (target.dataset.act) {
@@ -46065,6 +47197,7 @@ const Marken = (() => {
                         }
                         catch { /* egal */ }
                         tools.querySelectorAll('[data-wz]').forEach(node => node.classList.toggle('on', node.dataset.wz === 'stift'));
+                        tools.dataset.tool = 'stift';
                     }
                     return;
                 }
@@ -46083,6 +47216,7 @@ const Marken = (() => {
                         }
                         catch { /* egal */ }
                         tools.querySelectorAll('[data-wz]').forEach(node => node.classList.toggle('on', node.dataset.wz === 'radierer'));
+                        tools.dataset.tool = 'radierer';
                     }
                     return;
                 }
@@ -46112,6 +47246,7 @@ const Marken = (() => {
                         liste.slice().reverse().forEach(farbe => {
                             const k = document.createElement('button');
                             k.className = 'blatt-farbe blatt-farbe-eigen';
+                            k.dataset.gruppe = 'farbe';
                             k.dataset.c = farbe;
                             k.style.background = farbe;
                             k.title = 'Eigene Farbe ' + farbe;
@@ -46124,9 +47259,41 @@ const Marken = (() => {
                     feld.click();
                     return;
                 }
+                /* DIE SCHRIFT (E360): Familie im Kreis, Groesse eine Stufe, Fett
+                   und Rahmen als Schalter — alles ueber `setzeSchrift`, das auch
+                   die Auswahl anfasst. */
+                if (target.dataset.act === 'schriftart' && controls.setzeSchrift) {
+                    const jetzt = SCHRIFTEN.findIndex(x => x.id === target.dataset.schrift);
+                    const naechste = SCHRIFTEN[(jetzt + 1) % SCHRIFTEN.length];
+                    controls.setzeSchrift({ familie: naechste.id });
+                    target.dataset.schrift = naechste.id;
+                    target.title = `Schriftart: ${naechste.name} — antippen wechselt: ${SCHRIFTEN.map(x => x.name).join(' → ')}`;
+                    target.innerHTML = `<span class="zeichen" style="font-family:${naechste.stapel}">Aa</span><span class="wort">${naechste.name}</span>`;
+                    return;
+                }
+                if ((target.dataset.act === 'groesser' || target.dataset.act === 'kleiner') && controls.setzeSchrift) {
+                    controls.setzeSchrift({ schritt: target.dataset.act === 'groesser' ? 1 : -1 });
+                    const groesser = tools.querySelector('[data-act="groesser"]');
+                    if (groesser && controls.schriftVon)
+                        groesser.title = `Schrift grösser (jetzt ${controls.schriftVon().groesse} px)`;
+                    return;
+                }
+                if ((target.dataset.act === 'fett' || target.dataset.act === 'rahmen') && controls.setzeSchrift) {
+                    const an = target.getAttribute('aria-pressed') !== 'true';
+                    controls.setzeSchrift(target.dataset.act === 'fett' ? { fett: an } : { rahmen: an });
+                    target.setAttribute('aria-pressed', an ? 'true' : 'false');
+                    target.classList.toggle('on', an);
+                    return;
+                }
                 if (target.dataset.act === 'lineal' && controls.setzeLineal) {
                     const an = !controls.linealAn?.();
                     controls.setzeLineal(an);
+                    target.setAttribute('aria-pressed', an ? 'true' : 'false');
+                    target.classList.toggle('on', an);
+                }
+                if (target.dataset.act === 'formen' && controls.setzeFormen) {
+                    const an = !controls.formenAn?.();
+                    controls.setzeFormen(an);
                     target.setAttribute('aria-pressed', an ? 'true' : 'false');
                     target.classList.toggle('on', an);
                 }
@@ -47505,11 +48672,25 @@ const Blatt = (() => {
             '--blatt-mm-zehn-hoch': hoch(10),
         };
     };
-    const waehler = (jetzt) => '<span class="blatt-trenn"></span>' +
-        PAPIERE.map(art => `<button class="blatt-papierwahl${art.id === jetzt ? ' on' : ''}" ` +
-            `data-papier="${art.id}" title="Papier: ${art.name}" aria-label="Papier: ${art.name}" ` +
-            `aria-pressed="${art.id === jetzt ? 'true' : 'false'}">` +
-            `<i data-vorschau="${art.id}"></i></button>`).join('');
+    /* DIE PAPIERWAHL ALS KLAPPE (E359). Vorher standen die fuenf Vorlagen in
+       der Reihe und nahmen 210 px — die der Leiste fehlten (L115 Punkt 9).
+       Jetzt zeigt EIN Knopf das Papier, das gilt; die fuenf liegen darunter,
+       bis man sie braucht. Die Knoepfe selbst bleiben, wie sie waren
+       (`data-papier`, `aria-pressed`, ihr Muster) — nur ihr Ort ist neu. */
+    const waehler = (jetzt) => {
+        const name = PAPIERE.find(x => x.id === jetzt)?.name || jetzt;
+        return '<span class="blatt-trenn"></span>' +
+            '<span class="blatt-papiermenue">' +
+            `<button class="blatt-papierknopf" data-a="papier" aria-haspopup="true" aria-expanded="false" ` +
+            `title="Papier: ${name} — antippen zum Wechseln" aria-label="Papier: ${name}">` +
+            `<i data-vorschau="${jetzt}"></i><span class="wort">Papier</span></button>` +
+            '<span class="blatt-papierliste" hidden>' +
+            PAPIERE.map(art => `<button class="blatt-papierwahl${art.id === jetzt ? ' on' : ''}" ` +
+                `data-papier="${art.id}" title="Papier: ${art.name}" aria-label="Papier: ${art.name}" ` +
+                `aria-pressed="${art.id === jetzt ? 'true' : 'false'}">` +
+                `<i data-vorschau="${art.id}"></i></button>`).join('') +
+            '</span></span>';
+    };
     const zeichne = (block) => {
         const R = SheetSpace;
         const hoehe = Number(block.blattHoehe) || R.A4_HOEHE;
@@ -47533,10 +48714,47 @@ const Blatt = (() => {
         for (const [name, wert] of Object.entries(masse(breite, hoehe)))
             papier.style.setProperty(name, wert);
         w.appendChild(papier);
+        /* Die Klappe: auf, zu, zu bei Tipp daneben, zu bei Escape (§38). Der
+           Tipp daneben wird beim Aufmachen angemeldet und beim Zumachen wieder
+           abgemeldet — kein Dauerhorcher am Dokument je Blatt. Gehorcht wird
+           auf `click`, nicht auf den Zeiger: das Blatt hat keine eigene
+           Zeichenschicht, und test174 haelt fest, dass hier kein Zeigerweg
+           entsteht — die Klappe ist ein Menue, kein Malen. */
+        const papierListe = werk.querySelector('.blatt-papierliste');
+        const papierKnopf = werk.querySelector('.blatt-papierknopf');
+        const nebenTipp = (e) => {
+            if (!e.target?.closest?.('.blatt-papiermenue'))
+                papierMenue(false);
+        };
+        const escTaste = (e) => {
+            if (e.key !== 'Escape')
+                return;
+            e.stopPropagation();
+            papierMenue(false);
+            papierKnopf?.focus();
+        };
+        const papierMenue = (an) => {
+            if (!papierListe || !papierKnopf)
+                return;
+            papierListe.hidden = !an;
+            papierKnopf.setAttribute('aria-expanded', an ? 'true' : 'false');
+            if (an) {
+                document.addEventListener('click', nebenTipp, true);
+                document.addEventListener('keydown', escTaste, true);
+            }
+            else {
+                document.removeEventListener('click', nebenTipp, true);
+                document.removeEventListener('keydown', escTaste, true);
+            }
+        };
         werk.addEventListener('click', e => {
             const b = e.target?.closest?.('button');
             if (!b)
                 return;
+            if (b.dataset.a === 'papier') {
+                papierMenue(papierListe ? papierListe.hidden : false);
+                return;
+            }
             if (b.dataset.papier) {
                 /* NUR DAS FELD, SONST NICHTS. Kein Neuzeichnen der Seite: der Text
                    steht in Kindblöcken, die Striche in der Zeichenschicht, und
@@ -47554,6 +48772,12 @@ const Blatt = (() => {
                     k.classList.toggle('on', an);
                     k.setAttribute('aria-pressed', an ? 'true' : 'false');
                 });
+                /* Der Knopf zeigt das neue Papier, und die Klappe geht zu. */
+                const name = PAPIERE.find(x => x.id === art)?.name || art;
+                papierKnopf?.querySelector('i')?.setAttribute('data-vorschau', art);
+                papierKnopf?.setAttribute('title', `Papier: ${name} — antippen zum Wechseln`);
+                papierKnopf?.setAttribute('aria-label', `Papier: ${name}`);
+                papierMenue(false);
                 return;
             }
             if (b.dataset.a !== 'seite')
@@ -56130,6 +57354,51 @@ const DocumentMode = (() => {
             passen();
             zoomLabel.textContent = state.zoom + ' %';
         });
+        /* ZOOM MIT STRG+RAD UND MIT ZWEI FINGERN (E354), wie in GoodNotes. Der
+           Regler bleibt die Wahrheit: beide Wege schreiben in ihn hinein, damit
+           Regler, Zahl und Ansicht nie auseinanderlaufen. Ohne Strg rollt das
+           Rad wie immer; das Kneifen zaehlt nur Finger, nie Stift oder Maus. */
+        const zoomSetzen = (wert) => {
+            const neu = Math.max(60, Math.min(180, Math.round(wert)));
+            if (neu === state.zoom)
+                return;
+            state.zoom = neu;
+            zoom.value = String(neu);
+            zoomLabel.textContent = neu + ' %';
+            passen();
+        };
+        center.addEventListener('wheel', (event) => {
+            if (!event.ctrlKey && !event.metaKey)
+                return;
+            event.preventDefault();
+            zoomSetzen(state.zoom + (event.deltaY < 0 ? 10 : -10));
+        }, { passive: false });
+        const finger = new Map();
+        let kneifen = null;
+        center.addEventListener('pointerdown', (event) => {
+            if (event.pointerType !== 'touch')
+                return;
+            finger.set(event.pointerId, [event.clientX, event.clientY]);
+            if (finger.size === 2) {
+                const [a, b] = [...finger.values()];
+                kneifen = { abstand: Math.hypot(a[0] - b[0], a[1] - b[1]) || 1, zoom: state.zoom };
+            }
+        }, true);
+        center.addEventListener('pointermove', (event) => {
+            if (!kneifen || !finger.has(event.pointerId))
+                return;
+            finger.set(event.pointerId, [event.clientX, event.clientY]);
+            const [a, b] = [...finger.values()];
+            const abstand = Math.hypot(a[0] - b[0], a[1] - b[1]) || 1;
+            zoomSetzen(kneifen.zoom * abstand / kneifen.abstand);
+        }, true);
+        const fingerWeg = (event) => {
+            finger.delete(event.pointerId);
+            if (finger.size < 2)
+                kneifen = null;
+        };
+        center.addEventListener('pointerup', fingerWeg, true);
+        center.addEventListener('pointercancel', fingerWeg, true);
         return true;
     };
     return { available, active, select, toggle, documentsIn, render, sourceLabel };
@@ -75762,8 +77031,26 @@ const Werkzeuge = (() => {
             alert('Verschlüsselung fehlgeschlagen — es wurde nichts verändert.');
             return;
         }
+        /* WAS ANDERE ÜBER DIESE SEITE WISSEN, BEVOR SIE ZU IST (E364, L78 Punkt 4):
+           gesperrt sind ihre Kinder Chiffretext — wer sie DANACH einordnen
+           will (das Regal: „ist das ein Heft?"), kann es nicht mehr. Also wird
+           vorher gefragt, über den Bus, und was die Antworten sagen, wandert
+           mit ins Sperren. Diese Datei kennt die Heft-Regel damit nicht; sie
+           trägt nur, was ihr gesagt wird. Das Schloss selbst darf keine
+           Antwort umschreiben. */
+        const mitgabe = {};
+        if (typeof Ereignisse !== 'undefined' && typeof ARTEN !== 'undefined' && ARTEN.seiteWirdGesperrt) {
+            try {
+                for (const a of Ereignisse.frage(ARTEN.seiteWirdGesperrt, { id: p.id }))
+                    if (a && typeof a === 'object')
+                        Object.assign(mitgabe, a);
+            }
+            catch { /* dann eben ohne Mitgabe */ }
+        }
+        delete mitgabe['locked'];
+        delete mitgabe['id'];
         Store.kinderLeeren(p.id);
-        Store.updateBlock(p.id, { locked: { salz, iv: b64(iv), daten: b64(chiffre), zeit: Store.now() } });
+        Store.updateBlock(p.id, { ...mitgabe, locked: { salz, iv: b64(iv), daten: b64(chiffre), zeit: Store.now() } });
         schluesselCache.delete(p.id);
         App.zeichneSeite();
         App.zeichneBaum();
@@ -81508,6 +82795,28 @@ const Einstellungen = (() => {
      * DER DIALOG
      * ======================================================================*/
     let offenerBereich = 'allgemein';
+    /* Der Stand aus stand.ts (E361) — und der Weg, aus der Adresse gelesen. */
+    const standFassung = () => typeof Stand !== 'undefined' && Stand && Number(Stand.fassung) > 0 ? 'v' + Number(Stand.fassung) : '';
+    const herkunft = () => {
+        const ort = String(location.protocol || '');
+        const wirt = String(location.hostname || '');
+        if (ort === 'file:')
+            return 'Ordner (Doppelklick auf index.html)';
+        if (wirt === 'localhost' || wirt === '127.0.0.1' || wirt === '[::1]')
+            return 'örtlicher Server (start.bat)';
+        if (/\.workers\.dev$/.test(wirt) || /\.pages\.dev$/.test(wirt))
+            return 'Cloudflare (' + wirt + ')';
+        return wirt ? 'Netz (' + wirt + ')' : 'unbekannter Weg';
+    };
+    const standText = () => {
+        const fassung = standFassung();
+        if (!fassung)
+            return 'Stand unbekannt · ' + herkunft();
+        const gebaut = typeof Stand !== 'undefined' && Stand.gebaut ? new Date(String(Stand.gebaut)) : null;
+        const wann = gebaut && !isNaN(gebaut.getTime())
+            ? ' · gebaut ' + gebaut.toLocaleDateString('de-CH', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+        return fassung + wann + ' · ' + herkunft();
+    };
     const oeffne = (bereich) => {
         offenerBereich = bereich || offenerBereich;
         document.querySelectorAll('.overlay').forEach(o => o.remove());
@@ -82184,7 +83493,13 @@ const Einstellungen = (() => {
             zeile('Formelfunktionen', '', '<span class="ez-grau">über 130</span>') +
             zeile('Eigene Formelfunktionen', 'Einmal definieren, in jeder Formel nutzen — Notion kann das nicht', knopf('formelbib', 'Bibliothek öffnen')) +
             zeile('Tastenkürzel', '', knopf('kuerzel', 'Alle anzeigen')) +
-            zeile('Speicherort der Daten', '', '<span class="ez-grau">IndexedDB „notizen"</span>')
+            zeile('Speicherort der Daten', '', '<span class="ez-grau">IndexedDB „notizen"</span>') +
+            /* DER STAND UND DER WEG (E361, L83 Punkt 2): welche Fassung laeuft,
+               wann ihr Inhalt zuletzt gebaut wurde, und ob Redur gerade den
+               Ordner, start.bat oder Cloudflare ansieht. Drei Wege, und keiner
+               nannte sich — jetzt steht es hier, wo man nachsieht, wenn etwas
+               „alt aussieht". */
+            zeile('Stand', 'Fassung des Programms und der Weg, über den es gerade läuft', `<span class="ez-grau ez-stand" data-fassung="${esc(standFassung())}">${esc(standText())}</span>`)
     }[b] || (() => kopf('Unbekannt')))();
     /* ========================================================================
      * BEDIENUNG
@@ -83042,10 +84357,13 @@ const Einlesen = (() => {
             if (d.getUint32(zeiger, true) !== 0x02014b50)
                 break;
             const methode = d.getUint16(zeiger + 10, true);
+            /* Flags und Prüfsumme standen hier immer — gelesen wurden sie nie (E363). */
+            const flags = d.getUint16(zeiger + 8, true);
+            const crc = d.getUint32(zeiger + 16, true);
             const nameLaenge = d.getUint16(zeiger + 28, true);
             const extra = d.getUint16(zeiger + 30, true);
             const kommentar = d.getUint16(zeiger + 32, true);
-            const name = new TextDecoder().decode(bytes.subarray(zeiger + 46, zeiger + 46 + nameLaenge));
+            const name = ZipDetails.nameDecodieren(bytes.subarray(zeiger + 46, zeiger + 46 + nameLaenge), flags);
             /* Erst die 32-Bit-Felder, dann die echten Zahlen aus dem Zusatz —
                aber nur für die Felder, die den Platzhalter tragen. */
             const echt = zip64Zusatz(d, zeiger + 46 + nameLaenge, extra, d.getUint32(zeiger + 24, true), d.getUint32(zeiger + 20, true), d.getUint32(zeiger + 42, true));
@@ -83056,29 +84374,45 @@ const Einlesen = (() => {
             const lokalExtra = d.getUint16(offset + 28, true);
             const start = offset + 30 + lokalName + lokalExtra;
             const roh = bytes.subarray(start, start + gepackt);
-            dateien.set(name, { methode, roh });
+            dateien.set(name, { methode, roh, flags, crc, groesse: echt.roh });
             zeiger += 46 + nameLaenge + extra + kommentar;
         }
         vollzaehlig(anzahl, dateien.size);
-        /* Entpacken übernimmt der Browser */
+        /* Entpacken übernimmt der Browser — und DANACH wird nachgerechnet (E363):
+           ein Eintrag, dessen Bytes nicht zur Prüfsumme passen, ist beschädigt
+           und kommt nicht als Datei heraus. Ein verschlüsselter kommt gar nicht
+           erst in den Entpacker. */
         const holen = async (name) => {
             const e = dateien.get(name);
             if (!e)
                 return null;
+            if (ZipDetails.istVerschluesselt(e.flags))
+                throw new Error('„' + name + '" ist verschlüsselt — Redion kann keine verschlüsselten ZIP-Einträge lesen.');
+            let ergebnis;
             if (e.methode === 0)
-                return new Uint8Array(e.roh);
-            if (e.methode !== 8)
-                throw new Error('Diese Packmethode kennt der Browser nicht.');
-            if (!self.DecompressionStream)
-                throw new Error('Dieser Browser kann kein ZIP entpacken.');
-            const strom = new Blob([e.roh]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
-            return new Uint8Array(await new Response(strom).arrayBuffer());
+                ergebnis = new Uint8Array(e.roh);
+            else {
+                if (e.methode !== 8)
+                    throw new Error('Diese Packmethode kennt der Browser nicht.');
+                if (!self.DecompressionStream)
+                    throw new Error('Dieser Browser kann kein ZIP entpacken.');
+                const strom = new Blob([e.roh]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+                ergebnis = new Uint8Array(await new Response(strom).arrayBuffer());
+            }
+            if (ZipDetails.crc32(ergebnis) !== (e.crc >>> 0))
+                throw new Error('„' + name + '" ist beschädigt — die Prüfsumme stimmt nicht.');
+            return ergebnis;
+        };
+        const eintrag = (name) => {
+            const e = dateien.get(name);
+            return e ? { methode: e.methode, groesse: e.groesse, crc: e.crc >>> 0, flags: e.flags,
+                verschluesselt: ZipDetails.istVerschluesselt(e.flags) } : null;
         };
         const text = async (name) => {
             const b = await holen(name);
             return b ? new TextDecoder().decode(b) : null;
         };
-        return { namen: [...dateien.keys()], holen, text };
+        return { namen: [...dateien.keys()], holen, text, eintrag };
     };
     /**
      * Dasselbe für ein Archiv, das nicht in den Arbeitsspeicher passt.
@@ -83134,35 +84468,56 @@ const Einlesen = (() => {
             if (zeiger + 46 > vz.byteLength || vz.getUint32(zeiger, true) !== 0x02014b50)
                 break;
             const methode = vz.getUint16(zeiger + 10, true);
+            const flags = vz.getUint16(zeiger + 8, true);
+            const crc = vz.getUint32(zeiger + 16, true);
             const nameLaenge = vz.getUint16(zeiger + 28, true);
             const extra = vz.getUint16(zeiger + 30, true);
             const kommentar = vz.getUint16(zeiger + 32, true);
-            const name = new TextDecoder().decode(vzBytes.subarray(zeiger + 46, zeiger + 46 + nameLaenge));
+            const name = ZipDetails.nameDecodieren(vzBytes.subarray(zeiger + 46, zeiger + 46 + nameLaenge), flags);
             const echt = zip64Zusatz(vz, zeiger + 46 + nameLaenge, extra, vz.getUint32(zeiger + 24, true), vz.getUint32(zeiger + 20, true), vz.getUint32(zeiger + 42, true));
-            dateien.set(name, { methode, gepackt: echt.gepackt, roh: echt.roh, offset: echt.versatz });
+            dateien.set(name, { methode, gepackt: echt.gepackt, roh: echt.roh, offset: echt.versatz, flags, crc });
             zeiger += 46 + nameLaenge + extra + kommentar;
         }
         vollzaehlig(anzahl, dateien.size);
         /* Die Längen der Zusatzfelder stehen am lokalen Kopf noch einmal, und
            zwar oft anders als im Verzeichnis. Wer das Verzeichnis glaubt, liest
            um ein paar Byte verschoben — und bekommt Daten, die fast stimmen. */
+        /* DIE PRÜFSUMME SCHEIBCHENWEISE (E363): ein Blob liegt beim Browser,
+           nicht im Arbeitsspeicher — geprüft wird er in Stücken von einem
+           Megabyte, wie der Schreiber ihn rechnet. Ein beschädigter Eintrag
+           kam vorher als vollständige Datei heraus, still. */
+        const SCHEIBE = 1024 * 1024;
+        const pruefsumme = async (name, b, soll) => {
+            let z = ZipDetails.crc32Start();
+            for (let von = 0; von < b.size; von += SCHEIBE)
+                z = ZipDetails.crc32Weiter(z, new Uint8Array(await b.slice(von, Math.min(von + SCHEIBE, b.size)).arrayBuffer()));
+            if (ZipDetails.crc32Fertig(z) !== (soll >>> 0))
+                throw new Error('„' + name + '" ist beschädigt — die Prüfsumme stimmt nicht.');
+        };
         const alsBlob = async (name) => {
             const e = dateien.get(name);
             if (!e)
                 return null;
+            if (ZipDetails.istVerschluesselt(e.flags))
+                throw new Error('„' + name + '" ist verschlüsselt — Redion kann keine verschlüsselten ZIP-Einträge lesen.');
             const k = new DataView(await blob.slice(e.offset, e.offset + 30).arrayBuffer());
             const lokalName = k.getUint16(26, true);
             const lokalExtra = k.getUint16(28, true);
             const start = e.offset + 30 + lokalName + lokalExtra;
             const roh = blob.slice(start, start + e.gepackt);
+            let ergebnis;
             if (e.methode === 0)
-                return roh;
-            if (e.methode !== 8)
-                throw new Error('Diese Packmethode kennt der Browser nicht.');
-            if (!self.DecompressionStream)
-                throw new Error('Dieser Browser kann kein ZIP entpacken.');
-            const strom = roh.stream().pipeThrough(new DecompressionStream('deflate-raw'));
-            return await new Response(strom).blob();
+                ergebnis = roh;
+            else {
+                if (e.methode !== 8)
+                    throw new Error('Diese Packmethode kennt der Browser nicht.');
+                if (!self.DecompressionStream)
+                    throw new Error('Dieser Browser kann kein ZIP entpacken.');
+                const strom = roh.stream().pipeThrough(new DecompressionStream('deflate-raw'));
+                ergebnis = await new Response(strom).blob();
+            }
+            await pruefsumme(name, ergebnis, e.crc);
+            return ergebnis;
         };
         const holen = async (name) => {
             const b = await alsBlob(name);
@@ -83179,7 +84534,13 @@ const Einlesen = (() => {
             const e = dateien.get(name);
             return e && Number.isFinite(Number(e.roh)) ? Number(e.roh) : -1;
         };
-        return { namen: [...dateien.keys()], alsBlob, holen, text, groesse };
+        /** Was das Verzeichnis über einen Eintrag sagt — vor dem ersten Byte (E363). */
+        const eintrag = (name) => {
+            const e = dateien.get(name);
+            return e ? { methode: e.methode, groesse: Number(e.roh), gepackt: Number(e.gepackt), crc: e.crc >>> 0,
+                flags: e.flags, verschluesselt: ZipDetails.istVerschluesselt(e.flags) } : null;
+        };
+        return { namen: [...dateien.keys()], alsBlob, holen, text, groesse, eintrag };
     };
     const xml = (t) => new DOMParser().parseFromString(t, 'application/xml');
     /* ========================================================================
@@ -84084,6 +85445,8 @@ const ArchivImport = (() => {
             stuecke.push(e.anhaenge + (e.anhaenge === 1 ? ' Datei' : ' Dateien'));
         let s = '„' + zipName + '": ' + (stuecke.length ? stuecke.join(', ') : 'nichts Lesbares') +
             ' in ' + e.faecher + (e.faecher === 1 ? ' Fach' : ' Fächern');
+        if (e.unveraendert)
+            s += ' · ' + e.unveraendert + ' schon da (unverändert)';
         if (e.uebersprungen.length)
             s += ' · ' + e.uebersprungen.length + ' übersprungen';
         if (e.fehler.length)
@@ -84110,22 +85473,24 @@ const ArchivImport = (() => {
      * Liest stückweise, legt Fächer verschachtelt an, macht aus jeder Datei
      * ein Dokument, zählt, was nicht ging, und sagt es am Ende.
      */
-    const importZip = async (datei, zielId, opt = {}) => {
-        if (typeof Einlesen === 'undefined' || !Einlesen.zipLesenAusBlob)
-            throw new Error('Der ZIP-Leser ist nicht geladen.');
-        const zip = await Einlesen.zipLesenAusBlob(datei);
-        const ergebnis = {
-            wurzelId: null, faecher: 0, dokumente: 0, pdfs: 0, bilder: 0, seiten: 0, anhaenge: 0,
-            uebersprungen: [], fehler: [], hinweis: ''
-        };
-        /* Erst sortieren, dann anlegen — ein unsicherer Pfad legt nichts an. */
+    /**
+     * DER PLAN — was in dieser ZIP steckt, ohne dass ein Byte entpackt ist.
+     *
+     * Eigener Schritt seit E365, und das ist der Angelpunkt der Wiederaufnahme:
+     * derselbe Plan entsteht aus derselben ZIP immer wieder gleich (die
+     * Reihenfolge kommt aus dem Inhaltsverzeichnis, nicht aus einer Uhr oder
+     * einem Zufall). Ein unterbrochener Auftrag merkt sich deshalb nur die
+     * STELLE — Nummer 40 von 87 — und nicht die Liste.
+     */
+    const planen = (zip, zipName) => {
         const gueltig = [];
+        const uebersprungen = [];
         for (const name of zip.namen) {
             if (name.endsWith('/'))
                 continue; /* Ordnereinträge: die Fächer entstehen aus den Dateipfaden */
             const teile = segmente(name);
             if (!teile) {
-                ergebnis.uebersprungen.push(name + ' (unsicherer Pfad)');
+                uebersprungen.push(name + ' (unsicherer Pfad)');
                 continue;
             }
             if (istBeiwerk(teile))
@@ -84140,8 +85505,39 @@ const ArchivImport = (() => {
             gueltig.every(e => e.teile.length >= 2);
         const wurzelName = allesInEinem
             ? sauber([...oberste][0])
-            : sauber((datei.name || 'Archiv').replace(/\.zip$/i, ''));
-        const wurzel = fachFuer(zielId, wurzelName);
+            : sauber((zipName || 'Archiv').replace(/\.zip$/i, ''));
+        return { gueltig, allesInEinem, wurzelName, uebersprungen };
+    };
+    /** Wie viele Dokumente eine ZIP anlegen wird — für die Schrittzahl des
+        Auftrags, bevor er beginnt. */
+    const umfang = async (blob, zipName) => {
+        if (typeof Einlesen === 'undefined' || !Einlesen.zipLesenAusBlob)
+            return 0;
+        return planen(await Einlesen.zipLesenAusBlob(blob), zipName).gueltig.length;
+    };
+    const importZip = async (datei, zielId, opt = {}) => {
+        if (typeof Einlesen === 'undefined' || !Einlesen.zipLesenAusBlob)
+            throw new Error('Der ZIP-Leser ist nicht geladen.');
+        const zip = await Einlesen.zipLesenAusBlob(datei);
+        const ergebnis = {
+            wurzelId: null, faecher: 0, dokumente: 0, pdfs: 0, bilder: 0, seiten: 0, anhaenge: 0,
+            unveraendert: 0, uebersprungen: [], fehler: [], hinweis: ''
+        };
+        const plan = planen(zip, datei.name || 'Archiv');
+        const gueltig = plan.gueltig;
+        const allesInEinem = plan.allesInEinem;
+        /* Beim Wiederaufnehmen sind die unsicheren Pfade schon gezählt. */
+        const abBei = Math.max(0, Number(opt.abBei) || 0);
+        if (!abBei)
+            ergebnis.uebersprungen.push(...plan.uebersprungen);
+        /* DAS WURZELFACH ÜBERLEBT DIE UNTERBRECHUNG (E365): beim Wiederaufnehmen
+           kommt seine Kennung aus dem Auftrag, statt neu angelegt zu werden —
+           `fachFuer` fände es zwar am Namen wieder, aber nur, solange niemand
+           es umbenannt hat. */
+        const vorgabe = opt.wurzelVorgabe ? Store.getBlock(opt.wurzelVorgabe) : null;
+        const wurzel = vorgabe && vorgabe.alive !== false
+            ? { id: String(opt.wurzelVorgabe), neu: false }
+            : fachFuer(zielId, plan.wurzelName);
         ergebnis.wurzelId = wurzel.id;
         ergebnis.faecher = wurzel.neu ? 1 : 0;
         const faecher = new Map([['', wurzel.id]]);
@@ -84157,59 +85553,236 @@ const ArchivImport = (() => {
             faecher.set(schluessel, f.id);
             return f.id;
         };
-        const melder = !opt.still && typeof UI !== 'undefined' && UI.toast
+        const melder = !opt.still && !opt.beiSchritt && typeof UI !== 'undefined' && UI.toast
             ? UI.toast('„' + datei.name + '" wird entpackt …', 600000) : null;
-        let nr = 0;
-        for (const e of gueltig) {
+        let nr = abBei;
+        /* JEDER EINTRAG IST EIN SCHRITT — auch einer, der übersprungen wird
+           (E365, gefunden von test357 §4). Der erste Wurf meldete den Schritt
+           nur nach einem angelegten Dokument; eine ZIP, deren Dateien alle
+           schon da sind (E363), rückte damit nie vor: der Fortschritt stand
+           bei 0 von 87, und eine Wiederaufnahme hätte wieder von vorn
+           angefangen. Deshalb steht die Arbeit an einem Eintrag jetzt in einer
+           eigenen Funktion, die `return` sagt statt `continue` — und der
+           Schritt danach gilt immer. */
+        const einenEintrag = async (e, dateiName, rel) => {
+            /* Die ROHGRÖSSE steht im Verzeichnis, bevor ein Byte entpackt ist —
+               ein Eintrag, der 1 KB gepackt und 10 GB roh ist, wird gar nicht
+               erst durch den Entpacker geschickt. */
+            const roh = zip.groesse ? Number(zip.groesse(e.name)) : -1;
+            if (typeof Dateien !== 'undefined' && Dateien.GRENZE && roh > Dateien.GRENZE) {
+                ergebnis.uebersprungen.push(dateiName + ' (grösser als ' + Dateien.groesseText(Dateien.GRENZE) + ')');
+                return;
+            }
+            /* WAS DAS VERZEICHNIS SCHON WEISS (E363): verschlüsselt heisst
+               übersprungen, bevor ein Byte gelesen ist; und aus Name, Grösse
+               und Prüfsumme wird die Kennung, an der ein Dokument sich beim
+               zweiten Einlesen wiedererkennt (L114 Punkt 6). Fächer werden
+               weiterverwendet, ein unverändertes Dokument bleibt EINES —
+               kein „ (2)" mehr für dieselbe Datei. Eine geänderte Datei ist
+               eine andere Kennung und kommt daneben, wie bisher: nichts wird
+               überschrieben, Anmerkungen am alten Dokument bleiben (§46). */
+            const details = zip.eintrag ? zip.eintrag(e.name) : null;
+            if (details && details.verschluesselt) {
+                ergebnis.uebersprungen.push(dateiName + ' (verschlüsselt — Redion kann das nicht lesen)');
+                return;
+            }
+            const elternId = fachAusPfad(rel.slice(0, -1));
+            const kennung = details && Number.isFinite(Number(details.crc)) && roh >= 0
+                ? 'zip:' + dateiName + '|' + roh + '|' + ZipDetails.crc32Hex(Number(details.crc)) : '';
+            if (kennung && geschwister(elternId).some((k) => String(k.importKennung || '') === kennung)) {
+                ergebnis.unveraendert++;
+                return;
+            }
+            const blob = await zip.alsBlob(e.name);
+            if (!blob) {
+                ergebnis.uebersprungen.push(dateiName + ' (nicht lesbar)');
+                return;
+            }
+            const f = new File([blob], dateiName, { type: mimeVon(dateiName) });
+            const erg = await dateiAlsDokument(f, elternId, opt);
+            if (kennung && erg.seiteId)
+                Store.updateBlock(erg.seiteId, { importKennung: kennung });
+            ergebnis.dokumente++;
+            if (erg.art === 'pdf')
+                ergebnis.pdfs++;
+            else if (erg.art === 'bild')
+                ergebnis.bilder++;
+            else if (erg.art === 'seite')
+                ergebnis.seiten++;
+            else
+                ergebnis.anhaenge++;
+        };
+        for (const e of gueltig.slice(abBei)) {
             nr++;
+            /* ABBRECHEN HEISST HIER AUFHÖREN, nicht zurückrollen: was schon im
+               Regal steht, bleibt stehen (§46). Der Auftrag merkt sich die
+               Stelle, an der Schluss war. */
+            if (opt.abgebrochen && opt.abgebrochen()) {
+                ergebnis.abgebrochen = true;
+                nr--;
+                break;
+            }
             const rel = allesInEinem ? e.teile.slice(1) : e.teile;
             const dateiName = rel[rel.length - 1];
             if (melder && melder.textContent !== undefined)
                 melder.textContent = '„' + datei.name + '": Datei ' + nr + ' von ' + gueltig.length + ' — ' + dateiName;
             try {
-                /* Die ROHGRÖSSE steht im Verzeichnis, bevor ein Byte entpackt ist —
-                   ein Eintrag, der 1 KB gepackt und 10 GB roh ist, wird gar nicht
-                   erst durch den Entpacker geschickt. */
-                const roh = zip.groesse ? Number(zip.groesse(e.name)) : -1;
-                if (typeof Dateien !== 'undefined' && Dateien.GRENZE && roh > Dateien.GRENZE) {
-                    ergebnis.uebersprungen.push(dateiName + ' (grösser als ' + Dateien.groesseText(Dateien.GRENZE) + ')');
-                    continue;
-                }
-                const blob = await zip.alsBlob(e.name);
-                if (!blob) {
-                    ergebnis.uebersprungen.push(dateiName + ' (nicht lesbar)');
-                    continue;
-                }
-                const elternId = fachAusPfad(rel.slice(0, -1));
-                const f = new File([blob], dateiName, { type: mimeVon(dateiName) });
-                const erg = await dateiAlsDokument(f, elternId, opt);
-                ergebnis.dokumente++;
-                if (erg.art === 'pdf')
-                    ergebnis.pdfs++;
-                else if (erg.art === 'bild')
-                    ergebnis.bilder++;
-                else if (erg.art === 'seite')
-                    ergebnis.seiten++;
-                else
-                    ergebnis.anhaenge++;
+                await einenEintrag(e, dateiName, rel);
             }
             catch (err) {
-                ergebnis.fehler.push(dateiName + ': ' + (err instanceof Error ? err.message : String(err)));
+                const text = err instanceof Error ? err.message : String(err);
+                /* Ein beschädigter Eintrag ist eine Eigenschaft der ZIP, kein Fehler
+                   von Redion — er steht bei den Übersprungenen, mit Grund. */
+                if (/beschädigt/.test(text))
+                    ergebnis.uebersprungen.push(dateiName + ' (beschädigt — die Prüfsumme stimmt nicht)');
+                else
+                    ergebnis.fehler.push(dateiName + ': ' + text);
             }
+            /* JEDE FERTIGE DATEI IST EIN WIEDERAUFSETZPUNKT (E365). Geschrieben
+               wird sie vom Auftragsläufer; hier steht nur, WAS er schreiben soll. */
+            if (opt.beiSchritt)
+                await opt.beiSchritt({
+                    index: nr, wurzelId: ergebnis.wurzelId,
+                    zahlen: { faecher: ergebnis.faecher, dokumente: ergebnis.dokumente,
+                        pdfs: ergebnis.pdfs, bilder: ergebnis.bilder, seiten: ergebnis.seiten,
+                        anhaenge: ergebnis.anhaenge, unveraendert: ergebnis.unveraendert },
+                    uebersprungen: ergebnis.uebersprungen.slice(-MERKGRENZE),
+                    fehler: ergebnis.fehler.slice(-MERKGRENZE)
+                }, dateiName + ' (' + nr + ' von ' + gueltig.length + ')');
             /* Zwischen zwei Dateien einmal atmen — die Oberfläche bleibt bedienbar. */
             await new Promise(f => setTimeout(f, 0));
         }
         if (melder && melder.remove)
             melder.remove();
         ergebnis.hinweis = hinweisText(ergebnis, datei.name || 'Archiv');
-        if (!opt.still) {
+        if (!opt.still && !opt.beiSchritt) {
             if (typeof UI !== 'undefined' && UI.toast)
                 UI.toast(ergebnis.hinweis, 9000);
             ansichtAuffrischen();
         }
         return ergebnis;
     };
-    /** Der Dateiwähler — wie `PdfEinlesen.waehlen`, aber für eine ZIP. */
+    /* ========================================================================
+     * DER IMPORT ALS AUFTRAG (E365, L114 Punkt 1)
+     * ------------------------------------------------------------------------
+     * Bis hierher lief der Import im Tab. Wer ihn bei Datei 40 von 87 schloss,
+     * hatte 39 Dokumente und KEIN WISSEN darüber, was fehlt — das war die
+     * Lücke, und sie ist die unangenehme Sorte: es sieht aus, als sei alles da.
+     *
+     * Als Auftrag ist er dauerhaft. Dafür muss die ZIP selbst dauerhaft sein:
+     * ein `File` aus dem Dateiwähler überlebt kein Neuladen, also wandert sie
+     * zuerst in die Ablage — als ABGELEITETE Datei (E103), damit sie nicht mit
+     * in die Wolke geht und beim Aufräumen erkannt wird. Der Auftrag trägt nur
+     * ihre Kennung; nach dem letzten Dokument wird die Arbeitskopie gelöscht.
+     *
+     * Ist die ZIP grösser als die Ablage sie nimmt, gibt es keinen Auftrag,
+     * sondern den direkten Lauf mit einem ehrlichen Satz dazu.
+     * ======================================================================*/
+    const AUFTRAG_ART = 'zip-import';
+    /** So viele Namen je Liste wandern in den Auftrag — er soll nicht wachsen. */
+    const MERKGRENZE = 50;
+    const leereZahlen = () => ({ faecher: 0, dokumente: 0, pdfs: 0, bilder: 0, seiten: 0, anhaenge: 0, unveraendert: 0 });
+    /**
+     * Der Läufer. Er bekommt den Auftrag und die Hilfe der Maschine und
+     * arbeitet die ZIP ab — beim ersten Mal von vorn, danach ab der Stelle,
+     * die im Auftrag steht.
+     */
+    const zipLaeufer = async (auftrag, hilfe) => {
+        const ein = auftrag && auftrag.eingabe ? auftrag.eingabe : {};
+        const dateiId = String(ein.dateiId || '');
+        const zipName = String(ein.zipName || 'Archiv.zip');
+        if (!dateiId)
+            throw new Error('Dem Auftrag fehlt die Kennung der ZIP.');
+        if (typeof Dateien === 'undefined' || !Dateien.alsBlob)
+            throw new Error('Die Dateiablage steht nicht.');
+        const blob = await Dateien.alsBlob(dateiId);
+        if (!blob)
+            throw new Error('Die Arbeitskopie der ZIP ist nicht mehr da — bitte noch einmal einlesen.');
+        const stand = auftrag.stand && typeof auftrag.stand === 'object' ? auftrag.stand : null;
+        const erg = await importZip(new File([blob], zipName, { type: 'application/zip' }), ein.zielId ? String(ein.zielId) : null, { anordnung: ein.anordnung, still: true,
+            abBei: Math.max(0, Number(stand?.index) || 0),
+            wurzelVorgabe: stand?.wurzelId ? String(stand.wurzelId) : null,
+            beiSchritt: (s, text) => hilfe.schritt(s, text),
+            abgebrochen: () => hilfe.abgebrochen() });
+        /* Die Zahlen des Laufs sind die DIESES Durchgangs; was ein früherer
+           Durchgang schon geschafft hat, steht im Stand. Zusammengezählt wird
+           für den Menschen, nicht für die Ablage. */
+        const vorher = stand?.zahlen || leereZahlen();
+        const gesamt = {
+            faecher: vorher.faecher + erg.faecher, dokumente: vorher.dokumente + erg.dokumente,
+            pdfs: vorher.pdfs + erg.pdfs, bilder: vorher.bilder + erg.bilder,
+            seiten: vorher.seiten + erg.seiten, anhaenge: vorher.anhaenge + erg.anhaenge,
+            unveraendert: vorher.unveraendert + erg.unveraendert
+        };
+        const ganz = { ...erg, ...gesamt, wurzelId: erg.wurzelId,
+            uebersprungen: [...(stand?.uebersprungen || []), ...erg.uebersprungen].slice(-MERKGRENZE),
+            fehler: [...(stand?.fehler || []), ...erg.fehler].slice(-MERKGRENZE), hinweis: '' };
+        ganz.hinweis = hinweisText(ganz, zipName);
+        /* Die Arbeitskopie geht — aber nur, wenn wirklich Schluss ist. Bei einem
+           Abbruch bleibt sie liegen: der Auftrag lässt sich wieder aufnehmen. */
+        if (!erg.abgebrochen && typeof Dateien.weg === 'function') {
+            try {
+                await Dateien.weg(dateiId);
+            }
+            catch { /* dann liegt sie eben noch da */ }
+        }
+        return { ...ganz, abgebrochen: !!erg.abgebrochen, dateiId };
+    };
+    if (typeof Auftraege !== 'undefined' && Auftraege.anmelden)
+        Auftraege.anmelden(AUFTRAG_ART, zipLaeufer, 'ZIP entpacken');
+    /* Was der Mensch davon sieht: das Auftragsfenster zeigt den Fortschritt
+       von selbst (E286). Hier wird nur die ANSICHT aufgefrischt, wenn ein
+       Lauf zu Ende ist — sonst stünde das Regal still, obwohl fünfzig
+       Dokumente darin liegen. */
+    if (typeof Ereignisse !== 'undefined' && Ereignisse.horche) {
+        try {
+            Ereignisse.horche('auftrag.beendet', (d) => {
+                if (!d || d.art !== AUFTRAG_ART)
+                    return;
+                ansichtAuffrischen();
+            });
+        }
+        catch { /* ohne Bus frischt der nächste Klick auf */ }
+    }
+    /**
+     * Eine ZIP als Auftrag einlesen.
+     *
+     * Gibt den AUFTRAG zurück, nicht das Ergebnis — der Aufrufer wartet nicht
+     * mehr auf siebenundachtzig Dateien.
+     */
+    const alsAuftrag = async (datei, zielId = null, opt = {}) => {
+        const name = datei.name || 'Archiv.zip';
+        if (typeof Auftraege === 'undefined' || !Auftraege.anlegen ||
+            typeof Dateien === 'undefined' || !Dateien.ablegen) {
+            /* Ohne Maschine bleibt der alte Weg — und der Mensch erfährt, dass er
+               den Tab offen lassen muss. */
+            if (typeof UI !== 'undefined' && UI.toast)
+                UI.toast('„' + name + '" wird hier im Fenster entpackt — bitte offen lassen.', 6000);
+            return { auftrag: null, grund: 'ohne Maschine', ergebnis: await importZip(datei, zielId, opt) };
+        }
+        if (Dateien.GRENZE && datei.size > Dateien.GRENZE) {
+            if (typeof UI !== 'undefined' && UI.toast)
+                UI.toast('„' + name + '" ist grösser als ' + Dateien.groesseText(Dateien.GRENZE) +
+                    ' — sie wird hier im Fenster entpackt, bitte offen lassen.', 8000);
+            return { auftrag: null, grund: 'zu gross', ergebnis: await importZip(datei, zielId, opt) };
+        }
+        const schritte = await umfang(datei, name);
+        if (!schritte) {
+            const ergebnis = await importZip(datei, zielId, opt);
+            return { auftrag: null, grund: 'nichts Lesbares', ergebnis };
+        }
+        /* Die Arbeitskopie: abgeleitet, ohne Block — sie gehört keinem Dokument,
+           sondern dem Auftrag. */
+        const satz = await Dateien.ablegen(datei, { name, abgeleitet: true });
+        const auftrag = await Auftraege.anlegen(AUFTRAG_ART, { dateiId: satz.id, zipName: name, zielId: zielId || null, anordnung: opt.anordnung || 'untereinander' }, { schritte, text: '„' + name + '" wird entpackt' });
+        if (!opt.still && typeof UI !== 'undefined' && UI.toast)
+            UI.toast('„' + name + '": ' + schritte + (schritte === 1 ? ' Datei' : ' Dateien') +
+                ' — läuft im Hintergrund weiter, auch wenn du weggehst.', 7000);
+        return { auftrag };
+    };
+    /** Der Dateiwähler — wie `PdfEinlesen.waehlen`, aber für eine ZIP.
+        Seit E365 legt er einen AUFTRAG an; zurück kommt, was `alsAuftrag`
+        sagt (der Auftrag, oder das Ergebnis des direkten Laufs). */
     const waehlen = (zielId = null) => {
         const input = document.createElement('input');
         input.type = 'file';
@@ -84229,7 +85802,7 @@ const ArchivImport = (() => {
                     return;
                 }
                 try {
-                    fertig(await importZip(f, zielId));
+                    fertig(await alsAuftrag(f, zielId));
                 }
                 catch (e) {
                     if (typeof UI !== 'undefined')
@@ -84249,7 +85822,12 @@ const ArchivImport = (() => {
             input.click();
         });
     };
-    return { importZip, dateiAlsDokument, waehlen, ansichtAuffrischen, segmente, istBeiwerk, sauber };
+    /* `zipLaeufer` steht im Rückgabeobjekt, damit ein Prüflauf den Zustand
+       eines geschlossenen Tabs herstellen kann: Auftrag mit Stand hinein,
+       abgebrochen heraus, und noch einmal hinein. Die Maschine ruft ihn
+       ohnehin — hier ist er nur benennbar. */
+    return { importZip, alsAuftrag, zipLaeufer, umfang, planen, AUFTRAG_ART, dateiAlsDokument, waehlen,
+        ansichtAuffrischen, segmente, istBeiwerk, sauber };
 })();
 window.ArchivImport = ArchivImport;
 
@@ -98680,22 +100258,9 @@ const Austausch = (() => {
      * Ohne Komprimierung (Methode 0). Word und Excel lesen das anstandslos,
      * und der Code bleibt kurz genug, um ihn zu überblicken.
      * ======================================================================*/
-    let crcTafel = null;
-    const crc32 = (daten) => {
-        if (!crcTafel) {
-            crcTafel = new Uint32Array(256);
-            for (let n = 0; n < 256; n++) {
-                let c = n;
-                for (let k = 0; k < 8; k++)
-                    c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
-                crcTafel[n] = c >>> 0;
-            }
-        }
-        let c = 0xFFFFFFFF;
-        for (let i = 0; i < daten.length; i++)
-            c = crcTafel[(c ^ daten[i]) & 0xFF] ^ (c >>> 8);
-        return (c ^ 0xFFFFFFFF) >>> 0;
-    };
+    /* Die Prüfsumme rechnet seit E363 der Kern (`ZipDetails`) — dieselbe
+       Tafel für Schreiber und Leser, damit beide dasselbe meinen. */
+    const crc32 = (daten) => ZipDetails.crc32(daten instanceof Uint8Array ? daten : new Uint8Array(daten));
     /**
      * Dieselbe Prüfsumme, aber häppchenweise — für einen Blob, der nicht in den
      * Arbeitsspeicher passt.
@@ -98711,18 +100276,14 @@ const Austausch = (() => {
      */
     const SCHEIBE = 1024 * 1024;
     const crc32Strom = async (blob, beiFortschritt) => {
-        if (!crcTafel)
-            crc32(new Uint8Array(0)); /* Tafel einmal bauen */
-        let c = 0xFFFFFFFF;
+        let c = ZipDetails.crc32Start();
         for (let von = 0; von < blob.size; von += SCHEIBE) {
             const bis = Math.min(von + SCHEIBE, blob.size);
-            const teil = new Uint8Array(await blob.slice(von, bis).arrayBuffer());
-            for (let i = 0; i < teil.length; i++)
-                c = (crcTafel[(c ^ (teil[i] ?? 0)) & 0xFF] ?? 0) ^ (c >>> 8);
+            c = ZipDetails.crc32Weiter(c, new Uint8Array(await blob.slice(von, bis).arrayBuffer()));
             if (beiFortschritt)
                 beiFortschritt(bis / blob.size);
         }
-        return (c ^ 0xFFFFFFFF) >>> 0;
+        return ZipDetails.crc32Fertig(c);
     };
     /* ------------------------------------------------------------------------
      * DIE DREI GRENZEN — und warum sie seit dem 6. August keine mehr sind
@@ -98814,7 +100375,7 @@ const Austausch = (() => {
             const kopf = new Uint8Array(30 + name.length + lokalExtra);
             schreibe32(kopf, 0, 0x04034b50);
             schreibe16(kopf, 4, grosseDatei ? 45 : 20); /* benötigte Fassung */
-            schreibe16(kopf, 6, 0); /* Flags             */
+            schreibe16(kopf, 6, ZipDetails.UTF8_BIT); /* Flags: Bit 11 — der Name ist UTF-8 (E363, L114 Punkt 5) */
             schreibe16(kopf, 8, 0); /* Methode: gespeichert */
             schreibe16(kopf, 10, 0); /* Uhrzeit           */
             schreibe16(kopf, 12, 0x21); /* Datum: 1. Jan 1980 */
@@ -98849,7 +100410,7 @@ const Austausch = (() => {
             schreibe32(eintrag, 0, 0x02014b50);
             schreibe16(eintrag, 4, 20);
             schreibe16(eintrag, 6, (grosseDatei || weitHinten) ? 45 : 20);
-            schreibe16(eintrag, 8, 0);
+            schreibe16(eintrag, 8, ZipDetails.UTF8_BIT);
             schreibe16(eintrag, 10, 0);
             schreibe16(eintrag, 12, 0);
             schreibe16(eintrag, 14, 0x21);
@@ -120175,33 +121736,139 @@ const Notebook = (() => {
      *  direkte Kinder; der pdf-Vorrang ist deckungsgleich mit der
      *  Deckel-Art der Bibliothek. Grenzen stehen in LUECKEN.md. */
     const isNotebook = (p) => !!p && p.alive !== false && heftArtig(p);
+    /** Wie tief die Fach-Regel schaut. Ein Ordnerbaum aus einer ZIP ist
+     *  selten tiefer als fünf; zwölf ist grosszügig und begrenzt zugleich
+     *  die Arbeit auf einem kaputten Bestand. */
+    const FACH_TIEFE = 12;
     /** Ein Fach: eine lebende Seite ohne eigene Blätter/PDF-Seiten, in der
-     *  mindestens ein Heft liegt — oder die als Fach angelegt wurde
-     *  (`heftArt:'fach'`), damit sie nicht unsichtbar ist, solange sie
-     *  leer ist. Eine verschlüsselte Seite ist nie ein Fach: was in ihr
-     *  liegt, ist von aussen nicht zu sehen. */
-    const istFach = (p) => {
+     *  mindestens ein Heft ODER ein weiteres Fach liegt — oder die als Fach
+     *  angelegt wurde (`heftArt:'fach'`), damit sie nicht unsichtbar ist,
+     *  solange sie leer ist. Eine verschlüsselte Seite ist nie ein Fach:
+     *  was in ihr liegt, ist von aussen nicht zu sehen.
+     *
+     *  DAS „ODER EIN WEITERES FACH" IST E366 (L78 Punkt 2). Vorher zählte
+     *  nur ein DIREKTES Heft, und damit war „Schule" in
+     *  `Schule/Physik/Heft` gar kein Fach: „Physik" stand allein an der
+     *  Wurzel, und dass es zu „Schule" gehört, sah man nur im Baum. Nach
+     *  einem Import aus einer ZIP mit Ordnern war das die halbe Struktur.
+     *
+     *  Die Rekursion braucht zwei Bremsen, und beide sind nicht theoretisch:
+     *  `tiefe` gegen einen sehr tiefen Baum, `gesehen` gegen einen Ring in
+     *  `content` — ein solcher Ring wäre kaputt, aber er darf die App nicht
+     *  aufhängen (§46: lieber nichts anzeigen als hängen). */
+    const istFach = (p, tiefe = 0, gesehen) => {
         if (!p || p.type !== 'page' || p.alive === false || p.system || p.locked)
             return false;
         const kinder = Store.childrenOf(p.id);
+        /* DIESE ZEILE STEHT VOR DEM MERKER, UND DAS IST DER GANZE PUNKT.
+           Der erste Wurf von E366 zog `heftArt === 'fach'` als billigen
+           Vorab-Ausstieg nach oben — und machte damit genau die Lüge möglich,
+           gegen die E364 den Merker abgesichert hatte: ein gemerktes Fach, das
+           selbst ein Blatt bekommt, wäre ein Fach GEBLIEBEN. test356 §2 hat es
+           gefangen (27/28). Der Merker darf die abgeleitete Regel ergänzen,
+           nie überstimmen. */
         if (kinder.some((k) => k.type === 'blatt' || k.type === 'pdfseite'))
             return false;
-        return kinder.some(isNotebook) || p.heftArt === 'fach';
+        if (p.heftArt === 'fach')
+            return true;
+        if (kinder.some(isNotebook))
+            return true;
+        if (tiefe >= FACH_TIEFE)
+            return false;
+        const weg = gesehen || new Set();
+        if (weg.has(p.id))
+            return false;
+        weg.add(p.id);
+        return kinder.some((k) => istFach(k, tiefe + 1, weg));
     };
+    /** EIN FACH MERKT SICH, DASS ES EINES IST (E364, L78 Punkt 5). Eine
+     *  gewöhnliche Seite, in der ein Heft liegt, ist ein Fach — bis ihr
+     *  letztes Heft im Papierkorb liegt: dann fiel sie aus dem Regal, und
+     *  mit ihr die Karte, in der die Hefte zurückzuholen wären. Der Merker
+     *  wird beim Zeichnen des Regals gesetzt, für jedes abgeleitete Fach
+     *  ohne Merker — einmal, nicht bei jedem Zeichnen. Er kann nicht lügen:
+     *  eine Seite, die selbst Blätter bekommt, fällt in `istFach` schon
+     *  vorher heraus. */
+    const faecherMerken = () => {
+        Object.values(Store.cache.blocks).forEach(p => {
+            if (!p || p.heftArt === 'fach' || !istFach(p))
+                return;
+            /* Nur, was sich HEUTE ableiten lässt, wird gemerkt — ein Fach, das
+               nur über ein Unterfach eines ist, hängt an dessen Merker und
+               bekommt keinen eigenen. Sonst behauptete der Merker eine
+               Zugehörigkeit, die es nicht mehr gibt, sobald das Unterfach geht. */
+            const kinder = Store.childrenOf(p.id);
+            if (kinder.some(isNotebook))
+                Store.updateBlock(p.id, { heftArt: 'fach' });
+        });
+    };
+    /* DAS REGAL ANTWORTET, BEVOR EINE SEITE ZUGEHT (E364, L78 Punkt 4):
+       werkzeuge.ts fragt vor dem Verschlüsseln über den Bus, was die Seite
+       mitnehmen soll. Ist sie ein Heft — solange ihre Kinder lesbar sind,
+       lässt sich das ableiten —, sagt das Regal „heftArt: heft"; gesperrt
+       zählt dann der Merker, und das Heft bleibt in seiner Bibliothek.
+       Vorher wusste das nur das Regal selbst (`sperrenHier`); eine Seite,
+       die aus dem Seitenmenü oder der Palette verschlüsselt wurde, fehlte. */
+    if (typeof Ereignisse !== 'undefined' && typeof ARTEN !== 'undefined' && ARTEN.seiteWirdGesperrt) {
+        try {
+            Ereignisse.horche(ARTEN.seiteWirdGesperrt, (d) => {
+                const p = d && d.id ? Store.getBlock(String(d.id)) : null;
+                return p && !p.locked && heftArtig(p) ? { heftArt: 'heft' } : null;
+            });
+        }
+        catch { /* ohne Bus bleibt der Weg aus dem Regal */ }
+    }
     const notebookPages = () => Object.values(Store.cache.blocks)
         .filter(isNotebook)
         .sort((a, b) => String(b.edited || '').localeCompare(String(a.edited || '')));
-    /** Alle Fächer, flach und nach Namen — auch ein Fach in einem Fach
-     *  steht an der Wurzel (EINE Ebene zeigt das Regal; nichts geht
-     *  verloren, die Grenze steht in LUECKEN.md). */
-    const faecher = () => Object.values(Store.cache.blocks)
-        .filter(istFach)
-        .sort((a, b) => String(a.text || '').localeCompare(String(b.text || ''), 'de'));
+    const nachNamen = (a, b) => String(a.text || '').localeCompare(String(b.text || ''), 'de');
+    /** JEDES Fach, egal wie tief — für das Verschieben-Menü, das sonst
+     *  genau die Fächer verlöre, die E366 erst sichtbar gemacht hat. */
+    const alleFaecher = () => (faecherMerken(),
+        Object.values(Store.cache.blocks).filter((p) => istFach(p)).sort(nachNamen));
+    /** Das Fach, in dem dieses Fach liegt — oder null an der Wurzel. */
+    const elternFach = (f) => (f && f.parentId && f.parentTable !== 'collection')
+        ? (istFach(Store.getBlock(f.parentId)) ? Store.getBlock(f.parentId) : null)
+        : null;
+    /** Die Fächer der obersten Ebene: die, die in keinem Fach liegen. */
+    const faecher = () => alleFaecher().filter(f => !elternFach(f));
+    /** Die Fächer DIREKT in einem Fach (E366). */
+    const unterFaecher = (fid) => Store.childrenOf(fid).filter((k) => istFach(k)).sort(nachNamen);
+    /** Der Weg von der Wurzel bis zu diesem Fach — die Brotkrume (E366).
+     *  Mit Ringbremse, aus demselben Grund wie in `istFach`. */
+    const fachWeg = (fid) => {
+        const weg = [];
+        const gesehen = new Set();
+        let f = Store.getBlock(fid);
+        while (f && !gesehen.has(f.id) && weg.length < FACH_TIEFE + 1) {
+            gesehen.add(f.id);
+            weg.unshift(f);
+            f = elternFach(f);
+        }
+        return weg;
+    };
     /** Hefte, deren Eltern-Seite KEIN Fach ist — sie liegen lose im Regal
      *  (Hefte in gewöhnlichen Seiten bleiben so sichtbar, wie seit E264). */
     const loseHefte = () => notebookPages().filter(p => !istFach(p.parentId ? Store.getBlock(p.parentId) : null));
     const fachHefte = (fid) => Store.childrenOf(fid).filter(isNotebook)
         .sort((a, b) => String(b.edited || '').localeCompare(String(a.edited || '')));
+    /** WAS IN EINEM FACH LIEGT, IN EINEM SATZ (E366).
+     *
+     *  Vorher stand an jeder Fach-Karte „n Hefte" — auch an einem Fach, in
+     *  dem gar keine Hefte liegen, sondern zwei Unterfächer. Dort stand dann
+     *  „0 Hefte", und das ist die unangenehme Sorte falsch: es sieht aus wie
+     *  „hier ist nichts", während der ganze Bestand eine Ebene tiefer liegt.
+     *  Genannt wird deshalb, was WIRKLICH drin ist, und nur das. */
+    const fachInhaltSatz = (fid) => {
+        const h = fachHefte(fid).length;
+        const f = unterFaecher(fid).length;
+        const teile = [];
+        if (f)
+            teile.push(f === 1 ? '1 Fach' : f + ' Fächer');
+        if (h)
+            teile.push(h === 1 ? '1 Heft' : h + ' Hefte');
+        return teile.length ? teile.join(' · ') : 'leer';
+    };
     /** Tote Hefte für den Papierkorb-Reiter. */
     const toteHefte = () => Store.trashed().filter(heftArtig);
     /** Wie viele A4-Blätter die Seite hat — echt gerechnet aus der
@@ -120441,14 +122108,13 @@ const Notebook = (() => {
     /** Die Fach-Karte: Redions gezeichnete Ordner-Mappe (`data-art="ordner"`
      *  aus der Bibliotheks-Anatomie) mit Symbol und ehrlicher Zählung. */
     const fachCard = (f) => {
-        const n = fachHefte(f.id).length;
         return `<div class="nh-karte nh-fach">` +
             `<button class="bib-deckel" data-fach="${esc(f.id)}" data-art="ordner" ` +
             `aria-label="Fach öffnen: ${esc(f.text || 'Ohne Namen')}">` +
             `<span class="bib-deckel-blatt is-leer">` +
             `<span class="nh-fach-icon" aria-hidden="true">${esc(f.icon || '🗂')}</span></span>` +
             `<span class="bib-deckel-name"><b>${esc(f.text || 'Ohne Namen')}</b></span>` +
-            `<small>${n === 1 ? '1 Heft' : n + ' Hefte'}</small>` +
+            `<small>${esc(fachInhaltSatz(f.id))}</small>` +
             `</button>` +
             `<button class="nh-mehr" data-mehr-fach="${esc(f.id)}" title="Mehr zu diesem Fach" ` +
             `aria-label="Mehr zu ${esc(f.text || 'diesem Fach')}">⋯</button></div>`;
@@ -120474,12 +122140,11 @@ const Notebook = (() => {
             `aria-label="Mehr zu ${esc(p.text || 'diesem Heft')}">⋯</button></div>`;
     };
     const fachRow = (f) => {
-        const n = fachHefte(f.id).length;
         return `<div class="nh-zeile nh-fach">` +
             `<button class="nh-zeile-auf" data-fach="${esc(f.id)}">` +
             `<span class="nh-mini nh-mini-fach" aria-hidden="true">${esc(f.icon || '🗂')}</span>` +
             `<span class="nh-zeile-text"><b>${esc(f.text || 'Ohne Namen')}</b>` +
-            `<small>${n === 1 ? '1 Heft' : n + ' Hefte'}</small></span>` +
+            `<small>${esc(fachInhaltSatz(f.id))}</small></span>` +
             `</button>` +
             `<button class="nh-mehr" data-mehr-fach="${esc(f.id)}" title="Mehr zu diesem Fach" ` +
             `aria-label="Mehr zu ${esc(f.text || 'diesem Fach')}">⋯</button></div>`;
@@ -120525,9 +122190,34 @@ const Notebook = (() => {
      * ------------------------------------------------------------------ */
     const kopfHtml = () => {
         const fach = fachId ? Store.getBlock(fachId) : null;
+        /* DIE BROTKRUME ZEIGT DEN GANZEN WEG (E366). Solange das Regal eine
+           Ebene tief war, genügte „← Notizhefte": es gab nur einen Ort, an
+           den man zurückkonnte. Mit Fächern in Fächern wäre derselbe Knopf
+           eine Lüge — er spränge über drei Ebenen hinweg an die Wurzel. Der
+           Zurück-Knopf führt deshalb EINE Ebene hoch und trägt den Namen des
+           Ortes, an den er führt; der ganze Weg steht in einer eigenen Zeile
+           darüber, jede Station anklickbar.
+    
+           Die Zeile erscheint NUR ab der zweiten Ebene. An einem Wurzelfach
+           stünde dort „Notizhefte / Physik" neben der Überschrift „Physik"
+           und dem Knopf „← Notizhefte" — dreimal dasselbe. Eine Anzeige, die
+           immer da ist, wird nicht gelesen. */
+        const weg = fach ? fachWeg(fach.id) : [];
+        const oben = weg.length > 1 ? weg[weg.length - 2] : null;
+        const krumeHtml = weg.length > 1
+            ? `<nav class="nh-krume" aria-label="Wo Sie sind">` +
+                `<button data-zurueck>Notizhefte</button>` +
+                weg.slice(0, -1).map((f) => `<span aria-hidden="true"> / </span>` +
+                    `<button data-fach="${esc(f.id)}">${esc(f.text || 'Ohne Namen')}</button>`).join('') +
+                `<span aria-hidden="true"> / </span>` +
+                `<b>${esc(fach.text || 'Ohne Namen')}</b></nav>`
+            : '';
         const zeile1 = `<div class="nh-kopf-zeile">` +
             (fach
-                ? `<button class="rb leise nh-zurueck" data-zurueck>← Notizhefte</button>` +
+                ? `<button class="rb leise nh-zurueck"` +
+                    (oben ? ` data-fach="${esc(oben.id)}"` : ' data-zurueck') +
+                    ` aria-label="Zurück zu ${esc(oben ? (oben.text || 'Ohne Namen') : 'Notizhefte')}">` +
+                    `← ${esc(oben ? (oben.text || 'Ohne Namen') : 'Notizhefte')}</button>` +
                     `<h1>${esc(fach.icon || '🗂')} ${esc(fach.text || 'Ohne Namen')}</h1>`
                 : `<h1>Notizhefte</h1>`) +
             `<input class="nh-suche" type="search" placeholder="Heft suchen …" ` +
@@ -120577,7 +122267,8 @@ const Notebook = (() => {
                 `</div>`;
         const zeile2 = (!reiterHtml && !formHtml) ? '' :
             `<div class="nh-kopf-zeile nh-kopf-zeile2">${reiterHtml}${formHtml}</div>`;
-        return `<header class="nh-kopf" data-kopfzeile="eigene">${zeile1}${zeile2}</header>`;
+        return `<header class="nh-kopf" data-kopfzeile="eigene">` +
+            `${krumeHtml}${zeile1}${zeile2}</header>`;
     };
     /* ------------------------------------------------------------------ *
      * Der Inhalt je Reiter
@@ -120607,16 +122298,17 @@ const Notebook = (() => {
             `„${esc(searchText)}" im ganzen Bestand suchen — auch in Texten` +
             `</button>`;
     const nichtsSatz = () => `<p class="nh-nichts">Kein Heft heisst „${esc(searchText)}".</p>`;
+    const zuFaechern = (w) => Array.isArray(w) ? w : (w ? faecher() : []);
     const gitterHtml = (hefte, mitNeu, mitFaechern) => `<div class="bib-gitter nh-gitter">` +
         (mitNeu
             ? `<button class="nh-neu" data-neu>` +
                 `<span class="nh-neu-plus" aria-hidden="true">＋</span>` +
                 `<span>Neues Heft</span></button>`
             : '') +
-        (mitFaechern ? faecher().map(fachCard).join('') : '') +
+        zuFaechern(mitFaechern).map(fachCard).join('') +
         hefte.map(coverCard).join('') + `</div>`;
     const listeHtml = (hefte, mitFaechern) => `<div class="nh-liste">` +
-        (mitFaechern ? faecher().map(fachRow).join('') : '') +
+        zuFaechern(mitFaechern).map(fachRow).join('') +
         hefte.map(listRow).join('') + `</div>`;
     const korbHtml = () => {
         const tote = gefiltert(toteHefte());
@@ -120643,9 +122335,14 @@ const Notebook = (() => {
                         `an jeder Karte.</p>`);
         }
         else if (fachId && Store.getBlock(fachId)) {
+            /* IM FACH STEHEN AUCH DIE UNTERFÄCHER (E366) — vorher zeigte das
+               offene Fach nur seine Hefte, und ein Fach darin war von hier aus
+               gar nicht erreichbar. Während einer Suche bleiben sie weg: dann
+               wird gesucht, nicht geblättert (dieselbe Regel wie an der Wurzel). */
             const hefte = gefiltert(fachHefte(fachId));
+            const unter = searchText.trim() ? [] : unterFaecher(fachId);
             inhalt = (searchText.trim() && !hefte.length) ? nichtsSatz()
-                : (form() === 'liste' ? listeHtml(hefte, false) : gitterHtml(hefte, true, false));
+                : (form() === 'liste' ? listeHtml(hefte, unter) : gitterHtml(hefte, true, unter));
         }
         else {
             if (fachId)
@@ -120756,11 +122453,21 @@ const Notebook = (() => {
         const p = Store.getBlock(heftId);
         if (!p)
             return;
-        const ziele = faecher().filter(f => f.id !== heftId &&
+        /* JEDES Fach ist ein Ziel, nicht nur die der obersten Ebene (E366).
+           `faecher()` gibt seit diesem Bogen nur die Wurzelfächer zurück —
+           hier stünde damit genau die Schachtelung nicht zur Wahl, die das
+           Regal gerade sichtbar gemacht hat. Der Weg steht am Ziel, sonst
+           stehen zwei Fächer „Physik" ununterscheidbar untereinander. */
+        const ziele = alleFaecher().filter(f => f.id !== heftId &&
             !(typeof WissenDienst !== 'undefined' && WissenDienst.istUnter(f.id, heftId)));
         const imFach = istFach(p.parentId ? Store.getBlock(p.parentId) : null);
+        const wegText = (f) => {
+            const weg = fachWeg(f.id).slice(0, -1).map((x) => String(x.text || 'Ohne Namen'));
+            return weg.length ? weg.join(' / ') + ' / ' : '';
+        };
         const r = anker.getBoundingClientRect();
         const m = UI.menu(ziele.map(f => `<button data-z="${esc(f.id)}"><span class="mi">${esc(f.icon || '🗂')}</span>` +
+            (wegText(f) ? `<small class="nh-zielweg">${esc(wegText(f))}</small>` : '') +
             `${esc(f.text || 'Ohne Namen')}</button>`).join('') +
             (imFach ? `<button data-z=""><span class="mi">▤</span>Regal (ohne Fach)</button>` : '') +
             `<div class="sep"></div>` +
@@ -121064,7 +122771,11 @@ const Notebook = (() => {
         }
         App.zeigeSonder('Notizhefte', render);
     };
-    return { oeffnen, open: oeffnen, resume, render };
+    /* Die Regeln kommen mit heraus, damit ein Prüflauf sie OHNE Fenster
+       messen kann — dieselbe Trennung wie bei `Wissensluecken.sammeln`. */
+    return { oeffnen, open: oeffnen, resume, render,
+        istFach, isNotebook, faecher, alleFaecher, unterFaecher, fachWeg,
+        fachHefte, loseHefte, fachInhaltSatz, FACH_TIEFE };
 })();
 window.Notebook = Notebook;
 /* Die Notizhefte melden ihre Kontextkante an (E273).
@@ -121131,6 +122842,23 @@ const Zeitmesser = (() => {
     const MERKGRENZE = 50;
     let lauf = null;
     let ticker = null;
+    /* WACHE ZEIT, NICHT WANDUHR (E364, L81 Punkt 2). Der Tick kommt alle
+       500 ms; kommt er nach mehr als dreissig Sekunden, hat der Rechner
+       geschlafen oder der Browser die Registerkarte eingeschläfert — die
+       Spanne wird gesehen, aber nicht gezählt. Eine verborgene Registerkarte
+       zählt auch nicht: gezählt wird, was man vor sich hat. Und alle fünf
+       Sekunden geht der Stand in die Ablage, damit die Uhr ein Neuladen
+       überlebt (Punkt 4). */
+    const SCHLAF_GRENZE_MS = 30 * 1000;
+    const SICHERN_ALLE_MS = 5 * 1000;
+    const LAUFEND = 'zeit:laufend';
+    const laufendSichern = () => {
+        if (typeof Store === 'undefined')
+            return;
+        Store.setMeta(LAUFEND, lauf ? { ...lauf } : null);
+        if (lauf)
+            lauf.gesichert = Date.now();
+    };
     const sitzungen = () => {
         const roh = Store.getMeta('zeit:sitzungen', []);
         return Array.isArray(roh) ? roh : [];
@@ -121169,16 +122897,26 @@ const Zeitmesser = (() => {
         if (!lauf)
             return;
         const jetzt = Date.now();
-        if (!lauf.pausiert)
-            lauf.vergangenSek += (jetzt - lauf.zuletzt) / 1000;
+        const delta = jetzt - lauf.zuletzt;
         lauf.zuletzt = jetzt;
+        const sichtbar = typeof document === 'undefined' || document.visibilityState !== 'hidden';
+        if (!lauf.pausiert) {
+            /* Eine rückwärts gestellte Uhr (delta < 0) zählt weder vor noch zurück. */
+            if (delta > 0 && delta <= SCHLAF_GRENZE_MS && sichtbar)
+                lauf.vergangenSek += delta / 1000;
+            else if (delta > 0)
+                lauf.uebersprungenSek += delta / 1000;
+        }
         if (lauf.art === 'timer' && lauf.sollSek - lauf.vergangenSek <= 0) {
             const name = lauf.seitenName;
             const minuten = Math.round(lauf.sollSek / 60);
             merken();
             lauf = null;
+            laufendSichern();
             UI.toast(`⏰ Zeit um — ${minuten} Min an „${name}".`);
         }
+        else if (jetzt - lauf.gesichert >= SICHERN_ALLE_MS)
+            laufendSichern();
         zeichneStand();
         if (!lauf && ticker !== null) {
             clearInterval(ticker);
@@ -121190,10 +122928,11 @@ const Zeitmesser = (() => {
             merken();
         const wo = seiteJetzt();
         lauf = { art, beginn: Date.now(), sollSek: art === 'timer' ? Math.max(1, sollSek) : 0,
-            vergangenSek: 0, zuletzt: Date.now(), pausiert: false,
+            vergangenSek: 0, uebersprungenSek: 0, zuletzt: Date.now(), gesichert: 0, pausiert: false,
             seiteId: wo.id, seitenName: wo.name };
         if (ticker === null)
             ticker = window.setInterval(tick, 500);
+        laufendSichern();
         zeichneStand();
     };
     const pause = () => {
@@ -121201,6 +122940,7 @@ const Zeitmesser = (() => {
             return;
         lauf.pausiert = !lauf.pausiert;
         lauf.zuletzt = Date.now();
+        laufendSichern();
         zeichneStand();
     };
     const stopp = () => {
@@ -121208,15 +122948,43 @@ const Zeitmesser = (() => {
             return;
         merken();
         lauf = null;
+        laufendSichern();
         if (ticker !== null) {
             clearInterval(ticker);
             ticker = null;
         }
         zeichneStand();
     };
+    /** DIE UHR ÜBERLEBT DAS NEULADEN (E364, L81 Punkt 4): der zuletzt
+     *  gesicherte Stand wird wieder aufgenommen — die Spanne seit dem
+     *  Sichern zählt nicht (sie war Schlaf oder Neuladen), die Uhr läuft von
+     *  dort weiter. Angestossen, sobald die Ablage da ist; war sie beim
+     *  Anmelden längst geladen, reicht der Bus die Meldung nach (E362). */
+    const wiederaufnehmen = () => {
+        if (lauf || typeof Store === 'undefined')
+            return;
+        const roh = Store.getMeta(LAUFEND);
+        if (!roh || typeof roh !== 'object' || (roh.art !== 'stoppuhr' && roh.art !== 'timer'))
+            return;
+        lauf = { art: roh.art, beginn: Number(roh.beginn) || Date.now(), sollSek: Number(roh.sollSek) || 0,
+            vergangenSek: Math.max(0, Number(roh.vergangenSek) || 0),
+            uebersprungenSek: Math.max(0, Number(roh.uebersprungenSek) || 0),
+            zuletzt: Date.now(), gesichert: Date.now(), pausiert: !!roh.pausiert,
+            seiteId: String(roh.seiteId || ''), seitenName: String(roh.seitenName || 'Ohne Seite') };
+        if (ticker === null)
+            ticker = window.setInterval(tick, 500);
+        zeichneStand();
+    };
+    if (typeof Ereignisse !== 'undefined' && typeof ARTEN !== 'undefined' && ARTEN.ablageGeladen) {
+        try {
+            Ereignisse.horche(ARTEN.ablageGeladen, wiederaufnehmen, { nachreichen: true });
+        }
+        catch { /* dann eben nur in dieser Sitzung */ }
+    }
     const stand = () => ({
         laeuft: !!lauf, pausiert: !!lauf?.pausiert,
         art: lauf?.art || '', sekunden: lauf ? Math.round(restSek()) : 0,
+        uebersprungenSek: lauf ? Math.round(lauf.uebersprungenSek) : 0,
         seite: lauf?.seitenName || ''
     });
     /* ------------------------------------------------------------------ *
@@ -121231,7 +122999,8 @@ const Zeitmesser = (() => {
             `<div class="zm-uhr" aria-live="off">${uhrText(s.sekunden)}</div>` +
             `<p class="zm-wo">${s.laeuft
                 ? (s.art === 'timer' ? 'Timer' : 'Stoppuhr') + ' · ' + esc(s.seite) +
-                    (s.pausiert ? ' · pausiert' : '')
+                    (s.pausiert ? ' · pausiert' : '') +
+                    (s.uebersprungenSek >= 60 ? ' · ' + esc(uhrText(s.uebersprungenSek)) + ' Schlaf nicht gezählt' : '')
                 : 'Misst die Zeit an der offenen Seite.'}</p>` +
             `<div class="zm-reihe">` +
             `<button class="rb" data-zm="stoppuhr">Stoppuhr</button>` +
@@ -121287,7 +123056,7 @@ const Zeitmesser = (() => {
         });
         document.body.appendChild(feld);
     };
-    return { panel, start, pause, stopp, stand };
+    return { panel, start, pause, stopp, stand, wiederaufnehmen };
 })();
 window.Zeitmesser = Zeitmesser;
 
@@ -129149,9 +130918,18 @@ const Menueband = (() => {
            und wenn die Startreihenfolge sich einmal ändert, ist der Unterschied
            ein Band, das den gemerkten Reiter vergisst — ein Fehler, den niemand
            meldet, weil er wie eine Vorgabe aussieht. */
+        /* DER NAME WAR FALSCH (E362, gefunden beim Bau von L102 Punkt 4): hier
+           stand die Zeichenkette 'ablageGeladen', gemeldet wird aber
+           `ARTEN.ablageGeladen` = 'ablage.geladen'. Der Zuhörer hat also nie
+           etwas gehört — genau der Fehler, vor dem arten.ts warnt, und genau
+           der, den der Absatz darüber „von niemandem gemeldet" nennt. Jetzt der
+           Name aus dem Register, und mit `nachreichen`: ist die Ablage beim
+           Anmelden längst geladen, kommt die Meldung sofort — der Grund, warum
+           die Zeile „gemessen nicht griff", war nicht nur die Reihenfolge. */
         if (typeof Ereignisse !== 'undefined' && typeof Ereignisse.horche === 'function') {
+            const name = typeof ARTEN !== 'undefined' && ARTEN.ablageGeladen ? ARTEN.ablageGeladen : 'ablage.geladen';
             try {
-                Ereignisse.horche('ablageGeladen', () => zeichne());
+                Ereignisse.horche(name, () => zeichne(), { nachreichen: true });
             }
             catch { /* dann eben nicht */ }
         }

@@ -63,6 +63,13 @@ jobs:
       - name: Typen prüfen
         run: npm run typecheck
 
+      # Hat jemand eine Datei des Grundstocks geändert und den Bau vergessen?
+      # Dann sagen sw.ts und stand.ts eine alte Fassung, der Dienst-Arbeiter
+      # mischt bei Redur alte und neue Dateien, und niemand merkt es (L83).
+      # dienststand.mts rechnet den Stempel nach — in einer Sekunde (E361).
+      - name: Stimmt der Dienststand?
+        run: npm run stand
+
       - name: Quelltext prüfen
         run: node pruefungen/lauf/test87.mts
       - name: Datenbank-Logik prüfen

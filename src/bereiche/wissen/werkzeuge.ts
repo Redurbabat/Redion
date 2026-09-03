@@ -785,8 +785,23 @@ const Werkzeuge = (() => {
       if (new TextDecoder().decode(probe) !== klartext) throw new Error('Probe fehlgeschlagen');
     } catch (err) { alert('Verschlüsselung fehlgeschlagen — es wurde nichts verändert.'); return; }
 
+    /* WAS ANDERE ÜBER DIESE SEITE WISSEN, BEVOR SIE ZU IST (E364, L78 Punkt 4):
+       gesperrt sind ihre Kinder Chiffretext — wer sie DANACH einordnen
+       will (das Regal: „ist das ein Heft?"), kann es nicht mehr. Also wird
+       vorher gefragt, über den Bus, und was die Antworten sagen, wandert
+       mit ins Sperren. Diese Datei kennt die Heft-Regel damit nicht; sie
+       trägt nur, was ihr gesagt wird. Das Schloss selbst darf keine
+       Antwort umschreiben. */
+    const mitgabe: Record<string, unknown> = {};
+    if (typeof Ereignisse !== 'undefined' && typeof ARTEN !== 'undefined' && ARTEN.seiteWirdGesperrt) {
+      try {
+        for (const a of Ereignisse.frage(ARTEN.seiteWirdGesperrt, { id: p.id }))
+          if (a && typeof a === 'object') Object.assign(mitgabe, a);
+      } catch { /* dann eben ohne Mitgabe */ }
+    }
+    delete mitgabe['locked']; delete mitgabe['id'];
     Store.kinderLeeren(p.id);
-    Store.updateBlock(p.id, { locked: { salz, iv: b64(iv), daten: b64(chiffre), zeit: Store.now() } });
+    Store.updateBlock(p.id, { ...mitgabe, locked: { salz, iv: b64(iv), daten: b64(chiffre), zeit: Store.now() } });
     schluesselCache.delete(p.id);
     App.zeichneSeite(); App.zeichneBaum();
     UI.toast('Seite verschlüsselt');

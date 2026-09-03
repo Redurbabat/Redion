@@ -1279,8 +1279,17 @@ const Menueband = (() => {
        und wenn die Startreihenfolge sich einmal ändert, ist der Unterschied
        ein Band, das den gemerkten Reiter vergisst — ein Fehler, den niemand
        meldet, weil er wie eine Vorgabe aussieht. */
+    /* DER NAME WAR FALSCH (E362, gefunden beim Bau von L102 Punkt 4): hier
+       stand die Zeichenkette 'ablageGeladen', gemeldet wird aber
+       `ARTEN.ablageGeladen` = 'ablage.geladen'. Der Zuhörer hat also nie
+       etwas gehört — genau der Fehler, vor dem arten.ts warnt, und genau
+       der, den der Absatz darüber „von niemandem gemeldet" nennt. Jetzt der
+       Name aus dem Register, und mit `nachreichen`: ist die Ablage beim
+       Anmelden längst geladen, kommt die Meldung sofort — der Grund, warum
+       die Zeile „gemessen nicht griff", war nicht nur die Reihenfolge. */
     if (typeof Ereignisse !== 'undefined' && typeof Ereignisse.horche === 'function') {
-      try { Ereignisse.horche('ablageGeladen', () => zeichne()); } catch { /* dann eben nicht */ }
+      const name = typeof ARTEN !== 'undefined' && ARTEN.ablageGeladen ? ARTEN.ablageGeladen : 'ablage.geladen';
+      try { Ereignisse.horche(name, () => zeichne(), { nachreichen: true }); } catch { /* dann eben nicht */ }
     }
 
     /* GLOCKE UND STATUSPUNKT (E251) — die Horcher, einmal.

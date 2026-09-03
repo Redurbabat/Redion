@@ -2990,7 +2990,8 @@ Fünf hingenommene Grenzen der ersten Fassung, jede mit Grund:
    die Seite weiter in Bibliothek und Baum.
 3. Eine Seite mit PDF-Seiten UND Blättern zählt als PDF, nicht als
    Heft (PDF-Vorrang wie in der Bibliothek) — sie steht in der
-   Bibliothek, nicht im Regal.
+   Bibliothek, nicht im Regal. Bleibt offen und ist seit E366 die
+   verbliebene Hälfte von L114 Punkt 3.
 4. ✅ Keine Deckelfarben — seit E265 erledigt: `p.color` wird als
    Kante am Deckel gezeichnet, mit Whitelist.
 5. Kein Ziehen-Sortieren im Gitter; sortiert wird nach zuletzt
@@ -3006,10 +3007,19 @@ L77 Punkt 4 (Deckelfarben) ist damit erledigt. Neu hingenommen:
 
 1. Kein Ziehen-und-Ablegen ins Fach — verschieben geht über das
    Kontextmenü. Drag&Drop wäre ein eigener Bogen mit Telefon-Fassung.
-2. Das Regal zeigt EINE Fach-Ebene: ein Fach im Fach steht flach an
-   der Wurzel (nichts geht verloren, aber die Schachtelung sieht man
-   nur im Baum). Bleibt offen — Redur hat in E277 entschieden, dass
-   tiefe Verschachtelung ein eigener Bogen ist.
+2. ~~Das Regal zeigt EINE Fach-Ebene~~ — ERLEDIGT in E366, dem eigenen
+   Bogen, den Redur in E277 dafür verlangt hatte. Ein Fach ist jetzt auch
+   dann ein Fach, wenn nur ein FACH darin liegt (rekursiv, mit Tiefen- und
+   Ringbremse bei zwölf); die Wurzel zeigt nur die obersten, das offene
+   Fach seine Unterfächer, und eine Brotkrume nennt den ganzen Weg — ab
+   der zweiten Ebene, an einem Wurzelfach schweigt sie. Der Zurück-Knopf
+   führt EINE Ebene hoch und trägt den Namen des Ortes, an den er führt.
+   Das Verschieben-Menü kennt jedes Fach mit seinem Weg, nicht nur die
+   obersten. test358, 58 Punkte. Was bleibt: kein Ziehen-und-Ablegen
+   zwischen den Ebenen (Punkt 1), und ein Fach, das nur über ein
+   Unterfach eines ist, bekommt bewusst KEINEN `heftArt`-Merker — sonst
+   behauptete der Merker eine Zugehörigkeit, die es nach dem Löschen des
+   Unterfachs nicht mehr gibt.
 
    Nachtrag E283: Die Reiterzeile fehlt im offenen Fach weiterhin mit
    Absicht (die Brotkrume führt zurück, ein Reiterwechsel dort wäre
@@ -3022,13 +3032,20 @@ L77 Punkt 4 (Deckelfarben) ist damit erledigt. Neu hingenommen:
    `#notizhefte` — ein Fach-Hash bräuchte einen zweiten Start-Leseweg
    und ist damit keine offene Lücke mehr, sondern eine bewusst nicht
    gebaute Zusatzform (ein Fach lässt sich nicht verlinken).
-4. Ein Heft, das ANDERSWO verschlüsselt wurde (Seitenmenü, Palette),
-   trägt kein `heftArt` und fehlt im Regal, bis es entsperrt wird —
-   werkzeuge.ts soll die Heft-Regel nicht kennen (eine Regel-Maschine).
-5. Ein Fach verliert seine Fach-Eigenschaft, wenn sein letztes Heft im
-   Papierkorb liegt und es ohne `heftArt:'fach'` angelegt wurde (z.B.
-   als gewöhnliche Seite entstand) — es lebt in Bibliothek und Baum
-   weiter, nur die Fach-Karte verschwindet.
+4. ~~Ein Heft, das ANDERSWO verschlüsselt wurde, fehlt im Regal~~ —
+   ERLEDIGT in E364: `Werkzeuge.sperren` FRAGT vor dem Verschlüsseln über
+   den Bus (`ARTEN.seiteWirdGesperrt`), was die Seite mitnehmen soll, und
+   das Regal antwortet „heftArt: heft", solange die Kinder lesbar sind.
+   werkzeuge.ts kennt die Heft-Regel weiter nicht — es trägt, was ihm
+   gesagt wird (die Regel-Maschine ist der Bus). test356 §1.
+5. ~~Ein Fach verliert seine Fach-Eigenschaft, wenn sein letztes Heft im
+   Papierkorb liegt~~ — ERLEDIGT in E364: beim Zeichnen des Regals wird
+   jedes abgeleitete Fach ohne Merker als `heftArt:'fach'` gemerkt; die
+   Karte bleibt, wenn das letzte Heft im Papierkorb liegt. Der Merker
+   lügt nicht (eine Seite mit eigenen Blättern fällt vorher heraus).
+   Was bleibt: ein Fach, dessen letztes Heft VOR E364 in den Papierkorb
+   kam und das seither nie im Regal stand, bekommt den Merker erst,
+   wenn das Heft zurückgeholt ist. test356 §2.
 6. ✅ Die Listenform lief volle Breite — seit E282 hört sie bei 92ch
    auf (`ch`, damit die Grenze an der Schrift hängt und nicht an einer
    Zahl), links ausgerichtet wie die Kopfzeile darüber.
@@ -3075,12 +3092,18 @@ L81 — Was der Zeitmesser (E268) bewusst noch nicht kann
    `zeit:sitzungen` bereit; die Auswertung gehört in die Lernwelt, wo
    der Ort dafür schon existiert (dort steht die Lernzeit bis heute
    als Schätzung).
-2. Läuft die Uhr, während der Rechner schläft, zählt sie die Schlafzeit
-   mit — gerechnet wird aus der Wanduhr, nicht aus wacher Zeit.
+2. ~~Läuft die Uhr, während der Rechner schläft, zählt sie die Schlafzeit
+   mit~~ — ERLEDIGT in E364: gezählt wird WACHE Zeit. Kommt ein Tick nach
+   mehr als dreissig Sekunden (Schlaf, eingeschläferte Registerkarte),
+   wird die Spanne gesehen und nicht gezählt; eine verborgene
+   Registerkarte zählt nicht; eine rückwärts gestellte Uhr zählt nicht
+   rückwärts. Das Feld nennt den nicht gezählten Schlaf. test356 §3.
 3. Kein Ton und keine Systemmeldung beim Ablauf, nur der Hinweis in
    der App. Wer wegklickt, sieht ihn beim Zurückkommen.
-4. Die Uhr überlebt kein Neuladen: sie ist Laufzeit, nicht Ablage.
-   Eine beendete Sitzung ist gemerkt, eine laufende geht verloren.
+4. ~~Die Uhr überlebt kein Neuladen~~ — ERLEDIGT in E364: der laufende
+   Stand geht alle fünf Sekunden (und bei Start, Pause, Ende) nach
+   `zeit:laufend`; beim Laden der Ablage wird er wieder aufgenommen — die
+   Spanne seit dem Sichern zählt nicht. Beenden vergisst ihn. test356 §4.
 5. Nur eine Uhr gleichzeitig; ein zweiter Start beendet die erste
    (und merkt sie, wenn sie lang genug lief).
 
@@ -3150,20 +3173,24 @@ Gefunden am 30. August 2026 (beim Bau von E270, beim Ansehen der Bilder).
 L83 — Was zwischen „gepusht" und „Redur sieht es" noch fehlt (E271)
 ================================================================================
 
-1. **Der Prüflauf wird nicht abgewartet.** `holen.bat` holt `main`, egal ob
-   die GitHub-Aktion rot ist. Besonders: wurde ein `src/**.ts` ohne
-   `npm run bauen:ts` geschoben, bekommt Redur das ALTE Verhalten —
-   fehlerfrei und ohne jede Meldung. Nur `test105` fängt das, und zwar
-   drüben, nicht hier.
-2. **Kein Skript sagt, auf welchem Weg Redur gerade schaut.** Öffnet er die
-   Cloudflare-Adresse statt seines Ordners, ist `holen.bat` für das, was er
-   sieht, vollkommen irrelevant. Drei Wege (Ordner, `start.bat`, Cloudflare),
-   und keiner davon nennt sich.
-3. **Zweimal F5 ist ein Rennen, keine Zusicherung.** Ohne erhöhte `VERSION`
-   in `src/dienst/sw.ts` liefert der Dienst-Arbeiter jede Datei einzeln nach;
-   kommt der zweite Ladevorgang zu früh, mischen sich alte und neue. Und
-   nichts erzwingt die Erhöhung: `test99` prüft nur `fassung >= 11`,
-   `test143` nur die Form `notizen-v\d+`.
+1. ~~**Der Prüflauf wird nicht abgewartet.**~~ ERLEDIGT in E361: `holen.bat`
+   fragt vor dem Holen die GitHub-API nach dem letzten Lauf auf `main` —
+   grün wird genannt, rot und „läuft noch" fragen (nach 30 s ohne Antwort
+   Nein), ohne Antwort wird gewarnt und trotzdem geholt; danach vergleicht
+   es die Kennung des Geprüften mit der des Geholten. Nicht auf Windows
+   ausgeführt — test353 §5 liest nur den Text; der erste Doppelklick bei
+   Redur ist die Probe.
+2. ~~**Kein Skript sagt, auf welchem Weg Redur gerade schaut.**~~ ERLEDIGT
+   in E361: Einstellungen → „Über diese App" → „Stand" nennt Fassung,
+   Bauzeit und den Weg (Ordner, örtlicher Server, Cloudflare, Netz) — aus
+   `stand.ts` und der Adresse. test353 §6.
+3. ~~**Zweimal F5 ist ein Rennen, keine Zusicherung.**~~ ERLEDIGT in E361:
+   `dienststand.mts` rechnet beim Bauen einen Stempel über den Grundstock
+   und hebt `VERSION` in `sw.ts` von selbst, sobald er sich ändert;
+   test353 §2 rechnet ihn nach, und der schnelle CI-Job (`npm run stand`)
+   wird rot, wenn der Bau vergessen wurde. Das Rennen selbst bleibt (zwei
+   Ladevorgänge) — nur die Erhöhung, ohne die es ein Rennen ohne Ziel war,
+   ist jetzt zugesichert.
 4. **Die Rettungen häufen sich an.** Jeder Lauf von `holen.bat` mit eigener
    Arbeit legt einen `sicherung/`-Zweig und eine Ablage an. Niemand räumt sie
    je weg, und niemand fragt, ob sie noch gebraucht werden. `hochladen.bat`
@@ -4016,14 +4043,19 @@ nicht verlorengeht:
    Vektorweg nicht, weil ihn nie jemand rief. Toter Code ist nicht nur
    ungenutzt, sondern auch ungeprüft.
 
-4. **Der Ereignisbus kann kein async.** `melde` verwirft den Rückgabewert,
-   `frage` sammelt Promises als rohe Werte ein, statt sie abzuwarten. Kein
-   Abbruch, kein Veto, keine Reihenfolge, kein Nachreichen für spät
-   Angemeldete. Und von 42 Namen in `ARTEN` wird genau EINER je benutzt
-   (`ablageGeladen`).
-
-   Eine Auftragsmaschine, die auf diesem Bus aufsetzen soll, braucht ihn
-   vorher erweitert. Das ist ein eigener kleiner Bogen, kein Detail darin.
+4. ~~**Der Ereignisbus kann kein async.**~~ ERLEDIGT in E362: `frage`
+   zählt eine Promise nicht mehr als Antwort, sondern meldet sie;
+   `frageAsync` und `meldeAsync` warten ab, in der Reihenfolge der
+   Anmeldung, und melden, was scheitert; ein asynchroner Zuhörer von
+   `melde` versandet nicht mehr als „unhandled rejection"; `horche(name,
+   fn, {nachreichen: true})` reicht spät Angemeldeten die letzte Meldung
+   nach; `darf`/`darfAsync` sind das Veto. test354. Dabei gefunden: der
+   EINZIGE Zuhörer auf `ablageGeladen` (Menüband) horchte auf die
+   Zeichenkette `'ablageGeladen'`, gemeldet wird `'ablage.geladen'` — er
+   hat nie etwas gehört. Was bleibt: von 42 Namen in `ARTEN` wird weiter
+   nur einer benutzt; „Abbruch" (ein Zuhörer stoppt die weiteren) gibt es
+   nicht — bewusst: ein Bus, in dem einer die anderen anhalten kann, ist
+   wieder das Knäuel.
 
 5. **`exportAll`/`importAll` tragen drei hartkodierte Fachlisten** —
    **GESCHLOSSEN am 1. September 2026 durch E332.** Nachgezählt: elf
@@ -4102,11 +4134,47 @@ Die Maschine steht und ist geprüft. Fünf Dinge fehlen ihr, jedes mit Grund:
    (siehe E327).
 
 2. **Kein Web Worker.** Ein Auftrag läuft im selben Faden wie die
-   Oberfläche. Bei einem OCR über achtzig Seiten heisst das: die App
-   ruckelt, obwohl der Auftrag brav in Schritten arbeitet. Der
-   Agenten-Sandkasten (`agenten.ts:539`) zeigt, dass Redion Worker kann —
+   Oberfläche. Der Agenten-Sandkasten (`agenten.ts:583`) zeigt, dass
+   Redion Worker kann — über eine Blob-URL, also ohne Bauschritt (§6) —,
    ein Auftrag müsste dafür aber seinen Läufer als eigenständigen Code
    mitbringen, und das ist eine eigene Entscheidung.
+
+   **NACHGEMESSEN AM 3. SEPTEMBER 2026 (E366), UND DER SATZ OBEN WAR EINE
+   VERMUTUNG.** Hier stand: „Bei einem OCR über achtzig Seiten heisst das:
+   die App ruckelt." Gemessen worden war das nie. Also gemessen — am
+   einzigen schweren Auftrag, der wirklich angeschlossen ist, dem
+   ZIP-Import (E365):
+
+   · 120 Dateien à 18 KB (2 MB, ein Semester an Skripten): **1093 ms**
+     für den ganzen Auftrag, längste Bildlücke **149 ms**, EINE Lücke über
+     100 ms. Davon **165 ms** das reine Lesen der ZIP (Entpacken und
+     Prüfsumme) — der Teil, den ein Worker überhaupt übernehmen könnte,
+     ist also 15 % der Zeit.
+   · 300 Dateien: **2784 ms**, rund **8 ms je Schritt**, und zwar FLACH
+     über den ganzen Lauf (7,4 · 11,2 · 11,6 · 7,4 · 7,2 · 8,2 · 6,4 ·
+     8,8 · 9,5 · 7,4 · 7,2 · 6,7 · 10,3 · 7,2 · 7,6). Es wird nicht zäher,
+     je voller der Bestand ist.
+   · `ausMarkdown` selbst ist linear: 0,01 ms je Block, 68 ms für eine
+     Datei mit 5000 Absätzen, und 40 Dateien nacheinander kosten jede
+     gleich viel (3 ms).
+
+   Ein Ruckeln gibt es also — bei sehr grossem Einsatz. Der erste
+   Messlauf mit einer absichtlich unrealistischen ZIP (25 MB, 336 000
+   Blöcke) fror die Oberfläche einmal **7 Sekunden** ein und war nach
+   fünf Minuten nicht fertig. Das ist echt, aber es ist keine
+   Semesterablage, sondern ein Belastungsversuch.
+
+   WAS DARAUS FOLGT: Ein Worker für die Auftragsmaschine ist ein grosser
+   Umbau (jeder Läufer bräuchte eigenständigen Code und käme nicht mehr an
+   `Store`), und er würde 15 % einer Sekunde gewinnen. Er bleibt offen —
+   aber als Antwort auf eine GEMESSENE Not, nicht auf eine vermutete. Wer
+   ihn baut, misst vorher den Auftrag, für den er ihn baut. Die drei
+   Messskripte sind Wegwerfarbeit und stehen nicht im Verzeichnis; die
+   Zahlen oben sind das Ergebnis.
+
+   Und der eigentliche Kandidat ist ein anderer: L114 Punkt 7 — rund 0,35 s
+   je PDF-Seite, vierzig Skripte à 80 Seiten sind zwanzig Minuten. Dort
+   liegt die Zeit, und dort fehlt zuerst eine Schätzung VOR dem Start.
 
 3. **Kein Fortschritt in der Oberfläche.** Die Ereignisse (`auftrag.schritt`
    mit Schritt/Schrittzahl/Text) werden gemeldet, und niemand hört zu. Es
@@ -4956,39 +5024,65 @@ L114 — Was der ZIP-Import (E350) bewusst noch nicht kann
 
 E350 holt eine ZIP so ins Regal, wie sie ist. Was bleibt, mit Grund:
 
-1. **Der Lauf ist kein Auftrag.** Er läuft im Tab, Datei für Datei mit
-   Fortschrittszeile. Wer den Tab bei Datei 40 von 87 schliesst, hat 39
-   Dokumente und kein Wissen darüber, was fehlt. Der Weg zur
-   Auftragsmaschine ist getreten (E327, L103 Punkt 1) — der Import gehört
-   als Nächster dorthin, mit Wiederaufnahme über „welche Einträge fehlen
-   noch im Fach".
+1. ~~**Der Lauf ist kein Auftrag.**~~ ERLEDIGT in E365: die ZIP wandert
+   als abgeleitete Arbeitskopie in die Ablage, der Auftrag
+   (`zip-import`, „ZIP entpacken") trägt ihre Kennung, und jeder Eintrag
+   ist ein Schritt mit Wiederaufsetzpunkt — Stelle, Wurzelfach und Zahlen
+   stehen im Auftrag. Wer den Tab bei Datei 40 von 87 schliesst, sieht den
+   Auftrag im Auftragsfenster stehen und bekommt die restlichen 47, sobald
+   die Maschine ihn wieder aufnimmt; nichts wird doppelt (E363). Nach dem
+   letzten Eintrag geht die Arbeitskopie, bei einem Abbruch bleibt sie
+   liegen. Eine ZIP über der Ablagegrenze und ein Redion ohne Maschine
+   laufen wie früher — mit einem Satz, der sagt, dass das Fenster offen
+   bleiben muss. test357. Was bleibt: der Läufer rechnet weiter im Faden
+   der Oberfläche (L103 Punkt 2), und ein zweiter Tab kann denselben
+   Auftrag nicht gleichzeitig übernehmen (die Pacht der Maschine, E286).
 
 2. **Jedes Bild wird ein Deckel.** Das ist die GoodNotes-Lesart „eine Datei,
    ein Dokument" — bei 500 Fotos in einem Ordner sind das 500 Deckel. Eine
    Sammelseite je Ordner wäre die Alternative; sie bräuchte eine Regel,
    ab wann ein Ordner „ein Fotoalbum" ist.
 
-3. **Zwei Regale, zwei Regeln.** Die Bibliothek zeigt Fächer und PDFs, das
-   Notizhefte-Regal zeigt Fächer nur eine Ebene tief (L78 Punkt 2) und
-   PDFs gar nicht (L77 Punkt 3). Ein Import mit `Schule/Physik/Skript.pdf`
-   ist in der Bibliothek vollständig, im Notizhefte-Regal steht nur das
-   Fach „Schule". Die Verschmelzung ist eine eigene Entscheidung.
+3. **Zwei Regale, zwei Regeln — HALB ERLEDIGT in E366.** Die eine Hälfte
+   war die Tiefe: das Notizhefte-Regal zeigte Fächer nur eine Ebene tief
+   (L78 Punkt 2). Das ist weg — die Schachtelung steht jetzt so da, wie
+   die ZIP sie gebracht hat.
+
+   Was bleibt, ist die andere Hälfte: das Notizhefte-Regal zeigt PDFs
+   nicht (L77 Punkt 3 — eine Seite mit PDF-Seiten zählt als PDF und lebt
+   in der Bibliothek). Ein Import mit `Schule/Physik/Skript.pdf` ist in
+   der Bibliothek vollständig; im Notizhefte-Regal steht das Fach mit
+   seinem Weg, aber ohne das Skript darin. Ob die beiden Regale zu einem
+   werden sollen, ist eine eigene Entscheidung und keine Lücke — es ist
+   die Frage, ob „Notizhefte" ein Filter oder ein Ort ist.
 
 4. **Keine Ablegezone-Optik.** `#scroll` bekommt beim Ziehen die Klasse
    `ablegen`; im Regal gibt es keine Fläche, die sagt „hier fallen lassen".
    Das Ablegen funktioniert, man sieht es nur nicht kommen (L78 Punkt 1,
    mit Telefon).
 
-5. **Der Leser kennt CP437 nicht, keine verschlüsselten Einträge, keine
-   CRC-Prüfung.** Namen aus alten Windows-Packern ohne UTF-8-Bit kommen mit
-   Ersatzzeichen an; ein verschlüsselter Eintrag scheitert erst beim
-   Entpacken mit einer allgemeinen Meldung; ein beschädigter Eintrag wird
-   nicht erkannt. Der eigene Schreiber setzt seit E350 das UTF-8-Bit im
-   Prüfmaterial, `Austausch.zipSchreiben` noch nicht.
+5. ~~**Der Leser kennt CP437 nicht, keine verschlüsselten Einträge, keine
+   CRC-Prüfung.**~~ ERLEDIGT in E363: `ZipDetails` (Kern) rechnet die
+   CRC-32 fortlaufend, liest Namen ohne UTF-8-Bit als CP437 (gültiges
+   UTF-8 ohne Bit bleibt UTF-8) und erkennt Bit 0; beide Leser prüfen
+   jeden Eintrag nach dem Entpacken gegen seine Prüfsumme (scheibchenweise,
+   ohne ihn in den Speicher zu holen) und werfen bei Beschädigung und bei
+   Verschlüsselung mit Grund; der Import stellt beides zu den
+   Übersprungenen. `Austausch.zipSchreiben` setzt das UTF-8-Bit in beiden
+   Köpfen. test355. Was bleibt: die Prüfung kostet einen zweiten Lesegang
+   je Eintrag — bei einer 500-MB-Sicherung spürbar, aber ehrlich.
 
-6. **Keine Wiedererkennung beim zweiten Import.** Fächer werden
-   wiederverwendet, Dokumente bekommen „ (2)". Wer dieselbe ZIP nach einer
-   Korrektur noch einmal einliest, hat jedes Dokument doppelt. Eine
+6. ~~**Keine Wiedererkennung beim zweiten Import.**~~ ERLEDIGT in E363:
+   jedes Dokument aus einer ZIP trägt `importKennung` = Name, Rohgrösse und
+   Prüfsumme aus dem Verzeichnis; beim zweiten Einlesen wird eine Datei mit
+   derselben Kennung im selben Fach übersprungen und gezählt („3 schon da
+   (unverändert)"), eine geänderte kommt als „ (2)" daneben — nichts wird
+   überschrieben, Anmerkungen am alten Dokument bleiben. test355. Was
+   bleibt: eine Datei, die in ein anderes Fach verschoben wurde, wird nicht
+   wiedererkannt (die Kennung gilt je Fach); und die Frage, ob eine
+   geänderte Datei das alte Dokument ERSETZEN soll, ist bewusst mit Nein
+   beantwortet — das wäre der Weg, auf dem Anmerkungen verschwinden.
+   Der ursprüngliche Absatz stand so: Eine
    Kennung je Datei (Name + Grösse + Prüfsumme) könnte das ändern — das
    ist der Obsidian-Weg (redion-id), nur ohne Kennung im Archiv.
 
@@ -5022,46 +5116,114 @@ mit dem Grund, warum jeder Punkt ein eigener Bogen ist:
    ist am Telefon drei Pixel klein (das Trefffeld ist 22 Einheiten, der
    Punkt nicht); keine Systemzwischenablage.
 
-3. **Kein Handballen-Schutz.** Wer mit dem Stift schreibt und die Hand auf
-   dem Bildschirm ablegt, zeichnet mit der Hand. Die Schicht unterscheidet
-   `pointerType` nur für den Druck (E351), nicht für die Frage, ob der
-   Zeiger zeichnen darf. Regel für den Bogen: sobald ein `pen` gesehen
-   wurde, zeichnen `touch`-Zeiger für einige Sekunden nicht — sie rollen.
-   Braucht eine Prüfung mit zwei gleichzeitigen Zeigern.
+3. ~~**Kein Handballen-Schutz.**~~ ERLEDIGT in E354: `data-stift` mit vier
+   Sekunden Fingersperre, ein Zug gehört seinem Zeiger, der Stift nimmt
+   der aufliegenden Hand den Strich, ein zweiter Finger verwirft den
+   Fingerzug — test346 mit Schrittfolgen mehrerer Zeiger. Was bleibt: die
+   vier Sekunden sind Erfahrung, kein Mass.
 
-4. **Kein Zoom mit zwei Fingern, kein Strg+Rad auf dem Blatt.** Das Blatt
-   hat seinen Blattraum (E100), aber die Ansicht ist die des Browsers.
-   GoodNotes-Nutzer erwarten, ins Blatt zu zoomen und dort feiner zu
-   schreiben. Das ist eine Transformation auf der Fläche plus die
-   Umrechnung in `zuBlatt` — und die Werkzeugleiste darf dabei nicht
-   mitwandern.
+4. ~~**Kein Zoom mit zwei Fingern, kein Strg+Rad.**~~ ERLEDIGT in E354 für
+   das DOKUMENT: Strg+Rad und Kneifen schreiben in den Zoomregler, beides
+   in dessen Grenzen. Was bleibt: das Kneifen zoomt um die Mitte, nicht um
+   den Punkt zwischen den Fingern; das Blatt in einer gewöhnlichen Seite
+   hat weiterhin keinen Zoom.
 
-5. **Keine Formerkennung.** Ein gezogener Kreis bleibt ein gezogener Kreis.
-   GoodNotes rastet nach kurzem Halten am Ende des Strichs auf Kreis,
-   Rechteck, Linie, Dreieck. Redion hat die Formen als eigene Werkzeuge
-   (Rechteck, Ellipse, Linie, Pfeil); die Erkennung wäre ein Zusatz am
-   Ende von `finish`, mit einem Schwellwert, der nicht jede Schleife zum
-   Kreis macht.
+5. ~~**Keine Formerkennung.**~~ ERLEDIGT in E355 für Kreis, Ellipse,
+   Rechteck und Linie: ziehen, 450 ms halten, `InkShapes.recognize` —
+   test347. Was bleibt: kein Dreieck, kein Pfeil; keine Vorschau der Form
+   während des Haltens; die Schwellen sind Erfahrung, keine Masse.
 
-6. **Kein Bild- und kein Textwerkzeug auf der Zeichenschicht.** Ein Foto
-   auf das Blatt legen, verschieben, skalieren — geht nur als Bildblock
-   neben dem Blatt. Text gibt es als `text`-Marke, aber ohne Schriftwahl,
-   Grösse und Rahmen, und nur an der Stelle, an der getippt wurde.
+6. ~~**Kein Bild- und kein Textwerkzeug auf der Zeichenschicht.**~~ Das
+   BILD ist ERLEDIGT in E357: Werkzeug „Bild" in der Leiste öffnet den
+   Dateiwähler, die Datei geht in die Ablage (Stücke, das Blatt als Block),
+   die Marke `{id, art:'bild', dateiId, pts}` zeichnet ein `<image>` aus der
+   bekannten Adresse — synchron, damit Druck und Folien es sehen —, sonst
+   einen Platzhalter; mittig, halb so breit, im Seitenverhältnis, danach
+   gewählt. Skalieren hält das Verhältnis, der Radierer lässt es stehen,
+   Kopieren teilt die Datei. test349. Der TEXT ist ERLEDIGT in E360: ein
+   Tipp fragt mehrzeilig, der Text wird ein Kasten (`breiteBox`, 40 % der
+   Blattbreite) mit Zeilen aus `InkGeometry.textLayout` — deterministisch,
+   ohne DOM, dieselben Zeilen für Bildschirm, Druck und Auswahlkasten —,
+   mit Schriftart (die fünf aus E101), Stufen (A−/A+), Fett und Rahmen aus
+   der Leiste; mit Auswahl gilt es der Auswahl. Alte einzeilige Marken
+   bleiben einzeilig. test352. Was am Text bleibt: keine Ausrichtung
+   (links/mitte/rechts), keine Farbe je Wort, kein Kursiv, keine
+   Hintergrundfüllung; die Zeichenbreiten sind Schätzungen je Familie, kein
+   Schriftmass — ein Wort kann in einer Schrift etwas früher oder später
+   brechen, als das Auge es täte, aber überall gleich; die Höhe des Kastens
+   folgt dem Inhalt, man zieht nur die Breite. Und am Bild: eine gelöschte Bildmarke lässt
+   ihre Datei am Blatt zurück (sie geht erst mit dem Blatt); ein Bild
+   kommt nur aus dem Dateiwähler, nicht per Ziehen-und-Ablegen oder aus
+   der Zwischenablage des Systems; kein Drehen, kein Zuschneiden; eine
+   Vorschau, die synchron in eine Leinwand zeichnet, sieht beim ersten
+   Mal den Platzhalter.
 
-7. **Undo verliert die Knoten-Zuordnung beim Neuzeichnen.** Jedes Undo
-   zeichnet die ganze Schicht neu (`render`), eine Marke je SVG-Knoten.
-   Bei tausend Marken auf einer Seite ist das spürbar; eine Zuordnung
-   Kennung → Knoten würde nur die betroffene Marke anfassen. Noch kein
-   Nutzer hat tausend Marken gemeldet — gemessen ist es nicht.
+7. ~~**Undo verliert die Knoten-Zuordnung beim Neuzeichnen.**~~ ERLEDIGT
+   in E358. Erst gemessen (2. September 2026, unter Last): Zurück bei
+   100/1000/3000 Marken 7/59/155 ms, das Strichende 3/21/44 ms, der
+   Strichanfang 3/8/14 ms. Dann gebaut: `redraw` gleicht Knoten und Marken
+   über eine Merkliste der gezeichneten Fassung ab — gleich bleibt, anders
+   wird geflickt, überzählig geht, fehlend kommt, und die Knotenfolge ist
+   die Markenfolge. Zurück bei 1000 Marken: 24 ms (test350 §5). Was
+   bleibt: Strichanfang und Strichende kopieren weiter den ganzen Bestand
+   (`snapshot` für den Verlauf, zwei `JSON.stringify` in `commit`, dazu
+   `save`) — bei dreitausend Marken 14 und 44 ms; ein Verlauf aus
+   Änderungen statt aus Abbildern wäre der nächste Schritt.
 
-8. **Am Telefon steht die Leiste in einer langen Reihe.** Nach E351 hat sie
-   einen Knopf mehr (Stift) und bis zu fünf Tupfer mehr (eigene Farben und
-   „+"). Sie rollt waagerecht (E240), aber gruppiert ist sie nicht:
-   GoodNotes klappt Farben und Breiten unter dem gewählten Werkzeug auf.
+8. ~~**Am Telefon steht die Leiste in einer langen Reihe.**~~ ERLEDIGT in
+   E356: jeder Knopf trägt seine Gruppe, die Leiste ihr Werkzeug, und am
+   Telefon zeigt das CSS nur die Gruppen des Werkzeugs — direkt dahinter,
+   und die Leiste rollt hin (732 statt 1539 px beim Schreiben). test348.
+   Was bleibt: keine Klappe unter dem Werkzeug wie in GoodNotes.
+
+9. ~~**Am Rechner steht die Leiste über dem Blatt in fünf Zeilen.**~~
+   ERLEDIGT in E359: die Gruppenregel aus E356 gilt bei jeder Breite, am
+   Rechner zwei Zeilen (Werkzeuge, darunter ihr Zubehör) über einen
+   Zeilenbruch, Wörter nach Breite der Leiste (`@container`), und die
+   Papierwahl ist eine Klappe (100 statt 210 px). 84 statt rund 220 px.
+   test351. Was bleibt: am Telefon steht der feste Teil weiter in einer
+   eigenen Zeile; vierzehn Werkzeuge sind viele (Linie, Pfeil, Rechteck,
+   Ellipse als ein Formen-Werkzeug wäre GoodNotes näher).
 
 Nicht auf der Liste, weil es Format wäre: eine Marke bleibt `{id, art,
 farbe, breite, pts, pressure, stil?}`. Jeder Punkt oben lässt sich ohne
 Migration bauen; sobald einer das Format ändern will, ist das eine eigene
-Entscheidung.
+Entscheidung. (E357 kam mit einer neuen ART und einem neuen Feld daran —
+`bild` mit `dateiId`, wie `zettel` seinen `text` und `zeichen` seine
+`zeichenId` hat. Keine Migration: ein älteres Redion zeichnet eine
+unbekannte Art nicht, verliert sie aber auch nicht.)
 
 Gefunden am 2. September 2026 (E351).
+
+
+L116 — Was das Regal über seine eigene Zahl sagt
+════════════════════════════════════════════════════════════════════════════
+
+Gefunden am 3. September 2026 beim Ansehen der E365-Bilder — nicht durch
+einen Prüflauf, sondern weil ein Bild nach 900 eingelesenen Dokumenten eine
+zweistellige Zahl zeigte (§55).
+
+1. **„60 Dokumente" ist eine Decke, keine Zahl.** Der Reiter „Kürzlich
+   verwendet" schneidet seine Liste mit `.slice(0, 60)` ab
+   (`src/bereiche/wissen/bibliothek.ts`, `gefiltert()`), und der Kopf
+   zeigt danach die Länge der GESCHNITTENEN Liste an
+   (`deckelKopf(liste.length)`). Bei 61 Dokumenten steht dort „60", bei
+   900 ebenfalls „60". Wer eine grosse ZIP einliest und danach ins Regal
+   sieht, bekommt eine Zahl, die aussieht wie eine Antwort auf „wie viele
+   habe ich?" und keine ist.
+
+   Das ist derselbe Fehler wie E288 („14 Lücken" bei drei Seiten) und
+   E289 (ein Prozentwert ohne seine Grundlage), nur andersherum: eine
+   Anzeige, die IMMER dieselbe Zahl zeigt, wird nicht gelesen — und wenn
+   doch, dann falsch. §46.
+
+   Zu tun: entweder die Zahl des ungeschnittenen Bestands nennen und die
+   Decke als solche benennen („60 von 900"), oder die Decke fallen lassen.
+   Ersteres ist ehrlicher und billiger; die Decke selbst hat einen Grund
+   (900 Deckel zu zeichnen kostet), sie darf nur nicht schweigen.
+
+2. **Die anderen fünf Reiter haben keine Decke** — „Alle", „Favoriten",
+   „Geteilt", „Privat", „Datenbank" zeigen die volle Länge. Ihre Zahl
+   stimmt also; nur bei sehr vielen Dokumenten zeichnen sie alles. Ob das
+   ein Leistungsproblem ist, ist nicht gemessen worden und gehört zusammen
+   mit Punkt 1 gemessen, bevor gebaut wird.

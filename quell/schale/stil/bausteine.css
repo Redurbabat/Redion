@@ -3919,6 +3919,9 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 }
 .blatt-marken[data-tool="select"]{cursor:default}
 .blatt-marken[data-tool="radierer"]{cursor:cell}
+/* HANDBALLEN-SCHUTZ (E354): solange ein Stift zuletzt geschrieben hat,
+   darf ein Finger rollen und kneifen statt zu zeichnen. */
+.blatt-marken[data-stift="an"]{touch-action:pan-x pan-y pinch-zoom}
 /* Der Radierkreis (E352): beim Streichen sieht man, wie gross der Radierer
    ist — GoodNotes zeigt denselben Ring. Nur Anzeige, greift nichts ab. */
 .blatt-radierkreis{fill:rgba(0,0,0,.05); stroke:#444; stroke-width:1; stroke-dasharray:3 3;
@@ -3937,6 +3940,13 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
              vector-effect:non-scaling-stroke; pointer-events:none}
 .blatt-griff-feld{fill:transparent; pointer-events:all; cursor:nwse-resize}
 .blatt-griff-feld[data-griff="ne"], .blatt-griff-feld[data-griff="sw"]{cursor:nesw-resize}
+/* Ein Bild, dessen Datei fehlt oder noch laedt (E357): ein gestrichelter
+   Kasten in der Groesse der Marke — kein leerer Fleck, und greifbar bleibt
+   er auch. Das Wort kommt erst, wenn die Ablage wirklich nichts hat. */
+.blatt-bild-fehlt{fill:rgba(0,0,0,.04); stroke:#8a8a8a; stroke-width:1; stroke-dasharray:5 4;
+                  vector-effect:non-scaling-stroke}
+.blatt-bild-fehlt-wort{fill:#777; pointer-events:none}
+.blatt-marken[data-tool="bild"]{cursor:copy}
 /* Beim Malen soll der Finger nicht die Seite rollen und nichts markieren. */
 .blatt-papier.malt{cursor:crosshair; user-select:none}
 .blatt-papier.malt .blatt-inhalt{user-select:none}
@@ -3987,24 +3997,37 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
                   display:inline-flex; align-items:center; justify-content:center}
 .blatt-papierwahl i{display:block; width:100%; height:100%; border-radius:3px;
                     background-color:#fff; border:1px solid var(--line)}
+/* Die Papierwahl als Klappe (E359): ein Knopf zeigt das Papier, das gilt,
+   die fuenf Vorlagen liegen darunter, bis man sie braucht. Vorher standen
+   sie in der Reihe und nahmen 210 px, die der Leiste fehlten. */
+.blatt-papiermenue{position:relative; display:inline-flex; align-items:center}
+.blatt-papierknopf{display:inline-flex; align-items:center; gap:6px}
+.blatt-papierknopf i{display:block; width:18px; height:18px; border-radius:3px;
+                     background-color:#fff; border:1px solid var(--line)}
+.blatt-papierknopf[aria-expanded="true"]{background:var(--bg-hover)}
+.blatt-papierliste{position:absolute; right:0; top:calc(100% + 4px); z-index:6;
+                   display:flex; gap:4px; padding:6px; background:var(--bg-card);
+                   border:1px solid var(--line); border-radius:8px;
+                   box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.blatt-papierliste[hidden]{display:none}
 /* Auch hier stand `--akzent`, das es nicht gibt (gefunden beim Bau des
    Schaltplans). Der Ersatzwert rettete vor der Unsichtbarkeit — aber die
    gewählte Papierart leuchtete seit E100 immer blau, in keinem der beiden
    Themen in der Akzentfarbe. Ein Ersatzwert verdeckt einen Tippfehler, er
    behebt ihn nicht. */
 .blatt-papierwahl.on i{border-color:var(--accent-text); box-shadow:0 0 0 1px var(--accent)}
-.blatt-papierwahl i[data-vorschau="liniert"]{
+.blatt-papierwahl i[data-vorschau="liniert"], .blatt-papierknopf i[data-vorschau="liniert"]{
   background-image:linear-gradient(to bottom, var(--blatt-linie, #b9c6d8) 0 1px, transparent 1px);
   background-size:100% 4px}
-.blatt-papierwahl i[data-vorschau="kariert"]{
+.blatt-papierwahl i[data-vorschau="kariert"], .blatt-papierknopf i[data-vorschau="kariert"]{
   background-image:
     linear-gradient(to right,  var(--blatt-linie, #b9c6d8) 0 1px, transparent 1px),
     linear-gradient(to bottom, var(--blatt-linie, #b9c6d8) 0 1px, transparent 1px);
   background-size:4px 100%, 100% 4px}
-.blatt-papierwahl i[data-vorschau="punkte"]{
+.blatt-papierwahl i[data-vorschau="punkte"], .blatt-papierknopf i[data-vorschau="punkte"]{
   background-image:radial-gradient(circle at center, #8ea3bd 0 1px, transparent 1.1px);
   background-size:4px 4px}
-.blatt-papierwahl i[data-vorschau="mm"]{
+.blatt-papierwahl i[data-vorschau="mm"], .blatt-papierknopf i[data-vorschau="mm"]{
   background-image:
     linear-gradient(to right,  #8ea3bd 0 1px, transparent 1px),
     linear-gradient(to bottom, #8ea3bd 0 1px, transparent 1px),
@@ -4013,6 +4036,10 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   background-size:8px 100%, 100% 8px, 2px 100%, 100% 2px}
 
 .blatt-werk .zeichen{margin-right:5px}
+/* Die Schrift-Knoepfe (E360): das Muster zeigt die Familie, das F ist fett. */
+.blatt-werk [data-act="schriftart"] .zeichen{font-size:15px}
+.blatt-werk [data-act="fett"] .zeichen{font-weight:800}
+.blatt-textrahmen{vector-effect:non-scaling-stroke}
 .blatt-farbe .zeichen, .blatt-strich .zeichen{margin:0}
 
 /* ── Die schmale Leiste ────────────────────────────────────────────────────
@@ -4046,17 +4073,122 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
                            background:none; cursor:pointer; font-size:15px}
 .spalte .pdfs-nr{font-size:11.5px}
 
+/* ── Die Leiste zeigt nur das Zubehör des gewählten Werkzeugs — ÜBERALL (E359).
+   E356 hat diese Regel am Telefon eingeführt und den Rechner ausgenommen
+   („dort ist Platz"). Gemessen war das falsch, sobald die Seite eine Spalte
+   ist: bei 1360 px Fenster ist sie 706 px breit, und die Leiste stand mit
+   22 Knöpfen in FÜNF Zeilen, 220 px über dem Papier (L115 Punkt 9). Die
+   Regel gilt jetzt bei jeder Breite; die Anordnung (`order`, Rollen) bleibt
+   Sache des Telefons, siehe unten. */
+/* NUR DIE GRUPPEN DES GEWAEHLTEN WERKZEUGS (E356). Gemessen vor E356:
+   bei 390 px war die Leiste 1539 px lang — vier Bildschirmbreiten zum
+   Rollen, und die Farben standen am Ende. Jetzt liest das CSS
+   `data-tool` der Leiste gegen `data-gruppe` der Knoepfe: Werkzeuge und
+   der Verlauf stehen immer, alles andere nur, wo es gebraucht wird. Am
+   Rechner bleibt alles sichtbar — dort ist Platz. */
+.blatt-werk[data-tool] > [data-gruppe]{display:none}
+.blatt-werk[data-tool] > [data-gruppe="verlauf"]{display:inline-flex}
+.blatt-werk[data-tool="select"] > [data-gruppe="auswahl"],
+.blatt-werk[data-tool="select"] > [data-gruppe="farbe"],
+.blatt-werk[data-tool="select"] > [data-gruppe="breite"],
+.blatt-werk[data-tool="radierer"] > [data-gruppe="radierer"],
+.blatt-werk[data-tool="stift"] > [data-gruppe="stil"],
+.blatt-werk[data-tool="stift"] > [data-gruppe="formen"],
+.blatt-werk[data-tool="stift"] > [data-gruppe="farbe"],
+.blatt-werk[data-tool="stift"] > [data-gruppe="breite"],
+.blatt-werk[data-tool="marker"] > [data-gruppe="lineal"],
+.blatt-werk[data-tool="marker"] > [data-gruppe="farbe"],
+.blatt-werk[data-tool="marker"] > [data-gruppe="breite"],
+.blatt-werk[data-tool="line"] > [data-gruppe="lineal"],
+.blatt-werk[data-tool="line"] > [data-gruppe="farbe"],
+.blatt-werk[data-tool="line"] > [data-gruppe="breite"],
+.blatt-werk[data-tool="arrow"] > [data-gruppe="lineal"],
+.blatt-werk[data-tool="arrow"] > [data-gruppe="farbe"],
+.blatt-werk[data-tool="arrow"] > [data-gruppe="breite"],
+.blatt-werk[data-tool="rectangle"] > [data-gruppe="farbe"],
+.blatt-werk[data-tool="rectangle"] > [data-gruppe="breite"],
+.blatt-werk[data-tool="ellipse"] > [data-gruppe="farbe"],
+.blatt-werk[data-tool="ellipse"] > [data-gruppe="breite"],
+.blatt-werk[data-tool="abdeck"] > [data-gruppe="farbe"],
+.blatt-werk[data-tool="zettel"] > [data-gruppe="farbe"],
+.blatt-werk[data-tool="text"] > [data-gruppe="schrift"],
+.blatt-werk[data-tool="select"] > [data-gruppe="schrift"],
+.blatt-werk[data-tool="text"] > [data-gruppe="farbe"],
+.blatt-werk[data-tool="zeichen"] > [data-gruppe="farbe"]{display:inline-flex}
+.blatt-werk[data-tool] > span.blatt-trenn[data-gruppe]{display:none}
+
+/* ── Am Rechner ZWEI Zeilen: oben die Werkzeuge, darunter ihr Zubehör (E359).
+   Der Zeilenbruch ist ein leeres Element mit voller Breite hinter dem
+   letzten Werkzeug — Flexbox kennt keinen Umbruch-Befehl. Am Telefon und in
+   der Spalte rollt die Leiste in EINER Zeile (E140, E356); dort wäre das
+   Element eine Lücke von Bildschirmbreite und ist deshalb weg. */
+.blatt-werk > .blatt-zeilenbruch{flex:1 0 100%; height:0; padding:0; margin:0}
+.spalte .blatt-werk > .blatt-zeilenbruch{display:none}
+/* Wörter nur, wenn die LEISTE breit genug ist — nicht das Fenster. Vierzehn
+   Werkzeuge mit Wort brauchen rund 1130 px in einer Zeile; ohne Wort 556.
+   Die Seite als Spalte gibt der Leiste rund 620 px, die volle Breite bei
+   1360 px Fenster rund 1100 — auch dort keine Wörter, erst darüber.
+   Gemessen wird am Behälter (`container`), weil dieselbe Leiste in
+   derselben Fensterbreite beides sein kann. Zwei Behälter: die Leiste
+   selbst für ihre Wörter, die Reihe für die Wörter des festen Teils
+   rechts (Seite, Papier), der schon bei 1400 px Reihe seine Wörter lässt. */
+.blatt-reihe, .blatt-werk{container-type:inline-size}
+@media (min-width:761px){
+  @container (max-width:1150px){
+    .blatt-werk .wort{display:none}
+    .blatt-werk .zeichen{margin:0; font-size:16px}
+    .blatt-werk button{min-width:36px; padding:4px 7px}
+  }
+  @container (max-width:1400px){
+    .blatt-fest .wort{display:none}
+    .blatt-fest .zeichen{margin:0; font-size:16px}
+    .blatt-fest button{min-width:36px; padding:4px 7px}
+  }
+}
+
 @media (max-width:760px){
   .blatt-werk{flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none;
               max-width:100%; -webkit-overflow-scrolling:touch}
   .blatt-werk::-webkit-scrollbar{display:none}
   .blatt-werk > *{flex:0 0 auto}
+  .blatt-werk > .blatt-zeilenbruch{display:none}
   .blatt-werk button{min-height:44px; min-width:44px; padding:4px 8px}
   .blatt-werk .wort{display:none}
   .blatt-werk .zeichen{margin:0; font-size:17px}
   .blatt-farbe{width:30px; height:30px; min-width:30px}
   .blatt-farbe-neu{width:30px; height:30px; min-width:30px}
   .blatt-strich{min-width:38px}
+  /* … UND SIE STEHEN DIREKT HINTER DEM WERKZEUG. Die Werkzeuge bekommen
+     Plaetze in Zehnerschritten, die Gruppen den Platz gleich hinter dem
+     gewaehlten — so liegen Farben und Breiten neben dem Stift, nicht drei
+     Bildschirme weiter rechts. Die Reihenfolge im DOM bleibt (Tastatur,
+     Vorleser, Rechner); nur die Anordnung am Telefon wandert. */
+  .blatt-werk > [data-wz="schreiben"]{order:10} .blatt-werk > [data-wz="select"]{order:20}
+  .blatt-werk > [data-wz="stift"]{order:30} .blatt-werk > [data-wz="marker"]{order:40}
+  .blatt-werk > [data-wz="line"]{order:50} .blatt-werk > [data-wz="arrow"]{order:60}
+  .blatt-werk > [data-wz="rectangle"]{order:70} .blatt-werk > [data-wz="ellipse"]{order:80}
+  .blatt-werk > [data-wz="abdeck"]{order:90} .blatt-werk > [data-wz="zettel"]{order:100}
+  .blatt-werk > [data-wz="text"]{order:110} .blatt-werk > [data-wz="zeichen"]{order:120}
+  .blatt-werk > [data-wz="bild"]{order:125} .blatt-werk > [data-wz="radierer"]{order:130}
+  .blatt-werk > [data-gruppe="verlauf"]{order:200}
+  .blatt-werk[data-tool="schreiben"]{--platz:10} .blatt-werk[data-tool="select"]{--platz:20}
+  .blatt-werk[data-tool="stift"]{--platz:30} .blatt-werk[data-tool="marker"]{--platz:40}
+  .blatt-werk[data-tool="line"]{--platz:50} .blatt-werk[data-tool="arrow"]{--platz:60}
+  .blatt-werk[data-tool="rectangle"]{--platz:70} .blatt-werk[data-tool="ellipse"]{--platz:80}
+  .blatt-werk[data-tool="abdeck"]{--platz:90} .blatt-werk[data-tool="zettel"]{--platz:100}
+  .blatt-werk[data-tool="text"]{--platz:110} .blatt-werk[data-tool="zeichen"]{--platz:120}
+  .blatt-werk[data-tool="bild"]{--platz:125} .blatt-werk[data-tool="radierer"]{--platz:130}
+  /* Innerhalb der Gruppen: erst der Stift-Stil, dann Farben, dann Breiten,
+     dann die Schalter — wie GoodNotes es aufklappt. */
+  .blatt-werk[data-tool] > [data-gruppe="stil"],
+  .blatt-werk[data-tool] > [data-gruppe="schrift"],
+  .blatt-werk[data-tool] > [data-gruppe="radierer"],
+  .blatt-werk[data-tool] > [data-gruppe="auswahl"]{order:calc(var(--platz, 0) + 1)}
+  .blatt-werk[data-tool] > [data-gruppe="farbe"]{order:calc(var(--platz, 0) + 2)}
+  .blatt-werk[data-tool] > [data-gruppe="breite"]{order:calc(var(--platz, 0) + 3)}
+  .blatt-werk[data-tool] > [data-gruppe="formen"]{order:calc(var(--platz, 0) + 4)}
+  .blatt-werk[data-tool] > [data-gruppe="lineal"]{order:calc(var(--platz, 0) + 5)}
+  .blatt-werk[data-tool] > [data-gruppe="verlauf"]{order:200}
   /* Der Schatten zeigt, dass links davon noch etwas liegt — sonst sieht
      eine abgeschnittene Leiste aus wie eine vollständige (E103). */
   .blatt-fest{box-shadow:-10px 0 10px -7px rgba(0,0,0,.45); padding-left:8px}
@@ -4355,6 +4487,9 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    `offsetTop`, und der zaehlt zum naechsten positionierten Vorfahren. Ohne
    diese eine Angabe zeigte er an einem Element weiter aussen vorbei, und die
    Seitenzahl blieb beim Rollen auf 1 stehen. */
+/* Zwei Finger kneifen das DOKUMENT (E354), nicht die ganze Seite des
+   Browsers — die Geste gehoert der Dokumentansicht. */
+.document-center{touch-action:pan-x pan-y}
 .document-center{min-width:0; overflow:auto; padding:18px; position:relative;
   background:var(--bg-subtle,var(--bg-hover))}
 /* E299 · DIE ROLLE. Alle Seiten untereinander, mit Luft dazwischen — man

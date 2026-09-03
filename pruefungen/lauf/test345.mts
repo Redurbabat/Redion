@@ -290,7 +290,9 @@ gleich('Ein winziger Zug wählt nichts', (await auswahl(pg)).rahmen, 0);
 console.log('\n6 · Am Telefon fasst der Finger den Griff');
 const { ktx: ktxH, pg: pgH, blattId: blattH } = await kontext(true);
 await werkzeug(pgH, 'stift');
-await strich(pgH, [100, 100], [200, 100]);
+/* MIT DEM FINGER gezogen: seit E354 ist ein Finger nach einem Stift vier
+   Sekunden lang eine Hand und zieht kein Lasso. Hier kommt kein Stift vor. */
+await zug(pgH, Array.from({ length: 21 }, (_v, i) => [100 + i * 5, 100] as [number, number]), { art: 'touch' });
 await werkzeug(pgH, 'select');
 await zug(pgH, [[80, 80], [220, 80], [220, 120], [80, 120], [80, 80]], { art: 'touch' });
 const aH = await auswahl(pgH);

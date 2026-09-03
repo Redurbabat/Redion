@@ -39,6 +39,9 @@ const ARTEN = Object.freeze({
   seiteInPapierkorb: 'seite.papierkorb',
   seiteZurueck:      'seite.zurueckgeholt',
   seiteEndgueltigWeg:'seite.endgueltig-weg',
+  /* Eine FRAGE vor dem Verschlüsseln (E364): was soll die Seite mitnehmen,
+     solange ihre Kinder noch lesbar sind? Das Regal antwortet „heftArt". */
+  seiteWirdGesperrt: 'seite.wird-gesperrt',
 
   /* --- Blöcke ------------------------------------------------------------ */
   blockAngelegt:     'block.angelegt',

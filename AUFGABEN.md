@@ -2644,6 +2644,101 @@ node pruefungen/lauf/test105.mjs
   `padding` ist vier Erklärungen, nicht eine, und §2/§3 zählten absolut
   statt den Unterschied zum Bestand.
   test332 neu (14), belegt rot. test258 19/19.
+* E365 (L114 Punkt 1 erledigt): Der ZIP-Import ist ein Auftrag — die ZIP
+  geht als abgeleitete Arbeitskopie in die Ablage, der Auftrag
+  (`zip-import`) trägt ihre Kennung, jeder Eintrag ist ein Schritt mit
+  Wiederaufsetzpunkt (Stelle, Wurzelfach, Zahlen), nach dem letzten geht
+  die Arbeitskopie. Ein geschlossener Tab kostet keine Datei mehr. test357
+  neu (34), belegt rot in sieben Richtungen; dabei gefunden: übersprungene
+  Einträge meldeten keinen Schritt — der Fortschritt stand still.
+* E364 (L78 Punkte 4 und 5, L81 Punkte 2 und 4 erledigt): Vier kleine
+  Löcher — `Werkzeuge.sperren` fragt vor dem Verschlüsseln über den Bus
+  (`ARTEN.seiteWirdGesperrt`), das Regal antwortet „heftArt: heft", ein
+  anderswo gesperrtes Heft bleibt im Regal; ein abgeleitetes Fach wird
+  beim Zeichnen als `heftArt:'fach'` gemerkt und behält seine Karte, wenn
+  das letzte Heft im Papierkorb liegt; der Zeitmesser zählt wache Zeit
+  (Schlaf über 30 s, verborgene Registerkarte und rückwärts gestellte Uhr
+  zählen nicht) und überlebt das Neuladen (`zeit:laufend`, nachgereicht
+  über `ablageGeladen`). test356 neu, belegt rot in sieben Richtungen.
+* E363 (L114 Punkte 5 und 6 erledigt): Der ZIP-Leser sagt die Wahrheit —
+  `ZipDetails` (Kern) rechnet CRC-32, liest CP437 und erkennt
+  Verschlüsselung; beide Leser prüfen jeden Eintrag gegen seine Prüfsumme
+  und werfen mit Grund, der Import stellt Beschädigtes und Verschlüsseltes
+  zu den Übersprungenen; der eigene Schreiber setzt das UTF-8-Bit. Und die
+  ZIP erkennt sich beim zweiten Einlesen wieder (`importKennung` aus Name,
+  Grösse, Prüfsumme): nichts doppelt, „schon da (unverändert)", Geändertes
+  kommt daneben. test355 neu (34), belegt rot in sieben Richtungen.
+* E362 (L102 Punkt 4 erledigt): Der Ereignisbus kann async — `frage`
+  zählt keine Promise (sie wird gemeldet), `frageAsync`/`meldeAsync` warten
+  in Anmeldereihenfolge und melden Gescheitertes, `melde` fängt die
+  Ablehnung asynchroner Zuhörer, `horche(…, {nachreichen})` reicht die
+  letzte Meldung nach, `darf`/`darfAsync` als Veto. Dabei gefunden und
+  behoben: das Menüband horchte auf den falschen Namen (`'ablageGeladen'`
+  statt `ARTEN.ablageGeladen`) und hat nie etwas gehört. test354 neu (33,
+  ohne Browser), belegt rot in sieben Richtungen. Erster Bogen, dessen
+  Fassung E361 von selbst gehoben hat (v114).
+* E361 (L83 Punkte 1, 2, 3 erledigt): Der Dienststand folgt dem Inhalt —
+  `dienststand.mts` rechnet bei `npm run bauen:ts` einen Stempel über den
+  Grundstock und hebt `VERSION` in `sw.ts` von selbst; `stand.ts` trägt
+  Fassung, Stempel und Bauzeit, die App zeigt sie unter „Über diese App"
+  samt Weg (Ordner, start.bat, Cloudflare); `holen.bat` fragt GitHub vor
+  dem Holen, ob der Stand geprüft ist; der schnelle CI-Job prüft den
+  Stempel. test353 neu (39), belegt rot in sieben Richtungen. Bild angesehen.
+* E360 (L115 Punkt 6, der Text): Text wie GoodNotes — ein Tipp fragt
+  mehrzeilig, der Text wird ein Kasten mit Umbruch (`breiteBox`, Zeilen aus
+  `InkGeometry.textLayout`, deterministisch ohne DOM), Schriftart (die fünf
+  aus E101), Stufen A−/A+, Fett und Rahmen in der Leiste (Gruppe „schrift"
+  beim Text und bei der Auswahl); mit Auswahl gilt es der Auswahl, ein
+  Schritt im Verlauf; der Griff zieht den Kasten breiter. Alte einzeilige
+  Marken bleiben einzeilig. test352 neu (38), belegt rot in sieben
+  Richtungen; test201 §4 liest den Kasten. Bilder angesehen.
+* E359 (L115 Punkt 9 erledigt): Die Blattleiste am Rechner — statt fünf
+  Zeilen zwei: oben die Werkzeuge, darunter nur das Zubehör des gewählten
+  (die E356-Regel gilt jetzt überall), ein Zeilenbruch-Element, Wörter nach
+  Breite der Leiste (`@container`, unter 1150 px nur Sinnbilder), und die
+  Papierwahl als Klappe (ein Knopf, fünf Vorlagen darunter, Escape und Tipp
+  daneben schliessen). 84 statt rund 220 px. test351 neu (25), belegt rot
+  in sechs Richtungen; test348 §6 als Wächter der alten Entscheidung
+  umgeschrieben. Bilder angesehen.
+* E358 (L115 Punkt 7 erledigt): Zurück fasst nur an, was sich änderte —
+  `redraw` gleicht Knoten und Marken über die gemerkte Fassung je Kennung
+  ab (gleich bleibt, anders geflickt, überzählig weg, fehlend neu, Folge =
+  Markenfolge); `merke` hinter jedem direkten Knotenweg. Gemessen vorher
+  7/59/155 ms Zurück bei 100/1000/3000 Marken, nachher 24 ms bei 1000.
+  test350 neu (14) fand die stumme Merkliste beim Verschieben; belegt rot
+  in vier Richtungen. Keine Gestaltungsänderung, darum kein Bild. Nebenbei
+  war test267 §6 rot, seit E355/E357 die Leiste am Rechner auf fünf Zeilen
+  brachten und das Blatt unter das Fenster schoben — Prüflauf rollt jetzt
+  zum Blatt; die fünf Zeilen stehen als L115 Punkt 9.
+* E357 (L115 Punkt 6, das Bild): Bild aufs Blatt — Werkzeug „Bild" in der
+  Leiste öffnet den Dateiwähler, die Datei geht in die Ablage (Stücke, das
+  Blatt als Block), die Marke `{id, art:'bild', dateiId, pts}` zeichnet ein
+  `<image>` aus der bekannten Adresse (synchron, für Druck und Folien),
+  sonst einen Platzhalter „Bild fehlt"; mittig, halb so breit, im
+  Seitenverhältnis, danach gewählt. Skalieren hält das Verhältnis (Umschalt
+  gibt es frei), der Radierer lässt es stehen, Kopieren teilt die Datei.
+  test349 neu (30), belegt rot in sieben Richtungen. Bilder angesehen.
+* E356 (L115 Punkt 8 erledigt): Die Blattleiste am Telefon zeigt nur die
+  Gruppen des gewählten Werkzeugs — jeder Knopf trägt `data-gruppe`, die
+  Leiste `data-tool` (Tipp, Menüband, Stil- und Modus-Knopf), das CSS
+  blendet ≤ 760 px die fremden Gruppen aus, stellt die eigenen per `order`
+  direkt hinter das Werkzeug, und die Leiste rollt hin. 732 statt 1539 px
+  beim Schreiben. Rechner unverändert. test348 neu (33), belegt rot in
+  sechs Richtungen; eine siebte blieb grün und steht mit Grund in E356.
+* E355 (L115 Punkt 5 erledigt): Formerkennung — ziehen, 450 ms halten, und
+  der Stiftstrich wird Linie, Kreis/Ellipse oder Rechteck (`InkShapes.recognize`
+  in `src/core/ink/shapes.ts`, ohne DOM und Zeit). Nur der Stift, nie der
+  Marker; dieselbe Marke mit Farbe und Breite, ohne Druck und Stil. Schalter
+  „Formen" in der Leiste, gemerkt in `zeichnen:formen`. test347 neu (31)
+  fand die Kreis-als-Rechteck-Falle im ersten Entwurf; belegt rot in sechs
+  Richtungen. Bilder angesehen.
+* E354 (L115 Punkte 3 und 4 erledigt): Handballen-Schutz — nach einem
+  Stift zeichnen Finger vier Sekunden nicht, sie rollen (`data-stift`,
+  `touch-action`); ein Zug gehört seinem Zeiger; der Stift nimmt der
+  aufliegenden Hand den Strich (verworfen, kein Schritt); ein zweiter
+  Finger verwirft den Fingerzug. Im Dokument zoomen Strg+Rad und Kneifen
+  über den Regler (60–180). Kein neues Markenfeld. test346 neu (31), belegt
+  rot in sechs Richtungen. Kein Bild: es sieht nicht anders aus.
 * E353 (E269, L115 Punkt 2 erledigt): Die Auswahl wie in GoodNotes — Lasso
   (`InkGeometry.insidePolygon`, Schlinge nur mit Fläche, sonst der Kasten),
   vier Griffe zum Skalieren um die Gegenecke (`InkGeometry.scale`, Breite
@@ -2810,3 +2905,21 @@ node pruefungen/lauf/test105.mjs
   Wolke, und die braucht Redur.
   test333 neu (16), belegt rot. §3 stellt den alten Weg nach und verlangt,
   dass er einen verliert — ohne den misst §2 nichts.
+
+* E366 (L78 Punkt 2 zu, L114 Punkt 3 halb): Das Regal zeigt die ganze
+  Schachtelung. Die Fach-Regel las EINE Ebene tief — ein Fach zählte nur
+  mit einem DIREKTEN Heft darin. Bei `Schule/Physik/Mechanik/Heft` stand
+  „Schule" damit gar nicht im Regal, und Mechanik, Optik, Physik,
+  Mathematik lagen flach nebeneinander an der Wurzel. Verloren ging
+  nichts — der Baum wusste es weiter —, und genau das machte es leise:
+  nach einem ZIP-Import mit Ordnern zeigte ausgerechnet das Regal einen
+  Bestand, den so niemand angelegt hat. Jetzt zählt auch ein Fach im Fach
+  (rekursiv, Tiefe 12, mit Ringbremse); die Wurzel zeigt nur die obersten,
+  das offene Fach seine Unterfächer, eine Brotkrume nennt den Weg und der
+  Zurück-Knopf führt EINE Ebene hoch. Die Stelle, die man dabei vergisst,
+  ist das Verschieben-Menü: es hing an `faecher()` und hätte ab sofort
+  genau die Fächer nicht mehr als Ziel angeboten, die dieser Bogen
+  sichtbar macht — es nimmt jetzt `alleFaecher()`, mit dem Weg am Ziel.
+  Nebenbei ehrlich geworden: „0 Hefte" an einem Fach mit zwei Unterfächern
+  heisst jetzt „2 Fächer".
+  test358 neu (58), belegt rot in zehn Richtungen.

@@ -34,7 +34,7 @@ const ich = self;
 /** Der Name der Ablage. Muss `KONSTANTEN.ABLAGE_NAME` gleichen — siehe
  *  die Erklärung bei `faelligeErinnerungen`. `test143` rechnet es nach. */
 const ABLAGE_NAME = 'notizen';
-const VERSION = 'notizen-v105';
+const VERSION = 'notizen-v135';
 const ABLAGE = VERSION;
 /* Was beim ersten Besuch gleich mitgenommen wird. */
 const GRUNDSTOCK = [
@@ -42,6 +42,8 @@ const GRUNDSTOCK = [
     './index.html',
     './quell/kern/ereignisse/bus.js',
     './quell/kern/einstellung/konstanten.js',
+    /* Der Stand dieses Baus (E361) — bleibt aus dem Inhaltsstempel heraus, er traegt ihn. */
+    './quell/kern/einstellung/stand.js',
     './quell/core/helpers/reporter.js',
     './quell/core/helpers/ids.js',
     './quell/core/helpers/date.js',
@@ -56,6 +58,7 @@ const GRUNDSTOCK = [
     './quell/core/security/sanitize.js',
     './quell/core/sheet/space.js',
     './quell/core/ink/geometry.js',
+    './quell/core/ink/shapes.js',
     './quell/core/electrical/calculations.js',
     './quell/core/electrical/rechenweg.js',
     './quell/core/spreadsheet/address.js',
@@ -81,6 +84,7 @@ const GRUNDSTOCK = [
     './quell/core/import/vergleich.js',
     './quell/core/import/validierung.js',
     './quell/core/import/spaltentyp.js',
+    './quell/core/import/zipdetails.js',
     './quell/kern/sicherheit/pruefen.js',
     './quell/kern/ablage/formen.js',
     './quell/kern/ablage/umzuege.js',

@@ -101,6 +101,28 @@ const Einstellungen = (() => {
      * DER DIALOG
      * ======================================================================*/
     let offenerBereich = 'allgemein';
+    /* Der Stand aus stand.ts (E361) — und der Weg, aus der Adresse gelesen. */
+    const standFassung = () => typeof Stand !== 'undefined' && Stand && Number(Stand.fassung) > 0 ? 'v' + Number(Stand.fassung) : '';
+    const herkunft = () => {
+        const ort = String(location.protocol || '');
+        const wirt = String(location.hostname || '');
+        if (ort === 'file:')
+            return 'Ordner (Doppelklick auf index.html)';
+        if (wirt === 'localhost' || wirt === '127.0.0.1' || wirt === '[::1]')
+            return 'örtlicher Server (start.bat)';
+        if (/\.workers\.dev$/.test(wirt) || /\.pages\.dev$/.test(wirt))
+            return 'Cloudflare (' + wirt + ')';
+        return wirt ? 'Netz (' + wirt + ')' : 'unbekannter Weg';
+    };
+    const standText = () => {
+        const fassung = standFassung();
+        if (!fassung)
+            return 'Stand unbekannt · ' + herkunft();
+        const gebaut = typeof Stand !== 'undefined' && Stand.gebaut ? new Date(String(Stand.gebaut)) : null;
+        const wann = gebaut && !isNaN(gebaut.getTime())
+            ? ' · gebaut ' + gebaut.toLocaleDateString('de-CH', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+        return fassung + wann + ' · ' + herkunft();
+    };
     const oeffne = (bereich) => {
         offenerBereich = bereich || offenerBereich;
         document.querySelectorAll('.overlay').forEach(o => o.remove());
@@ -777,7 +799,13 @@ const Einstellungen = (() => {
             zeile('Formelfunktionen', '', '<span class="ez-grau">über 130</span>') +
             zeile('Eigene Formelfunktionen', 'Einmal definieren, in jeder Formel nutzen — Notion kann das nicht', knopf('formelbib', 'Bibliothek öffnen')) +
             zeile('Tastenkürzel', '', knopf('kuerzel', 'Alle anzeigen')) +
-            zeile('Speicherort der Daten', '', '<span class="ez-grau">IndexedDB „notizen"</span>')
+            zeile('Speicherort der Daten', '', '<span class="ez-grau">IndexedDB „notizen"</span>') +
+            /* DER STAND UND DER WEG (E361, L83 Punkt 2): welche Fassung laeuft,
+               wann ihr Inhalt zuletzt gebaut wurde, und ob Redur gerade den
+               Ordner, start.bat oder Cloudflare ansieht. Drei Wege, und keiner
+               nannte sich — jetzt steht es hier, wo man nachsieht, wenn etwas
+               „alt aussieht". */
+            zeile('Stand', 'Fassung des Programms und der Weg, über den es gerade läuft', `<span class="ez-grau ez-stand" data-fassung="${esc(standFassung())}">${esc(standText())}</span>`)
     }[b] || (() => kopf('Unbekannt')))();
     /* ========================================================================
      * BEDIENUNG

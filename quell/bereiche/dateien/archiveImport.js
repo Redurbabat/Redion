@@ -182,6 +182,8 @@ const ArchivImport = (() => {
             stuecke.push(e.anhaenge + (e.anhaenge === 1 ? ' Datei' : ' Dateien'));
         let s = '„' + zipName + '": ' + (stuecke.length ? stuecke.join(', ') : 'nichts Lesbares') +
             ' in ' + e.faecher + (e.faecher === 1 ? ' Fach' : ' Fächern');
+        if (e.unveraendert)
+            s += ' · ' + e.unveraendert + ' schon da (unverändert)';
         if (e.uebersprungen.length)
             s += ' · ' + e.uebersprungen.length + ' übersprungen';
         if (e.fehler.length)
@@ -208,22 +210,24 @@ const ArchivImport = (() => {
      * Liest stückweise, legt Fächer verschachtelt an, macht aus jeder Datei
      * ein Dokument, zählt, was nicht ging, und sagt es am Ende.
      */
-    const importZip = async (datei, zielId, opt = {}) => {
-        if (typeof Einlesen === 'undefined' || !Einlesen.zipLesenAusBlob)
-            throw new Error('Der ZIP-Leser ist nicht geladen.');
-        const zip = await Einlesen.zipLesenAusBlob(datei);
-        const ergebnis = {
-            wurzelId: null, faecher: 0, dokumente: 0, pdfs: 0, bilder: 0, seiten: 0, anhaenge: 0,
-            uebersprungen: [], fehler: [], hinweis: ''
-        };
-        /* Erst sortieren, dann anlegen — ein unsicherer Pfad legt nichts an. */
+    /**
+     * DER PLAN — was in dieser ZIP steckt, ohne dass ein Byte entpackt ist.
+     *
+     * Eigener Schritt seit E365, und das ist der Angelpunkt der Wiederaufnahme:
+     * derselbe Plan entsteht aus derselben ZIP immer wieder gleich (die
+     * Reihenfolge kommt aus dem Inhaltsverzeichnis, nicht aus einer Uhr oder
+     * einem Zufall). Ein unterbrochener Auftrag merkt sich deshalb nur die
+     * STELLE — Nummer 40 von 87 — und nicht die Liste.
+     */
+    const planen = (zip, zipName) => {
         const gueltig = [];
+        const uebersprungen = [];
         for (const name of zip.namen) {
             if (name.endsWith('/'))
                 continue; /* Ordnereinträge: die Fächer entstehen aus den Dateipfaden */
             const teile = segmente(name);
             if (!teile) {
-                ergebnis.uebersprungen.push(name + ' (unsicherer Pfad)');
+                uebersprungen.push(name + ' (unsicherer Pfad)');
                 continue;
             }
             if (istBeiwerk(teile))
@@ -238,8 +242,39 @@ const ArchivImport = (() => {
             gueltig.every(e => e.teile.length >= 2);
         const wurzelName = allesInEinem
             ? sauber([...oberste][0])
-            : sauber((datei.name || 'Archiv').replace(/\.zip$/i, ''));
-        const wurzel = fachFuer(zielId, wurzelName);
+            : sauber((zipName || 'Archiv').replace(/\.zip$/i, ''));
+        return { gueltig, allesInEinem, wurzelName, uebersprungen };
+    };
+    /** Wie viele Dokumente eine ZIP anlegen wird — für die Schrittzahl des
+        Auftrags, bevor er beginnt. */
+    const umfang = async (blob, zipName) => {
+        if (typeof Einlesen === 'undefined' || !Einlesen.zipLesenAusBlob)
+            return 0;
+        return planen(await Einlesen.zipLesenAusBlob(blob), zipName).gueltig.length;
+    };
+    const importZip = async (datei, zielId, opt = {}) => {
+        if (typeof Einlesen === 'undefined' || !Einlesen.zipLesenAusBlob)
+            throw new Error('Der ZIP-Leser ist nicht geladen.');
+        const zip = await Einlesen.zipLesenAusBlob(datei);
+        const ergebnis = {
+            wurzelId: null, faecher: 0, dokumente: 0, pdfs: 0, bilder: 0, seiten: 0, anhaenge: 0,
+            unveraendert: 0, uebersprungen: [], fehler: [], hinweis: ''
+        };
+        const plan = planen(zip, datei.name || 'Archiv');
+        const gueltig = plan.gueltig;
+        const allesInEinem = plan.allesInEinem;
+        /* Beim Wiederaufnehmen sind die unsicheren Pfade schon gezählt. */
+        const abBei = Math.max(0, Number(opt.abBei) || 0);
+        if (!abBei)
+            ergebnis.uebersprungen.push(...plan.uebersprungen);
+        /* DAS WURZELFACH ÜBERLEBT DIE UNTERBRECHUNG (E365): beim Wiederaufnehmen
+           kommt seine Kennung aus dem Auftrag, statt neu angelegt zu werden —
+           `fachFuer` fände es zwar am Namen wieder, aber nur, solange niemand
+           es umbenannt hat. */
+        const vorgabe = opt.wurzelVorgabe ? Store.getBlock(opt.wurzelVorgabe) : null;
+        const wurzel = vorgabe && vorgabe.alive !== false
+            ? { id: String(opt.wurzelVorgabe), neu: false }
+            : fachFuer(zielId, plan.wurzelName);
         ergebnis.wurzelId = wurzel.id;
         ergebnis.faecher = wurzel.neu ? 1 : 0;
         const faecher = new Map([['', wurzel.id]]);
@@ -255,59 +290,236 @@ const ArchivImport = (() => {
             faecher.set(schluessel, f.id);
             return f.id;
         };
-        const melder = !opt.still && typeof UI !== 'undefined' && UI.toast
+        const melder = !opt.still && !opt.beiSchritt && typeof UI !== 'undefined' && UI.toast
             ? UI.toast('„' + datei.name + '" wird entpackt …', 600000) : null;
-        let nr = 0;
-        for (const e of gueltig) {
+        let nr = abBei;
+        /* JEDER EINTRAG IST EIN SCHRITT — auch einer, der übersprungen wird
+           (E365, gefunden von test357 §4). Der erste Wurf meldete den Schritt
+           nur nach einem angelegten Dokument; eine ZIP, deren Dateien alle
+           schon da sind (E363), rückte damit nie vor: der Fortschritt stand
+           bei 0 von 87, und eine Wiederaufnahme hätte wieder von vorn
+           angefangen. Deshalb steht die Arbeit an einem Eintrag jetzt in einer
+           eigenen Funktion, die `return` sagt statt `continue` — und der
+           Schritt danach gilt immer. */
+        const einenEintrag = async (e, dateiName, rel) => {
+            /* Die ROHGRÖSSE steht im Verzeichnis, bevor ein Byte entpackt ist —
+               ein Eintrag, der 1 KB gepackt und 10 GB roh ist, wird gar nicht
+               erst durch den Entpacker geschickt. */
+            const roh = zip.groesse ? Number(zip.groesse(e.name)) : -1;
+            if (typeof Dateien !== 'undefined' && Dateien.GRENZE && roh > Dateien.GRENZE) {
+                ergebnis.uebersprungen.push(dateiName + ' (grösser als ' + Dateien.groesseText(Dateien.GRENZE) + ')');
+                return;
+            }
+            /* WAS DAS VERZEICHNIS SCHON WEISS (E363): verschlüsselt heisst
+               übersprungen, bevor ein Byte gelesen ist; und aus Name, Grösse
+               und Prüfsumme wird die Kennung, an der ein Dokument sich beim
+               zweiten Einlesen wiedererkennt (L114 Punkt 6). Fächer werden
+               weiterverwendet, ein unverändertes Dokument bleibt EINES —
+               kein „ (2)" mehr für dieselbe Datei. Eine geänderte Datei ist
+               eine andere Kennung und kommt daneben, wie bisher: nichts wird
+               überschrieben, Anmerkungen am alten Dokument bleiben (§46). */
+            const details = zip.eintrag ? zip.eintrag(e.name) : null;
+            if (details && details.verschluesselt) {
+                ergebnis.uebersprungen.push(dateiName + ' (verschlüsselt — Redion kann das nicht lesen)');
+                return;
+            }
+            const elternId = fachAusPfad(rel.slice(0, -1));
+            const kennung = details && Number.isFinite(Number(details.crc)) && roh >= 0
+                ? 'zip:' + dateiName + '|' + roh + '|' + ZipDetails.crc32Hex(Number(details.crc)) : '';
+            if (kennung && geschwister(elternId).some((k) => String(k.importKennung || '') === kennung)) {
+                ergebnis.unveraendert++;
+                return;
+            }
+            const blob = await zip.alsBlob(e.name);
+            if (!blob) {
+                ergebnis.uebersprungen.push(dateiName + ' (nicht lesbar)');
+                return;
+            }
+            const f = new File([blob], dateiName, { type: mimeVon(dateiName) });
+            const erg = await dateiAlsDokument(f, elternId, opt);
+            if (kennung && erg.seiteId)
+                Store.updateBlock(erg.seiteId, { importKennung: kennung });
+            ergebnis.dokumente++;
+            if (erg.art === 'pdf')
+                ergebnis.pdfs++;
+            else if (erg.art === 'bild')
+                ergebnis.bilder++;
+            else if (erg.art === 'seite')
+                ergebnis.seiten++;
+            else
+                ergebnis.anhaenge++;
+        };
+        for (const e of gueltig.slice(abBei)) {
             nr++;
+            /* ABBRECHEN HEISST HIER AUFHÖREN, nicht zurückrollen: was schon im
+               Regal steht, bleibt stehen (§46). Der Auftrag merkt sich die
+               Stelle, an der Schluss war. */
+            if (opt.abgebrochen && opt.abgebrochen()) {
+                ergebnis.abgebrochen = true;
+                nr--;
+                break;
+            }
             const rel = allesInEinem ? e.teile.slice(1) : e.teile;
             const dateiName = rel[rel.length - 1];
             if (melder && melder.textContent !== undefined)
                 melder.textContent = '„' + datei.name + '": Datei ' + nr + ' von ' + gueltig.length + ' — ' + dateiName;
             try {
-                /* Die ROHGRÖSSE steht im Verzeichnis, bevor ein Byte entpackt ist —
-                   ein Eintrag, der 1 KB gepackt und 10 GB roh ist, wird gar nicht
-                   erst durch den Entpacker geschickt. */
-                const roh = zip.groesse ? Number(zip.groesse(e.name)) : -1;
-                if (typeof Dateien !== 'undefined' && Dateien.GRENZE && roh > Dateien.GRENZE) {
-                    ergebnis.uebersprungen.push(dateiName + ' (grösser als ' + Dateien.groesseText(Dateien.GRENZE) + ')');
-                    continue;
-                }
-                const blob = await zip.alsBlob(e.name);
-                if (!blob) {
-                    ergebnis.uebersprungen.push(dateiName + ' (nicht lesbar)');
-                    continue;
-                }
-                const elternId = fachAusPfad(rel.slice(0, -1));
-                const f = new File([blob], dateiName, { type: mimeVon(dateiName) });
-                const erg = await dateiAlsDokument(f, elternId, opt);
-                ergebnis.dokumente++;
-                if (erg.art === 'pdf')
-                    ergebnis.pdfs++;
-                else if (erg.art === 'bild')
-                    ergebnis.bilder++;
-                else if (erg.art === 'seite')
-                    ergebnis.seiten++;
-                else
-                    ergebnis.anhaenge++;
+                await einenEintrag(e, dateiName, rel);
             }
             catch (err) {
-                ergebnis.fehler.push(dateiName + ': ' + (err instanceof Error ? err.message : String(err)));
+                const text = err instanceof Error ? err.message : String(err);
+                /* Ein beschädigter Eintrag ist eine Eigenschaft der ZIP, kein Fehler
+                   von Redion — er steht bei den Übersprungenen, mit Grund. */
+                if (/beschädigt/.test(text))
+                    ergebnis.uebersprungen.push(dateiName + ' (beschädigt — die Prüfsumme stimmt nicht)');
+                else
+                    ergebnis.fehler.push(dateiName + ': ' + text);
             }
+            /* JEDE FERTIGE DATEI IST EIN WIEDERAUFSETZPUNKT (E365). Geschrieben
+               wird sie vom Auftragsläufer; hier steht nur, WAS er schreiben soll. */
+            if (opt.beiSchritt)
+                await opt.beiSchritt({
+                    index: nr, wurzelId: ergebnis.wurzelId,
+                    zahlen: { faecher: ergebnis.faecher, dokumente: ergebnis.dokumente,
+                        pdfs: ergebnis.pdfs, bilder: ergebnis.bilder, seiten: ergebnis.seiten,
+                        anhaenge: ergebnis.anhaenge, unveraendert: ergebnis.unveraendert },
+                    uebersprungen: ergebnis.uebersprungen.slice(-MERKGRENZE),
+                    fehler: ergebnis.fehler.slice(-MERKGRENZE)
+                }, dateiName + ' (' + nr + ' von ' + gueltig.length + ')');
             /* Zwischen zwei Dateien einmal atmen — die Oberfläche bleibt bedienbar. */
             await new Promise(f => setTimeout(f, 0));
         }
         if (melder && melder.remove)
             melder.remove();
         ergebnis.hinweis = hinweisText(ergebnis, datei.name || 'Archiv');
-        if (!opt.still) {
+        if (!opt.still && !opt.beiSchritt) {
             if (typeof UI !== 'undefined' && UI.toast)
                 UI.toast(ergebnis.hinweis, 9000);
             ansichtAuffrischen();
         }
         return ergebnis;
     };
-    /** Der Dateiwähler — wie `PdfEinlesen.waehlen`, aber für eine ZIP. */
+    /* ========================================================================
+     * DER IMPORT ALS AUFTRAG (E365, L114 Punkt 1)
+     * ------------------------------------------------------------------------
+     * Bis hierher lief der Import im Tab. Wer ihn bei Datei 40 von 87 schloss,
+     * hatte 39 Dokumente und KEIN WISSEN darüber, was fehlt — das war die
+     * Lücke, und sie ist die unangenehme Sorte: es sieht aus, als sei alles da.
+     *
+     * Als Auftrag ist er dauerhaft. Dafür muss die ZIP selbst dauerhaft sein:
+     * ein `File` aus dem Dateiwähler überlebt kein Neuladen, also wandert sie
+     * zuerst in die Ablage — als ABGELEITETE Datei (E103), damit sie nicht mit
+     * in die Wolke geht und beim Aufräumen erkannt wird. Der Auftrag trägt nur
+     * ihre Kennung; nach dem letzten Dokument wird die Arbeitskopie gelöscht.
+     *
+     * Ist die ZIP grösser als die Ablage sie nimmt, gibt es keinen Auftrag,
+     * sondern den direkten Lauf mit einem ehrlichen Satz dazu.
+     * ======================================================================*/
+    const AUFTRAG_ART = 'zip-import';
+    /** So viele Namen je Liste wandern in den Auftrag — er soll nicht wachsen. */
+    const MERKGRENZE = 50;
+    const leereZahlen = () => ({ faecher: 0, dokumente: 0, pdfs: 0, bilder: 0, seiten: 0, anhaenge: 0, unveraendert: 0 });
+    /**
+     * Der Läufer. Er bekommt den Auftrag und die Hilfe der Maschine und
+     * arbeitet die ZIP ab — beim ersten Mal von vorn, danach ab der Stelle,
+     * die im Auftrag steht.
+     */
+    const zipLaeufer = async (auftrag, hilfe) => {
+        const ein = auftrag && auftrag.eingabe ? auftrag.eingabe : {};
+        const dateiId = String(ein.dateiId || '');
+        const zipName = String(ein.zipName || 'Archiv.zip');
+        if (!dateiId)
+            throw new Error('Dem Auftrag fehlt die Kennung der ZIP.');
+        if (typeof Dateien === 'undefined' || !Dateien.alsBlob)
+            throw new Error('Die Dateiablage steht nicht.');
+        const blob = await Dateien.alsBlob(dateiId);
+        if (!blob)
+            throw new Error('Die Arbeitskopie der ZIP ist nicht mehr da — bitte noch einmal einlesen.');
+        const stand = auftrag.stand && typeof auftrag.stand === 'object' ? auftrag.stand : null;
+        const erg = await importZip(new File([blob], zipName, { type: 'application/zip' }), ein.zielId ? String(ein.zielId) : null, { anordnung: ein.anordnung, still: true,
+            abBei: Math.max(0, Number(stand?.index) || 0),
+            wurzelVorgabe: stand?.wurzelId ? String(stand.wurzelId) : null,
+            beiSchritt: (s, text) => hilfe.schritt(s, text),
+            abgebrochen: () => hilfe.abgebrochen() });
+        /* Die Zahlen des Laufs sind die DIESES Durchgangs; was ein früherer
+           Durchgang schon geschafft hat, steht im Stand. Zusammengezählt wird
+           für den Menschen, nicht für die Ablage. */
+        const vorher = stand?.zahlen || leereZahlen();
+        const gesamt = {
+            faecher: vorher.faecher + erg.faecher, dokumente: vorher.dokumente + erg.dokumente,
+            pdfs: vorher.pdfs + erg.pdfs, bilder: vorher.bilder + erg.bilder,
+            seiten: vorher.seiten + erg.seiten, anhaenge: vorher.anhaenge + erg.anhaenge,
+            unveraendert: vorher.unveraendert + erg.unveraendert
+        };
+        const ganz = { ...erg, ...gesamt, wurzelId: erg.wurzelId,
+            uebersprungen: [...(stand?.uebersprungen || []), ...erg.uebersprungen].slice(-MERKGRENZE),
+            fehler: [...(stand?.fehler || []), ...erg.fehler].slice(-MERKGRENZE), hinweis: '' };
+        ganz.hinweis = hinweisText(ganz, zipName);
+        /* Die Arbeitskopie geht — aber nur, wenn wirklich Schluss ist. Bei einem
+           Abbruch bleibt sie liegen: der Auftrag lässt sich wieder aufnehmen. */
+        if (!erg.abgebrochen && typeof Dateien.weg === 'function') {
+            try {
+                await Dateien.weg(dateiId);
+            }
+            catch { /* dann liegt sie eben noch da */ }
+        }
+        return { ...ganz, abgebrochen: !!erg.abgebrochen, dateiId };
+    };
+    if (typeof Auftraege !== 'undefined' && Auftraege.anmelden)
+        Auftraege.anmelden(AUFTRAG_ART, zipLaeufer, 'ZIP entpacken');
+    /* Was der Mensch davon sieht: das Auftragsfenster zeigt den Fortschritt
+       von selbst (E286). Hier wird nur die ANSICHT aufgefrischt, wenn ein
+       Lauf zu Ende ist — sonst stünde das Regal still, obwohl fünfzig
+       Dokumente darin liegen. */
+    if (typeof Ereignisse !== 'undefined' && Ereignisse.horche) {
+        try {
+            Ereignisse.horche('auftrag.beendet', (d) => {
+                if (!d || d.art !== AUFTRAG_ART)
+                    return;
+                ansichtAuffrischen();
+            });
+        }
+        catch { /* ohne Bus frischt der nächste Klick auf */ }
+    }
+    /**
+     * Eine ZIP als Auftrag einlesen.
+     *
+     * Gibt den AUFTRAG zurück, nicht das Ergebnis — der Aufrufer wartet nicht
+     * mehr auf siebenundachtzig Dateien.
+     */
+    const alsAuftrag = async (datei, zielId = null, opt = {}) => {
+        const name = datei.name || 'Archiv.zip';
+        if (typeof Auftraege === 'undefined' || !Auftraege.anlegen ||
+            typeof Dateien === 'undefined' || !Dateien.ablegen) {
+            /* Ohne Maschine bleibt der alte Weg — und der Mensch erfährt, dass er
+               den Tab offen lassen muss. */
+            if (typeof UI !== 'undefined' && UI.toast)
+                UI.toast('„' + name + '" wird hier im Fenster entpackt — bitte offen lassen.', 6000);
+            return { auftrag: null, grund: 'ohne Maschine', ergebnis: await importZip(datei, zielId, opt) };
+        }
+        if (Dateien.GRENZE && datei.size > Dateien.GRENZE) {
+            if (typeof UI !== 'undefined' && UI.toast)
+                UI.toast('„' + name + '" ist grösser als ' + Dateien.groesseText(Dateien.GRENZE) +
+                    ' — sie wird hier im Fenster entpackt, bitte offen lassen.', 8000);
+            return { auftrag: null, grund: 'zu gross', ergebnis: await importZip(datei, zielId, opt) };
+        }
+        const schritte = await umfang(datei, name);
+        if (!schritte) {
+            const ergebnis = await importZip(datei, zielId, opt);
+            return { auftrag: null, grund: 'nichts Lesbares', ergebnis };
+        }
+        /* Die Arbeitskopie: abgeleitet, ohne Block — sie gehört keinem Dokument,
+           sondern dem Auftrag. */
+        const satz = await Dateien.ablegen(datei, { name, abgeleitet: true });
+        const auftrag = await Auftraege.anlegen(AUFTRAG_ART, { dateiId: satz.id, zipName: name, zielId: zielId || null, anordnung: opt.anordnung || 'untereinander' }, { schritte, text: '„' + name + '" wird entpackt' });
+        if (!opt.still && typeof UI !== 'undefined' && UI.toast)
+            UI.toast('„' + name + '": ' + schritte + (schritte === 1 ? ' Datei' : ' Dateien') +
+                ' — läuft im Hintergrund weiter, auch wenn du weggehst.', 7000);
+        return { auftrag };
+    };
+    /** Der Dateiwähler — wie `PdfEinlesen.waehlen`, aber für eine ZIP.
+        Seit E365 legt er einen AUFTRAG an; zurück kommt, was `alsAuftrag`
+        sagt (der Auftrag, oder das Ergebnis des direkten Laufs). */
     const waehlen = (zielId = null) => {
         const input = document.createElement('input');
         input.type = 'file';
@@ -327,7 +539,7 @@ const ArchivImport = (() => {
                     return;
                 }
                 try {
-                    fertig(await importZip(f, zielId));
+                    fertig(await alsAuftrag(f, zielId));
                 }
                 catch (e) {
                     if (typeof UI !== 'undefined')
@@ -347,6 +559,11 @@ const ArchivImport = (() => {
             input.click();
         });
     };
-    return { importZip, dateiAlsDokument, waehlen, ansichtAuffrischen, segmente, istBeiwerk, sauber };
+    /* `zipLaeufer` steht im Rückgabeobjekt, damit ein Prüflauf den Zustand
+       eines geschlossenen Tabs herstellen kann: Auftrag mit Stand hinein,
+       abgebrochen heraus, und noch einmal hinein. Die Maschine ruft ihn
+       ohnehin — hier ist er nur benennbar. */
+    return { importZip, alsAuftrag, zipLaeufer, umfang, planen, AUFTRAG_ART, dateiAlsDokument, waehlen,
+        ansichtAuffrischen, segmente, istBeiwerk, sauber };
 })();
 window.ArchivImport = ArchivImport;

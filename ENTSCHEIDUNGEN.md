@@ -27242,3 +27242,1496 @@ mit vier Griffen darum, Marker und dritte Welle unberührt; die Leiste mit
 Löschen, Kopieren und Einsetzen (Einsetzen erst nach dem Kopieren
 anfassbar); dasselbe am Telefon, wo die Leiste bis zu den drei Knöpfen
 gerollt ist.
+
+
+E354 — Handballen und zwei Finger: der Stift geht vor, Finger rollen, Kneifen zoomt (L115 Punkte 3 und 4)
+════════════════════════════════════════════════════════════════════════════
+
+BEFUND, gelesen und gemessen: Die Zeichenschicht unterschied `pointerType`
+seit E351 nur für den Druck. Ob ein Zeiger zeichnen DARF, fragte sie nicht
+— wer mit dem Stift schrieb und die Hand aufs Glas legte, zeichnete mit der
+Hand, und die Bewegungen der Hand landeten im Strich des Stifts, weil
+`pointermove` jeden ersten Zeiger seiner Art nahm. Das Dokument kannte zum
+Zoomen nur den Regler: kein Strg+Rad, kein Kneifen mit zwei Fingern — auf
+dem Tablett die erste Geste, die jeder macht.
+
+─── WAS GEBAUT WURDE ───────────────────────────────────────────────────────
+
+  1. HANDBALLEN-SCHUTZ. Sobald ein Stift die Fläche berührt oder über sie
+     fährt, steht `data-stift="an"` an der Schicht, und Finger zeichnen
+     vier Sekunden lang nicht (`STIFT_SPERRE_MS`). Der gesperrte Finger
+     bekommt kein `preventDefault` — er darf rollen, und das CSS sagt es
+     dem Browser: `touch-action: pan-x pan-y pinch-zoom` (Chromium nennt
+     das `manipulation`), solange die Marke steht. Ohne Stift bleibt alles,
+     wie es war: `touch-action: none`, der Finger zeichnet.
+
+  2. EIN ZUG GEHÖRT SEINEM ZEIGER. `aktiverZeiger` merkt, wer den Zug
+     begonnen hat; Bewegungen und Loslassen anderer Zeiger gehen ihn nichts
+     an. Vorher hätte die abhebende Hand den Stiftstrich beendet.
+
+  3. DER STIFT GEHT VOR. Liegt die Hand schon auf und zeichnet (weil kein
+     Stift in Sicht war), nimmt der Stift ihr den Strich weg: der
+     angefangene Handstrich wird VERWORFEN — kein Knoten, kein Schritt im
+     Verlauf, als hätte es ihn nie gegeben. Dafür trägt der laufende Zug
+     seine Zeigerart (`zeigerArt`); `finish` streift sie ab, in den Daten
+     steht sie nie.
+
+  4. EIN ZWEITER FINGER macht aus dem Fingerzug eine Geste: der angefangene
+     Strich verschwindet, die Finger dürfen rollen oder kneifen.
+
+  5. STRG+RAD UND KNEIFEN im Dokument. `zoomSetzen` schreibt in den Regler
+     (Wert, Zahl, `passen`) — der Regler bleibt die eine Wahrheit, damit
+     Regler, Zahl und Ansicht nie auseinanderlaufen. Strg+Rad geht in
+     Zehnerschritten, das Kneifen stetig (Verhältnis der Fingerabstände zum
+     Zoom beim Aufsetzen), beides in den Grenzen des Reglers (60 bis 180).
+     Das Rad ohne Strg rollt wie immer; das Kneifen zählt nur Finger, nie
+     Maus oder Stift. `.document-center` bekommt `touch-action: pan-x pan-y`,
+     damit zwei Finger das Dokument kneifen und nicht die Browserseite.
+
+─── WAS NICHT GEBAUT WURDE ────────────────────────────────────────────────
+
+Das Kneifen zoomt um die Mitte des Dokuments, nicht um den Punkt zwischen
+den Fingern; das Blatt in einer gewöhnlichen Seite (ausserhalb des
+Dokumentmodus) hat keinen Zoom; die vier Sekunden sind eine Zahl aus der
+Erfahrung, kein Mass. Steht in L115.
+
+─── PRÜFUNG ────────────────────────────────────────────────────────────────
+
+test346 neu, 31 Punkte, PORT 9350, sieben Abschnitte. Die Züge sind
+Schrittfolgen mehrerer Zeiger durcheinander (Stift 7, Hand 11, zweiter
+Finger 32 …), so wie die Ereignisse auf dem Glas ankommen; gemessen wird an
+den Marken, an den Knoten, am Verlauf, an `data-stift`, am Zoomregler und
+an der berechneten `touch-action`. Belegt rot in sechs Richtungen, jede
+einzeln zurückgedreht und wiederhergestellt:
+
+a — die Fingersperre fehlt (marken.js): 28/31. Der Finger zeichnet
+    während des Stifts und kurz danach.
+b — der Stift nimmt der Hand den Strich nicht (marken.js): 30/31. Zwei
+    Striche statt einem, der Handstrich bleibt.
+c — der zweite Finger verwirft nichts (marken.js): 27/31. Aus der Geste
+    wird ein Strich, mit Knoten und Schritt.
+d — Strg+Rad zoomt nicht (document-mode.js): 27/31.
+e — das Kneifen setzt immer den alten Zoom (document-mode.js): 28/31.
+f — der Zug gehört nicht seinem Zeiger (marken.js, beide Stellen): 29/31.
+    Die Hand bewegt den Stiftstrich mit, und ihr Abheben beendet ihn.
+
+test344 §8 wurde durch E354 rot — zu Recht: der Wächter zog den Strich mit
+dem Stift und radierte ihn gleich darauf mit dem Finger, und genau dieser
+Finger ist seit E354 vier Sekunden lang eine Hand. Jetzt zieht er den
+Strich mit dem Finger (kein Stift im Spiel) und radiert ihn mit dem Finger.
+test345 §6 dasselbe: der Finger zog das Lasso um einen Stiftstrich und war
+dabei eine Hand — jetzt zieht der Finger auch den Strich. 50/50 und 43/43.
+
+Dazu: test201 (Ink V2) 32/32, test174 (A4-Blatt) 25/25, test177 (ein
+PDF wird zu Seiten) 69/69, test285 (das Dokument ist die Seite) 52/52,
+test292 (Reiterzeile) 45/45, test295 (Randstreifen) 24/24, test341 (der
+Start) 37/37, test343 (Stifte) 30/30, test344 (Radierer) 50/50, test345
+(Auswahl) 43/43, test87 (Quelltext) 152/152, test105 (erzeugtes JavaScript)
+114/114, test109 (kein neues JavaScript) 20/20, test225 (Quellenangaben)
+11/11 — alle grün.
+
+Kein Bild zu diesem Bogen: nichts sieht anders aus, es verhält sich anders.
+Was zu sehen wäre — ein Strich, der NICHT entsteht —, misst test346.
+
+
+E355 — Formerkennung: ziehen, halten, und der Kreis wird ein Kreis (L115 Punkt 5)
+════════════════════════════════════════════════════════════════════════════
+
+BEFUND: Ein gezogener Kreis blieb ein gezogener Kreis. GoodNotes rastet
+nach kurzem Halten am Strichende auf Kreis, Rechteck, Linie — und das ist
+beim Lernen mehr als Kosmetik: ein Schaltbild, ein Diagramm, ein Kasten um
+die Lösung sind mit der Hand krumm und mit dem Halten gerade.
+
+─── WAS GEBAUT WURDE ───────────────────────────────────────────────────────
+
+  1. DER KERN, `src/core/ink/shapes.ts` (Global `InkShapes`), kennt weder
+     DOM noch Zeit noch Store (E125, wie geometry.ts). `recognize(pts)` gibt
+     Linie, Ellipse oder Rechteck mit ihren zwei Punkten zurück — oder null.
+     · LINIE: die Sehne ist mindestens neun Zehntel des Wegs, und kein Punkt
+       liegt weiter als fünf Hundertstel des Wegs neben ihr.
+     · GESCHLOSSEN heisst: Anfang und Ende näher als ein Fünftel der
+       Diagonale, und der Weg länger als anderthalb Diagonalen — sonst ist
+       es ein Haken.
+     · RECHTECK: fünfundachtzig von hundert Punkten nahe an den Kanten des
+       Kastens UND jede Ecke wirklich besucht (acht Hundertstel der
+       Diagonale). Die Ecke ist das Mass: ein Kreis kommt seinen
+       Kastenecken nie näher als 0,41 mal seinen Radius. Der erste Entwurf
+       liess ihn mit achtzehn Hundertsteln hinein, und test347 §1 sah einen
+       Kreis als Rechteck — gefunden, bevor es ein Nutzer sah.
+     · ELLIPSE: die Punkte halten ihren Abstand zur Mitte, auf die
+       Halbachsen bezogen (mittlere Abweichung höchstens zwölf Hundertstel).
+       Ist der Kasten fast quadratisch, wird ein Kreis daraus: der Kasten
+       wird zum Quadrat um dieselbe Mitte.
+     Die Schwellen sind Erfahrung, keine Masse; test347 hält beide Seiten
+     fest — die erkannte Form und das in Ruhe gelassene Gekritzel.
+
+  2. DAS HALTEN IST DIE ABSICHT. Der laufende Zug merkt sich `bewegtUm`
+     (die Zeit des letzten echten Punkts); `finish` vergleicht mit dem
+     Loslassen. Ab 450 ms (`HALTEN_MS`) und nur beim STIFT wird gefragt;
+     der Marker bleibt Marker — wer hervorhebt, will keine Geometrie. Die
+     erkannte Form wird DIESELBE Marke mit derselben Kennung, Farbe und
+     Breite; Druck und Stil hat eine Form nicht, sie fallen weg. `bewegtUm`
+     und `zeigerArt` (E354) streift `finish` ab — in den Daten steht keins
+     von beiden.
+
+  3. DER SCHALTER „Formen" in der Leiste, ein Schalter wie das Lineal, ab
+     Werk an, gemerkt in `zeichnen:formen` — wer lieber alles krumm lässt,
+     schaltet ihn ab, und er bleibt ab.
+
+  4. Kein neues Markenfeld. Eine erkannte Form ist eine `line`, `ellipse`
+     oder `rectangle`, wie das jeweilige Werkzeug sie auch anlegt.
+
+─── WAS NICHT GEBAUT WURDE ────────────────────────────────────────────────
+
+Kein Dreieck, kein Pfeil, kein Fünfeck; keine Vorschau während des Haltens
+(GoodNotes zeigt die Form schon, bevor man loslässt); kein Nachbessern einer
+erkannten Form ausser über die Griffe aus E353. Steht in L115.
+
+─── PRÜFUNG ────────────────────────────────────────────────────────────────
+
+test347 neu, 31 Punkte, PORT 9351, acht Abschnitte an Rechner und Telefon.
+Die Züge sind Punktfolgen mit dem Zittern einer Hand; gehalten wird mit
+einem echten Warten vor dem Loslassen. §1 misst den Kern allein (Kreis,
+Ellipse, Rechteck, Linie, Gekritzel, offener Bogen, drei Punkte), §2 bis §7
+die Schicht. Belegt rot in sechs Richtungen, jede einzeln zurückgedreht und
+wiederhergestellt:
+
+a — die Form wird nie übernommen (marken.js): 22/31. Alles bleibt Strich.
+b — das Halten zählt nicht, jeder Strich wird geprüft (marken.js): 29/31.
+    Der Kreis ohne Halten wird zum Kreis — genau das, was niemand will.
+c — das Rechteck wird nicht erkannt (shapes.js): 24/31.
+d — der Schalter merkt sich nichts (marken.js): 28/31. Nach dem Neuladen
+    steht er wieder an.
+e — die Linie wird nicht erkannt (shapes.js): 27/31.
+f — auch der Marker wird zur Form (marken.js): 30/31.
+
+Dazu: test201 (Ink V2) 32/32, test174 (A4-Blatt) 25/25, test343 (Stifte)
+30/30, test344 (Radierer) 50/50, test345 (Auswahl) 43/43, test346
+(Handballen und Kneifen) 31/31, test87 (Quelltext) 152/152, test105
+(erzeugtes JavaScript, jetzt mit shapes.js) 117/117, test109 (kein neues
+JavaScript) 20/20, test225 (Quellenangaben) 11/11 — alle grün.
+
+BILDER angesehen (§55): derselbe krumme Kreis zweimal — ohne Halten ein
+Strich mit Ecken, gehalten ein Kreis; darunter ein Rechteck und eine Linie,
+beide gehalten und beide gerade; „Formen" in der Leiste an. Am Telefon
+dasselbe.
+
+
+E356 — Die Blattleiste am Telefon zeigt nur die Gruppen des gewählten Werkzeugs (L115 Punkt 8)
+════════════════════════════════════════════════════════════════════════════
+
+BEFUND, gemessen bei 390 px: die Leiste über dem Blatt war nach E351 bis
+E355 1539 px lang — Stift-Stil, Radiermodus, Formen, Kopieren, Einsetzen
+und bis zu fünf Tupfer mehr, einer nach dem anderen, in einer Reihe. Vier
+Bildschirmbreiten zum Rollen, und die Farben standen ganz hinten: wer am
+Telefon rot schreiben wollte, rollte dreimal. GoodNotes klappt Farben und
+Breiten unter dem gewählten Werkzeug auf. Redion hat keine Klappe, aber
+dieselbe Idee: es zeigt, was zum Werkzeug gehört, und stellt es daneben.
+
+─── WAS GEBAUT WURDE ───────────────────────────────────────────────────────
+
+  1. JEDER KNOPF KENNT SEINE GRUPPE (`data-gruppe`): verlauf (Zurück, Vor),
+     auswahl (Löschen, Kopieren, Einsetzen), radierer (der Modus), stil,
+     formen, lineal, farbe (Tupfer, eigene Tupfer, „+"), breite. Auch der
+     Tupfer, den der Farbwähler später anlegt, bekommt seine Gruppe.
+
+  2. DIE LEISTE KENNT IHR WERKZEUG (`data-tool`) — gesetzt beim Tipp in der
+     Leiste, beim Wechsel über das Menüband (derselbe `markiere`-Weg aus
+     E212, der auch die Markierung nachzieht) und von den Knöpfen, die das
+     Werkzeug mit umschalten (Stift-Stil, Radiermodus).
+
+  3. AM TELEFON (≤ 760 px) LIEST DAS CSS BEIDES: Werkzeuge und Verlauf
+     stehen immer; alles andere nur, wo es gebraucht wird — beim Stift Stil,
+     Farben, Breiten, Formen; beim Marker, bei Linie und Pfeil Farben,
+     Breiten, Lineal; beim Radierer sein Modus; bei der Auswahl Löschen,
+     Kopieren, Einsetzen, Farben, Breiten; bei Text, Zettel, Zeichen und
+     Band die Farben; beim Schreiben nichts. Gemessen: beim Schreiben 732
+     statt 1539 px, beim Radierer 780, beim Stift 1260.
+
+  4. … UND SIE STEHEN DIREKT HINTER DEM WERKZEUG. Die Werkzeuge bekommen
+     Plätze in Zehnerschritten (`order`), die Gruppen den Platz gleich
+     hinter dem gewählten (`--platz` plus eins bis fünf: erst Stil, dann
+     Farben, Breiten, Formen, Lineal). Die Reihenfolge im DOM bleibt —
+     Tastatur, Vorleser und Rechner sehen sie wie bisher; nur die Anordnung
+     am Telefon wandert. Und die Leiste ROLLT ZUM WERKZEUG: nach dem Tipp
+     steht der Stift links im Bild, daneben Füller, daneben die Tupfer.
+     Ein Tipp, und alles ist da, was zu ihm gehört.
+
+  5. AM RECHNER ÄNDERT SICH NICHTS. Dort ist Platz, und dort ist die ganze
+     Leiste auf einen Blick mehr wert als eine kurze.
+     NACHTRAG (E359, am selben Tag): Das stimmte nur bei voller Breite. Als
+     Spalte (706 px bei 1360 px Fenster) stand die Leiste nach E355 und
+     E357 in FÜNF Zeilen. Seit E359 gilt die Gruppenregel bei jeder
+     Breite; der Rechner bekommt zwei Zeilen, kein Rollen.
+
+  6. Eine Zeile bleibt eine Zeile (test174 §6 misst weiter „unter 60 px");
+     nur kürzer.
+
+─── WAS NICHT GEBAUT WURDE ────────────────────────────────────────────────
+
+Keine Klappe unter dem Werkzeug (GoodNotes' Popover); das Papier und
+„Seite" (`.blatt-fest`) bleiben, wo sie sind. Steht in L115.
+
+─── PRÜFUNG ────────────────────────────────────────────────────────────────
+
+test348 neu, 33 Punkte, PORT 9352, sieben Abschnitte: die Gruppen je
+Werkzeug am Telefon, die Längen gegen die Leiste ohne Regel (das
+`data-tool` wird dafür kurz abgenommen), eine Zeile und Fingerknöpfe, der
+Weg über `Zeichenziel.setze`, der später angelegte Tupfer, die Lage —
+Stift links im Bild, Stil direkt daneben, erster Tupfer ohne Rollen, der
+Marker erst nach den Gruppen — und der Rechner, an dem alles sichtbar
+bleibt. Belegt rot in sechs Richtungen, jede einzeln zurückgedreht und
+wiederhergestellt:
+
+a — `markiere` schreibt kein `data-tool` (marken.js): zwei rot, dann
+    bricht die Suite ab — der Weg über das Menüband lässt die Leiste beim
+    alten Werkzeug.
+b — die Ausblende-Regel zeigt statt zu verstecken (bausteine.css): 20/33.
+    Alles steht wieder in einer Reihe.
+c — der später angelegte Tupfer bekommt keine Gruppe (marken.js): 31/33.
+    Er bleibt beim Radierer stehen.
+d — die Leiste rollt nicht zum Werkzeug (marken.js): 32/33. Der Stift
+    steht nach dem Tipp nicht im Bild.
+e — die Farben fehlen beim Stift (bausteine.css): 31/33.
+f — die Gruppen stehen nicht hinter dem Werkzeug (bausteine.css, `order`):
+    32/33. Der Stil-Knopf ist wieder drei Bildschirme entfernt.
+
+Eine siebte Probe blieb GRÜN, und das ist der Grund, warum sie nicht in
+der Liste steht: das `data-tool` beim Tipp in der Leiste zu streichen
+änderte nichts, weil derselbe Tipp über `Zeichenziel` auch `markiere`
+ruft, und das setzt es ebenfalls. Der Griff im Tipp bleibt für den Fall
+ohne Kern; als Beleg taugt er nicht.
+
+Drei Wächter wurden durch E356 rot, alle zu Recht: test174 §6 mass am
+Telefon ALLE Knöpfe der Leiste, auch die nun ausgeblendeten (0 × 0) — jetzt
+misst er, was da ist; test343 §8 mass Stift-Stil und Farbe, ohne den Stift
+zu wählen; test344 §8 den Modus-Knopf, ohne den Radierer zu wählen; test347
+§7 den Formen-Schalter, ohne den Stift. Alle drei wählen jetzt ihr
+Werkzeug, wie ein Mensch es täte.
+
+Dazu: test174 (A4-Blatt, §6 angepasst) 25/25, test114 (Fingergrössen)
+153/153, test201 (Ink V2) 32/32, test343 (Stifte, §8 angepasst) 30/30,
+test344 (Radierer, §8 angepasst) 50/50, test345 (Auswahl) 43/43, test346
+(Handballen) 31/31, test347 (Formen, §7 angepasst) 31/31, test247
+(Menüband) 106/106, test248 (ruhige Fassung) 45/45, test87 (Quelltext)
+152/152, test105 (erzeugtes JavaScript) 117/117, test109 (kein neues
+JavaScript) 20/20, test225 (Quellenangaben) 11/11 — alle grün.
+
+BILDER angesehen (§55): die Leiste am Telefon beim Schreiben (nur
+Werkzeuge), beim Stift (Stift, Füller, Tupfer nebeneinander), beim
+Radierer (Radierer, Modus, Zurück, Vor) und bei der Auswahl (Auswahl,
+Löschen, Kopieren, Einsetzen, Tupfer); am Rechner die unveränderte Leiste.
+Das erste Radierer-Bild zeigte einen Schwebezustand auf „Linie", weil das
+Bildskript zurückgerollt hatte und der Zeiger dort stehen blieb — das
+Skript rollt jetzt nicht mehr, die App tut es.
+
+
+E357 — Bild aufs Blatt: ein Foto als Marke, verschieb- und skalierbar (L115 Punkt 6)
+════════════════════════════════════════════════════════════════════════════
+
+BEFUND (L115 Punkt 6): ein Foto auf das Blatt legen ging nur als Bildblock
+NEBEN dem Blatt — im Textfluss, nicht auf dem Papier. GoodNotes legt es
+aufs Papier, und man schiebt und zieht es wie jeden Strich, mit dem
+Lasso, mit den Griffen. Redurs Auftrag („alles fertig wie GoodNotes")
+meint genau das.
+
+─── WAS GEBAUT WURDE ───────────────────────────────────────────────────────
+
+  1. EINE NEUE MARKENART. `{id, art:'bild', dateiId, pts:[[x1,y1],[x2,y2]]}`
+     — zwei Ecken im Blattraum, sonst nichts. Kein Data-URL in der Marke
+     (§14: nur für Kleines und Altes), keine Bytes in `marken`. Die Art
+     kommt mit einem Feld, wie `zettel` seinen `text` und `zeichen` seine
+     `zeichenId` hat; keine Migration, ein älteres Redion zeichnet eine
+     unbekannte Art nicht und verliert sie nicht.
+
+  2. DIE DATEI LIEGT IN DER ABLAGE — `Dateien.ablegen(datei, {blockId})`,
+     in Stücken, mit dem BLATT als Block. So wandert sie mit der Sicherung
+     (`.redion` erhält Kennungen, §11), mit dem Abgleich und mit dem
+     Papierkorb, und `purgeAnhaenge` findet sie, wenn das Blatt endgültig
+     geht. doku/REDION-FORMAT.md sagt es.
+
+  3. DER ZEICHNER BLEIBT SYNCHRON. `zeichneMarke` fragt
+     `Dateien.adresseBekannt` — ist die Objekt-URL da, steht das `<image>`
+     sofort; darauf verlassen sich Druck (`markenAlsSvg` in werkzeuge.js)
+     und Folien, die `outerHTML` lesen. Ist sie nicht da, steht ein
+     gestrichelter PLATZHALTER in der Grösse der Marke, und `bildNachladen`
+     holt die Adresse; kommt keine, sagt der Platzhalter „Bild fehlt". Kein
+     leerer Fleck, kein Fehler, nichts wird stillschweigend gelöscht — eine
+     `.json`-Sicherung ohne Anhänge zeigt genau das.
+
+  4. DER WEG. Der Knopf „Bild" in der Leiste ist kein Werkzeug, das man
+     hält, sondern ein Weg: er öffnet den Dateiwähler (`image/*`), die
+     Datei geht in die Ablage, die Grösse kommt aus dem Bild (`Image` mit
+     Objekt-URL), es landet MITTIG auf der ersten Seite, halb so breit wie
+     das Blatt, im Seitenverhältnis der Datei (höchstens 90 % der Seite),
+     und ist danach GEWÄHLT, im Auswahl-Werkzeug — man will es gleich
+     schieben. Wer abbricht, hat nichts verloren; das gewählte Werkzeug
+     bleibt bis dahin. Über `Zeichenziel.setze('bild')` gibt es das Werkzeug
+     auch zum Halten: dann öffnet der Tipp den Wähler, und das Bild kommt
+     dorthin, wo getippt wurde (in die Seite geklemmt).
+
+  5. WIE JEDE MARKE. Verschieben, Lasso und Kasten (Mitte des Kastens),
+     Griffe, Kopieren (die Kopie teilt die Datei; frische Kennung),
+     Löschen (nur die Marke), Zurück und Vor — alles aus E353, nichts
+     Eigenes. Drei Unterschiede, alle wie in GoodNotes: der Griff hält das
+     SEITENVERHÄLTNIS (Umschalt gibt es frei — bei Strichen ist es
+     umgekehrt, E353), der RADIERER lässt ein Bild stehen (er gilt der
+     Tinte; ein Bild geht über die Auswahl), und Farbe und Breite lassen es
+     aus.
+
+  6. GEFLICKT STATT ERSETZT. `updateNode` tauschte Gruppen mit Kindern
+     bisher ganz aus. Beim Ziehen eines Bilds käme so je Bewegung ein
+     neues `<image>` mit derselben Adresse — und ein noch ladendes Bild
+     bekäme seine Antwort nie, weil die Gruppe, auf die sie wartet, längst
+     ausgetauscht wäre. Bei gleicher Kinderfolge wandern nur Lage und
+     Mass; `bildNachladen` liest den Kasten vom Platzhalter, wie er JETZT
+     steht, nicht wie er beim Anlegen stand.
+
+  7. AM TELEFON: der Knopf ist ein Fingerknopf (44 × 44), steht zwischen
+     Fachzeichen und Radierer (`order` 125, E356), und weil danach die
+     Auswahl führt, rollt die Leiste dorthin — Löschen, Kopieren, Einsetzen
+     neben dem Bild.
+
+─── WAS NICHT GEBAUT WURDE ────────────────────────────────────────────────
+
+Die TEXT-Hälfte von L115 Punkt 6 (Schriftwahl, Grösse, Rahmen an der
+`text`-Marke) — eigener Bogen. Eine gelöschte Bildmarke lässt ihre Datei
+am Blatt zurück; sie geht erst mit dem Blatt (eine Zählung, welche Datei
+noch eine Marke hat, wäre der nächste Schritt). Ein Bild kommt nur aus
+dem Dateiwähler — nicht per Ziehen-und-Ablegen aufs Papier, nicht aus der
+Zwischenablage des Systems, nicht von der Kamera. Kein Drehen, kein
+Zuschneiden. Kein Knopf im Menüband-Reiter „Zeichnen": der hat seine
+fünfzehn Plätze (E272), und test247/248 messen sie. Eine Vorschau, die
+synchron in eine Leinwand zeichnet, sieht beim allerersten Mal den
+Platzhalter. Alles in L115.
+
+─── PRÜFUNG ────────────────────────────────────────────────────────────────
+
+test349 neu, 30 Punkte, PORT 9353, neun Abschnitte: der Wähler und die
+Lage (§1), gewählt und Auswahl (§2), das `<image>` mit Blob-Adresse und die
+Datei am Blatt (§3), Verschieben, Griff im Verhältnis, zweimal Zurück, der
+Radierer, der es stehen lässt (§4), Kopieren mit geteilter Datei und
+Löschen der Kopie (§5), der Platzhalter ohne Datei (§6), der Druckweg (§7),
+der Fingerknopf (§8), keine Seitenfehler (§9). Das Foto ist ein echtes PNG
+(40 × 30, mit zlib geschrieben, ohne Bibliothek), der Wähler ein echter
+`filechooser`. Belegt rot in sieben Richtungen, jede einzeln zurückgedreht
+und wiederhergestellt (alle marken.js):
+
+a — der Zeichner fragt die bekannte Adresse nicht ab: 29/30. Auf dem
+    Bildschirm kommt das Bild dann eben nachgeladen; der DRUCKWEG (§7)
+    bekommt kein `<image>` — genau der Weg, den nur die synchrone Antwort
+    trägt.
+b — der Platzhalter trägt seine Klasse nicht: 29/30 (§6).
+c — ein Drittel statt halb so breit: 29/30 (§1: 198,5 von 595,3).
+d — danach nicht gewählt: 29/30 (§2: kein Rahmen).
+e — die Datei ohne Blatt (`blockId` null): 29/30 (§3).
+f — der Radierer nimmt Bilder: ein rot, dann bricht die Suite ab (§4) —
+    der nächste Tipp findet kein Bild mehr, das er wählen könnte.
+g — der Griff ohne Verhältnis: 29/30 (§4: 394 × 281 statt 4 : 3).
+
+Dazu: test174 (A4-Blatt) 25/25, test114 (Fingergrössen) 153/153, test201
+(Ink V2) 32/32, test343 (Stifte) 30/30, test344 (Radierer) 50/50, test345
+(Auswahl) 43/43, test346 (Handballen) 31/31, test347 (Formen) 31/31,
+test348 (Leiste am Telefon) 33/33, test247 (Menüband) 106/106, test248
+(ruhige Fassung) 45/45, test87 (Quelltext) 152/152, test105 (erzeugtes
+JavaScript) 117/117, test109 (kein neues JavaScript) 20/20, test290
+(CSS-Namensräume) 13/13, test332 (CSS über Dateigrenzen) 14/14, test225
+(Quellenangaben) 11/11 — alle grün. Einzeldatei neu gebaut (8120 KB).
+
+BILDER angesehen (§55): am Rechner das gewählte Bild mit Kasten und vier
+Griffen, mittig auf dem linierten Blatt, der Knopf „Bild" zwischen
+Fachzeichen und Radieren; am Telefon dasselbe, die Leiste beim
+Auswahl-Werkzeug mit Löschen, Kopieren, Einsetzen; und der Platzhalter —
+gestrichelt, „Bild fehlt" in der Mitte, in der Grösse der Marke.
+
+
+E358 — Zurück fasst nur an, was sich änderte: `redraw` als Abgleich (L115 Punkt 7)
+════════════════════════════════════════════════════════════════════════════
+
+BEFUND, zuerst gemessen (2. September 2026, mit einem vollen Lauf daneben):
+
+    Marken        100     1000    3000
+    Strichanfang   3 ms     8 ms   14 ms   (`snapshot` — der Verlauf kopiert alles)
+    Strichende     3 ms    21 ms   44 ms   (`commit`: zweimal stringify, dann `save`)
+    Zurück         7 ms    59 ms  155 ms   (`restore`: alles weg, alles neu)
+    Vor            6 ms    47 ms  148 ms
+
+L115 Punkt 7 sagte „gemessen ist es nicht" — jetzt ist es das. Bei tausend
+Marken kostete jedes Zurück eine Sechzehntelsekunde, weil `redraw` jeden
+Knoten entfernte und jeden neu zeichnete; beim Füller heisst „neu zeichnen"
+die ganze Kontur rechnen. Und Zurück ist nicht selten: wer schreibt, nimmt
+alle paar Striche einen zurück.
+
+─── WAS GEBAUT WURDE ───────────────────────────────────────────────────────
+
+  1. EINE MERKLISTE DER GEZEICHNETEN FASSUNG. Je Kennung der JSON-Text der
+     Marke, wie sie zuletzt in einen Knoten kam (`gezeichnet`). Das ist die
+     ganze Datenstruktur — kein zweiter Baum, keine Kennung-zu-Knoten-
+     Tabelle, die aus dem Tritt geraten könnte: die Knoten findet `redraw`
+     im DOM selbst (`[data-sid]`, einmal je Aufruf).
+
+  2. `redraw` GLEICHT AB statt zu ersetzen: gleiche Fassung — der Knoten
+     bleibt, wie er ist; andere Fassung — `updateNode` flickt ihn (Pfade
+     behalten ihren Knoten, Gruppen wie Zettel und Bild werden getauscht,
+     E357); Marke ohne Knoten — neu; Knoten ohne Marke — weg. Und die
+     FOLGE der Knoten ist die Folge der Marken, weil sie die Stapelung auf
+     dem Papier ist: wo sie nicht stimmt, wird eingeordnet, sonst nicht
+     angerührt. Zwei Knoten mit einer Kennung (soll es nicht geben): der
+     zweite geht.
+
+  3. `merke` HINTER JEDEM DIREKTEN WEG. Ziehen, Griff, Umfärben, Breite,
+     Radieren, Strichende, Einsetzen, Bild — alle ändern Knoten, ohne durch
+     `redraw` zu gehen. Jeder trägt jetzt ein, was der Knoten zeigt. Die
+     Merkliste muss sagen, was der KNOTEN zeigt, nicht was die Marke ist:
+     test350 §3 fand den ersten Entwurf ohne das — nach Verschieben und
+     Zurück war die Marke wieder die alte, die Merkliste auch, der Knoten
+     aber noch der verschobene, und `redraw` sah „gleich" und liess ihn
+     stehen. Ein Zurück, das nichts zurücknimmt, wäre der schlimmste Fall
+     dieser Änderung gewesen.
+
+  4. `nodeFor` fragt das DOM (`querySelector` mit `CSS.escape`) statt alle
+     Knoten in eine Liste zu kopieren und zu durchsuchen — bei jedem
+     Ziehen je Marke je Bewegung.
+
+  5. Ergebnis: Zurück bei 1000 Marken 24 ms statt 59 (test350 §5, wieder
+     mit vollem Lauf daneben). Der Rest ist `clone` der Fassung, `save` und
+     das Stringifizieren für den Vergleich — kein Knoten wird mehr
+     angefasst, der nicht muss.
+
+─── WAS NICHT GEBAUT WURDE ────────────────────────────────────────────────
+
+Strichanfang und Strichende kopieren weiter den ganzen Bestand — `snapshot`
+für den Verlauf, zweimal `JSON.stringify` in `commit`, dann `save`. Bei
+dreitausend Marken sind das 14 und 44 ms. Ein Verlauf aus ÄNDERUNGEN
+(„Marke X hinzu", „Marke Y von A nach B") statt aus Abbildern würde das
+lösen, verlangt aber, dass keine Stelle mehr eine Marke in Ort ändert —
+`setzeFarbe`, `zettelText` und `radiereEine` tun es heute. Eigener Bogen,
+steht in L115. Keine Gestaltungsänderung, darum kein Bild (§55.3 gilt für
+Gestaltung und Neues; hier sieht man dasselbe, nur früher).
+
+─── PRÜFUNG ────────────────────────────────────────────────────────────────
+
+test350 neu, 14 Punkte, PORT 9354, sechs Abschnitte. Die Probe: 303 Marken
+(300 Striche, halb Füller, halb Kugel, dazu drei Zettel — die Gruppen, die
+`updateNode` tauschen MUSS), jeder Knoten bekommt ein Kennzeichen als
+JS-Eigenschaft (ein Attribut würde vom Flicken abgestreift), ein Strich
+dazu, Zurück: 303 Knoten, alle mit Kennzeichen (§1); Vor bringt den Strich
+als einzigen neuen (§2); Verschieben und Zurück: derselbe Knoten, der alte
+Pfad (§3); Löschen in der Mitte und Zurück: die Knotenfolge ist die
+Markenfolge (§4); gemessen bei 1000 Marken mit weicher Grenze (§5); keine
+Seitenfehler (§6). Belegt rot in vier Richtungen, jede einzeln
+zurückgedreht und wiederhergestellt (alle marken.js):
+
+a — jede Fassung gilt als „anders" (`else if (true)`): 9/14. Die drei
+    Zettel werden bei jedem Zurück getauscht, die Striche nicht — genau
+    das, was ohne Merkliste immer passiert wäre; und §3 sieht 301 statt
+    304 alte Knoten.
+b — nichts wird eingeordnet (kein `insertBefore`): 8/14. Ein neuer Knoten
+    kommt gar nicht erst ins DOM — Vor bringt keinen Strich (§2), Zurück
+    nach dem Löschen keine Marke (§4).
+c — überzählige Knoten bleiben (`if (false)`): 10/14. Nach dem Zurück
+    stehen 304 Knoten für 303 Marken (§1), und Gelöschtes steht noch da (§4).
+d — kein `merke` nach dem Verschieben: 13/14. Der Fund aus §3, noch
+    einmal: die Marke ist zurück, der Knoten nicht.
+
+Dazu: test174 (A4-Blatt) 25/25, test201 (Ink V2) 32/32, test266
+(Abdeckband) 12/12, test343 (Stifte) 30/30, test344 (Radierer) 50/50,
+test345 (Auswahl) 43/43, test346 (Handballen) 31/31, test347 (Formen) 31/31,
+test348 (Leiste am Telefon) 33/33, test349 (Bild) 30/30, test87 (Quelltext)
+152/152, test105 (erzeugtes JavaScript) 117/117, test109 (kein neues
+JavaScript) 20/20, test225 (Quellenangaben) 11/11 — alle grün. Einzeldatei
+neu gebaut (8123 KB).
+
+test267 §6 (Haftnotiz und Lineal) war ROT — und nicht durch E358: auf dem
+E357-Stand im Arbeitsbaum ebenso, in voll15 (E353) noch grün. Die Leiste
+über dem Blatt wuchs mit E355 (Formen) und E357 (Bild) um zwei Knöpfe und
+bei 706 px Breite um eine fünfte Zeile; das Blatt begann bei 537 px, und
+40 % seiner Höhe lagen bei 977 px — unter dem 950 px hohen Fenster. Die
+zweite Linie begann im Nichts, `pop()` fand die erste, und „gerastet" war
+„frei" (50,2° = 50,2°). Dazu rollt Playwright vor jedem Klick den Knopf
+ins Bild, und weil die Leiste ÜBER dem Blatt steht, schiebt jeder Klick in
+die Leiste das Blatt wieder nach unten — ein Rollen vor §6 allein half
+darum nicht. Der Prüflauf rollt jetzt nach jedem Klick zum Blatt und
+nimmt den Kasten frisch: 16/16. Die Sache selbst — fünf Zeilen Leiste am
+Rechner — steht als L115 Punkt 9.
+
+
+E359 — Die Blattleiste am Rechner: zwei Zeilen, nur das Zubehör des Werkzeugs, Papier als Klappe (L115 Punkt 9)
+════════════════════════════════════════════════════════════════════════════
+
+BEFUND (gefunden durch test267 §6, E358): bei 1360 px Fenster ist die Seite
+706 px breit, und die Leiste über dem Blatt stand nach E355 (Formen) und
+E357 (Bild) mit 22 Knöpfen in FÜNF Zeilen — rund 220 px Leiste über dem
+Papier, das Blatt begann bei 537 px. E356 hatte die Gruppenregel nur am
+Telefon eingeführt: „am Rechner ist Platz". Das galt bei voller Breite,
+nicht in der Spalte, die der Normalfall ist. Dazu nahm der feste Teil
+rechts (fünf Papier-Vorlagen, „Seite") 210 px, die der Leiste fehlten:
+sie hatte 456 px für 22 Knöpfe.
+
+─── WAS GEBAUT WURDE ───────────────────────────────────────────────────────
+
+  1. DIE GRUPPENREGEL GILT ÜBERALL. Der Block aus E356 (`data-tool` gegen
+     `data-gruppe`) steht nicht mehr im Telefon-Medienblock, sondern davor:
+     Werkzeuge und Verlauf immer, alles andere nur beim Werkzeug, zu dem es
+     gehört. Die Anordnung (`order`, Rollen zum Werkzeug) bleibt Sache des
+     Telefons.
+
+  2. AM RECHNER ZWEI ZEILEN. Ein leeres Element mit voller Breite hinter dem
+     letzten Werkzeug (`.blatt-zeilenbruch`, `flex:1 0 100%`, Höhe null) —
+     Flexbox kennt keinen Umbruch-Befehl. Oben die vierzehn Werkzeuge in
+     einer Zeile, darunter das Zubehör des gewählten. Am Telefon und in der
+     Spalte (`.spalte`, E140) ist das Element weg: dort rollt die Leiste
+     in einer Zeile, und ein Element von Bildschirmbreite wäre eine Lücke.
+
+  3. WÖRTER NACH BREITE DER LEISTE, NICHT DES FENSTERS. Vierzehn Werkzeuge
+     mit Wort brauchen rund 1130 px, ohne Wort 556. Gemessen wird mit
+     `@container` an der Leiste selbst (`.blatt-werk`): unter 1150 px nur
+     Sinnbilder, mit `title` und `aria-label` (§38). Dieselbe Leiste ist in
+     derselben Fensterbreite einmal Spalte (620 px) und einmal volle Breite
+     (1074 px bei 1360) — darum der Behälter und nicht das Fenster. Erst
+     ab rund 1450 px Fenster stehen die Wörter. Der feste Teil rechts
+     lässt seine Wörter unter 1400 px Reihe.
+
+  4. DIE PAPIERWAHL ALS KLAPPE. Ein Knopf zeigt das Papier, das gilt (das
+     Muster, wie auf den Vorlagen); die fünf Vorlagen liegen darunter, bis
+     man sie braucht — GoodNotes hat seine Vorlagen auch hinter einem
+     Knopf. Escape und ein Tipp daneben schliessen (§38); der Horcher am
+     Dokument wird beim Aufmachen angemeldet und beim Zumachen abgemeldet.
+     Die Knöpfe selbst bleiben, wie sie waren (`data-papier`, `aria-pressed`,
+     ihr Muster) — test207 fand keinen Unterschied. Der feste Teil ist
+     damit rund 100 statt 210 px breit; die Leiste hat 620.
+
+  5. Gemessen danach (test351): Werkzeuge in einer Zeile, Zubehör darunter,
+     Leiste 84 px hoch statt rund 220; in der Spalte eines Zweispalters
+     eine rollende Zeile ohne Lücke; am Telefon unverändert eine Zeile
+     unter 60 px.
+
+─── WAS NICHT GEBAUT WURDE ────────────────────────────────────────────────
+
+Am Telefon steht der feste Teil weiter in einer eigenen Zeile unter der
+rollenden Leiste (`min-width:100%`, E140) — mit zwei Knöpfen statt sieben
+passte er wohl daneben; nicht gemessen, nicht geändert. Keine Klappe unter
+dem Werkzeug wie GoodNotes' Popover (L115). Vierzehn Werkzeuge sind viele —
+Linie, Pfeil, Rechteck und Ellipse als EIN Formen-Werkzeug mit Unterwahl
+wären GoodNotes näher; das ist ein eigener Bogen.
+
+─── PRÜFUNG ────────────────────────────────────────────────────────────────
+
+test351 neu, 25 Punkte, PORT 9355, sieben Abschnitte: zwei Zeilen unter
+100 px (§1), das Zubehör je Werkzeug am Rechner (§2), Wörter nach Breite
+der Leiste — Spalte, volle Breite bei 1360, Fenster 1600 (§3), die
+Papierklappe mit Escape und Tipp daneben (§4), die Spalte eines
+Zweispalters (§5), das Telefon (§6), keine Seitenfehler (§7). Belegt rot
+in sechs Richtungen, jede einzeln zurückgedreht und wiederhergestellt:
+
+a — der Zeilenbruch ohne Breite (bausteine.css, `flex:0 0 0`): 23/25. Das
+    Zubehör rückt in die Werkzeugzeile hoch.
+b — die Gruppenregel zeigt statt zu verstecken (bausteine.css): 20/25.
+    Radiermodus beim Stift, Farben beim Radierer, 120 px hoch.
+c — die Wortgrenze bei 150 statt 1150 px (bausteine.css): 20/25. In der
+    Spalte stehen die Wörter, die Werkzeuge brechen in drei Zeilen, 156 px.
+d — kein Zeilenbruch-Element (marken.js): 23/25. Dasselbe Bild wie a, von
+    der anderen Seite.
+e — die Klappe geht nie auf (blatt.js): ein rot, dann bricht die Suite ab —
+    ohne Klappe gibt es nichts zu wählen.
+f — der Tipp daneben schliesst nicht (blatt.js): 24/25.
+
+test348 §6 („am Rechner bleibt alles sichtbar") war der Wächter der alten
+Entscheidung und wurde zu Recht rot; er prüft jetzt, dass am Rechner
+dieselbe Gruppenregel gilt.
+
+Die Kette danach fand vier Wächter rot, und jeder hatte recht:
+
+· test174 („Das Blatt hält keine zweite Zeichenschicht mehr") — der erste
+  Entwurf der Klappe horchte auf den ZEIGER; test174 liest blatt.ts und
+  hält fest, dass dort kein Zeigerweg entsteht. Die Klappe horcht jetzt
+  auf `click`; sie ist ein Menü, kein Malen. 25/25.
+· test201 (Ink V2) — sein Zug lag mit dem Ende ausserhalb des Fensters
+  (916 von 900 px), weil das Blatt jetzt 140 px höher beginnt; die Probe
+  prüfte nur die Mitte des Zugs. Jetzt müssen beide Enden im Bild sein.
+  32/32.
+· test343 §8 und test344 §8 — Stil- und Modus-Knopf standen am Rechner
+  nicht mehr ohne ihr Werkzeug; sie wählen es jetzt, wie schon am Telefon
+  (E356). 30/30 und 50/50.
+· test210 §4 (der PDF-Arbeitsplatz am Telefon) — gefunden von voll17 auf
+  E358 (313 von 314 grün, dieser eine rot): „keines auf Breite null" zählte
+  auch die seit E356 ausgeblendeten Gruppen (16 mit `display:none`).
+  Gemessen wird jetzt, was da ist, wie test174 §6. 31/31.
+
+Dazu grün: test114 (Fingergrössen) 153/153, test207 (Papiervorlagen)
+37/37, test266 (Abdeckband) 12/12, test267 (Haftnotiz) 16/16, test345
+43/43, test346 31/31, test347 31/31, test348 (§6 angepasst) 33/33, test349
+30/30, test350 14/14, test351 25/25, test247 (Menüband) 106/106, test248
+45/45, test87 152/152, test105 117/117, test109 20/20, test290 13/13,
+test332 14/14, test225 11/11. Einzeldatei neu gebaut (8129 KB).
+
+BILDER angesehen (§55): die Leiste bei der Auswahl am Rechner — oben die
+vierzehn Sinnbilder, darunter Zurück, Vor, Löschen, Kopieren, Einsetzen,
+die Tupfer, die Breiten, rechts „+" und der Papierknopf; die offene
+Klappe mit den fünf Vorlagen unter dem Knopf; die volle Breite mit dem
+Stift; das Telefon unverändert.
+
+
+E360 — Text wie GoodNotes: ein Kasten mit Umbruch, Schriftart, Grösse, Fett und Rahmen (L115 Punkt 6, der Text)
+════════════════════════════════════════════════════════════════════════════
+
+BEFUND (L115 Punkt 6, zweite Hälfte): die `text`-Marke (E100) war EINE
+Zeile an der getippten Stelle — `prompt`-artig gefragt, Zeilenumbrüche zu
+Leerzeichen gemacht, ohne Schriftwahl, ohne Grösse, ohne Rahmen. GoodNotes'
+Textfeld ist ein Kasten, der umbricht, mit Schrift, Grösse, Fett und einem
+Rahmen, und man zieht ihn breiter. Redurs Auftrag („Schrift … alles fertig
+wie GoodNotes") meint genau das.
+
+─── WAS GEBAUT WURDE ───────────────────────────────────────────────────────
+
+  1. DER KASTEN. Eine neue Textmarke trägt `breiteBox` (40 % der
+     Blattbreite, mindestens 120, nie über den rechten Rand), dazu
+     `schrift`, `fett`, `rahmen`; `point` ist die linke obere Ecke. Alles
+     optional: eine Marke OHNE `breiteBox` ist die alte einzeilige, und sie
+     wird weiter so gezeichnet — kein Bestand ändert sich (§53.3).
+
+  2. DIE ZEILEN RECHNET DER KERN. `InkGeometry.textLayout` (mit `textLines`
+     und `textWidth`) bricht den Text an der Kastenbreite — ohne DOM, ohne
+     Schriftmessung: die Breite eines Zeichens ist eine SCHÄTZUNG je
+     Familie (in em, schmale und breite Buchstaben getrennt, Fett ein
+     Sechstel breiter). Sie muss nicht stimmen, sie muss überall dieselbe
+     sein: Bildschirm, Druck (`markenAlsSvg` liest `outerHTML` synchron),
+     Auswahlkasten (`bounds`), Treffer (Radierer, Lasso, Kasten). Ein
+     echtes Schriftmass (`canvas.measureText`) hätte den Auswahlkasten von
+     der Geometrie getrennt und den Druck an das Dokument gebunden.
+
+  3. GEZEICHNET als `<g data-ink-art="text" data-kasten>`: eine
+     Greiffläche (unsichtbares Rechteck — der Kasten ist auch zwischen den
+     Wörtern zu fassen), bei `rahmen` ein sichtbares, dann `<text>` mit
+     einer `<tspan>` je Zeile, Schriftstapel und Gewicht als Attribute
+     (Attribute kennen keine CSS-Variablen, und der Druck liest sie roh).
+
+  4. DIE SCHRIFT: die fünf Familien aus E101 (Standard, Serifen,
+     Schreibmaschine, Handschrift, Schmal — `Register.textstile`), sechs
+     Stufen (11, 13, 16, 20, 26, 34 px), Fett, Rahmen. Gemerkt in
+     `zeichnen:schrift`. In der Leiste als Gruppe „schrift" — Aa im Kreis,
+     A−, A+, F, ▭ — beim Text UND bei der Auswahl.
+
+  5. MIT AUSWAHL GILT ES DER AUSWAHL, wie Farbe und Strich seit E353: A+
+     auf einen gewählten Text hebt IHN eine Stufe (von seiner eigenen
+     Grösse aus, nicht von der Vorgabe), die Familie wechselt ihn um, Fett
+     und Rahmen schalten ihn — ein Schritt im Verlauf —, und der nächste
+     Text kommt so.
+
+  6. DER GRIFF zieht den Kasten breiter: `InkGeometry.scale` skaliert
+     `breiteBox` mit der Breite, die Schrift mit dem Mittel (wie `breite`
+     und `fontSize` seit E353). Die Zeilen folgen; die Höhe folgt dem
+     Inhalt — man zieht nur die Breite.
+
+  7. DER TIPP fragt mehrzeilig (`Dialog.mehrzeilig`, wie die Haftnotiz):
+     Enter ist eine neue Zeile, Strg+Enter übernimmt. Ein Tipp auf einen
+     vorhandenen Text bearbeitet ihn; leer gemacht heisst weg.
+
+─── WAS NICHT GEBAUT WURDE ────────────────────────────────────────────────
+
+Keine Ausrichtung (links, mitte, rechts), kein Kursiv, keine Farbe je
+Wort, keine Hintergrundfüllung, keine Höhe zum Ziehen. Die Zeichenbreiten
+sind Schätzungen — ein Wort kann in einer Schrift etwas früher oder
+später brechen, als das Auge es täte, aber überall gleich. Kein Knopf im
+Menüband-Reiter „Zeichnen" (fünfzehn Plätze, E272). Alles in L115.
+
+─── PRÜFUNG ────────────────────────────────────────────────────────────────
+
+test352 neu, 38 Punkte, PORT 9361, acht Abschnitte: der Tipp und der
+Kasten mit Zeilen — dieselben Zeilen wie `textLayout`, keine Zeile
+breiter als der Kasten innen, kein Wort verloren (§1); die Leiste und der
+nächste Text (§2); mit Auswahl, mit Zurück (§3); der Griff (§4); alte
+Marken bleiben einzeilig (§5); der Druckweg (§6); das Telefon — Fingerknöpfe
+beim Text und bei der Auswahl, weg beim Stift (§7); keine Seitenfehler
+(§8). Eine Probe in §1 war im ersten Wurf eine Tautologie (`|| true`) und
+konnte nie rot werden (§55.2); sie misst jetzt die breiteste Zeile gegen
+die Innenbreite nach derselben Rechnung. Belegt rot in sieben Richtungen,
+jede einzeln zurückgedreht und wiederhergestellt:
+
+a — der Umbruch bricht nie (geometry.js, `passt` immer wahr): 35/38 —
+    zwei Zeilen statt vier, die breiteste 593 von 226 px innen (§1, §3).
+b — A+ lässt die Auswahl aus (marken.js): 34/38 (§3: 16 statt 20 px,
+    keine neue Zeile, kein wachsender Rahmen).
+c — kein Rahmen-Rechteck (marken.js): 36/38 (§2, §6).
+d — der Griff skaliert `breiteBox` nicht (geometry.js): 36/38 (§4: 238
+    nach 238, und die Schrift wächst, also MEHR Zeilen — 6 nach 5).
+e — alte Marken werden Kästen (marken.js): 35/38 (§5: eine Gruppe mit
+    zwei tspan-Zeilen, „AltZeile" ohne Leerzeichen).
+f — die Gruppe fehlt beim Text (bausteine.css): ein rot, dann bricht die
+    Suite ab — ohne Knöpfe gibt es nichts zu tippen (§2).
+g — die Familie wird nicht übernommen (marken.js): 32/38 (§2: gemerkt
+    bleibt „standard", der nächste Text kommt in Standard, §3).
+
+test201 §4 (die Textanmerkung ist sicher) las `textContent` und
+`children` des Textknotens — mit dem Kasten ist der Knoten eine Gruppe
+mit Greiffläche und tspan-Zeilen. Er liest jetzt den `<text>` darin, fügt
+die Zeilen zusammen und zählt, was KEIN tspan ist: dieselbe Frage, am
+neuen Knoten. 32/32.
+
+test348 (die Gruppen der Leiste, E356) kannte die Gruppe „schrift" nicht:
+drei Punkte rot — die Liste der Gruppen, die Gruppen bei der Auswahl und
+beim Text. Alle drei sagen jetzt „schrift" dazu; 33/33.
+
+Dazu: test174 (A4-Blatt) 25/25, test201 (Ink V2, §4 angepasst) 32/32,
+test207 (Papiervorlagen) 37/37, test266 (Abdeckband) 12/12, test267
+(Haftnotiz) 16/16, test343 (Stifte) 30/30, test344 (Radierer) 50/50,
+test345 (Auswahl) 43/43, test346 (Handballen) 31/31, test347 (Formen)
+31/31, test349 (Bild) 30/30, test350 (Zurück) 14/14, test351 (Leiste am
+Rechner) 25/25, test247 (Menüband) 106/106, test248 (ruhige Fassung)
+45/45, test87 (Quelltext) 152/152, test105 (erzeugtes JavaScript)
+117/117, test109 (kein neues JavaScript) 20/20, test143 (Bündelgrenzen,
+Grundstock) 23/23, test99 (zwei Fenster, Fassung) 23/23, test290 (CSS-
+Namensräume) 13/13, test332 (CSS über Dateigrenzen) 14/14, test225
+(Quellenangaben) 11/11 — alle grün. Ein Lauf von test247 in der Kette war
+104/106: „PDF einlesen" öffnete binnen vier Sekunden keinen Dateiwähler —
+während nebenan der volle Lauf lief und der Rechner kurz darauf neu
+startete; allein noch einmal gelaufen 106/106, und E360 rührt diesen Weg
+nicht an. Vermerkt, nicht verschwiegen.
+
+BILDER angesehen (§55): am Rechner drei Kästen auf dem linierten Blatt —
+ein umbrechender Standardtext, ein roter Merksatz in Serifen, fett, mit
+Rahmen, eine Formel in Schreibmaschine —, darüber die Leiste mit dem
+Text-Werkzeug und der Gruppe Aa, A−, A+, F, ▭; der gewählte Kasten mit
+Griffen; am Telefon dieselbe Gruppe neben dem T.
+
+
+E361 — Der Dienststand folgt dem Inhalt; holen.bat wartet auf Grün; die App nennt ihren Stand (L83 Punkte 1–3)
+════════════════════════════════════════════════════════════════════════════
+
+BEFUND (L83, gefunden beim Bau von E271; als nächster Bogen empfohlen, weil
+er ein FALSCHES Ergebnis erzeugt, §46): drei Löcher zwischen „gepusht" und
+„Redur sieht es".
+
+  1. `holen.bat` holte `main`, egal ob der Prüflauf rot war. Ein Stand mit
+     einem ungebauten `src/**.ts` zeigt das ALTE Verhalten — fehlerfrei,
+     ohne Meldung. Jede Messung, jedes Bild, jedes Urteil danach ist am
+     falschen Gegenstand gemacht.
+  3. Ohne erhöhte `VERSION` in `sw.ts` liefert der Dienst-Arbeiter jede
+     Datei einzeln nach und mischt Altes mit Neuem. Nichts erzwang die
+     Erhöhung: E357, E358, E359 und E360 haben sie je von Hand gesetzt —
+     viermal daran gedacht, und beim fünften Mal hätte es niemand gemerkt.
+  2. Drei Wege (Ordner, `start.bat`, Cloudflare), und keiner nannte sich.
+
+─── WAS GEBAUT WURDE ───────────────────────────────────────────────────────
+
+  1. DER STEMPEL. `dienststand.mts` (Wurzel, TypeScript, Node) liest den
+     Grundstock aus `sw.ts` — dieselbe Lesart wie test143 — und rechnet
+     SHA-256 über Pfad und Bytes jeder Datei, sortiert, sechzehn
+     Hexzeichen. Pfad UND Bytes: gleiche Bytes unter anderem Namen sind
+     ein anderer Stand. `stand.js` selbst bleibt heraus, es trägt den
+     Stempel.
+
+  2. DAS HEBEN. `npm run bauen:ts` ist jetzt `tsc bauen && node
+     dienststand.mts && tsc stand && tsc sw`: erst bauen, dann stempeln,
+     dann `stand.ts` noch einmal bauen (es wurde gerade geschrieben), dann
+     den Dienst-Arbeiter. Ändert sich der Stempel, steigt `VERSION` um
+     eins und `stand.ts` bekommt Fassung, Stempel und Bauzeit; ändert er
+     sich nicht, wird NICHTS geschrieben — kein neuer Zeitstempel, kein
+     Rauschen im Verzeichnis. Eine von Hand höher gesetzte Fassung bleibt
+     höher. `npm run stand` prüft nur (Rückgabe 1, wenn veraltet).
+
+  3. DER WÄCHTER. test353 §2 rechnet den Stempel nach: ändert jemand eine
+     Datei des Grundstocks und vergisst den Bau, sagt `stand.ts` einen
+     alten Stempel, und der Punkt wird rot — hier wie in der CI, wo der
+     schnelle Job (Sekunden, ohne Browser) `npm run stand` ruft. Das ist
+     der Teil, der den Fehler ERZWINGT statt ihn zu hoffen.
+
+  4. DER STAND IN DER APP. `src/kern/einstellung/stand.ts` (geladen vor
+     `app.js`, im Grundstock) trägt `{fassung, inhalt, gebaut}`; „Über
+     diese App" zeigt „Stand: v113 · gebaut 2. September 2026 · örtlicher
+     Server (start.bat)". Der Weg kommt aus der Adresse: `file:` ist der
+     Ordner, `localhost` der örtliche Server, `*.workers.dev` Cloudflare,
+     alles andere „Netz (Wirt)". Ohne Stand (Erstfassung `fassung: 0`)
+     steht „Stand unbekannt".
+
+  5. holen.bat FRAGT GITHUB. Vor `git fetch` holt PowerShell
+     `api.github.com/repos/Redurbabat/Redion/actions/runs?branch=main
+     &per_page=1` (öffentlich, ohne Anmeldung, 15 s Frist): grün wird mit
+     Kennung genannt; rot und „läuft noch" sagen es deutlich und fragen
+     (`choice`, nach 30 s Nein); ohne Antwort wird gewarnt und trotzdem
+     geholt — holen darf man immer, wissen muss man es. Nach dem Holen
+     vergleicht es `HEAD` mit der geprüften Kennung: ein neuerer Push auf
+     `main` heisst „geprüft wurde ein anderer Stand".
+
+  6. START-MIT-CLAUDE-CODE.md erklärt beides in Redurs Worten.
+
+─── WAS NICHT GEBAUT WURDE ────────────────────────────────────────────────
+
+`holen.bat` lief hier nicht — es gibt kein Windows in diesem Container;
+test353 §5 liest nur den Text, und der erste Doppelklick bei Redur ist die
+Probe (wie bei E271). Das Rennen der zwei Ladevorgänge bleibt; nur die
+Erhöhung, ohne die es ein Rennen ohne Ziel war, ist zugesichert. L83
+Punkte 4, 5, 7 (Rettungen aufräumen, Rückweg, `.sh`) bleiben offen. Die
+Bauzeit ist die des letzten INHALTSWECHSELS, nicht des letzten Baus —
+absichtlich, sonst änderte sich `stand.ts` bei jedem Bau ohne Grund.
+
+─── PRÜFUNG ────────────────────────────────────────────────────────────────
+
+test353 neu, 39 Punkte, PORT 9363, sieben Abschnitte: der Stempel in einem
+Wegwerfordner — bestimmt, bytegenau, pfadgenau, `stand.js` draussen (§1);
+der echte Stand — sw.ts, stand.ts, Grundstock, gebautes stand.js (§2); das
+Heben in einem Wegwerf-Repositorium — erste Fassung, unverändert, --pruefen
+schreibt nichts, Heben, von Hand höher (§3); der Bauweg — npm-Skript,
+index.html, Grundstock, CI-Schritt (§4); holen.bat — die Frage vor dem
+Holen, rot, läuft noch, unbekannt, der Vergleich danach, kein push (§5);
+die App — die Zeile „Stand" mit Fassung, Bauzeit und Weg (§6); keine
+Seitenfehler (§7). §3 fand beim ersten Lauf, dass der Ordner für
+`stand.ts` beim allerersten Schreiben fehlt — behoben. Belegt rot in
+sieben Richtungen, jede einzeln zurückgedreht und wiederhergestellt:
+
+a — der Stempel liest die Bytes nicht (dienststand.mts): 32/39 — ein
+    anderes Byte, derselbe Stempel (§1), und der echte Stand gilt als
+    veraltet (§2), weil der Stempel jetzt ein anderer ist.
+b — das Heben hebt nicht (dienststand.mts): 32/39 (§3: Fassung 7 statt 8,
+    sw.ts bleibt bei v7).
+c — der Bauweg ohne dienststand.mts (package.json): 38/39 (§4).
+d — die Frage im Rot-Zweig weg (holen.bat): beim ersten Mal 39/39 — GRÜN,
+    weil der Punkt irgendein `choice` in der Datei suchte und das aus dem
+    Läuft-noch-Zweig fand. Der Punkt fragt jetzt JE ZWEIG, zwischen der
+    Meldung und dem Weiter; dieselbe Probe danach 38/39 (§5). Eine Probe,
+    die nicht rot werden kann, ist keine (§55.2) — hier war sie es beinahe.
+e — index.html lädt stand.js nicht: 33/39 (§4, und §6 ohne Stand).
+f — die Zeile „Stand" fehlt (seite.js): 33/39 (§6).
+g — EIN BYTE in einer Datei des Grundstocks geändert, kein Bau
+    (geometry.js): 37/39 — §2 rot, `--pruefen` sagt veraltet. Das ist der
+    Fall, für den der Bogen gebaut wurde; e, f und g zeigen ihn dreimal.
+
+Dazu: test143 (Bündelgrenzen, Grundstock ↔ index.html) 23/23, test99
+(zwei Fenster, Fassung) 23/23, test105 (erzeugtes JavaScript — auch
+stand.js) 117/117, test109 (kein neues JavaScript) 20/20, test87
+(Quelltext) 152/152, test290 (CSS-Namensräume) 13/13, test235
+(Einstellungen) 71/71, test114 (Fingergrössen) 153/153, test128
+(Barrierefreiheit, Kontrast der neuen Zeile) 54/54, test247 (Menüband)
+106/106, test74 (Einzeldatei) 12/12, test225 (Quellenangaben) — alle grün.
+Die Einzeldatei trägt stand.js mit.
+
+BILD angesehen (§55): „Über diese App" mit der Zeile „Stand — v113 ·
+gebaut 2. September 2026 · örtlicher Server (start.bat)" unter dem
+Speicherort.
+
+
+E362 — Der Ereignisbus kann async: frageAsync, meldeAsync, Nachreichen, Veto (L102 Punkt 4)
+════════════════════════════════════════════════════════════════════════════
+
+BEFUND (L102 Punkt 4, als zweiter Bogen empfohlen, weil er still FALSCH
+rechnet, §46): `frage` sammelte Promises als ROHE Werte ein. Wer die Liste
+las, hielt ein Promise-Objekt für eine Antwort — kein Fehler, kein Hinweis,
+nur ein Wert, der keiner war. `melde` verwarf Rückgaben, und die Ablehnung
+eines asynchronen Zuhörers versandete als „unhandled rejection" in der
+Konsole. Kein Veto, kein Nachreichen für spät Angemeldete. E286 (die
+Auftragsmaschine) hat den Bus deshalb umgangen statt ihn zu reparieren.
+
+Nachgemessen vor dem Bau: `Ereignisse.frage` hat im Bestand KEINEN
+Aufrufer, `melde` sechs, `horche` acht, kein Zuhörer ist `async`. Der
+falsche Wert war also noch nie in einer Rechnung — aber der Bus ist die
+Stelle, an der weitere Bereiche andocken sollen, und ein Bus, der bei der
+ersten asynchronen Antwort still falsch wird, ist ein Loch, das auf den
+Ersten wartet, der hineinfällt.
+
+UND EIN ZWEITER BEFUND, beim Lesen der acht Zuhörer: der EINZIGE auf
+`ablageGeladen` (Menüband, seit E212: „nach dem Laden der Ablage noch
+einmal zeichnen") horchte auf die Zeichenkette `'ablageGeladen'`. Gemeldet
+wird `ARTEN.ablageGeladen`, und das ist `'ablage.geladen'`. Er hat nie
+etwas gehört — genau der Tippfehler, vor dem `arten.ts` in seiner
+Kopfzeile warnt („sieht aus wie: das Modul tut nichts"). Der Absatz über
+der Zeile sagt sogar: „gemessen greift das nicht" und schreibt es der
+Startreihenfolge zu. Die Reihenfolge war ein Grund; der Name war der
+andere, und den hat niemand gesehen, weil ein nie gehörtes Ereignis keinen
+Fehler macht.
+
+─── WAS GEBAUT WURDE ───────────────────────────────────────────────────────
+
+  1. `frage` ZÄHLT KEINE PROMISE. Antwortet ein Zuhörer mit einem
+     Thenable, wird das gemeldet (Konsole und `Pflege.fehlerMerken`, mit
+     dem Hinweis auf `frageAsync`) und nicht in die Liste getan; die
+     Promise bekommt einen Fänger, damit ihr Scheitern nicht als zweite
+     Meldung versandet. Synchron bleibt synchron — nur ehrlich.
+
+  2. `frageAsync(name, daten)` wartet jede Antwort ab — synchrone wie
+     asynchrone —, `Promise.allSettled`, und die Liste steht in der
+     REIHENFOLGE DER ANMELDUNG, nicht in der des Eintreffens (test354 §3:
+     „langsam" vor „sofort"). Was scheitert, ist gemeldet und fehlt;
+     `undefined` und `null` fallen heraus wie bei `frage`.
+
+  3. `meldeAsync(name, daten)` wartet, bis jeder Zuhörer fertig ist, und
+     gibt zurück, wie viele es ohne Fehler wurden. Ein Wurf VOR der
+     Promise (synchron) zählt wie eine Ablehnung.
+
+  4. `melde` bleibt synchron, aber ein asynchroner Zuhörer darf jetzt
+     scheitern, ohne dass es niemand erfährt: seine Ablehnung geht
+     denselben Weg wie ein synchroner Wurf (`fehlerMelden` — ein Weg, den
+     es vorher zweimal wörtlich gab).
+
+  5. NACHREICHEN. Der Bus merkt sich je Name die letzte Meldung
+     (`gemeldet`); `horche(name, fn, {nachreichen: true})` ruft den
+     Zuhörer sofort mit ihr — mit demselben Fehlerweg wie eine frische.
+     `schonGemeldet(name)` sagt, ob und womit. `leeren` vergisst es (nur
+     Prüfläufe).
+
+  6. VETO. `darf(name, daten)` fragt und sagt Nein, sobald EIN Zuhörer
+     `false` antwortet; `darfAsync` dasselbe abgewartet. Kein „Abbruch"
+     (ein Zuhörer hält die weiteren an) — absichtlich: ein Bus, in dem
+     einer die anderen anhalten kann, ist wieder das Knäuel, das der Bus
+     auflösen sollte.
+
+  7. DAS MENÜBAND horcht jetzt über `ARTEN.ablageGeladen` und mit
+     `nachreichen: true`: ist die Ablage beim Anmelden längst geladen (der
+     gemessene Normalfall), kommt die Meldung sofort.
+
+  8. E361 HAT SICH ZUM ERSTEN MAL BEWÄHRT: `npm run bauen:ts` meldete
+     „Dienststand v114: Inhalt geändert" und hob die Fassung von selbst —
+     niemand musste an `sw.ts` denken.
+
+─── WAS NICHT GEBAUT WURDE ────────────────────────────────────────────────
+
+Kein Umbau der sechs `melde`-Aufrufer auf `meldeAsync` — keiner braucht
+es. Von 42 Namen in `ARTEN` wird weiter nur einer benutzt; die anderen
+sieben Zuhörer horchen auf freie Zeichenketten (`'auftrag.schritt'`,
+`'emojiWaehlen'`, …), die nicht im Register stehen — ein Wächter, der
+jede gemeldete oder gehörte Zeichenkette gegen `ARTEN` hält, wäre der
+nächste Schritt (L102). Die Auftragsmaschine bleibt, wie E286 sie gebaut
+hat.
+
+─── PRÜFUNG ────────────────────────────────────────────────────────────────
+
+test354 neu, 33 Punkte, OHNE Browser (`bus.js` wie in test88 mit
+`new Function` geladen; `window`, `console` und `Pflege` sind Attrappen,
+die mitschreiben), acht Abschnitte: die Griffe (§1); `frage` ohne Promise,
+mit Meldung (§2); `frageAsync` in Anmeldereihenfolge, Gescheiterte
+gemeldet (§3); `meldeAsync` (§4); `melde` mit asynchronem Zuhörer — keine
+unbehandelte Ablehnung, gemessen mit `process.on('unhandledRejection')`
+(§5); Nachreichen, `schonGemeldet`, `leeren`, auch nach `meldeAsync` (§6);
+das Veto (§7); das Menüband am richtigen Namen (§8, am Quelltext). Belegt
+rot in sieben Richtungen, jede einzeln zurückgedreht und wiederhergestellt:
+
+a — `frage` zählt die Promise wieder (bus.js): 30/33 — `[1, {}, 3]`, das
+    leere Objekt ist die Promise, und gemeldet wird nichts (§2). Genau der
+    Befund.
+b — `frageAsync` wartet nicht (bus.js): drei rot, dann bricht die Suite ab
+    — sechs leere Objekte statt drei Wörter (§3).
+c — `meldeAsync` verschluckt die Ablehnung (bus.js): 32/33 (§4).
+d — kein Nachreichen (bus.js): 29/33 (§6, viermal).
+e — Reihenfolge des Eintreffens statt der Anmeldung (bus.js, `reverse`):
+    31/33 (§3: „schnell, sofort, langsam").
+f — das Menüband wieder auf der Zeichenkette (menueband.ts): 31/33 (§8).
+g — `melde` fängt die Ablehnung nicht (bus.js): 31/33 — eine unbehandelte
+    Ablehnung, keine Meldung (§5).
+
+Dazu: test87 (Quelltext) 152/152, test105 (erzeugtes JavaScript) 117/117,
+test109 (kein neues JavaScript) 20/20, test143 (Bündelgrenzen) 23/23,
+test99 (zwei Fenster, Fassung v114) 23/23, test353 (Dienststand — der
+Stempel stimmt nach dem Bau) 39/39, test247 (Menüband) 106/106, test41
+24/24, test71 59/59, test85 (Kern) 82/82, test272, test313, test315,
+test320 (die Suiten, die den Bus berühren) und test225 (Quellenangaben)
+11/11 — alle grün. Einzeldatei neu gebaut.
+
+
+E363 — Der ZIP-Leser sagt die Wahrheit: Prüfsumme, CP437, verschlüsselt — und die ZIP erkennt sich wieder (L114 Punkte 5 und 6)
+════════════════════════════════════════════════════════════════════════════
+
+BEFUND (L114, aus der Bestandsaufnahme als §46-Fälle empfohlen): der
+ZIP-Leser las weder die Flags noch die Prüfsumme eines Eintrags — beide
+standen seit jeher im Verzeichnis, sechzehn und acht Byte vor dem Namen.
+Folgen: ein beschädigter Eintrag kam als vollständiges Dokument ins Regal
+(still); ein verschlüsselter scheiterte erst im Entpacker mit einer
+allgemeinen Meldung; ein Name aus einem alten Windows-Packer („Übung.txt"
+in CP437) kam als „�bung" an. Und wer dieselbe ZIP nach einer Korrektur
+noch einmal einlas, hatte jedes Dokument doppelt — „ (2)" für alles, auch
+für das, was sich nicht geändert hatte.
+
+─── WAS GEBAUT WURDE ───────────────────────────────────────────────────────
+
+  1. `ZipDetails` (src/core/import/zipdetails.ts, reiner Kern): die
+     CRC-32-Tafel EINMAL — fortlaufend (`crc32Start`, `crc32Weiter`,
+     `crc32Fertig`), damit ein Blob scheibchenweise geprüft werden kann;
+     `nameDecodieren(bytes, flags)`: Bit 11 heisst UTF-8; ohne Bit wird
+     gültiges UTF-8 als UTF-8 gelesen (viele Packer setzen das Bit nicht),
+     was kein UTF-8 ist, als CP437 — 0x9A ist Ü, 0xE1 ist ß;
+     `istVerschluesselt` (Bit 0). Der Schreiber (`Austausch.crc32`,
+     `crc32Strom`) rechnet seither mit derselben Tafel.
+
+  2. BEIDE LESER (`Einlesen.zipLesen` im Speicher, `zipLesenAusBlob`
+     stückweise) lesen Flags und Prüfsumme, geben `eintrag(name)` heraus
+     (Grösse, gepackt, CRC, Flags, verschlüsselt — BEVOR ein Byte gelesen
+     ist), werfen bei einem verschlüsselten Eintrag vor dem Entpacker und
+     rechnen nach dem Entpacken die Prüfsumme nach: stimmt sie nicht, gibt
+     es keine Datei, sondern „ist beschädigt — die Prüfsumme stimmt nicht".
+     Beim Blob in Scheiben von einem Megabyte, wie der Schreiber sie
+     rechnet — ein 500-MB-Video liegt dafür nie im Arbeitsspeicher.
+
+  3. DER IMPORT (E350) stellt Beschädigtes und Verschlüsseltes zu den
+     ÜBERSPRUNGENEN, mit Grund — es sind Eigenschaften der ZIP, keine
+     Fehler von Redion —, und der Hinweis zählt sie.
+
+  4. DIE WIEDERERKENNUNG: aus Name, Rohgrösse und Prüsumme des
+     Verzeichnisses wird `importKennung` („zip:Skript.pdf|18211|9f3e2a01"),
+     gesetzt auf das angelegte Dokument. Beim zweiten Einlesen wird eine
+     Datei, deren Kennung im selben Fach schon steht, übersprungen und als
+     „schon da (unverändert)" gezählt — VOR dem Entpacken. Eine geänderte
+     Datei ist eine andere Kennung und kommt als „ (2)" daneben, wie
+     bisher: nichts wird überschrieben, Anmerkungen am alten Dokument
+     bleiben (§46). Fächer wurden schon vorher wiederverwendet.
+
+  5. DER EIGENE SCHREIBER setzt das UTF-8-Bit in beiden Köpfen — das
+     Prüfmaterial tat es seit E350, `Austausch.zipSchreiben` nicht.
+
+  6. E361 hob die Fassung von selbst (v115): eine neue Kerndatei im
+     Grundstock, index.html und sw.ts geändert.
+
+─── WAS NICHT GEBAUT WURDE ────────────────────────────────────────────────
+
+Kein Ersetzen eines geänderten Dokuments durch die neue Fassung — bewusst
+(Anmerkungen). Die Kennung gilt je Fach: eine verschobene Datei wird nicht
+wiedererkannt. Der zweite Lesegang für die Prüfsumme kostet Zeit — bei
+einer grossen Sicherung spürbar; keine Abschaltung, kein Fortschritt dafür
+(L82 Punkt 6). Keine ZIP-Verschlüsselung — weder lesen noch schreiben.
+Alles in L114.
+
+─── PRÜFUNG ────────────────────────────────────────────────────────────────
+
+test355 neu, 34 Punkte, PORT 9365, acht Abschnitte: der Kern mit dem
+Prüfvektor des Standards („123456789" → cbf43926), fortlaufend, CP437, UTF-8
+mit und ohne Bit (§1); beide Leser — `eintrag`, beschädigt, verschlüsselt
+(§2); ein alter Packer mit CP437-Namen (§3); eine kaputte ZIP — das Gute
+kommt, das andere steht mit Grund bei den Übersprungenen, im Fach steht
+nur „gut" (§4); zweimal dieselbe ZIP (§5); eine geänderte Datei daneben
+(§6); der eigene Schreiber, in beiden Köpfen (§7); keine Seitenfehler
+(§8). Die ZIPs baut die Suite selbst, mit frei wählbaren Flags, Namensbytes
+und Prüfsummen. Zwei Punkte des ersten Wurfs waren auf der Seite der Suite
+falsch: die Sortierung (der Browser stellt „normal" vor „Öl") und der Name
+des Wurzelfachs (E350: der eine oberste Ordner, nicht die ZIP). Belegt rot
+in sieben Richtungen, jede einzeln zurückgedreht und wiederhergestellt:
+
+a — das Polynom der Tafel um ein Bit verdreht (zipdetails.js): drei rot,
+    dann bricht die Suite ab — jeder Eintrag gilt als beschädigt, auch das
+    Prüfmaterial (§1, §2).
+b — Namen immer als UTF-8 (zipdetails.js): 29/34 — „�bung", „Stra�e"
+    (§1, §2, §3).
+c — Bit 0 nie gesehen (zipdetails.js): 26/34 (§1, §2, §4: der
+    verschlüsselte Eintrag geht durch den Entpacker).
+d — die Prüfsumme nicht nachgerechnet (einlesen.js): 29/34 — kaputt.txt
+    kommt als Dokument ins Fach (§2, §4). Der Befund.
+e — keine Wiedererkennung (archiveImport.js): 29/34 — „a (2)", „b (2)",
+    „bild (2)" (§5). Der andere Befund.
+f — die Kennung aus dem Namen allein (archiveImport.js): 31/34 — die
+    geänderte Datei gilt als unverändert (§5, §6).
+g — der Schreiber ohne UTF-8-Bit (ausgeben.js): 33/34 (§7).
+
+Drei Nachbarn mussten nachgezogen werden, alle zu Recht: test342 (E350)
+erwartete beim zweiten Einlesen derselben ZIP „Kapitel 1 (2)" und
+„Notizen (2)" — das war die alte Entscheidung, und §3, §7 und §9 lesen
+jetzt die neue (§9 liest in ein frisches Fach, sonst gäbe es keine PDF zu
+lesen); test103 (ZIP-Grenzen, ohne Browser) lädt ausgeben.js und
+einlesen.js mit `new Function` und bekam `ZipDetails` nicht — der Kern
+steht jetzt als Text davor; test105 verlangte den Kopf „ERZEUGT — NICHT
+VON HAND ÄNDERN" auch in zipdetails.js. Danach: test342 42/42, test103
+36/36, test105 120/120, test100 (Anhänge in der Sicherung — der Leser
+prüft jetzt jede Datei) 32/32, test96 (die Sicherung) 18/18, test87
+152/152, test109 20/20, test143 23/23, test99 23/23, test353 (Dienststand
+v116) 39/39, test74 (Einzeldatei) 12/12, test225 11/11 — alle grün.
+
+
+E364 — Vier kleine Löcher: Heft bleibt Heft beim Sperren, Fach bleibt Fach, wache Zeit, die Uhr überlebt (L78 Punkte 4 und 5, L81 Punkte 2 und 4)
+════════════════════════════════════════════════════════════════════════════
+
+BEFUND (aus der Bestandsaufnahme vom 2. September, Gruppe „falsches
+Ergebnis oder still nichts"):
+
+  · L78 Punkt 4: ein Heft, das über das Seitenmenü oder die Palette
+    verschlüsselt wurde, trug kein `heftArt` und fehlte im Regal, bis es
+    entsperrt war — für den Menschen sieht das aus wie Datenverlust. Nur
+    das Regal selbst (`sperrenHier`) setzte den Merker; werkzeuge.ts
+    sollte die Heft-Regel nicht kennen.
+  · L78 Punkt 5: eine gewöhnliche Seite, in der ein Heft lag, war ein
+    Fach — bis ihr letztes Heft im Papierkorb lag. Dann fiel sie aus dem
+    Regal, und mit ihr die Karte, in der man das Heft zurückholt.
+  · L81 Punkt 2: der Zeitmesser rechnete aus der Wanduhr. Ein Laptop, der
+    mit laufender Uhr zuklappt, schrieb die Nacht als Lernzeit ins Buch —
+    eine FALSCHE ZAHL (§46), und L81 Punkt 1 (die Auswertung) hätte darauf
+    aufgebaut.
+  · L81 Punkt 4: die laufende Uhr war Laufzeit; ein Neuladen verlor sie.
+
+─── WAS GEBAUT WURDE ───────────────────────────────────────────────────────
+
+  1. DIE FRAGE VOR DEM SPERREN. `ARTEN.seiteWirdGesperrt` ist eine Frage
+     (E362): `Werkzeuge.sperren` stellt sie, BEVOR es die Kinder
+     verschlüsselt, und trägt alles, was die Antworten sagen, mit ins
+     Sperren — ausser `locked` und `id`, das Schloss schreibt niemand um.
+     Das Regal (notebook.ts) hört zu und antwortet „heftArt: heft", wenn
+     die Seite heftartig ist — das lässt sich nur ableiten, solange die
+     Kinder lesbar sind; gesperrt zählt danach der Merker. werkzeuge.ts
+     kennt die Regel damit weiter nicht; der Bus ist die Regel-Maschine,
+     die L78 verlangte. `sperrenHier` bleibt als Gürtel zum Hosenträger.
+
+  2. DAS FACH MERKT SICH, DASS ES EINES IST. Beim Zeichnen des Regals
+     (`faecher()`) bekommt jedes abgeleitete Fach ohne Merker
+     `heftArt:'fach'` — einmal, nicht bei jedem Zeichnen. Danach bleibt
+     die Karte, auch wenn das letzte Heft im Papierkorb liegt. Der Merker
+     lügt nie: eine Seite, die selbst Blätter bekommt, fällt in `istFach`
+     schon vorher heraus (test356 §2 prüft genau das).
+
+  3. WACHE ZEIT. Der Tick kommt alle 500 ms. Kommt er nach mehr als
+     dreissig Sekunden, hat der Rechner geschlafen oder der Browser die
+     Registerkarte eingeschläfert — die Spanne wird GESEHEN
+     (`uebersprungenSek`) und nicht gezählt. Eine verborgene
+     Registerkarte zählt nicht (`document.visibilityState`): gezählt
+     wird, was man vor sich hat. Eine rückwärts gestellte Uhr (delta < 0)
+     zählt weder vor noch zurück. Das Feld sagt „1:23:00 Schlaf nicht
+     gezählt", sobald es eine Minute ist.
+
+  4. DIE UHR ÜBERLEBT. Alle fünf Sekunden, und bei Start, Pause und Ende,
+     geht der Stand nach `zeit:laufend`; Beenden schreibt null. Beim Laden
+     der Ablage nimmt `wiederaufnehmen` ihn wieder auf — die Spanne seit
+     dem Sichern zählt nicht (sie war Neuladen oder Schlaf). Angemeldet
+     über `Ereignisse.horche(ARTEN.ablageGeladen, …, {nachreichen: true})`
+     — die erste Verwendung des Nachreichens aus E362 ausserhalb des
+     Menübands; ohne es hinge der Zuhörer davon ab, ob die Ablage vor
+     oder nach zeitmesser.js geladen wird.
+
+  5. E361 hob die Fassung von selbst (v117).
+
+─── WAS NICHT GEBAUT WURDE ────────────────────────────────────────────────
+
+Kein Ton beim Ablauf (L81 Punkt 3), keine Auswertung (Punkt 1), weiter nur
+eine Uhr (Punkt 5). Ein Fach, dessen letztes Heft vor E364 in den
+Papierkorb kam und das seither nie im Regal stand, bekommt den Merker
+erst, wenn das Heft zurück ist. Die dreissig Sekunden sind eine Erfahrung,
+kein Mass: kürzer, und ein Browser, der eine verborgene Registerkarte
+auf einen Tick je Minute drosselt, würde als Schlaf gelten — was er in
+dem Fall auch ist.
+
+─── PRÜFUNG ────────────────────────────────────────────────────────────────
+
+test356 neu, PORT 9366, fünf Abschnitte: die Frage im Register, ein
+Zuhörer, die Antwort „heft" VOR dem Sperren, das Sperren über
+`Werkzeuge.sperren` (mit `prompt`-Attrappe) — gesperrt mit Merker, im
+Regal, entsperrt mit Blatt; eine gewöhnliche Seite bekommt keinen (§1);
+das Fach vor und nach dem ersten Zeichnen, nach dem Papierkorb, und die
+Seite, die selbst ein Blatt bekommt (§2); die Wanduhr um zwei Stunden
+vorgestellt, zurückgestellt, die Registerkarte verborgen und wieder
+sichtbar, das Feld (§3); Sichern, Neuladen, Weiterlaufen ohne die
+Ladezeit, Beenden, noch ein Neuladen (§4); keine Seitenfehler (§5).
+Belegt rot in sieben Richtungen, jede einzeln zurückgedreht und
+wiederhergestellt:
+
+a — das Regal antwortet nicht auf die Frage (notebook.js): 25/28 — das
+    Heft wird gesperrt und fehlt im Regal. Der Befund.
+b — `Werkzeuge.sperren` verwirft die Antworten (werkzeuge.js): 26/28 —
+    dasselbe Bild von der anderen Seite.
+c — kein `faecherMerken` (notebook.js): 26/28 — der Ordner bekommt keinen
+    Merker, und die Fach-Karte ist nach dem Papierkorb weg.
+d — die Wanduhr statt der wachen Zeit (zeitmesser.js): 25/28 — zwei
+    Stunden Schlaf stehen als 7202 s im Buch. Der andere Befund.
+e — die verborgene Registerkarte zählt mit (zeitmesser.js): 27/28. Beim
+    ersten Anlauf blieb diese Probe GRÜN: sie verbarg die Karte 1,2 s und
+    liess eine Sekunde Toleranz — das misst nichts (§55.2). Jetzt sind es
+    drei Sekunden ohne Toleranz, und die Probe wird rot (5 statt 2).
+f — der Stand wird nur bei Start und Ende gesichert (zeitmesser.js):
+    25/28 — nach dem Neuladen steht der Timer bei 0 gelaufenen Sekunden,
+    und die Sitzung fehlt im Verlauf.
+
+Eine siebte Probe blieb GRÜN, und sie steht mit Grund hier statt in der
+Liste: `{nachreichen: true}` am Zuhörer wegzunehmen ändert heute nichts,
+weil `ablage.geladen` erst gemeldet wird, wenn alle Skripte längst geladen
+sind — der Zuhörer hängt vorher. Der Griff bleibt für den Fall, dass sich
+die Startreihenfolge einmal ändert (genau der Fall, den E362 im Menüband
+gefunden hat); als Beleg taugt er nicht.
+
+NACHBARSCHAFT: test356 28/28 · test265 38/38 (Regal) · test268 15/15
+(Zeitmesser) · test272 153/153 (kein Griff verloren) · test87 152/152 ·
+test105 120/120 · test109 20/20 · test225 11/11 · Einzeldatei neu gebaut
+(8178 KB). Alles grün.
+
+
+E365 — Der ZIP-Import ist ein Auftrag: er überlebt den geschlossenen Tab (L114 Punkt 1)
+════════════════════════════════════════════════════════════════════════════
+
+BEFUND (L114 Punkt 1): der Import lief im Tab, Datei für Datei, mit einer
+Fortschrittszeile. Wer ihn bei Datei 40 von 87 schloss, hatte 39 Dokumente
+— und KEIN WISSEN darüber, was fehlt. Das ist die unangenehme Sorte
+Fehler: das Regal sieht aus, als sei alles da. E327 hat den Weg zur
+Auftragsmaschine getreten (Seitenbilder), und L114 sagt: „der Import
+gehört als Nächster dorthin".
+
+DIE FRAGE, AN DER ES HING: ein Auftrag ist dauerhaft, ein `File` aus dem
+Dateiwähler nicht. Nach einem Neuladen gibt es die ZIP nicht mehr — der
+Auftrag wüsste, was zu tun ist, und hätte nichts, womit.
+
+─── WAS GEBAUT WURDE ───────────────────────────────────────────────────────
+
+  1. DIE ZIP WIRD DAUERHAFT. `alsAuftrag` legt sie zuerst in die Ablage —
+     als ABGELEITETE Datei (E103), ohne Block: sie gehört keinem Dokument,
+     sondern dem Auftrag, und wandert nicht mit in die Wolke. Der Auftrag
+     trägt nur ihre Kennung. Nach dem letzten Eintrag wird sie gelöscht;
+     bei einem Abbruch bleibt sie liegen, sonst gäbe es kein Weitermachen.
+
+  2. DER PLAN IST WIEDERHOLBAR. `planen(zip, name)` liest das
+     Inhaltsverzeichnis und gibt dieselbe Reihenfolge, sooft man fragt —
+     keine Uhr, kein Zufall. Deshalb muss der Auftrag nur die STELLE
+     merken (40 von 87) und nicht die Liste. `umfang` zählt die Einträge,
+     bevor ein Byte entpackt ist: die Schrittzahl steht, bevor der Auftrag
+     beginnt.
+
+  3. JEDER EINTRAG IST EIN SCHRITT. `importZip` bekam drei Griffe —
+     `abBei` (wo anfangen), `beiSchritt` (Wiederaufsetzpunkt schreiben)
+     und `abgebrochen` (aufhören). Der Schritt trägt Stelle, Wurzelfach,
+     Zahlen und die letzten fünfzig übersprungenen und fehlerhaften Namen.
+
+  4. DAS WURZELFACH ÜBERLEBT. Beim Wiederaufnehmen kommt seine Kennung aus
+     dem Auftrag statt aus einer Namenssuche — `fachFuer` fände es zwar am
+     Namen wieder, aber nur, solange niemand es umbenannt hat.
+
+  5. ABBRECHEN HEISST AUFHÖREN, nicht zurückrollen: was im Regal steht,
+     bleibt stehen (§46), und die Stelle ist gemerkt.
+
+  6. DER RÜCKFALL IST EHRLICH. Eine ZIP über der Ablagegrenze und ein
+     Redion ohne Auftragsmaschine laufen wie früher — mit einem Satz dazu:
+     „wird hier im Fenster entpackt, bitte offen lassen." Kein stiller
+     Unterschied.
+
+  7. Der Dateiwähler geht jetzt diesen Weg; `ansichtAuffrischen` hängt am
+     Ereignis `auftrag.beendet`, damit das Regal nicht stillsteht, während
+     fünfzig Dokumente hineinlaufen.
+
+─── WAS DER BAU GEFUNDEN HAT ──────────────────────────────────────────────
+
+test357 §4 fand einen Fehler im ersten Wurf: der Schritt wurde nur nach
+einem ANGELEGTEN Dokument gemeldet. Eine ZIP, deren Dateien alle schon da
+sind (E363), rückte damit nie vor — der Fortschritt stand bei 0 von 87,
+und eine Wiederaufnahme hätte wieder von vorn angefangen. Die Arbeit an
+einem Eintrag steht jetzt in einer eigenen Funktion, die `return` sagt
+statt `continue`; der Schritt danach gilt IMMER, auch für einen
+übersprungenen Eintrag.
+
+─── WAS NICHT GEBAUT WURDE ────────────────────────────────────────────────
+
+Der Läufer rechnet weiter im Faden der Oberfläche (L103 Punkt 2, der Web
+Worker). Zwei Tabs können denselben Auftrag nicht gleichzeitig übernehmen
+— das verhindert die Pacht der Maschine (E286), aber der zweite wartet,
+statt zu helfen. Kein „welche Einträge fehlen noch im Fach" als eigene
+Ansicht: der Auftrag SAGT es (Schritt 40 von 87), eine Liste der offenen
+Namen gibt es nicht.
+
+─── PRÜFUNG ────────────────────────────────────────────────────────────────
+
+test357 neu, 34 Punkte, PORT 9367, sechs Abschnitte: die angemeldete Art
+mit menschlichem Namen und der Plan ohne Entpacken (§1); `alsAuftrag` —
+Arbeitskopie (abgeleitet, ohne Block) und Auftrag mit sechs Schritten,
+noch nichts angelegt (§2); die Maschine arbeitet ihn ab, die Arbeitskopie
+ist danach weg, das Regal trägt zwei Fächer und sechs Dokumente (§3); die
+UNTERBRECHUNG — nach zwei Dateien Schluss, Stand mit Stelle und
+Wurzelfach, Arbeitskopie bleibt, zweiter Anlauf beginnt bei Datei 3 und
+wird fertig, nichts doppelt, dasselbe Wurzelfach, und dieselbe ZIP ein
+drittes Mal ergibt sechs Schritte mit null neuen Dokumenten (§4); der
+Rückfall bei zu grosser ZIP und ohne Maschine, mit dem Satz für den
+Menschen (§5); keine Seitenfehler (§6). Der Prüfhelfer `titelFlach` war im
+ersten Wurf selbst kaputt — er schnitt in JEDER Rekursionsstufe den
+eigenen Titel weg und lieferte immer eine leere Liste (§55.2). Belegt rot
+in sieben Richtungen, jede einzeln zurückgedreht und wiederhergestellt:
+
+a — die Wiederaufnahme beginnt immer bei null (archiveImport.js): 32/35 —
+    der zweite Anlauf arbeitet acht statt sechs Einträge ab und fängt
+    wieder bei Datei 1 an. Der Befund.
+b — die Kennung des Wurzelfachs wird nicht mitgenommen: 33/35 — nachdem
+    der Mensch das Fach umbenannt hat, legt der zweite Anlauf ein ZWEITES
+    an, und der Bestand steht an zwei Orten. Beim ersten Anlauf blieb
+    diese Probe grün, weil `fachFuer` das Fach am Namen wiederfand; die
+    Umbenennung im Test macht den Unterschied sichtbar (§55.2).
+c — die Arbeitskopie wird nie gelöscht: 32/35 — sie bleibt nach dem
+    fertigen Lauf in der Ablage liegen.
+d — der Abbruch wird nicht beachtet: fünf rot, dann bricht die Suite ab —
+    der Läufer arbeitet durch, obwohl der Tab zu ist.
+e — kein Schritt gemeldet: acht rot — der Auftrag steht bei 0 von 6, und
+    von einer Wiederaufnahme kann keine Rede sein.
+f — die Arbeitskopie ist nicht abgeleitet: 33/35 — sie ginge mit in die
+    Wolke.
+g — die Grösse wird nicht geprüft: 32/35 — eine ZIP über der Ablagegrenze
+    bekäme einen Auftrag, dessen Arbeitskopie es nicht geben kann.
+
+NACHBARSCHAFT: test357 35/35 · test342 42/42 (der ZIP-Import selbst, an
+E363 angepasst) · test355 34/34 (der ZIP-Leser) · test327 30/30 und test286
+16/16 (die Auftragsmaschine und ihr erster Bereich — die beiden, die dieser
+Bogen mitbenutzt) · test96 18/18 und test100 32/32 (Sicherung und Anhänge,
+weil der Bogen `Dateien.ablegen`/`weg` anfasst) · test87 152/152 · test105
+120/120 · test109 20/20 · test353 39/39 (der Stempel, der sich bei jedem
+Bau mitbewegt) · test225 11/11 · Einzeldatei neu gebaut (8178 KB) · test74
+12/12 gegen die frische Einzeldatei. Alles grün.
+
+HINGESEHEN (§55): drei Bilder, und das zweite ist der eigentliche Beleg.
+Beim ersten Versuch zeigte das Fenster „Nichts läuft mehr. Alles erledigt."
+— nicht, weil etwas kaputt war, sondern weil 24 Einträge schneller fertig
+sind, als ein Bildschirmfoto braucht. Mit 900 Einträgen steht dort „Kapitel
+57.md (507 von 900)" mit Fortschrittsbalken und Abbrechen-Knopf. Dann die
+Seite mitten im Entpacken NEU GELADEN: das Fenster zeigt „Kapitel 61.md
+(511 von 900)" — vier Schritte weiter, kein Neubeginn. Genau das ist die
+Behauptung dieses Bogens, und sie ist mit Augen zu sehen, nicht nur zu
+messen.
+
+NEBENBEI GEFUNDEN, NICHT HIER BEHOBEN: das dritte Bild zeigt nach 900
+eingelesenen Dokumenten den Kopf „Kürzlich verwendet · 60 Dokumente". Die
+60 ist keine Zahl, sondern eine Decke (`bibliothek.ts`, `.slice(0, 60)`) —
+sie steht bei 61 Dokumenten genauso da wie bei 900. Als L116 Punkt 1
+eingetragen; ein eigener Bogen, kein Anhängsel an diesen (§45).
+
+
+E366 — Das Regal zeigt die ganze Schachtelung (L78 Punkt 2, L114 Punkt 3 halb)
+════════════════════════════════════════════════════════════════════════════
+
+BEFUND: das Notizhefte-Regal las seine Fach-Regel EINE Ebene tief. Ein Fach
+zählte nur, wenn direkt ein Heft darin lag:
+
+    const istFach = (p) => {
+      …
+      return kinder.some(isNotebook) || p.heftArt === 'fach';
+    };
+
+Bei `Schule/Physik/Mechanik/Kinematik` heisst das: „Mechanik" ist ein Fach
+(ein Heft darin), „Physik" auch (die Formelsammlung), „Mathematik" auch —
+und „Schule" ist KEINS, weil darin nur Fächer liegen. Das Regal zeigte
+also vier Fächer flach nebeneinander an der Wurzel, ohne das eine, das sie
+zusammenhält.
+
+Nichts ging dabei verloren, und genau das machte es leise: der Baum kannte
+die Schachtelung weiter, die Bibliothek auch. Nur das Regal, in dem man
+seine Hefte sucht, zeigte einen Bestand, den so niemand angelegt hat. Nach
+einem ZIP-Import mit Ordnern (E350/E365) ist das die halbe Struktur — und
+zwar die Hälfte, die der Nutzer selbst gemacht hat.
+
+L78 Punkt 2 hielt das seit dem 30. August fest, und Redur hat in E277
+entschieden, dass die tiefe Verschachtelung ein EIGENER Bogen ist. Das
+hier ist dieser Bogen.
+
+DIE REGEL, EIN WORT LÄNGER
+──────────────────────────
+Ein Fach ist ein Fach, wenn ein Heft ODER ein Fach darin liegt:
+
+    if (kinder.some(isNotebook)) return true;
+    if (tiefe >= FACH_TIEFE) return false;
+    …
+    return kinder.some(k => istFach(k, tiefe + 1, weg));
+
+Zwei Bremsen, und beide sind nicht theoretisch. `FACH_TIEFE = 12` gegen
+einen sehr tiefen Baum — ein Ordnerbaum aus einer ZIP ist selten tiefer
+als fünf, zwölf ist grosszügig und begrenzt zugleich die Arbeit auf einem
+kaputten Bestand. Und ein `gesehen`-Satz gegen einen RING in `content`:
+A hält B, B hält A. Ein solcher Ring wäre kaputt, aber er darf die App
+nicht aufhängen — lieber nichts anzeigen als hängen (§46). test358 §9 legt
+beide Fälle an und misst, dass die Antwort in Millisekunden kommt.
+
+WAS DARAUS FOLGT, UND ZWAR AN VIER STELLEN
+──────────────────────────────────────────
+1. `faecher()` gibt nur noch die OBERSTEN zurück (die, die in keinem Fach
+   liegen); `alleFaecher()` gibt jedes.
+2. Das offene Fach zeigt seine `unterFaecher()` — vorher waren die von
+   dort aus überhaupt nicht erreichbar.
+3. Eine BROTKRUME nennt den Weg, und der Zurück-Knopf führt EINE Ebene
+   hoch statt an die Wurzel. „← Notizhefte" war richtig, solange es nur
+   einen Ort gab, an den man zurückkonnte; drei Ebenen tief wäre derselbe
+   Knopf eine Lüge.
+4. Das VERSCHIEBEN-Menü nimmt `alleFaecher()`, nicht `faecher()`.
+
+Punkt 4 ist der, den man vergisst. `faecher()` gab vorher jedes Fach
+zurück, und das Menü hing daran. Hätte man nur die Anzeige umgestellt,
+wären ab sofort genau die Fächer nicht mehr als Ziel wählbar gewesen, die
+dieser Bogen sichtbar macht — ein Bogen, der eine Sache zeigt und
+gleichzeitig unerreichbar macht. Am Ziel steht jetzt sein Weg
+(„Schule / Physik / Mechanik"), sonst stünden zwei Fächer „Physik" aus
+verschiedenen Bäumen ununterscheidbar untereinander.
+
+DER SATZ AN DER FACH-KARTE
+──────────────────────────
+An jeder Fach-Karte stand „n Hefte" — auch an einem Fach, in dem gar keine
+Hefte liegen, sondern zwei Unterfächer. Dort stand dann „0 Hefte".
+
+Das ist die unangenehme Sorte falsch: es sieht aus wie „hier ist nichts",
+während der ganze Bestand eine Ebene tiefer liegt. Genannt wird jetzt, was
+WIRKLICH drin ist, und nur das — „2 Fächer", „2 Fächer · 1 Heft",
+„2 Hefte", „leer". Kein Teil, der immer da ist.
+
+Dasselbe gilt für die Brotkrume: sie erscheint erst ab der zweiten Ebene.
+An einem Wurzelfach stünde „Notizhefte / Schule" neben der Überschrift
+„Schule" und dem Knopf „← Notizhefte" — dreimal dasselbe. Eine Anzeige,
+die immer da ist, wird nicht gelesen; das ist die Regel, die bei E284,
+E286, E288, E289 und E290 fünfmal zugeschlagen hat.
+
+WAS BEWUSST NICHT PASSIERT
+──────────────────────────
+Ein Fach, das nur über ein UNTERFACH eines ist, bekommt keinen
+`heftArt:'fach'`-Merker. Der Merker aus E364 hält ein Fach sichtbar, wenn
+sein letztes Heft im Papierkorb liegt; er darf aber nur behaupten, was
+sich zum Zeitpunkt des Merkens ableiten liess. „Schule" ist ein Fach,
+solange „Physik" eines ist — verschwindet Physik, ist Schule eine
+gewöhnliche Seite, und ein Merker würde das Gegenteil behaupten.
+`faecherMerken` prüft deshalb weiter auf ein DIREKTES Heft.
+
+Und: PDFs stehen weiter nicht im Notizhefte-Regal (L77 Punkt 3). Das ist
+die verbliebene Hälfte von L114 Punkt 3 und eine eigene Entscheidung —
+die Frage, ob „Notizhefte" ein Filter ist oder ein Ort.
+
+HINGESEHEN (§55)
+────────────────
+Vier Bilder, Rechner und Telefon. Die Wurzel zeigt jetzt EINE Karte
+(„Schule · 2 Fächer") statt vier flacher; in „Physik" steht die Brotkrume
+`Notizhefte / Schule / Physik`, der Knopf „← Schule", darunter „Mechanik ·
+2 Hefte", „Optik · 1 Heft" und das Heft „Formelsammlung"; drei Ebenen tief
+in „Mechanik" dasselbe mit „← Physik". Am Telefon (390 px) passt der Weg
+`Notizhefte / Schule / Physik / Mechanik` in eine Zeile, weil die
+Brotkrume waagerecht rollt statt die Seite zu weiten.
+
+Beim Stil zwei Marken erfunden — `--flaeche-2` und `--akzent` —, die es
+beide nicht gibt. Das steht in `bausteine.css` an zwei Stellen als
+Kommentar, weil es dort schon zweimal passiert ist. Jetzt `--bg-hover`
+wie die Reiter darunter, und gar keine eigene Fokusregel: die globale
+`:focus-visible` trifft diese Knöpfe längst. test358 §11 hält beide Marken
+namentlich fest, damit die dritte Wiederholung rot wird.
+
+DER FEHLER, DEN DIESER BOGEN SELBST GEBAUT HAT
+──────────────────────────────────────────────
+Der erste Wurf zog `if (p.heftArt === 'fach') return true;` als billigen
+Vorab-Ausstieg an den Anfang von `istFach` — vor die Prüfung auf eigene
+Blätter. Das war genau die Lüge, gegen die E364 den Merker abgesichert
+hatte: ein gemerktes Fach, das selbst ein Blatt bekommt, wäre ein Fach
+GEBLIEBEN, und die Karte hätte behauptet, es sei ein Ordner, während man
+darin schreibt.
+
+Gefunden hat es test356 §2 — die Prüfung aus E364, drei Bögen alt, in der
+Nachbarschaftskette: 27 von 28. Nicht test358, das E366s eigener Prüflauf
+ist und den Fall nicht kannte. Er steht jetzt auch dort (§1), weil es
+E366s Fehler war und nicht E364s.
+
+Die Regel, die daraus bleibt: der Merker ERGÄNZT die abgeleitete Regel,
+er überstimmt sie nie. Was sich aus dem Bestand ablesen lässt, gilt.
+
+MUTATIONSPROBE (§55.2): zehn Richtungen, alle rot.
+
+a — die Regel wieder eine Ebene tief: 40/58 — achtzehn rot. Das ist der
+    Befund selbst; „Schule" ist dann kein Fach, die Wurzel zeigt vier
+    Fächer flach, die Brotkrume hat nichts zu nennen.
+b — `faecher()` gibt wieder alle flach zurück: 56/58 — an der Wurzel
+    stehen fünf Karten statt einer.
+c — das offene Fach zeigt seine Unterfächer nicht: 48/58 — zehn rot; ab
+    „Schule" kommt man nirgends mehr hin.
+d — keine Brotkrume: 51/58 — sieben rot, Rechner und Telefon.
+e — Zurück springt wieder an die Wurzel: 56/58 — aus „Mechanik" landet
+    man in „Notizhefte" statt in „Physik".
+f — der Inhaltssatz zählt wieder nur Hefte: 55/58 — „Schule" sagt
+    „0 Hefte", „Physik" verschweigt seine zwei Fächer.
+g — das Verschieben kennt nur die Wurzelfächer: 56/58 — „Mechanik" steht
+    nicht mehr zur Wahl. Das ist die Stelle, die man vergisst.
+h — keine TIEFENbremse (`FACH_TIEFE` weg): 57/58 — der 30 Ebenen tiefe
+    Baum gilt dann als Fach. Der Ring blieb dabei grün, und das ist
+    richtig: die Ringbremse (`gesehen`) ist die andere Zusage, und sie
+    stand noch. Zwei Bremsen, zwei Proben.
+i — die Suche lässt die Fächer stehen: 57/58 — beim Suchen steht
+    „Mechanik" zwischen den Treffern.
+j — die Brotkrume rollt nicht (`overflow-x` weg): 57/58 — das Regal wird
+    am Telefon breiter als 390 px.
+
+NACHBARSCHAFT: test358 60/60 · test265 38/38 und test264 25/25 (die
+beiden Regal-Bögen, die diese Regeln erfunden haben) · test282 57/57 und
+test283 35/35 (Regalzustand und Darstellungswahl) · test356 28/28 (E364 —
+erst 27/28, siehe oben) · test272 153/153 (kein Griff geht verloren) ·
+test342 42/42 und test357 35/35 (der ZIP-Import, dessen Ordner hier
+sichtbar werden) · test87 152/152 · test105 120/120 · test109 20/20 ·
+test353 39/39 · test225 11/11 · Einzeldatei neu gebaut · test74 ohne
+JS-Fehler. Alles grün.
