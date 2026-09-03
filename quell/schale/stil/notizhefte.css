@@ -312,3 +312,38 @@
   /* Beim Schreiben verschwindet die untere Leiste (body.schreibt) — der
      Knopf gehört nur zum Regal und stört dort nie die Tastatur. */
 }
+
+
+/* --- Ziehen und Ablegen im Regal (E368) ---------------------------------- *
+   Eine Geste für Maus und Finger. Während des Ziehens hängt `nh-zieht` am
+   Body: das schaltet die Textauswahl ab (sonst markiert der Zug den Namen
+   mit) und sagt dem Browser, dass der Finger hier nicht rollen soll. */
+body.nh-zieht{ user-select:none; -webkit-user-select:none }
+body.nh-zieht .nh-regal{ touch-action:none }
+
+/* Die gehobene Karte bleibt an ihrem Platz stehen, nur blasser — sonst
+   springt das Gitter beim Heben um, und man zieht in eine Ansicht, die es
+   im Moment des Loslassens nicht mehr gibt. */
+.nh-hebt{ opacity:.35 }
+
+/* Was unter dem Zeiger hängt: der Name, klein, halbdurchsichtig, dem Zeiger
+   nachgeführt. `pointer-events:none`, sonst meldete er sich selbst als
+   Ablegeziel. */
+.nh-schatten{
+  position:fixed; z-index:9000; pointer-events:none;
+  transform:translate(10px, 10px);
+  max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  padding:6px 10px; border-radius:var(--radius-md);
+  background:var(--bg-schwebend); color:var(--text);
+  border:1px solid var(--line); box-shadow:var(--shadow-2);
+  font-size:13px; font-weight:600;
+}
+
+/* DIE ABLEGEZONE (L114 Punkt 4). „Das Ablegen funktioniert, man sieht es
+   nur nicht kommen" — deshalb ein Rahmen UND eine Fläche, nicht nur Farbe
+   (§38). Sie erscheint nur, während wirklich etwas gezogen wird. */
+.nh-ziel{
+  outline:2px dashed var(--accent); outline-offset:2px;
+  background:var(--accent-schwach);
+  border-radius:var(--radius-md);
+}

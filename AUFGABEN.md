@@ -2939,3 +2939,24 @@ node pruefungen/lauf/test105.mjs
   war falsch), und die Decke muss VOR der Umsortierung greifen, sonst
   wären es beim Sortieren nach Namen die alphabetisch ersten sechzig.
   test359 neu (24), belegt rot in sieben Richtungen.
+
+* E368 (L78 Punkt 1 zu, L114 Punkt 4 zu): Ziehen und Ablegen im Regal.
+  Seit E366 sieht man die Schachtelung — bewegen ging nur über „⋯ →
+  Verschieben", den Weg, den GoodNotes gar nicht hat. Jetzt zieht man den
+  Deckel auf das Fach, mit EINER Geste über Pointer-Ereignisse für Maus und
+  Finger; HTML5-dragstart wäre am Rechner billiger und am Telefon gar
+  nichts. Ziele sind ein Fach, die Brotkrume (nimmt heraus) und die freie
+  Fläche; daneben abgelegt passiert nichts.
+
+  Der lehrreiche Teil war der Finger. `touch-action:none` allein genügt
+  nicht: der Browser liest es beim touchstart und hat entschieden, ob die
+  Berührung ein Rollen wird, ehe die Karte 400 ms später gehoben ist —
+  danach schickt er pointercancel, und am Telefon passierte schlicht
+  nichts. Ein touchmove-Zuhörer mit passive:false hält die Bewegung an,
+  solange etwas gehoben ist, und lässt sie vorher durch, damit die Liste
+  sich weiter rollen lässt.
+
+  Nebenbei: `Werkzeuge.verschiebe` sagte selbst schon „Verschoben" — zwei
+  Sätze für eine Handlung, der uninformative zuerst. Es nimmt jetzt ein
+  vorbelegtes drittes Argument, jeder bestehende Aufrufer bleibt gleich.
+  test360 neu (32), belegt rot in zehn Richtungen.

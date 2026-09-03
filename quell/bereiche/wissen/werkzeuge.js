@@ -2199,7 +2199,11 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
         });
         inp.focus();
     };
-    const verschiebe = (p, zielId) => {
+    /** `stillerHinweis` unterdrückt NUR den Satz „Verschoben" — für Aufrufer,
+     *  die selbst einen besseren sagen (E368: das Ziehen im Regal nennt Heft
+     *  und Ziel). Ohne den Zusatz bleibt alles, wie es war; zwei Sätze für
+     *  eine Handlung wären einer zu viel, und der bessere ist nicht dieser. */
+    const verschiebe = (p, zielId, stillerHinweis = false) => {
         const alt = Store.getBlock(p.parentId);
         if (alt) {
             alt.content = alt.content.filter((x) => x !== p.id);
@@ -2214,7 +2218,8 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
         }
         App.zeichneBaum();
         App.zeichneSeite();
-        UI.toast('Verschoben');
+        if (!stillerHinweis)
+            UI.toast('Verschoben');
     };
     /* ========================================================================
      * 16. WIKI   (Notions „In Wiki umwandeln")

@@ -28848,3 +28848,127 @@ test33 ohne JS-Fehler (der Prüflauf, der `.bib-zahlen` schon las) · test207
 test272 153/153 · test87 152/152 · test105 120/120 · test109 20/20 ·
 test353 39/39 · test225 11/11 · Einzeldatei neu gebaut · test74 ohne
 JS-Fehler. Alles grün.
+
+
+E368 — Ziehen und Ablegen im Regal (L78 Punkt 1, L114 Punkt 4)
+════════════════════════════════════════════════════════════════════════════
+
+BEFUND: seit E366 SIEHT man die Schachtelung des Regals — bewegen konnte man
+ein Heft aber nur über „⋯ → Verschieben". Das ist der Weg, den GoodNotes gar
+nicht hat: dort zieht man den Deckel auf das Fach. L78 Punkt 1 hielt es seit
+dem 30. August fest und sagte gleich, was es kostet: „Drag&Drop wäre ein
+eigener Bogen mit Telefon-Fassung." Das hier ist dieser Bogen.
+
+Dazu L114 Punkt 4, aus derselben Ecke: „Das Ablegen funktioniert, man sieht
+es nur nicht kommen" — es gab keine Fläche, die sagt „hier fallen lassen".
+
+EINE GESTE, NICHT ZWEI
+──────────────────────
+Über Pointer-Ereignisse, für Maus und Finger gemeinsam. Der Weg über
+HTML5-`dragstart` (wie in der Seitenleiste, `seitenleiste.ts:1087`) wäre am
+Rechner billiger — und am TELEFON gar nichts: Touch löst kein `dragstart`
+aus. Zwei Wege nebeneinander hiessen zwei Verhalten, die auseinanderlaufen,
+und die Telefon-Fassung ist genau das, was die Lücke verlangt.
+
+Drei Schwellen, jede mit einem Grund:
+
+    HEBEN_MS = 400   am Finger wird erst nach langem Drücken gehoben —
+                     sonst hebt jeder Tipp beim Blättern eine Karte an
+    HEBEN_PX = 6     an der Maus reicht ein Stück Weg; auf ein langes
+                     Drücken zu warten wäre am Rechner nur zäh
+    ROLL_PX  = 10    bewegt sich der Finger VOR dem Heben weiter als das,
+                     war es Blättern und nicht Ziehen
+
+DER FINGER, IN DREI ANLÄUFEN
+────────────────────────────
+Der lehrreiche Teil dieses Bogens. Am Rechner lief die Geste beim ersten
+Versuch; am Telefon passierte schlicht nichts, und die Prüfung sagte nur
+„die Ablegezone zeigt sich nicht".
+
+Der Grund ist eine Reihenfolge, die man nicht sieht: `touch-action:none`
+allein genügt nicht. Der Browser LIEST es beim `touchstart` und hat sich
+entschieden, ob die Berührung ein Rollen wird, ehe die Karte 400 ms später
+gehoben ist. Danach schickt er `pointercancel` — der Zeiger ist weg, das
+Ziel unbekannt, und der Aufräumer macht brav alles rückgängig.
+
+Die Abhilfe ist ein `touchmove`-Zuhörer mit `{ passive: false }`, der die
+Bewegung anhält, SOLANGE etwas gehoben ist. Vorher lässt er sie durch —
+sonst wäre die Liste am Telefon nicht mehr zu rollen, und das wäre der
+schlechtere Tausch. test360 §7 misst beide Hälften: wischen ohne halten
+verschiebt nichts, halten und tragen verschiebt.
+
+VIER ORTE, AN DENEN MAN ABLEGEN KANN
+────────────────────────────────────
+Ein Fach nimmt das Heft auf. Die BROTKRUME nimmt es heraus — sie ist der
+einzige Weg zurück, ohne das Fach erst zu verlassen. Die freie Fläche
+bedeutet „hierher" (im offenen Fach) beziehungsweise „aus jedem Fach
+heraus" (an der Wurzel). Und alles ausserhalb des Regals bedeutet gar
+nichts: wer danebenlässt, hat nichts getan. Das ist Absicht — ein Zug, der
+irgendwo endet, darf keine Wirkung raten.
+
+DER SATZ DANACH, UND WARUM ES NUR EINER IST
+───────────────────────────────────────────
+Beim Verschieben über das Menü hat man eben noch den Zielnamen gelesen;
+beim Ziehen nicht. Die Karte verschwindet aus der Ansicht, und ob sie im
+richtigen Fach gelandet ist, sieht man erst, wenn man hineingeht. Der Satz
+danach ist deshalb kein Beiwerk, sondern die einzige Quittung:
+
+    „Kladde" liegt jetzt in „Mathematik"
+
+Dabei kam heraus, dass `Werkzeuge.verschiebe` selbst schon „Verschoben"
+sagt — zwei Sätze für eine Handlung, und der uninformative zuerst.
+`verschiebe` nimmt jetzt ein drittes, vorbelegtes Argument
+`stillerHinweis = false` entgegen; jeder bestehende Aufrufer bleibt Wort
+für Wort, wie er war, und nur das Ziehen schaltet den generischen Satz ab.
+
+WAS DER PRÜFLAUF SELBST GELERNT HAT
+───────────────────────────────────
+Der erste Wurf teilte fünf Kennungen über neun Abschnitte — und §5 mass
+dann eine Schachtelung, die §2 kurz vorher aufgelöst hatte: das Fach lag
+gar nicht mehr im Heft, also war der Zug erlaubt, und die Zusage schien
+gebrochen, obwohl der Code recht hatte. Jeder Abschnitt legt sich jetzt
+seinen eigenen Bestand an. Ein Abschnitt, dem ein anderer den Bestand
+verstellt, misst nicht mehr, was er behauptet — dasselbe war schon in
+test358 §1 passiert und ist offenbar die häufigste Art, sich eine Prüfung
+selbst kaputtzumachen.
+
+MUTATIONSPROBE (§55.2): zehn Richtungen, alle rot — zwei davon erst, nachdem
+der Prüflauf selbst berichtigt war.
+
+a — gar kein Ziehen: 20/34 — vierzehn rot, Maus und Finger zugleich.
+b — keine Ablegezone: 29/34 — man sieht nicht, wohin man ablegt.
+c — kein Schatten am Zeiger: 30/34.
+d — der Ring ist nicht gesperrt: 30/34 — ein Fach landet in seinem Heft.
+e — die Brotkrume ist kein Ziel: 31/34 — ein Heft kommt aus dem offenen
+    Fach nicht mehr heraus, ohne es zu verlassen.
+f — am Finger wird SOFORT gehoben, ohne langes Drücken: rot bei „Wischen
+    ohne Halten verschiebt nichts" — genau das, wogegen HEBEN_MS steht,
+    und danach bricht die Suite ab, weil das Regal anders aussieht.
+g — das Rollen wird nicht angehalten: 30/34 — der Browser bricht den
+    Zeiger ab, am Telefon passiert nichts.
+h — kein Satz danach: 29/34.
+i — die Wegschwelle an der Maus fällt weg: 33/34.
+j — der gestrichelte Rahmen wird reine Farbe: 31/34 (§38).
+
+ZU i UND f: beide blieben im ersten Durchgang GRÜN, und beide aus einem
+anderen Grund als vermutet.
+
+i, weil §3 auf eine FACH-Karte drückte — und Fach-Karten tragen kein
+`data-id`, sind also gar nicht ziehbar (sie sind Ziel, nicht Fracht). Auf
+ihnen konnte keine Schwelle greifen und keine fehlen. Ausserdem prüfte §3
+nur, dass hinterher nichts verschoben IST — was auch ohne Schwelle stimmt:
+wird die Karte gehoben und auf sich selbst abgelegt, ist das Ziel dasselbe
+wie der Ursprung. Gemessen wird jetzt mitten im Drücken, ob überhaupt
+gehoben wurde.
+
+f, weil die Mutation zuerst gar nicht baute: ohne die Zeile war `HEBEN_MS`
+unbenutzt, und `noUnusedLocals` hielt den Bau an. Eine Mutation, die nicht
+übersetzt, ist keine Probe — sie sagt nur, dass der Übersetzer wach ist.
+
+NACHBARSCHAFT: test360 34/34 · test358 60/60 und test359 25/25 (die beiden
+Bögen davor, die dasselbe Regal anfassen) · test265 38/38 und test264 25/25 ·
+test282 57/57 und test283 35/35 (Regalzustand und Darstellungswahl) ·
+test272 153/153 · test216 32/32 (Werkzeuge, deren `verschiebe` das dritte
+Argument bekam) · test87 152/152 · test105 120/120 · test109 20/20 ·
+test353 39/39 · test225 11/11 · Einzeldatei neu gebaut · test74 ohne
+JS-Fehler. Alles grün.

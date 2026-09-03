@@ -384,6 +384,34 @@ const Notebook = (() => {
         }
         Werkzeuge.verschiebe(p, zielId);
     };
+    /**
+     * DASSELBE, ABER MIT EINEM SATZ (E368).
+     *
+     * Beim Verschieben über das Menü hat man eben noch den Zielnamen gelesen;
+     * beim ZIEHEN nicht. Die Karte verschwindet aus der Ansicht, und ob sie
+     * im richtigen Fach gelandet ist, sieht man erst, wenn man hineingeht.
+     * Ein Satz danach ist hier kein Beiwerk, sondern die einzige Quittung.
+     */
+    const ziehenAblegen = (heftId, zielId) => {
+        const p = Store.getBlock(heftId);
+        if (!p)
+            return false;
+        const jetzt = p.parentTable === 'collection' ? null : (p.parentId || null);
+        if ((zielId || null) === jetzt)
+            return false; /* dorthin, wo es liegt */
+        if (zielId) {
+            if (zielId === heftId ||
+                (typeof WissenDienst !== 'undefined' && WissenDienst.istUnter(zielId, heftId))) {
+                UI.toast('Das geht nicht — dieses Fach liegt im Heft selbst.');
+                return false;
+            }
+        }
+        Werkzeuge.verschiebe(p, zielId, true);
+        const ziel = zielId ? Store.getBlock(zielId) : null;
+        UI.toast('„' + String(p.text || 'Ohne Titel') + '" liegt jetzt ' +
+            (ziel ? 'in „' + String(ziel.text || 'Ohne Namen') + '"' : 'im Regal'));
+        return true;
+    };
     const toggleFavorit = (id) => {
         const p = Store.getBlock(id);
         if (!p)
@@ -968,8 +996,183 @@ const Notebook = (() => {
     /* ------------------------------------------------------------------ *
      * Verdrahtung
      * ------------------------------------------------------------------ */
+    /* ==================================================================== *
+     * ZIEHEN UND ABLEGEN IM REGAL (E368, L78 Punkt 1 und L114 Punkt 4)
+     * -------------------------------------------------------------------- *
+     * Seit E366 SIEHT man die Schachtelung — bewegen konnte man ein Heft
+     * aber nur über „⋯ → Verschieben". Das ist der Weg, den GoodNotes gar
+     * nicht hat: dort zieht man den Deckel auf das Fach.
+     *
+     * EINE Geste für Maus und Finger, über Pointer-Ereignisse. Der Weg über
+     * HTML5-`dragstart` (wie in der Seitenleiste) wäre am Rechner billiger,
+     * am TELEFON aber gar nichts: Touch löst kein `dragstart` aus. Zwei
+     * Wege nebeneinander hiessen zwei Verhalten, die auseinanderlaufen —
+     * und die Telefon-Fassung ist genau das, was L78 Punkt 1 verlangt.
+     *
+     * DREI SCHWELLEN, und jede hat einen Grund:
+     *  · `HEBEN_MS` (400) — am Finger wird erst nach langem Drücken gehoben,
+     *    sonst hebt jeder Tipp beim Blättern eine Karte an.
+     *  · `HEBEN_PX` (6) — an der Maus reicht ein Stück Weg; auf ein langes
+     *    Drücken zu warten wäre am Rechner nur zäh.
+     *  · `ROLL_PX` (10) — bewegt sich der Finger VOR dem Heben weiter als
+     *    das, war es Blättern und nicht Ziehen. Ohne diese Schwelle ist die
+     *    Liste am Telefon nicht mehr zu rollen.
+     * -------------------------------------------------------------------- */
+    const HEBEN_MS = 400;
+    const HEBEN_PX = 6;
+    const ROLL_PX = 10;
+    let zug = null;
+    /** Wohin ein Ablegen an dieser Stelle ginge — oder `undefined` für
+     *  „nirgendwohin" (dann bleibt alles, wo es ist). `null` heisst
+     *  ausdrücklich „ins Regal, aus jedem Fach heraus". */
+    const zielUnter = (x, y) => {
+        const el = document.elementFromPoint(x, y);
+        if (!el)
+            return undefined;
+        const fach = el.closest('[data-fach]');
+        if (fach && fach.dataset['fach'])
+            return fach.dataset['fach'];
+        /* Die Brotkrume ist eine Ablegezone: sie ist der einzige Weg, ein Heft
+           aus dem offenen Fach WIEDER HERAUSZUHOLEN, ohne es erst zu öffnen. */
+        if (el.closest('[data-zurueck]'))
+            return null;
+        /* Die freie Fläche des offenen Fachs bedeutet „hierher" — an der
+           Wurzel bedeutet dieselbe Fläche „aus dem Fach heraus". */
+        if (el.closest('.nh-regal'))
+            return fachId || null;
+        return undefined;
+    };
+    const zielMarkieren = (el) => {
+        if (zug && zug.ueber && zug.ueber !== el)
+            zug.ueber.classList.remove('nh-ziel');
+        if (el)
+            el.classList.add('nh-ziel');
+        if (zug)
+            zug.ueber = el;
+    };
+    const heben = (karte) => {
+        if (!zug)
+            return;
+        zug.gehoben = true;
+        karte.classList.add('nh-hebt');
+        document.body.classList.add('nh-zieht');
+        const s = document.createElement('div');
+        s.className = 'nh-schatten';
+        s.textContent = karte.querySelector('.bib-deckel-name b, .nh-zeile-text b')?.textContent
+            || 'Heft';
+        s.style.left = zug.x0 + 'px';
+        s.style.top = zug.y0 + 'px';
+        document.body.appendChild(s);
+        zug.schatten = s;
+    };
+    const aufraeumen = () => {
+        if (!zug)
+            return;
+        zug.uhr !== null && clearTimeout(zug.uhr);
+        zug.schatten?.remove();
+        zug.ueber?.classList.remove('nh-ziel');
+        document.querySelector('.nh-hebt')?.classList.remove('nh-hebt');
+        document.body.classList.remove('nh-zieht');
+        zug = null;
+    };
+    const bindZiehen = (wurzel) => {
+        wurzel.addEventListener('pointerdown', e => {
+            if (e.button !== 0 && e.pointerType === 'mouse')
+                return;
+            const ziel = e.target instanceof Element ? e.target : null;
+            /* Knöpfe auf der Karte bleiben Knöpfe. */
+            if (!ziel || ziel.closest('[data-mehr], [data-mehr-fach], [data-stern], .nh-neu'))
+                return;
+            const karte = ziel.closest('.bib-deckel[data-id], .nh-zeile-auf[data-id]');
+            const id = karte?.dataset['id'];
+            if (!karte || !id)
+                return;
+            aufraeumen();
+            zug = { id, zeiger: e.pointerId, x0: e.clientX, y0: e.clientY,
+                maus: e.pointerType === 'mouse', gehoben: false, uhr: null,
+                schatten: null, ueber: null };
+            if (!zug.maus)
+                zug.uhr = window.setTimeout(() => { if (zug && !zug.gehoben)
+                    heben(karte); }, HEBEN_MS);
+        });
+        wurzel.addEventListener('pointermove', e => {
+            if (!zug || e.pointerId !== zug.zeiger)
+                return;
+            const weg = Math.hypot(e.clientX - zug.x0, e.clientY - zug.y0);
+            if (!zug.gehoben) {
+                /* Am Finger: zu viel Weg VOR dem Heben ist Rollen, kein Ziehen. */
+                if (!zug.maus) {
+                    if (weg > ROLL_PX)
+                        aufraeumen();
+                    return;
+                }
+                if (weg < HEBEN_PX)
+                    return;
+                const karte = wurzel.querySelector(`.bib-deckel[data-id="${CSS.escape(zug.id)}"], .nh-zeile-auf[data-id="${CSS.escape(zug.id)}"]`);
+                if (!karte) {
+                    aufraeumen();
+                    return;
+                }
+                heben(karte);
+            }
+            e.preventDefault();
+            if (zug.schatten) {
+                zug.schatten.style.left = e.clientX + 'px';
+                zug.schatten.style.top = e.clientY + 'px';
+            }
+            /* Der Schatten liegt unter dem Zeiger — er darf sich nicht selbst
+               als Ziel melden. */
+            if (zug.schatten)
+                zug.schatten.style.visibility = 'hidden';
+            const el = document.elementFromPoint(e.clientX, e.clientY);
+            if (zug.schatten)
+                zug.schatten.style.visibility = '';
+            const fach = el?.closest('[data-fach]') ?? null;
+            const krume = el?.closest('[data-zurueck]') ?? null;
+            zielMarkieren(fach || krume);
+        });
+        const loslassen = (e) => {
+            if (!zug || e.pointerId !== zug.zeiger)
+                return;
+            const gehoben = zug.gehoben;
+            const id = zug.id;
+            if (zug.schatten)
+                zug.schatten.style.visibility = 'hidden';
+            const wohin = gehoben ? zielUnter(e.clientX, e.clientY) : undefined;
+            aufraeumen();
+            if (!gehoben)
+                return; /* war ein Tipp — der Klick trägt */
+            if (wohin === undefined)
+                return; /* daneben abgelegt: nichts tun */
+            if (ziehenAblegen(id, wohin))
+                renderShelf();
+        };
+        wurzel.addEventListener('pointerup', loslassen);
+        /* DAS ROLLEN AM FINGER WIRKLICH ANHALTEN.
+           `touch-action:none` allein genügt nicht: der Browser liest es beim
+           `touchstart` und hat sich schon entschieden, wenn die Karte 400 ms
+           später gehoben wird. Danach schickt er `pointercancel` — der Zeiger
+           ist weg, das Ziel unbekannt, und am Telefon passierte gar nichts.
+           Ein `touchmove`-Zuhörer mit `passive:false` hält die Bewegung an,
+           solange etwas gehoben ist; vorher lässt er sie durch, damit die
+           Liste sich weiter rollen lässt. */
+        wurzel.addEventListener('touchmove', e => {
+            if (zug && zug.gehoben)
+                e.preventDefault();
+        }, { passive: false });
+        wurzel.addEventListener('pointercancel', () => aufraeumen());
+        /* Wird die Karte beim Heben aus dem DOM genommen (Auffrischen während
+           des Ziehens), verliert der Zeiger sein Ziel — dann lieber nichts. */
+        wurzel.addEventListener('lostpointercapture', () => aufraeumen());
+    };
     const bindShelf = (wurzel) => {
+        bindZiehen(wurzel);
         wurzel.addEventListener('click', e => {
+            /* Ein Klick, der aus einem Ziehen kommt, öffnet nichts. */
+            if (document.body.classList.contains('nh-zieht')) {
+                e.stopPropagation();
+                return;
+            }
             const ziel = e.target instanceof Element ? e.target : null;
             if (!ziel)
                 return;
@@ -1151,7 +1354,8 @@ const Notebook = (() => {
        messen kann — dieselbe Trennung wie bei `Wissensluecken.sammeln`. */
     return { oeffnen, open: oeffnen, resume, render,
         istFach, isNotebook, faecher, alleFaecher, unterFaecher, fachWeg,
-        fachHefte, loseHefte, fachInhaltSatz, FACH_TIEFE };
+        fachHefte, loseHefte, fachInhaltSatz, FACH_TIEFE,
+        ziehenAblegen };
 })();
 window.Notebook = Notebook;
 /* Die Notizhefte melden ihre Kontextkante an (E273).

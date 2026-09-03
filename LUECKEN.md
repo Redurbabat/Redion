@@ -3005,8 +3005,18 @@ L78 — Was die Heft-Bibliothek (E265) bewusst noch nicht kann
 
 L77 Punkt 4 (Deckelfarben) ist damit erledigt. Neu hingenommen:
 
-1. Kein Ziehen-und-Ablegen ins Fach — verschieben geht über das
-   Kontextmenü. Drag&Drop wäre ein eigener Bogen mit Telefon-Fassung.
+1. ~~Kein Ziehen-und-Ablegen ins Fach~~ — ERLEDIGT in E368, dem eigenen
+   Bogen mit Telefon-Fassung, den dieser Punkt verlangt hatte. EINE Geste
+   über Pointer-Ereignisse für Maus und Finger (`dragstart` wie in der
+   Seitenleiste wäre am Telefon gar nichts); am Finger hebt langes Drücken
+   (400 ms), ein Wisch davor rollt weiter. Ziel sind ein Fach, die
+   Brotkrume (nimmt heraus) und die freie Fläche; alles ausserhalb tut
+   nichts. Der Ring ist gesperrt, die Ablegezone trägt Rahmen UND Fläche
+   (§38), und danach steht ein Satz, der Heft und Ziel nennt — beim Ziehen
+   gibt es kein Menü, in dem man den Zielnamen eben noch gelesen hätte.
+   test360, 32 Punkte. Was bleibt: keine Mehrfachauswahl (ein Heft je Zug),
+   und kein Sortieren innerhalb eines Fachs durch Ziehen (Punkt 5 von L77
+   steht weiter).
 2. ~~Das Regal zeigt EINE Fach-Ebene~~ — ERLEDIGT in E366, dem eigenen
    Bogen, den Redur in E277 dafür verlangt hatte. Ein Fach ist jetzt auch
    dann ein Fach, wenn nur ein FACH darin liegt (rekursiv, mit Tiefen- und
@@ -5056,10 +5066,11 @@ E350 holt eine ZIP so ins Regal, wie sie ist. Was bleibt, mit Grund:
    werden sollen, ist eine eigene Entscheidung und keine Lücke — es ist
    die Frage, ob „Notizhefte" ein Filter oder ein Ort ist.
 
-4. **Keine Ablegezone-Optik.** `#scroll` bekommt beim Ziehen die Klasse
-   `ablegen`; im Regal gibt es keine Fläche, die sagt „hier fallen lassen".
-   Das Ablegen funktioniert, man sieht es nur nicht kommen (L78 Punkt 1,
-   mit Telefon).
+4. ~~**Keine Ablegezone-Optik.**~~ ERLEDIGT in E368: das Ziel trägt
+   während des Zugs einen gestrichelten Rahmen und eine Fläche (nicht nur
+   Farbe, §38), am Zeiger hängt der Name des Hefts, und die gehobene Karte
+   bleibt an ihrem Platz stehen — nur blasser. Sichtbar ist das alles NUR
+   während eines Zugs; danach ist die Ansicht wieder ruhig. test360 §2.
 
 5. ~~**Der Leser kennt CP437 nicht, keine verschlüsselten Einträge, keine
    CRC-Prüfung.**~~ ERLEDIGT in E363: `ZipDetails` (Kern) rechnet die
