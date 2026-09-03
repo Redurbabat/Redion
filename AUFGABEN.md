@@ -139,7 +139,9 @@ rechtfertigt.
 Die Produktlücken stehen dort und werden dort gepflegt — sie hier zu
 wiederholen hiesse, zwei Listen zu führen, die auseinanderlaufen.
 
-Zuletzt geschlossen: vier rote Läufe, die schon vor E384 rot waren, und drei
+Zuletzt geschlossen: der Sofort-Block des UX-Prüfberichts (E386 — Ollama ohne
+Stern, Werkzeuge mit Namen, PDF-Titel, Zoom-Persistenz, Zurück-Zustand,
+einheitliche Begriffe); vier rote Läufe, die schon vor E384 rot waren, und drei
 davon Fehler aus E380/E381 (E385 — erfundene CSS-Marken, rohe Masse statt
 Marken, ein Werkzeug aus der Zeit vor E375); die PDF öffnet als ganzer Bildschirm (E384 — Redurs Satz
 zum zweiten Mal; E296 hatte den Seitenkopf geräumt, nicht die Schale drumherum),
@@ -154,7 +156,10 @@ Werkzeuge" stammte aus der Zeit vor E375 (dreizehn sind vollständig), und die
 „Mitte" war als `scrollWidth / 2` gerechnet statt als
 `(scrollWidth − clientWidth) / 2`, was den Browser ans Ende klemmte.
 
-Zuletzt AUFGEMACHT: **L120** — was nach E380 an GoodNotes noch fehlt.
+Zuletzt AUFGEMACHT: **L123** — die zwölf Befunde des UX-Prüfberichts, die noch
+offen sind (Sprint: F01, F02, F03, F08, F11, F13, F14 · Politur: F09, F10,
+F12, F17, F18). Zwei brauchen Redur: F02 (welche Navigation ist die primäre?)
+und F13 (echter Geräte-Abnahmelauf). Und **L120** — was nach E380 an GoodNotes noch fehlt.
 Der Kern (Ebenen im Regal, Hineingehen, nach dem Entpacken im Ordner
 stehen) ist zu; offen bleiben zwei Regale für dieselbe Sache
 (`bibliothek.ts` und `notebook.ts`) und eine untere Leiste, die noch nicht

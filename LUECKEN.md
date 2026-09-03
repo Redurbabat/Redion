@@ -5562,3 +5562,70 @@ BELEG: `test210` 31/31. Beide Wächter durch Mutation rot gesehen (§55.2) — e
 Werkzeug aus der Leiste genommen → „ist 12, soll 13"; den Rollstand-Melder
 abgeschaltet → alle drei Rollpunkte „(nichts)". Die Mitte-Rechnung ist durch
 den Befund selbst belegt: mit `scrollWidth / 2` steht dort „links".
+
+================================================================================
+L123 — Der UX-Prüfbericht vom 3. September: was davon noch offen ist
+================================================================================
+3. September 2026
+
+Redur hat einen Prüfbericht geschickt: „Redion Web-App · Vollständiger UX-,
+Funktions- und Responsive-Audit", geprüft gegen `redion.redurbabat7.workers.dev`
+(also `main` auf E353). 18 Befunde, Gesamturteil 6,9/10.
+
+**Der Sofort-Block ist ZU** — F04, F05, F06, F07, F15 und F16 durch E386,
+belegt mit `test386` (38 Punkte, sieben Mutationen rot gesehen).
+
+Was noch aussteht, in der Reihenfolge des Berichts:
+
+NÄCHSTER SPRINT (F01, F02, F03, F08, F11, F13, F14)
+
+a. **F01 · P1 · Die Navigation blieb im Workspace-Zustand hängen.** Im Test
+   waren Heute, Lernzentrum, Elektro, Bibliothek und Aufgaben sichtbar und
+   anklickbar, der Inhalt blieb aber auf der Übersicht. Noch nicht
+   nachgemessen gegen den heutigen Stand — E272 Phase E hat das „Gehen" ins
+   Register gezogen, es kann also schon zu sein. Erst messen.
+
+b. **F02 · P1 · Vier Navigationslogiken nebeneinander** — Menüband „Gehen",
+   Seitenleiste, obere Reiter, „Mehr". Das ist der grösste Bogen des ganzen
+   Berichts und der einzige, der eine Entscheidung von Redur braucht: welche
+   ist die primäre? Der Bericht schlägt vor: Rechner = Seitenleiste, Telefon
+   = fünf Pillen, Menüband nur für dokumentbezogene Werkzeuge.
+
+c. **F03 · P1 · Jede PDF-Seite trägt ihre eigene Werkzeugleiste.** GEMESSEN
+   am 3. September: bei drei Seiten drei Leisten (`test386` §2 hält die Zahl
+   fest). Bei hundert Seiten sind es hundert. Der Bericht will „Einzelseite
+   oder Fortlaufend" als Wahl und im fortlaufenden Modus genau EINE
+   schwebende Leiste. Achtung: E299 hat das Rollen ausdrücklich eingeführt,
+   weil Redur „ganz öffnen komplett wie one note" wollte — die Wahl darf das
+   nicht zurücknehmen, nur ergänzen.
+
+d. **F08 · P2 · Das KI-Seitenfeld nimmt dauerhaft Arbeitsbreite.** Im
+   Dokumentmodus soll es eingeklappt starten, am Telefon als Bottom Sheet.
+
+e. **F11 · P2 · 19 Einstellungskategorien auf einer Ebene.** Der Bericht
+   schlägt sechs Obergruppen vor.
+
+f. **F13 · P2 · Echter Geräte-Abnahmelauf.** DAS KANN ICH NICHT — im
+   Container gibt es kein iPhone und kein Android. Was möglich ist: ein
+   Release-Gate über die vier Grössen aus dem Bericht (360×800, 390×844,
+   428×926 und Querformat) mit Bildern und Kernflows. Der echte Safari- und
+   Chrome-Lauf bleibt Redurs Sache.
+
+g. **F14 · P2 · Werkzeugdichte am Telefon.** Der Bericht will vier
+   Primärwerkzeuge plus „Mehr". E356 zeigt heute schon nur die Gruppen des
+   gewählten Werkzeugs; ob das reicht, ist nicht gemessen.
+
+POLITUR (F09, F10, F12, F17, F18)
+
+h. **F09** Befehlsmenü mit Suche, zuletzt verwendet, Favoriten.
+i. **F10** „Handschriftliche Notiz" als eigener Typ im Neu-Menü.
+j. **F12** Datenschutztexte nach Modus formulieren statt pauschal.
+k. **F17** Progressive Offenlegung im Onboarding.
+l. **F18** Visuelle Hierarchie — ein dominantes Arbeitsziel je Ansicht.
+   E384 hat davon ein Stück vorweggenommen: im Dokumentmodus fällt die
+   ganze Schale weg.
+
+WAS DER BERICHT NICHT WISSEN KONNTE: er prüfte E353. Seither sind E354–E386
+dazugekommen, darunter E384 (das Dokument ist der ganze Bildschirm) und
+E296/E299 am PDF. Vor jedem dieser Punkte gehört deshalb eine Messung gegen
+den HEUTIGEN Stand, nicht gegen den Bericht.

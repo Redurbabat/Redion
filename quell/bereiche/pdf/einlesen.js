@@ -307,6 +307,25 @@ const PdfEinlesen = (() => {
             const zielSeite = typeof Links !== 'undefined' ? Links.seiteVon(elternId) : null;
             if (bis > 0 && !daneben && zielSeite && zielSeite.dokumentModus === undefined)
                 Store.updateBlock(zielSeite.id, { dokumentModus: true });
+            /* ══ DER DATEINAME WIRD DER TITEL, WENN NOCH KEINER DA IST (Audit F06)
+               Vorher hiess jede eingelesene PDF „Ohne Titel": der Name stand am
+               Datei-Block, nie an der Seite. Wer drei Skripte einlas, hatte drei
+               gleich heissende Seiten im Baum und musste jede oeffnen, um sie zu
+               unterscheiden.
+      
+               NUR, WENN NOCH KEINER DA IST. Ein Titel, den ein Mensch getippt
+               hat, wird nicht ueberschrieben — auch nicht beim zweiten Einlesen
+               in dieselbe Seite. Geprueft wird gegen leer UND gegen den
+               Vorgabetext, denn eine frisch angelegte Seite traegt ihn wirklich.
+      
+               Die Endung faellt weg: „Vorlesung 3.pdf" wird „Vorlesung 3". Der
+               volle Dateiname bleibt am Datei-Block stehen, wo er hingehoert. */
+            const OHNE_NAMEN = ['', 'Ohne Titel', 'Neue Seite'];
+            if (bis > 0 && zielSeite && OHNE_NAMEN.includes(String(zielSeite.text || '').trim())) {
+                const titel = datei.name.replace(/\.[^.]+$/, '').trim();
+                if (titel)
+                    Store.updateBlock(zielSeite.id, { text: titel });
+            }
             App.zeichneSeite();
             UI.toast(bis + ' von ' + gesamt + ' Seiten aus „' + datei.name + '" vorbereitet');
             return { seiten: bis, gesamt, quelle, bloecke: gemacht, anhang };

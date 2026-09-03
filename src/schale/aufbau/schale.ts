@@ -39,17 +39,43 @@ const App = (() => {
   const rueck: any[] = [], vor: any[] = [];
   let navSperre = false;
 
+  /* DIE KNÖPFE SAGEN VORHER, OB SIE KÖNNEN (Audit F15).
+     Vorher waren `‹` und `›` immer anklickbar und meldeten erst NACH dem
+     Druck „Kein Schritt zurück". Ein Knopf, der aktiv aussieht und dann
+     nichts tut, ist ein Fehlmoment, den niemand braucht — und für ein
+     Vorleseprogramm war der Unterschied überhaupt nicht hörbar.
+
+     `disabled` statt nur blass: dann überspringt ihn auch die Tabtaste,
+     und der Zustand steht im Zugänglichkeitsbaum. Die Tastenkürzel
+     Strg + [ und Strg + ] behalten ihre Meldung — dort gibt es keinen
+     Knopf, an dem man den Zustand vorher sehen könnte. */
+  const navKnoepfeStellen = (): void => {
+    const setz = (id: string, kann: boolean): void => {
+      const k = document.getElementById(id) as HTMLButtonElement | null;
+      if (!k) return;
+      k.disabled = !kann;
+      k.title = kann
+        ? (id === 'btn-back' ? 'Zurück (Strg + [)' : 'Vorwärts (Strg + ])')
+        : (id === 'btn-back' ? 'Zurück — kein Schritt vorhanden'
+                             : 'Vorwärts — kein Schritt vorhanden');
+    };
+    setz('btn-back', rueck.length > 0);
+    setz('btn-fwd', vor.length > 0);
+  };
+
   const zurueck = () => {
     if (!rueck.length) { UI.toast('Kein Schritt zurück'); return; }
     const id = rueck.pop();
     if (seiteId) vor.push(seiteId);
     navSperre = true; oeffne(id); navSperre = false;
+    navKnoepfeStellen();
   };
   const vorwaerts = () => {
     if (!vor.length) { UI.toast('Kein Schritt vorwärts'); return; }
     const id = vor.pop();
     if (seiteId) rueck.push(seiteId);
     navSperre = true; oeffne(id); navSperre = false;
+    navKnoepfeStellen();
   };
 
   /* ------------------------------------------------------------------------
@@ -699,7 +725,13 @@ const App = (() => {
     'Bibliothek': 'bibliothek', 'Alle Seiten': 'bibliothek',
     'Dokumente': 'bibliothek', 'Seiten': 'bibliothek',
     'Notizhefte': 'notizhefte',
-    'Workspace': 'workspace', 'Meine Aufgaben': 'aufgaben',
+    /* BEIDE NAMEN, EIN ZIEL (Audit F16). „Workspace" heisst seit dem
+       3. September „Arbeitsbereich"; der alte Name bleibt hier als Alias
+       stehen, damit ein gemerkter Schauplatz, ein Verweis oder eine ältere
+       Sicherung nicht ins Leere zeigt. Ein Alias ist kein Doppelkatalog:
+       er führt zur selben Kennung. */
+    'Arbeitsbereich': 'workspace', 'Workspace': 'workspace',
+    'Meine Aufgaben': 'aufgaben',
     'Aufgaben': 'aufgaben', 'Posteingang': 'posteingang',
     'Elektrotechnik': 'elektro', 'Elektro': 'elektro',
     'Papierkorb': 'papierkorb', 'Kalender': 'kalender', 'Termine': 'kalender'
@@ -780,6 +812,7 @@ const App = (() => {
   const oeffne = (id?: string | null) => {
     sonder = null;
     if (seiteId && seiteId !== id && !navSperre) { rueck.push(seiteId); vor.length = 0; }
+    navKnoepfeStellen();   /* F15 — der Verlauf hat sich gerade geändert */
     if (seiteId && seiteId !== id) Werkzeuge.versionAutomatisch(seiteId);
     seiteId = id;
     if (id) {
@@ -3788,6 +3821,9 @@ const App = (() => {
     /* `btn-hilfe` ebenfalls — siehe E167. */
     an('btn-back', zurueck);
     an('btn-fwd', vorwaerts);
+    /* DER ANFANGSZUSTAND IST DER WICHTIGE (F15): nach einem Neuladen ist der
+       Verlauf leer, und genau da stand der Knopf bisher aktiv da. */
+    navKnoepfeStellen();
     an('btn-komm', () => seiteId && Kommentare.panel(seiteId));
     an('btn-teilen', (e: any) => {
       const p = Store.getBlock(seiteId);

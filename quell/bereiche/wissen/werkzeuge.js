@@ -130,7 +130,7 @@ const Werkzeuge = (() => {
         c('Navigation', 'Lernpfad', '', () => Produktwelten.lernen('pfad'));
         c('Navigation', 'Fehlertraining', '', () => Produktwelten.lernen('fehler'));
         c('Navigation', 'Prüfungszentrum', '', () => Produktwelten.lernen('pruefungen'));
-        c('Navigation', 'Workspace', '', () => Produktwelten.workspace('start'));
+        c('Navigation', 'Arbeitsbereich', '', () => Produktwelten.workspace('start'));
         c('Navigation', 'Bibliothek', '', () => Produktwelten.bibliothek());
         c('Navigation', 'Aufgaben', '', () => Produktwelten.aufgaben());
         c('Navigation', 'Whiteboards', '', () => Produktwelten.whiteboards());

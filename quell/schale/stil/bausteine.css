@@ -3893,7 +3893,11 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
                    font-size:13px; color:var(--text); background:none; cursor:pointer}
 .blatt-fest button:hover{background:var(--bg-hover)}
 .blatt-fest .zeichen{margin-right:5px}
-.blatt-werk button{min-height:32px; padding:4px 9px; border-radius:6px;
+/* `position:relative`, damit das weggeklemmte Wort (Audit F04) an SEINEM
+   Knopf hängt und nicht am Seitenanfang — sichtbar ist es nie, aber ein
+   Vorleseprogramm liest in Dokumentreihenfolge, und die soll stimmen. */
+.blatt-werk button{position:relative;
+                   min-height:32px; padding:4px 9px; border-radius:6px;
                    font-size:13px; color:var(--text); background:none; cursor:pointer}
 .blatt-werk button:hover{background:var(--bg-hover)}
 .blatt-werk button.on{background:var(--accent); color:var(--auf-accent)}
@@ -4128,12 +4132,30 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .spalte .blatt-werk::-webkit-scrollbar{display:none}
 .spalte .blatt-werk > *{flex:0 0 auto}
 .spalte .blatt-werk button{min-height:36px; min-width:36px; padding:4px 7px}
-.spalte .blatt-werk .wort{display:none}
+/* ══ WEGGEKLEMMT, NICHT ENTFERNT (Audit F04) ══════════════════════════════
+   `display:none` nimmt Text nicht nur aus dem Bild, sondern auch aus dem
+   Zugänglichkeitsbaum. Bei den Werkzeugknöpfen hiess das: sobald `.wort`
+   weg war (Telefon, Spalte), blieb als Name das ZEICHEN übrig — der Knopf
+   hiess „✎" oder „⌖". `title` half nicht; es zählt nur, wenn sonst kein
+   Name da ist, und das Zeichen war einer.
+
+   Diese Klasse nimmt den Text aus dem Bild und lässt ihn im Baum. Das
+   Zeichen daneben trägt `aria-hidden`, also bleibt genau ein Name übrig:
+   das Wort. Die Knöpfe messen weiter 44 px — geklemmter Text nimmt keinen
+   Platz. */
+.nur-vorlesen,
+.blatt-werk .wort[hidden],
+.spalte .blatt-werk .wort,
+.spalte .blatt-fest .wort{
+  position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0 0 0 0); clip-path:inset(50%);
+  white-space:nowrap; border:0 }
+/* (die Regeln oben ersetzen die frueheren `display:none`) */
 .spalte .blatt-werk .zeichen{margin:0; font-size:16px}
 .spalte .blatt-farbe{width:24px; height:24px; min-width:24px}
 .spalte .blatt-strich{min-width:32px}
 .spalte .blatt-fest{box-shadow:-10px 0 10px -7px rgba(0,0,0,.45); padding-left:8px}
-.spalte .blatt-fest .wort{display:none}
+
 .spalte .blatt-fest .zeichen{margin:0}
 .spalte .blatt-fest button{min-height:36px; min-width:36px; padding:4px 7px;
                            border-radius:6px; color:var(--text);
@@ -4209,12 +4231,16 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-reihe, .blatt-werk{container-type:inline-size}
 @media (min-width:761px){
   @container (max-width:1150px){
-    .blatt-werk .wort{display:none}
+    .blatt-werk .wort{position:absolute; width:1px; height:1px; padding:0;
+      margin:-1px; overflow:hidden; clip:rect(0 0 0 0); clip-path:inset(50%);
+      white-space:nowrap; border:0}
     .blatt-werk .zeichen{margin:0; font-size:16px}
     .blatt-werk button{min-width:36px; padding:4px 7px}
   }
   @container (max-width:1400px){
-    .blatt-fest .wort{display:none}
+    .blatt-fest .wort{position:absolute; width:1px; height:1px; padding:0;
+      margin:-1px; overflow:hidden; clip:rect(0 0 0 0); clip-path:inset(50%);
+      white-space:nowrap; border:0}
     .blatt-fest .zeichen{margin:0; font-size:16px}
     .blatt-fest button{min-width:36px; padding:4px 7px}
   }
@@ -4227,7 +4253,9 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   .blatt-werk > *{flex:0 0 auto}
   .blatt-werk > .blatt-zeilenbruch{display:none}
   .blatt-werk button{min-height:44px; min-width:44px; padding:4px 8px}
-  .blatt-werk .wort{display:none}
+  .blatt-werk .wort{position:absolute; width:1px; height:1px; padding:0;
+    margin:-1px; overflow:hidden; clip:rect(0 0 0 0); clip-path:inset(50%);
+    white-space:nowrap; border:0}
   .blatt-werk .zeichen{margin:0; font-size:17px}
   .blatt-farbe{width:30px; height:30px; min-width:30px}
   .blatt-farbe-neu{width:30px; height:30px; min-width:30px}
@@ -4280,7 +4308,9 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
      keine Kopfzeile über sich; dort ist die Zahl die einzige. */
   .document-workspace .blatt-fest .pdfs-nr,
   .document-workspace .blatt-fest .blatt-trenn{display:none}
-  .blatt-fest .wort{display:none}
+  .blatt-fest .wort{position:absolute; width:1px; height:1px; padding:0;
+    margin:-1px; overflow:hidden; clip:rect(0 0 0 0); clip-path:inset(50%);
+    white-space:nowrap; border:0}
   .blatt-fest .zeichen{margin:0; font-size:17px}
   .blatt-fest button{min-height:44px; min-width:44px}
 }

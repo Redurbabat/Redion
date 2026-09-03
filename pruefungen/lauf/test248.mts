@@ -368,7 +368,12 @@ console.log('\n4 · Die fünf Wege');
 await seite.evaluate(() => Ruhig.setzen(true));
 await seite.waitForTimeout(400);
 const fuenf: any = await seite.evaluate(RAHMEN);
-const SOLL = ['Heute', 'Lernzentrum', 'Elektro', 'Bibliothek', 'Aufgaben'];
+/* „Elektrotechnik", nicht „Elektro" (Audit F16). Der Fachbereich hiess in
+   der Seitenleiste „Elektro" und überall sonst „Elektrotechnik" — zwei
+   Namen für ein Ziel, und der Nutzer vermutet zwei Ziele. Seit dem
+   3. September heisst er überall gleich; der alte Name bleibt in
+   `schale.ts` als Alias, damit gemerkte Schauplätze nicht ins Leere zeigen. */
+const SOLL = ['Heute', 'Lernzentrum', 'Elektrotechnik', 'Bibliothek', 'Aufgaben'];
 
 for (const name of SOLL) {
   p(`„${name}" steht in der Leiste`, fuenf.namen.includes(name), fuenf.namen.join(' | '));

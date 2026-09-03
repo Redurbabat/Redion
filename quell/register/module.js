@@ -87,7 +87,7 @@ Register.module = (() => {
         { id: 'notizhefte', name: 'Notizhefte', icon: '📓', zeichen: 'book',
             was: 'Regal deiner Schreibhefte — öffnen und losschreiben (E264).',
             oeffnen: () => (typeof Notebook !== 'undefined') && Notebook.oeffnen() },
-        { id: 'arbeitswelt', name: 'Workspace', icon: '🧱', zeichen: 'workspace',
+        { id: 'arbeitswelt', name: 'Arbeitsbereich', icon: '🧱', zeichen: 'workspace',
             was: 'Seiten, Bibliothek, Aufgaben, Kalender, Datenbanken, Whiteboards, Wiki, Vorlagen.',
             oeffnen: () => (typeof Produktwelten !== 'undefined') && Produktwelten.workspace('uebersicht') },
         { id: 'lebensbereiche', name: 'Lebensbereiche', icon: '◎', zeichen: 'compass',

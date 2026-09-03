@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-380 Entscheidungen, E1 bis E385 (E383 liegt auf dem Zweig
+381 Entscheidungen, E1 bis E386 (E383 liegt auf dem Zweig
 `claude/region-detailed-analysis-pzqqb4`). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
@@ -31031,3 +31031,134 @@ BETROFFENEN Läufe gefahren wurden und nicht die, die quer über den Bestand
 messen: Marken, Masse, Namensräume. Diese drei Wächter prüfen nichts an einer
 bestimmten Stelle — sie prüfen das GANZE, und deshalb weiss man vorher nie,
 dass man sie braucht.
+
+================================================================================
+E386 — Der Sofort-Block des UX-Audits: sechs Befunde, vier davon echt
+================================================================================
+3. September 2026
+
+Redur hat einen Prüfbericht geschickt — „Redion Web-App · Vollständiger UX-,
+Funktions- und Responsive-Audit", 18 Befunde in drei Blöcken. Dieser Eintrag
+hält den ersten Block: F04, F05, F06, F07, F15, F16.
+
+ZUERST NACHGEMESSEN, NICHT ANGENOMMEN. Der Bericht prüfte
+`redion.redurbabat7.workers.dev` — das ist `main` auf dem Stand E353. Dieser
+Zweig steht auf E385, also 32 Entscheidungen weiter. Jeder Befund wurde
+deshalb einzeln gegen den heutigen Stand gehalten, bevor etwas geändert wurde
+(§45 Schritt 1, §55.1).
+
+F05 · P1 · DIE OLLAMA-ANLEITUNG EMPFAHL EINEN STERN
+
+Der schwerste der sechs, und er ist ein Sicherheitsbefund.
+`OLLAMA_ORIGINS=*` stand an vier Stellen: dreimal im Kopfkommentar, einmal
+als Anleitung in der Oberfläche. Ein Stern erlaubt JEDER Webseite im selben
+Browser, mit dem lokalen Ollama zu sprechen — Modelle aufzulisten, Anfragen
+zu stellen, Antworten zu lesen.
+
+Redion wirbt damit, dass kein Text den Rechner verlässt (§21). Eine
+Anleitung, die nebenbei die Tür für alle aufmacht, nimmt genau dieses
+Versprechen zurück — und Einsteiger können das nicht einschätzen, denn der
+Befehl steht da, als gehöre er dazu.
+
+Jetzt zeigt die Oberfläche den Befehl MIT DER ECHTEN HERKUNFT dieses
+Fensters (`location.origin`), zum Kopieren, plus einem Satz, was der Stern
+täte. Das ist auch dann richtig, wenn jemand Redion unter einer eigenen
+Adresse betreibt — geraten hätte man da falsch.
+
+DER SONDERFALL `file://` WIRD GESAGT, NICHT VERSCHWIEGEN (§33). Wer
+`index.html` doppelklickt, hat keine Herkunft; der Browser sendet
+`Origin: null`. `OLLAMA_ORIGINS=null` wäre enger als der Stern, erlaubt aber
+immer noch jede örtlich geöffnete Datei. Die Oberfläche sagt das und rät zur
+ausgelieferten Fassung.
+
+F04 · P1 · DIE WERKZEUGE HIESSEN WIE IHR ZEICHEN
+
+Der Bericht: „Im Accessibility-Baum heißen mehrere Knöpfe nur wie ihr
+grafisches Symbol." Nachgemessen war es schlimmer, als es klingt, und der
+Grund stand in der CSS:
+
+    .blatt-werk .wort{display:none}
+
+Am Telefon und in Spalten fiel das Wort weg. Übrig blieb als zugänglicher
+Name das ZEICHEN — der Knopf hiess „✎", „⌖", „🖍". Das `title` half nicht:
+es zählt nur, wenn sonst gar kein Name da ist, und ein sichtbares Zeichen
+ist einer.
+
+STATT 25 `aria-label` VON HAND: die Wurzel. Das Zeichen bekommt
+`aria-hidden` (21 Stellen, alle auf einmal), und das Wort wird nicht mehr
+ENTFERNT, sondern WEGGEKLEMMT — `position:absolute; clip-path:inset(50%)`.
+Aus dem Bild, im Baum. Ein Name kann so nicht mehr vom sichtbaren Text
+abweichen, weil es derselbe ist.
+
+Dazu `aria-pressed` an jedem Werkzeug: welches gilt, stand nur in einer
+CSS-Klasse, und eine Klasse ist für ein Vorleseprogramm nicht da. Der
+Zustand wandert an allen drei Stellen mit, an denen die Klasse wandert.
+
+F06 · P2 · JEDE EINGELESENE PDF HIESS „OHNE TITEL"
+
+Der Dateiname stand am Datei-Block, nie an der Seite. Wer drei Skripte
+einlas, hatte drei gleich heissende Seiten im Baum. Jetzt füllt der Einleser
+den Titel — ohne Endung, und NUR wenn noch keiner da ist. Geprüft wird gegen
+leer und gegen die Vorgabetexte; ein getippter Titel wird nie überschrieben,
+auch nicht beim zweiten Einlesen in dieselbe Seite.
+
+F07 · P2 · DER ZOOM ÜBERLEBTE KEIN NEULADEN
+
+E349 merkte die SEITE, den Zoom nicht: `zoom: 100` stand fest im Zustand.
+Jetzt beides, gleich gebaut — als Meta je Dokument, nicht am Seitenblock:
+eine Ansicht ist kein Inhalt, Zoomen soll weder `edited` anheben noch eine
+Fassung erzeugen. Je Dokument und nicht global, denn ein Skript in
+Kleindruck braucht einen anderen Zoom als ein Foto-Scan. Gemerkt wird auch
+beim Kneifen und bei Strg+Rad (E354), nicht nur am Regler.
+
+F15 · P3 · ZURÜCK WAR AKTIV, OHNE ZU KÖNNEN
+
+`‹` und `›` waren immer anklickbar und meldeten erst NACH dem Druck „Kein
+Schritt zurück". Jetzt `disabled`, solange der Verlauf leer ist — dann
+überspringt sie auch die Tabtaste, und der Zustand steht im
+Zugänglichkeitsbaum. Die Sprechblase sagt den Grund. Die Tastenkürzel
+behalten ihre Meldung: dort gibt es keinen Knopf, an dem man vorher etwas
+sehen könnte.
+
+F16 · P3 · EIN ZIEL, ZWEI NAMEN
+
+„Workspace" in der Seitenleiste, „Arbeitsbereich" im Text; „Elektro" in der
+Leiste, „Elektrotechnik" überall sonst. Der Nutzer vermutet zwei Ziele.
+Umbenannt nach dem Vorschlag des Berichts, an fünf Stellen — und DIE ALTEN
+NAMEN BLEIBEN ALS ALIAS in der Schauplatz-Karte, damit ein gemerkter
+Schauplatz, ein Verweis oder eine ältere Sicherung nicht ins Leere zeigt.
+Ein Alias ist kein Doppelkatalog (§8): er führt zur selben Kennung.
+
+WAS DIE PRÜFUNG NEBENBEI FAND — UND ES IST F03
+
+Beim Messen der Werkzeugnamen meldeten sich DREI Knöpfe als gedrückt, wo
+einer stehen sollte: `["stift","schreiben","schreiben"]`. Der Grund ist
+nicht der Zustand, sondern die Anzahl — bei drei PDF-Seiten stehen DREI
+Werkzeugleisten im Dokument, jede mit eigenem Zustand. Genau Befund F03.
+Die Zahl steht jetzt als Messwert im Lauf, damit die Reparatur etwas hat,
+gegen das sie misst.
+
+Dateien: `src/bereiche/ki/dienst.ts`, `src/bereiche/pdf/marken.ts`,
+`src/bereiche/pdf/einlesen.ts`, `src/bereiche/pdf/document-mode.ts`,
+`src/schale/aufbau/schale.ts`, `src/register/navigation.ts`,
+`src/register/module.ts`, `src/bereiche/wissen/werkzeuge.ts`, `index.html`,
+`quell/schale/stil/bausteine.css`.
+
+Prüfung: `pruefungen/lauf/test386.mts`, 38 Punkte, sieben Mutationen rot
+gesehen (§55.2).
+
+UND EINE, DIE ERST BEIM ZWEITEN VERSUCH ROT WURDE. Die Gegenprobe zu F04
+— das Wort wieder auf `display:none` — blieb zunächst GRÜN. Der Grund war
+meine eigene Messung: sie las `textContent`, und ein weggeschaltetes
+Element steht weiter im DOM und hat weiter Text, nur eben nicht im
+Zugänglichkeitsbaum. Eine Prüfung, die das nicht unterscheidet, misst das
+DOM und behauptet den Baum — derselbe Fehler wie `scrollWidth` in §55.2.
+Mit `getComputedStyle` davor meldet sie jetzt, was wirklich passiert: 13
+Knöpfe mit LEEREM Namen.
+
+Mitgezogen: `test248` erwartete „Elektro" in der Seitenleiste — der Lauf hat
+die Umbenennung korrekt gefangen und sagt jetzt „Elektrotechnik".
+
+typecheck grün · test386 38/38 · test114 153 ok · test206 66 ok · test210
+31/31 · test222 51/51 · test247 106/106 · test248 45/45 · test285 53/53 ·
+test341 37/37 · test348 33/33 · test385 37/37.

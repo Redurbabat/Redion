@@ -33,6 +33,26 @@ const DocumentMode = (() => {
     Store.setMeta(SEITEN_MERKER + pageId, index);
   };
 
+  /* DER ZOOM BLEIBT AUCH (Audit F07). E349 merkte die SEITE, den Zoom
+     nicht: nach jedem Neuladen stand er wieder auf 100 %, und wer sein
+     Skript auf 140 % liest, musste das jedes Mal von Hand herstellen.
+
+     Genau wie die Seite als Meta, nicht am Seitenblock — eine Ansicht ist
+     kein Inhalt: Zoomen soll weder `edited` anheben noch eine Fassung
+     erzeugen. Und je Dokument, nicht global: ein Skript in Kleindruck
+     braucht einen anderen Zoom als ein Foto-Scan. */
+  const ZOOM_MERKER = 'dokZoom:';
+  const gemerkterZoom = (pageId: string): number => {
+    const n = Number(Store.getMeta(ZOOM_MERKER + pageId));
+    /* Die Grenzen des Reglers, nicht mehr: ein kaputter Wert aus einer
+       aelteren Fassung darf keine 4000-Pixel-Seite bauen. */
+    return Number.isFinite(n) && n >= 60 && n <= 180 ? Math.round(n) : 100;
+  };
+  const zoomMerken = (pageId: string, zoom: number): void => {
+    if (Store.getMeta(ZOOM_MERKER + pageId) === zoom) return;
+    Store.setMeta(ZOOM_MERKER + pageId, zoom);
+  };
+
   const stateFor = (pageId: string): DocumentState => {
     const known = states.get(pageId);
     if (known) return known;
@@ -40,7 +60,8 @@ const DocumentMode = (() => {
        stand dort bisher offen, weil Platz da war — 280 px, dauerhaft, fuer
        eine Liste, die bei einem frisch eingelesenen PDF leer ist. Wer sie
        braucht, holt sie mit `ⓘ`; wer liest, liest. */
-    const created = { index: gemerkteSeite(pageId), zoom: 100, thumbnailsOpen: false, inspectorOpen: false };
+    const created = { index: gemerkteSeite(pageId), zoom: gemerkterZoom(pageId),
+                      thumbnailsOpen: false, inspectorOpen: false };
     states.set(pageId, created);
     return created;
   };
@@ -792,6 +813,7 @@ const DocumentMode = (() => {
     });
     zoom.addEventListener('input', () => {
       state.zoom = Number(zoom.value) || 100;
+      zoomMerken(page.id, state.zoom);          /* F07 */
       passen(); zoomLabel.textContent = state.zoom + ' %';
     });
     /* ZOOM MIT STRG+RAD UND MIT ZWEI FINGERN (E354), wie in GoodNotes. Der
@@ -802,6 +824,7 @@ const DocumentMode = (() => {
       const neu = Math.max(60, Math.min(180, Math.round(wert)));
       if (neu === state.zoom) return;
       state.zoom = neu;
+      zoomMerken(page.id, neu);                 /* F07 — auch Strg+Rad und Kneifen */
       zoom.value = String(neu);
       zoomLabel.textContent = neu + ' %';
       passen();

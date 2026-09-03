@@ -22,10 +22,26 @@
  *
  * OLLAMA VORBEREITEN
  *   Damit der Browser Ollama ansprechen darf, muss einmal die Herkunft
- *   erlaubt werden:
- *     Windows : setx OLLAMA_ORIGINS "*"      danach Ollama neu starten
- *     macOS   : launchctl setenv OLLAMA_ORIGINS "*"
- *     Linux   : OLLAMA_ORIGINS=* ollama serve
+ *   erlaubt werden — und zwar GENAU DIESE EINE, nicht alle.
+ *
+ *   Hier stand bis zum 3. September 2026 ein Stern. Das war bequem und
+ *   falsch: `OLLAMA_ORIGINS=*` erlaubt JEDER Webseite im selben Browser,
+ *   mit dem lokalen Ollama zu sprechen — Modelle aufzulisten, Anfragen zu
+ *   stellen, Antworten zu lesen. Redion wirbt damit, dass kein Text den
+ *   Rechner verlaesst (§21); eine Anleitung, die nebenbei die Tuer fuer
+ *   alle aufmacht, nimmt genau dieses Versprechen zurueck.
+ *
+ *   Die Oberflaeche zeigt den Befehl deshalb MIT DER ECHTEN HERKUNFT
+ *   dieses Fensters, zum Kopieren (`ollamaBefehl()` weiter unten).
+ *
+ *     Windows : setx OLLAMA_ORIGINS "https://…"   danach Ollama neu starten
+ *     macOS   : launchctl setenv OLLAMA_ORIGINS "https://…"
+ *     Linux   : OLLAMA_ORIGINS=https://… ollama serve
+ *
+ *   Beim Start ueber `file://` gibt es keine Herkunft: der Browser sendet
+ *   `Origin: null`. Dafuer waere `OLLAMA_ORIGINS=null` noetig, und das
+ *   erlaubt JEDE oertlich geoeffnete Datei. Die Oberflaeche sagt das und
+ *   raet stattdessen zur ausgelieferten Fassung.
  * ==========================================================================*/
 const KI = (() => {
     /* Das angeklickte Element — oder nichts. `e.target` ist `EventTarget | null`
@@ -34,6 +50,33 @@ const KI = (() => {
        kein Element ist, warf das mitten im Behandeln. */
     const elVon = (e) => e.target instanceof Element ? e.target : null;
     const OLLAMA = 'http://localhost:11434';
+    /* ══ DIE HERKUNFT, NICHT DER STERN ═══════════════════════════════════════
+       Hier stand `OLLAMA_ORIGINS=*` als Anleitung. Ein Stern erlaubt JEDER
+       Webseite im selben Browser, das lokale Ollama anzusprechen — die
+       Modelle zu lesen, Anfragen zu stellen, Antworten mitzunehmen. Redion
+       verspricht, dass kein Text den Rechner verlaesst (§21); diese eine
+       Zeile Anleitung nahm das Versprechen zurueck.
+  
+       Jetzt steht der Befehl mit DER Herkunft da, aus der Redion gerade
+       laeuft — nachgesehen statt geraten, und damit auch richtig, wenn
+       jemand die App unter einer eigenen Adresse betreibt.
+  
+       DER SONDERFALL `file://`. Wer `index.html` doppelklickt, hat keine
+       Herkunft: der Browser sendet `Origin: null`. `OLLAMA_ORIGINS=null`
+       waere zwar enger als der Stern, erlaubt aber immer noch JEDE oertlich
+       geoeffnete Datei. Das wird gesagt, nicht verschwiegen (§33). */
+    const ollamaBefehl = () => {
+        const her = String(location.origin || '');
+        if (!her || her === 'null')
+            return '<code style="font-size:11.5px">OLLAMA_ORIGINS=null</code> setzen.<br>' +
+                '<b>Achtung:</b> Redion läuft gerade als Datei und hat keine eigene ' +
+                'Herkunft. Diese Einstellung erlaubt JEDER örtlich geöffneten Seite ' +
+                'den Zugriff auf Ollama. Sicherer ist die ausgelieferte Fassung ' +
+                'unter einer echten Adresse.';
+        return '<code style="font-size:11.5px">OLLAMA_ORIGINS=' + esc(her) + '</code> setzen.<br>' +
+            'Nur diese eine Herkunft — ein <code>*</code> erlaubt jeder Webseite im ' +
+            'Browser den Zugriff auf dein Ollama.';
+    };
     /* Die WebLLM-Modelle, die sich für einen Notizen-Assistenten eignen.
      * Klein genug zum Herunterladen, gut genug für Zusammenfassungen. */
     const WEB_MODELLE = [
@@ -742,7 +785,7 @@ const KI = (() => {
                 '<a href="https://ollama.com" target="_blank" style="color:var(--accent)">ollama.com</a> ' +
                 'installieren, dann<br><code style="font-size:11.5px">ollama pull llama3.2</code><br><br>' +
                 'Damit der Browser zugreifen darf, einmal<br>' +
-                '<code style="font-size:11.5px">OLLAMA_ORIGINS=*</code> setzen.' +
+                ollamaBefehl() +
                 '</div>';
         }
         html += '<hr><div class="grp">Im Browser · ohne Installation</div>';

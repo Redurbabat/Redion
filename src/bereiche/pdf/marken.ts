@@ -1791,9 +1791,23 @@ const Marken = (() => {
       const knopf = tools.querySelector<HTMLElement>(`[data-wz="${wz}"]`);
       if (knopf) tools.scrollLeft = Math.max(0, knopf.offsetLeft - 6);
     };
+    /* JEDER KNOPF SAGT SEINEN NAMEN UND SEINEN ZUSTAND (Audit F04).
+       Zwei Fehler steckten hier, und beide sah man nicht:
+
+       1. Das Zeichen stand als sichtbarer Text IM Knopf. Am Telefon und in
+          der Spalte blendet das CSS `.wort` aus — dann blieb als
+          zugänglicher Name genau das Zeichen übrig, und der Knopf hiess
+          „✎" oder „⌖". `title` half nicht: es zählt nur, wenn sonst gar
+          kein Name da ist. Jetzt trägt das Zeichen `aria-hidden` und das
+          Wort bleibt lesbar, auch wenn es unsichtbar ist (`.wort` ist
+          nicht mehr `display:none`, sondern weggeklemmt).
+
+       2. Welches Werkzeug GILT, stand nur in einer CSS-Klasse. Eine Klasse
+          ist für ein Vorleseprogramm nicht da. `aria-pressed` sagt es. */
     const button = (tool: string, icon: string, word: string, title: string) =>
-      `<button data-wz="${tool}"${tool === 'schreiben' ? ' class="on"' : ''} title="${title}">` +
-      `<span class="zeichen">${icon}</span><span class="wort">${word}</span></button>`;
+      `<button data-wz="${tool}"${tool === 'schreiben' ? ' class="on"' : ''} ` +
+      `aria-pressed="${tool === 'schreiben' ? 'true' : 'false'}" title="${title}">` +
+      `<span class="zeichen" aria-hidden="true">${icon}</span><span class="wort">${word}</span></button>`;
     tools.innerHTML =
       button('schreiben', '✎', 'Schreiben', 'Schreiben — die Zeichenschicht ist durchlässig') +
       button('select', '⌖', 'Auswahl', 'Marken auswählen, gemeinsam bewegen oder löschen') +
@@ -1810,7 +1824,7 @@ const Marken = (() => {
         const jetzt = FORMEN.find(f => f.id === formArt) || FORMEN[0]!;
         return `<button data-wz="formen" data-form="${jetzt.id}" ` +
           `title="${jetzt.titel} — die Form wählst du darunter">` +
-          `<span class="zeichen">${jetzt.zeichen}</span><span class="wort">Form</span></button>`;
+          `<span class="zeichen" aria-hidden="true">${jetzt.zeichen}</span><span class="wort">Form</span></button>`;
       })() +
       button('abdeck', '▬', 'Abdecken',
         'Abdeckband über Lösungen ziehen — Antippen im Schreiben-Modus deckt auf') +
@@ -1834,30 +1848,30 @@ const Marken = (() => {
       (() => {
         const jetzt = RADIERER.find(r => r.id === (controls.radierModusVon ? controls.radierModusVon() : RADIER_VORGABE)) || RADIERER[0];
         return `<button data-act="radiermodus" data-gruppe="radierer" data-modus="${jetzt.id}" title="${jetzt.titel} — antippen wechselt: ${RADIERER.map(r => r.name).join(' → ')}">` +
-          `<span class="zeichen">${jetzt.zeichen}</span><span class="wort">${jetzt.name}</span></button>`;
+          `<span class="zeichen" aria-hidden="true">${jetzt.zeichen}</span><span class="wort">${jetzt.name}</span></button>`;
       })() +
       /* JEDER KNOPF KENNT SEINE GRUPPE (E356): am Telefon zeigt die Leiste
          nur die Gruppen des gewaehlten Werkzeugs — Farben und Breiten beim
          Stift, den Modus beim Radierer, Kopieren und Loeschen bei der
          Auswahl. Das CSS liest `data-gruppe` gegen `data-tool` der Leiste. */
       '<span class="blatt-trenn" data-gruppe="verlauf"></span>' +
-      '<button data-act="undo" data-gruppe="verlauf" title="Rückgängig" disabled><span class="zeichen">↶</span><span class="wort">Zurück</span></button>' +
-      '<button data-act="redo" data-gruppe="verlauf" title="Wiederholen" disabled><span class="zeichen">↷</span><span class="wort">Vor</span></button>' +
-      '<button data-act="delete" data-gruppe="auswahl" title="Auswahl löschen" disabled><span class="zeichen">🗑</span><span class="wort">Löschen</span></button>' +
+      '<button data-act="undo" data-gruppe="verlauf" title="Rückgängig" disabled><span class="zeichen" aria-hidden="true">↶</span><span class="wort">Zurück</span></button>' +
+      '<button data-act="redo" data-gruppe="verlauf" title="Wiederholen" disabled><span class="zeichen" aria-hidden="true">↷</span><span class="wort">Vor</span></button>' +
+      '<button data-act="delete" data-gruppe="auswahl" title="Auswahl löschen" disabled><span class="zeichen" aria-hidden="true">🗑</span><span class="wort">Löschen</span></button>' +
       /* KOPIEREN UND EINSETZEN (E353) — auch ohne Tastatur, am Telefon. */
-      '<button data-act="copy" data-gruppe="auswahl" title="Auswahl kopieren (Strg+C)" disabled><span class="zeichen">⧉</span><span class="wort">Kopieren</span></button>' +
-      '<button data-act="paste" data-gruppe="auswahl" title="Kopiertes einsetzen (Strg+V)" disabled><span class="zeichen">📋</span><span class="wort">Einsetzen</span></button>' +
+      '<button data-act="copy" data-gruppe="auswahl" title="Auswahl kopieren (Strg+C)" disabled><span class="zeichen" aria-hidden="true">⧉</span><span class="wort">Kopieren</span></button>' +
+      '<button data-act="paste" data-gruppe="auswahl" title="Kopiertes einsetzen (Strg+V)" disabled><span class="zeichen" aria-hidden="true">📋</span><span class="wort">Einsetzen</span></button>' +
       /* Das Lineal ist ein SCHALTER neben den Werkzeugen: solange es
          anliegt, rasten Linie und Pfeil auf 15°-Schritte (E267). */
       '<button data-act="lineal" data-gruppe="lineal" aria-pressed="false" ' +
       'title="Lineal: Linie und Pfeil rasten auf 15°-Schritte">' +
-      '<span class="zeichen">📐</span><span class="wort">Lineal</span></button>' +
+      '<span class="zeichen" aria-hidden="true">📐</span><span class="wort">Lineal</span></button>' +
       /* FORMEN (E355): ein Schalter wie das Lineal — an, und ein gehaltener
          Strich wird zur Linie, zum Kreis, zum Rechteck. */
       `<button data-act="formen" data-gruppe="formen" aria-pressed="${controls.formenAn ? (controls.formenAn() ? 'true' : 'false') : 'true'}"` +
       `${controls.formenAn && controls.formenAn() ? ' class="on"' : ''} ` +
       'title="Formen erkennen: einen Kreis, ein Rechteck oder eine Linie ziehen und am Ende kurz halten">' +
-      '<span class="zeichen">◯</span><span class="wort">Formen</span></button>' +
+      '<span class="zeichen" aria-hidden="true">◯</span><span class="wort">Formen</span></button>' +
       /* DIE SCHRIFT (E360): Familie, Groesse, Fett, Rahmen — beim Text und
          bei der Auswahl; wirkt auf Gewaehltes und auf den naechsten Text. */
       (() => {
@@ -1865,22 +1879,22 @@ const Marken = (() => {
         const fam = SCHRIFTEN.find(x => x.id === s.familie) || SCHRIFTEN[0];
         return `<button data-act="schriftart" data-gruppe="schrift" data-schrift="${fam.id}" ` +
           `title="Schriftart: ${fam.name} — antippen wechselt: ${SCHRIFTEN.map(x => x.name).join(' → ')}">` +
-          `<span class="zeichen" style="font-family:${fam.stapel}">Aa</span><span class="wort">${fam.name}</span></button>` +
+          `<span class="zeichen" aria-hidden="true" style="font-family:${fam.stapel}">Aa</span><span class="wort">${fam.name}</span></button>` +
           '<button data-act="kleiner" data-gruppe="schrift" title="Schrift kleiner">' +
-          '<span class="zeichen">A−</span><span class="wort">Kleiner</span></button>' +
+          '<span class="zeichen" aria-hidden="true">A−</span><span class="wort">Kleiner</span></button>' +
           `<button data-act="groesser" data-gruppe="schrift" title="Schrift grösser (jetzt ${s.groesse} px)">` +
-          '<span class="zeichen">A+</span><span class="wort">Grösser</span></button>' +
+          '<span class="zeichen" aria-hidden="true">A+</span><span class="wort">Grösser</span></button>' +
           `<button data-act="fett" data-gruppe="schrift" aria-pressed="${s.fett ? 'true' : 'false'}"${s.fett ? ' class="on"' : ''} title="Fett">` +
-          '<span class="zeichen">F</span><span class="wort">Fett</span></button>' +
+          '<span class="zeichen" aria-hidden="true">F</span><span class="wort">Fett</span></button>' +
           `<button data-act="rahmen" data-gruppe="schrift" aria-pressed="${s.rahmen ? 'true' : 'false'}"${s.rahmen ? ' class="on"' : ''} title="Rahmen um den Text">` +
-          '<span class="zeichen">▭</span><span class="wort">Rahmen</span></button>';
+          '<span class="zeichen" aria-hidden="true">▭</span><span class="wort">Rahmen</span></button>';
       })() +
       /* DER STIFT (E351): ein Knopf, der durch Fueller, Kugelschreiber und
          Pinsel wechselt und sagt, welcher gerade fuehrt. */
       (() => {
         const jetzt = STIFTE.find(st => st.id === (controls.stilVon ? controls.stilVon() : STIL_VORGABE)) || STIFTE[0];
         return `<button data-act="stil" data-gruppe="stil" data-stil="${jetzt.id}" title="Stift wechseln: ${STIFTE.map(st => st.name).join(' → ')}">` +
-          `<span class="zeichen">${jetzt.zeichen}</span><span class="wort">${jetzt.name}</span></button>`;
+          `<span class="zeichen" aria-hidden="true">${jetzt.zeichen}</span><span class="wort">${jetzt.name}</span></button>`;
       })() +
       /* DAS ZUBEHÖR ZUM FORMEN-WERKZEUG (E375). Es steht in derselben
          Zeile wie Farbe und Breite und erscheint nach der Gruppenregel aus
@@ -1888,7 +1902,7 @@ const Marken = (() => {
       '<span class="blatt-trenn" data-gruppe="form"></span>' +
       FORMEN.map(f => `<button data-act="formart" data-gruppe="form" data-form="${f.id}"` +
         (f.id === formArt ? ' class="on"' : '') + ` aria-pressed="${f.id === formArt ? 'true' : 'false'}"` +
-        ` title="${f.titel}"><span class="zeichen">${f.zeichen}</span>` +
+        ` title="${f.titel}"><span class="zeichen" aria-hidden="true">${f.zeichen}</span>` +
         `<span class="wort">${f.name}</span></button>`).join('') +
       '<span class="blatt-trenn" data-gruppe="farbe"></span>' +
       FARBEN.map((value, index) => `<button class="blatt-farbe${index === 0 ? ' on' : ''}" data-gruppe="farbe" ` +
@@ -1963,6 +1977,8 @@ const Marken = (() => {
         const fuehrend = istForm(wz) ? 'formen' : wz;
         tools.querySelectorAll<HTMLElement>('[data-wz]').forEach(node => {
           node.classList.toggle('on', node.dataset.wz === fuehrend);
+          /* Der Zustand gehoert in den Baum, nicht nur in die Klasse (F04). */
+          node.setAttribute('aria-pressed', node.dataset.wz === fuehrend ? 'true' : 'false');
         });
         /* Die Leiste weiss, welches Werkzeug fuehrt — das CSS am Telefon
            liest es (E356). */
@@ -2010,8 +2026,9 @@ const Marken = (() => {
         if (typeof Zeichenziel !== 'undefined') {
           try { Zeichenziel.uebernehme(controls, wahl); } catch { /* egal */ }
         }
-        tools.querySelectorAll('[data-wz]').forEach(node => node.classList.remove('on'));
-        target.classList.add('on');
+        tools.querySelectorAll('[data-wz]').forEach(node => {
+          node.classList.remove('on'); node.setAttribute('aria-pressed', 'false'); });
+        target.classList.add('on'); target.setAttribute('aria-pressed', 'true');
         tools.dataset.tool = wahl;
         zumWerkzeugRollen('formen');
         return;
@@ -2024,8 +2041,9 @@ const Marken = (() => {
           try { Zeichenziel.uebernehme(controls, target.dataset.wz); }
           catch { /* egal */ }
         }
-        tools.querySelectorAll('[data-wz]').forEach(node => node.classList.remove('on'));
-        target.classList.add('on');
+        tools.querySelectorAll('[data-wz]').forEach(node => {
+          node.classList.remove('on'); node.setAttribute('aria-pressed', 'false'); });
+        target.classList.add('on'); target.setAttribute('aria-pressed', 'true');
         tools.dataset.tool = target.dataset.wz;
         zumWerkzeugRollen(target.dataset.wz);
         return;
@@ -2041,12 +2059,15 @@ const Marken = (() => {
           const naechster = STIFTE[(jetzt + 1) % STIFTE.length]!;
           controls.setzeStil(naechster.id);
           target.dataset.stil = naechster.id;
-          target.innerHTML = `<span class="zeichen">${naechster.zeichen}</span><span class="wort">${naechster.name}</span>`;
+          target.innerHTML = `<span class="zeichen" aria-hidden="true">${naechster.zeichen}</span><span class="wort">${naechster.name}</span>`;
           /* Ein Stift zeichnet — wer ihn wechselt, will ihn auch fuehren. */
           if (Zeichenziel.werkzeugVon?.(controls) !== 'stift') {
             controls.setzeWerkzeug('stift');
             try { Zeichenziel.uebernehme(controls, 'stift'); } catch { /* egal */ }
-            tools.querySelectorAll('[data-wz]').forEach(node => node.classList.toggle('on', (node as HTMLElement).dataset.wz === 'stift'));
+            tools.querySelectorAll('[data-wz]').forEach(node => {
+              const an = (node as HTMLElement).dataset.wz === 'stift';
+              node.classList.toggle('on', an);
+              node.setAttribute('aria-pressed', an ? 'true' : 'false'); });
             tools.dataset.tool = 'stift';
           }
           return;
@@ -2070,7 +2091,7 @@ const Marken = (() => {
           if (kopf && f) {
             kopf.dataset.form = wahl;
             kopf.title = f.titel + ' — die Form wählst du darunter';
-            kopf.innerHTML = `<span class="zeichen">${f.zeichen}</span><span class="wort">Form</span>`;
+            kopf.innerHTML = `<span class="zeichen" aria-hidden="true">${f.zeichen}</span><span class="wort">Form</span>`;
             tools.querySelectorAll('[data-wz]').forEach(node => node.classList.remove('on'));
             kopf.classList.add('on');
           }
@@ -2087,7 +2108,7 @@ const Marken = (() => {
           controls.setzeRadierModus(naechster.id);
           target.dataset.modus = naechster.id;
           target.title = `${naechster.titel} — antippen wechselt: ${RADIERER.map(r => r.name).join(' → ')}`;
-          target.innerHTML = `<span class="zeichen">${naechster.zeichen}</span><span class="wort">${naechster.name}</span>`;
+          target.innerHTML = `<span class="zeichen" aria-hidden="true">${naechster.zeichen}</span><span class="wort">${naechster.name}</span>`;
           /* Wer den Radierer einstellt, will radieren. */
           if (Zeichenziel.werkzeugVon?.(controls) !== 'radierer') {
             controls.setzeWerkzeug('radierer');
@@ -2137,7 +2158,7 @@ const Marken = (() => {
           controls.setzeSchrift({ familie: naechste.id });
           target.dataset.schrift = naechste.id;
           target.title = `Schriftart: ${naechste.name} — antippen wechselt: ${SCHRIFTEN.map(x => x.name).join(' → ')}`;
-          target.innerHTML = `<span class="zeichen" style="font-family:${naechste.stapel}">Aa</span><span class="wort">${naechste.name}</span>`;
+          target.innerHTML = `<span class="zeichen" aria-hidden="true" style="font-family:${naechste.stapel}">Aa</span><span class="wort">${naechste.name}</span>`;
           return;
         }
         if ((target.dataset.act === 'groesser' || target.dataset.act === 'kleiner') && controls.setzeSchrift) {

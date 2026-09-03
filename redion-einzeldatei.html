@@ -11404,7 +11404,11 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
                    font-size:13px; color:var(--text); background:none; cursor:pointer}
 .blatt-fest button:hover{background:var(--bg-hover)}
 .blatt-fest .zeichen{margin-right:5px}
-.blatt-werk button{min-height:32px; padding:4px 9px; border-radius:6px;
+/* `position:relative`, damit das weggeklemmte Wort (Audit F04) an SEINEM
+   Knopf hängt und nicht am Seitenanfang — sichtbar ist es nie, aber ein
+   Vorleseprogramm liest in Dokumentreihenfolge, und die soll stimmen. */
+.blatt-werk button{position:relative;
+                   min-height:32px; padding:4px 9px; border-radius:6px;
                    font-size:13px; color:var(--text); background:none; cursor:pointer}
 .blatt-werk button:hover{background:var(--bg-hover)}
 .blatt-werk button.on{background:var(--accent); color:var(--auf-accent)}
@@ -11639,12 +11643,30 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .spalte .blatt-werk::-webkit-scrollbar{display:none}
 .spalte .blatt-werk > *{flex:0 0 auto}
 .spalte .blatt-werk button{min-height:36px; min-width:36px; padding:4px 7px}
-.spalte .blatt-werk .wort{display:none}
+/* ══ WEGGEKLEMMT, NICHT ENTFERNT (Audit F04) ══════════════════════════════
+   `display:none` nimmt Text nicht nur aus dem Bild, sondern auch aus dem
+   Zugänglichkeitsbaum. Bei den Werkzeugknöpfen hiess das: sobald `.wort`
+   weg war (Telefon, Spalte), blieb als Name das ZEICHEN übrig — der Knopf
+   hiess „✎" oder „⌖". `title` half nicht; es zählt nur, wenn sonst kein
+   Name da ist, und das Zeichen war einer.
+
+   Diese Klasse nimmt den Text aus dem Bild und lässt ihn im Baum. Das
+   Zeichen daneben trägt `aria-hidden`, also bleibt genau ein Name übrig:
+   das Wort. Die Knöpfe messen weiter 44 px — geklemmter Text nimmt keinen
+   Platz. */
+.nur-vorlesen,
+.blatt-werk .wort[hidden],
+.spalte .blatt-werk .wort,
+.spalte .blatt-fest .wort{
+  position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0 0 0 0); clip-path:inset(50%);
+  white-space:nowrap; border:0 }
+/* (die Regeln oben ersetzen die frueheren `display:none`) */
 .spalte .blatt-werk .zeichen{margin:0; font-size:16px}
 .spalte .blatt-farbe{width:24px; height:24px; min-width:24px}
 .spalte .blatt-strich{min-width:32px}
 .spalte .blatt-fest{box-shadow:-10px 0 10px -7px rgba(0,0,0,.45); padding-left:8px}
-.spalte .blatt-fest .wort{display:none}
+
 .spalte .blatt-fest .zeichen{margin:0}
 .spalte .blatt-fest button{min-height:36px; min-width:36px; padding:4px 7px;
                            border-radius:6px; color:var(--text);
@@ -11720,12 +11742,16 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-reihe, .blatt-werk{container-type:inline-size}
 @media (min-width:761px){
   @container (max-width:1150px){
-    .blatt-werk .wort{display:none}
+    .blatt-werk .wort{position:absolute; width:1px; height:1px; padding:0;
+      margin:-1px; overflow:hidden; clip:rect(0 0 0 0); clip-path:inset(50%);
+      white-space:nowrap; border:0}
     .blatt-werk .zeichen{margin:0; font-size:16px}
     .blatt-werk button{min-width:36px; padding:4px 7px}
   }
   @container (max-width:1400px){
-    .blatt-fest .wort{display:none}
+    .blatt-fest .wort{position:absolute; width:1px; height:1px; padding:0;
+      margin:-1px; overflow:hidden; clip:rect(0 0 0 0); clip-path:inset(50%);
+      white-space:nowrap; border:0}
     .blatt-fest .zeichen{margin:0; font-size:16px}
     .blatt-fest button{min-width:36px; padding:4px 7px}
   }
@@ -11738,7 +11764,9 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   .blatt-werk > *{flex:0 0 auto}
   .blatt-werk > .blatt-zeilenbruch{display:none}
   .blatt-werk button{min-height:44px; min-width:44px; padding:4px 8px}
-  .blatt-werk .wort{display:none}
+  .blatt-werk .wort{position:absolute; width:1px; height:1px; padding:0;
+    margin:-1px; overflow:hidden; clip:rect(0 0 0 0); clip-path:inset(50%);
+    white-space:nowrap; border:0}
   .blatt-werk .zeichen{margin:0; font-size:17px}
   .blatt-farbe{width:30px; height:30px; min-width:30px}
   .blatt-farbe-neu{width:30px; height:30px; min-width:30px}
@@ -11791,7 +11819,9 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
      keine Kopfzeile über sich; dort ist die Zahl die einzige. */
   .document-workspace .blatt-fest .pdfs-nr,
   .document-workspace .blatt-fest .blatt-trenn{display:none}
-  .blatt-fest .wort{display:none}
+  .blatt-fest .wort{position:absolute; width:1px; height:1px; padding:0;
+    margin:-1px; overflow:hidden; clip:rect(0 0 0 0); clip-path:inset(50%);
+    white-space:nowrap; border:0}
   .blatt-fest .zeichen{margin:0; font-size:17px}
   .blatt-fest button{min-height:44px; min-width:44px}
 }
@@ -14437,10 +14467,10 @@ body.iblatt-auf .menu{z-index:794}
       <span data-sym="learn"></span><span>Lernzentrum</span>
     </button>
     <button class="side-item" id="btn-elektro" data-ruhig="bleibt">
-      <span data-sym="bolt"></span><span>Elektro</span>
+      <span data-sym="bolt"></span><span>Elektrotechnik</span>
     </button>
     <button class="side-item" id="btn-workspace">
-      <span data-sym="workspace"></span><span>Workspace</span>
+      <span data-sym="workspace"></span><span>Arbeitsbereich</span>
     </button>
     <button class="side-item" id="btn-library" data-ruhig="bleibt">
       <span data-sym="library"></span><span>Bibliothek</span>
@@ -16226,7 +16256,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 232, inhalt: '76bedc648c7ec5d4', gebaut: '2026-09-03T19:41:45.991Z' };
+const Stand = { fassung: 239, inhalt: 'a12003bb161e931b', gebaut: '2026-09-03T22:00:48.985Z' };
 window.Stand = Stand;
 
 </script>
@@ -26356,7 +26386,7 @@ Register.module = (() => {
         { id: 'notizhefte', name: 'Notizhefte', icon: '📓', zeichen: 'book',
             was: 'Regal deiner Schreibhefte — öffnen und losschreiben (E264).',
             oeffnen: () => (typeof Notebook !== 'undefined') && Notebook.oeffnen() },
-        { id: 'arbeitswelt', name: 'Workspace', icon: '🧱', zeichen: 'workspace',
+        { id: 'arbeitswelt', name: 'Arbeitsbereich', icon: '🧱', zeichen: 'workspace',
             was: 'Seiten, Bibliothek, Aufgaben, Kalender, Datenbanken, Whiteboards, Wiki, Vorlagen.',
             oeffnen: () => (typeof Produktwelten !== 'undefined') && Produktwelten.workspace('uebersicht') },
         { id: 'lebensbereiche', name: 'Lebensbereiche', icon: '◎', zeichen: 'compass',
@@ -26583,7 +26613,7 @@ Register.navigation = (() => {
            eine Überlagerung mit dem Rechner. Vier der fünf Wege dieser Gruppe
            ändern die Krume, der fünfte tat es als einziger nicht. Der Rechner
            ist jetzt einer der Knöpfe dieser Seite statt ihre Vordertür. */
-        { id: 'elektro', name: 'Elektro', icon: '⚡', zeichen: 'bolt', platz: 'oben', rang: 45,
+        { id: 'elektro', name: 'Elektrotechnik', icon: '⚡', zeichen: 'bolt', platz: 'oben', rang: 45,
             knopfId: 'btn-elektro',
             tun: () => {
                 if (typeof Elektrostart !== 'undefined')
@@ -26591,7 +26621,7 @@ Register.navigation = (() => {
                 else if (typeof Electrical !== 'undefined')
                     Electrical.open();
             } },
-        { id: 'workspace', name: 'Workspace', icon: '🧱', zeichen: 'workspace', platz: 'oben', rang: 50,
+        { id: 'workspace', name: 'Arbeitsbereich', icon: '🧱', zeichen: 'workspace', platz: 'oben', rang: 50,
             knopfId: 'btn-workspace', tun: () => Produktwelten.workspace('start') },
         { id: 'bibliothekOben', name: 'Bibliothek', icon: '📚', zeichen: 'library', platz: 'oben', rang: 60,
             /* Zweimal „Bibliothek": hier die Zeile der obersten Gruppe, weiter
@@ -48541,8 +48571,22 @@ const Marken = (() => {
             if (knopf)
                 tools.scrollLeft = Math.max(0, knopf.offsetLeft - 6);
         };
-        const button = (tool, icon, word, title) => `<button data-wz="${tool}"${tool === 'schreiben' ? ' class="on"' : ''} title="${title}">` +
-            `<span class="zeichen">${icon}</span><span class="wort">${word}</span></button>`;
+        /* JEDER KNOPF SAGT SEINEN NAMEN UND SEINEN ZUSTAND (Audit F04).
+           Zwei Fehler steckten hier, und beide sah man nicht:
+    
+           1. Das Zeichen stand als sichtbarer Text IM Knopf. Am Telefon und in
+              der Spalte blendet das CSS `.wort` aus — dann blieb als
+              zugänglicher Name genau das Zeichen übrig, und der Knopf hiess
+              „✎" oder „⌖". `title` half nicht: es zählt nur, wenn sonst gar
+              kein Name da ist. Jetzt trägt das Zeichen `aria-hidden` und das
+              Wort bleibt lesbar, auch wenn es unsichtbar ist (`.wort` ist
+              nicht mehr `display:none`, sondern weggeklemmt).
+    
+           2. Welches Werkzeug GILT, stand nur in einer CSS-Klasse. Eine Klasse
+              ist für ein Vorleseprogramm nicht da. `aria-pressed` sagt es. */
+        const button = (tool, icon, word, title) => `<button data-wz="${tool}"${tool === 'schreiben' ? ' class="on"' : ''} ` +
+            `aria-pressed="${tool === 'schreiben' ? 'true' : 'false'}" title="${title}">` +
+            `<span class="zeichen" aria-hidden="true">${icon}</span><span class="wort">${word}</span></button>`;
         tools.innerHTML =
             button('schreiben', '✎', 'Schreiben', 'Schreiben — die Zeichenschicht ist durchlässig') +
                 button('select', '⌖', 'Auswahl', 'Marken auswählen, gemeinsam bewegen oder löschen') +
@@ -48559,7 +48603,7 @@ const Marken = (() => {
                     const jetzt = FORMEN.find(f => f.id === formArt) || FORMEN[0];
                     return `<button data-wz="formen" data-form="${jetzt.id}" ` +
                         `title="${jetzt.titel} — die Form wählst du darunter">` +
-                        `<span class="zeichen">${jetzt.zeichen}</span><span class="wort">Form</span></button>`;
+                        `<span class="zeichen" aria-hidden="true">${jetzt.zeichen}</span><span class="wort">Form</span></button>`;
                 })() +
                 button('abdeck', '▬', 'Abdecken', 'Abdeckband über Lösungen ziehen — Antippen im Schreiben-Modus deckt auf') +
                 button('zettel', '🗒', 'Haftnotiz', 'Einen Zettel aufziehen und beschriften; Antippen mit dem Werkzeug bearbeitet ihn') +
@@ -48579,30 +48623,30 @@ const Marken = (() => {
                 (() => {
                     const jetzt = RADIERER.find(r => r.id === (controls.radierModusVon ? controls.radierModusVon() : RADIER_VORGABE)) || RADIERER[0];
                     return `<button data-act="radiermodus" data-gruppe="radierer" data-modus="${jetzt.id}" title="${jetzt.titel} — antippen wechselt: ${RADIERER.map(r => r.name).join(' → ')}">` +
-                        `<span class="zeichen">${jetzt.zeichen}</span><span class="wort">${jetzt.name}</span></button>`;
+                        `<span class="zeichen" aria-hidden="true">${jetzt.zeichen}</span><span class="wort">${jetzt.name}</span></button>`;
                 })() +
                 /* JEDER KNOPF KENNT SEINE GRUPPE (E356): am Telefon zeigt die Leiste
                    nur die Gruppen des gewaehlten Werkzeugs — Farben und Breiten beim
                    Stift, den Modus beim Radierer, Kopieren und Loeschen bei der
                    Auswahl. Das CSS liest `data-gruppe` gegen `data-tool` der Leiste. */
                 '<span class="blatt-trenn" data-gruppe="verlauf"></span>' +
-                '<button data-act="undo" data-gruppe="verlauf" title="Rückgängig" disabled><span class="zeichen">↶</span><span class="wort">Zurück</span></button>' +
-                '<button data-act="redo" data-gruppe="verlauf" title="Wiederholen" disabled><span class="zeichen">↷</span><span class="wort">Vor</span></button>' +
-                '<button data-act="delete" data-gruppe="auswahl" title="Auswahl löschen" disabled><span class="zeichen">🗑</span><span class="wort">Löschen</span></button>' +
+                '<button data-act="undo" data-gruppe="verlauf" title="Rückgängig" disabled><span class="zeichen" aria-hidden="true">↶</span><span class="wort">Zurück</span></button>' +
+                '<button data-act="redo" data-gruppe="verlauf" title="Wiederholen" disabled><span class="zeichen" aria-hidden="true">↷</span><span class="wort">Vor</span></button>' +
+                '<button data-act="delete" data-gruppe="auswahl" title="Auswahl löschen" disabled><span class="zeichen" aria-hidden="true">🗑</span><span class="wort">Löschen</span></button>' +
                 /* KOPIEREN UND EINSETZEN (E353) — auch ohne Tastatur, am Telefon. */
-                '<button data-act="copy" data-gruppe="auswahl" title="Auswahl kopieren (Strg+C)" disabled><span class="zeichen">⧉</span><span class="wort">Kopieren</span></button>' +
-                '<button data-act="paste" data-gruppe="auswahl" title="Kopiertes einsetzen (Strg+V)" disabled><span class="zeichen">📋</span><span class="wort">Einsetzen</span></button>' +
+                '<button data-act="copy" data-gruppe="auswahl" title="Auswahl kopieren (Strg+C)" disabled><span class="zeichen" aria-hidden="true">⧉</span><span class="wort">Kopieren</span></button>' +
+                '<button data-act="paste" data-gruppe="auswahl" title="Kopiertes einsetzen (Strg+V)" disabled><span class="zeichen" aria-hidden="true">📋</span><span class="wort">Einsetzen</span></button>' +
                 /* Das Lineal ist ein SCHALTER neben den Werkzeugen: solange es
                    anliegt, rasten Linie und Pfeil auf 15°-Schritte (E267). */
                 '<button data-act="lineal" data-gruppe="lineal" aria-pressed="false" ' +
                 'title="Lineal: Linie und Pfeil rasten auf 15°-Schritte">' +
-                '<span class="zeichen">📐</span><span class="wort">Lineal</span></button>' +
+                '<span class="zeichen" aria-hidden="true">📐</span><span class="wort">Lineal</span></button>' +
                 /* FORMEN (E355): ein Schalter wie das Lineal — an, und ein gehaltener
                    Strich wird zur Linie, zum Kreis, zum Rechteck. */
                 `<button data-act="formen" data-gruppe="formen" aria-pressed="${controls.formenAn ? (controls.formenAn() ? 'true' : 'false') : 'true'}"` +
                 `${controls.formenAn && controls.formenAn() ? ' class="on"' : ''} ` +
                 'title="Formen erkennen: einen Kreis, ein Rechteck oder eine Linie ziehen und am Ende kurz halten">' +
-                '<span class="zeichen">◯</span><span class="wort">Formen</span></button>' +
+                '<span class="zeichen" aria-hidden="true">◯</span><span class="wort">Formen</span></button>' +
                 /* DIE SCHRIFT (E360): Familie, Groesse, Fett, Rahmen — beim Text und
                    bei der Auswahl; wirkt auf Gewaehltes und auf den naechsten Text. */
                 (() => {
@@ -48610,22 +48654,22 @@ const Marken = (() => {
                     const fam = SCHRIFTEN.find(x => x.id === s.familie) || SCHRIFTEN[0];
                     return `<button data-act="schriftart" data-gruppe="schrift" data-schrift="${fam.id}" ` +
                         `title="Schriftart: ${fam.name} — antippen wechselt: ${SCHRIFTEN.map(x => x.name).join(' → ')}">` +
-                        `<span class="zeichen" style="font-family:${fam.stapel}">Aa</span><span class="wort">${fam.name}</span></button>` +
+                        `<span class="zeichen" aria-hidden="true" style="font-family:${fam.stapel}">Aa</span><span class="wort">${fam.name}</span></button>` +
                         '<button data-act="kleiner" data-gruppe="schrift" title="Schrift kleiner">' +
-                        '<span class="zeichen">A−</span><span class="wort">Kleiner</span></button>' +
+                        '<span class="zeichen" aria-hidden="true">A−</span><span class="wort">Kleiner</span></button>' +
                         `<button data-act="groesser" data-gruppe="schrift" title="Schrift grösser (jetzt ${s.groesse} px)">` +
-                        '<span class="zeichen">A+</span><span class="wort">Grösser</span></button>' +
+                        '<span class="zeichen" aria-hidden="true">A+</span><span class="wort">Grösser</span></button>' +
                         `<button data-act="fett" data-gruppe="schrift" aria-pressed="${s.fett ? 'true' : 'false'}"${s.fett ? ' class="on"' : ''} title="Fett">` +
-                        '<span class="zeichen">F</span><span class="wort">Fett</span></button>' +
+                        '<span class="zeichen" aria-hidden="true">F</span><span class="wort">Fett</span></button>' +
                         `<button data-act="rahmen" data-gruppe="schrift" aria-pressed="${s.rahmen ? 'true' : 'false'}"${s.rahmen ? ' class="on"' : ''} title="Rahmen um den Text">` +
-                        '<span class="zeichen">▭</span><span class="wort">Rahmen</span></button>';
+                        '<span class="zeichen" aria-hidden="true">▭</span><span class="wort">Rahmen</span></button>';
                 })() +
                 /* DER STIFT (E351): ein Knopf, der durch Fueller, Kugelschreiber und
                    Pinsel wechselt und sagt, welcher gerade fuehrt. */
                 (() => {
                     const jetzt = STIFTE.find(st => st.id === (controls.stilVon ? controls.stilVon() : STIL_VORGABE)) || STIFTE[0];
                     return `<button data-act="stil" data-gruppe="stil" data-stil="${jetzt.id}" title="Stift wechseln: ${STIFTE.map(st => st.name).join(' → ')}">` +
-                        `<span class="zeichen">${jetzt.zeichen}</span><span class="wort">${jetzt.name}</span></button>`;
+                        `<span class="zeichen" aria-hidden="true">${jetzt.zeichen}</span><span class="wort">${jetzt.name}</span></button>`;
                 })() +
                 /* DAS ZUBEHÖR ZUM FORMEN-WERKZEUG (E375). Es steht in derselben
                    Zeile wie Farbe und Breite und erscheint nach der Gruppenregel aus
@@ -48633,7 +48677,7 @@ const Marken = (() => {
                 '<span class="blatt-trenn" data-gruppe="form"></span>' +
                 FORMEN.map(f => `<button data-act="formart" data-gruppe="form" data-form="${f.id}"` +
                     (f.id === formArt ? ' class="on"' : '') + ` aria-pressed="${f.id === formArt ? 'true' : 'false'}"` +
-                    ` title="${f.titel}"><span class="zeichen">${f.zeichen}</span>` +
+                    ` title="${f.titel}"><span class="zeichen" aria-hidden="true">${f.zeichen}</span>` +
                     `<span class="wort">${f.name}</span></button>`).join('') +
                 '<span class="blatt-trenn" data-gruppe="farbe"></span>' +
                 FARBEN.map((value, index) => `<button class="blatt-farbe${index === 0 ? ' on' : ''}" data-gruppe="farbe" ` +
@@ -48713,6 +48757,8 @@ const Marken = (() => {
                 const fuehrend = istForm(wz) ? 'formen' : wz;
                 tools.querySelectorAll('[data-wz]').forEach(node => {
                     node.classList.toggle('on', node.dataset.wz === fuehrend);
+                    /* Der Zustand gehoert in den Baum, nicht nur in die Klasse (F04). */
+                    node.setAttribute('aria-pressed', node.dataset.wz === fuehrend ? 'true' : 'false');
                 });
                 /* Die Leiste weiss, welches Werkzeug fuehrt — das CSS am Telefon
                    liest es (E356). */
@@ -48774,8 +48820,12 @@ const Marken = (() => {
                     }
                     catch { /* egal */ }
                 }
-                tools.querySelectorAll('[data-wz]').forEach(node => node.classList.remove('on'));
+                tools.querySelectorAll('[data-wz]').forEach(node => {
+                    node.classList.remove('on');
+                    node.setAttribute('aria-pressed', 'false');
+                });
                 target.classList.add('on');
+                target.setAttribute('aria-pressed', 'true');
                 tools.dataset.tool = wahl;
                 zumWerkzeugRollen('formen');
                 return;
@@ -48790,8 +48840,12 @@ const Marken = (() => {
                     }
                     catch { /* egal */ }
                 }
-                tools.querySelectorAll('[data-wz]').forEach(node => node.classList.remove('on'));
+                tools.querySelectorAll('[data-wz]').forEach(node => {
+                    node.classList.remove('on');
+                    node.setAttribute('aria-pressed', 'false');
+                });
                 target.classList.add('on');
+                target.setAttribute('aria-pressed', 'true');
                 tools.dataset.tool = target.dataset.wz;
                 zumWerkzeugRollen(target.dataset.wz);
                 return;
@@ -48812,7 +48866,7 @@ const Marken = (() => {
                     const naechster = STIFTE[(jetzt + 1) % STIFTE.length];
                     controls.setzeStil(naechster.id);
                     target.dataset.stil = naechster.id;
-                    target.innerHTML = `<span class="zeichen">${naechster.zeichen}</span><span class="wort">${naechster.name}</span>`;
+                    target.innerHTML = `<span class="zeichen" aria-hidden="true">${naechster.zeichen}</span><span class="wort">${naechster.name}</span>`;
                     /* Ein Stift zeichnet — wer ihn wechselt, will ihn auch fuehren. */
                     if (Zeichenziel.werkzeugVon?.(controls) !== 'stift') {
                         controls.setzeWerkzeug('stift');
@@ -48820,7 +48874,11 @@ const Marken = (() => {
                             Zeichenziel.uebernehme(controls, 'stift');
                         }
                         catch { /* egal */ }
-                        tools.querySelectorAll('[data-wz]').forEach(node => node.classList.toggle('on', node.dataset.wz === 'stift'));
+                        tools.querySelectorAll('[data-wz]').forEach(node => {
+                            const an = node.dataset.wz === 'stift';
+                            node.classList.toggle('on', an);
+                            node.setAttribute('aria-pressed', an ? 'true' : 'false');
+                        });
                         tools.dataset.tool = 'stift';
                     }
                     return;
@@ -48850,7 +48908,7 @@ const Marken = (() => {
                     if (kopf && f) {
                         kopf.dataset.form = wahl;
                         kopf.title = f.titel + ' — die Form wählst du darunter';
-                        kopf.innerHTML = `<span class="zeichen">${f.zeichen}</span><span class="wort">Form</span>`;
+                        kopf.innerHTML = `<span class="zeichen" aria-hidden="true">${f.zeichen}</span><span class="wort">Form</span>`;
                         tools.querySelectorAll('[data-wz]').forEach(node => node.classList.remove('on'));
                         kopf.classList.add('on');
                     }
@@ -48870,7 +48928,7 @@ const Marken = (() => {
                     controls.setzeRadierModus(naechster.id);
                     target.dataset.modus = naechster.id;
                     target.title = `${naechster.titel} — antippen wechselt: ${RADIERER.map(r => r.name).join(' → ')}`;
-                    target.innerHTML = `<span class="zeichen">${naechster.zeichen}</span><span class="wort">${naechster.name}</span>`;
+                    target.innerHTML = `<span class="zeichen" aria-hidden="true">${naechster.zeichen}</span><span class="wort">${naechster.name}</span>`;
                     /* Wer den Radierer einstellt, will radieren. */
                     if (Zeichenziel.werkzeugVon?.(controls) !== 'radierer') {
                         controls.setzeWerkzeug('radierer');
@@ -48931,7 +48989,7 @@ const Marken = (() => {
                     controls.setzeSchrift({ familie: naechste.id });
                     target.dataset.schrift = naechste.id;
                     target.title = `Schriftart: ${naechste.name} — antippen wechselt: ${SCHRIFTEN.map(x => x.name).join(' → ')}`;
-                    target.innerHTML = `<span class="zeichen" style="font-family:${naechste.stapel}">Aa</span><span class="wort">${naechste.name}</span>`;
+                    target.innerHTML = `<span class="zeichen" aria-hidden="true" style="font-family:${naechste.stapel}">Aa</span><span class="wort">${naechste.name}</span>`;
                     return;
                 }
                 if ((target.dataset.act === 'groesser' || target.dataset.act === 'kleiner') && controls.setzeSchrift) {
@@ -49817,6 +49875,25 @@ const PdfEinlesen = (() => {
             const zielSeite = typeof Links !== 'undefined' ? Links.seiteVon(elternId) : null;
             if (bis > 0 && !daneben && zielSeite && zielSeite.dokumentModus === undefined)
                 Store.updateBlock(zielSeite.id, { dokumentModus: true });
+            /* ══ DER DATEINAME WIRD DER TITEL, WENN NOCH KEINER DA IST (Audit F06)
+               Vorher hiess jede eingelesene PDF „Ohne Titel": der Name stand am
+               Datei-Block, nie an der Seite. Wer drei Skripte einlas, hatte drei
+               gleich heissende Seiten im Baum und musste jede oeffnen, um sie zu
+               unterscheiden.
+      
+               NUR, WENN NOCH KEINER DA IST. Ein Titel, den ein Mensch getippt
+               hat, wird nicht ueberschrieben — auch nicht beim zweiten Einlesen
+               in dieselbe Seite. Geprueft wird gegen leer UND gegen den
+               Vorgabetext, denn eine frisch angelegte Seite traegt ihn wirklich.
+      
+               Die Endung faellt weg: „Vorlesung 3.pdf" wird „Vorlesung 3". Der
+               volle Dateiname bleibt am Datei-Block stehen, wo er hingehoert. */
+            const OHNE_NAMEN = ['', 'Ohne Titel', 'Neue Seite'];
+            if (bis > 0 && zielSeite && OHNE_NAMEN.includes(String(zielSeite.text || '').trim())) {
+                const titel = datei.name.replace(/\.[^.]+$/, '').trim();
+                if (titel)
+                    Store.updateBlock(zielSeite.id, { text: titel });
+            }
             App.zeichneSeite();
             UI.toast(bis + ' von ' + gesamt + ' Seiten aus „' + datei.name + '" vorbereitet');
             return { seiten: bis, gesamt, quelle, bloecke: gemacht, anhang };
@@ -58264,6 +58341,26 @@ const DocumentMode = (() => {
             return;
         Store.setMeta(SEITEN_MERKER + pageId, index);
     };
+    /* DER ZOOM BLEIBT AUCH (Audit F07). E349 merkte die SEITE, den Zoom
+       nicht: nach jedem Neuladen stand er wieder auf 100 %, und wer sein
+       Skript auf 140 % liest, musste das jedes Mal von Hand herstellen.
+  
+       Genau wie die Seite als Meta, nicht am Seitenblock — eine Ansicht ist
+       kein Inhalt: Zoomen soll weder `edited` anheben noch eine Fassung
+       erzeugen. Und je Dokument, nicht global: ein Skript in Kleindruck
+       braucht einen anderen Zoom als ein Foto-Scan. */
+    const ZOOM_MERKER = 'dokZoom:';
+    const gemerkterZoom = (pageId) => {
+        const n = Number(Store.getMeta(ZOOM_MERKER + pageId));
+        /* Die Grenzen des Reglers, nicht mehr: ein kaputter Wert aus einer
+           aelteren Fassung darf keine 4000-Pixel-Seite bauen. */
+        return Number.isFinite(n) && n >= 60 && n <= 180 ? Math.round(n) : 100;
+    };
+    const zoomMerken = (pageId, zoom) => {
+        if (Store.getMeta(ZOOM_MERKER + pageId) === zoom)
+            return;
+        Store.setMeta(ZOOM_MERKER + pageId, zoom);
+    };
     const stateFor = (pageId) => {
         const known = states.get(pageId);
         if (known)
@@ -58272,7 +58369,8 @@ const DocumentMode = (() => {
            stand dort bisher offen, weil Platz da war — 280 px, dauerhaft, fuer
            eine Liste, die bei einem frisch eingelesenen PDF leer ist. Wer sie
            braucht, holt sie mit `ⓘ`; wer liest, liest. */
-        const created = { index: gemerkteSeite(pageId), zoom: 100, thumbnailsOpen: false, inspectorOpen: false };
+        const created = { index: gemerkteSeite(pageId), zoom: gemerkterZoom(pageId),
+            thumbnailsOpen: false, inspectorOpen: false };
         states.set(pageId, created);
         return created;
     };
@@ -59063,6 +59161,7 @@ const DocumentMode = (() => {
         });
         zoom.addEventListener('input', () => {
             state.zoom = Number(zoom.value) || 100;
+            zoomMerken(page.id, state.zoom); /* F07 */
             passen();
             zoomLabel.textContent = state.zoom + ' %';
         });
@@ -59075,6 +59174,7 @@ const DocumentMode = (() => {
             if (neu === state.zoom)
                 return;
             state.zoom = neu;
+            zoomMerken(page.id, neu); /* F07 — auch Strg+Rad und Kneifen */
             zoom.value = String(neu);
             zoomLabel.textContent = neu + ' %';
             passen();
@@ -78036,7 +78136,7 @@ const Werkzeuge = (() => {
         c('Navigation', 'Lernpfad', '', () => Produktwelten.lernen('pfad'));
         c('Navigation', 'Fehlertraining', '', () => Produktwelten.lernen('fehler'));
         c('Navigation', 'Prüfungszentrum', '', () => Produktwelten.lernen('pruefungen'));
-        c('Navigation', 'Workspace', '', () => Produktwelten.workspace('start'));
+        c('Navigation', 'Arbeitsbereich', '', () => Produktwelten.workspace('start'));
         c('Navigation', 'Bibliothek', '', () => Produktwelten.bibliothek());
         c('Navigation', 'Aufgaben', '', () => Produktwelten.aufgaben());
         c('Navigation', 'Whiteboards', '', () => Produktwelten.whiteboards());
@@ -128074,10 +128174,26 @@ window.Produktwelten = Produktwelten;
  *
  * OLLAMA VORBEREITEN
  *   Damit der Browser Ollama ansprechen darf, muss einmal die Herkunft
- *   erlaubt werden:
- *     Windows : setx OLLAMA_ORIGINS "*"      danach Ollama neu starten
- *     macOS   : launchctl setenv OLLAMA_ORIGINS "*"
- *     Linux   : OLLAMA_ORIGINS=* ollama serve
+ *   erlaubt werden — und zwar GENAU DIESE EINE, nicht alle.
+ *
+ *   Hier stand bis zum 3. September 2026 ein Stern. Das war bequem und
+ *   falsch: `OLLAMA_ORIGINS=*` erlaubt JEDER Webseite im selben Browser,
+ *   mit dem lokalen Ollama zu sprechen — Modelle aufzulisten, Anfragen zu
+ *   stellen, Antworten zu lesen. Redion wirbt damit, dass kein Text den
+ *   Rechner verlaesst (§21); eine Anleitung, die nebenbei die Tuer fuer
+ *   alle aufmacht, nimmt genau dieses Versprechen zurueck.
+ *
+ *   Die Oberflaeche zeigt den Befehl deshalb MIT DER ECHTEN HERKUNFT
+ *   dieses Fensters, zum Kopieren (`ollamaBefehl()` weiter unten).
+ *
+ *     Windows : setx OLLAMA_ORIGINS "https://…"   danach Ollama neu starten
+ *     macOS   : launchctl setenv OLLAMA_ORIGINS "https://…"
+ *     Linux   : OLLAMA_ORIGINS=https://… ollama serve
+ *
+ *   Beim Start ueber `file://` gibt es keine Herkunft: der Browser sendet
+ *   `Origin: null`. Dafuer waere `OLLAMA_ORIGINS=null` noetig, und das
+ *   erlaubt JEDE oertlich geoeffnete Datei. Die Oberflaeche sagt das und
+ *   raet stattdessen zur ausgelieferten Fassung.
  * ==========================================================================*/
 const KI = (() => {
     /* Das angeklickte Element — oder nichts. `e.target` ist `EventTarget | null`
@@ -128086,6 +128202,33 @@ const KI = (() => {
        kein Element ist, warf das mitten im Behandeln. */
     const elVon = (e) => e.target instanceof Element ? e.target : null;
     const OLLAMA = 'http://localhost:11434';
+    /* ══ DIE HERKUNFT, NICHT DER STERN ═══════════════════════════════════════
+       Hier stand `OLLAMA_ORIGINS=*` als Anleitung. Ein Stern erlaubt JEDER
+       Webseite im selben Browser, das lokale Ollama anzusprechen — die
+       Modelle zu lesen, Anfragen zu stellen, Antworten mitzunehmen. Redion
+       verspricht, dass kein Text den Rechner verlaesst (§21); diese eine
+       Zeile Anleitung nahm das Versprechen zurueck.
+  
+       Jetzt steht der Befehl mit DER Herkunft da, aus der Redion gerade
+       laeuft — nachgesehen statt geraten, und damit auch richtig, wenn
+       jemand die App unter einer eigenen Adresse betreibt.
+  
+       DER SONDERFALL `file://`. Wer `index.html` doppelklickt, hat keine
+       Herkunft: der Browser sendet `Origin: null`. `OLLAMA_ORIGINS=null`
+       waere zwar enger als der Stern, erlaubt aber immer noch JEDE oertlich
+       geoeffnete Datei. Das wird gesagt, nicht verschwiegen (§33). */
+    const ollamaBefehl = () => {
+        const her = String(location.origin || '');
+        if (!her || her === 'null')
+            return '<code style="font-size:11.5px">OLLAMA_ORIGINS=null</code> setzen.<br>' +
+                '<b>Achtung:</b> Redion läuft gerade als Datei und hat keine eigene ' +
+                'Herkunft. Diese Einstellung erlaubt JEDER örtlich geöffneten Seite ' +
+                'den Zugriff auf Ollama. Sicherer ist die ausgelieferte Fassung ' +
+                'unter einer echten Adresse.';
+        return '<code style="font-size:11.5px">OLLAMA_ORIGINS=' + esc(her) + '</code> setzen.<br>' +
+            'Nur diese eine Herkunft — ein <code>*</code> erlaubt jeder Webseite im ' +
+            'Browser den Zugriff auf dein Ollama.';
+    };
     /* Die WebLLM-Modelle, die sich für einen Notizen-Assistenten eignen.
      * Klein genug zum Herunterladen, gut genug für Zusammenfassungen. */
     const WEB_MODELLE = [
@@ -128794,7 +128937,7 @@ const KI = (() => {
                 '<a href="https://ollama.com" target="_blank" style="color:var(--accent)">ollama.com</a> ' +
                 'installieren, dann<br><code style="font-size:11.5px">ollama pull llama3.2</code><br><br>' +
                 'Damit der Browser zugreifen darf, einmal<br>' +
-                '<code style="font-size:11.5px">OLLAMA_ORIGINS=*</code> setzen.' +
+                ollamaBefehl() +
                 '</div>';
         }
         html += '<hr><div class="grp">Im Browser · ohne Installation</div>';
@@ -134703,6 +134846,30 @@ const App = (() => {
     /* --- Navigationsverlauf (Strg + [ und Strg + ]) ------------------------ */
     const rueck = [], vor = [];
     let navSperre = false;
+    /* DIE KNÖPFE SAGEN VORHER, OB SIE KÖNNEN (Audit F15).
+       Vorher waren `‹` und `›` immer anklickbar und meldeten erst NACH dem
+       Druck „Kein Schritt zurück". Ein Knopf, der aktiv aussieht und dann
+       nichts tut, ist ein Fehlmoment, den niemand braucht — und für ein
+       Vorleseprogramm war der Unterschied überhaupt nicht hörbar.
+  
+       `disabled` statt nur blass: dann überspringt ihn auch die Tabtaste,
+       und der Zustand steht im Zugänglichkeitsbaum. Die Tastenkürzel
+       Strg + [ und Strg + ] behalten ihre Meldung — dort gibt es keinen
+       Knopf, an dem man den Zustand vorher sehen könnte. */
+    const navKnoepfeStellen = () => {
+        const setz = (id, kann) => {
+            const k = document.getElementById(id);
+            if (!k)
+                return;
+            k.disabled = !kann;
+            k.title = kann
+                ? (id === 'btn-back' ? 'Zurück (Strg + [)' : 'Vorwärts (Strg + ])')
+                : (id === 'btn-back' ? 'Zurück — kein Schritt vorhanden'
+                    : 'Vorwärts — kein Schritt vorhanden');
+        };
+        setz('btn-back', rueck.length > 0);
+        setz('btn-fwd', vor.length > 0);
+    };
     const zurueck = () => {
         if (!rueck.length) {
             UI.toast('Kein Schritt zurück');
@@ -134714,6 +134881,7 @@ const App = (() => {
         navSperre = true;
         oeffne(id);
         navSperre = false;
+        navKnoepfeStellen();
     };
     const vorwaerts = () => {
         if (!vor.length) {
@@ -134726,6 +134894,7 @@ const App = (() => {
         navSperre = true;
         oeffne(id);
         navSperre = false;
+        navKnoepfeStellen();
     };
     /* ------------------------------------------------------------------------
      * Was zuletzt offen war — Notions „Kürzlich verwendet".
@@ -135426,7 +135595,13 @@ const App = (() => {
         'Bibliothek': 'bibliothek', 'Alle Seiten': 'bibliothek',
         'Dokumente': 'bibliothek', 'Seiten': 'bibliothek',
         'Notizhefte': 'notizhefte',
-        'Workspace': 'workspace', 'Meine Aufgaben': 'aufgaben',
+        /* BEIDE NAMEN, EIN ZIEL (Audit F16). „Workspace" heisst seit dem
+           3. September „Arbeitsbereich"; der alte Name bleibt hier als Alias
+           stehen, damit ein gemerkter Schauplatz, ein Verweis oder eine ältere
+           Sicherung nicht ins Leere zeigt. Ein Alias ist kein Doppelkatalog:
+           er führt zur selben Kennung. */
+        'Arbeitsbereich': 'workspace', 'Workspace': 'workspace',
+        'Meine Aufgaben': 'aufgaben',
         'Aufgaben': 'aufgaben', 'Posteingang': 'posteingang',
         'Elektrotechnik': 'elektro', 'Elektro': 'elektro',
         'Papierkorb': 'papierkorb', 'Kalender': 'kalender', 'Termine': 'kalender'
@@ -135511,6 +135686,7 @@ const App = (() => {
             rueck.push(seiteId);
             vor.length = 0;
         }
+        navKnoepfeStellen(); /* F15 — der Verlauf hat sich gerade geändert */
         if (seiteId && seiteId !== id)
             Werkzeuge.versionAutomatisch(seiteId);
         seiteId = id;
@@ -138708,6 +138884,9 @@ const App = (() => {
         /* `btn-hilfe` ebenfalls — siehe E167. */
         an('btn-back', zurueck);
         an('btn-fwd', vorwaerts);
+        /* DER ANFANGSZUSTAND IST DER WICHTIGE (F15): nach einem Neuladen ist der
+           Verlauf leer, und genau da stand der Knopf bisher aktiv da. */
+        navKnoepfeStellen();
         an('btn-komm', () => seiteId && Kommentare.panel(seiteId));
         an('btn-teilen', (e) => {
             const p = Store.getBlock(seiteId);

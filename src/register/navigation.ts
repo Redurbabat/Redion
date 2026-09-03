@@ -107,11 +107,11 @@ Register.navigation = (() => {
        eine Überlagerung mit dem Rechner. Vier der fünf Wege dieser Gruppe
        ändern die Krume, der fünfte tat es als einziger nicht. Der Rechner
        ist jetzt einer der Knöpfe dieser Seite statt ihre Vordertür. */
-    { id: 'elektro',    name: 'Elektro',           icon: '⚡', zeichen: 'bolt', platz: 'oben',  rang: 45,
+    { id: 'elektro',    name: 'Elektrotechnik',    icon: '⚡', zeichen: 'bolt', platz: 'oben',  rang: 45,
       knopfId: 'btn-elektro',
       tun: () => { if (typeof Elektrostart !== 'undefined') Elektrostart.oeffne();
                    else if (typeof Electrical !== 'undefined') Electrical.open(); } },
-    { id: 'workspace',  name: 'Workspace',         icon: '🧱', zeichen: 'workspace', platz: 'oben',  rang: 50,
+    { id: 'workspace',  name: 'Arbeitsbereich',    icon: '🧱', zeichen: 'workspace', platz: 'oben',  rang: 50,
       knopfId: 'btn-workspace', tun: () => Produktwelten.workspace('start') },
     { id: 'bibliothekOben', name: 'Bibliothek',    icon: '📚', zeichen: 'library', platz: 'oben',  rang: 60,
       /* Zweimal „Bibliothek": hier die Zeile der obersten Gruppe, weiter
