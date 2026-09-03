@@ -122,7 +122,12 @@ p('Jeder Knopf ausser den Werkzeugen und dem Papier trägt eine Gruppe', await p
   [...document.querySelectorAll<HTMLElement>('.blatt-werk button')].every(b => !!b.dataset.wz || !!b.dataset.gruppe)));
 gleich('Die Gruppen heissen, wie sie heissen', await pgH.evaluate(() =>
   [...new Set([...document.querySelectorAll<HTMLElement>('.blatt-werk [data-gruppe]')].map(b => b.dataset.gruppe!))].sort()),
-  ['auswahl', 'breite', 'farbe', 'formen', 'lineal', 'radierer', 'schrift', 'stil', 'verlauf']);
+  /* ZEHN, NICHT NEUN (L122-Familie). E375 zog Linie, Pfeil, Rechteck und
+     Ellipse zu EINEM Werkzeug „Formen" zusammen; dessen Formenwahl ist eine
+     eigene Gruppe `form` — der Trenner und die vier Formknöpfe tragen sie.
+     `formen` (mit n) ist der SCHALTER „Formen erkennen", `form` die Wahl der
+     Form. Zwei Gruppen, zwei Aufgaben, ähnliche Namen. */
+  ['auswahl', 'breite', 'farbe', 'form', 'formen', 'lineal', 'radierer', 'schrift', 'stil', 'verlauf']);
 
 /* ======================================================================== */
 console.log('\n2 · Am Telefon zeigt jedes Werkzeug seine Gruppen — und die Leiste ist kürzer');
@@ -142,8 +147,13 @@ const auswahl = (await leiste(pgH))!;
 gleich('Bei der Auswahl: Auswahl, Breite, Farbe, Schrift, Verlauf', auswahl.gruppen, ['auswahl', 'breite', 'farbe', 'schrift', 'verlauf']);
 await werkzeug(pgH, 'marker');
 gleich('Beim Marker: Breite, Farbe, Lineal, Verlauf', (await leiste(pgH))!.gruppen, ['breite', 'farbe', 'lineal', 'verlauf']);
-await werkzeug(pgH, 'line');
-gleich('Bei der Linie: Breite, Farbe, Lineal, Verlauf', (await leiste(pgH))!.gruppen, ['breite', 'farbe', 'lineal', 'verlauf']);
+/* HIER STAND `werkzeug(pgH, 'line')` — bis E375. Linie, Pfeil, Rechteck und
+   Ellipse sind seither EIN Werkzeug `formen`; `[data-wz="line"]` gibt es
+   nicht mehr, und der Lauf lief in einen 30-Sekunden-Timeout, der wie ein
+   Aufhänger aussah statt wie eine veraltete Erwartung. */
+await werkzeug(pgH, 'formen');
+gleich('Beim Formen-Werkzeug: Breite, Farbe, Form, Lineal, Verlauf (E375)',
+  (await leiste(pgH))!.gruppen, ['breite', 'farbe', 'form', 'lineal', 'verlauf']);
 await werkzeug(pgH, 'text');
 gleich('Beim Text: Farbe, Schrift und Verlauf (E360)', (await leiste(pgH))!.gruppen, ['farbe', 'schrift', 'verlauf']);
 /* Die Länge: gemessen gegen die ganze Leiste ohne Regel. */

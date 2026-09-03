@@ -139,7 +139,9 @@ rechtfertigt.
 Die Produktlücken stehen dort und werden dort gepflegt — sie hier zu
 wiederholen hiesse, zwei Listen zu führen, die auseinanderlaufen.
 
-Zuletzt geschlossen: die PDF öffnet als ganzer Bildschirm (E384 — Redurs Satz
+Zuletzt geschlossen: vier rote Läufe, die schon vor E384 rot waren, und drei
+davon Fehler aus E380/E381 (E385 — erfundene CSS-Marken, rohe Masse statt
+Marken, ein Werkzeug aus der Zeit vor E375); die PDF öffnet als ganzer Bildschirm (E384 — Redurs Satz
 zum zweiten Mal; E296 hatte den Seitenkopf geräumt, nicht die Schale drumherum),
 L120 Listenform (E382), L120 Telefon-Brotkrume (E381), L120 Kern (E380 — das Dokumente-Regal hat Ebenen),
 L115 Rest (E375), der flüssige Stift und seine Nachbarwege (E376–E379),

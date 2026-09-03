@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-379 Entscheidungen, E1 bis E384 (E383 liegt auf dem Zweig
+380 Entscheidungen, E1 bis E385 (E383 liegt auf dem Zweig
 `claude/region-detailed-analysis-pzqqb4`). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
@@ -30941,3 +30941,93 @@ typecheck grün · test385 37/37 · test177 69/69 · test178 74/74 · test202 84
 · test204 41 ok · test210 31/31 (nach L122) · test220 21/21 · test221
 34/34 · test222 51/51 · test264 25/25 · test265 38/38 · test285 53/53 · test292
 45/45 · test295 24/24 · test341 37/37 · test342 42/42 · test346 31/31.
+
+================================================================================
+E385 — Vier rote Läufe, die schon vorher rot waren, und drei davon sind meine
+================================================================================
+3. September 2026
+
+Der volle Lauf nach E384 meldete vier gescheiterte Läufe: `test290`, `test298`,
+`test348`, `test362`. Bevor irgendetwas repariert wurde, die Frage aus §55.1:
+kommen sie von E384?
+
+BELEG, DASS SIE ES NICHT TUN. In einem eigenen Arbeitsbaum auf `da41dd78` —
+dem Stand VOR E384 — laufen alle vier mit **Zeichen für Zeichen derselben
+Fehlermeldung**. Sie lagen also schon auf dem Zweig, unbemerkt, und niemand
+hatte sie gemeldet. Nach §46 („Rot zuerst") gehen sie vor.
+
+Was dabei herauskam, ist unangenehmer als vier Prüffehler: DREI VON VIEREN
+SIND FEHLER AUS E380/E381 — meiner eigenen Arbeit von heute früh —, und alle
+drei waren im Bild unsichtbar.
+
+1 · test298 · DREI MARKEN, DIE ES NICHT GIBT
+
+`.bib-krume` benutzte `--fg-2`, `--fg` und `--flaeche-2`. Keine der drei ist
+in irgendeiner Stildatei definiert. Ein `var()` ohne Quelle und ohne
+Ersatzwert macht die ganze Deklaration ungültig — lautlos.
+
+Gemessen an einer Probeseite mit dem echten Stilblatt, vorher und nachher:
+
+                    vorher                    jetzt
+  Krumen-Text       rgb(55,53,47)  geerbt     rgb(102,101,95)  --text-dim
+  Knopf-Text        rgb(55,53,47)  geerbt     rgb(102,101,95)  --text-dim
+  Hover-Fläche      rgba(0,0,0,0)  KEINE      rgb(239,239,238) --bg-hover
+
+Die ersten beiden sahen aus Zufall richtig aus: die geerbte Farbe ist lesbar,
+nur eben nicht gedämpft. Der dritte war ein echter toter Weg — die Krumen-
+Knöpfe reagierten auf Überfahren mit gar nichts.
+
+Das ist genau der Fehler, vor dem §39 warnt („erfundene Tokens sind dreimal
+unbemerkt durchgegangen") und vor dem `notizhefte.css` in einem eigenen
+Kommentar warnt — namentlich vor `--flaeche-2`. Er ist trotzdem ein viertes
+Mal passiert, und `test298` hat ihn gefangen. Deshalb ist §39 die Frage an
+Redur wert, ob die Token-Regel hart werden soll.
+
+2 · test362 · DREI ROHE ZAHLEN, WO MARKEN STEHEN
+
+Dieselbe Krume: `min-width:44px; min-height:44px; font-size:22px`. Der
+Wächter zählt rohe Masse in den Stildateien gegen `marken-decke.json` und
+meldete 44 auf 154 statt 152 und 22 auf 67 statt 66.
+
+Die Decke DARF NUR SCHRUMPFEN — das steht im Prüflauf selbst. Sie zu heben
+wäre der bequeme und falsche Weg gewesen. Also die Marke: `var(--touch-min)`
+zweimal, und die Schriftgrösse ist gar keine eigene Zahl — das Zeichen ist
+halb so gross wie die Fläche, die es trägt: `calc(var(--touch-min) / 2)`.
+Gemessen bleibt es bei 44×44 und 22px; nur steht jetzt da, warum.
+
+3 · test348 · EIN WERKZEUG, DAS ES SEIT E375 NICHT MEHR GIBT
+
+`werkzeug(pgH, 'line')` wartete dreissig Sekunden auf `[data-wz="line"]` und
+lief in einen Timeout. E375 hat Linie, Pfeil, Rechteck und Ellipse zu EINEM
+Werkzeug „Formen" zusammengezogen. Dazu erwartete der Lauf neun Gruppen; es
+sind zehn, weil die Formenwahl ihre eigene bekam. `formen` (mit n) ist der
+Schalter „Formen erkennen", `form` die Wahl der Form — zwei Aufgaben, zwei
+Gruppen, ähnliche Namen.
+
+Dieselbe Familie wie L122: eine Prüfung, die die Vergangenheit misst.
+
+4 · test290 · ZWEI PRÄFIXE, DIE IM VERZEICHNIS FEHLTEN
+
+`hat-` und `pp-`. Beide sind in Ordnung — `pp-` sind die Teile von
+`.peek-prop` (Name und Wert), `hat-` ist etwas anderes und deshalb ein
+eigener Absatz in `doku/CSS-NAMENSRAEUME.md` wert:
+
+  Die meisten Präfixe benennen einen ORT. Zwei benennen einen ZUSTAND
+  (`hat-demo`, `hat-tinte`, und das ältere englische `is-`), und die stehen
+  deshalb an ganz anderen Elementen. Ein Zustandspräfix kollidiert nicht mit
+  einem Ortspräfix, weil es nie allein steht.
+
+Dateien: `quell/schale/stil/bausteine.css`, `doku/CSS-NAMENSRAEUME.md`,
+`pruefungen/lauf/test348.mts`.
+
+Prüfung: test290 13/13 · test298 8/8 · test348 33/33 · test362 18/18 ·
+test369 48/48 (die Krume selbst, unverändert grün) · test385 37/37.
+Einzeldatei neu gebaut.
+
+WAS DAS FÜR DAS NÄCHSTE MAL HEISST. Alle drei eigenen Fehler wären mit einem
+einzelnen Prüflauf nach E381 aufgefallen — `npm run pruefen -- --schnell`
+hätte sie gehabt. Sie sind durchgerutscht, weil nach E380/E381/E382 nur die
+BETROFFENEN Läufe gefahren wurden und nicht die, die quer über den Bestand
+messen: Marken, Masse, Namensräume. Diese drei Wächter prüfen nichts an einer
+bestimmten Stelle — sie prüfen das GANZE, und deshalb weiss man vorher nie,
+dass man sie braucht.

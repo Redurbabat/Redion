@@ -25,6 +25,22 @@ L90 hält seither fest, dass das nicht die Lücke ist:
 
 Es sind nicht vierzig. Es sind 143.
 
+## Zwei Sorten Präfix, und die zweite sieht nicht danach aus
+
+Die meisten Präfixe benennen einen ORT: `lw-` ist die Lernwelt, `bib-` das
+Regal, `mb-` das Menüband. Zwei benennen aber einen ZUSTAND, und die stehen
+deshalb an ganz anderen Elementen:
+
+- **`hat-`** — „dieses Element hat etwas". `body.hat-demo` heisst: über der
+  App liegt der Vorführungsbalken, also braucht der Körper oben Platz.
+  `.bib-deckel[data-art] .bib-deckel-blatt.hat-tinte` heisst: auf diesem
+  Deckel steht Handschrift, also kein leeres Papier zeigen.
+- **`is-`** — dasselbe auf Englisch, aus dem älteren Bestand (`is-open`).
+
+Ein Zustandspräfix kollidiert nicht mit einem Ortspräfix, weil es nie allein
+steht: es hängt immer an einer Klasse, die schon einen Ort hat. Wer ein
+neues braucht, nimmt `hat-` und nicht ein drittes Wort für dieselbe Sache.
+
 ## Wie man ein neues Präfix wählt
 
 1. In der Liste unten nachsehen, ob es frei ist. Sie ist vollständig für
@@ -105,6 +121,7 @@ frei     10  einstellungen.css
 fx        5  bausteine.css
 gal       6  einstellungen.css
 hk       12  bausteine.css
+hat       4  notizhefte.css
 hl        4  bausteine.css
 home     63  werkzeuge.css
 hs       20  werkzeuge.css
@@ -153,6 +170,7 @@ pf       12  bausteine.css
 pg       23  bausteine.css
 pk       15  bausteine.css
 pl       15  bausteine.css
+pp        5  ansichten.css
 pr       12  bausteine.css
 pv        8  bausteine.css
 rg       37  bausteine.css

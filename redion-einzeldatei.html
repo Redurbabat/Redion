@@ -8160,25 +8160,45 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
   grid-column:1 / -1; grid-row:1; min-width:0;
   display:flex; align-items:center; gap:2px;
   overflow-x:auto; scrollbar-width:none; white-space:nowrap;
-  margin:0 0 2px; font-size:13px; color:var(--fg-2)
+  /* DIE MARKEN HEISSEN `--text-dim`, `--text` UND `--bg-hover`.
+     Hier standen bis zum 3. September `--fg-2`, `--fg` und `--flaeche-2` —
+     drei Namen, die es in KEINER Stilblattdatei gibt (E380 hat sie
+     eingeschleppt). Ein `var()` ohne Quelle und ohne Ersatzwert macht die
+     ganze Deklaration ungueltig, und zwar lautlos: der Text nahm die
+     geerbte Farbe und sah deshalb richtig aus. Nur die Hover-Flaeche fiel
+     ersatzlos weg — die Krumen-Knoepfe reagierten auf gar nichts.
+     Genau der Fehler, vor dem §39 warnt und `notizhefte.css` in ihrem
+     eigenen Kommentar warnt. `test298` meldet ihn. */
+  margin:0 0 2px; font-size:13px; color:var(--text-dim)
 }
 .bib-krume::-webkit-scrollbar{ display:none }
 .bib-krume button{
   flex:0 0 auto; min-height:32px; padding:0 6px; border:0; border-radius:8px;
-  background:transparent; color:var(--fg-2); font:inherit; cursor:pointer
+  background:transparent; color:var(--text-dim); font:inherit; cursor:pointer
 }
-.bib-krume button:hover{ background:var(--flaeche-2); color:var(--fg) }
+.bib-krume button:hover{ background:var(--bg-hover); color:var(--text) }
 .bib-krume [data-hoch]{
   /* Der Weg zurück ist ein Hauptweg: 44 px, ohne Ausnahme (§37). Und er
      bleibt am Telefon SICHTBAR, wenn der Pfad länger ist als der Schirm:
      klebt links, mit eigener Fläche darunter, damit der Pfad hinter ihm
      durchläuft statt ihn zu verdecken (E381). Sonst scrollt der einzige
      oft getroffene Knopf aus dem Bild. */
+  /* DIE MARKE, NICHT DIE ZAHL. Hier stand `min-width:44px; min-height:44px;
+     font-size:22px` — drei rohe Zahlen, die `test362` als Ueberschreitung
+     seiner Decke meldete (44 auf 154 statt 152, 22 auf 67 statt 66). Das
+     Verzeichnis darf nur SCHRUMPFEN; die Decke zu heben waere der bequeme
+     und falsche Weg gewesen.
+
+     Und die Schriftgroesse ist gar keine eigene Zahl: das Zeichen ist halb
+     so gross wie die Flaeche, die es traegt. Das hinzuschreiben sagt mehr
+     als „22". */
   position:sticky; left:0; z-index:1; flex:0 0 auto;
-  min-width:44px; min-height:44px; margin-inline-start:-6px;
-  font-size:22px; line-height:1; color:var(--fg); background:var(--bg)
+  min-width:var(--touch-min); min-height:var(--touch-min);
+  margin-inline-start:-6px;
+  font-size:calc(var(--touch-min) / 2); line-height:1;
+  color:var(--text); background:var(--bg)
 }
-.bib-krume b{ flex:0 0 auto; padding:0 6px; color:var(--fg); font-weight:600 }
+.bib-krume b{ flex:0 0 auto; padding:0 6px; color:var(--text); font-weight:600 }
 .bib-krume span{ flex:0 0 auto; opacity:.5 }
 .bib-dkopf:has(.bib-krume) h1{ grid-row:2 }
 .bib-dkopf:has(.bib-krume) .bib-neu{ grid-row:2 }
@@ -16206,7 +16226,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 228, inhalt: '76bedc648c7ec5d4', gebaut: '2026-09-03T19:34:30.273Z' };
+const Stand = { fassung: 232, inhalt: '76bedc648c7ec5d4', gebaut: '2026-09-03T19:41:45.991Z' };
 window.Stand = Stand;
 
 </script>

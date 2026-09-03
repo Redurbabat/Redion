@@ -3132,3 +3132,33 @@ die Zeugnisnote je Semester (E242) und der echte Stundenplan (E243).
   Abschnitte umgeworfen, an denen nichts kaputt war. Eine Stelle in einer Reihe
   ist kein Anker, ein Auftragsname ist einer — dieselbe Lehre wie test228 in
   E296.
+
+* E385 (§46 „Rot zuerst"): Vier rote Läufe, die schon vorher rot waren — und
+  drei davon sind Fehler aus E380/E381, also aus meiner eigenen Arbeit vom
+  selben Tag. Belegt mit einem Arbeitsbaum auf `da41dd78`: dort laufen alle
+  vier mit Zeichen für Zeichen derselben Meldung, E384 hat sie nicht
+  verursacht.
+
+  · test298 — `.bib-krume` benutzte `--fg-2`, `--fg` und `--flaeche-2`, drei
+    Marken, die es in keiner Stildatei gibt. An einer Probeseite mit dem
+    echten Stilblatt gemessen: der Krumentext stand auf `rgb(55,53,47)`
+    (geerbt) statt `rgb(102,101,95)`, und die Hover-Fläche war `rgba(0,0,0,0)`
+    — die Knöpfe reagierten auf Überfahren mit GAR NICHTS. Der Fehler, vor
+    dem §39 warnt und `notizhefte.css` namentlich vor `--flaeche-2` warnt,
+    ein viertes Mal.
+  · test362 — dieselbe Krume mit `44px` zweimal und `22px` roh. Die
+    Marken-Decke darf nur schrumpfen, also `var(--touch-min)` und
+    `calc(var(--touch-min) / 2)`: die Schriftgrösse ist gar keine eigene
+    Zahl, das Zeichen ist halb so gross wie seine Fläche.
+  · test348 — wartete auf `[data-wz="line"]`, ein Werkzeug, das E375
+    abgeschafft hat, und lief in einen 30-Sekunden-Timeout, der wie ein
+    Aufhänger aussah. Dieselbe Familie wie L122.
+  · test290 — `hat-` und `pp-` fehlten im Namensraum-Verzeichnis. Beide sind
+    in Ordnung; `hat-` bekam dabei einen eigenen Absatz, weil es kein ORT ist
+    wie die anderen, sondern ein ZUSTAND.
+
+  DIE LEHRE. Alle drei eigenen Fehler hätte ein `npm run pruefen -- --schnell`
+  nach E381 gehabt. Sie sind durchgerutscht, weil nach E380/E381/E382 nur die
+  BETROFFENEN Läufe gefahren wurden. Marken, Masse und Namensräume prüfen
+  aber nichts an einer bestimmten Stelle — sie prüfen das GANZE, und deshalb
+  weiss man vorher nie, dass man sie braucht.
