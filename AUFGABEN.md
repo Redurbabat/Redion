@@ -2923,3 +2923,19 @@ node pruefungen/lauf/test105.mjs
   Nebenbei ehrlich geworden: „0 Hefte" an einem Fach mit zwei Unterfächern
   heisst jetzt „2 Fächer".
   test358 neu (58), belegt rot in zehn Richtungen.
+
+* E367 (L116 zu): Die Zahl im Bibliothekskopf ist eine Zahl, keine Decke.
+  „Kürzlich verwendet" schnitt bei sechzig ab und zeigte danach die Länge
+  der GESCHNITTENEN Liste — „60 Dokumente" bei 61 wie bei 900, im Regal
+  „60 Seiten auf diesem Gerät". Gefunden auf einem Bild nach dem
+  ZIP-Import aus E365, nicht von einem Prüflauf: eine Zahl, die immer
+  dieselbe ist, ist ja eine gültige Zahl. Vor dem Bauen gemessen, ob die
+  Decke überhaupt etwas schützt — der Reiter „Alle" zeichnet daneben 2013
+  Deckel ohne Decke in 395 ms (linear, 0,19 ms je Deckel). Sie ist keine
+  Bremse, sondern eine Bedeutung, und durfte deshalb bleiben; schweigen
+  durfte sie nicht. Jetzt „60 von 313 Dokumenten", und ohne Decke steht
+  die Zahl wieder allein da. Zwei Dinge gingen mit: gesucht wurde nur in
+  den sechzig neuesten (ein leeres Ergebnis ist eine Behauptung, und die
+  war falsch), und die Decke muss VOR der Umsortierung greifen, sonst
+  wären es beim Sortieren nach Namen die alphabetisch ersten sechzig.
+  test359 neu (24), belegt rot in sieben Richtungen.

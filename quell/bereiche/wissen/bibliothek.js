@@ -265,7 +265,30 @@ const Bibliothek = (() => {
         wrap.querySelector('[data-school-action="learn"]')?.addEventListener('click', () => Werkzeuge.lernen());
         wrap.querySelector('[data-school-action="calculate"]')?.addEventListener('click', () => Electrical.open(root));
     };
-    const gefiltert = () => {
+    /** WIE VIELE „KÜRZLICH VERWENDET" ZEIGT (E367, L116).
+     *
+     *  Die Decke bleibt, und sie hat einen Grund: „zuletzt verwendet" heisst
+     *  „die letzten", nicht „alles, was ich je angefasst habe, nach Datum".
+     *  Nachgemessen ist sie NICHT die Leistungsbremse, für die man sie halten
+     *  könnte — der Reiter „Alle" zeichnet daneben 2000 Deckel ohne Decke
+     *  (395 ms, linear mit rund 0,19 ms je Deckel). Sie ist eine Bedeutung,
+     *  keine Bremse. Und genau deshalb muss sie sich zu erkennen geben. */
+    const DECKE_KUERZLICH = 60;
+    /**
+     * Die Auswahl UND ihr wahrer Umfang, in einem Zug.
+     *
+     * BEFUND (L116): der Kopf zeigte die Länge der GESCHNITTENEN Liste. Bei
+     * 61 Dokumenten stand dort „60", bei 900 auch — eine Zahl, die aussieht
+     * wie eine Antwort auf „wie viele habe ich?" und keine ist. Im Regal war
+     * es noch deutlicher: „60 Seiten auf diesem Gerät". Gefunden nicht von
+     * einem Prüflauf, sondern auf einem Bild nach einem ZIP-Import (§55).
+     *
+     * Die Decke greift NACH der Suche und VOR der Umsortierung. Beides ist
+     * Absicht: vorher durchsuchte man nur die sechzig neuesten und bekam
+     * „nichts gefunden" für etwas, das da ist; nachher wären es die
+     * alphabetisch ersten sechzig statt der sechzig neuesten.
+     */
+    const auswahl = () => {
         const alle = alleSeiten();
         const freigaben = (p) => {
             if (typeof Konten === 'undefined' || !Konten.freigabenVon)
@@ -277,8 +300,7 @@ const Bibliothek = (() => {
         if (zustand.reiter === 'kuerzlich')
             liste = alle.filter(p => p.zuletztGeoeffnet || p.edited)
                 .sort((a, b) => zeitZahl(b.zuletztGeoeffnet || b.edited) -
-                zeitZahl(a.zuletztGeoeffnet || a.edited))
-                .slice(0, 60);
+                zeitZahl(a.zuletztGeoeffnet || a.edited));
         if (zustand.reiter === 'favoriten')
             liste = alle.filter(p => p.favorite);
         if (zustand.reiter === 'geteilt')
@@ -291,6 +313,9 @@ const Bibliothek = (() => {
             const s = zustand.suche.toLowerCase();
             liste = liste.filter(p => (p.text || '').toLowerCase().includes(s));
         }
+        const gesamt = liste.length;
+        if (zustand.reiter === 'kuerzlich' && liste.length > DECKE_KUERZLICH)
+            liste = liste.slice(0, DECKE_KUERZLICH);
         if (zustand.reiter !== 'kuerzlich' || zustand.sortier !== 'wann') {
             const wert = (p) => zustand.sortier === 'name' ? (p.text || '').toLowerCase()
                 : zustand.sortier === 'von' ? (p.erstelltVon || '').toLowerCase()
@@ -302,8 +327,12 @@ const Bibliothek = (() => {
                 return zustand.richtung === 'auf' ? v : -v;
             });
         }
-        return liste;
+        return { liste, gesamt };
     };
+    /* `gefiltert()` hiess diese Funktion bis E367 und gab nur die Liste
+       zurück. Sie ist umbenannt, nicht entfernt: alle drei Zeichenstellen
+       brauchen jetzt BEIDE Zahlen, und ein Kurzname daneben, den niemand
+       ruft, wäre genau die tote Bindung, die L86 aufgeräumt hat. */
     /* ====================================================================== *
      * DAS REGAL (E207)
      * ---------------------------------------------------------------------- *
@@ -520,10 +549,22 @@ const Bibliothek = (() => {
        Bestand, sie stellen ihn nicht dar. Was gefiltert wird, hat mit der Form
        nichts zu tun. Sie stehen deshalb im gemeinsamen Kopf und nicht in einer
        der beiden Zeichenfunktionen. */
-    const bibKopf = (liste, anzahlHefte) => '<h1 class="bib-titel">Bibliothek</h1>' +
+    /** „n von m" statt „n", solange die Decke greift (E367, L116). Ohne
+     *  Decke bleibt der Satz Wort für Wort, wie er war. */
+    const umfangSatz = (gezeigt, gesamt, eins, mehr, vonForm) => 
+    /* `vonForm` ist der DATIV: „60 von 313 Dokumenten", nicht „Dokumente".
+       Der erste Wurf nahm die Mehrzahl für beide Fälle, und der Fehler stand
+       auf dem Bild, nicht im Prüflauf (§55). Bei „Seiten" fällt es nicht
+       auf — deshalb steht es hier als eigenes Wort und nicht als Regel. */
+    gesamt > gezeigt
+        ? gezeigt + ' von ' + gesamt + ' ' + vonForm
+        : gezeigt + ' ' + (gezeigt === 1 ? eins : mehr);
+    const bibKopf = (liste, anzahlHefte, gesamt = liste.length) => '<h1 class="bib-titel">Bibliothek</h1>' +
         '<p class="bib-zahlen">' + anzahlHefte +
-        (anzahlHefte === 1 ? ' Heft' : ' Hefte') + ' · ' + liste.length +
-        (liste.length === 1 ? ' Seite' : ' Seiten') + ' auf diesem Gerät</p>' +
+        (anzahlHefte === 1 ? ' Heft' : ' Hefte') + ' · ' +
+        /* „auf diesem Gerät" ist eine Aussage über den BESTAND, nicht über
+           die Anzeige. Sie stand bis E367 über einer gedeckelten Liste. */
+        umfangSatz(liste.length, gesamt, 'Seite', 'Seiten', 'Seiten') + ' auf diesem Gerät</p>' +
         '<div class="bib-kopf">' +
         '<div class="bib-reiter">' +
         REITER.slice(0, 4).map(r => `<button data-r="${r.id}" class="${zustand.reiter === r.id ? 'on' : ''}">` +
@@ -636,7 +677,7 @@ const Bibliothek = (() => {
      * DIE DECKELANSICHT (E236)
      * ---------------------------------------------------------------- */
     const zeichneDeckel = (wrap) => {
-        const alle = gefiltert();
+        const { liste: alle, gesamt } = auswahl();
         const liste = zustand.art === 'alle'
             ? alle : alle.filter(p => artVon(p).id === zustand.art);
         /* Welche Arten es überhaupt GIBT — ein Filter für eine Art, die
@@ -644,7 +685,7 @@ const Bibliothek = (() => {
         const vorhanden = new Set(alle.map(p => artVon(p).id));
         wrap.innerHTML =
             '<div class="bib bib-deckel-seite">' +
-                deckelKopf(alle.length) +
+                deckelKopf(alle.length, gesamt) +
                 '<div class="bib-arten" role="group" aria-label="Nach Art filtern">' +
                 ART_FILTER.filter(a => a.id === 'alle' || vorhanden.has(a.id) ||
                     a.id === zustand.art)
@@ -697,7 +738,7 @@ const Bibliothek = (() => {
      * die Seite IST das Regal, der Reiter ist nur ein Filter darauf. Er
      * steht deshalb klein darunter, zusammen mit der Zahl.
      */
-    const deckelKopf = (anzahl) => {
+    const deckelKopf = (anzahl, gesamt = anzahl) => {
         const ort = REITER.find(r => r.id === zustand.reiter)?.name || 'Alle';
         return '<header class="bib-dkopf">' +
             '<h1>Dokumente</h1>' +
@@ -706,12 +747,13 @@ const Bibliothek = (() => {
             '<button class="bib-form-knopf" data-form="liste" ' +
             'aria-label="Als Liste anzeigen">\u2630</button>' +
             '<button class="bib-ort" data-orte aria-haspopup="menu">' +
-            esc(ort) + ' \u00b7 ' + anzahl + (anzahl === 1 ? ' Dokument' : ' Dokumente') +
+            esc(ort) + ' \u00b7 ' +
+            umfangSatz(anzahl, gesamt, 'Dokument', 'Dokumente', 'Dokumenten') +
             '<i aria-hidden="true">\u25be</i></button>' +
             '</header>';
     };
     const zeichneRegal = (wrap) => {
-        const liste = gefiltert();
+        const { liste, gesamt } = auswahl();
         const regal = hefte(liste);
         /* „Zuletzt in der Hand" ist bewusst NICHT dasselbe wie das Regal: dort
            steht je Heft die neueste Seite, hier die neuesten Seiten überhaupt.
@@ -724,7 +766,7 @@ const Bibliothek = (() => {
             .slice(0, 4);
         wrap.innerHTML =
             '<div class="bib bib-regal-seite">' +
-                bibKopf(liste, regal.length) +
+                bibKopf(liste, regal.length, gesamt) +
                 (regal.length
                     ? '<div class="bib-regal">' + regal.map(heftKarte).join('') + '</div>'
                     : '<p class="bib-leer">Hier ist noch nichts. Seiten erscheinen automatisch.</p>') +
@@ -883,12 +925,12 @@ const Bibliothek = (() => {
             zeichneRegal(wrap);
             return;
         }
-        const liste = gefiltert();
+        const { liste, gesamt } = auswahl();
         const spalten = SPALTEN.filter(s => zustand.spalten.includes(s.id));
         const raster = spalten.map(s => s.breit).join(' ');
         wrap.innerHTML =
             '<div class="bib">' +
-                bibKopf(liste, hefte(liste).length) +
+                bibKopf(liste, hefte(liste).length, gesamt) +
                 /* Eigene Klasse: `bib-kopf` trägt seit E207 Reiter und Umschalter und
                    steht in BEIDEN Formen. Zwei Elemente mit demselben Namen auf einer
                    Seite sind zwei Dinge, die gleich aussehen sollen und es beim
@@ -1307,7 +1349,11 @@ const Bibliothek = (() => {
         });
     };
     const aufgaben = () => App.zeigeSonder('Meine Aufgaben', zeichneAufgaben);
-    return { oeffne, aufgaben, meineAufgaben, quellenDialog, alleSeiten, quelleVon, wannText };
+    /* `umfangSatz` und `DECKE_KUERZLICH` kommen mit heraus, damit ein
+       Prüflauf die Sprache messen kann, ohne dreihundert Seiten anzulegen
+       (test359 §6) — und damit die Decke eine Zahl mit Namen bleibt. */
+    return { oeffne, aufgaben, meineAufgaben, quellenDialog, alleSeiten, quelleVon,
+        wannText, umfangSatz, DECKE_KUERZLICH };
 })();
 window.Bibliothek = Bibliothek;
 /* Die Bibliothek meldet ihre Kontextkante an (E272 Phase F). */

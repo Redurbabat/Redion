@@ -5203,7 +5203,17 @@ Gefunden am 3. September 2026 beim Ansehen der E365-Bilder — nicht durch
 einen Prüflauf, sondern weil ein Bild nach 900 eingelesenen Dokumenten eine
 zweistellige Zahl zeigte (§55).
 
-1. **„60 Dokumente" ist eine Decke, keine Zahl.** Der Reiter „Kürzlich
+1. ~~**„60 Dokumente" ist eine Decke, keine Zahl.**~~ ERLEDIGT in E367:
+   der Kopf sagt „60 von 313 Dokumenten", solange die Decke greift, und
+   ohne Decke steht die Zahl wieder allein da. Dasselbe im Regal und in
+   der Liste, wo „auf diesem Gerät" über einer gedeckelten Zahl stand.
+   Zwei Dinge gingen mit, die niemand gemeldet hatte: gesucht wurde nur
+   in den sechzig neuesten (die Decke greift jetzt NACH der Suche), und
+   sie greift weiter VOR der Umsortierung — sonst wären es beim Sortieren
+   nach Namen die alphabetisch ersten sechzig statt der sechzig neuesten.
+   test359, 24 Punkte. Der ursprüngliche Absatz stand so:
+
+   Der Reiter „Kürzlich
    verwendet" schneidet seine Liste mit `.slice(0, 60)` ab
    (`src/bereiche/wissen/bibliothek.ts`, `gefiltert()`), und der Kopf
    zeigt danach die Länge der GESCHNITTENEN Liste an
@@ -5224,6 +5234,16 @@ zweistellige Zahl zeigte (§55).
 
 2. **Die anderen fünf Reiter haben keine Decke** — „Alle", „Favoriten",
    „Geteilt", „Privat", „Datenbank" zeigen die volle Länge. Ihre Zahl
-   stimmt also; nur bei sehr vielen Dokumenten zeichnen sie alles. Ob das
-   ein Leistungsproblem ist, ist nicht gemessen worden und gehört zusammen
-   mit Punkt 1 gemessen, bevor gebaut wird.
+   stimmt also; nur bei sehr vielen Dokumenten zeichnen sie alles.
+
+   **GEMESSEN am 3. September 2026 (E367), vor dem Bauen.** Der Reiter
+   „Alle" zeichnet 60 · 213 · 513 · 913 · 2013 Deckel in 110 · 65 · 114 ·
+   198 · 395 ms — linear, rund 0,19 ms je Deckel. Zweitausend Deckel
+   kosten also eine gute Drittelsekunde, und das tut die App HEUTE schon,
+   direkt neben dem Reiter mit der Decke.
+
+   Daraus folgt zweierlei. Erstens: die Decke auf „Kürzlich verwendet" ist
+   keine Leistungsbremse — sie ist eine Bedeutung („die letzten"), und
+   deshalb durfte sie bleiben. Zweitens: eine Bremse braucht es hier
+   trotzdem nicht; wer zehntausend Seiten hat, wird sie merken, aber das
+   ist L22 und nicht L116. Punkt 2 ist damit beantwortet, nicht offen.

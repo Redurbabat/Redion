@@ -28735,3 +28735,116 @@ test342 42/42 und test357 35/35 (der ZIP-Import, dessen Ordner hier
 sichtbar werden) · test87 152/152 · test105 120/120 · test109 20/20 ·
 test353 39/39 · test225 11/11 · Einzeldatei neu gebaut · test74 ohne
 JS-Fehler. Alles grün.
+
+
+E367 — Die Zahl im Bibliothekskopf ist eine Zahl, keine Decke (L116)
+════════════════════════════════════════════════════════════════════════════
+
+BEFUND: der Reiter „Kürzlich verwendet" schnitt seine Liste bei sechzig ab,
+und der Kopf zeigte danach die Länge der GESCHNITTENEN Liste:
+
+    liste = alle.filter(…).sort(…).slice(0, 60);
+    …
+    deckelKopf(alle.length)      // ← die 60, nicht die 900
+
+Bei 61 Dokumenten stand dort „60 Dokumente". Bei 900 auch. Im Regal war es
+deutlicher, weil dort ein Wort danebensteht, das eine Aussage über den
+BESTAND macht: „60 Seiten auf diesem Gerät".
+
+GEFUNDEN HAT DAS KEIN PRÜFLAUF, sondern ein Bild. Nach dem Einlesen einer
+ZIP mit 900 Kapiteln (E365) stand im Regalkopf eine zweistellige Zahl. Das
+ist §55 in einem Satz: eine Zahl, die IMMER dieselbe ist, wird von einer
+Prüfung nicht als falsch erkannt — sie ist ja eine gültige Zahl.
+
+ERST GEMESSEN, DANN ENTSCHIEDEN
+───────────────────────────────
+Die naheliegende Antwort wäre „Decke weg". Vorher gemessen, was sie kostet
+— und zwar am Reiter „Alle", der schon heute KEINE Decke hat:
+
+    60 Deckel   110 ms
+   213 Deckel    65 ms
+   513 Deckel   114 ms
+   913 Deckel   198 ms
+  2013 Deckel   395 ms
+
+Linear, rund 0,19 ms je Deckel. Zweitausend Deckel kosten eine gute
+Drittelsekunde — und die App tut das HEUTE schon, einen Reiter weiter.
+
+Damit ist die Decke entlarvt als das, was sie ist: keine Bremse, sondern
+eine BEDEUTUNG. „Zuletzt verwendet" heisst „die letzten", nicht „alles, was
+ich je angefasst habe, nach Datum sortiert". Sie durfte deshalb bleiben.
+Was sie nicht durfte, ist schweigen.
+
+    60 von 313 Dokumenten
+    1 Heft · 60 von 313 Seiten auf diesem Gerät
+
+Und die Gegenprobe, ohne die der Satz nur Lärm wäre: greift die Decke
+nicht, steht die Zahl allein da, Wort für Wort wie vorher. test359 §2 misst
+genau das — sonst prüfte §1 nur, dass irgendwas dasteht.
+
+ZWEI DINGE, DIE NIEMAND GEMELDET HATTE
+──────────────────────────────────────
+Beim Umbauen fiel auf, dass die Decke an der falschen Stelle stand.
+
+VOR der Suche: wer in „Kürzlich verwendet" nach „Skript 7" suchte, durchsuchte
+nur die sechzig neuesten und bekam „nichts gefunden" für etwas, das da ist.
+Ein leeres Ergebnis ist eine Behauptung, und diese war falsch. Die Decke
+greift jetzt NACH der Suche — man findet in allem, was der Reiter meint.
+
+VOR der Umsortierung dagegen muss sie bleiben, und das ist der Grund, warum
+sie nicht einfach ans Ende wandern konnte: wer nach Namen sortiert, bekäme
+sonst die alphabetisch ersten sechzig statt der sechzig neuesten. Gemeint
+sind „die sechzig neuesten, nach Namen sortiert". test359 §5 hält es fest.
+
+DER DATIV
+─────────
+Der erste Wurf schrieb „60 von 313 Dokumente". Nach „von" will das Deutsche
+den Dativ: „Dokumenten". Bei „Seiten" fallen beide Formen zusammen, und
+genau deshalb steht die Form jetzt als eigenes Wort im Aufruf und nicht als
+Regel — eine Regel hätte bei „Seiten" nichts zu tun und wäre bei jedem
+neuen Wort eine Wette. Auch das stand auf dem Bild, nicht im Prüflauf (§55).
+
+WAS UMBENANNT WURDE
+───────────────────
+`gefiltert()` heisst jetzt `auswahl()` und gibt `{ liste, gesamt }` zurück.
+Alle drei Zeichenstellen brauchen beide Zahlen; ein Kurzname daneben, den
+niemand ruft, wäre genau die tote Bindung, die L86 aufgeräumt hat. Es ist
+eine Umbenennung, keine Entfernung — die Funktion gibt es weiter, sie sagt
+nur mehr.
+
+MUTATIONSPROBE (§55.2): sieben Richtungen, alle rot — eine davon erst
+nach einer Korrektur AM PRÜFLAUF, und das ist der lehrreiche Teil.
+
+a — der Kopf zeigt wieder nur die gezeigte Zahl: 17/25 — acht rot. Der
+    Befund selbst, in Deckel, Regal und Liste zugleich.
+b — die Decke greift wieder VOR der Suche: 21/25 — „Skript 7" findet
+    nichts, obwohl es die Seite gibt.
+c — der Dativ fällt weg: 22/25 — „60 von 313 Dokumente".
+d — Regal und Liste bekommen den wahren Umfang nicht: 21/25.
+e — der Deckelkopf bekommt ihn nicht: 22/25.
+f — die Decke greift NACH der Umsortierung: 22/25 — die alphabetisch
+    ersten sechzig statt der sechzig neuesten.
+g — die Decke ganz weg: 20/25 — vier rot; §2 bleibt richtigerweise grün
+    (ohne Decke soll der Zusatz schweigen), §5 fällt.
+
+ZU f: die Probe blieb im ERSTEN Durchgang GRÜN, und der Grund ist genau
+der, vor dem §55.2 warnt. §5 las nur die Voreinstellung ab — und die
+sortiert nach ZEIT, womit der Umsortierblock gar nicht läuft. Es gab
+nichts zu vertauschen, also fiel auch nichts auf. Erst mit einer echten
+Namenssortierung (Klick auf die Spalte) wird der Unterschied sichtbar.
+
+Dazu kam eine zweite Lehre, beim Schärfen der Schwelle: dreihundert Seiten
+in einem Tick tragen denselben Zeitstempel bis auf die Millisekunde, und
+welche sechzig davon „die neuesten" sind, ist innerhalb einer solchen
+Gruppe nicht festgelegt — gemessen lagen sie bei 191…285, nicht bei
+241…300. Eine Prüfung, die „Skript 300 ist dabei" verlangt, misst dann
+die Sortierstabilität und nicht die Decke. Verlangt wird jetzt nur, was
+die beiden Ordnungen wirklich trennt: keine der ersten hundert, und die
+sechzig stehen wirklich alphabetisch.
+
+NACHBARSCHAFT: test359 25/25 · test358 60/60 (E366, derselbe Bestand) ·
+test33 ohne JS-Fehler (der Prüflauf, der `.bib-zahlen` schon las) · test207
+37/37 und test208 43/43 · test265 38/38 · test282 57/57 (Regalzustand) ·
+test272 153/153 · test87 152/152 · test105 120/120 · test109 20/20 ·
+test353 39/39 · test225 11/11 · Einzeldatei neu gebaut · test74 ohne
+JS-Fehler. Alles grün.
