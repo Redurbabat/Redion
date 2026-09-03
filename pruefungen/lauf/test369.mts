@@ -311,6 +311,56 @@ p('… und der Zurück-Pfeil klebt sichtbar links (§37)',
   !!krumeMass && krumeMass.hochImBild && krumeMass.hochBreit,
   JSON.stringify(krumeMass));
 
+console.log('\n9 · Auch die Listenform ist ein Ordner-Browser (E382)');
+
+/* Die Ebenen aus E380 waren zuerst nur in der Deckelansicht verdrahtet. In
+   der Liste rief ein Klick auf eine Zeile IMMER App.oeffne — ein Fach wäre
+   als leere Seite aufgegangen (genau der Fehler, den E380 behob), und es gab
+   keine Brotkrume, um zu sehen wo man ist oder zurückzukommen. Die
+   Nachbarstelle, §45. */
+await seite.setViewportSize({ width: 1360, height: 900 });
+await seite.evaluate((id: string) => { Store.setMeta('bibForm', 'liste'); Bibliothek.oeffne(id); },
+  kennungen.wurzel);
+await seite.waitForTimeout(700);
+const listeVorher = await seite.evaluate(() => ({
+  istListe: !!document.querySelector('.bib-tab'),
+  titel: (document.querySelector('.bib-titel')?.textContent || '').trim(),
+  krume: [...document.querySelectorAll('.bib-krume button, .bib-krume b')]
+    .map(x => (x.textContent || '').trim()).filter(t => t && t !== '‹'),
+  zeilen: [...document.querySelectorAll('.bib-zeile[data-id]')]
+    .map(z => (z.querySelector('.bib-txt')?.textContent || '').trim())
+}));
+p('Die Liste steht im Ordner „Redur Babat"',
+  listeVorher.istListe && listeVorher.titel === 'Redur Babat', JSON.stringify(listeVorher));
+p('… und trägt jetzt eine Brotkrume (vorher gab es keine)',
+  listeVorher.krume.includes('Dokumente') && listeVorher.krume.includes('Redur Babat'),
+  JSON.stringify(listeVorher.krume));
+p('… und zeigt die Fächer als Zeilen',
+  listeVorher.zeilen.includes('BT-Arbeitssicherheit'), JSON.stringify(listeVorher.zeilen));
+
+/* Ein Klick auf die FACH-Zeile führt hinein — nicht in eine leere Seite. */
+await seite.evaluate((id: string) =>
+  document.querySelector<HTMLElement>(`.bib-zeile[data-id="${id}"]`)?.click(), kennungen.bt);
+await seite.waitForTimeout(700);
+const listeNachher = await seite.evaluate(() => ({
+  istListe: !!document.querySelector('.bib-tab'),
+  titel: (document.querySelector('.bib-titel')?.textContent || '').trim(),
+  ordner: (typeof Store !== 'undefined' && Store.getMeta) ? Store.getMeta('bibOrdner', '') : '',
+  krume: [...document.querySelectorAll('.bib-krume button, .bib-krume b')]
+    .map(x => (x.textContent || '').trim()).filter(t => t && t !== '‹'),
+  kinder: [...document.querySelectorAll('.bib-zeile[data-id]')]
+    .map(z => (z.querySelector('.bib-txt')?.textContent || '').trim())
+}));
+p('Der Klick auf ein Fach führt HINEIN, nicht in eine Seite',
+  listeNachher.istListe && listeNachher.titel === 'BT-Arbeitssicherheit',
+  JSON.stringify(listeNachher));
+gleich('… der Merker steht auf dem Fach', listeNachher.ordner, kennungen.bt);
+p('… und die Brotkrume nennt den ganzen Weg',
+  listeNachher.krume.join(' › ') === 'Dokumente › Redur Babat › BT-Arbeitssicherheit',
+  JSON.stringify(listeNachher.krume));
+p('… und die Liste zeigt die Kinder des Fachs',
+  listeNachher.kinder.includes('BT-Arbeitssicherheit Lösungen'), JSON.stringify(listeNachher.kinder));
+
 console.log(`\n${ok}/${ok + weg} bestanden · ✗=${weg}`);
 await browser.close();
 server.close();

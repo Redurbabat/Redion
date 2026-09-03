@@ -139,7 +139,7 @@ rechtfertigt.
 Die Produktlücken stehen dort und werden dort gepflegt — sie hier zu
 wiederholen hiesse, zwei Listen zu führen, die auseinanderlaufen.
 
-Zuletzt geschlossen: L120 Telefon-Brotkrume (E381), L120 Kern (E380 — das Dokumente-Regal hat Ebenen),
+Zuletzt geschlossen: L120 Listenform (E382), L120 Telefon-Brotkrume (E381), L120 Kern (E380 — das Dokumente-Regal hat Ebenen),
 L115 Rest (E375), der flüssige Stift und seine Nachbarwege (E376–E379),
 L61 Rest (E374), L114 Punkt 7 (E373), L10 Marken (E372), L10 Side Peek
 (E371), L78 Punkt 1 und L114 Punkt 4 (E368), L116 (E367).

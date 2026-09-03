@@ -701,8 +701,16 @@ const Bibliothek = (() => {
       ? gezeigt + ' von ' + gesamt + ' ' + vonForm
       : gezeigt + ' ' + (gezeigt === 1 ? eins : mehr);
 
-  const bibKopf = (liste: any[], anzahlHefte: number, gesamt = liste.length): string =>
-    '<h1 class="bib-titel">Bibliothek</h1>' +
+  const bibKopf = (liste: any[], anzahlHefte: number, gesamt = liste.length): string => {
+    /* Auch die Listenform ist in der Ablage ein Ordner-Browser (E382). Bis
+       E382 hatte sie keine Brotkrume: man ging in ein Fach hinein (per
+       Zeilenklick) und sah danach weder, WO man war, noch einen Weg zurück —
+       der Titel stand fest auf „Bibliothek". Jetzt trägt der Kopf in der
+       Ablage denselben Pfad wie die Deckelansicht (E380). */
+    const weg = zustand.reiter === 'ablage' ? ordnerWeg() : [];
+    const titel = weg.length ? esc(String(weg[weg.length - 1].text || 'Ohne Titel')) : 'Bibliothek';
+    return (zustand.reiter === 'ablage' ? ordnerKrume() : '') +
+    '<h1 class="bib-titel">' + titel + '</h1>' +
     '<p class="bib-zahlen">' + anzahlHefte +
       (anzahlHefte === 1 ? ' Heft' : ' Hefte') + ' · ' +
       /* „auf diesem Gerät" ist eine Aussage über den BESTAND, nicht über
@@ -722,6 +730,7 @@ const Bibliothek = (() => {
           '<span data-sym="menu" aria-hidden="true"></span>Liste</button>' +
       '</div>' +
     '</div>';
+  };
 
   /* ====================================================================== *
    * SICHERUNG, PAPIERKORB UND PLATZ (E208)
@@ -1137,7 +1146,7 @@ const Bibliothek = (() => {
                   quelle: `<div class="bib-quelle"><span>${q.icon}</span>${esc(q.text)}</div>`,
                   wann: `<div class="bib-wann">${esc(wannText(p.edited || p.created))}</div>`
                 };
-                return `<div class="bib-zeile" data-id="${p.id}">` +
+                return `<div class="bib-zeile" data-id="${p.id}" data-art="${artVon(p).id}">` +
                        spalten.map(s => zellen[s.id]).join('') + '</div>';
               }).join('')
             : '<div class="bib-leer">Hier ist noch nichts. Seiten erscheinen automatisch.</div>') +
@@ -1164,7 +1173,16 @@ const Bibliothek = (() => {
 
     /* Zeile öffnen */
     wrap.querySelectorAll('.bib-zeile[data-id]').forEach((z: any) =>
-      z.addEventListener('click', () => App.oeffne(z.dataset.id)));
+      z.addEventListener('click', () => {
+        /* Auch in der Liste ist ein Ordner ein Ort, kein Dokument
+           (E380/E382). Die Deckelansicht ging schon hinein; hier stand noch
+           die alte Öffnung — ein Fach wäre als leere Seite aufgegangen statt
+           eine Ebene tiefer zu führen. Die Nachbarstelle, §45. */
+        if (zustand.reiter === 'ablage' && z.dataset.art === 'ordner') {
+          geheIn(z.dataset.id); return;
+        }
+        App.oeffne(z.dataset.id);
+      }));
 
     /* Werkzeuge */
     wrap.querySelectorAll('.bib-werkzeuge button, [data-a="suchzu"]').forEach((b: any) =>

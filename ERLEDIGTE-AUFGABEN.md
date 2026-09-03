@@ -3086,3 +3086,15 @@ die Zeugnisnote je Semester (E242) und der echte Stundenplan (E243).
   aktuelle Ordner ausserhalb), der klebende Pfeil bleibt grün, weil er aus
   dem CSS kommt. Mit einem Telefonbild belegt (§55.3): vorher „…
   BT-Arbeitssicherl", nachher „… BT-Arbeitssicherheit" ganz im Bild.
+
+* E382 (die Nachbarstelle zu E380, §45): Auch die Listenform der Ablage ist
+  ein Ordner-Browser. E380 verdrahtete die Ebenen nur in der Deckelansicht;
+  in der Liste rief ein Zeilenklick immer App.oeffne — ein Fach ging als leere
+  Seite auf (der Fehler, den E380 behob), und der Listenkopf hatte keine
+  Brotkrume. Jetzt: data-art an jeder Zeile, der Klick prüft
+  reiter==='ablage' && art==='ordner' → geheIn; und bibKopf trägt in der
+  Ablage dieselbe Brotkrume und denselben Ordner-Titel wie die Deckelansicht.
+  Die Regalform bleibt absichtlich eine Heft-Gruppierung nach Quelle, kein
+  Ordner-Browser. Prüfung test369 §9; Gegenprobe: den Fach-Zweig abschalten →
+  der Klick öffnet das Fach als Seite (.bib-tab weg), §9 rot (4 Punkte). Mit
+  einem Bild belegt.

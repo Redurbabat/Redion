@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-377 Entscheidungen, E1 bis E381. Die Nummer ist die Ordnung: eine Entscheidung
+378 Entscheidungen, E1 bis E382. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -435,6 +435,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E379** — Neuzeichnen fragt nach der Identität, nicht nach dem Wortlaut
 * **E380** — Das Regal bekommt Ebenen: ein Ordner ist ein Ort, kein Etikett
 * **E381** — Die Brotkrume der Ablage bleibt am Telefon brauchbar
+* **E382** — Auch die Listenform der Ablage ist ein Ordner-Browser
 
 ---
 
@@ -30720,3 +30721,57 @@ Der halbe Wurzelname („umente") steht dann links am Pfeilrand. Das ist die
 übliche Erscheinung einer scrollbaren Brotkrume und der richtige Tausch:
 lieber ein abgeschnittener Vorfahr als ein abgeschnittener Standort.
 Belegt mit einem Telefonbild, nicht nur gemessen (§55.3).
+
+
+E382 — Auch die Listenform der Ablage ist ein Ordner-Browser
+════════════════════════════════════════════════════════════════════════════
+
+Die Nachbarstelle zu E380, und genau der Fehler, vor dem §45 warnt: eine
+Sache an einer Stelle reparieren und die daneben nicht ansehen.
+
+E380 verdrahtete die Ebenen der Ablage in der DECKELANSICHT. Das Regal hat
+aber drei Formen (Deckel, Regal, Liste), und Form und Reiter sind unabhängig
+— man kann in der Ablage stehen UND die Listenform gewählt haben. Dort:
+
+1. Ein Klick auf eine Zeile rief IMMER `App.oeffne`. Auf eine Fach-Zeile
+   angewandt hiess das: das Fach ging als leere Seite auf (mit Cursor, weil
+   `Inhaltsflaeche` einem kinderlosen Fach einen Textblock anlegt) — genau
+   der Fehler, den E380 in der Deckelansicht behoben hatte.
+2. Der Listenkopf (`bibKopf`) trug einen festen Titel „Bibliothek" und KEINE
+   Brotkrume. Selbst wenn man hineinkam, sah man weder, wo man war, noch
+   einen Weg zurück.
+
+WAS GEBAUT WURDE
+────────────────
+* Die Fach-Zeile führt hinein: `data-art` an jeder Zeile, und der Klick prüft
+  `reiter === 'ablage' && art === 'ordner'` → `geheIn`, sonst wie bisher
+  `App.oeffne`. Eine gewöhnliche Seite mit Unterblöcken öffnet also weiter
+  normal — nur ein Fach ist ein Ort.
+* `bibKopf` trägt in der Ablage denselben Pfad wie die Deckelansicht: die
+  Brotkrume (`ordnerKrume()`, an der Wurzel leer) und als Titel den Ordner,
+  in dem man steht, statt „Bibliothek".
+
+WARUM NICHT STATTDESSEN DIE LISTE IN DER ABLAGE SPERREN
+───────────────────────────────────────────────────────
+Wäre der kleinere Eingriff gewesen (Ablage nur als Deckel). Aber GoodNotes
+hat beide Ansichten, und die Liste zeigt mehr auf einen Blick (Quelle, Datum,
+Ersteller). Eine Form zu verbieten, weil sie halb verdrahtet war, hätte eine
+Funktion weggenommen statt sie fertig zu machen.
+
+Die Regalform bleibt eine Heft-Gruppierung nach Quelle (`hefte()`), kein
+Ordner-Browser — das ist Absicht, kein Rest: „Zuletzt in der Hand" ist eine
+Frage über den Bestand, nicht über eine Ebene.
+
+PRÜFUNG (§55.2)
+───────────────
+`test369` §9: in der Listenform in ein Fach hineingehen; der Kopf trägt die
+Brotkrume, der Titel ist das Fach, der Merker steht darauf, die Zeilen sind
+die Kinder. Gegenprobe: den Fach-Zweig im Zeilenklick abschalten → der Klick
+öffnet das Fach als Seite (`.bib-tab` verschwindet), §9 rot (4 Punkte). Mit
+einem Bild belegt (§55.3): Liste im Fach mit „‹ Dokumente › Redur Babat ›
+BT-Arbeitssicherheit".
+
+WAS ES KOSTET
+─────────────
+Keine Daten, kein Feld, keine Migration — `data-art` ist ein Anzeigewert,
+`geheIn` gab es schon. Einzeldatei neu gebaut.

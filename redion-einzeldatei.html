@@ -16110,7 +16110,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 219, inhalt: '3a16efc12a42e51a', gebaut: '2026-09-03T14:29:05.738Z' };
+const Stand = { fassung: 221, inhalt: '8760612d5383e6a7', gebaut: '2026-09-03T14:47:27.839Z' };
 window.Stand = Stand;
 
 </script>
@@ -118619,25 +118619,35 @@ const Bibliothek = (() => {
     gesamt > gezeigt
         ? gezeigt + ' von ' + gesamt + ' ' + vonForm
         : gezeigt + ' ' + (gezeigt === 1 ? eins : mehr);
-    const bibKopf = (liste, anzahlHefte, gesamt = liste.length) => '<h1 class="bib-titel">Bibliothek</h1>' +
-        '<p class="bib-zahlen">' + anzahlHefte +
-        (anzahlHefte === 1 ? ' Heft' : ' Hefte') + ' · ' +
-        /* „auf diesem Gerät" ist eine Aussage über den BESTAND, nicht über
-           die Anzeige. Sie stand bis E367 über einer gedeckelten Liste. */
-        umfangSatz(liste.length, gesamt, 'Seite', 'Seiten', 'Seiten') + ' auf diesem Gerät</p>' +
-        '<div class="bib-kopf">' +
-        '<div class="bib-reiter">' +
-        REITER.slice(0, 4).map(r => `<button data-r="${r.id}" class="${zustand.reiter === r.id ? 'on' : ''}">` +
-            `<span>${r.icon}</span>${esc(r.name)}</button>`).join('') +
-        `<button data-r="mehr" class="bib-mehr">${REITER.length - 4} mehr …</button>` +
-        '</div>' +
-        '<div class="bib-form" role="group" aria-label="Darstellung">' +
-        `<button data-form="regal"${form() === 'regal' ? ' class="on" aria-pressed="true"' : ' aria-pressed="false"'}>` +
-        '<span data-sym="library" aria-hidden="true"></span>Regal</button>' +
-        `<button data-form="liste"${form() === 'liste' ? ' class="on" aria-pressed="true"' : ' aria-pressed="false"'}>` +
-        '<span data-sym="menu" aria-hidden="true"></span>Liste</button>' +
-        '</div>' +
-        '</div>';
+    const bibKopf = (liste, anzahlHefte, gesamt = liste.length) => {
+        /* Auch die Listenform ist in der Ablage ein Ordner-Browser (E382). Bis
+           E382 hatte sie keine Brotkrume: man ging in ein Fach hinein (per
+           Zeilenklick) und sah danach weder, WO man war, noch einen Weg zurück —
+           der Titel stand fest auf „Bibliothek". Jetzt trägt der Kopf in der
+           Ablage denselben Pfad wie die Deckelansicht (E380). */
+        const weg = zustand.reiter === 'ablage' ? ordnerWeg() : [];
+        const titel = weg.length ? esc(String(weg[weg.length - 1].text || 'Ohne Titel')) : 'Bibliothek';
+        return (zustand.reiter === 'ablage' ? ordnerKrume() : '') +
+            '<h1 class="bib-titel">' + titel + '</h1>' +
+            '<p class="bib-zahlen">' + anzahlHefte +
+            (anzahlHefte === 1 ? ' Heft' : ' Hefte') + ' · ' +
+            /* „auf diesem Gerät" ist eine Aussage über den BESTAND, nicht über
+               die Anzeige. Sie stand bis E367 über einer gedeckelten Liste. */
+            umfangSatz(liste.length, gesamt, 'Seite', 'Seiten', 'Seiten') + ' auf diesem Gerät</p>' +
+            '<div class="bib-kopf">' +
+            '<div class="bib-reiter">' +
+            REITER.slice(0, 4).map(r => `<button data-r="${r.id}" class="${zustand.reiter === r.id ? 'on' : ''}">` +
+                `<span>${r.icon}</span>${esc(r.name)}</button>`).join('') +
+            `<button data-r="mehr" class="bib-mehr">${REITER.length - 4} mehr …</button>` +
+            '</div>' +
+            '<div class="bib-form" role="group" aria-label="Darstellung">' +
+            `<button data-form="regal"${form() === 'regal' ? ' class="on" aria-pressed="true"' : ' aria-pressed="false"'}>` +
+            '<span data-sym="library" aria-hidden="true"></span>Regal</button>' +
+            `<button data-form="liste"${form() === 'liste' ? ' class="on" aria-pressed="true"' : ' aria-pressed="false"'}>` +
+            '<span data-sym="menu" aria-hidden="true"></span>Liste</button>' +
+            '</div>' +
+            '</div>';
+    };
     /* ====================================================================== *
      * SICHERUNG, PAPIERKORB UND PLATZ (E208)
      * ---------------------------------------------------------------------- *
@@ -119056,7 +119066,7 @@ const Bibliothek = (() => {
                             quelle: `<div class="bib-quelle"><span>${q.icon}</span>${esc(q.text)}</div>`,
                             wann: `<div class="bib-wann">${esc(wannText(p.edited || p.created))}</div>`
                         };
-                        return `<div class="bib-zeile" data-id="${p.id}">` +
+                        return `<div class="bib-zeile" data-id="${p.id}" data-art="${artVon(p).id}">` +
                             spalten.map(s => zellen[s.id]).join('') + '</div>';
                     }).join('')
                     : '<div class="bib-leer">Hier ist noch nichts. Seiten erscheinen automatisch.</div>') +
@@ -119080,7 +119090,17 @@ const Bibliothek = (() => {
             App.zeichneSeite();
         }));
         /* Zeile öffnen */
-        wrap.querySelectorAll('.bib-zeile[data-id]').forEach((z) => z.addEventListener('click', () => App.oeffne(z.dataset.id)));
+        wrap.querySelectorAll('.bib-zeile[data-id]').forEach((z) => z.addEventListener('click', () => {
+            /* Auch in der Liste ist ein Ordner ein Ort, kein Dokument
+               (E380/E382). Die Deckelansicht ging schon hinein; hier stand noch
+               die alte Öffnung — ein Fach wäre als leere Seite aufgegangen statt
+               eine Ebene tiefer zu führen. Die Nachbarstelle, §45. */
+            if (zustand.reiter === 'ablage' && z.dataset.art === 'ordner') {
+                geheIn(z.dataset.id);
+                return;
+            }
+            App.oeffne(z.dataset.id);
+        }));
         /* Werkzeuge */
         wrap.querySelectorAll('.bib-werkzeuge button, [data-a="suchzu"]').forEach((b) => b.addEventListener('click', () => {
             const a = b.dataset.a;

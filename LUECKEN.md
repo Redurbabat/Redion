@@ -5495,4 +5495,10 @@ die Krume scrollt ans Ende. Belegt mit test369 §8 (setzt 390 px, prüft
 zuerst den Überlauf) und einem Telefonbild. E380 war am Rechner gebaut; das
 ist genau der Fehler, den §37 meint: das Telefon ist der Normalfall.
 
+Nachtrag (E382): Die Ebenen waren zuerst nur in der Deckelansicht verdrahtet.
+In der Listenform öffnete ein Klick auf ein Fach es als leere Seite, und der
+Listenkopf hatte keine Brotkrume. GESCHLOSSEN durch E382 — die Liste ist jetzt
+auch ein Ordner-Browser (test369 §9). Die Regalform bleibt absichtlich eine
+Heft-Gruppierung, kein Ordner-Browser.
+
 Gefunden beim Bauen von E380 am 3. September 2026.
