@@ -4978,12 +4978,19 @@ L114 — Was der ZIP-Import (E350) bewusst noch nicht kann
 
 E350 holt eine ZIP so ins Regal, wie sie ist. Was bleibt, mit Grund:
 
-1. **Der Lauf ist kein Auftrag.** Er läuft im Tab, Datei für Datei mit
-   Fortschrittszeile. Wer den Tab bei Datei 40 von 87 schliesst, hat 39
-   Dokumente und kein Wissen darüber, was fehlt. Der Weg zur
-   Auftragsmaschine ist getreten (E327, L103 Punkt 1) — der Import gehört
-   als Nächster dorthin, mit Wiederaufnahme über „welche Einträge fehlen
-   noch im Fach".
+1. ~~**Der Lauf ist kein Auftrag.**~~ ERLEDIGT in E365: die ZIP wandert
+   als abgeleitete Arbeitskopie in die Ablage, der Auftrag
+   (`zip-import`, „ZIP entpacken") trägt ihre Kennung, und jeder Eintrag
+   ist ein Schritt mit Wiederaufsetzpunkt — Stelle, Wurzelfach und Zahlen
+   stehen im Auftrag. Wer den Tab bei Datei 40 von 87 schliesst, sieht den
+   Auftrag im Auftragsfenster stehen und bekommt die restlichen 47, sobald
+   die Maschine ihn wieder aufnimmt; nichts wird doppelt (E363). Nach dem
+   letzten Eintrag geht die Arbeitskopie, bei einem Abbruch bleibt sie
+   liegen. Eine ZIP über der Ablagegrenze und ein Redion ohne Maschine
+   laufen wie früher — mit einem Satz, der sagt, dass das Fenster offen
+   bleiben muss. test357. Was bleibt: der Läufer rechnet weiter im Faden
+   der Oberfläche (L103 Punkt 2), und ein zweiter Tab kann denselben
+   Auftrag nicht gleichzeitig übernehmen (die Pacht der Maschine, E286).
 
 2. **Jedes Bild wird ein Deckel.** Das ist die GoodNotes-Lesart „eine Datei,
    ein Dokument" — bei 500 Fotos in einem Ordner sind das 500 Deckel. Eine
@@ -5134,3 +5141,36 @@ Entscheidung. (E357 kam mit einer neuen ART und einem neuen Feld daran —
 unbekannte Art nicht, verliert sie aber auch nicht.)
 
 Gefunden am 2. September 2026 (E351).
+
+
+L116 — Was das Regal über seine eigene Zahl sagt
+════════════════════════════════════════════════════════════════════════════
+
+Gefunden am 3. September 2026 beim Ansehen der E365-Bilder — nicht durch
+einen Prüflauf, sondern weil ein Bild nach 900 eingelesenen Dokumenten eine
+zweistellige Zahl zeigte (§55).
+
+1. **„60 Dokumente" ist eine Decke, keine Zahl.** Der Reiter „Kürzlich
+   verwendet" schneidet seine Liste mit `.slice(0, 60)` ab
+   (`src/bereiche/wissen/bibliothek.ts`, `gefiltert()`), und der Kopf
+   zeigt danach die Länge der GESCHNITTENEN Liste an
+   (`deckelKopf(liste.length)`). Bei 61 Dokumenten steht dort „60", bei
+   900 ebenfalls „60". Wer eine grosse ZIP einliest und danach ins Regal
+   sieht, bekommt eine Zahl, die aussieht wie eine Antwort auf „wie viele
+   habe ich?" und keine ist.
+
+   Das ist derselbe Fehler wie E288 („14 Lücken" bei drei Seiten) und
+   E289 (ein Prozentwert ohne seine Grundlage), nur andersherum: eine
+   Anzeige, die IMMER dieselbe Zahl zeigt, wird nicht gelesen — und wenn
+   doch, dann falsch. §46.
+
+   Zu tun: entweder die Zahl des ungeschnittenen Bestands nennen und die
+   Decke als solche benennen („60 von 900"), oder die Decke fallen lassen.
+   Ersteres ist ehrlicher und billiger; die Decke selbst hat einen Grund
+   (900 Deckel zu zeichnen kostet), sie darf nur nicht schweigen.
+
+2. **Die anderen fünf Reiter haben keine Decke** — „Alle", „Favoriten",
+   „Geteilt", „Privat", „Datenbank" zeigen die volle Länge. Ihre Zahl
+   stimmt also; nur bei sehr vielen Dokumenten zeichnen sie alles. Ob das
+   ein Leistungsproblem ist, ist nicht gemessen worden und gehört zusammen
+   mit Punkt 1 gemessen, bevor gebaut wird.

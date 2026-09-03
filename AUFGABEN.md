@@ -2644,6 +2644,13 @@ node pruefungen/lauf/test105.mjs
   `padding` ist vier Erklärungen, nicht eine, und §2/§3 zählten absolut
   statt den Unterschied zum Bestand.
   test332 neu (14), belegt rot. test258 19/19.
+* E365 (L114 Punkt 1 erledigt): Der ZIP-Import ist ein Auftrag — die ZIP
+  geht als abgeleitete Arbeitskopie in die Ablage, der Auftrag
+  (`zip-import`) trägt ihre Kennung, jeder Eintrag ist ein Schritt mit
+  Wiederaufsetzpunkt (Stelle, Wurzelfach, Zahlen), nach dem letzten geht
+  die Arbeitskopie. Ein geschlossener Tab kostet keine Datei mehr. test357
+  neu (34), belegt rot in sieben Richtungen; dabei gefunden: übersprungene
+  Einträge meldeten keinen Schritt — der Fortschritt stand still.
 * E364 (L78 Punkte 4 und 5, L81 Punkte 2 und 4 erledigt): Vier kleine
   Löcher — `Werkzeuge.sperren` fragt vor dem Verschlüsseln über den Bus
   (`ARTEN.seiteWirdGesperrt`), das Regal antwortet „heftArt: heft", ein

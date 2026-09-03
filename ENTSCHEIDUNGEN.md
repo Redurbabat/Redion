@@ -28437,4 +28437,138 @@ sind — der Zuhörer hängt vorher. Der Griff bleibt für den Fall, dass sich
 die Startreihenfolge einmal ändert (genau der Fall, den E362 im Menüband
 gefunden hat); als Beleg taugt er nicht.
 
-KETTE_ERGEBNIS
+NACHBARSCHAFT: test356 28/28 · test265 38/38 (Regal) · test268 15/15
+(Zeitmesser) · test272 153/153 (kein Griff verloren) · test87 152/152 ·
+test105 120/120 · test109 20/20 · test225 11/11 · Einzeldatei neu gebaut
+(8178 KB). Alles grün.
+
+
+E365 — Der ZIP-Import ist ein Auftrag: er überlebt den geschlossenen Tab (L114 Punkt 1)
+════════════════════════════════════════════════════════════════════════════
+
+BEFUND (L114 Punkt 1): der Import lief im Tab, Datei für Datei, mit einer
+Fortschrittszeile. Wer ihn bei Datei 40 von 87 schloss, hatte 39 Dokumente
+— und KEIN WISSEN darüber, was fehlt. Das ist die unangenehme Sorte
+Fehler: das Regal sieht aus, als sei alles da. E327 hat den Weg zur
+Auftragsmaschine getreten (Seitenbilder), und L114 sagt: „der Import
+gehört als Nächster dorthin".
+
+DIE FRAGE, AN DER ES HING: ein Auftrag ist dauerhaft, ein `File` aus dem
+Dateiwähler nicht. Nach einem Neuladen gibt es die ZIP nicht mehr — der
+Auftrag wüsste, was zu tun ist, und hätte nichts, womit.
+
+─── WAS GEBAUT WURDE ───────────────────────────────────────────────────────
+
+  1. DIE ZIP WIRD DAUERHAFT. `alsAuftrag` legt sie zuerst in die Ablage —
+     als ABGELEITETE Datei (E103), ohne Block: sie gehört keinem Dokument,
+     sondern dem Auftrag, und wandert nicht mit in die Wolke. Der Auftrag
+     trägt nur ihre Kennung. Nach dem letzten Eintrag wird sie gelöscht;
+     bei einem Abbruch bleibt sie liegen, sonst gäbe es kein Weitermachen.
+
+  2. DER PLAN IST WIEDERHOLBAR. `planen(zip, name)` liest das
+     Inhaltsverzeichnis und gibt dieselbe Reihenfolge, sooft man fragt —
+     keine Uhr, kein Zufall. Deshalb muss der Auftrag nur die STELLE
+     merken (40 von 87) und nicht die Liste. `umfang` zählt die Einträge,
+     bevor ein Byte entpackt ist: die Schrittzahl steht, bevor der Auftrag
+     beginnt.
+
+  3. JEDER EINTRAG IST EIN SCHRITT. `importZip` bekam drei Griffe —
+     `abBei` (wo anfangen), `beiSchritt` (Wiederaufsetzpunkt schreiben)
+     und `abgebrochen` (aufhören). Der Schritt trägt Stelle, Wurzelfach,
+     Zahlen und die letzten fünfzig übersprungenen und fehlerhaften Namen.
+
+  4. DAS WURZELFACH ÜBERLEBT. Beim Wiederaufnehmen kommt seine Kennung aus
+     dem Auftrag statt aus einer Namenssuche — `fachFuer` fände es zwar am
+     Namen wieder, aber nur, solange niemand es umbenannt hat.
+
+  5. ABBRECHEN HEISST AUFHÖREN, nicht zurückrollen: was im Regal steht,
+     bleibt stehen (§46), und die Stelle ist gemerkt.
+
+  6. DER RÜCKFALL IST EHRLICH. Eine ZIP über der Ablagegrenze und ein
+     Redion ohne Auftragsmaschine laufen wie früher — mit einem Satz dazu:
+     „wird hier im Fenster entpackt, bitte offen lassen." Kein stiller
+     Unterschied.
+
+  7. Der Dateiwähler geht jetzt diesen Weg; `ansichtAuffrischen` hängt am
+     Ereignis `auftrag.beendet`, damit das Regal nicht stillsteht, während
+     fünfzig Dokumente hineinlaufen.
+
+─── WAS DER BAU GEFUNDEN HAT ──────────────────────────────────────────────
+
+test357 §4 fand einen Fehler im ersten Wurf: der Schritt wurde nur nach
+einem ANGELEGTEN Dokument gemeldet. Eine ZIP, deren Dateien alle schon da
+sind (E363), rückte damit nie vor — der Fortschritt stand bei 0 von 87,
+und eine Wiederaufnahme hätte wieder von vorn angefangen. Die Arbeit an
+einem Eintrag steht jetzt in einer eigenen Funktion, die `return` sagt
+statt `continue`; der Schritt danach gilt IMMER, auch für einen
+übersprungenen Eintrag.
+
+─── WAS NICHT GEBAUT WURDE ────────────────────────────────────────────────
+
+Der Läufer rechnet weiter im Faden der Oberfläche (L103 Punkt 2, der Web
+Worker). Zwei Tabs können denselben Auftrag nicht gleichzeitig übernehmen
+— das verhindert die Pacht der Maschine (E286), aber der zweite wartet,
+statt zu helfen. Kein „welche Einträge fehlen noch im Fach" als eigene
+Ansicht: der Auftrag SAGT es (Schritt 40 von 87), eine Liste der offenen
+Namen gibt es nicht.
+
+─── PRÜFUNG ────────────────────────────────────────────────────────────────
+
+test357 neu, 34 Punkte, PORT 9367, sechs Abschnitte: die angemeldete Art
+mit menschlichem Namen und der Plan ohne Entpacken (§1); `alsAuftrag` —
+Arbeitskopie (abgeleitet, ohne Block) und Auftrag mit sechs Schritten,
+noch nichts angelegt (§2); die Maschine arbeitet ihn ab, die Arbeitskopie
+ist danach weg, das Regal trägt zwei Fächer und sechs Dokumente (§3); die
+UNTERBRECHUNG — nach zwei Dateien Schluss, Stand mit Stelle und
+Wurzelfach, Arbeitskopie bleibt, zweiter Anlauf beginnt bei Datei 3 und
+wird fertig, nichts doppelt, dasselbe Wurzelfach, und dieselbe ZIP ein
+drittes Mal ergibt sechs Schritte mit null neuen Dokumenten (§4); der
+Rückfall bei zu grosser ZIP und ohne Maschine, mit dem Satz für den
+Menschen (§5); keine Seitenfehler (§6). Der Prüfhelfer `titelFlach` war im
+ersten Wurf selbst kaputt — er schnitt in JEDER Rekursionsstufe den
+eigenen Titel weg und lieferte immer eine leere Liste (§55.2). Belegt rot
+in sieben Richtungen, jede einzeln zurückgedreht und wiederhergestellt:
+
+a — die Wiederaufnahme beginnt immer bei null (archiveImport.js): 32/35 —
+    der zweite Anlauf arbeitet acht statt sechs Einträge ab und fängt
+    wieder bei Datei 1 an. Der Befund.
+b — die Kennung des Wurzelfachs wird nicht mitgenommen: 33/35 — nachdem
+    der Mensch das Fach umbenannt hat, legt der zweite Anlauf ein ZWEITES
+    an, und der Bestand steht an zwei Orten. Beim ersten Anlauf blieb
+    diese Probe grün, weil `fachFuer` das Fach am Namen wiederfand; die
+    Umbenennung im Test macht den Unterschied sichtbar (§55.2).
+c — die Arbeitskopie wird nie gelöscht: 32/35 — sie bleibt nach dem
+    fertigen Lauf in der Ablage liegen.
+d — der Abbruch wird nicht beachtet: fünf rot, dann bricht die Suite ab —
+    der Läufer arbeitet durch, obwohl der Tab zu ist.
+e — kein Schritt gemeldet: acht rot — der Auftrag steht bei 0 von 6, und
+    von einer Wiederaufnahme kann keine Rede sein.
+f — die Arbeitskopie ist nicht abgeleitet: 33/35 — sie ginge mit in die
+    Wolke.
+g — die Grösse wird nicht geprüft: 32/35 — eine ZIP über der Ablagegrenze
+    bekäme einen Auftrag, dessen Arbeitskopie es nicht geben kann.
+
+NACHBARSCHAFT: test357 35/35 · test342 42/42 (der ZIP-Import selbst, an
+E363 angepasst) · test355 34/34 (der ZIP-Leser) · test327 30/30 und test286
+16/16 (die Auftragsmaschine und ihr erster Bereich — die beiden, die dieser
+Bogen mitbenutzt) · test96 18/18 und test100 32/32 (Sicherung und Anhänge,
+weil der Bogen `Dateien.ablegen`/`weg` anfasst) · test87 152/152 · test105
+120/120 · test109 20/20 · test353 39/39 (der Stempel, der sich bei jedem
+Bau mitbewegt) · test225 11/11 · Einzeldatei neu gebaut (8178 KB) · test74
+12/12 gegen die frische Einzeldatei. Alles grün.
+
+HINGESEHEN (§55): drei Bilder, und das zweite ist der eigentliche Beleg.
+Beim ersten Versuch zeigte das Fenster „Nichts läuft mehr. Alles erledigt."
+— nicht, weil etwas kaputt war, sondern weil 24 Einträge schneller fertig
+sind, als ein Bildschirmfoto braucht. Mit 900 Einträgen steht dort „Kapitel
+57.md (507 von 900)" mit Fortschrittsbalken und Abbrechen-Knopf. Dann die
+Seite mitten im Entpacken NEU GELADEN: das Fenster zeigt „Kapitel 61.md
+(511 von 900)" — vier Schritte weiter, kein Neubeginn. Genau das ist die
+Behauptung dieses Bogens, und sie ist mit Augen zu sehen, nicht nur zu
+messen.
+
+NEBENBEI GEFUNDEN, NICHT HIER BEHOBEN: das dritte Bild zeigt nach 900
+eingelesenen Dokumenten den Kopf „Kürzlich verwendet · 60 Dokumente". Die
+60 ist keine Zahl, sondern eine Decke (`bibliothek.ts`, `.slice(0, 60)`) —
+sie steht bei 61 Dokumenten genauso da wie bei 900. Als L116 Punkt 1
+eingetragen; ein eigener Bogen, kein Anhängsel an diesen (§45).
