@@ -139,9 +139,16 @@ rechtfertigt.
 Die Produktlücken stehen dort und werden dort gepflegt — sie hier zu
 wiederholen hiesse, zwei Listen zu führen, die auseinanderlaufen.
 
-Zuletzt geschlossen: L114 Punkt 7 (E373), L10 Marken (E372), L10 Side Peek (E371), L78 Punkt 1 und L114 Punkt 4
-(E368), L116 (E367), L78 Punkt 2 (E366), L114 Punkte 1, 5 und 6 (E363,
-E365).
+Zuletzt geschlossen: L61 Rest (E374), L114 Punkt 7 (E373), L10 Marken
+(E372), L10 Side Peek (E371), L78 Punkt 1 und L114 Punkt 4 (E368), L116
+(E367), L78 Punkt 2 (E366), L114 Punkte 1, 5 und 6 (E363, E365).
+
+Zuletzt AUFGEMACHT: **L119** — was am flüssigen Stift (E376) noch offen
+ist. Drei Punkte, und zwei davon brauchen Redur und ein Gerät mit Stift:
+ob `getPredictedEvents()` auf echter Hardware gut aussieht, und ob der
+Druck eines echten Stifts überhaupt zappelt. Der dritte ist der letzte
+Rest an Rechenzeit (83 µs je Bild bei 600 Punkten) und heute kein
+Problem.
 
 ---
 

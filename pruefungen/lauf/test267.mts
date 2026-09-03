@@ -156,7 +156,9 @@ const winkelVon = async (): Promise<number> => {
   const [a, b] = letzte.pts;
   return Math.abs(Math.atan2(b[1] - a[1], b[0] - a[0]) * 180 / Math.PI);
 };
-await seite.locator('.blatt-werk [data-wz="line"]').click();
+/* Seit E375 steht die Linie hinter dem Formen-Knopf (L115 Punkt 9). */
+await seite.locator('.blatt-werk [data-wz="formen"]').click();
+await seite.locator('.blatt-werk [data-act="formart"][data-form="line"]').click();
 /* DAS BLATT NACH OBEN ROLLEN, DANN MESSEN — NACH JEDEM KLICK IN DIE LEISTE
    (E358 gefunden): die Leiste über dem Blatt wuchs mit E355 und E357 um zwei
    Knöpfe und damit um eine Zeile; das Blatt begann bei 537 px, und 40 %

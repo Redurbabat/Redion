@@ -270,8 +270,10 @@ p('Ohne Rechteck sagt sie, was fehlt', /Rechteck/.test(ansage), ansage || '(nich
 p('Und legt keine Karte an', await seite.locator('.fkarte').count() === 0);
 p('Und fragt auch nicht nach der Rückseite', await seite.locator('#fq').count() === 0);
 
-/* Jetzt ein Rechteck ziehen. */
-await seite.locator('[data-wz="rectangle"]').click();
+/* Jetzt ein Rechteck ziehen. Seit E375 steht es hinter dem Formen-Knopf
+   (L115 Punkt 9): erst „Form", dann im Zubehör die Art. */
+await seite.locator('.blatt-werk [data-wz="formen"]').click();
+await seite.locator('.blatt-werk [data-act="formart"][data-form="rectangle"]').click();
 await seite.waitForTimeout(250);
 const r2 = (await seite.locator('.blatt-marken').boundingBox())!;
 await seite.mouse.move(r2.x + r2.width * 0.18, r2.y + r2.height * 0.16);

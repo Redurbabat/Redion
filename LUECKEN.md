@@ -5371,3 +5371,47 @@ Durchgangs aufheben — voll21 hat nur die Zusammenfassung behalten, nicht
 den Prüfpunkt, der fiel. Ohne den weiss niemand, welcher der drei es ist.
 
 Gefunden am 3. September 2026 (voll21, E374).
+
+
+L119 — Was am flüssigen Stift (E376) noch offen ist
+================================================================================
+
+E376 hat den gemessenen Grund für die Zähigkeit beseitigt: der Umriss
+wächst, statt bei jedem Zeigerereignis neu zu entstehen (9,2× über den
+Strich, 10,1× am Ende). Drei Dinge sind damit NICHT erledigt, und sie
+stehen hier, damit sie niemand für erledigt hält.
+
+1. **Der letzte Rest ist die Zeichenkette selbst — 83 µs bei 600 Punkten.**
+   Die Geometrie kostet nichts mehr; was bleibt, ist das Erzeugen einer
+   17 kB langen `d`-Angabe je Bild. Das ist ein Prozent eines Bildes bei
+   120 Hz und damit heute kein Problem — aber es wächst weiter linear mit
+   dem Strich.
+
+   Der nächste Schritt wäre, den nassen Strich in ZWEI Knoten zu teilen:
+   einen langen fertigen Pfad, der selten angefasst wird, und einen kurzen
+   lebenden. Verworfen wurde das in E376 aus einem konkreten Grund: beim
+   Marker mit `opacity: 0.32` verdunkeln sich zwei überlappende Flächen an
+   der Naht doppelt, und diese Naht steht mitten im Strich. Wer es angeht,
+   braucht zuerst eine Antwort darauf.
+
+2. **`getPredictedEvents()` ist im Prüfcontainer nicht messbar.** Chromium
+   liefert die Vorhersage nur bei echter Zeigerhardware; unter Playwright
+   kommt sie nie. Geprüft ist deshalb der Rückfallweg (`InkStroke.vorhersage`)
+   und die VERDRAHTUNG des Browserwegs — nicht, wie gut die Vorhersage des
+   Browsers auf einem echten Tablet aussieht. Das braucht Redur und ein
+   Gerät mit Stift.
+
+3. **Ob der Druck eines echten Stifts zappelt, ist unbekannt.** Der
+   Median-Filter (drei Messungen) ist eingebaut, weil er nachweislich
+   nichts kaputt macht — eine steigende Rampe geht unverändert durch. Ob
+   er etwas AUSRICHTET, hängt daran, wie ruhig ein Apple Pencil oder ein
+   Wacom-Stift wirklich misst. Im Container gibt es keinen Druck; der
+   Ersatzdruck für Maus und Finger wird aus der Geschwindigkeit gerechnet
+   und ist von sich aus glatt.
+
+   Der erste Versuch war hier ein gleitendes Mittel, und der hat den
+   Füller flach gemacht (`test343` rot). Das steht in E376 — und es ist
+   der Grund, warum an dieser Stelle nichts mehr ohne Messung geändert
+   wird.
+
+Gefunden beim Bauen von E376 am 3. September 2026.

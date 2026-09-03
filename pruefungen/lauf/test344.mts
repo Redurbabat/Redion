@@ -148,7 +148,17 @@ const marken = (pg: Seite, blattId: string) => pg.evaluate((id: string) => {
   }));
 }, blattId);
 
-const werkzeug = (pg: Seite, wz: string) => pg.click(`.blatt-werk [data-wz="${wz}"]`);
+/* SEIT E375 STEHEN DIE VIER FORMEN HINTER EINEM KNOPF (L115 Punkt 9): erst
+   „Form", dann im Zubehör die Art. Genau der Weg, den auch ein Mensch geht —
+   `[data-wz="rectangle"]` gibt es nicht mehr, und dieser Lauf lief 30
+   Sekunden lang in einen Knopf, den niemand mehr baut. Derselbe Helfer
+   steht in test351. */
+const FORM_ARTEN = ['line', 'arrow', 'rectangle', 'ellipse'];
+const werkzeug = async (pg: Seite, wz: string): Promise<void> => {
+  if (!FORM_ARTEN.includes(wz)) { await pg.click(`.blatt-werk [data-wz="${wz}"]`); return; }
+  await pg.click('.blatt-werk [data-wz="formen"]');
+  await pg.click(`.blatt-werk [data-act="formart"][data-form="${wz}"]`);
+};
 /* Seit E359 zeigt auch der Rechner nur das Zubehoer des Werkzeugs: der
    Modus-Knopf steht erst beim Radierer — also erst den waehlen (wie §8). */
 const modusKnopf = async (pg: Seite) => {

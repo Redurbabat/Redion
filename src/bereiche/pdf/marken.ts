@@ -515,6 +515,28 @@ const Marken = (() => {
     let running: any = null;
     let runningNode: SVGElement | null = null;
     let beforeRunning: any[] | null = null;
+    /* ---- DER NASSE STRICH (E376) -----------------------------------------
+     * Gemessen war der Grund fuer die Zaehigkeit eindeutig: bis hierher wurde
+     * bei JEDEM Zeigerereignis der ganze Umriss neu gerechnet — 484,7 ms
+     * Geometrie fuer einen Strich mit 600 Punkten, am Ende 0,774 ms je
+     * Ereignis. Die `Feder` waechst stattdessen — 9,2× schneller ueber den
+     * Strich, 10,1× am Ende, nachgemessen in test366 §2 — und liefert dabei
+     * ZEICHENGLEICH denselben Pfad
+     * wie `InkGeometry.outline` — geprueft in test366, sonst saehe der nasse
+     * Strich anders aus als der trockene.
+     * -------------------------------------------------------------------- */
+    let feder: any = null;
+    let glatt: ((p: [number, number], dt: number) => [number, number]) | null = null;
+    let druckGlatt: ((p: number) => number) | null = null;
+    let letzteZeit = 0;
+    /* Wo der Zeiger ZULETZT WIRKLICH WAR — ungeglaettet. Beim Absetzen wird
+       der letzte gespeicherte Punkt dorthin gezogen (siehe `finish`). */
+    let rohLetzter: number[] | null = null;
+    /* Ob der laufende Strich gerade als FLAECHE gezeichnet wird (Fueller,
+       Pinsel ab drei Punkten) oder als Linie. Wechselt er die Bauart, wird
+       der Knoten einmal ganz neu gebaut statt sein `d` gesetzt. */
+    let nassFlaeche = false;
+    let bildWunsch = 0;
     let selection = new Set<string>();
     let selectDrag: any = null;
     const historyUndo: any[][] = [];
@@ -832,13 +854,103 @@ const Marken = (() => {
     };
     const addSample = (event: PointerEvent): void => {
       if (!running) return;
-      const point = R.zuBlatt(flaeche, event);
-      if (!point) return;
+      const roh = R.zuBlatt(flaeche, event);
+      if (!roh) return;
+      /* DER DRUCK KOMMT AUS DEM ROHEN PUNKT (E376): der Ersatzdruck fuer
+         Maus und Finger rechnet aus der Geschwindigkeit, und geglaettete
+         Punkte bewegen sich langsamer als die Hand. */
+      const drucken = druckAus(event, roh);
+      const jetzt = Number(event.timeStamp) || letzteZeit;
+      const dt = letzteZeit ? Math.max(1, jetzt - letzteZeit) : 16;
+      letzteZeit = jetzt;
+      /* GEGLAETTET WIRD IMMER, GESPEICHERT NICHT (E376). Der Filter laeuft
+         auch dann weiter, wenn der Punkt unter der Schwelle bleibt — sonst
+         bliebe er bei langsamer Hand fuer immer hinter ihr zurueck. */
+      const point = glatt ? glatt(roh as [number, number], dt) : roh;
+      rohLetzter = roh;
+      const druck = druckGlatt ? druckGlatt(drucken) : drucken;
       const last = running.pts[running.pts.length - 1];
       if (last && Math.abs(last[0] - point[0]) < 0.6 && Math.abs(last[1] - point[1]) < 0.6) return;
       running.pts.push(point);
-      running.pressure.push(druckAus(event, point));
+      running.pressure.push(druck);
       running.bewegtUm = Date.now();
+      feder?.punkt(point, halbeBreite(running, druck));
+    };
+
+    /* Die halbe Strichbreite an einer Stelle — dieselbe Rechnung, die
+       `zeichneMarke` fuer den trockenen Fuellerstrich anstellt. Waere sie
+       hier anders, spraenge der Strich beim Absetzen des Stifts. */
+    const halbeBreite = (mark: any, druck: number): number => {
+      const base = Math.max(0.5, Number(mark?.breite) || BREITEN[1]);
+      return base / 2 * druckFaktor(String(mark?.stil || ''), druck);
+    };
+
+    /* ---- EIN BILD JE BILD, NICHT JE EREIGNIS (E376) ----------------------
+     * Ein Stift meldet sich bis zu 240-mal je Sekunde, ein Bildschirm zeigt
+     * 60- bis 120-mal. Bis hierher wurde jede Meldung sofort gezeichnet —
+     * bis zu drei Viertel dieser Arbeit sah nie jemand. Jetzt sammelt der
+     * Strich und zeichnet einmal je Bild.
+     * -------------------------------------------------------------------- */
+    const nassZeichnen = (): void => {
+      if (!running || !feder || !runningNode) return;
+      const alsFlaeche = running.art === 'stift' &&
+        (running.stil === 'fueller' || running.stil === 'pinsel') && feder.laenge() >= 3;
+      if (alsFlaeche !== nassFlaeche) {
+        /* Der Strich wechselt die Bauart — der Knoten wird einmal ganz neu
+           gebaut, danach genuegt wieder sein `d`. */
+        nassFlaeche = alsFlaeche;
+        runningNode = updateNode(runningNode, nasseMarke());
+        return;
+      }
+      const d = alsFlaeche ? feder.d() : feder.linie();
+      if (d) runningNode.setAttribute('d', d);
+      if (!alsFlaeche) runningNode.setAttribute('stroke-width', String(strokeWidth(running)));
+    };
+    /* Die Marke, wie sie GERADE aussieht — mit mindestens zwei Punkten,
+       damit `zeichneMarke` auch beim Aufsetzen etwas zu zeichnen hat. */
+    const nasseMarke = (): any => ({ ...running,
+      pts: running.pts.length > 1 ? running.pts : [running.pts[0], running.pts[0]] });
+    /* ---- DER NASSE SCHWANZ (E376) ---------------------------------------
+     * Zwischen der Bewegung der Hand und dem Bild auf dem Glas liegen immer
+     * ein paar Millisekunden — das ist die Luecke, die GoodNotes fuellt.
+     * Der Browser hilft mit `getPredictedEvents()`, wo er kann; sonst rechnet
+     * `InkStroke.vorhersage` selbst weiter.
+     *
+     * DIESE PUNKTE GEHEN NIE IN `running.pts`. Ein vorhergesagter Punkt ist
+     * eine Vermutung ueber die naechsten 14 ms; gespeichert waere er fuer
+     * immer da, und jeder Strich endete mit einem Ueberschuss, den niemand
+     * gezogen hat. `Feder.nass()` zeichnet ihn, `Feder.punkte()` kennt ihn
+     * nicht — test366 haelt genau das fest.
+     * -------------------------------------------------------------------- */
+    const nassenSchwanz = (event: PointerEvent): void => {
+      if (!feder || !running) return;
+      const druck = running.pressure[running.pressure.length - 1] ?? 0.5;
+      const halb = halbeBreite(running, druck);
+      let pts: number[][] = [];
+      const vom = typeof (event as any).getPredictedEvents === 'function'
+        ? (event as any).getPredictedEvents() as PointerEvent[] : [];
+      if (vom.length) {
+        for (const p of vom.slice(0, 3)) {
+          const q = R.zuBlatt(flaeche, p);
+          if (q) pts.push(q);
+        }
+      }
+      if (!pts.length) {
+        const jetzt = Number(event.timeStamp) || 0;
+        pts = InkStroke.vorhersage(running.pts as any, InkStroke.VORHER_MS,
+          letzteZeit && jetzt > letzteZeit ? jetzt - letzteZeit : 8) as any;
+      }
+      feder.nass(pts as any, pts.map(() => halb));
+    };
+
+    const bildAnfordern = (): void => {
+      if (bildWunsch) return;                     /* ein Bild ist schon bestellt */
+      if (typeof requestAnimationFrame !== 'function') { nassZeichnen(); return; }
+      bildWunsch = requestAnimationFrame(() => { bildWunsch = 0; nassZeichnen(); });
+    };
+    const bildAbsagen = (): void => {
+      if (bildWunsch && typeof cancelAnimationFrame === 'function') cancelAnimationFrame(bildWunsch);
+      bildWunsch = 0;
     };
     /* EIN BILD AUFS BLATT (E357, L115 Punkt 6). Der Weg: Dateiwaehler,
        Datei in die Ablage (in Stuecken, mit dem Blatt als Block — so wandert
@@ -955,6 +1067,11 @@ const Marken = (() => {
       const mark = running;
       const node = runningNode;
       const before = beforeRunning || snapshot();
+      /* Ein bestelltes Bild waere jetzt ein Bild ohne Strich (E376). */
+      bildAbsagen();
+      const letzterRoh = rohLetzter;
+      feder = null; glatt = null; druckGlatt = null; letzteZeit = 0; nassFlaeche = false;
+      rohLetzter = null;
       running = null; runningNode = null; beforeRunning = null;
       delete mark.zeigerArt;
       const gehalten = Date.now() - (Number(mark.bewegtUm) || 0) >= HALTEN_MS;
@@ -976,6 +1093,14 @@ const Marken = (() => {
       if (mark.art === 'stift' || mark.art === 'marker') {
         if (mark.pts.length < 2) { node?.remove(); return false; }
         delete mark.zuletzt;
+        /* DER STRICH ENDET, WO DIE HAND ABHOB (E376) — wie in GoodNotes.
+           Der Glaetter hinkt naturgemaess hinterher; beim Absetzen waeren
+           das je nach Tempo zwei bis drei Pixel, und ein Haken, den man
+           bewusst bis an eine Linie zieht, bliebe kurz davor stehen.
+           `test345` und `test346` haben genau das gefunden: ein Strich bis
+           x=300 endete bei 297. Der Anfang ist ohnehin roh (siehe
+           pointerdown); hier kommt das Ende dazu. */
+        if (letzterRoh) mark.pts[mark.pts.length - 1] = letzterRoh;
         const original: number[][] = mark.pts;
         const druckRoh: number[] = Array.isArray(mark.pressure) ? mark.pressure.map(Number) : [];
         const mittel = druckRoh.length
@@ -1263,6 +1388,16 @@ const Marken = (() => {
         if (tool === 'stift' && stil !== 'kugel') running.stil = stil;
         running.pressure.push(druckAus(event, point));
         const p0 = running.pressure[0];
+        /* DER AUFSETZPUNKT GEHT UNGEGLAETTET DURCH (E376): ein Strich, der
+           nicht dort beginnt, wo der Stift das Papier beruehrt hat, ist
+           falsch — und kein Filter kann das spaeter zurueckholen. */
+        glatt = InkStroke.glaetter(point as [number, number]);
+        rohLetzter = null;
+        druckGlatt = InkStroke.druckGlaetter(p0);
+        letzteZeit = Number(event.timeStamp) || 0;
+        feder = new InkStroke.Feder();
+        feder.punkt(point, halbeBreite(running, p0));
+        nassFlaeche = false;
         runningNode = zeichneMarke({ ...running, pts: [point, point], pressure: [p0, p0] });
       } else {
         /* Ein schwarzer Zettel mit schwarzer Vorgabetinte wäre keiner —
@@ -1352,11 +1487,13 @@ const Marken = (() => {
       if (running.art === 'stift' || running.art === 'marker') {
         const coalesced = typeof event.getCoalescedEvents === 'function' ? event.getCoalescedEvents() : [];
         (coalesced.length ? coalesced : [event]).forEach(addSample);
-      } else running.pts[1] = lineal && (running.art === 'line' || running.art === 'arrow')
+        nassenSchwanz(event);
+        bildAnfordern();
+        return;
+      }
+      running.pts[1] = lineal && (running.art === 'line' || running.art === 'arrow')
         ? rasten(running.pts[0], point) : point;
-      runningNode = updateNode(runningNode, running.art === 'stift' || running.art === 'marker'
-        ? { ...running, pts: running.pts.length > 1 ? running.pts : [running.pts[0], running.pts[0]] }
-        : running);
+      runningNode = updateNode(runningNode, running);
     });
     const beiEnde = (event: PointerEvent): void => {
       if (aktiverZeiger !== null && event.pointerId !== aktiverZeiger) return;

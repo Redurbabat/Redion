@@ -16075,7 +16075,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 194, inhalt: '810b501eebdfe6a3', gebaut: '2026-09-03T09:08:01.492Z' };
+const Stand = { fassung: 204, inhalt: '1eac02d81d88f630', gebaut: '2026-09-03T10:13:55.121Z' };
 window.Stand = Stand;
 
 </script>
@@ -17445,6 +17445,330 @@ const InkShapes = (() => {
     return { recognize };
 })();
 window.InkShapes = InkShapes;
+
+</script>
+<script>
+/* ===== quell/core/ink/stroke.js ===== */
+"use strict";
+/* ============================================================================
+ * core/ink/stroke.js — der nasse Strich: waechst, glaettet, sagt voraus
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/core/ink/stroke.ts`. `npm run bauen:ts` schreibt
+ * daraus diese Datei.
+ * ==========================================================================*/
+const InkStroke = (() => {
+    /* --------------------------------------------------------------------- *
+     * Rundung und Zahlen — WOERTLICH wie in `InkGeometry`.
+     * Eine eigene Rundung waere der sichere Weg zu einem Umriss, der um ein
+     * Hundertstel abweicht und beim Absetzen sichtbar springt.
+     * --------------------------------------------------------------------- */
+    const r2 = (v) => Math.round(v * 100) / 100;
+    const endlich = (v) => {
+        const n = Number(v);
+        return Number.isFinite(n) ? n : 0;
+    };
+    /* Der Mittelpunkt zweier Punkte, gerundet wie in `seite()`. */
+    const mitte = (a, b) => [
+        Math.round((a[0] + b[0]) * 50) / 100,
+        Math.round((a[1] + b[1]) * 50) / 100
+    ];
+    const qStueck = (a, b) => {
+        const m = mitte(a, b);
+        return ` Q${a[0]} ${a[1]} ${m[0]} ${m[1]}`;
+    };
+    /* ===================================================================== *
+     * 1 · DIE FEDER — ein Umriss, der waechst
+     * ===================================================================== *
+     *
+     * `InkGeometry.outline` rechnet den Versatz eines Punktes i aus seinen
+     * NACHBARN i-1 und i+1. Damit steht der Versatz von Punkt i erst fest,
+     * wenn Punkt i+1 da ist — und das Bogenstueck zwischen i und i+1 erst,
+     * wenn i+2 da ist. Die Feder haelt genau diese zwei Punkte Rueckstand
+     * offen und friert alles davor ein.
+     *
+     * Was je Punkt anfaellt: zwei Wurzeln, zwei Zeichenketten, zwei Anhaenge.
+     * Was NICHT mehr anfaellt: der ganze Strich.
+     * --------------------------------------------------------------------- */
+    class Feder {
+        /* Die Mittellinie — dieselben Punkte, die auch gespeichert werden. */
+        pts = [];
+        halb = [];
+        /* Die beiden Konturen. `links`/`rechts` werden nur fuer die letzten
+           zwei Punkte noch angefasst; alles davor steht fest. */
+        links = [];
+        rechts = [];
+        /* Die eingefrorenen Bogenstuecke. `linksFest[i]` ist das Stueck, das
+           `seite(links)` fuer den Index i erzeugt; `rechtsFest[j]` das Stueck,
+           das `seite(rueck)` fuer den Ruecklauf bei `rechts[j]` erzeugt. */
+        linksFest = [];
+        rechtsFest = [];
+        /* Bis wohin ist eingefroren (ausschliesslich). */
+        fest = 0;
+        /* Der nasse Schwanz: gezeichnet, nie gespeichert. */
+        nassPts = [];
+        nassHalb = [];
+        /** Wie viele echte Punkte im Strich stehen. */
+        laenge() { return this.pts.length; }
+        /** Die Mittellinie, wie sie gespeichert wird — ohne den nassen Schwanz. */
+        punkte() { return this.pts.map(p => [p[0], p[1]]); }
+        /** Die halben Breiten, in derselben Reihenfolge. */
+        breiten() { return this.halb.slice(); }
+        /**
+         * Ein echter Punkt. `halb` ist die halbe Strichbreite an dieser Stelle —
+         * dieselbe Zahl, die `zeichneMarke` fuer den trockenen Strich rechnet.
+         */
+        punkt(p, halb) {
+            this.pts.push([endlich(p[0]), endlich(p[1])]);
+            this.halb.push(Math.max(0.15, Number.isFinite(halb) ? halb : 1));
+            this.nassPts.length = 0;
+            this.nassHalb.length = 0;
+            this.nachziehen();
+        }
+        /**
+         * Der nasse Schwanz — die Vorhersage. Ersetzt bei jedem Aufruf den
+         * vorigen und geht NIE in `punkte()` ein.
+         */
+        nass(pts, halb) {
+            this.nassPts = pts.map(p => [endlich(p[0]), endlich(p[1])]);
+            this.nassHalb = this.nassPts.map((_p, i) => Math.max(0.15, Number.isFinite(halb[i]) ? Number(halb[i]) : (this.halb[this.halb.length - 1] ?? 1)));
+        }
+        /**
+         * Der SVG-Pfad des Umrisses. Zeichengleich mit
+         * `InkGeometry.outline(punkte(), breiten())`, solange kein nasser
+         * Schwanz gesetzt ist.
+         */
+        d() {
+            const pts = this.nassPts.length ? this.pts.concat(this.nassPts) : this.pts;
+            const halb = this.nassHalb.length ? this.halb.concat(this.nassHalb) : this.halb;
+            const n = pts.length;
+            if (n < 2)
+                return '';
+            /* Die Kontur der Punkte, die noch nicht feststehen (hoechstens ein
+               paar), wird hier frisch gerechnet — der Rest steht schon. */
+            const links = this.links.slice(0, Math.max(0, n - 2));
+            const rechts = this.rechts.slice(0, Math.max(0, n - 2));
+            for (let i = links.length; i < n; i++) {
+                const paar = versatz(pts, halb, i, n);
+                links.push(paar[0]);
+                rechts.push(paar[1]);
+            }
+            /* Die eingefrorenen Stuecke gelten nur, solange kein nasser Schwanz
+               die letzten Punkte verschiebt — und er verschiebt hoechstens die
+               letzten zwei, weshalb `fest` nie weiter reicht als n-2. */
+            const grenze = Math.min(this.fest, Math.max(0, n - 2));
+            let linksTeil = this.linksFest.slice(0, grenze).join('');
+            for (let i = Math.max(1, grenze); i <= n - 2; i++)
+                linksTeil += qStueck(links[i], links[i + 1]);
+            if (n === 2)
+                linksTeil = ` L${links[1][0]} ${links[1][1]}`;
+            else
+                linksTeil += ` L${links[n - 1][0]} ${links[n - 1][1]}`;
+            /* Der Ruecklauf laeuft von hinten nach vorn: das Stueck bei `rechts[j]`
+               zeigt auf `rechts[j-1]`, und die Reihenfolge ist absteigend. */
+            let rechtsTeil = '';
+            if (n === 2) {
+                rechtsTeil = ` L${rechts[0][0]} ${rechts[0][1]}`;
+            }
+            else {
+                const spaet = [];
+                for (let j = n - 2; j >= Math.max(1, grenze); j--)
+                    spaet.push(qStueck(rechts[j], rechts[j - 1]));
+                rechtsTeil = spaet.join('') + this.rechtsFest.slice(1, Math.max(1, grenze)).reverse().join('') +
+                    ` L${rechts[0][0]} ${rechts[0][1]}`;
+            }
+            const anfang = halbAn(halb, 0);
+            const ende = halbAn(halb, n - 1);
+            return `M${links[0][0]} ${links[0][1]}` + linksTeil +
+                ` A${r2(ende)} ${r2(ende)} 0 0 1 ${rechts[n - 1][0]} ${rechts[n - 1][1]}` +
+                rechtsTeil +
+                ` A${r2(anfang)} ${r2(anfang)} 0 0 1 ${links[0][0]} ${links[0][1]} Z`;
+        }
+        /**
+         * Der geglaettete Mittellinien-Pfad — fuer Kugelschreiber und Marker,
+         * die als Strich (`stroke`) und nicht als Flaeche gezeichnet werden.
+         * Zeichengleich mit `InkGeometry.path(punkte())`.
+         */
+        linie() {
+            const pts = this.nassPts.length ? this.pts.concat(this.nassPts) : this.pts;
+            const n = pts.length;
+            if (!n)
+                return '';
+            if (n === 1)
+                return `M${pts[0][0]} ${pts[0][1]}`;
+            if (n === 2)
+                return `M${pts[0][0]} ${pts[0][1]} L${pts[1][0]} ${pts[1][1]}`;
+            const grenze = Math.min(this.linieFest.length, Math.max(0, n - 2));
+            let aus = `M${pts[0][0]} ${pts[0][1]}` + this.linieFest.slice(0, grenze).join('');
+            for (let i = Math.max(1, grenze); i < n - 1; i++)
+                aus += qStueck(pts[i], pts[i + 1]);
+            return aus + ` L${pts[n - 1][0]} ${pts[n - 1][1]}`;
+        }
+        linieFest = [];
+        /* Alles einfrieren, was durch den neuen Punkt endgueltig geworden ist. */
+        nachziehen() {
+            const n = this.pts.length;
+            /* Die Kontur von Punkt i braucht i-1 und i+1; sie steht fest, sobald
+               i+1 existiert — also fuer alle i <= n-2. */
+            for (let i = this.links.length; i <= n - 2; i++) {
+                const paar = versatz(this.pts, this.halb, i, n);
+                this.links[i] = paar[0];
+                this.rechts[i] = paar[1];
+            }
+            /* Ein Bogenstueck bei i braucht die Kontur von i und i+1. */
+            for (let i = Math.max(1, this.fest); i <= n - 3; i++) {
+                this.linksFest[i] = qStueck(this.links[i], this.links[i + 1]);
+                this.rechtsFest[i] = qStueck(this.rechts[i], this.rechts[i - 1]);
+            }
+            this.fest = Math.max(this.fest, Math.max(0, n - 2));
+            for (let i = Math.max(1, this.linieFest.length); i <= n - 3; i++) {
+                this.linieFest[i] = qStueck(this.pts[i], this.pts[i + 1]);
+            }
+            if (this.linieFest.length < Math.max(0, n - 2))
+                this.linieFest.length = Math.max(0, n - 2);
+        }
+    }
+    const halbAn = (halb, i) => {
+        const w = Number(halb[Math.min(i, halb.length - 1)]);
+        return Math.max(0.15, Number.isFinite(w) ? w : 1);
+    };
+    /** Die zwei Konturpunkte zu einem Mittellinienpunkt — Rechnung wie `outline`. */
+    const versatz = (pts, halb, i, n) => {
+        const prev = pts[Math.max(0, i - 1)];
+        const next = pts[Math.min(n - 1, i + 1)];
+        let tx = next[0] - prev[0];
+        let ty = next[1] - prev[1];
+        const len = Math.hypot(tx, ty) || 1;
+        tx /= len;
+        ty /= len;
+        const w = halbAn(halb, i);
+        return [
+            [r2(pts[i][0] - ty * w), r2(pts[i][1] + tx * w)],
+            [r2(pts[i][0] + ty * w), r2(pts[i][1] - tx * w)]
+        ];
+    };
+    /* ===================================================================== *
+     * 2 · DER GLAETTER — stark, wo die Hand zittert; schwach, wo sie eilt
+     * ===================================================================== *
+     *
+     * Ein fester Filter kann nur eines von beidem: entweder er nimmt das
+     * Zittern weg und der Strich haengt hinter dem Stift, oder er bleibt am
+     * Stift und jedes Zittern steht im Papier. Deshalb haengt die Staerke an
+     * der Geschwindigkeit.
+     *
+     * Die drei Zahlen sind gemessen, nicht geraten — `test366` faehrt ein
+     * Zittersignal (0,4 px bei 60 Hz) und einen schnellen Zug hindurch und
+     * haelt beides fest: das Zittern muss deutlich kleiner werden, der
+     * Rueckstand beim schnellen Zug klein bleiben.
+     * --------------------------------------------------------------------- */
+    const ALPHA_LANGSAM = 0.28; /* bei stehender Hand: viel mitteln */
+    const ALPHA_SCHNELL = 0.92; /* im Zug: fast unveraendert durchlassen */
+    const TEMPO_VOLL = 1.1; /* px je ms, ab hier gilt ALPHA_SCHNELL */
+    /**
+     * Ein Glaetter mit Gedaechtnis. Der erste Punkt geht unveraendert durch —
+     * ein Strich, der nicht dort beginnt, wo der Stift aufsetzte, ist falsch.
+     */
+    const glaetter = (start) => {
+        let x = endlich(start[0]);
+        let y = endlich(start[1]);
+        return (p, dt) => {
+            const px = endlich(p[0]), py = endlich(p[1]);
+            const ms = Math.max(1, Number.isFinite(dt) ? dt : 16);
+            const tempo = Math.hypot(px - x, py - y) / ms;
+            const teil = Math.min(1, tempo / TEMPO_VOLL);
+            const alpha = ALPHA_LANGSAM + (ALPHA_SCHNELL - ALPHA_LANGSAM) * teil;
+            x += (px - x) * alpha;
+            y += (py - y) * alpha;
+            return [x, y];
+        };
+    };
+    /**
+     * DER DRUCK BRAUCHT EIN ANDERES WERKZEUG ALS DER ORT — und das war der
+     * teuerste Irrtum dieses Bogens.
+     *
+     * Zuerst stand hier derselbe Filter wie fuer den Ort: ein fester Anteil
+     * (0,35) je Punkt. `test343` wurde davon rot, und zu Recht: ein Bogen von
+     * 13 Punkten, der von 0,15 auf 0,95 steigt und zurueckfaellt, kam
+     * abgeflacht heraus. Der Fueller schwoll nicht mehr an — genau das, was
+     * E351 gebaut hatte, war weg.
+     *
+     * Was hier gebraucht wird, ist kein Mittel, sondern ein MITTLERER WERT:
+     * der Median von drei aufeinanderfolgenden Messungen. Er wirft einen
+     * einzelnen Ausreisser weg (das ist, was ein zappelnder Sensor liefert)
+     * und laesst eine steigende Reihe UNVERAENDERT durch (das ist, was eine
+     * druckende Hand liefert). Beides ist geprueft, nicht behauptet.
+     *
+     * Der Preis ist ein Punkt Verzoegerung. Der ist die Sache wert.
+     */
+    const druckGlaetter = (start) => {
+        const drei = [Number.isFinite(start) ? start : 0.5];
+        return (p) => {
+            drei.push(Number.isFinite(p) ? p : drei[drei.length - 1]);
+            if (drei.length > 3)
+                drei.shift();
+            if (drei.length < 3)
+                return Math.round(drei[drei.length - 1] * 1000) / 1000;
+            const sortiert = drei.slice().sort((a, b) => a - b);
+            return Math.round(sortiert[1] * 1000) / 1000;
+        };
+    };
+    /* ===================================================================== *
+     * 3 · DIE VORHERSAGE — der nasse Schwanz bis zur Spitze
+     * ===================================================================== *
+     *
+     * Zwischen der Bewegung der Hand und dem Bild auf dem Glas liegen immer
+     * ein paar Millisekunden. GoodNotes fuellt sie, indem es ein Stueck
+     * weiterzeichnet, als ginge es so weiter. Das ist eine Vermutung, und
+     * Vermutungen gehoeren gedeckelt:
+     *
+     *   · hoechstens `VORHER_MS` weit,
+     *   · hoechstens `VORHER_PX` lang,
+     *   · und bei einer Richtungsaenderung gar nicht — beim Kehren wuerde
+     *     der Schwanz nach aussen schiessen und ein Haekchen malen, das
+     *     niemand gezogen hat.
+     * --------------------------------------------------------------------- */
+    const VORHER_MS = 14; /* etwa ein Bild bei 72 Hz */
+    const VORHER_PX = 26;
+    const KEHRE = 0.55; /* cos der groessten erlaubten Richtungsaenderung */
+    /**
+     * Ein bis zwei Punkte, die den Strich zur Stiftspitze verlaengern.
+     * Leer, wenn zu wenig bekannt ist oder die Richtung gerade kippt.
+     *
+     * `abstand` ist die gemessene Zeit zwischen den letzten zwei Punkten. Sie
+     * MUSS herein: ohne sie waere die Vorhersage in Punkten gerechnet statt in
+     * Millisekunden, und derselbe Vorlauf waere bei 60 Hz doppelt so lang wie
+     * bei 120 Hz — gemessen 17,5 px statt 8,8 px bei gleichem Zug.
+     */
+    const vorhersage = (pts, ms = VORHER_MS, abstand = 8) => {
+        const n = Array.isArray(pts) ? pts.length : 0;
+        if (n < 3)
+            return [];
+        const a = pts[n - 3], b = pts[n - 2], c = pts[n - 1];
+        const v1x = b[0] - a[0], v1y = b[1] - a[1];
+        const v2x = c[0] - b[0], v2y = c[1] - b[1];
+        const l1 = Math.hypot(v1x, v1y), l2 = Math.hypot(v2x, v2y);
+        if (l2 < 0.3)
+            return [];
+        /* Kippt die Richtung, wird nicht geraten. */
+        if (l1 > 0.3 && (v1x * v2x + v1y * v2y) / (l1 * l2) < KEHRE)
+            return [];
+        const dt = Math.max(1, Number.isFinite(abstand) ? abstand : 8);
+        const weit = Math.min(VORHER_PX, l2 * Math.max(0, Math.min(3, ms / dt)));
+        if (weit < 0.4)
+            return [];
+        const ux = v2x / l2, uy = v2y / l2;
+        /* Zwei Punkte, der zweite gedaempft — so laeuft der Schwanz aus,
+           statt in einer Spitze zu enden. */
+        return [
+            [r2(c[0] + ux * weit * 0.6), r2(c[1] + uy * weit * 0.6)],
+            [r2(c[0] + ux * weit), r2(c[1] + uy * weit)]
+        ];
+    };
+    return { Feder, glaetter, druckGlaetter, vorhersage,
+        ALPHA_LANGSAM, ALPHA_SCHNELL, TEMPO_VOLL,
+        VORHER_MS, VORHER_PX, KEHRE };
+})();
+globalThis.InkStroke = InkStroke;
 
 </script>
 <script>
@@ -46515,6 +46839,28 @@ const Marken = (() => {
         let running = null;
         let runningNode = null;
         let beforeRunning = null;
+        /* ---- DER NASSE STRICH (E376) -----------------------------------------
+         * Gemessen war der Grund fuer die Zaehigkeit eindeutig: bis hierher wurde
+         * bei JEDEM Zeigerereignis der ganze Umriss neu gerechnet — 484,7 ms
+         * Geometrie fuer einen Strich mit 600 Punkten, am Ende 0,774 ms je
+         * Ereignis. Die `Feder` waechst stattdessen — 9,2× schneller ueber den
+         * Strich, 10,1× am Ende, nachgemessen in test366 §2 — und liefert dabei
+         * ZEICHENGLEICH denselben Pfad
+         * wie `InkGeometry.outline` — geprueft in test366, sonst saehe der nasse
+         * Strich anders aus als der trockene.
+         * -------------------------------------------------------------------- */
+        let feder = null;
+        let glatt = null;
+        let druckGlatt = null;
+        let letzteZeit = 0;
+        /* Wo der Zeiger ZULETZT WIRKLICH WAR — ungeglaettet. Beim Absetzen wird
+           der letzte gespeicherte Punkt dorthin gezogen (siehe `finish`). */
+        let rohLetzter = null;
+        /* Ob der laufende Strich gerade als FLAECHE gezeichnet wird (Fueller,
+           Pinsel ab drei Punkten) oder als Linie. Wechselt er die Bauart, wird
+           der Knoten einmal ganz neu gebaut statt sein `d` gesetzt. */
+        let nassFlaeche = false;
+        let bildWunsch = 0;
         let selection = new Set();
         let selectDrag = null;
         const historyUndo = [];
@@ -46885,15 +47231,111 @@ const Marken = (() => {
         const addSample = (event) => {
             if (!running)
                 return;
-            const point = R.zuBlatt(flaeche, event);
-            if (!point)
+            const roh = R.zuBlatt(flaeche, event);
+            if (!roh)
                 return;
+            /* DER DRUCK KOMMT AUS DEM ROHEN PUNKT (E376): der Ersatzdruck fuer
+               Maus und Finger rechnet aus der Geschwindigkeit, und geglaettete
+               Punkte bewegen sich langsamer als die Hand. */
+            const drucken = druckAus(event, roh);
+            const jetzt = Number(event.timeStamp) || letzteZeit;
+            const dt = letzteZeit ? Math.max(1, jetzt - letzteZeit) : 16;
+            letzteZeit = jetzt;
+            /* GEGLAETTET WIRD IMMER, GESPEICHERT NICHT (E376). Der Filter laeuft
+               auch dann weiter, wenn der Punkt unter der Schwelle bleibt — sonst
+               bliebe er bei langsamer Hand fuer immer hinter ihr zurueck. */
+            const point = glatt ? glatt(roh, dt) : roh;
+            rohLetzter = roh;
+            const druck = druckGlatt ? druckGlatt(drucken) : drucken;
             const last = running.pts[running.pts.length - 1];
             if (last && Math.abs(last[0] - point[0]) < 0.6 && Math.abs(last[1] - point[1]) < 0.6)
                 return;
             running.pts.push(point);
-            running.pressure.push(druckAus(event, point));
+            running.pressure.push(druck);
             running.bewegtUm = Date.now();
+            feder?.punkt(point, halbeBreite(running, druck));
+        };
+        /* Die halbe Strichbreite an einer Stelle — dieselbe Rechnung, die
+           `zeichneMarke` fuer den trockenen Fuellerstrich anstellt. Waere sie
+           hier anders, spraenge der Strich beim Absetzen des Stifts. */
+        const halbeBreite = (mark, druck) => {
+            const base = Math.max(0.5, Number(mark?.breite) || BREITEN[1]);
+            return base / 2 * druckFaktor(String(mark?.stil || ''), druck);
+        };
+        /* ---- EIN BILD JE BILD, NICHT JE EREIGNIS (E376) ----------------------
+         * Ein Stift meldet sich bis zu 240-mal je Sekunde, ein Bildschirm zeigt
+         * 60- bis 120-mal. Bis hierher wurde jede Meldung sofort gezeichnet —
+         * bis zu drei Viertel dieser Arbeit sah nie jemand. Jetzt sammelt der
+         * Strich und zeichnet einmal je Bild.
+         * -------------------------------------------------------------------- */
+        const nassZeichnen = () => {
+            if (!running || !feder || !runningNode)
+                return;
+            const alsFlaeche = running.art === 'stift' &&
+                (running.stil === 'fueller' || running.stil === 'pinsel') && feder.laenge() >= 3;
+            if (alsFlaeche !== nassFlaeche) {
+                /* Der Strich wechselt die Bauart — der Knoten wird einmal ganz neu
+                   gebaut, danach genuegt wieder sein `d`. */
+                nassFlaeche = alsFlaeche;
+                runningNode = updateNode(runningNode, nasseMarke());
+                return;
+            }
+            const d = alsFlaeche ? feder.d() : feder.linie();
+            if (d)
+                runningNode.setAttribute('d', d);
+            if (!alsFlaeche)
+                runningNode.setAttribute('stroke-width', String(strokeWidth(running)));
+        };
+        /* Die Marke, wie sie GERADE aussieht — mit mindestens zwei Punkten,
+           damit `zeichneMarke` auch beim Aufsetzen etwas zu zeichnen hat. */
+        const nasseMarke = () => ({ ...running,
+            pts: running.pts.length > 1 ? running.pts : [running.pts[0], running.pts[0]] });
+        /* ---- DER NASSE SCHWANZ (E376) ---------------------------------------
+         * Zwischen der Bewegung der Hand und dem Bild auf dem Glas liegen immer
+         * ein paar Millisekunden — das ist die Luecke, die GoodNotes fuellt.
+         * Der Browser hilft mit `getPredictedEvents()`, wo er kann; sonst rechnet
+         * `InkStroke.vorhersage` selbst weiter.
+         *
+         * DIESE PUNKTE GEHEN NIE IN `running.pts`. Ein vorhergesagter Punkt ist
+         * eine Vermutung ueber die naechsten 14 ms; gespeichert waere er fuer
+         * immer da, und jeder Strich endete mit einem Ueberschuss, den niemand
+         * gezogen hat. `Feder.nass()` zeichnet ihn, `Feder.punkte()` kennt ihn
+         * nicht — test366 haelt genau das fest.
+         * -------------------------------------------------------------------- */
+        const nassenSchwanz = (event) => {
+            if (!feder || !running)
+                return;
+            const druck = running.pressure[running.pressure.length - 1] ?? 0.5;
+            const halb = halbeBreite(running, druck);
+            let pts = [];
+            const vom = typeof event.getPredictedEvents === 'function'
+                ? event.getPredictedEvents() : [];
+            if (vom.length) {
+                for (const p of vom.slice(0, 3)) {
+                    const q = R.zuBlatt(flaeche, p);
+                    if (q)
+                        pts.push(q);
+                }
+            }
+            if (!pts.length) {
+                const jetzt = Number(event.timeStamp) || 0;
+                pts = InkStroke.vorhersage(running.pts, InkStroke.VORHER_MS, letzteZeit && jetzt > letzteZeit ? jetzt - letzteZeit : 8);
+            }
+            feder.nass(pts, pts.map(() => halb));
+        };
+        const bildAnfordern = () => {
+            if (bildWunsch)
+                return; /* ein Bild ist schon bestellt */
+            if (typeof requestAnimationFrame !== 'function') {
+                nassZeichnen();
+                return;
+            }
+            bildWunsch = requestAnimationFrame(() => { bildWunsch = 0; nassZeichnen(); });
+        };
+        const bildAbsagen = () => {
+            if (bildWunsch && typeof cancelAnimationFrame === 'function')
+                cancelAnimationFrame(bildWunsch);
+            bildWunsch = 0;
         };
         /* EIN BILD AUFS BLATT (E357, L115 Punkt 6). Der Weg: Dateiwaehler,
            Datei in die Ablage (in Stuecken, mit dem Blatt als Block — so wandert
@@ -47037,6 +47479,15 @@ const Marken = (() => {
             const mark = running;
             const node = runningNode;
             const before = beforeRunning || snapshot();
+            /* Ein bestelltes Bild waere jetzt ein Bild ohne Strich (E376). */
+            bildAbsagen();
+            const letzterRoh = rohLetzter;
+            feder = null;
+            glatt = null;
+            druckGlatt = null;
+            letzteZeit = 0;
+            nassFlaeche = false;
+            rohLetzter = null;
             running = null;
             runningNode = null;
             beforeRunning = null;
@@ -47063,6 +47514,15 @@ const Marken = (() => {
                     return false;
                 }
                 delete mark.zuletzt;
+                /* DER STRICH ENDET, WO DIE HAND ABHOB (E376) — wie in GoodNotes.
+                   Der Glaetter hinkt naturgemaess hinterher; beim Absetzen waeren
+                   das je nach Tempo zwei bis drei Pixel, und ein Haken, den man
+                   bewusst bis an eine Linie zieht, bliebe kurz davor stehen.
+                   `test345` und `test346` haben genau das gefunden: ein Strich bis
+                   x=300 endete bei 297. Der Anfang ist ohnehin roh (siehe
+                   pointerdown); hier kommt das Ende dazu. */
+                if (letzterRoh)
+                    mark.pts[mark.pts.length - 1] = letzterRoh;
                 const original = mark.pts;
                 const druckRoh = Array.isArray(mark.pressure) ? mark.pressure.map(Number) : [];
                 const mittel = druckRoh.length
@@ -47408,6 +47868,16 @@ const Marken = (() => {
                     running.stil = stil;
                 running.pressure.push(druckAus(event, point));
                 const p0 = running.pressure[0];
+                /* DER AUFSETZPUNKT GEHT UNGEGLAETTET DURCH (E376): ein Strich, der
+                   nicht dort beginnt, wo der Stift das Papier beruehrt hat, ist
+                   falsch — und kein Filter kann das spaeter zurueckholen. */
+                glatt = InkStroke.glaetter(point);
+                rohLetzter = null;
+                druckGlatt = InkStroke.druckGlaetter(p0);
+                letzteZeit = Number(event.timeStamp) || 0;
+                feder = new InkStroke.Feder();
+                feder.punkt(point, halbeBreite(running, p0));
+                nassFlaeche = false;
                 runningNode = zeichneMarke({ ...running, pts: [point, point], pressure: [p0, p0] });
             }
             else {
@@ -47517,13 +47987,13 @@ const Marken = (() => {
             if (running.art === 'stift' || running.art === 'marker') {
                 const coalesced = typeof event.getCoalescedEvents === 'function' ? event.getCoalescedEvents() : [];
                 (coalesced.length ? coalesced : [event]).forEach(addSample);
+                nassenSchwanz(event);
+                bildAnfordern();
+                return;
             }
-            else
-                running.pts[1] = lineal && (running.art === 'line' || running.art === 'arrow')
-                    ? rasten(running.pts[0], point) : point;
-            runningNode = updateNode(runningNode, running.art === 'stift' || running.art === 'marker'
-                ? { ...running, pts: running.pts.length > 1 ? running.pts : [running.pts[0], running.pts[0]] }
-                : running);
+            running.pts[1] = lineal && (running.art === 'line' || running.art === 'arrow')
+                ? rasten(running.pts[0], point) : point;
+            runningNode = updateNode(runningNode, running);
         });
         const beiEnde = (event) => {
             if (aktiverZeiger !== null && event.pointerId !== aktiverZeiger)

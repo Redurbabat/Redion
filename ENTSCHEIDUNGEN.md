@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-371 Entscheidungen, E1 bis E375. Die Nummer ist die Ordnung: eine Entscheidung
+372 Entscheidungen, E1 bis E376. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -429,6 +429,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E373** — Was ein langer Import kostet, steht vorher da — und schweigt sonst (L114 Punkt 7)
 * **E374** — Der Deckel eines handbeschriebenen Hefts zeigt, was daraufsteht (L61 Rest)
 * **E375** — Ein Formen-Werkzeug statt vier (L115 Punkt 9, Rest)
+* **E376** — Der Stift zeichnet flüssig: der Umriss wächst, statt neu zu entstehen
 
 ---
 
@@ -30187,3 +30188,154 @@ Zwei Bilder angesehen: Rechner und Telefon.
 
 MUTATIONSPROBE, zweimal: die Wahl nicht merken → 26/28. Der Formen-Knopf
 leuchtet nicht mit → 27/28.
+
+
+════════════════════════════════════════════════════════════════════════════
+E376 — Der Stift zeichnet flüssig: der Umriss wächst, statt neu zu entstehen
+════════════════════════════════════════════════════════════════════════════
+
+Redurs Satz war kurz: „stift verbessern wie goodnotes solte es sein
+flüssiger". Bevor daraus Code wurde, ist gemessen worden (§36, §45) — und
+die Messung war eindeutiger als jede Vermutung:
+
+    Ein Füllerstrich mit 600 Punkten kostete 484,7 ms allein an Geometrie.
+    Der Grund: bei JEDEM Zeigerereignis entstand der ganze Umriss neu.
+    Am Ende des Strichs kostete ein einzelnes Ereignis 0,774 ms und
+    erzeugte eine `d`-Zeichenkette von rund 17 kB — über den Strich
+    hinweg 10,2 MB Zeichenketten für EINEN Strich.
+
+DAS IST DIE UNFLÜSSIGKEIT, UND SIE WÄCHST MIT DEM STRICH. Der Anfang eines
+Satzes läuft, das Ende hängt. Genau so beschreibt ein Mensch den
+Unterschied zu GoodNotes — und genau deshalb hilft „schnellerer Rechner"
+nicht: die Arbeit wächst quadratisch mit dem, was man schreibt.
+
+WAS ENTSCHIEDEN WURDE
+─────────────────────
+Ein neuer reiner Kern `src/core/ink/stroke.ts` (`InkStroke`) mit drei
+Stücken, und ein viertes im Bereich:
+
+**1 · `Feder` — der Umriss wächst.** `InkGeometry.outline` rechnet den
+Versatz eines Punktes aus seinen NACHBARN; damit steht der Versatz von
+Punkt i erst fest, wenn i+1 da ist, und das Bogenstück zwischen i und i+1
+erst mit i+2. Die Feder hält genau diese zwei Punkte Rückstand offen und
+friert alles davor ein. Je Punkt fällt eine feste Menge Arbeit an statt
+einer wachsenden.
+
+    600 Punkte, ganzer Strich   263,7 ms  →  28,6 ms      9,2×
+    letztes Ereignis            805 µs    →  80 µs       10,1×
+
+**2 · `glaetter` — stark, wo die Hand zittert; schwach, wo sie eilt.** Ein
+fester Filter kann nur eines von beidem. Deshalb hängt die Stärke an der
+Geschwindigkeit: bei stehender Hand 0,28, im Zug 0,92. Gemessen: das
+Zittern wird 5,0× kleiner, der Rückstand im schnellen Zug bleibt bei
+2,72 px. Auf der echten Seite: derselbe zittrige Zug hinterlässt 60 Punkte
+ohne und 12 mit Glätter — 5× weniger Daten für denselben Strich, und man
+SIEHT es (bilder/e376-glaetter-vergleich.png).
+
+**3 · `vorhersage` — der nasse Schwanz bis zur Spitze.** Zwischen der
+Bewegung der Hand und dem Bild auf dem Glas liegen immer ein paar
+Millisekunden. Der Browser hilft mit `getPredictedEvents()`, wo er kann;
+sonst rechnet der Kern selbst weiter. Gedeckelt auf 14 ms und 26 px, und
+bei einer Richtungsänderung gar nicht — beim Kehren schösse der Schwanz
+nach aussen und malte ein Häkchen, das niemand gezogen hat.
+
+**4 · Ein Bild je Bild, nicht je Ereignis.** Ein Stift meldet sich bis zu
+240-mal je Sekunde, ein Bildschirm zeigt 60- bis 120-mal. Bis hierher
+wurde jede Meldung sofort gezeichnet; bis zu drei Viertel dieser Arbeit
+sah nie jemand. Jetzt sammelt der Strich und zeichnet in einem
+`requestAnimationFrame`.
+
+WARUM DIE GLEICHHEIT DER GEFÄHRLICHSTE PUNKT WAR
+────────────────────────────────────────────────
+Nicht die Geschwindigkeit, sondern die Form. Wäre der nasse Strich nur
+„ungefähr" derselbe wie der trockene, spränge er beim Absetzen des Stifts —
+und das wäre schlimmer als die alte Zähigkeit. `test366 §1` legt beide Wege
+über 400 zufällige Striche nebeneinander und vergleicht die `d`-Zeichenkette
+ZEICHEN FÜR ZEICHEN, dazu die Grenzfälle mit 1, 2, 3 und 4 Punkten und den
+Fall zweier gleicher Punkte (das Aufsetzen des Stifts, wo eine Tangente
+durch Null teilt).
+
+DIE VORHERSAGE DARF NIE IN DIE DATEN
+────────────────────────────────────
+Ein vorhergesagter Punkt ist eine Vermutung über die nächsten 14 ms.
+Landete er in `marken`, wäre er für immer da, und jeder Strich endete mit
+einem Überschuss, den niemand gezogen hat. Deshalb kennt die Feder zwei
+getrennte Wege: `punkt()` schreibt in den Strich, `nass()` nur ins Bild.
+Geprüft im Kern (§5) UND auf der echten Seite (§7: der gezeichnete Strich
+darf nicht über den Zeiger hinausragen).
+
+ZWEI DINGE, DIE DIE PRÜFLÄUFE GEFUNDEN HABEN — UND DIE OHNE SIE
+IN REDIONS DATEN GELANDET WÄREN
+───────────────────────────────────────────────────────────────
+**Der Druck brauchte ein anderes Werkzeug als der Ort.** Zuerst stand für
+den Druck derselbe Filter wie für den Ort: ein fester Anteil (0,35) je
+Punkt. `test343` wurde davon rot, und zu Recht — ein Bogen von 13 Punkten,
+der von 0,15 auf 0,95 steigt und zurückfällt, kam abgeflacht heraus. Der
+Füller schwoll nicht mehr an; genau das, was E351 gebaut hatte, war weg.
+Der Ersatz ist kein Mittel, sondern ein MITTLERER WERT: der Median von drei
+Messungen wirft einen einzelnen Ausreisser weg (das liefert ein zappelnder
+Sensor) und lässt eine steigende Reihe UNVERÄNDERT durch (das liefert eine
+drückende Hand). Beides wird jetzt geprüft.
+
+Und dahinter steht eine Lehre, die grösser ist als dieser Bogen: die
+Druckglättung war NICHT gemessen. Sie war eine Vermutung neben einer
+Messung — und §36 sagt, was eine Vermutung im Leistungskapitel kostet.
+
+**Der Strich endet, wo die Hand abhob.** Ein Glätter hinkt naturgemäss
+hinterher; beim Absetzen wären das je nach Tempo zwei bis drei Pixel.
+`test345` und `test346` haben es gefunden: ein Strich, der bis x=300
+gezogen wurde, endete bei 297. Ein Haken, den man bewusst bis an eine Linie
+zieht, bliebe kurz davor stehen. Jetzt wird der letzte gespeicherte Punkt
+beim Absetzen auf die WIRKLICHE letzte Zeigerposition gezogen. Der Anfang
+war ohnehin roh — kein Filter darf den Punkt verschieben, an dem der Stift
+das Papier berührt hat.
+
+WAS ES KOSTET
+─────────────
+Die Feder ist eine zweite Stelle, die den Umriss rechnet. Zwei Stellen für
+dieselbe Sache laufen erfahrungsgemäss auseinander (L34) — deshalb ist die
+Gleichheit nicht dokumentiert, sondern GEPRÜFT, und zwar über zufällige
+Eingaben statt über ein Beispiel. Die Gegenprobe zeigt, dass der Wächter
+das kann: eine Tangente aus i statt aus i-1 ergibt einen gültigen, aber
+ANDEREN Umriss — und §1 wird rot.
+
+WAS NICHT GEÄNDERT WURDE
+────────────────────────
+Das Format. `marken` sieht aus wie vorher: `pts`, `pressure`, `breite`,
+`art`, `stil`. Alte Striche zeichnen unverändert, neue auch. Es gibt keine
+Migration, weil es nichts zu migrieren gibt.
+
+ALTERNATIVEN, DIE VERWORFEN WURDEN
+──────────────────────────────────
+**Den nassen Strich in zwei Knoten teilen** (ein langer fertiger Pfad plus
+ein kurzer lebender). Das wäre nochmals schneller, aber beim Marker mit
+`opacity: 0.32` würden sich zwei überlappende Flächen an der Naht doppelt
+verdunkeln — eine sichtbare Naht mitten im Strich.
+
+**Canvas statt SVG.** Ein grösserer Umbau mit eigenem Neuzeichnen,
+eigenem Treffertest und eigenem Druckweg; die gemessenen 9,2× lösen das
+Problem ohne ihn.
+
+DREI PRÜFLÄUFE, DIE E375 LIEGEN LIESS
+─────────────────────────────────────
+Nebenbei gefunden, weil dieser Bogen alle Zeichenläufe zusammen gefahren
+hat: `test344`, `test242` und `test267` klickten noch
+`[data-wz="rectangle"]` beziehungsweise `[data-wz="line"]` — Knöpfe, die
+E375 durch den Formen-Knopf ersetzt hat. `test351` wurde damals umgestellt,
+die drei anderen nicht. Sie liefen dreissig Sekunden lang in einen Knopf,
+den niemand mehr baut, und starben an einer Zeitschranke.
+
+Die Lehre ist dieselbe wie in §45: eine Sache an EINER Stelle reparieren und
+die Nachbarstelle nicht ansehen. Ein `grep` über alle Prüfläufe hätte alle
+drei sofort gezeigt — und dieser Bogen hat ihn nachgeholt.
+
+PRÜFUNG: test366 45/45 (neu, Port 9397) · test343 30/30 · test344 50/50 ·
+test345 43/43 · test346 31/31 · test347 31/31 · test349 30/30 · test350,
+test351, test352, test353, test355, test356, test360 · test242 42/42 ·
+test267 16/16 · test105, test109, test113, test87 grün. Ein Bild angesehen
+und in den Chat gegeben.
+
+MUTATIONSPROBE, dreimal: Tangente aus i statt i-1 → §1 rot (zwei Punkte).
+Die Vorhersage landet in `punkte()` → §5 rot (drei Punkte). Und die
+Druckglättung als gleitendes Mittel → test343 29/30, was den Bogen
+überhaupt erst richtig gemacht hat.

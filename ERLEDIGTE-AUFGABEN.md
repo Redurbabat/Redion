@@ -1795,7 +1795,7 @@ die Zeugnisnote je Semester (E242) und der echte Stundenplan (E243).
 
 <a id="boegen"></a>
 
-## Die Bögen E272–E369
+## Die Bögen E272–E376
 
 * E272 Phase A (Inventar): doku/PREMIUM-SHELL-MATRIX.md angelegt — jeder
   Bandeintrag, jedes Modul, jeder Schalenknopf mit seinem künftigen Ort.
@@ -2951,3 +2951,66 @@ die Zeugnisnote je Semester (E242) und der echte Stundenplan (E243).
   langem versprochen hatte. Die Eingrenzung aus E359 bleibt: ein Rückfall
   wird nicht dadurch behoben, dass man den Bogen davor aufhebt.
   test178 74/74 (vorher 72/74), test351 unverändert 25/25.
+
+* E370 (CLAUDE.md aufräumen): 2469 → 2295 Zeilen, jeder Abschnitt mit einer
+  Marke **[hart]** oder **[Richtwert]**, ein Inhaltsverzeichnis über zwölf
+  Teile, und am Ende ein Zaun „Offene Fragen an Redur" für die fünf Marken,
+  die Claude gesetzt hat, weil irgendetwas dastehen musste. Vier hat Redur
+  am 3. September selbst entschieden (§30, §37, §46, §55.3). Berichtigt
+  wurde, was nicht mehr stimmte: die elf Fächer in §9, `.mts` statt `.mjs`
+  und 323 Läufe in §30/§31, die echte `tsconfig` in §52.6, das LEERE
+  `js-bestand.json` in §54.4, `bilder.mts` in §55.1. §52.19 stand mitten in
+  §53 und steht wieder an seinem Platz.
+* E371 (L10): Die Seitenvorschau am Telefon ist ein Blatt, kein Absprung.
+  `src/schale/ueberlagerung/sheet.ts` neu — Kopf zum Ziehen, drei Höhen,
+  Wischen. Die Datenbank-Zeilenvorschau benutzt es statt der Desktop-Kante.
+  test361 neu (44, Port 9374). Zwei Funde beim Bauen: ohne
+  `setPointerCapture` misst der Zug 490 px vor und nach dem Ziehen (das
+  Blatt wächst unter dem Zeiger weg), und ein Zug, der auf dem Titel
+  beginnt, darf nicht schon beim Aufsetzen abgelehnt werden — er gilt erst
+  nach 12 px nach unten.
+* E372 (L10): Zwei Telefonmarken logen. `--mobile-topbar` sagte 46, der
+  Balken misst 56; `--mobile-nav-height` sagte 56, die Leiste misst 59. Die
+  falsche Zahl traf genau das Gerät, für das sie geschrieben war: am iPhone
+  rechnete die Kerbenregel 46 + 47, und dem Inhalt blieben zehn Pixel zu
+  wenig. test362 neu (18, Port 9383) misst die Marken gegen die echten
+  Elemente statt gegen den Stil.
+* E373 (L114 Punkt 7): Was ein langer Import kostet, steht vorher da.
+  `src/core/jobs/estimate.ts` neu (rein, kennt keine Uhr), Messbuch in
+  `archiveImport.ts`. Der Anlauf sagt „12 Dateien · 96 PDF-Seiten — rund
+  9 Minuten" und SCHWEIGT unter zwanzig Sekunden; er lernt aus jedem Lauf.
+  Ein Startwert ist gemessen (3,4 ms je Textdatei), zwei sind es nicht —
+  das steht als L117 in den Lücken, statt als Zahl zu tun, als wäre sie
+  eine. test363 neu (57, Port 9387).
+* E374 (L61 Rest): Der Deckel eines handbeschriebenen Hefts zeigt, was
+  daraufsteht. `src/core/ink/thumbnail.ts` neu — aus den `marken` des Blatts
+  ein kleiner Umriss, ohne Datei, ohne Migration, und er kann nicht
+  veralten. test364 neu (54, Port 9389). Zweimal tat die CSS-Regel nichts:
+  einmal wegen Spezifität (2 Ebenen gegen 3), einmal weil eine Bearbeitung
+  ein `*/` stehen liess. Beide Male fand es der Wächter, weil er die
+  BERECHNETE Hintergrundfarbe misst und nicht die Klasse.
+* E375 (L115 Punkt 9, Rest): Ein Formen-Werkzeug statt vier. Elf Knöpfe
+  statt vierzehn auf einer Höhe; die Wahl wird gemerkt. Nach aussen heisst
+  das Werkzeug weiter `line`, `arrow`, `rectangle`, `ellipse` — E375 fasst
+  die KNÖPFE zusammen, nicht die Sachen. test365 neu (28, Port 9395).
+  Nachtrag aus E376: `test351` wurde damals umgestellt, `test344`, `test242`
+  und `test267` nicht — sie klickten weiter auf einen Knopf, den es nicht
+  mehr gibt, und starben an einer Zeitschranke. Alle drei gehen jetzt den
+  Weg über „Form"; gefunden, weil E376 alle Zeichenläufe zusammen gefahren
+  hat.
+* E376 (Redurs Auftrag „flüssiger wie GoodNotes"): Der Umriss wächst, statt
+  bei jedem Zeigerereignis neu zu entstehen. Gemessen VOR dem Bauen: 484,7 ms
+  Geometrie für einen Strich mit 600 Punkten, am Ende 0,774 ms je Ereignis
+  und 17 kB `d` — die Zähigkeit wuchs mit dem Strich. `src/core/ink/stroke.ts`
+  neu (rein): `Feder` (9,2× über den Strich, 10,1× am Ende, und ZEICHENGLEICH
+  mit `InkGeometry.outline`), ein geschwindigkeitsabhängiger `glaetter`
+  (Zittern 5× kleiner, 60 → 12 gespeicherte Punkte bei einem zittrigen Zug),
+  ein Median-3 für den Druck und eine gedeckelte `vorhersage`, die NIE
+  gespeichert wird. Dazu ein Bild je Bild statt je Ereignis. test366 neu
+  (45, Port 9397).
+
+  Zwei Dinge fanden die BESTEHENDEN Wächter, und beide wären sonst in den
+  Daten gelandet: ein gleitendes Mittel auf dem Druck machte den Füller flach
+  (test343), und ein geglätteter Strich endete drei Pixel vor der Stelle, an
+  der die Hand abhob (test345, test346). Der Druck bekam den Median, das
+  Strichende wird jetzt auf die wirkliche letzte Zeigerposition gezogen.
