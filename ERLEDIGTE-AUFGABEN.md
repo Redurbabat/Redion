@@ -1795,7 +1795,7 @@ die Zeugnisnote je Semester (E242) und der echte Stundenplan (E243).
 
 <a id="boegen"></a>
 
-## Die Bögen E272–E378
+## Die Bögen E272–E379
 
 * E272 Phase A (Inventar): doku/PREMIUM-SHELL-MATRIX.md angelegt — jeder
   Bandeintrag, jedes Modul, jeder Schalenknopf mit seinem künftigen Ort.
@@ -3037,3 +3037,12 @@ die Zeugnisnote je Semester (E242) und der echte Stundenplan (E243).
   `Cannot assign to read only property 'drehung'` ab. test368 neu (15, Port
   9399). Dabei aufgefallen: test357 war seit E373 rot, weil der ZIP-Auftrag
   seither `schaetzungMs` trägt.
+* E379 (der letzte Ort derselben Messreihe): Neuzeichnen fragt nach der
+  Identität, nicht nach dem Wortlaut. `redraw()` rief je Marke
+  `JSON.stringify` — 5,95 ms bei 800 Strichen, bei jedem Zurück, jeder
+  Haftnotiz, jedem Radierzug. Seit der Regel aus E378 (ersetzen statt
+  ändern) beantwortet `gezeichnet.get(id) !== mark` dieselbe Frage in 17 µs,
+  und zwar SCHÄRFER: zwei gleiche Objekte mit gleichem Inhalt galten früher
+  als unverändert, jetzt wird neu gezeichnet — mehr Arbeit als nötig, nie
+  zu wenig. Gegenprobe: der Abgleich hält jede Marke für unverändert →
+  test350 rot, genau an dem Fall, für den `gezeichnet` gebaut wurde.

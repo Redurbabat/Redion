@@ -5381,6 +5381,12 @@ wächst, statt bei jedem Zeigerereignis neu zu entstehen (9,2× über den
 Strich, 10,1× am Ende). Drei Dinge sind damit NICHT erledigt, und sie
 stehen hier, damit sie niemand für erledigt hält.
 
+0c. **Und das Neuzeichnen auch — seit E379 zu.** `redraw()` fragte je Marke
+   `JSON.stringify` (5,95 ms bei 800 Strichen, bei jedem Zurück). Seit der
+   Regel aus E378 beantwortet die Identität des Objekts dieselbe Frage in
+   17 µs. Damit ist in der Zeichenschicht keine Schleife mehr übrig, die
+   bei einer gewöhnlichen Handlung die ganze Seite ausschreibt.
+
 0b. **Und der Merkzettel fürs Zurück auch — seit E378 zu.** Er klonte bei
    jedem Aufsetzen des Stifts die ganze Seite; auf 800 Strichen 23,4 ms je
    Strich, zweimal (Aufsetzen und Abheben). Jetzt nimmt er die Liste flach
@@ -5430,5 +5436,5 @@ stehen hier, damit sie niemand für erledigt hält.
    der Grund, warum an dieser Stelle nichts mehr ohne Messung geändert
    wird.
 
-Gefunden beim Bauen von E376 am 3. September 2026; die Punkte 0 und 0b
-beim Nachmessen der Nachbarwege (E377, E378) am selben Tag.
+Gefunden beim Bauen von E376 am 3. September 2026; die Punkte 0, 0b und 0c
+beim Nachmessen der Nachbarwege (E377, E378, E379) am selben Tag.

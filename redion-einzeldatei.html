@@ -16075,7 +16075,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 214, inhalt: 'f5f0294703a99891', gebaut: '2026-09-03T10:49:02.115Z' };
+const Stand = { fassung: 217, inhalt: '7dfafd46c39bb800', gebaut: '2026-09-03T11:11:03.658Z' };
 window.Stand = Stand;
 
 </script>
@@ -46938,6 +46938,23 @@ const Marken = (() => {
            vergleicht dagegen und fasst nur an, was anders ist. Wo der Text
            fehlt (ein Strich oder ein Einsetzen haengt seinen Knoten direkt an),
            wird einmal geflickt und dann gemerkt. */
+        /* ---- WAS DER KNOTEN ZEIGT (E358, seit E379 als OBJEKT) ---------------
+         * Die Karte sagt, AUS WELCHER MARKE der Knoten gezeichnet wurde. Bis
+         * E378 stand darin die Marke als Zeichenkette, und `redraw()` schrieb
+         * dafuer bei jedem Durchgang die ganze Seite aus — 5,95 ms bei 800
+         * Strichen, jedes Mal, wenn ein Zurueck, eine Haftnotiz, ein Text oder
+         * ein Radierzug neu zeichnen liess.
+         *
+         * Seit E378 gilt: eine Marke in `marks` wird ERSETZT, nie von innen
+         * geaendert. Damit beantwortet die Identitaet des Objekts genau
+         * dieselbe Frage — und zwar in einem Takt statt in einer Zeichenkette
+         * (17 µs statt 5,95 ms).
+         *
+         * Und sie beantwortet sie SCHAERFER: zwei verschiedene Objekte mit
+         * gleichem Inhalt galten frueher als „unveraendert". Jetzt wird in dem
+         * Fall neu gezeichnet — mehr Arbeit als noetig, aber nie zu wenig. In
+         * die falsche Richtung zu irren ist hier die richtige Richtung.
+         * -------------------------------------------------------------------- */
         const gezeichnet = new Map();
         const fassung = (mark) => JSON.stringify(mark);
         /* `merke` steht hinter JEDEM Weg, der einen Knoten direkt aendert oder
@@ -46946,7 +46963,7 @@ const Marken = (() => {
            Marke ist: nach einem Zurueck ist die Marke wieder die alte, der
            Knoten aber noch der verschobene, und nur ein ehrlicher Eintrag
            laesst `redraw` das sehen (gefunden von test350 §3). */
-        const merke = (mark) => { gezeichnet.set(idOf(mark), fassung(mark)); };
+        const merke = (mark) => { gezeichnet.set(idOf(mark), mark); };
         marks.forEach(mark => {
             const node = zeichneMarke(mark);
             if (node) {
@@ -47089,18 +47106,17 @@ const Marken = (() => {
                 const id = idOf(mark);
                 if (!id || bleibt.has(id))
                     continue;
-                const jetzt = fassung(mark);
                 let node = knoten.get(id) || null;
                 if (!node)
                     node = zeichneMarke(mark);
-                else if (gezeichnet.get(id) !== jetzt)
+                else if (gezeichnet.get(id) !== mark)
                     node = updateNode(node, mark);
                 if (!node) {
                     gezeichnet.delete(id);
                     continue;
                 }
                 bleibt.add(id);
-                gezeichnet.set(id, jetzt);
+                gezeichnet.set(id, mark);
                 const platz = vorheriger ? vorheriger.nextSibling : flaeche.querySelector('[data-sid]');
                 if (node.parentNode !== flaeche || node !== platz)
                     flaeche.insertBefore(node, platz);

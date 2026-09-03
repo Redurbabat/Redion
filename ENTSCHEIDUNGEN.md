@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-374 Entscheidungen, E1 bis E378. Die Nummer ist die Ordnung: eine Entscheidung
+375 Entscheidungen, E1 bis E379. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -432,6 +432,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E376** — Der Stift zeichnet flüssig: der Umriss wächst, statt neu zu entstehen
 * **E377** — Erst der Kasten, dann der Weg: der Radierer fragt nicht mehr jeden Strich ganz
 * **E378** — Der Merkzettel fürs Zurück klont nicht mehr, er friert ein
+* **E379** — Neuzeichnen fragt nach der Identität, nicht nach dem Wortlaut
 
 ---
 
@@ -30530,3 +30531,56 @@ test87, test105.
 MUTATIONSPROBE, zweimal: der Textweg ändert wieder statt zu ersetzen → §2
 rot (zwei Punkte). Der Merkzettel klont wieder → §1 und §3 rot, und §3 zeigt
 den Befund direkt: 11 ms auf der leeren Seite, 97 ms auf der vollen.
+
+
+════════════════════════════════════════════════════════════════════════════
+E379 — Neuzeichnen fragt nach der Identität, nicht nach dem Wortlaut
+════════════════════════════════════════════════════════════════════════════
+
+Der letzte Ort in der Zeichenschicht, an dem noch die ganze Seite
+ausgeschrieben wurde. E358 hatte `redraw()` von „alles wegnehmen und neu
+zeichnen" auf einen Abgleich umgestellt — und der Abgleich fragte je Marke
+`JSON.stringify`:
+
+    400 Striche  2,19 ms je Neuzeichnen
+    800 Striche  5,95 ms je Neuzeichnen
+
+`redraw()` läuft nicht je Strich, sondern auf eine Handlung hin: Zurück,
+Vor, Haftnotiz, Text, Radierzug. 6 ms sind dort kein Ruckeln beim
+Schreiben, aber ein spürbarer Nachlauf bei jedem Zurück — und es war
+vermeidbar geworden.
+
+WARUM ES JETZT GEHT UND VORHER NICHT
+────────────────────────────────────
+Seit **E378** gilt: eine Marke in `marks` wird ERSETZT, nie von innen
+geändert. Damit beantwortet die Identität des Objekts genau dieselbe Frage
+wie der Vergleich der Zeichenketten — „zeigt der Knoten noch diese Marke?"
+— und zwar in einem Takt:
+
+    800 Striche:  5,95 ms  →  17 µs
+
+Vor E378 wäre das falsch gewesen: eine von innen geänderte Marke behält
+ihre Identität, und der Abgleich hätte sie für unverändert gehalten. Genau
+deshalb steht dieser Bogen HINTER jenem und nicht neben ihm.
+
+UND DIE ANTWORT WIRD SCHÄRFER, NICHT UNSCHÄRFER
+───────────────────────────────────────────────
+Zwei verschiedene Objekte mit gleichem Inhalt galten mit der Zeichenkette
+als „unverändert". Mit der Identität wird in dem Fall neu gezeichnet — mehr
+Arbeit als nötig, aber nie zu wenig.
+
+Das ist die richtige Richtung, in die man irrt. Ein Knoten, der zu oft
+gezeichnet wird, kostet Rechenzeit. Ein Knoten, der zu selten gezeichnet
+wird, zeigt etwas, das nicht mehr da ist.
+
+WAS ES KOSTET
+─────────────
+`fassung()` bleibt für den Listenvergleich in `commit()` — dort ist es der
+Rückfall für den Fall, dass eine Marke ersetzt wurde, ohne sich zu
+unterscheiden. Nur `redraw()` und `merke()` kommen ohne aus.
+
+PRÜFUNG: die Zeichenläufe zusammen — test343–347, test349–353, test355–358,
+test360, test365–368, test201, test242, test267, test194. Besonders
+`test350` §3, der den Fall hält, für den `gezeichnet` überhaupt gebaut
+wurde: nach einem Zurück ist die Marke wieder die alte, der Knoten aber
+noch der verschobene.
