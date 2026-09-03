@@ -5620,19 +5620,42 @@ belegt mit `test386` (38 Punkte, sieben Mutationen rot gesehen).
 
 Was noch aussteht, in der Reihenfolge des Berichts:
 
-NÄCHSTER SPRINT (F01, F02, F03, F08, F11, F13, F14)
+NÄCHSTER SPRINT (F01 ✓, F02 halb, F03 halb, F08, F11, F13, F14)
 
-a. **F01 · P1 · Die Navigation blieb im Workspace-Zustand hängen.** Im Test
-   waren Heute, Lernzentrum, Elektro, Bibliothek und Aufgaben sichtbar und
-   anklickbar, der Inhalt blieb aber auf der Übersicht. Noch nicht
-   nachgemessen gegen den heutigen Stand — E272 Phase E hat das „Gehen" ins
-   Register gezogen, es kann also schon zu sein. Erst messen.
+a. **F01 · NACHGEMESSEN, der Befund stimmt so nicht** (E388). Der Bericht
+   sagt, der Inhalt sei nach dem Klick auf der Übersicht geblieben. Am
+   3. September gemessen: er wechselt. `schauplatz` geht von `bibliothek`
+   auf `heute`, die Adresse auf `#welt-lernen-heute`, der Text im
+   Arbeitsraum von 1060 auf 2739 Zeichen. Was der Bericht sah, war E353.
 
-b. **F02 · P1 · Vier Navigationslogiken nebeneinander** — Menüband „Gehen",
-   Seitenleiste, obere Reiter, „Mehr". Das ist der grösste Bogen des ganzen
-   Berichts und der einzige, der eine Entscheidung von Redur braucht: welche
-   ist die primäre? Der Bericht schlägt vor: Rechner = Seitenleiste, Telefon
-   = fünf Pillen, Menüband nur für dokumentbezogene Werkzeuge.
+   Der ECHTE Befund an dieser Stelle war ein anderer und stand nicht im
+   Bericht: am Rechner gab es die fünf Knöpfe gar nicht. `#sidebar` ist
+   seit E272 Phase F `display:none`, und die Kante trug zehn Knöpfe, von
+   denen keiner ein Ort war. Behoben mit E388.
+
+b. **F02 · P1 · zur Hälfte ZU (E388).** Die Orte stehen jetzt oben in der
+   linken Leiste, „Mehr Orte" öffnet den Rest, und der Ort, an dem man
+   steht, ist markiert. Am Telefon trug die untere Leiste die fünf Pillen
+   schon vorher.
+
+   OFFEN BLEIBEN DREI STÜCKE:
+
+   1. **„Gehen" muss aus dem Band.** Es steht noch da und zeigt dasselbe
+      wie die linke Leiste — zwei Wege zum selben Ziel sind genau der
+      Befund. Das Wegnehmen rührt an `test248` und `test384`, die beide
+      Reiter zählen, und bekommt deshalb einen eigenen Bogen.
+   2. **Zwei verschiedene Fünfergruppen.** Gemessen: die linke Leiste und
+      `index.html` sagen „Heute · Lernzentrum · Elektrotechnik ·
+      Bibliothek · Aufgaben", die untere Telefonleiste sagt „Dokumente ·
+      Heute · Lernen · Termine · Mehr". Seit E388 steht die eine Gruppe im
+      Register (`haupt: true`); die Telefonleiste liest sie noch nicht.
+   3. **Der Ortskatalog mischt Orte und Handlungen.** In der Lade hinter
+      „Mehr Orte" stehen 39 Zeilen, darunter „Neue Seite", „Suchen",
+      „Befehle", „App installieren" und „Passwort" — das sind keine Orte.
+      Und „Zeitmesser" steht ZWEIMAL darin, einmal unter „Planung &
+      Lernen" und einmal unter „Weiteres". Beides ist geerbt: dieselbe
+      Liste zeichnet seit E272 der Reiter „Gehen". Sie gehört aufgeräumt,
+      wo sie entsteht, und nicht in der Leiste gefiltert (§8).
 
 c. **F03 · P1 · zur Hälfte ZU (E387).** „Nur die aktive Seite zeigt
    Werkzeuge" ist gebaut und gemessen: von drei gebauten Leisten ist genau

@@ -281,6 +281,86 @@ const Kontextkante = (() => {
   };
 
   /* ══════════════════════════════════════════════════════════════════════
+     DIE ORTE (E388)
+     ----------------------------------------------------------------------
+     WOHIN MAN GEHT, STAND IM BAND. Seit E272 Phase E lag die Navigation im
+     Reiter „Gehen", und seit dem ruhigen Band (E383) liegt sie hinter
+     einem zugeklappten Band: gemessen am 3. September brauchte „Heute" am
+     Rechner zwei Klicks von einem Zustand aus, in dem KEIN Reiter dasteht.
+     Der Prüfbericht nennt es F02, Auftrag 01 nennt es Schritt 2, und beide
+     sagen dasselbe: ein Ort ist kein Werkzeug.
+
+     KEIN ZWEITER KATALOG. Die fünf Hauptwege stehen im Navigationsregister
+     und tragen dort seit E388 `haupt: true`. Alles Übrige holt die Lade
+     aus `Register.menueband.orte()` — derselben Liste, die auch „Gehen"
+     zeichnet. Zwei Listen, die dasselbe behaupten, laufen auseinander
+     (§8, E160).
+
+     UND SIE FRAGT NACH ORTEN, NICHT NACH EINEM REITERBLATT. Der erste
+     Entwurf holte sie über den Reiter „Gehen"; `test272 §14` hat das
+     gefangen, und zwar zu Recht: sobald dieser Reiter das Band verlässt,
+     wäre die Leiste still leer gewesen. `orte()` gibt es, damit die Frage
+     überlebt, wo die Antwort gerade wohnt.
+
+     (Der Name des Reiter-Griffs steht hier bewusst NICHT ausgeschrieben:
+     der Wächter sucht das Wort, nicht den Aufruf — derselbe Stolperstein,
+     den `test272` bei `innerHTML` schon einmal beschreibt.)
+     ══════════════════════════════════════════════════════════════════════ */
+
+  /** Die fünf, die immer dastehen. */
+  const hauptOrte = (): any[] => {
+    try {
+      return (Register?.navigation?.anPlatz?.('oben') || [])
+        .filter((e: any) => e && e.haupt === true && typeof e.tun === 'function');
+    } catch { return []; }
+  };
+
+  /**
+   * Alles andere, wohin man gehen kann — für die Lade hinter „Mehr Orte".
+   *
+   * Die Gruppennamen des Bandes reisen als `unter` mit: die Lade zeichnet
+   * sie als zweite Zeile, und damit steht bei „Wochenrückblick" auch
+   * „Planung & Lernen". Ohne das ist es eine Liste aus zwanzig Wörtern.
+   */
+  const weitereOrte = (): any[] => {
+    const schon = new Set(hauptOrte().map((e: any) => String(e.id)));
+    const raus: any[] = [];
+    try {
+      for (const g of (Register?.menueband?.orte?.() || [])) {
+        for (const e of (g.eintraege || [])) {
+          const id = String(e?.id ?? '');
+          if (!id || schon.has(id) || typeof e.tun !== 'function') continue;
+          raus.push({ id, name: String(e.name ?? id),
+                      zeichen: String(e.zeichen ?? 'dots'),
+                      unter: String(g.gruppe ?? ''), tun: e.tun });
+        }
+      }
+    } catch { /* ohne Bandregister bleibt die Lade leer, aber sie öffnet */ }
+    return raus;
+  };
+
+  /** Der sechste Knopf: seltene Ziele, hinter einer Lade. */
+  const MEHR_ORTE = { bereich: '*', id: 'mehr-orte', name: 'Mehr Orte',
+                      zeichen: 'compass', liefern: () => weitereOrte() };
+
+  /**
+   * Welcher der fünf Orte gerade gilt.
+   *
+   * `App.schauplatz()` meldet einen Bezeichner; die zwei Orte, deren
+   * Bezeichner anders heisst als ihre Registerkennung, sagen es im
+   * Register selbst (`schauplatz`). Ohne Treffer wird NICHTS markiert —
+   * eine Markierung, die immer irgendwo steht, sagt nichts (§55.1).
+   */
+  const ortJetzt = (): string => {
+    let wo = '';
+    try { wo = String(App.schauplatz() || ''); } catch { wo = ''; }
+    if (!wo) return '';
+    const treffer = hauptOrte().find((e: any) =>
+      String(e.schauplatz || e.id) === wo);
+    return treffer ? String(treffer.id) : '';
+  };
+
+  /* ══════════════════════════════════════════════════════════════════════
      DIE KANTE
      ══════════════════════════════════════════════════════════════════════ */
 
@@ -327,6 +407,73 @@ const Kontextkante = (() => {
     return b;
   };
 
+  /** Ein Knopf plus Abstand. Gemessen, nicht geraten: 42 + 2. */
+  const KNOPF_PLATZ = 44;
+
+  /**
+   * WAS NICHT PASST, WIRD NICHT ABGESCHNITTEN (E388).
+   *
+   * Seit die Orte oben Platz brauchen, reicht die Höhe auf kleinen
+   * Bildschirmen nicht mehr für alles. Gemessen auf einem 1280×720-Laptop:
+   * der mittlere Abschnitt bekommt 259 Pixel für 308 — zwei Knöpfe stehen
+   * unter der Kante.
+   *
+   * ERST STAND HIER EIN ROLLBALKEN. Er war nicht zu sehen: Chromium
+   * zeichnet hier Überlagerungsbalken, gemessen `offsetWidth 53 /
+   * clientWidth 53` — der Balken belegt null Pixel und blendet sich nach
+   * dem Rollen aus. Auf dem Bildschirmfoto war schlicht nichts zu sehen,
+   * und das ist genau der Fehler aus §55.1: die Werkzeugleiste, die aus
+   * dem Bild ragt.
+   *
+   * Also gar nicht rollen. Was nicht passt, geht hinter einen `···`-Knopf
+   * in dieselbe Lade, die auch „Mehr Orte" öffnet — ein Knopf, den man
+   * sieht, statt eines Randes, den man nicht sieht.
+   *
+   * DER ABSCHNITT WIRD DAFÜR EIN ZWEITES MAL GEZEICHNET, und zwar erst,
+   * wenn die Masse stehen: `Register.symbole.fuelle` tauscht Platzhalter
+   * gegen SVG, und vorher ist die Höhe eine andere.
+   */
+  const werkzeugeAnpassen = (oben: HTMLElement, knoepfe: any[]): void => {
+    let hoehe = 0;
+    try {
+      if (oben.scrollHeight - oben.clientHeight <= 2) return;   /* passt */
+      hoehe = oben.clientHeight;
+    } catch { return; }
+    if (hoehe < KNOPF_PLATZ * 2) return;   /* zu wenig für eine Aussage */
+
+    /* Ein Platz geht an „Seiten", einer an den `···`-Knopf. */
+    const zeigen = Math.max(0, Math.floor(hoehe / KNOPF_PLATZ) - 2);
+    if (zeigen >= knoepfe.length) return;
+
+    const rest = knoepfe.slice(zeigen);
+    oben.replaceChildren();
+    oben.appendChild(knopfBauen(SEITEN, 'k-seiten'));
+    for (const k of knoepfe.slice(0, zeigen)) {
+      oben.appendChild(knopfBauen(k, 'k-bereich'));
+    }
+    oben.appendChild(knopfBauen({
+      bereich: '*', id: 'mehr-werkzeuge',
+      name: rest.length + (rest.length === 1 ? ' weiteres Werkzeug'
+                                             : ' weitere Werkzeuge'),
+      zeichen: 'dots',
+      /* Ein Werkzeug, das selbst eine Lade öffnet, hat kein `tun` — dann
+         wird SEINE Lade geöffnet statt einer leeren Zeile. */
+      liefern: () => rest.map((k: any) => ({
+        id: k.id, name: k.name, zeichen: k.zeichen,
+        tun: () => {
+          if (typeof k.tun === 'function') {
+            try { (k.tun as any)(); } catch { /* eine tote Zeile bleibt still */ }
+          } else { ladeAuf(k, null); }
+        }
+      }))
+    }, 'k-bereich k-mehr'));
+
+    if (Register?.symbole?.fuelle) {
+      try { Register.symbole.fuelle(oben); }
+      catch { /* ohne Zeichen bleibt der Name im aria-label */ }
+    }
+  };
+
   /**
    * Die Kante für den Ort zeichnen, an dem man gerade steht.
    *
@@ -348,6 +495,22 @@ const Kontextkante = (() => {
     w.hidden = false;
     w.dataset['bereich'] = bereich;
 
+    /* ZUERST DIE ORTE (E388), dann die Werkzeuge des Ortes. Die Reihenfolge
+       ist die Aussage: wohin man geht, steht über dem, was man dort tut. */
+    const orte = document.createElement('div');
+    orte.className = 'k-orte';
+    const hier = ortJetzt();
+    for (const o of hauptOrte()) {
+      const b = knopfBauen(o, 'k-ort');
+      if (hier && String(o.id) === hier) {
+        b.classList.add('ist-hier');
+        b.setAttribute('aria-current', 'page');
+      }
+      orte.appendChild(b);
+    }
+    orte.appendChild(knopfBauen(MEHR_ORTE, 'k-ort k-mehr'));
+    w.appendChild(orte);
+
     const oben = document.createElement('div');
     oben.className = 'k-oben';
     oben.appendChild(knopfBauen(SEITEN, 'k-seiten'));
@@ -363,6 +526,11 @@ const Kontextkante = (() => {
       try { Register.symbole.fuelle(w); }
       catch { /* ohne Zeichen bleibt der Name im aria-label */ }
     }
+
+    /* ERST NACH DEM ZEICHNEN DER SYMBOLE MESSEN. Vorher stehen Platzhalter
+       da und die Höhe stimmt nicht. */
+    try { requestAnimationFrame(() => werkzeugeAnpassen(oben, knoepfe)); }
+    catch { werkzeugeAnpassen(oben, knoepfe); }
 
     /* Eine offene Lade, deren Knopf es hier nicht mehr gibt, muss zu —
        sonst steht sie über einem Bereich, zu dem sie nicht gehört. */

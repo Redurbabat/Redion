@@ -38,6 +38,30 @@ dann die Phasen, dann die Bögen.
 
 ## Aktueller Stand
 
+**3. September 2026 · Ein Ort ist kein Werkzeug (E388, Audit F02)**
+
+> Vor dem Bauen gemessen, und der Bericht stimmte nicht: F01 sagt, der
+> Klick auf „Heute" lasse den Inhalt stehen — er wechselt (`schauplatz`
+> bibliothek → heute, 1060 → 2739 Zeichen). Der ECHTE Befund war ein
+> anderer: am Rechner gab es die fünf Knöpfe gar nicht. `#sidebar` ist seit
+> E272 Phase F `display:none`, die Kante trug zehn Knöpfe und keiner davon
+> war ein Ort, und seit dem ruhigen Band (E383) liegt „Gehen" hinter einem
+> zugeklappten Band.
+> Die Kante hat jetzt drei Abschnitte: die fünf Hauptwege oben (aus dem
+> Register, `haupt: true`), die Werkzeuge des Ortes in der Mitte,
+> KI/Neu/Einstellungen unten. Der Ort, an dem man steht, ist markiert —
+> und NUR er.
+> Zwei Funde nebenbei: die Fünf gab es dreimal und zweimal verschieden
+> (Telefonleiste sagt etwas anderes als Seitenleiste), und der Ortskatalog
+> mischt Orte mit Handlungen und führt „Zeitmesser" doppelt. Beides steht
+> in L123, keines still behoben.
+> Und einer gegen mich selbst: der erste Entwurf liess die Werkzeuge
+> rollen. Gemessen `offsetWidth 53 / clientWidth 53` — Chromium zeichnet
+> hier Überlagerungsbalken, auf dem Bild war NICHTS zu sehen. Was nicht
+> passt, geht jetzt hinter einen „···"-Knopf, der sagt, wie viele.
+> `test387` neu mit 34 Punkten, fünf Mutationen rot; `test272 §14` hat den
+> ersten Entwurf gefangen, bevor er landen konnte.
+
 **30. August 2026 · Holen und Hochladen, je ein Skript (E271)**
 
 > Redur: „eine holt die von github auf laptop und die andere umgekehrt".

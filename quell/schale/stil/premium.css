@@ -462,7 +462,13 @@
 
   /* ── Die Kante ────────────────────────────────────────────────────────── */
   body[data-schale="premium"] #kante{
-    display: flex; flex-direction: column; justify-content: space-between;
+    /* `flex-start` UND NICHT `space-between` (E388). Bis zu den Orten hatte
+       die Kante zwei Kinder, und `space-between` schob sie an die zwei
+       Enden. Mit drei Kindern verteilt es die Lücke ZWEIMAL — die Orte
+       stünden oben, die Werkzeuge in der Bildmitte und der Fuss unten, mit
+       zwei Löchern dazwischen. Der Fuss geht deshalb über `margin-top:auto`
+       nach unten, und der Rest steht zusammen, wo er hingehört. */
+    display: flex; flex-direction: column; justify-content: flex-start;
     min-height: 0; padding: var(--space-2) 0;
     background: var(--bg-side);
     border-right: 1px solid var(--line);
@@ -486,9 +492,33 @@
   body[data-schale="premium"][data-dokument="an"] #main{
     grid-template-columns: 0 minmax(0, 1fr);
   }
-  .k-oben, .k-unten{ display: flex; flex-direction: column; align-items: center; gap: 2px }
+  .k-orte, .k-oben, .k-unten{ display: flex; flex-direction: column;
+                              align-items: center; gap: 2px }
   .k-oben{ overflow-y: auto; scrollbar-width: none; min-height: 0 }
   .k-oben::-webkit-scrollbar{ display: none }
+  /* ── Die Orte, oben (E388) ─────────────────────────────────────────────
+     DREI ABSCHNITTE STATT ZWEI, und nur der mittlere darf schrumpfen. Die
+     Orte oben und KI/Neu/Einstellungen unten stehen immer da; was der Ort
+     an Werkzeugen mitbringt, rollt dazwischen. Ohne `flex:0 0 auto` an den
+     beiden Rändern staucht Flexbox sie gleichmässig mit — gemessen am
+     1280×720-Laptop, wo 263 Pixel frei sind und sechs Ortsknöpfe 264
+     brauchen. Genau ein Pixel zu wenig, und das Auge sieht es nicht: die
+     Knöpfe werden nur alle etwas flacher.
+
+     WAS DANN NICHT MEHR PASST, ROLLT NICHT — es geht hinter den
+     `···`-Knopf, den `werkzeugeAnpassen()` in `context-rail.ts` anhängt.
+     Der Weg über einen Rollbalken war da und ist wieder weg: Chromium
+     zeichnet hier Überlagerungsbalken, gemessen `offsetWidth 53 /
+     clientWidth 53`, und auf dem Bildschirmfoto war nichts zu sehen. */
+  .k-orte, .k-unten{ flex: 0 0 auto }
+  .k-orte{ border-bottom: 1px solid var(--line); padding-bottom: var(--space-2);
+           margin-bottom: var(--space-2) }
+  /* §38: der Ort, an dem man steht, ist nicht NUR an der Farbe zu erkennen
+     — er trägt den Strich links und `aria-current="page"`. */
+  .k-knopf.k-ort.ist-hier{
+    color: var(--gold-tinte); background: var(--gold-glass);
+    box-shadow: inset 2px 0 0 var(--gold);
+  }
 
   /* 42 × 42 UND NICHT 44 (§37). Die Fingerregel gilt für Finger; die Kante
      gibt es unter 761 px gar nicht, und test114 misst bei 428 und 390 px.
@@ -510,7 +540,8 @@
     box-shadow: inset 2px 0 0 var(--gold);
   }
   .k-knopf svg{ width: 19px; height: 19px }
-  .k-unten{ border-top: 1px solid var(--line); padding-top: var(--space-2) }
+  .k-unten{ border-top: 1px solid var(--line); padding-top: var(--space-2);
+            margin-top: auto }
 
   /* ── Die Lade ─────────────────────────────────────────────────────────
      Sie LIEGT ÜBER dem Inhalt und schiebt ihn nicht. Beim Schieben rutscht

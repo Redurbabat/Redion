@@ -42,7 +42,32 @@ mehr gibt.
 
 ## Was jetzt offen ist
 
-Fünf Punkte, jeder nachgesehen am 3. September 2026.
+Sechs Punkte, jeder nachgesehen am 3. September 2026.
+
+### 0 · Der Prüfbericht vom 3. September, was davon noch aussteht
+
+**Ziel** — die verbleibenden Befunde des UX-Audits schliessen. Der
+Sofort-Block ist zu (E386), F01 richtiggestellt und F02 zur Hälfte (E388).
+
+**Was noch offen ist**, in dieser Reihenfolge:
+
+```txt
+F02 Rest   „Gehen" aus dem Band nehmen — rührt an test248 und test384
+           die untere Telefonleiste an `haupt: true` hängen
+           den Ortskatalog von Handlungen trennen, „Zeitmesser" doppelt
+F03 Rest   Einzelseite/Fortlaufend — braucht Redurs Zustimmung (gegen E299)
+F08        das KI-Seitenfeld startet im Dokument eingeklappt
+F11        19 Einstellungskategorien auf sechs Obergruppen
+F13        Release-Gate über 360×800, 390×844, 428×926 und Querformat
+F14        Werkzeugdichte am Telefon — erst messen, ob E356 reicht
+F09 F10 F12 F17 F18   Politur
+```
+
+**Wo** — steht ausführlich in `LUECKEN.md` unter L123.
+
+**Priorität** — hoch; es ist die Liste, an der gerade gearbeitet wird.
+
+---
 
 ### 1 · Cloudflare wirklich aufsetzen — **braucht Redur**
 

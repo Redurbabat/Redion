@@ -1092,6 +1092,27 @@ Register.menueband = (() => {
     return folge.map(g => ({ gruppe: g, eintraege: nach.get(g)! }));
   };
 
+  /**
+   * DIE ORTE — wohin man gehen kann (E388).
+   *
+   * Derselbe Katalog, den der Reiter „Gehen" zeichnet, unter einem Namen,
+   * der von einem Ort spricht und nicht von einem Reiterblatt.
+   *
+   * WARUM DAS EINEN EIGENEN NAMEN BRAUCHT. Die linke Leiste zeigt seit
+   * E388 die Orte, und sie holte sie zuerst über `inReiter('gehen')`.
+   * `test272 §14` fing das: die Kante darf sich nicht an ein Reiterblatt
+   * hängen. Der Wächter hat recht, und zwar nicht formal — sobald „Gehen"
+   * das Band verlässt (und genau dahin geht der Weg), wäre die Leiste
+   * still leer gewesen.
+   *
+   * Der EINTRAG bleibt am Feld `reiter: 'gehen'` hängen; das ist seine
+   * Ablage im Register, nicht seine Anzeige. Ob das Band einen Reiter
+   * dafür zeigt, entscheidet `reiter()` — und wenn es keinen mehr zeigt,
+   * liefert `orte()` weiterhin dieselbe Liste.
+   */
+  const orte = (): Array<{ gruppe: string; eintraege: BandEintrag[] }> =>
+    inReiter('gehen');
+
   /** Die Reiter, die überhaupt etwas zu zeigen haben. */
   const reiter = (): BandReiter[] => {
     const belegt = new Set(alle().map(e => e.reiter));
@@ -1102,6 +1123,6 @@ Register.menueband = (() => {
 
   const anzahl = (): number => alle().length;
 
-  return { REITER, reiter, alle, inReiter, eines, anzahl,
+  return { REITER, reiter, alle, inReiter, orte, eines, anzahl,
            melde, meldeLieferant, nimmZurueck, nimmZurueckLieferant };
 })();

@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-383 Entscheidungen, E1 bis E387. Die Nummer ist die Ordnung: eine Entscheidung
+384 Entscheidungen, E1 bis E388. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -31345,3 +31345,107 @@ Prüfung: `pruefungen/lauf/test386.mts`, jetzt 41 Punkte. Zwei Mutationen rot
 gesehen (§55.2): die CSS-Regel weg → drei sichtbare Leisten; das Markieren
 beim Öffnen weg → gar keine sichtbare Leiste, der Lauf läuft in den Timeout.
 Mit einem Telefonbild belegt (§55.3): Seite 2 fängt jetzt mit dem Papier an.
+
+================================================================================
+E388 — Ein Ort ist kein Werkzeug: die Orte gehören in die linke Leiste
+================================================================================
+3. September 2026 · Audit F02, Auftrag 01 Schritt 2 von 5
+
+BEFUND, gemessen am Rechner (1360×900), bevor etwas gebaut wurde:
+
+    Seitenleiste            display:none seit E272 Phase F
+    Kante, 10 Knöpfe        Seiten · Übersicht · Notizhefte · Aufgaben ·
+                            Alle Seiten · Suchen · Zuletzt geöffnet ·
+                            KI · Neu · Einstellungen
+                            — kein einziger Ort darunter
+    Band zugeklappt         Werkzeuge · Suchen · KI · Konto — kein Ort
+    Weg zu „Heute"          zwei Klicks, der erste ins Band hinein
+
+Wohin man geht, stand seit E272 Phase E im Reiter „Gehen". Das war eine
+Entscheidung mit einem guten Grund — die Seitenleiste zeigte 52 Knöpfe im
+Startbild, die Kante zeigt sechs bis zehn. Seit dem ruhigen Band (E383)
+liegt „Gehen" aber hinter einem ZUGEKLAPPTEN Band: der Grundzustand am
+Rechner trägt gar keinen Reiter mehr.
+
+Der Prüfbericht nennt es F02 („vier Navigationslogiken nebeneinander"),
+Auftrag 01 nennt es Schritt 2 von fünf („die 17 Ortsknöpfe in die linke
+Leiste"), und beide sagen denselben Satz: ein Ort ist kein Werkzeug.
+
+UND F01 STIMMT NICHT, so wie er dasteht. Der Bericht sagt, die Navigation
+sei „im Workspace-Zustand hängengeblieben" — der Inhalt habe sich nach dem
+Klick nicht geändert. Nachgemessen: er ändert sich. `schauplatz` geht von
+`bibliothek` auf `heute`, die Adresse auf `#welt-lernen-heute`, der Text im
+Arbeitsraum von 1060 auf 2739 Zeichen. Was der Bericht sah, war E353 und
+vermutlich die schmale Anordnung. Der Befund wird deshalb nicht behoben,
+sondern richtiggestellt.
+
+WAS ENTSCHIEDEN WURDE
+
+Redur hat F02 mit „Wie der Bericht vorschlägt" beantwortet: Rechner =
+Seitenleiste, Telefon = fünf Pillen, Menüband nur für dokumentbezogene
+Werkzeuge, „Mehr" nur für seltene Ziele.
+
+Am Telefon war das schon da: die untere Leiste trägt fünf Pillen
+(Dokumente · Heute · Lernen · Termine · Mehr, je 73 × 48 px). Am Rechner
+IST die linke Leiste die Seitenleiste dieser App — 54 Pixel Kante mit einer
+Lade daneben, die Anatomie eines Aktivitätsbalkens. Ihr fehlten die Orte.
+
+Die Kante hat deshalb jetzt DREI Abschnitte statt zwei:
+
+    oben     die fünf Hauptwege + „Mehr Orte"     stehen immer
+    mitte    die Werkzeuge des Ortes              geben nach
+    unten    KI · Neu · Einstellungen             stehen immer
+
+KEIN ZWEITER KATALOG (§8). Die fünf tragen im Navigationsregister
+`haupt: true`; „Mehr Orte" öffnet dieselbe Liste, die auch „Gehen"
+zeichnet, über den neuen Griff `Register.menueband.orte()`.
+
+DASS ES DEN GRIFF GIBT, IST EIN FUND VON `test272`. Der erste Entwurf holte
+die Liste über den Reiter „Gehen". §14 des Laufs verbietet der Kante genau
+das — und nicht formal: sobald dieser Reiter das Band verlässt (und dahin
+geht der Weg), wäre die Leiste still leer gewesen. Ein Wächter, der einen
+Fehler fängt, bevor er entsteht.
+
+DIE FÜNF GAB ES DREIMAL, UND ZWEIMAL VERSCHIEDEN. Gemessen: `index.html`
+markiert fünf Zeilen mit `data-ruhig="bleibt"` (Heute, Lernzentrum,
+Elektrotechnik, Bibliothek, Aufgaben), die untere Telefonleiste zeigt fünf
+andere (Dokumente, Heute, Lernen, Termine, Mehr), und test248 §4 führt eine
+dritte. Ab hier stehen sie einmal, im Register. Die Telefonleiste zieht noch
+nicht nach — das ist der nächste Schritt und steht in L123.
+
+WAS NICHT PASST, WIRD NICHT ABGESCHNITTEN
+
+Sechs Ortsknöpfe kosten 264 Pixel. Auf einem 1280×720-Laptop hat die Kante
+683 Pixel, und danach bleiben den Werkzeugen 259 für 308 — zwei Knöpfe
+standen unter der Kante.
+
+    Erster Versuch: rollen lassen. Gemessen `offsetWidth 53 / clientWidth
+    53` — Chromium zeichnet hier Überlagerungsbalken, die null Pixel
+    belegen und sich nach dem Rollen ausblenden. Auf dem Bildschirmfoto war
+    NICHTS zu sehen. Das ist genau §55.1: die Werkzeugleiste, die aus dem
+    Bild ragt, nur diesmal selbst gebaut.
+
+    Zweiter Versuch, und der gilt: was nicht passt, geht hinter einen
+    „···"-Knopf in dieselbe Lade wie „Mehr Orte". Er sagt, wie viele
+    dahinterliegen („3 weitere Werkzeuge"), und er steht NUR da, wenn
+    wirklich etwas dahinterliegt — bei 900 px Höhe gibt es ihn nicht.
+
+WAS ES KOSTET
+────────────────────────────────────────────────────────────────────────
+Sechs Knöpfe mehr in der Kante; auf kleinen Bildschirmen dafür ein
+Überlaufknopf, wo vorher alle Werkzeuge nebeneinanderstanden. Keine Daten,
+kein Feldname, keine Migration. „Gehen" bleibt vorläufig im Band — das
+Wegnehmen ist der nächste Bogen und rührt an test248 und test384.
+
+Dateien: `src/register/navigation.ts` (Felder `haupt` und `schauplatz`),
+`src/register/menueband.ts` (`orte()`), `src/schale/aufbau/context-rail.ts`,
+`quell/schale/stil/premium.css`.
+
+PRÜFUNG: `pruefungen/lauf/test387.mts`, neu, 34 Punkte. Fünf Mutationen rot
+gesehen (§55.2): `haupt: true` bei einem Ort weg → 5 rot; die Orte-Reihe
+nicht angehängt → §1 ganz rot; die Markierung weg → 3 rot; der Überlauf
+nicht verstaut → 4 rot, darunter „es rollt trotzdem nichts: ist 47";
+`flex: 0 0 auto` weg → 1 rot. Dazu grün: test272 (der Wächter, der den
+ersten Entwurf gefangen hat), test87, test105, test109, test114, test222,
+test248, test273, test285, test384, test385, test386. Mit zwei Bildern
+belegt (§55.3): 1360×900 und 1280×720.
