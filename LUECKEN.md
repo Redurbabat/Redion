@@ -5403,6 +5403,13 @@ stehen hier, damit sie niemand für erledigt hält.
    stehen, weil die Stelle zeigt, wo man in dieser Schicht als Nächstes
    suchen würde: überall dort, wo eine Schleife über ALLE Marken läuft.
 
+0d. **Nachgesehen und in Ordnung: der Weg in die Ablage.** `save()` schreibt
+   NICHT je Strich in IndexedDB — `Store.updateBlock` legt den Block in eine
+   Warteliste, und `flush` schreibt gebündelt nach 400 ms
+   (`KONSTANTEN.SCHREIB_PAUSE_MS`). Der einzige Anteil, der sofort läuft,
+   ist ein Zähler (`datenGeaendert`). Steht hier, damit niemand die Stelle
+   noch einmal untersucht: sie war nie das Problem.
+
 1. **Der letzte Rest ist die Zeichenkette selbst — 83 µs bei 600 Punkten.**
    Die Geometrie kostet nichts mehr; was bleibt, ist das Erzeugen einer
    17 kB langen `d`-Angabe je Bild. Das ist ein Prozent eines Bildes bei
