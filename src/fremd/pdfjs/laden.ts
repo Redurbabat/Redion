@@ -47,9 +47,49 @@ const PdfFremd = (() => {
   };
 
   /** Einmal auspacken, dann behalten. Gibt das pdf.js-Modul zurück. */
+  /**
+   * DIE BYTES ERST HOLEN, WENN SIE GEBRAUCHT WERDEN (E389).
+   *
+   * `daten.js` ist 717 KB roh und 527 KB über die Leitung — der grösste
+   * Einzelposten des ganzen Starts und ein Fünftel von allem. Bis zum
+   * 4. September lud `index.html` sie mit einem gewöhnlichen `<script
+   * src>`, also bei JEDEM Start, auch wenn nie eine PDF geöffnet wurde.
+   * Gemessen mobil gedrosselt (4× CPU, Slow 4G): 2607 KB gesamt, und
+   * davon gingen 527 auf diese eine Datei.
+   *
+   * EIN `<script>`-ELEMENT UND KEIN `fetch`. Redion muss sich per
+   * Doppelklick öffnen lassen (§6) — unter `file://` scheitert `fetch`
+   * an der Herkunftsprüfung, ein eingehängtes Skript nicht.
+   *
+   * IN DER EINZELDATEI GIBT ES NICHTS ZU HOLEN: dort setzt `bauen.mts`
+   * die Bytes direkt ein, `PDFJS_EINGEPACKT` steht also schon da, und
+   * diese Funktion kehrt sofort zurück.
+   *
+   * OFFLINE BLEIBT ES OFFLINE: `daten.js` steht weiterhin im GRUNDSTOCK
+   * von `sw.ts`, wird also beim ersten Besuch im Hintergrund abgelegt.
+   * Das Nachladen bedient dann der Zwischenspeicher, nicht das Netz.
+   */
+  const bytesHolen = (): Promise<void> => new Promise((ja, nein) => {
+    if (typeof PDFJS_EINGEPACKT !== 'undefined') { ja(); return; }
+    if (typeof document === 'undefined') {
+      nein(new Error('Die PDF-Bibliothek lässt sich hier nicht nachladen.')); return;
+    }
+    const s = document.createElement('script');
+    s.src = 'quell/fremd/pdfjs/daten.js';
+    s.addEventListener('load', () => {
+      if (typeof PDFJS_EINGEPACKT === 'undefined') {
+        nein(new Error('quell/fremd/pdfjs/daten.js wurde geladen, ist aber leer.'));
+      } else ja();
+    });
+    s.addEventListener('error', () => nein(new Error(
+      'Die PDF-Bibliothek fehlt — quell/fremd/pdfjs/daten.js liess sich nicht laden.')));
+    document.head.appendChild(s);
+  });
+
   const laden = (): Promise<any> => {
     if (versprechen) return versprechen;
     versprechen = (async () => {
+      await bytesHolen();
       if (typeof PDFJS_EINGEPACKT === 'undefined')
         throw new Error('Die PDF-Bibliothek fehlt — quell/fremd/pdfjs/daten.js wird nicht geladen.');
       if (typeof DecompressionStream === 'undefined')

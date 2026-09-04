@@ -5698,3 +5698,70 @@ WAS DER BERICHT NICHT WISSEN KONNTE: er prüfte E353. Seither sind E354–E387
 dazugekommen, darunter E384 (das Dokument ist der ganze Bildschirm) und
 E296/E299 am PDF. Vor jedem dieser Punkte gehört deshalb eine Messung gegen
 den HEUTIGEN Stand, nicht gegen den Bericht.
+
+
+================================================================================
+L124 — Der Start holt 2081 KB, und daran ändert keine Ladeart etwas
+================================================================================
+4. September 2026 · gefunden beim Bauen von E389
+
+E389 hat den Start von 2607 auf 2081 KB (gzip) gebracht und ungedrosselt von
+5051 auf 556 ms. Gedrosselt bleiben 12,4 Sekunden bis DOMContentLoaded, und
+der Grund ist einfach: auf „Slow 4G" sind 2081 KB rund zehn Sekunden reine
+Übertragung. Es müssten WENIGER BYTES werden; wie sie geladen werden, ist
+ausgereizt.
+
+GEMESSEN, 184 Skripte, die zehn grössten:
+
+    122 KB  bereiche/datenbanken/steuerung.js
+     96 KB  schale/stil/bausteine.css
+     64 KB  schale/aufbau/schale.js
+     61 KB  bereiche/hilfe/wissensseiten.js
+     48 KB  kern/ablage/indexdb.js
+     48 KB  register/elektroformeln.js
+     47 KB  bereiche/editor/ansicht/editor.js
+     46 KB  bereiche/wissen/lernwelt.js
+     43 KB  bereiche/wissen/werkzeuge.js
+     40 KB  bereiche/dateien/ausgeben.js
+
+Danach ein langer Schwanz. Es gibt also keine zweite fette Datei, die man
+wie pdf.js herausnehmen könnte — 1848 KB verteilen sich auf 184 Stücke.
+
+DER NÄCHSTE HEBEL WÄRE, GANZE BEREICHE ERST BEIM BETRETEN ZU LADEN. Wer
+nie das Elektro-Formelheft öffnet, braucht seine 48 KB nicht; wer nie eine
+Datenbank anlegt, die 122 KB der Steuerung nicht. `Register.module` weiss
+schon, welcher Bereich welcher ist — die Kenntnis ist also da.
+
+WARUM DAS NICHT EINFACH GEBAUT WIRD: es rührt an §5 (Bereiche kennen
+einander nicht — aber sie kennen einander AUCH NICHT, wenn sie noch gar
+nicht geladen sind) und an §7 (`start.js` ist der einzige Einstiegspunkt).
+Jeder Aufruf über einen globalen Namen — und davon lebt diese App, siehe
+`test87 §8` — müsste vorher wissen, ob sein Modul schon da ist. Das ist
+kein Bogen, das ist ein Umbau, und er gehört Redur.
+
+Ein billigerer Zwischenschritt, der nichts an der Architektur rührt: den
+Dienstarbeiter den Grundstock im HINTERGRUND holen lassen statt im ersten
+Zug. Beim zweiten Besuch kommt ohnehin alles aus dem Zwischenspeicher —
+gemessen ist bisher nur der kalte erste Besuch, und den misst auch
+PageSpeed.
+
+
+================================================================================
+L125 — Der Rundgang zeigt auf einen Reiter, den man nicht sieht
+================================================================================
+4. September 2026 · gefunden beim Bauen von E389
+
+`test61` ist rot, zwei Punkte: „Das Loch liegt auf dem Ziel" und „Und ist
+sichtbar". NACHGEMESSEN IN EINEM ARBEITSBAUM auf dem Stand davor — dort
+ebenfalls rot. Es ist also kein Nachlauf der Leistungsarbeit.
+
+Der Grund ist E383: der erste Schritt der Führung zeigt auf
+`[data-mb-reiter="gehen"]`, und im ruhigen Band steht dieser Reiter gar
+nicht da. `stellen()` versteckt das Loch, wenn das Ziel fehlt — genau die
+stille Sorte Fehler, die `rundgang.ts` in seinem eigenen Kopf beschreibt:
+„neun Schritte ohne Loch sehen aus wie eine Führung, zeigen aber auf
+nichts."
+
+ZU TUN: der erste Schritt gehört auf die Orte in der linken Leiste (E388) —
+die stehen immer da. Am Telefon auf die untere Fünferleiste. Und `test61`
+zieht den Anker mit, wie sein eigener Kommentar es verlangt.

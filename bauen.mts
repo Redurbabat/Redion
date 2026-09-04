@@ -59,8 +59,45 @@ html = html.replace(/<link rel="stylesheet" href="([^"]+)">/g,
   (_m: string, datei: string) =>
     '<style>\n/* ===== ' + datei + ' ===== */\n' + cssMitImports(datei) + '\n</style>');
 
-/* Skripte einsetzen — in der Reihenfolge, in der sie im HTML stehen */
-html = html.replace(/<script src="(quell\/[^"]+)"><\/script>/g,
+/* DIE PDF-BYTES IN DIE EINZELDATEI (E389).
+ *
+ * `index.html` lädt `quell/fremd/pdfjs/daten.js` seit dem 4. September NICHT
+ * mehr über ein `<script src>` — 527 KB über die Leitung bei jedem Start,
+ * für etwas, das nur beim Öffnen einer PDF gebraucht wird. Im Ordnerbetrieb
+ * hängt `laden.js` die Datei bei Bedarf selbst ein.
+ *
+ * DIE EINZELDATEI KANN DAS NICHT: sie hat keinen Ordner neben sich, aus dem
+ * sich nachladen liesse. Also werden die Bytes hier eingesetzt, an genau der
+ * Stelle, an der die Marke steht — vor `laden.js`, damit `PDFJS_EINGEPACKT`
+ * dasteht, bevor jemand danach fragt.
+ *
+ * WENN DIE MARKE FEHLT, BRICHT DER BAU AB. Ein stilles Weglassen wäre eine
+ * Einzeldatei, die aussieht wie immer und beim ersten PDF sagt „die
+ * Bibliothek fehlt" — die Sorte Fehler, die niemand beim Bauen bemerkt. */
+const PDF_MARKE = /<!-- pdfjs-daten:[\s\S]*?-->/;
+if (!PDF_MARKE.test(html)) {
+  throw new Error('bauen.mts: die Marke „pdfjs-daten" fehlt in index.html — ' +
+    'ohne sie hätte die Einzeldatei keine PDF-Bibliothek.');
+}
+html = html.replace(PDF_MARKE,
+  () => '<script>\n/* ===== quell/fremd/pdfjs/daten.js ===== */\n' +
+        lies('quell/fremd/pdfjs/daten.js') + '\n</script>');
+
+/* Skripte einsetzen — in der Reihenfolge, in der sie im HTML stehen.
+ *
+ * `defer` WIRD DABEI WEGGELASSEN, und zwar richtig: seit E389 tragen die
+ * 185 Zeilen in `index.html` ein `defer`, damit der Browser sie parallel
+ * holt und der Parser nicht auf jede einzelne wartet. Ein INLINE-Skript
+ * kennt kein `defer` — die Angabe gilt nur für externe Dateien und würde
+ * hier nur stumm dastehen. Die Reihenfolge bleibt dieselbe: eingesetzte
+ * Skripte laufen beim Parsen der Reihe nach, genau wie deferred Skripte
+ * nach dem Parsen der Reihe nach laufen.
+ *
+ * `\s+defer` steht als OPTION im Muster, nicht als Pflicht — sonst hinge
+ * die Einzeldatei daran, dass jede Zeile es trägt, und eine ohne würde
+ * still als `<script src>` in der Einzeldatei stehenbleiben. Genau das
+ * fängt `test105`/`test74` nicht, weil die Datei ja gebaut WIRD. */
+html = html.replace(/<script src="(quell\/[^"]+)"(?:\s+defer)?><\/script>/g,
   (_m: string, datei: string) =>
     '<script>\n/* ===== ' + datei + ' ===== */\n' + lies(datei) + '\n</script>');
 

@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-384 Entscheidungen, E1 bis E388. Die Nummer ist die Ordnung: eine Entscheidung
+385 Entscheidungen, E1 bis E389. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -31449,3 +31449,115 @@ nicht verstaut → 4 rot, darunter „es rollt trotzdem nichts: ist 47";
 ersten Entwurf gefangen hat), test87, test105, test109, test114, test222,
 test248, test273, test285, test384, test385, test386. Mit zwei Bildern
 belegt (§55.3): 1360×900 und 1280×720.
+
+
+================================================================================
+E389 — Der Start wartet nicht mehr auf 185 Skripte
+================================================================================
+4. September 2026 · Redur schickte einen PageSpeed-Bericht
+
+DIE ZAHLEN VON GOOGLE KAMEN NICHT AN — der Netzzugang dieses Containers
+verweigert `googleapis.com` (403 am Tunnel, nachgesehen im Proxy-Status).
+Also selbst gemessen, mit derselben Drosselung, die Lighthouse mobil
+benutzt: 4× langsamere CPU, „Slow 4G" (1,6 Mbit/s, 150 ms), und der
+Prüfserver liefert gzip aus, weil Cloudflare es auch tut.
+
+                        vorher    mit defer   + PDF erst bei Bedarf
+  FCP ungedrosselt      1148 ms      156 ms        156 ms
+  DOMContentLoaded      5051 ms      584 ms        556 ms
+  FCP gedrosselt        2064 ms     1712 ms       1704 ms
+  DCL gedrosselt       14811 ms    15017 ms      12390 ms
+  Übertragen (gzip)     2607 KB     2607 KB       2081 KB
+  Lange Aufgaben          532 ms      233 ms        295 ms
+
+ZWEI VERSCHIEDENE WÄNDE, und das ist der eigentliche Fund. Ungedrosselt
+war es das BLOCKIEREN, gedrosselt sind es die BYTES. `defer` half nur gegen
+das erste — gedrosselt bewegte es die 15 Sekunden um nichts —, das
+Nachladen von pdf.js nur gegen das zweite. Wer nur eines von beidem gebaut
+hätte, hätte auf der einen oder der anderen Seite nichts erreicht.
+
+ERSTENS: 185 SKRIPTE OHNE `defer`
+
+`index.html` lud jede der 185 Dateien mit einem gewöhnlichen `<script
+src>`. Jedes davon hält den Parser an und wartet auf das vorige. Mit
+`defer` holt der Browser sie parallel und führt sie danach in derselben
+Reihenfolge aus — dieselbe Ordnung, ein Achtel der Zeit.
+
+DAS `defer` STEHT HINTER `src`, und das ist keine Geschmacksfrage:
+`test87 §8` und `test143 §2` lesen die geladenen Dateien mit
+`/<script src="([^"]+)"/`. Ein `<script defer src="…">` fände keiner von
+beiden mehr — sie wären grün und messten nichts. `test388 §1` hält beides
+fest, die Reihenfolge und das Vorhandensein.
+
+ZWEITENS: 527 KB pdf.js BEI JEDEM START
+
+`quell/fremd/pdfjs/daten.js` ist 717 KB roh, 527 KB über die Leitung — ein
+Fünftel von allem, für etwas, das nur beim Öffnen einer PDF gebraucht wird.
+`laden.js` packte schon immer erst beim Gebrauch aus („ERST BEIM
+GEBRAUCH", steht seit E103 in seinem Kopf) — aber die Bytes kamen trotzdem
+bei jedem Start über die Leitung.
+
+Jetzt hängt `laden.js` die Datei bei Bedarf selbst ein. Drei Punkte, die
+dabei nicht verhandelbar waren:
+
+  · EIN `<script>`-ELEMENT UND KEIN `fetch`. Redion muss sich per
+    Doppelklick öffnen lassen (§6); unter `file://` scheitert `fetch` an
+    der Herkunftsprüfung, ein eingehängtes Skript nicht.
+  · DIE EINZELDATEI HAT KEINEN ORDNER NEBEN SICH (§29). `bauen.mts` setzt
+    die Bytes an einer Marke in `index.html` ein — und BRICHT AB, wenn die
+    Marke fehlt. Ein stilles Weglassen wäre eine Einzeldatei, die aussieht
+    wie immer und beim ersten PDF sagt „die Bibliothek fehlt".
+  · OFFLINE BLEIBT OFFLINE (§28). `daten.js` steht weiterhin im
+    GRUNDSTOCK von `sw.ts`, wird also beim ersten Besuch im Hintergrund
+    abgelegt. Das Nachladen bedient dann der Zwischenspeicher.
+
+WAS ES KOSTET
+────────────────────────────────────────────────────────────────────────
+Beim ERSTEN Öffnen einer PDF kommt eine Anfrage dazu, die es vorher nicht
+gab — 527 KB, die vorher schon beim Start bezahlt waren. Wer täglich PDFs
+liest, zahlt sie also weiterhin, nur später und einmal statt bei jedem
+Neuladen; wer nie eine öffnet, zahlt sie nie.
+
+`test87 §8` prüft einen globalen Namen weniger auf Doppelung
+(`PDFJS_EINGEPACKT`), weil `daten.js` nicht mehr in der Skriptliste von
+`index.html` steht. Ein Name aus fremden Bytes, der genau einmal vorkommt
+— hingeschrieben, nicht verschwiegen.
+
+Keine Daten, kein Feldname, keine Migration. Kein Bauschritt für die
+normale Nutzung (§6): `defer` ist ein HTML-Attribut, kein Werkzeug.
+
+WAS DAMIT NICHT BEHOBEN IST
+────────────────────────────────────────────────────────────────────────
+2081 KB über 203 Dateien bleiben. Auf „Slow 4G" sind das rund zehn
+Sekunden reine Übertragung, und daran ändert keine Ladeart etwas — es
+müssten weniger Bytes werden. Die 184 verbliebenen Skripte verteilen sich
+auf einen langen Schwanz: 122, 64, 61, 48, 48, 47, 46, 43, 40 KB und dann
+lange nichts. Der nächste grosse Hebel wäre, ganze BEREICHE erst beim
+Betreten zu laden — das rührt an §5 und §7 und gehört Redur. Steht als
+L124 in `LUECKEN.md`, mit dieser Messung.
+
+Dateien: `index.html` (185 Zeilen + eine Marke), `src/fremd/pdfjs/laden.ts`,
+`bauen.mts`.
+
+PRÜFUNG: `pruefungen/lauf/test388.mts`, neu, 18 Punkte. Fünf Mutationen rot
+gesehen (§55.2): ein Skript ohne `defer`; `daten.js` wieder beim Start (die
+Decke reisst bei 2608 statt 2300 KB); der Nachladepfad ins Leere; `defer`
+vor `src`; `bauen.mts` ohne die Bytes.
+
+DIE FÜNFTE MUTATION WAR ZUERST GRÜN, und das ist der lehrreiche Teil. §4
+fragte `einzel.includes('PDFJS_EINGEPACKT')` — den Namen nennt aber auch
+`laden.js`, siebenmal. Der zweite Entwurf mass die längste Zeile der ganzen
+Datei; die ist mit 319 275 Zeichen ein Lernpaket und wäre auch ohne pdf.js
+dagewesen. Erst der dritte misst die Zeilen DIREKT HINTER der Deklaration.
+Zweimal hätte diese Prüfung „passt schon" gesagt (§55.2).
+
+Grün ausserdem: test74, test87, test105, test109, test143 (der Wächter für
+den Offline-Grundstock), test177, test180, test189, test192, test228,
+test272, test320 (die PDF-Wege), test33, test114, test210, test248,
+test285, test384, test385, test386, test387.
+
+NEBENBEI GEFUNDEN, NICHT VON HIER: `test61` ist rot (zwei Punkte, „Das Loch
+liegt auf dem Ziel"). Nachgemessen in einem Arbeitsbaum auf dem Stand
+davor — dort ebenfalls rot. Es ist ein Nachlauf von E383: der Rundgang
+zeigt auf den Reiter „Gehen", und der ist im ruhigen Band unsichtbar. Steht
+als L125.

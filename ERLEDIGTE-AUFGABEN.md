@@ -38,6 +38,40 @@ dann die Phasen, dann die Bögen.
 
 ## Aktueller Stand
 
+**4. September 2026 · Der Start wartet nicht mehr auf 185 Skripte (E389)**
+
+> Redur schickte einen PageSpeed-Bericht. Die Zahlen von Google kamen nicht
+> an — der Netzzugang verweigert `googleapis.com` —, also selbst gemessen,
+> gedrosselt wie Lighthouse mobil (4× CPU, Slow 4G, mit gzip).
+>
+> ```txt
+>                       vorher    mit defer   + PDF bei Bedarf
+>   FCP ungedrosselt   1148 ms      156 ms         156 ms
+>   DOMContentLoaded   5051 ms      584 ms         556 ms
+>   FCP gedrosselt     2064 ms     1712 ms        1704 ms
+>   DCL gedrosselt    14811 ms    15017 ms       12390 ms
+>   Übertragen         2607 KB     2607 KB        2081 KB
+> ```
+>
+> ZWEI VERSCHIEDENE WÄNDE, und das war der eigentliche Fund: ungedrosselt
+> blockierten die 185 Skripte einander (keines hatte `defer`), gedrosselt
+> sind es schlicht die Bytes. `defer` bewegte die 15 Sekunden um NICHTS;
+> pdf.js erst bei Bedarf zu holen nahm 526 KB weg. Wer nur eines gebaut
+> hätte, hätte auf einer der beiden Seiten nichts erreicht.
+> `defer` steht hinter `src` und nicht davor — sonst hätten `test87 §8` und
+> `test143 §2` ihre Dateiliste nicht mehr gefunden und wären grün gewesen,
+> ohne etwas zu messen.
+> `test388` neu mit 18 Punkten und einer Decke von 2300 KB über den Start.
+> Fünf Mutationen rot — die fünfte erst im DRITTEN Anlauf: sie fragte nach
+> dem Namen `PDFJS_EINGEPACKT`, den auch `laden.js` siebenmal nennt, dann
+> nach der längsten Zeile der Datei (die ist ein Lernpaket), und erst dann
+> nach den Zeilen hinter der Deklaration.
+> Nebenbei gefunden und NICHT von hier: `test61` ist rot, auch auf dem Stand
+> davor — der Rundgang zeigt seit E383 auf einen Reiter, den man im ruhigen
+> Band nicht sieht (L125). Und was bleibt, steht als L124: 2081 KB sind rund
+> zehn Sekunden reine Übertragung, und dagegen hilft nur, Bereiche erst beim
+> Betreten zu laden — ein Umbau, der Redur gehört.
+
 **3. September 2026 · Ein Ort ist kein Werkzeug (E388, Audit F02)**
 
 > Vor dem Bauen gemessen, und der Bericht stimmte nicht: F01 sagt, der

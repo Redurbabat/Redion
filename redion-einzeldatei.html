@@ -16355,7 +16355,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 255, inhalt: '8af35caaa1d52799', gebaut: '2026-09-03T23:11:59.528Z' };
+const Stand = { fassung: 261, inhalt: 'b65a160f24170dd8', gebaut: '2026-09-04T04:28:37.881Z' };
 window.Stand = Stand;
 
 </script>
@@ -46617,10 +46617,54 @@ const PdfFremd = (() => {
         return new Uint8Array(await new Response(strom).arrayBuffer());
     };
     /** Einmal auspacken, dann behalten. Gibt das pdf.js-Modul zurück. */
+    /**
+     * DIE BYTES ERST HOLEN, WENN SIE GEBRAUCHT WERDEN (E389).
+     *
+     * `daten.js` ist 717 KB roh und 527 KB über die Leitung — der grösste
+     * Einzelposten des ganzen Starts und ein Fünftel von allem. Bis zum
+     * 4. September lud `index.html` sie mit einem gewöhnlichen `<script
+     * src>`, also bei JEDEM Start, auch wenn nie eine PDF geöffnet wurde.
+     * Gemessen mobil gedrosselt (4× CPU, Slow 4G): 2607 KB gesamt, und
+     * davon gingen 527 auf diese eine Datei.
+     *
+     * EIN `<script>`-ELEMENT UND KEIN `fetch`. Redion muss sich per
+     * Doppelklick öffnen lassen (§6) — unter `file://` scheitert `fetch`
+     * an der Herkunftsprüfung, ein eingehängtes Skript nicht.
+     *
+     * IN DER EINZELDATEI GIBT ES NICHTS ZU HOLEN: dort setzt `bauen.mts`
+     * die Bytes direkt ein, `PDFJS_EINGEPACKT` steht also schon da, und
+     * diese Funktion kehrt sofort zurück.
+     *
+     * OFFLINE BLEIBT ES OFFLINE: `daten.js` steht weiterhin im GRUNDSTOCK
+     * von `sw.ts`, wird also beim ersten Besuch im Hintergrund abgelegt.
+     * Das Nachladen bedient dann der Zwischenspeicher, nicht das Netz.
+     */
+    const bytesHolen = () => new Promise((ja, nein) => {
+        if (typeof PDFJS_EINGEPACKT !== 'undefined') {
+            ja();
+            return;
+        }
+        if (typeof document === 'undefined') {
+            nein(new Error('Die PDF-Bibliothek lässt sich hier nicht nachladen.'));
+            return;
+        }
+        const s = document.createElement('script');
+        s.src = 'quell/fremd/pdfjs/daten.js';
+        s.addEventListener('load', () => {
+            if (typeof PDFJS_EINGEPACKT === 'undefined') {
+                nein(new Error('quell/fremd/pdfjs/daten.js wurde geladen, ist aber leer.'));
+            }
+            else
+                ja();
+        });
+        s.addEventListener('error', () => nein(new Error('Die PDF-Bibliothek fehlt — quell/fremd/pdfjs/daten.js liess sich nicht laden.')));
+        document.head.appendChild(s);
+    });
     const laden = () => {
         if (versprechen)
             return versprechen;
         versprechen = (async () => {
+            await bytesHolen();
             if (typeof PDFJS_EINGEPACKT === 'undefined')
                 throw new Error('Die PDF-Bibliothek fehlt — quell/fremd/pdfjs/daten.js wird nicht geladen.');
             if (typeof DecompressionStream === 'undefined')
