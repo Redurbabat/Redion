@@ -1942,6 +1942,32 @@ ANSICHTEN['palette'] = {
   }
 };
 
+/* --- Palette mit Gedächtnis (E401) ---------------------------------------
+   Drei Dinge müssen auf dem Bild stehen: die Überschrift „Angeheftet", die
+   Überschrift „Zuletzt" darunter, und der goldene Stern an den angehefteten
+   Zeilen. Der Merker wird vorher gesetzt — sonst müsste das Bild erst fünf
+   Befehle ausführen, und dann stünde etwas anderes im Vordergrund. */
+ANSICHTEN['palettegemerkt'] = {
+  titel: 'Die Palette merkt sich, was du brauchst (E401)',
+  bauen: async () => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelectorAll('.overlay').forEach(o => o.remove());
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+    document.getElementById('rg-willkommen')?.remove();
+    document.getElementById('rg-einladung')?.remove();
+    Store.setMeta('paletteFest', ['Papierkorb', 'Tastenkürzel anzeigen']);
+    /* Echte Befehlsnamen — beim ersten Bild standen hier zwei erfundene,
+       und die Absicherung liess sie still fallen. */
+    Store.setMeta('paletteZuletzt', ['Suchen', 'Lernpfad', 'Neue Seite']);
+    await new Promise(r => setTimeout(r, 300));
+  },
+  dann: async () => {
+    document.dispatchEvent(new KeyboardEvent('keydown',
+      { key: 'K', ctrlKey: true, shiftKey: true, bubbles: true }));
+    await new Promise(r => setTimeout(r, 700));
+  }
+};
+
 ANSICHTEN['dokumenteinzel'] = {
   titel: 'Einzelseite statt Rolle — der Schalter im Inspector (E398)',
   bauen: ANSICHTEN['dokument']!.bauen,

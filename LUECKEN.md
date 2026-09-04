@@ -5966,14 +5966,19 @@ Favoriten". Gemessen ist die erste Hälfte längst gebaut (E400 nennt die
 Belege). Zwei Funde daraus waren so schwer, dass sie sofort behoben wurden.
 Diese sieben bleiben offen — jeder mit Beleg, jeder ein eigener Bogen.
 
-1. **„Zuletzt verwendet" gibt es für Befehle nicht.** Es gibt nur
+1. **GESCHLOSSEN (E401) · „Zuletzt verwendet" gibt es für Befehle nicht.** Es gibt nur
    `paletteOft` (`werkzeuge.ts:305-310`), einen reinen Zähler: `m[name] =
    (m[name]||0)+1`. Kein Zeitstempel, keine Reihenfolge. Die SUCHE hat das
    Gegenstück längst — `suchverlauf` mit der Überschrift „Zuletzt gesucht"
    (`schale.ts:1064/1082`) —, die Palette nicht. Das ist die eine Hälfte
    von F09, die wirklich fehlt.
 
-2. **Favoriten für Befehle gibt es nicht.** Fünf Favoriten-Sorten stehen im
+2. **HALB GESCHLOSSEN (E401) · Favoriten für Befehle gibt es nicht.**
+   `paletteFest` ist gebaut — Stern in der Zeile, Strg+Enter, Gruppe ganz
+   oben. OFFEN bleibt das GEMEINSAME Register: es sind jetzt sechs
+   Favoriten-Speicher, die einander nicht kennen. Der sechste ist Absicht
+   (ein Befehl ist keine Seite), macht die Frage aber nicht kleiner.
+   Ursprünglicher Befund: Fünf Favoriten-Sorten stehen im
    Haus (Seiten, Chats, Zeichenwerkzeuge, Seitenleisten-Abschnitte,
    Regal-Sterne) — keine für Befehle oder Orte, und kein gemeinsames
    Register dafür (§8: fünf Speicher, die einander nicht kennen). Das ist
@@ -5985,7 +5990,11 @@ Diese sieben bleiben offen — jeder mit Beleg, jeder ein eigener Bogen.
    leere Abschnitte ganz weglässt (`:510-511`), sieht man nicht einmal, dass
    etwas fehlt. Auch im gebauten Stand. Kein Prüflauf fasst ihn an.
 
-4. **`paletteOft` wächst unbegrenzt und misst das Falsche.** Kein Deckel,
+4. **HALB GESCHLOSSEN (E401) · `paletteOft` wächst unbegrenzt und misst das
+   Falsche.** Der Deckel steht bei 50, und Seitentitel landen nicht mehr
+   darin. OFFEN bleibt, dass nur gezählt wird, was AUS DER PALETTE
+   ausgeführt wird — wer ein Tastenkürzel benutzt, zählt nicht mit.
+   Ursprünglicher Befund: Kein Deckel,
    kein Vergessen, kein Zurücksetzen — als einziger Verlauf im Haus (die
    anderen deckeln bei 8 / 12 / 60 / 100 / 2000). Ein umbenannter Befehl
    lässt seinen alten Namen für immer stehen. Seitentitel landen ungefiltert

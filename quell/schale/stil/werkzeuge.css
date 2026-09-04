@@ -41,6 +41,31 @@
    Überschrift halten, unter der noch etwas kommt. */
 .finder .grp.mehr{padding:10px 14px 12px; font-weight:400; font-style:italic;
   text-align:center; border-top:1px solid var(--line-soft)}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   E401 · DER STERN ZUM ANHEFTEN
+   --------------------------------------------------------------------------
+   RUHIG, BIS MAN IHN BRAUCHT. Sechzig Zeilen mit sechzig sichtbaren Sternen
+   wären eine Wand aus Zeichen; man liest dann keinen einzigen. Sichtbar ist
+   er deshalb nur an der Zeile, auf der man steht, an der man mit der Maus
+   ist — und an jeder, die WIRKLICH angeheftet ist, denn das ist eine
+   Auskunft und keine Einladung.
+
+   `visibility` statt `display`, damit die Zeile nicht springt: der Platz
+   bleibt in jedem Fall stehen. */
+.finder .res > button > .fest{
+  flex:none; width:18px; text-align:center; font-size:13px; line-height:1;
+  color:var(--text-faint); visibility:hidden; cursor:pointer;
+}
+.finder .res > button:hover > .fest,
+.finder .res > button.on > .fest{visibility:visible}
+.finder .res > button[data-ist-fest] > .fest{visibility:visible; color:var(--gold-tinte)}
+.finder .res > button > .fest:hover{color:var(--accent-text)}
+/* AM TELEFON GIBT ES KEIN ÜBERFAHREN. Dort steht der Stern immer da —
+   sonst wäre das Anheften mit dem Finger nicht erreichbar (§37). */
+@media (hover:none){
+  .finder .res > button > .fest{visibility:visible}
+}
 .fbtns{
   display:flex; gap:8px; padding:12px 16px; border-top:1px solid var(--line);
   justify-content:flex-end; flex-wrap:wrap;

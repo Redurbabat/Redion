@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-396 Entscheidungen, E1 bis E400. Die Nummer ist die Ordnung: eine Entscheidung
+397 Entscheidungen, E1 bis E401. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -454,6 +454,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E398** — Einzelseite oder Fortlaufend: die Wahl ja, die Vorgabe nein
 * **E399** — Der Rollbalken zeigte ein Viertel des Wegs an
 * **E400** — Die Palette führte aus, was niemand gesehen hatte (Audit F09)
+* **E401** — Die Palette merkt sich, was du brauchst (Audit F09, Rest)
 
 ---
 
@@ -32594,3 +32595,89 @@ Messung, die eigene Bögen brauchen.
 Dateien: `src/bereiche/wissen/werkzeuge.ts`, `src/schale/aufbau/schale.ts`,
 `src/register/navigation.ts`, `index.html`,
 `quell/schale/stil/werkzeuge.css`, `pruefungen/lauf/test396.mts`, `bilder.mts`.
+
+
+================================================================================
+E401 — Die Palette merkt sich, was du brauchst (Audit F09, Rest)
+================================================================================
+4. September 2026
+
+E400 hat gemessen, dass F09s erste Hälfte längst gebaut ist. Was wirklich
+fehlte, sind die zwei Halbworte: „zuletzt verwendet" und „Favoriten".
+
+DREI GEDÄCHTNISSE, DREI FRAGEN:
+
+    paletteOft       wie oft?       — gab es schon
+    paletteZuletzt   wann zuletzt?  — neu
+    paletteFest      was WILL ich?  — neu
+
+Der Unterschied zwischen den ersten beiden ist der ganze Befund. Ein Zähler
+weiss nicht, was man gerade eben getan hat: A, dann B, dann wieder A — der
+Zähler sagt „A zweimal, B einmal", die Reihenfolge sagt „A, B". Die SUCHE
+hatte das Gegenstück längst („Zuletzt gesucht", schale.ts:1082); die Palette
+nicht.
+
+Und das dritte ist keines von beiden: was man oft benutzt, ist nicht
+dasselbe wie das, was man oben haben WILL.
+
+WIE ES AUSSIEHT. Ohne Eingabe stehen jetzt bis zu drei Blöcke da:
+„Angeheftet", „Zuletzt", dann der Rest nach Häufigkeit wie bisher. Die zwei
+neuen Überschriften erscheinen NUR, wenn sie etwas enthalten — bei einem
+frischen Redion sieht die Palette aus wie vorher. Das ist die Regel, an der
+dieses Projekt am häufigsten scheitert, und `test397 §1` ist ihr Wächter.
+
+DER STERN STEHT IM ZEILENKNOPF, nicht daneben. Ein zweiter `<button>` darin
+wäre ungültiges HTML, und ein Umschlag um beide würde
+`:where(.finder .res) > button` brechen — die Zeilenregel gilt seit E348 nur
+für DIREKTE Kinder. Ein `<span data-fest>` ist deshalb das Richtige: der
+Griff prüft ihn VOR dem Knopf (sonst öffnet ein Druck auf den Stern den
+Papierkorb, statt ihn anzuheften), und für die Tastatur gibt es Strg+Enter.
+Der Zustand steht im `aria-label` (§38). Sichtbar ist der Stern nur an der
+gewählten Zeile, unter der Maus und an wirklich angehefteten — sechzig
+sichtbare Sterne wären eine Wand, und am Telefon steht er immer da, weil es
+dort kein Überfahren gibt (§37).
+
+ZWEI SACHEN, DIE DER PRÜFLAUF GEFUNDEN HAT und die vorher niemand gesucht
+hätte:
+
+1. SEITEN SIND KEINE BEFEHLE. Die Palette zeigt bei einer Eingabe auch bis
+   zu sechs Seiten; deren Titel landeten ungefiltert im Zähler. In einer
+   Liste „Zuletzt" wäre „📄 Zwiebelsuppe" zwischen „Papierkorb" und
+   „Exportieren" noch sichtbarer gewesen. `merkeBefehl` bekommt jetzt die
+   Gruppe mit und lässt „Seiten" aus. (L128 Punkt 4, halb.)
+
+2. DER GERADE BENUTZTE BEFEHL FIEL BEIM DECKELN SOFORT WIEDER HERAUS.
+   `paletteOft` war der einzige Verlauf im Haus ohne Obergrenze (die anderen
+   deckeln bei 8 / 12 / 60 / 100 / 2000) und wandert über `indexdb.ts` in
+   jede Sicherung. Der neue Deckel bei 50 sortierte zuerst nur nach
+   Häufigkeit — und der eben ausgeführte Befehl steht mit Zähler 1 ganz
+   unten. Man hätte etwas ausgeführt und es danach nicht in „Zuletzt"
+   wiedergefunden. `test397 §6` hat es gefunden; jetzt bleibt er in jedem
+   Fall.
+
+EIN SECHSTER FAVORITEN-SPEICHER, UND DAS IST ABSICHT. L128 Punkt 2 hält
+fest, dass es fünf Favoriten-Sorten ohne gemeinsames Register gibt (§8).
+`paletteFest` ist die sechste — aber kein neuer Fall desselben Fehlers: die
+anderen fünf betreffen SEITEN, Chats und Werkzeuge; ein angehefteter Befehl
+ist etwas anderes und gehört neben `paletteOft`, wo das übrige Gedächtnis
+der Palette liegt. Das gemeinsame Register bleibt als L128 Punkt 2 offen.
+
+KOSTEN: zwei Meta-Schlüssel, beide gedeckelt, beide reine Namenslisten.
+Keine Datenmigration — wer nie anheftet, hat sie nie.
+
+PRÜFUNG: `test397` (32 Punkte, PORT 9427). FÜNF MUTATIONEN ROT GESEHEN:
+
+    „Zuletzt" zeigt notfalls irgendetwas   §1 rot
+    „Zuletzt" hängt hinten an statt vorn   §2 dreifach rot
+    Stern nicht vor dem Knopf geprüft      §4 dreifach rot (Palette schloss)
+    Seitentitel wieder ins Gedächtnis      §5 zweifach rot
+    der gerade benutzte nicht geschützt    §6 rot
+
+Grün geblieben: test47, 51, 86, 128, 197, 222, 340, 396. Einzeldatei neu
+gebaut. Mit einem Bild belegt (§55.3) — und das Bild hat wieder etwas
+gezeigt: zwei meiner drei Beispielnamen gab es gar nicht, und die
+Absicherung `if (t)` liess sie still fallen. Genau so soll sie arbeiten;
+`test397 §3` hält den Fall jetzt fest.
+
+Dateien: `src/bereiche/wissen/werkzeuge.ts`, `quell/schale/stil/werkzeuge.css`,
+`pruefungen/lauf/test397.mts`, `bilder.mts`.

@@ -65,14 +65,15 @@ F14 Rest   welche VIER Zeichenwerkzeuge ohne Wischen dastehen sollen —
            Redurs Entscheidung (Zurück/Vor kleben seit E396)
 F12 F17 F18       Politur  (F10 ist mit E397 zu)
 
-F09 ist zur Hälfte ZU (E400) — und die Hälfte, die zählte, stand nicht im
+F09 ist ZU (E400 + E401) — und die Hälfte, die zählte, stand nicht im
 Bericht. Das Befehlsmenü gibt es längst (Strg ⇧ K, 163 Befehle, unscharfe
 Suche). Beim Nachmessen kam heraus, dass der Pfeil über die gezeichnete
 Liste hinauslief: ab dem 61. Druck führte Enter einen Befehl aus, den
 niemand gesehen hatte. Behoben, plus vier Stellen, die ein falsches
-Kürzel anschrieben. OFFEN bleiben die zwei Halbworte, die F09 wirklich
-verlangt — „zuletzt verwendet" und „Favoriten" für Befehle — sowie fünf
-weitere Funde derselben Messung: alle sieben stehen in **L128**.
+Kürzel anschrieben. E401 hat dann die zwei Halbworte gebaut, die F09 wirklich verlangte:
+„Zuletzt" (eine Reihenfolge, kein Zähler) und „Angeheftet" (Stern oder
+Strg+Enter). Beide Überschriften stehen nur da, wenn sie etwas enthalten.
+OFFEN bleiben fünf weitere Funde derselben Messung — sie stehen in **L128**.
 
 F03 ist ZU (E387+E398). Redur hat die Wahl am 4. September bestellt und
 die VORGABE ausdrücklich nicht: Fortlaufend bleibt der Normalfall, auch am
@@ -204,7 +205,7 @@ Werkzeuge" stammte aus der Zeit vor E375 (dreizehn sind vollständig), und die
 
 Zuletzt AUFGEMACHT: **L123** — die zwölf Befunde des UX-Prüfberichts, die noch
 offen sind (Sprint: F13, F14 · Politur: F12, F17, F18 — F03 ist mit E398,
-F10 mit E397 und F09 zur Hälfte mit E400 zu; der Rest steht in L128). Zwei brauchen Redur: F02 (welche Navigation ist die primäre?)
+F10 mit E397 und F09 mit E400+E401 zu; fünf Nebenfunde in L128). Zwei brauchen Redur: F02 (welche Navigation ist die primäre?)
 und F13 (echter Geräte-Abnahmelauf). Und **L120** — was nach E380 an GoodNotes noch fehlt.
 Der Kern (Ebenen im Regal, Hineingehen, nach dem Entpacken im Ordner
 stehen) ist zu; offen bleiben zwei Regale für dieselbe Sache

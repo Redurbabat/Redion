@@ -3506,3 +3506,31 @@ die Zeugnisnote je Semester (E242) und der echte Stundenplan (E243).
   Funde derselben Messung — alle sieben in **L128**, darunter ein toter
   Favoriten-Block, ein ungedeckelter Verlauf, der in jede Sicherung wandert,
   und vier Registerausgänge ohne einen einzigen Aufrufer.
+
+  E401 · F09 Rest: die zwei Halbworte, die wirklich fehlten. Die Palette hat
+  jetzt drei Gedächtnisse statt einem — `paletteOft` (wie oft), `paletteZuletzt`
+  (wann zuletzt) und `paletteFest` (was ich oben haben will). Der Unterschied
+  zwischen den ersten beiden ist der ganze Befund: A, dann B, dann wieder A —
+  ein Zähler sagt „A zweimal", eine Reihenfolge sagt „A, B".
+
+  Angeheftet wird mit dem Stern in der Zeile oder mit Strg+Enter. Der Stern
+  steht IM Zeilenknopf, weil ein zweiter Knopf darin ungültiges HTML wäre und
+  ein Umschlag die Zeilenregel aus E348 bräche; der Griff prüft ihn deshalb
+  VOR dem Knopf. Sichtbar ist er nur an der gewählten Zeile, unter der Maus
+  und an wirklich angehefteten — am Telefon immer, weil es dort kein
+  Überfahren gibt.
+
+  Beide neuen Überschriften stehen NUR da, wenn sie etwas enthalten. Bei
+  einem frischen Redion sieht die Palette aus wie vorher.
+
+  ZWEI FUNDE DES PRÜFLAUFS, die niemand gesucht hätte: Seitentitel landeten
+  ungefiltert im Befehlsgedächtnis („📄 Zwiebelsuppe" zwischen „Papierkorb"
+  und „Exportieren"); und der gerade ausgeführte Befehl fiel beim neuen
+  Deckel sofort wieder heraus, weil er mit Zähler 1 ganz unten steht. Beides
+  behoben.
+
+  PRÜFUNG: `test397` (32 Punkte, PORT 9427), fünf Mutationen rot gesehen.
+  Grün geblieben: test47, 51, 86, 128, 197, 222, 340, 396. Ein Bild im
+  Gespräch — es hat gezeigt, dass zwei meiner drei Beispielnamen gar nicht
+  existieren und die Absicherung sie still fallen liess. Genau so soll sie
+  arbeiten; `test397 §3` hält den Fall jetzt fest.
