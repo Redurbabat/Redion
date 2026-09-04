@@ -56,7 +56,12 @@
 .finder .res > button > .fest{
   flex:none; width:18px; text-align:center; font-size:13px; line-height:1;
   color:var(--text-faint); visibility:hidden; cursor:pointer;
-}
+
+  /* Das Zeichen gehört hierher und nicht in den HTML-Text: als Textknoten
+     stand es in jedem `textContent` einer Palettenzeile (test206). */
+  }
+.finder .res > button > .fest::before{content:"\2606"}          /* ☆ */
+.finder .res > button[data-ist-fest] > .fest::before{content:"\2605"}  /* ★ */
 .finder .res > button:hover > .fest,
 .finder .res > button.on > .fest{visibility:visible}
 .finder .res > button[data-ist-fest] > .fest{visibility:visible; color:var(--gold-tinte)}

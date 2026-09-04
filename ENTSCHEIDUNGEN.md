@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-398 Entscheidungen, E1 bis E402. Die Nummer ist die Ordnung: eine Entscheidung
+400 Entscheidungen, E1 bis E404. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -456,6 +456,8 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E400** — Die Palette führte aus, was niemand gesehen hatte (Audit F09)
 * **E401** — Die Palette merkt sich, was du brauchst (Audit F09, Rest)
 * **E402** — Der Favoritenblock war vier Bögen lang leer (L128 Punkt 3)
+* **E403** — Die Denkkugel: neun Zustände statt eines Dreh-Rädchens
+* **E404** — Der Anheft-Stern stand im Text der Palettenzeile (E401-Rückfall)
 
 ---
 
@@ -32732,3 +32734,185 @@ verwendet" und „Privat", mit den zwei angesternten Seiten darunter.
 
 Dateien: `src/bereiche/datenbanken/ansichten/dienst.ts`,
 `pruefungen/lauf/test398.mts`, `bilder.mts`.
+
+
+================================================================================
+E403 — Die Denkkugel: neun Zustände statt eines Dreh-Rädchens
+================================================================================
+4. September 2026
+
+Redur schickte zwei Effekte von libraries.dev — erst „Metal", dann „Orb" —
+jeweils mit dem Einbausatz der Seite: `npm install`, ein React-Bauteil, fertig.
+Beide Male lautete die Frage nicht „hübsch?", sondern „geht das hier?".
+
+WAS NACHGESEHEN WURDE, nicht geraten.
+
+`thinking-orbs@0.3.1` ist echt: MIT, 55 KB, KEINE Abhängigkeiten, React nur
+als *peer*. Und — anders als beim Metall-Paket — es hat einen zweiten Ausgang:
+
+    "./engine": { "import": { "default": "./dist/engine.es.js" } }
+
+`engine.es.js` ist 19 KB, hat NULL Importzeilen und kennt React nicht. Im
+ganzen Paket steht kein `fetch`, kein XHR, kein `sendBeacon`, kein WebSocket,
+kein `eval`, kein Worker, kein `localStorage`, kein `document.cookie` — und
+nicht eine einzige URL. Es telefoniert nicht nach Hause.
+
+Damit war der Weg offen, den `metal-fx` versperrt hatte, und Redion hat ihn
+sogar geregelt: `pruefungen/fremd-bestand.json` führt Fremdcode mit Pfad,
+Fassung, Lizenz, Herkunft und Prüfsumme; `test177` rechnet nach, `test109`
+zählt ihn nicht zum JS-Bestand (§54.4). So kam pdf.js herein (E103).
+
+WARUM TROTZDEM EIGENER CODE.
+
+Weil der Preis nicht stimmt. pdf.js ist 1,8 MB und kann etwas, das niemand
+in vertretbarer Zeit nachbaut — einen PDF-Renderer. Eine Warteanzeige ist
+das Gegenteil: 19 KB minifizierter Fremdcode, den niemand mehr lesen kann,
+gegen eine überschaubare Rechnung, die man im Klartext hinschreiben kann.
+§47 sagt „keine unnötigen Abhängigkeiten", und diese wäre eine.
+
+Die Technik ist trotzdem von dort abgesehen und im Quelltext genannt
+(Jakub Antalik, MIT, https://libraries.dev/orbs.html): Punkte auf einer
+Kugel, orthografisch abgebildet, nach Tiefe sortiert gezeichnet.
+
+WAS ES ERSETZT — und das war der Grund, es überhaupt zu bauen.
+
+`agenten.ts:1200` schrieb vier Bögen lang genau eine Zeile:
+
+    liste.innerHTML = '<div class="agent-laeuft">Der Agent denkt nach …</div>';
+
+Ohne Animation, ohne Bewegung, ohne Angabe, was gerade geschieht. Bei einem
+Lauf über zwölf Werkzeuge stand nach zwei Sekunden dasselbe da wie nach
+zwei Minuten. Und sie verschwand beim ERSTEN Schritt — also genau dann, wenn
+endlich etwas passierte.
+
+Jetzt trägt jedes der zwölf Werkzeuge einen Zustand:
+
+    suchen · nachschlagen · seiteLesen · datenbankLesen
+    kalenderLesen · mailLesen                      -> searching   „sucht"
+    seiteAnlegen · feldFuellen                     -> composing   „schreibt"
+    datenbankAnlegen · zeileAnlegen                -> shaping     „formt"
+    worker                                         -> solving     „löst"
+    fertig                                         -> breathing   „wartet"
+
+Der TEXT bleibt daneben stehen und nennt Schritt und Werkzeug. §38 sagt
+„keine Information nur über Farbe"; über Bewegung ist sie genauso wenig
+erlaubt.
+
+DER AUFBAU. Zwei Teile, wie bei E285 bis E290:
+
+    src/core/orb/geometry.ts   reine Rechnung: Rauschen, Kugelgitter,
+                               Abbildung, Tiefensortierung. Kein DOM,
+                               keine Uhr, kein Zufall.
+    src/core/orb/modes.ts      die neun Arten als reine Funktionen von
+                               (Grösse, Zeit).
+    src/schale/ueberlagerung/orb.ts   der Maler und die Aufhängung.
+
+Der Kern ist absichtlich zufallsfrei — mit `Math.random()` liesse sich keine
+einzige Zahl prüfen, und die Suite wäre auf Bildschirmfotos angewiesen.
+
+DREI SACHEN, DIE EINE ANIMATION IN EINER ECHTEN APP BRAUCHT und in keiner
+Vorführung vorkommen: sie hört auf, wenn der Tab weg oder das Element aus
+dem Bild ist; sie steht bei `prefers-reduced-motion` still (aber sie ist DA,
+als Standbild — nicht weg); und sie wird in JEDEM Ausgang angehalten, auch
+im Fehlerzweig, sonst rechnet ein unsichtbares Canvas für immer weiter.
+
+DIE TINTE IST DIE GEERBTE TEXTFARBE. Kein neues Token, keine eigene Farbe:
+der Maler liest `getComputedStyle(canvas).color` und regelt nur die Deckkraft
+über die Tiefe. Damit stimmt die Kugel in Hell, Dunkel und im Kontrastmodus
+von selbst. §39 warnt vor erfundenen Tokens — dreimal ist genau das schon
+passiert.
+
+WAS DAS HINSEHEN GEFUNDEN HAT (§55.3), und was keine Messung hatte:
+
+  · `working` war ein Klecks. Jede der drei Bahnen hatte ihre EIGENE Kamera
+    — drei flache Ellipsen aus drei Blickwinkeln. Die Neigung gehört an den
+    Ring, nicht an die Kamera. Jetzt zwei Bahnen, eine Kamera, ineinander.
+  · `breathing` und `shaping` waren beide ein gepunkteter Kreis, im
+    Standbild nicht zu unterscheiden. `breathing` ist jetzt ein langsam
+    wanderndes Oval.
+  · `solving` drehte seine Bänder richtig — nur sah man es nicht, weil die
+    Punkte einer gedrehten Scheibe dort landen, wo eben die der anderen
+    standen. Ein Spalt zwischen den Bändern macht die Drehung sichtbar.
+
+PRÜFUNG: `test399` (22 Punkte, PORT 9431).
+
+§4 ist der Punkt, für den es die Suite gibt: er misst, ob die neun einander
+gleichen. Er WAR rot, gleich beim ersten Lauf — searching/solving standen
+bei 2,1 px, searching/weaving bei 2,2, solving/weaving bei 2,3. Genau das
+hatte das Bild schon gesagt; die Messung hat es beziffert. Repariert wurde
+der CODE, nicht die Schwelle.
+
+Und die Messung selbst war zu schwach: sie verglich nur die LAGE der Punkte.
+Zwei Wolken in derselben Scheibe haben immer kleine Nachbarabstände, auch
+wenn die eine grob und die andere fein ist. Jetzt zählt die Punktgrösse mit.
+
+MUTATION ROT GESEHEN, zweimal:
+  §4 — in `shaping` ein `return breathing(size, t);` voranstellen:
+       „breathing/shaping = 0", 21 von 22.
+  §3 — in `breathing` ALLE VIER Zeit-Abhängigkeiten wegnehmen:
+       „Kein Zustand ist bei zwei Zeiten identisch — ist [breathing]".
+
+UND EINE MUTATION, DIE NICHT ROT WURDE, weil sie im Kopf der Suite steht und
+sonst jemand darauf baut: nur das Oval in `breathing` auf 0 zu setzen, genügt
+§4 nicht — die beiden bleiben über Punktgrösse und Durchmesser trennbar. Wer
+§4 traut, soll wissen, was es misst.
+
+WAS ES KOSTET: 24 KB erzeugtes JavaScript, drei Zeilen in `index.html` und
+drei im `GRUNDSTOCK`. Die Kugel läuft nur, während ein Agent läuft.
+
+Mit Bildern belegt (§55.3): alle neun Zustände in Hell und Dunkel, dazu die
+echte Anzeige aus dem Agentenfenster.
+
+Dateien: `src/core/orb/geometry.ts`, `src/core/orb/modes.ts`,
+`src/schale/ueberlagerung/orb.ts`, `src/bereiche/ki/agenten.ts`,
+`quell/schale/stil/bausteine.css`, `index.html`, `src/dienst/sw.ts`,
+`tsconfig.bauen.json`, `pruefungen/lauf/test399.mts`.
+
+
+================================================================================
+E404 — Der Anheft-Stern stand im Text der Palettenzeile (E401-Rückfall)
+================================================================================
+4. September 2026
+
+Der volle Lauf wurde in Stück 18 rot: `test206` fiel mit acht Punkten auf
+einmal. Alle acht sahen gleich aus:
+
+    „Neue Seite" findet „Anlegen › Neue Seite"
+      — Navigation › ☆Neue SeiteStrg N
+
+E401 hatte jeder Palettenzeile einen Anheft-Stern gegeben. Er sass richtig
+(im Knopf, als `<span>`, mit `aria-hidden` — ein Vorleseprogramm hörte ihn
+also nie), und er tat das Richtige. Aber er stand als TEXTKNOTEN dort, und
+damit stand er in jedem `textContent`: in jeder Prüfung, in jedem Stück
+Code, das den Namen einer Zeile abliest.
+
+`aria-hidden` verbirgt vor dem Vorleser, nicht vor dem Text. Das ist der
+ganze Fehler.
+
+REPARATUR: Das Zeichen wandert ins CSS.
+
+    .finder .res > button > .fest::before{content:"\2606"}
+    .finder .res > button[data-ist-fest] > .fest::before{content:"\2605"}
+
+Der `<span>` bleibt, wo er ist — er ist der Griff zum Anheften und muss ein
+direktes Kind bleiben, weil `:where(.finder .res) > button` nur für direkte
+Kinder gilt (E348). Er trägt jetzt ein `title` statt eines Zeichens.
+
+WARUM `test397` ES NICHT GEFUNDEN HAT. Der Wächter aus E401 prüfte, DASS der
+Stern da ist, WIE er aussieht und WAS er tut — nur nicht, was er dem Text
+antut. Der Lauf war grün, während acht Punkte in einer Nachbarsuite fielen.
+
+Nachgetragen als `test397 §6`: keine Zeile trägt ein Sternzeichen im Text,
+und das Zeichen kommt aus `::before`.
+
+MUTATION ROT GESEHEN: das `<span>` wieder mit `(istFest ? '★' : '☆')`
+füllen — §6 fällt und listet vierzig Zeilen mit Stern auf, genau das Bild,
+das `test206` gesehen hatte.
+
+DIE LEHRE, und sie ist nicht neu: ein Wächter prüft, was sein Autor im Kopf
+hatte. Der Stern war ein Gestaltungsdetail, also prüfte er Gestaltung. Dass
+ein Zeichen im Knopf auch DATEN sind, die andere lesen, stand in keinem
+Punkt.
+
+Dateien: `src/bereiche/wissen/werkzeuge.ts`,
+`quell/schale/stil/werkzeuge.css`, `pruefungen/lauf/test397.mts`.

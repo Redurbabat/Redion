@@ -3549,3 +3549,38 @@ die Zeugnisnote je Semester (E242) und der echte Stundenplan (E243).
   Nachbarläufe stehen noch aus — der volle Lauf belegt gerade die Ports, und
   test398 bekam deshalb eine Nummer, die mit nichts kollidiert. Ein Bild im
   Gespräch.
+
+## Die Denkkugel — neun Zustände statt „Der Agent denkt nach …" (E403)
+
+**Fund.** Redur schickte den Orb-Effekt von libraries.dev. Beim Nachmessen
+zeigte sich, dass Redion an der Stelle, wo er hingehört, seit vier Bögen eine
+einzige Textzeile ohne Bewegung hatte — und dass sie beim ersten Schritt des
+Agenten verschwand, also genau dann, wenn etwas passierte.
+
+**Bau.** `src/core/orb/geometry.ts` (reine Rechnung, kein DOM, kein Zufall)
+und `src/core/orb/modes.ts` (neun Arten als reine Funktionen von Grösse und
+Zeit), dazu `src/schale/ueberlagerung/orb.ts` als Maler. Eigener Code, keine
+Abhängigkeit; die Technik ist thinking-orbs (Jakub Antalik, MIT) abgesehen
+und im Quelltext genannt. Jedes der zwölf Agentenwerkzeuge zeigt seinen
+eigenen Zustand; der Text bleibt daneben stehen (§38).
+
+**Prüfung.** `test399`, 22 Punkte, PORT 9431. §4 misst, ob die neun einander
+gleichen — und war beim ersten Lauf rot: drei Paare unter 2,5 px. Zwei
+Mutationen rot gesehen. Drei Fehler fand nur das Bild: `working` als Klecks
+(jede Bahn hatte eine eigene Kamera), `breathing` und `shaping` als derselbe
+Kreis, `solving` mit unsichtbarer Drehung.
+
+## Der Anheft-Stern stand im Zeilentext (E404)
+
+**Fund.** Der volle Lauf wurde in Stück 18 rot: `test206`, acht Punkte auf
+einmal. E401s Anheft-Stern sass als Textknoten im Zeilenknopf und landete in
+jedem `textContent` — `aria-hidden` verbirgt vor dem Vorleser, nicht vor dem
+Text.
+
+**Bau.** Das Zeichen wandert nach `::before`; der `<span>` bleibt als Griff
+und trägt jetzt ein `title`.
+
+**Prüfung.** `test206` wieder ganz grün (66 ok). `test397 §6` nachgetragen —
+der Wächter aus E401 prüfte Gestaltung, nicht Text. Mutation rot gesehen:
+vierzig Zeilen mit Stern.
+

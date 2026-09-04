@@ -461,13 +461,20 @@ const Werkzeuge = (() => {
            für DIREKTE Kinder (E348). Ein <span> mit `data-fest` ist deshalb
            das Richtige: der Griff auf `.res` prüft ihn VOR dem Knopf, und
            für die Tastatur gibt es Strg+Enter. Der Zustand steht am Knopf
-           im `aria-label`, damit ein Vorleseprogramm ihn hört (§38). */
+           im `aria-label`, damit ein Vorleseprogramm ihn hört (§38).
+
+           DAS ZEICHEN SELBST STEHT IM CSS, NICHT HIER. Als Textknoten
+           landete es in `textContent` — und damit in jeder Prüfung und in
+           jedem Stück Code, das den Namen einer Zeile abliest. test206 fiel
+           daran mit acht Punkten auf einmal („Neue Seite" fand
+           „☆Neue Seite"). `aria-hidden` allein reicht nicht: es verbirgt
+           vor dem Vorleser, nicht vor dem Text. */
         const istFest = feste.has(t.name);
         return kopf + `<button data-i="${k}"${k === i ? ' class="on"' : ''}` +
                (istFest ? ' data-ist-fest' : '') +
                ` aria-label="${esc(t.name)}${istFest ? ' · angeheftet' : ''}">` +
-               `<span class="fest" data-fest="${esc(t.name)}" aria-hidden="true">` +
-                 (istFest ? '★' : '☆') + '</span>' +
+               `<span class="fest" data-fest="${esc(t.name)}" aria-hidden="true"` +
+                 ` title="${istFest ? 'Angeheftet' : 'Anheften'} — Strg+Enter"></span>` +
                `<span style="flex:1">${esc(t.name)}</span>` +
                (t.kurz ? `<span class="pth">${esc(t.kurz)}</span>` : '') + '</button>';
       }).join('') +

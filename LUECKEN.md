@@ -6033,3 +6033,36 @@ Gegenprüfung war das Geld wert — sie hat unter anderem eine Zahl korrigiert
 eine naheliegende Vermutung ausdrücklich ENTKRÄFTET: die Palette hat sehr
 wohl `role="dialog"` und `aria-modal`, weil der gemeinsame Overlay-Griff aus
 E302 sie mitnimmt. Dort ist nichts nachzubauen.
+
+
+================================================================================
+L129 — Die Denkkugel hängt bisher an EINER Stelle
+================================================================================
+4. September 2026 · gefunden beim Bauen von E403
+
+`Orb.setzen(element, zustand, groesse)` steht global bereit und ist geprüft
+(`test399`, 22 Punkte). Benutzt wird sie bisher nur im Agentenfenster. Die
+folgenden Stellen sind beim Messen aufgefallen und ABSICHTLICH nicht
+mitgebaut worden — jede braucht ihre eigene Entscheidung, welcher Zustand
+dort ehrlich wäre:
+
+1. `steuerung.ts:1255` schreibt „… denkt nach" als ZELLWERT in eine
+   KI-Spalte. Das ist Text in den DATEN, nicht in der Oberfläche. Die
+   20-px-Kugel gehört dorthin, aber die Zelle müsste vorher lernen, einen
+   Zustand statt eines Textes zu halten — sonst steht am Ende ein Bild im
+   Export.
+
+2. `arb-dreh` (`bausteine.css:6083`) und `hs-dreh` (`werkzeuge.css:514`)
+   sind zwei Dreh-Rädchen. Beide sagen „es passiert etwas" und sonst nichts.
+   Wer sie ersetzt, muss zuerst wissen, WAS an der Stelle passiert.
+
+3. Der WebLLM-Modell-Download und die OCR zeigen einen Balken. Ein Balken
+   ist dort BESSER als eine Kugel: er sagt, wie weit es ist. Hier
+   ausdrücklich NICHT ändern — das steht hier, damit es niemand für
+   vergessen hält.
+
+Und zwei der neun Zustände haben in Redion noch gar keinen Ort:
+`listening` gehört zur Spracheingabe, die es nicht gibt; `weaving` zum
+Wissensgraphen, der heute ohne Warteanzeige auskommt. Sie sind trotzdem
+gebaut und geprüft — eine Betriebsart wegzulassen und später nachzureichen
+hätte bedeutet, den Vergleichspunkt aus `test399 §4` neu zu eichen.

@@ -9,6 +9,7 @@
  *   §2 „Zuletzt" merkt sich die Reihenfolge, nicht die Zahl.
  *   §3 „Angeheftet" steht oben und überlebt das Neuladen.
  *   §4 Der Stern heftet an — er führt nicht aus.
+ *   §6 Und er steht nicht im Text der Zeile (nachgetragen, siehe dort).
  *   §5 Seiten sind keine Befehle und landen nicht im Gedächtnis.
  *   §6 `paletteOft` hat endlich einen Deckel, und der behält das Richtige.
  *
@@ -296,6 +297,41 @@ p('Der häufigste ist da', 'alt-59' in oft6);
    und es danach nicht in „Zuletzt" wiedergefunden. */
 p('Und der gerade benutzte bleibt in jedem Fall', 'Papierkorb' in oft6,
   'er ist beim Deckeln herausgefallen');
+
+/* ==========================================================================
+ * 6 · DER STERN STEHT NICHT IM ZEILENTEXT
+ * --------------------------------------------------------------------------
+ * NACHGETRAGEN, WEIL DIESE SUITE ES NICHT GEFUNDEN HAT. Sie prüfte, DASS der
+ * Stern da ist und was er tut — nicht, was er dem Text antut. Er stand als
+ * Textknoten im Knopf, und damit stand er in jedem `textContent`: test206
+ * fiel mit acht Punkten auf einmal, weil „Neue Seite" plötzlich
+ * „☆Neue Seite" hiess. Ein Zeichen, das nur aussehen soll, gehört ins CSS.
+ *
+ * Gegenprobe: in `werkzeuge.ts` das `<span class="fest" …></span>` wieder
+ * mit `(istFest ? '★' : '☆')` füllen — dieser Abschnitt fällt sofort.
+ * ========================================================================*/
+console.log('\n6 · Der Stern ist ein Bild, kein Text');
+
+await seite.keyboard.press('Control+Shift+K');
+await seite.waitForTimeout(500);
+const zeilentexte = await seite.evaluate(
+  `Array.from(document.querySelectorAll('#cr button[data-i]'))
+     .map(b => b.textContent).slice(0, 40)`) as string[];
+p('Es stehen Zeilen da', zeilentexte.length > 5, String(zeilentexte.length));
+const mitStern = zeilentexte.filter(t => /[★☆]/.test(t));
+gleich('Keine Zeile trägt ein Sternzeichen im Text', mitStern, []);
+p('Der Stern ist trotzdem sichtbar angelegt',
+  await seite.evaluate(`(() => {
+    const f = document.querySelector('#cr button[data-i] .fest');
+    if (!f) return false;
+    /* Das Zeichen kommt aus ::before — genau darum geht es. BEIDE sind
+       richtig: §4 hat vorher angeheftet, und eine angeheftete Zeile steht
+       oben und trägt den vollen Stern. */
+    const z = getComputedStyle(f, '::before').content.replace(/["']/g, '');
+    return z === '\u2606' || z === '\u2605';
+  })()`));
+await seite.keyboard.press('Escape');
+await seite.waitForTimeout(300);
 
 /* ======================================================================== */
 p('Keine Fehler auf der Konsole', fehler.length === 0, fehler.join(' · '));

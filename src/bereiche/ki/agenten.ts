@@ -1160,6 +1160,23 @@ const Agent = (() => {
     };
     zeichneTypen();
 
+    /* ------------------------------------------------------------------
+     * WAS DER AGENT GERADE TUT — nicht nur DASS er etwas tut.
+     *
+     * Hier stand vier Bögen lang eine Zeile Text: „Der Agent denkt nach …".
+     * Sie ist richtig, aber sie sagt bei einem Lauf über zwölf Werkzeuge
+     * dasselbe wie nach zwei Sekunden. Die Denkkugel (E403) nimmt für jedes
+     * Werkzeug eine andere Gestalt an — der Text bleibt trotzdem stehen,
+     * weil §38 sagt: keine Information allein über das Bild.
+     * ----------------------------------------------------------------- */
+    const ORB_ZU_WERKZEUG: Record<string, string> = {
+      suchen: 'searching', nachschlagen: 'searching', seiteLesen: 'searching',
+      datenbankLesen: 'searching', kalenderLesen: 'searching', mailLesen: 'searching',
+      seiteAnlegen: 'composing', feldFuellen: 'composing',
+      datenbankAnlegen: 'shaping', zeileAnlegen: 'shaping',
+      worker: 'solving', fertig: 'breathing',
+    };
+
     const zeigeSchritt = (s: any): void => {
       const liste = o.querySelector('#al');
       if (!liste) return;
@@ -1197,15 +1214,28 @@ const Agent = (() => {
         const liste = o.querySelector('#al');
         if (!auftrag) { UI.toast('Was soll er tun?'); return; }
         if (!liste) return;
-        liste.innerHTML = '<div class="agent-laeuft">Der Agent denkt nach …</div>';
+        liste.innerHTML = '';
+        const laeuftEl = document.createElement('div');
+        laeuftEl.className = 'agent-laeuft';
+        liste.appendChild(laeuftEl);
+        const kugel = (window as any).Orb
+          ? (window as any).Orb.setzen(laeuftEl, 'working', 64) as { zustand(n: string): void; stopp(): void }
+          : null;
+        const wort = document.createElement('div');
+        wort.className = 'agent-laeuft-wort';
+        wort.textContent = 'Der Agent denkt nach …';
+        laeuftEl.appendChild(wort);
         (b as HTMLButtonElement).disabled = true;
         laufImFenster = laufIdNeu();
         const stopp = o.querySelector<HTMLButtonElement>('[data-a="abbrechen"]');
         if (stopp) stopp.hidden = false;
         try {
-          const erst = o.querySelector('.agent-laeuft');
           const p = await laufen(gewaehlt, auftrag, (s: any) => {
-            if (erst) erst.remove();
+            /* Die Kugel WANDERT jetzt mit, statt beim ersten Schritt zu
+               verschwinden. Sie sass vorher über der leeren Liste und war
+               genau dann weg, wenn endlich etwas passierte. */
+            kugel?.zustand(ORB_ZU_WERKZEUG[String(s.werkzeug)] || 'working');
+            wort.textContent = 'Schritt ' + s.nr + ' · ' + String(s.werkzeug || '');
             zeigeSchritt(s);
           }, { laufId: laufImFenster });
           const letzte = p.schritte[p.schritte.length - 1];
@@ -1223,6 +1253,11 @@ const Agent = (() => {
           liste.innerHTML = '<div class="agent-fehler">' +
             esc(err instanceof Error ? err.message : String(err)) + '</div>';
         }
+        /* Anhalten gehört hierher und nicht in den Erfolgszweig: bei einem
+           Fehler bliebe die Kugel sonst für immer rechnen, unsichtbar unter
+           der Fehlermeldung. */
+        kugel?.stopp();
+        laeuftEl.remove();
         laufImFenster = '';
         if (stopp) stopp.hidden = true;
         (b as HTMLButtonElement).disabled = false;

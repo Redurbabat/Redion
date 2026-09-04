@@ -86,7 +86,17 @@
   white-space:nowrap}
 .as-erg{font-size:12.5px; color:var(--text-dim); line-height:1.55; padding-left:27px;
   max-height:150px; overflow:auto}
-.agent-laeuft{padding:22px; text-align:center; color:var(--text-faint); font-size:14px}
+.agent-laeuft{padding:22px; text-align:center; color:var(--text-faint); font-size:14px;
+  display:flex; flex-direction:column; align-items:center; gap:10px}
+.agent-laeuft-wort{font-variant-numeric:tabular-nums}
+
+/* DIE DENKKUGEL (E403). Sie hat keine eigene Farbe: der Maler nimmt die
+   geerbte `color` als Tinte und regelt nur die Deckkraft über die Tiefe.
+   Deshalb steht hier ein Token und keine Farbe — und deshalb stimmt sie in
+   Hell, Dunkel und im Kontrastmodus von selbst (§39). */
+.orb{display:block; color:var(--text-dim)}
+/* In einer Textzeile sitzt sie auf der Schriftlinie statt darüber. */
+.orb-inline{vertical-align:-4px; margin-right:6px}
 .agent-fehler{padding:16px; color:var(--c-red); font-size:13.5px}
 .agent-fertig{padding:13px 16px; background:var(--b-green); border-radius:8px; margin:10px 16px}
 .agent-fertig b{display:block; font-size:12px; color:var(--c-green); margin-bottom:5px;

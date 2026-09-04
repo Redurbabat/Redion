@@ -203,7 +203,10 @@ Werkzeuge" stammte aus der Zeit vor E375 (dreizehn sind vollständig), und die
 „Mitte" war als `scrollWidth / 2` gerechnet statt als
 `(scrollWidth − clientWidth) / 2`, was den Browser ans Ende klemmte.
 
-Zuletzt AUFGEMACHT: **L123** — die zwölf Befunde des UX-Prüfberichts, die noch
+Zuletzt AUFGEMACHT: **L129** — die Denkkugel (E403) hängt bisher nur am
+Agentenfenster. Drei Stellen wären Kandidaten, eine davon ausdrücklich NICHT
+(ein Fortschrittsbalken sagt mehr als eine Kugel), und zwei der neun Zustände
+haben in Redion noch gar keinen Ort. Und **L123** — die zwölf Befunde des UX-Prüfberichts, die noch
 offen sind (Sprint: F13, F14 · Politur: F12, F17, F18 — F03 ist mit E398,
 F10 mit E397 und F09 mit E400+E401 zu; fünf Nebenfunde in L128). Zwei brauchen Redur: F02 (welche Navigation ist die primäre?)
 und F13 (echter Geräte-Abnahmelauf). Und **L120** — was nach E380 an GoodNotes noch fehlt.

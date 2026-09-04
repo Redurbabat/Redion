@@ -2384,7 +2384,12 @@ body[data-small="1"] .b-text .ct{font-size:14px}
 .finder .res > button > .fest{
   flex:none; width:18px; text-align:center; font-size:13px; line-height:1;
   color:var(--text-faint); visibility:hidden; cursor:pointer;
-}
+
+  /* Das Zeichen gehört hierher und nicht in den HTML-Text: als Textknoten
+     stand es in jedem `textContent` einer Palettenzeile (test206). */
+  }
+.finder .res > button > .fest::before{content:"\2606"}          /* ☆ */
+.finder .res > button[data-ist-fest] > .fest::before{content:"\2605"}  /* ★ */
 .finder .res > button:hover > .fest,
 .finder .res > button.on > .fest{visibility:visible}
 .finder .res > button[data-ist-fest] > .fest{visibility:visible; color:var(--gold-tinte)}
@@ -7726,7 +7731,17 @@ body.nh-zieht .nh-regal{ touch-action:none }
   white-space:nowrap}
 .as-erg{font-size:12.5px; color:var(--text-dim); line-height:1.55; padding-left:27px;
   max-height:150px; overflow:auto}
-.agent-laeuft{padding:22px; text-align:center; color:var(--text-faint); font-size:14px}
+.agent-laeuft{padding:22px; text-align:center; color:var(--text-faint); font-size:14px;
+  display:flex; flex-direction:column; align-items:center; gap:10px}
+.agent-laeuft-wort{font-variant-numeric:tabular-nums}
+
+/* DIE DENKKUGEL (E403). Sie hat keine eigene Farbe: der Maler nimmt die
+   geerbte `color` als Tinte und regelt nur die Deckkraft über die Tiefe.
+   Deshalb steht hier ein Token und keine Farbe — und deshalb stimmt sie in
+   Hell, Dunkel und im Kontrastmodus von selbst (§39). */
+.orb{display:block; color:var(--text-dim)}
+/* In einer Textzeile sitzt sie auf der Schriftlinie statt darüber. */
+.orb-inline{vertical-align:-4px; margin-right:6px}
 .agent-fehler{padding:16px; color:var(--c-red); font-size:13.5px}
 .agent-fertig{padding:13px 16px; background:var(--b-green); border-radius:8px; margin:10px 16px}
 .agent-fertig b{display:block; font-size:12px; color:var(--c-green); margin-bottom:5px;
@@ -16533,7 +16548,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 332, inhalt: '989a2595bd6803d7', gebaut: '2026-09-04T20:59:24.553Z' };
+const Stand = { fassung: 348, inhalt: '90eb5d1804ce87b0', gebaut: '2026-09-04T22:11:33.916Z' };
 window.Stand = Stand;
 
 </script>
@@ -20484,6 +20499,432 @@ const KiAbrechnung = (() => {
         vollstaendig, abweichung, satz };
 })();
 window.KiAbrechnung = KiAbrechnung;
+
+</script>
+<script>
+/* ===== quell/core/orb/geometry.js ===== */
+"use strict";
+/* ============================================================================
+ * core/orb/geometry.js — die Rechnung hinter der Denkkugel
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/core/orb/geometry.ts`. `npm run bauen:ts` schreibt daraus
+ * `quell/core/orb/geometry.js`. Wer das .js bearbeitet, verliert die Änderung beim
+ * nächsten Bauen; `pruefungen/lauf/test105.mts` meldet es vorher.
+ * ----------------------------------------------------------------------------
+ * Diese Datei kennt KEIN Canvas, KEIN DOM und KEINE Uhr. Sie bekommt eine
+ * Grösse und einen Zeitpunkt und gibt Punkte und Linien zurück — sonst nichts.
+ *
+ * Der Grund dafür ist nicht Sauberkeit, sondern Prüfbarkeit: eine Animation,
+ * die man nur ansehen kann, ist eine Behauptung. Eine, die für t = 1.5 immer
+ * dieselben 84 Punkte liefert, lässt sich mit Zahlen prüfen — und §55.3 sagt
+ * genau das: ein Bild, wenn man etwas sehen kann, eine Messung, wenn es
+ * reines Rechnen ist. Hier ist beides möglich, weil es getrennt ist.
+ *
+ * Die Technik ist der Bauart von `thinking-orbs` (Jakub Antalik, MIT,
+ * https://libraries.dev/orbs.html) abgesehen: Punkte auf einer Kugel,
+ * orthografisch abgebildet, nach Tiefe sortiert gezeichnet. Der Code hier ist
+ * eigener; das Paket selbst kann Redion nicht laden (§6, §54 — siehe E403).
+ * ==========================================================================*/
+/* --------------------------------------------------------------------------
+ * Kleine Rechenhelfer. Alles absichtlich ohne Zufall: derselbe Zeitpunkt
+ * ergibt dasselbe Bild, sonst wäre keine Prüfung möglich.
+ * ------------------------------------------------------------------------*/
+/* Die Helfer liegen in einem Sammelnamen, nicht einzeln: `lerp` und
+   `hash` als globale Namen wären ein Hinterhalt für jede spätere Datei,
+   die genauso heissen will. */
+const OrbGeometry = (() => {
+    const lerp = (a, b, f) => a + (b - a) * f;
+    /** Ein fester Hash in [0, 1) — der Ersatz für Math.random(). */
+    const hash = (a, b) => {
+        const s = Math.sin(a * 127.1 + b * 311.7) * 43758.5453;
+        return s - Math.floor(s);
+    };
+    /** Weiches Rauschen auf einem Gitter, für Wellen und Bänder. */
+    const noise2 = (x, y) => {
+        const xi = Math.floor(x), yi = Math.floor(y);
+        const xf = x - xi, yf = y - yi;
+        const u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf);
+        const a = hash(xi, yi), b = hash(xi + 1, yi);
+        const c = hash(xi, yi + 1), d = hash(xi + 1, yi + 1);
+        return lerp(lerp(a, b, u), lerp(c, d, u), v);
+    };
+    /**
+     * Gleichmässige Richtungen auf der Kugel (Fibonacci-Gitter).
+     *
+     * Der naheliegende Weg — Breitengrad und Längengrad gleichmässig teilen —
+     * ballt die Punkte an den Polen zusammen. Man sieht es sofort: zwei helle
+     * Flecken oben und unten. Das Fibonacci-Gitter hat das Problem nicht.
+     */
+    const fibDir = (i, n) => {
+        const y = 1 - (i / Math.max(n - 1, 1)) * 2; /* von +1 nach -1 */
+        const r = Math.sqrt(Math.max(0, 1 - y * y));
+        const phi = i * 2.399963229728653; /* der goldene Winkel */
+        return [Math.cos(phi) * r, y, Math.sin(phi) * r];
+    };
+    /**
+     * Drehung um die Hochachse, Neigung nach vorn, dann orthografisch abbilden.
+     * Perspektive wäre bei 64 px verschwendet — man sähe sie nicht, und sie
+     * würde die Punkte am Rand verzerren.
+     */
+    const makeProj = (yaw, tilt, cx, cy, scale) => {
+        const cy1 = Math.cos(yaw), sy1 = Math.sin(yaw);
+        const ct = Math.cos(tilt), st = Math.sin(tilt);
+        return (x, y, z) => {
+            const x1 = x * cy1 + z * sy1;
+            const z1 = -x * sy1 + z * cy1;
+            const y2 = y * ct - z1 * st;
+            const z2 = y * st + z1 * ct;
+            return [cx + x1 * scale, cy + y2 * scale, (z2 + 1) / 2];
+        };
+    };
+    /**
+     * Die Punktgrössen sind für 64 px abgestimmt. Bei 20 px linear zu
+     * verkleinern ergäbe Punkte von unter einem halben Pixel — sichtbar wäre
+     * nur noch ein grauer Fleck. Deshalb unterlinear.
+     */
+    const radiusScale = (size, pow = 0.6) => Math.pow(size / 64, pow);
+    /**
+     * Aus rohen Punkten wird ein fertiger Augenblick: unsichtbare weg, zu kleine
+     * auf ein Mindestmass, und nach Tiefe sortiert.
+     *
+     * Die Sortierung gehört HIERHER und nicht in den Maler. Sonst müsste jeder
+     * Maler sie wiederholen — und der erste, der es vergisst, zeichnet die
+     * Rückseite über die Vorderseite, was aussieht wie ein Flackern.
+     */
+    const finalize = (dots, lines, rMin = 0.35) => {
+        const sichtbar = dots.filter(d => d.r > 0.01)
+            .map(d => (d.r < rMin ? { ...d, r: rMin } : d));
+        sichtbar.sort((a, b) => a.depth - b.depth);
+        return { dots: sichtbar, lines };
+    };
+    return { lerp, hash, noise2, fibDir, makeProj, radiusScale, finalize };
+})();
+window.OrbGeometry = OrbGeometry;
+
+</script>
+<script>
+/* ===== quell/core/orb/modes.js ===== */
+"use strict";
+/* ============================================================================
+ * core/orb/modes.js — die neun Betriebsarten der Denkkugel
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/core/orb/modes.ts`. `npm run bauen:ts` schreibt daraus
+ * `quell/core/orb/modes.js`. Wer das .js bearbeitet, verliert die Änderung beim
+ * nächsten Bauen; `pruefungen/lauf/test105.mts` meldet es vorher.
+ * ----------------------------------------------------------------------------
+ * Neun Arten zu warten. Sie sind nicht Schmuck: ein Dreh-Rädchen sagt „es
+ * passiert etwas", diese hier sagen WAS passiert. Wer sucht, sieht einen
+ * Suchstrahl über eine Kugel wandern; wer verbindet, sieht Kanten entstehen.
+ *
+ * Jede Art ist eine reine Funktion von (Grösse, Zeit). Kein Zufall, keine
+ * Uhr, kein DOM — deshalb ist jede von ihnen mit Zahlen prüfbar (test403).
+ * ==========================================================================*/
+const OrbModes = (() => {
+    const { fibDir, finalize, hash, lerp, makeProj, noise2, radiusScale } = OrbGeometry;
+    const TAU = Math.PI * 2;
+    /** Die Tiefe bestimmt auch die Grösse — vorn ist grösser, wie beim Auge. */
+    const dot = (x, y, depth, basis) => ({ x, y, depth, r: basis * (0.5 + 0.8 * depth) });
+    /** Gemeinsame Masse: Mittelpunkt, Kugelradius, Grundgrösse eines Punktes. */
+    const masse = (size) => ({
+        cx: size / 2,
+        cy: size / 2,
+        R: size * 0.36,
+        basis: 1.55 * radiusScale(size),
+    });
+    /* --------------------------------------------------------------------------
+     * 1 · working — Teilchen auf geneigten Bahnen
+     * ------------------------------------------------------------------------*/
+    const working = (size, t) => {
+        const { cx, cy, R, basis } = masse(size);
+        const dots = [];
+        const bahnen = 2, je = 17;
+        /* EINE Kamera für die ganze Szene. Hier stand für jede Bahn ein eigenes
+           `makeProj` mit eigenem Blickwinkel — drei flache Ellipsen, jede aus einer
+           anderen Richtung gesehen. Das ergibt keine ineinandergreifenden Ringe,
+           sondern einen Klecks, und genau so sah es auf dem ersten Bild aus.
+           Die Neigung gehört an den RING, nicht an die Kamera. */
+        const proj = makeProj(t * 0.32, 0.26, cx, cy, R);
+        for (let o = 0; o < bahnen; o++) {
+            const inkl = 0.15 + o * 1.18; /* zwei deutlich verschiedene Neigungen */
+            const ci = Math.cos(inkl), si = Math.sin(inkl);
+            const dreh = o * 1.35;
+            const cp = Math.cos(dreh), sp = Math.sin(dreh);
+            for (let i = 0; i < je; i++) {
+                const a = (i / je) * TAU + t * (1.05 + o * 0.22);
+                /* Kreis in der xy-Ebene, um x gekippt, dann um y gedreht. */
+                const rx = Math.cos(a), ry0 = Math.sin(a);
+                const ry = ry0 * ci, rz0 = ry0 * si;
+                const [x, y, d] = proj(rx * cp + rz0 * sp, ry, -rx * sp + rz0 * cp);
+                dots.push(dot(x, y, d, basis));
+            }
+        }
+        return finalize(dots, []);
+    };
+    /* --------------------------------------------------------------------------
+     * 2 · searching — ein Suchstrahl streicht über eine gepunktete Kugel
+     * ------------------------------------------------------------------------*/
+    const searching = (size, t) => {
+        const { cx, cy, R, basis } = masse(size);
+        const n = Math.round(56 * Math.max(0.45, size / 64));
+        const proj = makeProj(t * 0.16, 0.32, cx, cy, R);
+        const strahl = (t * 1.05) % TAU;
+        const dots = [];
+        for (let i = 0; i < n; i++) {
+            const [px, py, pz] = fibDir(i, n);
+            const laenge = Math.atan2(pz, px);
+            /* Wie nah dieser Punkt am Strahl steht — 1 heisst genau darauf. */
+            const nah = Math.max(0, Math.cos(laenge - strahl));
+            const treffer = Math.pow(nah, 6);
+            const [x, y, d] = proj(px, py, pz);
+            dots.push({ x, y, depth: Math.min(1, d + treffer * 0.5),
+                r: basis * (0.34 + 0.45 * d + treffer * 1.75) });
+        }
+        return finalize(dots, []);
+    };
+    /* --------------------------------------------------------------------------
+     * 3 · solving — Bänder verdrehen sich in Vierteln und rasten wieder ein
+     * ------------------------------------------------------------------------*/
+    const solving = (size, t) => {
+        const { cx, cy, R, basis } = masse(size);
+        const n = Math.round(72 * Math.max(0.45, size / 64));
+        const dots = [];
+        const takt = t * 1.25;
+        const schritt = Math.floor(takt);
+        /* Ein Viertel drehen, dann halten: die Bewegung sitzt in der ersten
+           Hälfte des Takts, die zweite Hälfte steht still. Das „Einrasten"
+           entsteht genau aus dieser Pause — ohne sie sähe es aus wie Trudeln. */
+        const roh = Math.min(1, (takt - schritt) * 2);
+        const weich = roh * roh * (3 - 2 * roh);
+        for (let i = 0; i < n; i++) {
+            const [px, py, pz] = fibDir(i, n);
+            /* Der Spalt ist der ganze Trick: ohne ihn dreht sich zwar alles
+               richtig, aber man sieht es nicht — die Punkte einer gedrehten Scheibe
+               landen dort, wo eben noch die Punkte der anderen standen. */
+            if (Math.abs(Math.abs(py) - 0.34) < 0.105)
+                continue;
+            const band = py > 0.34 ? 0 : py < -0.34 ? 2 : 1;
+            const vorher = (Math.PI / 2) * Math.floor(hash(band, schritt) * 4);
+            const nachher = (Math.PI / 2) * Math.floor(hash(band, schritt + 1) * 4);
+            const dreh = lerp(vorher, nachher, weich);
+            const c = Math.cos(dreh), s = Math.sin(dreh);
+            const proj = makeProj(0.5, 0.3, cx, cy, R);
+            const [x, y, d] = proj(px * c + pz * s, py, -px * s + pz * c);
+            dots.push(dot(x, y, d, basis));
+        }
+        return finalize(dots, []);
+    };
+    /* --------------------------------------------------------------------------
+     * 4 · listening — eine Welle läuft durch Breitenringe
+     * ------------------------------------------------------------------------*/
+    const listening = (size, t) => {
+        const { cx, cy, R, basis } = masse(size);
+        const proj = makeProj(0.35, 0.28, cx, cy, R);
+        const ringe = 5;
+        const dots = [];
+        for (let k = 0; k < ringe; k++) {
+            const lat = (-0.62 + (k / (ringe - 1)) * 1.24);
+            const ry = Math.sin(lat);
+            const rr = Math.cos(lat);
+            const je = Math.max(6, Math.round(16 * rr));
+            for (let i = 0; i < je; i++) {
+                const a = (i / je) * TAU;
+                /* Die Welle läuft in der Länge UND wandert über die Breiten — sonst
+                   pulsieren alle Ringe im Gleichtakt, und das sieht aus wie Atmen,
+                   nicht wie Hören. */
+                const w = Math.sin(a * 2 - t * 2.6 + k * 0.9);
+                const aus = 1 + w * 0.17;
+                const [x, y, d] = proj(Math.cos(a) * rr * aus, ry * aus, Math.sin(a) * rr * aus);
+                dots.push({ x, y, depth: d, r: basis * (0.45 + 0.7 * d) * (0.75 + 0.35 * (w + 1) / 2) });
+            }
+        }
+        return finalize(dots, []);
+    };
+    /* --------------------------------------------------------------------------
+     * 5 · connecting — ein Netz verdrahtet sich, Pakete laufen die Kanten entlang
+     * ------------------------------------------------------------------------*/
+    const connecting = (size, t) => {
+        const { cx, cy, R, basis } = masse(size);
+        const n = 11;
+        const proj = makeProj(t * 0.3, 0.3, cx, cy, R);
+        const orte = [];
+        for (let i = 0; i < n; i++) {
+            const [px, py, pz] = fibDir(i, n);
+            orte.push(proj(px, py, pz));
+        }
+        const dots = [];
+        const lines = [];
+        for (let i = 0; i < n; i++) {
+            const a = orte[i];
+            if (!a)
+                continue;
+            dots.push(dot(a[0], a[1], a[2], basis * 1.25));
+            for (const sprung of [3, 5]) {
+                const j = (i + sprung) % n;
+                const b = orte[j];
+                if (!b || j <= i)
+                    continue;
+                /* Jede Kante hat ihre eigene Weckzeit. Erschienen alle zugleich,
+                   wäre es kein Verdrahten, sondern ein Blinken. */
+                const weck = hash(i, j) * 3.2;
+                const auf = Math.max(0, Math.min(1, (t % 4.4) - weck));
+                if (auf <= 0)
+                    continue;
+                const tiefe = (a[2] + b[2]) / 2;
+                lines.push({ x1: a[0], y1: a[1],
+                    x2: lerp(a[0], b[0], auf), y2: lerp(a[1], b[1], auf),
+                    w: 0.5 * radiusScale(size, 0.8), depth: tiefe });
+                if (auf >= 1) {
+                    const p = ((t * 0.55 + hash(j, i)) % 1);
+                    dots.push(dot(lerp(a[0], b[0], p), lerp(a[1], b[1], p), tiefe, basis * 0.62));
+                }
+            }
+        }
+        return finalize(dots, lines);
+    };
+    /* --------------------------------------------------------------------------
+     * 6 · weaving — drei Stränge flechten sich um die Kugel
+     * ------------------------------------------------------------------------*/
+    const weaving = (size, t) => {
+        const { cx, cy, R, basis } = masse(size);
+        const proj = makeProj(t * 0.35, 0.3, cx, cy, R);
+        const dots = [];
+        const je = 26;
+        for (let s = 0; s < 3; s++) {
+            const phase = (s / 3) * TAU;
+            for (let i = 0; i < je; i++) {
+                const u = i / je;
+                const a = u * TAU;
+                /* Das Flechten steckt allein in dieser Zeile: die Höhe jedes Strangs
+                   schwingt dreimal je Umlauf, und die drei Stränge sind um ein
+                   Drittel versetzt — deshalb kreuzen sie einander statt parallel zu
+                   laufen. */
+                const hoehe = Math.sin(a * 2 + phase + t * 1.1) * 0.88;
+                const rr = Math.sqrt(Math.max(0, 1 - hoehe * hoehe));
+                const [x, y, d] = proj(Math.cos(a) * rr, hoehe, Math.sin(a) * rr);
+                dots.push(dot(x, y, d, basis * 0.92));
+            }
+        }
+        return finalize(dots, []);
+    };
+    /* --------------------------------------------------------------------------
+     * 7 · composing — eine wogende Schärpe aus mehreren Bändern
+     * ------------------------------------------------------------------------*/
+    const composing = (size, t) => {
+        const { cx, cy, R, basis } = masse(size);
+        const proj = makeProj(t * 0.22, 0.26, cx, cy, R);
+        const dots = [];
+        const laengs = 34, quer = 4;
+        for (let i = 0; i < laengs; i++) {
+            const u = i / laengs;
+            const a = u * TAU;
+            const mitte = Math.sin(a * 2 + t * 1.05) * 0.34
+                + (noise2(u * 3, t * 0.35) - 0.5) * 0.22;
+            for (let k = 0; k < quer; k++) {
+                const hoehe = mitte + (k - (quer - 1) / 2) * 0.13;
+                if (Math.abs(hoehe) >= 1)
+                    continue;
+                const rr = Math.sqrt(1 - hoehe * hoehe);
+                const [x, y, d] = proj(Math.cos(a) * rr, hoehe, Math.sin(a) * rr);
+                const rand = Math.abs(k - (quer - 1) / 2) / ((quer - 1) / 2);
+                dots.push({ x, y, depth: d, r: basis * (0.45 + 0.7 * d) * (1 - rand * 0.45) });
+            }
+        }
+        return finalize(dots, []);
+    };
+    /* --------------------------------------------------------------------------
+     * 8 · breathing — ein Ring von vorn, der sich langsam wandelt
+     * ------------------------------------------------------------------------*/
+    const breathing = (size, t) => {
+        const { cx, cy, R, basis } = masse(size);
+        const n = 42;
+        const dots = [];
+        const atem = 0.84 + Math.sin(t * 0.85) * 0.12;
+        for (let i = 0; i < n; i++) {
+            const a = (i / n) * TAU;
+            /* EIN OVAL, KEIN KREIS — und das ist keine Feinheit. Auf dem ersten Bild
+               waren `breathing` und `shaping` im Stillstand nicht zu unterscheiden:
+               zwei gepunktete Kreise. Das langsam wandernde Oval macht sie in JEDEM
+               Standbild verschieden, nicht nur in der Bewegung. */
+            const oval = 1 + Math.cos(2 * (a - t * 0.28)) * 0.19;
+            const unruhe = 1 + (noise2(Math.cos(a) * 1.6 + 4, Math.sin(a) * 1.6 + t * 0.4) - 0.5) * 0.14;
+            const rr = R * atem * oval * unruhe;
+            dots.push({ x: cx + Math.cos(a) * rr, y: cy + Math.sin(a) * rr,
+                depth: 0.62 + Math.sin(a * 2 + t) * 0.12, r: basis * 1.0 });
+        }
+        return finalize(dots, []);
+    };
+    /* --------------------------------------------------------------------------
+     * 9 · shaping — ein gepunkteter Umriss wandelt Kreis → Dreieck → Viereck
+     * ------------------------------------------------------------------------*/
+    const ECKEN = [0, 3, 4]; /* 0 heisst Kreis */
+    /** Ein Punkt auf dem Umriss mit `ecken` Ecken, bei Umlaufanteil u. */
+    const umriss = (u, ecken) => {
+        const a = u * TAU - Math.PI / 2;
+        if (ecken < 3)
+            return [Math.cos(a), Math.sin(a)];
+        /* Auf welcher Kante liegt u — und wie weit darauf. */
+        const k = u * ecken;
+        const seite = Math.floor(k) % ecken;
+        const f = k - Math.floor(k);
+        const w0 = (seite / ecken) * TAU - Math.PI / 2;
+        const w1 = ((seite + 1) / ecken) * TAU - Math.PI / 2;
+        return [lerp(Math.cos(w0), Math.cos(w1), f), lerp(Math.sin(w0), Math.sin(w1), f)];
+    };
+    const shaping = (size, t) => {
+        const { cx, cy, R, basis } = masse(size);
+        const n = 40;
+        const takt = t * 0.42;
+        const schritt = Math.floor(takt);
+        /* Halten, dann wandeln: der Umriss steht zwei Drittel des Takts still.
+           Ein Umriss, der ununterbrochen morpht, ist nie eine Form. */
+        const roh = Math.max(0, Math.min(1, (takt - schritt - 0.35) / 0.65));
+        const weich = roh * roh * (3 - 2 * roh);
+        const von = ECKEN[schritt % ECKEN.length] ?? 0;
+        const nach = ECKEN[(schritt + 1) % ECKEN.length] ?? 0;
+        const dots = [];
+        for (let i = 0; i < n; i++) {
+            const u = i / n;
+            const [ax, ay] = umriss(u, von);
+            const [bx, by] = umriss(u, nach);
+            const x = lerp(ax, bx, weich), y = lerp(ay, by, weich);
+            dots.push({ x: cx + x * R, y: cy + y * R,
+                depth: 0.55 + 0.35 * (1 - Math.abs(u * 2 - 1)),
+                r: basis * 0.95 });
+        }
+        return finalize(dots, []);
+    };
+    /* ------------------------------------------------------------------------ */
+    /** Die neun Zustände, so wie sie ein Mensch nennt. */
+    const ORB_STATES = [
+        'working', 'searching', 'solving', 'listening', 'connecting',
+        'weaving', 'composing', 'breathing', 'shaping',
+    ];
+    const ORB_MODES = {
+        working, searching, solving, listening, connecting,
+        weaving, composing, breathing, shaping,
+    };
+    /** Was jeder Zustand einem Menschen sagt — für `aria-label` und Titel. */
+    const ORB_TEXTE = {
+        working: 'arbeitet',
+        searching: 'sucht',
+        solving: 'löst',
+        listening: 'hört zu',
+        connecting: 'verbindet',
+        weaving: 'verknüpft',
+        composing: 'schreibt',
+        breathing: 'wartet',
+        shaping: 'formt',
+    };
+    /** Einen Augenblick berechnen. Unbekannter Zustand fällt auf `working` zurück. */
+    const orbFrame = (state, size, t) => {
+        const m = ORB_MODES[state] ?? working;
+        return m(size, t);
+    };
+    return { ORB_STATES, ORB_MODES, ORB_TEXTE, orbFrame };
+})();
+window.OrbModes = OrbModes;
 
 </script>
 <script>
@@ -37006,6 +37447,162 @@ const Hinweis = (() => {
     return { toast, banner, leer };
 })();
 window.Hinweis = Hinweis;
+
+</script>
+<script>
+/* ===== quell/schale/ueberlagerung/orb.js ===== */
+"use strict";
+/* ============================================================================
+ * schale/ueberlagerung/orb.js — die Denkkugel auf einem Canvas
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/schale/ueberlagerung/orb.ts`. `npm run bauen:ts` schreibt daraus
+ * `quell/schale/ueberlagerung/orb.js`. Wer das .js bearbeitet, verliert die Änderung beim
+ * nächsten Bauen; `pruefungen/lauf/test105.mts` meldet es vorher.
+ * ----------------------------------------------------------------------------
+ * Die Rechnung steht in `core/orb/`. Hier steht nur, wie daraus Farbe wird —
+ * und drei Dinge, die eine Animation in einer echten App braucht und die in
+ * keiner Vorführung vorkommen:
+ *
+ *   · Sie hört auf, wenn niemand hinsieht (Tab weg, Element aus dem Bild).
+ *     Eine Denkkugel, die im Hintergrund weiterrechnet, kostet Akku für
+ *     nichts — §36.
+ *   · Sie steht still, wenn der Nutzer `prefers-reduced-motion` gesetzt hat.
+ *     Dann ist sie ein Standbild, nicht nichts: der Zustand bleibt lesbar.
+ *   · Sie trägt ihren Zustand als Text, nicht nur als Bewegung — §38 sagt
+ *     „keine Information nur über Farbe", und Bewegung ist nicht besser.
+ *
+ * Die Tinte ist die geerbte Textfarbe des Ortes, an dem die Kugel hängt.
+ * Damit stimmt sie in Hell und Dunkel von selbst, ohne ein einziges neues
+ * Token — §39 warnt ausdrücklich vor erfundenen Tokens, und dreimal ist es
+ * hier schon passiert.
+ * ==========================================================================*/
+const Orb = (() => {
+    const { orbFrame, ORB_TEXTE } = OrbModes;
+    /** Wie eine `rgb(...)`-Zeichenkette in drei Zahlen zerfällt. */
+    const zuRgb = (farbe) => {
+        const m = farbe.match(/-?\d+(\.\d+)?/g);
+        if (!m || m.length < 3)
+            return [60, 60, 60];
+        return [Number(m[0]) || 0, Number(m[1]) || 0, Number(m[2]) || 0];
+    };
+    /**
+     * Einen fertigen Augenblick zeichnen. Linien zuerst, damit die Knoten
+     * darauf sitzen und nicht darunter verschwinden.
+     */
+    const malen = (ctx, bild, size, tinte) => {
+        ctx.clearRect(0, 0, size, size);
+        const [r, g, b] = tinte;
+        for (const l of bild.lines) {
+            ctx.strokeStyle = `rgba(${r},${g},${b},${(0.12 + 0.3 * l.depth).toFixed(3)})`;
+            ctx.lineWidth = l.w;
+            ctx.beginPath();
+            ctx.moveTo(l.x1, l.y1);
+            ctx.lineTo(l.x2, l.y2);
+            ctx.stroke();
+        }
+        for (const d of bild.dots) {
+            ctx.fillStyle = `rgba(${r},${g},${b},${(0.16 + 0.74 * d.depth).toFixed(3)})`;
+            ctx.beginPath();
+            ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    };
+    /**
+     * Eine Denkkugel in ein Element hängen.
+     *
+     * `groesse` ist in CSS-Pixeln. Zwei Werte sind abgestimmt: 64 für ein
+     * Fenster, 20 für eine Zeile. Dazwischen geht auch, sieht aber nach
+     * nichts Bestimmtem aus.
+     */
+    const setzen = (wirt, start = 'working', groesse = 64) => {
+        let art = start;
+        let laeuft = true;
+        let bild = 0;
+        let sichtbar = true;
+        const c = document.createElement('canvas');
+        c.className = 'orb';
+        c.setAttribute('role', 'img');
+        c.style.width = groesse + 'px';
+        c.style.height = groesse + 'px';
+        wirt.appendChild(c);
+        const beschriften = () => {
+            const wort = ORB_TEXTE[art] || 'arbeitet';
+            c.setAttribute('aria-label', 'Redion ' + wort + ' …');
+            c.title = 'Redion ' + wort + ' …';
+        };
+        beschriften();
+        const ctx = c.getContext('2d');
+        if (!ctx) {
+            /* Ohne 2D-Canvas bleibt der Platz leer statt kaputt. Ein Punkt
+               genügt, damit die Zeile nicht in sich zusammenfällt. */
+            c.remove();
+            return { zustand: (n) => { art = n; }, stopp: () => { } };
+        }
+        const ruhe = typeof matchMedia === 'function'
+            && matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const zeichnen = (jetzt) => {
+            if (!laeuft)
+                return;
+            const dpr = Math.min(2, (window.devicePixelRatio || 1));
+            const px = Math.round(groesse * dpr);
+            if (c.width !== px) {
+                c.width = px;
+                c.height = px;
+            }
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            /* Bei Bewegung-aus ein festes Standbild: t = 2.4 zeigt bei allen
+               neun Arten einen Zustand, in dem etwas zu erkennen ist — bei t = 0
+               sitzen mehrere Arten noch in ihrer Ausgangslage. */
+            const t = ruhe ? 2.4 : jetzt / 1000;
+            const tinte = zuRgb(getComputedStyle(c).color);
+            malen(ctx, orbFrame(art, groesse, t), groesse, tinte);
+            if (ruhe)
+                return; /* einmal malen genügt */
+            if (sichtbar && !document.hidden)
+                bild = requestAnimationFrame(zeichnen);
+        };
+        bild = requestAnimationFrame(zeichnen);
+        /* Aus dem Bild gescrollt heisst: nicht mehr rechnen. */
+        let beobachter;
+        if (typeof IntersectionObserver === 'function') {
+            beobachter = new IntersectionObserver((eintraege) => {
+                const e = eintraege[0];
+                if (!e)
+                    return;
+                sichtbar = e.isIntersecting;
+                if (sichtbar && laeuft && !ruhe && !bild)
+                    bild = requestAnimationFrame(zeichnen);
+            });
+            beobachter.observe(c);
+        }
+        const beiSicht = () => {
+            if (!document.hidden && laeuft && !ruhe && sichtbar) {
+                bild = requestAnimationFrame(zeichnen);
+            }
+        };
+        document.addEventListener('visibilitychange', beiSicht);
+        return {
+            zustand(neu) {
+                if (neu === art)
+                    return;
+                art = neu;
+                beschriften();
+            },
+            stopp() {
+                laeuft = false;
+                if (bild)
+                    cancelAnimationFrame(bild);
+                bild = 0;
+                beobachter?.disconnect();
+                document.removeEventListener('visibilitychange', beiSicht);
+                c.remove();
+            },
+        };
+    };
+    return { setzen, malen };
+})();
+window.Orb = Orb;
 
 </script>
 <script>
@@ -79036,13 +79633,20 @@ const Werkzeuge = (() => {
                    für DIREKTE Kinder (E348). Ein <span> mit `data-fest` ist deshalb
                    das Richtige: der Griff auf `.res` prüft ihn VOR dem Knopf, und
                    für die Tastatur gibt es Strg+Enter. Der Zustand steht am Knopf
-                   im `aria-label`, damit ein Vorleseprogramm ihn hört (§38). */
+                   im `aria-label`, damit ein Vorleseprogramm ihn hört (§38).
+        
+                   DAS ZEICHEN SELBST STEHT IM CSS, NICHT HIER. Als Textknoten
+                   landete es in `textContent` — und damit in jeder Prüfung und in
+                   jedem Stück Code, das den Namen einer Zeile abliest. test206 fiel
+                   daran mit acht Punkten auf einmal („Neue Seite" fand
+                   „☆Neue Seite"). `aria-hidden` allein reicht nicht: es verbirgt
+                   vor dem Vorleser, nicht vor dem Text. */
                 const istFest = feste.has(t.name);
                 return kopf + `<button data-i="${k}"${k === i ? ' class="on"' : ''}` +
                     (istFest ? ' data-ist-fest' : '') +
                     ` aria-label="${esc(t.name)}${istFest ? ' · angeheftet' : ''}">` +
-                    `<span class="fest" data-fest="${esc(t.name)}" aria-hidden="true">` +
-                    (istFest ? '★' : '☆') + '</span>' +
+                    `<span class="fest" data-fest="${esc(t.name)}" aria-hidden="true"` +
+                    ` title="${istFest ? 'Angeheftet' : 'Anheften'} — Strg+Enter"></span>` +
                     `<span style="flex:1">${esc(t.name)}</span>` +
                     (t.kurz ? `<span class="pth">${esc(t.kurz)}</span>` : '') + '</button>';
             }).join('') +
@@ -84585,7 +85189,22 @@ const Ansichten = (() => {
             .filter(b => b.type === 'page' && b.alive && b.parentTable !== 'collection' && !b.system);
         const kuerzlich = [...alle]
             .sort((a, b) => (b.edited || '').localeCompare(a.edited || '')).slice(0, 6);
-        const sterne = alle.filter(b => b.fav);
+        /* ══ EIN KATALOG, NICHT ZWEI (E402, L128 Punkt 3) ═════════════════════
+           Hier stand `alle.filter(b => b.fav)`. Das Feld heisst `favorite` —
+           `b.fav` gibt es an keinem Block. Die Liste war deshalb IMMER leer,
+           und weil `block()` einen leeren Abschnitt ganz weglässt (unten), fiel
+           nicht einmal eine Überschrift auf: der Bildschirm sah aus, als hätte
+           man einfach keine Favoriten.
+    
+           Statt das eine Wort zu berichtigen, fragt der Bildschirm jetzt den
+           Katalog, den es längst gibt — `Store.favorites()` (indexdb.ts:850).
+           Ein zweiter, von Hand geschriebener Filter für dieselbe Sache läuft
+           mit dem ersten auseinander, und genau das ist hier passiert (§8).
+           Die eigene Einschränkung bleibt: keine Datenbankzeilen, keine
+           Systemseiten — deshalb der Schnitt mit `alle`. */
+        const festeIds = new Set((Store.favorites?.() || [])
+            .map((b) => String(b.id)));
+        const sterne = alle.filter(b => festeIds.has(String(b.id)));
         const privat = alle.filter(b => !b.parentId);
         const datenbanken = Object.values(Store.cache.collections || {});
         const vorlagen = (() => {
@@ -94588,6 +95207,22 @@ const Agent = (() => {
                 '</button>').join('');
         };
         zeichneTypen();
+        /* ------------------------------------------------------------------
+         * WAS DER AGENT GERADE TUT — nicht nur DASS er etwas tut.
+         *
+         * Hier stand vier Bögen lang eine Zeile Text: „Der Agent denkt nach …".
+         * Sie ist richtig, aber sie sagt bei einem Lauf über zwölf Werkzeuge
+         * dasselbe wie nach zwei Sekunden. Die Denkkugel (E403) nimmt für jedes
+         * Werkzeug eine andere Gestalt an — der Text bleibt trotzdem stehen,
+         * weil §38 sagt: keine Information allein über das Bild.
+         * ----------------------------------------------------------------- */
+        const ORB_ZU_WERKZEUG = {
+            suchen: 'searching', nachschlagen: 'searching', seiteLesen: 'searching',
+            datenbankLesen: 'searching', kalenderLesen: 'searching', mailLesen: 'searching',
+            seiteAnlegen: 'composing', feldFuellen: 'composing',
+            datenbankAnlegen: 'shaping', zeileAnlegen: 'shaping',
+            worker: 'solving', fertig: 'breathing',
+        };
         const zeigeSchritt = (s) => {
             const liste = o.querySelector('#al');
             if (!liste)
@@ -94656,17 +95291,29 @@ const Agent = (() => {
                 }
                 if (!liste)
                     return;
-                liste.innerHTML = '<div class="agent-laeuft">Der Agent denkt nach …</div>';
+                liste.innerHTML = '';
+                const laeuftEl = document.createElement('div');
+                laeuftEl.className = 'agent-laeuft';
+                liste.appendChild(laeuftEl);
+                const kugel = window.Orb
+                    ? window.Orb.setzen(laeuftEl, 'working', 64)
+                    : null;
+                const wort = document.createElement('div');
+                wort.className = 'agent-laeuft-wort';
+                wort.textContent = 'Der Agent denkt nach …';
+                laeuftEl.appendChild(wort);
                 b.disabled = true;
                 laufImFenster = laufIdNeu();
                 const stopp = o.querySelector('[data-a="abbrechen"]');
                 if (stopp)
                     stopp.hidden = false;
                 try {
-                    const erst = o.querySelector('.agent-laeuft');
                     const p = await laufen(gewaehlt, auftrag, (s) => {
-                        if (erst)
-                            erst.remove();
+                        /* Die Kugel WANDERT jetzt mit, statt beim ersten Schritt zu
+                           verschwinden. Sie sass vorher über der leeren Liste und war
+                           genau dann weg, wenn endlich etwas passierte. */
+                        kugel?.zustand(ORB_ZU_WERKZEUG[String(s.werkzeug)] || 'working');
+                        wort.textContent = 'Schritt ' + s.nr + ' · ' + String(s.werkzeug || '');
                         zeigeSchritt(s);
                     }, { laufId: laufImFenster });
                     const letzte = p.schritte[p.schritte.length - 1];
@@ -94686,6 +95333,11 @@ const Agent = (() => {
                     liste.innerHTML = '<div class="agent-fehler">' +
                         esc(err instanceof Error ? err.message : String(err)) + '</div>';
                 }
+                /* Anhalten gehört hierher und nicht in den Erfolgszweig: bei einem
+                   Fehler bliebe die Kugel sonst für immer rechnen, unsichtbar unter
+                   der Fehlermeldung. */
+                kugel?.stopp();
+                laeuftEl.remove();
                 laufImFenster = '';
                 if (stopp)
                     stopp.hidden = true;
