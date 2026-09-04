@@ -5984,7 +5984,9 @@ Diese sieben bleiben offen — jeder mit Beleg, jeder ein eigener Bogen.
    Register dafür (§8: fünf Speicher, die einander nicht kennen). Das ist
    die zweite fehlende Hälfte von F09.
 
-3. **Ein toter Favoriten-Block.** `ansichten/dienst.ts:491` filtert
+3. **GESCHLOSSEN (E402) · Ein toter Favoriten-Block.** Der Bildschirm fragt
+   jetzt `Store.favorites()` statt eines eigenen Filters — ein Katalog, nicht
+   zwei (§8). `test398`, Mutation rot gesehen. Ursprünglicher Befund: `ansichten/dienst.ts:491` filtert
    `alle.filter(b => b.fav)` — das Feld heisst `favorite`. Der Bildschirm
    „Seiten" ist erreichbar, die Liste bleibt immer leer, und weil `block()`
    leere Abschnitte ganz weglässt (`:510-511`), sieht man nicht einmal, dass

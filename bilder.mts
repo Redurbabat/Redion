@@ -1947,6 +1947,29 @@ ANSICHTEN['palette'] = {
    Überschrift „Zuletzt" darunter, und der goldene Stern an den angehefteten
    Zeilen. Der Merker wird vorher gesetzt — sonst müsste das Bild erst fünf
    Befehle ausführen, und dann stünde etwas anderes im Vordergrund. */
+/* --- Der Favoritenblock, der vier Bögen lang leer war (E402) --------------
+   Zu sehen ist eine Überschrift, die es vorher nie gab: „Favoriten". Der
+   Filter fragte `b.fav`, das Feld heisst `favorite` — und weil ein leerer
+   Abschnitt ganz weggelassen wird, fehlte nicht einmal ein Hinweis. */
+ANSICHTEN['seitenfavoriten'] = {
+  titel: 'Der Favoritenblock, der immer leer war (E402)',
+  bauen: async () => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelectorAll('.overlay').forEach(o => o.remove());
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+    document.getElementById('rg-willkommen')?.remove();
+    document.getElementById('rg-einladung')?.remove();
+    const a = Store.addPage(null, { text: 'Formelsammlung Elektrotechnik', icon: '⚡' });
+    Store.updateBlock(a.id, { favorite: true });
+    const b = Store.addPage(null, { text: 'Prüfung Februar', icon: '📝' });
+    Store.updateBlock(b.id, { favorite: true });
+    Store.addPage(null, { text: 'Notizen vom Montag', icon: '📄' });
+    await Store.flush();
+    Ansichten.seiten();
+    await new Promise(r => setTimeout(r, 900));
+  }
+};
+
 ANSICHTEN['palettegemerkt'] = {
   titel: 'Die Palette merkt sich, was du brauchst (E401)',
   bauen: async () => {

@@ -3534,3 +3534,18 @@ die Zeugnisnote je Semester (E242) und der echte Stundenplan (E243).
   Gespräch — es hat gezeigt, dass zwei meiner drei Beispielnamen gar nicht
   existieren und die Absicherung sie still fallen liess. Genau so soll sie
   arbeiten; `test397 §3` hält den Fall jetzt fest.
+
+  E402 · L128 Punkt 3: der Favoritenblock auf dem Bildschirm „Seiten und
+  Notizen" filterte `b.fav` — das Feld heisst `favorite`. Die Liste war immer
+  leer, und weil ein leerer Abschnitt samt Überschrift ganz weggelassen wird,
+  sah man nicht einmal, dass etwas fehlte: man schloss daraus, keine
+  Favoriten zu haben.
+
+  Behoben nicht durch das eine Wort, sondern durch den vorhandenen Katalog:
+  `Store.favorites()` statt eines zweiten, von Hand geschriebenen Filters für
+  dieselbe Frage (§8). Genau dieses Auseinanderlaufen war die Ursache.
+
+  PRÜFUNG: `test398` (9 Punkte, PORT 9429), Mutation rot gesehen. Die
+  Nachbarläufe stehen noch aus — der volle Lauf belegt gerade die Ports, und
+  test398 bekam deshalb eine Nummer, die mit nichts kollidiert. Ein Bild im
+  Gespräch.

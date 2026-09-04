@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-397 Entscheidungen, E1 bis E401. Die Nummer ist die Ordnung: eine Entscheidung
+398 Entscheidungen, E1 bis E402. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -455,6 +455,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E399** — Der Rollbalken zeigte ein Viertel des Wegs an
 * **E400** — Die Palette führte aus, was niemand gesehen hatte (Audit F09)
 * **E401** — Die Palette merkt sich, was du brauchst (Audit F09, Rest)
+* **E402** — Der Favoritenblock war vier Bögen lang leer (L128 Punkt 3)
 
 ---
 
@@ -32681,3 +32682,53 @@ Absicherung `if (t)` liess sie still fallen. Genau so soll sie arbeiten;
 
 Dateien: `src/bereiche/wissen/werkzeuge.ts`, `quell/schale/stil/werkzeuge.css`,
 `pruefungen/lauf/test397.mts`, `bilder.mts`.
+
+
+================================================================================
+E402 — Der Favoritenblock war vier Bögen lang leer (L128 Punkt 3)
+================================================================================
+4. September 2026
+
+Der Bildschirm „Seiten und Notizen" hat einen Abschnitt „Favoriten". Er
+filterte:
+
+    const sterne = alle.filter(b => b.fav);
+
+Das Feld heisst `favorite`. `b.fav` gibt es an keinem Block — nachgesehen in
+`indexdb.ts:851`, wo `favorites()` es richtig macht. Die Liste war also IMMER
+leer.
+
+UND MAN SAH ES NICHT. `block()` (dienst.ts:511) lässt einen leeren Abschnitt
+GANZ weg, Überschrift inbegriffen. Wer den Bildschirm öffnete, sah
+„Kürzlich verwendet · Privat · Datenbanken · Vorlagen" und schloss daraus,
+dass er eben keine Favoriten hat. Genau die Sorte Fehler, die dieses Projekt
+am teuersten zu stehen kommt: gezeichnet, aber nie gefüllt.
+
+WAS GEBAUT WURDE — und es ist nicht das eine Wort. Den Filter auf `favorite`
+zu berichtigen hätte den Fehler behoben und die Ursache stehen lassen: ein
+zweiter, von Hand geschriebener Filter für dieselbe Frage. Der Bildschirm
+fragt jetzt den Katalog, den es längst gibt — `Store.favorites()` —, und
+schneidet ihn mit seiner eigenen Menge (keine Datenbankzeilen, keine
+Systemseiten). Ein Katalog, nicht zwei (§8).
+
+KOSTEN: drei Zeilen. Keine Daten, kein Feldname, keine Migration.
+
+PRÜFUNG: `test398` (9 Punkte, PORT 9429). MUTATION ROT GESEHEN: `b.fav`
+zurückgeschrieben, und §2 fällt — mit genau dem Bild von vorher, nämlich
+einer Liste von Überschriften OHNE „Favoriten".
+
+`test398 §1` hält ausdrücklich fest, dass die Überschrift ohne Favoriten
+FEHLT. Das war schon vorher richtig und ist der Grund, warum niemand etwas
+merkte; der Punkt steht deshalb zuerst, damit klar bleibt, was der Fehler
+war und was nicht.
+
+WAS NOCH AUSSTEHT: die Nachbarläufe. Während dieses Bogens fährt der volle
+Lauf in einem eigenen Arbeitsbaum, und die Prüfläufe teilen sich feste Ports
+— `test398` bekam deshalb eine neue Nummer (9429), die mit nichts kollidiert.
+`test114` und die übrigen Nachbarn laufen, sobald der volle Lauf durch ist.
+
+Mit einem Bild belegt (§55.3): „Favoriten" steht jetzt zwischen „Kürzlich
+verwendet" und „Privat", mit den zwei angesternten Seiten darunter.
+
+Dateien: `src/bereiche/datenbanken/ansichten/dienst.ts`,
+`pruefungen/lauf/test398.mts`, `bilder.mts`.
