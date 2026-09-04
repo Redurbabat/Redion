@@ -12,6 +12,7 @@ const DocumentMode = (() => {
     zoom: number;
     thumbnailsOpen: boolean;
     inspectorOpen: boolean;
+    einzeln: boolean;
   };
 
   type SourceRegion = { x: number; y: number; width: number; height: number };
@@ -53,6 +54,43 @@ const DocumentMode = (() => {
     Store.setMeta(ZOOM_MERKER + pageId, zoom);
   };
 
+  /* ══ EINZELSEITE ODER FORTLAUFEND (E398, Audit F03 Rest) ══════════════════
+     Der Pruefbericht schlaegt eine Wahl zwischen „Einzelseite" und
+     „Fortlaufend" vor, mit Einzelseite als Vorgabe am Telefon. Redur hat am
+     4. September das ERSTE bestellt und das ZWEITE nicht:
+
+       Die Wahl kommt. Die VORGABE bleibt Fortlaufend, auch am Telefon.
+
+     Und das ist keine Vorsicht, sondern seine eigene Ansage aus E299: „die
+     pdf seiten sollte wie goodnotes sich ganz oeffnen komplet wie one note".
+     Eine Vorgabe, die das zuruecknimmt, waere eine Entscheidung GEGEN ihn.
+     Einzelseite ist deshalb ein Angebot, kein neuer Normalfall.
+
+     WARUM ES DIE WAHL UEBERHAUPT BRAUCHT — gemessen an vier A4-Blaettern:
+
+                                   Telefon 390x844   Rechner 1360x900
+       Blaetter gleichzeitig im Bild        2                1
+       ein Blatt als Anteil des Bildes    72 %            213 %
+
+     Am Rechner passt ein Blatt ohnehin nicht ins Bild; dort steht immer
+     genau eines, und die Wahl aendert praktisch nichts. Am TELEFON teilen
+     sich zwei Blaetter den Bildschirm — und genau das meinte der Befund mit
+     „Nutzer wissen nicht sicher, welche Seite aktiv ist". Wer das nicht
+     will, schaltet es hier ab.
+
+     ALS META, NICHT AM BLOCK — genau wie Seite und Zoom. Eine Ansicht ist
+     kein Inhalt: umschalten soll weder `edited` anheben noch eine Fassung
+     erzeugen. Und je Dokument, aus demselben Grund wie beim Zoom: ein
+     gescanntes Buch liest sich anders als ein handbeschriebenes Heft. */
+  const LAUF_MERKER = 'dokLauf:';
+  const gemerkterLauf = (pageId: string): boolean =>
+    Store.getMeta(LAUF_MERKER + pageId) === 'einzel';
+  const laufMerken = (pageId: string, einzeln: boolean): void => {
+    const wert = einzeln ? 'einzel' : 'rolle';
+    if (Store.getMeta(LAUF_MERKER + pageId) === wert) return;
+    Store.setMeta(LAUF_MERKER + pageId, wert);
+  };
+
   const stateFor = (pageId: string): DocumentState => {
     const known = states.get(pageId);
     if (known) return known;
@@ -61,7 +99,8 @@ const DocumentMode = (() => {
        eine Liste, die bei einem frisch eingelesenen PDF leer ist. Wer sie
        braucht, holt sie mit `ⓘ`; wer liest, liest. */
     const created = { index: gemerkteSeite(pageId), zoom: gemerkterZoom(pageId),
-                      thumbnailsOpen: false, inspectorOpen: false };
+                      thumbnailsOpen: false, inspectorOpen: false,
+                      einzeln: gemerkterLauf(pageId) };
     states.set(pageId, created);
     return created;
   };
@@ -303,10 +342,39 @@ const DocumentMode = (() => {
     randKnopf.setAttribute('aria-pressed', randAn ? 'true' : 'false');
     randKnopf.title = 'Ein Streifen zum Schreiben neben der Seite — für das ganze Dokument.';
 
+    /* EINZELSEITE ODER FORTLAUFEND (E398). Neben dem Randstreifen und aus
+       demselben Grund hier statt in der Leiste: E384 hat den Randstreifen
+       aus der Leiste geholt, weil sie am Telefon 411 px breit war in einem
+       390 px breiten Fenster. Ein zweiter Schalter dort haette denselben
+       Fehler ein zweites Mal gemacht.
+
+       NUR AB ZWEI SEITEN. Bei einem einzigen Blatt sind Einzelseite und
+       Fortlaufend dasselbe Bild — ein Schalter, der nichts tut, ist
+       schlimmer als keiner: er laesst einen suchen, was sich geaendert hat.
+       `test395 §5` haelt fest, dass er dann fehlt. */
+    const laufKnopf = documentsIn(page).length > 1 ? (() => {
+      const einzeln = gemerkterLauf(page.id);
+      const knopf = document.createElement('button');
+      knopf.type = 'button';
+      knopf.dataset.documentAction = 'lauf';
+      knopf.className = 'document-lauf-knopf' + (einzeln ? ' an' : '');
+      /* Das Wort sagt, was ein Druck BEWIRKT — wie beim Randstreifen. Wo man
+         gerade steht, sagt die Sprechblase, und `aria-pressed` sagt es dem
+         Screenreader (§38). */
+      knopf.textContent = einzeln ? '▤ Fortlaufend zeigen' : '▢ Einzelseite zeigen';
+      knopf.setAttribute('aria-pressed', einzeln ? 'true' : 'false');
+      knopf.title = einzeln
+        ? 'Gerade steht eine Seite allein im Bild. Drücken zeigt wieder alle untereinander.'
+        : 'Gerade stehen alle Seiten untereinander. Drücken zeigt nur die, auf der du bist.';
+      return knopf;
+    })() : null;
+
     const original = originalKnopf(page, documentBlock);
     container.append(heading, source);
     if (original) container.appendChild(original);
-    container.append(actions, randKnopf, summary, list);
+    container.append(actions, randKnopf);
+    if (laufKnopf) container.appendChild(laufKnopf);
+    container.append(summary, list);
   };
 
   const renderDocument = (container: HTMLElement, block: any): void => {
@@ -502,7 +570,7 @@ const DocumentMode = (() => {
     documents.forEach((block, index) => thumbnails.appendChild(thumbnail(block, index, index === state.index)));
 
     const center = document.createElement('main');
-    center.className = 'document-center';
+    center.className = 'document-center' + (state.einzeln ? ' ist-einzeln' : '');
 
     /* ══ DIE ROLLE (E299) ══════════════════════════════════════════════════
        ALLE SEITEN UNTEREINANDER, NICHT EINE ZUM BLAETTERN.
@@ -555,8 +623,9 @@ const DocumentMode = (() => {
          Rollbalken bei jeder nachgezeichneten Seite. */
       const bw = Number(block.bw) || Number(block.blattBreite) || SheetSpace.A4_BREITE;
       const bh = Number(block.bh) || Number(block.blattHoehe) || SheetSpace.A4_HOEHE;
-      /* Der Platzhalter in der Hoehe, die die Seite wirklich bekommen wird —
-         sonst springt der Rollbalken, sobald sie gezeichnet ist. */
+      /* EIN GROBER PLATZHALTER, damit nichts auf null zusammenfaellt. Das
+         RICHTIGE Mass setzt `passen()` gleich darauf — hier kann es noch gar
+         nicht stimmen, siehe `platzhalterSetzen`. */
       if (bw > 0 && bh > 0)
         stand.style.height = Math.round(Math.max(200, center.clientWidth - 36) * (bh / bw)) + 'px';
       staende.push(stand);
@@ -636,6 +705,47 @@ const DocumentMode = (() => {
          Kauf; das ist etwas anderes als ein Seitenwechsel nach rechts, den
          es hier nicht gibt. */
       center.style.setProperty('--doc-blatt', Math.max(120, breit) + 'px');
+      platzhalterSetzen(Math.max(120, breit));
+    };
+
+    /* ══ E399 · DER PLATZHALTER WAR 283 PX HOCH STATT 1922 ═══════════════════
+       E299 schrieb an die Stelle oben: „Der Platzhalter in der Hoehe, die die
+       Seite wirklich bekommen wird — sonst springt der Rollbalken, sobald sie
+       gezeichnet ist." Genau das tat er nicht.
+
+       GEMESSEN an sechs A4-Seiten auf 1360x900:
+
+         beim Oeffnen   Rolle 3513   Hoehen [1922, 283, 283, 283, 283, 283]
+         nach 1000 px   Rolle 5067   Hoehen [1922, 1837, 283, 283, 283, 283]
+         nach 3000 px   Rolle 6620   Hoehen [1837, 1922, 1837, 283, 283, 283]
+
+       Der Rollbalken WAECHST mit jeder erreichten Seite. Bei sechs Seiten ist
+       das laestig; bei achtzig ist er von Anfang an eine Luege — er zeigt ein
+       Viertel des Wegs an, den man wirklich vor sich hat.
+
+       DER GRUND: `center.clientWidth` ist NULL, wenn die Buehnen gebaut
+       werden. `body.append(thumbnails, center, inspector)` kommt erst danach,
+       also haengt der Kasten noch nirgends und hat keine Breite. Aus
+       `Math.max(200, 0 - 36)` werden 200, und 200 mal 842/595 sind die 283.
+
+       Die Rechnung war nie falsch, sie lief nur zu frueh. Deshalb steht sie
+       jetzt in `passen()` — dort ist der Kasten im DOM, dort ist die Breite
+       bekannt, und dort wird ohnehin bei jedem Fensterwechsel und bei jedem
+       Zoom neu gerechnet. Der Platzhalter folgt beidem mit.
+
+       NUR DIE UNGEZEICHNETEN. Eine gezeichnete Seite hat ihre Hoehe von
+       ihrem Inhalt (`zeichneStand` nimmt `height` ausdruecklich wieder weg);
+       ihr eine feste Zahl zu geben, waere die Rueckkehr desselben Fehlers
+       von der anderen Seite. */
+    const platzhalterSetzen = (breit: number): void => {
+      staende.forEach((stand, i) => {
+        if (gezeichnet.has(i)) return;
+        const block = documents[i];
+        if (!block) return;
+        const bw = Number(block.bw) || Number(block.blattBreite) || SheetSpace.A4_BREITE;
+        const bh = Number(block.bh) || Number(block.blattHoehe) || SheetSpace.A4_HOEHE;
+        if (bw > 0 && bh > 0) stand.style.height = Math.round(breit * (bh / bw)) + 'px';
+      });
     };
 
     const beiGroesse = (): void => {
@@ -683,6 +793,16 @@ const DocumentMode = (() => {
 
     const nachziehen = (): void => {
       if (!center.isConnected) return;
+      /* IN DER EINZELSEITE GIBT ES NICHTS NACHZUZIEHEN (E398). Die Seite
+         wechselt dort nur ueber `‹ ›` und die Miniaturen, und beide gehen
+         durch `springe`, das Zahl, Miniatur und Marke selbst setzt.
+
+         UND ES MUSS KURZSCHLIESSEN, statt nur nichts zu finden. Eine
+         ausgeblendete Buehne hat `offsetTop` 0 und `offsetHeight` 0 — damit
+         faellt sie in JEDES Naehe-Fenster, und die Schleife unten wuerde
+         beim ersten Rollen alle achtzig Seiten zeichnen. Genau das, was
+         E299 verhindern wollte. `test395 §3` misst es. */
+      if (state.einzeln) { springtZu = -1; zeichneStand(state.index); return; }
       const oben = center.scrollTop - center.clientHeight;
       const unten = center.scrollTop + 2 * center.clientHeight;
       let sichtbar = state.index;
@@ -804,6 +924,19 @@ const DocumentMode = (() => {
       if (action === 'thumbnails-close') { state.thumbnailsOpen = false; rerender(); }
       if (action === 'inspector') { state.inspectorOpen = !state.inspectorOpen; rerender(); }
       if (action === 'inspector-close') { state.inspectorOpen = false; rerender(); }
+      if (action === 'lauf') {
+        /* UMSCHALTEN HEISST NEU AUFBAUEN. Wie beim Randstreifen und beim
+           Inspector: der Kasten bekommt eine andere Marke, der Schalter ein
+           anderes Wort, und in der Einzelseite soll nur EINE Buehne
+           gezeichnet dastehen — das geht am ehrlichsten von vorn. */
+        state.einzeln = !state.einzeln;
+        laufMerken(page.id, state.einzeln);
+        UI.toast(state.einzeln
+          ? 'Einzelseite — nur die Seite, auf der du bist'
+          : 'Fortlaufend — alle Seiten untereinander');
+        rerender();
+        return;
+      }
       if (action === 'rand') {
         /* 45 % der Seitenbreite — gemessen an einer A4-Seite sind das rund
            acht Zentimeter, und damit passt eine Zeile Handschrift daneben.

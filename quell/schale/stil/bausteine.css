@@ -4766,6 +4766,39 @@ body[data-dokument="an"] #handy-oben{display:none}
 body[data-dokument="an"] .document-stage:not([data-aktiv]) .blatt-reihe{
   display:none }
 
+/* ══════════════════════════════════════════════════════════════════════════
+   E398 · EINZELSEITE ODER FORTLAUFEND — die zweite Haelfte von F03
+   --------------------------------------------------------------------------
+   Der Pruefbericht wollte die Wahl UND Einzelseite als Vorgabe am Telefon.
+   Redur hat am 4. September das Erste bestellt und das Zweite nicht: die
+   Vorgabe bleibt die Rolle, ueberall. Das ist seine eigene Ansage aus E299
+   („die pdf seiten sollte wie goodnotes sich ganz oeffnen komplet wie one
+   note"), und eine Vorgabe dagegen waere eine Entscheidung gegen ihn.
+
+   Deshalb steht hier EINE Regel und keine Media Query: ohne die Klasse
+   `ist-einzeln` aendert sich gar nichts, und die Klasse setzt nur, wer den
+   Schalter im Inspector drueckt.
+
+   WARUM ES DIE WAHL BRAUCHT — gemessen an vier A4-Blaettern: am Telefon
+   (390x844) stehen ZWEI Blaetter gleichzeitig im Bild, eines ist 72 % des
+   Bildschirms hoch. Am Rechner (1360x900) ist ein Blatt 213 % des Bildes
+   hoch, also steht dort ohnehin nur eines. Der Befund „Nutzer wissen nicht
+   sicher, welche Seite aktiv ist" war ein Telefon-Befund.
+
+   `[data-aktiv]` traegt genau eine Buehne — dieselbe Marke, die oben schon
+   die Werkzeugleisten regelt (E387). Ein zweiter Zustand daneben waere ein
+   zweiter Katalog fuer dieselbe Sache (§8). */
+.document-center.ist-einzeln .document-stage:not([data-aktiv]){ display:none }
+/* Der Abstand unter der Seite ist der Schnitt zur naechsten. In der
+   Einzelseite gibt es keine naechste — und `:last-child` greift nicht, weil
+   die ausgeblendeten Geschwister im DOM stehen bleiben. */
+.document-center.ist-einzeln .document-stage[data-aktiv]{ margin-bottom:0 }
+/* E398 · Der Schalter, in denselben Massen wie der Randstreifen daneben. */
+.document-inspector .document-lauf-knopf{display:block; width:100%; min-height:40px;
+  margin-bottom:14px; padding:7px 12px; text-align:left; font-size:13px}
+.document-inspector .document-lauf-knopf.an{border-color:var(--accent-text);
+  background:var(--bg-hover); font-weight:600}
+
 /* E296 · DIE ZEICHENLEISTE BLEIBT OBEN STEHEN, wie in GoodNotes. Sie gehoert
    zum Blatt und rollte mit ihm weg: wer unten auf einer A4-Seite schrieb,
    musste zum Wechsel der Farbe erst wieder ganz nach oben. Nur im

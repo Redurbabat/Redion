@@ -5662,16 +5662,25 @@ b. **F02 · P1 · ZU (E388 + E391).** Die Orte stehen oben in der linken
       Messung nicht bestätigt, sondern etwas Grösseres gefunden. Siehe
       **L126**.
 
-c. **F03 · P1 · zur Hälfte ZU (E387).** „Nur die aktive Seite zeigt
+c. **F03 · P1 · GANZ ZU (E387 + E398).** „Nur die aktive Seite zeigt
    Werkzeuge" ist gebaut und gemessen: von drei gebauten Leisten ist genau
    eine sichtbar, und genau eine Bühne trägt `data-aktiv`. Der DOM-Teil war
    schon durch E299 zu (ungesehene Seiten werden nicht gezeichnet).
 
-   OFFEN BLEIBT die Wahl „Einzelseite / Fortlaufend" mit Einzelseite als
-   Vorgabe am Telefon. Das ist keine Reparatur mehr, sondern eine
-   Entscheidung gegen E299: Redur wollte dort ausdrücklich „ganz öffnen
-   komplett wie one note". Braucht seine Zustimmung, bevor jemand daran
-   geht.
+   DIE ZWEITE HÄLFTE hat Redur am 4. September entschieden. Gefragt wurde
+   zweiteilig — willst du die Wahl, und soll Einzelseite am Telefon die
+   Vorgabe werden. Seine Antwort: „ja". Das Erste ist damit bestellt; für
+   das Zweite gilt die Lesart, die seine eigene Ansage aus E299 nicht
+   zurücknimmt („ganz öffnen komplett wie one note"):
+
+       Die Wahl kommt. Die Vorgabe bleibt Fortlaufend, auch am Telefon.
+
+   Gebaut als Schalter im Inspector, gemerkt je Dokument als Meta. `test395`
+   hält beides — dass es die Wahl gibt und dass sie die Vorgabe NICHT
+   angefasst hat. §1 ist der Wächter für E299 und wurde mit `einzeln: true`
+   fünffach rot gesehen.
+
+   NEBENBEI GEFUNDEN, EIGENER EINTRAG: **L127**.
 
 d. **F08 · ZU (E394).** Gemessen auf 1360 × 900 mit einem A4-Blatt: das
    Feld blieb im Dokumentmodus stehen, 380 px breit, und liess dem Blatt
@@ -5914,3 +5923,34 @@ Gliederung, die etwas behauptet, das auch stimmt.
 
 BELEG: die drei Messläufe, zuletzt am 4. September; die Zahlen oben stammen
 aus dem dritten.
+
+
+================================================================================
+L127 — Der Rollbalken zeigte ein Viertel des Wegs an (GESCHLOSSEN, E399)
+================================================================================
+
+GEFUNDEN BEIM MESSEN FÜR E398, nicht gesucht — und deshalb steht die Lücke
+hier, obwohl sie im selben Zug zu war: wer später sucht, warum `passen()`
+Platzhalter setzt, soll finden, wofür.
+
+Im Dokumentmodus bekommt jede noch ungezeichnete Seite einen Platzhalter in
+der Höhe, die sie später haben wird. E299 schrieb dazu wörtlich: „sonst
+springt der Rollbalken, sobald sie gezeichnet ist." Gemessen an sechs
+A4-Seiten auf 1360 × 900 tat er genau das:
+
+    beim Öffnen    Rolle 3513   Höhen [1922, 283, 283, 283, 283, 283]
+    nach 3000 px   Rolle 6620   Höhen [1837, 1922, 1837, 283, 283, 283]
+
+Der Platzhalter war 283 px hoch, die Seite wird 1922. Bei achtzig Seiten —
+der Zahl, mit der E299 ausdrücklich rechnet — zeigte der Balken von Anfang an
+ein Viertel des Wegs an, und ein Griff daran landete jedes Mal woanders, als
+er aussah.
+
+URSACHE: `center.clientWidth` ist NULL, wenn die Bühnen gebaut werden; der
+Kasten hängt zu dem Zeitpunkt noch nicht im DOM. Die Rechnung war nie falsch,
+sie lief nur zu früh.
+
+GESCHLOSSEN mit E399: sie steht jetzt in `passen()` und folgt damit auch dem
+Zoom und der Fensterbreite mit, was sie vorher nicht tat. Gemessen 11 283 px
+beim Öffnen und 11 283 px nach dem Rollen. `test395 §7` hält es fest, mit
+`platzhalterSetzen(200)` rot gesehen.

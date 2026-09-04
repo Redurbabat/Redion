@@ -3412,3 +3412,50 @@ die Zeugnisnote je Semester (E242) und der echte Stundenplan (E243).
   Slash-Menü und im Papierkorb nicht (§8). Der Zweck gehört in die
   Unterzeile, nicht in einen zweiten Namen — `test394 §3` hält beides fest,
   und die Umbenennung war die vierte Mutation, die rot ging.
+
+  E398 · F03 Rest: die Wahl „Einzelseite / Fortlaufend". Redur wurde am
+  4. September zweiteilig gefragt — willst du die Wahl, und soll Einzelseite
+  am Telefon die Vorgabe werden — und hat „ja" gesagt. Gebaut ist deshalb
+  das Erste und ausdrücklich nicht das Zweite: die Rolle bleibt der
+  Normalfall, überall. Das ist seine eigene Ansage aus E299 („die pdf seiten
+  sollte wie goodnotes sich ganz oeffnen komplet wie one note"), und eine
+  Vorgabe dagegen wäre eine Entscheidung gegen ihn gewesen.
+
+  WARUM ES DIE WAHL BRAUCHT, gemessen an vier A4-Blättern: am Telefon
+  (390 × 844) stehen ZWEI Blätter gleichzeitig im Bild, eines ist 72 % des
+  Bildschirms hoch. Am Rechner (1360 × 900) ist ein Blatt 213 % des Bildes
+  hoch — dort steht ohnehin nur eines. Der Befund „Nutzer wissen nicht
+  sicher, welche Seite aktiv ist" war ein Telefon-Befund.
+
+  Der Schalter steht im INSPECTOR, nicht in der Leiste: E384 hat den
+  Randstreifen aus der Leiste geholt, weil sie am Telefon 411 px breit war in
+  einem 390 px breiten Fenster. Ein zweiter Schalter dort wäre derselbe
+  Fehler ein zweites Mal gewesen. Gemerkt wird je Dokument als Meta, wie
+  Seite und Zoom — eine Ansicht ist kein Inhalt, und `test395 §6` misst, dass
+  `edited` unberührt bleibt. Bei einem EINZIGEN Blatt fehlt der Schalter: er
+  täte dort nichts, und ein Schalter, der nichts tut, lässt einen suchen, was
+  sich geändert hat.
+
+  DIE STELLE, DIE FAST SCHIEFGEGANGEN WÄRE: eine ausgeblendete Bühne hat
+  `offsetTop` 0 und `offsetHeight` 0 und fällt damit in JEDES Nähe-Fenster
+  von `nachziehen()`. Ohne Kurzschluss wären beim ersten Rollen alle achtzig
+  Seiten gezeichnet worden — genau das, was E299 verhindern wollte, durch die
+  Hintertür wieder da. `test395 §3` meldet ohne ihn vier statt eine.
+
+  E399 · und das, was beim Messen dafür herausfiel: der Platzhalter einer
+  noch ungezeichneten Seite war 283 px hoch, die Seite wird 1922. Der
+  Rollbalken wuchs damit mit jeder erreichten Seite — bei sechs Seiten von
+  3513 auf 6620, bei achtzig hätte er von Anfang an ein Viertel des Wegs
+  angezeigt. Und E299 schrieb an dieselbe Stelle: „sonst springt der
+  Rollbalken, sobald sie gezeichnet ist."
+
+  Ursache: `center.clientWidth` ist NULL, wenn die Bühnen gebaut werden — der
+  Kasten hängt da noch nicht im DOM. Die Rechnung war nie falsch, sie lief
+  nur zu früh. Sie steht jetzt in `passen()` und folgt damit auch dem Zoom
+  und der Fensterbreite mit. Gemessen: 11 283 px beim Öffnen und 11 283 px
+  nach dem Rollen.
+
+  PRÜFUNG: `test395` (46 Punkte, PORT 9423), fünf Mutationen rot gesehen.
+  Die wichtigste ist die erste — `einzeln: true` als Vorgabe lässt §1
+  fünffach fallen, und §1 hält nicht den neuen Bau fest, sondern den alten:
+  dass ihn niemand angefasst hat. Drei Bilder im Gespräch (§55.3).

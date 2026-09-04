@@ -91,9 +91,23 @@ const server = createServer((a, b) => {
 /* `bauen` darf ein Versprechen zurückgeben. `page.evaluate` wartet darauf,
    und die Produktwelten zeichnen asynchron — ohne das Warten stünde auf dem
    Bild der Zustand von davor. */
+/* --- Die Wahl Einzelseite / Fortlaufend (E398, Audit F03 Rest) -----------
+   Zwei Dinge müssen auf dem Bild stehen: der SCHALTER im Inspector (dass es
+   ihn gibt und dass er sagt, was er tut) und das ERGEBNIS (dass wirklich nur
+   noch eine Seite dasteht statt vier untereinander).
+
+   Der Eintrag steht UNTER dem Katalog und nicht darin, weil er den Aufbau
+   der Ansicht `dokument` weiterverwendet — im Literal selbst wäre
+   `ANSICHTEN` noch nicht fertig. */
 const ANSICHTEN: Record<string, {
   titel: string;
   bauen: () => void | Promise<void>;
+  /* BAUEN, DANN BEDIENEN (E398). `bauen` wird in die Seite hineingereicht
+     und dort ausgewertet — eine Node-Konstante ist darin nicht erreichbar,
+     also kann eine Ansicht das `bauen` einer anderen nicht aufrufen.
+     Wer denselben Aufbau, aber einen anderen ZUSTAND fotografieren will,
+     nimmt `bauen` der ersten und legt die Klicks in `dann`. */
+  dann?: () => void | Promise<void>;
   /* GANZE SEITE STATT AUSSCHNITT. Manche Ansichten sind länger als jeder
      Bildschirm — die Lernzentrale hat unter „Fortschritt" vier Blöcke
      übereinander, und was zählt, steht im dritten. Rollen half nicht: die
@@ -1903,6 +1917,30 @@ const ANSICHTEN: Record<string, {
   }
 };
 
+ANSICHTEN['dokumenteinzel'] = {
+  titel: 'Einzelseite statt Rolle — der Schalter im Inspector (E398)',
+  bauen: ANSICHTEN['dokument']!.bauen,
+  dann: async () => {
+    /* NUR ZWEI KLICKS. Beim ersten Versuch standen hier drei — Inspector auf,
+       umschalten, Inspector „wieder" auf — und das Bild zeigte ihn ZU: der
+       Zustand überlebt den Neuaufbau (`state.inspectorOpen`), der dritte
+       Klick hat ihn also geschlossen. Auf dem Bild gesehen, nicht im Code. */
+    document.querySelector<HTMLElement>('[data-document-action="inspector"]')?.click();
+    await new Promise(r => setTimeout(r, 500));
+    document.querySelector<HTMLElement>('[data-document-action="lauf"]')?.click();
+    await new Promise(r => setTimeout(r, 900));
+    /* AM TELEFON WIEDER ZU. Dort ist der Inspector eine Überlagerung über
+       dem ganzen Bild — er verdeckt genau das, was er gerade verändert hat.
+       Am Rechner steht er als Spalte daneben, und dann zeigt ein Bild beides
+       auf einmal: den Schalter und die eine Seite. */
+    if (window.innerWidth < 760) {
+      document.querySelector<HTMLElement>('[data-document-action="inspector-close"]')?.click();
+      await new Promise(r => setTimeout(r, 600));
+    }
+  }
+};
+
+
 /* ========================================================================*/
 const wunsch = process.argv.slice(2);
 const nurAnsicht = wunsch.filter(a => ANSICHTEN[a]);
@@ -1965,6 +2003,7 @@ for (const name of ansichten) {
       await seite.evaluate((t: string) => document.documentElement.setAttribute('data-theme', t), thema);
       await seite.evaluate(ansicht.bauen);
       await seite.waitForTimeout(450);
+      if (ansicht.dann) { await seite.evaluate(ansicht.dann); await seite.waitForTimeout(450); }
 
       const datei = join(ZIEL, `${name}-${g}-${thema === 'light' ? 'hell' : 'dunkel'}.png`);
       await seite.screenshot({ path: datei, fullPage: !!ansicht.ganzeSeite });

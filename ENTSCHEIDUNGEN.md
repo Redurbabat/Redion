@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-393 Entscheidungen, E1 bis E397. Die Nummer ist die Ordnung: eine Entscheidung
+395 Entscheidungen, E1 bis E399. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -451,6 +451,8 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E395** — Eine Kante, die zu kurz ist, faltet sich, statt hinauszuragen
 * **E396** — „Zurück" und „Vor" rollen am Telefon nicht weg
 * **E397** — „Blatt" legt nicht nur an, es schlägt auch auf
+* **E398** — Einzelseite oder Fortlaufend: die Wahl ja, die Vorgabe nein
+* **E399** — Der Rollbalken zeigte ein Viertel des Wegs an
 
 ---
 
@@ -32312,3 +32314,164 @@ Mit einem Bild belegt (§55.3): am Telefon liegt nach dem Weg das Blatt da,
 mit Stift und der Leiste aus E396 — ohne einen weiteren Griff.
 
 Dateien: `src/schale/aufbau/schale.ts`, `pruefungen/lauf/test394.mts`.
+
+
+================================================================================
+E398 — Einzelseite oder Fortlaufend: die Wahl ja, die Vorgabe nein
+================================================================================
+4. September 2026
+
+Der Prüfbericht, Befund F03 (P1), verlangte zweierlei. E387 hat gestern die
+eine Hälfte gebaut — nur die aktive Seite zeigt ihre Werkzeuge. Die andere
+war ausdrücklich liegen geblieben, weil sie keine Reparatur ist:
+
+    „Wahl zwischen Einzelseite und Fortlaufend, mit Einzelseite als
+     Vorgabe am Telefon."
+
+REDUR HAT DAS ERSTE BESTELLT UND DAS ZWEITE NICHT. Er wurde am 4. September
+gefragt, mit den Zahlen daneben, und hat „ja" gesagt. Der zweite Teil der
+Frage — soll Einzelseite am Telefon die Vorgabe werden — blieb offen; also
+gilt die Lesart, die seine eigene Ansage aus E299 nicht zurücknimmt:
+
+    „die pdf seiten sollte wie goodnotes sich ganz oeffnen komplet wie
+     one note so"
+
+Die Rolle bleibt die Vorgabe, überall. Einzelseite ist ein Angebot.
+
+WARUM ES DIE WAHL TROTZDEM BRAUCHT — gemessen an vier A4-Blättern:
+
+                                   Telefon 390×844   Rechner 1360×900
+      Blätter gleichzeitig im Bild        2                 1
+      ein Blatt hoch                    609 px          1921 px
+      ein Blatt als Anteil des Bildes    72 %            213 %
+
+Am Rechner passt ein Blatt ohnehin nicht ins Bild; dort steht immer genau
+eines, und die Wahl ändert praktisch nichts. Am TELEFON teilen sich zwei
+Blätter den Bildschirm — und genau das meinte der Befund mit „Nutzer wissen
+nicht sicher, welche Seite aktiv ist". Auf dem Telefonbild sieht man es: unter
+Seite 1 fängt „Kapitel 2" an, im selben Blick.
+
+WAS SICH ÄNDERT
+
+Ein Schalter im Inspector, ein Merker je Dokument, eine CSS-Regel:
+
+    .document-center.ist-einzeln .document-stage:not([data-aktiv]){display:none}
+
+`[data-aktiv]` trägt genau eine Bühne — dieselbe Marke, die seit E387 schon
+die Werkzeugleisten regelt. Ein zweiter Zustand daneben wäre ein zweiter
+Katalog für dieselbe Sache (§8).
+
+IM INSPECTOR, NICHT IN DER LEISTE. E384 hat den Randstreifen-Schalter aus der
+Leiste geholt, weil sie am Telefon 411 px breit war in einem 390 px breiten
+Fenster; jedes Zeichen dort kostete den Ausgang. Ein zweiter Schalter in der
+Leiste hätte denselben Fehler ein zweites Mal gemacht. Er steht jetzt direkt
+unter dem Randstreifen — beide sind Schalter für das GANZE Dokument.
+
+ALS META, NICHT AM BLOCK. Wie Seite (E349) und Zoom (E386/F07): eine Ansicht
+ist kein Inhalt, umschalten soll weder `edited` anheben noch eine Fassung
+erzeugen. `test395 §6` misst genau das. Und je Dokument, nicht global — ein
+gescanntes Buch liest sich anders als ein handbeschriebenes Heft.
+
+NUR AB ZWEI SEITEN. Bei einem einzigen Blatt sind Einzelseite und Fortlaufend
+dasselbe Bild. Ein Schalter, der nichts tut, ist schlimmer als keiner: er
+lässt einen suchen, was sich geändert hat. Das ist dieselbe Regel wie überall
+hier — eine Anzeige, die IMMER dasteht, wird nicht gelesen.
+
+DIE STELLE, DIE FAST SCHIEFGEGANGEN WÄRE. Eine mit `display:none`
+ausgeblendete Bühne hat `offsetTop` 0 und `offsetHeight` 0. Damit fällt sie in
+JEDES Nähe-Fenster von `nachziehen()` — und beim ersten Rollen wären alle
+achtzig Seiten gezeichnet worden. Genau das, was E299 verhindern wollte, durch
+die Hintertür wieder da. `nachziehen()` schliesst deshalb kurz, wenn die
+Einzelseite gilt; die Seite wechselt dort nur über `‹ ›` und die Miniaturen,
+und beide gehen durch `springe()`, das Zahl, Miniatur und Marke selbst setzt.
+
+Ohne den Kurzschluss meldet `test395 §3` vier gezeichnete Seiten statt einer.
+
+KOSTEN: ein Meta-Schlüssel (`dokLauf:<seiteId>`), ein Knopf, zwei CSS-Regeln.
+Keine Daten, kein Feldname, keine Migration. Wer den Schalter nie drückt,
+merkt von der ganzen Sache nichts — und das ist der Punkt.
+
+PRÜFUNG: `test395` (46 Punkte, PORT 9423). FÜNF MUTATIONEN ROT GESEHEN (§55.2):
+
+    `einzeln: true` als Vorgabe        §1 fünffach rot — der Wächter für E299
+    die CSS-Regel weg                  §2, §3, §4, §6 rot (vier statt eine)
+    Kurzschluss in `nachziehen` weg    §3 rot (vier gezeichnet statt eine)
+    Schalter auch bei einer Seite      §5 rot
+    Platzhalter mit 200 px gerechnet   §7 rot — siehe E399
+
+§1 IST DER WICHTIGSTE ABSCHNITT und hält nicht den neuen Bau fest, sondern
+den alten: dass ihn niemand angefasst hat. Wer eines Tages `einzeln: true`
+als Grundstellung setzt oder eine Media Query für schmale Fenster einzieht,
+fällt dort — und nicht erst, wenn Redur es merkt.
+
+Mit drei Bildern belegt (§55.3): der Schalter im Inspector am Rechner, das
+Telefon in der Rolle (unter Seite 1 beginnt Kapitel 2) und das Telefon in der
+Einzelseite (Seite 1 steht allein).
+
+Dateien: `src/bereiche/pdf/document-mode.ts`, `quell/schale/stil/bausteine.css`,
+`pruefungen/lauf/test395.mts`, `bilder.mts`.
+
+
+================================================================================
+E399 — Der Rollbalken zeigte ein Viertel des Wegs an
+================================================================================
+4. September 2026
+
+GEFUNDEN BEIM MESSEN FÜR E398, NICHT GESUCHT. Eine Gegenprobe in `test395 §4`
+sollte zeigen, dass die Rolle deutlich höher ist als die Einzelseite. Sie fiel
+— die Rolle war bei vier Seiten gerade 2895 px hoch, wo gut 7000 hätten
+stehen müssen. Nachgemessen an sechs A4-Seiten auf 1360×900:
+
+    beim Öffnen    Rolle 3513   Höhen [1922, 283, 283, 283, 283, 283]
+    nach 1000 px   Rolle 5067   Höhen [1922, 1837, 283, 283, 283, 283]
+    nach 3000 px   Rolle 6620   Höhen [1837, 1922, 1837, 283, 283, 283]
+
+Der Platzhalter einer noch ungezeichneten Seite ist 283 px hoch. Die Seite
+wird 1922. Der Rollbalken WÄCHST also mit jeder Seite, die man erreicht: er
+sagt beim Öffnen 3513 und meint 11 283.
+
+Bei sechs Seiten ist das lästig. Bei achtzig — der Zahl, mit der E299
+ausdrücklich rechnet — zeigt er von Anfang an ein Viertel des Wegs an, und
+der Griff am Balken landet jedes Mal woanders, als er aussieht.
+
+UND E299 SCHRIEB AN DIESE STELLE WÖRTLICH:
+
+    „Der Platzhalter in der Hoehe, die die Seite wirklich bekommen wird —
+     sonst springt der Rollbalken, sobald sie gezeichnet ist."
+
+Genau das tat er nicht. Der Kommentar war richtig und der Code daneben auch —
+nur zu früh.
+
+DER GRUND. `center.clientWidth` ist NULL, wenn die Bühnen gebaut werden:
+`body.append(thumbnails, center, inspector)` kommt erst danach, der Kasten
+hängt also noch nirgends und hat keine Breite. Aus `Math.max(200, 0 - 36)`
+werden 200, und 200 mal 842/595 sind die 283.
+
+Die Rechnung war nie falsch. Sie lief nur, bevor es etwas zu rechnen gab.
+
+WAS SICH ÄNDERT. Sie steht jetzt in `passen()` — dort ist der Kasten im DOM,
+dort ist die Breite bekannt, und dort wird ohnehin bei jedem Fensterwechsel
+und bei jedem Zoom neu gerechnet. Der Platzhalter folgt beidem mit, was er
+vorher nicht tat: wer das Fenster schmaler zog, hatte einen Balken, der noch
+zur alten Breite gehörte.
+
+    vorher   3513 beim Öffnen, 5067 nach 1000 px, 6620 nach 3000 px
+    jetzt    11283 beim Öffnen — und 11283 nach 1000 und nach 3000 px
+
+NUR DIE UNGEZEICHNETEN. Eine gezeichnete Seite hat ihre Höhe von ihrem Inhalt
+(`zeichneStand` nimmt `height` ausdrücklich wieder weg); ihr eine feste Zahl
+zu geben wäre derselbe Fehler von der anderen Seite. Und weiterhin wird nur
+EINE Seite beim Öffnen gezeichnet — `test395 §7` misst das mit, damit die
+Reparatur nicht E299 aufhebt.
+
+KOSTEN: eine Funktion von acht Zeilen, ein Aufruf. Keine Daten.
+
+PRÜFUNG: `test395 §7`. MUTATION ROT GESEHEN: `platzhalterSetzen(200)` statt
+`platzhalterSetzen(Math.max(120, breit))` — drei Punkte rot, mit genau den
+283 px von oben.
+
+Warum diese Mutation und nicht „den Aufruf weglassen": dann ist
+`platzhalterSetzen` ungenutzt, und `noUnusedLocals` (§52.6) lässt den Zweig
+gar nicht mehr bauen. Eine Gegenprobe, die nicht baut, ist keine.
+
+Dateien: `src/bereiche/pdf/document-mode.ts`, `pruefungen/lauf/test395.mts`.

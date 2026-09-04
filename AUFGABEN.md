@@ -48,7 +48,7 @@ Sechs Punkte, jeder nachgesehen am 3. September 2026.
 
 **Ziel** — die verbleibenden Befunde des UX-Audits schliessen. Der
 Sofort-Block ist zu (E386), F01 richtiggestellt (E388), F02 zu (E388+E391),
-F03 halb (E387), F08 zu (E394), F11 zu (E392), F13 halb (E395),
+F03 ZU (E387+E398), F08 zu (E394), F11 zu (E392), F13 halb (E395),
 F14 halb (E396).
 
 **Was noch offen ist**, in dieser Reihenfolge:
@@ -59,12 +59,16 @@ F02 Rest   die untere Telefonleiste an `haupt: true` hängen — WELCHE fünf
            „Mehr" ein Platz, also vier Orte)
            („Gehen" ist mit E391 aus dem Band; der doppelte „Zeitmesser"
             und die falsche Ortsmarkierung sind mit E393 weg)
-F03 Rest   Einzelseite/Fortlaufend — braucht Redurs Zustimmung (gegen E299)
 F13 Rest   der echte Safari-/Chrome-Lauf auf Redurs Geräten — das Tor
            über die vier Grössen steht (test392, E395)
 F14 Rest   welche VIER Zeichenwerkzeuge ohne Wischen dastehen sollen —
            Redurs Entscheidung (Zurück/Vor kleben seit E396)
 F09 F12 F17 F18   Politur  (F10 ist mit E397 zu)
+
+F03 ist ZU (E387+E398). Redur hat die Wahl am 4. September bestellt und
+die VORGABE ausdrücklich nicht: Fortlaufend bleibt der Normalfall, auch am
+Telefon — das ist seine eigene Ansage aus E299. `test395 §1` ist der
+Wächter dagegen und wurde fünffach rot gesehen.
 
 F11 ist ZU (E392) — und die Behauptung war falsch: die vier Gruppen gibt
 es längst. Der wirkliche Fehler war ein auf 720 px gedeckeltes Fenster, das
@@ -190,8 +194,8 @@ Werkzeuge" stammte aus der Zeit vor E375 (dreizehn sind vollständig), und die
 `(scrollWidth − clientWidth) / 2`, was den Browser ans Ende klemmte.
 
 Zuletzt AUFGEMACHT: **L123** — die zwölf Befunde des UX-Prüfberichts, die noch
-offen sind (Sprint: F03 Rest, F13, F14 · Politur: F09, F10,
-F12, F17, F18). Zwei brauchen Redur: F02 (welche Navigation ist die primäre?)
+offen sind (Sprint: F13, F14 · Politur: F09, F12, F17, F18 — F03 ist mit
+E398 und F10 mit E397 zu). Zwei brauchen Redur: F02 (welche Navigation ist die primäre?)
 und F13 (echter Geräte-Abnahmelauf). Und **L120** — was nach E380 an GoodNotes noch fehlt.
 Der Kern (Ebenen im Regal, Hineingehen, nach dem Entpacken im Ordner
 stehen) ist zu; offen bleiben zwei Regale für dieselbe Sache
