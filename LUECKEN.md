@@ -5620,7 +5620,7 @@ belegt mit `test386` (38 Punkte, sieben Mutationen rot gesehen).
 
 Was noch aussteht, in der Reihenfolge des Berichts:
 
-NÄCHSTER SPRINT (F01 ✓, F02 ✓, F03 halb, F08 ✓, F11 ✓, F13, F14)
+NÄCHSTER SPRINT (F01 ✓, F02 ✓, F03 halb, F08 ✓, F11 ✓, F13 halb, F14)
 
 a. **F01 · NACHGEMESSEN, der Befund stimmt so nicht** (E388). Der Bericht
    sagt, der Inhalt sei nach dem Klick auf der Übersicht geblieben. Am
@@ -5714,11 +5714,24 @@ e. **F11 · ZU (E392) — aber nicht so, wie der Bericht es meinte.** Die
    weitergeht — und wieder verschwindet, sobald man unten ist. `test389`,
    19 Punkte, fünf Mutationen rot gesehen.
 
-f. **F13 · P2 · Echter Geräte-Abnahmelauf.** DAS KANN ICH NICHT — im
-   Container gibt es kein iPhone und kein Android. Was möglich ist: ein
-   Release-Gate über die vier Grössen aus dem Bericht (360×800, 390×844,
-   428×926 und Querformat) mit Bildern und Kernflows. Der echte Safari- und
-   Chrome-Lauf bleibt Redurs Sache.
+f. **F13 · ZUR HÄLFTE ZU (E395).** Das Abnahmetor über die vier Grössen
+   des Berichts gibt es: `test392`, 23 Punkte. Und es hat beim ersten Lauf
+   einen echten Fehler gefunden.
+
+   DIE DREI HOCHFORMATE waren sauber — nichts rollt waagerecht, die fünf
+   Wege der unteren Leiste messen 48 px (§37 verlangt 44). DAS QUERFORMAT
+   nicht: bei 844 × 390 ist die Kontextkante 353 px hoch, ihr Inhalt
+   braucht 424, und `overflow` steht auf `hidden`. Acht Knöpfe lagen
+   ausserhalb — darunter Suchen, Neu und Einstellungen —, und die untere
+   Telefonleiste greift dort nicht, weil sie bei 760 px Breite endet. Auf
+   einem quer gehaltenen Telefon führte kein Weg zu „Neu".
+
+   Behoben mit E395: die Kante faltet sich gruppenweise, und `.k-unten`
+   gibt nichts ab.
+
+   OFFEN BLEIBT der echte Safari- und Chrome-Lauf auf Redurs Geräten. Das
+   Tor prüft Masse und Erreichbarkeit, nicht Gesten, Tastatur, Zurück-Wisch
+   oder die Eigenheiten von iOS-Safari.
 
 g. **F14 · P2 · Werkzeugdichte am Telefon.** Der Bericht will vier
    Primärwerkzeuge plus „Mehr". E356 zeigt heute schon nur die Gruppen des

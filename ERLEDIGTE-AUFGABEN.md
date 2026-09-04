@@ -3357,3 +3357,22 @@ die Zeugnisnote je Semester (E242) und der echte Stundenplan (E243).
   Die zweite Hälfte des Befunds („am Telefon als Bottom Sheet") war schon
   erfüllt — nachgemessen und mit test391 §5 festgehalten, damit sie nicht ein
   zweites Mal als offen gilt.
+
+  E395 · F13: das Abnahmetor über die vier Grössen des Berichts steht
+  (test392, 23 Punkte) — und hat beim ersten Lauf gefunden, wofür es gebaut
+  wurde. Bei 844 × 390, einem quer gehaltenen Telefon, ist die Kontextkante
+  353 px hoch und ihr Inhalt 424; acht Knöpfe lagen ausserhalb, darunter
+  Suchen, Neu und Einstellungen. Die untere Telefonleiste hilft dort nicht,
+  weil sie bei 760 px Breite endet. Es gab also keinen Weg zu „Neu".
+
+  Die Kante faltet sich jetzt gruppenweise: erst die Werkzeuge, dann die
+  Orte, und `.k-unten` nie — wer den Ausweg wegfaltet, hat nichts gewonnen.
+
+  DREI LEHREN. (1) Der Falter aus E388 konnte nicht helfen, weil er `.k-oben`
+  an sich selbst misst: eine auf null gequetschte Gruppe meldet keinen
+  Überlauf. Genau im Ernstfall stieg er aus. (2) Die erste Fassung machte
+  vier Orte UNERREICHBAR — gefaltet in der Leiste und „steht ja schon da" in
+  der Lade. Die Lade fragt jetzt die Leiste statt des Registers. (3)
+  `page.click` wartet dreissig Sekunden und wirft, wenn ein Knopf unter
+  einem anderen liegt; der Prüflauf stürzte bei der Mutation ab, statt sechs
+  rote Zeilen zu melden. Jetzt klickt er über `evaluate`.

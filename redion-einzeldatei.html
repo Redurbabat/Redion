@@ -16409,7 +16409,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 293, inhalt: 'ecef8d2ccbb70f6e', gebaut: '2026-09-04T11:14:47.406Z' };
+const Stand = { fassung: 300, inhalt: 'fb5625c1d2249a6c', gebaut: '2026-09-04T11:43:50.444Z' };
 window.Stand = Stand;
 
 </script>
@@ -134863,7 +134863,27 @@ const Kontextkante = (() => {
      * „Planung & Lernen". Ohne das ist es eine Liste aus zwanzig Wörtern.
      */
     const weitereOrte = () => {
-        const schon = new Set(hauptOrte().map((e) => String(e.id)));
+        /* WAS MAN NICHT SCHON SIEHT — und das ist seit E395 nicht mehr dasselbe
+           wie „die fünf Hauptwege". Bei wenig Höhe faltet `kanteAnpassen()` die
+           Orte auf zwei zusammen; fragte man hier weiter das Register, wären die
+           vier ausgeblendeten NIRGENDS mehr: nicht in der Leiste, weil gefaltet,
+           und nicht in der Lade, weil „steht ja schon da". Gemessen bei
+           844 × 390 war genau das der Fall — „Heute" und „Lernzentrum" waren
+           nicht erreichbar.
+    
+           Also die Leiste selbst fragen. Steht sie noch nicht (der allererste
+           Aufbau), gilt wieder das Register. */
+        let sichtbar = [];
+        try {
+            sichtbar = Array.from(document.querySelectorAll('#' + WURZEL + ' .k-ort'))
+                .map(b => String(b.dataset['k'] || ''));
+        }
+        catch {
+            sichtbar = [];
+        }
+        const schon = new Set(sichtbar.length
+            ? sichtbar
+            : hauptOrte().map((e) => String(e.id)));
         const raus = [];
         try {
             for (const g of (Register?.menueband?.orte?.() || [])) {
@@ -135036,18 +135056,24 @@ const Kontextkante = (() => {
      * wenn die Masse stehen: `Register.symbole.fuelle` tauscht Platzhalter
      * gegen SVG, und vorher ist die Höhe eine andere.
      */
-    const werkzeugeAnpassen = (oben, knoepfe) => {
+    const werkzeugeAnpassen = (oben, knoepfe, platz) => {
         let hoehe = 0;
         try {
-            if (oben.scrollHeight - oben.clientHeight <= 2)
-                return; /* passt */
-            hoehe = oben.clientHeight;
+            /* `platz` kommt von `kanteAnpassen()` und sagt, wie viel diese Gruppe
+               WIRKLICH bekommt. Ohne ihn misst sie sich selbst — das war bis E395
+               der einzige Weg und ging genau dann daneben, wenn es darauf ankam:
+               `.k-oben` ist `flex:1` und wurde bei wenig Höhe auf NULL gequetscht.
+               Null Pixel meldet keinen Überlauf, also fiel die Zeile darunter aus
+               und die sieben Werkzeuge verschwanden ohne Ersatz. */
+            hoehe = platz === undefined ? oben.clientHeight : platz;
+            if (platz === undefined && oben.scrollHeight - oben.clientHeight <= 2)
+                return;
         }
         catch {
             return;
         }
         if (hoehe < KNOPF_PLATZ * 2)
-            return; /* zu wenig für eine Aussage */
+            hoehe = KNOPF_PLATZ * 2; /* mindestens „Seiten" und `···` */
         /* Ein Platz geht an „Seiten", einer an den `···`-Knopf. */
         const zeigen = Math.max(0, Math.floor(hoehe / KNOPF_PLATZ) - 2);
         if (zeigen >= knoepfe.length)
@@ -135086,6 +135112,94 @@ const Kontextkante = (() => {
             }
             catch { /* ohne Zeichen bleibt der Name im aria-label */ }
         }
+    };
+    /* ==========================================================================
+     * WENN DIE KANTE ZU KURZ IST (E395, Audit F13)
+     * --------------------------------------------------------------------------
+     * GEMESSEN AM 4. SEPTEMBER bei 844 × 390 — ein Telefon quer, ein iPad im
+     * geteilten Bild, ein flaches Fenster. Die Kante ist dort 353 px hoch, ihr
+     * Inhalt braucht 424, und `overflow` steht auf `hidden`:
+     *
+     *     .k-orte    6 Knöpfe   269 px
+     *     .k-oben    7 Knöpfe     0 px   (auf null gequetscht, `flex:1`)
+     *     .k-unten   3 Knöpfe   137 px   beginnt bei 281 → 65 px draussen
+     *
+     * ACHT KNÖPFE WAREN NICHT ZU ERREICHEN, darunter Suche, Neu und
+     * Einstellungen — und die untere Telefonleiste greift hier nicht, weil sie
+     * bei 760 px Breite endet und 844 breiter ist. Auf einem quer gehaltenen
+     * Telefon gab es also keinen Weg zu „Neu".
+     *
+     * DIE REIHENFOLGE, WER PLATZ ABGIBT, ist die Aussage dieses Abschnitts:
+     *
+     *   1. Die Werkzeuge (`.k-oben`) falten sich zuerst — sie hängen am Ort
+     *      und stehen ohnehin schon hinter einem `···`.
+     *   2. Dann die Orte (`.k-orte`): es bleibt der, an dem man steht, plus
+     *      „Mehr Orte". Der Rest steht in der Lade, die es dafür schon gibt.
+     *   3. `.k-unten` gibt NICHTS ab. KI, Neu und Einstellungen sind das,
+     *      was man überall braucht; sie wegzufalten hiesse, den Ausweg
+     *      wegzufalten.
+     * ======================================================================== */
+    const kanteAnpassen = (w, oben, orte, knoepfe) => {
+        /* GEMESSEN, NICHT GERECHNET. Der erste Anlauf schätzte die Höhe der
+           Ortsgruppe als `Anzahl × 44` und lag um fünf Pixel daneben — Polster,
+           Rand und Abstand der Gruppe zählen mit. Fünf Pixel zu viel Budget
+           heisst ein Werkzeug zu viel, und `test387` meldete prompt drei Pixel
+           Überlauf. Also die echte Höhe nehmen. */
+        const hoch = (el) => el ? Math.ceil(el.getBoundingClientRect().height) : 0;
+        let ganz = 0;
+        try {
+            ganz = w.clientHeight;
+        }
+        catch {
+            return;
+        }
+        if (!ganz)
+            return;
+        const frei = ganz - hoch(w.querySelector('.k-unten'));
+        /* FALTEN UND NACHSEHEN, statt genauer zu rechnen. 44 Pixel je Knopf ist
+           eine Näherung — dazu kommen zwei Pixel Abstand zwischen je zweien, und
+           bei sechs Knöpfen sind das zehn. Wer das in die Formel schreibt,
+           schreibt am nächsten Stilwechsel wieder daneben. Also einmal falten,
+           messen, und wenn es immer noch überläuft, einen Platz weniger geben.
+           Die Schleife ist beschränkt und endet spätestens bei zwei Knöpfen. */
+        const werkzeugePassend = (budget) => {
+            let platz = budget;
+            for (let runde = 0; runde < 12; runde++) {
+                werkzeugeAnpassen(oben, knoepfe, Math.max(0, platz));
+                if (oben.scrollHeight - oben.clientHeight <= 1)
+                    return;
+                platz -= KNOPF_PLATZ;
+                if (platz < KNOPF_PLATZ * 2)
+                    return;
+            }
+        };
+        /* 1 — die Werkzeuge falten, mit dem, was neben den Orten übrig ist. */
+        werkzeugePassend(frei - hoch(orte));
+        /* 2 — passt es immer noch nicht, falten sich auch die Orte. Zwei Knöpfe
+               bleiben: wo man ist, und der Weg zu allem anderen. Gefragt wird
+               der WIRKLICHE Überlauf der Kante, nicht noch eine Rechnung. */
+        if (w.scrollHeight - w.clientHeight <= 1)
+            return;
+        const orteZahl = orte.children.length;
+        if (orteZahl <= 2)
+            return;
+        const hier = ortJetzt();
+        const behalten = [];
+        for (const kind of Array.from(orte.children)) {
+            const id = kind.dataset['k'] || '';
+            if (id === 'mehr-orte' || (hier && id === hier))
+                behalten.push(kind);
+        }
+        /* Ohne Treffer (man steht anderswo) bleibt der erste Ort stehen, damit
+           die Gruppe nicht nur aus „Mehr Orte" besteht. */
+        if (behalten.length < 2 && orte.children[0])
+            behalten.unshift(orte.children[0]);
+        orte.replaceChildren(...behalten);
+        /* 3 — und jetzt haben die Werkzeuge mehr Platz als eben. Noch einmal
+               verteilen, sonst stünde dort ein `···` über einer halb leeren
+               Spalte. `werkzeugeAnpassen` baut aus `knoepfe` neu auf, also
+               kommt zurück, was vorhin zu viel war. */
+        werkzeugePassend(frei - hoch(orte));
     };
     /**
      * Die Kante für den Ort zeichnen, an dem man gerade steht.
@@ -135148,10 +135262,10 @@ const Kontextkante = (() => {
         /* ERST NACH DEM ZEICHNEN DER SYMBOLE MESSEN. Vorher stehen Platzhalter
            da und die Höhe stimmt nicht. */
         try {
-            requestAnimationFrame(() => werkzeugeAnpassen(oben, knoepfe));
+            requestAnimationFrame(() => kanteAnpassen(w, oben, orte, knoepfe));
         }
         catch {
-            werkzeugeAnpassen(oben, knoepfe);
+            kanteAnpassen(w, oben, orte, knoepfe);
         }
         /* Eine offene Lade, deren Knopf es hier nicht mehr gibt, muss zu —
            sonst steht sie über einem Bereich, zu dem sie nicht gehört. */

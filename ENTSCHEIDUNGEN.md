@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-390 Entscheidungen, E1 bis E394. Die Nummer ist die Ordnung: eine Entscheidung
+391 Entscheidungen, E1 bis E395. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -448,6 +448,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E392** — Die Einstellungsliste zeigt, was sie hat — und sagt, wenn mehr kommt
 * **E393** — Die Leiste zeigt, wo man wirklich ist; der Zeitmesser steht einmal
 * **E394** — Das KI-Feld bleibt nicht im Dokument stehen
+* **E395** — Eine Kante, die zu kurz ist, faltet sich, statt hinauszuragen
 
 ---
 
@@ -32059,3 +32060,111 @@ Grün geblieben: test114, test272, test296, test384. Einzeldatei neu gebaut.
 Mit zwei Bildern belegt (§55.3): dasselbe Blatt vorher und nachher.
 
 Dateien: `src/schale/aufbau/schale.ts`, `pruefungen/lauf/test391.mts`.
+
+
+E395 — Eine Kante, die zu kurz ist, faltet sich, statt hinauszuragen (Audit F13)
+================================================================================
+4. September 2026 · Audit F13 · Auftrag 01 Schritt 6
+
+PROBLEM
+
+Der Bericht verlangt unter F13 einen Geräte-Abnahmelauf über 360×800,
+390×844, 428×926 und Querformat. Ein echtes iPhone gibt es im Container
+nicht; die vier GRÖSSEN gibt es sehr wohl. Gemessen am 4. September:
+
+Die drei Hochformate waren sauber — nichts rollte waagerecht, und die fünf
+Wege der unteren Leiste massen 48 px (§37 verlangt 44). Das QUERFORMAT war
+es nicht:
+
+    844 × 390    Kante 353 px hoch, Inhalt 424 px, `overflow: hidden`
+      .k-orte     6 Knöpfe   269 px
+      .k-oben     7 Knöpfe     0 px   auf null gequetscht (`flex:1`)
+      .k-unten    3 Knöpfe   137 px   begann bei 281 → 65 px draussen
+
+ACHT KNÖPFE WAREN NICHT ZU ERREICHEN: Übersicht, Notizhefte, Aufgaben, Alle
+Seiten, Suchen, Zuletzt, Neu, Einstellungen. Und es gab keinen Ausweg — die
+untere Telefonleiste endet bei 760 px Breite, 844 ist breiter. Auf einem quer
+gehaltenen Telefon führte KEIN Weg zu „Neu".
+
+Der Falter aus E388 (`werkzeugeAnpassen`) hätte helfen sollen und konnte
+nicht: er misst `.k-oben` an sich selbst, und eine Gruppe von null Pixeln
+Höhe meldet keinen Überlauf. Genau dann, wenn es darauf ankam, stieg er aus.
+
+ENTSCHEIDUNG
+
+Ein Verteiler `kanteAnpassen()` rechnet den Platz VON OBEN und gibt jeder
+Gruppe, was ihr zusteht. Die Reihenfolge, wer abgibt, ist die Aussage:
+
+  1. Die WERKZEUGE falten zuerst — sie hängen am Ort und stehen ohnehin
+     schon hinter einem `···`.
+  2. Dann die ORTE: es bleiben der, an dem man steht, und „Mehr Orte".
+  3. `.k-unten` gibt NICHTS ab. KI, Neu und Einstellungen sind das, was man
+     überall braucht; sie wegzufalten hiesse, den Ausweg wegzufalten.
+
+Bei 844 × 390 stehen danach sieben Knöpfe statt sechzehn, der Inhalt misst
+353 px bei 353 px Höhe, und nichts liegt draussen.
+
+DER ZWEITE FEHLER, DEN DIE ERSTE FASSUNG SELBST GEMACHT HAT
+
+Nach dem Falten waren vier der fünf Orte NIRGENDS mehr: nicht in der Leiste,
+weil gefaltet — und nicht in der Lade, weil `weitereOrte()` weiter das
+Register fragte und „steht ja schon da" antwortete. Gemessen: „Heute" und
+„Lernzentrum" nicht erreichbar, die Lade zeigte 39 statt 43 Zeilen.
+
+Die Lade fragt jetzt die LEISTE, nicht das Register: was man nicht sieht,
+steht drin. Das ist auch der ehrlichere Satz — „mehr Orte" heisst „mehr als
+die, die hier stehen", nicht „mehr als die fünf".
+
+ALTERNATIVE: `#kante` senkrecht rollen lassen. Verworfen — eine rollende
+Zeichenspalte auf 390 px Höhe findet niemand, und `.k-unten` würde vom
+unteren Rand wegrollen, also genau das verlieren, was bleiben soll.
+
+ZWEITE ALTERNATIVE: unter einer Höhenschwelle auf die untere Telefonleiste
+umschalten. Verworfen für heute — die Leiste hängt an `max-width: 760px`, und
+sie an die Höhe zu hängen ist ein eigener Bogen mit eigenen Messungen. Sie
+trägt ausserdem noch die falschen fünf (L123 F02 Punkt 1, Redurs Entscheidung).
+
+DER DRITTE FEHLER, UND ER KAM VOM RECHNEN
+
+Der Verteiler schätzte die Höhe der Ortsgruppe als `Anzahl × 44` und lag um
+fünf Pixel daneben — Polster, Rand und Abstand der Gruppe zählen mit. Fünf
+Pixel zu viel Budget heissen ein Werkzeug zu viel, und `test387` meldete
+prompt drei Pixel Überlauf bei 1280 × 720. Die echte Höhe zu messen half
+nur halb: 44 px je Knopf ist selbst eine Näherung, denn zwischen je zweien
+liegen zwei Pixel Abstand, bei sechs Knöpfen also zehn.
+
+DIE ANTWORT IST NICHT DIE GENAUERE FORMEL, sondern der Blick danach: einmal
+falten, MESSEN, und bei Überlauf einen Platz weniger geben. Die Schleife ist
+beschränkt und endet spätestens bei zwei Knöpfen. Eine Formel, die alle
+Polster kennt, schreibt beim nächsten Stilwechsel wieder daneben.
+
+KOSTEN: ein Verteiler von vierzig Zeilen und ein Parameter mehr an
+`werkzeugeAnpassen`. Keine Daten, kein Feldname, keine Migration.
+
+PRÜFUNG: `test392` (23 Punkte, PORT 9417) — das Abnahmetor über die vier
+Grössen des Berichts. DREI MUTATIONEN ROT GESEHEN:
+
+    Verteiler weg, alter Falter zurück   6 rot (§3 und §4) — und es reicht
+                                         den Originalfehler nach: „neu" und
+                                         „einstellungen" liegen draussen
+    Orte falten nicht mit                2 rot (§3)
+    Lade fragt wieder das Register       4 rot (§4)
+
+`test387` war dabei der vierte Wächter, und er hat den Rechenfehler gefunden,
+den keine Mutation gefunden hätte: er misst den Überlauf von `.k-oben` bei
+1280 × 720 und stand auf 3 statt 0.
+
+BEIM DRITTEN SCHLUG `noUnusedLocals` ZU (§52.6): die Mutation nahm die letzte
+Verwendung einer Konstanten weg, und der Zweig baute nicht mehr. Die Variable
+musste mit weg — eine Gegenprobe, die nicht baut, ist keine.
+
+UND EINE LEHRE ÜBER PRÜFLÄUFE: `page.click` wartet dreissig Sekunden und
+WIRFT, wenn ein Knopf unter einem anderen liegt — genau der Zustand, den die
+erste Mutation herstellt. Der Lauf stürzte ab, statt sechs rote Zeilen zu
+melden. §4 klickt jetzt über `evaluate`; ein Prüflauf, der bei einem Fehler
+abstürzt, hilft niemandem.
+
+Grün geblieben: test33, test61, test272, test387, test390, test391.
+Einzeldatei neu gebaut. Mit einem Bild belegt (§55.3).
+
+Dateien: `src/schale/aufbau/context-rail.ts`, `pruefungen/lauf/test392.mts`.
