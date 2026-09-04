@@ -81,12 +81,14 @@ const pruef = (n: any, ist: any, soll: any) => {
       return x;
     };
     const l = musselement('#rg-loch').getBoundingClientRect();
-    /* SEIT E272 PHASE F ZEIGT SCHRITT 1 AUF DEN REITER „GEHEN".
-       Vorher war es `#sidebar .ws-btn`; die Seitenleiste gibt es am
-       Rechner nicht mehr. Der Anker steht in `rundgang.ts` — wer ihn
-       ändert, muss diese Zeile mitnehmen, und das ist Absicht: ein
-       Prüfpunkt, der irgendein Element nimmt, misst irgendetwas. */
-    const z = (document.querySelector('[data-mb-reiter="gehen"]') ?? document.body).getBoundingClientRect();
+    /* SEIT E390 ZEIGT SCHRITT 1 AUF DIE ORTE IN DER LINKEN LEISTE.
+       Vorher war es `#sidebar .ws-btn` (E272 Phase F nahm die Leiste weg),
+       danach der Reiter „Gehen" — und der stand seit E383 nur da, wenn
+       jemand das Band aufklappte. Genau daran war dieser Punkt rot.
+       Der Anker steht in `rundgang.ts` — wer ihn ändert, muss diese Zeile
+       mitnehmen, und das ist Absicht: ein Prüfpunkt, der irgendein
+       Element nimmt, misst irgendetwas. */
+    const z = (document.querySelector('#kante .k-orte') ?? document.body).getBoundingClientRect();
     return { nah: Math.abs(l.left + 6 - z.left) < 3 && Math.abs(l.top + 6 - z.top) < 3,
              sichtbar: getComputedStyle(musselement('#rg-loch')).display };
   });
@@ -236,6 +238,66 @@ const pruef = (n: any, ist: any, soll: any) => {
   });
   pruef('Die Führung passt aufs Telefon',   amHandy.raus, false);
   pruef('Die Übersicht auch',               amHandy.rausU, false);
+
+  /* ======================================================================
+     JEDER SCHRITT ZEIGT AUF ETWAS SICHTBARES — an beiden Grössen (E390)
+     ----------------------------------------------------------------------
+     DER PUNKT, DEN ES VORHER NICHT GAB, UND DER DEN FEHLER GEFUNDEN HÄTTE.
+     Bis hierher prüfte dieser Lauf nur SCHRITT 1. Am 4. September
+     nachgemessen zeigten im Grundzustand fünf der neun Schritte am Rechner
+     auf nichts und acht am Telefon — drei Ziele waren Reiter des Bandes
+     (seit E383 nur sichtbar, wenn man aufklappt), drei waren Knöpfe der
+     Kante (die es am Telefon nicht gibt).
+
+     `stellen()` versteckt das Loch dann still. Eine Führung ohne Loch sieht
+     aus wie eine Führung und zeigt auf nichts — der Kopf von `rundgang.ts`
+     beschreibt genau das seit E272, und es ist trotzdem passiert, weil kein
+     Lauf es hielt.
+
+     DIE FÜHRUNG WIRD WIRKLICH DURCHLAUFEN, und gemessen wird DAS LOCH.
+     Der erste Entwurf las `Rundgang.SCHRITTE` und suchte selbst den ersten
+     sichtbaren Kandidaten — also dieselbe Rechnung noch einmal, daneben.
+     Bei der Gegenprobe blieb er GRÜN, als `zielFinden()` den ersten
+     VORHANDENEN statt den ersten SICHTBAREN nahm: der Prüflauf rechnete ja
+     weiter richtig. Eine Prüfung, die den Mechanismus nachbaut, prüft den
+     Nachbau (§55.2). Jetzt klickt sie sich durch alle neun Schritte und
+     sieht nach, ob `#rg-loch` dasteht und eine Fläche hat. */
+  const zeigtAlles = async (breite: number, hoehe: number, mobil: boolean) => {
+    const s = await b.newPage({ viewport: { width: breite, height: hoehe },
+                                isMobile: mobil, hasTouch: mobil });
+    await s.goto('file://' + WURZEL + '/index.html');
+    await s.waitForTimeout(3200);
+    await s.evaluate(`document.getElementById('rg-willkommen')?.remove()`);
+    await s.evaluate(`Rundgang.start()`);
+    await s.waitForTimeout(400);
+    const zahl: number = await s.evaluate(`Rundgang.SCHRITTE.length`);
+    const blind: string[] = [];
+    for (let i = 0; i < zahl; i++) {
+      const loch: any = await s.evaluate(`(() => {
+        const l = document.getElementById('rg-loch');
+        if (!l) return { da: false };
+        const r = l.getBoundingClientRect();
+        return { da: getComputedStyle(l).display !== 'none' && r.width > 1 && r.height > 1,
+                 b: Math.round(r.width), h: Math.round(r.height),
+                 titel: ((document.querySelector('#rg-kasten h3, #rg-kasten b') || {})
+                          .textContent || '').trim().slice(0, 28) };
+      })()`);
+      if (!loch.da) blind.push(`${i + 1}: ${loch.titel || '(ohne Titel)'}`);
+      if (i < zahl - 1) {
+        await s.evaluate(`document.querySelector('#rg-kasten [data-a="weiter"]')?.click()`);
+        await s.waitForTimeout(260);
+      }
+    }
+    await s.evaluate(`Rundgang.fertig()`);
+    await s.close();
+    return { zahl, blind };
+  };
+  const amRechner = await zeigtAlles(1360, 900, false);
+  pruef('Der Rundgang hat neun Schritte (sonst misst die Zeile darunter nichts)',
+        amRechner.zahl, 9);
+  pruef('Am Rechner zeigt kein Schritt auf nichts', amRechner.blind, []);
+  const amTelefon2 = await zeigtAlles(390, 844, true);
+  pruef('Am Telefon zeigt kein Schritt auf nichts', amTelefon2.blind, []);
 
   console.log(`\n${ok}/${ok + bad} bestanden`);
   const alle = [...fehler, ...fehler2];

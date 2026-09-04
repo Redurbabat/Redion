@@ -38,6 +38,29 @@ dann die Phasen, dann die Bögen.
 
 ## Aktueller Stand
 
+**4. September 2026 · Eine Führung, die auf nichts zeigt (E390, L125 zu)**
+
+> `test61` war rot — und in einem Arbeitsbaum auf dem Stand davor ebenso,
+> es kam also nicht von der Leistungsarbeit. Beim Nachmessen war es viel
+> mehr als der eine rote Punkt: im Grundzustand zeigten **fünf von neun**
+> Schritten am Rechner auf nichts und **acht von neun** am Telefon. Drei
+> Ziele waren Reiter des Bandes (seit E383 nur sichtbar, wenn man
+> aufklappt), drei waren Kantenknöpfe (am Telefon gibt es die Kante nicht).
+> `stellen()` versteckt das Loch dann still — genau davor warnt der Kopf
+> von `rundgang.ts` seit E272, und es ist trotzdem passiert, weil `test61`
+> nur den ERSTEN Schritt hielt.
+> Jedes Ziel trägt jetzt mehrere Kandidaten, genommen wird der erste
+> sichtbare. Danach: null von neun blind, an beiden Grössen.
+> ZWEI LEHREN AUS DEM PRÜFLAUF SELBST. Der erste Entwurf las
+> `Rundgang.SCHRITTE` und suchte selbst den sichtbaren Kandidaten — also
+> dieselbe Rechnung daneben; bei der Gegenprobe blieb er grün, weil der
+> Nachbau ja stimmte. Jetzt klickt er sich wirklich durch alle neun und
+> misst das Loch. Und die Gegenprobe konnte zuerst gar nicht rot werden:
+> kein Schritt hatte einen Kandidaten, der DA, ABER UNSICHTBAR ist. Erst
+> mit den genauen Zielen vorne (Schritt 7 „Überprüfen", Schritt 9 „Datei")
+> trägt die Sichtbarkeitsprüfung etwas — und das ist auch für den Nutzer
+> besser.
+
 **4. September 2026 · Der Start wartet nicht mehr auf 185 Skripte (E389)**
 
 > Redur schickte einen PageSpeed-Bericht. Die Zahlen von Google kamen nicht

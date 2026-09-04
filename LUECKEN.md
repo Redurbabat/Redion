@@ -5747,9 +5747,16 @@ PageSpeed.
 
 
 ================================================================================
-L125 — Der Rundgang zeigt auf einen Reiter, den man nicht sieht
+L125 — ~~Der Rundgang zeigt auf einen Reiter, den man nicht sieht~~ — GESCHLOSSEN am 4. September 2026 (E390)
 ================================================================================
 4. September 2026 · gefunden beim Bauen von E389
+
+**GESCHLOSSEN durch E390, und es war mehr als der eine Schritt.** Gemessen
+zeigten im Grundzustand FÜNF der neun Schritte am Rechner auf nichts und
+ACHT am Telefon. Jedes Ziel trägt jetzt mehrere Kandidaten; genommen wird
+der erste, den man wirklich sieht. Danach: null von neun blind, an beiden
+Grössen. `test61` läuft die Führung jetzt wirklich durch statt nur den
+ersten Schritt zu messen (39 Punkte statt 36, vier Mutationen rot).
 
 `test61` ist rot, zwei Punkte: „Das Loch liegt auf dem Ziel" und „Und ist
 sichtbar". NACHGEMESSEN IN EINEM ARBEITSBAUM auf dem Stand davor — dort

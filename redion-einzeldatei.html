@@ -16355,7 +16355,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 261, inhalt: 'b65a160f24170dd8', gebaut: '2026-09-04T04:28:37.881Z' };
+const Stand = { fassung: 270, inhalt: '09d1372f8a3b538d', gebaut: '2026-09-04T06:29:23.487Z' };
 window.Stand = Stand;
 
 </script>
@@ -108864,40 +108864,52 @@ const Rundgang = (() => {
        Die neuen Anker sind die Stellen, an denen dieselben Dinge JETZT
        stehen — Reiter „Gehen" statt Seitenleiste, die Kante statt „+ Neu",
        „Datei" statt `#btn-settings`. test61 misst, dass das Loch auf dem
-       ersten Ziel wirklich liegt. */
+       ersten Ziel wirklich liegt.
+  
+       UND DAS HAT NICHT GEREICHT (E390). Am 4. September nachgemessen zeigten
+       im Grundzustand FÜNF der neun Schritte am Rechner auf nichts und ACHT
+       am Telefon: drei Ziele waren Reiter des Bandes (seit E383 nur sichtbar,
+       wenn man aufklappt), drei waren Kantenknöpfe (am Telefon gibt es die
+       Kante nicht). `test61` hielt nur den ERSTEN Schritt — der Rest war
+       genau die stille Sorte Fehler, vor der der Absatz darüber warnt.
+  
+       Seither trägt jedes Ziel MEHRERE Kandidaten, durch Komma getrennt, und
+       `zielFinden()` nimmt den ersten, den man wirklich sieht. `test61` misst
+       jetzt alle neun, an beiden Grössen. */
     const SCHRITTE = [
         /* E270: ohne Konto stimmt der Satz weiterhin — er darf nur nicht mehr
            behaupten, es GÄBE keinen Server. Er ist da und freiwillig. */
-        { ziel: '[data-mb-reiter="gehen"]', titel: 'Alles liegt hier',
-            text: 'Unter <b>Gehen</b> steht jeder Bereich, den Redion hat — Heute, ' +
-                'Bibliothek, Aufgaben, Elektro und dreissig weitere. Ohne Konto ' +
-                'bleibt alles in diesem Browser auf diesem Gerät; für dieselben ' +
-                'Notizen auf Rechner und Telefon gibt es die Wolke, freiwillig.' },
+        { ziel: '#kante .k-orte, #handy-oben', titel: 'Alles liegt hier',
+            text: 'Hier stehen deine Orte — Heute, Lernzentrum, Elektrotechnik, ' +
+                'Bibliothek, Aufgaben. Hinter <b>Mehr Orte</b> liegen dreissig ' +
+                'weitere. Ohne Konto bleibt alles in diesem Browser auf diesem ' +
+                'Gerät; für dieselben Notizen auf Rechner und Telefon gibt es ' +
+                'die Wolke, freiwillig.' },
         { ziel: '#mb-suche', titel: 'Suchen und Befehle',
             text: 'Strg + K sucht in allem. Strg + P öffnet die Befehle: dort steht ' +
                 'jede Funktion mit Namen, auch die, die du noch nicht kennst. ' +
                 'Sie sucht unscharf — „wchrck" findet den Wochenrückblick.' },
-        { ziel: '#kante .k-knopf[data-k="neu"]', titel: 'Eine Seite anfangen',
+        { ziel: '#kante .k-knopf[data-k="neu"], #btn-new-bottom', titel: 'Eine Seite anfangen',
             text: 'Strg + N legt eine Seite an. Ein <b>/</b> im Text öffnet die Bausteine: ' +
                 '43 Stück, von der Überschrift bis zur Datenbank.' },
-        { ziel: '[data-mb-reiter="einfuegen"]', titel: 'Zwölf Ansichten auf dieselben Daten',
+        { ziel: '.mb-klapp, #menueband', titel: 'Zwölf Ansichten auf dieselben Daten',
             text: 'Eine Datenbank kann Tabelle, Board, Zeitstrahl, Kalender, Galerie, ' +
                 'Liste, Diagramm, Formular, Feed, Karte, Kreuztabelle und Dashboard ' +
                 'zugleich sein — jede mit eigenem Filter.' },
-        { ziel: '#kante .k-knopf[data-k="ki"]', titel: 'Die KI, die nichts kaputt macht',
+        { ziel: '#kante .k-knopf[data-k="ki"], #mb-ki', titel: 'Die KI, die nichts kaputt macht',
             text: 'Sie schreibt Formeln, Automationen und Filter — aber sie ändert nie ' +
                 'einfach etwas. Jeder Vorschlag wird an deinen echten Daten ' +
                 'durchgerechnet und Zeile für Zeile verglichen, bevor du zustimmst.' },
-        { ziel: '#kante .k-knopf[data-k="einstellungen"]', titel: 'So, wie du es willst',
+        { ziel: '#kante .k-knopf[data-k="einstellungen"], #hl-mehr', titel: 'So, wie du es willst',
             text: 'Acht Farbschemata, eigene Akzentfarbe, Schrift und Seitenbreite — ' +
                 'und alle Tastenkürzel lassen sich umbelegen. Notions Kürzel sind fest.' },
-        { ziel: '[data-mb-reiter="ueberpruefen"]', titel: 'Ehrlich beim Tempo',
+        { ziel: '[data-mb-reiter="ueberpruefen"], .mb-klapp, #menueband', titel: 'Ehrlich beim Tempo',
             text: 'Hier steht, wie lange das Zeichnen gedauert hat und welche Formel ' +
                 'die teuerste ist — mit Namen. Kein anderes Programm sagt dir das.' },
-        { ziel: '[data-mb-reiter="hilfe"]', titel: 'Alles zum Nachlesen',
+        { ziel: '#kante .k-knopf[data-k="mehr-orte"], #hl-mehr', titel: 'Alles zum Nachlesen',
             text: 'Acht Dokumente: sieben über Notion, eines über alles, was Redion ' +
                 'mehr kann. Darin steht auch, was Redion bewusst <i>nicht</i> tut.' },
-        { ziel: '#mb-datei', titel: 'Zum Schluss',
+        { ziel: '#mb-datei, #mb-konto', titel: 'Zum Schluss',
             text: 'In den Einstellungen richtest du die KI ein, sicherst alles ' +
                 'verschlüsselt und stellst ein, was Redion beim Start tut. ' +
                 'Viel Freude damit.' }
@@ -108912,6 +108924,57 @@ const Rundgang = (() => {
         loch = null;
         removeEventListener('resize', stellen);
     };
+    /**
+     * DEN ERSTEN KANDIDATEN NEHMEN, DEN MAN WIRKLICH SIEHT (E390).
+     *
+     * `ziel` darf mehrere Auswahlausdrücke mit Komma tragen. Gewonnen hat
+     * NICHT der erste im Dokument — das täte `querySelector` —, sondern der
+     * erste, der eine Breite hat.
+     *
+     * WARUM DAS NÖTIG IST. Am 4. September nachgemessen, im Grundzustand:
+     * am Rechner zeigten FÜNF der neun Schritte auf nichts, am Telefon ACHT.
+     * Drei Ziele waren Reiter des Menübandes, und die stehen seit dem ruhigen
+     * Band (E383) nur da, wenn jemand es aufklappt; drei weitere waren Knöpfe
+     * der Kante, und die gibt es am Telefon gar nicht.
+     *
+     * `stellen()` versteckte das Loch dann stillschweigend. Genau davor warnt
+     * der Kopf dieser Datei seit E272 — „neun Schritte ohne Loch sehen aus
+     * wie eine Führung, zeigen aber auf nichts" —, und genau das war
+     * eingetreten, ohne dass ein Prüflauf es hielt. `test61` fing nur den
+     * ERSTEN Schritt.
+     *
+     * Ein Ziel je Gerät wäre die Alternative gewesen. Eine Liste ist besser:
+     * sie sagt „hier, sonst dort" statt „wenn Telefon, dann", und sie hält,
+     * wenn sich eine Breite verschiebt, statt an einer Zahl zu hängen.
+     *
+     * DAS GENAUE ZIEL STEHT VORNE, wo es eines gibt. Schritt 7 nennt zuerst
+     * den Reiter „Überprüfen" und Schritt 9 zuerst „Datei" — beide stehen im
+     * DOM, sind bei zugeklapptem Band aber null Pixel breit. Wer das Band
+     * aufklappt, bekommt also das richtige Loch; wer nicht, bekommt den
+     * Knopf, der dorthin führt. Und beiläufig macht genau das die Zeile
+     * unten prüfbar: ohne einen Kandidaten, der DA, ABER UNSICHTBAR ist,
+     * könnte `test61` gar nicht merken, wenn hier wieder nur nach
+     * Vorhandensein gefragt würde (§55.2).
+     */
+    const zielFinden = (ziel) => {
+        if (!ziel)
+            return null;
+        for (const teil of ziel.split(',')) {
+            const sel = teil.trim();
+            if (!sel)
+                continue;
+            let el = null;
+            try {
+                el = document.querySelector(sel);
+            }
+            catch {
+                el = null;
+            }
+            if (el && el.getBoundingClientRect().width)
+                return el;
+        }
+        return null;
+    };
     const stellen = () => {
         /* Kasten UND Loch — sie werden in `zeichne` zusammen angelegt und in
            `aufraeumen` zusammen weggenommen. Vorher stand nur die Frage nach dem
@@ -108922,7 +108985,7 @@ const Rundgang = (() => {
         const s = SCHRITTE[nr];
         if (!s)
             return;
-        const el = s.ziel ? document.querySelector(s.ziel) : null;
+        const el = zielFinden(s.ziel);
         if (el && el.getBoundingClientRect().width) {
             const r = el.getBoundingClientRect();
             loch.style.display = '';

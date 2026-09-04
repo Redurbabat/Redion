@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-385 Entscheidungen, E1 bis E389. Die Nummer ist die Ordnung: eine Entscheidung
+386 Entscheidungen, E1 bis E390. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -31561,3 +31561,96 @@ liegt auf dem Ziel"). Nachgemessen in einem Arbeitsbaum auf dem Stand
 davor — dort ebenfalls rot. Es ist ein Nachlauf von E383: der Rundgang
 zeigt auf den Reiter „Gehen", und der ist im ruhigen Band unsichtbar. Steht
 als L125.
+
+
+================================================================================
+E390 — Eine Führung, die auf nichts zeigt, ist keine Führung
+================================================================================
+4. September 2026 · L125, gefunden beim Bauen von E389
+
+BEFUND. `test61` war rot, zwei Punkte: „Das Loch liegt auf dem Ziel" und
+„Und ist sichtbar". In einem Arbeitsbaum auf dem Stand davor nachgemessen —
+dort ebenfalls rot; es war also kein Nachlauf der Leistungsarbeit.
+
+Beim Nachmessen war es viel mehr als der eine Punkt. Im Grundzustand, ohne
+etwas anzuklicken:
+
+    Schritt 1  Alles liegt hier          Rechner ✗   Telefon ✗
+    Schritt 2  Suchen und Befehle        ✓           ✓
+    Schritt 3  Eine Seite anfangen       ✓           ✗ (Kante fehlt)
+    Schritt 4  Zwölf Ansichten           ✗ (Reiter)  ✗
+    Schritt 5  Die KI                    ✓           ✗ (Kante fehlt)
+    Schritt 6  So, wie du es willst      ✓           ✗ (Kante fehlt)
+    Schritt 7  Ehrlich beim Tempo        ✗ (Reiter)  ✗
+    Schritt 8  Alles zum Nachlesen       ✗ (Reiter)  ✗
+    Schritt 9  Zum Schluss               ✗ (Datei)   ✗
+
+    FÜNF von neun am Rechner, ACHT von neun am Telefon.
+
+Zwei Ursachen: drei Ziele waren Reiter des Menübandes, und die stehen seit
+dem ruhigen Band (E383) nur da, wenn jemand aufklappt. Drei weitere waren
+Knöpfe der Kontextkante, und die gibt es am Telefon gar nicht (E272 Phase F,
+mit Absicht).
+
+UND `stellen()` VERSTECKT DAS LOCH DANN STILL. Genau davor warnt der Kopf
+von `rundgang.ts` seit E272, wörtlich: „neun Schritte ohne Loch sehen aus
+wie eine Führung, zeigen aber auf nichts." Es ist trotzdem passiert, weil
+`test61` nur den ERSTEN Schritt hielt.
+
+WAS GEBAUT WURDE
+
+`ziel` trägt jetzt MEHRERE Kandidaten mit Komma; `zielFinden()` nimmt den
+ersten, der eine Breite hat — nicht den ersten im Dokument, den `querySelector`
+nähme. Ein Ziel je Gerät wäre die Alternative gewesen; eine Liste sagt „hier,
+sonst dort" statt „wenn Telefon, dann" und hängt an keiner Breitenzahl.
+
+    1  #kante .k-orte, #handy-oben                          die Orte (E388)
+    2  #mb-suche
+    3  #kante .k-knopf[data-k="neu"], #btn-new-bottom
+    4  .mb-klapp, #menueband
+    5  #kante .k-knopf[data-k="ki"], #mb-ki
+    6  #kante .k-knopf[data-k="einstellungen"], #hl-mehr
+    7  [data-mb-reiter="ueberpruefen"], .mb-klapp, #menueband
+    8  #kante .k-knopf[data-k="mehr-orte"], #hl-mehr
+    9  #mb-datei, #mb-konto
+
+Gemessen danach: NULL von neun zeigen auf nichts, an beiden Grössen.
+
+Der Text von Schritt 1 stimmte auch nicht mehr — er sagte „Unter Gehen
+steht jeder Bereich". Seit E388 stehen die Orte links; der Satz sagt das
+jetzt.
+
+WAS ES KOSTET
+────────────────────────────────────────────────────────────────────────
+Schritt 4 und 7 landen beide auf „Werkzeuge", wenn das Band zu ist. Das ist
+keine schöne Führung, aber eine wahre: beide Dinge liegen dort. Keine Daten,
+kein Feldname, keine Migration.
+
+PRÜFUNG: `test61`, jetzt 39 Punkte statt 36. Der neue Abschnitt LÄUFT DIE
+FÜHRUNG WIRKLICH DURCH — er klickt sich durch alle neun Schritte und misst
+`#rg-loch`, an 1360×900 und an 390×844.
+
+DER ERSTE ENTWURF DIESES ABSCHNITTS WAR NUTZLOS, und das ist die Lehre.
+Er las `Rundgang.SCHRITTE` und suchte SELBST den ersten sichtbaren
+Kandidaten — also dieselbe Rechnung noch einmal, daneben. Bei der
+Gegenprobe „nimm den ersten VORHANDENEN statt den ersten SICHTBAREN" blieb
+er grün: der Prüflauf rechnete ja weiter richtig. Eine Prüfung, die den
+Mechanismus nachbaut, prüft den Nachbau (§55.2).
+
+UND DIE GEGENPROBE KONNTE ZUERST GAR NICHT ROT WERDEN. Nachgemessen hatte
+kein Schritt einen Kandidaten, der DA, ABER UNSICHTBAR ist — überall war
+der erste entweder sichtbar oder gar nicht vorhanden. Erst mit den genauen
+Zielen vorne (Schritt 7 „Überprüfen", Schritt 9 „Datei" — beide im DOM,
+bei zugeklapptem Band null Pixel breit) trägt die Sichtbarkeitsprüfung
+etwas, und erst dann wurde die Gegenprobe rot. Das ist auch für den Nutzer
+besser: wer das Band offen hat, bekommt das richtige Loch.
+
+Vier Mutationen rot gesehen: Schritt 1 zurück auf den Reiter „Gehen" (4
+Punkte); Schritt 3 ohne Telefon-Kandidaten (1); `zielFinden` nach
+Vorhandensein statt Sichtbarkeit (2, nach der Verschärfung); `stellen()`
+ohne Ziel (4, alle neun blind).
+
+Grün ausserdem: test74, test87, test105, test109, test143, test272,
+test387, test388. Mit zwei Bildern belegt (§55.3): Rechner und Telefon.
+
+Dateien: `src/bereiche/hilfe/rundgang.ts`, `pruefungen/lauf/test61.mts`.
