@@ -93,7 +93,12 @@ Register.navigation = (() => {
                tiefer. Die Suche hat ihr eigenes Fenster (E160). */
             tun: () => App.suche() },
         { id: 'befehle', name: 'Befehle', icon: '⌘', zeichen: 'command', platz: 'oben', rang: 20,
-            knopfId: 'btn-cmd', kuerzel: 'Strg ⇧ P',
+            knopfId: 'btn-cmd', kuerzel: 'Strg ⇧ K',
+            /* NICHT ⇧ P (E400). Strg ⇧ P verschiebt eine Seite, seit die Palette
+               auf Strg ⇧ K umgezogen ist; hier stand vier Bögen lang das alte
+               Kürzel. test222 §5 merkte es nicht, weil es nur diese Zeile gegen
+               `index.html` hält — und dort stand dasselbe falsche Wort.
+               `test396 §2` drückt jetzt die Taste und sieht nach, was aufgeht. */
             tun: () => Werkzeuge.palette() },
         { id: 'heute', name: 'Heute', icon: '☀️', zeichen: 'today', platz: 'oben', rang: 30,
             knopfId: 'btn-home', haupt: true, adresse: '#welt-lernen-heute',

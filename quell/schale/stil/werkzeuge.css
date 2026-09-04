@@ -35,6 +35,12 @@
 .finder .fh em{font-style:normal; color:var(--text-faint); font-weight:400; font-size:13px}
 .finder .fh .icon-btn{margin-left:auto}
 .finder .grp{padding:9px 14px 3px; font-size:11px; font-weight:600; color:var(--text-faint)}
+/* E400 · „N weitere" ist KEINE Gruppe, sondern die ehrliche Auskunft, dass
+   die Liste abgeschnitten ist. Deshalb steht sie tiefer, mittig und ohne
+   die fette Gruppenschrift — man soll sie lesen und nicht für eine
+   Überschrift halten, unter der noch etwas kommt. */
+.finder .grp.mehr{padding:10px 14px 12px; font-weight:400; font-style:italic;
+  text-align:center; border-top:1px solid var(--line-soft)}
 .fbtns{
   display:flex; gap:8px; padding:12px 16px; border-top:1px solid var(--line);
   justify-content:flex-end; flex-wrap:wrap;

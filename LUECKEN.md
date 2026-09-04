@@ -5954,3 +5954,71 @@ GESCHLOSSEN mit E399: sie steht jetzt in `passen()` und folgt damit auch dem
 Zoom und der Fensterbreite mit, was sie vorher nicht tat. Gemessen 11 283 px
 beim Öffnen und 11 283 px nach dem Rollen. `test395 §7` hält es fest, mit
 `platzhalterSetzen(200)` rot gesehen.
+
+
+================================================================================
+L128 — Was die F09-Messung sonst noch fand (sieben offene Punkte)
+================================================================================
+4. September 2026 · gefunden beim Messen für E400
+
+F09 des Prüfberichts lautet: „Befehlsmenü mit Suche, zuletzt verwendet,
+Favoriten". Gemessen ist die erste Hälfte längst gebaut (E400 nennt die
+Belege). Zwei Funde daraus waren so schwer, dass sie sofort behoben wurden.
+Diese sieben bleiben offen — jeder mit Beleg, jeder ein eigener Bogen.
+
+1. **„Zuletzt verwendet" gibt es für Befehle nicht.** Es gibt nur
+   `paletteOft` (`werkzeuge.ts:305-310`), einen reinen Zähler: `m[name] =
+   (m[name]||0)+1`. Kein Zeitstempel, keine Reihenfolge. Die SUCHE hat das
+   Gegenstück längst — `suchverlauf` mit der Überschrift „Zuletzt gesucht"
+   (`schale.ts:1064/1082`) —, die Palette nicht. Das ist die eine Hälfte
+   von F09, die wirklich fehlt.
+
+2. **Favoriten für Befehle gibt es nicht.** Fünf Favoriten-Sorten stehen im
+   Haus (Seiten, Chats, Zeichenwerkzeuge, Seitenleisten-Abschnitte,
+   Regal-Sterne) — keine für Befehle oder Orte, und kein gemeinsames
+   Register dafür (§8: fünf Speicher, die einander nicht kennen). Das ist
+   die zweite fehlende Hälfte von F09.
+
+3. **Ein toter Favoriten-Block.** `ansichten/dienst.ts:491` filtert
+   `alle.filter(b => b.fav)` — das Feld heisst `favorite`. Der Bildschirm
+   „Seiten" ist erreichbar, die Liste bleibt immer leer, und weil `block()`
+   leere Abschnitte ganz weglässt (`:510-511`), sieht man nicht einmal, dass
+   etwas fehlt. Auch im gebauten Stand. Kein Prüflauf fasst ihn an.
+
+4. **`paletteOft` wächst unbegrenzt und misst das Falsche.** Kein Deckel,
+   kein Vergessen, kein Zurücksetzen — als einziger Verlauf im Haus (die
+   anderen deckeln bei 8 / 12 / 60 / 100 / 2000). Ein umbenannter Befehl
+   lässt seinen alten Namen für immer stehen. Seitentitel landen ungefiltert
+   darin (`werkzeuge.ts:371-377` → `355`). Und gezählt wird nur, was AUS DER
+   PALETTE ausgeführt wird — wer dasselbe per Tastenkürzel auslöst, zählt
+   nicht mit. Das Objekt wandert über `indexdb.ts:1846-1857` in jede `.json`
+   und `.redion`.
+
+5. **Vier von acht Ausgängen des Befehlsregisters haben null Aufrufer.**
+   `gruppen()`, `anzahl()`, `lieferanten()` und `nimmZurueck()` werden im
+   ganzen Projekt nirgends gerufen, auch von keinem Prüflauf. Und ein Befehl
+   hat keine stabile Kennung: `nimmZurueck()` findet über den `titel`, zwei
+   gleichnamige Befehle sind nicht unterscheidbar.
+
+6. **`kuerzel` in `register/navigation.ts` hat null Verbraucher.** Die
+   Kürzel, die man in der Seitenleiste sieht, stehen von Hand in
+   `index.html`. Genau dadurch konnte das falsche „Strg ⇧ P" unbemerkt
+   bleiben (E400): die richtige Stelle (`register/tasten.ts:29`) und die
+   sichtbare Stelle waren nicht verbunden. E400 hat die Zeichenkette
+   berichtigt und einen Wächter gebaut, der die Taste DRÜCKT — die
+   Verdrahtung fehlt weiter.
+
+7. **`Aussehen.KUERZEL` zeigt zwei Vorgaben an, die nicht gelten.**
+   `aussehen.ts:145` führt `['palette','Befehle','Ctrl+P']`; ausgeführt wird
+   der Standard nie, weil `schale.ts:2882` nur über tatsächlich umbelegte
+   Kürzel läuft. Wer im Einstellungsdialog nachsieht, liest ein Kürzel, das
+   die Palette nicht öffnet — und das echte Strg ⇧ K steht dort gar nicht.
+   Dasselbe gilt für `favorit`.
+
+WIE ES GEFUNDEN WURDE: fünf Leser über Palette, Register, Suche, Verlauf und
+Favoriten, dazu fünf Gegenprüfer mit dem Auftrag zu WIDERLEGEN. Die
+Gegenprüfung war das Geld wert — sie hat unter anderem eine Zahl korrigiert
+(111 statt 163 Paletteneinträge), einen toten Block gefunden (Punkt 3) und
+eine naheliegende Vermutung ausdrücklich ENTKRÄFTET: die Palette hat sehr
+wohl `role="dialog"` und `aria-modal`, weil der gemeinsame Overlay-Griff aus
+E302 sie mitnimmt. Dort ist nichts nachzubauen.

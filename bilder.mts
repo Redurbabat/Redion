@@ -1917,6 +1917,31 @@ const ANSICHTEN: Record<string, {
   }
 };
 
+/* --- Die Befehlspalette (E400) -------------------------------------------
+   Zu sehen ist zweierlei: dass die Liste bei 60 Zeilen aufhört, und dass sie
+   das SAGT statt so zu tun, als wäre sie vollständig. Ohne Eingabe, denn nur
+   dann ist überhaupt etwas abgeschnitten. */
+ANSICHTEN['palette'] = {
+  titel: 'Die Befehlspalette — 60 Zeilen, und der Rest sagt Bescheid (E400)',
+  bauen: async () => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelectorAll('.overlay').forEach(o => o.remove());
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+    document.getElementById('rg-willkommen')?.remove();
+    document.getElementById('rg-einladung')?.remove();
+    await new Promise(r => setTimeout(r, 300));
+  },
+  dann: async () => {
+    document.dispatchEvent(new KeyboardEvent('keydown',
+      { key: 'K', ctrlKey: true, shiftKey: true, bubbles: true }));
+    await new Promise(r => setTimeout(r, 600));
+    /* Bis ans Ende rollen — dort steht die Zeile, um die es geht. */
+    const res = document.querySelector('#cr');
+    if (res) res.scrollTop = res.scrollHeight;
+    await new Promise(r => setTimeout(r, 400));
+  }
+};
+
 ANSICHTEN['dokumenteinzel'] = {
   titel: 'Einzelseite statt Rolle — der Schalter im Inspector (E398)',
   bauen: ANSICHTEN['dokument']!.bauen,

@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-395 Entscheidungen, E1 bis E399. Die Nummer ist die Ordnung: eine Entscheidung
+396 Entscheidungen, E1 bis E400. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -453,6 +453,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E397** — „Blatt" legt nicht nur an, es schlägt auch auf
 * **E398** — Einzelseite oder Fortlaufend: die Wahl ja, die Vorgabe nein
 * **E399** — Der Rollbalken zeigte ein Viertel des Wegs an
+* **E400** — Die Palette führte aus, was niemand gesehen hatte (Audit F09)
 
 ---
 
@@ -32475,3 +32476,121 @@ Warum diese Mutation und nicht „den Aufruf weglassen": dann ist
 gar nicht mehr bauen. Eine Gegenprobe, die nicht baut, ist keine.
 
 Dateien: `src/bereiche/pdf/document-mode.ts`, `pruefungen/lauf/test395.mts`.
+
+
+================================================================================
+E400 — Die Palette führte aus, was niemand gesehen hatte (Audit F09)
+================================================================================
+4. September 2026
+
+Der Prüfbericht nennt F09 in einem Halbsatz: „Befehlsmenü mit Suche, zuletzt
+verwendet, Favoriten". LUECKEN.md schreibt für jeden Befund des Berichts vor,
+ihn ZUERST gegen den heutigen Stand zu messen — der Bericht prüfte E353, das
+Projekt steht auf E399. Fünf Leser haben das getan, fünf Gegenprüfer haben
+sie widerlegt.
+
+WAS DIE MESSUNG ERGAB — die erste Hälfte von F09 ist längst gebaut:
+
+    Befehlsmenü   JA   `Werkzeuge.palette()`, werkzeuge.ts:315, Strg ⇧ K
+    Suche         JA   eigenes Fenster, Strg P / Strg K, findet Inhalte
+    Zuletzt       NEIN nur `paletteOft`, ein Zähler ohne Zeit
+    Favoriten     NEIN fünf Favoriten-Sorten im Haus, keine für Befehle
+
+Das ist der vierte Befund des Berichts, der sich beim Nachmessen als bereits
+erledigt herausstellt (nach F11, F08 und F10). Die Regel „erst messen" hat
+sich damit viermal bezahlt gemacht.
+
+ABER DABEI KAM ETWAS HERAUS, DAS DER BERICHT NICHT KANNTE, und es wiegt
+schwerer als das, was er verlangt.
+
+────────────────────────────────────────────────────────────────────────────
+ERSTENS: DER PFEIL LIEF ÜBER DIE GEZEICHNETE LISTE HINAUS
+────────────────────────────────────────────────────────────────────────────
+
+    zeichne()   res.innerHTML = treffer.slice(0, 60)...
+    ArrowDown   i = Math.min(i + 1, treffer.length - 1)
+
+Zwei Zahlen für dieselbe Sache, und sie waren verschieden. Ohne Eingabe hält
+`treffer` die ganze Liste. Wie lang die ist, sagt der Quelltext nicht: es
+sind 105 `c(`-Aufrufe, aber zwei davon sind SCHLEIFEN — eine erzeugt 66
+Befehle aus `Register.bloecke`, eine 0..n aus den Erweiterungen. Auf dem
+Bildschirm abgelesen sind es 163.
+
+Ab dem 61. Druck auf ↓ trug also kein gezeichneter Knopf mehr `.on`. Das
+`scrollIntoView` fiel still durch das `?.`, auf dem Bildschirm bewegte sich
+nichts — und Enter führte `treffer[i]` aus. 103 Befehle waren erreichbar,
+ohne sichtbar zu sein: man drückt ↓ ein paar Mal zu oft, drückt Enter, und
+irgendetwas passiert.
+
+Jetzt steht die Zahl einmal da (`GEZEIGT = 60`) und gilt an beiden Stellen.
+
+WARUM KEIN PRÜFLAUF DAS FAND: `test51` tippt immer erst etwas ein. Gefiltert
+sind es höchstens 46 Treffer (40 bewertete plus 6 Seiten), also nie mehr als
+60. Der Fehler lag ausschliesslich im ungefilterten Erstzustand — dem, den
+jeder sieht, der die Palette öffnet.
+
+UND DIE LISTE SAGT JETZT, DASS SIE ABGESCHNITTEN IST. „103 weitere — tipp
+einen Namen, um sie zu finden", kursiv, unter einem Haarstrich. Nur wenn
+wirklich etwas fehlt: eine Anzeige, die immer dasteht, wird nicht gelesen.
+
+────────────────────────────────────────────────────────────────────────────
+ZWEITENS: VIER STELLEN SCHRIEBEN EIN KÜRZEL AN, DAS DIE PALETTE NICHT ÖFFNET
+────────────────────────────────────────────────────────────────────────────
+
+Die Palette ist irgendwann von Strg ⇧ P auf Strg ⇧ K umgezogen. Vier Stellen
+blieben stehen:
+
+    index.html:167                die Seitenleiste, immer sichtbar
+    src/register/navigation.ts:95 das Register dahinter
+    schale.ts:4007                die WILLKOMMENSSEITE — jeder neue Nutzer
+    schale.ts:1105                das leere Suchergebnis
+
+Nur `src/register/tasten.ts:29` nannte das richtige Kürzel.
+
+WARUM ES NIEMAND MERKTE, und das ist der eigentliche Fund: `test222 §5`
+vergleicht die Beschriftung in `index.html` mit dem `kuerzel` im Register.
+Beide waren falsch — also stimmten sie überein, und der Lauf blieb grün. Ein
+Vergleich zweier Beschriftungen prüft nicht, ob eine davon stimmt.
+
+Der zweite Grund steht in `werkzeuge.ts:2683`:
+
+    if (p2) verschiebenNach(p2); else palette();
+
+Strg ⇧ P fällt OHNE offene Seite auf die Palette zurück. Auf dem
+Startbildschirm tat das falsche Kürzel also genau das, was danebenstand. Das
+ist Absicht und bleibt — aber es ist der Grund, warum vier Bögen lang niemand
+stutzte.
+
+`test396 §2` VERGLEICHT NICHT, ER DRÜCKT. Er liest das Kürzel vom Knopf ab,
+zerlegt es in Tasten und drückt genau die — mit offener Seite, damit der
+Rückfall die Probe nicht rettet.
+
+DASS DIESER UNTERSCHIED ZÄHLT, HAT DIE ERSTE MUTATION BEWIESEN. Beim ersten
+Bau stand §2 ohne offene Seite; mit dem falschen Kürzel in `index.html` blieb
+er GRÜN — der Wächter bestätigte genau den Fehler, gegen den er geschrieben
+war. Erst mit offener Seite fällt er (§55.2).
+
+KOSTEN: eine Konstante, vier Zeichenketten, eine CSS-Regel. Keine Daten,
+keine Migration, kein Kürzel umbelegt — Redurs Tastenlayout bleibt, wie es
+ist.
+
+PRÜFUNG: `test396` (27 Punkte, PORT 9425). VIER MUTATIONEN ROT GESEHEN:
+
+    Pfeil wieder bis `treffer.length`   §1 dreifach rot (Index −1)
+    falsches Kürzel in index.html       §2 zweifach rot
+    „N weitere" immer anzeigen          §3 rot („−59 weitere")
+    Willkommensseite auf ⇧ P zurück     §4 rot
+
+Grün geblieben: test47, 51, 86, 128, 197, 222, 340. Einzeldatei neu gebaut.
+Mit einem Bild belegt (§55.3) — und das Bild hat eine Zahl korrigiert: die
+Messung schätzte 111 Einträge, auf dem Bildschirm stehen „103 weitere" unter
+60 Zeilen, also 163.
+
+WAS OFFEN BLEIBT: die zwei Halbworte, die F09 wirklich verlangt — „zuletzt
+verwendet" und „Favoriten" für Befehle. Beides fehlt nachweislich und steht
+als **L128** in LUECKEN.md, zusammen mit sechs weiteren Funden aus derselben
+Messung, die eigene Bögen brauchen.
+
+Dateien: `src/bereiche/wissen/werkzeuge.ts`, `src/schale/aufbau/schale.ts`,
+`src/register/navigation.ts`, `index.html`,
+`quell/schale/stil/werkzeuge.css`, `pruefungen/lauf/test396.mts`, `bilder.mts`.

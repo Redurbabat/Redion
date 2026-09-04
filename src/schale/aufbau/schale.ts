@@ -1102,7 +1102,7 @@ const App = (() => {
           : inp.value
           ? '<div class="such-leer"><b>Nichts gefunden</b>' +
             '<span>Versuche einen anderen Begriff — oder suche in den Befehlen ' +
-            'mit <code>Strg ⇧ P</code>.</span></div>'
+            'mit <code>Strg ⇧ K</code>.</span></div>'
           : verlaufBlock();
         verlaufBinden();
         return;
@@ -4004,7 +4004,7 @@ const App = (() => {
     b('callout', 'Tippe irgendwo `/` — dann öffnet sich das Blockmenü mit allen Bausteinen.', { icon: '💡' });
 
     b('h2', 'Was du sofort ausprobieren kannst');
-    b('bullet', 'Strg + P sucht, Strg + Shift + P öffnet alle Befehle');
+    b('bullet', 'Strg + P sucht, Strg + Shift + K öffnet alle Befehle');
     b('bullet', 'Schreibe [[Willkommen]] — so verlinkst du Seiten');
     b('bullet', 'Schreibe #ideen — so setzt du ein Schlagwort');
     b('bullet', 'Tippe @ für Seite, Datum oder Person, : für Emoji');

@@ -97,7 +97,7 @@ const Werkzeuge = (() => {
   /* ========================================================================
    * 1. BEFEHLSPALETTE   (SilverBullet)
    * ------------------------------------------------------------------------
-   * Ein Fenster, das jeden Befehl der App kennt. Strg + Shift + P.
+   * Ein Fenster, das jeden Befehl der App kennt. Strg + Shift + K.
    * ======================================================================*/
   const befehle = () => {
     const s = App.aktuelleSeite();
@@ -339,15 +339,44 @@ const Werkzeuge = (() => {
     const anfang = [...liste].sort((a, b) => (oft[b.name] || 0) - (oft[a.name] || 0));
     let treffer = anfang, i = 0;
 
+    /* ══ SO VIELE ZEILEN WERDEN GEZEICHNET — UND NUR SO WEIT GEHT DER PFEIL
+       ══ (E400)
+       Hier stand `treffer.slice(0, 60)` beim Zeichnen und
+       `Math.min(i + 1, treffer.length - 1)` beim Pfeil. Ohne Eingabe ist
+       `treffer` die ganze Liste — und die ist laenger, als das Lesen des
+       Quelltextes vermuten laesst: 163 Eintraege. (Von den 105 `c(`-Aufrufen
+       sind zwei SCHLEIFEN — eine erzeugt 66 Befehle aus `Register.bloecke`,
+       eine 0..n aus den Erweiterungen. Auf dem Bildschirm abgelesen: „103
+       weitere" unter 60 gezeichneten Zeilen.)
+
+       Ab dem 61. Druck auf ↓ zeigte also KEIN gezeichneter Knopf mehr `.on`,
+       `scrollIntoView` fiel still durch das `?.`, auf dem Bildschirm bewegte
+       sich nichts — und Enter fuehrte einen Befehl aus, den der Nutzer nie
+       gesehen hatte. 103 Befehle waren so erreichbar, ohne sichtbar zu sein.
+
+       Eine Zahl, nicht zwei: `GEZEIGT` steht jetzt an beiden Stellen. Kein
+       Prüflauf fiel darüber, weil test51 immer erst etwas eintippt und damit
+       unter 46 Treffern bleibt (40 bewertete + 6 Seiten). */
+    const GEZEIGT = 60;
+
     const zeichne = () => {
       let g = '';
-      res.innerHTML = treffer.slice(0, 60).map((t, k) => {
+      const sicht = treffer.slice(0, GEZEIGT);
+      res.innerHTML = sicht.map((t, k) => {
         const kopf = t.gruppe !== g ? `<div class="grp">${esc(t.gruppe)}</div>` : '';
         g = t.gruppe;
         return kopf + `<button data-i="${k}"${k === i ? ' class="on"' : ''}>` +
                `<span style="flex:1">${esc(t.name)}</span>` +
                (t.kurz ? `<span class="pth">${esc(t.kurz)}</span>` : '') + '</button>';
-      }).join('');
+      }).join('') +
+      /* UND WAS NICHT DASTEHT, WIRD GESAGT. Eine abgeschnittene Liste, die
+         so tut, als wäre sie vollständig, ist dieselbe Lüge in klein. Der
+         Satz erscheint nur, wenn wirklich etwas fehlt — sonst wäre er ein
+         Hinweis, den niemand mehr liest. */
+      (treffer.length > GEZEIGT
+        ? `<div class="grp mehr">${treffer.length - GEZEIGT} weitere — ` +
+          'tipp einen Namen, um sie zu finden</div>'
+        : '');
       res.querySelector('button.on')?.scrollIntoView({ block: 'nearest' });
     };
     zeichne();
@@ -378,7 +407,8 @@ const Werkzeuge = (() => {
     });
     inp.addEventListener('keydown', e => {
       if (e.key === 'Escape') { o.remove(); return; }
-      if (e.key === 'ArrowDown') { e.preventDefault(); i = Math.min(i + 1, treffer.length - 1); zeichne(); }
+      if (e.key === 'ArrowDown') { e.preventDefault();
+        i = Math.min(i + 1, Math.min(treffer.length, GEZEIGT) - 1); zeichne(); }
       if (e.key === 'ArrowUp')   { e.preventDefault(); i = Math.max(i - 1, 0); zeichne(); }
       if (e.key === 'Enter' && treffer[i]) { e.preventDefault(); fuehreAus(treffer[i]); }
     });

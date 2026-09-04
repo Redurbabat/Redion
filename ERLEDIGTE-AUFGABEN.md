@@ -3459,3 +3459,50 @@ die Zeugnisnote je Semester (E242) und der echte Stundenplan (E243).
   Die wichtigste ist die erste — `einzeln: true` als Vorgabe lässt §1
   fünffach fallen, und §1 hält nicht den neuen Bau fest, sondern den alten:
   dass ihn niemand angefasst hat. Drei Bilder im Gespräch (§55.3).
+
+  E400 · F09 zur Hälfte: „Befehlsmenü mit Suche, zuletzt verwendet,
+  Favoriten". Erst gemessen, wie LUECKEN.md es für jeden Befund des Berichts
+  vorschreibt — fünf Leser, fünf Gegenprüfer. Ergebnis: das Menü gibt es
+  längst (`Werkzeuge.palette()`, Strg ⇧ K, 163 Befehle, unscharfe Suche,
+  Häufigkeitsgedächtnis). Der VIERTE Befund des Berichts, der beim Nachmessen
+  schon erledigt war — nach F11, F08 und F10.
+
+  DAFÜR ZWEI DINGE, DIE DER BERICHT NICHT KANNTE.
+
+  Erstens: `zeichne()` zeichnete `treffer.slice(0, 60)`, der Pfeil lief bis
+  `treffer.length - 1`. Zwei Zahlen für dieselbe Sache. Ohne Eingabe hält die
+  Liste 163 Einträge — der Quelltext verrät das nicht, weil zwei der 105
+  `c(`-Aufrufe SCHLEIFEN sind (66 Blockarten aus dem Register). Ab dem 61.
+  Druck auf ↓ trug kein gezeichneter Knopf mehr `.on`, auf dem Bildschirm
+  bewegte sich nichts, und Enter führte trotzdem aus. 103 Befehle waren
+  erreichbar, ohne sichtbar zu sein. Jetzt gilt eine Konstante an beiden
+  Stellen, und die Liste sagt „103 weitere", wenn sie abgeschnitten ist —
+  und schweigt, wenn nicht.
+
+  Warum kein Prüflauf das fand: `test51` tippt immer erst etwas ein und
+  bleibt damit unter 46 Treffern. Der Fehler lag nur im ungefilterten
+  Erstzustand, also in dem, den jeder sieht.
+
+  Zweitens: vier Stellen schrieben Strg ⇧ P für die Palette an — die
+  Seitenleiste, das Register, das leere Suchergebnis und die WILLKOMMENSSEITE,
+  die jeder neue Nutzer liest. Nur `register/tasten.ts` nannte das richtige
+  Strg ⇧ K. `test222 §5` blieb grün, weil es zwei Beschriftungen aneinander
+  hält und beide falsch waren; und `werkzeuge.ts:2683` lässt Strg ⇧ P ohne
+  offene Seite auf die Palette zurückfallen, also tat das falsche Kürzel auf
+  dem Startbildschirm genau das, was danebenstand.
+
+  `test396 §2` vergleicht deshalb nicht, sondern DRÜCKT: er liest das Kürzel
+  vom Knopf ab, zerlegt es und drückt genau das — mit offener Seite, damit
+  der Rückfall die Probe nicht rettet. Dass dieser Zusatz zählt, hat die
+  Mutation bewiesen: ohne offene Seite blieb der Wächter grün und bestätigte
+  genau den Fehler, gegen den er geschrieben war.
+
+  PRÜFUNG: `test396` (27 Punkte, PORT 9425), vier Mutationen rot gesehen.
+  Grün geblieben: test47, 51, 86, 128, 197, 222, 340. Einzeldatei neu gebaut.
+  Ein Bild im Gespräch — und es hat eine Zahl berichtigt: die Messung schätzte
+  111 Einträge, auf dem Bildschirm stehen „103 weitere" unter 60 Zeilen.
+
+  OFFEN: die zwei Halbworte, die F09 wirklich verlangt, plus fünf weitere
+  Funde derselben Messung — alle sieben in **L128**, darunter ein toter
+  Favoriten-Block, ein ungedeckelter Verlauf, der in jede Sicherung wandert,
+  und vier Registerausgänge ohne einen einzigen Aufrufer.

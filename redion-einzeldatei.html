@@ -2363,6 +2363,12 @@ body[data-small="1"] .b-text .ct{font-size:14px}
 .finder .fh em{font-style:normal; color:var(--text-faint); font-weight:400; font-size:13px}
 .finder .fh .icon-btn{margin-left:auto}
 .finder .grp{padding:9px 14px 3px; font-size:11px; font-weight:600; color:var(--text-faint)}
+/* E400 · „N weitere" ist KEINE Gruppe, sondern die ehrliche Auskunft, dass
+   die Liste abgeschnitten ist. Deshalb steht sie tiefer, mittig und ohne
+   die fette Gruppenschrift — man soll sie lesen und nicht für eine
+   Überschrift halten, unter der noch etwas kommt. */
+.finder .grp.mehr{padding:10px 14px 12px; font-weight:400; font-style:italic;
+  text-align:center; border-top:1px solid var(--line-soft)}
 .fbtns{
   display:flex; gap:8px; padding:12px 16px; border-top:1px solid var(--line);
   justify-content:flex-end; flex-wrap:wrap;
@@ -14704,7 +14710,7 @@ body.iblatt-auf .menu{z-index:794}
       <span data-sym="search"></span><span>Suchen</span><span class="k">Strg P</span>
     </button>
     <button class="side-item" id="btn-cmd">
-      <span data-sym="command"></span><span>Befehle</span><span class="k">Strg ⇧ P</span>
+      <span data-sym="command"></span><span>Befehle</span><span class="k">Strg ⇧ K</span>
     </button>
     <button class="side-item" id="btn-home" data-ruhig="bleibt">
       <span data-sym="today"></span><span>Heute</span>
@@ -16502,7 +16508,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 318, inhalt: 'd3fd690b9e08c9e4', gebaut: '2026-09-04T15:51:47.423Z' };
+const Stand = { fassung: 325, inhalt: '601790c528c0f069', gebaut: '2026-09-04T20:26:37.853Z' };
 window.Stand = Stand;
 
 </script>
@@ -26844,7 +26850,12 @@ Register.navigation = (() => {
                tiefer. Die Suche hat ihr eigenes Fenster (E160). */
             tun: () => App.suche() },
         { id: 'befehle', name: 'Befehle', icon: '⌘', zeichen: 'command', platz: 'oben', rang: 20,
-            knopfId: 'btn-cmd', kuerzel: 'Strg ⇧ P',
+            knopfId: 'btn-cmd', kuerzel: 'Strg ⇧ K',
+            /* NICHT ⇧ P (E400). Strg ⇧ P verschiebt eine Seite, seit die Palette
+               auf Strg ⇧ K umgezogen ist; hier stand vier Bögen lang das alte
+               Kürzel. test222 §5 merkte es nicht, weil es nur diese Zeile gegen
+               `index.html` hält — und dort stand dasselbe falsche Wort.
+               `test396 §2` drückt jetzt die Taste und sieht nach, was aufgeht. */
             tun: () => Werkzeuge.palette() },
         { id: 'heute', name: 'Heute', icon: '☀️', zeichen: 'today', platz: 'oben', rang: 30,
             knopfId: 'btn-home', haupt: true, adresse: '#welt-lernen-heute',
@@ -78630,7 +78641,7 @@ const Werkzeuge = (() => {
     /* ========================================================================
      * 1. BEFEHLSPALETTE   (SilverBullet)
      * ------------------------------------------------------------------------
-     * Ein Fenster, das jeden Befehl der App kennt. Strg + Shift + P.
+     * Ein Fenster, das jeden Befehl der App kennt. Strg + Shift + K.
      * ======================================================================*/
     const befehle = () => {
         const s = App.aktuelleSeite();
@@ -78877,15 +78888,43 @@ const Werkzeuge = (() => {
         /* Ohne Eingabe: die meistbenutzten zuerst, sonst die Reihenfolge der Liste */
         const anfang = [...liste].sort((a, b) => (oft[b.name] || 0) - (oft[a.name] || 0));
         let treffer = anfang, i = 0;
+        /* ══ SO VIELE ZEILEN WERDEN GEZEICHNET — UND NUR SO WEIT GEHT DER PFEIL
+           ══ (E400)
+           Hier stand `treffer.slice(0, 60)` beim Zeichnen und
+           `Math.min(i + 1, treffer.length - 1)` beim Pfeil. Ohne Eingabe ist
+           `treffer` die ganze Liste — und die ist laenger, als das Lesen des
+           Quelltextes vermuten laesst: 163 Eintraege. (Von den 105 `c(`-Aufrufen
+           sind zwei SCHLEIFEN — eine erzeugt 66 Befehle aus `Register.bloecke`,
+           eine 0..n aus den Erweiterungen. Auf dem Bildschirm abgelesen: „103
+           weitere" unter 60 gezeichneten Zeilen.)
+    
+           Ab dem 61. Druck auf ↓ zeigte also KEIN gezeichneter Knopf mehr `.on`,
+           `scrollIntoView` fiel still durch das `?.`, auf dem Bildschirm bewegte
+           sich nichts — und Enter fuehrte einen Befehl aus, den der Nutzer nie
+           gesehen hatte. 103 Befehle waren so erreichbar, ohne sichtbar zu sein.
+    
+           Eine Zahl, nicht zwei: `GEZEIGT` steht jetzt an beiden Stellen. Kein
+           Prüflauf fiel darüber, weil test51 immer erst etwas eintippt und damit
+           unter 46 Treffern bleibt (40 bewertete + 6 Seiten). */
+        const GEZEIGT = 60;
         const zeichne = () => {
             let g = '';
-            res.innerHTML = treffer.slice(0, 60).map((t, k) => {
+            const sicht = treffer.slice(0, GEZEIGT);
+            res.innerHTML = sicht.map((t, k) => {
                 const kopf = t.gruppe !== g ? `<div class="grp">${esc(t.gruppe)}</div>` : '';
                 g = t.gruppe;
                 return kopf + `<button data-i="${k}"${k === i ? ' class="on"' : ''}>` +
                     `<span style="flex:1">${esc(t.name)}</span>` +
                     (t.kurz ? `<span class="pth">${esc(t.kurz)}</span>` : '') + '</button>';
-            }).join('');
+            }).join('') +
+                /* UND WAS NICHT DASTEHT, WIRD GESAGT. Eine abgeschnittene Liste, die
+                   so tut, als wäre sie vollständig, ist dieselbe Lüge in klein. Der
+                   Satz erscheint nur, wenn wirklich etwas fehlt — sonst wäre er ein
+                   Hinweis, den niemand mehr liest. */
+                (treffer.length > GEZEIGT
+                    ? `<div class="grp mehr">${treffer.length - GEZEIGT} weitere — ` +
+                        'tipp einen Namen, um sie zu finden</div>'
+                    : '');
             res.querySelector('button.on')?.scrollIntoView({ block: 'nearest' });
         };
         zeichne();
@@ -78923,7 +78962,7 @@ const Werkzeuge = (() => {
             }
             if (e.key === 'ArrowDown') {
                 e.preventDefault();
-                i = Math.min(i + 1, treffer.length - 1);
+                i = Math.min(i + 1, Math.min(treffer.length, GEZEIGT) - 1);
                 zeichne();
             }
             if (e.key === 'ArrowUp') {
@@ -136969,7 +137008,7 @@ const App = (() => {
                     : inp.value
                         ? '<div class="such-leer"><b>Nichts gefunden</b>' +
                             '<span>Versuche einen anderen Begriff — oder suche in den Befehlen ' +
-                            'mit <code>Strg ⇧ P</code>.</span></div>'
+                            'mit <code>Strg ⇧ K</code>.</span></div>'
                         : verlaufBlock();
                 verlaufBinden();
                 return;
@@ -140066,7 +140105,7 @@ const App = (() => {
             'möglich und freiwillig (Mehr → Wolke).');
         b('callout', 'Tippe irgendwo `/` — dann öffnet sich das Blockmenü mit allen Bausteinen.', { icon: '💡' });
         b('h2', 'Was du sofort ausprobieren kannst');
-        b('bullet', 'Strg + P sucht, Strg + Shift + P öffnet alle Befehle');
+        b('bullet', 'Strg + P sucht, Strg + Shift + K öffnet alle Befehle');
         b('bullet', 'Schreibe [[Willkommen]] — so verlinkst du Seiten');
         b('bullet', 'Schreibe #ideen — so setzt du ein Schlagwort');
         b('bullet', 'Tippe @ für Seite, Datum oder Person, : für Emoji');
