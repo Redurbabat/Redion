@@ -16409,7 +16409,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 276, inhalt: '2bdf726dddf664b4', gebaut: '2026-09-04T08:11:37.209Z' };
+const Stand = { fassung: 287, inhalt: '376489b82d35211b', gebaut: '2026-09-04T08:50:11.415Z' };
 window.Stand = Stand;
 
 </script>
@@ -26754,9 +26754,11 @@ Register.navigation = (() => {
             knopfId: 'btn-cmd', kuerzel: 'Strg ⇧ P',
             tun: () => Werkzeuge.palette() },
         { id: 'heute', name: 'Heute', icon: '☀️', zeichen: 'today', platz: 'oben', rang: 30,
-            knopfId: 'btn-home', haupt: true, tun: () => Produktwelten.lernen('heute') },
+            knopfId: 'btn-home', haupt: true, adresse: '#welt-lernen-heute',
+            tun: () => Produktwelten.lernen('heute') },
         { id: 'lernzentrum', name: 'Lernzentrum', icon: '🎓', zeichen: 'learn', platz: 'oben', rang: 40,
             knopfId: 'btn-learning', haupt: true, schauplatz: 'lernen',
+            adresse: '#welt-lernen-lernen',
             tun: () => Produktwelten.lernen('lernen') },
         /* ELEKTRO HATTE KEINE EIGENE ZEILE. Es ist eines der 14 Module, und
            zwar das grösste — Fachzeichen, Schaltplan, Simulation, Rechner,
@@ -26782,9 +26784,11 @@ Register.navigation = (() => {
                unten der Anhängepunkt mit demselben Namen. Verschiedene Kennungen,
                weil `melde` über die Kennung dublettenfrei hält. */
             knopfId: 'btn-library', haupt: true, schauplatz: 'bibliothek',
+            adresse: '#welt-workspace-bibliothek',
             tun: () => Produktwelten.bibliothek() },
         { id: 'aufgaben', name: 'Aufgaben', icon: '☑', zeichen: 'tasks', platz: 'oben', rang: 70,
-            knopfId: 'btn-tasks', haupt: true, tun: () => Produktwelten.aufgaben() },
+            knopfId: 'btn-tasks', haupt: true, adresse: '#welt-workspace-aufgaben',
+            tun: () => Produktwelten.aufgaben() },
         { id: 'posteingang', name: 'Posteingang', icon: '📥', zeichen: 'inbox', platz: 'oben', rang: 80,
             /* Und hier stand `Werkzeuge.meldungen()`. Der Knopf ruft seit jeher
                `Ansichten.posteingang()`; das eine ist die Meldungsliste, das
@@ -28160,7 +28164,16 @@ Register.menueband = (() => {
         hilfe: 'app-kann', /* Rundgang.uebersicht()         */
         vorlagen: 'app-markt', /* Galerie.oeffne()              */
         bibliothek: 'app-bib', /* Bibliothek.oeffne()           */
-        papierkorb: 'papierkorbFuss' /* App.papierkorb()              */
+        papierkorb: 'papierkorbFuss', /* App.papierkorb()              */
+        /* ZWEIMAL DERSELBE ZEITMESSER (E393). `zeitmesser` aus `Register.module`
+           und `w-zeit` aus der Liste unten rufen beide `Zeitmesser.panel()`;
+           gemessen öffnen beide dasselbe Feld von 280 × 226 Pixeln. In der
+           Lade stand er dadurch zweimal — einmal unter „Planung & Lernen",
+           einmal unter „Weiteres". Es bleibt `w-zeit`, weil sein Hinweis
+           sagt, worauf sich die Uhr bezieht: „misst die Zeit an der offenen
+           Seite". Der Hinweis des Moduls nennt statt dessen die Entscheidung,
+           aus der es kam. */
+        zeitmesser: 'w-zeit'
     };
     /* Was kein ORT ist und deshalb nicht unter „Gehen" gehört.
        `lebensbereiche` sagt im Register selbst „KEIN EIGENER BILDSCHIRM";
@@ -134873,12 +134886,49 @@ const Kontextkante = (() => {
     /**
      * Welcher der fünf Orte gerade gilt.
      *
-     * `App.schauplatz()` meldet einen Bezeichner; die zwei Orte, deren
-     * Bezeichner anders heisst als ihre Registerkennung, sagen es im
-     * Register selbst (`schauplatz`). Ohne Treffer wird NICHTS markiert —
-     * eine Markierung, die immer irgendwo steht, sagt nichts (§55.1).
+     * ERST DIE ADRESSE, DANN DER SCHAUPLATZ (E393). Bis dahin wurde nur
+     * `App.schauplatz()` gefragt, und gemessen am 4. September traf das bei
+     * ZWEI von fünf Orten zu:
+     *
+     *     Ort              schauplatz()   Adresse                     markiert
+     *     Heute            heute          #welt-lernen-heute          Heute ✓
+     *     Lernzentrum      heute          #welt-lernen-lernen         Heute ✗
+     *     Elektrotechnik   elektro        #elektro                    Elektro ✓
+     *     Bibliothek       workspace      #welt-workspace-bibliothek  keiner ✗
+     *     Aufgaben         workspace      #welt-workspace-aufgaben    keiner ✗
+     *
+     * `schauplatz()` bildet den TITEL der Sonderansicht ab, und drei der
+     * fünf Orte teilen sich ihren Titel mit einem Nachbarn: Lernzentrum
+     * heisst dort „Heute", Bibliothek und Aufgaben heissen „Arbeitsbereich".
+     * Auf „Lernzentrum" leuchtete deshalb „Heute" — schlimmer als gar keine
+     * Markierung, weil sie an den falschen Ort zeigt.
+     *
+     * Die ADRESSE unterscheidet sie, denn genau dafür ist sie da. Sie steht
+     * als `adresse` im Register neben `schauplatz`; der Schauplatz bleibt
+     * als Rückfall für alles, was keine eigene Adresse hat.
+     *
+     * DASS DIE ADRESSE IM REGISTER STEHT, IST EINE KOPPLUNG — wer sie in der
+     * Lernwelt umbenennt, muss sie hier nachziehen. `test390 §1` klickt
+     * deshalb alle fünf Orte an und sieht nach, welcher leuchtet; ein
+     * umbenannter Weg wird dort rot, nicht still falsch.
+     *
+     * Ohne Treffer wird NICHTS markiert — eine Markierung, die immer
+     * irgendwo steht, sagt nichts (§55.1).
      */
     const ortJetzt = () => {
+        const orte = hauptOrte();
+        let adr = '';
+        try {
+            adr = String(location.hash || '');
+        }
+        catch {
+            adr = '';
+        }
+        if (adr) {
+            const genau = orte.find((e) => e.adresse && String(e.adresse) === adr);
+            if (genau)
+                return String(genau.id);
+        }
         let wo = '';
         try {
             wo = String(App.schauplatz() || '');
@@ -134888,7 +134938,14 @@ const Kontextkante = (() => {
         }
         if (!wo)
             return '';
-        const treffer = hauptOrte().find((e) => String(e.schauplatz || e.id) === wo);
+        /* HIER STAND EIN `!e.adresse` — und es ist wieder weg (E393).
+           Der Gedanke war, dass „Heute" sonst gewinnt, sobald man auf
+           „Lernzentrum" steht: beide melden den Schauplatz `heute`. Nachgeprüft
+           stimmt der Gedanke nicht, denn die Adresse oben trifft vorher und
+           kehrt zurück. Die Bedingung liess sich mit keiner Mutation rot
+           bekommen — und ein Wächter, der nie rot war, ist eine Behauptung
+           (§55.2). Also weg, statt als Zierat stehen zu bleiben. */
+        const treffer = orte.find((e) => String(e.schauplatz || e.id) === wo);
         return treffer ? String(treffer.id) : '';
     };
     /* ══════════════════════════════════════════════════════════════════════
@@ -135200,6 +135257,17 @@ const Kontextkante = (() => {
         });
         /* Der Ort hat gewechselt — andere Knöpfe. */
         window.addEventListener('redion:schauplatz', () => zeichne());
+        /* UND DIE ADRESSE, DENN SIE KOMMT SPÄTER (E393). Gemessen: `zeigeSonder`
+           setzt zuerst die Adresse aus dem TITEL (`#heute`), meldet dann den
+           Schauplatz — und erst danach setzt die Lernwelt ihre eigene Adresse
+           (`#welt-lernen-lernen`). Wer nur auf `redion:schauplatz` hört, liest
+           also die Adresse von vorletzter Sekunde und markiert den falschen
+           Ort. Der erste Versuch dieses Bogens tat genau das und markierte
+           daraufhin GAR NICHTS mehr — schlechter als vorher.
+    
+           Ein `hashchange` mehr kostet ein Neuzeichnen der Kante; das
+           geschieht bei jedem Ortswechsel ohnehin. */
+        window.addEventListener('hashchange', () => zeichne());
         /* Am Telefon ist sie aus; beim Drehen oder Aufziehen ändert sich das. */
         try {
             window.matchMedia('(max-width: 760px)').addEventListener('change', () => zeichne());
@@ -136219,7 +136287,21 @@ const App = (() => {
      */
     const schauplatzMelden = () => {
         const jetzt = schauplatz();
-        const merkmal = jetzt + '|' + String(seiteId || '');
+        /* DIE ADRESSE ZÄHLT MIT (E393) — dieselbe Sorte Lücke wie die Seite
+           oben, nur eine Ebene höher. Von „Heute" auf „Lernzentrum" bleibt
+           `schauplatz()` bei `heute` (beide Ansichten heissen so) und `seiteId`
+           bleibt leer. Es kam also kein Signal, und die Kontextkante liess
+           ihre Markierung auf „Heute" stehen, obwohl man woanders war.
+           `location.hash` unterscheidet die beiden — er sagt
+           `#welt-lernen-heute` gegen `#welt-lernen-lernen`. */
+        let adr = '';
+        try {
+            adr = String(location.hash || '');
+        }
+        catch {
+            adr = '';
+        }
+        const merkmal = jetzt + '|' + String(seiteId || '') + '|' + adr;
         if (merkmal === letzterSchauplatz)
             return;
         letzterSchauplatz = merkmal;

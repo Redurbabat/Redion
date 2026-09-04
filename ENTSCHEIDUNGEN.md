@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-388 Entscheidungen, E1 bis E392. Die Nummer ist die Ordnung: eine Entscheidung
+389 Entscheidungen, E1 bis E393. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -446,6 +446,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E390** — Eine Führung, die auf nichts zeigt, ist keine Führung
 * **E391** — „Gehen" verlässt das Band: eine Navigation je Gerät
 * **E392** — Die Einstellungsliste zeigt, was sie hat — und sagt, wenn mehr kommt
+* **E393** — Die Leiste zeigt, wo man wirklich ist; der Zeitmesser steht einmal
 
 ---
 
@@ -31863,3 +31864,123 @@ neu gebaut. Mit drei Bildern belegt (§55.3): 1360×900 vollständig,
 
 Dateien: `src/bereiche/einstellungen/ansicht/seite.ts`,
 `quell/schale/stil/einstellungen.css`, `pruefungen/lauf/test389.mts`.
+
+
+E393 — Die Leiste zeigt, wo man wirklich ist — und der Zeitmesser steht einmal
+================================================================================
+4. September 2026 · Audit F02, Rest · Auftrag 01 Schritt 4
+
+PROBLEM 1 — DIE MARKIERUNG ZEIGTE AUF DEN FALSCHEN ORT
+
+E388 hat die fünf Hauptwege in die linke Leiste geholt und den, an dem man
+steht, markiert. Am 4. September nachgemessen, indem jeder der fünf Knöpfe
+wirklich angeklickt wurde:
+
+    Ort              App.schauplatz()  Adresse                     markiert
+    Heute            heute             #welt-lernen-heute          Heute    ✓
+    Lernzentrum      heute             #welt-lernen-lernen         Heute    ✗
+    Elektrotechnik   elektro           #elektro                    Elektro  ✓
+    Bibliothek       workspace         #welt-workspace-bibliothek  keiner   ✗
+    Aufgaben         workspace         #welt-workspace-aufgaben    keiner   ✗
+
+ZWEI VON FÜNF. Und der schlimmere Fall ist nicht der leere: auf „Lernzentrum"
+leuchtete „Heute". Eine Markierung, die auf einen Ort zeigt, an dem man nicht
+steht, ist schlechter als gar keine — sie behauptet etwas.
+
+DER GRUND liegt in `App.schauplatz()`: es bildet den TITEL der Sonderansicht
+ab, und drei der fünf teilen ihren Titel mit einem Nachbarn. Das Lernzentrum
+heisst dort „Heute", Bibliothek und Aufgaben heissen „Arbeitsbereich".
+
+PROBLEM 2 — „ZEITMESSER" STAND ZWEIMAL IN DER LADE
+
+Einmal als `w-zeit` aus der eigenen Liste des Bandes, einmal als `zeitmesser`
+aus `Register.module` — unter zwei verschiedenen Überschriften. Beide rufen
+`Zeitmesser.panel()`; gemessen öffneten beide dasselbe Feld von 280 × 226 px.
+
+ENTSCHEIDUNG
+
+1. **Die Kante fragt zuerst die ADRESSE, dann den Schauplatz.** Die Adresse
+   steht als `adresse` im Register neben `schauplatz` und `haupt` — nicht in
+   der Leiste (§8). Vier der fünf bekommen eine; `elektro` nicht, weil sein
+   Schauplatz eindeutig ist und der Rückfall benutzt bleiben soll, statt zu
+   verrotten.
+
+2. **Die Kante hört auch auf `hashchange`.** Das war nicht geplant, sondern
+   der zweite Anlauf: `zeigeSonder` setzt zuerst die Adresse aus dem TITEL
+   (`#heute`), meldet dann den Schauplatz — und erst DANACH setzt die
+   Lernwelt ihre eigene Adresse. Wer nur auf `redion:schauplatz` hört, liest
+   die Adresse von vorletzter Sekunde. Der erste Anlauf tat genau das und
+   markierte daraufhin GAR NICHTS mehr — messbar schlechter als vorher.
+
+3. **`schauplatzMelden()` nimmt die Adresse in sein Merkmal auf.** Dieselbe
+   Sorte Lücke wie die Seite in E312, eine Ebene höher: von „Heute" auf
+   „Lernzentrum" ändert sich weder `schauplatz()` noch `seiteId`, also kam
+   kein Signal.
+
+4. **`zeitmesser` wird als Dublette zu `w-zeit` eingetragen.** Es bleibt
+   `w-zeit`, weil sein Hinweis sagt, worauf sich die Uhr bezieht („misst die
+   Zeit an der offenen Seite"); der Hinweis des Moduls nennt statt dessen die
+   Entscheidungsnummer, aus der er stammt. Das gehört nicht in eine Liste,
+   die ein Mensch liest.
+
+WAS DIE MESSUNG SONST NOCH ERGAB, UND WARUM ES HIER NICHT GEBAUT WIRD
+
+Der Bericht sagt unter F02, der Ortskatalog „mische Orte und Handlungen", und
+nennt fünf: Neue Seite, Suchen, Befehle, App installieren, Passwort. Um das
+nicht nach Gefühl zu entscheiden, wurden alle 45 Einträge angeklickt und
+gemessen, was danach anders ist. Drei Durchgänge, und die ersten zwei waren
+falsch:
+
+  · Der erste teilte nach „legt sich ein Fenster darüber?". Damit wurden
+    Kalender, Tagesplan und Datenbanken zu Handlungen — sie sind Fenster und
+    trotzdem Orte.
+  · Der zweite mass die Fläche des Neuen. Aber `.overlay` ist der
+    verdunkelnde Grund (`position:fixed; inset:0`) und deshalb IMMER so gross
+    wie der Bildschirm. Sechsundzwanzig Einträge kamen auf „100 %".
+  · Erst der dritte mass das FENSTER im Grund. Ergebnis: 26 der 45 Ziele
+    öffnen ein `.finder` — dieselbe Bauform wie die Schnellsuche — zwischen
+    10 % und 58 % des Bildschirms.
+
+Damit ist die Trennung „Ort gegen Handlung" heute NICHT ZIEHBAR, und der
+Grund ist kein Namensproblem: Redion baut mehr als die Hälfte seiner Ziele
+als Suchfenster. Das steht als **L126** in `LUECKEN.md`. Eine Gruppe
+„Handlungen" über diesen Zustand zu legen wäre ein Etikett auf einem Aufbau,
+und die nächste Messung hätte es wieder abgezogen.
+
+ALTERNATIVE zur Adresse: `App.schauplatz()` feiner machen. Verworfen —
+daran hängen acht `zeigeSonder`-Aufrufer, die Kontextkante, der Dienststand
+und die Merkfunktion „wo man war" (E349). Ein Feld im Register kostet eine
+Zeile; ein feinerer Schauplatz kostet einen Bogen für sich.
+
+KOSTEN: Ein Feld mehr im Registertyp, ein Horcher mehr in der Kante, ein
+Zeichen mehr im Merkmal. Die Adresse im Register ist eine KOPPLUNG an die
+Lernwelt und die Arbeitswelt — wer den Weg dort umbenennt, muss sie
+nachziehen. `test390 §1` klickt deshalb alle fünf an, statt das Register mit
+sich selbst zu vergleichen; ein umbenannter Weg wird dort rot statt still
+falsch.
+
+Keine Daten, kein Feldname, keine Migration.
+
+PRÜFUNG: `test390` (13 Punkte, PORT 9413). VIER MUTATIONEN ROT GESEHEN:
+
+    zwei Adressen entfernt        §1 zweifach rot
+    `hashchange` entfernt         §1 dreifach rot — und es reicht den
+                                  ursprünglichen Fehler nach: auf
+                                  „Lernzentrum" steht ["heute"]
+    Dublettenkarte entfernt       §3 zweifach rot
+    falschen Zwilling behalten    §4 zweifach rot, samt Hinweis „(E268)"
+
+EINE MUTATION BLIEB GRÜN, und die Zeile ist deshalb wieder weg: der Rückfall
+hatte ein `!e.adresse` bekommen, damit „Heute" nicht doch gewinnt. Nachgeprüft
+kann er das gar nicht — die Adresse trifft vorher und kehrt zurück. Eine
+Bedingung, die mit keiner Mutation rot wird, ist eine Behauptung (§55.2), also
+steht sie nicht mehr da.
+
+Grün geblieben: test33, test61, test222, test247, test248, test272, test387,
+test388, test389. Einzeldatei neu gebaut. Mit einem Bild belegt (§55.3):
+dieselbe Kante auf „Lernzentrum" und auf „Aufgaben", jeweils der richtige
+Knopf in Gold.
+
+Dateien: `src/register/navigation.ts`, `src/register/menueband.ts`,
+`src/schale/aufbau/context-rail.ts`, `src/schale/aufbau/schale.ts`,
+`pruefungen/lauf/test390.mts`.

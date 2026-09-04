@@ -53,9 +53,11 @@ F03 halb (E387), F11 zu (E392).
 **Was noch offen ist**, in dieser Reihenfolge:
 
 ```txt
-F02 Rest   die untere Telefonleiste an `haupt: true` hängen
-           den Ortskatalog von Handlungen trennen, „Zeitmesser" doppelt
-           („Gehen" ist mit E391 aus dem Band, test247/248/33 nachgezogen)
+F02 Rest   die untere Telefonleiste an `haupt: true` hängen — WELCHE fünf
+           es sein sollen, ist Redurs Entscheidung (am Telefon bleibt für
+           „Mehr" ein Platz, also vier Orte)
+           („Gehen" ist mit E391 aus dem Band; der doppelte „Zeitmesser"
+            und die falsche Ortsmarkierung sind mit E393 weg)
 F03 Rest   Einzelseite/Fortlaufend — braucht Redurs Zustimmung (gegen E299)
 F08        das KI-Seitenfeld startet im Dokument eingeklappt
 F13        Release-Gate über 360×800, 390×844, 428×926 und Querformat

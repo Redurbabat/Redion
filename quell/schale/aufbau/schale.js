@@ -838,7 +838,21 @@ const App = (() => {
      */
     const schauplatzMelden = () => {
         const jetzt = schauplatz();
-        const merkmal = jetzt + '|' + String(seiteId || '');
+        /* DIE ADRESSE ZÄHLT MIT (E393) — dieselbe Sorte Lücke wie die Seite
+           oben, nur eine Ebene höher. Von „Heute" auf „Lernzentrum" bleibt
+           `schauplatz()` bei `heute` (beide Ansichten heissen so) und `seiteId`
+           bleibt leer. Es kam also kein Signal, und die Kontextkante liess
+           ihre Markierung auf „Heute" stehen, obwohl man woanders war.
+           `location.hash` unterscheidet die beiden — er sagt
+           `#welt-lernen-heute` gegen `#welt-lernen-lernen`. */
+        let adr = '';
+        try {
+            adr = String(location.hash || '');
+        }
+        catch {
+            adr = '';
+        }
+        const merkmal = jetzt + '|' + String(seiteId || '') + '|' + adr;
         if (merkmal === letzterSchauplatz)
             return;
         letzterSchauplatz = merkmal;

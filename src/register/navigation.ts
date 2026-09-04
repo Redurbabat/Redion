@@ -95,9 +95,11 @@ Register.navigation = (() => {
       knopfId: 'btn-cmd',       kuerzel: 'Strg ⇧ P',
       tun: () => Werkzeuge.palette() },
     { id: 'heute',      name: 'Heute',             icon: '☀️', zeichen: 'today', platz: 'oben',  rang: 30,
-      knopfId: 'btn-home',      haupt: true, tun: () => Produktwelten.lernen('heute') },
+      knopfId: 'btn-home',      haupt: true, adresse: '#welt-lernen-heute',
+      tun: () => Produktwelten.lernen('heute') },
     { id: 'lernzentrum',name: 'Lernzentrum',       icon: '🎓', zeichen: 'learn', platz: 'oben',  rang: 40,
       knopfId: 'btn-learning',  haupt: true, schauplatz: 'lernen',
+      adresse: '#welt-lernen-lernen',
       tun: () => Produktwelten.lernen('lernen') },
     /* ELEKTRO HATTE KEINE EIGENE ZEILE. Es ist eines der 14 Module, und
        zwar das grösste — Fachzeichen, Schaltplan, Simulation, Rechner,
@@ -119,9 +121,11 @@ Register.navigation = (() => {
          unten der Anhängepunkt mit demselben Namen. Verschiedene Kennungen,
          weil `melde` über die Kennung dublettenfrei hält. */
       knopfId: 'btn-library',   haupt: true, schauplatz: 'bibliothek',
+      adresse: '#welt-workspace-bibliothek',
       tun: () => Produktwelten.bibliothek() },
     { id: 'aufgaben',   name: 'Aufgaben',          icon: '☑', zeichen: 'tasks',  platz: 'oben',  rang: 70,
-      knopfId: 'btn-tasks',     haupt: true, tun: () => Produktwelten.aufgaben() },
+      knopfId: 'btn-tasks',     haupt: true, adresse: '#welt-workspace-aufgaben',
+      tun: () => Produktwelten.aufgaben() },
     { id: 'posteingang',name: 'Posteingang',       icon: '📥', zeichen: 'inbox', platz: 'oben',  rang: 80,
       /* Und hier stand `Werkzeuge.meldungen()`. Der Knopf ruft seit jeher
          `Ansichten.posteingang()`; das eine ist die Meldungsliste, das
@@ -350,6 +354,32 @@ Register.navigation = (() => {
      * nicht wieder zwei Listen sind, die dasselbe behaupten (§8).
      */
     schauplatz?: string;
+    /**
+     * DIE ADRESSE, an der dieser Ort steht (E393).
+     *
+     * `schauplatz` allein reicht nicht, und das ist gemessen: er bildet
+     * den TITEL der Sonderansicht ab, und drei der fünf Hauptwege teilen
+     * sich ihren Titel mit einem Nachbarn.
+     *
+     *     Ort              schauplatz()   Adresse
+     *     Heute            heute          #welt-lernen-heute
+     *     Lernzentrum      heute          #welt-lernen-lernen
+     *     Bibliothek       workspace      #welt-workspace-bibliothek
+     *     Aufgaben         workspace      #welt-workspace-aufgaben
+     *
+     * Vor E393 leuchtete auf „Lernzentrum" deshalb „Heute", und auf
+     * „Bibliothek" und „Aufgaben" leuchtete gar nichts. Zwei von fünf
+     * stimmten.
+     *
+     * Die Adresse steht hier, wo auch `schauplatz` und `haupt` stehen —
+     * nicht in der Leiste (§8). Sie ist eine Kopplung an die Lernwelt und
+     * die Arbeitswelt: wer den Weg dort umbenennt, muss ihn hier
+     * nachziehen. `test390 §1` klickt alle fünf Orte an und sieht nach,
+     * welcher leuchtet; ein umbenannter Weg wird dort rot statt still
+     * falsch. `elektro` braucht keine — sein Schauplatz ist eindeutig,
+     * und der Rückfall soll benutzt bleiben, damit er nicht verrottet.
+     */
+    adresse?: string;
   };
 
   const LISTE: Eintrag[] = EINGEBAUT.slice();

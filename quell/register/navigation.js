@@ -96,9 +96,11 @@ Register.navigation = (() => {
             knopfId: 'btn-cmd', kuerzel: 'Strg ⇧ P',
             tun: () => Werkzeuge.palette() },
         { id: 'heute', name: 'Heute', icon: '☀️', zeichen: 'today', platz: 'oben', rang: 30,
-            knopfId: 'btn-home', haupt: true, tun: () => Produktwelten.lernen('heute') },
+            knopfId: 'btn-home', haupt: true, adresse: '#welt-lernen-heute',
+            tun: () => Produktwelten.lernen('heute') },
         { id: 'lernzentrum', name: 'Lernzentrum', icon: '🎓', zeichen: 'learn', platz: 'oben', rang: 40,
             knopfId: 'btn-learning', haupt: true, schauplatz: 'lernen',
+            adresse: '#welt-lernen-lernen',
             tun: () => Produktwelten.lernen('lernen') },
         /* ELEKTRO HATTE KEINE EIGENE ZEILE. Es ist eines der 14 Module, und
            zwar das grösste — Fachzeichen, Schaltplan, Simulation, Rechner,
@@ -124,9 +126,11 @@ Register.navigation = (() => {
                unten der Anhängepunkt mit demselben Namen. Verschiedene Kennungen,
                weil `melde` über die Kennung dublettenfrei hält. */
             knopfId: 'btn-library', haupt: true, schauplatz: 'bibliothek',
+            adresse: '#welt-workspace-bibliothek',
             tun: () => Produktwelten.bibliothek() },
         { id: 'aufgaben', name: 'Aufgaben', icon: '☑', zeichen: 'tasks', platz: 'oben', rang: 70,
-            knopfId: 'btn-tasks', haupt: true, tun: () => Produktwelten.aufgaben() },
+            knopfId: 'btn-tasks', haupt: true, adresse: '#welt-workspace-aufgaben',
+            tun: () => Produktwelten.aufgaben() },
         { id: 'posteingang', name: 'Posteingang', icon: '📥', zeichen: 'inbox', platz: 'oben', rang: 80,
             /* Und hier stand `Werkzeuge.meldungen()`. Der Knopf ruft seit jeher
                `Ansichten.posteingang()`; das eine ist die Meldungsliste, das

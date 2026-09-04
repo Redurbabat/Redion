@@ -364,12 +364,49 @@ const Kontextkante = (() => {
     /**
      * Welcher der fünf Orte gerade gilt.
      *
-     * `App.schauplatz()` meldet einen Bezeichner; die zwei Orte, deren
-     * Bezeichner anders heisst als ihre Registerkennung, sagen es im
-     * Register selbst (`schauplatz`). Ohne Treffer wird NICHTS markiert —
-     * eine Markierung, die immer irgendwo steht, sagt nichts (§55.1).
+     * ERST DIE ADRESSE, DANN DER SCHAUPLATZ (E393). Bis dahin wurde nur
+     * `App.schauplatz()` gefragt, und gemessen am 4. September traf das bei
+     * ZWEI von fünf Orten zu:
+     *
+     *     Ort              schauplatz()   Adresse                     markiert
+     *     Heute            heute          #welt-lernen-heute          Heute ✓
+     *     Lernzentrum      heute          #welt-lernen-lernen         Heute ✗
+     *     Elektrotechnik   elektro        #elektro                    Elektro ✓
+     *     Bibliothek       workspace      #welt-workspace-bibliothek  keiner ✗
+     *     Aufgaben         workspace      #welt-workspace-aufgaben    keiner ✗
+     *
+     * `schauplatz()` bildet den TITEL der Sonderansicht ab, und drei der
+     * fünf Orte teilen sich ihren Titel mit einem Nachbarn: Lernzentrum
+     * heisst dort „Heute", Bibliothek und Aufgaben heissen „Arbeitsbereich".
+     * Auf „Lernzentrum" leuchtete deshalb „Heute" — schlimmer als gar keine
+     * Markierung, weil sie an den falschen Ort zeigt.
+     *
+     * Die ADRESSE unterscheidet sie, denn genau dafür ist sie da. Sie steht
+     * als `adresse` im Register neben `schauplatz`; der Schauplatz bleibt
+     * als Rückfall für alles, was keine eigene Adresse hat.
+     *
+     * DASS DIE ADRESSE IM REGISTER STEHT, IST EINE KOPPLUNG — wer sie in der
+     * Lernwelt umbenennt, muss sie hier nachziehen. `test390 §1` klickt
+     * deshalb alle fünf Orte an und sieht nach, welcher leuchtet; ein
+     * umbenannter Weg wird dort rot, nicht still falsch.
+     *
+     * Ohne Treffer wird NICHTS markiert — eine Markierung, die immer
+     * irgendwo steht, sagt nichts (§55.1).
      */
     const ortJetzt = () => {
+        const orte = hauptOrte();
+        let adr = '';
+        try {
+            adr = String(location.hash || '');
+        }
+        catch {
+            adr = '';
+        }
+        if (adr) {
+            const genau = orte.find((e) => e.adresse && String(e.adresse) === adr);
+            if (genau)
+                return String(genau.id);
+        }
         let wo = '';
         try {
             wo = String(App.schauplatz() || '');
@@ -379,7 +416,14 @@ const Kontextkante = (() => {
         }
         if (!wo)
             return '';
-        const treffer = hauptOrte().find((e) => String(e.schauplatz || e.id) === wo);
+        /* HIER STAND EIN `!e.adresse` — und es ist wieder weg (E393).
+           Der Gedanke war, dass „Heute" sonst gewinnt, sobald man auf
+           „Lernzentrum" steht: beide melden den Schauplatz `heute`. Nachgeprüft
+           stimmt der Gedanke nicht, denn die Adresse oben trifft vorher und
+           kehrt zurück. Die Bedingung liess sich mit keiner Mutation rot
+           bekommen — und ein Wächter, der nie rot war, ist eine Behauptung
+           (§55.2). Also weg, statt als Zierat stehen zu bleiben. */
+        const treffer = orte.find((e) => String(e.schauplatz || e.id) === wo);
         return treffer ? String(treffer.id) : '';
     };
     /* ══════════════════════════════════════════════════════════════════════
@@ -691,6 +735,17 @@ const Kontextkante = (() => {
         });
         /* Der Ort hat gewechselt — andere Knöpfe. */
         window.addEventListener('redion:schauplatz', () => zeichne());
+        /* UND DIE ADRESSE, DENN SIE KOMMT SPÄTER (E393). Gemessen: `zeigeSonder`
+           setzt zuerst die Adresse aus dem TITEL (`#heute`), meldet dann den
+           Schauplatz — und erst danach setzt die Lernwelt ihre eigene Adresse
+           (`#welt-lernen-lernen`). Wer nur auf `redion:schauplatz` hört, liest
+           also die Adresse von vorletzter Sekunde und markiert den falschen
+           Ort. Der erste Versuch dieses Bogens tat genau das und markierte
+           daraufhin GAR NICHTS mehr — schlechter als vorher.
+    
+           Ein `hashchange` mehr kostet ein Neuzeichnen der Kante; das
+           geschieht bei jedem Ortswechsel ohnehin. */
+        window.addEventListener('hashchange', () => zeichne());
         /* Am Telefon ist sie aus; beim Drehen oder Aufziehen ändert sich das. */
         try {
             window.matchMedia('(max-width: 760px)').addEventListener('change', () => zeichne());

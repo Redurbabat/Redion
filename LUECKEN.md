@@ -5639,20 +5639,28 @@ b. **F02 · P1 · ZU (E388 + E391).** Die Orte stehen oben in der linken
    trägt nur noch dokumentbezogene Werkzeuge. Am Telefon trug die untere
    Leiste die fünf Pillen schon vorher.
 
-   OFFEN BLEIBEN ZWEI KLEINERE STÜCKE:
+   OFFEN BLEIBT EIN STÜCK:
 
    1. **Zwei verschiedene Fünfergruppen.** Gemessen: die linke Leiste und
       `index.html` sagen „Heute · Lernzentrum · Elektrotechnik ·
       Bibliothek · Aufgaben", die untere Telefonleiste sagt „Dokumente ·
       Heute · Lernen · Termine · Mehr". Seit E388 steht die eine Gruppe im
       Register (`haupt: true`); die Telefonleiste liest sie noch nicht.
-   2. **Der Ortskatalog mischt Orte und Handlungen.** In der Lade hinter
-      „Mehr Orte" stehen 39 Zeilen, darunter „Neue Seite", „Suchen",
-      „Befehle", „App installieren" und „Passwort" — das sind keine Orte.
-      Und „Zeitmesser" steht ZWEIMAL darin, einmal unter „Planung &
-      Lernen" und einmal unter „Weiteres". Beides ist geerbt: dieselbe
-      Liste zeichnet seit E272 der Reiter „Gehen". Sie gehört aufgeräumt,
-      wo sie entsteht, und nicht in der Leiste gefiltert (§8).
+
+      WELCHE FÜNF ES SEIN SOLLEN, IST REDURS ENTSCHEIDUNG. Am Telefon ist
+      ein Platz für „Mehr" nötig, es bleiben also vier für Orte — und die
+      untere Leiste trägt heute „Termine", das keiner der fünf Hauptwege
+      ist, während „Elektrotechnik" und „Aufgaben" dort fehlen.
+
+   2. **Der Ortskatalog — ZU, aber anders als gedacht (E393).** Die
+      Dublette ist weg: „Zeitmesser" stand zweimal (`w-zeit` und
+      `zeitmesser`), beide riefen `Zeitmesser.panel()`. Es bleibt der mit
+      dem brauchbaren Hinweis; `test390 §3` hält es fest, und zwar auf
+      DOPPELTE NAMEN, nicht auf diesen einen.
+
+      Die andere Hälfte — „Orte und Handlungen mischen sich" — hat die
+      Messung nicht bestätigt, sondern etwas Grösseres gefunden. Siehe
+      **L126**.
 
 c. **F03 · P1 · zur Hälfte ZU (E387).** „Nur die aktive Seite zeigt
    Werkzeuge" ist gebaut und gemessen: von drei gebauten Leisten ist genau
@@ -5793,3 +5801,63 @@ nichts."
 ZU TUN: der erste Schritt gehört auf die Orte in der linken Leiste (E388) —
 die stehen immer da. Am Telefon auf die untere Fünferleiste. Und `test61`
 zieht den Anker mit, wie sein eigener Kommentar es verlangt.
+
+
+================================================================================
+L126 — Sechsundzwanzig von 45 Zielen sind das Suchfenster
+================================================================================
+4. September 2026 · gefunden beim Nachmessen von L123 F02 Punkt 2
+
+Der UX-Bericht sagt, der Ortskatalog „mische Orte und Handlungen", und nennt
+fünf: Neue Seite, Suchen, Befehle, App installieren, Passwort. Um das nicht
+nach Gefühl zu entscheiden, wurde jeder der 45 Einträge aus
+`Register.menueband.orte()` wirklich angeklickt und gemessen, was danach
+anders ist.
+
+DREI DURCHGÄNGE, UND DIE ERSTEN ZWEI WAREN FALSCH — das gehört mit
+aufgeschrieben, weil beide Male die Messung plausibel aussah:
+
+  1. „Legt sich ein Fenster darüber?" Damit wurden Kalender, Tagesplan und
+     Datenbanken zu Handlungen. Sie sind Fenster und trotzdem Orte.
+  2. „Wie gross ist das Neue?" Aber `.overlay` ist der verdunkelnde GRUND
+     (`position:fixed; inset:0`) und deshalb immer so gross wie der
+     Bildschirm. Sechsundzwanzig Einträge kamen auf glatte 100 %.
+  3. Erst das FENSTER im Grund gemessen — `.overlay > *` — ergab Zahlen,
+     die etwas bedeuten.
+
+DAS ERGEBNIS:
+
+    12   ändern den Schauplatz oder die Adresse — echte Orte
+    26   öffnen ein `.finder`, zwischen 10 % und 58 % des Bildschirms
+     3   öffnen ein Panel (Zeitmesser 280×226, KI 380×900)
+     4   Randfälle (Dateiwahl, neue Seite)
+
+`.finder` ist die Bauform der SCHNELLSUCHE. Kalender, Tagesplan,
+Wochenrückblick, Zurückgestellt, Datenbanken, Datenmodell, Kennzahlen,
+Agenten, Besprechungen, Marktplatz, Erweiterungen, Papierkorb, Was Redion
+kann, Erste Hilfe, Tastenkürzel, Aussehen, Tempo, Passwort, App installieren,
+Schnellnotizen, Vorlagen, Dateien, Wissen, Verbinden, Was hereinkommt und die
+Suche selbst — alle sechsundzwanzig sind dasselbe Popup mit anderem Inhalt.
+
+**DAS IST DER GRUND, WARUM DIE LADE SICH WIE EIN HAUFEN LIEST**, und es ist
+kein Namensproblem. Die Trennung „Ort gegen Handlung" ist heute nicht
+ziehbar, weil mehr als die Hälfte der Ziele als Suchfenster gebaut ist. Eine
+Gruppe „Handlungen" darüberzulegen wäre ein Etikett auf einem Aufbau gewesen;
+die nächste Messung hätte es wieder abgezogen. Deshalb steht es hier statt in
+E393.
+
+WAS DAS KOSTET, ehrlich beziffert: `.einst-fenster` (68 %) und die zwei
+Marktplatz-Fenster (58 %) sind bereits so gross, dass sie Vollbild sein
+wollen. Am Telefon werden ohnehin alle zu Vollbild — dort fällt es nicht auf.
+Am Rechner steht die Bibliothek eines Menschen in einem 720 × 224 Pixel
+grossen Kasten.
+
+ZU TUN, wenn Redur es will — und es ist ein eigener Bogen, kein Nachlauf:
+entscheiden, welche der 26 ein Schauplatz werden (Kalender, Tagesplan,
+Datenbanken, Marktplatz sind die Kandidaten) und welche ein Fenster bleiben
+(Suchen, Befehle, Passwort, App installieren). Danach kann `App.schauplatz()`
+sie unterscheiden, und danach — erst danach — bekommt die Lade eine
+Gliederung, die etwas behauptet, das auch stimmt.
+
+BELEG: die drei Messläufe, zuletzt am 4. September; die Zahlen oben stammen
+aus dem dritten.

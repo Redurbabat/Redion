@@ -3316,3 +3316,23 @@ die Zeugnisnote je Semester (E242) und der echte Stundenplan (E243).
   Schrift UND kleineres Polster drücken die Zeile darunter. Der Wächter misst
   also die wirkliche Höhe statt der Schreibweise, was richtig ist, aber erst
   die Gegenprobe hat es gezeigt.
+
+  E393 · Zwei Funde an derselben Leiste. (a) Von den FÜNF Hauptwegen
+  markierte die Kontextkante nur ZWEI richtig — auf „Lernzentrum" leuchtete
+  „Heute", auf „Bibliothek" und „Aufgaben" gar nichts. `App.schauplatz()`
+  bildet den Titel der Ansicht ab, und drei der fünf teilen ihren Titel mit
+  einem Nachbarn. Die Adresse unterscheidet sie; sie steht jetzt als
+  `adresse` im Register neben `schauplatz`. (b) „Zeitmesser" stand zweimal
+  in der Lade, unter zwei Überschriften, beide Male dasselbe Panel.
+
+  DREI LEHREN. (1) Der erste Anlauf machte es SCHLECHTER: die Adresse kommt
+  später als das Signal, auf das die Kante hört — `zeigeSonder` setzt erst
+  die Adresse aus dem Titel, meldet, und erst danach setzt die Lernwelt ihre
+  eigene. Statt zwei richtigen Markierungen gab es null. Ein `hashchange`
+  mehr behebt es. (2) Eine Bedingung, die sich mit keiner Mutation rot
+  bekommen liess, ist wieder aus dem Code entfernt worden statt als Zierat
+  stehen zu bleiben (§55.2). (3) Die Behauptung des Berichts, der
+  Ortskatalog mische Orte und Handlungen, hat DREI Messläufe gebraucht und
+  ist am Ende widerlegt worden — siehe L126: 26 der 45 Ziele sind das
+  Suchfenster. Die ersten zwei Messungen sahen richtig aus und waren falsch;
+  die zweite mass den verdunkelnden Grund statt des Fensters.

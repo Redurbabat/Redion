@@ -565,7 +565,16 @@ Register.menueband = (() => {
         hilfe: 'app-kann', /* Rundgang.uebersicht()         */
         vorlagen: 'app-markt', /* Galerie.oeffne()              */
         bibliothek: 'app-bib', /* Bibliothek.oeffne()           */
-        papierkorb: 'papierkorbFuss' /* App.papierkorb()              */
+        papierkorb: 'papierkorbFuss', /* App.papierkorb()              */
+        /* ZWEIMAL DERSELBE ZEITMESSER (E393). `zeitmesser` aus `Register.module`
+           und `w-zeit` aus der Liste unten rufen beide `Zeitmesser.panel()`;
+           gemessen öffnen beide dasselbe Feld von 280 × 226 Pixeln. In der
+           Lade stand er dadurch zweimal — einmal unter „Planung & Lernen",
+           einmal unter „Weiteres". Es bleibt `w-zeit`, weil sein Hinweis
+           sagt, worauf sich die Uhr bezieht: „misst die Zeit an der offenen
+           Seite". Der Hinweis des Moduls nennt statt dessen die Entscheidung,
+           aus der es kam. */
+        zeitmesser: 'w-zeit'
     };
     /* Was kein ORT ist und deshalb nicht unter „Gehen" gehört.
        `lebensbereiche` sagt im Register selbst „KEIN EIGENER BILDSCHIRM";
