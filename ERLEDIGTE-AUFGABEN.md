@@ -3595,3 +3595,19 @@ Läufen mit doppelt vergebener Zahl, 23 Gruppen, eine davon viermal.
 
 **Prüfung.** `test400` liest alle Läufe und meldet jede Doppelvergabe — ohne
 Browser, ohne Server, ohne eigenen Port. Mutation rot gesehen.
+
+## Sieben erfundene Farbtokens, sechs namenlose Schalter, vier Farbreihen (E406)
+
+**Fund.** Vier Suchläufe über den Quelltext. Zwei fanden nichts (§19 Escape,
+tote Knöpfe) — das steht in E406 genauso da wie die Funde. Zwei fanden viel:
+30 Stellen mit sieben Tokens, die es nie gab und deren Rückfallwert immer
+griff (`var(--soft,#f6f6f6)` als weisse Platte im Dunkelmodus), sechs
+Kippschalter ohne Namen, ohne Zustand und 22 px hoch, und vier Farbreihen mit
+vier eigenen Namenslisten in zwei Wortwahlen („Lila" gegen „Violett").
+
+**Bau.** Tokens auf die echten Namen, Rückfallwerte ersatzlos weg.
+Schalter mit `role="switch"`, `aria-checked`, `aria-label` und 44 px
+Trefffläche. `src/core/helpers/colors.ts` als einzige Farbnamensliste.
+
+**Prüfung.** `test401`, ohne Browser und ohne Port. War rot und fand fünf
+Reihen mehr als ich. Mutation rot gesehen.

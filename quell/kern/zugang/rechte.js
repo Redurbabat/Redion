@@ -153,7 +153,7 @@ const Feldrechte = (() => {
             }
             catch (e) {
                 const grund = e instanceof Error ? e.message : String(e);
-                ziel.innerHTML = '<p style="color:var(--rot,#c33)">' + esc(grund) + '</p>';
+                ziel.innerHTML = '<p style="color:var(--gefahr)">' + esc(grund) + '</p>';
                 return;
             }
             const liste = daten?.feldrechte || [];

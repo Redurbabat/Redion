@@ -4345,7 +4345,8 @@ const Datenbank = (() => {
   const schalter = (id: string, an: any, text: string, hinweis?: any) =>
     `<div class="dl-zeile"><div class="dl-text"><b>${esc(text)}</b>` +
     (hinweis ? `<span>${esc(hinweis)}</span>` : '') + '</div>' +
-    `<button class="schalter${an ? ' an' : ''}" data-s="${id}"><i></i></button></div>`;
+    `<button class="schalter${an ? ' an' : ''}" data-s="${id}" role="switch" ` +
+    `aria-checked="${an ? 'true' : 'false'}" aria-label="${esc(name)}"><i></i></button></div>`;
 
   const layoutPanel = (_coll: any, view: any, _block: any) => {
     const zeichne = () => {
@@ -4490,7 +4491,9 @@ const Datenbank = (() => {
             '<label>diesen Wert<br><input id="fw"></label>' +
             '<label>dann färben<br><div class="fr-farben">' +
               FARBWAHL.map((c, i) => `<button data-c="${c}" class="bg-${c}` +
-                `${i === 0 ? ' on' : ''}" title="${c}"></button>`).join('') +
+                `${i === 0 ? ' on' : ''}" title="${esc(Farben.name(c))}" ` +
+                `aria-label="${esc(Farben.name(c))}" ` +
+                `aria-pressed="${i === 0 ? 'true' : 'false'}"></button>`).join('') +
             '</div></label>' +
           '</div>' +
           '<div class="fbtns"><button data-a="ok" class="prim">Anlegen</button>' +
@@ -6074,7 +6077,12 @@ const Datenbank = (() => {
         ? def.options.map((opt: any, i: any) =>
             `<div class="opt-zeile"><span class="tag bg-${opt.color}">${esc(opt.name)}</span>` +
             '<div class="opt-farben">' +
-            FARBEN.map(f => `<button data-i="${i}" data-f="${f}" title="${f}" ` +
+            /* Der Titel war die rohe Kennung („purple"). Jetzt der Name,
+               und das Gewählte trägt seinen Zustand, statt ihn nur zu
+               färben (§38). */
+            FARBEN.map(f => `<button data-i="${i}" data-f="${f}" ` +
+              `title="${esc(Farben.name(f))}" aria-label="${esc(Farben.name(f))}" ` +
+              `aria-pressed="${opt.color === f ? 'true' : 'false'}" ` +
               `style="background:var(--b-${f})"></button>`).join('') +
             '</div><button data-del="' + i + '" title="Option löschen">🗑</button></div>').join('')
         : '<div style="padding:16px; color:var(--text-faint); font-size:14px">Noch keine Optionen.</div>');
@@ -8607,7 +8615,9 @@ const Datenbank = (() => {
       fuelle(o, '#al', laufHtml + ((coll.automationen || []).length
         ? coll.automationen.map((a: any, i: any) =>
             `<div class="auto-zeile">` +
-              `<button class="schalter${a.an === false ? '' : ' an'}" data-an="${i}"><i></i></button>` +
+              `<button class="schalter${a.an === false ? '' : ' an'}" data-an="${i}" ` +
+              `role="switch" aria-checked="${a.an === false ? 'false' : 'true'}" ` +
+              `aria-label="${esc(a.name || 'Automation')}"><i></i></button>` +
               `<div class="auto-text"><b>${esc(a.name || 'Ohne Namen')}</b>` +
               `<span>Wenn: ${esc((AUSLOESER.find(x => x[0] === a.wenn.art) || [])[1] || '')}` +
               (a.wenn.key ? ' — ' + esc(namen(a.wenn.key)) : '') +

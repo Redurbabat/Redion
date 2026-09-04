@@ -3088,10 +3088,9 @@ const Blocks = (() => {
      * ======================================================================*/
     const blockMenue = (anker, b) => {
         const r = anker.getBoundingClientRect();
-        const FARBEN = [
-            ['default', 'Standard'], ['gray', 'Grau'], ['brown', 'Braun'], ['orange', 'Orange'], ['yellow', 'Gelb'],
-            ['green', 'Grün'], ['blue', 'Blau'], ['purple', 'Lila'], ['pink', 'Pink'], ['red', 'Rot']
-        ];
+        /* Vierte Kopie derselben Liste, und die dritte, die „Lila"/„Pink" statt
+           „Violett"/„Rosa" sagte. Seit E406 stehen die Namen an einer Stelle. */
+        const FARBEN = Farben.alle().map(id => [id, Farben.name(id)]);
         /* WOHER DIESE ZEILE KOMMT (E307) — in Worten, nicht nur als Farbe (§38).
            Nur wenn es etwas zu sagen gibt: bei Selbstgeschriebenem steht hier
            nichts, und das ist der Normalfall. */
@@ -3176,9 +3175,11 @@ const Blocks = (() => {
             }
             if (a === 'color') {
                 menu.innerHTML = '<div class="grp">Textfarbe</div><div class="swatches">' +
-                    FARBEN.map(([f, n]) => `<button data-c="${f}" title="${n}" style="background:var(--c-${f})"></button>`).join('') +
+                    FARBEN.map(([f, n]) => `<button data-c="${f}" title="${n}" aria-label="Textfarbe ${n}" ` +
+                        `style="background:var(--c-${f})"></button>`).join('') +
                     '</div><div class="grp">Hintergrund</div><div class="swatches">' +
-                    FARBEN.slice(1).map(([f, n]) => `<button data-c="bg-${f}" title="${n}" style="background:var(--b-${f})"></button>`).join('') +
+                    FARBEN.slice(1).map(([f, n]) => `<button data-c="bg-${f}" title="${n}" aria-label="Hintergrund ${n}" ` +
+                        `style="background:var(--b-${f})"></button>`).join('') +
                     '</div>';
                 menu.addEventListener('click', (ev) => {
                     const c = elVon(ev)?.closest('button[data-c]');

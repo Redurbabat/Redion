@@ -2945,7 +2945,8 @@ a.bl:hover{color:var(--text)}
 }
 .wb-tools button:hover{background:var(--bg-hover); color:var(--text)}
 .wb-tools button.on{background:var(--accent); color:var(--auf-accent)}
-.wb-tools .wb-farbe{width:17px; height:17px; border-radius:50%; border:2px solid transparent}
+.wb-tools .wb-farbe{width:17px; height:17px; border-radius:50%; border:2px solid transparent position:relative;}
+.wb-tools .wb-farbe::after{content:""; position:absolute; left:50%; top:50%; width:44px; height:44px; transform:translate(-50%,-50%);}
 .wb-tools .wb-farbe.on{border-color:var(--text)}
 .wb-sep{width:1px; height:18px; background:var(--line); margin:0 5px}
 .wb-flaeche{display:block; width:100%; touch-action:none; color:var(--text-faint); cursor:crosshair}
@@ -3397,7 +3398,7 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
   border-radius:6px; color:var(--text-faint); cursor:pointer; font-size:13px;
   line-height:1; padding:4px 8px; min-height:26px;
   width:auto; align-self:flex-end}
-.wl-hak:hover{color:var(--c-gruen, #2a8); border-color:var(--c-gruen, #2a8)}
+.wl-hak:hover{color:var(--erfolg); border-color:var(--erfolg)}
 .wl-zurueck{margin-top:8px; font-size:12px; color:var(--text-faint)}
 .wl-zurueck button{background:none; border:none; padding:0 0 0 4px;
   color:var(--accent-text); cursor:pointer; font:inherit;
@@ -3579,7 +3580,13 @@ table.grid .tt-auf:hover{background:var(--bg-hover); color:var(--text)}
 /* Optionen-Editor */
 .opt-zeile{display:flex; align-items:center; gap:10px; padding:8px 14px; border-bottom:1px solid var(--line-soft)}
 .opt-farben{display:flex; gap:3px; margin-left:auto}
-.opt-farben button{width:16px; height:16px; border-radius:4px; border:1px solid var(--line)}
+.opt-farben button{width:16px; height:16px; border-radius:4px; border:1px solid var(--line) position:relative;}
+/* 44 px TREFFFLÄCHE FÜR FARBFELDER (§37, E406).
+   Die Felder sind bewusst klein — acht davon in einer Zeile, das ist
+   richtig so. Aber 16 bis 26 px trifft am Telefon niemand zuverlässig, und
+   danebengegriffen heisst hier: die falsche Farbe gesetzt. Der Schatten
+   liegt DAVOR, nicht darum, damit keine Zeile wächst. */
+.opt-farben button::after{content:""; position:absolute; left:50%; top:50%; width:44px; height:44px; transform:translate(-50%,-50%);}
 .opt-farben button:hover{outline:2px solid var(--accent)}
 
 /* Seitenvorschau (Side Peek) */
@@ -3788,6 +3795,14 @@ html[data-theme="light"] .banner{color:#37352f}
 .schalter{
   width:38px; height:22px; border-radius:11px; background:var(--line);
   position:relative; transition:background .16s; flex:0 0 38px;
+}
+/* DIE TREFFFLÄCHE IST 44 px, DAS BILD BLEIBT 22 (§37).
+   Ein Kippschalter in den Einstellungen ist ein Hauptweg — man geht dorthin,
+   um ihn zu drücken. 22 px sind am Telefon die Hälfte dessen, was ein Daumen
+   sicher trifft. Der Schatten liegt DAVOR, nicht darum: so wächst keine
+   Zeile, und das Bild bleibt, wie es war. */
+.schalter::after{
+  content:""; position:absolute; left:-3px; right:-3px; top:-11px; bottom:-11px;
 }
 .schalter i{
   position:absolute; top:3px; left:3px; width:16px; height:16px; border-radius:50%;
@@ -7495,7 +7510,8 @@ body[data-ruhig="an"] .lernwelt .lw-nav{ padding-right:264px }
 .nh-farben button{
   width:26px; height:26px; border-radius:50%; border:1px solid var(--line-stark,var(--line));
   display:grid; place-items:center; color:#fff; font-size:12px;
-}
+ position:relative;}
+.nh-farben button::after{content:""; position:absolute; left:50%; top:50%; width:44px; height:44px; transform:translate(-50%,-50%);}
 .nh-mehr{
   position:absolute; right:2px; top:2px; z-index:3; width:26px; height:26px;
   display:grid; place-items:center; border-radius:var(--radius-sm);
@@ -8094,7 +8110,8 @@ body.nh-zieht .nh-regal{ touch-action:none }
   .rg-hinweis{padding:10px 16px 12px}
 }
 .fr-farben{display:flex; gap:5px; margin-top:5px}
-.fr-farben button{width:26px; height:26px; border-radius:6px; border:2px solid transparent}
+.fr-farben button{width:26px; height:26px; border-radius:6px; border:2px solid transparent position:relative;}
+.fr-farben button::after{content:""; position:absolute; left:50%; top:50%; width:44px; height:44px; transform:translate(-50%,-50%);}
 .fr-farben button.on{border-color:var(--text)}
 /* Gefärbte Zeile */
 tr.farbzeile > td{background:inherit}
@@ -10567,7 +10584,8 @@ button[disabled]{opacity:.4; cursor:not-allowed}
 .au-probe u{position:absolute; right:7px; bottom:9px; left:38%; height:4px; border-radius:2px; opacity:.7}
 .au-name{font-size:12px; color:var(--text-dim)}
 .au-akzente{display:flex; gap:7px; align-items:center; flex-wrap:wrap}
-.au-akzente button{width:26px; height:26px; border-radius:50%; border:2px solid transparent; cursor:pointer}
+.au-akzente button{width:26px; height:26px; border-radius:50%; border:2px solid transparent; cursor:pointer position:relative;}
+.au-akzente button::after{content:""; position:absolute; left:50%; top:50%; width:44px; height:44px; transform:translate(-50%,-50%);}
 .au-akzente button.an{border-color:var(--text)}
 .au-akzente .au-zurueck{width:auto; height:auto; border-radius:6px; padding:4px 10px;
                         background:transparent; border:1px solid var(--line);
@@ -11103,7 +11121,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   font-size:12.5px; padding:5px 10px; border-radius:6px;
   border:1px solid var(--line); color:var(--text-dim); background:transparent }
 #auswahl-leiste button:hover{ background:var(--bg-hover) }
-#auswahl-leiste button.rot{ color:var(--rot,#d64545) }
+#auswahl-leiste button.rot{ color:var(--gefahr) }
 @media(max-width:760px){
   #auswahl-leiste{ left:8px; right:8px; transform:none; bottom:74px;
                    flex-wrap:wrap; justify-content:center }
@@ -13761,7 +13779,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 .arb-kopf b{ font-size:13.5px }
 .arb-stopp{ background:none; border:1px solid var(--line); border-radius:6px;
   color:var(--text-faint); cursor:pointer; font-size:12px; padding:3px 9px }
-.arb-stopp:hover{ color:var(--c-rot, #d24); border-color:var(--c-rot, #d24) }
+.arb-stopp:hover{ color:var(--gefahr); border-color:var(--gefahr) }
 .arb-stopp[disabled]{ opacity:.55; cursor:default }
 .arb-text{ font-size:12.5px; color:var(--text-faint); margin-top:4px }
 .arb-balken{ height:5px; background:var(--bg-hover); border-radius:3px;
@@ -14431,7 +14449,7 @@ body.iblatt-auf .menu{z-index:794}
   .kl-zu:hover{ color: var(--text); background: var(--bg-hover) }
   .kl-zu:focus-visible{ outline: 2px solid var(--gold); outline-offset: -2px }
   .kl-koerper{ flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: var(--space-2) }
-  .kl-leer{ margin: var(--space-3); font-size: 12.5px; color: var(--text-muted) }
+  .kl-leer{ margin: var(--space-3); font-size: 12.5px; color: var(--text-dim) }
   .kl-grp{
     padding: var(--space-2) var(--space-2) 4px;
     font-size: 10.5px; font-weight: 700; letter-spacing: .06em;
@@ -14450,7 +14468,7 @@ body.iblatt-auf .menu{z-index:794}
   .kl-t{ flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column }
   .kl-t b{ font-size: 12.5px; font-weight: 500; color: var(--text);
            overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
-  .kl-t i{ font-style: normal; font-size: 11px; color: var(--text-muted) }
+  .kl-t i{ font-style: normal; font-size: 11px; color: var(--text-dim) }
   .kl-stapel{ border-top: 1px solid var(--line); padding: var(--space-2) }
 
   /* Der Seitenbaum, wenn er in der Lade steht. Er bringt seine eigenen
@@ -14541,7 +14559,7 @@ body.iblatt-auf .menu{z-index:794}
    passen, liest sich nicht als eine Zeile. Die Kacheln dürfen breiter sein —
    sie werden gescannt, nicht gelesen. */
 .bst-titel{ margin: 0 0 var(--space-2); font-size: 26px; font-weight: 600; color: var(--text) }
-.bst-unter{ margin: 0 0 var(--space-6); max-width: 62ch; font-size: 13.5px; color: var(--text-muted) }
+.bst-unter{ margin: 0 0 var(--space-6); max-width: 62ch; font-size: 13.5px; color: var(--text-dim) }
 .bst-grp{
   max-width: 760px;
   margin: var(--space-6) 0 var(--space-2);
@@ -14559,7 +14577,7 @@ body.iblatt-auf .menu{z-index:794}
   border-bottom: 1px solid var(--line);
   font-size: 13.5px;
 }
-.bst-fakt b{ flex: 0 0 190px; font-weight: 500; color: var(--text-muted) }
+.bst-fakt b{ flex: 0 0 190px; font-weight: 500; color: var(--text-dim) }
 .bst-fakt span{ color: var(--text) }
 /* Die zwei Stufen aus `Sicherung.stand()`. Die Farbe ist die zweite
    Auskunft; die erste ist der Satz selbst (§38). */
@@ -14581,7 +14599,7 @@ body.iblatt-auf .menu{z-index:794}
 .bst-zeile:focus-visible{ outline: 2px solid var(--gold); outline-offset: -2px }
 .bst-z-t{ flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 1px }
 .bst-z-t b{ font-size: 13.5px; font-weight: 500; color: var(--text) }
-.bst-z-t i{ font-style: normal; font-size: 12px; color: var(--text-muted) }
+.bst-z-t i{ font-style: normal; font-size: 12px; color: var(--text-dim) }
 .bst-z-pfeil{ flex: 0 0 auto; color: var(--text-faint); font-size: 16px }
 
 /* ── „Neu": der Katalog aus `App.erstellenWege()` ─────────────────────────
@@ -14605,7 +14623,7 @@ body.iblatt-auf .menu{z-index:794}
 .bst-k-z{ flex: 0 0 auto; font-size: 19px; line-height: 1.2 }
 .bst-k-t{ flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px }
 .bst-k-t b{ font-size: 13.5px; font-weight: 600; color: var(--text) }
-.bst-k-t i{ font-style: normal; font-size: 12px; color: var(--text-muted) }
+.bst-k-t i{ font-style: normal; font-size: 12px; color: var(--text-dim) }
 
 /* ── Am Telefon: ein Blatt, keine zwei Spalten (test155) ──────────────────
    202 px Navigation plus Inhalt liessen bei 390 px genau 129 px für den
@@ -16440,6 +16458,76 @@ window.Plural = Plural;
 
 </script>
 <script>
+/* ===== quell/core/helpers/colors.js ===== */
+"use strict";
+/* ============================================================================
+ * core/helpers/colors.ts — Farben haben Namen
+ * ----------------------------------------------------------------------------
+ * ERZEUGT — NICHT VON HAND ÄNDERN.
+ * Die Quelle ist `src/core/helpers/colors.ts`. `npm run bauen:ts` schreibt
+ * daraus `quell/core/helpers/colors.js`. Wer das .js bearbeitet, verliert die
+ * Änderung beim nächsten Bauen; `pruefungen/lauf/test105.mts` meldet es vorher.
+ * ----------------------------------------------------------------------------
+ * WARUM ES DIESE DATEI GIBT. Redion hat vier Reihen von Farbfeldern — für
+ * Auswahloptionen, für Regelfarben, für die Akzentfarbe, für Heftdeckel. Eine
+ * davon (`nh-farben`) macht es richtig: jedes Feld trägt seinen Namen als
+ * `title` und `aria-label`, und das gewählte trägt ein Häkchen. Die anderen
+ * drei trugen entweder gar nichts oder die rohe Kennung („purple"), und das
+ * Gewählte war nur an seiner Umrandung zu erkennen.
+ *
+ * §38 sagt: keine Information nur über Farbe. Bei einem Farbwähler ist das
+ * kein Wortspiel, sondern der Kern der Sache — wer Rot und Grün nicht
+ * unterscheidet, sieht dort acht graue Kreise.
+ *
+ * Die Kennungen sind die der CSS-Tokens `--c-*` und `--b-*`. Sie sind
+ * ENGLISCH, weil sie so gespeichert und so im Stil benannt sind (§53.3
+ * Grenze 1); die Namen sind deutsch, weil ein Mensch sie liest.
+ * ==========================================================================*/
+const Farben = (() => {
+    const NAMEN = {
+        default: 'Standard',
+        gray: 'Grau',
+        brown: 'Braun',
+        orange: 'Orange',
+        yellow: 'Gelb',
+        green: 'Grün',
+        blue: 'Blau',
+        purple: 'Violett',
+        pink: 'Rosa',
+        red: 'Rot',
+    };
+    /**
+     * Der deutsche Name zu einer Farbkennung.
+     *
+     * Eine unbekannte Kennung gibt sich selbst zurück, statt zu verschwinden:
+     * ein Feld mit der Marke „tuerkis" ist unschön, ein Feld ohne Marke ist
+     * ein Fehler.
+     */
+    const name = (id) => NAMEN[String(id || '')] || String(id || '');
+    /** Alle Kennungen in der Reihenfolge, in der sie in Wählern stehen sollen. */
+    const alle = () => Object.keys(NAMEN);
+    /**
+     * Ein Wort für eine Farbe, die nur als Hexwert vorliegt.
+     *
+     * Der Akzentwähler kennt keine Kennungen, sondern acht feste Hexwerte. Die
+     * hier zu benennen heisst nicht, Farben zu erkennen — es heisst, die acht
+     * bekannten beim Namen zu nennen und für alles andere ehrlich „eigene
+     * Farbe" zu sagen.
+     */
+    const HEX = {
+        '#2eaadc': 'Blau', '#6c8cff': 'Indigo', '#5cbf8a': 'Grün',
+        '#e0a33a': 'Gelb', '#e06a94': 'Rosa', '#9a6dd7': 'Violett',
+        '#ff7369': 'Rot', '#8a8a8a': 'Grau',
+        '#529cca': 'Blau', '#4dab9a': 'Türkis', '#ffa344': 'Orange',
+        '#e255a1': 'Magenta', '#ffdc49': 'Gelb', '#9b9a97': 'Grau',
+    };
+    const nachHex = (wert) => HEX[String(wert || '').toLowerCase()] || 'Eigene Farbe';
+    return { name, alle, nachHex };
+})();
+window.Farben = Farben;
+
+</script>
+<script>
 /* ===== quell/kern/ereignisse/arten.js ===== */
 "use strict";
 /* ============================================================================
@@ -16548,7 +16636,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 348, inhalt: '90eb5d1804ce87b0', gebaut: '2026-09-04T22:11:33.916Z' };
+const Stand = { fassung: 351, inhalt: 'a0b01cef77ab34c6', gebaut: '2026-09-04T22:38:31.311Z' };
 window.Stand = Stand;
 
 </script>
@@ -45860,14 +45948,21 @@ const Zusatz = (() => {
         Object.entries(attrs).forEach(([k, v]) => e.setAttribute(k, String(v)));
         return e;
     };
-    const PALETTE = ['#529cca', '#4dab9a', '#ffa344', '#ff7369', '#9a6dd7', '#e255a1', '#ffdc49', '#9b9a97'];
+    /* DIE FARBE BRAUCHT EINEN NAMEN. Ein Feld, das nur farbig ist, sagt einem
+       Vorleseprogramm gar nichts und jemandem mit Farbsehschwäche zu wenig —
+       §38: keine Information nur über Farbe. */
+    const PALETTE = [
+        ['#529cca', 'Blau'], ['#4dab9a', 'Grün'], ['#ffa344', 'Orange'],
+        ['#ff7369', 'Rot'], ['#9a6dd7', 'Violett'], ['#e255a1', 'Rosa'],
+        ['#ffdc49', 'Gelb'], ['#9b9a97', 'Grau'],
+    ];
     /* ========================================================================
      * 1. WHITEBOARD
      * ======================================================================*/
     const whiteboard = (block) => {
         const daten = block.shapes ? JSON.parse(JSON.stringify(block.shapes)) : [];
         let werkzeug = 'stift';
-        let farbe = PALETTE[0] ?? '#529cca';
+        let farbe = PALETTE[0]?.[0] ?? '#529cca';
         const hoehe = block.hoehe || 380;
         /* DIE FLÄCHE IST GRÖSSER ALS DAS FENSTER (E138, Auftrag §22).
            Bis hierher war das Whiteboard genau so gross wie sein Kasten: was
@@ -45908,7 +46003,8 @@ const Zusatz = (() => {
                     ['radierer', '⌫', 'Radierer']]
                     .map(([id, ico, titel]) => `<button data-wz="${id}" title="${titel}"${id === 'stift' ? ' class="on"' : ''}>${ico}</button>`).join('') +
                 '<span class="wb-sep"></span>' +
-                PALETTE.map(c => `<button class="wb-farbe" data-c="${c}" style="background:${c}"></button>`).join('') +
+                PALETTE.map(([c, n]) => `<button class="wb-farbe" data-c="${c}" ` +
+                    `style="background:${c}" title="${n}" aria-label="Farbe ${n}"></button>`).join('') +
                 '<span class="wb-sep"></span>' +
                 /* DIE VIER ZOOMKNÖPFE SIND EINE GRUPPE, kein loser Haufen. Am
                    Telefon bricht die Leiste in drei Zeilen um, und ohne diese
@@ -66628,10 +66724,9 @@ const Blocks = (() => {
      * ======================================================================*/
     const blockMenue = (anker, b) => {
         const r = anker.getBoundingClientRect();
-        const FARBEN = [
-            ['default', 'Standard'], ['gray', 'Grau'], ['brown', 'Braun'], ['orange', 'Orange'], ['yellow', 'Gelb'],
-            ['green', 'Grün'], ['blue', 'Blau'], ['purple', 'Lila'], ['pink', 'Pink'], ['red', 'Rot']
-        ];
+        /* Vierte Kopie derselben Liste, und die dritte, die „Lila"/„Pink" statt
+           „Violett"/„Rosa" sagte. Seit E406 stehen die Namen an einer Stelle. */
+        const FARBEN = Farben.alle().map(id => [id, Farben.name(id)]);
         /* WOHER DIESE ZEILE KOMMT (E307) — in Worten, nicht nur als Farbe (§38).
            Nur wenn es etwas zu sagen gibt: bei Selbstgeschriebenem steht hier
            nichts, und das ist der Normalfall. */
@@ -66716,9 +66811,11 @@ const Blocks = (() => {
             }
             if (a === 'color') {
                 menu.innerHTML = '<div class="grp">Textfarbe</div><div class="swatches">' +
-                    FARBEN.map(([f, n]) => `<button data-c="${f}" title="${n}" style="background:var(--c-${f})"></button>`).join('') +
+                    FARBEN.map(([f, n]) => `<button data-c="${f}" title="${n}" aria-label="Textfarbe ${n}" ` +
+                        `style="background:var(--c-${f})"></button>`).join('') +
                     '</div><div class="grp">Hintergrund</div><div class="swatches">' +
-                    FARBEN.slice(1).map(([f, n]) => `<button data-c="bg-${f}" title="${n}" style="background:var(--b-${f})"></button>`).join('') +
+                    FARBEN.slice(1).map(([f, n]) => `<button data-c="bg-${f}" title="${n}" aria-label="Hintergrund ${n}" ` +
+                        `style="background:var(--b-${f})"></button>`).join('') +
                     '</div>';
                 menu.addEventListener('click', (ev) => {
                     const c = elVon(ev)?.closest('button[data-c]');
@@ -72861,7 +72958,8 @@ const Datenbank = (() => {
     };
     const schalter = (id, an, text, hinweis) => `<div class="dl-zeile"><div class="dl-text"><b>${esc(text)}</b>` +
         (hinweis ? `<span>${esc(hinweis)}</span>` : '') + '</div>' +
-        `<button class="schalter${an ? ' an' : ''}" data-s="${id}"><i></i></button></div>`;
+        `<button class="schalter${an ? ' an' : ''}" data-s="${id}" role="switch" ` +
+        `aria-checked="${an ? 'true' : 'false'}" aria-label="${esc(name)}"><i></i></button></div>`;
     const layoutPanel = (_coll, view, _block) => {
         const zeichne = () => {
             const inhalt = '<div class="dl-kacheln">' + LAYOUTS.map(([id, ico, n]) => `<button data-l="${id}" class="${view.layout === id ? 'on' : ''}">` +
@@ -73000,7 +73098,9 @@ const Datenbank = (() => {
                     '<label>diesen Wert<br><input id="fw"></label>' +
                     '<label>dann färben<br><div class="fr-farben">' +
                     FARBWAHL.map((c, i) => `<button data-c="${c}" class="bg-${c}` +
-                        `${i === 0 ? ' on' : ''}" title="${c}"></button>`).join('') +
+                        `${i === 0 ? ' on' : ''}" title="${esc(Farben.name(c))}" ` +
+                        `aria-label="${esc(Farben.name(c))}" ` +
+                        `aria-pressed="${i === 0 ? 'true' : 'false'}"></button>`).join('') +
                     '</div></label>' +
                     '</div>' +
                     '<div class="fbtns"><button data-a="ok" class="prim">Anlegen</button>' +
@@ -74739,7 +74839,12 @@ const Datenbank = (() => {
             fuelle(o, '#op', def.options.length
                 ? def.options.map((opt, i) => `<div class="opt-zeile"><span class="tag bg-${opt.color}">${esc(opt.name)}</span>` +
                     '<div class="opt-farben">' +
-                    FARBEN.map(f => `<button data-i="${i}" data-f="${f}" title="${f}" ` +
+                    /* Der Titel war die rohe Kennung („purple"). Jetzt der Name,
+                       und das Gewählte trägt seinen Zustand, statt ihn nur zu
+                       färben (§38). */
+                    FARBEN.map(f => `<button data-i="${i}" data-f="${f}" ` +
+                        `title="${esc(Farben.name(f))}" aria-label="${esc(Farben.name(f))}" ` +
+                        `aria-pressed="${opt.color === f ? 'true' : 'false'}" ` +
                         `style="background:var(--b-${f})"></button>`).join('') +
                     '</div><button data-del="' + i + '" title="Option löschen">🗑</button></div>').join('')
                 : '<div style="padding:16px; color:var(--text-faint); font-size:14px">Noch keine Optionen.</div>');
@@ -77470,7 +77575,9 @@ const Datenbank = (() => {
                 '" class="danger">Abbrechen</button></div>').join('');
             fuelle(o, '#al', laufHtml + ((coll.automationen || []).length
                 ? coll.automationen.map((a, i) => `<div class="auto-zeile">` +
-                    `<button class="schalter${a.an === false ? '' : ' an'}" data-an="${i}"><i></i></button>` +
+                    `<button class="schalter${a.an === false ? '' : ' an'}" data-an="${i}" ` +
+                    `role="switch" aria-checked="${a.an === false ? 'false' : 'true'}" ` +
+                    `aria-label="${esc(a.name || 'Automation')}"><i></i></button>` +
                     `<div class="auto-text"><b>${esc(a.name || 'Ohne Namen')}</b>` +
                     `<span>Wenn: ${esc((AUSLOESER.find(x => x[0] === a.wenn.art) || [])[1] || '')}` +
                     (a.wenn.key ? ' — ' + esc(namen(a.wenn.key)) : '') +
@@ -83923,12 +84030,17 @@ const Auswahl = (() => {
             }
             if (a === 'farbe') {
                 const rr = b.getBoundingClientRect();
-                const FARBEN = [['default', 'Standard'], ['gray', 'Grau'], ['brown', 'Braun'], ['orange', 'Orange'],
-                    ['yellow', 'Gelb'], ['green', 'Grün'], ['blue', 'Blau'], ['purple', 'Lila'], ['pink', 'Pink'], ['red', 'Rot']];
+                /* Die Namen kommen aus `core/helpers/colors.ts` (E406). Hier standen
+                   sie als eigene Liste — und sagten „Lila" und „Pink", wo das
+                   Notizheft „Violett" und „Rosa" sagt. Zwei Namen für eine Farbe in
+                   derselben App sind kein Stil, sondern ein Fehler. */
+                const FARBEN = Farben.alle().map(id => [id, Farben.name(id)]);
                 const m = UI.menu('<div class="grp">Textfarbe</div><div class="swatches">' +
-                    FARBEN.map(([f, n]) => `<button data-c="${f}" title="${n}" style="background:var(--c-${f})"></button>`).join('') +
+                    FARBEN.map(([f, n]) => `<button data-c="${f}" title="${n}" aria-label="Textfarbe ${n}" ` +
+                        `style="background:var(--c-${f})"></button>`).join('') +
                     '</div><div class="grp">Hintergrund</div><div class="swatches">' +
-                    FARBEN.slice(1).map(([f, n]) => `<button data-c="bg-${f}" title="${n}" style="background:var(--b-${f})"></button>`).join('') +
+                    FARBEN.slice(1).map(([f, n]) => `<button data-c="bg-${f}" title="${n}" aria-label="Hintergrund ${n}" ` +
+                        `style="background:var(--b-${f})"></button>`).join('') +
                     '</div>', rr.left, rr.bottom + 6);
                 m.addEventListener('click', (ev) => {
                     const zielC = ev.target instanceof Element ? ev.target : null;
@@ -86158,7 +86270,13 @@ const Einstellungen = (() => {
             const [wert, name] = Array.isArray(w) ? w : [w, w];
             return `<option value="${esc(wert)}"${wert === jetzt ? ' selected' : ''}>${esc(name)}</option>`;
         }).join('') + '</select>';
-    const schalter = (schluessel, an) => `<button class="schalter${an ? ' an' : ''}" data-toggle="${schluessel}"><i></i></button>`;
+    /* EIN KIPPSCHALTER SAGT, WAS ER IST UND WIE ER STEHT.
+       Vorher war er ein <button> ohne Text, ohne Marke und ohne Zustand: ein
+       Vorleseprogramm las „Schaltfläche" und sonst nichts, und ob er an war,
+       stand allein in seiner Farbe — genau das, was §38 verbietet. */
+    const schalter = (schluessel, an, name = '') => `<button class="schalter${an ? ' an' : ''}" data-toggle="${esc(schluessel)}" ` +
+        `role="switch" aria-checked="${an ? 'true' : 'false'}"` +
+        (name ? ` aria-label="${esc(name)}"` : '') + `><i></i></button>`;
     const knopf = (aktion, text, klasse = '') => `<button class="ez-knopf ${klasse}" data-tun="${aktion}">${text}</button>`;
     const feld = (schluessel, wert, platzhalter = '') => `<input data-set="${schluessel}" value="${esc(wert)}" placeholder="${esc(platzhalter)}">`;
     const kopf = (titel, unter) => `<h2>${titel}</h2>` + (unter ? `<p class="ez-unter">${unter}</p>` : '');
@@ -86561,7 +86679,8 @@ const Einstellungen = (() => {
                    niemand sehen und niemand treffen kann (§47). Kein Prüflauf
                    hatte etwas dagegen; gefunden auf dem Bild (§55.1). */
                 const haken = (k, an) => `<button type="button" class="schalter${an ? ' an' : ''}" ` +
-                    `data-plan-an="${k}" aria-pressed="${an ? 'true' : 'false'}"><i></i></button>`;
+                    `data-plan-an="${esc(k)}" role="switch" aria-checked="${an ? 'true' : 'false'}" ` +
+                    `aria-label="${esc(k)}"><i></i></button>`;
                 return kopf('Lange Arbeiten', 'Gilt für neue Aufträge — Seitenbilder, OCR, grosse Sicherungen. ' +
                     'Was schon läuft, läuft weiter.') +
                     /* DER SATZ NUR, WENN ES EINEN GIBT. Ohne Zeitplan steht hier
@@ -103088,9 +103207,16 @@ const Aussehen = (() => {
                     }).join('') + '</div>' +
                         '<div class="au-titel">Akzentfarbe</div>' +
                         '<div class="au-akzente">' +
+                        /* ACHT FARBFELDER OHNE EIN EINZIGES WORT. Weder Titel noch
+                           Marke, und welches gewählt war, stand allein in der Umrandung
+                           — bei einem FARBwähler ist das die Regel aus §38 in Reinform.
+                           `nh-farben` machte es längst richtig; hier stand es nicht. */
                         ['#2eaadc', '#6c8cff', '#5cbf8a', '#e0a33a', '#e06a94', '#9a6dd7', '#ff7369', '#8a8a8a']
                             .map(c => `<button data-akz="${c}" style="background:${c}" ` +
-                            `class="${(s.akzent || '') === c ? 'an' : ''}"></button>`).join('') +
+                            `title="${Farben.nachHex(c)}" aria-label="${Farben.nachHex(c)}" ` +
+                            `aria-pressed="${(s.akzent || '') === c ? 'true' : 'false'}" ` +
+                            `class="${(s.akzent || '') === c ? 'an' : ''}">` +
+                            `${(s.akzent || '') === c ? '✓' : ''}</button>`).join('') +
                         '<input type="color" id="au-frei" value="' + (s.akzent || '#2eaadc') + '" ' +
                         'title="Eigene Farbe wählen">' +
                         '<button data-akz="" class="au-zurueck">wie im Schema</button>' +
@@ -109344,7 +109470,9 @@ Redion.befehl('Tagesnotiz anlegen', 'Neue Seite mit dem heutigen Datum', () => {
                     'baue nur ein, was du verstehst.</div>' +
                     (l.length
                         ? '<div class="ew-liste">' + l.map((e, i) => `<div class="ew-z${e.an === false ? ' aus' : ''}">` +
-                            `<button class="schalter${e.an === false ? '' : ' an'}" data-an="${i}"><i></i></button>` +
+                            `<button class="schalter${e.an === false ? '' : ' an'}" data-an="${i}" ` +
+                            `role="switch" aria-checked="${e.an === false ? 'false' : 'true'}" ` +
+                            `aria-label="${esc(e.name || 'Erweiterung')}"><i></i></button>` +
                             `<div class="ew-text"><b>${esc(e.name)}</b>` +
                             `<span>${esc(e.kurz || (e.code || '').split('\\n')[0].slice(0, 70))}</span></div>` +
                             `<button data-code="${i}" title="Code ansehen">⌨</button>` +
@@ -109771,7 +109899,9 @@ const Eingang = (() => {
                         ? '<div class="eg-liste">' + l.map((e, i) => {
                             const c = Store.getCollection(e.db);
                             return `<div class="eg-z${e.an === false ? ' aus' : ''}">` +
-                                `<button class="schalter${e.an === false ? '' : ' an'}" data-an="${i}"><i></i></button>` +
+                                `<button class="schalter${e.an === false ? '' : ' an'}" data-an="${i}" ` +
+                                `role="switch" aria-checked="${e.an === false ? 'false' : 'true'}" ` +
+                                `aria-label="${esc(e.name || 'Quelle')}"><i></i></button>` +
                                 '<div class="eg-text">' +
                                 `<b>${esc(e.name || 'Ohne Namen')}</b>` +
                                 `<span>${esc((c && c.name) || 'Datenbank fehlt')} · ` +
@@ -115148,12 +115278,12 @@ const Zusammen = (() => {
                         esc(k.feld) + ' · ' + esc(k.grund || '') + '</div>' +
                         '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
                         '<div><div style="font-size:.85em;opacity:.7;margin-bottom:4px">Hier</div>' +
-                        '<div style="background:var(--soft,#f6f6f6);padding:8px;border-radius:6px;' +
+                        '<div style="background:var(--bg-card);padding:8px;border-radius:6px;' +
                         'white-space:pre-wrap;word-break:break-word">' + kurz(k.hier) + '</div>' +
                         '<button class="btn" style="margin-top:6px;width:100%" ' +
                         'data-w="hier" data-k="' + esc(k.schluessel) + '">Diese behalten</button></div>' +
                         '<div><div style="font-size:.85em;opacity:.7;margin-bottom:4px">Anderes Gerät</div>' +
-                        '<div style="background:var(--soft,#f6f6f6);padding:8px;border-radius:6px;' +
+                        '<div style="background:var(--bg-card);padding:8px;border-radius:6px;' +
                         'white-space:pre-wrap;word-break:break-word">' + kurz(k.dort) + '</div>' +
                         '<button class="btn" style="margin-top:6px;width:100%" ' +
                         'data-w="dort" data-k="' + esc(k.schluessel) + '">Diese nehmen</button></div>' +
@@ -115378,7 +115508,7 @@ const Feldrechte = (() => {
             }
             catch (e) {
                 const grund = e instanceof Error ? e.message : String(e);
-                ziel.innerHTML = '<p style="color:var(--rot,#c33)">' + esc(grund) + '</p>';
+                ziel.innerHTML = '<p style="color:var(--gefahr)">' + esc(grund) + '</p>';
                 return;
             }
             const liste = daten?.feldrechte || [];
@@ -116655,7 +116785,7 @@ const Pruefsatz = (() => {
                 ziel.innerHTML =
                     '<p style="opacity:.8;margin-top:0">Noch kein Prüfsatz. Ein Prüfsatz ist ein Satz ' +
                         'in zwei Hälften:</p>' +
-                        '<p style="margin:10px 0;padding:10px 12px;background:var(--soft,#f6f6f6);' +
+                        '<p style="margin:10px 0;padding:10px 12px;background:var(--bg-card);' +
                         'border-radius:8px"><b>Wenn</b> Betrag = 100 und Land = „CH"<br>' +
                         '<b>dann</b> ist MwSt gleich 8.1</p>' +
                         '<p style="opacity:.8">Der schnellste Weg geht ohne dieses Fenster: eine Zeile, ' +
@@ -116669,14 +116799,14 @@ const Pruefsatz = (() => {
                         ? '⚠️ ' + r.schlecht + ' von ' + r.gesamt + ' stimmen nicht mehr'
                         : '✅ Alle ' + r.gesamt + ' stimmen') +
                     '</div>' +
-                    r.ergebnisse.map((e) => '<div style="border:1px solid ' + (e.ok ? 'var(--line,#ddd)' : 'var(--rot,#c33)') +
+                    r.ergebnisse.map((e) => '<div style="border:1px solid ' + (e.ok ? 'var(--line,#ddd)' : 'var(--gefahr)') +
                         ';border-radius:8px;padding:12px;margin-bottom:10px">' +
                         '<div style="display:flex;gap:8px;align-items:start">' +
                         '<div>' + (e.ok ? '✅' : '❌') + '</div>' +
                         '<div style="flex:1">' +
                         '<div style="font-weight:600">' + esc(e.satz.name || 'Ohne Namen') + '</div>' +
                         '<div style="opacity:.75;margin-top:2px">' + e.text + '</div>' +
-                        (e.ok ? '' : '<div style="margin-top:6px;color:var(--rot,#c33)">' +
+                        (e.ok ? '' : '<div style="margin-top:6px;color:var(--gefahr)">' +
                             'Herausgekommen ist: <b>' + esc(e.ist) + '</b></div>') +
                         '</div>' +
                         '<button class="btn" data-weg="' + esc(e.satz.id) + '">🗑</button>' +
@@ -117436,7 +117566,7 @@ const Vorrat = (() => {
         d.className = 'vorrat-leiste';
         d.style.cssText = 'display:flex;gap:10px;align-items:center;padding:6px 10px;' +
             'margin-bottom:8px;border-radius:8px;font-size:.9em;' +
-            'background:var(--soft,#f6f6f6);opacity:.9';
+            'background:var(--bg-card);opacity:.9';
         if (!s) {
             d.innerHTML = '<span>❄ Vorberechnung ist an, aber es liegt noch nichts vor.</span>' +
                 '<button class="btn" data-a="jetzt">Jetzt rechnen</button>';
@@ -117446,7 +117576,7 @@ const Vorrat = (() => {
                 '<span>❄ Gerechnet ' + esc(vorText(s.wann)) + ' · ' + s.anzahl + ' Werte in ' +
                     s.dauer + ' ms</span>' +
                     (s.seither
-                        ? '<b style="color:var(--gelb,#a80)">' + s.seither + ' Änderung' +
+                        ? '<b style="color:var(--warnung)">' + s.seither + ' Änderung' +
                             (s.seither === 1 ? '' : 'en') + ' seither</b>'
                         : '<span style="opacity:.7">nichts geändert seither</span>') +
                     '<span style="flex:1"></span>' +
@@ -117490,7 +117620,7 @@ const Vorrat = (() => {
             'Ergebnis behalten — über Änderungen und über das Neuladen hinweg. Das macht das ' +
             '<b>Öffnen</b> einer grossen Datenbank billig und nimmt dafür in Kauf, dass ein Wert ' +
             'eine Weile veraltet ist.</p>' +
-            '<p style="padding:10px 12px;background:var(--soft,#f6f6f6);border-radius:8px">' +
+            '<p style="padding:10px 12px;background:var(--bg-card);border-radius:8px">' +
             (l.ja ? '✔ ' : 'ℹ️ ') + esc(l.warum) + '</p>' +
             (s
                 ? '<p>Zuletzt gerechnet ' + esc(vorText(s.wann)) + ': ' + s.anzahl +
@@ -118998,7 +119128,7 @@ const WolkeFenster = (() => {
      * ------------------------------------------------------------------ */
     const kasten = (art, inhalt) => '<div style="padding:11px 12px; border-radius:8px; font-size:12.5px; ' +
         'line-height:1.6; border:1px solid ' +
-        (art === 'gut' ? 'var(--line)' : art === 'fehlt' ? 'var(--warn,#c88)' : 'var(--rot,#d64545)') +
+        (art === 'gut' ? 'var(--line)' : art === 'fehlt' ? 'var(--warnung)' : 'var(--gefahr)') +
         '">' + inhalt + '</div>';
     const befehl = (text) => '<code style="display:block; margin:4px 0; padding:5px 8px; ' +
         'background:var(--bg-hover); border-radius:5px; font-size:11.5px; ' +
@@ -119127,7 +119257,7 @@ const WolkeFenster = (() => {
                darf keine die Vorgabe sein. Wegklicken beantwortet hier nichts —
                die Frage steht dann eben weiter. */
             (frage
-                ? '<div id="wo-frage" style="padding:13px; border:1px solid var(--warn,#c88); ' +
+                ? '<div id="wo-frage" style="padding:13px; border:1px solid var(--warnung); ' +
                     'border-radius:8px; font-size:12.5px; line-height:1.6; margin-bottom:16px">' +
                     '<div style="display:flex; gap:10px; align-items:flex-start">' +
                     '<span style="font-size:17px">⏸</span><div style="flex:1; min-width:0">' +
@@ -119163,7 +119293,7 @@ const WolkeFenster = (() => {
                         'Dieses Gerät gleicht mit der Wolke ab.</div>' +
                         '<button data-a="nurlokal" style="font-size:12px; flex:none; width:auto; white-space:nowrap">' +
                         'Nur lokal arbeiten</button></div>'
-                    : '<div style="padding:12px; border:1px solid var(--warn,#c88); border-radius:8px; ' +
+                    : '<div style="padding:12px; border:1px solid var(--warnung); border-radius:8px; ' +
                         'font-size:12.5px; line-height:1.6; margin-bottom:16px; display:flex; ' +
                         'gap:10px; align-items:center">' +
                         '<span style="font-size:17px">📴</span><div style="flex:1; min-width:0"><b>Nur lokal.</b> ' +
@@ -119189,12 +119319,12 @@ const WolkeFenster = (() => {
                     '🔒 Der Schlüssel ist gesetzt. Private Seiten gehen verschlüsselt hinaus — ' +
                     'der Server kann sie nicht lesen. Nur was du ausdrücklich teilst oder ' +
                     'veröffentlichst, geht im Klartext.</div>'
-                : '<div style="padding:12px; border:1px solid var(--warn,#c88); border-radius:8px; ' +
+                : '<div style="padding:12px; border:1px solid var(--warnung); border-radius:8px; ' +
                     'font-size:12.5px; line-height:1.6">' +
                     '⚠ Es ist kein Schlüssel gesetzt. Ohne ihn liegen deine Seiten im Klartext auf ' +
                     'dem Server. <button data-a="schluessel" style="font-size:12px;margin-top:7px">' +
                     'Schlüssel setzen</button></div>') +
-            (z.fehler ? '<div style="margin-top:13px; font-size:12.5px; color:var(--rot,#d64545)">' +
+            (z.fehler ? '<div style="margin-top:13px; font-size:12.5px; color:var(--gefahr)">' +
                 esc(z.fehler) + '</div>' : '') +
             '<div style="margin-top:16px; font-size:12px; color:var(--text-faint); line-height:1.6">' +
             'Letzter Abgleich: ' + (z.letzter ? esc(new Date(z.letzter).toLocaleString('de-CH'))
@@ -119221,7 +119351,7 @@ const WolkeFenster = (() => {
             'color:var(--text-faint); flex-wrap:wrap">' +
             '<button data-a="sichern" style="font-size:12px; width:auto">⬇ Alles als .redion sichern</button>' +
             '<span style="flex:1"></span>' +
-            '<button data-a="loeschen" style="font-size:12px; width:auto; color:var(--rot,#d64545)">' +
+            '<button data-a="loeschen" style="font-size:12px; width:auto; color:var(--gefahr)">' +
             'Konto löschen …</button>' +
             '</div>');
     };
@@ -119268,7 +119398,7 @@ const WolkeFenster = (() => {
         o.innerHTML = '<div class="finder" style="width:min(520px,94vw)">' +
             '<div class="fh">Konto löschen<button class="icon-btn" data-a="zu">✕</button></div>' +
             '<div class="res" style="padding:18px; font-size:13px; line-height:1.65">' +
-            '<div style="padding:12px; border:1px solid var(--rot,#d64545); border-radius:8px; ' +
+            '<div style="padding:12px; border:1px solid var(--gefahr); border-radius:8px; ' +
             'margin-bottom:14px">' +
             'Das löscht auf dem Server <b>endgültig</b>:' +
             '<ul style="margin:8px 0 0 18px; padding:0">' +
@@ -119396,7 +119526,7 @@ const WolkeFenster = (() => {
             const codeFeld = o.querySelector('#wo-code');
             if (codeFeld)
                 codeFeld.innerHTML =
-                    '<div style="font-size:13px; color:var(--rot,#d64545)">' + esc(e instanceof Error ? e.message : String(e)) + '</div>';
+                    '<div style="font-size:13px; color:var(--gefahr)">' + esc(e instanceof Error ? e.message : String(e)) + '</div>';
         }
     };
     const freigebenFenster = async () => {
@@ -119443,7 +119573,7 @@ const WolkeFenster = (() => {
                 return;
             teilFeld.innerHTML =
                 '<div style="padding:13px; border:1px solid ' +
-                    (offen ? 'var(--line)' : 'var(--warn,#c88)') + '; border-radius:8px; ' +
+                    (offen ? 'var(--line)' : 'var(--warnung)') + '; border-radius:8px; ' +
                     'font-size:12.5px; line-height:1.65; margin-bottom:16px">' +
                     (offen
                         ? '🔓 Diese Seite geht <b>im Klartext</b> auf den Server. Anders könnte er ' +
@@ -125674,13 +125804,11 @@ const Notebook = (() => {
        am Deckel. Nur diese Namen erzeugen ein Attribut: der Wert wandert
        in einen Stil, und ein Feld aus einer fremden Sicherung darf dort
        nichts einschleusen können (§19). */
-    const FARBEN = [
-        { id: 'gray', name: 'Grau' }, { id: 'brown', name: 'Braun' },
-        { id: 'orange', name: 'Orange' }, { id: 'yellow', name: 'Gelb' },
-        { id: 'green', name: 'Grün' }, { id: 'blue', name: 'Blau' },
-        { id: 'purple', name: 'Violett' }, { id: 'pink', name: 'Rosa' },
-        { id: 'red', name: 'Rot' }
-    ];
+    /* Die Namen stehen seit E406 in `core/helpers/colors.ts`, weil vier
+       Stellen sie brauchen und drei davon keine hatten. Hier bleibt nur die
+       Auswahl: ein Heftdeckel kennt kein „Standard". */
+    const FARBEN = ['gray', 'brown', 'orange', 'yellow', 'green', 'blue', 'purple', 'pink', 'red']
+        .map(id => ({ id, name: Farben.name(id) }));
     const farbeVon = (p) => {
         const wert = String(p?.color || '');
         return FARBEN.some(f => f.id === wert) ? wert : '';

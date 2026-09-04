@@ -293,8 +293,14 @@ const Einstellungen = (() => {
       return `<option value="${esc(wert)}"${wert === jetzt ? ' selected' : ''}>${esc(name)}</option>`;
     }).join('') + '</select>';
 
-  const schalter = (schluessel: string, an: any) =>
-    `<button class="schalter${an ? ' an' : ''}" data-toggle="${schluessel}"><i></i></button>`;
+  /* EIN KIPPSCHALTER SAGT, WAS ER IST UND WIE ER STEHT.
+     Vorher war er ein <button> ohne Text, ohne Marke und ohne Zustand: ein
+     Vorleseprogramm las „Schaltfläche" und sonst nichts, und ob er an war,
+     stand allein in seiner Farbe — genau das, was §38 verbietet. */
+  const schalter = (schluessel: string, an: any, name = '') =>
+    `<button class="schalter${an ? ' an' : ''}" data-toggle="${esc(schluessel)}" ` +
+    `role="switch" aria-checked="${an ? 'true' : 'false'}"` +
+    (name ? ` aria-label="${esc(name)}"` : '') + `><i></i></button>`;
 
   const knopf = (aktion: any, text: string, klasse = '') =>
     `<button class="ez-knopf ${klasse}" data-tun="${aktion}">${text}</button>`;
@@ -851,7 +857,8 @@ const Einstellungen = (() => {
            hatte etwas dagegen; gefunden auf dem Bild (§55.1). */
         const haken = (k: string, an: boolean) =>
           `<button type="button" class="schalter${an ? ' an' : ''}" ` +
-          `data-plan-an="${k}" aria-pressed="${an ? 'true' : 'false'}"><i></i></button>`;
+          `data-plan-an="${esc(k)}" role="switch" aria-checked="${an ? 'true' : 'false'}" ` +
+          `aria-label="${esc(k)}"><i></i></button>`;
 
         return kopf('Lange Arbeiten',
           'Gilt für neue Aufträge — Seitenbilder, OCR, grosse Sicherungen. ' +

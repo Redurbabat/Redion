@@ -188,7 +188,7 @@ const WolkeFenster = (() => {
      * ------------------------------------------------------------------ */
     const kasten = (art, inhalt) => '<div style="padding:11px 12px; border-radius:8px; font-size:12.5px; ' +
         'line-height:1.6; border:1px solid ' +
-        (art === 'gut' ? 'var(--line)' : art === 'fehlt' ? 'var(--warn,#c88)' : 'var(--rot,#d64545)') +
+        (art === 'gut' ? 'var(--line)' : art === 'fehlt' ? 'var(--warnung)' : 'var(--gefahr)') +
         '">' + inhalt + '</div>';
     const befehl = (text) => '<code style="display:block; margin:4px 0; padding:5px 8px; ' +
         'background:var(--bg-hover); border-radius:5px; font-size:11.5px; ' +
@@ -317,7 +317,7 @@ const WolkeFenster = (() => {
                darf keine die Vorgabe sein. Wegklicken beantwortet hier nichts —
                die Frage steht dann eben weiter. */
             (frage
-                ? '<div id="wo-frage" style="padding:13px; border:1px solid var(--warn,#c88); ' +
+                ? '<div id="wo-frage" style="padding:13px; border:1px solid var(--warnung); ' +
                     'border-radius:8px; font-size:12.5px; line-height:1.6; margin-bottom:16px">' +
                     '<div style="display:flex; gap:10px; align-items:flex-start">' +
                     '<span style="font-size:17px">⏸</span><div style="flex:1; min-width:0">' +
@@ -353,7 +353,7 @@ const WolkeFenster = (() => {
                         'Dieses Gerät gleicht mit der Wolke ab.</div>' +
                         '<button data-a="nurlokal" style="font-size:12px; flex:none; width:auto; white-space:nowrap">' +
                         'Nur lokal arbeiten</button></div>'
-                    : '<div style="padding:12px; border:1px solid var(--warn,#c88); border-radius:8px; ' +
+                    : '<div style="padding:12px; border:1px solid var(--warnung); border-radius:8px; ' +
                         'font-size:12.5px; line-height:1.6; margin-bottom:16px; display:flex; ' +
                         'gap:10px; align-items:center">' +
                         '<span style="font-size:17px">📴</span><div style="flex:1; min-width:0"><b>Nur lokal.</b> ' +
@@ -379,12 +379,12 @@ const WolkeFenster = (() => {
                     '🔒 Der Schlüssel ist gesetzt. Private Seiten gehen verschlüsselt hinaus — ' +
                     'der Server kann sie nicht lesen. Nur was du ausdrücklich teilst oder ' +
                     'veröffentlichst, geht im Klartext.</div>'
-                : '<div style="padding:12px; border:1px solid var(--warn,#c88); border-radius:8px; ' +
+                : '<div style="padding:12px; border:1px solid var(--warnung); border-radius:8px; ' +
                     'font-size:12.5px; line-height:1.6">' +
                     '⚠ Es ist kein Schlüssel gesetzt. Ohne ihn liegen deine Seiten im Klartext auf ' +
                     'dem Server. <button data-a="schluessel" style="font-size:12px;margin-top:7px">' +
                     'Schlüssel setzen</button></div>') +
-            (z.fehler ? '<div style="margin-top:13px; font-size:12.5px; color:var(--rot,#d64545)">' +
+            (z.fehler ? '<div style="margin-top:13px; font-size:12.5px; color:var(--gefahr)">' +
                 esc(z.fehler) + '</div>' : '') +
             '<div style="margin-top:16px; font-size:12px; color:var(--text-faint); line-height:1.6">' +
             'Letzter Abgleich: ' + (z.letzter ? esc(new Date(z.letzter).toLocaleString('de-CH'))
@@ -411,7 +411,7 @@ const WolkeFenster = (() => {
             'color:var(--text-faint); flex-wrap:wrap">' +
             '<button data-a="sichern" style="font-size:12px; width:auto">⬇ Alles als .redion sichern</button>' +
             '<span style="flex:1"></span>' +
-            '<button data-a="loeschen" style="font-size:12px; width:auto; color:var(--rot,#d64545)">' +
+            '<button data-a="loeschen" style="font-size:12px; width:auto; color:var(--gefahr)">' +
             'Konto löschen …</button>' +
             '</div>');
     };
@@ -458,7 +458,7 @@ const WolkeFenster = (() => {
         o.innerHTML = '<div class="finder" style="width:min(520px,94vw)">' +
             '<div class="fh">Konto löschen<button class="icon-btn" data-a="zu">✕</button></div>' +
             '<div class="res" style="padding:18px; font-size:13px; line-height:1.65">' +
-            '<div style="padding:12px; border:1px solid var(--rot,#d64545); border-radius:8px; ' +
+            '<div style="padding:12px; border:1px solid var(--gefahr); border-radius:8px; ' +
             'margin-bottom:14px">' +
             'Das löscht auf dem Server <b>endgültig</b>:' +
             '<ul style="margin:8px 0 0 18px; padding:0">' +
@@ -586,7 +586,7 @@ const WolkeFenster = (() => {
             const codeFeld = o.querySelector('#wo-code');
             if (codeFeld)
                 codeFeld.innerHTML =
-                    '<div style="font-size:13px; color:var(--rot,#d64545)">' + esc(e instanceof Error ? e.message : String(e)) + '</div>';
+                    '<div style="font-size:13px; color:var(--gefahr)">' + esc(e instanceof Error ? e.message : String(e)) + '</div>';
         }
     };
     const freigebenFenster = async () => {
@@ -633,7 +633,7 @@ const WolkeFenster = (() => {
                 return;
             teilFeld.innerHTML =
                 '<div style="padding:13px; border:1px solid ' +
-                    (offen ? 'var(--line)' : 'var(--warn,#c88)') + '; border-radius:8px; ' +
+                    (offen ? 'var(--line)' : 'var(--warnung)') + '; border-radius:8px; ' +
                     'font-size:12.5px; line-height:1.65; margin-bottom:16px">' +
                     (offen
                         ? '🔓 Diese Seite geht <b>im Klartext</b> auf den Server. Anders könnte er ' +

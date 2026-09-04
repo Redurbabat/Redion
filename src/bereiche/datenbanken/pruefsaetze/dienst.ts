@@ -276,7 +276,7 @@ const Pruefsatz = (() => {
         ziel.innerHTML =
           '<p style="opacity:.8;margin-top:0">Noch kein Prüfsatz. Ein Prüfsatz ist ein Satz ' +
           'in zwei Hälften:</p>' +
-          '<p style="margin:10px 0;padding:10px 12px;background:var(--soft,#f6f6f6);' +
+          '<p style="margin:10px 0;padding:10px 12px;background:var(--bg-card);' +
           'border-radius:8px"><b>Wenn</b> Betrag = 100 und Land = „CH"<br>' +
           '<b>dann</b> ist MwSt gleich 8.1</p>' +
           '<p style="opacity:.8">Der schnellste Weg geht ohne dieses Fenster: eine Zeile, ' +
@@ -292,14 +292,14 @@ const Pruefsatz = (() => {
             : '✅ Alle ' + r.gesamt + ' stimmen') +
         '</div>' +
         r.ergebnisse.map((e: any) =>
-          '<div style="border:1px solid ' + (e.ok ? 'var(--line,#ddd)' : 'var(--rot,#c33)') +
+          '<div style="border:1px solid ' + (e.ok ? 'var(--line,#ddd)' : 'var(--gefahr)') +
             ';border-radius:8px;padding:12px;margin-bottom:10px">' +
             '<div style="display:flex;gap:8px;align-items:start">' +
               '<div>' + (e.ok ? '✅' : '❌') + '</div>' +
               '<div style="flex:1">' +
                 '<div style="font-weight:600">' + esc(e.satz.name || 'Ohne Namen') + '</div>' +
                 '<div style="opacity:.75;margin-top:2px">' + e.text + '</div>' +
-                (e.ok ? '' : '<div style="margin-top:6px;color:var(--rot,#c33)">' +
+                (e.ok ? '' : '<div style="margin-top:6px;color:var(--gefahr)">' +
                   'Herausgekommen ist: <b>' + esc(e.ist) + '</b></div>') +
               '</div>' +
               '<button class="btn" data-weg="' + esc(e.satz.id) + '">🗑</button>' +

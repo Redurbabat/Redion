@@ -617,7 +617,8 @@ a.bl:hover{color:var(--text)}
 }
 .wb-tools button:hover{background:var(--bg-hover); color:var(--text)}
 .wb-tools button.on{background:var(--accent); color:var(--auf-accent)}
-.wb-tools .wb-farbe{width:17px; height:17px; border-radius:50%; border:2px solid transparent}
+.wb-tools .wb-farbe{width:17px; height:17px; border-radius:50%; border:2px solid transparent position:relative;}
+.wb-tools .wb-farbe::after{content:""; position:absolute; left:50%; top:50%; width:44px; height:44px; transform:translate(-50%,-50%);}
 .wb-tools .wb-farbe.on{border-color:var(--text)}
 .wb-sep{width:1px; height:18px; background:var(--line); margin:0 5px}
 .wb-flaeche{display:block; width:100%; touch-action:none; color:var(--text-faint); cursor:crosshair}
@@ -1069,7 +1070,7 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
   border-radius:6px; color:var(--text-faint); cursor:pointer; font-size:13px;
   line-height:1; padding:4px 8px; min-height:26px;
   width:auto; align-self:flex-end}
-.wl-hak:hover{color:var(--c-gruen, #2a8); border-color:var(--c-gruen, #2a8)}
+.wl-hak:hover{color:var(--erfolg); border-color:var(--erfolg)}
 .wl-zurueck{margin-top:8px; font-size:12px; color:var(--text-faint)}
 .wl-zurueck button{background:none; border:none; padding:0 0 0 4px;
   color:var(--accent-text); cursor:pointer; font:inherit;

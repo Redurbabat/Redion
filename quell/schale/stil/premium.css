@@ -584,7 +584,7 @@
   .kl-zu:hover{ color: var(--text); background: var(--bg-hover) }
   .kl-zu:focus-visible{ outline: 2px solid var(--gold); outline-offset: -2px }
   .kl-koerper{ flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: var(--space-2) }
-  .kl-leer{ margin: var(--space-3); font-size: 12.5px; color: var(--text-muted) }
+  .kl-leer{ margin: var(--space-3); font-size: 12.5px; color: var(--text-dim) }
   .kl-grp{
     padding: var(--space-2) var(--space-2) 4px;
     font-size: 10.5px; font-weight: 700; letter-spacing: .06em;
@@ -603,7 +603,7 @@
   .kl-t{ flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column }
   .kl-t b{ font-size: 12.5px; font-weight: 500; color: var(--text);
            overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
-  .kl-t i{ font-style: normal; font-size: 11px; color: var(--text-muted) }
+  .kl-t i{ font-style: normal; font-size: 11px; color: var(--text-dim) }
   .kl-stapel{ border-top: 1px solid var(--line); padding: var(--space-2) }
 
   /* Der Seitenbaum, wenn er in der Lade steht. Er bringt seine eigenen
@@ -694,7 +694,7 @@
    passen, liest sich nicht als eine Zeile. Die Kacheln dürfen breiter sein —
    sie werden gescannt, nicht gelesen. */
 .bst-titel{ margin: 0 0 var(--space-2); font-size: 26px; font-weight: 600; color: var(--text) }
-.bst-unter{ margin: 0 0 var(--space-6); max-width: 62ch; font-size: 13.5px; color: var(--text-muted) }
+.bst-unter{ margin: 0 0 var(--space-6); max-width: 62ch; font-size: 13.5px; color: var(--text-dim) }
 .bst-grp{
   max-width: 760px;
   margin: var(--space-6) 0 var(--space-2);
@@ -712,7 +712,7 @@
   border-bottom: 1px solid var(--line);
   font-size: 13.5px;
 }
-.bst-fakt b{ flex: 0 0 190px; font-weight: 500; color: var(--text-muted) }
+.bst-fakt b{ flex: 0 0 190px; font-weight: 500; color: var(--text-dim) }
 .bst-fakt span{ color: var(--text) }
 /* Die zwei Stufen aus `Sicherung.stand()`. Die Farbe ist die zweite
    Auskunft; die erste ist der Satz selbst (§38). */
@@ -734,7 +734,7 @@
 .bst-zeile:focus-visible{ outline: 2px solid var(--gold); outline-offset: -2px }
 .bst-z-t{ flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 1px }
 .bst-z-t b{ font-size: 13.5px; font-weight: 500; color: var(--text) }
-.bst-z-t i{ font-style: normal; font-size: 12px; color: var(--text-muted) }
+.bst-z-t i{ font-style: normal; font-size: 12px; color: var(--text-dim) }
 .bst-z-pfeil{ flex: 0 0 auto; color: var(--text-faint); font-size: 16px }
 
 /* ── „Neu": der Katalog aus `App.erstellenWege()` ─────────────────────────
@@ -758,7 +758,7 @@
 .bst-k-z{ flex: 0 0 auto; font-size: 19px; line-height: 1.2 }
 .bst-k-t{ flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px }
 .bst-k-t b{ font-size: 13.5px; font-weight: 600; color: var(--text) }
-.bst-k-t i{ font-style: normal; font-size: 12px; color: var(--text-muted) }
+.bst-k-t i{ font-style: normal; font-size: 12px; color: var(--text-dim) }
 
 /* ── Am Telefon: ein Blatt, keine zwei Spalten (test155) ──────────────────
    202 px Navigation plus Inhalt liessen bei 390 px genau 129 px für den

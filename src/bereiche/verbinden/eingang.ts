@@ -221,7 +221,9 @@ const Eingang = (() => {
               ? '<div class="eg-liste">' + l.map((e: any, i: any) => {
                   const c = Store.getCollection(e.db);
                   return `<div class="eg-z${e.an === false ? ' aus' : ''}">` +
-                    `<button class="schalter${e.an === false ? '' : ' an'}" data-an="${i}"><i></i></button>` +
+                    `<button class="schalter${e.an === false ? '' : ' an'}" data-an="${i}" ` +
+                    `role="switch" aria-checked="${e.an === false ? 'false' : 'true'}" ` +
+                    `aria-label="${esc(e.name || 'Quelle')}"><i></i></button>` +
                     '<div class="eg-text">' +
                       `<b>${esc(e.name || 'Ohne Namen')}</b>` +
                       `<span>${esc((c && c.name) || 'Datenbank fehlt')} · ` +

@@ -35,7 +35,14 @@ const Zusatz = (() => {
     return e;
   };
 
-  const PALETTE = ['#529cca', '#4dab9a', '#ffa344', '#ff7369', '#9a6dd7', '#e255a1', '#ffdc49', '#9b9a97'];
+  /* DIE FARBE BRAUCHT EINEN NAMEN. Ein Feld, das nur farbig ist, sagt einem
+     Vorleseprogramm gar nichts und jemandem mit Farbsehschwäche zu wenig —
+     §38: keine Information nur über Farbe. */
+  const PALETTE: ReadonlyArray<[string, string]> = [
+    ['#529cca', 'Blau'], ['#4dab9a', 'Grün'], ['#ffa344', 'Orange'],
+    ['#ff7369', 'Rot'],  ['#9a6dd7', 'Violett'], ['#e255a1', 'Rosa'],
+    ['#ffdc49', 'Gelb'], ['#9b9a97', 'Grau'],
+  ];
 
   /* ========================================================================
    * 1. WHITEBOARD
@@ -43,7 +50,7 @@ const Zusatz = (() => {
   const whiteboard = (block: any) => {
     const daten = block.shapes ? JSON.parse(JSON.stringify(block.shapes)) : [];
     let werkzeug = 'stift';
-    let farbe: string = PALETTE[0] ?? '#529cca';
+    let farbe: string = PALETTE[0]?.[0] ?? '#529cca';
     const hoehe = block.hoehe || 380;
 
     /* DIE FLÄCHE IST GRÖSSER ALS DAS FENSTER (E138, Auftrag §22).
@@ -88,7 +95,8 @@ const Zusatz = (() => {
           .map(([id, ico, titel]) =>
             `<button data-wz="${id}" title="${titel}"${id === 'stift' ? ' class="on"' : ''}>${ico}</button>`).join('') +
         '<span class="wb-sep"></span>' +
-        PALETTE.map(c => `<button class="wb-farbe" data-c="${c}" style="background:${c}"></button>`).join('') +
+        PALETTE.map(([c, n]) => `<button class="wb-farbe" data-c="${c}" ` +
+          `style="background:${c}" title="${n}" aria-label="Farbe ${n}"></button>`).join('') +
         '<span class="wb-sep"></span>' +
         /* DIE VIER ZOOMKNÖPFE SIND EINE GRUPPE, kein loser Haufen. Am
            Telefon bricht die Leiste in drei Zeilen um, und ohne diese

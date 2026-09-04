@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-401 Entscheidungen, E1 bis E405. Die Nummer ist die Ordnung: eine Entscheidung
+402 Entscheidungen, E1 bis E406. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -459,6 +459,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E403** — Die Denkkugel: neun Zustände statt eines Dreh-Rädchens
 * **E404** — Der Anheft-Stern stand im Text der Palettenzeile (E401-Rückfall)
 * **E405** — 23 Prüfläufe teilten sich einen Port
+* **E406** — Sieben erfundene Farbtokens, sechs namenlose Schalter, vier Farbreihen
 
 ---
 
@@ -32967,3 +32968,99 @@ einem Fehler sucht, den es nicht gibt.
 
 Dateien: 26 Läufe unter `pruefungen/lauf/` (nur die PORT-Zeile),
 `pruefungen/lauf/test400.mts`.
+
+
+================================================================================
+E406 — Sieben erfundene Farbtokens, sechs namenlose Schalter, vier Farbreihen
+================================================================================
+4. September 2026
+
+Ein Durchgang mit Suchläufen statt mit Augen, weil der volle Lauf die Ports
+belegte. Vier Klassen gesucht, zwei mit Funden, zwei ohne — und die zwei
+ohne stehen hier genauso, weil eine Prüfung, die nichts findet, auch eine
+Antwort ist.
+
+━━━ WAS ES NICHT GAB ━━━
+
+  §19 Escape: NULL Funde. Keine `.replace(/</g, '<')`-Kette, kein
+      unescapetes Attribut mit Nutzertext. Nachgesehen wurden 81 Stellen mit
+      Interpolation in Attributen; alle tragen entweder feste Kennungen aus
+      Listen oder gehen durch `esc()`. Auch das `href` des Lesezeichen-
+      Schnipsels (`clipper.ts`) baut aus der eigenen App-Adresse, nicht aus
+      Nutzertext.
+
+  Tote Knöpfe: NULL Funde. Von 386 ausgegebenen `data-a`-Namen blieben nach
+      allen vier Griffmustern (`dataset.a`, `dataset['a']`, Verteilerkarte
+      mit Kurzschreibweise, `closest('[data-a]')?.dataset.a`) keiner ohne
+      Griff. Der Verteiler ist sauber; meine ersten drei Scans waren es
+      nicht, und die 206, 40 und 24 „Funde" waren jedesmal mein Werkzeug.
+
+━━━ FUND 1: SIEBEN TOKENS, DIE ES NIE GAB ━━━
+
+    var(--rot,#d64545)  var(--warn,#c88)   var(--soft,#f6f6f6)
+    var(--gelb,#a80)    var(--c-rot,#d24)  var(--c-gruen,#2a8)
+    var(--text-muted)
+
+30 Stellen in acht Dateien. Und der Rückfallwert ist nicht die Rettung,
+sondern der Grund, warum es niemand merkte: er greift IMMER. `--soft` sollte
+eine Fläche sein und war fest `#f6f6f6` — im Dunkelmodus eine weisse Platte
+mitten in der Seite.
+
+Alle sieben haben ein echtes Gegenstück, das in hell.css UND dunkel.css
+steht: `--gefahr`, `--warnung`, `--bg-card`, `--erfolg`, `--text-dim`. Der
+Rückfall fällt ersatzlos weg — er war es, der den Fehler verdeckt hat.
+
+§39 sagt, das sei dreimal unbemerkt durchgegangen. Es waren sieben.
+
+━━━ FUND 2: SECHS KIPPSCHALTER OHNE NAMEN UND OHNE ZUSTAND ━━━
+
+    <button class="schalter an" data-toggle="x"><i></i></button>
+
+Kein Text, keine Marke, kein `role`. Ein Vorleseprogramm las „Schaltfläche",
+und ob der Schalter an war, stand allein in seiner Farbe — genau das, was
+§38 verbietet. Jetzt: `role="switch"`, `aria-checked`, `aria-label`.
+
+Dazu §37: 22 px hoch. Ein Schalter in den Einstellungen ist ein Hauptweg —
+man geht dorthin, um ihn zu drücken. Die Trefffläche ist jetzt 44 px, das
+Bild bleibt 22: der Schatten liegt DAVOR, nicht darum, damit keine Zeile
+wächst.
+
+━━━ FUND 3: VIER FARBREIHEN, VIER NAMENSLISTEN, ZWEI SPRACHEN ━━━
+
+Redion hat neun Reihen von Farbfeldern. Eine (`nh-farben`) machte es
+richtig: Titel, Marke, Häkchen am Gewählten. Die anderen trugen entweder die
+rohe Kennung („purple"), oder gar nichts.
+
+Und die Namen liefen auseinander: `auswahlleiste.ts` und `editor.ts` sagten
+„Lila" und „Pink", `notebook.ts` „Violett" und „Rosa". Vier Kopien
+derselben Liste, drei davon mit anderen Wörtern.
+
+Bei einem FARBwähler ist §38 kein Wortspiel: wer Rot und Grün nicht
+unterscheidet, sieht dort acht graue Kreise.
+
+Neu: `src/core/helpers/colors.ts` — eine Liste, deutsche Namen, englische
+Kennungen (§53.3 Grenze 1: die Kennungen sind die der CSS-Tokens und damit
+Daten). Dazu `nachHex()` für den Akzentwähler, der keine Kennungen kennt,
+sondern acht feste Hexwerte.
+
+Alle Farbfelder haben jetzt 44 px Trefffläche. Sie bleiben 16 bis 26 px
+gross — acht in einer Zeile, das ist richtig so —, aber danebengegriffen
+heisst dort: die falsche Farbe gesetzt.
+
+━━━ PRÜFUNG ━━━
+
+`test401`, 4 Punkte, KEIN Browser und KEIN Port (der volle Lauf lief).
+Er liest den Quelltext: jedes `var()` muss sein `--x:` haben, kein
+Rückfallwert darf auf ein erfundenes Token zeigen, und jeder Knopf, dessen
+ganzer Inhalt seine Hintergrundfarbe ist, braucht eine Marke.
+
+ER WAR ROT und hat mehr gefunden als ich: fünf weitere Farbreihen in
+`auswahlleiste.ts` und `editor.ts`, die ich beim Lesen übersehen hatte.
+Genau dafür schreibt man ihn vor der Reparatur.
+
+MUTATION ROT GESEHEN: in `wolke.ts` ein `var(--warnung)` zurück auf
+`var(--warn,#c88)` — „✗ Kein `var(--x, fest)` mit erfundenem --x — --warn".
+
+Dateien: `src/core/helpers/colors.ts` (neu), acht Dateien mit Tokens,
+sechs mit Schaltern, vier mit Farbreihen, fünf Stildateien,
+`index.html`, `src/dienst/sw.ts`, `pruefungen/lauf/test401.mts`.

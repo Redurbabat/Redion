@@ -117,7 +117,13 @@ table.grid .tt-auf:hover{background:var(--bg-hover); color:var(--text)}
 /* Optionen-Editor */
 .opt-zeile{display:flex; align-items:center; gap:10px; padding:8px 14px; border-bottom:1px solid var(--line-soft)}
 .opt-farben{display:flex; gap:3px; margin-left:auto}
-.opt-farben button{width:16px; height:16px; border-radius:4px; border:1px solid var(--line)}
+.opt-farben button{width:16px; height:16px; border-radius:4px; border:1px solid var(--line) position:relative;}
+/* 44 px TREFFFLÄCHE FÜR FARBFELDER (§37, E406).
+   Die Felder sind bewusst klein — acht davon in einer Zeile, das ist
+   richtig so. Aber 16 bis 26 px trifft am Telefon niemand zuverlässig, und
+   danebengegriffen heisst hier: die falsche Farbe gesetzt. Der Schatten
+   liegt DAVOR, nicht darum, damit keine Zeile wächst. */
+.opt-farben button::after{content:""; position:absolute; left:50%; top:50%; width:44px; height:44px; transform:translate(-50%,-50%);}
 .opt-farben button:hover{outline:2px solid var(--accent)}
 
 /* Seitenvorschau (Side Peek) */

@@ -120,6 +120,14 @@
   width:38px; height:22px; border-radius:11px; background:var(--line);
   position:relative; transition:background .16s; flex:0 0 38px;
 }
+/* DIE TREFFFLÄCHE IST 44 px, DAS BILD BLEIBT 22 (§37).
+   Ein Kippschalter in den Einstellungen ist ein Hauptweg — man geht dorthin,
+   um ihn zu drücken. 22 px sind am Telefon die Hälfte dessen, was ein Daumen
+   sicher trifft. Der Schatten liegt DAVOR, nicht darum: so wächst keine
+   Zeile, und das Bild bleibt, wie es war. */
+.schalter::after{
+  content:""; position:absolute; left:-3px; right:-3px; top:-11px; bottom:-11px;
+}
 .schalter i{
   position:absolute; top:3px; left:3px; width:16px; height:16px; border-radius:50%;
   background:var(--text-dim); transition:transform .16s, background .16s; display:block;
