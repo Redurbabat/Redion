@@ -47,20 +47,24 @@ Sechs Punkte, jeder nachgesehen am 3. September 2026.
 ### 0 · Der Prüfbericht vom 3. September, was davon noch aussteht
 
 **Ziel** — die verbleibenden Befunde des UX-Audits schliessen. Der
-Sofort-Block ist zu (E386), F01 richtiggestellt und F02 zur Hälfte (E388).
+Sofort-Block ist zu (E386), F01 richtiggestellt (E388), F02 zu (E388+E391),
+F03 halb (E387), F11 zu (E392).
 
 **Was noch offen ist**, in dieser Reihenfolge:
 
 ```txt
-F02 Rest   „Gehen" aus dem Band nehmen — rührt an test248 und test384
-           die untere Telefonleiste an `haupt: true` hängen
+F02 Rest   die untere Telefonleiste an `haupt: true` hängen
            den Ortskatalog von Handlungen trennen, „Zeitmesser" doppelt
+           („Gehen" ist mit E391 aus dem Band, test247/248/33 nachgezogen)
 F03 Rest   Einzelseite/Fortlaufend — braucht Redurs Zustimmung (gegen E299)
 F08        das KI-Seitenfeld startet im Dokument eingeklappt
-F11        19 Einstellungskategorien auf sechs Obergruppen
 F13        Release-Gate über 360×800, 390×844, 428×926 und Querformat
 F14        Werkzeugdichte am Telefon — erst messen, ob E356 reicht
 F09 F10 F12 F17 F18   Politur
+
+F11 ist ZU (E392) — und die Behauptung war falsch: die vier Gruppen gibt
+es längst. Der wirkliche Fehler war ein auf 720 px gedeckeltes Fenster, das
+drei Einträge auf JEDEM Bildschirm verdeckte.
 ```
 
 **Wo** — steht ausführlich in `LUECKEN.md` unter L123.
@@ -182,7 +186,7 @@ Werkzeuge" stammte aus der Zeit vor E375 (dreizehn sind vollständig), und die
 `(scrollWidth − clientWidth) / 2`, was den Browser ans Ende klemmte.
 
 Zuletzt AUFGEMACHT: **L123** — die zwölf Befunde des UX-Prüfberichts, die noch
-offen sind (Sprint: F01, F02, F03, F08, F11, F13, F14 · Politur: F09, F10,
+offen sind (Sprint: F03 Rest, F08, F13, F14 · Politur: F09, F10,
 F12, F17, F18). Zwei brauchen Redur: F02 (welche Navigation ist die primäre?)
 und F13 (echter Geräte-Abnahmelauf). Und **L120** — was nach E380 an GoodNotes noch fehlt.
 Der Kern (Ebenen im Regal, Hineingehen, nach dem Entpacken im Ordner

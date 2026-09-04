@@ -3294,3 +3294,25 @@ die Zeugnisnote je Semester (E242) und der echte Stundenplan (E243).
   davor meldet sie 13 Knöpfe mit leerem Namen. (b) Ein Zustand, der sich beim
   Öffnen nicht ÄNDERT, wird von einer Änderungs-Behandlung nie gesetzt — die
   aktive Seite war beim ersten Versuch nur nach dem ersten Rollen markiert.
+
+  E392 · F11: der Bericht sagte „19 Einstellungskategorien auf einer Ebene"
+  und schlug sechs Obergruppen vor. Nachgesehen gibt es die Gruppen längst —
+  vier davon, drei mit sichtbarer Überschrift, am Rechner wie am Telefon.
+  DER ECHTE FEHLER stand daneben: `.einst-fenster` war auf `min(720px,88vh)`
+  gedeckelt, die Liste braucht 810 px, und darunter verschwanden auf JEDEM
+  Bildschirm dieselben drei Einträge — Speicher, Abrechnung, Über diese App.
+  Dazu hing das Fenster an `.overlay` 14vh unter dem oberen Rand, sodass bei
+  1280×720 seine Unterkante 43 px ausserhalb des Bildes lag.
+
+  Jetzt mittig, `min(920px,92vh)`, Zeilen ein Pixel dichter — und für kleine
+  Schirme ein Streifen, der sagt, dass es weitergeht, und wieder verschwindet,
+  sobald man unten ist. Ein sichtbar gemachter Rollbalken war der erste
+  Versuch und ist verworfen: in diesem Browser überlagert er, belegt ein
+  Pixel und malt nichts — eine Regel, die keine Prüfung erreichen kann, ist
+  eine Behauptung (§55.2).
+
+  EINE LEHRE AUS DER MUTATION: `min-height:52px` allein macht den §37-Wächter
+  nicht rot — der Zeileninhalt ist schon höher als 44 px. Erst kleinere
+  Schrift UND kleineres Polster drücken die Zeile darunter. Der Wächter misst
+  also die wirkliche Höhe statt der Schreibweise, was richtig ist, aber erst
+  die Gegenprobe hat es gezeigt.

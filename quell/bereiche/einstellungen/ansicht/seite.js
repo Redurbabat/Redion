@@ -158,6 +158,11 @@ const Einstellungen = (() => {
                     liste.map(([id, i, n]) => `<button data-b="${id}" class="${id === offenerBereich ? 'on' : ''}">` +
                         `<span class="mi">${i}</span>${n}</button>`).join('')).join('') +
                 '</div>' +
+                /* Der Hinweis, dass die Liste weitergeht — siehe `mehrPruefen()`
+                   weiter unten. Er liegt NEBEN der Liste, nicht darin: `.einst-nav`
+                   rollt, und ein Kind darin würde mitrollen statt unten zu bleiben.
+                   `.einst-fenster` ist `position:relative`, also genügt das. */
+                '<div class="einst-mehr" aria-hidden="true">\u2304</div>' +
                 /* Der Weg zurück zur Liste — nur am Telefon zu sehen. Ohne ihn
                    wäre die zweite Seite eine Sackgasse: das ✕ schliesst alles,
                    und dann fängt man von vorn an. */
@@ -179,6 +184,40 @@ const Einstellungen = (() => {
             binde(o);
         };
         zeichne();
+        /* ========================================================================
+         * „ES GEHT NOCH WEITER" (E392)
+         * ------------------------------------------------------------------------
+         * GEMESSEN AM 4. SEPTEMBER, vor jeder Änderung: die Liste braucht 810 px
+         * für 19 Einträge und drei Gruppenüberschriften, bekam aber nur 718 px
+         * (1360×900), 632 (1280×720) oder 570 (1280×650). Verdeckt lagen immer
+         * dieselben drei Einträge — Speicher, Abrechnung, Über diese App.
+         *
+         * Das Fenster ist jetzt hoch genug, dass auf einem gewöhnlichen Schirm
+         * nichts mehr fehlt. Auf einem kleinen rollt die Liste weiterhin, und
+         * DASS sie rollt, muss man sehen können. Der Rollbalken leistet das
+         * nicht: er belegt ein Pixel und blendet sich aus.
+         *
+         * Also ein eigener Streifen — der WIEDER VERSCHWINDET, sobald man unten
+         * angekommen ist. Eine Anzeige, die immer etwas anzeigt, wird nicht
+         * gelesen; das ist der Fehler, in den diese App schon sechsmal gelaufen
+         * ist. `test392 §3` misst genau das.
+         *
+         * Ein `ResizeObserver` statt eines Fensterhorchers: er hängt am Element,
+         * verschwindet mit ihm und lässt beim Schliessen nichts zurück. Und er
+         * feuert einmal von selbst, was den ersten Anstrich gleich mit erledigt.
+         * ======================================================================*/
+        const navEl = o.querySelector('.einst-nav');
+        const mehrPruefen = () => {
+            if (!navEl || !fenster)
+                return;
+            const rest = navEl.scrollHeight - navEl.clientHeight - navEl.scrollTop;
+            fenster.classList.toggle('hat-mehr', rest > 4);
+        };
+        if (navEl) {
+            navEl.addEventListener('scroll', mehrPruefen, { passive: true });
+            new ResizeObserver(mehrPruefen).observe(navEl);
+        }
+        mehrPruefen();
         o.addEventListener('click', e => {
             if (e.target === o || elVon(e)?.closest('[data-a="zu"]')) {
                 o.remove();

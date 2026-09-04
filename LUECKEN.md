@@ -5620,7 +5620,7 @@ belegt mit `test386` (38 Punkte, sieben Mutationen rot gesehen).
 
 Was noch aussteht, in der Reihenfolge des Berichts:
 
-NÄCHSTER SPRINT (F01 ✓, F02 ✓, F03 halb, F08, F11, F13, F14)
+NÄCHSTER SPRINT (F01 ✓, F02 ✓, F03 halb, F08, F11 ✓, F13, F14)
 
 a. **F01 · NACHGEMESSEN, der Befund stimmt so nicht** (E388). Der Bericht
    sagt, der Inhalt sei nach dem Klick auf der Übersicht geblieben. Am
@@ -5668,8 +5668,32 @@ c. **F03 · P1 · zur Hälfte ZU (E387).** „Nur die aktive Seite zeigt
 d. **F08 · P2 · Das KI-Seitenfeld nimmt dauerhaft Arbeitsbreite.** Im
    Dokumentmodus soll es eingeklappt starten, am Telefon als Bottom Sheet.
 
-e. **F11 · P2 · 19 Einstellungskategorien auf einer Ebene.** Der Bericht
-   schlägt sechs Obergruppen vor.
+e. **F11 · ZU (E392) — aber nicht so, wie der Bericht es meinte.** Die
+   Behauptung „19 Kategorien auf einer Ebene" hat die Messung nicht
+   überlebt: es gibt seit Langem VIER Gruppen — vier Einträge ohne
+   Überschrift oben, dann „Funktionen" (7), „Verwaltung" (5) und „Zugriff
+   und Abrechnung" (3). Die Überschriften stehen sichtbar da, am Rechner
+   wie am Telefon. Sechs Obergruppen zu erfinden hätte eine Ordnung
+   ersetzt, die es schon gibt.
+
+   DER WIRKLICHE FEHLER stand daneben und war schwerer:
+
+   | | Liste braucht | sichtbar | verdeckt |
+   |---|---|---|---|
+   | 1360 × 900 | 810 px | 718 px | 92 px |
+   | 1280 × 720 | 810 px | 632 px | 178 px |
+   | 1280 × 650 | 810 px | 570 px | 240 px |
+
+   Verdeckt lagen IMMER dieselben drei: Speicher, Abrechnung, Über diese
+   App. Nicht auf kleinen Bildschirmen — auf allen, denn `.einst-fenster`
+   war auf `min(720px, 88vh)` gedeckelt und wuchs mit keinem Schirm mit.
+   Dazu hing das Fenster an `.overlay` 14vh unter dem oberen Rand: bei
+   1280×720 lag seine Unterkante 43 px ausserhalb des Bildes.
+
+   Behoben mit E392: Fenster mittig und `min(920px, 92vh)`, Zeilen ein
+   Pixel dichter, und für kleine Schirme ein Streifen, der sagt, dass es
+   weitergeht — und wieder verschwindet, sobald man unten ist. `test389`,
+   19 Punkte, fünf Mutationen rot gesehen.
 
 f. **F13 · P2 · Echter Geräte-Abnahmelauf.** DAS KANN ICH NICHT — im
    Container gibt es kein iPhone und kein Android. Was möglich ist: ein

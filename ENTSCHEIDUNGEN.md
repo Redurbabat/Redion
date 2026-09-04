@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-387 Entscheidungen, E1 bis E391. Die Nummer ist die Ordnung: eine Entscheidung
+388 Entscheidungen, E1 bis E392. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -436,6 +436,16 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E380** — Das Regal bekommt Ebenen: ein Ordner ist ein Ort, kein Etikett
 * **E381** — Die Brotkrume der Ablage bleibt am Telefon brauchbar
 * **E382** — Auch die Listenform der Ablage ist ein Ordner-Browser
+* **E383** — Das Menüband wird ruhig: die Reiterzeile verdient keinen ständigen Platz
+* **E384** — Ein offenes Dokument ist der ganze Bildschirm, kein Kasten in der Schale
+* **E385** — Vier rote Läufe, die schon vorher rot waren, und drei davon sind meine
+* **E386** — Der Sofort-Block des UX-Audits: sechs Befunde, vier davon echt
+* **E387** — Nur die aktive Seite zeigt Werkzeuge (Audit F03)
+* **E388** — Ein Ort ist kein Werkzeug: die Orte gehören in die linke Leiste
+* **E389** — Der Start wartet nicht mehr auf 185 Skripte
+* **E390** — Eine Führung, die auf nichts zeigt, ist keine Führung
+* **E391** — „Gehen" verlässt das Band: eine Navigation je Gerät
+* **E392** — Die Einstellungsliste zeigt, was sie hat — und sagt, wenn mehr kommt
 
 ---
 
@@ -31726,3 +31736,130 @@ test384, test388. Einzeldatei neu gebaut. Mit einem Bild belegt (§55.3).
 
 Dateien: `src/register/menueband.ts`, `pruefungen/lauf/test33.mts`,
 `test247.mts`, `test248.mts`, `test387.mts`.
+
+
+E392 — Die Einstellungsliste zeigt, was sie hat — und sagt, wenn mehr kommt
+================================================================================
+4. September 2026 · Audit F11 · Auftrag 01 Schritt 3
+
+PROBLEM (und die Behauptung, die es nicht war)
+
+Der UX-Bericht sagt unter F11: „19 Einstellungskategorien auf einer Ebene",
+und schlägt sechs Obergruppen vor. Nachgesehen im Quelltext und nachgemessen
+im Browser stimmt das nicht. `GRUPPEN` in `seite.ts` führt VIER Gruppen:
+
+    (ohne Titel)             Mein Konto · Einstellungen ·
+                             Benachrichtigungen · Importieren       4
+    Funktionen               KI · Verbindungen · MCP · Worker ·
+                             Verifizierte Seiten · Öffentliche
+                             Seiten · Emoji                          7
+    Verwaltung               Arbeitsbereich · Analysen · Bereiche ·
+                             Sicherheit · Schlüssel und APIs         5
+    Zugriff und Abrechnung   Speicher · Abrechnung · Über diese App  3
+
+Die drei Überschriften stehen sichtbar da, in Versalien, am Rechner wie am
+Telefon. Sechs neue Obergruppen hätten eine Ordnung ersetzt, die es gibt.
+
+DER WIRKLICHE FEHLER stand daneben, und er war schwerer als der behauptete.
+Gemessen am 4. September, vor jeder Änderung:
+
+                      Liste braucht   sichtbar   verdeckt
+    1360 × 900             810 px       718 px     92 px
+    1280 × 720             810 px       632 px    178 px
+    1280 × 650             810 px       570 px    240 px
+
+Und verdeckt lagen IMMER dieselben drei Einträge: Speicher, Abrechnung, Über
+diese App. Nicht auf kleinen Bildschirmen — auf ALLEN. `.einst-fenster` war
+auf `min(720px, 88vh)` gedeckelt; ein grösserer Schirm machte das Fenster
+nicht höher, also war die Liste nie vollständig.
+
+Beim Nachmessen fiel ein zweiter Fehler auf, den niemand gesucht hatte:
+`.overlay` setzt für JEDES Fenster `align-items:flex-start; padding-top:14vh`.
+Für die Suche, die oben aufklappt, ist das richtig. Für ein Fenster, das fast
+die ganze Höhe will, ist es falsch — bei 1280×720 lag die Unterkante bei
+763 px, also 43 Pixel ausserhalb des Bildes. Mit der alten Höhe waren es 14,
+und deshalb ist es nie jemandem aufgefallen: abgeschnitten war es vorher
+auch schon, nur weniger.
+
+ENTSCHEIDUNG
+
+Drei Änderungen, in der Reihenfolge ihrer Wirkung:
+
+1. **Das Fenster steht mittig statt 14vh unter dem Rand.**
+   `.overlay:has(.einst-fenster){ align-items:center; padding-top:0 }` — die
+   Regel trifft nur dieses eine Fenster, alle anderen behalten ihren
+   Aufklapp-Punkt.
+
+2. **`min(720px, 88vh)` wird `min(920px, 92vh)`, die Zeile ein Pixel
+   dichter** (Polster 7 → 6). Auf einem 900-px-Schirm ergibt das 828 px für
+   ein Fenster, dessen Liste 810 braucht: sie passt ganz hinein. Am Telefon
+   ändert das nichts — dort hat dieselbe Zeile eine eigene Regel mit
+   `min-height:52px`, und §37 bleibt gewahrt.
+
+3. **Für kleinere Schirme ein Streifen, der sagt, dass es weitergeht** —
+   und der wieder verschwindet, sobald man unten angekommen ist.
+
+WAS ALS ERSTES VERSUCHT WURDE UND VERWORFEN IST
+
+Ein sichtbar gemachter Rollbalken: `scrollbar-width: auto` plus acht Pixel
+`::-webkit-scrollbar`. Er ist geschrieben, gemessen und wieder herausgenommen
+worden, denn in diesem Browser ist der Rollbalken ein ÜBERLAGERUNGSbalken.
+Er belegt ein Pixel, malt nichts und blendet sich nach dem Rollen aus. Auf
+einem Bildschirmfoto war er nicht zu sehen — derselbe Fund wie bei der
+Kontextkante (E388): ein Hinweis, der nicht malt, ist keiner.
+
+Er hätte auf Redurs Windows geholfen und wäre hier nie prüfbar gewesen. Eine
+Regel, die keine Prüfung erreichen kann, ist eine Behauptung (§55.2). Also
+ein eigenes Element, das überall dasselbe tut und sich messen lässt.
+
+DIE GEGENPROBE IST DER HALBE BOGEN
+
+`.einst-mehr` ist an `.hat-mehr` gebunden, und die Klasse wird bei jedem
+Rollen und jeder Grössenänderung neu gerechnet:
+
+    const rest = navEl.scrollHeight - navEl.clientHeight - navEl.scrollTop;
+    fenster.classList.toggle('hat-mehr', rest > 4);
+
+Ein `ResizeObserver` statt eines Fensterhorchers — er hängt am Element,
+verschwindet mit ihm, lässt beim Schliessen nichts zurück und feuert einmal
+von selbst, was den ersten Anstrich gleich mit erledigt.
+
+Dass er WIEDER SCHWEIGT, ist kein Beiwerk. Diese App ist sechsmal in dieselbe
+Falle gelaufen — ein `fehlt`, das nie leer ist; eine Warnung, die immer
+anspringt; ein Regel-Hinweis bei jedem Termin. Eine Anzeige, die immer etwas
+anzeigt, wird nicht gelesen. `test389 §3` misst deshalb beide Richtungen.
+
+ALTERNATIVE
+
+Die Liste kürzen oder in Unterseiten teilen. Verworfen: 19 Bereiche sind
+nicht zu viel für eine Navigationsspalte, sie waren nur zu hoch für ein
+Fenster, das ohne Grund gedeckelt war. Wer die Ordnung ändert, ändert auch
+jeden Weg dorthin.
+
+KOSTEN
+
+Ein Element mehr im Fenster, eine `:has()`-Regel und ein `ResizeObserver`.
+Keine Daten, kein Feldname, keine Migration, kein Import-Weg berührt.
+
+PRÜFUNG: `test389` (19 Punkte, PORT 9411). FÜNF MUTATIONEN ROT GESEHEN (§55.2):
+
+    Höhe zurück auf min(720px,88vh)   §2 dreifach rot — und es NENNT die
+                                      drei Einträge: Speicher, Abrechnung,
+                                      Über diese App
+    align-items zurück auf flex-start §4 dreifach rot, 763 von 720
+    hat-mehr nie setzen               §3 „der Streifen steht da" rot
+    hat-mehr immer setzen             §3 zweifach rot — die Gegenprobe
+    Telefonzeile auf 30 px            §5 rot (§37)
+
+Dabei fiel auf, dass ein `min-height:52px` allein den Abschnitt §5 NICHT rot
+machen kann: der Zeileninhalt allein ist schon höher als 44 px. Erst mit
+kleinerer Schrift UND kleinerem Polster fällt die Zeile unter die Grenze.
+Der Abschnitt prüft also die wirkliche Höhe, nicht die Schreibweise — was
+richtig ist, aber erst durch die Mutation sichtbar wurde.
+
+Grün geblieben: test114, test117, test128, test272 (152/152). Einzeldatei
+neu gebaut. Mit drei Bildern belegt (§55.3): 1360×900 vollständig,
+1280×720 mit Streifen, Telefon.
+
+Dateien: `src/bereiche/einstellungen/ansicht/seite.ts`,
+`quell/schale/stil/einstellungen.css`, `pruefungen/lauf/test389.mts`.
