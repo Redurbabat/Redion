@@ -29,7 +29,7 @@ import { readFileSync as lies, existsSync as da } from 'node:fs';
 import { createServer } from 'node:http';
 
 const WURZEL: string = loese(ordnerVon(alsPfad(import.meta.url)), '../..');
-const PORT = 8815;
+const PORT = 9509;
 
 let ok = 0, weg = 0;
 const p = (n: string, b: boolean, extra: string = ''): void => {

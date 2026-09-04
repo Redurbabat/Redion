@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-400 Entscheidungen, E1 bis E404. Die Nummer ist die Ordnung: eine Entscheidung
+401 Entscheidungen, E1 bis E405. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -458,6 +458,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E402** — Der Favoritenblock war vier Bögen lang leer (L128 Punkt 3)
 * **E403** — Die Denkkugel: neun Zustände statt eines Dreh-Rädchens
 * **E404** — Der Anheft-Stern stand im Text der Palettenzeile (E401-Rückfall)
+* **E405** — 23 Prüfläufe teilten sich einen Port
 
 ---
 
@@ -32916,3 +32917,53 @@ Punkt.
 
 Dateien: `src/bereiche/wissen/werkzeuge.ts`,
 `quell/schale/stil/werkzeuge.css`, `pruefungen/lauf/test397.mts`.
+
+
+================================================================================
+E405 — 23 Prüfläufe teilten sich einen Port
+================================================================================
+4. September 2026
+
+Der volle Lauf wurde in Stück 22 rot: `test247`, das Menüband. Einzeln
+nachgefahren lief es mit 106 von 106 durch. Nachgesehen, statt zu raten:
+
+    test206  PORT = 8967
+    test247  PORT = 8967
+
+Ich hatte `test206` im Hauptbaum geprüft (für E404), während der volle Lauf
+im Arbeitsbaum bei Stück 22 stand. Beide wollten denselben Port. Stück 22
+war rot, und nichts daran war ein Fehler im Produkt.
+
+Das ist derselbe Fehler wie bei den acht gleichzeitigen Läufern von vorher —
+und ich bin hineingelaufen, obwohl die Lehre daraus als Kommentar im
+Lauf-Skript steht. Ein Kommentar an einer Stelle hält nichts, was an einer
+anderen passiert.
+
+DER BESTAND, gezählt statt geschätzt: von 260 Läufen mit festem Port hatten
+48 einen doppelt vergebenen. 23 Gruppen; die Zahl 8797 war VIERMAL vergeben
+(test78, test90, test117, test128).
+
+REPARATUR. Der jeweils niedrigste Lauf behält seine Zahl, die anderen ziehen
+in den freien Bereich ab 9500. 26 Dateien geändert, nur die eine Zeile.
+
+Warum nicht ein zufälliger Port je Lauf? Weil ein fester Port beim Suchen
+hilft: wer wissen will, welcher Lauf gerade auf 9431 hört, findet ihn mit
+einem `grep`. Und weil ein Lauf, der seinen Port selbst sucht, bei einem
+Fehlschlag etwas anderes prüft als beim letzten Mal.
+
+WÄCHTER: `test400`. Er liest alle `pruefungen/lauf/test*.mts`, sammelt jedes
+`PORT = …` und meldet jede doppelt vergebene Zahl. Kein Browser, kein
+Server, kein eigener Port — er liest Dateien und läuft in unter einer
+Sekunde.
+
+MUTATION ROT GESEHEN: `test248` zurück auf 8967 gesetzt —
+„✗ Kein Port ist zweimal vergeben — 8967: test206 + test248". Und gegen den
+Bestand VOR dem Aufräumen meldete er alle 23 Gruppen.
+
+DIE LEHRE, und sie ist die dritte ihrer Art in dieser Woche: ein Ergebnis,
+das aus dem falschen Grund rot ist, ist schlimmer als eines, das grün lügt.
+Das grüne kostet später etwas; das falsch rote kostet sofort, weil man nach
+einem Fehler sucht, den es nicht gibt.
+
+Dateien: 26 Läufe unter `pruefungen/lauf/` (nur die PORT-Zeile),
+`pruefungen/lauf/test400.mts`.

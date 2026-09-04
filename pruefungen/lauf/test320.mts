@@ -30,7 +30,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const WURZEL = path.resolve(import.meta.dirname, '../..');
-const PORT = 9323;
+const PORT = 9518;
 
 let ok = 0, weg = 0;
 const p = (n: string, b: unknown, extra = ''): void => {

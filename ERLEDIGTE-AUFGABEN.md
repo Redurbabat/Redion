@@ -3584,3 +3584,14 @@ und trägt jetzt ein `title`.
 der Wächter aus E401 prüfte Gestaltung, nicht Text. Mutation rot gesehen:
 vierzig Zeilen mit Stern.
 
+## 23 Prüfläufe teilten sich einen Port (E405)
+
+**Fund.** Stück 22 des vollen Laufs war rot (`test247`), einzeln lief derselbe
+Lauf mit 106 von 106 durch. `test206` und `test247` hatten beide Port 8967,
+und ich hatte `test206` nebenher im Hauptbaum geprüft. Gezählt: 48 von 260
+Läufen mit doppelt vergebener Zahl, 23 Gruppen, eine davon viermal.
+
+**Bau.** Der niedrigste Lauf behält seine Zahl, 26 andere ziehen ab 9500 um.
+
+**Prüfung.** `test400` liest alle Läufe und meldet jede Doppelvergabe — ohne
+Browser, ohne Server, ohne eigenen Port. Mutation rot gesehen.

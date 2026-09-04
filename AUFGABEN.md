@@ -203,6 +203,9 @@ Werkzeuge" stammte aus der Zeit vor E375 (dreizehn sind vollständig), und die
 „Mitte" war als `scrollWidth / 2` gerechnet statt als
 `(scrollWidth − clientWidth) / 2`, was den Browser ans Ende klemmte.
 
+Zuletzt geschlossen (Fortsetzung): die doppelt vergebenen Prüfports (E405 —
+23 Gruppen über 48 Läufe, eine Zahl viermal vergeben; `test400` hält es).
+
 Zuletzt AUFGEMACHT: **L129** — die Denkkugel (E403) hängt bisher nur am
 Agentenfenster. Drei Stellen wären Kandidaten, eine davon ausdrücklich NICHT
 (ein Fortschrittsbalken sagt mehr als eine Kugel), und zwei der neun Zustände

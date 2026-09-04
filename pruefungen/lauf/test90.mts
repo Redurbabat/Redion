@@ -47,7 +47,7 @@ import { createServer } from 'node:http';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
 const WURZEL = _loese(_ordner(_alsPfad(import.meta.url)), '../..');
-const PORT = 8797;
+const PORT = 9501;
 
 let ok = 0, weg = 0;
 const p = (n: any, b: any, extra = '') => { if (b) { ok++; console.log('  ✓ ' + n); }

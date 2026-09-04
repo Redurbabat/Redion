@@ -66,7 +66,7 @@ declare const App: any;
 declare const Ruhig: any;
 
 const WURZEL = path.resolve(import.meta.dirname, '../..');
-const PORT = 8968;
+const PORT = 9517;
 
 const TYP: Record<string, string> = {
   '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css',

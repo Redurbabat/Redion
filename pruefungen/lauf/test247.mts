@@ -80,7 +80,7 @@ declare const Marken: any;
 declare const Blocks: any;
 
 const WURZEL = path.resolve(import.meta.dirname, '../..');
-const PORT = 8967;
+const PORT = 9516;
 
 const TYP: Record<string, string> = {
   '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css',
