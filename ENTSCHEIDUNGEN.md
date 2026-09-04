@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-389 Entscheidungen, E1 bis E393. Die Nummer ist die Ordnung: eine Entscheidung
+390 Entscheidungen, E1 bis E394. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -447,6 +447,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E391** — „Gehen" verlässt das Band: eine Navigation je Gerät
 * **E392** — Die Einstellungsliste zeigt, was sie hat — und sagt, wenn mehr kommt
 * **E393** — Die Leiste zeigt, wo man wirklich ist; der Zeitmesser steht einmal
+* **E394** — Das KI-Feld bleibt nicht im Dokument stehen
 
 ---
 
@@ -31984,3 +31985,77 @@ Knopf in Gold.
 Dateien: `src/register/navigation.ts`, `src/register/menueband.ts`,
 `src/schale/aufbau/context-rail.ts`, `src/schale/aufbau/schale.ts`,
 `pruefungen/lauf/test390.mts`.
+
+
+E394 — Das KI-Feld bleibt nicht im Dokument stehen (Audit F08)
+================================================================================
+4. September 2026 · Audit F08 · Auftrag 01 Schritt 5
+
+PROBLEM
+
+E384 hat den Dokumentmodus damit begründet, dass „im Dokumentmodus die ganze
+Schale wegfällt", und die CSS blendet dort auch Menüband, Kopfzeile, untere
+Leiste und Kontextkante aus. Gemessen am 4. September auf 1360 × 900, mit
+einem A4-Blatt:
+
+                              Breite `#ai`   Arbeitsbreite
+    Startbildschirm                   0 px       1306 px
+    KI von Hand geöffnet            380 px        926 px
+    … dann in den Dokumentmodus     380 px        980 px
+
+Das KI-Feld fehlte in der Liste. Es blieb stehen und nahm dem Blatt 28 % des
+Bildschirms — in genau der Ansicht, deren Zweck es ist, das Blatt gross zu
+zeigen.
+
+WAS DER BERICHT SONST NOCH SAGTE, UND WAS DAVON SCHON DA WAR
+
+F08 verlangt zweierlei: „im Dokumentmodus eingeklappt starten" und „am Telefon
+als Bottom Sheet". Der zweite Teil ist seit Längerem erfüllt — nachgemessen
+bei 390 × 844: `position:fixed`, unten verankert, 20 px runde Ecken oben,
+Beginn bei 102 px unter den Kopfleisten. Ein Blatt von unten, kein
+Seitenfeld. `test391 §5` hält es fest, damit die Forderung nicht ein zweites
+Mal als offen gilt.
+
+ENTSCHEIDUNG
+
+Beim EINTRETEN in den Dokumentmodus wird das Feld zugeklappt und gemerkt,
+dass es offen war; beim VERLASSEN kommt es zurück. Wer es im Dokument von
+Hand öffnet, behält es — die Erinnerung wird beim Eintreten gesetzt, nicht
+laufend nachgeführt.
+
+WARUM NICHT `display:none` IN DER CSS, was drei Zeilen kürzer gewesen wäre:
+weil man die KI IM Dokument sehr wohl braucht. „Fasse diese Seite zusammen"
+ist dort die naheliegende Frage. Eine Reparatur, die den Weg zumauert, ist
+schlimmer als der Fehler. `test391 §2` hält das fest.
+
+WARUM IN DER SCHALE UND NICHT IN `DocumentMode.toggle()`: weil `toggle()`
+nicht der einzige Weg hinein ist. `bibliothek.ts:295`, `notebook.ts:348` und
+`notebook.ts:370` setzen `dokumentModus: true` unmittelbar am Block. Ein
+Haken an `toggle()` hätte drei von vier Wegen verfehlt. `zeichneSeite()` sieht
+alle vier, weil dort die Flagge am `body` gesetzt und gelöscht wird.
+
+ALTERNATIVE: den Zustand in `Store.setMeta` merken statt im Speicher.
+Verworfen — es ist Ansichtszustand, kein Nutzerdatum, und er soll einen
+Neustart NICHT überleben.
+
+WAS DABEI NOCH SICHTBAR WURDE, und es steht hier, weil es auf dem Bild steht:
+mit den 380 Pixeln zurück zeigt die Blattleiste wieder ihre NAMEN statt nur
+der Zeichen — „Schreiben · Auswahl · Stift · Marker · Form · Abdecken ·
+Haftnotiz · Text · Fachzeichen · Bild · Radieren". Die Leiste aus E359 weicht
+bei Enge auf Zeichen aus; das KI-Feld hatte sie genau über diese Grenze
+gedrückt. Ein Fehler, der einen zweiten verdeckte.
+
+KOSTEN: zwei Merker im Speicher der Schale und ein Aufruf an zwei Stellen.
+Keine Daten, kein Feldname, keine Migration.
+
+PRÜFUNG: `test391` (15 Punkte, PORT 9415). VIER MUTATIONEN ROT GESEHEN:
+
+    beim Eintreten nicht zuklappen   §1 zweifach rot — 980 von 1360
+    beim Verlassen IMMER aufklappen  §4 rot — die Gegenprobe
+    beim Verlassen NIE aufklappen    §3 rot
+    Telefonregeln entfernt           §5 dreifach rot
+
+Grün geblieben: test114, test272, test296, test384. Einzeldatei neu gebaut.
+Mit zwei Bildern belegt (§55.3): dasselbe Blatt vorher und nachher.
+
+Dateien: `src/schale/aufbau/schale.ts`, `pruefungen/lauf/test391.mts`.

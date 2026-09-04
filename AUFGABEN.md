@@ -48,7 +48,7 @@ Sechs Punkte, jeder nachgesehen am 3. September 2026.
 
 **Ziel** — die verbleibenden Befunde des UX-Audits schliessen. Der
 Sofort-Block ist zu (E386), F01 richtiggestellt (E388), F02 zu (E388+E391),
-F03 halb (E387), F11 zu (E392).
+F03 halb (E387), F08 zu (E394), F11 zu (E392).
 
 **Was noch offen ist**, in dieser Reihenfolge:
 
@@ -59,7 +59,6 @@ F02 Rest   die untere Telefonleiste an `haupt: true` hängen — WELCHE fünf
            („Gehen" ist mit E391 aus dem Band; der doppelte „Zeitmesser"
             und die falsche Ortsmarkierung sind mit E393 weg)
 F03 Rest   Einzelseite/Fortlaufend — braucht Redurs Zustimmung (gegen E299)
-F08        das KI-Seitenfeld startet im Dokument eingeklappt
 F13        Release-Gate über 360×800, 390×844, 428×926 und Querformat
 F14        Werkzeugdichte am Telefon — erst messen, ob E356 reicht
 F09 F10 F12 F17 F18   Politur
@@ -188,7 +187,7 @@ Werkzeuge" stammte aus der Zeit vor E375 (dreizehn sind vollständig), und die
 `(scrollWidth − clientWidth) / 2`, was den Browser ans Ende klemmte.
 
 Zuletzt AUFGEMACHT: **L123** — die zwölf Befunde des UX-Prüfberichts, die noch
-offen sind (Sprint: F03 Rest, F08, F13, F14 · Politur: F09, F10,
+offen sind (Sprint: F03 Rest, F13, F14 · Politur: F09, F10,
 F12, F17, F18). Zwei brauchen Redur: F02 (welche Navigation ist die primäre?)
 und F13 (echter Geräte-Abnahmelauf). Und **L120** — was nach E380 an GoodNotes noch fehlt.
 Der Kern (Ebenen im Regal, Hineingehen, nach dem Entpacken im Ordner

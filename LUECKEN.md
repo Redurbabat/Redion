@@ -5620,7 +5620,7 @@ belegt mit `test386` (38 Punkte, sieben Mutationen rot gesehen).
 
 Was noch aussteht, in der Reihenfolge des Berichts:
 
-NÄCHSTER SPRINT (F01 ✓, F02 ✓, F03 halb, F08, F11 ✓, F13, F14)
+NÄCHSTER SPRINT (F01 ✓, F02 ✓, F03 halb, F08 ✓, F11 ✓, F13, F14)
 
 a. **F01 · NACHGEMESSEN, der Befund stimmt so nicht** (E388). Der Bericht
    sagt, der Inhalt sei nach dem Klick auf der Übersicht geblieben. Am
@@ -5673,8 +5673,19 @@ c. **F03 · P1 · zur Hälfte ZU (E387).** „Nur die aktive Seite zeigt
    komplett wie one note". Braucht seine Zustimmung, bevor jemand daran
    geht.
 
-d. **F08 · P2 · Das KI-Seitenfeld nimmt dauerhaft Arbeitsbreite.** Im
-   Dokumentmodus soll es eingeklappt starten, am Telefon als Bottom Sheet.
+d. **F08 · ZU (E394).** Gemessen auf 1360 × 900 mit einem A4-Blatt: das
+   Feld blieb im Dokumentmodus stehen, 380 px breit, und liess dem Blatt
+   980 von 1360 — 28 % für etwas, das man gerade nicht braucht. E384 hatte
+   den Modus damit begründet, dass „die ganze Schale wegfällt"; das KI-Feld
+   fehlte in der Liste. Jetzt klappt es beim Eintreten zu und beim
+   Verlassen wieder auf — und lässt sich im Dokument von Hand öffnen, denn
+   „fasse diese Seite zusammen" ist dort die naheliegende Frage.
+
+   DIE ZWEITE HÄLFTE WAR SCHON DA: „am Telefon als Bottom Sheet" ist seit
+   Längerem erfüllt. Nachgemessen bei 390 × 844: `position:fixed`, unten
+   verankert, 20 px runde Ecken oben, Beginn 102 px unter den Kopfleisten.
+   `test391 §5` hält es fest, damit die Forderung nicht ein zweites Mal
+   als offen gilt.
 
 e. **F11 · ZU (E392) — aber nicht so, wie der Bericht es meinte.** Die
    Behauptung „19 Kategorien auf einer Ebene" hat die Messung nicht

@@ -3336,3 +3336,24 @@ die Zeugnisnote je Semester (E242) und der echte Stundenplan (E243).
   ist am Ende widerlegt worden — siehe L126: 26 der 45 Ziele sind das
   Suchfenster. Die ersten zwei Messungen sahen richtig aus und waren falsch;
   die zweite mass den verdunkelnden Grund statt des Fensters.
+
+  E394 · F08: das KI-Feld blieb im Dokumentmodus stehen — 380 von 1360
+  Pixeln, in genau der Ansicht, deren Zweck das grosse Blatt ist. E384 hatte
+  versprochen, dort falle „die ganze Schale weg"; die CSS blendet Menüband,
+  Kopfzeile, untere Leiste und Kontextkante aus, das KI-Feld fehlte in der
+  Liste. Jetzt klappt es beim Eintreten zu und beim Verlassen wieder auf —
+  nicht mit `display:none`, denn „fasse diese Seite zusammen" ist im Dokument
+  die naheliegende Frage.
+
+  DER HAKEN SITZT IN `zeichneSeite()`, NICHT IN `DocumentMode.toggle()`: drei
+  von vier Wegen in den Modus (`bibliothek.ts`, `notebook.ts` zweimal) setzen
+  `dokumentModus` unmittelbar am Block und gehen an `toggle()` vorbei.
+
+  UND EIN FEHLER VERDECKTE EINEN ZWEITEN: mit den 380 Pixeln zurück zeigt die
+  Blattleiste wieder ihre NAMEN statt nur der Zeichen. Die Leiste aus E359
+  weicht bei Enge auf Zeichen aus, und das KI-Feld hatte sie über diese
+  Grenze gedrückt. Auf dem Bild zu sehen, in keiner Messung.
+
+  Die zweite Hälfte des Befunds („am Telefon als Bottom Sheet") war schon
+  erfüllt — nachgemessen und mit test391 §5 festgehalten, damit sie nicht ein
+  zweites Mal als offen gilt.

@@ -855,6 +855,43 @@ const App = (() => {
    * @param {string} fokus  ID des Blocks, der danach den Cursor bekommt
    * @param {string} wo     'ende' setzt den Cursor ans Textende
    */
+  /* ==========================================================================
+   * DAS KI-FELD BLEIBT NICHT IM DOKUMENT STEHEN (E394, Audit F08)
+   * --------------------------------------------------------------------------
+   * GEMESSEN AM 4. SEPTEMBER auf 1360 × 900, mit einem A4-Blatt im
+   * Dokumentmodus: `#ai` stand weiter da, 380 Pixel breit, und liess dem
+   * Blatt 980 von 1360 — 28 % des Bildschirms für ein Feld, das man gerade
+   * nicht braucht.
+   *
+   * E384 hat den Dokumentmodus damit begründet, dass „die ganze Schale
+   * wegfällt", und die CSS blendet dort auch Menüband, Kopfzeile, untere
+   * Leiste und Kontextkante aus. Das KI-Feld fehlte in dieser Liste.
+   *
+   * WARUM NICHT EINFACH `display:none` IN DER CSS. Weil man die KI IM
+   * Dokument sehr wohl brauchen kann — „fasse diese Seite zusammen" ist
+   * genau dort die Frage. Ein Feld, das sich nicht öffnen lässt, wäre die
+   * Reparatur, die mehr kaputt macht als der Fehler.
+   *
+   * Also: beim EINTRETEN zuklappen und sich merken, dass es offen war; beim
+   * VERLASSEN wieder aufklappen. Wer es im Dokument von Hand öffnet,
+   * behält es — die Erinnerung wird beim Eintreten gesetzt, nicht laufend
+   * nachgeführt. */
+  let kiVorDokument = false;
+  let warImDokument = false;
+  const kiAmDokumentAnpassen = (imDokument: boolean): void => {
+    if (imDokument === warImDokument) return;
+    warImDokument = imDokument;
+    const feld = document.getElementById('ai');
+    if (!feld) return;
+    if (imDokument) {
+      kiVorDokument = feld.classList.contains('open');
+      if (kiVorDokument) kiPanel(false);
+    } else if (kiVorDokument) {
+      kiVorDokument = false;
+      kiPanel(true);
+    }
+  };
+
   const zeichneSeite = (fokus: string | null = null, wo = 'anfang') => {
     const wrap = document.getElementById('page');
     if (!wrap) return;
@@ -876,6 +913,7 @@ const App = (() => {
        so faellt sie auch bei jedem fruehen Ausstieg zurueck (Sonderansicht,
        leere Seite, Sperrbildschirm). */
     delete document.body.dataset['dokument'];
+    kiAmDokumentAnpassen(false);
 
     if (sonder) {
       wrap.className = 'wide';
@@ -921,6 +959,7 @@ const App = (() => {
       wrap.className = 'wide document-page';
       wrap.innerHTML = '';
       document.body.dataset['dokument'] = 'an';
+      kiAmDokumentAnpassen(true);
       DocumentMode.render(wrap, p);
     } else {
       Inhaltsflaeche.zeichne(wrap, p);
