@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-386 Entscheidungen, E1 bis E390. Die Nummer ist die Ordnung: eine Entscheidung
+387 Entscheidungen, E1 bis E391. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -31654,3 +31654,75 @@ Grün ausserdem: test74, test87, test105, test109, test143, test272,
 test387, test388. Mit zwei Bildern belegt (§55.3): Rechner und Telefon.
 
 Dateien: `src/bereiche/hilfe/rundgang.ts`, `pruefungen/lauf/test61.mts`.
+
+
+================================================================================
+E391 — „Gehen" verlässt das Band: eine Navigation je Gerät (F02 zu)
+================================================================================
+4. September 2026 · Audit F02, Rest · Auftrag 01 Schritt 2, Rest
+
+E388 hat die Orte in die linke Leiste geholt. Der Reiter „Gehen" stand
+danach WEITERHIN im Band und zeigte dasselbe — zwei Wege zum selben Ziel,
+und genau das nennt der Prüfbericht „vier Navigationslogiken nebeneinander".
+Redurs Entscheidung: das Menüband trägt nur noch dokumentbezogene Werkzeuge.
+
+Nach dem Wegnehmen, gemessen:
+
+    Band, Seite offen    Start · Einfügen · Zeichnen · Verlauf ·
+                         Überprüfen · Ansicht · Hilfe    (7 statt 8)
+    Band, Startansicht   Verlauf · Überprüfen · Ansicht · Hilfe (4 statt 5)
+    orte()               45 Einträge, unverändert
+    Lade „Mehr Orte"     40 Zeilen, unverändert
+
+DER REITER GEHT, DIE EINTRÄGE BLEIBEN. Sie tragen weiterhin
+`reiter: 'gehen'` — das ist ihre Ablage im Register, nicht ihre Anzeige —,
+und `orte()` liefert sie unverändert an die Kante. `reiter()` zeigt ohnehin
+nur, was in `REITER` steht; ein Eintrag ohne Reiter verschwindet also von
+selbst aus dem Band und bleibt dem Register erhalten. Genau dafür war die
+Trennung da.
+
+DIE GEFAHR WAR NICHT DER REITER, SONDERN SECHS EINTRÄGE. Journal,
+Schnellnotizen, Vorlagen, Zeitmesser, Agenten und Besprechungen kommen aus
+dem schon früher aufgelösten Reiter „Werkzeuge" und wohnen unter
+`reiter: 'gehen'`. Sie wären mit dem Reiter unerreichbar geworden — nicht
+gelöscht, nur nicht mehr anklickbar. Vor dem Ändern nachgemessen: alle
+sechs stehen in der Lade hinter „Mehr Orte". `test387 §7` hält das jetzt,
+in beide Richtungen.
+
+WAS ES KOSTET
+────────────────────────────────────────────────────────────────────────
+Wer den Weg über das Band gewohnt war, geht ihn jetzt links. Fünf Prüfläufe
+tragen andere Zahlen — und keine davon ist weicher geworden:
+
+    test247  „acht Reiter" → sieben; „fünf ohne Seite" → vier;
+             der erste Reiter heisst „Start" statt „Gehen";
+             der Weg zu Journal/Agenten/Besprechungen führt über die Lade
+    test248  „fünf" → vier, „acht" → sieben, dazu eine neue Zeile, die die
+             vier bei NAMEN prüft statt nur zu zählen
+    test33   der Weg zu „Alle Seiten" und „Meine Aufgaben" führt über die
+             Lade statt über den Reiter
+    test272  unverändert grün — es fragt `inReiter('gehen')`, nicht den Reiter
+    test61   unverändert grün — Schritt 7 nennt „Überprüfen" zuerst (E390)
+
+ZWEI HOHLE PRÜFPUNKTE FIELEN DABEI AUF, beide in test247:
+
+  · §7 klickte auf `[data-mb-reiter="elektro"]`, um einen gemerkten Reiter
+    zu setzen, den es nicht mehr gibt. „Elektro" ist seit E272 kein Reiter
+    — der Klick traf also nichts, und die Zeile mass, welcher Reiter
+    zufällig gewählt war. Sie war grün, weil das zufällig der erste war.
+    Jetzt wird `bandReiter` unmittelbar auf `'gibtesnicht'` gesetzt.
+  · Mein eigener Helfer `klickOrt` klickte den Kantenknopf, um die Lade zu
+    öffnen — ein zweiter Klick klappt sie aber ZU. „Journal" war grün und
+    „Agenten" rot, im Wechsel. Jetzt schliesst er erst und öffnet dann.
+
+Keine Daten, kein Feldname, keine Migration.
+
+PRÜFUNG: `test387`, jetzt 40 Punkte (§7 neu, sechs Zeilen). Zwei Mutationen
+rot gesehen (§55.2): „Gehen" wieder in `REITER` (3 rot); `orte()` filtert
+die Gruppen „Erfassen" und „Verbinden" weg (3 rot, darunter „32 statt über
+40 Ziele"). Grün: test33 107/107, test61 39/39, test74, test87, test105,
+test109, test143, test247 106/106, test248 49/49, test272, test285,
+test384, test388. Einzeldatei neu gebaut. Mit einem Bild belegt (§55.3).
+
+Dateien: `src/register/menueband.ts`, `pruefungen/lauf/test33.mts`,
+`test247.mts`, `test248.mts`, `test387.mts`.

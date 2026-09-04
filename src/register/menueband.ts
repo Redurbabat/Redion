@@ -105,8 +105,22 @@ Register.menueband = (() => {
    * etwas zu zeigen haben — ein leerer Reiter verschwände von selbst. Die
    * volle Fassung aus `Register.module` und `Register.navigation` kommt in
    * Phase E. */
+  /* „GEHEN" STEHT HIER NICHT MEHR (E391, Audit F02).
+   *
+   * Der Reiter zeigte, wohin man geht. Seit E388 stehen die Orte in der
+   * linken Leiste, und zwei Wege zum selben Ziel sind genau der Befund des
+   * Prüfberichts: „vier Navigationslogiken nebeneinander". Redur hat
+   * entschieden: das Menüband trägt nur noch dokumentbezogene Werkzeuge.
+   *
+   * DIE EINTRÄGE BLEIBEN, nur der Reiter geht. Sie tragen weiterhin
+   * `reiter: 'gehen'` — das ist ihre Ablage im Register, nicht ihre
+   * Anzeige —, und `orte()` liefert sie unverändert an die Kante. Wer sie
+   * hier löschte, nähme der linken Leiste ihre Liste weg.
+   *
+   * `reiter()` zeigt ohnehin nur, was in REITER steht; ein Eintrag ohne
+   * Reiter verschwindet also von selbst aus dem Band und bleibt dem
+   * Register erhalten. Genau dafür war die Trennung da. */
   const REITER: BandReiter[] = [
-    { id: 'gehen',       name: 'Gehen',      zeichen: 'compass' },
     { id: 'start',       name: 'Start',      zeichen: 'pencil' },
     { id: 'einfuegen',   name: 'Einfügen',   zeichen: 'plus' },
     { id: 'zeichnen',    name: 'Zeichnen',   zeichen: 'page' },

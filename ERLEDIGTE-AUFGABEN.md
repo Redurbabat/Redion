@@ -38,6 +38,27 @@ dann die Phasen, dann die Bögen.
 
 ## Aktueller Stand
 
+**4. September 2026 · „Gehen" verlässt das Band — F02 ist zu (E391)**
+
+> E388 hat die Orte nach links geholt; der Reiter „Gehen" stand danach
+> weiterhin im Band und zeigte dasselbe. Zwei Wege zum selben Ziel sind
+> genau der Befund des Prüfberichts. Jetzt trägt das Band nur noch
+> Dokumentwerkzeuge: Start · Einfügen · Zeichnen · Verlauf · Überprüfen ·
+> Ansicht · Hilfe (sieben statt acht; über einer Startansicht vier statt
+> fünf).
+> DIE GEFAHR WAR NICHT DER REITER, sondern sechs Einträge, die unter ihm
+> wohnen — Journal, Schnellnotizen, Vorlagen, Zeitmesser, Agenten,
+> Besprechungen. Vor dem Ändern nachgemessen: alle sechs stehen in der Lade
+> hinter „Mehr Orte". `test387 §7` hält das jetzt in beide Richtungen.
+> Fünf Prüfläufe tragen andere Zahlen, keine davon weicher — jede mit
+> geschriebenem Grund.
+> ZWEI HOHLE PRÜFPUNKTE FIELEN AUF: `test247 §7` klickte auf einen Reiter
+> „Elektro", den es seit E272 nicht gibt, und mass danach, welcher Reiter
+> zufällig gewählt war — grün, weil das zufällig der erste war. Und mein
+> eigener Helfer klickte den Kantenknopf, um die Lade zu öffnen; ein
+> zweiter Klick klappt sie zu, also war „Journal" grün und „Agenten" rot,
+> im Wechsel. Beides behoben.
+
 **4. September 2026 · Eine Führung, die auf nichts zeigt (E390, L125 zu)**
 
 > `test61` war rot — und in einem Arbeitsbaum auf dem Stand davor ebenso,

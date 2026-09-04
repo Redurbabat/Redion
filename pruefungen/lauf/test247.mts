@@ -199,10 +199,18 @@ p('Er ist nicht versteckt', !grund.versteckt);
    kein eigener Reiter mehr; seine acht Eintraege behalten trotzdem
    `reiter: 'elektro'` im Register, weil `bereiche/elektro/start.ts` seine
    Kacheln daraus liest — geprueft wird das in test272 §5. */
-p('Alle acht Reiter stehen da',
-  ['gehen', 'start', 'einfuegen', 'zeichnen', 'verlauf', 'ueberpruefen',
+/* SIEBEN STATT ACHT (E391). „Gehen" hat das Band verlassen: wohin man geht,
+   steht seit E388 in der linken Leiste, und zwei Wege zum selben Ziel waren
+   der Befund F02 des Prüfberichts. Wie bei „Elektro" oben bleiben die
+   EINTRÄGE im Register — sie tragen weiter `reiter: 'gehen'`, und
+   `Register.menueband.orte()` liefert sie an die Kante. Nur der Reiter ist
+   weg. Dass die Liste dabei nichts verliert, misst §1c darunter. */
+p('Alle sieben Reiter stehen da',
+  ['start', 'einfuegen', 'zeichnen', 'verlauf', 'ueberpruefen',
    'ansicht', 'hilfe'].every(r => grund.reiter.includes(r)),
   grund.reiter.join(', '));
+p('Und „Gehen" ist wirklich weg (E391)',
+  !grund.reiter.includes('gehen'), grund.reiter.join(', '));
 p('Und „Werkzeuge" ist wirklich weg, nicht nur leer',
   !grund.reiter.includes('werkzeuge'), grund.reiter.join(', '));
 p('Genau EIN Reiter ist gewählt', grund.aktiv.length === 1, grund.aktiv.join(','));
@@ -223,7 +231,7 @@ const proReiter: Record<string, number> = {};
    null — die Messung „hat das SVG Flaeche" meldete ihn als zeichenlos. Beim
    Reiter „Einfuegen" waren das 56 falsche Treffer.
    Dass die Verborgenen erreichbar bleiben, prueft §2b darunter. */
-for (const r of ['gehen', 'start', 'einfuegen', 'zeichnen', 'verlauf',
+for (const r of ['start', 'einfuegen', 'zeichnen', 'verlauf',
                  'ueberpruefen', 'ansicht', 'hilfe']) {
   await klick(seite, `#menueband [data-mb-reiter="${r}"]`);
   await seite.waitForTimeout(260);
@@ -363,27 +371,64 @@ const klickBefehl = async (s2: any, id: string): Promise<boolean> => {
   return klick(s2, `#mb-mehr-lade [data-band="${id}"]`);
 };
 
+/**
+ * DENSELBEN WEG GEHEN WIE EIN MENSCH — und der führt seit E391 links entlang.
+ *
+ * „Journal", „Agenten" und „Besprechungen" standen im Reiter „Gehen". Den
+ * gibt es nicht mehr: wohin man geht, steht seit E388 in der linken Leiste,
+ * und die sechs Einträge des aufgelösten Reiters „Werkzeuge" sind mit
+ * umgezogen. Ihre Kennungen und Griffe sind dieselben geblieben —
+ * `Register.menueband.orte()` liefert sie unverändert —, nur der Klickweg
+ * ist ein anderer.
+ *
+ * ES WIRD ÜBER DEN NAMEN GEKLICKT und nicht über die Kennung: die Lade
+ * zeichnet Zeilen mit `textContent`, keine `data-band`-Marken. Wer den
+ * Namen ändert, macht diesen Punkt rot — und das ist richtig so, denn ein
+ * Mensch sucht nach dem Namen.
+ */
+const klickOrt = async (s2: any, name: string): Promise<boolean> => {
+  /* ERST SCHLIESSEN, DANN ÖFFNEN. Ein zweiter Klick auf denselben
+     Kantenknopf klappt die Lade ZU — so ist sie überall gebaut. Beim ersten
+     Versuch stand deshalb „Journal" grün und „Agenten" rot: der eine Aufruf
+     öffnete, der nächste schloss, der übernächste öffnete wieder. Ein
+     Prüflauf, der abwechselnd misst, misst nichts. */
+  await s2.evaluate(() => {
+    const l = document.getElementById('kanten-lade');
+    if (l && !l.hidden) {
+      (document.querySelector('#kante .k-knopf[data-k="mehr-orte"]') as HTMLElement)?.click();
+    }
+  });
+  await s2.waitForTimeout(300);
+  const auf = await klick(s2, '#kante .k-knopf[data-k="mehr-orte"]');
+  if (!auf) return false;
+  await s2.waitForTimeout(400);
+  const traf = await s2.evaluate((n: string) => {
+    const z = [...document.querySelectorAll<HTMLElement>('#kanten-lade .kl-zeile')]
+      .find(x => (x.querySelector('b')?.textContent || '').trim() === n);
+    if (!z) return false;
+    z.click();
+    return true;
+  }, name);
+  await s2.waitForTimeout(400);
+  return traf;
+};
+
 /* Und einer wird wirklich gedrückt. „Journal" legt einen Tageseintrag an —
    das ist im Bestand sichtbar und braucht keine Vermutung. */
-/* „Journal" wohnt seit E272 unter „Gehen" — derselbe Eintrag, derselbe
-   Griff `Werkzeuge.journal()`, nur ein anderer Reiter. */
-await klick(seite, '#menueband [data-mb-reiter="gehen"]');
-await seite.waitForTimeout(260);
+/* „Journal" wohnte seit E272 unter „Gehen". Seit E391 gibt es diesen Reiter
+   nicht mehr — der Eintrag ist derselbe, der Griff `Werkzeuge.journal()`
+   auch, nur steht er jetzt in der Lade hinter „Mehr Orte" in der linken
+   Leiste. Der Prüflauf geht denselben Weg wie ein Mensch. */
 const vorher = await seite.evaluate(() =>
   Object.keys(Store.cache.blocks).length);
-/* SEIT PHASE E STEHT „JOURNAL" NICHT MEHR VORNE. Der Reiter „Gehen" liest
-   jetzt aus `Register.module` und `Register.navigation` — 45 Einträge statt
-   sechs, und „Erfassen" kommt nach „Hauptbereiche" und „Planung & Lernen".
-   Damit landet Journal jenseits der fünfzehn und steht im „•••". Der
-   Prüflauf geht denselben Weg wie ein Mensch. */
-const journalDa = await klickBefehl(seite, 'w-journal');
+const journalDa = await klickOrt(seite, 'Journal');
 await seite.waitForTimeout(900);
-p('Der Knopf „Journal" ist im Band anklickbar', journalDa);
+p('Der Knopf „Journal" ist über die linke Leiste anklickbar', journalDa);
 const nachher = await seite.evaluate(() => ({
   bloecke: Object.keys(Store.cache.blocks).length,
   seite: App.aktuelleSeite()
 }));
-p('„Journal" im Band legt wirklich etwas an', nachher.bloecke > vorher,
+p('„Journal" legt wirklich etwas an', nachher.bloecke > vorher,
   `${vorher} → ${nachher.bloecke}`);
 
 /* ==========================================================================
@@ -475,12 +520,15 @@ for (const t of ['Agenten', 'Besprechungen', 'Kürzlich verwendet'])
    `Meeting.panel()` (E273): sie öffnen eine eigene Fläche, und die sieht
    man. Gemessen wird jetzt die Fläche. `test272` §15 stellt dieselbe
    Frage für alle 43 Wege in „Gehen". */
-const flaecheNach = async (kennung: string) => {
+/* SEIT E391 ÜBER DIE LINKE LEISTE. Der Reiter „Gehen" ist weg; die beiden
+   Einträge stehen unverändert im Register und in der Lade hinter
+   „Mehr Orte". Gemessen wird weiterhin die FLÄCHE, nicht der Klick. */
+const flaecheNach = async (name: string) => {
   await seite.evaluate(() => {
     document.querySelectorAll('.overlay, .menu, .menu-grund').forEach(x => x.remove());
   });
   await seite.waitForTimeout(200);
-  await klickBefehl(seite, kennung);
+  await klickOrt(seite, name);
   await seite.waitForTimeout(700);
   return await seite.evaluate(() => {
     const o = document.querySelector('.overlay');
@@ -489,12 +537,12 @@ const flaecheNach = async (kennung: string) => {
   });
 };
 
-const agentenAuf = await flaecheNach('w-agenten');
+const agentenAuf = await flaecheNach('Agenten');
 p('„Agenten" öffnet die Agentenfläche',
   agentenAuf.lagen === 1 && /Agent/i.test(agentenAuf.titel),
   JSON.stringify(agentenAuf));
 
-const besprAuf = await flaecheNach('w-bespr');
+const besprAuf = await flaecheNach('Besprechungen');
 p('„Besprechungen" öffnet die Besprechungsfläche',
   besprAuf.lagen === 1 && /Besprech/i.test(besprAuf.titel),
   JSON.stringify(besprAuf));
@@ -554,7 +602,18 @@ p('„Einfügen" zeigt genau die Blockarten aus dem Blockregister',
  * ========================================================================*/
 console.log('\n7 · Der gewählte Reiter wird gemerkt');
 
-await klick(seite, '#menueband [data-mb-reiter="elektro"]');
+/* DEN GEMERKTEN WERT WIRKLICH SETZEN, nicht auf einen Reiter klicken, den
+   es nicht gibt.
+
+   Hier stand `klick(… [data-mb-reiter="elektro"])`. „Elektro" ist seit
+   E272 kein Reiter mehr — der Klick traf also nichts, und die Zeile
+   darunter mass, welcher Reiter zufällig gerade gewählt war. Sie war grün,
+   weil das zufällig der erste war. Genau die Sorte Prüfung, die §55.2
+   meint: sie konnte gar nicht rot werden.
+
+   Jetzt wird `bandReiter` unmittelbar auf einen Wert gesetzt, den es
+   nachweislich nicht gibt, und danach neu geladen. */
+await seite.evaluate(() => Store.setMeta('bandReiter', 'gibtesnicht'));
 await seite.waitForTimeout(320);
 await seite.reload();
 await seite.waitForTimeout(2800);
@@ -567,8 +626,12 @@ const nachNeustart = await seite.evaluate(() =>
    gemerkte nicht mehr existiert. Genau das prueft diese Zeile jetzt: das
    Merken funktioniert, und ein Reiter, den es nicht gibt, fuehrt nicht zu
    einer leeren Auswahl. */
+/* UND SEIT E391 IST AUCH „GEHEN" KEINER MEHR. Der erste Reiter heisst
+   jetzt „Start". Die Aussage der Zeile ist unverändert — ein gemerkter
+   Reiter, den es nicht gibt, führt nicht in eine leere Auswahl —, nur der
+   erste hat einen anderen Namen. */
 p('Ein gemerkter Reiter, den es nicht mehr gibt, faellt sauber zurueck',
-  nachNeustart === 'gehen', nachNeustart);
+  nachNeustart === 'start', nachNeustart);
 
 /* Zuklappen und wieder auf. */
 await klick(seite, '#menueband .mb-klapp');
@@ -580,7 +643,8 @@ const zu = await seite.evaluate(() => ({
 }));
 p('Zugeklappt verschwindet das Band', zu.klasse === true && zu.bandHoch === 0,
   `Klasse ${zu.klasse}, Höhe ${zu.bandHoch}`);
-p('Die Reiterzeile bleibt stehen', zu.reiterDa === 8, String(zu.reiterDa));
+/* SIEBEN STATT ACHT seit E391 — „Gehen" steht jetzt links. */
+p('Die Reiterzeile bleibt stehen', zu.reiterDa === 7, String(zu.reiterDa));
 await klick(seite, '#menueband .mb-klapp');
 await seite.waitForTimeout(300);
 const wiederAuf = await seite.evaluate(() =>
@@ -602,8 +666,9 @@ const nachPfeil = await seite.evaluate(() =>
   [...document.querySelectorAll('#menueband [data-mb-reiter]')]
     .filter(b => b.getAttribute('aria-selected') === 'true')
     .map(b => (b as HTMLElement).dataset['mbReiter'])[0] || '');
-/* Der Pfeil geht EINEN weiter, und der erste heisst seit E272 „Gehen". */
-p('Pfeil rechts wechselt den Reiter', nachPfeil === 'start', nachPfeil);
+/* Der Pfeil geht EINEN weiter. Der erste hiess seit E272 „Gehen" und
+   heisst seit E391 „Start" — also ist der zweite jetzt „Einfügen". */
+p('Pfeil rechts wechselt den Reiter', nachPfeil === 'einfuegen', nachPfeil);
 
 await seite.keyboard.press('Home');
 await seite.waitForTimeout(320);
@@ -611,7 +676,7 @@ const nachHome = await seite.evaluate(() =>
   [...document.querySelectorAll('#menueband [data-mb-reiter]')]
     .filter(b => b.getAttribute('aria-selected') === 'true')
     .map(b => (b as HTMLElement).dataset['mbReiter'])[0] || '');
-p('Pos1 springt zum ersten', nachHome === 'gehen', nachHome);
+p('Pos1 springt zum ersten', nachHome === 'start', nachHome);
 
 const tabFolge = await seite.evaluate(() =>
   [...document.querySelectorAll('#menueband [data-mb-reiter]')]
@@ -686,11 +751,12 @@ p('Zurück auf „Heute" bleibt die Leiste stehen',
   zurueckHeute && aufHeute.sonder === true && aufHeute.hoch > 25,
   JSON.stringify(aufHeute));
 p('Aber nur mit den Reitern, die ohne Seite etwas können',
-  /* FUENF SEIT E272, nicht drei: zu Gehen und Ansicht sind Verlauf,
-     Ueberpruefen und Hilfe gekommen. Die REGEL ist unveraendert und das
-     Wichtige an dieser Zeile: die drei Reiter, die eine Seite brauchen,
-     stehen ohne Seite nicht da. */
-  aufHeute.reiter === 5 && !aufHeute.namen.some((n: string) =>
+  /* VIER SEIT E391, fuenf seit E272, drei davor. „Gehen" hat das Band
+     verlassen (die Orte stehen links, E388); geblieben sind Verlauf,
+     Ueberpruefen, Ansicht und Hilfe. Die REGEL ist über alle drei Zahlen
+     hinweg unveraendert und das Wichtige an dieser Zeile: die drei Reiter,
+     die eine Seite brauchen, stehen ohne Seite nicht da. */
+  aufHeute.reiter === 4 && !aufHeute.namen.some((n: string) =>
     ['start', 'einfuegen', 'zeichnen'].includes(n)),
   `${aufHeute.reiter} Reiter: ${aufHeute.namen.join(', ')}`);
 
@@ -710,9 +776,11 @@ const ohneRuhig = await seite.evaluate(() => ({
 /* Der Schalter der ruhigen Fassung ändert an der Leiste seit E236 nichts
    mehr — sie hing nie an der Ruhe, sondern daran, ob eine Seite offen
    ist. Geprüft wird deshalb, dass das Zurückschalten sie nicht kaputt
-   macht: dieselben drei Reiter, dieselbe Höhe. */
+   macht: DIESELBEN Reiter, dieselbe Höhe. Es sind seit E391 vier statt
+   fünf, und zwar in beiden Zuständen — die Zahl darf sich ändern, der
+   VERGLEICH nicht. */
 p('Ohne die ruhige Fassung steht dieselbe Reiterzeile da',
-  ohneRuhig.reiter === 5 && ohneRuhig.hoch > 25 && ohneRuhig.zu === true,
+  ohneRuhig.reiter === 4 && ohneRuhig.hoch > 25 && ohneRuhig.zu === true,
   JSON.stringify(ohneRuhig));
 /* Zurück auf die Ausgangslage DIESER Suite — seit Auftrag 01 ist das die
    alte Fassung (siehe `seiteAuf`), nicht die ruhige. Stünde hier wieder

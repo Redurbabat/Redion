@@ -249,6 +249,61 @@ p('Der Überlaufknopf öffnet eine Lade mit dem Rest',
   rest.offen === true && rest.zahl > 0, JSON.stringify(rest));
 
 /* ==========================================================================
+ * §7 · „Gehen" hat das Band verlassen — und nichts ist dabei verlorengegangen
+ * --------------------------------------------------------------------------
+ * DER REST VON F02. Die Orte standen seit E272 Phase E im Reiter „Gehen"
+ * UND seit E388 in der linken Leiste — zwei Wege zum selben Ziel, und genau
+ * das nennt der Prüfbericht „vier Navigationslogiken nebeneinander".
+ *
+ * DIE GEFAHR BEIM WEGNEHMEN war nicht der Reiter, sondern die SECHS
+ * EINTRÄGE des schon früher aufgelösten Reiters „Werkzeuge" — Journal,
+ * Schnellnotizen, Vorlagen, Zeitmesser, Agenten, Besprechungen. Sie wohnen
+ * unter `reiter: 'gehen'` und wären mit dem Reiter unerreichbar geworden.
+ * Deshalb prüft dieser Abschnitt beides: dass der Reiter weg ist UND dass
+ * die Einträge stehen.
+ * ======================================================================== */
+console.log('\n7 · „Gehen" ist aus dem Band raus, die Orte sind vollzählig');
+await pc.setViewportSize({ width: 1360, height: 900 });
+await pc.reload();
+await pc.waitForTimeout(3500);
+await pc.evaluate(AUFRAEUMEN);
+await pc.waitForTimeout(500);
+
+const band: any = await pc.evaluate(`(() => {
+  const reiter = (Register.menueband.reiter() || []).map(r => r.id);
+  const orte = Register.menueband.orte() || [];
+  const alle = [];
+  for (const g of orte) for (const e of (g.eintraege || [])) alle.push(String(e.id));
+  return { reiter, gruppen: orte.length, zahl: alle.length, alle };
+})()`);
+p('„Gehen" ist kein Reiter des Bandes mehr', !band.reiter.includes('gehen'),
+  band.reiter.join(', '));
+p('Und im DOM steht auch keiner',
+  await pc.evaluate(`!document.querySelector('[data-mb-reiter="gehen"]')`));
+p('Das Band trägt nur noch dokumentbezogene Reiter',
+  band.reiter.every((r: string) =>
+    ['start', 'einfuegen', 'zeichnen', 'verlauf', 'ueberpruefen',
+     'ansicht', 'hilfe'].includes(r)),
+  band.reiter.join(', '));
+
+/* DIE GEGENRICHTUNG, und sie ist die wichtigere: die Liste selbst lebt. */
+p('`orte()` liefert weiterhin über vierzig Ziele', band.zahl > 40, String(band.zahl));
+const SECHS = ['w-journal', 'w-memos', 'w-vorlagen', 'w-zeit', 'w-agenten', 'w-bespr'];
+gleich('Die sechs aus dem aufgelösten Reiter „Werkzeuge" sind alle da',
+  SECHS.filter(id => !band.alle.includes(id)), []);
+
+/* Und wirklich in der Lade, nicht nur im Register. */
+await pc.click('.k-knopf[data-k="mehr-orte"]');
+await pc.waitForTimeout(700);
+const inLade: string[] = await pc.evaluate(
+  `Array.from(document.querySelectorAll('#kanten-lade .kl-zeile b')).map(b => b.textContent.trim())`);
+gleich('… und stehen auch wirklich in der Lade',
+  ['Journal', 'Schnellnotizen', 'Vorlagen', 'Zeitmesser', 'Agenten', 'Besprechungen']
+    .filter(n => !inLade.includes(n)), []);
+await pc.evaluate(`document.querySelector('#kanten-lade .kl-zu, #kanten-lade button')?.click()`);
+await pc.waitForTimeout(300);
+
+/* ==========================================================================
  * §6 · Am Telefon gibt es die Kante nicht
  * ======================================================================== */
 console.log('\n6 · Am Telefon bleibt die Kante weg');

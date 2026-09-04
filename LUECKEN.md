@@ -5620,7 +5620,7 @@ belegt mit `test386` (38 Punkte, sieben Mutationen rot gesehen).
 
 Was noch aussteht, in der Reihenfolge des Berichts:
 
-NÄCHSTER SPRINT (F01 ✓, F02 halb, F03 halb, F08, F11, F13, F14)
+NÄCHSTER SPRINT (F01 ✓, F02 ✓, F03 halb, F08, F11, F13, F14)
 
 a. **F01 · NACHGEMESSEN, der Befund stimmt so nicht** (E388). Der Bericht
    sagt, der Inhalt sei nach dem Klick auf der Übersicht geblieben. Am
@@ -5633,23 +5633,20 @@ a. **F01 · NACHGEMESSEN, der Befund stimmt so nicht** (E388). Der Bericht
    seit E272 Phase F `display:none`, und die Kante trug zehn Knöpfe, von
    denen keiner ein Ort war. Behoben mit E388.
 
-b. **F02 · P1 · zur Hälfte ZU (E388).** Die Orte stehen jetzt oben in der
-   linken Leiste, „Mehr Orte" öffnet den Rest, und der Ort, an dem man
-   steht, ist markiert. Am Telefon trug die untere Leiste die fünf Pillen
-   schon vorher.
+b. **F02 · P1 · ZU (E388 + E391).** Die Orte stehen oben in der linken
+   Leiste, „Mehr Orte" öffnet den Rest, der Ort, an dem man steht, ist
+   markiert — und seit E391 hat „Gehen" das Band verlassen. Das Menüband
+   trägt nur noch dokumentbezogene Werkzeuge. Am Telefon trug die untere
+   Leiste die fünf Pillen schon vorher.
 
-   OFFEN BLEIBEN DREI STÜCKE:
+   OFFEN BLEIBEN ZWEI KLEINERE STÜCKE:
 
-   1. **„Gehen" muss aus dem Band.** Es steht noch da und zeigt dasselbe
-      wie die linke Leiste — zwei Wege zum selben Ziel sind genau der
-      Befund. Das Wegnehmen rührt an `test248` und `test384`, die beide
-      Reiter zählen, und bekommt deshalb einen eigenen Bogen.
-   2. **Zwei verschiedene Fünfergruppen.** Gemessen: die linke Leiste und
+   1. **Zwei verschiedene Fünfergruppen.** Gemessen: die linke Leiste und
       `index.html` sagen „Heute · Lernzentrum · Elektrotechnik ·
       Bibliothek · Aufgaben", die untere Telefonleiste sagt „Dokumente ·
       Heute · Lernen · Termine · Mehr". Seit E388 steht die eine Gruppe im
       Register (`haupt: true`); die Telefonleiste liest sie noch nicht.
-   3. **Der Ortskatalog mischt Orte und Handlungen.** In der Lade hinter
+   2. **Der Ortskatalog mischt Orte und Handlungen.** In der Lade hinter
       „Mehr Orte" stehen 39 Zeilen, darunter „Neue Seite", „Suchen",
       „Befehle", „App installieren" und „Passwort" — das sind keine Orte.
       Und „Zeitmesser" steht ZWEIMAL darin, einmal unter „Planung &
