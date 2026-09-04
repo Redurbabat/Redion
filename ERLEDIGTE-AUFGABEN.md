@@ -3611,3 +3611,20 @@ Trefffläche. `src/core/helpers/colors.ts` als einzige Farbnamensliste.
 
 **Prüfung.** `test401`, ohne Browser und ohne Port. War rot und fand fünf
 Reihen mehr als ich. Mutation rot gesehen.
+
+## 42 Trefflächen unter 44 px, und zwei Fehler beim Reparieren (E407)
+
+**Fund.** §37 verlangt 44 px auf Hauptwegen und einen GESCHRIEBENEN Grund für
+jeden Nebenweg. Gemessen: 42 Flächen darunter, vier begründet, 38 stumm —
+darunter die Dialogfusszeile mit 42 px, also Bestätigen und Abbrechen, die
+§37 namentlich nennt.
+
+**Bau.** Sechs Hauptwege auf 44 px Trefffläche. Für den Rest
+`masse-bestand.json`, das nur schrumpfen darf (Vorbild `js-bestand.json`).
+
+**Zwei eigene Fehler, beide dokumentiert:** eine 44×44-Fläche um 16-px-Felder
+hätte die Nachbarn überdeckt (jetzt wächst sie nur senkrecht); und ein
+fehlendes Semikolon machte vier CSS-Regeln ungültig, ohne dass irgendetwas
+gemeckert hätte.
+
+**Prüfung.** `test402`, ohne Browser und ohne Port. Mutation rot gesehen.

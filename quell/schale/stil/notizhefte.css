@@ -233,7 +233,7 @@
   width:26px; height:26px; border-radius:50%; border:1px solid var(--line-stark,var(--line));
   display:grid; place-items:center; color:#fff; font-size:12px;
  position:relative;}
-.nh-farben button::after{content:""; position:absolute; left:50%; top:50%; width:44px; height:44px; transform:translate(-50%,-50%);}
+.nh-farben button::after{content:""; position:absolute; left:-3px; right:-3px; top:50%; height:44px; transform:translateY(-50%);}
 .nh-mehr{
   position:absolute; right:2px; top:2px; z-index:3; width:26px; height:26px;
   display:grid; place-items:center; border-radius:var(--radius-sm);

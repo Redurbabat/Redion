@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-402 Entscheidungen, E1 bis E406. Die Nummer ist die Ordnung: eine Entscheidung
+403 Entscheidungen, E1 bis E407. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -460,6 +460,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E404** — Der Anheft-Stern stand im Text der Palettenzeile (E401-Rückfall)
 * **E405** — 23 Prüfläufe teilten sich einen Port
 * **E406** — Sieben erfundene Farbtokens, sechs namenlose Schalter, vier Farbreihen
+* **E407** — 42 Trefflächen unter 44 px, und zwei Fehler beim Reparieren
 
 ---
 
@@ -33064,3 +33065,72 @@ MUTATION ROT GESEHEN: in `wolke.ts` ein `var(--warnung)` zurück auf
 Dateien: `src/core/helpers/colors.ts` (neu), acht Dateien mit Tokens,
 sechs mit Schaltern, vier mit Farbreihen, fünf Stildateien,
 `index.html`, `src/dienst/sw.ts`, `pruefungen/lauf/test401.mts`.
+
+
+================================================================================
+E407 — 42 Trefflächen unter 44 px, und zwei Fehler beim Reparieren
+================================================================================
+4. September 2026
+
+§37 ist [hart im Kern] und sagt ZWEI Dinge, nicht eins:
+
+  1. 44 px auf den Hauptwegen — Werkzeuge, Hauptmenü, untere Leiste,
+     Bestätigen und Abbrechen. Ohne Ausnahme.
+  2. Nebenwege dürfen 32 px sein — ABER mit einem geschriebenen Grund an Ort
+     und Stelle, nicht stillschweigend.
+
+Der zweite Teil ist der, den niemand prüfte. Gemessen: 42 Trefflächen unter
+44 px, davon vier mit Begründung und 38 ohne. Darunter `.fbtns button` mit
+42 px — die Fusszeile jedes Dialogs, also Bestätigen und Abbrechen, die §37
+ausdrücklich beim Namen nennt.
+
+SECHS HAUPTWEGE bekommen jetzt 44 px: die Dialogfusszeile, die Zeichenleiste
+(zweimal), die Auswahlleiste der Planfläche (darunter ist LÖSCHEN — §46), und
+die Werkzeuge des Whiteboards.
+
+FÜR DEN REST EIN VERZEICHNIS statt einer Ausrede: `masse-bestand.json`, nach
+dem Vorbild von `js-bestand.json` (§54.4). 37 Einträge, und es darf nur
+schrumpfen. Es ist keine Erlaubnis, sondern eine Schuld — und eine Zeile
+verschwindet auf zwei Wegen, die beide richtig sind: die Fläche wird 44 px,
+oder über der Regel steht, warum sie ein Nebenweg ist.
+
+Was nicht zählt: ein Kommentar ohne Grund. „32px reicht hier" ist dieselbe
+Stille mit mehr Zeichen.
+
+━━━ UND JETZT DIE ZWEI FEHLER, DIE ICH DABEI GEMACHT HABE ━━━
+
+FEHLER 1 — EINE VERBESSERUNG, DIE DEN WÄHLER KAPUTT GEMACHT HÄTTE.
+
+Der erste Wurf legte um jedes Farbfeld eine Fläche von 44 × 44 px. Acht
+Felder in einer Reihe stehen aber im Abstand von etwa 20 px — die Flächen
+überlappen sich dann um 24 px, und die zuletzt gezeichnete liegt über allen
+davor. Aus „danebengreifen ist schwerer" wäre „nur die letzte Farbe ist noch
+zu treffen" geworden.
+
+Senkrecht ist der Platz frei, waagerecht steht der Nachbar. Die Fläche
+wächst deshalb nur nach oben und unten: 44 px hoch, so breit wie das Feld
+plus sein Abstand.
+
+FEHLER 2 — EIN FEHLENDES SEMIKOLON, VIER REGELN TOT.
+
+Das Skript, das `position:relative` nachtrug, setzte es OHNE Trennzeichen
+hinter die letzte Angabe:
+
+    border:1px solid var(--line) position:relative;
+
+Damit ist beides ungültig: der Rahmen verschwindet UND die Fläche bezieht
+sich auf den falschen Vorfahren. Vier Regeln in drei Dateien. Gefunden beim
+Nachlesen der erzeugten Zeile — nicht von einer Prüfung, und auch nicht vom
+Bauen, denn CSS bricht nicht ab, es lässt die Zeile einfach weg.
+
+Beides steht hier, weil beides die Art Fehler ist, die eine Reparatur
+schlimmer macht als der Zustand davor — und weil ein Skript, das über 40
+Dateien läuft, jeden Fehler vierzigmal macht.
+
+PRÜFUNG: `test402`, 4 Punkte, kein Browser und kein Port.
+MUTATION ROT GESEHEN: `.probe-mutation button{height:30px}` in `aufbau.css`
+— „✗ Keine neue Fläche unter 44 px ohne geschriebenen Grund" und
+„✗ Das Verzeichnis ist nicht gewachsen — 38 gemessen gegen 37 eingetragen".
+
+Dateien: `pruefungen/masse-bestand.json` (neu),
+`pruefungen/lauf/test402.mts` (neu), vier Stildateien.
