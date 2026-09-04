@@ -3376,3 +3376,25 @@ die Zeugnisnote je Semester (E242) und der echte Stundenplan (E243).
   `page.click` wartet dreissig Sekunden und wirft, wenn ein Knopf unter
   einem anderen liegt; der Prüflauf stürzte bei der Mutation ab, statt sechs
   rote Zeilen zu melden. Jetzt klickt er über `evaluate`.
+
+  E396 · F14: am Telefon standen „Rückgängig" und „Wiederholen" hinter einem
+  Wisch — die zwei Griffe, die man beim Schreiben von Hand am häufigsten
+  braucht, und die einzigen in der Leiste, die keine Werkzeuge sind. Sie
+  kleben jetzt am rechten Rand (`position:sticky`), ohne Umbau am DOM: die
+  Gruppenregeln aus E356 lesen `data-gruppe` an den direkten Kindern, ein
+  Umschlag hätte sie alle gebrochen.
+
+  DREI FEHLER AUF DEM WEG, ALLE DREI NUR AUF DEM BILD ZU SEHEN (§55.3) — in
+  der Messung standen die Knöpfe jedes Mal korrekt „im Bild":
+
+  (1) `button[disabled]{opacity:.4}` weit oben in der Datei gilt für JEDEN
+  Knopf der App und machte auch den Hintergrund der klebenden durchsichtig;
+  die Werkzeuge darunter schienen durch. Die Regel im Bereich nicht zu
+  wiederholen genügt nicht — sie muss zurückgenommen werden. (2) 48 statt 44
+  Pixel Abstand liessen einen Spalt, durch den ein abgeschnittenes
+  Haftnotiz-Zeichen blitzte: zwischen klebenden Knöpfen gibt es die Lücke
+  nicht. (3) Die acht Pixel Polster rechts gehören der Leiste, nicht dem
+  Knopf — dahinter rollten die Werkzeuge weiter sichtbar durch.
+
+  Die Reihenfolge der Werkzeuge bleibt offen und ist Redurs: „Radieren" steht
+  an elfter Stelle, beim Schreiben von Hand wäre es das dritte.

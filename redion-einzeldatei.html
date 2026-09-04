@@ -11510,7 +11510,23 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
                    font-size:13px; color:var(--text); background:none; cursor:pointer}
 .blatt-werk button:hover{background:var(--bg-hover)}
 .blatt-werk button.on{background:var(--accent); color:var(--auf-accent)}
-.blatt-werk button:disabled{opacity:.38; cursor:not-allowed}
+/* DIE BLASSE STELLE GEHÖRT DEM INHALT, NICHT DEM KNOPF (E396).
+   `opacity` am Knopf macht ALLES durchsichtig, auch seinen Hintergrund —
+   und das fiel erst auf, als „Zurück" und „Vor" am Telefon am rechten Rand
+   kleben blieben: sie sind meistens abgeschaltet, waren dadurch zu 38 %
+   durchsichtig, und die Werkzeuge, über denen sie liegen, schienen durch.
+   Auf dem Bild sah es aus wie ein Doppeldruck.
+
+   Am Zeichen statt am Knopf sieht abgeschaltet genauso aus — die Knöpfe
+   haben ohnehin `background:none`, solange sie nicht kleben.
+
+   DAS `opacity:1` MUSS DASTEHEN: die blasse Stelle kommt nicht von hier,
+   sondern von `button[disabled]{opacity:.4}` weit oben (Zeile 2797) — eine
+   Regel für JEDEN Knopf der App. Sie nur nicht zu wiederholen genügt
+   nicht; sie muss zurückgenommen werden. Gemessen stand am Knopf
+   `opacity: 0.4`, obwohl hier nichts dergleichen mehr steht. */
+.blatt-werk button:disabled{opacity:1; cursor:not-allowed}
+.blatt-werk button:disabled > *{opacity:.38}
 /* SICHTBAR MACHEN, DASS DIE LEISTE ROLLT (E140, §55.1).
 
    ERSTER VERSUCH, UND ER WAR FALSCH: ein Verlauf an `.blatt-reihe::after`,
@@ -11862,6 +11878,50 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   .blatt-werk > *{flex:0 0 auto}
   .blatt-werk > .blatt-zeilenbruch{display:none}
   .blatt-werk button{min-height:44px; min-width:44px; padding:4px 8px}
+
+  /* ── ZURÜCK UND VOR ROLLEN NICHT MIT (E396, Audit F14) ──────────────────
+     GEMESSEN AM 4. SEPTEMBER bei 390 × 844, im Dokumentmodus mit einem
+     A4-Blatt: dreizehn Werkzeuge, alle 44 px hoch (§37 stimmt), in einer
+     368 px breiten Leiste mit 636 px Inhalt. Sieben stehen im Bild, sechs
+     erst nach einem Wisch — und unter diesen sechs sind „Rückgängig" und
+     „Wiederholen".
+
+     Das sind die zwei Griffe, die man beim Schreiben von Hand am
+     häufigsten braucht, und sie sind keine Werkzeuge: sie ändern nicht,
+     was der Finger tut, sie nehmen zurück. Am Rechner stehen sie deshalb
+     seit E359 in einer eigenen Zeile. Am Telefon gibt es keine zweite
+     Zeile — also kleben sie am rechten Rand.
+
+     `position: sticky` im waagerechten Roller: der Knopf bleibt am Rand
+     stehen, solange seine eigentliche Stelle weiter rechts läge. Der
+     Abstand von 48 px ist die Knopfbreite (44) plus die Lücke (4); dass
+     er stimmt, prüft `test393 §2` an beiden Enden des Rollwegs — eine
+     Zahl im Stilblatt ohne Wächter wäre beim nächsten Mass daneben.
+
+     Der Trenner davor entfällt hier: er stünde unter den beiden. */
+  .blatt-werk > button[data-act="redo"]{ position:sticky; right:0 }
+  /* 44, NICHT 48 — die Knopfbreite OHNE die Lücke. Mit 48 klebten die zwei
+     vier Pixel auseinander, und durch den Spalt sah man die Werkzeuge
+     darunter durchblitzen. Auf dem Bild war es ein abgeschnittenes
+     Haftnotiz-Zeichen mitten zwischen den Pfeilen; gemessen hätte es
+     niemand. */
+  .blatt-werk > button[data-act="undo"]{ position:sticky; right:44px }
+  .blatt-werk > button[data-act="undo"],
+  .blatt-werk > button[data-act="redo"]{
+    z-index:2; background:var(--bg-card);
+  }
+  .blatt-werk > button[data-act="undo"]{
+    box-shadow:-8px 0 8px -6px rgba(0,0,0,.45);
+  }
+  /* DIE ACHT PIXEL POLSTER RECHTS gehören der Leiste, nicht dem Knopf:
+     `right:0` klebt an der Polsterkante, und dahinter rollten die
+     Werkzeuge weiter sichtbar durch. Ein Schatten ohne Weichzeichnung in
+     derselben Farbe verlängert die Fläche, ohne an den Massen zu rühren —
+     eine zweite Zahl im Stilblatt wäre die nächste, die verrutscht. */
+  .blatt-werk > button[data-act="redo"]{
+    box-shadow:9px 0 0 0 var(--bg-card);
+  }
+  .blatt-werk[data-tool] > .blatt-trenn[data-gruppe="verlauf"]{ display:none }
   .blatt-werk .wort{position:absolute; width:1px; height:1px; padding:0;
     margin:-1px; overflow:hidden; clip:rect(0 0 0 0); clip-path:inset(50%);
     white-space:nowrap; border:0}
@@ -16409,7 +16469,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 300, inhalt: 'fb5625c1d2249a6c', gebaut: '2026-09-04T11:43:50.444Z' };
+const Stand = { fassung: 301, inhalt: '400f11e1faa75e53', gebaut: '2026-09-04T14:11:34.838Z' };
 window.Stand = Stand;
 
 </script>

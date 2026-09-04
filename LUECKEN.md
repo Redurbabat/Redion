@@ -5620,7 +5620,7 @@ belegt mit `test386` (38 Punkte, sieben Mutationen rot gesehen).
 
 Was noch aussteht, in der Reihenfolge des Berichts:
 
-NÄCHSTER SPRINT (F01 ✓, F02 ✓, F03 halb, F08 ✓, F11 ✓, F13 halb, F14)
+NÄCHSTER SPRINT (F01 ✓, F02 ✓, F03 halb, F08 ✓, F11 ✓, F13 halb, F14 halb)
 
 a. **F01 · NACHGEMESSEN, der Befund stimmt so nicht** (E388). Der Bericht
    sagt, der Inhalt sei nach dem Klick auf der Übersicht geblieben. Am
@@ -5733,9 +5733,27 @@ f. **F13 · ZUR HÄLFTE ZU (E395).** Das Abnahmetor über die vier Grössen
    Tor prüft Masse und Erreichbarkeit, nicht Gesten, Tastatur, Zurück-Wisch
    oder die Eigenheiten von iOS-Safari.
 
-g. **F14 · P2 · Werkzeugdichte am Telefon.** Der Bericht will vier
-   Primärwerkzeuge plus „Mehr". E356 zeigt heute schon nur die Gruppen des
-   gewählten Werkzeugs; ob das reicht, ist nicht gemessen.
+g. **F14 · ZUR HÄLFTE ZU (E396) — der Rest ist Redurs Entscheidung.**
+   Gemessen bei 390 × 844 im Dokumentmodus: dreizehn Werkzeuge, alle 44 px
+   hoch (§37 stimmt), Leiste 368 px breit, Inhalt 636 px.
+
+   | | |
+   |---|---|
+   | im Bild ohne Wischen | Schreiben · Auswahl · Stift · Marker · Form · Abdecken · Haftnotiz |
+   | erst nach dem Wischen | Text · Fachzeichen · Bild · Radieren · Rückgängig · Wiederholen |
+
+   ZWEI DAVON SIND KEINE WERKZEUGE: „Rückgängig" und „Wiederholen" ändern
+   nicht, was der Finger tut. Am Rechner stehen sie seit E359 in einer
+   eigenen Zeile; am Telefon kleben sie jetzt am rechten Rand (E396,
+   `test393`).
+
+   OFFEN BLEIBT DIE REIHENFOLGE. „Radieren" steht an elfter Stelle und
+   damit hinter einem Wisch — beim Schreiben von Hand ist es das dritte
+   Werkzeug, nicht das elfte. Der Bericht will „vier Primärwerkzeuge plus
+   Mehr". Beides hiesse, die Reihenfolge der Zeichenwerkzeuge neu zu
+   setzen, und die gehört Redur: er hat sie in E352, E355, E359 und E375
+   selbst gebaut. **Frage an ihn:** welche vier Werkzeuge sollen ohne
+   Wischen dastehen?
 
 POLITUR (F09, F10, F12, F17, F18)
 

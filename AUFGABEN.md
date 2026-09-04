@@ -48,7 +48,8 @@ Sechs Punkte, jeder nachgesehen am 3. September 2026.
 
 **Ziel** — die verbleibenden Befunde des UX-Audits schliessen. Der
 Sofort-Block ist zu (E386), F01 richtiggestellt (E388), F02 zu (E388+E391),
-F03 halb (E387), F08 zu (E394), F11 zu (E392), F13 halb (E395).
+F03 halb (E387), F08 zu (E394), F11 zu (E392), F13 halb (E395),
+F14 halb (E396).
 
 **Was noch offen ist**, in dieser Reihenfolge:
 
@@ -61,7 +62,8 @@ F02 Rest   die untere Telefonleiste an `haupt: true` hängen — WELCHE fünf
 F03 Rest   Einzelseite/Fortlaufend — braucht Redurs Zustimmung (gegen E299)
 F13 Rest   der echte Safari-/Chrome-Lauf auf Redurs Geräten — das Tor
            über die vier Grössen steht (test392, E395)
-F14        Werkzeugdichte am Telefon — erst messen, ob E356 reicht
+F14 Rest   welche VIER Zeichenwerkzeuge ohne Wischen dastehen sollen —
+           Redurs Entscheidung (Zurück/Vor kleben seit E396)
 F09 F10 F12 F17 F18   Politur
 
 F11 ist ZU (E392) — und die Behauptung war falsch: die vier Gruppen gibt

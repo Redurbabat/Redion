@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-391 Entscheidungen, E1 bis E395. Die Nummer ist die Ordnung: eine Entscheidung
+392 Entscheidungen, E1 bis E396. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -449,6 +449,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E393** — Die Leiste zeigt, wo man wirklich ist; der Zeitmesser steht einmal
 * **E394** — Das KI-Feld bleibt nicht im Dokument stehen
 * **E395** — Eine Kante, die zu kurz ist, faltet sich, statt hinauszuragen
+* **E396** — „Zurück" und „Vor" rollen am Telefon nicht weg
 
 ---
 
@@ -32168,3 +32169,82 @@ Grün geblieben: test33, test61, test272, test387, test390, test391.
 Einzeldatei neu gebaut. Mit einem Bild belegt (§55.3).
 
 Dateien: `src/schale/aufbau/context-rail.ts`, `pruefungen/lauf/test392.mts`.
+
+
+E396 — „Zurück" und „Vor" rollen am Telefon nicht weg (Audit F14)
+================================================================================
+4. September 2026 · Audit F14 · Auftrag 01 Schritt 7
+
+PROBLEM
+
+Der Bericht verlangt unter F14 „vier Primärwerkzeuge plus Mehr" am Telefon.
+Gemessen am 4. September bei 390 × 844, im Dokumentmodus mit einem A4-Blatt:
+
+    dreizehn Werkzeuge, alle 44 px hoch (§37 stimmt),
+    Leiste 368 px breit, Inhalt 636 px — sie rollt.
+
+    im Bild ohne Wischen   Schreiben · Auswahl · Stift · Marker · Form ·
+                           Abdecken · Haftnotiz
+    erst nach dem Wischen  Text · Fachzeichen · Bild · Radieren ·
+                           RÜCKGÄNGIG · WIEDERHOLEN
+
+Die zwei letzten sind die Griffe, die man beim Schreiben von Hand am
+häufigsten braucht — und sie sind keine Werkzeuge: sie ändern nicht, was der
+Finger tut, sie nehmen zurück. Am Rechner stehen sie seit E359 in einer
+eigenen Zeile. Am Telefon gibt es keine zweite Zeile.
+
+ENTSCHEIDUNG
+
+Sie kleben am rechten Rand. `position: sticky` im waagerechten Roller: der
+Knopf bleibt stehen, solange seine eigentliche Stelle weiter rechts läge.
+Kein Umbau am DOM — die Gruppenregeln aus E356 lesen `data-gruppe` an den
+DIREKTEN Kindern, ein Umschlag hätte sie alle gebrochen.
+
+WAS DER BERICHT SONST VERLANGT, IST NICHT GEBAUT, und das ist Absicht: „vier
+Primärwerkzeuge" hiesse, die Reihenfolge der Zeichenwerkzeuge neu zu setzen.
+Die gehört Redur — er hat sie in E352, E355, E359 und E375 selbst gebaut.
+„Radieren" steht heute an elfter Stelle und damit hinter einem Wisch; ob es
+neben den Stift gehört, steht in LUECKEN.md unter L123 F14 als Frage an ihn,
+nicht als Entscheidung von mir.
+
+DREI FEHLER AUF DEM WEG, ALLE DREI AUF DEM BILD GEFUNDEN (§55.3)
+
+  1. Die zwei sind meistens ABGESCHALTET, und `button[disabled]{opacity:.4}`
+     — eine Regel für JEDEN Knopf der App, Zeile 2797 — machte auch ihren
+     Hintergrund durchsichtig. Die Werkzeuge darunter schienen durch; es sah
+     aus wie ein Doppeldruck. Die Regel im Bereich nicht zu wiederholen
+     genügte nicht, sie musste mit `opacity:1` zurückgenommen werden. Blass
+     bleibt der INHALT: `button:disabled > *{opacity:.38}`.
+  2. `right: 48px` für „Zurück" — Knopfbreite plus Lücke — liess einen Spalt
+     von vier Pixeln, durch den ein abgeschnittenes Haftnotiz-Zeichen
+     blitzte. Richtig sind 44: die Knopfbreite OHNE die Lücke, denn die
+     Lücke gibt es zwischen klebenden Knöpfen nicht.
+  3. Die acht Pixel Polster rechts an der Leiste gehören ihr, nicht dem
+     Knopf: `right:0` klebt an der Polsterkante, und dahinter rollten die
+     Werkzeuge weiter sichtbar durch. Ein Schatten ohne Weichzeichnung in
+     derselben Farbe verlängert die Fläche, ohne an den Massen zu rühren.
+
+KEINER DER DREI WAR MESSBAR, bevor man hinsah. Alle drei standen als richtige
+Zahlen in der Messung — die Knöpfe waren „im Bild" — und alle drei waren auf
+dem Bildschirm falsch. Das ist derselbe Fund wie beim Tabellenblock (§55.1).
+
+ALTERNATIVE: die zwei aus der rollenden Leiste in die feste `.blatt-fest`
+daneben verschieben. Verworfen — dort stehen die Griffe des DOKUMENTS
+(Seitenwechsel, Zoom), nicht die des Zeichnens, und die Leiste wäre um zwei
+Knöpfe breiter geworden, was auf 360 px die Werkzeuge weiter verdrängt.
+
+KOSTEN: fünf Regeln im Stilblatt, nur unter 760 px. Die zwei Zahlen (44 und
+9) hält `test393 §2` an beiden Enden des Rollwegs. Keine Daten, kein
+Feldname, keine Migration.
+
+PRÜFUNG: `test393` (19 Punkte, PORT 9419). VIER MUTATIONEN ROT GESEHEN:
+
+    `position:sticky` weg         §1 achtfach rot — an allen drei Grössen
+    zurück auf `right:48px`       §2 rot: „323 → 327", der Spalt
+    `opacity:1` weggenommen       §3 zweifach rot
+    Klebeschranke aufgehoben      §4 rot — am Rechner klebt es sonst mit
+
+Grün geblieben: test356, test359, test392. Einzeldatei neu gebaut. Mit einem
+Bild belegt: dieselbe Leiste an beiden Enden ihres Rollwegs.
+
+Dateien: `quell/schale/stil/bausteine.css`, `pruefungen/lauf/test393.mts`.
