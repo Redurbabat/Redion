@@ -5758,7 +5758,18 @@ g. **F14 · ZUR HÄLFTE ZU (E396) — der Rest ist Redurs Entscheidung.**
 POLITUR (F09, F10, F12, F17, F18)
 
 h. **F09** Befehlsmenü mit Suche, zuletzt verwendet, Favoriten.
-i. **F10** „Handschriftliche Notiz" als eigener Typ im Neu-Menü.
+i. **F10 · ZU (E397) — den Typ gab es schon, er öffnete nur nicht.** „Blatt"
+   steht seit E100 unter „Zeichnen". Gemessen: der Weg legte eine Seite mit
+   den Blöcken `["text", "blatt"]` an und liess `dokumentModus` auf `false`
+   — man landete im Texteditor, mit einem leeren Absatz oben und dem Blatt
+   als Kasten darunter, und musste „Dokumentmodus" erst selbst finden. Die
+   Notizhefte setzen die Flagge längst beim Anlegen; dieser Weg nicht.
+
+   Jetzt liegt das Blatt gleich zum Schreiben da, und die Unterzeile sagt
+   den Zweck statt nur das Papier. DER NAME BLEIBT „BLATT": so heisst die
+   Blockart, die Werkzeugleiste und alles, was E100, E359 und E375 gebaut
+   haben. Ein zweiter Name für dieselbe Sache steht dann in der Suche, im
+   Slash-Menü und im Papierkorb nicht (§8). `test394`, 16 Punkte.
 j. **F12** Datenschutztexte nach Modus formulieren statt pauschal.
 k. **F17** Progressive Offenlegung im Onboarding.
 l. **F18** Visuelle Hierarchie — ein dominantes Arbeitsziel je Ansicht.

@@ -3398,3 +3398,17 @@ die Zeugnisnote je Semester (E242) und der echte Stundenplan (E243).
 
   Die Reihenfolge der Werkzeuge bleibt offen und ist Redurs: „Radieren" steht
   an elfter Stelle, beim Schreiben von Hand wäre es das dritte.
+
+  E397 · F10: der Typ war da, er öffnete nur nicht. „Blatt" legte eine Seite
+  mit ["text", "blatt"] an und liess `dokumentModus` auf false — man landete
+  im Texteditor und musste „Dokumentmodus" erst selbst finden, um auf dem
+  Blatt schreiben zu können. Zwei Zeilen: die Flagge setzen, und die
+  Unterzeile sagt den Zweck („Mit der Hand schreiben") statt nur die
+  Papiersorten.
+
+  DER NAME BLEIBT „BLATT", obwohl der Bericht „Handschriftliche Notiz"
+  vorschlägt. So heisst die Blockart, die Werkzeugleiste und alles, was E100,
+  E359 und E375 gebaut haben; ein zweiter Name stünde dann in der Suche, im
+  Slash-Menü und im Papierkorb nicht (§8). Der Zweck gehört in die
+  Unterzeile, nicht in einen zweiten Namen — `test394 §3` hält beides fest,
+  und die Umbenennung war die vierte Mutation, die rot ging.

@@ -2599,8 +2599,15 @@ const App = (() => {
     /* --- Zeichnen ----------------------------------------------------- */
     { gruppe: 'Zeichnen', id: 'board', zeichen: '🖍', name: 'Whiteboard',
       sub: 'Freie Fläche zum Skizzieren' },
+    /* DIE UNTERZEILE SAGT DEN ZWECK, NICHT NUR DAS PAPIER (E397). Sie hiess
+       „A4 — liniert, kariert, Punktraster, Millimeter" und beschrieb damit
+       den Bogen, nicht das, wofür man ihn nimmt. Wer mit der Hand schreiben
+       will, sucht nicht nach Papiersorten.
+       Der NAME bleibt „Blatt": so heisst die Blockart, so heisst die
+       Werkzeugleiste, so heissen E100 und E359. Zwei Namen für dieselbe
+       Sache laufen auseinander (§8). */
     { gruppe: 'Zeichnen', id: 'blatt', zeichen: '📐', name: 'Blatt',
-      sub: 'A4 — liniert, kariert, Punktraster, Millimeter' },
+      sub: 'Mit der Hand schreiben — A4, liniert, kariert, Punktraster' },
     { gruppe: 'Zeichnen', id: 'plan', zeichen: '⚡', name: 'Schaltplan',
       sub: 'Mit Fachzeichen und Stromsimulation' },
 
@@ -2783,7 +2790,20 @@ const App = (() => {
          Kalkulationstabelle (gemessen 513 px, mit A1, fx, CHF und %). */
       else if (was === 'tabelle')  Store.addBlock(p.id, 'spreadsheet', {});
       else if (was === 'board')    Store.addBlock(p.id, 'whiteboard', { text: 'Whiteboard' });
-      else if (was === 'blatt')    Store.addBlock(p.id, 'blatt', { text: '' });
+      else if (was === 'blatt') {
+        Store.addBlock(p.id, 'blatt', { text: '' });
+        /* UND GLEICH ZUM SCHREIBEN AUFSCHLAGEN (E397, Audit F10).
+           GEMESSEN AM 4. SEPTEMBER: „Blatt" legte eine Seite mit den
+           Blöcken ["text", "blatt"] an und liess `dokumentModus` auf
+           `false`. Man landete also im Texteditor, mit einem leeren
+           Absatz oben und dem Blatt als Kasten darunter — und musste
+           „Dokumentmodus" erst selbst finden, um darauf schreiben zu
+           können. Ein Weg, der das Ding anlegt, aber nicht öffnet.
+
+           Die Notizhefte machen es längst richtig (`notebook.ts:348`
+           und `:370` setzen die Flagge beim Anlegen). Hier fehlte sie. */
+        Store.updateBlock(p.id, { dokumentModus: true });
+      }
       else if (was === 'plan')     Store.addBlock(p.id, 'schaltplan', { text: '' });
       else if (was === 'diagramm') Store.addBlock(p.id, 'chart', { text: '' });
       else if (was === 'aufgabe')  Store.addBlock(p.id, 'todo', { text: '' });

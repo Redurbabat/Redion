@@ -64,7 +64,7 @@ F13 Rest   der echte Safari-/Chrome-Lauf auf Redurs Geräten — das Tor
            über die vier Grössen steht (test392, E395)
 F14 Rest   welche VIER Zeichenwerkzeuge ohne Wischen dastehen sollen —
            Redurs Entscheidung (Zurück/Vor kleben seit E396)
-F09 F10 F12 F17 F18   Politur
+F09 F12 F17 F18   Politur  (F10 ist mit E397 zu)
 
 F11 ist ZU (E392) — und die Behauptung war falsch: die vier Gruppen gibt
 es längst. Der wirkliche Fehler war ein auf 720 px gedeckeltes Fenster, das

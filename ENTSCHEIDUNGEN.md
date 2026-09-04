@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-392 Entscheidungen, E1 bis E396. Die Nummer ist die Ordnung: eine Entscheidung
+393 Entscheidungen, E1 bis E397. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -450,6 +450,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E394** — Das KI-Feld bleibt nicht im Dokument stehen
 * **E395** — Eine Kante, die zu kurz ist, faltet sich, statt hinauszuragen
 * **E396** — „Zurück" und „Vor" rollen am Telefon nicht weg
+* **E397** — „Blatt" legt nicht nur an, es schlägt auch auf
 
 ---
 
@@ -32248,3 +32249,66 @@ Grün geblieben: test356, test359, test392. Einzeldatei neu gebaut. Mit einem
 Bild belegt: dieselbe Leiste an beiden Enden ihres Rollwegs.
 
 Dateien: `quell/schale/stil/bausteine.css`, `pruefungen/lauf/test393.mts`.
+
+
+E397 — „Blatt" legt nicht nur an, es schlägt auch auf (Audit F10)
+================================================================================
+4. September 2026 · Audit F10 · Auftrag 01 Schritt 8
+
+PROBLEM (und die Behauptung, die halb stimmte)
+
+Der Bericht verlangt unter F10 „Handschriftliche Notiz als eigener Typ im
+Neu-Menü". Den Typ gibt es seit E100: „Blatt" steht unter „Zeichnen", mit
+der Unterzeile „A4 — liniert, kariert, Punktraster, Millimeter".
+
+Gemessen am 4. September, an beiden Grössen, den Weg wirklich gegangen:
+
+    Blöcke der neuen Seite   ["text", "blatt"]
+    dokumentModus            false
+    DocumentMode.active()    false
+
+Man landete also im TEXTEDITOR — ein leerer Absatz oben, das Blatt als
+Kasten darunter — und musste „Dokumentmodus" erst selbst finden, um darauf
+schreiben zu können. Ein Weg, der das Ding anlegt, aber nicht öffnet.
+
+Die Notizhefte machen es längst richtig: `notebook.ts:348` und `:370` setzen
+die Flagge beim Anlegen, `bibliothek.ts:295` ebenso. Nur dieser Weg nicht.
+
+ENTSCHEIDUNG
+
+Zwei Zeilen:
+
+1. `Store.updateBlock(p.id, { dokumentModus: true })` gleich nach dem Blatt.
+2. Die Unterzeile sagt den ZWECK statt nur das Papier: „Mit der Hand
+   schreiben — A4, liniert, kariert, Punktraster". Wer mit der Hand schreiben
+   will, sucht nicht nach Papiersorten.
+
+DER NAME BLEIBT „BLATT", und das ist die eigentliche Entscheidung dieses
+Eintrags. Der Bericht schlägt „Handschriftliche Notiz" vor; so heisst aber
+weder die Blockart (`blatt`) noch die Werkzeugleiste (`.blatt-werk`) noch
+das, was E100, E359 und E375 gebaut haben. Zwei Namen für dieselbe Sache
+laufen auseinander (§8) — und der zweite steht dann in der Suche, im
+Slash-Menü und im Papierkorb nicht. Der Zweck gehört in die Unterzeile, nicht
+in einen zweiten Namen.
+
+WARUM DIE FLAGGE NICHT IN `neueSeite()` GEHÖRT: eine leere Seite ist ein
+Textdokument. Sie im Dokumentmodus zu öffnen hiesse, den Schreibzeiger
+wegzunehmen. `test394 §2` hält das fest — es war die zweite Mutation, und sie
+war rot.
+
+KOSTEN: zwei Zeilen. Keine Daten, kein Feldname, keine Migration —
+`dokumentModus` ist ein Feld, das es an jeder Seite schon gibt.
+
+PRÜFUNG: `test394` (16 Punkte, PORT 9421). VIER MUTATIONEN ROT GESEHEN:
+
+    Flagge weggelassen              5 rot (§1 dreifach, §4 zweifach)
+    Flagge in `neueSeite()`         §2 rot — die Gegenprobe
+    Unterzeile zurück auf Papier    §3 rot
+    Weg in „Handschriftliche
+      Notiz" umbenannt              §3 rot — der §8-Wächter
+
+Grün geblieben: test114, test237, test265, test391. Einzeldatei neu gebaut.
+Mit einem Bild belegt (§55.3): am Telefon liegt nach dem Weg das Blatt da,
+mit Stift und der Leiste aus E396 — ohne einen weiteren Griff.
+
+Dateien: `src/schale/aufbau/schale.ts`, `pruefungen/lauf/test394.mts`.
