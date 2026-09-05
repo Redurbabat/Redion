@@ -35,7 +35,6 @@ const ProduktOnboarding = (() => {
   };
 
   const META_KEY = 'produktOnboarding:v1';
-  const STIL_ID = 'produkt-onboarding-stil';
   const BEREICHE: BereichVorgabe[] = [
     {
       key: 'elektro', name: 'Elektro-Ausbildung', icon: '⚡', art: 'ausbildung',
@@ -153,140 +152,6 @@ const ProduktOnboarding = (() => {
     liste.find(bereich => gefaltet(bereich?.name) === gefaltet(vorgabe.name)) ||
     liste.find(bereich => text(bereich?.art, 40) === vorgabe.art) || null;
 
-  const stilSicherstellen = (): void => {
-    if (document.getElementById(STIL_ID)) return;
-    const stil = document.createElement('style');
-    stil.id = STIL_ID;
-    stil.textContent = `
-      .produkt-onboarding-lage {
-        position: fixed; inset: 0; z-index: 10050; box-sizing: border-box;
-        display: grid; place-items: center; padding: 12px;
-        background: color-mix(in srgb, #101217 62%, transparent);
-        overscroll-behavior: contain;
-      }
-      .produkt-onboarding-lage *, .produkt-onboarding-lage *::before,
-      .produkt-onboarding-lage *::after { box-sizing: border-box; }
-      .produkt-onboarding {
-        width: min(680px, calc(100vw - 24px)); max-width: 100%;
-        max-height: min(780px, calc(100dvh - 24px)); overflow: hidden;
-        display: flex; flex-direction: column; border: 1px solid var(--border, #d9dce2);
-        border-radius: 18px; color: var(--text, #1f2329); background: var(--bg, #fff);
-        box-shadow: 0 24px 80px rgb(0 0 0 / .28);
-      }
-      .produkt-onboarding-kopf {
-        display: flex; align-items: center; gap: 12px; padding: 18px 20px 12px;
-        border-bottom: 1px solid var(--border, #e2e4e9);
-      }
-      .produkt-onboarding-marke {
-        width: 42px; height: 42px; flex: 0 0 42px; display: grid; place-items: center;
-        border-radius: 12px; background: color-mix(in srgb, var(--accent, #d62b3a) 13%, transparent);
-        font-size: 22px;
-      }
-      .produkt-onboarding-kopftext { min-width: 0; flex: 1; }
-      .produkt-onboarding-kopftext strong { display: block; font-size: 16px; }
-      .produkt-onboarding-kopftext span { color: var(--text-faint, #6d7280); font-size: 12.5px; }
-      .produkt-onboarding-schliessen {
-        width: 44px; height: 44px; flex: 0 0 44px; border: 0; border-radius: 10px;
-        color: inherit; background: transparent; font: inherit; font-size: 19px; cursor: pointer;
-      }
-      .produkt-onboarding-schliessen:hover { background: var(--bg-hover, #f1f2f5); }
-      .produkt-onboarding-fortschritt {
-        display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px;
-        margin: 0; padding: 12px 20px 0; list-style: none;
-      }
-      .produkt-onboarding-fortschritt li {
-        min-width: 0; color: var(--text-faint, #737886); font-size: 11.5px;
-      }
-      .produkt-onboarding-fortschritt li::before {
-        content: ''; display: block; height: 4px; margin-bottom: 5px;
-        border-radius: 999px; background: var(--bg-hover, #e9ebef);
-      }
-      .produkt-onboarding-fortschritt li[data-erreicht="ja"]::before {
-        background: var(--accent, #d62b3a);
-      }
-      .produkt-onboarding-fortschritt li[aria-current="step"] {
-        color: var(--text, #1f2329); font-weight: 650;
-      }
-      .produkt-onboarding-inhalt {
-        min-height: 320px; padding: 22px 24px; overflow: auto; overflow-x: hidden;
-      }
-      .produkt-onboarding-inhalt h1 { margin: 0 0 8px; font-size: clamp(23px, 4vw, 31px); line-height: 1.15; }
-      .produkt-onboarding-inhalt > p { margin: 0 0 20px; color: var(--text-faint, #666d79); line-height: 1.55; }
-      .produkt-onboarding fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
-      .produkt-onboarding legend { width: 100%; margin-bottom: 10px; font-weight: 700; }
-      .produkt-onboarding-welten { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-      .produkt-onboarding-welt, .produkt-onboarding-bereich {
-        position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px;
-        min-width: 0; padding: 15px; border: 1px solid var(--border, #dfe2e8);
-        border-radius: 13px; cursor: pointer; background: var(--bg-card, #fff);
-      }
-      .produkt-onboarding-welt:first-of-type { grid-column: 1 / -1; }
-      .produkt-onboarding-welt:has(input:checked), .produkt-onboarding-bereich:has(input:checked) {
-        border-color: var(--accent, #d62b3a);
-        background: color-mix(in srgb, var(--accent, #d62b3a) 7%, var(--bg-card, #fff));
-      }
-      .produkt-onboarding-welt input, .produkt-onboarding-bereich input {
-        width: 19px; height: 19px; margin: 2px 0 0; accent-color: var(--accent, #d62b3a);
-      }
-      .produkt-onboarding-welt b, .produkt-onboarding-bereich b { display: block; margin-bottom: 4px; }
-      .produkt-onboarding-welt small, .produkt-onboarding-bereich small {
-        display: block; color: var(--text-faint, #69707d); line-height: 1.4;
-      }
-      .produkt-onboarding-bereiche { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-      .produkt-onboarding-bereich .po-icon { font-size: 21px; line-height: 1; }
-      .produkt-onboarding-bereich input { position: absolute; right: 13px; top: 13px; }
-      .produkt-onboarding-bereich > span:last-child { padding-right: 24px; }
-      .produkt-onboarding-bereich[data-gesperrt="ja"] { opacity: .58; cursor: not-allowed; }
-      .produkt-onboarding-hinweis {
-        margin-top: 14px; padding: 11px 13px; border-radius: 10px;
-        color: var(--text-faint, #676e79); background: var(--bg-hover, #f3f4f6); font-size: 12.5px; line-height: 1.45;
-      }
-      .produkt-onboarding-zusammenfassung {
-        display: grid; gap: 10px; margin: 0; padding: 0; list-style: none;
-      }
-      .produkt-onboarding-zusammenfassung li {
-        display: flex; align-items: flex-start; gap: 12px; padding: 13px 14px;
-        border-radius: 11px; background: var(--bg-hover, #f4f5f7);
-      }
-      .produkt-onboarding-zusammenfassung b { display: block; }
-      .produkt-onboarding-zusammenfassung small { color: var(--text-faint, #6d7280); }
-      .produkt-onboarding-fehler { min-height: 20px; margin: 12px 24px 0; color: #b4232f; font-size: 13px; }
-      .produkt-onboarding-fuss {
-        display: flex; align-items: center; gap: 9px; padding: 14px 20px 18px;
-        border-top: 1px solid var(--border, #e1e3e8);
-      }
-      .produkt-onboarding-fuss button {
-        min-height: 44px; padding: 9px 15px; border: 1px solid var(--border, #d9dce2);
-        border-radius: 10px; color: inherit; background: var(--bg, #fff); font: inherit;
-        font-weight: 620; cursor: pointer;
-      }
-      .produkt-onboarding-fuss button:hover:not(:disabled) { background: var(--bg-hover, #f1f2f5); }
-      .produkt-onboarding-fuss button:disabled { opacity: .52; cursor: wait; }
-      .produkt-onboarding-fuss .po-ueberspringen { margin-right: auto; border-color: transparent; color: var(--text-faint, #686e7a); }
-      .produkt-onboarding-fuss .po-weiter, .produkt-onboarding-fuss .po-fertig {
-        border-color: var(--accent, #d62b3a); color: #fff; background: var(--accent, #d62b3a);
-      }
-      .produkt-onboarding :focus-visible { outline: 3px solid color-mix(in srgb, var(--accent, #d62b3a) 45%, transparent); outline-offset: 2px; }
-      @media (max-width: 520px) {
-        .produkt-onboarding-lage { align-items: end; padding: 0; }
-        .produkt-onboarding { width: 100vw; max-height: 96dvh; border-radius: 18px 18px 0 0; border-bottom: 0; }
-        .produkt-onboarding-kopf { padding: 14px 14px 10px; }
-        .produkt-onboarding-fortschritt { padding: 10px 14px 0; }
-        .produkt-onboarding-fortschritt li { font-size: 10.5px; }
-        .produkt-onboarding-inhalt { min-height: 0; padding: 18px 16px; }
-        .produkt-onboarding-welten, .produkt-onboarding-bereiche { grid-template-columns: 1fr; }
-        .produkt-onboarding-welt:first-of-type { grid-column: auto; }
-        .produkt-onboarding-fehler { margin-inline: 16px; }
-        .produkt-onboarding-fuss { padding: 12px 14px max(14px, env(safe-area-inset-bottom)); flex-wrap: wrap; }
-        .produkt-onboarding-fuss .po-ueberspringen { order: 3; width: 100%; margin: 0; }
-        .produkt-onboarding-fuss .po-zurueck { margin-right: auto; }
-      }
-      @media (prefers-reduced-motion: reduce) {
-        .produkt-onboarding-lage *, .produkt-onboarding-lage *::before { scroll-behavior: auto !important; transition: none !important; }
-      }
-    `;
-    document.head.appendChild(stil);
-  };
 
   const weltName = (welt: Hauptwelt): string =>
     welt === 'lernen' ? '🎓 Lernen & Alltag' : welt === 'workspace' ? '🧱 Workspace' : 'Beide Hauptwelten';
@@ -297,7 +162,10 @@ const ProduktOnboarding = (() => {
       return Promise.reject(new Error('Das Onboarding braucht ein geöffnetes Redion-Fenster.'));
 
     laufend = new Promise<Ergebnis>(resolve => {
-      stilSicherstellen();
+      /* Der Stil kommt aus `quell/schale/stil/produktwelten.css` (E418).
+         Hier stand ein `<style>`-Block mit 126 Zeilen, der bei Bedarf in die
+         Seite gehaengt wurde — §39 sagt dazu einen Satz, und `test410` liest
+         Stildateien, keine Zeichenketten im Quelltext. */
       const vorherFokus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
       const gespeichert = profilLesen();
       let schritt = 1;

@@ -53,6 +53,15 @@
     margin-left: calc(-1 * var(--db-aus));
   }
 }
+/* DIE VORRAT-LEISTE (E418). Ihre Klasse war da, ihr Aussehen stand als
+   `style.cssText` am Element — sieben Deklarationen im Quelltext (§39).
+   Die Zeile meldet, dass eine Vorberechnung laeuft oder etwas vorliegt;
+   sie steht ueber der Datenbank und soll sich davon abheben, ohne zu
+   schreien. */
+.vorrat-leiste{
+  display:flex; gap:10px; align-items:center; padding:6px 10px;
+  margin-bottom:8px; border-radius:8px; font-size:.9em;
+  background:var(--bg-card); opacity:.9 }
 .db-head{display:flex; align-items:center; gap:2px; margin-bottom:6px; flex-wrap:wrap}
 /* DER TITEL DER DATENQUELLE (E417). Es gab ihn nicht — nur den Schalter, der
    ihn ausschalten sollte. Er steht ganz links im Kopf und bekommt die volle

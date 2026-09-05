@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-413 Entscheidungen, E1 bis E417. Die Nummer ist die Ordnung: eine Entscheidung
+414 Entscheidungen, E1 bis E418. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -471,6 +471,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E415** — Zwei tote CSS-Zeilen, zwei unklickbare Knöpfe
 * **E416** — Ein Wächter, der die alte Mechanik misst, misst nichts
 * **E417** — Sechs Schalter ohne Draht, zwei davon ohne Anzeige
+* **E418** — Stil gehört in eine Stildatei, und der Wächter sieht nur dorthin
 
 ---
 
@@ -33992,3 +33993,87 @@ Dateien: `src/bereiche/datenbanken/steuerung.ts`,
 `src/bereiche/wissen/werkzeuge.ts`, `src/bereiche/planen/dienst.ts`,
 `quell/schale/stil/ansichten.css`, `quell/schale/stil/datenbanken.css`,
 `pruefungen/lauf/test411.mts` (neu), `pruefungen/schalter-bestand.json` (neu).
+
+
+---
+
+E418 — Stil gehört in eine Stildatei, und der Wächter sieht nur dorthin
+-----------------------------------------------------------------------
+
+ENTSCHEIDUNG: Die 126 Zeilen Stil der Begrüssungsfläche wandern aus
+`produkt_onboarding.ts` nach `quell/schale/stil/produktwelten.css`. Zwei
+Klassen ohne Regel bekommen eine: `msg-ohne-quelle` und `vorrat-leiste`.
+
+WIE ES GEFUNDEN WURDE. Rückwärts gezählt: 1591 Klassen setzt der Code, 69
+haben keine Regel. Fünfzehn davon hiessen `produkt-onboarding-*` — die ganze
+Begrüssungsfläche. Kein Fehler im Stil, sondern einer am Ort: die Regeln
+standen als Zeichenkette im Quelltext und wurden bei Bedarf als `<style>` in
+die Seite gehängt.
+
+WARUM DAS MEHR IST ALS ORDNUNG, und der zweite Grund ist der, der zählt:
+
+  1. Niemand findet die Regel, wenn er sie sucht.
+  2. **Ein Wächter, der Stildateien liest, sieht sie nicht.** Genau das ist
+     beim Verschieben eingetreten: `test362` wurde SOFORT rot. Neun rohe
+     Zahlen, die er jahrelang nicht sehen konnte, standen plötzlich in
+     seinem Blickfeld — darunter vier `44px`, die Trefferflächen sind und in
+     die Marke gehören (§37). Der Bestand ist durch die Verschiebung nicht
+     schlechter geworden; er ist SICHTBAR geworden.
+  3. 31 Rückfallwerte wie `var(--border, #d9dce2)` — feste Hellwerte für den
+     Fall, dass die Marke fehlt. Alle vier Marken gibt es. Die Rückfälle
+     waren toter Text, der aussah wie Vorsicht.
+
+WOHIN, UND WARUM NICHT IN EINE EIGENE DATEI. `produktwelten.css`, weil der
+Namensraum dorthin gehört (`doku/CSS-NAMENSRAEUME.md`) und weil eine neue
+Stildatei ZWEI Einträge braucht — `index.html` und den `GRUNDSTOCK` in
+`sw.ts` (§28, E361). Ein vergessener zweiter Eintrag ist ein Fehler, der
+erst offline auffällt.
+
+DIE DECKE VON `test362` STEIGT UM FÜNF, und das ist eine bewusste Ausnahme
+von „darf nur schrumpfen": 16px von 221 auf 224, 22px von 66 auf 68. Die
+vier `44px` sind dagegen durch `var(--touch-min)` ersetzt, die Zahl bleibt
+bei 152. Der Unterschied ist der Grund: 44 hat eine semantische Marke,
+16 und 22 haben keine. `--mobile-gutter-small` ist 22px und meint einen
+SEITENRAND — sie für eine Schriftgrösse zu nehmen wäre genau der Fehler, vor
+dem `marken.css` warnt: „Gleiche Zahl bedeutet nur dann dieselbe Marke, wenn
+sie dieselbe Aufgabe hat."
+
+DIE ABSAGE DER KI SIEHT NICHT MEHR AUS WIE EINE ANTWORT. Der
+Nur-Quellen-Modus (E305) verspricht, das Modell gar nicht erst zu fragen,
+wenn nichts gefunden wird. Die Absage trug dafür schon die Klasse
+`msg-ohne-quelle` — ohne Regel. Sie stand da wie jede Antwort, in derselben
+Schrift, an derselben Stelle. Jetzt: Streifen, Einrückung UND ein Zeichen —
+drei Merkmale, weil §38 Information nur über Farbe verbietet.
+
+UND EIN FEHLER, DEN NUR DAS BILD GEFUNDEN HAT. Das Zeichen war zuerst `⃠`
+(U+20E0). Im Quelltext sieht es aus wie ein eigenes Zeichen; es ist eine
+KOMBINIERENDE Marke und legt sich über den folgenden Buchstaben. Auf dem
+Bild klebte sie am „D" von „Dazu", und ein Leerzeichen im `content` half
+nicht — eine kombinierende Marke sucht sich ihren Nachbarn selbst. Jetzt
+`⊘` (U+2298) mit `margin-right`. Kein gerechneter Wert hätte das gezeigt
+(§55.1).
+
+ZWEI NEUE BILDZIELE. `begruessung` und `kiAbsage`. Die Begrüssungsfläche
+hatte nie eines — im Gegenteil: jedes andere Ziel wirft sie mit
+`.produkt-onboarding-lage?.remove()` hinaus. 126 Zeilen Stil, die nie jemand
+angesehen hat, und die eigentliche Frage beim Verschieben war nicht „stimmen
+die gerechneten Werte", sondern „sieht es aus wie vorher".
+
+WAS NICHT GEÄNDERT WURDE, und warum es hier steht: `werkzeuge.ts` schreibt
+drei `<style>`-Blöcke, und alle drei stehen in AUSGELIEFERTEN HTML-Dokumenten
+— Archiv, HTML-Export, Drucken. Die verlassen die App und haben keine
+Stildatei bei sich; dort ist der Block richtig. Der Wächter sucht deshalb
+`createElement('style')` und nicht `<style>`. Ein Wächter, der die drei
+mitmeldet, wird abgeschaltet.
+
+PRÜFUNG: `test412`, 21 Punkte, PORT 9534. Dazu `test206`, `test299`,
+`test331`, `test84`, `test95`, `test143` — die Läufe, die die geänderten
+Stellen wirklich anfassen — sowie `test353`, `test362`, `test410`.
+GEGENPROBE: `createElement('style')` wieder eingebaut → §1 rot. Die
+kombinierende Marke zurückgesetzt → §3 dreimal rot. Beide gelaufen.
+
+Dateien: `src/bereiche/wissen/produkt_onboarding.ts`,
+`src/bereiche/datenbanken/vorrat/dienst.ts`,
+`quell/schale/stil/produktwelten.css`, `quell/schale/stil/ki.css`,
+`quell/schale/stil/datenbanken.css`, `pruefungen/marken-decke.json`,
+`bilder.mts`, `pruefungen/lauf/test412.mts` (neu).

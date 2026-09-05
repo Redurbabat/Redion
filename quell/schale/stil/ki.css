@@ -41,6 +41,31 @@
 .msg.a{white-space:pre-wrap}
 .msg.a code{background:var(--bg-card); padding:1px 5px; border-radius:3px; font-family:var(--mono); font-size:13px}
 .msg.sys{font-size:12.5px; color:var(--text-faint); text-align:center}
+/* DIE ABSAGE SIEHT NICHT AUS WIE EINE ANTWORT (E418).
+   Der Nur-Quellen-Modus (E305) verspricht: findet sich nichts, wird das
+   Modell GAR NICHT gefragt. Die Absage trug dafuer schon die Klasse
+   `msg-ohne-quelle` — und es gab keine Regel dazu. Der Satz stand da wie
+   jede andere Antwort, in derselben Schrift, an derselben Stelle. Wer nicht
+   liest, sondern ueberfliegt, haelt eine Absage fuer ein Ergebnis; und das
+   ist derselbe Fehler wie eine abgeschnittene Zahl (§55.1): eine Anzeige,
+   die etwas Falsches sagt statt gar nichts.
+   DREI MERKMALE, NICHT EINES. §38 verbietet Information nur ueber Farbe —
+   ein farbiger Streifen allein sagt einem Menschen, der Farben nicht
+   unterscheidet, gar nichts. Also: Streifen, Einrueckung UND ein Zeichen. */
+.msg.msg-ohne-quelle{
+  border-left:3px solid var(--c-orange); padding:2px 0 2px 12px;
+  color:var(--text-dim); font-style:normal }
+/* `⊘` (U+2298) UND NICHT `⃠` (U+20E0). Das zweite sieht im Quelltext
+   genauso aus und ist ein KOMBINIERENDES Zeichen — es legt sich über den
+   folgenden Buchstaben, statt neben ihm zu stehen. Auf dem Bild klebte es
+   am „D" von „Dazu"; ein Leerzeichen im `content` half nicht, weil ein
+   kombinierendes Zeichen sich sein Nachbarzeichen selbst sucht. Gefunden
+   auf dem Bild, nicht im Code (§55.1).
+   Der Abstand kommt deshalb aus `margin-right` und nicht aus einem
+   Leerzeichen: der Abstand ist Gestaltung, kein Text. */
+.msg.msg-ohne-quelle::before{
+  content:'⊘'; color:var(--c-orange); font-style:normal;
+  margin-right:7px; display:inline-block }
 .ai-foot{padding:10px 12px; border-top:1px solid var(--line)}
 .ai-foot textarea{
   width:100%; background:var(--bg-input); border:1px solid var(--line); border-radius:8px;

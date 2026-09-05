@@ -2097,6 +2097,15 @@ body[data-ruhig="an"] #menueband.ist-zu .mb-klapp{
     margin-left: calc(-1 * var(--db-aus));
   }
 }
+/* DIE VORRAT-LEISTE (E418). Ihre Klasse war da, ihr Aussehen stand als
+   `style.cssText` am Element — sieben Deklarationen im Quelltext (§39).
+   Die Zeile meldet, dass eine Vorberechnung laeuft oder etwas vorliegt;
+   sie steht ueber der Datenbank und soll sich davon abheben, ohne zu
+   schreien. */
+.vorrat-leiste{
+  display:flex; gap:10px; align-items:center; padding:6px 10px;
+  margin-bottom:8px; border-radius:8px; font-size:.9em;
+  background:var(--bg-card); opacity:.9 }
 .db-head{display:flex; align-items:center; gap:2px; margin-bottom:6px; flex-wrap:wrap}
 /* DER TITEL DER DATENQUELLE (E417). Es gab ihn nicht — nur den Schalter, der
    ihn ausschalten sollte. Er steht ganz links im Kopf und bekommt die volle
@@ -2250,6 +2259,31 @@ table.grid tfoot td{color:var(--text-faint); font-size:12.5px; border:none; padd
 .msg.a{white-space:pre-wrap}
 .msg.a code{background:var(--bg-card); padding:1px 5px; border-radius:3px; font-family:var(--mono); font-size:13px}
 .msg.sys{font-size:12.5px; color:var(--text-faint); text-align:center}
+/* DIE ABSAGE SIEHT NICHT AUS WIE EINE ANTWORT (E418).
+   Der Nur-Quellen-Modus (E305) verspricht: findet sich nichts, wird das
+   Modell GAR NICHT gefragt. Die Absage trug dafuer schon die Klasse
+   `msg-ohne-quelle` — und es gab keine Regel dazu. Der Satz stand da wie
+   jede andere Antwort, in derselben Schrift, an derselben Stelle. Wer nicht
+   liest, sondern ueberfliegt, haelt eine Absage fuer ein Ergebnis; und das
+   ist derselbe Fehler wie eine abgeschnittene Zahl (§55.1): eine Anzeige,
+   die etwas Falsches sagt statt gar nichts.
+   DREI MERKMALE, NICHT EINES. §38 verbietet Information nur ueber Farbe —
+   ein farbiger Streifen allein sagt einem Menschen, der Farben nicht
+   unterscheidet, gar nichts. Also: Streifen, Einrueckung UND ein Zeichen. */
+.msg.msg-ohne-quelle{
+  border-left:3px solid var(--c-orange); padding:2px 0 2px 12px;
+  color:var(--text-dim); font-style:normal }
+/* `⊘` (U+2298) UND NICHT `⃠` (U+20E0). Das zweite sieht im Quelltext
+   genauso aus und ist ein KOMBINIERENDES Zeichen — es legt sich über den
+   folgenden Buchstaben, statt neben ihm zu stehen. Auf dem Bild klebte es
+   am „D" von „Dazu"; ein Leerzeichen im `content` half nicht, weil ein
+   kombinierendes Zeichen sich sein Nachbarzeichen selbst sucht. Gefunden
+   auf dem Bild, nicht im Code (§55.1).
+   Der Abstand kommt deshalb aus `margin-right` und nicht aus einem
+   Leerzeichen: der Abstand ist Gestaltung, kein Text. */
+.msg.msg-ohne-quelle::before{
+  content:'⊘'; color:var(--c-orange); font-style:normal;
+  margin-right:7px; display:inline-block }
 .ai-foot{padding:10px 12px; border-top:1px solid var(--line)}
 .ai-foot textarea{
   width:100%; background:var(--bg-input); border:1px solid var(--line); border-radius:8px;
@@ -5185,6 +5219,152 @@ body[data-produktwelt="workspace"]:not(:has(#sidebar .side-item[aria-current="pa
 
 @media(prefers-reduced-motion:reduce){
   .produkt-welt *{scroll-behavior:auto!important}
+}
+
+/* ============================================================================
+   BEGRUESSUNGSFLAECHE — aus produkt_onboarding.ts hierher (E418)
+   ----------------------------------------------------------------------------
+   Diese 126 Zeilen standen als Zeichenkette im Quelltext und wurden bei
+   Bedarf als `<style>` in die Seite gehaengt. §39 verlangt Stil in einer
+   Stildatei, und dafuer gibt es drei Gruende, die hier alle drei zutrafen:
+   niemand findet die Regel, wenn er sie sucht; `test410` (fehlende Semikolon)
+   liest Stildateien und keine Zeichenketten; und die Marken trugen feste
+   Rueckfallwerte wie `var(--border, #d9dce2)` — 31 Stueck, alle vier Marken
+   gibt es wirklich, also 31 feste Hellwerte, die aussahen wie Vorsicht.
+   Der Namensraum `produkt-onboarding-` gehoert zu den Produktwelten
+   (doku/CSS-NAMENSRAEUME.md), deshalb steht es hier und nicht in einer
+   eigenen Datei: eine neue Datei braucht zwei Eintraege (index.html und
+   GRUNDSTOCK in sw.ts, §28), und diese Regeln teilen ohnehin die Marken
+   der Datei darueber.
+   ========================================================================== */
+.produkt-onboarding-lage {
+  position: fixed; inset: 0; z-index: 10050; box-sizing: border-box;
+  display: grid; place-items: center; padding: 12px;
+  background: color-mix(in srgb, #101217 62%, transparent);
+  overscroll-behavior: contain;
+}
+.produkt-onboarding-lage *, .produkt-onboarding-lage *::before,
+.produkt-onboarding-lage *::after { box-sizing: border-box; }
+.produkt-onboarding {
+  width: min(680px, calc(100vw - 24px)); max-width: 100%;
+  max-height: min(780px, calc(100dvh - 24px)); overflow: hidden;
+  display: flex; flex-direction: column; border: 1px solid var(--border);
+  border-radius: 18px; color: var(--text); background: var(--bg);
+  box-shadow: 0 24px 80px rgb(0 0 0 / .28);
+}
+.produkt-onboarding-kopf {
+  display: flex; align-items: center; gap: 12px; padding: 18px 20px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.produkt-onboarding-marke {
+  width: 42px; height: 42px; flex: 0 0 42px; display: grid; place-items: center;
+  border-radius: 12px; background: color-mix(in srgb, var(--accent) 13%, transparent);
+  font-size: 22px;
+}
+.produkt-onboarding-kopftext { min-width: 0; flex: 1; }
+.produkt-onboarding-kopftext strong { display: block; font-size: 16px; }
+.produkt-onboarding-kopftext span { color: var(--text-faint); font-size: 12.5px; }
+.produkt-onboarding-schliessen {
+  /* `var(--touch-min)` statt roher 44px: das Kreuz schliesst den Dialog,
+     und Abbrechen ist ein Hauptweg (§37). */
+  width: var(--touch-min); height: var(--touch-min);
+  flex: 0 0 var(--touch-min); border: 0; border-radius: 10px;
+  color: inherit; background: transparent; font: inherit; font-size: 19px; cursor: pointer;
+}
+.produkt-onboarding-schliessen:hover { background: var(--bg-hover); }
+.produkt-onboarding-fortschritt {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px;
+  margin: 0; padding: 12px 20px 0; list-style: none;
+}
+.produkt-onboarding-fortschritt li {
+  min-width: 0; color: var(--text-faint); font-size: 11.5px;
+}
+.produkt-onboarding-fortschritt li::before {
+  content: ''; display: block; height: 4px; margin-bottom: 5px;
+  border-radius: 999px; background: var(--bg-hover);
+}
+.produkt-onboarding-fortschritt li[data-erreicht="ja"]::before {
+  background: var(--accent);
+}
+.produkt-onboarding-fortschritt li[aria-current="step"] {
+  color: var(--text); font-weight: 650;
+}
+.produkt-onboarding-inhalt {
+  min-height: 320px; padding: 22px 24px; overflow: auto; overflow-x: hidden;
+}
+.produkt-onboarding-inhalt h1 { margin: 0 0 8px; font-size: clamp(23px, 4vw, 31px); line-height: 1.15; }
+.produkt-onboarding-inhalt > p { margin: 0 0 20px; color: var(--text-faint); line-height: 1.55; }
+.produkt-onboarding fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+.produkt-onboarding legend { width: 100%; margin-bottom: 10px; font-weight: 700; }
+.produkt-onboarding-welten { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.produkt-onboarding-welt, .produkt-onboarding-bereich {
+  position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px;
+  min-width: 0; padding: 15px; border: 1px solid var(--border);
+  border-radius: 13px; cursor: pointer; background: var(--bg-card);
+}
+.produkt-onboarding-welt:first-of-type { grid-column: 1 / -1; }
+.produkt-onboarding-welt:has(input:checked), .produkt-onboarding-bereich:has(input:checked) {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 7%, var(--bg-card));
+}
+.produkt-onboarding-welt input, .produkt-onboarding-bereich input {
+  width: 19px; height: 19px; margin: 2px 0 0; accent-color: var(--accent);
+}
+.produkt-onboarding-welt b, .produkt-onboarding-bereich b { display: block; margin-bottom: 4px; }
+.produkt-onboarding-welt small, .produkt-onboarding-bereich small {
+  display: block; color: var(--text-faint); line-height: 1.4;
+}
+.produkt-onboarding-bereiche { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.produkt-onboarding-bereich .po-icon { font-size: 21px; line-height: 1; }
+.produkt-onboarding-bereich input { position: absolute; right: 13px; top: 13px; }
+.produkt-onboarding-bereich > span:last-child { padding-right: 24px; }
+.produkt-onboarding-bereich[data-gesperrt="ja"] { opacity: .58; cursor: not-allowed; }
+.produkt-onboarding-hinweis {
+  margin-top: 14px; padding: 11px 13px; border-radius: 10px;
+  color: var(--text-faint); background: var(--bg-hover); font-size: 12.5px; line-height: 1.45;
+}
+.produkt-onboarding-zusammenfassung {
+  display: grid; gap: 10px; margin: 0; padding: 0; list-style: none;
+}
+.produkt-onboarding-zusammenfassung li {
+  display: flex; align-items: flex-start; gap: 12px; padding: 13px 14px;
+  border-radius: 11px; background: var(--bg-hover);
+}
+.produkt-onboarding-zusammenfassung b { display: block; }
+.produkt-onboarding-zusammenfassung small { color: var(--text-faint); }
+.produkt-onboarding-fehler { min-height: 20px; margin: 12px 24px 0; color: #b4232f; font-size: 13px; }
+.produkt-onboarding-fuss {
+  display: flex; align-items: center; gap: 9px; padding: 14px 20px 18px;
+  border-top: 1px solid var(--border);
+}
+.produkt-onboarding-fuss button {
+  min-height: var(--touch-min); padding: 9px 15px; border: 1px solid var(--border);
+  border-radius: 10px; color: inherit; background: var(--bg); font: inherit;
+  font-weight: 620; cursor: pointer;
+}
+.produkt-onboarding-fuss button:hover:not(:disabled) { background: var(--bg-hover); }
+.produkt-onboarding-fuss button:disabled { opacity: .52; cursor: wait; }
+.produkt-onboarding-fuss .po-ueberspringen { margin-right: auto; border-color: transparent; color: var(--text-faint); }
+.produkt-onboarding-fuss .po-weiter, .produkt-onboarding-fuss .po-fertig {
+  border-color: var(--accent); color: #fff; background: var(--accent);
+}
+.produkt-onboarding :focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 45%, transparent); outline-offset: 2px; }
+@media (max-width: 520px) {
+  .produkt-onboarding-lage { align-items: end; padding: 0; }
+  .produkt-onboarding { width: 100vw; max-height: 96dvh; border-radius: 18px 18px 0 0; border-bottom: 0; }
+  .produkt-onboarding-kopf { padding: 14px 14px 10px; }
+  .produkt-onboarding-fortschritt { padding: 10px 14px 0; }
+  .produkt-onboarding-fortschritt li { font-size: 10.5px; }
+  .produkt-onboarding-inhalt { min-height: 0; padding: 18px 16px; }
+  .produkt-onboarding-welten, .produkt-onboarding-bereiche { grid-template-columns: 1fr; }
+  .produkt-onboarding-welt:first-of-type { grid-column: auto; }
+  .produkt-onboarding-fehler { margin-inline: 16px; }
+  .produkt-onboarding-fuss { padding: 12px 14px max(14px, env(safe-area-inset-bottom)); flex-wrap: wrap; }
+  .produkt-onboarding-fuss .po-ueberspringen { order: 3; width: 100%; margin: 0; }
+  .produkt-onboarding-fuss .po-zurueck { margin-right: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .produkt-onboarding-lage *, .produkt-onboarding-lage *::before { scroll-behavior: auto !important; transition: none !important; }
 }
 
 </style>
@@ -16833,7 +17013,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 377, inhalt: 'c031716e6021439f', gebaut: '2026-09-05T18:03:52.965Z' };
+const Stand = { fassung: 380, inhalt: '90e9558143775aa4', gebaut: '2026-09-05T18:28:16.976Z' };
 window.Stand = Stand;
 
 </script>
@@ -118147,10 +118327,10 @@ const Vorrat = (() => {
         const s = stand(coll.id);
         const e = einstellung(coll);
         const d = document.createElement('div');
+        /* Das Aussehen steht in `datenbanken.css` unter `.vorrat-leiste` (E418).
+           Hier standen sieben Deklarationen als `style.cssText` — die Klasse gab
+           es schon, sie war nur leer. */
         d.className = 'vorrat-leiste';
-        d.style.cssText = 'display:flex;gap:10px;align-items:center;padding:6px 10px;' +
-            'margin-bottom:8px;border-radius:8px;font-size:.9em;' +
-            'background:var(--bg-card);opacity:.9';
         if (!s) {
             d.innerHTML = '<span>❄ Vorberechnung ist an, aber es liegt noch nichts vor.</span>' +
                 '<button class="btn" data-a="jetzt">Jetzt rechnen</button>';
@@ -129427,7 +129607,6 @@ if (typeof Register !== 'undefined' && Register.kontext) {
  * ==========================================================================*/
 const ProduktOnboarding = (() => {
     const META_KEY = 'produktOnboarding:v1';
-    const STIL_ID = 'produkt-onboarding-stil';
     const BEREICHE = [
         {
             key: 'elektro', name: 'Elektro-Ausbildung', icon: '⚡', art: 'ausbildung',
@@ -129531,141 +129710,6 @@ const ProduktOnboarding = (() => {
         .normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
     const vorhandenFuer = (vorgabe, liste = vorhandeneBereiche()) => liste.find(bereich => gefaltet(bereich?.name) === gefaltet(vorgabe.name)) ||
         liste.find(bereich => text(bereich?.art, 40) === vorgabe.art) || null;
-    const stilSicherstellen = () => {
-        if (document.getElementById(STIL_ID))
-            return;
-        const stil = document.createElement('style');
-        stil.id = STIL_ID;
-        stil.textContent = `
-      .produkt-onboarding-lage {
-        position: fixed; inset: 0; z-index: 10050; box-sizing: border-box;
-        display: grid; place-items: center; padding: 12px;
-        background: color-mix(in srgb, #101217 62%, transparent);
-        overscroll-behavior: contain;
-      }
-      .produkt-onboarding-lage *, .produkt-onboarding-lage *::before,
-      .produkt-onboarding-lage *::after { box-sizing: border-box; }
-      .produkt-onboarding {
-        width: min(680px, calc(100vw - 24px)); max-width: 100%;
-        max-height: min(780px, calc(100dvh - 24px)); overflow: hidden;
-        display: flex; flex-direction: column; border: 1px solid var(--border, #d9dce2);
-        border-radius: 18px; color: var(--text, #1f2329); background: var(--bg, #fff);
-        box-shadow: 0 24px 80px rgb(0 0 0 / .28);
-      }
-      .produkt-onboarding-kopf {
-        display: flex; align-items: center; gap: 12px; padding: 18px 20px 12px;
-        border-bottom: 1px solid var(--border, #e2e4e9);
-      }
-      .produkt-onboarding-marke {
-        width: 42px; height: 42px; flex: 0 0 42px; display: grid; place-items: center;
-        border-radius: 12px; background: color-mix(in srgb, var(--accent, #d62b3a) 13%, transparent);
-        font-size: 22px;
-      }
-      .produkt-onboarding-kopftext { min-width: 0; flex: 1; }
-      .produkt-onboarding-kopftext strong { display: block; font-size: 16px; }
-      .produkt-onboarding-kopftext span { color: var(--text-faint, #6d7280); font-size: 12.5px; }
-      .produkt-onboarding-schliessen {
-        width: 44px; height: 44px; flex: 0 0 44px; border: 0; border-radius: 10px;
-        color: inherit; background: transparent; font: inherit; font-size: 19px; cursor: pointer;
-      }
-      .produkt-onboarding-schliessen:hover { background: var(--bg-hover, #f1f2f5); }
-      .produkt-onboarding-fortschritt {
-        display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px;
-        margin: 0; padding: 12px 20px 0; list-style: none;
-      }
-      .produkt-onboarding-fortschritt li {
-        min-width: 0; color: var(--text-faint, #737886); font-size: 11.5px;
-      }
-      .produkt-onboarding-fortschritt li::before {
-        content: ''; display: block; height: 4px; margin-bottom: 5px;
-        border-radius: 999px; background: var(--bg-hover, #e9ebef);
-      }
-      .produkt-onboarding-fortschritt li[data-erreicht="ja"]::before {
-        background: var(--accent, #d62b3a);
-      }
-      .produkt-onboarding-fortschritt li[aria-current="step"] {
-        color: var(--text, #1f2329); font-weight: 650;
-      }
-      .produkt-onboarding-inhalt {
-        min-height: 320px; padding: 22px 24px; overflow: auto; overflow-x: hidden;
-      }
-      .produkt-onboarding-inhalt h1 { margin: 0 0 8px; font-size: clamp(23px, 4vw, 31px); line-height: 1.15; }
-      .produkt-onboarding-inhalt > p { margin: 0 0 20px; color: var(--text-faint, #666d79); line-height: 1.55; }
-      .produkt-onboarding fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
-      .produkt-onboarding legend { width: 100%; margin-bottom: 10px; font-weight: 700; }
-      .produkt-onboarding-welten { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-      .produkt-onboarding-welt, .produkt-onboarding-bereich {
-        position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px;
-        min-width: 0; padding: 15px; border: 1px solid var(--border, #dfe2e8);
-        border-radius: 13px; cursor: pointer; background: var(--bg-card, #fff);
-      }
-      .produkt-onboarding-welt:first-of-type { grid-column: 1 / -1; }
-      .produkt-onboarding-welt:has(input:checked), .produkt-onboarding-bereich:has(input:checked) {
-        border-color: var(--accent, #d62b3a);
-        background: color-mix(in srgb, var(--accent, #d62b3a) 7%, var(--bg-card, #fff));
-      }
-      .produkt-onboarding-welt input, .produkt-onboarding-bereich input {
-        width: 19px; height: 19px; margin: 2px 0 0; accent-color: var(--accent, #d62b3a);
-      }
-      .produkt-onboarding-welt b, .produkt-onboarding-bereich b { display: block; margin-bottom: 4px; }
-      .produkt-onboarding-welt small, .produkt-onboarding-bereich small {
-        display: block; color: var(--text-faint, #69707d); line-height: 1.4;
-      }
-      .produkt-onboarding-bereiche { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-      .produkt-onboarding-bereich .po-icon { font-size: 21px; line-height: 1; }
-      .produkt-onboarding-bereich input { position: absolute; right: 13px; top: 13px; }
-      .produkt-onboarding-bereich > span:last-child { padding-right: 24px; }
-      .produkt-onboarding-bereich[data-gesperrt="ja"] { opacity: .58; cursor: not-allowed; }
-      .produkt-onboarding-hinweis {
-        margin-top: 14px; padding: 11px 13px; border-radius: 10px;
-        color: var(--text-faint, #676e79); background: var(--bg-hover, #f3f4f6); font-size: 12.5px; line-height: 1.45;
-      }
-      .produkt-onboarding-zusammenfassung {
-        display: grid; gap: 10px; margin: 0; padding: 0; list-style: none;
-      }
-      .produkt-onboarding-zusammenfassung li {
-        display: flex; align-items: flex-start; gap: 12px; padding: 13px 14px;
-        border-radius: 11px; background: var(--bg-hover, #f4f5f7);
-      }
-      .produkt-onboarding-zusammenfassung b { display: block; }
-      .produkt-onboarding-zusammenfassung small { color: var(--text-faint, #6d7280); }
-      .produkt-onboarding-fehler { min-height: 20px; margin: 12px 24px 0; color: #b4232f; font-size: 13px; }
-      .produkt-onboarding-fuss {
-        display: flex; align-items: center; gap: 9px; padding: 14px 20px 18px;
-        border-top: 1px solid var(--border, #e1e3e8);
-      }
-      .produkt-onboarding-fuss button {
-        min-height: 44px; padding: 9px 15px; border: 1px solid var(--border, #d9dce2);
-        border-radius: 10px; color: inherit; background: var(--bg, #fff); font: inherit;
-        font-weight: 620; cursor: pointer;
-      }
-      .produkt-onboarding-fuss button:hover:not(:disabled) { background: var(--bg-hover, #f1f2f5); }
-      .produkt-onboarding-fuss button:disabled { opacity: .52; cursor: wait; }
-      .produkt-onboarding-fuss .po-ueberspringen { margin-right: auto; border-color: transparent; color: var(--text-faint, #686e7a); }
-      .produkt-onboarding-fuss .po-weiter, .produkt-onboarding-fuss .po-fertig {
-        border-color: var(--accent, #d62b3a); color: #fff; background: var(--accent, #d62b3a);
-      }
-      .produkt-onboarding :focus-visible { outline: 3px solid color-mix(in srgb, var(--accent, #d62b3a) 45%, transparent); outline-offset: 2px; }
-      @media (max-width: 520px) {
-        .produkt-onboarding-lage { align-items: end; padding: 0; }
-        .produkt-onboarding { width: 100vw; max-height: 96dvh; border-radius: 18px 18px 0 0; border-bottom: 0; }
-        .produkt-onboarding-kopf { padding: 14px 14px 10px; }
-        .produkt-onboarding-fortschritt { padding: 10px 14px 0; }
-        .produkt-onboarding-fortschritt li { font-size: 10.5px; }
-        .produkt-onboarding-inhalt { min-height: 0; padding: 18px 16px; }
-        .produkt-onboarding-welten, .produkt-onboarding-bereiche { grid-template-columns: 1fr; }
-        .produkt-onboarding-welt:first-of-type { grid-column: auto; }
-        .produkt-onboarding-fehler { margin-inline: 16px; }
-        .produkt-onboarding-fuss { padding: 12px 14px max(14px, env(safe-area-inset-bottom)); flex-wrap: wrap; }
-        .produkt-onboarding-fuss .po-ueberspringen { order: 3; width: 100%; margin: 0; }
-        .produkt-onboarding-fuss .po-zurueck { margin-right: auto; }
-      }
-      @media (prefers-reduced-motion: reduce) {
-        .produkt-onboarding-lage *, .produkt-onboarding-lage *::before { scroll-behavior: auto !important; transition: none !important; }
-      }
-    `;
-        document.head.appendChild(stil);
-    };
     const weltName = (welt) => welt === 'lernen' ? '🎓 Lernen & Alltag' : welt === 'workspace' ? '🧱 Workspace' : 'Beide Hauptwelten';
     const oeffnen = () => {
         if (laufend)
@@ -129673,7 +129717,10 @@ const ProduktOnboarding = (() => {
         if (typeof document === 'undefined' || !document.body)
             return Promise.reject(new Error('Das Onboarding braucht ein geöffnetes Redion-Fenster.'));
         laufend = new Promise(resolve => {
-            stilSicherstellen();
+            /* Der Stil kommt aus `quell/schale/stil/produktwelten.css` (E418).
+               Hier stand ein `<style>`-Block mit 126 Zeilen, der bei Bedarf in die
+               Seite gehaengt wurde — §39 sagt dazu einen Satz, und `test410` liest
+               Stildateien, keine Zeichenketten im Quelltext. */
             const vorherFokus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
             const gespeichert = profilLesen();
             let schritt = 1;
