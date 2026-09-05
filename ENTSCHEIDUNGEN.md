@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-411 Entscheidungen, E1 bis E415. Die Nummer ist die Ordnung: eine Entscheidung
+412 Entscheidungen, E1 bis E416. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -469,6 +469,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E413** — Der Zeitstrahl zeigt Spannen und liest sich
 * **E414** — Das Diagramm zeigt etwas
 * **E415** — Zwei tote CSS-Zeilen, zwei unklickbare Knöpfe
+* **E416** — Ein Wächter, der die alte Mechanik misst, misst nichts
 
 ---
 
@@ -33832,3 +33833,63 @@ GEGENPROBE: das Semikolon in `.blatt-fest button` wieder entfernen →
 zuerst gefunden worden.
 
 Dateien: `pruefungen/lauf/test410.mts` (neu), `quell/schale/stil/bausteine.css`.
+
+
+---
+
+E416 — Ein Wächter, der die alte Mechanik misst, misst nichts
+------------------------------------------------------------
+
+ENTSCHEIDUNG: `test351 §3` misst die Wörter der Werkzeugleiste an ihrer
+BREITE, nicht mehr an `getClientRects().length`. Der Punkt war seit Audit F04
+dauerhaft rot — nicht weil die App etwas falsch macht, sondern weil der
+Wächter eine Mechanik misst, die es nicht mehr gibt.
+
+WAS DER PUNKT VERSPRICHT. Die elf Werkzeugwörter stehen nur da, wenn die
+LEISTE breit genug ist — über 1150 px, gemessen am Behälter, nicht am
+Fenster. Darunter bleibt das Zeichen allein. So steht es in `bausteine.css`
+seit E359.
+
+WARUM ER ROT WAR. Ursprünglich verschwanden die Wörter mit `display:none`.
+Ein Element mit `display:none` hat keine Rechtecke, also war
+`getClientRects().length > 0` die richtige Frage. Audit F04 hat das
+`display:none` ersetzt: die Wörter werden jetzt GEKLEMMT statt entfernt —
+
+    position:absolute; width:1px; height:1px; clip-path:inset(50%)
+
+und zwar aus einem guten Grund. `display:none` nimmt den Text auch aus dem
+Zugänglichkeitsbaum, und dann hiess der Stift-Knopf für einen Screenreader
+„✎". Die Klemme lässt den Namen im Baum und nimmt ihn nur aus dem Bild.
+
+Ein geklemmtes Element hat aber ein Rechteck — eines von 1×1 px. Damit sagte
+`getClientRects()` in JEDER Breite „elf sichtbare Wörter".
+
+WAS DAS SCHLIMMER MACHT ALS EIN ROTER PUNKT. Der dritte Punkt desselben
+Abschnitts fragt, ob bei 1600 px die elf Wörter DA sind — der war grün, und
+zwar aus demselben falschen Grund. Der Abschnitt konnte also weder richtig
+rot noch richtig grün werden: er hat drei Runden lang dieselbe Zahl gemeldet,
+egal was das CSS tat. Das ist §55.2 in Reinform.
+
+NACHGEMESSEN, NICHT VERMUTET:
+
+    Leiste  596 px   Wort  1 px    position: absolute
+    Leiste 1074 px   Wort  1 px    position: absolute
+    Leiste 1241 px   Wort 22–74 px position: static
+
+DIE ALTERNATIVE wäre gewesen, auf `position` zu prüfen. Die Breite ist besser:
+sie beschreibt, was der Mensch sieht, und sie hält auch, wenn die Klemme
+einmal anders gebaut wird. Die Schwelle ist 4 px — weit über der geklemmten
+1 px, weit unter dem schmalsten echten Wort (22 px).
+
+WAS ES KOSTET: Der Wächter prüft die Wörter jetzt anders als das Zubehör
+daneben, und das braucht einen Kommentar an Ort und Stelle. Er steht dort.
+Das Zubehör verschwindet weiter mit `display:none`; für DAS ist
+`getClientRects` weiterhin die richtige Frage.
+
+GEGENPROBE: Schwelle im Behälterausdruck von 1150 px auf 1 px gesetzt, damit
+die Klemme nie greift → `test351 §3` Punkt 1 und 2 rot, Punkt 3 grün.
+Zurückgesetzt → 26/26. Vorher war Punkt 1 und 2 rot und Punkt 3 grün, ganz
+gleich, was im CSS stand.
+
+PRÜFUNG: `test351`, 26 Punkte.
+Dateien: `pruefungen/lauf/test351.mts`.
