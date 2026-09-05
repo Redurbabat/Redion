@@ -6083,11 +6083,13 @@ kostet den Nutzer eine Auskunft.
    Notion lässt die Eigenschaftsnamen auf Karten wahlweise mitlaufen. Das
    ist die kleinste sinnvolle Reparatur.
 
-2. **Der Kalender zeigt keine Zeitspannen.** „Schaltplan Werkstatt" läuft
-   vom 1. bis zum 12. September und steht nur am 1. „Steuerung Rolltor"
-   läuft vom 5. bis zum 26. und steht nur am 5. Das Feld `endeKey` wird im
-   Code gelesen, aber nie von selbst gesetzt und nie als Balken gezeichnet.
-   Wer im Monat nachsieht, was gerade läuft, sieht es nicht.
+2. **Der Kalender zeigt keine Zeitspannen.** GESCHLOSSEN mit E410. Der
+   Balken war gebaut und sprang nie an: `endeKey` war das einzige Feld der
+   Kalenderansicht ohne Vorgabewert. Er wird jetzt erkannt, wenn die Daten
+   es belegen, und die Oberfläche sagt, dass geraten wurde. Nebenbei kamen
+   zwei Fehler heraus, die seit jeher dastanden: die Balken hatten gar keine
+   Farbe (`.cw-bar.q-blue` gab es nirgends), und sie lagen auf den
+   Tageszahlen. Beide fand erst ein Bild. Gehalten von `test405`.
 
 3. **Kein Hinweis, dass rechts noch etwas kommt.** Die Tabelle rollt
    waagerecht, und der Roller ist unsichtbar. Vor E409 waren dahinter acht

@@ -2711,7 +2711,12 @@ body[data-kontrast="hoch"] select, body[data-kontrast="hoch"] textarea{
 .cal-dow{display:grid; grid-template-columns:repeat(7,1fr); gap:1px; background:var(--line)}
 .cal-dow .dow{background:var(--bg); padding:6px; font-size:12px; color:var(--text-dim); text-align:center}
 .cal-woche{position:relative}
-.cw-balken{position:absolute; top:24px; left:0; right:0; pointer-events:none}
+/* `top:24px` schob die Balken UNTER die Tageszahl — und die Zelle bekommt
+   ihr Polster oben (`paddingTop = 5 + Spuren * 20`), damit die Zahl unter
+   den Balken rutscht. Beides zusammen legte den letzten Balken genau auf
+   die Zahl: bei drei Spuren lagen sie bei 24, 44 und 64 px, das Polster
+   endete bei 65. Die Balken gehören ganz nach oben, die Zahl darunter. */
+.cw-balken{position:absolute; top:4px; left:0; right:0; pointer-events:none}
 .cw-bar{
   position:absolute; height:18px; line-height:18px; font-size:11.5px; padding:0 6px;
   overflow:hidden; text-overflow:ellipsis; white-space:nowrap; cursor:pointer;
@@ -2721,6 +2726,22 @@ body[data-kontrast="hoch"] select, body[data-kontrast="hoch"] textarea{
 .cw-bar.ende{border-radius:0 4px 4px 0; margin-right:2px}
 .cw-bar.anfang.ende{border-radius:4px}
 .cw-bar:hover{filter:brightness(1.12)}
+
+/* DIE FARBE FEHLTE, UND ZWAR SEIT JEHER (E410). `.cw-bar` bekam `color:#fff`
+   und eine Klasse `q-blue`, aber `.cw-bar.q-blue` gab es nirgends — nur
+   `.cal .ev.q-green` für einen anderen Ort. Ein weisser Balken auf weissem
+   Grund ist kein Balken, sondern loser Text quer über den Tageszahlen.
+   Gesehen hat es nie jemand, weil `endeKey` keinen Vorgabewert hatte und
+   die ganze Balkenschicht deshalb nie ansprang. */
+.cw-bar{background:var(--c-blue)}
+.cw-bar.q-blue  {background:var(--c-blue)}
+.cw-bar.q-green {background:var(--c-green)}
+.cw-bar.q-orange{background:var(--c-orange)}
+.cw-bar.q-purple{background:var(--c-purple)}
+.cw-bar.q-pink  {background:var(--c-pink)}
+.cw-bar.q-red   {background:var(--c-red)}
+.cw-bar.q-yellow{background:var(--c-yellow); color:#232323}
+.cw-bar.q-brown {background:var(--c-brown)}
 
 /* Wochenkalender mit Stundenraster */
 .kw{border:1px solid var(--line); border-radius:8px; overflow:hidden}

@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-405 Entscheidungen, E1 bis E409. Die Nummer ist die Ordnung: eine Entscheidung
+406 Entscheidungen, E1 bis E410. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -463,6 +463,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E407** — 42 Trefflächen unter 44 px, und zwei Fehler beim Reparieren
 * **E408** — Ein Schimmer, der sagt „hier kommt noch Text nach“
 * **E409** — Die Ansichten bekommen die Breite, die da ist
+* **E410** — Der Kalender zeigt Zeitspannen, und die Balken bekommen Farbe
 
 ---
 
@@ -33326,3 +33327,74 @@ Dateien: `pruefungen/lauf/test404.mts` (neu), `bilder.mts` (13 Bildziele),
 `src/schale/aufbau/schale.ts`, `src/bereiche/datenbanken/dienst.ts`,
 `src/bereiche/einstellungen/ansicht/seite.ts`,
 `quell/schale/stil/datenbanken.css`, `quell/schale/stil/bausteine.css`.
+
+E410 — Der Kalender zeigt Zeitspannen, und die Balken bekommen Farbe
+================================================================================
+5. September 2026
+
+Ein Projekt vom 1. bis zum 12. September stand am 1. September — und sonst
+nirgends. Wer im Monat nachsah, was gerade läuft, sah es nicht.
+
+DIE FUNKTION WAR GEBAUT. `spurenDerWoche` legt mehrtägige Einträge in Spuren,
+damit sich nichts überdeckt; `balkenWoche` zeichnet sie; `.cw-bar` hat Regeln
+für Anfang, Ende und beides. Im Quelltext steht sogar ein Kommentar: „das ist
+der durchgehende Balken, den Notion nicht zeichnet."
+
+Sie sprang nur nie an. `endeKey` war das einzige Feld der Kalenderansicht
+OHNE Vorgabewert — `dateKey` bekam seit jeher die erste Datumsspalte,
+`endeKey` bekam nichts. Also war jeder Termin eintägig, immer.
+
+Eine Funktion, deren Schalter keinen Vorgabewert hat, ist eine Funktion, die
+es nicht gibt.
+
+GERATEN WIRD NUR, WAS DIE DATEN BELEGEN. Eine zweite Datumsspalte muss nicht
+das Ende sein — sie kann „Erinnerung" heissen oder „zuletzt geprüft". Ein
+Balken über die falsche Spanne wäre schlimmer als gar keiner, weil er wie
+eine Auskunft aussieht. Drei Bedingungen, und alle drei müssen halten:
+
+  · Es gibt genau EINE weitere Datumsspalte.
+  · Mindestens eine Zeile trägt beide Werte — sonst weiss man nichts.
+  · Und bei JEDER Zeile, die beide trägt, liegt der zweite Wert nicht vor
+    dem ersten. Ein einziges Gegenbeispiel genügt zum Schweigen.
+
+`view.endeKey === undefined` heisst „nie entschieden", `''` heisst
+„ausdrücklich ein Tag". Eine Wahl wird nicht überstimmt.
+
+UND DIE OBERFLÄCHE SAGT ES: im Fuss steht „Zeitraum bis: Ende (erkannt)".
+Eine stille Annahme ist schlimmer als eine falsche — eine falsche kann der
+Nutzer berichtigen, eine stille nicht einmal bemerken.
+
+ZWEI FEHLER, DIE ERST DAS BILD ZEIGTE (§55.3), und beide waren seit jeher da:
+
+  1. DIE BALKEN HATTEN KEINE FARBE. `.cw-bar` bekommt `color:#fff` und eine
+     Klasse `q-blue` — aber `.cw-bar.q-blue` gab es nirgends. Es gab nur
+     `.cal .ev.q-green` für einen ganz anderen Ort. Weisser Text ohne
+     Hintergrund ist kein Balken, sondern loser Text quer über den
+     Tageszahlen. Gesehen hatte es nie jemand, weil die Balkenschicht wegen
+     Punkt oben nie ansprang. Jetzt gibt es alle acht Farben; die Tokens
+     `--c-blue` bis `--c-brown` waren längst da.
+
+  2. DIE BALKEN LAGEN AUF DEN TAGESZAHLEN. `.cw-balken` begann bei `top:24px`,
+     und die Zelle bekommt ihr Polster oben (`5 + Spuren * 20`), damit die
+     Zahl unter die Balken rutscht. Bei drei Spuren lagen die Balken auf 24,
+     44 und 64 px — und das Polster endete bei 65. Der letzte Balken lag
+     genau auf der Zahl. Jetzt beginnt die Lage bei 4 px, das Polster bei
+     `8 + Spuren * 20`: Balken oben, Zahl darunter.
+
+Das ist zusammen die Sorte Fehler, die eine Messung nicht findet: „Balken
+vorhanden" wäre grün gewesen. Auf dem Bild stand „◂ Schaltplan Werkstatt"
+als loser Text über der Zahl 14.
+
+PRÜFUNG: `test405`, 17 Punkte, PORT 9528.
+MUTATIONEN ROT GESEHEN:
+  §2 → die acht `.cw-bar.q-*`-Zeilen wieder entfernen. → „Jeder Balken hat
+       einen Hintergrund — rgba(0, 0, 0, 0) | rgba(0, 0, 0, 0) | …", 16/17.
+  §4 → `.cw-balken{top:4px}` zurück auf `24px`. → „Keine Tageszahl liegt
+       unter einem Balken — 1 unter Langes Projekt | 2 unter Langes Projekt
+       | 3 … | 4 …", 16/17.
+
+Mitgelaufen und grün: test87, test105, test109, test124, test214, test222,
+test284, test291, test319, test327, test328, test330, test404.
+
+Dateien: `pruefungen/lauf/test405.mts` (neu),
+`src/bereiche/datenbanken/steuerung.ts`, `quell/schale/stil/bausteine.css`.

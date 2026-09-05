@@ -2051,12 +2051,70 @@ const Datenbank = (() => {
      * eigenen Farbe, ein- und ausschaltbar und in der Reihenfolge verschiebbar.
      * ----------------------------------------------------------------------*/
     const KAL_FARBEN = ['blue', 'green', 'orange', 'purple', 'pink', 'red', 'yellow', 'brown'];
+    /* --------------------------------------------------------------------------
+     * WELCHE SPALTE DAS ENDE IST, WENN NIEMAND ES GESAGT HAT (E410)
+     *
+     * `dateKey` hatte seit jeher einen Vorgabewert — die erste Datumsspalte.
+     * `endeKey` hatte keinen. Damit stand jeder Termin immer nur an EINEM Tag,
+     * auch wenn die Datenbank ein Enddatum trug. Ein Projekt vom 1. bis zum
+     * 12. September stand am 1., und wer im Monat nachsah, was gerade laeuft,
+     * sah es nicht.
+     *
+     * Der durchgehende Balken war die ganze Zeit gebaut (`spurenDerWoche`,
+     * `balkenWoche`, `.cw-bar`) — er sprang nur nie an. Eine Funktion, deren
+     * Schalter keinen Vorgabewert hat, ist eine Funktion, die es nicht gibt.
+     *
+     * GERATEN WIRD NUR, WAS DIE DATEN BELEGEN. Eine zweite Datumsspalte muss
+     * nicht das Ende sein — sie kann „Erinnerung" heissen oder „zuletzt
+     * geprueft". Ein Balken ueber die falsche Spanne waere schlimmer als gar
+     * keiner. Deshalb drei Bedingungen, und alle drei muessen halten:
+     *
+     *   · Es gibt genau EINE weitere Datumsspalte.
+     *   · Mindestens eine Zeile traegt beide Werte — sonst weiss man nichts.
+     *   · Und bei JEDER Zeile, die beide traegt, liegt der zweite Wert nicht
+     *     vor dem ersten. Ein einziges Gegenbeispiel genuegt zum Schweigen.
+     *
+     * `view.endeKey === undefined` heisst „nie entschieden"; `''` heisst
+     * „ausdruecklich ein Tag" und wird nicht ueberstimmt.
+     * ------------------------------------------------------------------------*/
+    const endeGeraten = (coll, anfangKey) => {
+        if (!anfangKey)
+            return null;
+        const weitere = Object.keys(coll.schema)
+            .filter(k => k !== anfangKey && coll.schema[k].type === 'date');
+        if (weitere.length !== 1)
+            return null;
+        const kandidat = weitere[0];
+        let mitBeiden = 0;
+        for (const r of Store.rowsOf(coll.id)) {
+            const a = wert(r, anfangKey, coll);
+            const b = wert(r, kandidat, coll);
+            if (!a || !b)
+                continue;
+            const da = new Date(String(a)), db = new Date(String(b));
+            if (isNaN(da.getTime()) || isNaN(db.getTime()))
+                continue;
+            /* Ein einziges frueheres Ende widerlegt die Annahme. */
+            if (db.getTime() < da.getTime())
+                return null;
+            mitBeiden++;
+        }
+        return mitBeiden > 0 ? kandidat : null;
+    };
+    /** Die Endspalte einer Kalenderansicht — gewaehlt, geraten oder keine. */
+    const kalEnde = (coll, view, anfangKey) => {
+        if (view.endeKey && coll.schema[view.endeKey])
+            return view.endeKey;
+        if (view.endeKey !== undefined)
+            return null; /* '' = ausdruecklich ein Tag */
+        return endeGeraten(coll, anfangKey);
+    };
     /** Alle Kalender dieser Ansicht: der eigene zuerst, dann die zugeschalteten. */
     const kalenderQuellen = (coll, view) => {
         const eigen = view.dateKey || Object.keys(coll.schema).find(k => coll.schema[k].type === 'date');
         const liste = [{
                 coll, id: coll.id, name: coll.name, dateKey: eigen,
-                endeKey: view.endeKey && coll.schema[view.endeKey] ? view.endeKey : null,
+                endeKey: kalEnde(coll, view, eigen),
                 farbe: view.farbe || 'blue', an: true, eigen: true
             }];
         (view.extraDbs || []).forEach((x, i) => {
@@ -2319,8 +2377,11 @@ const Datenbank = (() => {
                     const t = new Date(wa);
                     t.setDate(wa.getDate() + i);
                     const z = tagesZelle(t, t.getMonth() !== monat, true);
+                    /* 8 statt 5: die Balkenlage beginnt bei 4 px (bausteine.css), jeder
+                       Balken ist 18 px hoch im 20er-Abstand. Der letzte endet damit
+                       bei 4 + n*20 - 2; darunter braucht die Tageszahl noch Luft. */
                     if (spuren.length)
-                        z.style.paddingTop = (5 + spuren.length * 20) + 'px';
+                        z.style.paddingTop = (8 + spuren.length * 20) + 'px';
                     tage.appendChild(z);
                 }
                 reihe.appendChild(tage);
@@ -2474,8 +2535,17 @@ const Datenbank = (() => {
         fuss.innerHTML =
             '<span>Doppelklick legt einen Eintrag an · Tasten T, W, M</span>' +
                 `<button data-a="kalender">Kalender: <b>${alleQuellen.filter(q => q.an).length}</b></button>` +
+                /* GERATEN WIRD GESAGT (E410). Eine stille Annahme ist schlimmer als
+                   eine falsche: eine falsche kann der Nutzer berichtigen, eine stille
+                   nicht einmal bemerken. */
                 '<button data-a="ende">Zeitraum bis: <b>' +
-                `${view.endeKey && coll.schema[view.endeKey] ? esc(coll.schema[view.endeKey].name) : 'ein Tag'}</b></button>`;
+                (() => {
+                    if (view.endeKey && coll.schema[view.endeKey])
+                        return esc(coll.schema[view.endeKey].name);
+                    const geraten = kalEnde(coll, view, view.dateKey ||
+                        Object.keys(coll.schema).find(k => coll.schema[k].type === 'date'));
+                    return geraten ? esc(coll.schema[geraten].name) + ' (erkannt)' : 'ein Tag';
+                })() + '</b></button>';
         fuss.addEventListener('click', e => {
             const r2 = (htmlVon(e) ?? document.body).getBoundingClientRect();
             if (elVon(e)?.closest('[data-a="ende"]')) {
