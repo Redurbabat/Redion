@@ -702,6 +702,35 @@ html[data-theme="light"]{
 .bg-red{background:var(--b-red)}
 [class*="bg-"]{border-radius:3px; padding:0 2px}
 
+/* DIE KRÄFTIGE REIHE, NICHT DIE TÖNUNG (E421).
+   Redion hat zwei Farbreihen. `--b-*` sind Tönungen, die HINTER dunklem
+   Text liegen — Etiketten, Zeilenfarben. `--c-*` sind die kräftigen Farben,
+   die für sich stehen. Ein Balken auf einer Bahn gehört zur zweiten Reihe,
+   und die Verteilungskachel des Dashboards benutzte die erste.
+   Gemessen war das kein Schönheitsfehler: `--b-gray` ist `#f1f1ef`, und die
+   Bahn `--bg-input` ist `#f1f1ef` — Byte für Byte dieselbe Farbe, Kontrast
+   1.00. Die Zeile „Offen 3" hatte einen Balken über die VOLLE Breite, und
+   niemand konnte ihn sehen. Die anderen drei lagen bei 1.01 bis 1.03, im
+   Dunkelmodus bei 1.85 bis 1.96.
+   Die Regel steht hier und nicht in `grund.css`: `bg-*` soll überall sonst
+   die Tönung bleiben. Ein Etikett mit `--c-gray` hinter schwarzem Text wäre
+   unlesbar. Umgedeutet wird nur der Balken. */
+.db-strich i.bg-gray  {background:var(--c-gray)}
+.db-strich i.bg-brown {background:var(--c-brown)}
+.db-strich i.bg-orange{background:var(--c-orange)}
+.db-strich i.bg-yellow{background:var(--c-yellow)}
+.db-strich i.bg-green {background:var(--c-green)}
+.db-strich i.bg-blue  {background:var(--c-blue)}
+.db-strich i.bg-purple{background:var(--c-purple)}
+.db-strich i.bg-pink  {background:var(--c-pink)}
+.db-strich i.bg-red   {background:var(--c-red)}
+/* Warum das hier steht und nicht bei `.db-strich` in `bausteine.css`: der
+   Namensraum `bg-` gehört dieser Datei (doku/CSS-NAMENSRAEUME.md), und
+   `test290` misst, ob ein Bereich unbemerkt in eine andere Datei zieht.
+   Er hat genau das gemeldet, als die neun Zeilen drüben standen — zu
+   Recht: eine fremde Datei, die `bg-*` umdeutet, ist der Fall, vor dem
+   §39 warnt. */
+
 /* --- Grundlayout ---------------------------------------------------------- */
 *{box-sizing:border-box; margin:0; padding:0}
 html,body{height:100%}
@@ -8511,28 +8540,6 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 .db-name{width:120px; flex:0 0 auto; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 .db-strich{flex:1; height:9px; background:var(--bg-input); border-radius:5px; overflow:hidden}
 .db-strich i{display:block; height:100%; border-radius:5px}
-/* DIE KRÄFTIGE REIHE, NICHT DIE TÖNUNG (E421).
-   Redion hat zwei Farbreihen. `--b-*` sind Tönungen, die HINTER dunklem
-   Text liegen — Etiketten, Zeilenfarben. `--c-*` sind die kräftigen Farben,
-   die für sich stehen. Ein Balken auf einer Bahn gehört zur zweiten Reihe,
-   und die Verteilungskachel des Dashboards benutzte die erste.
-   Gemessen war das kein Schönheitsfehler: `--b-gray` ist `#f1f1ef`, und die
-   Bahn `--bg-input` ist `#f1f1ef` — Byte für Byte dieselbe Farbe, Kontrast
-   1.00. Die Zeile „Offen 3" hatte einen Balken über die VOLLE Breite, und
-   niemand konnte ihn sehen. Die anderen drei lagen bei 1.01 bis 1.03, im
-   Dunkelmodus bei 1.85 bis 1.96.
-   Die Regel steht hier und nicht in `grund.css`: `bg-*` soll überall sonst
-   die Tönung bleiben. Ein Etikett mit `--c-gray` hinter schwarzem Text wäre
-   unlesbar. Umgedeutet wird nur der Balken. */
-.db-strich i.bg-gray  {background:var(--c-gray)}
-.db-strich i.bg-brown {background:var(--c-brown)}
-.db-strich i.bg-orange{background:var(--c-orange)}
-.db-strich i.bg-yellow{background:var(--c-yellow)}
-.db-strich i.bg-green {background:var(--c-green)}
-.db-strich i.bg-blue  {background:var(--c-blue)}
-.db-strich i.bg-purple{background:var(--c-purple)}
-.db-strich i.bg-pink  {background:var(--c-pink)}
-.db-strich i.bg-red   {background:var(--c-red)}
 /* 34 px reichten für eine Anzahl. Seit die Verteilung auch SUMMEN zeigen
    kann (E185), stehen dort Beträge — `min-width` statt `width`, sonst
    endet „184 500" als „184 5". Genau der Fund aus CLAUDE.md §55.2. */
@@ -17035,7 +17042,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 389, inhalt: '2891ab75b79b2ccc', gebaut: '2026-09-05T19:01:21.196Z' };
+const Stand = { fassung: 395, inhalt: 'fb76c26db8fb6b84', gebaut: '2026-09-05T19:16:13.396Z' };
 window.Stand = Stand;
 
 </script>
@@ -28516,7 +28523,12 @@ Register.ansichten = (() => {
            Notions grösste Lücke bei der Eingabe — siehe bereiche/datenbanken/raster.ts */
         ['raster', '🧮', 'Raster'],
         ['board', '▤', 'Board'],
-        ['timeline', '▬', 'Zeitleiste'],
+        /* „Zeitstrahl", nicht „Zeitleiste" (E422). Beide Wörter standen im
+           Projekt für dieselbe Ansicht: das Register sagte Zeitleiste, der
+           Reiter Zeitstrahl, und die Fehlermeldung „Für den Zeitstrahl braucht
+           es eine Datums-Eigenschaft" auch. Es gewinnt das Wort, das der Nutzer
+           schon liest. */
+        ['timeline', '▬', 'Zeitstrahl'],
         ['calendar', '📅', 'Kalender'],
         ['list', '☰', 'Liste'],
         ['gallery', '▩', 'Galerie'],
@@ -40018,12 +40030,20 @@ const Store = (() => {
         const c = cache.collections[collectionId];
         if (!c)
             return null;
-        const namen = { table: 'Tabelle', board: 'Board', list: 'Liste', gallery: 'Galerie',
-            calendar: 'Kalender', timeline: 'Zeitstrahl', chart: 'Diagramm', form: 'Formular',
-            feed: 'Feed', map: 'Karte', dashboard: 'Dashboard' };
+        /* DER NAME KOMMT AUS DEM REGISTER (E422, §8). Hier stand eine eigene
+           Karte mit elf von dreizehn Arten; `pivot` und `raster` fehlten, und
+           eine solche Ansicht hiess deshalb „Ansicht". Genau der Fall, vor dem
+           §8 warnt: ein zweiter Katalog läuft mit dem ersten auseinander, und
+           niemand merkt, welcher gilt.
+           `register/ansichten.js` wird vor dieser Datei geladen (index.html),
+           und `kern/` darf `register/` benutzen (§5 Regel 1). Der Rückfall
+           bleibt trotzdem stehen: eine Ansicht ohne Namen ist schlimmer als
+           eine mit einem faden. */
+        const ausRegister = (art) => (typeof Register !== 'undefined' && Register.ansichten)
+            ? Register.ansichten.name(art) : art;
         const v = {
             id: uid(), collectionId, layout,
-            name: name || namen[layout] || 'Ansicht',
+            name: name || ausRegister(layout) || 'Ansicht',
             filters: { operator: 'and', rules: [] },
             sorts: [], groupBy: '', hidden: [], calc: {},
             created: now(), edited: now() /* siehe `addDatabase` — E179 */
@@ -69086,10 +69106,10 @@ const Datenbank = (() => {
                 return;
             const b = document.createElement('button');
             b.className = 'db-tab' + (id === viewId ? ' on' : '');
-            const ICO = { table: '▦', board: '▤', list: '☰', gallery: '▩', calendar: '📅',
-                timeline: '▬', chart: '📊', form: '📝', feed: '📰', map: '🗺',
-                dashboard: '🧮' };
-            const ico = ICO[v.layout] || '▦';
+            /* AUS DEM REGISTER, NICHT AUS EINER EIGENEN KARTE (E422, §8). Hier
+               stand eine Karte mit elf von dreizehn Arten; `pivot` und `raster`
+               bekamen deshalb das Rückfallzeichen ▦ statt ⊞ und 🧮. */
+            const ico = Register.ansichten.icon(v.layout);
             b.innerHTML = `<span>${ico}</span>${esc(v.name)}`;
             b.addEventListener('click', () => {
                 if (id === viewId) {
@@ -73696,9 +73716,14 @@ const Datenbank = (() => {
             App.zeichneSeite();
         });
     };
-    const LAYOUT_NAMEN = { table: 'Tabelle', board: 'Board', list: 'Liste', gallery: 'Galerie',
-        calendar: 'Kalender', timeline: 'Zeitleiste', chart: 'Diagramm', form: 'Formular',
-        feed: 'Feed', map: 'Karte', dashboard: 'Dashboard' };
+    /* DER NAME EINER ANSICHTSART STEHT IM REGISTER (E422, §8). Hier stand eine
+       zweite Karte, und sie war mit dem Register auseinandergelaufen: `pivot`
+       und `raster` fehlten ganz, und `timeline` hiess hier „Zeitleiste", im
+       Reiter aber „Zeitstrahl". Zwei deutsche Wörter für dieselbe Ansicht,
+       nebeneinander in derselben App. */
+    const LAYOUT_NAMEN = new Proxy({}, {
+        get: (_z, art) => Register.ansichten.name(art)
+    });
     /** Gruppieren als eigenes kleines Menü — wird von zwei Stellen gebraucht. */
     /* ========================================================================
      * LAYOUT-PANEL
@@ -74368,9 +74393,11 @@ const Datenbank = (() => {
     const ansichtMenue = (anker, coll, view, block) => {
         const r = anker.getBoundingClientRect();
         const sichtbar = Object.keys(coll.schema).filter(k => !(view.hidden || []).includes(k)).length;
-        const LAY_ICON = { table: '▦', board: '▤', list: '☰', gallery: '▩', calendar: '📅',
-            timeline: '▬', chart: '📊', form: '📝', feed: '📰', map: '🗺',
-            dashboard: '🧮' };
+        /* Auch hier das Register (E422). Dieselbe Karte stand zweimal in
+           derselben Datei — einmal für den Reiter, einmal für das Menü. */
+        const LAY_ICON = new Proxy({}, {
+            get: (_z, art) => Register.ansichten.icon(art)
+        });
         const kopfKarte = '<div class="av-karte">' +
             `<span class="av-ico">${LAY_ICON[view.layout] || '▦'}</span>` +
             `<input class="av-name" value="${esc(view.name || 'Ansicht')}" spellcheck="false">` +
@@ -128090,11 +128117,15 @@ const Arbeitswelt = (() => {
     const dateiIcons = {
         file: '📎', image: '🖼', audio: '🎵', video: '🎬'
     };
-    const ansichtIcons = {
-        table: '▦', raster: '🧮', board: '▤', timeline: '▬', calendar: '📅',
-        list: '☰', gallery: '▩', chart: '📊', feed: '📰', map: '🗺',
-        dashboard: '🧮', pivot: '⊞', form: '📝'
-    };
+    /* AUS DEM REGISTER (E422, §8). Hier stand die fünfte Kopie derselben
+       Liste. Diese hier war sogar vollständig — und genau das ist der Punkt:
+       eine Kopie, die heute stimmt, ist die, von der man morgen nicht mehr
+       weiss, dass sie eine ist. Gefunden hat sie nicht das Lesen, sondern
+       `test415 §4`. */
+    const ansichtIcons = new Proxy({}, {
+        get: (_z, art) => (typeof Register !== 'undefined' && Register.ansichten)
+            ? Register.ansichten.icon(art) : '▦'
+    });
     const alsZeit = (wert) => {
         if (typeof wert === 'number')
             return Number.isFinite(wert) ? wert : 0;

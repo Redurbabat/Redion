@@ -147,10 +147,10 @@ const Datenbank = (() => {
       if (!v) return;
       const b = document.createElement('button');
       b.className = 'db-tab' + (id === viewId ? ' on' : '');
-      const ICO: Record<string, string> = { table:'▦', board:'▤', list:'☰', gallery:'▩', calendar:'📅',
-                    timeline:'▬', chart:'📊', form:'📝', feed:'📰', map:'🗺',
-                    dashboard:'🧮' };
-      const ico = ICO[v.layout] || '▦';
+      /* AUS DEM REGISTER, NICHT AUS EINER EIGENEN KARTE (E422, §8). Hier
+         stand eine Karte mit elf von dreizehn Arten; `pivot` und `raster`
+         bekamen deshalb das Rückfallzeichen ▦ statt ⊞ und 🧮. */
+      const ico = Register.ansichten.icon(v.layout);
       b.innerHTML = `<span>${ico}</span>${esc(v.name)}`;
       b.addEventListener('click', () => {
         if (id === viewId) { ansichtMenue(b, coll, v, block); return; }
@@ -4597,9 +4597,14 @@ const Datenbank = (() => {
     });
   };
 
-  const LAYOUT_NAMEN: Record<string, string> = { table:'Tabelle', board:'Board', list:'Liste', gallery:'Galerie',
-    calendar:'Kalender', timeline:'Zeitleiste', chart:'Diagramm', form:'Formular',
-    feed:'Feed', map:'Karte', dashboard:'Dashboard' };
+  /* DER NAME EINER ANSICHTSART STEHT IM REGISTER (E422, §8). Hier stand eine
+     zweite Karte, und sie war mit dem Register auseinandergelaufen: `pivot`
+     und `raster` fehlten ganz, und `timeline` hiess hier „Zeitleiste", im
+     Reiter aber „Zeitstrahl". Zwei deutsche Wörter für dieselbe Ansicht,
+     nebeneinander in derselben App. */
+  const LAYOUT_NAMEN = new Proxy({} as Record<string, string>, {
+    get: (_z, art: string) => Register.ansichten.name(art)
+  });
 
   /** Gruppieren als eigenes kleines Menü — wird von zwei Stellen gebraucht. */
   /* ========================================================================
@@ -5243,9 +5248,11 @@ const Datenbank = (() => {
   const ansichtMenue = (anker: any, coll: any, view: any, block: any) => {
     const r = anker.getBoundingClientRect();
     const sichtbar = Object.keys(coll.schema).filter(k => !(view.hidden || []).includes(k)).length;
-    const LAY_ICON: Record<string, string> = { table:'▦', board:'▤', list:'☰', gallery:'▩', calendar:'📅',
-                      timeline:'▬', chart:'📊', form:'📝', feed:'📰', map:'🗺',
-                      dashboard:'🧮' };
+    /* Auch hier das Register (E422). Dieselbe Karte stand zweimal in
+       derselben Datei — einmal für den Reiter, einmal für das Menü. */
+    const LAY_ICON = new Proxy({} as Record<string, string>, {
+      get: (_z, art: string) => Register.ansichten.icon(art)
+    });
     const kopfKarte =
       '<div class="av-karte">' +
         `<span class="av-ico">${LAY_ICON[view.layout] || '▦'}</span>` +

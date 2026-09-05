@@ -33,11 +33,15 @@ const Arbeitswelt = (() => {
     const dateiIcons = {
         file: '📎', image: '🖼', audio: '🎵', video: '🎬'
     };
-    const ansichtIcons = {
-        table: '▦', raster: '🧮', board: '▤', timeline: '▬', calendar: '📅',
-        list: '☰', gallery: '▩', chart: '📊', feed: '📰', map: '🗺',
-        dashboard: '🧮', pivot: '⊞', form: '📝'
-    };
+    /* AUS DEM REGISTER (E422, §8). Hier stand die fünfte Kopie derselben
+       Liste. Diese hier war sogar vollständig — und genau das ist der Punkt:
+       eine Kopie, die heute stimmt, ist die, von der man morgen nicht mehr
+       weiss, dass sie eine ist. Gefunden hat sie nicht das Lesen, sondern
+       `test415 §4`. */
+    const ansichtIcons = new Proxy({}, {
+        get: (_z, art) => (typeof Register !== 'undefined' && Register.ansichten)
+            ? Register.ansichten.icon(art) : '▦'
+    });
     const alsZeit = (wert) => {
         if (typeof wert === 'number')
             return Number.isFinite(wert) ? wert : 0;

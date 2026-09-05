@@ -981,12 +981,20 @@ const Store = (() => {
         const c = cache.collections[collectionId];
         if (!c)
             return null;
-        const namen = { table: 'Tabelle', board: 'Board', list: 'Liste', gallery: 'Galerie',
-            calendar: 'Kalender', timeline: 'Zeitstrahl', chart: 'Diagramm', form: 'Formular',
-            feed: 'Feed', map: 'Karte', dashboard: 'Dashboard' };
+        /* DER NAME KOMMT AUS DEM REGISTER (E422, §8). Hier stand eine eigene
+           Karte mit elf von dreizehn Arten; `pivot` und `raster` fehlten, und
+           eine solche Ansicht hiess deshalb „Ansicht". Genau der Fall, vor dem
+           §8 warnt: ein zweiter Katalog läuft mit dem ersten auseinander, und
+           niemand merkt, welcher gilt.
+           `register/ansichten.js` wird vor dieser Datei geladen (index.html),
+           und `kern/` darf `register/` benutzen (§5 Regel 1). Der Rückfall
+           bleibt trotzdem stehen: eine Ansicht ohne Namen ist schlimmer als
+           eine mit einem faden. */
+        const ausRegister = (art) => (typeof Register !== 'undefined' && Register.ansichten)
+            ? Register.ansichten.name(art) : art;
         const v = {
             id: uid(), collectionId, layout,
-            name: name || namen[layout] || 'Ansicht',
+            name: name || ausRegister(layout) || 'Ansicht',
             filters: { operator: 'and', rules: [] },
             sorts: [], groupBy: '', hidden: [], calc: {},
             created: now(), edited: now() /* siehe `addDatabase` — E179 */

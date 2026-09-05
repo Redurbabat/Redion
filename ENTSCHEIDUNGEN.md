@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-417 Entscheidungen, E1 bis E421. Die Nummer ist die Ordnung: eine Entscheidung
+418 Entscheidungen, E1 bis E422. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -475,6 +475,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E419** — Der Zeitstrahl füllt seine Fläche und sagt, wo man ist
 * **E420** — Eine Lücke, die niemand nachmisst, bleibt in der Liste
 * **E421** — Zwei Farbreihen, und der Balken nahm die falsche
+* **E422** — Fünf Kataloge für die dreizehn Ansichten, und sie waren auseinander
 
 ---
 
@@ -34283,3 +34284,93 @@ richtiger Länge und „2630 CHF".
 Dateien: `quell/schale/stil/bausteine.css`,
 `src/bereiche/datenbanken/steuerung.ts`, `src/bereiche/datenbanken/dienst.ts`,
 `pruefungen/lauf/test414.mts` (neu).
+
+
+---
+
+E422 — Fünf Kataloge für die dreizehn Ansichten, und sie waren auseinander
+---------------------------------------------------------------------------
+
+ENTSCHEIDUNG: Name und Zeichen einer Ansichtsart kommen aus
+`register/ansichten.ts` — und nur von dort. Fünf eigene Karten fallen weg.
+
+WAS AUF DEM BILD STAND. Über der Pivot-Tabelle stand ein Reiter namens
+„Ansicht". Nicht „Pivot" — „Ansicht". Das ist kein Tippfehler, sondern §8:
+
+  > Keine doppelten Kataloge einführen. Ein zweiter Katalog für dasselbe
+  > läuft mit dem ersten auseinander, und niemand merkt, welcher gilt.
+
+FÜNF KARTEN FÜR DASSELBE:
+
+    kern/ablage/indexdb.ts       `namen`          Name einer neuen Ansicht
+    datenbanken/steuerung.ts     `ICO`            Zeichen im Reiter
+    datenbanken/steuerung.ts     `LAYOUT_NAMEN`   Name im Ansichtsmenü
+    datenbanken/steuerung.ts     `LAY_ICON`       Zeichen im Ansichtsmenü
+    wissen/arbeitswelt.ts        `ansichtIcons`   Zeichen in der Arbeitswelt
+
+Vier davon kannten elf der dreizehn Arten: `pivot` und `raster` fehlten
+überall. Deshalb hiess eine Pivot-Ansicht „Ansicht" und trug ▦ statt ⊞.
+Im Register stehen beide seit jeher, mit Zeichen und Namen.
+
+UND SIE WAREN NICHT NUR UNVOLLSTÄNDIG, SONDERN WIDERSPRÜCHLICH. `timeline`
+hiess im Register „Zeitleiste", im Reiter „Zeitstrahl" und in der
+Fehlermeldung „Für den Zeitstrahl braucht es eine Datums-Eigenschaft" auch.
+Zwei deutsche Wörter für dieselbe Ansicht, nebeneinander in derselben App.
+Es gewinnt das Wort, das der Nutzer schon liest: Zeitstrahl.
+
+DIE FÜNFTE KARTE FAND NICHT DAS LESEN, SONDERN DER WÄCHTER. `ansichtIcons`
+in `arbeitswelt.ts` war sogar VOLLSTÄNDIG — alle dreizehn, richtig. Und
+genau das ist der Punkt: eine Kopie, die heute stimmt, ist die, von der man
+morgen nicht mehr weiss, dass sie eine ist.
+
+WAS KEIN ZWEITER KATALOG IST, und warum der Wächter das unterscheiden muss:
+`ANSICHT_ZEICHEN` in `steuerung.ts` bildet die dreizehn Arten auf
+STRICHZEICHEN-KENNUNGEN ab — grid, boxChecked, compass — mit geschriebenem
+Grund: „Emoji stehen im Ansichtenregister; an der Kante sind sie verboten
+(E202)". Das ist eine Übersetzung in ein anderes Zeichensystem. Der Wächter
+unterscheidet an den WERTEN: was ein Mensch liest, fängt gross an
+(„Tabelle") oder ist kein ASCII („▦"); was der Code liest, ist ein
+kleingeschriebener Bezeichner. Ohne diese Trennung meldet er eine gesunde
+Karte, und dann wird er abgeschaltet — derselbe Fehler wie bei `formel` in
+`test294` (E412).
+
+WARUM `Proxy` UND NICHT EINE FUNKTION. `LAYOUT_NAMEN[x]` steht an mehreren
+Stellen als Zugriff da. Ein `Proxy`, der jeden Zugriff ans Register gibt,
+lässt die Aufrufstellen unverändert und macht die Karte trotzdem zu einem
+Durchreicher. Die Alternative — überall auf `Register.ansichten.name(x)`
+umschreiben — wäre ehrlicher zu lesen und hätte mehr Stellen angefasst, als
+dieser Bogen tragen will.
+
+`kern/` DARF DAS REGISTER BENUTZEN. §5 Regel 1 erlaubt einem Bereich
+`kern/` und `register/`; `kern/` selbst nutzt `Register.` bereits an drei
+Stellen, und `register/ansichten.js` wird in `index.html` vor
+`kern/ablage/indexdb.js` geladen. Der Rückfall bleibt trotzdem stehen: eine
+Ansicht ohne Namen ist schlimmer als eine mit einem faden.
+
+PRÜFUNG: `test415`, 13 Punkte, PORT 9537. §3 ist der eigentliche Beweis: das
+Register zur Laufzeit ändern und nachsehen, ob die Oberfläche folgt. „Der
+Name stimmt" hiesse auch dann etwas, wenn ihn ein zweiter Katalog liefert,
+der zufällig gleich gefüllt ist — und genau so war es jahrelang.
+GEGENPROBE: `pivot` aus dem Register genommen → §1 und §2 rot. Die fünfte
+Karte wieder eingesetzt → §4 rot. Beide gelaufen.
+
+NACHTRAG — DREI FUNDE AUS DEM VOLLEN LAUF, alle aus meiner eigenen Arbeit
+dieses Tages, und alle von `test290` (CSS-Namensräume):
+
+  · `ohne` — `.ohne-namen` gab es seit jeher dreimal, unter der Schwelle
+    von vier. E417 legte `.ohne-linien` dazu, und der Namensraum wurde
+    sichtbar. Jetzt im Verzeichnis.
+  · `po` — die Begrüssungsfläche. Ihre Klassen standen bis E418 in einer
+    `.ts`-Datei und waren für den Wächter unsichtbar. Dasselbe Muster wie
+    bei `test362`: das Verschieben in eine Stildatei hat sie nicht
+    schlechter gemacht, sondern sichtbar.
+  · `bg` — E421 legte neun Regeln für `.db-strich i.bg-*` in
+    `bausteine.css`, und der Namensraum `bg-` gehört `grund.css`. Der
+    Wächter meldete „Verzeichnis sagt grund.css, Stil sagt bausteine.css" —
+    zu Recht: eine fremde Datei, die `bg-*` umdeutet, ist genau der Fall,
+    vor dem §39 warnt. Die neun Zeilen stehen jetzt in `grund.css`.
+
+Dateien: `src/register/ansichten.ts`, `src/kern/ablage/indexdb.ts`,
+`src/bereiche/datenbanken/steuerung.ts`, `src/bereiche/wissen/arbeitswelt.ts`,
+`quell/schale/stil/grund.css`, `quell/schale/stil/bausteine.css`,
+`doku/CSS-NAMENSRAEUME.md`, `pruefungen/lauf/test415.mts` (neu).
