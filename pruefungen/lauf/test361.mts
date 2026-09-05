@@ -216,6 +216,35 @@ const inhaltRechner = await d.s.evaluate(() => ({
   props: document.querySelectorAll('.peek .peek-prop').length,
   bloecke: !!document.querySelector('.peek .peek-inhalt'),
 }));
+/* DIE NAMENSSPALTE — GEMESSEN STATT VERMUTET (L131 Punkt 1, E433).
+   L131 hielt fest, `.pp-n` stehe auf `width:170px`, und auf 390 px seien
+   das 44 % der Breite für eine Beschriftung — dieselbe Bauform, die beim
+   Zeitstrahl der Fehler war (E427, `.zs-namen` mit 190 px). Der Punkt blieb
+   ein Jahr offen mit der Begründung, die Messung habe die Vorschau am
+   Telefon nicht öffnen können.
+   Nachgemessen stimmt die Vermutung NICHT: am Telefon rendert `.peek` gar
+   nicht — `zeilePeek` verzweigt zum Blatt —, und dort gilt
+   `.iblatt-koerper .pp-n{width:118px}`. Gemessen 118 von 390 px, also 30 %,
+   genau wie am Rechner (170 von 559).
+   Der Punkt bleibt trotzdem hier stehen, und zwar als Wächter: die
+   Telefon-Regel ist EINE Zeile in `bausteine.css`. Fällt sie weg, greift
+   wieder die 170, und niemand sieht es — ausser dieser Messung. */
+const spalte = async (seite: any, huelle: string) => seite.evaluate(`(() => {
+  const koerper = document.querySelector('${huelle} .peek-koerper, ${huelle}-koerper');
+  const n = document.querySelector('${huelle} .pp-n');
+  if (!koerper || !n) return null;
+  const kb = koerper.getBoundingClientRect().width;
+  const nb = n.getBoundingClientRect().width;
+  return { koerper: Math.round(kb), name: Math.round(nb),
+           anteil: Math.round(nb / kb * 100),
+           /* Wird eine Beschriftung abgeschnitten? Die Namensspalte hat
+              text-overflow:ellipsis, also verraet nur scrollWidth es.
+              (Keine Backticks in einem Kommentar innerhalb einer Vorlage.) */
+           kurz: [...document.querySelectorAll('${huelle} .pp-n')]
+                   .filter(x => x.scrollWidth > x.clientWidth + 1)
+                   .map(x => x.textContent.trim()) };
+})()`);
+const spalteRechner = await spalte(d.s, '.peek');
 await d.s.keyboard.press('Escape');
 
 await vorschau(t.s, t.zeile);
@@ -227,6 +256,25 @@ const inhaltTelefon = await t.s.evaluate(() => ({
 }));
 gleich('Titel, Eigenschaften und Blöcke stehen in beiden Hüllen gleich',
   inhaltTelefon, inhaltRechner);
+const spalteTelefon = await spalte(t.s, '.iblatt');
+p('Die Namensspalte ist an beiden Orten messbar',
+  !!spalteRechner && !!spalteTelefon,
+  JSON.stringify([spalteRechner, spalteTelefon]));
+/* 40 % ist die Grenze, nicht 44: bei 44 waere der heutige Zustand (30 %)
+   nur ein Haar von rot entfernt, und die 170-px-Rueckfallregel (44 %) laege
+   genau darauf. Eine Grenze, die den Fehler eben noch durchlaesst, ist
+   keine. */
+p('Am Telefon nimmt sie hoechstens 40 % der Breite',
+  (spalteTelefon?.anteil ?? 99) <= 40,
+  JSON.stringify(spalteTelefon));
+p('Am Rechner ebenso', (spalteRechner?.anteil ?? 99) <= 40,
+  JSON.stringify(spalteRechner));
+/* Und der zweite Weg, auf dem eine Spaltenbreite falsch sein kann: sie ist
+   schmal genug fuer das Bild, aber zu schmal fuer ihre eigenen Woerter.
+   Genau das war E427s zweiter Fund. */
+p('Und keine Beschriftung wird dabei abgeschnitten',
+  (spalteTelefon?.kurz?.length ?? 1) === 0 && (spalteRechner?.kurz?.length ?? 1) === 0,
+  JSON.stringify([spalteTelefon?.kurz, spalteRechner?.kurz]));
 p('Die Eigenschaftszeilen sind am Telefon fingergerecht (§37)',
   await t.s.evaluate(() => {
     const w = document.querySelector('.iblatt .pp-w');

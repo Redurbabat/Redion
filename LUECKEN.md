@@ -6145,16 +6145,38 @@ wichtigsten am Telefon angesehen worden (E419–E427). Vier Dinge sind dabei
 aufgefallen und NICHT repariert worden — jedes aus einem eigenen Grund, und
 der Grund steht dabei, damit niemand die Arbeit doppelt macht.
 
-1. **Die Namensspalte des Side Peek ist am Telefon nicht nachgemessen.**
-   `.pp-n` steht auf `width:170px; flex:0 0 170px` — auf 390 px sind das
-   44 % der Breite für die Beschriftung einer Eigenschaft. Das ist dieselbe
-   Bauform, die beim Zeitstrahl der Fehler war (E427: `.zs-namen` mit
-   190 px, am Telefon 57 %).
-   NICHT REPARIERT, weil die Messung den Peek am Telefon gar nicht öffnen
-   konnte: dort zeigt die Datenbank Karten statt einer Tabelle, und der
-   Weg zum Peek ist ein anderer. Eine Vermutung ohne Messung ist genau das,
-   wovor §36 warnt — erst messen, dann bauen. Wer das aufgreift, braucht
-   zuerst einen Weg, den Peek am Telefon zu öffnen.
+Punkt 1 ist am 6. September geschlossen — er war keiner. Drei bleiben.
+
+1. **Die Namensspalte des Side Peek am Telefon** — **GESCHLOSSEN am
+   6. September 2026 durch E433, und zwar als NICHTBEFUND.**
+
+   Der Verdacht war: `.pp-n` steht auf `width:170px; flex:0 0 170px`, auf
+   390 px sind das 44 % der Breite für die Beschriftung einer Eigenschaft —
+   dieselbe Bauform, die beim Zeitstrahl der Fehler war (E427, `.zs-namen`
+   mit 190 px, am Telefon 57 %). Nicht repariert, weil die Messung den Peek
+   am Telefon gar nicht öffnen konnte.
+
+   NACHGEMESSEN STIMMT DIE VERMUTUNG NICHT. Am Telefon rendert `.peek`
+   überhaupt nicht: `zeilePeek` verzweigt eine Zeile vorher zu
+   `zeilePeekBlatt`, dem Blatt von unten (E371). Dort gilt
+   `.iblatt-koerper .pp-n{width:118px}`. Gemessen auf 390 px:
+
+       Hülle          Körper   Name    Anteil   abgeschnitten
+       Blatt (Handy)   390 px  118 px    30 %   keiner
+       Peek (Rechner)  559 px  170 px    30 %   keiner
+
+   Dreissig Prozent an beiden Orten, und keine Beschriftung wird gekürzt.
+
+   Die Rechnung in der Lücke war richtig, ihre Voraussetzung nicht: 170 px
+   auf 390 px WÄREN 44 %, nur stehen dort nie 170 px. Das ist derselbe
+   Fehler wie E21 — eine Schnittstelle aus dem Gedächtnis statt aus dem
+   Quelltext —, nur an einer CSS-Regel statt an einer Funktion.
+
+   UND DER PUNKT BLEIBT TROTZDEM BEWACHT. Die Telefon-Regel ist EINE Zeile
+   in `bausteine.css`. `test361 §8` misst jetzt beide Hüllen: höchstens
+   40 % der Körperbreite, und keine Beschriftung abgeschnitten. Die
+   Gegenprobe — die eine Zeile weggenommen — liefert genau die 44 %, die
+   hier standen.
 
 2. **Die Karte sagt nicht, dass sie offline nichts zeigen kann.** Ohne Netz
    bleibt ein grosser grauer Kasten stehen, ohne ein Wort dazu. Die Kacheln

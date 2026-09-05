@@ -165,7 +165,15 @@ Rechner klein und am Telefon gross ist.
 
 Beide zeigen, worauf Punkt 1 wirklich zielt: nicht nur die rohen `44px`,
 sondern JEDE feste Zahl, deren Anteil am Bildschirm sich mit der Breite
-ändert. Eine Messung dazu steht in `LUECKEN.md` L131 Punkt 1.
+ändert.
+
+Der dritte Verdachtsfall, die Namensspalte der Vorschau, ist am
+6. September nachgemessen worden (E433) — und war KEINER: am Telefon
+rendert `.peek` gar nicht, dort steht das Blatt mit eigenen 118 px, also
+30 % statt der vermuteten 44 %. `test361 §8` hält die Grenze jetzt für
+beide Hüllen. Was bleibt, ist die Lehre und nicht der Fund: eine feste
+Zahl im Stil sagt nichts, solange nicht feststeht, WELCHE Regel am Telefon
+überhaupt gilt.
 
 **Wo** — `LUECKEN.md` L10 und L131.
 
@@ -232,12 +240,12 @@ als vermutet: die Fläche liess sich ohne Umbau auf Anteile strecken, und
 die erste Achsenmarke fehlte nicht, sie stand bei x = −45 links ausserhalb.
 
 Zuletzt AUFGEMACHT: **L131** — vier Fäden aus dem Telefon-Durchgang, die
-bewusst offen geblieben sind: die Namensspalte des Side Peek (nicht
-nachgemessen, weil sich der Peek am Telefon nicht öffnen liess), die Karte
-ohne Offline-Hinweis (im Container nicht von „lädt noch" zu unterscheiden),
-drei Klassen ohne CSS-Regel, und `.orb-inline` — die EINZIGE wirklich tote
-CSS-Regel im ganzen Bestand, nicht entfernt, weil §43 eine Rückfrage
-verlangt. Und **L129** — die Denkkugel (E403) hängt bisher nur am
+bewusst offen geblieben sind. Einer ist inzwischen zu: die Namensspalte des
+Side Peek war nachgemessen ein Nichtbefund (E433, 30 % statt 44 %). Drei
+bleiben: die Karte ohne Offline-Hinweis (im Container nicht von „lädt noch"
+zu unterscheiden), drei Klassen ohne CSS-Regel, und `.orb-inline` — die
+EINZIGE wirklich tote CSS-Regel im ganzen Bestand, nicht entfernt, weil §43
+eine Rückfrage verlangt. Und **L129** — die Denkkugel (E403) hängt bisher nur am
 Agentenfenster. Drei Stellen wären Kandidaten, eine davon ausdrücklich NICHT
 (ein Fortschrittsbalken sagt mehr als eine Kugel), und zwei der neun Zustände
 haben in Redion noch gar keinen Ort. Und **L123** — die zwölf Befunde des UX-Prüfberichts, die noch

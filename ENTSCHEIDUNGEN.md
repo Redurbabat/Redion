@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-428 Entscheidungen, E1 bis E432. Die Nummer ist die Ordnung: eine Entscheidung
+429 Entscheidungen, E1 bis E433. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -486,6 +486,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E430** — „Kalender“ öffnete den Verbindungsdialog
 * **E431** — Der Kalender wohnt nicht im Arbeitsbereich
 * **E432** — Die Regel stand in der falschen Datei und verlor still
+* **E433** — Die Namensspalte am Telefon war nie 170 Pixel breit
 
 ---
 
@@ -35022,3 +35023,65 @@ eine tote Regel weniger.
 
 Dateien: `quell/schale/stil/einstellungen.css`,
 `quell/schale/stil/datenbanken.css`, `pruefungen/lauf/test417.mts`.
+
+---
+
+E433 — Die Namensspalte am Telefon war nie 170 Pixel breit
+------------------------------------------------------------
+
+ENTSCHEIDUNG: L131 Punkt 1 wird als NICHTBEFUND geschlossen — und die Zahl
+bekommt trotzdem einen Wächter, weil sie an EINER Zeile hängt.
+
+DER VERDACHT. L131 hielt fest: `.pp-n` steht auf `width:170px; flex:0 0
+170px`. Auf einem 390-px-Telefon sind das 44 % der Breite für die
+Beschriftung einer Eigenschaft — dieselbe Bauform, die beim Zeitstrahl der
+Fehler war (E427: `.zs-namen` mit 190 px, am Telefon 57 %). Nicht repariert
+mit der Begründung, die Messung habe die Vorschau am Telefon nicht öffnen
+können: dort zeigt die Datenbank Karten statt einer Tabelle.
+
+NACHGEMESSEN STIMMT ER NICHT. Am Telefon rendert `.peek` überhaupt nicht.
+`zeilePeek` verzweigt eine Zeile vor dem Bau des Fensters:
+
+    const telefon = AppEinstellung.amTelefon();
+    if (telefon) { zeilePeekBlatt(row, coll); return; }
+
+Das Blatt von unten (E371) trägt denselben Inhalt in einer anderen Hülle,
+und für die gilt `.iblatt-koerper .pp-n{width:118px}`. Gemessen auf 390 px:
+
+    Hülle           Körper   Name    Anteil   abgeschnitten
+    Blatt (Handy)    390 px  118 px    30 %    keiner
+    Peek (Rechner)   559 px  170 px    30 %    keiner
+
+Dreissig Prozent an beiden Orten. Die Rechnung in der Lücke war richtig,
+ihre Voraussetzung nicht: 170 px auf 390 px WÄREN 44 %, nur stehen dort nie
+170 px.
+
+WARUM DAS EIN EINTRAG WERT IST. Es ist derselbe Fehler wie E21 — eine
+Schnittstelle aus dem Gedächtnis statt aus dem Quelltext —, nur an einer
+CSS-Regel statt an einer Funktion. Eine feste Zahl im Stilblatt sagt nichts,
+solange nicht feststeht, WELCHE Regel am Telefon überhaupt gilt. Und der
+Weg zur Messung war nicht schwer: die Vorschau ist die VORGABE
+(`oeffnenAls !== 'voll'`), ein Tipp auf eine Karte der Handy-Kartenliste
+öffnet sie. Der erste Versuch scheiterte an einem Selektor, nicht an der
+Sache.
+
+UND DER PUNKT BLEIBT BEWACHT. Die Telefon-Regel ist EINE Zeile in
+`bausteine.css`. Fällt sie weg, greift wieder die 170, und niemand sieht
+es — das ist genau die Sorte Rückfall, die E432 zwei Stunden vorher im Feed
+gefunden hat.
+
+PRÜFUNG: `test361 §8`, vier Punkte mehr — beide Hüllen gemessen, höchstens
+40 % der Körperbreite, keine Beschriftung abgeschnitten.
+
+Die Grenze ist 40 und nicht 44: bei 44 läge der Rückfall (44 %) genau
+darauf, und eine Grenze, die den Fehler eben noch durchlässt, ist keine.
+
+GEGENPROBE: `.iblatt-koerper .pp-n` umbenannt, also die Telefon-Regel
+weggenommen → `{"koerper":390,"name":170,"anteil":44}`. Exakt die 44 %, die
+in L131 standen. Der Wächter hält also genau den Fall, den die Lücke
+befürchtet hat.
+
+KOSTEN: Keine am Erzeugnis. Vier Prüfpunkte mehr in einem Lauf, der ohnehin
+beide Hüllen aufmacht.
+
+Dateien: `pruefungen/lauf/test361.mts`, `LUECKEN.md`, `AUFGABEN.md`.
