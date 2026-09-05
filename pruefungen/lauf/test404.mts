@@ -328,6 +328,48 @@ p('Jede der dreizehn nutzt mindestens 85 % der Breite', schmal.length === 0,
 p('Und keine schneidet eine Zahl ab', zahlSchnitt.length === 0,
   zahlSchnitt.slice(0, 3).join(' | '));
 
+/* ==========================================================================
+ * §10 · DIE ABGESCHNITTENE TABELLE SAGT, DASS RECHTS NOCH ETWAS KOMMT
+ * --------------------------------------------------------------------------
+ * L130 Punkt 3 stand als offen in der Liste: „Die Tabelle rollt waagerecht,
+ * und der Roller ist unsichtbar." Nachgemessen war die Lücke SCHON
+ * geschlossen — `Rollrand.binde` setzt `data-rand="rechts"` und die weiche
+ * Kante aus `tabelle.css` greift. Nur hatte niemand die Zeile in LUECKEN.md
+ * nachgezogen.
+ *
+ * Gehalten wurde das bisher nur für das TELEFON (`test136`, über den
+ * Schalter „Tabelle statt Karten"). Genau der Fall, über den L130 klagte —
+ * die Tabelle am Rechner —, war ungeprüft. Gemessen: 1637 px Inhalt in
+ * 1162 px Kasten bei 1280 px Fenster; vier Spalten stehen hinter der Kante.
+ * ========================================================================*/
+console.log('\n§10 Die abgeschnittene Tabelle zeigt ihre Kante');
+const s10 = await bauen(1280, 'table');
+await s10.waitForTimeout(700);
+const kante = JSON.parse(await s10.evaluate(`JSON.stringify((() => {
+  const box = document.querySelector('.db-rollbox');
+  if (!box) return { fehlt: true };
+  const st = getComputedStyle(box);
+  return { rollt: box.scrollWidth > box.clientWidth + 2,
+           masse: box.scrollWidth + ' in ' + box.clientWidth,
+           rand: box.getAttribute('data-rand') || '',
+           maske: (st.maskImage || st.webkitMaskImage || 'none').slice(0, 60) };
+})())`) as string);
+p('Am Rechner rollt die Tabelle wirklich', kante.rollt === true, kante.masse);
+p('… und sie trägt die Kante rechts', kante.rand === 'rechts', JSON.stringify(kante));
+p('… als echte Maske, nicht als Behauptung',
+  String(kante.maske).includes('gradient'), String(kante.maske));
+/* Und ganz rechts angekommen ist die Kante WEG — sonst behauptete sie
+   dauerhaft, es käme noch etwas. */
+const amEnde = JSON.parse(await s10.evaluate(`(async () => {
+  const box = document.querySelector('.db-rollbox');
+  box.scrollLeft = box.scrollWidth;
+  await new Promise(f => setTimeout(f, 300));
+  return JSON.stringify({ rand: box.getAttribute('data-rand') || '' });
+})()`) as string);
+p('Ganz rechts angekommen zeigt sie nur noch nach links',
+  amEnde.rand === 'links', JSON.stringify(amEnde));
+await s10.close();
+
 /* ======================================================================== */
 p('Keine Fehler auf der Konsole', fehler.length === 0, fehler.slice(0, 3).join(' · '));
 

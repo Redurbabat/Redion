@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-415 Entscheidungen, E1 bis E419. Die Nummer ist die Ordnung: eine Entscheidung
+416 Entscheidungen, E1 bis E420. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -473,6 +473,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E417** — Sechs Schalter ohne Draht, zwei davon ohne Anzeige
 * **E418** — Stil gehört in eine Stildatei, und der Wächter sieht nur dorthin
 * **E419** — Der Zeitstrahl füllt seine Fläche und sagt, wo man ist
+* **E420** — Eine Lücke, die niemand nachmisst, bleibt in der Liste
 
 ---
 
@@ -34162,3 +34163,50 @@ und die Titel stehen IN den Balken statt daneben.
 
 Dateien: `src/bereiche/datenbanken/steuerung.ts`,
 `pruefungen/lauf/test413.mts` (neu), `LUECKEN.md`.
+
+
+---
+
+E420 — Eine Lücke, die niemand nachmisst, bleibt in der Liste
+--------------------------------------------------------------
+
+ENTSCHEIDUNG: L130 Punkt 3 wird als GESCHLOSSEN eingetragen, und der Fall,
+über den er klagte, bekommt einen Wächter (`test404 §10`).
+
+WAS DASTAND: „Kein Hinweis, dass rechts noch etwas kommt. Die Tabelle rollt
+waagerecht, und der Roller ist unsichtbar. … Ein Schatten an der rechten
+Kante, solange noch etwas kommt, würde reichen."
+
+WAS NACHGEMESSEN HERAUSKAM: Es gibt ihn. `.db-rollbox` trägt bei 1280 px
+Fenster `data-rand="rechts"`, und `tabelle.css` legt eine echte Maske
+darüber — genau den Schatten, den der Punkt vorschlug. `Rollrand.binde`
+(E63) setzt das, und zwar seit jeher. Die Lücke war zu, als sie
+aufgeschrieben wurde.
+
+WAS WIRKLICH FEHLTE, war etwas anderes, und es war schlimmer: der Wächter.
+`test136` hielt die Kante nur am TELEFON, über den Schalter „Tabelle statt
+Karten". Der Fall am Rechner — der, über den L130 klagte — war ungeprüft.
+Ein Bogen, der `Rollrand.binde` aus der Tabelle nimmt, wäre grün
+durchgegangen. Die Gegenprobe zeigt genau das: ohne die Zeile bleibt
+`test136` grün und nur `test404 §10` wird rot.
+
+DER LEHRSATZ, und er gilt über diesen Punkt hinaus:
+
+  · Eine Lücke, die niemand nachmisst, bleibt in der Liste, auch wenn sie
+    zu ist. Sie lenkt dann Arbeit auf etwas, das es nicht mehr gibt — genau
+    das, wovor §49 warnt („Vier Jahre alte nächste Arbeiten lenken die
+    Arbeit auf etwas, das es nicht mehr gibt").
+  · Eine geschlossene Lücke ohne Wächter geht wieder auf, ohne dass es
+    jemand merkt.
+
+Das ist derselbe Befund wie bei L103 Punkt 2 (§36: „bei OCR über achtzig
+Seiten ruckelt die App" stand ein Jahr in der Liste, nachgemessen waren es
+flache 8 ms). Zweimal dieselbe Sorte Eintrag: eine Vermutung, die nie
+nachgerechnet wurde.
+
+PRÜFUNG: `test404 §10`, 4 Punkte — rollt, Kante rechts, echte Maske, und
+ganz rechts angekommen zeigt sie nur noch nach links.
+GEGENPROBE: `Rollrand.binde(box)` aus der Tabelle genommen → §10 dreimal
+rot (`rand:""`, `maske:"none"`), `test136` bleibt grün. Gelaufen.
+
+Dateien: `pruefungen/lauf/test404.mts`, `LUECKEN.md`.

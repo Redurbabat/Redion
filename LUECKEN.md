@@ -6091,11 +6091,19 @@ kostet den Nutzer eine Auskunft.
    Farbe (`.cw-bar.q-blue` gab es nirgends), und sie lagen auf den
    Tageszahlen. Beide fand erst ein Bild. Gehalten von `test405`.
 
-3. **Kein Hinweis, dass rechts noch etwas kommt.** Die Tabelle rollt
-   waagerecht, und der Roller ist unsichtbar. Vor E409 waren dahinter acht
-   von dreizehn Spalten, jetzt sind es drei — der Fehler ist kleiner
-   geworden, aber nicht weg. Ein Schatten an der rechten Kante, solange
-   noch etwas kommt, würde reichen.
+3. **Kein Hinweis, dass rechts noch etwas kommt.** GESCHLOSSEN — und zwar
+   war es das schon, als dieser Punkt geschrieben wurde. Nachgemessen bei
+   1280 px Fenster: `.db-rollbox` trägt `data-rand="rechts"`, und die weiche
+   Kante aus `tabelle.css` greift mit einer echten Maske. `Rollrand.binde`
+   (E63) setzt das seit jeher; niemand hatte die Zeile hier nachgezogen.
+   Was WIRKLICH fehlte, war der Wächter: `test136` hielt die Kante nur am
+   TELEFON, über den Schalter „Tabelle statt Karten". Genau der Fall, über
+   den dieser Punkt klagte — die Tabelle am Rechner —, war ungeprüft.
+   `test404 §10` hält ihn jetzt, samt der Gegenrichtung: ganz rechts
+   angekommen zeigt die Kante nur noch nach links.
+   Der Lehrsatz daraus steht in E420: eine Lücke, die niemand nachmisst,
+   bleibt in der Liste, auch wenn sie zu ist — und eine geschlossene Lücke
+   ohne Wächter geht wieder auf, ohne dass es jemand merkt.
 
 4. **Eine Zahlenspalte kann keine Einheit tragen.** GESCHLOSSEN mit E412.
    `einheit` steht im Menü der Spalte, hängt beim Zeichnen mit schmalem
