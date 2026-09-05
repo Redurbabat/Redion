@@ -292,13 +292,12 @@ const Notebook = (() => {
      am Deckel. Nur diese Namen erzeugen ein Attribut: der Wert wandert
      in einen Stil, und ein Feld aus einer fremden Sicherung darf dort
      nichts einschleusen können (§19). */
-  const FARBEN: ReadonlyArray<{ id: string; name: string }> = [
-    { id: 'gray', name: 'Grau' }, { id: 'brown', name: 'Braun' },
-    { id: 'orange', name: 'Orange' }, { id: 'yellow', name: 'Gelb' },
-    { id: 'green', name: 'Grün' }, { id: 'blue', name: 'Blau' },
-    { id: 'purple', name: 'Violett' }, { id: 'pink', name: 'Rosa' },
-    { id: 'red', name: 'Rot' }
-  ];
+  /* Die Namen stehen seit E406 in `core/helpers/colors.ts`, weil vier
+     Stellen sie brauchen und drei davon keine hatten. Hier bleibt nur die
+     Auswahl: ein Heftdeckel kennt kein „Standard". */
+  const FARBEN: ReadonlyArray<{ id: string; name: string }> =
+    ['gray', 'brown', 'orange', 'yellow', 'green', 'blue', 'purple', 'pink', 'red']
+      .map(id => ({ id, name: Farben.name(id) }));
   const farbeVon = (p: any): string => {
     const wert = String(p?.color || '');
     return FARBEN.some(f => f.id === wert) ? wert : '';

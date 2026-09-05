@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-383 Entscheidungen, E1 bis E387. Die Nummer ist die Ordnung: eine Entscheidung
+410 Entscheidungen, E1 bis E414. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -436,6 +436,38 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E380** — Das Regal bekommt Ebenen: ein Ordner ist ein Ort, kein Etikett
 * **E381** — Die Brotkrume der Ablage bleibt am Telefon brauchbar
 * **E382** — Auch die Listenform der Ablage ist ein Ordner-Browser
+* **E383** — Das Menüband wird ruhig: die Reiterzeile verdient keinen ständigen Platz
+* **E384** — Ein offenes Dokument ist der ganze Bildschirm, kein Kasten in der Schale
+* **E385** — Vier rote Läufe, die schon vorher rot waren, und drei davon sind meine
+* **E386** — Der Sofort-Block des UX-Audits: sechs Befunde, vier davon echt
+* **E387** — Nur die aktive Seite zeigt Werkzeuge (Audit F03)
+* **E388** — Ein Ort ist kein Werkzeug: die Orte gehören in die linke Leiste
+* **E389** — Der Start wartet nicht mehr auf 185 Skripte
+* **E390** — Eine Führung, die auf nichts zeigt, ist keine Führung
+* **E391** — „Gehen" verlässt das Band: eine Navigation je Gerät
+* **E392** — Die Einstellungsliste zeigt, was sie hat — und sagt, wenn mehr kommt
+* **E393** — Die Leiste zeigt, wo man wirklich ist; der Zeitmesser steht einmal
+* **E394** — Das KI-Feld bleibt nicht im Dokument stehen
+* **E395** — Eine Kante, die zu kurz ist, faltet sich, statt hinauszuragen
+* **E396** — „Zurück" und „Vor" rollen am Telefon nicht weg
+* **E397** — „Blatt" legt nicht nur an, es schlägt auch auf
+* **E398** — Einzelseite oder Fortlaufend: die Wahl ja, die Vorgabe nein
+* **E399** — Der Rollbalken zeigte ein Viertel des Wegs an
+* **E400** — Die Palette führte aus, was niemand gesehen hatte (Audit F09)
+* **E401** — Die Palette merkt sich, was du brauchst (Audit F09, Rest)
+* **E402** — Der Favoritenblock war vier Bögen lang leer (L128 Punkt 3)
+* **E403** — Die Denkkugel: neun Zustände statt eines Dreh-Rädchens
+* **E404** — Der Anheft-Stern stand im Text der Palettenzeile (E401-Rückfall)
+* **E405** — 23 Prüfläufe teilten sich einen Port
+* **E406** — Sieben erfundene Farbtokens, sechs namenlose Schalter, vier Farbreihen
+* **E407** — 42 Trefflächen unter 44 px, und zwei Fehler beim Reparieren
+* **E408** — Ein Schimmer, der sagt „hier kommt noch Text nach“
+* **E409** — Die Ansichten bekommen die Breite, die da ist
+* **E410** — Der Kalender zeigt Zeitspannen, und die Balken bekommen Farbe
+* **E411** — Werte auf Karten sagen, wovon sie handeln
+* **E412** — Eine Zahl sagt, wovon sie handelt — und der Typ sagt, was es gibt
+* **E413** — Der Zeitstrahl zeigt Spannen und liest sich
+* **E414** — Das Diagramm zeigt etwas
 
 ---
 
@@ -31345,3 +31377,2380 @@ Prüfung: `pruefungen/lauf/test386.mts`, jetzt 41 Punkte. Zwei Mutationen rot
 gesehen (§55.2): die CSS-Regel weg → drei sichtbare Leisten; das Markieren
 beim Öffnen weg → gar keine sichtbare Leiste, der Lauf läuft in den Timeout.
 Mit einem Telefonbild belegt (§55.3): Seite 2 fängt jetzt mit dem Papier an.
+
+================================================================================
+E388 — Ein Ort ist kein Werkzeug: die Orte gehören in die linke Leiste
+================================================================================
+3. September 2026 · Audit F02, Auftrag 01 Schritt 2 von 5
+
+BEFUND, gemessen am Rechner (1360×900), bevor etwas gebaut wurde:
+
+    Seitenleiste            display:none seit E272 Phase F
+    Kante, 10 Knöpfe        Seiten · Übersicht · Notizhefte · Aufgaben ·
+                            Alle Seiten · Suchen · Zuletzt geöffnet ·
+                            KI · Neu · Einstellungen
+                            — kein einziger Ort darunter
+    Band zugeklappt         Werkzeuge · Suchen · KI · Konto — kein Ort
+    Weg zu „Heute"          zwei Klicks, der erste ins Band hinein
+
+Wohin man geht, stand seit E272 Phase E im Reiter „Gehen". Das war eine
+Entscheidung mit einem guten Grund — die Seitenleiste zeigte 52 Knöpfe im
+Startbild, die Kante zeigt sechs bis zehn. Seit dem ruhigen Band (E383)
+liegt „Gehen" aber hinter einem ZUGEKLAPPTEN Band: der Grundzustand am
+Rechner trägt gar keinen Reiter mehr.
+
+Der Prüfbericht nennt es F02 („vier Navigationslogiken nebeneinander"),
+Auftrag 01 nennt es Schritt 2 von fünf („die 17 Ortsknöpfe in die linke
+Leiste"), und beide sagen denselben Satz: ein Ort ist kein Werkzeug.
+
+UND F01 STIMMT NICHT, so wie er dasteht. Der Bericht sagt, die Navigation
+sei „im Workspace-Zustand hängengeblieben" — der Inhalt habe sich nach dem
+Klick nicht geändert. Nachgemessen: er ändert sich. `schauplatz` geht von
+`bibliothek` auf `heute`, die Adresse auf `#welt-lernen-heute`, der Text im
+Arbeitsraum von 1060 auf 2739 Zeichen. Was der Bericht sah, war E353 und
+vermutlich die schmale Anordnung. Der Befund wird deshalb nicht behoben,
+sondern richtiggestellt.
+
+WAS ENTSCHIEDEN WURDE
+
+Redur hat F02 mit „Wie der Bericht vorschlägt" beantwortet: Rechner =
+Seitenleiste, Telefon = fünf Pillen, Menüband nur für dokumentbezogene
+Werkzeuge, „Mehr" nur für seltene Ziele.
+
+Am Telefon war das schon da: die untere Leiste trägt fünf Pillen
+(Dokumente · Heute · Lernen · Termine · Mehr, je 73 × 48 px). Am Rechner
+IST die linke Leiste die Seitenleiste dieser App — 54 Pixel Kante mit einer
+Lade daneben, die Anatomie eines Aktivitätsbalkens. Ihr fehlten die Orte.
+
+Die Kante hat deshalb jetzt DREI Abschnitte statt zwei:
+
+    oben     die fünf Hauptwege + „Mehr Orte"     stehen immer
+    mitte    die Werkzeuge des Ortes              geben nach
+    unten    KI · Neu · Einstellungen             stehen immer
+
+KEIN ZWEITER KATALOG (§8). Die fünf tragen im Navigationsregister
+`haupt: true`; „Mehr Orte" öffnet dieselbe Liste, die auch „Gehen"
+zeichnet, über den neuen Griff `Register.menueband.orte()`.
+
+DASS ES DEN GRIFF GIBT, IST EIN FUND VON `test272`. Der erste Entwurf holte
+die Liste über den Reiter „Gehen". §14 des Laufs verbietet der Kante genau
+das — und nicht formal: sobald dieser Reiter das Band verlässt (und dahin
+geht der Weg), wäre die Leiste still leer gewesen. Ein Wächter, der einen
+Fehler fängt, bevor er entsteht.
+
+DIE FÜNF GAB ES DREIMAL, UND ZWEIMAL VERSCHIEDEN. Gemessen: `index.html`
+markiert fünf Zeilen mit `data-ruhig="bleibt"` (Heute, Lernzentrum,
+Elektrotechnik, Bibliothek, Aufgaben), die untere Telefonleiste zeigt fünf
+andere (Dokumente, Heute, Lernen, Termine, Mehr), und test248 §4 führt eine
+dritte. Ab hier stehen sie einmal, im Register. Die Telefonleiste zieht noch
+nicht nach — das ist der nächste Schritt und steht in L123.
+
+WAS NICHT PASST, WIRD NICHT ABGESCHNITTEN
+
+Sechs Ortsknöpfe kosten 264 Pixel. Auf einem 1280×720-Laptop hat die Kante
+683 Pixel, und danach bleiben den Werkzeugen 259 für 308 — zwei Knöpfe
+standen unter der Kante.
+
+    Erster Versuch: rollen lassen. Gemessen `offsetWidth 53 / clientWidth
+    53` — Chromium zeichnet hier Überlagerungsbalken, die null Pixel
+    belegen und sich nach dem Rollen ausblenden. Auf dem Bildschirmfoto war
+    NICHTS zu sehen. Das ist genau §55.1: die Werkzeugleiste, die aus dem
+    Bild ragt, nur diesmal selbst gebaut.
+
+    Zweiter Versuch, und der gilt: was nicht passt, geht hinter einen
+    „···"-Knopf in dieselbe Lade wie „Mehr Orte". Er sagt, wie viele
+    dahinterliegen („3 weitere Werkzeuge"), und er steht NUR da, wenn
+    wirklich etwas dahinterliegt — bei 900 px Höhe gibt es ihn nicht.
+
+WAS ES KOSTET
+────────────────────────────────────────────────────────────────────────
+Sechs Knöpfe mehr in der Kante; auf kleinen Bildschirmen dafür ein
+Überlaufknopf, wo vorher alle Werkzeuge nebeneinanderstanden. Keine Daten,
+kein Feldname, keine Migration. „Gehen" bleibt vorläufig im Band — das
+Wegnehmen ist der nächste Bogen und rührt an test248 und test384.
+
+Dateien: `src/register/navigation.ts` (Felder `haupt` und `schauplatz`),
+`src/register/menueband.ts` (`orte()`), `src/schale/aufbau/context-rail.ts`,
+`quell/schale/stil/premium.css`.
+
+PRÜFUNG: `pruefungen/lauf/test387.mts`, neu, 34 Punkte. Fünf Mutationen rot
+gesehen (§55.2): `haupt: true` bei einem Ort weg → 5 rot; die Orte-Reihe
+nicht angehängt → §1 ganz rot; die Markierung weg → 3 rot; der Überlauf
+nicht verstaut → 4 rot, darunter „es rollt trotzdem nichts: ist 47";
+`flex: 0 0 auto` weg → 1 rot. Dazu grün: test272 (der Wächter, der den
+ersten Entwurf gefangen hat), test87, test105, test109, test114, test222,
+test248, test273, test285, test384, test385, test386. Mit zwei Bildern
+belegt (§55.3): 1360×900 und 1280×720.
+
+
+================================================================================
+E389 — Der Start wartet nicht mehr auf 185 Skripte
+================================================================================
+4. September 2026 · Redur schickte einen PageSpeed-Bericht
+
+DIE ZAHLEN VON GOOGLE KAMEN NICHT AN — der Netzzugang dieses Containers
+verweigert `googleapis.com` (403 am Tunnel, nachgesehen im Proxy-Status).
+Also selbst gemessen, mit derselben Drosselung, die Lighthouse mobil
+benutzt: 4× langsamere CPU, „Slow 4G" (1,6 Mbit/s, 150 ms), und der
+Prüfserver liefert gzip aus, weil Cloudflare es auch tut.
+
+                        vorher    mit defer   + PDF erst bei Bedarf
+  FCP ungedrosselt      1148 ms      156 ms        156 ms
+  DOMContentLoaded      5051 ms      584 ms        556 ms
+  FCP gedrosselt        2064 ms     1712 ms       1704 ms
+  DCL gedrosselt       14811 ms    15017 ms      12390 ms
+  Übertragen (gzip)     2607 KB     2607 KB       2081 KB
+  Lange Aufgaben          532 ms      233 ms        295 ms
+
+ZWEI VERSCHIEDENE WÄNDE, und das ist der eigentliche Fund. Ungedrosselt
+war es das BLOCKIEREN, gedrosselt sind es die BYTES. `defer` half nur gegen
+das erste — gedrosselt bewegte es die 15 Sekunden um nichts —, das
+Nachladen von pdf.js nur gegen das zweite. Wer nur eines von beidem gebaut
+hätte, hätte auf der einen oder der anderen Seite nichts erreicht.
+
+ERSTENS: 185 SKRIPTE OHNE `defer`
+
+`index.html` lud jede der 185 Dateien mit einem gewöhnlichen `<script
+src>`. Jedes davon hält den Parser an und wartet auf das vorige. Mit
+`defer` holt der Browser sie parallel und führt sie danach in derselben
+Reihenfolge aus — dieselbe Ordnung, ein Achtel der Zeit.
+
+DAS `defer` STEHT HINTER `src`, und das ist keine Geschmacksfrage:
+`test87 §8` und `test143 §2` lesen die geladenen Dateien mit
+`/<script src="([^"]+)"/`. Ein `<script defer src="…">` fände keiner von
+beiden mehr — sie wären grün und messten nichts. `test388 §1` hält beides
+fest, die Reihenfolge und das Vorhandensein.
+
+ZWEITENS: 527 KB pdf.js BEI JEDEM START
+
+`quell/fremd/pdfjs/daten.js` ist 717 KB roh, 527 KB über die Leitung — ein
+Fünftel von allem, für etwas, das nur beim Öffnen einer PDF gebraucht wird.
+`laden.js` packte schon immer erst beim Gebrauch aus („ERST BEIM
+GEBRAUCH", steht seit E103 in seinem Kopf) — aber die Bytes kamen trotzdem
+bei jedem Start über die Leitung.
+
+Jetzt hängt `laden.js` die Datei bei Bedarf selbst ein. Drei Punkte, die
+dabei nicht verhandelbar waren:
+
+  · EIN `<script>`-ELEMENT UND KEIN `fetch`. Redion muss sich per
+    Doppelklick öffnen lassen (§6); unter `file://` scheitert `fetch` an
+    der Herkunftsprüfung, ein eingehängtes Skript nicht.
+  · DIE EINZELDATEI HAT KEINEN ORDNER NEBEN SICH (§29). `bauen.mts` setzt
+    die Bytes an einer Marke in `index.html` ein — und BRICHT AB, wenn die
+    Marke fehlt. Ein stilles Weglassen wäre eine Einzeldatei, die aussieht
+    wie immer und beim ersten PDF sagt „die Bibliothek fehlt".
+  · OFFLINE BLEIBT OFFLINE (§28). `daten.js` steht weiterhin im
+    GRUNDSTOCK von `sw.ts`, wird also beim ersten Besuch im Hintergrund
+    abgelegt. Das Nachladen bedient dann der Zwischenspeicher.
+
+WAS ES KOSTET
+────────────────────────────────────────────────────────────────────────
+Beim ERSTEN Öffnen einer PDF kommt eine Anfrage dazu, die es vorher nicht
+gab — 527 KB, die vorher schon beim Start bezahlt waren. Wer täglich PDFs
+liest, zahlt sie also weiterhin, nur später und einmal statt bei jedem
+Neuladen; wer nie eine öffnet, zahlt sie nie.
+
+`test87 §8` prüft einen globalen Namen weniger auf Doppelung
+(`PDFJS_EINGEPACKT`), weil `daten.js` nicht mehr in der Skriptliste von
+`index.html` steht. Ein Name aus fremden Bytes, der genau einmal vorkommt
+— hingeschrieben, nicht verschwiegen.
+
+Keine Daten, kein Feldname, keine Migration. Kein Bauschritt für die
+normale Nutzung (§6): `defer` ist ein HTML-Attribut, kein Werkzeug.
+
+WAS DAMIT NICHT BEHOBEN IST
+────────────────────────────────────────────────────────────────────────
+2081 KB über 203 Dateien bleiben. Auf „Slow 4G" sind das rund zehn
+Sekunden reine Übertragung, und daran ändert keine Ladeart etwas — es
+müssten weniger Bytes werden. Die 184 verbliebenen Skripte verteilen sich
+auf einen langen Schwanz: 122, 64, 61, 48, 48, 47, 46, 43, 40 KB und dann
+lange nichts. Der nächste grosse Hebel wäre, ganze BEREICHE erst beim
+Betreten zu laden — das rührt an §5 und §7 und gehört Redur. Steht als
+L124 in `LUECKEN.md`, mit dieser Messung.
+
+Dateien: `index.html` (185 Zeilen + eine Marke), `src/fremd/pdfjs/laden.ts`,
+`bauen.mts`.
+
+PRÜFUNG: `pruefungen/lauf/test388.mts`, neu, 18 Punkte. Fünf Mutationen rot
+gesehen (§55.2): ein Skript ohne `defer`; `daten.js` wieder beim Start (die
+Decke reisst bei 2608 statt 2300 KB); der Nachladepfad ins Leere; `defer`
+vor `src`; `bauen.mts` ohne die Bytes.
+
+DIE FÜNFTE MUTATION WAR ZUERST GRÜN, und das ist der lehrreiche Teil. §4
+fragte `einzel.includes('PDFJS_EINGEPACKT')` — den Namen nennt aber auch
+`laden.js`, siebenmal. Der zweite Entwurf mass die längste Zeile der ganzen
+Datei; die ist mit 319 275 Zeichen ein Lernpaket und wäre auch ohne pdf.js
+dagewesen. Erst der dritte misst die Zeilen DIREKT HINTER der Deklaration.
+Zweimal hätte diese Prüfung „passt schon" gesagt (§55.2).
+
+Grün ausserdem: test74, test87, test105, test109, test143 (der Wächter für
+den Offline-Grundstock), test177, test180, test189, test192, test228,
+test272, test320 (die PDF-Wege), test33, test114, test210, test248,
+test285, test384, test385, test386, test387.
+
+NEBENBEI GEFUNDEN, NICHT VON HIER: `test61` ist rot (zwei Punkte, „Das Loch
+liegt auf dem Ziel"). Nachgemessen in einem Arbeitsbaum auf dem Stand
+davor — dort ebenfalls rot. Es ist ein Nachlauf von E383: der Rundgang
+zeigt auf den Reiter „Gehen", und der ist im ruhigen Band unsichtbar. Steht
+als L125.
+
+
+================================================================================
+E390 — Eine Führung, die auf nichts zeigt, ist keine Führung
+================================================================================
+4. September 2026 · L125, gefunden beim Bauen von E389
+
+BEFUND. `test61` war rot, zwei Punkte: „Das Loch liegt auf dem Ziel" und
+„Und ist sichtbar". In einem Arbeitsbaum auf dem Stand davor nachgemessen —
+dort ebenfalls rot; es war also kein Nachlauf der Leistungsarbeit.
+
+Beim Nachmessen war es viel mehr als der eine Punkt. Im Grundzustand, ohne
+etwas anzuklicken:
+
+    Schritt 1  Alles liegt hier          Rechner ✗   Telefon ✗
+    Schritt 2  Suchen und Befehle        ✓           ✓
+    Schritt 3  Eine Seite anfangen       ✓           ✗ (Kante fehlt)
+    Schritt 4  Zwölf Ansichten           ✗ (Reiter)  ✗
+    Schritt 5  Die KI                    ✓           ✗ (Kante fehlt)
+    Schritt 6  So, wie du es willst      ✓           ✗ (Kante fehlt)
+    Schritt 7  Ehrlich beim Tempo        ✗ (Reiter)  ✗
+    Schritt 8  Alles zum Nachlesen       ✗ (Reiter)  ✗
+    Schritt 9  Zum Schluss               ✗ (Datei)   ✗
+
+    FÜNF von neun am Rechner, ACHT von neun am Telefon.
+
+Zwei Ursachen: drei Ziele waren Reiter des Menübandes, und die stehen seit
+dem ruhigen Band (E383) nur da, wenn jemand aufklappt. Drei weitere waren
+Knöpfe der Kontextkante, und die gibt es am Telefon gar nicht (E272 Phase F,
+mit Absicht).
+
+UND `stellen()` VERSTECKT DAS LOCH DANN STILL. Genau davor warnt der Kopf
+von `rundgang.ts` seit E272, wörtlich: „neun Schritte ohne Loch sehen aus
+wie eine Führung, zeigen aber auf nichts." Es ist trotzdem passiert, weil
+`test61` nur den ERSTEN Schritt hielt.
+
+WAS GEBAUT WURDE
+
+`ziel` trägt jetzt MEHRERE Kandidaten mit Komma; `zielFinden()` nimmt den
+ersten, der eine Breite hat — nicht den ersten im Dokument, den `querySelector`
+nähme. Ein Ziel je Gerät wäre die Alternative gewesen; eine Liste sagt „hier,
+sonst dort" statt „wenn Telefon, dann" und hängt an keiner Breitenzahl.
+
+    1  #kante .k-orte, #handy-oben                          die Orte (E388)
+    2  #mb-suche
+    3  #kante .k-knopf[data-k="neu"], #btn-new-bottom
+    4  .mb-klapp, #menueband
+    5  #kante .k-knopf[data-k="ki"], #mb-ki
+    6  #kante .k-knopf[data-k="einstellungen"], #hl-mehr
+    7  [data-mb-reiter="ueberpruefen"], .mb-klapp, #menueband
+    8  #kante .k-knopf[data-k="mehr-orte"], #hl-mehr
+    9  #mb-datei, #mb-konto
+
+Gemessen danach: NULL von neun zeigen auf nichts, an beiden Grössen.
+
+Der Text von Schritt 1 stimmte auch nicht mehr — er sagte „Unter Gehen
+steht jeder Bereich". Seit E388 stehen die Orte links; der Satz sagt das
+jetzt.
+
+WAS ES KOSTET
+────────────────────────────────────────────────────────────────────────
+Schritt 4 und 7 landen beide auf „Werkzeuge", wenn das Band zu ist. Das ist
+keine schöne Führung, aber eine wahre: beide Dinge liegen dort. Keine Daten,
+kein Feldname, keine Migration.
+
+PRÜFUNG: `test61`, jetzt 39 Punkte statt 36. Der neue Abschnitt LÄUFT DIE
+FÜHRUNG WIRKLICH DURCH — er klickt sich durch alle neun Schritte und misst
+`#rg-loch`, an 1360×900 und an 390×844.
+
+DER ERSTE ENTWURF DIESES ABSCHNITTS WAR NUTZLOS, und das ist die Lehre.
+Er las `Rundgang.SCHRITTE` und suchte SELBST den ersten sichtbaren
+Kandidaten — also dieselbe Rechnung noch einmal, daneben. Bei der
+Gegenprobe „nimm den ersten VORHANDENEN statt den ersten SICHTBAREN" blieb
+er grün: der Prüflauf rechnete ja weiter richtig. Eine Prüfung, die den
+Mechanismus nachbaut, prüft den Nachbau (§55.2).
+
+UND DIE GEGENPROBE KONNTE ZUERST GAR NICHT ROT WERDEN. Nachgemessen hatte
+kein Schritt einen Kandidaten, der DA, ABER UNSICHTBAR ist — überall war
+der erste entweder sichtbar oder gar nicht vorhanden. Erst mit den genauen
+Zielen vorne (Schritt 7 „Überprüfen", Schritt 9 „Datei" — beide im DOM,
+bei zugeklapptem Band null Pixel breit) trägt die Sichtbarkeitsprüfung
+etwas, und erst dann wurde die Gegenprobe rot. Das ist auch für den Nutzer
+besser: wer das Band offen hat, bekommt das richtige Loch.
+
+Vier Mutationen rot gesehen: Schritt 1 zurück auf den Reiter „Gehen" (4
+Punkte); Schritt 3 ohne Telefon-Kandidaten (1); `zielFinden` nach
+Vorhandensein statt Sichtbarkeit (2, nach der Verschärfung); `stellen()`
+ohne Ziel (4, alle neun blind).
+
+Grün ausserdem: test74, test87, test105, test109, test143, test272,
+test387, test388. Mit zwei Bildern belegt (§55.3): Rechner und Telefon.
+
+Dateien: `src/bereiche/hilfe/rundgang.ts`, `pruefungen/lauf/test61.mts`.
+
+
+================================================================================
+E391 — „Gehen" verlässt das Band: eine Navigation je Gerät (F02 zu)
+================================================================================
+4. September 2026 · Audit F02, Rest · Auftrag 01 Schritt 2, Rest
+
+E388 hat die Orte in die linke Leiste geholt. Der Reiter „Gehen" stand
+danach WEITERHIN im Band und zeigte dasselbe — zwei Wege zum selben Ziel,
+und genau das nennt der Prüfbericht „vier Navigationslogiken nebeneinander".
+Redurs Entscheidung: das Menüband trägt nur noch dokumentbezogene Werkzeuge.
+
+Nach dem Wegnehmen, gemessen:
+
+    Band, Seite offen    Start · Einfügen · Zeichnen · Verlauf ·
+                         Überprüfen · Ansicht · Hilfe    (7 statt 8)
+    Band, Startansicht   Verlauf · Überprüfen · Ansicht · Hilfe (4 statt 5)
+    orte()               45 Einträge, unverändert
+    Lade „Mehr Orte"     40 Zeilen, unverändert
+
+DER REITER GEHT, DIE EINTRÄGE BLEIBEN. Sie tragen weiterhin
+`reiter: 'gehen'` — das ist ihre Ablage im Register, nicht ihre Anzeige —,
+und `orte()` liefert sie unverändert an die Kante. `reiter()` zeigt ohnehin
+nur, was in `REITER` steht; ein Eintrag ohne Reiter verschwindet also von
+selbst aus dem Band und bleibt dem Register erhalten. Genau dafür war die
+Trennung da.
+
+DIE GEFAHR WAR NICHT DER REITER, SONDERN SECHS EINTRÄGE. Journal,
+Schnellnotizen, Vorlagen, Zeitmesser, Agenten und Besprechungen kommen aus
+dem schon früher aufgelösten Reiter „Werkzeuge" und wohnen unter
+`reiter: 'gehen'`. Sie wären mit dem Reiter unerreichbar geworden — nicht
+gelöscht, nur nicht mehr anklickbar. Vor dem Ändern nachgemessen: alle
+sechs stehen in der Lade hinter „Mehr Orte". `test387 §7` hält das jetzt,
+in beide Richtungen.
+
+WAS ES KOSTET
+────────────────────────────────────────────────────────────────────────
+Wer den Weg über das Band gewohnt war, geht ihn jetzt links. Fünf Prüfläufe
+tragen andere Zahlen — und keine davon ist weicher geworden:
+
+    test247  „acht Reiter" → sieben; „fünf ohne Seite" → vier;
+             der erste Reiter heisst „Start" statt „Gehen";
+             der Weg zu Journal/Agenten/Besprechungen führt über die Lade
+    test248  „fünf" → vier, „acht" → sieben, dazu eine neue Zeile, die die
+             vier bei NAMEN prüft statt nur zu zählen
+    test33   der Weg zu „Alle Seiten" und „Meine Aufgaben" führt über die
+             Lade statt über den Reiter
+    test272  unverändert grün — es fragt `inReiter('gehen')`, nicht den Reiter
+    test61   unverändert grün — Schritt 7 nennt „Überprüfen" zuerst (E390)
+
+ZWEI HOHLE PRÜFPUNKTE FIELEN DABEI AUF, beide in test247:
+
+  · §7 klickte auf `[data-mb-reiter="elektro"]`, um einen gemerkten Reiter
+    zu setzen, den es nicht mehr gibt. „Elektro" ist seit E272 kein Reiter
+    — der Klick traf also nichts, und die Zeile mass, welcher Reiter
+    zufällig gewählt war. Sie war grün, weil das zufällig der erste war.
+    Jetzt wird `bandReiter` unmittelbar auf `'gibtesnicht'` gesetzt.
+  · Mein eigener Helfer `klickOrt` klickte den Kantenknopf, um die Lade zu
+    öffnen — ein zweiter Klick klappt sie aber ZU. „Journal" war grün und
+    „Agenten" rot, im Wechsel. Jetzt schliesst er erst und öffnet dann.
+
+Keine Daten, kein Feldname, keine Migration.
+
+PRÜFUNG: `test387`, jetzt 40 Punkte (§7 neu, sechs Zeilen). Zwei Mutationen
+rot gesehen (§55.2): „Gehen" wieder in `REITER` (3 rot); `orte()` filtert
+die Gruppen „Erfassen" und „Verbinden" weg (3 rot, darunter „32 statt über
+40 Ziele"). Grün: test33 107/107, test61 39/39, test74, test87, test105,
+test109, test143, test247 106/106, test248 49/49, test272, test285,
+test384, test388. Einzeldatei neu gebaut. Mit einem Bild belegt (§55.3).
+
+Dateien: `src/register/menueband.ts`, `pruefungen/lauf/test33.mts`,
+`test247.mts`, `test248.mts`, `test387.mts`.
+
+
+E392 — Die Einstellungsliste zeigt, was sie hat — und sagt, wenn mehr kommt
+================================================================================
+4. September 2026 · Audit F11 · Auftrag 01 Schritt 3
+
+PROBLEM (und die Behauptung, die es nicht war)
+
+Der UX-Bericht sagt unter F11: „19 Einstellungskategorien auf einer Ebene",
+und schlägt sechs Obergruppen vor. Nachgesehen im Quelltext und nachgemessen
+im Browser stimmt das nicht. `GRUPPEN` in `seite.ts` führt VIER Gruppen:
+
+    (ohne Titel)             Mein Konto · Einstellungen ·
+                             Benachrichtigungen · Importieren       4
+    Funktionen               KI · Verbindungen · MCP · Worker ·
+                             Verifizierte Seiten · Öffentliche
+                             Seiten · Emoji                          7
+    Verwaltung               Arbeitsbereich · Analysen · Bereiche ·
+                             Sicherheit · Schlüssel und APIs         5
+    Zugriff und Abrechnung   Speicher · Abrechnung · Über diese App  3
+
+Die drei Überschriften stehen sichtbar da, in Versalien, am Rechner wie am
+Telefon. Sechs neue Obergruppen hätten eine Ordnung ersetzt, die es gibt.
+
+DER WIRKLICHE FEHLER stand daneben, und er war schwerer als der behauptete.
+Gemessen am 4. September, vor jeder Änderung:
+
+                      Liste braucht   sichtbar   verdeckt
+    1360 × 900             810 px       718 px     92 px
+    1280 × 720             810 px       632 px    178 px
+    1280 × 650             810 px       570 px    240 px
+
+Und verdeckt lagen IMMER dieselben drei Einträge: Speicher, Abrechnung, Über
+diese App. Nicht auf kleinen Bildschirmen — auf ALLEN. `.einst-fenster` war
+auf `min(720px, 88vh)` gedeckelt; ein grösserer Schirm machte das Fenster
+nicht höher, also war die Liste nie vollständig.
+
+Beim Nachmessen fiel ein zweiter Fehler auf, den niemand gesucht hatte:
+`.overlay` setzt für JEDES Fenster `align-items:flex-start; padding-top:14vh`.
+Für die Suche, die oben aufklappt, ist das richtig. Für ein Fenster, das fast
+die ganze Höhe will, ist es falsch — bei 1280×720 lag die Unterkante bei
+763 px, also 43 Pixel ausserhalb des Bildes. Mit der alten Höhe waren es 14,
+und deshalb ist es nie jemandem aufgefallen: abgeschnitten war es vorher
+auch schon, nur weniger.
+
+ENTSCHEIDUNG
+
+Drei Änderungen, in der Reihenfolge ihrer Wirkung:
+
+1. **Das Fenster steht mittig statt 14vh unter dem Rand.**
+   `.overlay:has(.einst-fenster){ align-items:center; padding-top:0 }` — die
+   Regel trifft nur dieses eine Fenster, alle anderen behalten ihren
+   Aufklapp-Punkt.
+
+2. **`min(720px, 88vh)` wird `min(920px, 92vh)`, die Zeile ein Pixel
+   dichter** (Polster 7 → 6). Auf einem 900-px-Schirm ergibt das 828 px für
+   ein Fenster, dessen Liste 810 braucht: sie passt ganz hinein. Am Telefon
+   ändert das nichts — dort hat dieselbe Zeile eine eigene Regel mit
+   `min-height:52px`, und §37 bleibt gewahrt.
+
+3. **Für kleinere Schirme ein Streifen, der sagt, dass es weitergeht** —
+   und der wieder verschwindet, sobald man unten angekommen ist.
+
+WAS ALS ERSTES VERSUCHT WURDE UND VERWORFEN IST
+
+Ein sichtbar gemachter Rollbalken: `scrollbar-width: auto` plus acht Pixel
+`::-webkit-scrollbar`. Er ist geschrieben, gemessen und wieder herausgenommen
+worden, denn in diesem Browser ist der Rollbalken ein ÜBERLAGERUNGSbalken.
+Er belegt ein Pixel, malt nichts und blendet sich nach dem Rollen aus. Auf
+einem Bildschirmfoto war er nicht zu sehen — derselbe Fund wie bei der
+Kontextkante (E388): ein Hinweis, der nicht malt, ist keiner.
+
+Er hätte auf Redurs Windows geholfen und wäre hier nie prüfbar gewesen. Eine
+Regel, die keine Prüfung erreichen kann, ist eine Behauptung (§55.2). Also
+ein eigenes Element, das überall dasselbe tut und sich messen lässt.
+
+DIE GEGENPROBE IST DER HALBE BOGEN
+
+`.einst-mehr` ist an `.hat-mehr` gebunden, und die Klasse wird bei jedem
+Rollen und jeder Grössenänderung neu gerechnet:
+
+    const rest = navEl.scrollHeight - navEl.clientHeight - navEl.scrollTop;
+    fenster.classList.toggle('hat-mehr', rest > 4);
+
+Ein `ResizeObserver` statt eines Fensterhorchers — er hängt am Element,
+verschwindet mit ihm, lässt beim Schliessen nichts zurück und feuert einmal
+von selbst, was den ersten Anstrich gleich mit erledigt.
+
+Dass er WIEDER SCHWEIGT, ist kein Beiwerk. Diese App ist sechsmal in dieselbe
+Falle gelaufen — ein `fehlt`, das nie leer ist; eine Warnung, die immer
+anspringt; ein Regel-Hinweis bei jedem Termin. Eine Anzeige, die immer etwas
+anzeigt, wird nicht gelesen. `test389 §3` misst deshalb beide Richtungen.
+
+ALTERNATIVE
+
+Die Liste kürzen oder in Unterseiten teilen. Verworfen: 19 Bereiche sind
+nicht zu viel für eine Navigationsspalte, sie waren nur zu hoch für ein
+Fenster, das ohne Grund gedeckelt war. Wer die Ordnung ändert, ändert auch
+jeden Weg dorthin.
+
+KOSTEN
+
+Ein Element mehr im Fenster, eine `:has()`-Regel und ein `ResizeObserver`.
+Keine Daten, kein Feldname, keine Migration, kein Import-Weg berührt.
+
+PRÜFUNG: `test389` (19 Punkte, PORT 9411). FÜNF MUTATIONEN ROT GESEHEN (§55.2):
+
+    Höhe zurück auf min(720px,88vh)   §2 dreifach rot — und es NENNT die
+                                      drei Einträge: Speicher, Abrechnung,
+                                      Über diese App
+    align-items zurück auf flex-start §4 dreifach rot, 763 von 720
+    hat-mehr nie setzen               §3 „der Streifen steht da" rot
+    hat-mehr immer setzen             §3 zweifach rot — die Gegenprobe
+    Telefonzeile auf 30 px            §5 rot (§37)
+
+Dabei fiel auf, dass ein `min-height:52px` allein den Abschnitt §5 NICHT rot
+machen kann: der Zeileninhalt allein ist schon höher als 44 px. Erst mit
+kleinerer Schrift UND kleinerem Polster fällt die Zeile unter die Grenze.
+Der Abschnitt prüft also die wirkliche Höhe, nicht die Schreibweise — was
+richtig ist, aber erst durch die Mutation sichtbar wurde.
+
+Grün geblieben: test114, test117, test128, test272 (152/152). Einzeldatei
+neu gebaut. Mit drei Bildern belegt (§55.3): 1360×900 vollständig,
+1280×720 mit Streifen, Telefon.
+
+Dateien: `src/bereiche/einstellungen/ansicht/seite.ts`,
+`quell/schale/stil/einstellungen.css`, `pruefungen/lauf/test389.mts`.
+
+
+E393 — Die Leiste zeigt, wo man wirklich ist — und der Zeitmesser steht einmal
+================================================================================
+4. September 2026 · Audit F02, Rest · Auftrag 01 Schritt 4
+
+PROBLEM 1 — DIE MARKIERUNG ZEIGTE AUF DEN FALSCHEN ORT
+
+E388 hat die fünf Hauptwege in die linke Leiste geholt und den, an dem man
+steht, markiert. Am 4. September nachgemessen, indem jeder der fünf Knöpfe
+wirklich angeklickt wurde:
+
+    Ort              App.schauplatz()  Adresse                     markiert
+    Heute            heute             #welt-lernen-heute          Heute    ✓
+    Lernzentrum      heute             #welt-lernen-lernen         Heute    ✗
+    Elektrotechnik   elektro           #elektro                    Elektro  ✓
+    Bibliothek       workspace         #welt-workspace-bibliothek  keiner   ✗
+    Aufgaben         workspace         #welt-workspace-aufgaben    keiner   ✗
+
+ZWEI VON FÜNF. Und der schlimmere Fall ist nicht der leere: auf „Lernzentrum"
+leuchtete „Heute". Eine Markierung, die auf einen Ort zeigt, an dem man nicht
+steht, ist schlechter als gar keine — sie behauptet etwas.
+
+DER GRUND liegt in `App.schauplatz()`: es bildet den TITEL der Sonderansicht
+ab, und drei der fünf teilen ihren Titel mit einem Nachbarn. Das Lernzentrum
+heisst dort „Heute", Bibliothek und Aufgaben heissen „Arbeitsbereich".
+
+PROBLEM 2 — „ZEITMESSER" STAND ZWEIMAL IN DER LADE
+
+Einmal als `w-zeit` aus der eigenen Liste des Bandes, einmal als `zeitmesser`
+aus `Register.module` — unter zwei verschiedenen Überschriften. Beide rufen
+`Zeitmesser.panel()`; gemessen öffneten beide dasselbe Feld von 280 × 226 px.
+
+ENTSCHEIDUNG
+
+1. **Die Kante fragt zuerst die ADRESSE, dann den Schauplatz.** Die Adresse
+   steht als `adresse` im Register neben `schauplatz` und `haupt` — nicht in
+   der Leiste (§8). Vier der fünf bekommen eine; `elektro` nicht, weil sein
+   Schauplatz eindeutig ist und der Rückfall benutzt bleiben soll, statt zu
+   verrotten.
+
+2. **Die Kante hört auch auf `hashchange`.** Das war nicht geplant, sondern
+   der zweite Anlauf: `zeigeSonder` setzt zuerst die Adresse aus dem TITEL
+   (`#heute`), meldet dann den Schauplatz — und erst DANACH setzt die
+   Lernwelt ihre eigene Adresse. Wer nur auf `redion:schauplatz` hört, liest
+   die Adresse von vorletzter Sekunde. Der erste Anlauf tat genau das und
+   markierte daraufhin GAR NICHTS mehr — messbar schlechter als vorher.
+
+3. **`schauplatzMelden()` nimmt die Adresse in sein Merkmal auf.** Dieselbe
+   Sorte Lücke wie die Seite in E312, eine Ebene höher: von „Heute" auf
+   „Lernzentrum" ändert sich weder `schauplatz()` noch `seiteId`, also kam
+   kein Signal.
+
+4. **`zeitmesser` wird als Dublette zu `w-zeit` eingetragen.** Es bleibt
+   `w-zeit`, weil sein Hinweis sagt, worauf sich die Uhr bezieht („misst die
+   Zeit an der offenen Seite"); der Hinweis des Moduls nennt statt dessen die
+   Entscheidungsnummer, aus der er stammt. Das gehört nicht in eine Liste,
+   die ein Mensch liest.
+
+WAS DIE MESSUNG SONST NOCH ERGAB, UND WARUM ES HIER NICHT GEBAUT WIRD
+
+Der Bericht sagt unter F02, der Ortskatalog „mische Orte und Handlungen", und
+nennt fünf: Neue Seite, Suchen, Befehle, App installieren, Passwort. Um das
+nicht nach Gefühl zu entscheiden, wurden alle 45 Einträge angeklickt und
+gemessen, was danach anders ist. Drei Durchgänge, und die ersten zwei waren
+falsch:
+
+  · Der erste teilte nach „legt sich ein Fenster darüber?". Damit wurden
+    Kalender, Tagesplan und Datenbanken zu Handlungen — sie sind Fenster und
+    trotzdem Orte.
+  · Der zweite mass die Fläche des Neuen. Aber `.overlay` ist der
+    verdunkelnde Grund (`position:fixed; inset:0`) und deshalb IMMER so gross
+    wie der Bildschirm. Sechsundzwanzig Einträge kamen auf „100 %".
+  · Erst der dritte mass das FENSTER im Grund. Ergebnis: 26 der 45 Ziele
+    öffnen ein `.finder` — dieselbe Bauform wie die Schnellsuche — zwischen
+    10 % und 58 % des Bildschirms.
+
+Damit ist die Trennung „Ort gegen Handlung" heute NICHT ZIEHBAR, und der
+Grund ist kein Namensproblem: Redion baut mehr als die Hälfte seiner Ziele
+als Suchfenster. Das steht als **L126** in `LUECKEN.md`. Eine Gruppe
+„Handlungen" über diesen Zustand zu legen wäre ein Etikett auf einem Aufbau,
+und die nächste Messung hätte es wieder abgezogen.
+
+ALTERNATIVE zur Adresse: `App.schauplatz()` feiner machen. Verworfen —
+daran hängen acht `zeigeSonder`-Aufrufer, die Kontextkante, der Dienststand
+und die Merkfunktion „wo man war" (E349). Ein Feld im Register kostet eine
+Zeile; ein feinerer Schauplatz kostet einen Bogen für sich.
+
+KOSTEN: Ein Feld mehr im Registertyp, ein Horcher mehr in der Kante, ein
+Zeichen mehr im Merkmal. Die Adresse im Register ist eine KOPPLUNG an die
+Lernwelt und die Arbeitswelt — wer den Weg dort umbenennt, muss sie
+nachziehen. `test390 §1` klickt deshalb alle fünf an, statt das Register mit
+sich selbst zu vergleichen; ein umbenannter Weg wird dort rot statt still
+falsch.
+
+Keine Daten, kein Feldname, keine Migration.
+
+PRÜFUNG: `test390` (13 Punkte, PORT 9413). VIER MUTATIONEN ROT GESEHEN:
+
+    zwei Adressen entfernt        §1 zweifach rot
+    `hashchange` entfernt         §1 dreifach rot — und es reicht den
+                                  ursprünglichen Fehler nach: auf
+                                  „Lernzentrum" steht ["heute"]
+    Dublettenkarte entfernt       §3 zweifach rot
+    falschen Zwilling behalten    §4 zweifach rot, samt Hinweis „(E268)"
+
+EINE MUTATION BLIEB GRÜN, und die Zeile ist deshalb wieder weg: der Rückfall
+hatte ein `!e.adresse` bekommen, damit „Heute" nicht doch gewinnt. Nachgeprüft
+kann er das gar nicht — die Adresse trifft vorher und kehrt zurück. Eine
+Bedingung, die mit keiner Mutation rot wird, ist eine Behauptung (§55.2), also
+steht sie nicht mehr da.
+
+Grün geblieben: test33, test61, test222, test247, test248, test272, test387,
+test388, test389. Einzeldatei neu gebaut. Mit einem Bild belegt (§55.3):
+dieselbe Kante auf „Lernzentrum" und auf „Aufgaben", jeweils der richtige
+Knopf in Gold.
+
+Dateien: `src/register/navigation.ts`, `src/register/menueband.ts`,
+`src/schale/aufbau/context-rail.ts`, `src/schale/aufbau/schale.ts`,
+`pruefungen/lauf/test390.mts`.
+
+
+E394 — Das KI-Feld bleibt nicht im Dokument stehen (Audit F08)
+================================================================================
+4. September 2026 · Audit F08 · Auftrag 01 Schritt 5
+
+PROBLEM
+
+E384 hat den Dokumentmodus damit begründet, dass „im Dokumentmodus die ganze
+Schale wegfällt", und die CSS blendet dort auch Menüband, Kopfzeile, untere
+Leiste und Kontextkante aus. Gemessen am 4. September auf 1360 × 900, mit
+einem A4-Blatt:
+
+                              Breite `#ai`   Arbeitsbreite
+    Startbildschirm                   0 px       1306 px
+    KI von Hand geöffnet            380 px        926 px
+    … dann in den Dokumentmodus     380 px        980 px
+
+Das KI-Feld fehlte in der Liste. Es blieb stehen und nahm dem Blatt 28 % des
+Bildschirms — in genau der Ansicht, deren Zweck es ist, das Blatt gross zu
+zeigen.
+
+WAS DER BERICHT SONST NOCH SAGTE, UND WAS DAVON SCHON DA WAR
+
+F08 verlangt zweierlei: „im Dokumentmodus eingeklappt starten" und „am Telefon
+als Bottom Sheet". Der zweite Teil ist seit Längerem erfüllt — nachgemessen
+bei 390 × 844: `position:fixed`, unten verankert, 20 px runde Ecken oben,
+Beginn bei 102 px unter den Kopfleisten. Ein Blatt von unten, kein
+Seitenfeld. `test391 §5` hält es fest, damit die Forderung nicht ein zweites
+Mal als offen gilt.
+
+ENTSCHEIDUNG
+
+Beim EINTRETEN in den Dokumentmodus wird das Feld zugeklappt und gemerkt,
+dass es offen war; beim VERLASSEN kommt es zurück. Wer es im Dokument von
+Hand öffnet, behält es — die Erinnerung wird beim Eintreten gesetzt, nicht
+laufend nachgeführt.
+
+WARUM NICHT `display:none` IN DER CSS, was drei Zeilen kürzer gewesen wäre:
+weil man die KI IM Dokument sehr wohl braucht. „Fasse diese Seite zusammen"
+ist dort die naheliegende Frage. Eine Reparatur, die den Weg zumauert, ist
+schlimmer als der Fehler. `test391 §2` hält das fest.
+
+WARUM IN DER SCHALE UND NICHT IN `DocumentMode.toggle()`: weil `toggle()`
+nicht der einzige Weg hinein ist. `bibliothek.ts:295`, `notebook.ts:348` und
+`notebook.ts:370` setzen `dokumentModus: true` unmittelbar am Block. Ein
+Haken an `toggle()` hätte drei von vier Wegen verfehlt. `zeichneSeite()` sieht
+alle vier, weil dort die Flagge am `body` gesetzt und gelöscht wird.
+
+ALTERNATIVE: den Zustand in `Store.setMeta` merken statt im Speicher.
+Verworfen — es ist Ansichtszustand, kein Nutzerdatum, und er soll einen
+Neustart NICHT überleben.
+
+WAS DABEI NOCH SICHTBAR WURDE, und es steht hier, weil es auf dem Bild steht:
+mit den 380 Pixeln zurück zeigt die Blattleiste wieder ihre NAMEN statt nur
+der Zeichen — „Schreiben · Auswahl · Stift · Marker · Form · Abdecken ·
+Haftnotiz · Text · Fachzeichen · Bild · Radieren". Die Leiste aus E359 weicht
+bei Enge auf Zeichen aus; das KI-Feld hatte sie genau über diese Grenze
+gedrückt. Ein Fehler, der einen zweiten verdeckte.
+
+KOSTEN: zwei Merker im Speicher der Schale und ein Aufruf an zwei Stellen.
+Keine Daten, kein Feldname, keine Migration.
+
+PRÜFUNG: `test391` (15 Punkte, PORT 9415). VIER MUTATIONEN ROT GESEHEN:
+
+    beim Eintreten nicht zuklappen   §1 zweifach rot — 980 von 1360
+    beim Verlassen IMMER aufklappen  §4 rot — die Gegenprobe
+    beim Verlassen NIE aufklappen    §3 rot
+    Telefonregeln entfernt           §5 dreifach rot
+
+Grün geblieben: test114, test272, test296, test384. Einzeldatei neu gebaut.
+Mit zwei Bildern belegt (§55.3): dasselbe Blatt vorher und nachher.
+
+Dateien: `src/schale/aufbau/schale.ts`, `pruefungen/lauf/test391.mts`.
+
+
+E395 — Eine Kante, die zu kurz ist, faltet sich, statt hinauszuragen (Audit F13)
+================================================================================
+4. September 2026 · Audit F13 · Auftrag 01 Schritt 6
+
+PROBLEM
+
+Der Bericht verlangt unter F13 einen Geräte-Abnahmelauf über 360×800,
+390×844, 428×926 und Querformat. Ein echtes iPhone gibt es im Container
+nicht; die vier GRÖSSEN gibt es sehr wohl. Gemessen am 4. September:
+
+Die drei Hochformate waren sauber — nichts rollte waagerecht, und die fünf
+Wege der unteren Leiste massen 48 px (§37 verlangt 44). Das QUERFORMAT war
+es nicht:
+
+    844 × 390    Kante 353 px hoch, Inhalt 424 px, `overflow: hidden`
+      .k-orte     6 Knöpfe   269 px
+      .k-oben     7 Knöpfe     0 px   auf null gequetscht (`flex:1`)
+      .k-unten    3 Knöpfe   137 px   begann bei 281 → 65 px draussen
+
+ACHT KNÖPFE WAREN NICHT ZU ERREICHEN: Übersicht, Notizhefte, Aufgaben, Alle
+Seiten, Suchen, Zuletzt, Neu, Einstellungen. Und es gab keinen Ausweg — die
+untere Telefonleiste endet bei 760 px Breite, 844 ist breiter. Auf einem quer
+gehaltenen Telefon führte KEIN Weg zu „Neu".
+
+Der Falter aus E388 (`werkzeugeAnpassen`) hätte helfen sollen und konnte
+nicht: er misst `.k-oben` an sich selbst, und eine Gruppe von null Pixeln
+Höhe meldet keinen Überlauf. Genau dann, wenn es darauf ankam, stieg er aus.
+
+ENTSCHEIDUNG
+
+Ein Verteiler `kanteAnpassen()` rechnet den Platz VON OBEN und gibt jeder
+Gruppe, was ihr zusteht. Die Reihenfolge, wer abgibt, ist die Aussage:
+
+  1. Die WERKZEUGE falten zuerst — sie hängen am Ort und stehen ohnehin
+     schon hinter einem `···`.
+  2. Dann die ORTE: es bleiben der, an dem man steht, und „Mehr Orte".
+  3. `.k-unten` gibt NICHTS ab. KI, Neu und Einstellungen sind das, was man
+     überall braucht; sie wegzufalten hiesse, den Ausweg wegzufalten.
+
+Bei 844 × 390 stehen danach sieben Knöpfe statt sechzehn, der Inhalt misst
+353 px bei 353 px Höhe, und nichts liegt draussen.
+
+DER ZWEITE FEHLER, DEN DIE ERSTE FASSUNG SELBST GEMACHT HAT
+
+Nach dem Falten waren vier der fünf Orte NIRGENDS mehr: nicht in der Leiste,
+weil gefaltet — und nicht in der Lade, weil `weitereOrte()` weiter das
+Register fragte und „steht ja schon da" antwortete. Gemessen: „Heute" und
+„Lernzentrum" nicht erreichbar, die Lade zeigte 39 statt 43 Zeilen.
+
+Die Lade fragt jetzt die LEISTE, nicht das Register: was man nicht sieht,
+steht drin. Das ist auch der ehrlichere Satz — „mehr Orte" heisst „mehr als
+die, die hier stehen", nicht „mehr als die fünf".
+
+ALTERNATIVE: `#kante` senkrecht rollen lassen. Verworfen — eine rollende
+Zeichenspalte auf 390 px Höhe findet niemand, und `.k-unten` würde vom
+unteren Rand wegrollen, also genau das verlieren, was bleiben soll.
+
+ZWEITE ALTERNATIVE: unter einer Höhenschwelle auf die untere Telefonleiste
+umschalten. Verworfen für heute — die Leiste hängt an `max-width: 760px`, und
+sie an die Höhe zu hängen ist ein eigener Bogen mit eigenen Messungen. Sie
+trägt ausserdem noch die falschen fünf (L123 F02 Punkt 1, Redurs Entscheidung).
+
+DER DRITTE FEHLER, UND ER KAM VOM RECHNEN
+
+Der Verteiler schätzte die Höhe der Ortsgruppe als `Anzahl × 44` und lag um
+fünf Pixel daneben — Polster, Rand und Abstand der Gruppe zählen mit. Fünf
+Pixel zu viel Budget heissen ein Werkzeug zu viel, und `test387` meldete
+prompt drei Pixel Überlauf bei 1280 × 720. Die echte Höhe zu messen half
+nur halb: 44 px je Knopf ist selbst eine Näherung, denn zwischen je zweien
+liegen zwei Pixel Abstand, bei sechs Knöpfen also zehn.
+
+DIE ANTWORT IST NICHT DIE GENAUERE FORMEL, sondern der Blick danach: einmal
+falten, MESSEN, und bei Überlauf einen Platz weniger geben. Die Schleife ist
+beschränkt und endet spätestens bei zwei Knöpfen. Eine Formel, die alle
+Polster kennt, schreibt beim nächsten Stilwechsel wieder daneben.
+
+KOSTEN: ein Verteiler von vierzig Zeilen und ein Parameter mehr an
+`werkzeugeAnpassen`. Keine Daten, kein Feldname, keine Migration.
+
+PRÜFUNG: `test392` (23 Punkte, PORT 9417) — das Abnahmetor über die vier
+Grössen des Berichts. DREI MUTATIONEN ROT GESEHEN:
+
+    Verteiler weg, alter Falter zurück   6 rot (§3 und §4) — und es reicht
+                                         den Originalfehler nach: „neu" und
+                                         „einstellungen" liegen draussen
+    Orte falten nicht mit                2 rot (§3)
+    Lade fragt wieder das Register       4 rot (§4)
+
+`test387` war dabei der vierte Wächter, und er hat den Rechenfehler gefunden,
+den keine Mutation gefunden hätte: er misst den Überlauf von `.k-oben` bei
+1280 × 720 und stand auf 3 statt 0.
+
+BEIM DRITTEN SCHLUG `noUnusedLocals` ZU (§52.6): die Mutation nahm die letzte
+Verwendung einer Konstanten weg, und der Zweig baute nicht mehr. Die Variable
+musste mit weg — eine Gegenprobe, die nicht baut, ist keine.
+
+UND EINE LEHRE ÜBER PRÜFLÄUFE: `page.click` wartet dreissig Sekunden und
+WIRFT, wenn ein Knopf unter einem anderen liegt — genau der Zustand, den die
+erste Mutation herstellt. Der Lauf stürzte ab, statt sechs rote Zeilen zu
+melden. §4 klickt jetzt über `evaluate`; ein Prüflauf, der bei einem Fehler
+abstürzt, hilft niemandem.
+
+Grün geblieben: test33, test61, test272, test387, test390, test391.
+Einzeldatei neu gebaut. Mit einem Bild belegt (§55.3).
+
+Dateien: `src/schale/aufbau/context-rail.ts`, `pruefungen/lauf/test392.mts`.
+
+
+E396 — „Zurück" und „Vor" rollen am Telefon nicht weg (Audit F14)
+================================================================================
+4. September 2026 · Audit F14 · Auftrag 01 Schritt 7
+
+PROBLEM
+
+Der Bericht verlangt unter F14 „vier Primärwerkzeuge plus Mehr" am Telefon.
+Gemessen am 4. September bei 390 × 844, im Dokumentmodus mit einem A4-Blatt:
+
+    dreizehn Werkzeuge, alle 44 px hoch (§37 stimmt),
+    Leiste 368 px breit, Inhalt 636 px — sie rollt.
+
+    im Bild ohne Wischen   Schreiben · Auswahl · Stift · Marker · Form ·
+                           Abdecken · Haftnotiz
+    erst nach dem Wischen  Text · Fachzeichen · Bild · Radieren ·
+                           RÜCKGÄNGIG · WIEDERHOLEN
+
+Die zwei letzten sind die Griffe, die man beim Schreiben von Hand am
+häufigsten braucht — und sie sind keine Werkzeuge: sie ändern nicht, was der
+Finger tut, sie nehmen zurück. Am Rechner stehen sie seit E359 in einer
+eigenen Zeile. Am Telefon gibt es keine zweite Zeile.
+
+ENTSCHEIDUNG
+
+Sie kleben am rechten Rand. `position: sticky` im waagerechten Roller: der
+Knopf bleibt stehen, solange seine eigentliche Stelle weiter rechts läge.
+Kein Umbau am DOM — die Gruppenregeln aus E356 lesen `data-gruppe` an den
+DIREKTEN Kindern, ein Umschlag hätte sie alle gebrochen.
+
+WAS DER BERICHT SONST VERLANGT, IST NICHT GEBAUT, und das ist Absicht: „vier
+Primärwerkzeuge" hiesse, die Reihenfolge der Zeichenwerkzeuge neu zu setzen.
+Die gehört Redur — er hat sie in E352, E355, E359 und E375 selbst gebaut.
+„Radieren" steht heute an elfter Stelle und damit hinter einem Wisch; ob es
+neben den Stift gehört, steht in LUECKEN.md unter L123 F14 als Frage an ihn,
+nicht als Entscheidung von mir.
+
+DREI FEHLER AUF DEM WEG, ALLE DREI AUF DEM BILD GEFUNDEN (§55.3)
+
+  1. Die zwei sind meistens ABGESCHALTET, und `button[disabled]{opacity:.4}`
+     — eine Regel für JEDEN Knopf der App, Zeile 2797 — machte auch ihren
+     Hintergrund durchsichtig. Die Werkzeuge darunter schienen durch; es sah
+     aus wie ein Doppeldruck. Die Regel im Bereich nicht zu wiederholen
+     genügte nicht, sie musste mit `opacity:1` zurückgenommen werden. Blass
+     bleibt der INHALT: `button:disabled > *{opacity:.38}`.
+  2. `right: 48px` für „Zurück" — Knopfbreite plus Lücke — liess einen Spalt
+     von vier Pixeln, durch den ein abgeschnittenes Haftnotiz-Zeichen
+     blitzte. Richtig sind 44: die Knopfbreite OHNE die Lücke, denn die
+     Lücke gibt es zwischen klebenden Knöpfen nicht.
+  3. Die acht Pixel Polster rechts an der Leiste gehören ihr, nicht dem
+     Knopf: `right:0` klebt an der Polsterkante, und dahinter rollten die
+     Werkzeuge weiter sichtbar durch. Ein Schatten ohne Weichzeichnung in
+     derselben Farbe verlängert die Fläche, ohne an den Massen zu rühren.
+
+KEINER DER DREI WAR MESSBAR, bevor man hinsah. Alle drei standen als richtige
+Zahlen in der Messung — die Knöpfe waren „im Bild" — und alle drei waren auf
+dem Bildschirm falsch. Das ist derselbe Fund wie beim Tabellenblock (§55.1).
+
+ALTERNATIVE: die zwei aus der rollenden Leiste in die feste `.blatt-fest`
+daneben verschieben. Verworfen — dort stehen die Griffe des DOKUMENTS
+(Seitenwechsel, Zoom), nicht die des Zeichnens, und die Leiste wäre um zwei
+Knöpfe breiter geworden, was auf 360 px die Werkzeuge weiter verdrängt.
+
+KOSTEN: fünf Regeln im Stilblatt, nur unter 760 px. Die zwei Zahlen (44 und
+9) hält `test393 §2` an beiden Enden des Rollwegs. Keine Daten, kein
+Feldname, keine Migration.
+
+PRÜFUNG: `test393` (19 Punkte, PORT 9419). VIER MUTATIONEN ROT GESEHEN:
+
+    `position:sticky` weg         §1 achtfach rot — an allen drei Grössen
+    zurück auf `right:48px`       §2 rot: „323 → 327", der Spalt
+    `opacity:1` weggenommen       §3 zweifach rot
+    Klebeschranke aufgehoben      §4 rot — am Rechner klebt es sonst mit
+
+Grün geblieben: test356, test359, test392. Einzeldatei neu gebaut. Mit einem
+Bild belegt: dieselbe Leiste an beiden Enden ihres Rollwegs.
+
+Dateien: `quell/schale/stil/bausteine.css`, `pruefungen/lauf/test393.mts`.
+
+
+E397 — „Blatt" legt nicht nur an, es schlägt auch auf (Audit F10)
+================================================================================
+4. September 2026 · Audit F10 · Auftrag 01 Schritt 8
+
+PROBLEM (und die Behauptung, die halb stimmte)
+
+Der Bericht verlangt unter F10 „Handschriftliche Notiz als eigener Typ im
+Neu-Menü". Den Typ gibt es seit E100: „Blatt" steht unter „Zeichnen", mit
+der Unterzeile „A4 — liniert, kariert, Punktraster, Millimeter".
+
+Gemessen am 4. September, an beiden Grössen, den Weg wirklich gegangen:
+
+    Blöcke der neuen Seite   ["text", "blatt"]
+    dokumentModus            false
+    DocumentMode.active()    false
+
+Man landete also im TEXTEDITOR — ein leerer Absatz oben, das Blatt als
+Kasten darunter — und musste „Dokumentmodus" erst selbst finden, um darauf
+schreiben zu können. Ein Weg, der das Ding anlegt, aber nicht öffnet.
+
+Die Notizhefte machen es längst richtig: `notebook.ts:348` und `:370` setzen
+die Flagge beim Anlegen, `bibliothek.ts:295` ebenso. Nur dieser Weg nicht.
+
+ENTSCHEIDUNG
+
+Zwei Zeilen:
+
+1. `Store.updateBlock(p.id, { dokumentModus: true })` gleich nach dem Blatt.
+2. Die Unterzeile sagt den ZWECK statt nur das Papier: „Mit der Hand
+   schreiben — A4, liniert, kariert, Punktraster". Wer mit der Hand schreiben
+   will, sucht nicht nach Papiersorten.
+
+DER NAME BLEIBT „BLATT", und das ist die eigentliche Entscheidung dieses
+Eintrags. Der Bericht schlägt „Handschriftliche Notiz" vor; so heisst aber
+weder die Blockart (`blatt`) noch die Werkzeugleiste (`.blatt-werk`) noch
+das, was E100, E359 und E375 gebaut haben. Zwei Namen für dieselbe Sache
+laufen auseinander (§8) — und der zweite steht dann in der Suche, im
+Slash-Menü und im Papierkorb nicht. Der Zweck gehört in die Unterzeile, nicht
+in einen zweiten Namen.
+
+WARUM DIE FLAGGE NICHT IN `neueSeite()` GEHÖRT: eine leere Seite ist ein
+Textdokument. Sie im Dokumentmodus zu öffnen hiesse, den Schreibzeiger
+wegzunehmen. `test394 §2` hält das fest — es war die zweite Mutation, und sie
+war rot.
+
+KOSTEN: zwei Zeilen. Keine Daten, kein Feldname, keine Migration —
+`dokumentModus` ist ein Feld, das es an jeder Seite schon gibt.
+
+PRÜFUNG: `test394` (16 Punkte, PORT 9421). VIER MUTATIONEN ROT GESEHEN:
+
+    Flagge weggelassen              5 rot (§1 dreifach, §4 zweifach)
+    Flagge in `neueSeite()`         §2 rot — die Gegenprobe
+    Unterzeile zurück auf Papier    §3 rot
+    Weg in „Handschriftliche
+      Notiz" umbenannt              §3 rot — der §8-Wächter
+
+Grün geblieben: test114, test237, test265, test391. Einzeldatei neu gebaut.
+Mit einem Bild belegt (§55.3): am Telefon liegt nach dem Weg das Blatt da,
+mit Stift und der Leiste aus E396 — ohne einen weiteren Griff.
+
+Dateien: `src/schale/aufbau/schale.ts`, `pruefungen/lauf/test394.mts`.
+
+
+================================================================================
+E398 — Einzelseite oder Fortlaufend: die Wahl ja, die Vorgabe nein
+================================================================================
+4. September 2026
+
+Der Prüfbericht, Befund F03 (P1), verlangte zweierlei. E387 hat gestern die
+eine Hälfte gebaut — nur die aktive Seite zeigt ihre Werkzeuge. Die andere
+war ausdrücklich liegen geblieben, weil sie keine Reparatur ist:
+
+    „Wahl zwischen Einzelseite und Fortlaufend, mit Einzelseite als
+     Vorgabe am Telefon."
+
+REDUR HAT DAS ERSTE BESTELLT UND DAS ZWEITE NICHT. Er wurde am 4. September
+gefragt, mit den Zahlen daneben, und hat „ja" gesagt. Der zweite Teil der
+Frage — soll Einzelseite am Telefon die Vorgabe werden — blieb offen; also
+gilt die Lesart, die seine eigene Ansage aus E299 nicht zurücknimmt:
+
+    „die pdf seiten sollte wie goodnotes sich ganz oeffnen komplet wie
+     one note so"
+
+Die Rolle bleibt die Vorgabe, überall. Einzelseite ist ein Angebot.
+
+WARUM ES DIE WAHL TROTZDEM BRAUCHT — gemessen an vier A4-Blättern:
+
+                                   Telefon 390×844   Rechner 1360×900
+      Blätter gleichzeitig im Bild        2                 1
+      ein Blatt hoch                    609 px          1921 px
+      ein Blatt als Anteil des Bildes    72 %            213 %
+
+Am Rechner passt ein Blatt ohnehin nicht ins Bild; dort steht immer genau
+eines, und die Wahl ändert praktisch nichts. Am TELEFON teilen sich zwei
+Blätter den Bildschirm — und genau das meinte der Befund mit „Nutzer wissen
+nicht sicher, welche Seite aktiv ist". Auf dem Telefonbild sieht man es: unter
+Seite 1 fängt „Kapitel 2" an, im selben Blick.
+
+WAS SICH ÄNDERT
+
+Ein Schalter im Inspector, ein Merker je Dokument, eine CSS-Regel:
+
+    .document-center.ist-einzeln .document-stage:not([data-aktiv]){display:none}
+
+`[data-aktiv]` trägt genau eine Bühne — dieselbe Marke, die seit E387 schon
+die Werkzeugleisten regelt. Ein zweiter Zustand daneben wäre ein zweiter
+Katalog für dieselbe Sache (§8).
+
+IM INSPECTOR, NICHT IN DER LEISTE. E384 hat den Randstreifen-Schalter aus der
+Leiste geholt, weil sie am Telefon 411 px breit war in einem 390 px breiten
+Fenster; jedes Zeichen dort kostete den Ausgang. Ein zweiter Schalter in der
+Leiste hätte denselben Fehler ein zweites Mal gemacht. Er steht jetzt direkt
+unter dem Randstreifen — beide sind Schalter für das GANZE Dokument.
+
+ALS META, NICHT AM BLOCK. Wie Seite (E349) und Zoom (E386/F07): eine Ansicht
+ist kein Inhalt, umschalten soll weder `edited` anheben noch eine Fassung
+erzeugen. `test395 §6` misst genau das. Und je Dokument, nicht global — ein
+gescanntes Buch liest sich anders als ein handbeschriebenes Heft.
+
+NUR AB ZWEI SEITEN. Bei einem einzigen Blatt sind Einzelseite und Fortlaufend
+dasselbe Bild. Ein Schalter, der nichts tut, ist schlimmer als keiner: er
+lässt einen suchen, was sich geändert hat. Das ist dieselbe Regel wie überall
+hier — eine Anzeige, die IMMER dasteht, wird nicht gelesen.
+
+DIE STELLE, DIE FAST SCHIEFGEGANGEN WÄRE. Eine mit `display:none`
+ausgeblendete Bühne hat `offsetTop` 0 und `offsetHeight` 0. Damit fällt sie in
+JEDES Nähe-Fenster von `nachziehen()` — und beim ersten Rollen wären alle
+achtzig Seiten gezeichnet worden. Genau das, was E299 verhindern wollte, durch
+die Hintertür wieder da. `nachziehen()` schliesst deshalb kurz, wenn die
+Einzelseite gilt; die Seite wechselt dort nur über `‹ ›` und die Miniaturen,
+und beide gehen durch `springe()`, das Zahl, Miniatur und Marke selbst setzt.
+
+Ohne den Kurzschluss meldet `test395 §3` vier gezeichnete Seiten statt einer.
+
+KOSTEN: ein Meta-Schlüssel (`dokLauf:<seiteId>`), ein Knopf, zwei CSS-Regeln.
+Keine Daten, kein Feldname, keine Migration. Wer den Schalter nie drückt,
+merkt von der ganzen Sache nichts — und das ist der Punkt.
+
+PRÜFUNG: `test395` (46 Punkte, PORT 9423). FÜNF MUTATIONEN ROT GESEHEN (§55.2):
+
+    `einzeln: true` als Vorgabe        §1 fünffach rot — der Wächter für E299
+    die CSS-Regel weg                  §2, §3, §4, §6 rot (vier statt eine)
+    Kurzschluss in `nachziehen` weg    §3 rot (vier gezeichnet statt eine)
+    Schalter auch bei einer Seite      §5 rot
+    Platzhalter mit 200 px gerechnet   §7 rot — siehe E399
+
+§1 IST DER WICHTIGSTE ABSCHNITT und hält nicht den neuen Bau fest, sondern
+den alten: dass ihn niemand angefasst hat. Wer eines Tages `einzeln: true`
+als Grundstellung setzt oder eine Media Query für schmale Fenster einzieht,
+fällt dort — und nicht erst, wenn Redur es merkt.
+
+Mit drei Bildern belegt (§55.3): der Schalter im Inspector am Rechner, das
+Telefon in der Rolle (unter Seite 1 beginnt Kapitel 2) und das Telefon in der
+Einzelseite (Seite 1 steht allein).
+
+Dateien: `src/bereiche/pdf/document-mode.ts`, `quell/schale/stil/bausteine.css`,
+`pruefungen/lauf/test395.mts`, `bilder.mts`.
+
+
+================================================================================
+E399 — Der Rollbalken zeigte ein Viertel des Wegs an
+================================================================================
+4. September 2026
+
+GEFUNDEN BEIM MESSEN FÜR E398, NICHT GESUCHT. Eine Gegenprobe in `test395 §4`
+sollte zeigen, dass die Rolle deutlich höher ist als die Einzelseite. Sie fiel
+— die Rolle war bei vier Seiten gerade 2895 px hoch, wo gut 7000 hätten
+stehen müssen. Nachgemessen an sechs A4-Seiten auf 1360×900:
+
+    beim Öffnen    Rolle 3513   Höhen [1922, 283, 283, 283, 283, 283]
+    nach 1000 px   Rolle 5067   Höhen [1922, 1837, 283, 283, 283, 283]
+    nach 3000 px   Rolle 6620   Höhen [1837, 1922, 1837, 283, 283, 283]
+
+Der Platzhalter einer noch ungezeichneten Seite ist 283 px hoch. Die Seite
+wird 1922. Der Rollbalken WÄCHST also mit jeder Seite, die man erreicht: er
+sagt beim Öffnen 3513 und meint 11 283.
+
+Bei sechs Seiten ist das lästig. Bei achtzig — der Zahl, mit der E299
+ausdrücklich rechnet — zeigt er von Anfang an ein Viertel des Wegs an, und
+der Griff am Balken landet jedes Mal woanders, als er aussieht.
+
+UND E299 SCHRIEB AN DIESE STELLE WÖRTLICH:
+
+    „Der Platzhalter in der Hoehe, die die Seite wirklich bekommen wird —
+     sonst springt der Rollbalken, sobald sie gezeichnet ist."
+
+Genau das tat er nicht. Der Kommentar war richtig und der Code daneben auch —
+nur zu früh.
+
+DER GRUND. `center.clientWidth` ist NULL, wenn die Bühnen gebaut werden:
+`body.append(thumbnails, center, inspector)` kommt erst danach, der Kasten
+hängt also noch nirgends und hat keine Breite. Aus `Math.max(200, 0 - 36)`
+werden 200, und 200 mal 842/595 sind die 283.
+
+Die Rechnung war nie falsch. Sie lief nur, bevor es etwas zu rechnen gab.
+
+WAS SICH ÄNDERT. Sie steht jetzt in `passen()` — dort ist der Kasten im DOM,
+dort ist die Breite bekannt, und dort wird ohnehin bei jedem Fensterwechsel
+und bei jedem Zoom neu gerechnet. Der Platzhalter folgt beidem mit, was er
+vorher nicht tat: wer das Fenster schmaler zog, hatte einen Balken, der noch
+zur alten Breite gehörte.
+
+    vorher   3513 beim Öffnen, 5067 nach 1000 px, 6620 nach 3000 px
+    jetzt    11283 beim Öffnen — und 11283 nach 1000 und nach 3000 px
+
+NUR DIE UNGEZEICHNETEN. Eine gezeichnete Seite hat ihre Höhe von ihrem Inhalt
+(`zeichneStand` nimmt `height` ausdrücklich wieder weg); ihr eine feste Zahl
+zu geben wäre derselbe Fehler von der anderen Seite. Und weiterhin wird nur
+EINE Seite beim Öffnen gezeichnet — `test395 §7` misst das mit, damit die
+Reparatur nicht E299 aufhebt.
+
+KOSTEN: eine Funktion von acht Zeilen, ein Aufruf. Keine Daten.
+
+PRÜFUNG: `test395 §7`. MUTATION ROT GESEHEN: `platzhalterSetzen(200)` statt
+`platzhalterSetzen(Math.max(120, breit))` — drei Punkte rot, mit genau den
+283 px von oben.
+
+Warum diese Mutation und nicht „den Aufruf weglassen": dann ist
+`platzhalterSetzen` ungenutzt, und `noUnusedLocals` (§52.6) lässt den Zweig
+gar nicht mehr bauen. Eine Gegenprobe, die nicht baut, ist keine.
+
+Dateien: `src/bereiche/pdf/document-mode.ts`, `pruefungen/lauf/test395.mts`.
+
+
+================================================================================
+E400 — Die Palette führte aus, was niemand gesehen hatte (Audit F09)
+================================================================================
+4. September 2026
+
+Der Prüfbericht nennt F09 in einem Halbsatz: „Befehlsmenü mit Suche, zuletzt
+verwendet, Favoriten". LUECKEN.md schreibt für jeden Befund des Berichts vor,
+ihn ZUERST gegen den heutigen Stand zu messen — der Bericht prüfte E353, das
+Projekt steht auf E399. Fünf Leser haben das getan, fünf Gegenprüfer haben
+sie widerlegt.
+
+WAS DIE MESSUNG ERGAB — die erste Hälfte von F09 ist längst gebaut:
+
+    Befehlsmenü   JA   `Werkzeuge.palette()`, werkzeuge.ts:315, Strg ⇧ K
+    Suche         JA   eigenes Fenster, Strg P / Strg K, findet Inhalte
+    Zuletzt       NEIN nur `paletteOft`, ein Zähler ohne Zeit
+    Favoriten     NEIN fünf Favoriten-Sorten im Haus, keine für Befehle
+
+Das ist der vierte Befund des Berichts, der sich beim Nachmessen als bereits
+erledigt herausstellt (nach F11, F08 und F10). Die Regel „erst messen" hat
+sich damit viermal bezahlt gemacht.
+
+ABER DABEI KAM ETWAS HERAUS, DAS DER BERICHT NICHT KANNTE, und es wiegt
+schwerer als das, was er verlangt.
+
+────────────────────────────────────────────────────────────────────────────
+ERSTENS: DER PFEIL LIEF ÜBER DIE GEZEICHNETE LISTE HINAUS
+────────────────────────────────────────────────────────────────────────────
+
+    zeichne()   res.innerHTML = treffer.slice(0, 60)...
+    ArrowDown   i = Math.min(i + 1, treffer.length - 1)
+
+Zwei Zahlen für dieselbe Sache, und sie waren verschieden. Ohne Eingabe hält
+`treffer` die ganze Liste. Wie lang die ist, sagt der Quelltext nicht: es
+sind 105 `c(`-Aufrufe, aber zwei davon sind SCHLEIFEN — eine erzeugt 66
+Befehle aus `Register.bloecke`, eine 0..n aus den Erweiterungen. Auf dem
+Bildschirm abgelesen sind es 163.
+
+Ab dem 61. Druck auf ↓ trug also kein gezeichneter Knopf mehr `.on`. Das
+`scrollIntoView` fiel still durch das `?.`, auf dem Bildschirm bewegte sich
+nichts — und Enter führte `treffer[i]` aus. 103 Befehle waren erreichbar,
+ohne sichtbar zu sein: man drückt ↓ ein paar Mal zu oft, drückt Enter, und
+irgendetwas passiert.
+
+Jetzt steht die Zahl einmal da (`GEZEIGT = 60`) und gilt an beiden Stellen.
+
+WARUM KEIN PRÜFLAUF DAS FAND: `test51` tippt immer erst etwas ein. Gefiltert
+sind es höchstens 46 Treffer (40 bewertete plus 6 Seiten), also nie mehr als
+60. Der Fehler lag ausschliesslich im ungefilterten Erstzustand — dem, den
+jeder sieht, der die Palette öffnet.
+
+UND DIE LISTE SAGT JETZT, DASS SIE ABGESCHNITTEN IST. „103 weitere — tipp
+einen Namen, um sie zu finden", kursiv, unter einem Haarstrich. Nur wenn
+wirklich etwas fehlt: eine Anzeige, die immer dasteht, wird nicht gelesen.
+
+────────────────────────────────────────────────────────────────────────────
+ZWEITENS: VIER STELLEN SCHRIEBEN EIN KÜRZEL AN, DAS DIE PALETTE NICHT ÖFFNET
+────────────────────────────────────────────────────────────────────────────
+
+Die Palette ist irgendwann von Strg ⇧ P auf Strg ⇧ K umgezogen. Vier Stellen
+blieben stehen:
+
+    index.html:167                die Seitenleiste, immer sichtbar
+    src/register/navigation.ts:95 das Register dahinter
+    schale.ts:4007                die WILLKOMMENSSEITE — jeder neue Nutzer
+    schale.ts:1105                das leere Suchergebnis
+
+Nur `src/register/tasten.ts:29` nannte das richtige Kürzel.
+
+WARUM ES NIEMAND MERKTE, und das ist der eigentliche Fund: `test222 §5`
+vergleicht die Beschriftung in `index.html` mit dem `kuerzel` im Register.
+Beide waren falsch — also stimmten sie überein, und der Lauf blieb grün. Ein
+Vergleich zweier Beschriftungen prüft nicht, ob eine davon stimmt.
+
+Der zweite Grund steht in `werkzeuge.ts:2683`:
+
+    if (p2) verschiebenNach(p2); else palette();
+
+Strg ⇧ P fällt OHNE offene Seite auf die Palette zurück. Auf dem
+Startbildschirm tat das falsche Kürzel also genau das, was danebenstand. Das
+ist Absicht und bleibt — aber es ist der Grund, warum vier Bögen lang niemand
+stutzte.
+
+`test396 §2` VERGLEICHT NICHT, ER DRÜCKT. Er liest das Kürzel vom Knopf ab,
+zerlegt es in Tasten und drückt genau die — mit offener Seite, damit der
+Rückfall die Probe nicht rettet.
+
+DASS DIESER UNTERSCHIED ZÄHLT, HAT DIE ERSTE MUTATION BEWIESEN. Beim ersten
+Bau stand §2 ohne offene Seite; mit dem falschen Kürzel in `index.html` blieb
+er GRÜN — der Wächter bestätigte genau den Fehler, gegen den er geschrieben
+war. Erst mit offener Seite fällt er (§55.2).
+
+KOSTEN: eine Konstante, vier Zeichenketten, eine CSS-Regel. Keine Daten,
+keine Migration, kein Kürzel umbelegt — Redurs Tastenlayout bleibt, wie es
+ist.
+
+PRÜFUNG: `test396` (27 Punkte, PORT 9425). VIER MUTATIONEN ROT GESEHEN:
+
+    Pfeil wieder bis `treffer.length`   §1 dreifach rot (Index −1)
+    falsches Kürzel in index.html       §2 zweifach rot
+    „N weitere" immer anzeigen          §3 rot („−59 weitere")
+    Willkommensseite auf ⇧ P zurück     §4 rot
+
+Grün geblieben: test47, 51, 86, 128, 197, 222, 340. Einzeldatei neu gebaut.
+Mit einem Bild belegt (§55.3) — und das Bild hat eine Zahl korrigiert: die
+Messung schätzte 111 Einträge, auf dem Bildschirm stehen „103 weitere" unter
+60 Zeilen, also 163.
+
+WAS OFFEN BLEIBT: die zwei Halbworte, die F09 wirklich verlangt — „zuletzt
+verwendet" und „Favoriten" für Befehle. Beides fehlt nachweislich und steht
+als **L128** in LUECKEN.md, zusammen mit sechs weiteren Funden aus derselben
+Messung, die eigene Bögen brauchen.
+
+Dateien: `src/bereiche/wissen/werkzeuge.ts`, `src/schale/aufbau/schale.ts`,
+`src/register/navigation.ts`, `index.html`,
+`quell/schale/stil/werkzeuge.css`, `pruefungen/lauf/test396.mts`, `bilder.mts`.
+
+
+================================================================================
+E401 — Die Palette merkt sich, was du brauchst (Audit F09, Rest)
+================================================================================
+4. September 2026
+
+E400 hat gemessen, dass F09s erste Hälfte längst gebaut ist. Was wirklich
+fehlte, sind die zwei Halbworte: „zuletzt verwendet" und „Favoriten".
+
+DREI GEDÄCHTNISSE, DREI FRAGEN:
+
+    paletteOft       wie oft?       — gab es schon
+    paletteZuletzt   wann zuletzt?  — neu
+    paletteFest      was WILL ich?  — neu
+
+Der Unterschied zwischen den ersten beiden ist der ganze Befund. Ein Zähler
+weiss nicht, was man gerade eben getan hat: A, dann B, dann wieder A — der
+Zähler sagt „A zweimal, B einmal", die Reihenfolge sagt „A, B". Die SUCHE
+hatte das Gegenstück längst („Zuletzt gesucht", schale.ts:1082); die Palette
+nicht.
+
+Und das dritte ist keines von beiden: was man oft benutzt, ist nicht
+dasselbe wie das, was man oben haben WILL.
+
+WIE ES AUSSIEHT. Ohne Eingabe stehen jetzt bis zu drei Blöcke da:
+„Angeheftet", „Zuletzt", dann der Rest nach Häufigkeit wie bisher. Die zwei
+neuen Überschriften erscheinen NUR, wenn sie etwas enthalten — bei einem
+frischen Redion sieht die Palette aus wie vorher. Das ist die Regel, an der
+dieses Projekt am häufigsten scheitert, und `test397 §1` ist ihr Wächter.
+
+DER STERN STEHT IM ZEILENKNOPF, nicht daneben. Ein zweiter `<button>` darin
+wäre ungültiges HTML, und ein Umschlag um beide würde
+`:where(.finder .res) > button` brechen — die Zeilenregel gilt seit E348 nur
+für DIREKTE Kinder. Ein `<span data-fest>` ist deshalb das Richtige: der
+Griff prüft ihn VOR dem Knopf (sonst öffnet ein Druck auf den Stern den
+Papierkorb, statt ihn anzuheften), und für die Tastatur gibt es Strg+Enter.
+Der Zustand steht im `aria-label` (§38). Sichtbar ist der Stern nur an der
+gewählten Zeile, unter der Maus und an wirklich angehefteten — sechzig
+sichtbare Sterne wären eine Wand, und am Telefon steht er immer da, weil es
+dort kein Überfahren gibt (§37).
+
+ZWEI SACHEN, DIE DER PRÜFLAUF GEFUNDEN HAT und die vorher niemand gesucht
+hätte:
+
+1. SEITEN SIND KEINE BEFEHLE. Die Palette zeigt bei einer Eingabe auch bis
+   zu sechs Seiten; deren Titel landeten ungefiltert im Zähler. In einer
+   Liste „Zuletzt" wäre „📄 Zwiebelsuppe" zwischen „Papierkorb" und
+   „Exportieren" noch sichtbarer gewesen. `merkeBefehl` bekommt jetzt die
+   Gruppe mit und lässt „Seiten" aus. (L128 Punkt 4, halb.)
+
+2. DER GERADE BENUTZTE BEFEHL FIEL BEIM DECKELN SOFORT WIEDER HERAUS.
+   `paletteOft` war der einzige Verlauf im Haus ohne Obergrenze (die anderen
+   deckeln bei 8 / 12 / 60 / 100 / 2000) und wandert über `indexdb.ts` in
+   jede Sicherung. Der neue Deckel bei 50 sortierte zuerst nur nach
+   Häufigkeit — und der eben ausgeführte Befehl steht mit Zähler 1 ganz
+   unten. Man hätte etwas ausgeführt und es danach nicht in „Zuletzt"
+   wiedergefunden. `test397 §6` hat es gefunden; jetzt bleibt er in jedem
+   Fall.
+
+EIN SECHSTER FAVORITEN-SPEICHER, UND DAS IST ABSICHT. L128 Punkt 2 hält
+fest, dass es fünf Favoriten-Sorten ohne gemeinsames Register gibt (§8).
+`paletteFest` ist die sechste — aber kein neuer Fall desselben Fehlers: die
+anderen fünf betreffen SEITEN, Chats und Werkzeuge; ein angehefteter Befehl
+ist etwas anderes und gehört neben `paletteOft`, wo das übrige Gedächtnis
+der Palette liegt. Das gemeinsame Register bleibt als L128 Punkt 2 offen.
+
+KOSTEN: zwei Meta-Schlüssel, beide gedeckelt, beide reine Namenslisten.
+Keine Datenmigration — wer nie anheftet, hat sie nie.
+
+PRÜFUNG: `test397` (32 Punkte, PORT 9427). FÜNF MUTATIONEN ROT GESEHEN:
+
+    „Zuletzt" zeigt notfalls irgendetwas   §1 rot
+    „Zuletzt" hängt hinten an statt vorn   §2 dreifach rot
+    Stern nicht vor dem Knopf geprüft      §4 dreifach rot (Palette schloss)
+    Seitentitel wieder ins Gedächtnis      §5 zweifach rot
+    der gerade benutzte nicht geschützt    §6 rot
+
+Grün geblieben: test47, 51, 86, 128, 197, 222, 340, 396. Einzeldatei neu
+gebaut. Mit einem Bild belegt (§55.3) — und das Bild hat wieder etwas
+gezeigt: zwei meiner drei Beispielnamen gab es gar nicht, und die
+Absicherung `if (t)` liess sie still fallen. Genau so soll sie arbeiten;
+`test397 §3` hält den Fall jetzt fest.
+
+Dateien: `src/bereiche/wissen/werkzeuge.ts`, `quell/schale/stil/werkzeuge.css`,
+`pruefungen/lauf/test397.mts`, `bilder.mts`.
+
+
+================================================================================
+E402 — Der Favoritenblock war vier Bögen lang leer (L128 Punkt 3)
+================================================================================
+4. September 2026
+
+Der Bildschirm „Seiten und Notizen" hat einen Abschnitt „Favoriten". Er
+filterte:
+
+    const sterne = alle.filter(b => b.fav);
+
+Das Feld heisst `favorite`. `b.fav` gibt es an keinem Block — nachgesehen in
+`indexdb.ts:851`, wo `favorites()` es richtig macht. Die Liste war also IMMER
+leer.
+
+UND MAN SAH ES NICHT. `block()` (dienst.ts:511) lässt einen leeren Abschnitt
+GANZ weg, Überschrift inbegriffen. Wer den Bildschirm öffnete, sah
+„Kürzlich verwendet · Privat · Datenbanken · Vorlagen" und schloss daraus,
+dass er eben keine Favoriten hat. Genau die Sorte Fehler, die dieses Projekt
+am teuersten zu stehen kommt: gezeichnet, aber nie gefüllt.
+
+WAS GEBAUT WURDE — und es ist nicht das eine Wort. Den Filter auf `favorite`
+zu berichtigen hätte den Fehler behoben und die Ursache stehen lassen: ein
+zweiter, von Hand geschriebener Filter für dieselbe Frage. Der Bildschirm
+fragt jetzt den Katalog, den es längst gibt — `Store.favorites()` —, und
+schneidet ihn mit seiner eigenen Menge (keine Datenbankzeilen, keine
+Systemseiten). Ein Katalog, nicht zwei (§8).
+
+KOSTEN: drei Zeilen. Keine Daten, kein Feldname, keine Migration.
+
+PRÜFUNG: `test398` (9 Punkte, PORT 9429). MUTATION ROT GESEHEN: `b.fav`
+zurückgeschrieben, und §2 fällt — mit genau dem Bild von vorher, nämlich
+einer Liste von Überschriften OHNE „Favoriten".
+
+`test398 §1` hält ausdrücklich fest, dass die Überschrift ohne Favoriten
+FEHLT. Das war schon vorher richtig und ist der Grund, warum niemand etwas
+merkte; der Punkt steht deshalb zuerst, damit klar bleibt, was der Fehler
+war und was nicht.
+
+WAS NOCH AUSSTEHT: die Nachbarläufe. Während dieses Bogens fährt der volle
+Lauf in einem eigenen Arbeitsbaum, und die Prüfläufe teilen sich feste Ports
+— `test398` bekam deshalb eine neue Nummer (9429), die mit nichts kollidiert.
+`test114` und die übrigen Nachbarn laufen, sobald der volle Lauf durch ist.
+
+Mit einem Bild belegt (§55.3): „Favoriten" steht jetzt zwischen „Kürzlich
+verwendet" und „Privat", mit den zwei angesternten Seiten darunter.
+
+Dateien: `src/bereiche/datenbanken/ansichten/dienst.ts`,
+`pruefungen/lauf/test398.mts`, `bilder.mts`.
+
+
+================================================================================
+E403 — Die Denkkugel: neun Zustände statt eines Dreh-Rädchens
+================================================================================
+4. September 2026
+
+Redur schickte zwei Effekte von libraries.dev — erst „Metal", dann „Orb" —
+jeweils mit dem Einbausatz der Seite: `npm install`, ein React-Bauteil, fertig.
+Beide Male lautete die Frage nicht „hübsch?", sondern „geht das hier?".
+
+WAS NACHGESEHEN WURDE, nicht geraten.
+
+`thinking-orbs@0.3.1` ist echt: MIT, 55 KB, KEINE Abhängigkeiten, React nur
+als *peer*. Und — anders als beim Metall-Paket — es hat einen zweiten Ausgang:
+
+    "./engine": { "import": { "default": "./dist/engine.es.js" } }
+
+`engine.es.js` ist 19 KB, hat NULL Importzeilen und kennt React nicht. Im
+ganzen Paket steht kein `fetch`, kein XHR, kein `sendBeacon`, kein WebSocket,
+kein `eval`, kein Worker, kein `localStorage`, kein `document.cookie` — und
+nicht eine einzige URL. Es telefoniert nicht nach Hause.
+
+Damit war der Weg offen, den `metal-fx` versperrt hatte, und Redion hat ihn
+sogar geregelt: `pruefungen/fremd-bestand.json` führt Fremdcode mit Pfad,
+Fassung, Lizenz, Herkunft und Prüfsumme; `test177` rechnet nach, `test109`
+zählt ihn nicht zum JS-Bestand (§54.4). So kam pdf.js herein (E103).
+
+WARUM TROTZDEM EIGENER CODE.
+
+Weil der Preis nicht stimmt. pdf.js ist 1,8 MB und kann etwas, das niemand
+in vertretbarer Zeit nachbaut — einen PDF-Renderer. Eine Warteanzeige ist
+das Gegenteil: 19 KB minifizierter Fremdcode, den niemand mehr lesen kann,
+gegen eine überschaubare Rechnung, die man im Klartext hinschreiben kann.
+§47 sagt „keine unnötigen Abhängigkeiten", und diese wäre eine.
+
+Die Technik ist trotzdem von dort abgesehen und im Quelltext genannt
+(Jakub Antalik, MIT, https://libraries.dev/orbs.html): Punkte auf einer
+Kugel, orthografisch abgebildet, nach Tiefe sortiert gezeichnet.
+
+WAS ES ERSETZT — und das war der Grund, es überhaupt zu bauen.
+
+`agenten.ts:1200` schrieb vier Bögen lang genau eine Zeile:
+
+    liste.innerHTML = '<div class="agent-laeuft">Der Agent denkt nach …</div>';
+
+Ohne Animation, ohne Bewegung, ohne Angabe, was gerade geschieht. Bei einem
+Lauf über zwölf Werkzeuge stand nach zwei Sekunden dasselbe da wie nach
+zwei Minuten. Und sie verschwand beim ERSTEN Schritt — also genau dann, wenn
+endlich etwas passierte.
+
+Jetzt trägt jedes der zwölf Werkzeuge einen Zustand:
+
+    suchen · nachschlagen · seiteLesen · datenbankLesen
+    kalenderLesen · mailLesen                      -> searching   „sucht"
+    seiteAnlegen · feldFuellen                     -> composing   „schreibt"
+    datenbankAnlegen · zeileAnlegen                -> shaping     „formt"
+    worker                                         -> solving     „löst"
+    fertig                                         -> breathing   „wartet"
+
+Der TEXT bleibt daneben stehen und nennt Schritt und Werkzeug. §38 sagt
+„keine Information nur über Farbe"; über Bewegung ist sie genauso wenig
+erlaubt.
+
+DER AUFBAU. Zwei Teile, wie bei E285 bis E290:
+
+    src/core/orb/geometry.ts   reine Rechnung: Rauschen, Kugelgitter,
+                               Abbildung, Tiefensortierung. Kein DOM,
+                               keine Uhr, kein Zufall.
+    src/core/orb/modes.ts      die neun Arten als reine Funktionen von
+                               (Grösse, Zeit).
+    src/schale/ueberlagerung/orb.ts   der Maler und die Aufhängung.
+
+Der Kern ist absichtlich zufallsfrei — mit `Math.random()` liesse sich keine
+einzige Zahl prüfen, und die Suite wäre auf Bildschirmfotos angewiesen.
+
+DREI SACHEN, DIE EINE ANIMATION IN EINER ECHTEN APP BRAUCHT und in keiner
+Vorführung vorkommen: sie hört auf, wenn der Tab weg oder das Element aus
+dem Bild ist; sie steht bei `prefers-reduced-motion` still (aber sie ist DA,
+als Standbild — nicht weg); und sie wird in JEDEM Ausgang angehalten, auch
+im Fehlerzweig, sonst rechnet ein unsichtbares Canvas für immer weiter.
+
+DIE TINTE IST DIE GEERBTE TEXTFARBE. Kein neues Token, keine eigene Farbe:
+der Maler liest `getComputedStyle(canvas).color` und regelt nur die Deckkraft
+über die Tiefe. Damit stimmt die Kugel in Hell, Dunkel und im Kontrastmodus
+von selbst. §39 warnt vor erfundenen Tokens — dreimal ist genau das schon
+passiert.
+
+WAS DAS HINSEHEN GEFUNDEN HAT (§55.3), und was keine Messung hatte:
+
+  · `working` war ein Klecks. Jede der drei Bahnen hatte ihre EIGENE Kamera
+    — drei flache Ellipsen aus drei Blickwinkeln. Die Neigung gehört an den
+    Ring, nicht an die Kamera. Jetzt zwei Bahnen, eine Kamera, ineinander.
+  · `breathing` und `shaping` waren beide ein gepunkteter Kreis, im
+    Standbild nicht zu unterscheiden. `breathing` ist jetzt ein langsam
+    wanderndes Oval.
+  · `solving` drehte seine Bänder richtig — nur sah man es nicht, weil die
+    Punkte einer gedrehten Scheibe dort landen, wo eben die der anderen
+    standen. Ein Spalt zwischen den Bändern macht die Drehung sichtbar.
+
+PRÜFUNG: `test399` (22 Punkte, PORT 9431).
+
+§4 ist der Punkt, für den es die Suite gibt: er misst, ob die neun einander
+gleichen. Er WAR rot, gleich beim ersten Lauf — searching/solving standen
+bei 2,1 px, searching/weaving bei 2,2, solving/weaving bei 2,3. Genau das
+hatte das Bild schon gesagt; die Messung hat es beziffert. Repariert wurde
+der CODE, nicht die Schwelle.
+
+Und die Messung selbst war zu schwach: sie verglich nur die LAGE der Punkte.
+Zwei Wolken in derselben Scheibe haben immer kleine Nachbarabstände, auch
+wenn die eine grob und die andere fein ist. Jetzt zählt die Punktgrösse mit.
+
+MUTATION ROT GESEHEN, zweimal:
+  §4 — in `shaping` ein `return breathing(size, t);` voranstellen:
+       „breathing/shaping = 0", 21 von 22.
+  §3 — in `breathing` ALLE VIER Zeit-Abhängigkeiten wegnehmen:
+       „Kein Zustand ist bei zwei Zeiten identisch — ist [breathing]".
+
+UND EINE MUTATION, DIE NICHT ROT WURDE, weil sie im Kopf der Suite steht und
+sonst jemand darauf baut: nur das Oval in `breathing` auf 0 zu setzen, genügt
+§4 nicht — die beiden bleiben über Punktgrösse und Durchmesser trennbar. Wer
+§4 traut, soll wissen, was es misst.
+
+WAS ES KOSTET: 24 KB erzeugtes JavaScript, drei Zeilen in `index.html` und
+drei im `GRUNDSTOCK`. Die Kugel läuft nur, während ein Agent läuft.
+
+Mit Bildern belegt (§55.3): alle neun Zustände in Hell und Dunkel, dazu die
+echte Anzeige aus dem Agentenfenster.
+
+Dateien: `src/core/orb/geometry.ts`, `src/core/orb/modes.ts`,
+`src/schale/ueberlagerung/orb.ts`, `src/bereiche/ki/agenten.ts`,
+`quell/schale/stil/bausteine.css`, `index.html`, `src/dienst/sw.ts`,
+`tsconfig.bauen.json`, `pruefungen/lauf/test399.mts`.
+
+
+================================================================================
+E404 — Der Anheft-Stern stand im Text der Palettenzeile (E401-Rückfall)
+================================================================================
+4. September 2026
+
+Der volle Lauf wurde in Stück 18 rot: `test206` fiel mit acht Punkten auf
+einmal. Alle acht sahen gleich aus:
+
+    „Neue Seite" findet „Anlegen › Neue Seite"
+      — Navigation › ☆Neue SeiteStrg N
+
+E401 hatte jeder Palettenzeile einen Anheft-Stern gegeben. Er sass richtig
+(im Knopf, als `<span>`, mit `aria-hidden` — ein Vorleseprogramm hörte ihn
+also nie), und er tat das Richtige. Aber er stand als TEXTKNOTEN dort, und
+damit stand er in jedem `textContent`: in jeder Prüfung, in jedem Stück
+Code, das den Namen einer Zeile abliest.
+
+`aria-hidden` verbirgt vor dem Vorleser, nicht vor dem Text. Das ist der
+ganze Fehler.
+
+REPARATUR: Das Zeichen wandert ins CSS.
+
+    .finder .res > button > .fest::before{content:"\2606"}
+    .finder .res > button[data-ist-fest] > .fest::before{content:"\2605"}
+
+Der `<span>` bleibt, wo er ist — er ist der Griff zum Anheften und muss ein
+direktes Kind bleiben, weil `:where(.finder .res) > button` nur für direkte
+Kinder gilt (E348). Er trägt jetzt ein `title` statt eines Zeichens.
+
+WARUM `test397` ES NICHT GEFUNDEN HAT. Der Wächter aus E401 prüfte, DASS der
+Stern da ist, WIE er aussieht und WAS er tut — nur nicht, was er dem Text
+antut. Der Lauf war grün, während acht Punkte in einer Nachbarsuite fielen.
+
+Nachgetragen als `test397 §6`: keine Zeile trägt ein Sternzeichen im Text,
+und das Zeichen kommt aus `::before`.
+
+MUTATION ROT GESEHEN: das `<span>` wieder mit `(istFest ? '★' : '☆')`
+füllen — §6 fällt und listet vierzig Zeilen mit Stern auf, genau das Bild,
+das `test206` gesehen hatte.
+
+DIE LEHRE, und sie ist nicht neu: ein Wächter prüft, was sein Autor im Kopf
+hatte. Der Stern war ein Gestaltungsdetail, also prüfte er Gestaltung. Dass
+ein Zeichen im Knopf auch DATEN sind, die andere lesen, stand in keinem
+Punkt.
+
+Dateien: `src/bereiche/wissen/werkzeuge.ts`,
+`quell/schale/stil/werkzeuge.css`, `pruefungen/lauf/test397.mts`.
+
+
+================================================================================
+E405 — 23 Prüfläufe teilten sich einen Port
+================================================================================
+4. September 2026
+
+Der volle Lauf wurde in Stück 22 rot: `test247`, das Menüband. Einzeln
+nachgefahren lief es mit 106 von 106 durch. Nachgesehen, statt zu raten:
+
+    test206  PORT = 8967
+    test247  PORT = 8967
+
+Ich hatte `test206` im Hauptbaum geprüft (für E404), während der volle Lauf
+im Arbeitsbaum bei Stück 22 stand. Beide wollten denselben Port. Stück 22
+war rot, und nichts daran war ein Fehler im Produkt.
+
+Das ist derselbe Fehler wie bei den acht gleichzeitigen Läufern von vorher —
+und ich bin hineingelaufen, obwohl die Lehre daraus als Kommentar im
+Lauf-Skript steht. Ein Kommentar an einer Stelle hält nichts, was an einer
+anderen passiert.
+
+DER BESTAND, gezählt statt geschätzt: von 260 Läufen mit festem Port hatten
+48 einen doppelt vergebenen. 23 Gruppen; die Zahl 8797 war VIERMAL vergeben
+(test78, test90, test117, test128).
+
+REPARATUR. Der jeweils niedrigste Lauf behält seine Zahl, die anderen ziehen
+in den freien Bereich ab 9500. 26 Dateien geändert, nur die eine Zeile.
+
+Warum nicht ein zufälliger Port je Lauf? Weil ein fester Port beim Suchen
+hilft: wer wissen will, welcher Lauf gerade auf 9431 hört, findet ihn mit
+einem `grep`. Und weil ein Lauf, der seinen Port selbst sucht, bei einem
+Fehlschlag etwas anderes prüft als beim letzten Mal.
+
+WÄCHTER: `test400`. Er liest alle `pruefungen/lauf/test*.mts`, sammelt jedes
+`PORT = …` und meldet jede doppelt vergebene Zahl. Kein Browser, kein
+Server, kein eigener Port — er liest Dateien und läuft in unter einer
+Sekunde.
+
+MUTATION ROT GESEHEN: `test248` zurück auf 8967 gesetzt —
+„✗ Kein Port ist zweimal vergeben — 8967: test206 + test248". Und gegen den
+Bestand VOR dem Aufräumen meldete er alle 23 Gruppen.
+
+DIE LEHRE, und sie ist die dritte ihrer Art in dieser Woche: ein Ergebnis,
+das aus dem falschen Grund rot ist, ist schlimmer als eines, das grün lügt.
+Das grüne kostet später etwas; das falsch rote kostet sofort, weil man nach
+einem Fehler sucht, den es nicht gibt.
+
+Dateien: 26 Läufe unter `pruefungen/lauf/` (nur die PORT-Zeile),
+`pruefungen/lauf/test400.mts`.
+
+
+================================================================================
+E406 — Sieben erfundene Farbtokens, sechs namenlose Schalter, vier Farbreihen
+================================================================================
+4. September 2026
+
+Ein Durchgang mit Suchläufen statt mit Augen, weil der volle Lauf die Ports
+belegte. Vier Klassen gesucht, zwei mit Funden, zwei ohne — und die zwei
+ohne stehen hier genauso, weil eine Prüfung, die nichts findet, auch eine
+Antwort ist.
+
+━━━ WAS ES NICHT GAB ━━━
+
+  §19 Escape: NULL Funde. Keine `.replace(/</g, '<')`-Kette, kein
+      unescapetes Attribut mit Nutzertext. Nachgesehen wurden 81 Stellen mit
+      Interpolation in Attributen; alle tragen entweder feste Kennungen aus
+      Listen oder gehen durch `esc()`. Auch das `href` des Lesezeichen-
+      Schnipsels (`clipper.ts`) baut aus der eigenen App-Adresse, nicht aus
+      Nutzertext.
+
+  Tote Knöpfe: NULL Funde. Von 386 ausgegebenen `data-a`-Namen blieben nach
+      allen vier Griffmustern (`dataset.a`, `dataset['a']`, Verteilerkarte
+      mit Kurzschreibweise, `closest('[data-a]')?.dataset.a`) keiner ohne
+      Griff. Der Verteiler ist sauber; meine ersten drei Scans waren es
+      nicht, und die 206, 40 und 24 „Funde" waren jedesmal mein Werkzeug.
+
+━━━ FUND 1: SIEBEN TOKENS, DIE ES NIE GAB ━━━
+
+    var(--rot,#d64545)  var(--warn,#c88)   var(--soft,#f6f6f6)
+    var(--gelb,#a80)    var(--c-rot,#d24)  var(--c-gruen,#2a8)
+    var(--text-muted)
+
+30 Stellen in acht Dateien. Und der Rückfallwert ist nicht die Rettung,
+sondern der Grund, warum es niemand merkte: er greift IMMER. `--soft` sollte
+eine Fläche sein und war fest `#f6f6f6` — im Dunkelmodus eine weisse Platte
+mitten in der Seite.
+
+Alle sieben haben ein echtes Gegenstück, das in hell.css UND dunkel.css
+steht: `--gefahr`, `--warnung`, `--bg-card`, `--erfolg`, `--text-dim`. Der
+Rückfall fällt ersatzlos weg — er war es, der den Fehler verdeckt hat.
+
+§39 sagt, das sei dreimal unbemerkt durchgegangen. Es waren sieben.
+
+━━━ FUND 2: SECHS KIPPSCHALTER OHNE NAMEN UND OHNE ZUSTAND ━━━
+
+    <button class="schalter an" data-toggle="x"><i></i></button>
+
+Kein Text, keine Marke, kein `role`. Ein Vorleseprogramm las „Schaltfläche",
+und ob der Schalter an war, stand allein in seiner Farbe — genau das, was
+§38 verbietet. Jetzt: `role="switch"`, `aria-checked`, `aria-label`.
+
+Dazu §37: 22 px hoch. Ein Schalter in den Einstellungen ist ein Hauptweg —
+man geht dorthin, um ihn zu drücken. Die Trefffläche ist jetzt 44 px, das
+Bild bleibt 22: der Schatten liegt DAVOR, nicht darum, damit keine Zeile
+wächst.
+
+━━━ FUND 3: VIER FARBREIHEN, VIER NAMENSLISTEN, ZWEI SPRACHEN ━━━
+
+Redion hat neun Reihen von Farbfeldern. Eine (`nh-farben`) machte es
+richtig: Titel, Marke, Häkchen am Gewählten. Die anderen trugen entweder die
+rohe Kennung („purple"), oder gar nichts.
+
+Und die Namen liefen auseinander: `auswahlleiste.ts` und `editor.ts` sagten
+„Lila" und „Pink", `notebook.ts` „Violett" und „Rosa". Vier Kopien
+derselben Liste, drei davon mit anderen Wörtern.
+
+Bei einem FARBwähler ist §38 kein Wortspiel: wer Rot und Grün nicht
+unterscheidet, sieht dort acht graue Kreise.
+
+Neu: `src/core/helpers/colors.ts` — eine Liste, deutsche Namen, englische
+Kennungen (§53.3 Grenze 1: die Kennungen sind die der CSS-Tokens und damit
+Daten). Dazu `nachHex()` für den Akzentwähler, der keine Kennungen kennt,
+sondern acht feste Hexwerte.
+
+Alle Farbfelder haben jetzt 44 px Trefffläche. Sie bleiben 16 bis 26 px
+gross — acht in einer Zeile, das ist richtig so —, aber danebengegriffen
+heisst dort: die falsche Farbe gesetzt.
+
+━━━ PRÜFUNG ━━━
+
+`test401`, 4 Punkte, KEIN Browser und KEIN Port (der volle Lauf lief).
+Er liest den Quelltext: jedes `var()` muss sein `--x:` haben, kein
+Rückfallwert darf auf ein erfundenes Token zeigen, und jeder Knopf, dessen
+ganzer Inhalt seine Hintergrundfarbe ist, braucht eine Marke.
+
+ER WAR ROT und hat mehr gefunden als ich: fünf weitere Farbreihen in
+`auswahlleiste.ts` und `editor.ts`, die ich beim Lesen übersehen hatte.
+Genau dafür schreibt man ihn vor der Reparatur.
+
+MUTATION ROT GESEHEN: in `wolke.ts` ein `var(--warnung)` zurück auf
+`var(--warn,#c88)` — „✗ Kein `var(--x, fest)` mit erfundenem --x — --warn".
+
+Dateien: `src/core/helpers/colors.ts` (neu), acht Dateien mit Tokens,
+sechs mit Schaltern, vier mit Farbreihen, fünf Stildateien,
+`index.html`, `src/dienst/sw.ts`, `pruefungen/lauf/test401.mts`.
+
+
+================================================================================
+E407 — 42 Trefflächen unter 44 px, und zwei Fehler beim Reparieren
+================================================================================
+4. September 2026
+
+§37 ist [hart im Kern] und sagt ZWEI Dinge, nicht eins:
+
+  1. 44 px auf den Hauptwegen — Werkzeuge, Hauptmenü, untere Leiste,
+     Bestätigen und Abbrechen. Ohne Ausnahme.
+  2. Nebenwege dürfen 32 px sein — ABER mit einem geschriebenen Grund an Ort
+     und Stelle, nicht stillschweigend.
+
+Der zweite Teil ist der, den niemand prüfte. Gemessen: 42 Trefflächen unter
+44 px, davon vier mit Begründung und 38 ohne. Darunter `.fbtns button` mit
+42 px — die Fusszeile jedes Dialogs, also Bestätigen und Abbrechen, die §37
+ausdrücklich beim Namen nennt.
+
+SECHS HAUPTWEGE bekommen jetzt 44 px: die Dialogfusszeile, die Zeichenleiste
+(zweimal), die Auswahlleiste der Planfläche (darunter ist LÖSCHEN — §46), und
+die Werkzeuge des Whiteboards.
+
+FÜR DEN REST EIN VERZEICHNIS statt einer Ausrede: `masse-bestand.json`, nach
+dem Vorbild von `js-bestand.json` (§54.4). 37 Einträge, und es darf nur
+schrumpfen. Es ist keine Erlaubnis, sondern eine Schuld — und eine Zeile
+verschwindet auf zwei Wegen, die beide richtig sind: die Fläche wird 44 px,
+oder über der Regel steht, warum sie ein Nebenweg ist.
+
+Was nicht zählt: ein Kommentar ohne Grund. „32px reicht hier" ist dieselbe
+Stille mit mehr Zeichen.
+
+━━━ UND JETZT DIE ZWEI FEHLER, DIE ICH DABEI GEMACHT HABE ━━━
+
+FEHLER 1 — EINE VERBESSERUNG, DIE DEN WÄHLER KAPUTT GEMACHT HÄTTE.
+
+Der erste Wurf legte um jedes Farbfeld eine Fläche von 44 × 44 px. Acht
+Felder in einer Reihe stehen aber im Abstand von etwa 20 px — die Flächen
+überlappen sich dann um 24 px, und die zuletzt gezeichnete liegt über allen
+davor. Aus „danebengreifen ist schwerer" wäre „nur die letzte Farbe ist noch
+zu treffen" geworden.
+
+Senkrecht ist der Platz frei, waagerecht steht der Nachbar. Die Fläche
+wächst deshalb nur nach oben und unten: 44 px hoch, so breit wie das Feld
+plus sein Abstand.
+
+FEHLER 2 — EIN FEHLENDES SEMIKOLON, VIER REGELN TOT.
+
+Das Skript, das `position:relative` nachtrug, setzte es OHNE Trennzeichen
+hinter die letzte Angabe:
+
+    border:1px solid var(--line) position:relative;
+
+Damit ist beides ungültig: der Rahmen verschwindet UND die Fläche bezieht
+sich auf den falschen Vorfahren. Vier Regeln in drei Dateien. Gefunden beim
+Nachlesen der erzeugten Zeile — nicht von einer Prüfung, und auch nicht vom
+Bauen, denn CSS bricht nicht ab, es lässt die Zeile einfach weg.
+
+Beides steht hier, weil beides die Art Fehler ist, die eine Reparatur
+schlimmer macht als der Zustand davor — und weil ein Skript, das über 40
+Dateien läuft, jeden Fehler vierzigmal macht.
+
+PRÜFUNG: `test402`, 4 Punkte, kein Browser und kein Port.
+MUTATION ROT GESEHEN: `.probe-mutation button{height:30px}` in `aufbau.css`
+— „✗ Keine neue Fläche unter 44 px ohne geschriebenen Grund" und
+„✗ Das Verzeichnis ist nicht gewachsen — 38 gemessen gegen 37 eingetragen".
+
+Dateien: `pruefungen/masse-bestand.json` (neu),
+`pruefungen/lauf/test402.mts` (neu), vier Stildateien.
+
+E408 — Ein Schimmer, der sagt „hier kommt noch Text nach“
+================================================================================
+5. September 2026
+
+Redur schickte eine React-Komponente: „AnimatedShinyText“ aus Magic UI (MIT),
+ein Text, über den ein heller Streifen läuft. Die Frage dahinter war
+allgemeiner — ob er solchen Code schicken kann und Redion ihn bekommt.
+
+WAS ÜBERNOMMEN WURDE UND WAS NICHT. Die Wirkung, nicht der Code. Das Original
+ist eine React-Komponente mit Tailwind-Klassen und einem `cn()`-Helfer;
+Redion hat weder React (§6, E80) noch Tailwind. Übrig bleiben sechs Zeilen
+CSS und zwei Zeilen im KI-Dienst. Genauso lief es schon zweimal: der
+Metall-Schimmer (eigener GLSL-Code, `metal-fx` im Quelltext genannt) und die
+Denkkugel (E403, eigenes TypeScript, `thinking-orbs` genannt).
+
+WARUM ÜBERHAUPT. Ein Schimmer, der immer läuft, ist Zierde und wird nach zwei
+Tagen nicht mehr gesehen (§39: „Notion-artige Klarheit vor Effekten“). Dieser
+läuft nur, WÄHREND die Antwort noch geschrieben wird — der KI-Dienst streamt,
+`ziel.textContent = antwort` wird Stück für Stück neu gesetzt
+(`dienst.ts:1092` und `:1571`). Solange er läuft, kommt noch Text. Damit ist
+er eine Auskunft, und die Regel aus §46 gilt: eine Anzeige, die IMMER etwas
+anzeigt, wird nicht gelesen.
+
+DIE GEFAHR, die den ganzen Bogen bestimmt hat: `background-clip:text` braucht
+DURCHSICHTIGE Schrift. Wo der Verlauf nicht gemalt wird, steht dann
+unsichtbarer Text. Drei Stellen, an denen das passieren kann, und alle drei
+sind Datenverlust im Sinn von §51 — die Antwort ist da, der Nutzer sieht sie
+nur nicht:
+
+  1. Ein Browser ohne `background-clip:text`. Deshalb steht die ganze Wirkung
+     in einem `@supports`; ohne es steht da gewöhnlicher Text.
+  2. `prefers-reduced-motion`. Der Block dort gibt die Textfarbe zurück,
+     statt nur die Animation abzuschalten.
+  3. Der FEHLERZWEIG. `catch` schreibt „⚠ Der Anbieter antwortet mit 503“ in
+     dasselbe Feld. Die Klasse geht deshalb im `finally` weg, nicht nach dem
+     `try` — eine Fehlermeldung, die man nicht lesen kann, ist der
+     schlechtere Fehler.
+
+WAS DAS BILD FAND, UND KEINE MESSUNG. §55.3 verlangt ein Bild, wenn es etwas
+zu sehen gibt. Auf dem ersten stand:
+
+    Schimmer läuft — die A
+
+Und dann nichts mehr. `background-repeat:no-repeat` liess den Verlauf nicht
+über die ganze Zeile reichen, und wo nichts gemalt wird, ist durchsichtige
+Schrift unsichtbar. Die vier bereits geschriebenen Prüfungen waren dabei ALLE
+GRÜN: die Animation lief, ihre Position wanderte, das Token war echt, das
+`finally` stand da. Nur die halbe Antwort fehlte. Repariert durch Weglassen
+von `no-repeat`: gekachelt stösst `var(--text)` auf `var(--text)`, die Naht
+sieht man nicht.
+
+UND ZWEI PRÜFUNGEN, DIE ERST NICHT ROT WURDEN. Beide gehören hierher, weil
+sie zusammen §55.2 buchstäblich sind — „eine Prüfung, die immer ‚passt schon‘
+sagt, ist keine Prüfung“:
+
+  · §1 (durchsichtige Schrift nur im `@supports`) blieb unter seiner eigenen
+    Gegenprobe grün. Der Auszug suchte das Wort „@supports“ und fand es
+    zuerst IM KOMMENTAR über der Regel, brace-matchte von dort bis zur `}`
+    des echten Blocks — und verschluckte dabei genau die Zeile, die er hätte
+    finden sollen. Repariert wurde der Auszug (Kommentare zuerst weg).
+
+  · §2b (der Schimmer verschluckt keinen Text) mass zuerst EINEN Augenblick
+    und blieb mit wieder eingesetztem `no-repeat` grün — der Verlauf stand
+    gerade zufällig über der Zeile. Die Lücke wandert mit der Animation.
+    Jetzt wird über einen ganzen Umlauf gemessen und der schlechteste
+    Augenblick genommen.
+
+Die Alternative wäre gewesen, die Komponente einzubauen wie geliefert. Das
+hätte React, Radix, Tailwind und `lucide-react` bedeutet — vier
+Abhängigkeiten für einen laufenden Streifen, und den Doppelklick-Start
+(§6, §29) dazu. Der Preis der eigenen Fassung ist, dass sie bei jedem
+weiteren geschickten Bauteil neu bezahlt werden muss.
+
+PRÜFUNG: `test403`, 22 Punkte, PORT 9526.
+MUTATIONEN ROT GESEHEN, alle fünf:
+  §1  → `-webkit-text-fill-color:transparent` vor den `@supports`-Block.
+        → „Keine durchsichtige Schrift ausserhalb eines @supports“, 18/20.
+  §2  → `animation:` streichen. → „none“ und „0% 0% → 0% 0%“, 17/20.
+  §2b → `background-repeat:no-repeat` wieder einsetzen. → „schlechtester
+        Augenblick 87 Spalten, ohne Schimmer 295“, 21/22. Also 70 % der
+        Antwort unsichtbar.
+  §3  → den `prefers-reduced-motion`-Block streichen. → „Die Schrift ist
+        NICHT durchsichtig — rgba(0, 0, 0, 0)“, 17/20.
+  §4  → ein `finally` durch eine Zeile hinter dem `catch` ersetzen.
+        → „Beide stehen in einem finally — [false,true]“, 18/20.
+
+Dateien: `pruefungen/lauf/test403.mts` (neu),
+`quell/schale/stil/bausteine.css`, `src/bereiche/ki/dienst.ts`.
+
+E409 — Die Ansichten bekommen die Breite, die da ist
+================================================================================
+5. September 2026
+
+Redur: „arbeite an die ansicht funktionen". Also erst hinsehen (§55): ein
+Bildziel je Ansichtsart, alle dreizehn mit DERSELBEN Datenbank — neun Zeilen
+mit Status, Auswahl, Mehrfachauswahl, Anfang und Ende, Kosten, Fortschritt,
+Bewertung, Person, Ort, Haken und einem echten Bild. Was hier fehlt, fehlt
+auf dem Bild.
+
+WAS DIE MESSUNG ERGAB, und sie ist der Grund für alles Weitere:
+
+    Fenster   Seite    Datenbank sichtbar   Tabelle braucht   leer daneben
+    1280 px   900 px          708 px            1637 px          326 px
+    1920 px   900 px          708 px            1637 px          966 px
+
+57 % der Tabelle lagen hinter einem waagerechten Roller, den niemand sieht.
+Und ein doppelt so breites Fenster änderte NICHTS: `#page` blieb bei 900 px,
+links und rechts standen je 483 px leer. Auf dem Bild waren von dreizehn
+Spalten fünf zu sehen — Ende, Kosten, Stand, Bewertung, Wer, Ort, Erledigt
+und Bild fehlten, ohne jeden Hinweis, dass es sie gibt.
+
+Fliesstext soll schmal bleiben, das ist richtig und bleibt so. Eine Datenbank
+ist kein Fliesstext.
+
+DREI SCHRITTE, UND JEDER EINZELNE WAR NÖTIG. Das ist der Teil, der hier
+aufgeschrieben gehört, weil zwei davon erst durch ein Bild auffielen:
+
+  1. Die Schale MISST, wie viel Luft neben der Seite steht
+     (`schale.ts`, `luftMessen`), und schreibt sie als `--seite-luft`.
+     Eine Media-Query mit festen Zahlen ginge nicht: die Seitenleiste kann
+     offen oder eingeklappt sein, und eine feste Zahl wüsste davon nichts.
+
+     Der erste Versuch beobachtete nur `#scroll`. Das ändert seine Breite
+     nie — `#page` bekommt seine 900 px erst später. Gemessen wurde also
+     einmal, viel zu früh, mit dem Ergebnis 0, und danach kam nie wieder ein
+     Anlass. Auf dem Bild sah das aus, als hätte die Regel nicht gegriffen.
+     Jetzt werden beide beobachtet.
+
+  2. `max-width:100%` stand in der alten `.db`-Zeile und kappte die neue
+     Breite stillschweigend. Die Tabelle rückte nach links, wurde aber
+     keinen Pixel breiter.
+
+  3. `.blk` ist `display:flex` (aufbau.css), und ein Flex-Kind nimmt seine
+     Breite aus dem Inhalt, nicht aus `width`. Ohne `flex: 0 0 auto` wuchs
+     die Tabelle nur um EIN `--db-aus` statt um zwei: gemessen 943 px statt
+     der gerechneten 1178.
+
+Ergebnis: zehn Spalten statt fünf bei 1280 px, und bei 1920 px wächst sie
+wirklich mit. Das Board zeigt jetzt alle vier Bahnen — „Fertig" mit zwei
+Karten fehlte vorher ganz. Und das schiefe Kalenderraster, bei dem jede
+Wochenzeile ihre eigenen Spaltenbreiten hatte, steht gerade: es war eine
+Folge der zu schmalen Fläche, kein eigener Fehler.
+
+DER FORTSCHRITTSBALKEN LOG, und das fand nur ein Bild.
+
+`.proz i` hatte `width: n%` — und `n%` bezog sich auf die GANZE Zelle. Bei
+100 % nahm der Balken sie ein und schob die Prozentzahl hinaus; `flex:0 0
+auto` liess ihn dabei nicht schrumpfen. Gemessen in einer 90 px breiten
+Spalte: bei 0 % brauchte die Zelle 89 px und die Zahl stand da, bei 100 %
+brauchte sie 122 px und die Zahl war weg.
+
+Auf dem Bild sahen 55 %, 80 % und 100 % dadurch gleich aus — drei Balken bis
+zum Rand, keiner mit Zahl. Das ist §55.1 wörtlich: eine abgeschnittene
+Anzeige zeigt einen ANDEREN Wert, und beide sehen gültig aus.
+
+Jetzt gibt es eine BAHN. Die Zahl nimmt ihren Platz zuerst (`flex:0 0 auto`),
+die Bahn bekommt den Rest, und `n%` bezieht sich auf die Bahn. Nebenbei sieht
+man dadurch, wovon die Prozent sind — die graue Bahn zeigt das Ganze.
+
+DER KARTEIKARTEN-STREIFEN. Redur: „mache die 1 kqrt ist fählig komplet weg".
+`kartenMelden` stand auf an und meldete beim ersten Start des Tages. Der
+Streifen stand damit unten in der Mitte über allem — auch über jedem
+Bildschirmfoto und über dem, was gerade gebaut wurde. Die Vorgabe ist jetzt
+aus; der Schalter bleibt, wer die Meldung will, holt sie sich. Gelöscht wird
+nichts (§43).
+
+WAS NICHT GEMACHT WURDE. Eine Container-Query auf `#scroll` wäre die
+elegantere Messung gewesen. E369 hat gezeigt, was `container-type` auf einem
+Vorfahren anrichtet — die PDF-Seite fiel auf 2 px zusammen. Und kein
+`transform: translateX(-50%)`, obwohl es die kürzeste Zentrierung wäre: der
+Tabellenkopf ist `position:sticky`, und ein Vorfahr mit `transform` macht
+daraus einen neuen Bezugsrahmen. Der Kopf bliebe beim Rollen nicht stehen.
+
+PRÜFUNG: `test404`, 22 Punkte, PORT 9527. Die Beispieldaten kommen aus
+`bilder.mts` — eine Quelle, nicht zwei.
+MUTATIONEN ROT GESEHEN:
+  §1 → `flex: 0 0 auto` wegnehmen. → „Und zwar merklich — über 1000 px bei
+       1280 px Fenster — 943", 21/22. Genau der erste Fehlversuch.
+  §5 → die Bahn wieder weglassen. → „Ein höherer Wert hat einen längeren
+       Balken — 55 %=39px, 60 %=39px" und „Jede Bahn ist breit genug — -1
+       -1 -1 …", 20/22. Zwei verschiedene Werte, ein Balken.
+
+Mitgelaufen und grün: test32, test36, test40, test87, test105, test109,
+test136, test215, test233, test237, test283.
+
+Dateien: `pruefungen/lauf/test404.mts` (neu), `bilder.mts` (13 Bildziele),
+`src/schale/aufbau/schale.ts`, `src/bereiche/datenbanken/dienst.ts`,
+`src/bereiche/einstellungen/ansicht/seite.ts`,
+`quell/schale/stil/datenbanken.css`, `quell/schale/stil/bausteine.css`.
+
+E410 — Der Kalender zeigt Zeitspannen, und die Balken bekommen Farbe
+================================================================================
+5. September 2026
+
+Ein Projekt vom 1. bis zum 12. September stand am 1. September — und sonst
+nirgends. Wer im Monat nachsah, was gerade läuft, sah es nicht.
+
+DIE FUNKTION WAR GEBAUT. `spurenDerWoche` legt mehrtägige Einträge in Spuren,
+damit sich nichts überdeckt; `balkenWoche` zeichnet sie; `.cw-bar` hat Regeln
+für Anfang, Ende und beides. Im Quelltext steht sogar ein Kommentar: „das ist
+der durchgehende Balken, den Notion nicht zeichnet."
+
+Sie sprang nur nie an. `endeKey` war das einzige Feld der Kalenderansicht
+OHNE Vorgabewert — `dateKey` bekam seit jeher die erste Datumsspalte,
+`endeKey` bekam nichts. Also war jeder Termin eintägig, immer.
+
+Eine Funktion, deren Schalter keinen Vorgabewert hat, ist eine Funktion, die
+es nicht gibt.
+
+GERATEN WIRD NUR, WAS DIE DATEN BELEGEN. Eine zweite Datumsspalte muss nicht
+das Ende sein — sie kann „Erinnerung" heissen oder „zuletzt geprüft". Ein
+Balken über die falsche Spanne wäre schlimmer als gar keiner, weil er wie
+eine Auskunft aussieht. Drei Bedingungen, und alle drei müssen halten:
+
+  · Es gibt genau EINE weitere Datumsspalte.
+  · Mindestens eine Zeile trägt beide Werte — sonst weiss man nichts.
+  · Und bei JEDER Zeile, die beide trägt, liegt der zweite Wert nicht vor
+    dem ersten. Ein einziges Gegenbeispiel genügt zum Schweigen.
+
+`view.endeKey === undefined` heisst „nie entschieden", `''` heisst
+„ausdrücklich ein Tag". Eine Wahl wird nicht überstimmt.
+
+UND DIE OBERFLÄCHE SAGT ES: im Fuss steht „Zeitraum bis: Ende (erkannt)".
+Eine stille Annahme ist schlimmer als eine falsche — eine falsche kann der
+Nutzer berichtigen, eine stille nicht einmal bemerken.
+
+ZWEI FEHLER, DIE ERST DAS BILD ZEIGTE (§55.3), und beide waren seit jeher da:
+
+  1. DIE BALKEN HATTEN KEINE FARBE. `.cw-bar` bekommt `color:#fff` und eine
+     Klasse `q-blue` — aber `.cw-bar.q-blue` gab es nirgends. Es gab nur
+     `.cal .ev.q-green` für einen ganz anderen Ort. Weisser Text ohne
+     Hintergrund ist kein Balken, sondern loser Text quer über den
+     Tageszahlen. Gesehen hatte es nie jemand, weil die Balkenschicht wegen
+     Punkt oben nie ansprang. Jetzt gibt es alle acht Farben; die Tokens
+     `--c-blue` bis `--c-brown` waren längst da.
+
+  2. DIE BALKEN LAGEN AUF DEN TAGESZAHLEN. `.cw-balken` begann bei `top:24px`,
+     und die Zelle bekommt ihr Polster oben (`5 + Spuren * 20`), damit die
+     Zahl unter die Balken rutscht. Bei drei Spuren lagen die Balken auf 24,
+     44 und 64 px — und das Polster endete bei 65. Der letzte Balken lag
+     genau auf der Zahl. Jetzt beginnt die Lage bei 4 px, das Polster bei
+     `8 + Spuren * 20`: Balken oben, Zahl darunter.
+
+Das ist zusammen die Sorte Fehler, die eine Messung nicht findet: „Balken
+vorhanden" wäre grün gewesen. Auf dem Bild stand „◂ Schaltplan Werkstatt"
+als loser Text über der Zahl 14.
+
+PRÜFUNG: `test405`, 17 Punkte, PORT 9528.
+MUTATIONEN ROT GESEHEN:
+  §2 → die acht `.cw-bar.q-*`-Zeilen wieder entfernen. → „Jeder Balken hat
+       einen Hintergrund — rgba(0, 0, 0, 0) | rgba(0, 0, 0, 0) | …", 16/17.
+  §4 → `.cw-balken{top:4px}` zurück auf `24px`. → „Keine Tageszahl liegt
+       unter einem Balken — 1 unter Langes Projekt | 2 unter Langes Projekt
+       | 3 … | 4 …", 16/17.
+
+Mitgelaufen und grün: test87, test105, test109, test124, test214, test222,
+test284, test291, test319, test327, test328, test330, test404.
+
+Dateien: `pruefungen/lauf/test405.mts` (neu),
+`src/bereiche/datenbanken/steuerung.ts`, `quell/schale/stil/bausteine.css`.
+
+E411 — Werte auf Karten sagen, wovon sie handeln
+================================================================================
+5. September 2026
+
+Auf einer Board-Karte stand:
+
+    08.09.2026  10.09.2026  85  ▬ 0 %  ★★★☆☆  Lina  📍Bern  ☐
+
+Alle Werte in einer Zeile, ohne Namen und ohne Trenner. Welches Datum ist der
+Anfang? Ist 85 ein Preis oder eine Stückzahl? Was bedeutet das leere Kästchen?
+Der Code dahinter war eine Zeile: `meta += '<span class="mv">' + z + '</span>'`.
+
+ALLE NAMEN ANZUSCHREIBEN WÄRE DIE FALSCHE ANTWORT gewesen. Ein farbiges
+Status-Etikett erklärt sich selbst, und „Status: Offen" verdoppelt nur die
+Zeile. Dieselbe Regel wie überall hier: was IMMER dasteht, wird nicht mehr
+gelesen.
+
+Also bekommt seinen Namen, was ihn braucht:
+
+  · nackte Zahlen, Daten, Formeln, Zeitspannen, freier Text, Rollups
+  · JEDER Wert, dessen Spaltentyp auf der Karte mehrfach vorkommt — zwei
+    Auswahlspalten „Bereich" und „Werkstatt" sind ohne Namen nicht zu
+    trennen, auch wenn eine einzelne Auswahl es wäre
+  · und `checkbox`, obwohl ein Haken erst selbsterklärend aussieht: ein
+    GESETZTER Haken ist es, ein LEERES Kästchen sagt gar nichts. Auf dem
+    Bild stand ein weisses Quadrat neben dem Ort, ohne jeden Bezug. Die
+    häufigere Hälfte eines Zustands entscheidet.
+
+Selbsterklärend bleiben Etiketten, Sterne, Ortsmarken, Anhänge, Personen und
+alles mit eigener Einheit im Text. Der `title` steht trotzdem an JEDEM Wert:
+wer doch einmal unsicher ist, fährt darüber, statt die Spalte zu suchen.
+
+Board und Galerie teilen sich denselben Helfer `kartenWerte`; vorher hatten
+sie zwei fast gleiche Schleifen. Das Board lässt zusätzlich die Bahn aus,
+nach der gruppiert wird — sie steht schon als Spaltenüberschrift.
+
+DER FEHLER, DEN E409 DABEI HINTERLASSEN HATTE. Beim Nachsehen auf das
+Galeriebild stand eine Fehlerkarte quer über der Seite: „Etwas ist
+schiefgelaufen". Im Protokoll: „ResizeObserver loop completed with
+undelivered notifications" — der Beobachter aus E409 änderte in seinem
+eigenen Rückruf das Layout.
+
+UND DIE ERSTE GEGENPROBE BLIEB GRÜN. Die vermutete Ursache war, dass die
+Luft aus `clientWidth` gemessen wurde und damit davon abhing, OB der
+senkrechte Rollbalken gerade da ist. Diese Zeile zurückzudrehen änderte
+nichts. Erst als die neue Drosselung auf ein Bild je Messung wegfiel, wurde
+`test404 §8` rot — bei `list`, `gallery` und `chart`, also überall dort, wo
+nach dem ersten Zeichnen noch etwas nachwächst.
+
+Ohne die Gegenprobe stünde jetzt eine falsche Begründung im Quelltext, und
+der Nächste nähme die falsche Zeile weg. Beide Kommentare sind berichtigt:
+die Reserve hält die Breite ruhig, die Drosselung hält den Beobachter.
+
+`test404 §8` prüft seither ALLE DREIZEHN Ansichten darauf, dass das blosse
+Öffnen keinen Fehler ins Protokoll schreibt. Gemessen wird das Protokoll und
+nicht die Konsole — Redion fängt seine Fehler ab, und genau deshalb war in
+`pageerror` nichts zu sehen.
+
+PRÜFUNG: `test406`, 20 Punkte, PORT 9529.
+MUTATIONEN ROT GESEHEN:
+  §1 → `braucht = false`. → „Anfang ist angeschrieben — 9 mal da, davon 9
+       ohne Namen", und dasselbe für Ende und Kosten, 16/20.
+  §2 → `braucht = true`. → „Bereich ist NICHT angeschrieben — 9 mal da,
+       davon 9 mit Namen", dazu Schlagworte, Bewertung, Ort, 16/20.
+  §3 → das `mehrfach ||` streichen. → „Beide Auswahlspalten sind
+       angeschrieben — Bereich 0, Werkstatt 0", 19/20.
+
+UND EIN ABSCHNITT, DER ERST NICHTS PRÜFTE. §3 hiess zuerst „Anfang und Ende
+sind beide angeschrieben". Beide sind `date`, und `date` ist ohnehin nicht
+selbsterklärend — die Mehrfachregel hatte dort gar keine Wirkung, und die
+Gegenprobe blieb grün. Der Abschnitt hat jetzt einen eigenen kleinen Satz
+mit ZWEI Auswahlspalten und einer einzelnen Status-Spalte: die beiden
+bekommen Namen, die einzelne nicht. Damit kann er in beide Richtungen rot
+werden.
+
+Mitgelaufen und grün: test32, test36, test40, test87, test105, test109,
+test136, test233, test237, test404, test405.
+
+Dateien: `pruefungen/lauf/test406.mts` (neu),
+`src/bereiche/datenbanken/steuerung.ts`, `src/schale/aufbau/schale.ts`,
+`quell/schale/stil/datenbanken.css`, `pruefungen/lauf/test404.mts`.
+
+E412 — Eine Zahl sagt, wovon sie handelt — und der Typ sagt, was es gibt
+================================================================================
+5. September 2026
+
+„420" stand in der Tabelle und auf jeder Karte. Ob es Franken, Stunden oder
+Stücke waren, wusste nur, wer die Spalte benannt hatte. `def.anzeige` gab es
+längst — Balken, Ring, Farbstreifen, Heatmap — aber nichts, was die Zahl
+beschriftet. Notion kann das seit jeher.
+
+DIE EINHEIT IST EINE ANZEIGE, KEIN WERT. Das ist der Teil, der die ganze
+Bauform bestimmt: eine Einheit, die in `props` landet, macht aus jeder Zahl
+einen Text. Dann bricht jede Formel, jede Sortierung und jede Summe — und in
+einer Sicherung steht sie für immer. `mitEinheit()` hängt sie deshalb erst
+beim Zeichnen an, in `dienst.ts`, an genau vier Stellen: Zahl, Formel,
+Rollup und Farbstreifen.
+
+NACHGESTELLT mit schmalem Leerzeichen (U+202F). So schreibt man es im
+deutschen Sprachraum, auch bei Währungen — 420 CHF, nicht CHF 420. Und das
+schmale Leerzeichen bindet: mit einem gewöhnlichen brechen „420" und „CHF"
+auf zwei Zeilen um, und dann steht die Einheit unter einer fremden Zahl.
+
+Acht Vorschläge im Menü (CHF, €, %, h, min, kg, m, A) und ein Feld für alles
+andere. Eine feste Liste wäre derselbe Fehler, den CLAUDE.md 52.9 beim
+Spaltentyp beschreibt: streng statt richtig.
+
+--------------------------------------------------------------------------
+UND DABEI KAM HERAUS, DASS DER TYP LÜGT
+--------------------------------------------------------------------------
+
+Beim Schreiben des Prüflaufs brauchte ich eine Formelspalte. Der Typ sagt:
+
+    /** Bei `formula`: der Ausdruck. */
+    formel?: string;
+
+Die Formel rechnete nicht. Nachgesehen: gelesen und geschrieben wird
+`def.formula` — `dienst.ts` in `formelRechnen`, `steuerung.ts:5603, 5765,
+7048`. Der Feldname heisst `formula`, seit jeher, und CLAUDE.md 52.8 hat den
+falschen Namen mit abgeschrieben.
+
+Das ist genau der Fehler, vor dem 52.8 selbst warnt — in der Datei, die
+dafür die Wahrheit sein soll, und zum zweiten Mal nach E298.
+
+WARUM `test294` GESCHWIEGEN HAT, und das ist der eigentliche Fund. Er prüft,
+ob ein Feldname IRGENDWO im Bestand vorkommt. `formel` kommt vor:
+
+  · `elektro/lernbilder.ts` — das Formeldreieck der Elektrolehre
+  · `editor/ansicht/editor.ts` — die Variablen eines Knopfblocks
+  · `einstellungen/erweiterungen.ts` — `Redion.formel(name, fn)`
+
+Drei Dinge, die mit einer Datenbankspalte nichts zu tun haben. Ein häufiges
+deutsches Wort macht diese Messung blind, und „Formel" ist in dieser App ein
+sehr häufiges Wort.
+
+DIE ANDERE RICHTUNG FEHLTE GANZ. `test294` misst: kein Feld des Typs darf
+erfunden sein. Er misst NICHT: kein gelesenes Feld darf im Typ fehlen. Das
+ist die leiser gefährliche Hälfte — wer den Typ liest, hält ihn für
+vollständig und legt das Feld unter einem zweiten Namen neu an.
+
+Gemessen wurde deshalb der ZUGRIFF statt des Namens: jedes `def.X` unter
+`bereiche/datenbanken/`, Kommentare abgezogen. Dreizehn Treffer:
+
+    beschreibung  einheit  formula  max  muster  musterText  regel
+    regelMax  regelMin  regelText  setzeKey  setzeWert  uebergaenge
+
+Alle dreizehn stehen jetzt im Typ, `formel` heisst `formula`, und
+`test294 §5` misst diese Richtung mit.
+
+--------------------------------------------------------------------------
+UND EINE BEHAUPTUNG, DIE SICH BEIM MESSEN ALS FALSCH ERWIES
+--------------------------------------------------------------------------
+
+In der Zahlzelle stand `return String(v)` ohne `esc`. Der erste Kommentar
+dazu lautete: „ein Import schreibt in eine Zahlenspalte, was er will" — ein
+Sicherheitsfund also.
+
+Gemessen kam `NaN` heraus, nicht der eingeschleuste Text. Der Riegel steht
+weiter oben, in `wert()`:
+
+    if (def.type === 'number') return v == null ? null : Number(v);
+
+`Number('<img …>')` ist `NaN`, und weiter kommt nichts. Das `esc` bleibt
+stehen — eine zweite Tür kostet nichts —, aber es als DEN Riegel auszugeben
+wäre eine falsche Behauptung über die eigene Sicherheit, und die ist
+schlimmer als gar keine. Der Kommentar im Code und der Prüfabschnitt sind
+beide berichtigt; geprüft wird jetzt, was wirklich schützt.
+
+PRÜFUNGEN: `test407`, 14 Punkte, PORT 9530; `test294` von 10 auf 13 Punkte.
+MUTATIONEN ROT GESEHEN:
+  §2   → `mitEinheit` immer den blossen Wert zurückgeben lassen. → „Die
+         Einheit steht hinter der Zahl — [85, 420, 0]", 11/14.
+  §6   → in `wert()` die Umwandlung `Number(v)` entfernen. → „Der
+         eingeschleuste Text kommt gar nicht erst durch — <img src=x
+         onerror=…>", 13/14. Das `esc` hielt dabei stand: kein Bild-Element
+         entstand. Genau so war es gemeint.
+  294  → `formula` zurück auf `formel`. → „Jedes gelesene Schema-Feld steht
+         im Typ — ist [formula]", 12/13.
+  294  → die dreizehn wieder entfernen. → dieselbe Zeile mit allen zwölf
+         übrigen Namen, 12/13.
+
+Mitgelaufen und grün: test32, test36, test40, test87, test105, test109,
+test139, test235, test404, test405, test406.
+
+Dateien: `pruefungen/lauf/test407.mts` (neu),
+`src/bereiche/datenbanken/dienst.ts`, `src/bereiche/datenbanken/steuerung.ts`,
+`src/core/types/database.ts`, `pruefungen/lauf/test294.mts`, `CLAUDE.md`,
+`bilder.mts`.
+
+E413 — Der Zeitstrahl zeigt Spannen und liest sich
+================================================================================
+5. September 2026
+
+E410 hat dem KALENDER beigebracht, seine Endspalte zu erkennen. Der
+Zeitstrahl behielt die alte Zeile. Und dort war die Folge schlimmer: ohne
+Enddatum ist jeder Balken so breit wie ein Tag, das heisst auf der
+Monatsstufe dreissig Pixel — und in dreissig Pixeln steht vom Titel EIN
+Buchstabe. Auf dem Bild las man untereinander:
+
+    E   \   S   E   S   M   L   I   A
+
+Neun Balken, die alle gleich aussahen und alle nichts sagten. Das „\" ist
+ein abgeschnittenes „V" von „Verteiler beschriften", und es sieht aus wie
+ein Zeichen, nicht wie ein Rest — §55.1 in Reinform.
+
+Das ist der zweitteuerste wiederkehrende Fehler dieses Projekts, wörtlich
+aus §45: eine Sache an einer Stelle reparieren und die Nachbarstelle nicht
+ansehen. Er kostete hier drei Stunden nach E410, und E410 war eine Stunde.
+
+DER TITEL WANDERT NACH DRAUSSEN, wenn er drinnen nicht passt — so macht es
+Notion auch. Und die Schwelle ist GEMESSEN, nicht geschätzt, in zwei
+Anläufen:
+
+  · Zuerst stand dort eine feste Zahl: unter 64 px nach draussen. Falsch —
+    „Bericht Kapitel 2" bekam 70 px Balken für 91 px Text und blieb drinnen,
+    abgeschnitten. Wie breit ein Titel ist, weiss nur der Browser.
+  · Dann `t.scrollWidth > b.clientWidth`, also gegen die Breite des BALKENS.
+    Auch falsch: die schliesst zweimal 9 px Polster mit ein, die der Text
+    nicht hat. „Steuerung Ro…" blieb drinnen — 97 px Text gegen 110 px
+    Balken sah nach „passt" aus, während wirklich 92 px übrig waren.
+  · Richtig ist `t.scrollWidth > t.clientWidth + 2`: der Text gegen seinen
+    EIGENEN Platz. Danach war kein Titel mehr abgeschnitten.
+
+Beide Fehlversuche standen zwischendurch auf einem Bild. Keiner wäre durch
+Nachdenken aufgefallen.
+
+DIE BALKEN WAREN IM HELLMODUS UNSICHTBAR. Gemessen: der Grund eines Balkens
+ist rgb(241,241,239) auf weisser Seite — ein Kontrast von etwa 1,05. Im
+Dunkelmodus standen sie kräftig da, im Hellmodus sah man praktisch nichts.
+Die `bg-*`-Farben sind für Etiketten gemacht, die Text tragen; ein Balken
+mit dem Titel daneben trägt keinen.
+
+Die Reparatur ist eine Kante statt einer neuen Palette: `box-shadow: inset
+0 0 0 1px color-mix(in srgb, var(--text) 26%, transparent)`. Sie wirkt in
+beiden Modi, und eine geänderte Palette hätte jedes Etikett im ganzen
+Programm mitverändert.
+
+PRÜFUNG: `test408`, 13 Punkte, PORT 9531.
+MUTATIONEN ROT GESEHEN:
+  §1 → `kalEnde(coll, view, startKey)` zurück auf die alte Zeile. → „Die
+       drei sind nicht alle gleich breit — 42 42 42", 9/13. Drei Balken,
+       drei verschiedene Spannen, dieselbe Breite.
+  §2 → die Messung nach dem Zeichnen entfernen. → „Kein Titel steht
+       abgeschnitten — [Ein Tag]" und „Der winzige trägt ihn daneben —
+       22px, draussen=false", 11/13.
+  §4 → die `box-shadow`-Kante nehmen. → „Im Dunkelmodus hat jeder Balken
+       eine Kante — none | none | none", 11/13.
+
+UND EIN ABSCHNITT, DER AUF DER FALSCHEN STUFE NICHTS PRÜFTE. §1 stand
+zuerst auf der Monatsstufe. `ZS_STUFEN` gibt der fünf Pixel je Tag; drei
+Tage sind dort fünfzehn Pixel und fallen unter die Mindestbreite von 22. Ein
+Drei-Tage-Balken war damit genau so breit wie ein Ein-Tage-Balken, und der
+Abschnitt konnte gar nicht anders. Er steht jetzt auf der Tagesstufe, wo ein
+Tag 42 px hat.
+
+Dabei kam der Grund heraus, warum die Balken so gedrängt standen: `px` ist
+je Zoomstufe FEST. Bei einem Zeitraum von 45 Tagen ist die Fläche 225 px
+breit, während 1100 px zur Verfügung stehen — zwei Drittel der Ansicht
+bleiben leer, und die Balken sind unnötig winzig. Das steht als L130 Punkt 5
+und ist ein eigener Bogen: die Balken sind in Pixeln positioniert, ein
+Skalieren hiesse, alles auf Anteile umzustellen.
+
+Mitgelaufen und grün: test87, test105, test109, test294, test404, test405,
+test406, test407.
+
+Dateien: `pruefungen/lauf/test408.mts` (neu),
+`src/bereiche/datenbanken/steuerung.ts`, `quell/schale/stil/ansichten.css`.
+
+E414 — Das Diagramm zeigt etwas
+================================================================================
+5. September 2026
+
+Ein Bild, vier Fehler, und alle vier waren Anzeigen, die etwas FALSCHES
+sagten statt gar nichts. Das ist die schlimmere Sorte: eine leere Fläche
+fällt auf, eine falsche Achse nicht.
+
+1 · NEUN SCHWARZE BALKEN. `PALETTE` ist eine Liste von PAAREN — [Farbe,
+Name]. Der Name steht darin, weil der Farbwähler des Whiteboards ihn
+braucht. Sechs Stellen schrieben aber `fill: PALETTE[i]`, also das ganze
+Paar. Als Zeichenkette ergibt das „#529cca,Blau", und das ist kein gültiger
+Farbwert: SVG malt schwarz. Auf dunklem Grund sah man von neun Balken
+praktisch nichts, und die Legendenpunkte gar nichts.
+
+Der Fehler ist eine Regression: die Palette war einmal eine Liste von Farben
+und wurde für den Farbwähler auf Paare umgestellt. EINE Stelle wurde
+mitgezogen, sechs nicht. TypeScript sagte dazu nichts, weil `fill` in `sv()`
+als `any` durchgeht.
+
+Repariert mit einem Helfer `farbeVon(i)` statt `PALETTE[i][0]` an sechs
+Stellen: einen Namen, den man sucht, findet man wieder.
+
+2 · NEUN BALKEN DER HÖHE 1. Die Vorgabe-Gruppierung war `gruppierbar[0]`,
+und `gruppierbar` schliesst `title` ein — der Titel steht in jedem Schema
+zuerst. Jedes neue Diagramm gruppierte also nach dem TITEL, und da jeder
+Titel einmal vorkommt, ergab das für neun Zeilen neun Balken der Höhe eins.
+
+Ein Diagramm, das für jede Zeile einen Balken der Höhe eins zeigt, sagt
+genau nichts — und sieht dabei aus, als sagte es etwas.
+
+Gewählt wird jetzt wie beim Board: erst eine Auswahl-, Status-, Haken-,
+Mehrfach- oder Personenspalte, dann ein Datum, und der Titel erst, wenn es
+sonst nichts gibt. WÄHLBAR bleibt er; die Vorgabe zu ändern darf keine
+Möglichkeit wegnehmen, und `test409 §5` prüft genau das nach.
+
+3 · EINE ACHSE „3 2 2 1 0". Fest fünf Marken: `Math.round(max * (1 - i/4))`.
+Bei einem Höchstwert von 3 sind das 3, 2.25, 1.5, 0.75, 0 — gerundet steht
+die Zwei zweimal, an zwei verschiedenen Höhen. Bei einem Höchstwert von 1
+war es „1 1 1 0 0". Wer die Achse liest, sieht zwei gleiche Zahlen und weiss
+nicht mehr, welche Linie welche Höhe meint.
+
+Bei kleinen ganzen Zahlen wird jetzt in Einerschritten geteilt; darüber
+bleibt es bei fünf Marken, weil bei einem Höchstwert von 12 000 niemand
+zwölftausend Linien will.
+
+4 · BESCHRIFTUNGEN, DIE ZWEIMAL DASSELBE SAGTEN. „Bericht Kapi" stand unter
+zwei verschiedenen Balken — abgeschnitten von „Bericht Kapitel 1" und
+„Bericht Kapitel 2". Das war eine Folge von Punkt 2 und ist mit ihm weg.
+
+PRÜFUNG: `test409`, 16 Punkte, PORT 9532.
+MUTATIONEN ROT GESEHEN:
+  §1/§2 → `farbeVon(i)` zurück auf `PALETTE[i % PALETTE.length]`. → „Jeder
+          trägt einen gültigen Farbwert — #529cca,Blau | #4dab9a,Grün | …"
+          und „Keiner ist schwarz — rgba(0, 0, 0, 0) | …", 13/16.
+  §3    → `vorgabeGruppe` zurück auf `gruppierbar[0]`. → „Neun Zeilen ergeben
+          vier Balken, nicht neun — 9" und „verschieden hoch — 192 192 192
+          192 192 192 192 192 192", 11/16.
+  §4    → die Stufenzahl fest auf 4. → „Keine Zahl steht zweimal — 3 2 2 1 0",
+          14/16.
+
+NACHTRAG — DER SCAN, DER DIESEN BOGEN BEENDET HAT. Statt jede der noch
+offenen Ansichten einzeln anzusehen, wurden alle dreizehn gemessen: auf
+abgeschnittenen Text, auf Farbwerte mit Komma (das Kennzeichen des
+Paar-Fehlers), auf ungenutzte Breite und auf doppelte Beschriftungen.
+
+Der Scan meldete genau einen Treffer, und der war ein FEHLALARM: im Raster
+sind vier Dateinamen mit Auslassungszeichen abgeschnitten. Das ist richtig
+so — bei Text ist „…" die ehrliche Lösung.
+
+Bei einer ZAHL gibt es diese Lösung nicht. „34.21" statt „634.21" ist gültig
+und falsch, und beide sehen gleich aus (§55.1). `test404 §8` misst deshalb
+jetzt für alle dreizehn Ansichten zweierlei: dass jede mindestens 85 % der
+Breite nutzt, und dass keine eine Zahl abschneidet. Gegenprobe: `flex: 0 0
+auto` aus `.db` nehmen → „table: 76 % | raster: 76 % | board: 76 % | …",
+23 von 25.
+
+Mitgelaufen und grün: test87, test105, test109, test294, test404, test405,
+test406, test407, test408.
+
+Dateien: `pruefungen/lauf/test409.mts` (neu),
+`src/bereiche/bloecke/arten/zeichenflaeche.ts`,
+`src/bereiche/datenbanken/steuerung.ts`, `pruefungen/lauf/test404.mts`.

@@ -441,7 +441,22 @@ const Ansichten = (() => {
             .filter(b => b.type === 'page' && b.alive && b.parentTable !== 'collection' && !b.system);
         const kuerzlich = [...alle]
             .sort((a, b) => (b.edited || '').localeCompare(a.edited || '')).slice(0, 6);
-        const sterne = alle.filter(b => b.fav);
+        /* ══ EIN KATALOG, NICHT ZWEI (E402, L128 Punkt 3) ═════════════════════
+           Hier stand `alle.filter(b => b.fav)`. Das Feld heisst `favorite` —
+           `b.fav` gibt es an keinem Block. Die Liste war deshalb IMMER leer,
+           und weil `block()` einen leeren Abschnitt ganz weglässt (unten), fiel
+           nicht einmal eine Überschrift auf: der Bildschirm sah aus, als hätte
+           man einfach keine Favoriten.
+    
+           Statt das eine Wort zu berichtigen, fragt der Bildschirm jetzt den
+           Katalog, den es längst gibt — `Store.favorites()` (indexdb.ts:850).
+           Ein zweiter, von Hand geschriebener Filter für dieselbe Sache läuft
+           mit dem ersten auseinander, und genau das ist hier passiert (§8).
+           Die eigene Einschränkung bleibt: keine Datenbankzeilen, keine
+           Systemseiten — deshalb der Schnitt mit `alle`. */
+        const festeIds = new Set((Store.favorites?.() || [])
+            .map((b) => String(b.id)));
+        const sterne = alle.filter(b => festeIds.has(String(b.id)));
         const privat = alle.filter(b => !b.parentId);
         const datenbanken = Object.values(Store.cache.collections || {});
         const vorlagen = (() => {

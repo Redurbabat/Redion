@@ -169,5 +169,70 @@ p('Und das erfundene kommt im Bestand NICHT vor',
 p('Ein echtes dagegen schon — sonst wäre die Messung blind',
   kommtVor('parentTable'));
 
+/* ==========================================================================
+ * 5 · DIE ANDERE RICHTUNG: WAS DER CODE LIEST UND DER TYP NICHT KENNT
+ * --------------------------------------------------------------------------
+ * Die Abschnitte 1 bis 4 messen EINE Richtung — kein Feld des Typs darf
+ * erfunden sein. Am 5. September 2026 kam heraus, dass die andere Richtung
+ * genauso weh tut (E412):
+ *
+ *   `Column.formel` hiess in Wahrheit `formula`. Gelesen und geschrieben
+ *   wird `def.formula` (dienst.ts formelRechnen, steuerung.ts:5603, 5765,
+ *   7048). Wer nach dem Typ baute, bekam eine Formel, die nie rechnete.
+ *
+ * Und Abschnitt 2 schwieg dazu, obwohl er dafür gebaut wurde: er prüft, ob
+ * ein Feldname IRGENDWO im Bestand vorkommt — und `formel` kommt vor, im
+ * Formeldreieck der Elektrolehre, in den Knopfvariablen des Editors und in
+ * `Redion.formel()` der Erweiterungen. Drei Dinge, die mit einer Spalte
+ * nichts zu tun haben. Ein häufiges deutsches Wort macht diese Messung
+ * blind, und `formel` ist in dieser App ein sehr häufiges Wort.
+ *
+ * Gemessen wird deshalb hier der ZUGRIFF, nicht der Name: jedes `def.X`
+ * unter `bereiche/datenbanken/`. Was dort gelesen wird, muss der Typ
+ * kennen. Beim ersten Lauf waren es dreizehn Treffer.
+ *
+ * Eine unvollständige Wahrheit ist die leiser gefährliche: wer den Typ
+ * liest, hält ihn für vollständig und legt das Feld unter einem zweiten
+ * Namen neu an.
+ * ========================================================================*/
+console.log('\n5 · Was der Code liest, muss der Typ kennen');
+
+const dbBereich = (): string => {
+  const dateien: string[] = [];
+  const lauf = (d: string): void => {
+    if (!fs.existsSync(d)) return;
+    for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+      const pf = path.join(d, e.name);
+      if (e.isDirectory()) lauf(pf);
+      else if (e.name.endsWith('.ts')) dateien.push(pf);
+    }
+  };
+  lauf(path.join(WURZEL, 'src/bereiche/datenbanken'));
+  /* Kommentare weg — sonst zählt ein erklärendes `def.formel` im Fliesstext
+     als Zugriff, und der Wächter findet wieder sich selbst. */
+  return dateien.map(f => fs.readFileSync(f, 'utf-8')).join('\n')
+    .replace(/\/\*[\s\S]*?\*\//g, ' ');
+};
+
+const zugriffe = new Set<string>();
+for (const m of dbBereich().matchAll(/\bdef\.([A-Za-z_][A-Za-z0-9_]*)/g))
+  zugriffe.add(m[1]!);
+
+p('Es werden überhaupt Schema-Felder gelesen', zugriffe.size >= 20,
+  String(zugriffe.size));
+
+/* `type` und `name` stehen im Typ; alles Weitere muss es auch. Ausgenommen
+   ist nur, was gar kein Schema-Feld ist: `def.length` an einer Liste etwa. */
+const KEIN_SCHEMAFELD = new Set(['length', 'map', 'filter', 'forEach', 'push']);
+const unbekannt = [...zugriffe]
+  .filter(f => !KEIN_SCHEMAFELD.has(f) && !db.includes(f)).sort();
+gleich('Jedes gelesene Schema-Feld steht im Typ', unbekannt, []);
+
+/* Und die Gegenprobe zu dieser Messung selbst: sie muss überhaupt etwas
+   finden können. Ein leerer Zugriffs-Satz hätte oben auch „grün" ergeben. */
+p('Die Messung findet die bekannten Felder wieder',
+  ['type', 'name', 'options', 'formula'].every(f => zugriffe.has(f)),
+  [...zugriffe].sort().join(' '));
+
 console.log(`\n${ok}/${ok + weg} bestanden`);
 process.exitCode = weg ? 1 : 0;

@@ -34,7 +34,7 @@ const ich = self;
 /** Der Name der Ablage. Muss `KONSTANTEN.ABLAGE_NAME` gleichen — siehe
  *  die Erklärung bei `faelligeErinnerungen`. `test143` rechnet es nach. */
 const ABLAGE_NAME = 'notizen';
-const VERSION = 'notizen-v244';
+const VERSION = 'notizen-v373';
 const ABLAGE = VERSION;
 /* Was beim ersten Besuch gleich mitgenommen wird. */
 const GRUNDSTOCK = [
@@ -51,6 +51,7 @@ const GRUNDSTOCK = [
     './quell/core/helpers/bytes.js',
     './quell/core/helpers/throttle.js',
     './quell/core/helpers/plural.js',
+    './quell/core/helpers/colors.js',
     './quell/kern/ereignisse/arten.js',
     './quell/kern/einstellung/app.js',
     './quell/kern/einstellung/schalter.js',
@@ -68,6 +69,8 @@ const GRUNDSTOCK = [
     './quell/core/spreadsheet/csv.js',
     './quell/core/ai/kosten.js',
     './quell/core/ai/abrechnung.js',
+    './quell/core/orb/geometry.js',
+    './quell/core/orb/modes.js',
     './quell/core/jobs/modell.js',
     './quell/core/jobs/zeitplan.js',
     './quell/core/jobs/estimate.js',
@@ -115,6 +118,7 @@ const GRUNDSTOCK = [
     './quell/schale/ueberlagerung/menue.js',
     './quell/schale/ueberlagerung/sheet.js',
     './quell/schale/ueberlagerung/hinweis.js',
+    './quell/schale/ueberlagerung/orb.js',
     './quell/schale/ueberlagerung/dialog.js',
     './quell/schale/ueberlagerung/fokus.js',
     './quell/schale/ueberlagerung/ui.js',

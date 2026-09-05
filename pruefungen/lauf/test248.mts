@@ -66,7 +66,7 @@ declare const App: any;
 declare const Ruhig: any;
 
 const WURZEL = path.resolve(import.meta.dirname, '../..');
-const PORT = 8968;
+const PORT = 9517;
 
 const TYP: Record<string, string> = {
   '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css',
@@ -265,8 +265,24 @@ const bandZu = async (): Promise<void> => {
 };
 await bandAuf();
 const regalOffen: any = await seite.evaluate(RAHMEN);
-p('Aufgeklappt bleiben über einer Startansicht fünf Reiter statt acht',
-  regalOffen.reiter === 5, `sind ${regalOffen.reiter}`);
+/* VIER, NICHT MEHR FÜNF (E391). „Gehen" hat das Band verlassen: wohin man
+   geht, steht seit E388 in der linken Leiste, und zwei Wege zum selben Ziel
+   waren der Befund F02 des Prüfberichts.
+
+   DIE ZAHL IST NICHT WEICHER GEWORDEN, SIE ZÄHLT ETWAS ANDERES. Die Aussage
+   von E236/E272 war: „über einer Startansicht stehen nur die Reiter, die
+   ohne Seite etwas können". Das waren fünf, weil „Gehen" dazugehörte. Es
+   sind jetzt vier — Verlauf, Überprüfen, Ansicht, Hilfe —, und die Zeile
+   darunter prüft weiterhin an den NAMEN, dass es die richtigen sind. */
+p('Aufgeklappt bleiben über einer Startansicht vier Reiter statt sieben',
+  regalOffen.reiter === 4, `sind ${regalOffen.reiter}`);
+p('… und es sind Verlauf, Überprüfen, Ansicht, Hilfe',
+  JSON.stringify((regalOffen.reiterNamen || []).slice().sort()) ===
+  JSON.stringify(['ansicht', 'hilfe', 'ueberpruefen', 'verlauf']),
+  (regalOffen.reiterNamen || []).join(', '));
+p('„Gehen" ist keiner davon — es steht jetzt links (E391)',
+  !(regalOffen.reiterNamen || []).includes('gehen'),
+  (regalOffen.reiterNamen || []).join(', '));
 p('Und es sind die, die ohne Seite etwas können',
   !(regalOffen.reiterNamen || []).some((n: string) =>
     ['start', 'einfuegen', 'zeichnen'].includes(n)),
@@ -297,8 +313,11 @@ p('Auch über einer offenen Seite ist die Ruhe ruhig — kein Reiter',
    „fünf" auch dann grün, wenn es NIE mehr als fünf gäbe. */
 await bandAuf();
 const seiteOffenBand: any = await seite.evaluate(RAHMEN);
-p('Über einer offenen Seite sind es aufgeklappt wieder acht',
-  seiteOffenBand.reiter === 8, `sind ${seiteOffenBand.reiter}`);
+/* SIEBEN STATT ACHT, aus demselben Grund (E391): „Gehen" ist weg. Die
+   Gegenrichtung bleibt der eigentliche Zweck dieser Zeile — ohne sie wäre
+   „vier" auch dann grün, wenn es NIE mehr als vier gäbe. */
+p('Über einer offenen Seite sind es aufgeklappt wieder sieben',
+  seiteOffenBand.reiter === 7, `sind ${seiteOffenBand.reiter}`);
 await bandZu();
 
 /* ==========================================================================

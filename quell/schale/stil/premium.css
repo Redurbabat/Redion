@@ -462,7 +462,13 @@
 
   /* ── Die Kante ────────────────────────────────────────────────────────── */
   body[data-schale="premium"] #kante{
-    display: flex; flex-direction: column; justify-content: space-between;
+    /* `flex-start` UND NICHT `space-between` (E388). Bis zu den Orten hatte
+       die Kante zwei Kinder, und `space-between` schob sie an die zwei
+       Enden. Mit drei Kindern verteilt es die Lücke ZWEIMAL — die Orte
+       stünden oben, die Werkzeuge in der Bildmitte und der Fuss unten, mit
+       zwei Löchern dazwischen. Der Fuss geht deshalb über `margin-top:auto`
+       nach unten, und der Rest steht zusammen, wo er hingehört. */
+    display: flex; flex-direction: column; justify-content: flex-start;
     min-height: 0; padding: var(--space-2) 0;
     background: var(--bg-side);
     border-right: 1px solid var(--line);
@@ -486,9 +492,33 @@
   body[data-schale="premium"][data-dokument="an"] #main{
     grid-template-columns: 0 minmax(0, 1fr);
   }
-  .k-oben, .k-unten{ display: flex; flex-direction: column; align-items: center; gap: 2px }
+  .k-orte, .k-oben, .k-unten{ display: flex; flex-direction: column;
+                              align-items: center; gap: 2px }
   .k-oben{ overflow-y: auto; scrollbar-width: none; min-height: 0 }
   .k-oben::-webkit-scrollbar{ display: none }
+  /* ── Die Orte, oben (E388) ─────────────────────────────────────────────
+     DREI ABSCHNITTE STATT ZWEI, und nur der mittlere darf schrumpfen. Die
+     Orte oben und KI/Neu/Einstellungen unten stehen immer da; was der Ort
+     an Werkzeugen mitbringt, rollt dazwischen. Ohne `flex:0 0 auto` an den
+     beiden Rändern staucht Flexbox sie gleichmässig mit — gemessen am
+     1280×720-Laptop, wo 263 Pixel frei sind und sechs Ortsknöpfe 264
+     brauchen. Genau ein Pixel zu wenig, und das Auge sieht es nicht: die
+     Knöpfe werden nur alle etwas flacher.
+
+     WAS DANN NICHT MEHR PASST, ROLLT NICHT — es geht hinter den
+     `···`-Knopf, den `werkzeugeAnpassen()` in `context-rail.ts` anhängt.
+     Der Weg über einen Rollbalken war da und ist wieder weg: Chromium
+     zeichnet hier Überlagerungsbalken, gemessen `offsetWidth 53 /
+     clientWidth 53`, und auf dem Bildschirmfoto war nichts zu sehen. */
+  .k-orte, .k-unten{ flex: 0 0 auto }
+  .k-orte{ border-bottom: 1px solid var(--line); padding-bottom: var(--space-2);
+           margin-bottom: var(--space-2) }
+  /* §38: der Ort, an dem man steht, ist nicht NUR an der Farbe zu erkennen
+     — er trägt den Strich links und `aria-current="page"`. */
+  .k-knopf.k-ort.ist-hier{
+    color: var(--gold-tinte); background: var(--gold-glass);
+    box-shadow: inset 2px 0 0 var(--gold);
+  }
 
   /* 42 × 42 UND NICHT 44 (§37). Die Fingerregel gilt für Finger; die Kante
      gibt es unter 761 px gar nicht, und test114 misst bei 428 und 390 px.
@@ -510,7 +540,8 @@
     box-shadow: inset 2px 0 0 var(--gold);
   }
   .k-knopf svg{ width: 19px; height: 19px }
-  .k-unten{ border-top: 1px solid var(--line); padding-top: var(--space-2) }
+  .k-unten{ border-top: 1px solid var(--line); padding-top: var(--space-2);
+            margin-top: auto }
 
   /* ── Die Lade ─────────────────────────────────────────────────────────
      Sie LIEGT ÜBER dem Inhalt und schiebt ihn nicht. Beim Schieben rutscht
@@ -553,7 +584,7 @@
   .kl-zu:hover{ color: var(--text); background: var(--bg-hover) }
   .kl-zu:focus-visible{ outline: 2px solid var(--gold); outline-offset: -2px }
   .kl-koerper{ flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: var(--space-2) }
-  .kl-leer{ margin: var(--space-3); font-size: 12.5px; color: var(--text-muted) }
+  .kl-leer{ margin: var(--space-3); font-size: 12.5px; color: var(--text-dim) }
   .kl-grp{
     padding: var(--space-2) var(--space-2) 4px;
     font-size: 10.5px; font-weight: 700; letter-spacing: .06em;
@@ -572,7 +603,7 @@
   .kl-t{ flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column }
   .kl-t b{ font-size: 12.5px; font-weight: 500; color: var(--text);
            overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
-  .kl-t i{ font-style: normal; font-size: 11px; color: var(--text-muted) }
+  .kl-t i{ font-style: normal; font-size: 11px; color: var(--text-dim) }
   .kl-stapel{ border-top: 1px solid var(--line); padding: var(--space-2) }
 
   /* Der Seitenbaum, wenn er in der Lade steht. Er bringt seine eigenen
@@ -663,7 +694,7 @@
    passen, liest sich nicht als eine Zeile. Die Kacheln dürfen breiter sein —
    sie werden gescannt, nicht gelesen. */
 .bst-titel{ margin: 0 0 var(--space-2); font-size: 26px; font-weight: 600; color: var(--text) }
-.bst-unter{ margin: 0 0 var(--space-6); max-width: 62ch; font-size: 13.5px; color: var(--text-muted) }
+.bst-unter{ margin: 0 0 var(--space-6); max-width: 62ch; font-size: 13.5px; color: var(--text-dim) }
 .bst-grp{
   max-width: 760px;
   margin: var(--space-6) 0 var(--space-2);
@@ -681,7 +712,7 @@
   border-bottom: 1px solid var(--line);
   font-size: 13.5px;
 }
-.bst-fakt b{ flex: 0 0 190px; font-weight: 500; color: var(--text-muted) }
+.bst-fakt b{ flex: 0 0 190px; font-weight: 500; color: var(--text-dim) }
 .bst-fakt span{ color: var(--text) }
 /* Die zwei Stufen aus `Sicherung.stand()`. Die Farbe ist die zweite
    Auskunft; die erste ist der Satz selbst (§38). */
@@ -703,7 +734,7 @@
 .bst-zeile:focus-visible{ outline: 2px solid var(--gold); outline-offset: -2px }
 .bst-z-t{ flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 1px }
 .bst-z-t b{ font-size: 13.5px; font-weight: 500; color: var(--text) }
-.bst-z-t i{ font-style: normal; font-size: 12px; color: var(--text-muted) }
+.bst-z-t i{ font-style: normal; font-size: 12px; color: var(--text-dim) }
 .bst-z-pfeil{ flex: 0 0 auto; color: var(--text-faint); font-size: 16px }
 
 /* ── „Neu": der Katalog aus `App.erstellenWege()` ─────────────────────────
@@ -727,7 +758,7 @@
 .bst-k-z{ flex: 0 0 auto; font-size: 19px; line-height: 1.2 }
 .bst-k-t{ flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px }
 .bst-k-t b{ font-size: 13.5px; font-weight: 600; color: var(--text) }
-.bst-k-t i{ font-style: normal; font-size: 12px; color: var(--text-muted) }
+.bst-k-t i{ font-style: normal; font-size: 12px; color: var(--text-dim) }
 
 /* ── Am Telefon: ein Blatt, keine zwei Spalten (test155) ──────────────────
    202 px Navigation plus Inhalt liessen bei 390 px genau 129 px für den

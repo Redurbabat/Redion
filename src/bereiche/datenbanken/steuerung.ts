@@ -1747,6 +1747,66 @@ const Datenbank = (() => {
 
   /* --- Board -------------------------------------------------------------- */
   /** Bildquelle einer Zeile für die Kartenvorschau — Datei-, Bild- oder URL-Spalte. */
+  /* --------------------------------------------------------------------------
+   * WELCHER WERT SEINEN NAMEN BRAUCHT (E411)
+   *
+   * Auf einer Karte stand bisher: „08.09.2026 10.09.2026 85 ▬ 0 % ★★★☆☆
+   * Lina 📍Bern ☐" — alle Werte in einer Zeile, ohne Namen und ohne Trenner.
+   * Welches Datum ist der Anfang? Ist 85 ein Preis oder eine Stückzahl? Was
+   * bedeutet das leere Kästchen?
+   *
+   * Alle Namen anzuschreiben wäre die falsche Antwort: ein farbiges
+   * Status-Etikett erklärt sich selbst, und „Status: Offen" verdoppelt nur
+   * die Zeile. Dieselbe Regel wie überall hier — was IMMER dasteht, wird
+   * nicht mehr gelesen.
+   *
+   * Also bekommt seinen Namen, was ihn braucht:
+   *   · nackte Zahlen, Daten, Formeln, Zeitspannen, freier Text
+   *   · und JEDER Wert, dessen Spaltentyp auf der Karte mehrfach vorkommt —
+   *     zwei Datumsspalten nebeneinander sind ohne Namen nicht zu trennen,
+   *     auch wenn ein einzelnes Datum es wäre.
+   *
+   * Selbsterklärend bleiben Etiketten, Haken, Sterne, Ortsmarken, Anhänge
+   * und alles mit eigener Einheit im Text.
+   * ------------------------------------------------------------------------*/
+  /* `checkbox` steht hier BEWUSST NICHT drin, obwohl ein Haken erst einmal
+     selbsterklärend aussieht. Ein gesetzter Haken ist es auch — ein LEERES
+     Kästchen dagegen sagt gar nichts, und auf dem Bild stand genau das:
+     ein weisses Quadrat neben dem Ort, ohne jeden Hinweis worauf es sich
+     bezieht. Die häufigere Hälfte eines Zustands entscheidet. */
+  const SELBSTERKLAEREND = new Set(['select', 'status', 'multi',
+    'sterne', 'prozent', 'files', 'url', 'email', 'phone', 'place', 'person',
+    'image', 'verify', 'button', 'relation']);
+
+  /** Die Werteliste einer Karte — mit Namen dort, wo der Wert allein nicht spricht. */
+  const kartenWerte = (r: any, coll: any, view: any, ausser: string[] = []): string => {
+    /* Zuerst zählen, welcher Typ mehrfach vorkommt: zwei Datumsspalten sind
+       auch dann nicht zu trennen, wenn eine allein es wäre. */
+    const sichtbar = Object.keys(coll.schema).filter(k =>
+      coll.schema[k].type !== 'title' && !ausser.includes(k) &&
+      !(view.hidden || []).includes(k));
+    const proTyp: Record<string, number> = {};
+    sichtbar.forEach(k => {
+      const t = coll.schema[k].type;
+      proTyp[t] = (proTyp[t] ?? 0) + 1;
+    });
+
+    let aus = '';
+    sichtbar.forEach(k => {
+      const def = coll.schema[k];
+      const z = zelle(r, k, coll);
+      if (!z || z.includes('—')) return;
+      const mehrfach = (proTyp[def.type] ?? 0) > 1;
+      const braucht = mehrfach || !SELBSTERKLAEREND.has(def.type);
+      /* `title` steht IMMER da, auch beim selbsterklärenden Wert: wer doch
+         einmal unsicher ist, fährt darüber, statt die Spalte zu suchen. */
+      aus += `<span class="mv" title="${esc(def.name || k)}">` +
+             (braucht ? `<b class="mv-n">${esc(def.name || k)}</b>` : '') +
+             z + '</span>';
+    });
+    return aus;
+  };
+
   const kartenBild = (r: any, coll: any, view: any) => {
     if (view.bildKey === '') return null;
     const kandidaten = view.bildKey && coll.schema[view.bildKey]
@@ -1866,13 +1926,9 @@ const Datenbank = (() => {
         c.className = 'card';
         c.draggable = true;
         c.dataset.rid = r.id;
-        let meta = '';
-        Object.keys(coll.schema).forEach(k => {
-          if (k === gk || coll.schema[k].type === 'title') return;
-          if ((view.hidden || []).includes(k)) return;
-          const z = zelle(r, k, coll);
-          if (z && !z.includes('—')) meta += `<span class="mv">${z}</span>`;
-        });
+        /* `gk` bleibt aussen vor: die Bahn, nach der gruppiert wird, steht
+           schon als Überschrift der Spalte. */
+        const meta = kartenWerte(r, coll, view, [gk]);
         const bild = view.bild === false ? null : kartenBild(r, coll, view);
         c.innerHTML =
           (bild ? `<div class="kbild ${esc(view.bildPasst || 'deckt')}"><img src="${esc(bild)}" alt="" loading="lazy"></div>` : '') +
@@ -1940,12 +1996,7 @@ const Datenbank = (() => {
     rows.forEach((r: any) => {
       const c = document.createElement('div');
       c.className = 'card';
-      let meta = '';
-      Object.keys(coll.schema).forEach(k => {
-        if (coll.schema[k].type === 'title' || (view.hidden || []).includes(k)) return;
-        const z = zelle(r, k, coll);
-        if (z && !z.includes('—')) meta += `<span class="mv">${z}</span>`;
-      });
+      const meta = kartenWerte(r, coll, view);
       const bild = view.bild === false ? null : kartenBild(r, coll, view);
       c.innerHTML =
         (bild ? `<div class="kbild ${esc(view.bildPasst || 'deckt')}"><img src="${esc(bild)}" alt="" loading="lazy"></div>` : '') +
@@ -1967,12 +2018,66 @@ const Datenbank = (() => {
    * ----------------------------------------------------------------------*/
   const KAL_FARBEN = ['blue','green','orange','purple','pink','red','yellow','brown'];
 
+  /* --------------------------------------------------------------------------
+   * WELCHE SPALTE DAS ENDE IST, WENN NIEMAND ES GESAGT HAT (E410)
+   *
+   * `dateKey` hatte seit jeher einen Vorgabewert — die erste Datumsspalte.
+   * `endeKey` hatte keinen. Damit stand jeder Termin immer nur an EINEM Tag,
+   * auch wenn die Datenbank ein Enddatum trug. Ein Projekt vom 1. bis zum
+   * 12. September stand am 1., und wer im Monat nachsah, was gerade laeuft,
+   * sah es nicht.
+   *
+   * Der durchgehende Balken war die ganze Zeit gebaut (`spurenDerWoche`,
+   * `balkenWoche`, `.cw-bar`) — er sprang nur nie an. Eine Funktion, deren
+   * Schalter keinen Vorgabewert hat, ist eine Funktion, die es nicht gibt.
+   *
+   * GERATEN WIRD NUR, WAS DIE DATEN BELEGEN. Eine zweite Datumsspalte muss
+   * nicht das Ende sein — sie kann „Erinnerung" heissen oder „zuletzt
+   * geprueft". Ein Balken ueber die falsche Spanne waere schlimmer als gar
+   * keiner. Deshalb drei Bedingungen, und alle drei muessen halten:
+   *
+   *   · Es gibt genau EINE weitere Datumsspalte.
+   *   · Mindestens eine Zeile traegt beide Werte — sonst weiss man nichts.
+   *   · Und bei JEDER Zeile, die beide traegt, liegt der zweite Wert nicht
+   *     vor dem ersten. Ein einziges Gegenbeispiel genuegt zum Schweigen.
+   *
+   * `view.endeKey === undefined` heisst „nie entschieden"; `''` heisst
+   * „ausdruecklich ein Tag" und wird nicht ueberstimmt.
+   * ------------------------------------------------------------------------*/
+  const endeGeraten = (coll: any, anfangKey: any): string | null => {
+    if (!anfangKey) return null;
+    const weitere = Object.keys(coll.schema)
+      .filter(k => k !== anfangKey && coll.schema[k].type === 'date');
+    if (weitere.length !== 1) return null;
+    const kandidat = weitere[0]!;
+
+    let mitBeiden = 0;
+    for (const r of Store.rowsOf(coll.id)) {
+      const a = wert(r, anfangKey, coll);
+      const b = wert(r, kandidat, coll);
+      if (!a || !b) continue;
+      const da = new Date(String(a)), db = new Date(String(b));
+      if (isNaN(da.getTime()) || isNaN(db.getTime())) continue;
+      /* Ein einziges frueheres Ende widerlegt die Annahme. */
+      if (db.getTime() < da.getTime()) return null;
+      mitBeiden++;
+    }
+    return mitBeiden > 0 ? kandidat : null;
+  };
+
+  /** Die Endspalte einer Kalenderansicht — gewaehlt, geraten oder keine. */
+  const kalEnde = (coll: any, view: any, anfangKey: any): string | null => {
+    if (view.endeKey && coll.schema[view.endeKey]) return view.endeKey;
+    if (view.endeKey !== undefined) return null;   /* '' = ausdruecklich ein Tag */
+    return endeGeraten(coll, anfangKey);
+  };
+
   /** Alle Kalender dieser Ansicht: der eigene zuerst, dann die zugeschalteten. */
   const kalenderQuellen = (coll: any, view: any) => {
     const eigen = view.dateKey || Object.keys(coll.schema).find(k => coll.schema[k].type === 'date');
     const liste = [{
       coll, id: coll.id, name: coll.name, dateKey: eigen,
-      endeKey: view.endeKey && coll.schema[view.endeKey] ? view.endeKey : null,
+      endeKey: kalEnde(coll, view, eigen),
       farbe: view.farbe || 'blue', an: true, eigen: true
     }];
 
@@ -2215,7 +2320,10 @@ const Datenbank = (() => {
         for (let i = 0; i < 7; i++) {
           const t = new Date(wa); t.setDate(wa.getDate() + i);
           const z = tagesZelle(t, t.getMonth() !== monat, true);
-          if (spuren.length) z.style.paddingTop = (5 + spuren.length * 20) + 'px';
+          /* 8 statt 5: die Balkenlage beginnt bei 4 px (bausteine.css), jeder
+             Balken ist 18 px hoch im 20er-Abstand. Der letzte endet damit
+             bei 4 + n*20 - 2; darunter braucht die Tageszahl noch Luft. */
+          if (spuren.length) z.style.paddingTop = (8 + spuren.length * 20) + 'px';
           tage.appendChild(z);
         }
         reihe.appendChild(tage);
@@ -2374,8 +2482,17 @@ const Datenbank = (() => {
     fuss.innerHTML =
       '<span>Doppelklick legt einen Eintrag an · Tasten T, W, M</span>' +
       `<button data-a="kalender">Kalender: <b>${alleQuellen.filter(q => q.an).length}</b></button>` +
+      /* GERATEN WIRD GESAGT (E410). Eine stille Annahme ist schlimmer als
+         eine falsche: eine falsche kann der Nutzer berichtigen, eine stille
+         nicht einmal bemerken. */
       '<button data-a="ende">Zeitraum bis: <b>' +
-      `${view.endeKey && coll.schema[view.endeKey] ? esc(coll.schema[view.endeKey].name) : 'ein Tag'}</b></button>`;
+      (() => {
+        if (view.endeKey && coll.schema[view.endeKey])
+          return esc(coll.schema[view.endeKey].name);
+        const geraten = kalEnde(coll, view, view.dateKey ||
+          Object.keys(coll.schema).find(k => coll.schema[k].type === 'date'));
+        return geraten ? esc(coll.schema[geraten].name) + ' (erkannt)' : 'ein Tag';
+      })() + '</b></button>';
 
     fuss.addEventListener('click', e => {
       const r2 = (htmlVon(e) ?? document.body).getBoundingClientRect();
@@ -2974,7 +3091,17 @@ const Datenbank = (() => {
     const datumKeys = Object.keys(coll.schema).filter(k =>
       ['date','created','edited'].includes(coll.schema[k].type));
     const startKey = view.startKey && coll.schema[view.startKey] ? view.startKey : datumKeys[0];
-    const endeKey  = view.endeKey && coll.schema[view.endeKey] ? view.endeKey : null;
+    /* DIESELBE ERKENNUNG WIE IM KALENDER (E413). Hier stand die Zeile, die
+       E410 im Kalender ersetzt hat — und sie stand hier weiter. Die Folge
+       war schlimmer als dort: ein Zeitstrahl OHNE Enddatum zeichnet jedes
+       Projekt als Quadrat von dreissig Pixeln, und in dreissig Pixeln steht
+       vom Titel genau ein Buchstabe. Auf dem Bild las man „E", „\", „S",
+       „E" — neun Balken, die alle gleich aussahen und alle nichts sagten.
+
+       Das ist der zweitteuerste wiederkehrende Fehler dieses Projekts,
+       wörtlich aus §45: eine Sache an einer Stelle reparieren und die
+       Nachbarstelle nicht ansehen. */
+    const endeKey  = kalEnde(coll, view, startKey);
 
     if (!startKey) {
       w.innerHTML = '<div class="db-leer">Für den Zeitstrahl braucht es eine Datums-Eigenschaft.</div>';
@@ -3103,10 +3230,41 @@ const Datenbank = (() => {
         `style="left:${links}px; width:${breite}px; top:${ZS_KOPF + i * ZS_ZEILE + 3}px" ` +
         `title="${esc(e.row.text || 'Ohne Titel')} — ${e.von.toLocaleDateString('de-DE')}` +
         (endeKey ? ' bis ' + e.bis.toLocaleDateString('de-DE') : '') + '">' +
+        /* DER TITEL WANDERT NACH DRAUSSEN, WENN ER DRINNEN NICHT PASST
+           (E413). Auf dem Bild stand in den kurzen Balken „\", „I", „M" —
+           je EIN Buchstabe, ohne Auslassungszeichen. „\" ist ein
+           abgeschnittenes „V" von „Verteiler beschriften", und es sieht aus
+           wie ein Zeichen, nicht wie ein Rest. Genau der Fall aus §55.1:
+           eine abgeschnittene Anzeige zeigt etwas ANDERES, und beides sieht
+           gültig aus.
+
+           WER DRAUSSEN STEHT, ENTSCHEIDET DIE MESSUNG WEITER UNTEN, nicht
+           diese Zeile. Eine feste Pixelschwelle stand hier zuerst — 64 px —
+           und war nachweislich falsch: „Bericht Kapitel 2" bekam 70 px
+           Balken für 91 px Text und blieb drinnen, abgeschnitten. Wie breit
+           ein Titel wirklich ist, weiss erst der Browser. */
         `<span class="zs-txt">${esc(e.row.text || 'Ohne Titel')}</span>` +
         (endeKey ? '<i class="zs-griff"></i>' : '') + '</div>';
     });
     flaeche.innerHTML = html;
+
+    /* JETZT ERST MESSEN, wo der Titel hinpasst — vorher weiss es niemand.
+       `scrollWidth` gegen die Innenbreite des Balkens: passt der Text nicht,
+       wandert er nach rechts hinaus. Neun Balken, ein Durchgang; das kostet
+       nichts und trifft im Gegensatz zu jeder festen Zahl immer. */
+    requestAnimationFrame(() => {
+      flaeche.querySelectorAll<HTMLElement>('.zs-balken').forEach(b => {
+        const t = b.querySelector<HTMLElement>('.zs-txt');
+        if (!t) return;
+        /* Gegen die eigene clientWidth des TEXTES, nicht die des Balkens:
+           `b.clientWidth` schliesst das Polster von zweimal 9 px MIT ein,
+           und der Text hat es nicht zur Verfügung. Auf dem Bild blieb
+           „Steuerung Ro…" deshalb drinnen — 97 px Text gegen 110 px Balken
+           sah nach „passt" aus, während wirklich nur 92 px übrig waren.
+           Zwei Pixel Spiel gegen Rundung. */
+        if (t.scrollWidth > t.clientWidth + 2) t.classList.add('draussen');
+      });
+    });
 
     /* ---- Abhängigkeitspfeile -------------------------------------------- */
     if (abhKey) {
@@ -3491,7 +3649,22 @@ const Datenbank = (() => {
     const messbar = Object.keys(coll.schema).filter(k =>
       ['number','formula','rollup'].includes(coll.schema[k].type));
 
-    const gKey = view.chartGruppe && coll.schema[view.chartGruppe] ? view.chartGruppe : gruppierbar[0];
+    /* DIE VORGABE IST NICHT DIE ERSTE SPALTE (E414). `gruppierbar` schliesst
+       `title` ein — und der Titel steht in jedem Schema zuerst. Damit
+       gruppierte jedes neue Diagramm nach dem TITEL: neun Zeilen ergaben
+       neun Balken der Höhe 1. Ein Diagramm, das für jede Zeile einen Balken
+       der Höhe eins zeigt, sagt genau nichts.
+
+       Gewählt wird jetzt wie beim Board: erst eine Auswahl- oder
+       Statusspalte, dann ein Datum, und der Titel erst, wenn es sonst
+       nichts gibt. Wählbar bleibt er — jemand könnte ihn wollen. */
+    const VORZUG = ['select', 'status', 'checkbox', 'multi', 'person'];
+    const vorgabeGruppe =
+      Object.keys(coll.schema).find(k => VORZUG.includes(coll.schema[k].type)) ||
+      Object.keys(coll.schema).find(k => coll.schema[k].type === 'date') ||
+      gruppierbar[0];
+    const gKey = view.chartGruppe && coll.schema[view.chartGruppe]
+      ? view.chartGruppe : vorgabeGruppe;
     const mKey = view.chartWert && coll.schema[view.chartWert] ? view.chartWert : '';
     const typ = view.chartTyp || 'bar';
 
@@ -3625,7 +3798,10 @@ const Datenbank = (() => {
     const legende = document.createElement('div');
     legende.className = 'chart-legende';
     legende.innerHTML = werte.map((v, i) =>
-      `<span data-i="${i}"><i style="background:${Zusatz.PALETTE[i % Zusatz.PALETTE.length]}"></i>` +
+      /* `Zusatz.PALETTE[i]` ist ein PAAR [Farbe, Name] — als Zeichenkette
+         „#529cca,Blau" und damit kein gültiger Farbwert. Die Legendenpunkte
+         waren dadurch unsichtbar (E414). */
+      `<span data-i="${i}"><i style="background:${Zusatz.farbeVon(i)}"></i>` +
       `${esc(v.name)} <b>${Formula.anzeige(v.wert)}</b></span>`).join('');
     w.appendChild(legende);
 
@@ -4345,7 +4521,8 @@ const Datenbank = (() => {
   const schalter = (id: string, an: any, text: string, hinweis?: any) =>
     `<div class="dl-zeile"><div class="dl-text"><b>${esc(text)}</b>` +
     (hinweis ? `<span>${esc(hinweis)}</span>` : '') + '</div>' +
-    `<button class="schalter${an ? ' an' : ''}" data-s="${id}"><i></i></button></div>`;
+    `<button class="schalter${an ? ' an' : ''}" data-s="${id}" role="switch" ` +
+    `aria-checked="${an ? 'true' : 'false'}" aria-label="${esc(name)}"><i></i></button></div>`;
 
   const layoutPanel = (_coll: any, view: any, _block: any) => {
     const zeichne = () => {
@@ -4490,7 +4667,9 @@ const Datenbank = (() => {
             '<label>diesen Wert<br><input id="fw"></label>' +
             '<label>dann färben<br><div class="fr-farben">' +
               FARBWAHL.map((c, i) => `<button data-c="${c}" class="bg-${c}` +
-                `${i === 0 ? ' on' : ''}" title="${c}"></button>`).join('') +
+                `${i === 0 ? ' on' : ''}" title="${esc(Farben.name(c))}" ` +
+                `aria-label="${esc(Farben.name(c))}" ` +
+                `aria-pressed="${i === 0 ? 'true' : 'false'}"></button>`).join('') +
             '</div></label>' +
           '</div>' +
           '<div class="fbtns"><button data-a="ok" class="prim">Anlegen</button>' +
@@ -5815,7 +5994,9 @@ const Datenbank = (() => {
       (def.type === 'relation' ? '<button data-a="relein"><span class="mi">⇄</span>Verknüpfung einrichten</button>' : '') +
       (def.type === 'rollup'   ? '<button data-a="rollup"><span class="mi">⤴</span>Rollup einrichten</button>' : '') +
       (['number','formula','rollup'].includes(def.type)
-        ? '<button data-a="anzeige"><span class="mi">▤</span>Anzeigen als …</button>' : '') +
+        ? '<button data-a="anzeige"><span class="mi">▤</span>Anzeigen als …</button>' +
+          `<button data-a="einheit"><span class="mi">CHF</span>Einheit` +
+          `<span class="ms">${def.einheit ? esc(String(def.einheit)) : 'keine'}</span></button>` : '') +
       (def.type === 'uid'      ? '<button data-a="praefix"><span class="mi">ID</span>Vorsilbe setzen</button>' : '') +
       (KI_TYPEN.includes(def.type) ? '<button data-a="kiauftrag"><span class="mi">✨</span>Auftrag an die KI</button>' : '') +
       (!['formula','rollup','created','edited','createdBy','editedBy','uid','button'].includes(def.type)
@@ -5951,6 +6132,47 @@ const Datenbank = (() => {
         });
         return;
       }
+      /* --------------------------------------------------------------------
+       * DIE EINHEIT EINER ZAHLENSPALTE (E412)
+       *
+       * Die acht Vorschläge sind das, was in dieser App wirklich vorkommt —
+       * Redurs Projekte rechnen in Franken, Stunden, Metern und Ampere.
+       * Aber die Liste ist NICHT die Grenze: das Feld darunter nimmt, was
+       * jemand eintippt. Eine feste Liste wäre genau der Fehler, den §20
+       * beim Spaltentyp beschreibt — streng statt richtig.
+       * ------------------------------------------------------------------*/
+      if (a === 'einheit') {
+        const VORSCHLAG = ['CHF', '€', '%', 'h', 'min', 'kg', 'm', 'A'];
+        m.innerHTML = '<div class="grp">Einheit hinter der Zahl</div>' +
+          VORSCHLAG.map(e =>
+            `<button data-e="${esc(e)}">${def.einheit === e ? '✓ ' : ''}${esc(e)}</button>`).join('') +
+          /* `.menu-suche` ist die Klasse, die es GIBT — sie stylt jedes
+             Eingabefeld in einem Menü (bausteine.css). Eine eigene zu
+             erfinden wäre der Fehler aus E406: sieben Tokens waren dort
+             erfunden und je zweimal unsichtbar. */
+          '<hr><div class="grp">Oder eigene</div>' +
+          '<div class="menu-suche">' +
+          `<input data-eigen value="${esc(String(def.einheit || ''))}" ` +
+          `placeholder="z. B. Stück" aria-label="Eigene Einheit"></div>` +
+          '<hr><button data-e="">keine Einheit</button>';
+
+        const setzen = (wert: string) => {
+          const sauber = wert.trim().slice(0, 12);
+          if (sauber) def.einheit = sauber; else delete def.einheit;
+          Store.updateCollection(coll.id, { schema: coll.schema });
+          m.remove(); App.zeichneSeite();
+        };
+        m.addEventListener('click', ev => {
+          const e2 = elVon(ev)?.closest<HTMLElement>('button[data-e]');
+          if (e2) setzen(e2.dataset.e ?? '');
+        });
+        const feld = m.querySelector<HTMLInputElement>('[data-eigen]');
+        feld?.addEventListener('keydown', ev => {
+          if (ev.key === 'Enter') { ev.preventDefault(); setzen(feld.value); }
+        });
+        setTimeout(() => feld?.focus(), 30);
+        return;
+      }
       if (a === 'relein') { m.remove(); relationEinrichten(coll, key); return; }
       if (a === 'relziel') {
         const alle = Object.values<any>(Store.cache.collections);
@@ -6074,7 +6296,12 @@ const Datenbank = (() => {
         ? def.options.map((opt: any, i: any) =>
             `<div class="opt-zeile"><span class="tag bg-${opt.color}">${esc(opt.name)}</span>` +
             '<div class="opt-farben">' +
-            FARBEN.map(f => `<button data-i="${i}" data-f="${f}" title="${f}" ` +
+            /* Der Titel war die rohe Kennung („purple"). Jetzt der Name,
+               und das Gewählte trägt seinen Zustand, statt ihn nur zu
+               färben (§38). */
+            FARBEN.map(f => `<button data-i="${i}" data-f="${f}" ` +
+              `title="${esc(Farben.name(f))}" aria-label="${esc(Farben.name(f))}" ` +
+              `aria-pressed="${opt.color === f ? 'true' : 'false'}" ` +
               `style="background:var(--b-${f})"></button>`).join('') +
             '</div><button data-del="' + i + '" title="Option löschen">🗑</button></div>').join('')
         : '<div style="padding:16px; color:var(--text-faint); font-size:14px">Noch keine Optionen.</div>');
@@ -8607,7 +8834,9 @@ const Datenbank = (() => {
       fuelle(o, '#al', laufHtml + ((coll.automationen || []).length
         ? coll.automationen.map((a: any, i: any) =>
             `<div class="auto-zeile">` +
-              `<button class="schalter${a.an === false ? '' : ' an'}" data-an="${i}"><i></i></button>` +
+              `<button class="schalter${a.an === false ? '' : ' an'}" data-an="${i}" ` +
+              `role="switch" aria-checked="${a.an === false ? 'false' : 'true'}" ` +
+              `aria-label="${esc(a.name || 'Automation')}"><i></i></button>` +
               `<div class="auto-text"><b>${esc(a.name || 'Ohne Namen')}</b>` +
               `<span>Wenn: ${esc((AUSLOESER.find(x => x[0] === a.wenn.art) || [])[1] || '')}` +
               (a.wenn.key ? ' — ' + esc(namen(a.wenn.key)) : '') +

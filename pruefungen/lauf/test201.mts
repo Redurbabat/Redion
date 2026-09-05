@@ -10,7 +10,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const ROOT = path.resolve(import.meta.dirname, '../..');
-const PORT = 8946;
+const PORT = 9514;
 const TYPES: Record<string, string> = { '.html': 'text/html', '.js': 'text/javascript',
   '.css': 'text/css', '.png': 'image/png', '.json': 'application/json',
   '.webmanifest': 'application/manifest+json', '.ico': 'image/x-icon' };

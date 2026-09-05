@@ -16,8 +16,29 @@
 /* ==========================================================================
    EINSTELLUNGEN
    ========================================================================== */
+/* DAS FENSTER STAND 14vh ZU TIEF (E392). `.overlay` setzt für alle Fenster
+   `align-items:flex-start; padding-top:14vh` — richtig für die Suche, die
+   oben aufklappt, falsch für ein Fenster, das fast die ganze Höhe will.
+   Gemessen bei 1280×720: Oberkante bei 101 px, Höhe 662, Unterkante bei
+   763 — 43 Pixel ausserhalb des Bildes. Mit der alten Höhe waren es 14,
+   und deshalb ist es niemandem aufgefallen: abgeschnitten war es vorher
+   auch schon, nur weniger.
+
+   Mittig statt oben. Dann verteilt sich der Rest gleichmässig, und die
+   Höhe unten stimmt wieder mit dem überein, was man sieht. */
+.overlay:has(.einst-fenster){ align-items:center; padding-top:0 }
 .einst-fenster{
-  width:min(1000px,94vw); height:min(720px,88vh); background:var(--bg-side);
+  /* DIE HÖHE WAR AUF 720 PIXEL GEDECKELT, und das war der eigentliche Grund,
+     warum drei Einträge nie zu sehen waren (E392). Ein grösserer Bildschirm
+     machte das Fenster nicht höher: die Navigation braucht 810 px, bekam
+     718, und Speicher, Abrechnung und „Über diese App" lagen darunter.
+     Auf JEDEM Rechner, nicht nur auf kleinen.
+
+     Jetzt `min(920px, 92vh)`. Auf einem 900-px-Schirm sind das 828 px, und
+     mit den 810, die die Liste braucht, passt sie ganz hinein — gemessen,
+     nicht geschätzt. Auf kleineren Schirmen rollt sie weiterhin, und dafür
+     gibt es `.einst-mehr` unten. */
+  width:min(1000px,94vw); height:min(920px,92vh); background:var(--bg-side);
   border:1px solid var(--line); border-radius:12px; box-shadow:var(--shadow);
   display:flex; overflow:hidden; position:relative;
 }
@@ -25,12 +46,41 @@
   width:236px; flex:0 0 236px; background:var(--bg); border-right:1px solid var(--line);
   padding:12px 8px; overflow-y:auto;
 }
+/* ── „ES GEHT NOCH WEITER" (E392) ────────────────────────────────────────
+   Gemessen am 4. September in drei Grössen, VOR der Änderung: die Liste
+   braucht 810 px für 19 Einträge und drei Gruppenüberschriften, bekam aber
+   nur 718 (1360×900), 632 (1280×720) oder 570 (1280×650). Verdeckt waren
+   also 92, 178 bzw. 240 Pixel — und darunter lagen immer dieselben drei
+   Einträge: Speicher, Abrechnung, Über diese App.
+
+   Das Fenster ist jetzt hoch genug, damit auf einem gewöhnlichen Schirm
+   nichts mehr fehlt. Auf einem kleinen rollt die Liste weiterhin, und dann
+   muss man das SEHEN. Der Rollbalken tut das nicht: in diesem Browser ist
+   er ein Überlagerungsbalken, belegt EIN Pixel und blendet sich nach dem
+   Rollen aus. Ihn zu färben wäre eine Behauptung, die hier niemand prüfen
+   kann — derselbe Fund wie bei der Kontextkante (E388).
+
+   Also ein eigener Streifen, der überblendet und ein Winkelzeichen zeigt.
+   UND DER WIEDER VERSCHWINDET, sobald man unten ist: eine Anzeige, die
+   immer etwas anzeigt, wird nicht gelesen. Genau das prüft test392 §3. */
+.einst-mehr{
+  position:absolute; left:0; bottom:0; width:236px; height:36px;
+  display:none; align-items:flex-end; justify-content:center;
+  padding-bottom:4px; font-size:17px; line-height:1; color:var(--text-dim);
+  background:linear-gradient(to top, var(--bg) 48%, transparent);
+  pointer-events:none;
+}
+.einst-fenster.hat-mehr .einst-mehr{ display:flex }
 .einst-konto{display:flex; gap:10px; align-items:center; padding:8px 10px 14px}
 .einst-konto .ws-icon{width:30px; height:30px; flex:0 0 30px; font-size:14px}
 .einst-konto b{display:block; font-size:13.5px}
 .einst-konto span{font-size:11.5px; color:var(--text-faint)}
 .einst-nav button{
-  display:flex; align-items:center; gap:9px; width:100%; padding:7px 10px;
+  /* 6 statt 7 Pixel Polster (E392): 22 Zeilen sparen damit 44 Pixel, und
+     das ist der Rest, der zwischen „passt" und „passt nicht" liegt. Die
+     Zeile bleibt mit 36 px klickbar; §37 misst Finger, und die Navigation
+     dieses Fensters gibt es am Telefon in einer eigenen Form (unten). */
+  display:flex; align-items:center; gap:9px; width:100%; padding:6px 10px;
   border-radius:6px; font-size:13.5px; color:var(--text-dim); text-align:left;
 }
 .einst-nav button:hover{background:var(--bg-hover); color:var(--text)}
@@ -69,6 +119,14 @@
 .schalter{
   width:38px; height:22px; border-radius:11px; background:var(--line);
   position:relative; transition:background .16s; flex:0 0 38px;
+}
+/* DIE TREFFFLÄCHE IST 44 px, DAS BILD BLEIBT 22 (§37).
+   Ein Kippschalter in den Einstellungen ist ein Hauptweg — man geht dorthin,
+   um ihn zu drücken. 22 px sind am Telefon die Hälfte dessen, was ein Daumen
+   sicher trifft. Der Schatten liegt DAVOR, nicht darum: so wächst keine
+   Zeile, und das Bild bleibt, wie es war. */
+.schalter::after{
+  content:""; position:absolute; left:-3px; right:-3px; top:-11px; bottom:-11px;
 }
 .schalter i{
   position:absolute; top:3px; left:3px; width:16px; height:16px; border-radius:50%;
@@ -551,6 +609,10 @@ tr.mail-jetzt > td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
   }
   .einst-fenster[data-blick="liste"]   .einst-inhalt{ display:none }
   .einst-fenster[data-blick="bereich"] .einst-nav{ display:none }
+  /* Der Streifen gehört zur Liste. Steht der Bereich vorn, ist die Liste
+     weg — und ein Hinweis auf etwas, das gerade nicht dasteht, ist falsch. */
+  .einst-mehr{ width:100%; padding-bottom:calc(3px + env(safe-area-inset-bottom)) }
+  .einst-fenster[data-blick="bereich"].hat-mehr .einst-mehr{ display:none }
 
   /* Die Bereiche als Zeilen, die ein Finger trifft — und mit dem Pfeil,
      der sagt, dass es weitergeht. Ohne ihn sieht die Liste aus wie eine

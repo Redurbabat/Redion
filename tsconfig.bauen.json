@@ -76,6 +76,7 @@
     "src/core/slides/**/*.ts",
     "src/core/planning/**/*.ts",
     "src/core/text/**/*.ts",
+    "src/core/orb/**/*.ts",
     "src/bereiche/**/*.ts",
     "src/fremd/**/*.ts",
     "src/kern/**/*.ts",

@@ -67,8 +67,22 @@ Register.menueband = (() => {
      * etwas zu zeigen haben — ein leerer Reiter verschwände von selbst. Die
      * volle Fassung aus `Register.module` und `Register.navigation` kommt in
      * Phase E. */
+    /* „GEHEN" STEHT HIER NICHT MEHR (E391, Audit F02).
+     *
+     * Der Reiter zeigte, wohin man geht. Seit E388 stehen die Orte in der
+     * linken Leiste, und zwei Wege zum selben Ziel sind genau der Befund des
+     * Prüfberichts: „vier Navigationslogiken nebeneinander". Redur hat
+     * entschieden: das Menüband trägt nur noch dokumentbezogene Werkzeuge.
+     *
+     * DIE EINTRÄGE BLEIBEN, nur der Reiter geht. Sie tragen weiterhin
+     * `reiter: 'gehen'` — das ist ihre Ablage im Register, nicht ihre
+     * Anzeige —, und `orte()` liefert sie unverändert an die Kante. Wer sie
+     * hier löschte, nähme der linken Leiste ihre Liste weg.
+     *
+     * `reiter()` zeigt ohnehin nur, was in REITER steht; ein Eintrag ohne
+     * Reiter verschwindet also von selbst aus dem Band und bleibt dem
+     * Register erhalten. Genau dafür war die Trennung da. */
     const REITER = [
-        { id: 'gehen', name: 'Gehen', zeichen: 'compass' },
         { id: 'start', name: 'Start', zeichen: 'pencil' },
         { id: 'einfuegen', name: 'Einfügen', zeichen: 'plus' },
         { id: 'zeichnen', name: 'Zeichnen', zeichen: 'page' },
@@ -551,7 +565,16 @@ Register.menueband = (() => {
         hilfe: 'app-kann', /* Rundgang.uebersicht()         */
         vorlagen: 'app-markt', /* Galerie.oeffne()              */
         bibliothek: 'app-bib', /* Bibliothek.oeffne()           */
-        papierkorb: 'papierkorbFuss' /* App.papierkorb()              */
+        papierkorb: 'papierkorbFuss', /* App.papierkorb()              */
+        /* ZWEIMAL DERSELBE ZEITMESSER (E393). `zeitmesser` aus `Register.module`
+           und `w-zeit` aus der Liste unten rufen beide `Zeitmesser.panel()`;
+           gemessen öffnen beide dasselbe Feld von 280 × 226 Pixeln. In der
+           Lade stand er dadurch zweimal — einmal unter „Planung & Lernen",
+           einmal unter „Weiteres". Es bleibt `w-zeit`, weil sein Hinweis
+           sagt, worauf sich die Uhr bezieht: „misst die Zeit an der offenen
+           Seite". Der Hinweis des Moduls nennt statt dessen die Entscheidung,
+           aus der es kam. */
+        zeitmesser: 'w-zeit'
     };
     /* Was kein ORT ist und deshalb nicht unter „Gehen" gehört.
        `lebensbereiche` sagt im Register selbst „KEIN EIGENER BILDSCHIRM";
@@ -1059,6 +1082,25 @@ Register.menueband = (() => {
         }
         return folge.map(g => ({ gruppe: g, eintraege: nach.get(g) }));
     };
+    /**
+     * DIE ORTE — wohin man gehen kann (E388).
+     *
+     * Derselbe Katalog, den der Reiter „Gehen" zeichnet, unter einem Namen,
+     * der von einem Ort spricht und nicht von einem Reiterblatt.
+     *
+     * WARUM DAS EINEN EIGENEN NAMEN BRAUCHT. Die linke Leiste zeigt seit
+     * E388 die Orte, und sie holte sie zuerst über `inReiter('gehen')`.
+     * `test272 §14` fing das: die Kante darf sich nicht an ein Reiterblatt
+     * hängen. Der Wächter hat recht, und zwar nicht formal — sobald „Gehen"
+     * das Band verlässt (und genau dahin geht der Weg), wäre die Leiste
+     * still leer gewesen.
+     *
+     * Der EINTRAG bleibt am Feld `reiter: 'gehen'` hängen; das ist seine
+     * Ablage im Register, nicht seine Anzeige. Ob das Band einen Reiter
+     * dafür zeigt, entscheidet `reiter()` — und wenn es keinen mehr zeigt,
+     * liefert `orte()` weiterhin dieselbe Liste.
+     */
+    const orte = () => inReiter('gehen');
     /** Die Reiter, die überhaupt etwas zu zeigen haben. */
     const reiter = () => {
         const belegt = new Set(alle().map(e => e.reiter));
@@ -1066,6 +1108,6 @@ Register.menueband = (() => {
     };
     const eines = (id) => alle().find(e => e.id === id) || null;
     const anzahl = () => alle().length;
-    return { REITER, reiter, alle, inReiter, eines, anzahl,
+    return { REITER, reiter, alle, inReiter, orte, eines, anzahl,
         melde, meldeLieferant, nimmZurueck, nimmZurueckLieferant };
 })();

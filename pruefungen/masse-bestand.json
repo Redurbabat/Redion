@@ -1,0 +1,205 @@
+{
+ "//": [
+  "§37 sagt: 44 px auf den Hauptwegen, 32 px auf Nebenwegen — aber mit einem",
+  "GESCHRIEBENEN GRUND an Ort und Stelle, nicht stillschweigend. Gemessen am",
+  "4. September 2026 hatten 42 Trefflächen weder das eine noch das andere.",
+  "",
+  "Dieses Verzeichnis führt die, die noch offen sind. Es ist KEINE Erlaubnis,",
+  "sondern eine Schuld: `test402` lässt es nur SCHRUMPFEN, so wie",
+  "`js-bestand.json` es für JavaScript tut (§54.4).",
+  "",
+  "Eine Zeile verschwindet auf zwei Wegen, und beide sind richtig:",
+  "  · die Fläche wird 44 px (oder bekommt eine 44-px-Trefffläche), oder",
+  "  · über die Regel steht ein Kommentar, WARUM dies ein Nebenweg ist.",
+  "",
+  "Was NICHT zählt: ein Kommentar ohne Grund. „32px reicht hier\" ist keine",
+  "Begründung, sondern dieselbe Stille mit mehr Zeichen."
+ ],
+ "eintraege": [
+  {
+   "datei": "ansichten.css",
+   "wahl": ".peek-kopf button",
+   "px": 28
+  },
+  {
+   "datei": "aufbau.css",
+   "wahl": ".handles button",
+   "px": 24
+  },
+  {
+   "datei": "aufbau.css",
+   "wahl": ".row .act button",
+   "px": 20
+  },
+  {
+   "datei": "aufbau.css",
+   "wahl": ".sv-marken button",
+   "px": 36
+  },
+  {
+   "datei": "bausteine.css",
+   "wahl": ".ag-grenzstreifen button",
+   "px": 34
+  },
+  {
+   "datei": "bausteine.css",
+   "wahl": ".au-akzente button",
+   "px": 26
+  },
+  {
+   "datei": "bausteine.css",
+   "wahl": ".bib-arten button",
+   "px": 34
+  },
+  {
+   "datei": "bausteine.css",
+   "wahl": ".bib-form button",
+   "px": 32
+  },
+  {
+   "datei": "bausteine.css",
+   "wahl": ".bib-krume button",
+   "px": 32
+  },
+  {
+   "datei": "bausteine.css",
+   "wahl": ".blatt-werk button",
+   "px": 32
+  },
+  {
+   "datei": "bausteine.css",
+   "wahl": ".document-topbar button,.document-inspector button,.document-panel-header button",
+   "px": 36
+  },
+  {
+   "datei": "bausteine.css",
+   "wahl": ".ea-fuss button",
+   "px": 40
+  },
+  {
+   "datei": "bausteine.css",
+   "wahl": ".ea-werkzeuge button",
+   "px": 42
+  },
+  {
+   "datei": "bausteine.css",
+   "wahl": ".electrical-actions button",
+   "px": 40
+  },
+  {
+   "datei": "bausteine.css",
+   "wahl": ".emoji-eigene button",
+   "px": 38
+  },
+  {
+   "datei": "bausteine.css",
+   "wahl": ".fh-favseiten button",
+   "px": 26
+  },
+  {
+   "datei": "bausteine.css",
+   "wahl": ".fh-gesucht button",
+   "px": 38
+  },
+  {
+   "datei": "bausteine.css",
+   "wahl": ".fh-kopfknoepfe button",
+   "px": 28
+  },
+  {
+   "datei": "bausteine.css",
+   "wahl": ".fh-pdffuss button",
+   "px": 30
+  },
+  {
+   "datei": "bausteine.css",
+   "wahl": ".pers-gitter button",
+   "px": 42
+  },
+  {
+   "datei": "bausteine.css",
+   "wahl": ".rg-liste .fr-zeile button",
+   "px": 32
+  },
+  {
+   "datei": "bausteine.css",
+   "wahl": ".rg-neu button",
+   "px": 38
+  },
+  {
+   "datei": "bausteine.css",
+   "wahl": ".school-quick button",
+   "px": 40
+  },
+  {
+   "datei": "bausteine.css",
+   "wahl": ".sp-wz, .sp-rechts button",
+   "px": 34
+  },
+  {
+   "datei": "bausteine.css",
+   "wahl": ".spalte .blatt-fest button",
+   "px": 36
+  },
+  {
+   "datei": "bausteine.css",
+   "wahl": ".spalte .blatt-werk button",
+   "px": 36
+  },
+  {
+   "datei": "bausteine.css",
+   "wahl": ".wolke-blatt button",
+   "px": 36
+  },
+  {
+   "datei": "einstellungen.css",
+   "wahl": ".karte-zoom button",
+   "px": 28
+  },
+  {
+   "datei": "lernwelt.css",
+   "wahl": ".lernwelt .lw-subnav button",
+   "px": 32
+  },
+  {
+   "datei": "lernwelt.css",
+   "wahl": ".lernwelt .lw-subnav button",
+   "px": 36
+  },
+  {
+   "datei": "notizhefte.css",
+   "wahl": ".nh-farben button",
+   "px": 26
+  },
+  {
+   "datei": "notizhefte.css",
+   "wahl": ".nh-krume button",
+   "px": 32
+  },
+  {
+   "datei": "produktwelten.css",
+   "wahl": ".produkt-bereiche-fuss button",
+   "px": 40
+  },
+  {
+   "datei": "tabelle.css",
+   "wahl": ".tbl-werkzeuge button",
+   "px": 26
+  },
+  {
+   "datei": "werkzeuge.css",
+   "wahl": ".btn",
+   "px": 34
+  },
+  {
+   "datei": "werkzeuge.css",
+   "wahl": ".btn.klein",
+   "px": 28
+  },
+  {
+   "datei": "werkzeuge.css",
+   "wahl": ".wb-tools button",
+   "px": 26
+  }
+ ]
+}

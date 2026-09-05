@@ -680,7 +680,11 @@ const gehen = await seite.evaluate(() => {
   const DOPPELT: Record<string, string> = {
     lernwelt: 'heute', arbeitswelt: 'workspace', notizhefte: 'app-notizhefte',
     hilfe: 'app-kann', vorlagen: 'app-markt', bibliothek: 'app-bib',
-    papierkorb: 'papierkorbFuss'
+    papierkorb: 'papierkorbFuss',
+    /* Seit E393: `zeitmesser` und `w-zeit` riefen beide `Zeitmesser.panel()`
+       und standen unter zwei Überschriften in der Lade. Der Weg ist nicht
+       weg — er heisst jetzt `w-zeit`, mit dem Hinweis, der etwas sagt. */
+    zeitmesser: 'w-zeit'
   };
 
   const fehlendeModule: string[] = [];

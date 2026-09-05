@@ -256,7 +256,7 @@ const Vorrat = (() => {
         d.className = 'vorrat-leiste';
         d.style.cssText = 'display:flex;gap:10px;align-items:center;padding:6px 10px;' +
             'margin-bottom:8px;border-radius:8px;font-size:.9em;' +
-            'background:var(--soft,#f6f6f6);opacity:.9';
+            'background:var(--bg-card);opacity:.9';
         if (!s) {
             d.innerHTML = '<span>❄ Vorberechnung ist an, aber es liegt noch nichts vor.</span>' +
                 '<button class="btn" data-a="jetzt">Jetzt rechnen</button>';
@@ -266,7 +266,7 @@ const Vorrat = (() => {
                 '<span>❄ Gerechnet ' + esc(vorText(s.wann)) + ' · ' + s.anzahl + ' Werte in ' +
                     s.dauer + ' ms</span>' +
                     (s.seither
-                        ? '<b style="color:var(--gelb,#a80)">' + s.seither + ' Änderung' +
+                        ? '<b style="color:var(--warnung)">' + s.seither + ' Änderung' +
                             (s.seither === 1 ? '' : 'en') + ' seither</b>'
                         : '<span style="opacity:.7">nichts geändert seither</span>') +
                     '<span style="flex:1"></span>' +
@@ -310,7 +310,7 @@ const Vorrat = (() => {
             'Ergebnis behalten — über Änderungen und über das Neuladen hinweg. Das macht das ' +
             '<b>Öffnen</b> einer grossen Datenbank billig und nimmt dafür in Kauf, dass ein Wert ' +
             'eine Weile veraltet ist.</p>' +
-            '<p style="padding:10px 12px;background:var(--soft,#f6f6f6);border-radius:8px">' +
+            '<p style="padding:10px 12px;background:var(--bg-card);border-radius:8px">' +
             (l.ja ? '✔ ' : 'ℹ️ ') + esc(l.warum) + '</p>' +
             (s
                 ? '<p>Zuletzt gerechnet ' + esc(vorText(s.wann)) + ': ' + s.anzahl +

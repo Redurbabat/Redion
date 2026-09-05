@@ -1,6 +1,37 @@
 import _pfad from 'node:path';
 const WURZEL = _pfad.resolve(import.meta.dirname, '../..');
 import { chromium } from 'playwright';
+
+/* DEN WEG ÜBER DIE LINKE LEISTE GEHEN (E391).
+ *
+ * Bis hierher führte der Weg über den Reiter „Gehen". Den gibt es seit
+ * E391 nicht mehr: wohin man geht, steht seit E388 links in der Kante, und
+ * die selteneren Ziele liegen in der Lade hinter „Mehr Orte". Kennung und
+ * Griff der Einträge sind dieselben geblieben — nur der Klickweg ist ein
+ * anderer, und dieser Prüflauf geht ihn wie ein Mensch.
+ *
+ * ERST SCHLIESSEN, DANN ÖFFNEN: ein zweiter Klick auf denselben
+ * Kantenknopf klappt die Lade wieder ZU. Ohne das misst ein Lauf mit
+ * mehreren Zielen abwechselnd etwas und nichts. */
+const ortAusLade = async (p2: any, name: string): Promise<void> => {
+  await p2.evaluate(() => {
+    const l = document.getElementById('kanten-lade');
+    if (l && !l.hidden) {
+      (document.querySelector('#kante .k-knopf[data-k="mehr-orte"]') as HTMLElement)?.click();
+    }
+  });
+  await p2.waitForTimeout(300);
+  await p2.click('#kante .k-knopf[data-k="mehr-orte"]');
+  await p2.waitForTimeout(450);
+  await p2.evaluate((n: string) => {
+    const z = [...document.querySelectorAll<HTMLElement>('#kanten-lade .kl-zeile')]
+      .find(x => (x.querySelector('b')?.textContent || '').trim() === n);
+    if (!z) throw new Error('„' + n + '" steht nicht in der Lade hinter „Mehr Orte".');
+    z.click();
+  }, name);
+  await p2.waitForTimeout(700);
+};
+
 (async () => {
   const b = await chromium.launch();
   const p = await b.newPage({ viewport: { width: 1500, height: 950 } });
@@ -121,10 +152,7 @@ import { chromium } from 'playwright';
      dann „Alle Seiten". Dieselbe Kennung, dieselbe Handlung
      (`Bibliothek.oeffne()`), nur an der Stelle, an der sie heute steht.
      Dass „Gehen" jedes Modul deckt, misst test272 §12. */
-  await p.click('#menueband [data-mb-reiter="gehen"]');
-  await p.waitForTimeout(500);
-  await p.click('#menueband .mb-knopf[data-band="app-bib"]');
-  await p.waitForTimeout(600);
+  await ortAusLade(p, 'Alle Seiten');
 
   /* ================================================================== *
    * DIE DECKELFORM (E236) — die Ansicht, mit der Redion jetzt öffnet
@@ -507,12 +535,8 @@ import { chromium } from 'playwright';
   });
   await p.waitForTimeout(400);
   await schubladenAuf();
-  /* Auch hier über „Gehen" statt über die Seitenleiste (E272 Phase F) —
-     derselbe Grund und dieselbe Kennung wie oben. */
-  await p.click('#menueband [data-mb-reiter="gehen"]');
-  await p.waitForTimeout(500);
-  await p.click('#menueband .mb-knopf[data-band="app-aufgaben"]');
-  await p.waitForTimeout(600);
+  /* Auch hier über die linke Leiste (E391) — derselbe Grund wie oben. */
+  await ortAusLade(p, 'Meine Aufgaben');
 
   const auf = await p.evaluate(() => ({
     titel: document.querySelector('.bib-titel')?.textContent,

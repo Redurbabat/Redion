@@ -36,6 +36,47 @@
 .kq-titel{flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 .kq-art{color:var(--text-faint); font-size:11px; flex:0 0 auto}
 .kq-zeit{color:var(--text-faint); font-size:11px; flex:0 0 auto}
+/* ------------------------------------------------------------------------
+ * Der Schimmer über einer Antwort, die noch geschrieben wird.
+ *
+ * Der Gedanke stammt aus Magic UI („AnimatedShinyText", MIT) — der Code
+ * nicht: dort ist es eine React-Komponente mit Tailwind-Klassen, hier sind
+ * es sechs Zeilen CSS, weil Redion weder das eine noch das andere hat (§6).
+ *
+ * Er ist keine Zierde, sondern eine Auskunft: solange er läuft, kommt noch
+ * Text nach. Er hört auf, sobald der Strom endet — genau das unterscheidet
+ * ihn von einer Animation, die immer läuft und deshalb nichts mehr sagt.
+ *
+ * Die Fallgrube dabei: `background-clip:text` braucht durchsichtigen Text.
+ * Wo der Verlauf NICHT gemalt wird, stünde dann unsichtbarer Text — eine
+ * Antwort, die der Nutzer nicht lesen kann, und im Fehlerfall wäre es die
+ * Fehlermeldung selbst. Deshalb steht die ganze Wirkung in einem
+ * `@supports`, das nur dort zuschaltet, wo sie auch trägt; sonst steht da
+ * gewöhnlich gefärbter Text.
+ * ----------------------------------------------------------------------*/
+@supports ((-webkit-background-clip:text) or (background-clip:text)){
+  .ki-schreibt{
+    background-image:linear-gradient(100deg,
+      var(--text) 44%, var(--accent) 50%, var(--text) 56%);
+    /* KEIN `no-repeat`. Auf dem ersten Bild stand „Schimmer läuft — die A"
+       und dann nichts mehr: wo der Verlauf nicht hinreicht, wird nichts
+       gemalt, und durchsichtige Schrift ohne Farbe dahinter ist unsichtbare
+       Schrift. Gekachelt stösst `var(--text)` auf `var(--text)`, die Naht
+       sieht man nicht, und die Zeile steht ganz da. */
+    background-size:260% 100%;
+    -webkit-background-clip:text; background-clip:text;
+    -webkit-text-fill-color:transparent;
+    animation:ki-schimmer 1.7s linear infinite
+  }
+}
+@keyframes ki-schimmer{ from{background-position:170% 0} to{background-position:-70% 0} }
+
+/* Ohne Bewegung bleibt der Text stehen — aber lesbar, nicht durchsichtig. */
+@media(prefers-reduced-motion:reduce){
+  .ki-schreibt{ animation:none; background-image:none;
+    -webkit-text-fill-color:var(--text) }
+}
+
 .ki-antwortknoepfe{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px}
 .ki-antwortknoepfe button{font-size:12px; color:var(--accent-text); padding:3px 9px;
   border-radius:5px; border:1px solid var(--line)}
@@ -86,7 +127,17 @@
   white-space:nowrap}
 .as-erg{font-size:12.5px; color:var(--text-dim); line-height:1.55; padding-left:27px;
   max-height:150px; overflow:auto}
-.agent-laeuft{padding:22px; text-align:center; color:var(--text-faint); font-size:14px}
+.agent-laeuft{padding:22px; text-align:center; color:var(--text-faint); font-size:14px;
+  display:flex; flex-direction:column; align-items:center; gap:10px}
+.agent-laeuft-wort{font-variant-numeric:tabular-nums}
+
+/* DIE DENKKUGEL (E403). Sie hat keine eigene Farbe: der Maler nimmt die
+   geerbte `color` als Tinte und regelt nur die Deckkraft über die Tiefe.
+   Deshalb steht hier ein Token und keine Farbe — und deshalb stimmt sie in
+   Hell, Dunkel und im Kontrastmodus von selbst (§39). */
+.orb{display:block; color:var(--text-dim)}
+/* In einer Textzeile sitzt sie auf der Schriftlinie statt darüber. */
+.orb-inline{vertical-align:-4px; margin-right:6px}
 .agent-fehler{padding:16px; color:var(--c-red); font-size:13.5px}
 .agent-fertig{padding:13px 16px; background:var(--b-green); border-radius:8px; margin:10px 16px}
 .agent-fertig b{display:block; font-size:12px; color:var(--c-green); margin-bottom:5px;
@@ -261,7 +312,12 @@
   input, textarea, select{ font-size:16px !important; }
   .finder{ width:96vw !important; max-height:88vh; }
   .fbtns{ flex-wrap:wrap; }
-  .fbtns button{ flex:1 1 auto; min-height:42px; }
+  .fbtns button{ flex:1 1 auto; min-height:42px;  position:relative;}
+/* 44 px TREFFFLÄCHE (§37, E406). HAUPTWEG: Bestätigen und Abbrechen — §37 nennt sie ausdrücklich, ohne Ausnahme.
+   Sie wächst nur nach oben und unten — waagerecht stehen die
+   Nachbarn, und eine Fläche, die sie überdeckt, macht es
+   schlimmer statt besser. */
+.fbtns button::after{content:""; position:absolute; left:0; right:0; top:50%; height:44px; transform:translateY(-50%);}
   /* Der Hinweis in der Fussleiste bekommt am Telefon die ganze Zeile; die
      Knöpfe teilen sich die nächste. Neben einem Knopf wurde er sonst vier
      Zeilen hoch und zog den Knopf auf seine Höhe (E348, auf dem Bild). */
@@ -439,7 +495,8 @@
   .rg-hinweis{padding:10px 16px 12px}
 }
 .fr-farben{display:flex; gap:5px; margin-top:5px}
-.fr-farben button{width:26px; height:26px; border-radius:6px; border:2px solid transparent}
+.fr-farben button{width:26px; height:26px; border-radius:6px; border:2px solid transparent; position:relative;}
+.fr-farben button::after{content:""; position:absolute; left:-3px; right:-3px; top:50%; height:44px; transform:translateY(-50%);}
 .fr-farben button.on{border-color:var(--text)}
 /* Gefärbte Zeile */
 tr.farbzeile > td{background:inherit}
@@ -2606,13 +2663,20 @@ body[data-kontrast="hoch"] select, body[data-kontrast="hoch"] textarea{
 .sterne i.an{ color:#f5b301; }
 .sterne:hover i{ color:#f5b30188; }
 .sterne i:hover ~ i{ color:var(--line); }
-.proz{ display:inline-flex; align-items:center; gap:8px; width:100%; }
-.proz i{ display:block; height:6px; border-radius:3px; background:var(--accent);
+/* Fortschritt: Bahn, Balken, Zahl — in dieser Reihenfolge und mit diesen
+   drei Flex-Werten. Wer sie ändert, sollte E409 lesen: der Balken sass
+   vorher unmittelbar in `.proz`, bezog sein `width:n%` auf die ganze Zelle
+   und schob bei hohen Werten die Prozentzahl hinaus. 55 %, 80 % und 100 %
+   sahen danach gleich aus. */
+.proz{ display:flex; align-items:center; gap:8px; width:100%; min-width:0; }
+.proz-bahn{ flex:1 1 auto; min-width:14px; height:6px; border-radius:3px;
+            background:var(--line); overflow:hidden; }
+.proz i{ display:block; height:100%; border-radius:3px; background:var(--accent);
          min-width:2px; }
-.proz::before{ content:''; position:absolute; }
-.proz b{ font-size:11.5px; font-weight:500; color:var(--text-dim); flex:0 0 auto; }
-td .proz{ position:relative; }
-td .proz i{ flex:0 0 auto; }
+/* `flex:0 0 auto` ist hier die tragende Zeile: die Zahl gibt ihren Platz
+   nicht her. Sie steht bei 0 % genauso da wie bei 100 %. */
+.proz b{ font-size:11.5px; font-weight:500; color:var(--text-dim); flex:0 0 auto;
+         font-variant-numeric:tabular-nums; }
 
 /* Gruppierte Tabellen, Bahnen im Board, Kartenbilder */
 .tgruppen{display:flex; flex-direction:column; gap:14px}
@@ -2647,7 +2711,12 @@ td .proz i{ flex:0 0 auto; }
 .cal-dow{display:grid; grid-template-columns:repeat(7,1fr); gap:1px; background:var(--line)}
 .cal-dow .dow{background:var(--bg); padding:6px; font-size:12px; color:var(--text-dim); text-align:center}
 .cal-woche{position:relative}
-.cw-balken{position:absolute; top:24px; left:0; right:0; pointer-events:none}
+/* `top:24px` schob die Balken UNTER die Tageszahl — und die Zelle bekommt
+   ihr Polster oben (`paddingTop = 5 + Spuren * 20`), damit die Zahl unter
+   den Balken rutscht. Beides zusammen legte den letzten Balken genau auf
+   die Zahl: bei drei Spuren lagen sie bei 24, 44 und 64 px, das Polster
+   endete bei 65. Die Balken gehören ganz nach oben, die Zahl darunter. */
+.cw-balken{position:absolute; top:4px; left:0; right:0; pointer-events:none}
 .cw-bar{
   position:absolute; height:18px; line-height:18px; font-size:11.5px; padding:0 6px;
   overflow:hidden; text-overflow:ellipsis; white-space:nowrap; cursor:pointer;
@@ -2657,6 +2726,22 @@ td .proz i{ flex:0 0 auto; }
 .cw-bar.ende{border-radius:0 4px 4px 0; margin-right:2px}
 .cw-bar.anfang.ende{border-radius:4px}
 .cw-bar:hover{filter:brightness(1.12)}
+
+/* DIE FARBE FEHLTE, UND ZWAR SEIT JEHER (E410). `.cw-bar` bekam `color:#fff`
+   und eine Klasse `q-blue`, aber `.cw-bar.q-blue` gab es nirgends — nur
+   `.cal .ev.q-green` für einen anderen Ort. Ein weisser Balken auf weissem
+   Grund ist kein Balken, sondern loser Text quer über den Tageszahlen.
+   Gesehen hat es nie jemand, weil `endeKey` keinen Vorgabewert hatte und
+   die ganze Balkenschicht deshalb nie ansprang. */
+.cw-bar{background:var(--c-blue)}
+.cw-bar.q-blue  {background:var(--c-blue)}
+.cw-bar.q-green {background:var(--c-green)}
+.cw-bar.q-orange{background:var(--c-orange)}
+.cw-bar.q-purple{background:var(--c-purple)}
+.cw-bar.q-pink  {background:var(--c-pink)}
+.cw-bar.q-red   {background:var(--c-red)}
+.cw-bar.q-yellow{background:var(--c-yellow); color:#232323}
+.cw-bar.q-brown {background:var(--c-brown)}
 
 /* Wochenkalender mit Stundenraster */
 .kw{border:1px solid var(--line); border-radius:8px; overflow:hidden}
@@ -2912,7 +2997,8 @@ button[disabled]{opacity:.4; cursor:not-allowed}
 .au-probe u{position:absolute; right:7px; bottom:9px; left:38%; height:4px; border-radius:2px; opacity:.7}
 .au-name{font-size:12px; color:var(--text-dim)}
 .au-akzente{display:flex; gap:7px; align-items:center; flex-wrap:wrap}
-.au-akzente button{width:26px; height:26px; border-radius:50%; border:2px solid transparent; cursor:pointer}
+.au-akzente button{width:26px; height:26px; border-radius:50%; border:2px solid transparent; cursor:pointer; position:relative;}
+.au-akzente button::after{content:""; position:absolute; left:-3px; right:-3px; top:50%; height:44px; transform:translateY(-50%);}
 .au-akzente button.an{border-color:var(--text)}
 .au-akzente .au-zurueck{width:auto; height:auto; border-radius:6px; padding:4px 10px;
                         background:transparent; border:1px solid var(--line);
@@ -3448,7 +3534,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   font-size:12.5px; padding:5px 10px; border-radius:6px;
   border:1px solid var(--line); color:var(--text-dim); background:transparent }
 #auswahl-leiste button:hover{ background:var(--bg-hover) }
-#auswahl-leiste button.rot{ color:var(--rot,#d64545) }
+#auswahl-leiste button.rot{ color:var(--gefahr) }
 @media(max-width:760px){
   #auswahl-leiste{ left:8px; right:8px; transform:none; bottom:74px;
                    flex-wrap:wrap; justify-content:center }
@@ -3890,7 +3976,12 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-fest{display:flex; align-items:center; gap:4px; flex:0 0 auto;
             padding:6px 8px 6px 0}
 .blatt-fest button{min-height:32px; padding:4px 9px; border-radius:6px;
-                   font-size:13px; color:var(--text); background:none; cursor:pointer}
+                   font-size:13px; color:var(--text); background:none; cursor:pointer position:relative;}
+/* 44 px TREFFFLÄCHE (§37, E406). HAUPTWEG: Dasselbe wie die Zeichenleiste — dieselbe Hand, dasselbe Blatt.
+   Sie wächst nur nach oben und unten — waagerecht stehen die
+   Nachbarn, und eine Fläche, die sie überdeckt, macht es
+   schlimmer statt besser. */
+.blatt-fest button::after{content:""; position:absolute; left:0; right:0; top:50%; height:44px; transform:translateY(-50%);}
 .blatt-fest button:hover{background:var(--bg-hover)}
 .blatt-fest .zeichen{margin-right:5px}
 /* `position:relative`, damit das weggeklemmte Wort (Audit F04) an SEINEM
@@ -3899,9 +3990,30 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-werk button{position:relative;
                    min-height:32px; padding:4px 9px; border-radius:6px;
                    font-size:13px; color:var(--text); background:none; cursor:pointer}
+/* 44 px TREFFFLÄCHE (§37, E406). HAUPTWEG: Die Zeichenleiste ist der Hauptweg beim Schreiben von Hand.
+   Sie wächst nur nach oben und unten — waagerecht stehen die
+   Nachbarn, und eine Fläche, die sie überdeckt, macht es
+   schlimmer statt besser. */
+.blatt-werk button::after{content:""; position:absolute; left:0; right:0; top:50%; height:44px; transform:translateY(-50%);}
 .blatt-werk button:hover{background:var(--bg-hover)}
 .blatt-werk button.on{background:var(--accent); color:var(--auf-accent)}
-.blatt-werk button:disabled{opacity:.38; cursor:not-allowed}
+/* DIE BLASSE STELLE GEHÖRT DEM INHALT, NICHT DEM KNOPF (E396).
+   `opacity` am Knopf macht ALLES durchsichtig, auch seinen Hintergrund —
+   und das fiel erst auf, als „Zurück" und „Vor" am Telefon am rechten Rand
+   kleben blieben: sie sind meistens abgeschaltet, waren dadurch zu 38 %
+   durchsichtig, und die Werkzeuge, über denen sie liegen, schienen durch.
+   Auf dem Bild sah es aus wie ein Doppeldruck.
+
+   Am Zeichen statt am Knopf sieht abgeschaltet genauso aus — die Knöpfe
+   haben ohnehin `background:none`, solange sie nicht kleben.
+
+   DAS `opacity:1` MUSS DASTEHEN: die blasse Stelle kommt nicht von hier,
+   sondern von `button[disabled]{opacity:.4}` weit oben (Zeile 2797) — eine
+   Regel für JEDEN Knopf der App. Sie nur nicht zu wiederholen genügt
+   nicht; sie muss zurückgenommen werden. Gemessen stand am Knopf
+   `opacity: 0.4`, obwohl hier nichts dergleichen mehr steht. */
+.blatt-werk button:disabled{opacity:1; cursor:not-allowed}
+.blatt-werk button:disabled > *{opacity:.38}
 /* SICHTBAR MACHEN, DASS DIE LEISTE ROLLT (E140, §55.1).
 
    ERSTER VERSUCH, UND ER WAR FALSCH: ein Verlauf an `.blatt-reihe::after`,
@@ -4253,6 +4365,50 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   .blatt-werk > *{flex:0 0 auto}
   .blatt-werk > .blatt-zeilenbruch{display:none}
   .blatt-werk button{min-height:44px; min-width:44px; padding:4px 8px}
+
+  /* ── ZURÜCK UND VOR ROLLEN NICHT MIT (E396, Audit F14) ──────────────────
+     GEMESSEN AM 4. SEPTEMBER bei 390 × 844, im Dokumentmodus mit einem
+     A4-Blatt: dreizehn Werkzeuge, alle 44 px hoch (§37 stimmt), in einer
+     368 px breiten Leiste mit 636 px Inhalt. Sieben stehen im Bild, sechs
+     erst nach einem Wisch — und unter diesen sechs sind „Rückgängig" und
+     „Wiederholen".
+
+     Das sind die zwei Griffe, die man beim Schreiben von Hand am
+     häufigsten braucht, und sie sind keine Werkzeuge: sie ändern nicht,
+     was der Finger tut, sie nehmen zurück. Am Rechner stehen sie deshalb
+     seit E359 in einer eigenen Zeile. Am Telefon gibt es keine zweite
+     Zeile — also kleben sie am rechten Rand.
+
+     `position: sticky` im waagerechten Roller: der Knopf bleibt am Rand
+     stehen, solange seine eigentliche Stelle weiter rechts läge. Der
+     Abstand von 48 px ist die Knopfbreite (44) plus die Lücke (4); dass
+     er stimmt, prüft `test393 §2` an beiden Enden des Rollwegs — eine
+     Zahl im Stilblatt ohne Wächter wäre beim nächsten Mass daneben.
+
+     Der Trenner davor entfällt hier: er stünde unter den beiden. */
+  .blatt-werk > button[data-act="redo"]{ position:sticky; right:0 }
+  /* 44, NICHT 48 — die Knopfbreite OHNE die Lücke. Mit 48 klebten die zwei
+     vier Pixel auseinander, und durch den Spalt sah man die Werkzeuge
+     darunter durchblitzen. Auf dem Bild war es ein abgeschnittenes
+     Haftnotiz-Zeichen mitten zwischen den Pfeilen; gemessen hätte es
+     niemand. */
+  .blatt-werk > button[data-act="undo"]{ position:sticky; right:44px }
+  .blatt-werk > button[data-act="undo"],
+  .blatt-werk > button[data-act="redo"]{
+    z-index:2; background:var(--bg-card);
+  }
+  .blatt-werk > button[data-act="undo"]{
+    box-shadow:-8px 0 8px -6px rgba(0,0,0,.45);
+  }
+  /* DIE ACHT PIXEL POLSTER RECHTS gehören der Leiste, nicht dem Knopf:
+     `right:0` klebt an der Polsterkante, und dahinter rollten die
+     Werkzeuge weiter sichtbar durch. Ein Schatten ohne Weichzeichnung in
+     derselben Farbe verlängert die Fläche, ohne an den Massen zu rühren —
+     eine zweite Zahl im Stilblatt wäre die nächste, die verrutscht. */
+  .blatt-werk > button[data-act="redo"]{
+    box-shadow:9px 0 0 0 var(--bg-card);
+  }
+  .blatt-werk[data-tool] > .blatt-trenn[data-gruppe="verlauf"]{ display:none }
   .blatt-werk .wort{position:absolute; width:1px; height:1px; padding:0;
     margin:-1px; overflow:hidden; clip:rect(0 0 0 0); clip-path:inset(50%);
     white-space:nowrap; border:0}
@@ -4706,6 +4862,39 @@ body[data-dokument="an"] #handy-oben{display:none}
 body[data-dokument="an"] .document-stage:not([data-aktiv]) .blatt-reihe{
   display:none }
 
+/* ══════════════════════════════════════════════════════════════════════════
+   E398 · EINZELSEITE ODER FORTLAUFEND — die zweite Haelfte von F03
+   --------------------------------------------------------------------------
+   Der Pruefbericht wollte die Wahl UND Einzelseite als Vorgabe am Telefon.
+   Redur hat am 4. September das Erste bestellt und das Zweite nicht: die
+   Vorgabe bleibt die Rolle, ueberall. Das ist seine eigene Ansage aus E299
+   („die pdf seiten sollte wie goodnotes sich ganz oeffnen komplet wie one
+   note"), und eine Vorgabe dagegen waere eine Entscheidung gegen ihn.
+
+   Deshalb steht hier EINE Regel und keine Media Query: ohne die Klasse
+   `ist-einzeln` aendert sich gar nichts, und die Klasse setzt nur, wer den
+   Schalter im Inspector drueckt.
+
+   WARUM ES DIE WAHL BRAUCHT — gemessen an vier A4-Blaettern: am Telefon
+   (390x844) stehen ZWEI Blaetter gleichzeitig im Bild, eines ist 72 % des
+   Bildschirms hoch. Am Rechner (1360x900) ist ein Blatt 213 % des Bildes
+   hoch, also steht dort ohnehin nur eines. Der Befund „Nutzer wissen nicht
+   sicher, welche Seite aktiv ist" war ein Telefon-Befund.
+
+   `[data-aktiv]` traegt genau eine Buehne — dieselbe Marke, die oben schon
+   die Werkzeugleisten regelt (E387). Ein zweiter Zustand daneben waere ein
+   zweiter Katalog fuer dieselbe Sache (§8). */
+.document-center.ist-einzeln .document-stage:not([data-aktiv]){ display:none }
+/* Der Abstand unter der Seite ist der Schnitt zur naechsten. In der
+   Einzelseite gibt es keine naechste — und `:last-child` greift nicht, weil
+   die ausgeblendeten Geschwister im DOM stehen bleiben. */
+.document-center.ist-einzeln .document-stage[data-aktiv]{ margin-bottom:0 }
+/* E398 · Der Schalter, in denselben Massen wie der Randstreifen daneben. */
+.document-inspector .document-lauf-knopf{display:block; width:100%; min-height:40px;
+  margin-bottom:14px; padding:7px 12px; text-align:left; font-size:13px}
+.document-inspector .document-lauf-knopf.an{border-color:var(--accent-text);
+  background:var(--bg-hover); font-weight:600}
+
 /* E296 · DIE ZEICHENLEISTE BLEIBT OBEN STEHEN, wie in GoodNotes. Sie gehoert
    zum Blatt und rollte mit ihm weg: wer unten auf einer A4-Seite schrieb,
    musste zum Wechsel der Farbe erst wieder ganz nach oben. Nur im
@@ -5058,7 +5247,12 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 .sp-ebene.an{color:var(--text); border-color:var(--text-faint)}
 .sp-auswahl{display:flex; align-items:center; gap:4px; color:var(--text)}
 .sp-auswahl button{width:28px; height:28px; border:0; border-radius:6px;
-  background:var(--bg-hover); color:var(--text-dim); cursor:pointer; font-size:13px; line-height:1}
+  background:var(--bg-hover); color:var(--text-dim); cursor:pointer; font-size:13px; line-height:1 position:relative;}
+/* 44 px TREFFFLÄCHE (§37, E406). HAUPTWEG: Darunter ist Löschen. Danebengegriffen heisst hier: Arbeit weg (§46).
+   Sie wächst nur nach oben und unten — waagerecht stehen die
+   Nachbarn, und eine Fläche, die sie überdeckt, macht es
+   schlimmer statt besser. */
+.sp-auswahl button::after{content:""; position:absolute; left:0; right:0; top:50%; height:44px; transform:translateY(-50%);}
 .sp-auswahl button:hover{background:var(--bg-input); color:var(--text)}
 .sp-hinweis{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 .sp-zahlen{margin-left:auto; color:var(--text-faint); font-variant-numeric:tabular-nums}
@@ -6013,7 +6207,7 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 .arb-kopf b{ font-size:13.5px }
 .arb-stopp{ background:none; border:1px solid var(--line); border-radius:6px;
   color:var(--text-faint); cursor:pointer; font-size:12px; padding:3px 9px }
-.arb-stopp:hover{ color:var(--c-rot, #d24); border-color:var(--c-rot, #d24) }
+.arb-stopp:hover{ color:var(--gefahr); border-color:var(--gefahr) }
 .arb-stopp[disabled]{ opacity:.55; cursor:default }
 .arb-text{ font-size:12.5px; color:var(--text-faint); margin-top:4px }
 .arb-balken{ height:5px; background:var(--bg-hover); border-radius:3px;

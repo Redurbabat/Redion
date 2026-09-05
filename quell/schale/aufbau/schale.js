@@ -838,7 +838,21 @@ const App = (() => {
      */
     const schauplatzMelden = () => {
         const jetzt = schauplatz();
-        const merkmal = jetzt + '|' + String(seiteId || '');
+        /* DIE ADRESSE ZÄHLT MIT (E393) — dieselbe Sorte Lücke wie die Seite
+           oben, nur eine Ebene höher. Von „Heute" auf „Lernzentrum" bleibt
+           `schauplatz()` bei `heute` (beide Ansichten heissen so) und `seiteId`
+           bleibt leer. Es kam also kein Signal, und die Kontextkante liess
+           ihre Markierung auf „Heute" stehen, obwohl man woanders war.
+           `location.hash` unterscheidet die beiden — er sagt
+           `#welt-lernen-heute` gegen `#welt-lernen-lernen`. */
+        let adr = '';
+        try {
+            adr = String(location.hash || '');
+        }
+        catch {
+            adr = '';
+        }
+        const merkmal = jetzt + '|' + String(seiteId || '') + '|' + adr;
         if (merkmal === letzterSchauplatz)
             return;
         letzterSchauplatz = merkmal;
@@ -908,6 +922,46 @@ const App = (() => {
      * @param {string} fokus  ID des Blocks, der danach den Cursor bekommt
      * @param {string} wo     'ende' setzt den Cursor ans Textende
      */
+    /* ==========================================================================
+     * DAS KI-FELD BLEIBT NICHT IM DOKUMENT STEHEN (E394, Audit F08)
+     * --------------------------------------------------------------------------
+     * GEMESSEN AM 4. SEPTEMBER auf 1360 × 900, mit einem A4-Blatt im
+     * Dokumentmodus: `#ai` stand weiter da, 380 Pixel breit, und liess dem
+     * Blatt 980 von 1360 — 28 % des Bildschirms für ein Feld, das man gerade
+     * nicht braucht.
+     *
+     * E384 hat den Dokumentmodus damit begründet, dass „die ganze Schale
+     * wegfällt", und die CSS blendet dort auch Menüband, Kopfzeile, untere
+     * Leiste und Kontextkante aus. Das KI-Feld fehlte in dieser Liste.
+     *
+     * WARUM NICHT EINFACH `display:none` IN DER CSS. Weil man die KI IM
+     * Dokument sehr wohl brauchen kann — „fasse diese Seite zusammen" ist
+     * genau dort die Frage. Ein Feld, das sich nicht öffnen lässt, wäre die
+     * Reparatur, die mehr kaputt macht als der Fehler.
+     *
+     * Also: beim EINTRETEN zuklappen und sich merken, dass es offen war; beim
+     * VERLASSEN wieder aufklappen. Wer es im Dokument von Hand öffnet,
+     * behält es — die Erinnerung wird beim Eintreten gesetzt, nicht laufend
+     * nachgeführt. */
+    let kiVorDokument = false;
+    let warImDokument = false;
+    const kiAmDokumentAnpassen = (imDokument) => {
+        if (imDokument === warImDokument)
+            return;
+        warImDokument = imDokument;
+        const feld = document.getElementById('ai');
+        if (!feld)
+            return;
+        if (imDokument) {
+            kiVorDokument = feld.classList.contains('open');
+            if (kiVorDokument)
+                kiPanel(false);
+        }
+        else if (kiVorDokument) {
+            kiVorDokument = false;
+            kiPanel(true);
+        }
+    };
     const zeichneSeite = (fokus = null, wo = 'anfang') => {
         const wrap = document.getElementById('page');
         if (!wrap)
@@ -929,6 +983,7 @@ const App = (() => {
            so faellt sie auch bei jedem fruehen Ausstieg zurueck (Sonderansicht,
            leere Seite, Sperrbildschirm). */
         delete document.body.dataset['dokument'];
+        kiAmDokumentAnpassen(false);
         if (sonder) {
             wrap.className = 'wide';
             wrap.innerHTML = '';
@@ -971,6 +1026,7 @@ const App = (() => {
             wrap.className = 'wide document-page';
             wrap.innerHTML = '';
             document.body.dataset['dokument'] = 'an';
+            kiAmDokumentAnpassen(true);
             DocumentMode.render(wrap, p);
         }
         else {
@@ -1120,7 +1176,7 @@ const App = (() => {
                     : inp.value
                         ? '<div class="such-leer"><b>Nichts gefunden</b>' +
                             '<span>Versuche einen anderen Begriff — oder suche in den Befehlen ' +
-                            'mit <code>Strg ⇧ P</code>.</span></div>'
+                            'mit <code>Strg ⇧ K</code>.</span></div>'
                         : verlaufBlock();
                 verlaufBinden();
                 return;
@@ -2670,8 +2726,15 @@ const App = (() => {
         /* --- Zeichnen ----------------------------------------------------- */
         { gruppe: 'Zeichnen', id: 'board', zeichen: '🖍', name: 'Whiteboard',
             sub: 'Freie Fläche zum Skizzieren' },
+        /* DIE UNTERZEILE SAGT DEN ZWECK, NICHT NUR DAS PAPIER (E397). Sie hiess
+           „A4 — liniert, kariert, Punktraster, Millimeter" und beschrieb damit
+           den Bogen, nicht das, wofür man ihn nimmt. Wer mit der Hand schreiben
+           will, sucht nicht nach Papiersorten.
+           Der NAME bleibt „Blatt": so heisst die Blockart, so heisst die
+           Werkzeugleiste, so heissen E100 und E359. Zwei Namen für dieselbe
+           Sache laufen auseinander (§8). */
         { gruppe: 'Zeichnen', id: 'blatt', zeichen: '📐', name: 'Blatt',
-            sub: 'A4 — liniert, kariert, Punktraster, Millimeter' },
+            sub: 'Mit der Hand schreiben — A4, liniert, kariert, Punktraster' },
         { gruppe: 'Zeichnen', id: 'plan', zeichen: '⚡', name: 'Schaltplan',
             sub: 'Mit Fachzeichen und Stromsimulation' },
         /* --- Ordnen und rechnen ------------------------------------------- */
@@ -2888,8 +2951,20 @@ const App = (() => {
                 Store.addBlock(p.id, 'spreadsheet', {});
             else if (was === 'board')
                 Store.addBlock(p.id, 'whiteboard', { text: 'Whiteboard' });
-            else if (was === 'blatt')
+            else if (was === 'blatt') {
                 Store.addBlock(p.id, 'blatt', { text: '' });
+                /* UND GLEICH ZUM SCHREIBEN AUFSCHLAGEN (E397, Audit F10).
+                   GEMESSEN AM 4. SEPTEMBER: „Blatt" legte eine Seite mit den
+                   Blöcken ["text", "blatt"] an und liess `dokumentModus` auf
+                   `false`. Man landete also im Texteditor, mit einem leeren
+                   Absatz oben und dem Blatt als Kasten darunter — und musste
+                   „Dokumentmodus" erst selbst finden, um darauf schreiben zu
+                   können. Ein Weg, der das Ding anlegt, aber nicht öffnet.
+        
+                   Die Notizhefte machen es längst richtig (`notebook.ts:348`
+                   und `:370` setzen die Flagge beim Anlegen). Hier fehlte sie. */
+                Store.updateBlock(p.id, { dokumentModus: true });
+            }
             else if (was === 'plan')
                 Store.addBlock(p.id, 'schaltplan', { text: '' });
             else if (was === 'diagramm')
@@ -3373,6 +3448,81 @@ const App = (() => {
                 .setProperty('--demo-hoehe', balken.offsetHeight + 'px');
             hoeheSetzen();
             addEventListener('resize', hoeheSetzen);
+        }
+        /* ----------------------------------------------------------------------
+         * WIE VIEL LUFT NEBEN DER SEITE STEHT (E409)
+         *
+         * Gemessen, nicht geraten: bei 1280 px Fenster ist `#page` 900 px breit
+         * und seine Datenbank 708 — die Tabelle daneben braucht 1637 px. 57 %
+         * davon lagen hinter einem waagerechten Roller, den niemand sieht. Bei
+         * 1920 px Fenster ändert sich daran NICHTS: `#page` bleibt 900, und
+         * links und rechts stehen je 483 px leer.
+         *
+         * Fliesstext soll schmal bleiben, das ist richtig. Eine Datenbank ist
+         * kein Fliesstext. Sie darf über den Textrand hinaus — aber nur so weit,
+         * wie wirklich Platz ist, und den kennt allein die Schale: die
+         * Seitenleiste kann offen oder eingeklappt sein, und eine feste Zahl in
+         * einer Media-Query wüsste davon nichts.
+         *
+         * Deshalb steht hier eine gemessene Zahl statt einer geschätzten.
+         * `datenbanken.css` rechnet damit; ist sie 0, ändert sich nichts.
+         * -------------------------------------------------------------------*/
+        /* Eine feste Reserve statt der gemessenen Rollbalkenbreite. Mit
+           `clientWidth` hing die Zahl davon ab, OB der senkrechte Rollbalken
+           gerade da ist, und sprang beim Laden von Bildern um sechzehn Pixel
+           hin und her.
+    
+           ABER: das ist NICHT die Reparatur der Schleifenmeldung, auch wenn es
+           zuerst so aussah. Nachgemessen mit `test404 §8` — die Reserve allein
+           liess den Fehler weiterbestehen, die Drosselung unten allein behob
+           ihn. Diese Zeile macht die Breite ruhig, nicht den Beobachter. Wer
+           sie herausnimmt, bekommt ein zuckendes Layout, keinen Fehler. */
+        const ROLLER_RESERVE = 16;
+        let luftZuletzt = -1;
+        const luftMessen = () => {
+            const roller = document.getElementById('scroll');
+            const seite = document.getElementById('page');
+            if (!roller || !seite)
+                return;
+            const wert = Math.max(0, Math.round((roller.offsetWidth - ROLLER_RESERVE - seite.clientWidth) / 2));
+            /* NUR BEI ÄNDERUNG SCHREIBEN, und erst ab acht Pixeln: unter dieser
+               Schwelle ist der Gewinn nicht zu sehen, das erneute Zeichnen aber
+               zu bezahlen. */
+            if (Math.abs(wert - luftZuletzt) < 8)
+                return;
+            luftZuletzt = wert;
+            seite.style.setProperty('--seite-luft', wert + 'px');
+        };
+        /* EINMAL JE BILD, NICHT JE MELDUNG — und DAS ist die Reparatur.
+           Ein ResizeObserver, der in seinem eigenen Rückruf das Layout ändert,
+           meldet „ResizeObserver loop completed with undelivered notifications",
+           und Redion machte daraus eine Fehlerkarte quer über der Ansicht.
+           Nachgemessen: ohne diese Drosselung erscheint der Fehler bei `list`,
+           `gallery` und `chart` — überall dort, wo nach dem ersten Zeichnen noch
+           etwas nachwächst. `test404 §8` hält es fest. */
+        let luftGeplant = false;
+        const luftBald = () => {
+            if (luftGeplant)
+                return;
+            luftGeplant = true;
+            requestAnimationFrame(() => { luftGeplant = false; luftMessen(); });
+        };
+        luftMessen();
+        addEventListener('resize', luftBald, { passive: true });
+        /* BEIDE BEOBACHTEN, und das ist der Punkt, an dem der erste Versuch
+           scheiterte: beobachtet war nur `#scroll`. Das ändert seine Breite nie
+           — die Seitenleiste schiebt es zwar zusammen, aber `#page` bekommt
+           seine 900 px erst später. Gemessen wurde deshalb einmal, viel zu
+           früh, mit dem Ergebnis 0, und danach kam nie wieder ein Anlass.
+           Auf dem Bild sah das aus, als hätte die Regel nicht gegriffen. */
+        if (typeof ResizeObserver !== 'undefined') {
+            const beobachter = new ResizeObserver(luftBald);
+            const roller = document.getElementById('scroll');
+            const seite2 = document.getElementById('page');
+            if (roller)
+                beobachter.observe(roller);
+            if (seite2)
+                beobachter.observe(seite2);
         }
         /* Die Seitenleiste bekommt, was ihr nicht gehört — hier und nur hier.
            Das muss vor allem anderen stehen: sobald irgendetwas zeichnet, ruft
@@ -4198,7 +4348,7 @@ const App = (() => {
             'möglich und freiwillig (Mehr → Wolke).');
         b('callout', 'Tippe irgendwo `/` — dann öffnet sich das Blockmenü mit allen Bausteinen.', { icon: '💡' });
         b('h2', 'Was du sofort ausprobieren kannst');
-        b('bullet', 'Strg + P sucht, Strg + Shift + P öffnet alle Befehle');
+        b('bullet', 'Strg + P sucht, Strg + Shift + K öffnet alle Befehle');
         b('bullet', 'Schreibe [[Willkommen]] — so verlinkst du Seiten');
         b('bullet', 'Schreibe #ideen — so setzt du ein Schlagwort');
         b('bullet', 'Tippe @ für Seite, Datum oder Person, : für Emoji');

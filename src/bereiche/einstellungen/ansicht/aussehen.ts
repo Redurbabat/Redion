@@ -274,9 +274,16 @@ const Aussehen = (() => {
           }).join('') + '</div>' +
           '<div class="au-titel">Akzentfarbe</div>' +
           '<div class="au-akzente">' +
+            /* ACHT FARBFELDER OHNE EIN EINZIGES WORT. Weder Titel noch
+               Marke, und welches gewählt war, stand allein in der Umrandung
+               — bei einem FARBwähler ist das die Regel aus §38 in Reinform.
+               `nh-farben` machte es längst richtig; hier stand es nicht. */
             ['#2eaadc','#6c8cff','#5cbf8a','#e0a33a','#e06a94','#9a6dd7','#ff7369','#8a8a8a']
               .map(c => `<button data-akz="${c}" style="background:${c}" ` +
-                        `class="${(s.akzent || '') === c ? 'an' : ''}"></button>`).join('') +
+                        `title="${Farben.nachHex(c)}" aria-label="${Farben.nachHex(c)}" ` +
+                        `aria-pressed="${(s.akzent || '') === c ? 'true' : 'false'}" ` +
+                        `class="${(s.akzent || '') === c ? 'an' : ''}">` +
+                        `${(s.akzent || '') === c ? '✓' : ''}</button>`).join('') +
             '<input type="color" id="au-frei" value="' + (s.akzent || '#2eaadc') + '" ' +
               'title="Eigene Farbe wählen">' +
             '<button data-akz="" class="au-zurueck">wie im Schema</button>' +

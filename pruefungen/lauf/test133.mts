@@ -34,7 +34,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const WURZEL = path.resolve(import.meta.dirname, '../..');
-const PORT = 8803;
+const PORT = 9505;
 
 const TYP: Record<string, string> = {
   '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css',

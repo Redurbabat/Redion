@@ -116,7 +116,7 @@ const Werkzeuge = (() => {
     /* ========================================================================
      * 1. BEFEHLSPALETTE   (SilverBullet)
      * ------------------------------------------------------------------------
-     * Ein Fenster, das jeden Befehl der App kennt. Strg + Shift + P.
+     * Ein Fenster, das jeden Befehl der App kennt. Strg + Shift + K.
      * ======================================================================*/
     const befehle = () => {
         const s = App.aktuelleSeite();
@@ -327,11 +327,74 @@ const Werkzeuge = (() => {
      * zählen die Buchstaben in der richtigen Reihenfolge, und was man oft
      * benutzt, steht oben.
      * ---------------------------------------------------------------------- */
+    /* ══ DREI GEDÄCHTNISSE, UND SIE BEANTWORTEN DREI FRAGEN (E401) ═════════
+       `paletteOft`      wie oft?      — gab es schon
+       `paletteZuletzt`  wann zuletzt? — F09, fehlte
+       `paletteFest`     was WILL ich? — F09, fehlte
+  
+       Der Unterschied zwischen den ersten beiden ist der ganze Punkt des
+       Befundes: ein Zähler weiss nicht, was man gerade eben getan hat. Die
+       SUCHE hatte das Gegenstück längst („Zuletzt gesucht", schale.ts:1082);
+       die Palette nicht.
+  
+       Und das dritte ist keins von beiden: was oft benutzt wird, ist nicht
+       dasselbe wie das, was man oben haben WILL. */
+    const ZULETZT_ZAHL = 8;
+    const FEST_ZAHL = 8;
+    /* Jeder andere Verlauf im Haus hat einen Deckel (8 / 12 / 60 / 100 /
+       2000); `paletteOft` hatte als einziger keinen und wandert über
+       `indexdb.ts` in jede Sicherung. 50 Namen sind mehr, als ein Mensch je
+       bewusst benutzt, und beschränken das Wachstum auf einmal. */
+    const OFT_ZAHL = 50;
     const oftBenutzt = () => Store.getMeta('paletteOft', {}) || {};
-    const merkeBefehl = (name) => {
+    const zuletztBenutzt = () => {
+        const l = Store.getMeta('paletteZuletzt', []);
+        return Array.isArray(l) ? l.filter((x) => typeof x === 'string') : [];
+    };
+    const angeheftet = () => {
+        const l = Store.getMeta('paletteFest', []);
+        return Array.isArray(l) ? l.filter((x) => typeof x === 'string') : [];
+    };
+    const festUmschalten = (name) => {
+        const l = angeheftet();
+        const i = l.indexOf(name);
+        if (i >= 0)
+            l.splice(i, 1);
+        else
+            l.unshift(name);
+        Store.setMeta('paletteFest', l.slice(0, FEST_ZAHL));
+    };
+    const merkeBefehl = (name, gruppe = '') => {
+        /* SEITEN SIND KEINE BEFEHLE. Die Palette zeigt bei einer Eingabe auch
+           bis zu sechs Seiten an; deren Titel landeten bisher ungefiltert im
+           Zähler — „📄 Projekt" stand dann zwischen „Papierkorb" und
+           „Exportieren". In einer Liste „Zuletzt" wäre das noch sichtbarer. */
+        if (gruppe === 'Seiten')
+            return;
         const m = oftBenutzt();
         m[name] = (m[name] || 0) + 1;
-        Store.setMeta('paletteOft', m);
+        /* Beim Deckel gewinnt, wer öfter benutzt wurde — nicht, wer zufällig
+           zuerst dastand. */
+        const namen = Object.keys(m);
+        if (namen.length > OFT_ZAHL) {
+            /* DER GERADE BENUTZTE BLEIBT IN JEDEM FALL. Ohne diese Zeile fiel er
+               beim ersten Mal sofort wieder heraus: er steht mit Zähler 1 ganz
+               unten, und beim Deckeln gewinnt die Häufigkeit. Man hätte einen
+               Befehl ausgeführt und ihn danach nicht in „Zuletzt" wiedergefunden.
+               `test397 §6` hat das gefunden. */
+            const behalten = namen.filter(n => n !== name)
+                .sort((a, b) => (m[b] || 0) - (m[a] || 0)).slice(0, OFT_ZAHL - 1);
+            behalten.push(name);
+            const klein = {};
+            behalten.forEach(n => { klein[n] = m[n]; });
+            Store.setMeta('paletteOft', klein);
+        }
+        else {
+            Store.setMeta('paletteOft', m);
+        }
+        const jung = zuletztBenutzt().filter(n => n !== name);
+        jung.unshift(name);
+        Store.setMeta('paletteZuletzt', jung.slice(0, ZULETZT_ZAHL));
     };
     /* `vorgabe` füllt das Suchfeld vor. `register/module.js` ruft seit jeher
        `Werkzeuge.palette('datenbank')`, und der Wert fiel bisher stumm auf den
@@ -351,7 +414,8 @@ const Werkzeuge = (() => {
             '<div class="finder">' +
                 '<input id="cq" placeholder="Befehl suchen …" autocomplete="off">' +
                 '<div class="res" id="cr"></div>' +
-                '<div class="hint">↑ ↓ auswählen · Enter ausführen · Esc schliessen</div>' +
+                '<div class="hint">↑ ↓ auswählen · Enter ausführen · ' +
+                'Strg+Enter anheften · Esc schliessen</div>' +
                 '</div>';
         document.body.appendChild(o);
         const inp = o.querySelector('#cq');
@@ -360,22 +424,106 @@ const Werkzeuge = (() => {
         if (!inp || !res)
             return;
         const oft = oftBenutzt();
-        /* Ohne Eingabe: die meistbenutzten zuerst, sonst die Reihenfolge der Liste */
-        const anfang = [...liste].sort((a, b) => (oft[b.name] || 0) - (oft[a.name] || 0));
+        const fest = angeheftet();
+        const jung = zuletztBenutzt();
+        /* ══ OHNE EINGABE: ANGEHEFTET, ZULETZT, DANN DER REST (E401) ══════════
+           Die zwei Gruppen stehen NUR da, wenn sie etwas enthalten. Bei einem
+           frischen Redion sieht die Palette deshalb genau aus wie vorher — und
+           das ist die Regel dieses Projekts: eine Überschrift, die immer
+           dasteht, wird nicht gelesen.
+    
+           Die Gruppe wird am KOPIERTEN Eintrag gesetzt, nicht am Original: ein
+           Befehl behält seine echte Gruppe für die Suche, steht oben aber unter
+           „Angeheftet". */
+        const nachName = new Map(liste.map((t) => [t.name, t]));
+        const kopf = [];
+        fest.forEach(n => {
+            const t = nachName.get(n);
+            if (t)
+                kopf.push({ ...t, gruppe: 'Angeheftet' });
+        });
+        jung.forEach(n => {
+            if (fest.indexOf(n) >= 0)
+                return;
+            const t = nachName.get(n);
+            if (t)
+                kopf.push({ ...t, gruppe: 'Zuletzt' });
+        });
+        const schonOben = new Set(kopf.map(t => t.name));
+        const anfang = [...kopf, ...[...liste].filter((t) => !schonOben.has(t.name))
+                .sort((a, b) => (oft[b.name] || 0) - (oft[a.name] || 0))];
         let treffer = anfang, i = 0;
+        /* ══ SO VIELE ZEILEN WERDEN GEZEICHNET — UND NUR SO WEIT GEHT DER PFEIL
+           ══ (E400)
+           Hier stand `treffer.slice(0, 60)` beim Zeichnen und
+           `Math.min(i + 1, treffer.length - 1)` beim Pfeil. Ohne Eingabe ist
+           `treffer` die ganze Liste — und die ist laenger, als das Lesen des
+           Quelltextes vermuten laesst: 163 Eintraege. (Von den 105 `c(`-Aufrufen
+           sind zwei SCHLEIFEN — eine erzeugt 66 Befehle aus `Register.bloecke`,
+           eine 0..n aus den Erweiterungen. Auf dem Bildschirm abgelesen: „103
+           weitere" unter 60 gezeichneten Zeilen.)
+    
+           Ab dem 61. Druck auf ↓ zeigte also KEIN gezeichneter Knopf mehr `.on`,
+           `scrollIntoView` fiel still durch das `?.`, auf dem Bildschirm bewegte
+           sich nichts — und Enter fuehrte einen Befehl aus, den der Nutzer nie
+           gesehen hatte. 103 Befehle waren so erreichbar, ohne sichtbar zu sein.
+    
+           Eine Zahl, nicht zwei: `GEZEIGT` steht jetzt an beiden Stellen. Kein
+           Prüflauf fiel darüber, weil test51 immer erst etwas eintippt und damit
+           unter 46 Treffern bleibt (40 bewertete + 6 Seiten). */
+        const GEZEIGT = 60;
         const zeichne = () => {
             let g = '';
-            res.innerHTML = treffer.slice(0, 60).map((t, k) => {
+            /* Frisch lesen: das Anheften schreibt zwischen zwei Durchläufen. */
+            const feste = new Set(angeheftet());
+            const sicht = treffer.slice(0, GEZEIGT);
+            res.innerHTML = sicht.map((t, k) => {
                 const kopf = t.gruppe !== g ? `<div class="grp">${esc(t.gruppe)}</div>` : '';
                 g = t.gruppe;
-                return kopf + `<button data-i="${k}"${k === i ? ' class="on"' : ''}>` +
+                /* DER STERN STEHT IM KNOPF, NICHT DANEBEN. Ein zweiter <button>
+                   IM Knopf wäre ungültiges HTML, und ein Umschlag um beide würde
+                   `:where(.finder .res) > button` brechen — die Zeilenregel gilt nur
+                   für DIREKTE Kinder (E348). Ein <span> mit `data-fest` ist deshalb
+                   das Richtige: der Griff auf `.res` prüft ihn VOR dem Knopf, und
+                   für die Tastatur gibt es Strg+Enter. Der Zustand steht am Knopf
+                   im `aria-label`, damit ein Vorleseprogramm ihn hört (§38).
+        
+                   DAS ZEICHEN SELBST STEHT IM CSS, NICHT HIER. Als Textknoten
+                   landete es in `textContent` — und damit in jeder Prüfung und in
+                   jedem Stück Code, das den Namen einer Zeile abliest. test206 fiel
+                   daran mit acht Punkten auf einmal („Neue Seite" fand
+                   „☆Neue Seite"). `aria-hidden` allein reicht nicht: es verbirgt
+                   vor dem Vorleser, nicht vor dem Text. */
+                const istFest = feste.has(t.name);
+                return kopf + `<button data-i="${k}"${k === i ? ' class="on"' : ''}` +
+                    (istFest ? ' data-ist-fest' : '') +
+                    ` aria-label="${esc(t.name)}${istFest ? ' · angeheftet' : ''}">` +
+                    `<span class="fest" data-fest="${esc(t.name)}" aria-hidden="true"` +
+                    ` title="${istFest ? 'Angeheftet' : 'Anheften'} — Strg+Enter"></span>` +
                     `<span style="flex:1">${esc(t.name)}</span>` +
                     (t.kurz ? `<span class="pth">${esc(t.kurz)}</span>` : '') + '</button>';
-            }).join('');
+            }).join('') +
+                /* UND WAS NICHT DASTEHT, WIRD GESAGT. Eine abgeschnittene Liste, die
+                   so tut, als wäre sie vollständig, ist dieselbe Lüge in klein. Der
+                   Satz erscheint nur, wenn wirklich etwas fehlt — sonst wäre er ein
+                   Hinweis, den niemand mehr liest. */
+                (treffer.length > GEZEIGT
+                    ? `<div class="grp mehr">${treffer.length - GEZEIGT} weitere — ` +
+                        'tipp einen Namen, um sie zu finden</div>'
+                    : '');
             res.querySelector('button.on')?.scrollIntoView({ block: 'nearest' });
         };
         zeichne();
-        const fuehreAus = (t) => { o.remove(); merkeBefehl(t.name); setTimeout(() => t.fn(), 10); };
+        const fuehreAus = (t) => {
+            o.remove();
+            merkeBefehl(t.name, t.gruppe);
+            setTimeout(() => t.fn(), 10);
+        };
+        /* Anheften schliesst das Fenster NICHT: man heftet mehrere hintereinander
+           an, und wer danach doch ausführen will, drückt Enter. Neu gezeichnet
+           wird nur die Liste, nicht die Reihenfolge — sonst spränge die Zeile
+           unter dem Finger weg. */
+        const festSchalten = (name) => { festUmschalten(name); zeichne(); };
         inp.addEventListener('input', () => {
             const q = inp.value.trim();
             if (!q) {
@@ -389,7 +537,11 @@ const Werkzeuge = (() => {
                 const p1 = unscharf(t.name, q);
                 const p2 = unscharf(t.gruppe + ' ' + t.name, q);
                 const punkte = Math.max(p1, p2 - 40);
-                return punkte < 0 ? null : { t, punkte: punkte + Math.min(60, (oft[t.name] || 0) * 12) };
+                /* Angeheftetes führt auch die gefilterte Liste an — sonst wäre das
+                   Anheften nur eine Kosmetik für den ungefilterten Erstzustand. 100
+                   Punkte schlagen die 60 aus dem Häufigkeitsbonus sicher. */
+                const bonus = Math.min(60, (oft[t.name] || 0) * 12) + (fest.indexOf(t.name) >= 0 ? 100 : 0);
+                return punkte < 0 ? null : { t, punkte: punkte + bonus };
             }).filter(Boolean).sort((a, b) => b.punkte - a.punkte).map((x) => x.t);
             /* Und die Seiten, die so heissen — wie in Notions Schnellsuche */
             const seiten = q.length < 2 ? [] : Object.values(Store.cache.blocks)
@@ -409,7 +561,7 @@ const Werkzeuge = (() => {
             }
             if (e.key === 'ArrowDown') {
                 e.preventDefault();
-                i = Math.min(i + 1, treffer.length - 1);
+                i = Math.min(i + 1, Math.min(treffer.length, GEZEIGT) - 1);
                 zeichne();
             }
             if (e.key === 'ArrowUp') {
@@ -419,10 +571,20 @@ const Werkzeuge = (() => {
             }
             if (e.key === 'Enter' && treffer[i]) {
                 e.preventDefault();
-                fuehreAus(treffer[i]);
+                if (e.ctrlKey || e.metaKey)
+                    festSchalten(treffer[i].name);
+                else
+                    fuehreAus(treffer[i]);
             }
         });
         res.addEventListener('click', e => {
+            /* Der Stern ZUERST — sonst führt ein Druck darauf den Befehl aus,
+               statt ihn anzuheften. */
+            const stern = elVon(e)?.closest('[data-fest]');
+            if (stern?.dataset.fest) {
+                festSchalten(stern.dataset.fest);
+                return;
+            }
             const b = elVon(e)?.closest('button[data-i]');
             if (b)
                 fuehreAus(treffer[Number(b.dataset.i)]);

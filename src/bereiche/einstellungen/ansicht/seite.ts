@@ -175,6 +175,11 @@ const Einstellungen = (() => {
               `<button data-b="${id}" class="${id === offenerBereich ? 'on' : ''}">` +
               `<span class="mi">${i}</span>${n}</button>`).join('')).join('') +
         '</div>' +
+        /* Der Hinweis, dass die Liste weitergeht — siehe `mehrPruefen()`
+           weiter unten. Er liegt NEBEN der Liste, nicht darin: `.einst-nav`
+           rollt, und ein Kind darin würde mitrollen statt unten zu bleiben.
+           `.einst-fenster` ist `position:relative`, also genügt das. */
+        '<div class="einst-mehr" aria-hidden="true">\u2304</div>' +
         /* Der Weg zurück zur Liste — nur am Telefon zu sehen. Ohne ihn
            wäre die zweite Seite eine Sackgasse: das ✕ schliesst alles,
            und dann fängt man von vorn an. */
@@ -198,6 +203,40 @@ const Einstellungen = (() => {
       binde(o);
     };
     zeichne();
+
+    /* ========================================================================
+     * „ES GEHT NOCH WEITER" (E392)
+     * ------------------------------------------------------------------------
+     * GEMESSEN AM 4. SEPTEMBER, vor jeder Änderung: die Liste braucht 810 px
+     * für 19 Einträge und drei Gruppenüberschriften, bekam aber nur 718 px
+     * (1360×900), 632 (1280×720) oder 570 (1280×650). Verdeckt lagen immer
+     * dieselben drei Einträge — Speicher, Abrechnung, Über diese App.
+     *
+     * Das Fenster ist jetzt hoch genug, dass auf einem gewöhnlichen Schirm
+     * nichts mehr fehlt. Auf einem kleinen rollt die Liste weiterhin, und
+     * DASS sie rollt, muss man sehen können. Der Rollbalken leistet das
+     * nicht: er belegt ein Pixel und blendet sich aus.
+     *
+     * Also ein eigener Streifen — der WIEDER VERSCHWINDET, sobald man unten
+     * angekommen ist. Eine Anzeige, die immer etwas anzeigt, wird nicht
+     * gelesen; das ist der Fehler, in den diese App schon sechsmal gelaufen
+     * ist. `test392 §3` misst genau das.
+     *
+     * Ein `ResizeObserver` statt eines Fensterhorchers: er hängt am Element,
+     * verschwindet mit ihm und lässt beim Schliessen nichts zurück. Und er
+     * feuert einmal von selbst, was den ersten Anstrich gleich mit erledigt.
+     * ======================================================================*/
+    const navEl = o.querySelector<HTMLElement>('.einst-nav');
+    const mehrPruefen = (): void => {
+      if (!navEl || !fenster) return;
+      const rest = navEl.scrollHeight - navEl.clientHeight - navEl.scrollTop;
+      fenster.classList.toggle('hat-mehr', rest > 4);
+    };
+    if (navEl) {
+      navEl.addEventListener('scroll', mehrPruefen, { passive: true });
+      new ResizeObserver(mehrPruefen).observe(navEl);
+    }
+    mehrPruefen();
 
     o.addEventListener('click', e => {
       if (e.target === o || elVon(e)?.closest<HTMLElement>('[data-a="zu"]')) { o.remove(); return; }
@@ -254,8 +293,14 @@ const Einstellungen = (() => {
       return `<option value="${esc(wert)}"${wert === jetzt ? ' selected' : ''}>${esc(name)}</option>`;
     }).join('') + '</select>';
 
-  const schalter = (schluessel: string, an: any) =>
-    `<button class="schalter${an ? ' an' : ''}" data-toggle="${schluessel}"><i></i></button>`;
+  /* EIN KIPPSCHALTER SAGT, WAS ER IST UND WIE ER STEHT.
+     Vorher war er ein <button> ohne Text, ohne Marke und ohne Zustand: ein
+     Vorleseprogramm las „Schaltfläche" und sonst nichts, und ob er an war,
+     stand allein in seiner Farbe — genau das, was §38 verbietet. */
+  const schalter = (schluessel: string, an: any, name = '') =>
+    `<button class="schalter${an ? ' an' : ''}" data-toggle="${esc(schluessel)}" ` +
+    `role="switch" aria-checked="${an ? 'true' : 'false'}"` +
+    (name ? ` aria-label="${esc(name)}"` : '') + `><i></i></button>`;
 
   const knopf = (aktion: any, text: string, klasse = '') =>
     `<button class="ez-knopf ${klasse}" data-tun="${aktion}">${text}</button>`;
@@ -379,8 +424,8 @@ const Einstellungen = (() => {
                     ? 'Bereits erlaubt' : 'Erlauben')) +
       zeile('Erinnerungen in der App', 'Der Streifen unten am Bildschirm',
             schalter('erinnernInApp', V('erinnernInApp', true))) +
-      zeile('Karteikarten', 'Einmal am Tag melden, wenn Karten fällig sind',
-            schalter('kartenMelden', V('kartenMelden', true))) +
+      zeile('Karteikarten', 'Einmal am Tag melden, wenn Karten fällig sind — aus, bis du es einschaltest',
+            schalter('kartenMelden', V('kartenMelden', false))) +
       zeile('Offene Erinnerungen', '', `<span class="ez-grau">${Werkzeuge.erinnerungen().filter((e: any) => !e.erledigt).length} offen</span>`) +
       zeile('Alle Erinnerungen', '', knopf('erinnerungen-zeigen', 'Posteingang öffnen')),
 
@@ -812,7 +857,8 @@ const Einstellungen = (() => {
            hatte etwas dagegen; gefunden auf dem Bild (§55.1). */
         const haken = (k: string, an: boolean) =>
           `<button type="button" class="schalter${an ? ' an' : ''}" ` +
-          `data-plan-an="${k}" aria-pressed="${an ? 'true' : 'false'}"><i></i></button>`;
+          `data-plan-an="${esc(k)}" role="switch" aria-checked="${an ? 'true' : 'false'}" ` +
+          `aria-label="${esc(k)}"><i></i></button>`;
 
         return kopf('Lange Arbeiten',
           'Gilt für neue Aufträge — Seitenbilder, OCR, grosse Sicherungen. ' +
@@ -1077,7 +1123,11 @@ const Einstellungen = (() => {
           return;
         }
 
-        const neu = !V(k, k === 'erinnernInApp' || k === 'kartenMelden' ||
+        /* `kartenMelden` steht NICHT mehr in dieser Liste: seine Vorgabe ist
+           seit E409 aus. Redur bekam den Streifen auf jedem Bildschirm zu
+           sehen, ohne je danach gefragt zu haben. Der Schalter bleibt — wer
+           die Meldung will, holt sie sich. */
+        const neu = !V(k, k === 'erinnernInApp' ||
                           k === 'kiKontext' || k === 'autoVersionen' || k === 'ki:webFragen');
         S(k, neu);
         b.classList.toggle('an', neu);
@@ -1590,7 +1640,11 @@ const Einstellungen = (() => {
      * Der Merker wird nur gesetzt, wenn wirklich etwas gezeigt wurde. Sonst
      * würde ein Start um 8 Uhr ohne fällige Karten die Meldung um 14 Uhr
      * verschlucken, wenn dann welche fällig sind. */
-    if (V('kartenMelden', true)) {
+    /* AUS, BIS ER SIE EINSCHALTET (E409). Die Vorgabe war an, und damit stand
+       der Streifen bei jedem ersten Start des Tages unten in der Mitte — auch
+       über jedem Bildschirmfoto und über dem, was gerade gebaut wurde. Eine
+       Meldung, um die niemand gebeten hat, ist Werbung, keine Erinnerung. */
+    if (V('kartenMelden', false)) {
       const heute3 = new Date().toISOString().slice(0, 10);
       if (Store.getMeta('kartenGemeldet', '') !== heute3) {
         const n = Werkzeuge.faellig().length;

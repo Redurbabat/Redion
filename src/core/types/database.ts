@@ -30,8 +30,21 @@ export interface Column {
   type: string;
   /** Bei `select` und `status`: die erlaubten Werte samt Farbe. */
   options?: Array<{ name: string; color?: string }>;
-  /** Bei `formula`: der Ausdruck. Wird nie mit `eval` ausgewertet. */
-  formel?: string;
+  /** Bei `formula`: der Ausdruck. Wird nie mit `eval` ausgewertet.
+   *
+   *  ES HEISST `formula`, NICHT `formel` — nachgesehen, nicht geraten (E412).
+   *  Hier stand bis zum 5. September 2026 `formel`, und CLAUDE.md 52.8
+   *  schrieb es ab. Gelesen und geschrieben wird aber `def.formula`
+   *  (`datenbanken/dienst.ts` formelRechnen, `steuerung.ts:5603, 5765, 7048`).
+   *  Wer nach dem Typ baute, bekam eine Formel, die nie rechnete — genau
+   *  das ist beim Bau von E412 passiert.
+   *
+   *  Und `test294` schwieg dazu, obwohl er für solche Fälle gebaut wurde:
+   *  er prüft, ob ein Feldname IRGENDWO im Bestand vorkommt, und `formel`
+   *  kommt vor — im Formeldreieck der Elektrolehre, in den Knopfvariablen
+   *  des Editors und in `Redion.formel()` der Erweiterungen. Drei Dinge,
+   *  die mit einer Spalte nichts zu tun haben. */
+  formula?: string;
 
   /* ── Verknüpfung ──────────────────────────────────────────────────────
      NACHGESEHEN, NICHT GERATEN (E298). Hier standen bis zum 1. September
@@ -83,6 +96,41 @@ export interface Column {
   praefix?: string;
   /** Bei `number`, `formula`, `rollup`: wie der Wert angezeigt wird. */
   anzeige?: string;
+
+  /* ── Und dreizehn, die der Code liest und dieser Typ nicht kannte ──────
+     Gemessen am 5. September 2026 (E412): jedes `def.X` unter
+     `bereiche/datenbanken/` gegen die Felder hier. Dreizehn Treffer, und
+     `formula` war der teuerste davon.
+
+     Eine unvollständige Wahrheit ist die leiser gefährliche — wer den Typ
+     liest, hält ihn für vollständig und legt das Feld neu an, unter einem
+     zweiten Namen. `test294 §5` misst diese Richtung jetzt mit. */
+
+  /** Bei `number`, `formula`, `rollup`: die Einheit hinter der Zahl (E412). */
+  einheit?: string;
+  /** Ein erklärender Satz unter dem Feld, vor allem im Formular. */
+  beschreibung?: string;
+  /** Bei `anzeige: 'bar'` und `'ring'`: der Wert, der 100 % entspricht. */
+  max?: number;
+  /** Prüfregel: ein regulärer Ausdruck, dem der Wert genügen muss. */
+  muster?: string;
+  /** Der Satz, der erscheint, wenn `muster` nicht zutrifft. */
+  musterText?: string;
+  /** Prüfregel als Formel — muss wahr ergeben. */
+  regel?: string;
+  /** Der Satz, der erscheint, wenn `regel` nicht zutrifft. */
+  regelText?: string;
+  /** Prüfregel bei `number` und `duration`: der kleinste erlaubte Wert. */
+  regelMin?: number | string;
+  /** Und der grösste. */
+  regelMax?: number | string;
+  /** Bei `status` und `select`: von welchem Wert zu welchem gesprungen
+   *  werden darf. Ein leerer Eintrag heisst: alles ist erlaubt. */
+  uebergaenge?: Record<string, string[]>;
+  /** Bei `button`: welche Spalte der Knopf setzt. */
+  setzeKey?: string;
+  /** Bei `button`: auf welchen Wert. */
+  setzeWert?: unknown;
 }
 
 /** Das Schema einer Datenbank: Spaltenschlüssel → Spalte. */

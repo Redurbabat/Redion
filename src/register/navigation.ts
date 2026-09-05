@@ -92,12 +92,20 @@ Register.navigation = (() => {
          tiefer. Die Suche hat ihr eigenes Fenster (E160). */
       tun: () => App.suche() },
     { id: 'befehle',    name: 'Befehle',           icon: '⌘', zeichen: 'command',  platz: 'oben',  rang: 20,
-      knopfId: 'btn-cmd',       kuerzel: 'Strg ⇧ P',
+      knopfId: 'btn-cmd',       kuerzel: 'Strg ⇧ K',
+      /* NICHT ⇧ P (E400). Strg ⇧ P verschiebt eine Seite, seit die Palette
+         auf Strg ⇧ K umgezogen ist; hier stand vier Bögen lang das alte
+         Kürzel. test222 §5 merkte es nicht, weil es nur diese Zeile gegen
+         `index.html` hält — und dort stand dasselbe falsche Wort.
+         `test396 §2` drückt jetzt die Taste und sieht nach, was aufgeht. */
       tun: () => Werkzeuge.palette() },
     { id: 'heute',      name: 'Heute',             icon: '☀️', zeichen: 'today', platz: 'oben',  rang: 30,
-      knopfId: 'btn-home',      tun: () => Produktwelten.lernen('heute') },
+      knopfId: 'btn-home',      haupt: true, adresse: '#welt-lernen-heute',
+      tun: () => Produktwelten.lernen('heute') },
     { id: 'lernzentrum',name: 'Lernzentrum',       icon: '🎓', zeichen: 'learn', platz: 'oben',  rang: 40,
-      knopfId: 'btn-learning',  tun: () => Produktwelten.lernen('lernen') },
+      knopfId: 'btn-learning',  haupt: true, schauplatz: 'lernen',
+      adresse: '#welt-lernen-lernen',
+      tun: () => Produktwelten.lernen('lernen') },
     /* ELEKTRO HATTE KEINE EIGENE ZEILE. Es ist eines der 14 Module, und
        zwar das grösste — Fachzeichen, Schaltplan, Simulation, Rechner,
        Formelheft, Prüfung. Wer hin wollte, musste über den Workspace oder
@@ -108,7 +116,7 @@ Register.navigation = (() => {
        ändern die Krume, der fünfte tat es als einziger nicht. Der Rechner
        ist jetzt einer der Knöpfe dieser Seite statt ihre Vordertür. */
     { id: 'elektro',    name: 'Elektrotechnik',    icon: '⚡', zeichen: 'bolt', platz: 'oben',  rang: 45,
-      knopfId: 'btn-elektro',
+      knopfId: 'btn-elektro',   haupt: true,
       tun: () => { if (typeof Elektrostart !== 'undefined') Elektrostart.oeffne();
                    else if (typeof Electrical !== 'undefined') Electrical.open(); } },
     { id: 'workspace',  name: 'Arbeitsbereich',    icon: '🧱', zeichen: 'workspace', platz: 'oben',  rang: 50,
@@ -117,9 +125,12 @@ Register.navigation = (() => {
       /* Zweimal „Bibliothek": hier die Zeile der obersten Gruppe, weiter
          unten der Anhängepunkt mit demselben Namen. Verschiedene Kennungen,
          weil `melde` über die Kennung dublettenfrei hält. */
-      knopfId: 'btn-library',   tun: () => Produktwelten.bibliothek() },
+      knopfId: 'btn-library',   haupt: true, schauplatz: 'bibliothek',
+      adresse: '#welt-workspace-bibliothek',
+      tun: () => Produktwelten.bibliothek() },
     { id: 'aufgaben',   name: 'Aufgaben',          icon: '☑', zeichen: 'tasks',  platz: 'oben',  rang: 70,
-      knopfId: 'btn-tasks',     tun: () => Produktwelten.aufgaben() },
+      knopfId: 'btn-tasks',     haupt: true, adresse: '#welt-workspace-aufgaben',
+      tun: () => Produktwelten.aufgaben() },
     { id: 'posteingang',name: 'Posteingang',       icon: '📥', zeichen: 'inbox', platz: 'oben',  rang: 80,
       /* Und hier stand `Werkzeuge.meldungen()`. Der Knopf ruft seit jeher
          `Ansichten.posteingang()`; das eine ist die Meldungsliste, das
@@ -318,6 +329,62 @@ Register.navigation = (() => {
      * war, und die Registerkennung darf daneben heissen, wie sie mag.
      */
     marke?: string;
+    /**
+     * EINER DER FÜNF HAUPTWEGE (E388).
+     *
+     * Heute, Lernzentrum, Elektrotechnik, Bibliothek, Aufgaben. Sie sind
+     * das, wohin man täglich geht, und sie stehen deshalb IMMER da — am
+     * Rechner oben in der linken Leiste, am Telefon in der unteren
+     * Fünferleiste. Alles Übrige ist ein Ziel, das man sucht, und liegt
+     * hinter „Mehr Orte".
+     *
+     * WARUM DAS HIER STEHT UND NICHT IM MARKUP. Bis zum 3. September 2026
+     * gab es die Fünf DREIMAL: als `data-ruhig="bleibt"` in `index.html`,
+     * als Liste in der unteren Telefonleiste und als `SOLL` in test248.
+     * Gemessen kamen dabei ZWEI VERSCHIEDENE Fünfergruppen heraus — unten
+     * am Telefon stand „Dokumente · Heute · Lernen · Termine · Mehr", in
+     * der Seitenleiste „Heute · Lernzentrum · Elektrotechnik · Bibliothek
+     * · Aufgaben". Zwei Listen, die dasselbe behaupten, laufen auseinander
+     * (§8). Ab hier gibt es sie einmal, und zwar hier.
+     */
+    haupt?: boolean;
+    /**
+     * Der Schauplatz, den `App.schauplatz()` an diesem Ort meldet (E388).
+     *
+     * Meistens ist er die Kennung selbst — `heute`, `elektro`, `aufgaben`.
+     * Zweimal nicht: `lernzentrum` meldet sich als `lernen` und
+     * `bibliothekOben` als `bibliothek`. Wer den Ort in der Leiste
+     * markieren will, an dem man gerade steht, braucht diese zwei
+     * Ausnahmen — und sie stehen hier und nicht in der Leiste, damit es
+     * nicht wieder zwei Listen sind, die dasselbe behaupten (§8).
+     */
+    schauplatz?: string;
+    /**
+     * DIE ADRESSE, an der dieser Ort steht (E393).
+     *
+     * `schauplatz` allein reicht nicht, und das ist gemessen: er bildet
+     * den TITEL der Sonderansicht ab, und drei der fünf Hauptwege teilen
+     * sich ihren Titel mit einem Nachbarn.
+     *
+     *     Ort              schauplatz()   Adresse
+     *     Heute            heute          #welt-lernen-heute
+     *     Lernzentrum      heute          #welt-lernen-lernen
+     *     Bibliothek       workspace      #welt-workspace-bibliothek
+     *     Aufgaben         workspace      #welt-workspace-aufgaben
+     *
+     * Vor E393 leuchtete auf „Lernzentrum" deshalb „Heute", und auf
+     * „Bibliothek" und „Aufgaben" leuchtete gar nichts. Zwei von fünf
+     * stimmten.
+     *
+     * Die Adresse steht hier, wo auch `schauplatz` und `haupt` stehen —
+     * nicht in der Leiste (§8). Sie ist eine Kopplung an die Lernwelt und
+     * die Arbeitswelt: wer den Weg dort umbenennt, muss ihn hier
+     * nachziehen. `test390 §1` klickt alle fünf Orte an und sieht nach,
+     * welcher leuchtet; ein umbenannter Weg wird dort rot statt still
+     * falsch. `elektro` braucht keine — sein Schauplatz ist eindeutig,
+     * und der Rückfall soll benutzt bleiben, damit er nicht verrottet.
+     */
+    adresse?: string;
   };
 
   const LISTE: Eintrag[] = EINGEBAUT.slice();

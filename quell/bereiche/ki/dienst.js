@@ -1087,6 +1087,12 @@ const KI = (() => {
             .forEach(m => nachrichten.push(m));
         nachrichten.push({ role: 'user', content: text });
         let antwort = '';
+        /* Der Schimmer sagt „hier kommt noch etwas" und muss deshalb im
+           `finally` wieder weg: der Fehlerzweig schreibt seine Meldung in
+           dasselbe Feld, und durchsichtiger Text würde sie unlesbar machen.
+           Eine Fehlermeldung, die man nicht lesen kann, ist der schlechtere
+           Fehler. */
+        ziel.classList.add('ki-schreibt');
         try {
             await frage(nachrichten, (t) => {
                 antwort += t;
@@ -1100,6 +1106,9 @@ const KI = (() => {
         }
         catch (e) {
             ziel.textContent = '⚠ ' + (e instanceof Error ? e.message : String(e));
+        }
+        finally {
+            ziel.classList.remove('ki-schreibt');
         }
         /* Quellen unter die Antwort */
         const qk = quellenKarte(quellen);
@@ -1593,6 +1602,7 @@ const KI = (() => {
             (Store.getMeta('ki:persoenlich', '')
                 ? '\n\nDauerhafte Anweisungen: ' + Store.getMeta('ki:persoenlich', '') : '');
         let antwort = '';
+        ziel.classList.add('ki-schreibt');
         try {
             await frage([{ role: 'system', content: system },
                 { role: 'user', content: quelle.text.slice(0, 9000) }], (t) => {
@@ -1606,6 +1616,9 @@ const KI = (() => {
         catch (e) {
             ziel.textContent = '⚠ ' + (e instanceof Error ? e.message : String(e));
             return;
+        }
+        finally {
+            ziel.classList.remove('ki-schreibt');
         }
         const leiste = document.createElement('div');
         leiste.className = 'ki-antwortknoepfe';

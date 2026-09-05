@@ -41,7 +41,7 @@ declare const Store: any;
 declare const App: any;
 
 const WURZEL = path.resolve(import.meta.dirname, '../..');
-const PORT = 8797;
+const PORT = 9503;
 
 const TYP: Record<string, string> = {
   '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css',

@@ -35,6 +35,42 @@
 .finder .fh em{font-style:normal; color:var(--text-faint); font-weight:400; font-size:13px}
 .finder .fh .icon-btn{margin-left:auto}
 .finder .grp{padding:9px 14px 3px; font-size:11px; font-weight:600; color:var(--text-faint)}
+/* E400 · „N weitere" ist KEINE Gruppe, sondern die ehrliche Auskunft, dass
+   die Liste abgeschnitten ist. Deshalb steht sie tiefer, mittig und ohne
+   die fette Gruppenschrift — man soll sie lesen und nicht für eine
+   Überschrift halten, unter der noch etwas kommt. */
+.finder .grp.mehr{padding:10px 14px 12px; font-weight:400; font-style:italic;
+  text-align:center; border-top:1px solid var(--line-soft)}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   E401 · DER STERN ZUM ANHEFTEN
+   --------------------------------------------------------------------------
+   RUHIG, BIS MAN IHN BRAUCHT. Sechzig Zeilen mit sechzig sichtbaren Sternen
+   wären eine Wand aus Zeichen; man liest dann keinen einzigen. Sichtbar ist
+   er deshalb nur an der Zeile, auf der man steht, an der man mit der Maus
+   ist — und an jeder, die WIRKLICH angeheftet ist, denn das ist eine
+   Auskunft und keine Einladung.
+
+   `visibility` statt `display`, damit die Zeile nicht springt: der Platz
+   bleibt in jedem Fall stehen. */
+.finder .res > button > .fest{
+  flex:none; width:18px; text-align:center; font-size:13px; line-height:1;
+  color:var(--text-faint); visibility:hidden; cursor:pointer;
+
+  /* Das Zeichen gehört hierher und nicht in den HTML-Text: als Textknoten
+     stand es in jedem `textContent` einer Palettenzeile (test206). */
+  }
+.finder .res > button > .fest::before{content:"\2606"}          /* ☆ */
+.finder .res > button[data-ist-fest] > .fest::before{content:"\2605"}  /* ★ */
+.finder .res > button:hover > .fest,
+.finder .res > button.on > .fest{visibility:visible}
+.finder .res > button[data-ist-fest] > .fest{visibility:visible; color:var(--gold-tinte)}
+.finder .res > button > .fest:hover{color:var(--accent-text)}
+/* AM TELEFON GIBT ES KEIN ÜBERFAHREN. Dort steht der Stern immer da —
+   sonst wäre das Anheften mit dem Finger nicht erreichbar (§37). */
+@media (hover:none){
+  .finder .res > button > .fest{visibility:visible}
+}
 .fbtns{
   display:flex; gap:8px; padding:12px 16px; border-top:1px solid var(--line);
   justify-content:flex-end; flex-wrap:wrap;
@@ -578,10 +614,16 @@ a.bl:hover{color:var(--text)}
 .wb-tools button{
   width:28px; height:26px; border-radius:5px; font-size:14px; color:var(--text-dim);
   display:grid; place-items:center;
-}
+ position:relative;}
+/* 44 px TREFFFLÄCHE (§37, E406). HAUPTWEG: Die Werkzeuge des Whiteboards; man greift sie ständig.
+   Sie wächst nur nach oben und unten — waagerecht stehen die
+   Nachbarn, und eine Fläche, die sie überdeckt, macht es
+   schlimmer statt besser. */
+.wb-tools button::after{content:""; position:absolute; left:0; right:0; top:50%; height:44px; transform:translateY(-50%);}
 .wb-tools button:hover{background:var(--bg-hover); color:var(--text)}
 .wb-tools button.on{background:var(--accent); color:var(--auf-accent)}
-.wb-tools .wb-farbe{width:17px; height:17px; border-radius:50%; border:2px solid transparent}
+.wb-tools .wb-farbe{width:17px; height:17px; border-radius:50%; border:2px solid transparent; position:relative;}
+.wb-tools .wb-farbe::after{content:""; position:absolute; left:-3px; right:-3px; top:50%; height:44px; transform:translateY(-50%);}
 .wb-tools .wb-farbe.on{border-color:var(--text)}
 .wb-sep{width:1px; height:18px; background:var(--line); margin:0 5px}
 .wb-flaeche{display:block; width:100%; touch-action:none; color:var(--text-faint); cursor:crosshair}
@@ -1033,7 +1075,7 @@ body.fokus .blk:focus-within, body.fokus .blk:hover{opacity:1}
   border-radius:6px; color:var(--text-faint); cursor:pointer; font-size:13px;
   line-height:1; padding:4px 8px; min-height:26px;
   width:auto; align-self:flex-end}
-.wl-hak:hover{color:var(--c-gruen, #2a8); border-color:var(--c-gruen, #2a8)}
+.wl-hak:hover{color:var(--erfolg); border-color:var(--erfolg)}
 .wl-zurueck{margin-top:8px; font-size:12px; color:var(--text-faint)}
 .wl-zurueck button{background:none; border:none; padding:0 0 0 4px;
   color:var(--accent-text); cursor:pointer; font:inherit;

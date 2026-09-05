@@ -457,12 +457,12 @@ const Zusammen = (() => {
               esc(k.feld) + ' · ' + esc(k.grund || '') + '</div>' +
             '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
               '<div><div style="font-size:.85em;opacity:.7;margin-bottom:4px">Hier</div>' +
-                '<div style="background:var(--soft,#f6f6f6);padding:8px;border-radius:6px;' +
+                '<div style="background:var(--bg-card);padding:8px;border-radius:6px;' +
                 'white-space:pre-wrap;word-break:break-word">' + kurz(k.hier) + '</div>' +
                 '<button class="btn" style="margin-top:6px;width:100%" ' +
                 'data-w="hier" data-k="' + esc(k.schluessel) + '">Diese behalten</button></div>' +
               '<div><div style="font-size:.85em;opacity:.7;margin-bottom:4px">Anderes Gerät</div>' +
-                '<div style="background:var(--soft,#f6f6f6);padding:8px;border-radius:6px;' +
+                '<div style="background:var(--bg-card);padding:8px;border-radius:6px;' +
                 'white-space:pre-wrap;word-break:break-word">' + kurz(k.dort) + '</div>' +
                 '<button class="btn" style="margin-top:6px;width:100%" ' +
                 'data-w="dort" data-k="' + esc(k.schluessel) + '">Diese nehmen</button></div>' +

@@ -283,7 +283,9 @@ Redion.befehl('Tagesnotiz anlegen', 'Neue Seite mit dem heutigen Datum', () => {
                     'baue nur ein, was du verstehst.</div>' +
                     (l.length
                         ? '<div class="ew-liste">' + l.map((e, i) => `<div class="ew-z${e.an === false ? ' aus' : ''}">` +
-                            `<button class="schalter${e.an === false ? '' : ' an'}" data-an="${i}"><i></i></button>` +
+                            `<button class="schalter${e.an === false ? '' : ' an'}" data-an="${i}" ` +
+                            `role="switch" aria-checked="${e.an === false ? 'false' : 'true'}" ` +
+                            `aria-label="${esc(e.name || 'Erweiterung')}"><i></i></button>` +
                             `<div class="ew-text"><b>${esc(e.name)}</b>` +
                             `<span>${esc(e.kurz || (e.code || '').split('\\n')[0].slice(0, 70))}</span></div>` +
                             `<button data-code="${i}" title="Code ansehen">⌨</button>` +

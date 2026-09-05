@@ -5620,51 +5620,165 @@ belegt mit `test386` (38 Punkte, sieben Mutationen rot gesehen).
 
 Was noch aussteht, in der Reihenfolge des Berichts:
 
-NÄCHSTER SPRINT (F01, F02, F03, F08, F11, F13, F14)
+NÄCHSTER SPRINT (F01 ✓, F02 ✓, F03 halb, F08 ✓, F11 ✓, F13 halb, F14 halb)
 
-a. **F01 · P1 · Die Navigation blieb im Workspace-Zustand hängen.** Im Test
-   waren Heute, Lernzentrum, Elektro, Bibliothek und Aufgaben sichtbar und
-   anklickbar, der Inhalt blieb aber auf der Übersicht. Noch nicht
-   nachgemessen gegen den heutigen Stand — E272 Phase E hat das „Gehen" ins
-   Register gezogen, es kann also schon zu sein. Erst messen.
+a. **F01 · NACHGEMESSEN, der Befund stimmt so nicht** (E388). Der Bericht
+   sagt, der Inhalt sei nach dem Klick auf der Übersicht geblieben. Am
+   3. September gemessen: er wechselt. `schauplatz` geht von `bibliothek`
+   auf `heute`, die Adresse auf `#welt-lernen-heute`, der Text im
+   Arbeitsraum von 1060 auf 2739 Zeichen. Was der Bericht sah, war E353.
 
-b. **F02 · P1 · Vier Navigationslogiken nebeneinander** — Menüband „Gehen",
-   Seitenleiste, obere Reiter, „Mehr". Das ist der grösste Bogen des ganzen
-   Berichts und der einzige, der eine Entscheidung von Redur braucht: welche
-   ist die primäre? Der Bericht schlägt vor: Rechner = Seitenleiste, Telefon
-   = fünf Pillen, Menüband nur für dokumentbezogene Werkzeuge.
+   Der ECHTE Befund an dieser Stelle war ein anderer und stand nicht im
+   Bericht: am Rechner gab es die fünf Knöpfe gar nicht. `#sidebar` ist
+   seit E272 Phase F `display:none`, und die Kante trug zehn Knöpfe, von
+   denen keiner ein Ort war. Behoben mit E388.
 
-c. **F03 · P1 · zur Hälfte ZU (E387).** „Nur die aktive Seite zeigt
+b. **F02 · P1 · ZU (E388 + E391).** Die Orte stehen oben in der linken
+   Leiste, „Mehr Orte" öffnet den Rest, der Ort, an dem man steht, ist
+   markiert — und seit E391 hat „Gehen" das Band verlassen. Das Menüband
+   trägt nur noch dokumentbezogene Werkzeuge. Am Telefon trug die untere
+   Leiste die fünf Pillen schon vorher.
+
+   OFFEN BLEIBT EIN STÜCK:
+
+   1. **Zwei verschiedene Fünfergruppen.** Gemessen: die linke Leiste und
+      `index.html` sagen „Heute · Lernzentrum · Elektrotechnik ·
+      Bibliothek · Aufgaben", die untere Telefonleiste sagt „Dokumente ·
+      Heute · Lernen · Termine · Mehr". Seit E388 steht die eine Gruppe im
+      Register (`haupt: true`); die Telefonleiste liest sie noch nicht.
+
+      WELCHE FÜNF ES SEIN SOLLEN, IST REDURS ENTSCHEIDUNG. Am Telefon ist
+      ein Platz für „Mehr" nötig, es bleiben also vier für Orte — und die
+      untere Leiste trägt heute „Termine", das keiner der fünf Hauptwege
+      ist, während „Elektrotechnik" und „Aufgaben" dort fehlen.
+
+   2. **Der Ortskatalog — ZU, aber anders als gedacht (E393).** Die
+      Dublette ist weg: „Zeitmesser" stand zweimal (`w-zeit` und
+      `zeitmesser`), beide riefen `Zeitmesser.panel()`. Es bleibt der mit
+      dem brauchbaren Hinweis; `test390 §3` hält es fest, und zwar auf
+      DOPPELTE NAMEN, nicht auf diesen einen.
+
+      Die andere Hälfte — „Orte und Handlungen mischen sich" — hat die
+      Messung nicht bestätigt, sondern etwas Grösseres gefunden. Siehe
+      **L126**.
+
+c. **F03 · P1 · GANZ ZU (E387 + E398).** „Nur die aktive Seite zeigt
    Werkzeuge" ist gebaut und gemessen: von drei gebauten Leisten ist genau
    eine sichtbar, und genau eine Bühne trägt `data-aktiv`. Der DOM-Teil war
    schon durch E299 zu (ungesehene Seiten werden nicht gezeichnet).
 
-   OFFEN BLEIBT die Wahl „Einzelseite / Fortlaufend" mit Einzelseite als
-   Vorgabe am Telefon. Das ist keine Reparatur mehr, sondern eine
-   Entscheidung gegen E299: Redur wollte dort ausdrücklich „ganz öffnen
-   komplett wie one note". Braucht seine Zustimmung, bevor jemand daran
-   geht.
+   DIE ZWEITE HÄLFTE hat Redur am 4. September entschieden. Gefragt wurde
+   zweiteilig — willst du die Wahl, und soll Einzelseite am Telefon die
+   Vorgabe werden. Seine Antwort: „ja". Das Erste ist damit bestellt; für
+   das Zweite gilt die Lesart, die seine eigene Ansage aus E299 nicht
+   zurücknimmt („ganz öffnen komplett wie one note"):
 
-d. **F08 · P2 · Das KI-Seitenfeld nimmt dauerhaft Arbeitsbreite.** Im
-   Dokumentmodus soll es eingeklappt starten, am Telefon als Bottom Sheet.
+       Die Wahl kommt. Die Vorgabe bleibt Fortlaufend, auch am Telefon.
 
-e. **F11 · P2 · 19 Einstellungskategorien auf einer Ebene.** Der Bericht
-   schlägt sechs Obergruppen vor.
+   Gebaut als Schalter im Inspector, gemerkt je Dokument als Meta. `test395`
+   hält beides — dass es die Wahl gibt und dass sie die Vorgabe NICHT
+   angefasst hat. §1 ist der Wächter für E299 und wurde mit `einzeln: true`
+   fünffach rot gesehen.
 
-f. **F13 · P2 · Echter Geräte-Abnahmelauf.** DAS KANN ICH NICHT — im
-   Container gibt es kein iPhone und kein Android. Was möglich ist: ein
-   Release-Gate über die vier Grössen aus dem Bericht (360×800, 390×844,
-   428×926 und Querformat) mit Bildern und Kernflows. Der echte Safari- und
-   Chrome-Lauf bleibt Redurs Sache.
+   NEBENBEI GEFUNDEN, EIGENER EINTRAG: **L127**.
 
-g. **F14 · P2 · Werkzeugdichte am Telefon.** Der Bericht will vier
-   Primärwerkzeuge plus „Mehr". E356 zeigt heute schon nur die Gruppen des
-   gewählten Werkzeugs; ob das reicht, ist nicht gemessen.
+d. **F08 · ZU (E394).** Gemessen auf 1360 × 900 mit einem A4-Blatt: das
+   Feld blieb im Dokumentmodus stehen, 380 px breit, und liess dem Blatt
+   980 von 1360 — 28 % für etwas, das man gerade nicht braucht. E384 hatte
+   den Modus damit begründet, dass „die ganze Schale wegfällt"; das KI-Feld
+   fehlte in der Liste. Jetzt klappt es beim Eintreten zu und beim
+   Verlassen wieder auf — und lässt sich im Dokument von Hand öffnen, denn
+   „fasse diese Seite zusammen" ist dort die naheliegende Frage.
+
+   DIE ZWEITE HÄLFTE WAR SCHON DA: „am Telefon als Bottom Sheet" ist seit
+   Längerem erfüllt. Nachgemessen bei 390 × 844: `position:fixed`, unten
+   verankert, 20 px runde Ecken oben, Beginn 102 px unter den Kopfleisten.
+   `test391 §5` hält es fest, damit die Forderung nicht ein zweites Mal
+   als offen gilt.
+
+e. **F11 · ZU (E392) — aber nicht so, wie der Bericht es meinte.** Die
+   Behauptung „19 Kategorien auf einer Ebene" hat die Messung nicht
+   überlebt: es gibt seit Langem VIER Gruppen — vier Einträge ohne
+   Überschrift oben, dann „Funktionen" (7), „Verwaltung" (5) und „Zugriff
+   und Abrechnung" (3). Die Überschriften stehen sichtbar da, am Rechner
+   wie am Telefon. Sechs Obergruppen zu erfinden hätte eine Ordnung
+   ersetzt, die es schon gibt.
+
+   DER WIRKLICHE FEHLER stand daneben und war schwerer:
+
+   | | Liste braucht | sichtbar | verdeckt |
+   |---|---|---|---|
+   | 1360 × 900 | 810 px | 718 px | 92 px |
+   | 1280 × 720 | 810 px | 632 px | 178 px |
+   | 1280 × 650 | 810 px | 570 px | 240 px |
+
+   Verdeckt lagen IMMER dieselben drei: Speicher, Abrechnung, Über diese
+   App. Nicht auf kleinen Bildschirmen — auf allen, denn `.einst-fenster`
+   war auf `min(720px, 88vh)` gedeckelt und wuchs mit keinem Schirm mit.
+   Dazu hing das Fenster an `.overlay` 14vh unter dem oberen Rand: bei
+   1280×720 lag seine Unterkante 43 px ausserhalb des Bildes.
+
+   Behoben mit E392: Fenster mittig und `min(920px, 92vh)`, Zeilen ein
+   Pixel dichter, und für kleine Schirme ein Streifen, der sagt, dass es
+   weitergeht — und wieder verschwindet, sobald man unten ist. `test389`,
+   19 Punkte, fünf Mutationen rot gesehen.
+
+f. **F13 · ZUR HÄLFTE ZU (E395).** Das Abnahmetor über die vier Grössen
+   des Berichts gibt es: `test392`, 23 Punkte. Und es hat beim ersten Lauf
+   einen echten Fehler gefunden.
+
+   DIE DREI HOCHFORMATE waren sauber — nichts rollt waagerecht, die fünf
+   Wege der unteren Leiste messen 48 px (§37 verlangt 44). DAS QUERFORMAT
+   nicht: bei 844 × 390 ist die Kontextkante 353 px hoch, ihr Inhalt
+   braucht 424, und `overflow` steht auf `hidden`. Acht Knöpfe lagen
+   ausserhalb — darunter Suchen, Neu und Einstellungen —, und die untere
+   Telefonleiste greift dort nicht, weil sie bei 760 px Breite endet. Auf
+   einem quer gehaltenen Telefon führte kein Weg zu „Neu".
+
+   Behoben mit E395: die Kante faltet sich gruppenweise, und `.k-unten`
+   gibt nichts ab.
+
+   OFFEN BLEIBT der echte Safari- und Chrome-Lauf auf Redurs Geräten. Das
+   Tor prüft Masse und Erreichbarkeit, nicht Gesten, Tastatur, Zurück-Wisch
+   oder die Eigenheiten von iOS-Safari.
+
+g. **F14 · ZUR HÄLFTE ZU (E396) — der Rest ist Redurs Entscheidung.**
+   Gemessen bei 390 × 844 im Dokumentmodus: dreizehn Werkzeuge, alle 44 px
+   hoch (§37 stimmt), Leiste 368 px breit, Inhalt 636 px.
+
+   | | |
+   |---|---|
+   | im Bild ohne Wischen | Schreiben · Auswahl · Stift · Marker · Form · Abdecken · Haftnotiz |
+   | erst nach dem Wischen | Text · Fachzeichen · Bild · Radieren · Rückgängig · Wiederholen |
+
+   ZWEI DAVON SIND KEINE WERKZEUGE: „Rückgängig" und „Wiederholen" ändern
+   nicht, was der Finger tut. Am Rechner stehen sie seit E359 in einer
+   eigenen Zeile; am Telefon kleben sie jetzt am rechten Rand (E396,
+   `test393`).
+
+   OFFEN BLEIBT DIE REIHENFOLGE. „Radieren" steht an elfter Stelle und
+   damit hinter einem Wisch — beim Schreiben von Hand ist es das dritte
+   Werkzeug, nicht das elfte. Der Bericht will „vier Primärwerkzeuge plus
+   Mehr". Beides hiesse, die Reihenfolge der Zeichenwerkzeuge neu zu
+   setzen, und die gehört Redur: er hat sie in E352, E355, E359 und E375
+   selbst gebaut. **Frage an ihn:** welche vier Werkzeuge sollen ohne
+   Wischen dastehen?
 
 POLITUR (F09, F10, F12, F17, F18)
 
 h. **F09** Befehlsmenü mit Suche, zuletzt verwendet, Favoriten.
-i. **F10** „Handschriftliche Notiz" als eigener Typ im Neu-Menü.
+i. **F10 · ZU (E397) — den Typ gab es schon, er öffnete nur nicht.** „Blatt"
+   steht seit E100 unter „Zeichnen". Gemessen: der Weg legte eine Seite mit
+   den Blöcken `["text", "blatt"]` an und liess `dokumentModus` auf `false`
+   — man landete im Texteditor, mit einem leeren Absatz oben und dem Blatt
+   als Kasten darunter, und musste „Dokumentmodus" erst selbst finden. Die
+   Notizhefte setzen die Flagge längst beim Anlegen; dieser Weg nicht.
+
+   Jetzt liegt das Blatt gleich zum Schreiben da, und die Unterzeile sagt
+   den Zweck statt nur das Papier. DER NAME BLEIBT „BLATT": so heisst die
+   Blockart, die Werkzeugleiste und alles, was E100, E359 und E375 gebaut
+   haben. Ein zweiter Name für dieselbe Sache steht dann in der Suche, im
+   Slash-Menü und im Papierkorb nicht (§8). `test394`, 16 Punkte.
 j. **F12** Datenschutztexte nach Modus formulieren statt pauschal.
 k. **F17** Progressive Offenlegung im Onboarding.
 l. **F18** Visuelle Hierarchie — ein dominantes Arbeitsziel je Ansicht.
@@ -5675,3 +5789,336 @@ WAS DER BERICHT NICHT WISSEN KONNTE: er prüfte E353. Seither sind E354–E387
 dazugekommen, darunter E384 (das Dokument ist der ganze Bildschirm) und
 E296/E299 am PDF. Vor jedem dieser Punkte gehört deshalb eine Messung gegen
 den HEUTIGEN Stand, nicht gegen den Bericht.
+
+
+================================================================================
+L124 — Der Start holt 2081 KB, und daran ändert keine Ladeart etwas
+================================================================================
+4. September 2026 · gefunden beim Bauen von E389
+
+E389 hat den Start von 2607 auf 2081 KB (gzip) gebracht und ungedrosselt von
+5051 auf 556 ms. Gedrosselt bleiben 12,4 Sekunden bis DOMContentLoaded, und
+der Grund ist einfach: auf „Slow 4G" sind 2081 KB rund zehn Sekunden reine
+Übertragung. Es müssten WENIGER BYTES werden; wie sie geladen werden, ist
+ausgereizt.
+
+GEMESSEN, 184 Skripte, die zehn grössten:
+
+    122 KB  bereiche/datenbanken/steuerung.js
+     96 KB  schale/stil/bausteine.css
+     64 KB  schale/aufbau/schale.js
+     61 KB  bereiche/hilfe/wissensseiten.js
+     48 KB  kern/ablage/indexdb.js
+     48 KB  register/elektroformeln.js
+     47 KB  bereiche/editor/ansicht/editor.js
+     46 KB  bereiche/wissen/lernwelt.js
+     43 KB  bereiche/wissen/werkzeuge.js
+     40 KB  bereiche/dateien/ausgeben.js
+
+Danach ein langer Schwanz. Es gibt also keine zweite fette Datei, die man
+wie pdf.js herausnehmen könnte — 1848 KB verteilen sich auf 184 Stücke.
+
+DER NÄCHSTE HEBEL WÄRE, GANZE BEREICHE ERST BEIM BETRETEN ZU LADEN. Wer
+nie das Elektro-Formelheft öffnet, braucht seine 48 KB nicht; wer nie eine
+Datenbank anlegt, die 122 KB der Steuerung nicht. `Register.module` weiss
+schon, welcher Bereich welcher ist — die Kenntnis ist also da.
+
+WARUM DAS NICHT EINFACH GEBAUT WIRD: es rührt an §5 (Bereiche kennen
+einander nicht — aber sie kennen einander AUCH NICHT, wenn sie noch gar
+nicht geladen sind) und an §7 (`start.js` ist der einzige Einstiegspunkt).
+Jeder Aufruf über einen globalen Namen — und davon lebt diese App, siehe
+`test87 §8` — müsste vorher wissen, ob sein Modul schon da ist. Das ist
+kein Bogen, das ist ein Umbau, und er gehört Redur.
+
+Ein billigerer Zwischenschritt, der nichts an der Architektur rührt: den
+Dienstarbeiter den Grundstock im HINTERGRUND holen lassen statt im ersten
+Zug. Beim zweiten Besuch kommt ohnehin alles aus dem Zwischenspeicher —
+gemessen ist bisher nur der kalte erste Besuch, und den misst auch
+PageSpeed.
+
+
+================================================================================
+L125 — ~~Der Rundgang zeigt auf einen Reiter, den man nicht sieht~~ — GESCHLOSSEN am 4. September 2026 (E390)
+================================================================================
+4. September 2026 · gefunden beim Bauen von E389
+
+**GESCHLOSSEN durch E390, und es war mehr als der eine Schritt.** Gemessen
+zeigten im Grundzustand FÜNF der neun Schritte am Rechner auf nichts und
+ACHT am Telefon. Jedes Ziel trägt jetzt mehrere Kandidaten; genommen wird
+der erste, den man wirklich sieht. Danach: null von neun blind, an beiden
+Grössen. `test61` läuft die Führung jetzt wirklich durch statt nur den
+ersten Schritt zu messen (39 Punkte statt 36, vier Mutationen rot).
+
+`test61` ist rot, zwei Punkte: „Das Loch liegt auf dem Ziel" und „Und ist
+sichtbar". NACHGEMESSEN IN EINEM ARBEITSBAUM auf dem Stand davor — dort
+ebenfalls rot. Es ist also kein Nachlauf der Leistungsarbeit.
+
+Der Grund ist E383: der erste Schritt der Führung zeigt auf
+`[data-mb-reiter="gehen"]`, und im ruhigen Band steht dieser Reiter gar
+nicht da. `stellen()` versteckt das Loch, wenn das Ziel fehlt — genau die
+stille Sorte Fehler, die `rundgang.ts` in seinem eigenen Kopf beschreibt:
+„neun Schritte ohne Loch sehen aus wie eine Führung, zeigen aber auf
+nichts."
+
+ZU TUN: der erste Schritt gehört auf die Orte in der linken Leiste (E388) —
+die stehen immer da. Am Telefon auf die untere Fünferleiste. Und `test61`
+zieht den Anker mit, wie sein eigener Kommentar es verlangt.
+
+
+================================================================================
+L126 — Sechsundzwanzig von 45 Zielen sind das Suchfenster
+================================================================================
+4. September 2026 · gefunden beim Nachmessen von L123 F02 Punkt 2
+
+Der UX-Bericht sagt, der Ortskatalog „mische Orte und Handlungen", und nennt
+fünf: Neue Seite, Suchen, Befehle, App installieren, Passwort. Um das nicht
+nach Gefühl zu entscheiden, wurde jeder der 45 Einträge aus
+`Register.menueband.orte()` wirklich angeklickt und gemessen, was danach
+anders ist.
+
+DREI DURCHGÄNGE, UND DIE ERSTEN ZWEI WAREN FALSCH — das gehört mit
+aufgeschrieben, weil beide Male die Messung plausibel aussah:
+
+  1. „Legt sich ein Fenster darüber?" Damit wurden Kalender, Tagesplan und
+     Datenbanken zu Handlungen. Sie sind Fenster und trotzdem Orte.
+  2. „Wie gross ist das Neue?" Aber `.overlay` ist der verdunkelnde GRUND
+     (`position:fixed; inset:0`) und deshalb immer so gross wie der
+     Bildschirm. Sechsundzwanzig Einträge kamen auf glatte 100 %.
+  3. Erst das FENSTER im Grund gemessen — `.overlay > *` — ergab Zahlen,
+     die etwas bedeuten.
+
+DAS ERGEBNIS:
+
+    12   ändern den Schauplatz oder die Adresse — echte Orte
+    26   öffnen ein `.finder`, zwischen 10 % und 58 % des Bildschirms
+     3   öffnen ein Panel (Zeitmesser 280×226, KI 380×900)
+     4   Randfälle (Dateiwahl, neue Seite)
+
+`.finder` ist die Bauform der SCHNELLSUCHE. Kalender, Tagesplan,
+Wochenrückblick, Zurückgestellt, Datenbanken, Datenmodell, Kennzahlen,
+Agenten, Besprechungen, Marktplatz, Erweiterungen, Papierkorb, Was Redion
+kann, Erste Hilfe, Tastenkürzel, Aussehen, Tempo, Passwort, App installieren,
+Schnellnotizen, Vorlagen, Dateien, Wissen, Verbinden, Was hereinkommt und die
+Suche selbst — alle sechsundzwanzig sind dasselbe Popup mit anderem Inhalt.
+
+**DAS IST DER GRUND, WARUM DIE LADE SICH WIE EIN HAUFEN LIEST**, und es ist
+kein Namensproblem. Die Trennung „Ort gegen Handlung" ist heute nicht
+ziehbar, weil mehr als die Hälfte der Ziele als Suchfenster gebaut ist. Eine
+Gruppe „Handlungen" darüberzulegen wäre ein Etikett auf einem Aufbau gewesen;
+die nächste Messung hätte es wieder abgezogen. Deshalb steht es hier statt in
+E393.
+
+WAS DAS KOSTET, ehrlich beziffert: `.einst-fenster` (68 %) und die zwei
+Marktplatz-Fenster (58 %) sind bereits so gross, dass sie Vollbild sein
+wollen. Am Telefon werden ohnehin alle zu Vollbild — dort fällt es nicht auf.
+Am Rechner steht die Bibliothek eines Menschen in einem 720 × 224 Pixel
+grossen Kasten.
+
+ZU TUN, wenn Redur es will — und es ist ein eigener Bogen, kein Nachlauf:
+entscheiden, welche der 26 ein Schauplatz werden (Kalender, Tagesplan,
+Datenbanken, Marktplatz sind die Kandidaten) und welche ein Fenster bleiben
+(Suchen, Befehle, Passwort, App installieren). Danach kann `App.schauplatz()`
+sie unterscheiden, und danach — erst danach — bekommt die Lade eine
+Gliederung, die etwas behauptet, das auch stimmt.
+
+BELEG: die drei Messläufe, zuletzt am 4. September; die Zahlen oben stammen
+aus dem dritten.
+
+
+================================================================================
+L127 — Der Rollbalken zeigte ein Viertel des Wegs an (GESCHLOSSEN, E399)
+================================================================================
+
+GEFUNDEN BEIM MESSEN FÜR E398, nicht gesucht — und deshalb steht die Lücke
+hier, obwohl sie im selben Zug zu war: wer später sucht, warum `passen()`
+Platzhalter setzt, soll finden, wofür.
+
+Im Dokumentmodus bekommt jede noch ungezeichnete Seite einen Platzhalter in
+der Höhe, die sie später haben wird. E299 schrieb dazu wörtlich: „sonst
+springt der Rollbalken, sobald sie gezeichnet ist." Gemessen an sechs
+A4-Seiten auf 1360 × 900 tat er genau das:
+
+    beim Öffnen    Rolle 3513   Höhen [1922, 283, 283, 283, 283, 283]
+    nach 3000 px   Rolle 6620   Höhen [1837, 1922, 1837, 283, 283, 283]
+
+Der Platzhalter war 283 px hoch, die Seite wird 1922. Bei achtzig Seiten —
+der Zahl, mit der E299 ausdrücklich rechnet — zeigte der Balken von Anfang an
+ein Viertel des Wegs an, und ein Griff daran landete jedes Mal woanders, als
+er aussah.
+
+URSACHE: `center.clientWidth` ist NULL, wenn die Bühnen gebaut werden; der
+Kasten hängt zu dem Zeitpunkt noch nicht im DOM. Die Rechnung war nie falsch,
+sie lief nur zu früh.
+
+GESCHLOSSEN mit E399: sie steht jetzt in `passen()` und folgt damit auch dem
+Zoom und der Fensterbreite mit, was sie vorher nicht tat. Gemessen 11 283 px
+beim Öffnen und 11 283 px nach dem Rollen. `test395 §7` hält es fest, mit
+`platzhalterSetzen(200)` rot gesehen.
+
+
+================================================================================
+L128 — Was die F09-Messung sonst noch fand (sieben offene Punkte)
+================================================================================
+4. September 2026 · gefunden beim Messen für E400
+
+F09 des Prüfberichts lautet: „Befehlsmenü mit Suche, zuletzt verwendet,
+Favoriten". Gemessen ist die erste Hälfte längst gebaut (E400 nennt die
+Belege). Zwei Funde daraus waren so schwer, dass sie sofort behoben wurden.
+Diese sieben bleiben offen — jeder mit Beleg, jeder ein eigener Bogen.
+
+1. **GESCHLOSSEN (E401) · „Zuletzt verwendet" gibt es für Befehle nicht.** Es gibt nur
+   `paletteOft` (`werkzeuge.ts:305-310`), einen reinen Zähler: `m[name] =
+   (m[name]||0)+1`. Kein Zeitstempel, keine Reihenfolge. Die SUCHE hat das
+   Gegenstück längst — `suchverlauf` mit der Überschrift „Zuletzt gesucht"
+   (`schale.ts:1064/1082`) —, die Palette nicht. Das ist die eine Hälfte
+   von F09, die wirklich fehlt.
+
+2. **HALB GESCHLOSSEN (E401) · Favoriten für Befehle gibt es nicht.**
+   `paletteFest` ist gebaut — Stern in der Zeile, Strg+Enter, Gruppe ganz
+   oben. OFFEN bleibt das GEMEINSAME Register: es sind jetzt sechs
+   Favoriten-Speicher, die einander nicht kennen. Der sechste ist Absicht
+   (ein Befehl ist keine Seite), macht die Frage aber nicht kleiner.
+   Ursprünglicher Befund: Fünf Favoriten-Sorten stehen im
+   Haus (Seiten, Chats, Zeichenwerkzeuge, Seitenleisten-Abschnitte,
+   Regal-Sterne) — keine für Befehle oder Orte, und kein gemeinsames
+   Register dafür (§8: fünf Speicher, die einander nicht kennen). Das ist
+   die zweite fehlende Hälfte von F09.
+
+3. **GESCHLOSSEN (E402) · Ein toter Favoriten-Block.** Der Bildschirm fragt
+   jetzt `Store.favorites()` statt eines eigenen Filters — ein Katalog, nicht
+   zwei (§8). `test398`, Mutation rot gesehen. Ursprünglicher Befund: `ansichten/dienst.ts:491` filtert
+   `alle.filter(b => b.fav)` — das Feld heisst `favorite`. Der Bildschirm
+   „Seiten" ist erreichbar, die Liste bleibt immer leer, und weil `block()`
+   leere Abschnitte ganz weglässt (`:510-511`), sieht man nicht einmal, dass
+   etwas fehlt. Auch im gebauten Stand. Kein Prüflauf fasst ihn an.
+
+4. **HALB GESCHLOSSEN (E401) · `paletteOft` wächst unbegrenzt und misst das
+   Falsche.** Der Deckel steht bei 50, und Seitentitel landen nicht mehr
+   darin. OFFEN bleibt, dass nur gezählt wird, was AUS DER PALETTE
+   ausgeführt wird — wer ein Tastenkürzel benutzt, zählt nicht mit.
+   Ursprünglicher Befund: Kein Deckel,
+   kein Vergessen, kein Zurücksetzen — als einziger Verlauf im Haus (die
+   anderen deckeln bei 8 / 12 / 60 / 100 / 2000). Ein umbenannter Befehl
+   lässt seinen alten Namen für immer stehen. Seitentitel landen ungefiltert
+   darin (`werkzeuge.ts:371-377` → `355`). Und gezählt wird nur, was AUS DER
+   PALETTE ausgeführt wird — wer dasselbe per Tastenkürzel auslöst, zählt
+   nicht mit. Das Objekt wandert über `indexdb.ts:1846-1857` in jede `.json`
+   und `.redion`.
+
+5. **Vier von acht Ausgängen des Befehlsregisters haben null Aufrufer.**
+   `gruppen()`, `anzahl()`, `lieferanten()` und `nimmZurueck()` werden im
+   ganzen Projekt nirgends gerufen, auch von keinem Prüflauf. Und ein Befehl
+   hat keine stabile Kennung: `nimmZurueck()` findet über den `titel`, zwei
+   gleichnamige Befehle sind nicht unterscheidbar.
+
+6. **`kuerzel` in `register/navigation.ts` hat null Verbraucher.** Die
+   Kürzel, die man in der Seitenleiste sieht, stehen von Hand in
+   `index.html`. Genau dadurch konnte das falsche „Strg ⇧ P" unbemerkt
+   bleiben (E400): die richtige Stelle (`register/tasten.ts:29`) und die
+   sichtbare Stelle waren nicht verbunden. E400 hat die Zeichenkette
+   berichtigt und einen Wächter gebaut, der die Taste DRÜCKT — die
+   Verdrahtung fehlt weiter.
+
+7. **`Aussehen.KUERZEL` zeigt zwei Vorgaben an, die nicht gelten.**
+   `aussehen.ts:145` führt `['palette','Befehle','Ctrl+P']`; ausgeführt wird
+   der Standard nie, weil `schale.ts:2882` nur über tatsächlich umbelegte
+   Kürzel läuft. Wer im Einstellungsdialog nachsieht, liest ein Kürzel, das
+   die Palette nicht öffnet — und das echte Strg ⇧ K steht dort gar nicht.
+   Dasselbe gilt für `favorit`.
+
+WIE ES GEFUNDEN WURDE: fünf Leser über Palette, Register, Suche, Verlauf und
+Favoriten, dazu fünf Gegenprüfer mit dem Auftrag zu WIDERLEGEN. Die
+Gegenprüfung war das Geld wert — sie hat unter anderem eine Zahl korrigiert
+(111 statt 163 Paletteneinträge), einen toten Block gefunden (Punkt 3) und
+eine naheliegende Vermutung ausdrücklich ENTKRÄFTET: die Palette hat sehr
+wohl `role="dialog"` und `aria-modal`, weil der gemeinsame Overlay-Griff aus
+E302 sie mitnimmt. Dort ist nichts nachzubauen.
+
+
+================================================================================
+L129 — Die Denkkugel hängt bisher an EINER Stelle
+================================================================================
+4. September 2026 · gefunden beim Bauen von E403
+
+`Orb.setzen(element, zustand, groesse)` steht global bereit und ist geprüft
+(`test399`, 22 Punkte). Benutzt wird sie bisher nur im Agentenfenster. Die
+folgenden Stellen sind beim Messen aufgefallen und ABSICHTLICH nicht
+mitgebaut worden — jede braucht ihre eigene Entscheidung, welcher Zustand
+dort ehrlich wäre:
+
+1. `steuerung.ts:1255` schreibt „… denkt nach" als ZELLWERT in eine
+   KI-Spalte. Das ist Text in den DATEN, nicht in der Oberfläche. Die
+   20-px-Kugel gehört dorthin, aber die Zelle müsste vorher lernen, einen
+   Zustand statt eines Textes zu halten — sonst steht am Ende ein Bild im
+   Export.
+
+2. `arb-dreh` (`bausteine.css:6083`) und `hs-dreh` (`werkzeuge.css:514`)
+   sind zwei Dreh-Rädchen. Beide sagen „es passiert etwas" und sonst nichts.
+   Wer sie ersetzt, muss zuerst wissen, WAS an der Stelle passiert.
+
+3. Der WebLLM-Modell-Download und die OCR zeigen einen Balken. Ein Balken
+   ist dort BESSER als eine Kugel: er sagt, wie weit es ist. Hier
+   ausdrücklich NICHT ändern — das steht hier, damit es niemand für
+   vergessen hält.
+
+Und zwei der neun Zustände haben in Redion noch gar keinen Ort:
+`listening` gehört zur Spracheingabe, die es nicht gibt; `weaving` zum
+Wissensgraphen, der heute ohne Warteanzeige auskommt. Sie sind trotzdem
+gebaut und geprüft — eine Betriebsart wegzulassen und später nachzureichen
+hätte bedeutet, den Vergleichspunkt aus `test399 §4` neu zu eichen.
+
+---
+
+L130 — Was der Ansichten-Durchgang sonst noch fand
+==================================================
+
+E409 hat die Breite und den Fortschrittsbalken geholt. Beim Hinsehen auf die
+dreizehn Bilder blieben vier Dinge übrig, jedes für sich klein, aber jedes
+kostet den Nutzer eine Auskunft.
+
+1. **Die Werte auf einer Board-Karte sind nicht zuzuordnen.** GESCHLOSSEN
+   mit E411. Angeschrieben wird, was seinen Namen braucht — nackte Zahlen,
+   Daten, Zeitspannen, das leere Kontrollkästchen, und jeder Typ, der auf
+   derselben Karte mehrfach vorkommt. Etiketten, Sterne und Ortsmarken
+   bleiben ohne, weil eine Beschriftung an jedem Wert wieder niemand liest.
+   Gehalten von `test406`.
+
+2. **Der Kalender zeigt keine Zeitspannen.** GESCHLOSSEN mit E410. Der
+   Balken war gebaut und sprang nie an: `endeKey` war das einzige Feld der
+   Kalenderansicht ohne Vorgabewert. Er wird jetzt erkannt, wenn die Daten
+   es belegen, und die Oberfläche sagt, dass geraten wurde. Nebenbei kamen
+   zwei Fehler heraus, die seit jeher dastanden: die Balken hatten gar keine
+   Farbe (`.cw-bar.q-blue` gab es nirgends), und sie lagen auf den
+   Tageszahlen. Beide fand erst ein Bild. Gehalten von `test405`.
+
+3. **Kein Hinweis, dass rechts noch etwas kommt.** Die Tabelle rollt
+   waagerecht, und der Roller ist unsichtbar. Vor E409 waren dahinter acht
+   von dreizehn Spalten, jetzt sind es drei — der Fehler ist kleiner
+   geworden, aber nicht weg. Ein Schatten an der rechten Kante, solange
+   noch etwas kommt, würde reichen.
+
+4. **Eine Zahlenspalte kann keine Einheit tragen.** GESCHLOSSEN mit E412.
+   `einheit` steht im Menü der Spalte, hängt beim Zeichnen mit schmalem
+   Leerzeichen an und fasst den gespeicherten Wert nicht an — Formeln,
+   Summen und Sortierung rechnen weiter mit der Zahl. Gehalten von
+   `test407`. Dabei kam heraus, dass `Column.formel` in Wahrheit `formula`
+   heisst und dem Typ dreizehn Felder fehlten; `test294 §5` misst diese
+   Richtung jetzt mit.
+
+5. **Der Zeitstrahl nutzt seine Fläche nicht.** `px` — Pixel je Tag — ist
+   in `ZS_STUFEN` je Zoomstufe FEST: 42 am Tag, 15 in der Woche, 5 im
+   Monat. Bei einem Zeitraum von 45 Tagen ist die gezeichnete Fläche
+   deshalb 225 px breit, während 1100 px zur Verfügung stehen. Zwei Drittel
+   der Ansicht bleiben leer, und die Balken sind unnötig winzig — auf der
+   Monatsstufe fallen drei Tage sogar unter die Mindestbreite von 22 px und
+   sind von einem einzelnen Tag nicht zu unterscheiden.
+   Gefunden bei E413. Ein eigener Bogen: die Balken sind in Pixeln
+   positioniert, ein Skalieren hiesse, alles auf Anteile umzustellen.
+
+6. **Die Zeitachse hat keine Marke am Anfang.** Auf dem Bild standen
+   „Sept. 26" und „Okt. 26" — die Balken beginnen aber im August, und
+   dieser Bereich trägt keine Beschriftung. Wer hinsieht, weiss nicht, wo
+   er ist.
+
+Nachzusehen mit `node bilder.mts db-board`, `db-calendar`, `db-table`,
+`db-timeline`.

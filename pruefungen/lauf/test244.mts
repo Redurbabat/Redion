@@ -49,7 +49,7 @@ declare const Store: any; declare const Register: any;
 declare const Formelheft: any; declare const Elektroskizzen: any;
 
 const WURZEL = path.resolve(import.meta.dirname, '../..');
-const PORT = 8964;
+const PORT = 9515;
 
 const TYP: Record<string, string> = {
   '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css',

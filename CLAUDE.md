@@ -1672,8 +1672,8 @@ export interface Column {
   name: string
   type: string              // Bezeichner aus Register.eigenschaften
   options?: Array<{ name: string; color?: string }>
-  formel?: string
-  zielCollection?: CollectionId
+  formula?: string          // NICHT `formel` — so ist es gespeichert (E412)
+  ziel?: CollectionId       // NICHT `zielCollection` — dito (E298)
 }
 
 export type Schema = Record<string, Column>

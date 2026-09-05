@@ -214,12 +214,17 @@ const Auswahl = (() => {
             }
             if (a === 'farbe') {
                 const rr = b.getBoundingClientRect();
-                const FARBEN = [['default', 'Standard'], ['gray', 'Grau'], ['brown', 'Braun'], ['orange', 'Orange'],
-                    ['yellow', 'Gelb'], ['green', 'Grün'], ['blue', 'Blau'], ['purple', 'Lila'], ['pink', 'Pink'], ['red', 'Rot']];
+                /* Die Namen kommen aus `core/helpers/colors.ts` (E406). Hier standen
+                   sie als eigene Liste — und sagten „Lila" und „Pink", wo das
+                   Notizheft „Violett" und „Rosa" sagt. Zwei Namen für eine Farbe in
+                   derselben App sind kein Stil, sondern ein Fehler. */
+                const FARBEN = Farben.alle().map(id => [id, Farben.name(id)]);
                 const m = UI.menu('<div class="grp">Textfarbe</div><div class="swatches">' +
-                    FARBEN.map(([f, n]) => `<button data-c="${f}" title="${n}" style="background:var(--c-${f})"></button>`).join('') +
+                    FARBEN.map(([f, n]) => `<button data-c="${f}" title="${n}" aria-label="Textfarbe ${n}" ` +
+                        `style="background:var(--c-${f})"></button>`).join('') +
                     '</div><div class="grp">Hintergrund</div><div class="swatches">' +
-                    FARBEN.slice(1).map(([f, n]) => `<button data-c="bg-${f}" title="${n}" style="background:var(--b-${f})"></button>`).join('') +
+                    FARBEN.slice(1).map(([f, n]) => `<button data-c="bg-${f}" title="${n}" aria-label="Hintergrund ${n}" ` +
+                        `style="background:var(--b-${f})"></button>`).join('') +
                     '</div>', rr.left, rr.bottom + 6);
                 m.addEventListener('click', (ev) => {
                     const zielC = ev.target instanceof Element ? ev.target : null;

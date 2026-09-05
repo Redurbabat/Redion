@@ -93,12 +93,20 @@ Register.navigation = (() => {
                tiefer. Die Suche hat ihr eigenes Fenster (E160). */
             tun: () => App.suche() },
         { id: 'befehle', name: 'Befehle', icon: '⌘', zeichen: 'command', platz: 'oben', rang: 20,
-            knopfId: 'btn-cmd', kuerzel: 'Strg ⇧ P',
+            knopfId: 'btn-cmd', kuerzel: 'Strg ⇧ K',
+            /* NICHT ⇧ P (E400). Strg ⇧ P verschiebt eine Seite, seit die Palette
+               auf Strg ⇧ K umgezogen ist; hier stand vier Bögen lang das alte
+               Kürzel. test222 §5 merkte es nicht, weil es nur diese Zeile gegen
+               `index.html` hält — und dort stand dasselbe falsche Wort.
+               `test396 §2` drückt jetzt die Taste und sieht nach, was aufgeht. */
             tun: () => Werkzeuge.palette() },
         { id: 'heute', name: 'Heute', icon: '☀️', zeichen: 'today', platz: 'oben', rang: 30,
-            knopfId: 'btn-home', tun: () => Produktwelten.lernen('heute') },
+            knopfId: 'btn-home', haupt: true, adresse: '#welt-lernen-heute',
+            tun: () => Produktwelten.lernen('heute') },
         { id: 'lernzentrum', name: 'Lernzentrum', icon: '🎓', zeichen: 'learn', platz: 'oben', rang: 40,
-            knopfId: 'btn-learning', tun: () => Produktwelten.lernen('lernen') },
+            knopfId: 'btn-learning', haupt: true, schauplatz: 'lernen',
+            adresse: '#welt-lernen-lernen',
+            tun: () => Produktwelten.lernen('lernen') },
         /* ELEKTRO HATTE KEINE EIGENE ZEILE. Es ist eines der 14 Module, und
            zwar das grösste — Fachzeichen, Schaltplan, Simulation, Rechner,
            Formelheft, Prüfung. Wer hin wollte, musste über den Workspace oder
@@ -109,7 +117,7 @@ Register.navigation = (() => {
            ändern die Krume, der fünfte tat es als einziger nicht. Der Rechner
            ist jetzt einer der Knöpfe dieser Seite statt ihre Vordertür. */
         { id: 'elektro', name: 'Elektrotechnik', icon: '⚡', zeichen: 'bolt', platz: 'oben', rang: 45,
-            knopfId: 'btn-elektro',
+            knopfId: 'btn-elektro', haupt: true,
             tun: () => {
                 if (typeof Elektrostart !== 'undefined')
                     Elektrostart.oeffne();
@@ -122,9 +130,12 @@ Register.navigation = (() => {
             /* Zweimal „Bibliothek": hier die Zeile der obersten Gruppe, weiter
                unten der Anhängepunkt mit demselben Namen. Verschiedene Kennungen,
                weil `melde` über die Kennung dublettenfrei hält. */
-            knopfId: 'btn-library', tun: () => Produktwelten.bibliothek() },
+            knopfId: 'btn-library', haupt: true, schauplatz: 'bibliothek',
+            adresse: '#welt-workspace-bibliothek',
+            tun: () => Produktwelten.bibliothek() },
         { id: 'aufgaben', name: 'Aufgaben', icon: '☑', zeichen: 'tasks', platz: 'oben', rang: 70,
-            knopfId: 'btn-tasks', tun: () => Produktwelten.aufgaben() },
+            knopfId: 'btn-tasks', haupt: true, adresse: '#welt-workspace-aufgaben',
+            tun: () => Produktwelten.aufgaben() },
         { id: 'posteingang', name: 'Posteingang', icon: '📥', zeichen: 'inbox', platz: 'oben', rang: 80,
             /* Und hier stand `Werkzeuge.meldungen()`. Der Knopf ruft seit jeher
                `Ansichten.posteingang()`; das eine ist die Meldungsliste, das
