@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-416 Entscheidungen, E1 bis E420. Die Nummer ist die Ordnung: eine Entscheidung
+417 Entscheidungen, E1 bis E421. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -474,6 +474,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E418** — Stil gehört in eine Stildatei, und der Wächter sieht nur dorthin
 * **E419** — Der Zeitstrahl füllt seine Fläche und sagt, wo man ist
 * **E420** — Eine Lücke, die niemand nachmisst, bleibt in der Liste
+* **E421** — Zwei Farbreihen, und der Balken nahm die falsche
 
 ---
 
@@ -34210,3 +34211,75 @@ GEGENPROBE: `Rollrand.binde(box)` aus der Tabelle genommen → §10 dreimal
 rot (`rand:""`, `maske:"none"`), `test136` bleibt grün. Gelaufen.
 
 Dateien: `pruefungen/lauf/test404.mts`, `LUECKEN.md`.
+
+
+---
+
+E421 — Zwei Farbreihen, und der Balken nahm die falsche
+--------------------------------------------------------
+
+ENTSCHEIDUNG: Die Balken der Verteilungskachel im Dashboard nehmen die
+kräftige Farbreihe (`--c-*`) statt der Tönungen (`--b-*`). Und die
+Summen-Kachel hängt ihre Einheit an, so wie die Zelle es seit E412 tut.
+
+WAS AUF DEM BILD STAND. Die Kachel „Verteilung nach Status" sah aus, als
+hätten zwei von vier Zeilen gar keinen Balken. Nachgemessen war das
+Gegenteil richtig: alle vier Breiten stimmen — 100 %, 100 %, 67 %, 33 % —
+und trotzdem war kein Balken zu SEHEN.
+
+DIE URSACHE STEHT IN ZWEI ZEILEN DER STILDATEIEN NEBENEINANDER:
+
+    --bg-input: #f1f1ef      die Bahn, auf der der Balken liegt
+    --b-gray:   #f1f1ef      die Füllung des Balkens „Offen"
+
+Byte für Byte dieselbe Farbe. Kontrast 1.00. Ein Balken über die VOLLE
+Breite, den niemand sehen kann — und die Zeile „Offen 3" las sich wie „gar
+keine", obwohl sie mit „Läuft" den höchsten Wert teilt. Die anderen drei
+lagen bei 1.01 bis 1.03, im Dunkelmodus bei 1.85 bis 1.96.
+
+DAS IST KEINE VERGESSENE REGEL, SONDERN EINE PALETTENVERWECHSLUNG. Redion
+hat zwei Farbreihen, und der Unterschied ist keine Geschmacksfrage:
+
+    --b-*   Tönungen. Sie liegen HINTER dunklem Text — Etiketten,
+            Zeilenfarben. Sie sind absichtlich fast weiss.
+    --c-*   Die kräftigen Farben. Für Text und für Flächen, die für sich
+            stehen müssen.
+
+Ein Balken auf einer Bahn gehört zur zweiten Reihe. Gemessen: die Tönungen
+liegen bei 1.00 bis 1.03 gegen die Bahn, die kräftigen bei 2.43 (Gelb) bis
+10.84 (Standard). Dazwischen ist nichts — deshalb ist die Schwelle 2.0 im
+Prüflauf keine gegriffene Zahl, sondern der leere Raum zwischen den Reihen.
+
+WO DIE REGEL STEHT, UND WARUM NICHT IN `grund.css`. In `bausteine.css`,
+eng auf `.db-strich i` gezogen. `bg-*` soll überall sonst die Tönung
+bleiben: ein Etikett mit `--c-gray` hinter schwarzem Text wäre unlesbar.
+Umgedeutet wird nur der Balken.
+
+DERSELBE FALL WIE E410, wo die Kalenderbalken gar keine Farbe hatten, und
+wie E414, wo die Diagrammbalken schwarz waren. Dreimal dieselbe Sorte
+Fehler: eine Fläche, die ihre Farbe aus der falschen Quelle nimmt, und
+dreimal fand es erst ein Bild.
+
+UND DIE ZWEITE HÄLFTE: E412 hat der Zahlenspalte eine Einheit gegeben und
+sie in der ZELLE angehängt. Die Kachel darüber rechnete weiter ohne —
+„2630" stand da, und 2630 was, bei einer Spalte namens „Kosten"?
+`mitEinheit` war in `dienst.ts` gebaut und nicht exportiert. Jetzt ist es
+das, und die Kachel benutzt es. Die Anzahl-Kachel bekommt keine: „9 CHF
+Einträge" wäre schlimmer als gar nichts, und sie geht durch einen anderen
+Zweig.
+
+PRÜFUNG: `test414`, 14 Punkte, PORT 9536 — Kontrast in beiden Themen, die
+Breiten als Gegenprobe gegen eine Reparatur, die die Zahl kaputtmacht, und
+§38 (die Zahl steht daneben, der Balken ist nicht die einzige Auskunft).
+Dazu `test404`, `test407`, `test409`.
+GEGENPROBE: `.db-strich i.bg-gray` zurück auf `--b-gray` → §1 zweimal und
+§2 einmal rot, mit „Offen: 1.00". `mitEinheit` an der Kachel weggelassen →
+§5 rot. Beide gelaufen.
+
+Bild angesehen (§55.3): `bilder/db-dashboard-rechner-hell.png` — vorher vier
+Zeilen ohne sichtbaren Balken und „2630", jetzt vier farbige Balken in
+richtiger Länge und „2630 CHF".
+
+Dateien: `quell/schale/stil/bausteine.css`,
+`src/bereiche/datenbanken/steuerung.ts`, `src/bereiche/datenbanken/dienst.ts`,
+`pruefungen/lauf/test414.mts` (neu).

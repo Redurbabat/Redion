@@ -59,7 +59,7 @@ const Datenbank = (() => {
         if (el)
             el.style.display = ob ? wie : 'none';
     };
-    const { esc, DIENST_TYPEN, FARBEN, KI_AUFTRAG, KI_TYPEN, MUSTER_VORLAGEN, NUR_LESEN, OPERATOREN, RECHNUNGEN, ROLLUP_ARTEN, TYPEN, begrenzen, dauerLesen, dauerText, formelUmgebung, fremdWert, gruppeTrifftZu, hatRegeln, propTyp, pruefeWert, pruefeZeile, rechne, regelAnzahl, rollupWert, seitenListe, trifftZu, wert, wertFrisch, zeilen, zeilenGesamt, zelle, zusammenfassen } = DatenbankDienst;
+    const { esc, DIENST_TYPEN, FARBEN, KI_AUFTRAG, KI_TYPEN, MUSTER_VORLAGEN, NUR_LESEN, OPERATOREN, RECHNUNGEN, ROLLUP_ARTEN, TYPEN, begrenzen, dauerLesen, dauerText, formelUmgebung, fremdWert, gruppeTrifftZu, hatRegeln, propTyp, pruefeWert, pruefeZeile, rechne, regelAnzahl, rollupWert, seitenListe, trifftZu, wert, wertFrisch, zeilen, zeilenGesamt, mitEinheit, zelle, zusammenfassen } = DatenbankDienst;
     /* ========================================================================
      * RENDERN
      * ======================================================================*/
@@ -2970,7 +2970,15 @@ const Datenbank = (() => {
                    wie die Spalte. Heisst sie gleich, steht sie einmal da. */
                 const bezeichnung = art.toLowerCase() === String(name).toLowerCase()
                     ? esc(name) : esc(art) + ' · ' + esc(name);
-                d.innerHTML = `<span class="dz-wert">${esc(Formula.anzeige(wert2))}</span>` +
+                /* DIE EINHEIT GEHÖRT AN DIE SUMME (E421). E412 hat der Zahlenspalte
+                   eine Einheit gegeben und sie in der ZELLE angehängt; die Kachel
+                   darüber rechnete weiter ohne. „2630" stand da, und 2630 was, bei
+                   einer Spalte namens „Kosten"? `mitEinheit` fasst den Wert nicht
+                   an — es hängt ein schmales Leerzeichen und die Einheit an die
+                   ANZEIGE. Die Anzahl-Kachel bekommt keine: „9 CHF Einträge" wäre
+                   schlimmer als gar nichts, und sie geht hier nicht durch. */
+                d.innerHTML = `<span class="dz-wert">` +
+                    `${esc(mitEinheit(Formula.anzeige(wert2), kc.schema[k.key]))}</span>` +
                     `<span class="dz-name">${bezeichnung}` +
                     `${woher ? ' · ' + esc(woher) : ''}</span>`;
             }

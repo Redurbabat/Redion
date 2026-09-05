@@ -8511,6 +8511,28 @@ tr.farbzeile{box-shadow:inset 3px 0 0 currentColor}
 .db-name{width:120px; flex:0 0 auto; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 .db-strich{flex:1; height:9px; background:var(--bg-input); border-radius:5px; overflow:hidden}
 .db-strich i{display:block; height:100%; border-radius:5px}
+/* DIE KRÄFTIGE REIHE, NICHT DIE TÖNUNG (E421).
+   Redion hat zwei Farbreihen. `--b-*` sind Tönungen, die HINTER dunklem
+   Text liegen — Etiketten, Zeilenfarben. `--c-*` sind die kräftigen Farben,
+   die für sich stehen. Ein Balken auf einer Bahn gehört zur zweiten Reihe,
+   und die Verteilungskachel des Dashboards benutzte die erste.
+   Gemessen war das kein Schönheitsfehler: `--b-gray` ist `#f1f1ef`, und die
+   Bahn `--bg-input` ist `#f1f1ef` — Byte für Byte dieselbe Farbe, Kontrast
+   1.00. Die Zeile „Offen 3" hatte einen Balken über die VOLLE Breite, und
+   niemand konnte ihn sehen. Die anderen drei lagen bei 1.01 bis 1.03, im
+   Dunkelmodus bei 1.85 bis 1.96.
+   Die Regel steht hier und nicht in `grund.css`: `bg-*` soll überall sonst
+   die Tönung bleiben. Ein Etikett mit `--c-gray` hinter schwarzem Text wäre
+   unlesbar. Umgedeutet wird nur der Balken. */
+.db-strich i.bg-gray  {background:var(--c-gray)}
+.db-strich i.bg-brown {background:var(--c-brown)}
+.db-strich i.bg-orange{background:var(--c-orange)}
+.db-strich i.bg-yellow{background:var(--c-yellow)}
+.db-strich i.bg-green {background:var(--c-green)}
+.db-strich i.bg-blue  {background:var(--c-blue)}
+.db-strich i.bg-purple{background:var(--c-purple)}
+.db-strich i.bg-pink  {background:var(--c-pink)}
+.db-strich i.bg-red   {background:var(--c-red)}
 /* 34 px reichten für eine Anzahl. Seit die Verteilung auch SUMMEN zeigen
    kann (E185), stehen dort Beträge — `min-width` statt `width`, sonst
    endet „184 500" als „184 5". Genau der Fund aus CLAUDE.md §55.2. */
@@ -17013,7 +17035,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 388, inhalt: 'd3ad9bada9adb006', gebaut: '2026-09-05T18:52:48.373Z' };
+const Stand = { fassung: 389, inhalt: '2891ab75b79b2ccc', gebaut: '2026-09-05T19:01:21.196Z' };
 window.Stand = Stand;
 
 </script>
@@ -68952,6 +68974,7 @@ const DatenbankDienst = (() => {
         zeilen,
         zeilenGesamt,
         zelle,
+        mitEinheit,
         zusammenfassen };
 })();
 /* Nur, wenn es ein Fenster gibt. In Node gibt es keines — und genau das ist
@@ -69023,7 +69046,7 @@ const Datenbank = (() => {
         if (el)
             el.style.display = ob ? wie : 'none';
     };
-    const { esc, DIENST_TYPEN, FARBEN, KI_AUFTRAG, KI_TYPEN, MUSTER_VORLAGEN, NUR_LESEN, OPERATOREN, RECHNUNGEN, ROLLUP_ARTEN, TYPEN, begrenzen, dauerLesen, dauerText, formelUmgebung, fremdWert, gruppeTrifftZu, hatRegeln, propTyp, pruefeWert, pruefeZeile, rechne, regelAnzahl, rollupWert, seitenListe, trifftZu, wert, wertFrisch, zeilen, zeilenGesamt, zelle, zusammenfassen } = DatenbankDienst;
+    const { esc, DIENST_TYPEN, FARBEN, KI_AUFTRAG, KI_TYPEN, MUSTER_VORLAGEN, NUR_LESEN, OPERATOREN, RECHNUNGEN, ROLLUP_ARTEN, TYPEN, begrenzen, dauerLesen, dauerText, formelUmgebung, fremdWert, gruppeTrifftZu, hatRegeln, propTyp, pruefeWert, pruefeZeile, rechne, regelAnzahl, rollupWert, seitenListe, trifftZu, wert, wertFrisch, zeilen, zeilenGesamt, mitEinheit, zelle, zusammenfassen } = DatenbankDienst;
     /* ========================================================================
      * RENDERN
      * ======================================================================*/
@@ -71934,7 +71957,15 @@ const Datenbank = (() => {
                    wie die Spalte. Heisst sie gleich, steht sie einmal da. */
                 const bezeichnung = art.toLowerCase() === String(name).toLowerCase()
                     ? esc(name) : esc(art) + ' · ' + esc(name);
-                d.innerHTML = `<span class="dz-wert">${esc(Formula.anzeige(wert2))}</span>` +
+                /* DIE EINHEIT GEHÖRT AN DIE SUMME (E421). E412 hat der Zahlenspalte
+                   eine Einheit gegeben und sie in der ZELLE angehängt; die Kachel
+                   darüber rechnete weiter ohne. „2630" stand da, und 2630 was, bei
+                   einer Spalte namens „Kosten"? `mitEinheit` fasst den Wert nicht
+                   an — es hängt ein schmales Leerzeichen und die Einheit an die
+                   ANZEIGE. Die Anzahl-Kachel bekommt keine: „9 CHF Einträge" wäre
+                   schlimmer als gar nichts, und sie geht hier nicht durch. */
+                d.innerHTML = `<span class="dz-wert">` +
+                    `${esc(mitEinheit(Formula.anzeige(wert2), kc.schema[k.key]))}</span>` +
                     `<span class="dz-name">${bezeichnung}` +
                     `${woher ? ' · ' + esc(woher) : ''}</span>`;
             }
