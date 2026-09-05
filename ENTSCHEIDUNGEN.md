@@ -33316,6 +33316,21 @@ Vorfahren anrichtet — die PDF-Seite fiel auf 2 px zusammen. Und kein
 Tabellenkopf ist `position:sticky`, und ein Vorfahr mit `transform` macht
 daraus einen neuen Bezugsrahmen. Der Kopf bliebe beim Rollen nicht stehen.
 
+NACHTRAG (vom vollen Lauf gefunden): `test236` hielt fest, DASS der
+Karteikarten-Streifen kommt — und wurde durch die geänderte Vorgabe rot. Er
+las den Schalter mit seiner EIGENEN Vorgabe (`V('kartenMelden', true)`) und
+hielt ihn deshalb für an, während der Code ihn längst für aus hielt. Die
+Meldung „ist '', soll '2026-09-05'" sah dadurch aus wie ein kaputter Merker
+statt wie eine geänderte Vorgabe.
+
+Er schaltet den Schalter jetzt AUSDRÜCKLICH ein: er prüft die FUNKTION —
+einmal am Tag und nicht öfter —, nicht die Vorgabe. Dass die Vorgabe aus
+ist, prüft `test404 §7`, und dort gehört es hin.
+
+Der Fehler war meiner: E409 hat eine Vorgabe geändert, ohne den zuständigen
+Prüflauf zu suchen. §30 sagt es andersherum — erst den Prüflauf, dann die
+Änderung.
+
 PRÜFUNG: `test404`, 22 Punkte, PORT 9527. Die Beispieldaten kommen aus
 `bilder.mts` — eine Quelle, nicht zwei.
 MUTATIONEN ROT GESEHEN:
