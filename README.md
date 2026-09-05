@@ -376,6 +376,7 @@ Redion/
 ├─ package-lock.json
 ├─ start.bat
 ├─ oeffnen.bat
+├─ vergleichen.bat
 ├─ sw.js
 │
 ├─ quell/

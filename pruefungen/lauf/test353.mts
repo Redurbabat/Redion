@@ -148,6 +148,52 @@ const frage = holen.indexOf('actions/runs?branch=main');
 p('Gefragt wird VOR dem Holen', frage > 0 && frage < vorFetch, `${frage} / ${vorFetch}`);
 p('Und das Skript lädt weiterhin nichts hoch', !/git push/.test(holen));
 
+/* ── 5b ───────────────────────────────────────────────────────────────── */
+console.log('\n5b · vergleichen.bat sieht nur nach und faesst nichts an');
+/* DIE DRITTE RICHTUNG (E438). Redur fragte, wie er seinen Stand mit GitHub
+   vergleicht; die Antwort war bis dahin "starte holen.bat und lies mit" —
+   nur HOLT das eben auch. Ein Skript, das nur nachsieht, darf nichts
+   veraendern, und genau das wird hier gemessen.
+   STATISCH GEPRUEFT, und das ist eine Grenze, die dabeistehen muss: dieser
+   Container ist Linux und kann kein Windows-Batch ausfuehren. Geprueft wird
+   der Text, nicht der Lauf. Die git-Befehle darin sind einzeln von Hand
+   nachgefahren worden; die Batch-Huelle ist gespiegelt von holen.bat. */
+const vergl = lies('vergleichen.bat');
+p('Es gibt die Datei', vergl.length > 500, String(vergl.length));
+/* Die verbotenen Befehle — jeder einzeln, damit der Bericht sagt WELCHER. */
+for (const [name, muster] of [
+  ['push',    /git push/],
+  ['checkout',/git checkout/],
+  ['merge',   /git merge/],
+  ['reset',   /git reset/],
+  ['stash',   /git stash/],
+  ['pull',    /git pull/],
+  ['clean',   /git clean/],
+  ['restore', /git restore/]
+] as Array<[string, RegExp]>) {
+  p('Kein ' + name + ' — es veraendert nichts', !muster.test(vergl));
+}
+/* Und der eine Schreibvorgang, den es geben DARF, ist benannt. */
+p('Es holt den Fernstand mit fetch', /git fetch origin main/.test(vergl));
+p('… und sagt selbst, dass das der einzige Schreibvorgang ist',
+  /einzige Schreibvorgang/.test(vergl));
+/* Die Kernfrage wird ueber INHALTE beantwortet, nicht ueber Kennungen —
+   dieselbe Lehre, die holen.bat in E271 gekostet hat. */
+p('Der Vergleich fragt nach den Dateien, nicht nach den Kennungen',
+  /git diff --name-only origin\/main HEAD/.test(vergl));
+/* Kein `find /c`: die Zahl kommt mit fuehrenden Leerzeichen und der
+   Vergleich schlaegt still fehl. */
+p('Es zaehlt nicht mit find /c, sondern fragt ob es Ausgabe gibt',
+  !/find \/c/.test(vergl.replace(/^REM.*$/gm, '')) && /if not defined ANDERS/.test(vergl));
+/* Die Zaehler sind vorbelegt, sonst wird aus "" != "0" immer wahr. */
+p('Die Schrittzaehler sind mit 0 vorbelegt',
+  /set "VOR=0"/.test(vergl) && /set "ZURUECK=0"/.test(vergl));
+/* Und es sagt, was es NICHT vergleichen kann — die Notizen des Nutzers. */
+p('Es erklaert, dass die eigenen Notizen nicht auf GitHub liegen',
+  /verlassen ihn nie/.test(vergl) && /\.redion/.test(vergl));
+p('Es sagt am Ende zu, nichts geaendert zu haben',
+  /nichts an deinen Dateien geaendert/.test(vergl));
+
 /* ── 6 ────────────────────────────────────────────────────────────────── */
 console.log('\n6 · Die App nennt ihren Stand unter „Über diese App", samt Weg');
 const TYP: Record<string, string> = {
