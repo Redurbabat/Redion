@@ -81,15 +81,32 @@ const wieViele = await seite.evaluate(() => {
 p('Es gibt fällige Karten — sonst misst der Rest nichts', wieViele > 0, String(wieViele));
 
 /* ==========================================================================
- * §1 · Die Einstellung gibt es weiterhin, und sie steht auf an
- * ========================================================================*/
+ * §1 · Die Einstellung gibt es weiterhin — und sie wird HIER eingeschaltet
+ * --------------------------------------------------------------------------
+ * DIE VORGABE IST SEIT E409 AUS, und das ist Redurs Entscheidung: „mache die
+ * 1 kqrt ist fählig komplet weg". Der Streifen stand bei jedem ersten Start
+ * des Tages unten in der Mitte — auch über jedem Bildschirmfoto.
+ *
+ * Diese Suite prüft aber nicht die VORGABE, sondern die FUNKTION: kommt die
+ * Meldung einmal am Tag und nicht öfter. Also schaltet sie den Schalter
+ * ausdrücklich ein, statt sich auf einen Vorgabewert zu verlassen.
+ *
+ * Vorher stand hier `Einstellungen.V('kartenMelden', true)` — der Prüflauf
+ * brachte seine EIGENE Vorgabe mit und hielt den Schalter deshalb für an,
+ * während der Code ihn längst für aus hielt. Der Punkt blieb grün, die vier
+ * darunter wurden rot, und die Meldung „ist '', soll '2026-09-05'" sah aus
+ * wie ein kaputter Merker statt wie eine geänderte Vorgabe.
+ *
+ * Dass die Vorgabe AUS ist, prüft `test404 §7` — dort gehört es hin. */
 console.log('\n1 · Die Einstellung gibt es weiterhin');
 
+await seite.evaluate(() => { Store.setMeta('kartenMelden', true); });
 const schalter = await seite.evaluate(() => ({
-  an: Einstellungen.V('kartenMelden', true),
+  an: Einstellungen.V('kartenMelden', false),
   text: [...document.querySelectorAll('*')].length > 0
 }));
-p('Der Schalter „kartenMelden" steht auf an', schalter.an === true, String(schalter.an));
+p('Der Schalter „kartenMelden" lässt sich einschalten', schalter.an === true,
+  String(schalter.an));
 void schalter.text;
 
 /* ==========================================================================

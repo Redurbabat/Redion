@@ -221,11 +221,16 @@ const Arbeitswelt = (() => {
     file: '📎', image: '🖼', audio: '🎵', video: '🎬'
   };
 
-  const ansichtIcons: Record<string, string> = {
-    table: '▦', raster: '🧮', board: '▤', timeline: '▬', calendar: '📅',
-    list: '☰', gallery: '▩', chart: '📊', feed: '📰', map: '🗺',
-    dashboard: '🧮', pivot: '⊞', form: '📝'
-  };
+  /* AUS DEM REGISTER (E422, §8). Hier stand die fünfte Kopie derselben
+     Liste. Diese hier war sogar vollständig — und genau das ist der Punkt:
+     eine Kopie, die heute stimmt, ist die, von der man morgen nicht mehr
+     weiss, dass sie eine ist. Gefunden hat sie nicht das Lesen, sondern
+     `test415 §4`. */
+  const ansichtIcons = new Proxy({} as Record<string, string>, {
+    get: (_z, art: string) =>
+      (typeof Register !== 'undefined' && (Register as any).ansichten)
+        ? (Register as any).ansichten.icon(art) : '▦'
+  });
 
   const alsZeit = (wert: unknown): number => {
     if (typeof wert === 'number') return Number.isFinite(wert) ? wert : 0;
@@ -1447,7 +1452,17 @@ const Arbeitswelt = (() => {
     }
   };
 
-  const controllerBauen = (root: HTMLElement, startAnsicht: unknown): Controller => {
+  /* NACKT = OHNE DIE WORKSPACE-SCHALE (E431). Redur wollte den Kalender als
+     eigenen Ort, nicht als Abschnitt des Arbeitsbereichs: keine Spalte mit
+     Übersicht/Bibliothek/Aufgaben daneben, keine Krume „Workspace", kein
+     Reiterpanel rechts.
+     Gezeichnet wird trotzdem von hier, und das ist der Punkt: der
+     Kalenderabschnitt, seine Suche, seine Klickgriffe und die
+     Lebensbereich-Auswahl gibt es schon. Sie ein zweites Mal zu schreiben
+     wäre der doppelte Katalog aus §8 — zwei Kalender, die auseinanderlaufen,
+     und niemand merkt, welcher gilt. */
+  const controllerBauen = (root: HTMLElement, startAnsicht: unknown,
+                           nackt = false): Controller => {
     const id = `aw-${++instanz}`;
     const startBereiche = bereichDefinitionen();
     const zustand: Zustand = { ansicht: normalisiereAnsicht(startAnsicht), suche: '',
@@ -1459,6 +1474,22 @@ const Arbeitswelt = (() => {
 
     const zeichnen = (): void => {
       root.classList.add('produkt-welt', 'arbeitswelt');
+      if (nackt) {
+        root.classList.add('aw-nackt');
+        const schale = element('div', 'aw-shell');
+        /* Nur die Lebensbereich-Auswahl bleibt: sie filtert, was der
+           Kalender zeigt, und ohne sie liesse sich das nicht mehr wählen.
+           Titel und Beschreibung bringt der Abschnitt selbst mit. */
+        const kopf = element('header', 'aw-kopf aw-kopf-schmal');
+        kopf.append(bereichAuswahl(daten, zustand, id));
+        schale.append(kopf);
+        const nur = element('main', 'aw-inhalt'); nur.id = `${id}-inhalt`;
+        nur.tabIndex = -1;
+        zeichneHauptinhalt(nur, daten, zustand);
+        schale.append(nur);
+        root.replaceChildren(schale);
+        return;
+      }
       const shell = element('div', 'aw-shell');
       const header = element('header', 'aw-kopf');
       const titleBox = element('div', 'aw-titelgruppe');
@@ -1690,9 +1721,10 @@ const Arbeitswelt = (() => {
   };
 
   /** Setzt die Workspace-Welt in ein vorhandenes Schalen-Ziel ein. */
-  const render = (ziel: HTMLElement, ansicht: unknown = 'uebersicht'): Controller => {
+  const render = (ziel: HTMLElement, ansicht: unknown = 'uebersicht',
+                  nackt = false): Controller => {
     controllerNachRoot.get(ziel)?.zerstoeren();
-    const controller = controllerBauen(ziel, ansicht);
+    const controller = controllerBauen(ziel, ansicht, nackt);
     controllerNachRoot.set(ziel, controller);
     return controller;
   };
@@ -1705,8 +1737,23 @@ const Arbeitswelt = (() => {
     return controller;
   };
 
+  /** Der Kalender als eigener Ort (E431).
+   *
+   *  `zeigeSonder` vergibt die Adresse selbst — aus dem Titel wird `#kalender`
+   *  —, merkt den Ort für „Weiter wo du warst" und meldet den Schauplatz.
+   *  Genau das unterscheidet einen Ort von einer Überlagerung. */
+  const kalenderOeffnen = (): Controller | null => {
+    if (typeof App === 'undefined' || typeof App.zeigeSonder !== 'function') return null;
+    let controller: Controller | null = null;
+    App.zeigeSonder('Kalender', (ziel: HTMLElement) => {
+      controller = render(ziel, 'kalender', true);
+    });
+    return controller;
+  };
+
   return {
     TITEL, ansichten, render, oeffnen, open: oeffnen, mount: render,
+    kalenderOeffnen,
     snapshot, reiterVertrag, controller: render
   };
 })();

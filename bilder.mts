@@ -128,6 +128,109 @@ const ANSICHTEN: Record<string, {
      `bandZu:welt` gilt ohne offene Seite. Beide auf `false`, damit das
      Band wirklich aufgeht. */
 
+  /* DIE BEGRÜSSUNGSFLÄCHE HATTE NIE EIN BILDZIEL (E418) — im Gegenteil:
+     jedes andere Ziel wirft sie mit `.produkt-onboarding-lage?.remove()`
+     hinaus, damit sie nicht im Weg steht. 126 Zeilen Stil, die nie jemand
+     angesehen hat. Beim Verschieben nach `produktwelten.css` war das die
+     eigentliche Frage — nicht „stimmen die gerechneten Werte", sondern
+     „sieht es aus wie vorher". */
+  /* DER KALENDER ALS ORT (E430). Vorher öffnete der Eintrag „Kalender" den
+     Verbindungsdialog; ein Bildziel dafür gab es nie, weil es nichts zu
+     sehen gab ausser einer Überlagerung. */
+  kalender2: {
+    titel: 'Der Kalender als eigener Ort (E430, E431)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const seite = Store.addPage(null, { text: 'Termine' });
+      const { collectionId } = Store.addDatabase(seite.id, 'Termine', {
+        titel: { name: 'Sache', type: 'title' },
+        wann:  { name: 'Wann',  type: 'date' }
+      }, 'table');
+      const heute = new Date();
+      const tage: Array<[string, number]> = [
+        ['Zahnarzt', 2], ['Abgabe Bericht', 4], ['Messung Halle 3', 5],
+        ['Elternabend', 9], ['Prüfung Elektro', 12]
+      ];
+      for (const [t, plus] of tage) {
+        const d = new Date(heute.getTime() + plus * 86400000);
+        const z = Store.addBlock(collectionId, 'page', { text: t, parentTable: 'collection' });
+        Store.updateBlock(z.id, { props: { wann: d.toISOString().slice(0, 10) } });
+      }
+      await Store.flush();
+      (window as any).Produktwelten?.kalender?.();
+      await new Promise(f => setTimeout(f, 900));
+    }
+  },
+
+  /* Der Termine-Bildschirm — das ist der Ort, den die untere Leiste am
+     Telefon unter „Termine" oeffnet (E430). */
+  termine2: {
+    titel: 'Termine — mit einem Weg zum Kalender (E430)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const seite = Store.addPage(null, { text: 'Termine' });
+      const { collectionId } = Store.addDatabase(seite.id, 'Termine', {
+        titel: { name: 'Sache', type: 'title' },
+        wann:  { name: 'Wann',  type: 'date' }
+      }, 'table');
+      const heute = new Date();
+      for (const [t, plus] of [['Zahnarzt', 2], ['Abgabe Bericht', 4],
+                               ['Elternabend', 9]] as Array<[string, number]>) {
+        const d = new Date(heute.getTime() + plus * 86400000);
+        const z = Store.addBlock(collectionId, 'page', { text: t, parentTable: 'collection' });
+        Store.updateBlock(z.id, { props: { wann: d.toISOString().slice(0, 10) } });
+      }
+      await Store.flush();
+      (window as any).Ansichten?.termine?.();
+      await new Promise(f => setTimeout(f, 800));
+    }
+  },
+
+  begruessung: {
+    titel: 'Die Begrüssungsfläche (E418)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.getElementById('rg-willkommen')?.remove();
+      (window as any).ProduktOnboarding?.zuruecksetzen?.();
+      (window as any).ProduktOnboarding?.oeffnen?.();
+      await new Promise(f => setTimeout(f, 500));
+    }
+  },
+
+  /* Die Absage des Nur-Quellen-Modus neben einer gewöhnlichen Antwort —
+     nur nebeneinander ist „sieht anders aus" überhaupt zu sehen. */
+  kiAbsage: {
+    titel: 'Die KI sagt ab, statt zu raten (E305, E418)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const s = Store.addPage(null, { text: 'KI-Probe' });
+      App.oeffne(s.id);
+      await new Promise(f => setTimeout(f, 400));
+      /* Das Panel wird über die Klasse `open` an `#ai` aufgeklappt —
+         `kiPanel()` liegt in `schale.ts` und ist von aussen nicht zu rufen. */
+      document.getElementById('ai')?.classList.add('open');
+      await new Promise(f => setTimeout(f, 400));
+      const chat = document.getElementById('chat');
+      if (!chat) return;
+      chat.innerHTML =
+        '<div class="msg u">Was steht in meinen Unterlagen über Kirchhoff?</div>' +
+        '<div class="msg a">Die Knotenregel sagt: was in einen Knoten ' +
+        'hineinfliesst, fliesst auch wieder heraus.</div>' +
+        '<div class="msg u">Und über Maxwell?</div>' +
+        '<div class="msg a msg-ohne-quelle">Dazu finde ich nichts in deinen ' +
+        'Unterlagen. Der Nur-Quellen-Modus ist an — Redion fragt das Modell ' +
+        'dann gar nicht erst, statt eine Antwort zu bekommen, die nirgends ' +
+        'nachzulesen ist. Schalte ihn in den KI-Einstellungen aus, wenn du ' +
+        'trotzdem fragen willst.</div>';
+    }
+  },
+
   schaleBand: {
     titel: 'Die Schale — Menüband offen, Reiter Werkzeuge',
     bauen: async () => {

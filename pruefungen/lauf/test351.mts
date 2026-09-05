@@ -105,6 +105,16 @@ const werkzeug = async (pg: Seite, wz: string): Promise<void> => {
 const leiste = (pg: Seite) => pg.evaluate(() => {
   const w = document.querySelector<HTMLElement>('.blatt-werk')!;
   const sichtbar = (e: Element) => (e as HTMLElement).getClientRects().length > 0;
+  /* WÖRTER ANDERS MESSEN ALS ALLES ANDERE. Das Zubehör verschwindet mit
+     `display:none` — dort sagt `getClientRects()` die Wahrheit. Die Wörter
+     nicht: Audit F04 hat ihr `display:none` durch die Klemme ersetzt
+     (`position:absolute; width:1px; clip-path:inset(50%)`), damit der Knopf
+     im Zugänglichkeitsbaum seinen Namen behält statt „✎" zu heissen.
+     Ein geklemmtes Wort HAT ein Rechteck — eins von 1×1 px. `getClientRects`
+     zählte deshalb in JEDER Breite elf, und dieser Punkt konnte nicht mehr
+     rot werden, ohne dass jemand es merkte (§55.2).
+     Gemessen wird jetzt die Breite: geklemmt 1 px, gesetzt 22 bis 74 px. */
+  const wortSichtbar = (e: Element) => e.getBoundingClientRect().width > 4;
   const werkzeuge = [...w.querySelectorAll<HTMLElement>('[data-wz]')];
   const tops = new Set(werkzeuge.map(k => Math.round(k.getBoundingClientRect().top)));
   const zubehoer = [...w.querySelectorAll<HTMLElement>('[data-gruppe]')].filter(sichtbar);
@@ -118,7 +128,7 @@ const leiste = (pg: Seite) => pg.evaluate(() => {
     zubehoerSichtbar: zubehoer.length,
     hoehe: Math.round(w.getBoundingClientRect().height),
     breite: Math.round(w.getBoundingClientRect().width),
-    woerter: [...w.querySelectorAll<HTMLElement>('[data-wz] .wort')].filter(sichtbar).length,
+    woerter: [...w.querySelectorAll<HTMLElement>('[data-wz] .wort')].filter(wortSichtbar).length,
     gruppen: { stil: gruppen('stil'), formen: gruppen('formen'), farbe: gruppen('farbe'), breite: gruppen('breite'),
       radierer: gruppen('radierer'), auswahl: gruppen('auswahl'), lineal: gruppen('lineal'), verlauf: gruppen('verlauf') },
     bruch: bruch ? { da: true, sichtbar: getComputedStyle(bruch).display !== 'none', breite: Math.round(bruch.getBoundingClientRect().width) } : { da: false },

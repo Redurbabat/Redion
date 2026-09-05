@@ -1213,7 +1213,7 @@ const Wolke = (() => {
            Register —, gilt er sofort und nicht erst nach dem Neuladen. */
         const ev = globalThis.Ereignisse;
         if (ev?.horche)
-            ev.horche('einstellung.geaendert', (d) => {
+            ev.horche(ARTEN.einstellungGeaendert, (d) => {
                 if (d && d.id === 'wolkeTakt')
                     takt();
             });

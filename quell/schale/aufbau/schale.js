@@ -3406,12 +3406,26 @@ const App = (() => {
        anderen Sonderansichten — „Meine Aufgaben", „Lernen & Alltag",
        „Elektro" — führen zum Regal: das ist der Ort, an dem die Sachen
        liegen, und Redurs Wunsch für „nichts offen". */
+    /* UND SEIT E431 AUCH DER KALENDER. Er ist mit demselben Bogen ein eigener
+       Ort geworden — eigene Krume, eigene Adresse `#kalender`, keine
+       Workspace-Schale. Ein Ort, an den man nicht zurückkommt, ist aber nur
+       ein halber: wer die App im Kalender verlässt oder `#kalender` als
+       Lesezeichen speichert, landete ohne diese Zeile im Regal.
+       Die Tabelle ist beides — sie beantwortet „wo war ich zuletzt" UND
+       „welcher Hash ist ein Ort" (`rohHash in SONDER_START`, weiter unten). */
     const SONDER_START = {
         dokumente: () => Bibliothek.oeffne(),
         notizhefte: () => {
             const N = globalThis.Notebook;
             if (N && typeof N.oeffnen === 'function')
                 N.oeffnen();
+            else
+                Bibliothek.oeffne();
+        },
+        kalender: () => {
+            const P = globalThis.Produktwelten;
+            if (P && typeof P.kalender === 'function')
+                P.kalender();
             else
                 Bibliothek.oeffne();
         },

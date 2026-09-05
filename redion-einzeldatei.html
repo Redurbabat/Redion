@@ -702,6 +702,35 @@ html[data-theme="light"]{
 .bg-red{background:var(--b-red)}
 [class*="bg-"]{border-radius:3px; padding:0 2px}
 
+/* DIE KRÄFTIGE REIHE, NICHT DIE TÖNUNG (E421).
+   Redion hat zwei Farbreihen. `--b-*` sind Tönungen, die HINTER dunklem
+   Text liegen — Etiketten, Zeilenfarben. `--c-*` sind die kräftigen Farben,
+   die für sich stehen. Ein Balken auf einer Bahn gehört zur zweiten Reihe,
+   und die Verteilungskachel des Dashboards benutzte die erste.
+   Gemessen war das kein Schönheitsfehler: `--b-gray` ist `#f1f1ef`, und die
+   Bahn `--bg-input` ist `#f1f1ef` — Byte für Byte dieselbe Farbe, Kontrast
+   1.00. Die Zeile „Offen 3" hatte einen Balken über die VOLLE Breite, und
+   niemand konnte ihn sehen. Die anderen drei lagen bei 1.01 bis 1.03, im
+   Dunkelmodus bei 1.85 bis 1.96.
+   Die Regel steht hier und nicht in `grund.css`: `bg-*` soll überall sonst
+   die Tönung bleiben. Ein Etikett mit `--c-gray` hinter schwarzem Text wäre
+   unlesbar. Umgedeutet wird nur der Balken. */
+.db-strich i.bg-gray  {background:var(--c-gray)}
+.db-strich i.bg-brown {background:var(--c-brown)}
+.db-strich i.bg-orange{background:var(--c-orange)}
+.db-strich i.bg-yellow{background:var(--c-yellow)}
+.db-strich i.bg-green {background:var(--c-green)}
+.db-strich i.bg-blue  {background:var(--c-blue)}
+.db-strich i.bg-purple{background:var(--c-purple)}
+.db-strich i.bg-pink  {background:var(--c-pink)}
+.db-strich i.bg-red   {background:var(--c-red)}
+/* Warum das hier steht und nicht bei `.db-strich` in `bausteine.css`: der
+   Namensraum `bg-` gehört dieser Datei (doku/CSS-NAMENSRAEUME.md), und
+   `test290` misst, ob ein Bereich unbemerkt in eine andere Datei zieht.
+   Er hat genau das gemeldet, als die neun Zeilen drüben standen — zu
+   Recht: eine fremde Datei, die `bg-*` umdeutet, ist der Fall, vor dem
+   §39 warnt. */
+
 /* --- Grundlayout ---------------------------------------------------------- */
 *{box-sizing:border-box; margin:0; padding:0}
 html,body{height:100%}
@@ -2097,7 +2126,24 @@ body[data-ruhig="an"] #menueband.ist-zu .mb-klapp{
     margin-left: calc(-1 * var(--db-aus));
   }
 }
+/* DIE VORRAT-LEISTE (E418). Ihre Klasse war da, ihr Aussehen stand als
+   `style.cssText` am Element — sieben Deklarationen im Quelltext (§39).
+   Die Zeile meldet, dass eine Vorberechnung laeuft oder etwas vorliegt;
+   sie steht ueber der Datenbank und soll sich davon abheben, ohne zu
+   schreien. */
+.vorrat-leiste{
+  display:flex; gap:10px; align-items:center; padding:6px 10px;
+  margin-bottom:8px; border-radius:8px; font-size:.9em;
+  background:var(--bg-card); opacity:.9 }
 .db-head{display:flex; align-items:center; gap:2px; margin-bottom:6px; flex-wrap:wrap}
+/* DER TITEL DER DATENQUELLE (E417). Es gab ihn nicht — nur den Schalter, der
+   ihn ausschalten sollte. Er steht ganz links im Kopf und bekommt die volle
+   Breite, damit die Reiter darunter in ihre eigene Zeile fallen: eine
+   Datenbank mit fuenf Ansichten und einem langen Namen soll den Namen nicht
+   abschneiden, um Platz fuer die Reiter zu machen. */
+.db-titel{
+  flex:1 0 100%; font-weight:600; font-size:15px; color:var(--text);
+  margin:0 0 2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
 .db-tabs{display:flex; gap:2px; align-items:center}
 .db-tab{
   padding:5px 9px; border-radius:5px; font-size:14px; color:var(--text-dim);
@@ -2164,11 +2210,29 @@ table.grid tfoot td{color:var(--text-faint); font-size:12.5px; border:none; padd
    zusammenstehen als zwei verschiedene Werte — sonst liest man „Anfang"
    und das Datum daneben als zwei Angaben. */
 .card .meta{margin-top:6px; display:flex; flex-wrap:wrap; gap:4px 10px; align-items:center}
-.card .meta .mv{font-size:12.5px; color:var(--text-dim);
-                display:inline-flex; align-items:center; gap:4px; min-width:0}
+/* NICHT MEHR NUR `.card .meta` (E424). Der Feed benutzt seit E424 dieselbe
+   Maschine (`kartenWerte`), und diese Regeln galten nur in der Karte. Auf
+   dem Bild stand deshalb „Ende30.09.2026" und „Kosten0 CHF": ohne
+   `inline-flex` und `gap` klebte die Beschriftung am Wert.
+   Eine Klasse, die an zwei Orten gesetzt und nur an einem gestaltet wird,
+   ist derselbe Fall wie `.cw-bar.q-blue` aus E410 — nur schlimmer, weil er
+   halb funktioniert und deshalb nicht wie ein Fehler aussieht. */
+.card .meta .mv, .fe-merkmale .mv, .lr-werte .mv{
+  font-size:12.5px; color:var(--text-dim);
+  display:inline-flex; align-items:center; gap:4px; min-width:0}
 /* Der Name tritt zurück — er ist die Beschriftung, nicht die Auskunft. */
-.card .meta .mv-n{font-size:10.5px; font-weight:500; color:var(--text-faint);
-                  text-transform:none; letter-spacing:.01em; flex:0 0 auto}
+.card .meta .mv-n, .fe-merkmale .mv-n, .lr-werte .mv-n{
+  font-size:10.5px; font-weight:500; color:var(--text-faint);
+  text-transform:none; letter-spacing:.01em; flex:0 0 auto}
+/* HIER STAND EINE ZWEITE `.fe-merkmale`-REGEL — UND SIE WAR TOT (E432).
+   E424 schrieb sie hierher, weil der Feed dieselbe Wertemaschine benutzt wie
+   die Karte. Nur wohnt `fe-` in `einstellungen.css`
+   (doku/CSS-NAMENSRAEUME.md), und das Blatt lädt NACH diesem: gleiche
+   Spezifität, spätere Regel gewinnt. `gap:4px 12px` verlor still gegen
+   `gap:5px`, und auf dem Bild stand „Ende 30.09.2026 Kosten 0 CHF" als eine
+   Kette gleich weit entfernter Wörter.
+   Die Werte stehen jetzt dort, wo sie wirken — in `einstellungen.css`.
+   Gefunden hat es `test332`; gehalten wird es von `test417 §2`. */
 
 /* Galerie */
 .gallery{display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:12px}
@@ -2180,6 +2244,30 @@ table.grid tfoot td{color:var(--text-faint); font-size:12.5px; border:none; padd
   border-bottom:1px solid var(--line-soft); cursor:pointer; font-size:14.5px;
 }
 .list-row:hover{background:var(--bg-hover)}
+/* AUS DEM QUELLTEXT HIERHER (E425, §39). Die Zeile trug drei style-Blöcke:
+   die Schriftgrösse der Werte, das flex:1 des Titels und die Reihe der
+   Werte. Der Titel bekommt dabei zusätzlich, was er vorher nicht hatte —
+   eine Grenze: ohne min-width:0 drückt ein langer Titel die Werte aus dem
+   Bild, statt selbst gekürzt zu werden. */
+.list-row .lr-titel{flex:1 1 auto; min-width:0; overflow:hidden;
+  text-overflow:ellipsis; white-space:nowrap}
+.list-row .lr-werte{display:flex; flex-wrap:wrap; align-items:center;
+  justify-content:flex-end; gap:4px 12px; flex:0 1 auto; min-width:0}
+/* AM TELEFON STEHT DER TITEL FÜR SICH (E426).
+   `min-width:0` aus E425 lässt den Titel schrumpfen, damit er am Rechner
+   die Werte nicht aus dem Bild drückt. Am Telefon ist das die falsche
+   Richtung — dort ist nicht der Titel zu lang, sondern die Zeile zu schmal
+   für beides nebeneinander. Gemessen auf 390 px: dem Titel blieben 55 von
+   106 px, und „Bericht Kapitel 1" und „Bericht Kapitel 2" standen BEIDE als
+   „Bericht" da. Zwei verschiedene Einträge, ein Bild (§55.1).
+   Der Feed macht es an derselben Stelle richtig: Titel oben, Werte darunter.
+   Die Liste bekommt dasselbe — aber nur hier, denn am Rechner ist die EINE
+   Zeile genau das, was eine Liste ausmacht. */
+@media (max-width:760px){
+  .list-row{flex-wrap:wrap; align-items:flex-start; row-gap:4px}
+  .list-row .lr-titel{flex:1 0 100%; white-space:normal; overflow:visible}
+  .list-row .lr-werte{flex:1 0 100%; justify-content:flex-start}
+}
 
 /* Kalender */
 .cal{display:grid; grid-template-columns:repeat(7,1fr); gap:1px; background:var(--line)}
@@ -2242,6 +2330,31 @@ table.grid tfoot td{color:var(--text-faint); font-size:12.5px; border:none; padd
 .msg.a{white-space:pre-wrap}
 .msg.a code{background:var(--bg-card); padding:1px 5px; border-radius:3px; font-family:var(--mono); font-size:13px}
 .msg.sys{font-size:12.5px; color:var(--text-faint); text-align:center}
+/* DIE ABSAGE SIEHT NICHT AUS WIE EINE ANTWORT (E418).
+   Der Nur-Quellen-Modus (E305) verspricht: findet sich nichts, wird das
+   Modell GAR NICHT gefragt. Die Absage trug dafuer schon die Klasse
+   `msg-ohne-quelle` — und es gab keine Regel dazu. Der Satz stand da wie
+   jede andere Antwort, in derselben Schrift, an derselben Stelle. Wer nicht
+   liest, sondern ueberfliegt, haelt eine Absage fuer ein Ergebnis; und das
+   ist derselbe Fehler wie eine abgeschnittene Zahl (§55.1): eine Anzeige,
+   die etwas Falsches sagt statt gar nichts.
+   DREI MERKMALE, NICHT EINES. §38 verbietet Information nur ueber Farbe —
+   ein farbiger Streifen allein sagt einem Menschen, der Farben nicht
+   unterscheidet, gar nichts. Also: Streifen, Einrueckung UND ein Zeichen. */
+.msg.msg-ohne-quelle{
+  border-left:3px solid var(--c-orange); padding:2px 0 2px 12px;
+  color:var(--text-dim); font-style:normal }
+/* `⊘` (U+2298) UND NICHT `⃠` (U+20E0). Das zweite sieht im Quelltext
+   genauso aus und ist ein KOMBINIERENDES Zeichen — es legt sich über den
+   folgenden Buchstaben, statt neben ihm zu stehen. Auf dem Bild klebte es
+   am „D" von „Dazu"; ein Leerzeichen im `content` half nicht, weil ein
+   kombinierendes Zeichen sich sein Nachbarzeichen selbst sucht. Gefunden
+   auf dem Bild, nicht im Code (§55.1).
+   Der Abstand kommt deshalb aus `margin-right` und nicht aus einem
+   Leerzeichen: der Abstand ist Gestaltung, kein Text. */
+.msg.msg-ohne-quelle::before{
+  content:'⊘'; color:var(--c-orange); font-style:normal;
+  margin-right:7px; display:inline-block }
 .ai-foot{padding:10px 12px; border-top:1px solid var(--line)}
 .ai-foot textarea{
   width:100%; background:var(--bg-input); border:1px solid var(--line); border-radius:8px;
@@ -2992,11 +3105,11 @@ a.bl:hover{color:var(--text)}
    Sie wächst nur nach oben und unten — waagerecht stehen die
    Nachbarn, und eine Fläche, die sie überdeckt, macht es
    schlimmer statt besser. */
-.wb-tools button::after{content:""; position:absolute; left:0; right:0; top:50%; height:44px; transform:translateY(-50%);}
+.wb-tools button::after{content:""; position:absolute; left:0; right:0; top:50%; height:var(--touch-min); transform:translateY(-50%);}
 .wb-tools button:hover{background:var(--bg-hover); color:var(--text)}
 .wb-tools button.on{background:var(--accent); color:var(--auf-accent)}
 .wb-tools .wb-farbe{width:17px; height:17px; border-radius:50%; border:2px solid transparent; position:relative;}
-.wb-tools .wb-farbe::after{content:""; position:absolute; left:-3px; right:-3px; top:50%; height:44px; transform:translateY(-50%);}
+.wb-tools .wb-farbe::after{content:""; position:absolute; left:-3px; right:-3px; top:50%; height:var(--touch-min); transform:translateY(-50%);}
 .wb-tools .wb-farbe.on{border-color:var(--text)}
 .wb-sep{width:1px; height:18px; background:var(--line); margin:0 5px}
 .wb-flaeche{display:block; width:100%; touch-action:none; color:var(--text-faint); cursor:crosshair}
@@ -3533,7 +3646,23 @@ table.grid.h-klein td{padding:3px 8px; font-size:13.5px}
 table.grid.h-gross td{padding:12px 8px}
 table.grid td.umbruch{white-space:normal; max-width:320px}
 table.grid td:not(.umbruch){white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:340px}
+/* ZWEI SCHALTER, DIE JETZT ETWAS TUN (E417).
+   `umbruchAlle` macht aus JEDER Zelle das, was `.umbruch` fuer eine
+   einzelne tut. `:not(.umbruch)` steht dabei nicht der Ordnung halber da:
+   ohne den Zusatz haette die Regel dieselbe Staerke wie die Zeile darueber
+   und gewaenne nur, weil sie spaeter steht — eine Umsortierung der Datei
+   haette den Schalter still wieder abgeschaltet. */
+table.grid.umbruch-alle td:not(.umbruch){
+  white-space:normal; overflow:visible; text-overflow:clip; max-width:320px }
+/* `linien` nimmt die senkrechten Striche weg, aber NICHT den Platz: mit
+   `border-right:none` wuerde jede Spalte um 1 px schmaler und die ganze
+   Tabelle beim Umschalten springen. Die aeussere rechte Kante bleibt, sonst
+   haette die Tabelle nur noch drei Seiten. */
+table.grid.ohne-linien td:not(:last-child),
+table.grid.ohne-linien th:not(:last-child){ border-right-color:transparent }
 table.grid td.tt{display:flex; align-items:center; gap:8px; justify-content:space-between}
+/* Das Zeichen der Seite steht vor dem Titel und schrumpft nicht mit ihm. */
+table.grid td.tt .tt-icon{ flex:0 0 auto; font-size:15px; line-height:1 }
 table.grid td.tt .tt-t{flex:1; overflow:hidden; text-overflow:ellipsis}
 table.grid td.tt .tt-auf{
   opacity:0; font-size:11.5px; color:var(--text-dim); padding:2px 7px;
@@ -3571,6 +3700,22 @@ table.grid .tt-auf:hover{background:var(--bg-hover); color:var(--text)}
 .zs-name{display:flex; align-items:center; padding:0 10px; font-size:12.5px;
          white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer}
 .zs-name:hover{background:var(--bg-hover)}
+/* AM TELEFON GEHÖRT DER PLATZ DEM ZEITSTRAHL (E427).
+   `flex:0 0 190px` sind am Rechner 16 % der Breite und am Telefon 57 %.
+   Gemessen auf 390 px: Raster 334 px, Namen 190, Zeichenfläche 142 — und
+   weil in 142 px kein Balken breit genug für seinen Titel ist, wanderte
+   nach E413 JEDER der neun Titel nach draussen. Jeder Name stand also
+   zweimal im Bild, und die Hälfte des Platzes ging für die Wiederholung
+   drauf.
+   Zwei Regeln, beide nur hier: die Spalte wird schmaler, und der Titel
+   NEBEN dem Balken entfällt. Er entfällt nur draussen — ein Titel IM
+   Balken sagt dem Auge, welcher Balken zu welcher Zeile gehört, und den
+   nimmt E413 ohnehin nur, wenn er passt. */
+@media (max-width:760px){
+  .zs-namen{flex:0 0 118px}
+  .zs-name{padding:0 7px; font-size:12px}
+  .zs-balken .zs-txt.draussen{display:none}
+}
 .zs-scroll{flex:1; overflow-x:auto; overflow-y:hidden}
 .zs-flaeche{position:relative; min-width:100%}
 .zs-kopf{position:absolute; top:0; left:0; right:0; border-bottom:1px solid var(--line)}
@@ -3667,7 +3812,7 @@ table.grid .tt-auf:hover{background:var(--bg-hover); color:var(--text)}
    Flächen um 24 px, und die zuletzt gezeichnete deckt alle davor zu. Aus
    einer Verbesserung wäre ein Farbwähler geworden, der nur noch die letzte
    Farbe kennt. Senkrecht ist der Platz frei, waagerecht nicht. */
-.opt-farben button::after{content:""; position:absolute; left:-3px; right:-3px; top:50%; height:44px; transform:translateY(-50%);}
+.opt-farben button::after{content:""; position:absolute; left:-3px; right:-3px; top:50%; height:var(--touch-min); transform:translateY(-50%);}
 .opt-farben button:hover{outline:2px solid var(--accent)}
 
 /* Seitenvorschau (Side Peek) */
@@ -4040,7 +4185,14 @@ table.grid th.fixiert{position:sticky; left:38px; z-index:3; background:var(--bg
 .fe-kopf{display:flex; align-items:baseline; gap:10px; cursor:pointer}
 .fe-kopf b{font-size:15px; flex:1}
 .fe-kopf span{font-size:12px; color:var(--text-faint)}
-.fe-merkmale{margin-top:6px; display:flex; flex-wrap:wrap; gap:5px}
+/* DER SPALT ZÄHLT IN ZWEI RICHTUNGEN (E432). Innerhalb eines Wertes
+   trennt `.mv{gap:4px}` die Beschriftung vom Wert; hier trennt der Spalt
+   die Werte VONEINANDER. Stand beides bei 4 und 5 px, las sich die Zeile
+   als ein Satz: „Ende 30.09.2026 Kosten 0 CHF". 12 px aussen gegen 4 px
+   innen macht die Paare wieder sichtbar. Die Zeilenluft bleibt knapp — bei
+   einem Umbruch soll der Feed nicht auseinanderfallen. */
+.fe-merkmale{margin-top:6px; display:flex; flex-wrap:wrap; gap:4px 12px;
+             align-items:center}
 .fe-text{margin-top:7px; font-size:13.5px; color:var(--text-dim); line-height:1.55}
 .fe-fuss{margin-top:9px; display:flex; gap:8px}
 .fe-fuss button{font-size:12px; color:var(--text-dim); padding:3px 9px; border-radius:5px; border:1px solid var(--line)}
@@ -5163,6 +5315,152 @@ body[data-produktwelt="workspace"]:not(:has(#sidebar .side-item[aria-current="pa
   .produkt-welt *{scroll-behavior:auto!important}
 }
 
+/* ============================================================================
+   BEGRUESSUNGSFLAECHE — aus produkt_onboarding.ts hierher (E418)
+   ----------------------------------------------------------------------------
+   Diese 126 Zeilen standen als Zeichenkette im Quelltext und wurden bei
+   Bedarf als `<style>` in die Seite gehaengt. §39 verlangt Stil in einer
+   Stildatei, und dafuer gibt es drei Gruende, die hier alle drei zutrafen:
+   niemand findet die Regel, wenn er sie sucht; `test410` (fehlende Semikolon)
+   liest Stildateien und keine Zeichenketten; und die Marken trugen feste
+   Rueckfallwerte wie `var(--border, #d9dce2)` — 31 Stueck, alle vier Marken
+   gibt es wirklich, also 31 feste Hellwerte, die aussahen wie Vorsicht.
+   Der Namensraum `produkt-onboarding-` gehoert zu den Produktwelten
+   (doku/CSS-NAMENSRAEUME.md), deshalb steht es hier und nicht in einer
+   eigenen Datei: eine neue Datei braucht zwei Eintraege (index.html und
+   GRUNDSTOCK in sw.ts, §28), und diese Regeln teilen ohnehin die Marken
+   der Datei darueber.
+   ========================================================================== */
+.produkt-onboarding-lage {
+  position: fixed; inset: 0; z-index: 10050; box-sizing: border-box;
+  display: grid; place-items: center; padding: 12px;
+  background: color-mix(in srgb, #101217 62%, transparent);
+  overscroll-behavior: contain;
+}
+.produkt-onboarding-lage *, .produkt-onboarding-lage *::before,
+.produkt-onboarding-lage *::after { box-sizing: border-box; }
+.produkt-onboarding {
+  width: min(680px, calc(100vw - 24px)); max-width: 100%;
+  max-height: min(780px, calc(100dvh - 24px)); overflow: hidden;
+  display: flex; flex-direction: column; border: 1px solid var(--border);
+  border-radius: 18px; color: var(--text); background: var(--bg);
+  box-shadow: 0 24px 80px rgb(0 0 0 / .28);
+}
+.produkt-onboarding-kopf {
+  display: flex; align-items: center; gap: 12px; padding: 18px 20px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.produkt-onboarding-marke {
+  width: 42px; height: 42px; flex: 0 0 42px; display: grid; place-items: center;
+  border-radius: 12px; background: color-mix(in srgb, var(--accent) 13%, transparent);
+  font-size: 22px;
+}
+.produkt-onboarding-kopftext { min-width: 0; flex: 1; }
+.produkt-onboarding-kopftext strong { display: block; font-size: 16px; }
+.produkt-onboarding-kopftext span { color: var(--text-faint); font-size: 12.5px; }
+.produkt-onboarding-schliessen {
+  /* `var(--touch-min)` statt roher 44px: das Kreuz schliesst den Dialog,
+     und Abbrechen ist ein Hauptweg (§37). */
+  width: var(--touch-min); height: var(--touch-min);
+  flex: 0 0 var(--touch-min); border: 0; border-radius: 10px;
+  color: inherit; background: transparent; font: inherit; font-size: 19px; cursor: pointer;
+}
+.produkt-onboarding-schliessen:hover { background: var(--bg-hover); }
+.produkt-onboarding-fortschritt {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px;
+  margin: 0; padding: 12px 20px 0; list-style: none;
+}
+.produkt-onboarding-fortschritt li {
+  min-width: 0; color: var(--text-faint); font-size: 11.5px;
+}
+.produkt-onboarding-fortschritt li::before {
+  content: ''; display: block; height: 4px; margin-bottom: 5px;
+  border-radius: 999px; background: var(--bg-hover);
+}
+.produkt-onboarding-fortschritt li[data-erreicht="ja"]::before {
+  background: var(--accent);
+}
+.produkt-onboarding-fortschritt li[aria-current="step"] {
+  color: var(--text); font-weight: 650;
+}
+.produkt-onboarding-inhalt {
+  min-height: 320px; padding: 22px 24px; overflow: auto; overflow-x: hidden;
+}
+.produkt-onboarding-inhalt h1 { margin: 0 0 8px; font-size: clamp(23px, 4vw, 31px); line-height: 1.15; }
+.produkt-onboarding-inhalt > p { margin: 0 0 20px; color: var(--text-faint); line-height: 1.55; }
+.produkt-onboarding fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+.produkt-onboarding legend { width: 100%; margin-bottom: 10px; font-weight: 700; }
+.produkt-onboarding-welten { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.produkt-onboarding-welt, .produkt-onboarding-bereich {
+  position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px;
+  min-width: 0; padding: 15px; border: 1px solid var(--border);
+  border-radius: 13px; cursor: pointer; background: var(--bg-card);
+}
+.produkt-onboarding-welt:first-of-type { grid-column: 1 / -1; }
+.produkt-onboarding-welt:has(input:checked), .produkt-onboarding-bereich:has(input:checked) {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 7%, var(--bg-card));
+}
+.produkt-onboarding-welt input, .produkt-onboarding-bereich input {
+  width: 19px; height: 19px; margin: 2px 0 0; accent-color: var(--accent);
+}
+.produkt-onboarding-welt b, .produkt-onboarding-bereich b { display: block; margin-bottom: 4px; }
+.produkt-onboarding-welt small, .produkt-onboarding-bereich small {
+  display: block; color: var(--text-faint); line-height: 1.4;
+}
+.produkt-onboarding-bereiche { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.produkt-onboarding-bereich .po-icon { font-size: 21px; line-height: 1; }
+.produkt-onboarding-bereich input { position: absolute; right: 13px; top: 13px; }
+.produkt-onboarding-bereich > span:last-child { padding-right: 24px; }
+.produkt-onboarding-bereich[data-gesperrt="ja"] { opacity: .58; cursor: not-allowed; }
+.produkt-onboarding-hinweis {
+  margin-top: 14px; padding: 11px 13px; border-radius: 10px;
+  color: var(--text-faint); background: var(--bg-hover); font-size: 12.5px; line-height: 1.45;
+}
+.produkt-onboarding-zusammenfassung {
+  display: grid; gap: 10px; margin: 0; padding: 0; list-style: none;
+}
+.produkt-onboarding-zusammenfassung li {
+  display: flex; align-items: flex-start; gap: 12px; padding: 13px 14px;
+  border-radius: 11px; background: var(--bg-hover);
+}
+.produkt-onboarding-zusammenfassung b { display: block; }
+.produkt-onboarding-zusammenfassung small { color: var(--text-faint); }
+.produkt-onboarding-fehler { min-height: 20px; margin: 12px 24px 0; color: #b4232f; font-size: 13px; }
+.produkt-onboarding-fuss {
+  display: flex; align-items: center; gap: 9px; padding: 14px 20px 18px;
+  border-top: 1px solid var(--border);
+}
+.produkt-onboarding-fuss button {
+  min-height: var(--touch-min); padding: 9px 15px; border: 1px solid var(--border);
+  border-radius: 10px; color: inherit; background: var(--bg); font: inherit;
+  font-weight: 620; cursor: pointer;
+}
+.produkt-onboarding-fuss button:hover:not(:disabled) { background: var(--bg-hover); }
+.produkt-onboarding-fuss button:disabled { opacity: .52; cursor: wait; }
+.produkt-onboarding-fuss .po-ueberspringen { margin-right: auto; border-color: transparent; color: var(--text-faint); }
+.produkt-onboarding-fuss .po-weiter, .produkt-onboarding-fuss .po-fertig {
+  border-color: var(--accent); color: #fff; background: var(--accent);
+}
+.produkt-onboarding :focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 45%, transparent); outline-offset: 2px; }
+@media (max-width: 520px) {
+  .produkt-onboarding-lage { align-items: end; padding: 0; }
+  .produkt-onboarding { width: 100vw; max-height: 96dvh; border-radius: 18px 18px 0 0; border-bottom: 0; }
+  .produkt-onboarding-kopf { padding: 14px 14px 10px; }
+  .produkt-onboarding-fortschritt { padding: 10px 14px 0; }
+  .produkt-onboarding-fortschritt li { font-size: 10.5px; }
+  .produkt-onboarding-inhalt { min-height: 0; padding: 18px 16px; }
+  .produkt-onboarding-welten, .produkt-onboarding-bereiche { grid-template-columns: 1fr; }
+  .produkt-onboarding-welt:first-of-type { grid-column: auto; }
+  .produkt-onboarding-fehler { margin-inline: 16px; }
+  .produkt-onboarding-fuss { padding: 12px 14px max(14px, env(safe-area-inset-bottom)); flex-wrap: wrap; }
+  .produkt-onboarding-fuss .po-ueberspringen { order: 3; width: 100%; margin: 0; }
+  .produkt-onboarding-fuss .po-zurueck { margin-right: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .produkt-onboarding-lage *, .produkt-onboarding-lage *::before { scroll-behavior: auto !important; transition: none !important; }
+}
+
 </style>
 <style>
 /* ===== quell/schale/stil/arbeitswelt.css ===== */
@@ -5881,6 +6179,35 @@ body[data-ruhig="an"] .arbeitswelt .aw-kopf{
   background:none; border:none; box-shadow:none; overflow:visible;
 }
 body[data-ruhig="an"] .arbeitswelt .aw-kopf::after{ display:none }
+
+/* ============================================================================
+ * DER KALENDER OHNE DIE WORKSPACE-SCHALE (E431)
+ * ----------------------------------------------------------------------------
+ * Redur wollte den Kalender als eigenen Ort, nicht als Abschnitt des
+ * Arbeitsbereichs. Gezeichnet wird er weiter von der Arbeitswelt — der
+ * Kalenderabschnitt, seine Suche und seine Klickgriffe gibt es dort schon,
+ * und ein zweiter Kalender wäre der doppelte Katalog aus §8.
+ *
+ * Was hier wegfällt, fällt weg, weil es zum Arbeitsbereich gehört und nicht
+ * zum Kalender: die dreispaltige Fläche, die Navigationsspalte mit
+ * „Übersicht · Bibliothek · Aufgaben · …" und das Reiterpanel rechts. Sie
+ * werden im nackten Modus gar nicht erst gezeichnet; hier steht nur der
+ * Kopf.
+ *
+ * DER KOPF WIRD SCHMAL, und zwar aus demselben Grund wie in der ruhigen
+ * Fassung 20 Zeilen weiter oben: `.aw-kopf` ist eine 154-px-Bühne für
+ * „REDION HAUPTWELT / Workspace / Seiten, Wissen, Dateien …". Im nackten
+ * Modus steht darin nur noch die Lebensbereich-Auswahl — ein Auswahlfeld
+ * von 36 px. Eine 154-px-Bühne mit Farbverlauf und Ring darum wäre über
+ * der Falz die teuerste leere Fläche der App, und der Kalender darunter
+ * finge erst bei y=240 an.
+ * ==========================================================================*/
+.arbeitswelt.aw-nackt .aw-kopf-schmal{
+  min-height:0; padding:0 2px 2px; justify-content:flex-end;
+  align-items:center; background:none; border:none; box-shadow:none;
+  overflow:visible
+}
+.arbeitswelt.aw-nackt .aw-kopf-schmal::after{ display:none }
 
 </style>
 <style>
@@ -7592,7 +7919,7 @@ body[data-ruhig="an"] .lernwelt .lw-nav{ padding-right:264px }
   width:26px; height:26px; border-radius:50%; border:1px solid var(--line-stark,var(--line));
   display:grid; place-items:center; color:#fff; font-size:12px;
  position:relative;}
-.nh-farben button::after{content:""; position:absolute; left:-3px; right:-3px; top:50%; height:44px; transform:translateY(-50%);}
+.nh-farben button::after{content:""; position:absolute; left:-3px; right:-3px; top:50%; height:var(--touch-min); transform:translateY(-50%);}
 .nh-mehr{
   position:absolute; right:2px; top:2px; z-index:3; width:26px; height:26px;
   display:grid; place-items:center; border-radius:var(--radius-sm);
@@ -8059,7 +8386,7 @@ body.nh-zieht .nh-regal{ touch-action:none }
    Sie wächst nur nach oben und unten — waagerecht stehen die
    Nachbarn, und eine Fläche, die sie überdeckt, macht es
    schlimmer statt besser. */
-.fbtns button::after{content:""; position:absolute; left:0; right:0; top:50%; height:44px; transform:translateY(-50%);}
+.fbtns button::after{content:""; position:absolute; left:0; right:0; top:50%; height:var(--touch-min); transform:translateY(-50%);}
   /* Der Hinweis in der Fussleiste bekommt am Telefon die ganze Zeile; die
      Knöpfe teilen sich die nächste. Neben einem Knopf wurde er sonst vier
      Zeilen hoch und zog den Knopf auf seine Höhe (E348, auf dem Bild). */
@@ -8238,7 +8565,7 @@ body.nh-zieht .nh-regal{ touch-action:none }
 }
 .fr-farben{display:flex; gap:5px; margin-top:5px}
 .fr-farben button{width:26px; height:26px; border-radius:6px; border:2px solid transparent; position:relative;}
-.fr-farben button::after{content:""; position:absolute; left:-3px; right:-3px; top:50%; height:44px; transform:translateY(-50%);}
+.fr-farben button::after{content:""; position:absolute; left:-3px; right:-3px; top:50%; height:var(--touch-min); transform:translateY(-50%);}
 .fr-farben button.on{border-color:var(--text)}
 /* Gefärbte Zeile */
 tr.farbzeile > td{background:inherit}
@@ -10740,7 +11067,7 @@ button[disabled]{opacity:.4; cursor:not-allowed}
 .au-name{font-size:12px; color:var(--text-dim)}
 .au-akzente{display:flex; gap:7px; align-items:center; flex-wrap:wrap}
 .au-akzente button{width:26px; height:26px; border-radius:50%; border:2px solid transparent; cursor:pointer; position:relative;}
-.au-akzente button::after{content:""; position:absolute; left:-3px; right:-3px; top:50%; height:44px; transform:translateY(-50%);}
+.au-akzente button::after{content:""; position:absolute; left:-3px; right:-3px; top:50%; height:var(--touch-min); transform:translateY(-50%);}
 .au-akzente button.an{border-color:var(--text)}
 .au-akzente .au-zurueck{width:auto; height:auto; border-radius:6px; padding:4px 10px;
                         background:transparent; border:1px solid var(--line);
@@ -11718,12 +12045,12 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-fest{display:flex; align-items:center; gap:4px; flex:0 0 auto;
             padding:6px 8px 6px 0}
 .blatt-fest button{min-height:32px; padding:4px 9px; border-radius:6px;
-                   font-size:13px; color:var(--text); background:none; cursor:pointer position:relative;}
+                   font-size:13px; color:var(--text); background:none; cursor:pointer; position:relative}
 /* 44 px TREFFFLÄCHE (§37, E406). HAUPTWEG: Dasselbe wie die Zeichenleiste — dieselbe Hand, dasselbe Blatt.
    Sie wächst nur nach oben und unten — waagerecht stehen die
    Nachbarn, und eine Fläche, die sie überdeckt, macht es
    schlimmer statt besser. */
-.blatt-fest button::after{content:""; position:absolute; left:0; right:0; top:50%; height:44px; transform:translateY(-50%);}
+.blatt-fest button::after{content:""; position:absolute; left:0; right:0; top:50%; height:var(--touch-min); transform:translateY(-50%);}
 .blatt-fest button:hover{background:var(--bg-hover)}
 .blatt-fest .zeichen{margin-right:5px}
 /* `position:relative`, damit das weggeklemmte Wort (Audit F04) an SEINEM
@@ -11736,7 +12063,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
    Sie wächst nur nach oben und unten — waagerecht stehen die
    Nachbarn, und eine Fläche, die sie überdeckt, macht es
    schlimmer statt besser. */
-.blatt-werk button::after{content:""; position:absolute; left:0; right:0; top:50%; height:44px; transform:translateY(-50%);}
+.blatt-werk button::after{content:""; position:absolute; left:0; right:0; top:50%; height:var(--touch-min); transform:translateY(-50%);}
 .blatt-werk button:hover{background:var(--bg-hover)}
 .blatt-werk button.on{background:var(--accent); color:var(--auf-accent)}
 /* DIE BLASSE STELLE GEHÖRT DEM INHALT, NICHT DEM KNOPF (E396).
@@ -12134,7 +12461,10 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
      darunter durchblitzen. Auf dem Bild war es ein abgeschnittenes
      Haftnotiz-Zeichen mitten zwischen den Pfeilen; gemessen hätte es
      niemand. */
-  .blatt-werk > button[data-act="undo"]{ position:sticky; right:44px }
+  /* `var(--touch-min)` statt roher 44px: der Abstand IST eine Knopfbreite —
+   rechts daneben steht „Vor". Wächter `test362` zählt rohe Zahlen und
+   hat recht damit. */
+.blatt-werk > button[data-act="undo"]{ position:sticky; right:var(--touch-min) }
   .blatt-werk > button[data-act="undo"],
   .blatt-werk > button[data-act="redo"]{
     z-index:2; background:var(--bg-card);
@@ -12989,12 +13319,12 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 .sp-ebene.an{color:var(--text); border-color:var(--text-faint)}
 .sp-auswahl{display:flex; align-items:center; gap:4px; color:var(--text)}
 .sp-auswahl button{width:28px; height:28px; border:0; border-radius:6px;
-  background:var(--bg-hover); color:var(--text-dim); cursor:pointer; font-size:13px; line-height:1 position:relative;}
+  background:var(--bg-hover); color:var(--text-dim); cursor:pointer; font-size:13px; line-height:1; position:relative}
 /* 44 px TREFFFLÄCHE (§37, E406). HAUPTWEG: Darunter ist Löschen. Danebengegriffen heisst hier: Arbeit weg (§46).
    Sie wächst nur nach oben und unten — waagerecht stehen die
    Nachbarn, und eine Fläche, die sie überdeckt, macht es
    schlimmer statt besser. */
-.sp-auswahl button::after{content:""; position:absolute; left:0; right:0; top:50%; height:44px; transform:translateY(-50%);}
+.sp-auswahl button::after{content:""; position:absolute; left:0; right:0; top:50%; height:var(--touch-min); transform:translateY(-50%);}
 .sp-auswahl button:hover{background:var(--bg-input); color:var(--text)}
 .sp-hinweis{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 .sp-zahlen{margin-left:auto; color:var(--text-faint); font-variant-numeric:tabular-nums}
@@ -16781,7 +17111,20 @@ const ARTEN = Object.freeze({
     frageBefehle: 'frage.befehle', /* was gehört in die Befehlspalette? */
     frageSeitenMenue: 'frage.seitenmenue', /* was gehört ins Menü dieser Seite? */
     frageZeilenMenue: 'frage.zeilenmenue',
-    frageBefund: 'frage.befund' /* was gehört in den Gesundheitsbericht? */
+    frageBefund: 'frage.befund' /* was gehört in den Gesundheitsbericht? */,
+    /* --- Aufträge (E429) ---------------------------------------------------
+       Diese fünf gab es seit der Auftragsmaschine, aber nur als rohe
+       Zeichenketten an neunzehn Stellen. Ein Tippfehler wäre still gewesen:
+       `horche('auftrag.beended')` wartet für immer, und ein Zuhörer, der
+       nichts hört, sieht aus wie ein Ereignis, das nicht eingetreten ist. */
+    auftragAngelegt: 'auftrag.angelegt',
+    auftragBeginnt: 'auftrag.beginnt',
+    auftragSchritt: 'auftrag.schritt',
+    auftragBeendet: 'auftrag.beendet',
+    auftragFehler: 'auftrag.fehler',
+    auftragWiederaufgenommen: 'auftrag.wiederaufgenommen',
+    /* --- Einstellungen ----------------------------------------------------- */
+    einstellungGeaendert: 'einstellung.geaendert'
 });
 /**
  * Gibt es diesen Namen? Für Prüfläufe und die Fehlersuche.
@@ -16806,7 +17149,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 373, inhalt: '7369af5f1a4b4258', gebaut: '2026-09-05T15:32:31.290Z' };
+const Stand = { fassung: 420, inhalt: 'b1029b7945ebc72e', gebaut: '2026-09-05T21:07:34.112Z' };
 window.Stand = Stand;
 
 </script>
@@ -22100,7 +22443,7 @@ const Auftraege = (() => {
             : standardBedingung();
         const a = JobModell.anlegen(id, art, eingabe, jetzt(), zeitText(), { ...opt, bedingung });
         await Store.auftragPut(a);
-        melde('auftrag.angelegt', { id, art });
+        melde(ARTEN.auftragAngelegt, { id, art });
         /* Nicht auf den nächsten Takt warten: wer etwas anstösst, will es
            laufen sehen. `void`, weil `anlegen` nicht auf die ganze Arbeit
            warten soll. */
@@ -22126,7 +22469,7 @@ const Auftraege = (() => {
         abbrueche.add(id);
         if (a.zustand === 'wartet') {
             await Store.auftragPut(JobModell.abbrechen(a, zeitText()));
-            melde('auftrag.beendet', { id, art: a.art, zustand: 'abgebrochen' });
+            melde(ARTEN.auftragBeendet, { id, art: a.art, zustand: 'abgebrochen' });
             abbrueche.delete(id);
         }
         return true;
@@ -22241,7 +22584,7 @@ const Auftraege = (() => {
         catch (e) {
             /* Ein Fehler im TAKT darf die Maschine nicht anhalten — sonst
                genügte ein kaputter Auftrag, damit nie wieder einer läuft. */
-            melde('auftrag.fehler', { fehler: String(e && e.message || e) });
+            melde(ARTEN.auftragFehler, { fehler: String(e && e.message || e) });
             return false;
         }
         finally {
@@ -22253,7 +22596,7 @@ const Auftraege = (() => {
         const werkzeug = werkzeuge.get(a.art);
         if (!werkzeug)
             return;
-        melde('auftrag.beginnt', { id: a.id, art: a.art, versuch: a.versuche });
+        melde(ARTEN.auftragBeginnt, { id: a.id, art: a.art, versuch: a.versuche });
         let stand = a;
         const schreiben = async (neu) => {
             stand = neu;
@@ -22262,7 +22605,7 @@ const Auftraege = (() => {
         const hilfe = {
             schritt: async (wert, text) => {
                 await schreiben(JobModell.schrittFertig(stand, wert, jetzt(), text, HALTEN_MS));
-                melde('auftrag.schritt', {
+                melde(ARTEN.auftragSchritt, {
                     id: a.id, art: a.art, schritt: stand.schritt,
                     schritte: stand.schritte, text: stand.text
                 });
@@ -22277,11 +22620,11 @@ const Auftraege = (() => {
             if (abbrueche.has(a.id)) {
                 abbrueche.delete(a.id);
                 await schreiben(JobModell.abbrechen(stand, zeitText()));
-                melde('auftrag.beendet', { id: a.id, art: a.art, zustand: 'abgebrochen' });
+                melde(ARTEN.auftragBeendet, { id: a.id, art: a.art, zustand: 'abgebrochen' });
                 return;
             }
             await schreiben(JobModell.fertig({ ...stand, stand: ergebnis === undefined ? stand.stand : ergebnis }, zeitText()));
-            melde('auftrag.beendet', { id: a.id, art: a.art, zustand: 'fertig' });
+            melde(ARTEN.auftragBeendet, { id: a.id, art: a.art, zustand: 'fertig' });
         }
         catch (e) {
             abbrueche.delete(a.id);
@@ -22321,7 +22664,7 @@ const Auftraege = (() => {
                 continue;
             await Store.auftragPut(neu);
             n++;
-            melde('auftrag.wiederaufgenommen', {
+            melde(ARTEN.auftragWiederaufgenommen, {
                 id: a.id, art: a.art, schritt: a.schritt, zustand: neu.zustand
             });
         }
@@ -22358,7 +22701,7 @@ const Auftraege = (() => {
             await aufraeumen();
         }
         catch (e) {
-            melde('auftrag.fehler', { fehler: String(e && e.message || e) });
+            melde(ARTEN.auftragFehler, { fehler: String(e && e.message || e) });
         }
         if (takt)
             clearInterval(takt);
@@ -27643,8 +27986,26 @@ Register.navigation = (() => {
     
            Durchlaufend heisst: Registerreihenfolge IST Bildschirmreihenfolge,
            und die Gruppen sind nur die Schnitte darin. */
+        /* HIER STAND `Kalender.dialog()` — DER VERBINDUNGSDIALOG (E430).
+           Der Hinweis versprach „Termine aus allen Quellen"; aufgegangen ist
+           eine Überlagerung mit Google, CalDAV und Client-ID. Kein Kalender,
+           keine Termine, sondern die Quellen selbst.
+           Und der Unterschied ist nicht kosmetisch: eine Überlagerung hat keine
+           Adresse, keinen Zurück-Weg und keine Krume; sie liegt über der Seite
+           und ist wieder weg. „Aufgaben" und „Bibliothek" stehen im selben
+           Register daneben und machen es seit jeher richtig.
+           Der Verbindungsdialog bleibt — als das, was er ist: die Zeile
+           „Kalender verbinden" im Kontextregister und der Knopf in den
+           Einstellungen.
+           E431 HAT DIE ADRESSE NOCH EINMAL VERLEGT. Erst war der Kalender ein
+           Abschnitt des Arbeitsbereichs — richtiger Ort, aber mit der
+           Workspace-Spalte daneben und der Krume „Workspace" darüber. Redur
+           wollte ihn als eigenen Ort, wie die Elektrotechnik. `zeigeSonder`
+           vergibt die Adresse aus dem Titel: aus „Kalender" wird `#kalender`,
+           und die steht jetzt hier. */
         { id: 'app-kalender', marke: 'kalender', name: 'Kalender', icon: '📅', zeichen: 'calendar', platz: 'apps', gruppe: 'planen', rang: 10,
-            hinweis: 'Termine aus allen Quellen', tun: () => Kalender.dialog() },
+            adresse: '#kalender', schauplatz: 'kalender',
+            hinweis: 'Termine aus allen Quellen', tun: () => Produktwelten.kalender() },
         { id: 'app-tagesplan', marke: 'tagesplan', name: 'Tagesplan', icon: '☀', zeichen: 'clipboard', platz: 'apps', gruppe: 'planen', rang: 20,
             hinweis: 'Was heute ansteht', tun: () => Plan.tagesplan() },
         { id: 'app-woche', marke: 'woche', name: 'Wochenrückblick', icon: '📅', zeichen: 'chart', platz: 'apps', gruppe: 'planen', rang: 30,
@@ -28287,7 +28648,12 @@ Register.ansichten = (() => {
            Notions grösste Lücke bei der Eingabe — siehe bereiche/datenbanken/raster.ts */
         ['raster', '🧮', 'Raster'],
         ['board', '▤', 'Board'],
-        ['timeline', '▬', 'Zeitleiste'],
+        /* „Zeitstrahl", nicht „Zeitleiste" (E422). Beide Wörter standen im
+           Projekt für dieselbe Ansicht: das Register sagte Zeitleiste, der
+           Reiter Zeitstrahl, und die Fehlermeldung „Für den Zeitstrahl braucht
+           es eine Datums-Eigenschaft" auch. Es gewinnt das Wort, das der Nutzer
+           schon liest. */
+        ['timeline', '▬', 'Zeitstrahl'],
         ['calendar', '📅', 'Kalender'],
         ['list', '☰', 'Liste'],
         ['gallery', '▩', 'Galerie'],
@@ -29895,7 +30261,7 @@ Register.einstellungen = (() => {
         if (typeof Store !== 'undefined')
             Store.setMeta(id, wert);
         if (typeof Ereignisse !== 'undefined')
-            Ereignisse.melde('einstellung.geaendert', { id, wert });
+            Ereignisse.melde(ARTEN.einstellungGeaendert, { id, wert });
         return true;
     };
     /** Alles zurück auf Vorgabe — für „so wie am Anfang". */
@@ -39789,12 +40155,20 @@ const Store = (() => {
         const c = cache.collections[collectionId];
         if (!c)
             return null;
-        const namen = { table: 'Tabelle', board: 'Board', list: 'Liste', gallery: 'Galerie',
-            calendar: 'Kalender', timeline: 'Zeitstrahl', chart: 'Diagramm', form: 'Formular',
-            feed: 'Feed', map: 'Karte', dashboard: 'Dashboard' };
+        /* DER NAME KOMMT AUS DEM REGISTER (E422, §8). Hier stand eine eigene
+           Karte mit elf von dreizehn Arten; `pivot` und `raster` fehlten, und
+           eine solche Ansicht hiess deshalb „Ansicht". Genau der Fall, vor dem
+           §8 warnt: ein zweiter Katalog läuft mit dem ersten auseinander, und
+           niemand merkt, welcher gilt.
+           `register/ansichten.js` wird vor dieser Datei geladen (index.html),
+           und `kern/` darf `register/` benutzen (§5 Regel 1). Der Rückfall
+           bleibt trotzdem stehen: eine Ansicht ohne Namen ist schlimmer als
+           eine mit einem faden. */
+        const ausRegister = (art) => (typeof Register !== 'undefined' && Register.ansichten)
+            ? Register.ansichten.name(art) : art;
         const v = {
             id: uid(), collectionId, layout,
-            name: name || namen[layout] || 'Ansicht',
+            name: name || ausRegister(layout) || 'Ansicht',
             filters: { operator: 'and', rules: [] },
             sorts: [], groupBy: '', hidden: [], calc: {},
             created: now(), edited: now() /* siehe `addDatabase` — E179 */
@@ -50721,8 +51095,8 @@ const PdfSeite = (() => {
                     zurueck();
                 };
                 if (typeof Ereignisse !== 'undefined' && Ereignisse.horche) {
-                    aus.push(Ereignisse.horche('auftrag.beendet', fertig));
-                    aus.push(Ereignisse.horche('auftrag.fehler', fertig));
+                    aus.push(Ereignisse.horche(ARTEN.auftragBeendet, fertig));
+                    aus.push(Ereignisse.horche(ARTEN.auftragFehler, fertig));
                 }
                 PdfEinlesen.neuBerechnen(block.quelleId).then((e) => {
                     /* Nichts angelegt heisst: nichts wird kommen. Ein Knopf, der auf
@@ -51434,9 +51808,9 @@ const PdfEinlesen = (() => {
         }
     };
     if (typeof Ereignisse !== 'undefined' && Ereignisse.horche) {
-        Ereignisse.horche('auftrag.schritt', (d) => beiAuftragEreignis('auftrag.schritt', d));
-        Ereignisse.horche('auftrag.beendet', (d) => beiAuftragEreignis('auftrag.beendet', d));
-        Ereignisse.horche('auftrag.fehler', (d) => beiAuftragEreignis('auftrag.fehler', d));
+        Ereignisse.horche(ARTEN.auftragSchritt, (d) => beiAuftragEreignis('auftrag.schritt', d));
+        Ereignisse.horche(ARTEN.auftragBeendet, (d) => beiAuftragEreignis('auftrag.beendet', d));
+        Ereignisse.horche(ARTEN.auftragFehler, (d) => beiAuftragEreignis('auftrag.fehler', d));
     }
     /**
      * Die fehlenden Seitenbilder eines Dokuments neu rechnen — als Auftrag.
@@ -68745,6 +69119,7 @@ const DatenbankDienst = (() => {
         zeilen,
         zeilenGesamt,
         zelle,
+        mitEinheit,
         zusammenfassen };
 })();
 /* Nur, wenn es ein Fenster gibt. In Node gibt es keines — und genau das ist
@@ -68816,7 +69191,7 @@ const Datenbank = (() => {
         if (el)
             el.style.display = ob ? wie : 'none';
     };
-    const { esc, DIENST_TYPEN, FARBEN, KI_AUFTRAG, KI_TYPEN, MUSTER_VORLAGEN, NUR_LESEN, OPERATOREN, RECHNUNGEN, ROLLUP_ARTEN, TYPEN, begrenzen, dauerLesen, dauerText, formelUmgebung, fremdWert, gruppeTrifftZu, hatRegeln, propTyp, pruefeWert, pruefeZeile, rechne, regelAnzahl, rollupWert, seitenListe, trifftZu, wert, wertFrisch, zeilen, zeilenGesamt, zelle, zusammenfassen } = DatenbankDienst;
+    const { esc, DIENST_TYPEN, FARBEN, KI_AUFTRAG, KI_TYPEN, MUSTER_VORLAGEN, NUR_LESEN, OPERATOREN, RECHNUNGEN, ROLLUP_ARTEN, TYPEN, begrenzen, dauerLesen, dauerText, formelUmgebung, fremdWert, gruppeTrifftZu, hatRegeln, propTyp, pruefeWert, pruefeZeile, rechne, regelAnzahl, rollupWert, seitenListe, trifftZu, wert, wertFrisch, zeilen, zeilenGesamt, mitEinheit, zelle, zusammenfassen } = DatenbankDienst;
     /* ========================================================================
      * RENDERN
      * ======================================================================*/
@@ -68835,6 +69210,19 @@ const Datenbank = (() => {
         /* --- Kopfzeile ------------------------------------------------------- */
         const kopf = document.createElement('div');
         kopf.className = 'db-head';
+        /* DER TITEL DER DATENQUELLE (E417). Er stand als Schalter im
+           Layout-Panel — „Titel der Datenquelle anzeigen" —, und es gab ihn
+           nicht. Kein Titel im Kopf, nichts zum Ein- oder Ausschalten: der
+           Schalter war die einzige Spur einer Funktion, die nie gebaut wurde.
+           Vorgabe AN, weil eine Datenbank ohne Namen auf einer Seite mit
+           mehreren nicht auseinanderzuhalten ist. Wer ihn nicht will — etwa
+           weil die Überschrift darüber schon dasselbe sagt — schaltet ihn aus. */
+        if (view.titelZeigen !== false) {
+            const t = document.createElement('div');
+            t.className = 'db-titel';
+            t.textContent = (coll.icon ? coll.icon + ' ' : '') + (coll.name || 'Datenbank');
+            kopf.appendChild(t);
+        }
         const tabs = document.createElement('div');
         tabs.className = 'db-tabs';
         coll.viewIds.forEach((id) => {
@@ -68843,10 +69231,10 @@ const Datenbank = (() => {
                 return;
             const b = document.createElement('button');
             b.className = 'db-tab' + (id === viewId ? ' on' : '');
-            const ICO = { table: '▦', board: '▤', list: '☰', gallery: '▩', calendar: '📅',
-                timeline: '▬', chart: '📊', form: '📝', feed: '📰', map: '🗺',
-                dashboard: '🧮' };
-            const ico = ICO[v.layout] || '▦';
+            /* AUS DEM REGISTER, NICHT AUS EINER EIGENEN KARTE (E422, §8). Hier
+               stand eine Karte mit elf von dreizehn Arten; `pivot` und `raster`
+               bekamen deshalb das Rückfallzeichen ▦ statt ⊞ und 🧮. */
+            const ico = Register.ansichten.icon(v.layout);
             b.innerHTML = `<span>${ico}</span>${esc(v.name)}`;
             b.addEventListener('click', () => {
                 if (id === viewId) {
@@ -69456,7 +69844,16 @@ const Datenbank = (() => {
             .filter(k => !(view.hidden || []).includes(k))
             .filter(k => !coll.schema[k].eigen || (view.eigenZeigen || []).includes(k));
         const t = document.createElement('table');
-        t.className = 'grid h-' + (view.hoehe || 'normal');
+        /* ZWEI SCHALTER, DIE NIEMAND LAS (E417). `linien` und `umbruchAlle`
+           standen im Layout-Panel, wurden richtig gespeichert und von keiner
+           Zeile gelesen. Sie hängen als Klassen an der TABELLE und nicht an
+           jeder Zelle: eine Regel, hundert Zellen.
+           Die Vorgaben sind verschieden herum, und mit Absicht — Linien an
+           (eine Tabelle ohne sie ist schwer zu lesen), Umbruch aus (eine
+           Tabelle, in der jede Zelle umbricht, ist keine mehr). */
+        t.className = 'grid h-' + (view.hoehe || 'normal') +
+            (view.linien === false ? ' ohne-linien' : '') +
+            (view.umbruchAlle ? ' umbruch-alle' : '');
         /* Kopf */
         const thead = document.createElement('thead');
         const tr = document.createElement('tr');
@@ -69604,6 +70001,15 @@ const Datenbank = (() => {
                                 ? `<button class="tt-klapp" title="${zuJetzt ? 'Aufklappen' : 'Zuklappen'}">${zuJetzt ? '▸' : '▾'}</button>`
                                 : (coll.unterElemente ? '<span class="tt-klapp leer"></span>' : '')) +
                             (r.archiviert ? '<span class="tt-archiv" title="Archiviert">🗄</span>' : '') +
+                            /* DAS ZEICHEN DER SEITE (E417). Auch dieses gab es nicht: der
+                               Schalter „Seiten-Icon anzeigen" stand da, die Titelspalte
+                               zeigte nie eines. `aria-hidden`, weil daneben schon der Titel
+                               steht — sonst liest ein Vorleseprogramm „Magnet Schaltplan"
+                               (§38). Zeilen ohne eigenes Zeichen bekommen keines
+                               angedichtet; ein Platzhalter für alle wäre kein Zeichen mehr,
+                               sondern eine Spalte Rauschen. */
+                            (view.seitenIcon !== false && r.icon
+                                ? `<span class="tt-icon" aria-hidden="true">${esc(r.icon)}</span>` : '') +
                             (() => {
                                 const b2 = blockiertDurch(r, coll);
                                 return b2.length
@@ -70611,7 +71017,7 @@ const Datenbank = (() => {
         'sterne', 'prozent', 'files', 'url', 'email', 'phone', 'place', 'person',
         'image', 'verify', 'button', 'relation']);
     /** Die Werteliste einer Karte — mit Namen dort, wo der Wert allein nicht spricht. */
-    const kartenWerte = (r, coll, view, ausser = []) => {
+    const kartenWerte = (r, coll, view, ausser = [], hoechstens = 0) => {
         /* Zuerst zählen, welcher Typ mehrfach vorkommt: zwei Datumsspalten sind
            auch dann nicht zu trennen, wenn eine allein es wäre. */
         const sichtbar = Object.keys(coll.schema).filter(k => coll.schema[k].type !== 'title' && !ausser.includes(k) &&
@@ -70622,11 +71028,20 @@ const Datenbank = (() => {
             proTyp[t] = (proTyp[t] ?? 0) + 1;
         });
         let aus = '';
+        let wieviele = 0;
         sichtbar.forEach(k => {
+            /* EINE OBERGRENZE, WENN DIE STELLE EINE BRAUCHT (E424). Board- und
+               Galeriekarten zeigen alles: dort ist die Karte das Ganze. Der Feed
+               ist ein Strom zum Überfliegen — dreizehn Werte in einer Zeile sind
+               dort keine Auskunft mehr, sondern eine Wand. `0` heisst „alles",
+               damit die Karten nichts merken. */
+            if (hoechstens && wieviele >= hoechstens)
+                return;
             const def = coll.schema[k];
             const z = zelle(r, k, coll);
             if (!z || z.includes('—'))
                 return;
+            wieviele++;
             const mehrfach = (proTyp[def.type] ?? 0) > 1;
             const braucht = mehrfach || !SELBSTERKLAEREND.has(def.type);
             /* `title` steht IMMER da, auch beim selbsterklärenden Wert: wer doch
@@ -70807,21 +71222,21 @@ const Datenbank = (() => {
         rows.forEach((r) => {
             const d = document.createElement('div');
             d.className = 'list-row';
-            let meta = '';
-            Object.keys(coll.schema).forEach(k => {
-                if (coll.schema[k].type === 'title' || (view.hidden || []).includes(k))
-                    return;
-                const z = zelle(r, k, coll);
-                if (z && !z.includes('—'))
-                    meta += '<span style="font-size:12.5px">' + z + '</span>';
-            });
-            d.innerHTML = `<span style="flex:1">${esc(r.text || 'Ohne Titel')}</span>` +
-                `<span style="display:flex;gap:6px;align-items:center">${meta}</span>`;
+            /* DIESELBE MASCHINE WIE KARTE UND FEED (E425, aus E411). Hier stand
+               eine eigene Schleife, die jede Zelle in ein `span` ohne Namen
+               steckte. Auf dem Bild las sich das als
+                   01.09.2026 12.09.2026 420 CHF
+               — zwei Daten nebeneinander, und nichts sagt, welches der Anfang ist.
+               Eine Zeile darunter stand „15.09.2026 15.09.2026": zweimal dasselbe
+               Datum, ohne Beschriftung eine Auskunft über nichts.
+               Sechs Werte, nicht dreizehn: eine Liste ist zum Überfliegen da. */
+            d.innerHTML = `<span class="lr-titel">${esc(r.text || 'Ohne Titel')}</span>` +
+                `<span class="lr-werte">${kartenWerte(r, coll, view, [], 6)}</span>`;
             d.addEventListener('click', () => App.oeffne(r.id));
             w.appendChild(d);
         });
         if (!rows.length)
-            w.innerHTML = '<div style="color:var(--text-faint); padding:10px 0">Noch keine Einträge</div>';
+            w.innerHTML = '<div class="db-leer">Noch keine Einträge</div>';
         return w;
     };
     /* --- Galerie ------------------------------------------------------------ */
@@ -71696,7 +72111,15 @@ const Datenbank = (() => {
                    wie die Spalte. Heisst sie gleich, steht sie einmal da. */
                 const bezeichnung = art.toLowerCase() === String(name).toLowerCase()
                     ? esc(name) : esc(art) + ' · ' + esc(name);
-                d.innerHTML = `<span class="dz-wert">${esc(Formula.anzeige(wert2))}</span>` +
+                /* DIE EINHEIT GEHÖRT AN DIE SUMME (E421). E412 hat der Zahlenspalte
+                   eine Einheit gegeben und sie in der ZELLE angehängt; die Kachel
+                   darüber rechnete weiter ohne. „2630" stand da, und 2630 was, bei
+                   einer Spalte namens „Kosten"? `mitEinheit` fasst den Wert nicht
+                   an — es hängt ein schmales Leerzeichen und die Einheit an die
+                   ANZEIGE. Die Anzahl-Kachel bekommt keine: „9 CHF Einträge" wäre
+                   schlimmer als gar nichts, und sie geht hier nicht durch. */
+                d.innerHTML = `<span class="dz-wert">` +
+                    `${esc(mitEinheit(Formula.anzeige(wert2), kc.schema[k.key]))}</span>` +
                     `<span class="dz-name">${bezeichnung}` +
                     `${woher ? ' · ' + esc(woher) : ''}</span>`;
             }
@@ -71971,52 +72394,28 @@ const Datenbank = (() => {
         const stufe = ZS_STUFEN.find(s => s[0] === stufeId) ?? ZS_STUFEN[0];
         /* Pixel je Tag. `ZS_STUFEN` steht als Liste da; die dritte Stelle ist die
            Breite. Ohne die Umwandlung liest TypeScript daraus `string | number`. */
-        const px = Number(stufe?.[2] ?? 8);
+        const pxBasis = Number(stufe?.[2] ?? 8);
+        /* VERÄNDERLICH, WEIL DIE BREITE ERST NACH DEM EINHÄNGEN BEKANNT IST
+           (E419, L130 Punkt 5). `ZS_STUFEN` gibt eine feste Zahl je Zoomstufe —
+           5 px je Tag auf der Monatsstufe. Bei 65 Tagen sind das 325 px in
+           einem Behälter von 1130: gemessen, nicht geschätzt. Zwei Drittel
+           blieben weiss, und die Mindestbreite von 22 px zog dabei jede Spanne
+           unter fünf Tagen auf dieselbe Breite zusammen — ein Balken über EINEN
+           Tag sah aus wie einer über DREI.
+           Unten, nach dem Einhängen, wird `px` gestreckt, wenn Platz übrig ist.
+           Kleiner wird es nie: ein langer Zeitraum soll rollen, sonst wäre der
+           Zoom eine Anzeige, die immer gleich aussieht. */
+        let px = pxBasis;
         const minD = zsTag(new Date(Math.min(...eintraege.map((e) => e.von))));
         const maxD = zsTag(new Date(Math.max(...eintraege.map((e) => e.bis))));
         minD.setDate(minD.getDate() - (px > 8 ? 2 : 10));
         maxD.setDate(maxD.getDate() + (px > 8 ? 3 : 14));
         const tage = Math.max(1, Math.round((maxD.getTime() - minD.getTime()) / 86400000));
-        const breiteG = tage * px;
+        let breiteG = tage * px;
         const xVon = (d) => Math.round((zsTag(d).getTime() - minD.getTime()) / 86400000 * px);
         eintraege.sort((a, b) => a.von - b.von || String(a.row.text || '').localeCompare(String(b.row.text || ''), 'de'));
         const platz = {};
         eintraege.forEach((e, i) => { platz[e.row.id] = i; });
-        /* ---- Kopfzeile: je nach Zoomstufe Tage, Wochen, Monate oder Jahre ---- */
-        const marken = [];
-        const lauf = new Date(minD);
-        if (stufeId === 'tag') {
-            while (lauf <= maxD) {
-                marken.push({ x: xVon(lauf), text: lauf.toLocaleDateString('de-DE', { day: '2-digit', month: 'short' }),
-                    wochenende: lauf.getDay() === 0 || lauf.getDay() === 6 });
-                lauf.setDate(lauf.getDate() + 1);
-            }
-        }
-        else if (stufeId === 'woche') {
-            while (lauf.getDay() !== 1)
-                lauf.setDate(lauf.getDate() - 1);
-            while (lauf <= maxD) {
-                marken.push({ x: xVon(lauf), text: 'KW ' + kalenderWoche(lauf) });
-                lauf.setDate(lauf.getDate() + 7);
-            }
-        }
-        else if (stufeId === 'monat' || stufeId === 'quartal') {
-            lauf.setDate(1);
-            while (lauf <= maxD) {
-                marken.push({ x: xVon(lauf),
-                    text: stufeId === 'monat'
-                        ? lauf.toLocaleDateString('de-DE', { month: 'short', year: '2-digit' })
-                        : 'Q' + (Math.floor(lauf.getMonth() / 3) + 1) + ' ' + lauf.getFullYear() });
-                lauf.setMonth(lauf.getMonth() + (stufeId === 'monat' ? 1 : 3));
-            }
-        }
-        else {
-            lauf.setMonth(0, 1);
-            while (lauf <= maxD) {
-                marken.push({ x: xVon(lauf), text: String(lauf.getFullYear()) });
-                lauf.setFullYear(lauf.getFullYear() + 1);
-            }
-        }
         /* ---- Gerüst ---------------------------------------------------------- */
         const leiste = document.createElement('div');
         leiste.className = 'zs-leiste';
@@ -72039,96 +72438,190 @@ const Datenbank = (() => {
         scroll.className = 'zs-scroll';
         const flaeche = document.createElement('div');
         flaeche.className = 'zs-flaeche';
-        flaeche.style.width = breiteG + 'px';
-        flaeche.style.height = (ZS_KOPF + eintraege.length * ZS_ZEILE + 8) + 'px';
-        /* Kopf + Gitterlinien */
-        let html = `<div class="zs-kopf" style="height:${ZS_KOPF}px">` +
-            marken.map(m => `<span style="left:${m.x}px">${esc(m.text)}</span>`).join('') +
-            marken.map(m => `<i class="zs-gitter${m.wochenende ? ' we' : ''}" style="left:${m.x}px"></i>`).join('') +
-            '</div>';
-        /* Heute-Linie */
+        /* ---- Die Fläche zeichnen — alles hängt an `px` ------------------------
+           Marken, Balken, Pfeile und die Gesamtbreite werden AUS `px` gerechnet.
+           Deshalb genügt es, `px` zu ändern und dies noch einmal zu rufen; ein
+           Umbau auf Anteile, den L130 Punkt 5 für nötig hielt, war nicht nötig.
+           ---------------------------------------------------------------------*/
         const jetzt = zsTag(new Date());
-        if (jetzt >= minD && jetzt <= maxD)
-            html += `<div class="zs-heute" style="left:${xVon(jetzt)}px; top:${ZS_KOPF - 6}px"></div>`;
-        /* Balken */
-        const balkenBreite = (e) => Math.max(px < 4 ? 6 : 22, ((e.bis - e.von) / 86400000 + 1) * px);
-        eintraege.forEach((e, i) => {
-            const links = xVon(e.von);
-            const breite = balkenBreite(e);
-            const farbe = FARBEN[i % FARBEN.length];
-            html += `<div class="zs-balken bg-${farbe}" data-rid="${e.row.id}" ` +
-                `style="left:${links}px; width:${breite}px; top:${ZS_KOPF + i * ZS_ZEILE + 3}px" ` +
-                `title="${esc(e.row.text || 'Ohne Titel')} — ${e.von.toLocaleDateString('de-DE')}` +
-                (endeKey ? ' bis ' + e.bis.toLocaleDateString('de-DE') : '') + '">' +
-                /* DER TITEL WANDERT NACH DRAUSSEN, WENN ER DRINNEN NICHT PASST
-                   (E413). Auf dem Bild stand in den kurzen Balken „\", „I", „M" —
-                   je EIN Buchstabe, ohne Auslassungszeichen. „\" ist ein
-                   abgeschnittenes „V" von „Verteiler beschriften", und es sieht aus
-                   wie ein Zeichen, nicht wie ein Rest. Genau der Fall aus §55.1:
-                   eine abgeschnittene Anzeige zeigt etwas ANDERES, und beides sieht
-                   gültig aus.
-        
-                   WER DRAUSSEN STEHT, ENTSCHEIDET DIE MESSUNG WEITER UNTEN, nicht
-                   diese Zeile. Eine feste Pixelschwelle stand hier zuerst — 64 px —
-                   und war nachweislich falsch: „Bericht Kapitel 2" bekam 70 px
-                   Balken für 91 px Text und blieb drinnen, abgeschnitten. Wie breit
-                   ein Titel wirklich ist, weiss erst der Browser. */
-                `<span class="zs-txt">${esc(e.row.text || 'Ohne Titel')}</span>` +
-                (endeKey ? '<i class="zs-griff"></i>' : '') + '</div>';
-        });
-        flaeche.innerHTML = html;
-        /* JETZT ERST MESSEN, wo der Titel hinpasst — vorher weiss es niemand.
-           `scrollWidth` gegen die Innenbreite des Balkens: passt der Text nicht,
-           wandert er nach rechts hinaus. Neun Balken, ein Durchgang; das kostet
-           nichts und trifft im Gegensatz zu jeder festen Zahl immer. */
-        requestAnimationFrame(() => {
-            flaeche.querySelectorAll('.zs-balken').forEach(b => {
-                const t = b.querySelector('.zs-txt');
-                if (!t)
-                    return;
-                /* Gegen die eigene clientWidth des TEXTES, nicht die des Balkens:
-                   `b.clientWidth` schliesst das Polster von zweimal 9 px MIT ein,
-                   und der Text hat es nicht zur Verfügung. Auf dem Bild blieb
-                   „Steuerung Ro…" deshalb drinnen — 97 px Text gegen 110 px Balken
-                   sah nach „passt" aus, während wirklich nur 92 px übrig waren.
-                   Zwei Pixel Spiel gegen Rundung. */
-                if (t.scrollWidth > t.clientWidth + 2)
-                    t.classList.add('draussen');
+        const zeichneFlaeche = () => {
+            breiteG = Math.round(tage * px);
+            flaeche.style.width = breiteG + 'px';
+            flaeche.style.height = (ZS_KOPF + eintraege.length * ZS_ZEILE + 8) + 'px';
+            /* ---- Kopfzeile: je nach Zoomstufe Tage, Wochen, Monate oder Jahre ---- */
+            const marken = [];
+            const lauf = new Date(minD);
+            if (stufeId === 'tag') {
+                while (lauf <= maxD) {
+                    marken.push({ x: xVon(lauf), text: lauf.toLocaleDateString('de-DE', { day: '2-digit', month: 'short' }),
+                        wochenende: lauf.getDay() === 0 || lauf.getDay() === 6 });
+                    lauf.setDate(lauf.getDate() + 1);
+                }
+            }
+            else if (stufeId === 'woche') {
+                while (lauf.getDay() !== 1)
+                    lauf.setDate(lauf.getDate() - 1);
+                while (lauf <= maxD) {
+                    marken.push({ x: xVon(lauf), text: 'KW ' + kalenderWoche(lauf) });
+                    lauf.setDate(lauf.getDate() + 7);
+                }
+            }
+            else if (stufeId === 'monat' || stufeId === 'quartal') {
+                lauf.setDate(1);
+                while (lauf <= maxD) {
+                    marken.push({ x: xVon(lauf),
+                        text: stufeId === 'monat'
+                            ? lauf.toLocaleDateString('de-DE', { month: 'short', year: '2-digit' })
+                            : 'Q' + (Math.floor(lauf.getMonth() / 3) + 1) + ' ' + lauf.getFullYear() });
+                    lauf.setMonth(lauf.getMonth() + (stufeId === 'monat' ? 1 : 3));
+                }
+            }
+            else {
+                lauf.setMonth(0, 1);
+                while (lauf <= maxD) {
+                    marken.push({ x: xVon(lauf), text: String(lauf.getFullYear()) });
+                    lauf.setFullYear(lauf.getFullYear() + 1);
+                }
+            }
+            /* DIE ERSTE MARKE STAND LINKS AUSSERHALB (E419, L130 Punkt 6). Auf dem
+               Bild trugen „Sept. 26" und „Okt. 26" ihre Beschriftung, der August
+               nicht — und der Grund war nicht, dass die Marke fehlte, sondern dass
+               `lauf.setDate(1)` auf den Monatsersten springt und der VOR `minD`
+               liegt. Gemessen: x = −45. Die Marke war da, sie stand nur draussen.
+               Geklemmt wird nur die Beschriftung, nicht die Gitterlinie: die Linie
+               gehört an den echten Monatsersten, und der liegt ausserhalb, also
+               sieht man sie zu Recht nicht. Ein Strich bei 0 behauptete, hier
+               beginne ein Monat. */
+            const beschriftung = marken.map((m, i) => ({ ...m, x: i === 0 ? Math.max(0, m.x) : m.x }));
+            /* Kopf + Gitterlinien */
+            let html = `<div class="zs-kopf" style="height:${ZS_KOPF}px">` +
+                beschriftung.map(m => `<span style="left:${m.x}px">${esc(m.text)}</span>`).join('') +
+                marken.map(m => `<i class="zs-gitter${m.wochenende ? ' we' : ''}" style="left:${m.x}px"></i>`).join('') +
+                '</div>';
+            /* Heute-Linie */
+            if (jetzt >= minD && jetzt <= maxD)
+                html += `<div class="zs-heute" style="left:${xVon(jetzt)}px; top:${ZS_KOPF - 6}px"></div>`;
+            /* Balken */
+            const balkenBreite = (e) => Math.max(px < 4 ? 6 : 22, ((e.bis - e.von) / 86400000 + 1) * px);
+            eintraege.forEach((e, i) => {
+                const links = xVon(e.von);
+                const breite = balkenBreite(e);
+                const farbe = FARBEN[i % FARBEN.length];
+                html += `<div class="zs-balken bg-${farbe}" data-rid="${e.row.id}" ` +
+                    `style="left:${links}px; width:${breite}px; top:${ZS_KOPF + i * ZS_ZEILE + 3}px" ` +
+                    `title="${esc(e.row.text || 'Ohne Titel')} — ${e.von.toLocaleDateString('de-DE')}` +
+                    (endeKey ? ' bis ' + e.bis.toLocaleDateString('de-DE') : '') + '">' +
+                    /* DER TITEL WANDERT NACH DRAUSSEN, WENN ER DRINNEN NICHT PASST
+                       (E413). Auf dem Bild stand in den kurzen Balken „\", „I", „M" —
+                       je EIN Buchstabe, ohne Auslassungszeichen. „\" ist ein
+                       abgeschnittenes „V" von „Verteiler beschriften", und es sieht aus
+                       wie ein Zeichen, nicht wie ein Rest. Genau der Fall aus §55.1:
+                       eine abgeschnittene Anzeige zeigt etwas ANDERES, und beides sieht
+                       gültig aus.
+          
+                       WER DRAUSSEN STEHT, ENTSCHEIDET DIE MESSUNG WEITER UNTEN, nicht
+                       diese Zeile. Eine feste Pixelschwelle stand hier zuerst — 64 px —
+                       und war nachweislich falsch: „Bericht Kapitel 2" bekam 70 px
+                       Balken für 91 px Text und blieb drinnen, abgeschnitten. Wie breit
+                       ein Titel wirklich ist, weiss erst der Browser. */
+                    `<span class="zs-txt">${esc(e.row.text || 'Ohne Titel')}</span>` +
+                    (endeKey ? '<i class="zs-griff"></i>' : '') + '</div>';
             });
-        });
-        /* ---- Abhängigkeitspfeile -------------------------------------------- */
-        if (abhKey) {
-            const linien = [];
-            eintraege.forEach((e) => {
-                const vor = e.row.props && e.row.props[abhKey];
-                (Array.isArray(vor) ? vor : (vor ? [vor] : [])).forEach(id => {
-                    const q = eintraege.find((x) => x.row.id === id);
-                    if (!q)
+            flaeche.innerHTML = html;
+            /* JETZT ERST MESSEN, wo der Titel hinpasst — vorher weiss es niemand.
+               `scrollWidth` gegen die Innenbreite des Balkens: passt der Text nicht,
+               wandert er nach rechts hinaus. Neun Balken, ein Durchgang; das kostet
+               nichts und trifft im Gegensatz zu jeder festen Zahl immer. */
+            requestAnimationFrame(() => {
+                flaeche.querySelectorAll('.zs-balken').forEach(b => {
+                    const t = b.querySelector('.zs-txt');
+                    if (!t)
                         return;
-                    const y1 = ZS_KOPF + (platz[q.row.id] ?? 0) * ZS_ZEILE + ZS_ZEILE / 2;
-                    const y2 = ZS_KOPF + (platz[e.row.id] ?? 0) * ZS_ZEILE + ZS_ZEILE / 2;
-                    const x1 = xVon(q.von) + balkenBreite(q);
-                    const x2 = xVon(e.von);
-                    const mx = Math.max(x1 + 9, x2 - 9);
-                    linien.push(`<path d="M ${x1} ${y1} H ${mx} V ${y2} H ${x2 - 5}" ` +
-                        'fill="none" stroke="var(--text-faint)" stroke-width="1.4" marker-end="url(#zs-spitze)"/>');
+                    /* Gegen die eigene clientWidth des TEXTES, nicht die des Balkens:
+                       `b.clientWidth` schliesst das Polster von zweimal 9 px MIT ein,
+                       und der Text hat es nicht zur Verfügung. Auf dem Bild blieb
+                       „Steuerung Ro…" deshalb drinnen — 97 px Text gegen 110 px Balken
+                       sah nach „passt" aus, während wirklich nur 92 px übrig waren.
+                       Zwei Pixel Spiel gegen Rundung. */
+                    if (t.scrollWidth > t.clientWidth + 2)
+                        t.classList.add('draussen');
                 });
             });
-            if (linien.length) {
-                const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-                svg.setAttribute('class', 'zs-pfeile');
-                svg.setAttribute('width', String(breiteG));
-                svg.setAttribute('height', String(ZS_KOPF + eintraege.length * ZS_ZEILE + 8));
-                svg.innerHTML =
-                    '<defs><marker id="zs-spitze" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" ' +
-                        'markerHeight="7" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="var(--text-faint)"/></marker></defs>' +
-                        linien.join('');
-                flaeche.appendChild(svg);
+            /* ---- Abhängigkeitspfeile -------------------------------------------- */
+            if (abhKey) {
+                const linien = [];
+                eintraege.forEach((e) => {
+                    const vor = e.row.props && e.row.props[abhKey];
+                    (Array.isArray(vor) ? vor : (vor ? [vor] : [])).forEach(id => {
+                        const q = eintraege.find((x) => x.row.id === id);
+                        if (!q)
+                            return;
+                        const y1 = ZS_KOPF + (platz[q.row.id] ?? 0) * ZS_ZEILE + ZS_ZEILE / 2;
+                        const y2 = ZS_KOPF + (platz[e.row.id] ?? 0) * ZS_ZEILE + ZS_ZEILE / 2;
+                        const x1 = xVon(q.von) + balkenBreite(q);
+                        const x2 = xVon(e.von);
+                        const mx = Math.max(x1 + 9, x2 - 9);
+                        linien.push(`<path d="M ${x1} ${y1} H ${mx} V ${y2} H ${x2 - 5}" ` +
+                            'fill="none" stroke="var(--text-faint)" stroke-width="1.4" marker-end="url(#zs-spitze)"/>');
+                    });
+                });
+                if (linien.length) {
+                    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                    svg.setAttribute('class', 'zs-pfeile');
+                    svg.setAttribute('width', String(breiteG));
+                    svg.setAttribute('height', String(ZS_KOPF + eintraege.length * ZS_ZEILE + 8));
+                    svg.innerHTML =
+                        '<defs><marker id="zs-spitze" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" ' +
+                            'markerHeight="7" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="var(--text-faint)"/></marker></defs>' +
+                            linien.join('');
+                    flaeche.appendChild(svg);
+                }
             }
-        }
+        };
+        zeichneFlaeche();
         scroll.appendChild(flaeche);
         raster.appendChild(scroll);
         w.appendChild(raster);
+        /* ---- ERST JETZT WEISS JEMAND, WIE BREIT DER PLATZ IST (E419) --------
+           `zs-scroll` steht in der Seite, und `clientWidth` ist damit eine Zahl
+           statt einer Schätzung. Ist das Gemalte schmaler als der Platz, wird
+           `px` gestreckt und einmal neu gezeichnet — zehn Balken, ein Durchgang,
+           vor dem ersten Malen des Browsers. Die Titelmessung läuft in
+           `zeichneFlaeche` mit, also stimmt sie danach auch wieder.
+    
+           NUR GRÖSSER, NIE KLEINER. Auf der Tagesstufe sind 65 Tage 2730 px und
+           passen nicht; dort bleibt es beim Rollen. Ein Zoom, der jede Stufe auf
+           dieselbe Breite zöge, wäre kein Zoom mehr, sondern eine Anzeige, die
+           immer gleich aussieht.
+    
+           DIE VIER PIXEL SPIEL sind der Platz, den ein waagerechter Roller
+           einnimmt, falls er doch erscheint. Ohne sie streckt die Messung auf
+           genau die Behälterbreite, der Roller kommt, der Behälter wird
+           schmaler — und beim nächsten Zeichnen ginge es von vorn los. */
+        const anpassen = () => {
+            const frei = scroll.clientWidth - 4;
+            /* NUR WACHSEN, UND NUR WENN ES SICH LOHNT. Beides zusammen macht die
+               Rückkopplung unmöglich: `breiteG` wächst höchstens bis `frei`, und
+               unter vier Pixeln Unterschied geschieht gar nichts. */
+            if (frei > 0 && breiteG < frei - 4) {
+                px = frei / tage;
+                zeichneFlaeche();
+            }
+        };
+        requestAnimationFrame(anpassen);
+        /* UND NOCH EINMAL, WENN DER BEHÄLTER SEINE ENDGÜLTIGE BREITE HAT (E419).
+           Die eine Messung oben reicht nicht: `.db` bekommt seine Breite selbst
+           erst in einem `requestAnimationFrame` (E409, `luftMessen`), und wer
+           zuerst dran ist, entscheidet die Reihenfolge der Einhängungen — nicht
+           ich. Gemessen: die erste Messung sah 670 px, wo am Ende 1130 standen,
+           und der Zeitstrahl blieb bei der halben Breite stehen.
+           EINE RÜCKKOPPLUNG GIBT ES TROTZDEM NICHT. `.zs-scroll` trägt
+           `overflow-x:auto`, und damit ist seine automatische Mindestbreite
+           null — ein breiterer Inhalt schiebt den Behälter nicht auf. Das ist
+           der Unterschied zu E409, wo genau das den Beobachter in die Schleife
+           schickte. */
+        if (typeof ResizeObserver !== 'undefined')
+            new ResizeObserver(anpassen).observe(scroll);
         /* Erst nach dem Einhängen scrollen: zum heutigen Tag */
         setTimeout(() => {
             if (jetzt >= minD && jetzt <= maxD)
@@ -72285,8 +72778,25 @@ const Datenbank = (() => {
     const alsKarte = (coll, view, rows) => {
         const w = document.createElement('div');
         w.className = 'karte-w';
-        const ortKeys = Object.keys(coll.schema).filter(k => ['text', 'title', 'select'].includes(coll.schema[k].type));
-        const ortKey = view.ortKey && coll.schema[view.ortKey] ? view.ortKey : ortKeys[0];
+        /* ZWEI FEHLER IN ZWEI ZEILEN (E423). Erstens fehlte `place` in der Liste
+           — der eine Typ, der wörtlich „hier steht ein Ort" bedeutet und im
+           Eigenschaftenregister 📍 heisst. Zweitens war die Vorgabe `ortKeys[0]`,
+           und der Titel steht in jedem Schema zuerst. Auf dem Bild stand
+           deshalb „Ortsspalte: Projekt" und „0 auf der Karte": neun Zeilen,
+           neun unauffindbare Orte, denn „Schaltplan Werkstatt" ist keiner.
+           Das ist wörtlich der Befund aus E414, nur an einer anderen Ansicht —
+           dort war die Vorgabe-Gruppierung `gruppierbar[0]` und schloss `title`
+           ein. Zweimal derselbe Fehler: eine Vorgabe, die die erste Spalte
+           nimmt statt der passenden. */
+        const ortKeys = Object.keys(coll.schema).filter(k => ['place', 'text', 'title', 'select'].includes(coll.schema[k].type));
+        /* Die Reihenfolge der Wahl: erst was ein Ort IST, dann was einer sein
+           KANN, und der Titel zuletzt. Er bleibt in `ortKeys` und damit im
+           Menü — wer seine Orte im Titel führt, soll das weiter können (E414 §5:
+           eine bessere Vorgabe nimmt keine Möglichkeit weg). */
+        const ortVorgabe = ortKeys.find(k => coll.schema[k].type === 'place')
+            ?? ortKeys.find(k => coll.schema[k].type !== 'title')
+            ?? ortKeys[0];
+        const ortKey = view.ortKey && coll.schema[view.ortKey] ? view.ortKey : ortVorgabe;
         if (!ortKey) {
             w.innerHTML = '<div class="db-leer">Für die Karte braucht es eine Textspalte mit Orten.</div>';
             return w;
@@ -72448,12 +72958,25 @@ const Datenbank = (() => {
         sortiert2.forEach((r) => {
             const e = document.createElement('article');
             e.className = 'feed-eintrag';
-            const wann = datumKey ? Formula.anzeige(wert(r, datumKey, coll)) : Werkzeuge.zeitKurz(r.created);
-            const merkmale = Object.keys(coll.schema)
-                .filter(k => k !== datumKey && coll.schema[k].type !== 'title' && !(view.hidden || []).includes(k))
-                .map(k => zelle(r, k, coll))
-                .filter(z => z && !z.includes('—'))
-                .slice(0, 4).join(' ');
+            /* DEUTSCH, NICHT ROH (E424). Hier stand `Formula.anzeige(...)`, und
+               das liefert für ein Datum die gespeicherte Zeichenkette: oben rechts
+               stand `2026-09-22`, in derselben Karte `30.09.2026`. Zwei Formate in
+               einer Karte, und eines davon schreibt kein deutschsprachiger Mensch
+               (§3). `Einstellungen.datum` ist derselbe Formatierer, den die Zelle
+               benutzt — damit steht in der Karte überall dasselbe. */
+            const wannRoh = datumKey ? wert(r, datumKey, coll) : null;
+            const wannDat = wannRoh ? new Date(wannRoh) : null;
+            const wann = (wannDat && !isNaN(wannDat.getTime()))
+                ? Einstellungen.datum(wannDat, coll.schema[datumKey]?.type !== 'date')
+                : (datumKey ? String(Formula.anzeige(wannRoh)) : Werkzeuge.zeitKurz(r.created));
+            /* DIESELBE MASCHINE WIE DIE KARTEN (E424, aus E411). Hier klebten die
+               ersten vier Zellen mit einem Leerzeichen aneinander: auf dem Bild
+               stand „15.09.2026 60 CHF" als sähe es aus wie EIN Wert, ohne Namen
+               und ohne Trennung. `kartenWerte` schreibt an, was seinen Namen
+               braucht, und lässt Etiketten, Sterne und Ortsmarken ohne — eine
+               Beschriftung an JEDEM Wert läse wieder niemand.
+               Das Datum der Kopfzeile bleibt aussen vor: es steht schon oben. */
+            const merkmale = kartenWerte(r, coll, view, datumKey ? [datumKey] : [], 5);
             /* Der Anfang des Seiteninhalts als Vorschau */
             const vorschau = Store.childrenOf(r.id)
                 .map((b) => b.text || '').filter(Boolean).join(' ').slice(0, 220);
@@ -73357,9 +73880,14 @@ const Datenbank = (() => {
             App.zeichneSeite();
         });
     };
-    const LAYOUT_NAMEN = { table: 'Tabelle', board: 'Board', list: 'Liste', gallery: 'Galerie',
-        calendar: 'Kalender', timeline: 'Zeitleiste', chart: 'Diagramm', form: 'Formular',
-        feed: 'Feed', map: 'Karte', dashboard: 'Dashboard' };
+    /* DER NAME EINER ANSICHTSART STEHT IM REGISTER (E422, §8). Hier stand eine
+       zweite Karte, und sie war mit dem Register auseinandergelaufen: `pivot`
+       und `raster` fehlten ganz, und `timeline` hiess hier „Zeitleiste", im
+       Reiter aber „Zeitstrahl". Zwei deutsche Wörter für dieselbe Ansicht,
+       nebeneinander in derselben App. */
+    const LAYOUT_NAMEN = new Proxy({}, {
+        get: (_z, art) => Register.ansichten.name(art)
+    });
     /** Gruppieren als eigenes kleines Menü — wird von zwei Stellen gebraucht. */
     /* ========================================================================
      * LAYOUT-PANEL
@@ -74029,9 +74557,11 @@ const Datenbank = (() => {
     const ansichtMenue = (anker, coll, view, block) => {
         const r = anker.getBoundingClientRect();
         const sichtbar = Object.keys(coll.schema).filter(k => !(view.hidden || []).includes(k)).length;
-        const LAY_ICON = { table: '▦', board: '▤', list: '☰', gallery: '▩', calendar: '📅',
-            timeline: '▬', chart: '📊', form: '📝', feed: '📰', map: '🗺',
-            dashboard: '🧮' };
+        /* Auch hier das Register (E422). Dieselbe Karte stand zweimal in
+           derselben Datei — einmal für den Reiter, einmal für das Menü. */
+        const LAY_ICON = new Proxy({}, {
+            get: (_z, art) => Register.ansichten.icon(art)
+        });
         const kopfKarte = '<div class="av-karte">' +
             `<span class="av-ico">${LAY_ICON[view.layout] || '▦'}</span>` +
             `<input class="av-name" value="${esc(view.name || 'Ansicht')}" spellcheck="false">` +
@@ -80742,6 +81272,19 @@ const Werkzeuge = (() => {
     const versionAutomatisch = async (pageId) => {
         if (!pageId)
             return;
+        /* „FASSUNGEN AUTOMATISCH MERKEN" WIRD GELESEN (E417). Der Schalter stand
+           in den Einstellungen und im Register, und niemand fragte ihn. Wer ihn
+           ausmachte, bekam weiter alle vier Minuten eine Fassung.
+           Von den sechs toten Schaltern war das der einzige, dessen Fehler in
+           die SICHERE Richtung ging — es wurde mehr gesichert als bestellt. Ein
+           Schalter, der lügt, bleibt trotzdem einer, und dieser kostet Platz,
+           den der Nutzer ausdrücklich nicht ausgeben wollte (§15).
+           Nur das AUTOMATISCHE hängt daran: `versionSpeichern` von Hand, vor
+           einer Wiederherstellung und vor einer Quelltext-Änderung läuft
+           weiter. Ein Schalter darf keinen Schutz abschalten, um den gebeten
+           wurde. */
+        if (Store.getMeta('autoVersionen', true) === false)
+            return;
         const p = Store.getBlock(pageId);
         if (!p || p.locked)
             return;
@@ -81223,11 +81766,18 @@ const Werkzeuge = (() => {
         });
         Store.setMeta('meldungen', liste.slice(0, 200));
         meldungenGeaendert();
-        /* Kurz sichtbar machen, damit man es auch ohne Posteingang mitbekommt */
-        try {
-            UI.toast('🔔 ' + (m.text || 'Neue Benachrichtigung'));
-        }
-        catch { }
+        /* Kurz sichtbar machen, damit man es auch ohne Posteingang mitbekommt —
+           ausser der Nutzer hat genau diesen Streifen abbestellt (E417).
+           `erinnernInApp` heisst in den Einstellungen „Der Streifen unten am
+           Bildschirm", und DAS hier ist der Streifen. Der Eintrag im Posteingang
+           oben bleibt, die Systemmeldung unten bleibt: abbestellt wird die
+           Einblendung, nicht die Nachricht. Wer den Streifen wegschaltet, will
+           nicht die Meldung verlieren (§51). */
+        if (Store.getMeta('erinnernInApp', true) !== false)
+            try {
+                UI.toast('🔔 ' + (m.text || 'Neue Benachrichtigung'));
+            }
+            catch { }
         /* Und, falls erlaubt, als echte Benachrichtigung des Geräts */
         void geraeteMeldung(m.text || 'Redion', m.quelle || '', 'redion', m.seite || '');
         return liste[0];
@@ -85934,9 +86484,18 @@ const Ansichten = (() => {
         wrap.innerHTML =
             '<div class="home">' +
                 '<h1>Termine</h1>' +
+                /* DREI KARTEN, NICHT ZWEI (E430). „Kalender" führte hier zum
+                   VERBINDUNGSDIALOG — die Zeile „Termine hereinholen" sagt das
+                   zwar, aber von diesem Bildschirm führte damit gar kein Weg zum
+                   Kalender selbst. Wer auf „Termine" geht und einen Kalender sucht,
+                   landete bei Google-Client-IDs.
+                   Jetzt zuerst der Kalender als Ort, dann das Verbinden als das,
+                   was es ist. */
                 '<div class="home-karten">' +
-                '<button class="hk" data-a="kal"><b>📅 Kalender</b>' +
-                '<span>Termine hereinholen</span></button>' +
+                '<button class="hk" data-a="kal-auf"><b>📅 Kalender</b>' +
+                '<span>Alle Termine in einer Chronologie</span></button>' +
+                '<button class="hk" data-a="kal"><b>🔗 Kalender verbinden</b>' +
+                '<span>Google, CalDAV — Termine hereinholen</span></button>' +
                 '<button class="hk" data-a="mtg"><b>🎙 Besprechung</b>' +
                 '<span>Mitreden statt mitschreiben</span></button>' +
                 '</div>' +
@@ -85965,7 +86524,9 @@ const Ansichten = (() => {
             const a = el?.closest('[data-a]');
             if (!a)
                 return;
-            if (a.dataset.a === 'kal')
+            if (a.dataset.a === 'kal-auf')
+                window.Produktwelten?.kalender?.();
+            else if (a.dataset.a === 'kal')
                 window.Kalender?.dialog?.();
             else if (a.dataset.a === 'mtg')
                 window.Meeting?.panel?.();
@@ -89709,7 +90270,7 @@ const ArchivImport = (() => {
        Dokumente darin liegen. */
     if (typeof Ereignisse !== 'undefined' && Ereignisse.horche) {
         try {
-            Ereignisse.horche('auftrag.beendet', (d) => {
+            Ereignisse.horche(ARTEN.auftragBeendet, (d) => {
                 if (!d || d.art !== AUFTRAG_ART)
                     return;
                 /* WOHIN, STEHT IM FERTIGEN AUFTRAG (E380). Die Meldung selbst trägt
@@ -109191,8 +109752,18 @@ const Plan = (() => {
                 });
         });
         Store.setMeta('zurueckgestellt', liste().filter((x) => !f.some((y) => y.id === x.id)));
-        UI.toast(f.length + (f.length === 1 ? ' zurückgestellte Seite ist wieder da'
-            : ' zurückgestellte Seiten sind wieder da'));
+        /* DER SCHALTER WIRD GELESEN, UND ZWAR NUR FÜR DEN STREIFEN (E417).
+           „Erinnerungen in der App" stand in den Einstellungen und wurde von
+           niemandem gelesen: wer ihn ausmachte, bekam den Balken weiter. Das
+           ist derselbe Fall wie der Karteikarten-Streifen aus E409, nur eine
+           Stufe schlimmer — dort war die Vorgabe falsch, hier wirkte der
+           Schalter überhaupt nicht.
+           Er hält den BALKEN auf, nicht das Zurückholen: die Seiten oben sind
+           schon zurückgeholt und im Posteingang gemeldet. Wer keinen Streifen
+           will, will nicht seine Seiten verlieren (§51). */
+        if (Store.getMeta('erinnernInApp', true) !== false)
+            UI.toast(f.length + (f.length === 1 ? ' zurückgestellte Seite ist wieder da'
+                : ' zurückgestellte Seiten sind wieder da'));
         App.zeichneBaum();
         return f.length;
     };
@@ -118059,10 +118630,10 @@ const Vorrat = (() => {
         const s = stand(coll.id);
         const e = einstellung(coll);
         const d = document.createElement('div');
+        /* Das Aussehen steht in `datenbanken.css` unter `.vorrat-leiste` (E418).
+           Hier standen sieben Deklarationen als `style.cssText` — die Klasse gab
+           es schon, sie war nur leer. */
         d.className = 'vorrat-leiste';
-        d.style.cssText = 'display:flex;gap:10px;align-items:center;padding:6px 10px;' +
-            'margin-bottom:8px;border-radius:8px;font-size:.9em;' +
-            'background:var(--bg-card);opacity:.9';
         if (!s) {
             d.innerHTML = '<span>❄ Vorberechnung ist an, aber es liegt noch nichts vor.</span>' +
                 '<button class="btn" data-a="jetzt">Jetzt rechnen</button>';
@@ -119414,7 +119985,7 @@ const Wolke = (() => {
            Register —, gilt er sofort und nicht erst nach dem Neuladen. */
         const ev = globalThis.Ereignisse;
         if (ev?.horche)
-            ev.horche('einstellung.geaendert', (d) => {
+            ev.horche(ARTEN.einstellungGeaendert, (d) => {
                 if (d && d.id === 'wolkeTakt')
                     takt();
             });
@@ -127721,11 +128292,15 @@ const Arbeitswelt = (() => {
     const dateiIcons = {
         file: '📎', image: '🖼', audio: '🎵', video: '🎬'
     };
-    const ansichtIcons = {
-        table: '▦', raster: '🧮', board: '▤', timeline: '▬', calendar: '📅',
-        list: '☰', gallery: '▩', chart: '📊', feed: '📰', map: '🗺',
-        dashboard: '🧮', pivot: '⊞', form: '📝'
-    };
+    /* AUS DEM REGISTER (E422, §8). Hier stand die fünfte Kopie derselben
+       Liste. Diese hier war sogar vollständig — und genau das ist der Punkt:
+       eine Kopie, die heute stimmt, ist die, von der man morgen nicht mehr
+       weiss, dass sie eine ist. Gefunden hat sie nicht das Lesen, sondern
+       `test415 §4`. */
+    const ansichtIcons = new Proxy({}, {
+        get: (_z, art) => (typeof Register !== 'undefined' && Register.ansichten)
+            ? Register.ansichten.icon(art) : '▦'
+    });
     const alsZeit = (wert) => {
         if (typeof wert === 'number')
             return Number.isFinite(wert) ? wert : 0;
@@ -128948,7 +129523,16 @@ const Arbeitswelt = (() => {
             aside.append(split);
         }
     };
-    const controllerBauen = (root, startAnsicht) => {
+    /* NACKT = OHNE DIE WORKSPACE-SCHALE (E431). Redur wollte den Kalender als
+       eigenen Ort, nicht als Abschnitt des Arbeitsbereichs: keine Spalte mit
+       Übersicht/Bibliothek/Aufgaben daneben, keine Krume „Workspace", kein
+       Reiterpanel rechts.
+       Gezeichnet wird trotzdem von hier, und das ist der Punkt: der
+       Kalenderabschnitt, seine Suche, seine Klickgriffe und die
+       Lebensbereich-Auswahl gibt es schon. Sie ein zweites Mal zu schreiben
+       wäre der doppelte Katalog aus §8 — zwei Kalender, die auseinanderlaufen,
+       und niemand merkt, welcher gilt. */
+    const controllerBauen = (root, startAnsicht, nackt = false) => {
         const id = `aw-${++instanz}`;
         const startBereiche = bereichDefinitionen();
         const zustand = { ansicht: normalisiereAnsicht(startAnsicht), suche: '',
@@ -128959,6 +129543,23 @@ const Arbeitswelt = (() => {
         const reiter = reiterVertrag();
         const zeichnen = () => {
             root.classList.add('produkt-welt', 'arbeitswelt');
+            if (nackt) {
+                root.classList.add('aw-nackt');
+                const schale = element('div', 'aw-shell');
+                /* Nur die Lebensbereich-Auswahl bleibt: sie filtert, was der
+                   Kalender zeigt, und ohne sie liesse sich das nicht mehr wählen.
+                   Titel und Beschreibung bringt der Abschnitt selbst mit. */
+                const kopf = element('header', 'aw-kopf aw-kopf-schmal');
+                kopf.append(bereichAuswahl(daten, zustand, id));
+                schale.append(kopf);
+                const nur = element('main', 'aw-inhalt');
+                nur.id = `${id}-inhalt`;
+                nur.tabIndex = -1;
+                zeichneHauptinhalt(nur, daten, zustand);
+                schale.append(nur);
+                root.replaceChildren(schale);
+                return;
+            }
             const shell = element('div', 'aw-shell');
             const header = element('header', 'aw-kopf');
             const titleBox = element('div', 'aw-titelgruppe');
@@ -129281,9 +129882,9 @@ const Arbeitswelt = (() => {
         return controller;
     };
     /** Setzt die Workspace-Welt in ein vorhandenes Schalen-Ziel ein. */
-    const render = (ziel, ansicht = 'uebersicht') => {
+    const render = (ziel, ansicht = 'uebersicht', nackt = false) => {
         controllerNachRoot.get(ziel)?.zerstoeren();
-        const controller = controllerBauen(ziel, ansicht);
+        const controller = controllerBauen(ziel, ansicht, nackt);
         controllerNachRoot.set(ziel, controller);
         return controller;
     };
@@ -129295,8 +129896,23 @@ const Arbeitswelt = (() => {
         App.zeigeSonder(TITEL, (ziel) => { controller = render(ziel, ansicht); });
         return controller;
     };
+    /** Der Kalender als eigener Ort (E431).
+     *
+     *  `zeigeSonder` vergibt die Adresse selbst — aus dem Titel wird `#kalender`
+     *  —, merkt den Ort für „Weiter wo du warst" und meldet den Schauplatz.
+     *  Genau das unterscheidet einen Ort von einer Überlagerung. */
+    const kalenderOeffnen = () => {
+        if (typeof App === 'undefined' || typeof App.zeigeSonder !== 'function')
+            return null;
+        let controller = null;
+        App.zeigeSonder('Kalender', (ziel) => {
+            controller = render(ziel, 'kalender', true);
+        });
+        return controller;
+    };
     return {
         TITEL, ansichten, render, oeffnen, open: oeffnen, mount: render,
+        kalenderOeffnen,
         snapshot, reiterVertrag, controller: render
     };
 })();
@@ -129339,7 +129955,6 @@ if (typeof Register !== 'undefined' && Register.kontext) {
  * ==========================================================================*/
 const ProduktOnboarding = (() => {
     const META_KEY = 'produktOnboarding:v1';
-    const STIL_ID = 'produkt-onboarding-stil';
     const BEREICHE = [
         {
             key: 'elektro', name: 'Elektro-Ausbildung', icon: '⚡', art: 'ausbildung',
@@ -129443,141 +130058,6 @@ const ProduktOnboarding = (() => {
         .normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
     const vorhandenFuer = (vorgabe, liste = vorhandeneBereiche()) => liste.find(bereich => gefaltet(bereich?.name) === gefaltet(vorgabe.name)) ||
         liste.find(bereich => text(bereich?.art, 40) === vorgabe.art) || null;
-    const stilSicherstellen = () => {
-        if (document.getElementById(STIL_ID))
-            return;
-        const stil = document.createElement('style');
-        stil.id = STIL_ID;
-        stil.textContent = `
-      .produkt-onboarding-lage {
-        position: fixed; inset: 0; z-index: 10050; box-sizing: border-box;
-        display: grid; place-items: center; padding: 12px;
-        background: color-mix(in srgb, #101217 62%, transparent);
-        overscroll-behavior: contain;
-      }
-      .produkt-onboarding-lage *, .produkt-onboarding-lage *::before,
-      .produkt-onboarding-lage *::after { box-sizing: border-box; }
-      .produkt-onboarding {
-        width: min(680px, calc(100vw - 24px)); max-width: 100%;
-        max-height: min(780px, calc(100dvh - 24px)); overflow: hidden;
-        display: flex; flex-direction: column; border: 1px solid var(--border, #d9dce2);
-        border-radius: 18px; color: var(--text, #1f2329); background: var(--bg, #fff);
-        box-shadow: 0 24px 80px rgb(0 0 0 / .28);
-      }
-      .produkt-onboarding-kopf {
-        display: flex; align-items: center; gap: 12px; padding: 18px 20px 12px;
-        border-bottom: 1px solid var(--border, #e2e4e9);
-      }
-      .produkt-onboarding-marke {
-        width: 42px; height: 42px; flex: 0 0 42px; display: grid; place-items: center;
-        border-radius: 12px; background: color-mix(in srgb, var(--accent, #d62b3a) 13%, transparent);
-        font-size: 22px;
-      }
-      .produkt-onboarding-kopftext { min-width: 0; flex: 1; }
-      .produkt-onboarding-kopftext strong { display: block; font-size: 16px; }
-      .produkt-onboarding-kopftext span { color: var(--text-faint, #6d7280); font-size: 12.5px; }
-      .produkt-onboarding-schliessen {
-        width: 44px; height: 44px; flex: 0 0 44px; border: 0; border-radius: 10px;
-        color: inherit; background: transparent; font: inherit; font-size: 19px; cursor: pointer;
-      }
-      .produkt-onboarding-schliessen:hover { background: var(--bg-hover, #f1f2f5); }
-      .produkt-onboarding-fortschritt {
-        display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px;
-        margin: 0; padding: 12px 20px 0; list-style: none;
-      }
-      .produkt-onboarding-fortschritt li {
-        min-width: 0; color: var(--text-faint, #737886); font-size: 11.5px;
-      }
-      .produkt-onboarding-fortschritt li::before {
-        content: ''; display: block; height: 4px; margin-bottom: 5px;
-        border-radius: 999px; background: var(--bg-hover, #e9ebef);
-      }
-      .produkt-onboarding-fortschritt li[data-erreicht="ja"]::before {
-        background: var(--accent, #d62b3a);
-      }
-      .produkt-onboarding-fortschritt li[aria-current="step"] {
-        color: var(--text, #1f2329); font-weight: 650;
-      }
-      .produkt-onboarding-inhalt {
-        min-height: 320px; padding: 22px 24px; overflow: auto; overflow-x: hidden;
-      }
-      .produkt-onboarding-inhalt h1 { margin: 0 0 8px; font-size: clamp(23px, 4vw, 31px); line-height: 1.15; }
-      .produkt-onboarding-inhalt > p { margin: 0 0 20px; color: var(--text-faint, #666d79); line-height: 1.55; }
-      .produkt-onboarding fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
-      .produkt-onboarding legend { width: 100%; margin-bottom: 10px; font-weight: 700; }
-      .produkt-onboarding-welten { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-      .produkt-onboarding-welt, .produkt-onboarding-bereich {
-        position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 12px;
-        min-width: 0; padding: 15px; border: 1px solid var(--border, #dfe2e8);
-        border-radius: 13px; cursor: pointer; background: var(--bg-card, #fff);
-      }
-      .produkt-onboarding-welt:first-of-type { grid-column: 1 / -1; }
-      .produkt-onboarding-welt:has(input:checked), .produkt-onboarding-bereich:has(input:checked) {
-        border-color: var(--accent, #d62b3a);
-        background: color-mix(in srgb, var(--accent, #d62b3a) 7%, var(--bg-card, #fff));
-      }
-      .produkt-onboarding-welt input, .produkt-onboarding-bereich input {
-        width: 19px; height: 19px; margin: 2px 0 0; accent-color: var(--accent, #d62b3a);
-      }
-      .produkt-onboarding-welt b, .produkt-onboarding-bereich b { display: block; margin-bottom: 4px; }
-      .produkt-onboarding-welt small, .produkt-onboarding-bereich small {
-        display: block; color: var(--text-faint, #69707d); line-height: 1.4;
-      }
-      .produkt-onboarding-bereiche { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-      .produkt-onboarding-bereich .po-icon { font-size: 21px; line-height: 1; }
-      .produkt-onboarding-bereich input { position: absolute; right: 13px; top: 13px; }
-      .produkt-onboarding-bereich > span:last-child { padding-right: 24px; }
-      .produkt-onboarding-bereich[data-gesperrt="ja"] { opacity: .58; cursor: not-allowed; }
-      .produkt-onboarding-hinweis {
-        margin-top: 14px; padding: 11px 13px; border-radius: 10px;
-        color: var(--text-faint, #676e79); background: var(--bg-hover, #f3f4f6); font-size: 12.5px; line-height: 1.45;
-      }
-      .produkt-onboarding-zusammenfassung {
-        display: grid; gap: 10px; margin: 0; padding: 0; list-style: none;
-      }
-      .produkt-onboarding-zusammenfassung li {
-        display: flex; align-items: flex-start; gap: 12px; padding: 13px 14px;
-        border-radius: 11px; background: var(--bg-hover, #f4f5f7);
-      }
-      .produkt-onboarding-zusammenfassung b { display: block; }
-      .produkt-onboarding-zusammenfassung small { color: var(--text-faint, #6d7280); }
-      .produkt-onboarding-fehler { min-height: 20px; margin: 12px 24px 0; color: #b4232f; font-size: 13px; }
-      .produkt-onboarding-fuss {
-        display: flex; align-items: center; gap: 9px; padding: 14px 20px 18px;
-        border-top: 1px solid var(--border, #e1e3e8);
-      }
-      .produkt-onboarding-fuss button {
-        min-height: 44px; padding: 9px 15px; border: 1px solid var(--border, #d9dce2);
-        border-radius: 10px; color: inherit; background: var(--bg, #fff); font: inherit;
-        font-weight: 620; cursor: pointer;
-      }
-      .produkt-onboarding-fuss button:hover:not(:disabled) { background: var(--bg-hover, #f1f2f5); }
-      .produkt-onboarding-fuss button:disabled { opacity: .52; cursor: wait; }
-      .produkt-onboarding-fuss .po-ueberspringen { margin-right: auto; border-color: transparent; color: var(--text-faint, #686e7a); }
-      .produkt-onboarding-fuss .po-weiter, .produkt-onboarding-fuss .po-fertig {
-        border-color: var(--accent, #d62b3a); color: #fff; background: var(--accent, #d62b3a);
-      }
-      .produkt-onboarding :focus-visible { outline: 3px solid color-mix(in srgb, var(--accent, #d62b3a) 45%, transparent); outline-offset: 2px; }
-      @media (max-width: 520px) {
-        .produkt-onboarding-lage { align-items: end; padding: 0; }
-        .produkt-onboarding { width: 100vw; max-height: 96dvh; border-radius: 18px 18px 0 0; border-bottom: 0; }
-        .produkt-onboarding-kopf { padding: 14px 14px 10px; }
-        .produkt-onboarding-fortschritt { padding: 10px 14px 0; }
-        .produkt-onboarding-fortschritt li { font-size: 10.5px; }
-        .produkt-onboarding-inhalt { min-height: 0; padding: 18px 16px; }
-        .produkt-onboarding-welten, .produkt-onboarding-bereiche { grid-template-columns: 1fr; }
-        .produkt-onboarding-welt:first-of-type { grid-column: auto; }
-        .produkt-onboarding-fehler { margin-inline: 16px; }
-        .produkt-onboarding-fuss { padding: 12px 14px max(14px, env(safe-area-inset-bottom)); flex-wrap: wrap; }
-        .produkt-onboarding-fuss .po-ueberspringen { order: 3; width: 100%; margin: 0; }
-        .produkt-onboarding-fuss .po-zurueck { margin-right: auto; }
-      }
-      @media (prefers-reduced-motion: reduce) {
-        .produkt-onboarding-lage *, .produkt-onboarding-lage *::before { scroll-behavior: auto !important; transition: none !important; }
-      }
-    `;
-        document.head.appendChild(stil);
-    };
     const weltName = (welt) => welt === 'lernen' ? '🎓 Lernen & Alltag' : welt === 'workspace' ? '🧱 Workspace' : 'Beide Hauptwelten';
     const oeffnen = () => {
         if (laufend)
@@ -129585,7 +130065,10 @@ const ProduktOnboarding = (() => {
         if (typeof document === 'undefined' || !document.body)
             return Promise.reject(new Error('Das Onboarding braucht ein geöffnetes Redion-Fenster.'));
         laufend = new Promise(resolve => {
-            stilSicherstellen();
+            /* Der Stil kommt aus `quell/schale/stil/produktwelten.css` (E418).
+               Hier stand ein `<style>`-Block mit 126 Zeilen, der bei Bedarf in die
+               Seite gehaengt wurde — §39 sagt dazu einen Satz, und `test410` liest
+               Stildateien, keine Zeichenketten im Quelltext. */
             const vorherFokus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
             const gespeichert = profilLesen();
             let schritt = 1;
@@ -130031,6 +130514,24 @@ const Produktwelten = (() => {
     };
     const bibliothek = () => workspace('bibliothek');
     const aufgaben = () => workspace('aufgaben');
+    /* DER KALENDER IST EIN EIGENER ORT (E430, E431). Die Ansicht gab es die
+       ganze Zeit — die Arbeitswelt zeichnet die Chronologie aller Datumsfelder.
+       Es fehlte nur die Tür: der Navigationseintrag „Kalender" rief
+       `Kalender.dialog()`, und das ist der Verbindungsdialog für Google und
+       CalDAV.
+       E431 hat die Tür dann noch einmal verlegt. Redur wollte den Kalender
+       nicht als Abschnitt des Arbeitsbereichs, sondern als eigenen Ort — wie
+       die Elektrotechnik, die auch nicht im Workspace wohnt. Also `zeigeSonder`
+       statt `workspace('kalender')`: eigene Krume „📅 Kalender", eigene Adresse
+       `#kalender`, keine Workspace-Seitenleiste. Gezeichnet wird trotzdem von
+       der Arbeitswelt (§8: kein zweiter Katalog). */
+    const kalender = () => {
+        const modul = arbeitsmodul();
+        if (modul?.kalenderOeffnen && modul.kalenderOeffnen())
+            return;
+        /* Rückfall für alte Einzeldateien, in denen der eigene Ort noch fehlt. */
+        workspace('kalender');
+    };
     const whiteboards = () => workspace('whiteboards');
     const planung = () => {
         weltSetzen('lernen');
@@ -130218,7 +130719,7 @@ const Produktwelten = (() => {
     };
     return {
         start, aktiv, markieren, wechseln: weltSetzen, zurAktivenWelt,
-        lernen, workspace, bibliothek, aufgaben, whiteboards, planung, bereicheDialog,
+        lernen, workspace, bibliothek, aufgaben, kalender, whiteboards, planung, bereicheDialog,
         routeAusHash, routeOeffnen
     };
 })();
@@ -131462,12 +131963,37 @@ const KI = (() => {
             return null;
         }
     };
+    /* WAS EIN MODELL SCHREIBT, AUF REDIONS TYPEN. Das ist KEIN zweiter
+       Katalog (§8): das Register hält die Kennungen, diese Karte fängt die
+       vielen Schreibweisen dafür ab — deutsch wie englisch, denn die App
+       fragt deutsch und das Modell antwortet deutsch.
+       GEZÄHLT WAR SIE UNVOLLSTÄNDIG (E428): 30 Typen stehen im Register, 13
+       erreichte die KI. Die übrigen fielen still auf `text` zurück, und
+       „bau mir eine Bewertung und einen Fortschritt" ergab zwei Textspalten.
+       Kein Fehler, keine Meldung — nur eine Datenbank, die weniger kann als
+       bestellt. */
     const TYP_KARTE = {
         text: 'text', zahl: 'number', number: 'number', auswahl: 'select', select: 'select',
         mehrfach: 'multi', multi: 'multi', status: 'status', datum: 'date', date: 'date',
         person: 'person', kontrollkästchen: 'checkbox', checkbox: 'checkbox', url: 'url',
         email: 'email', 'e-mail': 'email', telefon: 'phone', phone: 'phone', formel: 'formula',
-        formula: 'formula', dateien: 'files', files: 'files'
+        formula: 'formula', dateien: 'files', files: 'files',
+        /* Die sieben, die nur vergessen waren — sie brauchen nichts ausser
+           ihrem Namen. */
+        sterne: 'sterne', bewertung: 'sterne', rating: 'sterne',
+        prozent: 'prozent', fortschritt: 'prozent', progress: 'prozent',
+        place: 'place', ort: 'place', adresse: 'place',
+        duration: 'duration', dauer: 'duration', zeitspanne: 'duration',
+        created: 'created', erstellt: 'created', 'erstellt am': 'created',
+        edited: 'edited', 'geändert': 'edited', 'zuletzt geändert': 'edited',
+        uid: 'uid', nummer: 'uid', 'laufende nummer': 'uid'
+        /* UND WAS MIT GRUND DRAUSSEN BLEIBT: `relation` und `rollup` brauchen
+           eine Zieldatenbank, die im Plan nicht steht; `gdrive`, `figma`,
+           `githubpr` und `zendesk` eine eingerichtete Verbindung; `button`,
+           `ki` und `verify` eine Einstellung, die niemand geraten hat. Jede
+           davon entstünde leer und kaputt — eine Textspalte ist dann die
+           ehrlichere Antwort, sie hält wenigstens, was hineingeschrieben wird.
+           `test421 §5` hält diese Grenze fest. */
     };
     /** Baut aus einer Beschreibung eine echte Datenbank. */
     /**
@@ -140679,12 +141205,26 @@ const App = (() => {
        anderen Sonderansichten — „Meine Aufgaben", „Lernen & Alltag",
        „Elektro" — führen zum Regal: das ist der Ort, an dem die Sachen
        liegen, und Redurs Wunsch für „nichts offen". */
+    /* UND SEIT E431 AUCH DER KALENDER. Er ist mit demselben Bogen ein eigener
+       Ort geworden — eigene Krume, eigene Adresse `#kalender`, keine
+       Workspace-Schale. Ein Ort, an den man nicht zurückkommt, ist aber nur
+       ein halber: wer die App im Kalender verlässt oder `#kalender` als
+       Lesezeichen speichert, landete ohne diese Zeile im Regal.
+       Die Tabelle ist beides — sie beantwortet „wo war ich zuletzt" UND
+       „welcher Hash ist ein Ort" (`rohHash in SONDER_START`, weiter unten). */
     const SONDER_START = {
         dokumente: () => Bibliothek.oeffne(),
         notizhefte: () => {
             const N = globalThis.Notebook;
             if (N && typeof N.oeffnen === 'function')
                 N.oeffnen();
+            else
+                Bibliothek.oeffne();
+        },
+        kalender: () => {
+            const P = globalThis.Produktwelten;
+            if (P && typeof P.kalender === 'function')
+                P.kalender();
             else
                 Bibliothek.oeffne();
         },
@@ -141731,10 +142271,10 @@ window.addEventListener('DOMContentLoaded', () => {
     if (window.__nurBote)
         return;
     if (typeof Ereignisse !== 'undefined')
-        Ereignisse.melde('app:startet');
+        Ereignisse.melde(ARTEN.appStartet);
     App.start();
     if (typeof Ereignisse !== 'undefined')
-        Ereignisse.melde('app:steht');
+        Ereignisse.melde(ARTEN.appSteht);
 });
 
 </script>

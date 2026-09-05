@@ -1133,6 +1133,7 @@ const DatenbankDienst = (() => {
         zeilen,
         zeilenGesamt,
         zelle,
+        mitEinheit,
         zusammenfassen };
 })();
 /* Nur, wenn es ein Fenster gibt. In Node gibt es keines — und genau das ist

@@ -1155,7 +1155,7 @@ const Wolke = (() => {
     /* Wird der Takt anderswo geändert — im Wolke-Fenster, über das
        Register —, gilt er sofort und nicht erst nach dem Neuladen. */
     const ev = (globalThis as any).Ereignisse;
-    if (ev?.horche) ev.horche('einstellung.geaendert', (d: any) => {
+    if (ev?.horche) ev.horche(ARTEN.einstellungGeaendert, (d: any) => {
       if (d && d.id === 'wolkeTakt') takt();
     });
   };

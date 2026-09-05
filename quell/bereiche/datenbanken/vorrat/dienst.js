@@ -253,10 +253,10 @@ const Vorrat = (() => {
         const s = stand(coll.id);
         const e = einstellung(coll);
         const d = document.createElement('div');
+        /* Das Aussehen steht in `datenbanken.css` unter `.vorrat-leiste` (E418).
+           Hier standen sieben Deklarationen als `style.cssText` — die Klasse gab
+           es schon, sie war nur leer. */
         d.className = 'vorrat-leiste';
-        d.style.cssText = 'display:flex;gap:10px;align-items:center;padding:6px 10px;' +
-            'margin-bottom:8px;border-radius:8px;font-size:.9em;' +
-            'background:var(--bg-card);opacity:.9';
         if (!s) {
             d.innerHTML = '<span>❄ Vorberechnung ist an, aber es liegt noch nichts vor.</span>' +
                 '<button class="btn" data-a="jetzt">Jetzt rechnen</button>';

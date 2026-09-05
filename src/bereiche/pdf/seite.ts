@@ -207,8 +207,8 @@ const PdfSeite = (() => {
           zurueck();
         };
         if (typeof Ereignisse !== 'undefined' && Ereignisse.horche) {
-          aus.push(Ereignisse.horche('auftrag.beendet', fertig));
-          aus.push(Ereignisse.horche('auftrag.fehler', fertig));
+          aus.push(Ereignisse.horche(ARTEN.auftragBeendet, fertig));
+          aus.push(Ereignisse.horche(ARTEN.auftragFehler, fertig));
         }
         PdfEinlesen.neuBerechnen(block.quelleId).then((e: any) => {
           /* Nichts angelegt heisst: nichts wird kommen. Ein Knopf, der auf

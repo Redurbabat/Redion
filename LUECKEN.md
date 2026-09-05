@@ -6091,11 +6091,19 @@ kostet den Nutzer eine Auskunft.
    Farbe (`.cw-bar.q-blue` gab es nirgends), und sie lagen auf den
    Tageszahlen. Beide fand erst ein Bild. Gehalten von `test405`.
 
-3. **Kein Hinweis, dass rechts noch etwas kommt.** Die Tabelle rollt
-   waagerecht, und der Roller ist unsichtbar. Vor E409 waren dahinter acht
-   von dreizehn Spalten, jetzt sind es drei — der Fehler ist kleiner
-   geworden, aber nicht weg. Ein Schatten an der rechten Kante, solange
-   noch etwas kommt, würde reichen.
+3. **Kein Hinweis, dass rechts noch etwas kommt.** GESCHLOSSEN — und zwar
+   war es das schon, als dieser Punkt geschrieben wurde. Nachgemessen bei
+   1280 px Fenster: `.db-rollbox` trägt `data-rand="rechts"`, und die weiche
+   Kante aus `tabelle.css` greift mit einer echten Maske. `Rollrand.binde`
+   (E63) setzt das seit jeher; niemand hatte die Zeile hier nachgezogen.
+   Was WIRKLICH fehlte, war der Wächter: `test136` hielt die Kante nur am
+   TELEFON, über den Schalter „Tabelle statt Karten". Genau der Fall, über
+   den dieser Punkt klagte — die Tabelle am Rechner —, war ungeprüft.
+   `test404 §10` hält ihn jetzt, samt der Gegenrichtung: ganz rechts
+   angekommen zeigt die Kante nur noch nach links.
+   Der Lehrsatz daraus steht in E420: eine Lücke, die niemand nachmisst,
+   bleibt in der Liste, auch wenn sie zu ist — und eine geschlossene Lücke
+   ohne Wächter geht wieder auf, ohne dass es jemand merkt.
 
 4. **Eine Zahlenspalte kann keine Einheit tragen.** GESCHLOSSEN mit E412.
    `einheit` steht im Menü der Spalte, hängt beim Zeichnen mit schmalem
@@ -6105,20 +6113,109 @@ kostet den Nutzer eine Auskunft.
    heisst und dem Typ dreizehn Felder fehlten; `test294 §5` misst diese
    Richtung jetzt mit.
 
-5. **Der Zeitstrahl nutzt seine Fläche nicht.** `px` — Pixel je Tag — ist
-   in `ZS_STUFEN` je Zoomstufe FEST: 42 am Tag, 15 in der Woche, 5 im
-   Monat. Bei einem Zeitraum von 45 Tagen ist die gezeichnete Fläche
-   deshalb 225 px breit, während 1100 px zur Verfügung stehen. Zwei Drittel
-   der Ansicht bleiben leer, und die Balken sind unnötig winzig — auf der
-   Monatsstufe fallen drei Tage sogar unter die Mindestbreite von 22 px und
-   sind von einem einzelnen Tag nicht zu unterscheiden.
-   Gefunden bei E413. Ein eigener Bogen: die Balken sind in Pixeln
-   positioniert, ein Skalieren hiesse, alles auf Anteile umzustellen.
+5. **Der Zeitstrahl nutzt seine Fläche nicht.** GESCHLOSSEN mit E419.
+   Nachgemessen waren es 325 px gezeichnete Fläche in einem Behälter von
+   1130 — schlimmer als hier stand. `px` wird nach dem Einhängen gestreckt,
+   wenn Platz übrig ist, und nur dann; ein langer Zeitraum rollt weiter.
+   Die Sorge, das hiesse „alles auf Anteile umstellen", war unbegründet:
+   Marken, Balken und Pfeile werden ohnehin ALLE aus `px` gerechnet, es
+   genügte, `px` zu ändern und einmal neu zu zeichnen.
+   Der Nebenschaden war der grössere: die Mindestbreite von 22 px zog jede
+   Spanne unter fünf Tagen auf dieselbe Breite — gemessen waren ein Tag,
+   zwei Tage und drei Tage alle genau 22 px breit. Jetzt 22, 35 und 52.
+   Gehalten von `test413`.
 
-6. **Die Zeitachse hat keine Marke am Anfang.** Auf dem Bild standen
-   „Sept. 26" und „Okt. 26" — die Balken beginnen aber im August, und
-   dieser Bereich trägt keine Beschriftung. Wer hinsieht, weiss nicht, wo
-   er ist.
+6. **Die Zeitachse hat keine Marke am Anfang.** GESCHLOSSEN mit E419. Und
+   die Ursache war eine andere als vermutet: die Marke FEHLTE nicht, sie
+   stand links ausserhalb. `lauf.setDate(1)` springt auf den Monatsersten,
+   und der liegt vor `minD` — gemessen x = −45, nach dem Strecken −156. Nur
+   die Beschriftung wird jetzt auf 0 geklemmt, nicht die Gitterlinie: ein
+   Strich bei 0 behauptete, hier beginne ein Monat.
+   Gehalten von `test413 §3`.
 
 Nachzusehen mit `node bilder.mts db-board`, `db-calendar`, `db-table`,
 `db-timeline`.
+
+
+L131 — Was der Telefon-Durchgang offen gelassen hat
+====================================================
+
+Am 5. September 2026 sind alle dreizehn Ansichtsarten am Rechner und die
+wichtigsten am Telefon angesehen worden (E419–E427). Vier Dinge sind dabei
+aufgefallen und NICHT repariert worden — jedes aus einem eigenen Grund, und
+der Grund steht dabei, damit niemand die Arbeit doppelt macht.
+
+Punkt 1 ist am 6. September geschlossen — er war keiner. Drei bleiben.
+
+1. **Die Namensspalte des Side Peek am Telefon** — **GESCHLOSSEN am
+   6. September 2026 durch E433, und zwar als NICHTBEFUND.**
+
+   Der Verdacht war: `.pp-n` steht auf `width:170px; flex:0 0 170px`, auf
+   390 px sind das 44 % der Breite für die Beschriftung einer Eigenschaft —
+   dieselbe Bauform, die beim Zeitstrahl der Fehler war (E427, `.zs-namen`
+   mit 190 px, am Telefon 57 %). Nicht repariert, weil die Messung den Peek
+   am Telefon gar nicht öffnen konnte.
+
+   NACHGEMESSEN STIMMT DIE VERMUTUNG NICHT. Am Telefon rendert `.peek`
+   überhaupt nicht: `zeilePeek` verzweigt eine Zeile vorher zu
+   `zeilePeekBlatt`, dem Blatt von unten (E371). Dort gilt
+   `.iblatt-koerper .pp-n{width:118px}`. Gemessen auf 390 px:
+
+       Hülle          Körper   Name    Anteil   abgeschnitten
+       Blatt (Handy)   390 px  118 px    30 %   keiner
+       Peek (Rechner)  559 px  170 px    30 %   keiner
+
+   Dreissig Prozent an beiden Orten, und keine Beschriftung wird gekürzt.
+
+   Die Rechnung in der Lücke war richtig, ihre Voraussetzung nicht: 170 px
+   auf 390 px WÄREN 44 %, nur stehen dort nie 170 px. Das ist derselbe
+   Fehler wie E21 — eine Schnittstelle aus dem Gedächtnis statt aus dem
+   Quelltext —, nur an einer CSS-Regel statt an einer Funktion.
+
+   UND DER PUNKT BLEIBT TROTZDEM BEWACHT. Die Telefon-Regel ist EINE Zeile
+   in `bausteine.css`. `test361 §8` misst jetzt beide Hüllen: höchstens
+   40 % der Körperbreite, und keine Beschriftung abgeschnitten. Die
+   Gegenprobe — die eine Zeile weggenommen — liefert genau die 44 %, die
+   hier standen.
+
+2. **Die Karte sagt nicht, dass sie offline nichts zeigen kann.** Ohne Netz
+   bleibt ein grosser grauer Kasten stehen, ohne ein Wort dazu. Die Kacheln
+   kommen von OpenStreetMap, das Nachschlagen der Orte ebenfalls.
+   NICHT REPARIERT, weil im Prüfcontainer gar kein Netz ist und sich „lädt
+   noch" von „geht nicht" damit nicht unterscheiden lässt. Ein Hinweis, der
+   IMMER erscheint, wäre schlimmer als keiner. `navigator.onLine` wäre der
+   Ansatzpunkt.
+
+3. **Drei Klassen werden gesetzt und haben keine Regel.** Gemessen: von
+   1591 Klassen, die der Code setzt, haben 69 keine CSS-Regel; die meisten
+   sind Griffe für `querySelector` oder Präfix-Bildungen. Drei bleiben:
+
+       ea-rechts               elektro/arbeitsplatz.ts
+       kal-block               datenbanken/steuerung.ts
+       menu-liste-ohne-suche   schale/ueberlagerung/menue.ts
+
+   NICHT REPARIERT, weil bei keiner der drei zu sehen ist, dass etwas
+   fehlt: `kal-block` ist die Hülle des Kalenders, deren Kinder ihre eigene
+   Gestaltung mitbringen. Eine Klasse ohne Regel ist eine Behauptung über
+   Gestaltung, die es nicht gibt (E410) — aber eine Hülle ohne Regel ist
+   nur eine Hülle. Wer das aufgreift, entscheidet je Klasse: Regel
+   schreiben oder Klasse entfernen.
+
+4. **`.orb-inline` ist eine tote Regel.** `bausteine.css:140`,
+   `vertical-align:-4px; margin-right:6px`. Angelegt in E403 für die
+   Denkkugel in einer Textzeile, nie gesetzt. Es ist die EINZIGE wirklich
+   tote CSS-Regel im ganzen Bestand — 58 weitere Meldungen derselben
+   Messung waren Fehlalarme aus Präfix-Bildungen (`b-` + Blocktyp,
+   `q-` + Farbe).
+   NICHT ENTFERNT, weil §43 sagt: nichts löschen ohne Rückfrage. Zwei Wege
+   stehen offen — die Klasse dort setzen, wo sie gedacht war, oder die
+   zwei Zeilen streichen. Das ist Redurs Entscheidung.
+
+Und ein Befund, der KEINE Lücke ist und deshalb hier steht, damit ihn
+niemand für eine hält: die Datumsfelder im Formular zeigen `mm/dd/yyyy`.
+Das ist die Anzeige des Browsers und folgt seiner Spracheinstellung, nicht
+der Seite — dieselbe bewusste Entscheidung wie beim Zeitfeld des
+Zeitplans (`schale/aufbau/schale.ts`): „Wer seinen Browser auf Englisch
+stellt, ERWARTET 10:00 PM." Ein eigenes Feld verlöre den Kalender zum
+Antippen, die Tastaturbedienung und das Rad am Telefon.
+

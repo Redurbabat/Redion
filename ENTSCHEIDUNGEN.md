@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-410 Entscheidungen, E1 bis E414. Die Nummer ist die Ordnung: eine Entscheidung
+429 Entscheidungen, E1 bis E433. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -468,6 +468,25 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E412** — Eine Zahl sagt, wovon sie handelt — und der Typ sagt, was es gibt
 * **E413** — Der Zeitstrahl zeigt Spannen und liest sich
 * **E414** — Das Diagramm zeigt etwas
+* **E415** — Zwei tote CSS-Zeilen, zwei unklickbare Knöpfe
+* **E416** — Ein Wächter, der die alte Mechanik misst, misst nichts
+* **E417** — Sechs Schalter ohne Draht, zwei davon ohne Anzeige
+* **E418** — Stil gehört in eine Stildatei, und der Wächter sieht nur dorthin
+* **E419** — Der Zeitstrahl füllt seine Fläche und sagt, wo man ist
+* **E420** — Eine Lücke, die niemand nachmisst, bleibt in der Liste
+* **E421** — Zwei Farbreihen, und der Balken nahm die falsche
+* **E422** — Fünf Kataloge für die dreizehn Ansichten, und sie waren auseinander
+* **E423** — Die Karte kannte den Ortstyp nicht
+* **E424** — Der Feed beschriftet seine Werte — und bleibt ein Strom
+* **E425** — Die Liste beschriftet ihre Werte — der dritte Fundort
+* **E426** — Am Telefon steht der Titel für sich
+* **E427** — Der Zeitstrahl am Telefon zeigt den Zeitstrahl
+* **E428** — Die KI konnte nur 13 von 30 Spaltentypen bauen
+* **E429** — Zwei Namen für dasselbe Ereignis
+* **E430** — „Kalender“ öffnete den Verbindungsdialog
+* **E431** — Der Kalender wohnt nicht im Arbeitsbereich
+* **E432** — Die Regel stand in der falschen Datei und verlor still
+* **E433** — Die Namensspalte am Telefon war nie 170 Pixel breit
 
 ---
 
@@ -33315,6 +33334,21 @@ Vorfahren anrichtet — die PDF-Seite fiel auf 2 px zusammen. Und kein
 Tabellenkopf ist `position:sticky`, und ein Vorfahr mit `transform` macht
 daraus einen neuen Bezugsrahmen. Der Kopf bliebe beim Rollen nicht stehen.
 
+NACHTRAG (vom vollen Lauf gefunden): `test236` hielt fest, DASS der
+Karteikarten-Streifen kommt — und wurde durch die geänderte Vorgabe rot. Er
+las den Schalter mit seiner EIGENEN Vorgabe (`V('kartenMelden', true)`) und
+hielt ihn deshalb für an, während der Code ihn längst für aus hielt. Die
+Meldung „ist '', soll '2026-09-05'" sah dadurch aus wie ein kaputter Merker
+statt wie eine geänderte Vorgabe.
+
+Er schaltet den Schalter jetzt AUSDRÜCKLICH ein: er prüft die FUNKTION —
+einmal am Tag und nicht öfter —, nicht die Vorgabe. Dass die Vorgabe aus
+ist, prüft `test404 §7`, und dort gehört es hin.
+
+Der Fehler war meiner: E409 hat eine Vorgabe geändert, ohne den zuständigen
+Prüflauf zu suchen. §30 sagt es andersherum — erst den Prüflauf, dann die
+Änderung.
+
 PRÜFUNG: `test404`, 22 Punkte, PORT 9527. Die Beispieldaten kommen aus
 `bilder.mts` — eine Quelle, nicht zwei.
 MUTATIONEN ROT GESEHEN:
@@ -33754,3 +33788,1300 @@ test406, test407, test408.
 Dateien: `pruefungen/lauf/test409.mts` (neu),
 `src/bereiche/bloecke/arten/zeichenflaeche.ts`,
 `src/bereiche/datenbanken/steuerung.ts`, `pruefungen/lauf/test404.mts`.
+
+E415 — Zwei tote CSS-Zeilen, zwei unklickbare Knöpfe
+================================================================================
+5. September 2026
+
+Gefunden von einem vollen Lauf, drei Wochen nach der Ursache. Kein Mensch,
+kein Bild und keine Konsole hatten etwas gemeldet.
+
+    cursor:pointer position:relative;
+    line-height:1 position:relative;
+
+Zwei Stellen in `bausteine.css`, beide ohne Semikolon zwischen den
+Deklarationen. CSS meldet das nicht: es wirft die GANZE Deklaration weg —
+BEIDE, nicht nur die zweite — und macht schweigend weiter.
+
+WAS DAS ANGERICHTET HAT. Ohne `position:relative` bezieht sich das `::after`
+mit der 44-px-Treffläche (E407) nicht mehr auf seinen Knopf, sondern auf den
+nächsten positionierten Vorfahren. Die Fläche legt sich damit irgendwohin —
+und dort über die Nachbarn.
+
+Zwei Knöpfe waren dadurch nicht mehr anklickbar:
+
+  · der Anker in der festen PDF-Leiste (`.blatt-fest button`) — `test179`
+  · Rückgängig in der Auswahlleiste der Planfläche (`.sp-auswahl button`) —
+    `test201`
+
+Bei der zweiten steht der Grund direkt daneben im Quelltext: „Darunter ist
+LÖSCHEN. Danebengegriffen heisst hier: Arbeit weg (§46)." Genau diese Fläche
+war kaputt.
+
+WOHER SIE KAMEN. Aus E407. Dort steht es schon aufgeschrieben — „mein Skript
+schrieb `border:1px solid var(--line) position:relative;` — kein Semikolon,
+beide Deklarationen ungültig" — und dort wurden vier Stellen mit einem Regex
+repariert. Der Regex hat diese zwei nicht erwischt.
+
+Der Fehler ist also nicht neu. Neu ist, dass er jetzt gefunden WIRD.
+
+DER WÄCHTER, UND WARUM ER SO GEBAUT IST. `test410` liest die Stildateien und
+die Einzeldatei und sucht nach einer Deklaration, hinter der ohne Semikolon
+eine zweite beginnt. Drei Entscheidungen darin:
+
+  1. Eine WÖRTLICHE Liste von Eigenschaften statt „irgendein Wort mit
+     Doppelpunkt". Ein allgemeiner Ausdruck fängt `background:linear-gradient(
+     100deg, var(--text) 44%)` und jede Farbfunktion mit. Ein Wächter, der
+     bei gültigem CSS anschlägt, wird abgeschaltet — und fängt dann auch das
+     Echte nicht mehr.
+  2. §2 steht VOR §1: der Leser bekommt bei jedem Lauf den echten Fall aus
+     E407 vorgesetzt und muss ihn finden. Ein Wächter, der nichts finden
+     kann, meldet fröhlich „alles in Ordnung".
+  3. §3 hält neun gültige Zeilen dagegen — Verläufe, `content`, Rasterspalten,
+     `url()`, `color-mix()`, Kurzschreibweisen. Keine darf gemeldet werden.
+
+UND DER WÄCHTER HAT SOFORT MEHR GEFUNDEN ALS DIE HAND. Die erste Suche von
+Hand fand eine Stelle; `test410` fand beide. Der Unterschied war
+`line-height` — es stand nicht in der Liste, mit der ich gegrept hatte.
+
+PRÜFUNG: `test410`, 7 Punkte, ohne Browser und ohne Port.
+GEGENPROBE: das Semikolon in `.blatt-fest button` wieder entfernen →
+`test410 §1` rot, und `test179` und `test201` gleich mit. Genau so ist es
+zuerst gefunden worden.
+
+Dateien: `pruefungen/lauf/test410.mts` (neu), `quell/schale/stil/bausteine.css`.
+
+
+---
+
+E416 — Ein Wächter, der die alte Mechanik misst, misst nichts
+------------------------------------------------------------
+
+ENTSCHEIDUNG: `test351 §3` misst die Wörter der Werkzeugleiste an ihrer
+BREITE, nicht mehr an `getClientRects().length`. Der Punkt war seit Audit F04
+dauerhaft rot — nicht weil die App etwas falsch macht, sondern weil der
+Wächter eine Mechanik misst, die es nicht mehr gibt.
+
+WAS DER PUNKT VERSPRICHT. Die elf Werkzeugwörter stehen nur da, wenn die
+LEISTE breit genug ist — über 1150 px, gemessen am Behälter, nicht am
+Fenster. Darunter bleibt das Zeichen allein. So steht es in `bausteine.css`
+seit E359.
+
+WARUM ER ROT WAR. Ursprünglich verschwanden die Wörter mit `display:none`.
+Ein Element mit `display:none` hat keine Rechtecke, also war
+`getClientRects().length > 0` die richtige Frage. Audit F04 hat das
+`display:none` ersetzt: die Wörter werden jetzt GEKLEMMT statt entfernt —
+
+    position:absolute; width:1px; height:1px; clip-path:inset(50%)
+
+und zwar aus einem guten Grund. `display:none` nimmt den Text auch aus dem
+Zugänglichkeitsbaum, und dann hiess der Stift-Knopf für einen Screenreader
+„✎". Die Klemme lässt den Namen im Baum und nimmt ihn nur aus dem Bild.
+
+Ein geklemmtes Element hat aber ein Rechteck — eines von 1×1 px. Damit sagte
+`getClientRects()` in JEDER Breite „elf sichtbare Wörter".
+
+WAS DAS SCHLIMMER MACHT ALS EIN ROTER PUNKT. Der dritte Punkt desselben
+Abschnitts fragt, ob bei 1600 px die elf Wörter DA sind — der war grün, und
+zwar aus demselben falschen Grund. Der Abschnitt konnte also weder richtig
+rot noch richtig grün werden: er hat drei Runden lang dieselbe Zahl gemeldet,
+egal was das CSS tat. Das ist §55.2 in Reinform.
+
+NACHGEMESSEN, NICHT VERMUTET:
+
+    Leiste  596 px   Wort  1 px    position: absolute
+    Leiste 1074 px   Wort  1 px    position: absolute
+    Leiste 1241 px   Wort 22–74 px position: static
+
+DIE ALTERNATIVE wäre gewesen, auf `position` zu prüfen. Die Breite ist besser:
+sie beschreibt, was der Mensch sieht, und sie hält auch, wenn die Klemme
+einmal anders gebaut wird. Die Schwelle ist 4 px — weit über der geklemmten
+1 px, weit unter dem schmalsten echten Wort (22 px).
+
+WAS ES KOSTET: Der Wächter prüft die Wörter jetzt anders als das Zubehör
+daneben, und das braucht einen Kommentar an Ort und Stelle. Er steht dort.
+Das Zubehör verschwindet weiter mit `display:none`; für DAS ist
+`getClientRects` weiterhin die richtige Frage.
+
+GEGENPROBE: Schwelle im Behälterausdruck von 1150 px auf 1 px gesetzt, damit
+die Klemme nie greift → `test351 §3` Punkt 1 und 2 rot, Punkt 3 grün.
+Zurückgesetzt → 26/26. Vorher war Punkt 1 und 2 rot und Punkt 3 grün, ganz
+gleich, was im CSS stand.
+
+PRÜFUNG: `test351`, 26 Punkte.
+Dateien: `pruefungen/lauf/test351.mts`.
+
+
+---
+
+E417 — Sechs Schalter ohne Draht, zwei davon ohne Anzeige
+---------------------------------------------------------
+
+ENTSCHEIDUNG: Sechs Schalter, die die Oberfläche anbietet und die niemand
+las, werden verdrahtet. Zwei davon brauchten dafür erst die Anzeige, die sie
+ein- und ausschalten sollten — es gab sie nicht.
+
+    titelZeigen      „Titel der Datenquelle anzeigen"     es gab keinen Titel
+    seitenIcon       „Seiten-Icon anzeigen"               es gab kein Zeichen
+    linien           „Vertikale Linien anzeigen"          Wert nie gelesen
+    umbruchAlle      „Zeilenumbruch für alle Inhalte"     Wert nie gelesen
+    erinnernInApp    „Erinnerungen in der App"            Wert nie gelesen
+    autoVersionen    „Fassungen automatisch merken"       Wert nie gelesen
+
+WIE SIE GEFUNDEN WURDEN. Statisch, während der volle Lauf lief: jeden
+`schalter('X', …)` gegen die Frage, ob `X` irgendwo ausserhalb seiner eigenen
+Zeile GELESEN wird. Der Klick speicherte in allen sechs Fällen richtig. Der
+Nutzer schaltet, der Knopf kippt, und nichts geschieht.
+
+DIE ZWEI SCHLIMMEREN. `titelZeigen` und `seitenIcon` konnten nichts
+ausschalten, weil es das, was sie zeigen sollten, nie gab: der Kopf der
+Datenbank trug Reiter und Werkzeuge und keinen Namen, die Titelspalte zeigte
+nie das Zeichen der Seite. Der Schalter war die einzige Spur einer Funktion,
+die nie gebaut wurde. Beide sind jetzt gebaut, Vorgabe an.
+
+WAS JEDER JETZT TUT, UND WO DIE GRENZE LIEGT:
+
+  · `linien` stellt die senkrechten Striche DURCHSICHTIG, statt sie zu
+    entfernen. Mit `border-right:none` wäre jede Spalte 1 px schmaler und die
+    Tabelle spränge beim Umschalten.
+  · `umbruchAlle` macht aus jeder Zelle das, was `.umbruch` für eine einzelne
+    tut. Der Zusatz `:not(.umbruch)` steht nicht der Ordnung halber da: ohne
+    ihn hätte die Regel dieselbe Stärke wie die Zeile darüber und gewänne
+    nur, weil sie später steht — eine Umsortierung der Datei hätte den
+    Schalter still wieder abgeschaltet.
+  · `erinnernInApp` hält den STREIFEN auf, nicht die Nachricht. Der Eintrag
+    im Posteingang bleibt, die Systemmeldung bleibt, die Seite kommt trotzdem
+    zurück. Wer den Streifen abbestellt, will nicht seine Seiten verlieren
+    (§51).
+  · `autoVersionen` hält nur das AUTOMATISCHE auf. Von Hand, vor einer
+    Wiederherstellung und vor einer Quelltext-Änderung wird weiter
+    gespeichert. Ein Schalter darf keinen Schutz abschalten, um den gebeten
+    wurde (§15).
+
+VON DEN SECHS GING NUR EINER IN DIE UNSICHERE RICHTUNG NICHT: `autoVersionen`
+sicherte MEHR als bestellt, nicht weniger. Ein Schalter, der lügt, bleibt
+trotzdem einer — und dieser kostet Platz, den der Nutzer ausdrücklich nicht
+ausgeben wollte.
+
+DER WÄCHTER IST EIN VERZEICHNIS UND KEIN MUSTER, und das ist die eigentliche
+Entscheidung. Dieselbe Messung meldete ZWÖLF Schalter ohne Leser, und SECHS
+davon waren Fehlalarm:
+
+  · die fünf `q:*` werden über einen berechneten Namen gelesen —
+    `Kontext.quellen()[k.slice(2)]`. Der Name steht nirgends als Zeichenkette.
+  · `sicherungErinnern` wird über `meta('sicherungErinnern', false)` gelesen;
+    diese Form kannte die erste Messung nicht.
+
+Ein Wächter, der bei jedem zweiten Fund danebenliegt, wird nach dem ersten
+Lauf abgeschaltet. Deshalb: die Leseformen, die es WIRKLICH gibt, stehen im
+Wächter (`V(`, `getMeta(`, `meta(`, `.k`, `['k']`); jede echte Ausnahme steht
+in `pruefungen/schalter-bestand.json` beim Namen, mit dem Grund daneben, und
+das Verzeichnis darf nur schrumpfen. `sicherungErinnern` steht NICHT drin —
+es war ein Fehler der Messung, kein Fehler des Codes, und der gehört im
+Wächter behoben, nicht im Verzeichnis versteckt.
+
+Das ist derselbe Fehler, den `test294` bei `formel` gemacht hat (E412), und
+derselbe, der 58 gesunde CSS-Regeln als tot meldete: ein Muster, das den
+NAMEN sucht, findet berechnete Formen nicht.
+
+DIE ALTERNATIVE zu alldem wäre gewesen, die sechs Schalter zu ENTFERNEN. Das
+wäre schneller gewesen und für zwei von ihnen sogar vertretbar. Dagegen
+sprach: `linien`, `umbruchAlle` und `autoVersionen` sind Funktionen, die
+Notion hat und die Nutzer erwarten; `erinnernInApp` steht in einer Gruppe,
+in der jeder andere Schalter wirkt. Einen Knopf wegzunehmen, weil sein Draht
+fehlt, verliert die Funktion mit.
+
+PRÜFUNG: `test411`, 26 Punkte, PORT 9533. Jeder Abschnitt hat zwei Hälften —
+„ist da" und „geht weg" —, weil ein toter Schalter nur die zweite rot macht.
+GEGENPROBE: Die ganze Suite lief gegen den unreparierten Stand und war in
+JEDEM Abschnitt rot (14 von 24). Dazu zwei einzelne: `q:web` aus dem
+Verzeichnis genommen → §7 rot; `border-right:none` statt durchsichtig → §3
+zweimal rot.
+
+UND EINE PRÜFUNG, DIE ES NICHT KONNTE. §3 hatte zuerst den Punkt „ohne dass
+die Spalte springt" und mass die ZELLBREITE. Die Gegenprobe deckte auf, dass
+er grün blieb, während der Rand schon weg war: `td` hat `min-width:90px`, die
+Zelle bleibt 90 px breit, ob der Rand da ist oder nicht. Gemessen wird jetzt
+die Breite des RANDES. Gefunden nur, weil die Gegenprobe gelaufen ist (§55.2).
+
+Dateien: `src/bereiche/datenbanken/steuerung.ts`,
+`src/bereiche/wissen/werkzeuge.ts`, `src/bereiche/planen/dienst.ts`,
+`quell/schale/stil/ansichten.css`, `quell/schale/stil/datenbanken.css`,
+`pruefungen/lauf/test411.mts` (neu), `pruefungen/schalter-bestand.json` (neu).
+
+
+---
+
+E418 — Stil gehört in eine Stildatei, und der Wächter sieht nur dorthin
+-----------------------------------------------------------------------
+
+ENTSCHEIDUNG: Die 126 Zeilen Stil der Begrüssungsfläche wandern aus
+`produkt_onboarding.ts` nach `quell/schale/stil/produktwelten.css`. Zwei
+Klassen ohne Regel bekommen eine: `msg-ohne-quelle` und `vorrat-leiste`.
+
+WIE ES GEFUNDEN WURDE. Rückwärts gezählt: 1591 Klassen setzt der Code, 69
+haben keine Regel. Fünfzehn davon hiessen `produkt-onboarding-*` — die ganze
+Begrüssungsfläche. Kein Fehler im Stil, sondern einer am Ort: die Regeln
+standen als Zeichenkette im Quelltext und wurden bei Bedarf als `<style>` in
+die Seite gehängt.
+
+WARUM DAS MEHR IST ALS ORDNUNG, und der zweite Grund ist der, der zählt:
+
+  1. Niemand findet die Regel, wenn er sie sucht.
+  2. **Ein Wächter, der Stildateien liest, sieht sie nicht.** Genau das ist
+     beim Verschieben eingetreten: `test362` wurde SOFORT rot. Neun rohe
+     Zahlen, die er jahrelang nicht sehen konnte, standen plötzlich in
+     seinem Blickfeld — darunter vier `44px`, die Trefferflächen sind und in
+     die Marke gehören (§37). Der Bestand ist durch die Verschiebung nicht
+     schlechter geworden; er ist SICHTBAR geworden.
+  3. 31 Rückfallwerte wie `var(--border, #d9dce2)` — feste Hellwerte für den
+     Fall, dass die Marke fehlt. Alle vier Marken gibt es. Die Rückfälle
+     waren toter Text, der aussah wie Vorsicht.
+
+WOHIN, UND WARUM NICHT IN EINE EIGENE DATEI. `produktwelten.css`, weil der
+Namensraum dorthin gehört (`doku/CSS-NAMENSRAEUME.md`) und weil eine neue
+Stildatei ZWEI Einträge braucht — `index.html` und den `GRUNDSTOCK` in
+`sw.ts` (§28, E361). Ein vergessener zweiter Eintrag ist ein Fehler, der
+erst offline auffällt.
+
+DIE DECKE VON `test362` STEIGT UM FÜNF, und das ist eine bewusste Ausnahme
+von „darf nur schrumpfen": 16px von 221 auf 224, 22px von 66 auf 68. Die
+vier `44px` sind dagegen durch `var(--touch-min)` ersetzt, die Zahl bleibt
+bei 152. Der Unterschied ist der Grund: 44 hat eine semantische Marke,
+16 und 22 haben keine. `--mobile-gutter-small` ist 22px und meint einen
+SEITENRAND — sie für eine Schriftgrösse zu nehmen wäre genau der Fehler, vor
+dem `marken.css` warnt: „Gleiche Zahl bedeutet nur dann dieselbe Marke, wenn
+sie dieselbe Aufgabe hat."
+
+DIE ABSAGE DER KI SIEHT NICHT MEHR AUS WIE EINE ANTWORT. Der
+Nur-Quellen-Modus (E305) verspricht, das Modell gar nicht erst zu fragen,
+wenn nichts gefunden wird. Die Absage trug dafür schon die Klasse
+`msg-ohne-quelle` — ohne Regel. Sie stand da wie jede Antwort, in derselben
+Schrift, an derselben Stelle. Jetzt: Streifen, Einrückung UND ein Zeichen —
+drei Merkmale, weil §38 Information nur über Farbe verbietet.
+
+UND EIN FEHLER, DEN NUR DAS BILD GEFUNDEN HAT. Das Zeichen war zuerst `⃠`
+(U+20E0). Im Quelltext sieht es aus wie ein eigenes Zeichen; es ist eine
+KOMBINIERENDE Marke und legt sich über den folgenden Buchstaben. Auf dem
+Bild klebte sie am „D" von „Dazu", und ein Leerzeichen im `content` half
+nicht — eine kombinierende Marke sucht sich ihren Nachbarn selbst. Jetzt
+`⊘` (U+2298) mit `margin-right`. Kein gerechneter Wert hätte das gezeigt
+(§55.1).
+
+ZWEI NEUE BILDZIELE. `begruessung` und `kiAbsage`. Die Begrüssungsfläche
+hatte nie eines — im Gegenteil: jedes andere Ziel wirft sie mit
+`.produkt-onboarding-lage?.remove()` hinaus. 126 Zeilen Stil, die nie jemand
+angesehen hat, und die eigentliche Frage beim Verschieben war nicht „stimmen
+die gerechneten Werte", sondern „sieht es aus wie vorher".
+
+WAS NICHT GEÄNDERT WURDE, und warum es hier steht: `werkzeuge.ts` schreibt
+drei `<style>`-Blöcke, und alle drei stehen in AUSGELIEFERTEN HTML-Dokumenten
+— Archiv, HTML-Export, Drucken. Die verlassen die App und haben keine
+Stildatei bei sich; dort ist der Block richtig. Der Wächter sucht deshalb
+`createElement('style')` und nicht `<style>`. Ein Wächter, der die drei
+mitmeldet, wird abgeschaltet.
+
+PRÜFUNG: `test412`, 21 Punkte, PORT 9534. Dazu `test206`, `test299`,
+`test331`, `test84`, `test95`, `test143` — die Läufe, die die geänderten
+Stellen wirklich anfassen — sowie `test353`, `test362`, `test410`.
+GEGENPROBE: `createElement('style')` wieder eingebaut → §1 rot. Die
+kombinierende Marke zurückgesetzt → §3 dreimal rot. Beide gelaufen.
+
+Dateien: `src/bereiche/wissen/produkt_onboarding.ts`,
+`src/bereiche/datenbanken/vorrat/dienst.ts`,
+`quell/schale/stil/produktwelten.css`, `quell/schale/stil/ki.css`,
+`quell/schale/stil/datenbanken.css`, `pruefungen/marken-decke.json`,
+`bilder.mts`, `pruefungen/lauf/test412.mts` (neu).
+
+
+---
+
+E419 — Der Zeitstrahl füllt seine Fläche und sagt, wo man ist
+--------------------------------------------------------------
+
+ENTSCHEIDUNG: `px` — Pixel je Tag — ist nicht mehr fest, sondern wird nach
+dem Einhängen gestreckt, wenn der Behälter breiter ist als das Gezeichnete.
+Und die erste Achsenmarke wird auf 0 geklemmt, damit sie im Bild steht.
+Schliesst L130 Punkt 5 und 6.
+
+NACHGEMESSEN, NICHT GESCHÄTZT. `ZS_STUFEN` gibt 5 px je Tag auf der
+Monatsstufe. 65 Tage sind damit 325 px — in einem Behälter von 1130. Nicht
+„zwei Drittel bleiben leer", wie L130 schrieb, sondern 71 %.
+
+DER NEBENSCHADEN WAR DER GRÖSSERE. `balkenBreite` hat eine Mindestbreite von
+22 px. Bei 5 px je Tag heisst das: ein Balken über EINEN Tag ist 22 px breit,
+einer über ZWEI Tage 22 px, einer über DREI Tage 22 px. Gemessen und im
+Prüflauf nachzulesen:
+
+    vorher   1T=22  2T=22  3T=22  9T=45  10T=50  22T=110
+    nachher  1T=22  2T=35  3T=52  9T=156 10T=173 22T=381
+
+Ein Zeitstrahl, auf dem eine Aufgabe über drei Tage aussieht wie eine über
+einen, ist derselbe Fehler wie die abgeschnittene Zahl aus §55.1: die
+Anzeige sagt etwas Falsches, und es sieht gültig aus.
+
+DIE SORGE AUS L130 WAR UNBEGRÜNDET. Dort stand: „Ein eigener Bogen: die
+Balken sind in Pixeln positioniert, ein Skalieren hiesse, alles auf Anteile
+umzustellen." Nachgesehen: Marken, Balken, Pfeile und die Gesamtbreite
+werden ALLE aus `px` gerechnet. Es genügte, das Zeichnen in eine Funktion zu
+fassen und `px` zu ändern.
+
+NUR GRÖSSER, NIE KLEINER. Auf der Tagesstufe sind 65 Tage 2730 px und passen
+nicht; dort bleibt es beim Rollen. Ein Zoom, der jede Stufe auf dieselbe
+Breite zöge, wäre kein Zoom mehr, sondern eine Anzeige, die immer gleich
+aussieht. `test413 §4` hält diese Richtung.
+
+EINE MESSUNG REICHTE NICHT, UND DAS WAR DER LEHRREICHE TEIL. Die erste
+Fassung mass in einem `requestAnimationFrame` nach dem Einhängen und kam auf
+670 px, wo am Ende 1130 standen — `.db` bekommt seine Breite selbst erst in
+einem `requestAnimationFrame` (E409, `luftMessen`), und wer zuerst dran ist,
+entscheidet die Reihenfolge der Einhängungen. Der Zeitstrahl blieb auf halber
+Breite stehen, und zwar so, dass es aussah wie ein Erfolg: 525 statt 260 px.
+Jetzt beobachtet ein `ResizeObserver` den Behälter.
+
+UND WARUM DAS DIESMAL NICHT IN DIE SCHLEIFE LÄUFT. E409 hat sich genau daran
+verbrannt: ein Beobachter, der in seinem eigenen Rückruf das Layout ändert.
+Hier nicht, aus einem Grund, der im CSS steht: `.zs-scroll` trägt
+`overflow-x:auto`, und damit ist seine automatische Mindestbreite null — ein
+breiterer Inhalt schiebt den Behälter nicht auf. Dazu zwei Bremsen: es wird
+nur GRÖSSER gerechnet, und erst ab vier Pixeln Unterschied.
+
+DIE ERSTE MARKE FEHLTE NICHT, SIE STAND DRAUSSEN. Das ist der Unterschied
+zwischen der Vermutung in L130 („hat keine Marke am Anfang") und dem Befund:
+`lauf.setDate(1)` springt auf den Monatsersten, und der liegt vor `minD`.
+Gemessen x = −45, nach dem Strecken −156. Geklemmt wird nur die
+BESCHRIFTUNG, nicht die Gitterlinie — ein Strich bei 0 behauptete, hier
+beginne ein Monat.
+
+DIE VIER PIXEL SPIEL beim Vergleich sind der Platz, den ein waagerechter
+Roller einnimmt, falls er doch erscheint. Ohne sie streckt die Messung auf
+genau die Behälterbreite, der Roller kommt, der Behälter wird schmaler.
+
+PRÜFUNG: `test413`, 22 Punkte, PORT 9535. Dazu `test408` (Zeitstrahl) und
+`test404` (alle dreizehn Ansichten).
+GEGENPROBE: die Anpassung herausgenommen → §1 zweimal und §2 einmal rot
+(325 px in 1130, und 1T=2T=3T=22). Die Klemme herausgenommen → §3 rot
+(x = −156). Beide gelaufen.
+
+UND EINE PRÜFUNG, DIE ES ZUERST NICHT KONNTE. §1 mass anfangs
+`.zs-flaeche` mit `getBoundingClientRect` — und war grün, während 71 % weiss
+blieben. Der Grund steht im CSS: `min-width:100%`. Das ELEMENT füllt die
+Breite immer, ganz gleich wie schmal darin gezeichnet wird. Gemessen wird
+jetzt die Breite, die der Code SETZT, und dazu die rechte Kante des letzten
+Balkens.
+
+Bild angesehen (§55.3): `bilder/db-timeline-rechner-hell.png` — vorher endete
+die Zeichnung bei 40 % der Breite, jetzt trägt „Aug. 26" seine Beschriftung
+und die Titel stehen IN den Balken statt daneben.
+
+Dateien: `src/bereiche/datenbanken/steuerung.ts`,
+`pruefungen/lauf/test413.mts` (neu), `LUECKEN.md`.
+
+
+---
+
+E420 — Eine Lücke, die niemand nachmisst, bleibt in der Liste
+--------------------------------------------------------------
+
+ENTSCHEIDUNG: L130 Punkt 3 wird als GESCHLOSSEN eingetragen, und der Fall,
+über den er klagte, bekommt einen Wächter (`test404 §10`).
+
+WAS DASTAND: „Kein Hinweis, dass rechts noch etwas kommt. Die Tabelle rollt
+waagerecht, und der Roller ist unsichtbar. … Ein Schatten an der rechten
+Kante, solange noch etwas kommt, würde reichen."
+
+WAS NACHGEMESSEN HERAUSKAM: Es gibt ihn. `.db-rollbox` trägt bei 1280 px
+Fenster `data-rand="rechts"`, und `tabelle.css` legt eine echte Maske
+darüber — genau den Schatten, den der Punkt vorschlug. `Rollrand.binde`
+(E63) setzt das, und zwar seit jeher. Die Lücke war zu, als sie
+aufgeschrieben wurde.
+
+WAS WIRKLICH FEHLTE, war etwas anderes, und es war schlimmer: der Wächter.
+`test136` hielt die Kante nur am TELEFON, über den Schalter „Tabelle statt
+Karten". Der Fall am Rechner — der, über den L130 klagte — war ungeprüft.
+Ein Bogen, der `Rollrand.binde` aus der Tabelle nimmt, wäre grün
+durchgegangen. Die Gegenprobe zeigt genau das: ohne die Zeile bleibt
+`test136` grün und nur `test404 §10` wird rot.
+
+DER LEHRSATZ, und er gilt über diesen Punkt hinaus:
+
+  · Eine Lücke, die niemand nachmisst, bleibt in der Liste, auch wenn sie
+    zu ist. Sie lenkt dann Arbeit auf etwas, das es nicht mehr gibt — genau
+    das, wovor §49 warnt („Vier Jahre alte nächste Arbeiten lenken die
+    Arbeit auf etwas, das es nicht mehr gibt").
+  · Eine geschlossene Lücke ohne Wächter geht wieder auf, ohne dass es
+    jemand merkt.
+
+Das ist derselbe Befund wie bei L103 Punkt 2 (§36: „bei OCR über achtzig
+Seiten ruckelt die App" stand ein Jahr in der Liste, nachgemessen waren es
+flache 8 ms). Zweimal dieselbe Sorte Eintrag: eine Vermutung, die nie
+nachgerechnet wurde.
+
+PRÜFUNG: `test404 §10`, 4 Punkte — rollt, Kante rechts, echte Maske, und
+ganz rechts angekommen zeigt sie nur noch nach links.
+GEGENPROBE: `Rollrand.binde(box)` aus der Tabelle genommen → §10 dreimal
+rot (`rand:""`, `maske:"none"`), `test136` bleibt grün. Gelaufen.
+
+Dateien: `pruefungen/lauf/test404.mts`, `LUECKEN.md`.
+
+
+---
+
+E421 — Zwei Farbreihen, und der Balken nahm die falsche
+--------------------------------------------------------
+
+ENTSCHEIDUNG: Die Balken der Verteilungskachel im Dashboard nehmen die
+kräftige Farbreihe (`--c-*`) statt der Tönungen (`--b-*`). Und die
+Summen-Kachel hängt ihre Einheit an, so wie die Zelle es seit E412 tut.
+
+WAS AUF DEM BILD STAND. Die Kachel „Verteilung nach Status" sah aus, als
+hätten zwei von vier Zeilen gar keinen Balken. Nachgemessen war das
+Gegenteil richtig: alle vier Breiten stimmen — 100 %, 100 %, 67 %, 33 % —
+und trotzdem war kein Balken zu SEHEN.
+
+DIE URSACHE STEHT IN ZWEI ZEILEN DER STILDATEIEN NEBENEINANDER:
+
+    --bg-input: #f1f1ef      die Bahn, auf der der Balken liegt
+    --b-gray:   #f1f1ef      die Füllung des Balkens „Offen"
+
+Byte für Byte dieselbe Farbe. Kontrast 1.00. Ein Balken über die VOLLE
+Breite, den niemand sehen kann — und die Zeile „Offen 3" las sich wie „gar
+keine", obwohl sie mit „Läuft" den höchsten Wert teilt. Die anderen drei
+lagen bei 1.01 bis 1.03, im Dunkelmodus bei 1.85 bis 1.96.
+
+DAS IST KEINE VERGESSENE REGEL, SONDERN EINE PALETTENVERWECHSLUNG. Redion
+hat zwei Farbreihen, und der Unterschied ist keine Geschmacksfrage:
+
+    --b-*   Tönungen. Sie liegen HINTER dunklem Text — Etiketten,
+            Zeilenfarben. Sie sind absichtlich fast weiss.
+    --c-*   Die kräftigen Farben. Für Text und für Flächen, die für sich
+            stehen müssen.
+
+Ein Balken auf einer Bahn gehört zur zweiten Reihe. Gemessen: die Tönungen
+liegen bei 1.00 bis 1.03 gegen die Bahn, die kräftigen bei 2.43 (Gelb) bis
+10.84 (Standard). Dazwischen ist nichts — deshalb ist die Schwelle 2.0 im
+Prüflauf keine gegriffene Zahl, sondern der leere Raum zwischen den Reihen.
+
+WO DIE REGEL STEHT, UND WARUM NICHT IN `grund.css`. In `bausteine.css`,
+eng auf `.db-strich i` gezogen. `bg-*` soll überall sonst die Tönung
+bleiben: ein Etikett mit `--c-gray` hinter schwarzem Text wäre unlesbar.
+Umgedeutet wird nur der Balken.
+
+DERSELBE FALL WIE E410, wo die Kalenderbalken gar keine Farbe hatten, und
+wie E414, wo die Diagrammbalken schwarz waren. Dreimal dieselbe Sorte
+Fehler: eine Fläche, die ihre Farbe aus der falschen Quelle nimmt, und
+dreimal fand es erst ein Bild.
+
+UND DIE ZWEITE HÄLFTE: E412 hat der Zahlenspalte eine Einheit gegeben und
+sie in der ZELLE angehängt. Die Kachel darüber rechnete weiter ohne —
+„2630" stand da, und 2630 was, bei einer Spalte namens „Kosten"?
+`mitEinheit` war in `dienst.ts` gebaut und nicht exportiert. Jetzt ist es
+das, und die Kachel benutzt es. Die Anzahl-Kachel bekommt keine: „9 CHF
+Einträge" wäre schlimmer als gar nichts, und sie geht durch einen anderen
+Zweig.
+
+PRÜFUNG: `test414`, 14 Punkte, PORT 9536 — Kontrast in beiden Themen, die
+Breiten als Gegenprobe gegen eine Reparatur, die die Zahl kaputtmacht, und
+§38 (die Zahl steht daneben, der Balken ist nicht die einzige Auskunft).
+Dazu `test404`, `test407`, `test409`.
+GEGENPROBE: `.db-strich i.bg-gray` zurück auf `--b-gray` → §1 zweimal und
+§2 einmal rot, mit „Offen: 1.00". `mitEinheit` an der Kachel weggelassen →
+§5 rot. Beide gelaufen.
+
+Bild angesehen (§55.3): `bilder/db-dashboard-rechner-hell.png` — vorher vier
+Zeilen ohne sichtbaren Balken und „2630", jetzt vier farbige Balken in
+richtiger Länge und „2630 CHF".
+
+Dateien: `quell/schale/stil/bausteine.css`,
+`src/bereiche/datenbanken/steuerung.ts`, `src/bereiche/datenbanken/dienst.ts`,
+`pruefungen/lauf/test414.mts` (neu).
+
+
+---
+
+E422 — Fünf Kataloge für die dreizehn Ansichten, und sie waren auseinander
+---------------------------------------------------------------------------
+
+ENTSCHEIDUNG: Name und Zeichen einer Ansichtsart kommen aus
+`register/ansichten.ts` — und nur von dort. Fünf eigene Karten fallen weg.
+
+WAS AUF DEM BILD STAND. Über der Pivot-Tabelle stand ein Reiter namens
+„Ansicht". Nicht „Pivot" — „Ansicht". Das ist kein Tippfehler, sondern §8:
+
+  > Keine doppelten Kataloge einführen. Ein zweiter Katalog für dasselbe
+  > läuft mit dem ersten auseinander, und niemand merkt, welcher gilt.
+
+FÜNF KARTEN FÜR DASSELBE:
+
+    kern/ablage/indexdb.ts       `namen`          Name einer neuen Ansicht
+    datenbanken/steuerung.ts     `ICO`            Zeichen im Reiter
+    datenbanken/steuerung.ts     `LAYOUT_NAMEN`   Name im Ansichtsmenü
+    datenbanken/steuerung.ts     `LAY_ICON`       Zeichen im Ansichtsmenü
+    wissen/arbeitswelt.ts        `ansichtIcons`   Zeichen in der Arbeitswelt
+
+Vier davon kannten elf der dreizehn Arten: `pivot` und `raster` fehlten
+überall. Deshalb hiess eine Pivot-Ansicht „Ansicht" und trug ▦ statt ⊞.
+Im Register stehen beide seit jeher, mit Zeichen und Namen.
+
+UND SIE WAREN NICHT NUR UNVOLLSTÄNDIG, SONDERN WIDERSPRÜCHLICH. `timeline`
+hiess im Register „Zeitleiste", im Reiter „Zeitstrahl" und in der
+Fehlermeldung „Für den Zeitstrahl braucht es eine Datums-Eigenschaft" auch.
+Zwei deutsche Wörter für dieselbe Ansicht, nebeneinander in derselben App.
+Es gewinnt das Wort, das der Nutzer schon liest: Zeitstrahl.
+
+DIE FÜNFTE KARTE FAND NICHT DAS LESEN, SONDERN DER WÄCHTER. `ansichtIcons`
+in `arbeitswelt.ts` war sogar VOLLSTÄNDIG — alle dreizehn, richtig. Und
+genau das ist der Punkt: eine Kopie, die heute stimmt, ist die, von der man
+morgen nicht mehr weiss, dass sie eine ist.
+
+WAS KEIN ZWEITER KATALOG IST, und warum der Wächter das unterscheiden muss:
+`ANSICHT_ZEICHEN` in `steuerung.ts` bildet die dreizehn Arten auf
+STRICHZEICHEN-KENNUNGEN ab — grid, boxChecked, compass — mit geschriebenem
+Grund: „Emoji stehen im Ansichtenregister; an der Kante sind sie verboten
+(E202)". Das ist eine Übersetzung in ein anderes Zeichensystem. Der Wächter
+unterscheidet an den WERTEN: was ein Mensch liest, fängt gross an
+(„Tabelle") oder ist kein ASCII („▦"); was der Code liest, ist ein
+kleingeschriebener Bezeichner. Ohne diese Trennung meldet er eine gesunde
+Karte, und dann wird er abgeschaltet — derselbe Fehler wie bei `formel` in
+`test294` (E412).
+
+WARUM `Proxy` UND NICHT EINE FUNKTION. `LAYOUT_NAMEN[x]` steht an mehreren
+Stellen als Zugriff da. Ein `Proxy`, der jeden Zugriff ans Register gibt,
+lässt die Aufrufstellen unverändert und macht die Karte trotzdem zu einem
+Durchreicher. Die Alternative — überall auf `Register.ansichten.name(x)`
+umschreiben — wäre ehrlicher zu lesen und hätte mehr Stellen angefasst, als
+dieser Bogen tragen will.
+
+`kern/` DARF DAS REGISTER BENUTZEN. §5 Regel 1 erlaubt einem Bereich
+`kern/` und `register/`; `kern/` selbst nutzt `Register.` bereits an drei
+Stellen, und `register/ansichten.js` wird in `index.html` vor
+`kern/ablage/indexdb.js` geladen. Der Rückfall bleibt trotzdem stehen: eine
+Ansicht ohne Namen ist schlimmer als eine mit einem faden.
+
+PRÜFUNG: `test415`, 13 Punkte, PORT 9537. §3 ist der eigentliche Beweis: das
+Register zur Laufzeit ändern und nachsehen, ob die Oberfläche folgt. „Der
+Name stimmt" hiesse auch dann etwas, wenn ihn ein zweiter Katalog liefert,
+der zufällig gleich gefüllt ist — und genau so war es jahrelang.
+GEGENPROBE: `pivot` aus dem Register genommen → §1 und §2 rot. Die fünfte
+Karte wieder eingesetzt → §4 rot. Beide gelaufen.
+
+NACHTRAG — DREI FUNDE AUS DEM VOLLEN LAUF, alle aus meiner eigenen Arbeit
+dieses Tages, und alle von `test290` (CSS-Namensräume):
+
+  · `ohne` — `.ohne-namen` gab es seit jeher dreimal, unter der Schwelle
+    von vier. E417 legte `.ohne-linien` dazu, und der Namensraum wurde
+    sichtbar. Jetzt im Verzeichnis.
+  · `po` — die Begrüssungsfläche. Ihre Klassen standen bis E418 in einer
+    `.ts`-Datei und waren für den Wächter unsichtbar. Dasselbe Muster wie
+    bei `test362`: das Verschieben in eine Stildatei hat sie nicht
+    schlechter gemacht, sondern sichtbar.
+  · `bg` — E421 legte neun Regeln für `.db-strich i.bg-*` in
+    `bausteine.css`, und der Namensraum `bg-` gehört `grund.css`. Der
+    Wächter meldete „Verzeichnis sagt grund.css, Stil sagt bausteine.css" —
+    zu Recht: eine fremde Datei, die `bg-*` umdeutet, ist genau der Fall,
+    vor dem §39 warnt. Die neun Zeilen stehen jetzt in `grund.css`.
+
+Dateien: `src/register/ansichten.ts`, `src/kern/ablage/indexdb.ts`,
+`src/bereiche/datenbanken/steuerung.ts`, `src/bereiche/wissen/arbeitswelt.ts`,
+`quell/schale/stil/grund.css`, `quell/schale/stil/bausteine.css`,
+`doku/CSS-NAMENSRAEUME.md`, `pruefungen/lauf/test415.mts` (neu).
+
+
+---
+
+E423 — Die Karte kannte den Ortstyp nicht
+------------------------------------------
+
+ENTSCHEIDUNG: Die Kartenansicht nimmt eine `place`-Spalte als Vorgabe und
+bietet sie überhaupt erst zur Wahl an. Der Titel bleibt wählbar, steht aber
+zuletzt.
+
+WAS AUF DEM BILD STAND:
+
+    0 auf der Karte   ·   9 Orte nachschlagen   ·   Ortsspalte: Projekt
+
+„Projekt" ist die Titelspalte. Die Datenbank hat eine Spalte „Ort" vom Typ
+`place` — dem einen Typ, der wörtlich „hier steht ein Ort" bedeutet und im
+Eigenschaftenregister 📍 heisst.
+
+ZWEI FEHLER IN ZWEI ZEILEN:
+
+    const ortKeys = Object.keys(coll.schema).filter(k =>
+      ['text','title','select'].includes(coll.schema[k].type));
+    const ortKey = … : ortKeys[0];
+
+`place` fehlt in der Liste — die Spalte kam also nicht einmal ins Menü. Und
+die Vorgabe ist das erste Element, und der Titel steht in jedem Schema
+zuerst. Neun Zeilen, neun unauffindbare Orte: „Schaltplan Werkstatt" ist
+keiner, und die Karte bleibt leer.
+
+DAS IST WÖRTLICH DER BEFUND AUS E414, an einer anderen Ansicht. Dort war die
+Vorgabe-Gruppierung des Diagramms `gruppierbar[0]`, und `gruppierbar`
+schloss `title` ein; neun Zeilen ergaben neun Balken. Zweimal derselbe
+Fehler: eine Vorgabe, die die ERSTE Spalte nimmt statt der PASSENDEN.
+
+DIE REIHENFOLGE DER WAHL ist jetzt: erst was ein Ort IST (`place`), dann was
+einer sein KANN (Text, Auswahl), und der Titel zuletzt. Er bleibt in der
+Liste und damit im Menü — E414 §5 hält denselben Satz für das Diagramm fest:
+eine bessere Vorgabe darf keine Möglichkeit wegnehmen. Wer seine Orte im
+Titel führt, soll das weiter können.
+
+WAS DIESER BOGEN NICHT LÖST: die Karte bleibt im Prüfcontainer leer, weil
+das Nachschlagen der Orte OpenStreetMap braucht und es dort kein Netz gibt.
+Geprüft wird deshalb, was ohne Netz zu prüfen ist — dass die Karte die neun
+Zeilen mit einem Ort FINDET.
+
+PRÜFUNG: `test416`, 9 Punkte, PORT 9538.
+GEGENPROBE: `place` aus der Liste genommen und die Vorgabe zurück auf
+`ortKeys[0]` → §1 zweimal, §2 einmal und §4 einmal rot, mit „Ortsspalte:
+Projekt". Gelaufen.
+
+Bild angesehen (§55.3): `bilder/db-map-rechner-hell.png` — die Kopfzeile
+liest sich jetzt „Ortsspalte: Ort".
+
+Dateien: `src/bereiche/datenbanken/steuerung.ts`,
+`pruefungen/lauf/test416.mts` (neu).
+
+
+---
+
+E424 — Der Feed beschriftet seine Werte — und bleibt ein Strom
+---------------------------------------------------------------
+
+ENTSCHEIDUNG: Der Feed benutzt `kartenWerte` aus E411 statt eigener Logik,
+formatiert sein Datum deutsch, und `kartenWerte` bekommt eine Obergrenze.
+
+WAS AUF DEM BILD STAND:
+
+    Offen  Messung   15.09.2026 60 CHF
+
+Ein Datum und ein Betrag, nebeneinander, ohne Trennung und ohne Namen.
+„60 CHF" — Kosten? Budget? Und „15.09.2026 60 CHF" liest sich als EIN Wert.
+In der Karte darüber stand nur „30.09.2026", in der darunter nur
+„19.09.2026" — dieselbe Stelle, verschiedene Bedeutung, nichts sagt welche.
+
+E411 hat genau dieses Problem für Board- und Galeriekarten gelöst. Der Feed
+benutzte die Maschine nicht; er klebte die ersten vier Zellen mit einem
+Leerzeichen aneinander:
+
+    .map(k => zelle(r, k, coll)).filter(…).slice(0, 4).join(' ')
+
+DAZU EIN ZWEITER FUND AUS DEMSELBEN BILD: das Datum oben rechts stand als
+`2026-09-22`, das Datum in derselben Karte als `30.09.2026`. Zwei Formate in
+einer Karte, und eines schreibt kein deutschsprachiger Mensch (§3). Der
+Grund war `Formula.anzeige`, das für ein Datum die gespeicherte Zeichenkette
+liefert; die Zelle daneben benutzt `Einstellungen.datum`.
+
+UND DANN HAT DER ERSTE WURF ZWEI NEUE FEHLER GEMACHT, beide nur auf dem
+BILD zu sehen, keiner in einer Zahl:
+
+  1. „Ende30.09.2026" und „Kosten0 CHF" — die Beschriftung klebte am Wert.
+     Der Grund: die Regeln für `.mv` und `.mv-n` standen auf `.card .meta`.
+     Der Feed hat kein `.card`, also kein `inline-flex` und kein `gap`.
+     Eine Klasse, die an zwei Orten gesetzt und nur an einem gestaltet wird
+     — derselbe Fall wie `.cw-bar.q-blue` aus E410, nur schlimmer, weil er
+     halb funktioniert und deshalb nicht wie ein Fehler aussieht.
+  2. Der Feed zeigte plötzlich ALLE Spalten: dreizehn Werte in einer Zeile,
+     samt Sternen, Ortsmarke, Kästchen und Anhang. `kartenWerte` kannte
+     keine Grenze, weil eine Karte im Board zu Recht alles zeigt. Ein Feed
+     ist zum Überfliegen da. Die Grenze ist deshalb ein Parameter, und `0`
+     heisst „alles" — die Karten merken nichts davon.
+
+PRÜFUNG: `test417`, 16 Punkte, PORT 9539.
+GEGENPROBE: zurück auf `.join(' ')` und `Formula.anzeige` → §1 dreimal und
+§3 zweimal rot. Die Obergrenze weggenommen → elf Werte je Karte, §2 rot.
+Die Abstandsregel für den Feed weggenommen → §2 rot mit `"spalt":0`.
+
+UND EINE PRÜFUNG, DIE DEN FALSCHEN SPALT MASS. §2 mass zuerst den Abstand
+ZWISCHEN den Einträgen und blieb in der Gegenprobe grün — den hält
+`.fe-merkmale` mit seinem eigenen `gap`, auch wenn die Regel für den
+einzelnen Eintrag fehlt. Der Fehler war aber der Spalt INNERHALB eines
+Eintrags, zwischen Name und Wert. Gemessen wird jetzt genau der, mit einer
+`Range` über den Textknoten hinter der Beschriftung. In der Gegenprobe
+steht dort `"spalt":0`.
+
+Bild angesehen (§55.3): `bilder/db-feed-rechner-hell.png` — vorher
+„Offen Bericht Abgabe 30.09.2026", jetzt „Offen · Bericht · Abgabe ·
+Ende 30.09.2026 · Kosten 0 CHF".
+
+Dateien: `src/bereiche/datenbanken/steuerung.ts`,
+`quell/schale/stil/datenbanken.css`, `pruefungen/lauf/test417.mts` (neu).
+
+
+---
+
+E425 — Die Liste beschriftet ihre Werte — der dritte Fundort
+-------------------------------------------------------------
+
+ENTSCHEIDUNG: Die Listenansicht benutzt `kartenWerte` (E411), begrenzt auf
+sechs Werte, und ihr Aufbau steht in `datenbanken.css` statt im Quelltext.
+
+WAS AUF DEM BILD STAND:
+
+    Schaltplan Werkstatt   Läuft Elektro Schule Team
+                           01.09.2026 12.09.2026 420 CHF …
+
+Zwei Daten nebeneinander, ohne Namen. Welches ist der Anfang, welches das
+Ende? Und eine Zeile darunter: „15.09.2026 15.09.2026" — zweimal dasselbe
+Datum. Ohne Beschriftung ist das eine Auskunft über nichts.
+
+DERSELBE FEHLER ZUM DRITTEN MAL, an drei Orten unabhängig voneinander
+geschrieben: Board- und Galeriekarte (E411), Feed (E424), Liste (hier).
+Jedes Mal eine eigene Schleife, die die Zellen aneinanderhängt. Die Maschine
+dagegen gibt es einmal und kann alles, was die drei brauchen — sie zählt
+zuerst, welcher Typ mehrfach vorkommt, und beschriftet dann genau das, was
+seinen Namen braucht.
+
+ZWEI WEITERE DINGE VOM SELBEN BILD:
+
+  · ALLE dreizehn Spalten standen in jeder Zeile — Etiketten, zwei Daten,
+    Kosten, Fortschritt, Sterne, Person, Ort, Kästchen und der Anhang. Eine
+    Liste ist zum Überfliegen da; sechs sind genug.
+  · Drei `style=`-Blöcke im Quelltext (§39): die Schriftgrösse der Werte,
+    das `flex:1` des Titels, die Reihe der Werte. Der Titel bekommt dabei,
+    was er vorher nicht hatte — `min-width:0`. Ohne das drückt ein langer
+    Titel die Werte aus dem Bild, statt selbst gekürzt zu werden.
+
+WAS §39 NICHT MEINT, und der Wächter musste es lernen: ein
+Fortschrittsbalken schreibt `style="width:55%"`, und das ist ein GERECHNETER
+Wert. Er kann gar nicht in einer Stildatei stehen. Gezählt werden deshalb
+die Träger des AUFBAUS — `.lr-titel`, `.lr-werte`, `.mv`, `.mv-n` —, und
+daneben steht eine zweite Zeile, die festhält, dass im Ganzen höchstens EIN
+gerechneter Wert je Zeile bleibt. Vorher waren es siebzehn.
+
+PRÜFUNG: `test418`, 14 Punkte, PORT 9540.
+GEGENPROBE: zurück auf die eigene Schleife → sechs Punkte rot, darunter
+„Wo zwei Daten stehen, tragen beide ihren Namen" mit leeren Listen.
+Gelaufen.
+
+Bild angesehen (§55.3): `bilder/db-list-rechner-hell.png` — vorher
+„01.09.2026 12.09.2026 420 CHF", jetzt „Anfang 01.09.2026 · Ende 12.09.2026
+· Kosten 420 CHF".
+
+Dateien: `src/bereiche/datenbanken/steuerung.ts`,
+`quell/schale/stil/datenbanken.css`, `pruefungen/lauf/test418.mts` (neu).
+
+
+---
+
+E426 — Am Telefon steht der Titel für sich
+--------------------------------------------
+
+ENTSCHEIDUNG: Die Listenzeile stapelt am Telefon — Titel oben, Werte
+darunter. Am Rechner bleibt sie eine Zeile.
+
+WAS AUF DEM TELEFONBILD STAND:
+
+    Beric…      Fertig  Bericht  Abgabe   Anfang 20.08.2026 …
+    Beric…      Prüfung Bericht  Abgabe   Anfang 03.09.2026 …
+
+Es sind „Bericht Kapitel 1" und „Bericht Kapitel 2". Gemessen auf 390 px:
+dem Titel blieben 55 von 106 px, und was auf dem Bildschirm ankam, war
+zweimal „Bericht". ZWEI VERSCHIEDENE EINTRÄGE, EIN BILD. Das ist der Fehler
+aus §55.1 in seiner reinsten Form — eine abgeschnittene Anzeige zeigt etwas
+anderes, und beides sieht gültig aus.
+
+SELBST GEBAUT, UND ZWAR EINEN BOGEN VORHER. E425 gab dem Titel
+`min-width:0`, damit er am Rechner die Werte nicht aus dem Bild drückt. Am
+Telefon ist genau das die falsche Richtung: dort ist nicht der Titel zu
+lang, sondern die Zeile zu schmal für beides nebeneinander. Eine Regel, die
+am Rechner richtig ist, kann am Telefon der Fehler sein — §37 sagt genau
+deshalb, dass das Telefon der Normalfall ist und nicht der Sonderfall.
+
+DER FEED MACHT ES SEIT JEHER RICHTIG: Titel auf eigener Zeile, Werte
+darunter. Die Liste bekommt dasselbe, aber nur unter 760 px — am Rechner ist
+die EINE Zeile genau das, was eine Liste von einer Karte unterscheidet.
+
+WIE DER PRÜFLAUF MISST, und das ist der Teil, der sich wiederverwenden
+lässt: Der volle Text steht im DOM, gekürzt wird mit `text-overflow`.
+Beides zu haben erlaubt die eigentliche Frage — was SIEHT ein Mensch? Eine
+`Range` läuft Zeichen für Zeichen, bis der Kasten zu Ende ist, und gibt
+zurück, was noch drinsteht. Damit lässt sich prüfen, ob zwei verschiedene
+Einträge auf dem Bildschirm verschieden aussehen. „Nicht gekürzt" allein
+wäre schwächer: ein Titel darf gekürzt werden, solange man ihn noch
+unterscheiden kann.
+
+PRÜFUNG: `test419`, 10 Punkte, PORT 9541. Dazu §4: die Zeile misst am
+Telefon weiter mindestens 44 px (§37).
+GEGENPROBE: die Grenze auf 1 px gesetzt, damit die Regel nie greift → §1
+zweimal und §2 einmal rot, mit „Bericht" zweimal. Die Grenze auf 99999 px
+gesetzt → §3 rot, weil dann auch der Rechner stapelt. Beide gelaufen.
+
+Bild angesehen (§55.3): `bilder/db-list-handy-dunkel.png`.
+
+Dateien: `quell/schale/stil/datenbanken.css`,
+`pruefungen/lauf/test419.mts` (neu).
+
+
+---
+
+E427 — Der Zeitstrahl am Telefon zeigt den Zeitstrahl
+------------------------------------------------------
+
+ENTSCHEIDUNG: Am Telefon wird die Namensspalte des Zeitstrahls schmaler, und
+der Titel NEBEN dem Balken entfällt.
+
+NACHGEMESSEN AUF 390 PX:
+
+    Raster gesamt   334 px
+    Namensspalte    190 px   (57 %)
+    Zeichenfläche   142 px   (43 %)
+    Titel im Balken   0 von 9
+    Titel daneben     9 von 9
+
+Jeder Name stand zweimal im Bild — links in der Spalte, rechts neben seinem
+Balken. Über die Hälfte des Platzes ging für eine Auskunft drauf, die schon
+dastand, und was vom Zeitstrahl blieb, waren 142 px.
+
+ZWEI URSACHEN, DIE SICH GEGENSEITIG VERSTÄRKEN:
+
+  1. `.zs-namen{flex:0 0 190px}` — eine feste Zahl. Am Rechner sind das
+     16 % der Breite, am Telefon 57 %. Dieselbe Zahl, zwei völlig
+     verschiedene Bedeutungen.
+  2. E413 lässt einen Titel nach draussen wandern, wenn er im Balken nicht
+     passt. In 142 px passt keiner — also wanderten alle neun.
+
+Die zweite Regel ist richtig und bleibt; sie ist am Rechner genau das, was
+E413 gebaut hat (dort stehen sechs von neun IM Balken). Am Telefon greift
+sie nur, weil die erste Ursache ihr keinen Platz lässt.
+
+WAS BLEIBT, UND WARUM. Der Titel IM Balken bleibt auch am Telefon erlaubt:
+er sagt dem Auge, welcher Balken zu welcher Zeile gehört, und E413 nimmt
+ihn ohnehin nur, wenn er passt. Weg ist nur die Wiederholung DANEBEN.
+
+UND DIE SPALTE DARF NICHT ZU SCHMAL WERDEN. 118 px statt 190 — genug, dass
+die neun Namen unterscheidbar bleiben. `test420 §4` misst das mit demselben
+Verfahren wie E426: wie viel vom Namen sichtbar ist, und ob die sichtbaren
+Anfänge noch verschieden sind. Sonst wäre aus einem Bogen gegen doppelte
+Namen einer für ununterscheidbare geworden.
+
+PRÜFUNG: `test420`, 12 Punkte, PORT 9542. §3 hält den Rechner fest: 190 px,
+und die Titel neben den Balken bleiben dort.
+GEGENPROBE: die Regel gegen den doppelten Titel herausgenommen → §2 rot mit
+„9 von 9 stehen draussen". Die Spalte zurück auf 190 px → §1 zweimal rot
+mit „190 px von 334 px". Beide gelaufen.
+
+Bild angesehen (§55.3): `bilder/db-timeline-handy-dunkel.png` — die
+Zeichenfläche ist von 142 px auf gut das Dreifache gewachsen.
+
+Dateien: `quell/schale/stil/ansichten.css`,
+`pruefungen/lauf/test420.mts` (neu).
+
+
+---
+
+E428 — Die KI konnte nur 13 von 30 Spaltentypen bauen
+------------------------------------------------------
+
+ENTSCHEIDUNG: `TYP_KARTE` in `ki/dienst.ts` bekommt sieben weitere Typen
+samt ihren deutschen Schreibweisen. Zehn bleiben mit Grund draussen.
+
+WIE ES GEFUNDEN WURDE. Nach E422 („fünf Kataloge für dieselben dreizehn
+Ansichten") habe ich gefragt, ob die anderen Register auch Schattenkopien
+haben. Gezählt, nicht gelesen: welche Objektliterale im Quelltext sechs oder
+mehr Kennungen EINES Registers als Schlüssel führen. Sechs Stellen kamen
+heraus, fünf davon harmlos — und eine mit dreizehn von neunundzwanzig
+Eigenschaftstypen.
+
+`TYP_KARTE` IST KEIN ZWEITER KATALOG, und das ist wichtig: das Register hält
+die Kennungen, diese Karte fängt die vielen SCHREIBWEISEN dafür ab —
+`zahl` → `number`, `kontrollkästchen` → `checkbox`. Deutsch wie englisch,
+denn die App fragt deutsch und das Modell antwortet deutsch. Sie darf und
+soll es geben.
+
+UNVOLLSTÄNDIG WAR SIE TROTZDEM. 30 Typen stehen im Register, 13 erreichte
+die KI. Die übrigen siebzehn fielen still auf `text` zurück:
+
+    const typ = TYP_KARTE[roh] || (istTitel ? 'title' : 'text');
+
+„Bau mir eine Datenbank mit einer Bewertung und einem Fortschritt" ergab
+also zwei Textspalten. Kein Fehler, keine Meldung — nur eine Datenbank, die
+weniger kann, als der Nutzer gesagt hat. Das ist dieselbe Sorte stiller
+Verlust wie ein Schalter ohne Draht (E417): die Oberfläche verspricht etwas,
+und nichts sagt, dass es nicht eingelöst wurde.
+
+SIEBEN WAREN NUR VERGESSEN: Sterne, Prozent, Ort, Zeitspanne, Erstellt am,
+Zuletzt geändert und die laufende Nummer brauchen nichts ausser ihrem Namen.
+Jeder bekommt zwei bis drei Schreibweisen, weil ein Modell „Bewertung",
+„rating" oder „sterne" schreiben kann.
+
+ZEHN BLEIBEN DRAUSSEN, mit Grund: `relation` und `rollup` brauchen eine
+Zieldatenbank, die im Plan nicht steht; `gdrive`, `figma`, `githubpr` und
+`zendesk` eine eingerichtete Verbindung; `button`, `ki` und `verify` eine
+Einstellung, die niemand geraten hat. Jede davon entstünde leer und kaputt —
+eine Textspalte ist dann die ehrlichere Antwort, sie hält wenigstens, was
+hineingeschrieben wird. `test421 §5` hält diese Grenze fest, damit sie eine
+ENTSCHEIDUNG bleibt und nicht wieder ein Versehen wird.
+
+ZWEI DINGE, DIE DER PRÜFLAUF FÜR FEHLER HIELT UND DIE KEINE SIND:
+
+  · `datenbankBauenAus` hängt eine Titelspalte an, wenn der Plan keine
+    nennt. Richtig — eine Datenbank ohne Titel gibt es nicht, ihre Zeilen
+    könnten keinen Namen tragen. Der Prüflauf zählt sie jetzt mit, statt sie
+    zu melden.
+  · `plan.spalten.slice(0, 12)` — mehr als zwölf Spalten baut ein Plan
+    nicht. Der erste Wurf des Prüflaufs bat um dreizehn, bekam zwölf, und
+    „files" fehlte im Ergebnis. Es fehlte nicht, es war das dreizehnte.
+    Jetzt zwei Pläne, und eine eigene Zeile hält die Grenze fest.
+
+PRÜFUNG: `test421`, 13 Punkte, PORT 9543. Eine Seite, kein zweiter Kontext —
+gebaut wird über `KI.datenbankBauenAus` unmittelbar, ohne Modell.
+GEGENPROBE: die sieben Zeilen wieder herausgenommen → §1 zweimal, §2 einmal
+und die Zählzeile rot, mit „13" statt „20". Gelaufen.
+
+Dateien: `src/bereiche/ki/dienst.ts`, `pruefungen/lauf/test421.mts` (neu).
+
+
+---
+
+E429 — Zwei Namen für dasselbe Ereignis
+----------------------------------------
+
+ENTSCHEIDUNG: Jeder Ereignisname kommt aus `kern/ereignisse/arten.ts`. Sechs
+Arten, die es nur als rohe Zeichenkette gab, stehen jetzt im Katalog; die
+neunzehn Stellen benutzen die Konstanten.
+
+`arten.ts` SAGT SELBST, WOZU ES DIE DATEI GIBT:
+
+  > Deshalb stehen die Namen hier, und man schreibt `ARTEN.seiteGeaendert`
+  > statt der Zeichenkette. Ein Tippfehler ist dann sofort `undefined` und
+  > fällt auf.
+
+An zwei Stellen war genau der Fehler eingetreten, vor dem sie warnt:
+
+    arten.ts    appStartet: 'app.startet'      mit PUNKT
+    start.ts    melde('app:startet')           mit DOPPELPUNKT
+
+Zwei Namen für dasselbe Ereignis. Wer über `ARTEN.appStartet` horcht, hört
+nie etwas — und weil `melde` den Wert für spätere Zuhörer aufhebt
+(`nachreichen`), bekäme er ihn auch nicht nachgereicht. Der Katalogeintrag
+war unerreichbar.
+
+UND DAS IST DIE SORTE FEHLER, DIE SICH NICHT ZEIGT. Ein Zuhörer, der nichts
+hört, sieht aus wie ein Ereignis, das nicht eingetreten ist. Es gibt keine
+Meldung, keinen roten Lauf, keinen Unterschied zum Normalfall — dieselbe
+Familie wie der Schalter ohne Draht (E417) und die Klasse ohne Regel (E410).
+
+DIE ÜBRIGEN SIEBZEHN WAREN NICHT FALSCH, NUR UNGESCHÜTZT. Die ganze Familie
+`auftrag.*` — angelegt, beginnt, schritt, beendet, fehler,
+wiederaufgenommen — stand gar nicht im Katalog, dazu
+`einstellung.geaendert`. Heute sind sie überall gleich geschrieben; ein
+Tippfehler morgen wäre still. `horche('auftrag.beended')` wartet für immer.
+
+WIE DER WÄCHTER DEN EIGENTLICHEN FALL FINDET, und das ist der übertragbare
+Teil: nicht Gleichheit prüfen, sondern „gleich bis auf die Trennzeichen".
+`app:startet` und `app.startet` sind dasselbe Wort mit einem anderen
+Zeichen dazwischen — und genau das macht sie zu zwei Ereignissen. Der
+Vergleich streicht `. : _ -` aus beiden und sieht nach, ob dann dasselbe
+dasteht. Ein Vergleich auf Gleichheit hätte gar nichts gefunden.
+
+§4 IST DER TEIL, DER NICHT LIEST, SONDERN NACHSIEHT: die Seite öffnen und
+über `ARTEN.appStartet` mit `nachreichen` horchen. Vor der Reparatur kam
+`{"name":"app.startet","da":false}` zurück — das Ereignis war gemeldet
+worden, nur unter einem anderen Namen.
+
+PRÜFUNG: `test422`, 14 Punkte, PORT 9544 — drei Abschnitte statisch, einer
+im Browser. Dazu `test180`, `test184`, `test189`, `test301` (Aufträge,
+Abgleich, PDF).
+GEGENPROBE: `melde('app:startet')` mit Doppelpunkt zurückgesetzt → §1, §3
+und §4 rot, mit „da: false". Gelaufen.
+
+Dateien: `src/kern/ereignisse/arten.ts`, `src/start.ts`,
+`src/kern/auftraege/maschine.ts`, `src/kern/abgleich/maschine.ts`,
+`src/register/einstellungen.ts`, `src/bereiche/pdf/einlesen.ts`,
+`src/bereiche/pdf/seite.ts`, `src/bereiche/dateien/archiveImport.ts`,
+`pruefungen/lauf/test422.mts` (neu).
+
+---
+
+E430 — „Kalender" öffnete den Verbindungsdialog
+------------------------------------------------
+
+ENTSCHEIDUNG (Redurs Bitte): Der Kalender ist ein ORT wie „Aufgaben" und
+„Bibliothek" — mit Adresse, Krume und Zurück-Weg —, keine Überlagerung. Und
+vom Termine-Bildschirm führt ein Weg dorthin.
+
+WAS DER EINTRAG VERSPRACH:
+
+    { id: 'app-kalender', name: 'Kalender', icon: '📅',
+      hinweis: 'Termine aus allen Quellen',
+      tun: () => Kalender.dialog() }
+
+`Kalender.dialog()` ist der Dialog „Kalender verbinden" — Google, CalDAV,
+Client-ID. Der Hinweis sagt „Termine aus allen Quellen", und was aufging,
+waren die QUELLEN selbst. Gemessen stand in der Überlagerung wörtlich:
+„📅 Kalender verbinden ✕ 🔵 Google Kalender nicht verbunden".
+
+DEN KALENDER GAB ES DIE GANZE ZEIT. `Arbeitsansicht` kennt `'kalender'`,
+`routeAusHash` lässt `#welt-workspace-kalender` zu, und die Arbeitswelt
+zeichnet die Chronologie aller Datumsfelder aus allen lesbaren Datenbanken.
+Es fehlte nur die Tür — `Produktwelten` hatte `bibliothek()` und
+`aufgaben()`, aber kein `kalender()`.
+
+UND DER UNTERSCHIED IST NICHT KOSMETISCH, das ist der Kern von Redurs
+Bitte: eine Überlagerung hat keine Adresse, keinen Zurück-Weg und keine
+Krume; sie liegt über der Seite und ist wieder weg. Ein Ort hat all das.
+„Aufgaben" und „Bibliothek" stehen im selben Register daneben und machen es
+seit jeher richtig — der Kalender war der eine, der es nicht tat.
+
+DER ZWEITE FUNDORT, und es ist der, den Redur vor Augen hatte: der
+Bildschirm `Ansichten.termine()` — was die untere Leiste am Telefon unter
+„Termine" öffnet — trug zwei Karten, und die mit dem Kalendersymbol führte
+ebenfalls in den Verbindungsdialog. Von diesem Bildschirm gab es GAR KEINEN
+Weg zum Kalender. Jetzt drei Karten:
+
+    📅 Kalender            Alle Termine in einer Chronologie   → der Ort
+    🔗 Kalender verbinden  Google, CalDAV — Termine hereinholen → die Einrichtung
+    🎙 Besprechung         Mitreden statt mitschreiben
+
+WAS NICHT WEGGENOMMEN WURDE. Der Verbindungsdialog bleibt über sechs Wege
+erreichbar — die Zeile „Kalender verbinden" im Kontextregister, den Knopf in
+den Einstellungen, die Lernwelt, die Besprechung, die neue Karte. `test423
+§4` sieht ausdrücklich nach, dass er weiter aufgeht: eine falsche Tür zu
+berichtigen darf keine richtige zumachen.
+
+PRÜFUNG: `test423`, 19 Punkte, PORT 9545. Dazu `test117`, `test272`,
+`test222`.
+GEGENPROBE: `tun` zurück auf `Kalender.dialog()` → fünf Punkte rot, mit der
+Überlagerung „Kalender verbinden" im Bericht und `hash: "#dokumente"`.
+
+UND ZWEI PRÜFUNGEN, DIE ZUERST AM FALSCHEN ORT NACHSAHEN:
+§2 las die ersten 400 Zeichen des Hauptbereichs — und das ist immer der Kopf
+der Arbeitswelt, den sie in JEDER Ansicht zeichnet. Sie prüfte damit, ob die
+Arbeitswelt aufgeht, nicht welche Ansicht. §4 suchte „Kalender verbinden" in
+`Register.befehle` und bekam eine leere Liste: die Zeile steht im
+KONTEXT-Register. Eine Prüfung, die am falschen Ort nachsieht, meldet „weg",
+wo nichts weg ist.
+
+Bilder angesehen (§55.3): `bilder/kalender2-rechner-hell.png`,
+`kalender2-handy-dunkel.png`, `termine2-handy-dunkel.png`.
+
+Dateien: `src/register/navigation.ts`, `src/bereiche/wissen/produktwelten.ts`,
+`src/bereiche/datenbanken/ansichten/dienst.ts`, `bilder.mts`,
+`pruefungen/lauf/test423.mts` (neu).
+
+---
+
+E431 — Der Kalender wohnt nicht im Arbeitsbereich
+--------------------------------------------------
+
+ENTSCHEIDUNG (Redurs Bitte): Der Kalender bekommt einen eigenen Bildschirm
+ohne die Workspace-Schale — eigene Krume „Kalender", eigene Adresse
+`#kalender`, und man kommt dorthin zurück. Gezeichnet wird er weiter von der
+Arbeitswelt.
+
+WAS REDUR GESAGT HAT: „die kalender sollte nicht in einem berich sich öfnnen
+sonder normal wie eine app". Auf die Rückfrage, wie weit das gehen soll,
+wählte er „Ganz eigener Ort" — wie die Elektrotechnik, die auch nicht im
+Workspace wohnt.
+
+WAS VORHER DASTAND. E430 hatte den Kalender einen Tag zuvor aus dem
+Verbindungsdialog geholt und als Ansicht in den Arbeitsbereich gehängt. Das
+war der richtige Ort in dem Sinn, dass er eine Adresse und eine Krume bekam
+— aber die Krume sagte „🧱 Workspace", links stand die Spalte „Übersicht ·
+Bibliothek · Aufgaben · Datenbanken · …", rechts das Reiterpanel mit den
+offenen Seiten. Gemessen: 210 px Navigationsspalte, 250 px Reiterpanel, und
+darüber eine 154-px-Bühne mit „REDION HAUPTWELT / 🧱 Workspace".
+
+Der Kalender war also ein Abschnitt von etwas anderem. Wer ihn öffnete,
+stand im Arbeitsbereich und sah zufällig gerade den Kalender.
+
+DIE ALTERNATIVE, DIE ES NICHT WURDE: einen zweiten Kalender schreiben, der
+für sich steht. Das wäre der doppelte Katalog aus §8 — zwei Kalender, die
+auseinanderlaufen, und niemand merkt, welcher gilt. Der Kalenderabschnitt
+gibt es schon: seine Chronologie, seine Suche, seine Klickgriffe, die
+Lebensbereich-Auswahl.
+
+WAS ES STATTDESSEN WURDE: ein NACKTER Modus in der Arbeitswelt.
+`render(ziel, ansicht, nackt)` zeichnet mit `nackt = true` nur den Kopf mit
+der Lebensbereich-Auswahl und darunter den Abschnitt selbst — kein
+`.aw-layout`, keine `.aw-navigation`, kein `.aw-reiter-panel`, keine
+Titelgruppe. Dieselbe Quelle, dieselben Daten, eine Schale weniger.
+
+Und die Tür ist `App.zeigeSonder('Kalender', …)` statt
+`workspace('kalender')`. `zeigeSonder` vergibt die Adresse aus dem Titel
+(`#kalender`), merkt den Ort unter `zuletztOrt`, zeichnet den Baum neu und
+meldet den Schauplatz. Genau diese vier Dinge unterscheiden einen Ort von
+einer Überlagerung — und `SCHAUPLATZ_NAMEN` kannte „Kalender" schon.
+
+DER KOPF WIRD SCHMAL, und das ist keine Kosmetik. `.aw-kopf` ist eine
+154-px-Bühne mit Farbverlauf und Ring für „REDION HAUPTWELT / Workspace /
+Seiten, Wissen, Dateien und Arbeit in einer gemeinsamen Sicht.". Im nackten
+Modus steht darin nur noch ein Auswahlfeld von 36 px. Ohne die Regel finge
+der Kalender erst bei y=240 an — über der Falz die teuerste leere Fläche der
+App. Dieselbe Rechnung wie E219/E222.
+
+UND EIN ORT, AN DEN MAN NICHT ZURÜCKKOMMT, IST NUR EIN HALBER. `#kalender`
+stand in der Adresszeile, aber beim Neuladen ging das Regal auf: die Tabelle
+`SONDER_START` in `schale.ts` beantwortet BEIDE Fragen — „wo war ich
+zuletzt" und „welcher Hash ist ein Ort" —, und der Kalender stand in keiner
+von beiden. Eine Zeile dort, und das Lesezeichen funktioniert ebenso wie
+„Weiter wo du warst".
+
+PRÜFUNG: `test423`, jetzt 30 Punkte, PORT 9545 (war 19). Neu sind §2 mit
+fünf Punkten gegen die Workspace-Schale, §3 mit den vier Merkmalen eines
+Ortes und §6 mit den beiden Rückwegen. Dazu `test390`, `test222`, `test87`,
+`test290`.
+
+GEGENPROBEN, vier Stück, alle gelaufen:
+  · `nackt` auf `false` → drei Punkte rot: Navigationsspalte 210 px,
+    Reiterpanel 250 px, Titel „🧱 Workspace".
+  · Die Regel `.aw-nackt .aw-kopf-schmal` umbenannt → der Kopf misst 154 px,
+    genau die Zahl aus dem Stilblatt.
+  · `zeigeSonder` zurück auf `workspace('kalender')` → vier Punkte rot:
+    `#welt-workspace-kalender`, `zuletztOrt: "-workspace"`, Schauplatz
+    `workspace`, Krume „🧱 Workspace".
+  · Die Zeile `kalender` aus `SONDER_START` genommen → §6 dreimal rot.
+
+UND EINE PRÜFUNG, DIE ZUERST NICHTS PRÜFTE. §6 stand erst als
+`goto(index.html#kalender)` da und war grün — auch mit herausgenommener
+`SONDER_START`-Zeile. Der Grund: von `index.html` auf `index.html#kalender`
+ist eine Sprungmarken-Navigation im SELBEN Dokument. Die Seite lädt nicht
+neu, `start()` läuft kein zweites Mal, und der Kalender stand einfach noch
+da. Erst `reload()` prüft, was die Prüfung behauptet. Aufgefallen ist es
+allein an der Gegenprobe — das ist der dritte Fall dieser Art in dieser
+Woche und der Grund, warum §55.2 keine Formalität ist.
+
+KOSTEN: Der nackte Modus ist ein zweiter Zeichenweg in derselben Datei.
+Wer die Arbeitswelt umbaut, muss beide ansehen; die Prüfung hält beide.
+Und `.aw-nackt .aw-kopf-schmal` ist in der Vorgabefassung wirkungslos, weil
+`body[data-ruhig="an"]` denselben Kopf schon abflacht — die Regel trägt nur
+bei abgeschalteter ruhiger Fassung und bei aufgeklapptem „Mehr". Die Prüfung
+misst deshalb ausdrücklich MIT abgeschalteter ruhiger Fassung; sonst wäre
+sie eine Behauptung.
+
+Bilder angesehen (§55.3): `bilder/kalender2-rechner-hell.png`,
+`kalender2-handy-dunkel.png`.
+
+NEBENBEI GRÜN GEMACHT: `test290` war rot mit `list` und `lr` — zwei
+Präfixe aus E425/E426, die im Verzeichnis fehlten. Nachgetragen in
+`doku/CSS-NAMENSRAEUME.md`.
+
+Dateien: `src/bereiche/wissen/arbeitswelt.ts`,
+`src/bereiche/wissen/produktwelten.ts`, `src/register/navigation.ts`,
+`src/schale/aufbau/schale.ts`, `quell/schale/stil/arbeitswelt.css`,
+`doku/CSS-NAMENSRAEUME.md`, `bilder.mts`, `pruefungen/lauf/test423.mts`.
+
+---
+
+E432 — Die Regel stand in der falschen Datei und verlor still
+--------------------------------------------------------------
+
+ENTSCHEIDUNG: Der Spalt zwischen zwei Werten im Feed ist 12 px, der
+zwischen Name und Wert 4 px. Die Regel steht in `einstellungen.css`, wo der
+Namensraum `fe-` wohnt — nicht in `datenbanken.css`, wo sie nichts bewirkte.
+
+WIE ES AUFFIEL: `test332` im vollen Lauf, Stück 30. Er meldete zwei tote
+Deklarationen:
+
+    .fe-merkmale | row-gap    — es gilt einstellungen.css: 5px,
+                                tot ist datenbanken.css: 4px
+    .fe-merkmale | column-gap — es gilt einstellungen.css: 5px,
+                                tot ist datenbanken.css: 12px
+
+WAS DAHINTERSTECKTE. E424 schrieb `gap:4px 12px` nach `datenbanken.css`,
+weil der Feed seit E424 dieselbe Wertemaschine benutzt wie die Karte. Nur
+wohnt `fe-` laut `doku/CSS-NAMENSRAEUME.md` in `einstellungen.css`, und
+`index.html` lädt dieses Blatt NACH `datenbanken.css`. Gleiche Spezifität,
+spätere Regel gewinnt: `gap:5px` schlug `gap:4px 12px`, und niemand sah es.
+
+Das ist wörtlich der Fall, vor dem §39 warnt — „zwei Bereiche mit demselben
+Klassenpräfix gewinnen abwechselnd, und niemand sieht es im Code" — und
+derselbe wie E421, wo `bg`-Regeln in der falschen Datei standen.
+
+UND ES WAR SICHTBAR. Auf `db-feed-rechner-hell.png` stand:
+
+    Offen  Bericht  Abgabe  Ende 30.09.2026 Kosten 0 CHF
+
+Alle Abstände 5 px, der innerhalb eines Wertes 4 px. Eine Kette gleich weit
+entfernter Wörter — man sah nicht mehr, welcher Name zu welchem Wert
+gehört. E424 war angetreten, genau das zu beheben („Ende30.09.2026"), und
+hat es zur Hälfte getan: der innere Spalt kam, der äussere nicht.
+
+WAS DAS ÜBER E424 SAGT. Die Prüfung dazu (`test417 §2`) hielt ausdrücklich
+fest, dass der erste Wurf zwischen den EINTRÄGEN mass und dass das der
+falsche Spalt sei. Das stimmte für den Fehler „Ende30.09.2026". Der Schluss
+daraus war zu weit: der äussere Spalt geht sehr wohl jemanden an, nur eben
+in die andere Richtung — er muss GRÖSSER sein als der innere. Diese
+Bedingung stand nirgends, und deshalb hielt sie nichts.
+
+PRÜFUNG: `test417 §2`, zwei Punkte mehr — der Spalt zwischen benachbarten
+`.mv` derselben Zeile muss mindestens 8 px betragen, also das Doppelte des
+inneren. Dazu `test332` (der Finder), `test290`, `test411`, `test413`,
+`test416`.
+
+GEGENPROBE: keine nötige Verstümmelung — die neue Prüfung war GEGEN DEN
+ECHTEN FEHLER rot, mit fünfmal `"spalt":5` im Bericht, und wurde durch die
+Reparatur grün. Das ist die stärkere Form: ein Wächter, der einen wirklichen
+Fund gemeldet hat, ist keine Behauptung mehr.
+
+Bild angesehen (§55.3): `bilder/db-feed-rechner-hell.png` vorher und
+nachher. Die Paare stehen jetzt sichtbar getrennt.
+
+KOSTEN: Keine. Es sind zwei Zahlen an der Stelle, an der sie wirken, und
+eine tote Regel weniger.
+
+Dateien: `quell/schale/stil/einstellungen.css`,
+`quell/schale/stil/datenbanken.css`, `pruefungen/lauf/test417.mts`.
+
+---
+
+E433 — Die Namensspalte am Telefon war nie 170 Pixel breit
+------------------------------------------------------------
+
+ENTSCHEIDUNG: L131 Punkt 1 wird als NICHTBEFUND geschlossen — und die Zahl
+bekommt trotzdem einen Wächter, weil sie an EINER Zeile hängt.
+
+DER VERDACHT. L131 hielt fest: `.pp-n` steht auf `width:170px; flex:0 0
+170px`. Auf einem 390-px-Telefon sind das 44 % der Breite für die
+Beschriftung einer Eigenschaft — dieselbe Bauform, die beim Zeitstrahl der
+Fehler war (E427: `.zs-namen` mit 190 px, am Telefon 57 %). Nicht repariert
+mit der Begründung, die Messung habe die Vorschau am Telefon nicht öffnen
+können: dort zeigt die Datenbank Karten statt einer Tabelle.
+
+NACHGEMESSEN STIMMT ER NICHT. Am Telefon rendert `.peek` überhaupt nicht.
+`zeilePeek` verzweigt eine Zeile vor dem Bau des Fensters:
+
+    const telefon = AppEinstellung.amTelefon();
+    if (telefon) { zeilePeekBlatt(row, coll); return; }
+
+Das Blatt von unten (E371) trägt denselben Inhalt in einer anderen Hülle,
+und für die gilt `.iblatt-koerper .pp-n{width:118px}`. Gemessen auf 390 px:
+
+    Hülle           Körper   Name    Anteil   abgeschnitten
+    Blatt (Handy)    390 px  118 px    30 %    keiner
+    Peek (Rechner)   559 px  170 px    30 %    keiner
+
+Dreissig Prozent an beiden Orten. Die Rechnung in der Lücke war richtig,
+ihre Voraussetzung nicht: 170 px auf 390 px WÄREN 44 %, nur stehen dort nie
+170 px.
+
+WARUM DAS EIN EINTRAG WERT IST. Es ist derselbe Fehler wie E21 — eine
+Schnittstelle aus dem Gedächtnis statt aus dem Quelltext —, nur an einer
+CSS-Regel statt an einer Funktion. Eine feste Zahl im Stilblatt sagt nichts,
+solange nicht feststeht, WELCHE Regel am Telefon überhaupt gilt. Und der
+Weg zur Messung war nicht schwer: die Vorschau ist die VORGABE
+(`oeffnenAls !== 'voll'`), ein Tipp auf eine Karte der Handy-Kartenliste
+öffnet sie. Der erste Versuch scheiterte an einem Selektor, nicht an der
+Sache.
+
+UND DER PUNKT BLEIBT BEWACHT. Die Telefon-Regel ist EINE Zeile in
+`bausteine.css`. Fällt sie weg, greift wieder die 170, und niemand sieht
+es — das ist genau die Sorte Rückfall, die E432 zwei Stunden vorher im Feed
+gefunden hat.
+
+PRÜFUNG: `test361 §8`, vier Punkte mehr — beide Hüllen gemessen, höchstens
+40 % der Körperbreite, keine Beschriftung abgeschnitten.
+
+Die Grenze ist 40 und nicht 44: bei 44 läge der Rückfall (44 %) genau
+darauf, und eine Grenze, die den Fehler eben noch durchlässt, ist keine.
+
+GEGENPROBE: `.iblatt-koerper .pp-n` umbenannt, also die Telefon-Regel
+weggenommen → `{"koerper":390,"name":170,"anteil":44}`. Exakt die 44 %, die
+in L131 standen. Der Wächter hält also genau den Fall, den die Lücke
+befürchtet hat.
+
+KOSTEN: Keine am Erzeugnis. Vier Prüfpunkte mehr in einem Lauf, der ohnehin
+beide Hüllen aufmacht.
+
+Dateien: `pruefungen/lauf/test361.mts`, `LUECKEN.md`, `AUFGABEN.md`.

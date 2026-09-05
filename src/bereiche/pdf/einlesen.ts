@@ -593,9 +593,9 @@ const PdfEinlesen = (() => {
     }
   };
   if (typeof Ereignisse !== 'undefined' && Ereignisse.horche) {
-    Ereignisse.horche('auftrag.schritt',  (d: any) => beiAuftragEreignis('auftrag.schritt', d));
-    Ereignisse.horche('auftrag.beendet', (d: any) => beiAuftragEreignis('auftrag.beendet', d));
-    Ereignisse.horche('auftrag.fehler',  (d: any) => beiAuftragEreignis('auftrag.fehler', d));
+    Ereignisse.horche(ARTEN.auftragSchritt,  (d: any) => beiAuftragEreignis('auftrag.schritt', d));
+    Ereignisse.horche(ARTEN.auftragBeendet, (d: any) => beiAuftragEreignis('auftrag.beendet', d));
+    Ereignisse.horche(ARTEN.auftragFehler,  (d: any) => beiAuftragEreignis('auftrag.fehler', d));
   }
 
   /**

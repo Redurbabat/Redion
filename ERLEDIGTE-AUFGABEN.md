@@ -38,6 +38,239 @@ dann die Phasen, dann die Bögen.
 
 ## Aktueller Stand
 
+## E419–E427 — Die dreizehn Ansichten, angesehen statt gelesen (5. September 2026)
+
+Neun Bögen an einem Abend, und sie hängen alle an derselben Arbeitsweise:
+**jede Ansichtsart wirklich öffnen und ansehen**, statt ihren Code zu lesen.
+Alle dreizehn am Rechner, die wichtigsten am Telefon.
+
+**Was dabei herauskam, in der Reihenfolge des Gewichts:**
+
+| Fund | Gemessen |
+|---|---|
+| Die Balken des Dashboards waren unsichtbar (E421) | `--b-gray` und die Bahn sind byte-identisch. Kontrast **1.00**. „Offen 3" hatte einen Balken über die volle Breite, den niemand sehen konnte |
+| Der Zeitstrahl nutzte 29 % seiner Fläche (E419) | 325 px gemalt in 1130 px. Und die Mindestbreite zog 1, 2 und 3 Tage auf **dieselben 22 px** |
+| Die Karte nahm die Titelspalte (E423) | `place` — der Typ, der „Ort" bedeutet — stand nicht einmal zur Wahl |
+| Fünf Kataloge für dreizehn Ansichten (E422) | `pivot` und `raster` fehlten in vier davon; `timeline` hiess an zwei Stellen verschieden |
+| Feed und Liste klebten ihre Werte zusammen (E424, E425) | „15.09.2026 60 CHF" als ein Wert; „01.09.2026 12.09.2026" ohne Namen |
+| Am Telefon sahen zwei Einträge gleich aus (E426) | „Bericht Kapitel 1" und „Bericht Kapitel 2" standen beide als „Bericht" da |
+| Der Zeitstrahl zeigte am Telefon jeden Namen zweimal (E427) | Namensspalte 190 von 334 px = 57 %; alle neun Titel standen daneben |
+
+**Dreimal derselbe Fehler an drei Orten.** `kartenWerte` aus E411 gibt es
+einmal und kann alles, was Karte, Feed und Liste brauchen. Jeder der drei
+hatte trotzdem seine eigene Schleife, die Zellen mit einem Leerzeichen
+aneinanderhängte.
+
+**Und zweimal derselbe Fehler in der Vorgabe.** E414 fand, dass die
+Diagramm-Gruppierung `gruppierbar[0]` nahm und damit den Titel. E423 fand
+dieselbe Zeile bei der Karte. „Die erste Spalte" ist nie die richtige
+Antwort auf „welche Spalte?".
+
+### Was dieser Durchgang über das Prüfen gesagt hat
+
+**Fünf Prüfungen konnten nicht rot werden, und alle fünf sind repariert:**
+
+- `test351 §3` zählte Wörter mit `getClientRects()`. Ein Audit hatte
+  `display:none` durch die Zugänglichkeits-Klemme ersetzt; ein geklemmtes
+  Wort HAT ein Rechteck, eines von 1×1 px. Der Abschnitt meldete drei
+  Runden lang dieselbe Zahl (E416).
+- `test413 §1` mass `.zs-flaeche` — mit `min-width:100%` immer voll, ganz
+  gleich wie schmal darin gezeichnet wird.
+- `test411 §3` mass die Zellbreite statt der Randbreite; `td` hat
+  `min-width:90px` und bleibt 90 px, ob der Rand da ist oder nicht.
+- `test417 §2` mass den Abstand zwischen den Einträgen statt zwischen Name
+  und Wert — den ersten hält der Behälter mit seinem eigenen `gap`.
+- `test290` meldete drei echte Namensraum-Funde, alle aus der Arbeit
+  desselben Tages (E422 Nachtrag).
+
+**Und zwei Wächter, die ihre eigene Grenze lernen mussten.** §39 verbietet
+Stil im Quelltext — aber ein Fortschrittsbalken schreibt `style="width:55%"`,
+und das ist ein GERECHNETER Wert. §8 verbietet zweite Kataloge — aber
+`ANSICHT_ZEICHEN` bildet auf Strichzeichen-Kennungen ab, nicht auf Namen.
+Ein Wächter, der bei jedem zweiten Fund danebenliegt, wird nach dem ersten
+Lauf abgeschaltet.
+
+### Und was Bilder gefunden haben, das keine Zahl finden konnte
+
+- Das Zeichen `⃠` vor der KI-Absage war eine KOMBINIERENDE Marke. Im
+  Quelltext sieht es aus wie ein eigenes Zeichen; es legt sich über den
+  folgenden Buchstaben und klebte am „D" von „Dazu" (E418).
+- „Ende30.09.2026" — die Beschriftung klebte am Wert, weil die Regel dafür
+  auf `.card .meta` stand und der Feed kein `.card` hat (E424).
+- Der Feed zeigte nach der ersten Reparatur ALLE dreizehn Spalten in einer
+  Zeile. Eine Karte im Board darf das; ein Strom zum Überfliegen nicht
+  (E424).
+
+---
+
+---
+
+## E415–E417 — Was der volle Lauf gefunden hat (5. September 2026)
+
+Der volle Lauf über 36 Stücke lief gegen den Stand von E408–E414. Drei
+Stücke wurden rot, und **jeder der drei Funde war echt** — zwei davon aus
+meiner eigenen Arbeit des Tages.
+
+### E415 — Zwei fehlende Semikolon, vier tote Deklarationen
+
+`test179` und `test201` rot: `cursor:pointer position:relative;` — ein
+Semikolon fehlte, und CSS verwirft dann BEIDE Deklarationen still. Ohne
+`position:relative` verankerte sich die unsichtbare 44-px-Trefferfläche am
+nächsten positionierten Vorfahren und legte sich über die Nachbarknöpfe.
+
+Die Suche von Hand fand eine Stelle. Der neue Wächter `test410` fand beide —
+der Unterschied war `line-height`, das in meinem Grep-Muster fehlte.
+
+**Nachtrag:** `test362` zählt rohe `44px` mit GENAUER Gleichheit gegen
+`marken-decke.json`. E407 hatte elf davon eingeführt, 152 → 163. Nicht die
+Decke angehoben, sondern die elf durch `var(--touch-min)` ersetzt.
+
+**Prüfung.** `test410`, 7 Punkte, ohne Browser. Gegenprobe: Semikolon wieder
+entfernt → `test410 §1`, `test179` und `test201` rot.
+
+### E416 — Ein Wächter, der die alte Mechanik misst, misst nichts
+
+`test351 §3` war dauerhaft rot — auch auf `main`, seit Audit F04. Nicht weil
+die App etwas falsch macht: der Wächter zählte sichtbare Wörter mit
+`getClientRects().length > 0`, und F04 hatte `display:none` durch die
+Zugänglichkeits-Klemme ersetzt. Ein geklemmtes Wort HAT ein Rechteck — eins
+von 1×1 px.
+
+Nachgemessen: Leiste 596 px → Wort 1 px · 1074 px → 1 px · 1241 px → 22–74 px.
+`getClientRects()` meldete dreimal elf. Der Abschnitt konnte weder richtig
+rot noch richtig grün werden; auch sein dritter, grüner Punkt war aus
+demselben falschen Grund grün.
+
+### E417 — Sechs Schalter ohne Draht
+
+Statisch gemessen, während der Lauf lief: 21 Schalter werden angeboten,
+sechs las niemand. Zwei davon — „Titel der Datenquelle" und „Seiten-Icon" —
+konnten gar nichts ausschalten, weil es die Anzeige nie gab.
+
+Alle sechs sind verdrahtet, zwei erst gebaut. Die Grenzen sind bewusst eng:
+`erinnernInApp` hält den Streifen auf, nicht die Nachricht; `autoVersionen`
+nur das Automatische, nicht das Speichern von Hand.
+
+**Und der Wächter ist ein Verzeichnis und kein Muster.** Dieselbe Messung
+meldete zwölf, sechs davon zu Unrecht: fünf `q:*` werden über einen
+berechneten Namen gelesen, `sicherungErinnern` über eine Form, die meine
+erste Messung nicht kannte. Zum dritten Mal an diesem Tag derselbe Befund —
+ein Muster, das den NAMEN sucht, findet berechnete Formen nicht.
+
+**Prüfung.** `test411`, 26 Punkte, PORT 9533. Gegen den unreparierten Stand
+in jedem Abschnitt rot (14 von 24). Zwei Einzelgegenproben dazu.
+
+**Und eine Prüfung, die es nicht konnte:** `§3` mass zuerst die ZELLBREITE
+und blieb grün, während der Rand schon weg war — `td` hat `min-width:90px`.
+Gefunden nur, weil die Gegenprobe gelaufen ist.
+
+
+---
+
+## E408–E414 — Der Schimmer und die dreizehn Ansichten (5. September 2026)
+
+Acht Bögen an einem Tag, und sie hängen zusammen: E408 kam aus einem Bauteil,
+das Redur geschickt hat; E409 bis E414 aus dem Entschluss, sich die dreizehn
+Ansichtsarten wirklich ANZUSEHEN statt ihren Code zu lesen.
+
+**Der Fund, der alles ausgelöst hat.** Ein Bildziel je Ansichtsart, alle mit
+derselben Datenbank: neun Zeilen, dreizehn Spalten, echte Anhänge. Auf dem
+ersten Bild standen von dreizehn Spalten fünf.
+
+### E408 — Ein Schimmer, der sagt „hier kommt noch Text nach"
+
+Redur schickte eine React-Komponente (AnimatedShinyText, Magic UI, MIT).
+Übernommen wurde die Wirkung, nicht der Code: sechs Zeilen CSS statt React,
+Radix, Tailwind und lucide-react. Er läuft nur, während die KI-Antwort noch
+streamt.
+
+Die Gefahr war eine Datengefahr: `background-clip:text` braucht durchsichtige
+Schrift, und wo der Verlauf nicht gemalt wird, steht unsichtbarer Text. Im
+Fehlerzweig wäre es die Fehlermeldung selbst gewesen.
+
+**Prüfung.** `test403`, 22 Punkte, PORT 9526. Fünf Mutationen rot gesehen.
+
+### E409 — Die Ansichten bekommen die Breite, die da ist
+
+Gemessen: bei 1280 px Fenster stand die Datenbank in 708 px, ihre Tabelle
+brauchte 1637. 57 % lagen hinter einem waagerechten Roller, den niemand
+sieht. Bei 1920 px änderte sich NICHTS — links und rechts je 483 px leer.
+
+Drei Dinge standen im Weg, zwei davon fielen erst auf einem Bild auf: der
+Beobachter hing nur an `#scroll` (das sich nie ändert), `max-width:100%`
+kappte die neue Breite stillschweigend, und `.blk` ist `display:flex`.
+
+Und der Fortschrittsbalken log: `width:n%` bezog sich auf die ganze Zelle,
+bei 100 % schob der Balken die Prozentzahl hinaus. 55 %, 80 % und 100 %
+sahen gleich aus.
+
+**Prüfung.** `test404`, 25 Punkte, PORT 9527. Der Karteikarten-Streifen ist
+seither aus — er stand über jedem Bildschirm und über jedem Bild.
+
+### E410 — Der Kalender zeigt Zeitspannen
+
+Die Balken waren die ganze Zeit gebaut und sprangen nie an: `endeKey` war das
+einzige Feld der Kalenderansicht ohne Vorgabewert. Zwei Fehler kamen dabei
+heraus, die seit jeher dastanden — die Balken hatten GAR KEINE Farbe, und
+sie lagen auf den Tageszahlen.
+
+**Prüfung.** `test405`, 17 Punkte, PORT 9528.
+
+### E411 — Werte auf Karten sagen, wovon sie handeln
+
+„08.09.2026 10.09.2026 85 ▬ 0 % ★★★☆☆ Lina 📍Bern ☐" in einer Zeile.
+Angeschrieben wird jetzt, was seinen Namen braucht; Etiketten und Sterne
+nicht. Dabei kam der Fehler heraus, den E409 hinterlassen hatte: eine
+Fehlerkarte quer über der Galerie.
+
+**Prüfung.** `test406`, 20 Punkte, PORT 9529.
+
+### E412 — Eine Zahl sagt, wovon sie handelt
+
+„420" heisst jetzt „420 CHF". Und der Typ log: `Column.formel` heisst in
+Wahrheit `formula`, und dreizehn Felder fehlten ihm ganz. `test294` schwieg
+dazu, weil er nur prüft, ob ein Name IRGENDWO vorkommt — und „formel" kommt
+im Formeldreieck der Elektrolehre vor.
+
+**Prüfung.** `test407`, 14 Punkte, PORT 9530; `test294` von 10 auf 13.
+
+### E413 — Der Zeitstrahl zeigt Spannen und liest sich
+
+Dieselbe Zeile wie im Kalender, an der Nachbarstelle nicht angesehen — §45,
+der zweitteuerste wiederkehrende Fehler. Neun Quadrate mit je einem
+Buchstaben: „E", „\", „S". Das „\" war ein abgeschnittenes „V".
+
+**Prüfung.** `test408`, 13 Punkte, PORT 9531.
+
+### E414 — Das Diagramm zeigt etwas
+
+Neun schwarze Balken der Höhe 1, gruppiert nach dem Titel, Achse „3 2 2 1 0".
+Die Farbpalette war einmal eine Liste von Farben und wurde auf Paare
+umgestellt; eine Stelle wurde mitgezogen, sechs nicht.
+
+**Prüfung.** `test409`, 16 Punkte, PORT 9532.
+
+### Was dieser Tag über das Arbeiten gesagt hat
+
+**Dreimal habe ich mich selbst berichtigt, und das gehört hierher:**
+
+- Ein Kommentar behauptete ein Sicherheitsloch in der Zahlenspalte. Gemessen
+  kam `NaN` heraus — der Riegel sitzt in `wert()`, nicht im `esc`. Eine
+  falsche Behauptung über die eigene Sicherheit ist schlimmer als keine.
+- `test403 §1` blieb unter seiner EIGENEN Gegenprobe grün, weil der Auszug
+  das Wort „@supports" im erklärenden Kommentar fand.
+- `test406 §3` prüfte nichts: „Anfang" und „Ende" sind beide `date`, und
+  `date` ist ohnehin nicht selbsterklärend. Der Abschnitt hat jetzt einen
+  eigenen Satz mit zwei Auswahlspalten.
+
+**Und die Arbeitsweise hat mitten im Durchgang gewechselt.** Statt die
+restlichen Ansichten einzeln zu fotografieren, wurden alle dreizehn auf
+dieselben vier Fehlerarten gemessen. Ein Treffer, und der war ein Fehlalarm.
+`test404 §8` misst seither für alle dreizehn: kein Fehler beim Öffnen,
+mindestens 85 % der Breite, keine abgeschnittene Zahl.
+
+---
+
 **4. September 2026 · „Gehen" verlässt das Band — F02 ist zu (E391)**
 
 > E388 hat die Orte nach links geholt; der Reiter „Gehen" stand danach

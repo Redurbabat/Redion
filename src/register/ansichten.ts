@@ -30,7 +30,12 @@ Register.ansichten = (() => {
        Notions grösste Lücke bei der Eingabe — siehe bereiche/datenbanken/raster.ts */
     ['raster',   '🧮', 'Raster'],
     ['board',    '▤', 'Board'],
-    ['timeline', '▬', 'Zeitleiste'],
+    /* „Zeitstrahl", nicht „Zeitleiste" (E422). Beide Wörter standen im
+       Projekt für dieselbe Ansicht: das Register sagte Zeitleiste, der
+       Reiter Zeitstrahl, und die Fehlermeldung „Für den Zeitstrahl braucht
+       es eine Datums-Eigenschaft" auch. Es gewinnt das Wort, das der Nutzer
+       schon liest. */
+    ['timeline', '▬', 'Zeitstrahl'],
     ['calendar', '📅', 'Kalender'],
     ['list',     '☰', 'Liste'],
     ['gallery',  '▩', 'Galerie'],

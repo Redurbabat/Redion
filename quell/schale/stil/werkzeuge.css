@@ -619,11 +619,11 @@ a.bl:hover{color:var(--text)}
    Sie wächst nur nach oben und unten — waagerecht stehen die
    Nachbarn, und eine Fläche, die sie überdeckt, macht es
    schlimmer statt besser. */
-.wb-tools button::after{content:""; position:absolute; left:0; right:0; top:50%; height:44px; transform:translateY(-50%);}
+.wb-tools button::after{content:""; position:absolute; left:0; right:0; top:50%; height:var(--touch-min); transform:translateY(-50%);}
 .wb-tools button:hover{background:var(--bg-hover); color:var(--text)}
 .wb-tools button.on{background:var(--accent); color:var(--auf-accent)}
 .wb-tools .wb-farbe{width:17px; height:17px; border-radius:50%; border:2px solid transparent; position:relative;}
-.wb-tools .wb-farbe::after{content:""; position:absolute; left:-3px; right:-3px; top:50%; height:44px; transform:translateY(-50%);}
+.wb-tools .wb-farbe::after{content:""; position:absolute; left:-3px; right:-3px; top:50%; height:var(--touch-min); transform:translateY(-50%);}
 .wb-tools .wb-farbe.on{border-color:var(--text)}
 .wb-sep{width:1px; height:18px; background:var(--line); margin:0 5px}
 .wb-flaeche{display:block; width:100%; touch-action:none; color:var(--text-faint); cursor:crosshair}

@@ -99,6 +99,7 @@ const Datenbank = (() => {
     wertFrisch,
     zeilen,
     zeilenGesamt,
+    mitEinheit,
     zelle,
     zusammenfassen
   } = DatenbankDienst;
@@ -125,6 +126,20 @@ const Datenbank = (() => {
     const kopf = document.createElement('div');
     kopf.className = 'db-head';
 
+    /* DER TITEL DER DATENQUELLE (E417). Er stand als Schalter im
+       Layout-Panel — „Titel der Datenquelle anzeigen" —, und es gab ihn
+       nicht. Kein Titel im Kopf, nichts zum Ein- oder Ausschalten: der
+       Schalter war die einzige Spur einer Funktion, die nie gebaut wurde.
+       Vorgabe AN, weil eine Datenbank ohne Namen auf einer Seite mit
+       mehreren nicht auseinanderzuhalten ist. Wer ihn nicht will — etwa
+       weil die Überschrift darüber schon dasselbe sagt — schaltet ihn aus. */
+    if (view.titelZeigen !== false) {
+      const t = document.createElement('div');
+      t.className = 'db-titel';
+      t.textContent = (coll.icon ? coll.icon + ' ' : '') + (coll.name || 'Datenbank');
+      kopf.appendChild(t);
+    }
+
     const tabs = document.createElement('div');
     tabs.className = 'db-tabs';
     coll.viewIds.forEach((id: any) => {
@@ -132,10 +147,10 @@ const Datenbank = (() => {
       if (!v) return;
       const b = document.createElement('button');
       b.className = 'db-tab' + (id === viewId ? ' on' : '');
-      const ICO: Record<string, string> = { table:'▦', board:'▤', list:'☰', gallery:'▩', calendar:'📅',
-                    timeline:'▬', chart:'📊', form:'📝', feed:'📰', map:'🗺',
-                    dashboard:'🧮' };
-      const ico = ICO[v.layout] || '▦';
+      /* AUS DEM REGISTER, NICHT AUS EINER EIGENEN KARTE (E422, §8). Hier
+         stand eine Karte mit elf von dreizehn Arten; `pivot` und `raster`
+         bekamen deshalb das Rückfallzeichen ▦ statt ⊞ und 🧮. */
+      const ico = Register.ansichten.icon(v.layout);
       b.innerHTML = `<span>${ico}</span>${esc(v.name)}`;
       b.addEventListener('click', () => {
         if (id === viewId) { ansichtMenue(b, coll, v, block); return; }
@@ -714,7 +729,16 @@ const Datenbank = (() => {
       .filter(k => !coll.schema[k].eigen || (view.eigenZeigen || []).includes(k));
 
     const t = document.createElement('table');
-    t.className = 'grid h-' + (view.hoehe || 'normal');
+    /* ZWEI SCHALTER, DIE NIEMAND LAS (E417). `linien` und `umbruchAlle`
+       standen im Layout-Panel, wurden richtig gespeichert und von keiner
+       Zeile gelesen. Sie hängen als Klassen an der TABELLE und nicht an
+       jeder Zelle: eine Regel, hundert Zellen.
+       Die Vorgaben sind verschieden herum, und mit Absicht — Linien an
+       (eine Tabelle ohne sie ist schwer zu lesen), Umbruch aus (eine
+       Tabelle, in der jede Zelle umbricht, ist keine mehr). */
+    t.className = 'grid h-' + (view.hoehe || 'normal') +
+                  (view.linien === false ? ' ohne-linien' : '') +
+                  (view.umbruchAlle ? ' umbruch-alle' : '');
 
     /* Kopf */
     const thead = document.createElement('thead');
@@ -857,6 +881,15 @@ const Datenbank = (() => {
               ? `<button class="tt-klapp" title="${zuJetzt ? 'Aufklappen' : 'Zuklappen'}">${zuJetzt ? '▸' : '▾'}</button>`
               : (coll.unterElemente ? '<span class="tt-klapp leer"></span>' : '')) +
             (r.archiviert ? '<span class="tt-archiv" title="Archiviert">🗄</span>' : '') +
+            /* DAS ZEICHEN DER SEITE (E417). Auch dieses gab es nicht: der
+               Schalter „Seiten-Icon anzeigen" stand da, die Titelspalte
+               zeigte nie eines. `aria-hidden`, weil daneben schon der Titel
+               steht — sonst liest ein Vorleseprogramm „Magnet Schaltplan"
+               (§38). Zeilen ohne eigenes Zeichen bekommen keines
+               angedichtet; ein Platzhalter für alle wäre kein Zeichen mehr,
+               sondern eine Spalte Rauschen. */
+            (view.seitenIcon !== false && r.icon
+              ? `<span class="tt-icon" aria-hidden="true">${esc(r.icon)}</span>` : '') +
             (() => {
               const b2 = blockiertDurch(r, coll);
               return b2.length
@@ -1779,7 +1812,8 @@ const Datenbank = (() => {
     'image', 'verify', 'button', 'relation']);
 
   /** Die Werteliste einer Karte — mit Namen dort, wo der Wert allein nicht spricht. */
-  const kartenWerte = (r: any, coll: any, view: any, ausser: string[] = []): string => {
+  const kartenWerte = (r: any, coll: any, view: any, ausser: string[] = [],
+                       hoechstens = 0): string => {
     /* Zuerst zählen, welcher Typ mehrfach vorkommt: zwei Datumsspalten sind
        auch dann nicht zu trennen, wenn eine allein es wäre. */
     const sichtbar = Object.keys(coll.schema).filter(k =>
@@ -1792,10 +1826,18 @@ const Datenbank = (() => {
     });
 
     let aus = '';
+    let wieviele = 0;
     sichtbar.forEach(k => {
+      /* EINE OBERGRENZE, WENN DIE STELLE EINE BRAUCHT (E424). Board- und
+         Galeriekarten zeigen alles: dort ist die Karte das Ganze. Der Feed
+         ist ein Strom zum Überfliegen — dreizehn Werte in einer Zeile sind
+         dort keine Auskunft mehr, sondern eine Wand. `0` heisst „alles",
+         damit die Karten nichts merken. */
+      if (hoechstens && wieviele >= hoechstens) return;
       const def = coll.schema[k];
       const z = zelle(r, k, coll);
       if (!z || z.includes('—')) return;
+      wieviele++;
       const mehrfach = (proTyp[def.type] ?? 0) > 1;
       const braucht = mehrfach || !SELBSTERKLAEREND.has(def.type);
       /* `title` steht IMMER da, auch beim selbsterklärenden Wert: wer doch
@@ -1974,18 +2016,20 @@ const Datenbank = (() => {
     rows.forEach((r: any) => {
       const d = document.createElement('div');
       d.className = 'list-row';
-      let meta = '';
-      Object.keys(coll.schema).forEach(k => {
-        if (coll.schema[k].type === 'title' || (view.hidden || []).includes(k)) return;
-        const z = zelle(r, k, coll);
-        if (z && !z.includes('—')) meta += '<span style="font-size:12.5px">' + z + '</span>';
-      });
-      d.innerHTML = `<span style="flex:1">${esc(r.text || 'Ohne Titel')}</span>` +
-                    `<span style="display:flex;gap:6px;align-items:center">${meta}</span>`;
+      /* DIESELBE MASCHINE WIE KARTE UND FEED (E425, aus E411). Hier stand
+         eine eigene Schleife, die jede Zelle in ein `span` ohne Namen
+         steckte. Auf dem Bild las sich das als
+             01.09.2026 12.09.2026 420 CHF
+         — zwei Daten nebeneinander, und nichts sagt, welches der Anfang ist.
+         Eine Zeile darunter stand „15.09.2026 15.09.2026": zweimal dasselbe
+         Datum, ohne Beschriftung eine Auskunft über nichts.
+         Sechs Werte, nicht dreizehn: eine Liste ist zum Überfliegen da. */
+      d.innerHTML = `<span class="lr-titel">${esc(r.text || 'Ohne Titel')}</span>` +
+                    `<span class="lr-werte">${kartenWerte(r, coll, view, [], 6)}</span>`;
       d.addEventListener('click', () => App.oeffne(r.id));
       w.appendChild(d);
     });
-    if (!rows.length) w.innerHTML = '<div style="color:var(--text-faint); padding:10px 0">Noch keine Einträge</div>';
+    if (!rows.length) w.innerHTML = '<div class="db-leer">Noch keine Einträge</div>';
     return w;
   };
 
@@ -2842,7 +2886,15 @@ const Datenbank = (() => {
            wie die Spalte. Heisst sie gleich, steht sie einmal da. */
         const bezeichnung = art.toLowerCase() === String(name).toLowerCase()
           ? esc(name) : esc(art) + ' · ' + esc(name);
-        d.innerHTML = `<span class="dz-wert">${esc(Formula.anzeige(wert2))}</span>` +
+        /* DIE EINHEIT GEHÖRT AN DIE SUMME (E421). E412 hat der Zahlenspalte
+           eine Einheit gegeben und sie in der ZELLE angehängt; die Kachel
+           darüber rechnete weiter ohne. „2630" stand da, und 2630 was, bei
+           einer Spalte namens „Kosten"? `mitEinheit` fasst den Wert nicht
+           an — es hängt ein schmales Leerzeichen und die Einheit an die
+           ANZEIGE. Die Anzahl-Kachel bekommt keine: „9 CHF Einträge" wäre
+           schlimmer als gar nichts, und sie geht hier nicht durch. */
+        d.innerHTML = `<span class="dz-wert">` +
+                      `${esc(mitEinheit(Formula.anzeige(wert2), kc.schema[k.key]))}</span>` +
                       `<span class="dz-name">${bezeichnung}` +
                       `${woher ? ' · ' + esc(woher) : ''}</span>`;
       }
@@ -3133,51 +3185,30 @@ const Datenbank = (() => {
     const stufe   = ZS_STUFEN.find(s => s[0] === stufeId) ?? ZS_STUFEN[0];
     /* Pixel je Tag. `ZS_STUFEN` steht als Liste da; die dritte Stelle ist die
        Breite. Ohne die Umwandlung liest TypeScript daraus `string | number`. */
-    const px      = Number(stufe?.[2] ?? 8);
+    const pxBasis = Number(stufe?.[2] ?? 8);
+    /* VERÄNDERLICH, WEIL DIE BREITE ERST NACH DEM EINHÄNGEN BEKANNT IST
+       (E419, L130 Punkt 5). `ZS_STUFEN` gibt eine feste Zahl je Zoomstufe —
+       5 px je Tag auf der Monatsstufe. Bei 65 Tagen sind das 325 px in
+       einem Behälter von 1130: gemessen, nicht geschätzt. Zwei Drittel
+       blieben weiss, und die Mindestbreite von 22 px zog dabei jede Spanne
+       unter fünf Tagen auf dieselbe Breite zusammen — ein Balken über EINEN
+       Tag sah aus wie einer über DREI.
+       Unten, nach dem Einhängen, wird `px` gestreckt, wenn Platz übrig ist.
+       Kleiner wird es nie: ein langer Zeitraum soll rollen, sonst wäre der
+       Zoom eine Anzeige, die immer gleich aussieht. */
+    let px        = pxBasis;
 
     const minD = zsTag(new Date(Math.min(...eintraege.map((e: any) => e.von))));
     const maxD = zsTag(new Date(Math.max(...eintraege.map((e: any) => e.bis))));
     minD.setDate(minD.getDate() - (px > 8 ? 2 : 10));
     maxD.setDate(maxD.getDate() + (px > 8 ? 3 : 14));
     const tage   = Math.max(1, Math.round((maxD.getTime() - minD.getTime()) / 86400000));
-    const breiteG = tage * px;
+    let breiteG = tage * px;
     const xVon   = (d: any) => Math.round((zsTag(d).getTime() - minD.getTime()) / 86400000 * px);
 
     eintraege.sort((a: any, b: any) => a.von - b.von || String(a.row.text || '').localeCompare(String(b.row.text || ''), 'de'));
     const platz: Record<string, number> = {};
     eintraege.forEach((e: any, i: any) => { platz[e.row.id] = i; });
-
-    /* ---- Kopfzeile: je nach Zoomstufe Tage, Wochen, Monate oder Jahre ---- */
-    const marken = [];
-    const lauf = new Date(minD);
-    if (stufeId === 'tag') {
-      while (lauf <= maxD) {
-        marken.push({ x: xVon(lauf), text: lauf.toLocaleDateString('de-DE', { day: '2-digit', month: 'short' }),
-                      wochenende: lauf.getDay() === 0 || lauf.getDay() === 6 });
-        lauf.setDate(lauf.getDate() + 1);
-      }
-    } else if (stufeId === 'woche') {
-      while (lauf.getDay() !== 1) lauf.setDate(lauf.getDate() - 1);
-      while (lauf <= maxD) {
-        marken.push({ x: xVon(lauf), text: 'KW ' + kalenderWoche(lauf) });
-        lauf.setDate(lauf.getDate() + 7);
-      }
-    } else if (stufeId === 'monat' || stufeId === 'quartal') {
-      lauf.setDate(1);
-      while (lauf <= maxD) {
-        marken.push({ x: xVon(lauf),
-          text: stufeId === 'monat'
-            ? lauf.toLocaleDateString('de-DE', { month: 'short', year: '2-digit' })
-            : 'Q' + (Math.floor(lauf.getMonth() / 3) + 1) + ' ' + lauf.getFullYear() });
-        lauf.setMonth(lauf.getMonth() + (stufeId === 'monat' ? 1 : 3));
-      }
-    } else {
-      lauf.setMonth(0, 1);
-      while (lauf <= maxD) {
-        marken.push({ x: xVon(lauf), text: String(lauf.getFullYear()) });
-        lauf.setFullYear(lauf.getFullYear() + 1);
-      }
-    }
 
     /* ---- Gerüst ---------------------------------------------------------- */
     const leiste = document.createElement('div');
@@ -3206,99 +3237,195 @@ const Datenbank = (() => {
     scroll.className = 'zs-scroll';
     const flaeche = document.createElement('div');
     flaeche.className = 'zs-flaeche';
-    flaeche.style.width  = breiteG + 'px';
-    flaeche.style.height = (ZS_KOPF + eintraege.length * ZS_ZEILE + 8) + 'px';
 
-    /* Kopf + Gitterlinien */
-    let html = `<div class="zs-kopf" style="height:${ZS_KOPF}px">` +
-      marken.map(m => `<span style="left:${m.x}px">${esc(m.text)}</span>`).join('') +
-      marken.map(m => `<i class="zs-gitter${m.wochenende ? ' we' : ''}" style="left:${m.x}px"></i>`).join('') +
-      '</div>';
-
-    /* Heute-Linie */
+    /* ---- Die Fläche zeichnen — alles hängt an `px` ------------------------
+       Marken, Balken, Pfeile und die Gesamtbreite werden AUS `px` gerechnet.
+       Deshalb genügt es, `px` zu ändern und dies noch einmal zu rufen; ein
+       Umbau auf Anteile, den L130 Punkt 5 für nötig hielt, war nicht nötig.
+       ---------------------------------------------------------------------*/
     const jetzt = zsTag(new Date());
-    if (jetzt >= minD && jetzt <= maxD)
-      html += `<div class="zs-heute" style="left:${xVon(jetzt)}px; top:${ZS_KOPF - 6}px"></div>`;
+    const zeichneFlaeche = () => {
+      breiteG = Math.round(tage * px);
+      flaeche.style.width  = breiteG + 'px';
+      flaeche.style.height = (ZS_KOPF + eintraege.length * ZS_ZEILE + 8) + 'px';
 
-    /* Balken */
-    const balkenBreite = (e: any) => Math.max(px < 4 ? 6 : 22, ((e.bis - e.von) / 86400000 + 1) * px);
-    eintraege.forEach((e: any, i: any) => {
-      const links  = xVon(e.von);
-      const breite = balkenBreite(e);
-      const farbe  = FARBEN[i % FARBEN.length];
-      html += `<div class="zs-balken bg-${farbe}" data-rid="${e.row.id}" ` +
-        `style="left:${links}px; width:${breite}px; top:${ZS_KOPF + i * ZS_ZEILE + 3}px" ` +
-        `title="${esc(e.row.text || 'Ohne Titel')} — ${e.von.toLocaleDateString('de-DE')}` +
-        (endeKey ? ' bis ' + e.bis.toLocaleDateString('de-DE') : '') + '">' +
-        /* DER TITEL WANDERT NACH DRAUSSEN, WENN ER DRINNEN NICHT PASST
-           (E413). Auf dem Bild stand in den kurzen Balken „\", „I", „M" —
-           je EIN Buchstabe, ohne Auslassungszeichen. „\" ist ein
-           abgeschnittenes „V" von „Verteiler beschriften", und es sieht aus
-           wie ein Zeichen, nicht wie ein Rest. Genau der Fall aus §55.1:
-           eine abgeschnittene Anzeige zeigt etwas ANDERES, und beides sieht
-           gültig aus.
+      /* ---- Kopfzeile: je nach Zoomstufe Tage, Wochen, Monate oder Jahre ---- */
+      const marken: any[] = [];
+      const lauf = new Date(minD);
+      if (stufeId === 'tag') {
+        while (lauf <= maxD) {
+          marken.push({ x: xVon(lauf), text: lauf.toLocaleDateString('de-DE', { day: '2-digit', month: 'short' }),
+                        wochenende: lauf.getDay() === 0 || lauf.getDay() === 6 });
+          lauf.setDate(lauf.getDate() + 1);
+        }
+      } else if (stufeId === 'woche') {
+        while (lauf.getDay() !== 1) lauf.setDate(lauf.getDate() - 1);
+        while (lauf <= maxD) {
+          marken.push({ x: xVon(lauf), text: 'KW ' + kalenderWoche(lauf) });
+          lauf.setDate(lauf.getDate() + 7);
+        }
+      } else if (stufeId === 'monat' || stufeId === 'quartal') {
+        lauf.setDate(1);
+        while (lauf <= maxD) {
+          marken.push({ x: xVon(lauf),
+            text: stufeId === 'monat'
+              ? lauf.toLocaleDateString('de-DE', { month: 'short', year: '2-digit' })
+              : 'Q' + (Math.floor(lauf.getMonth() / 3) + 1) + ' ' + lauf.getFullYear() });
+          lauf.setMonth(lauf.getMonth() + (stufeId === 'monat' ? 1 : 3));
+        }
+      } else {
+        lauf.setMonth(0, 1);
+        while (lauf <= maxD) {
+          marken.push({ x: xVon(lauf), text: String(lauf.getFullYear()) });
+          lauf.setFullYear(lauf.getFullYear() + 1);
+        }
+      }
 
-           WER DRAUSSEN STEHT, ENTSCHEIDET DIE MESSUNG WEITER UNTEN, nicht
-           diese Zeile. Eine feste Pixelschwelle stand hier zuerst — 64 px —
-           und war nachweislich falsch: „Bericht Kapitel 2" bekam 70 px
-           Balken für 91 px Text und blieb drinnen, abgeschnitten. Wie breit
-           ein Titel wirklich ist, weiss erst der Browser. */
-        `<span class="zs-txt">${esc(e.row.text || 'Ohne Titel')}</span>` +
-        (endeKey ? '<i class="zs-griff"></i>' : '') + '</div>';
-    });
-    flaeche.innerHTML = html;
 
-    /* JETZT ERST MESSEN, wo der Titel hinpasst — vorher weiss es niemand.
-       `scrollWidth` gegen die Innenbreite des Balkens: passt der Text nicht,
-       wandert er nach rechts hinaus. Neun Balken, ein Durchgang; das kostet
-       nichts und trifft im Gegensatz zu jeder festen Zahl immer. */
-    requestAnimationFrame(() => {
-      flaeche.querySelectorAll<HTMLElement>('.zs-balken').forEach(b => {
-        const t = b.querySelector<HTMLElement>('.zs-txt');
-        if (!t) return;
-        /* Gegen die eigene clientWidth des TEXTES, nicht die des Balkens:
-           `b.clientWidth` schliesst das Polster von zweimal 9 px MIT ein,
-           und der Text hat es nicht zur Verfügung. Auf dem Bild blieb
-           „Steuerung Ro…" deshalb drinnen — 97 px Text gegen 110 px Balken
-           sah nach „passt" aus, während wirklich nur 92 px übrig waren.
-           Zwei Pixel Spiel gegen Rundung. */
-        if (t.scrollWidth > t.clientWidth + 2) t.classList.add('draussen');
+      /* DIE ERSTE MARKE STAND LINKS AUSSERHALB (E419, L130 Punkt 6). Auf dem
+         Bild trugen „Sept. 26" und „Okt. 26" ihre Beschriftung, der August
+         nicht — und der Grund war nicht, dass die Marke fehlte, sondern dass
+         `lauf.setDate(1)` auf den Monatsersten springt und der VOR `minD`
+         liegt. Gemessen: x = −45. Die Marke war da, sie stand nur draussen.
+         Geklemmt wird nur die Beschriftung, nicht die Gitterlinie: die Linie
+         gehört an den echten Monatsersten, und der liegt ausserhalb, also
+         sieht man sie zu Recht nicht. Ein Strich bei 0 behauptete, hier
+         beginne ein Monat. */
+      const beschriftung = marken.map((m, i) =>
+        ({ ...m, x: i === 0 ? Math.max(0, m.x) : m.x }));
+
+      /* Kopf + Gitterlinien */
+      let html = `<div class="zs-kopf" style="height:${ZS_KOPF}px">` +
+        beschriftung.map(m => `<span style="left:${m.x}px">${esc(m.text)}</span>`).join('') +
+        marken.map(m => `<i class="zs-gitter${m.wochenende ? ' we' : ''}" style="left:${m.x}px"></i>`).join('') +
+        '</div>';
+
+      /* Heute-Linie */
+      if (jetzt >= minD && jetzt <= maxD)
+        html += `<div class="zs-heute" style="left:${xVon(jetzt)}px; top:${ZS_KOPF - 6}px"></div>`;
+
+      /* Balken */
+      const balkenBreite = (e: any) => Math.max(px < 4 ? 6 : 22, ((e.bis - e.von) / 86400000 + 1) * px);
+      eintraege.forEach((e: any, i: any) => {
+        const links  = xVon(e.von);
+        const breite = balkenBreite(e);
+        const farbe  = FARBEN[i % FARBEN.length];
+        html += `<div class="zs-balken bg-${farbe}" data-rid="${e.row.id}" ` +
+          `style="left:${links}px; width:${breite}px; top:${ZS_KOPF + i * ZS_ZEILE + 3}px" ` +
+          `title="${esc(e.row.text || 'Ohne Titel')} — ${e.von.toLocaleDateString('de-DE')}` +
+          (endeKey ? ' bis ' + e.bis.toLocaleDateString('de-DE') : '') + '">' +
+          /* DER TITEL WANDERT NACH DRAUSSEN, WENN ER DRINNEN NICHT PASST
+             (E413). Auf dem Bild stand in den kurzen Balken „\", „I", „M" —
+             je EIN Buchstabe, ohne Auslassungszeichen. „\" ist ein
+             abgeschnittenes „V" von „Verteiler beschriften", und es sieht aus
+             wie ein Zeichen, nicht wie ein Rest. Genau der Fall aus §55.1:
+             eine abgeschnittene Anzeige zeigt etwas ANDERES, und beides sieht
+             gültig aus.
+
+             WER DRAUSSEN STEHT, ENTSCHEIDET DIE MESSUNG WEITER UNTEN, nicht
+             diese Zeile. Eine feste Pixelschwelle stand hier zuerst — 64 px —
+             und war nachweislich falsch: „Bericht Kapitel 2" bekam 70 px
+             Balken für 91 px Text und blieb drinnen, abgeschnitten. Wie breit
+             ein Titel wirklich ist, weiss erst der Browser. */
+          `<span class="zs-txt">${esc(e.row.text || 'Ohne Titel')}</span>` +
+          (endeKey ? '<i class="zs-griff"></i>' : '') + '</div>';
       });
-    });
+      flaeche.innerHTML = html;
 
-    /* ---- Abhängigkeitspfeile -------------------------------------------- */
-    if (abhKey) {
-      const linien: any[] = [];
-      eintraege.forEach((e: any) => {
-        const vor = e.row.props && e.row.props[abhKey];
-        (Array.isArray(vor) ? vor : (vor ? [vor] : [])).forEach(id => {
-          const q = eintraege.find((x: any) => x.row.id === id);
-          if (!q) return;
-          const y1 = ZS_KOPF + (platz[q.row.id] ?? 0) * ZS_ZEILE + ZS_ZEILE / 2;
-          const y2 = ZS_KOPF + (platz[e.row.id] ?? 0) * ZS_ZEILE + ZS_ZEILE / 2;
-          const x1 = xVon(q.von) + balkenBreite(q);
-          const x2 = xVon(e.von);
-          const mx = Math.max(x1 + 9, x2 - 9);
-          linien.push(`<path d="M ${x1} ${y1} H ${mx} V ${y2} H ${x2 - 5}" ` +
-            'fill="none" stroke="var(--text-faint)" stroke-width="1.4" marker-end="url(#zs-spitze)"/>');
+      /* JETZT ERST MESSEN, wo der Titel hinpasst — vorher weiss es niemand.
+         `scrollWidth` gegen die Innenbreite des Balkens: passt der Text nicht,
+         wandert er nach rechts hinaus. Neun Balken, ein Durchgang; das kostet
+         nichts und trifft im Gegensatz zu jeder festen Zahl immer. */
+      requestAnimationFrame(() => {
+        flaeche.querySelectorAll<HTMLElement>('.zs-balken').forEach(b => {
+          const t = b.querySelector<HTMLElement>('.zs-txt');
+          if (!t) return;
+          /* Gegen die eigene clientWidth des TEXTES, nicht die des Balkens:
+             `b.clientWidth` schliesst das Polster von zweimal 9 px MIT ein,
+             und der Text hat es nicht zur Verfügung. Auf dem Bild blieb
+             „Steuerung Ro…" deshalb drinnen — 97 px Text gegen 110 px Balken
+             sah nach „passt" aus, während wirklich nur 92 px übrig waren.
+             Zwei Pixel Spiel gegen Rundung. */
+          if (t.scrollWidth > t.clientWidth + 2) t.classList.add('draussen');
         });
       });
-      if (linien.length) {
-        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        svg.setAttribute('class', 'zs-pfeile');
-        svg.setAttribute('width', String(breiteG));
-        svg.setAttribute('height', String(ZS_KOPF + eintraege.length * ZS_ZEILE + 8));
-        svg.innerHTML =
-          '<defs><marker id="zs-spitze" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" ' +
-          'markerHeight="7" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="var(--text-faint)"/></marker></defs>' +
-          linien.join('');
-        flaeche.appendChild(svg);
+
+      /* ---- Abhängigkeitspfeile -------------------------------------------- */
+      if (abhKey) {
+        const linien: any[] = [];
+        eintraege.forEach((e: any) => {
+          const vor = e.row.props && e.row.props[abhKey];
+          (Array.isArray(vor) ? vor : (vor ? [vor] : [])).forEach(id => {
+            const q = eintraege.find((x: any) => x.row.id === id);
+            if (!q) return;
+            const y1 = ZS_KOPF + (platz[q.row.id] ?? 0) * ZS_ZEILE + ZS_ZEILE / 2;
+            const y2 = ZS_KOPF + (platz[e.row.id] ?? 0) * ZS_ZEILE + ZS_ZEILE / 2;
+            const x1 = xVon(q.von) + balkenBreite(q);
+            const x2 = xVon(e.von);
+            const mx = Math.max(x1 + 9, x2 - 9);
+            linien.push(`<path d="M ${x1} ${y1} H ${mx} V ${y2} H ${x2 - 5}" ` +
+              'fill="none" stroke="var(--text-faint)" stroke-width="1.4" marker-end="url(#zs-spitze)"/>');
+          });
+        });
+        if (linien.length) {
+          const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+          svg.setAttribute('class', 'zs-pfeile');
+          svg.setAttribute('width', String(breiteG));
+          svg.setAttribute('height', String(ZS_KOPF + eintraege.length * ZS_ZEILE + 8));
+          svg.innerHTML =
+            '<defs><marker id="zs-spitze" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" ' +
+            'markerHeight="7" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="var(--text-faint)"/></marker></defs>' +
+            linien.join('');
+          flaeche.appendChild(svg);
+        }
       }
-    }
+
+
+    };
+    zeichneFlaeche();
 
     scroll.appendChild(flaeche);
     raster.appendChild(scroll);
     w.appendChild(raster);
+
+    /* ---- ERST JETZT WEISS JEMAND, WIE BREIT DER PLATZ IST (E419) --------
+       `zs-scroll` steht in der Seite, und `clientWidth` ist damit eine Zahl
+       statt einer Schätzung. Ist das Gemalte schmaler als der Platz, wird
+       `px` gestreckt und einmal neu gezeichnet — zehn Balken, ein Durchgang,
+       vor dem ersten Malen des Browsers. Die Titelmessung läuft in
+       `zeichneFlaeche` mit, also stimmt sie danach auch wieder.
+
+       NUR GRÖSSER, NIE KLEINER. Auf der Tagesstufe sind 65 Tage 2730 px und
+       passen nicht; dort bleibt es beim Rollen. Ein Zoom, der jede Stufe auf
+       dieselbe Breite zöge, wäre kein Zoom mehr, sondern eine Anzeige, die
+       immer gleich aussieht.
+
+       DIE VIER PIXEL SPIEL sind der Platz, den ein waagerechter Roller
+       einnimmt, falls er doch erscheint. Ohne sie streckt die Messung auf
+       genau die Behälterbreite, der Roller kommt, der Behälter wird
+       schmaler — und beim nächsten Zeichnen ginge es von vorn los. */
+    const anpassen = () => {
+      const frei = scroll.clientWidth - 4;
+      /* NUR WACHSEN, UND NUR WENN ES SICH LOHNT. Beides zusammen macht die
+         Rückkopplung unmöglich: `breiteG` wächst höchstens bis `frei`, und
+         unter vier Pixeln Unterschied geschieht gar nichts. */
+      if (frei > 0 && breiteG < frei - 4) { px = frei / tage; zeichneFlaeche(); }
+    };
+    requestAnimationFrame(anpassen);
+
+    /* UND NOCH EINMAL, WENN DER BEHÄLTER SEINE ENDGÜLTIGE BREITE HAT (E419).
+       Die eine Messung oben reicht nicht: `.db` bekommt seine Breite selbst
+       erst in einem `requestAnimationFrame` (E409, `luftMessen`), und wer
+       zuerst dran ist, entscheidet die Reihenfolge der Einhängungen — nicht
+       ich. Gemessen: die erste Messung sah 670 px, wo am Ende 1130 standen,
+       und der Zeitstrahl blieb bei der halben Breite stehen.
+       EINE RÜCKKOPPLUNG GIBT ES TROTZDEM NICHT. `.zs-scroll` trägt
+       `overflow-x:auto`, und damit ist seine automatische Mindestbreite
+       null — ein breiterer Inhalt schiebt den Behälter nicht auf. Das ist
+       der Unterschied zu E409, wo genau das den Beobachter in die Schleife
+       schickte. */
+    if (typeof ResizeObserver !== 'undefined')
+      new ResizeObserver(anpassen).observe(scroll);
 
     /* Erst nach dem Einhängen scrollen: zum heutigen Tag */
     setTimeout(() => {
@@ -3433,9 +3560,26 @@ const Datenbank = (() => {
     const w = document.createElement('div');
     w.className = 'karte-w';
 
+    /* ZWEI FEHLER IN ZWEI ZEILEN (E423). Erstens fehlte `place` in der Liste
+       — der eine Typ, der wörtlich „hier steht ein Ort" bedeutet und im
+       Eigenschaftenregister 📍 heisst. Zweitens war die Vorgabe `ortKeys[0]`,
+       und der Titel steht in jedem Schema zuerst. Auf dem Bild stand
+       deshalb „Ortsspalte: Projekt" und „0 auf der Karte": neun Zeilen,
+       neun unauffindbare Orte, denn „Schaltplan Werkstatt" ist keiner.
+       Das ist wörtlich der Befund aus E414, nur an einer anderen Ansicht —
+       dort war die Vorgabe-Gruppierung `gruppierbar[0]` und schloss `title`
+       ein. Zweimal derselbe Fehler: eine Vorgabe, die die erste Spalte
+       nimmt statt der passenden. */
     const ortKeys = Object.keys(coll.schema).filter(k =>
-      ['text','title','select'].includes(coll.schema[k].type));
-    const ortKey = view.ortKey && coll.schema[view.ortKey] ? view.ortKey : ortKeys[0];
+      ['place','text','title','select'].includes(coll.schema[k].type));
+    /* Die Reihenfolge der Wahl: erst was ein Ort IST, dann was einer sein
+       KANN, und der Titel zuletzt. Er bleibt in `ortKeys` und damit im
+       Menü — wer seine Orte im Titel führt, soll das weiter können (E414 §5:
+       eine bessere Vorgabe nimmt keine Möglichkeit weg). */
+    const ortVorgabe = ortKeys.find(k => coll.schema[k].type === 'place')
+                    ?? ortKeys.find(k => coll.schema[k].type !== 'title')
+                    ?? ortKeys[0];
+    const ortKey = view.ortKey && coll.schema[view.ortKey] ? view.ortKey : ortVorgabe;
 
     if (!ortKey) {
       w.innerHTML = '<div class="db-leer">Für die Karte braucht es eine Textspalte mit Orten.</div>';
@@ -3608,12 +3752,25 @@ const Datenbank = (() => {
       const e = document.createElement('article');
       e.className = 'feed-eintrag';
 
-      const wann = datumKey ? Formula.anzeige(wert(r, datumKey, coll)) : Werkzeuge.zeitKurz(r.created);
-      const merkmale = Object.keys(coll.schema)
-        .filter(k => k !== datumKey && coll.schema[k].type !== 'title' && !(view.hidden || []).includes(k))
-        .map(k => zelle(r, k, coll))
-        .filter(z => z && !z.includes('—'))
-        .slice(0, 4).join(' ');
+      /* DEUTSCH, NICHT ROH (E424). Hier stand `Formula.anzeige(...)`, und
+         das liefert für ein Datum die gespeicherte Zeichenkette: oben rechts
+         stand `2026-09-22`, in derselben Karte `30.09.2026`. Zwei Formate in
+         einer Karte, und eines davon schreibt kein deutschsprachiger Mensch
+         (§3). `Einstellungen.datum` ist derselbe Formatierer, den die Zelle
+         benutzt — damit steht in der Karte überall dasselbe. */
+      const wannRoh = datumKey ? wert(r, datumKey, coll) : null;
+      const wannDat = wannRoh ? new Date(wannRoh) : null;
+      const wann = (wannDat && !isNaN(wannDat.getTime()))
+        ? Einstellungen.datum(wannDat, coll.schema[datumKey]?.type !== 'date')
+        : (datumKey ? String(Formula.anzeige(wannRoh)) : Werkzeuge.zeitKurz(r.created));
+      /* DIESELBE MASCHINE WIE DIE KARTEN (E424, aus E411). Hier klebten die
+         ersten vier Zellen mit einem Leerzeichen aneinander: auf dem Bild
+         stand „15.09.2026 60 CHF" als sähe es aus wie EIN Wert, ohne Namen
+         und ohne Trennung. `kartenWerte` schreibt an, was seinen Namen
+         braucht, und lässt Etiketten, Sterne und Ortsmarken ohne — eine
+         Beschriftung an JEDEM Wert läse wieder niemand.
+         Das Datum der Kopfzeile bleibt aussen vor: es steht schon oben. */
+      const merkmale = kartenWerte(r, coll, view, datumKey ? [datumKey] : [], 5);
 
       /* Der Anfang des Seiteninhalts als Vorschau */
       const vorschau = Store.childrenOf(r.id)
@@ -4481,9 +4638,14 @@ const Datenbank = (() => {
     });
   };
 
-  const LAYOUT_NAMEN: Record<string, string> = { table:'Tabelle', board:'Board', list:'Liste', gallery:'Galerie',
-    calendar:'Kalender', timeline:'Zeitleiste', chart:'Diagramm', form:'Formular',
-    feed:'Feed', map:'Karte', dashboard:'Dashboard' };
+  /* DER NAME EINER ANSICHTSART STEHT IM REGISTER (E422, §8). Hier stand eine
+     zweite Karte, und sie war mit dem Register auseinandergelaufen: `pivot`
+     und `raster` fehlten ganz, und `timeline` hiess hier „Zeitleiste", im
+     Reiter aber „Zeitstrahl". Zwei deutsche Wörter für dieselbe Ansicht,
+     nebeneinander in derselben App. */
+  const LAYOUT_NAMEN = new Proxy({} as Record<string, string>, {
+    get: (_z, art: string) => Register.ansichten.name(art)
+  });
 
   /** Gruppieren als eigenes kleines Menü — wird von zwei Stellen gebraucht. */
   /* ========================================================================
@@ -5127,9 +5289,11 @@ const Datenbank = (() => {
   const ansichtMenue = (anker: any, coll: any, view: any, block: any) => {
     const r = anker.getBoundingClientRect();
     const sichtbar = Object.keys(coll.schema).filter(k => !(view.hidden || []).includes(k)).length;
-    const LAY_ICON: Record<string, string> = { table:'▦', board:'▤', list:'☰', gallery:'▩', calendar:'📅',
-                      timeline:'▬', chart:'📊', form:'📝', feed:'📰', map:'🗺',
-                      dashboard:'🧮' };
+    /* Auch hier das Register (E422). Dieselbe Karte stand zweimal in
+       derselben Datei — einmal für den Reiter, einmal für das Menü. */
+    const LAY_ICON = new Proxy({} as Record<string, string>, {
+      get: (_z, art: string) => Register.ansichten.icon(art)
+    });
     const kopfKarte =
       '<div class="av-karte">' +
         `<span class="av-ico">${LAY_ICON[view.layout] || '▦'}</span>` +

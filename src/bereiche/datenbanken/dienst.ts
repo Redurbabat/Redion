@@ -1096,6 +1096,7 @@ const DatenbankDienst = (() => {
            zeilen,
            zeilenGesamt,
            zelle,
+           mitEinheit,
            zusammenfassen };
 })();
 

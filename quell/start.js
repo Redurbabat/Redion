@@ -27,8 +27,8 @@ window.addEventListener('DOMContentLoaded', () => {
     if (window.__nurBote)
         return;
     if (typeof Ereignisse !== 'undefined')
-        Ereignisse.melde('app:startet');
+        Ereignisse.melde(ARTEN.appStartet);
     App.start();
     if (typeof Ereignisse !== 'undefined')
-        Ereignisse.melde('app:steht');
+        Ereignisse.melde(ARTEN.appSteht);
 });

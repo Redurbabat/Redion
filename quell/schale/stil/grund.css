@@ -202,6 +202,35 @@
 .bg-red{background:var(--b-red)}
 [class*="bg-"]{border-radius:3px; padding:0 2px}
 
+/* DIE KRÄFTIGE REIHE, NICHT DIE TÖNUNG (E421).
+   Redion hat zwei Farbreihen. `--b-*` sind Tönungen, die HINTER dunklem
+   Text liegen — Etiketten, Zeilenfarben. `--c-*` sind die kräftigen Farben,
+   die für sich stehen. Ein Balken auf einer Bahn gehört zur zweiten Reihe,
+   und die Verteilungskachel des Dashboards benutzte die erste.
+   Gemessen war das kein Schönheitsfehler: `--b-gray` ist `#f1f1ef`, und die
+   Bahn `--bg-input` ist `#f1f1ef` — Byte für Byte dieselbe Farbe, Kontrast
+   1.00. Die Zeile „Offen 3" hatte einen Balken über die VOLLE Breite, und
+   niemand konnte ihn sehen. Die anderen drei lagen bei 1.01 bis 1.03, im
+   Dunkelmodus bei 1.85 bis 1.96.
+   Die Regel steht hier und nicht in `grund.css`: `bg-*` soll überall sonst
+   die Tönung bleiben. Ein Etikett mit `--c-gray` hinter schwarzem Text wäre
+   unlesbar. Umgedeutet wird nur der Balken. */
+.db-strich i.bg-gray  {background:var(--c-gray)}
+.db-strich i.bg-brown {background:var(--c-brown)}
+.db-strich i.bg-orange{background:var(--c-orange)}
+.db-strich i.bg-yellow{background:var(--c-yellow)}
+.db-strich i.bg-green {background:var(--c-green)}
+.db-strich i.bg-blue  {background:var(--c-blue)}
+.db-strich i.bg-purple{background:var(--c-purple)}
+.db-strich i.bg-pink  {background:var(--c-pink)}
+.db-strich i.bg-red   {background:var(--c-red)}
+/* Warum das hier steht und nicht bei `.db-strich` in `bausteine.css`: der
+   Namensraum `bg-` gehört dieser Datei (doku/CSS-NAMENSRAEUME.md), und
+   `test290` misst, ob ein Bereich unbemerkt in eine andere Datei zieht.
+   Er hat genau das gemeldet, als die neun Zeilen drüben standen — zu
+   Recht: eine fremde Datei, die `bg-*` umdeutet, ist der Fall, vor dem
+   §39 warnt. */
+
 /* --- Grundlayout ---------------------------------------------------------- */
 *{box-sizing:border-box; margin:0; padding:0}
 html,body{height:100%}

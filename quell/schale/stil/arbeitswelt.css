@@ -713,3 +713,32 @@ body[data-ruhig="an"] .arbeitswelt .aw-kopf{
   background:none; border:none; box-shadow:none; overflow:visible;
 }
 body[data-ruhig="an"] .arbeitswelt .aw-kopf::after{ display:none }
+
+/* ============================================================================
+ * DER KALENDER OHNE DIE WORKSPACE-SCHALE (E431)
+ * ----------------------------------------------------------------------------
+ * Redur wollte den Kalender als eigenen Ort, nicht als Abschnitt des
+ * Arbeitsbereichs. Gezeichnet wird er weiter von der Arbeitswelt — der
+ * Kalenderabschnitt, seine Suche und seine Klickgriffe gibt es dort schon,
+ * und ein zweiter Kalender wäre der doppelte Katalog aus §8.
+ *
+ * Was hier wegfällt, fällt weg, weil es zum Arbeitsbereich gehört und nicht
+ * zum Kalender: die dreispaltige Fläche, die Navigationsspalte mit
+ * „Übersicht · Bibliothek · Aufgaben · …" und das Reiterpanel rechts. Sie
+ * werden im nackten Modus gar nicht erst gezeichnet; hier steht nur der
+ * Kopf.
+ *
+ * DER KOPF WIRD SCHMAL, und zwar aus demselben Grund wie in der ruhigen
+ * Fassung 20 Zeilen weiter oben: `.aw-kopf` ist eine 154-px-Bühne für
+ * „REDION HAUPTWELT / Workspace / Seiten, Wissen, Dateien …". Im nackten
+ * Modus steht darin nur noch die Lebensbereich-Auswahl — ein Auswahlfeld
+ * von 36 px. Eine 154-px-Bühne mit Farbverlauf und Ring darum wäre über
+ * der Falz die teuerste leere Fläche der App, und der Kalender darunter
+ * finge erst bei y=240 an.
+ * ==========================================================================*/
+.arbeitswelt.aw-nackt .aw-kopf-schmal{
+  min-height:0; padding:0 2px 2px; justify-content:flex-end;
+  align-items:center; background:none; border:none; box-shadow:none;
+  overflow:visible
+}
+.arbeitswelt.aw-nackt .aw-kopf-schmal::after{ display:none }
