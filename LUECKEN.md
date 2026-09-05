@@ -6105,20 +6105,25 @@ kostet den Nutzer eine Auskunft.
    heisst und dem Typ dreizehn Felder fehlten; `test294 §5` misst diese
    Richtung jetzt mit.
 
-5. **Der Zeitstrahl nutzt seine Fläche nicht.** `px` — Pixel je Tag — ist
-   in `ZS_STUFEN` je Zoomstufe FEST: 42 am Tag, 15 in der Woche, 5 im
-   Monat. Bei einem Zeitraum von 45 Tagen ist die gezeichnete Fläche
-   deshalb 225 px breit, während 1100 px zur Verfügung stehen. Zwei Drittel
-   der Ansicht bleiben leer, und die Balken sind unnötig winzig — auf der
-   Monatsstufe fallen drei Tage sogar unter die Mindestbreite von 22 px und
-   sind von einem einzelnen Tag nicht zu unterscheiden.
-   Gefunden bei E413. Ein eigener Bogen: die Balken sind in Pixeln
-   positioniert, ein Skalieren hiesse, alles auf Anteile umzustellen.
+5. **Der Zeitstrahl nutzt seine Fläche nicht.** GESCHLOSSEN mit E419.
+   Nachgemessen waren es 325 px gezeichnete Fläche in einem Behälter von
+   1130 — schlimmer als hier stand. `px` wird nach dem Einhängen gestreckt,
+   wenn Platz übrig ist, und nur dann; ein langer Zeitraum rollt weiter.
+   Die Sorge, das hiesse „alles auf Anteile umstellen", war unbegründet:
+   Marken, Balken und Pfeile werden ohnehin ALLE aus `px` gerechnet, es
+   genügte, `px` zu ändern und einmal neu zu zeichnen.
+   Der Nebenschaden war der grössere: die Mindestbreite von 22 px zog jede
+   Spanne unter fünf Tagen auf dieselbe Breite — gemessen waren ein Tag,
+   zwei Tage und drei Tage alle genau 22 px breit. Jetzt 22, 35 und 52.
+   Gehalten von `test413`.
 
-6. **Die Zeitachse hat keine Marke am Anfang.** Auf dem Bild standen
-   „Sept. 26" und „Okt. 26" — die Balken beginnen aber im August, und
-   dieser Bereich trägt keine Beschriftung. Wer hinsieht, weiss nicht, wo
-   er ist.
+6. **Die Zeitachse hat keine Marke am Anfang.** GESCHLOSSEN mit E419. Und
+   die Ursache war eine andere als vermutet: die Marke FEHLTE nicht, sie
+   stand links ausserhalb. `lauf.setDate(1)` springt auf den Monatsersten,
+   und der liegt vor `minD` — gemessen x = −45, nach dem Strecken −156. Nur
+   die Beschriftung wird jetzt auf 0 geklemmt, nicht die Gitterlinie: ein
+   Strich bei 0 behauptete, hier beginne ein Monat.
+   Gehalten von `test413 §3`.
 
 Nachzusehen mit `node bilder.mts db-board`, `db-calendar`, `db-table`,
 `db-timeline`.

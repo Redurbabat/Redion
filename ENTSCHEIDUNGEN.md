@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-414 Entscheidungen, E1 bis E418. Die Nummer ist die Ordnung: eine Entscheidung
+415 Entscheidungen, E1 bis E419. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -472,6 +472,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E416** — Ein Wächter, der die alte Mechanik misst, misst nichts
 * **E417** — Sechs Schalter ohne Draht, zwei davon ohne Anzeige
 * **E418** — Stil gehört in eine Stildatei, und der Wächter sieht nur dorthin
+* **E419** — Der Zeitstrahl füllt seine Fläche und sagt, wo man ist
 
 ---
 
@@ -34077,3 +34078,87 @@ Dateien: `src/bereiche/wissen/produkt_onboarding.ts`,
 `quell/schale/stil/produktwelten.css`, `quell/schale/stil/ki.css`,
 `quell/schale/stil/datenbanken.css`, `pruefungen/marken-decke.json`,
 `bilder.mts`, `pruefungen/lauf/test412.mts` (neu).
+
+
+---
+
+E419 — Der Zeitstrahl füllt seine Fläche und sagt, wo man ist
+--------------------------------------------------------------
+
+ENTSCHEIDUNG: `px` — Pixel je Tag — ist nicht mehr fest, sondern wird nach
+dem Einhängen gestreckt, wenn der Behälter breiter ist als das Gezeichnete.
+Und die erste Achsenmarke wird auf 0 geklemmt, damit sie im Bild steht.
+Schliesst L130 Punkt 5 und 6.
+
+NACHGEMESSEN, NICHT GESCHÄTZT. `ZS_STUFEN` gibt 5 px je Tag auf der
+Monatsstufe. 65 Tage sind damit 325 px — in einem Behälter von 1130. Nicht
+„zwei Drittel bleiben leer", wie L130 schrieb, sondern 71 %.
+
+DER NEBENSCHADEN WAR DER GRÖSSERE. `balkenBreite` hat eine Mindestbreite von
+22 px. Bei 5 px je Tag heisst das: ein Balken über EINEN Tag ist 22 px breit,
+einer über ZWEI Tage 22 px, einer über DREI Tage 22 px. Gemessen und im
+Prüflauf nachzulesen:
+
+    vorher   1T=22  2T=22  3T=22  9T=45  10T=50  22T=110
+    nachher  1T=22  2T=35  3T=52  9T=156 10T=173 22T=381
+
+Ein Zeitstrahl, auf dem eine Aufgabe über drei Tage aussieht wie eine über
+einen, ist derselbe Fehler wie die abgeschnittene Zahl aus §55.1: die
+Anzeige sagt etwas Falsches, und es sieht gültig aus.
+
+DIE SORGE AUS L130 WAR UNBEGRÜNDET. Dort stand: „Ein eigener Bogen: die
+Balken sind in Pixeln positioniert, ein Skalieren hiesse, alles auf Anteile
+umzustellen." Nachgesehen: Marken, Balken, Pfeile und die Gesamtbreite
+werden ALLE aus `px` gerechnet. Es genügte, das Zeichnen in eine Funktion zu
+fassen und `px` zu ändern.
+
+NUR GRÖSSER, NIE KLEINER. Auf der Tagesstufe sind 65 Tage 2730 px und passen
+nicht; dort bleibt es beim Rollen. Ein Zoom, der jede Stufe auf dieselbe
+Breite zöge, wäre kein Zoom mehr, sondern eine Anzeige, die immer gleich
+aussieht. `test413 §4` hält diese Richtung.
+
+EINE MESSUNG REICHTE NICHT, UND DAS WAR DER LEHRREICHE TEIL. Die erste
+Fassung mass in einem `requestAnimationFrame` nach dem Einhängen und kam auf
+670 px, wo am Ende 1130 standen — `.db` bekommt seine Breite selbst erst in
+einem `requestAnimationFrame` (E409, `luftMessen`), und wer zuerst dran ist,
+entscheidet die Reihenfolge der Einhängungen. Der Zeitstrahl blieb auf halber
+Breite stehen, und zwar so, dass es aussah wie ein Erfolg: 525 statt 260 px.
+Jetzt beobachtet ein `ResizeObserver` den Behälter.
+
+UND WARUM DAS DIESMAL NICHT IN DIE SCHLEIFE LÄUFT. E409 hat sich genau daran
+verbrannt: ein Beobachter, der in seinem eigenen Rückruf das Layout ändert.
+Hier nicht, aus einem Grund, der im CSS steht: `.zs-scroll` trägt
+`overflow-x:auto`, und damit ist seine automatische Mindestbreite null — ein
+breiterer Inhalt schiebt den Behälter nicht auf. Dazu zwei Bremsen: es wird
+nur GRÖSSER gerechnet, und erst ab vier Pixeln Unterschied.
+
+DIE ERSTE MARKE FEHLTE NICHT, SIE STAND DRAUSSEN. Das ist der Unterschied
+zwischen der Vermutung in L130 („hat keine Marke am Anfang") und dem Befund:
+`lauf.setDate(1)` springt auf den Monatsersten, und der liegt vor `minD`.
+Gemessen x = −45, nach dem Strecken −156. Geklemmt wird nur die
+BESCHRIFTUNG, nicht die Gitterlinie — ein Strich bei 0 behauptete, hier
+beginne ein Monat.
+
+DIE VIER PIXEL SPIEL beim Vergleich sind der Platz, den ein waagerechter
+Roller einnimmt, falls er doch erscheint. Ohne sie streckt die Messung auf
+genau die Behälterbreite, der Roller kommt, der Behälter wird schmaler.
+
+PRÜFUNG: `test413`, 22 Punkte, PORT 9535. Dazu `test408` (Zeitstrahl) und
+`test404` (alle dreizehn Ansichten).
+GEGENPROBE: die Anpassung herausgenommen → §1 zweimal und §2 einmal rot
+(325 px in 1130, und 1T=2T=3T=22). Die Klemme herausgenommen → §3 rot
+(x = −156). Beide gelaufen.
+
+UND EINE PRÜFUNG, DIE ES ZUERST NICHT KONNTE. §1 mass anfangs
+`.zs-flaeche` mit `getBoundingClientRect` — und war grün, während 71 % weiss
+blieben. Der Grund steht im CSS: `min-width:100%`. Das ELEMENT füllt die
+Breite immer, ganz gleich wie schmal darin gezeichnet wird. Gemessen wird
+jetzt die Breite, die der Code SETZT, und dazu die rechte Kante des letzten
+Balkens.
+
+Bild angesehen (§55.3): `bilder/db-timeline-rechner-hell.png` — vorher endete
+die Zeichnung bei 40 % der Breite, jetzt trägt „Aug. 26" seine Beschriftung
+und die Titel stehen IN den Balken statt daneben.
+
+Dateien: `src/bereiche/datenbanken/steuerung.ts`,
+`pruefungen/lauf/test413.mts` (neu), `LUECKEN.md`.
