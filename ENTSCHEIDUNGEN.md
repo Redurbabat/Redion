@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-409 Entscheidungen, E1 bis E413. Die Nummer ist die Ordnung: eine Entscheidung
+410 Entscheidungen, E1 bis E414. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -467,6 +467,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E411** — Werte auf Karten sagen, wovon sie handeln
 * **E412** — Eine Zahl sagt, wovon sie handelt — und der Typ sagt, was es gibt
 * **E413** — Der Zeitstrahl zeigt Spannen und liest sich
+* **E414** — Das Diagramm zeigt etwas
 
 ---
 
@@ -33669,3 +33670,71 @@ test406, test407.
 
 Dateien: `pruefungen/lauf/test408.mts` (neu),
 `src/bereiche/datenbanken/steuerung.ts`, `quell/schale/stil/ansichten.css`.
+
+E414 — Das Diagramm zeigt etwas
+================================================================================
+5. September 2026
+
+Ein Bild, vier Fehler, und alle vier waren Anzeigen, die etwas FALSCHES
+sagten statt gar nichts. Das ist die schlimmere Sorte: eine leere Fläche
+fällt auf, eine falsche Achse nicht.
+
+1 · NEUN SCHWARZE BALKEN. `PALETTE` ist eine Liste von PAAREN — [Farbe,
+Name]. Der Name steht darin, weil der Farbwähler des Whiteboards ihn
+braucht. Sechs Stellen schrieben aber `fill: PALETTE[i]`, also das ganze
+Paar. Als Zeichenkette ergibt das „#529cca,Blau", und das ist kein gültiger
+Farbwert: SVG malt schwarz. Auf dunklem Grund sah man von neun Balken
+praktisch nichts, und die Legendenpunkte gar nichts.
+
+Der Fehler ist eine Regression: die Palette war einmal eine Liste von Farben
+und wurde für den Farbwähler auf Paare umgestellt. EINE Stelle wurde
+mitgezogen, sechs nicht. TypeScript sagte dazu nichts, weil `fill` in `sv()`
+als `any` durchgeht.
+
+Repariert mit einem Helfer `farbeVon(i)` statt `PALETTE[i][0]` an sechs
+Stellen: einen Namen, den man sucht, findet man wieder.
+
+2 · NEUN BALKEN DER HÖHE 1. Die Vorgabe-Gruppierung war `gruppierbar[0]`,
+und `gruppierbar` schliesst `title` ein — der Titel steht in jedem Schema
+zuerst. Jedes neue Diagramm gruppierte also nach dem TITEL, und da jeder
+Titel einmal vorkommt, ergab das für neun Zeilen neun Balken der Höhe eins.
+
+Ein Diagramm, das für jede Zeile einen Balken der Höhe eins zeigt, sagt
+genau nichts — und sieht dabei aus, als sagte es etwas.
+
+Gewählt wird jetzt wie beim Board: erst eine Auswahl-, Status-, Haken-,
+Mehrfach- oder Personenspalte, dann ein Datum, und der Titel erst, wenn es
+sonst nichts gibt. WÄHLBAR bleibt er; die Vorgabe zu ändern darf keine
+Möglichkeit wegnehmen, und `test409 §5` prüft genau das nach.
+
+3 · EINE ACHSE „3 2 2 1 0". Fest fünf Marken: `Math.round(max * (1 - i/4))`.
+Bei einem Höchstwert von 3 sind das 3, 2.25, 1.5, 0.75, 0 — gerundet steht
+die Zwei zweimal, an zwei verschiedenen Höhen. Bei einem Höchstwert von 1
+war es „1 1 1 0 0". Wer die Achse liest, sieht zwei gleiche Zahlen und weiss
+nicht mehr, welche Linie welche Höhe meint.
+
+Bei kleinen ganzen Zahlen wird jetzt in Einerschritten geteilt; darüber
+bleibt es bei fünf Marken, weil bei einem Höchstwert von 12 000 niemand
+zwölftausend Linien will.
+
+4 · BESCHRIFTUNGEN, DIE ZWEIMAL DASSELBE SAGTEN. „Bericht Kapi" stand unter
+zwei verschiedenen Balken — abgeschnitten von „Bericht Kapitel 1" und
+„Bericht Kapitel 2". Das war eine Folge von Punkt 2 und ist mit ihm weg.
+
+PRÜFUNG: `test409`, 16 Punkte, PORT 9532.
+MUTATIONEN ROT GESEHEN:
+  §1/§2 → `farbeVon(i)` zurück auf `PALETTE[i % PALETTE.length]`. → „Jeder
+          trägt einen gültigen Farbwert — #529cca,Blau | #4dab9a,Grün | …"
+          und „Keiner ist schwarz — rgba(0, 0, 0, 0) | …", 13/16.
+  §3    → `vorgabeGruppe` zurück auf `gruppierbar[0]`. → „Neun Zeilen ergeben
+          vier Balken, nicht neun — 9" und „verschieden hoch — 192 192 192
+          192 192 192 192 192 192", 11/16.
+  §4    → die Stufenzahl fest auf 4. → „Keine Zahl steht zweimal — 3 2 2 1 0",
+          14/16.
+
+Mitgelaufen und grün: test87, test105, test109, test294, test404, test405,
+test406, test407, test408.
+
+Dateien: `pruefungen/lauf/test409.mts` (neu),
+`src/bereiche/bloecke/arten/zeichenflaeche.ts`,
+`src/bereiche/datenbanken/steuerung.ts`.

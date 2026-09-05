@@ -3649,7 +3649,22 @@ const Datenbank = (() => {
     const messbar = Object.keys(coll.schema).filter(k =>
       ['number','formula','rollup'].includes(coll.schema[k].type));
 
-    const gKey = view.chartGruppe && coll.schema[view.chartGruppe] ? view.chartGruppe : gruppierbar[0];
+    /* DIE VORGABE IST NICHT DIE ERSTE SPALTE (E414). `gruppierbar` schliesst
+       `title` ein — und der Titel steht in jedem Schema zuerst. Damit
+       gruppierte jedes neue Diagramm nach dem TITEL: neun Zeilen ergaben
+       neun Balken der Höhe 1. Ein Diagramm, das für jede Zeile einen Balken
+       der Höhe eins zeigt, sagt genau nichts.
+
+       Gewählt wird jetzt wie beim Board: erst eine Auswahl- oder
+       Statusspalte, dann ein Datum, und der Titel erst, wenn es sonst
+       nichts gibt. Wählbar bleibt er — jemand könnte ihn wollen. */
+    const VORZUG = ['select', 'status', 'checkbox', 'multi', 'person'];
+    const vorgabeGruppe =
+      Object.keys(coll.schema).find(k => VORZUG.includes(coll.schema[k].type)) ||
+      Object.keys(coll.schema).find(k => coll.schema[k].type === 'date') ||
+      gruppierbar[0];
+    const gKey = view.chartGruppe && coll.schema[view.chartGruppe]
+      ? view.chartGruppe : vorgabeGruppe;
     const mKey = view.chartWert && coll.schema[view.chartWert] ? view.chartWert : '';
     const typ = view.chartTyp || 'bar';
 
@@ -3783,7 +3798,10 @@ const Datenbank = (() => {
     const legende = document.createElement('div');
     legende.className = 'chart-legende';
     legende.innerHTML = werte.map((v, i) =>
-      `<span data-i="${i}"><i style="background:${Zusatz.PALETTE[i % Zusatz.PALETTE.length]}"></i>` +
+      /* `Zusatz.PALETTE[i]` ist ein PAAR [Farbe, Name] — als Zeichenkette
+         „#529cca,Blau" und damit kein gültiger Farbwert. Die Legendenpunkte
+         waren dadurch unsichtbar (E414). */
+      `<span data-i="${i}"><i style="background:${Zusatz.farbeVon(i)}"></i>` +
       `${esc(v.name)} <b>${Formula.anzeige(v.wert)}</b></span>`).join('');
     w.appendChild(legende);
 

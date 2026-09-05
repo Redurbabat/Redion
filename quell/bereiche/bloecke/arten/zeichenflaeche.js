@@ -38,6 +38,27 @@ const Zusatz = (() => {
         ['#ff7369', 'Rot'], ['#9a6dd7', 'Violett'], ['#e255a1', 'Rosa'],
         ['#ffdc49', 'Gelb'], ['#9b9a97', 'Grau'],
     ];
+    /* --------------------------------------------------------------------------
+     * DIE FARBE AN STELLE i — UND WARUM ES DIESEN HELFER GIBT (E414)
+     *
+     * `PALETTE` ist eine Liste von PAAREN: [Farbe, Name]. Der Name steht darin,
+     * weil der Farbwähler des Whiteboards ihn braucht.
+     *
+     * Alle sechs Diagrammstellen schrieben aber `fill: PALETTE[i]` — also das
+     * ganze Paar. Als Zeichenkette ergibt das „#529cca,Blau", und das ist kein
+     * gültiger Farbwert: SVG malt dann SCHWARZ. Auf dem Bild standen neun
+     * schwarze Balken auf dunklem Grund, praktisch unsichtbar, und die
+     * Legendenpunkte waren gar nicht zu sehen.
+     *
+     * Der Fehler ist eine Regression: die Palette war einmal eine Liste von
+     * Farben und wurde für den Farbwähler auf Paare umgestellt. Eine Stelle
+     * (Zeile 53) wurde mitgezogen, sechs nicht — und TypeScript sagte nichts,
+     * weil `fill` in `sv()` als `any` durchgeht.
+     *
+     * Dieser Helfer heisst deshalb `farbeVon` und nicht `PALETTE[i][0]` an
+     * sechs Stellen: ein Name, den man sucht, findet man wieder.
+     * ------------------------------------------------------------------------*/
+    const farbeVon = (i) => PALETTE[((i % PALETTE.length) + PALETTE.length) % PALETTE.length]?.[0] ?? '#529cca';
     /* ========================================================================
      * 1. WHITEBOARD
      * ======================================================================*/
@@ -924,7 +945,7 @@ const Zusatz = (() => {
             flaeche.appendChild(chartSvg(typ, werte));
             const legende = document.createElement('div');
             legende.className = 'chart-legende';
-            legende.innerHTML = werte.map((v, i) => `<span><i style="background:${PALETTE[i % PALETTE.length]}"></i>${esc(v.name)} ` +
+            legende.innerHTML = werte.map((v, i) => `<span><i style="background:${farbeVon(i)}"></i>${esc(v.name)} ` +
                 `<b>${Formula.anzeige(v.wert)}</b></span>`).join('');
             w.appendChild(legende);
         }
@@ -1013,7 +1034,7 @@ const Zusatz = (() => {
                 const x4 = cx + Math.cos(winkel) * ri, y4 = cy + Math.sin(winkel) * ri;
                 const st = sv('path', {
                     d: `M${x1} ${y1} A${ra} ${ra} 0 ${gross} 1 ${x2} ${y2} L${x3} ${y3} A${ri} ${ri} 0 ${gross} 0 ${x4} ${y4} Z`,
-                    fill: PALETTE[i % PALETTE.length], class: 'ch-teil'
+                    fill: farbeVon(i), class: 'ch-teil'
                 });
                 st.dataset.i = i;
                 st.appendChild(sv('title')).textContent = v.name + ': ' + Formula.anzeige(v.wert);
@@ -1025,12 +1046,35 @@ const Zusatz = (() => {
             s.appendChild(t);
             return s;
         }
-        /* Achsen */
-        for (let i = 0; i <= 4; i++) {
-            const y = pad + (H - pad * 2) * i / 4;
+        /* --------------------------------------------------------------------------
+         * ACHSEN — SO VIELE MARKEN, WIE ES WERTE ZU TRENNEN GIBT (E414)
+         *
+         * Hier standen fest FÜNF Marken: `Math.round(max * (1 - i/4))`. Bei einem
+         * Höchstwert von 3 ergab das 3, 2.25, 1.5, 0.75, 0 — gerundet
+         *
+         *     3   2   2   1   0
+         *
+         * Die Zwei stand zweimal, an zwei verschiedenen Höhen. Wer die Achse
+         * liest, sieht zwei gleiche Zahlen und weiss nicht mehr, welche Linie
+         * welche Höhe meint. Bei einem Höchstwert von 1 war es „1 1 1 0 0".
+         *
+         * Bei kleinen ganzen Zahlen wird deshalb in Einerschritten geteilt, und
+         * es gibt so viele Marken, wie ganze Zahlen hineinpassen. Darüber
+         * bleibt es bei fünf — bei einem Höchstwert von 12 000 will niemand
+         * zwölftausend Linien.
+         * ------------------------------------------------------------------------*/
+        const ganz = Number.isInteger(max) && max <= 8 && max >= 1;
+        const stufen = ganz ? max : 4;
+        for (let i = 0; i <= stufen; i++) {
+            const y = pad + (H - pad * 2) * i / stufen;
             s.appendChild(sv('line', { x1: pad, y1: y, x2: B - 8, y2: y, stroke: 'currentColor', opacity: .13 }));
             const t = sv('text', { x: pad - 6, y: y + 4, 'text-anchor': 'end', 'font-size': 10, fill: 'currentColor', opacity: .55 });
-            t.textContent = String(Math.round(max * (1 - i / 4)));
+            const wert = max * (1 - i / stufen);
+            /* Bei Bruchteilen eine Nachkommastelle, sonst ganz — „0.8" ist eine
+               Auskunft, „1 1 1" ist keine. */
+            t.textContent = ganz || Number.isInteger(wert)
+                ? String(Math.round(wert))
+                : String(Math.round(wert * 10) / 10);
             s.appendChild(t);
         }
         const n = werte.length;
@@ -1044,15 +1088,15 @@ const Zusatz = (() => {
                 s.appendChild(sv('path', {
                     d: `M${punkte[0][0]} ${H - pad} L` + punkte.map((p) => p.join(' ')).join(' L') +
                         ` L${punkte[n - 1][0]} ${H - pad} Z`,
-                    fill: PALETTE[0], opacity: .22
+                    fill: farbeVon(0), opacity: .22
                 }));
             }
             s.appendChild(sv('path', {
                 d: 'M' + punkte.map((p) => p.join(' ')).join(' L'),
-                stroke: PALETTE[0], 'stroke-width': 2.5, fill: 'none', 'stroke-linejoin': 'round'
+                stroke: farbeVon(0), 'stroke-width': 2.5, fill: 'none', 'stroke-linejoin': 'round'
             }));
             punkte.forEach((p, i) => {
-                const c = sv('circle', { cx: p[0], cy: p[1], r: 4, fill: PALETTE[0], class: 'ch-teil' });
+                const c = sv('circle', { cx: p[0], cy: p[1], r: 4, fill: farbeVon(0), class: 'ch-teil' });
                 c.dataset.i = i;
                 c.appendChild(sv('title')).textContent = werte[i].name + ': ' + Formula.anzeige(werte[i].wert);
                 s.appendChild(c);
@@ -1065,7 +1109,7 @@ const Zusatz = (() => {
                     const rc = sv('rect', {
                         x: pad + feld * i + feld * 0.16, y: H - pad - h,
                         width: feld * 0.68, height: Math.max(1, h),
-                        fill: PALETTE[i % PALETTE.length], rx: 3, class: 'ch-teil'
+                        fill: farbeVon(i), rx: 3, class: 'ch-teil'
                     });
                     rc.dataset.i = i;
                     rc.appendChild(sv('title')).textContent = v.name + ': ' + Formula.anzeige(v.wert);
@@ -1523,6 +1567,6 @@ const Zusatz = (() => {
         return out.replace(/\u0002([\uE000-\uF8FF])\u0002/g, (_, z) => sicher[z.charCodeAt(0) - 0xE000]);
     };
     return { whiteboard, diagramm, tabelle, mathe, formelBlock, chartSvg, chartDaten,
-        einfaerben, SCHLUESSEL, PALETTE };
+        einfaerben, SCHLUESSEL, PALETTE, farbeVon };
 })();
 window.Zusatz = Zusatz;
