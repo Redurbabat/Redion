@@ -17042,7 +17042,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 395, inhalt: 'fb76c26db8fb6b84', gebaut: '2026-09-05T19:16:13.396Z' };
+const Stand = { fassung: 398, inhalt: '7e3c69cb0b8d96ca', gebaut: '2026-09-05T19:24:35.578Z' };
 window.Stand = Stand;
 
 </script>
@@ -72644,8 +72644,25 @@ const Datenbank = (() => {
     const alsKarte = (coll, view, rows) => {
         const w = document.createElement('div');
         w.className = 'karte-w';
-        const ortKeys = Object.keys(coll.schema).filter(k => ['text', 'title', 'select'].includes(coll.schema[k].type));
-        const ortKey = view.ortKey && coll.schema[view.ortKey] ? view.ortKey : ortKeys[0];
+        /* ZWEI FEHLER IN ZWEI ZEILEN (E423). Erstens fehlte `place` in der Liste
+           — der eine Typ, der wörtlich „hier steht ein Ort" bedeutet und im
+           Eigenschaftenregister 📍 heisst. Zweitens war die Vorgabe `ortKeys[0]`,
+           und der Titel steht in jedem Schema zuerst. Auf dem Bild stand
+           deshalb „Ortsspalte: Projekt" und „0 auf der Karte": neun Zeilen,
+           neun unauffindbare Orte, denn „Schaltplan Werkstatt" ist keiner.
+           Das ist wörtlich der Befund aus E414, nur an einer anderen Ansicht —
+           dort war die Vorgabe-Gruppierung `gruppierbar[0]` und schloss `title`
+           ein. Zweimal derselbe Fehler: eine Vorgabe, die die erste Spalte
+           nimmt statt der passenden. */
+        const ortKeys = Object.keys(coll.schema).filter(k => ['place', 'text', 'title', 'select'].includes(coll.schema[k].type));
+        /* Die Reihenfolge der Wahl: erst was ein Ort IST, dann was einer sein
+           KANN, und der Titel zuletzt. Er bleibt in `ortKeys` und damit im
+           Menü — wer seine Orte im Titel führt, soll das weiter können (E414 §5:
+           eine bessere Vorgabe nimmt keine Möglichkeit weg). */
+        const ortVorgabe = ortKeys.find(k => coll.schema[k].type === 'place')
+            ?? ortKeys.find(k => coll.schema[k].type !== 'title')
+            ?? ortKeys[0];
+        const ortKey = view.ortKey && coll.schema[view.ortKey] ? view.ortKey : ortVorgabe;
         if (!ortKey) {
             w.innerHTML = '<div class="db-leer">Für die Karte braucht es eine Textspalte mit Orten.</div>';
             return w;

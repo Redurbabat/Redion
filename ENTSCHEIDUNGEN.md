@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-418 Entscheidungen, E1 bis E422. Die Nummer ist die Ordnung: eine Entscheidung
+419 Entscheidungen, E1 bis E423. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -476,6 +476,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E420** — Eine Lücke, die niemand nachmisst, bleibt in der Liste
 * **E421** — Zwei Farbreihen, und der Balken nahm die falsche
 * **E422** — Fünf Kataloge für die dreizehn Ansichten, und sie waren auseinander
+* **E423** — Die Karte kannte den Ortstyp nicht
 
 ---
 
@@ -34374,3 +34375,59 @@ Dateien: `src/register/ansichten.ts`, `src/kern/ablage/indexdb.ts`,
 `src/bereiche/datenbanken/steuerung.ts`, `src/bereiche/wissen/arbeitswelt.ts`,
 `quell/schale/stil/grund.css`, `quell/schale/stil/bausteine.css`,
 `doku/CSS-NAMENSRAEUME.md`, `pruefungen/lauf/test415.mts` (neu).
+
+
+---
+
+E423 — Die Karte kannte den Ortstyp nicht
+------------------------------------------
+
+ENTSCHEIDUNG: Die Kartenansicht nimmt eine `place`-Spalte als Vorgabe und
+bietet sie überhaupt erst zur Wahl an. Der Titel bleibt wählbar, steht aber
+zuletzt.
+
+WAS AUF DEM BILD STAND:
+
+    0 auf der Karte   ·   9 Orte nachschlagen   ·   Ortsspalte: Projekt
+
+„Projekt" ist die Titelspalte. Die Datenbank hat eine Spalte „Ort" vom Typ
+`place` — dem einen Typ, der wörtlich „hier steht ein Ort" bedeutet und im
+Eigenschaftenregister 📍 heisst.
+
+ZWEI FEHLER IN ZWEI ZEILEN:
+
+    const ortKeys = Object.keys(coll.schema).filter(k =>
+      ['text','title','select'].includes(coll.schema[k].type));
+    const ortKey = … : ortKeys[0];
+
+`place` fehlt in der Liste — die Spalte kam also nicht einmal ins Menü. Und
+die Vorgabe ist das erste Element, und der Titel steht in jedem Schema
+zuerst. Neun Zeilen, neun unauffindbare Orte: „Schaltplan Werkstatt" ist
+keiner, und die Karte bleibt leer.
+
+DAS IST WÖRTLICH DER BEFUND AUS E414, an einer anderen Ansicht. Dort war die
+Vorgabe-Gruppierung des Diagramms `gruppierbar[0]`, und `gruppierbar`
+schloss `title` ein; neun Zeilen ergaben neun Balken. Zweimal derselbe
+Fehler: eine Vorgabe, die die ERSTE Spalte nimmt statt der PASSENDEN.
+
+DIE REIHENFOLGE DER WAHL ist jetzt: erst was ein Ort IST (`place`), dann was
+einer sein KANN (Text, Auswahl), und der Titel zuletzt. Er bleibt in der
+Liste und damit im Menü — E414 §5 hält denselben Satz für das Diagramm fest:
+eine bessere Vorgabe darf keine Möglichkeit wegnehmen. Wer seine Orte im
+Titel führt, soll das weiter können.
+
+WAS DIESER BOGEN NICHT LÖST: die Karte bleibt im Prüfcontainer leer, weil
+das Nachschlagen der Orte OpenStreetMap braucht und es dort kein Netz gibt.
+Geprüft wird deshalb, was ohne Netz zu prüfen ist — dass die Karte die neun
+Zeilen mit einem Ort FINDET.
+
+PRÜFUNG: `test416`, 9 Punkte, PORT 9538.
+GEGENPROBE: `place` aus der Liste genommen und die Vorgabe zurück auf
+`ortKeys[0]` → §1 zweimal, §2 einmal und §4 einmal rot, mit „Ortsspalte:
+Projekt". Gelaufen.
+
+Bild angesehen (§55.3): `bilder/db-map-rechner-hell.png` — die Kopfzeile
+liest sich jetzt „Ortsspalte: Ort".
+
+Dateien: `src/bereiche/datenbanken/steuerung.ts`,
+`pruefungen/lauf/test416.mts` (neu).

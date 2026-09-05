@@ -3549,9 +3549,26 @@ const Datenbank = (() => {
     const w = document.createElement('div');
     w.className = 'karte-w';
 
+    /* ZWEI FEHLER IN ZWEI ZEILEN (E423). Erstens fehlte `place` in der Liste
+       — der eine Typ, der wörtlich „hier steht ein Ort" bedeutet und im
+       Eigenschaftenregister 📍 heisst. Zweitens war die Vorgabe `ortKeys[0]`,
+       und der Titel steht in jedem Schema zuerst. Auf dem Bild stand
+       deshalb „Ortsspalte: Projekt" und „0 auf der Karte": neun Zeilen,
+       neun unauffindbare Orte, denn „Schaltplan Werkstatt" ist keiner.
+       Das ist wörtlich der Befund aus E414, nur an einer anderen Ansicht —
+       dort war die Vorgabe-Gruppierung `gruppierbar[0]` und schloss `title`
+       ein. Zweimal derselbe Fehler: eine Vorgabe, die die erste Spalte
+       nimmt statt der passenden. */
     const ortKeys = Object.keys(coll.schema).filter(k =>
-      ['text','title','select'].includes(coll.schema[k].type));
-    const ortKey = view.ortKey && coll.schema[view.ortKey] ? view.ortKey : ortKeys[0];
+      ['place','text','title','select'].includes(coll.schema[k].type));
+    /* Die Reihenfolge der Wahl: erst was ein Ort IST, dann was einer sein
+       KANN, und der Titel zuletzt. Er bleibt in `ortKeys` und damit im
+       Menü — wer seine Orte im Titel führt, soll das weiter können (E414 §5:
+       eine bessere Vorgabe nimmt keine Möglichkeit weg). */
+    const ortVorgabe = ortKeys.find(k => coll.schema[k].type === 'place')
+                    ?? ortKeys.find(k => coll.schema[k].type !== 'title')
+                    ?? ortKeys[0];
+    const ortKey = view.ortKey && coll.schema[view.ortKey] ? view.ortKey : ortVorgabe;
 
     if (!ortKey) {
       w.innerHTML = '<div class="db-leer">Für die Karte braucht es eine Textspalte mit Orten.</div>';
