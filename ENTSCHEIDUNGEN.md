@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-421 Entscheidungen, E1 bis E425. Die Nummer ist die Ordnung: eine Entscheidung
+422 Entscheidungen, E1 bis E426. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -479,6 +479,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E423** — Die Karte kannte den Ortstyp nicht
 * **E424** — Der Feed beschriftet seine Werte — und bleibt ein Strom
 * **E425** — Die Liste beschriftet ihre Werte — der dritte Fundort
+* **E426** — Am Telefon steht der Titel für sich
 
 ---
 
@@ -34552,3 +34553,54 @@ Bild angesehen (§55.3): `bilder/db-list-rechner-hell.png` — vorher
 
 Dateien: `src/bereiche/datenbanken/steuerung.ts`,
 `quell/schale/stil/datenbanken.css`, `pruefungen/lauf/test418.mts` (neu).
+
+
+---
+
+E426 — Am Telefon steht der Titel für sich
+--------------------------------------------
+
+ENTSCHEIDUNG: Die Listenzeile stapelt am Telefon — Titel oben, Werte
+darunter. Am Rechner bleibt sie eine Zeile.
+
+WAS AUF DEM TELEFONBILD STAND:
+
+    Beric…      Fertig  Bericht  Abgabe   Anfang 20.08.2026 …
+    Beric…      Prüfung Bericht  Abgabe   Anfang 03.09.2026 …
+
+Es sind „Bericht Kapitel 1" und „Bericht Kapitel 2". Gemessen auf 390 px:
+dem Titel blieben 55 von 106 px, und was auf dem Bildschirm ankam, war
+zweimal „Bericht". ZWEI VERSCHIEDENE EINTRÄGE, EIN BILD. Das ist der Fehler
+aus §55.1 in seiner reinsten Form — eine abgeschnittene Anzeige zeigt etwas
+anderes, und beides sieht gültig aus.
+
+SELBST GEBAUT, UND ZWAR EINEN BOGEN VORHER. E425 gab dem Titel
+`min-width:0`, damit er am Rechner die Werte nicht aus dem Bild drückt. Am
+Telefon ist genau das die falsche Richtung: dort ist nicht der Titel zu
+lang, sondern die Zeile zu schmal für beides nebeneinander. Eine Regel, die
+am Rechner richtig ist, kann am Telefon der Fehler sein — §37 sagt genau
+deshalb, dass das Telefon der Normalfall ist und nicht der Sonderfall.
+
+DER FEED MACHT ES SEIT JEHER RICHTIG: Titel auf eigener Zeile, Werte
+darunter. Die Liste bekommt dasselbe, aber nur unter 760 px — am Rechner ist
+die EINE Zeile genau das, was eine Liste von einer Karte unterscheidet.
+
+WIE DER PRÜFLAUF MISST, und das ist der Teil, der sich wiederverwenden
+lässt: Der volle Text steht im DOM, gekürzt wird mit `text-overflow`.
+Beides zu haben erlaubt die eigentliche Frage — was SIEHT ein Mensch? Eine
+`Range` läuft Zeichen für Zeichen, bis der Kasten zu Ende ist, und gibt
+zurück, was noch drinsteht. Damit lässt sich prüfen, ob zwei verschiedene
+Einträge auf dem Bildschirm verschieden aussehen. „Nicht gekürzt" allein
+wäre schwächer: ein Titel darf gekürzt werden, solange man ihn noch
+unterscheiden kann.
+
+PRÜFUNG: `test419`, 10 Punkte, PORT 9541. Dazu §4: die Zeile misst am
+Telefon weiter mindestens 44 px (§37).
+GEGENPROBE: die Grenze auf 1 px gesetzt, damit die Regel nie greift → §1
+zweimal und §2 einmal rot, mit „Bericht" zweimal. Die Grenze auf 99999 px
+gesetzt → §3 rot, weil dann auch der Rechner stapelt. Beide gelaufen.
+
+Bild angesehen (§55.3): `bilder/db-list-handy-dunkel.png`.
+
+Dateien: `quell/schale/stil/datenbanken.css`,
+`pruefungen/lauf/test419.mts` (neu).

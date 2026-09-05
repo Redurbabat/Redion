@@ -2246,6 +2246,21 @@ table.grid tfoot td{color:var(--text-faint); font-size:12.5px; border:none; padd
   text-overflow:ellipsis; white-space:nowrap}
 .list-row .lr-werte{display:flex; flex-wrap:wrap; align-items:center;
   justify-content:flex-end; gap:4px 12px; flex:0 1 auto; min-width:0}
+/* AM TELEFON STEHT DER TITEL FÜR SICH (E426).
+   `min-width:0` aus E425 lässt den Titel schrumpfen, damit er am Rechner
+   die Werte nicht aus dem Bild drückt. Am Telefon ist das die falsche
+   Richtung — dort ist nicht der Titel zu lang, sondern die Zeile zu schmal
+   für beides nebeneinander. Gemessen auf 390 px: dem Titel blieben 55 von
+   106 px, und „Bericht Kapitel 1" und „Bericht Kapitel 2" standen BEIDE als
+   „Bericht" da. Zwei verschiedene Einträge, ein Bild (§55.1).
+   Der Feed macht es an derselben Stelle richtig: Titel oben, Werte darunter.
+   Die Liste bekommt dasselbe — aber nur hier, denn am Rechner ist die EINE
+   Zeile genau das, was eine Liste ausmacht. */
+@media (max-width:760px){
+  .list-row{flex-wrap:wrap; align-items:flex-start; row-gap:4px}
+  .list-row .lr-titel{flex:1 0 100%; white-space:normal; overflow:visible}
+  .list-row .lr-werte{flex:1 0 100%; justify-content:flex-start}
+}
 
 /* Kalender */
 .cal{display:grid; grid-template-columns:repeat(7,1fr); gap:1px; background:var(--line)}
@@ -17062,7 +17077,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 405, inhalt: 'b2ea98abcd69c6d2', gebaut: '2026-09-05T19:41:37.912Z' };
+const Stand = { fassung: 406, inhalt: '66d4329fb0cc1fee', gebaut: '2026-09-05T19:48:13.110Z' };
 window.Stand = Stand;
 
 </script>
