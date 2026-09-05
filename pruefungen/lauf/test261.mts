@@ -173,14 +173,46 @@ p('Nach dem Neuladen liegt die Löschabsicht noch da',
     Store.blockGrabsteine().some((e: any) => e && e.id === id), ids.block));
 
 console.log('\n4 · Der Abgleich meldet die Löschung');
-/* Nach dem Neuladen erst wieder anmelden — wie test256 es tut. */
+/* Nach dem Neuladen erst wieder anmelden — wie test256 es tut.
+ *
+ * DER TAKT WIRD VORHER ABGESCHALTET (E436). Im vollen Lauf war der Punkt
+ * „Auch die Sammlung ist drüben als gelöscht vermerkt" einmal rot, mit
+ * `{"da":true,"g":0}` — die Sammlung am Server, aber ohne Grabstein. Hier
+ * allein gefahren war er zweimal gruen.
+ *
+ * Der Grund steht in `maschine.ts:810`: `abgleichen()` kehrt SOFORT um und
+ * gibt `null`, wenn schon einer laeuft (`zustand.laeuft`). Und `takt()`
+ * stellt bei jeder Anmeldung einen Timer auf 120 Sekunden. Ein Lauf, der
+ * unter Last laenger braucht, faengt sich also einen Abgleich ein, den er
+ * nicht bestellt hat — und der ausdrueckliche Aufruf hier tut dann NICHTS,
+ * waehrend im Hintergrund noch geschickt wird. Gemessen wird danach ein
+ * Zwischenstand.
+ *
+ * `wolkeTakt = 0` heisst „nur von Hand" (E270). Damit gibt es keinen
+ * zweiten Abgleich, und der Punkt misst, was er behauptet.
+ *
+ * DAS IST KEINE VERSTECKTE WARTEZEIT, sondern das Ausschliessen der
+ * Ursache. Eine Prüfung, die unter Last einen Datenverlust meldet, den es
+ * nicht gibt, wird nach dem dritten Mal ignoriert — und dann sieht niemand
+ * mehr hin, wenn sie recht hat. */
 const tokenNeu = await machToken();
-await A.seite.evaluate(async ([tok]: [string]) => {
+const abgleichLief = await A.seite.evaluate(async ([tok]: [string]) => {
+  Store.setMeta('wolkeTakt', '0');
   await Wolke.tokenUebernehmen(tok);
   await Wolke.schluesselSetzen('mein langer geheimer satz');
   Wolke.abgleichSetzen(true);
-  await Wolke.abgleichen();
+  /* Den Takt NACH der Anmeldung noch einmal stellen — `tokenUebernehmen`
+     ruft `takt()`, und der liest die Marke, die eine Zeile vorher gesetzt
+     wurde. Doppelt genaeht, weil die Reihenfolge sonst von innen abhaengt. */
+  if (typeof Wolke.taktSetzen === 'function') Wolke.taktSetzen(0);
+  const r = await Wolke.abgleichen();
+  return r !== null;
 }, [tokenNeu] as [string]);
+/* Der Rueckgabewert ZUERST. War er `null`, hat gar kein Abgleich
+   stattgefunden — dann sind die beiden Punkte darunter keine Auskunft ueber
+   Grabsteine, sondern ueber einen Aufruf, der nichts tat. */
+p('Der ausdrückliche Abgleich lief wirklich (kein null)', abgleichLief === true,
+  String(abgleichLief));
 const server1 = await amServer(ids.block);
 const server2 = await amServer(ids.collection);
 p('Der Server-Satz des Blocks trägt geloescht=1',

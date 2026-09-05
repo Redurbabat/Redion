@@ -6219,3 +6219,43 @@ Zeitplans (`schale/aufbau/schale.ts`): „Wer seinen Browser auf Englisch
 stellt, ERWARTET 10:00 PM." Ein eigenes Feld verlöre den Kalender zum
 Antippen, die Tastaturbedienung und das Rad am Telefon.
 
+---
+
+L132 — „Nichts zu tun" sagt der Abgleich auch, wenn er gerade läuft
+====================================================================
+
+Gefunden am 6. September 2026 beim Nachgehen eines roten Punktes im vollen
+Lauf (test261 §4, E436).
+
+`abgleichen()` in `src/kern/abgleich/maschine.ts:810` kehrt in vier Fällen
+sofort um und gibt `null` zurück:
+
+    nicht angemeldet · kein Bereich · zustand.laeuft · Abgleich nicht erlaubt
+
+Der Knopf „Jetzt abgleichen" in `src/bereiche/verbinden/ansicht/wolke.ts:119`
+fängt zwei davon vorher ab und meldet sie richtig. Für die beiden anderen
+sagt er:
+
+    UI.toast(r ? … : 'Nichts zu tun');
+
+**„Nichts zu tun" ist bei `zustand.laeuft` die falsche Auskunft.** Es gibt
+etwas zu tun; es tut es gerade jemand. Wer den Knopf drückt, während der
+Takt (Vorgabe 120 Sekunden) einen Abgleich fährt, bekommt eine Entwarnung
+statt einer Auskunft — und im ungünstigen Fall glaubt er, sein Gerät sei
+auf Stand, während gerade noch geschickt wird.
+
+Es ist derselbe Fall wie der Bereichsdialog aus E434, nur eine Stufe
+gefährlicher: dort nannte eine Meldung den falschen Grund, hier meldet sie
+Ruhe, wo Arbeit läuft.
+
+NICHT REPARIERT, weil die saubere Antwort mehr ist als ein anderer Satz:
+`abgleichen()` müsste unterscheidbar antworten, statt viermal `null` zu
+geben — ein kleiner Ergebnistyp (§52.12) wäre der richtige Weg, und der
+berührt jeden Aufrufer. Das ist ein eigener Bogen und keiner, den man
+nebenbei macht: der Abgleich ist die Stelle, an der Datenverlust am
+teuersten wäre (§25).
+
+WAS ES SCHON GIBT: `test261 §4` schaltet den Takt seither ausdrücklich ab
+und prüft, dass der Abgleich wirklich lief (`kein null`), bevor es die
+Grabsteine misst. Der Wettlauf kann die Prüfung also nicht mehr falsch rot
+machen — er ist damit aber nur eingehegt, nicht behoben.

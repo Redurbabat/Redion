@@ -21,9 +21,14 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-430 Entscheidungen, E1 bis E434. Die Nummer ist die Ordnung: eine Entscheidung
+430 Entscheidungen, E1 bis E436. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
+
+**E435 fehlt noch.** Die Nummer ist für den Workspace-Umbau vergeben, an dem
+gerade gearbeitet wird, und steht schon in Kommentaren von E434. Eine Lücke
+im Verzeichnis ist ehrlicher als ein Eintrag für etwas, das es noch nicht
+gibt.
 
 Gesucht wird am schnellsten mit der Nummer (`E207`), nicht mit dem Titel.
 
@@ -488,6 +493,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E432** — Die Regel stand in der falschen Datei und verlor still
 * **E433** — Die Namensspalte am Telefon war nie 170 Pixel breit
 * **E434** — Die Begrüssungsfläche ist fort
+* **E436** — Der Prüflauf fing sich einen Abgleich ein, den er nicht bestellt hat
 
 ---
 
@@ -35192,3 +35198,64 @@ Dateien: `src/bereiche/wissen/produkt_onboarding.ts` (entfernt),
 `src/bereiche/wissen/werkzeuge.ts`, `src/dienst/sw.ts`, `index.html`,
 `quell/schale/stil/produktwelten.css`, `doku/CSS-NAMENSRAEUME.md`,
 `bilder.mts`, `pruefungen/lauf/test412.mts`, `test206.mts`, `test341.mts`.
+
+---
+
+E436 — Der Prüflauf fing sich einen Abgleich ein, den er nicht bestellt hat
+----------------------------------------------------------------------------
+
+ENTSCHEIDUNG: `test261 §4` schaltet den Abgleich-Takt ausdrücklich ab und
+prüft den Rückgabewert, bevor es Grabsteine misst.
+
+DER BEFUND. Der volle Lauf meldete bei Stück 23 einen roten Punkt:
+
+    ✗ Auch die Sammlung ist drüben als gelöscht vermerkt — {"da":true,"g":0}
+
+Die Sammlung liegt am Server, trägt aber keinen Grabstein. Das wäre ein
+Datenverlust der teuersten Sorte (§25) — eine gelöschte Datenbank, die auf
+dem anderen Gerät stehen bleibt.
+
+Hier allein gefahren war der Punkt zweimal grün, 21 von 21.
+
+DER GRUND STEHT IM QUELLTEXT, `maschine.ts:810`:
+
+    if (!angemeldet() || !bereich() || zustand.laeuft || !abgleichErlaubt())
+      return null;
+
+`abgleichen()` kehrt sofort um, wenn schon einer läuft. Und `takt()` stellt
+bei jeder Anmeldung einen Timer — Vorgabe 120 Sekunden (E270). Ein Lauf,
+der unter Last länger braucht, fängt sich also einen Abgleich ein, den er
+nicht bestellt hat; der ausdrückliche Aufruf tut dann NICHTS, während im
+Hintergrund noch geschickt wird, und gemessen wird ein Zwischenstand.
+
+Der Block war grün, die Sammlung rot — genau die Reihenfolge, in der ein
+halb fertiger Versand aussieht.
+
+WAS DAGEGEN GETAN WURDE, und was ausdrücklich NICHT:
+
+  · `wolkeTakt = 0` vor dem Abgleich — „nur von Hand". Damit gibt es keinen
+    zweiten, und der Punkt misst, was er behauptet.
+  · Ein Punkt VOR den beiden Messungen: „Der ausdrückliche Abgleich lief
+    wirklich (kein null)". War er `null`, sagen die Grabstein-Punkte nichts
+    über Grabsteine, sondern über einen Aufruf, der nichts tat.
+  · KEINE Wartezeit. Eine Pause hätte den Effekt verdeckt und die Ursache
+    stehen gelassen — und beim nächsten langsameren Rechner wäre derselbe
+    Punkt wieder rot.
+
+WAS DAS ÜBER PRÜFUNGEN SAGT. Eine Prüfung, die unter Last einen
+Datenverlust meldet, den es nicht gibt, wird nach dem dritten Mal ignoriert.
+Und dann sieht niemand mehr hin, wenn sie einmal recht hat. Eine falsch rote
+Prüfung ist deshalb kein kleineres Problem als eine falsch grüne, sondern
+dasselbe Problem eine Stufe später.
+
+UND EIN BEFUND FÜRS PRODUKT, der dabei abfiel: `abgleichen()` gibt aus VIER
+Gründen `null`, und der Knopf „Jetzt abgleichen" macht daraus „Nichts zu
+tun". Bei `zustand.laeuft` ist das eine Entwarnung, wo Arbeit läuft. Steht
+als **L132** in `LUECKEN.md` — nicht repariert, weil die saubere Antwort ein
+Ergebnistyp (§52.12) wäre und jeden Aufrufer berührt.
+
+GEGENPROBE: Der neue Punkt „kein null" ist grün, wenn der Abgleich lief. Rot
+wird er, sobald der Takt wieder mitläuft — das ist genau der Zustand, aus
+dem der Fund stammt, und er ist im Lauf des vollen Durchgangs belegt.
+
+Dateien: `pruefungen/lauf/test261.mts`, `LUECKEN.md`.
