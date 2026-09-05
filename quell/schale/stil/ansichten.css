@@ -74,6 +74,22 @@ table.grid .tt-auf:hover{background:var(--bg-hover); color:var(--text)}
 .zs-name{display:flex; align-items:center; padding:0 10px; font-size:12.5px;
          white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer}
 .zs-name:hover{background:var(--bg-hover)}
+/* AM TELEFON GEHÖRT DER PLATZ DEM ZEITSTRAHL (E427).
+   `flex:0 0 190px` sind am Rechner 16 % der Breite und am Telefon 57 %.
+   Gemessen auf 390 px: Raster 334 px, Namen 190, Zeichenfläche 142 — und
+   weil in 142 px kein Balken breit genug für seinen Titel ist, wanderte
+   nach E413 JEDER der neun Titel nach draussen. Jeder Name stand also
+   zweimal im Bild, und die Hälfte des Platzes ging für die Wiederholung
+   drauf.
+   Zwei Regeln, beide nur hier: die Spalte wird schmaler, und der Titel
+   NEBEN dem Balken entfällt. Er entfällt nur draussen — ein Titel IM
+   Balken sagt dem Auge, welcher Balken zu welcher Zeile gehört, und den
+   nimmt E413 ohnehin nur, wenn er passt. */
+@media (max-width:760px){
+  .zs-namen{flex:0 0 118px}
+  .zs-name{padding:0 7px; font-size:12px}
+  .zs-balken .zs-txt.draussen{display:none}
+}
 .zs-scroll{flex:1; overflow-x:auto; overflow-y:hidden}
 .zs-flaeche{position:relative; min-width:100%}
 .zs-kopf{position:absolute; top:0; left:0; right:0; border-bottom:1px solid var(--line)}

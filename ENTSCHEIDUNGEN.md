@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-422 Entscheidungen, E1 bis E426. Die Nummer ist die Ordnung: eine Entscheidung
+423 Entscheidungen, E1 bis E427. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -480,6 +480,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E424** — Der Feed beschriftet seine Werte — und bleibt ein Strom
 * **E425** — Die Liste beschriftet ihre Werte — der dritte Fundort
 * **E426** — Am Telefon steht der Titel für sich
+* **E427** — Der Zeitstrahl am Telefon zeigt den Zeitstrahl
 
 ---
 
@@ -34604,3 +34605,58 @@ Bild angesehen (§55.3): `bilder/db-list-handy-dunkel.png`.
 
 Dateien: `quell/schale/stil/datenbanken.css`,
 `pruefungen/lauf/test419.mts` (neu).
+
+
+---
+
+E427 — Der Zeitstrahl am Telefon zeigt den Zeitstrahl
+------------------------------------------------------
+
+ENTSCHEIDUNG: Am Telefon wird die Namensspalte des Zeitstrahls schmaler, und
+der Titel NEBEN dem Balken entfällt.
+
+NACHGEMESSEN AUF 390 PX:
+
+    Raster gesamt   334 px
+    Namensspalte    190 px   (57 %)
+    Zeichenfläche   142 px   (43 %)
+    Titel im Balken   0 von 9
+    Titel daneben     9 von 9
+
+Jeder Name stand zweimal im Bild — links in der Spalte, rechts neben seinem
+Balken. Über die Hälfte des Platzes ging für eine Auskunft drauf, die schon
+dastand, und was vom Zeitstrahl blieb, waren 142 px.
+
+ZWEI URSACHEN, DIE SICH GEGENSEITIG VERSTÄRKEN:
+
+  1. `.zs-namen{flex:0 0 190px}` — eine feste Zahl. Am Rechner sind das
+     16 % der Breite, am Telefon 57 %. Dieselbe Zahl, zwei völlig
+     verschiedene Bedeutungen.
+  2. E413 lässt einen Titel nach draussen wandern, wenn er im Balken nicht
+     passt. In 142 px passt keiner — also wanderten alle neun.
+
+Die zweite Regel ist richtig und bleibt; sie ist am Rechner genau das, was
+E413 gebaut hat (dort stehen sechs von neun IM Balken). Am Telefon greift
+sie nur, weil die erste Ursache ihr keinen Platz lässt.
+
+WAS BLEIBT, UND WARUM. Der Titel IM Balken bleibt auch am Telefon erlaubt:
+er sagt dem Auge, welcher Balken zu welcher Zeile gehört, und E413 nimmt
+ihn ohnehin nur, wenn er passt. Weg ist nur die Wiederholung DANEBEN.
+
+UND DIE SPALTE DARF NICHT ZU SCHMAL WERDEN. 118 px statt 190 — genug, dass
+die neun Namen unterscheidbar bleiben. `test420 §4` misst das mit demselben
+Verfahren wie E426: wie viel vom Namen sichtbar ist, und ob die sichtbaren
+Anfänge noch verschieden sind. Sonst wäre aus einem Bogen gegen doppelte
+Namen einer für ununterscheidbare geworden.
+
+PRÜFUNG: `test420`, 12 Punkte, PORT 9542. §3 hält den Rechner fest: 190 px,
+und die Titel neben den Balken bleiben dort.
+GEGENPROBE: die Regel gegen den doppelten Titel herausgenommen → §2 rot mit
+„9 von 9 stehen draussen". Die Spalte zurück auf 190 px → §1 zweimal rot
+mit „190 px von 334 px". Beide gelaufen.
+
+Bild angesehen (§55.3): `bilder/db-timeline-handy-dunkel.png` — die
+Zeichenfläche ist von 142 px auf gut das Dreifache gewachsen.
+
+Dateien: `quell/schale/stil/ansichten.css`,
+`pruefungen/lauf/test420.mts` (neu).
