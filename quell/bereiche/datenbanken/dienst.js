@@ -511,6 +511,31 @@ const DatenbankDienst = (() => {
             .map((id) => Store.getBlock(id)).filter(Boolean)
             .map((z) => wert(z, def.zielKey, zielColl));
     };
+    /* --------------------------------------------------------------------------
+     * DIE EINHEIT EINER ZAHL (E412)
+     *
+     * „420" stand in der Tabelle und auf jeder Karte, und ob es Franken,
+     * Stunden oder Stueck waren, wusste nur, wer die Spalte benannt hatte.
+     * Redion konnte einer Zahlenspalte bis hierher keine Einheit geben —
+     * `def.anzeige` gibt es (Balken, Ring, Skala, Heatmap), aber nichts, was
+     * die Zahl beschriftet.
+     *
+     * NACHGESTELLT mit schmalem Leerzeichen (U+202F): so schreibt man es im
+     * deutschen Sprachraum, auch bei Waehrungen (420 CHF, nicht CHF 420). Das
+     * schmale Leerzeichen bindet — die Zahl und ihre Einheit brechen nie auf
+     * zwei Zeilen um, und genau das passiert mit einem gewoehnlichen.
+     *
+     * Die Einheit ist eine ANZEIGE, kein Wert: sie kommt nie in `props`, nie
+     * in eine Formel und nie in eine Sicherung. Wer nach „420" sucht, findet
+     * die Zeile weiterhin.
+     * ------------------------------------------------------------------------*/
+    const mitEinheit = (roh, def) => {
+        const t = String(roh ?? '');
+        const e = String(def?.einheit ?? '').trim();
+        if (!t || !e)
+            return t;
+        return t + '\u202F' + e;
+    };
     /** Baut das HTML für eine Zelle. */
     const zelle = (row, key, coll) => {
         const def = coll.schema[key];
@@ -597,7 +622,7 @@ const DatenbankDienst = (() => {
             const stil = def.anzeige === 'heat'
                 ? `background:hsl(${ton} 62% 42% / .55)`
                 : `box-shadow:inset 3px 0 0 hsl(${ton} 65% 48%); padding-left:8px`;
-            return `<span class="zell-skala" style="${stil}">${esc(Formula.anzeige(v))}</span>`;
+            return `<span class="zell-skala" style="${stil}">${esc(mitEinheit(Formula.anzeige(v), def))}</span>`;
         }
         if ((def.type === 'number' || def.type === 'formula' || def.type === 'rollup') && v != null &&
             (def.anzeige === 'bar' || def.anzeige === 'ring')) {
@@ -612,10 +637,21 @@ const DatenbankDienst = (() => {
             }
             return `<div>${esc(Formula.anzeige(v))}<div class="bar"><i style="width:${p}%"></i></div></div>`;
         }
+        /* `esc` als ZWEITE Tür, nicht als erste. Die erste ist `wert()` weiter
+           oben: `if (def.type === 'number') … Number(v)`. Damit kommt aus einer
+           Zahlenspalte nie etwas anderes als eine Zahl oder `NaN`, auch wenn ein
+           Import in `props` schreibt, was er will.
+    
+           Das steht hier so genau, weil beim Bau von E412 zuerst das Gegenteil
+           im Kommentar stand — „ohne esc ist das ein Loch". Gemessen kam `NaN`
+           heraus, nicht der eingeschleuste Text. Ein `esc` kostet nichts und
+           bleibt; es als den Riegel auszugeben wäre eine falsche Behauptung
+           über die eigene Sicherheit, und die ist schlimmer als gar keine.
+           `test407 §6` hält beides fest. */
         if (def.type === 'number' && v != null)
-            return String(v);
+            return esc(mitEinheit(v, def));
         if (def.type === 'formula')
-            return esc(Formula.anzeige(v));
+            return esc(mitEinheit(Formula.anzeige(v), def));
         if (def.type === 'uid')
             return `<span style="color:var(--text-dim); font-family:var(--mono); font-size:12.5px">${esc(v)}</span>`;
         if (def.type === 'relation') {
@@ -627,7 +663,7 @@ const DatenbankDienst = (() => {
             }).join('');
         }
         if (def.type === 'rollup')
-            return `<span title="${esc(def.rollup || '')}">${esc(Formula.anzeige(v))}</span>`;
+            return `<span title="${esc(def.rollup || '')}">${esc(mitEinheit(Formula.anzeige(v), def))}</span>`;
         if (def.type === 'button')
             return `<button class="zellen-knopf" data-k="${key}">${esc(def.knopfText || 'Ausführen')}</button>`;
         if (def.type === 'files') {

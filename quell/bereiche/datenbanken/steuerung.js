@@ -6154,7 +6154,9 @@ const Datenbank = (() => {
             (def.type === 'relation' ? '<button data-a="relein"><span class="mi">⇄</span>Verknüpfung einrichten</button>' : '') +
             (def.type === 'rollup' ? '<button data-a="rollup"><span class="mi">⤴</span>Rollup einrichten</button>' : '') +
             (['number', 'formula', 'rollup'].includes(def.type)
-                ? '<button data-a="anzeige"><span class="mi">▤</span>Anzeigen als …</button>' : '') +
+                ? '<button data-a="anzeige"><span class="mi">▤</span>Anzeigen als …</button>' +
+                    `<button data-a="einheit"><span class="mi">CHF</span>Einheit` +
+                    `<span class="ms">${def.einheit ? esc(String(def.einheit)) : 'keine'}</span></button>` : '') +
             (def.type === 'uid' ? '<button data-a="praefix"><span class="mi">ID</span>Vorsilbe setzen</button>' : '') +
             (KI_TYPEN.includes(def.type) ? '<button data-a="kiauftrag"><span class="mi">✨</span>Auftrag an die KI</button>' : '') +
             (!['formula', 'rollup', 'created', 'edited', 'createdBy', 'editedBy', 'uid', 'button'].includes(def.type)
@@ -6307,6 +6309,53 @@ const Datenbank = (() => {
                     m.remove();
                     App.zeichneSeite();
                 });
+                return;
+            }
+            /* --------------------------------------------------------------------
+             * DIE EINHEIT EINER ZAHLENSPALTE (E412)
+             *
+             * Die acht Vorschläge sind das, was in dieser App wirklich vorkommt —
+             * Redurs Projekte rechnen in Franken, Stunden, Metern und Ampere.
+             * Aber die Liste ist NICHT die Grenze: das Feld darunter nimmt, was
+             * jemand eintippt. Eine feste Liste wäre genau der Fehler, den §20
+             * beim Spaltentyp beschreibt — streng statt richtig.
+             * ------------------------------------------------------------------*/
+            if (a === 'einheit') {
+                const VORSCHLAG = ['CHF', '€', '%', 'h', 'min', 'kg', 'm', 'A'];
+                m.innerHTML = '<div class="grp">Einheit hinter der Zahl</div>' +
+                    VORSCHLAG.map(e => `<button data-e="${esc(e)}">${def.einheit === e ? '✓ ' : ''}${esc(e)}</button>`).join('') +
+                    /* `.menu-suche` ist die Klasse, die es GIBT — sie stylt jedes
+                       Eingabefeld in einem Menü (bausteine.css). Eine eigene zu
+                       erfinden wäre der Fehler aus E406: sieben Tokens waren dort
+                       erfunden und je zweimal unsichtbar. */
+                    '<hr><div class="grp">Oder eigene</div>' +
+                    '<div class="menu-suche">' +
+                    `<input data-eigen value="${esc(String(def.einheit || ''))}" ` +
+                    `placeholder="z. B. Stück" aria-label="Eigene Einheit"></div>` +
+                    '<hr><button data-e="">keine Einheit</button>';
+                const setzen = (wert) => {
+                    const sauber = wert.trim().slice(0, 12);
+                    if (sauber)
+                        def.einheit = sauber;
+                    else
+                        delete def.einheit;
+                    Store.updateCollection(coll.id, { schema: coll.schema });
+                    m.remove();
+                    App.zeichneSeite();
+                };
+                m.addEventListener('click', ev => {
+                    const e2 = elVon(ev)?.closest('button[data-e]');
+                    if (e2)
+                        setzen(e2.dataset.e ?? '');
+                });
+                const feld = m.querySelector('[data-eigen]');
+                feld?.addEventListener('keydown', ev => {
+                    if (ev.key === 'Enter') {
+                        ev.preventDefault();
+                        setzen(feld.value);
+                    }
+                });
+                setTimeout(() => feld?.focus(), 30);
                 return;
             }
             if (a === 'relein') {

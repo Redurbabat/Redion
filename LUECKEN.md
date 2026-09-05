@@ -6097,12 +6097,12 @@ kostet den Nutzer eine Auskunft.
    geworden, aber nicht weg. Ein Schatten an der rechten Kante, solange
    noch etwas kommt, würde reichen.
 
-4. **Eine Zahlenspalte kann keine Einheit tragen.** Berichtigt: `format`
-   war eine Erfindung des Prüfdatensatzes, kein Feld von Redion. Es gibt
-   `def.anzeige` (Skala, Heatmap, Balken, Ring), aber nichts, was „420"
-   zu „420 CHF" oder „420 h" macht. Damit steht auf jeder Karte und in
-   jeder Tabelle eine nackte Zahl, und ob es Franken, Stunden oder Stück
-   sind, weiss nur, wer die Spalte benannt hat. Notion kann das; Redion
-   noch nicht.
+4. **Eine Zahlenspalte kann keine Einheit tragen.** GESCHLOSSEN mit E412.
+   `einheit` steht im Menü der Spalte, hängt beim Zeichnen mit schmalem
+   Leerzeichen an und fasst den gespeicherten Wert nicht an — Formeln,
+   Summen und Sortierung rechnen weiter mit der Zahl. Gehalten von
+   `test407`. Dabei kam heraus, dass `Column.formel` in Wahrheit `formula`
+   heisst und dem Typ dreizehn Felder fehlten; `test294 §5` misst diese
+   Richtung jetzt mit.
 
 Nachzusehen mit `node bilder.mts db-board`, `db-calendar`, `db-table`.

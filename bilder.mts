@@ -2067,7 +2067,7 @@ const dbAufbau = (layout: string): string => `return (async () => {
                          { name: 'Team', color: 'green' }] },
     anfang:  { name: 'Anfang',    type: 'date' },
     ende:    { name: 'Ende',      type: 'date' },
-    kosten:  { name: 'Kosten',    type: 'number', format: 'chf' },
+    kosten:  { name: 'Kosten',    type: 'number', einheit: 'CHF' },
     stand:   { name: 'Stand',     type: 'prozent' },
     wert:    { name: 'Bewertung', type: 'sterne' },
     wer:     { name: 'Wer',       type: 'person' },

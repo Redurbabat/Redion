@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-407 Entscheidungen, E1 bis E411. Die Nummer ist die Ordnung: eine Entscheidung
+408 Entscheidungen, E1 bis E412. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -465,6 +465,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E409** — Die Ansichten bekommen die Breite, die da ist
 * **E410** — Der Kalender zeigt Zeitspannen, und die Balken bekommen Farbe
 * **E411** — Werte auf Karten sagen, wovon sie handeln
+* **E412** — Eine Zahl sagt, wovon sie handelt — und der Typ sagt, was es gibt
 
 ---
 
@@ -33481,3 +33482,110 @@ test136, test233, test237, test404, test405.
 Dateien: `pruefungen/lauf/test406.mts` (neu),
 `src/bereiche/datenbanken/steuerung.ts`, `src/schale/aufbau/schale.ts`,
 `quell/schale/stil/datenbanken.css`, `pruefungen/lauf/test404.mts`.
+
+E412 — Eine Zahl sagt, wovon sie handelt — und der Typ sagt, was es gibt
+================================================================================
+5. September 2026
+
+„420" stand in der Tabelle und auf jeder Karte. Ob es Franken, Stunden oder
+Stücke waren, wusste nur, wer die Spalte benannt hatte. `def.anzeige` gab es
+längst — Balken, Ring, Farbstreifen, Heatmap — aber nichts, was die Zahl
+beschriftet. Notion kann das seit jeher.
+
+DIE EINHEIT IST EINE ANZEIGE, KEIN WERT. Das ist der Teil, der die ganze
+Bauform bestimmt: eine Einheit, die in `props` landet, macht aus jeder Zahl
+einen Text. Dann bricht jede Formel, jede Sortierung und jede Summe — und in
+einer Sicherung steht sie für immer. `mitEinheit()` hängt sie deshalb erst
+beim Zeichnen an, in `dienst.ts`, an genau vier Stellen: Zahl, Formel,
+Rollup und Farbstreifen.
+
+NACHGESTELLT mit schmalem Leerzeichen (U+202F). So schreibt man es im
+deutschen Sprachraum, auch bei Währungen — 420 CHF, nicht CHF 420. Und das
+schmale Leerzeichen bindet: mit einem gewöhnlichen brechen „420" und „CHF"
+auf zwei Zeilen um, und dann steht die Einheit unter einer fremden Zahl.
+
+Acht Vorschläge im Menü (CHF, €, %, h, min, kg, m, A) und ein Feld für alles
+andere. Eine feste Liste wäre derselbe Fehler, den CLAUDE.md 52.9 beim
+Spaltentyp beschreibt: streng statt richtig.
+
+--------------------------------------------------------------------------
+UND DABEI KAM HERAUS, DASS DER TYP LÜGT
+--------------------------------------------------------------------------
+
+Beim Schreiben des Prüflaufs brauchte ich eine Formelspalte. Der Typ sagt:
+
+    /** Bei `formula`: der Ausdruck. */
+    formel?: string;
+
+Die Formel rechnete nicht. Nachgesehen: gelesen und geschrieben wird
+`def.formula` — `dienst.ts` in `formelRechnen`, `steuerung.ts:5603, 5765,
+7048`. Der Feldname heisst `formula`, seit jeher, und CLAUDE.md 52.8 hat den
+falschen Namen mit abgeschrieben.
+
+Das ist genau der Fehler, vor dem 52.8 selbst warnt — in der Datei, die
+dafür die Wahrheit sein soll, und zum zweiten Mal nach E298.
+
+WARUM `test294` GESCHWIEGEN HAT, und das ist der eigentliche Fund. Er prüft,
+ob ein Feldname IRGENDWO im Bestand vorkommt. `formel` kommt vor:
+
+  · `elektro/lernbilder.ts` — das Formeldreieck der Elektrolehre
+  · `editor/ansicht/editor.ts` — die Variablen eines Knopfblocks
+  · `einstellungen/erweiterungen.ts` — `Redion.formel(name, fn)`
+
+Drei Dinge, die mit einer Datenbankspalte nichts zu tun haben. Ein häufiges
+deutsches Wort macht diese Messung blind, und „Formel" ist in dieser App ein
+sehr häufiges Wort.
+
+DIE ANDERE RICHTUNG FEHLTE GANZ. `test294` misst: kein Feld des Typs darf
+erfunden sein. Er misst NICHT: kein gelesenes Feld darf im Typ fehlen. Das
+ist die leiser gefährliche Hälfte — wer den Typ liest, hält ihn für
+vollständig und legt das Feld unter einem zweiten Namen neu an.
+
+Gemessen wurde deshalb der ZUGRIFF statt des Namens: jedes `def.X` unter
+`bereiche/datenbanken/`, Kommentare abgezogen. Dreizehn Treffer:
+
+    beschreibung  einheit  formula  max  muster  musterText  regel
+    regelMax  regelMin  regelText  setzeKey  setzeWert  uebergaenge
+
+Alle dreizehn stehen jetzt im Typ, `formel` heisst `formula`, und
+`test294 §5` misst diese Richtung mit.
+
+--------------------------------------------------------------------------
+UND EINE BEHAUPTUNG, DIE SICH BEIM MESSEN ALS FALSCH ERWIES
+--------------------------------------------------------------------------
+
+In der Zahlzelle stand `return String(v)` ohne `esc`. Der erste Kommentar
+dazu lautete: „ein Import schreibt in eine Zahlenspalte, was er will" — ein
+Sicherheitsfund also.
+
+Gemessen kam `NaN` heraus, nicht der eingeschleuste Text. Der Riegel steht
+weiter oben, in `wert()`:
+
+    if (def.type === 'number') return v == null ? null : Number(v);
+
+`Number('<img …>')` ist `NaN`, und weiter kommt nichts. Das `esc` bleibt
+stehen — eine zweite Tür kostet nichts —, aber es als DEN Riegel auszugeben
+wäre eine falsche Behauptung über die eigene Sicherheit, und die ist
+schlimmer als gar keine. Der Kommentar im Code und der Prüfabschnitt sind
+beide berichtigt; geprüft wird jetzt, was wirklich schützt.
+
+PRÜFUNGEN: `test407`, 14 Punkte, PORT 9530; `test294` von 10 auf 13 Punkte.
+MUTATIONEN ROT GESEHEN:
+  §2   → `mitEinheit` immer den blossen Wert zurückgeben lassen. → „Die
+         Einheit steht hinter der Zahl — [85, 420, 0]", 11/14.
+  §6   → in `wert()` die Umwandlung `Number(v)` entfernen. → „Der
+         eingeschleuste Text kommt gar nicht erst durch — <img src=x
+         onerror=…>", 13/14. Das `esc` hielt dabei stand: kein Bild-Element
+         entstand. Genau so war es gemeint.
+  294  → `formula` zurück auf `formel`. → „Jedes gelesene Schema-Feld steht
+         im Typ — ist [formula]", 12/13.
+  294  → die dreizehn wieder entfernen. → dieselbe Zeile mit allen zwölf
+         übrigen Namen, 12/13.
+
+Mitgelaufen und grün: test32, test36, test40, test87, test105, test109,
+test139, test235, test404, test405, test406.
+
+Dateien: `pruefungen/lauf/test407.mts` (neu),
+`src/bereiche/datenbanken/dienst.ts`, `src/bereiche/datenbanken/steuerung.ts`,
+`src/core/types/database.ts`, `pruefungen/lauf/test294.mts`, `CLAUDE.md`,
+`bilder.mts`.
