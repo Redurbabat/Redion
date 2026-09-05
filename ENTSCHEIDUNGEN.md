@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-427 Entscheidungen, E1 bis E431. Die Nummer ist die Ordnung: eine Entscheidung
+428 Entscheidungen, E1 bis E432. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -485,6 +485,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E429** — Zwei Namen für dasselbe Ereignis
 * **E430** — „Kalender“ öffnete den Verbindungsdialog
 * **E431** — Der Kalender wohnt nicht im Arbeitsbereich
+* **E432** — Die Regel stand in der falschen Datei und verlor still
 
 ---
 
@@ -34959,3 +34960,65 @@ Dateien: `src/bereiche/wissen/arbeitswelt.ts`,
 `src/bereiche/wissen/produktwelten.ts`, `src/register/navigation.ts`,
 `src/schale/aufbau/schale.ts`, `quell/schale/stil/arbeitswelt.css`,
 `doku/CSS-NAMENSRAEUME.md`, `bilder.mts`, `pruefungen/lauf/test423.mts`.
+
+---
+
+E432 — Die Regel stand in der falschen Datei und verlor still
+--------------------------------------------------------------
+
+ENTSCHEIDUNG: Der Spalt zwischen zwei Werten im Feed ist 12 px, der
+zwischen Name und Wert 4 px. Die Regel steht in `einstellungen.css`, wo der
+Namensraum `fe-` wohnt — nicht in `datenbanken.css`, wo sie nichts bewirkte.
+
+WIE ES AUFFIEL: `test332` im vollen Lauf, Stück 30. Er meldete zwei tote
+Deklarationen:
+
+    .fe-merkmale | row-gap    — es gilt einstellungen.css: 5px,
+                                tot ist datenbanken.css: 4px
+    .fe-merkmale | column-gap — es gilt einstellungen.css: 5px,
+                                tot ist datenbanken.css: 12px
+
+WAS DAHINTERSTECKTE. E424 schrieb `gap:4px 12px` nach `datenbanken.css`,
+weil der Feed seit E424 dieselbe Wertemaschine benutzt wie die Karte. Nur
+wohnt `fe-` laut `doku/CSS-NAMENSRAEUME.md` in `einstellungen.css`, und
+`index.html` lädt dieses Blatt NACH `datenbanken.css`. Gleiche Spezifität,
+spätere Regel gewinnt: `gap:5px` schlug `gap:4px 12px`, und niemand sah es.
+
+Das ist wörtlich der Fall, vor dem §39 warnt — „zwei Bereiche mit demselben
+Klassenpräfix gewinnen abwechselnd, und niemand sieht es im Code" — und
+derselbe wie E421, wo `bg`-Regeln in der falschen Datei standen.
+
+UND ES WAR SICHTBAR. Auf `db-feed-rechner-hell.png` stand:
+
+    Offen  Bericht  Abgabe  Ende 30.09.2026 Kosten 0 CHF
+
+Alle Abstände 5 px, der innerhalb eines Wertes 4 px. Eine Kette gleich weit
+entfernter Wörter — man sah nicht mehr, welcher Name zu welchem Wert
+gehört. E424 war angetreten, genau das zu beheben („Ende30.09.2026"), und
+hat es zur Hälfte getan: der innere Spalt kam, der äussere nicht.
+
+WAS DAS ÜBER E424 SAGT. Die Prüfung dazu (`test417 §2`) hielt ausdrücklich
+fest, dass der erste Wurf zwischen den EINTRÄGEN mass und dass das der
+falsche Spalt sei. Das stimmte für den Fehler „Ende30.09.2026". Der Schluss
+daraus war zu weit: der äussere Spalt geht sehr wohl jemanden an, nur eben
+in die andere Richtung — er muss GRÖSSER sein als der innere. Diese
+Bedingung stand nirgends, und deshalb hielt sie nichts.
+
+PRÜFUNG: `test417 §2`, zwei Punkte mehr — der Spalt zwischen benachbarten
+`.mv` derselben Zeile muss mindestens 8 px betragen, also das Doppelte des
+inneren. Dazu `test332` (der Finder), `test290`, `test411`, `test413`,
+`test416`.
+
+GEGENPROBE: keine nötige Verstümmelung — die neue Prüfung war GEGEN DEN
+ECHTEN FEHLER rot, mit fünfmal `"spalt":5` im Bericht, und wurde durch die
+Reparatur grün. Das ist die stärkere Form: ein Wächter, der einen wirklichen
+Fund gemeldet hat, ist keine Behauptung mehr.
+
+Bild angesehen (§55.3): `bilder/db-feed-rechner-hell.png` vorher und
+nachher. Die Paare stehen jetzt sichtbar getrennt.
+
+KOSTEN: Keine. Es sind zwei Zahlen an der Stelle, an der sie wirken, und
+eine tote Regel weniger.
+
+Dateien: `quell/schale/stil/einstellungen.css`,
+`quell/schale/stil/datenbanken.css`, `pruefungen/lauf/test417.mts`.

@@ -2224,8 +2224,15 @@ table.grid tfoot td{color:var(--text-faint); font-size:12.5px; border:none; padd
 .card .meta .mv-n, .fe-merkmale .mv-n, .lr-werte .mv-n{
   font-size:10.5px; font-weight:500; color:var(--text-faint);
   text-transform:none; letter-spacing:.01em; flex:0 0 auto}
-.fe-merkmale{margin-top:6px; display:flex; flex-wrap:wrap; gap:4px 12px;
-             align-items:center}
+/* HIER STAND EINE ZWEITE `.fe-merkmale`-REGEL — UND SIE WAR TOT (E432).
+   E424 schrieb sie hierher, weil der Feed dieselbe Wertemaschine benutzt wie
+   die Karte. Nur wohnt `fe-` in `einstellungen.css`
+   (doku/CSS-NAMENSRAEUME.md), und das Blatt lädt NACH diesem: gleiche
+   Spezifität, spätere Regel gewinnt. `gap:4px 12px` verlor still gegen
+   `gap:5px`, und auf dem Bild stand „Ende 30.09.2026 Kosten 0 CHF" als eine
+   Kette gleich weit entfernter Wörter.
+   Die Werte stehen jetzt dort, wo sie wirken — in `einstellungen.css`.
+   Gefunden hat es `test332`; gehalten wird es von `test417 §2`. */
 
 /* Galerie */
 .gallery{display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:12px}
@@ -4178,7 +4185,14 @@ table.grid th.fixiert{position:sticky; left:38px; z-index:3; background:var(--bg
 .fe-kopf{display:flex; align-items:baseline; gap:10px; cursor:pointer}
 .fe-kopf b{font-size:15px; flex:1}
 .fe-kopf span{font-size:12px; color:var(--text-faint)}
-.fe-merkmale{margin-top:6px; display:flex; flex-wrap:wrap; gap:5px}
+/* DER SPALT ZÄHLT IN ZWEI RICHTUNGEN (E432). Innerhalb eines Wertes
+   trennt `.mv{gap:4px}` die Beschriftung vom Wert; hier trennt der Spalt
+   die Werte VONEINANDER. Stand beides bei 4 und 5 px, las sich die Zeile
+   als ein Satz: „Ende 30.09.2026 Kosten 0 CHF". 12 px aussen gegen 4 px
+   innen macht die Paare wieder sichtbar. Die Zeilenluft bleibt knapp — bei
+   einem Umbruch soll der Feed nicht auseinanderfallen. */
+.fe-merkmale{margin-top:6px; display:flex; flex-wrap:wrap; gap:4px 12px;
+             align-items:center}
 .fe-text{margin-top:7px; font-size:13.5px; color:var(--text-dim); line-height:1.55}
 .fe-fuss{margin-top:9px; display:flex; gap:8px}
 .fe-fuss button{font-size:12px; color:var(--text-dim); padding:3px 9px; border-radius:5px; border:1px solid var(--line)}
@@ -17135,7 +17149,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 419, inhalt: '02d3341b543d1d78', gebaut: '2026-09-05T20:53:40.069Z' };
+const Stand = { fassung: 420, inhalt: 'b1029b7945ebc72e', gebaut: '2026-09-05T21:07:34.112Z' };
 window.Stand = Stand;
 
 </script>

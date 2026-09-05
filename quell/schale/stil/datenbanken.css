@@ -151,8 +151,15 @@ table.grid tfoot td{color:var(--text-faint); font-size:12.5px; border:none; padd
 .card .meta .mv-n, .fe-merkmale .mv-n, .lr-werte .mv-n{
   font-size:10.5px; font-weight:500; color:var(--text-faint);
   text-transform:none; letter-spacing:.01em; flex:0 0 auto}
-.fe-merkmale{margin-top:6px; display:flex; flex-wrap:wrap; gap:4px 12px;
-             align-items:center}
+/* HIER STAND EINE ZWEITE `.fe-merkmale`-REGEL — UND SIE WAR TOT (E432).
+   E424 schrieb sie hierher, weil der Feed dieselbe Wertemaschine benutzt wie
+   die Karte. Nur wohnt `fe-` in `einstellungen.css`
+   (doku/CSS-NAMENSRAEUME.md), und das Blatt lädt NACH diesem: gleiche
+   Spezifität, spätere Regel gewinnt. `gap:4px 12px` verlor still gegen
+   `gap:5px`, und auf dem Bild stand „Ende 30.09.2026 Kosten 0 CHF" als eine
+   Kette gleich weit entfernter Wörter.
+   Die Werte stehen jetzt dort, wo sie wirken — in `einstellungen.css`.
+   Gefunden hat es `test332`; gehalten wird es von `test417 §2`. */
 
 /* Galerie */
 .gallery{display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:12px}

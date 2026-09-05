@@ -149,6 +149,40 @@ p('Es gibt beschriftete Werte zu messen', kleb.length >= 3, String(kleb.length))
 const eng = kleb.filter((x: any) => x.spalt < 2);
 p('Keine Beschriftung klebt an ihrem Wert',
   eng.length === 0, JSON.stringify(eng).slice(0, 200));
+/* UND DER ZWEITE SPALT, DER IN DIE ANDERE RICHTUNG ZÄHLT (E432).
+   Der Absatz darüber sagt, dass der erste Wurf zwischen den EINTRÄGEN mass
+   und dass das der falsche Spalt war. Richtig — für den Fehler „Ende30.09.2026".
+   Falsch als Schluss, dass der Spalt zwischen den Einträgen niemanden
+   angeht: er muss GRÖSSER sein als der innerhalb eines Eintrags, sonst
+   steht dort eine Kette gleich weit entfernter Wörter, und man sieht nicht
+   mehr, welcher Name zu welchem Wert gehört.
+   Gemessen auf dem Bild `db-feed-rechner-hell.png`: 4 px innen, 5 px
+   aussen. „Ende 30.09.2026 Kosten 0 CHF" las sich als ein Satz. Der Grund
+   stand in `datenbanken.css` — eine tote Regel, die `einstellungen.css`
+   überschrieb (test332 fand sie). */
+const spalten = JSON.parse(await s.evaluate(`JSON.stringify((() => {
+  const raus = [];
+  for (const m of document.querySelectorAll('.fe-merkmale')) {
+    const mv = [...m.querySelectorAll(':scope > .mv')];
+    for (let i = 0; i + 1 < mv.length; i++) {
+      const a = mv[i].getBoundingClientRect(), b = mv[i + 1].getBoundingClientRect();
+      /* Nur nebeneinander, nicht über einen Umbruch hinweg. */
+      if (Math.abs(a.top - b.top) > 2) continue;
+      raus.push({ links: mv[i].textContent.trim().slice(0, 22),
+                  rechts: mv[i + 1].textContent.trim().slice(0, 22),
+                  spalt: Math.round((b.left - a.right) * 10) / 10 });
+    }
+  }
+  return raus;
+})())`) as string);
+p('Es gibt nebeneinanderstehende Werte zu messen', spalten.length >= 2,
+  String(spalten.length));
+/* Der innere Spalt ist 4 px (`.mv{gap:4px}`). Aussen muss deutlich mehr
+   stehen — die Grenze ist 8 px und damit das Doppelte, nicht ein Härchen. */
+const zuEng = spalten.filter((x: any) => x.spalt < 8);
+p('Zwischen zwei Werten steht mehr Luft als zwischen Name und Wert',
+  zuEng.length === 0, JSON.stringify(zuEng).slice(0, 220));
+
 /* UND DER STROM BLEIBT EIN STROM. Der erste Wurf hängte ALLE Spalten an —
    dreizehn Werte in einer Zeile, samt Sternen, Ortsmarke, Kästchen und
    Anhang. Auf dem Bild war das eine Wand, keine Auskunft. Eine Karte im
