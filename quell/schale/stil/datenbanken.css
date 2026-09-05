@@ -137,11 +137,22 @@ table.grid tfoot td{color:var(--text-faint); font-size:12.5px; border:none; padd
    zusammenstehen als zwei verschiedene Werte — sonst liest man „Anfang"
    und das Datum daneben als zwei Angaben. */
 .card .meta{margin-top:6px; display:flex; flex-wrap:wrap; gap:4px 10px; align-items:center}
-.card .meta .mv{font-size:12.5px; color:var(--text-dim);
-                display:inline-flex; align-items:center; gap:4px; min-width:0}
+/* NICHT MEHR NUR `.card .meta` (E424). Der Feed benutzt seit E424 dieselbe
+   Maschine (`kartenWerte`), und diese Regeln galten nur in der Karte. Auf
+   dem Bild stand deshalb „Ende30.09.2026" und „Kosten0 CHF": ohne
+   `inline-flex` und `gap` klebte die Beschriftung am Wert.
+   Eine Klasse, die an zwei Orten gesetzt und nur an einem gestaltet wird,
+   ist derselbe Fall wie `.cw-bar.q-blue` aus E410 — nur schlimmer, weil er
+   halb funktioniert und deshalb nicht wie ein Fehler aussieht. */
+.card .meta .mv, .fe-merkmale .mv{
+  font-size:12.5px; color:var(--text-dim);
+  display:inline-flex; align-items:center; gap:4px; min-width:0}
 /* Der Name tritt zurück — er ist die Beschriftung, nicht die Auskunft. */
-.card .meta .mv-n{font-size:10.5px; font-weight:500; color:var(--text-faint);
-                  text-transform:none; letter-spacing:.01em; flex:0 0 auto}
+.card .meta .mv-n, .fe-merkmale .mv-n{
+  font-size:10.5px; font-weight:500; color:var(--text-faint);
+  text-transform:none; letter-spacing:.01em; flex:0 0 auto}
+.fe-merkmale{margin-top:6px; display:flex; flex-wrap:wrap; gap:4px 12px;
+             align-items:center}
 
 /* Galerie */
 .gallery{display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:12px}

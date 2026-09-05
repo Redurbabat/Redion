@@ -1812,7 +1812,8 @@ const Datenbank = (() => {
     'image', 'verify', 'button', 'relation']);
 
   /** Die Werteliste einer Karte — mit Namen dort, wo der Wert allein nicht spricht. */
-  const kartenWerte = (r: any, coll: any, view: any, ausser: string[] = []): string => {
+  const kartenWerte = (r: any, coll: any, view: any, ausser: string[] = [],
+                       hoechstens = 0): string => {
     /* Zuerst zählen, welcher Typ mehrfach vorkommt: zwei Datumsspalten sind
        auch dann nicht zu trennen, wenn eine allein es wäre. */
     const sichtbar = Object.keys(coll.schema).filter(k =>
@@ -1825,10 +1826,18 @@ const Datenbank = (() => {
     });
 
     let aus = '';
+    let wieviele = 0;
     sichtbar.forEach(k => {
+      /* EINE OBERGRENZE, WENN DIE STELLE EINE BRAUCHT (E424). Board- und
+         Galeriekarten zeigen alles: dort ist die Karte das Ganze. Der Feed
+         ist ein Strom zum Überfliegen — dreizehn Werte in einer Zeile sind
+         dort keine Auskunft mehr, sondern eine Wand. `0` heisst „alles",
+         damit die Karten nichts merken. */
+      if (hoechstens && wieviele >= hoechstens) return;
       const def = coll.schema[k];
       const z = zelle(r, k, coll);
       if (!z || z.includes('—')) return;
+      wieviele++;
       const mehrfach = (proTyp[def.type] ?? 0) > 1;
       const braucht = mehrfach || !SELBSTERKLAEREND.has(def.type);
       /* `title` steht IMMER da, auch beim selbsterklärenden Wert: wer doch
@@ -3741,12 +3750,25 @@ const Datenbank = (() => {
       const e = document.createElement('article');
       e.className = 'feed-eintrag';
 
-      const wann = datumKey ? Formula.anzeige(wert(r, datumKey, coll)) : Werkzeuge.zeitKurz(r.created);
-      const merkmale = Object.keys(coll.schema)
-        .filter(k => k !== datumKey && coll.schema[k].type !== 'title' && !(view.hidden || []).includes(k))
-        .map(k => zelle(r, k, coll))
-        .filter(z => z && !z.includes('—'))
-        .slice(0, 4).join(' ');
+      /* DEUTSCH, NICHT ROH (E424). Hier stand `Formula.anzeige(...)`, und
+         das liefert für ein Datum die gespeicherte Zeichenkette: oben rechts
+         stand `2026-09-22`, in derselben Karte `30.09.2026`. Zwei Formate in
+         einer Karte, und eines davon schreibt kein deutschsprachiger Mensch
+         (§3). `Einstellungen.datum` ist derselbe Formatierer, den die Zelle
+         benutzt — damit steht in der Karte überall dasselbe. */
+      const wannRoh = datumKey ? wert(r, datumKey, coll) : null;
+      const wannDat = wannRoh ? new Date(wannRoh) : null;
+      const wann = (wannDat && !isNaN(wannDat.getTime()))
+        ? Einstellungen.datum(wannDat, coll.schema[datumKey]?.type !== 'date')
+        : (datumKey ? String(Formula.anzeige(wannRoh)) : Werkzeuge.zeitKurz(r.created));
+      /* DIESELBE MASCHINE WIE DIE KARTEN (E424, aus E411). Hier klebten die
+         ersten vier Zellen mit einem Leerzeichen aneinander: auf dem Bild
+         stand „15.09.2026 60 CHF" als sähe es aus wie EIN Wert, ohne Namen
+         und ohne Trennung. `kartenWerte` schreibt an, was seinen Namen
+         braucht, und lässt Etiketten, Sterne und Ortsmarken ohne — eine
+         Beschriftung an JEDEM Wert läse wieder niemand.
+         Das Datum der Kopfzeile bleibt aussen vor: es steht schon oben. */
+      const merkmale = kartenWerte(r, coll, view, datumKey ? [datumKey] : [], 5);
 
       /* Der Anfang des Seiteninhalts als Vorschau */
       const vorschau = Store.childrenOf(r.id)

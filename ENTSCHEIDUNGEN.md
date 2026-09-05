@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-419 Entscheidungen, E1 bis E423. Die Nummer ist die Ordnung: eine Entscheidung
+420 Entscheidungen, E1 bis E424. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -477,6 +477,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E421** — Zwei Farbreihen, und der Balken nahm die falsche
 * **E422** — Fünf Kataloge für die dreizehn Ansichten, und sie waren auseinander
 * **E423** — Die Karte kannte den Ortstyp nicht
+* **E424** — Der Feed beschriftet seine Werte — und bleibt ein Strom
 
 ---
 
@@ -34431,3 +34432,68 @@ liest sich jetzt „Ortsspalte: Ort".
 
 Dateien: `src/bereiche/datenbanken/steuerung.ts`,
 `pruefungen/lauf/test416.mts` (neu).
+
+
+---
+
+E424 — Der Feed beschriftet seine Werte — und bleibt ein Strom
+---------------------------------------------------------------
+
+ENTSCHEIDUNG: Der Feed benutzt `kartenWerte` aus E411 statt eigener Logik,
+formatiert sein Datum deutsch, und `kartenWerte` bekommt eine Obergrenze.
+
+WAS AUF DEM BILD STAND:
+
+    Offen  Messung   15.09.2026 60 CHF
+
+Ein Datum und ein Betrag, nebeneinander, ohne Trennung und ohne Namen.
+„60 CHF" — Kosten? Budget? Und „15.09.2026 60 CHF" liest sich als EIN Wert.
+In der Karte darüber stand nur „30.09.2026", in der darunter nur
+„19.09.2026" — dieselbe Stelle, verschiedene Bedeutung, nichts sagt welche.
+
+E411 hat genau dieses Problem für Board- und Galeriekarten gelöst. Der Feed
+benutzte die Maschine nicht; er klebte die ersten vier Zellen mit einem
+Leerzeichen aneinander:
+
+    .map(k => zelle(r, k, coll)).filter(…).slice(0, 4).join(' ')
+
+DAZU EIN ZWEITER FUND AUS DEMSELBEN BILD: das Datum oben rechts stand als
+`2026-09-22`, das Datum in derselben Karte als `30.09.2026`. Zwei Formate in
+einer Karte, und eines schreibt kein deutschsprachiger Mensch (§3). Der
+Grund war `Formula.anzeige`, das für ein Datum die gespeicherte Zeichenkette
+liefert; die Zelle daneben benutzt `Einstellungen.datum`.
+
+UND DANN HAT DER ERSTE WURF ZWEI NEUE FEHLER GEMACHT, beide nur auf dem
+BILD zu sehen, keiner in einer Zahl:
+
+  1. „Ende30.09.2026" und „Kosten0 CHF" — die Beschriftung klebte am Wert.
+     Der Grund: die Regeln für `.mv` und `.mv-n` standen auf `.card .meta`.
+     Der Feed hat kein `.card`, also kein `inline-flex` und kein `gap`.
+     Eine Klasse, die an zwei Orten gesetzt und nur an einem gestaltet wird
+     — derselbe Fall wie `.cw-bar.q-blue` aus E410, nur schlimmer, weil er
+     halb funktioniert und deshalb nicht wie ein Fehler aussieht.
+  2. Der Feed zeigte plötzlich ALLE Spalten: dreizehn Werte in einer Zeile,
+     samt Sternen, Ortsmarke, Kästchen und Anhang. `kartenWerte` kannte
+     keine Grenze, weil eine Karte im Board zu Recht alles zeigt. Ein Feed
+     ist zum Überfliegen da. Die Grenze ist deshalb ein Parameter, und `0`
+     heisst „alles" — die Karten merken nichts davon.
+
+PRÜFUNG: `test417`, 16 Punkte, PORT 9539.
+GEGENPROBE: zurück auf `.join(' ')` und `Formula.anzeige` → §1 dreimal und
+§3 zweimal rot. Die Obergrenze weggenommen → elf Werte je Karte, §2 rot.
+Die Abstandsregel für den Feed weggenommen → §2 rot mit `"spalt":0`.
+
+UND EINE PRÜFUNG, DIE DEN FALSCHEN SPALT MASS. §2 mass zuerst den Abstand
+ZWISCHEN den Einträgen und blieb in der Gegenprobe grün — den hält
+`.fe-merkmale` mit seinem eigenen `gap`, auch wenn die Regel für den
+einzelnen Eintrag fehlt. Der Fehler war aber der Spalt INNERHALB eines
+Eintrags, zwischen Name und Wert. Gemessen wird jetzt genau der, mit einer
+`Range` über den Textknoten hinter der Beschriftung. In der Gegenprobe
+steht dort `"spalt":0`.
+
+Bild angesehen (§55.3): `bilder/db-feed-rechner-hell.png` — vorher
+„Offen Bericht Abgabe 30.09.2026", jetzt „Offen · Bericht · Abgabe ·
+Ende 30.09.2026 · Kosten 0 CHF".
+
+Dateien: `src/bereiche/datenbanken/steuerung.ts`,
+`quell/schale/stil/datenbanken.css`, `pruefungen/lauf/test417.mts` (neu).
