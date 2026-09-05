@@ -90,7 +90,22 @@ const ARTEN = Object.freeze({
   frageBefehle:      'frage.befehle',          /* was gehört in die Befehlspalette? */
   frageSeitenMenue:  'frage.seitenmenue',      /* was gehört ins Menü dieser Seite? */
   frageZeilenMenue:  'frage.zeilenmenue',
-  frageBefund:       'frage.befund'            /* was gehört in den Gesundheitsbericht? */
+  frageBefund:       'frage.befund'            /* was gehört in den Gesundheitsbericht? */,
+
+  /* --- Aufträge (E429) ---------------------------------------------------
+     Diese fünf gab es seit der Auftragsmaschine, aber nur als rohe
+     Zeichenketten an neunzehn Stellen. Ein Tippfehler wäre still gewesen:
+     `horche('auftrag.beended')` wartet für immer, und ein Zuhörer, der
+     nichts hört, sieht aus wie ein Ereignis, das nicht eingetreten ist. */
+  auftragAngelegt:        'auftrag.angelegt',
+  auftragBeginnt:         'auftrag.beginnt',
+  auftragSchritt:         'auftrag.schritt',
+  auftragBeendet:         'auftrag.beendet',
+  auftragFehler:          'auftrag.fehler',
+  auftragWiederaufgenommen: 'auftrag.wiederaufgenommen',
+
+  /* --- Einstellungen ----------------------------------------------------- */
+  einstellungGeaendert:   'einstellung.geaendert'
 });
 
 /** Eine der Zeichenketten oben — nicht irgendeine. */

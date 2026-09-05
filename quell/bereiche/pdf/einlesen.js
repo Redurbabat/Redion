@@ -585,9 +585,9 @@ const PdfEinlesen = (() => {
         }
     };
     if (typeof Ereignisse !== 'undefined' && Ereignisse.horche) {
-        Ereignisse.horche('auftrag.schritt', (d) => beiAuftragEreignis('auftrag.schritt', d));
-        Ereignisse.horche('auftrag.beendet', (d) => beiAuftragEreignis('auftrag.beendet', d));
-        Ereignisse.horche('auftrag.fehler', (d) => beiAuftragEreignis('auftrag.fehler', d));
+        Ereignisse.horche(ARTEN.auftragSchritt, (d) => beiAuftragEreignis('auftrag.schritt', d));
+        Ereignisse.horche(ARTEN.auftragBeendet, (d) => beiAuftragEreignis('auftrag.beendet', d));
+        Ereignisse.horche(ARTEN.auftragFehler, (d) => beiAuftragEreignis('auftrag.fehler', d));
     }
     /**
      * Die fehlenden Seitenbilder eines Dokuments neu rechnen — als Auftrag.

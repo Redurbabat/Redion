@@ -17068,7 +17068,20 @@ const ARTEN = Object.freeze({
     frageBefehle: 'frage.befehle', /* was gehört in die Befehlspalette? */
     frageSeitenMenue: 'frage.seitenmenue', /* was gehört ins Menü dieser Seite? */
     frageZeilenMenue: 'frage.zeilenmenue',
-    frageBefund: 'frage.befund' /* was gehört in den Gesundheitsbericht? */
+    frageBefund: 'frage.befund' /* was gehört in den Gesundheitsbericht? */,
+    /* --- Aufträge (E429) ---------------------------------------------------
+       Diese fünf gab es seit der Auftragsmaschine, aber nur als rohe
+       Zeichenketten an neunzehn Stellen. Ein Tippfehler wäre still gewesen:
+       `horche('auftrag.beended')` wartet für immer, und ein Zuhörer, der
+       nichts hört, sieht aus wie ein Ereignis, das nicht eingetreten ist. */
+    auftragAngelegt: 'auftrag.angelegt',
+    auftragBeginnt: 'auftrag.beginnt',
+    auftragSchritt: 'auftrag.schritt',
+    auftragBeendet: 'auftrag.beendet',
+    auftragFehler: 'auftrag.fehler',
+    auftragWiederaufgenommen: 'auftrag.wiederaufgenommen',
+    /* --- Einstellungen ----------------------------------------------------- */
+    einstellungGeaendert: 'einstellung.geaendert'
 });
 /**
  * Gibt es diesen Namen? Für Prüfläufe und die Fehlersuche.
@@ -17093,7 +17106,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 410, inhalt: '5c39bcf33139f692', gebaut: '2026-09-05T20:01:41.248Z' };
+const Stand = { fassung: 413, inhalt: 'e7fa3210afbe925a', gebaut: '2026-09-05T20:14:04.774Z' };
 window.Stand = Stand;
 
 </script>
@@ -22387,7 +22400,7 @@ const Auftraege = (() => {
             : standardBedingung();
         const a = JobModell.anlegen(id, art, eingabe, jetzt(), zeitText(), { ...opt, bedingung });
         await Store.auftragPut(a);
-        melde('auftrag.angelegt', { id, art });
+        melde(ARTEN.auftragAngelegt, { id, art });
         /* Nicht auf den nächsten Takt warten: wer etwas anstösst, will es
            laufen sehen. `void`, weil `anlegen` nicht auf die ganze Arbeit
            warten soll. */
@@ -22413,7 +22426,7 @@ const Auftraege = (() => {
         abbrueche.add(id);
         if (a.zustand === 'wartet') {
             await Store.auftragPut(JobModell.abbrechen(a, zeitText()));
-            melde('auftrag.beendet', { id, art: a.art, zustand: 'abgebrochen' });
+            melde(ARTEN.auftragBeendet, { id, art: a.art, zustand: 'abgebrochen' });
             abbrueche.delete(id);
         }
         return true;
@@ -22528,7 +22541,7 @@ const Auftraege = (() => {
         catch (e) {
             /* Ein Fehler im TAKT darf die Maschine nicht anhalten — sonst
                genügte ein kaputter Auftrag, damit nie wieder einer läuft. */
-            melde('auftrag.fehler', { fehler: String(e && e.message || e) });
+            melde(ARTEN.auftragFehler, { fehler: String(e && e.message || e) });
             return false;
         }
         finally {
@@ -22540,7 +22553,7 @@ const Auftraege = (() => {
         const werkzeug = werkzeuge.get(a.art);
         if (!werkzeug)
             return;
-        melde('auftrag.beginnt', { id: a.id, art: a.art, versuch: a.versuche });
+        melde(ARTEN.auftragBeginnt, { id: a.id, art: a.art, versuch: a.versuche });
         let stand = a;
         const schreiben = async (neu) => {
             stand = neu;
@@ -22549,7 +22562,7 @@ const Auftraege = (() => {
         const hilfe = {
             schritt: async (wert, text) => {
                 await schreiben(JobModell.schrittFertig(stand, wert, jetzt(), text, HALTEN_MS));
-                melde('auftrag.schritt', {
+                melde(ARTEN.auftragSchritt, {
                     id: a.id, art: a.art, schritt: stand.schritt,
                     schritte: stand.schritte, text: stand.text
                 });
@@ -22564,11 +22577,11 @@ const Auftraege = (() => {
             if (abbrueche.has(a.id)) {
                 abbrueche.delete(a.id);
                 await schreiben(JobModell.abbrechen(stand, zeitText()));
-                melde('auftrag.beendet', { id: a.id, art: a.art, zustand: 'abgebrochen' });
+                melde(ARTEN.auftragBeendet, { id: a.id, art: a.art, zustand: 'abgebrochen' });
                 return;
             }
             await schreiben(JobModell.fertig({ ...stand, stand: ergebnis === undefined ? stand.stand : ergebnis }, zeitText()));
-            melde('auftrag.beendet', { id: a.id, art: a.art, zustand: 'fertig' });
+            melde(ARTEN.auftragBeendet, { id: a.id, art: a.art, zustand: 'fertig' });
         }
         catch (e) {
             abbrueche.delete(a.id);
@@ -22608,7 +22621,7 @@ const Auftraege = (() => {
                 continue;
             await Store.auftragPut(neu);
             n++;
-            melde('auftrag.wiederaufgenommen', {
+            melde(ARTEN.auftragWiederaufgenommen, {
                 id: a.id, art: a.art, schritt: a.schritt, zustand: neu.zustand
             });
         }
@@ -22645,7 +22658,7 @@ const Auftraege = (() => {
             await aufraeumen();
         }
         catch (e) {
-            melde('auftrag.fehler', { fehler: String(e && e.message || e) });
+            melde(ARTEN.auftragFehler, { fehler: String(e && e.message || e) });
         }
         if (takt)
             clearInterval(takt);
@@ -30187,7 +30200,7 @@ Register.einstellungen = (() => {
         if (typeof Store !== 'undefined')
             Store.setMeta(id, wert);
         if (typeof Ereignisse !== 'undefined')
-            Ereignisse.melde('einstellung.geaendert', { id, wert });
+            Ereignisse.melde(ARTEN.einstellungGeaendert, { id, wert });
         return true;
     };
     /** Alles zurück auf Vorgabe — für „so wie am Anfang". */
@@ -51021,8 +51034,8 @@ const PdfSeite = (() => {
                     zurueck();
                 };
                 if (typeof Ereignisse !== 'undefined' && Ereignisse.horche) {
-                    aus.push(Ereignisse.horche('auftrag.beendet', fertig));
-                    aus.push(Ereignisse.horche('auftrag.fehler', fertig));
+                    aus.push(Ereignisse.horche(ARTEN.auftragBeendet, fertig));
+                    aus.push(Ereignisse.horche(ARTEN.auftragFehler, fertig));
                 }
                 PdfEinlesen.neuBerechnen(block.quelleId).then((e) => {
                     /* Nichts angelegt heisst: nichts wird kommen. Ein Knopf, der auf
@@ -51734,9 +51747,9 @@ const PdfEinlesen = (() => {
         }
     };
     if (typeof Ereignisse !== 'undefined' && Ereignisse.horche) {
-        Ereignisse.horche('auftrag.schritt', (d) => beiAuftragEreignis('auftrag.schritt', d));
-        Ereignisse.horche('auftrag.beendet', (d) => beiAuftragEreignis('auftrag.beendet', d));
-        Ereignisse.horche('auftrag.fehler', (d) => beiAuftragEreignis('auftrag.fehler', d));
+        Ereignisse.horche(ARTEN.auftragSchritt, (d) => beiAuftragEreignis('auftrag.schritt', d));
+        Ereignisse.horche(ARTEN.auftragBeendet, (d) => beiAuftragEreignis('auftrag.beendet', d));
+        Ereignisse.horche(ARTEN.auftragFehler, (d) => beiAuftragEreignis('auftrag.fehler', d));
     }
     /**
      * Die fehlenden Seitenbilder eines Dokuments neu rechnen — als Auftrag.
@@ -90185,7 +90198,7 @@ const ArchivImport = (() => {
        Dokumente darin liegen. */
     if (typeof Ereignisse !== 'undefined' && Ereignisse.horche) {
         try {
-            Ereignisse.horche('auftrag.beendet', (d) => {
+            Ereignisse.horche(ARTEN.auftragBeendet, (d) => {
                 if (!d || d.art !== AUFTRAG_ART)
                     return;
                 /* WOHIN, STEHT IM FERTIGEN AUFTRAG (E380). Die Meldung selbst trägt
@@ -119900,7 +119913,7 @@ const Wolke = (() => {
            Register —, gilt er sofort und nicht erst nach dem Neuladen. */
         const ev = globalThis.Ereignisse;
         if (ev?.horche)
-            ev.horche('einstellung.geaendert', (d) => {
+            ev.horche(ARTEN.einstellungGeaendert, (d) => {
                 if (d && d.id === 'wolkeTakt')
                     takt();
             });
@@ -142113,10 +142126,10 @@ window.addEventListener('DOMContentLoaded', () => {
     if (window.__nurBote)
         return;
     if (typeof Ereignisse !== 'undefined')
-        Ereignisse.melde('app:startet');
+        Ereignisse.melde(ARTEN.appStartet);
     App.start();
     if (typeof Ereignisse !== 'undefined')
-        Ereignisse.melde('app:steht');
+        Ereignisse.melde(ARTEN.appSteht);
 });
 
 </script>

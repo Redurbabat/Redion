@@ -270,7 +270,7 @@ const Auftraege = (() => {
             : standardBedingung();
         const a = JobModell.anlegen(id, art, eingabe, jetzt(), zeitText(), { ...opt, bedingung });
         await Store.auftragPut(a);
-        melde('auftrag.angelegt', { id, art });
+        melde(ARTEN.auftragAngelegt, { id, art });
         /* Nicht auf den nächsten Takt warten: wer etwas anstösst, will es
            laufen sehen. `void`, weil `anlegen` nicht auf die ganze Arbeit
            warten soll. */
@@ -296,7 +296,7 @@ const Auftraege = (() => {
         abbrueche.add(id);
         if (a.zustand === 'wartet') {
             await Store.auftragPut(JobModell.abbrechen(a, zeitText()));
-            melde('auftrag.beendet', { id, art: a.art, zustand: 'abgebrochen' });
+            melde(ARTEN.auftragBeendet, { id, art: a.art, zustand: 'abgebrochen' });
             abbrueche.delete(id);
         }
         return true;
@@ -411,7 +411,7 @@ const Auftraege = (() => {
         catch (e) {
             /* Ein Fehler im TAKT darf die Maschine nicht anhalten — sonst
                genügte ein kaputter Auftrag, damit nie wieder einer läuft. */
-            melde('auftrag.fehler', { fehler: String(e && e.message || e) });
+            melde(ARTEN.auftragFehler, { fehler: String(e && e.message || e) });
             return false;
         }
         finally {
@@ -423,7 +423,7 @@ const Auftraege = (() => {
         const werkzeug = werkzeuge.get(a.art);
         if (!werkzeug)
             return;
-        melde('auftrag.beginnt', { id: a.id, art: a.art, versuch: a.versuche });
+        melde(ARTEN.auftragBeginnt, { id: a.id, art: a.art, versuch: a.versuche });
         let stand = a;
         const schreiben = async (neu) => {
             stand = neu;
@@ -432,7 +432,7 @@ const Auftraege = (() => {
         const hilfe = {
             schritt: async (wert, text) => {
                 await schreiben(JobModell.schrittFertig(stand, wert, jetzt(), text, HALTEN_MS));
-                melde('auftrag.schritt', {
+                melde(ARTEN.auftragSchritt, {
                     id: a.id, art: a.art, schritt: stand.schritt,
                     schritte: stand.schritte, text: stand.text
                 });
@@ -447,11 +447,11 @@ const Auftraege = (() => {
             if (abbrueche.has(a.id)) {
                 abbrueche.delete(a.id);
                 await schreiben(JobModell.abbrechen(stand, zeitText()));
-                melde('auftrag.beendet', { id: a.id, art: a.art, zustand: 'abgebrochen' });
+                melde(ARTEN.auftragBeendet, { id: a.id, art: a.art, zustand: 'abgebrochen' });
                 return;
             }
             await schreiben(JobModell.fertig({ ...stand, stand: ergebnis === undefined ? stand.stand : ergebnis }, zeitText()));
-            melde('auftrag.beendet', { id: a.id, art: a.art, zustand: 'fertig' });
+            melde(ARTEN.auftragBeendet, { id: a.id, art: a.art, zustand: 'fertig' });
         }
         catch (e) {
             abbrueche.delete(a.id);
@@ -491,7 +491,7 @@ const Auftraege = (() => {
                 continue;
             await Store.auftragPut(neu);
             n++;
-            melde('auftrag.wiederaufgenommen', {
+            melde(ARTEN.auftragWiederaufgenommen, {
                 id: a.id, art: a.art, schritt: a.schritt, zustand: neu.zustand
             });
         }
@@ -528,7 +528,7 @@ const Auftraege = (() => {
             await aufraeumen();
         }
         catch (e) {
-            melde('auftrag.fehler', { fehler: String(e && e.message || e) });
+            melde(ARTEN.auftragFehler, { fehler: String(e && e.message || e) });
         }
         if (takt)
             clearInterval(takt);

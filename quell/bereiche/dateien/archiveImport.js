@@ -601,7 +601,7 @@ const ArchivImport = (() => {
        Dokumente darin liegen. */
     if (typeof Ereignisse !== 'undefined' && Ereignisse.horche) {
         try {
-            Ereignisse.horche('auftrag.beendet', (d) => {
+            Ereignisse.horche(ARTEN.auftragBeendet, (d) => {
                 if (!d || d.art !== AUFTRAG_ART)
                     return;
                 /* WOHIN, STEHT IM FERTIGEN AUFTRAG (E380). Die Meldung selbst trägt

@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-424 Entscheidungen, E1 bis E428. Die Nummer ist die Ordnung: eine Entscheidung
+425 Entscheidungen, E1 bis E429. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -482,6 +482,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E426** — Am Telefon steht der Titel für sich
 * **E427** — Der Zeitstrahl am Telefon zeigt den Zeitstrahl
 * **E428** — Die KI konnte nur 13 von 30 Spaltentypen bauen
+* **E429** — Zwei Namen für dasselbe Ereignis
 
 ---
 
@@ -34725,3 +34726,64 @@ GEGENPROBE: die sieben Zeilen wieder herausgenommen → §1 zweimal, §2 einmal
 und die Zählzeile rot, mit „13" statt „20". Gelaufen.
 
 Dateien: `src/bereiche/ki/dienst.ts`, `pruefungen/lauf/test421.mts` (neu).
+
+
+---
+
+E429 — Zwei Namen für dasselbe Ereignis
+----------------------------------------
+
+ENTSCHEIDUNG: Jeder Ereignisname kommt aus `kern/ereignisse/arten.ts`. Sechs
+Arten, die es nur als rohe Zeichenkette gab, stehen jetzt im Katalog; die
+neunzehn Stellen benutzen die Konstanten.
+
+`arten.ts` SAGT SELBST, WOZU ES DIE DATEI GIBT:
+
+  > Deshalb stehen die Namen hier, und man schreibt `ARTEN.seiteGeaendert`
+  > statt der Zeichenkette. Ein Tippfehler ist dann sofort `undefined` und
+  > fällt auf.
+
+An zwei Stellen war genau der Fehler eingetreten, vor dem sie warnt:
+
+    arten.ts    appStartet: 'app.startet'      mit PUNKT
+    start.ts    melde('app:startet')           mit DOPPELPUNKT
+
+Zwei Namen für dasselbe Ereignis. Wer über `ARTEN.appStartet` horcht, hört
+nie etwas — und weil `melde` den Wert für spätere Zuhörer aufhebt
+(`nachreichen`), bekäme er ihn auch nicht nachgereicht. Der Katalogeintrag
+war unerreichbar.
+
+UND DAS IST DIE SORTE FEHLER, DIE SICH NICHT ZEIGT. Ein Zuhörer, der nichts
+hört, sieht aus wie ein Ereignis, das nicht eingetreten ist. Es gibt keine
+Meldung, keinen roten Lauf, keinen Unterschied zum Normalfall — dieselbe
+Familie wie der Schalter ohne Draht (E417) und die Klasse ohne Regel (E410).
+
+DIE ÜBRIGEN SIEBZEHN WAREN NICHT FALSCH, NUR UNGESCHÜTZT. Die ganze Familie
+`auftrag.*` — angelegt, beginnt, schritt, beendet, fehler,
+wiederaufgenommen — stand gar nicht im Katalog, dazu
+`einstellung.geaendert`. Heute sind sie überall gleich geschrieben; ein
+Tippfehler morgen wäre still. `horche('auftrag.beended')` wartet für immer.
+
+WIE DER WÄCHTER DEN EIGENTLICHEN FALL FINDET, und das ist der übertragbare
+Teil: nicht Gleichheit prüfen, sondern „gleich bis auf die Trennzeichen".
+`app:startet` und `app.startet` sind dasselbe Wort mit einem anderen
+Zeichen dazwischen — und genau das macht sie zu zwei Ereignissen. Der
+Vergleich streicht `. : _ -` aus beiden und sieht nach, ob dann dasselbe
+dasteht. Ein Vergleich auf Gleichheit hätte gar nichts gefunden.
+
+§4 IST DER TEIL, DER NICHT LIEST, SONDERN NACHSIEHT: die Seite öffnen und
+über `ARTEN.appStartet` mit `nachreichen` horchen. Vor der Reparatur kam
+`{"name":"app.startet","da":false}` zurück — das Ereignis war gemeldet
+worden, nur unter einem anderen Namen.
+
+PRÜFUNG: `test422`, 14 Punkte, PORT 9544 — drei Abschnitte statisch, einer
+im Browser. Dazu `test180`, `test184`, `test189`, `test301` (Aufträge,
+Abgleich, PDF).
+GEGENPROBE: `melde('app:startet')` mit Doppelpunkt zurückgesetzt → §1, §3
+und §4 rot, mit „da: false". Gelaufen.
+
+Dateien: `src/kern/ereignisse/arten.ts`, `src/start.ts`,
+`src/kern/auftraege/maschine.ts`, `src/kern/abgleich/maschine.ts`,
+`src/register/einstellungen.ts`, `src/bereiche/pdf/einlesen.ts`,
+`src/bereiche/pdf/seite.ts`, `src/bereiche/dateien/archiveImport.ts`,
+`pruefungen/lauf/test422.mts` (neu).

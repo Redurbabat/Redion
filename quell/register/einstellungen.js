@@ -135,7 +135,7 @@ Register.einstellungen = (() => {
         if (typeof Store !== 'undefined')
             Store.setMeta(id, wert);
         if (typeof Ereignisse !== 'undefined')
-            Ereignisse.melde('einstellung.geaendert', { id, wert });
+            Ereignisse.melde(ARTEN.einstellungGeaendert, { id, wert });
         return true;
     };
     /** Alles zurück auf Vorgabe — für „so wie am Anfang". */

@@ -26,9 +26,9 @@ window.addEventListener('DOMContentLoaded', () => {
   /* Der Bote (die Brücke für fremde Fenster) will nur die Datenschicht. */
   if ((window as any).__nurBote) return;
 
-  if (typeof Ereignisse !== 'undefined') Ereignisse.melde('app:startet');
+  if (typeof Ereignisse !== 'undefined') Ereignisse.melde(ARTEN.appStartet);
 
   App.start();
 
-  if (typeof Ereignisse !== 'undefined') Ereignisse.melde('app:steht');
+  if (typeof Ereignisse !== 'undefined') Ereignisse.melde(ARTEN.appSteht);
 });
