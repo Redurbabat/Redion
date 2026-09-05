@@ -6066,3 +6066,39 @@ Und zwei der neun Zustände haben in Redion noch gar keinen Ort:
 Wissensgraphen, der heute ohne Warteanzeige auskommt. Sie sind trotzdem
 gebaut und geprüft — eine Betriebsart wegzulassen und später nachzureichen
 hätte bedeutet, den Vergleichspunkt aus `test399 §4` neu zu eichen.
+
+---
+
+L130 — Was der Ansichten-Durchgang sonst noch fand
+==================================================
+
+E409 hat die Breite und den Fortschrittsbalken geholt. Beim Hinsehen auf die
+dreizehn Bilder blieben vier Dinge übrig, jedes für sich klein, aber jedes
+kostet den Nutzer eine Auskunft.
+
+1. **Die Werte auf einer Board-Karte sind nicht zuzuordnen.** Da steht
+   „08.09.2026 10.09.2026 85 ▬ 0 % ★★★☆☆ Lina 📍Bern ☐" — in einer Zeile,
+   ohne Feldnamen und ohne Trenner. Welches Datum ist Anfang, welches Ende?
+   Ist 85 der Preis oder die Stückzahl? Was bedeutet das leere Kästchen?
+   Notion lässt die Eigenschaftsnamen auf Karten wahlweise mitlaufen. Das
+   ist die kleinste sinnvolle Reparatur.
+
+2. **Der Kalender zeigt keine Zeitspannen.** „Schaltplan Werkstatt" läuft
+   vom 1. bis zum 12. September und steht nur am 1. „Steuerung Rolltor"
+   läuft vom 5. bis zum 26. und steht nur am 5. Das Feld `endeKey` wird im
+   Code gelesen, aber nie von selbst gesetzt und nie als Balken gezeichnet.
+   Wer im Monat nachsieht, was gerade läuft, sieht es nicht.
+
+3. **Kein Hinweis, dass rechts noch etwas kommt.** Die Tabelle rollt
+   waagerecht, und der Roller ist unsichtbar. Vor E409 waren dahinter acht
+   von dreizehn Spalten, jetzt sind es drei — der Fehler ist kleiner
+   geworden, aber nicht weg. Ein Schatten an der rechten Kante, solange
+   noch etwas kommt, würde reichen.
+
+4. **Das Zahlenformat einer Spalte wird nicht angezeigt.** Das Schema kann
+   `format: 'chf'` tragen; in der Tabelle steht trotzdem „420". Entweder
+   das Format wirkt, oder das Feld gehört aus dem Schema entfernt — ein
+   Feld, das gespeichert wird und nichts tut, ist die schlechtere Hälfte
+   von beidem.
+
+Nachzusehen mit `node bilder.mts db-board`, `db-calendar`, `db-table`.

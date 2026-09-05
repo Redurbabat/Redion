@@ -2663,13 +2663,20 @@ body[data-kontrast="hoch"] select, body[data-kontrast="hoch"] textarea{
 .sterne i.an{ color:#f5b301; }
 .sterne:hover i{ color:#f5b30188; }
 .sterne i:hover ~ i{ color:var(--line); }
-.proz{ display:inline-flex; align-items:center; gap:8px; width:100%; }
-.proz i{ display:block; height:6px; border-radius:3px; background:var(--accent);
+/* Fortschritt: Bahn, Balken, Zahl — in dieser Reihenfolge und mit diesen
+   drei Flex-Werten. Wer sie ändert, sollte E409 lesen: der Balken sass
+   vorher unmittelbar in `.proz`, bezog sein `width:n%` auf die ganze Zelle
+   und schob bei hohen Werten die Prozentzahl hinaus. 55 %, 80 % und 100 %
+   sahen danach gleich aus. */
+.proz{ display:flex; align-items:center; gap:8px; width:100%; min-width:0; }
+.proz-bahn{ flex:1 1 auto; min-width:14px; height:6px; border-radius:3px;
+            background:var(--line); overflow:hidden; }
+.proz i{ display:block; height:100%; border-radius:3px; background:var(--accent);
          min-width:2px; }
-.proz::before{ content:''; position:absolute; }
-.proz b{ font-size:11.5px; font-weight:500; color:var(--text-dim); flex:0 0 auto; }
-td .proz{ position:relative; }
-td .proz i{ flex:0 0 auto; }
+/* `flex:0 0 auto` ist hier die tragende Zeile: die Zahl gibt ihren Platz
+   nicht her. Sie steht bei 0 % genauso da wie bei 100 %. */
+.proz b{ font-size:11.5px; font-weight:500; color:var(--text-dim); flex:0 0 auto;
+         font-variant-numeric:tabular-nums; }
 
 /* Gruppierte Tabellen, Bahnen im Board, Kartenbilder */
 .tgruppen{display:flex; flex-direction:column; gap:14px}

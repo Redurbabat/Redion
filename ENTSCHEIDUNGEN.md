@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-404 Entscheidungen, E1 bis E408. Die Nummer ist die Ordnung: eine Entscheidung
+405 Entscheidungen, E1 bis E409. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -462,6 +462,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E406** — Sieben erfundene Farbtokens, sechs namenlose Schalter, vier Farbreihen
 * **E407** — 42 Trefflächen unter 44 px, und zwei Fehler beim Reparieren
 * **E408** — Ein Schimmer, der sagt „hier kommt noch Text nach“
+* **E409** — Die Ansichten bekommen die Breite, die da ist
 
 ---
 
@@ -33224,3 +33225,104 @@ MUTATIONEN ROT GESEHEN, alle fünf:
 
 Dateien: `pruefungen/lauf/test403.mts` (neu),
 `quell/schale/stil/bausteine.css`, `src/bereiche/ki/dienst.ts`.
+
+E409 — Die Ansichten bekommen die Breite, die da ist
+================================================================================
+5. September 2026
+
+Redur: „arbeite an die ansicht funktionen". Also erst hinsehen (§55): ein
+Bildziel je Ansichtsart, alle dreizehn mit DERSELBEN Datenbank — neun Zeilen
+mit Status, Auswahl, Mehrfachauswahl, Anfang und Ende, Kosten, Fortschritt,
+Bewertung, Person, Ort, Haken und einem echten Bild. Was hier fehlt, fehlt
+auf dem Bild.
+
+WAS DIE MESSUNG ERGAB, und sie ist der Grund für alles Weitere:
+
+    Fenster   Seite    Datenbank sichtbar   Tabelle braucht   leer daneben
+    1280 px   900 px          708 px            1637 px          326 px
+    1920 px   900 px          708 px            1637 px          966 px
+
+57 % der Tabelle lagen hinter einem waagerechten Roller, den niemand sieht.
+Und ein doppelt so breites Fenster änderte NICHTS: `#page` blieb bei 900 px,
+links und rechts standen je 483 px leer. Auf dem Bild waren von dreizehn
+Spalten fünf zu sehen — Ende, Kosten, Stand, Bewertung, Wer, Ort, Erledigt
+und Bild fehlten, ohne jeden Hinweis, dass es sie gibt.
+
+Fliesstext soll schmal bleiben, das ist richtig und bleibt so. Eine Datenbank
+ist kein Fliesstext.
+
+DREI SCHRITTE, UND JEDER EINZELNE WAR NÖTIG. Das ist der Teil, der hier
+aufgeschrieben gehört, weil zwei davon erst durch ein Bild auffielen:
+
+  1. Die Schale MISST, wie viel Luft neben der Seite steht
+     (`schale.ts`, `luftMessen`), und schreibt sie als `--seite-luft`.
+     Eine Media-Query mit festen Zahlen ginge nicht: die Seitenleiste kann
+     offen oder eingeklappt sein, und eine feste Zahl wüsste davon nichts.
+
+     Der erste Versuch beobachtete nur `#scroll`. Das ändert seine Breite
+     nie — `#page` bekommt seine 900 px erst später. Gemessen wurde also
+     einmal, viel zu früh, mit dem Ergebnis 0, und danach kam nie wieder ein
+     Anlass. Auf dem Bild sah das aus, als hätte die Regel nicht gegriffen.
+     Jetzt werden beide beobachtet.
+
+  2. `max-width:100%` stand in der alten `.db`-Zeile und kappte die neue
+     Breite stillschweigend. Die Tabelle rückte nach links, wurde aber
+     keinen Pixel breiter.
+
+  3. `.blk` ist `display:flex` (aufbau.css), und ein Flex-Kind nimmt seine
+     Breite aus dem Inhalt, nicht aus `width`. Ohne `flex: 0 0 auto` wuchs
+     die Tabelle nur um EIN `--db-aus` statt um zwei: gemessen 943 px statt
+     der gerechneten 1178.
+
+Ergebnis: zehn Spalten statt fünf bei 1280 px, und bei 1920 px wächst sie
+wirklich mit. Das Board zeigt jetzt alle vier Bahnen — „Fertig" mit zwei
+Karten fehlte vorher ganz. Und das schiefe Kalenderraster, bei dem jede
+Wochenzeile ihre eigenen Spaltenbreiten hatte, steht gerade: es war eine
+Folge der zu schmalen Fläche, kein eigener Fehler.
+
+DER FORTSCHRITTSBALKEN LOG, und das fand nur ein Bild.
+
+`.proz i` hatte `width: n%` — und `n%` bezog sich auf die GANZE Zelle. Bei
+100 % nahm der Balken sie ein und schob die Prozentzahl hinaus; `flex:0 0
+auto` liess ihn dabei nicht schrumpfen. Gemessen in einer 90 px breiten
+Spalte: bei 0 % brauchte die Zelle 89 px und die Zahl stand da, bei 100 %
+brauchte sie 122 px und die Zahl war weg.
+
+Auf dem Bild sahen 55 %, 80 % und 100 % dadurch gleich aus — drei Balken bis
+zum Rand, keiner mit Zahl. Das ist §55.1 wörtlich: eine abgeschnittene
+Anzeige zeigt einen ANDEREN Wert, und beide sehen gültig aus.
+
+Jetzt gibt es eine BAHN. Die Zahl nimmt ihren Platz zuerst (`flex:0 0 auto`),
+die Bahn bekommt den Rest, und `n%` bezieht sich auf die Bahn. Nebenbei sieht
+man dadurch, wovon die Prozent sind — die graue Bahn zeigt das Ganze.
+
+DER KARTEIKARTEN-STREIFEN. Redur: „mache die 1 kqrt ist fählig komplet weg".
+`kartenMelden` stand auf an und meldete beim ersten Start des Tages. Der
+Streifen stand damit unten in der Mitte über allem — auch über jedem
+Bildschirmfoto und über dem, was gerade gebaut wurde. Die Vorgabe ist jetzt
+aus; der Schalter bleibt, wer die Meldung will, holt sie sich. Gelöscht wird
+nichts (§43).
+
+WAS NICHT GEMACHT WURDE. Eine Container-Query auf `#scroll` wäre die
+elegantere Messung gewesen. E369 hat gezeigt, was `container-type` auf einem
+Vorfahren anrichtet — die PDF-Seite fiel auf 2 px zusammen. Und kein
+`transform: translateX(-50%)`, obwohl es die kürzeste Zentrierung wäre: der
+Tabellenkopf ist `position:sticky`, und ein Vorfahr mit `transform` macht
+daraus einen neuen Bezugsrahmen. Der Kopf bliebe beim Rollen nicht stehen.
+
+PRÜFUNG: `test404`, 22 Punkte, PORT 9527. Die Beispieldaten kommen aus
+`bilder.mts` — eine Quelle, nicht zwei.
+MUTATIONEN ROT GESEHEN:
+  §1 → `flex: 0 0 auto` wegnehmen. → „Und zwar merklich — über 1000 px bei
+       1280 px Fenster — 943", 21/22. Genau der erste Fehlversuch.
+  §5 → die Bahn wieder weglassen. → „Ein höherer Wert hat einen längeren
+       Balken — 55 %=39px, 60 %=39px" und „Jede Bahn ist breit genug — -1
+       -1 -1 …", 20/22. Zwei verschiedene Werte, ein Balken.
+
+Mitgelaufen und grün: test32, test36, test40, test87, test105, test109,
+test136, test215, test233, test237, test283.
+
+Dateien: `pruefungen/lauf/test404.mts` (neu), `bilder.mts` (13 Bildziele),
+`src/schale/aufbau/schale.ts`, `src/bereiche/datenbanken/dienst.ts`,
+`src/bereiche/einstellungen/ansicht/seite.ts`,
+`quell/schale/stil/datenbanken.css`, `quell/schale/stil/bausteine.css`.

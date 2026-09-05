@@ -424,8 +424,8 @@ const Einstellungen = (() => {
                     ? 'Bereits erlaubt' : 'Erlauben')) +
       zeile('Erinnerungen in der App', 'Der Streifen unten am Bildschirm',
             schalter('erinnernInApp', V('erinnernInApp', true))) +
-      zeile('Karteikarten', 'Einmal am Tag melden, wenn Karten fällig sind',
-            schalter('kartenMelden', V('kartenMelden', true))) +
+      zeile('Karteikarten', 'Einmal am Tag melden, wenn Karten fällig sind — aus, bis du es einschaltest',
+            schalter('kartenMelden', V('kartenMelden', false))) +
       zeile('Offene Erinnerungen', '', `<span class="ez-grau">${Werkzeuge.erinnerungen().filter((e: any) => !e.erledigt).length} offen</span>`) +
       zeile('Alle Erinnerungen', '', knopf('erinnerungen-zeigen', 'Posteingang öffnen')),
 
@@ -1123,7 +1123,11 @@ const Einstellungen = (() => {
           return;
         }
 
-        const neu = !V(k, k === 'erinnernInApp' || k === 'kartenMelden' ||
+        /* `kartenMelden` steht NICHT mehr in dieser Liste: seine Vorgabe ist
+           seit E409 aus. Redur bekam den Streifen auf jedem Bildschirm zu
+           sehen, ohne je danach gefragt zu haben. Der Schalter bleibt — wer
+           die Meldung will, holt sie sich. */
+        const neu = !V(k, k === 'erinnernInApp' ||
                           k === 'kiKontext' || k === 'autoVersionen' || k === 'ki:webFragen');
         S(k, neu);
         b.classList.toggle('an', neu);
@@ -1636,7 +1640,11 @@ const Einstellungen = (() => {
      * Der Merker wird nur gesetzt, wenn wirklich etwas gezeigt wurde. Sonst
      * würde ein Start um 8 Uhr ohne fällige Karten die Meldung um 14 Uhr
      * verschlucken, wenn dann welche fällig sind. */
-    if (V('kartenMelden', true)) {
+    /* AUS, BIS ER SIE EINSCHALTET (E409). Die Vorgabe war an, und damit stand
+       der Streifen bei jedem ersten Start des Tages unten in der Mitte — auch
+       über jedem Bildschirmfoto und über dem, was gerade gebaut wurde. Eine
+       Meldung, um die niemand gebeten hat, ist Werbung, keine Erinnerung. */
+    if (V('kartenMelden', false)) {
       const heute3 = new Date().toISOString().slice(0, 10);
       if (Store.getMeta('kartenGemeldet', '') !== heute3) {
         const n = Werkzeuge.faellig().length;

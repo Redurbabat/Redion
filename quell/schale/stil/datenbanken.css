@@ -16,6 +16,43 @@
    DATENBANKEN
    ========================================================================== */
 .db{margin:10px 0 20px; border-radius:4px; max-width:100%; min-width:0}
+
+/* ----------------------------------------------------------------------------
+ * EINE DATENBANK DARF ÜBER DEN TEXTRAND HINAUS (E409)
+ *
+ * Gemessen: bei 1280 px Fenster stand die Tabelle in 708 px, brauchte aber
+ * 1637 — 57 % lagen hinter einem waagerechten Roller. Bei 1920 px war es
+ * genauso, und daneben blieben je 483 px leer.
+ *
+ * `--seite-luft` misst die Schale (schale.ts, luftMessen). Dazu kommt das
+ * Polster von `#page` selbst; 24 px bleiben als Rand stehen, damit die
+ * Datenbank nicht an der Fensterkante klebt. Ohne die Variable ist der Wert
+ * 0 und alles bleibt, wie es war — das ist der Rückfall am Telefon und
+ * überall, wo die Schale noch nicht gemessen hat.
+ *
+ * Ab 1100 px erst: darunter gibt es nichts zu holen, und am Telefon würde
+ * ein negativer Rand die Seite herausschieben.
+ *
+ * KEIN `transform: translateX(-50%)` — der Tabellenkopf ist `position:sticky`,
+ * und ein Vorfahr mit `transform` macht daraus einen neuen Bezugsrahmen. Der
+ * Kopf bliebe beim Rollen nicht mehr stehen.
+ * --------------------------------------------------------------------------*/
+@media (min-width:1100px){
+  .db{
+    /* `.blk` ist `display:flex` (aufbau.css), und ein Flex-Kind nimmt seine
+       Breite aus dem Inhalt, nicht aus `width`. Ohne diese Zeile wuchs die
+       Tabelle nur um EIN `--db-aus` statt um zwei — gemessen 939 px statt
+       der gerechneten 1178. */
+    flex: 0 0 auto;
+    --db-aus: min(calc(var(--seite-luft, 0px) + 72px), 620px);
+    /* `max-width:100%` steht oben und hat den ersten Versuch stillschweigend
+       gekappt: die Tabelle rückte nach links, wurde aber keinen Pixel
+       breiter. Auf dem Bild sah das nach „hat nichts getan" aus. */
+    max-width: none;
+    width: calc(100% + 2 * var(--db-aus));
+    margin-left: calc(-1 * var(--db-aus));
+  }
+}
 .db-head{display:flex; align-items:center; gap:2px; margin-bottom:6px; flex-wrap:wrap}
 .db-tabs{display:flex; gap:2px; align-items:center}
 .db-tab{

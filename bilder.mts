@@ -2016,6 +2016,118 @@ ANSICHTEN['dokumenteinzel'] = {
 
 
 /* ========================================================================*/
+/* ==========================================================================
+ * DIE DREIZEHN ANSICHTEN EINER DATENBANK (E409)
+ * --------------------------------------------------------------------------
+ * Ein Eintrag je Ansichtsart, alle mit DERSELBEN Datenbank: neun Zeilen mit
+ * Status, Auswahl, Mehrfachauswahl, Anfang und Ende, Zahl, Fortschritt,
+ * Bewertung, Person, Ort, Haken und einem echten Bild — also genau die
+ * Werte, an denen eine Ansicht etwas zu zeigen hat. Was hier fehlt, fehlt
+ * auf dem Bild, und dann weiss man wenigstens, dass es fehlt.
+ *
+ * Die Einträge stehen UNTER dem Katalog, weil sie erzeugt werden: `bauen`
+ * wird in die Seite hineingereicht und dort ausgewertet, ein Verschluss über
+ * eine Node-Variable überlebt das nicht. Die Ansichtsart steht deshalb als
+ * Wortlaut im Funktionstext — `new Function` baut ihn, einmal je Ansicht.
+ * ========================================================================*/
+const DB_ANSICHTEN = ['table', 'raster', 'board', 'timeline', 'calendar', 'list',
+  'gallery', 'chart', 'feed', 'map', 'dashboard', 'pivot', 'form'];
+
+const dbAufbau = (layout: string): string => `return (async () => {
+  const w = window;
+  Store.setMeta('rundgangGesehen', true);
+  document.querySelector('.produkt-onboarding-lage')?.remove();
+  document.getElementById('rg-willkommen')?.remove();
+  document.getElementById('rg-einladung')?.remove();
+
+  /* Ein gemaltes Bild als Anhang — echte Bytes, damit Galerie und Board
+     wirklich ein Bild finden und nicht nur einen Platzhalter. */
+  const male = (text, farbe) => {
+    const c = document.createElement('canvas');
+    c.width = 480; c.height = 300;
+    const g = c.getContext('2d');
+    g.fillStyle = farbe; g.fillRect(0, 0, 480, 300);
+    g.fillStyle = 'rgba(255,255,255,.18)';
+    for (let i = 0; i < 6; i++) { g.beginPath(); g.arc(80 + i * 70, 150 + (i % 2) * 40, 60, 0, 7); g.fill(); }
+    g.fillStyle = '#fff'; g.font = 'bold 30px sans-serif'; g.fillText(text, 26, 260);
+    return new Promise(r => c.toBlob(b => r(b), 'image/png'));
+  };
+
+  const seite = Store.addPage(null, { text: 'Projekte 2026', icon: '📋' });
+  const { block, collectionId } = Store.addDatabase(seite.id, 'Projekte 2026', {
+    titel:   { name: 'Projekt',   type: 'title' },
+    status:  { name: 'Status',    type: 'status',
+               options: [{ name: 'Offen', color: 'gray' }, { name: 'Läuft', color: 'blue' },
+                         { name: 'Prüfung', color: 'orange' }, { name: 'Fertig', color: 'green' }] },
+    bereich: { name: 'Bereich',   type: 'select',
+               options: [{ name: 'Elektro', color: 'yellow' }, { name: 'Bericht', color: 'purple' },
+                         { name: 'Messung', color: 'red' }] },
+    tags:    { name: 'Schlagworte', type: 'multi',
+               options: [{ name: 'Schule', color: 'blue' }, { name: 'Abgabe', color: 'red' },
+                         { name: 'Team', color: 'green' }] },
+    anfang:  { name: 'Anfang',    type: 'date' },
+    ende:    { name: 'Ende',      type: 'date' },
+    kosten:  { name: 'Kosten',    type: 'number', format: 'chf' },
+    stand:   { name: 'Stand',     type: 'prozent' },
+    wert:    { name: 'Bewertung', type: 'sterne' },
+    wer:     { name: 'Wer',       type: 'person' },
+    ort:     { name: 'Ort',       type: 'place' },
+    fertig:  { name: 'Erledigt',  type: 'checkbox' },
+    bild:    { name: 'Bild',      type: 'files' }
+  }, 'table');
+
+  const zeilen = [
+    ['Schaltplan Werkstatt',  'Läuft',   'Elektro', ['Schule','Team'],  '2026-09-01', '2026-09-12',  420,  55, 4, 'Redur',  'Zürich',   false, '#2563eb'],
+    ['Messprotokoll Motor',   'Offen',   'Messung', ['Schule'],         '2026-09-08', '2026-09-10',   85,   0, 3, 'Lina',   'Bern',     false, '#059669'],
+    ['Bericht Kapitel 1',     'Fertig',  'Bericht', ['Abgabe'],         '2026-08-20', '2026-08-29',    0, 100, 5, 'Redur',  'Basel',    true,  '#b45309'],
+    ['Bericht Kapitel 2',     'Prüfung', 'Bericht', ['Abgabe','Team'],  '2026-09-03', '2026-09-16',    0,  80, 4, 'Amir',   'Luzern',   false, '#7c3aed'],
+    ['Steuerung Rolltor',     'Läuft',   'Elektro', ['Team'],           '2026-09-05', '2026-09-26', 1290,  35, 2, 'Lina',   'Winterthur', false, '#dc2626'],
+    ['Isolationsmessung',     'Offen',   'Messung', [],                 '2026-09-15', '2026-09-15',   60,   0, 0, 'Amir',   'St. Gallen', false, '#0891b2'],
+    ['Abgabe vorbereiten',    'Offen',   'Bericht', ['Abgabe'],         '2026-09-22', '2026-09-30',    0,  10, 3, 'Redur',  'Zürich',   false, '#4f46e5'],
+    ['Verteiler beschriften', 'Fertig',  'Elektro', ['Schule'],         '2026-08-25', '2026-08-26',   35, 100, 5, 'Lina',   'Bern',     true,  '#16a34a'],
+    ['Lastmessung Halle 3',   'Läuft',   'Messung', ['Team','Schule'],  '2026-09-09', '2026-09-19',  740,  60, 4, 'Amir',   'Chur',     false, '#ea580c']
+  ];
+  const ORTE = { 'Zürich': [47.3769, 8.5417], 'Bern': [46.948, 7.4474], 'Basel': [47.5596, 7.5886],
+                 'Luzern': [47.0502, 8.3093], 'Winterthur': [47.4988, 8.7237], 'St. Gallen': [47.4245, 9.3767],
+                 'Chur': [46.8508, 9.5320] };
+  /* NICHT w als Name für die Bewertung: das verdeckt das w von oben, und
+     w.Dateien wurde dadurch zu (4).Dateien. Und KEINE Schrägstriche als
+     Anführung in diesem Kommentar — er steht in einem Template-Literal,
+     und ein Gegenstrich darin beendet es. */
+  for (const [t, st, ber, tags, a, e, k, pr, bew, wer, ort, fertig, farbe] of zeilen) {
+    const r = Store.addRow(collectionId, { title: t });
+    Store.setProp(r.id, 'status', st);
+    Store.setProp(r.id, 'bereich', ber);
+    Store.setProp(r.id, 'tags', tags);
+    Store.setProp(r.id, 'anfang', a);
+    Store.setProp(r.id, 'ende', e);
+    Store.setProp(r.id, 'kosten', k);
+    Store.setProp(r.id, 'stand', pr);
+    Store.setProp(r.id, 'wert', bew);
+    Store.setProp(r.id, 'wer', wer);
+    Store.setProp(r.id, 'ort', { name: ort, lat: ORTE[ort][0], lon: ORTE[ort][1], voll: ort + ', Schweiz' });
+    Store.setProp(r.id, 'fertig', fertig);
+    const blob = await male(t, farbe);
+    const datei = await w.Dateien.ablegen(blob, { name: t + '.png', blockId: r.id });
+    Store.setProp(r.id, 'bild', [{ id: datei.id, name: datei.name, url: URL.createObjectURL(blob) }]);
+  }
+
+  const layout = '${layout}';
+  let view = Store.getView(Store.getCollection(collectionId).viewIds[0]);
+  if (layout !== 'table') view = Store.addView(collectionId, layout);
+  Store.updateBlock(block.id, { aktiveView: view.id });
+  await Store.flush();
+  App.oeffne(seite.id);
+  await new Promise(r => setTimeout(r, 1200));
+})();`;
+
+for (const l of DB_ANSICHTEN) {
+  ANSICHTEN['db-' + l] = {
+    titel: 'Datenbank als ' + l + ' (E409)',
+    bauen: new Function(dbAufbau(l)) as () => Promise<void>
+  };
+}
+
 const wunsch = process.argv.slice(2);
 const nurAnsicht = wunsch.filter(a => ANSICHTEN[a]);
 const nurGeraet = wunsch.filter(a => GERAETE[a]);

@@ -524,10 +524,26 @@ const DatenbankDienst = (() => {
                 [1, 2, 3, 4, 5].map(i => `<i data-n="${i}" class="${i <= n ? 'an' : ''}">★</i>`).join('') +
                 '</span>';
         }
-        /* Fortschritt: Balken mit Prozentzahl. */
+        /* Fortschritt: eine Bahn, darin der Balken, daneben die Zahl.
+         *
+         * DIE BAHN IST NEU UND SIE IST DER GANZE PUNKT (E409). Vorher stand der
+         * Balken unmittelbar in `.proz`, und `width: n%` bezog sich damit auf
+         * die GANZE Zelle — bei 100 % nahm er sie ganz ein und schob die
+         * Prozentzahl hinaus. Gemessen in einer 90 px breiten Spalte: bei 0 %
+         * brauchte die Zelle 89 px und die Zahl stand da, bei 100 % brauchte
+         * sie 122 px und die Zahl war weg.
+         *
+         * Auf dem Bild sahen 55 %, 80 % und 100 % dadurch gleich aus — drei
+         * Balken bis zum Rand, keine Zahl dabei. Das ist der Fehler aus §55.1:
+         * eine abgeschnittene Anzeige zeigt einen ANDEREN Wert, und beide sehen
+         * gültig aus.
+         *
+         * Jetzt nimmt die Zahl ihren Platz zuerst, die Bahn bekommt den Rest,
+         * und `n%` bezieht sich auf die Bahn. */
         if (def.type === 'prozent') {
             const n = Math.max(0, Math.min(100, Math.round(Formula.zahl(v))));
-            return '<span class="proz"><i style="width:' + n + '%"></i>' +
+            return '<span class="proz"><span class="proz-bahn">' +
+                '<i style="width:' + n + '%"></i></span>' +
                 '<b>' + n + ' %</b></span>';
         }
         if (def.type === 'select' || def.type === 'status') {

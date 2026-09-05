@@ -2060,6 +2060,43 @@ body[data-ruhig="an"] #menueband.ist-zu .mb-klapp{
    DATENBANKEN
    ========================================================================== */
 .db{margin:10px 0 20px; border-radius:4px; max-width:100%; min-width:0}
+
+/* ----------------------------------------------------------------------------
+ * EINE DATENBANK DARF ÜBER DEN TEXTRAND HINAUS (E409)
+ *
+ * Gemessen: bei 1280 px Fenster stand die Tabelle in 708 px, brauchte aber
+ * 1637 — 57 % lagen hinter einem waagerechten Roller. Bei 1920 px war es
+ * genauso, und daneben blieben je 483 px leer.
+ *
+ * `--seite-luft` misst die Schale (schale.ts, luftMessen). Dazu kommt das
+ * Polster von `#page` selbst; 24 px bleiben als Rand stehen, damit die
+ * Datenbank nicht an der Fensterkante klebt. Ohne die Variable ist der Wert
+ * 0 und alles bleibt, wie es war — das ist der Rückfall am Telefon und
+ * überall, wo die Schale noch nicht gemessen hat.
+ *
+ * Ab 1100 px erst: darunter gibt es nichts zu holen, und am Telefon würde
+ * ein negativer Rand die Seite herausschieben.
+ *
+ * KEIN `transform: translateX(-50%)` — der Tabellenkopf ist `position:sticky`,
+ * und ein Vorfahr mit `transform` macht daraus einen neuen Bezugsrahmen. Der
+ * Kopf bliebe beim Rollen nicht mehr stehen.
+ * --------------------------------------------------------------------------*/
+@media (min-width:1100px){
+  .db{
+    /* `.blk` ist `display:flex` (aufbau.css), und ein Flex-Kind nimmt seine
+       Breite aus dem Inhalt, nicht aus `width`. Ohne diese Zeile wuchs die
+       Tabelle nur um EIN `--db-aus` statt um zwei — gemessen 939 px statt
+       der gerechneten 1178. */
+    flex: 0 0 auto;
+    --db-aus: min(calc(var(--seite-luft, 0px) + 72px), 620px);
+    /* `max-width:100%` steht oben und hat den ersten Versuch stillschweigend
+       gekappt: die Tabelle rückte nach links, wurde aber keinen Pixel
+       breiter. Auf dem Bild sah das nach „hat nichts getan" aus. */
+    max-width: none;
+    width: calc(100% + 2 * var(--db-aus));
+    margin-left: calc(-1 * var(--db-aus));
+  }
+}
 .db-head{display:flex; align-items:center; gap:2px; margin-bottom:6px; flex-wrap:wrap}
 .db-tabs{display:flex; gap:2px; align-items:center}
 .db-tab{
@@ -10335,13 +10372,20 @@ body[data-kontrast="hoch"] select, body[data-kontrast="hoch"] textarea{
 .sterne i.an{ color:#f5b301; }
 .sterne:hover i{ color:#f5b30188; }
 .sterne i:hover ~ i{ color:var(--line); }
-.proz{ display:inline-flex; align-items:center; gap:8px; width:100%; }
-.proz i{ display:block; height:6px; border-radius:3px; background:var(--accent);
+/* Fortschritt: Bahn, Balken, Zahl — in dieser Reihenfolge und mit diesen
+   drei Flex-Werten. Wer sie ändert, sollte E409 lesen: der Balken sass
+   vorher unmittelbar in `.proz`, bezog sein `width:n%` auf die ganze Zelle
+   und schob bei hohen Werten die Prozentzahl hinaus. 55 %, 80 % und 100 %
+   sahen danach gleich aus. */
+.proz{ display:flex; align-items:center; gap:8px; width:100%; min-width:0; }
+.proz-bahn{ flex:1 1 auto; min-width:14px; height:6px; border-radius:3px;
+            background:var(--line); overflow:hidden; }
+.proz i{ display:block; height:100%; border-radius:3px; background:var(--accent);
          min-width:2px; }
-.proz::before{ content:''; position:absolute; }
-.proz b{ font-size:11.5px; font-weight:500; color:var(--text-dim); flex:0 0 auto; }
-td .proz{ position:relative; }
-td .proz i{ flex:0 0 auto; }
+/* `flex:0 0 auto` ist hier die tragende Zeile: die Zahl gibt ihren Platz
+   nicht her. Sie steht bei 0 % genauso da wie bei 100 %. */
+.proz b{ font-size:11.5px; font-weight:500; color:var(--text-dim); flex:0 0 auto;
+         font-variant-numeric:tabular-nums; }
 
 /* Gruppierte Tabellen, Bahnen im Board, Kartenbilder */
 .tgruppen{display:flex; flex-direction:column; gap:14px}
@@ -16708,7 +16752,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 354, inhalt: '33fa538e2dde9142', gebaut: '2026-09-05T11:50:12.132Z' };
+const Stand = { fassung: 358, inhalt: '48658a3c97023b2f', gebaut: '2026-09-05T14:14:14.483Z' };
 window.Stand = Stand;
 
 </script>
@@ -67994,10 +68038,26 @@ const DatenbankDienst = (() => {
                 [1, 2, 3, 4, 5].map(i => `<i data-n="${i}" class="${i <= n ? 'an' : ''}">★</i>`).join('') +
                 '</span>';
         }
-        /* Fortschritt: Balken mit Prozentzahl. */
+        /* Fortschritt: eine Bahn, darin der Balken, daneben die Zahl.
+         *
+         * DIE BAHN IST NEU UND SIE IST DER GANZE PUNKT (E409). Vorher stand der
+         * Balken unmittelbar in `.proz`, und `width: n%` bezog sich damit auf
+         * die GANZE Zelle — bei 100 % nahm er sie ganz ein und schob die
+         * Prozentzahl hinaus. Gemessen in einer 90 px breiten Spalte: bei 0 %
+         * brauchte die Zelle 89 px und die Zahl stand da, bei 100 % brauchte
+         * sie 122 px und die Zahl war weg.
+         *
+         * Auf dem Bild sahen 55 %, 80 % und 100 % dadurch gleich aus — drei
+         * Balken bis zum Rand, keine Zahl dabei. Das ist der Fehler aus §55.1:
+         * eine abgeschnittene Anzeige zeigt einen ANDEREN Wert, und beide sehen
+         * gültig aus.
+         *
+         * Jetzt nimmt die Zahl ihren Platz zuerst, die Bahn bekommt den Rest,
+         * und `n%` bezieht sich auf die Bahn. */
         if (def.type === 'prozent') {
             const n = Math.max(0, Math.min(100, Math.round(Formula.zahl(v))));
-            return '<span class="proz"><i style="width:' + n + '%"></i>' +
+            return '<span class="proz"><span class="proz-bahn">' +
+                '<i style="width:' + n + '%"></i></span>' +
                 '<b>' + n + ' %</b></span>';
         }
         if (def.type === 'select' || def.type === 'status') {
@@ -86438,7 +86498,7 @@ const Einstellungen = (() => {
             zeile('Systemmeldungen', 'Erlaubnis des Browsers einholen', knopf('benachr-erlauben', ('Notification' in window && Notification.permission === 'granted')
                 ? 'Bereits erlaubt' : 'Erlauben')) +
             zeile('Erinnerungen in der App', 'Der Streifen unten am Bildschirm', schalter('erinnernInApp', V('erinnernInApp', true))) +
-            zeile('Karteikarten', 'Einmal am Tag melden, wenn Karten fällig sind', schalter('kartenMelden', V('kartenMelden', true))) +
+            zeile('Karteikarten', 'Einmal am Tag melden, wenn Karten fällig sind — aus, bis du es einschaltest', schalter('kartenMelden', V('kartenMelden', false))) +
             zeile('Offene Erinnerungen', '', `<span class="ez-grau">${Werkzeuge.erinnerungen().filter((e) => !e.erledigt).length} offen</span>`) +
             zeile('Alle Erinnerungen', '', knopf('erinnerungen-zeigen', 'Posteingang öffnen')),
         verbindungen: () => {
@@ -86960,7 +87020,11 @@ const Einstellungen = (() => {
                         .forEach(x => x.classList.toggle('an', !jetzt));
                     return;
                 }
-                const neu = !V(k, k === 'erinnernInApp' || k === 'kartenMelden' ||
+                /* `kartenMelden` steht NICHT mehr in dieser Liste: seine Vorgabe ist
+                   seit E409 aus. Redur bekam den Streifen auf jedem Bildschirm zu
+                   sehen, ohne je danach gefragt zu haben. Der Schalter bleibt — wer
+                   die Meldung will, holt sie sich. */
+                const neu = !V(k, k === 'erinnernInApp' ||
                     k === 'kiKontext' || k === 'autoVersionen' || k === 'ki:webFragen');
                 S(k, neu);
                 b.classList.toggle('an', neu);
@@ -87585,7 +87649,11 @@ const Einstellungen = (() => {
          * Der Merker wird nur gesetzt, wenn wirklich etwas gezeigt wurde. Sonst
          * würde ein Start um 8 Uhr ohne fällige Karten die Meldung um 14 Uhr
          * verschlucken, wenn dann welche fällig sind. */
-        if (V('kartenMelden', true)) {
+        /* AUS, BIS ER SIE EINSCHALTET (E409). Die Vorgabe war an, und damit stand
+           der Streifen bei jedem ersten Start des Tages unten in der Mitte — auch
+           über jedem Bildschirmfoto und über dem, was gerade gebaut wurde. Eine
+           Meldung, um die niemand gebeten hat, ist Werbung, keine Erinnerung. */
+        if (V('kartenMelden', false)) {
             const heute3 = new Date().toISOString().slice(0, 10);
             if (Store.getMeta('kartenGemeldet', '') !== heute3) {
                 const n = Werkzeuge.faellig().length;
@@ -140297,6 +140365,57 @@ const App = (() => {
                 .setProperty('--demo-hoehe', balken.offsetHeight + 'px');
             hoeheSetzen();
             addEventListener('resize', hoeheSetzen);
+        }
+        /* ----------------------------------------------------------------------
+         * WIE VIEL LUFT NEBEN DER SEITE STEHT (E409)
+         *
+         * Gemessen, nicht geraten: bei 1280 px Fenster ist `#page` 900 px breit
+         * und seine Datenbank 708 — die Tabelle daneben braucht 1637 px. 57 %
+         * davon lagen hinter einem waagerechten Roller, den niemand sieht. Bei
+         * 1920 px Fenster ändert sich daran NICHTS: `#page` bleibt 900, und
+         * links und rechts stehen je 483 px leer.
+         *
+         * Fliesstext soll schmal bleiben, das ist richtig. Eine Datenbank ist
+         * kein Fliesstext. Sie darf über den Textrand hinaus — aber nur so weit,
+         * wie wirklich Platz ist, und den kennt allein die Schale: die
+         * Seitenleiste kann offen oder eingeklappt sein, und eine feste Zahl in
+         * einer Media-Query wüsste davon nichts.
+         *
+         * Deshalb steht hier eine gemessene Zahl statt einer geschätzten.
+         * `datenbanken.css` rechnet damit; ist sie 0, ändert sich nichts.
+         * -------------------------------------------------------------------*/
+        let luftZuletzt = -1;
+        const luftMessen = () => {
+            const roller = document.getElementById('scroll');
+            const seite = document.getElementById('page');
+            if (!roller || !seite)
+                return;
+            /* clientWidth, nicht getBoundingClientRect: der senkrechte Roller
+               gehört nicht zur nutzbaren Breite, und `width` zählt ihn mit. */
+            const wert = Math.max(0, Math.round((roller.clientWidth - seite.clientWidth) / 2));
+            /* NUR BEI ÄNDERUNG SCHREIBEN. Der Beobachter unten feuert auch bei
+               Höhenänderungen, und eine breitere Datenbank ändert die Höhe. */
+            if (wert === luftZuletzt)
+                return;
+            luftZuletzt = wert;
+            seite.style.setProperty('--seite-luft', wert + 'px');
+        };
+        luftMessen();
+        addEventListener('resize', luftMessen, { passive: true });
+        /* BEIDE BEOBACHTEN, und das ist der Punkt, an dem der erste Versuch
+           scheiterte: beobachtet war nur `#scroll`. Das ändert seine Breite nie
+           — die Seitenleiste schiebt es zwar zusammen, aber `#page` bekommt
+           seine 900 px erst später. Gemessen wurde deshalb einmal, viel zu
+           früh, mit dem Ergebnis 0, und danach kam nie wieder ein Anlass.
+           Auf dem Bild sah das aus, als hätte die Regel nicht gegriffen. */
+        if (typeof ResizeObserver !== 'undefined') {
+            const beobachter = new ResizeObserver(luftMessen);
+            const roller = document.getElementById('scroll');
+            const seite2 = document.getElementById('page');
+            if (roller)
+                beobachter.observe(roller);
+            if (seite2)
+                beobachter.observe(seite2);
         }
         /* Die Seitenleiste bekommt, was ihr nicht gehört — hier und nur hier.
            Das muss vor allem anderen stehen: sobald irgendetwas zeichnet, ruft

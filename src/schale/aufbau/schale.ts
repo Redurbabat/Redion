@@ -3221,6 +3221,54 @@ const App = (() => {
       addEventListener('resize', hoeheSetzen);
     }
 
+    /* ----------------------------------------------------------------------
+     * WIE VIEL LUFT NEBEN DER SEITE STEHT (E409)
+     *
+     * Gemessen, nicht geraten: bei 1280 px Fenster ist `#page` 900 px breit
+     * und seine Datenbank 708 — die Tabelle daneben braucht 1637 px. 57 %
+     * davon lagen hinter einem waagerechten Roller, den niemand sieht. Bei
+     * 1920 px Fenster ändert sich daran NICHTS: `#page` bleibt 900, und
+     * links und rechts stehen je 483 px leer.
+     *
+     * Fliesstext soll schmal bleiben, das ist richtig. Eine Datenbank ist
+     * kein Fliesstext. Sie darf über den Textrand hinaus — aber nur so weit,
+     * wie wirklich Platz ist, und den kennt allein die Schale: die
+     * Seitenleiste kann offen oder eingeklappt sein, und eine feste Zahl in
+     * einer Media-Query wüsste davon nichts.
+     *
+     * Deshalb steht hier eine gemessene Zahl statt einer geschätzten.
+     * `datenbanken.css` rechnet damit; ist sie 0, ändert sich nichts.
+     * -------------------------------------------------------------------*/
+    let luftZuletzt = -1;
+    const luftMessen = () => {
+      const roller = document.getElementById('scroll');
+      const seite = document.getElementById('page');
+      if (!roller || !seite) return;
+      /* clientWidth, nicht getBoundingClientRect: der senkrechte Roller
+         gehört nicht zur nutzbaren Breite, und `width` zählt ihn mit. */
+      const wert = Math.max(0, Math.round((roller.clientWidth - seite.clientWidth) / 2));
+      /* NUR BEI ÄNDERUNG SCHREIBEN. Der Beobachter unten feuert auch bei
+         Höhenänderungen, und eine breitere Datenbank ändert die Höhe. */
+      if (wert === luftZuletzt) return;
+      luftZuletzt = wert;
+      seite.style.setProperty('--seite-luft', wert + 'px');
+    };
+    luftMessen();
+    addEventListener('resize', luftMessen, { passive: true });
+    /* BEIDE BEOBACHTEN, und das ist der Punkt, an dem der erste Versuch
+       scheiterte: beobachtet war nur `#scroll`. Das ändert seine Breite nie
+       — die Seitenleiste schiebt es zwar zusammen, aber `#page` bekommt
+       seine 900 px erst später. Gemessen wurde deshalb einmal, viel zu
+       früh, mit dem Ergebnis 0, und danach kam nie wieder ein Anlass.
+       Auf dem Bild sah das aus, als hätte die Regel nicht gegriffen. */
+    if (typeof ResizeObserver !== 'undefined') {
+      const beobachter = new ResizeObserver(luftMessen);
+      const roller = document.getElementById('scroll');
+      const seite2 = document.getElementById('page');
+      if (roller) beobachter.observe(roller);
+      if (seite2) beobachter.observe(seite2);
+    }
+
     /* Die Seitenleiste bekommt, was ihr nicht gehört — hier und nur hier.
        Das muss vor allem anderen stehen: sobald irgendetwas zeichnet, ruft
        es `zeichneBaum`, und das läuft dann schon nach drüben. */
