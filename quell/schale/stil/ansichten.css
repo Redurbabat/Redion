@@ -154,7 +154,7 @@ table.grid .tt-auf:hover{background:var(--bg-hover); color:var(--text)}
    Flächen um 24 px, und die zuletzt gezeichnete deckt alle davor zu. Aus
    einer Verbesserung wäre ein Farbwähler geworden, der nur noch die letzte
    Farbe kennt. Senkrecht ist der Platz frei, waagerecht nicht. */
-.opt-farben button::after{content:""; position:absolute; left:-3px; right:-3px; top:50%; height:44px; transform:translateY(-50%);}
+.opt-farben button::after{content:""; position:absolute; left:-3px; right:-3px; top:50%; height:var(--touch-min); transform:translateY(-50%);}
 .opt-farben button:hover{outline:2px solid var(--accent)}
 
 /* Seitenvorschau (Side Peek) */
