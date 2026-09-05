@@ -322,12 +322,37 @@ console.log('\n7 · Am Telefon gilt dasselbe');
 }
 
 /* ======================================================================== */
-console.log('\n8 · Das Onboarding schreibt keine Startansicht mehr');
+/* HIER STAND: „Das Onboarding schreibt keine Startansicht mehr" — zwei
+   Punkte gegen `setMeta('startAnsicht'` in `produkt_onboarding.ts`.
+   Mit E434 ist das Modul fort, und ein Punkt, der eine geloeschte Datei
+   liest, ist nach dem Loeschen fuer immer rot.
+   DIE FRAGE BLEIBT ABER GUELTIG, nur weiter gefasst: die Startansicht ist
+   Redurs Wahl, und NIEMAND soll sie ungefragt umschreiben. Der Punkt prueft
+   das jetzt fuer den ganzen Bestand statt fuer eine Datei — das ist die
+   staerkere Form, und sie haette den urspruenglichen Fehler auch gefunden. */
+console.log('\n8 · Niemand schreibt die Startansicht ungefragt um');
 {
-  const quelle = fs.readFileSync(path.join(WURZEL, 'src/bereiche/wissen/produkt_onboarding.ts'), 'utf8');
-  const gebaut = fs.readFileSync(path.join(WURZEL, 'quell/bereiche/wissen/produkt_onboarding.js'), 'utf8');
-  p('Im Quelltext des Onboardings steht kein setMeta(\'startAnsicht\' mehr', !/setMeta\('startAnsicht'/.test(quelle));
-  p('… und im gebauten JavaScript auch nicht', !/setMeta\('startAnsicht'/.test(gebaut));
+  const wurzeln = ['src'];
+  const dateien: string[] = [];
+  const sammeln = (ort: string): void => {
+    for (const eintrag of fs.readdirSync(ort, { withFileTypes: true })) {
+      const voll = path.join(ort, eintrag.name);
+      if (eintrag.isDirectory()) sammeln(voll);
+      else if (eintrag.name.endsWith('.ts')) dateien.push(voll);
+    }
+  };
+  wurzeln.forEach(w => sammeln(path.join(WURZEL, w)));
+  /* Erlaubt ist genau eine Stelle: die Einstellungsseite, auf der Redur
+     die Startansicht selbst waehlt. Und `schale.ts`, wo E349 den einmaligen
+     Ruecksetzer stehen hat — beide ausdruecklich, beide begruendet. */
+  const erlaubt = ['einstellungen', 'schale.ts'];
+  const schreiber = dateien.filter(d => /setMeta\('startAnsicht'/.test(fs.readFileSync(d, 'utf8')))
+    .map(d => path.relative(WURZEL, d))
+    .filter(d => !erlaubt.some(e => d.includes(e)));
+  p('Nur Einstellungen und Schale setzen die Startansicht',
+    schreiber.length === 0, JSON.stringify(schreiber));
+  p('Das entfernte Onboarding-Modul gibt es nicht mehr',
+    !fs.existsSync(path.join(WURZEL, 'src/bereiche/wissen/produkt_onboarding.ts')));
 }
 
 console.log('');

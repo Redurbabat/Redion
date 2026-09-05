@@ -173,7 +173,6 @@ pf       12  bausteine.css
 pg       23  bausteine.css
 pk       15  bausteine.css
 pl       15  bausteine.css
-po         6  produktwelten.css
 pp        5  ansichten.css
 pr       12  bausteine.css
 pv        8  bausteine.css

@@ -143,7 +143,22 @@ const Werkzeuge = (() => {
         c('Navigation', 'Arbeit öffnen', '', () => Produktwelten.lernen('arbeit'));
         c('Navigation', 'Lernfortschritt', '', () => Produktwelten.lernen('fortschritt'));
         c('Navigation', 'Planung und Termine', '', () => Produktwelten.planung());
-        c('Navigation', 'Hauptwelten und Lebensbereiche einrichten', '', () => ProduktOnboarding.oeffnen());
+        /* HIER STAND „Hauptwelten und Lebensbereiche einrichten" (weg mit E434).
+           Die Einrichtung gibt es nicht mehr; zuordnen und anlegen kann der
+           Bereichsdialog seit jeher selbst.
+           ER BRAUCHT ABER EIN OBJEKT. `bereicheDialog(null)` kehrt sofort um und
+           wirft einen Hinweis — ein Knopf ohne Draht, und zwar genau die Sorte,
+           die E410 und E417 gekostet haben. Also die offene Seite mitgeben und
+           ehrlich sagen, wenn keine offen ist. */
+        c('Navigation', 'Lebensbereiche dieser Seite', '', () => {
+            const id = App.aktuelleSeite?.();
+            const seite = id ? Store.getBlock(id) : null;
+            if (!seite) {
+                UI.toast('Dafür muss eine Seite offen sein.');
+                return;
+            }
+            Produktwelten.bereicheDialog(seite);
+        });
         c('Navigation', 'Posteingang', '', () => Ansichten.posteingang());
         c('Navigation', 'Tagesjournal öffnen', 'Strg Shift J', () => journal());
         c('Navigation', 'Schnellnotizen', 'Strg Shift M', () => schnellnotizen());

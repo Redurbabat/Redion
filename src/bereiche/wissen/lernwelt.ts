@@ -1375,24 +1375,16 @@ const Lernwelt = (() => {
         : naechstePruefung.tage === 1 ? 'morgen'
         : naechstePruefung.tage + ' Tage'
       : 'keine geplant';
-    /* DIE EINRICHTUNG ALS ANGEBOT, NICHT ALS SPERRE (E137).
-       Sie öffnete sich früher von selbst über alles. Jetzt steht sie hier,
-       solange sie noch nicht durchlaufen ist — sichtbar für jeden, der neu
-       ist, und im Weg für niemanden. Wer sie überspringt oder abschliesst,
-       sieht die Karte nicht mehr. */
-    const einrichtung = (() => {
-      const modul = (globalThis as any).ProduktOnboarding;
-      let neuHier = false;
-      try { neuHier = modul?.profil?.().status === 'neu'; } catch { neuHier = false; }
-      if (!neuHier) return '';
-      return '<section class="lw-note lw-setup"><div><strong>Redion einrichten</strong>' +
-        '<p>Zwei Hauptwelten, ein Bestand: lege fest, womit du anfangen willst. ' +
-        'Deine Inhalte bleiben, wo sie sind.</p></div>' +
-        '<button type="button" data-lw-action="setup">Einrichten</button></section>';
-    })();
-
+    /* HIER STAND DER EINRICHTEN-STREIFEN (E137, weg mit E434).
+       Er bot an, zwischen zwei Hauptwelten zu waehlen — „Lernen" und
+       „Workspace" — und stand da, solange die Einrichtung nicht durchlaufen
+       war. Redur hat ihn weggenommen: eine Wahl zwischen zwei Dingen, von
+       denen es nur noch eines gibt, ist keine Frage, sondern eine
+       Verzoegerung — den Arbeitsbereich loest Redur gerade auf, seine
+       Abschnitte werden einzelne Orte (E435).
+       Lebensbereiche legt man weiter an — ueber den Bereichsdialog
+       (`Produktwelten.bereicheDialog`), der sie schon immer konnte. */
     return '<div class="lw-today">' +
-      einrichtung +
       /* DREIMAL DERSELBE BEREICH WAR ZWEIMAL ZU VIEL (E205).
          Hier stand „◎ Alle Bereiche" als Marke — dieselbe Auskunft, die 300 px
          weiter oben schon im Auswahlfeld steht und die man dort auch ändern
@@ -3130,11 +3122,6 @@ const Lernwelt = (() => {
         titel: 'Fehler aus der Simulation', karten, index: 0, aufgedeckt: false, bewertet: 0, beschaeftigt: false
       };
       zeichnen();
-      return;
-    }
-    if (element.closest<HTMLElement>('[data-lw-action="setup"]')) {
-      const modul = (globalThis as any).ProduktOnboarding;
-      if (modul?.oeffnen) void modul.oeffnen().then(() => zeichnen());
       return;
     }
     const rate = element.closest<HTMLElement>('[data-lw-rate]');

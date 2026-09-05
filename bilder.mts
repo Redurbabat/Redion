@@ -190,17 +190,6 @@ const ANSICHTEN: Record<string, {
     }
   },
 
-  begruessung: {
-    titel: 'Die Begrüssungsfläche (E418)',
-    bauen: async () => {
-      Store.setMeta('rundgangGesehen', true);
-      document.getElementById('rg-willkommen')?.remove();
-      (window as any).ProduktOnboarding?.zuruecksetzen?.();
-      (window as any).ProduktOnboarding?.oeffnen?.();
-      await new Promise(f => setTimeout(f, 500));
-    }
-  },
-
   /* Die Absage des Nur-Quellen-Modus neben einer gewöhnlichen Antwort —
      nur nebeneinander ist „sieht anders aus" überhaupt zu sehen. */
   kiAbsage: {

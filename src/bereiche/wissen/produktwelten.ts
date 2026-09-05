@@ -149,8 +149,17 @@ const Produktwelten = (() => {
       kleinen Bereichskennungen; Inhalt und Objektkennung bleiben dieselben. */
   const bereicheDialog = async (objekt: any): Promise<void> => {
     const api = (globalThis as any).Lebensbereiche;
-    if (!api || !objekt?.id) {
+    /* ZWEI GRÜNDE, ZWEI SÄTZE (E434). Hier stand ein Satz für beide Fälle:
+       „Die Lebensbereiche sind in dieser Fassung noch nicht geladen."
+       Beim häufigeren Fall — kein Objekt zum Zuordnen — war er schlicht
+       falsch und schickte den Nutzer auf die Suche nach einem Ladefehler,
+       den es nicht gab. */
+    if (!api) {
       UI.toast('Die Lebensbereiche sind in dieser Fassung noch nicht geladen.');
+      return;
+    }
+    if (!objekt?.id) {
+      UI.toast('Dafür braucht es eine Seite oder einen Block.');
       return;
     }
     const ref = { art: objekt.type === 'page' ? 'page' : 'block', id: String(objekt.id) };
@@ -183,11 +192,10 @@ const Produktwelten = (() => {
     neu.type = 'button';
     neu.dataset.aktion = 'neu';
     neu.textContent = '＋ Bereich anlegen';
-    const onboarding = document.createElement('button');
-    onboarding.type = 'button';
-    onboarding.dataset.aktion = 'onboarding';
-    onboarding.textContent = 'Einrichtung öffnen';
-    fuss.append(neu, onboarding);
+    /* HIER STAND „Einrichtung öffnen" (weg mit E434). Der Knopf führte in
+       die Begrüssungsfläche, und die gibt es nicht mehr. Anlegen und
+       Zuordnen kann dieser Dialog selbst — dafür ist er da. */
+    fuss.append(neu);
     dialog.append(kopf, erklaerung, liste, fuss);
     overlay.appendChild(dialog);
     document.body.appendChild(overlay);
@@ -238,13 +246,6 @@ const Produktwelten = (() => {
           else await api.zuordnen(ref, ziel.dataset.bereich);
           await zeichnen();
           App.zeichneBaum?.();
-          return;
-        }
-        if (ziel.dataset.aktion === 'onboarding') {
-          overlay.remove();
-          const modul = (globalThis as any).ProduktOnboarding;
-          if (modul?.oeffnen) modul.oeffnen();
-          else UI.toast('Die Einrichtung ist in dieser Fassung noch nicht geladen.');
           return;
         }
         if (ziel.dataset.aktion === 'neu') {

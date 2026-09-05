@@ -17,13 +17,13 @@
  *   · Und niemand findet die Regel, wenn er sie sucht.
  *
  *   §1 Kein Stilblock wird mehr in die laufende Seite gehängt.
- *   §2 Die Begrüssungsfläche steht trotzdem — in Hell UND in Dunkel.
+ *   §2 Die Begrüssungsfläche ist fort — und jeder Weg dorthin (E434).
  *   §3 Die Absage der KI sieht nicht aus wie eine Antwort.
  *   §4 Die Vorrat-Leiste holt ihr Aussehen aus ihrer Klasse.
  *
  * ─── KANN DIESE SUITE ROT WERDEN? (§55.2) ───────────────────────────────────
  *   §1 → `document.createElement('style')` irgendwo in `src/` wieder einbauen.
- *   §2 → die verschobenen Regeln aus `produktwelten.css` nehmen.
+ *   §2 → das Modul wieder einhängen, oder den Streifen zurückholen.
  *   §3 → die Regel `.msg-ohne-quelle` entfernen.
  *   §4 → die Klasse gegen `style.cssText` zurücktauschen.
  * Alle vier gelaufen, Ergebnisse im Bericht zu E418.
@@ -86,66 +86,165 @@ const mitStil = tsDateien.filter(f =>
 p('Der Wächter sieht überhaupt Dateien', tsDateien.length > 100, String(tsDateien.length));
 p('Keine .ts hängt einen Stilblock in die Seite',
   mitStil.length === 0, mitStil.map(f => path.relative(WURZEL, f)).join(' | '));
-/* Und die verschobenen Regeln stehen wirklich in einer Stildatei. */
-const pw = fs.readFileSync(path.join(WURZEL, 'quell/schale/stil/produktwelten.css'), 'utf8');
-p('Die Regeln der Begrüssungsfläche stehen in produktwelten.css',
-  pw.includes('.produkt-onboarding-lage') && pw.includes('.produkt-onboarding-welt'), '');
-/* Die Rückfallwerte sind mit weg. Sie sahen aus wie Vorsicht und waren
-   feste Hellwerte in einer Datei, die auch dunkel gelesen wird. */
-p('Und ohne feste Rückfallfarben',
-  !/var\(--(border|bg|text|text-faint|accent|bg-card|bg-hover)\s*,\s*#/.test(
-    pw.slice(pw.indexOf('.produkt-onboarding-lage'))), '');
+/* HIER STANDEN ZWEI PUNKTE UEBER DIE VERSCHOBENEN REGELN (E418): dass sie
+   in `produktwelten.css` stehen, und dass sie keine festen Rueckfallfarben
+   mehr tragen. Mit E434 ist die Flaeche fort und die Regeln mit ihr — die
+   Punkte haetten keinen Gegenstand mehr.
+   DIE FRAGE BLEIBT, nur ohne diesen einen Fall: keine Stildatei soll feste
+   Hellwerte als Rueckfall hinter einer Marke tragen. Das galt fuer die
+   Begruessungsflaeche und gilt fuer jede andere Datei genauso, und so
+   gemessen ist es der staerkere Punkt. */
+const stilOrdner = path.join(WURZEL, 'quell/schale/stil');
+const stilDateien = fs.readdirSync(stilOrdner).filter(f => f.endsWith('.css'));
+const mitRueckfall: string[] = [];
+for (const datei of stilDateien) {
+  const text = fs.readFileSync(path.join(stilOrdner, datei), 'utf8');
+  /* Nur echte Regeln, keine Kommentare — ein Beispiel in einer Erklaerung
+     ist kein Rueckfall. Das ist die test361-Lehre von heute Morgen. */
+  const ohneWorte = text.replace(/\/\*[\s\S]*?\*\//g, '');
+  const treffer = ohneWorte.match(
+    /var\(--(border|bg|text|text-faint|accent|bg-card|bg-hover)\s*,\s*#[0-9a-fA-F]{3,8}\)/g);
+  if (treffer) mitRueckfall.push(datei + ': ' + treffer.slice(0, 3).join(', '));
+}
+p('Der Waechter sieht ueberhaupt Stildateien', stilDateien.length > 5,
+  String(stilDateien.length));
+p('Keine Stildatei traegt feste Hellwerte als Rueckfall hinter einer Marke',
+  mitRueckfall.length === 0, mitRueckfall.slice(0, 3).join(' | '));
+/* Und die Flaeche selbst hinterlaesst keine Regeln ohne Elemente. */
+const pw = fs.readFileSync(path.join(stilOrdner, 'produktwelten.css'), 'utf8');
+p('Keine Regel der entfernten Begruessungsflaeche steht noch im Stil',
+  !/^\s*\.produkt-onboarding/m.test(pw.replace(/\/\*[\s\S]*?\*\//g, '')), '');
 
 const browser = await chromium.launch();
 const fehler: string[] = [];
 
 /* ==========================================================================
- * §2 · DIE FLÄCHE STEHT — IN BEIDEN THEMEN
+ * §2 · DIE BEGRÜSSUNGSFLÄCHE IST FORT — UND JEDER WEG DORTHIN (E434)
+ * --------------------------------------------------------------------------
+ * Hier stand bis zum 6. September das Gegenteil: „Die Fläche steht — in Hell
+ * UND in Dunkel", sechs Punkte über Position, Grösse, Rundung und die beiden
+ * Themen. Sie prüften richtig, was E418 gebaut hatte.
+ *
+ * Redur hat die Fläche dann weggenommen. Sie bot an, zwischen zwei
+ * Hauptwelten zu wählen — „Lernen" und „Workspace" —, und den Workspace
+ * löst er gerade auf: seine Abschnitte werden einzelne Orte (E435). Eine
+ * Wahl zwischen zwei Dingen, von denen eines verschwindet, ist keine Frage,
+ * sondern eine Verzögerung.
+ *
+ * DIE PUNKTE BLEIBEN, NUR ANDERSHERUM. Eine Fläche, die weg soll, kommt
+ * zurück, wenn niemand hinsieht: ein Streifen hier, ein Palettenbefehl dort,
+ * eine Datei, die noch im Dienststock steht. Deshalb wird JEDER Weg geprüft
+ * und nicht nur die Fläche.
  * ========================================================================*/
-console.log('\n§2 Die Begrüssungsfläche steht, hell wie dunkel');
-const flaeche = async (thema: 'light' | 'dark') => {
-  const s = await browser.newPage({ viewport: { width: 1280, height: 900 } });
-  s.on('pageerror', e => fehler.push(e.message.slice(0, 140)));
-  await s.goto(`http://localhost:${PORT}/index.html`);
-  await s.waitForFunction("typeof App !== 'undefined' && typeof Store !== 'undefined'",
-                          null, { timeout: 30000 });
-  await s.evaluate(`document.documentElement.setAttribute('data-theme', ${JSON.stringify(thema)})`);
-  await s.waitForTimeout(300);
-  await s.evaluate(`(async () => {
-    ProduktOnboarding.zuruecksetzen();
-    ProduktOnboarding.oeffnen();
-    await new Promise(f => setTimeout(f, 500));
-  })()`);
-  const mass = await s.evaluate(`(() => {
-    const lage = document.querySelector('.produkt-onboarding-lage');
-    const k = document.querySelector('.produkt-onboarding');
-    if (!lage || !k) return { fehlt: !lage ? 'lage' : 'karte' };
-    const sl = getComputedStyle(lage), sk = getComputedStyle(k);
-    const r = k.getBoundingClientRect();
-    return { lagePos: sl.position, lageGrund: sl.backgroundColor,
-             kGrund: sk.backgroundColor, kText: sk.color,
-             kRadius: sk.borderRadius, breite: Math.round(r.width),
-             hoehe: Math.round(r.height), links: Math.round(r.left) };
-  })()`) as any;
-  await s.close();
-  return mass;
-};
-const hell = await flaeche('light');
-const dunkel = await flaeche('dark');
-p('Die Fläche liegt fest über der Seite', hell.lagePos === 'fixed', JSON.stringify(hell));
-p('Die Karte hat eine echte Grösse',
-  hell.breite > 400 && hell.hoehe > 200, JSON.stringify(hell));
-p('… und steht mittig', Math.abs(hell.links - (1280 - hell.breite) / 2) < 12,
-  `${hell.links} px bei ${hell.breite} px Breite`);
-p('Die Ecken sind rund — die Regeln greifen wirklich',
-  /1[0-9]px/.test(String(hell.kRadius)), String(hell.kRadius));
-/* DER PUNKT, DER DIE VERSCHIEBUNG PRÜFT. Vorher standen feste Hellwerte als
-   Rückfall im Block. Wären die Marken beim Verschieben verlorengegangen,
-   sähe Dunkel genauso aus wie Hell — und genau das misst diese Zeile. */
-p('In Dunkel ist die Karte wirklich dunkel, nicht dieselbe wie in Hell',
-  dunkel.kGrund !== hell.kGrund, `hell ${hell.kGrund} · dunkel ${dunkel.kGrund}`);
-p('… und ihre Schrift auch nicht dieselbe',
-  dunkel.kText !== hell.kText, `hell ${hell.kText} · dunkel ${dunkel.kText}`);
+console.log('\n§2 Die Begrüssungsfläche ist fort — und jeder Weg dorthin');
+
+const s2 = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+s2.on('pageerror', e => fehler.push(e.message.slice(0, 140)));
+await s2.goto(`http://localhost:${PORT}/index.html`);
+await s2.waitForFunction("typeof App !== 'undefined' && typeof Store !== 'undefined'",
+                         null, { timeout: 30000 });
+await s2.waitForTimeout(900);
+
+const fort = JSON.parse(await s2.evaluate(`JSON.stringify({
+  /* 1. Das Modul selbst. */
+  modul: typeof window.ProduktOnboarding,
+  /* 2. Die Fläche, auch ungefragt beim Start. */
+  lage: document.querySelectorAll('.produkt-onboarding-lage').length,
+  karte: document.querySelectorAll('.produkt-onboarding').length,
+  /* 3. Der Streifen auf dem Heute-Bild. Er kam nur fuer ein Profil mit
+        Status "neu" — und genau das ist ein frischer Bestand hier. */
+  streifen: document.querySelectorAll('.lw-setup').length,
+  /* 4. Und der Griff, an dem er hing. */
+  griff: document.querySelectorAll('[data-lw-action="setup"]').length
+})`) as string);
+p('Das Modul ProduktOnboarding gibt es nicht mehr', fort.modul === 'undefined',
+  String(fort.modul));
+p('Beim Start liegt keine Begrüssungsfläche über der Seite',
+  fort.lage === 0 && fort.karte === 0, JSON.stringify(fort));
+
+/* Das Heute-Bild ausdrücklich aufmachen — der Streifen stand dort, nicht
+   auf dem Startbildschirm. */
+await s2.evaluate(`(async () => {
+  Produktwelten.lernen('heute');
+  await new Promise(f => setTimeout(f, 900));
+})()`);
+const heute = JSON.parse(await s2.evaluate(`JSON.stringify({
+  streifen: document.querySelectorAll('.lw-setup').length,
+  griff: document.querySelectorAll('[data-lw-action="setup"]').length,
+  text: (document.querySelector('.lw-today') || document.body)
+          .textContent.replace(/\\s+/g, ' ').slice(0, 400)
+})`) as string);
+p('Auf dem Heute-Bild steht kein Einrichten-Streifen mehr',
+  heute.streifen === 0 && heute.griff === 0, JSON.stringify(heute).slice(0, 200));
+p('… und auch der Text „Redion einrichten" nicht',
+  !/Redion einrichten/.test(heute.text), heute.text.slice(0, 200));
+
+/* Und kein Befehl in der Palette führt noch dorthin.
+   DIE PALETTE WIRD WIRKLICH AUFGEMACHT, nicht das Register befragt. Der
+   erste Wurf las `Register.befehle` und war gruen, ohne etwas zu pruefen:
+   die Zeile stand in `befehle()` in `werkzeuge.ts`, einer eigenen Liste,
+   die die Palette VOR das Register haengt. Ein Punkt, der am falschen Ort
+   nachsieht, meldet Ordnung, wo keine ist (§55.2) — derselbe Fehler wie in
+   test423 §4 zwei Tage vorher. */
+await s2.evaluate(`(async () => {
+  document.querySelectorAll('.overlay').forEach(o => o.remove());
+  Werkzeuge.palette();
+  await new Promise(f => setTimeout(f, 500));
+})()`);
+const befehle = JSON.parse(await s2.evaluate(`JSON.stringify((() => {
+  const feld = document.querySelector('#cq');
+  const zeilen = [...document.querySelectorAll('#cr *')]
+    .map(e => e.textContent || '').filter(Boolean);
+  return { feldDa: !!feld,
+           treffer: zeilen.filter(t => /Hauptwelt|einrichten/i.test(t))
+                          .map(t => t.replace(/\s+/g, ' ').trim().slice(0, 60)),
+           anzahl: zeilen.length };
+})())`) as string);
+p('Die Palette geht auf und zeigt Befehle', befehle.feldDa === true && befehle.anzahl > 5,
+  JSON.stringify(befehle.anzahl));
+p('Kein Befehl verspricht noch „Hauptwelten einrichten"',
+  befehle.treffer.length === 0, JSON.stringify(befehle.treffer));
+
+/* UND DER ERSATZ TUT WIRKLICH ETWAS. An die Stelle des entfernten Befehls
+   kam „Lebensbereiche dieser Seite" — und der Dialog dahinter kehrt ohne
+   Objekt sofort um. Ein Ersatz, der nur einen Hinweis wirft, waere derselbe
+   Knopf ohne Draht, den E410 und E417 gekostet haben.
+   Geprueft wird BEIDES: mit offener Seite geht der Dialog auf, ohne offene
+   Seite kommt ein ehrlicher Satz statt eines falschen. */
+const ersatz = JSON.parse(await s2.evaluate(`(async () => {
+  document.querySelectorAll('.overlay').forEach(o => o.remove());
+  const seite = Store.addPage(null, { text: 'Bereichsprobe' });
+  await Store.flush();
+  App.oeffne(seite.id);
+  await new Promise(f => setTimeout(f, 500));
+  Werkzeuge.palette();
+  await new Promise(f => setTimeout(f, 400));
+  const zeile = [...document.querySelectorAll('#cr *')]
+    .find(e => /Lebensbereiche dieser Seite/.test(e.textContent || ''));
+  const gefunden = !!zeile;
+  document.querySelectorAll('.overlay').forEach(o => o.remove());
+  /* Den Weg nehmen, den der Befehl nimmt — nicht den Klick nachbauen. */
+  Produktwelten.bereicheDialog(Store.getBlock(seite.id));
+  await new Promise(f => setTimeout(f, 600));
+  const auf = !!document.querySelector('.produkt-bereiche-dialog');
+  document.querySelectorAll('.overlay').forEach(o => o.remove());
+  return JSON.stringify({ gefunden, auf });
+})()`) as string);
+p('Der Ersatzbefehl „Lebensbereiche dieser Seite" steht in der Palette',
+  ersatz.gefunden === true, JSON.stringify(ersatz));
+p('… und sein Dialog geht mit einer Seite wirklich auf',
+  ersatz.auf === true, JSON.stringify(ersatz));
+await s2.close();
+
+/* Und die Datei ist wirklich weg, nicht nur unerreichbar. Eine Datei, die
+   im Dienststock steht und nicht existiert, bricht die Offline-Fassung. */
+p('Die Quelldatei gibt es nicht mehr',
+  !fs.existsSync(path.join(WURZEL, 'src/bereiche/wissen/produkt_onboarding.ts')) &&
+  !fs.existsSync(path.join(WURZEL, 'quell/bereiche/wissen/produkt_onboarding.js')));
+const indexHtml = fs.readFileSync(path.join(WURZEL, 'index.html'), 'utf8');
+const dienst = fs.readFileSync(path.join(WURZEL, 'src/dienst/sw.ts'), 'utf8');
+p('index.html lädt sie nicht mehr', !indexHtml.includes('produkt_onboarding'));
+p('Und der Dienststock führt sie nicht mehr', !dienst.includes('produkt_onboarding'));
 
 /* ==========================================================================
  * §3 · DIE ABSAGE SIEHT NICHT AUS WIE EINE ANTWORT

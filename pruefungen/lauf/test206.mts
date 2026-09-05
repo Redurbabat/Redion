@@ -94,15 +94,21 @@ const da = await seite.evaluate(() => ({
   lernwelt: typeof (globalThis as any).Lernwelt,
   arbeitswelt: typeof (globalThis as any).Arbeitswelt,
   lebensbereiche: typeof (globalThis as any).Lebensbereiche,
-  onboarding: typeof (globalThis as any).ProduktOnboarding,
 }));
 for (const [name, art] of Object.entries(da)) gleich(name + ' ist geladen', art, 'object');
 
 const geladen = await seite.evaluate(() =>
   [...document.querySelectorAll('script[src]')].map(s => (s as HTMLScriptElement).src));
-p('index.html lädt die fünf neuen Module',
-  ['lebensbereiche', 'lernwelt', 'arbeitswelt', 'produkt_onboarding', 'produktwelten']
+/* VIER, NICHT MEHR FUENF (E434). `produkt_onboarding` war das fuenfte;
+   Redur hat die Begruessungsflaeche weggenommen, und das Modul ist mit ihr
+   gegangen. Ein Punkt, der eine geloeschte Datei verlangt, waere nach dem
+   Loeschen fuer immer rot — und ein Lauf, den man nicht gruen bekommt, wird
+   abgeschaltet statt gelesen. */
+p('index.html lädt die vier Weltenmodule',
+  ['lebensbereiche', 'lernwelt', 'arbeitswelt', 'produktwelten']
     .every(n => geladen.some(s => s.includes(n))));
+p('… und das entfernte Onboarding-Modul nicht mehr',
+  !geladen.some(s => s.includes('produkt_onboarding')));
 
 /* ==========================================================================
  * §2 · Beide Hauptwelten öffnen wirklich

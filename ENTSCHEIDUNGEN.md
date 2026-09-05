@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-429 Entscheidungen, E1 bis E433. Die Nummer ist die Ordnung: eine Entscheidung
+430 Entscheidungen, E1 bis E434. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -487,6 +487,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E431** — Der Kalender wohnt nicht im Arbeitsbereich
 * **E432** — Die Regel stand in der falschen Datei und verlor still
 * **E433** — Die Namensspalte am Telefon war nie 170 Pixel breit
+* **E434** — Die Begrüssungsfläche ist fort
 
 ---
 
@@ -35085,3 +35086,109 @@ KOSTEN: Keine am Erzeugnis. Vier Prüfpunkte mehr in einem Lauf, der ohnehin
 beide Hüllen aufmacht.
 
 Dateien: `pruefungen/lauf/test361.mts`, `LUECKEN.md`, `AUFGABEN.md`.
+
+---
+
+E434 — Die Begrüssungsfläche ist fort
+---------------------------------------
+
+ENTSCHEIDUNG (Redurs Bitte): Der Streifen „Redion einrichten" auf dem
+Heute-Bild, die Begrüssungsfläche dahinter und jeder Weg dorthin kommen
+weg — das Modul mit.
+
+WAS REDUR GESAGT HAT, mit einem Bild vom Streifen: „mache die teil komplet
+weg überlar und die workpace auch". Auf die Rückfrage, was genau beim
+Arbeitsbereich weg soll: „also nur die workpache entfernen und ws dort ist
+nicht finden für denen eine passende ort". Der Arbeitsbereich ist damit der
+nächste Bogen (E435); hier geht es um die Fläche.
+
+WARUM SIE OHNEHIN GEGENSTANDSLOS WAR. Sie bot an, zwischen zwei
+Hauptwelten zu wählen — „Lernen" und „Workspace". Eine Wahl zwischen zwei
+Dingen, von denen eines gerade verschwindet, ist keine Frage, sondern eine
+Verzögerung vor dem ersten Klick. E137 hatte sie schon einmal
+entschärft — vom Modal, das jeden Klick abfing, zum Streifen, der
+danebensteht. Jetzt geht auch der Streifen.
+
+WAS ALLES WEGGING, und das ist der eigentliche Aufwand: eine Fläche hat
+mehr Türen, als man denkt.
+
+    Streifen auf dem Heute-Bild        lernwelt.ts
+    sein Klick-Griff                   lernwelt.ts
+    „Hauptwelten … einrichten"         werkzeuge.ts (Befehlspalette)
+    „Einrichtung öffnen"               produktwelten.ts (Bereichsdialog)
+    134 Zeilen Stil                    produktwelten.css
+    das Modul, 456 Zeilen              produkt_onboarding.ts
+    zwei Einträge (§28)                index.html, sw.ts GRUNDSTOCK
+    ein Bildziel                       bilder.mts
+
+WAS BLEIBT. Lebensbereiche legt man weiter an und ordnet sie zu — das kann
+der Bereichsdialog seit jeher selbst, und er ist der einzige Weg, den das
+Onboarding nicht doppelt hatte. In der Befehlspalette steht dafür jetzt
+„Lebensbereiche dieser Seite" an derselben Stelle.
+
+UND DABEI WÄRE FAST DER FEHLER DIESER WOCHE NOCH EINMAL PASSIERT. Der
+Ersatzbefehl hiess zuerst „Lebensbereiche zuordnen" und rief
+`bereicheDialog(null)`. Nachgesehen kehrt der Dialog ohne Objekt in der
+zweiten Zeile um und wirft einen Hinweis — ein Knopf ohne Draht, genau die
+Sorte aus E410 und E417, und einer, den ich selbst gerade erst gezählt
+hatte. Jetzt gibt der Befehl die offene Seite mit und sagt ehrlich „Dafür
+muss eine Seite offen sein", wenn keine offen ist.
+
+Der Hinweis im Dialog war ausserdem für den häufigeren der beiden Fälle
+falsch: „Die Lebensbereiche sind in dieser Fassung noch nicht geladen" stand
+auch dann da, wenn nur das Objekt fehlte — und schickte damit auf die Suche
+nach einem Ladefehler, den es nicht gab. Zwei Gründe haben jetzt zwei Sätze.
+
+PRÜFUNG: `test412 §2`, umgedreht — aus „Die Begrüssungsfläche steht, hell
+wie dunkel" wurde „Die Begrüssungsfläche ist fort — und jeder Weg dorthin".
+Neun Punkte: Modul, Fläche beim Start, Streifen auf dem Heute-Bild, sein
+Text, ein Palettenbefehl, die Quelldatei, `index.html`, der Dienststock.
+
+Und zwei Punkte mehr für den Ersatz: dass „Lebensbereiche dieser Seite" in
+der Palette steht, und dass sein Dialog mit einer offenen Seite wirklich
+aufgeht. Ein Ersatz, der nur einen Hinweis wirft, wäre keiner.
+
+Dazu `test206` (vier Weltenmodule statt fünf), `test341 §8`, `test290`,
+`test202`, `test105`, `test109`, `test400`.
+
+UND ZWEI PUNKTE, DIE DABEI STÄRKER WURDEN statt zu verschwinden:
+
+  · `test412 §1` prüfte, dass die verschobenen Regeln in
+    `produktwelten.css` stehen und keine festen Hellwerte als Rückfall
+    tragen. Der erste Teil hat keinen Gegenstand mehr; der zweite gilt für
+    JEDE Stildatei und wird jetzt so gemessen — über alle Dateien unter
+    `quell/schale/stil/`, Kommentare ausgenommen.
+  · `test341 §8` prüfte, dass das Onboarding keine `startAnsicht` schreibt.
+    Jetzt prüft es, dass NIEMAND sie ungefragt schreibt — ausser den
+    Einstellungen und `schale.ts`, wo E349 das begründet hat.
+
+Beides ist dieselbe Bewegung: ein Punkt, der an einer Datei hing, hängt
+jetzt an der Regel dahinter. Eine Prüfung, die man beim Löschen mitlöschen
+muss, war zu eng gefasst.
+
+GEGENPROBEN: der Streifen zurück → vier Punkte rot mit dem Wortlaut
+„Redion einrichten" im Bericht; ein `var(--text, #333)` in eine Stildatei →
+der neue §1-Punkt rot; eine `.produkt-onboarding`-Regel zurück → der
+Aufräumpunkt rot. Und die Prüfung war VOR der Reparatur geschrieben und
+siebenfach rot.
+
+UND EIN PUNKT, DER ZUERST AUS DEM FALSCHEN GRUND GRÜN WAR. „Kein Befehl
+verspricht noch Hauptwelten einrichten" las `Register.befehle` — die Zeile
+steht aber in `befehle()` in `werkzeuge.ts`, einer eigenen Liste, die die
+Palette VOR das Register hängt. Der Punkt meldete Ordnung, ohne
+nachzusehen. Jetzt wird die Palette wirklich aufgemacht und ihr Inhalt
+gelesen. Derselbe Fehler wie `test423 §4` vorgestern, und beide Male hat
+ihn nur die Gegenprobe gezeigt.
+
+Bild angesehen (§55.3): `bilder/heute-rechner-dunkel.png`. Unter der
+Reiterzeile steht jetzt der Gruss, nicht der Streifen.
+
+KOSTEN: Wer Redion zum ersten Mal öffnet, bekommt keine Einrichtung mehr
+angeboten. Das ist die Absicht — der Rundgang (E55) bleibt und ist der
+Ort, an dem Redion sich erklärt.
+
+Dateien: `src/bereiche/wissen/produkt_onboarding.ts` (entfernt),
+`src/bereiche/wissen/lernwelt.ts`, `src/bereiche/wissen/produktwelten.ts`,
+`src/bereiche/wissen/werkzeuge.ts`, `src/dienst/sw.ts`, `index.html`,
+`quell/schale/stil/produktwelten.css`, `doku/CSS-NAMENSRAEUME.md`,
+`bilder.mts`, `pruefungen/lauf/test412.mts`, `test206.mts`, `test341.mts`.
