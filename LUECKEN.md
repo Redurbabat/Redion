@@ -6105,4 +6105,20 @@ kostet den Nutzer eine Auskunft.
    heisst und dem Typ dreizehn Felder fehlten; `test294 §5` misst diese
    Richtung jetzt mit.
 
-Nachzusehen mit `node bilder.mts db-board`, `db-calendar`, `db-table`.
+5. **Der Zeitstrahl nutzt seine Fläche nicht.** `px` — Pixel je Tag — ist
+   in `ZS_STUFEN` je Zoomstufe FEST: 42 am Tag, 15 in der Woche, 5 im
+   Monat. Bei einem Zeitraum von 45 Tagen ist die gezeichnete Fläche
+   deshalb 225 px breit, während 1100 px zur Verfügung stehen. Zwei Drittel
+   der Ansicht bleiben leer, und die Balken sind unnötig winzig — auf der
+   Monatsstufe fallen drei Tage sogar unter die Mindestbreite von 22 px und
+   sind von einem einzelnen Tag nicht zu unterscheiden.
+   Gefunden bei E413. Ein eigener Bogen: die Balken sind in Pixeln
+   positioniert, ein Skalieren hiesse, alles auf Anteile umzustellen.
+
+6. **Die Zeitachse hat keine Marke am Anfang.** Auf dem Bild standen
+   „Sept. 26" und „Okt. 26" — die Balken beginnen aber im August, und
+   dieser Bereich trägt keine Beschriftung. Wer hinsieht, weiss nicht, wo
+   er ist.
+
+Nachzusehen mit `node bilder.mts db-board`, `db-calendar`, `db-table`,
+`db-timeline`.

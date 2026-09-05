@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-408 Entscheidungen, E1 bis E412. Die Nummer ist die Ordnung: eine Entscheidung
+409 Entscheidungen, E1 bis E413. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -466,6 +466,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E410** — Der Kalender zeigt Zeitspannen, und die Balken bekommen Farbe
 * **E411** — Werte auf Karten sagen, wovon sie handeln
 * **E412** — Eine Zahl sagt, wovon sie handelt — und der Typ sagt, was es gibt
+* **E413** — Der Zeitstrahl zeigt Spannen und liest sich
 
 ---
 
@@ -33589,3 +33590,82 @@ Dateien: `pruefungen/lauf/test407.mts` (neu),
 `src/bereiche/datenbanken/dienst.ts`, `src/bereiche/datenbanken/steuerung.ts`,
 `src/core/types/database.ts`, `pruefungen/lauf/test294.mts`, `CLAUDE.md`,
 `bilder.mts`.
+
+E413 — Der Zeitstrahl zeigt Spannen und liest sich
+================================================================================
+5. September 2026
+
+E410 hat dem KALENDER beigebracht, seine Endspalte zu erkennen. Der
+Zeitstrahl behielt die alte Zeile. Und dort war die Folge schlimmer: ohne
+Enddatum ist jeder Balken so breit wie ein Tag, das heisst auf der
+Monatsstufe dreissig Pixel — und in dreissig Pixeln steht vom Titel EIN
+Buchstabe. Auf dem Bild las man untereinander:
+
+    E   \   S   E   S   M   L   I   A
+
+Neun Balken, die alle gleich aussahen und alle nichts sagten. Das „\" ist
+ein abgeschnittenes „V" von „Verteiler beschriften", und es sieht aus wie
+ein Zeichen, nicht wie ein Rest — §55.1 in Reinform.
+
+Das ist der zweitteuerste wiederkehrende Fehler dieses Projekts, wörtlich
+aus §45: eine Sache an einer Stelle reparieren und die Nachbarstelle nicht
+ansehen. Er kostete hier drei Stunden nach E410, und E410 war eine Stunde.
+
+DER TITEL WANDERT NACH DRAUSSEN, wenn er drinnen nicht passt — so macht es
+Notion auch. Und die Schwelle ist GEMESSEN, nicht geschätzt, in zwei
+Anläufen:
+
+  · Zuerst stand dort eine feste Zahl: unter 64 px nach draussen. Falsch —
+    „Bericht Kapitel 2" bekam 70 px Balken für 91 px Text und blieb drinnen,
+    abgeschnitten. Wie breit ein Titel ist, weiss nur der Browser.
+  · Dann `t.scrollWidth > b.clientWidth`, also gegen die Breite des BALKENS.
+    Auch falsch: die schliesst zweimal 9 px Polster mit ein, die der Text
+    nicht hat. „Steuerung Ro…" blieb drinnen — 97 px Text gegen 110 px
+    Balken sah nach „passt" aus, während wirklich 92 px übrig waren.
+  · Richtig ist `t.scrollWidth > t.clientWidth + 2`: der Text gegen seinen
+    EIGENEN Platz. Danach war kein Titel mehr abgeschnitten.
+
+Beide Fehlversuche standen zwischendurch auf einem Bild. Keiner wäre durch
+Nachdenken aufgefallen.
+
+DIE BALKEN WAREN IM HELLMODUS UNSICHTBAR. Gemessen: der Grund eines Balkens
+ist rgb(241,241,239) auf weisser Seite — ein Kontrast von etwa 1,05. Im
+Dunkelmodus standen sie kräftig da, im Hellmodus sah man praktisch nichts.
+Die `bg-*`-Farben sind für Etiketten gemacht, die Text tragen; ein Balken
+mit dem Titel daneben trägt keinen.
+
+Die Reparatur ist eine Kante statt einer neuen Palette: `box-shadow: inset
+0 0 0 1px color-mix(in srgb, var(--text) 26%, transparent)`. Sie wirkt in
+beiden Modi, und eine geänderte Palette hätte jedes Etikett im ganzen
+Programm mitverändert.
+
+PRÜFUNG: `test408`, 13 Punkte, PORT 9531.
+MUTATIONEN ROT GESEHEN:
+  §1 → `kalEnde(coll, view, startKey)` zurück auf die alte Zeile. → „Die
+       drei sind nicht alle gleich breit — 42 42 42", 9/13. Drei Balken,
+       drei verschiedene Spannen, dieselbe Breite.
+  §2 → die Messung nach dem Zeichnen entfernen. → „Kein Titel steht
+       abgeschnitten — [Ein Tag]" und „Der winzige trägt ihn daneben —
+       22px, draussen=false", 11/13.
+  §4 → die `box-shadow`-Kante nehmen. → „Im Dunkelmodus hat jeder Balken
+       eine Kante — none | none | none", 11/13.
+
+UND EIN ABSCHNITT, DER AUF DER FALSCHEN STUFE NICHTS PRÜFTE. §1 stand
+zuerst auf der Monatsstufe. `ZS_STUFEN` gibt der fünf Pixel je Tag; drei
+Tage sind dort fünfzehn Pixel und fallen unter die Mindestbreite von 22. Ein
+Drei-Tage-Balken war damit genau so breit wie ein Ein-Tage-Balken, und der
+Abschnitt konnte gar nicht anders. Er steht jetzt auf der Tagesstufe, wo ein
+Tag 42 px hat.
+
+Dabei kam der Grund heraus, warum die Balken so gedrängt standen: `px` ist
+je Zoomstufe FEST. Bei einem Zeitraum von 45 Tagen ist die Fläche 225 px
+breit, während 1100 px zur Verfügung stehen — zwei Drittel der Ansicht
+bleiben leer, und die Balken sind unnötig winzig. Das steht als L130 Punkt 5
+und ist ein eigener Bogen: die Balken sind in Pixeln positioniert, ein
+Skalieren hiesse, alles auf Anteile umzustellen.
+
+Mitgelaufen und grün: test87, test105, test109, test294, test404, test405,
+test406, test407.
+
+Dateien: `pruefungen/lauf/test408.mts` (neu),
+`src/bereiche/datenbanken/steuerung.ts`, `quell/schale/stil/ansichten.css`.

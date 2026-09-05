@@ -3091,7 +3091,17 @@ const Datenbank = (() => {
     const datumKeys = Object.keys(coll.schema).filter(k =>
       ['date','created','edited'].includes(coll.schema[k].type));
     const startKey = view.startKey && coll.schema[view.startKey] ? view.startKey : datumKeys[0];
-    const endeKey  = view.endeKey && coll.schema[view.endeKey] ? view.endeKey : null;
+    /* DIESELBE ERKENNUNG WIE IM KALENDER (E413). Hier stand die Zeile, die
+       E410 im Kalender ersetzt hat — und sie stand hier weiter. Die Folge
+       war schlimmer als dort: ein Zeitstrahl OHNE Enddatum zeichnet jedes
+       Projekt als Quadrat von dreissig Pixeln, und in dreissig Pixeln steht
+       vom Titel genau ein Buchstabe. Auf dem Bild las man „E", „\", „S",
+       „E" — neun Balken, die alle gleich aussahen und alle nichts sagten.
+
+       Das ist der zweitteuerste wiederkehrende Fehler dieses Projekts,
+       wörtlich aus §45: eine Sache an einer Stelle reparieren und die
+       Nachbarstelle nicht ansehen. */
+    const endeKey  = kalEnde(coll, view, startKey);
 
     if (!startKey) {
       w.innerHTML = '<div class="db-leer">Für den Zeitstrahl braucht es eine Datums-Eigenschaft.</div>';
@@ -3220,10 +3230,41 @@ const Datenbank = (() => {
         `style="left:${links}px; width:${breite}px; top:${ZS_KOPF + i * ZS_ZEILE + 3}px" ` +
         `title="${esc(e.row.text || 'Ohne Titel')} — ${e.von.toLocaleDateString('de-DE')}` +
         (endeKey ? ' bis ' + e.bis.toLocaleDateString('de-DE') : '') + '">' +
+        /* DER TITEL WANDERT NACH DRAUSSEN, WENN ER DRINNEN NICHT PASST
+           (E413). Auf dem Bild stand in den kurzen Balken „\", „I", „M" —
+           je EIN Buchstabe, ohne Auslassungszeichen. „\" ist ein
+           abgeschnittenes „V" von „Verteiler beschriften", und es sieht aus
+           wie ein Zeichen, nicht wie ein Rest. Genau der Fall aus §55.1:
+           eine abgeschnittene Anzeige zeigt etwas ANDERES, und beides sieht
+           gültig aus.
+
+           WER DRAUSSEN STEHT, ENTSCHEIDET DIE MESSUNG WEITER UNTEN, nicht
+           diese Zeile. Eine feste Pixelschwelle stand hier zuerst — 64 px —
+           und war nachweislich falsch: „Bericht Kapitel 2" bekam 70 px
+           Balken für 91 px Text und blieb drinnen, abgeschnitten. Wie breit
+           ein Titel wirklich ist, weiss erst der Browser. */
         `<span class="zs-txt">${esc(e.row.text || 'Ohne Titel')}</span>` +
         (endeKey ? '<i class="zs-griff"></i>' : '') + '</div>';
     });
     flaeche.innerHTML = html;
+
+    /* JETZT ERST MESSEN, wo der Titel hinpasst — vorher weiss es niemand.
+       `scrollWidth` gegen die Innenbreite des Balkens: passt der Text nicht,
+       wandert er nach rechts hinaus. Neun Balken, ein Durchgang; das kostet
+       nichts und trifft im Gegensatz zu jeder festen Zahl immer. */
+    requestAnimationFrame(() => {
+      flaeche.querySelectorAll<HTMLElement>('.zs-balken').forEach(b => {
+        const t = b.querySelector<HTMLElement>('.zs-txt');
+        if (!t) return;
+        /* Gegen die eigene clientWidth des TEXTES, nicht die des Balkens:
+           `b.clientWidth` schliesst das Polster von zweimal 9 px MIT ein,
+           und der Text hat es nicht zur Verfügung. Auf dem Bild blieb
+           „Steuerung Ro…" deshalb drinnen — 97 px Text gegen 110 px Balken
+           sah nach „passt" aus, während wirklich nur 92 px übrig waren.
+           Zwei Pixel Spiel gegen Rundung. */
+        if (t.scrollWidth > t.clientWidth + 2) t.classList.add('draussen');
+      });
+    });
 
     /* ---- Abhängigkeitspfeile -------------------------------------------- */
     if (abhKey) {

@@ -70,10 +70,35 @@ table.grid .tt-auf:hover{background:var(--bg-hover); color:var(--text)}
 .zs-heute{position:absolute; bottom:0; width:2px; background:var(--c-red); opacity:.65; z-index:2}
 .zs-balken{
   position:absolute; height:26px; border-radius:5px; padding:4px 9px;
-  font-size:12.5px; overflow:hidden; white-space:nowrap;
+  font-size:12.5px; white-space:nowrap;
   cursor:grab; min-width:6px; z-index:3; user-select:none;
 }
+/* `overflow:hidden` stand oben am Balken. Es muss an den TEXT, sonst kann
+   der Titel nicht hinausragen (E413). Der Balken selbst schneidet damit
+   nichts mehr ab — er hat auch nichts abzuschneiden ausser diesem Text. */
 .zs-balken .zs-txt{overflow:hidden; text-overflow:ellipsis; display:block}
+
+/* Passt der Titel nicht hinein, steht er RECHTS DANEBEN. Vorher stand dort
+   ein einzelner Buchstabe ohne Auslassungszeichen — „\" für „Verteiler
+   beschriften" — und das sah aus wie ein Zeichen, nicht wie ein Rest. */
+.zs-balken .zs-txt.draussen{
+  position:absolute; left:calc(100% + 7px); top:4px;
+  overflow:visible; color:var(--text); pointer-events:none;
+}
+
+/* DER BALKEN BRAUCHT EINE KANTE (E413). Gemessen im Hellmodus: der Grund
+   eines Balkens ist rgb(241,241,239) auf weisser Seite — ein Kontrast von
+   etwa 1,05. Auf dem Bild sah man von den Balken praktisch nichts, während
+   sie im Dunkelmodus kräftig standen. Die `bg-*`-Farben sind für Etiketten
+   gemacht, die Text tragen; ein Balken trägt hier keinen.
+
+   Die Kante nimmt die Textfarbe mit wenig Deckkraft: sie wirkt in BEIDEN
+   Modi, ohne die Palette anzufassen — und eine geänderte Palette hätte
+   jedes Etikett im Programm mitverändert. */
+.zs-balken{ box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text) 26%, transparent) }
+@supports not (color: color-mix(in srgb, red 50%, blue)){
+  .zs-balken{ box-shadow: inset 0 0 0 1px var(--line) }
+}
 .zs-balken:hover{filter:brightness(1.12); outline:1px solid var(--text-faint)}
 .zs-balken:active{cursor:grabbing}
 .zs-griff{position:absolute; right:0; top:0; bottom:0; width:7px; cursor:ew-resize;
