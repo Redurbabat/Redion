@@ -120,6 +120,13 @@ const Produktwelten = (() => {
 
   const bibliothek = (): void => workspace('bibliothek');
   const aufgaben = (): void => workspace('aufgaben');
+  /* DER KALENDER IST EIN ORT, KEIN DIALOG (E430). Die Ansicht gab es die
+     ganze Zeit — `Arbeitsansicht` kennt `'kalender'`, `routeAusHash` lässt
+     `#welt-workspace-kalender` zu, und die Arbeitswelt zeichnet die
+     Chronologie aller Datumsfelder. Es fehlte nur die Tür: der
+     Navigationseintrag „Kalender" rief `Kalender.dialog()`, und das ist der
+     Verbindungsdialog für Google und CalDAV. */
+  const kalender = (): void => workspace('kalender');
   const whiteboards = (): void => workspace('whiteboards');
 
   const planung = (): void => {
@@ -300,7 +307,7 @@ const Produktwelten = (() => {
 
   return {
     start, aktiv, markieren, wechseln: weltSetzen, zurAktivenWelt,
-    lernen, workspace, bibliothek, aufgaben, whiteboards, planung, bereicheDialog,
+    lernen, workspace, bibliothek, aufgaben, kalender, whiteboards, planung, bereicheDialog,
     routeAusHash, routeOeffnen
   };
 })();

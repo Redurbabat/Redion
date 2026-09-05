@@ -586,9 +586,18 @@ const Ansichten = (() => {
         wrap.innerHTML =
             '<div class="home">' +
                 '<h1>Termine</h1>' +
+                /* DREI KARTEN, NICHT ZWEI (E430). „Kalender" führte hier zum
+                   VERBINDUNGSDIALOG — die Zeile „Termine hereinholen" sagt das
+                   zwar, aber von diesem Bildschirm führte damit gar kein Weg zum
+                   Kalender selbst. Wer auf „Termine" geht und einen Kalender sucht,
+                   landete bei Google-Client-IDs.
+                   Jetzt zuerst der Kalender als Ort, dann das Verbinden als das,
+                   was es ist. */
                 '<div class="home-karten">' +
-                '<button class="hk" data-a="kal"><b>📅 Kalender</b>' +
-                '<span>Termine hereinholen</span></button>' +
+                '<button class="hk" data-a="kal-auf"><b>📅 Kalender</b>' +
+                '<span>Alle Termine in einer Chronologie</span></button>' +
+                '<button class="hk" data-a="kal"><b>🔗 Kalender verbinden</b>' +
+                '<span>Google, CalDAV — Termine hereinholen</span></button>' +
                 '<button class="hk" data-a="mtg"><b>🎙 Besprechung</b>' +
                 '<span>Mitreden statt mitschreiben</span></button>' +
                 '</div>' +
@@ -617,7 +626,9 @@ const Ansichten = (() => {
             const a = el?.closest('[data-a]');
             if (!a)
                 return;
-            if (a.dataset.a === 'kal')
+            if (a.dataset.a === 'kal-auf')
+                window.Produktwelten?.kalender?.();
+            else if (a.dataset.a === 'kal')
                 window.Kalender?.dialog?.();
             else if (a.dataset.a === 'mtg')
                 window.Meeting?.panel?.();

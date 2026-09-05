@@ -134,6 +134,62 @@ const ANSICHTEN: Record<string, {
      angesehen hat. Beim Verschieben nach `produktwelten.css` war das die
      eigentliche Frage — nicht „stimmen die gerechneten Werte", sondern
      „sieht es aus wie vorher". */
+  /* DER KALENDER ALS ORT (E430). Vorher öffnete der Eintrag „Kalender" den
+     Verbindungsdialog; ein Bildziel dafür gab es nie, weil es nichts zu
+     sehen gab ausser einer Überlagerung. */
+  kalender2: {
+    titel: 'Der Kalender als eigener Ort (E430)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const seite = Store.addPage(null, { text: 'Termine' });
+      const { collectionId } = Store.addDatabase(seite.id, 'Termine', {
+        titel: { name: 'Sache', type: 'title' },
+        wann:  { name: 'Wann',  type: 'date' }
+      }, 'table');
+      const heute = new Date();
+      const tage: Array<[string, number]> = [
+        ['Zahnarzt', 2], ['Abgabe Bericht', 4], ['Messung Halle 3', 5],
+        ['Elternabend', 9], ['Prüfung Elektro', 12]
+      ];
+      for (const [t, plus] of tage) {
+        const d = new Date(heute.getTime() + plus * 86400000);
+        const z = Store.addBlock(collectionId, 'page', { text: t, parentTable: 'collection' });
+        Store.updateBlock(z.id, { props: { wann: d.toISOString().slice(0, 10) } });
+      }
+      await Store.flush();
+      (window as any).Produktwelten?.kalender?.();
+      await new Promise(f => setTimeout(f, 900));
+    }
+  },
+
+  /* Der Termine-Bildschirm — das ist der Ort, den die untere Leiste am
+     Telefon unter „Termine" oeffnet (E430). */
+  termine2: {
+    titel: 'Termine — mit einem Weg zum Kalender (E430)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const seite = Store.addPage(null, { text: 'Termine' });
+      const { collectionId } = Store.addDatabase(seite.id, 'Termine', {
+        titel: { name: 'Sache', type: 'title' },
+        wann:  { name: 'Wann',  type: 'date' }
+      }, 'table');
+      const heute = new Date();
+      for (const [t, plus] of [['Zahnarzt', 2], ['Abgabe Bericht', 4],
+                               ['Elternabend', 9]] as Array<[string, number]>) {
+        const d = new Date(heute.getTime() + plus * 86400000);
+        const z = Store.addBlock(collectionId, 'page', { text: t, parentTable: 'collection' });
+        Store.updateBlock(z.id, { props: { wann: d.toISOString().slice(0, 10) } });
+      }
+      await Store.flush();
+      (window as any).Ansichten?.termine?.();
+      await new Promise(f => setTimeout(f, 800));
+    }
+  },
+
   begruessung: {
     titel: 'Die Begrüssungsfläche (E418)',
     bauen: async () => {

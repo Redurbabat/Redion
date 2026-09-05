@@ -17106,7 +17106,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 413, inhalt: 'e7fa3210afbe925a', gebaut: '2026-09-05T20:14:04.774Z' };
+const Stand = { fassung: 417, inhalt: 'e7821cfc091fde30', gebaut: '2026-09-05T20:25:23.873Z' };
 window.Stand = Stand;
 
 </script>
@@ -27943,8 +27943,20 @@ Register.navigation = (() => {
     
            Durchlaufend heisst: Registerreihenfolge IST Bildschirmreihenfolge,
            und die Gruppen sind nur die Schnitte darin. */
+        /* HIER STAND `Kalender.dialog()` — DER VERBINDUNGSDIALOG (E430).
+           Der Hinweis versprach „Termine aus allen Quellen"; aufgegangen ist
+           eine Überlagerung mit Google, CalDAV und Client-ID. Kein Kalender,
+           keine Termine, sondern die Quellen selbst.
+           Und der Unterschied ist nicht kosmetisch: eine Überlagerung hat keine
+           Adresse, keinen Zurück-Weg und keine Krume; sie liegt über der Seite
+           und ist wieder weg. „Aufgaben" und „Bibliothek" stehen im selben
+           Register daneben und machen es seit jeher richtig.
+           Der Verbindungsdialog bleibt — als das, was er ist: die Zeile
+           „Kalender verbinden" im Kontextregister und der Knopf in den
+           Einstellungen. */
         { id: 'app-kalender', marke: 'kalender', name: 'Kalender', icon: '📅', zeichen: 'calendar', platz: 'apps', gruppe: 'planen', rang: 10,
-            hinweis: 'Termine aus allen Quellen', tun: () => Kalender.dialog() },
+            adresse: '#welt-workspace-kalender',
+            hinweis: 'Termine aus allen Quellen', tun: () => Produktwelten.kalender() },
         { id: 'app-tagesplan', marke: 'tagesplan', name: 'Tagesplan', icon: '☀', zeichen: 'clipboard', platz: 'apps', gruppe: 'planen', rang: 20,
             hinweis: 'Was heute ansteht', tun: () => Plan.tagesplan() },
         { id: 'app-woche', marke: 'woche', name: 'Wochenrückblick', icon: '📅', zeichen: 'chart', platz: 'apps', gruppe: 'planen', rang: 30,
@@ -86423,9 +86435,18 @@ const Ansichten = (() => {
         wrap.innerHTML =
             '<div class="home">' +
                 '<h1>Termine</h1>' +
+                /* DREI KARTEN, NICHT ZWEI (E430). „Kalender" führte hier zum
+                   VERBINDUNGSDIALOG — die Zeile „Termine hereinholen" sagt das
+                   zwar, aber von diesem Bildschirm führte damit gar kein Weg zum
+                   Kalender selbst. Wer auf „Termine" geht und einen Kalender sucht,
+                   landete bei Google-Client-IDs.
+                   Jetzt zuerst der Kalender als Ort, dann das Verbinden als das,
+                   was es ist. */
                 '<div class="home-karten">' +
-                '<button class="hk" data-a="kal"><b>📅 Kalender</b>' +
-                '<span>Termine hereinholen</span></button>' +
+                '<button class="hk" data-a="kal-auf"><b>📅 Kalender</b>' +
+                '<span>Alle Termine in einer Chronologie</span></button>' +
+                '<button class="hk" data-a="kal"><b>🔗 Kalender verbinden</b>' +
+                '<span>Google, CalDAV — Termine hereinholen</span></button>' +
                 '<button class="hk" data-a="mtg"><b>🎙 Besprechung</b>' +
                 '<span>Mitreden statt mitschreiben</span></button>' +
                 '</div>' +
@@ -86454,7 +86475,9 @@ const Ansichten = (() => {
             const a = el?.closest('[data-a]');
             if (!a)
                 return;
-            if (a.dataset.a === 'kal')
+            if (a.dataset.a === 'kal-auf')
+                window.Produktwelten?.kalender?.();
+            else if (a.dataset.a === 'kal')
                 window.Kalender?.dialog?.();
             else if (a.dataset.a === 'mtg')
                 window.Meeting?.panel?.();
@@ -130401,6 +130424,13 @@ const Produktwelten = (() => {
     };
     const bibliothek = () => workspace('bibliothek');
     const aufgaben = () => workspace('aufgaben');
+    /* DER KALENDER IST EIN ORT, KEIN DIALOG (E430). Die Ansicht gab es die
+       ganze Zeit — `Arbeitsansicht` kennt `'kalender'`, `routeAusHash` lässt
+       `#welt-workspace-kalender` zu, und die Arbeitswelt zeichnet die
+       Chronologie aller Datumsfelder. Es fehlte nur die Tür: der
+       Navigationseintrag „Kalender" rief `Kalender.dialog()`, und das ist der
+       Verbindungsdialog für Google und CalDAV. */
+    const kalender = () => workspace('kalender');
     const whiteboards = () => workspace('whiteboards');
     const planung = () => {
         weltSetzen('lernen');
@@ -130588,7 +130618,7 @@ const Produktwelten = (() => {
     };
     return {
         start, aktiv, markieren, wechseln: weltSetzen, zurAktivenWelt,
-        lernen, workspace, bibliothek, aufgaben, whiteboards, planung, bereicheDialog,
+        lernen, workspace, bibliothek, aufgaben, kalender, whiteboards, planung, bereicheDialog,
         routeAusHash, routeOeffnen
     };
 })();

@@ -162,8 +162,20 @@ Register.navigation = (() => {
     
            Durchlaufend heisst: Registerreihenfolge IST Bildschirmreihenfolge,
            und die Gruppen sind nur die Schnitte darin. */
+        /* HIER STAND `Kalender.dialog()` — DER VERBINDUNGSDIALOG (E430).
+           Der Hinweis versprach „Termine aus allen Quellen"; aufgegangen ist
+           eine Überlagerung mit Google, CalDAV und Client-ID. Kein Kalender,
+           keine Termine, sondern die Quellen selbst.
+           Und der Unterschied ist nicht kosmetisch: eine Überlagerung hat keine
+           Adresse, keinen Zurück-Weg und keine Krume; sie liegt über der Seite
+           und ist wieder weg. „Aufgaben" und „Bibliothek" stehen im selben
+           Register daneben und machen es seit jeher richtig.
+           Der Verbindungsdialog bleibt — als das, was er ist: die Zeile
+           „Kalender verbinden" im Kontextregister und der Knopf in den
+           Einstellungen. */
         { id: 'app-kalender', marke: 'kalender', name: 'Kalender', icon: '📅', zeichen: 'calendar', platz: 'apps', gruppe: 'planen', rang: 10,
-            hinweis: 'Termine aus allen Quellen', tun: () => Kalender.dialog() },
+            adresse: '#welt-workspace-kalender',
+            hinweis: 'Termine aus allen Quellen', tun: () => Produktwelten.kalender() },
         { id: 'app-tagesplan', marke: 'tagesplan', name: 'Tagesplan', icon: '☀', zeichen: 'clipboard', platz: 'apps', gruppe: 'planen', rang: 20,
             hinweis: 'Was heute ansteht', tun: () => Plan.tagesplan() },
         { id: 'app-woche', marke: 'woche', name: 'Wochenrückblick', icon: '📅', zeichen: 'chart', platz: 'apps', gruppe: 'planen', rang: 30,
