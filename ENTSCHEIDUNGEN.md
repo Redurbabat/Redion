@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-410 Entscheidungen, E1 bis E414. Die Nummer ist die Ordnung: eine Entscheidung
+411 Entscheidungen, E1 bis E415. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -468,6 +468,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E412** — Eine Zahl sagt, wovon sie handelt — und der Typ sagt, was es gibt
 * **E413** — Der Zeitstrahl zeigt Spannen und liest sich
 * **E414** — Das Diagramm zeigt etwas
+* **E415** — Zwei tote CSS-Zeilen, zwei unklickbare Knöpfe
 
 ---
 
@@ -33754,3 +33755,65 @@ test406, test407, test408.
 Dateien: `pruefungen/lauf/test409.mts` (neu),
 `src/bereiche/bloecke/arten/zeichenflaeche.ts`,
 `src/bereiche/datenbanken/steuerung.ts`, `pruefungen/lauf/test404.mts`.
+
+E415 — Zwei tote CSS-Zeilen, zwei unklickbare Knöpfe
+================================================================================
+5. September 2026
+
+Gefunden von einem vollen Lauf, drei Wochen nach der Ursache. Kein Mensch,
+kein Bild und keine Konsole hatten etwas gemeldet.
+
+    cursor:pointer position:relative;
+    line-height:1 position:relative;
+
+Zwei Stellen in `bausteine.css`, beide ohne Semikolon zwischen den
+Deklarationen. CSS meldet das nicht: es wirft die GANZE Deklaration weg —
+BEIDE, nicht nur die zweite — und macht schweigend weiter.
+
+WAS DAS ANGERICHTET HAT. Ohne `position:relative` bezieht sich das `::after`
+mit der 44-px-Treffläche (E407) nicht mehr auf seinen Knopf, sondern auf den
+nächsten positionierten Vorfahren. Die Fläche legt sich damit irgendwohin —
+und dort über die Nachbarn.
+
+Zwei Knöpfe waren dadurch nicht mehr anklickbar:
+
+  · der Anker in der festen PDF-Leiste (`.blatt-fest button`) — `test179`
+  · Rückgängig in der Auswahlleiste der Planfläche (`.sp-auswahl button`) —
+    `test201`
+
+Bei der zweiten steht der Grund direkt daneben im Quelltext: „Darunter ist
+LÖSCHEN. Danebengegriffen heisst hier: Arbeit weg (§46)." Genau diese Fläche
+war kaputt.
+
+WOHER SIE KAMEN. Aus E407. Dort steht es schon aufgeschrieben — „mein Skript
+schrieb `border:1px solid var(--line) position:relative;` — kein Semikolon,
+beide Deklarationen ungültig" — und dort wurden vier Stellen mit einem Regex
+repariert. Der Regex hat diese zwei nicht erwischt.
+
+Der Fehler ist also nicht neu. Neu ist, dass er jetzt gefunden WIRD.
+
+DER WÄCHTER, UND WARUM ER SO GEBAUT IST. `test410` liest die Stildateien und
+die Einzeldatei und sucht nach einer Deklaration, hinter der ohne Semikolon
+eine zweite beginnt. Drei Entscheidungen darin:
+
+  1. Eine WÖRTLICHE Liste von Eigenschaften statt „irgendein Wort mit
+     Doppelpunkt". Ein allgemeiner Ausdruck fängt `background:linear-gradient(
+     100deg, var(--text) 44%)` und jede Farbfunktion mit. Ein Wächter, der
+     bei gültigem CSS anschlägt, wird abgeschaltet — und fängt dann auch das
+     Echte nicht mehr.
+  2. §2 steht VOR §1: der Leser bekommt bei jedem Lauf den echten Fall aus
+     E407 vorgesetzt und muss ihn finden. Ein Wächter, der nichts finden
+     kann, meldet fröhlich „alles in Ordnung".
+  3. §3 hält neun gültige Zeilen dagegen — Verläufe, `content`, Rasterspalten,
+     `url()`, `color-mix()`, Kurzschreibweisen. Keine darf gemeldet werden.
+
+UND DER WÄCHTER HAT SOFORT MEHR GEFUNDEN ALS DIE HAND. Die erste Suche von
+Hand fand eine Stelle; `test410` fand beide. Der Unterschied war
+`line-height` — es stand nicht in der Liste, mit der ich gegrept hatte.
+
+PRÜFUNG: `test410`, 7 Punkte, ohne Browser und ohne Port.
+GEGENPROBE: das Semikolon in `.blatt-fest button` wieder entfernen →
+`test410 §1` rot, und `test179` und `test201` gleich mit. Genau so ist es
+zuerst gefunden worden.
+
+Dateien: `pruefungen/lauf/test410.mts` (neu), `quell/schale/stil/bausteine.css`.
