@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-425 Entscheidungen, E1 bis E429. Die Nummer ist die Ordnung: eine Entscheidung
+426 Entscheidungen, E1 bis E430. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -483,6 +483,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E427** — Der Zeitstrahl am Telefon zeigt den Zeitstrahl
 * **E428** — Die KI konnte nur 13 von 30 Spaltentypen bauen
 * **E429** — Zwei Namen für dasselbe Ereignis
+* **E430** — „Kalender“ öffnete den Verbindungsdialog
 
 ---
 
@@ -34787,3 +34788,71 @@ Dateien: `src/kern/ereignisse/arten.ts`, `src/start.ts`,
 `src/register/einstellungen.ts`, `src/bereiche/pdf/einlesen.ts`,
 `src/bereiche/pdf/seite.ts`, `src/bereiche/dateien/archiveImport.ts`,
 `pruefungen/lauf/test422.mts` (neu).
+
+---
+
+E430 — „Kalender" öffnete den Verbindungsdialog
+------------------------------------------------
+
+ENTSCHEIDUNG (Redurs Bitte): Der Kalender ist ein ORT wie „Aufgaben" und
+„Bibliothek" — mit Adresse, Krume und Zurück-Weg —, keine Überlagerung. Und
+vom Termine-Bildschirm führt ein Weg dorthin.
+
+WAS DER EINTRAG VERSPRACH:
+
+    { id: 'app-kalender', name: 'Kalender', icon: '📅',
+      hinweis: 'Termine aus allen Quellen',
+      tun: () => Kalender.dialog() }
+
+`Kalender.dialog()` ist der Dialog „Kalender verbinden" — Google, CalDAV,
+Client-ID. Der Hinweis sagt „Termine aus allen Quellen", und was aufging,
+waren die QUELLEN selbst. Gemessen stand in der Überlagerung wörtlich:
+„📅 Kalender verbinden ✕ 🔵 Google Kalender nicht verbunden".
+
+DEN KALENDER GAB ES DIE GANZE ZEIT. `Arbeitsansicht` kennt `'kalender'`,
+`routeAusHash` lässt `#welt-workspace-kalender` zu, und die Arbeitswelt
+zeichnet die Chronologie aller Datumsfelder aus allen lesbaren Datenbanken.
+Es fehlte nur die Tür — `Produktwelten` hatte `bibliothek()` und
+`aufgaben()`, aber kein `kalender()`.
+
+UND DER UNTERSCHIED IST NICHT KOSMETISCH, das ist der Kern von Redurs
+Bitte: eine Überlagerung hat keine Adresse, keinen Zurück-Weg und keine
+Krume; sie liegt über der Seite und ist wieder weg. Ein Ort hat all das.
+„Aufgaben" und „Bibliothek" stehen im selben Register daneben und machen es
+seit jeher richtig — der Kalender war der eine, der es nicht tat.
+
+DER ZWEITE FUNDORT, und es ist der, den Redur vor Augen hatte: der
+Bildschirm `Ansichten.termine()` — was die untere Leiste am Telefon unter
+„Termine" öffnet — trug zwei Karten, und die mit dem Kalendersymbol führte
+ebenfalls in den Verbindungsdialog. Von diesem Bildschirm gab es GAR KEINEN
+Weg zum Kalender. Jetzt drei Karten:
+
+    📅 Kalender            Alle Termine in einer Chronologie   → der Ort
+    🔗 Kalender verbinden  Google, CalDAV — Termine hereinholen → die Einrichtung
+    🎙 Besprechung         Mitreden statt mitschreiben
+
+WAS NICHT WEGGENOMMEN WURDE. Der Verbindungsdialog bleibt über sechs Wege
+erreichbar — die Zeile „Kalender verbinden" im Kontextregister, den Knopf in
+den Einstellungen, die Lernwelt, die Besprechung, die neue Karte. `test423
+§4` sieht ausdrücklich nach, dass er weiter aufgeht: eine falsche Tür zu
+berichtigen darf keine richtige zumachen.
+
+PRÜFUNG: `test423`, 19 Punkte, PORT 9545. Dazu `test117`, `test272`,
+`test222`.
+GEGENPROBE: `tun` zurück auf `Kalender.dialog()` → fünf Punkte rot, mit der
+Überlagerung „Kalender verbinden" im Bericht und `hash: "#dokumente"`.
+
+UND ZWEI PRÜFUNGEN, DIE ZUERST AM FALSCHEN ORT NACHSAHEN:
+§2 las die ersten 400 Zeichen des Hauptbereichs — und das ist immer der Kopf
+der Arbeitswelt, den sie in JEDER Ansicht zeichnet. Sie prüfte damit, ob die
+Arbeitswelt aufgeht, nicht welche Ansicht. §4 suchte „Kalender verbinden" in
+`Register.befehle` und bekam eine leere Liste: die Zeile steht im
+KONTEXT-Register. Eine Prüfung, die am falschen Ort nachsieht, meldet „weg",
+wo nichts weg ist.
+
+Bilder angesehen (§55.3): `bilder/kalender2-rechner-hell.png`,
+`kalender2-handy-dunkel.png`, `termine2-handy-dunkel.png`.
+
+Dateien: `src/register/navigation.ts`, `src/bereiche/wissen/produktwelten.ts`,
+`src/bereiche/datenbanken/ansichten/dienst.ts`, `bilder.mts`,
+`pruefungen/lauf/test423.mts` (neu).
