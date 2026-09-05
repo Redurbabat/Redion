@@ -2217,11 +2217,11 @@ table.grid tfoot td{color:var(--text-faint); font-size:12.5px; border:none; padd
    Eine Klasse, die an zwei Orten gesetzt und nur an einem gestaltet wird,
    ist derselbe Fall wie `.cw-bar.q-blue` aus E410 — nur schlimmer, weil er
    halb funktioniert und deshalb nicht wie ein Fehler aussieht. */
-.card .meta .mv, .fe-merkmale .mv{
+.card .meta .mv, .fe-merkmale .mv, .lr-werte .mv{
   font-size:12.5px; color:var(--text-dim);
   display:inline-flex; align-items:center; gap:4px; min-width:0}
 /* Der Name tritt zurück — er ist die Beschriftung, nicht die Auskunft. */
-.card .meta .mv-n, .fe-merkmale .mv-n{
+.card .meta .mv-n, .fe-merkmale .mv-n, .lr-werte .mv-n{
   font-size:10.5px; font-weight:500; color:var(--text-faint);
   text-transform:none; letter-spacing:.01em; flex:0 0 auto}
 .fe-merkmale{margin-top:6px; display:flex; flex-wrap:wrap; gap:4px 12px;
@@ -2237,6 +2237,15 @@ table.grid tfoot td{color:var(--text-faint); font-size:12.5px; border:none; padd
   border-bottom:1px solid var(--line-soft); cursor:pointer; font-size:14.5px;
 }
 .list-row:hover{background:var(--bg-hover)}
+/* AUS DEM QUELLTEXT HIERHER (E425, §39). Die Zeile trug drei style-Blöcke:
+   die Schriftgrösse der Werte, das flex:1 des Titels und die Reihe der
+   Werte. Der Titel bekommt dabei zusätzlich, was er vorher nicht hatte —
+   eine Grenze: ohne min-width:0 drückt ein langer Titel die Werte aus dem
+   Bild, statt selbst gekürzt zu werden. */
+.list-row .lr-titel{flex:1 1 auto; min-width:0; overflow:hidden;
+  text-overflow:ellipsis; white-space:nowrap}
+.list-row .lr-werte{display:flex; flex-wrap:wrap; align-items:center;
+  justify-content:flex-end; gap:4px 12px; flex:0 1 auto; min-width:0}
 
 /* Kalender */
 .cal{display:grid; grid-template-columns:repeat(7,1fr); gap:1px; background:var(--line)}
@@ -17053,7 +17062,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 402, inhalt: 'b89e7607dc914f87', gebaut: '2026-09-05T19:32:20.476Z' };
+const Stand = { fassung: 405, inhalt: 'b2ea98abcd69c6d2', gebaut: '2026-09-05T19:41:37.912Z' };
 window.Stand = Stand;
 
 </script>
@@ -71108,21 +71117,21 @@ const Datenbank = (() => {
         rows.forEach((r) => {
             const d = document.createElement('div');
             d.className = 'list-row';
-            let meta = '';
-            Object.keys(coll.schema).forEach(k => {
-                if (coll.schema[k].type === 'title' || (view.hidden || []).includes(k))
-                    return;
-                const z = zelle(r, k, coll);
-                if (z && !z.includes('—'))
-                    meta += '<span style="font-size:12.5px">' + z + '</span>';
-            });
-            d.innerHTML = `<span style="flex:1">${esc(r.text || 'Ohne Titel')}</span>` +
-                `<span style="display:flex;gap:6px;align-items:center">${meta}</span>`;
+            /* DIESELBE MASCHINE WIE KARTE UND FEED (E425, aus E411). Hier stand
+               eine eigene Schleife, die jede Zelle in ein `span` ohne Namen
+               steckte. Auf dem Bild las sich das als
+                   01.09.2026 12.09.2026 420 CHF
+               — zwei Daten nebeneinander, und nichts sagt, welches der Anfang ist.
+               Eine Zeile darunter stand „15.09.2026 15.09.2026": zweimal dasselbe
+               Datum, ohne Beschriftung eine Auskunft über nichts.
+               Sechs Werte, nicht dreizehn: eine Liste ist zum Überfliegen da. */
+            d.innerHTML = `<span class="lr-titel">${esc(r.text || 'Ohne Titel')}</span>` +
+                `<span class="lr-werte">${kartenWerte(r, coll, view, [], 6)}</span>`;
             d.addEventListener('click', () => App.oeffne(r.id));
             w.appendChild(d);
         });
         if (!rows.length)
-            w.innerHTML = '<div style="color:var(--text-faint); padding:10px 0">Noch keine Einträge</div>';
+            w.innerHTML = '<div class="db-leer">Noch keine Einträge</div>';
         return w;
     };
     /* --- Galerie ------------------------------------------------------------ */

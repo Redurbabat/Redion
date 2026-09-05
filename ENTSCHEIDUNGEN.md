@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-420 Entscheidungen, E1 bis E424. Die Nummer ist die Ordnung: eine Entscheidung
+421 Entscheidungen, E1 bis E425. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -478,6 +478,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E422** — Fünf Kataloge für die dreizehn Ansichten, und sie waren auseinander
 * **E423** — Die Karte kannte den Ortstyp nicht
 * **E424** — Der Feed beschriftet seine Werte — und bleibt ein Strom
+* **E425** — Die Liste beschriftet ihre Werte — der dritte Fundort
 
 ---
 
@@ -34497,3 +34498,57 @@ Ende 30.09.2026 · Kosten 0 CHF".
 
 Dateien: `src/bereiche/datenbanken/steuerung.ts`,
 `quell/schale/stil/datenbanken.css`, `pruefungen/lauf/test417.mts` (neu).
+
+
+---
+
+E425 — Die Liste beschriftet ihre Werte — der dritte Fundort
+-------------------------------------------------------------
+
+ENTSCHEIDUNG: Die Listenansicht benutzt `kartenWerte` (E411), begrenzt auf
+sechs Werte, und ihr Aufbau steht in `datenbanken.css` statt im Quelltext.
+
+WAS AUF DEM BILD STAND:
+
+    Schaltplan Werkstatt   Läuft Elektro Schule Team
+                           01.09.2026 12.09.2026 420 CHF …
+
+Zwei Daten nebeneinander, ohne Namen. Welches ist der Anfang, welches das
+Ende? Und eine Zeile darunter: „15.09.2026 15.09.2026" — zweimal dasselbe
+Datum. Ohne Beschriftung ist das eine Auskunft über nichts.
+
+DERSELBE FEHLER ZUM DRITTEN MAL, an drei Orten unabhängig voneinander
+geschrieben: Board- und Galeriekarte (E411), Feed (E424), Liste (hier).
+Jedes Mal eine eigene Schleife, die die Zellen aneinanderhängt. Die Maschine
+dagegen gibt es einmal und kann alles, was die drei brauchen — sie zählt
+zuerst, welcher Typ mehrfach vorkommt, und beschriftet dann genau das, was
+seinen Namen braucht.
+
+ZWEI WEITERE DINGE VOM SELBEN BILD:
+
+  · ALLE dreizehn Spalten standen in jeder Zeile — Etiketten, zwei Daten,
+    Kosten, Fortschritt, Sterne, Person, Ort, Kästchen und der Anhang. Eine
+    Liste ist zum Überfliegen da; sechs sind genug.
+  · Drei `style=`-Blöcke im Quelltext (§39): die Schriftgrösse der Werte,
+    das `flex:1` des Titels, die Reihe der Werte. Der Titel bekommt dabei,
+    was er vorher nicht hatte — `min-width:0`. Ohne das drückt ein langer
+    Titel die Werte aus dem Bild, statt selbst gekürzt zu werden.
+
+WAS §39 NICHT MEINT, und der Wächter musste es lernen: ein
+Fortschrittsbalken schreibt `style="width:55%"`, und das ist ein GERECHNETER
+Wert. Er kann gar nicht in einer Stildatei stehen. Gezählt werden deshalb
+die Träger des AUFBAUS — `.lr-titel`, `.lr-werte`, `.mv`, `.mv-n` —, und
+daneben steht eine zweite Zeile, die festhält, dass im Ganzen höchstens EIN
+gerechneter Wert je Zeile bleibt. Vorher waren es siebzehn.
+
+PRÜFUNG: `test418`, 14 Punkte, PORT 9540.
+GEGENPROBE: zurück auf die eigene Schleife → sechs Punkte rot, darunter
+„Wo zwei Daten stehen, tragen beide ihren Namen" mit leeren Listen.
+Gelaufen.
+
+Bild angesehen (§55.3): `bilder/db-list-rechner-hell.png` — vorher
+„01.09.2026 12.09.2026 420 CHF", jetzt „Anfang 01.09.2026 · Ende 12.09.2026
+· Kosten 420 CHF".
+
+Dateien: `src/bereiche/datenbanken/steuerung.ts`,
+`quell/schale/stil/datenbanken.css`, `pruefungen/lauf/test418.mts` (neu).

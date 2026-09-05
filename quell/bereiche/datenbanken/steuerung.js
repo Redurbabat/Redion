@@ -2090,21 +2090,21 @@ const Datenbank = (() => {
         rows.forEach((r) => {
             const d = document.createElement('div');
             d.className = 'list-row';
-            let meta = '';
-            Object.keys(coll.schema).forEach(k => {
-                if (coll.schema[k].type === 'title' || (view.hidden || []).includes(k))
-                    return;
-                const z = zelle(r, k, coll);
-                if (z && !z.includes('—'))
-                    meta += '<span style="font-size:12.5px">' + z + '</span>';
-            });
-            d.innerHTML = `<span style="flex:1">${esc(r.text || 'Ohne Titel')}</span>` +
-                `<span style="display:flex;gap:6px;align-items:center">${meta}</span>`;
+            /* DIESELBE MASCHINE WIE KARTE UND FEED (E425, aus E411). Hier stand
+               eine eigene Schleife, die jede Zelle in ein `span` ohne Namen
+               steckte. Auf dem Bild las sich das als
+                   01.09.2026 12.09.2026 420 CHF
+               — zwei Daten nebeneinander, und nichts sagt, welches der Anfang ist.
+               Eine Zeile darunter stand „15.09.2026 15.09.2026": zweimal dasselbe
+               Datum, ohne Beschriftung eine Auskunft über nichts.
+               Sechs Werte, nicht dreizehn: eine Liste ist zum Überfliegen da. */
+            d.innerHTML = `<span class="lr-titel">${esc(r.text || 'Ohne Titel')}</span>` +
+                `<span class="lr-werte">${kartenWerte(r, coll, view, [], 6)}</span>`;
             d.addEventListener('click', () => App.oeffne(r.id));
             w.appendChild(d);
         });
         if (!rows.length)
-            w.innerHTML = '<div style="color:var(--text-faint); padding:10px 0">Noch keine Einträge</div>';
+            w.innerHTML = '<div class="db-leer">Noch keine Einträge</div>';
         return w;
     };
     /* --- Galerie ------------------------------------------------------------ */
