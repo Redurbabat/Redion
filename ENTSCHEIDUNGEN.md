@@ -33732,9 +33732,25 @@ MUTATIONEN ROT GESEHEN:
   §4    → die Stufenzahl fest auf 4. → „Keine Zahl steht zweimal — 3 2 2 1 0",
           14/16.
 
+NACHTRAG — DER SCAN, DER DIESEN BOGEN BEENDET HAT. Statt jede der noch
+offenen Ansichten einzeln anzusehen, wurden alle dreizehn gemessen: auf
+abgeschnittenen Text, auf Farbwerte mit Komma (das Kennzeichen des
+Paar-Fehlers), auf ungenutzte Breite und auf doppelte Beschriftungen.
+
+Der Scan meldete genau einen Treffer, und der war ein FEHLALARM: im Raster
+sind vier Dateinamen mit Auslassungszeichen abgeschnitten. Das ist richtig
+so — bei Text ist „…" die ehrliche Lösung.
+
+Bei einer ZAHL gibt es diese Lösung nicht. „34.21" statt „634.21" ist gültig
+und falsch, und beide sehen gleich aus (§55.1). `test404 §8` misst deshalb
+jetzt für alle dreizehn Ansichten zweierlei: dass jede mindestens 85 % der
+Breite nutzt, und dass keine eine Zahl abschneidet. Gegenprobe: `flex: 0 0
+auto` aus `.db` nehmen → „table: 76 % | raster: 76 % | board: 76 % | …",
+23 von 25.
+
 Mitgelaufen und grün: test87, test105, test109, test294, test404, test405,
 test406, test407, test408.
 
 Dateien: `pruefungen/lauf/test409.mts` (neu),
 `src/bereiche/bloecke/arten/zeichenflaeche.ts`,
-`src/bereiche/datenbanken/steuerung.ts`.
+`src/bereiche/datenbanken/steuerung.ts`, `pruefungen/lauf/test404.mts`.

@@ -283,6 +283,51 @@ for (const l of LAYOUTS) {
 p('Alle dreizehn Ansichten öffnen ohne Fehler', schlecht.length === 0,
   schlecht.slice(0, 4).join(' | '));
 
+/* --------------------------------------------------------------------------
+ * UND JEDE NUTZT DIE BREITE, DIE DA IST
+ *
+ * Vor E409 waren es 55 % — 708 px von 1226. Der Wert wird hier für ALLE
+ * dreizehn gemessen, nicht nur für die Tabelle: die Regel sitzt an `.db`
+ * und gilt damit für jede Ansichtsart, aber „gilt" und „wirkt" ist nicht
+ * dasselbe. Eine Ansicht mit eigenem Rahmen könnte sie überstimmen, ohne
+ * dass es jemandem auffiele.
+ * ------------------------------------------------------------------------*/
+const schmal: string[] = [];
+const zahlSchnitt: string[] = [];
+for (const l of LAYOUTS) {
+  const s9 = await bauen(1280, l);
+  await s9.waitForTimeout(500);
+  const m = JSON.parse(await s9.evaluate(`(() => {
+    const db = document.querySelector('.db');
+    const roller = document.getElementById('scroll');
+    if (!db || !roller) return JSON.stringify({ genutzt: -1, zahlen: [] });
+
+    /* EINE ABGESCHNITTENE ZAHL ZEIGT EINE ANDERE ZAHL (§55.1). Bei Text
+       ist ein „…" die ehrliche Lösung; bei einer Zahl gibt es keine —
+       „34.21" statt „634.21" ist gültig und falsch. Gesucht wird deshalb
+       nur nach Blattknoten, deren Inhalt AUSSCHLIESSLICH eine Zahl ist. */
+    const zahlen = [];
+    for (const el of db.querySelectorAll('*')) {
+      if (el.children.length) continue;
+      const txt = (el.textContent || '').trim();
+      if (!/^[-+]?[\d.,\u202F\s]{3,}$/.test(txt)) continue;
+      if (el.scrollWidth > el.clientWidth + 2)
+        zahlen.push(txt.slice(0, 20) + ' [' + el.clientWidth + '/' + el.scrollWidth + ']');
+    }
+    return JSON.stringify({
+      genutzt: Math.round(db.getBoundingClientRect().width / roller.clientWidth * 100),
+      zahlen: [...new Set(zahlen)].slice(0, 3)
+    });
+  })()`) as string);
+  if (m.genutzt < 85) schmal.push(l + ': ' + m.genutzt + ' %');
+  if (m.zahlen.length) zahlSchnitt.push(l + ': ' + m.zahlen.join(', '));
+  await s9.close();
+}
+p('Jede der dreizehn nutzt mindestens 85 % der Breite', schmal.length === 0,
+  schmal.slice(0, 5).join(' | '));
+p('Und keine schneidet eine Zahl ab', zahlSchnitt.length === 0,
+  zahlSchnitt.slice(0, 3).join(' | '));
+
 /* ======================================================================== */
 p('Keine Fehler auf der Konsole', fehler.length === 0, fehler.slice(0, 3).join(' · '));
 
