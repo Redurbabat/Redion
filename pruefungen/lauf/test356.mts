@@ -195,7 +195,21 @@ const zeit = await pg.evaluate(async () => {
     await warte(3000);
     const verborgen = Zeitmesser.stand().sekunden;
     Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'visible' });
-    await warte(1200);
+    /* 2,5 s UND NICHT 1,2 s (E437). Im vollen Lauf war dieser Punkt einmal
+       rot mit „2 nach 2": die Uhr stand nach dem Wiedersichtbarwerden
+       scheinbar still.
+       Nachgerechnet ist das kein Fehler der Uhr, sondern zu wenig Luft in
+       der Messung. `stand().sekunden` ist `Math.round(restSek())` — eine
+       gerundete Zahl. Ein sichtbarer Sprung von N auf N+1 braucht im
+       unguenstigsten Fall knapp eine volle Sekunde, und dazu kommt die
+       Zeit, bis die Umschaltung auf „visible" wirkt. Beides zusammen passt
+       nicht sicher in 1200 ms; unter Last passt es gar nicht.
+       DAS IST KEINE VERSTECKTE WARTEZEIT wie die, die E436 abgelehnt hat.
+       Dort haette eine Pause einen echten Wettlauf verdeckt. Hier gibt es
+       nichts zu verdecken: bleibt die Uhr nach dem Wiedersichtbarwerden
+       wirklich stehen, wird der Punkt auch nach 2,5 s rot — nur eben
+       richtig rot. */
+    await warte(2500);
     const wiederDa = Zeitmesser.stand().sekunden;
     Zeitmesser.panel();
     const feld = document.querySelector('.zm-feld .zm-wo')?.textContent || '';
@@ -210,7 +224,15 @@ p('… sie werden aber gesehen (rund 7200 s übersprungen)',
 p('Eine rückwärts gestellte Uhr zählt nicht rückwärts', zeit.nachRueck >= zeit.nachSchlaf.sekunden, `${zeit.nachRueck} nach ${zeit.nachSchlaf.sekunden}`);
 p('Eine verborgene Registerkarte zählt nicht — drei Sekunden lang keine einzige',
   zeit.verborgen === zeit.nachRueck, `${zeit.verborgen} nach ${zeit.nachRueck}`);
-p('… und danach läuft sie weiter', zeit.wiederDa >= zeit.verborgen + 1, `${zeit.wiederDa} nach ${zeit.verborgen}`);
+/* DIE MELDUNG NENNT DIE WARTEZEIT (E437), und das ist kein Beiwerk.
+   Die Gegenprobe zu diesem Punkt — die Uhr kuenstlich anhalten — liefert
+   WORTGLEICH denselben Bericht wie der Fund im vollen Lauf: „2 nach 2".
+   Zwei verschiedene Ursachen, ein Satz. Beim naechsten roten Lauf kostet
+   das wieder eine Untersuchung, nur um zu erfahren, wie lange gewartet
+   wurde. Steht die Zahl dabei, ist die Frage in einer Zeile beantwortet:
+   nach 2500 ms ist ein Stillstand ein Stillstand. */
+p('… und danach läuft sie weiter', zeit.wiederDa >= zeit.verborgen + 1,
+  `${zeit.wiederDa} nach ${zeit.verborgen} — gemessen nach 2500 ms Wartezeit`);
 p('Das Feld sagt, wie viel Schlaf nicht gezählt wurde', /Schlaf nicht gezählt/.test(zeit.feld), zeit.feld);
 
 /* ── 4 ────────────────────────────────────────────────────────────────── */

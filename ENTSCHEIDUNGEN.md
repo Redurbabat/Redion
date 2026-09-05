@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-430 Entscheidungen, E1 bis E436. Die Nummer ist die Ordnung: eine Entscheidung
+431 Entscheidungen, E1 bis E437. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -494,6 +494,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E433** — Die Namensspalte am Telefon war nie 170 Pixel breit
 * **E434** — Die Begrüssungsfläche ist fort
 * **E436** — Der Prüflauf fing sich einen Abgleich ein, den er nicht bestellt hat
+* **E437** — Eine Messung mit zu wenig Luft für ihre eigene Rundung
 
 ---
 
@@ -35259,3 +35260,60 @@ wird er, sobald der Takt wieder mitläuft — das ist genau der Zustand, aus
 dem der Fund stammt, und er ist im Lauf des vollen Durchgangs belegt.
 
 Dateien: `pruefungen/lauf/test261.mts`, `LUECKEN.md`.
+
+---
+
+E437 — Eine Messung mit zu wenig Luft für ihre eigene Rundung
+---------------------------------------------------------------
+
+ENTSCHEIDUNG: `test356 §3` wartet 2,5 Sekunden statt 1,2, und seine Meldung
+nennt die Wartezeit.
+
+DER BEFUND. Der volle Lauf meldete bei Stück 32:
+
+    ✗ … und danach läuft sie weiter — 2 nach 2
+
+Die Uhr des Zeitmessers stand nach dem Wiedersichtbarwerden der
+Registerkarte scheinbar still. An der Zweigspitze war der Punkt zweimal
+grün, 28 von 28, und an der Uhr hat seit dem Stand des Laufs niemand etwas
+geändert.
+
+NACHGERECHNET IST ES KEIN FEHLER DER UHR. `stand().sekunden` ist
+`Math.round(restSek())` — eine gerundete Zahl. Ein sichtbarer Sprung von N
+auf N+1 braucht im ungünstigsten Fall knapp eine volle Sekunde, und dazu
+kommt die Zeit, bis die Umschaltung auf „visible" wirkt. Beides zusammen
+passt nicht sicher in 1200 ms; unter Last passt es gar nicht.
+
+WARUM DAS KEINE VERSTECKTE WARTEZEIT IST. E436 hat zwei Stunden vorher
+ausdrücklich abgelehnt, einen roten Punkt mit einer Pause zu beruhigen —
+dort hätte sie einen echten Wettlauf verdeckt, den es auch im Produkt gibt.
+Hier gibt es nichts zu verdecken: bleibt die Uhr wirklich stehen, wird der
+Punkt auch nach 2,5 Sekunden rot. Der Unterschied ist nicht die Pause,
+sondern was sie verbirgt.
+
+UND DER TEIL, DER MEHR WERT IST ALS DIE REPARATUR. Die Gegenprobe zu diesem
+Punkt — die Uhr künstlich anhalten (`Math.min(2, …)`) — liefert WORTGLEICH
+denselben Bericht wie der Fund im vollen Lauf: „2 nach 2". Zwei
+verschiedene Ursachen, ein Satz.
+
+Das heisst zweierlei:
+
+  · Die Gegenprobe war gültig, der Wächter hält weiterhin.
+  · Der Bericht war unbrauchbar zur Unterscheidung. Beim nächsten roten
+    Lauf hätte er wieder eine Untersuchung gekostet, nur um zu erfahren,
+    wie lange gewartet wurde.
+
+Die Meldung nennt jetzt die Wartezeit: „2 nach 2 — gemessen nach 2500 ms
+Wartezeit". Danach ist die Frage in einer Zeile beantwortet.
+
+Das ist die allgemeinere Lehre aus beiden Bögen dieses Nachmittags: eine
+Prüfung muss nicht nur rot werden können (§55.2), sie muss auch sagen
+können, WARUM. Zwei Prüfungen, die für verschiedene Fehler denselben Satz
+schreiben, sind eine Prüfung.
+
+GEGENPROBE: `Math.min(2, Math.round(restSek()))` im gebauten Zeitmesser →
+zwei Punkte rot, „2 nach 2" und „2 nach 2". Zurückgestellt.
+
+KOSTEN: Der Lauf dauert 1,3 Sekunden länger.
+
+Dateien: `pruefungen/lauf/test356.mts`.
