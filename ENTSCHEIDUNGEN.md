@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-412 Entscheidungen, E1 bis E416. Die Nummer ist die Ordnung: eine Entscheidung
+413 Entscheidungen, E1 bis E417. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -470,6 +470,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E414** — Das Diagramm zeigt etwas
 * **E415** — Zwei tote CSS-Zeilen, zwei unklickbare Knöpfe
 * **E416** — Ein Wächter, der die alte Mechanik misst, misst nichts
+* **E417** — Sechs Schalter ohne Draht, zwei davon ohne Anzeige
 
 ---
 
@@ -33893,3 +33894,101 @@ gleich, was im CSS stand.
 
 PRÜFUNG: `test351`, 26 Punkte.
 Dateien: `pruefungen/lauf/test351.mts`.
+
+
+---
+
+E417 — Sechs Schalter ohne Draht, zwei davon ohne Anzeige
+---------------------------------------------------------
+
+ENTSCHEIDUNG: Sechs Schalter, die die Oberfläche anbietet und die niemand
+las, werden verdrahtet. Zwei davon brauchten dafür erst die Anzeige, die sie
+ein- und ausschalten sollten — es gab sie nicht.
+
+    titelZeigen      „Titel der Datenquelle anzeigen"     es gab keinen Titel
+    seitenIcon       „Seiten-Icon anzeigen"               es gab kein Zeichen
+    linien           „Vertikale Linien anzeigen"          Wert nie gelesen
+    umbruchAlle      „Zeilenumbruch für alle Inhalte"     Wert nie gelesen
+    erinnernInApp    „Erinnerungen in der App"            Wert nie gelesen
+    autoVersionen    „Fassungen automatisch merken"       Wert nie gelesen
+
+WIE SIE GEFUNDEN WURDEN. Statisch, während der volle Lauf lief: jeden
+`schalter('X', …)` gegen die Frage, ob `X` irgendwo ausserhalb seiner eigenen
+Zeile GELESEN wird. Der Klick speicherte in allen sechs Fällen richtig. Der
+Nutzer schaltet, der Knopf kippt, und nichts geschieht.
+
+DIE ZWEI SCHLIMMEREN. `titelZeigen` und `seitenIcon` konnten nichts
+ausschalten, weil es das, was sie zeigen sollten, nie gab: der Kopf der
+Datenbank trug Reiter und Werkzeuge und keinen Namen, die Titelspalte zeigte
+nie das Zeichen der Seite. Der Schalter war die einzige Spur einer Funktion,
+die nie gebaut wurde. Beide sind jetzt gebaut, Vorgabe an.
+
+WAS JEDER JETZT TUT, UND WO DIE GRENZE LIEGT:
+
+  · `linien` stellt die senkrechten Striche DURCHSICHTIG, statt sie zu
+    entfernen. Mit `border-right:none` wäre jede Spalte 1 px schmaler und die
+    Tabelle spränge beim Umschalten.
+  · `umbruchAlle` macht aus jeder Zelle das, was `.umbruch` für eine einzelne
+    tut. Der Zusatz `:not(.umbruch)` steht nicht der Ordnung halber da: ohne
+    ihn hätte die Regel dieselbe Stärke wie die Zeile darüber und gewänne
+    nur, weil sie später steht — eine Umsortierung der Datei hätte den
+    Schalter still wieder abgeschaltet.
+  · `erinnernInApp` hält den STREIFEN auf, nicht die Nachricht. Der Eintrag
+    im Posteingang bleibt, die Systemmeldung bleibt, die Seite kommt trotzdem
+    zurück. Wer den Streifen abbestellt, will nicht seine Seiten verlieren
+    (§51).
+  · `autoVersionen` hält nur das AUTOMATISCHE auf. Von Hand, vor einer
+    Wiederherstellung und vor einer Quelltext-Änderung wird weiter
+    gespeichert. Ein Schalter darf keinen Schutz abschalten, um den gebeten
+    wurde (§15).
+
+VON DEN SECHS GING NUR EINER IN DIE UNSICHERE RICHTUNG NICHT: `autoVersionen`
+sicherte MEHR als bestellt, nicht weniger. Ein Schalter, der lügt, bleibt
+trotzdem einer — und dieser kostet Platz, den der Nutzer ausdrücklich nicht
+ausgeben wollte.
+
+DER WÄCHTER IST EIN VERZEICHNIS UND KEIN MUSTER, und das ist die eigentliche
+Entscheidung. Dieselbe Messung meldete ZWÖLF Schalter ohne Leser, und SECHS
+davon waren Fehlalarm:
+
+  · die fünf `q:*` werden über einen berechneten Namen gelesen —
+    `Kontext.quellen()[k.slice(2)]`. Der Name steht nirgends als Zeichenkette.
+  · `sicherungErinnern` wird über `meta('sicherungErinnern', false)` gelesen;
+    diese Form kannte die erste Messung nicht.
+
+Ein Wächter, der bei jedem zweiten Fund danebenliegt, wird nach dem ersten
+Lauf abgeschaltet. Deshalb: die Leseformen, die es WIRKLICH gibt, stehen im
+Wächter (`V(`, `getMeta(`, `meta(`, `.k`, `['k']`); jede echte Ausnahme steht
+in `pruefungen/schalter-bestand.json` beim Namen, mit dem Grund daneben, und
+das Verzeichnis darf nur schrumpfen. `sicherungErinnern` steht NICHT drin —
+es war ein Fehler der Messung, kein Fehler des Codes, und der gehört im
+Wächter behoben, nicht im Verzeichnis versteckt.
+
+Das ist derselbe Fehler, den `test294` bei `formel` gemacht hat (E412), und
+derselbe, der 58 gesunde CSS-Regeln als tot meldete: ein Muster, das den
+NAMEN sucht, findet berechnete Formen nicht.
+
+DIE ALTERNATIVE zu alldem wäre gewesen, die sechs Schalter zu ENTFERNEN. Das
+wäre schneller gewesen und für zwei von ihnen sogar vertretbar. Dagegen
+sprach: `linien`, `umbruchAlle` und `autoVersionen` sind Funktionen, die
+Notion hat und die Nutzer erwarten; `erinnernInApp` steht in einer Gruppe,
+in der jeder andere Schalter wirkt. Einen Knopf wegzunehmen, weil sein Draht
+fehlt, verliert die Funktion mit.
+
+PRÜFUNG: `test411`, 26 Punkte, PORT 9533. Jeder Abschnitt hat zwei Hälften —
+„ist da" und „geht weg" —, weil ein toter Schalter nur die zweite rot macht.
+GEGENPROBE: Die ganze Suite lief gegen den unreparierten Stand und war in
+JEDEM Abschnitt rot (14 von 24). Dazu zwei einzelne: `q:web` aus dem
+Verzeichnis genommen → §7 rot; `border-right:none` statt durchsichtig → §3
+zweimal rot.
+
+UND EINE PRÜFUNG, DIE ES NICHT KONNTE. §3 hatte zuerst den Punkt „ohne dass
+die Spalte springt" und mass die ZELLBREITE. Die Gegenprobe deckte auf, dass
+er grün blieb, während der Rand schon weg war: `td` hat `min-width:90px`, die
+Zelle bleibt 90 px breit, ob der Rand da ist oder nicht. Gemessen wird jetzt
+die Breite des RANDES. Gefunden nur, weil die Gegenprobe gelaufen ist (§55.2).
+
+Dateien: `src/bereiche/datenbanken/steuerung.ts`,
+`src/bereiche/wissen/werkzeuge.ts`, `src/bereiche/planen/dienst.ts`,
+`quell/schale/stil/ansichten.css`, `quell/schale/stil/datenbanken.css`,
+`pruefungen/lauf/test411.mts` (neu), `pruefungen/schalter-bestand.json` (neu).

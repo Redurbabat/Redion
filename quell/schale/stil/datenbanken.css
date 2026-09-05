@@ -54,6 +54,14 @@
   }
 }
 .db-head{display:flex; align-items:center; gap:2px; margin-bottom:6px; flex-wrap:wrap}
+/* DER TITEL DER DATENQUELLE (E417). Es gab ihn nicht — nur den Schalter, der
+   ihn ausschalten sollte. Er steht ganz links im Kopf und bekommt die volle
+   Breite, damit die Reiter darunter in ihre eigene Zeile fallen: eine
+   Datenbank mit fuenf Ansichten und einem langen Namen soll den Namen nicht
+   abschneiden, um Platz fuer die Reiter zu machen. */
+.db-titel{
+  flex:1 0 100%; font-weight:600; font-size:15px; color:var(--text);
+  margin:0 0 2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
 .db-tabs{display:flex; gap:2px; align-items:center}
 .db-tab{
   padding:5px 9px; border-radius:5px; font-size:14px; color:var(--text-dim);

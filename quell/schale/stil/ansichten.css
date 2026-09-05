@@ -20,7 +20,23 @@ table.grid.h-klein td{padding:3px 8px; font-size:13.5px}
 table.grid.h-gross td{padding:12px 8px}
 table.grid td.umbruch{white-space:normal; max-width:320px}
 table.grid td:not(.umbruch){white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:340px}
+/* ZWEI SCHALTER, DIE JETZT ETWAS TUN (E417).
+   `umbruchAlle` macht aus JEDER Zelle das, was `.umbruch` fuer eine
+   einzelne tut. `:not(.umbruch)` steht dabei nicht der Ordnung halber da:
+   ohne den Zusatz haette die Regel dieselbe Staerke wie die Zeile darueber
+   und gewaenne nur, weil sie spaeter steht — eine Umsortierung der Datei
+   haette den Schalter still wieder abgeschaltet. */
+table.grid.umbruch-alle td:not(.umbruch){
+  white-space:normal; overflow:visible; text-overflow:clip; max-width:320px }
+/* `linien` nimmt die senkrechten Striche weg, aber NICHT den Platz: mit
+   `border-right:none` wuerde jede Spalte um 1 px schmaler und die ganze
+   Tabelle beim Umschalten springen. Die aeussere rechte Kante bleibt, sonst
+   haette die Tabelle nur noch drei Seiten. */
+table.grid.ohne-linien td:not(:last-child),
+table.grid.ohne-linien th:not(:last-child){ border-right-color:transparent }
 table.grid td.tt{display:flex; align-items:center; gap:8px; justify-content:space-between}
+/* Das Zeichen der Seite steht vor dem Titel und schrumpft nicht mit ihm. */
+table.grid td.tt .tt-icon{ flex:0 0 auto; font-size:15px; line-height:1 }
 table.grid td.tt .tt-t{flex:1; overflow:hidden; text-overflow:ellipsis}
 table.grid td.tt .tt-auf{
   opacity:0; font-size:11.5px; color:var(--text-dim); padding:2px 7px;

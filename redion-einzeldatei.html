@@ -2098,6 +2098,14 @@ body[data-ruhig="an"] #menueband.ist-zu .mb-klapp{
   }
 }
 .db-head{display:flex; align-items:center; gap:2px; margin-bottom:6px; flex-wrap:wrap}
+/* DER TITEL DER DATENQUELLE (E417). Es gab ihn nicht — nur den Schalter, der
+   ihn ausschalten sollte. Er steht ganz links im Kopf und bekommt die volle
+   Breite, damit die Reiter darunter in ihre eigene Zeile fallen: eine
+   Datenbank mit fuenf Ansichten und einem langen Namen soll den Namen nicht
+   abschneiden, um Platz fuer die Reiter zu machen. */
+.db-titel{
+  flex:1 0 100%; font-weight:600; font-size:15px; color:var(--text);
+  margin:0 0 2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
 .db-tabs{display:flex; gap:2px; align-items:center}
 .db-tab{
   padding:5px 9px; border-radius:5px; font-size:14px; color:var(--text-dim);
@@ -3533,7 +3541,23 @@ table.grid.h-klein td{padding:3px 8px; font-size:13.5px}
 table.grid.h-gross td{padding:12px 8px}
 table.grid td.umbruch{white-space:normal; max-width:320px}
 table.grid td:not(.umbruch){white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:340px}
+/* ZWEI SCHALTER, DIE JETZT ETWAS TUN (E417).
+   `umbruchAlle` macht aus JEDER Zelle das, was `.umbruch` fuer eine
+   einzelne tut. `:not(.umbruch)` steht dabei nicht der Ordnung halber da:
+   ohne den Zusatz haette die Regel dieselbe Staerke wie die Zeile darueber
+   und gewaenne nur, weil sie spaeter steht — eine Umsortierung der Datei
+   haette den Schalter still wieder abgeschaltet. */
+table.grid.umbruch-alle td:not(.umbruch){
+  white-space:normal; overflow:visible; text-overflow:clip; max-width:320px }
+/* `linien` nimmt die senkrechten Striche weg, aber NICHT den Platz: mit
+   `border-right:none` wuerde jede Spalte um 1 px schmaler und die ganze
+   Tabelle beim Umschalten springen. Die aeussere rechte Kante bleibt, sonst
+   haette die Tabelle nur noch drei Seiten. */
+table.grid.ohne-linien td:not(:last-child),
+table.grid.ohne-linien th:not(:last-child){ border-right-color:transparent }
 table.grid td.tt{display:flex; align-items:center; gap:8px; justify-content:space-between}
+/* Das Zeichen der Seite steht vor dem Titel und schrumpft nicht mit ihm. */
+table.grid td.tt .tt-icon{ flex:0 0 auto; font-size:15px; line-height:1 }
 table.grid td.tt .tt-t{flex:1; overflow:hidden; text-overflow:ellipsis}
 table.grid td.tt .tt-auf{
   opacity:0; font-size:11.5px; color:var(--text-dim); padding:2px 7px;
@@ -16809,7 +16833,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 375, inhalt: '7433bfab06b34f92', gebaut: '2026-09-05T17:47:27.377Z' };
+const Stand = { fassung: 377, inhalt: 'c031716e6021439f', gebaut: '2026-09-05T18:03:52.965Z' };
 window.Stand = Stand;
 
 </script>
@@ -68838,6 +68862,19 @@ const Datenbank = (() => {
         /* --- Kopfzeile ------------------------------------------------------- */
         const kopf = document.createElement('div');
         kopf.className = 'db-head';
+        /* DER TITEL DER DATENQUELLE (E417). Er stand als Schalter im
+           Layout-Panel — „Titel der Datenquelle anzeigen" —, und es gab ihn
+           nicht. Kein Titel im Kopf, nichts zum Ein- oder Ausschalten: der
+           Schalter war die einzige Spur einer Funktion, die nie gebaut wurde.
+           Vorgabe AN, weil eine Datenbank ohne Namen auf einer Seite mit
+           mehreren nicht auseinanderzuhalten ist. Wer ihn nicht will — etwa
+           weil die Überschrift darüber schon dasselbe sagt — schaltet ihn aus. */
+        if (view.titelZeigen !== false) {
+            const t = document.createElement('div');
+            t.className = 'db-titel';
+            t.textContent = (coll.icon ? coll.icon + ' ' : '') + (coll.name || 'Datenbank');
+            kopf.appendChild(t);
+        }
         const tabs = document.createElement('div');
         tabs.className = 'db-tabs';
         coll.viewIds.forEach((id) => {
@@ -69459,7 +69496,16 @@ const Datenbank = (() => {
             .filter(k => !(view.hidden || []).includes(k))
             .filter(k => !coll.schema[k].eigen || (view.eigenZeigen || []).includes(k));
         const t = document.createElement('table');
-        t.className = 'grid h-' + (view.hoehe || 'normal');
+        /* ZWEI SCHALTER, DIE NIEMAND LAS (E417). `linien` und `umbruchAlle`
+           standen im Layout-Panel, wurden richtig gespeichert und von keiner
+           Zeile gelesen. Sie hängen als Klassen an der TABELLE und nicht an
+           jeder Zelle: eine Regel, hundert Zellen.
+           Die Vorgaben sind verschieden herum, und mit Absicht — Linien an
+           (eine Tabelle ohne sie ist schwer zu lesen), Umbruch aus (eine
+           Tabelle, in der jede Zelle umbricht, ist keine mehr). */
+        t.className = 'grid h-' + (view.hoehe || 'normal') +
+            (view.linien === false ? ' ohne-linien' : '') +
+            (view.umbruchAlle ? ' umbruch-alle' : '');
         /* Kopf */
         const thead = document.createElement('thead');
         const tr = document.createElement('tr');
@@ -69607,6 +69653,15 @@ const Datenbank = (() => {
                                 ? `<button class="tt-klapp" title="${zuJetzt ? 'Aufklappen' : 'Zuklappen'}">${zuJetzt ? '▸' : '▾'}</button>`
                                 : (coll.unterElemente ? '<span class="tt-klapp leer"></span>' : '')) +
                             (r.archiviert ? '<span class="tt-archiv" title="Archiviert">🗄</span>' : '') +
+                            /* DAS ZEICHEN DER SEITE (E417). Auch dieses gab es nicht: der
+                               Schalter „Seiten-Icon anzeigen" stand da, die Titelspalte
+                               zeigte nie eines. `aria-hidden`, weil daneben schon der Titel
+                               steht — sonst liest ein Vorleseprogramm „Magnet Schaltplan"
+                               (§38). Zeilen ohne eigenes Zeichen bekommen keines
+                               angedichtet; ein Platzhalter für alle wäre kein Zeichen mehr,
+                               sondern eine Spalte Rauschen. */
+                            (view.seitenIcon !== false && r.icon
+                                ? `<span class="tt-icon" aria-hidden="true">${esc(r.icon)}</span>` : '') +
                             (() => {
                                 const b2 = blockiertDurch(r, coll);
                                 return b2.length
@@ -80745,6 +80800,19 @@ const Werkzeuge = (() => {
     const versionAutomatisch = async (pageId) => {
         if (!pageId)
             return;
+        /* „FASSUNGEN AUTOMATISCH MERKEN" WIRD GELESEN (E417). Der Schalter stand
+           in den Einstellungen und im Register, und niemand fragte ihn. Wer ihn
+           ausmachte, bekam weiter alle vier Minuten eine Fassung.
+           Von den sechs toten Schaltern war das der einzige, dessen Fehler in
+           die SICHERE Richtung ging — es wurde mehr gesichert als bestellt. Ein
+           Schalter, der lügt, bleibt trotzdem einer, und dieser kostet Platz,
+           den der Nutzer ausdrücklich nicht ausgeben wollte (§15).
+           Nur das AUTOMATISCHE hängt daran: `versionSpeichern` von Hand, vor
+           einer Wiederherstellung und vor einer Quelltext-Änderung läuft
+           weiter. Ein Schalter darf keinen Schutz abschalten, um den gebeten
+           wurde. */
+        if (Store.getMeta('autoVersionen', true) === false)
+            return;
         const p = Store.getBlock(pageId);
         if (!p || p.locked)
             return;
@@ -81226,11 +81294,18 @@ const Werkzeuge = (() => {
         });
         Store.setMeta('meldungen', liste.slice(0, 200));
         meldungenGeaendert();
-        /* Kurz sichtbar machen, damit man es auch ohne Posteingang mitbekommt */
-        try {
-            UI.toast('🔔 ' + (m.text || 'Neue Benachrichtigung'));
-        }
-        catch { }
+        /* Kurz sichtbar machen, damit man es auch ohne Posteingang mitbekommt —
+           ausser der Nutzer hat genau diesen Streifen abbestellt (E417).
+           `erinnernInApp` heisst in den Einstellungen „Der Streifen unten am
+           Bildschirm", und DAS hier ist der Streifen. Der Eintrag im Posteingang
+           oben bleibt, die Systemmeldung unten bleibt: abbestellt wird die
+           Einblendung, nicht die Nachricht. Wer den Streifen wegschaltet, will
+           nicht die Meldung verlieren (§51). */
+        if (Store.getMeta('erinnernInApp', true) !== false)
+            try {
+                UI.toast('🔔 ' + (m.text || 'Neue Benachrichtigung'));
+            }
+            catch { }
         /* Und, falls erlaubt, als echte Benachrichtigung des Geräts */
         void geraeteMeldung(m.text || 'Redion', m.quelle || '', 'redion', m.seite || '');
         return liste[0];
@@ -109194,8 +109269,18 @@ const Plan = (() => {
                 });
         });
         Store.setMeta('zurueckgestellt', liste().filter((x) => !f.some((y) => y.id === x.id)));
-        UI.toast(f.length + (f.length === 1 ? ' zurückgestellte Seite ist wieder da'
-            : ' zurückgestellte Seiten sind wieder da'));
+        /* DER SCHALTER WIRD GELESEN, UND ZWAR NUR FÜR DEN STREIFEN (E417).
+           „Erinnerungen in der App" stand in den Einstellungen und wurde von
+           niemandem gelesen: wer ihn ausmachte, bekam den Balken weiter. Das
+           ist derselbe Fall wie der Karteikarten-Streifen aus E409, nur eine
+           Stufe schlimmer — dort war die Vorgabe falsch, hier wirkte der
+           Schalter überhaupt nicht.
+           Er hält den BALKEN auf, nicht das Zurückholen: die Seiten oben sind
+           schon zurückgeholt und im Posteingang gemeldet. Wer keinen Streifen
+           will, will nicht seine Seiten verlieren (§51). */
+        if (Store.getMeta('erinnernInApp', true) !== false)
+            UI.toast(f.length + (f.length === 1 ? ' zurückgestellte Seite ist wieder da'
+                : ' zurückgestellte Seiten sind wieder da'));
         App.zeichneBaum();
         return f.length;
     };

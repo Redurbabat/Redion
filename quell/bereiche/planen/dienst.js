@@ -83,8 +83,18 @@ const Plan = (() => {
                 });
         });
         Store.setMeta('zurueckgestellt', liste().filter((x) => !f.some((y) => y.id === x.id)));
-        UI.toast(f.length + (f.length === 1 ? ' zurückgestellte Seite ist wieder da'
-            : ' zurückgestellte Seiten sind wieder da'));
+        /* DER SCHALTER WIRD GELESEN, UND ZWAR NUR FÜR DEN STREIFEN (E417).
+           „Erinnerungen in der App" stand in den Einstellungen und wurde von
+           niemandem gelesen: wer ihn ausmachte, bekam den Balken weiter. Das
+           ist derselbe Fall wie der Karteikarten-Streifen aus E409, nur eine
+           Stufe schlimmer — dort war die Vorgabe falsch, hier wirkte der
+           Schalter überhaupt nicht.
+           Er hält den BALKEN auf, nicht das Zurückholen: die Seiten oben sind
+           schon zurückgeholt und im Posteingang gemeldet. Wer keinen Streifen
+           will, will nicht seine Seiten verlieren (§51). */
+        if (Store.getMeta('erinnernInApp', true) !== false)
+            UI.toast(f.length + (f.length === 1 ? ' zurückgestellte Seite ist wieder da'
+                : ' zurückgestellte Seiten sind wieder da'));
         App.zeichneBaum();
         return f.length;
     };

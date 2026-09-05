@@ -893,6 +893,18 @@ const Werkzeuge = (() => {
   let letzteSicherung: Record<string, number> = {};
   const versionAutomatisch = async (pageId: any) => {
     if (!pageId) return;
+    /* „FASSUNGEN AUTOMATISCH MERKEN" WIRD GELESEN (E417). Der Schalter stand
+       in den Einstellungen und im Register, und niemand fragte ihn. Wer ihn
+       ausmachte, bekam weiter alle vier Minuten eine Fassung.
+       Von den sechs toten Schaltern war das der einzige, dessen Fehler in
+       die SICHERE Richtung ging — es wurde mehr gesichert als bestellt. Ein
+       Schalter, der lügt, bleibt trotzdem einer, und dieser kostet Platz,
+       den der Nutzer ausdrücklich nicht ausgeben wollte (§15).
+       Nur das AUTOMATISCHE hängt daran: `versionSpeichern` von Hand, vor
+       einer Wiederherstellung und vor einer Quelltext-Änderung läuft
+       weiter. Ein Schalter darf keinen Schutz abschalten, um den gebeten
+       wurde. */
+    if (Store.getMeta('autoVersionen', true) === false) return;
     const p = Store.getBlock(pageId);
     if (!p || p.locked) return;
     const jetzt = Date.now();
@@ -1337,8 +1349,15 @@ const Werkzeuge = (() => {
     });
     Store.setMeta('meldungen', liste.slice(0, 200));
     meldungenGeaendert();
-    /* Kurz sichtbar machen, damit man es auch ohne Posteingang mitbekommt */
-    try { UI.toast('🔔 ' + (m.text || 'Neue Benachrichtigung')); } catch {}
+    /* Kurz sichtbar machen, damit man es auch ohne Posteingang mitbekommt —
+       ausser der Nutzer hat genau diesen Streifen abbestellt (E417).
+       `erinnernInApp` heisst in den Einstellungen „Der Streifen unten am
+       Bildschirm", und DAS hier ist der Streifen. Der Eintrag im Posteingang
+       oben bleibt, die Systemmeldung unten bleibt: abbestellt wird die
+       Einblendung, nicht die Nachricht. Wer den Streifen wegschaltet, will
+       nicht die Meldung verlieren (§51). */
+    if (Store.getMeta('erinnernInApp', true) !== false)
+      try { UI.toast('🔔 ' + (m.text || 'Neue Benachrichtigung')); } catch {}
     /* Und, falls erlaubt, als echte Benachrichtigung des Geräts */
     void geraeteMeldung(m.text || 'Redion', m.quelle || '', 'redion', m.seite || '');
     return liste[0];

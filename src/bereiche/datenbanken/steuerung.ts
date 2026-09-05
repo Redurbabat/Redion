@@ -125,6 +125,20 @@ const Datenbank = (() => {
     const kopf = document.createElement('div');
     kopf.className = 'db-head';
 
+    /* DER TITEL DER DATENQUELLE (E417). Er stand als Schalter im
+       Layout-Panel — „Titel der Datenquelle anzeigen" —, und es gab ihn
+       nicht. Kein Titel im Kopf, nichts zum Ein- oder Ausschalten: der
+       Schalter war die einzige Spur einer Funktion, die nie gebaut wurde.
+       Vorgabe AN, weil eine Datenbank ohne Namen auf einer Seite mit
+       mehreren nicht auseinanderzuhalten ist. Wer ihn nicht will — etwa
+       weil die Überschrift darüber schon dasselbe sagt — schaltet ihn aus. */
+    if (view.titelZeigen !== false) {
+      const t = document.createElement('div');
+      t.className = 'db-titel';
+      t.textContent = (coll.icon ? coll.icon + ' ' : '') + (coll.name || 'Datenbank');
+      kopf.appendChild(t);
+    }
+
     const tabs = document.createElement('div');
     tabs.className = 'db-tabs';
     coll.viewIds.forEach((id: any) => {
@@ -714,7 +728,16 @@ const Datenbank = (() => {
       .filter(k => !coll.schema[k].eigen || (view.eigenZeigen || []).includes(k));
 
     const t = document.createElement('table');
-    t.className = 'grid h-' + (view.hoehe || 'normal');
+    /* ZWEI SCHALTER, DIE NIEMAND LAS (E417). `linien` und `umbruchAlle`
+       standen im Layout-Panel, wurden richtig gespeichert und von keiner
+       Zeile gelesen. Sie hängen als Klassen an der TABELLE und nicht an
+       jeder Zelle: eine Regel, hundert Zellen.
+       Die Vorgaben sind verschieden herum, und mit Absicht — Linien an
+       (eine Tabelle ohne sie ist schwer zu lesen), Umbruch aus (eine
+       Tabelle, in der jede Zelle umbricht, ist keine mehr). */
+    t.className = 'grid h-' + (view.hoehe || 'normal') +
+                  (view.linien === false ? ' ohne-linien' : '') +
+                  (view.umbruchAlle ? ' umbruch-alle' : '');
 
     /* Kopf */
     const thead = document.createElement('thead');
@@ -857,6 +880,15 @@ const Datenbank = (() => {
               ? `<button class="tt-klapp" title="${zuJetzt ? 'Aufklappen' : 'Zuklappen'}">${zuJetzt ? '▸' : '▾'}</button>`
               : (coll.unterElemente ? '<span class="tt-klapp leer"></span>' : '')) +
             (r.archiviert ? '<span class="tt-archiv" title="Archiviert">🗄</span>' : '') +
+            /* DAS ZEICHEN DER SEITE (E417). Auch dieses gab es nicht: der
+               Schalter „Seiten-Icon anzeigen" stand da, die Titelspalte
+               zeigte nie eines. `aria-hidden`, weil daneben schon der Titel
+               steht — sonst liest ein Vorleseprogramm „Magnet Schaltplan"
+               (§38). Zeilen ohne eigenes Zeichen bekommen keines
+               angedichtet; ein Platzhalter für alle wäre kein Zeichen mehr,
+               sondern eine Spalte Rauschen. */
+            (view.seitenIcon !== false && r.icon
+              ? `<span class="tt-icon" aria-hidden="true">${esc(r.icon)}</span>` : '') +
             (() => {
               const b2 = blockiertDurch(r, coll);
               return b2.length
