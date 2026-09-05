@@ -94,6 +94,7 @@ start.bat        ← lokal starten
 oeffnen.bat      ← lokal ohne Server öffnen
 holen.bat        ← GitHub → dieser Ordner
 hochladen.bat    ← dieser Ordner → GitHub
+vergleichen.bat  ← nur nachsehen, ändert nichts
 ```
 
 > **`.assetsignore` ist keine Bequemlichkeit.** `wrangler.toml` bindet

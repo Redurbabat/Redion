@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-431 Entscheidungen, E1 bis E437. Die Nummer ist die Ordnung: eine Entscheidung
+432 Entscheidungen, E1 bis E438. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -495,6 +495,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E434** — Die Begrüssungsfläche ist fort
 * **E436** — Der Prüflauf fing sich einen Abgleich ein, den er nicht bestellt hat
 * **E437** — Eine Messung mit zu wenig Luft für ihre eigene Rundung
+* **E438** — Die dritte Richtung: nur nachsehen
 
 ---
 
@@ -35317,3 +35318,69 @@ zwei Punkte rot, „2 nach 2" und „2 nach 2". Zurückgestellt.
 KOSTEN: Der Lauf dauert 1,3 Sekunden länger.
 
 Dateien: `pruefungen/lauf/test356.mts`.
+
+---
+
+E438 — Die dritte Richtung: nur nachsehen
+-------------------------------------------
+
+ENTSCHEIDUNG (Redurs Frage): `vergleichen.bat` neben `holen.bat` und
+`hochladen.bat` — es sagt, ob der Ordner und GitHub denselben Stand haben,
+und verändert dabei nichts.
+
+DIE FRAGE WAR: „wie kann ich die lokale Version mit dem GitHub vergleichen
+oder kannst du meine lokalen Daten sehen". Die zweite Hälfte ist mit Nein zu
+beantworten — die Sitzung läuft in einem Container in der Wolke, nicht auf
+Redurs Rechner. Die erste Hälfte hatte bis dahin keine gute Antwort: es gab
+`holen.bat` („lies mit, was es sagt"), nur HOLT das eben auch. Wer nur wissen
+will, wo er steht, soll nichts anstossen müssen, das seinen Ordner verändert.
+
+WAS DAS SKRIPT BEANTWORTET, in dieser Reihenfolge:
+
+    Habe ich dieselbe App wie auf GitHub?   git diff --name-only origin/main HEAD
+    Was habe ich noch nicht hochgeladen?    git status --porcelain
+    Was hat GitHub, das ich nicht habe?     git log --oneline HEAD..origin/main
+    Und in Zahlen                           git rev-list --count …
+
+DER VERGLEICH GEHT ÜBER INHALTE, NICHT ÜBER KENNUNGEN. Das ist wörtlich die
+Lehre, die `holen.bat` in E271 gekostet hat, nur andersherum: dort verglich
+das Skript Inhalte, wo es Kennungen hätte vergleichen müssen. Hier ist es
+umgekehrt richtig — ein Mensch fragt „läuft bei mir dasselbe", und nach
+einem Zusammenführen sind die Kennungen verschieden und die Dateien gleich.
+Steht der Inhalt gleich und die Historie nicht, sagt das Skript beides.
+
+ZWEI BATCH-FALLEN, DIE DABEI AUFFIELEN und beide still gewesen wären:
+
+  · `find /c /v ""` liefert die Zahl mitunter mit führenden Leerzeichen.
+    `if "%X%"=="0"` schlägt dann fehl, und ein Skript, das bei Unterschieden
+    „gleicher Stand" meldet, ist schlimmer als keines. Jetzt wird nicht
+    gezählt, sondern mit `if defined` gefragt, ob es überhaupt Ausgabe gibt.
+  · Ein leerer Zähler macht aus `if not "%ZURUECK%"=="0"` ein
+    `if not ""=="0"` — immer wahr. Die Zähler sind mit `0` vorbelegt.
+
+UND DAS SKRIPT SAGT, WAS ES NICHT KANN. Redurs Frage nach den „lokalen
+Daten" hat zwei Lesarten, und die zweite ist die wichtigere: seine Notizen.
+Die liegen im Speicher seines Browsers und verlassen den Rechner nie von
+selbst (§9, E1/E34). Kein Git-Befehl zeigt sie, und niemand sonst kann sie
+sehen. Das steht jetzt als eigener Absatz im Skript, damit die Frage nicht
+wiederkommt — und mit dem Hinweis auf `.redion` als dem Weg, sie zu sichern.
+
+PRÜFUNG: `test353 §5b`, sechzehn Punkte. Acht davon nennen je einen
+verbotenen Befehl beim Namen (`push`, `checkout`, `merge`, `reset`, `stash`,
+`pull`, `clean`, `restore`) — einzeln, damit der Bericht sagt, WELCHER
+hineingeraten ist.
+
+GEGENPROBE: `git fetch` gegen `git pull` getauscht → zwei Punkte rot, „Kein
+pull" und „Es holt den Fernstand mit fetch". Zurückgestellt.
+
+DIE GRENZE, DIE DABEISTEHEN MUSS: geprüft wird der TEXT des Skripts, nicht
+sein Lauf. Dieser Container ist Linux und kann kein Windows-Batch
+ausführen. Die git-Befehle darin sind einzeln von Hand nachgefahren worden,
+in beiden Fällen (Stand gleich, Stand verschieden); die Batch-Hülle ist von
+`holen.bat` gespiegelt, samt dessen Regel „kein `setlocal
+EnableDelayedExpansion`". Ein Skript, das niemand ausgeführt hat, ist bis
+zum ersten Doppelklick eine Behauptung — das gehört gesagt, statt es
+auszusehen wie geprüft.
+
+Dateien: `vergleichen.bat` (neu), `pruefungen/lauf/test353.mts`,
+`README.md`, `CLOUDFLARE.md`.
