@@ -1233,12 +1233,37 @@ const KI = (() => {
             return null;
         }
     };
+    /* WAS EIN MODELL SCHREIBT, AUF REDIONS TYPEN. Das ist KEIN zweiter
+       Katalog (§8): das Register hält die Kennungen, diese Karte fängt die
+       vielen Schreibweisen dafür ab — deutsch wie englisch, denn die App
+       fragt deutsch und das Modell antwortet deutsch.
+       GEZÄHLT WAR SIE UNVOLLSTÄNDIG (E428): 30 Typen stehen im Register, 13
+       erreichte die KI. Die übrigen fielen still auf `text` zurück, und
+       „bau mir eine Bewertung und einen Fortschritt" ergab zwei Textspalten.
+       Kein Fehler, keine Meldung — nur eine Datenbank, die weniger kann als
+       bestellt. */
     const TYP_KARTE = {
         text: 'text', zahl: 'number', number: 'number', auswahl: 'select', select: 'select',
         mehrfach: 'multi', multi: 'multi', status: 'status', datum: 'date', date: 'date',
         person: 'person', kontrollkästchen: 'checkbox', checkbox: 'checkbox', url: 'url',
         email: 'email', 'e-mail': 'email', telefon: 'phone', phone: 'phone', formel: 'formula',
-        formula: 'formula', dateien: 'files', files: 'files'
+        formula: 'formula', dateien: 'files', files: 'files',
+        /* Die sieben, die nur vergessen waren — sie brauchen nichts ausser
+           ihrem Namen. */
+        sterne: 'sterne', bewertung: 'sterne', rating: 'sterne',
+        prozent: 'prozent', fortschritt: 'prozent', progress: 'prozent',
+        place: 'place', ort: 'place', adresse: 'place',
+        duration: 'duration', dauer: 'duration', zeitspanne: 'duration',
+        created: 'created', erstellt: 'created', 'erstellt am': 'created',
+        edited: 'edited', 'geändert': 'edited', 'zuletzt geändert': 'edited',
+        uid: 'uid', nummer: 'uid', 'laufende nummer': 'uid'
+        /* UND WAS MIT GRUND DRAUSSEN BLEIBT: `relation` und `rollup` brauchen
+           eine Zieldatenbank, die im Plan nicht steht; `gdrive`, `figma`,
+           `githubpr` und `zendesk` eine eingerichtete Verbindung; `button`,
+           `ki` und `verify` eine Einstellung, die niemand geraten hat. Jede
+           davon entstünde leer und kaputt — eine Textspalte ist dann die
+           ehrlichere Antwort, sie hält wenigstens, was hineingeschrieben wird.
+           `test421 §5` hält diese Grenze fest. */
     };
     /** Baut aus einer Beschreibung eine echte Datenbank. */
     /**

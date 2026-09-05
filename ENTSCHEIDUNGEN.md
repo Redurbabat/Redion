@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-423 Entscheidungen, E1 bis E427. Die Nummer ist die Ordnung: eine Entscheidung
+424 Entscheidungen, E1 bis E428. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -481,6 +481,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E425** — Die Liste beschriftet ihre Werte — der dritte Fundort
 * **E426** — Am Telefon steht der Titel für sich
 * **E427** — Der Zeitstrahl am Telefon zeigt den Zeitstrahl
+* **E428** — Die KI konnte nur 13 von 30 Spaltentypen bauen
 
 ---
 
@@ -34660,3 +34661,67 @@ Zeichenfläche ist von 142 px auf gut das Dreifache gewachsen.
 
 Dateien: `quell/schale/stil/ansichten.css`,
 `pruefungen/lauf/test420.mts` (neu).
+
+
+---
+
+E428 — Die KI konnte nur 13 von 30 Spaltentypen bauen
+------------------------------------------------------
+
+ENTSCHEIDUNG: `TYP_KARTE` in `ki/dienst.ts` bekommt sieben weitere Typen
+samt ihren deutschen Schreibweisen. Zehn bleiben mit Grund draussen.
+
+WIE ES GEFUNDEN WURDE. Nach E422 („fünf Kataloge für dieselben dreizehn
+Ansichten") habe ich gefragt, ob die anderen Register auch Schattenkopien
+haben. Gezählt, nicht gelesen: welche Objektliterale im Quelltext sechs oder
+mehr Kennungen EINES Registers als Schlüssel führen. Sechs Stellen kamen
+heraus, fünf davon harmlos — und eine mit dreizehn von neunundzwanzig
+Eigenschaftstypen.
+
+`TYP_KARTE` IST KEIN ZWEITER KATALOG, und das ist wichtig: das Register hält
+die Kennungen, diese Karte fängt die vielen SCHREIBWEISEN dafür ab —
+`zahl` → `number`, `kontrollkästchen` → `checkbox`. Deutsch wie englisch,
+denn die App fragt deutsch und das Modell antwortet deutsch. Sie darf und
+soll es geben.
+
+UNVOLLSTÄNDIG WAR SIE TROTZDEM. 30 Typen stehen im Register, 13 erreichte
+die KI. Die übrigen siebzehn fielen still auf `text` zurück:
+
+    const typ = TYP_KARTE[roh] || (istTitel ? 'title' : 'text');
+
+„Bau mir eine Datenbank mit einer Bewertung und einem Fortschritt" ergab
+also zwei Textspalten. Kein Fehler, keine Meldung — nur eine Datenbank, die
+weniger kann, als der Nutzer gesagt hat. Das ist dieselbe Sorte stiller
+Verlust wie ein Schalter ohne Draht (E417): die Oberfläche verspricht etwas,
+und nichts sagt, dass es nicht eingelöst wurde.
+
+SIEBEN WAREN NUR VERGESSEN: Sterne, Prozent, Ort, Zeitspanne, Erstellt am,
+Zuletzt geändert und die laufende Nummer brauchen nichts ausser ihrem Namen.
+Jeder bekommt zwei bis drei Schreibweisen, weil ein Modell „Bewertung",
+„rating" oder „sterne" schreiben kann.
+
+ZEHN BLEIBEN DRAUSSEN, mit Grund: `relation` und `rollup` brauchen eine
+Zieldatenbank, die im Plan nicht steht; `gdrive`, `figma`, `githubpr` und
+`zendesk` eine eingerichtete Verbindung; `button`, `ki` und `verify` eine
+Einstellung, die niemand geraten hat. Jede davon entstünde leer und kaputt —
+eine Textspalte ist dann die ehrlichere Antwort, sie hält wenigstens, was
+hineingeschrieben wird. `test421 §5` hält diese Grenze fest, damit sie eine
+ENTSCHEIDUNG bleibt und nicht wieder ein Versehen wird.
+
+ZWEI DINGE, DIE DER PRÜFLAUF FÜR FEHLER HIELT UND DIE KEINE SIND:
+
+  · `datenbankBauenAus` hängt eine Titelspalte an, wenn der Plan keine
+    nennt. Richtig — eine Datenbank ohne Titel gibt es nicht, ihre Zeilen
+    könnten keinen Namen tragen. Der Prüflauf zählt sie jetzt mit, statt sie
+    zu melden.
+  · `plan.spalten.slice(0, 12)` — mehr als zwölf Spalten baut ein Plan
+    nicht. Der erste Wurf des Prüflaufs bat um dreizehn, bekam zwölf, und
+    „files" fehlte im Ergebnis. Es fehlte nicht, es war das dreizehnte.
+    Jetzt zwei Pläne, und eine eigene Zeile hält die Grenze fest.
+
+PRÜFUNG: `test421`, 13 Punkte, PORT 9543. Eine Seite, kein zweiter Kontext —
+gebaut wird über `KI.datenbankBauenAus` unmittelbar, ohne Modell.
+GEGENPROBE: die sieben Zeilen wieder herausgenommen → §1 zweimal, §2 einmal
+und die Zählzeile rot, mit „13" statt „20". Gelaufen.
+
+Dateien: `src/bereiche/ki/dienst.ts`, `pruefungen/lauf/test421.mts` (neu).
