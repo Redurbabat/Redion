@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-403 Entscheidungen, E1 bis E407. Die Nummer ist die Ordnung: eine Entscheidung
+404 Entscheidungen, E1 bis E408. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -461,6 +461,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E405** — 23 Prüfläufe teilten sich einen Port
 * **E406** — Sieben erfundene Farbtokens, sechs namenlose Schalter, vier Farbreihen
 * **E407** — 42 Trefflächen unter 44 px, und zwei Fehler beim Reparieren
+* **E408** — Ein Schimmer, der sagt „hier kommt noch Text nach“
 
 ---
 
@@ -33134,3 +33135,92 @@ MUTATION ROT GESEHEN: `.probe-mutation button{height:30px}` in `aufbau.css`
 
 Dateien: `pruefungen/masse-bestand.json` (neu),
 `pruefungen/lauf/test402.mts` (neu), vier Stildateien.
+
+E408 — Ein Schimmer, der sagt „hier kommt noch Text nach“
+================================================================================
+5. September 2026
+
+Redur schickte eine React-Komponente: „AnimatedShinyText“ aus Magic UI (MIT),
+ein Text, über den ein heller Streifen läuft. Die Frage dahinter war
+allgemeiner — ob er solchen Code schicken kann und Redion ihn bekommt.
+
+WAS ÜBERNOMMEN WURDE UND WAS NICHT. Die Wirkung, nicht der Code. Das Original
+ist eine React-Komponente mit Tailwind-Klassen und einem `cn()`-Helfer;
+Redion hat weder React (§6, E80) noch Tailwind. Übrig bleiben sechs Zeilen
+CSS und zwei Zeilen im KI-Dienst. Genauso lief es schon zweimal: der
+Metall-Schimmer (eigener GLSL-Code, `metal-fx` im Quelltext genannt) und die
+Denkkugel (E403, eigenes TypeScript, `thinking-orbs` genannt).
+
+WARUM ÜBERHAUPT. Ein Schimmer, der immer läuft, ist Zierde und wird nach zwei
+Tagen nicht mehr gesehen (§39: „Notion-artige Klarheit vor Effekten“). Dieser
+läuft nur, WÄHREND die Antwort noch geschrieben wird — der KI-Dienst streamt,
+`ziel.textContent = antwort` wird Stück für Stück neu gesetzt
+(`dienst.ts:1092` und `:1571`). Solange er läuft, kommt noch Text. Damit ist
+er eine Auskunft, und die Regel aus §46 gilt: eine Anzeige, die IMMER etwas
+anzeigt, wird nicht gelesen.
+
+DIE GEFAHR, die den ganzen Bogen bestimmt hat: `background-clip:text` braucht
+DURCHSICHTIGE Schrift. Wo der Verlauf nicht gemalt wird, steht dann
+unsichtbarer Text. Drei Stellen, an denen das passieren kann, und alle drei
+sind Datenverlust im Sinn von §51 — die Antwort ist da, der Nutzer sieht sie
+nur nicht:
+
+  1. Ein Browser ohne `background-clip:text`. Deshalb steht die ganze Wirkung
+     in einem `@supports`; ohne es steht da gewöhnlicher Text.
+  2. `prefers-reduced-motion`. Der Block dort gibt die Textfarbe zurück,
+     statt nur die Animation abzuschalten.
+  3. Der FEHLERZWEIG. `catch` schreibt „⚠ Der Anbieter antwortet mit 503“ in
+     dasselbe Feld. Die Klasse geht deshalb im `finally` weg, nicht nach dem
+     `try` — eine Fehlermeldung, die man nicht lesen kann, ist der
+     schlechtere Fehler.
+
+WAS DAS BILD FAND, UND KEINE MESSUNG. §55.3 verlangt ein Bild, wenn es etwas
+zu sehen gibt. Auf dem ersten stand:
+
+    Schimmer läuft — die A
+
+Und dann nichts mehr. `background-repeat:no-repeat` liess den Verlauf nicht
+über die ganze Zeile reichen, und wo nichts gemalt wird, ist durchsichtige
+Schrift unsichtbar. Die vier bereits geschriebenen Prüfungen waren dabei ALLE
+GRÜN: die Animation lief, ihre Position wanderte, das Token war echt, das
+`finally` stand da. Nur die halbe Antwort fehlte. Repariert durch Weglassen
+von `no-repeat`: gekachelt stösst `var(--text)` auf `var(--text)`, die Naht
+sieht man nicht.
+
+UND ZWEI PRÜFUNGEN, DIE ERST NICHT ROT WURDEN. Beide gehören hierher, weil
+sie zusammen §55.2 buchstäblich sind — „eine Prüfung, die immer ‚passt schon‘
+sagt, ist keine Prüfung“:
+
+  · §1 (durchsichtige Schrift nur im `@supports`) blieb unter seiner eigenen
+    Gegenprobe grün. Der Auszug suchte das Wort „@supports“ und fand es
+    zuerst IM KOMMENTAR über der Regel, brace-matchte von dort bis zur `}`
+    des echten Blocks — und verschluckte dabei genau die Zeile, die er hätte
+    finden sollen. Repariert wurde der Auszug (Kommentare zuerst weg).
+
+  · §2b (der Schimmer verschluckt keinen Text) mass zuerst EINEN Augenblick
+    und blieb mit wieder eingesetztem `no-repeat` grün — der Verlauf stand
+    gerade zufällig über der Zeile. Die Lücke wandert mit der Animation.
+    Jetzt wird über einen ganzen Umlauf gemessen und der schlechteste
+    Augenblick genommen.
+
+Die Alternative wäre gewesen, die Komponente einzubauen wie geliefert. Das
+hätte React, Radix, Tailwind und `lucide-react` bedeutet — vier
+Abhängigkeiten für einen laufenden Streifen, und den Doppelklick-Start
+(§6, §29) dazu. Der Preis der eigenen Fassung ist, dass sie bei jedem
+weiteren geschickten Bauteil neu bezahlt werden muss.
+
+PRÜFUNG: `test403`, 22 Punkte, PORT 9526.
+MUTATIONEN ROT GESEHEN, alle fünf:
+  §1  → `-webkit-text-fill-color:transparent` vor den `@supports`-Block.
+        → „Keine durchsichtige Schrift ausserhalb eines @supports“, 18/20.
+  §2  → `animation:` streichen. → „none“ und „0% 0% → 0% 0%“, 17/20.
+  §2b → `background-repeat:no-repeat` wieder einsetzen. → „schlechtester
+        Augenblick 87 Spalten, ohne Schimmer 295“, 21/22. Also 70 % der
+        Antwort unsichtbar.
+  §3  → den `prefers-reduced-motion`-Block streichen. → „Die Schrift ist
+        NICHT durchsichtig — rgba(0, 0, 0, 0)“, 17/20.
+  §4  → ein `finally` durch eine Zeile hinter dem `catch` ersetzen.
+        → „Beide stehen in einem finally — [false,true]“, 18/20.
+
+Dateien: `pruefungen/lauf/test403.mts` (neu),
+`quell/schale/stil/bausteine.css`, `src/bereiche/ki/dienst.ts`.

@@ -7708,6 +7708,47 @@ body.nh-zieht .nh-regal{ touch-action:none }
 .kq-titel{flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 .kq-art{color:var(--text-faint); font-size:11px; flex:0 0 auto}
 .kq-zeit{color:var(--text-faint); font-size:11px; flex:0 0 auto}
+/* ------------------------------------------------------------------------
+ * Der Schimmer über einer Antwort, die noch geschrieben wird.
+ *
+ * Der Gedanke stammt aus Magic UI („AnimatedShinyText", MIT) — der Code
+ * nicht: dort ist es eine React-Komponente mit Tailwind-Klassen, hier sind
+ * es sechs Zeilen CSS, weil Redion weder das eine noch das andere hat (§6).
+ *
+ * Er ist keine Zierde, sondern eine Auskunft: solange er läuft, kommt noch
+ * Text nach. Er hört auf, sobald der Strom endet — genau das unterscheidet
+ * ihn von einer Animation, die immer läuft und deshalb nichts mehr sagt.
+ *
+ * Die Fallgrube dabei: `background-clip:text` braucht durchsichtigen Text.
+ * Wo der Verlauf NICHT gemalt wird, stünde dann unsichtbarer Text — eine
+ * Antwort, die der Nutzer nicht lesen kann, und im Fehlerfall wäre es die
+ * Fehlermeldung selbst. Deshalb steht die ganze Wirkung in einem
+ * `@supports`, das nur dort zuschaltet, wo sie auch trägt; sonst steht da
+ * gewöhnlich gefärbter Text.
+ * ----------------------------------------------------------------------*/
+@supports ((-webkit-background-clip:text) or (background-clip:text)){
+  .ki-schreibt{
+    background-image:linear-gradient(100deg,
+      var(--text) 44%, var(--accent) 50%, var(--text) 56%);
+    /* KEIN `no-repeat`. Auf dem ersten Bild stand „Schimmer läuft — die A"
+       und dann nichts mehr: wo der Verlauf nicht hinreicht, wird nichts
+       gemalt, und durchsichtige Schrift ohne Farbe dahinter ist unsichtbare
+       Schrift. Gekachelt stösst `var(--text)` auf `var(--text)`, die Naht
+       sieht man nicht, und die Zeile steht ganz da. */
+    background-size:260% 100%;
+    -webkit-background-clip:text; background-clip:text;
+    -webkit-text-fill-color:transparent;
+    animation:ki-schimmer 1.7s linear infinite
+  }
+}
+@keyframes ki-schimmer{ from{background-position:170% 0} to{background-position:-70% 0} }
+
+/* Ohne Bewegung bleibt der Text stehen — aber lesbar, nicht durchsichtig. */
+@media(prefers-reduced-motion:reduce){
+  .ki-schreibt{ animation:none; background-image:none;
+    -webkit-text-fill-color:var(--text) }
+}
+
 .ki-antwortknoepfe{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px}
 .ki-antwortknoepfe button{font-size:12px; color:var(--accent-text); padding:3px 9px;
   border-radius:5px; border:1px solid var(--line)}
@@ -16667,7 +16708,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 352, inhalt: 'aa6e8ebca9dd1b73', gebaut: '2026-09-04T22:44:15.408Z' };
+const Stand = { fassung: 354, inhalt: '33fa538e2dde9142', gebaut: '2026-09-05T11:50:12.132Z' };
 window.Stand = Stand;
 
 </script>
@@ -130851,6 +130892,12 @@ const KI = (() => {
             .forEach(m => nachrichten.push(m));
         nachrichten.push({ role: 'user', content: text });
         let antwort = '';
+        /* Der Schimmer sagt „hier kommt noch etwas" und muss deshalb im
+           `finally` wieder weg: der Fehlerzweig schreibt seine Meldung in
+           dasselbe Feld, und durchsichtiger Text würde sie unlesbar machen.
+           Eine Fehlermeldung, die man nicht lesen kann, ist der schlechtere
+           Fehler. */
+        ziel.classList.add('ki-schreibt');
         try {
             await frage(nachrichten, (t) => {
                 antwort += t;
@@ -130864,6 +130911,9 @@ const KI = (() => {
         }
         catch (e) {
             ziel.textContent = '⚠ ' + (e instanceof Error ? e.message : String(e));
+        }
+        finally {
+            ziel.classList.remove('ki-schreibt');
         }
         /* Quellen unter die Antwort */
         const qk = quellenKarte(quellen);
@@ -131357,6 +131407,7 @@ const KI = (() => {
             (Store.getMeta('ki:persoenlich', '')
                 ? '\n\nDauerhafte Anweisungen: ' + Store.getMeta('ki:persoenlich', '') : '');
         let antwort = '';
+        ziel.classList.add('ki-schreibt');
         try {
             await frage([{ role: 'system', content: system },
                 { role: 'user', content: quelle.text.slice(0, 9000) }], (t) => {
@@ -131370,6 +131421,9 @@ const KI = (() => {
         catch (e) {
             ziel.textContent = '⚠ ' + (e instanceof Error ? e.message : String(e));
             return;
+        }
+        finally {
+            ziel.classList.remove('ki-schreibt');
         }
         const leiste = document.createElement('div');
         leiste.className = 'ki-antwortknoepfe';
