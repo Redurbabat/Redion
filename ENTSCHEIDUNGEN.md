@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-426 Entscheidungen, E1 bis E430. Die Nummer ist die Ordnung: eine Entscheidung
+427 Entscheidungen, E1 bis E431. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -484,6 +484,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E428** — Die KI konnte nur 13 von 30 Spaltentypen bauen
 * **E429** — Zwei Namen für dasselbe Ereignis
 * **E430** — „Kalender“ öffnete den Verbindungsdialog
+* **E431** — Der Kalender wohnt nicht im Arbeitsbereich
 
 ---
 
@@ -34856,3 +34857,105 @@ Bilder angesehen (§55.3): `bilder/kalender2-rechner-hell.png`,
 Dateien: `src/register/navigation.ts`, `src/bereiche/wissen/produktwelten.ts`,
 `src/bereiche/datenbanken/ansichten/dienst.ts`, `bilder.mts`,
 `pruefungen/lauf/test423.mts` (neu).
+
+---
+
+E431 — Der Kalender wohnt nicht im Arbeitsbereich
+--------------------------------------------------
+
+ENTSCHEIDUNG (Redurs Bitte): Der Kalender bekommt einen eigenen Bildschirm
+ohne die Workspace-Schale — eigene Krume „Kalender", eigene Adresse
+`#kalender`, und man kommt dorthin zurück. Gezeichnet wird er weiter von der
+Arbeitswelt.
+
+WAS REDUR GESAGT HAT: „die kalender sollte nicht in einem berich sich öfnnen
+sonder normal wie eine app". Auf die Rückfrage, wie weit das gehen soll,
+wählte er „Ganz eigener Ort" — wie die Elektrotechnik, die auch nicht im
+Workspace wohnt.
+
+WAS VORHER DASTAND. E430 hatte den Kalender einen Tag zuvor aus dem
+Verbindungsdialog geholt und als Ansicht in den Arbeitsbereich gehängt. Das
+war der richtige Ort in dem Sinn, dass er eine Adresse und eine Krume bekam
+— aber die Krume sagte „🧱 Workspace", links stand die Spalte „Übersicht ·
+Bibliothek · Aufgaben · Datenbanken · …", rechts das Reiterpanel mit den
+offenen Seiten. Gemessen: 210 px Navigationsspalte, 250 px Reiterpanel, und
+darüber eine 154-px-Bühne mit „REDION HAUPTWELT / 🧱 Workspace".
+
+Der Kalender war also ein Abschnitt von etwas anderem. Wer ihn öffnete,
+stand im Arbeitsbereich und sah zufällig gerade den Kalender.
+
+DIE ALTERNATIVE, DIE ES NICHT WURDE: einen zweiten Kalender schreiben, der
+für sich steht. Das wäre der doppelte Katalog aus §8 — zwei Kalender, die
+auseinanderlaufen, und niemand merkt, welcher gilt. Der Kalenderabschnitt
+gibt es schon: seine Chronologie, seine Suche, seine Klickgriffe, die
+Lebensbereich-Auswahl.
+
+WAS ES STATTDESSEN WURDE: ein NACKTER Modus in der Arbeitswelt.
+`render(ziel, ansicht, nackt)` zeichnet mit `nackt = true` nur den Kopf mit
+der Lebensbereich-Auswahl und darunter den Abschnitt selbst — kein
+`.aw-layout`, keine `.aw-navigation`, kein `.aw-reiter-panel`, keine
+Titelgruppe. Dieselbe Quelle, dieselben Daten, eine Schale weniger.
+
+Und die Tür ist `App.zeigeSonder('Kalender', …)` statt
+`workspace('kalender')`. `zeigeSonder` vergibt die Adresse aus dem Titel
+(`#kalender`), merkt den Ort unter `zuletztOrt`, zeichnet den Baum neu und
+meldet den Schauplatz. Genau diese vier Dinge unterscheiden einen Ort von
+einer Überlagerung — und `SCHAUPLATZ_NAMEN` kannte „Kalender" schon.
+
+DER KOPF WIRD SCHMAL, und das ist keine Kosmetik. `.aw-kopf` ist eine
+154-px-Bühne mit Farbverlauf und Ring für „REDION HAUPTWELT / Workspace /
+Seiten, Wissen, Dateien und Arbeit in einer gemeinsamen Sicht.". Im nackten
+Modus steht darin nur noch ein Auswahlfeld von 36 px. Ohne die Regel finge
+der Kalender erst bei y=240 an — über der Falz die teuerste leere Fläche der
+App. Dieselbe Rechnung wie E219/E222.
+
+UND EIN ORT, AN DEN MAN NICHT ZURÜCKKOMMT, IST NUR EIN HALBER. `#kalender`
+stand in der Adresszeile, aber beim Neuladen ging das Regal auf: die Tabelle
+`SONDER_START` in `schale.ts` beantwortet BEIDE Fragen — „wo war ich
+zuletzt" und „welcher Hash ist ein Ort" —, und der Kalender stand in keiner
+von beiden. Eine Zeile dort, und das Lesezeichen funktioniert ebenso wie
+„Weiter wo du warst".
+
+PRÜFUNG: `test423`, jetzt 30 Punkte, PORT 9545 (war 19). Neu sind §2 mit
+fünf Punkten gegen die Workspace-Schale, §3 mit den vier Merkmalen eines
+Ortes und §6 mit den beiden Rückwegen. Dazu `test390`, `test222`, `test87`,
+`test290`.
+
+GEGENPROBEN, vier Stück, alle gelaufen:
+  · `nackt` auf `false` → drei Punkte rot: Navigationsspalte 210 px,
+    Reiterpanel 250 px, Titel „🧱 Workspace".
+  · Die Regel `.aw-nackt .aw-kopf-schmal` umbenannt → der Kopf misst 154 px,
+    genau die Zahl aus dem Stilblatt.
+  · `zeigeSonder` zurück auf `workspace('kalender')` → vier Punkte rot:
+    `#welt-workspace-kalender`, `zuletztOrt: "-workspace"`, Schauplatz
+    `workspace`, Krume „🧱 Workspace".
+  · Die Zeile `kalender` aus `SONDER_START` genommen → §6 dreimal rot.
+
+UND EINE PRÜFUNG, DIE ZUERST NICHTS PRÜFTE. §6 stand erst als
+`goto(index.html#kalender)` da und war grün — auch mit herausgenommener
+`SONDER_START`-Zeile. Der Grund: von `index.html` auf `index.html#kalender`
+ist eine Sprungmarken-Navigation im SELBEN Dokument. Die Seite lädt nicht
+neu, `start()` läuft kein zweites Mal, und der Kalender stand einfach noch
+da. Erst `reload()` prüft, was die Prüfung behauptet. Aufgefallen ist es
+allein an der Gegenprobe — das ist der dritte Fall dieser Art in dieser
+Woche und der Grund, warum §55.2 keine Formalität ist.
+
+KOSTEN: Der nackte Modus ist ein zweiter Zeichenweg in derselben Datei.
+Wer die Arbeitswelt umbaut, muss beide ansehen; die Prüfung hält beide.
+Und `.aw-nackt .aw-kopf-schmal` ist in der Vorgabefassung wirkungslos, weil
+`body[data-ruhig="an"]` denselben Kopf schon abflacht — die Regel trägt nur
+bei abgeschalteter ruhiger Fassung und bei aufgeklapptem „Mehr". Die Prüfung
+misst deshalb ausdrücklich MIT abgeschalteter ruhiger Fassung; sonst wäre
+sie eine Behauptung.
+
+Bilder angesehen (§55.3): `bilder/kalender2-rechner-hell.png`,
+`kalender2-handy-dunkel.png`.
+
+NEBENBEI GRÜN GEMACHT: `test290` war rot mit `list` und `lr` — zwei
+Präfixe aus E425/E426, die im Verzeichnis fehlten. Nachgetragen in
+`doku/CSS-NAMENSRAEUME.md`.
+
+Dateien: `src/bereiche/wissen/arbeitswelt.ts`,
+`src/bereiche/wissen/produktwelten.ts`, `src/register/navigation.ts`,
+`src/schale/aufbau/schale.ts`, `quell/schale/stil/arbeitswelt.css`,
+`doku/CSS-NAMENSRAEUME.md`, `bilder.mts`, `pruefungen/lauf/test423.mts`.

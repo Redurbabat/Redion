@@ -120,13 +120,23 @@ const Produktwelten = (() => {
 
   const bibliothek = (): void => workspace('bibliothek');
   const aufgaben = (): void => workspace('aufgaben');
-  /* DER KALENDER IST EIN ORT, KEIN DIALOG (E430). Die Ansicht gab es die
-     ganze Zeit — `Arbeitsansicht` kennt `'kalender'`, `routeAusHash` lässt
-     `#welt-workspace-kalender` zu, und die Arbeitswelt zeichnet die
-     Chronologie aller Datumsfelder. Es fehlte nur die Tür: der
-     Navigationseintrag „Kalender" rief `Kalender.dialog()`, und das ist der
-     Verbindungsdialog für Google und CalDAV. */
-  const kalender = (): void => workspace('kalender');
+  /* DER KALENDER IST EIN EIGENER ORT (E430, E431). Die Ansicht gab es die
+     ganze Zeit — die Arbeitswelt zeichnet die Chronologie aller Datumsfelder.
+     Es fehlte nur die Tür: der Navigationseintrag „Kalender" rief
+     `Kalender.dialog()`, und das ist der Verbindungsdialog für Google und
+     CalDAV.
+     E431 hat die Tür dann noch einmal verlegt. Redur wollte den Kalender
+     nicht als Abschnitt des Arbeitsbereichs, sondern als eigenen Ort — wie
+     die Elektrotechnik, die auch nicht im Workspace wohnt. Also `zeigeSonder`
+     statt `workspace('kalender')`: eigene Krume „📅 Kalender", eigene Adresse
+     `#kalender`, keine Workspace-Seitenleiste. Gezeichnet wird trotzdem von
+     der Arbeitswelt (§8: kein zweiter Katalog). */
+  const kalender = (): void => {
+    const modul = arbeitsmodul();
+    if (modul?.kalenderOeffnen && modul.kalenderOeffnen()) return;
+    /* Rückfall für alte Einzeldateien, in denen der eigene Ort noch fehlt. */
+    workspace('kalender');
+  };
   const whiteboards = (): void => workspace('whiteboards');
 
   const planung = (): void => {

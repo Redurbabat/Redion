@@ -138,7 +138,7 @@ const ANSICHTEN: Record<string, {
      Verbindungsdialog; ein Bildziel dafür gab es nie, weil es nichts zu
      sehen gab ausser einer Überlagerung. */
   kalender2: {
-    titel: 'Der Kalender als eigener Ort (E430)',
+    titel: 'Der Kalender als eigener Ort (E430, E431)',
     bauen: async () => {
       Store.setMeta('rundgangGesehen', true);
       document.querySelector('.produkt-onboarding-lage')?.remove();

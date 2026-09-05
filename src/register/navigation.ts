@@ -168,9 +168,15 @@ Register.navigation = (() => {
        Register daneben und machen es seit jeher richtig.
        Der Verbindungsdialog bleibt — als das, was er ist: die Zeile
        „Kalender verbinden" im Kontextregister und der Knopf in den
-       Einstellungen. */
+       Einstellungen.
+       E431 HAT DIE ADRESSE NOCH EINMAL VERLEGT. Erst war der Kalender ein
+       Abschnitt des Arbeitsbereichs — richtiger Ort, aber mit der
+       Workspace-Spalte daneben und der Krume „Workspace" darüber. Redur
+       wollte ihn als eigenen Ort, wie die Elektrotechnik. `zeigeSonder`
+       vergibt die Adresse aus dem Titel: aus „Kalender" wird `#kalender`,
+       und die steht jetzt hier. */
     { id: 'app-kalender', marke: 'kalender',  name: 'Kalender',        icon: '📅', zeichen: 'calendar', platz: 'apps', gruppe: 'planen', rang: 10,
-      adresse: '#welt-workspace-kalender',
+      adresse: '#kalender', schauplatz: 'kalender',
       hinweis: 'Termine aus allen Quellen',                tun: () => Produktwelten.kalender() },
     { id: 'app-tagesplan', marke: 'tagesplan', name: 'Tagesplan',      icon: '☀', zeichen: 'clipboard',  platz: 'apps', gruppe: 'planen', rang: 20,
       hinweis: 'Was heute ansteht',                        tun: () => Plan.tagesplan() },

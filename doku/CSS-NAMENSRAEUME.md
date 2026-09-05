@@ -143,6 +143,8 @@ kt       15  einstellungen.css
 kw       20  bausteine.css
 kz       15  bausteine.css
 leer      9  werkzeuge.css
+list      7  datenbanken.css
+lr        6  datenbanken.css
 lv        5  bausteine.css
 lern      6  werkzeuge.css
 lw      657  lernwelt.css

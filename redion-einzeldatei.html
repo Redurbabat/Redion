@@ -6166,6 +6166,35 @@ body[data-ruhig="an"] .arbeitswelt .aw-kopf{
 }
 body[data-ruhig="an"] .arbeitswelt .aw-kopf::after{ display:none }
 
+/* ============================================================================
+ * DER KALENDER OHNE DIE WORKSPACE-SCHALE (E431)
+ * ----------------------------------------------------------------------------
+ * Redur wollte den Kalender als eigenen Ort, nicht als Abschnitt des
+ * Arbeitsbereichs. Gezeichnet wird er weiter von der Arbeitswelt — der
+ * Kalenderabschnitt, seine Suche und seine Klickgriffe gibt es dort schon,
+ * und ein zweiter Kalender wäre der doppelte Katalog aus §8.
+ *
+ * Was hier wegfällt, fällt weg, weil es zum Arbeitsbereich gehört und nicht
+ * zum Kalender: die dreispaltige Fläche, die Navigationsspalte mit
+ * „Übersicht · Bibliothek · Aufgaben · …" und das Reiterpanel rechts. Sie
+ * werden im nackten Modus gar nicht erst gezeichnet; hier steht nur der
+ * Kopf.
+ *
+ * DER KOPF WIRD SCHMAL, und zwar aus demselben Grund wie in der ruhigen
+ * Fassung 20 Zeilen weiter oben: `.aw-kopf` ist eine 154-px-Bühne für
+ * „REDION HAUPTWELT / Workspace / Seiten, Wissen, Dateien …". Im nackten
+ * Modus steht darin nur noch die Lebensbereich-Auswahl — ein Auswahlfeld
+ * von 36 px. Eine 154-px-Bühne mit Farbverlauf und Ring darum wäre über
+ * der Falz die teuerste leere Fläche der App, und der Kalender darunter
+ * finge erst bei y=240 an.
+ * ==========================================================================*/
+.arbeitswelt.aw-nackt .aw-kopf-schmal{
+  min-height:0; padding:0 2px 2px; justify-content:flex-end;
+  align-items:center; background:none; border:none; box-shadow:none;
+  overflow:visible
+}
+.arbeitswelt.aw-nackt .aw-kopf-schmal::after{ display:none }
+
 </style>
 <style>
 /* ===== quell/schale/stil/lernwelt.css ===== */
@@ -17106,7 +17135,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 417, inhalt: 'e7821cfc091fde30', gebaut: '2026-09-05T20:25:23.873Z' };
+const Stand = { fassung: 419, inhalt: '02d3341b543d1d78', gebaut: '2026-09-05T20:53:40.069Z' };
 window.Stand = Stand;
 
 </script>
@@ -27953,9 +27982,15 @@ Register.navigation = (() => {
            Register daneben und machen es seit jeher richtig.
            Der Verbindungsdialog bleibt — als das, was er ist: die Zeile
            „Kalender verbinden" im Kontextregister und der Knopf in den
-           Einstellungen. */
+           Einstellungen.
+           E431 HAT DIE ADRESSE NOCH EINMAL VERLEGT. Erst war der Kalender ein
+           Abschnitt des Arbeitsbereichs — richtiger Ort, aber mit der
+           Workspace-Spalte daneben und der Krume „Workspace" darüber. Redur
+           wollte ihn als eigenen Ort, wie die Elektrotechnik. `zeigeSonder`
+           vergibt die Adresse aus dem Titel: aus „Kalender" wird `#kalender`,
+           und die steht jetzt hier. */
         { id: 'app-kalender', marke: 'kalender', name: 'Kalender', icon: '📅', zeichen: 'calendar', platz: 'apps', gruppe: 'planen', rang: 10,
-            adresse: '#welt-workspace-kalender',
+            adresse: '#kalender', schauplatz: 'kalender',
             hinweis: 'Termine aus allen Quellen', tun: () => Produktwelten.kalender() },
         { id: 'app-tagesplan', marke: 'tagesplan', name: 'Tagesplan', icon: '☀', zeichen: 'clipboard', platz: 'apps', gruppe: 'planen', rang: 20,
             hinweis: 'Was heute ansteht', tun: () => Plan.tagesplan() },
@@ -129474,7 +129509,16 @@ const Arbeitswelt = (() => {
             aside.append(split);
         }
     };
-    const controllerBauen = (root, startAnsicht) => {
+    /* NACKT = OHNE DIE WORKSPACE-SCHALE (E431). Redur wollte den Kalender als
+       eigenen Ort, nicht als Abschnitt des Arbeitsbereichs: keine Spalte mit
+       Übersicht/Bibliothek/Aufgaben daneben, keine Krume „Workspace", kein
+       Reiterpanel rechts.
+       Gezeichnet wird trotzdem von hier, und das ist der Punkt: der
+       Kalenderabschnitt, seine Suche, seine Klickgriffe und die
+       Lebensbereich-Auswahl gibt es schon. Sie ein zweites Mal zu schreiben
+       wäre der doppelte Katalog aus §8 — zwei Kalender, die auseinanderlaufen,
+       und niemand merkt, welcher gilt. */
+    const controllerBauen = (root, startAnsicht, nackt = false) => {
         const id = `aw-${++instanz}`;
         const startBereiche = bereichDefinitionen();
         const zustand = { ansicht: normalisiereAnsicht(startAnsicht), suche: '',
@@ -129485,6 +129529,23 @@ const Arbeitswelt = (() => {
         const reiter = reiterVertrag();
         const zeichnen = () => {
             root.classList.add('produkt-welt', 'arbeitswelt');
+            if (nackt) {
+                root.classList.add('aw-nackt');
+                const schale = element('div', 'aw-shell');
+                /* Nur die Lebensbereich-Auswahl bleibt: sie filtert, was der
+                   Kalender zeigt, und ohne sie liesse sich das nicht mehr wählen.
+                   Titel und Beschreibung bringt der Abschnitt selbst mit. */
+                const kopf = element('header', 'aw-kopf aw-kopf-schmal');
+                kopf.append(bereichAuswahl(daten, zustand, id));
+                schale.append(kopf);
+                const nur = element('main', 'aw-inhalt');
+                nur.id = `${id}-inhalt`;
+                nur.tabIndex = -1;
+                zeichneHauptinhalt(nur, daten, zustand);
+                schale.append(nur);
+                root.replaceChildren(schale);
+                return;
+            }
             const shell = element('div', 'aw-shell');
             const header = element('header', 'aw-kopf');
             const titleBox = element('div', 'aw-titelgruppe');
@@ -129807,9 +129868,9 @@ const Arbeitswelt = (() => {
         return controller;
     };
     /** Setzt die Workspace-Welt in ein vorhandenes Schalen-Ziel ein. */
-    const render = (ziel, ansicht = 'uebersicht') => {
+    const render = (ziel, ansicht = 'uebersicht', nackt = false) => {
         controllerNachRoot.get(ziel)?.zerstoeren();
-        const controller = controllerBauen(ziel, ansicht);
+        const controller = controllerBauen(ziel, ansicht, nackt);
         controllerNachRoot.set(ziel, controller);
         return controller;
     };
@@ -129821,8 +129882,23 @@ const Arbeitswelt = (() => {
         App.zeigeSonder(TITEL, (ziel) => { controller = render(ziel, ansicht); });
         return controller;
     };
+    /** Der Kalender als eigener Ort (E431).
+     *
+     *  `zeigeSonder` vergibt die Adresse selbst — aus dem Titel wird `#kalender`
+     *  —, merkt den Ort für „Weiter wo du warst" und meldet den Schauplatz.
+     *  Genau das unterscheidet einen Ort von einer Überlagerung. */
+    const kalenderOeffnen = () => {
+        if (typeof App === 'undefined' || typeof App.zeigeSonder !== 'function')
+            return null;
+        let controller = null;
+        App.zeigeSonder('Kalender', (ziel) => {
+            controller = render(ziel, 'kalender', true);
+        });
+        return controller;
+    };
     return {
         TITEL, ansichten, render, oeffnen, open: oeffnen, mount: render,
+        kalenderOeffnen,
         snapshot, reiterVertrag, controller: render
     };
 })();
@@ -130424,13 +130500,24 @@ const Produktwelten = (() => {
     };
     const bibliothek = () => workspace('bibliothek');
     const aufgaben = () => workspace('aufgaben');
-    /* DER KALENDER IST EIN ORT, KEIN DIALOG (E430). Die Ansicht gab es die
-       ganze Zeit — `Arbeitsansicht` kennt `'kalender'`, `routeAusHash` lässt
-       `#welt-workspace-kalender` zu, und die Arbeitswelt zeichnet die
-       Chronologie aller Datumsfelder. Es fehlte nur die Tür: der
-       Navigationseintrag „Kalender" rief `Kalender.dialog()`, und das ist der
-       Verbindungsdialog für Google und CalDAV. */
-    const kalender = () => workspace('kalender');
+    /* DER KALENDER IST EIN EIGENER ORT (E430, E431). Die Ansicht gab es die
+       ganze Zeit — die Arbeitswelt zeichnet die Chronologie aller Datumsfelder.
+       Es fehlte nur die Tür: der Navigationseintrag „Kalender" rief
+       `Kalender.dialog()`, und das ist der Verbindungsdialog für Google und
+       CalDAV.
+       E431 hat die Tür dann noch einmal verlegt. Redur wollte den Kalender
+       nicht als Abschnitt des Arbeitsbereichs, sondern als eigenen Ort — wie
+       die Elektrotechnik, die auch nicht im Workspace wohnt. Also `zeigeSonder`
+       statt `workspace('kalender')`: eigene Krume „📅 Kalender", eigene Adresse
+       `#kalender`, keine Workspace-Seitenleiste. Gezeichnet wird trotzdem von
+       der Arbeitswelt (§8: kein zweiter Katalog). */
+    const kalender = () => {
+        const modul = arbeitsmodul();
+        if (modul?.kalenderOeffnen && modul.kalenderOeffnen())
+            return;
+        /* Rückfall für alte Einzeldateien, in denen der eigene Ort noch fehlt. */
+        workspace('kalender');
+    };
     const whiteboards = () => workspace('whiteboards');
     const planung = () => {
         weltSetzen('lernen');
@@ -141104,12 +141191,26 @@ const App = (() => {
        anderen Sonderansichten — „Meine Aufgaben", „Lernen & Alltag",
        „Elektro" — führen zum Regal: das ist der Ort, an dem die Sachen
        liegen, und Redurs Wunsch für „nichts offen". */
+    /* UND SEIT E431 AUCH DER KALENDER. Er ist mit demselben Bogen ein eigener
+       Ort geworden — eigene Krume, eigene Adresse `#kalender`, keine
+       Workspace-Schale. Ein Ort, an den man nicht zurückkommt, ist aber nur
+       ein halber: wer die App im Kalender verlässt oder `#kalender` als
+       Lesezeichen speichert, landete ohne diese Zeile im Regal.
+       Die Tabelle ist beides — sie beantwortet „wo war ich zuletzt" UND
+       „welcher Hash ist ein Ort" (`rohHash in SONDER_START`, weiter unten). */
     const SONDER_START = {
         dokumente: () => Bibliothek.oeffne(),
         notizhefte: () => {
             const N = globalThis.Notebook;
             if (N && typeof N.oeffnen === 'function')
                 N.oeffnen();
+            else
+                Bibliothek.oeffne();
+        },
+        kalender: () => {
+            const P = globalThis.Produktwelten;
+            if (P && typeof P.kalender === 'function')
+                P.kalender();
             else
                 Bibliothek.oeffne();
         },
