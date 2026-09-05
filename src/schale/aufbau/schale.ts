@@ -3239,22 +3239,47 @@ const App = (() => {
      * Deshalb steht hier eine gemessene Zahl statt einer geschätzten.
      * `datenbanken.css` rechnet damit; ist sie 0, ändert sich nichts.
      * -------------------------------------------------------------------*/
+    /* Eine feste Reserve statt der gemessenen Rollbalkenbreite. Mit
+       `clientWidth` hing die Zahl davon ab, OB der senkrechte Rollbalken
+       gerade da ist, und sprang beim Laden von Bildern um sechzehn Pixel
+       hin und her.
+
+       ABER: das ist NICHT die Reparatur der Schleifenmeldung, auch wenn es
+       zuerst so aussah. Nachgemessen mit `test404 §8` — die Reserve allein
+       liess den Fehler weiterbestehen, die Drosselung unten allein behob
+       ihn. Diese Zeile macht die Breite ruhig, nicht den Beobachter. Wer
+       sie herausnimmt, bekommt ein zuckendes Layout, keinen Fehler. */
+    const ROLLER_RESERVE = 16;
     let luftZuletzt = -1;
     const luftMessen = () => {
       const roller = document.getElementById('scroll');
       const seite = document.getElementById('page');
       if (!roller || !seite) return;
-      /* clientWidth, nicht getBoundingClientRect: der senkrechte Roller
-         gehört nicht zur nutzbaren Breite, und `width` zählt ihn mit. */
-      const wert = Math.max(0, Math.round((roller.clientWidth - seite.clientWidth) / 2));
-      /* NUR BEI ÄNDERUNG SCHREIBEN. Der Beobachter unten feuert auch bei
-         Höhenänderungen, und eine breitere Datenbank ändert die Höhe. */
-      if (wert === luftZuletzt) return;
+      const wert = Math.max(0, Math.round(
+        (roller.offsetWidth - ROLLER_RESERVE - seite.clientWidth) / 2));
+      /* NUR BEI ÄNDERUNG SCHREIBEN, und erst ab acht Pixeln: unter dieser
+         Schwelle ist der Gewinn nicht zu sehen, das erneute Zeichnen aber
+         zu bezahlen. */
+      if (Math.abs(wert - luftZuletzt) < 8) return;
       luftZuletzt = wert;
       seite.style.setProperty('--seite-luft', wert + 'px');
     };
+
+    /* EINMAL JE BILD, NICHT JE MELDUNG — und DAS ist die Reparatur.
+       Ein ResizeObserver, der in seinem eigenen Rückruf das Layout ändert,
+       meldet „ResizeObserver loop completed with undelivered notifications",
+       und Redion machte daraus eine Fehlerkarte quer über der Ansicht.
+       Nachgemessen: ohne diese Drosselung erscheint der Fehler bei `list`,
+       `gallery` und `chart` — überall dort, wo nach dem ersten Zeichnen noch
+       etwas nachwächst. `test404 §8` hält es fest. */
+    let luftGeplant = false;
+    const luftBald = () => {
+      if (luftGeplant) return;
+      luftGeplant = true;
+      requestAnimationFrame(() => { luftGeplant = false; luftMessen(); });
+    };
     luftMessen();
-    addEventListener('resize', luftMessen, { passive: true });
+    addEventListener('resize', luftBald, { passive: true });
     /* BEIDE BEOBACHTEN, und das ist der Punkt, an dem der erste Versuch
        scheiterte: beobachtet war nur `#scroll`. Das ändert seine Breite nie
        — die Seitenleiste schiebt es zwar zusammen, aber `#page` bekommt
@@ -3262,7 +3287,7 @@ const App = (() => {
        früh, mit dem Ergebnis 0, und danach kam nie wieder ein Anlass.
        Auf dem Bild sah das aus, als hätte die Regel nicht gegriffen. */
     if (typeof ResizeObserver !== 'undefined') {
-      const beobachter = new ResizeObserver(luftMessen);
+      const beobachter = new ResizeObserver(luftBald);
       const roller = document.getElementById('scroll');
       const seite2 = document.getElementById('page');
       if (roller) beobachter.observe(roller);

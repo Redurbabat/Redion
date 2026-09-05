@@ -1747,6 +1747,66 @@ const Datenbank = (() => {
 
   /* --- Board -------------------------------------------------------------- */
   /** Bildquelle einer Zeile für die Kartenvorschau — Datei-, Bild- oder URL-Spalte. */
+  /* --------------------------------------------------------------------------
+   * WELCHER WERT SEINEN NAMEN BRAUCHT (E411)
+   *
+   * Auf einer Karte stand bisher: „08.09.2026 10.09.2026 85 ▬ 0 % ★★★☆☆
+   * Lina 📍Bern ☐" — alle Werte in einer Zeile, ohne Namen und ohne Trenner.
+   * Welches Datum ist der Anfang? Ist 85 ein Preis oder eine Stückzahl? Was
+   * bedeutet das leere Kästchen?
+   *
+   * Alle Namen anzuschreiben wäre die falsche Antwort: ein farbiges
+   * Status-Etikett erklärt sich selbst, und „Status: Offen" verdoppelt nur
+   * die Zeile. Dieselbe Regel wie überall hier — was IMMER dasteht, wird
+   * nicht mehr gelesen.
+   *
+   * Also bekommt seinen Namen, was ihn braucht:
+   *   · nackte Zahlen, Daten, Formeln, Zeitspannen, freier Text
+   *   · und JEDER Wert, dessen Spaltentyp auf der Karte mehrfach vorkommt —
+   *     zwei Datumsspalten nebeneinander sind ohne Namen nicht zu trennen,
+   *     auch wenn ein einzelnes Datum es wäre.
+   *
+   * Selbsterklärend bleiben Etiketten, Haken, Sterne, Ortsmarken, Anhänge
+   * und alles mit eigener Einheit im Text.
+   * ------------------------------------------------------------------------*/
+  /* `checkbox` steht hier BEWUSST NICHT drin, obwohl ein Haken erst einmal
+     selbsterklärend aussieht. Ein gesetzter Haken ist es auch — ein LEERES
+     Kästchen dagegen sagt gar nichts, und auf dem Bild stand genau das:
+     ein weisses Quadrat neben dem Ort, ohne jeden Hinweis worauf es sich
+     bezieht. Die häufigere Hälfte eines Zustands entscheidet. */
+  const SELBSTERKLAEREND = new Set(['select', 'status', 'multi',
+    'sterne', 'prozent', 'files', 'url', 'email', 'phone', 'place', 'person',
+    'image', 'verify', 'button', 'relation']);
+
+  /** Die Werteliste einer Karte — mit Namen dort, wo der Wert allein nicht spricht. */
+  const kartenWerte = (r: any, coll: any, view: any, ausser: string[] = []): string => {
+    /* Zuerst zählen, welcher Typ mehrfach vorkommt: zwei Datumsspalten sind
+       auch dann nicht zu trennen, wenn eine allein es wäre. */
+    const sichtbar = Object.keys(coll.schema).filter(k =>
+      coll.schema[k].type !== 'title' && !ausser.includes(k) &&
+      !(view.hidden || []).includes(k));
+    const proTyp: Record<string, number> = {};
+    sichtbar.forEach(k => {
+      const t = coll.schema[k].type;
+      proTyp[t] = (proTyp[t] ?? 0) + 1;
+    });
+
+    let aus = '';
+    sichtbar.forEach(k => {
+      const def = coll.schema[k];
+      const z = zelle(r, k, coll);
+      if (!z || z.includes('—')) return;
+      const mehrfach = (proTyp[def.type] ?? 0) > 1;
+      const braucht = mehrfach || !SELBSTERKLAEREND.has(def.type);
+      /* `title` steht IMMER da, auch beim selbsterklärenden Wert: wer doch
+         einmal unsicher ist, fährt darüber, statt die Spalte zu suchen. */
+      aus += `<span class="mv" title="${esc(def.name || k)}">` +
+             (braucht ? `<b class="mv-n">${esc(def.name || k)}</b>` : '') +
+             z + '</span>';
+    });
+    return aus;
+  };
+
   const kartenBild = (r: any, coll: any, view: any) => {
     if (view.bildKey === '') return null;
     const kandidaten = view.bildKey && coll.schema[view.bildKey]
@@ -1866,13 +1926,9 @@ const Datenbank = (() => {
         c.className = 'card';
         c.draggable = true;
         c.dataset.rid = r.id;
-        let meta = '';
-        Object.keys(coll.schema).forEach(k => {
-          if (k === gk || coll.schema[k].type === 'title') return;
-          if ((view.hidden || []).includes(k)) return;
-          const z = zelle(r, k, coll);
-          if (z && !z.includes('—')) meta += `<span class="mv">${z}</span>`;
-        });
+        /* `gk` bleibt aussen vor: die Bahn, nach der gruppiert wird, steht
+           schon als Überschrift der Spalte. */
+        const meta = kartenWerte(r, coll, view, [gk]);
         const bild = view.bild === false ? null : kartenBild(r, coll, view);
         c.innerHTML =
           (bild ? `<div class="kbild ${esc(view.bildPasst || 'deckt')}"><img src="${esc(bild)}" alt="" loading="lazy"></div>` : '') +
@@ -1940,12 +1996,7 @@ const Datenbank = (() => {
     rows.forEach((r: any) => {
       const c = document.createElement('div');
       c.className = 'card';
-      let meta = '';
-      Object.keys(coll.schema).forEach(k => {
-        if (coll.schema[k].type === 'title' || (view.hidden || []).includes(k)) return;
-        const z = zelle(r, k, coll);
-        if (z && !z.includes('—')) meta += `<span class="mv">${z}</span>`;
-      });
+      const meta = kartenWerte(r, coll, view);
       const bild = view.bild === false ? null : kartenBild(r, coll, view);
       c.innerHTML =
         (bild ? `<div class="kbild ${esc(view.bildPasst || 'deckt')}"><img src="${esc(bild)}" alt="" loading="lazy"></div>` : '') +

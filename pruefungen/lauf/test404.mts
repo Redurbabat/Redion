@@ -25,6 +25,11 @@
  *   §5 → in `dienst.ts` die Bahn wieder weglassen (`<i>` unmittelbar in
  *        `.proz`). Dann bezieht sich `width:n%` auf die ganze Zelle, der
  *        Balken schiebt die Zahl hinaus, und 55 % sieht aus wie 100 %.
+ *   §8 → `new ResizeObserver(luftBald)` zurück auf `luftMessen`. → „list:
+ *        ResizeObserver loop … | gallery: … | chart: …", 22 von 23.
+ *        Die naheliegendere Gegenprobe — die Rollbalken-Reserve
+ *        wegzunehmen — blieb grün. Sie hält die Breite ruhig, nicht den
+ *        Beobachter; siehe oben.
  *
  *   node pruefungen/lauf/test404.mts
  * ==========================================================================*/
@@ -237,6 +242,46 @@ p('Die Vorgabe von kartenMelden ist aus',
   /V\('kartenMelden',\s*false\)/.test(quelle) && !/V\('kartenMelden',\s*true\)/.test(quelle));
 p('Der Schalter gibt es trotzdem noch',
   /schalter\('kartenMelden'/.test(quelle));
+
+/* ==========================================================================
+ * §8 · KEINE ANSICHT WIRFT BEIM BLOSSEN ÖFFNEN EINEN FEHLER
+ * --------------------------------------------------------------------------
+ * Diesen Abschnitt gibt es, weil E409 selbst einen erzeugt hat und ihn erst
+ * ein Bild zeigte: der neue ResizeObserver änderte in seinem eigenen
+ * Rückruf das Layout. Der Browser meldete „ResizeObserver loop completed
+ * with undelivered notifications", und Redion machte daraus eine
+ * Fehlerkarte quer über der Galerie.
+ *
+ * Und dieser Abschnitt hat gleich noch etwas anderes gefunden: die erste
+ * Gegenprobe blieb GRÜN. Die vermutete Ursache — die Luft aus `clientWidth`
+ * zu messen und damit vom Rollbalken abzuhängen — war gar nicht die
+ * Ursache. Erst als die rAF-Drosselung wegfiel, wurde §8 rot, und zwar bei
+ * `list`, `gallery` und `chart`. Ohne die Gegenprobe stünde jetzt eine
+ * falsche Begründung im Quelltext, und der Nächste nähme die falsche Zeile
+ * weg.
+ *
+ * Gemessen wird das Fehlerprotokoll, nicht die Konsole: Redion fängt seine
+ * Fehler ab und schreibt sie dorthin, und genau deshalb sah man in
+ * `pageerror` nichts. Und alle dreizehn Ansichten, nicht nur die eine —
+ * der Fehler trat nur bei der Galerie auf, weil dort Bilder nachladen.
+ * ========================================================================*/
+console.log('\n§8 Keine Ansicht wirft einen Fehler');
+
+const LAYOUTS = ['table', 'raster', 'board', 'timeline', 'calendar', 'list',
+  'gallery', 'chart', 'feed', 'map', 'dashboard', 'pivot', 'form'];
+const schlecht: string[] = [];
+for (const l of LAYOUTS) {
+  const s8 = await bauen(1280, l);
+  await s8.waitForTimeout(600);
+  const prot = JSON.parse(await s8.evaluate(
+    "JSON.stringify(Store.getMeta('fehlerprotokoll', []) || [])") as string) as any[];
+  const karte = await s8.evaluate("!!document.getElementById('fehler-karte')");
+  if (prot.length) schlecht.push(l + ': ' + String(prot[0].text).slice(0, 70));
+  else if (karte) schlecht.push(l + ': Fehlerkarte ohne Protokolleintrag');
+  await s8.close();
+}
+p('Alle dreizehn Ansichten öffnen ohne Fehler', schlecht.length === 0,
+  schlecht.slice(0, 4).join(' | '));
 
 /* ======================================================================== */
 p('Keine Fehler auf der Konsole', fehler.length === 0, fehler.slice(0, 3).join(' · '));

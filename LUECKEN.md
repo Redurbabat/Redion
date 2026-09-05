@@ -6076,12 +6076,12 @@ E409 hat die Breite und den Fortschrittsbalken geholt. Beim Hinsehen auf die
 dreizehn Bilder blieben vier Dinge übrig, jedes für sich klein, aber jedes
 kostet den Nutzer eine Auskunft.
 
-1. **Die Werte auf einer Board-Karte sind nicht zuzuordnen.** Da steht
-   „08.09.2026 10.09.2026 85 ▬ 0 % ★★★☆☆ Lina 📍Bern ☐" — in einer Zeile,
-   ohne Feldnamen und ohne Trenner. Welches Datum ist Anfang, welches Ende?
-   Ist 85 der Preis oder die Stückzahl? Was bedeutet das leere Kästchen?
-   Notion lässt die Eigenschaftsnamen auf Karten wahlweise mitlaufen. Das
-   ist die kleinste sinnvolle Reparatur.
+1. **Die Werte auf einer Board-Karte sind nicht zuzuordnen.** GESCHLOSSEN
+   mit E411. Angeschrieben wird, was seinen Namen braucht — nackte Zahlen,
+   Daten, Zeitspannen, das leere Kontrollkästchen, und jeder Typ, der auf
+   derselben Karte mehrfach vorkommt. Etiketten, Sterne und Ortsmarken
+   bleiben ohne, weil eine Beschriftung an jedem Wert wieder niemand liest.
+   Gehalten von `test406`.
 
 2. **Der Kalender zeigt keine Zeitspannen.** GESCHLOSSEN mit E410. Der
    Balken war gebaut und sprang nie an: `endeKey` war das einzige Feld der
@@ -6097,10 +6097,12 @@ kostet den Nutzer eine Auskunft.
    geworden, aber nicht weg. Ein Schatten an der rechten Kante, solange
    noch etwas kommt, würde reichen.
 
-4. **Das Zahlenformat einer Spalte wird nicht angezeigt.** Das Schema kann
-   `format: 'chf'` tragen; in der Tabelle steht trotzdem „420". Entweder
-   das Format wirkt, oder das Feld gehört aus dem Schema entfernt — ein
-   Feld, das gespeichert wird und nichts tut, ist die schlechtere Hälfte
-   von beidem.
+4. **Eine Zahlenspalte kann keine Einheit tragen.** Berichtigt: `format`
+   war eine Erfindung des Prüfdatensatzes, kein Feld von Redion. Es gibt
+   `def.anzeige` (Skala, Heatmap, Balken, Ring), aber nichts, was „420"
+   zu „420 CHF" oder „420 h" macht. Damit steht auf jeder Karte und in
+   jeder Tabelle eine nackte Zahl, und ob es Franken, Stunden oder Stück
+   sind, weiss nur, wer die Spalte benannt hat. Notion kann das; Redion
+   noch nicht.
 
 Nachzusehen mit `node bilder.mts db-board`, `db-calendar`, `db-table`.

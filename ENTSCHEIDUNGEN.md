@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-406 Entscheidungen, E1 bis E410. Die Nummer ist die Ordnung: eine Entscheidung
+407 Entscheidungen, E1 bis E411. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -464,6 +464,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E408** — Ein Schimmer, der sagt „hier kommt noch Text nach“
 * **E409** — Die Ansichten bekommen die Breite, die da ist
 * **E410** — Der Kalender zeigt Zeitspannen, und die Balken bekommen Farbe
+* **E411** — Werte auf Karten sagen, wovon sie handeln
 
 ---
 
@@ -33398,3 +33399,85 @@ test284, test291, test319, test327, test328, test330, test404.
 
 Dateien: `pruefungen/lauf/test405.mts` (neu),
 `src/bereiche/datenbanken/steuerung.ts`, `quell/schale/stil/bausteine.css`.
+
+E411 — Werte auf Karten sagen, wovon sie handeln
+================================================================================
+5. September 2026
+
+Auf einer Board-Karte stand:
+
+    08.09.2026  10.09.2026  85  ▬ 0 %  ★★★☆☆  Lina  📍Bern  ☐
+
+Alle Werte in einer Zeile, ohne Namen und ohne Trenner. Welches Datum ist der
+Anfang? Ist 85 ein Preis oder eine Stückzahl? Was bedeutet das leere Kästchen?
+Der Code dahinter war eine Zeile: `meta += '<span class="mv">' + z + '</span>'`.
+
+ALLE NAMEN ANZUSCHREIBEN WÄRE DIE FALSCHE ANTWORT gewesen. Ein farbiges
+Status-Etikett erklärt sich selbst, und „Status: Offen" verdoppelt nur die
+Zeile. Dieselbe Regel wie überall hier: was IMMER dasteht, wird nicht mehr
+gelesen.
+
+Also bekommt seinen Namen, was ihn braucht:
+
+  · nackte Zahlen, Daten, Formeln, Zeitspannen, freier Text, Rollups
+  · JEDER Wert, dessen Spaltentyp auf der Karte mehrfach vorkommt — zwei
+    Auswahlspalten „Bereich" und „Werkstatt" sind ohne Namen nicht zu
+    trennen, auch wenn eine einzelne Auswahl es wäre
+  · und `checkbox`, obwohl ein Haken erst selbsterklärend aussieht: ein
+    GESETZTER Haken ist es, ein LEERES Kästchen sagt gar nichts. Auf dem
+    Bild stand ein weisses Quadrat neben dem Ort, ohne jeden Bezug. Die
+    häufigere Hälfte eines Zustands entscheidet.
+
+Selbsterklärend bleiben Etiketten, Sterne, Ortsmarken, Anhänge, Personen und
+alles mit eigener Einheit im Text. Der `title` steht trotzdem an JEDEM Wert:
+wer doch einmal unsicher ist, fährt darüber, statt die Spalte zu suchen.
+
+Board und Galerie teilen sich denselben Helfer `kartenWerte`; vorher hatten
+sie zwei fast gleiche Schleifen. Das Board lässt zusätzlich die Bahn aus,
+nach der gruppiert wird — sie steht schon als Spaltenüberschrift.
+
+DER FEHLER, DEN E409 DABEI HINTERLASSEN HATTE. Beim Nachsehen auf das
+Galeriebild stand eine Fehlerkarte quer über der Seite: „Etwas ist
+schiefgelaufen". Im Protokoll: „ResizeObserver loop completed with
+undelivered notifications" — der Beobachter aus E409 änderte in seinem
+eigenen Rückruf das Layout.
+
+UND DIE ERSTE GEGENPROBE BLIEB GRÜN. Die vermutete Ursache war, dass die
+Luft aus `clientWidth` gemessen wurde und damit davon abhing, OB der
+senkrechte Rollbalken gerade da ist. Diese Zeile zurückzudrehen änderte
+nichts. Erst als die neue Drosselung auf ein Bild je Messung wegfiel, wurde
+`test404 §8` rot — bei `list`, `gallery` und `chart`, also überall dort, wo
+nach dem ersten Zeichnen noch etwas nachwächst.
+
+Ohne die Gegenprobe stünde jetzt eine falsche Begründung im Quelltext, und
+der Nächste nähme die falsche Zeile weg. Beide Kommentare sind berichtigt:
+die Reserve hält die Breite ruhig, die Drosselung hält den Beobachter.
+
+`test404 §8` prüft seither ALLE DREIZEHN Ansichten darauf, dass das blosse
+Öffnen keinen Fehler ins Protokoll schreibt. Gemessen wird das Protokoll und
+nicht die Konsole — Redion fängt seine Fehler ab, und genau deshalb war in
+`pageerror` nichts zu sehen.
+
+PRÜFUNG: `test406`, 20 Punkte, PORT 9529.
+MUTATIONEN ROT GESEHEN:
+  §1 → `braucht = false`. → „Anfang ist angeschrieben — 9 mal da, davon 9
+       ohne Namen", und dasselbe für Ende und Kosten, 16/20.
+  §2 → `braucht = true`. → „Bereich ist NICHT angeschrieben — 9 mal da,
+       davon 9 mit Namen", dazu Schlagworte, Bewertung, Ort, 16/20.
+  §3 → das `mehrfach ||` streichen. → „Beide Auswahlspalten sind
+       angeschrieben — Bereich 0, Werkstatt 0", 19/20.
+
+UND EIN ABSCHNITT, DER ERST NICHTS PRÜFTE. §3 hiess zuerst „Anfang und Ende
+sind beide angeschrieben". Beide sind `date`, und `date` ist ohnehin nicht
+selbsterklärend — die Mehrfachregel hatte dort gar keine Wirkung, und die
+Gegenprobe blieb grün. Der Abschnitt hat jetzt einen eigenen kleinen Satz
+mit ZWEI Auswahlspalten und einer einzelnen Status-Spalte: die beiden
+bekommen Namen, die einzelne nicht. Damit kann er in beide Richtungen rot
+werden.
+
+Mitgelaufen und grün: test32, test36, test40, test87, test105, test109,
+test136, test233, test237, test404, test405.
+
+Dateien: `pruefungen/lauf/test406.mts` (neu),
+`src/bereiche/datenbanken/steuerung.ts`, `src/schale/aufbau/schale.ts`,
+`quell/schale/stil/datenbanken.css`, `pruefungen/lauf/test404.mts`.
