@@ -6135,3 +6135,65 @@ kostet den Nutzer eine Auskunft.
 
 Nachzusehen mit `node bilder.mts db-board`, `db-calendar`, `db-table`,
 `db-timeline`.
+
+
+L131 — Was der Telefon-Durchgang offen gelassen hat
+====================================================
+
+Am 5. September 2026 sind alle dreizehn Ansichtsarten am Rechner und die
+wichtigsten am Telefon angesehen worden (E419–E427). Vier Dinge sind dabei
+aufgefallen und NICHT repariert worden — jedes aus einem eigenen Grund, und
+der Grund steht dabei, damit niemand die Arbeit doppelt macht.
+
+1. **Die Namensspalte des Side Peek ist am Telefon nicht nachgemessen.**
+   `.pp-n` steht auf `width:170px; flex:0 0 170px` — auf 390 px sind das
+   44 % der Breite für die Beschriftung einer Eigenschaft. Das ist dieselbe
+   Bauform, die beim Zeitstrahl der Fehler war (E427: `.zs-namen` mit
+   190 px, am Telefon 57 %).
+   NICHT REPARIERT, weil die Messung den Peek am Telefon gar nicht öffnen
+   konnte: dort zeigt die Datenbank Karten statt einer Tabelle, und der
+   Weg zum Peek ist ein anderer. Eine Vermutung ohne Messung ist genau das,
+   wovor §36 warnt — erst messen, dann bauen. Wer das aufgreift, braucht
+   zuerst einen Weg, den Peek am Telefon zu öffnen.
+
+2. **Die Karte sagt nicht, dass sie offline nichts zeigen kann.** Ohne Netz
+   bleibt ein grosser grauer Kasten stehen, ohne ein Wort dazu. Die Kacheln
+   kommen von OpenStreetMap, das Nachschlagen der Orte ebenfalls.
+   NICHT REPARIERT, weil im Prüfcontainer gar kein Netz ist und sich „lädt
+   noch" von „geht nicht" damit nicht unterscheiden lässt. Ein Hinweis, der
+   IMMER erscheint, wäre schlimmer als keiner. `navigator.onLine` wäre der
+   Ansatzpunkt.
+
+3. **Drei Klassen werden gesetzt und haben keine Regel.** Gemessen: von
+   1591 Klassen, die der Code setzt, haben 69 keine CSS-Regel; die meisten
+   sind Griffe für `querySelector` oder Präfix-Bildungen. Drei bleiben:
+
+       ea-rechts               elektro/arbeitsplatz.ts
+       kal-block               datenbanken/steuerung.ts
+       menu-liste-ohne-suche   schale/ueberlagerung/menue.ts
+
+   NICHT REPARIERT, weil bei keiner der drei zu sehen ist, dass etwas
+   fehlt: `kal-block` ist die Hülle des Kalenders, deren Kinder ihre eigene
+   Gestaltung mitbringen. Eine Klasse ohne Regel ist eine Behauptung über
+   Gestaltung, die es nicht gibt (E410) — aber eine Hülle ohne Regel ist
+   nur eine Hülle. Wer das aufgreift, entscheidet je Klasse: Regel
+   schreiben oder Klasse entfernen.
+
+4. **`.orb-inline` ist eine tote Regel.** `bausteine.css:140`,
+   `vertical-align:-4px; margin-right:6px`. Angelegt in E403 für die
+   Denkkugel in einer Textzeile, nie gesetzt. Es ist die EINZIGE wirklich
+   tote CSS-Regel im ganzen Bestand — 58 weitere Meldungen derselben
+   Messung waren Fehlalarme aus Präfix-Bildungen (`b-` + Blocktyp,
+   `q-` + Farbe).
+   NICHT ENTFERNT, weil §43 sagt: nichts löschen ohne Rückfrage. Zwei Wege
+   stehen offen — die Klasse dort setzen, wo sie gedacht war, oder die
+   zwei Zeilen streichen. Das ist Redurs Entscheidung.
+
+Und ein Befund, der KEINE Lücke ist und deshalb hier steht, damit ihn
+niemand für eine hält: die Datumsfelder im Formular zeigen `mm/dd/yyyy`.
+Das ist die Anzeige des Browsers und folgt seiner Spracheinstellung, nicht
+der Seite — dieselbe bewusste Entscheidung wie beim Zeitfeld des
+Zeitplans (`schale/aufbau/schale.ts`): „Wer seinen Browser auf Englisch
+stellt, ERWARTET 10:00 PM." Ein eigenes Feld verlöre den Kalender zum
+Antippen, die Tastaturbedienung und das Rad am Telefon.
+

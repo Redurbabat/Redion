@@ -38,6 +38,71 @@ dann die Phasen, dann die Bögen.
 
 ## Aktueller Stand
 
+## E419–E427 — Die dreizehn Ansichten, angesehen statt gelesen (5. September 2026)
+
+Neun Bögen an einem Abend, und sie hängen alle an derselben Arbeitsweise:
+**jede Ansichtsart wirklich öffnen und ansehen**, statt ihren Code zu lesen.
+Alle dreizehn am Rechner, die wichtigsten am Telefon.
+
+**Was dabei herauskam, in der Reihenfolge des Gewichts:**
+
+| Fund | Gemessen |
+|---|---|
+| Die Balken des Dashboards waren unsichtbar (E421) | `--b-gray` und die Bahn sind byte-identisch. Kontrast **1.00**. „Offen 3" hatte einen Balken über die volle Breite, den niemand sehen konnte |
+| Der Zeitstrahl nutzte 29 % seiner Fläche (E419) | 325 px gemalt in 1130 px. Und die Mindestbreite zog 1, 2 und 3 Tage auf **dieselben 22 px** |
+| Die Karte nahm die Titelspalte (E423) | `place` — der Typ, der „Ort" bedeutet — stand nicht einmal zur Wahl |
+| Fünf Kataloge für dreizehn Ansichten (E422) | `pivot` und `raster` fehlten in vier davon; `timeline` hiess an zwei Stellen verschieden |
+| Feed und Liste klebten ihre Werte zusammen (E424, E425) | „15.09.2026 60 CHF" als ein Wert; „01.09.2026 12.09.2026" ohne Namen |
+| Am Telefon sahen zwei Einträge gleich aus (E426) | „Bericht Kapitel 1" und „Bericht Kapitel 2" standen beide als „Bericht" da |
+| Der Zeitstrahl zeigte am Telefon jeden Namen zweimal (E427) | Namensspalte 190 von 334 px = 57 %; alle neun Titel standen daneben |
+
+**Dreimal derselbe Fehler an drei Orten.** `kartenWerte` aus E411 gibt es
+einmal und kann alles, was Karte, Feed und Liste brauchen. Jeder der drei
+hatte trotzdem seine eigene Schleife, die Zellen mit einem Leerzeichen
+aneinanderhängte.
+
+**Und zweimal derselbe Fehler in der Vorgabe.** E414 fand, dass die
+Diagramm-Gruppierung `gruppierbar[0]` nahm und damit den Titel. E423 fand
+dieselbe Zeile bei der Karte. „Die erste Spalte" ist nie die richtige
+Antwort auf „welche Spalte?".
+
+### Was dieser Durchgang über das Prüfen gesagt hat
+
+**Fünf Prüfungen konnten nicht rot werden, und alle fünf sind repariert:**
+
+- `test351 §3` zählte Wörter mit `getClientRects()`. Ein Audit hatte
+  `display:none` durch die Zugänglichkeits-Klemme ersetzt; ein geklemmtes
+  Wort HAT ein Rechteck, eines von 1×1 px. Der Abschnitt meldete drei
+  Runden lang dieselbe Zahl (E416).
+- `test413 §1` mass `.zs-flaeche` — mit `min-width:100%` immer voll, ganz
+  gleich wie schmal darin gezeichnet wird.
+- `test411 §3` mass die Zellbreite statt der Randbreite; `td` hat
+  `min-width:90px` und bleibt 90 px, ob der Rand da ist oder nicht.
+- `test417 §2` mass den Abstand zwischen den Einträgen statt zwischen Name
+  und Wert — den ersten hält der Behälter mit seinem eigenen `gap`.
+- `test290` meldete drei echte Namensraum-Funde, alle aus der Arbeit
+  desselben Tages (E422 Nachtrag).
+
+**Und zwei Wächter, die ihre eigene Grenze lernen mussten.** §39 verbietet
+Stil im Quelltext — aber ein Fortschrittsbalken schreibt `style="width:55%"`,
+und das ist ein GERECHNETER Wert. §8 verbietet zweite Kataloge — aber
+`ANSICHT_ZEICHEN` bildet auf Strichzeichen-Kennungen ab, nicht auf Namen.
+Ein Wächter, der bei jedem zweiten Fund danebenliegt, wird nach dem ersten
+Lauf abgeschaltet.
+
+### Und was Bilder gefunden haben, das keine Zahl finden konnte
+
+- Das Zeichen `⃠` vor der KI-Absage war eine KOMBINIERENDE Marke. Im
+  Quelltext sieht es aus wie ein eigenes Zeichen; es legt sich über den
+  folgenden Buchstaben und klebte am „D" von „Dazu" (E418).
+- „Ende30.09.2026" — die Beschriftung klebte am Wert, weil die Regel dafür
+  auf `.card .meta` stand und der Feed kein `.card` hat (E424).
+- Der Feed zeigte nach der ersten Reparatur ALLE dreizehn Spalten in einer
+  Zeile. Eine Karte im Board darf das; ein Strom zum Überfliegen nicht
+  (E424).
+
+---
+
 ---
 
 ## E415–E417 — Was der volle Lauf gefunden hat (5. September 2026)
