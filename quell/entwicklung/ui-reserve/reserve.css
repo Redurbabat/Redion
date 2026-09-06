@@ -1,0 +1,49 @@
+/* ============================================================================
+   res- — die UI-Reserve (Entwicklerseite, nicht Teil der App)
+   ----------------------------------------------------------------------------
+   Eigene feste Farben, mit Absicht: diese Seite wird ohne Redions Stilblätter
+   geöffnet, also gibt es hier keine Marken zu erben. Der Auftrag erlaubt das
+   ausdrücklich für die isolierte Entwicklerseite. In der App hätte das
+   nichts zu suchen (§39).
+   `res-` ist in doku/CSS-NAMENSRAEUME.md vermerkt (als Satz, nicht in der
+   Tabelle — test290 zählt nur quell/schale/stil/), damit niemand das
+   Präfix ein zweites Mal vergibt.
+   ========================================================================== */
+:root{color-scheme:dark;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:#121316;color:#ecedf0;line-height:1.45}
+.res-ui{width:min(1280px,calc(100% - 32px));margin:auto;padding:32px 0 64px}
+.res-kopf{max-width:760px;margin-bottom:28px}
+.res-kopf h1{margin:0 0 8px;font-size:1.9rem;letter-spacing:-.02em}
+.res-kopf p{margin:0 0 8px;color:#b7bac2}
+.res-kicker{text-transform:uppercase;letter-spacing:.08em;font-size:.75rem;color:#9aa0ad}
+.res-hinweis{font-size:.9rem}
+.res-filter{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 20px}
+.res-filter button{min-height:44px;border:1px solid #3a3d45;background:#1b1d22;color:inherit;
+  border-radius:999px;padding:8px 14px;cursor:pointer;font:inherit}
+.res-filter button:hover{border-color:#5a5e69}
+.res-filter button:focus-visible{outline:2px solid #8b8ff5;outline-offset:2px}
+.res-filter button[aria-pressed="true"]{background:#ecedf0;color:#121316;border-color:#ecedf0}
+.res-status{min-height:1.4em;color:#9aa0ad;margin:0 0 14px}
+.res-raster{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px}
+.res-karte{border:1px solid #2b2e35;border-radius:16px;overflow:hidden;background:#181a1f;
+  display:flex;flex-direction:column}
+.res-meta{padding:14px 16px;border-bottom:1px solid #2b2e35}
+.res-meta h2{font-size:1rem;margin:0 0 6px}
+.res-meta p{margin:3px 0;font-size:.85rem;color:#b7bac2}
+.res-notiz{margin-top:8px !important;color:#d5d7dd !important}
+/* Die Entscheidung ist nicht nur Farbe (§38): sie steht als Wort in der
+   Zeile „Redion: …". Der Streifen links ist die Zweitspur fürs Auge. */
+.res-karte[data-status="reserve"],
+.res-karte[data-status="ersetzt"]{border-left:4px solid #6b7080}
+.res-karte[data-status="produktiv"],
+.res-karte[data-status="produktiv-adaptiert"]{border-left:4px solid #8b8ff5}
+.res-karte[data-status="bedingt-produktiv"]{border-left:4px solid #d6a656}
+.res-vorschau{min-height:260px;background:#0d0e11;flex:1}
+/* Weisser Grund im Rahmen: die meisten Originale sind für hell gebaut und
+   bringen keinen eigenen mit. Ein Original, das auf Dunkel unsichtbar ist,
+   sähe hier aus wie ein Fehler der Galerie. */
+.res-vorschau iframe{display:block;width:100%;height:300px;border:0;background:#fff}
+.res-fehlt{min-height:260px;margin:0;display:grid;place-items:center;padding:24px;
+  text-align:center;color:#b7bac2}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.001ms !important;transition-duration:.001ms !important}}

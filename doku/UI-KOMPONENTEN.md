@@ -1,6 +1,83 @@
 # Redion UI-Komponenten — Bestandsaufnahme und Plan
 
-**Stand: 6. September 2026.** Diese Datei ist Schritt 0 des UI-Auftrags:
+**Stand: 6. September 2026, zweiter Durchgang.** Seit dem ersten Durchgang liegt
+der Uiverse-Code vor (Handoff-Paket, 50 Einträge, 20 mit Original) und die
+Studio-Schale ist auf dem Zweig (E440). Die Tabelle unten ist die verbindliche;
+die Karte darunter ist vom ersten Durchgang und bleibt als Begründung stehen.
+
+## Die Tabelle (Auftrag §20)
+
+Quelle-Status sagt, ob der Originalcode vorliegt und wie sicher; Redion-Status
+sagt, was daraus wird; „Gebaut" sagt, ob die produktive Fassung schon steht.
+
+| Nr | Komponente | Autor | Quelle-Status | Redion-Status | Produktiver Ort | Gebaut | Bemerkung |
+|---|---|---|---|---|---|---|---|
+| 01 | Sparkle Generate Site | JkHuger | `chat-original` | RESERVE | — | noch nicht | Sparkle "Generate Site" ist als eigener Knopf ausgeschieden (Auftrag §5). |
+| 02 | Apply Now Button | satyamchaudharydev | `uiverse-galaxy-verifiziert` | PRODUKTIV (angepasst) | Redion-Knopfsystem, Weiter/Öffnen/Anwenden | noch nicht | Pfeil- und Shine-Idee wird ins Knopfsystem übernommen, kein eigener Knopftyp (§4.5). |
+| 03 | Download → Open State Button | nazar-gavrylyk | `nicht-verifiziert` | PRODUKTIV (angepasst) | PDF-Export, Sicherung, Lernpaket | noch nicht | Herunterladen → Wird heruntergeladen → Heruntergeladen → Öffnen, mit Fehlerzustand (§4.16). |
+| 04 | Sun/Moon Theme Switch | RiccardoRapelli | `nicht-verifiziert` | RESERVE | — | noch nicht | Als Haupt-Themensteuerung ausgeschieden; Redion hat acht Schemata und den Studio-Schnellschalter (§5, §12). |
+| 05 | AI Prompt Composer | Cobp | `nur-identifiziert` | ERSETZT | src/bereiche/ki — bestehender Composer in index.html | vorhanden | Redion hat den Composer bereits (Anhang, Eingabe, Senden, Quick-Actions). Nichts zweitbauen (§4.8, §12). |
+| 06 | Liquid Loader | ShaikhWahid99 | `nicht-verifiziert` | PRODUKTIV (angepasst) | längere unbestimmte Verarbeitung | noch nicht | Das Handoff nannte den Eintrag "uiverse-seite-verifiziert", lieferte aber keinen Code — nur die Notiz. Ohne Datei ist der Status nicht haltbar (Auftrag §0.10); test426 fand den Widerspruch. Nur für Vorgänge über einer Sekunde (§4.20). |
+| 07 | File Explorer Folder Button | simontheonlyone | `uiverse-galaxy-verifiziert` | BEDINGT | Bibliothek, leere Dateien-Ansicht (Mikrointeraktion) | noch nicht | Kein zweiter Navigationsknopf — Studio hat "Dokumente" (§4.32). |
+| 08 | Logout Button | vinodjangid07 | `uiverse-galaxy-verifiziert` | PRODUKTIV (angepasst) | Einstellungen → Konto → Abmelden | noch nicht | Nur dort (§4.30). |
+| 09 | Animated Gesture Hand | Pradeepsaranbishnoi | `nicht-verifiziert` | PRODUKTIV (angepasst) | Onboarding/Rundgang (Lasso, Ziehen, Zeichnen) | noch nicht | Wenige Wiederholungen, dann Stopp (§4.28). |
+| 10 | Glow / Shimmer Button | mrhyddenn | `nur-identifiziert` | RESERVE | — | noch nicht | Glow/Shimmer als eigener Knopf ausgeschieden (§5). |
+| 11 | Server / Data SVG | Juanes200122 | `chat-original` | PRODUKTIV (angepasst) | Verbinden / Wolke / Abgleich | noch nicht | Zustände offline·bereit·synchronisiert·läuft·fehler; nur bei echtem Abgleich animieren; SVG-IDs prüfen (§4.18). |
+| 12 | Runner / Character Loader | anand_4957 | `nicht-verifiziert` | RESERVE | — | noch nicht | Runner Loader ausgeschieden (§5). |
+| 13 | Holographic Toggle | reglobby | `nicht-verifiziert` | BEDINGT | nur ein echter Sondermodus (Simulation, Prüfmodus) | noch nicht | Keinen Modus erfinden, damit der Schalter etwas zu schalten hat (§4.14). |
+| 14 | Minimal Text Input | Praashoo7 | `uiverse-galaxy-verifiziert` | PRODUKTIV (angepasst) | Umbenennen, Konto, einfache Felder | noch nicht | Formular-Basis, nicht 1:1; an Redions Eingabefelder anpassen (§4.31). |
+| 15 | Aurora / Gradient Start Button | dexter-st | `nicht-verifiziert` | PRODUKTIV (angepasst) | Lernen/Prüfung/Simulation starten | noch nicht | Nur grosse Startaktionen (§4.25). |
+| 16 | Folder-Card Mini File Browser | byllzz | `nicht-verifiziert` | PRODUKTIV (angepasst) | Bibliothek / Dokumente (grosser Datei-Browser) | noch nicht | Kein Demo-Dateisystem; echte Ablage (§4.2). |
+| 17 | Glass Radio / Segmented Control | chase2k25 | `nicht-verifiziert` | ERSETZT | src/schale/bedienung/segment.ts (E439) | E439 `segment.ts` | Der Umschalter ist in Redion-Bauart gebaut, mit Radiogruppen-Semantik und Tastatur; das Original war nicht verifiziert (§4.4). |
+| 18 | Geometric Triangle / Mask Loader | andrew-manzyk | `nicht-verifiziert` | RESERVE | — | noch nicht | Geometric Triangle Loader ausgeschieden (§5). |
+| 19 | 10-Segment Spinner | PriyanshuGupta28 | `uiverse-galaxy-verifiziert` | BEDINGT | KONFLIKT mit E46 — siehe doku/UI-KOMPONENTEN.md | noch nicht | Der Auftrag will ihn als einzigen Standardspinner; E46 hat Skelette statt Kreisel entschieden. Redur entscheidet. |
+| 20 | Compact Menu Home/Files/Plans/Settings | mymiato / mymiamo | `nicht-verifiziert` | RESERVE | — | noch nicht | Home/Files/Plans/Settings-Menü ausgeschieden; Studio hat die groben Wege (§5). |
+| 21 | 3D Rotating / Fanned Card Carousel | ilkhoeri | `nicht-verifiziert` | PRODUKTIV (angepasst) | Vorlagen, Lernsets, Heft-Deckel | noch nicht | Kein Autoplay; Maus/Touch/Tastatur; reduced-motion (§4.27). |
+| 22 | 4-Circle Loader | AbanoubMagdy1 | `uiverse-galaxy-verifiziert` | RESERVE | — | noch nicht | 4-Circle Loader ausgeschieden (§5). |
+| 23 | Jimu Primary Loading | Donewenfu | `uiverse-galaxy-verifiziert` | RESERVE | — | noch nicht | Jimu Loader ausgeschieden (§5). |
+| 24 | Glass Fanned Action Cards | codebykay101 | `uiverse-galaxy-verifiziert-struktur` | PRODUKTIV (angepasst) | Lernwelt (Lernen·Üben·Prüfen), Elektro, KI | noch nicht | Echte Knöpfe, deutsche Texte; drei lange Icon-Pfade im Handoff gekürzt (§4.26). |
+| 25 | Sparkle KI Toggle | MuhammadHasann | `nicht-verifiziert` | BEDINGT | nur wenn ein echter Zustand "KI-Unterstützung an/aus" existiert | noch nicht | Sonst Reserve; Partikel reduzieren (§4.12). |
+| 26 | Generate → Generating Sparkle Button | dexter-st | `nicht-verifiziert` | PRODUKTIV (angepasst) | KI-Aktionen: Karteikarten, Fragen, Zusammenfassung | noch nicht | bereit → arbeitet → fertig → fehler; Mehrfachauslösung sperren (§4.9). |
+| 27 | Radial / Horizontal Plus Quick Menu | risabbir | `nicht-verifiziert` | PRODUKTIV (angepasst) | kontextuelle Schnellaktionen (Einfügen, KI, Block) | noch nicht | NICHT als zweiter Studio-Plusknopf; Klick öffnet, Escape/Aussenklick schliesst (§4.6). |
+| 28 | Printer Process Card | spotift_5948 | `nicht-verifiziert` | PRODUKTIV (angepasst) | src/bereiche/pdf — Dokumentmodus, Drucken | noch nicht | Zustände bereit·vorbereiten·rendern·speichern·fertig·fehler; nur echter Zustand (§4.17). |
+| 29 | Compact Folder Card | Nykolas94 | `nicht-verifiziert` | PRODUKTIV (angepasst) | Bibliothek, Notizhefte, zuletzt verwendet | noch nicht | Übersichts-Kachel, ersetzt weder Baum noch Browser (§4.3). |
+| 30 | Gooey Liquid / Blob Filter | prikshit_1236 | `nicht-verifiziert` | RESERVE | — | noch nicht | Gooey Blob vorerst Reserve (§5). |
+| 31 | Orb Option Row | vinh_8995 | `nicht-verifiziert` | PRODUKTIV (angepasst) | KI-Quellen, Elektro-Optionen (Titel + Untertitel + Schalter) | noch nicht | Nur für wichtige Optionen (§4.13). |
+| 32 | Billiard-Table Switch | chase2k25 | `nicht-verifiziert` | RESERVE | — | noch nicht | Billiard Toggle ausgeschieden (§5). |
+| 33 | Juggler Loader | john_2426 | `nicht-verifiziert` | RESERVE | — | noch nicht | Juggler zunächst Reserve; nur bei beschlossener spielerischer Lernwartezeit (§5). |
+| 34 | Device / Gamepad Power Control | byllzz | `nicht-verifiziert` | PRODUKTIV (angepasst) | Elektro — Simulation/Messung (AUS·BEREIT·LÄUFT·PAUSIERT·FEHLER) | noch nicht | Nur echte Simulations-/Messlogik (§4.29). |
+| 35 | Radial Share Orbit Menu | maxwell_2390 | `nicht-verifiziert` | PRODUKTIV (angepasst) | Teilen/Export (PDF, Bild, Text, Drucken, Link, E-Mail, System) | noch nicht | Nur echte verfügbare Aktionen (§4.7). |
+| 36 | 7-Circle Gradient Loader | anand_4957 | `nicht-verifiziert` | RESERVE | — | noch nicht | 7-Circle Gradient als globaler Loader ausgeschieden (§5). |
+| 37 | Candlestick / Analysis Animation | bilal_9731 | `nicht-verifiziert` | PRODUKTIV (angepasst) | Elektro-Messwerte, Statistik — "Analyseindikator" | noch nicht | Dekorative Animation nie als echte Messdaten beschriften (§4.24). |
+| 38 | Tree / File Explorer | ashif_6672 | `chat-original` | PRODUKTIV (angepasst) | Seitenleiste-Hierarchie, Notizhefte, Wissen — höchste Priorität | noch nicht | role=tree, Pfeiltasten, Zustand erhalten, keine eigene Datenhaltung (§4.1). |
+| 39 | Google Meet Glass SVG | Chrisllan02 | `nicht-verifiziert` | BEDINGT | nur echte Google-Meet-/Kalenderintegration | noch nicht | Sonst Reserve; Providerfarben nicht ändern (§4.34). |
+| 40 | Gemini Glass SVG | Chrisllan02 | `nicht-verifiziert` | BEDINGT | nur wenn Gemini als Anbieter wählbar ist | noch nicht | Nie als Redion-KI-Logo (§4.33). |
+| 41 | Upload Status Card | egehan_1415 | `chat-original-snippet` | PRODUKTIV (angepasst) | Bibliothek, KI-Anhang, Import — Standard für Übertragungen | noch nicht | Zustände wartet·hochladen·fertig·fehler·abgebrochen; echtes <progress> (§4.15). Die Daten gibt es schon: dateien/ablage.ts. |
+| 42 | Minimal Liquid Loader | egehan_1415 | `chat-original-snippet` | PRODUKTIV (angepasst) | längere unbestimmte Verarbeitung (mit Nr. 6 zusammenführen) | noch nicht | Zwei Liquid-Originale — eines wird die Basis, das andere Reserve (§4.20). |
+| 43 | Circuit / Ask AI → Thinking Button | dexter-st | `nicht-verifiziert` | PRODUKTIV (angepasst) | grosse KI-Analyse, Elektro-Schaltungsanalyse | noch nicht | Spezialkomponente; Leiterbahnen nur bei echter Verarbeitung (§4.11). |
+| 44 | 6-Circle + Loading Text | santhosh_4929 | `chat-original-snippet` | RESERVE | — | noch nicht | 6-Circle Loader ausgeschieden (§5). |
+| 45 | 3-Spark Geometric KI Loader | andrew-manzyk | `chat-original` | ERSETZT | src/schale/ueberlagerung/orb.ts (E403) — Denkkugel | vorhanden (E403) | Redion hat eine KI-Aktivitätsanzeige, die Sichtbarkeit, reduced-motion und Zustandstext schon beherrscht. Der Spark-Effekt kann sie ergänzen, nicht ersetzen (§4.10, §12). |
+| 46 | Gear / Process Loader | faelpatrick | `chat-original` | PRODUKTIV (angepasst) | Elektro, Konvertierung — Zahnrad | noch nicht | #067c40 → currentColor; feste 1280pt-Masse entfernen; "Waiting More Faster" nicht übernehmen (§4.21). |
+| 47 | 3D 8-Side Loader | 20essentials | `chat-original-snippet` | RESERVE | — | noch nicht | 3D 8-Side Loader ausgeschieden (§5). |
+| 48 | Black-Hole / Orbit Loader | necatimertmetin | `chat-original-snippet` | PRODUKTIV (angepasst) | Wissen, RAG, semantische Suche — Orbit | noch nicht | Nur dort; nie allgemeines Laden (§4.23). |
+| 49 | 15-Segment Aro Loader | 20essentials | `chat-original-snippet` | RESERVE | — | noch nicht | 15-Segment Aro Loader ausgeschieden (§5). |
+| 50 | Pixel / Raster Loader | 20essentials | `chat-original-snippet` | PRODUKTIV (angepasst) | Datenbank-Indexierung, Blockverarbeitung — Pixel | noch nicht | --wh-number bleibt, wenn das Original es so nutzt (§4.22). |
+
+
+**Wo die Originale liegen:** `quell/entwicklung/ui-reserve/komponenten/NN-name/original.html`
+— unverändert, nur für Einträge mit verifiziertem Quelle-Status. Die Galerie:
+`quell/entwicklung/ui-reserve/index.html` (braucht `npm run server`).
+
+**Ein Widerspruch im Handoff, den `test426` fand:** Nr. 06 „Liquid Loader" war
+als `uiverse-seite-verifiziert` eingetragen, ohne dass Code dabeilag. Er steht
+jetzt als `nicht-verifiziert` — nichts erfunden.
+
+---
+
+## Die Karte vom ersten Durchgang
+
+Diese Datei war Schritt 0 des UI-Auftrags:
+
 was gibt es schon, was fehlt wirklich, und wo widerspricht der Auftrag
 einer Entscheidung, die Redion bereits getroffen hat.
 
@@ -110,7 +187,12 @@ Elektro-Modi. Die Schema-Wahl bleibt, wie sie ist.
 Der „Sun/Moon-Toggle", der laut Auftrag in die Reserve soll, **existiert
 nicht** — es gibt nichts zu verschieben.
 
-### 3. Der Uiverse-Code liegt mir nicht vor
+### 3. Der Uiverse-Code liegt mir nicht vor — ERLEDIGT am 6. September
+
+Redur hat das Handoff-Paket geschickt: 20 Originale, 30 als Notiz ohne Code.
+Alles Weitere in diesem Abschnitt beschreibt den Stand davor.
+
+#### Der ursprüngliche Absatz
 
 Abschnitt 3 und 4 verlangen, zwölf ausgeschiedene Komponenten
 *vollständig mit Code* in die Reserve zu legen: 4-Circle, 6-Circle,

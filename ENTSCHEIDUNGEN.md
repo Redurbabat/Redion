@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-433 Entscheidungen, E1 bis E439. Die Nummer ist die Ordnung: eine Entscheidung
+434 Entscheidungen, E1 bis E440. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -497,6 +497,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E437** — Eine Messung mit zu wenig Luft für ihre eigene Rundung
 * **E438** — Die dritte Richtung: nur nachsehen
 * **E439** — Der Umschalter, und die Karte davor
+* **E440** — Das Studio kommt auf den Zweig, und die UI-Reserve ist ein Archiv
 
 ---
 
@@ -35485,3 +35486,117 @@ Dateien: `src/schale/bedienung/segment.ts` (neu),
 `quell/schale/stil/bausteine.css`, `doku/UI-KOMPONENTEN.md` (neu),
 `doku/CSS-NAMENSRAEUME.md`, `index.html`, `src/dienst/sw.ts`, `bilder.mts`,
 `pruefungen/lauf/test425.mts` (neu).
+
+---
+
+E440 — Das Studio kommt auf den Zweig, und die UI-Reserve ist ein Archiv
+--------------------------------------------------------------------------
+
+ENTSCHEIDUNG, in zwei Teilen: Redurs Studio-Zweig wird zusammengeführt
+(Teil 1), und die UI-Reserve entsteht unter `quell/entwicklung/ui-reserve/`
+als isolierte Entwicklerseite, die nie in der App landet (Teil 2).
+
+TEIL 1 — DER MERGE. Redur baute auf dem Laptop eine Studio-Schale und
+pushte sie als `studio-vom-laptop`. Der neue UI-Auftrag setzt sie voraus.
+Der Zweig ging sauber von `main` aus; drei Konflikte, alle in erzeugten
+Dateien. Zwei Dinge fehlten und stehen im Commit: der GRUNDSTOCK (§28,
+sonst kein Studio offline) und zwei Reparaturen an Redurs Prüflauf, der
+auf seinem eigenen Zweig rot war — kein `flush` vor dem Neuladen, und ein
+Warten auf das Element statt auf den Start. Beides Prüflauf, nichts Produkt.
+
+Ein Klick-Timeout im PDF-Modus bleibt, und zwar auch auf dem
+unveränderten Zweig. Er steht hier als offen, nicht als gelöst.
+
+TEIL 2 — DIE RESERVE, UND WARUM SIE UNTER `quell/` LIEGT. Der Auftrag
+schlug `entwicklung/ui-reserve/` mit einem handgeschriebenen `reserve.js`
+vor. Zwei Regeln von Redion stehen dagegen, und beide gewinnen — der
+Auftrag sagt es selbst („aktuelle Architektur gewinnt"):
+
+  · §54/E28: Es entsteht kein neues JavaScript. `reserve.js` ist deshalb
+    aus `src/entwicklung/ui-reserve/reserve.ts` erzeugt. `test109` hätte
+    eine handgeschriebene `.js` rot gemacht.
+  · §54.2: Was der Browser lädt, liegt unter `quell/`; Quelle unter `src/`.
+    Also `quell/entwicklung/ui-reserve/` für Galerie, Stil, Katalog und
+    Originale, `src/entwicklung/ui-reserve/reserve.ts` als Quelle. Das
+    braucht in `tsconfig.bauen.json` eine Zeile und in `test105`/`test109`
+    keine Ausnahme.
+
+DIE DREI REGELN DES ARCHIVS, und jede hat einen Prüfpunkt (`test426`):
+
+  1. Es ist keine Tür. Nicht in `index.html`, nicht im GRUNDSTOCK, in
+     keinem Register, nicht in der Einzeldatei. Die Originale tragen
+     `.button`, `.loader`, `.container` — in der App wären sie Gift.
+  2. Es erfindet nichts. 30 von 50 Einträgen liegen ohne Code vor. Ihre
+     Karte sagt „Originalcode noch nicht verifiziert". Ein Ordner, dessen
+     Eintrag `nicht-verifiziert` sagt, darf keine `original.html` haben —
+     sonst behauptet die Datei, was der Katalog verneint.
+  3. Es verändert nichts. Kein Redion-Präfix in einer `original.html`,
+     kein Skript darin. Die Originale laufen in `<iframe sandbox="">`.
+
+WAS DAS LESEN DER ORIGINALE ERGAB — zwei Dinge, die der Auftrag
+vorhergesagt hat, und die gemessen stimmen:
+
+  · Der KI-Spark (Nr. 45) trägt `shine`, `mask` und `gradient-1…5` je
+    DREIMAL. Zwei Instanzen auf einer Seite teilen sich Masken. Die
+    produktive Fassung muss die IDs je Instanz vergeben oder das SVG
+    einmal definieren und referenzieren.
+  · Der Baum (Nr. 38) ist ein Checkbox-Hack: `<input type="checkbox">`
+    plus `<label for>`. Der Zustand lebt im DOM, nicht in Redion. Die
+    produktive Fassung bekommt `role="tree"` und echte Knöpfe.
+
+DIE ENTSCHEIDUNG JE KOMPONENTE steht in `katalog.json` und in jeder
+`notizen.md`, abgeleitet aus Abschnitt 4 und 5 des Auftrags, nicht
+geraten: 26 produktiv-adaptiert, 15 Reserve, 6 bedingt, 3 ersetzt. Die
+drei Ersetzten sind die, die Redion schon hat — Composer (index.html),
+Denkkugel (E403), Umschalter (E439).
+
+Und ein Konflikt bleibt ein Konflikt: der 10-Segment-Spinner (Nr. 19)
+steht als `bedingt-produktiv` mit dem Hinweis auf E46. Redur entscheidet.
+
+PRÜFUNG: `test426`, PORT 9547 — fünf Abschnitte, siehe oben. Dazu
+`test105`, `test109` (die Reserve darf keine handgeschriebene `.js`
+sein), `test290` (`res-` im Verzeichnis), `test143`.
+
+GEGENPROBEN: siehe Suite-Kopf; Ergebnisse folgen in Teil 3.
+
+Dateien: `src/entwicklung/ui-reserve/reserve.ts` (neu),
+`quell/entwicklung/ui-reserve/**` (neu, 50 Ordner), `tsconfig.bauen.json`,
+`doku/CSS-NAMENSRAEUME.md`, `pruefungen/lauf/test426.mts` (neu),
+`pruefungen/lauf/test424.mts`, `src/dienst/sw.ts`.
+
+GEGENPROBEN, gelaufen:
+  · A — die Reserve in den GRUNDSTOCK → §1 „Der GRUNDSTOCK kennt sie nicht" rot.
+  · B — eine `original.html` in den Ordner eines nicht-verifizierten
+    Eintrags → §2 „Kein unverifizierter Eintrag trägt ein Original" rot.
+  · C — zuerst nur `ZEIGBAR` um `nicht-verifiziert` erweitert: BLIEB GRÜN.
+    Die Unverifizierten haben `original: null`, der Pfad sperrt vor der
+    Stufe. Eine Gegenprobe, die nicht rot wird, beweist nichts (§55.2) —
+    also C': Katalog-Pfad UND `ZEIGBAR` gestrichen → drei Punkte rot,
+    „21 Rahmen, 20 verifiziert". Der Wächter hält, und er hält doppelt.
+
+UND EIN FUND DURCH DEN WÄCHTER, noch bevor er fertig war: Nr. 06 „Liquid
+Loader" stand im Handoff-Katalog als `uiverse-seite-verifiziert`, aber das
+Paket enthielt keinen Code dafür — nur die Notiz. Der Punkt „Jeder
+verifizierte Eintrag HAT ein Original" war beim ersten Lauf rot. Der Eintrag
+steht jetzt als `nicht-verifiziert`; erfunden wurde nichts. Beim ersten Wurf
+stürzte der Lauf an genau dieser Stelle ab (`readFileSync('…/null')`) statt
+rot zu werden — ein Wächter, der bei seinem ersten Fund abstürzt, hat den
+Fund nur halb gemacht. Repariert.
+
+ZU REDURS PRÜFLAUF, gemessen statt vermutet — und einmal falsch gelesen: nach
+den zwei Reparaturen laufen 19 Punkte grün. Dann klickt der Test
+`[data-document-action="regal"]` (da, sichtbar, klickbar) und danach
+`[data-studio-weg="pdf"]`, den Filter „Alle PDFs" der Studio-Bibliothek. Der
+zweite Klick läuft in den Timeout. Erster Schluss war „den Knopf gibt es
+nicht" — falsch: `bibliothek.ts:554` zeichnet ihn, `pdf` ist eine gültige
+Kennung. Die Sonde sagt, was wirklich fehlt: nach dem Klick auf „regal" ist
+die Studio-Bibliothek NICHT offen — `.bib-studio-wege` steht 0-, 800- und
+2000 ms später nicht im DOM. Und warum: `document-mode.ts:1097` löst bei
+„regal" den Navigationseintrag `bibliothekOben` aus, also `Bibliothek.oeffne()`
+— das alte Regal „Dokumente". Die Studio-Wege (`studioNavigation()` in
+`bibliothek.ts:544`) zeichnet dieser Weg nicht. Der Test erwartet, dass
+„regal" aus dem PDF-Modus in die STUDIO-Bibliothek führt; das tut er nicht. Auf dem
+unveränderten Studio-Zweig genauso. Das ist Redurs Baustelle — Test oder
+Weg —, sie steht hier, nicht im Commit.
+
+Bild angesehen (§55.3): `bilder/ui-reserve.png` und `ui-reserve-lader.png`.
