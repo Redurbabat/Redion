@@ -35449,7 +35449,9 @@ Umschaltern auf einer Seite zwölf Anschläge für nichts.
 Und die Pfeiltaste WÄHLT, sie bewegt nicht nur den Fokus. So steht es im
 ARIA-Muster, und es ist das, was ein Mensch erwartet.
 
-PRÜFUNG: `test424`, 25 Punkte, PORT 9546.
+PRÜFUNG: `test425`, 25 Punkte, PORT 9546. (Hiess beim Bau `test424`; umbenannt,
+weil Redurs Studio-Zweig gleichzeitig eine `test424` mitbrachte — seine
+behält den Namen, E440.)
 
 GEGENPROBEN, drei, alle gelaufen:
   · Das `waehlen(…)` aus dem Tastendruck genommen → vier Punkte rot, und
@@ -35482,4 +35484,4 @@ ist.
 Dateien: `src/schale/bedienung/segment.ts` (neu),
 `quell/schale/stil/bausteine.css`, `doku/UI-KOMPONENTEN.md` (neu),
 `doku/CSS-NAMENSRAEUME.md`, `index.html`, `src/dienst/sw.ts`, `bilder.mts`,
-`pruefungen/lauf/test424.mts` (neu).
+`pruefungen/lauf/test425.mts` (neu).

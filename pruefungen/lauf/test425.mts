@@ -1,4 +1,4 @@
-/* Suite 424 — Der Umschalter: eine Wahl, mit der Tastatur bedienbar (E439)
+/* Suite 425 — Der Umschalter: eine Wahl, mit der Tastatur bedienbar (E439)
  * ============================================================================
  * BEFUND. Redion hatte fuer „Liste oder Raster", „Aufbauen · Simulieren ·
  * Messen" und jede andere Wahl zwischen wenigen sich ausschliessenden
@@ -25,7 +25,7 @@
  *   §6 → die `:focus-visible`-Regel entfernen.
  * Alle drei gelaufen, Ergebnisse im Bericht zu E439.
  *
- *   node pruefungen/lauf/test424.mts
+ *   node pruefungen/lauf/test425.mts
  * ==========================================================================*/
 import { chromium } from 'playwright';
 import http from 'node:http';
