@@ -1,0 +1,45 @@
+/* Document workbench: controls use material; the original paper stays opaque. */
+.document-studio{border-color:var(--line);border-radius:var(--radius-xl);box-shadow:none}
+.document-studio .document-topbar{padding:8px 12px;gap:12px;min-height:52px;background:var(--bg-card);flex-shrink:0}
+.document-navigation,.document-top-actions,.document-pagination,.document-zoom-group{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.document-studio .document-topbar button{background:transparent;border-color:transparent;border-radius:var(--radius-lg);color:var(--text-dim);font-size:12px}
+.document-studio .document-topbar button:hover{background:var(--bg-hover);color:var(--text)}
+.document-studio .document-topbar button[aria-expanded="true"]{color:var(--accent-text);background:var(--accent-schwach)}
+.document-studio .document-title{text-align:center;font-size:13px;padding-inline:6px}
+.document-commandbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;min-height:52px;padding:7px 16px;border-bottom:1px solid var(--line);background:var(--bg-side)}
+.document-commandbar button{min-height:34px;padding:6px 12px;border-radius:var(--radius-md);font-size:12px;white-space:nowrap}
+.document-commandbar button:hover{background:var(--bg-hover)}
+.document-mode-switch{display:flex;padding:3px;border-radius:var(--radius-lg);background:var(--bg-input);border:1px solid var(--line)}
+.document-mode-switch button[aria-pressed="true"]{background:var(--bg-card);color:var(--accent-text);box-shadow:var(--studio-highlight),0 1px 4px #00000015;font-weight:600}
+.document-position{font-size:12px;font-variant-numeric:tabular-nums;min-width:82px;text-align:center;margin:0}
+.document-zoom-group input{width:100px;accent-color:var(--accent)}
+.document-zoom-label{font-variant-numeric:tabular-nums}
+.document-studio button:focus-visible,.document-center:focus-visible{outline:2px solid var(--accent-text);outline-offset:2px}
+.document-studio button:disabled{opacity:.45;cursor:not-allowed}
+.document-studio .document-center{background:var(--bg);scrollbar-gutter:stable}
+.document-studio .blatt-papier{box-shadow:var(--studio-paper-shadow);border-radius:3px}
+.document-studio .document-thumbnail{border-radius:var(--radius-lg)}
+.document-studio .document-thumbnail.is-selected{border-color:var(--accent);background:var(--accent-schwach)}
+.document-studio .document-panel-header{padding:8px 4px;font-size:12px}
+.document-studio .document-inspector{padding:16px;background:var(--bg-side)}
+.document-studio .document-inspector button{border-radius:var(--radius-lg);font-size:12px;min-height:38px}
+.document-studio .document-section-title{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin:24px 0 10px}
+.document-studio .blatt-werk{border:1px solid var(--studio-line);border-radius:var(--radius-xl);background:var(--studio-glass);box-shadow:var(--studio-highlight),0 5px 15px #00000010;margin:0 auto 14px;padding:6px;max-width:100%}
+.document-studio[data-document-tools="closed"] .blatt-reihe{display:none}
+.document-studio[data-document-tools="closed"] .blatt-papier{cursor:default}
+@supports(backdrop-filter:blur(8px)){.document-studio .blatt-werk{backdrop-filter:blur(8px)}}
+@media(max-width:1100px){.document-zoom-group input{width:70px}.document-commandbar{padding-inline:10px;gap:8px}}
+@media(max-width:760px){
+  .document-studio .document-topbar{display:flex;flex-wrap:wrap;gap:6px;padding:6px 8px}
+  .document-navigation{flex:1}.document-top-actions{margin-left:auto}
+  .document-studio .document-title{order:3;flex-basis:100%;text-align:left;padding:3px 6px;font-size:12px}
+  .document-studio .document-topbar button{width:auto;min-height:44px;padding-inline:8px}
+  .document-commandbar{flex-wrap:wrap;padding:6px 8px;gap:6px}
+  .document-mode-switch{flex:1;justify-content:center}.document-pagination{margin-left:auto}
+  .document-commandbar button{min-height:44px;padding-inline:10px}
+  .document-zoom-group{width:100%;justify-content:center;border-top:1px solid var(--line-soft);padding-top:3px}
+  .document-zoom-group input{flex:1;max-width:180px}.document-zoom-group button{min-height:36px}
+  .document-studio .document-inspector,.document-studio .document-thumbnails{border-radius:var(--radius-xl);box-shadow:var(--studio-elevation);max-height:calc(100% - 16px)}
+  .document-studio .blatt-werk{border-radius:var(--radius-lg);margin-bottom:8px}
+}
+@media(prefers-reduced-transparency:reduce){.document-studio .blatt-werk{background:var(--bg-card);backdrop-filter:none}}

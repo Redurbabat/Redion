@@ -71,6 +71,9 @@
      darin hängt an `body[data-schale="premium"]` — das Attribut steht unten
      fest am body und ist der Notausstieg, solange die Schale entsteht. -->
 <link rel="stylesheet" href="quell/schale/stil/premium.css">
+<link rel="stylesheet" href="quell/schale/stil/studio.css">
+<link rel="stylesheet" href="quell/schale/stil/bibliothek-studio.css">
+<link rel="stylesheet" href="quell/schale/stil/pdf-studio.css">
 
 <!-- =========================================================================
      ANMELDE-FENSTER
@@ -302,6 +305,21 @@
      HAUPTBEREICH
      ====================================================================== -->
 <main id="main" role="main">
+  <header id="studio-bar" aria-label="Redion Schnellzugriff">
+    <button id="studio-home" class="studio-brand" title="Dokumente öffnen">
+      <span class="studio-monogram" aria-hidden="true">R</span><span>redion<span class="studio-wordmark">STUDIO</span></span>
+    </button>
+    <button id="studio-nav" class="studio-icon" aria-label="Navigation kompakt anzeigen" aria-pressed="false" title="Navigation kompakt anzeigen"><span data-sym="panelL"></span></button>
+    <div class="studio-shortcuts" aria-label="Arbeitsfläche">
+      <button id="studio-documents">Dokumente</button>
+      <button id="studio-notebooks">Notizhefte</button>
+    </div>
+    <button id="studio-search" class="studio-search"><span data-sym="search"></span><span>Suchen &amp; finden</span><kbd>Strg P</kbd></button>
+    <button id="studio-theme" class="studio-icon studio-theme" aria-label="Farbschema wechseln" title="Hell / Dunkel"><span class="studio-orb" aria-hidden="true"></span></button>
+    <button id="studio-import" class="studio-action" data-studio-import><span data-sym="plus"></span><span>PDF öffnen</span></button>
+    <button id="studio-create" class="studio-icon" aria-label="Neu erstellen" title="Neu erstellen"><span data-sym="plus"></span></button>
+  </header>
+  <div id="studio-divider" role="separator" aria-label="Navigationsbreite" aria-orientation="vertical" aria-valuemin="148" aria-valuemax="260" aria-valuenow="184" tabindex="0"></div>
 
   <!-- DAS MENÜBAND (E210) — GANZ OBEN SEIT E236.
        Es stand bisher UNTER der Kopfzeile. Redur will es dort, wo es an
@@ -631,6 +649,7 @@
 <script src="quell/schale/aufbau/menueband.js" defer></script>
 <script src="quell/schale/aufbau/backstage.js" defer></script>
 <script src="quell/schale/aufbau/context-rail.js" defer></script>
+<script src="quell/schale/aufbau/studio.js" defer></script>
 <script src="quell/schale/aufbau/inhaltsflaeche.js" defer></script>
 <script src="quell/schale/aufbau/schale.js" defer></script>
 <script src="quell/start.js" defer></script>

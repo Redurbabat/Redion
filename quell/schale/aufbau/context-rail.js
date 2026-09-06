@@ -483,6 +483,11 @@ const Kontextkante = (() => {
         const s = document.createElement('span');
         s.dataset['sym'] = String(k.zeichen || 'dots');
         b.appendChild(s);
+        const beschriftung = document.createElement('span');
+        beschriftung.className = 'k-beschriftung';
+        beschriftung.textContent = String(k.name);
+        beschriftung.setAttribute('aria-hidden', 'true');
+        b.appendChild(beschriftung);
         b.addEventListener('click', () => {
             /* Zweiter Klick auf denselben Knopf schliesst — wie überall. */
             if (typeof k.liefern === 'function' || k.id === 'seiten') {
