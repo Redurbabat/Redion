@@ -81,6 +81,7 @@
     "src/fremd/**/*.ts",
     "src/kern/**/*.ts",
     "src/schale/**/*.ts",
+    "src/entwicklung/**/*.ts",
     "src/register/**/*.ts",
     "src/*.ts"
   ]

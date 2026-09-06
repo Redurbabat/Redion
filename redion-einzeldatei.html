@@ -14218,6 +14218,59 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 body.iblatt-auf .menu-grund{z-index:790}
 body.iblatt-auf .menu{z-index:794}
 
+/* ============================================================================
+   RU- — DER UMSCHALTER (E439)
+   ----------------------------------------------------------------------------
+   `ru-` heisst „Redion UI": gemeinsame Bedienbauteile, die keinem Bereich
+   gehoeren. Der Auftrag schlug `.redion-ui-*` vor; Redion arbeitet mit
+   Praefixen von zwei bis vier Buchstaben (163 Stueck), und der Zweck der
+   Regel ist Kapselung, nicht Laenge. Eingetragen in
+   doku/CSS-NAMENSRAEUME.md wie jeder andere.
+
+   DIE MARKIERUNG IST NICHT NUR FARBE (Paragraph 38). Die gewaehlte Flaeche
+   traegt Grund UND Rahmen UND Schriftgewicht — wer Farben nicht
+   unterscheidet, sieht trotzdem, was gilt.
+   ==========================================================================*/
+.ru-seg{
+  display:inline-flex; align-items:stretch; gap:2px;
+  padding:2px; border:1px solid var(--line); border-radius:9px;
+  background:var(--bg-side); max-width:100%
+}
+.ru-seg-wahl{
+  display:inline-flex; align-items:center; justify-content:center; gap:6px;
+  min-height:var(--touch-min); padding:0 12px; min-width:0;
+  border:1px solid transparent; border-radius:7px;
+  background:none; color:var(--text-dim);
+  font-size:13.5px; font-weight:560; white-space:nowrap;
+  transition:background var(--motion-fast,120ms) ease,
+             color var(--motion-fast,120ms) ease
+}
+.ru-seg-wahl:hover{ color:var(--text) }
+.ru-seg-wahl[aria-checked="true"]{
+  border-color:var(--line); background:var(--bg-card); color:var(--text);
+  font-weight:700; box-shadow:0 1px 2px rgba(0,0,0,.06)
+}
+/* DER FOKUS MUSS SICHTBAR SEIN (Paragraph 38). Bei „roving tabindex" traegt
+   nur ein Knopf den Fokus, und wer mit der Tastatur kommt, muss ihn finden.
+   `:focus-visible` und nicht `:focus`: mit der Maus soll kein Ring
+   aufblitzen. */
+.ru-seg-wahl:focus-visible{
+  outline:2px solid var(--accent); outline-offset:2px
+}
+.ru-seg-zeichen{display:inline-flex; flex:none}
+.ru-seg-zeichen svg{width:15px; height:15px}
+/* Die Kurzform steht bereit und ist am Rechner aus. Der Tausch geschieht
+   im Stil, nicht in JavaScript: eine Breite, die von einem Ereignis
+   abhaengt, ist beim ersten Zeichnen falsch. */
+.ru-seg-kurz{display:none}
+@media(max-width:520px){
+  .ru-seg-wahl{padding:0 9px}
+  /* Nur tauschen, wo es eine Kurzform GIBT — sonst verschwaende der
+     Umschalter seinen Namen und zeigte gar nichts. */
+  .ru-seg-wahl:has(.ru-seg-kurz) .ru-seg-name{display:none}
+  .ru-seg-wahl:has(.ru-seg-kurz) .ru-seg-kurz{display:inline}
+}
+
 </style>
 <!-- DIE PREMIUM-SCHALE (E272). Sie steht ABSICHTLICH als letzte: sie ordnet,
      was die Blätter darüber gebaut haben, und muss deshalb gewinnen. Alles
@@ -17312,7 +17365,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 425, inhalt: '2ae6b41f37a9e031', gebaut: '2026-09-06T09:21:46.198Z' };
+const Stand = { fassung: 426, inhalt: '9d3eec3293cc761b', gebaut: '2026-09-06T09:54:51.905Z' };
 window.Stand = Stand;
 
 </script>
@@ -38390,6 +38443,175 @@ const Orb = (() => {
     return { setzen, malen };
 })();
 window.Orb = Orb;
+
+</script>
+<script>
+/* ===== quell/schale/bedienung/segment.js ===== */
+"use strict";
+/* ============================================================================
+ * schale/bedienung/segment.ts — der Umschalter für zwei bis vier Dinge
+ * ----------------------------------------------------------------------------
+ * ERZEUGT DARAUS WIRD `quell/schale/bedienung/segment.js`.
+ * Die Quelle ist DIESE Datei. `npm run bauen:ts` schreibt das .js; wer das
+ * .js bearbeitet, verliert die Änderung beim nächsten Bauen (test105).
+ * ----------------------------------------------------------------------------
+ * WOFÜR. Redion hatte für „Liste oder Raster", „Aufbauen · Simulieren ·
+ * Messen" und jede andere Wahl zwischen wenigen sich ausschliessenden
+ * Möglichkeiten kein gemeinsames Bauteil. Gemessen: nirgends im ganzen
+ * `src/` ein `role="radiogroup"` oder etwas Gleichwertiges. Jede Stelle
+ * baute sich ihre eigene Knopfreihe, und keine davon war mit der Tastatur
+ * bedienbar.
+ *
+ * WARUM EIN EIGENER ORDNER. `schale/aufbau/` ist die feste Schale der App —
+ * Seitenleiste, Kopfzeile, Menüband. `schale/ueberlagerung/` ist, was ÜBER
+ * der Seite liegt — Dialog, Menü, Blatt, Hinweis. Ein Umschalter ist
+ * weder das eine noch das andere: er steht IN der Fläche und gehört
+ * niemandem. Deshalb `bedienung/` — der dritte Platz, für Bauteile, die
+ * jeder Bereich benutzen darf.
+ *
+ * WAS ES NICHT IST. Kein Reiterband (`role="tablist"`): Reiter zeigen
+ * verschiedene Inhalte im selben Rahmen und haben ihr eigenes Muster. Ein
+ * Umschalter WÄHLT einen Wert; das ist eine Radiogruppe, und die
+ * Tastaturbedienung ist eine andere.
+ *
+ * DIE TASTATUR IST DER EIGENTLICHE GEWINN.
+ *
+ *     Tab            springt IN die Gruppe und wieder heraus — einmal,
+ *                    nicht einmal je Knopf
+ *     ← ↑            eine Wahl zurück, am Anfang umlaufend
+ *     → ↓            eine Wahl weiter, am Ende umlaufend
+ *     Pos1 / Ende    erste / letzte Wahl
+ *
+ * Das ist „roving tabindex": genau ein Knopf trägt `tabindex="0"`, alle
+ * anderen `-1`. Ohne das tabbt man sich durch vier Knöpfe, um an der Gruppe
+ * VORBEIZUKOMMEN — bei drei Umschaltern auf einer Seite sind das zwölf
+ * Anschläge für nichts.
+ *
+ * UND DIE WAHL WIRKT SOFORT. Pfeiltaste heisst wählen, nicht nur
+ * hinbewegen. So steht es im ARIA-Muster für Radiogruppen, und es ist auch
+ * das, was ein Mensch erwartet: der Umschalter zeigt das Ergebnis, nicht
+ * eine Absicht.
+ * ==========================================================================*/
+const Segment = (() => {
+    const bauen = (auftrag) => {
+        const wahlen = auftrag.wahlen.filter(w => w && w.id);
+        if (!wahlen.length)
+            throw new Error('Ein Umschalter ohne Wahl ist keiner.');
+        const gruppe = document.createElement('div');
+        gruppe.className = 'ru-seg';
+        gruppe.setAttribute('role', 'radiogroup');
+        gruppe.setAttribute('aria-label', auftrag.name);
+        let jetzt = wahlen.some(w => w.id === auftrag.gewaehlt)
+            ? String(auftrag.gewaehlt) : String(wahlen[0]?.id);
+        const knoepfe = wahlen.map(wahl => {
+            const k = document.createElement('button');
+            k.type = 'button';
+            k.className = 'ru-seg-wahl';
+            k.setAttribute('role', 'radio');
+            k.dataset['segWahl'] = wahl.id;
+            /* DAS ZEICHEN IST SCHMUCK, DER NAME IST DIE AUSKUNFT. Deshalb steht
+               das Zeichen `aria-hidden` — ein Screenreader liest sonst „Bild
+               Liste" statt „Liste". */
+            if (wahl.zeichen && typeof Register !== 'undefined' && Register.symbole?.hat?.(wahl.zeichen)) {
+                const zeichen = document.createElement('span');
+                zeichen.className = 'ru-seg-zeichen';
+                zeichen.setAttribute('aria-hidden', 'true');
+                zeichen.innerHTML = Register.symbole.alsSvg(wahl.zeichen);
+                k.append(zeichen);
+            }
+            const text = document.createElement('span');
+            text.className = 'ru-seg-name';
+            text.textContent = wahl.name;
+            k.append(text);
+            /* Die Kurzform steht als zweites Element daneben und wird per CSS
+               getauscht — nicht per JavaScript beim Umbau des Fensters. Eine
+               Breite, die von einem Ereignis abhängt, ist beim ersten Zeichnen
+               falsch. */
+            if (wahl.kurz) {
+                const kurz = document.createElement('span');
+                kurz.className = 'ru-seg-kurz';
+                kurz.textContent = wahl.kurz;
+                k.append(kurz);
+            }
+            gruppe.append(k);
+            return k;
+        });
+        const stellen = () => {
+            knoepfe.forEach((k, i) => {
+                const an = wahlen[i]?.id === jetzt;
+                k.setAttribute('aria-checked', String(an));
+                /* Roving tabindex — siehe Kopf. */
+                k.tabIndex = an ? 0 : -1;
+            });
+        };
+        const waehlen = (id, melden) => {
+            if (!wahlen.some(w => w.id === id) || id === jetzt)
+                return;
+            jetzt = id;
+            stellen();
+            if (melden)
+                auftrag.gewechselt?.(jetzt);
+        };
+        const springen = (schritt, fokus) => {
+            const von = wahlen.findIndex(w => w.id === jetzt);
+            const nach = (von + schritt + wahlen.length) % wahlen.length;
+            const ziel = wahlen[nach];
+            if (!ziel)
+                return;
+            waehlen(ziel.id, true);
+            if (fokus)
+                knoepfe[nach]?.focus();
+        };
+        gruppe.addEventListener('click', ereignis => {
+            const ziel = ereignis.target instanceof Element
+                ? ereignis.target.closest('[data-seg-wahl]') : null;
+            if (ziel?.dataset['segWahl'])
+                waehlen(ziel.dataset['segWahl'], true);
+        });
+        gruppe.addEventListener('keydown', ereignis => {
+            const taste = ereignis.key;
+            if (taste === 'ArrowRight' || taste === 'ArrowDown') {
+                ereignis.preventDefault();
+                springen(1, true);
+                return;
+            }
+            if (taste === 'ArrowLeft' || taste === 'ArrowUp') {
+                ereignis.preventDefault();
+                springen(-1, true);
+                return;
+            }
+            if (taste === 'Home') {
+                ereignis.preventDefault();
+                const erste = wahlen[0];
+                if (erste) {
+                    waehlen(erste.id, true);
+                    knoepfe[0]?.focus();
+                }
+                return;
+            }
+            if (taste === 'End') {
+                ereignis.preventDefault();
+                const letzte = wahlen[wahlen.length - 1];
+                if (letzte) {
+                    waehlen(letzte.id, true);
+                    knoepfe[knoepfe.length - 1]?.focus();
+                }
+            }
+            /* Leertaste und Enter brauchen nichts: der Knopf ist ein echter
+               `<button>`, und der löst darauf von selbst ein `click` aus. Wer
+               hier `preventDefault` schriebe, nähme ihm das ab und müsste es
+               nachbauen. */
+        });
+        stellen();
+        return {
+            element: gruppe,
+            wert: () => jetzt,
+            setzen: (id) => waehlen(id, false)
+        };
+    };
+    return { bauen };
+})();
+window.Segment = Segment;
 
 </script>
 <script>

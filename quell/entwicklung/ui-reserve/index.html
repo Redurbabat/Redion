@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Redion UI-Reserve</title>
+  <!-- ENTWICKLERSEITE. Nicht Teil der App: nicht in index.html, nicht im
+       GRUNDSTOCK, in keinem Register. test426 hält das. -->
+  <link rel="stylesheet" href="./reserve.css">
+</head>
+<body>
+  <main class="res-ui">
+    <header class="res-kopf">
+      <p class="res-kicker">Redion Entwicklung</p>
+      <h1>UI-Reserve</h1>
+      <p>Originale und geprüfte UI-Experimente. Nicht automatisch produktiv —
+         und nichts hier ist Teil des Redion-Designsystems, solange es nicht
+         in einer Entscheidung steht.</p>
+      <p class="res-hinweis">Die Originale laufen unverändert in eigenen Rahmen. Wo kein
+         Code vorliegt, steht das dran — es wird nichts nachgebaut.</p>
+    </header>
+    <div class="res-filter" role="toolbar" aria-label="Komponenten filtern">
+      <button type="button" data-filter="alle" aria-pressed="true">Alle</button>
+      <button type="button" data-filter="produktiv" aria-pressed="false">Produktiv</button>
+      <button type="button" data-filter="reserve" aria-pressed="false">Reserve</button>
+      <button type="button" data-filter="loader" aria-pressed="false">Lader</button>
+      <button type="button" data-filter="button" aria-pressed="false">Knöpfe</button>
+      <button type="button" data-filter="toggle" aria-pressed="false">Schalter</button>
+      <button type="button" data-filter="navigation" aria-pressed="false">Navigation</button>
+      <button type="button" data-filter="ki" aria-pressed="false">KI</button>
+    </div>
+    <p id="res-status" class="res-status" role="status" aria-live="polite"></p>
+    <section id="res-raster" class="res-raster" aria-label="UI-Komponenten"></section>
+  </main>
+  <script src="./reserve.js" defer></script>
+</body>
+</html>

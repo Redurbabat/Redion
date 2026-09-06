@@ -34,7 +34,7 @@ const ich = self;
 /** Der Name der Ablage. Muss `KONSTANTEN.ABLAGE_NAME` gleichen — siehe
  *  die Erklärung bei `faelligeErinnerungen`. `test143` rechnet es nach. */
 const ABLAGE_NAME = 'notizen';
-const VERSION = 'notizen-v425';
+const VERSION = 'notizen-v426';
 const ABLAGE = VERSION;
 /* Was beim ersten Besuch gleich mitgenommen wird. */
 const GRUNDSTOCK = [
@@ -119,6 +119,8 @@ const GRUNDSTOCK = [
     './quell/schale/ueberlagerung/sheet.js',
     './quell/schale/ueberlagerung/hinweis.js',
     './quell/schale/ueberlagerung/orb.js',
+    './quell/schale/bedienung/segment.js',
+    './quell/schale/aufbau/studio.js',
     './quell/schale/ueberlagerung/dialog.js',
     './quell/schale/ueberlagerung/fokus.js',
     './quell/schale/ueberlagerung/ui.js',
@@ -255,6 +257,9 @@ const GRUNDSTOCK = [
        verlinkt, und trotzdem kam sie nicht an. Gefunden beim Zusammenführen
        von PR #46 (E271). */
     './quell/schale/stil/premium.css',
+    './quell/schale/stil/studio.css',
+    './quell/schale/stil/bibliothek-studio.css',
+    './quell/schale/stil/pdf-studio.css',
     './quell/schale/stil/datenbanken.css',
     './quell/schale/stil/ki.css',
     './quell/schale/stil/werkzeuge.css',

@@ -55,7 +55,19 @@ try {
   check('Studio navigation contains a real icon', await page.locator('#studio-nav svg').count() === 1);
   await page.locator('#studio-nav').click();
   check('Collapse acts on shell state', await page.locator('body').getAttribute('data-studio-nav') === 'kompakt');
+  /* FLUSH VOR DEM NEULADEN (E440). `Store.setMeta` schreibt asynchron nach
+     IndexedDB; ein `reload()` direkt nach dem Klick kann den Schreibvorgang
+     abschneiden, und dann ist der Zustand nach dem Neuladen der alte — nicht,
+     weil das Studio ihn nicht speichert (studio.ts:85 tut es), sondern weil
+     die Prüfung schneller war als die Platte. Derselbe Wettlauf wie E436.
+     Ohne diese Zeile war der Punkt auf dem unveränderten Studio-Zweig rot. */
+  await page.evaluate('Store.flush()');
   await page.reload();
+  /* NACH DEM NEULADEN AUF DEN START WARTEN, nicht auf das Element. `#studio-nav`
+     steht im statischen HTML und ist sofort da — lange bevor `StudioSchale.start()`
+     den gespeicherten Zustand gelesen und an den body gehängt hat. Wer hier
+     nur auf das Element wartet, liest den Zustand VOR dem Start. */
+  await page.waitForFunction("typeof App !== 'undefined' && typeof StudioSchale !== 'undefined' && Store.cache.blocks && document.body.dataset.studioNav");
   await page.locator('#studio-nav').waitFor();
   check('Collapsed state survives reload', await page.locator('body').getAttribute('data-studio-nav') === 'kompakt');
   await page.locator('#studio-nav').click();

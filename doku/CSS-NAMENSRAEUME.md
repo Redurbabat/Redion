@@ -65,6 +65,15 @@ gedacht, sondern als Grössenordnung: ob `lw-` sechshundert oder sechs
 Vorkommen hat, sagt einem sofort, wie schwer eine Umbenennung wäre.
 `test290` prüft die NAMEN, nicht die Zahlen.
 
+## Ein Präfix ausserhalb der Zählung
+
+`res-` gehört der UI-Reserve (`quell/entwicklung/ui-reserve/reserve.css`,
+E440). Die Datei liegt nicht unter `quell/schale/stil/` und wird von
+`test290` deshalb nicht gezählt — sie steht hier als Satz und nicht in der
+Tabelle, weil ein Tabelleneintrag ohne Vorkommen im Stil als Karteileiche
+gemeldet würde. Der Zweck ist derselbe: niemand vergibt `res-` ein zweites
+Mal.
+
 ## Das Verzeichnis
 
 ```
@@ -180,6 +189,7 @@ rg       37  bausteine.css
 rgn      13  bausteine.css
 rm       16  bausteine.css
 rs        5  bausteine.css
+ru        9  bausteine.css
 rt       13  bausteine.css
 side     75  aufbau.css
 sk       46  bausteine.css

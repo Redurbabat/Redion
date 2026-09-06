@@ -206,6 +206,53 @@ rechtfertigt.
 
 ---
 
+### 6 · Das UI-System aus dem Handoff — 50 Komponenten, sechs Phasen
+
+Redur hat am 6. September ein Handoff-Paket geschickt: 50 Uiverse-
+Komponenten, davon 20 mit Originalcode, dazu den Implementierungsauftrag
+(`REDION_UI_IMPLEMENTIERUNG_PROMPT.md`, liegt nicht im Repository). Der
+Auftrag will kein Sammelsurium, sondern EIN Redion-Designsystem: die
+Originale liefern Bewegung und Idee, Redion liefert Farbe, Zustand, Logik
+und Zugänglichkeit.
+
+**Was steht (E439, E440):**
+
+  · Die UI-Reserve unter `quell/entwicklung/ui-reserve/` — alle 50 als
+    Ordner, die 20 Originale unverändert, eine Galerie mit Filter, ein
+    Wächter (`test426`). Nichts davon ist in der App.
+  · Der Umschalter (`Segment`, `src/schale/bedienung/segment.ts`) als
+    erster Baustein — Phase B, Punkt 2 des Auftrags.
+  · Die Karte in `doku/UI-KOMPONENTEN.md`: je Komponente Quelle-Status,
+    Redion-Status, Ort, ob gebaut.
+
+**Was offen ist**, in der Reihenfolge des Auftrags (Phase B bis F):
+
+  · B — Standardspinner (KONFLIKT mit E46, braucht Redur), Knopf-Variante
+    „Weiter/Anwenden" (Nr. 02), gemeinsame Status-Semantik.
+  · C — Bibliothek: Baumansicht (Nr. 38, höchste Priorität), grosser
+    Datei-Browser (16), Ordnerkarte (29), Upload-Status (41), Download→Öffnen (03).
+  · D — KI: Generate→Generating (26), Spark-Effekt in die Denkkugel (45),
+    Circuit (43), Orb-Optionszeile (31), KI-Schalter nur bei echtem Zustand (25).
+  · E — PDF/Sync/Wissen/Elektro: Drucker-Prozess (28), Server/Daten-SVG (11),
+    Zahnrad (46), Pixel (50), Orbit (48), Analyseindikator (37), Gerätesteuerung (34).
+  · F — Lernwelt: Aurora-Start (15), Workflow-Karten (24), Karussell (21),
+    Gestenhand (09), Teilen-Menü (35), Schnellaktionen (27).
+
+Jede Komponente: bestehenden Bereich lesen, an echten Zustand anschliessen,
+Prüflauf mit Gegenprobe, Bild. Für die 30 ohne Originalcode gilt: nur die
+Idee, nie eine Nachbildung.
+
+**Zwei Dinge braucht Redur:** die Entscheidung zum Spinner (E46 gegen den
+Auftrag), und die zwei Kopfzeilen übereinander seit dem Studio (Studio-Leiste
+plus alte Kopfzeile, 114 px am Rechner; am Telefon nur eine).
+
+**Wo** — `doku/UI-KOMPONENTEN.md` (die Tabelle), `quell/entwicklung/ui-reserve/`,
+ENTSCHEIDUNGEN.md E439/E440.
+
+**Priorität** — hoch; es ist Redurs aktueller Auftrag.
+
+---
+
 ### 5 · Was in LUECKEN.md offen steht
 
 Die Produktlücken stehen dort und werden dort gepflegt — sie hier zu

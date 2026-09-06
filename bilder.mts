@@ -137,6 +137,38 @@ const ANSICHTEN: Record<string, {
   /* DER KALENDER ALS ORT (E430). Vorher öffnete der Eintrag „Kalender" den
      Verbindungsdialog; ein Bildziel dafür gab es nie, weil es nichts zu
      sehen gab ausser einer Überlagerung. */
+  /* Der Umschalter (E439) — drei Zustaende nebeneinander, damit man die
+     Markierung wirklich vergleichen kann statt sie zu behaupten. */
+  segment: {
+    titel: 'Der Umschalter (E439)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const platz = document.createElement('div');
+      platz.style.cssText = 'position:fixed;left:50%;top:120px;transform:translateX(-50%);'
+        + 'z-index:9000;display:grid;gap:22px;justify-items:start';
+      const S = (window as any).Segment;
+      for (const [titel, wahlen, gewaehlt] of [
+        ['Ansicht', [{ id: 'liste', name: 'Liste' }, { id: 'raster', name: 'Raster' },
+                     { id: 'karten', name: 'Karten' }], 'liste'],
+        ['Elektro', [{ id: 'bau', name: 'Aufbauen' }, { id: 'sim', name: 'Simulieren' },
+                     { id: 'mess', name: 'Messen' }], 'sim'],
+        ['Zwei', [{ id: 'a', name: 'Offen' }, { id: 'b', name: 'Erledigt' }], 'b']
+      ] as Array<[string, any[], string]>) {
+        const zeile = document.createElement('div');
+        const kopf = document.createElement('p');
+        kopf.textContent = titel;
+        kopf.style.cssText = 'margin:0 0 6px;font-size:12px;opacity:.6';
+        zeile.append(kopf);
+        zeile.append(S.bauen({ name: titel, wahlen, gewaehlt }).element);
+        platz.append(zeile);
+      }
+      document.body.append(platz);
+      await new Promise(f => setTimeout(f, 400));
+    }
+  },
+
   kalender2: {
     titel: 'Der Kalender als eigener Ort (E430, E431)',
     bauen: async () => {
