@@ -16302,21 +16302,28 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
 @media (hover:hover) and (min-width:761px){
   .studio-icon{position:relative; transition:transform var(--motion-fast) var(--ease)}
   .studio-icon:is(:hover,:focus-visible){transform:translate(2px,-2px)}
+  /* DIE BLASE GIBT ES ERST BEIM ZEIGEN (`display:none`, nicht `opacity:0`).
+     Eine unsichtbare Blase nimmt trotzdem Platz: die des letzten Knopfes
+     ragte 45 px rechts aus dem Fenster, und test54 „Am PC kein Überlauf"
+     wurde mit E462 rot. Das Einblenden läuft als Animation, weil ein
+     Übergang beim Wechsel von `display:none` nicht anspringt. */
   .studio-icon[aria-label]::after{
     content:attr(aria-label);
-    position:absolute; top:calc(100% + 8px); left:50%; translate:-50% 0;
+    display:none; position:absolute; top:calc(100% + 8px); left:50%; translate:-50% 2px;
     padding:4px 9px; border-radius:var(--radius-md);
     background:var(--bg-card); border:1px solid var(--line);
     box-shadow:var(--studio-elevation);
     color:var(--text); font-size:11.5px; font-weight:600; white-space:nowrap;
-    opacity:0; pointer-events:none; z-index:60;
-    transition:opacity var(--motion-fast) var(--ease), translate var(--motion-fast) var(--ease)
+    pointer-events:none; z-index:60
   }
-  .studio-icon[aria-label]:is(:hover,:focus-visible)::after{opacity:1; translate:-50% 2px}
+  .studio-icon[aria-label]:is(:hover,:focus-visible)::after{
+    display:block; animation:studio-blase-auf var(--motion-fast) var(--ease)
+  }
+  @keyframes studio-blase-auf{ from{ opacity:0; translate:-50% 0 } }
 }
 @media (prefers-reduced-motion: reduce){
   .studio-icon:is(:hover,:focus-visible){transform:none}
-  .studio-icon[aria-label]::after{transition:none}
+  .studio-icon[aria-label]::after{animation:none}
 }
 
 </style>
@@ -16428,6 +16435,12 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
 <style>
 /* ===== quell/schale/stil/pdf-studio.css ===== */
 /* Document workbench: controls use material; the original paper stays opaque. */
+
+/* MARKEN STATT ROHER ZAHLEN (E464): Redurs Fassung vom Zweig
+   codex/pdf-schreibstudio schrieb 44px, 28px, 22px, 16px aus — test362 §7
+   lässt das Verzeichnis roher Wiederholungen nur schrumpfen. Trefferflächen
+   sind hier `var(--touch-min)`, Schriftgrössen und Rundungen rem. */
+:root{--pdf-chrome:#22375c;--pdf-tools:#304d78;--pdf-on-chrome:#f3f6ff;--pdf-desk:#242323;--pdf-dock:#292827;--pdf-paper-max:980px}
 .document-studio{border-color:var(--line);border-radius:var(--radius-xl);box-shadow:none;position:relative}
 .document-view-button{display:none}
 .document-studio .document-topbar{padding:8px 12px;gap:12px;min-height:52px;background:var(--bg-card);flex-shrink:0}
@@ -16501,6 +16514,77 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
   .document-studio .document-thumbnails.is-open,.document-studio .document-inspector.is-open,.document-studio[data-document-view="open"] .document-commandbar{animation:none}
   .document-studio :is(.document-topbar,.document-commandbar) button:active:not(:disabled){transform:none}
 }
+
+/* Full-window PDF desk, using the real shell tabs and annotation controllers. */
+body[data-dokument="an"] #main{display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto minmax(0,1fr)!important}
+body[data-dokument="an"] :is(#studio-bar,#kante,#studio-divider,#topbar,#menueband,#handy-oben,#sidebar){display:none!important}
+body[data-dokument="an"] #reiterleiste{grid-column:1!important;grid-row:1!important;background:var(--pdf-chrome);color:var(--pdf-on-chrome);border:0;min-height:48px;padding:4px 12px 0;position:relative;inset:auto;flex-wrap:nowrap}
+body[data-dokument="an"] #reiterleiste .rt-tab{min-width:150px;max-width:240px;min-height:var(--touch-min);color:var(--pdf-on-chrome);background:transparent;border:0;border-radius:12px 12px 0 0;box-shadow:none}
+body[data-dokument="an"] #reiterleiste .rt-tab.an{background:var(--pdf-tools);font-weight:650}
+body[data-dokument="an"] #reiterleiste button{color:var(--pdf-on-chrome)}
+body[data-dokument="an"] #scroll{grid-column:1!important;grid-row:2!important;padding:0!important;overflow:hidden}
+body[data-dokument="an"] #page.document-page{padding:0!important;margin:0!important;max-width:none!important}
+body[data-dokument="an"] .document-studio{border:0;border-radius:0;min-height:0;box-shadow:none;background:var(--pdf-desk)}
+body[data-dokument="an"] .document-studio .document-topbar{background:var(--pdf-tools);color:var(--pdf-on-chrome);border:0;min-height:48px;padding:2px 12px}
+body[data-dokument="an"] .document-studio .document-topbar :is(button,.document-title){color:var(--pdf-on-chrome)}
+body[data-dokument="an"] .document-studio .document-topbar button:hover{background:#ffffff18}
+.document-studio .document-drawingbar{display:flex;align-items:center;justify-content:center;gap:8px;flex:none;min-height:58px;padding:5px 12px;background:var(--pdf-tools);color:var(--pdf-on-chrome);border-bottom:1px solid #ffffff18;overflow-x:auto}
+.document-drawingbar button{display:grid;place-items:center;width:var(--touch-min);min-width:var(--touch-min);height:var(--touch-min);border-radius:12px;color:inherit;background:transparent;border:1px solid transparent;cursor:pointer;transition:background var(--motion-fast) var(--ease),transform var(--motion-instant) var(--ease)}
+.document-drawingbar svg{width:25px;height:25px}
+.document-drawingbar button:hover{background:#ffffff18}
+.document-drawingbar button[aria-pressed="true"],.document-drawingbar button[aria-expanded="true"]{background:#d8e4f1;color:#193859;box-shadow:inset 0 1px 0 #fff8}
+.document-drawingbar button:active:not(:disabled){transform:scale(var(--press-scale))}
+.document-ink-history{display:flex;gap:0;border-left:1px solid #ffffff30;padding-left:12px;margin-left:12px}
+.document-ink-history button{font-size:1.75rem}
+/* ZURÜCK UND VOR SIND NICHT DURCHSICHTIG (test393 §3, E396): abgeschaltet
+   werden sie blass, nicht durchscheinend — sonst blitzen beim Rollen die
+   Werkzeuge darunter durch. */
+.document-ink-history button{opacity:1;background:var(--pdf-tools)}
+.document-ink-history button:disabled{color:#ffffff66;cursor:default}
+.document-studio .document-view-button{display:block}
+.document-studio .document-commandbar{display:none;position:absolute;top:50px;right:12px;left:auto;z-index:98;flex-wrap:wrap;max-width:calc(100% - 24px);border:1px solid var(--line);border-radius:var(--radius-xl);box-shadow:var(--studio-elevation)}
+.document-studio[data-document-view="open"] .document-commandbar{display:flex}
+body[data-dokument="an"] .document-studio .document-center{background:var(--pdf-desk);padding:18px 18px 110px;scroll-padding-bottom:110px;overscroll-behavior:contain}
+.document-studio .document-source-master{max-width:var(--doc-blatt,var(--pdf-paper-max));width:100%;margin:0 auto 6px;background:#ffffff0b;border:1px solid #ffffff28;color:#e9e9eb;border-radius:8px;min-height:40px}
+.document-source-master .do-wort{color:#c1c7d1}
+.document-copy-label{max-width:var(--doc-blatt,var(--pdf-paper-max));margin:0 auto 14px;font-size:11px;letter-spacing:.3px;color:#bdc1c9}
+body[data-dokument="an"] .document-studio .blatt-papier{border-radius:0;box-shadow:0 2px 12px #0005}
+body[data-dokument="an"] .document-stage[data-aktiv]>.blatt-huelle>.blatt-reihe{position:fixed;top:auto;bottom:max(14px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);z-index:80;width:max-content;max-width:calc(100vw - 32px);background:transparent;border:0;box-shadow:none}
+body[data-dokument="an"] .document-studio .blatt-werk{display:flex;flex:0 1 auto;width:max-content;flex-wrap:nowrap;align-items:center;gap:6px;max-width:100%;margin:0;padding:8px 12px;border-radius:1.375rem;background:var(--pdf-dock);color:#f5f5f5;border:1px solid #ffffff25;box-shadow:0 10px 30px #0005;overflow-x:auto;backdrop-filter:none}
+.document-studio:not([data-ink-options="open"]) .blatt-fest{display:none}
+.document-studio :is(.blatt-reihe,.blatt-werk){container-type:normal}
+.document-studio[data-ink-options="open"] .blatt-fest{background:var(--pdf-dock);color:#eee;box-shadow:none;border:1px solid #ffffff25;border-radius:var(--radius-xl);padding:8px}
+body[data-dokument="an"] .document-studio .blatt-werk button{color:inherit;min-height:var(--touch-min);flex-shrink:0}
+body[data-dokument="an"] .document-studio .blatt-werk :is(.blatt-farbe,.blatt-farbe-neu){width:var(--touch-min);min-width:var(--touch-min);height:var(--touch-min);min-height:var(--touch-min);border-radius:50%;padding:6px!important;background-clip:content-box;border:1px solid transparent}
+body[data-dokument="an"] .document-studio .blatt-werk .blatt-farbe.on{border-color:#e5e9f2;outline:none;box-shadow:none}
+body[data-dokument="an"] .document-studio .blatt-werk .blatt-strich{min-width:var(--touch-min)}
+body[data-dokument="an"] .document-studio .blatt-werk .blatt-zeilenbruch{display:none}
+body[data-dokument="an"] .document-studio .blatt-werk .on:not(.blatt-farbe){background:#425e7a;border-color:#93b3d1;color:#fff}
+.document-studio:not([data-ink-options="open"]) .blatt-werk>:is([data-wz],.blatt-trenn,[data-gruppe="verlauf"],[data-gruppe="auswahl"],[data-gruppe="lineal"],[data-gruppe="formen"],[data-gruppe="schrift"],[data-gruppe="form"]){display:none!important}
+.document-studio:not([data-ink-options="open"]) .blatt-werk[data-tool="schreiben"]{display:none}
+.document-studio[data-ink-options="open"] .blatt-werk{max-height:240px;flex-wrap:wrap!important;overflow:auto;width:min(850px,calc(100vw - 32px))}
+.document-studio[data-ink-options="open"] .blatt-werk>[data-gruppe]{display:inline-flex!important}
+body[data-dokument="an"] .document-studio .blatt-marken[data-stift="an"]{touch-action:none}
+body[data-dokument="an"] .document-studio .blatt-marken[data-tool="schreiben"]{touch-action:pan-x pan-y pinch-zoom}
+@media(max-width:760px){
+  body[data-dokument="an"] #reiterleiste{min-height:var(--touch-min);padding-inline:6px}
+  body[data-dokument="an"] #reiterleiste .rt-tab{min-width:120px;max-width:180px;min-height:40px}
+  body[data-dokument="an"] .document-studio .document-topbar{padding-inline:4px}
+  .document-studio .document-topbar .document-zurueck .dz-wort{display:none}
+  .document-studio .document-topbar [data-document-action="print"]{font-size:0}
+  .document-studio .document-topbar [data-document-action="print"]::before{content:'↥';font-size:1.375rem}
+  .document-studio .document-drawingbar{justify-content:flex-start;gap:4px;padding:4px 8px;min-height:52px}
+  /* ZURÜCK UND VOR ROLLEN AM TELEFON NICHT WEG (E396, Audit F14 — seit E464
+     für die Zeichenleiste): die Leiste rollt, die zwei kleben rechts. Wer
+     schreibt, greift zu ihnen, ohne erst zu wischen. */
+  .document-ink-history{position:sticky;right:0;z-index:1;padding-left:4px;margin-left:auto;background:var(--pdf-tools)}
+  .document-studio .document-commandbar{left:8px;right:8px}
+  body[data-dokument="an"] .document-studio .document-center{padding:10px 8px 100px}
+  .document-source-master .do-name{font-size:11px}.document-source-master .do-wort{font-size:10px}
+  .document-copy-label{font-size:10px}
+}
+@media(prefers-reduced-motion:reduce){.document-drawingbar button{transition:none}.document-drawingbar button:active:not(:disabled){transform:none}}
+@media print{.document-drawingbar,.document-source-master,.document-copy-label,.document-studio .blatt-reihe{display:none!important}}
 
 </style>
 
@@ -18505,7 +18589,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 476, inhalt: 'bc8cfd8035eead7c', gebaut: '2026-09-06T21:22:11.750Z' };
+const Stand = { fassung: 477, inhalt: '502f83891ccea2a3', gebaut: '2026-09-06T21:25:37.182Z' };
 window.Stand = Stand;
 
 </script>
@@ -28734,6 +28818,12 @@ Register.symbole = (() => {
         sparkle: '<path d="M12 3.2 13.7 9l5.8 1.7-5.8 1.7L12 18.2l-1.7-5.8L4.5 10.7 10.3 9z"/>' +
             '<path d="M18.6 3v3.2M17 4.6h3.2"/>',
         pencil: '<path d="M16.5 3.9a2.1 2.1 0 0 1 3 3L8.9 17.5l-4 1 1-4z"/><path d="M14.6 5.8l3 3"/>',
+        inkHand: '<path d="M8 12V5a1.5 1.5 0 0 1 3 0v6-8a1.5 1.5 0 0 1 3 0v8-6a1.5 1.5 0 0 1 3 0v7-3a1.5 1.5 0 0 1 3 0v6c0 4-3 6-6 6h-2c-2 0-3-1-4-3l-4-5a1.5 1.5 0 0 1 2-2l2 1z"/>',
+        inkLasso: '<ellipse cx="12" cy="10" rx="9" ry="6" stroke-dasharray="3 3"/><path d="M7 14c-4 7 4 9 6 4"/>',
+        inkMarker: '<path d="m13 3 7 7-8 8-7-7zM5 11l-2 7 3 3 6-3M3 21h7"/>',
+        inkEraser: '<path d="m14 3 7 7-10 11H6l-4-4zM8 11l8 8M11 21h10"/>',
+        inkText: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M12 8v9M9 17h6"/>',
+        inkShapes: '<path d="m7 3 5 8H2z"/><circle cx="17" cy="7" r="4"/><rect x="4" y="15" width="7" height="6" rx="1"/><circle cx="18" cy="18" r="3"/>',
         /* --- Werkzeuge der Seitenleiste --------------------------------------- */
         calendar: '<rect x="3.2" y="5" width="17.6" height="16" rx="2.6"/>' +
             '<path d="M3.2 10h17.6M8.2 3v4M15.8 3v4"/>',
@@ -51998,6 +52088,7 @@ const Marken = (() => {
         let stiftZuletzt = 0;
         let stiftTimer = null;
         let aktiverZeiger = null;
+        let fingerPan = null;
         let radierStrich = null;
         /* Der Stift, mit dem der naechste Strich entsteht — gemerkt ueber
            Neuladen hinweg, wie das Papier eines Hefts (E351). */
@@ -52465,12 +52556,20 @@ const Marken = (() => {
         const stiftGesehen = () => {
             stiftZuletzt = Date.now();
             flaeche.setAttribute('data-stift', 'an');
+            const dokument = flaeche.closest('.document-workspace');
+            if (dokument)
+                dokument.dataset.documentPen = 'seen';
             if (stiftTimer)
                 clearTimeout(stiftTimer);
-            stiftTimer = setTimeout(() => { flaeche.removeAttribute('data-stift'); stiftTimer = null; }, STIFT_SPERRE_MS);
+            stiftTimer = setTimeout(() => {
+                if (!flaeche.closest('.document-workspace'))
+                    flaeche.removeAttribute('data-stift');
+                stiftTimer = null;
+            }, STIFT_SPERRE_MS);
         };
         const fingerGesperrt = (event) => event.pointerType === 'touch' &&
-            (Date.now() - stiftZuletzt < STIFT_SPERRE_MS || (running !== null && running.zeigerArt === 'pen'));
+            (flaeche.closest('.document-workspace')?.dataset.documentPen === 'seen' ||
+                Date.now() - stiftZuletzt < STIFT_SPERRE_MS || (running !== null && running.zeigerArt === 'pen'));
         /* Einen angefangenen Strich VERWERFEN: kein Knoten, kein Schritt im
            Verlauf — als haette es ihn nie gegeben. */
         const verwerfen = () => {
@@ -52763,9 +52862,11 @@ const Marken = (() => {
                 }
             }
             if (mark.art === 'stift' || mark.art === 'marker') {
-                if (mark.pts.length < 2) {
-                    node?.remove();
-                    return false;
+                // A stationary tap is an intentional dot (i, punctuation, circuit node).
+                // Two coincident points use the existing round-cap renderer and data format.
+                if (mark.pts.length === 1) {
+                    mark.pts.push([...mark.pts[0]]);
+                    mark.pressure.push(mark.pressure[0] ?? 0.5);
                 }
                 delete mark.zuletzt;
                 /* DER STRICH ENDET, WO DIE HAND ABHOB (E376) — wie in GoodNotes.
@@ -53004,12 +53105,26 @@ const Marken = (() => {
             if (!e.isPrimary)
                 return;
             /* Der gesperrte Finger bekommt kein preventDefault — er darf rollen. */
-            if (fingerGesperrt(e))
+            if (fingerGesperrt(e)) {
+                const center = flaeche.closest('.document-center');
+                if (center && !running && aktiverZeiger === null) {
+                    fingerPan = { id: e.pointerId, x: e.clientX, y: e.clientY, left: center.scrollLeft, top: center.scrollTop, center };
+                    event.preventDefault();
+                    try {
+                        flaeche.setPointerCapture(e.pointerId);
+                    }
+                    catch { /* optional */ }
+                }
                 return;
+            }
             /* DER STIFT GEHT VOR: liegt der Handballen schon auf und zeichnet,
                nimmt der Stift ihm den Strich weg (E354). */
             if (e.pointerType === 'pen' && running && running.zeigerArt === 'touch')
                 verwerfen();
+            if (e.pointerType === 'pen')
+                fingerPan = null;
+            if (aktiverZeiger !== null && aktiverZeiger !== e.pointerId)
+                return;
             /* DER RUECKKNOPF DES STIFTS RADIERT (E352): das Radierende (button 5,
                buttons 32) und der Seitenknopf (button 2) eines Stifts halten den
                Radierer, solange sie gedrueckt sind — das gewaehlte Werkzeug
@@ -53156,6 +53271,12 @@ const Marken = (() => {
             catch { /* optional */ }
         });
         flaeche.addEventListener('pointermove', (event) => {
+            if (fingerPan && fingerPan.id === event.pointerId) {
+                event.preventDefault();
+                fingerPan.center.scrollLeft = fingerPan.left + fingerPan.x - event.clientX;
+                fingerPan.center.scrollTop = fingerPan.top + fingerPan.y - event.clientY;
+                return;
+            }
             if (!event.isPrimary)
                 return;
             if (event.pointerType === 'pen')
@@ -53255,13 +53376,33 @@ const Marken = (() => {
             runningNode = updateNode(runningNode, running);
         });
         const beiEnde = (event) => {
+            if (fingerPan?.id === event.pointerId) {
+                fingerPan = null;
+                return;
+            }
             if (aktiverZeiger !== null && event.pointerId !== aktiverZeiger)
                 return;
+            // pointerup may carry a final position that no pointermove delivered.
+            // Keep the previous pressure: pen devices report zero pressure on lift.
+            if (event.type === 'pointerup' && running && (running.art === 'stift' || running.art === 'marker')) {
+                const end = R.zuBlatt(flaeche, event);
+                if (end) {
+                    const last = running.pts[running.pts.length - 1];
+                    if (Math.hypot(end[0] - last[0], end[1] - last[1]) > 0.01) {
+                        running.pts.push(end);
+                        running.pressure.push(running.pressure[running.pressure.length - 1] ?? 0.5);
+                    }
+                    rohLetzter = end;
+                }
+            }
             finish();
         };
         flaeche.addEventListener('pointerup', beiEnde);
         flaeche.addEventListener('pointercancel', beiEnde);
-        flaeche.addEventListener('pointerleave', beiEnde);
+        flaeche.addEventListener('pointerleave', (event) => {
+            if (!flaeche.hasPointerCapture(event.pointerId))
+                beiEnde(event);
+        });
         /* Der Seitenknopf eines Stifts ist fuer den Browser eine rechte Taste —
            ohne diese Zeile spraenge beim Radieren das Kontextmenue auf. */
         flaeche.addEventListener('contextmenu', event => { if (tool !== 'schreiben')
@@ -63903,7 +64044,7 @@ const DocumentMode = (() => {
         const viewButton = topButton('view', '☷', 'Ansicht, Lesemodus und Zoom');
         viewButton.className = 'document-view-button';
         viewButton.setAttribute('aria-expanded', 'false');
-        topActions.append(viewButton, inspectorButton, topButton('exit', 'Seiteneditor', 'Dokumentmodus verlassen'));
+        topActions.append(viewButton, inspectorButton, topButton('print', 'Drucken', 'Bearbeitete Fassung mit Notizen drucken'), topButton('exit', 'Seiteneditor', 'Dokumentmodus verlassen'));
         top.append(topActions);
         const commandbar = document.createElement('div');
         commandbar.className = 'document-commandbar';
@@ -63919,11 +64060,51 @@ const DocumentMode = (() => {
         readButton.setAttribute('aria-pressed', String(!state.toolsOpen));
         annotateButton.setAttribute('aria-pressed', String(state.toolsOpen));
         const canAnnotate = !page.gesperrt && (typeof Konten === 'undefined' || Konten.darf('bearbeiten', page));
+        if (!canAnnotate) {
+            state.toolsOpen = false;
+            workspace.dataset.documentTools = 'closed';
+            readButton.setAttribute('aria-pressed', 'true');
+            annotateButton.setAttribute('aria-pressed', 'false');
+        }
         annotateButton.disabled = !canAnnotate;
         if (!canAnnotate)
             annotateButton.title = 'Zum Annotieren brauchst du Bearbeitungsrechte und ein entsperrtes Dokument.';
         modes.append(readButton, annotateButton);
         commandbar.append(modes, pagination, zoomGroup);
+        // One document-wide tool strip. Each action delegates to the existing page
+        // controller; the original controls, undo stacks and mark objects stay intact.
+        const drawingbar = document.createElement('div');
+        drawingbar.className = 'document-drawingbar';
+        drawingbar.setAttribute('role', 'toolbar');
+        drawingbar.setAttribute('aria-label', 'PDF bearbeiten');
+        const drawingTools = [
+            ['schreiben', 'inkHand', 'Hand / Verschieben'], ['select', 'inkLasso', 'Lasso / Auswahl'],
+            ['stift', 'pencil', 'Stift'], ['marker', 'inkMarker', 'Marker'],
+            ['radierer', 'inkEraser', 'Radierer'], ['text', 'inkText', 'Text'],
+            ['formen', 'inkShapes', 'Formen'], ['zettel', 'comment', 'Haftnotiz'],
+            ['bild', 'image', 'Bild'], ['zeichen', 'bolt', 'Fachzeichen'], ['abdeck', 'eye', 'Abdecken']
+        ];
+        drawingTools.forEach(([tool, icon, label]) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.dataset.documentTool = tool;
+            button.title = label;
+            button.setAttribute('aria-label', label);
+            const glyph = document.createElement('span');
+            glyph.dataset.sym = icon;
+            glyph.setAttribute('aria-hidden', 'true');
+            button.appendChild(glyph);
+            drawingbar.appendChild(button);
+        });
+        const moreTools = topButton('ink-options', '···', 'Alle Stiftoptionen und Bearbeitungsaktionen');
+        moreTools.setAttribute('aria-expanded', 'false');
+        drawingbar.appendChild(moreTools);
+        const history = document.createElement('div');
+        history.className = 'document-ink-history';
+        history.setAttribute('role', 'group');
+        history.setAttribute('aria-label', 'Zeichenverlauf');
+        history.append(topButton('ink-undo', '↶', 'Letzten Zeichenstrich rückgängig machen'), topButton('ink-redo', '↷', 'Zeichenstrich wiederholen'));
+        drawingbar.appendChild(history);
         /* WELCHE SPALTEN ES GIBT, STEHT AM KASTEN (E296). Vorher war das Raster
            fest — 190 px links, 280 px rechts, bei jeder Fensterbreite ueber
            1100 px. Auf 1440 px blieben der Seite damit rund 900, obwohl beide
@@ -63967,10 +64148,18 @@ const DocumentMode = (() => {
            Anfang an — und wird gezeichnet, sobald sie in die Naehe kommt.
     
            `‹ ›` und die Miniaturen wechseln nichts mehr, sie SPRINGEN. */
-        /* HIER STAND DIE ORIGINAL-KARTE — bis E384.
-           Sie liegt jetzt im Inspector (`originalKnopf`). Der Grund steht dort:
-           eine Zeile, die man selten braucht, darf nicht bei jedem Blick auf
-           das Papier 45 Pixel wegnehmen. */
+        // The source file remains untouched. Existing pdfseite blocks below are
+        // its editable printout: do not duplicate files or discard annotations.
+        const original = originalKnopf(page, current);
+        if (original) {
+            original.classList.add('document-source-master');
+            original.querySelector('.do-wort').textContent = 'Original · geschützt';
+            center.appendChild(original);
+            const copyLabel = document.createElement('div');
+            copyLabel.className = 'document-copy-label';
+            copyLabel.textContent = 'Arbeitskopie · hier schreiben und mit Notizen drucken';
+            center.appendChild(copyLabel);
+        }
         /* WELCHE SEITE GERADE GILT, IST BEWEGLICH GEWORDEN (E299). Vorher stand
            sie beim Zeichnen fest — es gab ja nur eine. In der Rolle wandert sie
            mit dem Blick, und „Ausschnitt", „Erkennen" und der Inspector müssen
@@ -63978,6 +64167,23 @@ const DocumentMode = (() => {
         const jetzt = () => documents[Math.max(0, Math.min(state.index, documents.length - 1))] || current;
         const staende = [];
         const gezeichnet = new Set();
+        let penTool = String(Store.getMeta('dokStift:' + page.id, 'stift'));
+        let penColor = String(Store.getMeta('dokTinte:' + page.id, Marken.FARBEN[0]));
+        let penWidth = Number(Store.getMeta('dokStrich:' + page.id, Marken.BREITEN[1]));
+        const applyPen = (stand) => {
+            if (!state.toolsOpen || !canAnnotate || !stand.isConnected)
+                return;
+            const toolbar = stand.querySelector('.blatt-werk');
+            if (toolbar && !toolbar.dataset.documentPenReady) {
+                toolbar.dataset.documentPenReady = 'true';
+                Array.from(toolbar.querySelectorAll('[data-c]')).find(b => b.dataset.c === penColor)?.click();
+                Array.from(toolbar.querySelectorAll('[data-b]')).find(b => Number(b.dataset.b) === penWidth)?.click();
+            }
+            const key = drawingTools.some(([tool]) => tool === penTool) ? penTool : 'stift';
+            if (toolbar?.dataset.tool === key)
+                return;
+            toolbar?.querySelector('[data-wz="' + key + '"]')?.click();
+        };
         const zeichneStand = (i) => {
             if (gezeichnet.has(i))
                 return;
@@ -63991,11 +64197,20 @@ const DocumentMode = (() => {
             stand.querySelectorAll('.blatt-papier').forEach(paper => {
                 (paper.closest('.blatt-flur') || paper).inert = !state.toolsOpen;
             });
+            requestAnimationFrame(() => applyPen(stand));
         };
         documents.forEach((block, i) => {
             const stand = document.createElement('div');
             stand.className = 'document-stage';
             stand.dataset.standNr = String(i);
+            stand.addEventListener('pointerdown', event => {
+                if (!(event.target instanceof Element) || event.target.closest('.blatt-reihe'))
+                    return;
+                state.index = i;
+                seiteMerken(page.id, i);
+                aktivMarkieren();
+                applyPen(stand);
+            }, true);
             /* Der Platzhalter in der richtigen Hoehe. Ohne ihn springt der
                Rollbalken bei jeder nachgezeichneten Seite. */
             const bw = Number(block.bw) || Number(block.blattBreite) || SheetSpace.A4_BREITE;
@@ -64017,8 +64232,39 @@ const DocumentMode = (() => {
         inspectorButton.setAttribute('aria-controls', inspector.id);
         renderInspector(inspector, page, current);
         body.append(thumbnails, center, inspector);
-        workspace.append(top, commandbar, body);
+        workspace.append(top, drawingbar, commandbar, body);
         wrap.appendChild(workspace);
+        if (typeof Register !== 'undefined')
+            Register.symbole.fuelle(drawingbar);
+        const inkToolbar = () => staende[state.index]?.querySelector('.blatt-werk') || null;
+        const inkSync = () => {
+            if (!workspace.isConnected) {
+                Zeichenziel.vergiss(inkSync);
+                return;
+            }
+            const source = inkToolbar();
+            drawingbar.querySelectorAll('[data-document-tool]').forEach(button => {
+                const real = source?.querySelector('[data-wz="' + button.dataset.documentTool + '"]');
+                button.disabled = !canAnnotate || !real || real.disabled;
+                button.setAttribute('aria-pressed', String(state.toolsOpen && real?.getAttribute('aria-pressed') === 'true'));
+            });
+            for (const action of ['undo', 'redo']) {
+                const real = source?.querySelector('[data-act="' + action + '"]');
+                const button = history.querySelector('[data-document-action="ink-' + action + '"]');
+                if (button)
+                    button.disabled = !canAnnotate || !real || real.disabled;
+            }
+        };
+        Zeichenziel.horche(inkSync);
+        // History state is published on the existing controls via disabled attrs.
+        const inkObserver = new MutationObserver(() => {
+            if (!workspace.isConnected) {
+                inkObserver.disconnect();
+                return;
+            }
+            inkSync();
+        });
+        inkObserver.observe(center, { subtree: true, attributes: true, attributeFilter: ['disabled', 'aria-pressed', 'data-tool'] });
         /* DIE HOEHE MISST SICH SELBST (E296). In der CSS stand `calc(100vh -
            150px)`; die 150 waren der Seitenkopf plus die Leisten darueber. Der
            Kopf ist weg, also waere jede feste Zahl ab jetzt eine andere Luecke —
@@ -64035,7 +64281,7 @@ const DocumentMode = (() => {
             const oben = Math.round(workspace.getBoundingClientRect().top);
             if (oben < 0 || oben >= window.innerHeight)
                 return;
-            workspace.style.height = Math.max(240, window.innerHeight - oben - 12) + 'px';
+            workspace.style.height = Math.max(240, window.innerHeight - oben) + 'px';
         };
         /* DIE GANZE SEITE PASST INS BILD (E296) — das ist bei GoodNotes die
            Grundstellung, und es ist die Frage, die eine Dokumentansicht
@@ -64065,7 +64311,7 @@ const DocumentMode = (() => {
       
                Gemessen auf 1440 px war die Seite mit der Hoehenrechnung 432 px
                breit; die Mitte hatte 1360. Ein Skript liest sich so nicht. */
-            const breit = Math.round((raum - 36) * (state.zoom / 100));
+            const breit = Math.round(Math.min(raum - 36, 980) * (state.zoom / 100));
             /* DAS MASS GEHT ANS PAPIER, NICHT AN DIE BUEHNE. Die Zeichenleiste
                gehoert zum Blatt und steht in derselben Huelle; haette die Buehne
                das Passmass, waere die Leiste so schmal wie die Seite — gemessen:
@@ -64128,6 +64374,7 @@ const DocumentMode = (() => {
                 if (bw > 0 && bh > 0)
                     stand.style.height = Math.round(breit * (bh / bw)) + 'px';
             });
+            inkSync();
         };
         const beiGroesse = () => {
             if (!workspace.isConnected) {
@@ -64185,6 +64432,7 @@ const DocumentMode = (() => {
                 else
                     stand.removeAttribute('data-aktiv');
             });
+            inkSync();
         };
         const nachziehen = () => {
             if (!center.isConnected)
@@ -64306,6 +64554,7 @@ const DocumentMode = (() => {
                 (paper.closest('.blatt-flur') || paper).inert = !an;
             });
             passen();
+            inkSync();
         };
         const panelsSetzen = () => {
             body.classList.toggle('with-thumbnails', state.thumbnailsOpen);
@@ -64321,6 +64570,13 @@ const DocumentMode = (() => {
             passen();
         };
         workspace.addEventListener('keydown', event => {
+            if (event.key === 'Escape' && workspace.dataset.inkOptions === 'open') {
+                workspace.dataset.inkOptions = 'closed';
+                moreTools.setAttribute('aria-expanded', 'false');
+                moreTools.focus();
+                event.stopPropagation();
+                return;
+            }
             if (event.key === 'Escape' && workspace.dataset.documentView === 'open') {
                 workspace.dataset.documentView = 'closed';
                 viewButton.setAttribute('aria-expanded', 'false');
@@ -64343,6 +64599,30 @@ const DocumentMode = (() => {
         });
         workspace.addEventListener('click', event => {
             const element = event.target instanceof Element ? event.target : null;
+            const inkButton = element?.closest('.blatt-werk button');
+            if (inkButton?.dataset.c) {
+                penColor = inkButton.dataset.c;
+                Store.setMeta('dokTinte:' + page.id, penColor);
+            }
+            if (inkButton?.dataset.b) {
+                penWidth = Number(inkButton.dataset.b);
+                Store.setMeta('dokStrich:' + page.id, penWidth);
+            }
+            if (inkButton?.dataset.wz && inkButton.dataset.wz !== 'bild') {
+                penTool = inkButton.dataset.wz;
+                Store.setMeta('dokStift:' + page.id, penTool);
+            }
+            const tool = element?.closest('[data-document-tool]')?.dataset.documentTool;
+            if (tool && canAnnotate) {
+                if (tool !== 'bild') {
+                    penTool = tool;
+                    Store.setMeta('dokStift:' + page.id, tool);
+                }
+                toolsSetzen(true);
+                inkToolbar()?.querySelector('[data-wz="' + tool + '"]')?.click();
+                inkSync();
+                return;
+            }
             if (!element?.closest('.document-commandbar,[data-document-action="view"]')) {
                 workspace.dataset.documentView = 'closed';
                 viewButton.setAttribute('aria-expanded', 'false');
@@ -64377,6 +64657,24 @@ const DocumentMode = (() => {
             const action = element?.closest('[data-document-action]')?.dataset.documentAction;
             if (!action)
                 return;
+            if (action === 'ink-options') {
+                const open = workspace.dataset.inkOptions !== 'open';
+                workspace.dataset.inkOptions = open ? 'open' : 'closed';
+                moreTools.setAttribute('aria-expanded', String(open));
+                if (canAnnotate)
+                    toolsSetzen(true);
+            }
+            if ((action === 'ink-undo' || action === 'ink-redo') && canAnnotate) {
+                inkToolbar()?.querySelector('[data-act="' + action.slice(4) + '"]')?.click();
+                inkSync();
+            }
+            if (action === 'print') {
+                const print = Register.menueband.eines('a-drucken');
+                if (print?.tun)
+                    print.tun();
+                else
+                    UI.toast('Drucken ist gerade nicht verfügbar.');
+            }
             if (action === 'view') {
                 const offen = workspace.dataset.documentView !== 'open';
                 workspace.dataset.documentView = offen ? 'open' : 'closed';
@@ -107138,7 +107436,8 @@ const Fenster = (() => {
             main.insertBefore(leiste, document.getElementById('topbar'));
         }
         /* Ein einzelner Reiter ohne Nutzen wird nicht gezeigt. */
-        if (Store.getMeta('reiterAn', true) === false || reiter.length < 2) {
+        const dokument = !!Store.getBlock(App.aktuelleSeite())?.dokumentModus;
+        if (Store.getMeta('reiterAn', true) === false || (reiter.length < 2 && !dokument)) {
             leiste.style.display = 'none';
             if (reiter.length < 2)
                 leiste.innerHTML = '';
@@ -141723,9 +142022,36 @@ const App = (() => {
         .replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c] ?? c));
     const aktuelleSeite = () => seiteId;
     const setzeSeite = (id) => { seiteId = id; };
-    /* --- Navigationsverlauf (Strg + [ und Strg + ]) ------------------------ */
     const rueck = [], vor = [];
     let navSperre = false;
+    const navOrt = () => seiteId ? { seite: String(seiteId) }
+        : sonder ? { titel: sonder.titel, zeichner: sonder.zeichner, hash: location.hash } : null;
+    const navMerken = () => {
+        if (navSperre)
+            return;
+        const ort = navOrt();
+        if (ort) {
+            rueck.push(ort);
+            if (rueck.length > 100)
+                rueck.shift();
+        }
+        vor.length = 0;
+    };
+    const navOeffnen = (ort) => {
+        navSperre = true;
+        try {
+            if ('seite' in ort)
+                oeffne(ort.seite);
+            else {
+                zeigeSonder(ort.titel, ort.zeichner);
+                location.hash = ort.hash;
+            }
+        }
+        finally {
+            navSperre = false;
+            navKnoepfeStellen();
+        }
+    };
     /* DIE KNÖPFE SAGEN VORHER, OB SIE KÖNNEN (Audit F15).
        Vorher waren `‹` und `›` immer anklickbar und meldeten erst NACH dem
        Druck „Kein Schritt zurück". Ein Knopf, der aktiv aussieht und dann
@@ -141747,34 +142073,47 @@ const App = (() => {
                 : (id === 'btn-back' ? 'Zurück — kein Schritt vorhanden'
                     : 'Vorwärts — kein Schritt vorhanden');
         };
-        setz('btn-back', rueck.length > 0);
+        setz('btn-back', rueck.length > 0 || !!seiteId);
+        if (!rueck.length && seiteId) {
+            const back = document.getElementById('btn-back');
+            if (back)
+                back.title = 'Zur Dokumentübersicht (Strg + [)';
+        }
         setz('btn-fwd', vor.length > 0);
     };
     const zurueck = () => {
-        if (!rueck.length) {
+        const ziel = rueck.pop();
+        const jetzt = navOrt();
+        if (!ziel && !seiteId) {
             UI.toast('Kein Schritt zurück');
             return;
         }
-        const id = rueck.pop();
-        if (seiteId)
-            vor.push(seiteId);
-        navSperre = true;
-        oeffne(id);
-        navSperre = false;
-        navKnoepfeStellen();
+        if (jetzt)
+            vor.push(jetzt);
+        if (ziel)
+            navOeffnen(ziel);
+        else {
+            // A directly opened or restored page still needs a way out.
+            navSperre = true;
+            try {
+                Register.navigation.eines('bibliothekOben')?.tun?.();
+            }
+            finally {
+                navSperre = false;
+                navKnoepfeStellen();
+            }
+        }
     };
     const vorwaerts = () => {
         if (!vor.length) {
             UI.toast('Kein Schritt vorwärts');
             return;
         }
-        const id = vor.pop();
-        if (seiteId)
-            rueck.push(seiteId);
-        navSperre = true;
-        oeffne(id);
-        navSperre = false;
-        navKnoepfeStellen();
+        const ziel = vor.pop();
+        const jetzt = navOrt();
+        if (jetzt)
+            rueck.push(jetzt);
+        navOeffnen(ziel);
     };
     /* ------------------------------------------------------------------------
      * Was zuletzt offen war — Notions „Kürzlich verwendet".
@@ -142561,8 +142900,11 @@ const App = (() => {
         catch { /* ohne CustomEvent bleibt der Rest */ }
     };
     const zeigeSonder = (titel, zeichner) => {
+        if (seiteId || !sonder || sonder.titel !== titel)
+            navMerken();
         sonder = { titel, zeichner };
         seiteId = null;
+        navKnoepfeStellen();
         const ort = titel.toLowerCase().replace(/[^a-z]+/g, '-');
         location.hash = '#' + ort;
         /* WO MAN WAR, NICHT NUR WAS ZULETZT OFFEN WAR (E349). `letzte` zeigt
@@ -142578,15 +142920,13 @@ const App = (() => {
             scr.scrollTop = 0;
     };
     const oeffne = (id) => {
+        if (sonder || seiteId !== id)
+            navMerken();
         sonder = null;
-        if (seiteId && seiteId !== id && !navSperre) {
-            rueck.push(seiteId);
-            vor.length = 0;
-        }
-        navKnoepfeStellen(); /* F15 — der Verlauf hat sich gerade geändert */
         if (seiteId && seiteId !== id)
             Werkzeuge.versionAutomatisch(seiteId);
         seiteId = id;
+        navKnoepfeStellen();
         if (id) {
             const p = Store.getBlock(id);
             if (p)

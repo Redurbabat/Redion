@@ -236,19 +236,26 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
 @media (hover:hover) and (min-width:761px){
   .studio-icon{position:relative; transition:transform var(--motion-fast) var(--ease)}
   .studio-icon:is(:hover,:focus-visible){transform:translate(2px,-2px)}
+  /* DIE BLASE GIBT ES ERST BEIM ZEIGEN (`display:none`, nicht `opacity:0`).
+     Eine unsichtbare Blase nimmt trotzdem Platz: die des letzten Knopfes
+     ragte 45 px rechts aus dem Fenster, und test54 „Am PC kein Überlauf"
+     wurde mit E462 rot. Das Einblenden läuft als Animation, weil ein
+     Übergang beim Wechsel von `display:none` nicht anspringt. */
   .studio-icon[aria-label]::after{
     content:attr(aria-label);
-    position:absolute; top:calc(100% + 8px); left:50%; translate:-50% 0;
+    display:none; position:absolute; top:calc(100% + 8px); left:50%; translate:-50% 2px;
     padding:4px 9px; border-radius:var(--radius-md);
     background:var(--bg-card); border:1px solid var(--line);
     box-shadow:var(--studio-elevation);
     color:var(--text); font-size:11.5px; font-weight:600; white-space:nowrap;
-    opacity:0; pointer-events:none; z-index:60;
-    transition:opacity var(--motion-fast) var(--ease), translate var(--motion-fast) var(--ease)
+    pointer-events:none; z-index:60
   }
-  .studio-icon[aria-label]:is(:hover,:focus-visible)::after{opacity:1; translate:-50% 2px}
+  .studio-icon[aria-label]:is(:hover,:focus-visible)::after{
+    display:block; animation:studio-blase-auf var(--motion-fast) var(--ease)
+  }
+  @keyframes studio-blase-auf{ from{ opacity:0; translate:-50% 0 } }
 }
 @media (prefers-reduced-motion: reduce){
   .studio-icon:is(:hover,:focus-visible){transform:none}
-  .studio-icon[aria-label]::after{transition:none}
+  .studio-icon[aria-label]::after{animation:none}
 }

@@ -171,6 +171,7 @@ const raum = await pc.evaluate(`(async () => {
     mitte: kasten('.document-center'),
     inspektor: kasten('.document-inspector-heading'),
     inspektorText: (document.querySelector('.document-inspector-heading')?.textContent || '').trim(),
+    titelText: (document.querySelector('.document-title')?.textContent || '').trim(),
     zaehler: [...document.querySelectorAll('.document-inspector-summary')]
       .map(x => (x.textContent || '').replace(/\s+/g, ' ').trim()).join(' | ')
   };
@@ -183,8 +184,11 @@ p('Die Miniaturen stehen links vom Dokument',
 p('Der Inspector steht rechts davon',
   !!raum.inspektor && !!raum.mitte && raum.inspektor.links >= raum.mitte.rechts - 2,
   `${JSON.stringify(raum.inspektor)} vs ${JSON.stringify(raum.mitte)}`);
-p('Der Inspector nennt das Dokument beim Namen',
-  /Elektrotechnik/.test(raum.inspektorText), raum.inspektorText);
+/* SEIT E464 STEHT DER NAME IN DER KOPFZEILE des Schreibtischs (`.document-title`);
+   der Inspector heisst dort „Dokumentdetails". Genannt wird er so oder so. */
+p('Der Arbeitsplatz nennt das Dokument beim Namen — im Inspector oder in der Kopfzeile',
+  /Elektrotechnik/.test(raum.inspektorText) || /Elektrotechnik/.test(raum.titelText),
+  raum.inspektorText + ' / ' + raum.titelText);
 p('Und zählt, was mit der Stelle verbunden ist',
   /Lernkarten|Aufgaben|Notizen/.test(raum.zaehler), raum.zaehler);
 
@@ -330,6 +334,8 @@ const rollen = await handy.evaluate(async () => {
   const ende = reihe.dataset['mehr'] || '(nichts)';
   return {
     knoepfe: knoepfe.length,
+    zeichenleiste: [...document.querySelectorAll<HTMLElement>('.document-drawingbar button')]
+      .filter(k => getComputedStyle(k).display !== 'none').length,
     breit: Math.round(leiste.getBoundingClientRect().width),
     inhalt: Math.round(leiste.scrollWidth),
     ohneBreite: knoepfe.filter(k => k.getBoundingClientRect().width < 1).length,
@@ -350,8 +356,12 @@ if (rollen) {
    solange ein anderes gewaehlt ist. Von 38 gebauten Knoepfen sind 13 sichtbar,
    und das ist die richtige Zahl. Eine Schranke, die eine bewusste Vereinfachung
    als Verlust meldet, misst die Vergangenheit. */
-gleich('Genau die dreizehn Werkzeuge des Stifts stehen da (E375 zog vier Formen zu einer zusammen)',
-  rollen.knoepfe, 13);
+/* SEIT E464 TEILT SICH DAS: die elf Werkzeuge, „···" und Zurück/Vor stehen
+   in der Zeichenleiste des Schreibtischs (`.document-drawingbar`, 14
+   Knöpfe); die Blattleiste darunter trägt die Stiftoptionen. Gezählt wird
+   die Zeichenleiste — und die Blattleiste muss weiter rollen (unten). */
+gleich('Die vierzehn Knöpfe der Zeichenleiste stehen da (elf Werkzeuge, ···, Zurück, Vor)',
+  rollen.zeichenleiste, 14);
   gleich('Und keines ist auf Breite null gesetzt', rollen.ohneBreite, 0);
   p('Sie nimmt mehr als ein Drittel der Fensterbreite',
     rollen.breit >= 290, `${rollen.breit} von 390 px`);

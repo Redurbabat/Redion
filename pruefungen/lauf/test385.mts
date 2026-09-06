@@ -158,11 +158,16 @@ p('Und die Kante hält auch keine leere Rasterspalte mehr frei',
 console.log('\n2 · Das Papier fängt oben an');
 /* Vor E384 gemessen: 222 von 900. Die Schranke ist bewusst grosszügig — sie
    soll den Rückfall fangen, nicht ein paar Pixel Feinschliff verbieten. */
-p('Das erste Blatt beginnt in den oberen 15 % des Fensters',
-  (m.papier?.t ?? 9999) < m.fenster.h * 0.15,
+/* SEIT E464 (Redurs Schreibstudio) stehen über dem Papier die Reiterleiste
+   (48), die Kopfzeile, die Zeichenleiste und die Original-Karte — gemessen
+   254 von 900 am Rechner, 245 von 844 am Telefon. Die Schranke ist 30 %:
+   sie fängt weiterhin den Rückfall (222 + Menüband + Kopfzeile wären 40 %),
+   ohne Redurs abgenommene Anordnung zu verbieten. */
+p('Das erste Blatt beginnt im oberen Drittel des Fensters',
+  (m.papier?.t ?? 9999) < m.fenster.h * 0.30,
   'Blatt bei ' + m.papier?.t + ' von ' + m.fenster.h);
-p('Genau eine Leiste steht darüber, und sie ist es auch',
-  (m.leiste?.t ?? -1) >= 0 && (m.leiste?.t ?? 0) < 8,
+p('Die Kopfzeile des Dokuments steht direkt unter der Reiterleiste — sonst nichts',
+  (m.leiste?.t ?? -1) >= 0 && (m.leiste?.t ?? 0) <= 56,
   JSON.stringify(m.leiste));
 p('Das Papier nimmt die Breite, die die Kante nicht mehr braucht',
   (m.papier?.w ?? 0) > 1340, 'breit: ' + m.papier?.w);
@@ -194,15 +199,18 @@ await pc.waitForTimeout(500);
 m = await pc.evaluate(MESS) as any;
 gleich('Das Dokument geht wieder als Dokument auf', m.marke, 'an');
 
-console.log('\n4 · Die Original-Karte steht im Inspector, nicht über dem Papier');
-p('Über dem Papier steht sie nicht mehr', !m.originalUeberPapier);
+console.log('\n4 · Die Original-Karte steht über der Arbeitskopie UND im Inspector');
+/* E385 nahm sie vom Papier in den Inspector; Redurs Schreibtisch (E464) stellt
+   sie als Kopf der Arbeitskopie zurück — sein test437 verlangt genau das
+   („Original über der Arbeitskopie sichtbar"). Der Inspector behält sie. */
+p('Über der Arbeitskopie steht sie (E464)', m.originalUeberPapier);
 /* Der Inspector ist zu (E296 Punkt 2) — also erst öffnen. */
 await pc.click('.document-topbar [data-document-action="inspector"]');
 await pc.waitForTimeout(500);
 m = await pc.evaluate(MESS) as any;
 p('Im geöffneten Inspector steht sie', m.originalImInspector);
-p('Und das Papier bleibt oben, auch mit offenem Inspector',
-  (m.papier?.t ?? 9999) < m.fenster.h * 0.15, 'Blatt bei ' + m.papier?.t);
+p('Und das Papier bleibt im oberen Drittel, auch mit offenem Inspector',
+  (m.papier?.t ?? 9999) < m.fenster.h * 0.30, 'Blatt bei ' + m.papier?.t);
 
 console.log('\n5 · Der Randstreifen steht im Inspector, mit Wort');
 p('In der Leiste steht er nicht mehr', !m.randInLeiste);
@@ -267,8 +275,8 @@ p('Die untere Reiterleiste steht nicht mehr da', !h.handyOben?.sicht,
 p('Die Dokumentleiste läuft nicht über das Fenster hinaus',
   (h.leisteUeber?.scrollW ?? 9999) <= (h.leisteUeber?.clientW ?? 0),
   JSON.stringify(h.leisteUeber));
-p('Das erste Blatt beginnt in den oberen 15 %',
-  (h.papier?.t ?? 9999) < h.fenster.h * 0.15,
+p('Das erste Blatt beginnt im oberen Drittel (E464: 245 von 844)',
+  (h.papier?.t ?? 9999) < h.fenster.h * 0.30,
   'Blatt bei ' + h.papier?.t + ' von ' + h.fenster.h);
 p('Der Zurück-Pfeil ist da', !!h.zurueck?.sicht, JSON.stringify(h.zurueck));
 p('Aber ohne Wort — dafür ist kein Platz', !h.zurueck || h.zurueck.w <= 52,

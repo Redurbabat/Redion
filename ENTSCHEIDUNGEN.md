@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-443 Entscheidungen, E1 bis E463 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+444 Entscheidungen, E1 bis E464 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -507,6 +507,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E461** — Vier Lader, vier Auskünfte, und keiner erfindet einen Anteil
 * **E462** — Schalter, Staffelei, Textur, Symbolreihe: die Vorgabe liefert das Aussehen, Redion den Zustand
 * **E463** — Sichtbar und lustig: die Vorgaben kommen an die Wege, die man täglich geht
+* **E464** — Redurs Zweig `codex/pdf-schreibstudio` übernommen: Schreibtisch im Vollbild, Stiftmarken, Verlauf
 
 ---
 
@@ -36366,6 +36367,14 @@ DATEIEN. `src/schale/bedienung/staffelei.ts` (neu), `textur.ts` (neu),
 GEPRÜFT. test435 (42 Punkte, neu), test362 (18), test290, test105,
 test109, test87; `npm run typecheck`, `npm run bauen:ts`.
 
+NACHTRAG (6. September, beim Zusammenführen von E464): die Blase der
+Symbolreihe war mit `opacity:0` versteckt — und eine durchsichtige Blase
+nimmt trotzdem Platz. Die des letzten Knopfes rechts ragte 45 px aus dem
+Fenster; `test54` „Am PC kein Überlauf" war seit E462 rot, und keiner der
+Läufe zu E462 hat es gesehen, weil keiner die Fensterbreite misst. Jetzt
+`display:none` bis zum Zeigen, das Einblenden als Animation (ein Übergang
+springt bei `display` nicht an); test435 §4 misst den Überlauf mit.
+
 ---
 
 E463 — Sichtbar und lustig: die Vorgaben kommen an die Wege, die man täglich geht
@@ -36494,3 +36503,106 @@ DATEIEN. `src/schale/bedienung/geste.ts` (neu), `funkel.ts` (neu),
 GEPRÜFT. test436 (71 Punkte, neu), test37 (52), test61, test432, test334,
 test258, test315, test431–435, test362 (18), test290, test105, test109,
 test87, test426; `npm run typecheck`, `npm run bauen:ts`.
+
+---
+
+E464 — Redurs Zweig `codex/pdf-schreibstudio` übernommen: Schreibtisch im Vollbild, Stiftmarken, Verlauf
+--------------------------------------------------------------------------
+
+ENTSCHEIDUNG. Der Zweig `codex/pdf-schreibstudio` (ein Commit von Redur,
+6. September 2026, auf `fc90028`) wird in `claude/redion-premium-ui-tvw2qh`
+zusammengeführt — mit Merge-Commit, nicht mit Rebase, damit sein Zweig
+gültig bleibt. Er bringt:
+
+  · `document-mode.ts`: der PDF-Schreibtisch nimmt das ganze Fenster
+    (`body[data-dokument="an"]`), Kante und Studio-Kopf treten zurück, die
+    Reiterleiste bleibt; Stiftleiste mit Farben, Strichstärken und einem
+    Verlauf zum Zurücknehmen.
+  · `marken.ts`, `symbole.ts`: sechs Tintenzeichen mehr, Stiftmarken.
+  · `reiter.ts`, `schale.ts`: der Navigationsort merkt sich den Verlauf.
+  · `pdf-studio.css`: 64 Zeilen für den Vollbild-Schreibtisch.
+  · sechs Abnahmebilder unter `doku/studio-abnahme/` — Redurs eigene
+    Ablage, sie bleiben, wo er sie hingelegt hat.
+  · einen Prüflauf mit echtem PDF, eigenem Speicher und Stifteingabe.
+
+WAS BEIM ZUSAMMENFÜHREN ENTSCHIEDEN WURDE.
+
+  · SEIN test431 HEISST HIER test437. Beide Zweige hatten die Nummer
+    vergeben — hier die Drucker-Karte (E458). Nummern sind Namen (§30);
+    die frühere Vergabe bleibt, seiner bekommt die nächste freie. Inhalt
+    unverändert, ein deutscher Kopf davor.
+  · SEINE BILDER BLEIBEN SEINE. test437 schrieb bei jedem Durchgang sechs
+    Bildschirmfotos nach `doku/studio-abnahme/` — über genau die Bilder,
+    mit denen Redur den Zweig abgenommen hat. Nach dem ersten Lauf hier
+    waren alle sechs geändert. Jetzt schreibt der Lauf nur mit
+    `--screenshots`, und dann nach `bilder/studio-abnahme/` (§55.4:
+    Bilder gehen nie auf GitHub). Die sechs Abnahmebilder stehen im
+    Verzeichnis so, wie er sie abgelegt hat.
+  · DIE VIER VERSIONSDATEIEN (`sw.ts`, `stand.ts`, `sw.js`, `stand.js`)
+    sind Ausgabe, kein Quelltext (E361): Konflikt mit UNSERER Seite
+    gelöst und dann neu gebaut — `dienststand.mts` rechnet die Prüfsumme
+    über den zusammengeführten Stand.
+  · ROHE ZAHLEN WERDEN MARKEN. Seine CSS-Zeilen schrieben 44px, 28px,
+    22px und 16px aus; test362 §7 lässt das Verzeichnis roher
+    Wiederholungen (`marken-decke.json`) nur schrumpfen. Trefferflächen
+    sind jetzt `var(--touch-min)`, Schriftgrössen und Rundungen `rem` —
+    dieselben Pixel, ein anderer Name. Sonst nichts an seinem Stil.
+  · `quell/**` WIRD NEU ERZEUGT, nicht zusammengeführt. Sein Zweig trug
+    erzeugtes JS von seinem Stand; nach dem Merge der `.ts` schreibt
+    `npm run bauen:ts` das JS aus dem zusammengeführten Quelltext, und
+    test105 hält, dass beides zusammenpasst.
+
+WAS DER ZWEIG AN ÄLTEREN ENTSCHEIDUNGEN UMSTÖSST — und was damit geschah.
+Sein Zweig stand fünf Commits hinter `main` und hatte die Suite nie ganz
+gesehen; nach dem Zusammenführen waren elf Läufe rot. Drei Sorten:
+
+  · ECHTE FEHLER, IM CODE BEHOBEN. `test54` (Überlauf am Rechner) kam
+    nicht von ihm, sondern von E462 — die Sprechblase der Symbolreihe nahm
+    unsichtbar Platz (Nachtrag dort). `test393` (E396, Audit F14): Zurück
+    und Vor wohnen jetzt in seiner Zeichenleiste, und am Telefon rollten
+    sie wieder aus dem Bild — die Zeichenleiste bekommt dieselbe Lösung wie
+    damals die Blattleiste: die zwei kleben rechts, deckend, ohne Spalt.
+  · SEINE NEUEN ENTSCHEIDUNGEN, DIE ÄLTERE ERSETZEN — die Wächter folgen
+    ihm, jeder mit dem Hinweis „E464" an der Stelle:
+      test385  Das Papier beginnt bei 254 von 900 (28 %), nicht in den
+               oberen 15 % (E384) — über ihm stehen Reiterleiste, Kopfzeile,
+               Zeichenleiste und die Original-Karte. Schranke jetzt 30 %.
+      test385  Die Original-Karte steht wieder ÜBER der Arbeitskopie
+               (E385 hatte sie in den Inspector genommen; sein test437
+               verlangt sie oben). Der Inspector behält sie.
+      test292  Die Reiterleiste steht im Schreibstudio immer, mit dem „+"
+               (E300 blendete sie bei einem Reiter aus). Ausserhalb gilt
+               E300 weiter.
+      test386  Das Studio beginnt mit dem STIFT, nicht mit „schreiben"
+               (das ist dort die Hand zum Schieben).
+      test386  Zurück führt auf einer Seite ohne Verlauf zur Dokument-
+               übersicht statt aus zu sein (F15 bleibt für den Fall ohne
+               Seite).
+      test210  Elf Werkzeuge, „···", Zurück und Vor stehen in der Zeichen-
+               leiste (14); die Blattleiste trägt die Stiftoptionen.
+      test285  Das Blatt hat ein Lesemass (`--pdf-paper-max`, 980 px).
+      test202  Zwei Dokumente sind bei 1280 × 720 beide im Bild und werden
+               beide gezeichnet; dass der REST wartet, hält test285 §2.
+      test346  Mit Stift ist `touch-action:none` — sein `marken.ts` rollt
+               die Finger selbst (`fingerPan`).
+      test202, test424  Lesen, ‹ ›, Zoom liegen hinter „☷ Ansicht"; die
+               Läufe klappen es vorher auf, wie sein test437.
+  · UND EINER, DER ZWEI URSACHEN HATTE. `test424` fiel bei E462 an
+    „Library fits 1920x1080 light" — die Sprechblase, siehe oben — und auf
+    `main` gelegentlich an „PDF page position survives reload" (flatterte
+    bei E457 und E460, stand bei E458, E459, E461). Nach dem Zusammen-
+    führen dann viermal an einem Klick auf „Lesen": das liegt seit E464
+    hinter „☷ Ansicht", und der Lauf klappt es jetzt auf. 50/50.
+
+DREI DAVON SOLLTE REDUR ANSEHEN, weil sie eine eigene frühere Entscheidung
+umkehren: das Papier bei 28 % (E384), die Original-Karte über dem Papier
+(E385), die Reiterleiste mit einem Reiter (E300). Die Wächter sind so
+geschrieben, dass ein Zurückdrehen sie wieder rot macht.
+
+GEPRÜFT. test437 (seiner), test431–436, test362, test105, test109, test87,
+test290, test426 und die Läufe, die den Dokumentmodus anfassen (test46,
+test54, test177, test202, test204, test210, test212, test220, test221,
+test222, test228, test264, test266, test285, test292, test295, test306,
+test342, test346, test385, test386, test391, test393, test394);
+`npm run typecheck`, `npm run bauen:ts`, `node bauen.mts`. Bild
+angesehen: `bilder/dokument-rechner-hell.png`.

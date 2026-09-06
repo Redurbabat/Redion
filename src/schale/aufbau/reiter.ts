@@ -81,7 +81,8 @@ const Fenster = (() => {
       main.insertBefore(leiste, document.getElementById('topbar'));
     }
     /* Ein einzelner Reiter ohne Nutzen wird nicht gezeigt. */
-    if (Store.getMeta('reiterAn', true) === false || reiter.length < 2) {
+    const dokument = !!Store.getBlock(App.aktuelleSeite())?.dokumentModus;
+    if (Store.getMeta('reiterAn', true) === false || (reiter.length < 2 && !dokument)) {
       leiste.style.display = 'none';
       if (reiter.length < 2) leiste.innerHTML = '';
       return;

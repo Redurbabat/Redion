@@ -27,9 +27,36 @@ const App = (() => {
         .replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c] ?? c));
     const aktuelleSeite = () => seiteId;
     const setzeSeite = (id) => { seiteId = id; };
-    /* --- Navigationsverlauf (Strg + [ und Strg + ]) ------------------------ */
     const rueck = [], vor = [];
     let navSperre = false;
+    const navOrt = () => seiteId ? { seite: String(seiteId) }
+        : sonder ? { titel: sonder.titel, zeichner: sonder.zeichner, hash: location.hash } : null;
+    const navMerken = () => {
+        if (navSperre)
+            return;
+        const ort = navOrt();
+        if (ort) {
+            rueck.push(ort);
+            if (rueck.length > 100)
+                rueck.shift();
+        }
+        vor.length = 0;
+    };
+    const navOeffnen = (ort) => {
+        navSperre = true;
+        try {
+            if ('seite' in ort)
+                oeffne(ort.seite);
+            else {
+                zeigeSonder(ort.titel, ort.zeichner);
+                location.hash = ort.hash;
+            }
+        }
+        finally {
+            navSperre = false;
+            navKnoepfeStellen();
+        }
+    };
     /* DIE KNÖPFE SAGEN VORHER, OB SIE KÖNNEN (Audit F15).
        Vorher waren `‹` und `›` immer anklickbar und meldeten erst NACH dem
        Druck „Kein Schritt zurück". Ein Knopf, der aktiv aussieht und dann
@@ -51,34 +78,47 @@ const App = (() => {
                 : (id === 'btn-back' ? 'Zurück — kein Schritt vorhanden'
                     : 'Vorwärts — kein Schritt vorhanden');
         };
-        setz('btn-back', rueck.length > 0);
+        setz('btn-back', rueck.length > 0 || !!seiteId);
+        if (!rueck.length && seiteId) {
+            const back = document.getElementById('btn-back');
+            if (back)
+                back.title = 'Zur Dokumentübersicht (Strg + [)';
+        }
         setz('btn-fwd', vor.length > 0);
     };
     const zurueck = () => {
-        if (!rueck.length) {
+        const ziel = rueck.pop();
+        const jetzt = navOrt();
+        if (!ziel && !seiteId) {
             UI.toast('Kein Schritt zurück');
             return;
         }
-        const id = rueck.pop();
-        if (seiteId)
-            vor.push(seiteId);
-        navSperre = true;
-        oeffne(id);
-        navSperre = false;
-        navKnoepfeStellen();
+        if (jetzt)
+            vor.push(jetzt);
+        if (ziel)
+            navOeffnen(ziel);
+        else {
+            // A directly opened or restored page still needs a way out.
+            navSperre = true;
+            try {
+                Register.navigation.eines('bibliothekOben')?.tun?.();
+            }
+            finally {
+                navSperre = false;
+                navKnoepfeStellen();
+            }
+        }
     };
     const vorwaerts = () => {
         if (!vor.length) {
             UI.toast('Kein Schritt vorwärts');
             return;
         }
-        const id = vor.pop();
-        if (seiteId)
-            rueck.push(seiteId);
-        navSperre = true;
-        oeffne(id);
-        navSperre = false;
-        navKnoepfeStellen();
+        const ziel = vor.pop();
+        const jetzt = navOrt();
+        if (jetzt)
+            rueck.push(jetzt);
+        navOeffnen(ziel);
     };
     /* ------------------------------------------------------------------------
      * Was zuletzt offen war — Notions „Kürzlich verwendet".
@@ -865,8 +905,11 @@ const App = (() => {
         catch { /* ohne CustomEvent bleibt der Rest */ }
     };
     const zeigeSonder = (titel, zeichner) => {
+        if (seiteId || !sonder || sonder.titel !== titel)
+            navMerken();
         sonder = { titel, zeichner };
         seiteId = null;
+        navKnoepfeStellen();
         const ort = titel.toLowerCase().replace(/[^a-z]+/g, '-');
         location.hash = '#' + ort;
         /* WO MAN WAR, NICHT NUR WAS ZULETZT OFFEN WAR (E349). `letzte` zeigt
@@ -882,15 +925,13 @@ const App = (() => {
             scr.scrollTop = 0;
     };
     const oeffne = (id) => {
+        if (sonder || seiteId !== id)
+            navMerken();
         sonder = null;
-        if (seiteId && seiteId !== id && !navSperre) {
-            rueck.push(seiteId);
-            vor.length = 0;
-        }
-        navKnoepfeStellen(); /* F15 — der Verlauf hat sich gerade geändert */
         if (seiteId && seiteId !== id)
             Werkzeuge.versionAutomatisch(seiteId);
         seiteId = id;
+        navKnoepfeStellen();
         if (id) {
             const p = Store.getBlock(id);
             if (p)

@@ -81,11 +81,15 @@ const mitBlatt = async (w: number, h: number, handy = true): Promise<Page> => {
 };
 
 /** Stehen die zwei im Bild? Und wie sehen sie aus? */
+/* SEIT E464 STEHEN DIE ZWEI IN DER ZEICHENLEISTE des Schreibtischs
+   (`.document-drawingbar`, `data-document-action="ink-undo|ink-redo"`);
+   die Blattleiste darunter trägt nur noch die Stiftoptionen. Gemessen wird
+   dort, wo sie sind — die Frage bleibt dieselbe: im Bild, ohne zu wischen. */
 const LAGE = `(() => {
-  const l = document.querySelector('.blatt-werk');
+  const l = document.querySelector('.document-drawingbar') || document.querySelector('.blatt-werk');
   const lr = l.getBoundingClientRect();
   const eins = (a) => {
-    const b = l.querySelector('[data-act="' + a + '"]');
+    const b = l.querySelector('[data-document-action="ink-' + a + '"]') || l.querySelector('[data-act="' + a + '"]');
     if (!b) return null;
     const r = b.getBoundingClientRect();
     const cs = getComputedStyle(b);
@@ -139,7 +143,7 @@ console.log('\n2 · Auch ganz links und ganz rechts im Rollweg');
     !!links.undo && !!links.redo && links.redo.links - links.undo.rechts === 0,
     links.undo && links.redo ? `${links.undo.rechts} → ${links.redo.links}` : 'fehlt');
 
-  await s.evaluate(`(() => { const l = document.querySelector('.blatt-werk');
+  await s.evaluate(`(() => { const l = document.querySelector('.document-drawingbar') || document.querySelector('.blatt-werk');
                              l.scrollLeft = l.scrollWidth; })()`);
   await s.waitForTimeout(400);
   const rechts = await s.evaluate(LAGE) as Lage;

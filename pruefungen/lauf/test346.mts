@@ -318,8 +318,13 @@ p('Die Zeichenschicht mit Stift lässt Finger rollen und kneifen (touch-action)'
   s.removeAttribute('data-stift');
   const ohne = getComputedStyle(s).touchAction;
   /* Chromium schreibt `pan-x pan-y pinch-zoom` als `manipulation` zurück —
-     dasselbe Verhalten, ein anderes Wort. */
-  return (mit === 'manipulation' || mit === 'pan-x pan-y pinch-zoom') && ohne === 'none';
+     dasselbe Verhalten, ein anderes Wort.
+     IM SCHREIBSTUDIO (E464) steht `none`, und das ist dort richtig: Redurs
+     `marken.ts` rollt die Finger SELBST (`fingerPan` auf `.document-center`),
+     damit der Stift zeichnet, während ein Finger die Rolle schiebt. Der
+     Browser darf dann nicht dazwischenrollen. */
+  const studio = !!s.closest('.document-studio');
+  return (mit === 'manipulation' || mit === 'pan-x pan-y pinch-zoom' || (studio && mit === 'none')) && ohne === 'none';
 }));
 
 /* ======================================================================== */

@@ -221,22 +221,27 @@ const reihe = JSON.parse(await s.evaluate(`JSON.stringify((() => {
   const k = document.getElementById('studio-theme');
   if (!k) return { da: false };
   const vor = getComputedStyle(k, '::after');
-  return { da: true, inhalt: vor.content, label: k.getAttribute('aria-label'), deckung: vor.opacity };
+  return { da: true, inhalt: vor.content, label: k.getAttribute('aria-label'), anzeige: vor.display,
+    ueberlauf: document.documentElement.scrollWidth - innerWidth };
 })())`) as string);
 p('Ein Knopf der Reihe hat einen Vorlesenamen', reihe.da && !!reihe.label);
 p('Die Blase trägt genau diesen Namen (attr(aria-label))',
   reihe.da && reihe.inhalt.replace(/^"|"$/g, '') === reihe.label, reihe.inhalt + ' / ' + reihe.label);
-p('… und ist ohne Zeiger darauf unsichtbar', reihe.da && reihe.deckung === '0');
+/* `display:none`, nicht `opacity:0` (E464): eine durchsichtige Blase nimmt
+   Platz — die des letzten Knopfes ragte 45 px aus dem Fenster, test54 rot. */
+p('… und gibt es ohne Zeiger darauf gar nicht', reihe.da && reihe.anzeige === 'none', reihe.anzeige);
+p('… also ragt auch nichts aus dem Fenster (test54)', reihe.ueberlauf <= 0, reihe.ueberlauf + ' px');
 await s.hover('#studio-theme');
 await s.waitForTimeout(300);
 const beiZeiger = JSON.parse(await s.evaluate(`JSON.stringify((() => {
   const k = document.getElementById('studio-theme');
   const vor = getComputedStyle(k, '::after');
   const r = k.getBoundingClientRect();
-  return { deckung: vor.opacity, verschoben: getComputedStyle(k).transform !== 'none',
+  return { anzeige: vor.display, deckung: vor.opacity, verschoben: getComputedStyle(k).transform !== 'none',
     imBild: r.top >= 0 && r.left >= 0 };
 })())`) as string);
-p('Mit Zeiger darauf erscheint sie', beiZeiger.deckung === '1', beiZeiger.deckung);
+p('Mit Zeiger darauf erscheint sie', beiZeiger.anzeige === 'block' && beiZeiger.deckung === '1',
+  beiZeiger.anzeige + ' / ' + beiZeiger.deckung);
 p('… und der Knopf rückt heraus', beiZeiger.verschoben);
 const handy = await oeffne({ breite: 390, beruehrung: true });
 const amTelefon = JSON.parse(await handy.evaluate(`JSON.stringify((() => {

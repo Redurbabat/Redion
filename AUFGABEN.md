@@ -238,6 +238,12 @@ und Zugänglichkeit.
     „R" im Willkommen sind weg — nur „R redion STUDIO" bleibt.
   · Die Karte in `doku/UI-KOMPONENTEN.md`: je Komponente Quelle-Status,
     Redion-Status, Ort, ob gebaut.
+  · Redurs vierzehn Vorgaben vom 6. September (E458–E463, test431–436):
+    Drucker-Karte (Nr. 28), Ordnerkarte (Nr. 29) mit dem Auge am
+    Ordnerdeckel, Merkzeichen, vier Lader (Ring, Sterne, Wort, Presse),
+    Schalter, Staffelei, Textur, Symbolreihe, die tippende Hand (Nr. 09) im
+    Rundgang und der Funkel-Knopf. Seit E463 stehen sie an den Wegen, die
+    man täglich geht — Studio-Kopf, PDF-Einlesen, Start, Cover-Wahl.
 
 **Was offen ist**, in der Reihenfolge des Auftrags (Phase B bis F):
 
@@ -245,13 +251,15 @@ und Zugänglichkeit.
     Redur) und ein kleiner Rest: der Sicherungsknopf des Start-Bildschirms
     (E57, `.hs-kreisel`) auf den Zustandsknopf umstellen, test114 §19 dazu.
   · C — Bibliothek: Baumansicht (Nr. 38, höchste Priorität), grosser
-    Datei-Browser (16), Ordnerkarte (29), Upload-Status (41).
+    Datei-Browser (16), Upload-Status (41). Die Ordnerkarte (29) steht (E459).
   · D — KI: Generate→Generating (26), Spark-Effekt in die Denkkugel (45),
     Circuit (43), Orb-Optionszeile (31), KI-Schalter nur bei echtem Zustand (25).
-  · E — PDF/Sync/Wissen/Elektro: Drucker-Prozess (28), Server/Daten-SVG (11),
-    Zahnrad (46), Pixel (50), Orbit (48), Analyseindikator (37), Gerätesteuerung (34).
+  · E — PDF/Sync/Wissen/Elektro: Server/Daten-SVG (11), Zahnrad (46),
+    Pixel (50), Orbit (48), Analyseindikator (37), Gerätesteuerung (34).
+    Der Drucker-Prozess (28) steht (E458).
   · F — Lernwelt: Aurora-Start (15), Workflow-Karten (24), Karussell (21),
-    Gestenhand (09), Teilen-Menü (35), Schnellaktionen (27).
+    Teilen-Menü (35), Schnellaktionen (27). Die Gestenhand (09) steht — im
+    Rundgang statt in der Lernwelt (E463).
 
 Jede Komponente: bestehenden Bereich lesen, an echten Zustand anschliessen,
 Prüflauf mit Gegenprobe, Bild. Für die 30 ohne Originalcode gilt: nur die

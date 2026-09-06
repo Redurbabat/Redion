@@ -624,7 +624,7 @@ const DocumentMode = (() => {
     const viewButton = topButton('view', '☷', 'Ansicht, Lesemodus und Zoom');
     viewButton.className = 'document-view-button';
     viewButton.setAttribute('aria-expanded', 'false');
-    topActions.append(viewButton, inspectorButton, topButton('exit', 'Seiteneditor', 'Dokumentmodus verlassen'));
+    topActions.append(viewButton, inspectorButton, topButton('print', 'Drucken', 'Bearbeitete Fassung mit Notizen drucken'), topButton('exit', 'Seiteneditor', 'Dokumentmodus verlassen'));
     top.append(topActions);
     const commandbar = document.createElement('div');
     commandbar.className = 'document-commandbar';
@@ -640,10 +640,44 @@ const DocumentMode = (() => {
     readButton.setAttribute('aria-pressed', String(!state.toolsOpen));
     annotateButton.setAttribute('aria-pressed', String(state.toolsOpen));
     const canAnnotate = !page.gesperrt && (typeof Konten === 'undefined' || Konten.darf('bearbeiten', page));
+    if (!canAnnotate) {
+      state.toolsOpen = false; workspace.dataset.documentTools = 'closed';
+      readButton.setAttribute('aria-pressed', 'true'); annotateButton.setAttribute('aria-pressed', 'false');
+    }
     annotateButton.disabled = !canAnnotate;
     if (!canAnnotate) annotateButton.title = 'Zum Annotieren brauchst du Bearbeitungsrechte und ein entsperrtes Dokument.';
     modes.append(readButton, annotateButton);
     commandbar.append(modes, pagination, zoomGroup);
+
+    // One document-wide tool strip. Each action delegates to the existing page
+    // controller; the original controls, undo stacks and mark objects stay intact.
+    const drawingbar = document.createElement('div');
+    drawingbar.className = 'document-drawingbar';
+    drawingbar.setAttribute('role', 'toolbar');
+    drawingbar.setAttribute('aria-label', 'PDF bearbeiten');
+    const drawingTools = [
+      ['schreiben', 'inkHand', 'Hand / Verschieben'], ['select', 'inkLasso', 'Lasso / Auswahl'],
+      ['stift', 'pencil', 'Stift'], ['marker', 'inkMarker', 'Marker'],
+      ['radierer', 'inkEraser', 'Radierer'], ['text', 'inkText', 'Text'],
+      ['formen', 'inkShapes', 'Formen'], ['zettel', 'comment', 'Haftnotiz'],
+      ['bild', 'image', 'Bild'], ['zeichen', 'bolt', 'Fachzeichen'], ['abdeck', 'eye', 'Abdecken']
+    ];
+    drawingTools.forEach(([tool, icon, label]) => {
+      const button = document.createElement('button');
+      button.type = 'button'; button.dataset.documentTool = tool!;
+      button.title = label!; button.setAttribute('aria-label', label!);
+      const glyph = document.createElement('span'); glyph.dataset.sym = icon!;
+      glyph.setAttribute('aria-hidden', 'true'); button.appendChild(glyph);
+      drawingbar.appendChild(button);
+    });
+    const moreTools = topButton('ink-options', '···', 'Alle Stiftoptionen und Bearbeitungsaktionen');
+    moreTools.setAttribute('aria-expanded', 'false');
+    drawingbar.appendChild(moreTools);
+    const history = document.createElement('div'); history.className = 'document-ink-history';
+    history.setAttribute('role', 'group'); history.setAttribute('aria-label', 'Zeichenverlauf');
+    history.append(topButton('ink-undo', '↶', 'Letzten Zeichenstrich rückgängig machen'),
+      topButton('ink-redo', '↷', 'Zeichenstrich wiederholen'));
+    drawingbar.appendChild(history);
 
     /* WELCHE SPALTEN ES GIBT, STEHT AM KASTEN (E296). Vorher war das Raster
        fest — 190 px links, 280 px rechts, bei jeder Fensterbreite ueber
@@ -688,10 +722,17 @@ const DocumentMode = (() => {
        Anfang an — und wird gezeichnet, sobald sie in die Naehe kommt.
 
        `‹ ›` und die Miniaturen wechseln nichts mehr, sie SPRINGEN. */
-    /* HIER STAND DIE ORIGINAL-KARTE — bis E384.
-       Sie liegt jetzt im Inspector (`originalKnopf`). Der Grund steht dort:
-       eine Zeile, die man selten braucht, darf nicht bei jedem Blick auf
-       das Papier 45 Pixel wegnehmen. */
+    // The source file remains untouched. Existing pdfseite blocks below are
+    // its editable printout: do not duplicate files or discard annotations.
+    const original = originalKnopf(page, current);
+    if (original) {
+      original.classList.add('document-source-master');
+      original.querySelector('.do-wort')!.textContent = 'Original · geschützt';
+      center.appendChild(original);
+      const copyLabel = document.createElement('div'); copyLabel.className = 'document-copy-label';
+      copyLabel.textContent = 'Arbeitskopie · hier schreiben und mit Notizen drucken';
+      center.appendChild(copyLabel);
+    }
 
 
     /* WELCHE SEITE GERADE GILT, IST BEWEGLICH GEWORDEN (E299). Vorher stand
@@ -703,6 +744,21 @@ const DocumentMode = (() => {
 
     const staende: HTMLElement[] = [];
     const gezeichnet = new Set<number>();
+    let penTool = String(Store.getMeta('dokStift:' + page.id, 'stift'));
+    let penColor = String(Store.getMeta('dokTinte:' + page.id, Marken.FARBEN[0]));
+    let penWidth = Number(Store.getMeta('dokStrich:' + page.id, Marken.BREITEN[1]));
+    const applyPen = (stand: HTMLElement): void => {
+      if (!state.toolsOpen || !canAnnotate || !stand.isConnected) return;
+      const toolbar = stand.querySelector<HTMLElement>('.blatt-werk');
+      if (toolbar && !toolbar.dataset.documentPenReady) {
+        toolbar.dataset.documentPenReady = 'true';
+        Array.from(toolbar.querySelectorAll<HTMLButtonElement>('[data-c]')).find(b => b.dataset.c === penColor)?.click();
+        Array.from(toolbar.querySelectorAll<HTMLButtonElement>('[data-b]')).find(b => Number(b.dataset.b) === penWidth)?.click();
+      }
+      const key = drawingTools.some(([tool]) => tool === penTool) ? penTool : 'stift';
+      if (toolbar?.dataset.tool === key) return;
+      toolbar?.querySelector<HTMLButtonElement>('[data-wz="' + key + '"]')?.click();
+    };
 
     const zeichneStand = (i: number): void => {
       if (gezeichnet.has(i)) return;
@@ -715,12 +771,18 @@ const DocumentMode = (() => {
       stand.querySelectorAll<HTMLElement>('.blatt-papier').forEach(paper => {
         (paper.closest<HTMLElement>('.blatt-flur') || paper).inert = !state.toolsOpen;
       });
+      requestAnimationFrame(() => applyPen(stand));
     };
 
     documents.forEach((block, i) => {
       const stand = document.createElement('div');
       stand.className = 'document-stage';
       stand.dataset.standNr = String(i);
+      stand.addEventListener('pointerdown', event => {
+        if (!(event.target instanceof Element) || event.target.closest('.blatt-reihe')) return;
+        state.index = i; seiteMerken(page.id, i); aktivMarkieren();
+        applyPen(stand);
+      }, true);
       /* Der Platzhalter in der richtigen Hoehe. Ohne ihn springt der
          Rollbalken bei jeder nachgezeichneten Seite. */
       const bw = Number(block.bw) || Number(block.blattBreite) || SheetSpace.A4_BREITE;
@@ -744,8 +806,33 @@ const DocumentMode = (() => {
     inspectorButton.setAttribute('aria-controls', inspector.id);
     renderInspector(inspector, page, current);
     body.append(thumbnails, center, inspector);
-    workspace.append(top, commandbar, body);
+    workspace.append(top, drawingbar, commandbar, body);
     wrap.appendChild(workspace);
+    if (typeof Register !== 'undefined') Register.symbole.fuelle(drawingbar);
+
+    const inkToolbar = (): HTMLElement | null =>
+      staende[state.index]?.querySelector<HTMLElement>('.blatt-werk') || null;
+    const inkSync = (): void => {
+      if (!workspace.isConnected) { Zeichenziel.vergiss(inkSync); return; }
+      const source = inkToolbar();
+      drawingbar.querySelectorAll<HTMLButtonElement>('[data-document-tool]').forEach(button => {
+        const real = source?.querySelector<HTMLButtonElement>('[data-wz="' + button.dataset.documentTool + '"]');
+        button.disabled = !canAnnotate || !real || real.disabled;
+        button.setAttribute('aria-pressed', String(state.toolsOpen && real?.getAttribute('aria-pressed') === 'true'));
+      });
+      for (const action of ['undo', 'redo']) {
+        const real = source?.querySelector<HTMLButtonElement>('[data-act="' + action + '"]');
+        const button = history.querySelector<HTMLButtonElement>('[data-document-action="ink-' + action + '"]');
+        if (button) button.disabled = !canAnnotate || !real || real.disabled;
+      }
+    };
+    Zeichenziel.horche(inkSync);
+    // History state is published on the existing controls via disabled attrs.
+    const inkObserver = new MutationObserver(() => {
+      if (!workspace.isConnected) { inkObserver.disconnect(); return; }
+      inkSync();
+    });
+    inkObserver.observe(center, {subtree:true, attributes:true, attributeFilter:['disabled','aria-pressed','data-tool']});
 
     /* DIE HOEHE MISST SICH SELBST (E296). In der CSS stand `calc(100vh -
        150px)`; die 150 waren der Seitenkopf plus die Leisten darueber. Der
@@ -761,7 +848,7 @@ const DocumentMode = (() => {
       if (!workspace.isConnected) return;
       const oben = Math.round(workspace.getBoundingClientRect().top);
       if (oben < 0 || oben >= window.innerHeight) return;
-      workspace.style.height = Math.max(240, window.innerHeight - oben - 12) + 'px';
+      workspace.style.height = Math.max(240, window.innerHeight - oben) + 'px';
     };
 
     /* DIE GANZE SEITE PASST INS BILD (E296) — das ist bei GoodNotes die
@@ -790,7 +877,7 @@ const DocumentMode = (() => {
 
          Gemessen auf 1440 px war die Seite mit der Hoehenrechnung 432 px
          breit; die Mitte hatte 1360. Ein Skript liest sich so nicht. */
-      const breit = Math.round((raum - 36) * (state.zoom / 100));
+      const breit = Math.round(Math.min(raum - 36, 980) * (state.zoom / 100));
       /* DAS MASS GEHT ANS PAPIER, NICHT AN DIE BUEHNE. Die Zeichenleiste
          gehoert zum Blatt und steht in derselben Huelle; haette die Buehne
          das Passmass, waere die Leiste so schmal wie die Seite — gemessen:
@@ -851,6 +938,7 @@ const DocumentMode = (() => {
         const bh = Number(block.bh) || Number(block.blattHoehe) || SheetSpace.A4_HOEHE;
         if (bw > 0 && bh > 0) stand.style.height = Math.round(breit * (bh / bw)) + 'px';
       });
+      inkSync();
     };
 
     const beiGroesse = (): void => {
@@ -900,6 +988,7 @@ const DocumentMode = (() => {
         if (i === state.index) stand.setAttribute('data-aktiv', '');
         else stand.removeAttribute('data-aktiv');
       });
+      inkSync();
     };
 
     const nachziehen = (): void => {
@@ -1014,6 +1103,7 @@ const DocumentMode = (() => {
         (paper.closest<HTMLElement>('.blatt-flur') || paper).inert = !an;
       });
       passen();
+      inkSync();
     };
     const panelsSetzen = (): void => {
       body.classList.toggle('with-thumbnails', state.thumbnailsOpen);
@@ -1027,6 +1117,10 @@ const DocumentMode = (() => {
       passen();
     };
     workspace.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && workspace.dataset.inkOptions === 'open') {
+        workspace.dataset.inkOptions = 'closed'; moreTools.setAttribute('aria-expanded', 'false');
+        moreTools.focus(); event.stopPropagation(); return;
+      }
       if (event.key === 'Escape' && workspace.dataset.documentView === 'open') {
         workspace.dataset.documentView = 'closed';
         viewButton.setAttribute('aria-expanded', 'false');
@@ -1043,6 +1137,23 @@ const DocumentMode = (() => {
     });
     workspace.addEventListener('click', event => {
       const element = event.target instanceof Element ? event.target : null;
+      const inkButton = element?.closest<HTMLElement>('.blatt-werk button');
+      if (inkButton?.dataset.c) {
+        penColor = inkButton.dataset.c; Store.setMeta('dokTinte:' + page.id, penColor);
+      }
+      if (inkButton?.dataset.b) {
+        penWidth = Number(inkButton.dataset.b); Store.setMeta('dokStrich:' + page.id, penWidth);
+      }
+      if (inkButton?.dataset.wz && inkButton.dataset.wz !== 'bild') {
+        penTool = inkButton.dataset.wz; Store.setMeta('dokStift:' + page.id, penTool);
+      }
+      const tool = element?.closest<HTMLElement>('[data-document-tool]')?.dataset.documentTool;
+      if (tool && canAnnotate) {
+        if (tool !== 'bild') { penTool = tool; Store.setMeta('dokStift:' + page.id, tool); }
+        toolsSetzen(true);
+        inkToolbar()?.querySelector<HTMLButtonElement>('[data-wz="' + tool + '"]')?.click();
+        inkSync(); return;
+      }
       if (!element?.closest('.document-commandbar,[data-document-action="view"]')) {
         workspace.dataset.documentView = 'closed';
         viewButton.setAttribute('aria-expanded', 'false');
@@ -1070,6 +1181,21 @@ const DocumentMode = (() => {
       }
       const action = element?.closest<HTMLElement>('[data-document-action]')?.dataset.documentAction;
       if (!action) return;
+      if (action === 'ink-options') {
+        const open = workspace.dataset.inkOptions !== 'open';
+        workspace.dataset.inkOptions = open ? 'open' : 'closed';
+        moreTools.setAttribute('aria-expanded', String(open));
+        if (canAnnotate) toolsSetzen(true);
+      }
+      if ((action === 'ink-undo' || action === 'ink-redo') && canAnnotate) {
+        inkToolbar()?.querySelector<HTMLButtonElement>('[data-act="' + action.slice(4) + '"]')?.click();
+        inkSync();
+      }
+      if (action === 'print') {
+        const print = Register.menueband.eines('a-drucken');
+        if (print?.tun) print.tun();
+        else UI.toast('Drucken ist gerade nicht verfügbar.');
+      }
       if (action === 'view') {
         const offen = workspace.dataset.documentView !== 'open';
         workspace.dataset.documentView = offen ? 'open' : 'closed';

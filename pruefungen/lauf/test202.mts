@@ -106,8 +106,11 @@ gleich('Verschachtelte Dokumentblöcke werden in derselben Reihenfolge gefunden'
   dokumentStart.ids, [dokument.sheetId, dokument.pdfId]);
 gleich('Der Modus ist für die Seite verfügbar und aktiv',
   [dokumentStart.available, dokumentStart.active], [true, true]);
-gleich('Zwei Miniaturen, aber nur eine volle Dokumentseite werden gezeichnet',
-  [dokumentStart.thumbs, dokumentStart.full], [2, 1]);
+/* SEIT E464 nimmt der Schreibtisch das ganze Fenster, und damit steht das
+   zweite Dokument bei 1280×720 schon im Bild — gezeichnet wird, was man
+   sieht (E299). Dass der REST wartet, hält test285 §2 mit vier Seiten. */
+gleich('Zwei Miniaturen, und gezeichnet wird nur, was im Bild ist (mindestens eine, höchstens beide)',
+  [dokumentStart.thumbs, dokumentStart.full >= 1 && dokumentStart.full <= 2], [2, true]);
 gleich('Die Positionsanzeige beginnt auf dem Blatt', dokumentStart.position, 'Seite 1/2');
 pruefe('Inspector bietet Quelle, Ausschnitt und Erkennung an',
   ['source-actions', 'select-region', 'recognize'].every(action => dokumentStart.inspector.includes(action)),
@@ -116,6 +119,9 @@ pruefe('Inspector bietet Quelle, Ausschnitt und Erkennung an',
 /* SEIT E299 WECHSELT `›` DIE ANSICHT NICHT, SONDERN ROLLT HIN. Die Rolle
    traegt alle Seiten; der Knopf springt zur naechsten. Das Rollen ist weich,
    also braucht die Messung etwas mehr Zeit als die 180 ms von vorher. */
+/* SEIT E464 liegen ‹ ›, Lesen/Annotieren und Zoom hinter „☷ Ansicht" — erst aufklappen. */
+await seite.locator('[data-document-action="view"]').click();
+await seite.waitForTimeout(250);
 await seite.locator('[data-document-action="next"]').click();
 await seite.waitForTimeout(900);
 gleich('Der echte Weiter-Knopf rollt zur zweiten PDF-Seite',
