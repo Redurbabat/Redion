@@ -180,6 +180,7 @@ rg       37  bausteine.css
 rgn      13  bausteine.css
 rm       16  bausteine.css
 rs        5  bausteine.css
+ru        9  bausteine.css
 rt       13  bausteine.css
 side     75  aufbau.css
 sk       46  bausteine.css

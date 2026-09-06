@@ -6286,3 +6286,56 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
    Regel gilt nur, solange ein Blatt offen ist (E371). */
 body.iblatt-auf .menu-grund{z-index:790}
 body.iblatt-auf .menu{z-index:794}
+
+/* ============================================================================
+   RU- — DER UMSCHALTER (E439)
+   ----------------------------------------------------------------------------
+   `ru-` heisst „Redion UI": gemeinsame Bedienbauteile, die keinem Bereich
+   gehoeren. Der Auftrag schlug `.redion-ui-*` vor; Redion arbeitet mit
+   Praefixen von zwei bis vier Buchstaben (163 Stueck), und der Zweck der
+   Regel ist Kapselung, nicht Laenge. Eingetragen in
+   doku/CSS-NAMENSRAEUME.md wie jeder andere.
+
+   DIE MARKIERUNG IST NICHT NUR FARBE (Paragraph 38). Die gewaehlte Flaeche
+   traegt Grund UND Rahmen UND Schriftgewicht — wer Farben nicht
+   unterscheidet, sieht trotzdem, was gilt.
+   ==========================================================================*/
+.ru-seg{
+  display:inline-flex; align-items:stretch; gap:2px;
+  padding:2px; border:1px solid var(--line); border-radius:9px;
+  background:var(--bg-side); max-width:100%
+}
+.ru-seg-wahl{
+  display:inline-flex; align-items:center; justify-content:center; gap:6px;
+  min-height:var(--touch-min); padding:0 12px; min-width:0;
+  border:1px solid transparent; border-radius:7px;
+  background:none; color:var(--text-dim);
+  font-size:13.5px; font-weight:560; white-space:nowrap;
+  transition:background var(--motion-fast,120ms) ease,
+             color var(--motion-fast,120ms) ease
+}
+.ru-seg-wahl:hover{ color:var(--text) }
+.ru-seg-wahl[aria-checked="true"]{
+  border-color:var(--line); background:var(--bg-card); color:var(--text);
+  font-weight:700; box-shadow:0 1px 2px rgba(0,0,0,.06)
+}
+/* DER FOKUS MUSS SICHTBAR SEIN (Paragraph 38). Bei „roving tabindex" traegt
+   nur ein Knopf den Fokus, und wer mit der Tastatur kommt, muss ihn finden.
+   `:focus-visible` und nicht `:focus`: mit der Maus soll kein Ring
+   aufblitzen. */
+.ru-seg-wahl:focus-visible{
+  outline:2px solid var(--accent); outline-offset:2px
+}
+.ru-seg-zeichen{display:inline-flex; flex:none}
+.ru-seg-zeichen svg{width:15px; height:15px}
+/* Die Kurzform steht bereit und ist am Rechner aus. Der Tausch geschieht
+   im Stil, nicht in JavaScript: eine Breite, die von einem Ereignis
+   abhaengt, ist beim ersten Zeichnen falsch. */
+.ru-seg-kurz{display:none}
+@media(max-width:520px){
+  .ru-seg-wahl{padding:0 9px}
+  /* Nur tauschen, wo es eine Kurzform GIBT — sonst verschwaende der
+     Umschalter seinen Namen und zeigte gar nichts. */
+  .ru-seg-wahl:has(.ru-seg-kurz) .ru-seg-name{display:none}
+  .ru-seg-wahl:has(.ru-seg-kurz) .ru-seg-kurz{display:inline}
+}

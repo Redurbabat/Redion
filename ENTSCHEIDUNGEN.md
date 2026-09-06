@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-432 Entscheidungen, E1 bis E438. Die Nummer ist die Ordnung: eine Entscheidung
+433 Entscheidungen, E1 bis E439. Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -496,6 +496,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E436** — Der Prüflauf fing sich einen Abgleich ein, den er nicht bestellt hat
 * **E437** — Eine Messung mit zu wenig Luft für ihre eigene Rundung
 * **E438** — Die dritte Richtung: nur nachsehen
+* **E439** — Der Umschalter, und die Karte davor
 
 ---
 
@@ -35384,3 +35385,101 @@ auszusehen wie geprüft.
 
 Dateien: `vergleichen.bat` (neu), `pruefungen/lauf/test353.mts`,
 `README.md`, `CLOUDFLARE.md`.
+
+---
+
+E439 — Der Umschalter, und die Karte davor
+--------------------------------------------
+
+ENTSCHEIDUNG: Redion bekommt ein gemeinsames Bauteil für die Wahl zwischen
+zwei bis vier sich ausschliessenden Dingen — `Segment`, in einem neuen
+Ordner `src/schale/bedienung/`. Vorher entsteht `doku/UI-KOMPONENTEN.md`
+als Karte des Bestands.
+
+DER AUFTRAG WAR GROSS: dreissig UI-Komponenten produktiv einbauen, zwölf
+weitere in eine „UI-Reserve" legen. Sein eigener Schritt 0 lautet „ZUERST
+PROJEKT LESEN", und sein eigener Vorrangsatz lautet „AKTUELLE
+REDION-ARCHITEKTUR GEWINNT". Beides ist hier ernst genommen worden, und das
+Lesen hat den Auftrag an drei Stellen verändert.
+
+WAS DAS LESEN ERGAB — die drei Funde, die zählen:
+
+  · **Der KI-Composer existiert vollständig.** `index.html:388–412`: `＋`
+    Anhang, Eingabefeld, `↑` Senden, zwölf Quick-Actions, Werkzeugzeile mit
+    Quellen, Fähigkeiten, Modus und Diktat. Der Auftrag führt ihn als
+    Punkt G mit „Priorität: SEHR HOCH". Er ist da. §19 des Auftrags sagt
+    selbst: keine zweite Parallelimplementierung.
+  · **Die KI-Aktivitätsanzeige existiert** — die Denkkugel aus E403, und
+    sie erfüllt bereits, was der Auftrag verlangt: sie hört auf, wenn
+    niemand hinsieht, steht still bei `prefers-reduced-motion` und trägt
+    ihren Zustand als TEXT, nicht nur als Bewegung.
+  · **Der Standardspinner widerspricht E46.** Der Auftrag verlangt einen
+    10-Segment-Spinner als Standard. E46 hat aus Redurs eigener Vorgabe §23
+    das Gegenteil entschieden — „Use skeletons, not random spinners
+    everywhere" —, die Skelette sind gebaut, bis in die Strichbreiten
+    begründet und von `test126 §5` mit Gegenprobe gehalten. Ein Kreisel
+    existiert in Redion gar nicht; das ist gemessen, nicht vermutet.
+
+Gebaut wurde deshalb, was WIRKLICH fehlt.
+
+DER UMSCHALTER FEHLTE. Gemessen: nirgends im ganzen `src/` ein
+`role="radiogroup"` oder etwas Gleichwertiges. Jede Stelle, die „Liste oder
+Raster" anbot, baute sich ihre eigene Knopfreihe — und keine davon war mit
+der Tastatur bedienbar. §38 sagt „Die Tastaturbedienung bleibt erhalten";
+eine Knopfreihe, die nur mit der Maus geht, verletzt das leise, weil sie
+bedienbar aussieht.
+
+WARUM EIN NEUER ORDNER. `schale/aufbau/` ist die feste Schale — Seitenleiste,
+Kopfzeile, Menüband. `schale/ueberlagerung/` ist, was ÜBER der Seite liegt.
+Ein Umschalter ist weder das eine noch das andere: er steht IN der Fläche
+und gehört keinem Bereich. `bedienung/` ist der dritte Platz. `src/schale/**`
+steht schon im `include` von `tsconfig.bauen.json`, es brauchte also keine
+Bauänderung — nur die zwei Einträge aus §28 (`index.html` und GRUNDSTOCK).
+
+DAS EIGENTLICHE STÜCK ARBEIT IST DIE TASTATUR:
+
+    Tab            in die Gruppe und wieder heraus — EINMAL, nicht je Knopf
+    ← ↑ → ↓        eine Wahl weiter, umlaufend, und die Wahl WIRKT
+    Pos1 / Ende    erste / letzte
+
+„Roving tabindex": genau ein Knopf trägt `tabindex="0"`. Ohne das tabbt man
+sich durch vier Knöpfe, um an der Gruppe VORBEIZUKOMMEN — bei drei
+Umschaltern auf einer Seite zwölf Anschläge für nichts.
+
+Und die Pfeiltaste WÄHLT, sie bewegt nicht nur den Fokus. So steht es im
+ARIA-Muster, und es ist das, was ein Mensch erwartet.
+
+PRÜFUNG: `test424`, 25 Punkte, PORT 9546.
+
+GEGENPROBEN, drei, alle gelaufen:
+  · Das `waehlen(…)` aus dem Tastendruck genommen → vier Punkte rot, und
+    der Bericht zeigt den Fehler wörtlich: `{"fokus":"karten",
+    "gewaehlt":"raster"}`. Das ist der Fehler, den kein Bildschirmfoto
+    zeigt — die Markierung sitzt woanders als der Fokus.
+  · `tabIndex = an ? 0 : -1` durch `0` ersetzt → zwei Punkte rot, alle drei
+    Knöpfe tabbar.
+  · Die `:focus-visible`-Regel umbenannt → der Stilpunkt rot.
+
+NAMENSRAUM `ru-` („Redion UI"). Der Auftrag schlug `.redion-ui-*` vor;
+Redion arbeitet mit Präfixen von zwei bis vier Buchstaben (163 Stück), und
+der Zweck der Regel ist Kapselung, nicht Länge. Eingetragen in
+`doku/CSS-NAMENSRAEUME.md` wie jeder andere; `test290` hält es.
+
+§37 UND §38 SIND GEMESSEN, nicht behauptet: 44 px Höhe auf dem Hauptweg,
+und die Markierung wirkt über Grund UND Rahmen UND Schriftgewicht — wer
+Farben nicht unterscheidet, sieht trotzdem, was gilt.
+
+Bild angesehen (§55.3): `bilder/segment-rechner-hell.png`, drei Umschalter
+nebeneinander.
+
+WAS OFFEN BLEIBT, und warum es hier steht statt in einer Zusage: der
+Uiverse-Code für die zwölf Reserve-Komponenten liegt nicht vor. Er steht
+nicht im Repository und war nicht Teil des Auftrags. Ihn nachzubauen wäre
+nicht der Code, den Redur bewertet hat, sondern eine Behauptung darüber.
+Das Reserve-Regal lässt sich leer bauen; gefüllt wird es, wenn der Code da
+ist.
+
+Dateien: `src/schale/bedienung/segment.ts` (neu),
+`quell/schale/stil/bausteine.css`, `doku/UI-KOMPONENTEN.md` (neu),
+`doku/CSS-NAMENSRAEUME.md`, `index.html`, `src/dienst/sw.ts`, `bilder.mts`,
+`pruefungen/lauf/test424.mts` (neu).
