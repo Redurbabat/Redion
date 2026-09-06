@@ -123,6 +123,8 @@ const GRUNDSTOCK = [
   './quell/schale/ueberlagerung/hinweis.js',
   './quell/schale/ueberlagerung/orb.js',
   './quell/schale/bedienung/segment.js',
+  './quell/schale/bedienung/zustand.js',
+  './quell/schale/bedienung/zustandsknopf.js',
   './quell/schale/aufbau/studio.js',
   './quell/schale/ueberlagerung/dialog.js',
   './quell/schale/ueberlagerung/fokus.js',
