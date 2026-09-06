@@ -281,6 +281,46 @@ const Einstellungen = (() => {
         `role="switch" aria-checked="${an ? 'true' : 'false'}"` +
         (name ? ` aria-label="${esc(name)}"` : '') + `><i></i></button>`;
     const knopf = (aktion, text, klasse = '') => `<button class="ez-knopf ${klasse}" data-tun="${aktion}">${text}</button>`;
+    /* EIN KNOPF, DER SEINEN VERLAUF ZEIGT (E441). Die Seite wird als Text
+       gezeichnet; ein Zustandsknopf ist aber ein Element mit Zustand. Deshalb
+       steht hier nur ein Platzhalter, und `binde()` tauscht ihn gegen den
+       echten Knopf aus `zustandsknopf.ts`. `data-zk` bleibt am fertigen
+       Knopf stehen, damit ein Prüflauf ihn findet. */
+    const zustandsknopf = (id) => `<span data-zk="${esc(id)}"></span>`;
+    /**
+     * Die Aufträge der Zustandsknöpfe dieser Seite. Der Zustand kommt aus
+     * der Zusage der echten Arbeit — nie aus einem Zeitgeber.
+     *
+     * Die Sicherung endet bei „Heruntergeladen": eine `.redion` oder `.json`
+     * kann der Browser nicht öffnen, also gibt es kein „Öffnen". Die
+     * HTML-Einzeldatei dagegen kann er — sie bekommt den Öffnen-Weg.
+     */
+    const zustandsknopfAuftrag = (id) => {
+        if (id === 'export-json')
+            return {
+                art: 'laden', klasse: 'ez-knopf',
+                texte: { bereit: 'Speichern', arbeitet: 'Wird erstellt …',
+                    fertig: 'Heruntergeladen', fehler: 'Nicht gesichert' },
+                /* `sicherungSpeichern` fängt seine Fehler selbst und sagt `false`
+                   (E146); der Knopf wertet genau das als Fehlschlag. */
+                aktion: () => App.sicherungSpeichern()
+            };
+        if (id === 'einzeldatei') {
+            let blob = null;
+            return {
+                art: 'laden', klasse: 'ez-knopf',
+                texte: { bereit: 'Erzeugen', arbeitet: 'Wird erzeugt …',
+                    geschafft: 'Heruntergeladen', fertig: 'Öffnen' },
+                aktion: () => { blob = Werkzeuge.einzelDatei(); },
+                /* Die Adresse wird nicht zurückgegeben: das Fenster braucht sie,
+                   solange es offen ist, und der Browser räumt sie mit der Seite
+                   auf. */
+                oeffnen: () => { if (blob)
+                    window.open(URL.createObjectURL(blob), '_blank'); }
+            };
+        }
+        return null;
+    };
     const feld = (schluessel, wert, platzhalter = '') => `<input data-set="${schluessel}" value="${esc(wert)}" placeholder="${esc(platzhalter)}">`;
     const kopf = (titel, unter) => `<h2>${titel}</h2>` + (unter ? `<p class="ez-unter">${unter}</p>` : '');
     /* ========================================================================
@@ -385,12 +425,12 @@ const Einstellungen = (() => {
                     ? 'verbunden' + (z.google.profil ? ' als ' + esc(z.google.profil.email) : '')
                     : (z.google.id ? 'Client-ID da, nicht angemeldet' : 'nicht eingerichtet')}</span> ` +
                     knopf('verbindungen', 'Einrichten')) +
-                zeile('Kalender', 'Google, iCloud und jede ICS-Adresse', `<span class="ez-grau">${z.ics.anzahl} Abos</span> ` + knopf('kalender-verb', 'Öffnen')) +
-                zeile('Mail', 'Gmail holen, beschriften, beantworten — oder EML-Dateien einlesen', knopf('mail-verb', 'Öffnen')) +
+                zeile('Kalender', 'Google, iCloud und jede ICS-Adresse', `<span class="ez-grau">${z.ics.anzahl} Abos</span> ` + knopf('kalender-verb', 'Öffnen', 'weiter')) +
+                zeile('Mail', 'Gmail holen, beschriften, beantworten — oder EML-Dateien einlesen', knopf('mail-verb', 'Öffnen', 'weiter')) +
                 zeile('GitHub und Jira', 'Issues und Vorgänge als gespiegelte Datenbank', `<span class="ez-grau">${z.github.verbunden ? 'GitHub verbunden' : 'nicht verbunden'}` +
-                    `</span> ` + knopf('spiegel-verb', 'Öffnen')) +
+                    `</span> ` + knopf('spiegel-verb', 'Öffnen', 'weiter')) +
                 zeile('MCP-Server', 'Fremde Werkzeuge für die KI', `<span class="ez-grau">${(Store.getMeta('mcp:server', []) || []).length} eingetragen</span> ` +
-                    knopf('mcp-verb', 'Öffnen')) +
+                    knopf('mcp-verb', 'Öffnen', 'weiter')) +
                 zeile('Web Clipper', 'Webseiten sammeln — ohne Browsererweiterung', knopf('clipper', 'Einrichten')) +
                 zeile('Ordner auf der Festplatte', 'Notizen als Markdown-Dateien ablegen', knopf('ordner-schreiben', 'Ordner wählen')) +
                 zeile('Brücke', 'Für Dienste, die den Browser nicht direkt heranlassen', `<span class="ez-grau">${z.bruecke ? 'eingetragen' : 'keine'}</span> ` +
@@ -480,13 +520,13 @@ const Einstellungen = (() => {
                             'Dropbox. Redion legt dort selbständig vollständige Sicherungen ab, ' +
                             'und der Dienst bringt sie auf deine anderen Geräte.';
             return kopf('Import und Export') +
-                zeile('Sicherung speichern', 'Alles als eine JSON-Datei', knopf('export-json', 'Speichern')) +
+                zeile('Sicherung speichern', 'Alles als eine JSON-Datei', zustandsknopf('export-json')) +
                 zeile('Sicherung laden', 'Ersetzt den jetzigen Inhalt', knopf('import-json', 'Laden')) +
                 zeile('Markdown-Ordner schreiben', 'Je Seite eine .md-Datei, Unterseiten in Unterordnern', knopf('ordner-schreiben', 'Ordner wählen')) +
                 zeile('Markdown-Ordner einlesen', 'Legt aus jeder Datei eine Seite an', knopf('ordner-lesen', 'Ordner wählen')) +
                 zeile('Dateien einlesen', 'Markdown, Text, CSV, TSV, HTML, Excel (.xlsx), Word (.docx), EPUB — ' +
                     'Excel wird zur Datenbank, EPUB zu einem Wiki mit Kapiteln', knopf('dateien-lesen', 'Dateien wählen')) +
-                zeile('Als eine HTML-Datei', 'Zum Weitergeben und Archivieren', knopf('einzeldatei', 'Erzeugen')) +
+                zeile('Als eine HTML-Datei', 'Zum Weitergeben und Archivieren', zustandsknopf('einzeldatei')) +
                 zeile('Offene Seite als Markdown', '', knopf('seite-md', 'Speichern')) +
                 zeile('Offene Seite als HTML', '', knopf('seite-html', 'Speichern')) +
                 zeile('Offene Seite drucken oder als PDF', '', knopf('seite-pdf', 'Drucken')) +
@@ -973,6 +1013,18 @@ const Einstellungen = (() => {
         });
         /* Knöpfe */
         o.querySelectorAll('[data-tun]').forEach((b) => b.addEventListener('click', () => tun(b.dataset.tun, o)));
+        /* Die Zustandsknöpfe (E441): Platzhalter gegen das echte Element
+           tauschen. Ein Platzhalter ohne Auftrag bleibt leer — lieber eine
+           Lücke, die auffällt, als ein Knopf, der nichts tut. */
+        o.querySelectorAll('span[data-zk]').forEach(platz => {
+            const id = platz.dataset['zk'] ?? '';
+            const auftrag = zustandsknopfAuftrag(id);
+            if (!auftrag || typeof Zustandsknopf === 'undefined')
+                return;
+            const griff = Zustandsknopf.bauen(auftrag);
+            griff.element.dataset['zk'] = id;
+            platz.replaceWith(griff.element);
+        });
         /* Speicherplatz nachreichen */
         const zahlen = o.querySelector('#speicher-zahlen');
         if (zahlen)

@@ -2007,8 +2007,13 @@ document.getElementById('q').oninput = e => zeichneNav(e.target.value);
 zeichneNav();
 oeffne(location.hash.slice(1) || (D[0] && D[0].id));
 <\/script></body></html>`;
-        lade(new Blob([doc], { type: 'text/html' }), 'notizen-archiv-' + heute() + '.html');
+        const blob = new Blob([doc], { type: 'text/html' });
+        lade(blob, 'notizen-archiv-' + heute() + '.html');
         UI.toast(seiten.length + ' Seiten in eine HTML-Datei gepackt');
+        /* Der Blob geht zurück, damit der Zustandsknopf in den Einstellungen
+           ihn nach dem Herunterladen ÖFFNEN kann (E441) — eine HTML-Datei kann
+           der Browser zeigen, anders als eine .redion. */
+        return blob;
     };
     /**
      * Eine Seite als HTML — für Archiv, Einzelexport und Drucken.

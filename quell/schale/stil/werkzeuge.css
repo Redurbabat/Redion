@@ -100,6 +100,71 @@
 .btn.rot{color:var(--c-red,#e03e3e); border-color:var(--c-red,#e03e3e)}
 .btn.rot.prim{background:var(--c-red,#e03e3e); color:#fff}
 .btn.klein{padding:4px 9px; min-height:28px; font-size:12.5px}
+/* DIE WEITER-VARIANTE (E441, Auftrag §4.5, Nr. 02 „Apply Now").
+   Kein neuer Knopftyp — eine Klasse `weiter` fuer Knoepfe, die irgendwohin
+   FUEHREN: „Weiter", „Oeffnen", „Anwenden". Uebernommen ist die IDEE des
+   Originals, nicht sein Aussehen: ein Pfeil, der beim Ueberfahren und beim
+   Tastaturfokus ein Stueck nach rechts gleitet, und ein feiner Schimmer
+   nur unter der Maus. Farben, Masse, Rundung bleiben die des Knopfes, auf
+   dem die Klasse steht.
+
+   WARUM VIER WIRTE. Das Knopfsystem ist `.btn`; aber „Weiter" steht heute
+   im Rundgang (`.rg-knoepfe`), in der Elektro-Pruefung (`.ea-fuss`) und
+   „Oeffnen" in den Einstellungen (`.ez-knopf`) — drei Familien mit
+   eigenen Massen, die man nicht nebenbei auf `.btn` umstellt (§45: die
+   Nachbarstelle ansehen). Die Variante ist EINE Regel mit vier Wirten,
+   nicht vier Regeln. */
+.btn.weiter, .ez-knopf.weiter, .rg-knoepfe button.weiter, .ea-fuss button.weiter{
+  position:relative; overflow:hidden;
+  display:inline-flex; align-items:center; justify-content:center; gap:6px
+}
+/* Der Pfeil ist Schmuck: `/ ""` gibt ihm einen leeren Alternativtext, damit
+   ein Vorleser „Weiter" sagt und nicht „Weiter Pfeil nach rechts". Die
+   Zeile davor ist der Rueckfall fuer Browser ohne die Schraegstrich-Form. */
+.btn.weiter::after, .ez-knopf.weiter::after,
+.rg-knoepfe button.weiter::after, .ea-fuss button.weiter::after{
+  content:"\2192"; content:"\2192" / "";
+  display:inline-block; line-height:1;
+  transition:transform var(--motion-fast) var(--ease)
+}
+.btn.weiter:hover::after, .btn.weiter:focus-visible::after,
+.ez-knopf.weiter:hover::after, .ez-knopf.weiter:focus-visible::after,
+.rg-knoepfe button.weiter:hover::after, .rg-knoepfe button.weiter:focus-visible::after,
+.ea-fuss button.weiter:hover::after, .ea-fuss button.weiter:focus-visible::after{
+  transform:translateX(4px)
+}
+/* Der Schimmer: ein heller Streifen, der einmal von links nach rechts
+   zieht — nur unter der Maus (`hover:hover`), nie am Telefon, nie bei
+   Tastaturfokus. Auf dem Akzentgrund ist er weiss, auf hellem Grund
+   nimmt er die Textfarbe schwach. */
+@media (hover:hover){
+  .btn.weiter::before, .ez-knopf.weiter::before,
+  .rg-knoepfe button.weiter::before, .ea-fuss button.weiter::before{
+    content:""; position:absolute; top:0; bottom:0; left:-60%; width:50%;
+    background:linear-gradient(110deg, transparent 20%, currentColor 50%, transparent 80%);
+    opacity:0; pointer-events:none
+  }
+  .btn.weiter:hover::before, .ez-knopf.weiter:hover::before,
+  .rg-knoepfe button.weiter:hover::before, .ea-fuss button.weiter:hover::before{
+    animation:btn-schimmer 900ms var(--ease) 1
+  }
+}
+@keyframes btn-schimmer{
+  from{ left:-60%; opacity:0 } 30%{ opacity:.18 } to{ left:110%; opacity:0 }
+}
+/* OHNE BEWEGUNG: der Pfeil steht, der Schimmer bleibt aus. Nicht nur
+   kuerzer (das macht grund.css schon), sondern gar nicht — `transform:none`
+   und `animation:none`, damit auch ein Sprung um vier Pixel unterbleibt. */
+@media (prefers-reduced-motion: reduce){
+  .btn.weiter::after, .ez-knopf.weiter::after,
+  .rg-knoepfe button.weiter::after, .ea-fuss button.weiter::after{
+    transition:none; transform:none !important
+  }
+  .btn.weiter::before, .ez-knopf.weiter::before,
+  .rg-knoepfe button.weiter::before, .ea-fuss button.weiter::before{
+    animation:none !important
+  }
+}
 /* Ein Feld im Fensterinhalt: Rand, Fläche, 14px — dasselbe Mass wie das
    Feld in der Beschriftung weiter unten. */
 .fn-feld{

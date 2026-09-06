@@ -528,7 +528,9 @@ const Elektroarbeitsplatz = (() => {
           beantwortet: false, antwort: p.antworten[p.jetzt] ?? '', pruefung: true })}</div>` +
         `<div class="ea-fuss">` +
         `<button data-a="zurueck"${p.jetzt ? '' : ' disabled'}>Zurück</button>` +
-        `<button class="prim" data-a="vor">` +
+        /* `weiter` (E441): der Pfeil nur, solange eine Aufgabe folgt —
+           „Abgeben" führt nirgendwohin, es schliesst ab. */
+        `<button class="prim${p.jetzt + 1 === p.aufgaben.length ? '' : ' weiter'}" data-a="vor">` +
         (p.jetzt + 1 === p.aufgaben.length ? 'Abgeben' : 'Weiter') + `</button></div>`;
     };
 

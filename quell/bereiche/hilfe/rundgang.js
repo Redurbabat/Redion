@@ -216,7 +216,9 @@ const Rundgang = (() => {
                 '<div class="rg-knoepfe">' +
                 '<button data-a="weg">Überspringen</button>' +
                 (nr > 0 ? '<button data-a="zurueck">Zurück</button>' : '') +
-                `<button data-a="weiter" class="prim">${nr === SCHRITTE.length - 1 ? 'Fertig' : 'Weiter'}</button>` +
+                /* `weiter` (E441): der Pfeil gleitet — nur solange es weitergeht. */
+                `<button data-a="weiter" class="prim${nr === SCHRITTE.length - 1 ? '' : ' weiter'}">` +
+                `${nr === SCHRITTE.length - 1 ? 'Fertig' : 'Weiter'}</button>` +
                 '</div>';
         stellen();
         setTimeout(stellen, 30);

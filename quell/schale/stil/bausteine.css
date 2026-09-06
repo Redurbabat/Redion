@@ -6339,3 +6339,99 @@ body.iblatt-auf .menu{z-index:794}
   .ru-seg-wahl:has(.ru-seg-kurz) .ru-seg-name{display:none}
   .ru-seg-wahl:has(.ru-seg-kurz) .ru-seg-kurz{display:inline}
 }
+
+/* ============================================================================
+   RU- — DIE ZUSTANDSPILLE UND DER ZUSTANDSKNOPF (E441)
+   ----------------------------------------------------------------------------
+   Eine Sprache fuer „laeuft, fertig, Fehler" (schale/bedienung/zustand.ts)
+   und der Knopf, der sie beim Arbeiten spricht (zustandsknopf.ts).
+
+   KEIN ZUSTAND NUR UEBER FARBE (Paragraph 38): jede Art traegt ein Zeichen
+   und einen Text; die Farbe kommt dazu, nicht statt. Farben nur aus den
+   Marken, die es gibt — `--erfolg`, `--gefahr`, `--warnung` stehen in
+   hell.css und dunkel.css.
+   ==========================================================================*/
+.ru-zustand{
+  display:inline-flex; align-items:center; gap:6px;
+  padding:2px 9px 2px 7px; border-radius:999px;
+  border:1px solid var(--line); background:var(--bg-card);
+  color:var(--text-dim); font-size:12.5px; line-height:1.5; white-space:nowrap
+}
+.ru-zustand-zeichen{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:14px; flex:none; font-size:12px; line-height:1
+}
+.ru-zustand[data-zustand="laeuft"]{ color:var(--text) }
+.ru-zustand[data-zustand="fertig"]{ color:var(--erfolg); border-color:var(--erfolg) }
+.ru-zustand[data-zustand="fehler"]{ color:var(--gefahr); border-color:var(--gefahr) }
+.ru-zustand[data-zustand="abgebrochen"]{ color:var(--warnung); border-color:var(--warnung) }
+/* Das Zeichen von „laeuft" dreht sich — dezent, 1,2 s, und nur solange
+   wirklich etwas laeuft. Wer keine Bewegung will, sieht den halben Kreis
+   still stehen; der Text daneben sagt es ohnehin. */
+.ru-zustand[data-zustand="laeuft"] .ru-zustand-zeichen,
+.ru-zk[data-zustand="arbeitet"] .ru-zk-zeichen{
+  animation:ru-dreh 1.2s linear infinite
+}
+@keyframes ru-dreh{ to{ transform:rotate(360deg) } }
+
+/* ---- Der Zustandsknopf -------------------------------------------------
+   `button.ru-zk` und nicht `.ru-zk`: der Knopf traegt daneben die Klasse
+   seines Ortes (`.ez-knopf`, `.btn`), und die stehen in Dateien, die frueher
+   laden. Die Zustandsregeln muessen darueber gewinnen — ueber Gewicht, nicht
+   ueber Reihenfolge (E320). 44 px: ein Knopf, der eine Aktion ausloest, ist
+   ein Hauptweg (Paragraph 37). */
+button.ru-zk{
+  position:relative; overflow:hidden;
+  display:inline-flex; align-items:center; justify-content:center; gap:7px;
+  min-height:var(--touch-min); padding:0 14px;
+  border:1px solid var(--line); border-radius:7px;
+  background:var(--bg); color:var(--text); font-size:13.5px; white-space:nowrap;
+  transition:color var(--motion-fast) var(--ease), border-color var(--motion-fast) var(--ease),
+             background var(--motion-fast) var(--ease)
+}
+button.ru-zk:hover{ background:var(--bg-hover) }
+/* DER FOKUS MUSS SICHTBAR SEIN (Paragraph 38) — auch waehrend der Knopf
+   arbeitet, denn er ist nie `disabled` und behaelt den Fokus. */
+button.ru-zk:focus-visible{ outline:2px solid var(--accent); outline-offset:2px }
+.ru-zk-zeichen{
+  display:inline-flex; align-items:center; justify-content:center;
+  flex:none; min-width:14px; font-size:14px; line-height:1
+}
+.ru-zk-zeichen svg{ width:16px; height:16px }
+button.ru-zk[data-zustand="arbeitet"]{ cursor:progress; color:var(--text-dim) }
+button.ru-zk[data-zustand="fertig"]:not(.prim){ color:var(--erfolg); border-color:var(--erfolg) }
+button.ru-zk[data-zustand="fehler"]:not(.prim){ color:var(--gefahr); border-color:var(--gefahr) }
+/* Die Aufforderung („Oeffnen") ist wieder ein gewoehnlicher Knopf im
+   Akzent — sie fordert auf, sie meldet nichts mehr. */
+button.ru-zk.ru-zk-aufforderung:not(.prim){ color:var(--accent-text); border-color:var(--accent-text) }
+
+/* ---- Die Sicht „laden" (Auftrag Paragraph 4.16, Nr. 03) ----------------
+   Pfeil nach unten → Balken am unteren Rand, solange es laeuft → Haken.
+   Der Balken ist BESTIMMT, wenn ein Anteil bekannt ist (`--ru-zk-anteil`),
+   sonst laeuft er unbestimmt hin und her. Nie ein erfundener Prozentwert
+   (Auftrag Paragraph 0.8). */
+.ru-zk-balken{
+  position:absolute; left:0; right:0; bottom:0; height:3px; display:none;
+  background:var(--line-soft, var(--line))
+}
+button.ru-zk[data-art="laden"][data-zustand="arbeitet"] .ru-zk-balken{ display:block }
+.ru-zk-balken i{
+  display:block; height:100%; background:var(--accent);
+  width:var(--ru-zk-anteil, 40%);
+  transition:width var(--motion-normal) var(--ease)
+}
+.ru-zk-balken:not(.bestimmt) i{ animation:ru-zk-gleiten 1.4s ease-in-out infinite }
+@keyframes ru-zk-gleiten{
+  from{ transform:translateX(-100%) } to{ transform:translateX(250%) }
+}
+
+/* WER KEINE BEWEGUNG WILL, BEKOMMT KEINE (Paragraph 15 des Auftrags).
+   grund.css kuerzt jede Dauer auf .001 ms; hier wird zusaetzlich der Name
+   genommen, damit auch ein Blitz von einem Bild nicht bleibt. Der
+   unbestimmte Balken steht dann als halbe Linie — sichtbar, nur nicht
+   wandernd. */
+@media (prefers-reduced-motion: reduce){
+  .ru-zustand[data-zustand="laeuft"] .ru-zustand-zeichen,
+  .ru-zk[data-zustand="arbeitet"] .ru-zk-zeichen{ animation:none }
+  .ru-zk-balken:not(.bestimmt) i{ animation:none; width:50% }
+}
