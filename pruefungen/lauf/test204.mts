@@ -151,6 +151,15 @@ try {
     await seite.locator('.document-inspector.is-open [data-document-action="inspector-close"]').click();
   await seite.locator('.document-topbar [data-document-action="thumbnails"]').click();
   await seite.waitForSelector('.document-thumbnails.is-open');
+  /* ERST ANKOMMEN LASSEN, DANN MESSEN. Seit dem Motion-Pass (6. September)
+     kommt die Lade mit `studio-drawer` von links herein — 10 px, eine
+     Fünftelsekunde. Gemessen unmittelbar nach dem Aufgehen stand sie bei
+     -10, und das ist kein Aufbaufehler, sondern der Eintritt. Gewartet
+     wird auf die Animation selbst, nicht auf eine geratene Zeit. */
+  await seite.evaluate(async () => {
+    const panel = document.querySelector<HTMLElement>('.document-thumbnails.is-open');
+    await Promise.all((panel?.getAnimations?.() || []).map(a => a.finished.catch(() => undefined)));
+  });
   const drawerOffen = await seite.evaluate(() => {
     const panel = document.querySelector<HTMLElement>('.document-thumbnails.is-open');
     const rect = panel?.getBoundingClientRect();
