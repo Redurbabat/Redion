@@ -468,8 +468,9 @@ const Rundgang = (() => {
         d.setAttribute('aria-label', 'Willkommen bei Redion');
         d.innerHTML =
             '<div class="wk-kasten">' +
+                /* Hier stand ein „R" im Farbkasten (bis E456). Redur will genau
+                   eine Marke — die des Studios in der Kopfzeile. */
                 '<div class="wk-kopf">' +
-                '<div class="wk-zeichen" aria-hidden="true">R</div>' +
                 '<h2>Willkommen bei Redion</h2>' +
                 '<p>Notizen, Seiten und Datenbanken — <b>auf deinem Gerät</b>. ' +
                 'Kein Konto, kein Abo, keine Wolke, solange du keine willst.</p>' +

@@ -211,6 +211,8 @@ import { chromium } from 'playwright';
       seitenleiste: Math.round(s.getBoundingClientRect().width),
       seitenleistePos: getComputedStyle(s).position,
       kante: kante ? Math.round(kante.getBoundingClientRect().width) : 0,
+      /* Seit dem Studio (E440) sagt der Griff, wie breit die Kante ist. */
+      navBreite: Number(document.getElementById('studio-divider')?.getAttribute('aria-valuenow')) || 0,
       /* Wo der INHALT anfängt, nicht wo `#main` anfängt: `#main` läuft
          seit Phase F über die volle Breite, weil das Menüband darin oben
          quer darüber steht. Gemessen wird die Rollfläche. */
@@ -252,12 +254,20 @@ import { chromium } from 'playwright';
      sie die Schublade, und `#tree` darin ist der einzige Seitenbaum, den
      es gibt (die Lade schiebt ihn sich herüber). Am Rechner ist sie
      `display:none`, und genau das wird hier gemessen. */
-  ok('Am PC ist die Kontextkante da und 54 px breit',
-     pc.kante === 54, String(pc.kante) + ' px');
+  /* SEIT DEM STUDIO (E440) IST DIE KANTE DIE STUDIO-NAVIGATION. Sie ist
+     nicht mehr 54 Pixel schmal, sondern 148 bis 260 breit (Standard 184,
+     kompakt 62) und trägt Beschriftungen. Die Breite steht am Griff
+     `#studio-divider` als aria-valuenow — gemessen wird gegen DIESEN Wert,
+     nicht gegen eine Zahl, denn der Mensch darf ziehen. Fest bleibt: der
+     Inhalt beginnt genau hinter ihr. (E456 hat den Punkt vom Studio
+     eingeholt; bis dahin stand er seit dem Merge rot.) */
+  ok('Am PC ist die Kontextkante da und so breit wie die Studio-Navigation',
+     pc.kante >= 148 && pc.kante <= 260 && pc.kante === pc.navBreite,
+     pc.kante + ' px, der Griff sagt ' + pc.navBreite);
   ok('Und die alte 240-px-Seitenleiste ist dort weg',
      pc.seitenleiste === 0, pc.seitenleistePos + ' / ' + pc.seitenleiste);
-  ok('Der Inhalt beginnt hinter der Kante', pc.inhaltLinks === 54,
-     pc.inhaltLinks + ' px');
+  ok('Der Inhalt beginnt hinter der Kante', pc.inhaltLinks === pc.kante,
+     pc.inhaltLinks + ' px hinter ' + pc.kante + ' px Kante');
   /* SEIT E219 SIND ES AM PC ABSICHTLICH WENIGER. Fünf Zeichen — Teilen,
      Kommentare, Versionsverlauf, Automationen, Link kopieren — stehen im
      ⋯-Menü, und zwar in demselben Block, der dort schon fürs Telefon war.

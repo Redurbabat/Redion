@@ -102,9 +102,18 @@ for (const f of dateien) alles += lies(f);
 let allesOhne = '';
 for (const f of dateien) allesOhne += ohneKommentar(lies(f));
 
+/* DIE RESERVE HAT IHRE EIGENE SEITE (E440, E456). `src/entwicklung/ui-reserve/`
+   lädt nicht index.html, sondern `quell/entwicklung/ui-reserve/index.html` —
+   dort stehen ihre Kennungen. Ein Griff aus der Reserve gilt also DORT, und
+   nur dort; in der Schale wäre er ein Fremdstück (test426 hält das). Bis
+   E456 mass der Lauf die Reserve gegen die Schale und stand seit E440 rot. */
+const reserveMarkup = lies('quell/entwicklung/ui-reserve/index.html');
+const seiteFuer = (f: string): string =>
+  f.startsWith('src/entwicklung/ui-reserve/') ? reserveMarkup : markup;
+
 /** Kann diese Kennung überhaupt irgendwo entstehen? */
-const entsteht = (id: string): boolean =>
-  markup.includes('id="' + id + '"') ||
+const entsteht = (id: string, seite: string = markup): boolean =>
+  seite.includes('id="' + id + '"') ||
   alles.includes('id="' + id + '"') ||
   alles.includes("id='" + id + "'") ||
   alles.includes('.id = \'' + id + '\'') ||
@@ -146,7 +155,7 @@ for (const f of dateien) {
   for (const m of treffer) {
     geprueft++;
     const id = m[1]!;
-    if (!entsteht(id) && !(id in ERLAUBT)) verwaisteSuche.push(f + ': ' + id);
+    if (!entsteht(id, seiteFuer(f)) && !(id in ERLAUBT)) verwaisteSuche.push(f + ': ' + id);
   }
 }
 p('Die Messung findet überhaupt Nachschlagestellen', geprueft >= 80,
@@ -167,6 +176,13 @@ p('Eine erfundene Kennung entsteht nirgends', !entsteht('gibt-es-hier-sicher-nic
    falsch und §1/§2 meldeten alles als verwaist. Das ist der Zwilling zu
    (a), und ohne ihn wäre der Lauf in die andere Richtung blind. */
 p('Eine echte Kennung aus dem Markup wird gefunden', entsteht('handy-oben'));
+
+/* (b2) Die Reserve-Seite wird wirklich gelesen — und ihre Kennung gilt NUR
+   dort. Sonst wäre die Lockerung oben eine stille Abschaltung: eine leere
+   Reserve-Seite liesse jeden Griff der Reserve durch. */
+p('Die Reserve-Seite hat ihre Kennung, die Schale nicht',
+  entsteht('res-raster', reserveMarkup) && !entsteht('res-raster'),
+  'reserveMarkup ' + reserveMarkup.length + ' Zeichen');
 
 /* (c) Kommentare zählen NICHT mit. `btn-suche-mitte` steht in schale.ts nur
    noch im Kommentar über sein eigenes Aufräumen; ohne die Streichung meldete

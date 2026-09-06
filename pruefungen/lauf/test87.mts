@@ -223,7 +223,14 @@ const STILE = _liste(STIL_ORDNER).filter(n => n.endsWith('.css')).sort();
 const STUFE: Record<string, number> = { 'marken.css': 0, 'dunkel.css': 0, 'hell.css': 0,
                 'grund.css': 1, 'aufbau.css': 1,
                 'bausteine.css': 3,
-                'premium.css': 4 };
+                /* DIE SCHALE HAT SEIT DEM STUDIO (E440) VIER BLÄTTER: premium
+                   ist die Grundschale, studio setzt darauf auf, die zwei
+                   Bereichsblätter des Studios darauf. Alle vier gehören ans
+                   Ende — und in dieser Folge, siehe unten. Bis E456 fehlten
+                   die drei Studio-Blätter hier und zählten als Bauteile
+                   (Stufe 2): der Wächter stand seit dem Merge rot. */
+                'premium.css': 4, 'studio.css': 4,
+                'bibliothek-studio.css': 4, 'pdf-studio.css': 4 };
 const stufeVon = (d: string) => STUFE[d] ?? 2;
 
 const html = _lies(_dazu(WURZEL, 'index.html'), 'utf8');
@@ -283,6 +290,16 @@ p('marken.css, dann dunkel.css, dann hell.css',
    ein durchgerutschter Vergleich für immer grün. */
 p('Und die Prüfung würde eine verdrehte Folge merken',
   stufeVon('marken.css') < stufeVon('bausteine.css'));
+
+/* Und innerhalb der Schale ebenso (E456): premium.css ist die Grundschale,
+   studio.css übersteuert sie mit GLEICHER Genauigkeit — also nur über die
+   Position. Die zwei Bereichsblätter des Studios kommen danach. Verdreht
+   gewönne die Grundschale, und das Studio sähe aus wie vorher. */
+const schaleBlaetter = verlinkt.filter(d => stufeVon(d) === 4);
+p('premium.css, dann studio.css, dann die Studio-Bereiche',
+  JSON.stringify(schaleBlaetter) ===
+    JSON.stringify(['premium.css', 'studio.css', 'bibliothek-studio.css', 'pdf-studio.css']),
+  schaleBlaetter.join(', '));
 
 /* HIER WIRD NICHT GELOCKERT, und das ist der Unterschied: ein `@import` ist
    eine EIGENE Netzanfrage. Offline nützt es nichts, dass das importierende

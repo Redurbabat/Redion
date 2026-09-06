@@ -3429,12 +3429,8 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   border-radius:16px; box-shadow:var(--shadow); padding:28px 26px 22px;
 }
 .wk-kopf{ text-align:center; margin-bottom:22px }
-.wk-zeichen{
-  width:56px; height:56px; margin:0 auto 14px; border-radius:16px;
-  background:var(--accent); color:var(--auf-accent);
-  display:flex; align-items:center; justify-content:center;
-  font-size:26px; font-weight:700;
-}
+/* `.wk-zeichen` — das „R" im Farbkasten über dem Willkommen — ist seit E456
+   weg: eine Marke, die des Studios, nicht drei. */
 .wk-kopf h2{ font-size:22px; font-weight:600; margin-bottom:8px }
 .wk-kopf p{ font-size:14px; color:var(--text-dim); line-height:1.6 }
 .wk-kopf p b{ color:var(--text); font-weight:600 }
