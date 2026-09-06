@@ -6375,3 +6375,24 @@ Funktion aus `dienst.ts` heraus oder überschreibbar werden — und das ist
 eine Änderung am KI-Kern für einen Prüflauf, also eine eigene
 Entscheidung. Für das Wort: die Server-Suite um einen Abgleichfall
 erweitern.
+
+---
+
+L120 — Die Presse beim PDF-Einlesen läuft im Prüflauf nicht an einer echten PDF
+--------------------------------------------------------------------------
+
+E463 hängt die Presse (E461) an `PdfEinlesen.einlesen`: eine schwebende
+Karte, die „Seite n von m" schreibt, während die Schleife läuft. `test436`
+§3 prüft die Karte selbst mit echten Bytes im DOM — bauen, setzen,
+entfernen, Lage am Telefon — und die VERDRAHTUNG in `einlesen.ts` als Text:
+`Lader.schweben`, kein Toast daneben, fünfmal `wegMelden()`.
+
+Was er nicht tut: eine PDF durch die Schleife schicken und dabei zusehen,
+wie die Karte „Seite 3 von 12" sagt. Dafür bräuchte der Lauf eine
+PDF-Datei und den PDF-Leser im Browser; die Suiten, die das haben
+(test177, test180, test189, test192, test228, test285, test320), prüfen das
+Ergebnis des Einlesens, nicht die Meldung währenddessen.
+
+WAS ES SCHLIESSEN WÜRDE: in einer dieser Suiten während des Einlesens
+nach `.ru-lader-schwebt .ru-lader-text` sehen — eine Zeile, aber in einem
+Lauf, der der Presse nicht gehört. Derselbe Stand wie bei L119.

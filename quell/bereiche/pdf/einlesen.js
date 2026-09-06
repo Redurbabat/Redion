@@ -63,10 +63,27 @@ const PdfEinlesen = (() => {
         const kopf = new Uint8Array(await datei.slice(0, PDF_KOPF.length).arrayBuffer());
         if (PDF_KOPF.some((b, i) => kopf[i] !== b))
             throw new Error('Das ist keine PDF-Datei.');
-        const melder = UI.toast('„' + datei.name + '" wird gelesen …', 120000);
+        /* DIE PRESSE STATT DES TOASTS (E463). Ein Toast ist zwei Zeilen Grau,
+           und beim zwölften „Seite 7 von 12" sieht ihn niemand mehr an. Die
+           Karte unten rechts zeigt Bogen für Bogen, wie aus der Datei Seiten
+           werden, und schreibt dieselbe Zahl daneben — als `role="status"`,
+           also hört der Vorleser denselben Satz wie vorher. Beides zugleich
+           wäre der Satz zweimal. Ohne `Lader` (alte Einzeldatei, Prüflauf ohne
+           Schale) bleibt es beim Toast. */
+        const presse = typeof Lader !== 'undefined'
+            ? Lader.schweben({ art: 'presse', text: '„' + datei.name + '" wird gelesen …' })
+            : null;
+        const melder = presse ? null : UI.toast('„' + datei.name + '" wird gelesen …', 120000);
         const sageAn = (t) => {
-            if (melder && melder.textContent !== undefined)
+            if (melder)
                 melder.textContent = t;
+            presse?.setzen({ text: t });
+        };
+        /* Toast oder Karte gehen auf JEDEM Weg hinaus weg — eine Presse, die
+           nach dem Fehler weiterläuft, wäre eine Behauptung. */
+        const wegMelden = () => {
+            melder?.remove();
+            presse?.entfernen();
         };
         let griff = null;
         /* DAS ORIGINAL ZUERST — es ist das, was zählt. Geht danach etwas schief,
@@ -79,7 +96,7 @@ const PdfEinlesen = (() => {
             quelle = await Dateien.ablegen(datei, { blockId: elternId });
         }
         catch (e) {
-            melder.remove();
+            wegMelden();
             throw e;
         }
         /**
@@ -112,7 +129,7 @@ const PdfEinlesen = (() => {
             griff = await PdfLeser.oeffne(bytes, async (nochmal) => {
                 if (typeof Dialog === 'undefined')
                     return null;
-                melder.textContent = '„' + datei.name + '" ist geschützt.';
+                sageAn('„' + datei.name + '" ist geschützt.');
                 return await Dialog.frage(nochmal ? 'Das Passwort stimmte nicht — noch einmal'
                     : 'Passwort für „' + datei.name + '"', '', 'passwort');
             });
@@ -148,7 +165,7 @@ const PdfEinlesen = (() => {
                     })
                     : zuletzt;
             if (!anordnung) {
-                melder.remove();
+                wegMelden();
                 return nurAnhaengen('liegt als Anhang auf der Seite.');
             }
             if (!(vorgabe && vorgabe.anordnung))
@@ -177,7 +194,7 @@ const PdfEinlesen = (() => {
                         })
                         : 'alle';
                 if (!antwort) {
-                    melder.remove();
+                    wegMelden();
                     return nurAnhaengen('liegt als Anhang auf der Seite.');
                 }
                 bis = antwort === 'erste' ? OHNE_FRAGE : gesamt;
@@ -248,8 +265,7 @@ const PdfEinlesen = (() => {
                 /* Dem Browser Luft lassen — sonst steht die Oberfläche still. */
                 await new Promise(r => setTimeout(r, 0));
             }
-            if (melder && melder.remove)
-                melder.remove();
+            wegMelden();
             /* ══ DAS ORIGINAL BLEIBT OBEN STEHEN (E299) ═══════════════════════════
                Redur: „ganz oben sollte immer die orginale pdf dort stehen und die
                anderen als eien kopier dort ausdrucken". Genau so macht es OneNote:
@@ -331,7 +347,7 @@ const PdfEinlesen = (() => {
             return { seiten: bis, gesamt, quelle, bloecke: gemacht, anhang };
         }
         catch (e) {
-            melder.remove();
+            wegMelden();
             const text = e instanceof Error ? e.message : String(e);
             /* Verschlüsselte Dateien sind der häufigste Fall — und der einzige,
                bei dem eine allgemeine Meldung ratlos machen würde. */

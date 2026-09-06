@@ -87,8 +87,15 @@ const Kopfleiste = (() => {
                 'radial-gradient(circle at 70% 20%,#c9b8a8,#6b5b4d)',
                 'conic-gradient(from 200deg,#4dab9a,#529cca,#9a6dd7,#4dab9a)',
                 'conic-gradient(from 20deg,#ffa344,#e03e3e,#9a6dd7,#ffa344)'
-            ]]
+            ]],
+        /* DAS RAUSCHEN (E463). Kein Farbwert, sondern ein Name: `textur:` und
+           eine der drei Grundflächen, darüber die zwei Rauschlagen aus
+           `textur.ts`, die treiben. Der Wert steht so im Block — wer ihn in
+           einer alten Fassung öffnet, sieht ein Cover ohne Bild, keinen
+           Fehler. */
+        ['Rauschen', ['textur:nebel', 'textur:sand', 'textur:nacht']]
     ];
+    const texturVon = (cover) => cover.startsWith('textur:') ? cover.slice(7).replace(/[^a-z]/g, '') : '';
     const coverWaehlen = (p) => {
         let reiter = 'galerie';
         const o = document.createElement('div');
@@ -110,8 +117,14 @@ const Kopfleiste = (() => {
                     (reiter === 'galerie'
                         ? COVER_GRUPPEN.map(([name, liste]) => `<div class="cb-grp">${esc(name)}</div>` +
                             '<div class="cover-gitter">' +
-                            liste.map((f) => `<button data-c="${esc(f)}" style="background:${f}"` +
-                                `${p.cover === f ? ' class="on"' : ''}></button>`).join('') +
+                            liste.map((f) => {
+                                const textur = texturVon(f);
+                                const klassen = [textur ? 'cover-textur cover-textur-' + textur : '',
+                                    p.cover === f ? 'on' : ''].filter(Boolean).join(' ');
+                                return `<button data-c="${esc(f)}"` +
+                                    (textur ? '' : ` style="background:${f}"`) +
+                                    (klassen ? ` class="${klassen}"` : '') + '></button>';
+                            }).join('') +
                             '</div>').join('')
                         : reiter === 'hoch'
                             ? '<div class="cb-mitte"><button class="cb-knopf" data-a="bild">Bild wählen</button>' +
@@ -121,6 +134,10 @@ const Kopfleiste = (() => {
                                 '<div class="cb-hinweis">Die Adresse eines Bildes im Netz.</div></div>') +
                     '</div>' +
                     '</div>';
+            /* Die Rausch-Kacheln bekommen ihre Lagen erst, wenn sie im Baum
+               stehen — eine Zeichenkette kann keinen Filter tragen. */
+            if (typeof Textur !== 'undefined')
+                o.querySelectorAll('.cover-textur').forEach(b => Textur.legen(b));
         };
         zeichne();
         o.addEventListener('click', e => {
@@ -196,8 +213,21 @@ const Kopfleiste = (() => {
         if (p.cover) {
             const c = document.createElement('div');
             c.className = 'cover';
-            c.style.background = p.cover.startsWith('#') || p.cover.startsWith('linear')
-                ? p.cover : `url(${p.cover}) center/cover`;
+            const textur = texturVon(String(p.cover));
+            if (textur) {
+                c.classList.add('cover-textur', 'cover-textur-' + textur);
+                if (typeof Textur !== 'undefined')
+                    Textur.legen(c);
+            }
+            else {
+                /* JEDER VERLAUF IST EIN VERLAUF. Hier stand `startsWith('linear')`
+                   — und die sechs Kacheln unter „Papier und Struktur" beginnen
+                   mit `repeating-`, `radial-` oder `conic-`. Sie wurden als
+                   Bildadresse gelesen (`url(conic-gradient(…))`) und blieben leer.
+                   Gefunden beim Anbau des Rauschens (E463). */
+                c.style.background = /^(#|[a-z-]*gradient\()/.test(p.cover)
+                    ? p.cover : `url(${p.cover}) center/cover`;
+            }
             wrap.appendChild(c);
         }
         /* Symbol */

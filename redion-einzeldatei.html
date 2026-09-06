@@ -4101,6 +4101,37 @@ html[data-theme="light"] .banner{color:#37352f}
 .schalter.an{background:var(--accent)}
 .schalter.an i{transform:translateX(16px); background:#fff}
 
+/* ---- Der Verlauf im eingeschalteten Schalter (E462, Vorgabe 6. September)
+   Redurs `.gradient-btn` legt zwei gedrehte Verläufe übereinander und
+   mischt sie. Die Redion-Fassung nimmt davon EINEN und legt ihn IN die
+   Bahn des Schalters — die Markierung selbst (Fläche voll, Knebel rechts)
+   bleibt unverändert, denn sie ist es, die den Zustand sagt (§38).
+
+   KEIN NEUES MARKUP. Der Schalter wird an 18 Stellen als Zeichenkette
+   gebaut (`schalter()` und `haken()` in einstellungen/ansicht/seite.ts);
+   zwei Verlaufsschichten hineinzuflechten hiesse, 18 Aufrufer und ihre
+   Prüfläufe anzufassen. `::before` reicht — und es kann nichts brechen,
+   was es nicht selbst mitbringt. */
+.schalter{overflow:hidden; isolation:isolate}
+.schalter::before{
+  content:""; position:absolute; left:50%; top:50%;
+  width:220%; aspect-ratio:1; transform:translate(-50%,-50%);
+  border-radius:50%; opacity:0; pointer-events:none; z-index:0;
+  background:conic-gradient(from 0deg,
+    var(--accent), var(--accent-text), var(--accent),
+    var(--accent-text), var(--accent));
+  transition:opacity var(--motion-normal) var(--ease)
+}
+.schalter.an::before{opacity:.85; animation:ez-schalter-dreh 7s linear infinite}
+.schalter i{z-index:1}
+@keyframes ez-schalter-dreh{to{transform:translate(-50%,-50%) rotate(360deg)}}
+/* Die Trefferfläche liegt VOR dem Verlauf — sie darf nicht überdeckt
+   werden, und `overflow:hidden` würde sie sonst beschneiden. */
+.schalter::after{z-index:2}
+@media (prefers-reduced-motion: reduce){
+  .schalter.an::before{animation:none}
+}
+
 .ez-plan{
   background:var(--bg-card); border-radius:9px; padding:16px 18px; margin:6px 0 18px;
 }
@@ -4648,6 +4679,8 @@ tr.mail-jetzt > td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
   td.td-aus input.zeilen-aus{display:inline}
   .stab-griff{opacity:.75}
 }
+/* Die Staffelei über den Schema-Karten (E462) */
+.au-staffelei{display:flex; justify-content:center; margin:4px 0 18px}
 
 </style>
 <style>
@@ -14438,6 +14471,555 @@ button.ru-zk[data-art="laden"][data-zustand="arbeitet"] .ru-zk-balken{ display:b
   .ru-zk-balken:not(.bestimmt) i{ animation:none; width:50% }
 }
 
+/* ---- Die Drucker-Karte (E458, Uiverse Nr. 28 von spotift_5948) -----------
+   Ein Drucker, ein Blatt, eine Lampe, ein Satz. Der Zustand steht in
+   `data-zustand` und kommt aus dem echten Druckweg (schale/bedienung/
+   drucker.ts, werkzeuge.ts `drucken`) — die Schleife des Originals, die
+   alle 6,4 s „Done" sagte, gibt es hier nicht. Bewegung NUR in
+   `vorbereiten` und `rendern`; sonst liegt das Blatt still.
+
+   DIE BUEHNE IST EIN BILD und behaelt den dunklen Grund des Originals in
+   beiden Schemata — ein weisser Drucker auf weisser Karte waere keiner.
+   Karte, Satz und Lampe nehmen die Marken. Die Masse sind die des
+   Originals bis auf fuenf, die den rohen Zahlen aus marken-decke.json
+   ausweichen (test362 Paragraph 7): 22→23, 56→55, 28→27, 16→15, 46→45. */
+.ru-drucker{
+  --ru-lampe:var(--warnung);
+  width:190px; overflow:hidden; border-radius:var(--radius-xl);
+  border:1px solid var(--line); background:var(--bg-card); box-shadow:var(--shadow);
+  color:var(--text-dim); font-size:11px; font-weight:600; letter-spacing:.3px
+}
+.ru-drucker-schwebt{ position:fixed; right:var(--mobile-gutter-small); bottom:var(--mobile-gutter-small); z-index:901 }
+@media (max-width:760px){
+  .ru-drucker-schwebt{ bottom:calc(var(--mobile-nav-height) + var(--mobile-gutter-small)) }
+}
+.ru-drucker-buehne{ position:relative; height:175px; overflow:hidden; background:linear-gradient(145deg,#1a1a1a,#222) }
+.ru-drucker-buehne::before{
+  content:""; position:absolute; inset:0; pointer-events:none;
+  background-image:radial-gradient(rgba(255,255,255,.04) 1px,transparent 1px); background-size:14px 14px
+}
+.ru-drucker-buehne i{ display:block }
+/* Das Blatt — hinter dem Geraet. Die Grundlage ist die Ruhelage „halb
+   im Schlitz"; die Zustaende unten verschieben oder bewegen sie. */
+.ru-drucker-blattgruppe{ position:absolute; left:50%; top:23px; z-index:1; transform:translate(-50%,14px) }
+.ru-drucker-blattschatten{ position:absolute; top:2px; left:1px; width:55px; height:70px; border-radius:3px; background:rgba(0,0,0,.22); filter:blur(2px); z-index:1; opacity:0 }
+.ru-drucker-blatt{ position:relative; z-index:2; width:54px; height:68px; padding:7px 8px; display:flex; flex-direction:column; gap:5px; background:#fff; border:1px solid #d0d0d0; border-radius:3px }
+.ru-drucker-tinte{ height:2.5px; border-radius:1.5px; background:#2a2a2a; opacity:0 }
+.ru-drucker-tinte:nth-child(3n+1){ width:40px }
+.ru-drucker-tinte:nth-child(3n+2){ width:27px }
+.ru-drucker-tinte:nth-child(3n){ width:19px }
+/* Das Geraet — davor */
+.ru-drucker-geraet{ position:absolute; left:50%; top:50%; width:132px; height:96px; transform:translate(-50%,-50%); z-index:3 }
+.ru-drucker-umschatten{ position:absolute; left:3px; top:10px; width:126px; height:70px; border-radius:12px; background:rgba(0,0,0,.06) }
+.ru-drucker-deckel{ position:absolute; left:26px; top:0; width:80px; height:17px; background:#f0f0f0; border:1px solid #c8c8c8; border-radius:4px; z-index:2 }
+.ru-drucker-deckel-innen{ position:absolute; left:50%; top:50%; width:72px; height:11px; transform:translate(-50%,-50%); background:#f8f8f8; border:.5px solid #d8d8d8; border-radius:2px }
+.ru-drucker-koerper{ position:absolute; left:0; top:14px; width:132px; height:58px; background:#fff; border:1.5px solid #d5d5d5; border-radius:10px; z-index:2; box-shadow:0 5px 0 rgba(0,0,0,.03) }
+.ru-drucker-schlitz{ position:absolute; left:50%; top:5px; width:70px; height:4px; transform:translateX(-50%); background:#2a2a2a; border-radius:2px; z-index:3 }
+.ru-drucker-feld{ position:absolute; left:9px; top:15px; width:42px; height:15px; background:#f8f8f8; border:1px solid #e0e0e0; border-radius:3px; z-index:3 }
+.ru-drucker-feld-gross{ position:absolute; left:4px; top:4px; width:15px; height:2.5px; background:#a0a0a0; border-radius:1.5px }
+.ru-drucker-feld-klein{ position:absolute; left:4px; top:9px; width:26px; height:2px; background:#c8c8c8; border-radius:1px }
+.ru-drucker-knoepfe{ position:absolute; left:58px; top:18px; display:flex; gap:3px; z-index:3 }
+.ru-drucker-knopf{ width:6px; height:6px; background:#e0e0e0; border:.5px solid #c8c8c8; border-radius:50% }
+.ru-drucker-lampe{ position:absolute; right:10px; top:15px; width:7px; height:7px; z-index:3 }
+.ru-drucker-led{ position:relative; z-index:2; width:7px; height:7px; border-radius:50%; background:var(--ru-lampe); box-shadow:0 0 4px var(--ru-lampe) }
+.ru-drucker-schein{ position:absolute; left:50%; top:50%; width:12px; height:12px; transform:translate(-50%,-50%); border-radius:50%; background:var(--ru-lampe); opacity:.35; z-index:1 }
+.ru-drucker-lueftung{ position:absolute; right:9px; top:30px; display:flex; flex-direction:column; gap:2.5px; z-index:3 }
+.ru-drucker-lamelle{ width:15px; height:2px; background:#e0e0e0; border-radius:1px }
+.ru-drucker-fach{ position:absolute; bottom:-3px; left:50%; width:108px; height:5px; transform:translateX(-50%); background:#e8e8e8; border:.5px solid #c8c8c8; border-radius:3px; z-index:3 }
+.ru-drucker-fach-innen{ position:absolute; top:50%; left:50%; width:96px; height:2.5px; transform:translate(-50%,-50%); background:#d0d0d0; border-radius:1px }
+.ru-drucker-marke{ position:absolute; left:9px; top:45px; width:27px; height:4px; background:#e8e8e8; border-radius:1px; z-index:3 }
+/* Der Satz — Zeichen und Text, nie nur die Lampe (Paragraph 38) */
+/* FLIESSTEXT, KEIN FLEX: ein langer Fehlersatz bricht dann zentriert um,
+   und das Zeichen bleibt vor dem ersten Wort statt allein am linken Rand
+   (so stand es auf dem ersten Bild). */
+.ru-drucker-status{ display:block; margin:0; padding:8px 10px; min-height:18px; line-height:1.4; text-align:center }
+.ru-drucker-zeichen{ display:inline-block; margin-right:5px; font-size:12px; line-height:1; vertical-align:-1px }
+.ru-drucker-text{ overflow-wrap:anywhere }
+.ru-drucker[data-zustand="rendern"]{ --ru-lampe:var(--accent) }
+.ru-drucker[data-zustand="speichern"],.ru-drucker[data-zustand="fertig"]{ --ru-lampe:var(--erfolg) }
+.ru-drucker[data-zustand="fehler"]{ --ru-lampe:var(--gefahr) }
+.ru-drucker[data-zustand="rendern"] .ru-drucker-status,.ru-drucker[data-zustand="speichern"] .ru-drucker-status{ color:var(--text) }
+.ru-drucker[data-zustand="fertig"] .ru-drucker-status{ color:var(--erfolg) }
+.ru-drucker[data-zustand="fehler"] .ru-drucker-status{ color:var(--gefahr) }
+/* Die Lagen des Blatts, wenn nichts laeuft: weg, im Fach, halb im Schlitz */
+.ru-drucker[data-zustand="bereit"] .ru-drucker-blattgruppe{ opacity:0 }
+.ru-drucker[data-zustand="speichern"] .ru-drucker-blattgruppe,.ru-drucker[data-zustand="fertig"] .ru-drucker-blattgruppe{ transform:translate(-50%,40px) }
+.ru-drucker[data-zustand="speichern"] :is(.ru-drucker-tinte,.ru-drucker-blattschatten),
+.ru-drucker[data-zustand="fertig"] :is(.ru-drucker-tinte,.ru-drucker-blattschatten){ opacity:1 }
+.ru-drucker[data-zustand="fehler"] .ru-drucker-blattgruppe{ transform:translate(-50%,-6px) }
+/* Bewegung nur, solange gearbeitet wird */
+.ru-drucker[data-zustand="vorbereiten"] .ru-drucker-blattgruppe{ animation:ru-drucker-einzug 2.4s cubic-bezier(.4,0,.2,1) infinite }
+.ru-drucker[data-zustand="rendern"] .ru-drucker-blattgruppe{ animation:ru-drucker-zyklus 6.4s cubic-bezier(.4,0,.2,1) infinite }
+.ru-drucker[data-zustand="rendern"] .ru-drucker-blattschatten{ animation:ru-drucker-schatten 6.4s ease-in-out infinite }
+.ru-drucker[data-zustand="rendern"] .ru-drucker-tinte{ animation:ru-drucker-tinte 6.4s ease-out infinite; animation-delay:calc(var(--ru-schritt) * 160ms) }
+.ru-drucker:is([data-zustand="vorbereiten"],[data-zustand="rendern"],[data-zustand="speichern"]) .ru-drucker-schein{ animation:ru-drucker-puls .6s ease-in-out infinite alternate }
+@keyframes ru-drucker-einzug{
+  0%{transform:translate(-50%,-75px);opacity:0} 15%{opacity:1}
+  70%{transform:translate(-50%,-6px);opacity:1} 100%{transform:translate(-50%,-6px);opacity:0}
+}
+@keyframes ru-drucker-zyklus{
+  0%,3%{transform:translate(-50%,-75px);opacity:0}
+  18.75%{transform:translate(-50%,-6px);opacity:1}
+  43.75%{transform:translate(-50%,14px);opacity:1}
+  78%{transform:translate(-50%,72px);opacity:1}
+  81.25%{transform:translate(-50%,72px);opacity:0}
+  81.3%,100%{transform:translate(-50%,-75px);opacity:0}
+}
+@keyframes ru-drucker-schatten{ 0%,43.75%{opacity:0} 78%{opacity:.22} 81.25%,100%{opacity:0} }
+@keyframes ru-drucker-tinte{ 0%,43.75%{opacity:0} 48.75%,78%{opacity:1} 81.25%,100%{opacity:0} }
+@keyframes ru-drucker-puls{ from{transform:translate(-50%,-50%) scale(1);opacity:.7} to{transform:translate(-50%,-50%) scale(1.5);opacity:.15} }
+/* Wer keine Bewegung will, sieht das Blatt liegen: beim Vorbereiten halb
+   im Schlitz, beim Setzen bedruckt in der Mitte. Der Satz sagt es ohnehin. */
+@media (prefers-reduced-motion: reduce){
+  /* `[data-zustand]` nicht aus Zierde: die Zustandsregeln oben wiegen
+     (0,3,0), und ohne das Attribut hier wog diese (0,2,0) und verlor —
+     test431 §2 mass `ru-drucker-zyklus` trotz reduced motion. */
+  .ru-drucker[data-zustand] :is(.ru-drucker-blattgruppe,.ru-drucker-blattschatten,.ru-drucker-tinte,.ru-drucker-schein){ animation:none }
+  .ru-drucker[data-zustand="vorbereiten"] .ru-drucker-blattgruppe{ transform:translate(-50%,-6px) }
+  .ru-drucker[data-zustand="rendern"] .ru-drucker-tinte{ opacity:1 }
+}
+
+/* ---- Die Staffelei (E462, Vorgabe „theme-switch") ------------------------
+   Hell und dunkel als Bild auf einer Leinwand: links die Bleistiftskizze
+   (Tag), rechts dasselbe Bild gemalt (Nacht). Der Pinsel fährt hinüber,
+   und eine Blende gibt das gemalte Bild frei — es wird gemalt, nicht
+   getauscht.
+
+   BEIDE LANDSCHAFTEN HABEN DIESELBEN TEILE AN DENSELBEN STELLEN. Nur die
+   Farben unterscheiden sich; sonst wäre der Wechsel ein Szenenwechsel. */
+.ru-staff{
+  --ru-staff-breite:190px; --ru-staff-hoehe:116px;
+  position:relative; display:flex; flex-direction:column; align-items:center; gap:7px;
+  padding:0; border:0; background:transparent; cursor:pointer;
+  color:var(--text); font:inherit
+}
+.ru-staff:focus-visible{outline:2px solid var(--accent-text); outline-offset:4px; border-radius:var(--radius-lg)}
+.ru-staff-wort{font-size:12px; font-weight:600; color:var(--text-dim); letter-spacing:.2px}
+.ru-staff[data-hell="nein"] .ru-staff-wort{color:var(--accent-text)}
+.ru-staff-rahmen{
+  position:relative; width:var(--ru-staff-breite); height:var(--ru-staff-hoehe);
+  overflow:hidden; border-radius:6px;
+  border:4px solid #8a5a2b; box-shadow:0 6px 18px #0000002e, inset 0 0 0 3px #fdfbf7
+}
+.ru-staff:active .ru-staff-rahmen{transform:scale(.98)}
+/* Die Skizze liegt unten, das Bild darüber in der Blende. */
+.ru-staff-skizze,.ru-staff-bild{position:absolute; inset:3px; overflow:hidden; background:#fdfbf7}
+.ru-staff-bild{width:calc(var(--ru-staff-breite) - 14px)}
+.ru-staff-blende{
+  position:absolute; left:3px; top:3px; bottom:3px; width:0; overflow:hidden;
+  transition:width var(--motion-slow) var(--ease-enter)
+}
+.ru-staff[data-hell="nein"] .ru-staff-blende{width:calc(100% - 6px)}
+/* --- die Teile, erst als Skizze --- */
+.ru-staff-himmel{position:absolute; inset:0; background:#fdfbf7}
+.ru-staff-gestirn{
+  position:absolute; left:60%; top:14%; width:26px; height:26px; border-radius:50%;
+  border:1px dashed #94a3b8
+}
+.ru-staff-berg{position:absolute; bottom:22%; border-top:1px solid #94a3b8; border-radius:44% 56% 50% 50% / 60% 60% 40% 40%}
+.ru-staff-berg-1{left:2%; width:44%; height:38%}
+.ru-staff-berg-2{left:26%; width:54%; height:52%}
+.ru-staff-berg-3{left:64%; width:38%; height:32%}
+.ru-staff-wasser{position:absolute; left:0; right:0; bottom:0; height:22%; border-top:1px solid #94a3b8}
+.ru-staff-welle{position:absolute; height:1px; background:#cbd5e1; border-radius:1px}
+.ru-staff-welle-1{top:26%; left:12%; width:26%}
+.ru-staff-welle-2{top:52%; left:46%; width:34%}
+.ru-staff-welle-3{top:74%; left:22%; width:18%}
+/* --- dieselben Teile, gemalt: Nacht --- */
+.ru-staff-bild .ru-staff-himmel{background:linear-gradient(#1b1f3a, #2d2a53 55%, #3b2f5c)}
+.ru-staff-bild .ru-staff-gestirn{
+  border:0; background:#f6f3d8; box-shadow:0 0 12px #f6f3d8aa, 0 0 26px #f6f3d855
+}
+.ru-staff-bild .ru-staff-berg{border-top:0; box-shadow:inset 2px 2px 8px #ffffff1a, inset -2px -2px 8px #00000038}
+.ru-staff-bild .ru-staff-berg-1{background:linear-gradient(135deg,#4c3f7a,#2f2750)}
+.ru-staff-bild .ru-staff-berg-2{background:linear-gradient(135deg,#3b3468,#221d40)}
+.ru-staff-bild .ru-staff-berg-3{background:linear-gradient(135deg,#5b4a8c,#332a5a)}
+.ru-staff-bild .ru-staff-wasser{border-top:0; background:linear-gradient(#2a2550,#141230)}
+.ru-staff-bild .ru-staff-welle{background:#f6f3d866; height:1.5px}
+/* --- der Pinsel fährt mit der Blende --- */
+.ru-staff-pinsel{
+  position:absolute; left:-14px; top:-8px; width:15px; height:100%;
+  transition:transform var(--motion-slow) var(--ease-enter);
+  filter:drop-shadow(3px 3px 4px #00000040)
+}
+.ru-staff[data-hell="nein"] .ru-staff-pinsel{transform:translateX(var(--ru-staff-breite))}
+.ru-staff-stiel{
+  position:absolute; top:0; left:4px; width:8px; height:58%;
+  background:linear-gradient(to right,#3d1e06,#a8620f,#3d1e06); border-radius:4px 4px 0 0
+}
+.ru-staff-zwinge{
+  position:absolute; top:58%; left:4px; width:8px; height:13%;
+  background:linear-gradient(to right,#64748b,#f8fafc,#64748b); border-radius:1px
+}
+.ru-staff-haare{
+  position:absolute; top:71%; left:4px; width:8px; height:22%;
+  background:linear-gradient(to bottom,#1c1917,#6b4c9a); border-radius:0 0 50% 50%
+}
+@media (prefers-reduced-motion: reduce){
+  .ru-staff-blende,.ru-staff-pinsel{transition:none}
+  .ru-staff:active .ru-staff-rahmen{transform:none}
+}
+@media (max-width:760px){
+  .ru-staff{--ru-staff-breite:min(240px, calc(100vw - 96px)); --ru-staff-hoehe:130px}
+}
+
+/* ---- Die Rauschtextur (E462, Vorgabe „island") ---------------------------
+   Zwei Lagen Rauschen, verschieden dicht, weich übereinander. Sie trägt
+   keine Auskunft und steht deshalb nur dort, wo auch sonst keine steht
+   (siehe schale/bedienung/textur.ts). Beide Filter sind GENAU EINMAL
+   global definiert und werden hier nur referenziert. */
+.ru-textur-wirt{position:relative; isolation:isolate}
+.ru-textur-wirt > *:not(.ru-textur){position:relative; z-index:1}
+.ru-textur{
+  position:absolute; inset:0; z-index:0; pointer-events:none;
+  border-radius:inherit; overflow:hidden
+}
+.ru-textur-fein{
+  filter:url(#ru-textur-fein) brightness(3.4) contrast(.9);
+  opacity:.22; mix-blend-mode:multiply
+}
+.ru-textur-grob{
+  filter:url(#ru-textur-grob) brightness(2.6);
+  opacity:.16; mix-blend-mode:multiply
+}
+/* Im dunklen Schema deckt „multiply" alles zu — dort hellt die Textur auf,
+   statt zu verdunkeln. */
+html[data-theme="dark"] .ru-textur{mix-blend-mode:screen}
+html[data-theme="dark"] .ru-textur-fein{opacity:.16}
+html[data-theme="dark"] .ru-textur-grob{opacity:.12}
+/* Wer weniger Durchsichtigkeit will, will auch kein Rauschen. */
+@media (prefers-reduced-transparency: reduce){ .ru-textur{display:none} }
+
+/* ---- Die vier Lader (E461, Vorgaben vom 6. September) --------------------
+   Ein Bild je Sorte Auskunft, nicht ein Kreisel für alles. Der Satz
+   daneben ist die Auskunft; das Bild ist das Bild (`role="status"` am
+   Wirt, `aria-hidden` an jedem Bild).
+
+   `--ru-lader-gross` ist die Kantenlänge; jeder Wirt darf sie setzen. */
+.ru-lader{
+  --ru-lader-gross:54px;
+  display:inline-flex; align-items:center; gap:10px;
+  color:var(--text-dim); font-size:12.5px; line-height:1.4
+}
+.ru-lader-bild{width:var(--ru-lader-gross); height:var(--ru-lader-gross); flex:none; display:block}
+.ru-lader-text{min-width:0; overflow-wrap:anywhere}
+
+/* fluss — der Stand steigt, die Zahl steht daneben.
+   DER KONTRAST AUF DER MASKE ist der Trick der Vorgabe: weichgezeichnete
+   weisse Formen fliessen ineinander, und die Kante dazwischen wird zu
+   einer einzigen welligen Linie. In einer Maske heisst weiss „hier ist
+   Flüssigkeit". */
+.ru-lader[data-art="fluss"]{--ru-lader-gross:72px; position:relative}
+.ru-lader-glas{fill:none; stroke:var(--line); stroke-width:2}
+.ru-lader-saft{fill:var(--accent)}
+.ru-lader-klumpen{filter:contrast(14)}
+.ru-lader-klumpen :is(rect,ellipse){filter:blur(4px)}
+.ru-lader-welle{
+  transform-box:fill-box; transform-origin:center;
+  animation:ru-lader-wiegen 3.2s ease-in-out infinite;
+  animation-delay:calc(var(--ru-schritt) * -900ms)
+}
+@keyframes ru-lader-wiegen{
+  0%,100%{transform:translateY(-2px) scaleX(1)}
+  50%{transform:translateY(2px) scaleX(1.15)}
+}
+.ru-lader-zahl{
+  position:absolute; left:0; top:0; width:var(--ru-lader-gross); height:var(--ru-lader-gross);
+  display:flex; align-items:center; justify-content:center;
+  font-size:14px; font-variant-numeric:tabular-nums; color:var(--text);
+  text-shadow:0 1px 3px var(--bg-card), 0 0 6px var(--bg-card)
+}
+
+/* sterne — fünf, die sich drehen. Für Arbeit ohne bekannte Länge. */
+.ru-lader-sterne{position:relative; display:grid; place-items:center}
+/* GRÖSSER UND GESTAFFELT. Mit 18 % bis 46 % lagen alle fünf übereinander
+   und ergaben auf dem Bild einen einzigen kleinen Fleck — fünf Sterne, die
+   wie einer aussehen, sind vier zu viel. Jetzt 34 % bis 98 %, und je
+   grösser, desto blasser: so sieht man die Staffelung, statt sie zu
+   ahnen. */
+.ru-lader-stern{
+  position:absolute; aspect-ratio:1; background:var(--accent);
+  width:calc(34% + var(--ru-schritt) * 16%);
+  opacity:calc(0.95 - var(--ru-schritt) * 0.15);
+  clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);
+  animation:ru-lader-dreh 6s linear infinite;
+  animation-delay:calc(var(--ru-schritt) * -1s)
+}
+@keyframes ru-lader-dreh{to{rotate:360deg}}
+
+/* wort — die Buchstaben gehen der Reihe nach an. */
+.ru-lader[data-art="wort"]{--ru-lader-gross:78px}
+.ru-lader-wort{position:relative; display:grid; place-items:center}
+.ru-lader-ring{
+  position:absolute; inset:0; border-radius:50%;
+  animation:ru-lader-ring 2s linear infinite
+}
+/* DER RING IST EIN RING, KEINE KUGEL. Mit den Schatten der Vorgabe füllte
+   er die ganze Fläche, und die Schrift darauf war nicht mehr zu lesen —
+   auf dem Bild stand „Abgle ich läuft" in Dunkelgrau auf Violett. Jetzt
+   liegt der Schein am RAND (`inset` mit grossem Radius, kleine Streuung),
+   die Mitte bleibt frei, und die Schrift steht darauf wie auf Papier. */
+@keyframes ru-lader-ring{
+  0%{transform:rotate(90deg); box-shadow:0 5px 9px -3px var(--accent) inset, 0 -5px 9px -3px var(--accent-schwach) inset}
+  50%{transform:rotate(270deg); box-shadow:0 5px 9px -3px var(--accent-text) inset, 0 -5px 9px -3px var(--accent) inset}
+  100%{transform:rotate(450deg); box-shadow:0 5px 9px -3px var(--accent) inset, 0 -5px 9px -3px var(--accent-schwach) inset}
+}
+.ru-lader-buchstaben{
+  position:relative; z-index:1; font-size:11px; font-weight:700;
+  letter-spacing:.2px; color:var(--text); white-space:nowrap
+}
+.ru-lader-buchstabe{
+  display:inline-block; opacity:.4;
+  animation:ru-lader-buchstabe 2s infinite;
+  animation-delay:calc(var(--ru-schritt) * 100ms)
+}
+@keyframes ru-lader-buchstabe{
+  0%,100%{opacity:.4; transform:none}
+  20%{opacity:1; transform:scale(1.15)}
+  40%{opacity:.7; transform:none}
+}
+
+/* presse — Bogen für Bogen. Für die Auftragsart, die Blätter macht. */
+.ru-lader[data-art="presse"]{--ru-lader-gross:60px}
+.ru-lader-presse{position:relative; overflow:hidden}
+.ru-lader-raum{
+  position:absolute; left:50%; top:50%; width:42px; height:42px;
+  transform:translate(-50%,-50%) rotateX(52deg) rotateZ(-45deg); transform-style:preserve-3d
+}
+/* DEUTLICHER ALS IN DER VORGABE. Dort sind die Walzen fast schwarz auf
+   Hellblau; in Redions Flächen stand grau auf grau, und auf dem Bild war
+   nicht zu erkennen, dass es eine Presse ist. */
+.ru-lader-walze{
+  position:absolute; left:0; width:42px; height:9px; border-radius:5px/4px;
+  background:var(--text); opacity:.8
+}
+.ru-lader-walze:nth-of-type(1){top:4px}
+.ru-lader-walze:nth-of-type(2){top:18px}
+.ru-lader-walze:nth-of-type(3){top:32px}
+.ru-lader-bogen{
+  position:absolute; left:6px; width:32px; height:14px; border-radius:2px;
+  background:#fff; border:1px solid var(--text-dim); box-shadow:0 1px 3px #00000026;
+  animation:ru-lader-presse 1.8s ease-in-out infinite;
+  animation-delay:calc(var(--ru-schritt) * -600ms)
+}
+@keyframes ru-lader-presse{
+  0%{transform:translateY(-14px); opacity:0}
+  20%{opacity:1}
+  80%{opacity:1}
+  100%{transform:translateY(36px); opacity:0}
+}
+
+@media (prefers-reduced-motion: reduce){
+  .ru-lader :is(.ru-lader-welle,.ru-lader-stern,.ru-lader-ring,.ru-lader-buchstabe,.ru-lader-bogen){
+    animation:none
+  }
+  /* Ohne Bewegung stehen die Bogen gestaffelt statt übereinander — sonst
+     sähe die Presse leer aus. */
+  .ru-lader-bogen{opacity:1}
+  .ru-lader-bogen:nth-of-type(4){transform:translateY(-8px)}
+  .ru-lader-bogen:nth-of-type(6){transform:translateY(14px)}
+  .ru-lader-buchstabe{opacity:1}
+}
+
+/* ---- Das Merkzeichen (E460, Vorgaben vom 6. September) --------------------
+   EIN Merker für `favorite`, überall derselbe. Der Zustand steht in der
+   FORM (gefülltes gegen offenes Band) und in `aria-pressed`; die Farbe
+   kommt dazu, nicht statt dessen (§38).
+
+   Der Kranz und die Funken kommen aus dem Lesezeichen der Vorgabe, der
+   rollende Punkt aus dem Herz. Beide laufen NUR beim Anhaken und nur
+   einmal — die Klasse `platzt` nimmt sich das Bauteil nach
+   `animationend` selbst wieder weg. */
+.ru-merk{
+  --ru-merk-farbe:var(--accent-text);
+  position:relative; display:inline-flex; align-items:center; justify-content:center;
+  color:var(--text-dim); background:transparent; border:0; cursor:pointer;
+  border-radius:var(--radius-md); transition:color var(--motion-fast) var(--ease)
+}
+.ru-merk:hover{color:var(--text); background:var(--bg-hover)}
+.ru-merk:focus-visible{outline:2px solid var(--accent-text); outline-offset:2px}
+.ru-merk.ist-an{color:var(--ru-merk-farbe)}
+.ru-merk-band{width:19px; height:19px; flex:none; display:block; position:relative; z-index:2; transform-origin:top}
+.ru-merk.platzt .ru-merk-band{animation:ru-merk-band .3s}
+/* Der Kranz: ein Ring, der aufgeht und verschwindet. */
+.ru-merk-kreis{
+  position:absolute; left:50%; top:50%; width:0; height:0; z-index:1;
+  transform:translate(-50%,-50%); border-radius:50%;
+  border:1px solid var(--ru-merk-farbe); opacity:0; pointer-events:none
+}
+.ru-merk.platzt .ru-merk-kreis{animation:ru-merk-kreis .3s cubic-bezier(.175,.885,.32,1.275) .3s forwards}
+/* Die Funken: acht Punkte als ein einziger Schatten — kein zweites Dutzend
+   Elemente für acht Pixel. */
+.ru-merk-funken{
+  position:absolute; left:50%; top:50%; width:9px; height:9px; z-index:1;
+  transform:translate(-50%,-50%) scale(0); border-radius:50%; pointer-events:none;
+  box-shadow:
+    0 26px 0 -4px var(--ru-merk-farbe), 26px 0 0 -4px var(--ru-merk-farbe),
+    0 -26px 0 -4px var(--ru-merk-farbe), -26px 0 0 -4px var(--ru-merk-farbe),
+    -19px 19px 0 -4px var(--ru-merk-farbe), -19px -19px 0 -4px var(--ru-merk-farbe),
+    19px -19px 0 -4px var(--ru-merk-farbe), 19px 19px 0 -4px var(--ru-merk-farbe)
+}
+.ru-merk.platzt .ru-merk-funken{animation:ru-merk-funken .3s cubic-bezier(.175,.885,.32,1.275) .3s forwards}
+/* Der rollende Punkt aus dem Herz: zwei Züge, dann ist er im Band. */
+.ru-merk-punkt{
+  position:absolute; left:calc(50% - 7px); top:calc(50% - 9px);
+  width:5px; height:5px; z-index:3; border-radius:50%;
+  background:var(--ru-merk-farbe); opacity:0; pointer-events:none
+}
+.ru-merk.platzt .ru-merk-punkt{animation:ru-merk-punkt .3s forwards}
+@keyframes ru-merk-band{50%{transform:scaleY(.6)} 100%{transform:scaleY(1)}}
+@keyframes ru-merk-kreis{from{width:0;height:0;opacity:0} 90%{width:30px;height:30px;opacity:1} to{opacity:0}}
+@keyframes ru-merk-funken{from{transform:translate(-50%,-50%) scale(0)} 40%{opacity:1} to{transform:translate(-50%,-50%) scale(.8);opacity:0}}
+@keyframes ru-merk-punkt{
+  0%{transform:translate(0,0);opacity:1}
+  50%{transform:translate(0,7px);opacity:1}
+  100%{transform:translate(7px,9px);opacity:0}
+}
+@media (prefers-reduced-motion: reduce){
+  .ru-merk.platzt :is(.ru-merk-band,.ru-merk-kreis,.ru-merk-funken,.ru-merk-punkt){animation:none}
+}
+
+/* ---- Die Ordnerkarte (E459, Vorgabe vom 6. September) --------------------
+   Der Blick in einen Ordner, ohne hineinzugehen. Die Blätter sind KNÖPFE
+   (man drückt sie), die Bühne ist Bild. Aufgeklappt wird über
+   `[data-offen]` am Wirt statt über ein verstecktes Kästchen: ein Ordner,
+   der aufgeht, ist kein Formularwert (§38, `aria-expanded`).
+
+   DIE FÜNF FARBEN SIND SCHMUCK. Die Art steht als WORT auf jedem Blatt —
+   ein Farbschlüssel für zehn Arten wäre eine Auskunft, die niemand
+   auswendig kann. */
+.ru-fach{
+  /* 214, und die Zahl ist gerechnet: das oberste Blatt steht 138 px über
+     dem Boden und ist 68 hoch, macht 5 + 68 + 138 = 211. Drei Anläufe
+     davor, jeder erst auf dem Bild sichtbar (§55.1): mit 132 ragte das
+     oberste Blatt aus der Bühne und lag auf der Suchzeile; mit 158 lagen
+     drei hinter der Klappe; mit 190 war die Zeile des untersten
+     verdeckt. */
+  --ru-fach-hoehe:214px;
+  position:relative; width:248px; padding:10px 12px 12px;
+  border-radius:var(--radius-xl); border:1px solid var(--line);
+  background:var(--bg-card); box-shadow:var(--shadow); color:var(--text)
+}
+.ru-fach-kopf{display:flex; align-items:baseline; gap:8px; margin-bottom:8px}
+.ru-fach-suche{
+  width:100%; margin-bottom:8px; display:flex; align-items:center;
+  height:30px; padding:0 10px; border-radius:var(--radius-pill);
+  border:1px solid var(--line); background:var(--bg-input)
+}
+.ru-fach-suche:focus-within{outline:2px solid var(--accent-text); outline-offset:1px}
+.ru-fach-eingabe{
+  width:100%; min-width:0; border:0; outline:0; background:transparent;
+  color:var(--text); font:inherit; font-size:12px
+}
+.ru-fach-sr{position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap}
+.ru-fach-zaehler{
+  display:flex; align-items:center; gap:5px; margin:0; flex:none;
+  padding:3px 9px; border-radius:var(--radius-pill);
+  background:var(--accent-schwach); color:var(--accent-text);
+  font-size:10px; font-weight:700; letter-spacing:.2px
+}
+.ru-fach-zahl{font-size:12px}
+.ru-fach-punkt{
+  width:6px; height:6px; flex:none; border-radius:50%;
+  background:currentColor; position:relative
+}
+/* Der Punkt schlägt NUR, während wirklich gefiltert wird — und das Wort
+   daneben sagt es auch. Ein Punkt, der immer pulst, meint nichts. */
+.ru-fach[data-sucht="ja"] .ru-fach-punkt::after{
+  content:""; position:absolute; inset:0; border-radius:50%;
+  background:currentColor; animation:ru-fach-puls 2s infinite
+}
+@keyframes ru-fach-puls{from{transform:scale(1);opacity:.9} to{transform:scale(3);opacity:0}}
+/* KEIN `preserve-3d`. Mit ihm malt der Browser nach der 3D-Lage statt nach
+   `z-index` — die um -50° gekippte Klappe kam damit VOR die Blätter, und
+   drei der fünf waren unsichtbar. Die Blätter brauchen kein 3D; die Klappe
+   braucht nur die Perspektive des Wirts. */
+.ru-fach-buehne{position:relative; height:var(--ru-fach-hoehe); perspective:1200px}
+.ru-fach-ruecken,.ru-fach-klappe{position:absolute; left:0; bottom:0; width:100%; pointer-events:none}
+.ru-fach-ruecken svg,.ru-fach-klappe svg{display:block; width:100%; height:auto}
+.ru-fach-ruecken path{fill:var(--accent); opacity:.55}
+.ru-fach-klappe{bottom:-6px; z-index:9; transform-origin:bottom; transition:transform var(--motion-normal) var(--ease-enter)}
+.ru-fach-klappe path{fill:var(--accent)}
+.ru-fach-marke{position:absolute; top:16%; left:8%; width:30px; height:4px; border-radius:10px; background:#ffffff88}
+.ru-fach[data-offen="ja"] .ru-fach-klappe{transform:rotateX(-50deg)}
+/* DER GRIFF LIEGT UNTER DEN BLÄTTERN, und das ist kein Feinschliff: mit
+   `z-index:10` über `.ru-fach-blaetter` fing er JEDEN Mausklick ab. Die
+   Blätter sind Knöpfe, aber getroffen hätte sie niemand — der Ordner wäre
+   stattdessen zugeklappt. Gefunden hat das test432 §2 mit
+   `elementFromPoint`; im Quelltext und auf dem Bild sah alles richtig aus.
+   Die Blätter tragen ihre eigenen `z-index` INNERHALB von
+   `.ru-fach-blaetter`; nach aussen zählt nur dessen 20 gegen die 10 hier. */
+.ru-fach-griff{
+  position:absolute; inset:0; z-index:10; width:100%; border:0; padding:0;
+  background:transparent; cursor:pointer; border-radius:var(--radius-lg)
+}
+.ru-fach-griff:focus-visible{outline:2px solid var(--accent-text); outline-offset:3px}
+.ru-fach-blaetter{position:absolute; inset:0; z-index:20}
+.ru-fach-blatt{
+  position:absolute; bottom:5px; left:9%; width:82%; height:68px;
+  display:block; text-align:left; overflow:hidden; cursor:pointer;
+  padding:0; border:0; border-radius:6px; color:#fff;
+  box-shadow:inset 0 1px 1px #ffffff4d, 0 4px 12px #0000002e;
+  transition:transform var(--motion-slow) var(--ease-enter), filter var(--motion-fast) var(--ease)
+}
+.ru-fach-blatt[data-nr="0"]{background:#c2410c; z-index:25; transition-delay:.15s}
+.ru-fach-blatt[data-nr="1"]{background:#b45309; z-index:24; transition-delay:.1s}
+.ru-fach-blatt[data-nr="2"]{background:#0369a1; z-index:23; transition-delay:.05s}
+.ru-fach-blatt[data-nr="3"]{background:#0f766e; z-index:22; transition-delay:.02s}
+/* NICHT VIOLETT. #6d28d9 war die Farbe des Ordners selbst — das fünfte
+   Blatt stand unsichtbar vor der Klappe. */
+.ru-fach-blatt[data-nr="4"]{background:#9d174d; z-index:21}
+/* EINE ZEILE AM UNTEREN RAND, und was nicht passt, endet mit „…". Der
+   ganze Name steht im `title` und im `aria-label`. */
+.ru-fach-zeile{
+  position:absolute; left:9px; right:7px; bottom:5px;
+  display:flex; align-items:baseline; gap:6px
+}
+.ru-fach-text{
+  flex:1 1 auto; min-width:0; font-size:10.5px; font-weight:700; line-height:1.3;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis
+}
+.ru-fach-weg{font-weight:600; opacity:.8}
+.ru-fach-art{
+  flex:none; padding:1px 5px; border-radius:4px;
+  background:#00000080; font-size:8.5px; font-weight:700; white-space:nowrap
+}
+.ru-fach-glanz{
+  position:absolute; top:0; left:-100%; width:50%; height:100%; pointer-events:none;
+  background:linear-gradient(90deg,transparent,#ffffff66,transparent); transform:skewX(-20deg)
+}
+.ru-fach[data-offen="ja"] .ru-fach-glanz{left:150%; transition:left .8s ease-in-out .3s}
+.ru-fach[data-offen="nein"] .ru-fach-blatt{transform:none; opacity:0; pointer-events:none}
+/* 26 px Abstand von Blatt zu Blatt — eine Zeile Name (10,5 px mal 1,3)
+   plus das Polster darunter und etwas Luft. Enger, und der Name des unteren Blattes
+   steckt unter dem oberen; weiter, und die Karte wird höher als der
+   Deckel, an dem sie hängt. Die Drehungen sind kleiner als in der Vorgabe
+   (±3° statt ±15°): mit 15° stand die Art-Marke des zweiten Blattes
+   ausserhalb der Karte, und die Schrägen schnitten den Namen des Blattes
+   darunter an — „Formelsammlung" stand als „Formelsa…" da, obwohl Platz
+   gewesen wäre. */
+.ru-fach[data-offen="ja"] .ru-fach-blatt[data-nr="0"]{transform:translateY(-138px) translateX(-5px) rotate(-3deg)}
+.ru-fach[data-offen="ja"] .ru-fach-blatt[data-nr="1"]{transform:translateY(-112px) translateX(6px) rotate(2.5deg)}
+.ru-fach[data-offen="ja"] .ru-fach-blatt[data-nr="2"]{transform:translateY(-86px) translateX(-4px) rotate(-3.5deg)}
+.ru-fach[data-offen="ja"] .ru-fach-blatt[data-nr="3"]{transform:translateY(-60px) translateX(5px) rotate(3deg)}
+.ru-fach[data-offen="ja"] .ru-fach-blatt[data-nr="4"]{transform:translateY(-34px) rotate(-1.5deg)}
+.ru-fach-blatt:hover,.ru-fach-blatt:focus-visible{filter:brightness(1.12)}
+.ru-fach-blatt:focus-visible{outline:2px solid var(--text); outline-offset:2px}
+.ru-fach[data-offen="ja"] .ru-fach-blatt:is(:hover,:focus-visible){translate:0 -10px}
+.ru-fach-name{flex:1 1 auto; min-width:0; margin:0; font-size:13px; font-weight:600; line-height:1.35; overflow-wrap:anywhere}
+.ru-fach-rest{margin:8px 0 0; font-size:11px; color:var(--text-dim); line-height:1.4}
+.ru-fach-gehen{margin-top:10px; width:100%; justify-content:center}
+/* Die Lage, in der die Karte über dem Regal schwebt. */
+.ru-fach-lage{position:fixed; z-index:760; inset:auto}
+@media (max-width:760px){
+  .ru-fach{width:min(300px, calc(100vw - 32px))}
+}
+@media (prefers-reduced-motion: reduce){
+  .ru-fach :is(.ru-fach-klappe,.ru-fach-blatt,.ru-fach-glanz){transition:none}
+  .ru-fach[data-sucht="ja"] .ru-fach-punkt::after{animation:none; opacity:0}
+  .ru-fach[data-offen="ja"] .ru-fach-blatt:is(:hover,:focus-visible){translate:none}
+}
+
 /* Redion-Bedienung · Baumansicht */
 .ru-baum{display:block;min-width:0;color:var(--text);font-size:13px;line-height:1.35}
 .ru-baum [role="group"]{display:block}
@@ -14457,6 +15039,226 @@ button.ru-zk[data-art="laden"][data-zustand="arbeitet"] .ru-zk-balken{ display:b
 @keyframes ru-baum-oeffnen{from{opacity:.3;transform:translateY(-4px)}to{opacity:1;transform:none}}
 @media(max-width:760px){.ru-baum-zeile{min-height:var(--touch-min)}}
 @media(prefers-reduced-motion:reduce){.ru-baum *{scroll-behavior:auto!important}.ru-baum-auf{animation:none}}
+
+/* =========================================================================
+   E463 — SICHTBAR UND LUSTIG. Redur am 6. September: „du musst alles stark
+   nutzen, die Webseite könnte auch lustig sein". §39 sagt „Animationen
+   sparsam" und ist ein Richtwert; hier ist der geschriebene Grund für die
+   Abweichung: die Bauteile aus den Vorgaben stehen an Wegen, die man
+   TÄGLICH sieht, und sie dürfen dort Spass machen. Was sie nicht dürfen,
+   bleibt: etwas behaupten, das nicht stimmt, und sich bewegen, wenn das
+   System um Ruhe bittet (ganz unten).
+   ====================================================================== */
+
+/* ---- Ein Lader als schwebende Karte (Lader.schweben) ------------------- */
+.ru-lader-karte{
+  display:flex; align-items:center; gap:12px; padding:10px 14px;
+  border:1px solid var(--line); border-radius:var(--radius-xl);
+  background:var(--bg-card); box-shadow:var(--shadow); color:var(--text);
+  max-width:min(330px, calc(100vw - 2 * var(--mobile-gutter-small)))
+}
+.ru-lader-schwebt{
+  position:fixed; right:var(--mobile-gutter-small); bottom:var(--mobile-gutter-small);
+  z-index:901; pointer-events:none; animation:ru-lader-herein .3s ease
+}
+@media (max-width:760px){
+  .ru-lader-schwebt{ bottom:calc(var(--mobile-nav-height) + var(--mobile-gutter-small)) }
+}
+@keyframes ru-lader-herein{ from{ transform:translateY(20px); opacity:0 } }
+
+/* ---- Die Sterne im Studio-Kopf (#studio-auftraege) --------------------- */
+#studio-auftraege{ position:relative }
+#studio-auftraege[hidden]{ display:none }
+#studio-auftraege .glocke-zahl{ top:3px; right:2px }
+.ru-auftrag-sterne{ position:relative; display:grid; place-items:center; width:24px; height:24px }
+/* Drei statt fünf — in 24 px wären fünf ein Fleck. Die Schritte 0, 2, 4
+   nehmen die Grössen 34 %, 66 % und 98 % aus `.ru-lader-stern`. */
+.ru-auftrag-sterne .ru-lader-stern:nth-child(1){ --ru-schritt:0 }
+.ru-auftrag-sterne .ru-lader-stern:nth-child(2){ --ru-schritt:2 }
+.ru-auftrag-sterne .ru-lader-stern:nth-child(3){ --ru-schritt:4 }
+
+/* ---- Der Vorhang beim Start (#ru-vorhang) ------------------------------ */
+/* Über allem ausser dem Sperrschirm (99999): der Willkommen-Schirm und die
+   Dialoge liegen darunter, sonst stünde beim ersten Start ein Dialog auf
+   einem dunklen Tuch, und die Buchstaben dahinter sähe niemand. */
+#ru-vorhang{
+  position:fixed; inset:0; z-index:9500; display:grid; place-items:center;
+  background:var(--bg); pointer-events:none;
+  transition:opacity .5s ease;
+  /* Die Notbremse: nach sechs Sekunden geht er von selbst auf, ob der
+     Start ihn gerufen hat oder nicht. */
+  animation:ru-vorhang-notaus .5s ease 6s forwards
+}
+#ru-vorhang.ru-vorhang-weg{ opacity:0 }
+#ru-vorhang[hidden]{ display:none }
+#ru-vorhang .ru-lader{ --ru-lader-gross:150px }
+#ru-vorhang .ru-lader-buchstaben{ font-size:26px; letter-spacing:1px }
+@keyframes ru-vorhang-notaus{ to{ opacity:0; visibility:hidden } }
+
+/* ---- Die Hand, die tippt (Geste) ---------------------------------------
+   Redurs `.🤚`, auf drei Viertel: 80 × 60 wird 60 × 45, und jede Länge
+   darin im selben Mass. */
+.ru-geste{
+  --ru-haut:#e4c560; --ru-tipp:.6s; --ru-versatz:.1s;
+  position:fixed; z-index:901; width:60px; height:45px; pointer-events:none
+}
+.ru-geste::before{
+  content:""; display:block; position:absolute; top:70%; right:20%;
+  width:180%; height:75%; border-radius:30px 8px; background:#000;
+  filter:blur(8px); opacity:.3
+}
+.ru-geste i{ display:block; position:absolute }
+.ru-geste-flaeche{ inset:0; background:var(--ru-haut); border-radius:8px 30px }
+.ru-geste-daumen{
+  width:120%; height:29px; bottom:-18%; right:1%; background:var(--ru-haut);
+  transform-origin:calc(100% - 15px) 15px; transform:rotate(-20deg);
+  border-radius:23px 15px 15px 8px;
+  border-bottom:2px solid rgba(0,0,0,.1); border-left:2px solid rgba(0,0,0,.1)
+}
+.ru-geste-daumen::after{
+  content:""; position:absolute; width:20%; height:60%; bottom:-8%; left:4px;
+  background:rgba(255,255,255,.3); border-radius:60% 10% 10% 30%;
+  border-right:2px solid rgba(0,0,0,.05)
+}
+.ru-geste-finger{
+  width:80%; height:26px; bottom:32%; right:64%; background:var(--ru-haut);
+  transform-origin:100% 15px; transform:rotate(10deg) scale(var(--ru-mass));
+  animation:ru-geste-tipp calc(var(--ru-tipp) * 2) ease-in-out infinite
+}
+.ru-geste-finger::before{
+  content:""; position:absolute; width:140%; height:23px; bottom:8%; right:65%;
+  background:var(--ru-haut); transform-origin:calc(100% - 15px) 15px;
+  transform:rotate(-60deg); border-radius:15px
+}
+.ru-geste-finger-1{ --ru-mass:.4; filter:brightness(70%); animation-delay:0s }
+.ru-geste-finger-2{ --ru-mass:.6; filter:brightness(80%); animation-delay:var(--ru-versatz) }
+.ru-geste-finger-3{ --ru-mass:.8; filter:brightness(90%); animation-delay:calc(var(--ru-versatz) * 2) }
+.ru-geste-finger-4{ --ru-mass:1; animation-delay:calc(var(--ru-versatz) * 3) }
+@keyframes ru-geste-tipp{
+  0%,50%,100%{ transform:rotate(10deg) scale(var(--ru-mass)) }
+  40%{ transform:rotate(50deg) scale(var(--ru-mass)) }
+}
+
+/* ---- Der Funkel-Knopf (Funkel) ------------------------------------------
+   Redurs `.btn`: fast schwarz, die Buchstaben glimmen der Reihe nach, und
+   beim Anfassen kommt Licht von unten. Die drei Selektoren sind nötig,
+   weil `.ai-quick button` und `.lernwelt button.is-primary` sonst mit
+   ihrer Farbe gewinnen. */
+.ru-funkel, .ai-quick button.ru-funkel, .lernwelt button.is-primary.ru-funkel{
+  --ru-funkel-farbe:#101010; --ru-funkel-ton:210deg;
+  --ru-funkel-rund:24px; --ru-funkel-rand:4px; --ru-funkel-zeit:.4s;
+  position:relative; isolation:isolate; user-select:none;
+  color:#fff; background:var(--ru-funkel-farbe);
+  border:1px solid #fff2; border-radius:var(--ru-funkel-rund);
+  box-shadow:
+    inset 0 1px 1px rgba(255,255,255,.2), inset 0 2px 2px rgba(255,255,255,.15),
+    inset 0 4px 4px rgba(255,255,255,.1), inset 0 8px 8px rgba(255,255,255,.05),
+    inset 0 15px 15px rgba(255,255,255,.05),
+    0 -1px 1px rgba(0,0,0,.02), 0 -2px 2px rgba(0,0,0,.03), 0 -4px 4px rgba(0,0,0,.05),
+    0 -8px 8px rgba(0,0,0,.06), 0 -15px 15px rgba(0,0,0,.08);
+  transition:box-shadow var(--ru-funkel-zeit), border-color var(--ru-funkel-zeit),
+             background-color var(--ru-funkel-zeit)
+}
+.ru-funkel:hover, .ai-quick button.ru-funkel:hover, .lernwelt button.is-primary.ru-funkel:hover{
+  color:#fff; background:var(--ru-funkel-farbe)
+}
+.ru-funkel::before{
+  content:""; position:absolute; inset:calc(0px - var(--ru-funkel-rand)); z-index:-1;
+  border-radius:calc(var(--ru-funkel-rund) + var(--ru-funkel-rand)); pointer-events:none;
+  background-image:linear-gradient(0deg,#0004,#000a);
+  box-shadow:0 -8px 8px -6px #0000 inset, 0 -15px 15px -8px #0000 inset,
+             1px 1px 1px #fff2, 2px 2px 2px #fff1, -1px -1px 1px #0002, -2px -2px 2px #0001;
+  transition:box-shadow var(--ru-funkel-zeit)
+}
+.ru-funkel::after{
+  content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none; opacity:0;
+  background-image:linear-gradient(0deg,#fff,hsl(var(--ru-funkel-ton) 100% 70%),
+                   hsl(var(--ru-funkel-ton) 100% 70% / 50%) 8%,transparent);
+  transition:opacity var(--ru-funkel-zeit), filter var(--ru-funkel-zeit)
+}
+.ru-funkel-b{
+  position:relative; display:inline-block; color:#fff5;
+  animation:ru-funkel-glimmen 2s ease-in-out infinite;
+  animation-delay:calc(var(--ru-schritt) * 80ms);
+  transition:color var(--ru-funkel-zeit), text-shadow var(--ru-funkel-zeit)
+}
+@keyframes ru-funkel-glimmen{ 50%{ text-shadow:0 0 3px #fff8; color:#fff } }
+.ru-funkel > svg, #ai .ai-quick button.ru-funkel > svg{
+  stroke:#e8e8e8; filter:drop-shadow(0 0 2px #fff9);
+  animation:ru-funkel-flackern 2s linear infinite; animation-delay:.5s
+}
+@keyframes ru-funkel-flackern{ 50%{ opacity:.3 } }
+.ru-funkel:hover::before, .ru-funkel:focus-visible::before{
+  box-shadow:0 -8px 12px -6px #fff3 inset, 0 -15px 15px -8px hsl(var(--ru-funkel-ton) 100% 70% / 20%) inset,
+             1px 1px 1px #fff3, 2px 2px 2px #fff1, -1px -1px 1px #0002, -2px -2px 2px #0001
+}
+.ru-funkel:hover::after, .ru-funkel:focus-visible::after{
+  opacity:.6; mask-image:linear-gradient(0deg,#fff,transparent)
+}
+/* Beim Anfassen platzen die Buchstaben einmal auf und glimmen dann schneller. */
+.ru-funkel:hover .ru-funkel-b, .ru-funkel:focus-visible .ru-funkel-b{
+  animation:ru-funkel-platzen 1s ease-in-out forwards, ru-funkel-glimmen 1.2s ease-in-out infinite;
+  animation-delay:calc(var(--ru-schritt) * 80ms), calc(1s + var(--ru-schritt) * 80ms)
+}
+@keyframes ru-funkel-platzen{
+  0%,100%{ filter:blur(0) }
+  50%{ transform:scale(2); filter:blur(10px) brightness(150%)
+       drop-shadow(-36px 12px 12px hsl(var(--ru-funkel-ton) 100% 70%)) }
+}
+.ru-funkel:active, .ai-quick button.ru-funkel:active, .lernwelt button.is-primary.ru-funkel:active{
+  border-color:hsl(var(--ru-funkel-ton) 100% 80% / 70%);
+  background:hsl(var(--ru-funkel-ton) 50% 20% / .5)
+}
+.ru-funkel:active::after{ opacity:1; mask-image:linear-gradient(0deg,#fff,transparent); filter:brightness(200%) }
+.ru-funkel:active .ru-funkel-b{ text-shadow:0 0 1px hsl(var(--ru-funkel-ton) 100% 90% / 90%); animation:none }
+
+/* ---- Das Rauschen als Cover (textur:nebel | sand | nacht) --------------- */
+.cover-textur{ position:relative; overflow:hidden }
+.cover-textur-nebel{ background:linear-gradient(120deg,#cfe3ee,#8fb0c4) }
+.cover-textur-sand{ background:linear-gradient(120deg,#ead9c2,#c4a07c) }
+.cover-textur-nacht{ background:linear-gradient(120deg,#1d2140,#4a3a78) }
+.cover-textur-nacht .ru-textur{ mix-blend-mode:screen }
+/* Es treibt — Redurs „island" lebt von der Bewegung, nicht vom Korn. */
+.cover-textur .ru-textur-fein{ animation:ru-textur-treiben 9s ease-in-out infinite alternate }
+.cover-textur .ru-textur-grob{ animation:ru-textur-treiben 13s ease-in-out infinite alternate-reverse }
+@keyframes ru-textur-treiben{
+  from{ transform:translate(-2%,-2%) scale(1.08) }
+  to{ transform:translate(2%,2%) scale(1.08) }
+}
+
+/* ---- Das Auge am Ordnerdeckel (.bib-blick) ------------------------------ */
+.bib-zelle{ position:relative; display:block; min-width:0 }
+.bib-blick{
+  position:absolute; left:4px; top:4px; z-index:2;
+  width:var(--touch-min); height:var(--touch-min); padding:0; border:0;
+  background:none; cursor:pointer; display:grid; place-items:center;
+  border-radius:10px; color:var(--text)
+}
+.bib-blick:hover, .bib-blick:focus-visible{ background:rgba(0,0,0,.08) }
+.bib-blick-auge{
+  position:relative; display:block; width:26px; height:15px; box-sizing:border-box;
+  border-radius:50%; background:#fff; border:2px solid #2b2b2b;
+  box-shadow:0 1px 3px rgba(0,0,0,.25)
+}
+.bib-blick-auge b{
+  position:absolute; left:50%; top:50%; width:9px; height:9px; margin:-4.5px 0 0 -4.5px;
+  border-radius:50%; background:#2b2b2b; transition:transform .3s ease
+}
+.bib-blick:hover .bib-blick-auge b, .bib-blick:focus-visible .bib-blick-auge b{ transform:translateX(-5px) }
+.bib-blick:hover .bib-blick-auge{ animation:bib-blick-zwinkern 1.2s ease }
+@keyframes bib-blick-zwinkern{ 0%,100%{ transform:none } 12%{ transform:scaleY(.1) } 24%{ transform:none } }
+
+/* ---- Wenn das System um Ruhe bittet ------------------------------------- */
+@media (prefers-reduced-motion:reduce){
+  .ru-lader-schwebt{ animation:none }
+  #ru-vorhang{ transition:none }
+  #ru-vorhang .ru-lader-buchstabe{ animation:none; opacity:1 }
+  .ru-geste-finger{ animation:none; transform:rotate(30deg) scale(var(--ru-mass)) }
+  .ru-funkel-b, .ru-funkel:hover .ru-funkel-b, .ru-funkel:focus-visible .ru-funkel-b,
+  .ru-funkel > svg{ animation:none; color:#fff; opacity:1 }
+  .cover-textur .ru-textur{ animation:none }
+  .bib-blick:hover .bib-blick-auge{ animation:none }
+}
 
 </style>
 <!-- DIE PREMIUM-SCHALE (E272). Sie steht ABSICHTLICH als letzte: sie ordnet,
@@ -15484,6 +16286,39 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
   .studio-action[aria-busy="true"]::before,.bib-studio-import[aria-busy="true"]::before{animation:none}
 }
 
+/* ---- Die Symbolreihe im Studio-Kopf (E462, Vorgabe „iso-pro") ------------
+   Redurs Vorgabe schiebt ein Symbol beim Überfahren isometrisch heraus und
+   lässt eine Beschriftung daneben aufgehen. In Redion sitzt genau eine
+   echte Symbolreihe: der Studio-Kopf. Sie bekommt beides.
+
+   DIE BESCHRIFTUNG IST DER ECHTE VORLESENAME. `content: attr(aria-label)`
+   nimmt, was schon dasteht — kein zweiter Text, der mit dem ersten
+   auseinanderlaufen könnte (§8). Ein Knopf ohne `aria-label` bekommt
+   deshalb auch keine Blase, und das ist richtig so: er hätte nichts zu
+   sagen.
+
+   NUR MIT ECHTEM ZEIGER (`hover:hover`). Am Telefon läge die Blase unter
+   dem Daumen und verdeckte den Knopf, den sie erklärt. */
+@media (hover:hover) and (min-width:761px){
+  .studio-icon{position:relative; transition:transform var(--motion-fast) var(--ease)}
+  .studio-icon:is(:hover,:focus-visible){transform:translate(2px,-2px)}
+  .studio-icon[aria-label]::after{
+    content:attr(aria-label);
+    position:absolute; top:calc(100% + 8px); left:50%; translate:-50% 0;
+    padding:4px 9px; border-radius:var(--radius-md);
+    background:var(--bg-card); border:1px solid var(--line);
+    box-shadow:var(--studio-elevation);
+    color:var(--text); font-size:11.5px; font-weight:600; white-space:nowrap;
+    opacity:0; pointer-events:none; z-index:60;
+    transition:opacity var(--motion-fast) var(--ease), translate var(--motion-fast) var(--ease)
+  }
+  .studio-icon[aria-label]:is(:hover,:focus-visible)::after{opacity:1; translate:-50% 2px}
+}
+@media (prefers-reduced-motion: reduce){
+  .studio-icon:is(:hover,:focus-visible){transform:none}
+  .studio-icon[aria-label]::after{transition:none}
+}
+
 </style>
 <style>
 /* ===== quell/schale/stil/bibliothek-studio.css ===== */
@@ -15708,6 +16543,15 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
 <!-- Für die Tastatur: der kürzeste Weg an der Seitenleiste vorbei -->
 <a href="#page" id="zum-inhalt">Zum Inhalt springen</a>
 
+<!-- DER VORHANG (E463). Steht hier als Text, nicht als Skript, damit er
+     VOR dem ersten Skript da ist — genau die Sekunde, in der sonst leere
+     Kästchen und halbe Leisten zu sehen wären. `App.start` zieht ihn am
+     Ende auf; falls der Start hängt, zieht ihn das Stilblatt nach sechs
+     Sekunden von selbst auf (kein stiller Absturz, §7). Er nimmt keine
+     Klicks an und sagt dem Vorleser nichts: der Buchstabenlauf ist das
+     Bild des Wort-Laders aus E461, hier mit dem Namen der App. -->
+<div id="ru-vorhang" aria-hidden="true"><div class="ru-lader" data-art="wort"><div class="ru-lader-bild ru-lader-wort"><i class="ru-lader-ring"></i><span class="ru-lader-buchstaben"><span class="ru-lader-buchstabe" style="--ru-schritt:0">R</span><span class="ru-lader-buchstabe" style="--ru-schritt:1">e</span><span class="ru-lader-buchstabe" style="--ru-schritt:2">d</span><span class="ru-lader-buchstabe" style="--ru-schritt:3">i</span><span class="ru-lader-buchstabe" style="--ru-schritt:4">o</span><span class="ru-lader-buchstabe" style="--ru-schritt:5">n</span></span></div></div></div>
+
 <!-- =========================================================================
      SEITENLEISTE
      ====================================================================== -->
@@ -15912,6 +16756,9 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
          `menueband.ts` hält beide Stellen gemeinsam frisch (glockeFrisch,
          wolkeFrisch); die Glocke steht erst mit Ungelesenem da. -->
     <button id="studio-glocke" class="studio-icon" hidden aria-label="Posteingang" title="Posteingang"><span data-sym="bell"></span><b class="glocke-zahl" hidden aria-hidden="true"></b></button>
+    <!-- DIE STERNE (E463): nur da, solange ein Auftrag läuft. `auftraege.ts`
+         hält sie mit `#mb-auftraege` gemeinsam frisch (knopfFrisch). -->
+    <button id="studio-auftraege" class="studio-icon ru-auftrag" hidden aria-label="Aufträge" title="Aufträge"><span class="ru-auftrag-sterne" aria-hidden="true"><i class="ru-lader-stern"></i><i class="ru-lader-stern"></i><i class="ru-lader-stern"></i></span><b class="glocke-zahl" hidden aria-hidden="true"></b></button>
     <button id="studio-account" class="studio-icon" aria-label="Konto und Arbeitsbereich" title="Konto und Arbeitsbereich"><span data-sym="workspace"></span><i class="wolke-punkt" hidden></i></button>
   </header>
   <div id="studio-divider" role="separator" aria-label="Navigationsbreite" aria-orientation="vertical" aria-valuemin="148" aria-valuemax="260" aria-valuenow="184" tabindex="0"></div>
@@ -15973,7 +16820,7 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
          und Kontostand gehören der APP. Sie stehen deshalb in der
          Menüleiste (mb-glocke, Punkt an mb-konto), gezeichnet von
          menueband.ts; der Weg zum Wolke-Dialog steht unter „Mehr". -->
-    <button class="top-btn schmal" id="btn-fav"     title="Zu Favoriten" aria-label="Zu Favoriten"><span data-sym="star"></span></button>
+    <button class="top-btn schmal ru-merk" id="btn-fav" aria-pressed="false" title="Zu Favoriten" aria-label="Zu Favoriten"></button>
     <button class="top-btn schmal" id="btn-page-menu" title="Seitenoptionen" aria-label="Seitenoptionen"><span data-sym="dots"></span></button>
   </header>
 
@@ -17658,7 +18505,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 438, inhalt: '098a1f3fac2cf729', gebaut: '2026-09-06T16:42:01.272Z' };
+const Stand = { fassung: 476, inhalt: 'bc8cfd8035eead7c', gebaut: '2026-09-06T21:22:11.750Z' };
 window.Stand = Stand;
 
 </script>
@@ -39472,6 +40319,1155 @@ window.Zustandsknopf = Zustandsknopf;
 
 </script>
 <script>
+/* ===== quell/schale/bedienung/drucker.js ===== */
+"use strict";
+/* ============================================================================
+ * schale/bedienung/drucker.ts — die Drucker-Karte: was der Druckauftrag tut
+ * ----------------------------------------------------------------------------
+ * ERZEUGT DARAUS WIRD `quell/schale/bedienung/drucker.js`.
+ * Die Quelle ist DIESE Datei. `npm run bauen:ts` schreibt das .js; wer das
+ * .js bearbeitet, verliert die Änderung beim nächsten Bauen (test105).
+ * ----------------------------------------------------------------------------
+ * WOFÜR. „Drucken oder als PDF" (bereiche/wissen/werkzeuge.ts, `drucken`)
+ * sammelt erst die Seitenbilder aus der Ablage, setzt dann die Seite als
+ * HTML in einen Druckrahmen und ruft den Druckdialog des Browsers. Bei
+ * achtzig PDF-Seiten dauert das Sammeln Sekunden — und bis hierher zeigte
+ * in dieser Zeit NICHTS, dass etwas geschieht. Wer nichts sieht, drückt
+ * noch einmal (so steht es im Kopf von pdf/einlesen.ts, und es gilt hier
+ * genauso).
+ *
+ * WOHER. Uiverse-Eintrag Nr. 28 „Printer Process Card" von spotift_5948
+ * (UI-Reserve, E440; das Original liegt unverändert unter
+ * Katalog-Eintrag 28 im Entwicklungs-Archiv, printer-process-card).
+ * Das Original lässt einen Drucker in einer Schleife von 6,4 s ein Blatt
+ * einziehen, bedrucken und ausgeben — und schreibt dazu „Ready, Feeding,
+ * Printing, Ejecting, Done" AUS EINEM ZEITGEBER. Genau das darf die
+ * Redion-Fassung nicht (Katalog: „nur echter Zustand"): hier kommt jeder
+ * Zustand aus dem Ablauf, der ihn auslöst, und kein Wort steht da, das
+ * nicht gerade wahr ist (E458).
+ *
+ * SECHS ZUSTÄNDE, und woher jeder kommt:
+ *
+ *     bereit       die Karte steht, noch läuft nichts
+ *     vorbereiten  `bilderSammeln()` läuft — Seitenbilder aus der Ablage
+ *     rendern      `seiteAlsHtml()` und der Druckrahmen werden gebaut
+ *     speichern    der Druckdialog des Browsers ist offen (Drucker oder PDF)
+ *     fertig       der Dialog ist zu — `print()` ist zurückgekehrt
+ *     fehler       davor flog ein Fehler; sein Satz steht auf der Karte
+ *
+ * Das Blatt bewegt sich nur in `vorbereiten` und `rendern` — solange
+ * wirklich gearbeitet wird. In `speichern` und `fertig` liegt es bedruckt
+ * im Fach, in `fehler` steckt es halb im Schlitz, ohne Druck. Die Lampe
+ * wechselt die Farbe, aber nie allein (§38): Zeichen und Satz sagen es
+ * daneben, und die Karte ist `role="status"` — der Wechsel wird
+ * vorgelesen, ohne zu unterbrechen. Wer keine Bewegung will
+ * (`prefers-reduced-motion`), sieht das Blatt still liegen; der Satz sagt
+ * es ohnehin.
+ *
+ * WAS ES NICHT IST. Kein Fortschrittsbalken: der Druckweg kennt keinen
+ * Anteil nach aussen, und ein erfundener Prozentwert wäre eine Behauptung.
+ * Und kein Knopf — der Knopf, der Drucken auslöst, bleibt, wo er ist.
+ * ==========================================================================*/
+const Drucker = (() => {
+    /* KURZ, weil die Karte 190 px breit ist: „Die Seiten werden gesetzt …"
+       brach auf dem Bild in zwei Zeilen, das Zeichen stand allein am Rand.
+       Bis 22 Zeichen passt ein Satz in eine Zeile; ein Fehlersatz darf
+       länger sein und bricht dann als Fliesstext um. */
+    const SAETZE = {
+        bereit: 'Bereit',
+        vorbereiten: 'Seitenbilder sammeln …',
+        rendern: 'Seiten setzen …',
+        speichern: 'Drucken oder als PDF …',
+        fertig: 'Fertig',
+        fehler: 'Nicht gedruckt'
+    };
+    /* Das Zeichen kommt aus zustand.ts, damit es EINE Sprache bleibt (E441):
+       „…" wartet, „◐" läuft, „✓" fertig, „!" Fehler. Fehlt das Bauteil
+       (Ladereihenfolge), stehen dieselben Zeichen hier als Rückfall. */
+    const ZEICHEN_ART = {
+        bereit: 'bereit', vorbereiten: 'wartet', rendern: 'laeuft',
+        speichern: 'laeuft', fertig: 'fertig', fehler: 'fehler'
+    };
+    const RUECKFALL = {
+        bereit: '○', wartet: '…', laeuft: '◐', fertig: '✓', fehler: '!', abgebrochen: '✕'
+    };
+    const zeichenFuer = (zustand) => {
+        const art = ZEICHEN_ART[zustand];
+        return typeof Zustand !== 'undefined' && Zustand.zeichen ? Zustand.zeichen(art) : RUECKFALL[art];
+    };
+    const ist = (wert) => typeof wert === 'string' && Object.prototype.hasOwnProperty.call(SAETZE, wert);
+    const el = (tag, klasse, eltern) => {
+        const e = document.createElement(tag);
+        e.className = klasse;
+        if (eltern)
+            eltern.append(e);
+        return e;
+    };
+    /** Die Bühne: das Blatt hinter dem Gerät, das Gerät davor. Alles Bild. */
+    const buehne = () => {
+        const b = el('div', 'ru-drucker-buehne');
+        b.setAttribute('aria-hidden', 'true');
+        const gruppe = el('div', 'ru-drucker-blattgruppe', b);
+        el('i', 'ru-drucker-blattschatten', gruppe);
+        const blatt = el('div', 'ru-drucker-blatt', gruppe);
+        for (let i = 0; i < 8; i++)
+            el('i', 'ru-drucker-tinte', blatt).style.setProperty('--ru-schritt', String(i));
+        const geraet = el('div', 'ru-drucker-geraet', b);
+        el('i', 'ru-drucker-umschatten', geraet);
+        el('i', 'ru-drucker-deckel-innen', el('div', 'ru-drucker-deckel', geraet));
+        const koerper = el('div', 'ru-drucker-koerper', geraet);
+        el('i', 'ru-drucker-schlitz', koerper);
+        const feld = el('div', 'ru-drucker-feld', koerper);
+        el('i', 'ru-drucker-feld-gross', feld);
+        el('i', 'ru-drucker-feld-klein', feld);
+        const knoepfe = el('div', 'ru-drucker-knoepfe', koerper);
+        for (let i = 0; i < 3; i++)
+            el('i', 'ru-drucker-knopf', knoepfe);
+        const lampe = el('div', 'ru-drucker-lampe', koerper);
+        el('i', 'ru-drucker-led', lampe);
+        el('i', 'ru-drucker-schein', lampe);
+        const lueftung = el('div', 'ru-drucker-lueftung', koerper);
+        for (let i = 0; i < 4; i++)
+            el('i', 'ru-drucker-lamelle', lueftung);
+        el('i', 'ru-drucker-fach-innen', el('div', 'ru-drucker-fach', koerper));
+        el('i', 'ru-drucker-marke', koerper);
+        return b;
+    };
+    /**
+     * Die Karte bauen. `<div class="ru-drucker" role="status" data-zustand>`
+     * mit Bühne (aria-hidden) und Satz (Zeichen aria-hidden, Text). Sie
+     * hängt noch nirgends — `zeigen()` stellt sie schwebend auf die Seite.
+     */
+    const bauen = () => {
+        const karte = el('div', 'ru-drucker');
+        karte.setAttribute('role', 'status');
+        karte.append(buehne());
+        const status = el('p', 'ru-drucker-status', karte);
+        const zeichen = el('span', 'ru-drucker-zeichen', status);
+        zeichen.setAttribute('aria-hidden', 'true');
+        const text = el('span', 'ru-drucker-text', status);
+        let jetzt = 'bereit';
+        let wecker = 0;
+        const setzen = (zustand, eigenerText) => {
+            /* Ein unbekanntes Wort wird zu 'fehler' MIT dem Wort als Satz: lieber
+               ein sichtbares Fragezeichen als eine stille Karte (wie zustand.ts). */
+            jetzt = ist(zustand) ? zustand : 'fehler';
+            karte.dataset['zustand'] = jetzt;
+            zeichen.textContent = zeichenFuer(jetzt);
+            text.textContent = eigenerText ?? (ist(zustand) ? SAETZE[jetzt] : String(zustand));
+        };
+        const entfernen = (nachMs = 0) => {
+            window.clearTimeout(wecker);
+            if (nachMs > 0) {
+                wecker = window.setTimeout(() => karte.remove(), nachMs);
+                return;
+            }
+            karte.remove();
+        };
+        setzen('bereit');
+        return { element: karte, setzen, zustand: () => jetzt, entfernen };
+    };
+    /**
+     * Die Karte schwebend über der Seite zeigen — unten rechts, am Telefon
+     * über der Leiste. Es gibt höchstens EINE: wer zweimal druckt, bevor die
+     * erste weg ist, bekommt eine frische Karte und keine zwei übereinander.
+     */
+    const zeigen = () => {
+        document.querySelectorAll('.ru-drucker.ru-drucker-schwebt').forEach(alt => alt.remove());
+        const griff = bauen();
+        griff.element.classList.add('ru-drucker-schwebt');
+        document.body.append(griff.element);
+        return griff;
+    };
+    return { SAETZE, ist, bauen, zeigen };
+})();
+window.Drucker = Drucker;
+
+</script>
+<script>
+/* ===== quell/schale/bedienung/ordnerkarte.js ===== */
+"use strict";
+/* ============================================================================
+ * schale/bedienung/ordnerkarte.ts — der Blick in einen Ordner, ohne hineinzugehen
+ * ----------------------------------------------------------------------------
+ * ERZEUGT DARAUS WIRD `quell/schale/bedienung/ordnerkarte.js`.
+ * Die Quelle ist DIESE Datei. `npm run bauen:ts` schreibt das .js; wer das
+ * .js bearbeitet, verliert die Änderung beim nächsten Bauen (test105).
+ * ----------------------------------------------------------------------------
+ * WOFÜR. Ein Ordner im Regal sagt heute „7 Sachen" und sonst nichts. Wer
+ * wissen will, WELCHE sieben, muss hineingehen (`geheIn`, E380) und danach
+ * wieder heraus. Bei der Frage „liegt das Prüfungsskript in diesem Fach
+ * oder im anderen?" sind das vier Wege für eine Auskunft.
+ *
+ * Die Ordnerkarte ist dieser Blick: ein Ordner klappt auf, die echten
+ * Kinder fächern heraus, jedes mit seinem Namen und seiner Art. Ein Tipp
+ * darauf öffnet es — man landet direkt am Ziel statt eine Ebene tiefer.
+ *
+ * WOHER. Vorgabe von Redur vom 6. September 2026 (Vorgaben-Archiv, `
+ * folder-card.css`), zusammengelegt mit der zweiten Vorgabe desselben
+ * Tages: der Ordnerstruktur, die beim Überfahren eine verschachtelte Liste
+ * zeigt. Beide beschreiben dasselbe — „zeig mir, was drin ist, ohne dass
+ * ich hingehen muss" —, also ist es EIN Bauteil und nicht zwei (§8).
+ *
+ * WAS ECHT IST, und das ist die ganze Regel hier:
+ *
+ *     die Kinder      `Store.childrenOf`, dieselbe Liste wie im Regal
+ *     die Zahl        die echte Anzahl, nicht „5+"
+ *     die Suche       filtert den ganzen Unterbaum, nicht nur eine Ebene
+ *     die Art         steht als WORT auf jedem Blatt („PDF", „Ordner")
+ *
+ * Die fünf Farben der Blätter sind Schmuck und tragen keine Auskunft — die
+ * Art steht daneben als Text. Ein Farbschlüssel für zehn Arten wäre eine
+ * Auskunft, die niemand auswendig kann, und §38 verbietet Farbe als
+ * einziges Merkmal.
+ *
+ * WARUM DIE SUCHE TIEFER GEHT ALS DIE DES REGALS. Das Suchfeld der
+ * Bibliothek filtert die Kinder der offenen Ebene (`bibliothek.ts`, Filter
+ * nach `parentId`). In einem Fach mit Unterfächern findet es deshalb
+ * nichts, was eine Ebene tiefer liegt. Die Karte bekommt den Unterbaum
+ * mitgegeben und sucht darin; jeder Treffer zeigt seinen Weg.
+ * ==========================================================================*/
+const Ordnerkarte = (() => {
+    /* Höchstens fünf fächern heraus — mehr überdecken einander, und die
+       Vorgabe zeichnet genau fünf. Der Rest steht als Zahl daneben und ist
+       über die Suche erreichbar. */
+    const FAECHER = 5;
+    const el = (tag, klasse, eltern) => {
+        const e = document.createElement(tag);
+        e.className = klasse;
+        if (eltern)
+            eltern.append(e);
+        return e;
+    };
+    /* Das Papier: eine Rückwand, die Blätter, eine Vorderklappe. Alles Bild
+       ausser den Blättern — die sind Knöpfe, weil man sie drückt. */
+    /* DIE VORDERKLAPPE IST NIEDRIGER ALS DIE RÜCKWAND, und das ist keine
+       Feinheit: mit derselben Höhe verdeckte sie drei der fünf Blätter
+       vollständig — auf dem Bild standen nur zwei da. Die Rückwand ist der
+       ganze Ordner mit Reiter, die Klappe nur die vordere Lasche. */
+    const RUECKEN = 'M4 14a8 8 0 0 1 8-8h44l12 12h90a8 8 0 0 1 8 8v66a8 8 0 0 1-8 8H12a8 8 0 0 1-8-8Z';
+    const KLAPPE = 'M4 8a8 8 0 0 1 8-8h146a8 8 0 0 1 8 8v17a8 8 0 0 1-8 8H12a8 8 0 0 1-8-8Z';
+    const papier = (vorn = false) => {
+        const ns = 'http://www.w3.org/2000/svg';
+        const svg = document.createElementNS(ns, 'svg');
+        svg.setAttribute('viewBox', vorn ? '0 0 170 33' : '0 0 170 100');
+        svg.setAttribute('aria-hidden', 'true');
+        svg.setAttribute('focusable', 'false');
+        const pfad = document.createElementNS(ns, 'path');
+        pfad.setAttribute('d', vorn ? KLAPPE : RUECKEN);
+        svg.append(pfad);
+        return svg;
+    };
+    const bauen = (auftrag) => {
+        const karte = el('div', 'ru-fach');
+        const tiefe = auftrag.tiefe && auftrag.tiefe.length ? auftrag.tiefe : auftrag.kinder;
+        let offen = false;
+        let suchwort = '';
+        /* ---- Zeile 1: Name und Zähler -------------------------------------- *
+         * DER NAME STEHT OBEN UND NICHT UNTEN. Auf dem ersten Bild lag er unter
+         * dem Ordner, die Suche darüber — und die aufgefächerten Blätter deckten
+         * genau diese Suchzeile zu. Oben ist beides frei, und wer die Karte
+         * aufschlägt, liest zuerst, welcher Ordner das ist (§55.1). */
+        const kopf = el('div', 'ru-fach-kopf', karte);
+        const name = el('p', 'ru-fach-name', kopf);
+        name.textContent = auftrag.name;
+        const zaehler = el('p', 'ru-fach-zaehler', kopf);
+        zaehler.setAttribute('role', 'status');
+        const punkt = el('i', 'ru-fach-punkt', zaehler);
+        punkt.setAttribute('aria-hidden', 'true');
+        const zahl = el('b', 'ru-fach-zahl', zaehler);
+        const wort = el('span', 'ru-fach-wort', zaehler);
+        /* ---- Zeile 2: die Suche, über die ganze Breite ---------------------- */
+        const feld = document.createElement('label');
+        feld.className = 'ru-fach-suche';
+        const sr = el('span', 'ru-fach-sr', feld);
+        sr.textContent = 'In „' + auftrag.name + '" suchen, auch in den Unterordnern';
+        const eingabe = document.createElement('input');
+        eingabe.type = 'search';
+        eingabe.className = 'ru-fach-eingabe';
+        /* „In diesem Ordner suchen …" stand als „In diesem Ordn…" da — und ein
+           abgeschnittener Satz ist ein anderer Satz (§55.1). */
+        eingabe.placeholder = 'Hier suchen …';
+        feld.append(eingabe);
+        karte.append(feld);
+        /* ---- Der Ordner selbst -------------------------------------------- */
+        const buehne = el('div', 'ru-fach-buehne', karte);
+        const ruecken = el('div', 'ru-fach-ruecken', buehne);
+        ruecken.append(papier());
+        const blaetter = el('div', 'ru-fach-blaetter', buehne);
+        const klappe = el('div', 'ru-fach-klappe', buehne);
+        klappe.append(papier(true));
+        el('i', 'ru-fach-marke', klappe).setAttribute('aria-hidden', 'true');
+        /* Der Griff, der auf- und zuklappt. Ein KNOPF und kein Kästchen: die
+           Vorgabe nimmt ein verstecktes `<input type=checkbox>` und `:checked`,
+           aber ein Ordner, der sich öffnet, ist keine Auswahl, die man
+           abschickt — er ist eine Aussage über „auf" und „zu", und dafür heisst
+           das Attribut `aria-expanded` (§38). */
+        const griff = document.createElement('button');
+        griff.type = 'button';
+        griff.className = 'ru-fach-griff';
+        griff.setAttribute('aria-expanded', 'false');
+        buehne.append(griff);
+        /* Der Resttext ENTSTEHT HIER und nicht beim Zeichnen: sonst hängt er
+           sich hinter den „Ordner öffnen"-Knopf, weil der da schon steht. */
+        const mehr = el('p', 'ru-fach-rest', karte);
+        /* ---- Was gerade gezeigt wird -------------------------------------- */
+        const passend = () => {
+            const s = suchwort.trim().toLowerCase();
+            if (!s)
+                return auftrag.kinder;
+            return tiefe.filter(k => k.name.toLowerCase().includes(s));
+        };
+        const blattBauen = (stueck, nr) => {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'ru-fach-blatt';
+            b.dataset['nr'] = String(nr);
+            b.dataset['fachId'] = stueck.id;
+            const glanz = el('i', 'ru-fach-glanz', b);
+            glanz.setAttribute('aria-hidden', 'true');
+            /* DIE ZEILE STEHT UNTEN. Vom Blatt darunter sieht man den unteren
+               Streifen, nicht den oberen: das obere Blatt liegt weiter oben UND
+               weiter vorn. Mit dem Namen am Kopf (so zeichnet die Vorgabe) war
+               nur der Name des vordersten Blattes lesbar — auf dem Telefonbild
+               standen vier farbige Streifen ohne ein Wort darauf. */
+            const zeile = el('span', 'ru-fach-zeile', b);
+            const text = el('span', 'ru-fach-text', zeile);
+            text.textContent = stueck.name;
+            /* DER GANZE NAME MUSS ERREICHBAR BLEIBEN. Vom Blatt darunter sieht
+               man einen Streifen von 24 px — eine Zeile. Was nicht hineinpasst,
+               endet sichtbar mit „…" (die CSS) und steht vollständig im Titel
+               und im Vorlesenamen. Ein stumm abgeschnittener Name ist ein
+               anderer Name (§55.1). */
+            b.title = stueck.name + ' — ' + stueck.art + (stueck.weg ? ' (' + stueck.weg + ')' : '');
+            b.setAttribute('aria-label', (stueck.ordner ? 'Ordner öffnen: ' : 'Öffnen: ') + b.title);
+            const marke = el('span', 'ru-fach-art', zeile);
+            /* Die Art als Wort. Ohne sie sagte die Farbe alles — und die sagt
+               niemandem etwas (§38). */
+            marke.textContent = stueck.art;
+            if (stueck.weg) {
+                const weg = el('span', 'ru-fach-weg', text);
+                weg.textContent = ' \u00b7 ' + stueck.weg;
+            }
+            b.addEventListener('click', ereignis => {
+                ereignis.stopPropagation();
+                auftrag.beiWahl(stueck);
+            });
+            return b;
+        };
+        const zeichnen = () => {
+            const liste = passend();
+            const gezeigt = liste.slice(0, FAECHER);
+            /* ZUGEKLAPPT STEHT KEIN BLATT IM BAUM. Sie nur mit `opacity:0` zu
+               verstecken hiesse: ein Vorleser zählt fünf Knöpfe auf, die niemand
+               sieht und niemand treffen kann (§38). */
+            blaetter.replaceChildren(...(offen ? gezeigt.map(blattBauen) : []));
+            const sucht = !!suchwort.trim();
+            zahl.textContent = String(liste.length);
+            /* Der Satz sagt, was die Zahl bedeutet, und ändert sich mit dem
+               Zustand: ohne Suche die Anzahl im Ordner, mit Suche die Treffer. */
+            wort.textContent = sucht
+                ? (liste.length === 1 ? 'Treffer' : 'Treffer') + ' von ' + tiefe.length
+                : (liste.length === 1 ? 'Sache' : 'Sachen');
+            karte.dataset['sucht'] = sucht ? 'ja' : 'nein';
+            karte.dataset['leer'] = liste.length ? 'nein' : 'ja';
+            const rest = liste.length - gezeigt.length;
+            mehr.textContent = liste.length === 0
+                ? (sucht ? 'Kein Treffer in diesem Ordner.' : 'Dieser Ordner ist leer.')
+                : (rest > 0 ? 'und ' + rest + ' weitere — such danach, um sie zu sehen' : '');
+            mehr.hidden = !mehr.textContent;
+        };
+        const klappen = (auf) => {
+            offen = auf === undefined ? !offen : auf;
+            karte.dataset['offen'] = offen ? 'ja' : 'nein';
+            griff.setAttribute('aria-expanded', offen ? 'true' : 'false');
+            griff.setAttribute('aria-label', offen
+                ? 'Ordner „' + auftrag.name + '" zuklappen'
+                : 'In den Ordner „' + auftrag.name + '" hineinsehen');
+            if (offen)
+                zeichnen();
+        };
+        griff.addEventListener('click', () => klappen());
+        eingabe.addEventListener('input', () => { suchwort = eingabe.value; zeichnen(); });
+        /* Enter im Suchfeld darf kein Formular abschicken und nichts öffnen —
+           es gibt keinen „ersten Treffer", den man erraten dürfte. */
+        eingabe.addEventListener('keydown', ereignis => {
+            if (ereignis.key === 'Enter')
+                ereignis.preventDefault();
+        });
+        if (auftrag.beiOrdner) {
+            const gehen = document.createElement('button');
+            gehen.type = 'button';
+            gehen.className = 'ru-fach-gehen btn weiter';
+            gehen.textContent = 'Ordner öffnen';
+            gehen.addEventListener('click', () => auftrag.beiOrdner?.());
+            karte.append(gehen);
+        }
+        klappen(false);
+        zeichnen();
+        return { element: karte, klappen, offen: () => offen, entfernen: () => karte.remove() };
+    };
+    return { FAECHER, bauen };
+})();
+window.Ordnerkarte = Ordnerkarte;
+
+</script>
+<script>
+/* ===== quell/schale/bedienung/merkzeichen.js ===== */
+"use strict";
+/* ============================================================================
+ * schale/bedienung/merkzeichen.ts — das Lesezeichen: ein Merker, eine Sprache
+ * ----------------------------------------------------------------------------
+ * ERZEUGT DARAUS WIRD `quell/schale/bedienung/merkzeichen.js`.
+ * Die Quelle ist DIESE Datei. `npm run bauen:ts` schreibt das .js; wer das
+ * .js bearbeitet, verliert die Änderung beim nächsten Bauen (test105).
+ * ----------------------------------------------------------------------------
+ * WOFÜR. Das Feld heisst überall `favorite`, aber jede Stelle zeichnete es
+ * anders: die Kopfleiste ein SVG mit der Klasse `on` und OHNE `aria-pressed`,
+ * die Notizhefte ein „★" gegen ein „☆" mit `aria-pressed`, das Regal ein
+ * Zeichen, das gar kein Knopf ist. Wer nicht sieht, ob etwas gedrückt ist,
+ * hört es auch nicht — und in der Kopfleiste hörte man es nicht.
+ *
+ * Dieses Bauteil ist der eine Merker: ein Lesezeichen, das seinen Zustand
+ * über FORM (gefüllt gegen offen), über TEXT (`aria-pressed`, `aria-label`)
+ * und erst zusätzlich über Farbe sagt (§38).
+ *
+ * WOHER, und warum es EIN Zeichen ist und nicht zwei. Redur hat am
+ * 6. September 2026 zwei Vorgaben geschickt: das Lesezeichen mit dem
+ * Funkenkranz (`.ui-bookmark`) und das Herz mit dem rollenden Punkt
+ * (`.love-heart`, beide in `loader-sammlung.css` im Vorgaben-Archiv).
+ * Beide zeichnen denselben Vorgang: etwas anhaken, das man wiederfinden
+ * will. Zwei Symbole für dasselbe Feld wären zwei Sprachen für eine Sache
+ * (§8) — jemand, der in der Kopfleiste ein Herz und im Heft einen Stern
+ * sieht, fragt zu Recht, was der Unterschied ist. Es gibt keinen.
+ *
+ * Also nimmt Redion die FORM des Lesezeichens — weil das Wort hier
+ * „Favoriten" heisst und nicht „gefällt mir" — und die MECHANIK des
+ * Herzens: der Punkt rollt in zwei Zügen an seinen Platz, und darauf
+ * springt der Kranz auf. Beide Vorgaben stecken darin, keine zweimal.
+ * ==========================================================================*/
+const Merkzeichen = (() => {
+    const NS = 'http://www.w3.org/2000/svg';
+    /* Das Band. Ein Pfad, kein Zeichen aus der Schrift: „★" gegen „☆" hängt
+       davon ab, dass die Schrift beide hat, und auf dem Telefon hat sie oft
+       nur eines — dann sieht „gemerkt" aus wie „nicht gemerkt". */
+    const BAND = 'M6.5 3h11a1.5 1.5 0 0 1 1.5 1.5v16.2a.8.8 0 0 1-1.2.7L12 17.9l-5.8 3.5a.8.8 0 0 1-1.2-.7V4.5A1.5 1.5 0 0 1 6.5 3Z';
+    const band = (an) => {
+        const svg = document.createElementNS(NS, 'svg');
+        svg.setAttribute('viewBox', '0 0 24 24');
+        svg.setAttribute('aria-hidden', 'true');
+        svg.setAttribute('focusable', 'false');
+        svg.classList.add('ru-merk-band');
+        const pfad = document.createElementNS(NS, 'path');
+        pfad.setAttribute('d', BAND);
+        /* GEFÜLLT ODER OFFEN — das ist der Unterschied, den man auch ohne
+           Farbe sieht. Die Farbe kommt oben drauf, nicht statt dessen. */
+        pfad.setAttribute('fill', an ? 'currentColor' : 'none');
+        pfad.setAttribute('stroke', 'currentColor');
+        pfad.setAttribute('stroke-width', '1.7');
+        pfad.setAttribute('stroke-linejoin', 'round');
+        svg.append(pfad);
+        return svg;
+    };
+    const satz = (an, name) => (an ? 'Aus Favoriten' : 'Zu Favoriten') + (name ? ': ' + name : '');
+    /** Der Inhalt eines Merkknopfs: Band, Kranz, Funken, rollender Punkt. */
+    const inneres = (auftrag) => {
+        const teil = document.createDocumentFragment();
+        teil.append(band(auftrag.an));
+        for (const klasse of ['ru-merk-kreis', 'ru-merk-funken', 'ru-merk-punkt']) {
+            const i = document.createElement('i');
+            i.className = klasse;
+            i.setAttribute('aria-hidden', 'true');
+            teil.append(i);
+        }
+        return teil;
+    };
+    /**
+     * Einen vorhandenen Knopf auf den Zustand stellen.
+     *
+     * DER KRANZ SPRINGT NUR AUF, WENN SICH ETWAS ÄNDERT — und nur beim
+     * Anhaken. Ein Kranz bei jedem Neuzeichnen wäre ein Feuerwerk, sooft die
+     * Seite sich rührt; einer beim Abhaken wäre eine Feier fürs Weggehen.
+     */
+    const markieren = (knopf, auftrag) => {
+        const vorher = knopf.getAttribute('aria-pressed');
+        const an = !!auftrag.an;
+        knopf.classList.add('ru-merk');
+        knopf.classList.toggle('ist-an', an);
+        knopf.setAttribute('aria-pressed', an ? 'true' : 'false');
+        knopf.setAttribute('aria-label', satz(an, auftrag.name));
+        knopf.title = satz(an, auftrag.name);
+        knopf.replaceChildren(inneres({ an, ...(auftrag.name ? { name: auftrag.name } : {}) }));
+        /* JEDES STELLEN RÄUMT DEN KRANZ ERST WEG. Ohne das blieb er nach dem
+           Abhaken hängen, bis `animationend` kam — und ein Kranz, der eine
+           Dreizehntelsekunde nach dem Abhaken noch dasteht, feiert das
+           Falsche. (test433 §1 hat genau das gefunden.) */
+        knopf.classList.remove('platzt');
+        if (an && vorher === 'false') {
+            /* Ein Neuzeichnen erzwingen, sonst läuft die Bewegung nicht noch
+               einmal, wenn dieselbe Klasse im selben Zug ab- und wieder angeht. */
+            void knopf.offsetWidth;
+            knopf.classList.add('platzt');
+            knopf.addEventListener('animationend', () => knopf.classList.remove('platzt'), { once: true });
+        }
+    };
+    /**
+     * Ein fertiger Merkknopf. `beiWechsel` bekommt den NEUEN Zustand; wer den
+     * Wert wirklich speichert, entscheidet der Aufrufer — dieses Bauteil
+     * kennt weder `Store` noch `favorite`.
+     */
+    const bauen = (auftrag) => {
+        const knopf = document.createElement('button');
+        knopf.type = 'button';
+        let an = !!auftrag.an;
+        knopf.setAttribute('aria-pressed', an ? 'true' : 'false');
+        markieren(knopf, auftrag);
+        knopf.addEventListener('click', () => {
+            an = !an;
+            markieren(knopf, { an, ...(auftrag.name ? { name: auftrag.name } : {}) });
+            auftrag.beiWechsel(an);
+        });
+        return knopf;
+    };
+    /**
+     * Dasselbe als Zeichenkette — für die Stellen, die ihr Markup als Text
+     * bauen (Notizhefte, Regal). `zusatz` kommt roh in den Knopf; wer dort
+     * Nutzertext hineingibt, escapt ihn selbst (§19).
+     */
+    const html = (auftrag) => {
+        const an = !!auftrag.an;
+        const beschriftung = satz(an, auftrag.name);
+        const sicher = String(beschriftung)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        return '<button type="button" class="ru-merk' + (an ? ' ist-an' : '') +
+            (auftrag.klasse ? ' ' + auftrag.klasse : '') + '" ' +
+            'aria-pressed="' + (an ? 'true' : 'false') + '" ' +
+            'title="' + sicher + '" aria-label="' + sicher + '" ' + (auftrag.zusatz || '') + '>' +
+            '<svg class="ru-merk-band" viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
+            '<path d="' + BAND + '" fill="' + (an ? 'currentColor' : 'none') +
+            '" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"></path></svg>' +
+            '<i class="ru-merk-kreis" aria-hidden="true"></i>' +
+            '<i class="ru-merk-funken" aria-hidden="true"></i>' +
+            '<i class="ru-merk-punkt" aria-hidden="true"></i>' +
+            '</button>';
+    };
+    return { BAND, satz, markieren, bauen, html };
+})();
+window.Merkzeichen = Merkzeichen;
+
+</script>
+<script>
+/* ===== quell/schale/bedienung/lader.js ===== */
+"use strict";
+/* ============================================================================
+ * schale/bedienung/lader.ts — vier Bilder für „es läuft", und jedes sagt etwas
+ * ----------------------------------------------------------------------------
+ * ERZEUGT DARAUS WIRD `quell/schale/bedienung/lader.js`.
+ * Die Quelle ist DIESE Datei. `npm run bauen:ts` schreibt das .js; wer das
+ * .js bearbeitet, verliert die Änderung beim nächsten Bauen (test105).
+ * ----------------------------------------------------------------------------
+ * WOFÜR. Redion hat sechs Zustandswörter (`zustand.ts`) und einen Knopf,
+ * der sie spricht (`zustandsknopf.ts`). Was ihm fehlte, war das Bild für
+ * längere Vorgänge — und zwar EIN Bild je Sorte Auskunft, nicht ein
+ * Kreisel für alles:
+ *
+ *   fluss    ES GIBT EINEN ECHTEN ANTEIL. Der Stand steigt wie eine
+ *            Flüssigkeit, die Zahl steht daneben. Genau eine Stelle im
+ *            ganzen Bestand liefert einen 0..1-Wert von aussen: der
+ *            Modell-Download von WebLLM (`initProgressCallback`).
+ *   sterne   ES LÄUFT, ABER NIEMAND WEISS WIE LANGE. Fünf Sterne drehen
+ *            sich. Für Aufträge mit `schritte: 0` — dort verbietet sich
+ *            ein Balken (E286), und bis hierher stand nur eine Zahl da.
+ *   wort     ES LÄUFT ODER ES LÄUFT NICHT, mehr weiss man nicht. Die
+ *            Buchstaben eines Wortes gehen der Reihe nach an. Für den
+ *            Abgleich, der nur `laeuft` kennt.
+ *   presse   EIN AUFTRAG MACHT BLÄTTER. Für die Auftragsart `pdf-bilder`:
+ *            Seite für Seite kommt aus der Presse, und der Balken daneben
+ *            sagt die echte Zahl.
+ *
+ * WOHER. Vier Vorgaben von Redur vom 6. September 2026 aus
+ * `loader-sammlung.css` im Vorgaben-Archiv: der flüssige Ring, die
+ * fünf Sterne, der Buchstabenring und die isometrische Druckpresse.
+ *
+ * DIE REGEL, DIE ÜBER ALLEN VIER STEHT. Ein Lader ist ein Bild und keine
+ * Auskunft — die Auskunft ist der Text daneben. Deshalb trägt jeder Lader
+ * `role="status"` mit einem Satz, jedes Bild ist `aria-hidden`, und
+ * `fluss` schreibt seine Zahl als Text hin statt sie nur zu malen (§38).
+ * Und keiner von ihnen erfindet einen Anteil: wer keinen bekommt, zeigt
+ * keinen (Auftrag §0.8, E441).
+ *
+ * SVG-IDS SIND JE INSTANZ EINDEUTIG. Der flüssige Ring braucht eine Maske,
+ * und eine Maske braucht eine ID. Zwei Lader auf einer Seite mit derselben
+ * ID teilen sich die Maske — der Befund aus E440 zum KI-Funken. `zaehler`
+ * vergibt deshalb je Instanz eine neue.
+ * ==========================================================================*/
+const Lader = (() => {
+    const NS = 'http://www.w3.org/2000/svg';
+    let zaehler = 0;
+    const SAETZE = {
+        fluss: 'Wird geladen …',
+        sterne: 'Läuft …',
+        wort: 'Läuft …',
+        presse: 'Seiten werden gerechnet …'
+    };
+    const el = (tag, klasse, eltern) => {
+        const e = document.createElement(tag);
+        e.className = klasse;
+        if (eltern)
+            eltern.append(e);
+        return e;
+    };
+    const svgEl = (tag, eltern) => {
+        const e = document.createElementNS(NS, tag);
+        if (eltern)
+            eltern.append(e);
+        return e;
+    };
+    /* ---- fluss: der Stand steigt, die Zahl steht daneben ----------------- *
+     * Die Klumpen sind der Trick der Vorgabe: weichgezeichnete Formen, über
+     * die ein hoher Kontrast läuft, fliessen ineinander. In einer Maske
+     * heisst weiss „hier ist Flüssigkeit"; die Kanten dazwischen werden vom
+     * Kontrast zu einer einzigen welligen Linie.
+     * --------------------------------------------------------------------- */
+    const flussBild = (id) => {
+        const svg = svgEl('svg');
+        svg.setAttribute('viewBox', '0 0 100 100');
+        svg.setAttribute('aria-hidden', 'true');
+        svg.setAttribute('focusable', 'false');
+        svg.classList.add('ru-lader-bild');
+        const defs = svgEl('defs', svg);
+        const maske = svgEl('mask', defs);
+        maske.setAttribute('id', id);
+        const gruppe = svgEl('g', maske);
+        gruppe.setAttribute('class', 'ru-lader-klumpen');
+        /* Die Fläche unter der Oberfläche — ihre Höhe IST der Anteil. */
+        const flaeche = svgEl('rect', gruppe);
+        flaeche.setAttribute('class', 'ru-lader-spiegel');
+        flaeche.setAttribute('x', '0');
+        flaeche.setAttribute('width', '100');
+        flaeche.setAttribute('fill', '#fff');
+        /* Drei Wellen auf der Oberfläche, jede mit eigener Drehung. */
+        for (let i = 0; i < 3; i++) {
+            const welle = svgEl('ellipse', gruppe);
+            welle.setAttribute('class', 'ru-lader-welle');
+            welle.setAttribute('rx', String(30 - i * 6));
+            welle.setAttribute('ry', String(11 - i * 2));
+            welle.setAttribute('fill', '#fff');
+            welle.style.setProperty('--ru-schritt', String(i));
+        }
+        const glas = svgEl('circle', svg);
+        glas.setAttribute('class', 'ru-lader-glas');
+        glas.setAttribute('cx', '50');
+        glas.setAttribute('cy', '50');
+        glas.setAttribute('r', '47');
+        const topf = svgEl('g', svg);
+        topf.setAttribute('mask', 'url(#' + id + ')');
+        const saft = svgEl('circle', topf);
+        saft.setAttribute('class', 'ru-lader-saft');
+        saft.setAttribute('cx', '50');
+        saft.setAttribute('cy', '50');
+        saft.setAttribute('r', '47');
+        return svg;
+    };
+    /* ---- sterne: fünf, die sich drehen ---------------------------------- */
+    const sterneBild = () => {
+        const b = el('div', 'ru-lader-bild ru-lader-sterne');
+        b.setAttribute('aria-hidden', 'true');
+        for (let i = 0; i < 5; i++)
+            el('i', 'ru-lader-stern', b).style.setProperty('--ru-schritt', String(i));
+        return b;
+    };
+    /* ---- wort: die Buchstaben gehen der Reihe nach an -------------------- */
+    const wortBild = (wort) => {
+        const b = el('div', 'ru-lader-bild ru-lader-wort');
+        b.setAttribute('aria-hidden', 'true');
+        el('i', 'ru-lader-ring', b);
+        const zeile = el('span', 'ru-lader-buchstaben', b);
+        /* Array.from und nicht split(''): ein Zeichen ausserhalb der
+           Grundebene (ein Emoji im Wort) zerfiele sonst in zwei halbe. */
+        Array.from(wort).forEach((zeichen, i) => {
+            const s = el('span', 'ru-lader-buchstabe', zeile);
+            s.textContent = zeichen;
+            s.style.setProperty('--ru-schritt', String(i));
+        });
+        return b;
+    };
+    /* ---- presse: Blätter kommen heraus ---------------------------------- */
+    const presseBild = () => {
+        const b = el('div', 'ru-lader-bild ru-lader-presse');
+        b.setAttribute('aria-hidden', 'true');
+        const raum = el('div', 'ru-lader-raum', b);
+        for (let i = 0; i < 3; i++)
+            el('i', 'ru-lader-walze', raum).style.setProperty('--ru-schritt', String(i));
+        for (let i = 0; i < 3; i++)
+            el('i', 'ru-lader-bogen', raum).style.setProperty('--ru-schritt', String(i));
+        return b;
+    };
+    const bauen = (auftrag) => {
+        const wurzel = el('div', 'ru-lader');
+        wurzel.dataset['art'] = auftrag.art;
+        wurzel.setAttribute('role', 'status');
+        let anteil = null;
+        let spiegel = null;
+        let wellen = [];
+        let zahl = null;
+        if (auftrag.art === 'fluss') {
+            const id = 'ru-lader-maske-' + (++zaehler);
+            const bild = flussBild(id);
+            wurzel.append(bild);
+            spiegel = bild.querySelector('.ru-lader-spiegel');
+            wellen = Array.from(bild.querySelectorAll('.ru-lader-welle'));
+            zahl = el('b', 'ru-lader-zahl', wurzel);
+        }
+        else if (auftrag.art === 'sterne') {
+            wurzel.append(sterneBild());
+        }
+        else if (auftrag.art === 'wort') {
+            wurzel.append(wortBild(auftrag.wort || 'Abgleich'));
+        }
+        else {
+            wurzel.append(presseBild());
+        }
+        const satz = el('span', 'ru-lader-text', wurzel);
+        satz.textContent = auftrag.text ?? SAETZE[auftrag.art];
+        const stellen = (wert) => {
+            anteil = wert;
+            if (!spiegel)
+                return;
+            const hoch = wert === null ? 0 : Math.max(0, Math.min(1, wert));
+            /* Die Oberfläche steht bei `100 - 100·Anteil`; die Wellen sitzen
+               genau darauf, damit sie den Rand verwischen und nicht die Mitte. */
+            const kante = 100 - hoch * 100;
+            spiegel.setAttribute('y', String(kante));
+            spiegel.setAttribute('height', String(hoch * 100));
+            wellen.forEach((w, i) => {
+                w.setAttribute('cx', String(30 + i * 20));
+                w.setAttribute('cy', String(kante));
+            });
+            if (zahl) {
+                /* DIE ZAHL STEHT ALS TEXT DA, nicht nur als Höhe. Wer die Füllung
+                   nicht sieht, liest „42 %" (§38). Ohne Anteil steht nichts —
+                   „0 %" wäre eine Behauptung über etwas Unbekanntes. */
+                zahl.textContent = wert === null ? '' : Math.round(hoch * 100) + ' %';
+            }
+            wurzel.dataset['anteil'] = wert === null ? 'unbekannt' : 'bekannt';
+        };
+        stellen(typeof auftrag.anteil === 'number' ? auftrag.anteil : null);
+        const setzen = (neu) => {
+            if (typeof neu.anteil === 'number')
+                stellen(neu.anteil);
+            if (typeof neu.text === 'string')
+                satz.textContent = neu.text;
+        };
+        return { element: wurzel, setzen, anteil: () => anteil,
+            entfernen: () => wurzel.remove() };
+    };
+    /**
+     * Ein Lader als SCHWEBENDE KARTE unten rechts — dort, wo auch die
+     * Drucker-Karte (E458) steht. Für Vorgänge, die keinen eigenen Ort
+     * haben: das Einlesen einer PDF läuft über dem Regal, über einer Seite,
+     * über allem, und ein Toast dafür war zwei Zeilen Text, die man nach
+     * der dritten Seite nicht mehr ansah (E463).
+     *
+     * Die Karte hängt sich selbst an `<body>` und nimmt sich mit `entfernen`
+     * wieder weg. Sie hat `pointer-events:none`: sie meldet, sie bedient
+     * nichts — wer darunter arbeiten will, klickt durch sie hindurch.
+     */
+    const schweben = (auftrag) => {
+        const griff = bauen(auftrag);
+        const karte = el('div', 'ru-lader-karte ru-lader-schwebt');
+        karte.append(griff.element);
+        document.body.append(karte);
+        return { element: karte, setzen: griff.setzen, anteil: griff.anteil,
+            entfernen: () => karte.remove() };
+    };
+    return { SAETZE, bauen, schweben };
+})();
+window.Lader = Lader;
+
+</script>
+<script>
+/* ===== quell/schale/bedienung/textur.js ===== */
+"use strict";
+/* ============================================================================
+ * schale/bedienung/textur.ts — die eine Rauschtextur, genau einmal definiert
+ * ----------------------------------------------------------------------------
+ * ERZEUGT DARAUS WIRD `quell/schale/bedienung/textur.js`.
+ * Die Quelle ist DIESE Datei. `npm run bauen:ts` schreibt das .js; wer das
+ * .js bearbeitet, verliert die Änderung beim nächsten Bauen (test105).
+ * ----------------------------------------------------------------------------
+ * WOFÜR. Redurs Vorgabe „island" legt zwei Rauschflächen übereinander und
+ * treibt sie mit `brightness` auseinander — daraus wird eine weiche,
+ * wolkige Fläche. Sie trägt keine Auskunft, und genau deshalb steht sie an
+ * der EINEN Stelle in Redion, die auch keine trägt: dem Kopf des
+ * Begrüssungsbildschirms. Seit E456 ist der bewusst markenlos.
+ *
+ * ÜBERALL SONST WÄRE SIE FALSCH. Eine Fläche, die nichts bedeutet, kostet
+ * Aufmerksamkeit; auf einer Arbeitsfläche ist das ein Abzug, kein Zusatz
+ * (§39, „Notion-artige Klarheit vor Effekten"). Der Willkommensschirm ist
+ * die Ausnahme, weil man ihn genau einmal sieht.
+ *
+ * WARUM DIESE DATEI ÜBERHAUPT EXISTIERT — und nicht nur CSS: eine
+ * Rauschtextur braucht `feTurbulence`, und das braucht einen
+ * `<filter id="…">`. Das ist der ERSTE SVG-Filter im Produktivcode. E440
+ * hat am KI-Funken gezeigt, was passiert, wenn mehrere Instanzen dieselbe
+ * ID tragen: sie teilen sie sich. Für einen Lader war die Antwort „je
+ * Instanz eine eigene ID" (E461). Für eine Textur ist die Antwort die
+ * andere Hälfte derselben Regel: GENAU EINMAL global definieren und dann
+ * referenzieren. Sie ist überall dieselbe; zwei davon wären zwei gleiche.
+ *
+ * Der Halter hängt versteckt am Ende von `<body>`, ist `aria-hidden`, hat
+ * Höhe und Breite null und wird nur einmal gebaut.
+ * ==========================================================================*/
+const Textur = (() => {
+    const NS = 'http://www.w3.org/2000/svg';
+    const HALTER = 'ru-textur-halter';
+    const FEIN = 'ru-textur-fein';
+    const GROB = 'ru-textur-grob';
+    const rauschen = (id, dichte, lagen, saat) => {
+        const f = document.createElementNS(NS, 'filter');
+        f.setAttribute('id', id);
+        /* `userSpaceOnUse` mit fester Kachel: ohne das rechnet der Browser die
+           Frequenz gegen die Elementgrösse, und dieselbe Textur sähe auf einem
+           breiten Kopf anders aus als auf einem schmalen. */
+        f.setAttribute('x', '0');
+        f.setAttribute('y', '0');
+        f.setAttribute('width', '100%');
+        f.setAttribute('height', '100%');
+        const t = document.createElementNS(NS, 'feTurbulence');
+        t.setAttribute('type', 'fractalNoise');
+        t.setAttribute('baseFrequency', dichte);
+        t.setAttribute('numOctaves', lagen);
+        t.setAttribute('seed', saat);
+        t.setAttribute('stitchTiles', 'stitch');
+        f.append(t);
+        return f;
+    };
+    /** Den Halter anlegen, falls es ihn noch nicht gibt. Mehrfach rufen ist
+     *  ausdrücklich erlaubt — der zweite Ruf tut nichts. */
+    const sicherstellen = () => {
+        if (document.getElementById(HALTER))
+            return;
+        const svg = document.createElementNS(NS, 'svg');
+        svg.setAttribute('id', HALTER);
+        svg.setAttribute('aria-hidden', 'true');
+        svg.setAttribute('focusable', 'false');
+        svg.setAttribute('width', '0');
+        svg.setAttribute('height', '0');
+        svg.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden';
+        const defs = document.createElementNS(NS, 'defs');
+        defs.append(rauschen(FEIN, '0.85', '3', '7'), rauschen(GROB, '0.24', '2', '19'));
+        svg.append(defs);
+        document.body.append(svg);
+    };
+    /**
+     * Eine Textur in ein Element legen. Sie kommt als zwei absolute Lagen
+     * DAVOR — der Inhalt des Wirts bleibt, wo er ist.
+     *
+     * Der Wirt braucht `position` ausser `static`; das setzt diese Funktion
+     * nicht selbst, weil sie damit ein Layout ändern würde, das ihr nicht
+     * gehört. Die CSS-Regel `.ru-textur-wirt` erledigt es.
+     */
+    const legen = (wirt) => {
+        sicherstellen();
+        if (wirt.querySelector(':scope > .ru-textur'))
+            return;
+        wirt.classList.add('ru-textur-wirt');
+        for (const lage of ['ru-textur ru-textur-fein', 'ru-textur ru-textur-grob']) {
+            const i = document.createElement('i');
+            i.className = lage;
+            i.setAttribute('aria-hidden', 'true');
+            wirt.prepend(i);
+        }
+    };
+    return { HALTER, FEIN, GROB, sicherstellen, legen };
+})();
+window.Textur = Textur;
+
+</script>
+<script>
+/* ===== quell/schale/bedienung/staffelei.js ===== */
+"use strict";
+/* ============================================================================
+ * schale/bedienung/staffelei.ts — hell und dunkel als Bild auf einer Leinwand
+ * ----------------------------------------------------------------------------
+ * ERZEUGT DARAUS WIRD `quell/schale/bedienung/staffelei.js`.
+ * Die Quelle ist DIESE Datei. `npm run bauen:ts` schreibt das .js; wer das
+ * .js bearbeitet, verliert die Änderung beim nächsten Bauen (test105).
+ * ----------------------------------------------------------------------------
+ * WOFÜR. Redion hat acht Farbschemata, und jedes trägt einen Grundton:
+ * `light` oder `dark`. Zwischen den beiden GRUNDTÖNEN wechselt man heute
+ * an zwei Stellen — dem kleinen Knopf im Studio-Kopf und einer Wahlzeile
+ * in den Einstellungen. Beide sagen es mit einem Wort und einem Fleck.
+ *
+ * Die Staffelei sagt es mit dem Bild selbst: links steht die Leinwand als
+ * Bleistiftskizze (Tag), ein Pinsel fährt hinüber und malt sie in Nacht.
+ * Das ist kein Schmuck neben der Sache — es IST die Sache. Wer hier
+ * umschaltet, sieht vorher, was er bekommt.
+ *
+ * WOHER. Redurs Vorgabe `.theme-switch` vom 6. September 2026
+ * (`loader-sammlung.css` im Vorgaben-Archiv). Sie malt Sonne, Berge und
+ * Wasser von der Skizze ins Bunte. Redion malt dieselbe Landschaft von
+ * TAG auf NACHT, weil das die Bedeutung ist, die hier daranhängt: ein
+ * rosa Sonnenuntergang wäre hübsch und hiesse nichts.
+ *
+ * WAS ES NICHT TUT. Es wählt kein Schema aus den acht — es wechselt den
+ * GRUNDTON und überlässt die Wahl darunter der Kartenreihe, die es schon
+ * gibt (§8). Welches Schema bei einem Wechsel kommt, entscheidet dieselbe
+ * Regel wie im Studio-Kopf: das zuletzt benutzte dieses Grundtons.
+ *
+ * `role="switch"` und `aria-checked`, nicht `<input type="checkbox">`:
+ * dasselbe wie bei der Ordnerkarte (E459) — ein Umschalter ist eine
+ * Aussage über an und aus, kein Formularwert (§38). Der Zustand steht
+ * ausserdem als WORT daneben, nicht nur im Bild.
+ * ==========================================================================*/
+const Staffelei = (() => {
+    const el = (tag, klasse, eltern) => {
+        const e = document.createElement(tag);
+        e.className = klasse;
+        if (eltern)
+            eltern.append(e);
+        return e;
+    };
+    /* Die Landschaft steht zweimal da: einmal als Skizze, einmal gemalt.
+       Beide haben DIESELBEN Teile an denselben Stellen — nur die Farben
+       unterscheiden sich. Sonst wäre der Wechsel ein Szenenwechsel und
+       kein Anmalen. */
+    const landschaft = (klasse) => {
+        const s = el('div', klasse);
+        el('i', 'ru-staff-himmel', s);
+        el('i', 'ru-staff-gestirn', s);
+        for (const nr of ['ru-staff-berg-1', 'ru-staff-berg-2', 'ru-staff-berg-3'])
+            el('i', 'ru-staff-berg ' + nr, s);
+        const wasser = el('i', 'ru-staff-wasser', s);
+        for (const nr of ['ru-staff-welle-1', 'ru-staff-welle-2', 'ru-staff-welle-3'])
+            el('i', 'ru-staff-welle ' + nr, wasser);
+        return s;
+    };
+    const pinsel = () => {
+        const p = el('div', 'ru-staff-pinsel');
+        p.setAttribute('aria-hidden', 'true');
+        el('i', 'ru-staff-stiel', p);
+        el('i', 'ru-staff-zwinge', p);
+        el('i', 'ru-staff-haare', p);
+        return p;
+    };
+    const bauen = (auftrag) => {
+        let hell = !!auftrag.hell;
+        const knopf = document.createElement('button');
+        knopf.type = 'button';
+        knopf.className = 'ru-staff';
+        knopf.setAttribute('role', 'switch');
+        const rahmen = el('div', 'ru-staff-rahmen', knopf);
+        rahmen.setAttribute('aria-hidden', 'true');
+        /* Die Skizze liegt unten, das gemalte Bild darüber in einer Blende,
+           deren Breite von 0 auf 100 % wächst. So wird gemalt statt getauscht. */
+        rahmen.append(landschaft('ru-staff-skizze'));
+        const blende = el('div', 'ru-staff-blende', rahmen);
+        blende.append(landschaft('ru-staff-bild'));
+        rahmen.append(pinsel());
+        const wort = el('span', 'ru-staff-wort', knopf);
+        const stellen = () => {
+            knopf.dataset['hell'] = hell ? 'ja' : 'nein';
+            /* `aria-checked=true` heisst hier „dunkel an" — der Schalter heisst
+               „Dunkles Schema", nicht „Helligkeit". Der Vorlesename sagt es. */
+            knopf.setAttribute('aria-checked', hell ? 'false' : 'true');
+            knopf.setAttribute('aria-label', 'Dunkles Schema' + (hell ? ' einschalten' : ' ausschalten'));
+            knopf.title = hell ? 'Zum dunklen Schema wechseln' : 'Zum hellen Schema wechseln';
+            /* DAS WORT SAGT DEN ZUSTAND, nicht die Handlung — sonst liest man
+               auf einem Bild „Dunkel" und weiss nicht, ob das gerade gilt oder
+               gleich passiert. */
+            wort.textContent = hell ? 'Hell' : 'Dunkel';
+        };
+        knopf.addEventListener('click', () => {
+            hell = !hell;
+            stellen();
+            auftrag.beiWechsel(hell);
+        });
+        /* DIE STAFFELEI FOLGT DEM DOKUMENT. Wird der Grundton anderswo
+           gewechselt — Schema-Karte, Studio-Kopf, ein zweiter Tab —, sagt
+           `data-theme` am Wurzelelement es zuerst. Ein Umschalter, der dann
+           noch „Hell" zeigt, während die Seite dunkel ist, behauptet das
+           Falsche; test435 §1 hat genau diesen Stand gefunden. Der Beobachter
+           räumt sich weg, sobald die Staffelei nicht mehr im Baum hängt. */
+        const beobachter = new MutationObserver(() => {
+            if (!knopf.isConnected) {
+                beobachter.disconnect();
+                return;
+            }
+            const jetztHell = document.documentElement.dataset['theme'] === 'light';
+            if (jetztHell !== hell) {
+                hell = jetztHell;
+                stellen();
+            }
+        });
+        beobachter.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+        stellen();
+        return {
+            element: knopf,
+            setzen: (neu) => { hell = !!neu; stellen(); },
+            hell: () => hell
+        };
+    };
+    return { bauen };
+})();
+window.Staffelei = Staffelei;
+
+</script>
+<script>
+/* ===== quell/schale/bedienung/geste.js ===== */
+"use strict";
+/* ============================================================================
+ * schale/bedienung/geste.ts — die Hand, die zeigt, wo man hintippt
+ * ----------------------------------------------------------------------------
+ * ERZEUGT DARAUS WIRD `quell/schale/bedienung/geste.js`.
+ * Die Quelle ist DIESE Datei. `npm run bauen:ts` schreibt das .js; wer das
+ * .js bearbeitet, verliert die Änderung beim nächsten Bauen (test105).
+ * ----------------------------------------------------------------------------
+ * WOFÜR. Der Rundgang (`bereiche/hilfe/rundgang.ts`) legt um jedes Ziel
+ * ein Loch in den Schleier und stellt einen Kasten daneben. Das Loch sagt
+ * WO, der Kasten sagt WAS — und keiner von beiden sagt, dass man da
+ * HINTIPPEN kann. Die Hand sagt es: vier Finger, die auf das Ziel klopfen.
+ *
+ * WOHER. Redurs Vorgabe `.🤚` vom 6. September 2026
+ * (`loader-sammlung.css` im Vorgaben-Archiv): Handfläche, Daumen, vier
+ * Finger, die gestaffelt tippen. Hier auf drei Viertel verkleinert, damit
+ * sie neben einem 38-px-Knopf nicht wie ein Baseballhandschuh wirkt.
+ *
+ * WAS SIE NICHT IST. Kein Bedienelement: `pointer-events:none`,
+ * `aria-hidden`, kein Text. Wer den Rundgang mit dem Vorleser macht, hört
+ * den Kasten — die Hand ist nur für die Augen, und deshalb sagt sie
+ * nichts, was nicht auch im Kasten steht (§38).
+ *
+ * SIE STEHT UNTER DEM KASTEN. z-index 901 wie das Loch, der Kasten hat
+ * 902: wo beide sich treffen, gewinnt das, was man lesen muss.
+ * ==========================================================================*/
+const Geste = (() => {
+    let hand = null;
+    const bauen = () => {
+        const h = document.createElement('div');
+        h.className = 'ru-geste';
+        h.setAttribute('aria-hidden', 'true');
+        const el = (klasse) => {
+            const i = document.createElement('i');
+            i.className = klasse;
+            h.append(i);
+        };
+        el('ru-geste-flaeche');
+        el('ru-geste-daumen');
+        for (let n = 1; n <= 4; n++)
+            el('ru-geste-finger ru-geste-finger-' + n);
+        return h;
+    };
+    /**
+     * Die Hand an ein Ziel stellen. Die Fingerspitzen landen in der unteren
+     * rechten Hälfte des Ziels; die Handfläche steht rechts darunter, wo
+     * sie — meistens — nichts verdeckt. Mehrfach rufen stellt nur nach.
+     */
+    const zeigen = (ziel) => {
+        const r = ziel.getBoundingClientRect();
+        if (!r.width) {
+            weg();
+            return;
+        }
+        if (!hand) {
+            hand = bauen();
+            document.body.append(hand);
+        }
+        /* Die Spitze des Zeigefingers liegt etwa 24 px links und 18 px unter
+           der oberen linken Ecke der Handfläche — abgelesen an der Vorgabe,
+           auf drei Viertel gerechnet. Sie soll auf 62 % / 60 % des Ziels
+           liegen: rechts der Mitte, unter der Mitte, wie ein echter Finger,
+           der von rechts unten kommt. */
+        const spitzeX = r.left + r.width * 0.62;
+        const spitzeY = r.top + r.height * 0.6;
+        /* Daumen und Schatten ragen unter den Kasten hinaus; am Telefon stand
+           die Hand am unteren Rand mit halbem Daumen im Bild. Also 65 statt
+           45 Luft nach unten. */
+        const links = Math.max(0, Math.min(innerWidth - 66, spitzeX + 24));
+        const oben = Math.max(0, Math.min(innerHeight - 65, spitzeY - 18));
+        hand.style.left = links + 'px';
+        hand.style.top = oben + 'px';
+    };
+    const weg = () => { hand?.remove(); hand = null; };
+    return { zeigen, weg, sichtbar: () => !!hand?.isConnected };
+})();
+window.Geste = Geste;
+
+</script>
+<script>
+/* ===== quell/schale/bedienung/funkel.js ===== */
+"use strict";
+/* ============================================================================
+ * schale/bedienung/funkel.ts — der dunkle Knopf, dessen Buchstaben glimmen
+ * ----------------------------------------------------------------------------
+ * ERZEUGT DARAUS WIRD `quell/schale/bedienung/funkel.js`.
+ * Die Quelle ist DIESE Datei. `npm run bauen:ts` schreibt das .js; wer das
+ * .js bearbeitet, verliert die Änderung beim nächsten Bauen (test105).
+ * ----------------------------------------------------------------------------
+ * WOFÜR. Drei Knöpfe in Redion versprechen, dass gleich etwas GEBAUT wird:
+ * „Datenbank bauen" und „Seite aufbauen" im KI-Fenster, „Lernen starten"
+ * in der Lernwelt. Sie standen bisher in derselben Farbe wie „Übersetzen"
+ * und „Zusammenfassen" daneben — und sahen damit nach derselben Grösse
+ * von Handlung aus. Sind sie nicht: die einen schreiben eine Antwort, die
+ * anderen legen Strukturen an.
+ *
+ * WOHER. Redurs Vorgabe `.btn` vom 6. September 2026
+ * (`loader-sammlung.css` im Vorgaben-Archiv): ein fast schwarzer Knopf mit
+ * einem Buchstabenlauf, der glimmt, und einem Lichtschein, der beim
+ * Anfassen von unten hochkommt. Genau das ist die Aussage: hier ist eine
+ * Maschine, die gleich anspringt.
+ *
+ * WAS DIESE DATEI TUT: sie zerlegt den Text eines Knopfes in Buchstaben,
+ * jeder in einem eigenen `<span>` mit seiner Nummer, damit CSS ihn
+ * versetzt anleuchten kann. SVG-Zeichen im Knopf bleiben, wie sie sind;
+ * Leerzeichen bleiben Text, damit der Knopf weiter umbricht wie zuvor.
+ *
+ * DER TEXT BLEIBT DER TEXT. Ein Vorleser liest „Datenbank bauen" wie
+ * vorher — `<span>` ohne Rolle ändern daran nichts. Und der Klick landet
+ * über `closest()` weiterhin am Knopf, nicht am Buchstaben.
+ * ==========================================================================*/
+const Funkel = (() => {
+    /** Einen Knopf mit dem Glimmen versehen. Ein zweiter Ruf tut nichts. */
+    const anlegen = (knopf) => {
+        if (knopf.classList.contains('ru-funkel'))
+            return;
+        knopf.classList.add('ru-funkel');
+        let nr = 0;
+        /* Erst sammeln, dann tauschen — wer die Kinderliste während des
+           Durchlaufs ändert, überspringt jedes zweite Kind. */
+        const texte = Array.from(knopf.childNodes).filter(k => k.nodeType === Node.TEXT_NODE);
+        for (const t of texte) {
+            const stueck = document.createDocumentFragment();
+            /* Array.from, nicht split(''): ein Pfeil wie „→" ist ein Zeichen,
+               ein Emoji wären sonst zwei halbe. */
+            for (const zeichen of Array.from(t.textContent || '')) {
+                if (/\s/.test(zeichen)) {
+                    stueck.append(zeichen);
+                    continue;
+                }
+                const s = document.createElement('span');
+                s.className = 'ru-funkel-b';
+                s.textContent = zeichen;
+                s.style.setProperty('--ru-schritt', String(nr++));
+                stueck.append(s);
+            }
+            t.replaceWith(stueck);
+        }
+    };
+    /** Alle Knöpfe unter `wurzel`, die auf `selektor` passen. */
+    const alle = (wurzel, selektor) => {
+        let n = 0;
+        wurzel.querySelectorAll(selektor).forEach(k => { anlegen(k); n++; });
+        return n;
+    };
+    return { anlegen, alle };
+})();
+window.Funkel = Funkel;
+
+</script>
+<script>
 /* ===== quell/schale/ueberlagerung/dialog.js ===== */
 "use strict";
 /* ============================================================================
@@ -40134,14 +42130,32 @@ const AuftragsAnzeige = (() => {
         return fertig === 1 ? '1 Schritt fertig' : fertig + ' Schritte fertig';
     };
     let fenster = null;
+    /**
+     * Welches Bild zu diesem Auftrag passt (E461).
+     *
+     *   presse   die Art macht Blätter — `pdf-bilder` rechnet Seitenbilder.
+     *   sterne   es läuft, aber die Länge ist unbekannt (`schritte: 0`).
+     *   ''       wartet oder Fehler: dann steht der Satz, und ein laufendes
+     *            Bild daneben wäre eine Behauptung über Arbeit, die gerade
+     *            nicht stattfindet.
+     */
+    const bildArt = (a) => {
+        if (a?.zustand !== 'laeuft')
+            return '';
+        if (String(a?.art) === 'pdf-bilder')
+            return 'presse';
+        return anteil(a) === null ? 'sterne' : '';
+    };
     const zeileHtml = (a) => {
         const q = anteil(a);
+        const bild = bildArt(a);
         return '<div class="arb-z" data-id="' + esc(a.id) + '">' +
             '<div class="arb-kopf">' +
             '<b>' + esc(artWort(a.art)) + '</b>' +
             '<button type="button" class="arb-stopp" data-stopp="' + esc(a.id) + '" ' +
             'aria-label="' + esc(artWort(a.art)) + ' abbrechen">Abbrechen</button>' +
             '</div>' +
+            (bild ? '<span class="arb-bild" data-lader="' + bild + '"></span>' : '') +
             (a.text ? '<div class="arb-text">' + esc(a.text) + '</div>' : '') +
             /* Der Balken NUR bei bekannter Gesamtzahl — sonst die Zahl allein. */
             (q === null ? '' :
@@ -40171,6 +42185,23 @@ const AuftragsAnzeige = (() => {
             /* Wer das Fenster offen hat, während der letzte Auftrag fertig wird,
                soll nicht in eine leere Fläche schauen. */
             : '<div class="arb-leer">Nichts läuft mehr. Alles erledigt.</div>';
+        /* Die Bilder kommen NACH dem Einsetzen hinein: `zeileHtml` baut
+           Zeichenketten, die Lader sind DOM. Der Platzhalter oben hält die
+           Stelle frei. */
+        koerper.querySelectorAll('[data-lader]').forEach(platz => {
+            if (typeof Lader === 'undefined')
+                return;
+            const art = platz.dataset['lader'];
+            if (art !== 'presse' && art !== 'sterne')
+                return;
+            const zeile = platz.closest('.arb-z');
+            const satz = zeile?.querySelector('.arb-stand')?.textContent || 'Läuft …';
+            /* Der Satz steht schon in der Zeile — der Lader wiederholt ihn nicht
+               als Text, sonst stünde er zweimal da. Er trägt ihn nur für die
+               Vorlesestimme, und die Zeile darunter ist dieselbe Auskunft. */
+            platz.append(Lader.bauen({ art, text: satz }).element);
+            platz.querySelector('.ru-lader-text')?.remove();
+        });
         koerper.querySelectorAll('[data-stopp]').forEach(b => b.addEventListener('click', async () => {
             b.setAttribute('disabled', 'disabled');
             b.textContent = 'wird abgebrochen …';
@@ -40189,9 +42220,6 @@ const AuftragsAnzeige = (() => {
      * nichts — das ist kein Fehler, sondern der Normalfall am Telefon.
      */
     const knopfFrisch = async () => {
-        const b = document.getElementById('mb-auftraege');
-        if (!b)
-            return;
         let n = 0;
         try {
             n = (await Auftraege.offen()).length;
@@ -40199,16 +42227,27 @@ const AuftragsAnzeige = (() => {
         catch {
             n = 0;
         }
-        b.hidden = n === 0;
-        const zahl = b.querySelector('b');
-        if (zahl) {
-            zahl.textContent = String(n);
-            zahl.hidden = n < 2;
-        }
         /* Die Zahl ist nur Bild — die Wörter stehen im Label (§38). */
         const wort = n === 1 ? '1 Auftrag läuft' : n + ' Aufträge laufen';
-        b.setAttribute('aria-label', wort);
-        b.title = wort;
+        /* ZWEI STELLEN, EINE WAHRHEIT (E463). `#mb-auftraege` wohnt im
+           Menüband, und das ist am Rechner seit E457 eine Lade, die zu ist —
+           ein Auftrag, der dort läuft, lief für den Menschen unsichtbar.
+           `#studio-auftraege` steht im Studio-Kopf mit den Sternen der
+           Vorgabe und ist nur da, solange etwas läuft. Beide bekommen hier
+           dieselbe Zahl, wie die Glocke in `menueband.ts`. */
+        for (const id of ['mb-auftraege', 'studio-auftraege']) {
+            const b = document.getElementById(id);
+            if (!b)
+                continue;
+            b.hidden = n === 0;
+            const zahl = b.querySelector('b');
+            if (zahl) {
+                zahl.textContent = String(n);
+                zahl.hidden = n < 2;
+            }
+            b.setAttribute('aria-label', wort);
+            b.title = wort;
+        }
     };
     /** Das Fenster öffnen. */
     const oeffnen = () => {
@@ -52528,10 +54567,27 @@ const PdfEinlesen = (() => {
         const kopf = new Uint8Array(await datei.slice(0, PDF_KOPF.length).arrayBuffer());
         if (PDF_KOPF.some((b, i) => kopf[i] !== b))
             throw new Error('Das ist keine PDF-Datei.');
-        const melder = UI.toast('„' + datei.name + '" wird gelesen …', 120000);
+        /* DIE PRESSE STATT DES TOASTS (E463). Ein Toast ist zwei Zeilen Grau,
+           und beim zwölften „Seite 7 von 12" sieht ihn niemand mehr an. Die
+           Karte unten rechts zeigt Bogen für Bogen, wie aus der Datei Seiten
+           werden, und schreibt dieselbe Zahl daneben — als `role="status"`,
+           also hört der Vorleser denselben Satz wie vorher. Beides zugleich
+           wäre der Satz zweimal. Ohne `Lader` (alte Einzeldatei, Prüflauf ohne
+           Schale) bleibt es beim Toast. */
+        const presse = typeof Lader !== 'undefined'
+            ? Lader.schweben({ art: 'presse', text: '„' + datei.name + '" wird gelesen …' })
+            : null;
+        const melder = presse ? null : UI.toast('„' + datei.name + '" wird gelesen …', 120000);
         const sageAn = (t) => {
-            if (melder && melder.textContent !== undefined)
+            if (melder)
                 melder.textContent = t;
+            presse?.setzen({ text: t });
+        };
+        /* Toast oder Karte gehen auf JEDEM Weg hinaus weg — eine Presse, die
+           nach dem Fehler weiterläuft, wäre eine Behauptung. */
+        const wegMelden = () => {
+            melder?.remove();
+            presse?.entfernen();
         };
         let griff = null;
         /* DAS ORIGINAL ZUERST — es ist das, was zählt. Geht danach etwas schief,
@@ -52544,7 +54600,7 @@ const PdfEinlesen = (() => {
             quelle = await Dateien.ablegen(datei, { blockId: elternId });
         }
         catch (e) {
-            melder.remove();
+            wegMelden();
             throw e;
         }
         /**
@@ -52577,7 +54633,7 @@ const PdfEinlesen = (() => {
             griff = await PdfLeser.oeffne(bytes, async (nochmal) => {
                 if (typeof Dialog === 'undefined')
                     return null;
-                melder.textContent = '„' + datei.name + '" ist geschützt.';
+                sageAn('„' + datei.name + '" ist geschützt.');
                 return await Dialog.frage(nochmal ? 'Das Passwort stimmte nicht — noch einmal'
                     : 'Passwort für „' + datei.name + '"', '', 'passwort');
             });
@@ -52613,7 +54669,7 @@ const PdfEinlesen = (() => {
                     })
                     : zuletzt;
             if (!anordnung) {
-                melder.remove();
+                wegMelden();
                 return nurAnhaengen('liegt als Anhang auf der Seite.');
             }
             if (!(vorgabe && vorgabe.anordnung))
@@ -52642,7 +54698,7 @@ const PdfEinlesen = (() => {
                         })
                         : 'alle';
                 if (!antwort) {
-                    melder.remove();
+                    wegMelden();
                     return nurAnhaengen('liegt als Anhang auf der Seite.');
                 }
                 bis = antwort === 'erste' ? OHNE_FRAGE : gesamt;
@@ -52713,8 +54769,7 @@ const PdfEinlesen = (() => {
                 /* Dem Browser Luft lassen — sonst steht die Oberfläche still. */
                 await new Promise(r => setTimeout(r, 0));
             }
-            if (melder && melder.remove)
-                melder.remove();
+            wegMelden();
             /* ══ DAS ORIGINAL BLEIBT OBEN STEHEN (E299) ═══════════════════════════
                Redur: „ganz oben sollte immer die orginale pdf dort stehen und die
                anderen als eien kopier dort ausdrucken". Genau so macht es OneNote:
@@ -52796,7 +54851,7 @@ const PdfEinlesen = (() => {
             return { seiten: bis, gesamt, quelle, bloecke: gemacht, anhang };
         }
         catch (e) {
-            melder.remove();
+            wegMelden();
             const text = e instanceof Error ? e.message : String(e);
             /* Verschlüsselte Dateien sind der häufigste Fall — und der einzige,
                bei dem eine allgemeine Meldung ratlos machen würde. */
@@ -83979,13 +86034,23 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
         '.blatt-druck.mit-rand{background:#fff}' +
         '.blatt-druck .fehlt{padding:30mm 10mm; text-align:center; color:#666; ' +
         'border:1px dashed #bbb}';
-    const drucken = async (p) => {
+    /**
+     * Der Druckweg selbst; `drucken()` darunter hält die Karte und fängt den
+     * Fehler. `karte` ist null, wenn das Bauteil nicht geladen ist — dann
+     * läuft alles wie vor E458.
+     */
+    const druckLauf = async (p, karte) => {
+        /* DIE DRUCKER-KARTE (E458) sagt, was gerade geschieht: Bilder sammeln,
+           Seiten setzen, Dialog offen, fertig. Jeder Zustand wird HIER gesetzt,
+           an der Stelle, die ihn wahr macht — kein Zeitgeber rät. */
+        karte?.setzen('vorbereiten');
         const { adressen: bilder, ausgelassen } = await bilderSammeln(p);
         const zuGross = new Set(ausgelassen);
         if (ausgelassen.length)
             UI.toast(ausgelassen.length + ' Seitenbild' +
                 (ausgelassen.length === 1 ? '' : 'er') + ' ist für einen Ausdruck zu ' +
                 'gross und bleibt leer — drucke das Dokument in Abschnitten.', 8000);
+        karte?.setzen('rendern');
         /* Der Sonderfall setzt PDF-Seiten und Blätter; alles andere macht die
            gewöhnliche Kette. `null` heisst „nicht meine Sache". */
         const inhalt = seiteAlsHtml(p, (b, tiefe, hinab) => {
@@ -84042,6 +86107,8 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
         /* Ohne Dokument im Rahmen gibt es nichts zu drucken. */
         if (!d) {
             f.remove();
+            karte?.setzen('fehler', 'Der Druckrahmen liess sich nicht öffnen.');
+            karte?.entfernen(8000);
             return;
         }
         /* KOPFZEILE, DATUM UND SEITENZAHLEN (E244). Sie leben in den
@@ -84074,10 +86141,35 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
             '<h1>' + esc(p.text || 'Ohne Titel') + '</h1>' + inhalt + '</body></html>');
         d.close();
         setTimeout(() => {
+            /* `print()` kehrt erst zurück, wenn der Dialog zu ist (Chromium,
+               Firefox, Safari). Davor „speichern", danach „fertig" — und nach
+               2,5 s ist die Karte weg. `afterprint` wäre genauer, kommt aber
+               ohne Dialog (Prüflauf ohne Kopf) gar nicht erst. */
+            karte?.setzen('speichern');
             f.contentWindow?.focus();
             f.contentWindow?.print();
+            karte?.setzen('fertig');
+            karte?.entfernen(2500);
             setTimeout(() => f.remove(), 1000);
         }, 300);
+    };
+    const drucken = async (p) => {
+        const karte = typeof Drucker !== 'undefined' ? Drucker.zeigen() : null;
+        try {
+            await druckLauf(p, karte);
+        }
+        catch (e) {
+            /* Vorher flog der Fehler unbeachtet nach oben — die Konsole sah ihn,
+               der Mensch nicht. Jetzt steht sein Satz acht Sekunden auf der Karte
+               (role="status", also auch hörbar); ohne Karte wie vorher ein Toast. */
+            const satz = e instanceof Error ? e.message : String(e);
+            if (karte) {
+                karte.setzen('fehler', satz);
+                karte.entfernen(8000);
+            }
+            else
+                UI.toast('Drucken hat nicht geklappt: ' + satz);
+        }
     };
     /* ========================================================================
      * 15. VERSCHIEBEN NACH   (Notion „Move to")
@@ -105768,7 +107860,12 @@ const Aussehen = (() => {
             const s = einstellung();
             if (reiter === 'farbe') {
                 inhalt.innerHTML =
-                    '<div class="au-titel">Farbschema</div>' +
+                    /* DIE STAFFELEI (E462) steht über den Karten: sie wechselt den
+                       GRUNDTON, die Karten wählen das Schema darunter. Der Platz
+                       wird unten mit dem Bauteil gefüllt — ein Umschalter ist ein
+                       Element mit Zustand, keine Zeichenkette. */
+                    '<div class="au-staffelei" id="au-staffelei"></div>' +
+                        '<div class="au-titel">Farbschema</div>' +
                         '<div class="au-schemata">' + SCHEMATA.map(x => {
                         const bg = x.werte['--bg'] || (x.grund === 'light' ? '#ffffff' : '#191919');
                         const side = x.werte['--bg-side'] || (x.grund === 'light' ? '#fbfbfa' : '#202020');
@@ -105796,6 +107893,32 @@ const Aussehen = (() => {
                         'title="Eigene Farbe wählen">' +
                         '<button data-akz="" class="au-zurueck">wie im Schema</button>' +
                         '</div>';
+                const platz = inhalt.querySelector('#au-staffelei');
+                if (platz && typeof Staffelei !== 'undefined') {
+                    const grund = SCHEMATA.find(x => x.id === s.schema)?.grund || 'dark';
+                    platz.append(Staffelei.bauen({
+                        hell: grund === 'light',
+                        beiWechsel: () => {
+                            /* DIESELBE REGEL WIE IM STUDIO-KOPF (studio.ts): das zuletzt
+                               benutzte Schema des Ziel-Grundtons, sonst Hell bzw.
+                               Standard. Zwei Umschalter, eine Regel (§8).
+              
+                               VON WO, sagt das GESPEICHERTE Schema — nicht der Knopf.
+                               Der kann hinterherhinken, wenn anderswo gewechselt wurde;
+                               dann stünde das dunkle Schema unter dem hellen Schlüssel,
+                               und der nächste Wechsel liefe ins Leere. */
+                            const jetzt = einstellung();
+                            const jetztGrund = SCHEMATA.find(x => x.id === jetzt.schema)?.grund || 'dark';
+                            const hell = jetztGrund === 'dark';
+                            const von = jetztGrund, zu = hell ? 'light' : 'dark';
+                            Store.setMeta('studio:schema-' + von, jetzt.schema);
+                            const gemerkt = Store.getMeta('studio:schema-' + zu, hell ? 'hell' : 'standard');
+                            const ziel = SCHEMATA.find(x => x.id === gemerkt && x.grund === zu);
+                            setzen({ schema: ziel?.id || (hell ? 'hell' : 'standard'), akzent: '' });
+                            zeichne();
+                        }
+                    }).element);
+                }
             }
             if (reiter === 'schrift') {
                 inhalt.innerHTML =
@@ -112839,6 +114962,8 @@ const Rundgang = (() => {
         kasten = null;
         loch = null;
         removeEventListener('resize', stellen);
+        if (typeof Geste !== 'undefined')
+            Geste.weg();
     };
     /**
      * DEN ERSTEN KANDIDATEN NEHMEN, DEN MAN WIRKLICH SIEHT (E390).
@@ -112920,8 +115045,16 @@ const Rundgang = (() => {
                 oben = Math.max(12, innerHeight - kb.height - 12);
             kasten.style.left = links + 'px';
             kasten.style.top = oben + 'px';
+            /* DIE HAND TIPPT AUF DAS ZIEL (E463). Loch und Kasten sagen wo und
+               was; die Hand sagt, dass man da hintippen kann. Sie hängt am
+               echten Ziel, nicht an einer Stelle — beim Grösserziehen des
+               Fensters wandert sie mit, weil `stellen` sie neu stellt. */
+            if (typeof Geste !== 'undefined')
+                Geste.zeigen(el);
         }
         else {
+            if (typeof Geste !== 'undefined')
+                Geste.weg();
             loch.style.display = 'none';
             const kb = kasten.getBoundingClientRect();
             kasten.style.left = ((innerWidth - kb.width) / 2) + 'px';
@@ -113231,6 +115364,13 @@ const Rundgang = (() => {
                 '<p class="wk-fuss">Deine Daten liegen im Speicher dieses Browsers. ' +
                 'Sichere sie ab und zu — unter „Mehr" steht, wie.</p>' +
                 '</div>';
+        /* DIE TEXTUR IN DEN KOPF (E462). Sie ist Schmuck, und der Kopf ist die
+           eine Fläche in Redion, die keine Auskunft trägt — seit E456 steht
+           dort nicht einmal mehr eine Marke. Fehlt das Bauteil, fehlt nur der
+           Schmuck. */
+        const wkKopf = d.querySelector('.wk-kopf');
+        if (wkKopf && typeof Textur !== 'undefined')
+            Textur.legen(wkKopf);
         d.addEventListener('click', e => {
             const b = elVon(e)?.closest('[data-a]');
             if (!b)
@@ -121663,8 +123803,17 @@ const WolkeFenster = (() => {
                         UI.toast('Der Abgleich ist für dieses Gerät ausgeschaltet — erst einschalten.');
                         return;
                     }
+                    /* DER ABGLEICH KENNT KEINEN ANTEIL (nur `zustand.laeuft`), also
+                       bekommt er das Bild, das keinen zeigt: die Buchstaben gehen
+                       der Reihe nach an (E461). Ein Balken hier wäre erfunden. */
                     a.disabled = true;
-                    a.textContent = 'Läuft …';
+                    if (typeof Lader !== 'undefined') {
+                        a.textContent = '';
+                        a.append(Lader.bauen({ art: 'wort', wort: 'Abgleich',
+                            text: 'Abgleich läuft …' }).element);
+                    }
+                    else
+                        a.textContent = 'Läuft …';
                     const r = await Wolke.abgleichen();
                     UI.toast(r ? (r.uebernommen + ' geholt, ' + r.angenommen + ' geschickt' +
                         (r.unlesbar ? ' · ' + r.unlesbar + ' nicht lesbar' : '')) : 'Nichts zu tun');
@@ -122874,6 +125023,98 @@ const Bibliothek = (() => {
         const oben = weg.length >= 2 ? weg[weg.length - 2] : null;
         geheIn(oben ? oben.id : null);
     };
+    /* ---- BLICK HINEIN (E459) -------------------------------------------- *
+     * Hineingehen und wieder heraus sind zwei Wege für eine Auskunft. Die
+     * Ordnerkarte (`schale/bedienung/ordnerkarte.ts`) zeigt dieselben Kinder
+     * an Ort und Stelle — und ihre Suche geht durch den GANZEN Unterbaum,
+     * während die Suche des Regals nur die offene Ebene filtert.
+     * --------------------------------------------------------------------- */
+    /** Die Kindseiten eines Ordners, Ordner zuerst — wie im Regal (§8). */
+    const fachSeiten = (elternId) => (Store.childrenOf(elternId) || [])
+        .filter((b) => b && b.alive !== false && b.type === 'page')
+        .sort((a, b) => {
+        const ao = artVon(a).id === 'ordner' ? 0 : 1;
+        const bo = artVon(b).id === 'ordner' ? 0 : 1;
+        return ao !== bo ? ao - bo
+            : String(a.text || '').localeCompare(String(b.text || ''), 'de');
+    });
+    const fachStueck = (p, weg) => {
+        const art = artVon(p);
+        return {
+            id: p.id, name: p.text || 'Ohne Titel', art: art.name,
+            ordner: art.id === 'ordner',
+            /* `exactOptionalPropertyTypes` verbietet `weg: undefined` — also gar
+               nicht setzen, wenn der Treffer auf Ebene 1 liegt. */
+            ...(weg.length ? { weg: weg.join(' \u203a ') } : {})
+        };
+    };
+    /** Der ganze Unterbaum, flach, jeder Treffer mit seinem Weg. */
+    const fachTiefe = (elternId, weg = [], tief = 0) => {
+        if (tief > 6)
+            return [];
+        const raus = [];
+        for (const p of fachSeiten(elternId)) {
+            raus.push(fachStueck(p, weg));
+            if (artVon(p).id === 'ordner')
+                raus.push(...fachTiefe(p.id, weg.concat(p.text || 'Ohne Titel'), tief + 1));
+        }
+        return raus;
+    };
+    /** Die Karte über dem Deckel aufschlagen. `r` ist das Rechteck des Deckels. */
+    const blickHinein = (p, r) => {
+        if (typeof Ordnerkarte === 'undefined') {
+            geheIn(p.id);
+            return;
+        }
+        document.querySelectorAll('.ru-fach-lage').forEach(a => a.remove());
+        const zurueck = document.activeElement;
+        const lage = document.createElement('div');
+        lage.className = 'ru-fach-lage';
+        let zu = () => { };
+        const griff = Ordnerkarte.bauen({
+            name: p.text || 'Ohne Titel',
+            kinder: fachSeiten(p.id).map(k => fachStueck(k, [])),
+            tiefe: fachTiefe(p.id),
+            beiWahl: (stueck) => {
+                zu();
+                if (stueck.ordner)
+                    geheIn(stueck.id);
+                else
+                    App.oeffne(stueck.id);
+            },
+            beiOrdner: () => { zu(); geheIn(p.id); }
+        });
+        lage.append(griff.element);
+        document.body.append(lage);
+        /* ERST MESSEN, DANN STELLEN. Die Karte ist zugeklappt schmaler als
+           aufgeklappt; gestellt wird nach dem, was wirklich dasteht. */
+        const b = lage.getBoundingClientRect();
+        lage.style.left = Math.max(8, Math.min(r.left, innerWidth - b.width - 8)) + 'px';
+        lage.style.top = (r.bottom + 6 + b.height > innerHeight
+            ? Math.max(8, r.top - b.height - 6) : r.bottom + 6) + 'px';
+        const beiTaste = (ereignis) => {
+            if (ereignis.key === 'Escape') {
+                ereignis.stopPropagation();
+                zu();
+            }
+        };
+        const beiKlick = (ereignis) => {
+            if (!(ereignis.target instanceof Node) || !lage.contains(ereignis.target))
+                zu();
+        };
+        zu = () => {
+            document.removeEventListener('keydown', beiTaste, true);
+            document.removeEventListener('mousedown', beiKlick);
+            lage.remove();
+            zurueck?.focus?.();
+        };
+        document.addEventListener('keydown', beiTaste, true);
+        /* Erst im nächsten Zug horchen: der Klick, der die Karte öffnet, würde
+           sie sonst im selben Zug wieder schliessen. */
+        setTimeout(() => document.addEventListener('mousedown', beiKlick), 0);
+        griff.klappen(true);
+        griff.element.querySelector('.ru-fach-griff')?.focus();
+    };
     /** Die Brotkrume der Ablage. An der Wurzel schweigt sie — ein Pfad mit
      *  genau einem Glied ist kein Pfad, sondern eine Zeile Luft. */
     const ordnerKrume = () => {
@@ -123041,7 +125282,7 @@ const Bibliothek = (() => {
             ? `<img class="bib-deckel-bild" data-vorschau="${esc(datei)}" alt="" loading="lazy">`
             : (tinte || (MIT_TEXT.has(art.id) ? (Vorschau.miniatur(p.id, 5) || '') : ''));
         const wann = wannText(p.zuletztGeoeffnet || p.edited || p.created);
-        return `<button class="bib-deckel" data-id="${esc(p.id)}" data-art="${esc(art.id)}" ` +
+        const deckel = `<button class="bib-deckel" data-id="${esc(p.id)}" data-art="${esc(art.id)}" ` +
             `title="${esc(p.text || 'Ohne Titel')}">` +
             `<span class="bib-deckel-blatt mini-zeilen${bild ? '' : ' is-leer'}${tinte ? ' hat-tinte' : ''}">` +
             '<i class="bib-papier" aria-hidden="true"></i>' +
@@ -123056,6 +125297,18 @@ const Bibliothek = (() => {
             '<i class="bib-deckel-mehr" aria-hidden="true">\u2304</i></span>' +
             '<small>' + esc(art.name) + ' \u00b7 ' + esc(wann) + '</small>' +
             '</button>';
+        if (art.id !== 'ordner')
+            return deckel;
+        /* DAS AUGE AM ORDNER (E463). „Blick hinein" stand seit E459 nur im
+           ⌄-Menü — ein Weg, den man kennen muss. Jetzt sitzt am Deckel jedes
+           Ordners ein Auge, das beim Darüberfahren zwinkert und zur Seite
+           schaut. Es ist ein GESCHWISTER des Deckels, kein Kind: ein Knopf im
+           Knopf ist kein gültiges HTML, und der Klick käme zweimal an. */
+        return '<span class="bib-zelle">' + deckel +
+            `<button class="bib-blick" data-blick="${esc(p.id)}" ` +
+            `aria-label="Blick in „${esc(p.text || 'Ohne Titel')}\u201c" title="Blick hinein">` +
+            '<i class="bib-blick-auge" aria-hidden="true"><b></b></i>' +
+            '</button></span>';
     };
     const hefte = (liste) => {
         const nach = new Map();
@@ -123639,6 +125892,15 @@ const Bibliothek = (() => {
             krume.scrollLeft = krume.scrollWidth;
         });
         wrap.querySelectorAll('[data-ordner]').forEach(b => b.addEventListener('click', () => geheIn(b.dataset['ordner'] || null)));
+        /* Das Auge am Ordner (E463) — derselbe Weg wie im ⌄-Menü, ohne Menü. */
+        wrap.querySelectorAll('.bib-blick[data-blick]').forEach(b => {
+            b.addEventListener('click', ereignis => {
+                ereignis.stopPropagation();
+                const p = Store.getBlock(b.dataset['blick'] || '');
+                if (p)
+                    blickHinein(p, b.getBoundingClientRect());
+            });
+        });
         wrap.querySelectorAll('.bib-deckel[data-id]').forEach(k => {
             k.addEventListener('click', ereignis => {
                 /* Der Pfeil im Namen öffnet das Menü zum Stück, nicht das Stück. */
@@ -123667,6 +125929,10 @@ const Bibliothek = (() => {
                     return;
                 const r = k.getBoundingClientRect();
                 const m = UI.menu(`<button data-a="oeffnen"><span class="mi">\u2197</span>Öffnen</button>` +
+                    /* NUR BEI ORDNERN. Ein Blick in eine PDF wäre die PDF — dafür
+                       gibt es „Öffnen". */
+                    (k.dataset['art'] === 'ordner'
+                        ? `<button data-a="blick"><span class="mi">\u2315</span>Blick hinein</button>` : '') +
                     `<button data-a="stern"><span class="mi">${p.favorite ? '\u2605' : '\u2606'}</span>` +
                     (p.favorite ? 'Aus Favoriten' : 'Zu Favoriten') + '</button>' +
                     '<button data-a="umbenennen"><span class="mi">\u270e</span>Umbenennen</button>' +
@@ -123680,6 +125946,10 @@ const Bibliothek = (() => {
                     m.remove();
                     if (a === 'oeffnen') {
                         App.oeffne(p.id);
+                        return;
+                    }
+                    if (a === 'blick') {
+                        blickHinein(p, r);
                         return;
                     }
                     if (a === 'stern') {
@@ -127722,6 +129992,11 @@ const Lernwelt = (() => {
         if (typeof Register !== 'undefined' && Register.symbole) {
             Register.symbole.fuelle(root);
         }
+        /* „Lernen starten" glimmt (E463) — der eine Knopf je Ansicht, der
+           etwas ANFÄNGT, nicht nur wechselt. Die Zeichen werden bei jedem
+           Zeichnen neu zerlegt, weil `innerHTML` sie neu schreibt. */
+        if (typeof Funkel !== 'undefined')
+            Funkel.alle(root, '.is-primary[data-lw-train], .is-primary[data-lw-nav="lernen"]');
         if (zustand.simulation && !zustand.simulation.fertig)
             timerStarten();
         else
@@ -128888,13 +131163,22 @@ const Notebook = (() => {
             `<button class="nh-mehr" data-mehr="${esc(p.id)}" title="Mehr zu diesem Heft" ` +
             `aria-label="Mehr zu ${esc(p.text || 'diesem Heft')}">⋯</button></div>`;
     };
-    /** Der Stern zeigt seinen Zustand über die FORM (★ gefüllt, ☆ leer)
-     *  und `aria-pressed` — nicht nur über Farbe (§38). */
-    const sternKnopf = (p) => `<button class="nh-stern${p.favorite ? ' an' : ''}" data-stern="${esc(p.id)}" ` +
-        `aria-pressed="${p.favorite ? 'true' : 'false'}" ` +
-        `title="${p.favorite ? 'Aus Favoriten' : 'Zu Favoriten'}" ` +
-        `aria-label="${p.favorite ? 'Aus Favoriten: ' : 'Zu Favoriten: '}` +
-        `${esc(p.text || 'Ohne Titel')}">${p.favorite ? '★' : '☆'}</button>`;
+    /** Der Merker zeigt seinen Zustand über die FORM (Band gefüllt oder
+     *  offen) und `aria-pressed` — nicht nur über Farbe (§38). Seit E460
+     *  ist es DASSELBE Zeichen wie in der Kopfleiste: „★" hier und ein SVG
+     *  dort waren zwei Sprachen für ein Feld. */
+    const sternKnopf = (p) => {
+        const name = p.text || 'Ohne Titel';
+        if (typeof Merkzeichen !== 'undefined')
+            return Merkzeichen.html({ an: !!p.favorite, name,
+                klasse: 'nh-stern' + (p.favorite ? ' an' : ''),
+                zusatz: `data-stern="${esc(p.id)}"` });
+        return `<button class="nh-stern${p.favorite ? ' an' : ''}" data-stern="${esc(p.id)}" ` +
+            `aria-pressed="${p.favorite ? 'true' : 'false'}" ` +
+            `title="${p.favorite ? 'Aus Favoriten' : 'Zu Favoriten'}" ` +
+            `aria-label="${p.favorite ? 'Aus Favoriten: ' : 'Zu Favoriten: '}` +
+            `${esc(name)}">${p.favorite ? '★' : '☆'}</button>`;
+    };
     /** Die Fach-Karte: Redions gezeichnete Ordner-Mappe (`data-art="ordner"`
      *  aus der Bibliotheks-Anatomie) mit Symbol und ehrlicher Zählung. */
     const fachCard = (f) => {
@@ -132876,16 +135160,30 @@ const KI = (() => {
             zustand.laedt = true;
             status('load', 'Lädt …');
             const zeile = melde('Modell wird geladen. Beim ersten Mal dauert das ein paar Minuten — danach liegt es im Browser-Cache.');
+            /* DER FLÜSSIGE RING (E461). Diese Stelle ist die einzige im ganzen
+               Bestand, die von aussen einen echten 0..1-Anteil bekommt
+               (`initProgressCallback`) — also bekommt sie das Bild, das einen
+               Anteil zeigen darf. Der alte Balken bleibt als Rückfall, falls
+               das Bauteil nicht geladen ist. */
+            const ring = typeof Lader !== 'undefined'
+                ? Lader.bauen({ art: 'fluss', anteil: 0, text: 'Modell wird geladen …' }) : null;
             const balken = document.createElement('div');
-            balken.className = 'prog';
-            balken.innerHTML = '<i style="width:0%"></i>';
-            zeile.appendChild(balken);
+            if (ring)
+                zeile.appendChild(ring.element);
+            else {
+                balken.className = 'prog';
+                balken.innerHTML = '<i style="width:0%"></i>';
+                zeile.appendChild(balken);
+            }
             try {
                 await webllmLaden(zustand.modell, (_text, p) => {
+                    const anteil = Math.max(0, Math.min(1, Number(p) || 0));
+                    if (ring)
+                        ring.setzen({ anteil });
                     const innen = balken.firstChild;
                     if (innen instanceof HTMLElement)
-                        innen.style.width = Math.round(p * 100) + '%';
-                    status('load', Math.round(p * 100) + ' %');
+                        innen.style.width = Math.round(anteil * 100) + '%';
+                    status('load', Math.round(anteil * 100) + ' %');
                 });
                 zustand.bereit = true;
                 zustand.laedt = false;
@@ -134315,6 +136613,12 @@ const KI = (() => {
         });
         document.getElementById('ai-faehig')?.addEventListener('click', (e) => faehigkeitenMenue(e.currentTarget));
         document.getElementById('ai-diktat')?.addEventListener('click', () => diktat(ta));
+        /* DIE ZWEI KNÖPFE, DIE ETWAS BAUEN, SEHEN AUCH SO AUS (E463). „Datenbank
+           bauen" und „Seite aufbauen" legen Strukturen an — die anderen in
+           der Reihe schreiben eine Antwort. Der dunkle Knopf mit dem
+           Buchstabenlauf ist Redurs Vorgabe für genau diese Sorte Zusage. */
+        if (typeof Funkel !== 'undefined')
+            Funkel.alle(document, '#ai-db, #ai-seite');
         document.getElementById('ai-db')?.addEventListener('click', async () => {
             const auftrag = await UI.frage('Was soll die Datenbank können?', 'Aufgaben mit Status, Priorität, Fälligkeit und Aufwand');
             if (auftrag)
@@ -135729,8 +138033,15 @@ const Kopfleiste = (() => {
                 'radial-gradient(circle at 70% 20%,#c9b8a8,#6b5b4d)',
                 'conic-gradient(from 200deg,#4dab9a,#529cca,#9a6dd7,#4dab9a)',
                 'conic-gradient(from 20deg,#ffa344,#e03e3e,#9a6dd7,#ffa344)'
-            ]]
+            ]],
+        /* DAS RAUSCHEN (E463). Kein Farbwert, sondern ein Name: `textur:` und
+           eine der drei Grundflächen, darüber die zwei Rauschlagen aus
+           `textur.ts`, die treiben. Der Wert steht so im Block — wer ihn in
+           einer alten Fassung öffnet, sieht ein Cover ohne Bild, keinen
+           Fehler. */
+        ['Rauschen', ['textur:nebel', 'textur:sand', 'textur:nacht']]
     ];
+    const texturVon = (cover) => cover.startsWith('textur:') ? cover.slice(7).replace(/[^a-z]/g, '') : '';
     const coverWaehlen = (p) => {
         let reiter = 'galerie';
         const o = document.createElement('div');
@@ -135752,8 +138063,14 @@ const Kopfleiste = (() => {
                     (reiter === 'galerie'
                         ? COVER_GRUPPEN.map(([name, liste]) => `<div class="cb-grp">${esc(name)}</div>` +
                             '<div class="cover-gitter">' +
-                            liste.map((f) => `<button data-c="${esc(f)}" style="background:${f}"` +
-                                `${p.cover === f ? ' class="on"' : ''}></button>`).join('') +
+                            liste.map((f) => {
+                                const textur = texturVon(f);
+                                const klassen = [textur ? 'cover-textur cover-textur-' + textur : '',
+                                    p.cover === f ? 'on' : ''].filter(Boolean).join(' ');
+                                return `<button data-c="${esc(f)}"` +
+                                    (textur ? '' : ` style="background:${f}"`) +
+                                    (klassen ? ` class="${klassen}"` : '') + '></button>';
+                            }).join('') +
                             '</div>').join('')
                         : reiter === 'hoch'
                             ? '<div class="cb-mitte"><button class="cb-knopf" data-a="bild">Bild wählen</button>' +
@@ -135763,6 +138080,10 @@ const Kopfleiste = (() => {
                                 '<div class="cb-hinweis">Die Adresse eines Bildes im Netz.</div></div>') +
                     '</div>' +
                     '</div>';
+            /* Die Rausch-Kacheln bekommen ihre Lagen erst, wenn sie im Baum
+               stehen — eine Zeichenkette kann keinen Filter tragen. */
+            if (typeof Textur !== 'undefined')
+                o.querySelectorAll('.cover-textur').forEach(b => Textur.legen(b));
         };
         zeichne();
         o.addEventListener('click', e => {
@@ -135838,8 +138159,21 @@ const Kopfleiste = (() => {
         if (p.cover) {
             const c = document.createElement('div');
             c.className = 'cover';
-            c.style.background = p.cover.startsWith('#') || p.cover.startsWith('linear')
-                ? p.cover : `url(${p.cover}) center/cover`;
+            const textur = texturVon(String(p.cover));
+            if (textur) {
+                c.classList.add('cover-textur', 'cover-textur-' + textur);
+                if (typeof Textur !== 'undefined')
+                    Textur.legen(c);
+            }
+            else {
+                /* JEDER VERLAUF IST EIN VERLAUF. Hier stand `startsWith('linear')`
+                   — und die sechs Kacheln unter „Papier und Struktur" beginnen
+                   mit `repeating-`, `radial-` oder `conic-`. Sie wurden als
+                   Bildadresse gelesen (`url(conic-gradient(…))`) und blieben leer.
+                   Gefunden beim Anbau des Rauschens (E463). */
+                c.style.background = /^(#|[a-z-]*gradient\()/.test(p.cover)
+                    ? p.cover : `url(${p.cover}) center/cover`;
+            }
             wrap.appendChild(c);
         }
         /* Symbol */
@@ -136038,10 +138372,19 @@ const Kopfleiste = (() => {
            `lockOpen`. */
         const zeichen = (id) => (typeof Register !== 'undefined' && Register.symbole)
             ? Register.symbole.alsSvg(id) : '';
+        /* DER MERKER SAGT SEINEN ZUSTAND JETZT AUCH HÖRBAR (E460). Vorher
+           stand hier nur `classList.toggle('on', …)`: wer die Farbe nicht
+           sieht, erfuhr nie, ob die Seite gemerkt ist — der Knopf hiess in
+           beiden Fällen „Zu Favoriten". `Merkzeichen.markieren` setzt
+           `aria-pressed`, den Vorlesenamen und die Form (§38). */
         const stern = document.getElementById('btn-fav');
         if (stern && p) {
-            stern.innerHTML = zeichen('star');
-            stern.classList.toggle('on', !!p.favorite);
+            if (typeof Merkzeichen !== 'undefined')
+                Merkzeichen.markieren(stern, { an: !!p.favorite, name: p.text || 'Ohne Titel' });
+            else {
+                stern.innerHTML = zeichen('star');
+                stern.classList.toggle('on', !!p.favorite);
+            }
         }
         const kb = document.getElementById('btn-komm');
         if (kb && p) {
@@ -139085,6 +141428,12 @@ const StudioSchale = (() => {
             Ansichten.posteingang();
         }
         catch { /* ohne Posteingang bleibt der Kopf */ } });
+        /* Die Sterne (E463): sie stehen nur, solange ein Auftrag läuft, und
+           öffnen dasselbe Fenster wie der Knopf im Menüband. */
+        an('studio-auftraege', () => {
+            if (typeof AuftragsAnzeige !== 'undefined')
+                AuftragsAnzeige.oeffnen();
+        });
         an('studio-tools', () => {
             if (document.body.dataset.studioTools === 'offen')
                 Menueband.schliessen();
@@ -142790,6 +145139,23 @@ const App = (() => {
                 Bibliothek.oeffne();
         },
     };
+    /* DER VORHANG GEHT AUF (E463). `index.html` legt ihn als Text über die
+       Seite, bevor das erste Skript läuft — die Sekunde, in der sonst leere
+       Kästchen und halbe Leisten stünden. Hier geht er auf: nach dem Start,
+       und auch nach einem gescheiterten Start, denn ein Vorhang vor einem
+       Fehlerbanner wäre ein stiller Absturz (§7). Das Stilblatt zieht ihn
+       ausserdem nach sechs Sekunden von selbst auf, falls diese Zeile nie
+       erreicht wird. */
+    const vorhangWeg = () => {
+        const v = document.getElementById('ru-vorhang');
+        if (!v || v.hidden)
+            return;
+        v.classList.add('ru-vorhang-weg');
+        /* Erst nach der Blende verstecken — und nur, wenn ihn niemand in der
+           Zwischenzeit wieder zugezogen hat (`bilder.mts` tut das fürs Bild). */
+        setTimeout(() => { if (v.classList.contains('ru-vorhang-weg'))
+            v.hidden = true; }, 600);
+    };
     const start = async () => {
         /* DIE ZEICHEN DER OBERFLÄCHE ZUERST (E200).
            `index.html` schreibt nur die Stellen — `<span data-sym="search">` —,
@@ -143054,8 +145420,10 @@ const App = (() => {
         Store.beiWarnung((text) => UI.banner(text, 'warn'));
         try {
             await starteWirklich();
+            vorhangWeg();
         }
         catch (err) {
+            vorhangWeg();
             UI.banner('Die App konnte nicht starten: ' +
                 (err instanceof Error ? err.message : String(err)), 'fehler');
             throw err;

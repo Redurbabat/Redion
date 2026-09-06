@@ -113,6 +113,7 @@ const Rundgang = (() => {
     document.getElementById('rg-schleier')?.remove();
     kasten = null; loch = null;
     removeEventListener('resize', stellen);
+    if (typeof Geste !== 'undefined') Geste.weg();
   };
 
   /**
@@ -184,7 +185,13 @@ const Rundgang = (() => {
       if (oben + kb.height > innerHeight - 12) oben = Math.max(12, innerHeight - kb.height - 12);
       kasten.style.left = links + 'px';
       kasten.style.top  = oben + 'px';
+      /* DIE HAND TIPPT AUF DAS ZIEL (E463). Loch und Kasten sagen wo und
+         was; die Hand sagt, dass man da hintippen kann. Sie hängt am
+         echten Ziel, nicht an einer Stelle — beim Grösserziehen des
+         Fensters wandert sie mit, weil `stellen` sie neu stellt. */
+      if (typeof Geste !== 'undefined') Geste.zeigen(el);
     } else {
+      if (typeof Geste !== 'undefined') Geste.weg();
       loch.style.display = 'none';
       const kb = kasten.getBoundingClientRect();
       kasten.style.left = ((innerWidth - kb.width) / 2) + 'px';

@@ -7002,3 +7002,223 @@ html[data-theme="dark"] .ru-textur-grob{opacity:.12}
 @keyframes ru-baum-oeffnen{from{opacity:.3;transform:translateY(-4px)}to{opacity:1;transform:none}}
 @media(max-width:760px){.ru-baum-zeile{min-height:var(--touch-min)}}
 @media(prefers-reduced-motion:reduce){.ru-baum *{scroll-behavior:auto!important}.ru-baum-auf{animation:none}}
+
+/* =========================================================================
+   E463 — SICHTBAR UND LUSTIG. Redur am 6. September: „du musst alles stark
+   nutzen, die Webseite könnte auch lustig sein". §39 sagt „Animationen
+   sparsam" und ist ein Richtwert; hier ist der geschriebene Grund für die
+   Abweichung: die Bauteile aus den Vorgaben stehen an Wegen, die man
+   TÄGLICH sieht, und sie dürfen dort Spass machen. Was sie nicht dürfen,
+   bleibt: etwas behaupten, das nicht stimmt, und sich bewegen, wenn das
+   System um Ruhe bittet (ganz unten).
+   ====================================================================== */
+
+/* ---- Ein Lader als schwebende Karte (Lader.schweben) ------------------- */
+.ru-lader-karte{
+  display:flex; align-items:center; gap:12px; padding:10px 14px;
+  border:1px solid var(--line); border-radius:var(--radius-xl);
+  background:var(--bg-card); box-shadow:var(--shadow); color:var(--text);
+  max-width:min(330px, calc(100vw - 2 * var(--mobile-gutter-small)))
+}
+.ru-lader-schwebt{
+  position:fixed; right:var(--mobile-gutter-small); bottom:var(--mobile-gutter-small);
+  z-index:901; pointer-events:none; animation:ru-lader-herein .3s ease
+}
+@media (max-width:760px){
+  .ru-lader-schwebt{ bottom:calc(var(--mobile-nav-height) + var(--mobile-gutter-small)) }
+}
+@keyframes ru-lader-herein{ from{ transform:translateY(20px); opacity:0 } }
+
+/* ---- Die Sterne im Studio-Kopf (#studio-auftraege) --------------------- */
+#studio-auftraege{ position:relative }
+#studio-auftraege[hidden]{ display:none }
+#studio-auftraege .glocke-zahl{ top:3px; right:2px }
+.ru-auftrag-sterne{ position:relative; display:grid; place-items:center; width:24px; height:24px }
+/* Drei statt fünf — in 24 px wären fünf ein Fleck. Die Schritte 0, 2, 4
+   nehmen die Grössen 34 %, 66 % und 98 % aus `.ru-lader-stern`. */
+.ru-auftrag-sterne .ru-lader-stern:nth-child(1){ --ru-schritt:0 }
+.ru-auftrag-sterne .ru-lader-stern:nth-child(2){ --ru-schritt:2 }
+.ru-auftrag-sterne .ru-lader-stern:nth-child(3){ --ru-schritt:4 }
+
+/* ---- Der Vorhang beim Start (#ru-vorhang) ------------------------------ */
+/* Über allem ausser dem Sperrschirm (99999): der Willkommen-Schirm und die
+   Dialoge liegen darunter, sonst stünde beim ersten Start ein Dialog auf
+   einem dunklen Tuch, und die Buchstaben dahinter sähe niemand. */
+#ru-vorhang{
+  position:fixed; inset:0; z-index:9500; display:grid; place-items:center;
+  background:var(--bg); pointer-events:none;
+  transition:opacity .5s ease;
+  /* Die Notbremse: nach sechs Sekunden geht er von selbst auf, ob der
+     Start ihn gerufen hat oder nicht. */
+  animation:ru-vorhang-notaus .5s ease 6s forwards
+}
+#ru-vorhang.ru-vorhang-weg{ opacity:0 }
+#ru-vorhang[hidden]{ display:none }
+#ru-vorhang .ru-lader{ --ru-lader-gross:150px }
+#ru-vorhang .ru-lader-buchstaben{ font-size:26px; letter-spacing:1px }
+@keyframes ru-vorhang-notaus{ to{ opacity:0; visibility:hidden } }
+
+/* ---- Die Hand, die tippt (Geste) ---------------------------------------
+   Redurs `.🤚`, auf drei Viertel: 80 × 60 wird 60 × 45, und jede Länge
+   darin im selben Mass. */
+.ru-geste{
+  --ru-haut:#e4c560; --ru-tipp:.6s; --ru-versatz:.1s;
+  position:fixed; z-index:901; width:60px; height:45px; pointer-events:none
+}
+.ru-geste::before{
+  content:""; display:block; position:absolute; top:70%; right:20%;
+  width:180%; height:75%; border-radius:30px 8px; background:#000;
+  filter:blur(8px); opacity:.3
+}
+.ru-geste i{ display:block; position:absolute }
+.ru-geste-flaeche{ inset:0; background:var(--ru-haut); border-radius:8px 30px }
+.ru-geste-daumen{
+  width:120%; height:29px; bottom:-18%; right:1%; background:var(--ru-haut);
+  transform-origin:calc(100% - 15px) 15px; transform:rotate(-20deg);
+  border-radius:23px 15px 15px 8px;
+  border-bottom:2px solid rgba(0,0,0,.1); border-left:2px solid rgba(0,0,0,.1)
+}
+.ru-geste-daumen::after{
+  content:""; position:absolute; width:20%; height:60%; bottom:-8%; left:4px;
+  background:rgba(255,255,255,.3); border-radius:60% 10% 10% 30%;
+  border-right:2px solid rgba(0,0,0,.05)
+}
+.ru-geste-finger{
+  width:80%; height:26px; bottom:32%; right:64%; background:var(--ru-haut);
+  transform-origin:100% 15px; transform:rotate(10deg) scale(var(--ru-mass));
+  animation:ru-geste-tipp calc(var(--ru-tipp) * 2) ease-in-out infinite
+}
+.ru-geste-finger::before{
+  content:""; position:absolute; width:140%; height:23px; bottom:8%; right:65%;
+  background:var(--ru-haut); transform-origin:calc(100% - 15px) 15px;
+  transform:rotate(-60deg); border-radius:15px
+}
+.ru-geste-finger-1{ --ru-mass:.4; filter:brightness(70%); animation-delay:0s }
+.ru-geste-finger-2{ --ru-mass:.6; filter:brightness(80%); animation-delay:var(--ru-versatz) }
+.ru-geste-finger-3{ --ru-mass:.8; filter:brightness(90%); animation-delay:calc(var(--ru-versatz) * 2) }
+.ru-geste-finger-4{ --ru-mass:1; animation-delay:calc(var(--ru-versatz) * 3) }
+@keyframes ru-geste-tipp{
+  0%,50%,100%{ transform:rotate(10deg) scale(var(--ru-mass)) }
+  40%{ transform:rotate(50deg) scale(var(--ru-mass)) }
+}
+
+/* ---- Der Funkel-Knopf (Funkel) ------------------------------------------
+   Redurs `.btn`: fast schwarz, die Buchstaben glimmen der Reihe nach, und
+   beim Anfassen kommt Licht von unten. Die drei Selektoren sind nötig,
+   weil `.ai-quick button` und `.lernwelt button.is-primary` sonst mit
+   ihrer Farbe gewinnen. */
+.ru-funkel, .ai-quick button.ru-funkel, .lernwelt button.is-primary.ru-funkel{
+  --ru-funkel-farbe:#101010; --ru-funkel-ton:210deg;
+  --ru-funkel-rund:24px; --ru-funkel-rand:4px; --ru-funkel-zeit:.4s;
+  position:relative; isolation:isolate; user-select:none;
+  color:#fff; background:var(--ru-funkel-farbe);
+  border:1px solid #fff2; border-radius:var(--ru-funkel-rund);
+  box-shadow:
+    inset 0 1px 1px rgba(255,255,255,.2), inset 0 2px 2px rgba(255,255,255,.15),
+    inset 0 4px 4px rgba(255,255,255,.1), inset 0 8px 8px rgba(255,255,255,.05),
+    inset 0 15px 15px rgba(255,255,255,.05),
+    0 -1px 1px rgba(0,0,0,.02), 0 -2px 2px rgba(0,0,0,.03), 0 -4px 4px rgba(0,0,0,.05),
+    0 -8px 8px rgba(0,0,0,.06), 0 -15px 15px rgba(0,0,0,.08);
+  transition:box-shadow var(--ru-funkel-zeit), border-color var(--ru-funkel-zeit),
+             background-color var(--ru-funkel-zeit)
+}
+.ru-funkel:hover, .ai-quick button.ru-funkel:hover, .lernwelt button.is-primary.ru-funkel:hover{
+  color:#fff; background:var(--ru-funkel-farbe)
+}
+.ru-funkel::before{
+  content:""; position:absolute; inset:calc(0px - var(--ru-funkel-rand)); z-index:-1;
+  border-radius:calc(var(--ru-funkel-rund) + var(--ru-funkel-rand)); pointer-events:none;
+  background-image:linear-gradient(0deg,#0004,#000a);
+  box-shadow:0 -8px 8px -6px #0000 inset, 0 -15px 15px -8px #0000 inset,
+             1px 1px 1px #fff2, 2px 2px 2px #fff1, -1px -1px 1px #0002, -2px -2px 2px #0001;
+  transition:box-shadow var(--ru-funkel-zeit)
+}
+.ru-funkel::after{
+  content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none; opacity:0;
+  background-image:linear-gradient(0deg,#fff,hsl(var(--ru-funkel-ton) 100% 70%),
+                   hsl(var(--ru-funkel-ton) 100% 70% / 50%) 8%,transparent);
+  transition:opacity var(--ru-funkel-zeit), filter var(--ru-funkel-zeit)
+}
+.ru-funkel-b{
+  position:relative; display:inline-block; color:#fff5;
+  animation:ru-funkel-glimmen 2s ease-in-out infinite;
+  animation-delay:calc(var(--ru-schritt) * 80ms);
+  transition:color var(--ru-funkel-zeit), text-shadow var(--ru-funkel-zeit)
+}
+@keyframes ru-funkel-glimmen{ 50%{ text-shadow:0 0 3px #fff8; color:#fff } }
+.ru-funkel > svg, #ai .ai-quick button.ru-funkel > svg{
+  stroke:#e8e8e8; filter:drop-shadow(0 0 2px #fff9);
+  animation:ru-funkel-flackern 2s linear infinite; animation-delay:.5s
+}
+@keyframes ru-funkel-flackern{ 50%{ opacity:.3 } }
+.ru-funkel:hover::before, .ru-funkel:focus-visible::before{
+  box-shadow:0 -8px 12px -6px #fff3 inset, 0 -15px 15px -8px hsl(var(--ru-funkel-ton) 100% 70% / 20%) inset,
+             1px 1px 1px #fff3, 2px 2px 2px #fff1, -1px -1px 1px #0002, -2px -2px 2px #0001
+}
+.ru-funkel:hover::after, .ru-funkel:focus-visible::after{
+  opacity:.6; mask-image:linear-gradient(0deg,#fff,transparent)
+}
+/* Beim Anfassen platzen die Buchstaben einmal auf und glimmen dann schneller. */
+.ru-funkel:hover .ru-funkel-b, .ru-funkel:focus-visible .ru-funkel-b{
+  animation:ru-funkel-platzen 1s ease-in-out forwards, ru-funkel-glimmen 1.2s ease-in-out infinite;
+  animation-delay:calc(var(--ru-schritt) * 80ms), calc(1s + var(--ru-schritt) * 80ms)
+}
+@keyframes ru-funkel-platzen{
+  0%,100%{ filter:blur(0) }
+  50%{ transform:scale(2); filter:blur(10px) brightness(150%)
+       drop-shadow(-36px 12px 12px hsl(var(--ru-funkel-ton) 100% 70%)) }
+}
+.ru-funkel:active, .ai-quick button.ru-funkel:active, .lernwelt button.is-primary.ru-funkel:active{
+  border-color:hsl(var(--ru-funkel-ton) 100% 80% / 70%);
+  background:hsl(var(--ru-funkel-ton) 50% 20% / .5)
+}
+.ru-funkel:active::after{ opacity:1; mask-image:linear-gradient(0deg,#fff,transparent); filter:brightness(200%) }
+.ru-funkel:active .ru-funkel-b{ text-shadow:0 0 1px hsl(var(--ru-funkel-ton) 100% 90% / 90%); animation:none }
+
+/* ---- Das Rauschen als Cover (textur:nebel | sand | nacht) --------------- */
+.cover-textur{ position:relative; overflow:hidden }
+.cover-textur-nebel{ background:linear-gradient(120deg,#cfe3ee,#8fb0c4) }
+.cover-textur-sand{ background:linear-gradient(120deg,#ead9c2,#c4a07c) }
+.cover-textur-nacht{ background:linear-gradient(120deg,#1d2140,#4a3a78) }
+.cover-textur-nacht .ru-textur{ mix-blend-mode:screen }
+/* Es treibt — Redurs „island" lebt von der Bewegung, nicht vom Korn. */
+.cover-textur .ru-textur-fein{ animation:ru-textur-treiben 9s ease-in-out infinite alternate }
+.cover-textur .ru-textur-grob{ animation:ru-textur-treiben 13s ease-in-out infinite alternate-reverse }
+@keyframes ru-textur-treiben{
+  from{ transform:translate(-2%,-2%) scale(1.08) }
+  to{ transform:translate(2%,2%) scale(1.08) }
+}
+
+/* ---- Das Auge am Ordnerdeckel (.bib-blick) ------------------------------ */
+.bib-zelle{ position:relative; display:block; min-width:0 }
+.bib-blick{
+  position:absolute; left:4px; top:4px; z-index:2;
+  width:var(--touch-min); height:var(--touch-min); padding:0; border:0;
+  background:none; cursor:pointer; display:grid; place-items:center;
+  border-radius:10px; color:var(--text)
+}
+.bib-blick:hover, .bib-blick:focus-visible{ background:rgba(0,0,0,.08) }
+.bib-blick-auge{
+  position:relative; display:block; width:26px; height:15px; box-sizing:border-box;
+  border-radius:50%; background:#fff; border:2px solid #2b2b2b;
+  box-shadow:0 1px 3px rgba(0,0,0,.25)
+}
+.bib-blick-auge b{
+  position:absolute; left:50%; top:50%; width:9px; height:9px; margin:-4.5px 0 0 -4.5px;
+  border-radius:50%; background:#2b2b2b; transition:transform .3s ease
+}
+.bib-blick:hover .bib-blick-auge b, .bib-blick:focus-visible .bib-blick-auge b{ transform:translateX(-5px) }
+.bib-blick:hover .bib-blick-auge{ animation:bib-blick-zwinkern 1.2s ease }
+@keyframes bib-blick-zwinkern{ 0%,100%{ transform:none } 12%{ transform:scaleY(.1) } 24%{ transform:none } }
+
+/* ---- Wenn das System um Ruhe bittet ------------------------------------- */
+@media (prefers-reduced-motion:reduce){
+  .ru-lader-schwebt{ animation:none }
+  #ru-vorhang{ transition:none }
+  #ru-vorhang .ru-lader-buchstabe{ animation:none; opacity:1 }
+  .ru-geste-finger{ animation:none; transform:rotate(30deg) scale(var(--ru-mass)) }
+  .ru-funkel-b, .ru-funkel:hover .ru-funkel-b, .ru-funkel:focus-visible .ru-funkel-b,
+  .ru-funkel > svg{ animation:none; color:#fff; opacity:1 }
+  .cover-textur .ru-textur{ animation:none }
+  .bib-blick:hover .bib-blick-auge{ animation:none }
+}

@@ -2185,6 +2185,11 @@ const KI = (() => {
 
     document.getElementById('ai-diktat')?.addEventListener('click', () => diktat(ta));
 
+    /* DIE ZWEI KNÖPFE, DIE ETWAS BAUEN, SEHEN AUCH SO AUS (E463). „Datenbank
+       bauen" und „Seite aufbauen" legen Strukturen an — die anderen in
+       der Reihe schreiben eine Antwort. Der dunkle Knopf mit dem
+       Buchstabenlauf ist Redurs Vorgabe für genau diese Sorte Zusage. */
+    if (typeof Funkel !== 'undefined') Funkel.alle(document, '#ai-db, #ai-seite');
     document.getElementById('ai-db')?.addEventListener('click', async () => {
       const auftrag = await UI.frage('Was soll die Datenbank können?',
         'Aufgaben mit Status, Priorität, Fälligkeit und Aufwand');

@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-442 Entscheidungen, E1 bis E462 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+443 Entscheidungen, E1 bis E463 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -506,6 +506,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E460** — Ein Merker für „gemerkt", und er sagt es auch hörbar
 * **E461** — Vier Lader, vier Auskünfte, und keiner erfindet einen Anteil
 * **E462** — Schalter, Staffelei, Textur, Symbolreihe: die Vorgabe liefert das Aussehen, Redion den Zustand
+* **E463** — Sichtbar und lustig: die Vorgaben kommen an die Wege, die man täglich geht
 
 ---
 
@@ -36365,3 +36366,131 @@ DATEIEN. `src/schale/bedienung/staffelei.ts` (neu), `textur.ts` (neu),
 GEPRÜFT. test435 (42 Punkte, neu), test362 (18), test290, test105,
 test109, test87; `npm run typecheck`, `npm run bauen:ts`.
 
+---
+
+E463 — Sichtbar und lustig: die Vorgaben kommen an die Wege, die man täglich geht
+--------------------------------------------------------------------------
+
+ENTSCHEIDUNG. Redur hat am 6. September zwei Sätze zu E458–E462 gesagt:
+„nicht einfach Orte, die man nicht sieht — es muss sichtbar sein" und „du
+musst alles stark nutzen, die Webseite könnte auch lustig sein, nicht so
+professionell". Beides gilt ab hier für die Bauteile aus seinen Vorgaben,
+und beides steht damit als GESCHRIEBENER GRUND neben §39 („Animationen
+sparsam", ein Richtwert): an den Wegen, die man täglich geht, dürfen diese
+Bauteile Spass machen. Was bleibt, ist der harte Kern — nichts behaupten,
+was nicht stimmt (§0.8, E441), und stillstehen, wenn das System um Ruhe
+bittet (§38, `prefers-reduced-motion`).
+
+Sieben Stellen, zwei davon neu gebaut, fünf aus E459–E462 an einen
+sichtbaren Ort geholt:
+
+| Vorgabe | Vorher | Jetzt | Zustand kommt aus |
+|---|---|---|---|
+| `.🤚` (Hand) | — | `schale/bedienung/geste.ts`: im Rundgang tippt sie auf das Ziel jedes Schritts | dem echten Ziel aus `SCHRITTE` |
+| `.btn` (dunkel, Buchstaben) | — | `schale/bedienung/funkel.ts`: „Datenbank bauen", „Seite aufbauen", „Lernen starten" | den drei Knöpfen, die etwas ANLEGEN |
+| `.folder-card` (Ordnerkarte, E459) | nur im ⌄-Menü | ein Auge auf JEDEM Ordnerdeckel öffnet sie | `Store.childrenOf`, wie vorher |
+| `.press` (Presse, E461) | nur im Auftragsfenster | schwebende Karte beim PDF-Einlesen, „Seite n von m" | der echten Schleife in `einlesen.ts` |
+| `.preloader` (Sterne, E461) | nur im Auftragsfenster | `#studio-auftraege` im Studio-Kopf, mit Zahl | `Auftraege.offen()`, wie `#mb-auftraege` |
+| `.loader-letter` (Wort, E461) | nur beim Abgleich | der Vorhang beim Start: „Redion" geht Buchstabe für Buchstabe an | dem Start selbst |
+| `.island` (Rauschen, E462) | nur im Willkommen-Kopf | eine Cover-Wahl: `textur:nebel`, `textur:sand`, `textur:nacht` | dem Feld `cover` am Block |
+
+WARUM SO.
+
+  · DER VORHANG STEHT ALS TEXT IN `index.html`, nicht als Skript — er muss
+    da sein, BEVOR das erste Skript läuft, denn genau diese Sekunde soll er
+    abdecken. `App.start` zieht ihn auf, nach dem Start und nach einem
+    gescheiterten Start (ein Vorhang vor einem Fehlerbanner wäre ein
+    stiller Absturz, §7). Und das Stilblatt zieht ihn nach sechs Sekunden
+    von selbst auf, falls keine der beiden Zeilen je erreicht wird. Er
+    nimmt keine Klicks an (`pointer-events:none`): wer schneller ist als
+    die Blende, klickt hindurch. Er liegt bei 9500 — über dem
+    Willkommen-Schirm (960), unter dem Sperrschirm (99999).
+  · ZWEI STELLEN, EINE WAHRHEIT. `#mb-auftraege` wohnt im Menüband, und
+    das ist am Rechner seit E457 eine zugeklappte Lade: ein laufender
+    Auftrag lief unsichtbar. `knopfFrisch` in `auftraege.ts` schreibt jetzt
+    beide Knöpfe in einer Schleife, genau wie `glockeFrisch` die zwei
+    Glocken (E457). Drei Sterne, nicht fünf — in 24 px wären fünf ein
+    Fleck.
+  · DIE PRESSE ERSETZT DEN TOAST, sie ergänzt ihn nicht. Beide sind
+    `role="status"`; beide zusammen liessen den Vorleser jede Seite zweimal
+    hören. Ohne `Lader` (alte Einzeldatei, Prüflauf ohne Schale) bleibt der
+    Toast. Und `wegMelden` nimmt Karte oder Toast auf JEDEM der fünf Wege
+    hinaus weg — eine Presse, die nach dem Fehler weiterläuft, wäre eine
+    Behauptung.
+  · DIE HAND IST KEIN BEDIENELEMENT. `aria-hidden`, kein Text, keine
+    Klicks; wer den Rundgang mit dem Vorleser macht, hört den Kasten, und
+    die Hand sagt nichts, was nicht auch dort steht. Sie hängt am ECHTEN
+    Ziel — `stellen` stellt sie bei jedem Grösserziehen neu — und liegt
+    unter dem Kasten (901 gegen 902): wo beide sich treffen, gewinnt, was
+    man lesen muss.
+  · DER FUNKEL ZERLEGT DEN TEXT, ÄNDERT IHN ABER NICHT. Jeder Buchstabe
+    wird ein `<span>` mit seiner Nummer, Leerzeichen bleiben Text, SVG
+    bleibt SVG. `textContent` ist danach derselbe, ein Vorleser liest
+    dasselbe, und der Klick auf einen Buchstaben landet über `closest()`
+    am Knopf — test436 §5 klickt wirklich auf ein `<span>` und sieht die
+    Frage aufgehen. In der Lernwelt wird bei jedem Zeichnen neu zerlegt,
+    weil `innerHTML` die Spans wegschreibt.
+  · DAS RAUSCHEN IST EIN NAME, KEIN FARBWERT. `cover` bleibt eine
+    Zeichenkette; `textur:nacht` steht so im Block. Wer den Block in einer
+    älteren Fassung öffnet, sieht ein Cover ohne Bild — keinen Fehler,
+    keine kaputte Seite. Die drei Grundflächen sind Verläufe, die Lagen
+    kommen aus `textur.ts`, und der Filterhalter bleibt EINER, auch nach
+    der Wahl (E440, geprüft).
+  · GEFUNDEN BEIM ANBAU: der Cover-Zeichner las `startsWith('linear')`.
+    Die sechs Kacheln unter „Papier und Struktur" beginnen mit
+    `repeating-`, `radial-` oder `conic-` — sie wurden als Bildadresse
+    gelesen (`url(conic-gradient(…))`) und blieben leer. Jetzt ist jeder
+    `…gradient(` ein Verlauf. test436 §6 hält es.
+  · DAS AUGE IST EIN GESCHWISTER, KEIN KIND. Ein Knopf im Knopf ist kein
+    gültiges HTML, und der Klick käme zweimal an. Deshalb steckt der
+    Ordnerdeckel jetzt in einer `.bib-zelle`, das Auge daneben, absolut
+    darüber. Nur an Ordnern: ein Blick in eine PDF wäre die PDF.
+
+WAS DAS BILD GEÄNDERT HAT (§55.1): am Telefon stand die Hand am unteren
+Rand mit halbem Daumen im Bild — die Klemme rechnete mit der Handfläche,
+nicht mit Daumen und Schatten; jetzt 65 px Luft. Der Vorhang fehlte auf
+dem ersten Bild ganz: `bilder.mts` zog ihn zu, und 600 ms später versteckte
+ihn der Start noch einmal. Jetzt versteckt der Start nur, was noch auf dem
+Weg hinaus ist.
+
+WAS DER PRÜFLAUF GEFUNDEN HAT, was kein Auge sah: das Vorlesezeichen des
+Auges endete nach „Elektrotechnik — das schliessende Anführungszeichen war
+ein ASCII-`"` und beendete das Attribut. `„…\u201c` ist es jetzt.
+
+UND NOCH EINER, erst nach dem Bau der Einzeldatei: sieben Kopfkommentare
+unter `schale/bedienung/` nannten den Archivordner `ui-reserve` beim Namen,
+und `test426` verlangt, dass die Einzeldatei dieses Wort nicht kennt —
+Kommentare reisen im erzeugten JS mit. Die Einzeldatei war seit E457 nicht
+gebaut worden; der Wächter konnte es bis heute nicht sehen. Die Kommentare
+sagen jetzt „Vorgaben-Archiv", der Weg dorthin steht in
+`doku/UI-KOMPONENTEN.md`.
+
+GEGENPROBEN (§55.2), alle drei gelaufen und rot gesehen: `vorhangWeg()`
+nach `starteWirklich()` weggelassen → §1 „nach dem Start weg" rot.
+`Geste.weg()` aus `aufraeumen` genommen → §4 „nach Fertig weg" rot. Die
+Verdrahtung der `.bib-blick` auf einen falschen Selektor gestellt → §7
+„öffnet die Ordnerkarte" rot.
+
+BILDER ANGESEHEN: `bilder/vorhang-rechner-hell.png`, `hand-rechner-hell`,
+`hand-handy-dunkel`, `pdfpresse-rechner-hell`, `sterne-rechner-hell`,
+`funkel-rechner-hell`, `lernstart-rechner-hell`, `covertextur-rechner-hell`,
+`auge-rechner-hell`, `auge-handy-dunkel`.
+
+ALTERNATIVEN, VERWORFEN. Den Vorhang per Skript bauen — dann wäre er nach
+der Sekunde da, die er abdecken soll. Den Toast neben der Presse stehen
+lassen — doppelte Auskunft. Die Hand als Kind des Kastens — sie muss am
+Ziel hängen, nicht am Text. Das Rauschen als Data-URL im Cover — ein
+Bild in jedem Block, das derselbe Filter umsonst rechnet.
+
+DATEIEN. `src/schale/bedienung/geste.ts` (neu), `funkel.ts` (neu),
+`lader.ts` (`schweben`), `src/schale/aufbau/schale.ts` (`vorhangWeg`),
+`kopfleiste.ts` (Rauschen, Verlauf-Fehler), `studio.ts`,
+`src/schale/ueberlagerung/auftraege.ts`, `src/bereiche/pdf/einlesen.ts`,
+`src/bereiche/hilfe/rundgang.ts`, `src/bereiche/ki/dienst.ts`,
+`src/bereiche/wissen/lernwelt.ts`, `bibliothek.ts`, `index.html`,
+`src/dienst/sw.ts`, `quell/schale/stil/bausteine.css`, `bilder.mts`,
+`pruefungen/lauf/test436.mts` (neu), `test37.mts` (vier Cover-Gruppen).
+
+GEPRÜFT. test436 (71 Punkte, neu), test37 (52), test61, test432, test334,
+test258, test315, test431–435, test362 (18), test290, test105, test109,
+test87, test426; `npm run typecheck`, `npm run bauen:ts`.

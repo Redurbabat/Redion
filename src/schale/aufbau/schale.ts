@@ -3210,6 +3210,22 @@ const App = (() => {
     },
   };
 
+  /* DER VORHANG GEHT AUF (E463). `index.html` legt ihn als Text über die
+     Seite, bevor das erste Skript läuft — die Sekunde, in der sonst leere
+     Kästchen und halbe Leisten stünden. Hier geht er auf: nach dem Start,
+     und auch nach einem gescheiterten Start, denn ein Vorhang vor einem
+     Fehlerbanner wäre ein stiller Absturz (§7). Das Stilblatt zieht ihn
+     ausserdem nach sechs Sekunden von selbst auf, falls diese Zeile nie
+     erreicht wird. */
+  const vorhangWeg = (): void => {
+    const v = document.getElementById('ru-vorhang');
+    if (!v || v.hidden) return;
+    v.classList.add('ru-vorhang-weg');
+    /* Erst nach der Blende verstecken — und nur, wenn ihn niemand in der
+       Zwischenzeit wieder zugezogen hat (`bilder.mts` tut das fürs Bild). */
+    setTimeout(() => { if (v.classList.contains('ru-vorhang-weg')) v.hidden = true; }, 600);
+  };
+
   const start = async () => {
     /* DIE ZEICHEN DER OBERFLÄCHE ZUERST (E200).
        `index.html` schreibt nur die Stellen — `<span data-sym="search">` —,
@@ -3470,7 +3486,9 @@ const App = (() => {
 
     try {
       await starteWirklich();
+      vorhangWeg();
     } catch (err) {
+      vorhangWeg();
       UI.banner('Die App konnte nicht starten: ' +
         (err instanceof Error ? err.message : String(err)), 'fehler');
       throw err;

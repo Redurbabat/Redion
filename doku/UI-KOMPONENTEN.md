@@ -269,12 +269,29 @@ mehr, als das Bauteil hübsch ist.
 | `.preloader` / `.crack` (Sterne) | Auftragsfenster, Aufträge ohne bekannte Schrittzahl | `schritte === 0` heisst „unbekannt" — dort gibt es bewusst keinen Balken | **E461**, test434 |
 | `.loader-letter` (Buchstaben) | „Jetzt abgleichen" in der Wolke | `zustand.laeuft` des Abgleichs — läuft oder läuft nicht, kein Anteil | **E461**, test434 |
 | `.press` (Druckpresse) | Auftragsfenster, Auftragsart `pdf-bilder` | `schritt` von `schritte`, echte Seitenzahlen | **E461**, test434 |
-| `.🤚` (tippende Hand) | Rundgang, an den Zielen, die man antippt | die neun Schritte und ihre echten Ziele | offen |
-| `.btn` mit Buchstaben (dunkel) | Zustandsknopf, Sicht `erzeugen` — „Datenbank bauen", „Seite aufbauen" | die Zusage der KI-Aktion, wie bei `laden` (E441) | offen |
+| `.🤚` (tippende Hand) | Rundgang, an jedem Ziel (`Geste.zeigen`) | die neun Schritte und ihre echten Ziele | **E463**, test436 |
+| `.btn` mit Buchstaben (dunkel) | „Datenbank bauen", „Seite aufbauen" (KI-Fenster), „Lernen starten" (Lernwelt) | die drei Knöpfe, die etwas ANLEGEN — der Text bleibt derselbe | **E463**, test436 |
 | `.gradient-btn` als Umschalter | die Schalter der Einstellungen | `Store.setMeta`, derselbe Wert wie heute | **E462**, test435 |
 | `.theme-switch` (Staffelei) | Aussehen → Farbe, der Wechsel hell/dunkel | die acht Schemata und ihr `grund: 'light' \| 'dark'` | **E462**, test435 |
 | `.island` (Textur) | der Kopf des Begrüssungsbildschirms | nichts — bewusst Schmuck an der einen Stelle, die keine Auskunft trägt | **E462**, test435 |
 | `.iso-pro` (isometrische Symbole) | die Symbolreihe der Studio-Kopfleiste | die Knöpfe, die es dort schon gibt; die Beschriftung kommt aus dem `aria-label` | **E462**, test435 |
+
+### Sichtbar gemacht (E463)
+
+Redur nach E462: „nicht einfach Orte, die man nicht sieht — es muss
+sichtbar sein" und „die Webseite könnte auch lustig sein". Fünf der Orte
+oben waren Menüs, Fenster und Sonderfälle. Seit E463 stehen die Bauteile
+zusätzlich dort, wo man täglich vorbeikommt:
+
+| Bauteil | Zusätzlich hier | Was daran echt ist |
+|---|---|---|
+| Ordnerkarte (E459) | ein Auge auf jedem Ordnerdeckel der Bibliothek | dieselbe Karte, derselbe Unterbaum |
+| Presse (E461) | schwebende Karte unten rechts beim PDF-Einlesen | „Seite n von m" aus der echten Schleife |
+| Sterne (E461) | `#studio-auftraege` im Studio-Kopf | `Auftraege.offen()`, Zahl und Vorlesename |
+| Wort-Lader (E461) | der Vorhang beim Start, „Redion" | der Start selbst; weg, sobald er durch ist |
+| Rauschen (E462) | eine Gruppe in der Cover-Wahl jeder Seite | das Feld `cover` — `textur:nebel`, `:sand`, `:nacht` |
+
+Alle stehen still, wenn das System um Ruhe bittet (test436 §8).
 
 Was **nicht** übernommen wird, und warum, steht jeweils in der Entscheidung
 zum Bauteil. Der wiederkehrende Grund ist derselbe wie bei Nr. 28: das

@@ -2045,6 +2045,157 @@ const ANSICHTEN: Record<string, {
    Drei Vorgaben auf einem Bild: die Rauschtextur im Kopf des
    Begrüssungsschirms, der eingeschaltete Schalter mit seinem Verlauf und
    die Beschriftung an einem Symbol der Studio-Reihe. */
+/* --- E463: sichtbar und lustig ------------------------------------------
+   Acht Ansichten für die Runde, in der die Vorgaben an die Wege kamen, die
+   man täglich sieht. Jede zeigt genau EIN Bauteil an seinem echten Ort.
+   Das Aufräumen steht in jeder einzeln — `bauen` läuft in der Seite, und
+   eine Node-Konstante ist dort nicht erreichbar (E398, oben). */
+/* Der Vorhang ist nach dem Start weg — für das Bild wird er noch einmal
+   zugezogen. Die Notbremse (6 s) wird abgeschaltet, sonst ist er beim
+   Fotografieren schon wieder auf. */
+ANSICHTEN['vorhang'] = {
+  titel: 'Der Vorhang beim Start: „Redion" geht Buchstabe für Buchstabe an (E463)',
+  bauen: async () => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelectorAll('.overlay').forEach(o => o.remove());
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+    document.getElementById('rg-willkommen')?.remove();
+    document.getElementById('rg-einladung')?.remove();
+    /* Der Start versteckt ihn 600 ms nach seinem Ende — erst danach wieder
+       zuziehen, sonst zieht der Start ihn gleich noch einmal auf. */
+    await new Promise(r => setTimeout(r, 900));
+    const v = document.getElementById('ru-vorhang');
+    if (v) { v.hidden = false; v.style.animation = 'none'; v.classList.remove('ru-vorhang-weg'); }
+    await new Promise(r => setTimeout(r, 700));
+  }
+};
+
+ANSICHTEN['hand'] = {
+  titel: 'Die Hand im Rundgang: sie tippt auf das, was der Kasten erklärt (E463)',
+  bauen: async () => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelectorAll('.overlay').forEach(o => o.remove());
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+    document.getElementById('rg-willkommen')?.remove();
+    document.getElementById('rg-einladung')?.remove();
+    (window as any).Rundgang.start();
+    await new Promise(r => setTimeout(r, 900));
+  }
+};
+
+ANSICHTEN['pdfpresse'] = {
+  titel: 'Die Presse beim PDF-Einlesen: Seite für Seite, unten rechts (E463)',
+  bauen: async () => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelectorAll('.overlay').forEach(o => o.remove());
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+    document.getElementById('rg-willkommen')?.remove();
+    document.getElementById('rg-einladung')?.remove();
+    Store.addPage(null, { text: 'Skript Elektrotechnik' });
+    await Store.flush();
+    Bibliothek.oeffne();
+    await new Promise(r => setTimeout(r, 500));
+    const w = window as any;
+    /* Dieselbe Karte, die `einlesen.ts` baut — nur ohne echte PDF, die ein
+       Bildschirmfoto nicht braucht. Text und Zahl sind die aus dem Lauf. */
+    w.UI.toast('Seite 7 von 12 …', 120000);
+    w.Lader.schweben({ art: 'presse', text: 'Seite 7 von 12 …' });
+    await new Promise(r => setTimeout(r, 600));
+  }
+};
+
+ANSICHTEN['sterne'] = {
+  titel: 'Die Sterne im Studio-Kopf: zwei Aufträge laufen (E463)',
+  bauen: async () => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelectorAll('.overlay').forEach(o => o.remove());
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+    document.getElementById('rg-willkommen')?.remove();
+    document.getElementById('rg-einladung')?.remove();
+    const w = window as any;
+    await w.Auftraege.anlegen('ocr', { seiten: 80 }, { schritte: 80, text: 'Seite 34 von 80' });
+    await w.Auftraege.anlegen('embeddings', { texte: 1200 }, { schritte: 0, text: 'Gedächtnis wird gebaut' });
+    await w.AuftragsAnzeige.knopfFrisch();
+    Bibliothek.oeffne();
+    await new Promise(r => setTimeout(r, 600));
+  }
+};
+
+ANSICHTEN['funkel'] = {
+  titel: 'Die zwei Bau-Knöpfe im KI-Fenster glimmen (E463)',
+  bauen: async () => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelectorAll('.overlay').forEach(o => o.remove());
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+    document.getElementById('rg-willkommen')?.remove();
+    document.getElementById('rg-einladung')?.remove();
+    const seite = Store.addPage(null, { text: 'Projektplan' });
+    await Store.flush();
+    App.oeffne(seite.id);
+    await new Promise(r => setTimeout(r, 400));
+    App.kiPanel();
+    await new Promise(r => setTimeout(r, 900));
+  }
+};
+
+ANSICHTEN['lernstart'] = {
+  titel: '„Lernen starten" in der Lernwelt glimmt (E463)',
+  bauen: async () => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelectorAll('.overlay').forEach(o => o.remove());
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+    document.getElementById('rg-willkommen')?.remove();
+    document.getElementById('rg-einladung')?.remove();
+    const fach = Store.addPage(null, { text: 'Elektrotechnik' });
+    for (const q of ['Ohmsches Gesetz :: U = R · I', 'Leistung :: P = U · I',
+                     'Arbeit :: W = P · t', 'Reihenschaltung :: R = R1 + R2'])
+      Store.addBlock(fach.id, 'flashcard', { text: q });
+    await Store.flush();
+    (window as any).Produktwelten.lernen('heute');
+    await new Promise(r => setTimeout(r, 900));
+  }
+};
+
+ANSICHTEN['covertextur'] = {
+  titel: 'Das Rauschen als Cover einer Seite (E463)',
+  bauen: async () => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelectorAll('.overlay').forEach(o => o.remove());
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+    document.getElementById('rg-willkommen')?.remove();
+    document.getElementById('rg-einladung')?.remove();
+    const seite = Store.addPage(null, { text: 'Nachtschicht', icon: '🌙' });
+    Store.updateBlock(seite.id, { cover: 'textur:nacht' });
+    Store.addBlock(seite.id, 'text', { text: 'Was heute noch zu tun ist.' });
+    await Store.flush();
+    App.oeffne(seite.id);
+    await new Promise(r => setTimeout(r, 900));
+  }
+};
+
+ANSICHTEN['auge'] = {
+  titel: 'Das Auge am Ordnerdeckel — und der Blick hinein (E463)',
+  bauen: async () => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelectorAll('.overlay').forEach(o => o.remove());
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+    document.getElementById('rg-willkommen')?.remove();
+    document.getElementById('rg-einladung')?.remove();
+    const fach = Store.addPage(null, { text: 'Elektrotechnik', icon: '⚡' });
+    Store.updateBlock(fach.id, { heftArt: 'fach' });
+    ['Kapitel 2 — Spannung und Strom', 'Formelsammlung', 'Prüfung Februar',
+     'Messprotokoll 14.03.'].forEach(t => Store.addPage(fach.id, { text: t }));
+    Store.addPage(null, { text: 'Lose Notiz' });
+    await Store.flush();
+    Bibliothek.oeffne();
+    await new Promise(r => setTimeout(r, 700));
+  },
+  dann: async () => {
+    document.querySelector<HTMLElement>('.bib-blick[data-blick]')?.click();
+    await new Promise(r => setTimeout(r, 900));
+  }
+};
+
 ANSICHTEN['willkommen'] = {
   titel: 'Willkommen: Rauschtextur im Kopf (E462)',
   bauen: async () => {

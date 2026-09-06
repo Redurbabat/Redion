@@ -741,7 +741,7 @@ const Bibliothek = (() => {
             ? `<img class="bib-deckel-bild" data-vorschau="${esc(datei)}" alt="" loading="lazy">`
             : (tinte || (MIT_TEXT.has(art.id) ? (Vorschau.miniatur(p.id, 5) || '') : ''));
         const wann = wannText(p.zuletztGeoeffnet || p.edited || p.created);
-        return `<button class="bib-deckel" data-id="${esc(p.id)}" data-art="${esc(art.id)}" ` +
+        const deckel = `<button class="bib-deckel" data-id="${esc(p.id)}" data-art="${esc(art.id)}" ` +
             `title="${esc(p.text || 'Ohne Titel')}">` +
             `<span class="bib-deckel-blatt mini-zeilen${bild ? '' : ' is-leer'}${tinte ? ' hat-tinte' : ''}">` +
             '<i class="bib-papier" aria-hidden="true"></i>' +
@@ -756,6 +756,18 @@ const Bibliothek = (() => {
             '<i class="bib-deckel-mehr" aria-hidden="true">\u2304</i></span>' +
             '<small>' + esc(art.name) + ' \u00b7 ' + esc(wann) + '</small>' +
             '</button>';
+        if (art.id !== 'ordner')
+            return deckel;
+        /* DAS AUGE AM ORDNER (E463). „Blick hinein" stand seit E459 nur im
+           ⌄-Menü — ein Weg, den man kennen muss. Jetzt sitzt am Deckel jedes
+           Ordners ein Auge, das beim Darüberfahren zwinkert und zur Seite
+           schaut. Es ist ein GESCHWISTER des Deckels, kein Kind: ein Knopf im
+           Knopf ist kein gültiges HTML, und der Klick käme zweimal an. */
+        return '<span class="bib-zelle">' + deckel +
+            `<button class="bib-blick" data-blick="${esc(p.id)}" ` +
+            `aria-label="Blick in „${esc(p.text || 'Ohne Titel')}\u201c" title="Blick hinein">` +
+            '<i class="bib-blick-auge" aria-hidden="true"><b></b></i>' +
+            '</button></span>';
     };
     const hefte = (liste) => {
         const nach = new Map();
@@ -1339,6 +1351,15 @@ const Bibliothek = (() => {
             krume.scrollLeft = krume.scrollWidth;
         });
         wrap.querySelectorAll('[data-ordner]').forEach(b => b.addEventListener('click', () => geheIn(b.dataset['ordner'] || null)));
+        /* Das Auge am Ordner (E463) — derselbe Weg wie im ⌄-Menü, ohne Menü. */
+        wrap.querySelectorAll('.bib-blick[data-blick]').forEach(b => {
+            b.addEventListener('click', ereignis => {
+                ereignis.stopPropagation();
+                const p = Store.getBlock(b.dataset['blick'] || '');
+                if (p)
+                    blickHinein(p, b.getBoundingClientRect());
+            });
+        });
         wrap.querySelectorAll('.bib-deckel[data-id]').forEach(k => {
             k.addEventListener('click', ereignis => {
                 /* Der Pfeil im Namen öffnet das Menü zum Stück, nicht das Stück. */

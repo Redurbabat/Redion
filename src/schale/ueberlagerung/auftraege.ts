@@ -195,20 +195,28 @@ const AuftragsAnzeige = (() => {
    * nichts — das ist kein Fehler, sondern der Normalfall am Telefon.
    */
   const knopfFrisch = async (): Promise<void> => {
-    const b = document.getElementById('mb-auftraege');
-    if (!b) return;
     let n = 0;
     try { n = (await Auftraege.offen()).length; } catch { n = 0; }
-    b.hidden = n === 0;
-    const zahl = b.querySelector('b');
-    if (zahl) {
-      zahl.textContent = String(n);
-      (zahl as HTMLElement).hidden = n < 2;
-    }
     /* Die Zahl ist nur Bild — die Wörter stehen im Label (§38). */
     const wort = n === 1 ? '1 Auftrag läuft' : n + ' Aufträge laufen';
-    b.setAttribute('aria-label', wort);
-    b.title = wort;
+    /* ZWEI STELLEN, EINE WAHRHEIT (E463). `#mb-auftraege` wohnt im
+       Menüband, und das ist am Rechner seit E457 eine Lade, die zu ist —
+       ein Auftrag, der dort läuft, lief für den Menschen unsichtbar.
+       `#studio-auftraege` steht im Studio-Kopf mit den Sternen der
+       Vorgabe und ist nur da, solange etwas läuft. Beide bekommen hier
+       dieselbe Zahl, wie die Glocke in `menueband.ts`. */
+    for (const id of ['mb-auftraege', 'studio-auftraege']) {
+      const b = document.getElementById(id);
+      if (!b) continue;
+      b.hidden = n === 0;
+      const zahl = b.querySelector('b');
+      if (zahl) {
+        zahl.textContent = String(n);
+        (zahl as HTMLElement).hidden = n < 2;
+      }
+      b.setAttribute('aria-label', wort);
+      b.title = wort;
+    }
   };
 
   /** Das Fenster öffnen. */

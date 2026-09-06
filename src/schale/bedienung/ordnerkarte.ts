@@ -14,7 +14,7 @@
  * Kinder fächern heraus, jedes mit seinem Namen und seiner Art. Ein Tipp
  * darauf öffnet es — man landet direkt am Ziel statt eine Ebene tiefer.
  *
- * WOHER. Vorgabe von Redur vom 6. September 2026 (`../ui-reserve/vorgaben/
+ * WOHER. Vorgabe von Redur vom 6. September 2026 (Vorgaben-Archiv, `
  * folder-card.css`), zusammengelegt mit der zweiten Vorgabe desselben
  * Tages: der Ordnerstruktur, die beim Überfahren eine verschachtelte Liste
  * zeigt. Beide beschreiben dasselbe — „zeig mir, was drin ist, ohne dass

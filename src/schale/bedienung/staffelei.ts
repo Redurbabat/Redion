@@ -16,7 +16,7 @@
  * umschaltet, sieht vorher, was er bekommt.
  *
  * WOHER. Redurs Vorgabe `.theme-switch` vom 6. September 2026
- * (`ui-reserve/vorgaben/loader-sammlung.css`). Sie malt Sonne, Berge und
+ * (`loader-sammlung.css` im Vorgaben-Archiv). Sie malt Sonne, Berge und
  * Wasser von der Skizze ins Bunte. Redion malt dieselbe Landschaft von
  * TAG auf NACHT, weil das die Bedeutung ist, die hier daranhängt: ein
  * rosa Sonnenuntergang wäre hübsch und hiesse nichts.

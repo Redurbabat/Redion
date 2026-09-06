@@ -262,8 +262,9 @@ import { chromium } from 'playwright';
   ok('Kopf: Entfernen · Seiten-Cover · Schliessen',
      cover.links === 'Entfernen' && cover.titel === 'Seiten-Cover' && cover.rechts === 'Schliessen');
   ok('Drei Reiter', cover.reiter.join(',') === 'Galerie,Hochladen,Link');
-  ok('Gruppen mit Überschriften', cover.gruppen.length === 3 &&
-     /Farbe und Gradient/.test(cover.gruppen[0] ?? ''));
+  /* Vier seit E463: die vierte Gruppe ist das Rauschen (`textur:…`). */
+  ok('Gruppen mit Überschriften', cover.gruppen.length === 4 &&
+     /Farbe und Gradient/.test(cover.gruppen[0] ?? '') && /Rauschen/.test(cover.gruppen[3] ?? ''));
   ok('Genug Kacheln zur Auswahl', cover.kacheln >= 20);
   ok('Auf dem Telefon fährt es von unten hoch', cover.untenBuendig && cover.breite === 428);
 
