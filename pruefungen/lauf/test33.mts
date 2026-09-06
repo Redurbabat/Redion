@@ -251,7 +251,10 @@ const ortAusLade = async (p2: any, name: string): Promise<void> => {
     const karten = [...document.querySelectorAll<HTMLElement>('.bib-heft')];
     return {
       hefte: karten.length,
-      zahlen: document.querySelector('.bib-zahlen')?.textContent || '',
+      /* Seit dem 6. September trägt jede Form denselben Kopf; die Zahl
+         steht am Ort-Knopf („Ablage · 4 Dokumente"), nicht mehr in einer
+         eigenen Zeile mit Heften. */
+      zahlen: document.querySelector('.bib-dkopf .bib-ort')?.textContent || '',
       /* Die entscheidende Zahl: wie viele Blätter tragen wirklich Text?
          Ein Regal, in dem überall „Dieses Heft ist noch leer" steht, hätte
          alle anderen Punkte ebenfalls bestanden — genau so sah es aus,
@@ -352,7 +355,7 @@ const ortAusLade = async (p2: any, name: string): Promise<void> => {
      ohneText.benannt.some(x => x.includes('A4-Blatt')) &&
      ohneText.benannt.some(x => x.includes('PDF-Seite')) &&
      ohneText.benannt.some(x => x.includes('Zeichenfläche')));
-  ok('Und sagt, wie viele Hefte und Seiten es sind', /Hefte? · \d+ Seiten?/.test(regal.zahlen));
+  ok('Und sagt, wie viele Dokumente es sind', /\d+ Dokument/.test(regal.zahlen));
   ok('Jedes Heft zeigt echten Inhalt, keinen leeren Kasten',
      regal.mitInhalt === regal.hefte);
   ok('Und jedes führt auf eine Seite', regal.ziele === regal.hefte);
@@ -441,9 +444,14 @@ const ortAusLade = async (p2: any, name: string): Promise<void> => {
 
   await p.waitForTimeout(500);
 
+  /* DIE LISTE TRÄGT SEIT DEM 6. SEPTEMBER DENSELBEN KOPF WIE DIE DECKEL:
+     „Dokumente", Neu, PDF importieren, die Schnellwege (Meine Ablage ·
+     Zuletzt geöffnet · Favoriten · Alle PDFs) und dahinter der Ort-Knopf
+     mit ALLEN Reitern. `.bib-titel` und `.bib-reiter` gibt es nicht mehr —
+     die Namen von Notion stehen im Ort-Menü, nicht in einer Reiterzeile. */
   const bib = await p.evaluate(() => ({
-    titel: document.querySelector('.bib-titel')?.textContent,
-    reiter: [...document.querySelectorAll<HTMLElement>('.bib-reiter button')].map(x => (x.textContent ?? '').trim()),
+    titel: (document.querySelector('.bib-dkopf h1')?.textContent ?? '').trim(),
+    wege: [...document.querySelectorAll<HTMLElement>('[data-studio-weg]')].map(x => (x.textContent ?? '').trim()),
     spalten: [...document.querySelectorAll<HTMLElement>('.bib-kopfzeile [data-s]')].map(x => (x.textContent ?? '').replace(/[↑↓]/g, '').trim()),
     zeilen: document.querySelectorAll('.bib-zeile[data-id]').length,
     krume: document.getElementById('crumb')?.textContent,
@@ -452,49 +460,48 @@ const ortAusLade = async (p2: any, name: string): Promise<void> => {
     fuss: document.querySelector('.bib-fuss')?.textContent
   }));
   console.log('   Bibliothek:', JSON.stringify(bib));
-  ok('Bibliothek trägt ihren Titel', bib.titel === 'Bibliothek');
-  ok('Vier Reiter plus „mehr"', bib.reiter.length === 5 && /mehr/.test(bib.reiter[4] ?? ''));
-  /* SEIT E380 STEHT „ABLAGE" VORNE, und damit ist „Privat" ins mehr-Menü
-     gerutscht. Die Zeile zeigt vier Reiter plus „N mehr" (bibliothek.ts:713)
-     — mit einem Reiter mehr muss einer weichen, und es ist der seltenste.
-     Die Ablage ist der Hauptweg: sie zeigt die Ordnerstruktur, und ein Tipp
-     auf einen Ordner führt hinein. Die Notion-Namen sind unverändert DA,
-     sie stehen nur eine Stelle weiter; deshalb prüft die Zusage jetzt, dass
-     es sie GIBT, und nicht mehr, an welcher Position. Wer sie sucht, findet
-     sie in der Zeile oder im mehr-Menü. */
-  const alleReiter = bib.reiter.join(' | ');
-  ok('Die Ablage steht vorne (E380)', (bib.reiter[0] ?? '').includes('Ablage'));
+  ok('Die Dokumente tragen ihren Titel', bib.titel === 'Dokumente');
+  ok('Vier Schnellwege', bib.wege.length === 4);
+  ok('Die Ablage steht vorne (E380)', (bib.wege[0] ?? '').includes('Ablage'));
+  /* Die Notion-Namen stehen im Ort-Menü — alle Reiter, auch „Privat". */
+  await p.click('.bib-dkopf [data-orte]');
+  await p.waitForTimeout(300);
+  const orteMenue = await p.evaluate(() =>
+    [...document.querySelectorAll<HTMLElement>('.menu [data-x], .overlay [data-x]')].map(x => (x.textContent ?? '').trim()));
+  await p.evaluate(() => { document.querySelectorAll('.menu').forEach(m => m.remove()); });
+  await p.waitForTimeout(200);
+  const alleReiter = orteMenue.join(' | ');
+  console.log('   Ort-Menü:', alleReiter);
   ok('Reiter heissen wie bei Notion',
      ['Kürzlich verwendet', 'Favoriten', 'Geteilt'].every(n => alleReiter.includes(n)));
-  ok('… und „Privat" ist über das mehr-Menü erreichbar',
-     /mehr/.test(bib.reiter[4] ?? '') && !alleReiter.includes('Privat'));
+  ok('… und „Privat" ist über das Ort-Menü erreichbar', alleReiter.includes('Privat'));
   ok('Vier Spalten wie im Bild',
      bib.spalten.length === 4 && (bib.spalten[0] ?? '').includes('Seitenbezeichnung') &&
      (bib.spalten[1] ?? '').includes('Erstellt von') && (bib.spalten[2] ?? '').includes('Quelle'));
   ok('Zeilen erscheinen', bib.zeilen >= 2);
   ok('Quelle wird gezeigt', bib.hatQuelle);
   ok('Person wird gezeigt', bib.hatPerson);
-  /* SIE HEISST SEIT E236 „DOKUMENTE".
-     Die Seite schrieb den Namen schon gross darüber, während die Krume
-     „Bibliothek" sagte — zwei Namen für dieselbe Sache. Das Modul heisst
-     weiter `Bibliothek`; das ist der Ordner, nicht die Aufschrift. */
-  ok('Krume nennt die Dokumente', /Dokumente/.test(bib.krume || ''));
+  /* SIE HEISST SEIT E236 „DOKUMENTE". Das Modul heisst weiter `Bibliothek`;
+     das ist der Ordner, nicht die Aufschrift. */
+  /* Über „Alle Seiten" (app-bib) heisst der Ort seit dem 6. September auch
+     so — die Liste über den ganzen Bestand hat ihre eigene Adresse. Das
+     Regal selbst sagt weiter „Dokumente". */
+  ok('Krume nennt den Ort', /Dokumente|Alle Seiten/.test(bib.krume || ''));
   ok('Fusszeile zählt', /Seiten?/.test(bib.fuss || ''));
 
-  /* Reiter Favoriten */
-  await p.click('.bib-reiter [data-r="favoriten"]');
+  /* Schnellweg Favoriten */
+  await p.click('[data-studio-weg="favoriten"]');
   await p.waitForTimeout(400);
   const favs = await p.evaluate(() =>
     [...document.querySelectorAll<HTMLElement>('.bib-zeile[data-id] .bib-txt')].map(x => (x.textContent ?? '').replace(/[⌄›]/g, '')));
   console.log('   Favoriten:', JSON.stringify(favs));
   ok('Favoritenreiter filtert', favs.length >= 1 && favs.every(x => (x ?? '').includes('B')));
 
-  /* Sortieren durch Kopfklick */
-  await p.click('.bib-reiter [data-r="alle"]').catch(() => {});
-  await p.evaluate(() => { document.querySelector<HTMLElement>('.bib-mehr')?.click(); });
+  /* Sortieren durch Kopfklick — zurück auf „Alle" über das Ort-Menü */
+  await p.click('.bib-dkopf [data-orte]');
   await p.waitForTimeout(300);
   await p.evaluate(() => {
-    const b2 = [...document.querySelectorAll<HTMLElement>('.overlay button[data-x], .menu button[data-x]')]
+    const b2 = [...document.querySelectorAll<HTMLElement>('.overlay [data-x], .menu [data-x]')]
       .find(x => x.dataset.x === 'alle');
     b2?.click();
   });

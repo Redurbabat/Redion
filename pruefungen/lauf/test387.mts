@@ -12,13 +12,17 @@
  * Der Prüfbericht nennt es F02, Auftrag 01 nennt es Schritt 2 von 5, und
  * beide sagen dasselbe: ein Ort ist kein Werkzeug.
  *
- *   §1 Die fünf Hauptwege stehen oben in der Kante, ohne einen Klick.
+ *   §1 Drei Orte plus „Mehr Orte" stehen oben in der Kante, ohne einen
+ *      Klick (ruhiger Modus, seit 6. September); Heute, Elektrotechnik und
+ *      Aufgaben sind Hauptwege mit `ruhig: false` und liegen dahinter.
  *   §2 Sie kommen aus dem Register und nicht aus einer zweiten Liste.
- *   §3 „Mehr Orte" öffnet die Lade mit allem Übrigen.
+ *   §3 „Mehr Orte" öffnet die Lade mit allem Übrigen — die drei
+ *      Verborgenen eingeschlossen.
  *   §4 Ein Klick auf einen Ort führt wirklich dorthin — und der Ort, an
  *      dem man steht, ist markiert. Und NUR er.
  *   §5 Nichts wird abgeschnitten: was nicht passt, steht hinter „···".
- *      Und wenn alles passt, gibt es kein „···".
+ *      Und wenn alles passt, gibt es kein „···" — gemessen an der alten
+ *      Leiste ohne ruhigen Modus, wo das Falten weiterhin gilt.
  *   §6 Am Telefon gibt es die Kante weiterhin nicht.
  *
  *   node pruefungen/lauf/test387.mts
@@ -91,21 +95,36 @@ await pc.goto(`http://localhost:${PORT}/index.html`);
 await pc.waitForTimeout(3500);
 await pc.evaluate(AUFRAEUMEN);
 await pc.waitForTimeout(500);
-
 /* ==========================================================================
- * §1 · Die fünf Hauptwege stehen da, ohne einen Klick
+ * §1 · Wenige Orte stehen da, ohne einen Klick — und der Rest ist erreichbar
+ * --------------------------------------------------------------------------
+ * SEIT DEM 6. SEPTEMBER SIND ES DREI PLUS „MEHR ORTE", NICHT FÜNF PLUS EINS.
+ * Redur: „Nicht 20 Bereiche gleichzeitig." Die Leiste zeigt im ruhigen
+ * Modus die Wege, die man täglich geht — Bibliothek, Notizhefte,
+ * Lernzentrum —, und Heute, Elektrotechnik und Aufgaben tragen im Register
+ * `ruhig: false`: sie bleiben Hauptwege, stehen aber hinter „Mehr Orte".
+ *
+ * WAS DIESER ABSCHNITT DESHALB ZWEIMAL PRÜFT: dass die Leiste wenig zeigt
+ * UND dass nichts verschwunden ist. Eine Zählung allein hielte das
+ * Zweite nicht — drei Knöpfe sind auch dann drei, wenn die drei anderen
+ * nirgends mehr stehen.
  * ======================================================================== */
-console.log('\n1 · Die fünf Hauptwege stehen oben in der Kante');
+console.log('\n1 · Drei Orte plus „Mehr Orte" stehen oben in der Kante');
 const a: any = await pc.evaluate(ORTE);
 p('Die Kante hat einen Abschnitt für Orte', !a.fehlt && a.orte.length > 0,
   JSON.stringify(a).slice(0, 90));
+p('Der ruhige Modus ist von Haus aus an', await pc.evaluate('Ruhig.an()'));
 
-const SOLL = ['Heute', 'Lernzentrum', 'Elektrotechnik', 'Bibliothek', 'Aufgaben'];
+const SOLL = ['Bibliothek', 'Notizhefte', 'Lernzentrum'];
+const HINTER_MEHR = ['Heute', 'Elektrotechnik', 'Aufgaben'];
 const namen: string[] = (a.orte || []).map((x: any) => x.name);
 for (const n of SOLL) p(`„${n}" steht ohne einen Klick da`, namen.includes(n), namen.join(' | '));
-p('Und „Mehr Orte" als sechster', namen.includes('Mehr Orte'), namen.join(' | '));
-gleich('Genau sechs Knöpfe — fünf Orte und „Mehr"', a.orte.length, 6);
-p('Alle sechs sind im Bild', (a.orte || []).every((x: any) => x.drin),
+for (const n of HINTER_MEHR) p(`„${n}" steht NICHT in der Leiste — er liegt hinter „Mehr Orte"`,
+  !namen.includes(n), namen.join(' | '));
+p('Und „Mehr Orte" als vierter', namen.includes('Mehr Orte'), namen.join(' | '));
+gleich('Genau vier Knöpfe — drei Orte und „Mehr"', a.orte.length, 4);
+gleich('… in der Folge des Registers (hauptRang)', namen, [...SOLL, 'Mehr Orte']);
+p('Alle vier sind im Bild', (a.orte || []).every((x: any) => x.drin),
   JSON.stringify((a.orte || []).filter((x: any) => !x.drin)));
 
 /* ==========================================================================
@@ -115,22 +134,28 @@ p('Alle sechs sind im Bild', (a.orte || []).every((x: any) => x.drin),
  * als `data-ruhig="bleibt"` im Markup, als Liste in der unteren
  * Telefonleiste und als SOLL in test248 — und zwei davon waren VERSCHIEDEN.
  * Diese Zeile prüft, dass die Leiste wirklich das Register liest: wer
- * `haupt: true` dort wegnimmt, muss den Knopf verlieren.
+ * `haupt: true` dort wegnimmt, muss den Knopf verlieren; wer `ruhig: false`
+ * wegnimmt, muss ihn bekommen.
  * ======================================================================== */
-console.log('\n2 · Die Fünf kommen aus dem Register');
+console.log('\n2 · Die Orte kommen aus dem Register');
 const ausRegister: any = await pc.evaluate(`(() => {
   try {
-    const r = (Register.navigation.anPlatz('oben') || [])
-      .filter(e => e && e.haupt === true);
-    return { zahl: r.length, namen: r.map(e => e.name) };
+    const r = (Register.navigation.alle() || [])
+      .filter(e => e && e.haupt === true)
+      .sort((x, y) => (x.hauptRang ?? x.rang) - (y.hauptRang ?? y.rang));
+    return { zahl: r.length, namen: r.map(e => e.name),
+             ruhig: r.filter(e => e.ruhig !== false).map(e => e.name),
+             hinterMehr: r.filter(e => e.ruhig === false).map(e => e.name) };
   } catch (e) { return { fehler: String(e) }; }
 })()`);
-gleich('Das Register führt fünf Hauptwege', ausRegister.zahl, 5);
-gleich('… und es sind dieselben wie in der Leiste',
-  ausRegister.namen, namen.filter((n: string) => n !== 'Mehr Orte'));
+gleich('Das Register führt sechs Hauptwege', ausRegister.zahl, 6);
+gleich('… drei davon für die ruhige Leiste, und es sind dieselben wie in der Leiste',
+  ausRegister.ruhig, namen.filter((n: string) => n !== 'Mehr Orte'));
+gleich('… und drei mit `ruhig: false`', (ausRegister.hinterMehr || []).slice().sort(),
+  HINTER_MEHR.slice().sort());
 
 /* ==========================================================================
- * §3 · „Mehr Orte" öffnet die Lade
+ * §3 · „Mehr Orte" öffnet die Lade — mit den drei Verborgenen darin
  * ======================================================================== */
 console.log('\n3 · „Mehr Orte" öffnet die Lade mit allem Übrigen');
 await pc.click('.k-knopf[data-k="mehr-orte"]');
@@ -146,9 +171,13 @@ const lade: any = await pc.evaluate(`(() => {
 })()`);
 p('Die Lade ist offen', lade.offen === true);
 p('Sie hat mehr als zehn Ziele', lade.zahl > 10, 'sind ' + lade.zahl);
-p('Keiner der fünf Hauptwege steht doppelt darin',
+p('Keiner der drei Leistenorte steht doppelt darin',
   SOLL.every(n => !(lade.namen || []).includes(n)),
   (lade.namen || []).filter((n: string) => SOLL.includes(n)).join(' | '));
+/* DER PUNKT, DER „NICHTS LÖSCHEN" HÄLT: die drei mit `ruhig: false`
+   stehen genau hier — sonst wären sie nirgends. */
+gleich('Heute, Elektrotechnik und Aufgaben stehen in der Lade',
+  HINTER_MEHR.filter(n => !(lade.namen || []).includes(n)), []);
 p('Jede Zeile sagt, zu welcher Gruppe sie gehört',
   lade.mitGruppe === lade.zahl, `${lade.mitGruppe} von ${lade.zahl}`);
 await pc.evaluate(`(() => { document.querySelector('#kanten-lade .kl-zu, #kanten-lade button')?.click(); })()`);
@@ -163,46 +192,98 @@ const vorher: any = await pc.evaluate(`(() => ({
   laenge: ((document.querySelector('#main') || document.body).textContent || '').length
 }))()`);
 
-await pc.click('.k-knopf[data-k="heute"]');
+await pc.click('.k-knopf[data-k="lernzentrum"]');
 await pc.waitForTimeout(1200);
 const nachher: any = await pc.evaluate(`(() => ({
   schauplatz: App.schauplatz(),
   laenge: ((document.querySelector('#main') || document.body).textContent || '').length
 }))()`);
-gleich('Nach dem Klick steht man auf „heute"', nachher.schauplatz, 'heute');
+/* `App.schauplatz()` sagt für Heute UND Lernzentrum „heute" — beide
+   Ansichten heissen so (E393). Was sie unterscheidet, ist die ADRESSE;
+   genau deshalb steht sie im Register. */
+gleich('Nach dem Klick steht man im Lernzentrum', await pc.evaluate('location.hash'), '#welt-lernen-lernen');
 p('Und der Inhalt hat sich wirklich geändert', nachher.laenge !== vorher.laenge,
   `vorher ${vorher.laenge}, nachher ${nachher.laenge}`);
 
 const b: any = await pc.evaluate(ORTE);
 const markiert = (b.orte || []).filter((x: any) => x.hier);
 gleich('Genau ein Ort ist markiert', markiert.length, 1);
-gleich('… und zwar „Heute"', markiert[0]?.name, 'Heute');
+gleich('… und zwar „Lernzentrum"', markiert[0]?.name, 'Lernzentrum');
 gleich('Er trägt aria-current (§38)', markiert[0]?.aria, 'page');
 
+/* WER HINTER „MEHR ORTE" STEHT, LEUCHTET DORT. Der Weg nach „Heute" geht
+   wie beim Menschen über die Lade — und danach ist „Mehr Orte" der eine
+   markierte Knopf: er ist der, der dorthin führt. */
+await pc.click('.k-knopf[data-k="mehr-orte"]');
+await pc.waitForTimeout(500);
+await pc.evaluate(`(() => {
+  const z = Array.from(document.querySelectorAll('#kanten-lade .kl-zeile'))
+    .find(x => ((x.querySelector('b') || {}).textContent || '').trim() === 'Heute');
+  if (!z) throw new Error('„Heute" steht nicht in der Lade.');
+  z.click();
+})()`);
+await pc.waitForTimeout(1200);
+gleich('Über die Lade steht man auf „heute"', await pc.evaluate('App.schauplatz()'), 'heute');
+const c0: any = await pc.evaluate(ORTE);
+gleich('… und genau „Mehr Orte" leuchtet — der Knopf, der dorthin führt',
+  (c0.orte || []).filter((x: any) => x.hier).map((x: any) => x.id), ['mehr-orte']);
+
 /* Die GEGENPROBE, ohne die die Markierung nichts sagt: an einem Ort, der
-   keiner der fünf ist, darf KEINER markiert sein. Eine Markierung, die
-   immer irgendwo steht, sagt nichts (§55.1). */
+   keiner der Hauptwege ist, darf KEINER markiert sein — auch nicht „Mehr
+   Orte". Eine Markierung, die immer irgendwo steht, sagt nichts (§55.1). */
 await pc.evaluate(`(() => { Register.navigation.eines('posteingang')?.tun?.(); })()`);
 await pc.waitForTimeout(1100);
 const c: any = await pc.evaluate(ORTE);
-gleich('GEGENPROBE: im Posteingang ist keiner der fünf markiert',
+gleich('GEGENPROBE: im Posteingang ist keiner markiert, auch „Mehr Orte" nicht',
   (c.orte || []).filter((x: any) => x.hier).length, 0);
 
 /* ==========================================================================
  * §5 · Nichts wird abgeschnitten
  * --------------------------------------------------------------------------
- * ZWEI RICHTUNGEN, und die zweite ist die wichtigere. Bei 900 px Höhe passt
- * alles — dann darf es KEINEN „···"-Knopf geben. Ein Überlaufknopf, der
- * immer da ist, sagt nichts (§55.1). Bei 720 px passt es nicht — dann muss
- * er da sein, und trotzdem darf nichts unter der Kante stehen.
+ * ZWEI FASSUNGEN, ZWEI MESSUNGEN. Im ruhigen Modus stehen im mittleren
+ * Abschnitt absichtlich nur „Seiten" und „Werkzeuge" — die Lade dahinter
+ * trägt alle Griffe des Ortes (test430). Das Falten selbst — bei 900 px
+ * passt alles, bei 720 px nicht — wird an der ALTEN Leiste gemessen, die
+ * es ohne ruhigen Modus weiterhin gibt. Eine Regel, die nur noch im
+ * Zustand mit zwei Knöpfen gemessen wird, wäre nie mehr rot (§55.2).
  * ======================================================================== */
 console.log('\n5 · Was nicht passt, steht hinter „···" — und sonst nicht');
-gleich('Bei 900 px Höhe rollt nichts', b.ueberlauf, 0);
+gleich('Ruhig: der mittlere Abschnitt trägt genau „Seiten" und „Werkzeuge"',
+  (b.werkzeuge || []).map((x: any) => x.id), ['seiten', 'mehr-werkzeuge']);
+await pc.evaluate(`(() => { Register.navigation.eines('heute')?.tun?.(); })()`);
+await pc.waitForTimeout(900);
+const ruhigWerkzeuge: any = await pc.evaluate(`(() => {
+  const w = document.querySelector('.k-knopf[data-k="mehr-werkzeuge"]');
+  if (!w) return { fehlt: true };
+  w.click();
+  const l = document.getElementById('kanten-lade');
+  const inLade = Array.from(l ? l.querySelectorAll('.kl-koerper .kl-zeile') : []).length;
+  const soll = (Register.kontext.fuer(Kontextkante.bereichJetzt()) || []).length + 1; /* + KI */
+  document.querySelector('#kanten-lade .kl-zu')?.click();
+  return { inLade, soll };
+})()`);
+gleich('Ruhig: die Werkzeuglade trägt alle Griffe des Ortes plus die KI',
+  ruhigWerkzeuge.inLade, ruhigWerkzeuge.soll);
+
+/* Ohne ruhigen Modus: die alte Leiste, sechs Orte, und das Falten. */
+await pc.evaluate(`Store.setMeta('ruhig', false)`);
+await pc.setViewportSize({ width: 1360, height: 900 });
+await pc.reload();
+await pc.waitForTimeout(3500);
+await pc.evaluate(AUFRAEUMEN);
+await pc.waitForTimeout(700);
+const alt: any = await pc.evaluate(ORTE);
+p('Ohne Ruhe: der ruhige Modus ist aus', !(await pc.evaluate('Ruhig.an()')));
+gleich('Ohne Ruhe: sechs Orte plus „Mehr Orte"', alt.orte.length, 7);
+gleich('… und es sind alle sechs Hauptwege',
+  (alt.orte || []).map((x: any) => x.name).filter((n: string) => n !== 'Mehr Orte').slice().sort(),
+  [...SOLL, ...HINTER_MEHR].slice().sort());
+gleich('Bei 900 px Höhe rollt nichts', alt.ueberlauf, 0);
 p('… und es gibt keinen Überlaufknopf',
-  !(b.werkzeuge || []).some((x: any) => x.id === 'mehr-werkzeuge'),
-  (b.werkzeuge || []).map((x: any) => x.name).join(' | '));
-p('Alle Werkzeuge sind im Bild', (b.werkzeuge || []).every((x: any) => x.drin),
-  JSON.stringify((b.werkzeuge || []).filter((x: any) => !x.drin)));
+  !(alt.werkzeuge || []).some((x: any) => x.id === 'mehr-werkzeuge'),
+  (alt.werkzeuge || []).map((x: any) => x.name).join(' | '));
+p('Alle Werkzeuge sind im Bild', (alt.werkzeuge || []).every((x: any) => x.drin),
+  JSON.stringify((alt.werkzeuge || []).filter((x: any) => !x.drin)));
 
 /* NEU LADEN STATT KLICKEN. Der erste Versuch klickte auf „Bibliothek" und
    mass dann drei Werkzeuge — `Produktwelten.bibliothek()` führt an einen
@@ -216,8 +297,14 @@ await pc.waitForTimeout(3500);
 await pc.evaluate(AUFRAEUMEN);
 await pc.waitForTimeout(700);
 const d: any = await pc.evaluate(ORTE);
+/* Gezählt wird im REGISTER, nicht in der Leiste: mit sieben Orten darüber
+   sind bei 720 px schon drei Knöpfe gefaltet, und die gefaltete Leiste
+   zeigt die Zahl, die sie zeigen soll — nicht die, die gemessen werden
+   soll. */
+const imRegister: number = await pc.evaluate(
+  `(Register.kontext.fuer(Kontextkante.bereichJetzt()) || []).length`);
 p('Der Startbildschirm bringt genug Werkzeuge mit, dass etwas überlaufen KANN',
-  (d.werkzeuge || []).length >= 5,
+  imRegister >= 5, imRegister + ' im Register — ' +
   (d.werkzeuge || []).map((x: any) => x.name).join(' | '));
 p('Bei 720 px Höhe steht der Überlaufknopf da',
   (d.werkzeuge || []).some((x: any) => x.id === 'mehr-werkzeuge'),
@@ -227,8 +314,8 @@ p('Er sagt, wie viele dahinter liegen',
     (d.werkzeuge || []).find((x: any) => x.id === 'mehr-werkzeuge')?.name || ''),
   (d.werkzeuge || []).find((x: any) => x.id === 'mehr-werkzeuge')?.name || '(keiner)');
 gleich('Und es rollt trotzdem nichts', d.ueberlauf, 0);
-p('Alle sechs Orte stehen weiterhin im Bild',
-  (d.orte || []).length === 6 && (d.orte || []).every((x: any) => x.drin),
+p('Alle sieben Orte stehen weiterhin im Bild',
+  (d.orte || []).length === 7 && (d.orte || []).every((x: any) => x.drin),
   JSON.stringify((d.orte || []).filter((x: any) => !x.drin)));
 p('Der Fuss steht weiterhin im Bild',
   (d.fuss || []).length === 3 && (d.fuss || []).every((x: any) => x.drin),
@@ -247,7 +334,10 @@ const rest: any = await pc.evaluate(`(() => {
 })()`);
 p('Der Überlaufknopf öffnet eine Lade mit dem Rest',
   rest.offen === true && rest.zahl > 0, JSON.stringify(rest));
+/* Zurück in den ruhigen Modus, damit §7 und §6 den Normalfall messen. */
+await pc.evaluate(`Store.setMeta('ruhig', true)`);
 
+/* ==========================================================================
 /* ==========================================================================
  * §7 · „Gehen" hat das Band verlassen — und nichts ist dabei verlorengegangen
  * --------------------------------------------------------------------------

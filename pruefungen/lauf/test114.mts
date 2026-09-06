@@ -582,6 +582,7 @@ const seitenReiter = await seite.evaluate(() => {
   const zeilen = [...buehne.querySelectorAll<HTMLElement>('button')];
   const kiKnopf = document.getElementById('mb-ki');
   return {
+    krume: (document.getElementById('crumb')?.textContent || '').trim(),
     beschriftungen: pillen.map(b => (b.textContent || '').trim()),
     aktiv: pillen.filter(b => b.classList.contains('an'))
                  .map(b => (b.textContent || '').trim()),
@@ -594,7 +595,7 @@ const seitenReiter = await seite.evaluate(() => {
                    .map(z => (z.textContent || '').trim().slice(0, 16)),
     kiOben: !!kiKnopf && kiKnopf.getBoundingClientRect().width > 0
   };
-}) as { beschriftungen: string[]; aktiv: string[]; ueberschrift: string;
+}) as { krume: string; beschriftungen: string[]; aktiv: string[]; ueberschrift: string;
         abschnitte: string[]; kursiv: string[]; zuFlach: string[];
         kiOben: boolean } | null;
 
@@ -611,12 +612,17 @@ p('Unten stehen die fünf Wege',
   (seitenReiter?.beschriftungen ?? []).join(' · '));
 p('… und „Chats" steht nicht mehr da',
   seitenReiter?.beschriftungen.includes('Chats') === false);
-p('Der Workspace geht auf',
-  seitenReiter?.ueberschrift === '🧱 Workspace', seitenReiter?.ueberschrift);
-p('Und keiner der fünf Wege behauptet, man sei dort',
-  seitenReiter?.aktiv.length === 0,
-  'aktiv: ' + (seitenReiter?.aktiv ?? []).join(', ') +
-  ' — ein falsch markierter Weg ist schlimmer als kein markierter');
+/* DER WORKSPACE IST AUFGELÖST (6. September). `Produktwelten.workspace('start')`
+   führt in die Sammlung „Seiten & Wissen" — und die wohnt in der
+   Bibliothek. Deshalb DARF unten „Dokumente" leuchten, und zwar genau
+   dieser eine Weg: die Sammlung ist ein Teil davon, kein Ort daneben.
+   Vorher stand hier „keiner der fünf", weil der Workspace ein eigener
+   Ort ohne Knopf war. */
+p('„Seiten & Wissen" geht auf — als Sammlung der Bibliothek',
+  /Seiten & Wissen/.test(seitenReiter?.krume ?? ''), seitenReiter?.krume);
+p('Und unten leuchtet genau „Dokumente", denn dort wohnt die Sammlung',
+  (seitenReiter?.aktiv ?? []).join(',') === 'Dokumente',
+  'aktiv: ' + (seitenReiter?.aktiv ?? []).join(', '));
 /* DER BEREICH IST EIN ANDERER GEWORDEN (E132): `hl-seiten` öffnet seit den
    Produktwelten die Workspace-Übersicht statt der alten Seitenliste. Die
    Absicht des Prüfpunkts bleibt — man muss finden, woran man zuletzt war,

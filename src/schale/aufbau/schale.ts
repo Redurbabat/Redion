@@ -3190,6 +3190,7 @@ const App = (() => {
      „welcher Hash ist ein Ort" (`rohHash in SONDER_START`, weiter unten). */
   const SONDER_START: Record<string, () => void> = {
     dokumente: () => Bibliothek.oeffne(),
+    'alle-seiten': () => (Bibliothek.alleZeigen ? Bibliothek.alleZeigen() : Bibliothek.oeffne()),
     'seiten-wissen': () => Arbeitswelt.oeffnen('uebersicht'),
     'dateien-pdfs': () => Arbeitswelt.oeffnen('bibliothek'),
     aufgaben: () => Arbeitswelt.oeffnen('aufgaben'),

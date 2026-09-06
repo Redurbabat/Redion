@@ -6137,7 +6137,7 @@ body[data-ruhig="an"] .arbeitswelt .aw-kopf::after{ display:none }
 
 /* Fenster gehören zu den Seiten, nicht in eine zusätzliche Navigationsspalte. */
 .arbeitswelt .aw-fenster{border-bottom:1px solid var(--line);padding-bottom:var(--space-3,12px)}
-.arbeitswelt .aw-fenster>summary{min-height:44px;display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600}
+.arbeitswelt .aw-fenster>summary{min-height:var(--touch-min);display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600}
 .arbeitswelt .aw-fenster>summary::before{content:'›';transition:transform var(--motion-fast,120ms)}
 .arbeitswelt .aw-fenster[open]>summary::before{transform:rotate(90deg)}
 .arbeitswelt .aw-fenster>summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
@@ -14447,7 +14447,7 @@ button.ru-zk[data-art="laden"][data-zustand="arbeitet"] .ru-zk-balken{ display:b
 .ru-baum-zeile[aria-disabled="true"]{opacity:.45}
 .ru-baum-zeile:focus-visible{outline:2px solid var(--accent-text);outline-offset:1px}
 .ru-baum-knick{display:grid;place-items:center;width:20px;height:24px;padding:0;border:0;color:var(--text-dim);background:transparent;font:inherit;line-height:1}
-.ru-baum-knick:disabled{opacity:0}
+.ru-baum-knick:empty{opacity:0}
 .ru-baum-inhalt{display:flex;align-items:center;gap:7px;min-width:0}
 .ru-baum-zeichen{display:grid;place-items:center;flex:0 0 18px;width:18px;height:18px;color:var(--text-dim)}
 .ru-baum-zeichen svg{width:16px;height:16px}
@@ -14455,7 +14455,7 @@ button.ru-zk[data-art="laden"][data-zustand="arbeitet"] .ru-zk-balken{ display:b
 .ru-baum-kinder[hidden]{display:none}
 .ru-baum-auf{animation:ru-baum-oeffnen var(--motion-normal) var(--ease-enter)}
 @keyframes ru-baum-oeffnen{from{opacity:.3;transform:translateY(-4px)}to{opacity:1;transform:none}}
-@media(max-width:760px){.ru-baum-zeile{min-height:44px}}
+@media(max-width:760px){.ru-baum-zeile{min-height:var(--touch-min)}}
 @media(prefers-reduced-motion:reduce){.ru-baum *{scroll-behavior:auto!important}.ru-baum-auf{animation:none}}
 
 </style>
@@ -15290,7 +15290,7 @@ button.ru-zk[data-art="laden"][data-zustand="arbeitet"] .ru-zk-balken{ display:b
 .studio-brand:hover .studio-monogram{transform:perspective(var(--studio-perspective)) rotateY(10deg) rotateZ(0)}
 .studio-icon,.studio-action,.studio-search,.studio-shortcuts button{
   display:inline-flex;align-items:center;justify-content:center;gap:8px;
-  min-height:44px;padding:0 12px;border-radius:var(--radius-lg);font-size:13px;
+  min-height:var(--touch-min);padding:0 12px;border-radius:var(--radius-lg);font-size:13px;
   border:1px solid transparent;transition:transform var(--motion-instant) var(--ease),
   background var(--motion-fast) var(--ease),border-color var(--motion-fast) var(--ease);
 }
@@ -15309,6 +15309,37 @@ button.ru-zk[data-art="laden"][data-zustand="arbeitet"] .ru-zk-balken{ display:b
 #studio-bar button:focus-visible{outline:2px solid var(--accent-text);outline-offset:3px}
 .k-beschriftung{display:none}
 #studio-divider{display:none}
+/* DAS MENÜBAND IST AM RECHNER EINE WERKZEUGLADE, kein zweiter Kopf.
+   Zugeklappt zeigte es „Werkzeuge · Suche · KI · Konto" — und genau die
+   drei stehen seit dem Studio-Kopf schon darüber. Also ist es ganz weg,
+   bis `#studio-tools` es holt (`Menueband.aufklappen()`).
+
+   NUR AM RECHNER. Am Telefon gibt es den Studio-Kopf nicht (unten
+   `#studio-bar{display:none}`), und dort IST das Band die einzige Zeile
+   mit Suche, KI und Konto. Gemessen am 6. September bei 390 px: ohne die
+   Medienabfrage war keine Suche mehr erreichbar, die Menüleiste unten
+   hatte null Knöpfe, und test40, test114 und test248 wurden rot. */
+@media(min-width:761px){
+  body[data-schale="premium"][data-ruhig="an"]:not([data-studio-tools="offen"]) #menueband{display:none}
+}
+#studio-tools[aria-expanded="true"]{background:var(--accent-schwach);color:var(--accent-text);border-color:var(--line)}
+/* Glocke und Wolkenpunkt im Studio-Kopf (E457): dieselben Klassen wie im
+   Band, nur der Anker. `display:inline-flex` an .studio-icon schlüge das
+   [hidden] des Browsers — deshalb die eigene Zeile, wie bei #mb-glocke. */
+#studio-glocke,#studio-account{position:relative}
+#studio-glocke[hidden]{display:none}
+#studio-glocke .glocke-zahl{top:3px;right:2px}
+#studio-account .wolke-punkt{top:5px;right:5px}
+/* EIN „PDF IMPORTIEREN", NICHT ZWEI. Das Regal trägt den Knopf selbst, gross
+   und neben „Neu"; der im Studio-Kopf ist dann derselbe Griff eine Zeile
+   höher (Redur: „keine doppelte Neu-Aktion in drei sichtbaren Leisten").
+   Er bleibt überall sonst — in einem Dokument, im Lernzentrum, in den
+   Sammlungen — der schnelle Weg zur PDF. Gefragt wird die SEITE, nicht der
+   Ort: die Sammlungen sind auch „bibliothek", haben den Knopf aber nicht. */
+body:has(#page .bib-studio-import) #studio-import{display:none}
+body[data-studio-tools="offen"] #menueband{animation:studio-tools-enter var(--motion-fast) var(--ease-enter)}
+@keyframes studio-tools-enter{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){body[data-studio-tools="offen"] #menueband{animation:none}}
 .studio-orb{display:block;width:19px;height:19px;border-radius:50%;background:#e5defd;box-shadow:inset -6px -3px 0 #656079;transform:rotate(-25deg);transition:transform var(--motion-slow) var(--ease),box-shadow var(--motion-slow) var(--ease)}
 html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #8165df22,inset 0 1px 2px #ffffff70;transform:rotate(0)}
 
@@ -15325,8 +15356,13 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
     background:var(--bg-side);border-color:var(--line)}
   body[data-schale="premium"] #main > #kante{grid-row:3/-1;padding:8px 8px 12px;
     background:var(--bg-side)}
+  /* DIE LADE BEGINNT UNTER DEM BAND, NICHT DARIN. premium.css gibt ihr
+     `grid-row: 2 / -1` — dort ist Zeile 2 das Band. Hier steht in Zeile 1
+     der Studio-Kopf und in Zeile 2 das Band; ohne diese Zeile deckte eine
+     offene Lade das aufgeklappte Band zu (test272 §13, gemessen 6. Sept.). */
+  body[data-schale="premium"] #main > #kanten-lade{grid-row:3/-1}
   body[data-schale="premium"] #main > #reiterleiste{grid-row:3}
-  body[data-schale="premium"] #main > #topbar{grid-row:4;background:var(--bg);min-height:44px;border-bottom-color:var(--line-soft)}
+  body[data-schale="premium"] #main > #topbar{grid-row:4;background:var(--bg);min-height:var(--touch-min);border-bottom-color:var(--line-soft)}
   body[data-schale="premium"] #main > #scroll{grid-row:5;background:var(--bg)}
   body[data-schale="premium"] .k-knopf{width:100%;display:flex;justify-content:flex-start;
     gap:11px;padding:0 10px;border-radius:var(--radius-lg);color:var(--text-dim);font-size:12px;
@@ -15379,7 +15415,7 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
 .lw-desk-copy{min-width:0}.lernwelt .lw-eyebrow{font-size:10px;letter-spacing:1.8px;font-weight:650;color:var(--accent-text);margin:0 0 16px}
 .lernwelt .lw-desk h2{font-size:clamp(28px,3.1vw,44px);line-height:1.12;letter-spacing:-1.7px;margin:0 0 18px;font-weight:650}
 .lw-desk-copy>p:not(.lw-eyebrow){color:var(--text-dim);font-size:14px;line-height:1.7;max-width:350px;margin-bottom:24px}
-.lernwelt .lw-desk .lw-actions{gap:10px}.lernwelt .lw-desk .lw-actions button{min-height:44px;border-radius:var(--radius-lg)}
+.lernwelt .lw-desk .lw-actions{gap:10px}.lernwelt .lw-desk .lw-actions button{min-height:var(--touch-min);border-radius:var(--radius-lg)}
 .lw-desk-link{margin-top:18px;font-size:12px;color:var(--text-dim);padding:6px 0}
 .lw-desk-link:hover{color:var(--accent-text)}
 .lw-paper-stack{position:relative;display:block;padding:18px;width:min(100%,290px);justify-self:center;perspective:var(--studio-perspective);background:transparent;border:0;text-align:left;isolation:isolate}
@@ -15452,36 +15488,47 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
 <style>
 /* ===== quell/schale/stil/bibliothek-studio.css ===== */
 /* Real document covers, not a second content model. Perspective on hover only. */
-.bib-deckel-seite{max-width:1400px;margin-inline:auto;padding-top:12px}
+.bib:is(.bib-deckel-seite,.bib-regal-seite){max-width:1400px;margin-inline:auto;padding-top:12px}
 .bib-dkopf{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-bottom:26px}
 .bib-dkopf h1{flex:1;min-width:120px;margin:0;font-size:26px;letter-spacing:-.7px}
 .bib-dkopf .bib-krume{flex-basis:100%;order:-1}
 .bib-dkopf .bib-ort{flex-basis:100%;margin:0;text-align:left;padding:0;background:none;border:0;color:var(--text-dim)}
-.bib-dkopf .bib-neu,.bib-studio-import{min-height:40px;padding:0 16px;border-radius:var(--radius-lg);font-weight:600}
+/* 44, nicht 40: „Neu" und „PDF importieren" sind die zwei Hauptwege des
+   Regals (§37 hart). Die 40 gewann am Telefon gegen `.bib-dkopf button`,
+   weil `.bib-dkopf .bib-neu` spezifischer ist — test114 mass 80 × 40. */
+.bib-dkopf .bib-neu,.bib-studio-import{min-height:var(--touch-min);padding:0 16px;border-radius:var(--radius-lg);font-weight:600}
 .bib-studio-import{background:var(--haupt-flaeche);color:var(--auf-accent);box-shadow:var(--haupt-schein)}
 .bib-dkopf .bib-neu{background:var(--bg-hover);color:var(--text);border:1px solid var(--line)}
 .bib-studio-navigation{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:0 0 20px;border-bottom:1px solid var(--line);padding-bottom:16px}
+.bib-studio-optionen{position:relative;font-size:13px;color:var(--text-dim)}
+.bib-studio-optionen>summary{cursor:pointer;min-height:var(--touch-min);display:flex;align-items:center;gap:8px;padding-inline:10px;border-radius:var(--radius-lg);list-style:none}
+.bib-studio-optionen>summary::after{content:'⌄';font-size:14px}
+.bib-studio-optionen>summary:hover{background:var(--bg-hover);color:var(--text)}
+.bib-studio-optionen[open]>summary{background:var(--accent-schwach);color:var(--accent-text)}
+.bib-studio-optionen>select{position:absolute;top:calc(100% + 6px);left:0;z-index:10;width:220px;max-width:calc(100vw - 48px);box-shadow:var(--studio-elevation)}
+.bib-studio-optionen>summary::-webkit-details-marker{display:none}
+.bib :is(summary,select):focus-visible{outline:2px solid var(--accent-text);outline-offset:3px}
 .bib-studio-wege{display:flex;gap:4px;flex-wrap:wrap}
-.bib-studio-wege button{min-height:44px;padding:8px 12px;border-radius:var(--radius-lg);color:var(--text-dim);font-size:13px}
-.bib-studio-sammlungen{max-width:100%;min-height:44px;padding:8px 10px;border:1px solid var(--line);border-radius:var(--radius-lg);background:var(--bg-card);color:var(--text);font:inherit;font-size:13px}
+.bib-studio-wege button{min-height:var(--touch-min);padding:8px 12px;border-radius:var(--radius-lg);color:var(--text-dim);font-size:13px}
+.bib-studio-sammlungen{max-width:100%;min-height:var(--touch-min);padding:8px 10px;border:1px solid var(--line);border-radius:var(--radius-lg);background:var(--bg-card);color:var(--text);font:inherit;font-size:13px}
 .bib-studio-wege button.on{background:var(--accent-schwach);color:var(--accent-text);font-weight:600}
 .bib-studio-wege button:hover{background:var(--bg-hover)}
 .bib-studio-wege button,.bib-arten button{transition:background var(--motion-fast) var(--ease),transform var(--motion-instant) var(--ease)}
 .bib-studio-wege button:active,.bib-arten button:active{transform:scale(var(--press-scale))}
 .bib-studio-suche{display:flex;align-items:center;gap:8px;margin-left:auto;min-width:160px;flex:0 1 260px;background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius-lg);padding:0 12px}
 .bib-studio-suche svg{width:16px;height:16px;color:var(--text-dim)}
-.bib-studio-suche input{width:100%;min-width:0;min-height:40px;background:transparent;border:0;outline:0;color:var(--text);font:inherit;font-size:13px}
+.bib-studio-suche input{width:100%;min-width:0;min-height:var(--touch-min);background:transparent;border:0;outline:0;color:var(--text);font:inherit;font-size:13px}
 .bib-studio-suche:focus-within{outline:2px solid var(--accent-text);outline-offset:2px}
 .bib-studio-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 .bib-studio-weiter{display:flex;align-items:center;gap:22px;padding:22px 26px;margin-bottom:24px;background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius-xl);overflow:hidden}
 .bib-studio-weiter>div{min-width:0;flex:1}.bib-studio-weiter h2{font-size:18px;line-height:1.4;margin:6px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bib-studio-eyebrow{font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--accent-text)}
 .bib-studio-weiter p{font-size:12px;color:var(--text-dim);margin:0}
-.bib-studio-weiter button{display:flex;gap:14px;align-items:center;flex-shrink:0;min-height:44px;padding:10px 16px;background:var(--accent-schwach);color:var(--accent-text);border-radius:var(--radius-lg);font-weight:600}
+.bib-studio-weiter button{display:flex;gap:14px;align-items:center;flex-shrink:0;min-height:var(--touch-min);padding:10px 16px;background:var(--accent-schwach);color:var(--accent-text);border-radius:var(--radius-lg);font-weight:600}
 .bib-studio-miniatur{display:grid;place-items:center;flex:0 0 62px;height:82px;border-radius:4px;background:#fff;color:#6556ae;box-shadow:var(--studio-paper-shadow);transform:perspective(var(--studio-perspective)) rotateY(-12deg) rotate(-6deg);overflow:hidden}
 .bib-studio-miniatur img{width:100%;height:100%;object-fit:cover}
 .bib-arten{gap:6px;margin-bottom:24px}.bib-arten button{border-radius:var(--radius-pill);padding:6px 12px;font-size:12px}
-.bib-gitter{grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:30px 26px}
+.bib-gitter{grid-template-columns:repeat(auto-fill,minmax(155px,200px));gap:30px 26px}
 .bib-deckel{perspective:var(--studio-perspective);min-width:0}
 .bib-deckel-blatt{border-radius:6px 12px 12px 6px;border:1px solid var(--line);transition:transform var(--motion-normal) var(--ease),box-shadow var(--motion-normal) var(--ease);transform-origin:25% 80%;box-shadow:0 2px 3px #00000010,0 9px 20px #0000000d}
 .bib-deckel-name{padding-top:9px}.bib-deckel-name b{font-size:13px;line-height:1.5}.bib-deckel small{color:var(--text-dim)}
@@ -15494,24 +15541,39 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
 .bib-deckel:focus-visible .bib-deckel-blatt{transform:translateY(-3px)}
 .bib-deckel:active .bib-deckel-blatt{transform:translateY(1px) scale(.98)}
 .bib-deckel:focus-visible{outline:2px solid var(--accent-text);outline-offset:6px;border-radius:var(--radius-lg)}
-.bib-deckel-seite .bib-pflege{margin-top:36px}
+.bib-pflege-details{margin-top:40px;border-top:1px solid var(--line);color:var(--text-dim);font-size:12px}
+.bib-pflege-details>summary{cursor:pointer;min-height:48px;padding:12px 0;line-height:1.5}
+.bib-pflege-details>summary>span{float:right;margin-left:16px;color:var(--text)}
+.bib-pflege-details .bib-pflege{margin-top:12px;display:flex;flex-direction:column;gap:0}
+.bib-pflege-details .bib-pflege-karte{background:none;border:0;border-bottom:1px solid var(--line);border-radius:0;box-shadow:none;padding:16px 0}
+.bib-pflege-details[open]>.bib-abschnitt,.bib-ablage-baum[open]>[data-bib-baum]{animation:bib-detail-arrive var(--motion-normal) var(--ease-enter)}
+@keyframes bib-detail-arrive{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
+/* AM TABLET (820 px) WURDE „Dokumente" ZU „Dokume…" — die zwei Knöpfe
+   daneben liessen dem Titel 130 px. Ein abgeschnittenes Wort ist ein
+   anderes Wort (§55.1). Ab 240 px Mindestbreite rücken die Knöpfe in die
+   nächste Zeile; am Rechner ändert sich nichts, am Telefon gilt der
+   eigene Aufbau unten. */
+@media(max-width:1100px) and (min-width:761px){.bib-dkopf h1{min-width:240px}}
 @media(max-width:760px){
   .bib-dkopf{gap:10px;margin-bottom:20px}.bib-dkopf h1{font-size:23px}
   .bib-studio-import{order:3;flex:1 0 100%;white-space:nowrap}.bib-dkopf .bib-ort{order:4}
   .bib-studio-suche{flex-basis:100%;margin:0;max-width:none}
   .bib-studio-wege{display:flex;flex-wrap:nowrap;overflow-x:auto;width:100%}
-  .bib-studio-wege button{white-space:nowrap;min-height:44px;padding-inline:10px}
+  .bib-studio-wege button{white-space:nowrap;min-height:var(--touch-min);padding-inline:10px}
   .bib-studio-navigation{gap:10px}.bib-studio-weiter{gap:14px;padding:18px;flex-wrap:wrap}
   .bib-studio-weiter button{width:100%;justify-content:space-between}.bib-studio-weiter h2{font-size:16px}
   .bib-gitter{grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 18px}
-  .bib-dkopf button,.bib-arten button,.bib-deckel-mehr{min-height:44px}
+  .bib-dkopf button,.bib-arten button,.bib-deckel-mehr{min-height:var(--touch-min)}
+  .bib-pflege-details>summary>span{float:none;display:block;margin:4px 0 0}
 }
 @media(prefers-reduced-motion:reduce){.bib-studio-miniatur{transform:none}.bib-deckel:is(:active,:focus-visible) .bib-deckel-blatt,.bib-studio-wege button:active,.bib-arten button:active{transform:none}.bib-deckel-blatt,.bib-deckel .bib-papier{transition:none}}
 
-/* Phase C Â· echte Ablage-Baumansicht â€” nutzt dieselben Store-Seiten wie die Deckel */
-.bib-ablage-layout{display:grid;grid-template-columns:minmax(220px,270px) minmax(0,1fr);gap:24px;align-items:start}
-.bib-ablage-baum{position:sticky;top:88px;max-height:calc(100vh - 120px);overflow:auto;padding:10px;background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius-xl)}
-.bib-ablage-baum-kopf{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:7px 8px 10px;border-bottom:1px solid var(--line);margin-bottom:6px}
+/* Phase C · echte Ablage-Baumansicht — nutzt dieselben Store-Seiten wie die Deckel */
+.bib-ablage-layout{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;align-items:start}
+.bib-ablage-layout:has(.bib-ablage-baum[open]){grid-template-columns:minmax(210px,230px) minmax(0,1fr);gap:24px}
+.bib-ablage-baum{min-width:0;max-height:calc(100vh - 120px);overflow:auto;padding:0;background:transparent;border:0;border-radius:var(--radius-lg)}
+.bib-ablage-baum[open]{position:sticky;top:88px;padding:0 12px 12px 0;border-right:1px solid var(--line);border-radius:0}
+.bib-ablage-baum-kopf{min-height:var(--touch-min);cursor:pointer;padding:12px 8px;font-size:12px;font-weight:600;color:var(--text-dim)}
 .bib-ablage-baum-kopf strong{font-size:13px}
 .bib-ablage-baum-kopf span{font-size:11px;color:var(--text-dim)}
 .bib-ablage-baum .ru-baum{padding:2px 0 4px}
@@ -15519,9 +15581,10 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
 .bib-ablage-inhalt{min-width:0}
 .bib-baum-fehlt{margin:8px;color:var(--text-dim);font-size:12px}
 @media(max-width:980px){
-  .bib-ablage-layout{grid-template-columns:1fr;gap:16px}
-  .bib-ablage-baum{position:relative;top:auto;max-height:290px}
+  .bib-ablage-layout,.bib-ablage-layout:has(.bib-ablage-baum[open]){grid-template-columns:1fr;gap:12px}
+  .bib-ablage-baum,.bib-ablage-baum[open]{position:relative;top:auto;max-height:290px;border-right:0;border-bottom:1px solid var(--line)}
 }
+@media(prefers-reduced-motion:reduce){.bib-pflege-details[open]>.bib-abschnitt,.bib-ablage-baum[open]>[data-bib-baum]{animation:none}}
 @media(max-width:760px){
   .bib-ablage-baum{max-height:240px}
 }
@@ -15538,8 +15601,12 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
 .document-studio .document-topbar button:hover{background:var(--bg-hover);color:var(--text)}
 .document-studio .document-topbar button[aria-expanded="true"]{color:var(--accent-text);background:var(--accent-schwach)}
 .document-studio .document-title{text-align:center;font-size:13px;padding-inline:6px}
-.document-commandbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;min-height:52px;padding:7px 16px;border-bottom:1px solid var(--line);background:var(--bg-side)}
-.document-commandbar button{min-height:44px;padding:6px 12px;border-radius:var(--radius-md);font-size:12px;white-space:nowrap}
+/* 3 px Polster statt 7: die Knöpfe sind 44 hoch (§37), der Umschalter 52 —
+   mit 7 px oben und unten stand das erste Blatt am Rechner bei 141 von
+   900 px, über der 15-%-Marke aus test385. Jetzt 45 + 59 + 12 = 116. */
+.document-commandbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;min-height:52px;padding:3px 16px;border-bottom:1px solid var(--line);background:var(--bg-side)}
+@media(min-width:761px){.document-studio .document-center{padding-top:12px}}
+.document-commandbar button{min-height:var(--touch-min);padding:6px 12px;border-radius:var(--radius-md);font-size:12px;white-space:nowrap}
 .document-commandbar button:hover{background:var(--bg-hover)}
 .document-mode-switch{display:flex;padding:3px;border-radius:var(--radius-lg);background:var(--bg-input);border:1px solid var(--line)}
 .document-mode-switch button[aria-pressed="true"]{background:var(--bg-card);color:var(--accent-text);box-shadow:var(--studio-highlight),0 1px 4px #00000015;font-weight:600}
@@ -15547,7 +15614,12 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
 .document-zoom-group input{width:100px;accent-color:var(--accent)}
 .document-zoom-label{font-variant-numeric:tabular-nums}
 .document-studio button:focus-visible,.document-center:focus-visible{outline:2px solid var(--accent-text);outline-offset:2px}
-.document-studio button:disabled{opacity:.45;cursor:not-allowed}
+/* NICHT `.document-studio button:disabled` — das traf auch „Zurück" und
+   „Vor" in der Blattleiste, die am Telefon am rechten Rand kleben und
+   DECKEN müssen (test393 §3): mit opacity .45 schienen die Werkzeuge
+   darunter wieder durch, der Doppeldruck war zurück. Die Blattleiste
+   hat ihre eigene Regel (Knopf deckend, nur das Zeichen blass). */
+.document-studio :is(.document-topbar,.document-commandbar,.document-inspector,.document-thumbnails) button:disabled{opacity:.45;cursor:not-allowed}
 .document-studio :is(.document-topbar,.document-commandbar) button{transition:background var(--motion-fast) var(--ease),transform var(--motion-instant) var(--ease)}
 .document-studio :is(.document-topbar,.document-commandbar) button:active:not(:disabled){transform:scale(var(--press-scale))}
 .document-studio .document-thumbnails.is-open{animation:studio-drawer var(--motion-normal) var(--ease-enter)}
@@ -15558,7 +15630,7 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
 .document-studio .document-thumbnail.is-selected{border-color:var(--accent);background:var(--accent-schwach)}
 .document-studio .document-panel-header{padding:8px 4px;font-size:12px}
 .document-studio .document-inspector{padding:16px;background:var(--bg-side)}
-.document-studio .document-inspector button{border-radius:var(--radius-lg);font-size:12px;min-height:44px}
+.document-studio .document-inspector button{border-radius:var(--radius-lg);font-size:12px;min-height:var(--touch-min)}
 .document-studio .document-section-title{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin:24px 0 10px}
 .document-studio .blatt-werk{border:1px solid var(--studio-line);border-radius:var(--radius-xl);background:var(--studio-glass);box-shadow:var(--studio-highlight),0 5px 15px #00000010;margin:0 auto 14px;padding:6px;max-width:100%}
 .document-studio[data-document-tools="closed"] .blatt-reihe{display:none}
@@ -15569,7 +15641,7 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
   .document-studio .document-topbar{display:flex;flex-wrap:nowrap;gap:2px;padding:4px;min-height:52px}
   .document-navigation,.document-top-actions{gap:0;flex:none}
   .document-studio .document-title{order:0;flex:1 1 auto;min-width:0;text-align:left;padding:3px 6px;font-size:12px}
-  .document-studio .document-topbar button{width:44px;min-width:44px;min-height:44px;padding:0}
+  .document-studio .document-topbar button{width:var(--touch-min);min-width:var(--touch-min);min-height:var(--touch-min);padding:0}
   .document-studio .document-topbar button::after{content:none}
   .document-studio .document-topbar [data-document-action="thumbnails"],
   .document-studio .document-topbar [data-document-action="inspector"],
@@ -15582,10 +15654,10 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
   .document-studio[data-document-view="open"] .document-commandbar{display:flex}
   .document-studio[data-document-view="open"] .document-commandbar{animation:studio-arrive var(--motion-normal) var(--ease-enter)}
   .document-mode-switch{flex:1;justify-content:center}.document-pagination{margin-left:auto}
-  .document-commandbar button{min-height:44px;padding-inline:10px}
+  .document-commandbar button{min-height:var(--touch-min);padding-inline:10px}
   .document-zoom-group{width:100%;justify-content:center;border-top:1px solid var(--line-soft);padding-top:3px}
-  .document-zoom-group input{flex:1;max-width:150px;min-width:0}.document-zoom-group button{min-height:44px}
-  .document-zoom-label{display:inline;min-width:44px}
+  .document-zoom-group input{flex:1;max-width:150px;min-width:0}.document-zoom-group button{min-height:var(--touch-min)}
+  .document-zoom-label{display:inline;min-width:var(--touch-min)}
   .document-studio .document-inspector,.document-studio .document-thumbnails{border-radius:var(--radius-xl);box-shadow:var(--studio-elevation);max-height:calc(100% - 16px)}
   .document-studio .blatt-werk{border-radius:var(--radius-lg);margin-bottom:8px}
 }
@@ -15834,7 +15906,13 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
     <button id="studio-import" class="studio-action" data-studio-import><span data-sym="plus"></span><span>PDF öffnen</span></button>
     <button id="studio-create" class="studio-icon" aria-label="Neu erstellen" title="Neu erstellen"><span data-sym="plus"></span></button>
     <button id="studio-tools" class="studio-icon" aria-label="Werkzeuge einblenden" title="Werkzeuge einblenden" aria-expanded="false" aria-controls="menueband"><span data-sym="command"></span></button>
-    <button id="studio-account" class="studio-icon" aria-label="Konto und Arbeitsbereich" title="Konto und Arbeitsbereich"><span data-sym="workspace"></span></button>
+    <!-- GLOCKE UND WOLKENPUNKT AUCH HIER (E457). Beide wohnen im Menüband
+         rechts — und das ist am Rechner seit E457 eine Lade, die zu ist. Eine
+         Meldung, die man erst sieht, wenn man die Werkzeuge holt, ist keine.
+         `menueband.ts` hält beide Stellen gemeinsam frisch (glockeFrisch,
+         wolkeFrisch); die Glocke steht erst mit Ungelesenem da. -->
+    <button id="studio-glocke" class="studio-icon" hidden aria-label="Posteingang" title="Posteingang"><span data-sym="bell"></span><b class="glocke-zahl" hidden aria-hidden="true"></b></button>
+    <button id="studio-account" class="studio-icon" aria-label="Konto und Arbeitsbereich" title="Konto und Arbeitsbereich"><span data-sym="workspace"></span><i class="wolke-punkt" hidden></i></button>
   </header>
   <div id="studio-divider" role="separator" aria-label="Navigationsbreite" aria-orientation="vertical" aria-valuemin="148" aria-valuemax="260" aria-valuenow="184" tabindex="0"></div>
 
@@ -17580,7 +17658,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 432, inhalt: 'd122d97955bfa221', gebaut: '2026-09-06T15:04:31.310Z' };
+const Stand = { fassung: 438, inhalt: '098a1f3fac2cf729', gebaut: '2026-09-06T16:42:01.272Z' };
 window.Stand = Stand;
 
 </script>
@@ -28472,8 +28550,13 @@ Register.navigation = (() => {
             haupt: true, hauptRang: 20, schauplatz: 'notizhefte',
             hinweis: 'Deine Schreibhefte, sofort schreibbereit',
             tun: () => (typeof Notebook !== 'undefined') && Notebook.oeffnen() },
+        /* `alleZeigen`, NICHT `oeffne`: `oeffne()` ist das Regal, und dorthin
+           führt seit der Workspace-Auflösung auch `bibliothekOben`. Zwei Wege
+           zum selben Ziel wären eine Dublette (E206) — „Alle Seiten" ist der
+           Reiter „Alle", die flache Liste über den ganzen Bestand. */
         { id: 'app-bib', marke: 'bib', name: 'Alle Seiten', icon: '📚', zeichen: 'page', platz: 'apps', gruppe: 'daten', rang: 55,
-            hinweis: 'Jede Seite, mit Reitern und Spalten', tun: () => Bibliothek.oeffne() },
+            hinweis: 'Jede Seite, mit Reitern und Spalten',
+            tun: () => (Bibliothek.alleZeigen ? Bibliothek.alleZeigen() : Bibliothek.oeffne()) },
         { id: 'app-modell', marke: 'modell', name: 'Datenmodell', icon: '🗺', zeichen: 'database', platz: 'apps', gruppe: 'daten', rang: 60,
             hinweis: 'Alle Datenbanken und ihre Verknüpfungen', tun: () => Schema.ansicht() },
         { id: 'app-kennzahl', marke: 'kennzahl', name: 'Kennzahlen', icon: '📊', zeichen: 'chart', platz: 'apps', gruppe: 'daten', rang: 70,
@@ -29782,11 +29865,16 @@ Register.menueband = (() => {
      * unter ihren eigenen Namen. */
     const GEHEN_DOPPELT = {
         lernwelt: 'heute', /* Produktwelten.lernen('heute') */
-        'app-bib': 'bibliothekOben', /* Beide öffnen jetzt das Dokumentregal. */
+        /* HIER STAND KURZ `'app-bib': 'bibliothekOben'` (6. September). Beide
+           öffneten nach der Workspace-Auflösung dasselbe Regal — und „Alle
+           Seiten" war damit aus der Lade hinter „Mehr Orte" verschwunden
+           (test33). Seither öffnet `app-bib` den Reiter „Alle" der Bibliothek,
+           die flache Liste über den ganzen Bestand, und ist wieder ein
+           eigenes Ziel. */
         notizhefte: 'app-notizhefte', /* Notebook.oeffnen()            */
         hilfe: 'app-kann', /* Rundgang.uebersicht()         */
         vorlagen: 'app-markt', /* Galerie.oeffne()              */
-        bibliothek: 'app-bib', /* Bibliothek.oeffne()           */
+        bibliothek: 'bibliothekOben', /* Bibliothek.oeffne() — das Regal, wie `btn-library` */
         papierkorb: 'papierkorbFuss', /* App.papierkorb()              */
         /* ZWEIMAL DERSELBE ZEITMESSER (E393). `zeitmesser` aus `Register.module`
            und `w-zeit` aus der Liste unten rufen beide `Zeitmesser.panel()`;
@@ -38882,12 +38970,15 @@ const Baumansicht = (() => {
                         zeile.setAttribute('aria-disabled', 'true');
                     zeile.tabIndex = gewaehlt === k.id ? 0 : -1;
                     zeile.style.setProperty('--baum-ebene', String(ebene - 1));
-                    const knick = document.createElement('button');
-                    knick.type = 'button';
+                    /* EIN `span`, KEIN `button`. Der Knick ist Zierat am Treeitem: die
+                       Zeile selbst ist das Bedienelement (Klick, Pfeiltasten, Enter),
+                       und der Klick auf den Knick wird über `closest()` an der Zeile
+                       erkannt. Als Knopf war er 20 × 24 gross, `aria-hidden` und
+                       `tabindex=-1` — für den Finger ein Ziel unter 44 px (§37), für
+                       den Vorleser ein Knopf, den es nicht gibt. test114 mass ihn. */
+                    const knick = document.createElement('span');
                     knick.className = 'ru-baum-knick';
-                    knick.tabIndex = -1;
                     knick.setAttribute('aria-hidden', 'true');
-                    knick.disabled = !hatKinder;
                     knick.textContent = hatKinder ? (offen.has(k.id) ? '⌄' : '›') : '';
                     const inhalt = document.createElement('span');
                     inhalt.className = 'ru-baum-inhalt';
@@ -62300,8 +62391,11 @@ const DocumentMode = (() => {
             if (action === 'regal') {
                 /* Zurueck ins Regal, ohne den Dokumentmodus abzuschalten: wer das
                    Skript wieder aufmacht, will es wieder als Dokument sehen. */
+                /* `bibliothekOben`, nicht `app-bib`: das eine ist das Regal (die
+                   Ablage mit Ordnern), das andere seit dem 6. September die flache
+                   Liste „Alle Seiten". Zurück aus einem Dokument will man ins Regal. */
                 const eintrag = typeof Register !== 'undefined' && Register.navigation
-                    ? Register.navigation.eines('app-bib') : null;
+                    ? Register.navigation.eines('bibliothekOben') : null;
                 if (eintrag && typeof eintrag.tun === 'function')
                     eintrag.tun();
                 else
@@ -112693,37 +112787,45 @@ const Rundgang = (() => {
     const SCHRITTE = [
         /* E270: ohne Konto stimmt der Satz weiterhin — er darf nur nicht mehr
            behaupten, es GÄBE keinen Server. Er ist da und freiwillig. */
+        /* DIE ANKER ZEIGEN AUF DEN STUDIO-KOPF (6. September). Im ruhigen Modus
+           ist das Band am Rechner eine Lade hinter `#studio-tools`, und die
+           Kante trägt unten nur noch „Einstellungen" — `#mb-suche`, `#mb-ki`,
+           `[data-k="neu"]` und `[data-k="ki"]` waren damit null Pixel breit.
+           test61 fand sechs von neun Schritten ohne Loch. Der Studio-Kopf hat
+           für jedes davon einen Knopf; die alten Kandidaten bleiben dahinter
+           stehen — am Telefon und ohne ruhigen Modus sind sie weiter die
+           richtigen. */
         { ziel: '#kante .k-orte, #handy-oben', titel: 'Alles liegt hier',
-            text: 'Hier stehen deine Orte — Heute, Lernzentrum, Elektrotechnik, ' +
-                'Bibliothek, Aufgaben. Hinter <b>Mehr Orte</b> liegen dreissig ' +
-                'weitere. Ohne Konto bleibt alles in diesem Browser auf diesem ' +
-                'Gerät; für dieselben Notizen auf Rechner und Telefon gibt es ' +
-                'die Wolke, freiwillig.' },
-        { ziel: '#mb-suche', titel: 'Suchen und Befehle',
+            text: 'Hier stehen deine Orte — Bibliothek, Notizhefte, Lernzentrum. ' +
+                'Hinter <b>Mehr Orte</b> liegen Heute, Elektrotechnik, Aufgaben ' +
+                'und dreissig weitere. Ohne Konto bleibt alles in diesem Browser ' +
+                'auf diesem Gerät; für dieselben Notizen auf Rechner und Telefon ' +
+                'gibt es die Wolke, freiwillig.' },
+        { ziel: '#studio-search, #mb-suche, #btn-suche-handy', titel: 'Suchen und Befehle',
             text: 'Strg + K sucht in allem. Strg + P öffnet die Befehle: dort steht ' +
                 'jede Funktion mit Namen, auch die, die du noch nicht kennst. ' +
                 'Sie sucht unscharf — „wchrck" findet den Wochenrückblick.' },
-        { ziel: '#kante .k-knopf[data-k="neu"], #btn-new-bottom', titel: 'Eine Seite anfangen',
+        { ziel: '#studio-create, #kante .k-knopf[data-k="neu"], #btn-new-bottom', titel: 'Eine Seite anfangen',
             text: 'Strg + N legt eine Seite an. Ein <b>/</b> im Text öffnet die Bausteine: ' +
                 '43 Stück, von der Überschrift bis zur Datenbank.' },
-        { ziel: '.mb-klapp, #menueband', titel: 'Zwölf Ansichten auf dieselben Daten',
+        { ziel: '#studio-tools, .mb-klapp, #menueband', titel: 'Zwölf Ansichten auf dieselben Daten',
             text: 'Eine Datenbank kann Tabelle, Board, Zeitstrahl, Kalender, Galerie, ' +
                 'Liste, Diagramm, Formular, Feed, Karte, Kreuztabelle und Dashboard ' +
                 'zugleich sein — jede mit eigenem Filter.' },
-        { ziel: '#kante .k-knopf[data-k="ki"], #mb-ki', titel: 'Die KI, die nichts kaputt macht',
+        { ziel: '#kante .k-knopf[data-k="ki"], #btn-ai, #mb-ki', titel: 'Die KI, die nichts kaputt macht',
             text: 'Sie schreibt Formeln, Automationen und Filter — aber sie ändert nie ' +
                 'einfach etwas. Jeder Vorschlag wird an deinen echten Daten ' +
                 'durchgerechnet und Zeile für Zeile verglichen, bevor du zustimmst.' },
         { ziel: '#kante .k-knopf[data-k="einstellungen"], #hl-mehr', titel: 'So, wie du es willst',
             text: 'Acht Farbschemata, eigene Akzentfarbe, Schrift und Seitenbreite — ' +
                 'und alle Tastenkürzel lassen sich umbelegen. Notions Kürzel sind fest.' },
-        { ziel: '[data-mb-reiter="ueberpruefen"], .mb-klapp, #menueband', titel: 'Ehrlich beim Tempo',
+        { ziel: '[data-mb-reiter="ueberpruefen"], #studio-tools, .mb-klapp, #menueband', titel: 'Ehrlich beim Tempo',
             text: 'Hier steht, wie lange das Zeichnen gedauert hat und welche Formel ' +
                 'die teuerste ist — mit Namen. Kein anderes Programm sagt dir das.' },
         { ziel: '#kante .k-knopf[data-k="mehr-orte"], #hl-mehr', titel: 'Alles zum Nachlesen',
             text: 'Acht Dokumente: sieben über Notion, eines über alles, was Redion ' +
                 'mehr kann. Darin steht auch, was Redion bewusst <i>nicht</i> tut.' },
-        { ziel: '#mb-datei, #mb-konto', titel: 'Zum Schluss',
+        { ziel: '#mb-datei, #studio-account, #mb-konto', titel: 'Zum Schluss',
             text: 'In den Einstellungen richtest du die KI ein, sicherst alles ' +
                 'verschlüsselt und stellst ein, was Redion beim Start tut. ' +
                 'Viel Freude damit.' }
@@ -122817,9 +122919,10 @@ const Bibliothek = (() => {
                 return '<button type="button" data-studio-weg="' + weg.id + '"' +
                     (an ? ' class="on" aria-current="page"' : '') + '>' + weg.name + '</button>';
             }).join('') + '</nav>' +
+            '<details class="bib-studio-optionen"><summary>Sammlungen</summary>' +
             '<select class="bib-studio-sammlungen" aria-label="Weitere Bibliothek-Inhalte öffnen">' +
             '<option value="">Dateien & Wissen …</option>' +
-            (typeof Arbeitswelt !== 'undefined' ? Arbeitswelt.sammlungen.map(a => '<option value="' + esc(a.id) + '">' + esc(a.name) + '</option>').join('') : '') + '</select>' +
+            (typeof Arbeitswelt !== 'undefined' ? Arbeitswelt.sammlungen.map(a => '<option value="' + esc(a.id) + '">' + esc(a.name) + '</option>').join('') : '') + '</select></details>' +
             '<label class="bib-studio-suche"><span data-sym="search" aria-hidden="true"></span>' +
             '<span class="bib-studio-sr">Dokumenttitel in dieser Ansicht suchen</span>' +
             '<input id="bib-studio-suche" type="search" autocomplete="off" placeholder="Dokument suchen …"' +
@@ -123068,34 +123171,14 @@ const Bibliothek = (() => {
     gesamt > gezeigt
         ? gezeigt + ' von ' + gesamt + ' ' + vonForm
         : gezeigt + ' ' + (gezeigt === 1 ? eins : mehr);
-    const bibKopf = (liste, anzahlHefte, gesamt = liste.length) => {
+    const bibKopf = (liste, _anzahlHefte, gesamt = liste.length) => {
         /* Auch die Listenform ist in der Ablage ein Ordner-Browser (E382). Bis
            E382 hatte sie keine Brotkrume: man ging in ein Fach hinein (per
            Zeilenklick) und sah danach weder, WO man war, noch einen Weg zurück —
            der Titel stand fest auf „Bibliothek". Jetzt trägt der Kopf in der
            Ablage denselben Pfad wie die Deckelansicht (E380). */
-        const weg = zustand.reiter === 'ablage' ? ordnerWeg() : [];
-        const titel = weg.length ? esc(String(weg[weg.length - 1].text || 'Ohne Titel')) : 'Bibliothek';
-        return (zustand.reiter === 'ablage' ? ordnerKrume() : '') +
-            '<h1 class="bib-titel">' + titel + '</h1>' +
-            '<p class="bib-zahlen">' + anzahlHefte +
-            (anzahlHefte === 1 ? ' Heft' : ' Hefte') + ' · ' +
-            /* „auf diesem Gerät" ist eine Aussage über den BESTAND, nicht über
-               die Anzeige. Sie stand bis E367 über einer gedeckelten Liste. */
-            umfangSatz(liste.length, gesamt, 'Seite', 'Seiten', 'Seiten') + ' auf diesem Gerät</p>' +
-            '<div class="bib-kopf">' +
-            '<div class="bib-reiter">' +
-            REITER.slice(0, 4).map(r => `<button data-r="${r.id}" class="${zustand.reiter === r.id ? 'on' : ''}">` +
-                `<span>${r.icon}</span>${esc(r.name)}</button>`).join('') +
-            `<button data-r="mehr" class="bib-mehr">${REITER.length - 4} mehr …</button>` +
-            '</div>' +
-            '<div class="bib-form" role="group" aria-label="Darstellung">' +
-            `<button data-form="regal"${form() === 'regal' ? ' class="on" aria-pressed="true"' : ' aria-pressed="false"'}>` +
-            '<span data-sym="library" aria-hidden="true"></span>Regal</button>' +
-            `<button data-form="liste"${form() === 'liste' ? ' class="on" aria-pressed="true"' : ' aria-pressed="false"'}>` +
-            '<span data-sym="menu" aria-hidden="true"></span>Liste</button>' +
-            '</div>' +
-            '</div>';
+        // One header in every saved presentation, including older notebook shelves.
+        return deckelKopf(liste.length, gesamt) + studioNavigation();
     };
     /* ====================================================================== *
      * SICHERUNG, PAPIERKORB UND PLATZ (E208)
@@ -123134,7 +123217,9 @@ const Bibliothek = (() => {
                         pk.naechste === 0 ? ' · die nächste läuft heute ab'
                             : pk.naechste === 1 ? ' · die nächste läuft morgen ab'
                                 : ' · noch ' + pk.naechste + ' Tage für die nächste');
-        return '<section class="bib-abschnitt"><header><h2>Sicherung und Papierkorb</h2>' +
+        return '<details class="bib-pflege-details"><summary>' + esc(satz) +
+            '<span>Sicherung & Speicher</span></summary>' +
+            '<section class="bib-abschnitt"><header><h2>Sicherung und Papierkorb</h2>' +
             '<p>alles auf diesem Gerät</p></header><div class="bib-pflege">' +
             `<div class="bib-pflege-karte bib-sicher-${esc(st.stufe)}">` +
             `<span class="bib-pflege-zeichen" data-sym="${st.stufe === 'gut' ? 'checkCircle' : 'bell'}" aria-hidden="true"></span>` +
@@ -123146,7 +123231,7 @@ const Bibliothek = (() => {
             '<span class="bib-pflege-zeichen" data-sym="trash" aria-hidden="true"></span>' +
             '<span><strong>Papierkorb</strong><small>' + esc(frist) + '</small></span>' +
             '<button type="button" data-a="papierkorb">Öffnen</button></div>' +
-            '</div></section>';
+            '</div></section>' + platzKarte() + '</details>';
     };
     /* Der Platz kommt als Versprechen und wird deshalb NACHGETRAGEN. Die Stelle
        steht sofort da und sagt, dass gerechnet wird — ein Kasten, der aus dem
@@ -123218,7 +123303,7 @@ const Bibliothek = (() => {
         const bauen = (p, gesehen) => {
             const id = String(p.id);
             if (gesehen.has(id))
-                return { id, name: String(p.text || 'Ohne Titel'), zeichen: 'â–¡' };
+                return { id, name: String(p.text || 'Ohne Titel'), zeichen: 'page' };
             const weiter = new Set(gesehen);
             weiter.add(id);
             const kinder = (nachEltern.get(id) || [])
@@ -123228,7 +123313,7 @@ const Bibliothek = (() => {
             return {
                 id,
                 name: String(p.text || 'Ohne Titel'),
-                zeichen: kinder.length || p.heftArt === 'fach' ? 'â–£' : 'â–¡',
+                zeichen: kinder.length || p.heftArt === 'fach' ? 'pages' : 'page',
                 ...(kinder.length ? { kinder } : {})
             };
         };
@@ -123239,7 +123324,7 @@ const Bibliothek = (() => {
         return [{
                 id: BIB_BAUM_WURZEL,
                 name: 'Dokumente',
-                zeichen: 'â–¤',
+                zeichen: 'library',
                 kinder: wurzeln
             }];
     };
@@ -123284,6 +123369,27 @@ const Bibliothek = (() => {
         });
         stelle.replaceChildren(griff.element);
     };
+    /**
+     * DIE FILTERZEILE NACH ART — und wann sie WEGBLEIBT (6. September).
+     *
+     * Sie stand immer da, auch als „Alle · Seiten": ein Filter mit einer
+     * einzigen Wahl filtert nichts, kostet aber eine Zeile über den Deckeln
+     * — am Telefon eine von sieben. Redur: „nicht 20 Werkzeuggruppen
+     * gleichzeitig". Jetzt erscheint sie erst, wenn es zwei Arten zu
+     * unterscheiden gibt; ein gesetzter Filter bleibt immer sichtbar, sonst
+     * käme man aus ihm nicht mehr heraus.
+     */
+    const artenZeile = (vorhanden) => {
+        const arten = ART_FILTER.filter(a => a.id === 'alle' || vorhanden.has(a.id) ||
+            a.id === zustand.art);
+        if (arten.length <= 2 && zustand.art === 'alle')
+            return '';
+        return '<div class="bib-arten" role="group" aria-label="Nach Art filtern">' +
+            arten.map(a => `<button data-art="${esc(a.id)}"` +
+                (zustand.art === a.id ? ' class="on" aria-pressed="true"' : ' aria-pressed="false"') +
+                `>${esc(a.name)}</button>`).join('') +
+            '</div>';
+    };
     /* ---------------------------------------------------------------- *
      * DIE DECKELANSICHT (E236)
      * ---------------------------------------------------------------- */
@@ -123299,19 +123405,14 @@ const Bibliothek = (() => {
                 deckelKopf(alle.length, gesamt) +
                 (zustand.reiter === 'ablage'
                     ? '<div class="bib-ablage-layout">' +
-                        '<aside class="bib-ablage-baum" aria-label="Ablagebaum">' +
-                        '<div class="bib-ablage-baum-kopf"><strong>Ablage</strong><span>Ordner & Seiten</span></div>' +
+                        '<details class="bib-ablage-baum" aria-label="Ablagebaum"' +
+                        (Store.getMeta('bibBaumSichtbar', false) ? ' open' : '') + '>' +
+                        '<summary class="bib-ablage-baum-kopf">Ordner & Seiten</summary>' +
                         '<div data-bib-baum></div>' +
-                        '</aside><div class="bib-ablage-inhalt">'
+                        '</details><div class="bib-ablage-inhalt">'
                     : '') +
                 studioNavigation() + studioWeiter() +
-                '<div class="bib-arten" role="group" aria-label="Nach Art filtern">' +
-                ART_FILTER.filter(a => a.id === 'alle' || vorhanden.has(a.id) ||
-                    a.id === zustand.art)
-                    .map(a => `<button data-art="${esc(a.id)}"` +
-                    (zustand.art === a.id ? ' class="on" aria-pressed="true"' : ' aria-pressed="false"') +
-                    `>${esc(a.name)}</button>`).join('') +
-                '</div>' +
+                artenZeile(vorhanden) +
                 (liste.length
                     ? '<div class="bib-gitter">' + liste.map(deckelKarte).join('') + '</div>'
                     : '<p class="bib-leer">' + (zustand.art === 'alle'
@@ -123329,7 +123430,6 @@ const Bibliothek = (() => {
                    kaum jemand öffnet, ist keine Warnung. */
                 (zustand.reiter === 'ablage' ? '</div></div>' : '') +
                 sicherungsKarte() +
-                platzKarte() +
                 '</div>';
         if (typeof Register !== 'undefined' && Register.symbole)
             Register.symbole.fuelle(wrap);
@@ -123375,8 +123475,9 @@ const Bibliothek = (() => {
             (pdfImportLaeuft || !permitted('bearbeiten', zustand.ordner || undefined)
                 ? ' disabled title="Import läuft oder Bearbeitungsrechte fehlen"' : '') +
             '>PDF importieren</button>' +
-            '<button class="bib-form-knopf" data-form="liste" ' +
-            'aria-label="Als Liste anzeigen">\u2630</button>' +
+            '<button class="bib-form-knopf" data-form="' + (form() === 'liste' ? 'deckel' : 'liste') + '" ' +
+            'aria-label="' + (form() === 'liste' ? 'Als Dokumente anzeigen' : 'Als Liste anzeigen') + '">' +
+            '<span data-sym="' + (form() === 'liste' ? 'library' : 'menu') + '" aria-hidden="true"></span></button>' +
             '<button class="bib-ort" data-orte aria-haspopup="menu">' +
             esc(ort) + ' \u00b7 ' +
             umfangSatz(anzahl, gesamt, 'Dokument', 'Dokumente', 'Dokumenten') +
@@ -123384,7 +123485,8 @@ const Bibliothek = (() => {
             '</header>';
     };
     const zeichneRegal = (wrap) => {
-        const { liste, gesamt } = auswahl();
+        const { liste: alle, gesamt } = auswahl();
+        const liste = zustand.art === 'alle' ? alle : alle.filter(p => artVon(p).id === zustand.art);
         const regal = hefte(liste);
         /* „Zuletzt in der Hand" ist bewusst NICHT dasselbe wie das Regal: dort
            steht je Heft die neueste Seite, hier die neuesten Seiten überhaupt.
@@ -123407,7 +123509,6 @@ const Bibliothek = (() => {
                         '<div class="bib-hand-reihe">' + hand.map(handKarte).join('') + '</div></section>'
                     : '') +
                 sicherungsKarte() +
-                platzKarte() +
                 '</div>';
         if (typeof Register !== 'undefined' && Register.symbole)
             Register.symbole.fuelle(wrap);
@@ -123416,6 +123517,9 @@ const Bibliothek = (() => {
     };
     /** Was in beiden Formen gleich funktioniert: öffnen und umschalten. */
     const binde = (wrap) => {
+        wrap.querySelector('.bib-ablage-baum')?.addEventListener('toggle', event => {
+            Store.setMeta('bibBaumSichtbar', event.currentTarget.open);
+        });
         wrap.querySelector('.bib-studio-sammlungen')?.addEventListener('change', event => {
             const ziel = event.currentTarget.value;
             if (ziel && typeof Arbeitswelt !== 'undefined')
@@ -123466,7 +123570,7 @@ const Bibliothek = (() => {
             App.zeichneSeite();
         }));
         wrap.querySelectorAll('[data-form]').forEach(b => b.addEventListener('click', () => {
-            const f = b.dataset['form'] === 'liste' ? 'liste' : 'regal';
+            const f = b.dataset['form'] === 'liste' ? 'liste' : b.dataset['form'] === 'deckel' ? 'deckel' : 'regal';
             Store.setMeta('bibForm', f);
             App.zeichneSeite();
         }));
@@ -123499,6 +123603,7 @@ const Bibliothek = (() => {
             const m = UI.menu(REITER.map(x => `<button data-x="${x.id}"${zustand.reiter === x.id ? ' class="on"' : ''}>` +
                 `<span class="mi">${x.icon}</span>${esc(x.name)}</button>`).join('') +
                 '<div class="sep"></div>' +
+                '<button data-x="__deckel"><span class="mi">\u25a6</span>Als Dokumente</button>' +
                 '<button data-x="__regal"><span class="mi">\u25a4</span>Nach Heften ordnen</button>' +
                 '<button data-x="__liste"><span class="mi">\u2630</span>Als Tabelle</button>', r.left, r.bottom + 6);
             m.addEventListener('click', ev => {
@@ -123509,6 +123614,9 @@ const Bibliothek = (() => {
                 m.remove();
                 if (wahl === '__regal') {
                     Store.setMeta('bibForm', 'regal');
+                }
+                else if (wahl === '__deckel') {
+                    Store.setMeta('bibForm', 'deckel');
                 }
                 else if (wahl === '__liste') {
                     Store.setMeta('bibForm', 'liste');
@@ -123608,7 +123716,8 @@ const Bibliothek = (() => {
             zeichneRegal(wrap);
             return;
         }
-        const { liste, gesamt } = auswahl();
+        const { liste: alle, gesamt } = auswahl();
+        const liste = zustand.art === 'alle' ? alle : alle.filter(p => artVon(p).id === zustand.art);
         const spalten = SPALTEN.filter(s => zustand.spalten.includes(s.id));
         const raster = spalten.map(s => s.breit).join(' ');
         wrap.innerHTML =
@@ -123801,6 +123910,27 @@ const Bibliothek = (() => {
             zustand.ordner = ordnerLesen();
         }
         App.zeigeSonder('Dokumente', zeichnen);
+    };
+    /**
+     * „ALLE SEITEN" — der Reiter „Alle", die flache Liste über den ganzen
+     * Bestand, ohne Ordnerstufen (6. September).
+     *
+     * Bis dahin rief der Navigationseintrag `app-bib` („Alle Seiten") wie
+     * `bibliothekOben` einfach `oeffne()` — seit die Bibliothek das Regal
+     * direkt öffnet, waren das zwei Wege zu genau demselben Ziel, und die
+     * Zeile in der Kontextkante rief `alleSeiten()`, den Datenhelfer: ein
+     * Knopf, der eine Liste zurückgab und nichts zeigte. Jetzt ist es ein
+     * eigener Ort mit eigener Adresse (`#alle-seiten`, `SONDER_START` in
+     * schale.ts), und das Regal bleibt, was es ist.
+     */
+    const alleZeigen = () => {
+        try {
+            Seitenleiste.reiter('dokumente');
+        }
+        catch { /* ohne Leiste kein Reiter */ }
+        zustand.reiter = 'alle';
+        zustand.art = 'alle';
+        App.zeigeSonder('Alle Seiten', zeichnen);
     };
     /* ------------------------------------------------------------------ *
      * MEINE AUFGABEN
@@ -124066,8 +124196,8 @@ const Bibliothek = (() => {
     /* `umfangSatz` und `DECKE_KUERZLICH` kommen mit heraus, damit ein
        Prüflauf die Sprache messen kann, ohne dreihundert Seiten anzulegen
        (test359 §6) — und damit die Decke eine Zahl mit Namen bleibt. */
-    return { oeffne, aufgaben, meineAufgaben, quellenDialog, alleSeiten, quelleVon, pdfImportieren,
-        wannText, umfangSatz, DECKE_KUERZLICH };
+    return { oeffne, alleZeigen, aufgaben, meineAufgaben, quellenDialog, alleSeiten, quelleVon,
+        pdfImportieren, wannText, umfangSatz, DECKE_KUERZLICH };
 })();
 window.Bibliothek = Bibliothek;
 /* Die Bibliothek meldet ihre Kontextkante an (E272 Phase F). */
@@ -124081,8 +124211,10 @@ if (typeof Register !== 'undefined' && Register.kontext) {
         tun: () => Notebook.oeffnen() });
     K.melde({ bereich: 'bibliothek', id: 'aufgaben', name: 'Meine Aufgaben',
         zeichen: 'tasks', rang: 30, tun: () => Bibliothek.aufgaben() });
+    /* `alleZeigen`, nicht `alleSeiten`: das eine öffnet die Liste, das andere
+       GIBT sie zurück — als Griff war das ein Knopf ins Leere (§47). */
     K.melde({ bereich: 'bibliothek', id: 'alle', name: 'Alle Seiten',
-        zeichen: 'pages', rang: 40, tun: () => Bibliothek.alleSeiten() });
+        zeichen: 'pages', rang: 40, tun: () => Bibliothek.alleZeigen() });
     K.melde({ bereich: 'bibliothek', id: 'suche', name: 'Suchen',
         zeichen: 'search', rang: 50, tun: () => App.suche() });
     /* ZULETZT GEÖFFNET ist eine Lade und kein Knopf: eine Liste, die sich
@@ -136654,6 +136786,16 @@ const Menueband = (() => {
            viel Platz nehmen." Zugeklappt sind das 30 px. */
         void seiteOffen;
         wurzel.hidden = false;
+        /* DIE LADE FOLGT DEM MERKER (6. September). `data-studio-tools` am
+           body entscheidet am Rechner, ob das Band überhaupt dasteht
+           (studio.css); gesetzt wurde es bisher nur vom Klick auf den Pfeil
+           und von `zeige()`. Wer den Merker anders setzte — ein Prüflauf, ein
+           Ortswechsel mit anderem Schlüssel (`merkeZu()`) — bekam ein Band,
+           dessen Sichtbarkeit nicht zu `zugeklappt()` passte: offen gemerkt,
+           aber nicht da. Also hier, bei jedem Zeichnen. Eine Wahrheit, ein
+           Ort (§8). Am Telefon ist `zugeklappt()` immer wahr, und die Regel
+           in studio.css greift dort ohnehin nicht. */
+        sichtbarSetzen(!zugeklappt());
         let gewaehlt = reiterJetzt();
         if (!reiter.some((r) => r.id === gewaehlt))
             gewaehlt = String(reiter[0].id);
@@ -137159,10 +137301,12 @@ const Menueband = (() => {
      * Die Horcher stehen in `start()` und werden EINMAL gesetzt: ein Horcher
      * je Zeichnen wäre nach zehn Reiterwechseln ein Chor.
      * ======================================================================== */
+    /* ZWEI GLOCKEN, EIN STAND (E457). Die im Band ist am Rechner hinter der
+       Werkzeuglade; die im Studio-Kopf (`#studio-glocke`, index.html) steht
+       davor. Beide bekommen hier dieselbe Zahl und denselben Namen — eine
+       Meldung, die man erst nach dem Holen der Werkzeuge sieht, ist keine.
+       test258 klickt die sichtbare von beiden. */
     const glockeFrisch = () => {
-        const glocke = document.getElementById('mb-glocke');
-        if (!glocke)
-            return;
         let offen = 0;
         try {
             offen = (typeof Werkzeuge !== 'undefined' && Werkzeuge.meldungen
@@ -137170,30 +137314,42 @@ const Menueband = (() => {
                 .filter((m) => !m.gelesen).length;
         }
         catch { /* ohne Posteingang bleibt die Glocke versteckt */ }
-        glocke.hidden = !offen;
-        const zahl = glocke.querySelector('.glocke-zahl');
-        if (zahl) {
-            zahl.textContent = offen > 99 ? '99+' : String(offen);
-            zahl.hidden = !offen;
-        }
         const wort = offen ? 'Posteingang, ' + offen + ' ungelesen' : 'Posteingang';
-        glocke.setAttribute('aria-label', wort);
-        glocke.title = wort;
+        for (const id of ['mb-glocke', 'studio-glocke']) {
+            const glocke = document.getElementById(id);
+            if (!glocke)
+                continue;
+            glocke.hidden = !offen;
+            const zahl = glocke.querySelector('.glocke-zahl');
+            if (zahl) {
+                zahl.textContent = offen > 99 ? '99+' : String(offen);
+                zahl.hidden = !offen;
+            }
+            glocke.setAttribute('aria-label', wort);
+            glocke.title = wort;
+        }
     };
     /* Der letzte gemeldete Wolke-Stand. `Wolke.beiAenderung` ruft nur bei
        ÄNDERUNGEN — ein frisch gebauter Punkt muss den Stand von davor kennen,
        sonst zeigt er bis zum nächsten Takt nichts. */
     let wolkeStand = null;
+    /* AUCH DER WOLKENPUNKT STEHT ZWEIMAL (E457): am Konto-Knopf im Band und
+       am Konto-Knopf im Studio-Kopf (`#studio-account`). Derselbe Stand,
+       derselbe Satz — nur der Grundname des Knopfes ist je seiner. */
     const wolkeFrisch = () => {
-        const konto = document.getElementById('mb-konto');
+        wolkeAn('mb-konto', 'Arbeitsbereich');
+        wolkeAn('studio-account', 'Konto und Arbeitsbereich');
+    };
+    const wolkeAn = (id, grundname) => {
+        const konto = document.getElementById(id);
         const punkt = konto?.querySelector('.wolke-punkt');
         if (!konto || !punkt)
             return;
         const z = wolkeStand;
         if (!z || !z.angemeldet) {
             punkt.hidden = true;
-            konto.title = 'Arbeitsbereich';
-            konto.setAttribute('aria-label', 'Arbeitsbereich');
+            konto.title = grundname;
+            konto.setAttribute('aria-label', grundname);
             return;
         }
         const schlecht = String(z.fehler || z.fehlerDateien || '');
@@ -137216,8 +137372,8 @@ const Menueband = (() => {
            nichts anderes versprechen. Der Wolke-Stand steht DAHINTER, als
            Auskunft, nicht als Ziel; der Weg zum Wolke-Dialog steht unter
            „Mehr → Wolke". */
-        konto.title = 'Arbeitsbereich · ' + name + ' · ' + stand;
-        konto.setAttribute('aria-label', 'Arbeitsbereich — Konto ' + name + ', ' + stand);
+        konto.title = grundname + ' · ' + name + ' · ' + stand;
+        konto.setAttribute('aria-label', grundname + ' — Konto ' + name + ', ' + stand);
     };
     /* ======================================================================== *
      * START
@@ -137319,7 +137475,6 @@ const Menueband = (() => {
     };
     /** Von aussen: das Band auf einen Reiter stellen. */
     const zeige = (reiter) => {
-        sichtbarSetzen(true);
         setzeMeta(merkeReiter, reiter);
         if (amTelefon()) {
             zeichne();
@@ -137329,6 +137484,11 @@ const Menueband = (() => {
         setzeMeta(merkeZu(), false);
         zeichne();
     };
+    /**
+     * Ob das Band am Rechner dasteht — als Marke am `body` und als Zustand
+     * am Griff `#studio-tools` (aria-expanded, Name). `zeichne()` ruft es bei
+     * jedem Zeichnen mit `!zugeklappt()`; von aussen braucht es niemand.
+     */
     const sichtbarSetzen = (an) => {
         document.body.dataset.studioTools = an ? 'offen' : 'zu';
         const knopf = document.getElementById('studio-tools');
@@ -137338,8 +137498,22 @@ const Menueband = (() => {
         if (knopf)
             knopf.title = name;
     };
+    /** Die Lade holen — mit dem zuletzt gewählten Reiter. */
     const aufklappen = () => { zeige(reiterJetzt()); };
-    const schliessen = () => { fluechtig(true); sichtbarSetzen(false); };
+    /**
+     * Die Lade wegnehmen. Am Rechner über den MERKER, nicht nur über die
+     * Klasse: `fluechtig(true)` allein liess `bandZu=false` stehen, und das
+     * nächste `zeichne()` hätte das Band wieder geholt. Am Telefon ist das
+     * Band ein Menü (E240) und wird nur jetzt zugeklappt.
+     */
+    const schliessen = () => {
+        if (amTelefon()) {
+            fluechtig(true);
+            return;
+        }
+        setzeMeta(merkeZu(), true);
+        zeichne();
+    };
     return { start, zeichne, zeige, aufklappen, schliessen, WURZEL };
 })();
 window.Menueband = Menueband;
@@ -138243,16 +138417,27 @@ const Kontextkante = (() => {
        der Wächter sucht das Wort, nicht den Aufruf — derselbe Stolperstein,
        den `test272` bei `innerHTML` schon einmal beschreibt.)
        ══════════════════════════════════════════════════════════════════════ */
-    /** Die fünf, die immer dastehen. */
-    const hauptOrte = () => {
+    /**
+     * ALLE Hauptwege des Registers — auch die, die der ruhige Modus verbirgt.
+     *
+     * Sechs seit dem 6. September: Bibliothek, Notizhefte, Lernzentrum
+     * (die in der Leiste stehen) und Heute, Elektrotechnik, Aufgaben (mit
+     * `ruhig: false`, hinter „Mehr Orte"). `ortJetzt()` fragt DIESE Liste:
+     * wer auf „Heute" steht, steht auf einem Hauptweg, auch wenn dessen
+     * Knopf gerade nicht da ist — und das soll die Leiste sagen.
+     */
+    const alleHauptOrte = () => {
         try {
-            return (Register?.navigation?.anPlatz?.('oben') || [])
-                .filter((e) => e && e.haupt === true && typeof e.tun === 'function');
+            return (Register?.navigation?.alle?.() || [])
+                .filter((e) => e && e.haupt === true && typeof e.tun === 'function')
+                .sort((a, b) => (a.hauptRang ?? a.rang) - (b.hauptRang ?? b.rang));
         }
         catch {
             return [];
         }
     };
+    /** Die wenigen, die in der Leiste stehen. Im ruhigen Modus ohne `ruhig: false`. */
+    const hauptOrte = () => alleHauptOrte().filter((e) => typeof Ruhig === 'undefined' || !Ruhig.an() || e.ruhig !== false);
     /**
      * Alles andere, wohin man gehen kann — für die Lade hinter „Mehr Orte".
      *
@@ -138334,7 +138519,9 @@ const Kontextkante = (() => {
      * irgendwo steht, sagt nichts (§55.1).
      */
     const ortJetzt = () => {
-        const orte = hauptOrte();
+        /* Gegen ALLE Hauptwege, nicht nur die gezeigten: ein Ort, der hinter
+           „Mehr Orte" liegt, ist trotzdem der Ort, an dem man steht. */
+        const orte = alleHauptOrte();
         let adr = '';
         try {
             adr = String(location.hash || '');
@@ -138477,6 +138664,8 @@ const Kontextkante = (() => {
         }
         if (hoehe < KNOPF_PLATZ * 2)
             hoehe = KNOPF_PLATZ * 2; /* mindestens „Seiten" und `···` */
+        if (typeof Ruhig !== 'undefined' && Ruhig.an())
+            hoehe = KNOPF_PLATZ * 2;
         /* Ein Platz geht an „Seiten", einer an den `···`-Knopf. */
         const zeigen = Math.max(0, Math.floor(hoehe / KNOPF_PLATZ) - 2);
         if (zeigen >= knoepfe.length)
@@ -138489,8 +138678,8 @@ const Kontextkante = (() => {
         }
         oben.appendChild(knopfBauen({
             bereich: '*', id: 'mehr-werkzeuge',
-            name: rest.length + (rest.length === 1 ? ' weiteres Werkzeug'
-                : ' weitere Werkzeuge'),
+            name: typeof Ruhig !== 'undefined' && Ruhig.an() ? 'Werkzeuge'
+                : rest.length + (rest.length === 1 ? ' weiteres Werkzeug' : ' weitere Werkzeuge'),
             zeichen: 'dots',
             /* Ein Werkzeug, das selbst eine Lade öffnet, hat kein `tun` — dann
                wird SEINE Lade geöffnet statt einer leeren Zeile. */
@@ -138627,6 +138816,9 @@ const Kontextkante = (() => {
         catch {
             knoepfe = [];
         }
+        const ruhig = typeof Ruhig !== 'undefined' && Ruhig.an();
+        if (ruhig)
+            knoepfe = [...knoepfe, ...FUSS.filter(k => k.id === 'ki')];
         w.replaceChildren();
         w.hidden = false;
         w.dataset['bereich'] = bereich;
@@ -138635,15 +138827,29 @@ const Kontextkante = (() => {
         const orte = document.createElement('div');
         orte.className = 'k-orte';
         const hier = ortJetzt();
+        let gezeigt = false;
         for (const o of hauptOrte()) {
             const b = knopfBauen(o, 'k-ort');
             if (hier && String(o.id) === hier) {
                 b.classList.add('ist-hier');
                 b.setAttribute('aria-current', 'page');
+                gezeigt = true;
             }
             orte.appendChild(b);
         }
-        orte.appendChild(knopfBauen(MEHR_ORTE, 'k-ort k-mehr'));
+        const mehr = knopfBauen(MEHR_ORTE, 'k-ort k-mehr');
+        /* WER HINTER „MEHR ORTE" STEHT, LEUCHTET DORT (6. September).
+           Heute, Elektrotechnik und Aufgaben sind Hauptwege ohne eigenen Knopf
+           im ruhigen Modus. Stünde man dort und nichts leuchtete, sähe die
+           Leiste aus wie im Posteingang — und das ist die Markierung, die
+           nichts sagt (§55.1). Also leuchtet der Knopf, der dorthin führt.
+           Ohne Treffer (Posteingang, eine Seite) leuchtet weiterhin nichts:
+           test390 §2 hält die Gegenprobe. */
+        if (hier && !gezeigt) {
+            mehr.classList.add('ist-hier');
+            mehr.setAttribute('aria-current', 'page');
+        }
+        orte.appendChild(mehr);
         w.appendChild(orte);
         const oben = document.createElement('div');
         oben.className = 'k-oben';
@@ -138653,8 +138859,9 @@ const Kontextkante = (() => {
         w.appendChild(oben);
         const unten = document.createElement('div');
         unten.className = 'k-unten';
-        for (const k of FUSS)
+        for (const k of FUSS.filter(k => !ruhig || k.id === 'einstellungen')) {
             unten.appendChild(knopfBauen(k, 'k-fuss'));
+        }
         w.appendChild(unten);
         if (Register?.symbole?.fuelle) {
             try {
@@ -138873,6 +139080,11 @@ const StudioSchale = (() => {
         an('studio-create', () => App.erstellenBlatt());
         an('studio-import', () => Bibliothek.pdfImportieren());
         an('studio-account', () => App.arbeitsbereich());
+        /* Dieselbe Handlung wie `mb-glocke` im Band (menueband.ts). */
+        an('studio-glocke', () => { try {
+            Ansichten.posteingang();
+        }
+        catch { /* ohne Posteingang bleibt der Kopf */ } });
         an('studio-tools', () => {
             if (document.body.dataset.studioTools === 'offen')
                 Menueband.schliessen();
@@ -142553,6 +142765,7 @@ const App = (() => {
        „welcher Hash ist ein Ort" (`rohHash in SONDER_START`, weiter unten). */
     const SONDER_START = {
         dokumente: () => Bibliothek.oeffne(),
+        'alle-seiten': () => (Bibliothek.alleZeigen ? Bibliothek.alleZeigen() : Bibliothek.oeffne()),
         'seiten-wissen': () => Arbeitswelt.oeffnen('uebersicht'),
         'dateien-pdfs': () => Arbeitswelt.oeffnen('bibliothek'),
         aufgaben: () => Arbeitswelt.oeffnen('aufgaben'),

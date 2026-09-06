@@ -323,18 +323,27 @@ const Kontextkante = (() => {
        der Wächter sucht das Wort, nicht den Aufruf — derselbe Stolperstein,
        den `test272` bei `innerHTML` schon einmal beschreibt.)
        ══════════════════════════════════════════════════════════════════════ */
-    /** Wenige Hauptwege; der vollständige Katalog bleibt unter „Mehr Orte“. */
-    const hauptOrte = () => {
+    /**
+     * ALLE Hauptwege des Registers — auch die, die der ruhige Modus verbirgt.
+     *
+     * Sechs seit dem 6. September: Bibliothek, Notizhefte, Lernzentrum
+     * (die in der Leiste stehen) und Heute, Elektrotechnik, Aufgaben (mit
+     * `ruhig: false`, hinter „Mehr Orte"). `ortJetzt()` fragt DIESE Liste:
+     * wer auf „Heute" steht, steht auf einem Hauptweg, auch wenn dessen
+     * Knopf gerade nicht da ist — und das soll die Leiste sagen.
+     */
+    const alleHauptOrte = () => {
         try {
             return (Register?.navigation?.alle?.() || [])
-                .filter((e) => e && e.haupt === true && typeof e.tun === 'function' &&
-                (typeof Ruhig === 'undefined' || !Ruhig.an() || e.ruhig !== false))
+                .filter((e) => e && e.haupt === true && typeof e.tun === 'function')
                 .sort((a, b) => (a.hauptRang ?? a.rang) - (b.hauptRang ?? b.rang));
         }
         catch {
             return [];
         }
     };
+    /** Die wenigen, die in der Leiste stehen. Im ruhigen Modus ohne `ruhig: false`. */
+    const hauptOrte = () => alleHauptOrte().filter((e) => typeof Ruhig === 'undefined' || !Ruhig.an() || e.ruhig !== false);
     /**
      * Alles andere, wohin man gehen kann — für die Lade hinter „Mehr Orte".
      *
@@ -416,7 +425,9 @@ const Kontextkante = (() => {
      * irgendwo steht, sagt nichts (§55.1).
      */
     const ortJetzt = () => {
-        const orte = hauptOrte();
+        /* Gegen ALLE Hauptwege, nicht nur die gezeigten: ein Ort, der hinter
+           „Mehr Orte" liegt, ist trotzdem der Ort, an dem man steht. */
+        const orte = alleHauptOrte();
         let adr = '';
         try {
             adr = String(location.hash || '');
@@ -722,15 +733,29 @@ const Kontextkante = (() => {
         const orte = document.createElement('div');
         orte.className = 'k-orte';
         const hier = ortJetzt();
+        let gezeigt = false;
         for (const o of hauptOrte()) {
             const b = knopfBauen(o, 'k-ort');
             if (hier && String(o.id) === hier) {
                 b.classList.add('ist-hier');
                 b.setAttribute('aria-current', 'page');
+                gezeigt = true;
             }
             orte.appendChild(b);
         }
-        orte.appendChild(knopfBauen(MEHR_ORTE, 'k-ort k-mehr'));
+        const mehr = knopfBauen(MEHR_ORTE, 'k-ort k-mehr');
+        /* WER HINTER „MEHR ORTE" STEHT, LEUCHTET DORT (6. September).
+           Heute, Elektrotechnik und Aufgaben sind Hauptwege ohne eigenen Knopf
+           im ruhigen Modus. Stünde man dort und nichts leuchtete, sähe die
+           Leiste aus wie im Posteingang — und das ist die Markierung, die
+           nichts sagt (§55.1). Also leuchtet der Knopf, der dorthin führt.
+           Ohne Treffer (Posteingang, eine Seite) leuchtet weiterhin nichts:
+           test390 §2 hält die Gegenprobe. */
+        if (hier && !gezeigt) {
+            mehr.classList.add('ist-hier');
+            mehr.setAttribute('aria-current', 'page');
+        }
+        orte.appendChild(mehr);
         w.appendChild(orte);
         const oben = document.createElement('div');
         oben.className = 'k-oben';

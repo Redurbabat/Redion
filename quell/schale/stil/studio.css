@@ -26,7 +26,7 @@
 .studio-brand:hover .studio-monogram{transform:perspective(var(--studio-perspective)) rotateY(10deg) rotateZ(0)}
 .studio-icon,.studio-action,.studio-search,.studio-shortcuts button{
   display:inline-flex;align-items:center;justify-content:center;gap:8px;
-  min-height:44px;padding:0 12px;border-radius:var(--radius-lg);font-size:13px;
+  min-height:var(--touch-min);padding:0 12px;border-radius:var(--radius-lg);font-size:13px;
   border:1px solid transparent;transition:transform var(--motion-instant) var(--ease),
   background var(--motion-fast) var(--ease),border-color var(--motion-fast) var(--ease);
 }
@@ -45,9 +45,34 @@
 #studio-bar button:focus-visible{outline:2px solid var(--accent-text);outline-offset:3px}
 .k-beschriftung{display:none}
 #studio-divider{display:none}
-/* The full ribbon is a deliberate tool drawer, not a second permanent header. */
-body[data-schale="premium"][data-ruhig="an"]:not([data-studio-tools="offen"]) #menueband{display:none}
+/* DAS MENÜBAND IST AM RECHNER EINE WERKZEUGLADE, kein zweiter Kopf.
+   Zugeklappt zeigte es „Werkzeuge · Suche · KI · Konto" — und genau die
+   drei stehen seit dem Studio-Kopf schon darüber. Also ist es ganz weg,
+   bis `#studio-tools` es holt (`Menueband.aufklappen()`).
+
+   NUR AM RECHNER. Am Telefon gibt es den Studio-Kopf nicht (unten
+   `#studio-bar{display:none}`), und dort IST das Band die einzige Zeile
+   mit Suche, KI und Konto. Gemessen am 6. September bei 390 px: ohne die
+   Medienabfrage war keine Suche mehr erreichbar, die Menüleiste unten
+   hatte null Knöpfe, und test40, test114 und test248 wurden rot. */
+@media(min-width:761px){
+  body[data-schale="premium"][data-ruhig="an"]:not([data-studio-tools="offen"]) #menueband{display:none}
+}
 #studio-tools[aria-expanded="true"]{background:var(--accent-schwach);color:var(--accent-text);border-color:var(--line)}
+/* Glocke und Wolkenpunkt im Studio-Kopf (E457): dieselben Klassen wie im
+   Band, nur der Anker. `display:inline-flex` an .studio-icon schlüge das
+   [hidden] des Browsers — deshalb die eigene Zeile, wie bei #mb-glocke. */
+#studio-glocke,#studio-account{position:relative}
+#studio-glocke[hidden]{display:none}
+#studio-glocke .glocke-zahl{top:3px;right:2px}
+#studio-account .wolke-punkt{top:5px;right:5px}
+/* EIN „PDF IMPORTIEREN", NICHT ZWEI. Das Regal trägt den Knopf selbst, gross
+   und neben „Neu"; der im Studio-Kopf ist dann derselbe Griff eine Zeile
+   höher (Redur: „keine doppelte Neu-Aktion in drei sichtbaren Leisten").
+   Er bleibt überall sonst — in einem Dokument, im Lernzentrum, in den
+   Sammlungen — der schnelle Weg zur PDF. Gefragt wird die SEITE, nicht der
+   Ort: die Sammlungen sind auch „bibliothek", haben den Knopf aber nicht. */
+body:has(#page .bib-studio-import) #studio-import{display:none}
 body[data-studio-tools="offen"] #menueband{animation:studio-tools-enter var(--motion-fast) var(--ease-enter)}
 @keyframes studio-tools-enter{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){body[data-studio-tools="offen"] #menueband{animation:none}}
@@ -67,8 +92,13 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
     background:var(--bg-side);border-color:var(--line)}
   body[data-schale="premium"] #main > #kante{grid-row:3/-1;padding:8px 8px 12px;
     background:var(--bg-side)}
+  /* DIE LADE BEGINNT UNTER DEM BAND, NICHT DARIN. premium.css gibt ihr
+     `grid-row: 2 / -1` — dort ist Zeile 2 das Band. Hier steht in Zeile 1
+     der Studio-Kopf und in Zeile 2 das Band; ohne diese Zeile deckte eine
+     offene Lade das aufgeklappte Band zu (test272 §13, gemessen 6. Sept.). */
+  body[data-schale="premium"] #main > #kanten-lade{grid-row:3/-1}
   body[data-schale="premium"] #main > #reiterleiste{grid-row:3}
-  body[data-schale="premium"] #main > #topbar{grid-row:4;background:var(--bg);min-height:44px;border-bottom-color:var(--line-soft)}
+  body[data-schale="premium"] #main > #topbar{grid-row:4;background:var(--bg);min-height:var(--touch-min);border-bottom-color:var(--line-soft)}
   body[data-schale="premium"] #main > #scroll{grid-row:5;background:var(--bg)}
   body[data-schale="premium"] .k-knopf{width:100%;display:flex;justify-content:flex-start;
     gap:11px;padding:0 10px;border-radius:var(--radius-lg);color:var(--text-dim);font-size:12px;
@@ -121,7 +151,7 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
 .lw-desk-copy{min-width:0}.lernwelt .lw-eyebrow{font-size:10px;letter-spacing:1.8px;font-weight:650;color:var(--accent-text);margin:0 0 16px}
 .lernwelt .lw-desk h2{font-size:clamp(28px,3.1vw,44px);line-height:1.12;letter-spacing:-1.7px;margin:0 0 18px;font-weight:650}
 .lw-desk-copy>p:not(.lw-eyebrow){color:var(--text-dim);font-size:14px;line-height:1.7;max-width:350px;margin-bottom:24px}
-.lernwelt .lw-desk .lw-actions{gap:10px}.lernwelt .lw-desk .lw-actions button{min-height:44px;border-radius:var(--radius-lg)}
+.lernwelt .lw-desk .lw-actions{gap:10px}.lernwelt .lw-desk .lw-actions button{min-height:var(--touch-min);border-radius:var(--radius-lg)}
 .lw-desk-link{margin-top:18px;font-size:12px;color:var(--text-dim);padding:6px 0}
 .lw-desk-link:hover{color:var(--accent-text)}
 .lw-paper-stack{position:relative;display:block;padding:18px;width:min(100%,290px);justify-self:center;perspective:var(--studio-perspective);background:transparent;border:0;text-align:left;isolation:isolate}

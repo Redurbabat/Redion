@@ -126,7 +126,17 @@ pr('Leeren lässt die ganze Glocke wieder verschwinden',
 
 console.log('\n5 · Ein Klick öffnet den Posteingang');
 await p.evaluate(() => { Werkzeuge.posteingangMelden({ text: 'Klickprobe', quelle: 'test258' }); });
-await p.click('#mb-glocke');
+/* AM RECHNER IST DAS BAND SEIT E457 EINE LADE — die Glocke, die man sieht,
+   ist die im Studio-Kopf. Geklickt wird die sichtbare von beiden; beide
+   tragen dieselbe Zahl (`glockeFrisch`). */
+const sichtbareGlocke = await p.evaluate(() => {
+  const s = document.getElementById('studio-glocke');
+  return s && !s.hidden && s.getBoundingClientRect().width > 0 ? '#studio-glocke' : '#mb-glocke';
+});
+pr('Die Studio-Glocke zeigt dieselbe Zahl wie die im Band', await p.evaluate(() =>
+  (document.querySelector('#studio-glocke .glocke-zahl')?.textContent || '') ===
+  (document.querySelector('#mb-glocke .glocke-zahl')?.textContent || '')));
+await p.click(sichtbareGlocke);
 await p.waitForTimeout(600);
 pr('Die Krume zeigt den Posteingang',
   await p.evaluate(() => /Posteingang/.test(document.getElementById('crumb')?.textContent || '')),

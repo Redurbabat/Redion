@@ -138,6 +138,16 @@ const MESS = `
       kontoSymbol: !!document.querySelector('#mb-konto svg'),
       kontoBuchstabe: da('#mb-konto .ws-icon'),
       klapp: da('#menueband .mb-klapp'),
+      /* SEIT E457 (6. September): am Rechner ist das Band in Ruhe eine Lade,
+         die erst der Griff im Studio-Kopf holt. Suche, KI und Konto stehen
+         dort im Kopf; das Wort „Werkzeuge" steht am Griff. */
+      bandDa: !!band && band.getBoundingClientRect().height > 0,
+      griff: da('#studio-tools'),
+      griffWort: (document.getElementById('studio-tools')
+        ? (document.getElementById('studio-tools').getAttribute('aria-label') || '') : ''),
+      studioSuche: da('#studio-search'),
+      studioKi: da('#btn-ai'),
+      studioKonto: da('#studio-account'),
       /* Das Wort am Pfeil — es soll GENAU dann dastehen, wenn die Reiter
          fehlen, und sonst nicht (sonst wäre es Doppelung). */
       wort: da('#menueband .mb-klapp-wort'),
@@ -185,23 +195,16 @@ p('… und „Datei" auch nicht', ruhe.datei === false, JSON.stringify(ruhe.date
    Pfeil war bisher das Ende einer Reihe; allein an der rechten Kante ist er
    eine Zierde, die niemand anklickt. Redur hat entschieden, ihm ein Wort zu
    geben. Es ist der einzige neue Knopf dieses Bogens — und er ersetzt zehn. */
-p('Der Pfeil trägt jetzt ein Wort', ruhe.wort === true, JSON.stringify(ruhe.wort));
-gleich('… und das Wort heisst „Werkzeuge"', String(ruhe.wortText).trim(), 'Werkzeuge');
-
-/* DER KNOPF MUSS SEINEN INHALT AUCH FASSEN. `.mb-klapp` ist 32 px breit
-   festgesetzt; ohne `width:auto` ragten Wort (1288–1354) und Pfeil
-   (1358–1373) aus dem Knopf (1317–1344) heraus, und der Pfeil lag über dem
-   Suchknopf (1346–1374). Diese drei Zeilen halten das fest. */
-const kk = ruhe.kaesten || {};
-p('Das Wort steht IM Knopf, nicht daneben',
-  !!kk.wort && !!kk.klapp && kk.wort.l >= kk.klapp.l && kk.wort.r <= kk.klapp.r,
-  JSON.stringify(kk));
-p('… der Pfeil auch',
-  !!kk.pfeil && !!kk.klapp && kk.pfeil.l >= kk.klapp.l && kk.pfeil.r <= kk.klapp.r,
-  JSON.stringify(kk));
-p('… und der Knopf überlappt die Suche nicht',
-  !!kk.klapp && !!kk.suche && (kk.klapp.r <= kk.suche.l || kk.suche.r <= kk.klapp.l),
-  JSON.stringify(kk));
+/* SEIT E457 IST DAS BAND AM RECHNER GANZ WEG, solange es niemand holt: das
+   Wort am Pfeil hat seinen Platz gewechselt und steht am Griff im
+   Studio-Kopf („Werkzeuge einblenden"). Pfeil samt Wort gibt es weiter —
+   am Telefon, wo das Band die einzige Zeile ist; §5 misst dort, ob das
+   Wort in seinen Knopf passt. */
+p('In Ruhe ist das Band am Rechner ganz weg', ruhe.bandDa === false,
+  JSON.stringify(ruhe.bandDa));
+p('Dafür trägt der Griff im Studio-Kopf das Wort „Werkzeuge"',
+  ruhe.griff === true && /Werkzeuge/.test(String(ruhe.griffWort)),
+  JSON.stringify(ruhe.griffWort));
 
 /* ==========================================================================
  * §2 Aber erreichbar — und das ist der eigentliche Punkt
@@ -214,14 +217,14 @@ await seite.waitForTimeout(500);
 const alt: any = await seite.evaluate(MESS);
 p('In der alten Fassung stehen Reiter da', alt.reiter > 0, JSON.stringify(alt.reiter));
 
-/* Zurück in die Ruhe, dann den Klapp-Pfeil drücken. */
+/* Zurück in die Ruhe, dann den Griff im Studio-Kopf drücken (E457). */
 await seite.evaluate(() => { Ruhig.setzen(true); if (Ruhig.offen()) Ruhig.schalten(); });
 await seite.waitForTimeout(400);
-await seite.click('#menueband .mb-klapp');
+await seite.click('#studio-tools');
 await seite.waitForTimeout(600);
 const aufgeklappt: any = await seite.evaluate(MESS);
 
-p('Ein Klick auf den Klapp-Pfeil bringt die Reiter zurück',
+p('Ein Klick auf den Griff bringt die Reiter zurück',
   aufgeklappt.reiter > 0, JSON.stringify(aufgeklappt));
 gleich('… und zwar genau dieselben wie in der alten Fassung',
   aufgeklappt.namen, alt.namen);
@@ -230,7 +233,7 @@ p('… und das Wort am Pfeil verschwindet wieder — sonst wäre es Doppelung',
   aufgeklappt.wort === false, JSON.stringify(aufgeklappt.wort));
 
 /* Wieder zuklappen, damit der nächste Weg von vorne anfängt. */
-await seite.click('#menueband .mb-klapp');
+await seite.click('#studio-tools');
 await seite.waitForTimeout(600);
 const wiederZu: any = await seite.evaluate(MESS);
 gleich('Wieder zugeklappt sind sie wieder weg', wiederZu.reiter, 0);
@@ -270,9 +273,11 @@ for (const [name, setzen] of zustaende) {
   await setzen();
   await seite.waitForTimeout(450);
   const m: any = await seite.evaluate(MESS);
-  p(`${name}: Suche, KI und Konto stehen rechts`,
-    m.suche && m.ki && m.konto,
-    JSON.stringify({ suche: m.suche, ki: m.ki, konto: m.konto }));
+  /* In Ruhe (Band zu) stehen die drei im Studio-Kopf, sonst rechts im Band. */
+  p(`${name}: Suche, KI und Konto stehen da — rechts im Band oder im Studio-Kopf`,
+    (m.suche && m.ki && m.konto) || (m.studioSuche && m.studioKi && m.studioKonto),
+    JSON.stringify({ suche: m.suche, ki: m.ki, konto: m.konto,
+                     studio: [m.studioSuche, m.studioKi, m.studioKonto] }));
   /* E456: Redur will genau EINE Marke — „R redion STUDIO" in der Zeile
      darüber. Das „N" links und der Buchstabe im Kontokreis waren daneben
      zwei weitere Logos. */
@@ -280,7 +285,7 @@ for (const [name, setzen] of zustaende) {
   p(`${name}: das Konto trägt ein Symbol, keinen Buchstaben (E456)`,
     m.kontoSymbol === true && m.kontoBuchstabe === false,
     JSON.stringify({ symbol: m.kontoSymbol, buchstabe: m.kontoBuchstabe }));
-  p(`${name}: der Klapp-Pfeil ist erreichbar`, m.klapp === true);
+  p(`${name}: der Klapp-Pfeil oder der Griff ist erreichbar`, m.klapp === true || m.griff === true);
 }
 
 /* ==========================================================================
@@ -313,6 +318,23 @@ p('Am Telefon ist das Band von Haus aus zu', tel.istZu === true, JSON.stringify(
 gleich('… also stehen dort auch keine Reiter', tel.reiter, 0);
 gleich('Nichts läuft waagerecht über', tel.ueberlauf, 0);
 p('… und die Suche steht trotzdem rechts', tel.suche === true);
+/* DER KNOPF MUSS SEINEN INHALT AUCH FASSEN — hier, wo das Wort steht.
+   `.mb-klapp` ist 32 px breit festgesetzt; ohne `width:auto` ragten Wort
+   und Pfeil aus dem Knopf heraus, und der Pfeil lag über dem Suchknopf.
+   Bis E457 stand die Messung in §1 am Rechner; dort ist das Band in Ruhe
+   weg, das Wort steht nur noch am Telefon. */
+p('Am Telefon trägt der Pfeil das Wort', tel.wort === true, JSON.stringify(tel.wort));
+gleich('… und es heisst „Werkzeuge"', String(tel.wortText).trim(), 'Werkzeuge');
+const kk = tel.kaesten || {};
+p('Das Wort steht IM Knopf, nicht daneben',
+  !!kk.wort && !!kk.klapp && kk.wort.l >= kk.klapp.l && kk.wort.r <= kk.klapp.r,
+  JSON.stringify(kk));
+p('… der Pfeil auch',
+  !!kk.pfeil && !!kk.klapp && kk.pfeil.l >= kk.klapp.l && kk.pfeil.r <= kk.klapp.r,
+  JSON.stringify(kk));
+p('… und der Knopf überlappt die Suche nicht',
+  !!kk.klapp && !!kk.suche && (kk.klapp.r <= kk.suche.l || kk.suche.r <= kk.klapp.l),
+  JSON.stringify(kk));
 
 /* DER WEG ZURÜCK AM TELEFON läuft über einen anderen Zweig als am Rechner:
    `__klapp` ruft dort `fluechtig(false)`, und das nimmt `.ist-zu` als Klasse

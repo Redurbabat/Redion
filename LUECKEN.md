@@ -6259,3 +6259,66 @@ WAS ES SCHON GIBT: `test261 §4` schaltet den Takt seither ausdrücklich ab
 und prüft, dass der Abgleich wirklich lief (`kein null`), bevor es die
 Grabsteine misst. Der Wettlauf kann die Prüfung also nicht mehr falsch rot
 machen — er ist damit aber nur eingehegt, nicht behoben.
+
+L117 — Was die ruhige Studio-Schale (E457) noch nicht kann
+════════════════════════════════════════════════════════════════════════════
+
+Gefunden am 6. September 2026 beim Abschluss des Umbaus — am Bild und an
+den Prüfläufen, nicht vermutet.
+
+1. **Die untere Telefonleiste hängt an fünf festen Knöpfen** — Dokumente ·
+   Heute · Lernen · Termine · Mehr — und nicht an `haupt: true` wie die
+   Kante am Rechner. Das ist der Rest von F02 (AUFGABEN.md §0): WELCHE
+   vier es unten sein sollen, ist Redurs Entscheidung, und bis dahin
+   stehen dort weiter die Fünf aus E236. Die Sammlungen erreicht man am
+   Telefon über die Bibliothek („Sammlungen ⌄") und das Mehr-Blatt.
+
+2. **Die Sammlung „Dateien & PDFs" listet jeden Textblock als Eintrag** —
+   bis zu 80 Stück, jeder mit „text ↗ ⊞ ¶". Sie ist die alte Bibliothek
+   der Arbeitswelt, unverändert übernommen, und noch nicht beruhigt.
+   test428 stolperte darüber: ein Nutzerblock aus dem Notion-Wissen
+   („in jedem Notion-Workspace") stand als Eintrag da, und die Prüfung
+   „keine Workspace-Beschriftung" las den ganzen Inhalt statt der Schale.
+   Die Prüfung ist umgeschrieben; die Sammlung nicht.
+
+3. **Bei offener Werkzeuglade stehen Suche, KI und Konto doppelt** — im
+   Studio-Kopf und rechts im Band. Glocke und Wolkenpunkt stehen seit
+   E457 auch im Studio-Kopf (`#studio-glocke`, `#studio-account`; test258
+   fand, dass die Glocke im Band bei zugeklappter Lade unsichtbar war);
+   die Band-Rechtsgruppe bleibt trotzdem, weil das Band am Telefon die
+   einzige Zeile ist. Im Ruhezustand (Lade zu) gibt es die Doppelung
+   nicht.
+
+4. **Im ruhigen Modus zeigt die Kante keinen Kontextgriff direkt** — nur
+   „Seiten" und „Werkzeuge". Redurs Auftrag sagt „wenige", der
+   Laptop-Stand hat null gewählt und test430 misst genau zwei Knöpfe. Ob
+   ein oder zwei Griffe je Ort (Lesen/Annotieren im Dokument, Neu im
+   Regal) direkt stehen sollen, ist offen.
+
+5. **Nicht auf einem echten Gerät geprüft** — wie L10: alles gemessen mit
+   Playwright im Telefon-Bildmass.
+
+6. **Die Studio-Stilblätter haben zwei Wächter rot gemacht, die Schuld
+   festhalten.** test332 (E340, L111): 55 Grundregeln in bausteine.css,
+   premium.css, aufbau.css, einstellungen.css und lernwelt.css sind von
+   studio.css, bibliothek-studio.css und pdf-studio.css vollständig
+   überschrieben — tote Regeln, die noch nicht entfernt sind. test362
+   (E372, L10): die Decken der rohen Pixelzahlen sind mit dem Studio-Stil
+   gestiegen — 16px 224 → 245, 22px 68 → 74, 28px 52 → 55 — und wurden am
+   6. September einmal auf den gemessenen Stand gesetzt, damit der Wächter
+   wieder eine Decke hält statt dauerhaft rot zu stehen (E457). Die 44er
+   sind in den vier Studio-Stilblättern auf `var(--touch-min)` umgestellt
+   (175 → 153, unter die alte Decke von 152 kam sie nicht ganz: 56px sank
+   von 13 auf 12). Ab hier dürfen alle sechs Zahlen wieder nur sinken.
+
+7. **Vier Läufe sind unabhängig von der Schale rot und waren es schon vor
+   diesem Bogen**: test180 (PDF-Sicherung einspielen, `App.oeffne` wirft
+   beim Setzen der Adresse), test210 (der Inspector nennt das Dokument
+   nicht beim Namen — „Dokumentdetails"), test217 (die Heute-Ansicht heisst
+   ihren Knopf „Lernen starten →" statt „Tagesrunde starten" und stapelt
+   die Zahlen unter das erste Bild), test225 (ENTSCHEIDUNGEN.md verweist
+   auf „test423 §4" und „test427 §5", die es nicht gibt). test341 war im
+   Parallel-Lauf rot (85 s, der Speicher wurde zu früh gelesen) und allein
+   grün — ein Lastfehler, kein Produktfehler, aber einer, der zeigt, dass
+   der Start den Merker `startAnsichtE349` liest, bevor die Ablage sicher
+   da ist.

@@ -64,6 +64,11 @@ const StudioSchale = (() => {
         an('studio-create', () => App.erstellenBlatt());
         an('studio-import', () => Bibliothek.pdfImportieren());
         an('studio-account', () => App.arbeitsbereich());
+        /* Dieselbe Handlung wie `mb-glocke` im Band (menueband.ts). */
+        an('studio-glocke', () => { try {
+            Ansichten.posteingang();
+        }
+        catch { /* ohne Posteingang bleibt der Kopf */ } });
         an('studio-tools', () => {
             if (document.body.dataset.studioTools === 'offen')
                 Menueband.schliessen();

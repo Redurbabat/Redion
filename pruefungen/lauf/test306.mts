@@ -71,6 +71,13 @@ const gebaut = await pc.evaluate(async () => {
   document.querySelectorAll('.overlay').forEach(o => o.remove());
   document.getElementById('rg-willkommen')?.remove();
   document.getElementById('rg-einladung')?.remove();
+  /* OHNE RUHIGEN MODUS MESSEN (E457). Im ruhigen Modus zeichnet die Kante
+     die Griffe eines Ortes nicht als Knöpfe, sondern hinter „Werkzeuge" —
+     test387 §5 und test430 halten das. Dieser Lauf prüft, ob die Datenbank
+     ihre fünf Griffe ANMELDET und ob sie etwas öffnen; dafür braucht er
+     sie als Knöpfe. §5 unten prüft zusätzlich, dass dieselben fünf im
+     ruhigen Modus in der Werkzeuglade stehen. */
+  (globalThis as any).Ruhig?.setzen?.(false);
 
   const schema = {
     titel:  { name: 'Projekt', type: 'title' },
@@ -190,6 +197,31 @@ for (const [id, wort] of [['db-filter', 'Filter'], ['db-sort', 'Sortier'],
     JSON.stringify(r));
   p(`… und es ist ${wort}`, r.text.includes(wort), r.text);
 }
+
+/* UND IM RUHIGEN MODUS stehen dieselben fünf in der Werkzeuglade — sonst
+   wären sie mit der ruhigen Kante verschwunden statt gefaltet (E457). */
+console.log('\n4b · Im ruhigen Modus liegen die fünf hinter „Werkzeuge"');
+const inLade = await pc.evaluate(async (id: string) => {
+  const w = globalThis as any;
+  w.Ruhig?.setzen?.(true);
+  App.oeffne(id);
+  await new Promise(r => setTimeout(r, 800));
+  const direkt = [...document.querySelectorAll('#kante .k-oben .k-knopf')]
+    .map(b => String((b as HTMLElement).dataset['k'] || ''));
+  (document.querySelector('#kante .k-knopf[data-k="mehr-werkzeuge"]') as HTMLElement | null)?.click();
+  await new Promise(r => setTimeout(r, 300));
+  const namen = [...document.querySelectorAll('#kanten-lade .kl-koerper .kl-zeile b')]
+    .map(b => (b.textContent || '').trim());
+  (document.querySelector('#kanten-lade .kl-zu') as HTMLElement | null)?.click();
+  /* Und zurück in die alte Leiste — §5 misst die Ansichten-Lade direkt. */
+  w.Ruhig?.setzen?.(false);
+  App.oeffne(id);
+  await new Promise(r => setTimeout(r, 800));
+  return { direkt, namen };
+}, gebaut.rein);
+gleich('Ruhig: direkt stehen nur „Seiten" und „Werkzeuge"', inLade.direkt, ['seiten', 'mehr-werkzeuge']);
+gleich('… und die fünf Datenbankgriffe liegen in der Lade',
+  ['Ansicht', 'Filter', 'Sortieren', 'Gruppieren', 'Spalten'].filter(n => !inLade.namen.includes(n)), []);
 
 /* ------------------------------------------------------------------------ */
 console.log('\n5 · Die Ansichten in der Lade');

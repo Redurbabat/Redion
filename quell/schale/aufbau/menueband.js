@@ -711,6 +711,16 @@ const Menueband = (() => {
            viel Platz nehmen." Zugeklappt sind das 30 px. */
         void seiteOffen;
         wurzel.hidden = false;
+        /* DIE LADE FOLGT DEM MERKER (6. September). `data-studio-tools` am
+           body entscheidet am Rechner, ob das Band überhaupt dasteht
+           (studio.css); gesetzt wurde es bisher nur vom Klick auf den Pfeil
+           und von `zeige()`. Wer den Merker anders setzte — ein Prüflauf, ein
+           Ortswechsel mit anderem Schlüssel (`merkeZu()`) — bekam ein Band,
+           dessen Sichtbarkeit nicht zu `zugeklappt()` passte: offen gemerkt,
+           aber nicht da. Also hier, bei jedem Zeichnen. Eine Wahrheit, ein
+           Ort (§8). Am Telefon ist `zugeklappt()` immer wahr, und die Regel
+           in studio.css greift dort ohnehin nicht. */
+        sichtbarSetzen(!zugeklappt());
         let gewaehlt = reiterJetzt();
         if (!reiter.some((r) => r.id === gewaehlt))
             gewaehlt = String(reiter[0].id);
@@ -1124,7 +1134,6 @@ const Menueband = (() => {
                     return;
                 }
                 setzeMeta(merkeZu(), !zugeklappt());
-                sichtbarSetzen(!zugeklappt());
                 zeichne();
                 return;
             }
@@ -1217,10 +1226,12 @@ const Menueband = (() => {
      * Die Horcher stehen in `start()` und werden EINMAL gesetzt: ein Horcher
      * je Zeichnen wäre nach zehn Reiterwechseln ein Chor.
      * ======================================================================== */
+    /* ZWEI GLOCKEN, EIN STAND (E457). Die im Band ist am Rechner hinter der
+       Werkzeuglade; die im Studio-Kopf (`#studio-glocke`, index.html) steht
+       davor. Beide bekommen hier dieselbe Zahl und denselben Namen — eine
+       Meldung, die man erst nach dem Holen der Werkzeuge sieht, ist keine.
+       test258 klickt die sichtbare von beiden. */
     const glockeFrisch = () => {
-        const glocke = document.getElementById('mb-glocke');
-        if (!glocke)
-            return;
         let offen = 0;
         try {
             offen = (typeof Werkzeuge !== 'undefined' && Werkzeuge.meldungen
@@ -1228,30 +1239,42 @@ const Menueband = (() => {
                 .filter((m) => !m.gelesen).length;
         }
         catch { /* ohne Posteingang bleibt die Glocke versteckt */ }
-        glocke.hidden = !offen;
-        const zahl = glocke.querySelector('.glocke-zahl');
-        if (zahl) {
-            zahl.textContent = offen > 99 ? '99+' : String(offen);
-            zahl.hidden = !offen;
-        }
         const wort = offen ? 'Posteingang, ' + offen + ' ungelesen' : 'Posteingang';
-        glocke.setAttribute('aria-label', wort);
-        glocke.title = wort;
+        for (const id of ['mb-glocke', 'studio-glocke']) {
+            const glocke = document.getElementById(id);
+            if (!glocke)
+                continue;
+            glocke.hidden = !offen;
+            const zahl = glocke.querySelector('.glocke-zahl');
+            if (zahl) {
+                zahl.textContent = offen > 99 ? '99+' : String(offen);
+                zahl.hidden = !offen;
+            }
+            glocke.setAttribute('aria-label', wort);
+            glocke.title = wort;
+        }
     };
     /* Der letzte gemeldete Wolke-Stand. `Wolke.beiAenderung` ruft nur bei
        ÄNDERUNGEN — ein frisch gebauter Punkt muss den Stand von davor kennen,
        sonst zeigt er bis zum nächsten Takt nichts. */
     let wolkeStand = null;
+    /* AUCH DER WOLKENPUNKT STEHT ZWEIMAL (E457): am Konto-Knopf im Band und
+       am Konto-Knopf im Studio-Kopf (`#studio-account`). Derselbe Stand,
+       derselbe Satz — nur der Grundname des Knopfes ist je seiner. */
     const wolkeFrisch = () => {
-        const konto = document.getElementById('mb-konto');
+        wolkeAn('mb-konto', 'Arbeitsbereich');
+        wolkeAn('studio-account', 'Konto und Arbeitsbereich');
+    };
+    const wolkeAn = (id, grundname) => {
+        const konto = document.getElementById(id);
         const punkt = konto?.querySelector('.wolke-punkt');
         if (!konto || !punkt)
             return;
         const z = wolkeStand;
         if (!z || !z.angemeldet) {
             punkt.hidden = true;
-            konto.title = 'Arbeitsbereich';
-            konto.setAttribute('aria-label', 'Arbeitsbereich');
+            konto.title = grundname;
+            konto.setAttribute('aria-label', grundname);
             return;
         }
         const schlecht = String(z.fehler || z.fehlerDateien || '');
@@ -1274,8 +1297,8 @@ const Menueband = (() => {
            nichts anderes versprechen. Der Wolke-Stand steht DAHINTER, als
            Auskunft, nicht als Ziel; der Weg zum Wolke-Dialog steht unter
            „Mehr → Wolke". */
-        konto.title = 'Arbeitsbereich · ' + name + ' · ' + stand;
-        konto.setAttribute('aria-label', 'Arbeitsbereich — Konto ' + name + ', ' + stand);
+        konto.title = grundname + ' · ' + name + ' · ' + stand;
+        konto.setAttribute('aria-label', grundname + ' — Konto ' + name + ', ' + stand);
     };
     /* ======================================================================== *
      * START
@@ -1377,7 +1400,6 @@ const Menueband = (() => {
     };
     /** Von aussen: das Band auf einen Reiter stellen. */
     const zeige = (reiter) => {
-        sichtbarSetzen(true);
         setzeMeta(merkeReiter, reiter);
         if (amTelefon()) {
             zeichne();
@@ -1387,6 +1409,11 @@ const Menueband = (() => {
         setzeMeta(merkeZu(), false);
         zeichne();
     };
+    /**
+     * Ob das Band am Rechner dasteht — als Marke am `body` und als Zustand
+     * am Griff `#studio-tools` (aria-expanded, Name). `zeichne()` ruft es bei
+     * jedem Zeichnen mit `!zugeklappt()`; von aussen braucht es niemand.
+     */
     const sichtbarSetzen = (an) => {
         document.body.dataset.studioTools = an ? 'offen' : 'zu';
         const knopf = document.getElementById('studio-tools');
@@ -1396,8 +1423,22 @@ const Menueband = (() => {
         if (knopf)
             knopf.title = name;
     };
+    /** Die Lade holen — mit dem zuletzt gewählten Reiter. */
     const aufklappen = () => { zeige(reiterJetzt()); };
-    const schliessen = () => { fluechtig(true); sichtbarSetzen(false); };
+    /**
+     * Die Lade wegnehmen. Am Rechner über den MERKER, nicht nur über die
+     * Klasse: `fluechtig(true)` allein liess `bandZu=false` stehen, und das
+     * nächste `zeichne()` hätte das Band wieder geholt. Am Telefon ist das
+     * Band ein Menü (E240) und wird nur jetzt zugeklappt.
+     */
+    const schliessen = () => {
+        if (amTelefon()) {
+            fluechtig(true);
+            return;
+        }
+        setzeMeta(merkeZu(), true);
+        zeichne();
+    };
     return { start, zeichne, zeige, aufklappen, schliessen, WURZEL };
 })();
 window.Menueband = Menueband;

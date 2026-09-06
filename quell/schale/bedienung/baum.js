@@ -51,12 +51,15 @@ const Baumansicht = (() => {
                         zeile.setAttribute('aria-disabled', 'true');
                     zeile.tabIndex = gewaehlt === k.id ? 0 : -1;
                     zeile.style.setProperty('--baum-ebene', String(ebene - 1));
-                    const knick = document.createElement('button');
-                    knick.type = 'button';
+                    /* EIN `span`, KEIN `button`. Der Knick ist Zierat am Treeitem: die
+                       Zeile selbst ist das Bedienelement (Klick, Pfeiltasten, Enter),
+                       und der Klick auf den Knick wird über `closest()` an der Zeile
+                       erkannt. Als Knopf war er 20 × 24 gross, `aria-hidden` und
+                       `tabindex=-1` — für den Finger ein Ziel unter 44 px (§37), für
+                       den Vorleser ein Knopf, den es nicht gibt. test114 mass ihn. */
+                    const knick = document.createElement('span');
                     knick.className = 'ru-baum-knick';
-                    knick.tabIndex = -1;
                     knick.setAttribute('aria-hidden', 'true');
-                    knick.disabled = !hatKinder;
                     knick.textContent = hatKinder ? (offen.has(k.id) ? '⌄' : '›') : '';
                     const inhalt = document.createElement('span');
                     inhalt.className = 'ru-baum-inhalt';

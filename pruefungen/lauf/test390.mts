@@ -83,13 +83,44 @@ const MARKIERT = `[...document.querySelectorAll('#kante .k-orte .k-knopf')]
  * §1 · Jeder der fünf Orte markiert sich selbst — und nur sich
  * ========================================================================*/
 console.log('\n1 · Wo man steht, leuchtet auch');
-const FUENF = ['heute', 'lernzentrum', 'elektro', 'bibliothekOben', 'aufgaben'];
-for (const id of FUENF) {
+/* DREI IN DER LEISTE, DREI DAHINTER (6. September). Im ruhigen Modus stehen
+   Bibliothek, Notizhefte und Lernzentrum da; Heute, Elektrotechnik und
+   Aufgaben tragen `ruhig: false` und liegen hinter „Mehr Orte". Beide
+   Gruppen sind Hauptwege — nur der Knopf, der leuchtet, ist ein anderer. */
+const IN_DER_LEISTE = ['bibliothekOben', 'app-notizhefte', 'lernzentrum'];
+for (const id of IN_DER_LEISTE) {
   const s = await frisch();
   await s.evaluate(`document.querySelector('#kante .k-orte .k-knopf[data-k=${JSON.stringify(id)}]')?.click()`);
   await s.waitForTimeout(1300);
   const m = await s.evaluate(MARKIERT) as string[];
   gleich(`„${id}" markiert genau sich selbst`, m, [id]);
+  await s.close();
+}
+/* Wer hinter „Mehr Orte" steht, sieht es AM KNOPF, DER DORTHIN FÜHRT — und
+   nur dort. Nichts zu markieren sähe aus wie der Posteingang (§2), und
+   das wäre die Markierung, die nichts sagt (§55.1). */
+const HINTER_MEHR = ['heute', 'elektro', 'aufgaben'];
+for (const id of HINTER_MEHR) {
+  const s = await frisch();
+  gleich(`„${id}" hat im ruhigen Modus keinen eigenen Knopf`,
+    await s.evaluate(`!!document.querySelector('#kante .k-orte .k-knopf[data-k=${JSON.stringify(id)}]')`), false);
+  await s.evaluate(`Register.navigation.eines(${JSON.stringify(id)})?.tun?.()`);
+  await s.waitForTimeout(1300);
+  gleich(`„${id}" leuchtet an „Mehr Orte"`, await s.evaluate(MARKIERT), ['mehr-orte']);
+  await s.close();
+}
+/* UND OHNE RUHIGEN MODUS gilt die alte Zusicherung unverändert: jeder der
+   sechs steht da und markiert sich selbst. `Ruhig.setzen(false)` zeichnet
+   die Kante neu (ruhig.ts). */
+{
+  const s = await frisch();
+  await s.evaluate(`Ruhig.setzen(false)`);
+  await s.waitForTimeout(500);
+  for (const id of [...IN_DER_LEISTE, ...HINTER_MEHR]) {
+    await s.evaluate(`document.querySelector('#kante .k-orte .k-knopf[data-k=${JSON.stringify(id)}]')?.click()`);
+    await s.waitForTimeout(1300);
+    gleich(`ohne Ruhe: „${id}" markiert genau sich selbst`, await s.evaluate(MARKIERT), [id]);
+  }
   await s.close();
 }
 
@@ -104,9 +135,9 @@ for (const id of FUENF) {
 console.log('\n2 · Anderswo leuchtet keiner');
 {
   const s = await frisch();
-  await s.evaluate(`document.querySelector('#kante .k-orte .k-knopf[data-k="heute"]')?.click()`);
+  await s.evaluate(`document.querySelector('#kante .k-orte .k-knopf[data-k="lernzentrum"]')?.click()`);
   await s.waitForTimeout(1000);
-  gleich('Erst steht „Heute" an', await s.evaluate(MARKIERT), ['heute']);
+  gleich('Erst steht „Lernzentrum" an', await s.evaluate(MARKIERT), ['lernzentrum']);
   /* Und jetzt auf eine gewöhnliche Seite. */
   await s.evaluate(`App.neueSeite()`);
   await s.waitForTimeout(1300);

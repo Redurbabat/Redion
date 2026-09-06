@@ -678,8 +678,13 @@ const gehen = await seite.evaluate(() => {
   const KEIN_ORT = ['lebensbereiche', 'dokumentmodus', 'editor'];
   /* Und was zweimal dasselbe tut: links fällt weg, rechts bleibt. */
   const DOPPELT: Record<string, string> = {
-    lernwelt: 'heute', arbeitswelt: 'workspace', notizhefte: 'app-notizhefte',
-    hilfe: 'app-kann', vorlagen: 'app-markt', bibliothek: 'app-bib',
+    /* `arbeitswelt` stand hier als Dublette von `workspace` — den Eintrag
+       gibt es seit der Workspace-Auflösung (6. September) nicht mehr; das
+       Modul heisst „Seiten & Wissen" und steht selbst unter „Daten".
+       `bibliothek` (Platz unten) öffnet das Regal wie `bibliothekOben`;
+       `app-bib` ist seither die Liste „Alle Seiten" und kein Doppel. */
+    lernwelt: 'heute', notizhefte: 'app-notizhefte',
+    hilfe: 'app-kann', vorlagen: 'app-markt', bibliothek: 'bibliothekOben',
     papierkorb: 'papierkorbFuss',
     /* Seit E393: `zeitmesser` und `w-zeit` riefen beide `Zeitmesser.panel()`
        und standen unter zwei Überschriften in der Lade. Der Weg ist nicht
@@ -1025,7 +1030,12 @@ const kanteGrund = await seite.evaluate(async () => {
 }) as any;
 
 p('Die Kante steht da', kanteGrund.da && !kanteGrund.versteckt);
-p('Sie ist 54 px breit', kanteGrund.breit === 54, String(kanteGrund.breit));
+/* 184 STATT 54 (Studio, E440): die Kante trägt Beschriftungen und lässt
+   sich ziehen (148–260, kompakt 62). Die Wahrheit steht am Regler. */
+const reglerBreite = Number(await seite.evaluate(
+  `document.getElementById('studio-divider')?.getAttribute('aria-valuenow')`));
+p('Sie ist so breit, wie der Studio-Regler sagt', kanteGrund.breit === reglerBreite,
+  kanteGrund.breit + ' gegen ' + reglerBreite);
 p('Die Seitenleiste ist am Rechner weg', kanteGrund.seitenleiste === 0,
   String(kanteGrund.seitenleiste));
 p('Eine offene Seite ist der Bereich „editor"', kanteGrund.bereich === 'editor',
@@ -1036,9 +1046,25 @@ p('Jeder Knopf hat ein gezeichnetes Zeichen', kanteGrund.ohneZeichen === 0,
   kanteGrund.ohneZeichen + ' ohne SVG — fehlt der Name in Register.symbole?');
 p('Und ist gross genug zum Treffen', kanteGrund.zuKlein === 0,
   kanteGrund.zuKlein + ' unter 42 px');
-p('Unten stehen KI, Neu und Einstellungen',
-  ['ki', 'neu', 'einstellungen'].every((x: string) => kanteGrund.ids.includes(x)),
+/* IM RUHIGEN MODUS STEHT UNTEN NUR „EINSTELLUNGEN" (6. September). Die KI
+   liegt in der Werkzeuglade, „Neu" ist der Knopf im Studio-Kopf — beide
+   sind da, nur nicht als dritter und vierter Knopf einer Leiste, die
+   ruhig sein soll. Gemessen wird deshalb der WEG, nicht der Platz. */
+p('Unten steht „Einstellungen", und der Werkzeuggriff ist da',
+  ['einstellungen', 'mehr-werkzeuge'].every((x: string) => kanteGrund.ids.includes(x)),
   (kanteGrund.ids ?? []).join(', '));
+const kiNeu = await seite.evaluate(async () => {
+  (document.querySelector('#kante .k-knopf[data-k="mehr-werkzeuge"]') as HTMLElement | null)?.click();
+  await new Promise(f => setTimeout(f, 200));
+  const inLade = [...document.querySelectorAll('#kanten-lade .kl-koerper .kl-zeile b')]
+    .map(b => (b.textContent || '').trim());
+  (document.querySelector('#kanten-lade .kl-zu') as HTMLElement | null)?.click();
+  const neu = document.getElementById('studio-create');
+  return { ki: inLade.includes('Lokale KI'),
+           neu: !!neu && neu.getBoundingClientRect().width > 0 };
+}) as any;
+p('… die KI liegt in der Werkzeuglade', kiNeu.ki === true);
+p('… und „Neu" steht im Studio-Kopf', kiNeu.neu === true);
 
 /* JEDER GEMELDETE BEREICH LIEFERT ETWAS. Eine Kante, die in einem Bereich
    leer bleibt, ist ein Streifen ohne Zweck. */
@@ -1056,17 +1082,31 @@ p('Und es sind mindestens sechs Bereiche',
   Object.keys(kanteBereiche).join(', '));
 
 /* GEGENPROBE: einen Lieferanten abmelden, und der Punkt muss es merken. */
+/* GEZÄHLT WIRD IN DER LADE (6. September): im ruhigen Modus zeichnet die
+   Kante die Griffe des Ortes nicht als Knöpfe, sondern hinter „Werkzeuge"
+   — die Zahl der Knöpfe bliebe also immer zwei, und diese Gegenprobe
+   könnte nie rot werden (§55.2). Also die Lade auf, zählen, zu; abmelden;
+   noch einmal. */
 const kanteGegen = await seite.evaluate(async () => {
+  const zaehle = async (): Promise<number> => {
+    (document.querySelector('#kante .k-knopf[data-k="mehr-werkzeuge"]') as HTMLElement | null)?.click();
+    await new Promise(f => setTimeout(f, 200));
+    const n = document.querySelectorAll('#kanten-lade .kl-koerper .kl-zeile').length;
+    (document.querySelector('#kanten-lade .kl-zu') as HTMLElement | null)?.click();
+    await new Promise(f => setTimeout(f, 100));
+    return n;
+  };
   const vorher = Register.kontext.fuer('editor').length;
+  const gezeichnetVorher = await zaehle();
   Register.kontext.nimmZurueck('editor', 'fassungen');
   (window as any).Kontextkante.zeichne();
   await new Promise(f => setTimeout(f, 200));
-  const gezeichnet = document.querySelectorAll('#kante .k-bereich').length;
-  return { vorher, nachher: Register.kontext.fuer('editor').length, gezeichnet };
+  const gezeichnet = await zaehle();
+  return { vorher, nachher: Register.kontext.fuer('editor').length, gezeichnetVorher, gezeichnet };
 }) as any;
 p('Gegenprobe: ein abgemeldeter Knopf verschwindet aus der Kante',
   kanteGegen.nachher === kanteGegen.vorher - 1
-  && kanteGegen.gezeichnet === kanteGegen.nachher,
+  && kanteGegen.gezeichnet === kanteGegen.gezeichnetVorher - 1,
   JSON.stringify(kanteGegen) + ' — bliebe die Zahl gleich, zeichnete die '
   + 'Kante eine eigene Liste statt des Registers');
 
@@ -1390,8 +1430,10 @@ p('Gegenprobe: ohne `zeigeSonder` bleibt der Schauplatz stehen',
    genau das der Zustand, den E273 beheben sollte. */
 const kanten = await seite.evaluate(() => {
   const raus: Record<string, number> = {};
+  /* `workspace` stand hier bis zur Workspace-Auflösung (6. September);
+     seine Griffe wohnen jetzt bei `bibliothek` und `aufgaben`. */
   for (const b of ['heute', 'posteingang', 'kalender', 'bibliothek',
-                   'kompass', 'mehr', 'notizhefte', 'aufgaben', 'workspace'])
+                   'kompass', 'mehr', 'notizhefte', 'aufgaben'])
     raus[b] = (Register.kontext.fuer(b) || []).length;
   return raus;
 }) as any;

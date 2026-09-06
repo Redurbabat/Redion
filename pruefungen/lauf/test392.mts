@@ -68,6 +68,14 @@ const auf = async (w: number, h: number): Promise<Page> => {
   await s.waitForFunction(`typeof App === 'object'`, null, { timeout: 20000 });
   await s.waitForTimeout(900);
   await s.evaluate(`document.getElementById('rg-willkommen')?.remove()`);
+  /* OHNE RUHIGEN MODUS MESSEN (E457). Dieser Lauf misst das FALTEN der
+     Kante (E395): sechs Orte, sieben Werkzeuge, drei im Fuss, und was bei
+     wenig Höhe hinter „···" geht. Im ruhigen Modus zeigt die Kante drei
+     Orte, zwei Griffe und einen Fuss — dort gibt es nichts zu falten;
+     test387 §5 und test430 halten diese Fassung. Das Falten gilt weiter,
+     nämlich in der alten Leiste, und die wird hier hergestellt. */
+  await s.evaluate(`(globalThis.Ruhig && Ruhig.setzen(false))`);
+  await s.waitForTimeout(400);
   return s;
 };
 
@@ -188,8 +196,17 @@ console.log('\n4 · Und alles Weggefaltete ist über die Laden erreichbar');
  * ========================================================================*/
 console.log('\n5 · Am Rechner steht alles da');
 {
-  const s = await browser.newPage({ viewport: { width: 1360, height: 900 } });
+  /* 1080 STATT 900 SEIT E457: die alte Leiste trägt sieben Orte (Notizhefte
+     ist der sechste Hauptweg) plus sieben Werkzeuge, „Seiten" und drei im
+     Fuss — 18 Knöpfe zu 44 px sind 792 px vor Abständen, und bei 900 px
+     faltet sie zu Recht. Die Gegenprobe fragt, ob sie IMMER faltet; das
+     misst sie dort, wo Platz ist. */
+  const s = await browser.newPage({ viewport: { width: 1360, height: 1080 } });
   await s.goto(`http://localhost:${PORT}/index.html`, { waitUntil: 'load' });
+  /* Auch hier die alte Leiste (E457, siehe `auf()` oben). */
+  await s.waitForFunction(`typeof App === 'object'`, null, { timeout: 20000 });
+  await s.evaluate(`(globalThis.Ruhig && Ruhig.setzen(false))`);
+  await s.waitForTimeout(400);
   await s.waitForFunction(`typeof App === 'object'`, null, { timeout: 20000 });
   await s.waitForTimeout(1200);
   await s.evaluate(`document.getElementById('rg-willkommen')?.remove()`);
@@ -199,7 +216,8 @@ console.log('\n5 · Am Rechner steht alles da');
              werkzeuge: k.querySelectorAll('.k-oben .k-knopf').length,
              gefaltet: !!k.querySelector('.k-knopf[data-k="mehr-werkzeuge"]') };
   })()`) as { orte: number; werkzeuge: number; gefaltet: boolean };
-  p('Sechs Ortsknöpfe (fünf Orte und „Mehr Orte")', m.orte === 6, String(m.orte));
+  /* Sieben seit E457: Notizhefte ist der sechste Hauptweg (`haupt: true`). */
+  p('Sieben Ortsknöpfe (sechs Orte und „Mehr Orte")', m.orte === 7, String(m.orte));
   p('Mehr als zwei Werkzeuge', m.werkzeuge > 2, String(m.werkzeuge));
   p('Und kein „···" — es ist ja Platz', !m.gefaltet);
   await s.close();

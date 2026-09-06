@@ -141,6 +141,11 @@ try {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   check('Reduced-motion disables Studio transitions', await page.locator('body').evaluate(e => getComputedStyle(e).getPropertyValue('--motion-normal').trim() === '1ms'));
   await page.locator('[data-document-action="read"]').click();
+  /* Flush vor dem Neuladen, wie oben (E440): `Store.setMeta` schreibt
+     asynchron, und unter Last (drei Läufe parallel) kam das Neuladen dem
+     Schreiben zuvor — der Lesemodus war dann „nicht gemerkt". */
+  await page.evaluate('Store.flush()');
+  await page.waitForTimeout(150);
   await page.reload();
   await page.locator('.document-workspace').waitFor();
   check('Reading preference is persisted per document', await page.locator('.document-workspace').getAttribute('data-document-tools') === 'closed');
