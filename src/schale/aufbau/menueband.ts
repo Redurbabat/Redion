@@ -1076,7 +1076,8 @@ const Menueband = (() => {
           fluechtig(!w?.classList.contains('ist-zu'));
           return;
         }
-        setzeMeta(merkeZu(), !zugeklappt()); zeichne(); return;
+        setzeMeta(merkeZu(), !zugeklappt());
+        sichtbarSetzen(!zugeklappt()); zeichne(); return;
       }
 
       const eintrag = Register?.menueband?.eines?.(id);
@@ -1306,13 +1307,25 @@ const Menueband = (() => {
 
   /** Von aussen: das Band auf einen Reiter stellen. */
   const zeige = (reiter: string): void => {
+    sichtbarSetzen(true);
     setzeMeta(merkeReiter, reiter);
     if (amTelefon()) { zeichne(); fluechtig(false); return; }
     setzeMeta(merkeZu(), false);
     zeichne();
   };
 
-  return { start, zeichne, zeige, WURZEL };
+  const sichtbarSetzen = (an: boolean): void => {
+    document.body.dataset.studioTools = an ? 'offen' : 'zu';
+    const knopf = document.getElementById('studio-tools');
+    const name = an ? 'Werkzeuge ausblenden' : 'Werkzeuge einblenden';
+    knopf?.setAttribute('aria-expanded', String(an));
+    knopf?.setAttribute('aria-label', name);
+    if (knopf) knopf.title = name;
+  };
+  const aufklappen = (): void => { zeige(reiterJetzt()); };
+  const schliessen = (): void => { fluechtig(true); sichtbarSetzen(false); };
+
+  return { start, zeichne, zeige, aufklappen, schliessen, WURZEL };
 })();
 
 (window as any).Menueband = Menueband;

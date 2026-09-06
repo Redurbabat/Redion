@@ -724,13 +724,16 @@ const App = (() => {
     'Lernzentrum': 'lernen',
     'Bibliothek': 'bibliothek', 'Alle Seiten': 'bibliothek',
     'Dokumente': 'bibliothek', 'Seiten': 'bibliothek',
+    'Seiten & Wissen': 'bibliothek', 'Dateien & PDFs': 'bibliothek',
+    'Datenbanken': 'bibliothek', 'Whiteboards': 'bibliothek',
+    'Wissen & Verweise': 'bibliothek', 'Vorlagen': 'bibliothek',
     'Notizhefte': 'notizhefte',
     /* BEIDE NAMEN, EIN ZIEL (Audit F16). „Workspace" heisst seit dem
        3. September „Arbeitsbereich"; der alte Name bleibt hier als Alias
        stehen, damit ein gemerkter Schauplatz, ein Verweis oder eine ältere
        Sicherung nicht ins Leere zeigt. Ein Alias ist kein Doppelkatalog:
        er führt zur selben Kennung. */
-    'Arbeitsbereich': 'workspace', 'Workspace': 'workspace',
+    'Arbeitsbereich': 'bibliothek', 'Workspace': 'bibliothek',
     'Meine Aufgaben': 'aufgaben',
     'Aufgaben': 'aufgaben', 'Posteingang': 'posteingang',
     'Elektrotechnik': 'elektro', 'Elektro': 'elektro',
@@ -3187,6 +3190,15 @@ const App = (() => {
      „welcher Hash ist ein Ort" (`rohHash in SONDER_START`, weiter unten). */
   const SONDER_START: Record<string, () => void> = {
     dokumente: () => Bibliothek.oeffne(),
+    'seiten-wissen': () => Arbeitswelt.oeffnen('uebersicht'),
+    'dateien-pdfs': () => Arbeitswelt.oeffnen('bibliothek'),
+    aufgaben: () => Arbeitswelt.oeffnen('aufgaben'),
+    datenbanken: () => Arbeitswelt.oeffnen('datenbanken'),
+    whiteboards: () => Arbeitswelt.oeffnen('whiteboards'),
+    'wissen-verweise': () => Arbeitswelt.oeffnen('wiki'),
+    vorlagen: () => Arbeitswelt.oeffnen('vorlagen'),
+    workspace: () => Arbeitswelt.oeffnen('uebersicht'),
+    arbeitsbereich: () => Arbeitswelt.oeffnen('uebersicht'),
     notizhefte: () => {
       const N = (globalThis as any).Notebook;
       if (N && typeof N.oeffnen === 'function') N.oeffnen(); else Bibliothek.oeffne();
@@ -3567,7 +3579,12 @@ const App = (() => {
        durch, weil sie nicht mit `block=` beginnen. */
     addEventListener('hashchange', () => {
       const b = blockAusHash(location.hash);
-      if (b) zeigeBlock(b);
+      if (b) { zeigeBlock(b); return; }
+      const alt = Produktwelten.routeAusHash();
+      if (alt?.welt === 'workspace') { Produktwelten.routeOeffnen(alt); return; }
+      const ort = location.hash.slice(1);
+      const jetzt = String(sonder?.titel || '').toLowerCase().replace(/[^a-z]+/g, '-');
+      if (ort !== jetzt && SONDER_START[ort]) SONDER_START[ort]();
     });
 
     /* AM TELEFON BEGINNT REDION AUF „START", NICHT IN EINER SEITE (E37).
@@ -3711,6 +3728,7 @@ const App = (() => {
       }
     }
     if (produktRoute) startAnsichtZeigen = () => Produktwelten.routeOeffnen(produktRoute);
+    else if (sonderHash) startAnsichtZeigen = SONDER_START[sonderHash] || null;
 
     /* Name und Symbol des Arbeitsbereichs */
     const wsBtn = document.getElementById('btn-settings');

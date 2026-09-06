@@ -543,7 +543,7 @@ Register.menueband = (() => {
     /* Hauptbereiche — wohin man am häufigsten geht */
     heute: 'Hauptbereiche', lernzentrum: 'Hauptbereiche',
     bibliothekOben: 'Hauptbereiche', 'app-bib': 'Hauptbereiche',
-    workspace: 'Hauptbereiche', aufgaben: 'Hauptbereiche',
+    aufgaben: 'Hauptbereiche',
     'app-notizhefte': 'Hauptbereiche',
 
     /* Planung & Lernen */
@@ -563,7 +563,7 @@ Register.menueband = (() => {
     posteingang: 'Verbinden',
 
     /* Daten */
-    datenbanken: 'Daten', 'app-modell': 'Daten', 'app-kennzahl': 'Daten',
+    datenbanken: 'Daten', arbeitswelt: 'Daten', 'app-modell': 'Daten', 'app-kennzahl': 'Daten',
 
     /* System */
     einstellungen: 'System', 'app-aussehen': 'System', 'app-tempo': 'System',
@@ -585,7 +585,7 @@ Register.menueband = (() => {
    * unter ihren eigenen Namen. */
   const GEHEN_DOPPELT: Record<string, string> = {
     lernwelt: 'heute',            /* Produktwelten.lernen('heute') */
-    arbeitswelt: 'workspace',     /* Produktwelten.workspace(…)    */
+    'app-bib': 'bibliothekOben', /* Beide öffnen jetzt das Dokumentregal. */
     notizhefte: 'app-notizhefte', /* Notebook.oeffnen()            */
     hilfe: 'app-kann',            /* Rundgang.uebersicht()         */
     vorlagen: 'app-markt',        /* Galerie.oeffne()              */

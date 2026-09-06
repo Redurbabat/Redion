@@ -153,9 +153,11 @@ const Zustandsknopf = (() => {
         zeichen.innerHTML = bereitZeichen();
       } else if (aufforderung) {
         zeichen.textContent = ZEICHEN_OEFFNEN;
+      } else if (z === 'arbeitet') {
+        zeichen.replaceChildren(Zustand.aktivitaet(art === 'erzeugen' ? 'ki' : 'neutral'));
       } else {
         zeichen.textContent = Zustand.zeichen(
-          z === 'arbeitet' ? 'laeuft' : z === 'fertig' ? 'fertig' : 'fehler');
+          z === 'fertig' ? 'fertig' : 'fehler');
       }
       zeichen.hidden = zeichen.innerHTML === '';
       text.textContent = satz;

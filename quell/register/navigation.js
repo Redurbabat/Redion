@@ -101,10 +101,10 @@ Register.navigation = (() => {
                `test396 §2` drückt jetzt die Taste und sieht nach, was aufgeht. */
             tun: () => Werkzeuge.palette() },
         { id: 'heute', name: 'Heute', icon: '☀️', zeichen: 'today', platz: 'oben', rang: 30,
-            knopfId: 'btn-home', haupt: true, adresse: '#welt-lernen-heute',
+            knopfId: 'btn-home', haupt: true, ruhig: false, adresse: '#welt-lernen-heute',
             tun: () => Produktwelten.lernen('heute') },
         { id: 'lernzentrum', name: 'Lernzentrum', icon: '🎓', zeichen: 'learn', platz: 'oben', rang: 40,
-            knopfId: 'btn-learning', haupt: true, schauplatz: 'lernen',
+            knopfId: 'btn-learning', haupt: true, hauptRang: 30, schauplatz: 'lernen',
             adresse: '#welt-lernen-lernen',
             tun: () => Produktwelten.lernen('lernen') },
         /* ELEKTRO HATTE KEINE EIGENE ZEILE. Es ist eines der 14 Module, und
@@ -117,24 +117,21 @@ Register.navigation = (() => {
            ändern die Krume, der fünfte tat es als einziger nicht. Der Rechner
            ist jetzt einer der Knöpfe dieser Seite statt ihre Vordertür. */
         { id: 'elektro', name: 'Elektrotechnik', icon: '⚡', zeichen: 'bolt', platz: 'oben', rang: 45,
-            knopfId: 'btn-elektro', haupt: true,
+            knopfId: 'btn-elektro', haupt: true, ruhig: false,
             tun: () => {
                 if (typeof Elektrostart !== 'undefined')
                     Elektrostart.oeffne();
                 else if (typeof Electrical !== 'undefined')
                     Electrical.open();
             } },
-        { id: 'workspace', name: 'Arbeitsbereich', icon: '🧱', zeichen: 'workspace', platz: 'oben', rang: 50,
-            knopfId: 'btn-workspace', tun: () => Produktwelten.workspace('start') },
         { id: 'bibliothekOben', name: 'Bibliothek', icon: '📚', zeichen: 'library', platz: 'oben', rang: 60,
             /* Zweimal „Bibliothek": hier die Zeile der obersten Gruppe, weiter
                unten der Anhängepunkt mit demselben Namen. Verschiedene Kennungen,
                weil `melde` über die Kennung dublettenfrei hält. */
-            knopfId: 'btn-library', haupt: true, schauplatz: 'bibliothek',
-            adresse: '#welt-workspace-bibliothek',
+            knopfId: 'btn-library', haupt: true, hauptRang: 10, schauplatz: 'bibliothek',
             tun: () => Produktwelten.bibliothek() },
         { id: 'aufgaben', name: 'Aufgaben', icon: '☑', zeichen: 'tasks', platz: 'oben', rang: 70,
-            knopfId: 'btn-tasks', haupt: true, adresse: '#welt-workspace-aufgaben',
+            knopfId: 'btn-tasks', haupt: true, ruhig: false, schauplatz: 'aufgaben', adresse: '#aufgaben',
             tun: () => Produktwelten.aufgaben() },
         { id: 'posteingang', name: 'Posteingang', icon: '📥', zeichen: 'inbox', platz: 'oben', rang: 80,
             /* Und hier stand `Werkzeuge.meldungen()`. Der Knopf ruft seit jeher
@@ -217,6 +214,7 @@ Register.navigation = (() => {
         /* Rang 52: nach „Meine Aufgaben" (50), vor „Alle Seiten" (55) — die
            Reihe läuft durch (E206), Zehner sind keine Pflicht. */
         { id: 'app-notizhefte', marke: 'notizhefte', name: 'Notizhefte', icon: '📓', zeichen: 'book', platz: 'apps', gruppe: 'daten', rang: 52,
+            haupt: true, hauptRang: 20, schauplatz: 'notizhefte',
             hinweis: 'Deine Schreibhefte, sofort schreibbereit',
             tun: () => (typeof Notebook !== 'undefined') && Notebook.oeffnen() },
         { id: 'app-bib', marke: 'bib', name: 'Alle Seiten', icon: '📚', zeichen: 'page', platz: 'apps', gruppe: 'daten', rang: 55,

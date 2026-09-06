@@ -388,7 +388,7 @@ const Einstellungen = (() => {
             zeile('Zeilenabstand', 'Enger oder luftiger', wahl('dichte', [['eng', 'Eng'], ['normal', 'Normal'], ['weit', 'Weit']], V('dichte', 'normal'))) +
             zeile('Beim Öffnen zeigen', 'Was erscheint, wenn du die App startest', wahl('startAnsicht', [['dokument', 'Zuletzt geöffnetes Dokument, sonst das Regal'],
                 ['dokumente', 'Immer das Regal'],
-                ['start', 'Heute – Lernen & Alltag'], ['workspace', 'Workspace'],
+                ['start', 'Heute – Lernen & Alltag'], ['workspace', 'Bibliothek – Seiten & Wissen'],
                 ['notizhefte', 'Notizhefte – Regal zum Losschreiben'],
                 ['notizheft', 'Zuletzt benutztes Heft, sofort schreibbereit'],
                 ['letzte', 'Zuletzt geöffnete Seite'],

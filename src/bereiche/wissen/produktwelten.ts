@@ -1,5 +1,5 @@
 /* ============================================================================
- * bereiche/wissen/produktwelten.ts — zwei Oberflächen, ein Datenbestand
+ * bereiche/wissen/produktwelten.ts — Navigation und alte Routen, ein Datenbestand
  * ----------------------------------------------------------------------------
  * Dieser kleine Lotse besitzt bewusst keine Seiten, Karten oder Aufgaben.
  * Er merkt nur, in welcher Produktwelt man arbeitet, markiert die gemeinsame
@@ -84,8 +84,8 @@ const Produktwelten = (() => {
     const welt = sichereWelt(treffer[1]);
     const erlaubte = welt === 'lernen'
       ? new Set(['heute', 'lernen', 'lernweg', 'fehler', 'pruefungen', 'schule', 'uni', 'arbeit', 'fortschritt'])
-      : new Set(['uebersicht', 'bibliothek', 'aufgaben', 'kalender', 'datenbanken',
-                 'whiteboards', 'wiki', 'vorlagen']);
+      : new Set(['start', 'seiten', 'dateien', 'projekte', 'uebersicht', 'bibliothek',
+                 'aufgaben', 'kalender', 'datenbanken', 'whiteboards', 'wiki', 'vorlagen']);
     return erlaubte.has(treffer[2] as string) ? { welt, ansicht: treffer[2] as string } : null;
   };
 
@@ -105,20 +105,27 @@ const Produktwelten = (() => {
   };
 
   const workspace = (ansicht: Arbeitsansicht = 'start'): void => {
-    const ziel = ansicht === 'start' || ansicht === 'seiten' ? 'uebersicht' : ansicht;
+    /* Nur noch ein Kompatibilitätsweg für gespeicherte Links und Aufrufer.
+       Die Ansichten wohnen jetzt in Bibliothek, Aufgaben und Kalender;
+       keine neue Workspace-Schale und keine Migration von Inhaltsdaten. */
+    const ziel = ansicht === 'start' || ansicht === 'seiten' || ansicht === 'projekte'
+      ? 'uebersicht' : ansicht === 'dateien' ? 'bibliothek' : ansicht;
     weltSetzen('workspace');
     Store.setMeta(ARBEIT_META, ziel);
-    reiterSetzen('workspace');
+    reiterSetzen(ziel === 'aufgaben' ? 'aufgaben' : ziel === 'kalender' ? 'kalender' : 'bibliothek');
     const modul = arbeitsmodul();
-    if (modul?.oeffnen) { modul.oeffnen(ziel); routeSchreiben('workspace', ziel); return; }
-    if (modul?.open) { modul.open(ziel); routeSchreiben('workspace', ziel); return; }
+    if (modul?.oeffnen) { modul.oeffnen(ziel); return; }
+    if (modul?.open) { modul.open(ziel); return; }
     if (ziel === 'bibliothek' && typeof Bibliothek !== 'undefined') Bibliothek.oeffne();
     else if (ziel === 'aufgaben' && typeof Bibliothek !== 'undefined') Bibliothek.aufgaben();
     else if (typeof Ansichten !== 'undefined') Ansichten.seiten();
-    routeSchreiben('workspace', ziel);
   };
 
-  const bibliothek = (): void => workspace('bibliothek');
+  const bibliothek = (): void => {
+    weltSetzen('workspace');
+    reiterSetzen('bibliothek');
+    if (typeof Bibliothek !== 'undefined') Bibliothek.oeffne();
+  };
   const aufgaben = (): void => workspace('aufgaben');
   /* DER KALENDER IST EIN EIGENER ORT (E430, E431). Die Ansicht gab es die
      ganze Zeit — die Arbeitswelt zeichnet die Chronologie aller Datumsfelder.

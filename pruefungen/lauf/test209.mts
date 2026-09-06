@@ -366,20 +366,22 @@ const bereich = await seite.evaluate(async () => {
        Wort — bei der Gegenprobe ohne Reiter blieb die Zeile deshalb grün,
        obwohl der Bereich fehlte. Eine Prüfung, die den Fehler nicht sieht,
        den sie prüfen soll, ist keine (§55.2). */
-    reiter: [...document.querySelectorAll<HTMLElement>('.arbeitswelt .aw-navigation [data-aw-section]')]
-      .map(k => (k.textContent || '').replace(/\s+/g, ' ').trim()),
+    reiter: Arbeitswelt.sammlungen.map(a => a.name),
+    eigeneAdresse: location.hash === '#whiteboards',
+    ohneWorkspace: !document.querySelector('.arbeitswelt .aw-navigation'),
     karten: document.querySelectorAll('.arbeitswelt .aw-board').length,
     bilder: document.querySelectorAll('.arbeitswelt .aw-board-bild').length,
     text: (wurzel?.textContent || '').replace(/\s+/g, ' ').trim(),
     hash: location.hash
   };
 });
-p('Der Workspace hat einen Reiter „Whiteboards"',
-  bereich.reiter.some(t => /Whiteboards/.test(t)), bereich.reiter.join(' | '));
+p('Whiteboards sind in den Bibliothek-Sammlungen erreichbar',
+  bereich.reiter.some(t => /Whiteboards/.test(t)) && bereich.eigeneAdresse && bereich.ohneWorkspace,
+  bereich.reiter.join(' | '));
 p('Die angelegte Fläche steht darin', bereich.karten >= 1, `${bereich.karten} Karten`);
 p('Mit einer Miniatur ihrer Formen', bereich.bilder >= 1, `${bereich.bilder} Bilder`);
 p('Und ihr Name steht dabei', /Projektskizze/.test(bereich.text));
-gleich('Die Adresse merkt sich den Bereich', bereich.hash, '#welt-workspace-whiteboards');
+gleich('Die Adresse merkt sich den Bereich', bereich.hash, '#whiteboards');
 
 /* Der Weg zurück über die Adresse — ohne Klick. */
 const ueberRoute = await seite.evaluate(async () => {

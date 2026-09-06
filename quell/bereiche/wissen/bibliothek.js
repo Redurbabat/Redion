@@ -527,6 +527,10 @@ const Bibliothek = (() => {
                 return '<button type="button" data-studio-weg="' + weg.id + '"' +
                     (an ? ' class="on" aria-current="page"' : '') + '>' + weg.name + '</button>';
             }).join('') + '</nav>' +
+            '<details class="bib-studio-optionen"><summary>Sammlungen</summary>' +
+            '<select class="bib-studio-sammlungen" aria-label="Weitere Bibliothek-Inhalte öffnen">' +
+            '<option value="">Dateien & Wissen …</option>' +
+            (typeof Arbeitswelt !== 'undefined' ? Arbeitswelt.sammlungen.map(a => '<option value="' + esc(a.id) + '">' + esc(a.name) + '</option>').join('') : '') + '</select></details>' +
             '<label class="bib-studio-suche"><span data-sym="search" aria-hidden="true"></span>' +
             '<span class="bib-studio-sr">Dokumenttitel in dieser Ansicht suchen</span>' +
             '<input id="bib-studio-suche" type="search" autocomplete="off" placeholder="Dokument suchen …"' +
@@ -775,34 +779,14 @@ const Bibliothek = (() => {
     gesamt > gezeigt
         ? gezeigt + ' von ' + gesamt + ' ' + vonForm
         : gezeigt + ' ' + (gezeigt === 1 ? eins : mehr);
-    const bibKopf = (liste, anzahlHefte, gesamt = liste.length) => {
+    const bibKopf = (liste, _anzahlHefte, gesamt = liste.length) => {
         /* Auch die Listenform ist in der Ablage ein Ordner-Browser (E382). Bis
            E382 hatte sie keine Brotkrume: man ging in ein Fach hinein (per
            Zeilenklick) und sah danach weder, WO man war, noch einen Weg zurück —
            der Titel stand fest auf „Bibliothek". Jetzt trägt der Kopf in der
            Ablage denselben Pfad wie die Deckelansicht (E380). */
-        const weg = zustand.reiter === 'ablage' ? ordnerWeg() : [];
-        const titel = weg.length ? esc(String(weg[weg.length - 1].text || 'Ohne Titel')) : 'Bibliothek';
-        return (zustand.reiter === 'ablage' ? ordnerKrume() : '') +
-            '<h1 class="bib-titel">' + titel + '</h1>' +
-            '<p class="bib-zahlen">' + anzahlHefte +
-            (anzahlHefte === 1 ? ' Heft' : ' Hefte') + ' · ' +
-            /* „auf diesem Gerät" ist eine Aussage über den BESTAND, nicht über
-               die Anzeige. Sie stand bis E367 über einer gedeckelten Liste. */
-            umfangSatz(liste.length, gesamt, 'Seite', 'Seiten', 'Seiten') + ' auf diesem Gerät</p>' +
-            '<div class="bib-kopf">' +
-            '<div class="bib-reiter">' +
-            REITER.slice(0, 4).map(r => `<button data-r="${r.id}" class="${zustand.reiter === r.id ? 'on' : ''}">` +
-                `<span>${r.icon}</span>${esc(r.name)}</button>`).join('') +
-            `<button data-r="mehr" class="bib-mehr">${REITER.length - 4} mehr …</button>` +
-            '</div>' +
-            '<div class="bib-form" role="group" aria-label="Darstellung">' +
-            `<button data-form="regal"${form() === 'regal' ? ' class="on" aria-pressed="true"' : ' aria-pressed="false"'}>` +
-            '<span data-sym="library" aria-hidden="true"></span>Regal</button>' +
-            `<button data-form="liste"${form() === 'liste' ? ' class="on" aria-pressed="true"' : ' aria-pressed="false"'}>` +
-            '<span data-sym="menu" aria-hidden="true"></span>Liste</button>' +
-            '</div>' +
-            '</div>';
+        // One header in every saved presentation, including older notebook shelves.
+        return deckelKopf(liste.length, gesamt) + studioNavigation();
     };
     /* ====================================================================== *
      * SICHERUNG, PAPIERKORB UND PLATZ (E208)
@@ -841,7 +825,9 @@ const Bibliothek = (() => {
                         pk.naechste === 0 ? ' · die nächste läuft heute ab'
                             : pk.naechste === 1 ? ' · die nächste läuft morgen ab'
                                 : ' · noch ' + pk.naechste + ' Tage für die nächste');
-        return '<section class="bib-abschnitt"><header><h2>Sicherung und Papierkorb</h2>' +
+        return '<details class="bib-pflege-details"><summary>' + esc(satz) +
+            '<span>Sicherung & Speicher</span></summary>' +
+            '<section class="bib-abschnitt"><header><h2>Sicherung und Papierkorb</h2>' +
             '<p>alles auf diesem Gerät</p></header><div class="bib-pflege">' +
             `<div class="bib-pflege-karte bib-sicher-${esc(st.stufe)}">` +
             `<span class="bib-pflege-zeichen" data-sym="${st.stufe === 'gut' ? 'checkCircle' : 'bell'}" aria-hidden="true"></span>` +
@@ -853,7 +839,7 @@ const Bibliothek = (() => {
             '<span class="bib-pflege-zeichen" data-sym="trash" aria-hidden="true"></span>' +
             '<span><strong>Papierkorb</strong><small>' + esc(frist) + '</small></span>' +
             '<button type="button" data-a="papierkorb">Öffnen</button></div>' +
-            '</div></section>';
+            '</div></section>' + platzKarte() + '</details>';
     };
     /* Der Platz kommt als Versprechen und wird deshalb NACHGETRAGEN. Die Stelle
        steht sofort da und sagt, dass gerechnet wird — ein Kasten, der aus dem
@@ -899,6 +885,98 @@ const Bibliothek = (() => {
                 'Gesamtgrösse, die Aufteilung kommt aus dem Bestand.</p>';
         });
     };
+    const BIB_BAUM_WURZEL = '__redion_bibliothek_wurzel__';
+    const BIB_BAUM_OFFEN = 'bibBaumOffen';
+    const bibliothekBaumKnoten = () => {
+        const seiten = alleSeiten()
+            .filter(p => p.parentTable !== 'collection');
+        const nachId = new Map();
+        seiten.forEach(p => nachId.set(String(p.id), p));
+        const nachEltern = new Map();
+        for (const p of seiten) {
+            const parent = p.parentId && nachId.has(String(p.parentId))
+                ? String(p.parentId)
+                : '';
+            const liste = nachEltern.get(parent) || [];
+            liste.push(p);
+            nachEltern.set(parent, liste);
+        }
+        const sortiere = (a, b) => {
+            const aKinder = (nachEltern.get(String(a.id)) || []).length;
+            const bKinder = (nachEltern.get(String(b.id)) || []).length;
+            if (!!aKinder !== !!bKinder)
+                return aKinder ? -1 : 1;
+            return String(a.text || '').localeCompare(String(b.text || ''), 'de', { sensitivity: 'base', numeric: true });
+        };
+        const bauen = (p, gesehen) => {
+            const id = String(p.id);
+            if (gesehen.has(id))
+                return { id, name: String(p.text || 'Ohne Titel'), zeichen: 'â–¡' };
+            const weiter = new Set(gesehen);
+            weiter.add(id);
+            const kinder = (nachEltern.get(id) || [])
+                .slice()
+                .sort(sortiere)
+                .map(k => bauen(k, weiter));
+            return {
+                id,
+                name: String(p.text || 'Ohne Titel'),
+                zeichen: kinder.length || p.heftArt === 'fach' ? 'â–£' : 'â–¡',
+                ...(kinder.length ? { kinder } : {})
+            };
+        };
+        const wurzeln = (nachEltern.get('') || [])
+            .slice()
+            .sort(sortiere)
+            .map(p => bauen(p, new Set()));
+        return [{
+                id: BIB_BAUM_WURZEL,
+                name: 'Dokumente',
+                zeichen: 'â–¤',
+                kinder: wurzeln
+            }];
+    };
+    const bibliothekBaumNachtragen = (wrap) => {
+        if (zustand.reiter !== 'ablage')
+            return;
+        const stelle = wrap.querySelector('[data-bib-baum]');
+        if (!stelle)
+            return;
+        const Baum = window.Baumansicht;
+        if (!Baum?.bauen) {
+            stelle.innerHTML = '<p class="bib-baum-fehlt">Baumansicht konnte nicht geladen werden.</p>';
+            return;
+        }
+        const gemerkt = Store.getMeta(BIB_BAUM_OFFEN, []);
+        const offeneMeta = Array.isArray(gemerkt) ? gemerkt.map(String) : [];
+        const pfad = ordnerWeg().map(p => String(p.id));
+        const offen = [...new Set([BIB_BAUM_WURZEL, ...offeneMeta, ...pfad])];
+        const griff = Baum.bauen({
+            name: 'Dokumente',
+            knoten: bibliothekBaumKnoten(),
+            gewaehlt: zustand.ordner || BIB_BAUM_WURZEL,
+            offen,
+            gewaehltGeaendert: (id) => {
+                if (id === BIB_BAUM_WURZEL) {
+                    geheIn(null);
+                    return;
+                }
+                const p = Store.getBlock(id);
+                if (!p || p.alive === false || !permitted('lesen', id))
+                    return;
+                if (artVon(p).id === 'ordner') {
+                    geheIn(id);
+                    return;
+                }
+                App.oeffne(id);
+            },
+            offenGeaendert: (ids) => {
+                if (Store.setMeta)
+                    Store.setMeta(BIB_BAUM_OFFEN, ids);
+            }
+        });
+        stelle.replaceChildren(griff.element);
+    };
     /* ---------------------------------------------------------------- *
      * DIE DECKELANSICHT (E236)
      * ---------------------------------------------------------------- */
@@ -912,6 +990,14 @@ const Bibliothek = (() => {
         wrap.innerHTML =
             '<div class="bib bib-deckel-seite">' +
                 deckelKopf(alle.length, gesamt) +
+                (zustand.reiter === 'ablage'
+                    ? '<div class="bib-ablage-layout">' +
+                        '<details class="bib-ablage-baum" aria-label="Ablagebaum"' +
+                        (Store.getMeta('bibBaumSichtbar', false) ? ' open' : '') + '>' +
+                        '<summary class="bib-ablage-baum-kopf">Ordner & Seiten</summary>' +
+                        '<div data-bib-baum></div>' +
+                        '</details><div class="bib-ablage-inhalt">'
+                    : '') +
                 studioNavigation() + studioWeiter() +
                 '<div class="bib-arten" role="group" aria-label="Nach Art filtern">' +
                 ART_FILTER.filter(a => a.id === 'alle' || vorhanden.has(a.id) ||
@@ -935,12 +1021,13 @@ const Bibliothek = (() => {
                    Sicherheitsfunktion, und §46 stellt Datenintegrität vor alles
                    andere. Eine Warnung, die man nur in einer Ansicht sieht, die
                    kaum jemand öffnet, ist keine Warnung. */
+                (zustand.reiter === 'ablage' ? '</div></div>' : '') +
                 sicherungsKarte() +
-                platzKarte() +
                 '</div>';
         if (typeof Register !== 'undefined' && Register.symbole)
             Register.symbole.fuelle(wrap);
         binde(wrap);
+        bibliothekBaumNachtragen(wrap);
         platzNachtragen(wrap);
         /* Die Adressen der Vorschaubilder kommen aus der Ablage und damit
            später als die Karte (E313). */
@@ -981,8 +1068,9 @@ const Bibliothek = (() => {
             (pdfImportLaeuft || !permitted('bearbeiten', zustand.ordner || undefined)
                 ? ' disabled title="Import läuft oder Bearbeitungsrechte fehlen"' : '') +
             '>PDF importieren</button>' +
-            '<button class="bib-form-knopf" data-form="liste" ' +
-            'aria-label="Als Liste anzeigen">\u2630</button>' +
+            '<button class="bib-form-knopf" data-form="' + (form() === 'liste' ? 'deckel' : 'liste') + '" ' +
+            'aria-label="' + (form() === 'liste' ? 'Als Dokumente anzeigen' : 'Als Liste anzeigen') + '">' +
+            '<span data-sym="' + (form() === 'liste' ? 'library' : 'menu') + '" aria-hidden="true"></span></button>' +
             '<button class="bib-ort" data-orte aria-haspopup="menu">' +
             esc(ort) + ' \u00b7 ' +
             umfangSatz(anzahl, gesamt, 'Dokument', 'Dokumente', 'Dokumenten') +
@@ -990,7 +1078,8 @@ const Bibliothek = (() => {
             '</header>';
     };
     const zeichneRegal = (wrap) => {
-        const { liste, gesamt } = auswahl();
+        const { liste: alle, gesamt } = auswahl();
+        const liste = zustand.art === 'alle' ? alle : alle.filter(p => artVon(p).id === zustand.art);
         const regal = hefte(liste);
         /* „Zuletzt in der Hand" ist bewusst NICHT dasselbe wie das Regal: dort
            steht je Heft die neueste Seite, hier die neuesten Seiten überhaupt.
@@ -1013,7 +1102,6 @@ const Bibliothek = (() => {
                         '<div class="bib-hand-reihe">' + hand.map(handKarte).join('') + '</div></section>'
                     : '') +
                 sicherungsKarte() +
-                platzKarte() +
                 '</div>';
         if (typeof Register !== 'undefined' && Register.symbole)
             Register.symbole.fuelle(wrap);
@@ -1022,6 +1110,14 @@ const Bibliothek = (() => {
     };
     /** Was in beiden Formen gleich funktioniert: öffnen und umschalten. */
     const binde = (wrap) => {
+        wrap.querySelector('.bib-ablage-baum')?.addEventListener('toggle', event => {
+            Store.setMeta('bibBaumSichtbar', event.currentTarget.open);
+        });
+        wrap.querySelector('.bib-studio-sammlungen')?.addEventListener('change', event => {
+            const ziel = event.currentTarget.value;
+            if (ziel && typeof Arbeitswelt !== 'undefined')
+                Arbeitswelt.oeffnen(ziel);
+        });
         wrap.querySelectorAll('[data-studio-weg]').forEach(button => button.addEventListener('click', () => {
             const weg = button.dataset.studioWeg || 'ablage';
             zustand.reiter = weg === 'pdf' ? 'alle' : weg;
@@ -1067,7 +1163,7 @@ const Bibliothek = (() => {
             App.zeichneSeite();
         }));
         wrap.querySelectorAll('[data-form]').forEach(b => b.addEventListener('click', () => {
-            const f = b.dataset['form'] === 'liste' ? 'liste' : 'regal';
+            const f = b.dataset['form'] === 'liste' ? 'liste' : b.dataset['form'] === 'deckel' ? 'deckel' : 'regal';
             Store.setMeta('bibForm', f);
             App.zeichneSeite();
         }));
@@ -1100,6 +1196,7 @@ const Bibliothek = (() => {
             const m = UI.menu(REITER.map(x => `<button data-x="${x.id}"${zustand.reiter === x.id ? ' class="on"' : ''}>` +
                 `<span class="mi">${x.icon}</span>${esc(x.name)}</button>`).join('') +
                 '<div class="sep"></div>' +
+                '<button data-x="__deckel"><span class="mi">\u25a6</span>Als Dokumente</button>' +
                 '<button data-x="__regal"><span class="mi">\u25a4</span>Nach Heften ordnen</button>' +
                 '<button data-x="__liste"><span class="mi">\u2630</span>Als Tabelle</button>', r.left, r.bottom + 6);
             m.addEventListener('click', ev => {
@@ -1110,6 +1207,9 @@ const Bibliothek = (() => {
                 m.remove();
                 if (wahl === '__regal') {
                     Store.setMeta('bibForm', 'regal');
+                }
+                else if (wahl === '__deckel') {
+                    Store.setMeta('bibForm', 'deckel');
                 }
                 else if (wahl === '__liste') {
                     Store.setMeta('bibForm', 'liste');
@@ -1209,7 +1309,8 @@ const Bibliothek = (() => {
             zeichneRegal(wrap);
             return;
         }
-        const { liste, gesamt } = auswahl();
+        const { liste: alle, gesamt } = auswahl();
+        const liste = zustand.art === 'alle' ? alle : alle.filter(p => artVon(p).id === zustand.art);
         const spalten = SPALTEN.filter(s => zustand.spalten.includes(s.id));
         const raster = spalten.map(s => s.breit).join(' ');
         wrap.innerHTML =
@@ -1680,7 +1781,7 @@ if (typeof Register !== 'undefined' && Register.kontext) {
         zeichen: 'book', rang: 20,
         zeigen: () => typeof Notebook !== 'undefined' && !!Notebook.oeffnen,
         tun: () => Notebook.oeffnen() });
-    K.melde({ bereich: 'bibliothek', id: 'aufgaben', name: 'Aufgaben',
+    K.melde({ bereich: 'bibliothek', id: 'aufgaben', name: 'Meine Aufgaben',
         zeichen: 'tasks', rang: 30, tun: () => Bibliothek.aufgaben() });
     K.melde({ bereich: 'bibliothek', id: 'alle', name: 'Alle Seiten',
         zeichen: 'pages', rang: 40, tun: () => Bibliothek.alleSeiten() });

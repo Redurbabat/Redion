@@ -1,6 +1,6 @@
 "use strict";
 /* ============================================================================
- * arbeitswelt.js — die Hauptwelt „Workspace"
+ * arbeitswelt.ts — Sammlungen in Bibliothek, Aufgaben und Kalender
  * ----------------------------------------------------------------------------
  * Diese Datei ist eine Sicht auf den vorhandenen Bestand. Sie führt weder
  * Seiten noch Datenbanken, Aufgaben, Termine oder Fenster ein zweites Mal.
@@ -13,7 +13,7 @@
  * `aw-*` an allen eigenen Elementen.
  * ==========================================================================*/
 const Arbeitswelt = (() => {
-    const TITEL = '🧱 Workspace';
+    const TITEL = 'Seiten & Wissen';
     const MAX_LISTE = 80;
     const MAX_BEREICHE = 64;
     const MAX_BEREICH_IDS = 1024;
@@ -21,15 +21,16 @@ const Arbeitswelt = (() => {
     const controllerNachRoot = new WeakMap();
     let instanz = 0;
     const ansichten = Object.freeze([
-        { id: 'uebersicht', icon: '🧱', name: 'Übersicht' },
-        { id: 'bibliothek', icon: '📚', name: 'Bibliothek' },
+        { id: 'uebersicht', icon: '📄', name: TITEL },
+        { id: 'bibliothek', icon: '📚', name: 'Dateien & PDFs' },
         { id: 'aufgaben', icon: '☑', name: 'Aufgaben' },
         { id: 'kalender', icon: '📅', name: 'Kalender' },
         { id: 'datenbanken', icon: '▦', name: 'Datenbanken' },
         { id: 'whiteboards', icon: '🖍', name: 'Whiteboards' },
-        { id: 'wiki', icon: '🕸', name: 'Wiki & Verweise' },
+        { id: 'wiki', icon: '🕸', name: 'Wissen & Verweise' },
         { id: 'vorlagen', icon: '🧩', name: 'Vorlagen' }
     ]);
+    const sammlungen = Object.freeze(ansichten.filter(a => a.id !== 'aufgaben' && a.id !== 'kalender'));
     const dateiIcons = {
         file: '📎', image: '🖼', audio: '🎵', video: '🎬'
     };
@@ -844,7 +845,7 @@ const Arbeitswelt = (() => {
         const form = element('form', 'aw-suche');
         form.setAttribute('role', 'search');
         form.dataset.awSearchForm = 'true';
-        const label = element('label', 'aw-visuell-versteckt', 'Workspace durchsuchen');
+        const label = element('label', 'aw-visuell-versteckt', 'Inhalte durchsuchen');
         const input = element('input', 'aw-suche-eingabe');
         input.type = 'search';
         input.placeholder = platzhalter;
@@ -866,7 +867,7 @@ const Arbeitswelt = (() => {
         select.id = `${id}-bereich`;
         label.htmlFor = select.id;
         select.dataset.awBereich = 'true';
-        select.setAttribute('aria-label', 'Workspace nach Lebensbereich filtern');
+        select.setAttribute('aria-label', 'Inhalte nach Lebensbereich filtern');
         const alle = element('option', '', '◎ Alle Bereiche');
         alle.value = ALLE_BEREICHE;
         select.append(alle);
@@ -916,7 +917,7 @@ const Arbeitswelt = (() => {
         main.append(arbeit);
     };
     const zeichneBibliothek = (main, daten, zustand) => {
-        const header = bereich('aw-bibliothek-kopf', 'Zentrale Bibliothek', 'Seiten, Dateien, PDFs, Whiteboards und Tabellen bleiben an ihrem ursprünglichen Ort.');
+        const header = bereich('aw-bibliothek-kopf', 'Dateien & PDFs', 'Seiten, Dateien, PDFs, Whiteboards und Tabellen bleiben an ihrem ursprünglichen Ort.');
         header.append(sucheKopf(zustand, 'Titel, Pfad oder Alias …'));
         const cards = element('div', 'aw-zaehler-grid');
         cards.append(zaehlerKarte('📄', 'Seiten', daten.seiten.length, 'bibliothek'), zaehlerKarte('◻', 'Inhaltsblöcke', daten.bloecke.length, 'bibliothek'), zaehlerKarte('📎', 'Dateien', daten.dateien.length, 'bibliothek'), zaehlerKarte('📕', 'PDF-Dokumente', daten.pdfs.length, 'bibliothek'), zaehlerKarte('🎨', 'Whiteboards', daten.zaehler.whiteboards || 0, 'bibliothek'), zaehlerKarte('📊', 'Tabellen', daten.zaehler.tabellen || 0, 'bibliothek'));
@@ -1280,62 +1281,43 @@ const Arbeitswelt = (() => {
             bereichId: gemerkterBereich(startBereiche),
             mobileNavigationOffen: false };
         let daten = snapshot(zustand.bereichId);
-        const media = typeof matchMedia === 'function' ? matchMedia('(max-width: 760px)') : null;
         const reiter = reiterVertrag();
+        let reiterOffen = false;
         const zeichnen = () => {
-            root.classList.add('produkt-welt', 'arbeitswelt');
-            if (nackt) {
-                root.classList.add('aw-nackt');
-                const schale = element('div', 'aw-shell');
-                /* Nur die Lebensbereich-Auswahl bleibt: sie filtert, was der
-                   Kalender zeigt, und ohne sie liesse sich das nicht mehr wählen.
-                   Titel und Beschreibung bringt der Abschnitt selbst mit. */
-                const kopf = element('header', 'aw-kopf aw-kopf-schmal');
-                kopf.append(bereichAuswahl(daten, zustand, id));
-                schale.append(kopf);
-                const nur = element('main', 'aw-inhalt');
-                nur.id = `${id}-inhalt`;
-                nur.tabIndex = -1;
-                zeichneHauptinhalt(nur, daten, zustand);
-                schale.append(nur);
-                root.replaceChildren(schale);
-                return;
-            }
-            const shell = element('div', 'aw-shell');
-            const header = element('header', 'aw-kopf');
-            const titleBox = element('div', 'aw-titelgruppe');
-            titleBox.append(element('p', 'aw-eyebrow', 'Redion Hauptwelt'), element('h1', 'aw-titel', TITEL), element('p', 'aw-untertitel', 'Seiten, Wissen, Dateien und Arbeit in einer gemeinsamen Sicht.'));
-            const mobile = knopf('Bereiche', 'aw-mobile-nav');
-            mobile.dataset.awMobileNav = 'true';
-            mobile.setAttribute('aria-controls', `${id}-nav`);
-            mobile.setAttribute('aria-expanded', String(zustand.mobileNavigationOffen));
-            header.append(titleBox, bereichAuswahl(daten, zustand, id), mobile);
-            shell.append(header);
-            const layout = element('div', 'aw-layout');
-            const nav = element('nav', 'aw-navigation');
-            nav.id = `${id}-nav`;
-            nav.setAttribute('aria-label', 'Workspace-Bereiche');
-            if (media?.matches && !zustand.mobileNavigationOffen)
-                nav.hidden = true;
-            ansichten.forEach(ansicht => {
-                const button = knopf(`${ansicht.icon} ${ansicht.name}`, 'aw-navigation-eintrag');
-                button.dataset.awSection = ansicht.id;
-                if (ansicht.id === zustand.ansicht)
-                    button.setAttribute('aria-current', 'page');
-                nav.append(button);
-            });
-            layout.append(nav);
+            root.classList.add('produkt-welt', 'arbeitswelt', 'aw-nackt');
+            const schale = element('div', 'aw-shell');
+            const kopf = element('header', 'aw-kopf aw-kopf-schmal');
+            kopf.append(bereichAuswahl(daten, zustand, id));
+            schale.append(kopf);
             const main = element('main', 'aw-inhalt');
             main.id = `${id}-inhalt`;
             main.tabIndex = -1;
+            /* Die Fensterwerkzeuge bleiben bei den Seiten, als aufklappbarer
+               Abschnitt statt einer dauerhaften dritten Navigationsspalte. */
+            if (zustand.ansicht === 'uebersicht') {
+                const fenster = element('details', 'aw-fenster');
+                fenster.open = reiterOffen;
+                fenster.append(element('summary', '', 'Offene Seiten & geteilte Ansicht'));
+                const panel = element('div', 'aw-reiter-panel');
+                zeichneReiter(panel, reiter);
+                fenster.append(panel);
+                fenster.addEventListener('toggle', () => { reiterOffen = fenster.open; });
+                main.append(fenster);
+            }
             zeichneHauptinhalt(main, daten, zustand);
-            layout.append(main);
-            const aside = element('aside', 'aw-reiter-panel');
-            aside.setAttribute('aria-label', 'Offene Seiten und geteilte Ansicht');
-            zeichneReiter(aside, reiter);
-            layout.append(aside);
-            shell.append(layout);
-            root.replaceChildren(shell);
+            schale.append(main);
+            root.replaceChildren(schale);
+        };
+        const ansichtWechseln = (ansicht) => {
+            const ziel = normalisiereAnsicht(ansicht);
+            /* Eingebettete Controller bleiben lokal bedienbar; echte Orte erhalten
+               beim Wechsel auch die richtige Adresse und Navigationsmarkierung. */
+            if (nackt) {
+                oeffnen(ziel);
+                return;
+            }
+            zustand.ansicht = ziel;
+            zeichnen();
         };
         const oeffneSeite = (pageId) => {
             const page = Store.getBlock(pageId);
@@ -1405,17 +1387,14 @@ const Arbeitswelt = (() => {
                 return;
             }
             if (name === 'show-templates') {
-                zustand.ansicht = 'vorlagen';
-                zeichnen();
+                ansichtWechseln('vorlagen');
                 return;
             }
             if (name === 'template-gallery') {
                 if (typeof Galerie !== 'undefined' && typeof Galerie.oeffne === 'function')
                     Galerie.oeffne();
-                else {
-                    zustand.ansicht = 'vorlagen';
-                    zeichnen();
-                }
+                else
+                    ansichtWechseln('vorlagen');
                 return;
             }
             if (name === 'global-search') {
@@ -1484,17 +1463,9 @@ const Arbeitswelt = (() => {
             const target = event.target instanceof Element ? event.target : null;
             if (!target)
                 return;
-            const mobile = target.closest('[data-aw-mobile-nav]');
-            if (mobile) {
-                zustand.mobileNavigationOffen = !zustand.mobileNavigationOffen;
-                zeichnen();
-                return;
-            }
             const section = target.closest('[data-aw-section]');
             if (section?.dataset.awSection) {
-                zustand.ansicht = normalisiereAnsicht(section.dataset.awSection);
-                zustand.mobileNavigationOffen = false;
-                zeichnen();
+                ansichtWechseln(section.dataset.awSection);
                 return;
             }
             const template = target.closest('[data-aw-template]');
@@ -1580,20 +1551,11 @@ const Arbeitswelt = (() => {
             zustand.bereichId = daten.bereichId;
             zeichnen();
         };
-        const mediaGeaendert = () => {
-            if (!media?.matches)
-                zustand.mobileNavigationOffen = false;
-            zeichnen();
-        };
         const controller = {
             root,
             zustand: () => ({ ...zustand }),
             snapshot: () => daten,
-            ansichtSetzen: (ansicht) => {
-                zustand.ansicht = normalisiereAnsicht(ansicht);
-                zustand.mobileNavigationOffen = false;
-                zeichnen();
-            },
+            ansichtSetzen: ansichtWechseln,
             sucheSetzen: (text) => { zustand.suche = String(text || ''); zeichnen(); },
             bereichSetzen,
             aktualisieren: () => {
@@ -1607,34 +1569,34 @@ const Arbeitswelt = (() => {
                 root.removeEventListener('input', input);
                 root.removeEventListener('change', change);
                 root.removeEventListener('submit', submit);
-                media?.removeEventListener('change', mediaGeaendert);
                 if (controllerNachRoot.get(root) === controller)
                     controllerNachRoot.delete(root);
                 root.replaceChildren();
-                root.classList.remove('produkt-welt', 'arbeitswelt');
+                root.classList.remove('produkt-welt', 'arbeitswelt', 'aw-nackt');
             }
         };
         root.addEventListener('click', click);
         root.addEventListener('input', input);
         root.addEventListener('change', change);
         root.addEventListener('submit', submit);
-        media?.addEventListener('change', mediaGeaendert);
         zeichnen();
         return controller;
     };
-    /** Setzt die Workspace-Welt in ein vorhandenes Schalen-Ziel ein. */
+    /** Bestehender Renderer; keine zweite Datenhaltung und keine Workspace-Schale. */
     const render = (ziel, ansicht = 'uebersicht', nackt = false) => {
         controllerNachRoot.get(ziel)?.zerstoeren();
         const controller = controllerBauen(ziel, ansicht, nackt);
         controllerNachRoot.set(ziel, controller);
         return controller;
     };
-    /** Öffnet die Workspace-Welt als bestehende Redion-Sonderansicht. */
+    /** Jede Sammlung ist ein eigenständiger, wiederherstellbarer Ort. */
     const oeffnen = (ansicht = 'uebersicht') => {
         if (typeof App === 'undefined' || typeof App.zeigeSonder !== 'function')
             return null;
         let controller = null;
-        App.zeigeSonder(TITEL, (ziel) => { controller = render(ziel, ansicht); });
+        const zielAnsicht = normalisiereAnsicht(ansicht);
+        const titel = ansichten.find(a => a.id === zielAnsicht)?.name || TITEL;
+        App.zeigeSonder(titel, (ziel) => { controller = render(ziel, zielAnsicht, true); });
         return controller;
     };
     /** Der Kalender als eigener Ort (E431).
@@ -1643,16 +1605,10 @@ const Arbeitswelt = (() => {
      *  —, merkt den Ort für „Weiter wo du warst" und meldet den Schauplatz.
      *  Genau das unterscheidet einen Ort von einer Überlagerung. */
     const kalenderOeffnen = () => {
-        if (typeof App === 'undefined' || typeof App.zeigeSonder !== 'function')
-            return null;
-        let controller = null;
-        App.zeigeSonder('Kalender', (ziel) => {
-            controller = render(ziel, 'kalender', true);
-        });
-        return controller;
+        return oeffnen('kalender');
     };
     return {
-        TITEL, ansichten, render, oeffnen, open: oeffnen, mount: render,
+        TITEL, ansichten, sammlungen, render, oeffnen, open: oeffnen, mount: render,
         kalenderOeffnen,
         snapshot, reiterVertrag, controller: render
     };
@@ -1670,14 +1626,13 @@ window.Arbeitswelt = Arbeitswelt;
    Emoji aus der Schale heraus, und eine Ladezeile ist Schale. */
 if (typeof Register !== 'undefined' && Register.kontext) {
     const K = Register.kontext;
-    K.melde({ bereich: 'workspace', id: 'uebersicht', name: 'Übersicht',
-        zeichen: 'workspace', rang: 10,
-        tun: () => Arbeitswelt.oeffnen('uebersicht') });
-    K.melde({ bereich: 'workspace', id: 'ansichten', name: 'Ansichten',
-        zeichen: 'cards', rang: 20,
-        liefern: () => (Arbeitswelt.ansichten || []).map((a) => ({
+    K.melde({ bereich: 'bibliothek', id: 'sammlungen', name: 'Dateien & Wissen',
+        zeichen: 'cards', rang: 25,
+        liefern: () => Arbeitswelt.sammlungen.map(a => ({
             id: 'a-' + a.id, name: String(a.name || a.id), zeichen: 'page',
             tun: () => Arbeitswelt.oeffnen(a.id)
         }))
     });
+    K.melde({ bereich: 'aufgaben', id: 'alle-aufgaben', name: 'Alle Aufgaben',
+        zeichen: 'tasks', rang: 5, tun: () => Arbeitswelt.oeffnen('aufgaben') });
 }

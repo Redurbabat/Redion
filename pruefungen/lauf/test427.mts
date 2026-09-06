@@ -107,9 +107,9 @@ const pille = JSON.parse(await s.evaluate(`JSON.stringify((() => {
   const z = el.querySelector('.ru-zustand-zeichen');
   const t = el.querySelector('.ru-zustand-text');
   const vorher = { rolle: el.getAttribute('role'), art: el.dataset.zustand,
-    zeichen: z ? z.textContent : '', text: t ? t.textContent : '',
+    zeichen: z ? z.querySelectorAll('.ru-aktivitaet rect').length : 0, text: t ? t.textContent : '',
     zeichenVersteckt: z ? z.getAttribute('aria-hidden') : '',
-    dreht: z ? getComputedStyle(z).animationName : '' };
+    dreht: z?.querySelector('rect') ? getComputedStyle(z.querySelector('rect')).animationName : '' };
   Zustand.setzen(el, 'fertig', 'Sicherung geschrieben');
   const nachher = { art: el.dataset.zustand, zeichen: z ? z.textContent : '',
     text: t ? t.textContent : '', farbeAnders: getComputedStyle(el).color !== '' ,
@@ -121,10 +121,10 @@ const pille = JSON.parse(await s.evaluate(`JSON.stringify((() => {
 p('Die Pille ist eine Statusregion', pille.vorher.rolle === 'status', JSON.stringify(pille.vorher));
 p('… trägt ihre Art als data-zustand', pille.vorher.art === 'laeuft');
 p('… und sagt sie mit Zeichen UND Text (§38)',
-  pille.vorher.zeichen === '◐' && pille.vorher.text === 'Läuft …', JSON.stringify(pille.vorher));
+  pille.vorher.zeichen === 10 && pille.vorher.text === 'Läuft …', JSON.stringify(pille.vorher));
 p('Das Zeichen ist für den Vorleser unsichtbar — der Text reicht',
   pille.vorher.zeichenVersteckt === 'true');
-p('Solange es läuft, dreht sich das Zeichen', pille.vorher.dreht === 'ru-dreh', pille.vorher.dreht);
+p('Solange es läuft, bewegen sich die zehn Segmente', pille.vorher.dreht === 'ru-segment', pille.vorher.dreht);
 p('Umschalten wechselt Art, Zeichen und Text',
   pille.nachher.art === 'fertig' && pille.nachher.zeichen === '✓' &&
   pille.nachher.text === 'Sicherung geschrieben', JSON.stringify(pille.nachher));
@@ -168,8 +168,8 @@ await s.waitForTimeout(80);
 const laeuft = JSON.parse(await s.evaluate(`JSON.stringify((() => {
   const k = document.getElementById('zk-eins');
   return { zustand: k.dataset.zustand, busy: k.getAttribute('aria-busy'),
-    text: k.querySelector('.ru-zk-text').textContent, zeichen: k.querySelector('.ru-zk-zeichen').textContent,
-    dreht: getComputedStyle(k.querySelector('.ru-zk-zeichen')).animationName,
+    text: k.querySelector('.ru-zk-text').textContent, zeichen: k.querySelectorAll('.ru-aktivitaet rect').length,
+    dreht: getComputedStyle(k.querySelector('.ru-aktivitaet rect')).animationName,
     balken: getComputedStyle(k.querySelector('.ru-zk-balken')).display,
     gleitet: getComputedStyle(k.querySelector('.ru-zk-balken i')).animationName,
     disabled: k.disabled, aufrufe: window.__aufrufe, griff: window.__griff.zustand() };
@@ -178,8 +178,8 @@ p('Klick → arbeitet, und der Griff sagt es auch',
   laeuft.zustand === 'arbeitet' && laeuft.griff === 'arbeitet' && laeuft.aufrufe === 1, JSON.stringify(laeuft));
 p('… sagt aria-busy', laeuft.busy === 'true', String(laeuft.busy));
 p('… wechselt den Text SICHTBAR', laeuft.text === 'Wird erstellt …', laeuft.text);
-p('… mit dem Zeichen aus Zustand, das sich dreht',
-  laeuft.zeichen === '◐' && laeuft.dreht === 'ru-dreh', JSON.stringify(laeuft));
+p('… mit dem gemeinsamen Zehn-Segment-Zeichen',
+  laeuft.zeichen === 10 && laeuft.dreht === 'ru-segment', JSON.stringify(laeuft));
 p('… und der Balken läuft unbestimmt, weil kein Anteil bekannt ist',
   laeuft.balken === 'block' && laeuft.gleitet === 'ru-zk-gleiten', JSON.stringify(laeuft));
 p('Der Knopf ist dabei nicht gesperrt — er behält den Fokus', laeuft.disabled === false);
@@ -360,7 +360,7 @@ const still = JSON.parse(await ruhig.evaluate(`JSON.stringify((() => {
   const griff = Zustandsknopf.bauen({ texte: { bereit: 'a', arbeitet: 'b' }, art: 'laden',
     aktion: () => new Promise(() => {}) });
   g.append(griff.element); griff.element.click();
-  const dreht = getComputedStyle(griff.element.querySelector('.ru-zk-zeichen')).animationName;
+  const dreht = getComputedStyle(griff.element.querySelector('.ru-aktivitaet rect')).animationName;
   const balken = getComputedStyle(griff.element.querySelector('.ru-zk-balken i')).animationName;
   g.remove();
   return { pfeil: n.content, transform: n.transform, schimmer: v.animationName, dreht, balken,

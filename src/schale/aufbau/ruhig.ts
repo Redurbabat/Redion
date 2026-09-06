@@ -77,6 +77,7 @@ const Ruhig = (() => {
        stünde nach dem nächsten Einschalten alles offen da. */
     if (!neu) offen = false;
     anwenden();
+    if (typeof Kontextkante !== 'undefined') Kontextkante.zeichne();
     return neu;
   };
 

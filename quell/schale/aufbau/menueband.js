@@ -1124,6 +1124,7 @@ const Menueband = (() => {
                     return;
                 }
                 setzeMeta(merkeZu(), !zugeklappt());
+                sichtbarSetzen(!zugeklappt());
                 zeichne();
                 return;
             }
@@ -1376,6 +1377,7 @@ const Menueband = (() => {
     };
     /** Von aussen: das Band auf einen Reiter stellen. */
     const zeige = (reiter) => {
+        sichtbarSetzen(true);
         setzeMeta(merkeReiter, reiter);
         if (amTelefon()) {
             zeichne();
@@ -1385,6 +1387,17 @@ const Menueband = (() => {
         setzeMeta(merkeZu(), false);
         zeichne();
     };
-    return { start, zeichne, zeige, WURZEL };
+    const sichtbarSetzen = (an) => {
+        document.body.dataset.studioTools = an ? 'offen' : 'zu';
+        const knopf = document.getElementById('studio-tools');
+        const name = an ? 'Werkzeuge ausblenden' : 'Werkzeuge einblenden';
+        knopf?.setAttribute('aria-expanded', String(an));
+        knopf?.setAttribute('aria-label', name);
+        if (knopf)
+            knopf.title = name;
+    };
+    const aufklappen = () => { zeige(reiterJetzt()); };
+    const schliessen = () => { fluechtig(true); sichtbarSetzen(false); };
+    return { start, zeichne, zeige, aufklappen, schliessen, WURZEL };
 })();
 window.Menueband = Menueband;

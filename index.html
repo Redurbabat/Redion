@@ -178,9 +178,6 @@
     <button class="side-item" id="btn-elektro" data-ruhig="bleibt">
       <span data-sym="bolt"></span><span>Elektrotechnik</span>
     </button>
-    <button class="side-item" id="btn-workspace">
-      <span data-sym="workspace"></span><span>Arbeitsbereich</span>
-    </button>
     <button class="side-item" id="btn-library" data-ruhig="bleibt">
       <span data-sym="library"></span><span>Bibliothek</span>
     </button>
@@ -310,14 +307,12 @@
       <span class="studio-monogram" aria-hidden="true">R</span><span>redion<span class="studio-wordmark">STUDIO</span></span>
     </button>
     <button id="studio-nav" class="studio-icon" aria-label="Navigation kompakt anzeigen" aria-pressed="false" title="Navigation kompakt anzeigen"><span data-sym="panelL"></span></button>
-    <div class="studio-shortcuts" aria-label="Arbeitsfläche">
-      <button id="studio-documents">Dokumente</button>
-      <button id="studio-notebooks">Notizhefte</button>
-    </div>
     <button id="studio-search" class="studio-search"><span data-sym="search"></span><span>Suchen &amp; finden</span><kbd>Strg P</kbd></button>
     <button id="studio-theme" class="studio-icon studio-theme" aria-label="Farbschema wechseln" title="Hell / Dunkel"><span class="studio-orb" aria-hidden="true"></span></button>
     <button id="studio-import" class="studio-action" data-studio-import><span data-sym="plus"></span><span>PDF öffnen</span></button>
     <button id="studio-create" class="studio-icon" aria-label="Neu erstellen" title="Neu erstellen"><span data-sym="plus"></span></button>
+    <button id="studio-tools" class="studio-icon" aria-label="Werkzeuge einblenden" title="Werkzeuge einblenden" aria-expanded="false" aria-controls="menueband"><span data-sym="command"></span></button>
+    <button id="studio-account" class="studio-icon" aria-label="Konto und Arbeitsbereich" title="Konto und Arbeitsbereich"><span data-sym="workspace"></span></button>
   </header>
   <div id="studio-divider" role="separator" aria-label="Navigationsbreite" aria-orientation="vertical" aria-valuemin="148" aria-valuemax="260" aria-valuenow="184" tabindex="0"></div>
 
@@ -524,6 +519,7 @@
 <script src="quell/schale/ueberlagerung/hinweis.js" defer></script>
 <script src="quell/schale/ueberlagerung/orb.js" defer></script>
 <script src="quell/schale/bedienung/segment.js" defer></script>
+<script src="quell/schale/bedienung/baum.js" defer></script>
 <script src="quell/schale/bedienung/zustand.js" defer></script>
 <script src="quell/schale/bedienung/zustandsknopf.js" defer></script>
 <script src="quell/schale/ueberlagerung/dialog.js" defer></script>
