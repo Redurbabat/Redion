@@ -3715,7 +3715,8 @@ const App = (() => {
     /* Name und Symbol des Arbeitsbereichs */
     const wsBtn = document.getElementById('btn-settings');
     const wsName = wsBtn?.querySelectorAll('span')[1];
-    /* Alle `.ws-icon` — seit E236 auch das Konto rechts in der Menüleiste. */
+    /* Alle `.ws-icon` — die Schublade und die Einstellungen. Das Konto rechts
+       in der Menüleiste trägt seit E456 ein Symbol statt des Zeichens. */
     document.querySelectorAll('.ws-icon').forEach(ico => {
       ico.textContent = Store.getMeta('arbeitsIcon', 'N');
     });

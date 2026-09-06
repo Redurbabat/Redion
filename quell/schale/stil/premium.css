@@ -56,21 +56,10 @@
     background: var(--schale-grund);
   }
 
-  /* ── Die Marke ganz links ─────────────────────────────────────────────────
-     Ein „R" im Gold der App. Sie ist KEIN Knopf: die Startansicht erreicht
-     man über Gehen, und ein zweiter Weg dorthin wäre genau die Doppelung,
-     gegen die E206 den Welt-Umschalter entfernt hat. Sie steht da, damit die
-     Zeile links nicht kahl beginnt, und ist für Vorleseprogramme unsichtbar. */
-  body[data-schale="premium"] .mb-marke{
-    flex: 0 0 auto;
-    display: grid; place-items: center;
-    width: 26px; height: var(--shell-reiter-h);
-    margin-right: var(--space-2);
-    font-size: 14px; font-weight: 700; line-height: 1;
-    color: var(--gold-bright);
-    letter-spacing: .01em;
-    user-select: none;
-  }
+  /* ── Hier stand die Marke ganz links (bis E456) ──────────────────────────
+     Ein Buchstabe im Gold der App, „damit die Zeile links nicht kahl
+     beginnt". Seit dem Studio steht die eine Marke der App darüber; ein
+     zweites Zeichen hier war ein zweites Logo. */
 
   /* ── „Datei" — der Knopf, der eine Fläche öffnet (Phase G) ────────────────
      Er steht links neben den Reitern und sieht aus wie einer, ist aber
@@ -167,12 +156,6 @@
   }
   body[data-schale="premium"] .mb-rechts-knopf:focus-visible{
     outline: 2px solid var(--gold-bright); outline-offset: -2px;
-  }
-  /* Der Kontokreis behält seine Farbe: er zeigt den ARBEITSBEREICH an, nicht
-     die Schale. Ein goldener Kreis neben goldenen Knöpfen wäre ausserdem
-     nicht mehr als Zustand erkennbar. */
-  body[data-schale="premium"] .mb-rechts-knopf.mb-konto span{
-    width: 20px; height: 20px; font-size: 9.5px;
   }
 
   body[data-schale="premium"] .mb-klapp{

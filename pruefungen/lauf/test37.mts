@@ -465,8 +465,11 @@ import { chromium } from 'playwright';
   const zeichenVorher = await p.evaluate(() =>
     [...document.querySelectorAll<HTMLElement>('.ws-icon')]
       .map(x => (x.textContent || '').trim()));
-  ok('Es gibt überhaupt mehrere Stellen mit dem Zeichen',
-     zeichenVorher.length >= 2, zeichenVorher.join(','));
+  /* Seit E456 zeigt das Konto rechts in der Menüleiste ein Symbol statt
+     des Zeichens — vor dem Öffnen der Einstellungen bleibt EINE Stelle (die
+     Schublade). Mehrere gibt es erst mit den Einstellungen, unten. */
+  ok('Es gibt mindestens eine Stelle mit dem Zeichen',
+     zeichenVorher.length >= 1, zeichenVorher.join(','));
   ok('Und alle zeigen dasselbe',
      new Set(zeichenVorher).size === 1, zeichenVorher.join(','));
 

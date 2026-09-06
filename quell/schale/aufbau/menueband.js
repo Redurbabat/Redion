@@ -734,29 +734,13 @@ const Menueband = (() => {
         reiterliste.className = 'mb-tabs';
         reiterliste.setAttribute('role', 'tablist');
         reiterliste.setAttribute('aria-label', 'Menüband');
-        /* DIE MARKE GANZ LINKS (E272).
-           Ein „R" im Gold der App, damit die Zeile links nicht kahl beginnt.
-    
-           Sie ist KEIN Knopf und trägt `aria-hidden`: man erreicht die
-           Startansicht über „Gehen", und ein zweiter Weg dorthin wäre die
-           Doppelung, die E206 beim Welt-Umschalter gerade entfernt hat. Seit
-           Phase G steht sie ausserhalb der `tablist` — vorher war sie ein
-           Fremdstück darin und musste sich das mit `aria-hidden` erkaufen;
-           jetzt ist sie schlicht Zierrat neben der Liste.
-    
-           Das Zeichen ist der Buchstabe des Arbeitsbereichs, dasselbe wie im
-           Kontokreis rechts — nicht ein zweites, festes „R". Wer seinen
-           Arbeitsbereich „Notizen" nennt, sieht links und rechts dasselbe N. */
-        const marke = document.createElement('div');
-        marke.className = 'mb-marke';
-        marke.setAttribute('aria-hidden', 'true');
-        try {
-            marke.textContent = String(Store.getMeta('arbeitsIcon', 'N'));
-        }
-        catch {
-            marke.textContent = 'N';
-        }
-        zeile.appendChild(marke);
+        /* HIER STAND DIE MARKE GANZ LINKS (E272 bis E456).
+           Ein Buchstabe des Arbeitsbereichs, „damit die Zeile links nicht kahl
+           beginnt". Seit dem Studio (E440) trägt die Zeile darüber die eine
+           Marke der App — „R redion STUDIO" — und Redur will genau eine:
+           „nur das sollte hier bleiben." Ein zweites Zeichen darunter war ab
+           da kein Schmuck mehr, sondern ein zweites Logo. `test384` hält
+           fest, dass es weg bleibt. */
         /* ── „DATEI" — KEIN REITER, SONDERN EINE FLÄCHE (E272 Phase G) ──────
            Die acht Reiter zeigen Befehle für das, was offen ist. „Datei"
            wirkt auf das Ganze: sichern, drucken, weitergeben, Konto,
@@ -935,25 +919,16 @@ const Menueband = (() => {
                 b.appendChild(z);
             }
             else {
-                /* Das Konto trägt kein Symbol, sondern das Zeichen des
-                   Arbeitsbereichs — dasselbe, das im R-Kreis stand.
-        
-                   `.ws-icon` IST DIE VERBINDUNG, nicht Schmuck: wer das Zeichen in
-                   den Einstellungen ändert, ruft `kopfzeileAuffrischen()`, und die
-                   sucht genau diese Klasse. Ohne sie stünde hier bis zum nächsten
-                   Neuzeichnen das alte Zeichen.
-                   Und die Vorgabe heisst „N" wie überall sonst. Hier stand „R" —
-                   bei einem Arbeitsbereich ohne eigenes Zeichen hätten Seitenleiste
-                   und Menüleiste dann zwei verschiedene Buchstaben für dieselbe
-                   Sache gezeigt. */
+                /* DAS KONTO TRÄGT EIN SYMBOL, KEINEN BUCHSTABEN (E456).
+                   Bis dahin stand hier das Zeichen des Arbeitsbereichs in einem
+                   farbigen Kreis — und wirkte neben der Studio-Marke wie ein
+                   zweites Logo. Redur: „nur das sollte hier bleiben." Das Zeichen
+                   des Arbeitsbereichs lebt weiter in der Schublade und in den
+                   Einstellungen (`.ws-icon`, `kopfzeileAuffrischen`); hier steht
+                   das Symbol für „Arbeitsbereich", so wie Suche und KI ihre
+                   Symbole tragen. Der Statuspunkt darunter bleibt. */
                 const z = document.createElement('span');
-                z.className = 'ws-icon';
-                try {
-                    z.textContent = String(Store.getMeta('arbeitsIcon', 'N'));
-                }
-                catch {
-                    z.textContent = 'N';
-                }
+                z.dataset['sym'] = 'workspace';
                 b.appendChild(z);
                 /* DER STATUSPUNKT (E251). Wer angemeldet ist, sieht am
                    Arbeitsbereichs-Knopf, ob der Abgleich gut steht, läuft oder

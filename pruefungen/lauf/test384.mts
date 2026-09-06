@@ -135,6 +135,8 @@ const MESS = `
       ki: da('#mb-ki'),
       konto: da('#mb-konto'),
       marke: da('#menueband .mb-marke'),
+      kontoSymbol: !!document.querySelector('#mb-konto svg'),
+      kontoBuchstabe: da('#mb-konto .ws-icon'),
       klapp: da('#menueband .mb-klapp'),
       /* Das Wort am Pfeil — es soll GENAU dann dastehen, wenn die Reiter
          fehlen, und sonst nicht (sonst wäre es Doppelung). */
@@ -271,7 +273,13 @@ for (const [name, setzen] of zustaende) {
   p(`${name}: Suche, KI und Konto stehen rechts`,
     m.suche && m.ki && m.konto,
     JSON.stringify({ suche: m.suche, ki: m.ki, konto: m.konto }));
-  p(`${name}: die Marke „N" bleibt der Weg in die Backstage`, m.marke === true);
+  /* E456: Redur will genau EINE Marke — „R redion STUDIO" in der Zeile
+     darüber. Das „N" links und der Buchstabe im Kontokreis waren daneben
+     zwei weitere Logos. */
+  p(`${name}: die Marke „N" links ist weg (E456)`, m.marke === false);
+  p(`${name}: das Konto trägt ein Symbol, keinen Buchstaben (E456)`,
+    m.kontoSymbol === true && m.kontoBuchstabe === false,
+    JSON.stringify({ symbol: m.kontoSymbol, buchstabe: m.kontoBuchstabe }));
   p(`${name}: der Klapp-Pfeil ist erreichbar`, m.klapp === true);
 }
 

@@ -384,16 +384,13 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
 }
 .mb-rechts-knopf:hover{ background:var(--bg-hover); color:var(--text) }
 .mb-rechts-knopf svg{ width:15px; height:15px; display:block }
-.mb-rechts-knopf.mb-konto span{
-  display:grid; place-items:center; width:21px; height:21px;
-  border-radius:999px; background:var(--accent); color:var(--auf-accent);
-  font-size:10px; font-weight:700; line-height:1;
-}
+/* Hier stand der farbige Kreis mit dem Zeichen des Arbeitsbereichs am
+   Konto-Knopf. Seit E456 trägt der Knopf ein Symbol wie seine Nachbarn —
+   neben der Studio-Marke war der Kreis ein zweites Logo. */
 @media(max-width:760px){
   /* §37: am Finger 44, auch hier. Die Leiste ist dort ohnehin 44 hoch. */
   .mb-rechts-knopf{ min-width:44px; min-height:44px; font-size:15px }
   .mb-rechts-knopf svg{ width:19px; height:19px }
-  .mb-rechts-knopf.mb-konto span{ width:26px; height:26px; font-size:11.5px }
 }
 
 .mb-reiter-knopf:hover{ color:var(--text) }
@@ -854,7 +851,7 @@ body[data-ruhig="an"] #topbar [data-ruhig="mehr"]{ display:none }
 
    `.mb-rechts` bleibt ausdrücklich stehen — dort hängen Suche, KI und
    Konto, und die Suche gibt es sonst nirgends in der Kopfzeile. Ebenso
-   bleibt `.mb-marke` (der Weg in die Backstage) und der Klapp-Pfeil selbst.
+   bleibt der Klapp-Pfeil selbst (die Marke links ist seit E456 weg).
    Deshalb wird auch NICHT `.mb-reiter` als Ganzes ausgeblendet: diese Zeile
    trägt `.mb-rechts`.
 

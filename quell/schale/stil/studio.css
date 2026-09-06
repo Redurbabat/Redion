@@ -82,7 +82,6 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
   body[data-schale="premium"] #menueband .mb-reiter-knopf{color:var(--text-dim)}
   body[data-schale="premium"] #menueband .mb-reiter-knopf.ist-an{color:var(--accent-text);border-bottom-color:var(--accent);background:var(--accent-schwach)}
   body[data-schale="premium"] #menueband .mb-datei{border-radius:var(--radius-md);margin:3px 8px;color:var(--text);background:var(--bg-hover);min-height:30px}
-  body[data-schale="premium"] #menueband .mb-marke{color:var(--accent-text)}
   body[data-schale="premium"][data-dokument="an"] #studio-bar{display:none}
   body[data-schale="premium"][data-dokument="an"] #main{grid-template-rows:auto auto auto auto minmax(0,1fr)}
   body.fokus #studio-bar{display:none}
