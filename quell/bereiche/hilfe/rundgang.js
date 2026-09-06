@@ -56,37 +56,45 @@ const Rundgang = (() => {
     const SCHRITTE = [
         /* E270: ohne Konto stimmt der Satz weiterhin — er darf nur nicht mehr
            behaupten, es GÄBE keinen Server. Er ist da und freiwillig. */
+        /* DIE ANKER ZEIGEN AUF DEN STUDIO-KOPF (6. September). Im ruhigen Modus
+           ist das Band am Rechner eine Lade hinter `#studio-tools`, und die
+           Kante trägt unten nur noch „Einstellungen" — `#mb-suche`, `#mb-ki`,
+           `[data-k="neu"]` und `[data-k="ki"]` waren damit null Pixel breit.
+           test61 fand sechs von neun Schritten ohne Loch. Der Studio-Kopf hat
+           für jedes davon einen Knopf; die alten Kandidaten bleiben dahinter
+           stehen — am Telefon und ohne ruhigen Modus sind sie weiter die
+           richtigen. */
         { ziel: '#kante .k-orte, #handy-oben', titel: 'Alles liegt hier',
-            text: 'Hier stehen deine Orte — Heute, Lernzentrum, Elektrotechnik, ' +
-                'Bibliothek, Aufgaben. Hinter <b>Mehr Orte</b> liegen dreissig ' +
-                'weitere. Ohne Konto bleibt alles in diesem Browser auf diesem ' +
-                'Gerät; für dieselben Notizen auf Rechner und Telefon gibt es ' +
-                'die Wolke, freiwillig.' },
-        { ziel: '#mb-suche', titel: 'Suchen und Befehle',
+            text: 'Hier stehen deine Orte — Bibliothek, Notizhefte, Lernzentrum. ' +
+                'Hinter <b>Mehr Orte</b> liegen Heute, Elektrotechnik, Aufgaben ' +
+                'und dreissig weitere. Ohne Konto bleibt alles in diesem Browser ' +
+                'auf diesem Gerät; für dieselben Notizen auf Rechner und Telefon ' +
+                'gibt es die Wolke, freiwillig.' },
+        { ziel: '#studio-search, #mb-suche, #btn-suche-handy', titel: 'Suchen und Befehle',
             text: 'Strg + K sucht in allem. Strg + P öffnet die Befehle: dort steht ' +
                 'jede Funktion mit Namen, auch die, die du noch nicht kennst. ' +
                 'Sie sucht unscharf — „wchrck" findet den Wochenrückblick.' },
-        { ziel: '#kante .k-knopf[data-k="neu"], #btn-new-bottom', titel: 'Eine Seite anfangen',
+        { ziel: '#studio-create, #kante .k-knopf[data-k="neu"], #btn-new-bottom', titel: 'Eine Seite anfangen',
             text: 'Strg + N legt eine Seite an. Ein <b>/</b> im Text öffnet die Bausteine: ' +
                 '43 Stück, von der Überschrift bis zur Datenbank.' },
-        { ziel: '.mb-klapp, #menueband', titel: 'Zwölf Ansichten auf dieselben Daten',
+        { ziel: '#studio-tools, .mb-klapp, #menueband', titel: 'Zwölf Ansichten auf dieselben Daten',
             text: 'Eine Datenbank kann Tabelle, Board, Zeitstrahl, Kalender, Galerie, ' +
                 'Liste, Diagramm, Formular, Feed, Karte, Kreuztabelle und Dashboard ' +
                 'zugleich sein — jede mit eigenem Filter.' },
-        { ziel: '#kante .k-knopf[data-k="ki"], #mb-ki', titel: 'Die KI, die nichts kaputt macht',
+        { ziel: '#kante .k-knopf[data-k="ki"], #btn-ai, #mb-ki', titel: 'Die KI, die nichts kaputt macht',
             text: 'Sie schreibt Formeln, Automationen und Filter — aber sie ändert nie ' +
                 'einfach etwas. Jeder Vorschlag wird an deinen echten Daten ' +
                 'durchgerechnet und Zeile für Zeile verglichen, bevor du zustimmst.' },
         { ziel: '#kante .k-knopf[data-k="einstellungen"], #hl-mehr', titel: 'So, wie du es willst',
             text: 'Acht Farbschemata, eigene Akzentfarbe, Schrift und Seitenbreite — ' +
                 'und alle Tastenkürzel lassen sich umbelegen. Notions Kürzel sind fest.' },
-        { ziel: '[data-mb-reiter="ueberpruefen"], .mb-klapp, #menueband', titel: 'Ehrlich beim Tempo',
+        { ziel: '[data-mb-reiter="ueberpruefen"], #studio-tools, .mb-klapp, #menueband', titel: 'Ehrlich beim Tempo',
             text: 'Hier steht, wie lange das Zeichnen gedauert hat und welche Formel ' +
                 'die teuerste ist — mit Namen. Kein anderes Programm sagt dir das.' },
         { ziel: '#kante .k-knopf[data-k="mehr-orte"], #hl-mehr', titel: 'Alles zum Nachlesen',
             text: 'Acht Dokumente: sieben über Notion, eines über alles, was Redion ' +
                 'mehr kann. Darin steht auch, was Redion bewusst <i>nicht</i> tut.' },
-        { ziel: '#mb-datei, #mb-konto', titel: 'Zum Schluss',
+        { ziel: '#mb-datei, #studio-account, #mb-konto', titel: 'Zum Schluss',
             text: 'In den Einstellungen richtest du die KI ein, sicherst alles ' +
                 'verschlüsselt und stellst ein, was Redion beim Start tut. ' +
                 'Viel Freude damit.' }

@@ -560,11 +560,16 @@ Register.menueband = (() => {
      * unter ihren eigenen Namen. */
     const GEHEN_DOPPELT = {
         lernwelt: 'heute', /* Produktwelten.lernen('heute') */
-        'app-bib': 'bibliothekOben', /* Beide öffnen jetzt das Dokumentregal. */
+        /* HIER STAND KURZ `'app-bib': 'bibliothekOben'` (6. September). Beide
+           öffneten nach der Workspace-Auflösung dasselbe Regal — und „Alle
+           Seiten" war damit aus der Lade hinter „Mehr Orte" verschwunden
+           (test33). Seither öffnet `app-bib` den Reiter „Alle" der Bibliothek,
+           die flache Liste über den ganzen Bestand, und ist wieder ein
+           eigenes Ziel. */
         notizhefte: 'app-notizhefte', /* Notebook.oeffnen()            */
         hilfe: 'app-kann', /* Rundgang.uebersicht()         */
         vorlagen: 'app-markt', /* Galerie.oeffne()              */
-        bibliothek: 'app-bib', /* Bibliothek.oeffne()           */
+        bibliothek: 'bibliothekOben', /* Bibliothek.oeffne() — das Regal, wie `btn-library` */
         papierkorb: 'papierkorbFuss', /* App.papierkorb()              */
         /* ZWEIMAL DERSELBE ZEITMESSER (E393). `zeitmesser` aus `Register.module`
            und `w-zeit` aus der Liste unten rufen beide `Zeitmesser.panel()`;

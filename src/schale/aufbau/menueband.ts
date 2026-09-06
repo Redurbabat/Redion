@@ -684,6 +684,17 @@ const Menueband = (() => {
     void seiteOffen;
     wurzel.hidden = false;
 
+    /* DIE LADE FOLGT DEM MERKER (6. September). `data-studio-tools` am
+       body entscheidet am Rechner, ob das Band überhaupt dasteht
+       (studio.css); gesetzt wurde es bisher nur vom Klick auf den Pfeil
+       und von `zeige()`. Wer den Merker anders setzte — ein Prüflauf, ein
+       Ortswechsel mit anderem Schlüssel (`merkeZu()`) — bekam ein Band,
+       dessen Sichtbarkeit nicht zu `zugeklappt()` passte: offen gemerkt,
+       aber nicht da. Also hier, bei jedem Zeichnen. Eine Wahrheit, ein
+       Ort (§8). Am Telefon ist `zugeklappt()` immer wahr, und die Regel
+       in studio.css greift dort ohnehin nicht. */
+    sichtbarSetzen(!zugeklappt());
+
     let gewaehlt = reiterJetzt();
     if (!reiter.some((r: any) => r.id === gewaehlt)) gewaehlt = String(reiter[0].id);
     const zu = zugeklappt();
@@ -1077,7 +1088,7 @@ const Menueband = (() => {
           return;
         }
         setzeMeta(merkeZu(), !zugeklappt());
-        sichtbarSetzen(!zugeklappt()); zeichne(); return;
+        zeichne(); return;
       }
 
       const eintrag = Register?.menueband?.eines?.(id);
@@ -1307,13 +1318,17 @@ const Menueband = (() => {
 
   /** Von aussen: das Band auf einen Reiter stellen. */
   const zeige = (reiter: string): void => {
-    sichtbarSetzen(true);
     setzeMeta(merkeReiter, reiter);
     if (amTelefon()) { zeichne(); fluechtig(false); return; }
     setzeMeta(merkeZu(), false);
     zeichne();
   };
 
+  /**
+   * Ob das Band am Rechner dasteht — als Marke am `body` und als Zustand
+   * am Griff `#studio-tools` (aria-expanded, Name). `zeichne()` ruft es bei
+   * jedem Zeichnen mit `!zugeklappt()`; von aussen braucht es niemand.
+   */
   const sichtbarSetzen = (an: boolean): void => {
     document.body.dataset.studioTools = an ? 'offen' : 'zu';
     const knopf = document.getElementById('studio-tools');
@@ -1322,8 +1337,19 @@ const Menueband = (() => {
     knopf?.setAttribute('aria-label', name);
     if (knopf) knopf.title = name;
   };
+  /** Die Lade holen — mit dem zuletzt gewählten Reiter. */
   const aufklappen = (): void => { zeige(reiterJetzt()); };
-  const schliessen = (): void => { fluechtig(true); sichtbarSetzen(false); };
+  /**
+   * Die Lade wegnehmen. Am Rechner über den MERKER, nicht nur über die
+   * Klasse: `fluechtig(true)` allein liess `bandZu=false` stehen, und das
+   * nächste `zeichne()` hätte das Band wieder geholt. Am Telefon ist das
+   * Band ein Menü (E240) und wird nur jetzt zugeklappt.
+   */
+  const schliessen = (): void => {
+    if (amTelefon()) { fluechtig(true); return; }
+    setzeMeta(merkeZu(), true);
+    zeichne();
+  };
 
   return { start, zeichne, zeige, aufklappen, schliessen, WURZEL };
 })();

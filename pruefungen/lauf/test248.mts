@@ -520,10 +520,22 @@ for (const was of ['Teilen', 'Versionsverlauf', 'Kommentare', 'Automationen', 'L
 await seite.keyboard.press('Escape');
 await seite.waitForTimeout(300);
 
-/* Auf einer OFFENEN Seite kommt das Band zurück — sonst wäre es gelöscht. */
+/* Auf einer OFFENEN Seite kommt das Band zurück — sonst wäre es gelöscht.
+   AM RECHNER IST ES SEIT DEM STUDIO-KOPF EINE LADE (6. September): es
+   steht erst da, wenn `#studio-tools` es holt. Gemessen wird deshalb der
+   Griff — und dass hinter ihm wirklich das Band mit seinen Knöpfen liegt. */
+const griff: any = await seite.evaluate(() => {
+  const g = document.getElementById('studio-tools');
+  return g ? g.getBoundingClientRect().width > 0 : false;
+});
+p('Auf einer offenen Seite steht der Werkzeuggriff', griff === true);
+await seite.evaluate(() => (window as any).Menueband.aufklappen());
+await seite.waitForTimeout(500);
 const aufSeite: any = await seite.evaluate(RAHMEN);
-p('Auf einer offenen Seite ist das Menüband wieder da',
+p('… und hinter ihm ist das Menüband wieder da',
   aufSeite.band > 0, `sind ${aufSeite.band}`);
+await seite.evaluate(() => (window as any).Menueband.schliessen());
+await seite.waitForTimeout(300);
 
 /* ==========================================================================
  * §6 Der Schalter überlebt den Neustart

@@ -1119,8 +1119,11 @@ const DocumentMode = (() => {
       if (action === 'regal') {
         /* Zurueck ins Regal, ohne den Dokumentmodus abzuschalten: wer das
            Skript wieder aufmacht, will es wieder als Dokument sehen. */
+        /* `bibliothekOben`, nicht `app-bib`: das eine ist das Regal (die
+           Ablage mit Ordnern), das andere seit dem 6. September die flache
+           Liste „Alle Seiten". Zurück aus einem Dokument will man ins Regal. */
         const eintrag = typeof Register !== 'undefined' && (Register as any).navigation
-          ? (Register as any).navigation.eines('app-bib') : null;
+          ? (Register as any).navigation.eines('bibliothekOben') : null;
         if (eintrag && typeof eintrag.tun === 'function') eintrag.tun();
         else UI.toast('Das Regal ist gerade nicht erreichbar.');
         return;

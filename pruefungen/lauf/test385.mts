@@ -106,6 +106,7 @@ const MESS = `(() => {
   return {
     marke: document.body.dataset.dokument || '',
     menueband: q('#menueband'), topbar: q('#topbar'),
+    werkzeuge: q('#studio-tools'),
     kante: q('#kante'), handyOben: q('#handy-oben'),
     leiste: q('.document-topbar'),
     papier: q('.document-center .document-stage'),
@@ -226,7 +227,17 @@ await pc.evaluate(GEWOEHNLICH);
 await pc.waitForTimeout(700);
 m = await pc.evaluate(MESS) as any;
 gleich('Die Marke ist wieder weg', m.marke, '');
-p('Das Menüband steht wieder da', !!m.menueband?.sicht, JSON.stringify(m.menueband));
+/* SEIT DEM STUDIO-KOPF IST DAS BAND AM RECHNER EINE LADE (6. September):
+   es steht erst da, wenn `#studio-tools` es holt. Was nach dem Dokument
+   zurückkommen muss, ist deshalb der GRIFF — und hinter ihm das Band. Ein
+   Band, das ohne Griff dastünde, wäre der alte Zustand, nicht der neue. */
+p('Der Werkzeuggriff steht wieder da', !!m.werkzeuge?.sicht, JSON.stringify(m.werkzeuge));
+await pc.evaluate(`Menueband.aufklappen()`);
+await pc.waitForTimeout(400);
+const mitBand = await pc.evaluate(MESS) as any;
+p('… und er holt das Menüband zurück', !!mitBand.menueband?.sicht, JSON.stringify(mitBand.menueband));
+await pc.evaluate(`Menueband.schliessen()`);
+await pc.waitForTimeout(200);
 p('Die Kopfzeile steht wieder da', !!m.topbar?.sicht, JSON.stringify(m.topbar));
 p('Die Kontextkante steht wieder da', !!m.kante?.sicht, JSON.stringify(m.kante));
 

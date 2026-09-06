@@ -911,7 +911,7 @@ const Bibliothek = (() => {
         const bauen = (p, gesehen) => {
             const id = String(p.id);
             if (gesehen.has(id))
-                return { id, name: String(p.text || 'Ohne Titel'), zeichen: 'â–¡' };
+                return { id, name: String(p.text || 'Ohne Titel'), zeichen: 'page' };
             const weiter = new Set(gesehen);
             weiter.add(id);
             const kinder = (nachEltern.get(id) || [])
@@ -921,7 +921,7 @@ const Bibliothek = (() => {
             return {
                 id,
                 name: String(p.text || 'Ohne Titel'),
-                zeichen: kinder.length || p.heftArt === 'fach' ? 'â–£' : 'â–¡',
+                zeichen: kinder.length || p.heftArt === 'fach' ? 'pages' : 'page',
                 ...(kinder.length ? { kinder } : {})
             };
         };
@@ -932,7 +932,7 @@ const Bibliothek = (() => {
         return [{
                 id: BIB_BAUM_WURZEL,
                 name: 'Dokumente',
-                zeichen: 'â–¤',
+                zeichen: 'library',
                 kinder: wurzeln
             }];
     };
@@ -977,6 +977,27 @@ const Bibliothek = (() => {
         });
         stelle.replaceChildren(griff.element);
     };
+    /**
+     * DIE FILTERZEILE NACH ART — und wann sie WEGBLEIBT (6. September).
+     *
+     * Sie stand immer da, auch als „Alle · Seiten": ein Filter mit einer
+     * einzigen Wahl filtert nichts, kostet aber eine Zeile über den Deckeln
+     * — am Telefon eine von sieben. Redur: „nicht 20 Werkzeuggruppen
+     * gleichzeitig". Jetzt erscheint sie erst, wenn es zwei Arten zu
+     * unterscheiden gibt; ein gesetzter Filter bleibt immer sichtbar, sonst
+     * käme man aus ihm nicht mehr heraus.
+     */
+    const artenZeile = (vorhanden) => {
+        const arten = ART_FILTER.filter(a => a.id === 'alle' || vorhanden.has(a.id) ||
+            a.id === zustand.art);
+        if (arten.length <= 2 && zustand.art === 'alle')
+            return '';
+        return '<div class="bib-arten" role="group" aria-label="Nach Art filtern">' +
+            arten.map(a => `<button data-art="${esc(a.id)}"` +
+                (zustand.art === a.id ? ' class="on" aria-pressed="true"' : ' aria-pressed="false"') +
+                `>${esc(a.name)}</button>`).join('') +
+            '</div>';
+    };
     /* ---------------------------------------------------------------- *
      * DIE DECKELANSICHT (E236)
      * ---------------------------------------------------------------- */
@@ -999,13 +1020,7 @@ const Bibliothek = (() => {
                         '</details><div class="bib-ablage-inhalt">'
                     : '') +
                 studioNavigation() + studioWeiter() +
-                '<div class="bib-arten" role="group" aria-label="Nach Art filtern">' +
-                ART_FILTER.filter(a => a.id === 'alle' || vorhanden.has(a.id) ||
-                    a.id === zustand.art)
-                    .map(a => `<button data-art="${esc(a.id)}"` +
-                    (zustand.art === a.id ? ' class="on" aria-pressed="true"' : ' aria-pressed="false"') +
-                    `>${esc(a.name)}</button>`).join('') +
-                '</div>' +
+                artenZeile(vorhanden) +
                 (liste.length
                     ? '<div class="bib-gitter">' + liste.map(deckelKarte).join('') + '</div>'
                     : '<p class="bib-leer">' + (zustand.art === 'alle'
@@ -1504,6 +1519,27 @@ const Bibliothek = (() => {
         }
         App.zeigeSonder('Dokumente', zeichnen);
     };
+    /**
+     * „ALLE SEITEN" — der Reiter „Alle", die flache Liste über den ganzen
+     * Bestand, ohne Ordnerstufen (6. September).
+     *
+     * Bis dahin rief der Navigationseintrag `app-bib` („Alle Seiten") wie
+     * `bibliothekOben` einfach `oeffne()` — seit die Bibliothek das Regal
+     * direkt öffnet, waren das zwei Wege zu genau demselben Ziel, und die
+     * Zeile in der Kontextkante rief `alleSeiten()`, den Datenhelfer: ein
+     * Knopf, der eine Liste zurückgab und nichts zeigte. Jetzt ist es ein
+     * eigener Ort mit eigener Adresse (`#alle-seiten`, `SONDER_START` in
+     * schale.ts), und das Regal bleibt, was es ist.
+     */
+    const alleZeigen = () => {
+        try {
+            Seitenleiste.reiter('dokumente');
+        }
+        catch { /* ohne Leiste kein Reiter */ }
+        zustand.reiter = 'alle';
+        zustand.art = 'alle';
+        App.zeigeSonder('Alle Seiten', zeichnen);
+    };
     /* ------------------------------------------------------------------ *
      * MEINE AUFGABEN
      *
@@ -1768,8 +1804,8 @@ const Bibliothek = (() => {
     /* `umfangSatz` und `DECKE_KUERZLICH` kommen mit heraus, damit ein
        Prüflauf die Sprache messen kann, ohne dreihundert Seiten anzulegen
        (test359 §6) — und damit die Decke eine Zahl mit Namen bleibt. */
-    return { oeffne, aufgaben, meineAufgaben, quellenDialog, alleSeiten, quelleVon, pdfImportieren,
-        wannText, umfangSatz, DECKE_KUERZLICH };
+    return { oeffne, alleZeigen, aufgaben, meineAufgaben, quellenDialog, alleSeiten, quelleVon,
+        pdfImportieren, wannText, umfangSatz, DECKE_KUERZLICH };
 })();
 window.Bibliothek = Bibliothek;
 /* Die Bibliothek meldet ihre Kontextkante an (E272 Phase F). */
@@ -1783,8 +1819,10 @@ if (typeof Register !== 'undefined' && Register.kontext) {
         tun: () => Notebook.oeffnen() });
     K.melde({ bereich: 'bibliothek', id: 'aufgaben', name: 'Meine Aufgaben',
         zeichen: 'tasks', rang: 30, tun: () => Bibliothek.aufgaben() });
+    /* `alleZeigen`, nicht `alleSeiten`: das eine öffnet die Liste, das andere
+       GIBT sie zurück — als Griff war das ein Knopf ins Leere (§47). */
     K.melde({ bereich: 'bibliothek', id: 'alle', name: 'Alle Seiten',
-        zeichen: 'pages', rang: 40, tun: () => Bibliothek.alleSeiten() });
+        zeichen: 'pages', rang: 40, tun: () => Bibliothek.alleZeigen() });
     K.melde({ bereich: 'bibliothek', id: 'suche', name: 'Suchen',
         zeichen: 'search', rang: 50, tun: () => App.suche() });
     /* ZULETZT GEÖFFNET ist eine Lade und kein Knopf: eine Liste, die sich

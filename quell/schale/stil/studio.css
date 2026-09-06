@@ -45,9 +45,27 @@
 #studio-bar button:focus-visible{outline:2px solid var(--accent-text);outline-offset:3px}
 .k-beschriftung{display:none}
 #studio-divider{display:none}
-/* The full ribbon is a deliberate tool drawer, not a second permanent header. */
-body[data-schale="premium"][data-ruhig="an"]:not([data-studio-tools="offen"]) #menueband{display:none}
+/* DAS MENÜBAND IST AM RECHNER EINE WERKZEUGLADE, kein zweiter Kopf.
+   Zugeklappt zeigte es „Werkzeuge · Suche · KI · Konto" — und genau die
+   drei stehen seit dem Studio-Kopf schon darüber. Also ist es ganz weg,
+   bis `#studio-tools` es holt (`Menueband.aufklappen()`).
+
+   NUR AM RECHNER. Am Telefon gibt es den Studio-Kopf nicht (unten
+   `#studio-bar{display:none}`), und dort IST das Band die einzige Zeile
+   mit Suche, KI und Konto. Gemessen am 6. September bei 390 px: ohne die
+   Medienabfrage war keine Suche mehr erreichbar, die Menüleiste unten
+   hatte null Knöpfe, und test40, test114 und test248 wurden rot. */
+@media(min-width:761px){
+  body[data-schale="premium"][data-ruhig="an"]:not([data-studio-tools="offen"]) #menueband{display:none}
+}
 #studio-tools[aria-expanded="true"]{background:var(--accent-schwach);color:var(--accent-text);border-color:var(--line)}
+/* EIN „PDF IMPORTIEREN", NICHT ZWEI. Das Regal trägt den Knopf selbst, gross
+   und neben „Neu"; der im Studio-Kopf ist dann derselbe Griff eine Zeile
+   höher (Redur: „keine doppelte Neu-Aktion in drei sichtbaren Leisten").
+   Er bleibt überall sonst — in einem Dokument, im Lernzentrum, in den
+   Sammlungen — der schnelle Weg zur PDF. Gefragt wird die SEITE, nicht der
+   Ort: die Sammlungen sind auch „bibliothek", haben den Knopf aber nicht. */
+body:has(#page .bib-studio-import) #studio-import{display:none}
 body[data-studio-tools="offen"] #menueband{animation:studio-tools-enter var(--motion-fast) var(--ease-enter)}
 @keyframes studio-tools-enter{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){body[data-studio-tools="offen"] #menueband{animation:none}}
@@ -67,6 +85,11 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
     background:var(--bg-side);border-color:var(--line)}
   body[data-schale="premium"] #main > #kante{grid-row:3/-1;padding:8px 8px 12px;
     background:var(--bg-side)}
+  /* DIE LADE BEGINNT UNTER DEM BAND, NICHT DARIN. premium.css gibt ihr
+     `grid-row: 2 / -1` — dort ist Zeile 2 das Band. Hier steht in Zeile 1
+     der Studio-Kopf und in Zeile 2 das Band; ohne diese Zeile deckte eine
+     offene Lade das aufgeklappte Band zu (test272 §13, gemessen 6. Sept.). */
+  body[data-schale="premium"] #main > #kanten-lade{grid-row:3/-1}
   body[data-schale="premium"] #main > #reiterleiste{grid-row:3}
   body[data-schale="premium"] #main > #topbar{grid-row:4;background:var(--bg);min-height:44px;border-bottom-color:var(--line-soft)}
   body[data-schale="premium"] #main > #scroll{grid-row:5;background:var(--bg)}

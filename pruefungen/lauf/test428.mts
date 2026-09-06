@@ -31,7 +31,13 @@ const ready = async () => {
 };
 const noWorkspace = async () => {
   check('Keine zusätzliche Workspace-Schale oder Navigation', await page.locator('#btn-workspace,.aw-navigation,.aw-titelgruppe').count() === 0);
-  check('Keine Workspace-Beschriftung im Inhalt', !/Workspace/.test(await page.locator('.arbeitswelt').innerText()));
+  /* NUR DIE SCHALE, NICHT DER INHALT. `innerText` der ganzen Ansicht traf
+     einen Nutzerblock aus dem Notion-Wissen („in jedem Notion-Workspace")
+     — je nach Reihenfolge der 80 gezeigten Einträge mal ja, mal nein.
+     Gemessen wird, was Redion SELBST beschriftet: Überschriften,
+     Navigation, Krume. */
+  check('Keine Workspace-Beschriftung in der Schale', !/Workspace/.test(await page.evaluate(
+    "[...document.querySelectorAll('#crumb, .arbeitswelt :is(h1,h2,h3,nav,summary,.aw-eyebrow,.aw-bereich-text,.aw-untertitel)')].map(e => e.textContent).join(' | ')")));
 };
 try {
   await page.goto('http://127.0.0.1:9628/index.html'); await ready();
@@ -44,7 +50,11 @@ try {
     const board = Store.addBlock(p.id, 'whiteboard', {text:'Prinzipskizze', shapes:[]});
     const database = Store.addDatabase(p.id, 'Messwerte');
     Bibliothek.oeffne();
-    return {page:p.id, todo:todo.id, board:board.id, database:database.id};
+    /* addDatabase gibt { block, collectionId } zurueck, keine Kennung
+       (test33 liest es genau so). database.id war undefined, und die
+       letzte Zusicherung unten waere auch bei heilen Daten rot geworden.
+       (Kein Backtick hier drin: der Block ist eine Vorlagenzeichenkette.) */
+    return {page:p.id, todo:todo.id, board:board.id, database:database.collectionId ?? database.id};
   })()`);
   await page.evaluate('Store.flush()');
   const before = await page.evaluate('Object.keys(Store.cache.blocks).length');
@@ -71,7 +81,12 @@ try {
   await page.evaluate("Arbeitswelt.oeffnen('datenbanken')");
   await page.evaluate("Arbeitswelt.oeffnen('whiteboards')");
   await page.goBack();
-  await page.waitForFunction("location.hash === '#datenbanken' && document.querySelector('.aw-datenbanken-kopf')");
+  /* `#aw-datenbanken-kopf` ist eine KENNUNG, keine Klasse: `bereich()` in
+     arbeitswelt.ts schreibt den Namen in `id`, die Klasse heisst
+     `aw-bereich`. Mit `.aw-datenbanken-kopf` wartete der Lauf zwölf
+     Sekunden auf etwas, das nie da sein konnte — der Zurück-Weg selbst
+     funktionierte die ganze Zeit (nachgemessen am 6. September). */
+  await page.waitForFunction("location.hash === '#datenbanken' && document.querySelector('#aw-datenbanken-kopf')");
   check('Browser-Zurück wechselt auch den tatsächlichen Inhalt', (await page.locator('.aw-inhalt').innerText()).includes('Messwerte'));
   await page.evaluate(`App.oeffne(${JSON.stringify(fixture.page)}); Arbeitswelt.oeffnen('uebersicht')`);
   await page.locator('.aw-fenster summary').click();

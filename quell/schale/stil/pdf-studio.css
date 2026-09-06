@@ -7,7 +7,11 @@
 .document-studio .document-topbar button:hover{background:var(--bg-hover);color:var(--text)}
 .document-studio .document-topbar button[aria-expanded="true"]{color:var(--accent-text);background:var(--accent-schwach)}
 .document-studio .document-title{text-align:center;font-size:13px;padding-inline:6px}
-.document-commandbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;min-height:52px;padding:7px 16px;border-bottom:1px solid var(--line);background:var(--bg-side)}
+/* 3 px Polster statt 7: die Knöpfe sind 44 hoch (§37), der Umschalter 52 —
+   mit 7 px oben und unten stand das erste Blatt am Rechner bei 141 von
+   900 px, über der 15-%-Marke aus test385. Jetzt 45 + 59 + 12 = 116. */
+.document-commandbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;min-height:52px;padding:3px 16px;border-bottom:1px solid var(--line);background:var(--bg-side)}
+@media(min-width:761px){.document-studio .document-center{padding-top:12px}}
 .document-commandbar button{min-height:44px;padding:6px 12px;border-radius:var(--radius-md);font-size:12px;white-space:nowrap}
 .document-commandbar button:hover{background:var(--bg-hover)}
 .document-mode-switch{display:flex;padding:3px;border-radius:var(--radius-lg);background:var(--bg-input);border:1px solid var(--line)}
@@ -16,7 +20,12 @@
 .document-zoom-group input{width:100px;accent-color:var(--accent)}
 .document-zoom-label{font-variant-numeric:tabular-nums}
 .document-studio button:focus-visible,.document-center:focus-visible{outline:2px solid var(--accent-text);outline-offset:2px}
-.document-studio button:disabled{opacity:.45;cursor:not-allowed}
+/* NICHT `.document-studio button:disabled` — das traf auch „Zurück" und
+   „Vor" in der Blattleiste, die am Telefon am rechten Rand kleben und
+   DECKEN müssen (test393 §3): mit opacity .45 schienen die Werkzeuge
+   darunter wieder durch, der Doppeldruck war zurück. Die Blattleiste
+   hat ihre eigene Regel (Knopf deckend, nur das Zeichen blass). */
+.document-studio :is(.document-topbar,.document-commandbar,.document-inspector,.document-thumbnails) button:disabled{opacity:.45;cursor:not-allowed}
 .document-studio :is(.document-topbar,.document-commandbar) button{transition:background var(--motion-fast) var(--ease),transform var(--motion-instant) var(--ease)}
 .document-studio :is(.document-topbar,.document-commandbar) button:active:not(:disabled){transform:scale(var(--press-scale))}
 .document-studio .document-thumbnails.is-open{animation:studio-drawer var(--motion-normal) var(--ease-enter)}

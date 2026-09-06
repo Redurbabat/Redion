@@ -214,8 +214,13 @@ Register.navigation = (() => {
       haupt: true, hauptRang: 20, schauplatz: 'notizhefte',
       hinweis: 'Deine Schreibhefte, sofort schreibbereit',
       tun: () => (typeof Notebook !== 'undefined') && Notebook.oeffnen() },
+    /* `alleZeigen`, NICHT `oeffne`: `oeffne()` ist das Regal, und dorthin
+       führt seit der Workspace-Auflösung auch `bibliothekOben`. Zwei Wege
+       zum selben Ziel wären eine Dublette (E206) — „Alle Seiten" ist der
+       Reiter „Alle", die flache Liste über den ganzen Bestand. */
     { id: 'app-bib', marke: 'bib',       name: 'Alle Seiten',     icon: '📚', zeichen: 'page', platz: 'apps', gruppe: 'daten', rang: 55,
-      hinweis: 'Jede Seite, mit Reitern und Spalten',      tun: () => Bibliothek.oeffne() },
+      hinweis: 'Jede Seite, mit Reitern und Spalten',
+      tun: () => (Bibliothek.alleZeigen ? Bibliothek.alleZeigen() : Bibliothek.oeffne()) },
     { id: 'app-modell', marke: 'modell',    name: 'Datenmodell',     icon: '🗺', zeichen: 'database', platz: 'apps', gruppe: 'daten', rang: 60,
       hinweis: 'Alle Datenbanken und ihre Verknüpfungen',  tun: () => Schema.ansicht() },
     { id: 'app-kennzahl', marke: 'kennzahl',  name: 'Kennzahlen',      icon: '📊', zeichen: 'chart', platz: 'apps', gruppe: 'daten', rang: 70,

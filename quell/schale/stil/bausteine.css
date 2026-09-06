@@ -6443,7 +6443,7 @@ button.ru-zk[data-art="laden"][data-zustand="arbeitet"] .ru-zk-balken{ display:b
 .ru-baum-zeile[aria-disabled="true"]{opacity:.45}
 .ru-baum-zeile:focus-visible{outline:2px solid var(--accent-text);outline-offset:1px}
 .ru-baum-knick{display:grid;place-items:center;width:20px;height:24px;padding:0;border:0;color:var(--text-dim);background:transparent;font:inherit;line-height:1}
-.ru-baum-knick:disabled{opacity:0}
+.ru-baum-knick:empty{opacity:0}
 .ru-baum-inhalt{display:flex;align-items:center;gap:7px;min-width:0}
 .ru-baum-zeichen{display:grid;place-items:center;flex:0 0 18px;width:18px;height:18px;color:var(--text-dim)}
 .ru-baum-zeichen svg{width:16px;height:16px}

@@ -4,7 +4,10 @@
 .bib-dkopf h1{flex:1;min-width:120px;margin:0;font-size:26px;letter-spacing:-.7px}
 .bib-dkopf .bib-krume{flex-basis:100%;order:-1}
 .bib-dkopf .bib-ort{flex-basis:100%;margin:0;text-align:left;padding:0;background:none;border:0;color:var(--text-dim)}
-.bib-dkopf .bib-neu,.bib-studio-import{min-height:40px;padding:0 16px;border-radius:var(--radius-lg);font-weight:600}
+/* 44, nicht 40: „Neu" und „PDF importieren" sind die zwei Hauptwege des
+   Regals (§37 hart). Die 40 gewann am Telefon gegen `.bib-dkopf button`,
+   weil `.bib-dkopf .bib-neu` spezifischer ist — test114 mass 80 × 40. */
+.bib-dkopf .bib-neu,.bib-studio-import{min-height:44px;padding:0 16px;border-radius:var(--radius-lg);font-weight:600}
 .bib-studio-import{background:var(--haupt-flaeche);color:var(--auf-accent);box-shadow:var(--haupt-schein)}
 .bib-dkopf .bib-neu{background:var(--bg-hover);color:var(--text);border:1px solid var(--line)}
 .bib-studio-navigation{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:0 0 20px;border-bottom:1px solid var(--line);padding-bottom:16px}
@@ -25,7 +28,7 @@
 .bib-studio-wege button:active,.bib-arten button:active{transform:scale(var(--press-scale))}
 .bib-studio-suche{display:flex;align-items:center;gap:8px;margin-left:auto;min-width:160px;flex:0 1 260px;background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius-lg);padding:0 12px}
 .bib-studio-suche svg{width:16px;height:16px;color:var(--text-dim)}
-.bib-studio-suche input{width:100%;min-width:0;min-height:40px;background:transparent;border:0;outline:0;color:var(--text);font:inherit;font-size:13px}
+.bib-studio-suche input{width:100%;min-width:0;min-height:44px;background:transparent;border:0;outline:0;color:var(--text);font:inherit;font-size:13px}
 .bib-studio-suche:focus-within{outline:2px solid var(--accent-text);outline-offset:2px}
 .bib-studio-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 .bib-studio-weiter{display:flex;align-items:center;gap:22px;padding:22px 26px;margin-bottom:24px;background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius-xl);overflow:hidden}
@@ -56,6 +59,12 @@
 .bib-pflege-details .bib-pflege-karte{background:none;border:0;border-bottom:1px solid var(--line);border-radius:0;box-shadow:none;padding:16px 0}
 .bib-pflege-details[open]>.bib-abschnitt,.bib-ablage-baum[open]>[data-bib-baum]{animation:bib-detail-arrive var(--motion-normal) var(--ease-enter)}
 @keyframes bib-detail-arrive{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
+/* AM TABLET (820 px) WURDE „Dokumente" ZU „Dokume…" — die zwei Knöpfe
+   daneben liessen dem Titel 130 px. Ein abgeschnittenes Wort ist ein
+   anderes Wort (§55.1). Ab 240 px Mindestbreite rücken die Knöpfe in die
+   nächste Zeile; am Rechner ändert sich nichts, am Telefon gilt der
+   eigene Aufbau unten. */
+@media(max-width:1100px) and (min-width:761px){.bib-dkopf h1{min-width:240px}}
 @media(max-width:760px){
   .bib-dkopf{gap:10px;margin-bottom:20px}.bib-dkopf h1{font-size:23px}
   .bib-studio-import{order:3;flex:1 0 100%;white-space:nowrap}.bib-dkopf .bib-ort{order:4}
@@ -70,7 +79,7 @@
 }
 @media(prefers-reduced-motion:reduce){.bib-studio-miniatur{transform:none}.bib-deckel:is(:active,:focus-visible) .bib-deckel-blatt,.bib-studio-wege button:active,.bib-arten button:active{transform:none}.bib-deckel-blatt,.bib-deckel .bib-papier{transition:none}}
 
-/* Phase C Â· echte Ablage-Baumansicht â€” nutzt dieselben Store-Seiten wie die Deckel */
+/* Phase C · echte Ablage-Baumansicht — nutzt dieselben Store-Seiten wie die Deckel */
 .bib-ablage-layout{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;align-items:start}
 .bib-ablage-layout:has(.bib-ablage-baum[open]){grid-template-columns:minmax(210px,230px) minmax(0,1fr);gap:24px}
 .bib-ablage-baum{min-width:0;max-height:calc(100vh - 120px);overflow:auto;padding:0;background:transparent;border:0;border-radius:var(--radius-lg)}
