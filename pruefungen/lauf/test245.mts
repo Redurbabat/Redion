@@ -418,8 +418,13 @@ const schaleMass = await seite.evaluate(() => {
    Der Punkt misst deshalb die Kante. Die Zahl bleibt ausgeschrieben und
    wird nicht aus der CSS gelesen — er soll ja gerade merken, wenn die
    Breite sich ändert, ohne dass jemand es wollte. */
-p('Die Kontextkante ist 54 px breit', schaleMass.kante === 54,
-  String(schaleMass.kante));
+/* 184 STATT 54 SEIT DEM STUDIO (E440): die Kante trägt Beschriftungen und
+   lässt sich am Regler ziehen (148–260, kompakt 62). Die Zahl steht am
+   Regler — und genau dagegen wird gemessen, nicht gegen eine geratene. */
+const kanteSoll = Number(await seite.evaluate(
+  `document.getElementById('studio-divider')?.getAttribute('aria-valuenow')`)) || 54;
+p('Die Kontextkante ist so breit, wie der Studio-Regler sagt',
+  schaleMass.kante === kanteSoll, schaleMass.kante + ' gegen ' + kanteSoll);
 p('Und die alte 240-px-Seitenleiste steht am Rechner nicht mehr im Weg',
   schaleMass.seite === 0, `${schaleMass.seite}`);
 /* §8: 52–58. */
@@ -457,7 +462,14 @@ p('Die Knöpfe blenden ihren Druckpunkt über',
 
 /* UND SIE TUT ETWAS. Ein Suchfeld, das nichts öffnet, ist die schlimmste
    Sorte Attrappe — es sieht aus wie das Wichtigste der App. */
-await seite.click('#menueband #mb-suche');
+/* AM RECHNER IST DAS BAND SEIT E457 EINE LADE; die Suche steht im
+   Studio-Kopf. Geklickt wird, was man sieht — der Studio-Sucher, und
+   sonst (Telefon, alte Leiste) weiter `mb-suche`. */
+const sucher = await seite.evaluate(() => {
+  const s = document.getElementById('studio-search');
+  return s && s.getBoundingClientRect().width > 0 ? '#studio-search' : '#menueband #mb-suche';
+});
+await seite.click(sucher);
 await seite.waitForTimeout(500);
 const suchDa = await seite.evaluate(() =>
   !!document.querySelector('#suche-overlay, .suche-fenster, [data-suche], .overlay input'));
