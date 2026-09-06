@@ -243,3 +243,40 @@ bleibt bei Redions Bauart.
 
 `.redion-reserve-*` bleibt für die Reserve — sie ist eine eigene Seite
 ausserhalb der App, dort stört die Länge nicht.
+
+---
+
+## Vorgaben vom 6. September 2026
+
+Redur hat an diesem Tag vierzehn CSS-Bauteile geschickt, mit einem Satz
+dazu: „finde heraus, wo das passen könnte". Sie liegen unverändert unter
+`quell/entwicklung/ui-reserve/vorgaben/` (`loader-sammlung.css`,
+`folder-card.css`) — nicht bei den 50 Katalog-Einträgen nebenan, weil bei
+den meisten der Autor nicht dabeisteht und ein `quelleStatus` ohne Namen
+keine Behauptung tragen kann. Die einzige Ausnahme ist Nr. 28, wo er
+dabeistand (E458).
+
+Die Zuordnung folgt einer einzigen Frage: **gibt es in Redion etwas, das
+dieses Bauteil anzeigen kann?** Ein Zähler ohne Daten, ein Fortschritt ohne
+Anteil oder ein Schalter ohne Modus wäre eine Behauptung, und die kostet
+mehr, als das Bauteil hübsch ist.
+
+| Vorgabe | Redion-Ort | Was daran echt ist | Stand |
+|---|---|---|---|
+| `.folder-card` + Projektstruktur-Liste | Bibliothek, ⌄-Menü eines Ordners → „Blick hinein" | `Store.childrenOf`, die echte Anzahl, Suche durch den ganzen Unterbaum | **E459**, test432 |
+| `.ui-bookmark` · `.love-heart` | der Favoritenstern der Kopfleiste und der Deckelstern im Regal | das Feld `favorite` am Block | offen |
+| `.loader` (flüssiger Ring) | WebLLM lädt sein Modell | `initProgressCallback` — der einzige echte 0..1-Anteil im ganzen Bestand | offen |
+| `.preloader` / `.crack` (Sterne) | Auftragsfenster, Aufträge ohne bekannte Schrittzahl | `schritte === 0` heisst „unbekannt" — dort gibt es bewusst keinen Balken | offen |
+| `.loader-letter` (Buchstaben) | „Jetzt abgleichen" in der Wolke | `zustand.laeuft` des Abgleichs — läuft oder läuft nicht, kein Anteil | offen |
+| `.press` (Druckpresse) | Auftragsfenster, Auftragsart `pdf-bilder` | `schritt` von `schritte`, echte Seitenzahlen | offen |
+| `.🤚` (tippende Hand) | Rundgang, an den Zielen, die man antippt | die neun Schritte und ihre echten Ziele | offen |
+| `.btn` mit Buchstaben (dunkel) | Zustandsknopf, Sicht `erzeugen` — „Datenbank bauen", „Seite aufbauen" | die Zusage der KI-Aktion, wie bei `laden` (E441) | offen |
+| `.gradient-btn` als Umschalter | die Schalter der Einstellungen | `Store.setMeta`, derselbe Wert wie heute | offen |
+| `.theme-switch` (Staffelei) | Aussehen → Farbe, der Wechsel hell/dunkel | die acht Schemata und ihr `grund: 'light' \| 'dark'` | offen |
+| `.island` (Textur) | der Kopf des Begrüssungsbildschirms | nichts — bewusst Schmuck an der einen Stelle, die keine Auskunft trägt | offen |
+| `.iso-pro` (isometrische Symbole) | die Symbolreihe der Studio-Kopfleiste | die Knöpfe, die es dort schon gibt; die Beschriftung kommt aus dem `aria-label` | offen |
+
+Was **nicht** übernommen wird, und warum, steht jeweils in der Entscheidung
+zum Bauteil. Der wiederkehrende Grund ist derselbe wie bei Nr. 28: das
+Original spricht seine Zustände aus einem Zeitgeber, Redion spricht sie aus
+dem Ablauf.

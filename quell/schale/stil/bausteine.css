@@ -6542,6 +6542,147 @@ button.ru-zk[data-art="laden"][data-zustand="arbeitet"] .ru-zk-balken{ display:b
   .ru-drucker[data-zustand="rendern"] .ru-drucker-tinte{ opacity:1 }
 }
 
+/* ---- Die Ordnerkarte (E459, Vorgabe vom 6. September) --------------------
+   Der Blick in einen Ordner, ohne hineinzugehen. Die Blätter sind KNÖPFE
+   (man drückt sie), die Bühne ist Bild. Aufgeklappt wird über
+   `[data-offen]` am Wirt statt über ein verstecktes Kästchen: ein Ordner,
+   der aufgeht, ist kein Formularwert (§38, `aria-expanded`).
+
+   DIE FÜNF FARBEN SIND SCHMUCK. Die Art steht als WORT auf jedem Blatt —
+   ein Farbschlüssel für zehn Arten wäre eine Auskunft, die niemand
+   auswendig kann. */
+.ru-fach{
+  /* 214, und die Zahl ist gerechnet: das oberste Blatt steht 138 px über
+     dem Boden und ist 68 hoch, macht 5 + 68 + 138 = 211. Drei Anläufe
+     davor, jeder erst auf dem Bild sichtbar (§55.1): mit 132 ragte das
+     oberste Blatt aus der Bühne und lag auf der Suchzeile; mit 158 lagen
+     drei hinter der Klappe; mit 190 war die Zeile des untersten
+     verdeckt. */
+  --ru-fach-hoehe:214px;
+  position:relative; width:248px; padding:10px 12px 12px;
+  border-radius:var(--radius-xl); border:1px solid var(--line);
+  background:var(--bg-card); box-shadow:var(--shadow); color:var(--text)
+}
+.ru-fach-kopf{display:flex; align-items:baseline; gap:8px; margin-bottom:8px}
+.ru-fach-suche{
+  width:100%; margin-bottom:8px; display:flex; align-items:center;
+  height:30px; padding:0 10px; border-radius:var(--radius-pill);
+  border:1px solid var(--line); background:var(--bg-input)
+}
+.ru-fach-suche:focus-within{outline:2px solid var(--accent-text); outline-offset:1px}
+.ru-fach-eingabe{
+  width:100%; min-width:0; border:0; outline:0; background:transparent;
+  color:var(--text); font:inherit; font-size:12px
+}
+.ru-fach-sr{position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap}
+.ru-fach-zaehler{
+  display:flex; align-items:center; gap:5px; margin:0; flex:none;
+  padding:3px 9px; border-radius:var(--radius-pill);
+  background:var(--accent-schwach); color:var(--accent-text);
+  font-size:10px; font-weight:700; letter-spacing:.2px
+}
+.ru-fach-zahl{font-size:12px}
+.ru-fach-punkt{
+  width:6px; height:6px; flex:none; border-radius:50%;
+  background:currentColor; position:relative
+}
+/* Der Punkt schlägt NUR, während wirklich gefiltert wird — und das Wort
+   daneben sagt es auch. Ein Punkt, der immer pulst, meint nichts. */
+.ru-fach[data-sucht="ja"] .ru-fach-punkt::after{
+  content:""; position:absolute; inset:0; border-radius:50%;
+  background:currentColor; animation:ru-fach-puls 2s infinite
+}
+@keyframes ru-fach-puls{from{transform:scale(1);opacity:.9} to{transform:scale(3);opacity:0}}
+/* KEIN `preserve-3d`. Mit ihm malt der Browser nach der 3D-Lage statt nach
+   `z-index` — die um -50° gekippte Klappe kam damit VOR die Blätter, und
+   drei der fünf waren unsichtbar. Die Blätter brauchen kein 3D; die Klappe
+   braucht nur die Perspektive des Wirts. */
+.ru-fach-buehne{position:relative; height:var(--ru-fach-hoehe); perspective:1200px}
+.ru-fach-ruecken,.ru-fach-klappe{position:absolute; left:0; bottom:0; width:100%; pointer-events:none}
+.ru-fach-ruecken svg,.ru-fach-klappe svg{display:block; width:100%; height:auto}
+.ru-fach-ruecken path{fill:var(--accent); opacity:.55}
+.ru-fach-klappe{bottom:-6px; z-index:9; transform-origin:bottom; transition:transform var(--motion-normal) var(--ease-enter)}
+.ru-fach-klappe path{fill:var(--accent)}
+.ru-fach-marke{position:absolute; top:16%; left:8%; width:30px; height:4px; border-radius:10px; background:#ffffff88}
+.ru-fach[data-offen="ja"] .ru-fach-klappe{transform:rotateX(-50deg)}
+/* DER GRIFF LIEGT UNTER DEN BLÄTTERN, und das ist kein Feinschliff: mit
+   `z-index:10` über `.ru-fach-blaetter` fing er JEDEN Mausklick ab. Die
+   Blätter sind Knöpfe, aber getroffen hätte sie niemand — der Ordner wäre
+   stattdessen zugeklappt. Gefunden hat das test432 §2 mit
+   `elementFromPoint`; im Quelltext und auf dem Bild sah alles richtig aus.
+   Die Blätter tragen ihre eigenen `z-index` INNERHALB von
+   `.ru-fach-blaetter`; nach aussen zählt nur dessen 20 gegen die 10 hier. */
+.ru-fach-griff{
+  position:absolute; inset:0; z-index:10; width:100%; border:0; padding:0;
+  background:transparent; cursor:pointer; border-radius:var(--radius-lg)
+}
+.ru-fach-griff:focus-visible{outline:2px solid var(--accent-text); outline-offset:3px}
+.ru-fach-blaetter{position:absolute; inset:0; z-index:20}
+.ru-fach-blatt{
+  position:absolute; bottom:5px; left:9%; width:82%; height:68px;
+  display:block; text-align:left; overflow:hidden; cursor:pointer;
+  padding:0; border:0; border-radius:6px; color:#fff;
+  box-shadow:inset 0 1px 1px #ffffff4d, 0 4px 12px #0000002e;
+  transition:transform var(--motion-slow) var(--ease-enter), filter var(--motion-fast) var(--ease)
+}
+.ru-fach-blatt[data-nr="0"]{background:#c2410c; z-index:25; transition-delay:.15s}
+.ru-fach-blatt[data-nr="1"]{background:#b45309; z-index:24; transition-delay:.1s}
+.ru-fach-blatt[data-nr="2"]{background:#0369a1; z-index:23; transition-delay:.05s}
+.ru-fach-blatt[data-nr="3"]{background:#0f766e; z-index:22; transition-delay:.02s}
+/* NICHT VIOLETT. #6d28d9 war die Farbe des Ordners selbst — das fünfte
+   Blatt stand unsichtbar vor der Klappe. */
+.ru-fach-blatt[data-nr="4"]{background:#9d174d; z-index:21}
+/* EINE ZEILE AM UNTEREN RAND, und was nicht passt, endet mit „…". Der
+   ganze Name steht im `title` und im `aria-label`. */
+.ru-fach-zeile{
+  position:absolute; left:9px; right:7px; bottom:5px;
+  display:flex; align-items:baseline; gap:6px
+}
+.ru-fach-text{
+  flex:1 1 auto; min-width:0; font-size:10.5px; font-weight:700; line-height:1.3;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis
+}
+.ru-fach-weg{font-weight:600; opacity:.8}
+.ru-fach-art{
+  flex:none; padding:1px 5px; border-radius:4px;
+  background:#00000080; font-size:8.5px; font-weight:700; white-space:nowrap
+}
+.ru-fach-glanz{
+  position:absolute; top:0; left:-100%; width:50%; height:100%; pointer-events:none;
+  background:linear-gradient(90deg,transparent,#ffffff66,transparent); transform:skewX(-20deg)
+}
+.ru-fach[data-offen="ja"] .ru-fach-glanz{left:150%; transition:left .8s ease-in-out .3s}
+.ru-fach[data-offen="nein"] .ru-fach-blatt{transform:none; opacity:0; pointer-events:none}
+/* 26 px Abstand von Blatt zu Blatt — eine Zeile Name (10,5 px mal 1,3)
+   plus das Polster darunter und etwas Luft. Enger, und der Name des unteren Blattes
+   steckt unter dem oberen; weiter, und die Karte wird höher als der
+   Deckel, an dem sie hängt. Die Drehungen sind kleiner als in der Vorgabe
+   (±3° statt ±15°): mit 15° stand die Art-Marke des zweiten Blattes
+   ausserhalb der Karte, und die Schrägen schnitten den Namen des Blattes
+   darunter an — „Formelsammlung" stand als „Formelsa…" da, obwohl Platz
+   gewesen wäre. */
+.ru-fach[data-offen="ja"] .ru-fach-blatt[data-nr="0"]{transform:translateY(-138px) translateX(-5px) rotate(-3deg)}
+.ru-fach[data-offen="ja"] .ru-fach-blatt[data-nr="1"]{transform:translateY(-112px) translateX(6px) rotate(2.5deg)}
+.ru-fach[data-offen="ja"] .ru-fach-blatt[data-nr="2"]{transform:translateY(-86px) translateX(-4px) rotate(-3.5deg)}
+.ru-fach[data-offen="ja"] .ru-fach-blatt[data-nr="3"]{transform:translateY(-60px) translateX(5px) rotate(3deg)}
+.ru-fach[data-offen="ja"] .ru-fach-blatt[data-nr="4"]{transform:translateY(-34px) rotate(-1.5deg)}
+.ru-fach-blatt:hover,.ru-fach-blatt:focus-visible{filter:brightness(1.12)}
+.ru-fach-blatt:focus-visible{outline:2px solid var(--text); outline-offset:2px}
+.ru-fach[data-offen="ja"] .ru-fach-blatt:is(:hover,:focus-visible){translate:0 -10px}
+.ru-fach-name{flex:1 1 auto; min-width:0; margin:0; font-size:13px; font-weight:600; line-height:1.35; overflow-wrap:anywhere}
+.ru-fach-rest{margin:8px 0 0; font-size:11px; color:var(--text-dim); line-height:1.4}
+.ru-fach-gehen{margin-top:10px; width:100%; justify-content:center}
+/* Die Lage, in der die Karte über dem Regal schwebt. */
+.ru-fach-lage{position:fixed; z-index:760; inset:auto}
+@media (max-width:760px){
+  .ru-fach{width:min(300px, calc(100vw - 32px))}
+}
+@media (prefers-reduced-motion: reduce){
+  .ru-fach :is(.ru-fach-klappe,.ru-fach-blatt,.ru-fach-glanz){transition:none}
+  .ru-fach[data-sucht="ja"] .ru-fach-punkt::after{animation:none; opacity:0}
+  .ru-fach[data-offen="ja"] .ru-fach-blatt:is(:hover,:focus-visible){translate:none}
+}
+
 /* Redion-Bedienung · Baumansicht */
 .ru-baum{display:block;min-width:0;color:var(--text);font-size:13px;line-height:1.35}
 .ru-baum [role="group"]{display:block}

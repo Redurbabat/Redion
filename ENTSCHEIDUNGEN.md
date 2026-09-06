@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-438 Entscheidungen, E1 bis E458 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+439 Entscheidungen, E1 bis E459 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -502,6 +502,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E456** — Eine Marke: das „N" links, der Kontokreis und das „R" im Willkommen weichen der Studio-Marke
 * **E457** — Die ruhige Studio-Schale: drei Orte, eine Werkzeuglade, ein Regal — und was dabei rot war
 * **E458** — Die Drucker-Karte: der Druckauftrag sagt, was er gerade tut
+* **E459** — Die Ordnerkarte: der Blick ins Fach, ohne hineinzugehen
 
 ---
 
@@ -36039,4 +36040,101 @@ DATEIEN. `src/schale/bedienung/drucker.ts` (neu),
 GEPRÜFT. test431 (45 Punkte, neu), test426 (28), test427 (55), test182
 (36), test362 (18), test290 (13), test105, test109, test87;
 `npm run typecheck`, `npm run bauen:ts` (Dienststand v442).
+
+---
+
+E459 — Die Ordnerkarte: der Blick ins Fach, ohne hineinzugehen
+--------------------------------------------------------------------------
+
+ENTSCHEIDUNG. Ein Ordner im Regal bekommt im ⌄-Menü den Eintrag „Blick
+hinein". Er schlägt die Ordnerkarte auf: die echten Kinder fächern heraus,
+jedes ein Knopf mit Namen und Art, der Zähler nennt die echte Anzahl, und
+die Suche darin geht durch den ganzen Unterbaum. Das Bauteil liegt als
+`src/schale/bedienung/ordnerkarte.ts` neben `zustand.ts`, `zustandsknopf.ts`
+und `drucker.ts`.
+
+BEFUND. Seit E380 ist ein Ordner ein ORT: ein Tipp geht hinein statt zu
+öffnen. Das ist richtig und war der Fund aus GoodNotes — aber für die
+Frage „liegt das Skript in diesem Fach oder im anderen?" sind es vier Wege
+für eine Auskunft: hinein, ansehen, zurück, ins nächste. Der Deckel sagt
+heute „7 Sachen" und verschweigt, WELCHE sieben.
+
+Dazu ein zweiter, kleinerer Befund: die Suche des Regals filtert nach
+`parentId` — also nur die offene Ebene. In einem Fach mit Unterfächern
+findet sie nichts, was eine Ebene tiefer liegt, und sagt das auch nicht.
+Die Karte bekommt den Unterbaum mit und nennt bei jedem Treffer den Weg.
+
+WOHER. Zwei Vorgaben von Redur vom 6. September 2026, und sie beschreiben
+dasselbe: die 3D-Ordnerkarte, die sich beim Klick öffnet und die Dateien
+auffächert (`vorgaben/folder-card.css`), und die Projektstruktur, die beim
+Überfahren eine verschachtelte Liste zeigt. „Zeig mir, was drin ist, ohne
+dass ich hingehen muss" — ein Bauteil, nicht zwei (§8).
+
+WARUM SO.
+
+  · EIN KNOPF, KEIN KÄSTCHEN. Die Vorgabe klappt über ein verstecktes
+    `<input type="checkbox">` und `:checked` auf. Ein Ordner, der aufgeht,
+    ist aber keine Auswahl, die man abschickt — er ist ein Zustand „auf"
+    oder „zu", und dafür heisst das Attribut `aria-expanded` (§38).
+  · ZUGEKLAPPT STEHT KEIN BLATT IM BAUM. Sie nur mit `opacity:0` zu
+    verstecken hiesse: ein Vorleser zählt fünf Knöpfe auf, die niemand
+    sieht und niemand treffen kann.
+  · DIE FARBEN SIND SCHMUCK, DIE ART IST TEXT. Fünf Farben für zehn Arten
+    wäre ein Schlüssel, den niemand auswendig kann. Auf jedem Blatt steht
+    das Wort — „PDF", „Ordner", „3 Sachen" —, und der ganze Name samt Art
+    und Weg steht im `title` und im `aria-label`.
+  · HÖCHSTENS FÜNF. Mehr überdecken einander; der Rest steht als Satz da
+    („und 2 weitere — such danach, um sie zu sehen") und ist über die
+    Suche erreichbar. Der Zähler nennt trotzdem ALLE.
+  · DER PUNKT SCHLÄGT NUR BEIM SUCHEN. In der Vorgabe pulst er immer und
+    meint nichts. Hier heisst er: es ist ein Filter aktiv — und das Wort
+    daneben wechselt mit ihm von „Sachen" auf „Treffer von 8".
+  · DER ALTE WEG BLEIBT. „Ordner öffnen" steht unter der Karte und tut
+    genau das, was der Deckelklick immer tat (`geheIn`). Nichts wird
+    ersetzt, es kommt etwas dazu.
+
+WAS DIE BILDER GEFUNDEN HABEN, und das ist der eigentliche Bericht (§55.1).
+Drei Fassungen sahen im Quelltext richtig aus:
+
+  1. Die aufgefächerten Blätter lagen ÜBER der Suchzeile. Die Bühne war
+     132 px hoch, das oberste Blatt steht 138 px über dem Boden.
+  2. Mit 158 px lagen drei der fünf Blätter hinter der Vorderklappe — die
+     war so hoch wie die Rückwand. Sie ist jetzt eine niedrige Lasche.
+  3. Mit 190 px war die Zeile des untersten Blattes verdeckt. Und die
+     Zeilen standen am KOPF jedes Blattes — sichtbar ist aber der untere
+     Streifen, weil das nächste Blatt weiter oben UND weiter vorn liegt.
+     Auf dem Telefonbild standen vier farbige Streifen ohne ein Wort
+     darauf. Die Zeile sitzt jetzt unten.
+
+Dazu zwei kleinere: das fünfte Blatt war violett wie der Ordner selbst und
+damit unsichtbar; und die Drehung von ±15° schnitt den Namen des Blattes
+darunter an — „Formelsammlung" stand als „Formelsa…" da, obwohl Platz war.
+Jetzt ±3°, und was wirklich nicht passt, endet sichtbar mit „…".
+
+UND WAS DER PRÜFLAUF GEFUNDEN HAT, was kein Bild zeigen konnte: der
+Klappgriff (`inset:0`, `z-index:10`) lag über allen Blättern. Sie sind
+Knöpfe, aber ein Mausklick hätte nie einen getroffen — er hätte den Ordner
+zugeklappt. Auf dem Bild war nichts zu sehen, im Quelltext auch nicht, und
+ein `querySelector` findet ein Element auch dann, wenn es vollständig
+hinter einem anderen liegt. `test432` §2 misst deshalb mit
+`elementFromPoint`: liegt in der Mitte jeder Zeile wirklich diese Zeile?
+
+GEGENPROBEN (§55.2). A: `.ru-fach-blaetter` zurück auf `z-index:5` → sechs
+Punkte rot, jeder mit „davor liegt ru-fach-griff". B: die Zeile zurück an
+den Kopf des Blattes → vier Punkte rot. C: die Bühnenhöhe zurück auf
+190 px → BLIEB GRÜN; die Höhe allein war nie der Fehler, sondern erst
+zusammen mit den alten Abständen. C steht deshalb nicht als Beleg da.
+
+BILDER ANGESEHEN: `bilder/ordnerkarte-rechner-hell.png`,
+`-rechner-dunkel.png`, `-handy-dunkel.png` — fünf Blätter, fünf lesbare
+Namen, fünf Art-Marken.
+
+DATEIEN. `src/schale/bedienung/ordnerkarte.ts` (neu),
+`src/bereiche/wissen/bibliothek.ts`, `quell/schale/stil/bausteine.css`,
+`index.html`, `src/dienst/sw.ts`, `bilder.mts`,
+`quell/entwicklung/ui-reserve/vorgaben/` (neu),
+`pruefungen/lauf/test432.mts` (neu).
+
+GEPRÜFT. test432 (48 Punkte, neu, zwei Gegenproben rot gesehen);
+`npm run typecheck`, `npm run bauen:ts`.
 

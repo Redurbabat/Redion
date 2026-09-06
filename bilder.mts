@@ -2041,6 +2041,40 @@ const ANSICHTEN: Record<string, {
   }
 };
 
+/* --- Die Ordnerkarte (E459) ----------------------------------------------
+   Zu sehen: der Blick in ein Fach — fünf echte Kinder fächern heraus, jedes
+   mit seinem Namen und seiner Art, der Zähler nennt die echte Zahl. Das
+   Menü wird nicht geklickt, sondern die Karte direkt gestellt: ein Menü im
+   Bild verdeckt genau das, was zu sehen sein soll. */
+ANSICHTEN['ordnerkarte'] = {
+  titel: 'Die Ordnerkarte: der Blick ins Fach (E459)',
+  bauen: async () => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelectorAll('.overlay').forEach(o => o.remove());
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+    document.getElementById('rg-willkommen')?.remove();
+    document.getElementById('rg-einladung')?.remove();
+    const fach = Store.addPage(null, { text: 'Elektrotechnik', icon: '⚡' });
+    Store.updateBlock(fach.id, { heftArt: 'fach' });
+    ['Kapitel 2 — Spannung und Strom', 'Formelsammlung', 'Prüfung Februar',
+     'Messprotokoll 14.03.', 'Notizen Vorlesung', 'Altklausuren']
+      .forEach(t => Store.addPage(fach.id, { text: t }));
+    const unter = Store.addPage(fach.id, { text: 'Laborberichte' });
+    Store.updateBlock(unter.id, { heftArt: 'fach' });
+    Store.addPage(unter.id, { text: 'Versuch 3 — Widerstandsmessung' });
+    await Store.flush();
+    Bibliothek.oeffne();
+    await new Promise(r => setTimeout(r, 700));
+  },
+  dann: async () => {
+    const deckel = document.querySelector<HTMLElement>('.bib-deckel[data-art="ordner"]');
+    deckel?.querySelector<HTMLElement>('.bib-deckel-mehr')?.click();
+    await new Promise(r => setTimeout(r, 250));
+    document.querySelector<HTMLElement>('.menu [data-a="blick"]')?.click();
+    await new Promise(r => setTimeout(r, 900));
+  }
+};
+
 /* --- Die Drucker-Karte (E458) --------------------------------------------
    Zu sehen: die Karte unten rechts ueber einer offenen Seite, im Zustand
    „rendern" — Blatt mit Druck, Lampe im Akzent, der Satz darunter. Der
