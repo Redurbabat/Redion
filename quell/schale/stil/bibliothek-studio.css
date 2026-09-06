@@ -1,0 +1,49 @@
+/* Real document covers, not a second content model. Perspective on hover only. */
+.bib-deckel-seite{max-width:1400px;margin-inline:auto;padding-top:12px}
+.bib-dkopf{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-bottom:26px}
+.bib-dkopf h1{flex:1;min-width:120px;margin:0;font-size:26px;letter-spacing:-.7px}
+.bib-dkopf .bib-krume{flex-basis:100%;order:-1}
+.bib-dkopf .bib-ort{flex-basis:100%;margin:0;text-align:left;padding:0;background:none;border:0;color:var(--text-dim)}
+.bib-dkopf .bib-neu,.bib-studio-import{min-height:40px;padding:0 16px;border-radius:var(--radius-lg);font-weight:600}
+.bib-studio-import{background:var(--haupt-flaeche);color:var(--auf-accent);box-shadow:var(--haupt-schein)}
+.bib-dkopf .bib-neu{background:var(--bg-hover);color:var(--text);border:1px solid var(--line)}
+.bib-studio-navigation{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:0 0 20px;border-bottom:1px solid var(--line);padding-bottom:16px}
+.bib-studio-wege{display:flex;gap:4px;flex-wrap:wrap}
+.bib-studio-wege button{min-height:40px;padding:8px 12px;border-radius:var(--radius-lg);color:var(--text-dim);font-size:13px}
+.bib-studio-wege button.on{background:var(--accent-schwach);color:var(--accent-text);font-weight:600}
+.bib-studio-wege button:hover{background:var(--bg-hover)}
+.bib-studio-suche{display:flex;align-items:center;gap:8px;margin-left:auto;min-width:160px;flex:0 1 260px;background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius-lg);padding:0 12px}
+.bib-studio-suche svg{width:16px;height:16px;color:var(--text-dim)}
+.bib-studio-suche input{width:100%;min-width:0;min-height:40px;background:transparent;border:0;outline:0;color:var(--text);font:inherit;font-size:13px}
+.bib-studio-suche:focus-within{outline:2px solid var(--accent-text);outline-offset:2px}
+.bib-studio-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.bib-studio-weiter{display:flex;align-items:center;gap:22px;padding:22px 26px;margin-bottom:24px;background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius-xl);overflow:hidden}
+.bib-studio-weiter>div{min-width:0;flex:1}.bib-studio-weiter h2{font-size:18px;line-height:1.4;margin:6px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bib-studio-eyebrow{font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--accent-text)}
+.bib-studio-weiter p{font-size:12px;color:var(--text-dim);margin:0}
+.bib-studio-weiter button{display:flex;gap:14px;align-items:center;flex-shrink:0;min-height:44px;padding:10px 16px;background:var(--accent-schwach);color:var(--accent-text);border-radius:var(--radius-lg);font-weight:600}
+.bib-studio-miniatur{display:grid;place-items:center;flex:0 0 62px;height:82px;border-radius:4px;background:#fff;color:#6556ae;box-shadow:var(--studio-paper-shadow);transform:perspective(var(--studio-perspective)) rotateY(-12deg) rotate(-6deg);overflow:hidden}
+.bib-studio-miniatur img{width:100%;height:100%;object-fit:cover}
+.bib-arten{gap:6px;margin-bottom:24px}.bib-arten button{border-radius:var(--radius-pill);padding:6px 12px;font-size:12px}
+.bib-gitter{grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:30px 26px}
+.bib-deckel{perspective:var(--studio-perspective);min-width:0}
+.bib-deckel-blatt{border-radius:6px 12px 12px 6px;border:1px solid var(--line);transition:transform var(--motion-normal) var(--ease),box-shadow var(--motion-normal) var(--ease);transform-origin:25% 80%;box-shadow:0 2px 3px #00000010,0 9px 20px #0000000d}
+.bib-deckel-name{padding-top:9px}.bib-deckel-name b{font-size:13px;line-height:1.5}.bib-deckel small{color:var(--text-dim)}
+@media(hover:hover) and (prefers-reduced-motion:no-preference){
+  .bib-deckel:hover .bib-deckel-blatt{transform:translateY(-5px) rotateY(-6deg) rotateX(2deg);box-shadow:var(--studio-paper-shadow)}
+  .bib-deckel[data-art="ordner"]:hover .bib-deckel-blatt{transform:translateY(-4px) rotateX(-8deg)}
+}
+.bib-deckel:focus-visible{outline:2px solid var(--accent-text);outline-offset:6px;border-radius:var(--radius-lg)}
+.bib-deckel-seite .bib-pflege{margin-top:36px}
+@media(max-width:760px){
+  .bib-dkopf{gap:10px;margin-bottom:20px}.bib-dkopf h1{font-size:23px}
+  .bib-studio-import{order:3;flex:1}.bib-dkopf .bib-ort{order:4}
+  .bib-studio-suche{flex-basis:100%;margin:0;max-width:none}
+  .bib-studio-wege{display:flex;flex-wrap:nowrap;overflow-x:auto;width:100%}
+  .bib-studio-wege button{white-space:nowrap;min-height:44px;padding-inline:10px}
+  .bib-studio-navigation{gap:10px}.bib-studio-weiter{gap:14px;padding:18px;flex-wrap:wrap}
+  .bib-studio-weiter button{width:100%;justify-content:space-between}.bib-studio-weiter h2{font-size:16px}
+  .bib-gitter{grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 18px}
+  .bib-dkopf button,.bib-arten button,.bib-deckel-mehr{min-height:44px}
+}
+@media(prefers-reduced-motion:reduce){.bib-studio-miniatur{transform:none}.bib-deckel:active .bib-deckel-blatt{transform:none}}

@@ -1154,6 +1154,43 @@ const Lernwelt = (() => {
                         esc(ansichtName(id)) + '</button>').join('') + '</nav>';
             })();
     };
+    /** Der Einstieg bleibt eine Sicht auf echte Seiten. Das Papier zeigt einen
+        Textausschnitt, keine erfundene PDF-Vorschau und keine Inhaltskopie. */
+    const dokumentEinstieg = () => {
+        const pdf = sichtbarePdfs()[0];
+        const zuletzt = pdf || sichtbareZuletzt()[0];
+        const seitenId = zuletzt?.pageId || zuletzt?.id || '';
+        const ausschnitt = seitenId ? miniatur(seitenId, 4) : '';
+        const darfImportieren = typeof Konten === 'undefined' || Konten.darf('bearbeiten');
+        const importVerfuegbar = typeof Bibliothek !== 'undefined' && !!Bibliothek.pdfImportieren;
+        return '<section class="lw-desk" aria-label="Dein Dokumentenstudio">' +
+            '<div class="lw-desk-copy"><p class="lw-eyebrow">DEIN PLATZ FÜR IDEEN</p>' +
+            '<h2>Aufmachen.<br>Weiterdenken.</h2>' +
+            '<p>Deine PDFs, Notizen und Unterlagen. Ein Griff — und du bist mittendrin.</p>' +
+            '<div class="lw-actions">' +
+            (pdf
+                ? '<button type="button" class="is-primary" data-lw-open="' + esc(seitenId) + '">' +
+                    zeichenSpan('book') + 'PDF öffnen</button>'
+                : '<button type="button" class="is-primary" data-lw-action="library">' +
+                    zeichenSpan('library') + 'Dokumente öffnen</button>') +
+            '<button type="button" data-lw-action="import"' +
+            (darfImportieren && importVerfuegbar ? '' : ' disabled title="' +
+                (darfImportieren ? 'Der Dateiimport ist hier nicht verfügbar.' : 'Du benötigst Bearbeitungsrechte, um Dateien hinzuzufügen.') + '"') +
+            '>' + zeichenSpan('plus') + 'PDF importieren</button></div>' +
+            (pdf ? '<button type="button" class="lw-desk-link" data-lw-action="library">Alle Dokumente ansehen →</button>' : '') +
+            '</div><button type="button" class="lw-paper-stack" ' +
+            (zuletzt ? 'data-lw-open="' + esc(seitenId) + '" aria-label="' + esc(zuletzt.titel) + ' öffnen"'
+                : 'data-lw-action="library" aria-label="Deine Dokumente öffnen"') + '>' +
+            '<span class="lw-paper-sheet"><span class="lw-paper-cap">' + zeichenSpan(pdf ? 'book' : 'page') +
+            '<span>' + (pdf ? 'PDF · WEITERLESEN' : 'DEINE DOKUMENTE') + '</span></span>' +
+            '<strong>' + esc(zuletzt?.titel || 'Platz für deine Gedanken') + '</strong>' +
+            '<span class="lw-paper-preview mini-zeilen">' +
+            (ausschnitt || '<span class="lw-paper-message">' + (zuletzt
+                ? 'Öffnen, lesen und direkt weiterarbeiten.'
+                : 'Sammle deine Unterlagen. Halte fest, was dir wichtig ist.') + '</span>') + '</span>' +
+            '<span class="lw-paper-foot">' + (zuletzt ? 'Weiterarbeiten' : 'Loslegen') + '<span aria-hidden="true">↗</span></span>' +
+            '</span></button></section>';
+    };
     const heuteAnsicht = () => {
         const queue = warteschlange();
         const stats = statistik();
@@ -1182,80 +1219,53 @@ const Lernwelt = (() => {
                 : naechstePruefung.tage === 1 ? 'morgen'
                     : naechstePruefung.tage + ' Tage'
             : 'keine geplant';
-        /* HIER STAND DER EINRICHTEN-STREIFEN (E137, weg mit E434).
-           Er bot an, zwischen zwei Hauptwelten zu waehlen — „Lernen" und
-           „Workspace" — und stand da, solange die Einrichtung nicht durchlaufen
-           war. Redur hat ihn weggenommen: eine Wahl zwischen zwei Dingen, von
-           denen es nur noch eines gibt, ist keine Frage, sondern eine
-           Verzoegerung — den Arbeitsbereich loest Redur gerade auf, seine
-           Abschnitte werden einzelne Orte (E435).
-           Lebensbereiche legt man weiter an — ueber den Bereichsdialog
-           (`Produktwelten.bereicheDialog`), der sie schon immer konnte. */
+        /* Eine klare Startfolge: Dokument öffnen, Lernrunde, dann der Tagesplan.
+           Auswertungen bleiben vollständig über native Details erreichbar. */
         return '<div class="lw-today">' +
-            /* DREIMAL DERSELBE BEREICH WAR ZWEIMAL ZU VIEL (E205).
-               Hier stand „◎ Alle Bereiche" als Marke — dieselbe Auskunft, die 300 px
-               weiter oben schon im Auswahlfeld steht und die man dort auch ändern
-               kann. Eine Marke, die nur wiederholt, was daneben steht, kostet Höhe
-               und sagt nichts; über der Falz ist Höhe das Knappe. */
-            /* „Guten Abend, Ich" — so stand es da, solange kein Konto einen Namen
-               trägt. „Ich" ist der Rückfallwert der AKTOR-Kennung, nicht ein Name,
-               mit dem man jemanden anspricht; im Deutschen grüsst man sich nicht
-               mit dem eigenen Pronomen. Ohne Namen bleibt es beim blossen Gruss.
-               Der Aktor selbst bleibt unberührt — er wird an anderer Stelle
-               gebraucht, und dort ist „Ich" richtig. */
-            '<section class="lw-hero"><div><p>' +
-            esc(aktor().name && aktor().name !== 'Ich' ? gruss + ', ' + aktor().name : gruss) +
-            '</p><h2>' +
-            esc(new Date().toLocaleDateString('de-CH', {
-                weekday: 'long', day: 'numeric', month: 'long'
-            })) + '</h2></div><div class="lw-goal"><button type="button" data-lw-action="goal" aria-label="Tagesziel ändern">' +
+            '<section class="lw-hero lw-hero-compact"><div><p>' +
+            esc(new Date().toLocaleDateString('de-CH', { weekday: 'long', day: 'numeric', month: 'long' })) +
+            '</p><h2>' + esc(aktor().name && aktor().name !== 'Ich' ? gruss + ', ' + aktor().name : gruss) +
+            '.</h2></div><div class="lw-goal"><button type="button" data-lw-action="goal" aria-label="Tagesziel ändern">' +
             '<span>' + stats.reviewedToday + ' / ' + ziel + '</span><small>Lernziel heute</small></button>' +
             '<progress max="100" value="' + zielProzent + '" aria-label="Tagesfortschritt"></progress></div></section>' +
-            /* WEITER WO DU WARST — DIE ERSTE FRAGE DES TAGES (E205).
-               Hier stand bisher nichts, und unten in der Übersicht stand
-               „Zuletzt geöffnet": neun Zeilen, jede mit demselben Untertitel und
-               derselben Zeit. Wer morgens aufmacht, sucht keine Titelliste,
-               sondern die Seite, an der er gestern aufgehört hat — und die
-               erkennt man an dem, was draufsteht. Drei Karten mit dem echten
-               Anfang der Seite sagen das, was neun Titel nicht sagen konnten.
-      
-               Die Liste unten entfällt damit; sie war dieselbe Auskunft in
-               schlechterer Form. */
+            dokumentEinstieg() +
+            '<section class="lw-next-step" aria-label="Dein nächster Lernschritt">' +
+            zeichenSpan('cards', 'lw-next-icon') + '<div><p>Ein guter nächster Schritt</p><h2>' +
+            (queue.all.length ? queue.all.length + (queue.all.length === 1 ? ' Karte für heute' : ' Karten für heute')
+                : stats.total ? 'Deine Wiederholungen sind erledigt' : 'Aus Wissen wird Können') +
+            '</h2><span>' + (queue.all.length
+            ? 'Fehler festigen, Bekanntes wiederholen, Neues entdecken.'
+            : stats.total ? 'Du kannst deine Themen vertiefen oder neue Karten anlegen.'
+                : 'Erstelle deine erste Lernkarte aus deinen Unterlagen.') + '</span></div>' +
+            '<div class="lw-actions">' +
+            (queue.all.length ? '<button type="button" class="is-primary" data-lw-train="today">Lernen starten →</button>'
+                : '<button type="button" class="is-primary" data-lw-nav="lernen">Lernen öffnen →</button>') +
+            '<button type="button" data-lw-nav="lernen">Lernplan ansehen</button></div></section>' +
             (weiterKarten.length
-                ? '<section class="lw-continue"><header><div><h2>Weiter wo du warst</h2>' +
-                    '<p>Die Seiten, an denen du zuletzt gearbeitet hast</p></div>' +
-                    (alleZuletzt.length > weiterKarten.length
-                        ? '<button type="button" data-lw-action="library">Alle ' +
-                            alleZuletzt.length + ' ansehen</button>'
-                        : '') +
-                    '</header><div class="lw-continue-grid">' +
-                    weiterKarten.map(weiterKarte).join('') + '</div></section>'
+                ? '<section class="lw-continue"><header><div><h2>Zuletzt auf deinem Schreibtisch</h2>' +
+                    '<p>Genau dort weiter, wo du aufgehört hast.</p></div>' +
+                    '<button type="button" data-lw-action="library">Alle Dokumente</button>' +
+                    '</header><div class="lw-continue-grid">' + weiterKarten.map(weiterKarte).join('') + '</div></section>'
                 : '') +
+            '<div class="lw-dashboard-grid lw-day-plan">' +
+            sektion('Deine Aufgaben', aufgabenListe([...ueberfaellige, ...heutigeAufgaben].slice(0, 6), 'Für heute ist alles erledigt.'), mehrAls(ueberfaellige.length + heutigeAufgaben.length, 6)) +
+            sektion('Dein Tag', terminListe(heutigeTermine, 'Heute ist Raum für deine eigenen Pläne.')) +
+            '</div>' +
+            '<div class="lw-quick" aria-label="Schnellzugriff">' +
+            '<button type="button" data-lw-action="tasks">' + zeichenSpan('tasks') + 'Alle Aufgaben</button>' +
+            '<button type="button" data-lw-action="calendar">' + zeichenSpan('calendar') + 'Kalender</button>' +
+            '<button type="button" data-lw-action="library">' + zeichenSpan('library') + 'Dokumente</button>' +
+            '<button type="button" data-lw-action="capture">' + zeichenSpan('camera') + 'Scannen</button>' +
+            '</div>' +
+            '<details class="lw-insights" data-lw-details="today-insights"><summary><span>' +
+            zeichenSpan('chart') + '<span>Lernübersicht &amp; Fortschritt<small>Prüfungen, Themen, Projekte und deine Lernroutine</small></span>' +
+            '</span><span class="lw-details-chevron" aria-hidden="true">⌄</span></summary><div class="lw-insights-body">' +
             '<section class="lw-metrics" aria-label="Heute auf einen Blick">' +
             kennzahl(String(queue.errors.length + queue.due.length), 'fällig', 'heute zu wiederholen') +
             kennzahl(String(queue.newCards.length), 'neu', 'höchstens 20 pro Runde') +
             kennzahl(String(fehlerListe().filter(item => !item.stabil).length), 'Fehler', 'gezielt wiederholen') +
-            /* VIER ZAHLEN, ALSO AUCH HIER EINE ZAHL. Ohne geplante Prüfung stand
-               in der vierten Kachel „keine geplant" in Zahlengrösse — ein Satz
-               dort, wo daneben dreimal eine Ziffer steht, und die Reihe las sich
-               nicht mehr als Reihe. Was fehlt, ist ein Strich; der Satz erklärt
-               ihn eine Zeile tiefer. */
-            (naechstePruefung
-                ? kennzahl(pruefungText, 'nächste Prüfung', naechstePruefung.titel || '')
+            (naechstePruefung ? kennzahl(pruefungText, 'nächste Prüfung', naechstePruefung.titel || '')
                 : kennzahl('–', 'nächste Prüfung', 'keine geplant')) + '</section>' +
-            '<div class="lw-primary-grid">' +
-            '<section class="lw-focus-card"><header><div><p>Deine Tagesrunde</p><h2>' +
-            (queue.all.length === 1 ? '1 Karte wartet'
-                : queue.all.length ? queue.all.length + ' Karten warten'
-                    : 'Alles für heute erledigt') +
-            '</h2></div><span class="lw-card-icon" data-sym="cards" aria-hidden="true"></span></header><p>' +
-            (queue.all.length
-                ? 'Zuerst Fehler, danach fällige Karten und zum Schluss neue Inhalte.'
-                : stats.total ? 'Die nächste Wiederholung erscheint automatisch zum geplanten Zeitpunkt.'
-                    : 'Erstelle deine erste Karte aus einer Notiz, einem Text oder PDF.') + '</p><div class="lw-actions">' +
-            '<button type="button" class="is-primary" data-lw-train="today"' +
-            (queue.all.length ? '' : ' disabled') + '>Tagesrunde starten</button>' +
-            '<button type="button" data-lw-nav="lernen">Plan ansehen</button></div></section>' +
             '<section class="lw-exam-card"><header><p>Nächste Prüfung</p>' +
             '<span class="lw-card-icon" data-sym="clipboard" aria-hidden="true"></span></header>' +
             (naechstePruefung
@@ -1263,45 +1273,18 @@ const Lernwelt = (() => {
                     esc(naechstePruefung.fach || naechstePruefung.lernstoff || 'Lernstoff noch nicht zugeordnet') +
                     '</p><button type="button" data-lw-exam="' + esc(naechstePruefung.id) + '">Vorbereitung öffnen</button>'
                 : leer('calendar', 'Keine Prüfung geplant', 'Lege einen Termin in deiner Prüfungsdatenbank an.', 'school-setup', 'Prüfungen öffnen')) + '</section>' +
-            '</div>' +
             '<div class="lw-dashboard-grid">' +
-            /* VIER KACHELN, NICHT SECHS (E205).
-               Sechs Sektionen mit sehr unterschiedlich langen Listen ergaben in
-               zwei Spalten ein weisses Loch von fast 400 px: „Termine" mit einer
-               Zeile stand neben „Zuletzt geöffnet" mit acht.
-    
-               „Aufgaben heute" und „Überfällig" sind ausserdem dieselbe Frage —
-               was ist offen. Die Antwort steht in der ZEILE („heute", „Do",
-               „26. Aug."), nicht in zwei Überschriften; überfällig kommt zuerst,
-               weil es zuerst dran ist. „Zuletzt geöffnet" ist nach oben gewandert
-               und dort etwas geworden, das man ansehen kann. */
-            sektion('Offen', aufgabenListe([...ueberfaellige, ...heutigeAufgaben].slice(0, 6), 'Nichts offen — heute ist keine Aufgabe fällig.'), mehrAls(ueberfaellige.length + heutigeAufgaben.length, 6)) +
-            sektion('Termine', terminListe(heutigeTermine, 'Heute steht kein Termin an.'), 'Unterricht, Arbeit und Meetings') +
-            sektion('Themenfortschritt', themenListe(liste(stats.topics), 5), 'fachlicher SM-2-Stand') +
-            sektion('Laufende Projekte', eintragListe(projekteGezeigt, 'Noch kein Projekt zugeordnet.'), mehrAls(alleProjekte.length, 5) || 'ohne Kopien') +
+            sektion('Themenfortschritt', themenListe(liste(stats.topics), 5), 'Was du schon sicher beherrschst') +
+            sektion('Laufende Projekte', eintragListe(projekteGezeigt, 'Noch kein Projekt zugeordnet.'), mehrAls(alleProjekte.length, 5)) +
             '</div>' +
-            '<section class="lw-engagement"><header><div><p>Aktivität &amp; Motivation</p><h2>Deine Lernroutine</h2></div>' +
+            '<section class="lw-engagement"><header><div><p>Aktivität</p><h2>Deine Lernroutine</h2></div>' +
             '<span>Getrennt vom Wissensstand</span></header><div class="lw-metrics">' +
-            /* VIER UND NICHT FÜNF (E204). Fünf Karten in vier Spalten liessen
-               „Level" allein in einer zweiten Reihe stehen, daneben drei Viertel
-               weisse Fläche — bei JEDER Breite, denn fünf teilt sich durch nichts.
-               XP und Level sind ohnehin dieselbe Zahl zweimal: das eine ist die
-               Rechnung, das andere ihr Ergebnis. Damit vier, und vier geht auf.
-    
-               Drei Entschuldigungen standen auf derselben Karte — die Marke oben,
-               „kein Wissensstand" und „Motivation, nicht Fachfortschritt". Es
-               bleibt die oben; sie gilt für die ganze Karte. */
             kennzahl('~' + spiel.minuten + ' Min.', 'Lernzeit', spiel.tempoSatz) +
             kennzahl(spiel.woche + ' / ' + ziel * 7, 'Wochenziel') +
             kennzahl(spiel.streak + (spiel.streak === 1 ? ' Tag' : ' Tage'), 'Streak') +
             kennzahl('Level ' + spiel.level, 'Aktivität', spiel.xp + ' XP') +
             '</div>' + fortschritt(spiel.wochenProzent, 'Wochenfortschritt') + '</section>' +
-            '<div class="lw-quick" aria-label="Schnellzugriff">' +
-            '<button type="button" data-lw-action="tasks">' + zeichenSpan('tasks') + 'Alle Aufgaben</button>' +
-            '<button type="button" data-lw-action="calendar">' + zeichenSpan('calendar') + 'Kalender</button>' +
-            '<button type="button" data-lw-action="library">' + zeichenSpan('library') + 'Bibliothek</button>' +
-            '<button type="button" data-lw-action="capture">' + zeichenSpan('camera') + 'Erfassen</button>' +
-            '</div></div>';
+            '</div></details></div>';
     };
     const verlaufsTage = (logs, anzahl) => {
         const heute = tagesStart();
@@ -2696,6 +2679,10 @@ const Lernwelt = (() => {
         if (aktion === 'library') {
             abmelden();
             Bibliothek.oeffne();
+            return;
+        }
+        if (aktion === 'import') {
+            Bibliothek.pdfImportieren();
             return;
         }
         if (aktion === 'calendar') {
