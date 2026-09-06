@@ -3760,6 +3760,7 @@ const App = (() => {
        Vorher gefragt wäre die Antwort „nein" gewesen, und das Band wäre
        leer geblieben, ohne dass jemand einen Fehler gesehen hätte. */
     Menueband.start();
+    if (typeof StudioSchale !== 'undefined') StudioSchale.start();
     Blocks.auswahlEinklinken();
     /* DER WILLKOMMENSBILDSCHIRM BLEIBT DER WILLKOMMENSBILDSCHIRM (E137).
        Hier stand `ProduktOnboarding.vielleichtStarten()` zuerst, und der

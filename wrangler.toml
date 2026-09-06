@@ -25,7 +25,7 @@
 #  Von Hand veroeffentlichen geht auch:
 #      npm install -g wrangler
 #      wrangler login
-#      wrangler deploy --dry-run     # sagt, wie viele Dateien mitgehen
+#      wrangler deploy --dry-run
 #      wrangler deploy
 # ===========================================================================
 
@@ -40,80 +40,59 @@ binding = "ASSETS"
 # ===========================================================================
 #  D1 — die Datenbank fuer Konten, Abgleich und Rechte
 # ---------------------------------------------------------------------------
-#  Diese vier Zeilen sind auskommentiert, weil die database_id bei jedem
-#  anders ist. Sie entsteht mit
+#  Diese Datenbank ist fuer Redion aktiviert.
 #
-#      npx wrangler d1 create redion
+#  Datenbankname:
+#      redion
 #
-#  und wird dann hier eingetragen. Ohne sie laeuft der Worker trotzdem —
-#  er sagt dann bei /api/stand, dass die Datenbank fehlt, und Redion
-#  arbeitet weiter rein auf dem Geraet.
-#
-#  ACHTUNG: Die Rauten erst wegnehmen, wenn eine ECHTE Kennung dasteht.
-#  Cloudflare prueft die Bindung beim Veroeffentlichen gegen das Konto —
-#  mit dem Platzhalter bricht `wrangler deploy` ab, und der Worker bleibt
-#  auf dem alten Stand. Auskommentiert-bleiben ist also kein Versaeumnis,
-#  sondern die einzige Form, in der die Datei VOR `d1 create` deploybar
-#  ist. Ohne Bindung antwortet der Server ehrlich (server/cloudflare.ts).
-#
-#  DARF DIE KENNUNG INS REPOSITORY? Ja. Sie ist kein Geheimnis nach §42 —
-#  kein Token, kein Schluessel, kein Passwort, und ohne Zugang zum Konto
-#  nutzlos. Wenn Cloudflare aus GitHub baut, MUSS sie sogar mit: sonst
-#  veroeffentlicht der naechste Push einen Worker ohne Datenbank.
-#  Die echten Geheimnisse stehen nie hier, sondern hinter
-#  `wrangler secret put` (ADRESSE, GITHUB_GEHEIM, GOOGLE_GEHEIM,
-#  VAPID_PRIVAT).
-#
-#  Die ganze Anleitung steht in SERVER-EINRICHTEN.md.
+#  Die database_id ist keine geheime Zugangsinformation.
+#  Geheimnisse gehoeren weiterhin in Cloudflare Secrets.
 # ===========================================================================
-# [[d1_databases]]
-# binding = "DB"
-# database_name = "redion"
-# database_id = "hier-die-eigene-einsetzen"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "redion"
+database_id = "2a4f6708-b7e7-43c5-9e18-17b33713dbb9"
 
 # ===========================================================================
 #  R2 — die Ablage fuer Anhaenge (Bilder, PDFs, Videos)
 # ---------------------------------------------------------------------------
-#  Grosse Dateien gehoeren nicht in D1 (E2). Der Bucket entsteht mit
+#  Grosse Dateien gehoeren nicht in D1.
+#
+#  Der Bucket entsteht mit:
 #
 #      npx wrangler r2 bucket create redion-dateien
 #
-#  und wird dann hier eingebunden. Ohne ihn laeuft alles Uebrige weiter —
-#  die /datei-Wege sagen dann 503 mit genau diesem Hinweis, und Redion
-#  gleicht Saetze ab, aber keine Anhaenge.
+#  Danach diesen Block aktivieren:
 #
-#  ACHTUNG: dieselbe Regel wie oben — die Rauten erst weg, wenn der Bucket
-#  wirklich angelegt ist. Sonst bricht `wrangler deploy` ab.
+# [[r2_buckets]]
+# binding = "R2"
+# bucket_name = "redion-dateien"
 #
-#  Nachsehen laesst es sich jederzeit: `/api/stand` nennt seit E270 auch
-#  den Dateispeicher ("dateien": "r2" oder "keine"), und in Redion sagt es
-#  der Knopf Wolke → Server pruefen in Worten.
+#  Ohne R2 funktioniert Redion weiterhin, aber Anhaenge bleiben lokal
+#  beziehungsweise die Datei-API meldet, dass R2 fehlt.
 # ===========================================================================
+
 # [[r2_buckets]]
 # binding = "R2"
 # bucket_name = "redion-dateien"
 
 # ===========================================================================
-#  WECKRUFE — Web Push (L33, E54)
+#  WECKRUFE — Web Push
 # ---------------------------------------------------------------------------
-#  Damit eine Erinnerung auch klingelt, wenn Redion geschlossen ist, muss
-#  jemand zur richtigen Zeit anstossen. Das tut der geplante Lauf.
-#
-#  Eine Minute ist die kleinste Aufloesung, die Cron erlaubt, und fuer einen
-#  Wecker genau genug: "08:00" darf 08:00:40 heissen, aber nicht 08:05.
-#
-#  Auskommentiert, weil es ohne VAPID-Schluessel nichts zu tun gaebe. Wer
-#  Weckrufe will, setzt zuerst die Schluessel und nimmt dann das Kommentar-
-#  zeichen weg:
+#  Fuer Push-Erinnerungen koennen spaeter VAPID-Schluessel und ein Cron
+#  aktiviert werden.
 #
 #      npx web-push generate-vapid-keys
 #      npx wrangler secret put VAPID_OEFFENTLICH
 #      npx wrangler secret put VAPID_PRIVAT
-#      npx wrangler secret put VAPID_ABSENDER      # mailto:du@example.com
+#      npx wrangler secret put VAPID_ABSENDER
 #
-#  WAS DABEI AN DEN SERVER GEHT, ist ein Zeitpunkt - nicht der Text der
-#  Erinnerung, nicht die Seite, nicht der Grund. Der Stoss sagt nur
-#  "wach auf"; was faellig ist, liest das Dienst-Skript auf dem Geraet.
+#  Danach:
+#
+# [triggers]
+# crons = ["* * * * *"]
 # ===========================================================================
+
 # [triggers]
 # crons = ["* * * * *"]

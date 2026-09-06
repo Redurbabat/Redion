@@ -502,12 +502,116 @@ const Bibliothek = (() => {
         { id: 'alle', name: 'Alle' },
         { id: 'pdf', name: 'PDF' },
         { id: 'board', name: 'Whiteboards' },
+        { id: 'plan', name: 'Schaltpläne' },
         { id: 'blatt', name: 'Blätter' },
         { id: 'tab', name: 'Tabellen' },
         { id: 'db', name: 'Datenbanken' },
         { id: 'karten', name: 'Karteikarten' },
-        { id: 'ordner', name: 'Ordner' }
+        { id: 'ordner', name: 'Ordner' },
+        { id: 'datei', name: 'Dateien' },
+        { id: 'seite', name: 'Seiten' }
     ];
+    /** Schnellwege sind Sichten auf denselben Bestand, keine zweite Ablage. */
+    const studioNavigation = () => {
+        const pdfAn = zustand.reiter === 'alle' && zustand.art === 'pdf';
+        const wege = [
+            { id: 'ablage', name: 'Meine Ablage' },
+            { id: 'kuerzlich', name: 'Zuletzt geöffnet' },
+            { id: 'favoriten', name: 'Favoriten' },
+            { id: 'pdf', name: 'Alle PDFs' }
+        ];
+        return '<div class="bib-studio-navigation">' +
+            '<nav class="bib-studio-wege" aria-label="Dokumente finden">' +
+            wege.map(weg => {
+                const an = weg.id === 'pdf' ? pdfAn : !pdfAn && zustand.reiter === weg.id;
+                return '<button type="button" data-studio-weg="' + weg.id + '"' +
+                    (an ? ' class="on" aria-current="page"' : '') + '>' + weg.name + '</button>';
+            }).join('') + '</nav>' +
+            '<label class="bib-studio-suche"><span data-sym="search" aria-hidden="true"></span>' +
+            '<span class="bib-studio-sr">Dokumenttitel in dieser Ansicht suchen</span>' +
+            '<input id="bib-studio-suche" type="search" autocomplete="off" placeholder="Dokument suchen …"' +
+            ' value="' + esc(zustand.suche) + '"></label>' +
+            '</div>';
+    };
+    /** Nur ein wirklich geöffnetes PDF anbieten; Importzeit ist kein Lesefortschritt. */
+    const studioWeiter = () => {
+        if (zustand.reiter !== 'ablage' || zustand.ordner || zustand.suche || zustand.art !== 'alle')
+            return '';
+        const letzte = alleSeiten().filter(p => p.zuletztGeoeffnet && artVon(p).id === 'pdf')
+            .sort((a, b) => zeitZahl(b.zuletztGeoeffnet) - zeitZahl(a.zuletztGeoeffnet))[0];
+        if (!letzte)
+            return '';
+        const bild = typeof Vorschau !== 'undefined' && Vorschau.bildDatei ? Vorschau.bildDatei(letzte.id) : null;
+        return '<section class="bib-studio-weiter" aria-label="PDF weiterlesen">' +
+            '<span class="bib-studio-miniatur" aria-hidden="true">' +
+            (bild ? '<img data-vorschau="' + esc(bild) + '" alt="" loading="lazy">' : '<span>PDF</span>') + '</span>' +
+            '<div><span class="bib-studio-eyebrow">Weiterarbeiten</span><h2>' + esc(letzte.text || 'Ohne Titel') +
+            '</h2><p>Zuletzt geöffnet ' + esc(wannText(letzte.zuletztGeoeffnet)) + '</p></div>' +
+            '<button type="button" data-studio-weiter="' + esc(letzte.id) + '">PDF öffnen' +
+            '<span aria-hidden="true">↗</span></button></section>';
+    };
+    let pdfImportLaeuft = false;
+    /** Derselbe PDF-Importer wie beim Archivimport, mit direktem Weg ins Dokument. */
+    const pdfImportieren = () => {
+        const ziel = zustand.reiter === 'ablage' ? zustand.ordner : null;
+        if (pdfImportLaeuft)
+            return;
+        if (!permitted('bearbeiten', ziel || undefined)) {
+            UI.toast('Du darfst hier keine PDF ablegen.');
+            return;
+        }
+        if (typeof ArchivImport === 'undefined' || !ArchivImport.dateiAlsDokument) {
+            UI.toast('Der PDF-Import ist gerade nicht verfügbar.');
+            return;
+        }
+        const eingabe = document.createElement('input');
+        eingabe.type = 'file';
+        eingabe.accept = '.pdf,application/pdf';
+        eingabe.hidden = true;
+        document.body.appendChild(eingabe);
+        eingabe.addEventListener('cancel', () => eingabe.remove(), { once: true });
+        eingabe.addEventListener('change', async () => {
+            const datei = eingabe.files?.[0];
+            eingabe.remove();
+            if (!datei || pdfImportLaeuft)
+                return;
+            if (!/\.pdf$/i.test(datei.name)) {
+                UI.toast('Bitte eine PDF-Datei auswählen.');
+                return;
+            }
+            if (!permitted('bearbeiten', ziel || undefined) || (ziel && Store.getBlock(ziel)?.alive === false)) {
+                UI.toast('In diesem Ordner kann nichts abgelegt werden.');
+                return;
+            }
+            pdfImportLaeuft = true;
+            document.querySelectorAll('[data-studio-import]').forEach(button => {
+                button.disabled = true;
+                button.setAttribute('aria-busy', 'true');
+                button.textContent = 'PDF wird importiert …';
+            });
+            try {
+                const ergebnis = await ArchivImport.dateiAlsDokument(datei, ziel);
+                App.zeichneBaum();
+                if (ergebnis.seiteId)
+                    App.oeffne(ergebnis.seiteId);
+                else
+                    App.zeichneSeite();
+            }
+            catch (fehler) {
+                UI.toast('PDF konnte nicht importiert werden: ' +
+                    (fehler instanceof Error ? fehler.message : String(fehler)));
+            }
+            finally {
+                pdfImportLaeuft = false;
+                document.querySelectorAll('[data-studio-import]').forEach(button => {
+                    button.disabled = !permitted('bearbeiten', zustand.ordner || undefined);
+                    button.removeAttribute('aria-busy');
+                    button.textContent = 'PDF importieren';
+                });
+            }
+        }, { once: true });
+        eingabe.click();
+    };
     /**
      * Ein Deckel. Was darauf steht, ist keine Zeichnung, sondern eine
      * Aussage: welche Art, und wenn es eine gibt, die echte Vorschau der
@@ -808,6 +912,7 @@ const Bibliothek = (() => {
         wrap.innerHTML =
             '<div class="bib bib-deckel-seite">' +
                 deckelKopf(alle.length, gesamt) +
+                studioNavigation() + studioWeiter() +
                 '<div class="bib-arten" role="group" aria-label="Nach Art filtern">' +
                 ART_FILTER.filter(a => a.id === 'alle' || vorhanden.has(a.id) ||
                     a.id === zustand.art)
@@ -872,6 +977,10 @@ const Bibliothek = (() => {
             '<h1>' + esc(hier) + '</h1>' +
             '<button class="bib-neu" data-neu-auf>' +
             '<b aria-hidden="true">+</b><span>Neu</span></button>' +
+            '<button class="bib-studio-import" data-studio-import' +
+            (pdfImportLaeuft || !permitted('bearbeiten', zustand.ordner || undefined)
+                ? ' disabled title="Import läuft oder Bearbeitungsrechte fehlen"' : '') +
+            '>PDF importieren</button>' +
             '<button class="bib-form-knopf" data-form="liste" ' +
             'aria-label="Als Liste anzeigen">\u2630</button>' +
             '<button class="bib-ort" data-orte aria-haspopup="menu">' +
@@ -913,6 +1022,33 @@ const Bibliothek = (() => {
     };
     /** Was in beiden Formen gleich funktioniert: öffnen und umschalten. */
     const binde = (wrap) => {
+        wrap.querySelectorAll('[data-studio-weg]').forEach(button => button.addEventListener('click', () => {
+            const weg = button.dataset.studioWeg || 'ablage';
+            zustand.reiter = weg === 'pdf' ? 'alle' : weg;
+            zustand.art = weg === 'pdf' ? 'pdf' : 'alle';
+            zustand.ordner = null;
+            App.zeichneSeite();
+        }));
+        wrap.querySelector('[data-studio-import]')?.addEventListener('click', pdfImportieren);
+        wrap.querySelector('[data-studio-weiter]')?.addEventListener('click', event => {
+            const id = event.currentTarget.dataset.studioWeiter;
+            if (id && permitted('lesen', id))
+                App.oeffne(id);
+        });
+        wrap.querySelector('#bib-studio-suche')?.addEventListener('input', event => {
+            const input = event.currentTarget;
+            zustand.suche = input.value;
+            const cursor = input.selectionStart;
+            App.zeichneSeite();
+            const neu = wrap.querySelector('#bib-studio-suche');
+            neu?.focus();
+            if (neu && cursor !== null) {
+                try {
+                    neu.setSelectionRange(cursor, cursor);
+                }
+                catch { /* search inputs */ }
+            }
+        });
         wrap.querySelectorAll('.bib-reiter [data-r]').forEach(b => b.addEventListener('click', () => {
             if (b.dataset['r'] === 'mehr') {
                 const r = b.getBoundingClientRect();
@@ -1531,7 +1667,7 @@ const Bibliothek = (() => {
     /* `umfangSatz` und `DECKE_KUERZLICH` kommen mit heraus, damit ein
        Prüflauf die Sprache messen kann, ohne dreihundert Seiten anzulegen
        (test359 §6) — und damit die Decke eine Zahl mit Namen bleibt. */
-    return { oeffne, aufgaben, meineAufgaben, quellenDialog, alleSeiten, quelleVon,
+    return { oeffne, aufgaben, meineAufgaben, quellenDialog, alleSeiten, quelleVon, pdfImportieren,
         wannText, umfangSatz, DECKE_KUERZLICH };
 })();
 window.Bibliothek = Bibliothek;

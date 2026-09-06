@@ -13,6 +13,7 @@ const DocumentMode = (() => {
     thumbnailsOpen: boolean;
     inspectorOpen: boolean;
     einzeln: boolean;
+    toolsOpen: boolean;
   };
 
   type SourceRegion = { x: number; y: number; width: number; height: number };
@@ -100,7 +101,8 @@ const DocumentMode = (() => {
        braucht, holt sie mit `ⓘ`; wer liest, liest. */
     const created = { index: gemerkteSeite(pageId), zoom: gemerkterZoom(pageId),
                       thumbnailsOpen: false, inspectorOpen: false,
-                      einzeln: gemerkterLauf(pageId) };
+                      einzeln: gemerkterLauf(pageId),
+                      toolsOpen: Store.getMeta('dokWerkzeuge:' + pageId) !== false };
     states.set(pageId, created);
     return created;
   };
@@ -167,6 +169,7 @@ const DocumentMode = (() => {
     button.className = 'document-thumbnail' + (selected ? ' is-selected' : '');
     button.dataset.documentIndex = String(index);
     button.setAttribute('aria-label', sourceLabel(documentBlock) + ' öffnen');
+    button.setAttribute('aria-current', selected ? 'page' : 'false');
 
     const preview = document.createElement('span');
     preview.className = 'document-thumbnail-preview';
@@ -274,7 +277,7 @@ const DocumentMode = (() => {
     const heading = document.createElement('div');
     heading.className = 'document-inspector-heading';
     const title = document.createElement('strong');
-    title.textContent = page.text || 'Ohne Titel';
+    title.textContent = 'Dokumentdetails';
     const close = document.createElement('button');
     close.type = 'button';
     close.dataset.documentAction = 'inspector-close';
@@ -284,7 +287,7 @@ const DocumentMode = (() => {
 
     const source = document.createElement('div');
     source.className = 'document-inspector-source';
-    source.textContent = sourceLabel(documentBlock);
+    source.textContent = sourceLabel(documentBlock) + ' · ' + (page.text || 'Ohne Titel');
 
     const actions = document.createElement('div');
     actions.className = 'document-inspector-actions';
@@ -300,6 +303,13 @@ const DocumentMode = (() => {
       makeAction('select-region', '⌗ Ausschnitt'),
       makeAction('recognize', '⌁ Erkennen')
     );
+    const importButton = makeAction('import', '＋ PDF hinzufügen');
+    importButton.className = 'document-import';
+    const mayEdit = !page.gesperrt && (typeof Konten === 'undefined' || Konten.darf('bearbeiten', page));
+    importButton.disabled = !mayEdit;
+    importButton.title = mayEdit
+      ? 'Eine weitere PDF in dieses Dokument einlesen'
+      : 'Zum Hinzufügen brauchst du Bearbeitungsrechte und ein entsperrtes Dokument.';
 
     const summary = document.createElement('div');
     summary.className = 'document-inspector-summary';
@@ -326,7 +336,7 @@ const DocumentMode = (() => {
     });
     if (!links.length) {
       const empty = document.createElement('p');
-      empty.textContent = 'Noch keine Notiz, Aufgabe oder Karte ist mit dieser Stelle verbunden.';
+      empty.textContent = 'Deine Gedanken neben dem Papier. Wähle „Aus Inhalt“, um eine Notiz, Aufgabe oder Lernkarte mit dieser Seite zu verbinden.';
       list.appendChild(empty);
     }
     /* DER RANDSTREIFEN (E301, L107; hierher E384). Ein Schalter fuer das
@@ -372,9 +382,15 @@ const DocumentMode = (() => {
     const original = originalKnopf(page, documentBlock);
     container.append(heading, source);
     if (original) container.appendChild(original);
-    container.append(actions, randKnopf);
+    const linkedTitle = document.createElement('h3');
+    linkedTitle.className = 'document-section-title';
+    linkedTitle.textContent = 'Mit dieser Seite verbunden';
+    const viewTitle = document.createElement('h3');
+    viewTitle.className = 'document-section-title';
+    viewTitle.textContent = 'Papier & Ansicht';
+    container.append(importButton, viewTitle, randKnopf);
     if (laufKnopf) container.appendChild(laufKnopf);
-    container.append(summary, list);
+    container.append(linkedTitle, actions, summary, list);
   };
 
   const renderDocument = (container: HTMLElement, block: any): void => {
@@ -387,6 +403,34 @@ const DocumentMode = (() => {
        Blocks, deshalb braucht es dafür keinen zweiten Blockknoten. */
     container.dataset.bid = block.id;
     container.appendChild(block.type === 'pdfseite' ? PdfSeite.zeichne(block) : Blatt.zeichne(block));
+    /* Die vorhandene Ink-Leiste bleibt Eigentümerin ihrer Aktionen. Der
+       Dokumentmodus ergänzt lediglich Namen und Tastatur-Navigation. */
+    const toolbar = container.querySelector<HTMLElement>('.blatt-werk');
+    if (toolbar) {
+      toolbar.setAttribute('role', 'toolbar');
+      toolbar.setAttribute('aria-label', 'Schreiben, markieren und bearbeiten');
+      toolbar.querySelectorAll<HTMLButtonElement>('button').forEach(button => {
+        button.type = 'button';
+        if (!button.getAttribute('aria-label')) {
+          const label = button.querySelector('.wort')?.textContent?.trim() || button.title;
+          if (label) button.setAttribute('aria-label', label);
+        }
+      });
+      toolbar.addEventListener('keydown', event => {
+        if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+        const target = event.target instanceof Element ? event.target.closest('button') : null;
+        if (!target) return;
+        const buttons = Array.from(toolbar.querySelectorAll<HTMLButtonElement>('button'))
+          .filter(button => !button.disabled && button.getClientRects().length > 0);
+        const index = buttons.indexOf(target as HTMLButtonElement);
+        if (index < 0 || !buttons.length) return;
+        event.preventDefault();
+        const next = event.key === 'Home' ? 0 : event.key === 'End' ? buttons.length - 1
+          : (index + (event.key === 'ArrowRight' ? 1 : -1) + buttons.length) % buttons.length;
+        buttons[next]?.focus();
+        buttons[next]?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      });
+    }
   };
 
   const selectRegion = (
@@ -394,6 +438,8 @@ const DocumentMode = (() => {
     documentBlock: any,
     done: (region: SourceRegion) => void
   ): void => {
+    const warInert = paper.inert;
+    paper.inert = false;
     paper.classList.add('document-selecting');
     const overlay = document.createElement('div');
     overlay.className = 'document-region-overlay';
@@ -450,7 +496,15 @@ const DocumentMode = (() => {
       overlay.removeEventListener('pointermove', move, true);
       overlay.removeEventListener('pointerup', finish, true);
       overlay.remove(); paper.classList.remove('document-selecting');
+      paper.inert = warInert;
+      window.removeEventListener('keydown', escapeRegion, true);
     };
+    const escapeRegion = (event: KeyboardEvent): void => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault(); event.stopPropagation(); cleanup();
+    };
+    window.addEventListener('keydown', escapeRegion, true);
+    overlay.addEventListener('pointercancel', cleanup, { once: true });
     overlay.addEventListener('pointerdown', down, true);
     overlay.addEventListener('pointermove', move, true);
     overlay.addEventListener('pointerup', finish, true);
@@ -474,8 +528,10 @@ const DocumentMode = (() => {
     if (!current) return false;
 
     const workspace = document.createElement('section');
-    workspace.className = 'document-workspace';
+    workspace.className = 'document-workspace document-studio';
     workspace.dataset.pageId = page.id;
+    workspace.dataset.documentTools = state.toolsOpen ? 'open' : 'closed';
+    workspace.setAttribute('aria-label', 'Dokument: ' + (page.text || 'Ohne Titel'));
 
     const top = document.createElement('div');
     top.className = 'document-topbar';
@@ -483,6 +539,7 @@ const DocumentMode = (() => {
       const button = document.createElement('button');
       button.type = 'button'; button.dataset.documentAction = action;
       button.setAttribute('aria-label', label); button.textContent = text;
+      button.title = label;
       return button;
     };
     /* DER WEG ZURUECK STEHT IM DOKUMENT (E384). Solange Menueband und
@@ -501,12 +558,14 @@ const DocumentMode = (() => {
     zurueckWort.className = 'dz-wort';
     zurueckWort.textContent = 'Dokumente';
     zurueck.append(zurueckWort);
-    top.append(
-      zurueck,
-      topButton('thumbnails', '☰', 'Seitenübersicht öffnen'),
-      topButton('previous', '‹', 'Vorherige Seite'),
-      topButton('next', '›', 'Nächste Seite')
-    );
+    const thumbnailButton = topButton('thumbnails', '▤ Seiten', 'Seitenübersicht öffnen');
+    thumbnailButton.setAttribute('aria-expanded', String(state.thumbnailsOpen));
+    const inspectorButton = topButton('inspector', 'Details', 'Notizen und Verknüpfungen öffnen');
+    inspectorButton.setAttribute('aria-expanded', String(state.inspectorOpen));
+    const navigation = document.createElement('div');
+    navigation.className = 'document-navigation';
+    navigation.append(zurueck, thumbnailButton);
+    top.append(navigation);
     /* DER RANDSTREIFEN STEHT SEIT E384 IM INSPECTOR (vorher hier, E301/L107).
        Er ist ein Schalter fuer das GANZE Dokument — das sagte schon E301 —
        und damit gehoert er zu den uebrigen Angaben ueber das Dokument, nicht
@@ -517,12 +576,24 @@ const DocumentMode = (() => {
     const position = document.createElement('span');
     position.className = 'document-position';
     position.textContent = 'Seite ' + (state.index + 1) + '/' + documents.length;
+    position.setAttribute('aria-live', 'polite');
+    position.setAttribute('aria-atomic', 'true');
+    const previousButton = topButton('previous', '‹', 'Vorherige Seite');
+    const nextButton = topButton('next', '›', 'Nächste Seite');
+    const pagination = document.createElement('div');
+    pagination.className = 'document-pagination';
+    pagination.setAttribute('role', 'group');
+    pagination.setAttribute('aria-label', 'Im Dokument blättern');
+    pagination.append(previousButton, position, nextButton);
     const zoom = document.createElement('input');
     zoom.type = 'range'; zoom.min = '60'; zoom.max = '180'; zoom.step = '10';
     zoom.value = String(state.zoom); zoom.dataset.documentZoom = '';
     zoom.setAttribute('aria-label', 'Dokumentzoom');
     const zoomLabel = document.createElement('span');
     zoomLabel.className = 'document-zoom-label'; zoomLabel.textContent = state.zoom + ' %';
+    const zoomGroup = document.createElement('div');
+    zoomGroup.className = 'document-zoom-group';
+    zoomGroup.append(zoom, zoomLabel, topButton('fit', 'Anpassen', 'Seite an die verfügbare Breite anpassen'));
 
     /* DER TITEL STEHT JETZT HIER (E296). Der grosse Seitenkopf faellt im
        Dokumentmodus weg; ohne diese Zeile hiesse das offene Dokument
@@ -532,7 +603,7 @@ const DocumentMode = (() => {
     titel.className = 'document-title';
     titel.textContent = page.text || 'Ohne Titel';
     titel.title = page.text || 'Ohne Titel';
-    top.append(position, titel);
+    top.append(titel);
 
     /* UND DER EINE HINWEIS AUS DEM KOPF, DER HIER WEITER GILT. Eine gegen
        Bearbeiten gesperrte Seite sagte das oben in einer eigenen Zeile. Die
@@ -547,9 +618,26 @@ const DocumentMode = (() => {
       top.append(schloss);
     }
 
-    top.append(zoom, zoomLabel,
-      topButton('inspector', 'ⓘ', 'Notizen und Verknüpfungen öffnen'),
-      topButton('exit', 'Normale Seite', 'Dokumentmodus verlassen'));
+    const topActions = document.createElement('div');
+    topActions.className = 'document-top-actions';
+    topActions.append(inspectorButton, topButton('exit', 'Seiteneditor', 'Dokumentmodus verlassen'));
+    top.append(topActions);
+    const commandbar = document.createElement('div');
+    commandbar.className = 'document-commandbar';
+    commandbar.setAttribute('aria-label', 'Dokumentansicht');
+    const modes = document.createElement('div');
+    modes.className = 'document-mode-switch';
+    modes.setAttribute('role', 'group');
+    modes.setAttribute('aria-label', 'Lesen oder annotieren');
+    const readButton = topButton('read', 'Lesen', 'Lesen — Zeichenwerkzeuge einklappen');
+    const annotateButton = topButton('annotate', '✎ Annotieren', 'Annotieren — mit dem Stift auf der Seite schreiben');
+    readButton.setAttribute('aria-pressed', String(!state.toolsOpen));
+    annotateButton.setAttribute('aria-pressed', String(state.toolsOpen));
+    const canAnnotate = !page.gesperrt && (typeof Konten === 'undefined' || Konten.darf('bearbeiten', page));
+    annotateButton.disabled = !canAnnotate;
+    if (!canAnnotate) annotateButton.title = 'Zum Annotieren brauchst du Bearbeitungsrechte und ein entsperrtes Dokument.';
+    modes.append(readButton, annotateButton);
+    commandbar.append(modes, pagination, zoomGroup);
 
     /* WELCHE SPALTEN ES GIBT, STEHT AM KASTEN (E296). Vorher war das Raster
        fest — 190 px links, 280 px rechts, bei jeder Fensterbreite ueber
@@ -562,6 +650,9 @@ const DocumentMode = (() => {
       (state.inspectorOpen ? ' with-inspector' : '');
     const thumbnails = document.createElement('aside');
     thumbnails.className = 'document-thumbnails' + (state.thumbnailsOpen ? ' is-open' : '');
+    thumbnails.id = 'document-thumbnails-' + page.id;
+    thumbnails.setAttribute('aria-label', 'Seitenübersicht');
+    thumbnailButton.setAttribute('aria-controls', thumbnails.id);
     const thumbHeader = document.createElement('div');
     thumbHeader.className = 'document-panel-header';
     const thumbTitle = document.createElement('strong'); thumbTitle.textContent = 'Seiten';
@@ -571,6 +662,8 @@ const DocumentMode = (() => {
 
     const center = document.createElement('main');
     center.className = 'document-center' + (state.einzeln ? ' ist-einzeln' : '');
+    center.setAttribute('aria-label', 'Papierfläche');
+    center.tabIndex = 0;
 
     /* ══ DIE ROLLE (E299) ══════════════════════════════════════════════════
        ALLE SEITEN UNTEREINANDER, NICHT EINE ZUM BLAETTERN.
@@ -613,6 +706,9 @@ const DocumentMode = (() => {
       gezeichnet.add(i);
       stand.style.removeProperty('height');
       renderDocument(stand, block);
+      stand.querySelectorAll<HTMLElement>('.blatt-papier').forEach(paper => {
+        paper.inert = !state.toolsOpen;
+      });
     };
 
     documents.forEach((block, i) => {
@@ -637,9 +733,12 @@ const DocumentMode = (() => {
 
     const inspector = document.createElement('aside');
     inspector.className = 'document-inspector' + (state.inspectorOpen ? ' is-open' : '');
+    inspector.id = 'document-inspector-' + page.id;
+    inspector.setAttribute('aria-label', 'Dokumentdetails und verknüpfte Inhalte');
+    inspectorButton.setAttribute('aria-controls', inspector.id);
     renderInspector(inspector, page, current);
     body.append(thumbnails, center, inspector);
-    workspace.append(top, body);
+    workspace.append(top, commandbar, body);
     wrap.appendChild(workspace);
 
     /* DIE HOEHE MISST SICH SELBST (E296). In der CSS stand `calc(100vh -
@@ -785,6 +884,12 @@ const DocumentMode = (() => {
        nichts wissen und nichts wissen sollen (§5 Regel 1). Das CSS liest
        `[data-aktiv]` und blendet die übrigen aus. */
     const aktivMarkieren = (): void => {
+      previousButton.disabled = state.index === 0;
+      nextButton.disabled = state.index === documents.length - 1;
+      thumbnails.querySelectorAll<HTMLElement>('[data-document-index]').forEach(button => {
+        if (Number(button.dataset.documentIndex) === state.index) button.setAttribute('aria-current', 'page');
+        else button.removeAttribute('aria-current');
+      });
       staende.forEach((stand, i) => {
         if (i === state.index) stand.setAttribute('data-aktiv', '');
         else stand.removeAttribute('data-aktiv');
@@ -880,7 +985,7 @@ const DocumentMode = (() => {
       const stand = staende[nr];
       if (stand) {
         springtZu = nr;
-        if (weich && typeof center.scrollTo === 'function')
+        if (weich && !matchMedia('(prefers-reduced-motion: reduce)').matches && typeof center.scrollTo === 'function')
           center.scrollTo({ top: stand.offsetTop, behavior: 'smooth' });
         else center.scrollTop = stand.offsetTop;
       }
@@ -893,6 +998,36 @@ const DocumentMode = (() => {
     };
 
     const rerender = (): void => App.zeichneSeite();
+    const toolsSetzen = (an: boolean): void => {
+      state.toolsOpen = an;
+      Store.setMeta('dokWerkzeuge:' + page.id, an);
+      workspace.dataset.documentTools = an ? 'open' : 'closed';
+      readButton.setAttribute('aria-pressed', String(!an));
+      annotateButton.setAttribute('aria-pressed', String(an));
+      center.querySelectorAll<HTMLElement>('.blatt-papier').forEach(paper => { paper.inert = !an; });
+      passen();
+    };
+    const panelsSetzen = (): void => {
+      body.classList.toggle('with-thumbnails', state.thumbnailsOpen);
+      body.classList.toggle('with-inspector', state.inspectorOpen);
+      thumbnails.classList.toggle('is-open', state.thumbnailsOpen);
+      inspector.classList.toggle('is-open', state.inspectorOpen);
+      thumbnailButton.setAttribute('aria-expanded', String(state.thumbnailsOpen));
+      inspectorButton.setAttribute('aria-expanded', String(state.inspectorOpen));
+      if (state.inspectorOpen) renderInspector(inspector, page, jetzt());
+      if (state.thumbnailsOpen) activateVisibleThumbnails(thumbnails);
+      passen();
+    };
+    workspace.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && (state.thumbnailsOpen || state.inspectorOpen)) {
+        const returnTo = state.inspectorOpen ? inspectorButton : thumbnailButton;
+        state.thumbnailsOpen = false; state.inspectorOpen = false;
+        panelsSetzen(); returnTo.focus(); event.stopPropagation();
+      }
+      if (event.target === center && (event.key === 'PageDown' || event.key === 'PageUp')) {
+        event.preventDefault(); springe(state.index + (event.key === 'PageDown' ? 1 : -1));
+      }
+    });
     workspace.addEventListener('click', event => {
       const element = event.target instanceof Element ? event.target : null;
       const thumb = element?.closest<HTMLElement>('[data-document-index]');
@@ -920,10 +1055,20 @@ const DocumentMode = (() => {
       if (!action) return;
       if (action === 'previous') springe(state.index - 1);
       if (action === 'next') springe(state.index + 1);
-      if (action === 'thumbnails') { state.thumbnailsOpen = !state.thumbnailsOpen; rerender(); }
-      if (action === 'thumbnails-close') { state.thumbnailsOpen = false; rerender(); }
-      if (action === 'inspector') { state.inspectorOpen = !state.inspectorOpen; rerender(); }
-      if (action === 'inspector-close') { state.inspectorOpen = false; rerender(); }
+      if (action === 'thumbnails') { state.thumbnailsOpen = !state.thumbnailsOpen; panelsSetzen(); }
+      if (action === 'thumbnails-close') { state.thumbnailsOpen = false; panelsSetzen(); thumbnailButton.focus(); }
+      if (action === 'inspector') { state.inspectorOpen = !state.inspectorOpen; panelsSetzen(); }
+      if (action === 'inspector-close') { state.inspectorOpen = false; panelsSetzen(); inspectorButton.focus(); }
+      if (action === 'read') toolsSetzen(false);
+      if (action === 'annotate' && !page.gesperrt &&
+          (typeof Konten === 'undefined' || Konten.darf('bearbeiten', page))) toolsSetzen(true);
+      if (action === 'fit') {
+        zoomSetzen(100); center.scrollLeft = 0;
+      }
+      if (action === 'import' && !page.gesperrt &&
+          (typeof Konten === 'undefined' || Konten.darf('bearbeiten', page))) {
+        void PdfEinlesen.waehlen(page.id).then(result => { if (result) rerender(); });
+      }
       if (action === 'lauf') {
         /* UMSCHALTEN HEISST NEU AUFBAUEN. Wie beim Randstreifen und beim
            Inspector: der Kasten bekommt eine andere Marke, der Schalter ein
@@ -966,6 +1111,8 @@ const DocumentMode = (() => {
         const stand = staende[state.index];
         const paper = stand?.querySelector<HTMLElement>('.blatt-papier');
         if (!paper) { UI.toast('Diese Seite ist gerade nicht gezeichnet.'); return; }
+        /* Region selection is available in reading mode too. Only the temporary
+           overlay is interactive; the document beneath stays inert. */
         selectRegion(paper, jetzt(), region => {
           if (action === 'recognize') {
             const recognition = (window as any).Recognition;

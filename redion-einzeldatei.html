@@ -15037,6 +15037,292 @@ body.iblatt-auf .menu{z-index:794}
 }
 
 </style>
+<style>
+/* ===== quell/schale/stil/studio.css ===== */
+/* Shared Studio surfaces. Existing commands and content controllers remain the
+   only source of behavior. Glass belongs to controls, paper remains opaque. */
+:root{
+  --studio-nav-width:var(--studio-nav-expanded,184px);
+  --studio-bar-height:60px;
+  --studio-glass:color-mix(in srgb,var(--bg-card) 88%,transparent);
+  --studio-line:color-mix(in srgb,var(--text) 12%,transparent);
+  --studio-highlight:inset 0 1px 0 color-mix(in srgb,white 15%,transparent);
+  --studio-elevation:0 12px 36px rgb(0 0 0 / .16),0 1px 3px rgb(0 0 0 / .10);
+  --studio-paper-shadow:0 2px 3px rgb(0 0 0 / .12),0 20px 45px rgb(0 0 0 / .16);
+  --studio-perspective:1100px;
+}
+#studio-bar{
+  display:flex;align-items:center;gap:var(--space-3);min-width:0;
+  min-height:var(--studio-bar-height);padding:var(--space-3) var(--space-5);
+  background:var(--bg-side);border-bottom:1px solid var(--line);
+}
+.studio-brand{display:flex;align-items:center;gap:10px;text-align:left;flex:none;
+  font-size:19px;font-weight:650;letter-spacing:-.6px;padding-right:12px}
+.studio-wordmark{display:block;font-size:8px;letter-spacing:2.2px;color:var(--text-dim);line-height:1.2}
+.studio-monogram{display:grid;place-items:center;width:34px;height:38px;color:white;
+  border-radius:11px;background:linear-gradient(145deg,#ad9aff,#6547df 65%,#48398a);
+  box-shadow:inset 0 1px 0 #ffffff80,inset 0 -3px 0 #00000020,0 5px 14px #6547df40;
+  transform:perspective(var(--studio-perspective)) rotateY(-12deg) rotateZ(-5deg);
+  transition:transform var(--motion-normal) var(--ease)}
+.studio-brand:hover .studio-monogram{transform:perspective(var(--studio-perspective)) rotateY(10deg) rotateZ(0)}
+.studio-icon,.studio-action,.studio-search,.studio-shortcuts button{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  min-height:38px;padding:0 12px;border-radius:var(--radius-lg);font-size:13px;
+  border:1px solid transparent;transition:transform var(--motion-instant) var(--ease),
+  background var(--motion-fast) var(--ease),border-color var(--motion-fast) var(--ease);
+}
+.studio-icon{width:38px;padding:0;flex:none;color:var(--text-dim)}
+#studio-bar svg{width:18px;height:18px;flex:none}
+.studio-shortcuts{display:flex;align-items:center;gap:2px}
+.studio-shortcuts button{color:var(--text-dim);white-space:nowrap}
+.studio-shortcuts button[aria-current]{background:var(--bg-card);color:var(--text);box-shadow:var(--studio-highlight);border-color:var(--line);font-weight:600}
+.studio-search{margin-left:auto;width:clamp(160px,22vw,340px);justify-content:flex-start;
+  color:var(--text-dim);background:var(--bg-input);border-color:var(--line)}
+.studio-search kbd{margin-left:auto;font:10px var(--font);opacity:.7;white-space:nowrap}
+.studio-action{color:var(--auf-accent);background:var(--haupt-flaeche);box-shadow:var(--haupt-schein);font-weight:600;white-space:nowrap}
+.studio-icon:hover,.studio-shortcuts button:hover,.studio-search:hover{background:var(--bg-hover);border-color:var(--line)}
+.studio-action:hover{background:var(--haupt-flaeche-hover)}
+#studio-bar button:active{transform:scale(var(--press-scale))}
+#studio-bar button:focus-visible{outline:2px solid var(--accent-text);outline-offset:3px}
+.k-beschriftung{display:none}
+#studio-divider{display:none}
+.studio-orb{display:block;width:19px;height:19px;border-radius:50%;background:#e5defd;box-shadow:inset -6px -3px 0 #656079;transform:rotate(-25deg);transition:transform var(--motion-slow) var(--ease),box-shadow var(--motion-slow) var(--ease)}
+html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #8165df22,inset 0 1px 2px #ffffff70;transform:rotate(0)}
+
+@media(min-width:761px){
+  body[data-schale="premium"]{--kante-b:var(--studio-nav-width)}
+  body[data-studio-nav="kompakt"]{--studio-nav-width:62px}
+  body[data-schale="premium"] #main{grid-template-rows:auto auto auto auto minmax(0,1fr)}
+  body[data-schale="premium"] #main > #studio-bar{grid-column:1/-1;grid-row:1}
+  body[data-schale="premium"] #studio-divider{display:block;grid-column:1;grid-row:3/-1;justify-self:end;width:6px;margin-right:-3px;z-index:4;cursor:col-resize;touch-action:none;border-radius:4px}
+  body[data-schale="premium"] #studio-divider:is(:hover,:focus-visible),.studio-resizing #studio-divider{background:var(--accent);outline:none}
+  body[data-studio-nav="kompakt"] #studio-divider,body[data-dokument="an"] #studio-divider,body.fokus #studio-divider{display:none!important}
+  .studio-resizing{cursor:col-resize;user-select:none}
+  body[data-schale="premium"] #main > #menueband{grid-column:1/-1;grid-row:2;
+    background:var(--bg-side);border-color:var(--line)}
+  body[data-schale="premium"] #main > #kante{grid-row:3/-1;padding:8px 8px 12px;
+    background:var(--bg-side)}
+  body[data-schale="premium"] #main > #reiterleiste{grid-row:3}
+  body[data-schale="premium"] #main > #topbar{grid-row:4;background:var(--bg);min-height:44px;border-bottom-color:var(--line-soft)}
+  body[data-schale="premium"] #main > #scroll{grid-row:5;background:var(--bg)}
+  body[data-schale="premium"] .k-knopf{width:100%;display:flex;justify-content:flex-start;
+    gap:11px;padding:0 10px;border-radius:var(--radius-lg);color:var(--text-dim);font-size:12px;
+    transition:background var(--motion-fast) var(--ease),transform var(--motion-instant) var(--ease)}
+  body[data-schale="premium"] .k-knopf > span:first-child{flex:0 0 20px}
+  body[data-schale="premium"] .k-knopf svg{width:19px;height:19px}
+  body[data-schale="premium"] .k-beschriftung{display:block;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.4}
+  body[data-schale="premium"] .k-orte,body[data-schale="premium"] .k-oben,body[data-schale="premium"] .k-unten{align-items:stretch;width:100%}
+  body[data-schale="premium"] .k-ort.ist-hier{color:var(--accent-text);background:var(--accent-schwach);
+    box-shadow:inset 3px 0 0 var(--accent);font-weight:600}
+  body[data-schale="premium"] .k-knopf:hover{background:var(--bg-hover);color:var(--text)}
+  body[data-schale="premium"] .k-knopf:active{transform:scale(.98)}
+  body[data-studio-nav="kompakt"] .k-beschriftung{display:none}
+  body[data-studio-nav="kompakt"] .k-knopf{justify-content:center;padding:0}
+  body[data-schale="premium"] #kanten-lade{border-radius:0 var(--radius-xl) var(--radius-xl) 0;box-shadow:var(--studio-elevation);background:var(--bg-card)}
+  body[data-schale="premium"] #menueband .mb-reiter{background:var(--bg-side)}
+  body[data-schale="premium"] #menueband .mb-reiter-knopf{color:var(--text-dim)}
+  body[data-schale="premium"] #menueband .mb-reiter-knopf.ist-an{color:var(--accent-text);border-bottom-color:var(--accent);background:var(--accent-schwach)}
+  body[data-schale="premium"] #menueband .mb-datei{border-radius:var(--radius-md);margin:3px 8px;color:var(--text);background:var(--bg-hover);min-height:30px}
+  body[data-schale="premium"] #menueband .mb-marke{color:var(--accent-text)}
+  body[data-schale="premium"][data-dokument="an"] #studio-bar{display:none}
+  body[data-schale="premium"][data-dokument="an"] #main{grid-template-rows:auto auto auto auto minmax(0,1fr)}
+  body.fokus #studio-bar{display:none}
+}
+
+/* Consistent material and motion for the actual existing components. */
+:is(.finder,.dlg,.menu,.blatt-dialog,.r-sheet){border-radius:var(--radius-2xl);box-shadow:var(--studio-elevation);border-color:var(--studio-line)}
+:is(.finder,.dlg,.menu){animation:studio-arrive var(--motion-normal) var(--ease-enter) both}
+:is(.icon-btn,.btn,.mb-knopf,.ez-knopf){transition:background var(--motion-fast) var(--ease),transform var(--motion-instant) var(--ease)}
+:is(.icon-btn,.btn,.mb-knopf,.ez-knopf):active:not(:disabled){transform:scale(var(--press-scale))}
+.einst-nav{background:var(--bg-side)}
+.einst-inhalt{background:var(--bg)}
+.einst-inhalt :is(.ez-gruppe,.ez-grp){border-radius:var(--radius-xl);background:var(--bg-card);border:1px solid var(--line)}
+.blk:not(.b-blatt):not(.b-zeichenflaeche){border-radius:var(--radius-sm)}
+.blk .handle{transition:opacity var(--motion-fast) var(--ease)}
+#reiterleiste{background:var(--bg-side);gap:var(--space-2)}
+#reiterleiste .reiter{border-radius:var(--radius-lg) var(--radius-lg) 0 0;animation:studio-arrive var(--motion-normal) var(--ease-enter) both}
+@supports(backdrop-filter:blur(8px)){
+  :is(.menu,.finder,.auswahlleiste){background:var(--studio-glass);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+}
+@keyframes studio-arrive{from{opacity:0;transform:translateY(7px) scale(.985)}to{opacity:1;transform:none}}
+/* A document-first Today view. Insights are still reachable in native details. */
+.lernwelt .lw-hero.lw-hero-compact{padding:0 0 20px;background:none;border:0;box-shadow:none;min-height:0}
+.lernwelt .lw-hero.lw-hero-compact h2{font-size:22px;letter-spacing:-.5px}
+.lernwelt .lw-desk{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(210px,.85fr);gap:32px;align-items:center;isolation:isolate;padding:38px 42px;margin-bottom:28px;overflow:hidden;border:1px solid var(--line);border-radius:var(--radius-2xl);background:radial-gradient(ellipse at 95% 10%,var(--accent-schwach),transparent 65%),var(--bg-side)}
+.lw-desk-copy{min-width:0}.lernwelt .lw-eyebrow{font-size:10px;letter-spacing:1.8px;font-weight:650;color:var(--accent-text);margin:0 0 16px}
+.lernwelt .lw-desk h2{font-size:clamp(28px,3.1vw,44px);line-height:1.12;letter-spacing:-1.7px;margin:0 0 18px;font-weight:650}
+.lw-desk-copy>p:not(.lw-eyebrow){color:var(--text-dim);font-size:14px;line-height:1.7;max-width:350px;margin-bottom:24px}
+.lernwelt .lw-desk .lw-actions{gap:10px}.lernwelt .lw-desk .lw-actions button{min-height:44px;border-radius:var(--radius-lg)}
+.lw-desk-link{margin-top:18px;font-size:12px;color:var(--text-dim);padding:6px 0}
+.lw-desk-link:hover{color:var(--accent-text)}
+.lw-paper-stack{position:relative;display:block;padding:18px;width:min(100%,290px);justify-self:center;perspective:var(--studio-perspective);background:transparent;border:0;text-align:left;isolation:isolate}
+.lw-paper-stack::before,.lw-paper-stack::after{content:"";position:absolute;inset:18px;background:var(--bg-card);border:1px solid var(--line);border-radius:6px;transform:rotate(7deg);z-index:-1;transition:transform var(--motion-slow) var(--ease)}
+.lw-paper-stack::after{transform:rotate(-5deg);background:var(--accent-schwach)}
+.lw-paper-sheet{display:flex;flex-direction:column;min-height:290px;padding:24px;background:#fdfdfc;color:#272735;border:1px solid #ffffff;border-radius:6px;box-shadow:var(--studio-paper-shadow);transform:rotate(-3deg) rotateY(-6deg);transition:transform var(--motion-slow) var(--ease)}
+.lw-paper-cap{display:flex;gap:8px;align-items:center;font-size:8px;letter-spacing:1px;color:#71668a;margin-bottom:24px}.lw-paper-cap svg{width:16px;height:16px}
+.lw-paper-sheet>strong{font-size:17px;line-height:1.45;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.lw-paper-preview{display:block;flex:1;margin:14px 0 26px;font-size:11px;line-height:1.8;color:#666674;max-height:100px;overflow:hidden}
+.lw-paper-foot{display:flex;justify-content:space-between;font-size:9px;text-transform:uppercase;letter-spacing:.8px;border-top:1px solid #e7e5ed;padding-top:14px;color:#71668a}
+.lw-paper-stack:focus-visible{outline:2px solid var(--accent-text);outline-offset:5px;border-radius:var(--radius-xl)}
+@media(hover:hover) and (prefers-reduced-motion:no-preference){
+  .lw-paper-stack:hover .lw-paper-sheet{transform:translateY(-7px) rotate(-1deg) rotateY(3deg)}
+  .lw-paper-stack:hover::before{transform:rotate(11deg)}.lw-paper-stack:hover::after{transform:rotate(-9deg)}
+}
+.lernwelt .lw-next-step{display:flex;align-items:center;justify-content:space-between;gap:22px;padding:22px 0;border-block:1px solid var(--line);margin-bottom:28px}
+.lernwelt .lw-next-step h2{font-size:18px;margin:0 0 6px;letter-spacing:-.4px}.lw-next-step>div>span{font-size:12px;color:var(--text-dim)}
+.lernwelt .lw-next-step .lw-eyebrow{margin-bottom:8px}
+.lw-next-icon{display:grid;place-items:center;width:40px;height:40px;flex-shrink:0;background:var(--accent-schwach);color:var(--accent-text);border-radius:var(--radius-lg)}
+.lw-next-icon svg{width:22px;height:22px}.lw-next-step>div:not(.lw-actions){flex:1}
+.lw-next-step>div>p{font-size:11px;color:var(--text-dim);margin:0 0 8px}
+.lernwelt .lw-day-plan .lw-section{background:none;border:0;border-radius:0;box-shadow:none;padding:12px 0}
+.lw-insights{border-top:1px solid var(--line);margin-top:26px}.lw-insights>summary{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 0;cursor:pointer;list-style:none;font-size:13px;font-weight:600}
+.lw-insights>summary::-webkit-details-marker{display:none}.lw-insights>summary>span:first-child{display:flex;align-items:center;gap:12px}.lw-insights>summary svg{width:20px;height:20px;color:var(--accent-text)}
+.lw-insights>summary small{display:block;font-size:11px;font-weight:400;color:var(--text-dim);margin-top:5px}
+.lw-details-chevron{transition:transform var(--motion-normal) var(--ease)}.lw-insights[open] .lw-details-chevron{transform:rotate(180deg)}
+.lw-insights-body{display:grid;gap:18px;padding-bottom:24px;animation:studio-arrive var(--motion-normal) var(--ease)}
+/* Uiverse-inspired material families, implemented locally with Redion tokens.
+   No imported logo/SVG/JS, no decorative permanent loader. */
+.studio-action,.bib-studio-import,.lernwelt .lw-actions button.is-primary{position:relative;isolation:isolate;overflow:hidden}
+.studio-action::after,.bib-studio-import::after,.lernwelt .lw-actions button.is-primary::after{content:"";position:absolute;inset:-60% -20%;pointer-events:none;background:linear-gradient(105deg,transparent 40%,#ffffff20 49%,transparent 58%);transform:translateX(-110%);transition:transform var(--motion-slow) var(--ease)}
+@media(hover:hover){.studio-action:hover::after,.bib-studio-import:hover::after,.lernwelt .lw-actions button.is-primary:hover::after{transform:translateX(110%)}}
+.studio-action[aria-busy="true"],.bib-studio-import[aria-busy="true"]{padding-left:38px}
+.studio-action[aria-busy="true"]::before,.bib-studio-import[aria-busy="true"]::before{content:"";position:absolute;left:14px;width:12px;height:12px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:studio-orbit 850ms linear infinite}
+@keyframes studio-orbit{to{transform:rotate(360deg)}}
+.schalter{box-shadow:inset 0 1px 3px #00000025;border:1px solid var(--studio-line)}
+.schalter i{box-shadow:0 1px 3px #00000030,inset 0 1px 0 #ffffff70;transition:transform var(--motion-normal) var(--ease),background var(--motion-fast) var(--ease)}
+.schalter:focus-visible{outline:2px solid var(--accent-text);outline-offset:4px}
+.document-mode-switch,.bib-studio-wege{isolation:isolate}
+.menu button:focus-visible{outline:2px solid var(--accent-text);outline-offset:-3px}
+@media(max-width:1100px) and (min-width:761px){
+  :root{--studio-nav-width:var(--studio-nav-expanded,156px)}
+  .studio-shortcuts button{padding:0 8px;font-size:12px}
+  .studio-search{width:160px}
+  .studio-search kbd{display:none}
+}
+@media(max-width:760px){
+  #studio-bar{display:none}
+  #handy-oben{border-radius:var(--radius-2xl);box-shadow:var(--studio-highlight),var(--studio-elevation)}
+  :is(.finder,.dlg){border-radius:var(--radius-2xl) var(--radius-2xl) 0 0}
+  .lernwelt .lw-desk{grid-template-columns:minmax(0,1fr);padding:26px 22px;gap:12px}
+  .lernwelt .lw-desk h2{font-size:34px;letter-spacing:-1px}
+  .lw-paper-stack{width:210px;padding:14px}.lw-paper-sheet{min-height:230px;padding:20px}
+  .lw-paper-preview{max-height:60px;margin-bottom:16px}.lw-paper-cap{margin-bottom:16px}
+  .lernwelt .lw-next-step{align-items:flex-start;flex-direction:column;gap:16px}
+}
+@media(prefers-reduced-transparency:reduce){
+  :is(.menu,.finder,.auswahlleiste){background:var(--bg-card);backdrop-filter:none;-webkit-backdrop-filter:none}
+}
+@media(prefers-reduced-motion:reduce){
+  .studio-monogram,.studio-brand:hover .studio-monogram{transform:none}
+  #studio-bar button:active,body[data-schale="premium"] .k-knopf:active{transform:none}
+  .lw-paper-sheet,.lw-paper-stack::before,.lw-paper-stack::after{transform:none;transition:none}
+  .studio-action::after,.bib-studio-import::after,.lernwelt .lw-actions button.is-primary::after{display:none}
+  .studio-action[aria-busy="true"]::before,.bib-studio-import[aria-busy="true"]::before{animation:none}
+}
+
+</style>
+<style>
+/* ===== quell/schale/stil/bibliothek-studio.css ===== */
+/* Real document covers, not a second content model. Perspective on hover only. */
+.bib-deckel-seite{max-width:1400px;margin-inline:auto;padding-top:12px}
+.bib-dkopf{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-bottom:26px}
+.bib-dkopf h1{flex:1;min-width:120px;margin:0;font-size:26px;letter-spacing:-.7px}
+.bib-dkopf .bib-krume{flex-basis:100%;order:-1}
+.bib-dkopf .bib-ort{flex-basis:100%;margin:0;text-align:left;padding:0;background:none;border:0;color:var(--text-dim)}
+.bib-dkopf .bib-neu,.bib-studio-import{min-height:40px;padding:0 16px;border-radius:var(--radius-lg);font-weight:600}
+.bib-studio-import{background:var(--haupt-flaeche);color:var(--auf-accent);box-shadow:var(--haupt-schein)}
+.bib-dkopf .bib-neu{background:var(--bg-hover);color:var(--text);border:1px solid var(--line)}
+.bib-studio-navigation{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:0 0 20px;border-bottom:1px solid var(--line);padding-bottom:16px}
+.bib-studio-wege{display:flex;gap:4px;flex-wrap:wrap}
+.bib-studio-wege button{min-height:40px;padding:8px 12px;border-radius:var(--radius-lg);color:var(--text-dim);font-size:13px}
+.bib-studio-wege button.on{background:var(--accent-schwach);color:var(--accent-text);font-weight:600}
+.bib-studio-wege button:hover{background:var(--bg-hover)}
+.bib-studio-suche{display:flex;align-items:center;gap:8px;margin-left:auto;min-width:160px;flex:0 1 260px;background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius-lg);padding:0 12px}
+.bib-studio-suche svg{width:16px;height:16px;color:var(--text-dim)}
+.bib-studio-suche input{width:100%;min-width:0;min-height:40px;background:transparent;border:0;outline:0;color:var(--text);font:inherit;font-size:13px}
+.bib-studio-suche:focus-within{outline:2px solid var(--accent-text);outline-offset:2px}
+.bib-studio-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.bib-studio-weiter{display:flex;align-items:center;gap:22px;padding:22px 26px;margin-bottom:24px;background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius-xl);overflow:hidden}
+.bib-studio-weiter>div{min-width:0;flex:1}.bib-studio-weiter h2{font-size:18px;line-height:1.4;margin:6px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bib-studio-eyebrow{font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--accent-text)}
+.bib-studio-weiter p{font-size:12px;color:var(--text-dim);margin:0}
+.bib-studio-weiter button{display:flex;gap:14px;align-items:center;flex-shrink:0;min-height:44px;padding:10px 16px;background:var(--accent-schwach);color:var(--accent-text);border-radius:var(--radius-lg);font-weight:600}
+.bib-studio-miniatur{display:grid;place-items:center;flex:0 0 62px;height:82px;border-radius:4px;background:#fff;color:#6556ae;box-shadow:var(--studio-paper-shadow);transform:perspective(var(--studio-perspective)) rotateY(-12deg) rotate(-6deg);overflow:hidden}
+.bib-studio-miniatur img{width:100%;height:100%;object-fit:cover}
+.bib-arten{gap:6px;margin-bottom:24px}.bib-arten button{border-radius:var(--radius-pill);padding:6px 12px;font-size:12px}
+.bib-gitter{grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:30px 26px}
+.bib-deckel{perspective:var(--studio-perspective);min-width:0}
+.bib-deckel-blatt{border-radius:6px 12px 12px 6px;border:1px solid var(--line);transition:transform var(--motion-normal) var(--ease),box-shadow var(--motion-normal) var(--ease);transform-origin:25% 80%;box-shadow:0 2px 3px #00000010,0 9px 20px #0000000d}
+.bib-deckel-name{padding-top:9px}.bib-deckel-name b{font-size:13px;line-height:1.5}.bib-deckel small{color:var(--text-dim)}
+@media(hover:hover) and (prefers-reduced-motion:no-preference){
+  .bib-deckel:hover .bib-deckel-blatt{transform:translateY(-5px) rotateY(-6deg) rotateX(2deg);box-shadow:var(--studio-paper-shadow)}
+  .bib-deckel[data-art="ordner"]:hover .bib-deckel-blatt{transform:translateY(-4px) rotateX(-8deg)}
+}
+.bib-deckel:focus-visible{outline:2px solid var(--accent-text);outline-offset:6px;border-radius:var(--radius-lg)}
+.bib-deckel-seite .bib-pflege{margin-top:36px}
+@media(max-width:760px){
+  .bib-dkopf{gap:10px;margin-bottom:20px}.bib-dkopf h1{font-size:23px}
+  .bib-studio-import{order:3;flex:1}.bib-dkopf .bib-ort{order:4}
+  .bib-studio-suche{flex-basis:100%;margin:0;max-width:none}
+  .bib-studio-wege{display:flex;flex-wrap:nowrap;overflow-x:auto;width:100%}
+  .bib-studio-wege button{white-space:nowrap;min-height:44px;padding-inline:10px}
+  .bib-studio-navigation{gap:10px}.bib-studio-weiter{gap:14px;padding:18px;flex-wrap:wrap}
+  .bib-studio-weiter button{width:100%;justify-content:space-between}.bib-studio-weiter h2{font-size:16px}
+  .bib-gitter{grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 18px}
+  .bib-dkopf button,.bib-arten button,.bib-deckel-mehr{min-height:44px}
+}
+@media(prefers-reduced-motion:reduce){.bib-studio-miniatur{transform:none}.bib-deckel:active .bib-deckel-blatt{transform:none}}
+
+</style>
+<style>
+/* ===== quell/schale/stil/pdf-studio.css ===== */
+/* Document workbench: controls use material; the original paper stays opaque. */
+.document-studio{border-color:var(--line);border-radius:var(--radius-xl);box-shadow:none}
+.document-studio .document-topbar{padding:8px 12px;gap:12px;min-height:52px;background:var(--bg-card);flex-shrink:0}
+.document-navigation,.document-top-actions,.document-pagination,.document-zoom-group{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.document-studio .document-topbar button{background:transparent;border-color:transparent;border-radius:var(--radius-lg);color:var(--text-dim);font-size:12px}
+.document-studio .document-topbar button:hover{background:var(--bg-hover);color:var(--text)}
+.document-studio .document-topbar button[aria-expanded="true"]{color:var(--accent-text);background:var(--accent-schwach)}
+.document-studio .document-title{text-align:center;font-size:13px;padding-inline:6px}
+.document-commandbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;min-height:52px;padding:7px 16px;border-bottom:1px solid var(--line);background:var(--bg-side)}
+.document-commandbar button{min-height:34px;padding:6px 12px;border-radius:var(--radius-md);font-size:12px;white-space:nowrap}
+.document-commandbar button:hover{background:var(--bg-hover)}
+.document-mode-switch{display:flex;padding:3px;border-radius:var(--radius-lg);background:var(--bg-input);border:1px solid var(--line)}
+.document-mode-switch button[aria-pressed="true"]{background:var(--bg-card);color:var(--accent-text);box-shadow:var(--studio-highlight),0 1px 4px #00000015;font-weight:600}
+.document-position{font-size:12px;font-variant-numeric:tabular-nums;min-width:82px;text-align:center;margin:0}
+.document-zoom-group input{width:100px;accent-color:var(--accent)}
+.document-zoom-label{font-variant-numeric:tabular-nums}
+.document-studio button:focus-visible,.document-center:focus-visible{outline:2px solid var(--accent-text);outline-offset:2px}
+.document-studio button:disabled{opacity:.45;cursor:not-allowed}
+.document-studio .document-center{background:var(--bg);scrollbar-gutter:stable}
+.document-studio .blatt-papier{box-shadow:var(--studio-paper-shadow);border-radius:3px}
+.document-studio .document-thumbnail{border-radius:var(--radius-lg)}
+.document-studio .document-thumbnail.is-selected{border-color:var(--accent);background:var(--accent-schwach)}
+.document-studio .document-panel-header{padding:8px 4px;font-size:12px}
+.document-studio .document-inspector{padding:16px;background:var(--bg-side)}
+.document-studio .document-inspector button{border-radius:var(--radius-lg);font-size:12px;min-height:38px}
+.document-studio .document-section-title{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin:24px 0 10px}
+.document-studio .blatt-werk{border:1px solid var(--studio-line);border-radius:var(--radius-xl);background:var(--studio-glass);box-shadow:var(--studio-highlight),0 5px 15px #00000010;margin:0 auto 14px;padding:6px;max-width:100%}
+.document-studio[data-document-tools="closed"] .blatt-reihe{display:none}
+.document-studio[data-document-tools="closed"] .blatt-papier{cursor:default}
+@supports(backdrop-filter:blur(8px)){.document-studio .blatt-werk{backdrop-filter:blur(8px)}}
+@media(max-width:1100px){.document-zoom-group input{width:70px}.document-commandbar{padding-inline:10px;gap:8px}}
+@media(max-width:760px){
+  .document-studio .document-topbar{display:flex;flex-wrap:wrap;gap:6px;padding:6px 8px}
+  .document-navigation{flex:1}.document-top-actions{margin-left:auto}
+  .document-studio .document-title{order:3;flex-basis:100%;text-align:left;padding:3px 6px;font-size:12px}
+  .document-studio .document-topbar button{width:auto;min-height:44px;padding-inline:8px}
+  .document-commandbar{flex-wrap:wrap;padding:6px 8px;gap:6px}
+  .document-mode-switch{flex:1;justify-content:center}.document-pagination{margin-left:auto}
+  .document-commandbar button{min-height:44px;padding-inline:10px}
+  .document-zoom-group{width:100%;justify-content:center;border-top:1px solid var(--line-soft);padding-top:3px}
+  .document-zoom-group input{flex:1;max-width:180px}.document-zoom-group button{min-height:36px}
+  .document-studio .document-inspector,.document-studio .document-thumbnails{border-radius:var(--radius-xl);box-shadow:var(--studio-elevation);max-height:calc(100% - 16px)}
+  .document-studio .blatt-werk{border-radius:var(--radius-lg);margin-bottom:8px}
+}
+@media(prefers-reduced-transparency:reduce){.document-studio .blatt-werk{background:var(--bg-card);backdrop-filter:none}}
+
+</style>
 
 <!-- =========================================================================
      ANMELDE-FENSTER
@@ -15268,6 +15554,21 @@ body.iblatt-auf .menu{z-index:794}
      HAUPTBEREICH
      ====================================================================== -->
 <main id="main" role="main">
+  <header id="studio-bar" aria-label="Redion Schnellzugriff">
+    <button id="studio-home" class="studio-brand" title="Dokumente öffnen">
+      <span class="studio-monogram" aria-hidden="true">R</span><span>redion<span class="studio-wordmark">STUDIO</span></span>
+    </button>
+    <button id="studio-nav" class="studio-icon" aria-label="Navigation kompakt anzeigen" aria-pressed="false" title="Navigation kompakt anzeigen"><span data-sym="panelL"></span></button>
+    <div class="studio-shortcuts" aria-label="Arbeitsfläche">
+      <button id="studio-documents">Dokumente</button>
+      <button id="studio-notebooks">Notizhefte</button>
+    </div>
+    <button id="studio-search" class="studio-search"><span data-sym="search"></span><span>Suchen &amp; finden</span><kbd>Strg P</kbd></button>
+    <button id="studio-theme" class="studio-icon studio-theme" aria-label="Farbschema wechseln" title="Hell / Dunkel"><span class="studio-orb" aria-hidden="true"></span></button>
+    <button id="studio-import" class="studio-action" data-studio-import><span data-sym="plus"></span><span>PDF öffnen</span></button>
+    <button id="studio-create" class="studio-icon" aria-label="Neu erstellen" title="Neu erstellen"><span data-sym="plus"></span></button>
+  </header>
+  <div id="studio-divider" role="separator" aria-label="Navigationsbreite" aria-orientation="vertical" aria-valuemin="148" aria-valuemax="260" aria-valuenow="184" tabindex="0"></div>
 
   <!-- DAS MENÜBAND (E210) — GANZ OBEN SEIT E236.
        Es stand bisher UNTER der Kopfzeile. Redur will es dort, wo es an
@@ -17011,7 +17312,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 423, inhalt: '62d4c8aaa6f7dace', gebaut: '2026-09-05T21:53:40.869Z' };
+const Stand = { fassung: 425, inhalt: '2ae6b41f37a9e031', gebaut: '2026-09-06T09:21:46.198Z' };
 window.Stand = Stand;
 
 </script>
@@ -59924,7 +60225,8 @@ const DocumentMode = (() => {
            braucht, holt sie mit `ⓘ`; wer liest, liest. */
         const created = { index: gemerkteSeite(pageId), zoom: gemerkterZoom(pageId),
             thumbnailsOpen: false, inspectorOpen: false,
-            einzeln: gemerkterLauf(pageId) };
+            einzeln: gemerkterLauf(pageId),
+            toolsOpen: Store.getMeta('dokWerkzeuge:' + pageId) !== false };
         states.set(pageId, created);
         return created;
     };
@@ -59989,6 +60291,7 @@ const DocumentMode = (() => {
         button.className = 'document-thumbnail' + (selected ? ' is-selected' : '');
         button.dataset.documentIndex = String(index);
         button.setAttribute('aria-label', sourceLabel(documentBlock) + ' öffnen');
+        button.setAttribute('aria-current', selected ? 'page' : 'false');
         const preview = document.createElement('span');
         preview.className = 'document-thumbnail-preview';
         if (documentBlock.type === 'pdfseite' && documentBlock.bildDateiId && typeof Dateien !== 'undefined') {
@@ -60105,7 +60408,7 @@ const DocumentMode = (() => {
         const heading = document.createElement('div');
         heading.className = 'document-inspector-heading';
         const title = document.createElement('strong');
-        title.textContent = page.text || 'Ohne Titel';
+        title.textContent = 'Dokumentdetails';
         const close = document.createElement('button');
         close.type = 'button';
         close.dataset.documentAction = 'inspector-close';
@@ -60114,7 +60417,7 @@ const DocumentMode = (() => {
         heading.append(title, close);
         const source = document.createElement('div');
         source.className = 'document-inspector-source';
-        source.textContent = sourceLabel(documentBlock);
+        source.textContent = sourceLabel(documentBlock) + ' · ' + (page.text || 'Ohne Titel');
         const actions = document.createElement('div');
         actions.className = 'document-inspector-actions';
         const makeAction = (action, label) => {
@@ -60125,6 +60428,13 @@ const DocumentMode = (() => {
             return button;
         };
         actions.append(makeAction('source-actions', '＋ Aus Inhalt'), makeAction('select-region', '⌗ Ausschnitt'), makeAction('recognize', '⌁ Erkennen'));
+        const importButton = makeAction('import', '＋ PDF hinzufügen');
+        importButton.className = 'document-import';
+        const mayEdit = !page.gesperrt && (typeof Konten === 'undefined' || Konten.darf('bearbeiten', page));
+        importButton.disabled = !mayEdit;
+        importButton.title = mayEdit
+            ? 'Eine weitere PDF in dieses Dokument einlesen'
+            : 'Zum Hinzufügen brauchst du Bearbeitungsrechte und ein entsperrtes Dokument.';
         const summary = document.createElement('div');
         summary.className = 'document-inspector-summary';
         [['🎴', 'Lernkarten', cards.length], ['☑', 'Aufgaben', tasks.length], ['¶', 'Notizen', notes.length]]
@@ -60149,7 +60459,7 @@ const DocumentMode = (() => {
         });
         if (!links.length) {
             const empty = document.createElement('p');
-            empty.textContent = 'Noch keine Notiz, Aufgabe oder Karte ist mit dieser Stelle verbunden.';
+            empty.textContent = 'Deine Gedanken neben dem Papier. Wähle „Aus Inhalt“, um eine Notiz, Aufgabe oder Lernkarte mit dieser Seite zu verbinden.';
             list.appendChild(empty);
         }
         /* DER RANDSTREIFEN (E301, L107; hierher E384). Ein Schalter fuer das
@@ -60194,10 +60504,16 @@ const DocumentMode = (() => {
         container.append(heading, source);
         if (original)
             container.appendChild(original);
-        container.append(actions, randKnopf);
+        const linkedTitle = document.createElement('h3');
+        linkedTitle.className = 'document-section-title';
+        linkedTitle.textContent = 'Mit dieser Seite verbunden';
+        const viewTitle = document.createElement('h3');
+        viewTitle.className = 'document-section-title';
+        viewTitle.textContent = 'Papier & Ansicht';
+        container.append(importButton, viewTitle, randKnopf);
         if (laufKnopf)
             container.appendChild(laufKnopf);
-        container.append(summary, list);
+        container.append(linkedTitle, actions, summary, list);
     };
     const renderDocument = (container, block) => {
         container.replaceChildren();
@@ -60209,8 +60525,42 @@ const DocumentMode = (() => {
            Blocks, deshalb braucht es dafür keinen zweiten Blockknoten. */
         container.dataset.bid = block.id;
         container.appendChild(block.type === 'pdfseite' ? PdfSeite.zeichne(block) : Blatt.zeichne(block));
+        /* Die vorhandene Ink-Leiste bleibt Eigentümerin ihrer Aktionen. Der
+           Dokumentmodus ergänzt lediglich Namen und Tastatur-Navigation. */
+        const toolbar = container.querySelector('.blatt-werk');
+        if (toolbar) {
+            toolbar.setAttribute('role', 'toolbar');
+            toolbar.setAttribute('aria-label', 'Schreiben, markieren und bearbeiten');
+            toolbar.querySelectorAll('button').forEach(button => {
+                button.type = 'button';
+                if (!button.getAttribute('aria-label')) {
+                    const label = button.querySelector('.wort')?.textContent?.trim() || button.title;
+                    if (label)
+                        button.setAttribute('aria-label', label);
+                }
+            });
+            toolbar.addEventListener('keydown', event => {
+                if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key))
+                    return;
+                const target = event.target instanceof Element ? event.target.closest('button') : null;
+                if (!target)
+                    return;
+                const buttons = Array.from(toolbar.querySelectorAll('button'))
+                    .filter(button => !button.disabled && button.getClientRects().length > 0);
+                const index = buttons.indexOf(target);
+                if (index < 0 || !buttons.length)
+                    return;
+                event.preventDefault();
+                const next = event.key === 'Home' ? 0 : event.key === 'End' ? buttons.length - 1
+                    : (index + (event.key === 'ArrowRight' ? 1 : -1) + buttons.length) % buttons.length;
+                buttons[next]?.focus();
+                buttons[next]?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+            });
+        }
     };
     const selectRegion = (paper, documentBlock, done) => {
+        const warInert = paper.inert;
+        paper.inert = false;
         paper.classList.add('document-selecting');
         const overlay = document.createElement('div');
         overlay.className = 'document-region-overlay';
@@ -60284,7 +60634,18 @@ const DocumentMode = (() => {
             overlay.removeEventListener('pointerup', finish, true);
             overlay.remove();
             paper.classList.remove('document-selecting');
+            paper.inert = warInert;
+            window.removeEventListener('keydown', escapeRegion, true);
         };
+        const escapeRegion = (event) => {
+            if (event.key !== 'Escape')
+                return;
+            event.preventDefault();
+            event.stopPropagation();
+            cleanup();
+        };
+        window.addEventListener('keydown', escapeRegion, true);
+        overlay.addEventListener('pointercancel', cleanup, { once: true });
         overlay.addEventListener('pointerdown', down, true);
         overlay.addEventListener('pointermove', move, true);
         overlay.addEventListener('pointerup', finish, true);
@@ -60307,8 +60668,10 @@ const DocumentMode = (() => {
         if (!current)
             return false;
         const workspace = document.createElement('section');
-        workspace.className = 'document-workspace';
+        workspace.className = 'document-workspace document-studio';
         workspace.dataset.pageId = page.id;
+        workspace.dataset.documentTools = state.toolsOpen ? 'open' : 'closed';
+        workspace.setAttribute('aria-label', 'Dokument: ' + (page.text || 'Ohne Titel'));
         const top = document.createElement('div');
         top.className = 'document-topbar';
         const topButton = (action, text, label) => {
@@ -60317,6 +60680,7 @@ const DocumentMode = (() => {
             button.dataset.documentAction = action;
             button.setAttribute('aria-label', label);
             button.textContent = text;
+            button.title = label;
             return button;
         };
         /* DER WEG ZURUECK STEHT IM DOKUMENT (E384). Solange Menueband und
@@ -60335,7 +60699,14 @@ const DocumentMode = (() => {
         zurueckWort.className = 'dz-wort';
         zurueckWort.textContent = 'Dokumente';
         zurueck.append(zurueckWort);
-        top.append(zurueck, topButton('thumbnails', '☰', 'Seitenübersicht öffnen'), topButton('previous', '‹', 'Vorherige Seite'), topButton('next', '›', 'Nächste Seite'));
+        const thumbnailButton = topButton('thumbnails', '▤ Seiten', 'Seitenübersicht öffnen');
+        thumbnailButton.setAttribute('aria-expanded', String(state.thumbnailsOpen));
+        const inspectorButton = topButton('inspector', 'Details', 'Notizen und Verknüpfungen öffnen');
+        inspectorButton.setAttribute('aria-expanded', String(state.inspectorOpen));
+        const navigation = document.createElement('div');
+        navigation.className = 'document-navigation';
+        navigation.append(zurueck, thumbnailButton);
+        top.append(navigation);
         /* DER RANDSTREIFEN STEHT SEIT E384 IM INSPECTOR (vorher hier, E301/L107).
            Er ist ein Schalter fuer das GANZE Dokument — das sagte schon E301 —
            und damit gehoert er zu den uebrigen Angaben ueber das Dokument, nicht
@@ -60346,6 +60717,15 @@ const DocumentMode = (() => {
         const position = document.createElement('span');
         position.className = 'document-position';
         position.textContent = 'Seite ' + (state.index + 1) + '/' + documents.length;
+        position.setAttribute('aria-live', 'polite');
+        position.setAttribute('aria-atomic', 'true');
+        const previousButton = topButton('previous', '‹', 'Vorherige Seite');
+        const nextButton = topButton('next', '›', 'Nächste Seite');
+        const pagination = document.createElement('div');
+        pagination.className = 'document-pagination';
+        pagination.setAttribute('role', 'group');
+        pagination.setAttribute('aria-label', 'Im Dokument blättern');
+        pagination.append(previousButton, position, nextButton);
         const zoom = document.createElement('input');
         zoom.type = 'range';
         zoom.min = '60';
@@ -60357,6 +60737,9 @@ const DocumentMode = (() => {
         const zoomLabel = document.createElement('span');
         zoomLabel.className = 'document-zoom-label';
         zoomLabel.textContent = state.zoom + ' %';
+        const zoomGroup = document.createElement('div');
+        zoomGroup.className = 'document-zoom-group';
+        zoomGroup.append(zoom, zoomLabel, topButton('fit', 'Anpassen', 'Seite an die verfügbare Breite anpassen'));
         /* DER TITEL STEHT JETZT HIER (E296). Der grosse Seitenkopf faellt im
            Dokumentmodus weg; ohne diese Zeile hiesse das offene Dokument
            nirgends mehr beim Namen. `textContent`, nicht `innerHTML` — der Titel
@@ -60365,7 +60748,7 @@ const DocumentMode = (() => {
         titel.className = 'document-title';
         titel.textContent = page.text || 'Ohne Titel';
         titel.title = page.text || 'Ohne Titel';
-        top.append(position, titel);
+        top.append(titel);
         /* UND DER EINE HINWEIS AUS DEM KOPF, DER HIER WEITER GILT. Eine gegen
            Bearbeiten gesperrte Seite sagte das oben in einer eigenen Zeile. Die
            ist mit dem Kopf weg — das Schloss bleibt, mit Wort statt nur Zeichen
@@ -60378,7 +60761,27 @@ const DocumentMode = (() => {
                 'Über „Normale Seite" lässt sie sich wieder freigeben.';
             top.append(schloss);
         }
-        top.append(zoom, zoomLabel, topButton('inspector', 'ⓘ', 'Notizen und Verknüpfungen öffnen'), topButton('exit', 'Normale Seite', 'Dokumentmodus verlassen'));
+        const topActions = document.createElement('div');
+        topActions.className = 'document-top-actions';
+        topActions.append(inspectorButton, topButton('exit', 'Seiteneditor', 'Dokumentmodus verlassen'));
+        top.append(topActions);
+        const commandbar = document.createElement('div');
+        commandbar.className = 'document-commandbar';
+        commandbar.setAttribute('aria-label', 'Dokumentansicht');
+        const modes = document.createElement('div');
+        modes.className = 'document-mode-switch';
+        modes.setAttribute('role', 'group');
+        modes.setAttribute('aria-label', 'Lesen oder annotieren');
+        const readButton = topButton('read', 'Lesen', 'Lesen — Zeichenwerkzeuge einklappen');
+        const annotateButton = topButton('annotate', '✎ Annotieren', 'Annotieren — mit dem Stift auf der Seite schreiben');
+        readButton.setAttribute('aria-pressed', String(!state.toolsOpen));
+        annotateButton.setAttribute('aria-pressed', String(state.toolsOpen));
+        const canAnnotate = !page.gesperrt && (typeof Konten === 'undefined' || Konten.darf('bearbeiten', page));
+        annotateButton.disabled = !canAnnotate;
+        if (!canAnnotate)
+            annotateButton.title = 'Zum Annotieren brauchst du Bearbeitungsrechte und ein entsperrtes Dokument.';
+        modes.append(readButton, annotateButton);
+        commandbar.append(modes, pagination, zoomGroup);
         /* WELCHE SPALTEN ES GIBT, STEHT AM KASTEN (E296). Vorher war das Raster
            fest — 190 px links, 280 px rechts, bei jeder Fensterbreite ueber
            1100 px. Auf 1440 px blieben der Seite damit rund 900, obwohl beide
@@ -60390,6 +60793,9 @@ const DocumentMode = (() => {
             (state.inspectorOpen ? ' with-inspector' : '');
         const thumbnails = document.createElement('aside');
         thumbnails.className = 'document-thumbnails' + (state.thumbnailsOpen ? ' is-open' : '');
+        thumbnails.id = 'document-thumbnails-' + page.id;
+        thumbnails.setAttribute('aria-label', 'Seitenübersicht');
+        thumbnailButton.setAttribute('aria-controls', thumbnails.id);
         const thumbHeader = document.createElement('div');
         thumbHeader.className = 'document-panel-header';
         const thumbTitle = document.createElement('strong');
@@ -60400,6 +60806,8 @@ const DocumentMode = (() => {
         documents.forEach((block, index) => thumbnails.appendChild(thumbnail(block, index, index === state.index)));
         const center = document.createElement('main');
         center.className = 'document-center' + (state.einzeln ? ' ist-einzeln' : '');
+        center.setAttribute('aria-label', 'Papierfläche');
+        center.tabIndex = 0;
         /* ══ DIE ROLLE (E299) ══════════════════════════════════════════════════
            ALLE SEITEN UNTEREINANDER, NICHT EINE ZUM BLAETTERN.
     
@@ -60438,6 +60846,9 @@ const DocumentMode = (() => {
             gezeichnet.add(i);
             stand.style.removeProperty('height');
             renderDocument(stand, block);
+            stand.querySelectorAll('.blatt-papier').forEach(paper => {
+                paper.inert = !state.toolsOpen;
+            });
         };
         documents.forEach((block, i) => {
             const stand = document.createElement('div');
@@ -60459,9 +60870,12 @@ const DocumentMode = (() => {
         zeichneStand(Math.max(0, Math.min(state.index, documents.length - 1)));
         const inspector = document.createElement('aside');
         inspector.className = 'document-inspector' + (state.inspectorOpen ? ' is-open' : '');
+        inspector.id = 'document-inspector-' + page.id;
+        inspector.setAttribute('aria-label', 'Dokumentdetails und verknüpfte Inhalte');
+        inspectorButton.setAttribute('aria-controls', inspector.id);
         renderInspector(inspector, page, current);
         body.append(thumbnails, center, inspector);
-        workspace.append(top, body);
+        workspace.append(top, commandbar, body);
         wrap.appendChild(workspace);
         /* DIE HOEHE MISST SICH SELBST (E296). In der CSS stand `calc(100vh -
            150px)`; die 150 waren der Seitenkopf plus die Leisten darueber. Der
@@ -60615,6 +61029,14 @@ const DocumentMode = (() => {
            nichts wissen und nichts wissen sollen (§5 Regel 1). Das CSS liest
            `[data-aktiv]` und blendet die übrigen aus. */
         const aktivMarkieren = () => {
+            previousButton.disabled = state.index === 0;
+            nextButton.disabled = state.index === documents.length - 1;
+            thumbnails.querySelectorAll('[data-document-index]').forEach(button => {
+                if (Number(button.dataset.documentIndex) === state.index)
+                    button.setAttribute('aria-current', 'page');
+                else
+                    button.removeAttribute('aria-current');
+            });
             staende.forEach((stand, i) => {
                 if (i === state.index)
                     stand.setAttribute('data-aktiv', '');
@@ -60719,7 +61141,7 @@ const DocumentMode = (() => {
             const stand = staende[nr];
             if (stand) {
                 springtZu = nr;
-                if (weich && typeof center.scrollTo === 'function')
+                if (weich && !matchMedia('(prefers-reduced-motion: reduce)').matches && typeof center.scrollTo === 'function')
                     center.scrollTo({ top: stand.offsetTop, behavior: 'smooth' });
                 else
                     center.scrollTop = stand.offsetTop;
@@ -60732,6 +61154,42 @@ const DocumentMode = (() => {
             passen();
         };
         const rerender = () => App.zeichneSeite();
+        const toolsSetzen = (an) => {
+            state.toolsOpen = an;
+            Store.setMeta('dokWerkzeuge:' + page.id, an);
+            workspace.dataset.documentTools = an ? 'open' : 'closed';
+            readButton.setAttribute('aria-pressed', String(!an));
+            annotateButton.setAttribute('aria-pressed', String(an));
+            center.querySelectorAll('.blatt-papier').forEach(paper => { paper.inert = !an; });
+            passen();
+        };
+        const panelsSetzen = () => {
+            body.classList.toggle('with-thumbnails', state.thumbnailsOpen);
+            body.classList.toggle('with-inspector', state.inspectorOpen);
+            thumbnails.classList.toggle('is-open', state.thumbnailsOpen);
+            inspector.classList.toggle('is-open', state.inspectorOpen);
+            thumbnailButton.setAttribute('aria-expanded', String(state.thumbnailsOpen));
+            inspectorButton.setAttribute('aria-expanded', String(state.inspectorOpen));
+            if (state.inspectorOpen)
+                renderInspector(inspector, page, jetzt());
+            if (state.thumbnailsOpen)
+                activateVisibleThumbnails(thumbnails);
+            passen();
+        };
+        workspace.addEventListener('keydown', event => {
+            if (event.key === 'Escape' && (state.thumbnailsOpen || state.inspectorOpen)) {
+                const returnTo = state.inspectorOpen ? inspectorButton : thumbnailButton;
+                state.thumbnailsOpen = false;
+                state.inspectorOpen = false;
+                panelsSetzen();
+                returnTo.focus();
+                event.stopPropagation();
+            }
+            if (event.target === center && (event.key === 'PageDown' || event.key === 'PageUp')) {
+                event.preventDefault();
+                springe(state.index + (event.key === 'PageDown' ? 1 : -1));
+            }
+        });
         workspace.addEventListener('click', event => {
             const element = event.target instanceof Element ? event.target : null;
             const thumb = element?.closest('[data-document-index]');
@@ -60770,19 +61228,35 @@ const DocumentMode = (() => {
                 springe(state.index + 1);
             if (action === 'thumbnails') {
                 state.thumbnailsOpen = !state.thumbnailsOpen;
-                rerender();
+                panelsSetzen();
             }
             if (action === 'thumbnails-close') {
                 state.thumbnailsOpen = false;
-                rerender();
+                panelsSetzen();
+                thumbnailButton.focus();
             }
             if (action === 'inspector') {
                 state.inspectorOpen = !state.inspectorOpen;
-                rerender();
+                panelsSetzen();
             }
             if (action === 'inspector-close') {
                 state.inspectorOpen = false;
-                rerender();
+                panelsSetzen();
+                inspectorButton.focus();
+            }
+            if (action === 'read')
+                toolsSetzen(false);
+            if (action === 'annotate' && !page.gesperrt &&
+                (typeof Konten === 'undefined' || Konten.darf('bearbeiten', page)))
+                toolsSetzen(true);
+            if (action === 'fit') {
+                zoomSetzen(100);
+                center.scrollLeft = 0;
+            }
+            if (action === 'import' && !page.gesperrt &&
+                (typeof Konten === 'undefined' || Konten.darf('bearbeiten', page))) {
+                void PdfEinlesen.waehlen(page.id).then(result => { if (result)
+                    rerender(); });
             }
             if (action === 'lauf') {
                 /* UMSCHALTEN HEISST NEU AUFBAUEN. Wie beim Randstreifen und beim
@@ -60833,6 +61307,8 @@ const DocumentMode = (() => {
                     UI.toast('Diese Seite ist gerade nicht gezeichnet.');
                     return;
                 }
+                /* Region selection is available in reading mode too. Only the temporary
+                   overlay is interactive; the document beneath stays inert. */
                 selectRegion(paper, jetzt(), region => {
                     if (action === 'recognize') {
                         const recognition = window.Recognition;
@@ -121242,12 +121718,116 @@ const Bibliothek = (() => {
         { id: 'alle', name: 'Alle' },
         { id: 'pdf', name: 'PDF' },
         { id: 'board', name: 'Whiteboards' },
+        { id: 'plan', name: 'Schaltpläne' },
         { id: 'blatt', name: 'Blätter' },
         { id: 'tab', name: 'Tabellen' },
         { id: 'db', name: 'Datenbanken' },
         { id: 'karten', name: 'Karteikarten' },
-        { id: 'ordner', name: 'Ordner' }
+        { id: 'ordner', name: 'Ordner' },
+        { id: 'datei', name: 'Dateien' },
+        { id: 'seite', name: 'Seiten' }
     ];
+    /** Schnellwege sind Sichten auf denselben Bestand, keine zweite Ablage. */
+    const studioNavigation = () => {
+        const pdfAn = zustand.reiter === 'alle' && zustand.art === 'pdf';
+        const wege = [
+            { id: 'ablage', name: 'Meine Ablage' },
+            { id: 'kuerzlich', name: 'Zuletzt geöffnet' },
+            { id: 'favoriten', name: 'Favoriten' },
+            { id: 'pdf', name: 'Alle PDFs' }
+        ];
+        return '<div class="bib-studio-navigation">' +
+            '<nav class="bib-studio-wege" aria-label="Dokumente finden">' +
+            wege.map(weg => {
+                const an = weg.id === 'pdf' ? pdfAn : !pdfAn && zustand.reiter === weg.id;
+                return '<button type="button" data-studio-weg="' + weg.id + '"' +
+                    (an ? ' class="on" aria-current="page"' : '') + '>' + weg.name + '</button>';
+            }).join('') + '</nav>' +
+            '<label class="bib-studio-suche"><span data-sym="search" aria-hidden="true"></span>' +
+            '<span class="bib-studio-sr">Dokumenttitel in dieser Ansicht suchen</span>' +
+            '<input id="bib-studio-suche" type="search" autocomplete="off" placeholder="Dokument suchen …"' +
+            ' value="' + esc(zustand.suche) + '"></label>' +
+            '</div>';
+    };
+    /** Nur ein wirklich geöffnetes PDF anbieten; Importzeit ist kein Lesefortschritt. */
+    const studioWeiter = () => {
+        if (zustand.reiter !== 'ablage' || zustand.ordner || zustand.suche || zustand.art !== 'alle')
+            return '';
+        const letzte = alleSeiten().filter(p => p.zuletztGeoeffnet && artVon(p).id === 'pdf')
+            .sort((a, b) => zeitZahl(b.zuletztGeoeffnet) - zeitZahl(a.zuletztGeoeffnet))[0];
+        if (!letzte)
+            return '';
+        const bild = typeof Vorschau !== 'undefined' && Vorschau.bildDatei ? Vorschau.bildDatei(letzte.id) : null;
+        return '<section class="bib-studio-weiter" aria-label="PDF weiterlesen">' +
+            '<span class="bib-studio-miniatur" aria-hidden="true">' +
+            (bild ? '<img data-vorschau="' + esc(bild) + '" alt="" loading="lazy">' : '<span>PDF</span>') + '</span>' +
+            '<div><span class="bib-studio-eyebrow">Weiterarbeiten</span><h2>' + esc(letzte.text || 'Ohne Titel') +
+            '</h2><p>Zuletzt geöffnet ' + esc(wannText(letzte.zuletztGeoeffnet)) + '</p></div>' +
+            '<button type="button" data-studio-weiter="' + esc(letzte.id) + '">PDF öffnen' +
+            '<span aria-hidden="true">↗</span></button></section>';
+    };
+    let pdfImportLaeuft = false;
+    /** Derselbe PDF-Importer wie beim Archivimport, mit direktem Weg ins Dokument. */
+    const pdfImportieren = () => {
+        const ziel = zustand.reiter === 'ablage' ? zustand.ordner : null;
+        if (pdfImportLaeuft)
+            return;
+        if (!permitted('bearbeiten', ziel || undefined)) {
+            UI.toast('Du darfst hier keine PDF ablegen.');
+            return;
+        }
+        if (typeof ArchivImport === 'undefined' || !ArchivImport.dateiAlsDokument) {
+            UI.toast('Der PDF-Import ist gerade nicht verfügbar.');
+            return;
+        }
+        const eingabe = document.createElement('input');
+        eingabe.type = 'file';
+        eingabe.accept = '.pdf,application/pdf';
+        eingabe.hidden = true;
+        document.body.appendChild(eingabe);
+        eingabe.addEventListener('cancel', () => eingabe.remove(), { once: true });
+        eingabe.addEventListener('change', async () => {
+            const datei = eingabe.files?.[0];
+            eingabe.remove();
+            if (!datei || pdfImportLaeuft)
+                return;
+            if (!/\.pdf$/i.test(datei.name)) {
+                UI.toast('Bitte eine PDF-Datei auswählen.');
+                return;
+            }
+            if (!permitted('bearbeiten', ziel || undefined) || (ziel && Store.getBlock(ziel)?.alive === false)) {
+                UI.toast('In diesem Ordner kann nichts abgelegt werden.');
+                return;
+            }
+            pdfImportLaeuft = true;
+            document.querySelectorAll('[data-studio-import]').forEach(button => {
+                button.disabled = true;
+                button.setAttribute('aria-busy', 'true');
+                button.textContent = 'PDF wird importiert …';
+            });
+            try {
+                const ergebnis = await ArchivImport.dateiAlsDokument(datei, ziel);
+                App.zeichneBaum();
+                if (ergebnis.seiteId)
+                    App.oeffne(ergebnis.seiteId);
+                else
+                    App.zeichneSeite();
+            }
+            catch (fehler) {
+                UI.toast('PDF konnte nicht importiert werden: ' +
+                    (fehler instanceof Error ? fehler.message : String(fehler)));
+            }
+            finally {
+                pdfImportLaeuft = false;
+                document.querySelectorAll('[data-studio-import]').forEach(button => {
+                    button.disabled = !permitted('bearbeiten', zustand.ordner || undefined);
+                    button.removeAttribute('aria-busy');
+                    button.textContent = 'PDF importieren';
+                });
+            }
+        }, { once: true });
+        eingabe.click();
+    };
     /**
      * Ein Deckel. Was darauf steht, ist keine Zeichnung, sondern eine
      * Aussage: welche Art, und wenn es eine gibt, die echte Vorschau der
@@ -121548,6 +122128,7 @@ const Bibliothek = (() => {
         wrap.innerHTML =
             '<div class="bib bib-deckel-seite">' +
                 deckelKopf(alle.length, gesamt) +
+                studioNavigation() + studioWeiter() +
                 '<div class="bib-arten" role="group" aria-label="Nach Art filtern">' +
                 ART_FILTER.filter(a => a.id === 'alle' || vorhanden.has(a.id) ||
                     a.id === zustand.art)
@@ -121612,6 +122193,10 @@ const Bibliothek = (() => {
             '<h1>' + esc(hier) + '</h1>' +
             '<button class="bib-neu" data-neu-auf>' +
             '<b aria-hidden="true">+</b><span>Neu</span></button>' +
+            '<button class="bib-studio-import" data-studio-import' +
+            (pdfImportLaeuft || !permitted('bearbeiten', zustand.ordner || undefined)
+                ? ' disabled title="Import läuft oder Bearbeitungsrechte fehlen"' : '') +
+            '>PDF importieren</button>' +
             '<button class="bib-form-knopf" data-form="liste" ' +
             'aria-label="Als Liste anzeigen">\u2630</button>' +
             '<button class="bib-ort" data-orte aria-haspopup="menu">' +
@@ -121653,6 +122238,33 @@ const Bibliothek = (() => {
     };
     /** Was in beiden Formen gleich funktioniert: öffnen und umschalten. */
     const binde = (wrap) => {
+        wrap.querySelectorAll('[data-studio-weg]').forEach(button => button.addEventListener('click', () => {
+            const weg = button.dataset.studioWeg || 'ablage';
+            zustand.reiter = weg === 'pdf' ? 'alle' : weg;
+            zustand.art = weg === 'pdf' ? 'pdf' : 'alle';
+            zustand.ordner = null;
+            App.zeichneSeite();
+        }));
+        wrap.querySelector('[data-studio-import]')?.addEventListener('click', pdfImportieren);
+        wrap.querySelector('[data-studio-weiter]')?.addEventListener('click', event => {
+            const id = event.currentTarget.dataset.studioWeiter;
+            if (id && permitted('lesen', id))
+                App.oeffne(id);
+        });
+        wrap.querySelector('#bib-studio-suche')?.addEventListener('input', event => {
+            const input = event.currentTarget;
+            zustand.suche = input.value;
+            const cursor = input.selectionStart;
+            App.zeichneSeite();
+            const neu = wrap.querySelector('#bib-studio-suche');
+            neu?.focus();
+            if (neu && cursor !== null) {
+                try {
+                    neu.setSelectionRange(cursor, cursor);
+                }
+                catch { /* search inputs */ }
+            }
+        });
         wrap.querySelectorAll('.bib-reiter [data-r]').forEach(b => b.addEventListener('click', () => {
             if (b.dataset['r'] === 'mehr') {
                 const r = b.getBoundingClientRect();
@@ -122271,7 +122883,7 @@ const Bibliothek = (() => {
     /* `umfangSatz` und `DECKE_KUERZLICH` kommen mit heraus, damit ein
        Prüflauf die Sprache messen kann, ohne dreihundert Seiten anzulegen
        (test359 §6) — und damit die Decke eine Zahl mit Namen bleibt. */
-    return { oeffne, aufgaben, meineAufgaben, quellenDialog, alleSeiten, quelleVon,
+    return { oeffne, aufgaben, meineAufgaben, quellenDialog, alleSeiten, quelleVon, pdfImportieren,
         wannText, umfangSatz, DECKE_KUERZLICH };
 })();
 window.Bibliothek = Bibliothek;
@@ -124548,6 +125160,43 @@ const Lernwelt = (() => {
                         esc(ansichtName(id)) + '</button>').join('') + '</nav>';
             })();
     };
+    /** Der Einstieg bleibt eine Sicht auf echte Seiten. Das Papier zeigt einen
+        Textausschnitt, keine erfundene PDF-Vorschau und keine Inhaltskopie. */
+    const dokumentEinstieg = () => {
+        const pdf = sichtbarePdfs()[0];
+        const zuletzt = pdf || sichtbareZuletzt()[0];
+        const seitenId = zuletzt?.pageId || zuletzt?.id || '';
+        const ausschnitt = seitenId ? miniatur(seitenId, 4) : '';
+        const darfImportieren = typeof Konten === 'undefined' || Konten.darf('bearbeiten');
+        const importVerfuegbar = typeof Bibliothek !== 'undefined' && !!Bibliothek.pdfImportieren;
+        return '<section class="lw-desk" aria-label="Dein Dokumentenstudio">' +
+            '<div class="lw-desk-copy"><p class="lw-eyebrow">DEIN PLATZ FÜR IDEEN</p>' +
+            '<h2>Aufmachen.<br>Weiterdenken.</h2>' +
+            '<p>Deine PDFs, Notizen und Unterlagen. Ein Griff — und du bist mittendrin.</p>' +
+            '<div class="lw-actions">' +
+            (pdf
+                ? '<button type="button" class="is-primary" data-lw-open="' + esc(seitenId) + '">' +
+                    zeichenSpan('book') + 'PDF öffnen</button>'
+                : '<button type="button" class="is-primary" data-lw-action="library">' +
+                    zeichenSpan('library') + 'Dokumente öffnen</button>') +
+            '<button type="button" data-lw-action="import"' +
+            (darfImportieren && importVerfuegbar ? '' : ' disabled title="' +
+                (darfImportieren ? 'Der Dateiimport ist hier nicht verfügbar.' : 'Du benötigst Bearbeitungsrechte, um Dateien hinzuzufügen.') + '"') +
+            '>' + zeichenSpan('plus') + 'PDF importieren</button></div>' +
+            (pdf ? '<button type="button" class="lw-desk-link" data-lw-action="library">Alle Dokumente ansehen →</button>' : '') +
+            '</div><button type="button" class="lw-paper-stack" ' +
+            (zuletzt ? 'data-lw-open="' + esc(seitenId) + '" aria-label="' + esc(zuletzt.titel) + ' öffnen"'
+                : 'data-lw-action="library" aria-label="Deine Dokumente öffnen"') + '>' +
+            '<span class="lw-paper-sheet"><span class="lw-paper-cap">' + zeichenSpan(pdf ? 'book' : 'page') +
+            '<span>' + (pdf ? 'PDF · WEITERLESEN' : 'DEINE DOKUMENTE') + '</span></span>' +
+            '<strong>' + esc(zuletzt?.titel || 'Platz für deine Gedanken') + '</strong>' +
+            '<span class="lw-paper-preview mini-zeilen">' +
+            (ausschnitt || '<span class="lw-paper-message">' + (zuletzt
+                ? 'Öffnen, lesen und direkt weiterarbeiten.'
+                : 'Sammle deine Unterlagen. Halte fest, was dir wichtig ist.') + '</span>') + '</span>' +
+            '<span class="lw-paper-foot">' + (zuletzt ? 'Weiterarbeiten' : 'Loslegen') + '<span aria-hidden="true">↗</span></span>' +
+            '</span></button></section>';
+    };
     const heuteAnsicht = () => {
         const queue = warteschlange();
         const stats = statistik();
@@ -124576,80 +125225,53 @@ const Lernwelt = (() => {
                 : naechstePruefung.tage === 1 ? 'morgen'
                     : naechstePruefung.tage + ' Tage'
             : 'keine geplant';
-        /* HIER STAND DER EINRICHTEN-STREIFEN (E137, weg mit E434).
-           Er bot an, zwischen zwei Hauptwelten zu waehlen — „Lernen" und
-           „Workspace" — und stand da, solange die Einrichtung nicht durchlaufen
-           war. Redur hat ihn weggenommen: eine Wahl zwischen zwei Dingen, von
-           denen es nur noch eines gibt, ist keine Frage, sondern eine
-           Verzoegerung — den Arbeitsbereich loest Redur gerade auf, seine
-           Abschnitte werden einzelne Orte (E435).
-           Lebensbereiche legt man weiter an — ueber den Bereichsdialog
-           (`Produktwelten.bereicheDialog`), der sie schon immer konnte. */
+        /* Eine klare Startfolge: Dokument öffnen, Lernrunde, dann der Tagesplan.
+           Auswertungen bleiben vollständig über native Details erreichbar. */
         return '<div class="lw-today">' +
-            /* DREIMAL DERSELBE BEREICH WAR ZWEIMAL ZU VIEL (E205).
-               Hier stand „◎ Alle Bereiche" als Marke — dieselbe Auskunft, die 300 px
-               weiter oben schon im Auswahlfeld steht und die man dort auch ändern
-               kann. Eine Marke, die nur wiederholt, was daneben steht, kostet Höhe
-               und sagt nichts; über der Falz ist Höhe das Knappe. */
-            /* „Guten Abend, Ich" — so stand es da, solange kein Konto einen Namen
-               trägt. „Ich" ist der Rückfallwert der AKTOR-Kennung, nicht ein Name,
-               mit dem man jemanden anspricht; im Deutschen grüsst man sich nicht
-               mit dem eigenen Pronomen. Ohne Namen bleibt es beim blossen Gruss.
-               Der Aktor selbst bleibt unberührt — er wird an anderer Stelle
-               gebraucht, und dort ist „Ich" richtig. */
-            '<section class="lw-hero"><div><p>' +
-            esc(aktor().name && aktor().name !== 'Ich' ? gruss + ', ' + aktor().name : gruss) +
-            '</p><h2>' +
-            esc(new Date().toLocaleDateString('de-CH', {
-                weekday: 'long', day: 'numeric', month: 'long'
-            })) + '</h2></div><div class="lw-goal"><button type="button" data-lw-action="goal" aria-label="Tagesziel ändern">' +
+            '<section class="lw-hero lw-hero-compact"><div><p>' +
+            esc(new Date().toLocaleDateString('de-CH', { weekday: 'long', day: 'numeric', month: 'long' })) +
+            '</p><h2>' + esc(aktor().name && aktor().name !== 'Ich' ? gruss + ', ' + aktor().name : gruss) +
+            '.</h2></div><div class="lw-goal"><button type="button" data-lw-action="goal" aria-label="Tagesziel ändern">' +
             '<span>' + stats.reviewedToday + ' / ' + ziel + '</span><small>Lernziel heute</small></button>' +
             '<progress max="100" value="' + zielProzent + '" aria-label="Tagesfortschritt"></progress></div></section>' +
-            /* WEITER WO DU WARST — DIE ERSTE FRAGE DES TAGES (E205).
-               Hier stand bisher nichts, und unten in der Übersicht stand
-               „Zuletzt geöffnet": neun Zeilen, jede mit demselben Untertitel und
-               derselben Zeit. Wer morgens aufmacht, sucht keine Titelliste,
-               sondern die Seite, an der er gestern aufgehört hat — und die
-               erkennt man an dem, was draufsteht. Drei Karten mit dem echten
-               Anfang der Seite sagen das, was neun Titel nicht sagen konnten.
-      
-               Die Liste unten entfällt damit; sie war dieselbe Auskunft in
-               schlechterer Form. */
+            dokumentEinstieg() +
+            '<section class="lw-next-step" aria-label="Dein nächster Lernschritt">' +
+            zeichenSpan('cards', 'lw-next-icon') + '<div><p>Ein guter nächster Schritt</p><h2>' +
+            (queue.all.length ? queue.all.length + (queue.all.length === 1 ? ' Karte für heute' : ' Karten für heute')
+                : stats.total ? 'Deine Wiederholungen sind erledigt' : 'Aus Wissen wird Können') +
+            '</h2><span>' + (queue.all.length
+            ? 'Fehler festigen, Bekanntes wiederholen, Neues entdecken.'
+            : stats.total ? 'Du kannst deine Themen vertiefen oder neue Karten anlegen.'
+                : 'Erstelle deine erste Lernkarte aus deinen Unterlagen.') + '</span></div>' +
+            '<div class="lw-actions">' +
+            (queue.all.length ? '<button type="button" class="is-primary" data-lw-train="today">Lernen starten →</button>'
+                : '<button type="button" class="is-primary" data-lw-nav="lernen">Lernen öffnen →</button>') +
+            '<button type="button" data-lw-nav="lernen">Lernplan ansehen</button></div></section>' +
             (weiterKarten.length
-                ? '<section class="lw-continue"><header><div><h2>Weiter wo du warst</h2>' +
-                    '<p>Die Seiten, an denen du zuletzt gearbeitet hast</p></div>' +
-                    (alleZuletzt.length > weiterKarten.length
-                        ? '<button type="button" data-lw-action="library">Alle ' +
-                            alleZuletzt.length + ' ansehen</button>'
-                        : '') +
-                    '</header><div class="lw-continue-grid">' +
-                    weiterKarten.map(weiterKarte).join('') + '</div></section>'
+                ? '<section class="lw-continue"><header><div><h2>Zuletzt auf deinem Schreibtisch</h2>' +
+                    '<p>Genau dort weiter, wo du aufgehört hast.</p></div>' +
+                    '<button type="button" data-lw-action="library">Alle Dokumente</button>' +
+                    '</header><div class="lw-continue-grid">' + weiterKarten.map(weiterKarte).join('') + '</div></section>'
                 : '') +
+            '<div class="lw-dashboard-grid lw-day-plan">' +
+            sektion('Deine Aufgaben', aufgabenListe([...ueberfaellige, ...heutigeAufgaben].slice(0, 6), 'Für heute ist alles erledigt.'), mehrAls(ueberfaellige.length + heutigeAufgaben.length, 6)) +
+            sektion('Dein Tag', terminListe(heutigeTermine, 'Heute ist Raum für deine eigenen Pläne.')) +
+            '</div>' +
+            '<div class="lw-quick" aria-label="Schnellzugriff">' +
+            '<button type="button" data-lw-action="tasks">' + zeichenSpan('tasks') + 'Alle Aufgaben</button>' +
+            '<button type="button" data-lw-action="calendar">' + zeichenSpan('calendar') + 'Kalender</button>' +
+            '<button type="button" data-lw-action="library">' + zeichenSpan('library') + 'Dokumente</button>' +
+            '<button type="button" data-lw-action="capture">' + zeichenSpan('camera') + 'Scannen</button>' +
+            '</div>' +
+            '<details class="lw-insights" data-lw-details="today-insights"><summary><span>' +
+            zeichenSpan('chart') + '<span>Lernübersicht &amp; Fortschritt<small>Prüfungen, Themen, Projekte und deine Lernroutine</small></span>' +
+            '</span><span class="lw-details-chevron" aria-hidden="true">⌄</span></summary><div class="lw-insights-body">' +
             '<section class="lw-metrics" aria-label="Heute auf einen Blick">' +
             kennzahl(String(queue.errors.length + queue.due.length), 'fällig', 'heute zu wiederholen') +
             kennzahl(String(queue.newCards.length), 'neu', 'höchstens 20 pro Runde') +
             kennzahl(String(fehlerListe().filter(item => !item.stabil).length), 'Fehler', 'gezielt wiederholen') +
-            /* VIER ZAHLEN, ALSO AUCH HIER EINE ZAHL. Ohne geplante Prüfung stand
-               in der vierten Kachel „keine geplant" in Zahlengrösse — ein Satz
-               dort, wo daneben dreimal eine Ziffer steht, und die Reihe las sich
-               nicht mehr als Reihe. Was fehlt, ist ein Strich; der Satz erklärt
-               ihn eine Zeile tiefer. */
-            (naechstePruefung
-                ? kennzahl(pruefungText, 'nächste Prüfung', naechstePruefung.titel || '')
+            (naechstePruefung ? kennzahl(pruefungText, 'nächste Prüfung', naechstePruefung.titel || '')
                 : kennzahl('–', 'nächste Prüfung', 'keine geplant')) + '</section>' +
-            '<div class="lw-primary-grid">' +
-            '<section class="lw-focus-card"><header><div><p>Deine Tagesrunde</p><h2>' +
-            (queue.all.length === 1 ? '1 Karte wartet'
-                : queue.all.length ? queue.all.length + ' Karten warten'
-                    : 'Alles für heute erledigt') +
-            '</h2></div><span class="lw-card-icon" data-sym="cards" aria-hidden="true"></span></header><p>' +
-            (queue.all.length
-                ? 'Zuerst Fehler, danach fällige Karten und zum Schluss neue Inhalte.'
-                : stats.total ? 'Die nächste Wiederholung erscheint automatisch zum geplanten Zeitpunkt.'
-                    : 'Erstelle deine erste Karte aus einer Notiz, einem Text oder PDF.') + '</p><div class="lw-actions">' +
-            '<button type="button" class="is-primary" data-lw-train="today"' +
-            (queue.all.length ? '' : ' disabled') + '>Tagesrunde starten</button>' +
-            '<button type="button" data-lw-nav="lernen">Plan ansehen</button></div></section>' +
             '<section class="lw-exam-card"><header><p>Nächste Prüfung</p>' +
             '<span class="lw-card-icon" data-sym="clipboard" aria-hidden="true"></span></header>' +
             (naechstePruefung
@@ -124657,45 +125279,18 @@ const Lernwelt = (() => {
                     esc(naechstePruefung.fach || naechstePruefung.lernstoff || 'Lernstoff noch nicht zugeordnet') +
                     '</p><button type="button" data-lw-exam="' + esc(naechstePruefung.id) + '">Vorbereitung öffnen</button>'
                 : leer('calendar', 'Keine Prüfung geplant', 'Lege einen Termin in deiner Prüfungsdatenbank an.', 'school-setup', 'Prüfungen öffnen')) + '</section>' +
-            '</div>' +
             '<div class="lw-dashboard-grid">' +
-            /* VIER KACHELN, NICHT SECHS (E205).
-               Sechs Sektionen mit sehr unterschiedlich langen Listen ergaben in
-               zwei Spalten ein weisses Loch von fast 400 px: „Termine" mit einer
-               Zeile stand neben „Zuletzt geöffnet" mit acht.
-    
-               „Aufgaben heute" und „Überfällig" sind ausserdem dieselbe Frage —
-               was ist offen. Die Antwort steht in der ZEILE („heute", „Do",
-               „26. Aug."), nicht in zwei Überschriften; überfällig kommt zuerst,
-               weil es zuerst dran ist. „Zuletzt geöffnet" ist nach oben gewandert
-               und dort etwas geworden, das man ansehen kann. */
-            sektion('Offen', aufgabenListe([...ueberfaellige, ...heutigeAufgaben].slice(0, 6), 'Nichts offen — heute ist keine Aufgabe fällig.'), mehrAls(ueberfaellige.length + heutigeAufgaben.length, 6)) +
-            sektion('Termine', terminListe(heutigeTermine, 'Heute steht kein Termin an.'), 'Unterricht, Arbeit und Meetings') +
-            sektion('Themenfortschritt', themenListe(liste(stats.topics), 5), 'fachlicher SM-2-Stand') +
-            sektion('Laufende Projekte', eintragListe(projekteGezeigt, 'Noch kein Projekt zugeordnet.'), mehrAls(alleProjekte.length, 5) || 'ohne Kopien') +
+            sektion('Themenfortschritt', themenListe(liste(stats.topics), 5), 'Was du schon sicher beherrschst') +
+            sektion('Laufende Projekte', eintragListe(projekteGezeigt, 'Noch kein Projekt zugeordnet.'), mehrAls(alleProjekte.length, 5)) +
             '</div>' +
-            '<section class="lw-engagement"><header><div><p>Aktivität &amp; Motivation</p><h2>Deine Lernroutine</h2></div>' +
+            '<section class="lw-engagement"><header><div><p>Aktivität</p><h2>Deine Lernroutine</h2></div>' +
             '<span>Getrennt vom Wissensstand</span></header><div class="lw-metrics">' +
-            /* VIER UND NICHT FÜNF (E204). Fünf Karten in vier Spalten liessen
-               „Level" allein in einer zweiten Reihe stehen, daneben drei Viertel
-               weisse Fläche — bei JEDER Breite, denn fünf teilt sich durch nichts.
-               XP und Level sind ohnehin dieselbe Zahl zweimal: das eine ist die
-               Rechnung, das andere ihr Ergebnis. Damit vier, und vier geht auf.
-    
-               Drei Entschuldigungen standen auf derselben Karte — die Marke oben,
-               „kein Wissensstand" und „Motivation, nicht Fachfortschritt". Es
-               bleibt die oben; sie gilt für die ganze Karte. */
             kennzahl('~' + spiel.minuten + ' Min.', 'Lernzeit', spiel.tempoSatz) +
             kennzahl(spiel.woche + ' / ' + ziel * 7, 'Wochenziel') +
             kennzahl(spiel.streak + (spiel.streak === 1 ? ' Tag' : ' Tage'), 'Streak') +
             kennzahl('Level ' + spiel.level, 'Aktivität', spiel.xp + ' XP') +
             '</div>' + fortschritt(spiel.wochenProzent, 'Wochenfortschritt') + '</section>' +
-            '<div class="lw-quick" aria-label="Schnellzugriff">' +
-            '<button type="button" data-lw-action="tasks">' + zeichenSpan('tasks') + 'Alle Aufgaben</button>' +
-            '<button type="button" data-lw-action="calendar">' + zeichenSpan('calendar') + 'Kalender</button>' +
-            '<button type="button" data-lw-action="library">' + zeichenSpan('library') + 'Bibliothek</button>' +
-            '<button type="button" data-lw-action="capture">' + zeichenSpan('camera') + 'Erfassen</button>' +
-            '</div></div>';
+            '</div></details></div>';
     };
     const verlaufsTage = (logs, anzahl) => {
         const heute = tagesStart();
@@ -126090,6 +126685,10 @@ const Lernwelt = (() => {
         if (aktion === 'library') {
             abmelden();
             Bibliothek.oeffne();
+            return;
+        }
+        if (aktion === 'import') {
+            Bibliothek.pdfImportieren();
             return;
         }
         if (aktion === 'calendar') {
@@ -136657,6 +137256,11 @@ const Kontextkante = (() => {
         const s = document.createElement('span');
         s.dataset['sym'] = String(k.zeichen || 'dots');
         b.appendChild(s);
+        const beschriftung = document.createElement('span');
+        beschriftung.className = 'k-beschriftung';
+        beschriftung.textContent = String(k.name);
+        beschriftung.setAttribute('aria-hidden', 'true');
+        b.appendChild(beschriftung);
         b.addEventListener('click', () => {
             /* Zweiter Klick auf denselben Knopf schliesst — wie überall. */
             if (typeof k.liefern === 'function' || k.id === 'seiten') {
@@ -137052,6 +137656,120 @@ const Kontextkante = (() => {
         offen: () => !!offenerKnopf };
 })();
 window.Kontextkante = Kontextkante;
+
+</script>
+<script>
+/* ===== quell/schale/aufbau/studio.js ===== */
+"use strict";
+/* Redion Studio: shortcuts into existing controllers; no content storage. */
+const StudioSchale = (() => {
+    let gestartet = false;
+    const META = 'studio:navigation-kompakt';
+    const BREITE = 'studio:navigation-breite';
+    const breiteSetzen = (wert) => {
+        const breite = Math.max(148, Math.min(260, Math.round(wert)));
+        document.body.style.setProperty('--studio-nav-expanded', breite + 'px');
+        document.getElementById('studio-divider')?.setAttribute('aria-valuenow', String(breite));
+        return breite;
+    };
+    const themaMarkieren = () => {
+        const hell = document.documentElement.dataset.theme === 'light';
+        const b = document.getElementById('studio-theme');
+        b?.setAttribute('aria-label', hell ? 'Dunkles Farbschema einschalten' : 'Helles Farbschema einschalten');
+        if (b)
+            b.title = hell ? 'Dunkles Farbschema' : 'Helles Farbschema';
+    };
+    const einstellen = (kompakt) => {
+        document.body.dataset.studioNav = kompakt ? 'kompakt' : 'offen';
+        const knopf = document.getElementById('studio-nav');
+        knopf?.setAttribute('aria-pressed', String(kompakt));
+        const name = kompakt ? 'Navigation mit Beschriftungen anzeigen' : 'Navigation kompakt anzeigen';
+        knopf?.setAttribute('aria-label', name);
+        if (knopf)
+            knopf.title = name;
+    };
+    const markieren = () => {
+        const wo = App.schauplatz();
+        for (const [id, aktiv] of [['studio-documents', wo === 'bibliothek'],
+            ['studio-notebooks', wo === 'notizhefte']]) {
+            const b = document.getElementById(id);
+            if (aktiv)
+                b?.setAttribute('aria-current', 'page');
+            else
+                b?.removeAttribute('aria-current');
+        }
+    };
+    const start = () => {
+        if (gestartet)
+            return;
+        gestartet = true;
+        einstellen(Store.getMeta(META, false) === true);
+        const gespeichert = Number(Store.getMeta(BREITE, 184));
+        breiteSetzen(Number.isFinite(gespeichert) ? gespeichert : 184);
+        const an = (id, tun) => {
+            document.getElementById(id)?.addEventListener('click', tun);
+        };
+        an('studio-home', () => Bibliothek.oeffne());
+        an('studio-documents', () => Bibliothek.oeffne());
+        an('studio-notebooks', () => Notebook.oeffnen());
+        an('studio-search', () => App.suche());
+        an('studio-create', () => App.erstellenBlatt());
+        an('studio-import', () => Bibliothek.pdfImportieren());
+        an('studio-theme', () => {
+            Einstellungen.S('theme', document.documentElement.dataset.theme === 'light' ? 'dark' : 'light');
+            themaMarkieren();
+        });
+        new MutationObserver(themaMarkieren).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+        themaMarkieren();
+        const divider = document.getElementById('studio-divider');
+        let ziehen = null;
+        const jetztBreite = () => Number(divider?.getAttribute('aria-valuenow')) || 184;
+        const merken = () => { Store.setMeta(BREITE, jetztBreite()); Kontextkante.zeichne(); };
+        divider?.addEventListener('pointerdown', event => {
+            if (event.button !== 0)
+                return;
+            ziehen = { id: event.pointerId, x: event.clientX, breite: jetztBreite() };
+            divider.setPointerCapture(event.pointerId);
+            event.preventDefault();
+            document.body.classList.add('studio-resizing');
+        });
+        divider?.addEventListener('pointermove', event => {
+            if (ziehen?.id === event.pointerId)
+                breiteSetzen(ziehen.breite + event.clientX - ziehen.x);
+        });
+        const ende = (event) => {
+            if (ziehen?.id !== event.pointerId)
+                return;
+            if (event.type === 'pointercancel')
+                breiteSetzen(ziehen.breite);
+            ziehen = null;
+            document.body.classList.remove('studio-resizing');
+            merken();
+        };
+        divider?.addEventListener('pointerup', ende);
+        divider?.addEventListener('pointercancel', ende);
+        divider?.addEventListener('keydown', event => {
+            if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key))
+                return;
+            event.preventDefault();
+            breiteSetzen(event.key === 'Home' ? 148 : event.key === 'End' ? 260 : jetztBreite() + (event.key === 'ArrowRight' ? 8 : -8));
+            merken();
+        });
+        an('studio-nav', () => {
+            const kompakt = document.body.dataset.studioNav !== 'kompakt';
+            einstellen(kompakt);
+            Store.setMeta(META, kompakt);
+            Kontextkante.zeichne();
+        });
+        const bar = document.getElementById('studio-bar');
+        if (bar)
+            Register.symbole.fuelle(bar);
+        window.addEventListener('redion:schauplatz', markieren);
+        window.addEventListener('hashchange', markieren);
+        markieren();
+    };
+    return { start };
+})();
 
 </script>
 <script>
@@ -141215,6 +141933,8 @@ const App = (() => {
            Vorher gefragt wäre die Antwort „nein" gewesen, und das Band wäre
            leer geblieben, ohne dass jemand einen Fehler gesehen hätte. */
         Menueband.start();
+        if (typeof StudioSchale !== 'undefined')
+            StudioSchale.start();
         Blocks.auswahlEinklinken();
         /* DER WILLKOMMENSBILDSCHIRM BLEIBT DER WILLKOMMENSBILDSCHIRM (E137).
            Hier stand `ProduktOnboarding.vielleichtStarten()` zuerst, und der
