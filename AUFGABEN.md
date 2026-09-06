@@ -222,15 +222,22 @@ und Zugänglichkeit.
     Wächter (`test426`). Nichts davon ist in der App.
   · Der Umschalter (`Segment`, `src/schale/bedienung/segment.ts`) als
     erster Baustein — Phase B, Punkt 2 des Auftrags.
+  · Phase B ganz (E441): `Zustand` (die sechs Zustände, Pille) und der
+    `Zustandsknopf` (sperrt, aria-busy, Live-Text, Sicht „laden" an der
+    Sicherung und der HTML-Einzeldatei = Nr. 03), die Weiter-Variante
+    `.btn.weiter` (Nr. 02). Nr. 19 bleibt Reserve, bis Redur entscheidet.
+  · Eine Marke (E456): das „N" links im Menüband, der Kontokreis und das
+    „R" im Willkommen sind weg — nur „R redion STUDIO" bleibt.
   · Die Karte in `doku/UI-KOMPONENTEN.md`: je Komponente Quelle-Status,
     Redion-Status, Ort, ob gebaut.
 
 **Was offen ist**, in der Reihenfolge des Auftrags (Phase B bis F):
 
-  · B — Standardspinner (KONFLIKT mit E46, braucht Redur), Knopf-Variante
-    „Weiter/Anwenden" (Nr. 02), gemeinsame Status-Semantik.
+  · B — nur noch der Standardspinner (Nr. 19, KONFLIKT mit E46, braucht
+    Redur) und ein kleiner Rest: der Sicherungsknopf des Start-Bildschirms
+    (E57, `.hs-kreisel`) auf den Zustandsknopf umstellen, test114 §19 dazu.
   · C — Bibliothek: Baumansicht (Nr. 38, höchste Priorität), grosser
-    Datei-Browser (16), Ordnerkarte (29), Upload-Status (41), Download→Öffnen (03).
+    Datei-Browser (16), Ordnerkarte (29), Upload-Status (41).
   · D — KI: Generate→Generating (26), Spark-Effekt in die Denkkugel (45),
     Circuit (43), Orb-Optionszeile (31), KI-Schalter nur bei echtem Zustand (25).
   · E — PDF/Sync/Wissen/Elektro: Drucker-Prozess (28), Server/Daten-SVG (11),

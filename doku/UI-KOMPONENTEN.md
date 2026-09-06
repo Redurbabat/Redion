@@ -1,6 +1,6 @@
 # Redion UI-Komponenten — Bestandsaufnahme und Plan
 
-**Stand: 6. September 2026, zweiter Durchgang.** Seit dem ersten Durchgang liegt
+**Stand: 6. September 2026, dritter Durchgang (Phase B gebaut, E441).** Seit dem ersten Durchgang liegt
 der Uiverse-Code vor (Handoff-Paket, 50 Einträge, 20 mit Original) und die
 Studio-Schale ist auf dem Zweig (E440). Die Tabelle unten ist die verbindliche;
 die Karte darunter ist vom ersten Durchgang und bleibt als Begründung stehen.
@@ -13,8 +13,8 @@ sagt, was daraus wird; „Gebaut" sagt, ob die produktive Fassung schon steht.
 | Nr | Komponente | Autor | Quelle-Status | Redion-Status | Produktiver Ort | Gebaut | Bemerkung |
 |---|---|---|---|---|---|---|---|
 | 01 | Sparkle Generate Site | JkHuger | `chat-original` | RESERVE | — | noch nicht | Sparkle "Generate Site" ist als eigener Knopf ausgeschieden (Auftrag §5). |
-| 02 | Apply Now Button | satyamchaudharydev | `uiverse-galaxy-verifiziert` | PRODUKTIV (angepasst) | Redion-Knopfsystem, Weiter/Öffnen/Anwenden | noch nicht | Pfeil- und Shine-Idee wird ins Knopfsystem übernommen, kein eigener Knopftyp (§4.5). |
-| 03 | Download → Open State Button | nazar-gavrylyk | `nicht-verifiziert` | PRODUKTIV (angepasst) | PDF-Export, Sicherung, Lernpaket | noch nicht | Herunterladen → Wird heruntergeladen → Heruntergeladen → Öffnen, mit Fehlerzustand (§4.16). |
+| 02 | Apply Now Button | satyamchaudharydev | `uiverse-galaxy-verifiziert` | PRODUKTIV (angepasst) | Redion-Knopfsystem, Weiter/Öffnen/Anwenden | E441 `.btn.weiter` | Pfeil gleitet bei hover/focus-visible, Schimmer nur unter der Maus, still bei reduced motion; kein eigener Knopftyp. Eingesetzt: Rundgang „Weiter", Elektro-Prüfung „Weiter", vier „Öffnen" in den Verbindungen (§4.5). test427 §4. |
+| 03 | Download → Open State Button | nazar-gavrylyk | `nicht-verifiziert` | PRODUKTIV (angepasst) | PDF-Export, Sicherung, Lernpaket | E441 Zustandsknopf `art=laden` | Herunterladen → Wird erstellt … → Heruntergeladen; die HTML-Einzeldatei weiter bis „Öffnen" (echtes Fenster). `.redion`/`.json` enden bei Heruntergeladen — der Browser kann sie nicht zeigen. Zustand aus der Promise, nie aus einem Timer (§4.16). test427 §2, §5. Offen: der Sicherungsknopf des Start-Bildschirms (E57). |
 | 04 | Sun/Moon Theme Switch | RiccardoRapelli | `nicht-verifiziert` | RESERVE | — | noch nicht | Als Haupt-Themensteuerung ausgeschieden; Redion hat acht Schemata und den Studio-Schnellschalter (§5, §12). |
 | 05 | AI Prompt Composer | Cobp | `nur-identifiziert` | ERSETZT | src/bereiche/ki — bestehender Composer in index.html | vorhanden | Redion hat den Composer bereits (Anhang, Eingabe, Senden, Quick-Actions). Nichts zweitbauen (§4.8, §12). |
 | 06 | Liquid Loader | ShaikhWahid99 | `nicht-verifiziert` | PRODUKTIV (angepasst) | längere unbestimmte Verarbeitung | noch nicht | Das Handoff nannte den Eintrag "uiverse-seite-verifiziert", lieferte aber keinen Code — nur die Notiz. Ohne Datei ist der Status nicht haltbar (Auftrag §0.10); test426 fand den Widerspruch. Nur für Vorgänge über einer Sekunde (§4.20). |
@@ -30,7 +30,7 @@ sagt, was daraus wird; „Gebaut" sagt, ob die produktive Fassung schon steht.
 | 16 | Folder-Card Mini File Browser | byllzz | `nicht-verifiziert` | PRODUKTIV (angepasst) | Bibliothek / Dokumente (grosser Datei-Browser) | noch nicht | Kein Demo-Dateisystem; echte Ablage (§4.2). |
 | 17 | Glass Radio / Segmented Control | chase2k25 | `nicht-verifiziert` | ERSETZT | src/schale/bedienung/segment.ts (E439) | E439 `segment.ts` | Der Umschalter ist in Redion-Bauart gebaut, mit Radiogruppen-Semantik und Tastatur; das Original war nicht verifiziert (§4.4). |
 | 18 | Geometric Triangle / Mask Loader | andrew-manzyk | `nicht-verifiziert` | RESERVE | — | noch nicht | Geometric Triangle Loader ausgeschieden (§5). |
-| 19 | 10-Segment Spinner | PriyanshuGupta28 | `uiverse-galaxy-verifiziert` | BEDINGT | KONFLIKT mit E46 — siehe doku/UI-KOMPONENTEN.md | noch nicht | Der Auftrag will ihn als einzigen Standardspinner; E46 hat Skelette statt Kreisel entschieden. Redur entscheidet. |
+| 19 | 10-Segment Spinner | PriyanshuGupta28 | `uiverse-galaxy-verifiziert` | BEDINGT | KONFLIKT mit E46 — siehe doku/UI-KOMPONENTEN.md | Reserve (E441) | Der Auftrag will ihn als einzigen Standardspinner (§4.19, §17); E46 hat Skelette statt Kreisel entschieden, und §0 des Auftrags lässt die aktuelle Architektur gewinnen. Redur entscheidet. Den kleinen Busy-Zustand am Knopf deckt der Zustandsknopf mit Text ab. |
 | 20 | Compact Menu Home/Files/Plans/Settings | mymiato / mymiamo | `nicht-verifiziert` | RESERVE | — | noch nicht | Home/Files/Plans/Settings-Menü ausgeschieden; Studio hat die groben Wege (§5). |
 | 21 | 3D Rotating / Fanned Card Carousel | ilkhoeri | `nicht-verifiziert` | PRODUKTIV (angepasst) | Vorlagen, Lernsets, Heft-Deckel | noch nicht | Kein Autoplay; Maus/Touch/Tastatur; reduced-motion (§4.27). |
 | 22 | 4-Circle Loader | AbanoubMagdy1 | `uiverse-galaxy-verifiziert` | RESERVE | — | noch nicht | 4-Circle Loader ausgeschieden (§5). |

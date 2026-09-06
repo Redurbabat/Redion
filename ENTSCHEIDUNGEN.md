@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-434 Entscheidungen, E1 bis E440. Die Nummer ist die Ordnung: eine Entscheidung
+436 Entscheidungen, E1 bis E456 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -498,6 +498,8 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E438** — Die dritte Richtung: nur nachsehen
 * **E439** — Der Umschalter, und die Karte davor
 * **E440** — Das Studio kommt auf den Zweig, und die UI-Reserve ist ein Archiv
+* **E441** — Eine Sprache für „läuft, fertig, Fehler", ein Knopf, der sie spricht, und die Weiter-Variante
+* **E456** — Eine Marke: das „N" links, der Kontokreis und das „R" im Willkommen weichen der Studio-Marke
 
 ---
 
@@ -35600,3 +35602,217 @@ unveränderten Studio-Zweig genauso. Das ist Redurs Baustelle — Test oder
 Weg —, sie steht hier, nicht im Commit.
 
 Bild angesehen (§55.3): `bilder/ui-reserve.png` und `ui-reserve-lader.png`.
+
+---
+
+E441 — Eine Sprache für „läuft, fertig, Fehler", ein Knopf, der sie spricht, und die Weiter-Variante
+--------------------------------------------------------------------------
+
+ENTSCHEIDUNG, in vier Teilen (Phase B des UI-Auftrags, die globalen
+Grundlagen): (1) `schale/bedienung/zustand.ts` legt die sechs
+Übertragungs- und Arbeitszustände einmal fest — Zeichen, Standardsatz,
+Pille. (2) `schale/bedienung/zustandsknopf.ts` ist der EINE Knopf, der
+eine Aktion auslöst, sich währenddessen sperrt und seinen Verlauf
+sichtbar und hörbar zeigt; die Sicht „laden" (Nr. 03, Auftrag §4.16) ist
+gebaut, „erzeugen" und „schaltung" sind als `data-art` vorgesehen.
+(3) Nr. 02 „Apply Now" wird KEIN Knopftyp, sondern die Klasse `weiter`
+im bestehenden Knopfsystem — ein Pfeil, der gleitet, ein Schimmer nur
+unter der Maus. (4) Nr. 19, der 10-Segment-Spinner, wird NICHT gebaut.
+
+BEFUND. Eine Sicherung mit Anhängen dauert Sekunden bis Minuten. In den
+Einstellungen zeigte in dieser Zeit nichts an, dass etwas läuft: ein
+gewöhnlicher Knopf „Speichern", irgendwann ein Toast. Der Start-Bildschirm
+hatte dafür eine eigene Lösung (E57, `.hs-kreisel`, `.laeuft`, `.fertig`);
+die Dateiablage speichert `'wartet' | 'laeuft' | 'fertig'`; die
+Auftragsmaschine, der Abgleich, die KI haben je eigene Wörter. Gemessen:
+kein gemeinsames Bauteil, kein `aria-busy` an einem Aktionsknopf im
+ganzen `src/` ausser dem Start-Bildschirm. Und „Öffnen", „Weiter",
+„Anwenden" waren Knöpfe wie jeder andere — nichts sagte, dass sie
+irgendwohin FÜHREN.
+
+WARUM SO.
+
+  · Die Werte der Zustände sind deutsch, weil drei davon in IndexedDB
+    liegen (`dateien.zustand`). Ein Feldname im Speicher ist Daten, kein
+    Name (§53.3); die anderen drei ('bereit', 'fehler', 'abgebrochen')
+    folgen derselben Sprache, damit es EINE ist.
+  · Jeder Zustand trägt Zeichen UND Text (§38). Die Pille ist
+    `role="status"`, der Knopftext ist `aria-live="polite"` — ein Vorleser
+    hört „Wird erstellt …" und später „Heruntergeladen", ohne den Knopf
+    noch einmal anzufassen.
+  · Der Knopf ist während der Arbeit NICHT `disabled`: er behält den
+    Fokus und bleibt lesbar (E57 hatte gemessen, dass `disabled` die
+    Erfolgsmeldung auf 40 % Deckkraft setzt). Die Sperre sitzt im
+    Klickgriff: `if (jetzt === 'arbeitet') return;`.
+  · Der Zustand kommt aus der Zusage der echten Arbeit. `fertig` heisst:
+    die Promise ist eingelöst. Ein ausdrückliches `false` zählt als
+    Fehlschlag, weil `App.sicherungSpeichern` seine Fehler selbst fängt
+    und so berichtet (E146). Kein Zeitgeber täuscht ein „fertig" vor; der
+    einzige Zeitgeber wechselt nach `fertigNach` von fertig auf bereit.
+  · Mit `oeffnen` ist der Standard für `fertigNach` 0: eine Aufforderung
+    „Öffnen", die nach 2,5 s verschwindet, ist keine. Nach dem Klick auf
+    „Öffnen" steht der Knopf wieder auf bereit.
+  · Die Sicherung endet bei „Heruntergeladen". Eine `.redion` oder
+    `.json` kann der Browser nicht zeigen; ein „Öffnen", das nichts
+    öffnet, wäre eine Behauptung. Die HTML-Einzeldatei dagegen bekommt den
+    Öffnen-Weg — `Werkzeuge.einzelDatei()` gibt dafür jetzt ihren Blob
+    zurück, und `window.open` auf die Blob-Adresse zeigt ihn wirklich
+    (test427 §5 fängt das Fenster).
+  · Der Balken der Sicht „laden" ist BESTIMMT nur, wenn `setzen(…, anteil)`
+    einen Anteil bekommt; sonst läuft er unbestimmt. Die Sicherung kennt
+    heute keinen Anteil nach aussen — also unbestimmt, kein erfundener
+    Prozentwert (Auftrag §0.8).
+  · Die Weiter-Variante ist EINE Regel mit vier Wirten (`.btn`,
+    `.ez-knopf`, `.rg-knoepfe button`, `.ea-fuss button`), weil „Weiter"
+    und „Öffnen" heute in drei Knopffamilien stehen, die nicht nebenbei
+    auf `.btn` umgestellt werden (§45: die Nachbarstelle ansehen). Der
+    Pfeil ist `::after` mit leerem Alternativtext (`content: "→" / ""`),
+    damit der Vorleser „Weiter" sagt und nicht „Weiter Pfeil". Eingesetzt
+    an: Rundgang „Weiter" (nicht „Fertig"), Elektro-Prüfung „Weiter"
+    (nicht „Abgeben"), vier „Öffnen" in den Verbindungen.
+  · Reduced motion: grund.css kürzt jede Dauer auf .001 ms — damit bliebe
+    ein SPRUNG um vier Pixel. Die Variante setzt deshalb `transform:none`
+    und `animation:none`; der Zustandsknopf nimmt dem Drehzeichen und dem
+    Balken den Animationsnamen. test427 misst den Namen, nicht die Dauer.
+
+NR. 19 BLEIBT RESERVE. Der Auftrag will den 10-Segment-Spinner als
+einzigen neutralen Standard (§4.19, §17). E46 hat für Redion „Skelette
+statt Kreisel" entschieden, und der Auftrag sagt in §0 selbst, dass die
+aktuelle Architektur gewinnt. Zwei Regeln, die sich widersprechen,
+entscheidet nicht ein Bau-Agent — sie entscheidet Redur. Bis dahin: kein
+Spinner, keine zweite Ladeanzeige, der Eintrag steht in
+doku/UI-KOMPONENTEN.md als BEDINGT mit dem Konflikt beim Namen. Was der
+Auftrag mit „kleiner Button-Busy-State" meint, deckt der Zustandsknopf
+ab — mit Text, nicht mit einem Kreisel.
+
+ALTERNATIVE. (a) Jede Stelle baut weiter ihren eigenen Knopf — das ist
+der Zustand vor E441, und er hat auf dem Start-Bildschirm schon einmal
+zwanzig Zeilen gekostet, die nirgends sonst wirken. (b) Den Knopf
+`disabled` sperren — nimmt ihm den Fokus und die Lesbarkeit (E57).
+(c) Nr. 02 als eigener Knopftyp `.apply-now` — ein zweiter Katalog für
+dasselbe (§8). (d) Den Start-Bildschirm gleich mit auf den Zustandsknopf
+ziehen — test114 hängt an `.hs-kreisel` und `hs-dreh`; das ist ein
+eigener Bogen, nicht ein Nebensatz dieses.
+
+KOSTEN. Zwei Skripte mehr in index.html und im GRUNDSTOCK (~14 KB).
+`einzelDatei()` gibt einen Blob zurück, den vier Aufrufer ignorieren. Der
+Sicherungsknopf misst 44 px in einer Zeile von 34-px-Knöpfen — sichtbar
+im Bild, und gewollt: er ist die Hauptaktion der Seite (§37). Der
+Start-Bildschirm behält vorerst seinen eigenen Sicherungsknopf (E57);
+seine Umstellung ist ein offener Punkt.
+
+GEGENPROBE (test427, PORT 9548, 55 Punkte).
+  (a) Sperre `if (jetzt === 'arbeitet') return;` entfernt →
+      „✗ Zwei weitere Klicks während der Arbeit zählen nicht — 3 Aufrufe",
+      „✗ Ein Klick im Fehler versucht es noch einmal"; 53 von 55.
+  (b) `aria-busy` fest auf 'false' →
+      „✗ … sagt aria-busy — false", „✗ Der Zustand ging durch arbeitet
+      (aria-busy, „Wird erstellt …") … — [arbeitet/false/…]"; 53 von 55.
+  (c) Reduced-Motion-Block der Weiter-Variante aus werkzeuge.css
+      entfernt → „✗ Ohne Bewegungswunsch: der Pfeil ist da, steht aber
+      still — transform: matrix(1, 0, 0, 1, 4, 0)", „✗ … und kein
+      Schimmer — btn-schimmer"; 53 von 55. Der erste Versuch war ein
+      Leerlauf: das Suchmuster traf den Block nicht, und 55 von 55 blieb
+      — genau der Fall, vor dem §55.2 warnt. Erst das Löschen nach
+      Zeilennummern (grep-Zähler 2 → 1) war eine Gegenprobe.
+  Zurückgedreht: 55 von 55.
+
+DATEIEN. src/schale/bedienung/zustand.ts (+ quell/…/zustand.js),
+src/schale/bedienung/zustandsknopf.ts (+ quell/…/zustandsknopf.js),
+quell/schale/stil/bausteine.css (`.ru-zustand`, `.ru-zk`, am Ende),
+quell/schale/stil/werkzeuge.css (`.weiter`-Variante nach `.btn.klein`),
+src/bereiche/einstellungen/ansicht/seite.ts (Platzhalter `data-zk`,
+Aufträge, `binde`), src/bereiche/wissen/werkzeuge.ts (`einzelDatei`
+gibt Blob zurück), src/bereiche/hilfe/rundgang.ts,
+src/bereiche/elektro/arbeitsplatz.ts (Klasse `weiter`), index.html,
+src/dienst/sw.ts (GRUNDSTOCK), pruefungen/lauf/test427.mts.
+
+---
+
+E456 — Eine Marke: das „N" links, der Kontokreis und das „R" im Willkommen weichen der Studio-Marke
+--------------------------------------------------------------------------
+
+ENTSCHEIDUNG. Redion zeigt genau EINE Marke: „R redion STUDIO" in der
+Studio-Leiste (E440). Drei weitere Zeichen, die wie Logos wirkten, sind
+weg: (1) das Zeichen des Arbeitsbereichs als Zierrat ganz links im
+Menüband (`.mb-marke`, E272); (2) dasselbe Zeichen im farbigen Kreis am
+Konto-Knopf rechts — der Knopf bleibt, trägt jetzt das Symbol
+„Arbeitsbereich", so wie Suche und KI ihre Symbole tragen, samt
+Statuspunkt (E251); (3) das „R" im Farbkasten über „Willkommen bei Redion"
+(`.wk-zeichen`). Dazu „Rot zuerst" (§46): drei Wächter, die seit dem
+Studio-Merge rot standen.
+
+BEFUND. Redur, 6. September, mit dem Bild der Studio-Marke: „nur das
+sollte hier bleiben, du kannst die anderen Logos weg machen." Gemessen am
+Rechner (1366×800): unter der Studio-Leiste stand links ein „N" (13,78),
+rechts ein „N" im violetten Kreis — und beim ersten Start ein „R" im
+Kasten mitten im Bild. Am Telefon, wo die Studio-Leiste nicht steht, waren
+die beiden „N" die einzigen Marken überhaupt. Das „N" ist der Buchstabe
+des Arbeitsbereichs (`arbeitsIcon`, Vorgabe „N") — E272 hatte ihn links
+als Schmuck gesetzt, „damit die Zeile nicht kahl beginnt", E236 rechts in
+den Kreis. Neben einer richtigen Marke sind das zwei falsche.
+
+WARUM SO. Das Zeichen des Arbeitsbereichs ist nicht abgeschafft: es steht
+in der Schublade (`#btn-settings .ws-icon`) und in den Einstellungen
+(`.einst-konto`), und `kopfzeileAuffrischen` hält beide aktuell (test37
+misst weiter, dass alle Stellen dasselbe zeigen — vor den Einstellungen
+ist es jetzt eine Stelle statt zwei). Der Konto-Knopf ist ein Hauptweg
+(§37) und behält Kennung, Titel, Statuspunkt und alle Prüfläufe (test37,
+40, 54, 114, 258, 384); nur sein Gesicht wechselt vom Buchstaben zum
+Symbol `workspace`. Der Kreis geht mit: ein Symbol im Akzentkreis wäre
+wieder ein Avatar. Das Willkommen verliert nur die Zierde; Titel, drei
+Wege und der Hinweis bleiben.
+
+ROT ZUERST. Beim Prüfen fielen drei Wächter auf, die seit E440 rot waren
+und die niemand gesehen hatte, weil der volle Lauf seit dem Merge nicht
+lief:
+
+  · test87 kannte `studio.css`, `bibliothek-studio.css` und
+    `pdf-studio.css` nicht und zählte sie als Bauteile (Stufe 2) HINTER
+    der Schale — „premium.css vor studio.css". Jetzt Stufe 4, und die
+    Folge innerhalb der Schale ist selbst ein Punkt: premium → studio →
+    Bereiche, weil studio.css premium.css mit gleicher Genauigkeit nur
+    über die Position übersteuert.
+  · test274 mass die Griffe aus `src/entwicklung/ui-reserve/reserve.ts`
+    gegen index.html; die Reserve hat ihre eigene Seite. `entsteht(id,
+    seite)` nimmt jetzt die Seite, die das Skript lädt, und eine
+    Gegenprobe belegt, dass `res-raster` NUR dort gilt.
+  · test40 erwartete die 54-px-Kontextkante; das Studio hat sie zur
+    148–260-px-Navigation gemacht (Standard 184, kompakt 62). Gemessen
+    wird jetzt gegen `#studio-divider` aria-valuenow, und der Inhalt
+    beginnt genau dahinter.
+
+Dazu `sw.js` und `stand` aus `npm run bauen:ts` für die zwei Bauteile aus
+E441 (test87, test105).
+
+ALTERNATIVE. (a) Nur das linke „N" entfernen und den Kreis lassen — am
+Telefon bliebe dann ein Avatar als einzige Marke, und Redur hat das Bild
+mit beiden „N" geschickt. (b) Die Studio-Marke auch am Telefon zeigen —
+dort ist die Studio-Leiste bewusst weg (Redurs Studio), und eine zweite
+Kopfzeile ist genau die offene Frage aus E440. (c) Das Zeichen des
+Arbeitsbereichs ganz streichen — es ist eine Einstellung, die Menschen
+gesetzt haben; die bleibt.
+
+KOSTEN. Wer den Arbeitsbereich am Zeichen erkannte, sieht es im Menüband
+nicht mehr, nur noch in Schublade und Einstellungen. Drei Prüfläufe haben
+neue Erwartungen.
+
+GEGENPROBE. test384: Konto wieder mit Buchstaben (`z.className =
+'ws-icon'`) → „✗ das Konto trägt ein Symbol, keinen Buchstaben" dreimal
+(ruhig zu, ruhig offen, alte Fassung), 40 von 43; zurück 43 von 43.
+test87: studio.css vor premium.css getauscht → „✗ premium.css, dann
+studio.css, dann die Studio-Bereiche — studio.css, premium.css, …";
+zurück grün. test274 (b2): eine leere Reserve-Seite liesse jeden
+Reserve-Griff durch — der Punkt hält die Länge der Seite und die
+Gegenrichtung (`!entsteht('res-raster')` in der Schale). test40: vorher
+23 von 25 (184 px gegen 54), jetzt 25 von 25.
+
+Bilder angesehen (§55.3): Rechner und Telefon vorher und nachher (das „N"
+links weg, rechts das Symbol), das Willkommen ohne Kasten am Rechner und
+am Telefon — nichts verschoben, nichts abgeschnitten.
+
+DATEIEN. src/schale/aufbau/menueband.ts, src/schale/aufbau/schale.ts
+(Kommentar), src/bereiche/hilfe/rundgang.ts, quell/schale/stil/aufbau.css,
+premium.css, studio.css, bausteine.css (`.wk-zeichen`),
+pruefungen/lauf/test384.mts, test37.mts, test87.mts, test274.mts,
+test40.mts, sw.js, src/dienst/sw.ts, src/kern/einstellung/stand.ts.
