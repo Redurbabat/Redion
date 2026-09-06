@@ -108,4 +108,24 @@ direkt in der Kante; nicht auf einem echten Gerät geprüft.
 
 ## Gesamtsuite
 
-_(wird nach dem vollen Lauf am 6. September ergänzt)_
+Voller Lauf am 6. September 2026, drei Läufe parallel, in Stücken (§30):
+
+| | Läufe |
+|---|---|
+| gesamt | 370 |
+| grün im ersten Durchgang | 354 |
+| rot, weil die Prüfung die alte Leiste, den alten Regalkopf oder das sichtbare Band voraussetzte — umgeschrieben, jetzt grün | 204, 214, 245, 258, 306, 359, 369, 384, 392 |
+| davon ein echter Fehler im Produkt (Glocke fehlte im Studio-Kopf, gebaut) | 258 |
+| Lastfehler, allein grün | 341 |
+| rot schon vor diesem Bogen, unverändert rot | 180, 210, 217, 225, 332 |
+
+Die neun umgeschriebenen Läufe sind nicht abgeschwächt: jeder prüft
+weiterhin, dass das Ziel erreichbar ist — nur über den Weg, den es jetzt
+gibt (Studio-Kopf, Ortslade, Werkzeuglade). Die Begründung steht als
+Kommentar in jeder Datei. Die fünf alten roten Läufe sind in LUECKEN.md
+L117 Punkt 7 festgehalten, mit Ursache.
+
+Serverläufe (`node pruefungen/alle.mts server`): 9 von 9 grün.
+
+Ausserdem grün: `npm run typecheck`, `npm run bauen:ts` (Dienststand v438),
+`node bauen.mts` (8588 KB), und die Wächter test87, 105, 109, 362, 402.

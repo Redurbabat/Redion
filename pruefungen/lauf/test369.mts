@@ -324,7 +324,9 @@ await seite.evaluate((id: string) => { Store.setMeta('bibForm', 'liste'); Biblio
 await seite.waitForTimeout(700);
 const listeVorher = await seite.evaluate(() => ({
   istListe: !!document.querySelector('.bib-tab'),
-  titel: (document.querySelector('.bib-titel')?.textContent || '').trim(),
+  /* `.bib-dkopf h1` statt `.bib-titel`: seit E457 trägt die Liste denselben
+     Kopf wie die Deckel, und der nennt den Ordner. */
+  titel: (document.querySelector('.bib-dkopf h1')?.textContent || '').trim(),
   krume: [...document.querySelectorAll('.bib-krume button, .bib-krume b')]
     .map(x => (x.textContent || '').trim()).filter(t => t && t !== '‹'),
   zeilen: [...document.querySelectorAll('.bib-zeile[data-id]')]
@@ -344,7 +346,9 @@ await seite.evaluate((id: string) =>
 await seite.waitForTimeout(700);
 const listeNachher = await seite.evaluate(() => ({
   istListe: !!document.querySelector('.bib-tab'),
-  titel: (document.querySelector('.bib-titel')?.textContent || '').trim(),
+  /* `.bib-dkopf h1` statt `.bib-titel`: seit E457 trägt die Liste denselben
+     Kopf wie die Deckel, und der nennt den Ordner. */
+  titel: (document.querySelector('.bib-dkopf h1')?.textContent || '').trim(),
   ordner: (typeof Store !== 'undefined' && Store.getMeta) ? Store.getMeta('bibOrdner', '') : '',
   krume: [...document.querySelectorAll('.bib-krume button, .bib-krume b')]
     .map(x => (x.textContent || '').trim()).filter(t => t && t !== '‹'),

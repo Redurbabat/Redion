@@ -6451,5 +6451,5 @@ button.ru-zk[data-art="laden"][data-zustand="arbeitet"] .ru-zk-balken{ display:b
 .ru-baum-kinder[hidden]{display:none}
 .ru-baum-auf{animation:ru-baum-oeffnen var(--motion-normal) var(--ease-enter)}
 @keyframes ru-baum-oeffnen{from{opacity:.3;transform:translateY(-4px)}to{opacity:1;transform:none}}
-@media(max-width:760px){.ru-baum-zeile{min-height:44px}}
+@media(max-width:760px){.ru-baum-zeile{min-height:var(--touch-min)}}
 @media(prefers-reduced-motion:reduce){.ru-baum *{scroll-behavior:auto!important}.ru-baum-auf{animation:none}}

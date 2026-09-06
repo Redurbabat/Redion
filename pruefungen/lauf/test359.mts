@@ -115,8 +115,12 @@ const zahlenSatz = async (form: 'regal' | 'liste'): Promise<string> => {
   await seite.waitForTimeout(300);
   await reiterSetzen('kuerzlich');
   await seite.waitForTimeout(400);
+  /* SEIT DEM 6. SEPTEMBER (E457) tragen Regal und Liste denselben Kopf wie
+     die Deckel: die Zahl steht am Ort-Knopf („Kürzlich verwendet · 60 von
+     313 Dokumenten"), die eigene Zeile `.bib-zahlen` gibt es nicht mehr. */
   return seite.evaluate(() =>
-    (document.querySelector('.bib-zahlen')?.textContent || '').replace(/\s+/g, ' ').trim());
+    (document.querySelector('.bib-dkopf .bib-ort')?.textContent || '').replace(/\s+/g, ' ')
+      .replace(/▾/g, '').trim());
 };
 
 /* ========================================================================== */
@@ -150,11 +154,11 @@ console.log('\n3 · Regal und Liste tragen denselben Satz');
 await anlegen(300, 'Skript');
 const regalSatz = await zahlenSatz('regal');
 const listeSatz = await zahlenSatz('liste');
-p('Im Regal steht „60 von N Seiten auf diesem Gerät"',
-  /60 von \d+ Seiten auf diesem Gerät/.test(regalSatz), regalSatz);
-p('In der Liste ebenso', /60 von \d+ Seiten auf diesem Gerät/.test(listeSatz), listeSatz);
-p('„auf diesem Gerät" steht nicht mehr über einer Zahl, die das Gerät nicht kennt',
-  !/·\s*60 Seiten auf diesem Gerät/.test(regalSatz), regalSatz);
+p('Im Regal steht „60 von N Dokumenten"',
+  /60 von \d+ Dokumenten/.test(regalSatz), regalSatz);
+p('In der Liste ebenso', /60 von \d+ Dokumenten/.test(listeSatz), listeSatz);
+p('Die nackte Sechzig steht nirgends als Zahl, die das Gerät nicht kennt',
+  !/·\s*60 Dokumente\b/.test(regalSatz), regalSatz);
 
 /* ========================================================================== */
 console.log('\n4 · Gesucht wird über alle kürzlich verwendeten');
@@ -176,7 +180,7 @@ const suchTreffer = await seite.evaluate(async () => {
   await new Promise(f => setTimeout(f, 500));
   return { feldDa: true,
            treffer: document.querySelectorAll('.bib-zeile:not(.bib-kopfzeile)').length,
-           satz: (document.querySelector('.bib-zahlen')?.textContent || '')
+           satz: (document.querySelector('.bib-dkopf .bib-ort')?.textContent || '')
              .replace(/\s+/g, ' ').trim() };
 });
 p('Es gibt ein Suchfeld', suchTreffer.feldDa);

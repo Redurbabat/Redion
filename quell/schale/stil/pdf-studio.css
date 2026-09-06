@@ -12,7 +12,7 @@
    900 px, über der 15-%-Marke aus test385. Jetzt 45 + 59 + 12 = 116. */
 .document-commandbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;min-height:52px;padding:3px 16px;border-bottom:1px solid var(--line);background:var(--bg-side)}
 @media(min-width:761px){.document-studio .document-center{padding-top:12px}}
-.document-commandbar button{min-height:44px;padding:6px 12px;border-radius:var(--radius-md);font-size:12px;white-space:nowrap}
+.document-commandbar button{min-height:var(--touch-min);padding:6px 12px;border-radius:var(--radius-md);font-size:12px;white-space:nowrap}
 .document-commandbar button:hover{background:var(--bg-hover)}
 .document-mode-switch{display:flex;padding:3px;border-radius:var(--radius-lg);background:var(--bg-input);border:1px solid var(--line)}
 .document-mode-switch button[aria-pressed="true"]{background:var(--bg-card);color:var(--accent-text);box-shadow:var(--studio-highlight),0 1px 4px #00000015;font-weight:600}
@@ -36,7 +36,7 @@
 .document-studio .document-thumbnail.is-selected{border-color:var(--accent);background:var(--accent-schwach)}
 .document-studio .document-panel-header{padding:8px 4px;font-size:12px}
 .document-studio .document-inspector{padding:16px;background:var(--bg-side)}
-.document-studio .document-inspector button{border-radius:var(--radius-lg);font-size:12px;min-height:44px}
+.document-studio .document-inspector button{border-radius:var(--radius-lg);font-size:12px;min-height:var(--touch-min)}
 .document-studio .document-section-title{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin:24px 0 10px}
 .document-studio .blatt-werk{border:1px solid var(--studio-line);border-radius:var(--radius-xl);background:var(--studio-glass);box-shadow:var(--studio-highlight),0 5px 15px #00000010;margin:0 auto 14px;padding:6px;max-width:100%}
 .document-studio[data-document-tools="closed"] .blatt-reihe{display:none}
@@ -47,7 +47,7 @@
   .document-studio .document-topbar{display:flex;flex-wrap:nowrap;gap:2px;padding:4px;min-height:52px}
   .document-navigation,.document-top-actions{gap:0;flex:none}
   .document-studio .document-title{order:0;flex:1 1 auto;min-width:0;text-align:left;padding:3px 6px;font-size:12px}
-  .document-studio .document-topbar button{width:44px;min-width:44px;min-height:44px;padding:0}
+  .document-studio .document-topbar button{width:var(--touch-min);min-width:var(--touch-min);min-height:var(--touch-min);padding:0}
   .document-studio .document-topbar button::after{content:none}
   .document-studio .document-topbar [data-document-action="thumbnails"],
   .document-studio .document-topbar [data-document-action="inspector"],
@@ -60,10 +60,10 @@
   .document-studio[data-document-view="open"] .document-commandbar{display:flex}
   .document-studio[data-document-view="open"] .document-commandbar{animation:studio-arrive var(--motion-normal) var(--ease-enter)}
   .document-mode-switch{flex:1;justify-content:center}.document-pagination{margin-left:auto}
-  .document-commandbar button{min-height:44px;padding-inline:10px}
+  .document-commandbar button{min-height:var(--touch-min);padding-inline:10px}
   .document-zoom-group{width:100%;justify-content:center;border-top:1px solid var(--line-soft);padding-top:3px}
-  .document-zoom-group input{flex:1;max-width:150px;min-width:0}.document-zoom-group button{min-height:44px}
-  .document-zoom-label{display:inline;min-width:44px}
+  .document-zoom-group input{flex:1;max-width:150px;min-width:0}.document-zoom-group button{min-height:var(--touch-min)}
+  .document-zoom-label{display:inline;min-width:var(--touch-min)}
   .document-studio .document-inspector,.document-studio .document-thumbnails{border-radius:var(--radius-xl);box-shadow:var(--studio-elevation);max-height:calc(100% - 16px)}
   .document-studio .blatt-werk{border-radius:var(--radius-lg);margin-bottom:8px}
 }

@@ -6137,7 +6137,7 @@ body[data-ruhig="an"] .arbeitswelt .aw-kopf::after{ display:none }
 
 /* Fenster gehören zu den Seiten, nicht in eine zusätzliche Navigationsspalte. */
 .arbeitswelt .aw-fenster{border-bottom:1px solid var(--line);padding-bottom:var(--space-3,12px)}
-.arbeitswelt .aw-fenster>summary{min-height:44px;display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600}
+.arbeitswelt .aw-fenster>summary{min-height:var(--touch-min);display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600}
 .arbeitswelt .aw-fenster>summary::before{content:'›';transition:transform var(--motion-fast,120ms)}
 .arbeitswelt .aw-fenster[open]>summary::before{transform:rotate(90deg)}
 .arbeitswelt .aw-fenster>summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
@@ -14455,7 +14455,7 @@ button.ru-zk[data-art="laden"][data-zustand="arbeitet"] .ru-zk-balken{ display:b
 .ru-baum-kinder[hidden]{display:none}
 .ru-baum-auf{animation:ru-baum-oeffnen var(--motion-normal) var(--ease-enter)}
 @keyframes ru-baum-oeffnen{from{opacity:.3;transform:translateY(-4px)}to{opacity:1;transform:none}}
-@media(max-width:760px){.ru-baum-zeile{min-height:44px}}
+@media(max-width:760px){.ru-baum-zeile{min-height:var(--touch-min)}}
 @media(prefers-reduced-motion:reduce){.ru-baum *{scroll-behavior:auto!important}.ru-baum-auf{animation:none}}
 
 </style>
@@ -15290,7 +15290,7 @@ button.ru-zk[data-art="laden"][data-zustand="arbeitet"] .ru-zk-balken{ display:b
 .studio-brand:hover .studio-monogram{transform:perspective(var(--studio-perspective)) rotateY(10deg) rotateZ(0)}
 .studio-icon,.studio-action,.studio-search,.studio-shortcuts button{
   display:inline-flex;align-items:center;justify-content:center;gap:8px;
-  min-height:44px;padding:0 12px;border-radius:var(--radius-lg);font-size:13px;
+  min-height:var(--touch-min);padding:0 12px;border-radius:var(--radius-lg);font-size:13px;
   border:1px solid transparent;transition:transform var(--motion-instant) var(--ease),
   background var(--motion-fast) var(--ease),border-color var(--motion-fast) var(--ease);
 }
@@ -15362,7 +15362,7 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
      offene Lade das aufgeklappte Band zu (test272 §13, gemessen 6. Sept.). */
   body[data-schale="premium"] #main > #kanten-lade{grid-row:3/-1}
   body[data-schale="premium"] #main > #reiterleiste{grid-row:3}
-  body[data-schale="premium"] #main > #topbar{grid-row:4;background:var(--bg);min-height:44px;border-bottom-color:var(--line-soft)}
+  body[data-schale="premium"] #main > #topbar{grid-row:4;background:var(--bg);min-height:var(--touch-min);border-bottom-color:var(--line-soft)}
   body[data-schale="premium"] #main > #scroll{grid-row:5;background:var(--bg)}
   body[data-schale="premium"] .k-knopf{width:100%;display:flex;justify-content:flex-start;
     gap:11px;padding:0 10px;border-radius:var(--radius-lg);color:var(--text-dim);font-size:12px;
@@ -15415,7 +15415,7 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
 .lw-desk-copy{min-width:0}.lernwelt .lw-eyebrow{font-size:10px;letter-spacing:1.8px;font-weight:650;color:var(--accent-text);margin:0 0 16px}
 .lernwelt .lw-desk h2{font-size:clamp(28px,3.1vw,44px);line-height:1.12;letter-spacing:-1.7px;margin:0 0 18px;font-weight:650}
 .lw-desk-copy>p:not(.lw-eyebrow){color:var(--text-dim);font-size:14px;line-height:1.7;max-width:350px;margin-bottom:24px}
-.lernwelt .lw-desk .lw-actions{gap:10px}.lernwelt .lw-desk .lw-actions button{min-height:44px;border-radius:var(--radius-lg)}
+.lernwelt .lw-desk .lw-actions{gap:10px}.lernwelt .lw-desk .lw-actions button{min-height:var(--touch-min);border-radius:var(--radius-lg)}
 .lw-desk-link{margin-top:18px;font-size:12px;color:var(--text-dim);padding:6px 0}
 .lw-desk-link:hover{color:var(--accent-text)}
 .lw-paper-stack{position:relative;display:block;padding:18px;width:min(100%,290px);justify-self:center;perspective:var(--studio-perspective);background:transparent;border:0;text-align:left;isolation:isolate}
@@ -15496,12 +15496,12 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
 /* 44, nicht 40: „Neu" und „PDF importieren" sind die zwei Hauptwege des
    Regals (§37 hart). Die 40 gewann am Telefon gegen `.bib-dkopf button`,
    weil `.bib-dkopf .bib-neu` spezifischer ist — test114 mass 80 × 40. */
-.bib-dkopf .bib-neu,.bib-studio-import{min-height:44px;padding:0 16px;border-radius:var(--radius-lg);font-weight:600}
+.bib-dkopf .bib-neu,.bib-studio-import{min-height:var(--touch-min);padding:0 16px;border-radius:var(--radius-lg);font-weight:600}
 .bib-studio-import{background:var(--haupt-flaeche);color:var(--auf-accent);box-shadow:var(--haupt-schein)}
 .bib-dkopf .bib-neu{background:var(--bg-hover);color:var(--text);border:1px solid var(--line)}
 .bib-studio-navigation{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:0 0 20px;border-bottom:1px solid var(--line);padding-bottom:16px}
 .bib-studio-optionen{position:relative;font-size:13px;color:var(--text-dim)}
-.bib-studio-optionen>summary{cursor:pointer;min-height:44px;display:flex;align-items:center;gap:8px;padding-inline:10px;border-radius:var(--radius-lg);list-style:none}
+.bib-studio-optionen>summary{cursor:pointer;min-height:var(--touch-min);display:flex;align-items:center;gap:8px;padding-inline:10px;border-radius:var(--radius-lg);list-style:none}
 .bib-studio-optionen>summary::after{content:'⌄';font-size:14px}
 .bib-studio-optionen>summary:hover{background:var(--bg-hover);color:var(--text)}
 .bib-studio-optionen[open]>summary{background:var(--accent-schwach);color:var(--accent-text)}
@@ -15509,22 +15509,22 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
 .bib-studio-optionen>summary::-webkit-details-marker{display:none}
 .bib :is(summary,select):focus-visible{outline:2px solid var(--accent-text);outline-offset:3px}
 .bib-studio-wege{display:flex;gap:4px;flex-wrap:wrap}
-.bib-studio-wege button{min-height:44px;padding:8px 12px;border-radius:var(--radius-lg);color:var(--text-dim);font-size:13px}
-.bib-studio-sammlungen{max-width:100%;min-height:44px;padding:8px 10px;border:1px solid var(--line);border-radius:var(--radius-lg);background:var(--bg-card);color:var(--text);font:inherit;font-size:13px}
+.bib-studio-wege button{min-height:var(--touch-min);padding:8px 12px;border-radius:var(--radius-lg);color:var(--text-dim);font-size:13px}
+.bib-studio-sammlungen{max-width:100%;min-height:var(--touch-min);padding:8px 10px;border:1px solid var(--line);border-radius:var(--radius-lg);background:var(--bg-card);color:var(--text);font:inherit;font-size:13px}
 .bib-studio-wege button.on{background:var(--accent-schwach);color:var(--accent-text);font-weight:600}
 .bib-studio-wege button:hover{background:var(--bg-hover)}
 .bib-studio-wege button,.bib-arten button{transition:background var(--motion-fast) var(--ease),transform var(--motion-instant) var(--ease)}
 .bib-studio-wege button:active,.bib-arten button:active{transform:scale(var(--press-scale))}
 .bib-studio-suche{display:flex;align-items:center;gap:8px;margin-left:auto;min-width:160px;flex:0 1 260px;background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius-lg);padding:0 12px}
 .bib-studio-suche svg{width:16px;height:16px;color:var(--text-dim)}
-.bib-studio-suche input{width:100%;min-width:0;min-height:44px;background:transparent;border:0;outline:0;color:var(--text);font:inherit;font-size:13px}
+.bib-studio-suche input{width:100%;min-width:0;min-height:var(--touch-min);background:transparent;border:0;outline:0;color:var(--text);font:inherit;font-size:13px}
 .bib-studio-suche:focus-within{outline:2px solid var(--accent-text);outline-offset:2px}
 .bib-studio-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 .bib-studio-weiter{display:flex;align-items:center;gap:22px;padding:22px 26px;margin-bottom:24px;background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius-xl);overflow:hidden}
 .bib-studio-weiter>div{min-width:0;flex:1}.bib-studio-weiter h2{font-size:18px;line-height:1.4;margin:6px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bib-studio-eyebrow{font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--accent-text)}
 .bib-studio-weiter p{font-size:12px;color:var(--text-dim);margin:0}
-.bib-studio-weiter button{display:flex;gap:14px;align-items:center;flex-shrink:0;min-height:44px;padding:10px 16px;background:var(--accent-schwach);color:var(--accent-text);border-radius:var(--radius-lg);font-weight:600}
+.bib-studio-weiter button{display:flex;gap:14px;align-items:center;flex-shrink:0;min-height:var(--touch-min);padding:10px 16px;background:var(--accent-schwach);color:var(--accent-text);border-radius:var(--radius-lg);font-weight:600}
 .bib-studio-miniatur{display:grid;place-items:center;flex:0 0 62px;height:82px;border-radius:4px;background:#fff;color:#6556ae;box-shadow:var(--studio-paper-shadow);transform:perspective(var(--studio-perspective)) rotateY(-12deg) rotate(-6deg);overflow:hidden}
 .bib-studio-miniatur img{width:100%;height:100%;object-fit:cover}
 .bib-arten{gap:6px;margin-bottom:24px}.bib-arten button{border-radius:var(--radius-pill);padding:6px 12px;font-size:12px}
@@ -15559,11 +15559,11 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
   .bib-studio-import{order:3;flex:1 0 100%;white-space:nowrap}.bib-dkopf .bib-ort{order:4}
   .bib-studio-suche{flex-basis:100%;margin:0;max-width:none}
   .bib-studio-wege{display:flex;flex-wrap:nowrap;overflow-x:auto;width:100%}
-  .bib-studio-wege button{white-space:nowrap;min-height:44px;padding-inline:10px}
+  .bib-studio-wege button{white-space:nowrap;min-height:var(--touch-min);padding-inline:10px}
   .bib-studio-navigation{gap:10px}.bib-studio-weiter{gap:14px;padding:18px;flex-wrap:wrap}
   .bib-studio-weiter button{width:100%;justify-content:space-between}.bib-studio-weiter h2{font-size:16px}
   .bib-gitter{grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 18px}
-  .bib-dkopf button,.bib-arten button,.bib-deckel-mehr{min-height:44px}
+  .bib-dkopf button,.bib-arten button,.bib-deckel-mehr{min-height:var(--touch-min)}
   .bib-pflege-details>summary>span{float:none;display:block;margin:4px 0 0}
 }
 @media(prefers-reduced-motion:reduce){.bib-studio-miniatur{transform:none}.bib-deckel:is(:active,:focus-visible) .bib-deckel-blatt,.bib-studio-wege button:active,.bib-arten button:active{transform:none}.bib-deckel-blatt,.bib-deckel .bib-papier{transition:none}}
@@ -15573,7 +15573,7 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
 .bib-ablage-layout:has(.bib-ablage-baum[open]){grid-template-columns:minmax(210px,230px) minmax(0,1fr);gap:24px}
 .bib-ablage-baum{min-width:0;max-height:calc(100vh - 120px);overflow:auto;padding:0;background:transparent;border:0;border-radius:var(--radius-lg)}
 .bib-ablage-baum[open]{position:sticky;top:88px;padding:0 12px 12px 0;border-right:1px solid var(--line);border-radius:0}
-.bib-ablage-baum-kopf{min-height:44px;cursor:pointer;padding:12px 8px;font-size:12px;font-weight:600;color:var(--text-dim)}
+.bib-ablage-baum-kopf{min-height:var(--touch-min);cursor:pointer;padding:12px 8px;font-size:12px;font-weight:600;color:var(--text-dim)}
 .bib-ablage-baum-kopf strong{font-size:13px}
 .bib-ablage-baum-kopf span{font-size:11px;color:var(--text-dim)}
 .bib-ablage-baum .ru-baum{padding:2px 0 4px}
@@ -15606,7 +15606,7 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
    900 px, über der 15-%-Marke aus test385. Jetzt 45 + 59 + 12 = 116. */
 .document-commandbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;min-height:52px;padding:3px 16px;border-bottom:1px solid var(--line);background:var(--bg-side)}
 @media(min-width:761px){.document-studio .document-center{padding-top:12px}}
-.document-commandbar button{min-height:44px;padding:6px 12px;border-radius:var(--radius-md);font-size:12px;white-space:nowrap}
+.document-commandbar button{min-height:var(--touch-min);padding:6px 12px;border-radius:var(--radius-md);font-size:12px;white-space:nowrap}
 .document-commandbar button:hover{background:var(--bg-hover)}
 .document-mode-switch{display:flex;padding:3px;border-radius:var(--radius-lg);background:var(--bg-input);border:1px solid var(--line)}
 .document-mode-switch button[aria-pressed="true"]{background:var(--bg-card);color:var(--accent-text);box-shadow:var(--studio-highlight),0 1px 4px #00000015;font-weight:600}
@@ -15630,7 +15630,7 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
 .document-studio .document-thumbnail.is-selected{border-color:var(--accent);background:var(--accent-schwach)}
 .document-studio .document-panel-header{padding:8px 4px;font-size:12px}
 .document-studio .document-inspector{padding:16px;background:var(--bg-side)}
-.document-studio .document-inspector button{border-radius:var(--radius-lg);font-size:12px;min-height:44px}
+.document-studio .document-inspector button{border-radius:var(--radius-lg);font-size:12px;min-height:var(--touch-min)}
 .document-studio .document-section-title{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin:24px 0 10px}
 .document-studio .blatt-werk{border:1px solid var(--studio-line);border-radius:var(--radius-xl);background:var(--studio-glass);box-shadow:var(--studio-highlight),0 5px 15px #00000010;margin:0 auto 14px;padding:6px;max-width:100%}
 .document-studio[data-document-tools="closed"] .blatt-reihe{display:none}
@@ -15641,7 +15641,7 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
   .document-studio .document-topbar{display:flex;flex-wrap:nowrap;gap:2px;padding:4px;min-height:52px}
   .document-navigation,.document-top-actions{gap:0;flex:none}
   .document-studio .document-title{order:0;flex:1 1 auto;min-width:0;text-align:left;padding:3px 6px;font-size:12px}
-  .document-studio .document-topbar button{width:44px;min-width:44px;min-height:44px;padding:0}
+  .document-studio .document-topbar button{width:var(--touch-min);min-width:var(--touch-min);min-height:var(--touch-min);padding:0}
   .document-studio .document-topbar button::after{content:none}
   .document-studio .document-topbar [data-document-action="thumbnails"],
   .document-studio .document-topbar [data-document-action="inspector"],
@@ -15654,10 +15654,10 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
   .document-studio[data-document-view="open"] .document-commandbar{display:flex}
   .document-studio[data-document-view="open"] .document-commandbar{animation:studio-arrive var(--motion-normal) var(--ease-enter)}
   .document-mode-switch{flex:1;justify-content:center}.document-pagination{margin-left:auto}
-  .document-commandbar button{min-height:44px;padding-inline:10px}
+  .document-commandbar button{min-height:var(--touch-min);padding-inline:10px}
   .document-zoom-group{width:100%;justify-content:center;border-top:1px solid var(--line-soft);padding-top:3px}
-  .document-zoom-group input{flex:1;max-width:150px;min-width:0}.document-zoom-group button{min-height:44px}
-  .document-zoom-label{display:inline;min-width:44px}
+  .document-zoom-group input{flex:1;max-width:150px;min-width:0}.document-zoom-group button{min-height:var(--touch-min)}
+  .document-zoom-label{display:inline;min-width:var(--touch-min)}
   .document-studio .document-inspector,.document-studio .document-thumbnails{border-radius:var(--radius-xl);box-shadow:var(--studio-elevation);max-height:calc(100% - 16px)}
   .document-studio .blatt-werk{border-radius:var(--radius-lg);margin-bottom:8px}
 }
@@ -17658,7 +17658,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 437, inhalt: '5c4548b33f5ade89', gebaut: '2026-09-06T16:23:35.949Z' };
+const Stand = { fassung: 438, inhalt: '098a1f3fac2cf729', gebaut: '2026-09-06T16:42:01.272Z' };
 window.Stand = Stand;
 
 </script>

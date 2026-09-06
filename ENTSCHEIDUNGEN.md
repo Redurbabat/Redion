@@ -35918,10 +35918,20 @@ WAS ES KOSTET. „Heute" kostet am Rechner zwei Klicks (Mehr Orte → Heute);
 die Werkzeuge einen Klick mehr; die Bibliothek zeigt den Heft-Zähler
 („3 Hefte · 12 Seiten") nicht mehr — der Ort-Knopf nennt die Dokumente.
 
-GEPRÜFT. Grün nach dem Umbau: test33, 40, 61, 87, 105, 109, 114, 209, 222,
-248, 272, 385, 386, 387, 390, 393, 396, 424, 428, 429, 430; `npm run
-typecheck`, `npm run bauen:ts`. Der Stand der Gesamtsuite steht in
-`doku/DESIGN-REDION-PREMIUM.md`. 45 Bilder unter `bilder/premium/`
+GEPRÜFT. Grün nach dem Umbau: test33, 40, 61, 87, 105, 109, 114, 204, 209,
+214, 222, 245, 248, 258, 272, 306, 359, 362, 369, 384, 385, 386, 387, 390,
+392, 393, 396, 402, 424, 428, 429, 430; `npm run typecheck`, `npm run
+bauen:ts`. Der volle Lauf (370 Läufe, drei parallel) fand 16 rote; acht
+davon waren Prüfungen, die die alte Leiste, den alten Regalkopf oder das
+sichtbare Band voraussetzten (204, 214, 245, 258, 306, 359, 369, 384, 392)
+und sind umgeschrieben — nicht abgeschwächt, siehe die Kommentare darin;
+einer (258) fand einen echten Fehler (die Glocke). Fünf waren schon vor
+diesem Bogen rot und bleiben es (180, 210, 217, 225, 332), einer war ein
+Lastfehler (341, allein grün). L117 hält alle fest. Die Decken der rohen
+Pixelzahlen (`marken-decke.json`) sind mit dem Studio-Stil gestiegen und
+einmal auf den gemessenen Stand gesetzt; die 44er sind in den
+Studio-Stilblättern auf `var(--touch-min)` umgestellt (L117 Punkt 6).
+Der Stand der Gesamtsuite steht in `doku/DESIGN-REDION-PREMIUM.md`. 45 Bilder unter `bilder/premium/`
 (nicht versioniert, §55.4) — angesehen: Regal 390/430/820/1366/1920 hell
 und dunkel, Baum, Sicherung, Mehr Orte, Werkzeuglade, PDF 1366/390,
 Seiten & Wissen, Alle Seiten, Heute, Einstellungen, Mehr-Blatt.

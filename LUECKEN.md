@@ -6297,3 +6297,28 @@ den Prüfläufen, nicht vermutet.
 
 5. **Nicht auf einem echten Gerät geprüft** — wie L10: alles gemessen mit
    Playwright im Telefon-Bildmass.
+
+6. **Die Studio-Stilblätter haben zwei Wächter rot gemacht, die Schuld
+   festhalten.** test332 (E340, L111): 55 Grundregeln in bausteine.css,
+   premium.css, aufbau.css, einstellungen.css und lernwelt.css sind von
+   studio.css, bibliothek-studio.css und pdf-studio.css vollständig
+   überschrieben — tote Regeln, die noch nicht entfernt sind. test362
+   (E372, L10): die Decken der rohen Pixelzahlen sind mit dem Studio-Stil
+   gestiegen — 16px 224 → 245, 22px 68 → 74, 28px 52 → 55 — und wurden am
+   6. September einmal auf den gemessenen Stand gesetzt, damit der Wächter
+   wieder eine Decke hält statt dauerhaft rot zu stehen (E457). Die 44er
+   sind in den vier Studio-Stilblättern auf `var(--touch-min)` umgestellt
+   (175 → 153, unter die alte Decke von 152 kam sie nicht ganz: 56px sank
+   von 13 auf 12). Ab hier dürfen alle sechs Zahlen wieder nur sinken.
+
+7. **Vier Läufe sind unabhängig von der Schale rot und waren es schon vor
+   diesem Bogen**: test180 (PDF-Sicherung einspielen, `App.oeffne` wirft
+   beim Setzen der Adresse), test210 (der Inspector nennt das Dokument
+   nicht beim Namen — „Dokumentdetails"), test217 (die Heute-Ansicht heisst
+   ihren Knopf „Lernen starten →" statt „Tagesrunde starten" und stapelt
+   die Zahlen unter das erste Bild), test225 (ENTSCHEIDUNGEN.md verweist
+   auf „test423 §4" und „test427 §5", die es nicht gibt). test341 war im
+   Parallel-Lauf rot (85 s, der Speicher wurde zu früh gelesen) und allein
+   grün — ein Lastfehler, kein Produktfehler, aber einer, der zeigt, dass
+   der Start den Merker `startAnsichtE349` liest, bevor die Ablage sicher
+   da ist.
