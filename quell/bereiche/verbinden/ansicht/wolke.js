@@ -127,8 +127,17 @@ const WolkeFenster = (() => {
                         UI.toast('Der Abgleich ist für dieses Gerät ausgeschaltet — erst einschalten.');
                         return;
                     }
+                    /* DER ABGLEICH KENNT KEINEN ANTEIL (nur `zustand.laeuft`), also
+                       bekommt er das Bild, das keinen zeigt: die Buchstaben gehen
+                       der Reihe nach an (E461). Ein Balken hier wäre erfunden. */
                     a.disabled = true;
-                    a.textContent = 'Läuft …';
+                    if (typeof Lader !== 'undefined') {
+                        a.textContent = '';
+                        a.append(Lader.bauen({ art: 'wort', wort: 'Abgleich',
+                            text: 'Abgleich läuft …' }).element);
+                    }
+                    else
+                        a.textContent = 'Läuft …';
                     const r = await Wolke.abgleichen();
                     UI.toast(r ? (r.uebernommen + ' geholt, ' + r.angenommen + ' geschickt' +
                         (r.unlesbar ? ' · ' + r.unlesbar + ' nicht lesbar' : '')) : 'Nichts zu tun');

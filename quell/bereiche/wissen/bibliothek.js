@@ -482,6 +482,98 @@ const Bibliothek = (() => {
         const oben = weg.length >= 2 ? weg[weg.length - 2] : null;
         geheIn(oben ? oben.id : null);
     };
+    /* ---- BLICK HINEIN (E459) -------------------------------------------- *
+     * Hineingehen und wieder heraus sind zwei Wege für eine Auskunft. Die
+     * Ordnerkarte (`schale/bedienung/ordnerkarte.ts`) zeigt dieselben Kinder
+     * an Ort und Stelle — und ihre Suche geht durch den GANZEN Unterbaum,
+     * während die Suche des Regals nur die offene Ebene filtert.
+     * --------------------------------------------------------------------- */
+    /** Die Kindseiten eines Ordners, Ordner zuerst — wie im Regal (§8). */
+    const fachSeiten = (elternId) => (Store.childrenOf(elternId) || [])
+        .filter((b) => b && b.alive !== false && b.type === 'page')
+        .sort((a, b) => {
+        const ao = artVon(a).id === 'ordner' ? 0 : 1;
+        const bo = artVon(b).id === 'ordner' ? 0 : 1;
+        return ao !== bo ? ao - bo
+            : String(a.text || '').localeCompare(String(b.text || ''), 'de');
+    });
+    const fachStueck = (p, weg) => {
+        const art = artVon(p);
+        return {
+            id: p.id, name: p.text || 'Ohne Titel', art: art.name,
+            ordner: art.id === 'ordner',
+            /* `exactOptionalPropertyTypes` verbietet `weg: undefined` — also gar
+               nicht setzen, wenn der Treffer auf Ebene 1 liegt. */
+            ...(weg.length ? { weg: weg.join(' \u203a ') } : {})
+        };
+    };
+    /** Der ganze Unterbaum, flach, jeder Treffer mit seinem Weg. */
+    const fachTiefe = (elternId, weg = [], tief = 0) => {
+        if (tief > 6)
+            return [];
+        const raus = [];
+        for (const p of fachSeiten(elternId)) {
+            raus.push(fachStueck(p, weg));
+            if (artVon(p).id === 'ordner')
+                raus.push(...fachTiefe(p.id, weg.concat(p.text || 'Ohne Titel'), tief + 1));
+        }
+        return raus;
+    };
+    /** Die Karte über dem Deckel aufschlagen. `r` ist das Rechteck des Deckels. */
+    const blickHinein = (p, r) => {
+        if (typeof Ordnerkarte === 'undefined') {
+            geheIn(p.id);
+            return;
+        }
+        document.querySelectorAll('.ru-fach-lage').forEach(a => a.remove());
+        const zurueck = document.activeElement;
+        const lage = document.createElement('div');
+        lage.className = 'ru-fach-lage';
+        let zu = () => { };
+        const griff = Ordnerkarte.bauen({
+            name: p.text || 'Ohne Titel',
+            kinder: fachSeiten(p.id).map(k => fachStueck(k, [])),
+            tiefe: fachTiefe(p.id),
+            beiWahl: (stueck) => {
+                zu();
+                if (stueck.ordner)
+                    geheIn(stueck.id);
+                else
+                    App.oeffne(stueck.id);
+            },
+            beiOrdner: () => { zu(); geheIn(p.id); }
+        });
+        lage.append(griff.element);
+        document.body.append(lage);
+        /* ERST MESSEN, DANN STELLEN. Die Karte ist zugeklappt schmaler als
+           aufgeklappt; gestellt wird nach dem, was wirklich dasteht. */
+        const b = lage.getBoundingClientRect();
+        lage.style.left = Math.max(8, Math.min(r.left, innerWidth - b.width - 8)) + 'px';
+        lage.style.top = (r.bottom + 6 + b.height > innerHeight
+            ? Math.max(8, r.top - b.height - 6) : r.bottom + 6) + 'px';
+        const beiTaste = (ereignis) => {
+            if (ereignis.key === 'Escape') {
+                ereignis.stopPropagation();
+                zu();
+            }
+        };
+        const beiKlick = (ereignis) => {
+            if (!(ereignis.target instanceof Node) || !lage.contains(ereignis.target))
+                zu();
+        };
+        zu = () => {
+            document.removeEventListener('keydown', beiTaste, true);
+            document.removeEventListener('mousedown', beiKlick);
+            lage.remove();
+            zurueck?.focus?.();
+        };
+        document.addEventListener('keydown', beiTaste, true);
+        /* Erst im nächsten Zug horchen: der Klick, der die Karte öffnet, würde
+           sie sonst im selben Zug wieder schliessen. */
+        setTimeout(() => document.addEventListener('mousedown', beiKlick), 0);
+        griff.klappen(true);
+        griff.element.querySelector('.ru-fach-griff')?.focus();
+    };
     /** Die Brotkrume der Ablage. An der Wurzel schweigt sie — ein Pfad mit
      *  genau einem Glied ist kein Pfad, sondern eine Zeile Luft. */
     const ordnerKrume = () => {
@@ -1275,6 +1367,10 @@ const Bibliothek = (() => {
                     return;
                 const r = k.getBoundingClientRect();
                 const m = UI.menu(`<button data-a="oeffnen"><span class="mi">\u2197</span>Öffnen</button>` +
+                    /* NUR BEI ORDNERN. Ein Blick in eine PDF wäre die PDF — dafür
+                       gibt es „Öffnen". */
+                    (k.dataset['art'] === 'ordner'
+                        ? `<button data-a="blick"><span class="mi">\u2315</span>Blick hinein</button>` : '') +
                     `<button data-a="stern"><span class="mi">${p.favorite ? '\u2605' : '\u2606'}</span>` +
                     (p.favorite ? 'Aus Favoriten' : 'Zu Favoriten') + '</button>' +
                     '<button data-a="umbenennen"><span class="mi">\u270e</span>Umbenennen</button>' +
@@ -1288,6 +1384,10 @@ const Bibliothek = (() => {
                     m.remove();
                     if (a === 'oeffnen') {
                         App.oeffne(p.id);
+                        return;
+                    }
+                    if (a === 'blick') {
+                        blickHinein(p, r);
                         return;
                     }
                     if (a === 'stern') {

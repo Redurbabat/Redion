@@ -539,14 +539,22 @@ const Notebook = (() => {
       `aria-label="Mehr zu ${esc(p.text || 'diesem Heft')}">⋯</button></div>`;
   };
 
-  /** Der Stern zeigt seinen Zustand über die FORM (★ gefüllt, ☆ leer)
-   *  und `aria-pressed` — nicht nur über Farbe (§38). */
-  const sternKnopf = (p: any): string =>
-    `<button class="nh-stern${p.favorite ? ' an' : ''}" data-stern="${esc(p.id)}" ` +
-    `aria-pressed="${p.favorite ? 'true' : 'false'}" ` +
-    `title="${p.favorite ? 'Aus Favoriten' : 'Zu Favoriten'}" ` +
-    `aria-label="${p.favorite ? 'Aus Favoriten: ' : 'Zu Favoriten: '}` +
-    `${esc(p.text || 'Ohne Titel')}">${p.favorite ? '★' : '☆'}</button>`;
+  /** Der Merker zeigt seinen Zustand über die FORM (Band gefüllt oder
+   *  offen) und `aria-pressed` — nicht nur über Farbe (§38). Seit E460
+   *  ist es DASSELBE Zeichen wie in der Kopfleiste: „★" hier und ein SVG
+   *  dort waren zwei Sprachen für ein Feld. */
+  const sternKnopf = (p: any): string => {
+    const name = p.text || 'Ohne Titel';
+    if (typeof Merkzeichen !== 'undefined')
+      return Merkzeichen.html({ an: !!p.favorite, name,
+        klasse: 'nh-stern' + (p.favorite ? ' an' : ''),
+        zusatz: `data-stern="${esc(p.id)}"` });
+    return `<button class="nh-stern${p.favorite ? ' an' : ''}" data-stern="${esc(p.id)}" ` +
+      `aria-pressed="${p.favorite ? 'true' : 'false'}" ` +
+      `title="${p.favorite ? 'Aus Favoriten' : 'Zu Favoriten'}" ` +
+      `aria-label="${p.favorite ? 'Aus Favoriten: ' : 'Zu Favoriten: '}` +
+      `${esc(name)}">${p.favorite ? '★' : '☆'}</button>`;
+  };
 
   /** Die Fach-Karte: Redions gezeichnete Ordner-Mappe (`data-art="ordner"`
    *  aus der Bibliotheks-Anatomie) mit Symbol und ehrlicher Zählung. */

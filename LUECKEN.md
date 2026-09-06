@@ -6322,3 +6322,56 @@ den Prüfläufen, nicht vermutet.
    grün — ein Lastfehler, kein Produktfehler, aber einer, der zeigt, dass
    der Start den Merker `startAnsichtE349` liest, bevor die Ablage sicher
    da ist.
+
+---
+
+L118 — Der Deckelstern im Regal ist kein Knopf
+--------------------------------------------------------------------------
+
+Seit E460 gibt es EIN Merkzeichen für `favorite`, und es steht in der
+Kopfleiste und im Heftregal. Im Dokumentregal steht es nicht: der Stern
+auf dem Deckel (`.bib-deckel-stern`, `bibliothek.ts`) ist `aria-hidden`
+und nicht klickbar.
+
+DER GRUND IST KEINE FAULHEIT, SONDERN HTML. Der Deckel selbst ist ein
+`<button class="bib-deckel">`, und der Stern sitzt darin. Ein Knopf im
+Knopf ist ungültig; der Browser bricht die Verschachtelung auf, und was
+dann klickbar ist, entscheidet er. Umschalten geht deshalb über das
+⌄-Menü des Deckels („Zu Favoriten" / „Aus Favoriten") — das ist ein Weg,
+aber ein versteckter.
+
+WAS ES KOSTEN WÜRDE, es zu schliessen: der Deckel müsste vom Knopf zu
+einer Fläche mit einem Knopf darin werden. Das berührt die Tastaturführung
+des ganzen Regals, den Ziehen-und-Ablegen-Weg und drei Prüfläufe, die den
+Deckel anklicken. Es ist eine eigene Arbeit, keine Zeile nebenbei.
+
+---
+
+L119 — Zwei der vier Lader stehen an Stellen, die kein Prüflauf auslöst
+--------------------------------------------------------------------------
+
+E461 hängt vier Lader an vier echte Vorgänge. Zwei davon laufen in
+`test434` wirklich: die Presse und die Sterne am Auftragsfenster, mit
+angelegten Aufträgen und echten Zahlen.
+
+Die anderen zwei nicht:
+
+  · **Der flüssige Ring am Modell-Download.** WebLLM holt ein Modell von
+    mehreren hundert Megabyte; das dauert Minuten und braucht das Netz.
+    Ein Prüflauf, der das täte, wäre kein Prüflauf mehr.
+  · **Das Wort am Abgleich.** `Wolke.abgleichen()` braucht einen Server.
+    Es gibt einen Prüfserver, aber der Weg dorthin führt über Konto,
+    Anmeldung und Bereich — das ist eine eigene Suite und keine Zeile
+    nebenbei.
+
+`test434` §5 prüft deshalb dort die VERDRAHTUNG: dass `dienst.ts` den
+echten Anteil an den Ring weitergibt und dass `wolke.ts` das Wort nimmt
+und keinen Balken. Das ist ehrlich, aber es ist weniger — es sagt nicht,
+wie die beiden im Betrieb aussehen.
+
+WAS ES SCHLIESSEN WÜRDE: für den Ring ein Stellvertreter für
+`webllmLaden`, der eine Folge von Anteilen abspult. Dafür müsste die
+Funktion aus `dienst.ts` heraus oder überschreibbar werden — und das ist
+eine Änderung am KI-Kern für einen Prüflauf, also eine eigene
+Entscheidung. Für das Wort: die Server-Suite um einen Abgleichfall
+erweitern.

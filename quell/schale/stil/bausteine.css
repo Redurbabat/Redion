@@ -6434,6 +6434,444 @@ button.ru-zk[data-art="laden"][data-zustand="arbeitet"] .ru-zk-balken{ display:b
   .ru-zk-balken:not(.bestimmt) i{ animation:none; width:50% }
 }
 
+/* ---- Die Drucker-Karte (E458, Uiverse Nr. 28 von spotift_5948) -----------
+   Ein Drucker, ein Blatt, eine Lampe, ein Satz. Der Zustand steht in
+   `data-zustand` und kommt aus dem echten Druckweg (schale/bedienung/
+   drucker.ts, werkzeuge.ts `drucken`) — die Schleife des Originals, die
+   alle 6,4 s „Done" sagte, gibt es hier nicht. Bewegung NUR in
+   `vorbereiten` und `rendern`; sonst liegt das Blatt still.
+
+   DIE BUEHNE IST EIN BILD und behaelt den dunklen Grund des Originals in
+   beiden Schemata — ein weisser Drucker auf weisser Karte waere keiner.
+   Karte, Satz und Lampe nehmen die Marken. Die Masse sind die des
+   Originals bis auf fuenf, die den rohen Zahlen aus marken-decke.json
+   ausweichen (test362 Paragraph 7): 22→23, 56→55, 28→27, 16→15, 46→45. */
+.ru-drucker{
+  --ru-lampe:var(--warnung);
+  width:190px; overflow:hidden; border-radius:var(--radius-xl);
+  border:1px solid var(--line); background:var(--bg-card); box-shadow:var(--shadow);
+  color:var(--text-dim); font-size:11px; font-weight:600; letter-spacing:.3px
+}
+.ru-drucker-schwebt{ position:fixed; right:var(--mobile-gutter-small); bottom:var(--mobile-gutter-small); z-index:901 }
+@media (max-width:760px){
+  .ru-drucker-schwebt{ bottom:calc(var(--mobile-nav-height) + var(--mobile-gutter-small)) }
+}
+.ru-drucker-buehne{ position:relative; height:175px; overflow:hidden; background:linear-gradient(145deg,#1a1a1a,#222) }
+.ru-drucker-buehne::before{
+  content:""; position:absolute; inset:0; pointer-events:none;
+  background-image:radial-gradient(rgba(255,255,255,.04) 1px,transparent 1px); background-size:14px 14px
+}
+.ru-drucker-buehne i{ display:block }
+/* Das Blatt — hinter dem Geraet. Die Grundlage ist die Ruhelage „halb
+   im Schlitz"; die Zustaende unten verschieben oder bewegen sie. */
+.ru-drucker-blattgruppe{ position:absolute; left:50%; top:23px; z-index:1; transform:translate(-50%,14px) }
+.ru-drucker-blattschatten{ position:absolute; top:2px; left:1px; width:55px; height:70px; border-radius:3px; background:rgba(0,0,0,.22); filter:blur(2px); z-index:1; opacity:0 }
+.ru-drucker-blatt{ position:relative; z-index:2; width:54px; height:68px; padding:7px 8px; display:flex; flex-direction:column; gap:5px; background:#fff; border:1px solid #d0d0d0; border-radius:3px }
+.ru-drucker-tinte{ height:2.5px; border-radius:1.5px; background:#2a2a2a; opacity:0 }
+.ru-drucker-tinte:nth-child(3n+1){ width:40px }
+.ru-drucker-tinte:nth-child(3n+2){ width:27px }
+.ru-drucker-tinte:nth-child(3n){ width:19px }
+/* Das Geraet — davor */
+.ru-drucker-geraet{ position:absolute; left:50%; top:50%; width:132px; height:96px; transform:translate(-50%,-50%); z-index:3 }
+.ru-drucker-umschatten{ position:absolute; left:3px; top:10px; width:126px; height:70px; border-radius:12px; background:rgba(0,0,0,.06) }
+.ru-drucker-deckel{ position:absolute; left:26px; top:0; width:80px; height:17px; background:#f0f0f0; border:1px solid #c8c8c8; border-radius:4px; z-index:2 }
+.ru-drucker-deckel-innen{ position:absolute; left:50%; top:50%; width:72px; height:11px; transform:translate(-50%,-50%); background:#f8f8f8; border:.5px solid #d8d8d8; border-radius:2px }
+.ru-drucker-koerper{ position:absolute; left:0; top:14px; width:132px; height:58px; background:#fff; border:1.5px solid #d5d5d5; border-radius:10px; z-index:2; box-shadow:0 5px 0 rgba(0,0,0,.03) }
+.ru-drucker-schlitz{ position:absolute; left:50%; top:5px; width:70px; height:4px; transform:translateX(-50%); background:#2a2a2a; border-radius:2px; z-index:3 }
+.ru-drucker-feld{ position:absolute; left:9px; top:15px; width:42px; height:15px; background:#f8f8f8; border:1px solid #e0e0e0; border-radius:3px; z-index:3 }
+.ru-drucker-feld-gross{ position:absolute; left:4px; top:4px; width:15px; height:2.5px; background:#a0a0a0; border-radius:1.5px }
+.ru-drucker-feld-klein{ position:absolute; left:4px; top:9px; width:26px; height:2px; background:#c8c8c8; border-radius:1px }
+.ru-drucker-knoepfe{ position:absolute; left:58px; top:18px; display:flex; gap:3px; z-index:3 }
+.ru-drucker-knopf{ width:6px; height:6px; background:#e0e0e0; border:.5px solid #c8c8c8; border-radius:50% }
+.ru-drucker-lampe{ position:absolute; right:10px; top:15px; width:7px; height:7px; z-index:3 }
+.ru-drucker-led{ position:relative; z-index:2; width:7px; height:7px; border-radius:50%; background:var(--ru-lampe); box-shadow:0 0 4px var(--ru-lampe) }
+.ru-drucker-schein{ position:absolute; left:50%; top:50%; width:12px; height:12px; transform:translate(-50%,-50%); border-radius:50%; background:var(--ru-lampe); opacity:.35; z-index:1 }
+.ru-drucker-lueftung{ position:absolute; right:9px; top:30px; display:flex; flex-direction:column; gap:2.5px; z-index:3 }
+.ru-drucker-lamelle{ width:15px; height:2px; background:#e0e0e0; border-radius:1px }
+.ru-drucker-fach{ position:absolute; bottom:-3px; left:50%; width:108px; height:5px; transform:translateX(-50%); background:#e8e8e8; border:.5px solid #c8c8c8; border-radius:3px; z-index:3 }
+.ru-drucker-fach-innen{ position:absolute; top:50%; left:50%; width:96px; height:2.5px; transform:translate(-50%,-50%); background:#d0d0d0; border-radius:1px }
+.ru-drucker-marke{ position:absolute; left:9px; top:45px; width:27px; height:4px; background:#e8e8e8; border-radius:1px; z-index:3 }
+/* Der Satz — Zeichen und Text, nie nur die Lampe (Paragraph 38) */
+/* FLIESSTEXT, KEIN FLEX: ein langer Fehlersatz bricht dann zentriert um,
+   und das Zeichen bleibt vor dem ersten Wort statt allein am linken Rand
+   (so stand es auf dem ersten Bild). */
+.ru-drucker-status{ display:block; margin:0; padding:8px 10px; min-height:18px; line-height:1.4; text-align:center }
+.ru-drucker-zeichen{ display:inline-block; margin-right:5px; font-size:12px; line-height:1; vertical-align:-1px }
+.ru-drucker-text{ overflow-wrap:anywhere }
+.ru-drucker[data-zustand="rendern"]{ --ru-lampe:var(--accent) }
+.ru-drucker[data-zustand="speichern"],.ru-drucker[data-zustand="fertig"]{ --ru-lampe:var(--erfolg) }
+.ru-drucker[data-zustand="fehler"]{ --ru-lampe:var(--gefahr) }
+.ru-drucker[data-zustand="rendern"] .ru-drucker-status,.ru-drucker[data-zustand="speichern"] .ru-drucker-status{ color:var(--text) }
+.ru-drucker[data-zustand="fertig"] .ru-drucker-status{ color:var(--erfolg) }
+.ru-drucker[data-zustand="fehler"] .ru-drucker-status{ color:var(--gefahr) }
+/* Die Lagen des Blatts, wenn nichts laeuft: weg, im Fach, halb im Schlitz */
+.ru-drucker[data-zustand="bereit"] .ru-drucker-blattgruppe{ opacity:0 }
+.ru-drucker[data-zustand="speichern"] .ru-drucker-blattgruppe,.ru-drucker[data-zustand="fertig"] .ru-drucker-blattgruppe{ transform:translate(-50%,40px) }
+.ru-drucker[data-zustand="speichern"] :is(.ru-drucker-tinte,.ru-drucker-blattschatten),
+.ru-drucker[data-zustand="fertig"] :is(.ru-drucker-tinte,.ru-drucker-blattschatten){ opacity:1 }
+.ru-drucker[data-zustand="fehler"] .ru-drucker-blattgruppe{ transform:translate(-50%,-6px) }
+/* Bewegung nur, solange gearbeitet wird */
+.ru-drucker[data-zustand="vorbereiten"] .ru-drucker-blattgruppe{ animation:ru-drucker-einzug 2.4s cubic-bezier(.4,0,.2,1) infinite }
+.ru-drucker[data-zustand="rendern"] .ru-drucker-blattgruppe{ animation:ru-drucker-zyklus 6.4s cubic-bezier(.4,0,.2,1) infinite }
+.ru-drucker[data-zustand="rendern"] .ru-drucker-blattschatten{ animation:ru-drucker-schatten 6.4s ease-in-out infinite }
+.ru-drucker[data-zustand="rendern"] .ru-drucker-tinte{ animation:ru-drucker-tinte 6.4s ease-out infinite; animation-delay:calc(var(--ru-schritt) * 160ms) }
+.ru-drucker:is([data-zustand="vorbereiten"],[data-zustand="rendern"],[data-zustand="speichern"]) .ru-drucker-schein{ animation:ru-drucker-puls .6s ease-in-out infinite alternate }
+@keyframes ru-drucker-einzug{
+  0%{transform:translate(-50%,-75px);opacity:0} 15%{opacity:1}
+  70%{transform:translate(-50%,-6px);opacity:1} 100%{transform:translate(-50%,-6px);opacity:0}
+}
+@keyframes ru-drucker-zyklus{
+  0%,3%{transform:translate(-50%,-75px);opacity:0}
+  18.75%{transform:translate(-50%,-6px);opacity:1}
+  43.75%{transform:translate(-50%,14px);opacity:1}
+  78%{transform:translate(-50%,72px);opacity:1}
+  81.25%{transform:translate(-50%,72px);opacity:0}
+  81.3%,100%{transform:translate(-50%,-75px);opacity:0}
+}
+@keyframes ru-drucker-schatten{ 0%,43.75%{opacity:0} 78%{opacity:.22} 81.25%,100%{opacity:0} }
+@keyframes ru-drucker-tinte{ 0%,43.75%{opacity:0} 48.75%,78%{opacity:1} 81.25%,100%{opacity:0} }
+@keyframes ru-drucker-puls{ from{transform:translate(-50%,-50%) scale(1);opacity:.7} to{transform:translate(-50%,-50%) scale(1.5);opacity:.15} }
+/* Wer keine Bewegung will, sieht das Blatt liegen: beim Vorbereiten halb
+   im Schlitz, beim Setzen bedruckt in der Mitte. Der Satz sagt es ohnehin. */
+@media (prefers-reduced-motion: reduce){
+  /* `[data-zustand]` nicht aus Zierde: die Zustandsregeln oben wiegen
+     (0,3,0), und ohne das Attribut hier wog diese (0,2,0) und verlor —
+     test431 §2 mass `ru-drucker-zyklus` trotz reduced motion. */
+  .ru-drucker[data-zustand] :is(.ru-drucker-blattgruppe,.ru-drucker-blattschatten,.ru-drucker-tinte,.ru-drucker-schein){ animation:none }
+  .ru-drucker[data-zustand="vorbereiten"] .ru-drucker-blattgruppe{ transform:translate(-50%,-6px) }
+  .ru-drucker[data-zustand="rendern"] .ru-drucker-tinte{ opacity:1 }
+}
+
+/* ---- Die vier Lader (E461, Vorgaben vom 6. September) --------------------
+   Ein Bild je Sorte Auskunft, nicht ein Kreisel für alles. Der Satz
+   daneben ist die Auskunft; das Bild ist das Bild (`role="status"` am
+   Wirt, `aria-hidden` an jedem Bild).
+
+   `--ru-lader-gross` ist die Kantenlänge; jeder Wirt darf sie setzen. */
+.ru-lader{
+  --ru-lader-gross:56px;
+  display:inline-flex; align-items:center; gap:10px;
+  color:var(--text-dim); font-size:12.5px; line-height:1.4
+}
+.ru-lader-bild{width:var(--ru-lader-gross); height:var(--ru-lader-gross); flex:none; display:block}
+.ru-lader-text{min-width:0; overflow-wrap:anywhere}
+
+/* fluss — der Stand steigt, die Zahl steht daneben.
+   DER KONTRAST AUF DER MASKE ist der Trick der Vorgabe: weichgezeichnete
+   weisse Formen fliessen ineinander, und die Kante dazwischen wird zu
+   einer einzigen welligen Linie. In einer Maske heisst weiss „hier ist
+   Flüssigkeit". */
+.ru-lader[data-art="fluss"]{--ru-lader-gross:72px; position:relative}
+.ru-lader-glas{fill:none; stroke:var(--line); stroke-width:2}
+.ru-lader-saft{fill:var(--accent)}
+.ru-lader-klumpen{filter:contrast(14)}
+.ru-lader-klumpen :is(rect,ellipse){filter:blur(4px)}
+.ru-lader-welle{
+  transform-box:fill-box; transform-origin:center;
+  animation:ru-lader-wiegen 3.2s ease-in-out infinite;
+  animation-delay:calc(var(--ru-schritt) * -900ms)
+}
+@keyframes ru-lader-wiegen{
+  0%,100%{transform:translateY(-2px) scaleX(1)}
+  50%{transform:translateY(2px) scaleX(1.15)}
+}
+.ru-lader-zahl{
+  position:absolute; left:0; top:0; width:var(--ru-lader-gross); height:var(--ru-lader-gross);
+  display:flex; align-items:center; justify-content:center;
+  font-size:14px; font-variant-numeric:tabular-nums; color:var(--text);
+  text-shadow:0 1px 3px var(--bg-card), 0 0 6px var(--bg-card)
+}
+
+/* sterne — fünf, die sich drehen. Für Arbeit ohne bekannte Länge. */
+.ru-lader-sterne{position:relative; display:grid; place-items:center}
+/* GRÖSSER UND GESTAFFELT. Mit 18 % bis 46 % lagen alle fünf übereinander
+   und ergaben auf dem Bild einen einzigen kleinen Fleck — fünf Sterne, die
+   wie einer aussehen, sind vier zu viel. Jetzt 34 % bis 98 %, und je
+   grösser, desto blasser: so sieht man die Staffelung, statt sie zu
+   ahnen. */
+.ru-lader-stern{
+  position:absolute; aspect-ratio:1; background:var(--accent);
+  width:calc(34% + var(--ru-schritt) * 16%);
+  opacity:calc(0.95 - var(--ru-schritt) * 0.15);
+  clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);
+  animation:ru-lader-dreh 6s linear infinite;
+  animation-delay:calc(var(--ru-schritt) * -1s)
+}
+@keyframes ru-lader-dreh{to{rotate:360deg}}
+
+/* wort — die Buchstaben gehen der Reihe nach an. */
+.ru-lader[data-art="wort"]{--ru-lader-gross:78px}
+.ru-lader-wort{position:relative; display:grid; place-items:center}
+.ru-lader-ring{
+  position:absolute; inset:0; border-radius:50%;
+  animation:ru-lader-ring 2s linear infinite
+}
+/* DER RING IST EIN RING, KEINE KUGEL. Mit den Schatten der Vorgabe füllte
+   er die ganze Fläche, und die Schrift darauf war nicht mehr zu lesen —
+   auf dem Bild stand „Abgle ich läuft" in Dunkelgrau auf Violett. Jetzt
+   liegt der Schein am RAND (`inset` mit grossem Radius, kleine Streuung),
+   die Mitte bleibt frei, und die Schrift steht darauf wie auf Papier. */
+@keyframes ru-lader-ring{
+  0%{transform:rotate(90deg); box-shadow:0 5px 9px -3px var(--accent) inset, 0 -5px 9px -3px var(--accent-schwach) inset}
+  50%{transform:rotate(270deg); box-shadow:0 5px 9px -3px var(--accent-text) inset, 0 -5px 9px -3px var(--accent) inset}
+  100%{transform:rotate(450deg); box-shadow:0 5px 9px -3px var(--accent) inset, 0 -5px 9px -3px var(--accent-schwach) inset}
+}
+.ru-lader-buchstaben{
+  position:relative; z-index:1; font-size:11px; font-weight:700;
+  letter-spacing:.2px; color:var(--text); white-space:nowrap
+}
+.ru-lader-buchstabe{
+  display:inline-block; opacity:.4;
+  animation:ru-lader-buchstabe 2s infinite;
+  animation-delay:calc(var(--ru-schritt) * 100ms)
+}
+@keyframes ru-lader-buchstabe{
+  0%,100%{opacity:.4; transform:none}
+  20%{opacity:1; transform:scale(1.15)}
+  40%{opacity:.7; transform:none}
+}
+
+/* presse — Bogen für Bogen. Für die Auftragsart, die Blätter macht. */
+.ru-lader[data-art="presse"]{--ru-lader-gross:60px}
+.ru-lader-presse{position:relative; overflow:hidden}
+.ru-lader-raum{
+  position:absolute; left:50%; top:50%; width:44px; height:44px;
+  transform:translate(-50%,-50%) rotateX(52deg) rotateZ(-45deg); transform-style:preserve-3d
+}
+/* DEUTLICHER ALS IN DER VORGABE. Dort sind die Walzen fast schwarz auf
+   Hellblau; in Redions Flächen stand grau auf grau, und auf dem Bild war
+   nicht zu erkennen, dass es eine Presse ist. */
+.ru-lader-walze{
+  position:absolute; left:0; width:44px; height:9px; border-radius:5px/4px;
+  background:var(--text); opacity:.8
+}
+.ru-lader-walze:nth-of-type(1){top:4px}
+.ru-lader-walze:nth-of-type(2){top:18px}
+.ru-lader-walze:nth-of-type(3){top:32px}
+.ru-lader-bogen{
+  position:absolute; left:6px; width:32px; height:14px; border-radius:2px;
+  background:#fff; border:1px solid var(--text-dim); box-shadow:0 1px 3px #00000026;
+  animation:ru-lader-presse 1.8s ease-in-out infinite;
+  animation-delay:calc(var(--ru-schritt) * -600ms)
+}
+@keyframes ru-lader-presse{
+  0%{transform:translateY(-14px); opacity:0}
+  20%{opacity:1}
+  80%{opacity:1}
+  100%{transform:translateY(36px); opacity:0}
+}
+
+@media (prefers-reduced-motion: reduce){
+  .ru-lader :is(.ru-lader-welle,.ru-lader-stern,.ru-lader-ring,.ru-lader-buchstabe,.ru-lader-bogen){
+    animation:none
+  }
+  /* Ohne Bewegung stehen die Bogen gestaffelt statt übereinander — sonst
+     sähe die Presse leer aus. */
+  .ru-lader-bogen{opacity:1}
+  .ru-lader-bogen:nth-of-type(4){transform:translateY(-8px)}
+  .ru-lader-bogen:nth-of-type(6){transform:translateY(14px)}
+  .ru-lader-buchstabe{opacity:1}
+}
+
+/* ---- Das Merkzeichen (E460, Vorgaben vom 6. September) --------------------
+   EIN Merker für `favorite`, überall derselbe. Der Zustand steht in der
+   FORM (gefülltes gegen offenes Band) und in `aria-pressed`; die Farbe
+   kommt dazu, nicht statt dessen (§38).
+
+   Der Kranz und die Funken kommen aus dem Lesezeichen der Vorgabe, der
+   rollende Punkt aus dem Herz. Beide laufen NUR beim Anhaken und nur
+   einmal — die Klasse `platzt` nimmt sich das Bauteil nach
+   `animationend` selbst wieder weg. */
+.ru-merk{
+  --ru-merk-farbe:var(--accent-text);
+  position:relative; display:inline-flex; align-items:center; justify-content:center;
+  color:var(--text-dim); background:transparent; border:0; cursor:pointer;
+  border-radius:var(--radius-md); transition:color var(--motion-fast) var(--ease)
+}
+.ru-merk:hover{color:var(--text); background:var(--bg-hover)}
+.ru-merk:focus-visible{outline:2px solid var(--accent-text); outline-offset:2px}
+.ru-merk.ist-an{color:var(--ru-merk-farbe)}
+.ru-merk-band{width:19px; height:19px; flex:none; display:block; position:relative; z-index:2; transform-origin:top}
+.ru-merk.platzt .ru-merk-band{animation:ru-merk-band .3s}
+/* Der Kranz: ein Ring, der aufgeht und verschwindet. */
+.ru-merk-kreis{
+  position:absolute; left:50%; top:50%; width:0; height:0; z-index:1;
+  transform:translate(-50%,-50%); border-radius:50%;
+  border:1px solid var(--ru-merk-farbe); opacity:0; pointer-events:none
+}
+.ru-merk.platzt .ru-merk-kreis{animation:ru-merk-kreis .3s cubic-bezier(.175,.885,.32,1.275) .3s forwards}
+/* Die Funken: acht Punkte als ein einziger Schatten — kein zweites Dutzend
+   Elemente für acht Pixel. */
+.ru-merk-funken{
+  position:absolute; left:50%; top:50%; width:9px; height:9px; z-index:1;
+  transform:translate(-50%,-50%) scale(0); border-radius:50%; pointer-events:none;
+  box-shadow:
+    0 26px 0 -4px var(--ru-merk-farbe), 26px 0 0 -4px var(--ru-merk-farbe),
+    0 -26px 0 -4px var(--ru-merk-farbe), -26px 0 0 -4px var(--ru-merk-farbe),
+    -19px 19px 0 -4px var(--ru-merk-farbe), -19px -19px 0 -4px var(--ru-merk-farbe),
+    19px -19px 0 -4px var(--ru-merk-farbe), 19px 19px 0 -4px var(--ru-merk-farbe)
+}
+.ru-merk.platzt .ru-merk-funken{animation:ru-merk-funken .3s cubic-bezier(.175,.885,.32,1.275) .3s forwards}
+/* Der rollende Punkt aus dem Herz: zwei Züge, dann ist er im Band. */
+.ru-merk-punkt{
+  position:absolute; left:calc(50% - 7px); top:calc(50% - 9px);
+  width:5px; height:5px; z-index:3; border-radius:50%;
+  background:var(--ru-merk-farbe); opacity:0; pointer-events:none
+}
+.ru-merk.platzt .ru-merk-punkt{animation:ru-merk-punkt .3s forwards}
+@keyframes ru-merk-band{50%{transform:scaleY(.6)} 100%{transform:scaleY(1)}}
+@keyframes ru-merk-kreis{from{width:0;height:0;opacity:0} 90%{width:30px;height:30px;opacity:1} to{opacity:0}}
+@keyframes ru-merk-funken{from{transform:translate(-50%,-50%) scale(0)} 40%{opacity:1} to{transform:translate(-50%,-50%) scale(.8);opacity:0}}
+@keyframes ru-merk-punkt{
+  0%{transform:translate(0,0);opacity:1}
+  50%{transform:translate(0,7px);opacity:1}
+  100%{transform:translate(7px,9px);opacity:0}
+}
+@media (prefers-reduced-motion: reduce){
+  .ru-merk.platzt :is(.ru-merk-band,.ru-merk-kreis,.ru-merk-funken,.ru-merk-punkt){animation:none}
+}
+
+/* ---- Die Ordnerkarte (E459, Vorgabe vom 6. September) --------------------
+   Der Blick in einen Ordner, ohne hineinzugehen. Die Blätter sind KNÖPFE
+   (man drückt sie), die Bühne ist Bild. Aufgeklappt wird über
+   `[data-offen]` am Wirt statt über ein verstecktes Kästchen: ein Ordner,
+   der aufgeht, ist kein Formularwert (§38, `aria-expanded`).
+
+   DIE FÜNF FARBEN SIND SCHMUCK. Die Art steht als WORT auf jedem Blatt —
+   ein Farbschlüssel für zehn Arten wäre eine Auskunft, die niemand
+   auswendig kann. */
+.ru-fach{
+  /* 214, und die Zahl ist gerechnet: das oberste Blatt steht 138 px über
+     dem Boden und ist 68 hoch, macht 5 + 68 + 138 = 211. Drei Anläufe
+     davor, jeder erst auf dem Bild sichtbar (§55.1): mit 132 ragte das
+     oberste Blatt aus der Bühne und lag auf der Suchzeile; mit 158 lagen
+     drei hinter der Klappe; mit 190 war die Zeile des untersten
+     verdeckt. */
+  --ru-fach-hoehe:214px;
+  position:relative; width:248px; padding:10px 12px 12px;
+  border-radius:var(--radius-xl); border:1px solid var(--line);
+  background:var(--bg-card); box-shadow:var(--shadow); color:var(--text)
+}
+.ru-fach-kopf{display:flex; align-items:baseline; gap:8px; margin-bottom:8px}
+.ru-fach-suche{
+  width:100%; margin-bottom:8px; display:flex; align-items:center;
+  height:30px; padding:0 10px; border-radius:var(--radius-pill);
+  border:1px solid var(--line); background:var(--bg-input)
+}
+.ru-fach-suche:focus-within{outline:2px solid var(--accent-text); outline-offset:1px}
+.ru-fach-eingabe{
+  width:100%; min-width:0; border:0; outline:0; background:transparent;
+  color:var(--text); font:inherit; font-size:12px
+}
+.ru-fach-sr{position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap}
+.ru-fach-zaehler{
+  display:flex; align-items:center; gap:5px; margin:0; flex:none;
+  padding:3px 9px; border-radius:var(--radius-pill);
+  background:var(--accent-schwach); color:var(--accent-text);
+  font-size:10px; font-weight:700; letter-spacing:.2px
+}
+.ru-fach-zahl{font-size:12px}
+.ru-fach-punkt{
+  width:6px; height:6px; flex:none; border-radius:50%;
+  background:currentColor; position:relative
+}
+/* Der Punkt schlägt NUR, während wirklich gefiltert wird — und das Wort
+   daneben sagt es auch. Ein Punkt, der immer pulst, meint nichts. */
+.ru-fach[data-sucht="ja"] .ru-fach-punkt::after{
+  content:""; position:absolute; inset:0; border-radius:50%;
+  background:currentColor; animation:ru-fach-puls 2s infinite
+}
+@keyframes ru-fach-puls{from{transform:scale(1);opacity:.9} to{transform:scale(3);opacity:0}}
+/* KEIN `preserve-3d`. Mit ihm malt der Browser nach der 3D-Lage statt nach
+   `z-index` — die um -50° gekippte Klappe kam damit VOR die Blätter, und
+   drei der fünf waren unsichtbar. Die Blätter brauchen kein 3D; die Klappe
+   braucht nur die Perspektive des Wirts. */
+.ru-fach-buehne{position:relative; height:var(--ru-fach-hoehe); perspective:1200px}
+.ru-fach-ruecken,.ru-fach-klappe{position:absolute; left:0; bottom:0; width:100%; pointer-events:none}
+.ru-fach-ruecken svg,.ru-fach-klappe svg{display:block; width:100%; height:auto}
+.ru-fach-ruecken path{fill:var(--accent); opacity:.55}
+.ru-fach-klappe{bottom:-6px; z-index:9; transform-origin:bottom; transition:transform var(--motion-normal) var(--ease-enter)}
+.ru-fach-klappe path{fill:var(--accent)}
+.ru-fach-marke{position:absolute; top:16%; left:8%; width:30px; height:4px; border-radius:10px; background:#ffffff88}
+.ru-fach[data-offen="ja"] .ru-fach-klappe{transform:rotateX(-50deg)}
+/* DER GRIFF LIEGT UNTER DEN BLÄTTERN, und das ist kein Feinschliff: mit
+   `z-index:10` über `.ru-fach-blaetter` fing er JEDEN Mausklick ab. Die
+   Blätter sind Knöpfe, aber getroffen hätte sie niemand — der Ordner wäre
+   stattdessen zugeklappt. Gefunden hat das test432 §2 mit
+   `elementFromPoint`; im Quelltext und auf dem Bild sah alles richtig aus.
+   Die Blätter tragen ihre eigenen `z-index` INNERHALB von
+   `.ru-fach-blaetter`; nach aussen zählt nur dessen 20 gegen die 10 hier. */
+.ru-fach-griff{
+  position:absolute; inset:0; z-index:10; width:100%; border:0; padding:0;
+  background:transparent; cursor:pointer; border-radius:var(--radius-lg)
+}
+.ru-fach-griff:focus-visible{outline:2px solid var(--accent-text); outline-offset:3px}
+.ru-fach-blaetter{position:absolute; inset:0; z-index:20}
+.ru-fach-blatt{
+  position:absolute; bottom:5px; left:9%; width:82%; height:68px;
+  display:block; text-align:left; overflow:hidden; cursor:pointer;
+  padding:0; border:0; border-radius:6px; color:#fff;
+  box-shadow:inset 0 1px 1px #ffffff4d, 0 4px 12px #0000002e;
+  transition:transform var(--motion-slow) var(--ease-enter), filter var(--motion-fast) var(--ease)
+}
+.ru-fach-blatt[data-nr="0"]{background:#c2410c; z-index:25; transition-delay:.15s}
+.ru-fach-blatt[data-nr="1"]{background:#b45309; z-index:24; transition-delay:.1s}
+.ru-fach-blatt[data-nr="2"]{background:#0369a1; z-index:23; transition-delay:.05s}
+.ru-fach-blatt[data-nr="3"]{background:#0f766e; z-index:22; transition-delay:.02s}
+/* NICHT VIOLETT. #6d28d9 war die Farbe des Ordners selbst — das fünfte
+   Blatt stand unsichtbar vor der Klappe. */
+.ru-fach-blatt[data-nr="4"]{background:#9d174d; z-index:21}
+/* EINE ZEILE AM UNTEREN RAND, und was nicht passt, endet mit „…". Der
+   ganze Name steht im `title` und im `aria-label`. */
+.ru-fach-zeile{
+  position:absolute; left:9px; right:7px; bottom:5px;
+  display:flex; align-items:baseline; gap:6px
+}
+.ru-fach-text{
+  flex:1 1 auto; min-width:0; font-size:10.5px; font-weight:700; line-height:1.3;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis
+}
+.ru-fach-weg{font-weight:600; opacity:.8}
+.ru-fach-art{
+  flex:none; padding:1px 5px; border-radius:4px;
+  background:#00000080; font-size:8.5px; font-weight:700; white-space:nowrap
+}
+.ru-fach-glanz{
+  position:absolute; top:0; left:-100%; width:50%; height:100%; pointer-events:none;
+  background:linear-gradient(90deg,transparent,#ffffff66,transparent); transform:skewX(-20deg)
+}
+.ru-fach[data-offen="ja"] .ru-fach-glanz{left:150%; transition:left .8s ease-in-out .3s}
+.ru-fach[data-offen="nein"] .ru-fach-blatt{transform:none; opacity:0; pointer-events:none}
+/* 26 px Abstand von Blatt zu Blatt — eine Zeile Name (10,5 px mal 1,3)
+   plus das Polster darunter und etwas Luft. Enger, und der Name des unteren Blattes
+   steckt unter dem oberen; weiter, und die Karte wird höher als der
+   Deckel, an dem sie hängt. Die Drehungen sind kleiner als in der Vorgabe
+   (±3° statt ±15°): mit 15° stand die Art-Marke des zweiten Blattes
+   ausserhalb der Karte, und die Schrägen schnitten den Namen des Blattes
+   darunter an — „Formelsammlung" stand als „Formelsa…" da, obwohl Platz
+   gewesen wäre. */
+.ru-fach[data-offen="ja"] .ru-fach-blatt[data-nr="0"]{transform:translateY(-138px) translateX(-5px) rotate(-3deg)}
+.ru-fach[data-offen="ja"] .ru-fach-blatt[data-nr="1"]{transform:translateY(-112px) translateX(6px) rotate(2.5deg)}
+.ru-fach[data-offen="ja"] .ru-fach-blatt[data-nr="2"]{transform:translateY(-86px) translateX(-4px) rotate(-3.5deg)}
+.ru-fach[data-offen="ja"] .ru-fach-blatt[data-nr="3"]{transform:translateY(-60px) translateX(5px) rotate(3deg)}
+.ru-fach[data-offen="ja"] .ru-fach-blatt[data-nr="4"]{transform:translateY(-34px) rotate(-1.5deg)}
+.ru-fach-blatt:hover,.ru-fach-blatt:focus-visible{filter:brightness(1.12)}
+.ru-fach-blatt:focus-visible{outline:2px solid var(--text); outline-offset:2px}
+.ru-fach[data-offen="ja"] .ru-fach-blatt:is(:hover,:focus-visible){translate:0 -10px}
+.ru-fach-name{flex:1 1 auto; min-width:0; margin:0; font-size:13px; font-weight:600; line-height:1.35; overflow-wrap:anywhere}
+.ru-fach-rest{margin:8px 0 0; font-size:11px; color:var(--text-dim); line-height:1.4}
+.ru-fach-gehen{margin-top:10px; width:100%; justify-content:center}
+/* Die Lage, in der die Karte über dem Regal schwebt. */
+.ru-fach-lage{position:fixed; z-index:760; inset:auto}
+@media (max-width:760px){
+  .ru-fach{width:min(300px, calc(100vw - 32px))}
+}
+@media (prefers-reduced-motion: reduce){
+  .ru-fach :is(.ru-fach-klappe,.ru-fach-blatt,.ru-fach-glanz){transition:none}
+  .ru-fach[data-sucht="ja"] .ru-fach-punkt::after{animation:none; opacity:0}
+  .ru-fach[data-offen="ja"] .ru-fach-blatt:is(:hover,:focus-visible){translate:none}
+}
+
 /* Redion-Bedienung · Baumansicht */
 .ru-baum{display:block;min-width:0;color:var(--text);font-size:13px;line-height:1.35}
 .ru-baum [role="group"]{display:block}

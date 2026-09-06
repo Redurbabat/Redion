@@ -2261,13 +2261,23 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
         '.blatt-druck.mit-rand{background:#fff}' +
         '.blatt-druck .fehlt{padding:30mm 10mm; text-align:center; color:#666; ' +
         'border:1px dashed #bbb}';
-    const drucken = async (p) => {
+    /**
+     * Der Druckweg selbst; `drucken()` darunter hält die Karte und fängt den
+     * Fehler. `karte` ist null, wenn das Bauteil nicht geladen ist — dann
+     * läuft alles wie vor E458.
+     */
+    const druckLauf = async (p, karte) => {
+        /* DIE DRUCKER-KARTE (E458) sagt, was gerade geschieht: Bilder sammeln,
+           Seiten setzen, Dialog offen, fertig. Jeder Zustand wird HIER gesetzt,
+           an der Stelle, die ihn wahr macht — kein Zeitgeber rät. */
+        karte?.setzen('vorbereiten');
         const { adressen: bilder, ausgelassen } = await bilderSammeln(p);
         const zuGross = new Set(ausgelassen);
         if (ausgelassen.length)
             UI.toast(ausgelassen.length + ' Seitenbild' +
                 (ausgelassen.length === 1 ? '' : 'er') + ' ist für einen Ausdruck zu ' +
                 'gross und bleibt leer — drucke das Dokument in Abschnitten.', 8000);
+        karte?.setzen('rendern');
         /* Der Sonderfall setzt PDF-Seiten und Blätter; alles andere macht die
            gewöhnliche Kette. `null` heisst „nicht meine Sache". */
         const inhalt = seiteAlsHtml(p, (b, tiefe, hinab) => {
@@ -2324,6 +2334,8 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
         /* Ohne Dokument im Rahmen gibt es nichts zu drucken. */
         if (!d) {
             f.remove();
+            karte?.setzen('fehler', 'Der Druckrahmen liess sich nicht öffnen.');
+            karte?.entfernen(8000);
             return;
         }
         /* KOPFZEILE, DATUM UND SEITENZAHLEN (E244). Sie leben in den
@@ -2356,10 +2368,35 @@ oeffne(location.hash.slice(1) || (D[0] && D[0].id));
             '<h1>' + esc(p.text || 'Ohne Titel') + '</h1>' + inhalt + '</body></html>');
         d.close();
         setTimeout(() => {
+            /* `print()` kehrt erst zurück, wenn der Dialog zu ist (Chromium,
+               Firefox, Safari). Davor „speichern", danach „fertig" — und nach
+               2,5 s ist die Karte weg. `afterprint` wäre genauer, kommt aber
+               ohne Dialog (Prüflauf ohne Kopf) gar nicht erst. */
+            karte?.setzen('speichern');
             f.contentWindow?.focus();
             f.contentWindow?.print();
+            karte?.setzen('fertig');
+            karte?.entfernen(2500);
             setTimeout(() => f.remove(), 1000);
         }, 300);
+    };
+    const drucken = async (p) => {
+        const karte = typeof Drucker !== 'undefined' ? Drucker.zeigen() : null;
+        try {
+            await druckLauf(p, karte);
+        }
+        catch (e) {
+            /* Vorher flog der Fehler unbeachtet nach oben — die Konsole sah ihn,
+               der Mensch nicht. Jetzt steht sein Satz acht Sekunden auf der Karte
+               (role="status", also auch hörbar); ohne Karte wie vorher ein Toast. */
+            const satz = e instanceof Error ? e.message : String(e);
+            if (karte) {
+                karte.setzen('fehler', satz);
+                karte.entfernen(8000);
+            }
+            else
+                UI.toast('Drucken hat nicht geklappt: ' + satz);
+        }
     };
     /* ========================================================================
      * 15. VERSCHIEBEN NACH   (Notion „Move to")

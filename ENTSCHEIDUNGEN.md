@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-437 Entscheidungen, E1 bis E457 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+441 Entscheidungen, E1 bis E461 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -501,6 +501,10 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E441** — Eine Sprache für „läuft, fertig, Fehler", ein Knopf, der sie spricht, und die Weiter-Variante
 * **E456** — Eine Marke: das „N" links, der Kontokreis und das „R" im Willkommen weichen der Studio-Marke
 * **E457** — Die ruhige Studio-Schale: drei Orte, eine Werkzeuglade, ein Regal — und was dabei rot war
+* **E458** — Die Drucker-Karte: der Druckauftrag sagt, was er gerade tut
+* **E459** — Die Ordnerkarte: der Blick ins Fach, ohne hineinzugehen
+* **E460** — Ein Merker für „gemerkt", und er sagt es auch hörbar
+* **E461** — Vier Lader, vier Auskünfte, und keiner erfindet einen Anteil
 
 ---
 
@@ -35943,3 +35947,354 @@ src/bereiche/pdf/document-mode.ts, src/bereiche/hilfe/rundgang.ts,
 quell/schale/stil/studio.css, pdf-studio.css, bibliothek-studio.css,
 bausteine.css; pruefungen/lauf/test33, 114, 248, 272, 385, 387, 390, 424,
 428.
+
+---
+
+E458 — Die Drucker-Karte: der Druckauftrag sagt, was er gerade tut
+--------------------------------------------------------------------------
+
+ENTSCHEIDUNG. `Werkzeuge.drucken()` zeigt für die Dauer des Druckwegs eine
+kleine Karte unten rechts: ein Drucker, ein Blatt, eine Lampe, ein Satz.
+Sie ist die produktive Fassung von Uiverse Nr. 28 „Printer Process Card"
+(spotift_5948) und liegt als `src/schale/bedienung/drucker.ts` neben
+`zustand.ts` und `zustandsknopf.ts` (E441).
+
+BEFUND. „Drucken oder als PDF" sammelt zuerst jedes Seitenbild aus der
+Ablage (`bilderSammeln`), setzt dann die ganze Seite als HTML in einen
+verborgenen Rahmen und ruft `print()`. Bei achtzig PDF-Seiten dauert der
+erste Schritt Sekunden — und in dieser Zeit stand NICHTS auf dem Schirm.
+Der Kopf von `pdf/einlesen.ts` sagt seit E104: „Wer nicht sieht, dass
+etwas geschieht, drückt noch einmal." Für den Druckweg galt das nicht.
+Und ein Fehler darin flog unbeachtet nach oben: `drucken()` war das
+einzige `async` in `werkzeuge.ts` ohne `catch` — die Konsole sah ihn, der
+Mensch sah eine Seite, auf der nichts passierte.
+
+WARUM SO.
+
+  · SECHS ZUSTÄNDE, JEDER AUS DEM ABLAUF. Das Original läuft in einer
+    Schleife von 6,4 s und schreibt dazu „Ready, Feeding, Printing,
+    Ejecting, Done" — aus einem Zeitgeber, ob gedruckt wird oder nicht.
+    Die Redion-Fassung setzt jeden Zustand an der Stelle, die ihn wahr
+    macht: `vorbereiten` vor `bilderSammeln`, `rendern` vor
+    `seiteAlsHtml`, `speichern` vor `print()`, `fertig` danach. Der
+    Katalog verlangte genau das („nur echter Zustand", §4.17).
+  · `print()` KEHRT ERST ZURÜCK, WENN DER DIALOG ZU IST. Deshalb steht
+    „fertig" danach und nicht nach einer geratenen Wartezeit. `afterprint`
+    wäre genauer, kommt aber ohne Dialog (Prüflauf ohne Kopf) gar nicht —
+    ein Ereignis, auf das man vergeblich wartet, ist schlechter als eine
+    Stelle im Ablauf, die immer erreicht wird.
+  · KEIN BALKEN. Der Druckweg kennt keinen Anteil nach aussen. Ein
+    Prozentwert wäre erfunden (E441 hat dieselbe Frage für die Sicherung
+    schon so entschieden).
+  · BEWEGUNG NUR, SOLANGE GEARBEITET WIRD. Das Blatt läuft in
+    `vorbereiten` und `rendern`; in `speichern` und `fertig` liegt es
+    bedruckt im Fach, in `fehler` steckt es ohne Druck im Schlitz. Eine
+    Animation, die auch im Ruhezustand läuft, behauptet Arbeit.
+  · NIE NUR FARBE (§38). Die Lampe wechselt — Warnung, Akzent, Erfolg,
+    Gefahr — aber Zeichen und Satz stehen daneben, und die Karte ist
+    `role="status"`. Die Zeichen kommen aus `zustand.ts`, damit es EINE
+    Sprache bleibt: „…", „◐", „✓", „!".
+  · DIE SÄTZE SIND KURZ, WEIL DIE KARTE 190 px BREIT IST. „Die Seiten
+    werden gesetzt …" brach auf dem ersten Bild in zwei Zeilen und das
+    Zeichen stand allein am Rand. Jetzt „Seiten setzen …", und der Lauf
+    misst die Zeilenzahl statt sie zu hoffen (§55.1).
+  · HÖCHSTENS EINE KARTE. `zeigen()` räumt eine ältere weg; zwei
+    übereinander wären zwei Behauptungen über denselben Vorgang.
+  · DIE BÜHNE BLEIBT DUNKEL, in Hell wie in Dunkel. Ein weisser Drucker
+    auf weisser Karte wäre keiner. Karte, Satz und Lampe nehmen die
+    Marken.
+
+WAS DABEI AUS DEM ARCHIV WURDE. Nr. 28 stand als `nicht-verifiziert` und
+ohne Original im Katalog. Redur hat am 6. September das CSS geschickt, mit
+der Kopfzeile „From Uiverse.io by spotift_5948" — der Autor stimmt mit dem
+Katalog überein. Es liegt jetzt unverändert als `original.css` im Ordner,
+der Status ist `chat-original-snippet`, und die Galerie zeigt es. Das HTML
+liegt weiterhin nicht vor und wird NICHT rekonstruiert: die Klassen liessen
+sich aus dem CSS ableiten, der sichtbare Text nur raten (§0.10). Deshalb
+`original.css` und keine `original.html`.
+
+GEGENPROBE, gelaufen (§55.2): in `werkzeuge.ts` `karte?.setzen('rendern')`
+gestrichen, neu gebaut, `test431` gelaufen — §3 rot mit
+`["bereit","vorbereiten","speichern","fertig"]`, das Glied fehlte. Wieder
+eingesetzt, 45/45 grün.
+
+UND EIN FUND BEIM SCHREIBEN DES LAUFS, zweimal derselbe: eine Prüfung, die
+nicht rot werden kann, beweist nichts. Der erste Beobachter las
+`dataset.zustand` erst, nachdem `print()` zurück war — die Sätze kommen
+gesammelt, also stand dort zweimal „fertig" und nie „speichern". Und die
+erste Zeilenzählung teilte die Höhe des Absatzes durch die Zeilenhöhe und
+zählte das Polster mit: „Bereit" ergab 2. Jetzt: `attributeOldValue` für
+die Folge, `getClientRects().length` für die Zeilen.
+
+BILD ANGESEHEN (§55.3): `bilder/drucker-rechner-hell.png`,
+`drucker-rechner-dunkel.png`, `drucker-handy-dunkel.png` — die Karte über
+einer offenen Seite, Zustand „rendern". Auf dem ersten Bild brach der Satz
+um; das ist der Grund für die kurzen Sätze oben.
+
+DATEIEN. `src/schale/bedienung/drucker.ts` (neu),
+`src/bereiche/wissen/werkzeuge.ts`, `quell/schale/stil/bausteine.css`,
+`index.html`, `src/dienst/sw.ts`, `bilder.mts`,
+`quell/entwicklung/ui-reserve/katalog.json`,
+`quell/entwicklung/ui-reserve/komponenten/28-printer-process-card/`
+(`original.css` neu, `notizen.md`), `doku/UI-KOMPONENTEN.md`,
+`pruefungen/lauf/test431.mts` (neu).
+
+GEPRÜFT. test431 (45 Punkte, neu), test426 (28), test427 (55), test182
+(36), test362 (18), test290 (13), test105, test109, test87;
+`npm run typecheck`, `npm run bauen:ts` (Dienststand v442).
+
+---
+
+E459 — Die Ordnerkarte: der Blick ins Fach, ohne hineinzugehen
+--------------------------------------------------------------------------
+
+ENTSCHEIDUNG. Ein Ordner im Regal bekommt im ⌄-Menü den Eintrag „Blick
+hinein". Er schlägt die Ordnerkarte auf: die echten Kinder fächern heraus,
+jedes ein Knopf mit Namen und Art, der Zähler nennt die echte Anzahl, und
+die Suche darin geht durch den ganzen Unterbaum. Das Bauteil liegt als
+`src/schale/bedienung/ordnerkarte.ts` neben `zustand.ts`, `zustandsknopf.ts`
+und `drucker.ts`.
+
+BEFUND. Seit E380 ist ein Ordner ein ORT: ein Tipp geht hinein statt zu
+öffnen. Das ist richtig und war der Fund aus GoodNotes — aber für die
+Frage „liegt das Skript in diesem Fach oder im anderen?" sind es vier Wege
+für eine Auskunft: hinein, ansehen, zurück, ins nächste. Der Deckel sagt
+heute „7 Sachen" und verschweigt, WELCHE sieben.
+
+Dazu ein zweiter, kleinerer Befund: die Suche des Regals filtert nach
+`parentId` — also nur die offene Ebene. In einem Fach mit Unterfächern
+findet sie nichts, was eine Ebene tiefer liegt, und sagt das auch nicht.
+Die Karte bekommt den Unterbaum mit und nennt bei jedem Treffer den Weg.
+
+WOHER. Zwei Vorgaben von Redur vom 6. September 2026, und sie beschreiben
+dasselbe: die 3D-Ordnerkarte, die sich beim Klick öffnet und die Dateien
+auffächert (`vorgaben/folder-card.css`), und die Projektstruktur, die beim
+Überfahren eine verschachtelte Liste zeigt. „Zeig mir, was drin ist, ohne
+dass ich hingehen muss" — ein Bauteil, nicht zwei (§8).
+
+WARUM SO.
+
+  · EIN KNOPF, KEIN KÄSTCHEN. Die Vorgabe klappt über ein verstecktes
+    `<input type="checkbox">` und `:checked` auf. Ein Ordner, der aufgeht,
+    ist aber keine Auswahl, die man abschickt — er ist ein Zustand „auf"
+    oder „zu", und dafür heisst das Attribut `aria-expanded` (§38).
+  · ZUGEKLAPPT STEHT KEIN BLATT IM BAUM. Sie nur mit `opacity:0` zu
+    verstecken hiesse: ein Vorleser zählt fünf Knöpfe auf, die niemand
+    sieht und niemand treffen kann.
+  · DIE FARBEN SIND SCHMUCK, DIE ART IST TEXT. Fünf Farben für zehn Arten
+    wäre ein Schlüssel, den niemand auswendig kann. Auf jedem Blatt steht
+    das Wort — „PDF", „Ordner", „3 Sachen" —, und der ganze Name samt Art
+    und Weg steht im `title` und im `aria-label`.
+  · HÖCHSTENS FÜNF. Mehr überdecken einander; der Rest steht als Satz da
+    („und 2 weitere — such danach, um sie zu sehen") und ist über die
+    Suche erreichbar. Der Zähler nennt trotzdem ALLE.
+  · DER PUNKT SCHLÄGT NUR BEIM SUCHEN. In der Vorgabe pulst er immer und
+    meint nichts. Hier heisst er: es ist ein Filter aktiv — und das Wort
+    daneben wechselt mit ihm von „Sachen" auf „Treffer von 8".
+  · DER ALTE WEG BLEIBT. „Ordner öffnen" steht unter der Karte und tut
+    genau das, was der Deckelklick immer tat (`geheIn`). Nichts wird
+    ersetzt, es kommt etwas dazu.
+
+WAS DIE BILDER GEFUNDEN HABEN, und das ist der eigentliche Bericht (§55.1).
+Drei Fassungen sahen im Quelltext richtig aus:
+
+  1. Die aufgefächerten Blätter lagen ÜBER der Suchzeile. Die Bühne war
+     132 px hoch, das oberste Blatt steht 138 px über dem Boden.
+  2. Mit 158 px lagen drei der fünf Blätter hinter der Vorderklappe — die
+     war so hoch wie die Rückwand. Sie ist jetzt eine niedrige Lasche.
+  3. Mit 190 px war die Zeile des untersten Blattes verdeckt. Und die
+     Zeilen standen am KOPF jedes Blattes — sichtbar ist aber der untere
+     Streifen, weil das nächste Blatt weiter oben UND weiter vorn liegt.
+     Auf dem Telefonbild standen vier farbige Streifen ohne ein Wort
+     darauf. Die Zeile sitzt jetzt unten.
+
+Dazu zwei kleinere: das fünfte Blatt war violett wie der Ordner selbst und
+damit unsichtbar; und die Drehung von ±15° schnitt den Namen des Blattes
+darunter an — „Formelsammlung" stand als „Formelsa…" da, obwohl Platz war.
+Jetzt ±3°, und was wirklich nicht passt, endet sichtbar mit „…".
+
+UND WAS DER PRÜFLAUF GEFUNDEN HAT, was kein Bild zeigen konnte: der
+Klappgriff (`inset:0`, `z-index:10`) lag über allen Blättern. Sie sind
+Knöpfe, aber ein Mausklick hätte nie einen getroffen — er hätte den Ordner
+zugeklappt. Auf dem Bild war nichts zu sehen, im Quelltext auch nicht, und
+ein `querySelector` findet ein Element auch dann, wenn es vollständig
+hinter einem anderen liegt. `test432` §2 misst deshalb mit
+`elementFromPoint`: liegt in der Mitte jeder Zeile wirklich diese Zeile?
+
+GEGENPROBEN (§55.2). A: `.ru-fach-blaetter` zurück auf `z-index:5` → sechs
+Punkte rot, jeder mit „davor liegt ru-fach-griff". B: die Zeile zurück an
+den Kopf des Blattes → vier Punkte rot. C: die Bühnenhöhe zurück auf
+190 px → BLIEB GRÜN; die Höhe allein war nie der Fehler, sondern erst
+zusammen mit den alten Abständen. C steht deshalb nicht als Beleg da.
+
+BILDER ANGESEHEN: `bilder/ordnerkarte-rechner-hell.png`,
+`-rechner-dunkel.png`, `-handy-dunkel.png` — fünf Blätter, fünf lesbare
+Namen, fünf Art-Marken.
+
+DATEIEN. `src/schale/bedienung/ordnerkarte.ts` (neu),
+`src/bereiche/wissen/bibliothek.ts`, `quell/schale/stil/bausteine.css`,
+`index.html`, `src/dienst/sw.ts`, `bilder.mts`,
+`quell/entwicklung/ui-reserve/vorgaben/` (neu),
+`pruefungen/lauf/test432.mts` (neu).
+
+GEPRÜFT. test432 (48 Punkte, neu, zwei Gegenproben rot gesehen);
+`npm run typecheck`, `npm run bauen:ts`.
+
+---
+
+E460 — Ein Merker für „gemerkt", und er sagt es auch hörbar
+--------------------------------------------------------------------------
+
+ENTSCHEIDUNG. `schale/bedienung/merkzeichen.ts` ist der eine Merker für
+das Feld `favorite`: ein Lesezeichenband, gefüllt oder offen, mit
+`aria-pressed` und einem Vorlesenamen, der den Titel nennt. Er steht in
+der Kopfleiste (`#btn-fav`) und im Heftregal (`.nh-stern`).
+
+BEFUND, gezählt statt vermutet. Dasselbe Feld wurde an drei Stellen
+verschieden gezeichnet:
+
+  · Kopfleiste — ein SVG mit der Klasse `on`, KEIN `aria-pressed`, und der
+    Vorlesename hiess in beiden Zuständen „Zu Favoriten". Wer die Farbe
+    nicht sieht, erfuhr nie, ob die Seite gemerkt ist, und hörte auch
+    beim Drücken nur denselben Satz. Das ist §38, und es war offen.
+  · Notizhefte — „★" gegen „☆" aus der Schrift, mit `aria-pressed`. Ein
+    Zeichen aus der Schrift ist ein Risiko: hat eine Schrift nur eines der
+    beiden, sieht „gemerkt" aus wie „nicht gemerkt".
+  · Regal — ein Zeichen, das gar kein Knopf ist (`aria-hidden`); umschalten
+    geht nur über das ⌄-Menü.
+
+WOHER, und warum es EIN Zeichen wurde. Redur hat zwei Vorgaben geschickt:
+das Lesezeichen mit dem Funkenkranz und das Herz mit dem rollenden Punkt.
+Beide zeichnen denselben Vorgang. Zwei Symbole für ein Feld wären zwei
+Sprachen für eine Sache (§8) — wer in der Kopfleiste ein Herz und im Heft
+einen Stern sieht, fragt zu Recht nach dem Unterschied, und es gibt
+keinen. Redion nimmt deshalb die FORM des Lesezeichens (das Wort hier
+heisst „Favoriten", nicht „gefällt mir") und die MECHANIK des Herzens:
+der Punkt rollt in zwei Zügen an seinen Platz, darauf springt der Kranz
+auf. Beide Vorgaben stecken darin, keine zweimal.
+
+WARUM SO.
+
+  · FORM VOR FARBE. Gefüllt gegen offen, derselbe Umriss. Das bleibt in
+    Graustufen unterscheidbar; `test433` §4 misst genau das.
+  · EIN PFAD, KEIN SCHRIFTZEICHEN. Siehe oben.
+  · DER KRANZ SPRINGT NUR BEIM ANHAKEN AUF, und nur bei einem echten
+    Wechsel. Bei jedem Neuzeichnen wäre es ein Feuerwerk, sooft sich die
+    Seite rührt; beim Abhaken wäre es eine Feier fürs Weggehen.
+  · DAS BAUTEIL KENNT WEDER `Store` NOCH `favorite`. Es meldet den neuen
+    Zustand; wer ihn speichert, entscheidet der Aufrufer. So kann dasselbe
+    Zeichen später an einem anderen Feld hängen, ohne dass es sich ändert.
+  · ZWEI FASSUNGEN, EINE WAHRHEIT. `markieren()` stellt einen vorhandenen
+    Knopf (Kopfleiste), `html()` gibt die Zeichenkette (Notizhefte bauen
+    ihr Regal als Text). Beide bauen dasselbe Markup — die zweite escapt
+    den Namen selbst (§19).
+
+WAS DER PRÜFLAUF GEFUNDEN HAT: der Kranz blieb nach dem Abhaken stehen,
+bis `animationend` kam. Jedes Stellen räumt ihn jetzt zuerst weg.
+
+GEGENPROBEN (§55.2), beide gelaufen und rot gesehen: die Kopfleiste zurück
+auf `classList.toggle('on', …)` → §2 rot, das Band fehlt und der
+Vorlesename ist wieder zustandslos. Die Füllung immer auf `currentColor`
+→ §1 und §4 rot, die Form sagt nichts mehr.
+
+WAS OFFEN BLEIBT: der Deckelstern im Regal (`bib-deckel-stern`) ist
+weiterhin kein Knopf. Er sitzt INNERHALB des Deckelknopfs, und ein Knopf
+im Knopf ist ungültiges HTML. Umschalten geht dort über das ⌄-Menü. Steht
+in LUECKEN.md.
+
+BILD ANGESEHEN: `bilder/merkzeichen-rechner-hell.png` — das gefüllte Band
+in der Kopfleiste einer gemerkten Seite.
+
+DATEIEN. `src/schale/bedienung/merkzeichen.ts` (neu),
+`src/schale/aufbau/kopfleiste.ts`, `src/bereiche/wissen/notebook.ts`,
+`quell/schale/stil/bausteine.css`, `index.html`, `src/dienst/sw.ts`,
+`bilder.mts`, `pruefungen/lauf/test433.mts` (neu).
+
+GEPRÜFT. test433 (34 Punkte, neu, zwei Gegenproben rot gesehen);
+`npm run typecheck`, `npm run bauen:ts`.
+
+---
+
+E461 — Vier Lader, vier Auskünfte, und keiner erfindet einen Anteil
+--------------------------------------------------------------------------
+
+ENTSCHEIDUNG. `schale/bedienung/lader.ts` hat vier Sichten, und jede sagt
+etwas anderes über den Vorgang, den sie begleitet:
+
+| Sicht | Heisst | Wo sie steht |
+|---|---|---|
+| `fluss` | es gibt einen echten Anteil | WebLLM lädt sein Modell |
+| `sterne` | es läuft, die Länge ist unbekannt | Auftrag mit `schritte: 0` |
+| `wort` | es läuft oder nicht, mehr weiss niemand | „Jetzt abgleichen" |
+| `presse` | dieser Auftrag macht Blätter | Auftragsart `pdf-bilder` |
+
+BEFUND. Redion hatte sechs Zustandswörter (E441) und einen Knopf, der sie
+spricht — aber für längere Vorgänge nur einen Endlos-Kreisel
+(`.hs-kreisel`, E57) und einen Balken. Nachgezählt gibt es im ganzen
+Bestand GENAU ZWEI Stellen mit einem echten Anteil: den
+`initProgressCallback` von WebLLM (0..1 von aussen) und `schritt/schritte`
+der Auftragsmaschine. Alles andere — Suchindex, Abgleich,
+Ollama-Prüfung, Einzeldatei — weiss nur „läuft" oder gar nichts.
+
+Ein Kreisel für alle vier sagt bei jedem Vorgang dasselbe, nämlich nichts.
+Vier Bilder sagen vier Dinge, und das ist die ganze Entscheidung.
+
+WOHER. Vier Vorgaben von Redur vom 6. September 2026 aus
+`ui-reserve/vorgaben/loader-sammlung.css`: der flüssige Ring mit der
+Klumpen-Maske, die fünf Sterne, der Buchstabenring und die isometrische
+Druckpresse.
+
+WARUM SO.
+
+  · DER ANTEIL IST DIE HÖHE UND DIE ZAHL. `fluss` schreibt „42 %" als
+    TEXT in die Mitte — wer die Füllung nicht sieht, liest sie (§38). Ohne
+    Anteil steht dort NICHTS: „0 %" wäre eine Behauptung über etwas
+    Unbekanntes. Über 1 und unter 0 wird geklemmt.
+  · DIE MASKE IST JE INSTANZ EIGEN. Der Ring braucht eine SVG-Maske, und
+    eine Maske braucht eine ID. E440 hat am KI-Funken gefunden, was
+    passiert, wenn zwei Instanzen dieselbe tragen: sie teilen sie sich.
+    `test434` §2 hält das fest.
+  · DIE PRESSE STEHT NEBEN DEM BALKEN, NICHT STATT SEINER. Der Balken ist
+    die Zahl, die Presse ist das Bild dazu. Und sie erscheint nur bei
+    `zustand === 'laeuft'` — ein wartender Auftrag bekommt kein laufendes
+    Bild, sonst behauptet es Arbeit, die gerade nicht stattfindet (E286,
+    derselbe Grund wie beim fehlenden Balken).
+  · DER SATZ STEHT NUR EINMAL. Im Auftragsfenster trägt die Zeile ihren
+    Stand schon; der Lader bekommt ihn für die Vorlesestimme und gibt
+    seinen sichtbaren Text ab.
+  · JEDER WIRT BEHÄLT SEINEN RÜCKFALL. Ist `Lader` nicht geladen, steht in
+    der KI-Fläche wieder der alte Balken und am Abgleich wieder „Läuft …".
+
+WAS DAS BILD GEÄNDERT HAT (§55.1), drei Dinge, die im Quelltext richtig
+aussahen:
+
+  · Die fünf Sterne lagen mit 18–46 % Grösse übereinander und ergaben
+    EINEN kleinen Fleck. Fünf Sterne, die wie einer aussehen, sind vier zu
+    viel. Jetzt 34–98 % und je grösser, desto blasser.
+  · Der Buchstabenring war mit den Schatten der Vorgabe eine gefüllte
+    Kugel, und „Abgleich" stand dunkelgrau auf Violett — unlesbar. Der
+    Schein liegt jetzt am Rand, die Mitte bleibt frei.
+  · Die Presse war grau auf grau und nicht als Presse zu erkennen. Die
+    Walzen sind jetzt dunkel, die Bogen weiss mit Schatten.
+
+GEGENPROBEN (§55.2), beide gelaufen und rot gesehen: eine feste
+Masken-Kennung statt des Zählers → §2 rot. `bildArt` immer leer → §4 rot,
+drei Punkte.
+
+WAS OFFEN BLEIBT: zwei der vier Stellen liessen sich im Prüflauf nicht
+auslösen — ein Modell-Download dauert Minuten, ein Abgleich braucht einen
+Server. Dort prüft `test434` §5 die VERDRAHTUNG und sagt das auch so.
+Steht in LUECKEN.md als L119.
+
+BILD ANGESEHEN: `bilder/lader-rechner-hell.png` und `-dunkel` — alle vier
+nebeneinander mit echten Werten.
+
+DATEIEN. `src/schale/bedienung/lader.ts` (neu),
+`src/bereiche/ki/dienst.ts`, `src/schale/ueberlagerung/auftraege.ts`,
+`src/bereiche/verbinden/ansicht/wolke.ts`, `quell/schale/stil/bausteine.css`,
+`index.html`, `src/dienst/sw.ts`, `bilder.mts`,
+`pruefungen/lauf/test434.mts` (neu).
+
+GEPRÜFT. test434 (46 Punkte, neu, zwei Gegenproben rot gesehen);
+`npm run typecheck`, `npm run bauen:ts`.
+
