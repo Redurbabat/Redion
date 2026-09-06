@@ -219,3 +219,36 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
   .studio-action::after,.bib-studio-import::after,.lernwelt .lw-actions button.is-primary::after{display:none}
   .studio-action[aria-busy="true"]::before,.bib-studio-import[aria-busy="true"]::before{animation:none}
 }
+
+/* ---- Die Symbolreihe im Studio-Kopf (E462, Vorgabe „iso-pro") ------------
+   Redurs Vorgabe schiebt ein Symbol beim Überfahren isometrisch heraus und
+   lässt eine Beschriftung daneben aufgehen. In Redion sitzt genau eine
+   echte Symbolreihe: der Studio-Kopf. Sie bekommt beides.
+
+   DIE BESCHRIFTUNG IST DER ECHTE VORLESENAME. `content: attr(aria-label)`
+   nimmt, was schon dasteht — kein zweiter Text, der mit dem ersten
+   auseinanderlaufen könnte (§8). Ein Knopf ohne `aria-label` bekommt
+   deshalb auch keine Blase, und das ist richtig so: er hätte nichts zu
+   sagen.
+
+   NUR MIT ECHTEM ZEIGER (`hover:hover`). Am Telefon läge die Blase unter
+   dem Daumen und verdeckte den Knopf, den sie erklärt. */
+@media (hover:hover) and (min-width:761px){
+  .studio-icon{position:relative; transition:transform var(--motion-fast) var(--ease)}
+  .studio-icon:is(:hover,:focus-visible){transform:translate(2px,-2px)}
+  .studio-icon[aria-label]::after{
+    content:attr(aria-label);
+    position:absolute; top:calc(100% + 8px); left:50%; translate:-50% 0;
+    padding:4px 9px; border-radius:var(--radius-md);
+    background:var(--bg-card); border:1px solid var(--line);
+    box-shadow:var(--studio-elevation);
+    color:var(--text); font-size:11.5px; font-weight:600; white-space:nowrap;
+    opacity:0; pointer-events:none; z-index:60;
+    transition:opacity var(--motion-fast) var(--ease), translate var(--motion-fast) var(--ease)
+  }
+  .studio-icon[aria-label]:is(:hover,:focus-visible)::after{opacity:1; translate:-50% 2px}
+}
+@media (prefers-reduced-motion: reduce){
+  .studio-icon:is(:hover,:focus-visible){transform:none}
+  .studio-icon[aria-label]::after{transition:none}
+}

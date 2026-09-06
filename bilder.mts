@@ -2041,6 +2041,53 @@ const ANSICHTEN: Record<string, {
   }
 };
 
+/* --- Willkommen mit Textur, Schalter und Symbolreihe (E462) ---------------
+   Drei Vorgaben auf einem Bild: die Rauschtextur im Kopf des
+   Begrüssungsschirms, der eingeschaltete Schalter mit seinem Verlauf und
+   die Beschriftung an einem Symbol der Studio-Reihe. */
+ANSICHTEN['willkommen'] = {
+  titel: 'Willkommen: Rauschtextur im Kopf (E462)',
+  bauen: async () => {
+    Store.setMeta('rundgangGesehen', false);
+    document.querySelectorAll('.overlay').forEach(o => o.remove());
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+    Rundgang.willkommen();
+    await new Promise(r => setTimeout(r, 700));
+  }
+};
+
+ANSICHTEN['staffelei'] = {
+  titel: 'Die Staffelei: hell und dunkel als Bild (E462)',
+  bauen: async () => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelectorAll('.overlay').forEach(o => o.remove());
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+    document.getElementById('rg-willkommen')?.remove();
+    document.getElementById('rg-einladung')?.remove();
+    Aussehen.dialog();
+    await new Promise(r => setTimeout(r, 900));
+  },
+  /* Einmal drücken: dann steht die Skizze (Tag) da, und der Pinsel ist
+     zurückgefahren. Das erste Bild zeigte nur die Nacht. */
+  dann: async () => {
+    document.querySelector<HTMLElement>('.ru-staff')?.click();
+    await new Promise(r => setTimeout(r, 900));
+  }
+};
+
+ANSICHTEN['schalter'] = {
+  titel: 'Der Schalter mit dem Verlauf der Vorgabe (E462)',
+  bauen: async () => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelectorAll('.overlay').forEach(o => o.remove());
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+    document.getElementById('rg-willkommen')?.remove();
+    document.getElementById('rg-einladung')?.remove();
+    Einstellungen.oeffne();
+    await new Promise(r => setTimeout(r, 900));
+  }
+};
+
 /* --- Die vier Lader (E461) -----------------------------------------------
    Zu sehen sind alle vier nebeneinander, mit echten Werten: der flüssige
    Ring bei 42 %, die Sterne, das Wort „Abgleich", die Presse. Ihre echten

@@ -271,10 +271,10 @@ mehr, als das Bauteil hübsch ist.
 | `.press` (Druckpresse) | Auftragsfenster, Auftragsart `pdf-bilder` | `schritt` von `schritte`, echte Seitenzahlen | **E461**, test434 |
 | `.🤚` (tippende Hand) | Rundgang, an den Zielen, die man antippt | die neun Schritte und ihre echten Ziele | offen |
 | `.btn` mit Buchstaben (dunkel) | Zustandsknopf, Sicht `erzeugen` — „Datenbank bauen", „Seite aufbauen" | die Zusage der KI-Aktion, wie bei `laden` (E441) | offen |
-| `.gradient-btn` als Umschalter | die Schalter der Einstellungen | `Store.setMeta`, derselbe Wert wie heute | offen |
-| `.theme-switch` (Staffelei) | Aussehen → Farbe, der Wechsel hell/dunkel | die acht Schemata und ihr `grund: 'light' \| 'dark'` | offen |
-| `.island` (Textur) | der Kopf des Begrüssungsbildschirms | nichts — bewusst Schmuck an der einen Stelle, die keine Auskunft trägt | offen |
-| `.iso-pro` (isometrische Symbole) | die Symbolreihe der Studio-Kopfleiste | die Knöpfe, die es dort schon gibt; die Beschriftung kommt aus dem `aria-label` | offen |
+| `.gradient-btn` als Umschalter | die Schalter der Einstellungen | `Store.setMeta`, derselbe Wert wie heute | **E462**, test435 |
+| `.theme-switch` (Staffelei) | Aussehen → Farbe, der Wechsel hell/dunkel | die acht Schemata und ihr `grund: 'light' \| 'dark'` | **E462**, test435 |
+| `.island` (Textur) | der Kopf des Begrüssungsbildschirms | nichts — bewusst Schmuck an der einen Stelle, die keine Auskunft trägt | **E462**, test435 |
+| `.iso-pro` (isometrische Symbole) | die Symbolreihe der Studio-Kopfleiste | die Knöpfe, die es dort schon gibt; die Beschriftung kommt aus dem `aria-label` | **E462**, test435 |
 
 Was **nicht** übernommen wird, und warum, steht jeweils in der Entscheidung
 zum Bauteil. Der wiederkehrende Grund ist derselbe wie bei Nr. 28: das

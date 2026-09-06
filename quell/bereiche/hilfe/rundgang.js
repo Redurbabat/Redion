@@ -500,6 +500,13 @@ const Rundgang = (() => {
                 '<p class="wk-fuss">Deine Daten liegen im Speicher dieses Browsers. ' +
                 'Sichere sie ab und zu — unter „Mehr" steht, wie.</p>' +
                 '</div>';
+        /* DIE TEXTUR IN DEN KOPF (E462). Sie ist Schmuck, und der Kopf ist die
+           eine Fläche in Redion, die keine Auskunft trägt — seit E456 steht
+           dort nicht einmal mehr eine Marke. Fehlt das Bauteil, fehlt nur der
+           Schmuck. */
+        const wkKopf = d.querySelector('.wk-kopf');
+        if (wkKopf && typeof Textur !== 'undefined')
+            Textur.legen(wkKopf);
         d.addEventListener('click', e => {
             const b = elVon(e)?.closest('[data-a]');
             if (!b)

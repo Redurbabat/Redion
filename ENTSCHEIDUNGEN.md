@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-441 Entscheidungen, E1 bis E461 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+442 Entscheidungen, E1 bis E462 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -505,6 +505,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E459** — Die Ordnerkarte: der Blick ins Fach, ohne hineinzugehen
 * **E460** — Ein Merker für „gemerkt", und er sagt es auch hörbar
 * **E461** — Vier Lader, vier Auskünfte, und keiner erfindet einen Anteil
+* **E462** — Schalter, Staffelei, Textur, Symbolreihe: die Vorgabe liefert das Aussehen, Redion den Zustand
 
 ---
 
@@ -36297,4 +36298,70 @@ DATEIEN. `src/schale/bedienung/lader.ts` (neu),
 
 GEPRÜFT. test434 (46 Punkte, neu, zwei Gegenproben rot gesehen);
 `npm run typecheck`, `npm run bauen:ts`.
+
+---
+
+E462 — Schalter, Staffelei, Textur, Symbolreihe: die Vorgabe liefert das Aussehen, Redion den Zustand
+--------------------------------------------------------------------------
+
+ENTSCHEIDUNG. Vier weitere Vorgaben Redurs vom 6. September, vier Stellen:
+
+| Vorgabe | Wird zu | Zustand kommt aus |
+|---|---|---|
+| `.gradient-btn` als Umschalter | dem Verlauf IM eingeschalteten `.schalter` | `Store.setMeta`, wie bisher |
+| `.theme-switch` (Staffelei) | `schale/bedienung/staffelei.ts`, oben in Aussehen → Farben | `grund` des gespeicherten Schemas |
+| `.island` (Rauschen) | `schale/bedienung/textur.ts`, im Kopf des Willkommen-Schirms | nichts — bewusst Schmuck |
+| `.iso-pro` (Symbole) | Druck und Beschriftung der Studio-Kopfleiste | der echte `aria-label` |
+
+WARUM SO.
+
+  · DER SCHALTER BEHÄLT SEIN MARKUP. Er wird an 18 Stellen als
+    Zeichenkette gebaut (`schalter()` und `haken()`); zwei Verlaufsschichten
+    hineinzuflechten hiesse 18 Aufrufer und ihre Prüfläufe anfassen. Der
+    Verlauf hängt an `::before`, nur an `.an`, und die 44-px-Trefferfläche
+    (`::after`, §37) liegt davor — `test435` §2 misst mit `elementFromPoint`,
+    dass ein Klick in die Mitte den Schalter trifft und nicht den Verlauf.
+  · DIE STAFFELEI MALT TAG AUF NACHT, nicht Skizze auf Bunt. Das ist die
+    Bedeutung, die hier daranhängt; ein rosa Sonnenuntergang wäre hübsch
+    und hiesse nichts. Beide Landschaften haben DIESELBEN Teile an
+    denselben Stellen, sonst wäre der Wechsel ein Szenenwechsel.
+  · SIE WECHSELT DEN GRUNDTON, NICHT DAS SCHEMA. Die acht Karten bleiben
+    die Wahl darunter (§8). Welches Schema kommt, entscheidet dieselbe
+    Regel wie im Studio-Kopf: das zuletzt benutzte dieses Grundtons.
+  · UND SIE FOLGT DEM DOKUMENT. Wird anderswo gewechselt, sagt `data-theme`
+    es zuerst; ein Beobachter stellt die Staffelei nach. `test435` §1 fand
+    den Stand ohne ihn: die Karte sagte „Hell", die Seite war dunkel — und
+    der nächste Wechsel schrieb das dunkle Schema unter den hellen
+    Schlüssel. Der Wechsel geht deshalb vom GESPEICHERTEN Schema aus,
+    nicht vom Knopf.
+  · DIE TEXTUR IST DER ERSTE SVG-FILTER IM PRODUKTIVCODE. E440 hat am
+    KI-Funken gezeigt, was zwei gleiche IDs tun. Für einen Lader hiess die
+    Antwort „je Instanz eine eigene" (E461); für eine Textur, die überall
+    dieselbe ist, heisst sie: GENAU EINMAL global, dann referenzieren.
+    Dreimal legen gibt einen Halter und zwei Lagen.
+  · DIE BLASE DER SYMBOLREIHE IST `attr(aria-label)`. Kein zweiter Text,
+    der mit dem ersten auseinanderlaufen könnte — und ein Knopf ohne
+    Vorlesenamen bekommt keine Blase, weil er nichts zu sagen hätte. Nur
+    mit echtem Zeiger (`hover:hover`): am Telefon läge sie unter dem
+    Daumen.
+
+WAS DAS BILD GEÄNDERT HAT (§55.1): die Textur war mit 9 % Deckung
+unsichtbar — `brightness` treibt das Rauschen fast ins Weiss, und Weiss
+mal Weiss ist Weiss. Erst bei 50 % war sie da; 22 % ist die leise Fassung.
+
+GEGENPROBEN (§55.2), beide gelaufen und rot gesehen: `beiWechsel` der
+Staffelei ohne `setzen()` → §1 rot, drei Punkte. Der Textur-Halter wird
+unter falschem Namen gesucht → §3 rot, „4 Halter, 8 Filter".
+
+BILDER ANGESEHEN: `bilder/staffelei-rechner-hell.png` (Tag),
+`-dunkel.png` (Nacht), `willkommen-rechner-hell.png`.
+
+DATEIEN. `src/schale/bedienung/staffelei.ts` (neu), `textur.ts` (neu),
+`src/bereiche/einstellungen/ansicht/aussehen.ts`,
+`src/bereiche/hilfe/rundgang.ts`, `quell/schale/stil/bausteine.css`,
+`einstellungen.css`, `studio.css`, `index.html`, `src/dienst/sw.ts`,
+`bilder.mts`, `pruefungen/lauf/test435.mts` (neu).
+
+GEPRÜFT. test435 (42 Punkte, neu), test362 (18), test290, test105,
+test109, test87; `npm run typecheck`, `npm run bauen:ts`.
 

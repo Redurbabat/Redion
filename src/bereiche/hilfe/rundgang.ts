@@ -489,6 +489,13 @@ const Rundgang = (() => {
         'Sichere sie ab und zu — unter „Mehr" steht, wie.</p>' +
       '</div>';
 
+    /* DIE TEXTUR IN DEN KOPF (E462). Sie ist Schmuck, und der Kopf ist die
+       eine Fläche in Redion, die keine Auskunft trägt — seit E456 steht
+       dort nicht einmal mehr eine Marke. Fehlt das Bauteil, fehlt nur der
+       Schmuck. */
+    const wkKopf = d.querySelector<HTMLElement>('.wk-kopf');
+    if (wkKopf && typeof Textur !== 'undefined') Textur.legen(wkKopf);
+
     d.addEventListener('click', e => {
       const b = elVon(e)?.closest<HTMLElement>('[data-a]');
       if (!b) return;
