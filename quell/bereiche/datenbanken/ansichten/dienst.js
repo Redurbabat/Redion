@@ -654,7 +654,7 @@ const Ansichten = (() => {
            §46 sagt, dass nichts verschwinden darf, und ein Weg, den man nur
            noch über die Adresszeile findet, ist verschwunden. */
         { name: 'Wo du arbeitest', eintraege: [
-                { z: '▤', t: 'Workspace', s: 'Übersicht, Datenbanken, Wiki und Vorlagen.', a: 'workspace' },
+                { z: '▤', t: 'Seiten & Wissen', s: 'Dein Bestand und offene Seiten. Weitere Sammlungen findest du in der Bibliothek.', a: 'workspace' },
                 { z: '⌂', t: 'Arbeitsbereich', s: 'Name, Zeichen und der Baum aller Seiten.', a: 'schublade' }
             ] },
         { name: 'Wichtige Werkzeuge', eintraege: [

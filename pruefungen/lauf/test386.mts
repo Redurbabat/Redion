@@ -389,17 +389,17 @@ const worte = await pc.evaluate(`(() => {
     : [];
   return { seiteWorkspace: holen('btn-workspace'), seiteElektro: holen('btn-elektro'), reg };
 })()`) as any;
-gleich('Die Seitenleiste sagt „Arbeitsbereich"', worte.seiteWorkspace, 'Arbeitsbereich');
+gleich('Der entfernte Workspace steht nicht mehr in der Seitenleiste', worte.seiteWorkspace, '');
 gleich('… und „Elektrotechnik"', worte.seiteElektro, 'Elektrotechnik');
 gleich('Das Register sagt dasselbe', worte.reg,
-  ['elektro=Elektrotechnik', 'workspace=Arbeitsbereich']);
+  ['elektro=Elektrotechnik']);
 p('Nirgends steht mehr „Workspace" als Beschriftung',
   !/>Workspace</.test(await pc.content()));
 /* DER ALTE NAME FÜHRT WEITER HIN. Ohne diesen Punkt wäre eine Umbenennung
    grün, die gemerkte Schauplätze und ältere Verweise ins Leere zeigen lässt. */
 const alias = fs.readFileSync(path.join(WURZEL, 'quell/schale/aufbau/schale.js'), 'utf8');
-p('„Workspace" bleibt als Alias auf dasselbe Ziel',
-  /'Arbeitsbereich': 'workspace'/.test(alias) && /'Workspace': 'workspace'/.test(alias));
+p('Alte Workspace-Namen gehören nun zur Bibliothek',
+  /'Arbeitsbereich': 'bibliothek'/.test(alias) && /'Workspace': 'bibliothek'/.test(alias));
 p('„Elektro" ebenso', /'Elektro': 'elektro'/.test(alias));
 
 await pc.close();

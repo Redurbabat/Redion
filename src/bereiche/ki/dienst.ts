@@ -1091,6 +1091,7 @@ const KI = (() => {
        dasselbe Feld, und durchsichtiger Text würde sie unlesbar machen.
        Eine Fehlermeldung, die man nicht lesen kann, ist der schlechtere
        Fehler. */
+    const aktivitaet = zeigeAktivitaet(ziel);
     ziel.classList.add('ki-schreibt');
     try {
       await frage(nachrichten, (t: any) => {
@@ -1105,6 +1106,7 @@ const KI = (() => {
       ziel.textContent = '⚠ ' + (e instanceof Error ? e.message : String(e));
     } finally {
       ziel.classList.remove('ki-schreibt');
+      aktivitaet.remove();
     }
 
     /* Quellen unter die Antwort */
@@ -1582,6 +1584,17 @@ const KI = (() => {
     });
   };
 
+  /** Eigene Statuszeile: Streaming ersetzt den Antworttext, nicht den Status.
+      Entfernen in finally gilt auch bei Fehlern und abgebrochenen Anfragen. */
+  const zeigeAktivitaet = (ziel: HTMLElement): HTMLElement => {
+    const status = document.createElement('div');
+    status.className = 'ki-aktivitaet';
+    status.setAttribute('role', 'status');
+    status.append(Zustand.aktivitaet('ki'), document.createTextNode('KI arbeitet …'));
+    ziel.before(status);
+    return status;
+  };
+
   const schreibLauf = async (befehl: any, auftrag: any) => {
     const quelle = arbeitsText();
     if (!quelle.text.trim()) { UI.toast('Es gibt noch keinen Text.'); return; }
@@ -1597,6 +1610,7 @@ const KI = (() => {
         ? '\n\nDauerhafte Anweisungen: ' + Store.getMeta('ki:persoenlich', '') : '');
 
     let antwort = '';
+    const aktivitaet = zeigeAktivitaet(ziel);
     ziel.classList.add('ki-schreibt');
     try {
       await frage([{ role: 'system', content: system },
@@ -1607,7 +1621,7 @@ const KI = (() => {
         if (kasten2) kasten2.scrollTop = 1e9;
       });
     } catch (e: unknown) { ziel.textContent = '⚠ ' + (e instanceof Error ? e.message : String(e)); return; }
-    finally { ziel.classList.remove('ki-schreibt'); }
+    finally { ziel.classList.remove('ki-schreibt'); aktivitaet.remove(); }
 
     const leiste = document.createElement('div');
     leiste.className = 'ki-antwortknoepfe';

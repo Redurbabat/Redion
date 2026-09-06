@@ -438,8 +438,9 @@ const DocumentMode = (() => {
     documentBlock: any,
     done: (region: SourceRegion) => void
   ): void => {
-    const warInert = paper.inert;
-    paper.inert = false;
+    const leseflaeche = paper.closest<HTMLElement>('.blatt-flur') || paper;
+    const warInert = leseflaeche.inert;
+    leseflaeche.inert = false;
     paper.classList.add('document-selecting');
     const overlay = document.createElement('div');
     overlay.className = 'document-region-overlay';
@@ -496,7 +497,7 @@ const DocumentMode = (() => {
       overlay.removeEventListener('pointermove', move, true);
       overlay.removeEventListener('pointerup', finish, true);
       overlay.remove(); paper.classList.remove('document-selecting');
-      paper.inert = warInert;
+      leseflaeche.inert = warInert;
       window.removeEventListener('keydown', escapeRegion, true);
     };
     const escapeRegion = (event: KeyboardEvent): void => {
@@ -620,11 +621,16 @@ const DocumentMode = (() => {
 
     const topActions = document.createElement('div');
     topActions.className = 'document-top-actions';
-    topActions.append(inspectorButton, topButton('exit', 'Seiteneditor', 'Dokumentmodus verlassen'));
+    const viewButton = topButton('view', '☷', 'Ansicht, Lesemodus und Zoom');
+    viewButton.className = 'document-view-button';
+    viewButton.setAttribute('aria-expanded', 'false');
+    topActions.append(viewButton, inspectorButton, topButton('exit', 'Seiteneditor', 'Dokumentmodus verlassen'));
     top.append(topActions);
     const commandbar = document.createElement('div');
     commandbar.className = 'document-commandbar';
     commandbar.setAttribute('aria-label', 'Dokumentansicht');
+    commandbar.id = 'document-view-' + page.id;
+    viewButton.setAttribute('aria-controls', commandbar.id);
     const modes = document.createElement('div');
     modes.className = 'document-mode-switch';
     modes.setAttribute('role', 'group');
@@ -707,7 +713,7 @@ const DocumentMode = (() => {
       stand.style.removeProperty('height');
       renderDocument(stand, block);
       stand.querySelectorAll<HTMLElement>('.blatt-papier').forEach(paper => {
-        paper.inert = !state.toolsOpen;
+        (paper.closest<HTMLElement>('.blatt-flur') || paper).inert = !state.toolsOpen;
       });
     };
 
@@ -1004,7 +1010,9 @@ const DocumentMode = (() => {
       workspace.dataset.documentTools = an ? 'open' : 'closed';
       readButton.setAttribute('aria-pressed', String(!an));
       annotateButton.setAttribute('aria-pressed', String(an));
-      center.querySelectorAll<HTMLElement>('.blatt-papier').forEach(paper => { paper.inert = !an; });
+      center.querySelectorAll<HTMLElement>('.blatt-papier').forEach(paper => {
+        (paper.closest<HTMLElement>('.blatt-flur') || paper).inert = !an;
+      });
       passen();
     };
     const panelsSetzen = (): void => {
@@ -1019,6 +1027,11 @@ const DocumentMode = (() => {
       passen();
     };
     workspace.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && workspace.dataset.documentView === 'open') {
+        workspace.dataset.documentView = 'closed';
+        viewButton.setAttribute('aria-expanded', 'false');
+        viewButton.focus(); event.stopPropagation(); return;
+      }
       if (event.key === 'Escape' && (state.thumbnailsOpen || state.inspectorOpen)) {
         const returnTo = state.inspectorOpen ? inspectorButton : thumbnailButton;
         state.thumbnailsOpen = false; state.inspectorOpen = false;
@@ -1030,6 +1043,10 @@ const DocumentMode = (() => {
     });
     workspace.addEventListener('click', event => {
       const element = event.target instanceof Element ? event.target : null;
+      if (!element?.closest('.document-commandbar,[data-document-action="view"]')) {
+        workspace.dataset.documentView = 'closed';
+        viewButton.setAttribute('aria-expanded', 'false');
+      }
       const thumb = element?.closest<HTMLElement>('[data-document-index]');
       if (thumb?.dataset.documentIndex) {
         springe(Number(thumb.dataset.documentIndex) || 0);
@@ -1053,6 +1070,11 @@ const DocumentMode = (() => {
       }
       const action = element?.closest<HTMLElement>('[data-document-action]')?.dataset.documentAction;
       if (!action) return;
+      if (action === 'view') {
+        const offen = workspace.dataset.documentView !== 'open';
+        workspace.dataset.documentView = offen ? 'open' : 'closed';
+        viewButton.setAttribute('aria-expanded', String(offen));
+      }
       if (action === 'previous') springe(state.index - 1);
       if (action === 'next') springe(state.index + 1);
       if (action === 'thumbnails') { state.thumbnailsOpen = !state.thumbnailsOpen; panelsSetzen(); }
@@ -1098,7 +1120,7 @@ const DocumentMode = (() => {
         /* Zurueck ins Regal, ohne den Dokumentmodus abzuschalten: wer das
            Skript wieder aufmacht, will es wieder als Dokument sehen. */
         const eintrag = typeof Register !== 'undefined' && (Register as any).navigation
-          ? (Register as any).navigation.eines('bibliothekOben') : null;
+          ? (Register as any).navigation.eines('app-bib') : null;
         if (eintrag && typeof eintrag.tun === 'function') eintrag.tun();
         else UI.toast('Das Regal ist gerade nicht erreichbar.');
         return;

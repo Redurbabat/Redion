@@ -6364,11 +6364,11 @@ body.iblatt-auf .menu{z-index:794}
 /* Das Zeichen von „laeuft" dreht sich — dezent, 1,2 s, und nur solange
    wirklich etwas laeuft. Wer keine Bewegung will, sieht den halben Kreis
    still stehen; der Text daneben sagt es ohnehin. */
-.ru-zustand[data-zustand="laeuft"] .ru-zustand-zeichen,
-.ru-zk[data-zustand="arbeitet"] .ru-zk-zeichen{
-  animation:ru-dreh 1.2s linear infinite
-}
-@keyframes ru-dreh{ to{ transform:rotate(360deg) } }
+.ru-aktivitaet{display:inline-block;width:18px;height:18px;flex:none;fill:currentColor;overflow:visible}
+.ru-aktivitaet[data-art="neutral"] rect{animation:ru-segment 1s linear infinite;animation-delay:calc(var(--ru-schritt) * -100ms)}
+.ru-aktivitaet[data-art="ki"] path{transform-box:fill-box;transform-origin:center;animation:ru-funken 1.4s ease-in-out infinite;animation-delay:calc(var(--ru-schritt) * -240ms)}
+@keyframes ru-segment{0%,100%{opacity:1}80%{opacity:.22}}
+@keyframes ru-funken{0%,100%{opacity:.55;transform:scale(.88)}50%{opacity:1;transform:scale(1)}}
 
 /* ---- Der Zustandsknopf -------------------------------------------------
    `button.ru-zk` und nicht `.ru-zk`: der Knopf traegt daneben die Klasse
@@ -6427,7 +6427,29 @@ button.ru-zk[data-art="laden"][data-zustand="arbeitet"] .ru-zk-balken{ display:b
    unbestimmte Balken steht dann als halbe Linie — sichtbar, nur nicht
    wandernd. */
 @media (prefers-reduced-motion: reduce){
+  .ru-aktivitaet[data-art] :is(rect,path){animation:none;opacity:1}
+  .ru-aktivitaet[data-art="ki"] path{transform:none}
   .ru-zustand[data-zustand="laeuft"] .ru-zustand-zeichen,
   .ru-zk[data-zustand="arbeitet"] .ru-zk-zeichen{ animation:none }
   .ru-zk-balken:not(.bestimmt) i{ animation:none; width:50% }
 }
+
+/* Redion-Bedienung · Baumansicht */
+.ru-baum{display:block;min-width:0;color:var(--text);font-size:13px;line-height:1.35}
+.ru-baum [role="group"]{display:block}
+.ru-baum-zeile{--baum-einzug:calc(var(--baum-ebene,0)*16px);display:grid;grid-template-columns:20px minmax(0,1fr);align-items:center;min-height:34px;padding:3px 8px 3px calc(6px + var(--baum-einzug));border-radius:var(--radius-md);cursor:default;user-select:none}
+.ru-baum-zeile:hover{background:var(--bg-hover)}
+.ru-baum-zeile[aria-selected="true"]{background:var(--accent-schwach);color:var(--accent-text)}
+.ru-baum-zeile[aria-disabled="true"]{opacity:.45}
+.ru-baum-zeile:focus-visible{outline:2px solid var(--accent-text);outline-offset:1px}
+.ru-baum-knick{display:grid;place-items:center;width:20px;height:24px;padding:0;border:0;color:var(--text-dim);background:transparent;font:inherit;line-height:1}
+.ru-baum-knick:disabled{opacity:0}
+.ru-baum-inhalt{display:flex;align-items:center;gap:7px;min-width:0}
+.ru-baum-zeichen{display:grid;place-items:center;flex:0 0 18px;width:18px;height:18px;color:var(--text-dim)}
+.ru-baum-zeichen svg{width:16px;height:16px}
+.ru-baum-name{min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.ru-baum-kinder[hidden]{display:none}
+.ru-baum-auf{animation:ru-baum-oeffnen var(--motion-normal) var(--ease-enter)}
+@keyframes ru-baum-oeffnen{from{opacity:.3;transform:translateY(-4px)}to{opacity:1;transform:none}}
+@media(max-width:760px){.ru-baum-zeile{min-height:44px}}
+@media(prefers-reduced-motion:reduce){.ru-baum *{scroll-behavior:auto!important}.ru-baum-auf{animation:none}}

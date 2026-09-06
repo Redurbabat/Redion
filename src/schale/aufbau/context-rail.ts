@@ -307,11 +307,13 @@ const Kontextkante = (() => {
      den `test272` bei `innerHTML` schon einmal beschreibt.)
      ══════════════════════════════════════════════════════════════════════ */
 
-  /** Die fünf, die immer dastehen. */
+  /** Wenige Hauptwege; der vollständige Katalog bleibt unter „Mehr Orte“. */
   const hauptOrte = (): any[] => {
     try {
-      return (Register?.navigation?.anPlatz?.('oben') || [])
-        .filter((e: any) => e && e.haupt === true && typeof e.tun === 'function');
+      return (Register?.navigation?.alle?.() || [])
+        .filter((e: any) => e && e.haupt === true && typeof e.tun === 'function' &&
+          (typeof Ruhig === 'undefined' || !Ruhig.an() || e.ruhig !== false))
+        .sort((a: any, b: any) => (a.hauptRang ?? a.rang) - (b.hauptRang ?? b.rang));
     } catch { return []; }
   };
 
@@ -507,6 +509,7 @@ const Kontextkante = (() => {
       if (platz === undefined && oben.scrollHeight - oben.clientHeight <= 2) return;
     } catch { return; }
     if (hoehe < KNOPF_PLATZ * 2) hoehe = KNOPF_PLATZ * 2;   /* mindestens „Seiten" und `···` */
+    if (typeof Ruhig !== 'undefined' && Ruhig.an()) hoehe = KNOPF_PLATZ * 2;
 
     /* Ein Platz geht an „Seiten", einer an den `···`-Knopf. */
     const zeigen = Math.max(0, Math.floor(hoehe / KNOPF_PLATZ) - 2);
@@ -520,8 +523,8 @@ const Kontextkante = (() => {
     }
     oben.appendChild(knopfBauen({
       bereich: '*', id: 'mehr-werkzeuge',
-      name: rest.length + (rest.length === 1 ? ' weiteres Werkzeug'
-                                             : ' weitere Werkzeuge'),
+      name: typeof Ruhig !== 'undefined' && Ruhig.an() ? 'Werkzeuge'
+        : rest.length + (rest.length === 1 ? ' weiteres Werkzeug' : ' weitere Werkzeuge'),
       zeichen: 'dots',
       /* Ein Werkzeug, das selbst eine Lade öffnet, hat kein `tun` — dann
          wird SEINE Lade geöffnet statt einer leeren Zeile. */
@@ -642,6 +645,8 @@ const Kontextkante = (() => {
     let knoepfe: any[] = [];
     try { knoepfe = Register.kontext.fuer(bereich) || []; }
     catch { knoepfe = []; }
+    const ruhig = typeof Ruhig !== 'undefined' && Ruhig.an();
+    if (ruhig) knoepfe = [...knoepfe, ...FUSS.filter(k => k.id === 'ki')];
 
     w.replaceChildren();
     w.hidden = false;
@@ -671,7 +676,9 @@ const Kontextkante = (() => {
 
     const unten = document.createElement('div');
     unten.className = 'k-unten';
-    for (const k of FUSS) unten.appendChild(knopfBauen(k, 'k-fuss'));
+    for (const k of FUSS.filter(k => !ruhig || k.id === 'einstellungen')) {
+      unten.appendChild(knopfBauen(k, 'k-fuss'));
+    }
     w.appendChild(unten);
 
     if (Register?.symbole?.fuelle) {

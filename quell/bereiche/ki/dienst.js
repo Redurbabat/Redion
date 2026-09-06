@@ -1092,6 +1092,7 @@ const KI = (() => {
            dasselbe Feld, und durchsichtiger Text würde sie unlesbar machen.
            Eine Fehlermeldung, die man nicht lesen kann, ist der schlechtere
            Fehler. */
+        const aktivitaet = zeigeAktivitaet(ziel);
         ziel.classList.add('ki-schreibt');
         try {
             await frage(nachrichten, (t) => {
@@ -1109,6 +1110,7 @@ const KI = (() => {
         }
         finally {
             ziel.classList.remove('ki-schreibt');
+            aktivitaet.remove();
         }
         /* Quellen unter die Antwort */
         const qk = quellenKarte(quellen);
@@ -1612,6 +1614,16 @@ const KI = (() => {
             await schreibLauf(befehl, auftrag);
         });
     };
+    /** Eigene Statuszeile: Streaming ersetzt den Antworttext, nicht den Status.
+        Entfernen in finally gilt auch bei Fehlern und abgebrochenen Anfragen. */
+    const zeigeAktivitaet = (ziel) => {
+        const status = document.createElement('div');
+        status.className = 'ki-aktivitaet';
+        status.setAttribute('role', 'status');
+        status.append(Zustand.aktivitaet('ki'), document.createTextNode('KI arbeitet …'));
+        ziel.before(status);
+        return status;
+    };
     const schreibLauf = async (befehl, auftrag) => {
         const quelle = arbeitsText();
         if (!quelle.text.trim()) {
@@ -1627,6 +1639,7 @@ const KI = (() => {
             (Store.getMeta('ki:persoenlich', '')
                 ? '\n\nDauerhafte Anweisungen: ' + Store.getMeta('ki:persoenlich', '') : '');
         let antwort = '';
+        const aktivitaet = zeigeAktivitaet(ziel);
         ziel.classList.add('ki-schreibt');
         try {
             await frage([{ role: 'system', content: system },
@@ -1644,6 +1657,7 @@ const KI = (() => {
         }
         finally {
             ziel.classList.remove('ki-schreibt');
+            aktivitaet.remove();
         }
         const leiste = document.createElement('div');
         leiste.className = 'ki-antwortknoepfe';

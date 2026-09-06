@@ -1418,16 +1418,13 @@ body.zieht-seite .side-griff{background:var(--accent); opacity:.55}
 }
 .mb-rechts-knopf:hover{ background:var(--bg-hover); color:var(--text) }
 .mb-rechts-knopf svg{ width:15px; height:15px; display:block }
-.mb-rechts-knopf.mb-konto span{
-  display:grid; place-items:center; width:21px; height:21px;
-  border-radius:999px; background:var(--accent); color:var(--auf-accent);
-  font-size:10px; font-weight:700; line-height:1;
-}
+/* Hier stand der farbige Kreis mit dem Zeichen des Arbeitsbereichs am
+   Konto-Knopf. Seit E456 trägt der Knopf ein Symbol wie seine Nachbarn —
+   neben der Studio-Marke war der Kreis ein zweites Logo. */
 @media(max-width:760px){
   /* §37: am Finger 44, auch hier. Die Leiste ist dort ohnehin 44 hoch. */
   .mb-rechts-knopf{ min-width:44px; min-height:44px; font-size:15px }
   .mb-rechts-knopf svg{ width:19px; height:19px }
-  .mb-rechts-knopf.mb-konto span{ width:26px; height:26px; font-size:11.5px }
 }
 
 .mb-reiter-knopf:hover{ color:var(--text) }
@@ -1888,7 +1885,7 @@ body[data-ruhig="an"] #topbar [data-ruhig="mehr"]{ display:none }
 
    `.mb-rechts` bleibt ausdrücklich stehen — dort hängen Suche, KI und
    Konto, und die Suche gibt es sonst nirgends in der Kopfzeile. Ebenso
-   bleibt `.mb-marke` (der Weg in die Backstage) und der Klapp-Pfeil selbst.
+   bleibt der Klapp-Pfeil selbst (die Marke links ist seit E456 weg).
    Deshalb wird auch NICHT `.mb-reiter` als Ganzes ausgeblendet: diese Zeile
    trägt `.mb-rechts`.
 
@@ -2328,6 +2325,8 @@ table.grid tfoot td{color:var(--text-faint); font-size:12.5px; border:none; padd
 .msg{font-size:14px; line-height:1.6}
 .msg.u{background:var(--bg-card); padding:10px 12px; border-radius:8px; align-self:flex-end; max-width:88%}
 .msg.a{white-space:pre-wrap}
+.ki-aktivitaet{display:flex;align-items:center;gap:8px;color:var(--accent-text);font-size:12px;min-height:24px}
+.ki-aktivitaet .ru-aktivitaet{width:24px;height:24px}
 .msg.a code{background:var(--bg-card); padding:1px 5px; border-radius:3px; font-family:var(--mono); font-size:13px}
 .msg.sys{font-size:12.5px; color:var(--text-faint); text-align:center}
 /* DIE ABSAGE SIEHT NICHT AUS WIE EINE ANTWORT (E418).
@@ -2586,6 +2585,71 @@ body[data-small="1"] .b-text .ct{font-size:14px}
 .btn.rot{color:var(--c-red,#e03e3e); border-color:var(--c-red,#e03e3e)}
 .btn.rot.prim{background:var(--c-red,#e03e3e); color:#fff}
 .btn.klein{padding:4px 9px; min-height:28px; font-size:12.5px}
+/* DIE WEITER-VARIANTE (E441, Auftrag §4.5, Nr. 02 „Apply Now").
+   Kein neuer Knopftyp — eine Klasse `weiter` fuer Knoepfe, die irgendwohin
+   FUEHREN: „Weiter", „Oeffnen", „Anwenden". Uebernommen ist die IDEE des
+   Originals, nicht sein Aussehen: ein Pfeil, der beim Ueberfahren und beim
+   Tastaturfokus ein Stueck nach rechts gleitet, und ein feiner Schimmer
+   nur unter der Maus. Farben, Masse, Rundung bleiben die des Knopfes, auf
+   dem die Klasse steht.
+
+   WARUM VIER WIRTE. Das Knopfsystem ist `.btn`; aber „Weiter" steht heute
+   im Rundgang (`.rg-knoepfe`), in der Elektro-Pruefung (`.ea-fuss`) und
+   „Oeffnen" in den Einstellungen (`.ez-knopf`) — drei Familien mit
+   eigenen Massen, die man nicht nebenbei auf `.btn` umstellt (§45: die
+   Nachbarstelle ansehen). Die Variante ist EINE Regel mit vier Wirten,
+   nicht vier Regeln. */
+.btn.weiter, .ez-knopf.weiter, .rg-knoepfe button.weiter, .ea-fuss button.weiter{
+  position:relative; overflow:hidden;
+  display:inline-flex; align-items:center; justify-content:center; gap:6px
+}
+/* Der Pfeil ist Schmuck: `/ ""` gibt ihm einen leeren Alternativtext, damit
+   ein Vorleser „Weiter" sagt und nicht „Weiter Pfeil nach rechts". Die
+   Zeile davor ist der Rueckfall fuer Browser ohne die Schraegstrich-Form. */
+.btn.weiter::after, .ez-knopf.weiter::after,
+.rg-knoepfe button.weiter::after, .ea-fuss button.weiter::after{
+  content:"\2192"; content:"\2192" / "";
+  display:inline-block; line-height:1;
+  transition:transform var(--motion-fast) var(--ease)
+}
+.btn.weiter:hover::after, .btn.weiter:focus-visible::after,
+.ez-knopf.weiter:hover::after, .ez-knopf.weiter:focus-visible::after,
+.rg-knoepfe button.weiter:hover::after, .rg-knoepfe button.weiter:focus-visible::after,
+.ea-fuss button.weiter:hover::after, .ea-fuss button.weiter:focus-visible::after{
+  transform:translateX(4px)
+}
+/* Der Schimmer: ein heller Streifen, der einmal von links nach rechts
+   zieht — nur unter der Maus (`hover:hover`), nie am Telefon, nie bei
+   Tastaturfokus. Auf dem Akzentgrund ist er weiss, auf hellem Grund
+   nimmt er die Textfarbe schwach. */
+@media (hover:hover){
+  .btn.weiter::before, .ez-knopf.weiter::before,
+  .rg-knoepfe button.weiter::before, .ea-fuss button.weiter::before{
+    content:""; position:absolute; top:0; bottom:0; left:-60%; width:50%;
+    background:linear-gradient(110deg, transparent 20%, currentColor 50%, transparent 80%);
+    opacity:0; pointer-events:none
+  }
+  .btn.weiter:hover::before, .ez-knopf.weiter:hover::before,
+  .rg-knoepfe button.weiter:hover::before, .ea-fuss button.weiter:hover::before{
+    animation:btn-schimmer 900ms var(--ease) 1
+  }
+}
+@keyframes btn-schimmer{
+  from{ left:-60%; opacity:0 } 30%{ opacity:.18 } to{ left:110%; opacity:0 }
+}
+/* OHNE BEWEGUNG: der Pfeil steht, der Schimmer bleibt aus. Nicht nur
+   kuerzer (das macht grund.css schon), sondern gar nicht — `transform:none`
+   und `animation:none`, damit auch ein Sprung um vier Pixel unterbleibt. */
+@media (prefers-reduced-motion: reduce){
+  .btn.weiter::after, .ez-knopf.weiter::after,
+  .rg-knoepfe button.weiter::after, .ea-fuss button.weiter::after{
+    transition:none; transform:none !important
+  }
+  .btn.weiter::before, .ez-knopf.weiter::before,
+  .rg-knoepfe button.weiter::before, .ea-fuss button.weiter::before{
+    animation:none !important
+  }
+}
 /* Ein Feld im Fensterinhalt: Rand, Fläche, 14px — dasselbe Mass wie das
    Feld in der Beschriftung weiter unten. */
 .fn-feld{
@@ -6070,6 +6134,15 @@ body[data-ruhig="an"] .arbeitswelt .aw-kopf::after{ display:none }
   overflow:visible
 }
 .arbeitswelt.aw-nackt .aw-kopf-schmal::after{ display:none }
+
+/* Fenster gehören zu den Seiten, nicht in eine zusätzliche Navigationsspalte. */
+.arbeitswelt .aw-fenster{border-bottom:1px solid var(--line);padding-bottom:var(--space-3,12px)}
+.arbeitswelt .aw-fenster>summary{min-height:44px;display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600}
+.arbeitswelt .aw-fenster>summary::before{content:'›';transition:transform var(--motion-fast,120ms)}
+.arbeitswelt .aw-fenster[open]>summary::before{transform:rotate(90deg)}
+.arbeitswelt .aw-fenster>summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.arbeitswelt .aw-fenster .aw-reiter-panel{position:static;max-height:none}
+@media(prefers-reduced-motion:reduce){.arbeitswelt .aw-fenster>summary::before{transition:none}}
 
 </style>
 <style>
@@ -11360,12 +11433,8 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   border-radius:16px; box-shadow:var(--shadow); padding:28px 26px 22px;
 }
 .wk-kopf{ text-align:center; margin-bottom:22px }
-.wk-zeichen{
-  width:56px; height:56px; margin:0 auto 14px; border-radius:16px;
-  background:var(--accent); color:var(--auf-accent);
-  display:flex; align-items:center; justify-content:center;
-  font-size:26px; font-weight:700;
-}
+/* `.wk-zeichen` — das „R" im Farbkasten über dem Willkommen — ist seit E456
+   weg: eine Marke, die des Studios, nicht drei. */
 .wk-kopf h2{ font-size:22px; font-weight:600; margin-bottom:8px }
 .wk-kopf p{ font-size:14px; color:var(--text-dim); line-height:1.6 }
 .wk-kopf p b{ color:var(--text); font-weight:600 }
@@ -14271,6 +14340,124 @@ body.iblatt-auf .menu{z-index:794}
   .ru-seg-wahl:has(.ru-seg-kurz) .ru-seg-kurz{display:inline}
 }
 
+/* ============================================================================
+   RU- — DIE ZUSTANDSPILLE UND DER ZUSTANDSKNOPF (E441)
+   ----------------------------------------------------------------------------
+   Eine Sprache fuer „laeuft, fertig, Fehler" (schale/bedienung/zustand.ts)
+   und der Knopf, der sie beim Arbeiten spricht (zustandsknopf.ts).
+
+   KEIN ZUSTAND NUR UEBER FARBE (Paragraph 38): jede Art traegt ein Zeichen
+   und einen Text; die Farbe kommt dazu, nicht statt. Farben nur aus den
+   Marken, die es gibt — `--erfolg`, `--gefahr`, `--warnung` stehen in
+   hell.css und dunkel.css.
+   ==========================================================================*/
+.ru-zustand{
+  display:inline-flex; align-items:center; gap:6px;
+  padding:2px 9px 2px 7px; border-radius:999px;
+  border:1px solid var(--line); background:var(--bg-card);
+  color:var(--text-dim); font-size:12.5px; line-height:1.5; white-space:nowrap
+}
+.ru-zustand-zeichen{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:14px; flex:none; font-size:12px; line-height:1
+}
+.ru-zustand[data-zustand="laeuft"]{ color:var(--text) }
+.ru-zustand[data-zustand="fertig"]{ color:var(--erfolg); border-color:var(--erfolg) }
+.ru-zustand[data-zustand="fehler"]{ color:var(--gefahr); border-color:var(--gefahr) }
+.ru-zustand[data-zustand="abgebrochen"]{ color:var(--warnung); border-color:var(--warnung) }
+/* Das Zeichen von „laeuft" dreht sich — dezent, 1,2 s, und nur solange
+   wirklich etwas laeuft. Wer keine Bewegung will, sieht den halben Kreis
+   still stehen; der Text daneben sagt es ohnehin. */
+.ru-aktivitaet{display:inline-block;width:18px;height:18px;flex:none;fill:currentColor;overflow:visible}
+.ru-aktivitaet[data-art="neutral"] rect{animation:ru-segment 1s linear infinite;animation-delay:calc(var(--ru-schritt) * -100ms)}
+.ru-aktivitaet[data-art="ki"] path{transform-box:fill-box;transform-origin:center;animation:ru-funken 1.4s ease-in-out infinite;animation-delay:calc(var(--ru-schritt) * -240ms)}
+@keyframes ru-segment{0%,100%{opacity:1}80%{opacity:.22}}
+@keyframes ru-funken{0%,100%{opacity:.55;transform:scale(.88)}50%{opacity:1;transform:scale(1)}}
+
+/* ---- Der Zustandsknopf -------------------------------------------------
+   `button.ru-zk` und nicht `.ru-zk`: der Knopf traegt daneben die Klasse
+   seines Ortes (`.ez-knopf`, `.btn`), und die stehen in Dateien, die frueher
+   laden. Die Zustandsregeln muessen darueber gewinnen — ueber Gewicht, nicht
+   ueber Reihenfolge (E320). 44 px: ein Knopf, der eine Aktion ausloest, ist
+   ein Hauptweg (Paragraph 37). */
+button.ru-zk{
+  position:relative; overflow:hidden;
+  display:inline-flex; align-items:center; justify-content:center; gap:7px;
+  min-height:var(--touch-min); padding:0 14px;
+  border:1px solid var(--line); border-radius:7px;
+  background:var(--bg); color:var(--text); font-size:13.5px; white-space:nowrap;
+  transition:color var(--motion-fast) var(--ease), border-color var(--motion-fast) var(--ease),
+             background var(--motion-fast) var(--ease)
+}
+button.ru-zk:hover{ background:var(--bg-hover) }
+/* DER FOKUS MUSS SICHTBAR SEIN (Paragraph 38) — auch waehrend der Knopf
+   arbeitet, denn er ist nie `disabled` und behaelt den Fokus. */
+button.ru-zk:focus-visible{ outline:2px solid var(--accent); outline-offset:2px }
+.ru-zk-zeichen{
+  display:inline-flex; align-items:center; justify-content:center;
+  flex:none; min-width:14px; font-size:14px; line-height:1
+}
+.ru-zk-zeichen svg{ width:16px; height:16px }
+button.ru-zk[data-zustand="arbeitet"]{ cursor:progress; color:var(--text-dim) }
+button.ru-zk[data-zustand="fertig"]:not(.prim){ color:var(--erfolg); border-color:var(--erfolg) }
+button.ru-zk[data-zustand="fehler"]:not(.prim){ color:var(--gefahr); border-color:var(--gefahr) }
+/* Die Aufforderung („Oeffnen") ist wieder ein gewoehnlicher Knopf im
+   Akzent — sie fordert auf, sie meldet nichts mehr. */
+button.ru-zk.ru-zk-aufforderung:not(.prim){ color:var(--accent-text); border-color:var(--accent-text) }
+
+/* ---- Die Sicht „laden" (Auftrag Paragraph 4.16, Nr. 03) ----------------
+   Pfeil nach unten → Balken am unteren Rand, solange es laeuft → Haken.
+   Der Balken ist BESTIMMT, wenn ein Anteil bekannt ist (`--ru-zk-anteil`),
+   sonst laeuft er unbestimmt hin und her. Nie ein erfundener Prozentwert
+   (Auftrag Paragraph 0.8). */
+.ru-zk-balken{
+  position:absolute; left:0; right:0; bottom:0; height:3px; display:none;
+  background:var(--line-soft, var(--line))
+}
+button.ru-zk[data-art="laden"][data-zustand="arbeitet"] .ru-zk-balken{ display:block }
+.ru-zk-balken i{
+  display:block; height:100%; background:var(--accent);
+  width:var(--ru-zk-anteil, 40%);
+  transition:width var(--motion-normal) var(--ease)
+}
+.ru-zk-balken:not(.bestimmt) i{ animation:ru-zk-gleiten 1.4s ease-in-out infinite }
+@keyframes ru-zk-gleiten{
+  from{ transform:translateX(-100%) } to{ transform:translateX(250%) }
+}
+
+/* WER KEINE BEWEGUNG WILL, BEKOMMT KEINE (Paragraph 15 des Auftrags).
+   grund.css kuerzt jede Dauer auf .001 ms; hier wird zusaetzlich der Name
+   genommen, damit auch ein Blitz von einem Bild nicht bleibt. Der
+   unbestimmte Balken steht dann als halbe Linie — sichtbar, nur nicht
+   wandernd. */
+@media (prefers-reduced-motion: reduce){
+  .ru-aktivitaet[data-art] :is(rect,path){animation:none;opacity:1}
+  .ru-aktivitaet[data-art="ki"] path{transform:none}
+  .ru-zustand[data-zustand="laeuft"] .ru-zustand-zeichen,
+  .ru-zk[data-zustand="arbeitet"] .ru-zk-zeichen{ animation:none }
+  .ru-zk-balken:not(.bestimmt) i{ animation:none; width:50% }
+}
+
+/* Redion-Bedienung · Baumansicht */
+.ru-baum{display:block;min-width:0;color:var(--text);font-size:13px;line-height:1.35}
+.ru-baum [role="group"]{display:block}
+.ru-baum-zeile{--baum-einzug:calc(var(--baum-ebene,0)*16px);display:grid;grid-template-columns:20px minmax(0,1fr);align-items:center;min-height:34px;padding:3px 8px 3px calc(6px + var(--baum-einzug));border-radius:var(--radius-md);cursor:default;user-select:none}
+.ru-baum-zeile:hover{background:var(--bg-hover)}
+.ru-baum-zeile[aria-selected="true"]{background:var(--accent-schwach);color:var(--accent-text)}
+.ru-baum-zeile[aria-disabled="true"]{opacity:.45}
+.ru-baum-zeile:focus-visible{outline:2px solid var(--accent-text);outline-offset:1px}
+.ru-baum-knick{display:grid;place-items:center;width:20px;height:24px;padding:0;border:0;color:var(--text-dim);background:transparent;font:inherit;line-height:1}
+.ru-baum-knick:disabled{opacity:0}
+.ru-baum-inhalt{display:flex;align-items:center;gap:7px;min-width:0}
+.ru-baum-zeichen{display:grid;place-items:center;flex:0 0 18px;width:18px;height:18px;color:var(--text-dim)}
+.ru-baum-zeichen svg{width:16px;height:16px}
+.ru-baum-name{min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.ru-baum-kinder[hidden]{display:none}
+.ru-baum-auf{animation:ru-baum-oeffnen var(--motion-normal) var(--ease-enter)}
+@keyframes ru-baum-oeffnen{from{opacity:.3;transform:translateY(-4px)}to{opacity:1;transform:none}}
+@media(max-width:760px){.ru-baum-zeile{min-height:44px}}
+@media(prefers-reduced-motion:reduce){.ru-baum *{scroll-behavior:auto!important}.ru-baum-auf{animation:none}}
+
 </style>
 <!-- DIE PREMIUM-SCHALE (E272). Sie steht ABSICHTLICH als letzte: sie ordnet,
      was die Blätter darüber gebaut haben, und muss deshalb gewinnen. Alles
@@ -14336,21 +14523,10 @@ body.iblatt-auf .menu{z-index:794}
     background: var(--schale-grund);
   }
 
-  /* ── Die Marke ganz links ─────────────────────────────────────────────────
-     Ein „R" im Gold der App. Sie ist KEIN Knopf: die Startansicht erreicht
-     man über Gehen, und ein zweiter Weg dorthin wäre genau die Doppelung,
-     gegen die E206 den Welt-Umschalter entfernt hat. Sie steht da, damit die
-     Zeile links nicht kahl beginnt, und ist für Vorleseprogramme unsichtbar. */
-  body[data-schale="premium"] .mb-marke{
-    flex: 0 0 auto;
-    display: grid; place-items: center;
-    width: 26px; height: var(--shell-reiter-h);
-    margin-right: var(--space-2);
-    font-size: 14px; font-weight: 700; line-height: 1;
-    color: var(--gold-bright);
-    letter-spacing: .01em;
-    user-select: none;
-  }
+  /* ── Hier stand die Marke ganz links (bis E456) ──────────────────────────
+     Ein Buchstabe im Gold der App, „damit die Zeile links nicht kahl
+     beginnt". Seit dem Studio steht die eine Marke der App darüber; ein
+     zweites Zeichen hier war ein zweites Logo. */
 
   /* ── „Datei" — der Knopf, der eine Fläche öffnet (Phase G) ────────────────
      Er steht links neben den Reitern und sieht aus wie einer, ist aber
@@ -14447,12 +14623,6 @@ body.iblatt-auf .menu{z-index:794}
   }
   body[data-schale="premium"] .mb-rechts-knopf:focus-visible{
     outline: 2px solid var(--gold-bright); outline-offset: -2px;
-  }
-  /* Der Kontokreis behält seine Farbe: er zeigt den ARBEITSBEREICH an, nicht
-     die Schale. Ein goldener Kreis neben goldenen Knöpfen wäre ausserdem
-     nicht mehr als Zustand erkennbar. */
-  body[data-schale="premium"] .mb-rechts-knopf.mb-konto span{
-    width: 20px; height: 20px; font-size: 9.5px;
   }
 
   body[data-schale="premium"] .mb-klapp{
@@ -15120,7 +15290,7 @@ body.iblatt-auf .menu{z-index:794}
 .studio-brand:hover .studio-monogram{transform:perspective(var(--studio-perspective)) rotateY(10deg) rotateZ(0)}
 .studio-icon,.studio-action,.studio-search,.studio-shortcuts button{
   display:inline-flex;align-items:center;justify-content:center;gap:8px;
-  min-height:38px;padding:0 12px;border-radius:var(--radius-lg);font-size:13px;
+  min-height:44px;padding:0 12px;border-radius:var(--radius-lg);font-size:13px;
   border:1px solid transparent;transition:transform var(--motion-instant) var(--ease),
   background var(--motion-fast) var(--ease),border-color var(--motion-fast) var(--ease);
 }
@@ -15176,7 +15346,6 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
   body[data-schale="premium"] #menueband .mb-reiter-knopf{color:var(--text-dim)}
   body[data-schale="premium"] #menueband .mb-reiter-knopf.ist-an{color:var(--accent-text);border-bottom-color:var(--accent);background:var(--accent-schwach)}
   body[data-schale="premium"] #menueband .mb-datei{border-radius:var(--radius-md);margin:3px 8px;color:var(--text);background:var(--bg-hover);min-height:30px}
-  body[data-schale="premium"] #menueband .mb-marke{color:var(--accent-text)}
   body[data-schale="premium"][data-dokument="an"] #studio-bar{display:none}
   body[data-schale="premium"][data-dokument="an"] #main{grid-template-rows:auto auto auto auto minmax(0,1fr)}
   body.fokus #studio-bar{display:none}
@@ -15185,6 +15354,9 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
 /* Consistent material and motion for the actual existing components. */
 :is(.finder,.dlg,.menu,.blatt-dialog,.r-sheet){border-radius:var(--radius-2xl);box-shadow:var(--studio-elevation);border-color:var(--studio-line)}
 :is(.finder,.dlg,.menu){animation:studio-arrive var(--motion-normal) var(--ease-enter) both}
+#kanten-lade:not([hidden]){animation:studio-drawer var(--motion-normal) var(--ease-enter)}
+.r-sheet{animation:studio-sheet var(--motion-normal) var(--ease-enter)}
+.aw-fenster[open]>.aw-reiter-panel{animation:studio-arrive var(--motion-normal) var(--ease-enter)}
 :is(.icon-btn,.btn,.mb-knopf,.ez-knopf){transition:background var(--motion-fast) var(--ease),transform var(--motion-instant) var(--ease)}
 :is(.icon-btn,.btn,.mb-knopf,.ez-knopf):active:not(:disabled){transform:scale(var(--press-scale))}
 .einst-nav{background:var(--bg-side)}
@@ -15198,6 +15370,8 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
   :is(.menu,.finder,.auswahlleiste){background:var(--studio-glass);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
 }
 @keyframes studio-arrive{from{opacity:0;transform:translateY(7px) scale(.985)}to{opacity:1;transform:none}}
+@keyframes studio-drawer{from{opacity:.3;transform:translateX(-10px)}to{opacity:1;transform:none}}
+@keyframes studio-sheet{from{opacity:.3;transform:translateY(16px)}to{opacity:1;transform:none}}
 /* A document-first Today view. Insights are still reachable in native details. */
 .lernwelt .lw-hero.lw-hero-compact{padding:0 0 20px;background:none;border:0;box-shadow:none;min-height:0}
 .lernwelt .lw-hero.lw-hero-compact h2{font-size:22px;letter-spacing:-.5px}
@@ -15266,6 +15440,7 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
   :is(.menu,.finder,.auswahlleiste){background:var(--bg-card);backdrop-filter:none;-webkit-backdrop-filter:none}
 }
 @media(prefers-reduced-motion:reduce){
+  :is(.finder,.dlg,.menu,.r-sheet),#kanten-lade:not([hidden]),.aw-fenster[open]>.aw-reiter-panel,#reiterleiste .reiter,.lw-insights-body{animation:none}
   .studio-monogram,.studio-brand:hover .studio-monogram{transform:none}
   #studio-bar button:active,body[data-schale="premium"] .k-knopf:active{transform:none}
   .lw-paper-sheet,.lw-paper-stack::before,.lw-paper-stack::after{transform:none;transition:none}
@@ -15287,9 +15462,12 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
 .bib-dkopf .bib-neu{background:var(--bg-hover);color:var(--text);border:1px solid var(--line)}
 .bib-studio-navigation{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin:0 0 20px;border-bottom:1px solid var(--line);padding-bottom:16px}
 .bib-studio-wege{display:flex;gap:4px;flex-wrap:wrap}
-.bib-studio-wege button{min-height:40px;padding:8px 12px;border-radius:var(--radius-lg);color:var(--text-dim);font-size:13px}
+.bib-studio-wege button{min-height:44px;padding:8px 12px;border-radius:var(--radius-lg);color:var(--text-dim);font-size:13px}
+.bib-studio-sammlungen{max-width:100%;min-height:44px;padding:8px 10px;border:1px solid var(--line);border-radius:var(--radius-lg);background:var(--bg-card);color:var(--text);font:inherit;font-size:13px}
 .bib-studio-wege button.on{background:var(--accent-schwach);color:var(--accent-text);font-weight:600}
 .bib-studio-wege button:hover{background:var(--bg-hover)}
+.bib-studio-wege button,.bib-arten button{transition:background var(--motion-fast) var(--ease),transform var(--motion-instant) var(--ease)}
+.bib-studio-wege button:active,.bib-arten button:active{transform:scale(var(--press-scale))}
 .bib-studio-suche{display:flex;align-items:center;gap:8px;margin-left:auto;min-width:160px;flex:0 1 260px;background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius-lg);padding:0 12px}
 .bib-studio-suche svg{width:16px;height:16px;color:var(--text-dim)}
 .bib-studio-suche input{width:100%;min-width:0;min-height:40px;background:transparent;border:0;outline:0;color:var(--text);font:inherit;font-size:13px}
@@ -15310,12 +15488,16 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
 @media(hover:hover) and (prefers-reduced-motion:no-preference){
   .bib-deckel:hover .bib-deckel-blatt{transform:translateY(-5px) rotateY(-6deg) rotateX(2deg);box-shadow:var(--studio-paper-shadow)}
   .bib-deckel[data-art="ordner"]:hover .bib-deckel-blatt{transform:translateY(-4px) rotateX(-8deg)}
+  .bib-deckel[data-art="ordner"]:hover .bib-papier{transform:translateY(-5px) rotate(-2deg)}
 }
+.bib-deckel[data-art="ordner"] .bib-papier{transition:transform var(--motion-normal) var(--ease-enter)}
+.bib-deckel:focus-visible .bib-deckel-blatt{transform:translateY(-3px)}
+.bib-deckel:active .bib-deckel-blatt{transform:translateY(1px) scale(.98)}
 .bib-deckel:focus-visible{outline:2px solid var(--accent-text);outline-offset:6px;border-radius:var(--radius-lg)}
 .bib-deckel-seite .bib-pflege{margin-top:36px}
 @media(max-width:760px){
   .bib-dkopf{gap:10px;margin-bottom:20px}.bib-dkopf h1{font-size:23px}
-  .bib-studio-import{order:3;flex:1}.bib-dkopf .bib-ort{order:4}
+  .bib-studio-import{order:3;flex:1 0 100%;white-space:nowrap}.bib-dkopf .bib-ort{order:4}
   .bib-studio-suche{flex-basis:100%;margin:0;max-width:none}
   .bib-studio-wege{display:flex;flex-wrap:nowrap;overflow-x:auto;width:100%}
   .bib-studio-wege button{white-space:nowrap;min-height:44px;padding-inline:10px}
@@ -15324,13 +15506,32 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
   .bib-gitter{grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 18px}
   .bib-dkopf button,.bib-arten button,.bib-deckel-mehr{min-height:44px}
 }
-@media(prefers-reduced-motion:reduce){.bib-studio-miniatur{transform:none}.bib-deckel:active .bib-deckel-blatt{transform:none}}
+@media(prefers-reduced-motion:reduce){.bib-studio-miniatur{transform:none}.bib-deckel:is(:active,:focus-visible) .bib-deckel-blatt,.bib-studio-wege button:active,.bib-arten button:active{transform:none}.bib-deckel-blatt,.bib-deckel .bib-papier{transition:none}}
+
+/* Phase C Â· echte Ablage-Baumansicht â€” nutzt dieselben Store-Seiten wie die Deckel */
+.bib-ablage-layout{display:grid;grid-template-columns:minmax(220px,270px) minmax(0,1fr);gap:24px;align-items:start}
+.bib-ablage-baum{position:sticky;top:88px;max-height:calc(100vh - 120px);overflow:auto;padding:10px;background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius-xl)}
+.bib-ablage-baum-kopf{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:7px 8px 10px;border-bottom:1px solid var(--line);margin-bottom:6px}
+.bib-ablage-baum-kopf strong{font-size:13px}
+.bib-ablage-baum-kopf span{font-size:11px;color:var(--text-dim)}
+.bib-ablage-baum .ru-baum{padding:2px 0 4px}
+.bib-ablage-baum .ru-baum-zeile{min-height:36px}
+.bib-ablage-inhalt{min-width:0}
+.bib-baum-fehlt{margin:8px;color:var(--text-dim);font-size:12px}
+@media(max-width:980px){
+  .bib-ablage-layout{grid-template-columns:1fr;gap:16px}
+  .bib-ablage-baum{position:relative;top:auto;max-height:290px}
+}
+@media(max-width:760px){
+  .bib-ablage-baum{max-height:240px}
+}
 
 </style>
 <style>
 /* ===== quell/schale/stil/pdf-studio.css ===== */
 /* Document workbench: controls use material; the original paper stays opaque. */
-.document-studio{border-color:var(--line);border-radius:var(--radius-xl);box-shadow:none}
+.document-studio{border-color:var(--line);border-radius:var(--radius-xl);box-shadow:none;position:relative}
+.document-view-button{display:none}
 .document-studio .document-topbar{padding:8px 12px;gap:12px;min-height:52px;background:var(--bg-card);flex-shrink:0}
 .document-navigation,.document-top-actions,.document-pagination,.document-zoom-group{display:flex;align-items:center;gap:6px;flex-shrink:0}
 .document-studio .document-topbar button{background:transparent;border-color:transparent;border-radius:var(--radius-lg);color:var(--text-dim);font-size:12px}
@@ -15338,7 +15539,7 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
 .document-studio .document-topbar button[aria-expanded="true"]{color:var(--accent-text);background:var(--accent-schwach)}
 .document-studio .document-title{text-align:center;font-size:13px;padding-inline:6px}
 .document-commandbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0;min-height:52px;padding:7px 16px;border-bottom:1px solid var(--line);background:var(--bg-side)}
-.document-commandbar button{min-height:34px;padding:6px 12px;border-radius:var(--radius-md);font-size:12px;white-space:nowrap}
+.document-commandbar button{min-height:44px;padding:6px 12px;border-radius:var(--radius-md);font-size:12px;white-space:nowrap}
 .document-commandbar button:hover{background:var(--bg-hover)}
 .document-mode-switch{display:flex;padding:3px;border-radius:var(--radius-lg);background:var(--bg-input);border:1px solid var(--line)}
 .document-mode-switch button[aria-pressed="true"]{background:var(--bg-card);color:var(--accent-text);box-shadow:var(--studio-highlight),0 1px 4px #00000015;font-weight:600}
@@ -15347,13 +15548,17 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
 .document-zoom-label{font-variant-numeric:tabular-nums}
 .document-studio button:focus-visible,.document-center:focus-visible{outline:2px solid var(--accent-text);outline-offset:2px}
 .document-studio button:disabled{opacity:.45;cursor:not-allowed}
+.document-studio :is(.document-topbar,.document-commandbar) button{transition:background var(--motion-fast) var(--ease),transform var(--motion-instant) var(--ease)}
+.document-studio :is(.document-topbar,.document-commandbar) button:active:not(:disabled){transform:scale(var(--press-scale))}
+.document-studio .document-thumbnails.is-open{animation:studio-drawer var(--motion-normal) var(--ease-enter)}
+.document-studio .document-inspector.is-open{animation:studio-arrive var(--motion-normal) var(--ease-enter)}
 .document-studio .document-center{background:var(--bg);scrollbar-gutter:stable}
 .document-studio .blatt-papier{box-shadow:var(--studio-paper-shadow);border-radius:3px}
 .document-studio .document-thumbnail{border-radius:var(--radius-lg)}
 .document-studio .document-thumbnail.is-selected{border-color:var(--accent);background:var(--accent-schwach)}
 .document-studio .document-panel-header{padding:8px 4px;font-size:12px}
 .document-studio .document-inspector{padding:16px;background:var(--bg-side)}
-.document-studio .document-inspector button{border-radius:var(--radius-lg);font-size:12px;min-height:38px}
+.document-studio .document-inspector button{border-radius:var(--radius-lg);font-size:12px;min-height:44px}
 .document-studio .document-section-title{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin:24px 0 10px}
 .document-studio .blatt-werk{border:1px solid var(--studio-line);border-radius:var(--radius-xl);background:var(--studio-glass);box-shadow:var(--studio-highlight),0 5px 15px #00000010;margin:0 auto 14px;padding:6px;max-width:100%}
 .document-studio[data-document-tools="closed"] .blatt-reihe{display:none}
@@ -15361,19 +15566,34 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
 @supports(backdrop-filter:blur(8px)){.document-studio .blatt-werk{backdrop-filter:blur(8px)}}
 @media(max-width:1100px){.document-zoom-group input{width:70px}.document-commandbar{padding-inline:10px;gap:8px}}
 @media(max-width:760px){
-  .document-studio .document-topbar{display:flex;flex-wrap:wrap;gap:6px;padding:6px 8px}
-  .document-navigation{flex:1}.document-top-actions{margin-left:auto}
-  .document-studio .document-title{order:3;flex-basis:100%;text-align:left;padding:3px 6px;font-size:12px}
-  .document-studio .document-topbar button{width:auto;min-height:44px;padding-inline:8px}
-  .document-commandbar{flex-wrap:wrap;padding:6px 8px;gap:6px}
+  .document-studio .document-topbar{display:flex;flex-wrap:nowrap;gap:2px;padding:4px;min-height:52px}
+  .document-navigation,.document-top-actions{gap:0;flex:none}
+  .document-studio .document-title{order:0;flex:1 1 auto;min-width:0;text-align:left;padding:3px 6px;font-size:12px}
+  .document-studio .document-topbar button{width:44px;min-width:44px;min-height:44px;padding:0}
+  .document-studio .document-topbar button::after{content:none}
+  .document-studio .document-topbar [data-document-action="thumbnails"],
+  .document-studio .document-topbar [data-document-action="inspector"],
+  .document-studio .document-topbar [data-document-action="exit"]{font-size:0}
+  .document-studio .document-topbar [data-document-action="thumbnails"]::before{content:'▤';font-size:19px}
+  .document-studio .document-topbar [data-document-action="inspector"]::before{content:'ⓘ';font-size:19px}
+  .document-studio .document-topbar [data-document-action="exit"]::before{content:'✕';font-size:18px}
+  .document-studio .document-topbar .document-view-button{display:block;font-size:20px}
+  .document-commandbar{display:none;position:absolute;top:56px;left:8px;right:8px;z-index:98;flex-wrap:wrap;padding:8px;gap:6px;border:1px solid var(--line);border-radius:var(--radius-xl);box-shadow:var(--studio-elevation)}
+  .document-studio[data-document-view="open"] .document-commandbar{display:flex}
+  .document-studio[data-document-view="open"] .document-commandbar{animation:studio-arrive var(--motion-normal) var(--ease-enter)}
   .document-mode-switch{flex:1;justify-content:center}.document-pagination{margin-left:auto}
   .document-commandbar button{min-height:44px;padding-inline:10px}
   .document-zoom-group{width:100%;justify-content:center;border-top:1px solid var(--line-soft);padding-top:3px}
-  .document-zoom-group input{flex:1;max-width:180px}.document-zoom-group button{min-height:36px}
+  .document-zoom-group input{flex:1;max-width:150px;min-width:0}.document-zoom-group button{min-height:44px}
+  .document-zoom-label{display:inline;min-width:44px}
   .document-studio .document-inspector,.document-studio .document-thumbnails{border-radius:var(--radius-xl);box-shadow:var(--studio-elevation);max-height:calc(100% - 16px)}
   .document-studio .blatt-werk{border-radius:var(--radius-lg);margin-bottom:8px}
 }
 @media(prefers-reduced-transparency:reduce){.document-studio .blatt-werk{background:var(--bg-card);backdrop-filter:none}}
+@media(prefers-reduced-motion:reduce){
+  .document-studio .document-thumbnails.is-open,.document-studio .document-inspector.is-open,.document-studio[data-document-view="open"] .document-commandbar{animation:none}
+  .document-studio :is(.document-topbar,.document-commandbar) button:active:not(:disabled){transform:none}
+}
 
 </style>
 
@@ -15479,9 +15699,6 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
     </button>
     <button class="side-item" id="btn-elektro" data-ruhig="bleibt">
       <span data-sym="bolt"></span><span>Elektrotechnik</span>
-    </button>
-    <button class="side-item" id="btn-workspace">
-      <span data-sym="workspace"></span><span>Arbeitsbereich</span>
     </button>
     <button class="side-item" id="btn-library" data-ruhig="bleibt">
       <span data-sym="library"></span><span>Bibliothek</span>
@@ -15612,14 +15829,12 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
       <span class="studio-monogram" aria-hidden="true">R</span><span>redion<span class="studio-wordmark">STUDIO</span></span>
     </button>
     <button id="studio-nav" class="studio-icon" aria-label="Navigation kompakt anzeigen" aria-pressed="false" title="Navigation kompakt anzeigen"><span data-sym="panelL"></span></button>
-    <div class="studio-shortcuts" aria-label="Arbeitsfläche">
-      <button id="studio-documents">Dokumente</button>
-      <button id="studio-notebooks">Notizhefte</button>
-    </div>
     <button id="studio-search" class="studio-search"><span data-sym="search"></span><span>Suchen &amp; finden</span><kbd>Strg P</kbd></button>
     <button id="studio-theme" class="studio-icon studio-theme" aria-label="Farbschema wechseln" title="Hell / Dunkel"><span class="studio-orb" aria-hidden="true"></span></button>
     <button id="studio-import" class="studio-action" data-studio-import><span data-sym="plus"></span><span>PDF öffnen</span></button>
     <button id="studio-create" class="studio-icon" aria-label="Neu erstellen" title="Neu erstellen"><span data-sym="plus"></span></button>
+    <button id="studio-tools" class="studio-icon" aria-label="Werkzeuge einblenden" title="Werkzeuge einblenden" aria-expanded="false" aria-controls="menueband"><span data-sym="command"></span></button>
+    <button id="studio-account" class="studio-icon" aria-label="Konto und Arbeitsbereich" title="Konto und Arbeitsbereich"><span data-sym="workspace"></span></button>
   </header>
   <div id="studio-divider" role="separator" aria-label="Navigationsbreite" aria-orientation="vertical" aria-valuemin="148" aria-valuemax="260" aria-valuenow="184" tabindex="0"></div>
 
@@ -17365,7 +17580,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 426, inhalt: '9d3eec3293cc761b', gebaut: '2026-09-06T09:54:51.905Z' };
+const Stand = { fassung: 432, inhalt: 'd122d97955bfa221', gebaut: '2026-09-06T15:04:31.310Z' };
 window.Stand = Stand;
 
 </script>
@@ -27921,8 +28136,8 @@ Register.module = (() => {
         { id: 'notizhefte', name: 'Notizhefte', icon: '📓', zeichen: 'book',
             was: 'Regal deiner Schreibhefte — öffnen und losschreiben (E264).',
             oeffnen: () => (typeof Notebook !== 'undefined') && Notebook.oeffnen() },
-        { id: 'arbeitswelt', name: 'Arbeitsbereich', icon: '🧱', zeichen: 'workspace',
-            was: 'Seiten, Bibliothek, Aufgaben, Kalender, Datenbanken, Whiteboards, Wiki, Vorlagen.',
+        { id: 'arbeitswelt', name: 'Seiten & Wissen', icon: '📄', zeichen: 'pages',
+            was: 'Bestand, Favoriten, zuletzt geöffnete Seiten und geteilte Ansicht in der Bibliothek.',
             oeffnen: () => (typeof Produktwelten !== 'undefined') && Produktwelten.workspace('uebersicht') },
         { id: 'lebensbereiche', name: 'Lebensbereiche', icon: '◎', zeichen: 'compass',
             was: 'Schule, Arbeit, Privat — dieselbe Seite darf in mehreren stehen, ohne Kopie.',
@@ -28141,10 +28356,10 @@ Register.navigation = (() => {
                `test396 §2` drückt jetzt die Taste und sieht nach, was aufgeht. */
             tun: () => Werkzeuge.palette() },
         { id: 'heute', name: 'Heute', icon: '☀️', zeichen: 'today', platz: 'oben', rang: 30,
-            knopfId: 'btn-home', haupt: true, adresse: '#welt-lernen-heute',
+            knopfId: 'btn-home', haupt: true, ruhig: false, adresse: '#welt-lernen-heute',
             tun: () => Produktwelten.lernen('heute') },
         { id: 'lernzentrum', name: 'Lernzentrum', icon: '🎓', zeichen: 'learn', platz: 'oben', rang: 40,
-            knopfId: 'btn-learning', haupt: true, schauplatz: 'lernen',
+            knopfId: 'btn-learning', haupt: true, hauptRang: 30, schauplatz: 'lernen',
             adresse: '#welt-lernen-lernen',
             tun: () => Produktwelten.lernen('lernen') },
         /* ELEKTRO HATTE KEINE EIGENE ZEILE. Es ist eines der 14 Module, und
@@ -28157,24 +28372,21 @@ Register.navigation = (() => {
            ändern die Krume, der fünfte tat es als einziger nicht. Der Rechner
            ist jetzt einer der Knöpfe dieser Seite statt ihre Vordertür. */
         { id: 'elektro', name: 'Elektrotechnik', icon: '⚡', zeichen: 'bolt', platz: 'oben', rang: 45,
-            knopfId: 'btn-elektro', haupt: true,
+            knopfId: 'btn-elektro', haupt: true, ruhig: false,
             tun: () => {
                 if (typeof Elektrostart !== 'undefined')
                     Elektrostart.oeffne();
                 else if (typeof Electrical !== 'undefined')
                     Electrical.open();
             } },
-        { id: 'workspace', name: 'Arbeitsbereich', icon: '🧱', zeichen: 'workspace', platz: 'oben', rang: 50,
-            knopfId: 'btn-workspace', tun: () => Produktwelten.workspace('start') },
         { id: 'bibliothekOben', name: 'Bibliothek', icon: '📚', zeichen: 'library', platz: 'oben', rang: 60,
             /* Zweimal „Bibliothek": hier die Zeile der obersten Gruppe, weiter
                unten der Anhängepunkt mit demselben Namen. Verschiedene Kennungen,
                weil `melde` über die Kennung dublettenfrei hält. */
-            knopfId: 'btn-library', haupt: true, schauplatz: 'bibliothek',
-            adresse: '#welt-workspace-bibliothek',
+            knopfId: 'btn-library', haupt: true, hauptRang: 10, schauplatz: 'bibliothek',
             tun: () => Produktwelten.bibliothek() },
         { id: 'aufgaben', name: 'Aufgaben', icon: '☑', zeichen: 'tasks', platz: 'oben', rang: 70,
-            knopfId: 'btn-tasks', haupt: true, adresse: '#welt-workspace-aufgaben',
+            knopfId: 'btn-tasks', haupt: true, ruhig: false, schauplatz: 'aufgaben', adresse: '#aufgaben',
             tun: () => Produktwelten.aufgaben() },
         { id: 'posteingang', name: 'Posteingang', icon: '📥', zeichen: 'inbox', platz: 'oben', rang: 80,
             /* Und hier stand `Werkzeuge.meldungen()`. Der Knopf ruft seit jeher
@@ -28257,6 +28469,7 @@ Register.navigation = (() => {
         /* Rang 52: nach „Meine Aufgaben" (50), vor „Alle Seiten" (55) — die
            Reihe läuft durch (E206), Zehner sind keine Pflicht. */
         { id: 'app-notizhefte', marke: 'notizhefte', name: 'Notizhefte', icon: '📓', zeichen: 'book', platz: 'apps', gruppe: 'daten', rang: 52,
+            haupt: true, hauptRang: 20, schauplatz: 'notizhefte',
             hinweis: 'Deine Schreibhefte, sofort schreibbereit',
             tun: () => (typeof Notebook !== 'undefined') && Notebook.oeffnen() },
         { id: 'app-bib', marke: 'bib', name: 'Alle Seiten', icon: '📚', zeichen: 'page', platz: 'apps', gruppe: 'daten', rang: 55,
@@ -29533,7 +29746,7 @@ Register.menueband = (() => {
         /* Hauptbereiche — wohin man am häufigsten geht */
         heute: 'Hauptbereiche', lernzentrum: 'Hauptbereiche',
         bibliothekOben: 'Hauptbereiche', 'app-bib': 'Hauptbereiche',
-        workspace: 'Hauptbereiche', aufgaben: 'Hauptbereiche',
+        aufgaben: 'Hauptbereiche',
         'app-notizhefte': 'Hauptbereiche',
         /* Planung & Lernen */
         elektro: 'Planung & Lernen', 'app-kalender': 'Planung & Lernen',
@@ -29549,7 +29762,7 @@ Register.menueband = (() => {
         verbinden: 'Verbinden', 'app-eingang': 'Verbinden',
         posteingang: 'Verbinden',
         /* Daten */
-        datenbanken: 'Daten', 'app-modell': 'Daten', 'app-kennzahl': 'Daten',
+        datenbanken: 'Daten', arbeitswelt: 'Daten', 'app-modell': 'Daten', 'app-kennzahl': 'Daten',
         /* System */
         einstellungen: 'System', 'app-aussehen': 'System', 'app-tempo': 'System',
         'app-krypto': 'System', 'app-erweitern': 'System', 'app-pwa': 'System',
@@ -29569,7 +29782,7 @@ Register.menueband = (() => {
      * unter ihren eigenen Namen. */
     const GEHEN_DOPPELT = {
         lernwelt: 'heute', /* Produktwelten.lernen('heute') */
-        arbeitswelt: 'workspace', /* Produktwelten.workspace(…)    */
+        'app-bib': 'bibliothekOben', /* Beide öffnen jetzt das Dokumentregal. */
         notizhefte: 'app-notizhefte', /* Notebook.oeffnen()            */
         hilfe: 'app-kann', /* Rundgang.uebersicht()         */
         vorlagen: 'app-markt', /* Galerie.oeffne()              */
@@ -38612,6 +38825,559 @@ const Segment = (() => {
     return { bauen };
 })();
 window.Segment = Segment;
+
+</script>
+<script>
+/* ===== quell/schale/bedienung/baum.js ===== */
+"use strict";
+/* schale/bedienung/baum.ts — gemeinsame Baumansicht
+   Quelle: Redion-Adaption der Uiverse-Baumidee von ashif_6672.
+   Kein eigenes Datenmodell; Bereiche liefern nur Knoten und Zustand. */
+const Baumansicht = (() => {
+    const bauen = (auftrag) => {
+        const wurzel = document.createElement('div');
+        wurzel.className = 'ru-baum';
+        wurzel.setAttribute('role', 'tree');
+        wurzel.setAttribute('aria-label', auftrag.name);
+        const offen = new Set(auftrag.offen || []);
+        let gewaehlt = auftrag.gewaehlt || null;
+        const alle = new Map();
+        const eltern = new Map();
+        const aufnehmen = (knoten, elternId) => {
+            for (const k of knoten) {
+                if (!k?.id)
+                    continue;
+                alle.set(k.id, k);
+                eltern.set(k.id, elternId);
+                aufnehmen(k.kinder || [], k.id);
+            }
+        };
+        aufnehmen(auftrag.knoten || [], null);
+        if (gewaehlt && !alle.has(gewaehlt))
+            gewaehlt = null;
+        const sichtbar = () => [...wurzel.querySelectorAll('[data-baum-id]')]
+            .filter(el => !el.closest('[hidden]'));
+        const fokus = (ziel) => {
+            if (!ziel)
+                return;
+            sichtbar().forEach(el => { el.tabIndex = el === ziel ? 0 : -1; });
+            ziel.focus();
+        };
+        const zeichne = () => {
+            wurzel.replaceChildren();
+            const gruppeBauen = (knoten, ebene) => {
+                const gruppe = document.createElement('div');
+                gruppe.setAttribute('role', 'group');
+                for (const k of knoten) {
+                    const hatKinder = !!k.kinder?.length;
+                    const zeile = document.createElement('div');
+                    zeile.className = 'ru-baum-zeile';
+                    zeile.dataset['baumId'] = k.id;
+                    zeile.setAttribute('role', 'treeitem');
+                    zeile.setAttribute('aria-level', String(ebene));
+                    zeile.setAttribute('aria-selected', String(gewaehlt === k.id));
+                    if (hatKinder)
+                        zeile.setAttribute('aria-expanded', String(offen.has(k.id)));
+                    if (k.deaktiviert)
+                        zeile.setAttribute('aria-disabled', 'true');
+                    zeile.tabIndex = gewaehlt === k.id ? 0 : -1;
+                    zeile.style.setProperty('--baum-ebene', String(ebene - 1));
+                    const knick = document.createElement('button');
+                    knick.type = 'button';
+                    knick.className = 'ru-baum-knick';
+                    knick.tabIndex = -1;
+                    knick.setAttribute('aria-hidden', 'true');
+                    knick.disabled = !hatKinder;
+                    knick.textContent = hatKinder ? (offen.has(k.id) ? '⌄' : '›') : '';
+                    const inhalt = document.createElement('span');
+                    inhalt.className = 'ru-baum-inhalt';
+                    if (k.zeichen) {
+                        const zeichen = document.createElement('span');
+                        zeichen.className = 'ru-baum-zeichen';
+                        zeichen.setAttribute('aria-hidden', 'true');
+                        if (typeof Register !== 'undefined' && Register.symbole?.hat?.(k.zeichen)) {
+                            zeichen.innerHTML = Register.symbole.alsSvg(k.zeichen);
+                        }
+                        else {
+                            zeichen.textContent = k.zeichen;
+                        }
+                        inhalt.append(zeichen);
+                    }
+                    const name = document.createElement('span');
+                    name.className = 'ru-baum-name';
+                    name.textContent = k.name;
+                    inhalt.append(name);
+                    zeile.append(knick, inhalt);
+                    gruppe.append(zeile);
+                    if (hatKinder) {
+                        const kinder = gruppeBauen(k.kinder || [], ebene + 1);
+                        kinder.classList.add('ru-baum-kinder');
+                        if (!offen.has(k.id))
+                            kinder.hidden = true;
+                        gruppe.append(kinder);
+                    }
+                }
+                return gruppe;
+            };
+            wurzel.append(gruppeBauen(auftrag.knoten || [], 1));
+            const zeilen = sichtbar();
+            if (!zeilen.some(el => el.tabIndex === 0) && zeilen[0])
+                zeilen[0].tabIndex = 0;
+        };
+        const waehlen = (id, melden) => {
+            if (id && !alle.has(id))
+                return;
+            gewaehlt = id;
+            for (const zeile of wurzel.querySelectorAll('[data-baum-id]')) {
+                const an = zeile.dataset['baumId'] === id;
+                zeile.setAttribute('aria-selected', String(an));
+                zeile.tabIndex = an ? 0 : -1;
+            }
+            if (melden && id)
+                auftrag.gewaehltGeaendert?.(id);
+        };
+        const klappen = (id, wert) => {
+            const k = alle.get(id);
+            if (!k?.kinder?.length)
+                return;
+            const soll = wert ?? !offen.has(id);
+            if (soll)
+                offen.add(id);
+            else
+                offen.delete(id);
+            zeichne();
+            if (soll) {
+                wurzel.querySelector(`[data-baum-id="${CSS.escape(id)}"]`)
+                    ?.nextElementSibling?.classList.add('ru-baum-auf');
+            }
+            auftrag.offenGeaendert?.([...offen]);
+            fokus(wurzel.querySelector(`[data-baum-id="${CSS.escape(id)}"]`) || undefined);
+        };
+        wurzel.addEventListener('click', e => {
+            const ziel = e.target instanceof Element ? e.target.closest('[data-baum-id]') : null;
+            if (!ziel)
+                return;
+            const id = ziel.dataset['baumId'];
+            if (!id || ziel.getAttribute('aria-disabled') === 'true')
+                return;
+            if (e.target instanceof Element && e.target.closest('.ru-baum-knick')) {
+                klappen(id);
+                return;
+            }
+            waehlen(id, true);
+            fokus(ziel);
+        });
+        wurzel.addEventListener('keydown', e => {
+            const aktiv = e.target instanceof Element ? e.target.closest('[data-baum-id]') : null;
+            if (!aktiv)
+                return;
+            const id = aktiv.dataset['baumId'];
+            if (!id)
+                return;
+            const zeilen = sichtbar();
+            const pos = zeilen.indexOf(aktiv);
+            const k = alle.get(id);
+            const hatKinder = !!k?.kinder?.length;
+            if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                e.preventDefault();
+                const d = e.key === 'ArrowDown' ? 1 : -1;
+                fokus(zeilen[Math.max(0, Math.min(zeilen.length - 1, pos + d))]);
+                return;
+            }
+            if (e.key === 'Home' || e.key === 'End') {
+                e.preventDefault();
+                fokus(e.key === 'Home' ? zeilen[0] : zeilen[zeilen.length - 1]);
+                return;
+            }
+            if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                if (hatKinder && !offen.has(id)) {
+                    klappen(id, true);
+                    return;
+                }
+                if (hatKinder) {
+                    const neu = sichtbar();
+                    const p = neu.findIndex(el => el.dataset['baumId'] === id);
+                    fokus(neu[p + 1]);
+                }
+                return;
+            }
+            if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                if (hatKinder && offen.has(id)) {
+                    klappen(id, false);
+                    return;
+                }
+                const elternId = eltern.get(id);
+                if (elternId) {
+                    fokus(wurzel.querySelector(`[data-baum-id="${CSS.escape(elternId)}"]`) || undefined);
+                }
+                return;
+            }
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                if (aktiv.getAttribute('aria-disabled') !== 'true') {
+                    waehlen(id, true);
+                    fokus(aktiv);
+                }
+            }
+        });
+        zeichne();
+        return {
+            element: wurzel,
+            gewaehlt: () => gewaehlt,
+            waehlen: (id) => waehlen(id, false),
+            offene: () => [...offen],
+            oeffnen: (ids) => {
+                offen.clear();
+                ids.filter(id => alle.has(id)).forEach(id => offen.add(id));
+                zeichne();
+            }
+        };
+    };
+    return { bauen };
+})();
+window.Baumansicht = Baumansicht;
+
+</script>
+<script>
+/* ===== quell/schale/bedienung/zustand.js ===== */
+"use strict";
+/* ============================================================================
+ * schale/bedienung/zustand.ts — die eine Sprache für „läuft, fertig, Fehler"
+ * ----------------------------------------------------------------------------
+ * ERZEUGT DARAUS WIRD `quell/schale/bedienung/zustand.js`.
+ * Die Quelle ist DIESE Datei. `npm run bauen:ts` schreibt das .js; wer das
+ * .js bearbeitet, verliert die Änderung beim nächsten Bauen (test105).
+ * ----------------------------------------------------------------------------
+ * WOFÜR. Ein Upload, eine Sicherung, ein Druckauftrag, ein Abgleich und
+ * eine KI-Anfrage haben denselben Lebenslauf: sie warten, sie laufen, sie
+ * sind fertig — oder sie scheitern oder werden abgebrochen. Bis hierher
+ * hatte jede Stelle dafür eigene Wörter, eigene Klassen und eigene Farben:
+ * `.laeuft` mit `.hs-kreisel` auf dem Start-Bildschirm, `zustand: 'wartet'`
+ * in der Dateiablage, „Sichern …" hier und „wird geschrieben" dort.
+ *
+ * Dieses Bauteil legt die SECHS Arten einmal fest — mit Zeichen und
+ * Standardsatz — und gibt eine kleine Pille dafür her. Die Werte sind
+ * deutsch, weil drei davon ('wartet' | 'laeuft' | 'fertig') so in der
+ * Dateiablage GESPEICHERT sind (`src/bereiche/dateien/ablage.ts`). Ein
+ * Feldname, der in IndexedDB liegt, ist Daten und kein Name (§53.3).
+ *
+ * EIN ZUSTAND IST NIE NUR FARBE (§38). Jede Art trägt ein Zeichen UND einen
+ * Text. Wer Rot und Grün nicht unterscheidet, liest „!" gegen „✓"; wer gar
+ * nicht sieht, hört den Text — die Pille ist `role="status"`, und der
+ * Wechsel wird gemeldet.
+ *
+ * WAS ES NICHT IST. Kein Fortschrittsbalken und kein Knopf. Der Knopf,
+ * der eine Aktion auslöst und dabei seinen Verlauf zeigt, ist
+ * `zustandsknopf.ts` — und der holt sich Zeichen und Sätze von hier.
+ * ==========================================================================*/
+const Zustand = (() => {
+    /* DIE ZEICHEN SIND TEXT, KEINE BILDER. Ein Kreis, der sich füllt, ein
+       Haken, ein Ausrufezeichen: das versteht jede Schrift und jeder
+       Vorleser braucht es nicht — die Pille sagt den Text selbst. */
+    const ARTEN = {
+        bereit: { zeichen: '○', text: 'Bereit' },
+        wartet: { zeichen: '…', text: 'Wartet' },
+        laeuft: { zeichen: '◐', text: 'Läuft …' },
+        fertig: { zeichen: '✓', text: 'Fertig' },
+        fehler: { zeichen: '!', text: 'Fehler' },
+        abgebrochen: { zeichen: '✕', text: 'Abgebrochen' }
+    };
+    const ist = (wert) => typeof wert === 'string' && Object.prototype.hasOwnProperty.call(ARTEN, wert);
+    const zeichen = (art) => ARTEN[art].zeichen;
+    const text = (art) => ARTEN[art].text;
+    /** Uiverse 19/45: kleine Aktivitätszeichen, keine neue Prozesslogik.
+        Keine SVG-IDs, Filter oder externen Assets: mehrere Instanzen sind sicher. */
+    const aktivitaet = (art = 'neutral') => {
+        const ns = 'http://www.w3.org/2000/svg';
+        const svg = document.createElementNS(ns, 'svg');
+        svg.setAttribute('viewBox', '0 0 24 24');
+        svg.setAttribute('aria-hidden', 'true');
+        svg.setAttribute('focusable', 'false');
+        svg.classList.add('ru-aktivitaet');
+        svg.dataset.art = art;
+        if (art === 'neutral') {
+            for (let i = 0; i < 10; i++) {
+                const segment = document.createElementNS(ns, 'rect');
+                segment.setAttribute('x', '11');
+                segment.setAttribute('y', '2');
+                segment.setAttribute('width', '2');
+                segment.setAttribute('height', '5');
+                segment.setAttribute('rx', '1');
+                segment.setAttribute('transform', `rotate(${i * 36} 12 12)`);
+                segment.style.setProperty('--ru-schritt', String(i));
+                svg.append(segment);
+            }
+        }
+        else {
+            ['translate(1 7) scale(1.2)', 'translate(14 1) scale(.8)', 'translate(15 15) scale(.65)']
+                .forEach((transform, i) => {
+                const gruppe = document.createElementNS(ns, 'g');
+                gruppe.setAttribute('transform', transform);
+                const funke = document.createElementNS(ns, 'path');
+                funke.setAttribute('d', 'M5 0Q5 5 10 5Q5 5 5 10Q5 5 0 5Q5 5 5 0Z');
+                funke.style.setProperty('--ru-schritt', String(i));
+                gruppe.append(funke);
+                svg.append(gruppe);
+            });
+        }
+        return svg;
+    };
+    /**
+     * Ein Element auf eine Art stellen. Funktioniert für jede Pille aus
+     * `pille()` — und für jedes andere Element mit denselben zwei Kindern.
+     * Eine unbekannte Art wird zu 'fehler' mit dem Wort selbst als Text:
+     * lieber ein sichtbares Fragezeichen als eine stille Pille.
+     */
+    const setzen = (element, art, eigenerText) => {
+        const sicher = ist(art) ? art : 'fehler';
+        element.dataset['zustand'] = sicher;
+        const z = element.querySelector('.ru-zustand-zeichen');
+        const t = element.querySelector('.ru-zustand-text');
+        if (z) {
+            if (sicher === 'laeuft')
+                z.replaceChildren(aktivitaet());
+            else
+                z.textContent = ARTEN[sicher].zeichen;
+        }
+        if (t)
+            t.textContent = eigenerText ?? (ist(art) ? ARTEN[sicher].text : String(art));
+    };
+    /**
+     * Die Pille: `<span class="ru-zustand" role="status" data-zustand="…">`
+     * mit Zeichen (aria-hidden) und Text. `role="status"` ist eine höfliche
+     * Live-Region — der Wechsel wird vorgelesen, ohne zu unterbrechen.
+     */
+    const pille = (auftrag) => {
+        const el = document.createElement('span');
+        el.className = 'ru-zustand';
+        el.setAttribute('role', 'status');
+        const z = document.createElement('span');
+        z.className = 'ru-zustand-zeichen';
+        z.setAttribute('aria-hidden', 'true');
+        const t = document.createElement('span');
+        t.className = 'ru-zustand-text';
+        el.append(z, t);
+        setzen(el, auftrag.art, auftrag.text);
+        return el;
+    };
+    return { ARTEN, ist, zeichen, text, aktivitaet, pille, setzen };
+})();
+window.Zustand = Zustand;
+
+</script>
+<script>
+/* ===== quell/schale/bedienung/zustandsknopf.js ===== */
+"use strict";
+/* ============================================================================
+ * schale/bedienung/zustandsknopf.ts — der Knopf, der zeigt, was er tut
+ * ----------------------------------------------------------------------------
+ * ERZEUGT DARAUS WIRD `quell/schale/bedienung/zustandsknopf.js`.
+ * Die Quelle ist DIESE Datei. `npm run bauen:ts` schreibt das .js; wer das
+ * .js bearbeitet, verliert die Änderung beim nächsten Bauen (test105).
+ * ----------------------------------------------------------------------------
+ * WOFÜR. Eine Sicherung mit Anhängen dauert Sekunden bis Minuten, eine
+ * KI-Antwort auch, ein Export ebenso. Bis hierher zeigte in dieser Zeit
+ * meistens NICHTS an, dass etwas läuft — und wer nichts sieht, tippt ein
+ * zweites Mal. Der Start-Bildschirm hatte dafür eine eigene Lösung (E57,
+ * `.hs-kreisel`); jede weitere Stelle hätte sich wieder eine gebaut.
+ *
+ * Dieser Knopf ist die EINE Lösung: er löst die Aktion aus, sperrt sich,
+ * solange sie läuft, sagt sichtbar UND hörbar, was gerade ist, und kehrt
+ * danach zurück — oder bietet „Öffnen" an, wenn es etwas zu öffnen gibt.
+ *
+ * VIER ZUSTÄNDE, und sie kommen aus dem ECHTEN Ablauf:
+ *
+ *     bereit    → Klick startet `aktion()`
+ *     arbeitet  → die Zusage aus `aktion()` ist noch offen; Klick tut nichts
+ *     fertig    → die Zusage ist eingelöst; nach `fertigNach` ms zurück auf
+ *                 bereit — oder, mit `oeffnen`, die Aufforderung „Öffnen"
+ *     fehler    → die Zusage ist geplatzt (oder `aktion()` gab `false`);
+ *                 Klick versucht es noch einmal
+ *
+ * Kein Zeitgeber täuscht ein „fertig" vor. Was der Knopf zeigt, ist der
+ * Stand der Zusage — nichts anderes.
+ *
+ * DIE SICHTEN. `art` sagt, wie der Verlauf aussieht, nicht was er ist:
+ * 'weiter' (Standard) ist ein gewöhnlicher Aktionsknopf, 'laden' die
+ * Sicht „Herunterladen → Balken → Heruntergeladen → Öffnen" (Auftrag
+ * §4.16). 'erzeugen' und 'schaltung' sind vorgesehen (`data-art`) und
+ * bekommen ihre Sicht in den Phasen D und E.
+ *
+ * WAS ER VON `zustand.ts` NIMMT. Zeichen und Standardsätze. Der Knopf
+ * erfindet keine zweite Sprache für „läuft" — Pille und Knopf sagen es
+ * mit demselben Zeichen.
+ * ==========================================================================*/
+const Zustandsknopf = (() => {
+    /* Das Zeichen der Sicht 'laden' im Zustand bereit: ein Pfeil nach
+       unten. Alles andere kommt aus `Zustand`, damit Knopf und Pille
+       dieselbe Sprache sprechen. */
+    const ZEICHEN_LADEN = '↓';
+    const ZEICHEN_OEFFNEN = '↗';
+    const kurz = (fehler) => {
+        const m = fehler instanceof Error ? fehler.message : String(fehler ?? '');
+        const eine = m.split('\n')[0]?.trim() ?? '';
+        if (!eine)
+            return Zustand.text('fehler');
+        return eine.length > 60 ? eine.slice(0, 57) + ' …' : eine;
+    };
+    const bauen = (auftrag) => {
+        const art = auftrag.art || 'weiter';
+        const fertigNach = auftrag.fertigNach ?? (auftrag.oeffnen ? 0 : 2500);
+        const knopf = document.createElement('button');
+        knopf.type = 'button';
+        knopf.className = 'ru-zk' + (auftrag.klasse ? ' ' + auftrag.klasse : '');
+        knopf.dataset['art'] = art;
+        const zeichen = document.createElement('span');
+        zeichen.className = 'ru-zk-zeichen';
+        zeichen.setAttribute('aria-hidden', 'true');
+        /* DER TEXT IST DIE LIVE-REGION. Ein Vorleseprogramm hört „Wird
+           erstellt …" und später „Heruntergeladen" — ohne dass der Nutzer den
+           Knopf noch einmal anfassen muss. `polite`, nicht `assertive`: der
+           Wechsel darf warten, bis der Satz zu Ende ist. */
+        const text = document.createElement('span');
+        text.className = 'ru-zk-text';
+        text.setAttribute('aria-live', 'polite');
+        /* Der Balken gehört der Sicht 'laden' und ist Schmuck: die Auskunft
+           steht im Text. Deshalb `aria-hidden`. */
+        const balken = document.createElement('span');
+        balken.className = 'ru-zk-balken';
+        balken.setAttribute('aria-hidden', 'true');
+        balken.append(document.createElement('i'));
+        knopf.append(zeichen, text, balken);
+        let jetzt = 'bereit';
+        let aufforderung = false; /* fertig + oeffnen: „Öffnen" steht da */
+        let zeitgeber = null;
+        const bereitZeichen = () => {
+            if (art === 'laden')
+                return ZEICHEN_LADEN;
+            if (auftrag.zeichen && typeof Register !== 'undefined' && Register.symbole?.hat?.(auftrag.zeichen))
+                return Register.symbole.alsSvg(auftrag.zeichen, 16);
+            return '';
+        };
+        const stellen = (z, satz, anteil) => {
+            if (zeitgeber) {
+                clearTimeout(zeitgeber);
+                zeitgeber = null;
+            }
+            jetzt = z;
+            knopf.dataset['zustand'] = z;
+            knopf.setAttribute('aria-busy', z === 'arbeitet' ? 'true' : 'false');
+            knopf.classList.toggle('ru-zk-aufforderung', aufforderung);
+            if (z === 'bereit') {
+                /* Das Zeichen von bereit kann ein SVG sein — das ist Redions
+                   eigenes Strichzeichen, kein Nutzertext. */
+                zeichen.innerHTML = bereitZeichen();
+            }
+            else if (aufforderung) {
+                zeichen.textContent = ZEICHEN_OEFFNEN;
+            }
+            else if (z === 'arbeitet') {
+                zeichen.replaceChildren(Zustand.aktivitaet(art === 'erzeugen' ? 'ki' : 'neutral'));
+            }
+            else {
+                zeichen.textContent = Zustand.zeichen(z === 'fertig' ? 'fertig' : 'fehler');
+            }
+            zeichen.hidden = zeichen.innerHTML === '';
+            text.textContent = satz;
+            /* Der Balken: bestimmt, wenn ein Anteil bekannt ist; sonst läuft er
+               unbestimmt hin und her. Nie ein erfundener Prozentwert. */
+            if (typeof anteil === 'number' && Number.isFinite(anteil)) {
+                const a = Math.max(0, Math.min(1, anteil));
+                balken.classList.add('bestimmt');
+                balken.style.setProperty('--ru-zk-anteil', (a * 100).toFixed(1) + '%');
+            }
+            else {
+                balken.classList.remove('bestimmt');
+                balken.style.removeProperty('--ru-zk-anteil');
+            }
+        };
+        const bereit = () => { aufforderung = false; stellen('bereit', auftrag.texte.bereit); };
+        const fertig = () => {
+            if (auftrag.oeffnen) {
+                /* Erst die Bestätigung, dann die Aufforderung — wenn es eine
+                   Bestätigung gibt. Der Zustand ist in beiden Fällen 'fertig';
+                   der Zeitgeber wechselt nur den Satz, nicht die Wahrheit. */
+                const zurAufforderung = () => {
+                    aufforderung = true;
+                    stellen('fertig', auftrag.texte.fertig ?? 'Öffnen');
+                };
+                if (auftrag.texte.geschafft) {
+                    aufforderung = false;
+                    stellen('fertig', auftrag.texte.geschafft);
+                    zeitgeber = setTimeout(zurAufforderung, 1200);
+                }
+                else
+                    zurAufforderung();
+                return;
+            }
+            aufforderung = false;
+            stellen('fertig', auftrag.texte.fertig ?? Zustand.text('fertig'));
+            if (fertigNach > 0)
+                zeitgeber = setTimeout(bereit, fertigNach);
+        };
+        const starten = () => {
+            aufforderung = false;
+            stellen('arbeitet', auftrag.texte.arbeitet);
+            let zusage;
+            try {
+                zusage = Promise.resolve(auftrag.aktion());
+            }
+            catch (fehler) {
+                zusage = Promise.reject(fehler);
+            }
+            zusage.then(ergebnis => {
+                if (jetzt !== 'arbeitet')
+                    return; /* von aussen umgestellt */
+                if (ergebnis === false)
+                    stellen('fehler', auftrag.texte.fehler ?? Zustand.text('fehler'));
+                else
+                    fertig();
+            }, fehler => {
+                if (jetzt !== 'arbeitet')
+                    return;
+                stellen('fehler', auftrag.texte.fehler ?? kurz(fehler));
+            });
+        };
+        knopf.addEventListener('click', () => {
+            /* DIE SPERRE (Auftrag §4.9). Ein zweiter Klick während der Arbeit
+               wäre eine zweite Sicherung, eine zweite KI-Anfrage, ein zweiter
+               Druckauftrag. Der Knopf ist dabei NICHT `disabled` — er behält
+               den Fokus und bleibt lesbar; er tut nur nichts. */
+            if (jetzt === 'arbeitet')
+                return;
+            if (jetzt === 'fertig' && aufforderung && auftrag.oeffnen) {
+                auftrag.oeffnen();
+                bereit();
+                return;
+            }
+            starten();
+        });
+        bereit();
+        return {
+            element: knopf,
+            zustand: () => jetzt,
+            setzen: (z, satz, anteil) => {
+                if (z === 'bereit') {
+                    bereit();
+                    return;
+                }
+                if (z === 'fertig' && satz === undefined) {
+                    fertig();
+                    return;
+                }
+                aufforderung = false;
+                const standard = z === 'arbeitet' ? auftrag.texte.arbeitet
+                    : z === 'fertig' ? (auftrag.texte.fertig ?? Zustand.text('fertig'))
+                        : (auftrag.texte.fehler ?? Zustand.text('fehler'));
+                stellen(z, satz ?? standard, anteil);
+            }
+        };
+    };
+    return { bauen };
+})();
+window.Zustandsknopf = Zustandsknopf;
 
 </script>
 <script>
@@ -58525,7 +59291,9 @@ const Elektroarbeitsplatz = (() => {
                     })}</div>` +
                     `<div class="ea-fuss">` +
                     `<button data-a="zurueck"${p.jetzt ? '' : ' disabled'}>Zurück</button>` +
-                    `<button class="prim" data-a="vor">` +
+                    /* `weiter` (E441): der Pfeil nur, solange eine Aufgabe folgt —
+                       „Abgeben" führt nirgendwohin, es schliesst ab. */
+                    `<button class="prim${p.jetzt + 1 === p.aufgaben.length ? '' : ' weiter'}" data-a="vor">` +
                     (p.jetzt + 1 === p.aufgaben.length ? 'Abgeben' : 'Weiter') + `</button></div>`;
         };
         const merkeAntwort = () => {
@@ -60781,8 +61549,9 @@ const DocumentMode = (() => {
         }
     };
     const selectRegion = (paper, documentBlock, done) => {
-        const warInert = paper.inert;
-        paper.inert = false;
+        const leseflaeche = paper.closest('.blatt-flur') || paper;
+        const warInert = leseflaeche.inert;
+        leseflaeche.inert = false;
         paper.classList.add('document-selecting');
         const overlay = document.createElement('div');
         overlay.className = 'document-region-overlay';
@@ -60856,7 +61625,7 @@ const DocumentMode = (() => {
             overlay.removeEventListener('pointerup', finish, true);
             overlay.remove();
             paper.classList.remove('document-selecting');
-            paper.inert = warInert;
+            leseflaeche.inert = warInert;
             window.removeEventListener('keydown', escapeRegion, true);
         };
         const escapeRegion = (event) => {
@@ -60985,11 +61754,16 @@ const DocumentMode = (() => {
         }
         const topActions = document.createElement('div');
         topActions.className = 'document-top-actions';
-        topActions.append(inspectorButton, topButton('exit', 'Seiteneditor', 'Dokumentmodus verlassen'));
+        const viewButton = topButton('view', '☷', 'Ansicht, Lesemodus und Zoom');
+        viewButton.className = 'document-view-button';
+        viewButton.setAttribute('aria-expanded', 'false');
+        topActions.append(viewButton, inspectorButton, topButton('exit', 'Seiteneditor', 'Dokumentmodus verlassen'));
         top.append(topActions);
         const commandbar = document.createElement('div');
         commandbar.className = 'document-commandbar';
         commandbar.setAttribute('aria-label', 'Dokumentansicht');
+        commandbar.id = 'document-view-' + page.id;
+        viewButton.setAttribute('aria-controls', commandbar.id);
         const modes = document.createElement('div');
         modes.className = 'document-mode-switch';
         modes.setAttribute('role', 'group');
@@ -61069,7 +61843,7 @@ const DocumentMode = (() => {
             stand.style.removeProperty('height');
             renderDocument(stand, block);
             stand.querySelectorAll('.blatt-papier').forEach(paper => {
-                paper.inert = !state.toolsOpen;
+                (paper.closest('.blatt-flur') || paper).inert = !state.toolsOpen;
             });
         };
         documents.forEach((block, i) => {
@@ -61382,7 +62156,9 @@ const DocumentMode = (() => {
             workspace.dataset.documentTools = an ? 'open' : 'closed';
             readButton.setAttribute('aria-pressed', String(!an));
             annotateButton.setAttribute('aria-pressed', String(an));
-            center.querySelectorAll('.blatt-papier').forEach(paper => { paper.inert = !an; });
+            center.querySelectorAll('.blatt-papier').forEach(paper => {
+                (paper.closest('.blatt-flur') || paper).inert = !an;
+            });
             passen();
         };
         const panelsSetzen = () => {
@@ -61399,6 +62175,13 @@ const DocumentMode = (() => {
             passen();
         };
         workspace.addEventListener('keydown', event => {
+            if (event.key === 'Escape' && workspace.dataset.documentView === 'open') {
+                workspace.dataset.documentView = 'closed';
+                viewButton.setAttribute('aria-expanded', 'false');
+                viewButton.focus();
+                event.stopPropagation();
+                return;
+            }
             if (event.key === 'Escape' && (state.thumbnailsOpen || state.inspectorOpen)) {
                 const returnTo = state.inspectorOpen ? inspectorButton : thumbnailButton;
                 state.thumbnailsOpen = false;
@@ -61414,6 +62197,10 @@ const DocumentMode = (() => {
         });
         workspace.addEventListener('click', event => {
             const element = event.target instanceof Element ? event.target : null;
+            if (!element?.closest('.document-commandbar,[data-document-action="view"]')) {
+                workspace.dataset.documentView = 'closed';
+                viewButton.setAttribute('aria-expanded', 'false');
+            }
             const thumb = element?.closest('[data-document-index]');
             if (thumb?.dataset.documentIndex) {
                 springe(Number(thumb.dataset.documentIndex) || 0);
@@ -61444,6 +62231,11 @@ const DocumentMode = (() => {
             const action = element?.closest('[data-document-action]')?.dataset.documentAction;
             if (!action)
                 return;
+            if (action === 'view') {
+                const offen = workspace.dataset.documentView !== 'open';
+                workspace.dataset.documentView = offen ? 'open' : 'closed';
+                viewButton.setAttribute('aria-expanded', String(offen));
+            }
             if (action === 'previous')
                 springe(state.index - 1);
             if (action === 'next')
@@ -61509,7 +62301,7 @@ const DocumentMode = (() => {
                 /* Zurueck ins Regal, ohne den Dokumentmodus abzuschalten: wer das
                    Skript wieder aufmacht, will es wieder als Dokument sehen. */
                 const eintrag = typeof Register !== 'undefined' && Register.navigation
-                    ? Register.navigation.eines('bibliothekOben') : null;
+                    ? Register.navigation.eines('app-bib') : null;
                 if (eintrag && typeof eintrag.tun === 'function')
                     eintrag.tun();
                 else
@@ -82839,8 +83631,13 @@ document.getElementById('q').oninput = e => zeichneNav(e.target.value);
 zeichneNav();
 oeffne(location.hash.slice(1) || (D[0] && D[0].id));
 <\/script></body></html>`;
-        lade(new Blob([doc], { type: 'text/html' }), 'notizen-archiv-' + heute() + '.html');
+        const blob = new Blob([doc], { type: 'text/html' });
+        lade(blob, 'notizen-archiv-' + heute() + '.html');
         UI.toast(seiten.length + ' Seiten in eine HTML-Datei gepackt');
+        /* Der Blob geht zurück, damit der Zustandsknopf in den Einstellungen
+           ihn nach dem Herunterladen ÖFFNEN kann (E441) — eine HTML-Datei kann
+           der Browser zeigen, anders als eine .redion. */
+        return blob;
     };
     /**
      * Eine Seite als HTML — für Archiv, Einzelexport und Drucken.
@@ -87127,7 +87924,7 @@ const Ansichten = (() => {
            §46 sagt, dass nichts verschwinden darf, und ein Weg, den man nur
            noch über die Adresszeile findet, ist verschwunden. */
         { name: 'Wo du arbeitest', eintraege: [
-                { z: '▤', t: 'Workspace', s: 'Übersicht, Datenbanken, Wiki und Vorlagen.', a: 'workspace' },
+                { z: '▤', t: 'Seiten & Wissen', s: 'Dein Bestand und offene Seiten. Weitere Sammlungen findest du in der Bibliothek.', a: 'workspace' },
                 { z: '⌂', t: 'Arbeitsbereich', s: 'Name, Zeichen und der Baum aller Seiten.', a: 'schublade' }
             ] },
         { name: 'Wichtige Werkzeuge', eintraege: [
@@ -87902,6 +88699,46 @@ const Einstellungen = (() => {
         `role="switch" aria-checked="${an ? 'true' : 'false'}"` +
         (name ? ` aria-label="${esc(name)}"` : '') + `><i></i></button>`;
     const knopf = (aktion, text, klasse = '') => `<button class="ez-knopf ${klasse}" data-tun="${aktion}">${text}</button>`;
+    /* EIN KNOPF, DER SEINEN VERLAUF ZEIGT (E441). Die Seite wird als Text
+       gezeichnet; ein Zustandsknopf ist aber ein Element mit Zustand. Deshalb
+       steht hier nur ein Platzhalter, und `binde()` tauscht ihn gegen den
+       echten Knopf aus `zustandsknopf.ts`. `data-zk` bleibt am fertigen
+       Knopf stehen, damit ein Prüflauf ihn findet. */
+    const zustandsknopf = (id) => `<span data-zk="${esc(id)}"></span>`;
+    /**
+     * Die Aufträge der Zustandsknöpfe dieser Seite. Der Zustand kommt aus
+     * der Zusage der echten Arbeit — nie aus einem Zeitgeber.
+     *
+     * Die Sicherung endet bei „Heruntergeladen": eine `.redion` oder `.json`
+     * kann der Browser nicht öffnen, also gibt es kein „Öffnen". Die
+     * HTML-Einzeldatei dagegen kann er — sie bekommt den Öffnen-Weg.
+     */
+    const zustandsknopfAuftrag = (id) => {
+        if (id === 'export-json')
+            return {
+                art: 'laden', klasse: 'ez-knopf',
+                texte: { bereit: 'Speichern', arbeitet: 'Wird erstellt …',
+                    fertig: 'Heruntergeladen', fehler: 'Nicht gesichert' },
+                /* `sicherungSpeichern` fängt seine Fehler selbst und sagt `false`
+                   (E146); der Knopf wertet genau das als Fehlschlag. */
+                aktion: () => App.sicherungSpeichern()
+            };
+        if (id === 'einzeldatei') {
+            let blob = null;
+            return {
+                art: 'laden', klasse: 'ez-knopf',
+                texte: { bereit: 'Erzeugen', arbeitet: 'Wird erzeugt …',
+                    geschafft: 'Heruntergeladen', fertig: 'Öffnen' },
+                aktion: () => { blob = Werkzeuge.einzelDatei(); },
+                /* Die Adresse wird nicht zurückgegeben: das Fenster braucht sie,
+                   solange es offen ist, und der Browser räumt sie mit der Seite
+                   auf. */
+                oeffnen: () => { if (blob)
+                    window.open(URL.createObjectURL(blob), '_blank'); }
+            };
+        }
+        return null;
+    };
     const feld = (schluessel, wert, platzhalter = '') => `<input data-set="${schluessel}" value="${esc(wert)}" placeholder="${esc(platzhalter)}">`;
     const kopf = (titel, unter) => `<h2>${titel}</h2>` + (unter ? `<p class="ez-unter">${unter}</p>` : '');
     /* ========================================================================
@@ -87969,7 +88806,7 @@ const Einstellungen = (() => {
             zeile('Zeilenabstand', 'Enger oder luftiger', wahl('dichte', [['eng', 'Eng'], ['normal', 'Normal'], ['weit', 'Weit']], V('dichte', 'normal'))) +
             zeile('Beim Öffnen zeigen', 'Was erscheint, wenn du die App startest', wahl('startAnsicht', [['dokument', 'Zuletzt geöffnetes Dokument, sonst das Regal'],
                 ['dokumente', 'Immer das Regal'],
-                ['start', 'Heute – Lernen & Alltag'], ['workspace', 'Workspace'],
+                ['start', 'Heute – Lernen & Alltag'], ['workspace', 'Bibliothek – Seiten & Wissen'],
                 ['notizhefte', 'Notizhefte – Regal zum Losschreiben'],
                 ['notizheft', 'Zuletzt benutztes Heft, sofort schreibbereit'],
                 ['letzte', 'Zuletzt geöffnete Seite'],
@@ -88006,12 +88843,12 @@ const Einstellungen = (() => {
                     ? 'verbunden' + (z.google.profil ? ' als ' + esc(z.google.profil.email) : '')
                     : (z.google.id ? 'Client-ID da, nicht angemeldet' : 'nicht eingerichtet')}</span> ` +
                     knopf('verbindungen', 'Einrichten')) +
-                zeile('Kalender', 'Google, iCloud und jede ICS-Adresse', `<span class="ez-grau">${z.ics.anzahl} Abos</span> ` + knopf('kalender-verb', 'Öffnen')) +
-                zeile('Mail', 'Gmail holen, beschriften, beantworten — oder EML-Dateien einlesen', knopf('mail-verb', 'Öffnen')) +
+                zeile('Kalender', 'Google, iCloud und jede ICS-Adresse', `<span class="ez-grau">${z.ics.anzahl} Abos</span> ` + knopf('kalender-verb', 'Öffnen', 'weiter')) +
+                zeile('Mail', 'Gmail holen, beschriften, beantworten — oder EML-Dateien einlesen', knopf('mail-verb', 'Öffnen', 'weiter')) +
                 zeile('GitHub und Jira', 'Issues und Vorgänge als gespiegelte Datenbank', `<span class="ez-grau">${z.github.verbunden ? 'GitHub verbunden' : 'nicht verbunden'}` +
-                    `</span> ` + knopf('spiegel-verb', 'Öffnen')) +
+                    `</span> ` + knopf('spiegel-verb', 'Öffnen', 'weiter')) +
                 zeile('MCP-Server', 'Fremde Werkzeuge für die KI', `<span class="ez-grau">${(Store.getMeta('mcp:server', []) || []).length} eingetragen</span> ` +
-                    knopf('mcp-verb', 'Öffnen')) +
+                    knopf('mcp-verb', 'Öffnen', 'weiter')) +
                 zeile('Web Clipper', 'Webseiten sammeln — ohne Browsererweiterung', knopf('clipper', 'Einrichten')) +
                 zeile('Ordner auf der Festplatte', 'Notizen als Markdown-Dateien ablegen', knopf('ordner-schreiben', 'Ordner wählen')) +
                 zeile('Brücke', 'Für Dienste, die den Browser nicht direkt heranlassen', `<span class="ez-grau">${z.bruecke ? 'eingetragen' : 'keine'}</span> ` +
@@ -88101,13 +88938,13 @@ const Einstellungen = (() => {
                             'Dropbox. Redion legt dort selbständig vollständige Sicherungen ab, ' +
                             'und der Dienst bringt sie auf deine anderen Geräte.';
             return kopf('Import und Export') +
-                zeile('Sicherung speichern', 'Alles als eine JSON-Datei', knopf('export-json', 'Speichern')) +
+                zeile('Sicherung speichern', 'Alles als eine JSON-Datei', zustandsknopf('export-json')) +
                 zeile('Sicherung laden', 'Ersetzt den jetzigen Inhalt', knopf('import-json', 'Laden')) +
                 zeile('Markdown-Ordner schreiben', 'Je Seite eine .md-Datei, Unterseiten in Unterordnern', knopf('ordner-schreiben', 'Ordner wählen')) +
                 zeile('Markdown-Ordner einlesen', 'Legt aus jeder Datei eine Seite an', knopf('ordner-lesen', 'Ordner wählen')) +
                 zeile('Dateien einlesen', 'Markdown, Text, CSV, TSV, HTML, Excel (.xlsx), Word (.docx), EPUB — ' +
                     'Excel wird zur Datenbank, EPUB zu einem Wiki mit Kapiteln', knopf('dateien-lesen', 'Dateien wählen')) +
-                zeile('Als eine HTML-Datei', 'Zum Weitergeben und Archivieren', knopf('einzeldatei', 'Erzeugen')) +
+                zeile('Als eine HTML-Datei', 'Zum Weitergeben und Archivieren', zustandsknopf('einzeldatei')) +
                 zeile('Offene Seite als Markdown', '', knopf('seite-md', 'Speichern')) +
                 zeile('Offene Seite als HTML', '', knopf('seite-html', 'Speichern')) +
                 zeile('Offene Seite drucken oder als PDF', '', knopf('seite-pdf', 'Drucken')) +
@@ -88594,6 +89431,18 @@ const Einstellungen = (() => {
         });
         /* Knöpfe */
         o.querySelectorAll('[data-tun]').forEach((b) => b.addEventListener('click', () => tun(b.dataset.tun, o)));
+        /* Die Zustandsknöpfe (E441): Platzhalter gegen das echte Element
+           tauschen. Ein Platzhalter ohne Auftrag bleibt leer — lieber eine
+           Lücke, die auffällt, als ein Knopf, der nichts tut. */
+        o.querySelectorAll('span[data-zk]').forEach(platz => {
+            const id = platz.dataset['zk'] ?? '';
+            const auftrag = zustandsknopfAuftrag(id);
+            if (!auftrag || typeof Zustandsknopf === 'undefined')
+                return;
+            const griff = Zustandsknopf.bauen(auftrag);
+            griff.element.dataset['zk'] = id;
+            platz.replaceWith(griff.element);
+        });
         /* Speicherplatz nachreichen */
         const zahlen = o.querySelector('#speicher-zahlen');
         if (zahlen)
@@ -112004,7 +112853,9 @@ const Rundgang = (() => {
                 '<div class="rg-knoepfe">' +
                 '<button data-a="weg">Überspringen</button>' +
                 (nr > 0 ? '<button data-a="zurueck">Zurück</button>' : '') +
-                `<button data-a="weiter" class="prim">${nr === SCHRITTE.length - 1 ? 'Fertig' : 'Weiter'}</button>` +
+                /* `weiter` (E441): der Pfeil gleitet — nur solange es weitergeht. */
+                `<button data-a="weiter" class="prim${nr === SCHRITTE.length - 1 ? '' : ' weiter'}">` +
+                `${nr === SCHRITTE.length - 1 ? 'Fertig' : 'Weiter'}</button>` +
                 '</div>';
         stellen();
         setTimeout(stellen, 30);
@@ -112254,8 +113105,9 @@ const Rundgang = (() => {
         d.setAttribute('aria-label', 'Willkommen bei Redion');
         d.innerHTML =
             '<div class="wk-kasten">' +
+                /* Hier stand ein „R" im Farbkasten (bis E456). Redur will genau
+                   eine Marke — die des Studios in der Kopfzeile. */
                 '<div class="wk-kopf">' +
-                '<div class="wk-zeichen" aria-hidden="true">R</div>' +
                 '<h2>Willkommen bei Redion</h2>' +
                 '<p>Notizen, Seiten und Datenbanken — <b>auf deinem Gerät</b>. ' +
                 'Kein Konto, kein Abo, keine Wolke, solange du keine willst.</p>' +
@@ -121965,6 +122817,9 @@ const Bibliothek = (() => {
                 return '<button type="button" data-studio-weg="' + weg.id + '"' +
                     (an ? ' class="on" aria-current="page"' : '') + '>' + weg.name + '</button>';
             }).join('') + '</nav>' +
+            '<select class="bib-studio-sammlungen" aria-label="Weitere Bibliothek-Inhalte öffnen">' +
+            '<option value="">Dateien & Wissen …</option>' +
+            (typeof Arbeitswelt !== 'undefined' ? Arbeitswelt.sammlungen.map(a => '<option value="' + esc(a.id) + '">' + esc(a.name) + '</option>').join('') : '') + '</select>' +
             '<label class="bib-studio-suche"><span data-sym="search" aria-hidden="true"></span>' +
             '<span class="bib-studio-sr">Dokumenttitel in dieser Ansicht suchen</span>' +
             '<input id="bib-studio-suche" type="search" autocomplete="off" placeholder="Dokument suchen …"' +
@@ -122337,6 +123192,98 @@ const Bibliothek = (() => {
                 'Gesamtgrösse, die Aufteilung kommt aus dem Bestand.</p>';
         });
     };
+    const BIB_BAUM_WURZEL = '__redion_bibliothek_wurzel__';
+    const BIB_BAUM_OFFEN = 'bibBaumOffen';
+    const bibliothekBaumKnoten = () => {
+        const seiten = alleSeiten()
+            .filter(p => p.parentTable !== 'collection');
+        const nachId = new Map();
+        seiten.forEach(p => nachId.set(String(p.id), p));
+        const nachEltern = new Map();
+        for (const p of seiten) {
+            const parent = p.parentId && nachId.has(String(p.parentId))
+                ? String(p.parentId)
+                : '';
+            const liste = nachEltern.get(parent) || [];
+            liste.push(p);
+            nachEltern.set(parent, liste);
+        }
+        const sortiere = (a, b) => {
+            const aKinder = (nachEltern.get(String(a.id)) || []).length;
+            const bKinder = (nachEltern.get(String(b.id)) || []).length;
+            if (!!aKinder !== !!bKinder)
+                return aKinder ? -1 : 1;
+            return String(a.text || '').localeCompare(String(b.text || ''), 'de', { sensitivity: 'base', numeric: true });
+        };
+        const bauen = (p, gesehen) => {
+            const id = String(p.id);
+            if (gesehen.has(id))
+                return { id, name: String(p.text || 'Ohne Titel'), zeichen: 'â–¡' };
+            const weiter = new Set(gesehen);
+            weiter.add(id);
+            const kinder = (nachEltern.get(id) || [])
+                .slice()
+                .sort(sortiere)
+                .map(k => bauen(k, weiter));
+            return {
+                id,
+                name: String(p.text || 'Ohne Titel'),
+                zeichen: kinder.length || p.heftArt === 'fach' ? 'â–£' : 'â–¡',
+                ...(kinder.length ? { kinder } : {})
+            };
+        };
+        const wurzeln = (nachEltern.get('') || [])
+            .slice()
+            .sort(sortiere)
+            .map(p => bauen(p, new Set()));
+        return [{
+                id: BIB_BAUM_WURZEL,
+                name: 'Dokumente',
+                zeichen: 'â–¤',
+                kinder: wurzeln
+            }];
+    };
+    const bibliothekBaumNachtragen = (wrap) => {
+        if (zustand.reiter !== 'ablage')
+            return;
+        const stelle = wrap.querySelector('[data-bib-baum]');
+        if (!stelle)
+            return;
+        const Baum = window.Baumansicht;
+        if (!Baum?.bauen) {
+            stelle.innerHTML = '<p class="bib-baum-fehlt">Baumansicht konnte nicht geladen werden.</p>';
+            return;
+        }
+        const gemerkt = Store.getMeta(BIB_BAUM_OFFEN, []);
+        const offeneMeta = Array.isArray(gemerkt) ? gemerkt.map(String) : [];
+        const pfad = ordnerWeg().map(p => String(p.id));
+        const offen = [...new Set([BIB_BAUM_WURZEL, ...offeneMeta, ...pfad])];
+        const griff = Baum.bauen({
+            name: 'Dokumente',
+            knoten: bibliothekBaumKnoten(),
+            gewaehlt: zustand.ordner || BIB_BAUM_WURZEL,
+            offen,
+            gewaehltGeaendert: (id) => {
+                if (id === BIB_BAUM_WURZEL) {
+                    geheIn(null);
+                    return;
+                }
+                const p = Store.getBlock(id);
+                if (!p || p.alive === false || !permitted('lesen', id))
+                    return;
+                if (artVon(p).id === 'ordner') {
+                    geheIn(id);
+                    return;
+                }
+                App.oeffne(id);
+            },
+            offenGeaendert: (ids) => {
+                if (Store.setMeta)
+                    Store.setMeta(BIB_BAUM_OFFEN, ids);
+            }
+        });
+        stelle.replaceChildren(griff.element);
+    };
     /* ---------------------------------------------------------------- *
      * DIE DECKELANSICHT (E236)
      * ---------------------------------------------------------------- */
@@ -122350,6 +123297,13 @@ const Bibliothek = (() => {
         wrap.innerHTML =
             '<div class="bib bib-deckel-seite">' +
                 deckelKopf(alle.length, gesamt) +
+                (zustand.reiter === 'ablage'
+                    ? '<div class="bib-ablage-layout">' +
+                        '<aside class="bib-ablage-baum" aria-label="Ablagebaum">' +
+                        '<div class="bib-ablage-baum-kopf"><strong>Ablage</strong><span>Ordner & Seiten</span></div>' +
+                        '<div data-bib-baum></div>' +
+                        '</aside><div class="bib-ablage-inhalt">'
+                    : '') +
                 studioNavigation() + studioWeiter() +
                 '<div class="bib-arten" role="group" aria-label="Nach Art filtern">' +
                 ART_FILTER.filter(a => a.id === 'alle' || vorhanden.has(a.id) ||
@@ -122373,12 +123327,14 @@ const Bibliothek = (() => {
                    Sicherheitsfunktion, und §46 stellt Datenintegrität vor alles
                    andere. Eine Warnung, die man nur in einer Ansicht sieht, die
                    kaum jemand öffnet, ist keine Warnung. */
+                (zustand.reiter === 'ablage' ? '</div></div>' : '') +
                 sicherungsKarte() +
                 platzKarte() +
                 '</div>';
         if (typeof Register !== 'undefined' && Register.symbole)
             Register.symbole.fuelle(wrap);
         binde(wrap);
+        bibliothekBaumNachtragen(wrap);
         platzNachtragen(wrap);
         /* Die Adressen der Vorschaubilder kommen aus der Ablage und damit
            später als die Karte (E313). */
@@ -122460,6 +123416,11 @@ const Bibliothek = (() => {
     };
     /** Was in beiden Formen gleich funktioniert: öffnen und umschalten. */
     const binde = (wrap) => {
+        wrap.querySelector('.bib-studio-sammlungen')?.addEventListener('change', event => {
+            const ziel = event.currentTarget.value;
+            if (ziel && typeof Arbeitswelt !== 'undefined')
+                Arbeitswelt.oeffnen(ziel);
+        });
         wrap.querySelectorAll('[data-studio-weg]').forEach(button => button.addEventListener('click', () => {
             const weg = button.dataset.studioWeg || 'ablage';
             zustand.reiter = weg === 'pdf' ? 'alle' : weg;
@@ -123118,7 +124079,7 @@ if (typeof Register !== 'undefined' && Register.kontext) {
         zeichen: 'book', rang: 20,
         zeigen: () => typeof Notebook !== 'undefined' && !!Notebook.oeffnen,
         tun: () => Notebook.oeffnen() });
-    K.melde({ bereich: 'bibliothek', id: 'aufgaben', name: 'Aufgaben',
+    K.melde({ bereich: 'bibliothek', id: 'aufgaben', name: 'Meine Aufgaben',
         zeichen: 'tasks', rang: 30, tun: () => Bibliothek.aufgaben() });
     K.melde({ bereich: 'bibliothek', id: 'alle', name: 'Alle Seiten',
         zeichen: 'pages', rang: 40, tun: () => Bibliothek.alleSeiten() });
@@ -128938,7 +129899,7 @@ window.Zeitmesser = Zeitmesser;
 /* ===== quell/bereiche/wissen/arbeitswelt.js ===== */
 "use strict";
 /* ============================================================================
- * arbeitswelt.js — die Hauptwelt „Workspace"
+ * arbeitswelt.ts — Sammlungen in Bibliothek, Aufgaben und Kalender
  * ----------------------------------------------------------------------------
  * Diese Datei ist eine Sicht auf den vorhandenen Bestand. Sie führt weder
  * Seiten noch Datenbanken, Aufgaben, Termine oder Fenster ein zweites Mal.
@@ -128951,7 +129912,7 @@ window.Zeitmesser = Zeitmesser;
  * `aw-*` an allen eigenen Elementen.
  * ==========================================================================*/
 const Arbeitswelt = (() => {
-    const TITEL = '🧱 Workspace';
+    const TITEL = 'Seiten & Wissen';
     const MAX_LISTE = 80;
     const MAX_BEREICHE = 64;
     const MAX_BEREICH_IDS = 1024;
@@ -128959,15 +129920,16 @@ const Arbeitswelt = (() => {
     const controllerNachRoot = new WeakMap();
     let instanz = 0;
     const ansichten = Object.freeze([
-        { id: 'uebersicht', icon: '🧱', name: 'Übersicht' },
-        { id: 'bibliothek', icon: '📚', name: 'Bibliothek' },
+        { id: 'uebersicht', icon: '📄', name: TITEL },
+        { id: 'bibliothek', icon: '📚', name: 'Dateien & PDFs' },
         { id: 'aufgaben', icon: '☑', name: 'Aufgaben' },
         { id: 'kalender', icon: '📅', name: 'Kalender' },
         { id: 'datenbanken', icon: '▦', name: 'Datenbanken' },
         { id: 'whiteboards', icon: '🖍', name: 'Whiteboards' },
-        { id: 'wiki', icon: '🕸', name: 'Wiki & Verweise' },
+        { id: 'wiki', icon: '🕸', name: 'Wissen & Verweise' },
         { id: 'vorlagen', icon: '🧩', name: 'Vorlagen' }
     ]);
+    const sammlungen = Object.freeze(ansichten.filter(a => a.id !== 'aufgaben' && a.id !== 'kalender'));
     const dateiIcons = {
         file: '📎', image: '🖼', audio: '🎵', video: '🎬'
     };
@@ -129782,7 +130744,7 @@ const Arbeitswelt = (() => {
         const form = element('form', 'aw-suche');
         form.setAttribute('role', 'search');
         form.dataset.awSearchForm = 'true';
-        const label = element('label', 'aw-visuell-versteckt', 'Workspace durchsuchen');
+        const label = element('label', 'aw-visuell-versteckt', 'Inhalte durchsuchen');
         const input = element('input', 'aw-suche-eingabe');
         input.type = 'search';
         input.placeholder = platzhalter;
@@ -129804,7 +130766,7 @@ const Arbeitswelt = (() => {
         select.id = `${id}-bereich`;
         label.htmlFor = select.id;
         select.dataset.awBereich = 'true';
-        select.setAttribute('aria-label', 'Workspace nach Lebensbereich filtern');
+        select.setAttribute('aria-label', 'Inhalte nach Lebensbereich filtern');
         const alle = element('option', '', '◎ Alle Bereiche');
         alle.value = ALLE_BEREICHE;
         select.append(alle);
@@ -129854,7 +130816,7 @@ const Arbeitswelt = (() => {
         main.append(arbeit);
     };
     const zeichneBibliothek = (main, daten, zustand) => {
-        const header = bereich('aw-bibliothek-kopf', 'Zentrale Bibliothek', 'Seiten, Dateien, PDFs, Whiteboards und Tabellen bleiben an ihrem ursprünglichen Ort.');
+        const header = bereich('aw-bibliothek-kopf', 'Dateien & PDFs', 'Seiten, Dateien, PDFs, Whiteboards und Tabellen bleiben an ihrem ursprünglichen Ort.');
         header.append(sucheKopf(zustand, 'Titel, Pfad oder Alias …'));
         const cards = element('div', 'aw-zaehler-grid');
         cards.append(zaehlerKarte('📄', 'Seiten', daten.seiten.length, 'bibliothek'), zaehlerKarte('◻', 'Inhaltsblöcke', daten.bloecke.length, 'bibliothek'), zaehlerKarte('📎', 'Dateien', daten.dateien.length, 'bibliothek'), zaehlerKarte('📕', 'PDF-Dokumente', daten.pdfs.length, 'bibliothek'), zaehlerKarte('🎨', 'Whiteboards', daten.zaehler.whiteboards || 0, 'bibliothek'), zaehlerKarte('📊', 'Tabellen', daten.zaehler.tabellen || 0, 'bibliothek'));
@@ -130218,62 +131180,43 @@ const Arbeitswelt = (() => {
             bereichId: gemerkterBereich(startBereiche),
             mobileNavigationOffen: false };
         let daten = snapshot(zustand.bereichId);
-        const media = typeof matchMedia === 'function' ? matchMedia('(max-width: 760px)') : null;
         const reiter = reiterVertrag();
+        let reiterOffen = false;
         const zeichnen = () => {
-            root.classList.add('produkt-welt', 'arbeitswelt');
-            if (nackt) {
-                root.classList.add('aw-nackt');
-                const schale = element('div', 'aw-shell');
-                /* Nur die Lebensbereich-Auswahl bleibt: sie filtert, was der
-                   Kalender zeigt, und ohne sie liesse sich das nicht mehr wählen.
-                   Titel und Beschreibung bringt der Abschnitt selbst mit. */
-                const kopf = element('header', 'aw-kopf aw-kopf-schmal');
-                kopf.append(bereichAuswahl(daten, zustand, id));
-                schale.append(kopf);
-                const nur = element('main', 'aw-inhalt');
-                nur.id = `${id}-inhalt`;
-                nur.tabIndex = -1;
-                zeichneHauptinhalt(nur, daten, zustand);
-                schale.append(nur);
-                root.replaceChildren(schale);
-                return;
-            }
-            const shell = element('div', 'aw-shell');
-            const header = element('header', 'aw-kopf');
-            const titleBox = element('div', 'aw-titelgruppe');
-            titleBox.append(element('p', 'aw-eyebrow', 'Redion Hauptwelt'), element('h1', 'aw-titel', TITEL), element('p', 'aw-untertitel', 'Seiten, Wissen, Dateien und Arbeit in einer gemeinsamen Sicht.'));
-            const mobile = knopf('Bereiche', 'aw-mobile-nav');
-            mobile.dataset.awMobileNav = 'true';
-            mobile.setAttribute('aria-controls', `${id}-nav`);
-            mobile.setAttribute('aria-expanded', String(zustand.mobileNavigationOffen));
-            header.append(titleBox, bereichAuswahl(daten, zustand, id), mobile);
-            shell.append(header);
-            const layout = element('div', 'aw-layout');
-            const nav = element('nav', 'aw-navigation');
-            nav.id = `${id}-nav`;
-            nav.setAttribute('aria-label', 'Workspace-Bereiche');
-            if (media?.matches && !zustand.mobileNavigationOffen)
-                nav.hidden = true;
-            ansichten.forEach(ansicht => {
-                const button = knopf(`${ansicht.icon} ${ansicht.name}`, 'aw-navigation-eintrag');
-                button.dataset.awSection = ansicht.id;
-                if (ansicht.id === zustand.ansicht)
-                    button.setAttribute('aria-current', 'page');
-                nav.append(button);
-            });
-            layout.append(nav);
+            root.classList.add('produkt-welt', 'arbeitswelt', 'aw-nackt');
+            const schale = element('div', 'aw-shell');
+            const kopf = element('header', 'aw-kopf aw-kopf-schmal');
+            kopf.append(bereichAuswahl(daten, zustand, id));
+            schale.append(kopf);
             const main = element('main', 'aw-inhalt');
             main.id = `${id}-inhalt`;
             main.tabIndex = -1;
+            /* Die Fensterwerkzeuge bleiben bei den Seiten, als aufklappbarer
+               Abschnitt statt einer dauerhaften dritten Navigationsspalte. */
+            if (zustand.ansicht === 'uebersicht') {
+                const fenster = element('details', 'aw-fenster');
+                fenster.open = reiterOffen;
+                fenster.append(element('summary', '', 'Offene Seiten & geteilte Ansicht'));
+                const panel = element('div', 'aw-reiter-panel');
+                zeichneReiter(panel, reiter);
+                fenster.append(panel);
+                fenster.addEventListener('toggle', () => { reiterOffen = fenster.open; });
+                main.append(fenster);
+            }
             zeichneHauptinhalt(main, daten, zustand);
-            layout.append(main);
-            const aside = element('aside', 'aw-reiter-panel');
-            aside.setAttribute('aria-label', 'Offene Seiten und geteilte Ansicht');
-            zeichneReiter(aside, reiter);
-            layout.append(aside);
-            shell.append(layout);
-            root.replaceChildren(shell);
+            schale.append(main);
+            root.replaceChildren(schale);
+        };
+        const ansichtWechseln = (ansicht) => {
+            const ziel = normalisiereAnsicht(ansicht);
+            /* Eingebettete Controller bleiben lokal bedienbar; echte Orte erhalten
+               beim Wechsel auch die richtige Adresse und Navigationsmarkierung. */
+            if (nackt) {
+                oeffnen(ziel);
+                return;
+            }
+            zustand.ansicht = ziel;
+            zeichnen();
         };
         const oeffneSeite = (pageId) => {
             const page = Store.getBlock(pageId);
@@ -130343,17 +131286,14 @@ const Arbeitswelt = (() => {
                 return;
             }
             if (name === 'show-templates') {
-                zustand.ansicht = 'vorlagen';
-                zeichnen();
+                ansichtWechseln('vorlagen');
                 return;
             }
             if (name === 'template-gallery') {
                 if (typeof Galerie !== 'undefined' && typeof Galerie.oeffne === 'function')
                     Galerie.oeffne();
-                else {
-                    zustand.ansicht = 'vorlagen';
-                    zeichnen();
-                }
+                else
+                    ansichtWechseln('vorlagen');
                 return;
             }
             if (name === 'global-search') {
@@ -130422,17 +131362,9 @@ const Arbeitswelt = (() => {
             const target = event.target instanceof Element ? event.target : null;
             if (!target)
                 return;
-            const mobile = target.closest('[data-aw-mobile-nav]');
-            if (mobile) {
-                zustand.mobileNavigationOffen = !zustand.mobileNavigationOffen;
-                zeichnen();
-                return;
-            }
             const section = target.closest('[data-aw-section]');
             if (section?.dataset.awSection) {
-                zustand.ansicht = normalisiereAnsicht(section.dataset.awSection);
-                zustand.mobileNavigationOffen = false;
-                zeichnen();
+                ansichtWechseln(section.dataset.awSection);
                 return;
             }
             const template = target.closest('[data-aw-template]');
@@ -130518,20 +131450,11 @@ const Arbeitswelt = (() => {
             zustand.bereichId = daten.bereichId;
             zeichnen();
         };
-        const mediaGeaendert = () => {
-            if (!media?.matches)
-                zustand.mobileNavigationOffen = false;
-            zeichnen();
-        };
         const controller = {
             root,
             zustand: () => ({ ...zustand }),
             snapshot: () => daten,
-            ansichtSetzen: (ansicht) => {
-                zustand.ansicht = normalisiereAnsicht(ansicht);
-                zustand.mobileNavigationOffen = false;
-                zeichnen();
-            },
+            ansichtSetzen: ansichtWechseln,
             sucheSetzen: (text) => { zustand.suche = String(text || ''); zeichnen(); },
             bereichSetzen,
             aktualisieren: () => {
@@ -130545,34 +131468,34 @@ const Arbeitswelt = (() => {
                 root.removeEventListener('input', input);
                 root.removeEventListener('change', change);
                 root.removeEventListener('submit', submit);
-                media?.removeEventListener('change', mediaGeaendert);
                 if (controllerNachRoot.get(root) === controller)
                     controllerNachRoot.delete(root);
                 root.replaceChildren();
-                root.classList.remove('produkt-welt', 'arbeitswelt');
+                root.classList.remove('produkt-welt', 'arbeitswelt', 'aw-nackt');
             }
         };
         root.addEventListener('click', click);
         root.addEventListener('input', input);
         root.addEventListener('change', change);
         root.addEventListener('submit', submit);
-        media?.addEventListener('change', mediaGeaendert);
         zeichnen();
         return controller;
     };
-    /** Setzt die Workspace-Welt in ein vorhandenes Schalen-Ziel ein. */
+    /** Bestehender Renderer; keine zweite Datenhaltung und keine Workspace-Schale. */
     const render = (ziel, ansicht = 'uebersicht', nackt = false) => {
         controllerNachRoot.get(ziel)?.zerstoeren();
         const controller = controllerBauen(ziel, ansicht, nackt);
         controllerNachRoot.set(ziel, controller);
         return controller;
     };
-    /** Öffnet die Workspace-Welt als bestehende Redion-Sonderansicht. */
+    /** Jede Sammlung ist ein eigenständiger, wiederherstellbarer Ort. */
     const oeffnen = (ansicht = 'uebersicht') => {
         if (typeof App === 'undefined' || typeof App.zeigeSonder !== 'function')
             return null;
         let controller = null;
-        App.zeigeSonder(TITEL, (ziel) => { controller = render(ziel, ansicht); });
+        const zielAnsicht = normalisiereAnsicht(ansicht);
+        const titel = ansichten.find(a => a.id === zielAnsicht)?.name || TITEL;
+        App.zeigeSonder(titel, (ziel) => { controller = render(ziel, zielAnsicht, true); });
         return controller;
     };
     /** Der Kalender als eigener Ort (E431).
@@ -130581,16 +131504,10 @@ const Arbeitswelt = (() => {
      *  —, merkt den Ort für „Weiter wo du warst" und meldet den Schauplatz.
      *  Genau das unterscheidet einen Ort von einer Überlagerung. */
     const kalenderOeffnen = () => {
-        if (typeof App === 'undefined' || typeof App.zeigeSonder !== 'function')
-            return null;
-        let controller = null;
-        App.zeigeSonder('Kalender', (ziel) => {
-            controller = render(ziel, 'kalender', true);
-        });
-        return controller;
+        return oeffnen('kalender');
     };
     return {
-        TITEL, ansichten, render, oeffnen, open: oeffnen, mount: render,
+        TITEL, ansichten, sammlungen, render, oeffnen, open: oeffnen, mount: render,
         kalenderOeffnen,
         snapshot, reiterVertrag, controller: render
     };
@@ -130608,16 +131525,15 @@ window.Arbeitswelt = Arbeitswelt;
    Emoji aus der Schale heraus, und eine Ladezeile ist Schale. */
 if (typeof Register !== 'undefined' && Register.kontext) {
     const K = Register.kontext;
-    K.melde({ bereich: 'workspace', id: 'uebersicht', name: 'Übersicht',
-        zeichen: 'workspace', rang: 10,
-        tun: () => Arbeitswelt.oeffnen('uebersicht') });
-    K.melde({ bereich: 'workspace', id: 'ansichten', name: 'Ansichten',
-        zeichen: 'cards', rang: 20,
-        liefern: () => (Arbeitswelt.ansichten || []).map((a) => ({
+    K.melde({ bereich: 'bibliothek', id: 'sammlungen', name: 'Dateien & Wissen',
+        zeichen: 'cards', rang: 25,
+        liefern: () => Arbeitswelt.sammlungen.map(a => ({
             id: 'a-' + a.id, name: String(a.name || a.id), zeichen: 'page',
             tun: () => Arbeitswelt.oeffnen(a.id)
         }))
     });
+    K.melde({ bereich: 'aufgaben', id: 'alle-aufgaben', name: 'Alle Aufgaben',
+        zeichen: 'tasks', rang: 5, tun: () => Arbeitswelt.oeffnen('aufgaben') });
 }
 
 </script>
@@ -130625,7 +131541,7 @@ if (typeof Register !== 'undefined' && Register.kontext) {
 /* ===== quell/bereiche/wissen/produktwelten.js ===== */
 "use strict";
 /* ============================================================================
- * bereiche/wissen/produktwelten.ts — zwei Oberflächen, ein Datenbestand
+ * bereiche/wissen/produktwelten.ts — Navigation und alte Routen, ein Datenbestand
  * ----------------------------------------------------------------------------
  * Dieser kleine Lotse besitzt bewusst keine Seiten, Karten oder Aufgaben.
  * Er merkt nur, in welcher Produktwelt man arbeitet, markiert die gemeinsame
@@ -130698,8 +131614,8 @@ const Produktwelten = (() => {
         const welt = sichereWelt(treffer[1]);
         const erlaubte = welt === 'lernen'
             ? new Set(['heute', 'lernen', 'lernweg', 'fehler', 'pruefungen', 'schule', 'uni', 'arbeit', 'fortschritt'])
-            : new Set(['uebersicht', 'bibliothek', 'aufgaben', 'kalender', 'datenbanken',
-                'whiteboards', 'wiki', 'vorlagen']);
+            : new Set(['start', 'seiten', 'dateien', 'projekte', 'uebersicht', 'bibliothek',
+                'aufgaben', 'kalender', 'datenbanken', 'whiteboards', 'wiki', 'vorlagen']);
         return erlaubte.has(treffer[2]) ? { welt, ansicht: treffer[2] } : null;
     };
     const lernen = (ansicht = 'heute') => {
@@ -130727,19 +131643,21 @@ const Produktwelten = (() => {
         routeSchreiben('lernen', ziel);
     };
     const workspace = (ansicht = 'start') => {
-        const ziel = ansicht === 'start' || ansicht === 'seiten' ? 'uebersicht' : ansicht;
+        /* Nur noch ein Kompatibilitätsweg für gespeicherte Links und Aufrufer.
+           Die Ansichten wohnen jetzt in Bibliothek, Aufgaben und Kalender;
+           keine neue Workspace-Schale und keine Migration von Inhaltsdaten. */
+        const ziel = ansicht === 'start' || ansicht === 'seiten' || ansicht === 'projekte'
+            ? 'uebersicht' : ansicht === 'dateien' ? 'bibliothek' : ansicht;
         weltSetzen('workspace');
         Store.setMeta(ARBEIT_META, ziel);
-        reiterSetzen('workspace');
+        reiterSetzen(ziel === 'aufgaben' ? 'aufgaben' : ziel === 'kalender' ? 'kalender' : 'bibliothek');
         const modul = arbeitsmodul();
         if (modul?.oeffnen) {
             modul.oeffnen(ziel);
-            routeSchreiben('workspace', ziel);
             return;
         }
         if (modul?.open) {
             modul.open(ziel);
-            routeSchreiben('workspace', ziel);
             return;
         }
         if (ziel === 'bibliothek' && typeof Bibliothek !== 'undefined')
@@ -130748,9 +131666,13 @@ const Produktwelten = (() => {
             Bibliothek.aufgaben();
         else if (typeof Ansichten !== 'undefined')
             Ansichten.seiten();
-        routeSchreiben('workspace', ziel);
     };
-    const bibliothek = () => workspace('bibliothek');
+    const bibliothek = () => {
+        weltSetzen('workspace');
+        reiterSetzen('bibliothek');
+        if (typeof Bibliothek !== 'undefined')
+            Bibliothek.oeffne();
+    };
     const aufgaben = () => workspace('aufgaben');
     /* DER KALENDER IST EIN EIGENER ORT (E430, E431). Die Ansicht gab es die
        ganze Zeit — die Arbeitswelt zeichnet die Chronologie aller Datumsfelder.
@@ -132059,6 +132981,7 @@ const KI = (() => {
            dasselbe Feld, und durchsichtiger Text würde sie unlesbar machen.
            Eine Fehlermeldung, die man nicht lesen kann, ist der schlechtere
            Fehler. */
+        const aktivitaet = zeigeAktivitaet(ziel);
         ziel.classList.add('ki-schreibt');
         try {
             await frage(nachrichten, (t) => {
@@ -132076,6 +132999,7 @@ const KI = (() => {
         }
         finally {
             ziel.classList.remove('ki-schreibt');
+            aktivitaet.remove();
         }
         /* Quellen unter die Antwort */
         const qk = quellenKarte(quellen);
@@ -132579,6 +133503,16 @@ const KI = (() => {
             await schreibLauf(befehl, auftrag);
         });
     };
+    /** Eigene Statuszeile: Streaming ersetzt den Antworttext, nicht den Status.
+        Entfernen in finally gilt auch bei Fehlern und abgebrochenen Anfragen. */
+    const zeigeAktivitaet = (ziel) => {
+        const status = document.createElement('div');
+        status.className = 'ki-aktivitaet';
+        status.setAttribute('role', 'status');
+        status.append(Zustand.aktivitaet('ki'), document.createTextNode('KI arbeitet …'));
+        ziel.before(status);
+        return status;
+    };
     const schreibLauf = async (befehl, auftrag) => {
         const quelle = arbeitsText();
         if (!quelle.text.trim()) {
@@ -132594,6 +133528,7 @@ const KI = (() => {
             (Store.getMeta('ki:persoenlich', '')
                 ? '\n\nDauerhafte Anweisungen: ' + Store.getMeta('ki:persoenlich', '') : '');
         let antwort = '';
+        const aktivitaet = zeigeAktivitaet(ziel);
         ziel.classList.add('ki-schreibt');
         try {
             await frage([{ role: 'system', content: system },
@@ -132611,6 +133546,7 @@ const KI = (() => {
         }
         finally {
             ziel.classList.remove('ki-schreibt');
+            aktivitaet.remove();
         }
         const leiste = document.createElement('div');
         leiste.className = 'ki-antwortknoepfe';
@@ -133387,6 +134323,8 @@ const Ruhig = (() => {
         if (!neu)
             offen = false;
         anwenden();
+        if (typeof Kontextkante !== 'undefined')
+            Kontextkante.zeichne();
         return neu;
     };
     /**
@@ -135739,29 +136677,13 @@ const Menueband = (() => {
         reiterliste.className = 'mb-tabs';
         reiterliste.setAttribute('role', 'tablist');
         reiterliste.setAttribute('aria-label', 'Menüband');
-        /* DIE MARKE GANZ LINKS (E272).
-           Ein „R" im Gold der App, damit die Zeile links nicht kahl beginnt.
-    
-           Sie ist KEIN Knopf und trägt `aria-hidden`: man erreicht die
-           Startansicht über „Gehen", und ein zweiter Weg dorthin wäre die
-           Doppelung, die E206 beim Welt-Umschalter gerade entfernt hat. Seit
-           Phase G steht sie ausserhalb der `tablist` — vorher war sie ein
-           Fremdstück darin und musste sich das mit `aria-hidden` erkaufen;
-           jetzt ist sie schlicht Zierrat neben der Liste.
-    
-           Das Zeichen ist der Buchstabe des Arbeitsbereichs, dasselbe wie im
-           Kontokreis rechts — nicht ein zweites, festes „R". Wer seinen
-           Arbeitsbereich „Notizen" nennt, sieht links und rechts dasselbe N. */
-        const marke = document.createElement('div');
-        marke.className = 'mb-marke';
-        marke.setAttribute('aria-hidden', 'true');
-        try {
-            marke.textContent = String(Store.getMeta('arbeitsIcon', 'N'));
-        }
-        catch {
-            marke.textContent = 'N';
-        }
-        zeile.appendChild(marke);
+        /* HIER STAND DIE MARKE GANZ LINKS (E272 bis E456).
+           Ein Buchstabe des Arbeitsbereichs, „damit die Zeile links nicht kahl
+           beginnt". Seit dem Studio (E440) trägt die Zeile darüber die eine
+           Marke der App — „R redion STUDIO" — und Redur will genau eine:
+           „nur das sollte hier bleiben." Ein zweites Zeichen darunter war ab
+           da kein Schmuck mehr, sondern ein zweites Logo. `test384` hält
+           fest, dass es weg bleibt. */
         /* ── „DATEI" — KEIN REITER, SONDERN EINE FLÄCHE (E272 Phase G) ──────
            Die acht Reiter zeigen Befehle für das, was offen ist. „Datei"
            wirkt auf das Ganze: sichern, drucken, weitergeben, Konto,
@@ -135940,25 +136862,16 @@ const Menueband = (() => {
                 b.appendChild(z);
             }
             else {
-                /* Das Konto trägt kein Symbol, sondern das Zeichen des
-                   Arbeitsbereichs — dasselbe, das im R-Kreis stand.
-        
-                   `.ws-icon` IST DIE VERBINDUNG, nicht Schmuck: wer das Zeichen in
-                   den Einstellungen ändert, ruft `kopfzeileAuffrischen()`, und die
-                   sucht genau diese Klasse. Ohne sie stünde hier bis zum nächsten
-                   Neuzeichnen das alte Zeichen.
-                   Und die Vorgabe heisst „N" wie überall sonst. Hier stand „R" —
-                   bei einem Arbeitsbereich ohne eigenes Zeichen hätten Seitenleiste
-                   und Menüleiste dann zwei verschiedene Buchstaben für dieselbe
-                   Sache gezeigt. */
+                /* DAS KONTO TRÄGT EIN SYMBOL, KEINEN BUCHSTABEN (E456).
+                   Bis dahin stand hier das Zeichen des Arbeitsbereichs in einem
+                   farbigen Kreis — und wirkte neben der Studio-Marke wie ein
+                   zweites Logo. Redur: „nur das sollte hier bleiben." Das Zeichen
+                   des Arbeitsbereichs lebt weiter in der Schublade und in den
+                   Einstellungen (`.ws-icon`, `kopfzeileAuffrischen`); hier steht
+                   das Symbol für „Arbeitsbereich", so wie Suche und KI ihre
+                   Symbole tragen. Der Statuspunkt darunter bleibt. */
                 const z = document.createElement('span');
-                z.className = 'ws-icon';
-                try {
-                    z.textContent = String(Store.getMeta('arbeitsIcon', 'N'));
-                }
-                catch {
-                    z.textContent = 'N';
-                }
+                z.dataset['sym'] = 'workspace';
                 b.appendChild(z);
                 /* DER STATUSPUNKT (E251). Wer angemeldet ist, sieht am
                    Arbeitsbereichs-Knopf, ob der Abgleich gut steht, läuft oder
@@ -136406,6 +137319,7 @@ const Menueband = (() => {
     };
     /** Von aussen: das Band auf einen Reiter stellen. */
     const zeige = (reiter) => {
+        sichtbarSetzen(true);
         setzeMeta(merkeReiter, reiter);
         if (amTelefon()) {
             zeichne();
@@ -136415,7 +137329,18 @@ const Menueband = (() => {
         setzeMeta(merkeZu(), false);
         zeichne();
     };
-    return { start, zeichne, zeige, WURZEL };
+    const sichtbarSetzen = (an) => {
+        document.body.dataset.studioTools = an ? 'offen' : 'zu';
+        const knopf = document.getElementById('studio-tools');
+        const name = an ? 'Werkzeuge ausblenden' : 'Werkzeuge einblenden';
+        knopf?.setAttribute('aria-expanded', String(an));
+        knopf?.setAttribute('aria-label', name);
+        if (knopf)
+            knopf.title = name;
+    };
+    const aufklappen = () => { zeige(reiterJetzt()); };
+    const schliessen = () => { fluechtig(true); sichtbarSetzen(false); };
+    return { start, zeichne, zeige, aufklappen, schliessen, WURZEL };
 })();
 window.Menueband = Menueband;
 
@@ -137888,6 +138813,29 @@ const StudioSchale = (() => {
     let gestartet = false;
     const META = 'studio:navigation-kompakt';
     const BREITE = 'studio:navigation-breite';
+    const bewegt = new Set();
+    const ruhig = matchMedia('(prefers-reduced-motion: reduce)');
+    ruhig.addEventListener('change', () => {
+        if (ruhig.matches) {
+            bewegt.forEach(a => a.cancel());
+            bewegt.clear();
+        }
+    });
+    /** Nur echte Navigation animieren, nicht jeden Such-/Editor-Rerender.
+        Keine Papier-/Canvas-Transformation: Ink-Koordinaten bleiben unverändert. */
+    const ankommen = (element, x = 0, y = 6, delay = 0) => {
+        if (!element || ruhig.matches || document.hidden || typeof element.animate !== 'function')
+            return;
+        const tokens = getComputedStyle(document.documentElement);
+        const zeit = tokens.getPropertyValue('--motion-normal').trim();
+        const duration = parseFloat(zeit) * (zeit.endsWith('ms') ? 1 : 1000) || 200;
+        const animation = element.animate([
+            { opacity: .35, transform: `translate(${x}px,${y}px)` },
+            { opacity: 1, transform: 'none' }
+        ], { duration, delay, fill: 'backwards', easing: tokens.getPropertyValue('--ease-enter').trim() || 'ease-out' });
+        bewegt.add(animation);
+        animation.onfinish = animation.oncancel = () => { bewegt.delete(animation); };
+    };
     const breiteSetzen = (wert) => {
         const breite = Math.max(148, Math.min(260, Math.round(wert)));
         document.body.style.setProperty('--studio-nav-expanded', breite + 'px');
@@ -137910,17 +138858,6 @@ const StudioSchale = (() => {
         if (knopf)
             knopf.title = name;
     };
-    const markieren = () => {
-        const wo = App.schauplatz();
-        for (const [id, aktiv] of [['studio-documents', wo === 'bibliothek'],
-            ['studio-notebooks', wo === 'notizhefte']]) {
-            const b = document.getElementById(id);
-            if (aktiv)
-                b?.setAttribute('aria-current', 'page');
-            else
-                b?.removeAttribute('aria-current');
-        }
-    };
     const start = () => {
         if (gestartet)
             return;
@@ -137932,13 +138869,36 @@ const StudioSchale = (() => {
             document.getElementById(id)?.addEventListener('click', tun);
         };
         an('studio-home', () => Bibliothek.oeffne());
-        an('studio-documents', () => Bibliothek.oeffne());
-        an('studio-notebooks', () => Notebook.oeffnen());
         an('studio-search', () => App.suche());
         an('studio-create', () => App.erstellenBlatt());
         an('studio-import', () => Bibliothek.pdfImportieren());
+        an('studio-account', () => App.arbeitsbereich());
+        an('studio-tools', () => {
+            if (document.body.dataset.studioTools === 'offen')
+                Menueband.schliessen();
+            else
+                Menueband.aufklappen();
+        });
+        document.addEventListener('keydown', event => {
+            if (event.key !== 'Escape' || document.body.dataset.studioTools !== 'offen')
+                return;
+            if (document.querySelector('.overlay,.menu,[role="dialog"]'))
+                return;
+            Menueband.schliessen();
+            document.getElementById('studio-tools')?.focus();
+        });
         an('studio-theme', () => {
-            Einstellungen.S('theme', document.documentElement.dataset.theme === 'light' ? 'dark' : 'light');
+            const hell = document.documentElement.dataset.theme === 'light';
+            if (typeof Aussehen !== 'undefined') {
+                const aktuell = Aussehen.einstellung();
+                Store.setMeta('studio:schema-' + (hell ? 'light' : 'dark'), aktuell.schema);
+                const ziel = hell ? 'dark' : 'light';
+                const gemerkt = Store.getMeta('studio:schema-' + ziel, hell ? 'standard' : 'hell');
+                const schema = Aussehen.SCHEMATA.find(s => s.id === gemerkt && s.grund === ziel);
+                Aussehen.setzen({ schema: schema?.id || (hell ? 'standard' : 'hell') });
+            }
+            else
+                Einstellungen.S('theme', hell ? 'dark' : 'light');
             themaMarkieren();
         });
         new MutationObserver(themaMarkieren).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
@@ -137986,9 +138946,29 @@ const StudioSchale = (() => {
         const bar = document.getElementById('studio-bar');
         if (bar)
             Register.symbole.fuelle(bar);
-        window.addEventListener('redion:schauplatz', markieren);
-        window.addEventListener('hashchange', markieren);
-        markieren();
+        let letzterOrt = location.hash;
+        let frame = 0;
+        const ortBelebt = () => {
+            cancelAnimationFrame(frame);
+            frame = requestAnimationFrame(() => {
+                if (letzterOrt === location.hash)
+                    return;
+                letzterOrt = location.hash;
+                bewegt.forEach(a => a.cancel());
+                bewegt.clear();
+                ankommen(document.querySelector('#page .bib-dkopf,#page .bib-titel,#page .aw-kopf'));
+                document.querySelectorAll('#page .bib-gitter>.bib-deckel:nth-child(-n+6)')
+                    .forEach((karte, i) => ankommen(karte, 0, 8, i * 24));
+            });
+        };
+        window.addEventListener('redion:schauplatz', ortBelebt);
+        window.addEventListener('hashchange', ortBelebt);
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                bewegt.forEach(a => a.cancel());
+                bewegt.clear();
+            }
+        });
     };
     return { start };
 })();
@@ -138933,13 +139913,16 @@ const App = (() => {
         'Lernzentrum': 'lernen',
         'Bibliothek': 'bibliothek', 'Alle Seiten': 'bibliothek',
         'Dokumente': 'bibliothek', 'Seiten': 'bibliothek',
+        'Seiten & Wissen': 'bibliothek', 'Dateien & PDFs': 'bibliothek',
+        'Datenbanken': 'bibliothek', 'Whiteboards': 'bibliothek',
+        'Wissen & Verweise': 'bibliothek', 'Vorlagen': 'bibliothek',
         'Notizhefte': 'notizhefte',
         /* BEIDE NAMEN, EIN ZIEL (Audit F16). „Workspace" heisst seit dem
            3. September „Arbeitsbereich"; der alte Name bleibt hier als Alias
            stehen, damit ein gemerkter Schauplatz, ein Verweis oder eine ältere
            Sicherung nicht ins Leere zeigt. Ein Alias ist kein Doppelkatalog:
            er führt zur selben Kennung. */
-        'Arbeitsbereich': 'workspace', 'Workspace': 'workspace',
+        'Arbeitsbereich': 'bibliothek', 'Workspace': 'bibliothek',
         'Meine Aufgaben': 'aufgaben',
         'Aufgaben': 'aufgaben', 'Posteingang': 'posteingang',
         'Elektrotechnik': 'elektro', 'Elektro': 'elektro',
@@ -141570,6 +142553,15 @@ const App = (() => {
        „welcher Hash ist ein Ort" (`rohHash in SONDER_START`, weiter unten). */
     const SONDER_START = {
         dokumente: () => Bibliothek.oeffne(),
+        'seiten-wissen': () => Arbeitswelt.oeffnen('uebersicht'),
+        'dateien-pdfs': () => Arbeitswelt.oeffnen('bibliothek'),
+        aufgaben: () => Arbeitswelt.oeffnen('aufgaben'),
+        datenbanken: () => Arbeitswelt.oeffnen('datenbanken'),
+        whiteboards: () => Arbeitswelt.oeffnen('whiteboards'),
+        'wissen-verweise': () => Arbeitswelt.oeffnen('wiki'),
+        vorlagen: () => Arbeitswelt.oeffnen('vorlagen'),
+        workspace: () => Arbeitswelt.oeffnen('uebersicht'),
+        arbeitsbereich: () => Arbeitswelt.oeffnen('uebersicht'),
         notizhefte: () => {
             const N = globalThis.Notebook;
             if (N && typeof N.oeffnen === 'function')
@@ -141956,8 +142948,19 @@ const App = (() => {
            durch, weil sie nicht mit `block=` beginnen. */
         addEventListener('hashchange', () => {
             const b = blockAusHash(location.hash);
-            if (b)
+            if (b) {
                 zeigeBlock(b);
+                return;
+            }
+            const alt = Produktwelten.routeAusHash();
+            if (alt?.welt === 'workspace') {
+                Produktwelten.routeOeffnen(alt);
+                return;
+            }
+            const ort = location.hash.slice(1);
+            const jetzt = String(sonder?.titel || '').toLowerCase().replace(/[^a-z]+/g, '-');
+            if (ort !== jetzt && SONDER_START[ort])
+                SONDER_START[ort]();
         });
         /* AM TELEFON BEGINNT REDION AUF „START", NICHT IN EINER SEITE (E37).
            Eine App, die mit einem halb gescrollten Text aufgeht, sieht aus wie
@@ -142107,10 +143110,13 @@ const App = (() => {
         }
         if (produktRoute)
             startAnsichtZeigen = () => Produktwelten.routeOeffnen(produktRoute);
+        else if (sonderHash)
+            startAnsichtZeigen = SONDER_START[sonderHash] || null;
         /* Name und Symbol des Arbeitsbereichs */
         const wsBtn = document.getElementById('btn-settings');
         const wsName = wsBtn?.querySelectorAll('span')[1];
-        /* Alle `.ws-icon` — seit E236 auch das Konto rechts in der Menüleiste. */
+        /* Alle `.ws-icon` — die Schublade und die Einstellungen. Das Konto rechts
+           in der Menüleiste trägt seit E456 ein Symbol statt des Zeichens. */
         document.querySelectorAll('.ws-icon').forEach(ico => {
             ico.textContent = Store.getMeta('arbeitsIcon', 'N');
         });

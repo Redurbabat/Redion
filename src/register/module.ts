@@ -101,8 +101,8 @@ Register.module = (() => {
       was: 'Regal deiner Schreibhefte — öffnen und losschreiben (E264).',
       oeffnen: () => (typeof Notebook !== 'undefined') && Notebook.oeffnen() },
 
-    { id: 'arbeitswelt',   name: 'Arbeitsbereich', icon: '🧱', zeichen: 'workspace',
-      was: 'Seiten, Bibliothek, Aufgaben, Kalender, Datenbanken, Whiteboards, Wiki, Vorlagen.',
+    { id: 'arbeitswelt',   name: 'Seiten & Wissen', icon: '📄', zeichen: 'pages',
+      was: 'Bestand, Favoriten, zuletzt geöffnete Seiten und geteilte Ansicht in der Bibliothek.',
       oeffnen: () => (typeof Produktwelten !== 'undefined') && Produktwelten.workspace('uebersicht') },
 
     { id: 'lebensbereiche', name: 'Lebensbereiche', icon: '◎', zeichen: 'compass',

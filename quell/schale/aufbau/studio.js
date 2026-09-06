@@ -4,6 +4,29 @@ const StudioSchale = (() => {
     let gestartet = false;
     const META = 'studio:navigation-kompakt';
     const BREITE = 'studio:navigation-breite';
+    const bewegt = new Set();
+    const ruhig = matchMedia('(prefers-reduced-motion: reduce)');
+    ruhig.addEventListener('change', () => {
+        if (ruhig.matches) {
+            bewegt.forEach(a => a.cancel());
+            bewegt.clear();
+        }
+    });
+    /** Nur echte Navigation animieren, nicht jeden Such-/Editor-Rerender.
+        Keine Papier-/Canvas-Transformation: Ink-Koordinaten bleiben unverändert. */
+    const ankommen = (element, x = 0, y = 6, delay = 0) => {
+        if (!element || ruhig.matches || document.hidden || typeof element.animate !== 'function')
+            return;
+        const tokens = getComputedStyle(document.documentElement);
+        const zeit = tokens.getPropertyValue('--motion-normal').trim();
+        const duration = parseFloat(zeit) * (zeit.endsWith('ms') ? 1 : 1000) || 200;
+        const animation = element.animate([
+            { opacity: .35, transform: `translate(${x}px,${y}px)` },
+            { opacity: 1, transform: 'none' }
+        ], { duration, delay, fill: 'backwards', easing: tokens.getPropertyValue('--ease-enter').trim() || 'ease-out' });
+        bewegt.add(animation);
+        animation.onfinish = animation.oncancel = () => { bewegt.delete(animation); };
+    };
     const breiteSetzen = (wert) => {
         const breite = Math.max(148, Math.min(260, Math.round(wert)));
         document.body.style.setProperty('--studio-nav-expanded', breite + 'px');
@@ -26,17 +49,6 @@ const StudioSchale = (() => {
         if (knopf)
             knopf.title = name;
     };
-    const markieren = () => {
-        const wo = App.schauplatz();
-        for (const [id, aktiv] of [['studio-documents', wo === 'bibliothek'],
-            ['studio-notebooks', wo === 'notizhefte']]) {
-            const b = document.getElementById(id);
-            if (aktiv)
-                b?.setAttribute('aria-current', 'page');
-            else
-                b?.removeAttribute('aria-current');
-        }
-    };
     const start = () => {
         if (gestartet)
             return;
@@ -48,13 +60,36 @@ const StudioSchale = (() => {
             document.getElementById(id)?.addEventListener('click', tun);
         };
         an('studio-home', () => Bibliothek.oeffne());
-        an('studio-documents', () => Bibliothek.oeffne());
-        an('studio-notebooks', () => Notebook.oeffnen());
         an('studio-search', () => App.suche());
         an('studio-create', () => App.erstellenBlatt());
         an('studio-import', () => Bibliothek.pdfImportieren());
+        an('studio-account', () => App.arbeitsbereich());
+        an('studio-tools', () => {
+            if (document.body.dataset.studioTools === 'offen')
+                Menueband.schliessen();
+            else
+                Menueband.aufklappen();
+        });
+        document.addEventListener('keydown', event => {
+            if (event.key !== 'Escape' || document.body.dataset.studioTools !== 'offen')
+                return;
+            if (document.querySelector('.overlay,.menu,[role="dialog"]'))
+                return;
+            Menueband.schliessen();
+            document.getElementById('studio-tools')?.focus();
+        });
         an('studio-theme', () => {
-            Einstellungen.S('theme', document.documentElement.dataset.theme === 'light' ? 'dark' : 'light');
+            const hell = document.documentElement.dataset.theme === 'light';
+            if (typeof Aussehen !== 'undefined') {
+                const aktuell = Aussehen.einstellung();
+                Store.setMeta('studio:schema-' + (hell ? 'light' : 'dark'), aktuell.schema);
+                const ziel = hell ? 'dark' : 'light';
+                const gemerkt = Store.getMeta('studio:schema-' + ziel, hell ? 'standard' : 'hell');
+                const schema = Aussehen.SCHEMATA.find(s => s.id === gemerkt && s.grund === ziel);
+                Aussehen.setzen({ schema: schema?.id || (hell ? 'standard' : 'hell') });
+            }
+            else
+                Einstellungen.S('theme', hell ? 'dark' : 'light');
             themaMarkieren();
         });
         new MutationObserver(themaMarkieren).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
@@ -102,9 +137,29 @@ const StudioSchale = (() => {
         const bar = document.getElementById('studio-bar');
         if (bar)
             Register.symbole.fuelle(bar);
-        window.addEventListener('redion:schauplatz', markieren);
-        window.addEventListener('hashchange', markieren);
-        markieren();
+        let letzterOrt = location.hash;
+        let frame = 0;
+        const ortBelebt = () => {
+            cancelAnimationFrame(frame);
+            frame = requestAnimationFrame(() => {
+                if (letzterOrt === location.hash)
+                    return;
+                letzterOrt = location.hash;
+                bewegt.forEach(a => a.cancel());
+                bewegt.clear();
+                ankommen(document.querySelector('#page .bib-dkopf,#page .bib-titel,#page .aw-kopf'));
+                document.querySelectorAll('#page .bib-gitter>.bib-deckel:nth-child(-n+6)')
+                    .forEach((karte, i) => ankommen(karte, 0, 8, i * 24));
+            });
+        };
+        window.addEventListener('redion:schauplatz', ortBelebt);
+        window.addEventListener('hashchange', ortBelebt);
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                bewegt.forEach(a => a.cancel());
+                bewegt.clear();
+            }
+        });
     };
     return { start };
 })();

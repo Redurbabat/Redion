@@ -1,0 +1,112 @@
+/* Workspace auflösen, Inhalte behalten. Isolierte Browserablage mit Testdaten.
+ * Prüft echte Navigation, alte Links, Wiederherstellung, Sammlungen am Handy
+ * und dass die bisherigen Fenster- und Erstellwerkzeuge erreichbar bleiben.
+ * node pruefungen/lauf/test428.mts [--screenshots]
+ */
+import { chromium } from 'playwright';
+import http from 'node:http';
+import fs from 'node:fs';
+import path from 'node:path';
+import assert from 'node:assert/strict';
+
+const root = path.resolve(import.meta.dirname, '../..');
+const types: Record<string, string> = { '.html':'text/html', '.js':'text/javascript', '.css':'text/css', '.svg':'image/svg+xml', '.json':'application/json' };
+const server = http.createServer((req, res) => {
+  const file = path.resolve(root, '.' + decodeURIComponent((req.url || '/index.html').split('?')[0]!));
+  if (!file.startsWith(root + path.sep) || !fs.existsSync(file) || !fs.statSync(file).isFile()) { res.writeHead(404).end(); return; }
+  res.writeHead(200, { 'Content-Type': (types[path.extname(file)] || 'application/octet-stream') + '; charset=utf-8' });
+  res.end(fs.readFileSync(file));
+});
+await new Promise<void>(resolve => server.listen(9628, '127.0.0.1', resolve));
+const browser = await chromium.launch();
+const page = await browser.newPage({ viewport:{width:1366,height:900}, serviceWorkers:'block' });
+page.setDefaultTimeout(12000);
+const errors: string[] = [];
+page.on('pageerror', e => errors.push(e.message));
+let passed = 0;
+const check = (name: string, value: unknown) => { assert.ok(value, name); passed++; console.log('  ✓ ' + name); };
+const ready = async () => {
+  await page.waitForFunction("typeof Arbeitswelt !== 'undefined' && Store.cache.blocks && document.body.dataset.studioNav");
+  await page.waitForTimeout(700);
+};
+const noWorkspace = async () => {
+  check('Keine zusätzliche Workspace-Schale oder Navigation', await page.locator('#btn-workspace,.aw-navigation,.aw-titelgruppe').count() === 0);
+  check('Keine Workspace-Beschriftung im Inhalt', !/Workspace/.test(await page.locator('.arbeitswelt').innerText()));
+};
+try {
+  await page.goto('http://127.0.0.1:9628/index.html'); await ready();
+  const fixture = await page.evaluate<{page:string;todo:string;board:string;database:string}>(`(() => {
+    Store.setMeta('rundgangGesehen', true);
+    Store.setMeta('neuerungenGesehen', Math.max(...Rundgang.NEUERUNGEN.map(n=>n.nr)));
+    document.querySelectorAll('.overlay,#rg-willkommen,#rg-einladung,#rg-neu').forEach(e=>e.remove());
+    const p = Store.addPage(null, {text:'Navigation – Bestand', favorite:true});
+    const todo = Store.addBlock(p.id, 'todo', {text:'Messbericht abgeben', checked:false});
+    const board = Store.addBlock(p.id, 'whiteboard', {text:'Prinzipskizze', shapes:[]});
+    const database = Store.addDatabase(p.id, 'Messwerte');
+    Bibliothek.oeffne();
+    return {page:p.id, todo:todo.id, board:board.id, database:database.id};
+  })()`);
+  await page.evaluate('Store.flush()');
+  const before = await page.evaluate('Object.keys(Store.cache.blocks).length');
+  check('Bibliothek öffnet direkt das Dokumentregal', new URL(page.url()).hash === '#dokumente');
+  check('Workspace ist nicht mehr im Navigationsregister', await page.evaluate("!Register.navigation.eines('workspace')"));
+  const collectionIds = ['uebersicht','bibliothek','datenbanken','whiteboards','wiki','vorlagen'];
+  check('Alle sechs Bibliothek-Sammlungen haben einen sichtbaren Zugang', JSON.stringify(await page.locator('.bib-studio-sammlungen option').evaluateAll(es => es.map(e => (e as HTMLOptionElement).value).filter(Boolean))) === JSON.stringify(collectionIds));
+  const routes: Record<string,string> = { uebersicht:'seiten-wissen', bibliothek:'dateien-pdfs', datenbanken:'datenbanken', whiteboards:'whiteboards', wiki:'wissen-verweise', vorlagen:'vorlagen', aufgaben:'aufgaben', kalender:'kalender' };
+  for (const [view, route] of Object.entries(routes)) {
+    await page.evaluate(`Produktwelten.routeOeffnen(Produktwelten.routeAusHash('#welt-workspace-${view}'))`);
+    await page.waitForURL('**#' + route);
+    await noWorkspace();
+    check(view + ': richtiger Bereich markiert', await page.evaluate('App.schauplatz()') === (view === 'aufgaben' ? 'aufgaben' : view === 'kalender' ? 'kalender' : 'bibliothek'));
+    await page.evaluate("Store.setMeta('startAnsicht','dokumente'); Store.flush()");
+    await page.reload(); await ready();
+    check(view + ': Deep Link überlebt Neuladen auch bei anderer Startwahl', new URL(page.url()).hash === '#' + route);
+    check(view + ': tatsächlicher Inhalt wiederhergestellt', await page.locator('.arbeitswelt .aw-inhalt').count() === 1);
+  }
+  await page.evaluate("Bibliothek.oeffne(); location.hash='#welt-workspace-whiteboards'");
+  await page.waitForURL('**#whiteboards');
+  check('Alter Link funktioniert auch während der laufenden Sitzung', await page.locator('.aw-board').count() >= 1);
+  await page.evaluate("Arbeitswelt.oeffnen('aufgaben')");
+  check('Bestehende Todo-Aufgabe ist erreichbar', (await page.locator('.aw-inhalt').innerText()).includes('Messbericht abgeben'));
+  await page.evaluate("Arbeitswelt.oeffnen('datenbanken')");
+  await page.evaluate("Arbeitswelt.oeffnen('whiteboards')");
+  await page.goBack();
+  await page.waitForFunction("location.hash === '#datenbanken' && document.querySelector('.aw-datenbanken-kopf')");
+  check('Browser-Zurück wechselt auch den tatsächlichen Inhalt', (await page.locator('.aw-inhalt').innerText()).includes('Messwerte'));
+  await page.evaluate(`App.oeffne(${JSON.stringify(fixture.page)}); Arbeitswelt.oeffnen('uebersicht')`);
+  await page.locator('.aw-fenster summary').click();
+  check('Offene Seiten und Split-Steuerung bleiben zugänglich', await page.locator('.aw-fenster [data-aw-split]').count() > 0);
+  await page.locator('[data-aw-action="show-templates"]').click();
+  await page.waitForURL('**#vorlagen');
+  check('Interner Wechsel aktualisiert auch die Adresse', await page.locator('.aw-vorlagen').count() === 1);
+  check('Navigation hat keine Inhaltsobjekte angelegt oder entfernt', before === await page.evaluate('Object.keys(Store.cache.blocks).length'));
+  check('Objektkennungen und Inhalte bleiben unverändert', await page.evaluate(`(() => {
+    const f=${JSON.stringify(fixture)};
+    return Store.getBlock(f.page)?.text==='Navigation – Bestand' && Store.getBlock(f.todo)?.text==='Messbericht abgeben'
+      && Store.getBlock(f.board)?.type==='whiteboard' && !!Store.getCollection(f.database);
+  })()`));
+  for (const theme of ['hell','standard']) {
+    await page.evaluate(`Aussehen.setzen({schema:'${theme}'})`);
+    for (const [width,height] of [[1366,768],[820,1180],[390,844]]) {
+      await page.setViewportSize({width:width!,height:height!});
+      await page.evaluate('Bibliothek.oeffne()');
+      await page.locator('.bib-studio-optionen summary').click();
+      await page.locator('.bib-studio-sammlungen').selectOption('whiteboards');
+      await page.waitForURL('**#whiteboards');
+      check(`${theme} ${width}: Sammlung über echte Bibliothek-Auswahl erreichbar`, await page.locator('.aw-board').count() >= 1);
+      check(`${theme} ${width}: kein horizontaler Seitenüberlauf`, await page.evaluate('document.documentElement.scrollWidth <= innerWidth + 1'));
+      if (process.argv.includes('--screenshots')) {
+        const out = path.join(root, 'doku/studio-abnahme'); fs.mkdirSync(out,{recursive:true});
+        await page.screenshot({path:path.join(out,`sammlung-${theme}-${width}.png`)});
+      }
+    }
+  }
+  await page.evaluate('Bibliothek.oeffne()');
+  await page.locator('.bib-studio-optionen summary').click();
+  await page.locator('.bib-studio-sammlungen').focus();
+  await page.keyboard.press('Home'); await page.keyboard.press('ArrowDown'); await page.keyboard.press('Enter');
+  await page.waitForURL('**#seiten-wissen');
+  check('Sammlungen sind mit Tastatur bedienbar', await page.locator('.aw-fenster summary').count() === 1);
+  check('Keine Laufzeitfehler', errors.length === 0);
+  console.log(`\n${passed}/${passed} bestanden`);
+} finally { await browser.close(); await new Promise<void>(resolve => server.close(() => resolve())); }

@@ -49,7 +49,8 @@ try {
   await page.waitForTimeout(900);
   await page.evaluate(`(() => {
     Store.setMeta('rundgangGesehen', true);
-    document.querySelectorAll('.overlay,.produkt-onboarding-lage,#rg-willkommen,#rg-einladung').forEach(e=>e.remove());
+    Store.setMeta('neuerungenGesehen', Math.max(...Rundgang.NEUERUNGEN.map(n => n.nr)));
+    document.querySelectorAll('.overlay,.produkt-onboarding-lage,#rg-willkommen,#rg-einladung,#rg-neu').forEach(e=>e.remove());
     Bibliothek.oeffne(null);
   })()`);
   check('Studio navigation contains a real icon', await page.locator('#studio-nav svg').count() === 1);
@@ -76,8 +77,11 @@ try {
   check('Keyboard resize reaches bounded maximum', await page.locator('#studio-divider').getAttribute('aria-valuenow') === '260');
   await page.keyboard.press('Home');
   check('Keyboard resize reaches bounded minimum', await page.locator('#studio-divider').getAttribute('aria-valuenow') === '148');
+  await page.evaluate("Aussehen.setzen({schema:'standard'})");
   await page.locator('#studio-theme').click();
-  check('Theme button uses existing theme setting', await page.evaluate("Store.getMeta('theme') === document.documentElement.dataset.theme"));
+  check('Theme button really switches to light', await page.locator('html').getAttribute('data-theme') === 'light');
+  await page.locator('#studio-theme').click();
+  check('Theme button really switches back to dark', await page.locator('html').getAttribute('data-theme') === 'dark');
   await page.locator('#studio-create').click();
   check('Quick Create opens existing create sheet', await page.locator('[role="dialog"],.overlay,.menu').count() > 0);
   await page.keyboard.press('Escape');
@@ -116,11 +120,13 @@ try {
   check('Search retains focus after rerender', await page.locator('#bib-studio-suche').evaluate(e => e === document.activeElement));
   check('Matching search restores result', await page.locator('.bib-deckel').count() === 1);
   await page.locator('#bib-studio-suche').fill('');
+  await page.waitForTimeout(3500); // Importmeldung darf die Abnahmebilder nicht verdecken.
 
   const sizes = [[1920,1080],[1600,900],[1440,900],[1366,768],[1280,800],[1024,768],[820,1180],[768,1024],[430,932],[390,844]] as const;
   if (screenshots) fs.mkdirSync(out, { recursive: true });
   for (const theme of ['light', 'dark']) {
-    await page.evaluate(`Einstellungen.S('theme', '${theme}')`);
+    await page.evaluate(`Aussehen.setzen({schema:'${theme === 'light' ? 'hell' : 'standard'}'})`);
+    check('Visual matrix really uses ' + theme, await page.locator('html').getAttribute('data-theme') === theme);
     for (const [width,height] of sizes) {
       await page.setViewportSize({width,height});
       await page.waitForTimeout(120);
@@ -142,7 +148,7 @@ try {
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   if (screenshots) {
     for (const theme of ['light', 'dark']) {
-      await page.evaluate(`Einstellungen.S('theme', '${theme}')`);
+      await page.evaluate(`Aussehen.setzen({schema:'${theme === 'light' ? 'hell' : 'standard'}'})`);
       for (const [width,height] of [[1366,768],[820,1180],[390,844]]) {
         await page.setViewportSize({width:width!,height:height!});
         await page.evaluate(`App.oeffne(${JSON.stringify(id)})`);
@@ -151,8 +157,10 @@ try {
         await page.screenshot({path:path.join(out,`pdf-${theme}-${width}.png`)});
         await page.evaluate("Lernwelt.oeffnen('heute')");
         await page.locator('.lw-desk').waitFor();
+        await page.waitForTimeout(500);
         await page.screenshot({path:path.join(out,`heute-${theme}-${width}.png`)});
         await page.evaluate("Lernwelt.wechseln('lernen')");
+        await page.waitForTimeout(500);
         await page.screenshot({path:path.join(out,`lernen-${theme}-${width}.png`)});
         await page.evaluate("Einstellungen.oeffne('allgemein')");
         await page.locator('.einst-fenster').waitFor();

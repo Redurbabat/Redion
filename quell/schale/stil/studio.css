@@ -26,7 +26,7 @@
 .studio-brand:hover .studio-monogram{transform:perspective(var(--studio-perspective)) rotateY(10deg) rotateZ(0)}
 .studio-icon,.studio-action,.studio-search,.studio-shortcuts button{
   display:inline-flex;align-items:center;justify-content:center;gap:8px;
-  min-height:38px;padding:0 12px;border-radius:var(--radius-lg);font-size:13px;
+  min-height:44px;padding:0 12px;border-radius:var(--radius-lg);font-size:13px;
   border:1px solid transparent;transition:transform var(--motion-instant) var(--ease),
   background var(--motion-fast) var(--ease),border-color var(--motion-fast) var(--ease);
 }
@@ -45,6 +45,12 @@
 #studio-bar button:focus-visible{outline:2px solid var(--accent-text);outline-offset:3px}
 .k-beschriftung{display:none}
 #studio-divider{display:none}
+/* The full ribbon is a deliberate tool drawer, not a second permanent header. */
+body[data-schale="premium"][data-ruhig="an"]:not([data-studio-tools="offen"]) #menueband{display:none}
+#studio-tools[aria-expanded="true"]{background:var(--accent-schwach);color:var(--accent-text);border-color:var(--line)}
+body[data-studio-tools="offen"] #menueband{animation:studio-tools-enter var(--motion-fast) var(--ease-enter)}
+@keyframes studio-tools-enter{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){body[data-studio-tools="offen"] #menueband{animation:none}}
 .studio-orb{display:block;width:19px;height:19px;border-radius:50%;background:#e5defd;box-shadow:inset -6px -3px 0 #656079;transform:rotate(-25deg);transition:transform var(--motion-slow) var(--ease),box-shadow var(--motion-slow) var(--ease)}
 html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #8165df22,inset 0 1px 2px #ffffff70;transform:rotate(0)}
 
@@ -90,6 +96,9 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
 /* Consistent material and motion for the actual existing components. */
 :is(.finder,.dlg,.menu,.blatt-dialog,.r-sheet){border-radius:var(--radius-2xl);box-shadow:var(--studio-elevation);border-color:var(--studio-line)}
 :is(.finder,.dlg,.menu){animation:studio-arrive var(--motion-normal) var(--ease-enter) both}
+#kanten-lade:not([hidden]){animation:studio-drawer var(--motion-normal) var(--ease-enter)}
+.r-sheet{animation:studio-sheet var(--motion-normal) var(--ease-enter)}
+.aw-fenster[open]>.aw-reiter-panel{animation:studio-arrive var(--motion-normal) var(--ease-enter)}
 :is(.icon-btn,.btn,.mb-knopf,.ez-knopf){transition:background var(--motion-fast) var(--ease),transform var(--motion-instant) var(--ease)}
 :is(.icon-btn,.btn,.mb-knopf,.ez-knopf):active:not(:disabled){transform:scale(var(--press-scale))}
 .einst-nav{background:var(--bg-side)}
@@ -103,6 +112,8 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
   :is(.menu,.finder,.auswahlleiste){background:var(--studio-glass);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
 }
 @keyframes studio-arrive{from{opacity:0;transform:translateY(7px) scale(.985)}to{opacity:1;transform:none}}
+@keyframes studio-drawer{from{opacity:.3;transform:translateX(-10px)}to{opacity:1;transform:none}}
+@keyframes studio-sheet{from{opacity:.3;transform:translateY(16px)}to{opacity:1;transform:none}}
 /* A document-first Today view. Insights are still reachable in native details. */
 .lernwelt .lw-hero.lw-hero-compact{padding:0 0 20px;background:none;border:0;box-shadow:none;min-height:0}
 .lernwelt .lw-hero.lw-hero-compact h2{font-size:22px;letter-spacing:-.5px}
@@ -171,6 +182,7 @@ html[data-theme="light"] .studio-orb{background:#8165df;box-shadow:0 0 0 3px #81
   :is(.menu,.finder,.auswahlleiste){background:var(--bg-card);backdrop-filter:none;-webkit-backdrop-filter:none}
 }
 @media(prefers-reduced-motion:reduce){
+  :is(.finder,.dlg,.menu,.r-sheet),#kanten-lade:not([hidden]),.aw-fenster[open]>.aw-reiter-panel,#reiterleiste .reiter,.lw-insights-body{animation:none}
   .studio-monogram,.studio-brand:hover .studio-monogram{transform:none}
   #studio-bar button:active,body[data-schale="premium"] .k-knopf:active{transform:none}
   .lw-paper-sheet,.lw-paper-stack::before,.lw-paper-stack::after{transform:none;transition:none}
