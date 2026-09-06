@@ -265,10 +265,10 @@ mehr, als das Bauteil hübsch ist.
 |---|---|---|---|
 | `.folder-card` + Projektstruktur-Liste | Bibliothek, ⌄-Menü eines Ordners → „Blick hinein" | `Store.childrenOf`, die echte Anzahl, Suche durch den ganzen Unterbaum | **E459**, test432 |
 | `.ui-bookmark` · `.love-heart` | Kopfleiste (`#btn-fav`) und Heftregal (`.nh-stern`) | das Feld `favorite` am Block | **E460**, test433 |
-| `.loader` (flüssiger Ring) | WebLLM lädt sein Modell | `initProgressCallback` — der einzige echte 0..1-Anteil im ganzen Bestand | offen |
-| `.preloader` / `.crack` (Sterne) | Auftragsfenster, Aufträge ohne bekannte Schrittzahl | `schritte === 0` heisst „unbekannt" — dort gibt es bewusst keinen Balken | offen |
-| `.loader-letter` (Buchstaben) | „Jetzt abgleichen" in der Wolke | `zustand.laeuft` des Abgleichs — läuft oder läuft nicht, kein Anteil | offen |
-| `.press` (Druckpresse) | Auftragsfenster, Auftragsart `pdf-bilder` | `schritt` von `schritte`, echte Seitenzahlen | offen |
+| `.loader` (flüssiger Ring) | WebLLM lädt sein Modell | `initProgressCallback` — der einzige echte 0..1-Anteil im ganzen Bestand | **E461**, test434 |
+| `.preloader` / `.crack` (Sterne) | Auftragsfenster, Aufträge ohne bekannte Schrittzahl | `schritte === 0` heisst „unbekannt" — dort gibt es bewusst keinen Balken | **E461**, test434 |
+| `.loader-letter` (Buchstaben) | „Jetzt abgleichen" in der Wolke | `zustand.laeuft` des Abgleichs — läuft oder läuft nicht, kein Anteil | **E461**, test434 |
+| `.press` (Druckpresse) | Auftragsfenster, Auftragsart `pdf-bilder` | `schritt` von `schritte`, echte Seitenzahlen | **E461**, test434 |
 | `.🤚` (tippende Hand) | Rundgang, an den Zielen, die man antippt | die neun Schritte und ihre echten Ziele | offen |
 | `.btn` mit Buchstaben (dunkel) | Zustandsknopf, Sicht `erzeugen` — „Datenbank bauen", „Seite aufbauen" | die Zusage der KI-Aktion, wie bei `laden` (E441) | offen |
 | `.gradient-btn` als Umschalter | die Schalter der Einstellungen | `Store.setMeta`, derselbe Wert wie heute | offen |

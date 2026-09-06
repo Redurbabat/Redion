@@ -855,16 +855,30 @@ const KI = (() => {
             zustand.laedt = true;
             status('load', 'Lädt …');
             const zeile = melde('Modell wird geladen. Beim ersten Mal dauert das ein paar Minuten — danach liegt es im Browser-Cache.');
+            /* DER FLÜSSIGE RING (E461). Diese Stelle ist die einzige im ganzen
+               Bestand, die von aussen einen echten 0..1-Anteil bekommt
+               (`initProgressCallback`) — also bekommt sie das Bild, das einen
+               Anteil zeigen darf. Der alte Balken bleibt als Rückfall, falls
+               das Bauteil nicht geladen ist. */
+            const ring = typeof Lader !== 'undefined'
+                ? Lader.bauen({ art: 'fluss', anteil: 0, text: 'Modell wird geladen …' }) : null;
             const balken = document.createElement('div');
-            balken.className = 'prog';
-            balken.innerHTML = '<i style="width:0%"></i>';
-            zeile.appendChild(balken);
+            if (ring)
+                zeile.appendChild(ring.element);
+            else {
+                balken.className = 'prog';
+                balken.innerHTML = '<i style="width:0%"></i>';
+                zeile.appendChild(balken);
+            }
             try {
                 await webllmLaden(zustand.modell, (_text, p) => {
+                    const anteil = Math.max(0, Math.min(1, Number(p) || 0));
+                    if (ring)
+                        ring.setzen({ anteil });
                     const innen = balken.firstChild;
                     if (innen instanceof HTMLElement)
-                        innen.style.width = Math.round(p * 100) + '%';
-                    status('load', Math.round(p * 100) + ' %');
+                        innen.style.width = Math.round(anteil * 100) + '%';
+                    status('load', Math.round(anteil * 100) + ' %');
                 });
                 zustand.bereit = true;
                 zustand.laedt = false;

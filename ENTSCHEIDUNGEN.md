@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-440 Entscheidungen, E1 bis E460 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+441 Entscheidungen, E1 bis E461 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -504,6 +504,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E458** — Die Drucker-Karte: der Druckauftrag sagt, was er gerade tut
 * **E459** — Die Ordnerkarte: der Blick ins Fach, ohne hineinzugehen
 * **E460** — Ein Merker für „gemerkt", und er sagt es auch hörbar
+* **E461** — Vier Lader, vier Auskünfte, und keiner erfindet einen Anteil
 
 ---
 
@@ -36210,5 +36211,90 @@ DATEIEN. `src/schale/bedienung/merkzeichen.ts` (neu),
 `bilder.mts`, `pruefungen/lauf/test433.mts` (neu).
 
 GEPRÜFT. test433 (34 Punkte, neu, zwei Gegenproben rot gesehen);
+`npm run typecheck`, `npm run bauen:ts`.
+
+---
+
+E461 — Vier Lader, vier Auskünfte, und keiner erfindet einen Anteil
+--------------------------------------------------------------------------
+
+ENTSCHEIDUNG. `schale/bedienung/lader.ts` hat vier Sichten, und jede sagt
+etwas anderes über den Vorgang, den sie begleitet:
+
+| Sicht | Heisst | Wo sie steht |
+|---|---|---|
+| `fluss` | es gibt einen echten Anteil | WebLLM lädt sein Modell |
+| `sterne` | es läuft, die Länge ist unbekannt | Auftrag mit `schritte: 0` |
+| `wort` | es läuft oder nicht, mehr weiss niemand | „Jetzt abgleichen" |
+| `presse` | dieser Auftrag macht Blätter | Auftragsart `pdf-bilder` |
+
+BEFUND. Redion hatte sechs Zustandswörter (E441) und einen Knopf, der sie
+spricht — aber für längere Vorgänge nur einen Endlos-Kreisel
+(`.hs-kreisel`, E57) und einen Balken. Nachgezählt gibt es im ganzen
+Bestand GENAU ZWEI Stellen mit einem echten Anteil: den
+`initProgressCallback` von WebLLM (0..1 von aussen) und `schritt/schritte`
+der Auftragsmaschine. Alles andere — Suchindex, Abgleich,
+Ollama-Prüfung, Einzeldatei — weiss nur „läuft" oder gar nichts.
+
+Ein Kreisel für alle vier sagt bei jedem Vorgang dasselbe, nämlich nichts.
+Vier Bilder sagen vier Dinge, und das ist die ganze Entscheidung.
+
+WOHER. Vier Vorgaben von Redur vom 6. September 2026 aus
+`ui-reserve/vorgaben/loader-sammlung.css`: der flüssige Ring mit der
+Klumpen-Maske, die fünf Sterne, der Buchstabenring und die isometrische
+Druckpresse.
+
+WARUM SO.
+
+  · DER ANTEIL IST DIE HÖHE UND DIE ZAHL. `fluss` schreibt „42 %" als
+    TEXT in die Mitte — wer die Füllung nicht sieht, liest sie (§38). Ohne
+    Anteil steht dort NICHTS: „0 %" wäre eine Behauptung über etwas
+    Unbekanntes. Über 1 und unter 0 wird geklemmt.
+  · DIE MASKE IST JE INSTANZ EIGEN. Der Ring braucht eine SVG-Maske, und
+    eine Maske braucht eine ID. E440 hat am KI-Funken gefunden, was
+    passiert, wenn zwei Instanzen dieselbe tragen: sie teilen sie sich.
+    `test434` §2 hält das fest.
+  · DIE PRESSE STEHT NEBEN DEM BALKEN, NICHT STATT SEINER. Der Balken ist
+    die Zahl, die Presse ist das Bild dazu. Und sie erscheint nur bei
+    `zustand === 'laeuft'` — ein wartender Auftrag bekommt kein laufendes
+    Bild, sonst behauptet es Arbeit, die gerade nicht stattfindet (E286,
+    derselbe Grund wie beim fehlenden Balken).
+  · DER SATZ STEHT NUR EINMAL. Im Auftragsfenster trägt die Zeile ihren
+    Stand schon; der Lader bekommt ihn für die Vorlesestimme und gibt
+    seinen sichtbaren Text ab.
+  · JEDER WIRT BEHÄLT SEINEN RÜCKFALL. Ist `Lader` nicht geladen, steht in
+    der KI-Fläche wieder der alte Balken und am Abgleich wieder „Läuft …".
+
+WAS DAS BILD GEÄNDERT HAT (§55.1), drei Dinge, die im Quelltext richtig
+aussahen:
+
+  · Die fünf Sterne lagen mit 18–46 % Grösse übereinander und ergaben
+    EINEN kleinen Fleck. Fünf Sterne, die wie einer aussehen, sind vier zu
+    viel. Jetzt 34–98 % und je grösser, desto blasser.
+  · Der Buchstabenring war mit den Schatten der Vorgabe eine gefüllte
+    Kugel, und „Abgleich" stand dunkelgrau auf Violett — unlesbar. Der
+    Schein liegt jetzt am Rand, die Mitte bleibt frei.
+  · Die Presse war grau auf grau und nicht als Presse zu erkennen. Die
+    Walzen sind jetzt dunkel, die Bogen weiss mit Schatten.
+
+GEGENPROBEN (§55.2), beide gelaufen und rot gesehen: eine feste
+Masken-Kennung statt des Zählers → §2 rot. `bildArt` immer leer → §4 rot,
+drei Punkte.
+
+WAS OFFEN BLEIBT: zwei der vier Stellen liessen sich im Prüflauf nicht
+auslösen — ein Modell-Download dauert Minuten, ein Abgleich braucht einen
+Server. Dort prüft `test434` §5 die VERDRAHTUNG und sagt das auch so.
+Steht in LUECKEN.md als L119.
+
+BILD ANGESEHEN: `bilder/lader-rechner-hell.png` und `-dunkel` — alle vier
+nebeneinander mit echten Werten.
+
+DATEIEN. `src/schale/bedienung/lader.ts` (neu),
+`src/bereiche/ki/dienst.ts`, `src/schale/ueberlagerung/auftraege.ts`,
+`src/bereiche/verbinden/ansicht/wolke.ts`, `quell/schale/stil/bausteine.css`,
+`index.html`, `src/dienst/sw.ts`, `bilder.mts`,
+`pruefungen/lauf/test434.mts` (neu).
+
+GEPRÜFT. test434 (46 Punkte, neu, zwei Gegenproben rot gesehen);
 `npm run typecheck`, `npm run bauen:ts`.
 

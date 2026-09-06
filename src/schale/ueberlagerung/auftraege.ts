@@ -115,14 +115,31 @@ const AuftragsAnzeige = (() => {
 
   let fenster: HTMLElement | null = null;
 
+  /**
+   * Welches Bild zu diesem Auftrag passt (E461).
+   *
+   *   presse   die Art macht Blätter — `pdf-bilder` rechnet Seitenbilder.
+   *   sterne   es läuft, aber die Länge ist unbekannt (`schritte: 0`).
+   *   ''       wartet oder Fehler: dann steht der Satz, und ein laufendes
+   *            Bild daneben wäre eine Behauptung über Arbeit, die gerade
+   *            nicht stattfindet.
+   */
+  const bildArt = (a: any): string => {
+    if (a?.zustand !== 'laeuft') return '';
+    if (String(a?.art) === 'pdf-bilder') return 'presse';
+    return anteil(a) === null ? 'sterne' : '';
+  };
+
   const zeileHtml = (a: any): string => {
     const q = anteil(a);
+    const bild = bildArt(a);
     return '<div class="arb-z" data-id="' + esc(a.id) + '">' +
       '<div class="arb-kopf">' +
         '<b>' + esc(artWort(a.art)) + '</b>' +
         '<button type="button" class="arb-stopp" data-stopp="' + esc(a.id) + '" ' +
           'aria-label="' + esc(artWort(a.art)) + ' abbrechen">Abbrechen</button>' +
       '</div>' +
+      (bild ? '<span class="arb-bild" data-lader="' + bild + '"></span>' : '') +
       (a.text ? '<div class="arb-text">' + esc(a.text) + '</div>' : '') +
       /* Der Balken NUR bei bekannter Gesamtzahl — sonst die Zahl allein. */
       (q === null ? '' :
@@ -146,6 +163,21 @@ const AuftragsAnzeige = (() => {
       /* Wer das Fenster offen hat, während der letzte Auftrag fertig wird,
          soll nicht in eine leere Fläche schauen. */
       : '<div class="arb-leer">Nichts läuft mehr. Alles erledigt.</div>';
+    /* Die Bilder kommen NACH dem Einsetzen hinein: `zeileHtml` baut
+       Zeichenketten, die Lader sind DOM. Der Platzhalter oben hält die
+       Stelle frei. */
+    koerper.querySelectorAll<HTMLElement>('[data-lader]').forEach(platz => {
+      if (typeof Lader === 'undefined') return;
+      const art = platz.dataset['lader'];
+      if (art !== 'presse' && art !== 'sterne') return;
+      const zeile = platz.closest('.arb-z');
+      const satz = zeile?.querySelector('.arb-stand')?.textContent || 'Läuft …';
+      /* Der Satz steht schon in der Zeile — der Lader wiederholt ihn nicht
+         als Text, sonst stünde er zweimal da. Er trägt ihn nur für die
+         Vorlesestimme, und die Zeile darunter ist dieselbe Auskunft. */
+      platz.append(Lader.bauen({ art, text: satz }).element);
+      platz.querySelector('.ru-lader-text')?.remove();
+    });
     koerper.querySelectorAll<HTMLElement>('[data-stopp]').forEach(b =>
       b.addEventListener('click', async () => {
         b.setAttribute('disabled', 'disabled');
