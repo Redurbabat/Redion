@@ -226,7 +226,12 @@ const grammatik = await einzahl.evaluate(async () => {
   const s = Store.addPage(null, { text: 'Genau eins', icon: '📄' });
   Store.addBlock(s.id, 'text', { text: 'Ein einziger Block' });
   await Store.flush();
-  await (globalThis as any).Produktwelten.bibliothek();
+  /* SEIT DEM 6. SEPTEMBER (E457) öffnet `Produktwelten.bibliothek()` das
+     Dokumentregal — dort steht kein Zähler mehr unter der Seite, sondern
+     der Deckel. Die Zeile „1 Eintrag" gehört zur Sammlung „Dateien & PDFs"
+     (arbeitswelt.ts, `zahlWort(page.blockAnzahl, 'Eintrag', 'Einträge')`),
+     und die wohnt jetzt in der Bibliothek unter `#dateien-pdfs`. */
+  await (globalThis as any).Arbeitswelt.oeffnen('bibliothek');
   await new Promise(r => setTimeout(r, 1400));
   const text = (document.querySelector('#main') as HTMLElement)?.innerText || '';
   const zeilen = text.split('\n');
