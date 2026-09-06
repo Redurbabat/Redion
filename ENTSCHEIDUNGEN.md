@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-439 Entscheidungen, E1 bis E459 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+440 Entscheidungen, E1 bis E460 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -503,6 +503,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E457** — Die ruhige Studio-Schale: drei Orte, eine Werkzeuglade, ein Regal — und was dabei rot war
 * **E458** — Die Drucker-Karte: der Druckauftrag sagt, was er gerade tut
 * **E459** — Die Ordnerkarte: der Blick ins Fach, ohne hineinzugehen
+* **E460** — Ein Merker für „gemerkt", und er sagt es auch hörbar
 
 ---
 
@@ -36136,5 +36137,78 @@ DATEIEN. `src/schale/bedienung/ordnerkarte.ts` (neu),
 `pruefungen/lauf/test432.mts` (neu).
 
 GEPRÜFT. test432 (48 Punkte, neu, zwei Gegenproben rot gesehen);
+`npm run typecheck`, `npm run bauen:ts`.
+
+---
+
+E460 — Ein Merker für „gemerkt", und er sagt es auch hörbar
+--------------------------------------------------------------------------
+
+ENTSCHEIDUNG. `schale/bedienung/merkzeichen.ts` ist der eine Merker für
+das Feld `favorite`: ein Lesezeichenband, gefüllt oder offen, mit
+`aria-pressed` und einem Vorlesenamen, der den Titel nennt. Er steht in
+der Kopfleiste (`#btn-fav`) und im Heftregal (`.nh-stern`).
+
+BEFUND, gezählt statt vermutet. Dasselbe Feld wurde an drei Stellen
+verschieden gezeichnet:
+
+  · Kopfleiste — ein SVG mit der Klasse `on`, KEIN `aria-pressed`, und der
+    Vorlesename hiess in beiden Zuständen „Zu Favoriten". Wer die Farbe
+    nicht sieht, erfuhr nie, ob die Seite gemerkt ist, und hörte auch
+    beim Drücken nur denselben Satz. Das ist §38, und es war offen.
+  · Notizhefte — „★" gegen „☆" aus der Schrift, mit `aria-pressed`. Ein
+    Zeichen aus der Schrift ist ein Risiko: hat eine Schrift nur eines der
+    beiden, sieht „gemerkt" aus wie „nicht gemerkt".
+  · Regal — ein Zeichen, das gar kein Knopf ist (`aria-hidden`); umschalten
+    geht nur über das ⌄-Menü.
+
+WOHER, und warum es EIN Zeichen wurde. Redur hat zwei Vorgaben geschickt:
+das Lesezeichen mit dem Funkenkranz und das Herz mit dem rollenden Punkt.
+Beide zeichnen denselben Vorgang. Zwei Symbole für ein Feld wären zwei
+Sprachen für eine Sache (§8) — wer in der Kopfleiste ein Herz und im Heft
+einen Stern sieht, fragt zu Recht nach dem Unterschied, und es gibt
+keinen. Redion nimmt deshalb die FORM des Lesezeichens (das Wort hier
+heisst „Favoriten", nicht „gefällt mir") und die MECHANIK des Herzens:
+der Punkt rollt in zwei Zügen an seinen Platz, darauf springt der Kranz
+auf. Beide Vorgaben stecken darin, keine zweimal.
+
+WARUM SO.
+
+  · FORM VOR FARBE. Gefüllt gegen offen, derselbe Umriss. Das bleibt in
+    Graustufen unterscheidbar; `test433` §4 misst genau das.
+  · EIN PFAD, KEIN SCHRIFTZEICHEN. Siehe oben.
+  · DER KRANZ SPRINGT NUR BEIM ANHAKEN AUF, und nur bei einem echten
+    Wechsel. Bei jedem Neuzeichnen wäre es ein Feuerwerk, sooft sich die
+    Seite rührt; beim Abhaken wäre es eine Feier fürs Weggehen.
+  · DAS BAUTEIL KENNT WEDER `Store` NOCH `favorite`. Es meldet den neuen
+    Zustand; wer ihn speichert, entscheidet der Aufrufer. So kann dasselbe
+    Zeichen später an einem anderen Feld hängen, ohne dass es sich ändert.
+  · ZWEI FASSUNGEN, EINE WAHRHEIT. `markieren()` stellt einen vorhandenen
+    Knopf (Kopfleiste), `html()` gibt die Zeichenkette (Notizhefte bauen
+    ihr Regal als Text). Beide bauen dasselbe Markup — die zweite escapt
+    den Namen selbst (§19).
+
+WAS DER PRÜFLAUF GEFUNDEN HAT: der Kranz blieb nach dem Abhaken stehen,
+bis `animationend` kam. Jedes Stellen räumt ihn jetzt zuerst weg.
+
+GEGENPROBEN (§55.2), beide gelaufen und rot gesehen: die Kopfleiste zurück
+auf `classList.toggle('on', …)` → §2 rot, das Band fehlt und der
+Vorlesename ist wieder zustandslos. Die Füllung immer auf `currentColor`
+→ §1 und §4 rot, die Form sagt nichts mehr.
+
+WAS OFFEN BLEIBT: der Deckelstern im Regal (`bib-deckel-stern`) ist
+weiterhin kein Knopf. Er sitzt INNERHALB des Deckelknopfs, und ein Knopf
+im Knopf ist ungültiges HTML. Umschalten geht dort über das ⌄-Menü. Steht
+in LUECKEN.md.
+
+BILD ANGESEHEN: `bilder/merkzeichen-rechner-hell.png` — das gefüllte Band
+in der Kopfleiste einer gemerkten Seite.
+
+DATEIEN. `src/schale/bedienung/merkzeichen.ts` (neu),
+`src/schale/aufbau/kopfleiste.ts`, `src/bereiche/wissen/notebook.ts`,
+`quell/schale/stil/bausteine.css`, `index.html`, `src/dienst/sw.ts`,
+`bilder.mts`, `pruefungen/lauf/test433.mts` (neu).
+
+GEPRÜFT. test433 (34 Punkte, neu, zwei Gegenproben rot gesehen);
 `npm run typecheck`, `npm run bauen:ts`.
 

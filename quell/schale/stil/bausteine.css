@@ -6542,6 +6542,64 @@ button.ru-zk[data-art="laden"][data-zustand="arbeitet"] .ru-zk-balken{ display:b
   .ru-drucker[data-zustand="rendern"] .ru-drucker-tinte{ opacity:1 }
 }
 
+/* ---- Das Merkzeichen (E460, Vorgaben vom 6. September) --------------------
+   EIN Merker für `favorite`, überall derselbe. Der Zustand steht in der
+   FORM (gefülltes gegen offenes Band) und in `aria-pressed`; die Farbe
+   kommt dazu, nicht statt dessen (§38).
+
+   Der Kranz und die Funken kommen aus dem Lesezeichen der Vorgabe, der
+   rollende Punkt aus dem Herz. Beide laufen NUR beim Anhaken und nur
+   einmal — die Klasse `platzt` nimmt sich das Bauteil nach
+   `animationend` selbst wieder weg. */
+.ru-merk{
+  --ru-merk-farbe:var(--accent-text);
+  position:relative; display:inline-flex; align-items:center; justify-content:center;
+  color:var(--text-dim); background:transparent; border:0; cursor:pointer;
+  border-radius:var(--radius-md); transition:color var(--motion-fast) var(--ease)
+}
+.ru-merk:hover{color:var(--text); background:var(--bg-hover)}
+.ru-merk:focus-visible{outline:2px solid var(--accent-text); outline-offset:2px}
+.ru-merk.ist-an{color:var(--ru-merk-farbe)}
+.ru-merk-band{width:19px; height:19px; flex:none; display:block; position:relative; z-index:2; transform-origin:top}
+.ru-merk.platzt .ru-merk-band{animation:ru-merk-band .3s}
+/* Der Kranz: ein Ring, der aufgeht und verschwindet. */
+.ru-merk-kreis{
+  position:absolute; left:50%; top:50%; width:0; height:0; z-index:1;
+  transform:translate(-50%,-50%); border-radius:50%;
+  border:1px solid var(--ru-merk-farbe); opacity:0; pointer-events:none
+}
+.ru-merk.platzt .ru-merk-kreis{animation:ru-merk-kreis .3s cubic-bezier(.175,.885,.32,1.275) .3s forwards}
+/* Die Funken: acht Punkte als ein einziger Schatten — kein zweites Dutzend
+   Elemente für acht Pixel. */
+.ru-merk-funken{
+  position:absolute; left:50%; top:50%; width:9px; height:9px; z-index:1;
+  transform:translate(-50%,-50%) scale(0); border-radius:50%; pointer-events:none;
+  box-shadow:
+    0 26px 0 -4px var(--ru-merk-farbe), 26px 0 0 -4px var(--ru-merk-farbe),
+    0 -26px 0 -4px var(--ru-merk-farbe), -26px 0 0 -4px var(--ru-merk-farbe),
+    -19px 19px 0 -4px var(--ru-merk-farbe), -19px -19px 0 -4px var(--ru-merk-farbe),
+    19px -19px 0 -4px var(--ru-merk-farbe), 19px 19px 0 -4px var(--ru-merk-farbe)
+}
+.ru-merk.platzt .ru-merk-funken{animation:ru-merk-funken .3s cubic-bezier(.175,.885,.32,1.275) .3s forwards}
+/* Der rollende Punkt aus dem Herz: zwei Züge, dann ist er im Band. */
+.ru-merk-punkt{
+  position:absolute; left:calc(50% - 7px); top:calc(50% - 9px);
+  width:5px; height:5px; z-index:3; border-radius:50%;
+  background:var(--ru-merk-farbe); opacity:0; pointer-events:none
+}
+.ru-merk.platzt .ru-merk-punkt{animation:ru-merk-punkt .3s forwards}
+@keyframes ru-merk-band{50%{transform:scaleY(.6)} 100%{transform:scaleY(1)}}
+@keyframes ru-merk-kreis{from{width:0;height:0;opacity:0} 90%{width:30px;height:30px;opacity:1} to{opacity:0}}
+@keyframes ru-merk-funken{from{transform:translate(-50%,-50%) scale(0)} 40%{opacity:1} to{transform:translate(-50%,-50%) scale(.8);opacity:0}}
+@keyframes ru-merk-punkt{
+  0%{transform:translate(0,0);opacity:1}
+  50%{transform:translate(0,7px);opacity:1}
+  100%{transform:translate(7px,9px);opacity:0}
+}
+@media (prefers-reduced-motion: reduce){
+  .ru-merk.platzt :is(.ru-merk-band,.ru-merk-kreis,.ru-merk-funken,.ru-merk-punkt){animation:none}
+}
+
 /* ---- Die Ordnerkarte (E459, Vorgabe vom 6. September) --------------------
    Der Blick in einen Ordner, ohne hineinzugehen. Die Blätter sind KNÖPFE
    (man drückt sie), die Bühne ist Bild. Aufgeklappt wird über

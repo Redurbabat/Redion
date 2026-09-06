@@ -6322,3 +6322,25 @@ den Prüfläufen, nicht vermutet.
    grün — ein Lastfehler, kein Produktfehler, aber einer, der zeigt, dass
    der Start den Merker `startAnsichtE349` liest, bevor die Ablage sicher
    da ist.
+
+---
+
+L118 — Der Deckelstern im Regal ist kein Knopf
+--------------------------------------------------------------------------
+
+Seit E460 gibt es EIN Merkzeichen für `favorite`, und es steht in der
+Kopfleiste und im Heftregal. Im Dokumentregal steht es nicht: der Stern
+auf dem Deckel (`.bib-deckel-stern`, `bibliothek.ts`) ist `aria-hidden`
+und nicht klickbar.
+
+DER GRUND IST KEINE FAULHEIT, SONDERN HTML. Der Deckel selbst ist ein
+`<button class="bib-deckel">`, und der Stern sitzt darin. Ein Knopf im
+Knopf ist ungültig; der Browser bricht die Verschachtelung auf, und was
+dann klickbar ist, entscheidet er. Umschalten geht deshalb über das
+⌄-Menü des Deckels („Zu Favoriten" / „Aus Favoriten") — das ist ein Weg,
+aber ein versteckter.
+
+WAS ES KOSTEN WÜRDE, es zu schliessen: der Deckel müsste vom Knopf zu
+einer Fläche mit einem Knopf darin werden. Das berührt die Tastaturführung
+des ganzen Regals, den Ziehen-und-Ablegen-Weg und drei Prüfläufe, die den
+Deckel anklicken. Es ist eine eigene Arbeit, keine Zeile nebenbei.

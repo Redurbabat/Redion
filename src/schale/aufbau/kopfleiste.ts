@@ -380,10 +380,16 @@ const Kopfleiste = (() => {
       (typeof Register !== 'undefined' && (Register as any).symbole)
         ? (Register as any).symbole.alsSvg(id) : '';
 
+    /* DER MERKER SAGT SEINEN ZUSTAND JETZT AUCH HÖRBAR (E460). Vorher
+       stand hier nur `classList.toggle('on', …)`: wer die Farbe nicht
+       sieht, erfuhr nie, ob die Seite gemerkt ist — der Knopf hiess in
+       beiden Fällen „Zu Favoriten". `Merkzeichen.markieren` setzt
+       `aria-pressed`, den Vorlesenamen und die Form (§38). */
     const stern = document.getElementById('btn-fav');
     if (stern && p) {
-      stern.innerHTML = zeichen('star');
-      stern.classList.toggle('on', !!p.favorite);
+      if (typeof Merkzeichen !== 'undefined')
+        Merkzeichen.markieren(stern, { an: !!p.favorite, name: p.text || 'Ohne Titel' });
+      else { stern.innerHTML = zeichen('star'); stern.classList.toggle('on', !!p.favorite); }
     }
     const kb = document.getElementById('btn-komm');
     if (kb && p) {

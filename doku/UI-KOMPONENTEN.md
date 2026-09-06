@@ -264,7 +264,7 @@ mehr, als das Bauteil hübsch ist.
 | Vorgabe | Redion-Ort | Was daran echt ist | Stand |
 |---|---|---|---|
 | `.folder-card` + Projektstruktur-Liste | Bibliothek, ⌄-Menü eines Ordners → „Blick hinein" | `Store.childrenOf`, die echte Anzahl, Suche durch den ganzen Unterbaum | **E459**, test432 |
-| `.ui-bookmark` · `.love-heart` | der Favoritenstern der Kopfleiste und der Deckelstern im Regal | das Feld `favorite` am Block | offen |
+| `.ui-bookmark` · `.love-heart` | Kopfleiste (`#btn-fav`) und Heftregal (`.nh-stern`) | das Feld `favorite` am Block | **E460**, test433 |
 | `.loader` (flüssiger Ring) | WebLLM lädt sein Modell | `initProgressCallback` — der einzige echte 0..1-Anteil im ganzen Bestand | offen |
 | `.preloader` / `.crack` (Sterne) | Auftragsfenster, Aufträge ohne bekannte Schrittzahl | `schritte === 0` heisst „unbekannt" — dort gibt es bewusst keinen Balken | offen |
 | `.loader-letter` (Buchstaben) | „Jetzt abgleichen" in der Wolke | `zustand.laeuft` des Abgleichs — läuft oder läuft nicht, kein Anteil | offen |

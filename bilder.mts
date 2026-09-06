@@ -2041,6 +2041,28 @@ const ANSICHTEN: Record<string, {
   }
 };
 
+/* --- Das Merkzeichen (E460) ----------------------------------------------
+   Zu sehen: derselbe Merker zweimal — gefüllt in der Kopfleiste einer
+   gemerkten Seite, offen daneben. Vorher war das in der Kopfleiste ein
+   SVG mit einer Klasse und im Heft ein „★" aus der Schrift. */
+ANSICHTEN['merkzeichen'] = {
+  titel: 'Der Merker: ein Zeichen für „gemerkt" (E460)',
+  bauen: async () => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelectorAll('.overlay').forEach(o => o.remove());
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+    document.getElementById('rg-willkommen')?.remove();
+    document.getElementById('rg-einladung')?.remove();
+    const p = Store.addPage(null, { text: 'Formelsammlung Elektrotechnik', icon: '⚡' });
+    Store.updateBlock(p.id, { favorite: true });
+    Store.addBlock(p.id, 'h2', { text: 'Ohmsches Gesetz' });
+    Store.addBlock(p.id, 'text', { text: 'U = R · I, und daraus folgt alles Weitere.' });
+    await Store.flush();
+    App.oeffne(p.id);
+    await new Promise(r => setTimeout(r, 800));
+  }
+};
+
 /* --- Die Ordnerkarte (E459) ----------------------------------------------
    Zu sehen: der Blick in ein Fach — fünf echte Kinder fächern heraus, jedes
    mit seinem Namen und seiner Art, der Zähler nennt die echte Zahl. Das
