@@ -6282,9 +6282,12 @@ den Prüfläufen, nicht vermutet.
    Die Prüfung ist umgeschrieben; die Sammlung nicht.
 
 3. **Bei offener Werkzeuglade stehen Suche, KI und Konto doppelt** — im
-   Studio-Kopf und rechts im Band. Die Band-Rechtsgruppe trägt Glocke und
-   Wolkenpunkt; solange der Studio-Kopf beides nicht zeigt, bleibt sie.
-   Im Ruhezustand (Lade zu) gibt es die Doppelung nicht.
+   Studio-Kopf und rechts im Band. Glocke und Wolkenpunkt stehen seit
+   E457 auch im Studio-Kopf (`#studio-glocke`, `#studio-account`; test258
+   fand, dass die Glocke im Band bei zugeklappter Lade unsichtbar war);
+   die Band-Rechtsgruppe bleibt trotzdem, weil das Band am Telefon die
+   einzige Zeile ist. Im Ruhezustand (Lade zu) gibt es die Doppelung
+   nicht.
 
 4. **Im ruhigen Modus zeigt die Kante keinen Kontextgriff direkt** — nur
    „Seiten" und „Werkzeuge". Redurs Auftrag sagt „wenige", der

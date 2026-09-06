@@ -35907,7 +35907,12 @@ ALTERNATIVE. Alle sechs Orte weiter zeigen — bleibt als alte Leiste
 erhalten und wird gemessen. Das Band ganz entfernen — nein: es ist die
 einzige Stelle, an der alle Reiter stehen; die Lade kostet einen Klick.
 Die Band-Rechtsgruppe (Suche · KI · Konto) bei offener Lade ausblenden —
-nicht getan, weil dort Glocke und Wolkenpunkt wohnen; L117 Punkt 3.
+nicht getan, weil sie am Telefon die einzige Zeile ist; L117 Punkt 3.
+Glocke und Wolkenpunkt stehen dafür AUCH im Studio-Kopf: test258 fand
+im vollen Lauf, dass die Glocke im Band bei zugeklappter Lade unsichtbar
+war — eine Meldung, die man erst nach dem Holen der Werkzeuge sieht, ist
+keine. `glockeFrisch` und `wolkeFrisch` halten beide Stellen gemeinsam
+frisch; die Studio-Glocke steht erst mit Ungelesenem da.
 
 WAS ES KOSTET. „Heute" kostet am Rechner zwei Klicks (Mehr Orte → Heute);
 die Werkzeuge einen Klick mehr; die Bibliothek zeigt den Heft-Zähler

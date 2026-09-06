@@ -10,7 +10,7 @@ und was geprüft wurde — und was nicht.
 
 | Leiste | Inhalt |
 |---|---|
-| Studio-Kopf | Marke · Navigation ein/aus · Suchen & finden · Farbschema · PDF öffnen (nur ausserhalb des Regals) · Neu · Werkzeuge · Konto |
+| Studio-Kopf | Marke · Navigation ein/aus · Suchen & finden · Farbschema · PDF öffnen (nur ausserhalb des Regals) · Neu · Werkzeuge · Posteingang (nur mit Ungelesenem) · Konto (mit Wolkenpunkt) |
 | Kante links | Bibliothek · Notizhefte · Lernzentrum · Mehr Orte — darunter Seiten · Werkzeuge — unten Einstellungen |
 | Kopfzeile | Zurück · Vor · Krume · KI · (auf einer Seite: Favorit, Seitenmenü) |
 | Menüband | **nur auf Abruf**: der Werkzeug-Knopf im Studio-Kopf klappt es auf, Esc schliesst es und gibt den Fokus zurück |

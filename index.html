@@ -312,7 +312,13 @@
     <button id="studio-import" class="studio-action" data-studio-import><span data-sym="plus"></span><span>PDF öffnen</span></button>
     <button id="studio-create" class="studio-icon" aria-label="Neu erstellen" title="Neu erstellen"><span data-sym="plus"></span></button>
     <button id="studio-tools" class="studio-icon" aria-label="Werkzeuge einblenden" title="Werkzeuge einblenden" aria-expanded="false" aria-controls="menueband"><span data-sym="command"></span></button>
-    <button id="studio-account" class="studio-icon" aria-label="Konto und Arbeitsbereich" title="Konto und Arbeitsbereich"><span data-sym="workspace"></span></button>
+    <!-- GLOCKE UND WOLKENPUNKT AUCH HIER (E457). Beide wohnen im Menüband
+         rechts — und das ist am Rechner seit E457 eine Lade, die zu ist. Eine
+         Meldung, die man erst sieht, wenn man die Werkzeuge holt, ist keine.
+         `menueband.ts` hält beide Stellen gemeinsam frisch (glockeFrisch,
+         wolkeFrisch); die Glocke steht erst mit Ungelesenem da. -->
+    <button id="studio-glocke" class="studio-icon" hidden aria-label="Posteingang" title="Posteingang"><span data-sym="bell"></span><b class="glocke-zahl" hidden aria-hidden="true"></b></button>
+    <button id="studio-account" class="studio-icon" aria-label="Konto und Arbeitsbereich" title="Konto und Arbeitsbereich"><span data-sym="workspace"></span><i class="wolke-punkt" hidden></i></button>
   </header>
   <div id="studio-divider" role="separator" aria-label="Navigationsbreite" aria-orientation="vertical" aria-valuemin="148" aria-valuemax="260" aria-valuenow="184" tabindex="0"></div>
 

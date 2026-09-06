@@ -59,6 +59,13 @@
   body[data-schale="premium"][data-ruhig="an"]:not([data-studio-tools="offen"]) #menueband{display:none}
 }
 #studio-tools[aria-expanded="true"]{background:var(--accent-schwach);color:var(--accent-text);border-color:var(--line)}
+/* Glocke und Wolkenpunkt im Studio-Kopf (E457): dieselben Klassen wie im
+   Band, nur der Anker. `display:inline-flex` an .studio-icon schlüge das
+   [hidden] des Browsers — deshalb die eigene Zeile, wie bei #mb-glocke. */
+#studio-glocke,#studio-account{position:relative}
+#studio-glocke[hidden]{display:none}
+#studio-glocke .glocke-zahl{top:3px;right:2px}
+#studio-account .wolke-punkt{top:5px;right:5px}
 /* EIN „PDF IMPORTIEREN", NICHT ZWEI. Das Regal trägt den Knopf selbst, gross
    und neben „Neu"; der im Studio-Kopf ist dann derselbe Griff eine Zeile
    höher (Redur: „keine doppelte Neu-Aktion in drei sichtbaren Leisten").

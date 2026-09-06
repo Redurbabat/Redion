@@ -1226,10 +1226,12 @@ const Menueband = (() => {
      * Die Horcher stehen in `start()` und werden EINMAL gesetzt: ein Horcher
      * je Zeichnen wäre nach zehn Reiterwechseln ein Chor.
      * ======================================================================== */
+    /* ZWEI GLOCKEN, EIN STAND (E457). Die im Band ist am Rechner hinter der
+       Werkzeuglade; die im Studio-Kopf (`#studio-glocke`, index.html) steht
+       davor. Beide bekommen hier dieselbe Zahl und denselben Namen — eine
+       Meldung, die man erst nach dem Holen der Werkzeuge sieht, ist keine.
+       test258 klickt die sichtbare von beiden. */
     const glockeFrisch = () => {
-        const glocke = document.getElementById('mb-glocke');
-        if (!glocke)
-            return;
         let offen = 0;
         try {
             offen = (typeof Werkzeuge !== 'undefined' && Werkzeuge.meldungen
@@ -1237,30 +1239,42 @@ const Menueband = (() => {
                 .filter((m) => !m.gelesen).length;
         }
         catch { /* ohne Posteingang bleibt die Glocke versteckt */ }
-        glocke.hidden = !offen;
-        const zahl = glocke.querySelector('.glocke-zahl');
-        if (zahl) {
-            zahl.textContent = offen > 99 ? '99+' : String(offen);
-            zahl.hidden = !offen;
-        }
         const wort = offen ? 'Posteingang, ' + offen + ' ungelesen' : 'Posteingang';
-        glocke.setAttribute('aria-label', wort);
-        glocke.title = wort;
+        for (const id of ['mb-glocke', 'studio-glocke']) {
+            const glocke = document.getElementById(id);
+            if (!glocke)
+                continue;
+            glocke.hidden = !offen;
+            const zahl = glocke.querySelector('.glocke-zahl');
+            if (zahl) {
+                zahl.textContent = offen > 99 ? '99+' : String(offen);
+                zahl.hidden = !offen;
+            }
+            glocke.setAttribute('aria-label', wort);
+            glocke.title = wort;
+        }
     };
     /* Der letzte gemeldete Wolke-Stand. `Wolke.beiAenderung` ruft nur bei
        ÄNDERUNGEN — ein frisch gebauter Punkt muss den Stand von davor kennen,
        sonst zeigt er bis zum nächsten Takt nichts. */
     let wolkeStand = null;
+    /* AUCH DER WOLKENPUNKT STEHT ZWEIMAL (E457): am Konto-Knopf im Band und
+       am Konto-Knopf im Studio-Kopf (`#studio-account`). Derselbe Stand,
+       derselbe Satz — nur der Grundname des Knopfes ist je seiner. */
     const wolkeFrisch = () => {
-        const konto = document.getElementById('mb-konto');
+        wolkeAn('mb-konto', 'Arbeitsbereich');
+        wolkeAn('studio-account', 'Konto und Arbeitsbereich');
+    };
+    const wolkeAn = (id, grundname) => {
+        const konto = document.getElementById(id);
         const punkt = konto?.querySelector('.wolke-punkt');
         if (!konto || !punkt)
             return;
         const z = wolkeStand;
         if (!z || !z.angemeldet) {
             punkt.hidden = true;
-            konto.title = 'Arbeitsbereich';
-            konto.setAttribute('aria-label', 'Arbeitsbereich');
+            konto.title = grundname;
+            konto.setAttribute('aria-label', grundname);
             return;
         }
         const schlecht = String(z.fehler || z.fehlerDateien || '');
@@ -1283,8 +1297,8 @@ const Menueband = (() => {
            nichts anderes versprechen. Der Wolke-Stand steht DAHINTER, als
            Auskunft, nicht als Ziel; der Weg zum Wolke-Dialog steht unter
            „Mehr → Wolke". */
-        konto.title = 'Arbeitsbereich · ' + name + ' · ' + stand;
-        konto.setAttribute('aria-label', 'Arbeitsbereich — Konto ' + name + ', ' + stand);
+        konto.title = grundname + ' · ' + name + ' · ' + stand;
+        konto.setAttribute('aria-label', grundname + ' — Konto ' + name + ', ' + stand);
     };
     /* ======================================================================== *
      * START
