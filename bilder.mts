@@ -2041,6 +2041,30 @@ const ANSICHTEN: Record<string, {
   }
 };
 
+/* --- Die Drucker-Karte (E458) --------------------------------------------
+   Zu sehen: die Karte unten rechts ueber einer offenen Seite, im Zustand
+   „rendern" — Blatt mit Druck, Lampe im Akzent, der Satz darunter. Der
+   Zustand wird hier GESETZT, nicht gedruckt: ein Druckdialog laesst sich
+   nicht fotografieren, die Karte schon. */
+ANSICHTEN['drucker'] = {
+  titel: 'Die Drucker-Karte: was der Druckauftrag gerade tut (E458)',
+  bauen: async () => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelectorAll('.overlay').forEach(o => o.remove());
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+    document.getElementById('rg-willkommen')?.remove();
+    document.getElementById('rg-einladung')?.remove();
+    const p = Store.addPage(null, { text: 'Elektrotechnik – Kapitel 2', icon: '⚡' });
+    Store.addBlock(p.id, 'h2', { text: 'Spannung, Strom und Widerstand' });
+    Store.addBlock(p.id, 'text', { text: 'U = R · I — die Grundgleichung, aus der alles Weitere folgt.' });
+    await Store.flush();
+    App.oeffne(p.id);
+    await new Promise(r => setTimeout(r, 600));
+    Drucker.zeigen().setzen('rendern');
+    await new Promise(r => setTimeout(r, 500));
+  }
+};
+
 /* --- Die Befehlspalette (E400) -------------------------------------------
    Zu sehen ist zweierlei: dass die Liste bei 60 Zeilen aufhört, und dass sie
    das SAGT statt so zu tun, als wäre sie vollständig. Ohne Eingabe, denn nur

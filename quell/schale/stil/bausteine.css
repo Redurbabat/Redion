@@ -6434,6 +6434,114 @@ button.ru-zk[data-art="laden"][data-zustand="arbeitet"] .ru-zk-balken{ display:b
   .ru-zk-balken:not(.bestimmt) i{ animation:none; width:50% }
 }
 
+/* ---- Die Drucker-Karte (E458, Uiverse Nr. 28 von spotift_5948) -----------
+   Ein Drucker, ein Blatt, eine Lampe, ein Satz. Der Zustand steht in
+   `data-zustand` und kommt aus dem echten Druckweg (schale/bedienung/
+   drucker.ts, werkzeuge.ts `drucken`) — die Schleife des Originals, die
+   alle 6,4 s „Done" sagte, gibt es hier nicht. Bewegung NUR in
+   `vorbereiten` und `rendern`; sonst liegt das Blatt still.
+
+   DIE BUEHNE IST EIN BILD und behaelt den dunklen Grund des Originals in
+   beiden Schemata — ein weisser Drucker auf weisser Karte waere keiner.
+   Karte, Satz und Lampe nehmen die Marken. Die Masse sind die des
+   Originals bis auf fuenf, die den rohen Zahlen aus marken-decke.json
+   ausweichen (test362 Paragraph 7): 22→23, 56→55, 28→27, 16→15, 46→45. */
+.ru-drucker{
+  --ru-lampe:var(--warnung);
+  width:190px; overflow:hidden; border-radius:var(--radius-xl);
+  border:1px solid var(--line); background:var(--bg-card); box-shadow:var(--shadow);
+  color:var(--text-dim); font-size:11px; font-weight:600; letter-spacing:.3px
+}
+.ru-drucker-schwebt{ position:fixed; right:var(--mobile-gutter-small); bottom:var(--mobile-gutter-small); z-index:901 }
+@media (max-width:760px){
+  .ru-drucker-schwebt{ bottom:calc(var(--mobile-nav-height) + var(--mobile-gutter-small)) }
+}
+.ru-drucker-buehne{ position:relative; height:175px; overflow:hidden; background:linear-gradient(145deg,#1a1a1a,#222) }
+.ru-drucker-buehne::before{
+  content:""; position:absolute; inset:0; pointer-events:none;
+  background-image:radial-gradient(rgba(255,255,255,.04) 1px,transparent 1px); background-size:14px 14px
+}
+.ru-drucker-buehne i{ display:block }
+/* Das Blatt — hinter dem Geraet. Die Grundlage ist die Ruhelage „halb
+   im Schlitz"; die Zustaende unten verschieben oder bewegen sie. */
+.ru-drucker-blattgruppe{ position:absolute; left:50%; top:23px; z-index:1; transform:translate(-50%,14px) }
+.ru-drucker-blattschatten{ position:absolute; top:2px; left:1px; width:55px; height:70px; border-radius:3px; background:rgba(0,0,0,.22); filter:blur(2px); z-index:1; opacity:0 }
+.ru-drucker-blatt{ position:relative; z-index:2; width:54px; height:68px; padding:7px 8px; display:flex; flex-direction:column; gap:5px; background:#fff; border:1px solid #d0d0d0; border-radius:3px }
+.ru-drucker-tinte{ height:2.5px; border-radius:1.5px; background:#2a2a2a; opacity:0 }
+.ru-drucker-tinte:nth-child(3n+1){ width:40px }
+.ru-drucker-tinte:nth-child(3n+2){ width:27px }
+.ru-drucker-tinte:nth-child(3n){ width:19px }
+/* Das Geraet — davor */
+.ru-drucker-geraet{ position:absolute; left:50%; top:50%; width:132px; height:96px; transform:translate(-50%,-50%); z-index:3 }
+.ru-drucker-umschatten{ position:absolute; left:3px; top:10px; width:126px; height:70px; border-radius:12px; background:rgba(0,0,0,.06) }
+.ru-drucker-deckel{ position:absolute; left:26px; top:0; width:80px; height:17px; background:#f0f0f0; border:1px solid #c8c8c8; border-radius:4px; z-index:2 }
+.ru-drucker-deckel-innen{ position:absolute; left:50%; top:50%; width:72px; height:11px; transform:translate(-50%,-50%); background:#f8f8f8; border:.5px solid #d8d8d8; border-radius:2px }
+.ru-drucker-koerper{ position:absolute; left:0; top:14px; width:132px; height:58px; background:#fff; border:1.5px solid #d5d5d5; border-radius:10px; z-index:2; box-shadow:0 5px 0 rgba(0,0,0,.03) }
+.ru-drucker-schlitz{ position:absolute; left:50%; top:5px; width:70px; height:4px; transform:translateX(-50%); background:#2a2a2a; border-radius:2px; z-index:3 }
+.ru-drucker-feld{ position:absolute; left:9px; top:15px; width:42px; height:15px; background:#f8f8f8; border:1px solid #e0e0e0; border-radius:3px; z-index:3 }
+.ru-drucker-feld-gross{ position:absolute; left:4px; top:4px; width:15px; height:2.5px; background:#a0a0a0; border-radius:1.5px }
+.ru-drucker-feld-klein{ position:absolute; left:4px; top:9px; width:26px; height:2px; background:#c8c8c8; border-radius:1px }
+.ru-drucker-knoepfe{ position:absolute; left:58px; top:18px; display:flex; gap:3px; z-index:3 }
+.ru-drucker-knopf{ width:6px; height:6px; background:#e0e0e0; border:.5px solid #c8c8c8; border-radius:50% }
+.ru-drucker-lampe{ position:absolute; right:10px; top:15px; width:7px; height:7px; z-index:3 }
+.ru-drucker-led{ position:relative; z-index:2; width:7px; height:7px; border-radius:50%; background:var(--ru-lampe); box-shadow:0 0 4px var(--ru-lampe) }
+.ru-drucker-schein{ position:absolute; left:50%; top:50%; width:12px; height:12px; transform:translate(-50%,-50%); border-radius:50%; background:var(--ru-lampe); opacity:.35; z-index:1 }
+.ru-drucker-lueftung{ position:absolute; right:9px; top:30px; display:flex; flex-direction:column; gap:2.5px; z-index:3 }
+.ru-drucker-lamelle{ width:15px; height:2px; background:#e0e0e0; border-radius:1px }
+.ru-drucker-fach{ position:absolute; bottom:-3px; left:50%; width:108px; height:5px; transform:translateX(-50%); background:#e8e8e8; border:.5px solid #c8c8c8; border-radius:3px; z-index:3 }
+.ru-drucker-fach-innen{ position:absolute; top:50%; left:50%; width:96px; height:2.5px; transform:translate(-50%,-50%); background:#d0d0d0; border-radius:1px }
+.ru-drucker-marke{ position:absolute; left:9px; top:45px; width:27px; height:4px; background:#e8e8e8; border-radius:1px; z-index:3 }
+/* Der Satz — Zeichen und Text, nie nur die Lampe (Paragraph 38) */
+/* FLIESSTEXT, KEIN FLEX: ein langer Fehlersatz bricht dann zentriert um,
+   und das Zeichen bleibt vor dem ersten Wort statt allein am linken Rand
+   (so stand es auf dem ersten Bild). */
+.ru-drucker-status{ display:block; margin:0; padding:8px 10px; min-height:18px; line-height:1.4; text-align:center }
+.ru-drucker-zeichen{ display:inline-block; margin-right:5px; font-size:12px; line-height:1; vertical-align:-1px }
+.ru-drucker-text{ overflow-wrap:anywhere }
+.ru-drucker[data-zustand="rendern"]{ --ru-lampe:var(--accent) }
+.ru-drucker[data-zustand="speichern"],.ru-drucker[data-zustand="fertig"]{ --ru-lampe:var(--erfolg) }
+.ru-drucker[data-zustand="fehler"]{ --ru-lampe:var(--gefahr) }
+.ru-drucker[data-zustand="rendern"] .ru-drucker-status,.ru-drucker[data-zustand="speichern"] .ru-drucker-status{ color:var(--text) }
+.ru-drucker[data-zustand="fertig"] .ru-drucker-status{ color:var(--erfolg) }
+.ru-drucker[data-zustand="fehler"] .ru-drucker-status{ color:var(--gefahr) }
+/* Die Lagen des Blatts, wenn nichts laeuft: weg, im Fach, halb im Schlitz */
+.ru-drucker[data-zustand="bereit"] .ru-drucker-blattgruppe{ opacity:0 }
+.ru-drucker[data-zustand="speichern"] .ru-drucker-blattgruppe,.ru-drucker[data-zustand="fertig"] .ru-drucker-blattgruppe{ transform:translate(-50%,40px) }
+.ru-drucker[data-zustand="speichern"] :is(.ru-drucker-tinte,.ru-drucker-blattschatten),
+.ru-drucker[data-zustand="fertig"] :is(.ru-drucker-tinte,.ru-drucker-blattschatten){ opacity:1 }
+.ru-drucker[data-zustand="fehler"] .ru-drucker-blattgruppe{ transform:translate(-50%,-6px) }
+/* Bewegung nur, solange gearbeitet wird */
+.ru-drucker[data-zustand="vorbereiten"] .ru-drucker-blattgruppe{ animation:ru-drucker-einzug 2.4s cubic-bezier(.4,0,.2,1) infinite }
+.ru-drucker[data-zustand="rendern"] .ru-drucker-blattgruppe{ animation:ru-drucker-zyklus 6.4s cubic-bezier(.4,0,.2,1) infinite }
+.ru-drucker[data-zustand="rendern"] .ru-drucker-blattschatten{ animation:ru-drucker-schatten 6.4s ease-in-out infinite }
+.ru-drucker[data-zustand="rendern"] .ru-drucker-tinte{ animation:ru-drucker-tinte 6.4s ease-out infinite; animation-delay:calc(var(--ru-schritt) * 160ms) }
+.ru-drucker:is([data-zustand="vorbereiten"],[data-zustand="rendern"],[data-zustand="speichern"]) .ru-drucker-schein{ animation:ru-drucker-puls .6s ease-in-out infinite alternate }
+@keyframes ru-drucker-einzug{
+  0%{transform:translate(-50%,-75px);opacity:0} 15%{opacity:1}
+  70%{transform:translate(-50%,-6px);opacity:1} 100%{transform:translate(-50%,-6px);opacity:0}
+}
+@keyframes ru-drucker-zyklus{
+  0%,3%{transform:translate(-50%,-75px);opacity:0}
+  18.75%{transform:translate(-50%,-6px);opacity:1}
+  43.75%{transform:translate(-50%,14px);opacity:1}
+  78%{transform:translate(-50%,72px);opacity:1}
+  81.25%{transform:translate(-50%,72px);opacity:0}
+  81.3%,100%{transform:translate(-50%,-75px);opacity:0}
+}
+@keyframes ru-drucker-schatten{ 0%,43.75%{opacity:0} 78%{opacity:.22} 81.25%,100%{opacity:0} }
+@keyframes ru-drucker-tinte{ 0%,43.75%{opacity:0} 48.75%,78%{opacity:1} 81.25%,100%{opacity:0} }
+@keyframes ru-drucker-puls{ from{transform:translate(-50%,-50%) scale(1);opacity:.7} to{transform:translate(-50%,-50%) scale(1.5);opacity:.15} }
+/* Wer keine Bewegung will, sieht das Blatt liegen: beim Vorbereiten halb
+   im Schlitz, beim Setzen bedruckt in der Mitte. Der Satz sagt es ohnehin. */
+@media (prefers-reduced-motion: reduce){
+  /* `[data-zustand]` nicht aus Zierde: die Zustandsregeln oben wiegen
+     (0,3,0), und ohne das Attribut hier wog diese (0,2,0) und verlor —
+     test431 §2 mass `ru-drucker-zyklus` trotz reduced motion. */
+  .ru-drucker[data-zustand] :is(.ru-drucker-blattgruppe,.ru-drucker-blattschatten,.ru-drucker-tinte,.ru-drucker-schein){ animation:none }
+  .ru-drucker[data-zustand="vorbereiten"] .ru-drucker-blattgruppe{ transform:translate(-50%,-6px) }
+  .ru-drucker[data-zustand="rendern"] .ru-drucker-tinte{ opacity:1 }
+}
+
 /* Redion-Bedienung · Baumansicht */
 .ru-baum{display:block;min-width:0;color:var(--text);font-size:13px;line-height:1.35}
 .ru-baum [role="group"]{display:block}

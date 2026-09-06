@@ -1,6 +1,6 @@
 # Redion UI-Komponenten — Bestandsaufnahme und Plan
 
-**Stand: 6. September 2026, dritter Durchgang (Phase B gebaut, E441).** Seit dem ersten Durchgang liegt
+**Stand: 6. September 2026, vierter Durchgang (Phase B gebaut, E441; Nr. 28 gebaut, E458).** Seit dem ersten Durchgang liegt
 der Uiverse-Code vor (Handoff-Paket, 50 Einträge, 20 mit Original) und die
 Studio-Schale ist auf dem Zweig (E440). Die Tabelle unten ist die verbindliche;
 die Karte darunter ist vom ersten Durchgang und bleibt als Begründung stehen.
@@ -39,7 +39,7 @@ sagt, was daraus wird; „Gebaut" sagt, ob die produktive Fassung schon steht.
 | 25 | Sparkle KI Toggle | MuhammadHasann | `nicht-verifiziert` | BEDINGT | nur wenn ein echter Zustand "KI-Unterstützung an/aus" existiert | noch nicht | Sonst Reserve; Partikel reduzieren (§4.12). |
 | 26 | Generate → Generating Sparkle Button | dexter-st | `nicht-verifiziert` | PRODUKTIV (angepasst) | KI-Aktionen: Karteikarten, Fragen, Zusammenfassung | noch nicht | bereit → arbeitet → fertig → fehler; Mehrfachauslösung sperren (§4.9). |
 | 27 | Radial / Horizontal Plus Quick Menu | risabbir | `nicht-verifiziert` | PRODUKTIV (angepasst) | kontextuelle Schnellaktionen (Einfügen, KI, Block) | noch nicht | NICHT als zweiter Studio-Plusknopf; Klick öffnet, Escape/Aussenklick schliesst (§4.6). |
-| 28 | Printer Process Card | spotift_5948 | `nicht-verifiziert` | PRODUKTIV (angepasst) | src/bereiche/pdf — Dokumentmodus, Drucken | noch nicht | Zustände bereit·vorbereiten·rendern·speichern·fertig·fehler; nur echter Zustand (§4.17). |
+| 28 | Printer Process Card | spotift_5948 | `chat-original-snippet` (nur CSS) | PRODUKTIV (angepasst) | `wissen/werkzeuge.ts` `drucken()` — die Drucker-Karte | E458 `Drucker` | Sechs Zustände, jeder aus dem Druckweg statt aus einem Zeitgeber; Bewegung nur beim Sammeln und Setzen; kein erfundener Balken. Das CSS kam am 6. September, der Autor stimmt; das HTML liegt nicht vor und wird nicht erfunden. test431. |
 | 29 | Compact Folder Card | Nykolas94 | `nicht-verifiziert` | PRODUKTIV (angepasst) | Bibliothek, Notizhefte, zuletzt verwendet | noch nicht | Übersichts-Kachel, ersetzt weder Baum noch Browser (§4.3). |
 | 30 | Gooey Liquid / Blob Filter | prikshit_1236 | `nicht-verifiziert` | RESERVE | — | noch nicht | Gooey Blob vorerst Reserve (§5). |
 | 31 | Orb Option Row | vinh_8995 | `nicht-verifiziert` | PRODUKTIV (angepasst) | KI-Quellen, Elektro-Optionen (Titel + Untertitel + Schalter) | noch nicht | Nur für wichtige Optionen (§4.13). |
@@ -126,7 +126,7 @@ getroffenen Entscheidung · `OFFEN` = noch nicht geprüft
 | L | Orb Option Row | **TEIL** | `einstellungen/ansicht/seite.ts` (`schalter(…)`) | Titel + Untertitel + Schalter gibt es als Zeilenform. |
 | M | Upload-Status | **TEIL** | `dateien/ablage.ts`: `teile`, `angekommen`, `zustand` | Die **Daten** sind da (`'wartet' \| 'laeuft' \| 'fertig'`, Stückzähler) — die Anzeige mit Pille und Balken fehlt. Gute Lücke: echter State ohne Fake-Prozente. |
 | N | Download → Open | **FEHLT** | — | — |
-| O | Printer Process | **TEIL** | `wissen/werkzeuge.ts:2158` (`print()`) | Drucken existiert; die Zustandsanzeige nicht. |
+| O | Printer Process | **DA** | `wissen/werkzeuge.ts` `drucken()` + `schale/bedienung/drucker.ts` (E458) | Drucken existierte, die Zustandsanzeige nicht — jetzt schon. Nebenbei gefunden: `drucken()` war das einzige `async` ohne `catch`; ein Fehler sah nur die Konsole. |
 | P | Server/Data Sync | **TEIL** | `wolkeStand`, `abgleich/maschine.ts` | Der Zustand existiert. Siehe **L132** — der Abgleich meldet vier verschiedene Gründe als einen. |
 | Q | Standardspinner | **KONFLIKT** | siehe unten | **E46 hat gegen Kreisel entschieden.** |
 | R | Liquid/Progress | **FEHLT** | — | — |

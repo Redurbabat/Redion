@@ -356,12 +356,12 @@
     "name": "Printer Process Card",
     "autor": "spotift_5948",
     "quelle": "Uiverse.io",
-    "quelleStatus": "nicht-verifiziert",
+    "quelleStatus": "chat-original-snippet",
     "status": "produktiv-adaptiert",
     "kategorie": "loader",
     "redionOrt": "src/bereiche/pdf — Dokumentmodus, Drucken",
-    "original": null,
-    "notiz": "Zustände bereit·vorbereiten·rendern·speichern·fertig·fehler; nur echter Zustand (§4.17)."
+    "original": "./komponenten/28-printer-process-card/original.css",
+    "notiz": "Zustände bereit·vorbereiten·rendern·speichern·fertig·fehler; nur echter Zustand (§4.17). Vorliegend ist NUR das CSS (Gespräch 6. September 2026, Autor stimmt) — das HTML wird nicht rekonstruiert, die Galerie zeigt das CSS. Gebaut als Drucker-Karte (E458, drucker.ts)."
   },
   {
     "id": "29-compact-folder-card",

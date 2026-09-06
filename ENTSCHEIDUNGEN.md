@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-437 Entscheidungen, E1 bis E457 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+438 Entscheidungen, E1 bis E458 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -501,6 +501,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E441** — Eine Sprache für „läuft, fertig, Fehler", ein Knopf, der sie spricht, und die Weiter-Variante
 * **E456** — Eine Marke: das „N" links, der Kontokreis und das „R" im Willkommen weichen der Studio-Marke
 * **E457** — Die ruhige Studio-Schale: drei Orte, eine Werkzeuglade, ein Regal — und was dabei rot war
+* **E458** — Die Drucker-Karte: der Druckauftrag sagt, was er gerade tut
 
 ---
 
@@ -35943,3 +35944,99 @@ src/bereiche/pdf/document-mode.ts, src/bereiche/hilfe/rundgang.ts,
 quell/schale/stil/studio.css, pdf-studio.css, bibliothek-studio.css,
 bausteine.css; pruefungen/lauf/test33, 114, 248, 272, 385, 387, 390, 424,
 428.
+
+---
+
+E458 — Die Drucker-Karte: der Druckauftrag sagt, was er gerade tut
+--------------------------------------------------------------------------
+
+ENTSCHEIDUNG. `Werkzeuge.drucken()` zeigt für die Dauer des Druckwegs eine
+kleine Karte unten rechts: ein Drucker, ein Blatt, eine Lampe, ein Satz.
+Sie ist die produktive Fassung von Uiverse Nr. 28 „Printer Process Card"
+(spotift_5948) und liegt als `src/schale/bedienung/drucker.ts` neben
+`zustand.ts` und `zustandsknopf.ts` (E441).
+
+BEFUND. „Drucken oder als PDF" sammelt zuerst jedes Seitenbild aus der
+Ablage (`bilderSammeln`), setzt dann die ganze Seite als HTML in einen
+verborgenen Rahmen und ruft `print()`. Bei achtzig PDF-Seiten dauert der
+erste Schritt Sekunden — und in dieser Zeit stand NICHTS auf dem Schirm.
+Der Kopf von `pdf/einlesen.ts` sagt seit E104: „Wer nicht sieht, dass
+etwas geschieht, drückt noch einmal." Für den Druckweg galt das nicht.
+Und ein Fehler darin flog unbeachtet nach oben: `drucken()` war das
+einzige `async` in `werkzeuge.ts` ohne `catch` — die Konsole sah ihn, der
+Mensch sah eine Seite, auf der nichts passierte.
+
+WARUM SO.
+
+  · SECHS ZUSTÄNDE, JEDER AUS DEM ABLAUF. Das Original läuft in einer
+    Schleife von 6,4 s und schreibt dazu „Ready, Feeding, Printing,
+    Ejecting, Done" — aus einem Zeitgeber, ob gedruckt wird oder nicht.
+    Die Redion-Fassung setzt jeden Zustand an der Stelle, die ihn wahr
+    macht: `vorbereiten` vor `bilderSammeln`, `rendern` vor
+    `seiteAlsHtml`, `speichern` vor `print()`, `fertig` danach. Der
+    Katalog verlangte genau das („nur echter Zustand", §4.17).
+  · `print()` KEHRT ERST ZURÜCK, WENN DER DIALOG ZU IST. Deshalb steht
+    „fertig" danach und nicht nach einer geratenen Wartezeit. `afterprint`
+    wäre genauer, kommt aber ohne Dialog (Prüflauf ohne Kopf) gar nicht —
+    ein Ereignis, auf das man vergeblich wartet, ist schlechter als eine
+    Stelle im Ablauf, die immer erreicht wird.
+  · KEIN BALKEN. Der Druckweg kennt keinen Anteil nach aussen. Ein
+    Prozentwert wäre erfunden (E441 hat dieselbe Frage für die Sicherung
+    schon so entschieden).
+  · BEWEGUNG NUR, SOLANGE GEARBEITET WIRD. Das Blatt läuft in
+    `vorbereiten` und `rendern`; in `speichern` und `fertig` liegt es
+    bedruckt im Fach, in `fehler` steckt es ohne Druck im Schlitz. Eine
+    Animation, die auch im Ruhezustand läuft, behauptet Arbeit.
+  · NIE NUR FARBE (§38). Die Lampe wechselt — Warnung, Akzent, Erfolg,
+    Gefahr — aber Zeichen und Satz stehen daneben, und die Karte ist
+    `role="status"`. Die Zeichen kommen aus `zustand.ts`, damit es EINE
+    Sprache bleibt: „…", „◐", „✓", „!".
+  · DIE SÄTZE SIND KURZ, WEIL DIE KARTE 190 px BREIT IST. „Die Seiten
+    werden gesetzt …" brach auf dem ersten Bild in zwei Zeilen und das
+    Zeichen stand allein am Rand. Jetzt „Seiten setzen …", und der Lauf
+    misst die Zeilenzahl statt sie zu hoffen (§55.1).
+  · HÖCHSTENS EINE KARTE. `zeigen()` räumt eine ältere weg; zwei
+    übereinander wären zwei Behauptungen über denselben Vorgang.
+  · DIE BÜHNE BLEIBT DUNKEL, in Hell wie in Dunkel. Ein weisser Drucker
+    auf weisser Karte wäre keiner. Karte, Satz und Lampe nehmen die
+    Marken.
+
+WAS DABEI AUS DEM ARCHIV WURDE. Nr. 28 stand als `nicht-verifiziert` und
+ohne Original im Katalog. Redur hat am 6. September das CSS geschickt, mit
+der Kopfzeile „From Uiverse.io by spotift_5948" — der Autor stimmt mit dem
+Katalog überein. Es liegt jetzt unverändert als `original.css` im Ordner,
+der Status ist `chat-original-snippet`, und die Galerie zeigt es. Das HTML
+liegt weiterhin nicht vor und wird NICHT rekonstruiert: die Klassen liessen
+sich aus dem CSS ableiten, der sichtbare Text nur raten (§0.10). Deshalb
+`original.css` und keine `original.html`.
+
+GEGENPROBE, gelaufen (§55.2): in `werkzeuge.ts` `karte?.setzen('rendern')`
+gestrichen, neu gebaut, `test431` gelaufen — §3 rot mit
+`["bereit","vorbereiten","speichern","fertig"]`, das Glied fehlte. Wieder
+eingesetzt, 45/45 grün.
+
+UND EIN FUND BEIM SCHREIBEN DES LAUFS, zweimal derselbe: eine Prüfung, die
+nicht rot werden kann, beweist nichts. Der erste Beobachter las
+`dataset.zustand` erst, nachdem `print()` zurück war — die Sätze kommen
+gesammelt, also stand dort zweimal „fertig" und nie „speichern". Und die
+erste Zeilenzählung teilte die Höhe des Absatzes durch die Zeilenhöhe und
+zählte das Polster mit: „Bereit" ergab 2. Jetzt: `attributeOldValue` für
+die Folge, `getClientRects().length` für die Zeilen.
+
+BILD ANGESEHEN (§55.3): `bilder/drucker-rechner-hell.png`,
+`drucker-rechner-dunkel.png`, `drucker-handy-dunkel.png` — die Karte über
+einer offenen Seite, Zustand „rendern". Auf dem ersten Bild brach der Satz
+um; das ist der Grund für die kurzen Sätze oben.
+
+DATEIEN. `src/schale/bedienung/drucker.ts` (neu),
+`src/bereiche/wissen/werkzeuge.ts`, `quell/schale/stil/bausteine.css`,
+`index.html`, `src/dienst/sw.ts`, `bilder.mts`,
+`quell/entwicklung/ui-reserve/katalog.json`,
+`quell/entwicklung/ui-reserve/komponenten/28-printer-process-card/`
+(`original.css` neu, `notizen.md`), `doku/UI-KOMPONENTEN.md`,
+`pruefungen/lauf/test431.mts` (neu).
+
+GEPRÜFT. test431 (45 Punkte, neu), test426 (28), test427 (55), test182
+(36), test362 (18), test290 (13), test105, test109, test87;
+`npm run typecheck`, `npm run bauen:ts` (Dienststand v442).
+
