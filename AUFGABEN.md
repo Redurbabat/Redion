@@ -91,6 +91,14 @@ drei Einträge auf JEDEM Bildschirm verdeckte.
 
 ---
 
+**Am 6. September dazugekommen (E457)** — die Kante am Rechner zeigt im
+ruhigen Modus drei Orte (Bibliothek, Notizhefte, Lernzentrum) plus „Mehr
+Orte"; Heute, Elektrotechnik und Aufgaben liegen dahinter und leuchten
+dort. Das ist die Antwort für den RECHNER. Der F02-Rest oben — die untere
+Telefonleiste an `haupt: true` zu hängen — steht damit noch deutlicher:
+oben drei aus dem Register, unten fünf aus dem Markup (L117 Punkt 1).
+Redur entscheidet, welche vier es unten sein sollen.
+
 ### 1 · Cloudflare wirklich aufsetzen — **braucht Redur**
 
 **Ziel** — Server, Konto und Sync einmal gegen echtes D1/R2 laufen lassen.

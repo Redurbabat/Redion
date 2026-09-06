@@ -6259,3 +6259,38 @@ WAS ES SCHON GIBT: `test261 §4` schaltet den Takt seither ausdrücklich ab
 und prüft, dass der Abgleich wirklich lief (`kein null`), bevor es die
 Grabsteine misst. Der Wettlauf kann die Prüfung also nicht mehr falsch rot
 machen — er ist damit aber nur eingehegt, nicht behoben.
+
+L117 — Was die ruhige Studio-Schale (E457) noch nicht kann
+════════════════════════════════════════════════════════════════════════════
+
+Gefunden am 6. September 2026 beim Abschluss des Umbaus — am Bild und an
+den Prüfläufen, nicht vermutet.
+
+1. **Die untere Telefonleiste hängt an fünf festen Knöpfen** — Dokumente ·
+   Heute · Lernen · Termine · Mehr — und nicht an `haupt: true` wie die
+   Kante am Rechner. Das ist der Rest von F02 (AUFGABEN.md §0): WELCHE
+   vier es unten sein sollen, ist Redurs Entscheidung, und bis dahin
+   stehen dort weiter die Fünf aus E236. Die Sammlungen erreicht man am
+   Telefon über die Bibliothek („Sammlungen ⌄") und das Mehr-Blatt.
+
+2. **Die Sammlung „Dateien & PDFs" listet jeden Textblock als Eintrag** —
+   bis zu 80 Stück, jeder mit „text ↗ ⊞ ¶". Sie ist die alte Bibliothek
+   der Arbeitswelt, unverändert übernommen, und noch nicht beruhigt.
+   test428 stolperte darüber: ein Nutzerblock aus dem Notion-Wissen
+   („in jedem Notion-Workspace") stand als Eintrag da, und die Prüfung
+   „keine Workspace-Beschriftung" las den ganzen Inhalt statt der Schale.
+   Die Prüfung ist umgeschrieben; die Sammlung nicht.
+
+3. **Bei offener Werkzeuglade stehen Suche, KI und Konto doppelt** — im
+   Studio-Kopf und rechts im Band. Die Band-Rechtsgruppe trägt Glocke und
+   Wolkenpunkt; solange der Studio-Kopf beides nicht zeigt, bleibt sie.
+   Im Ruhezustand (Lade zu) gibt es die Doppelung nicht.
+
+4. **Im ruhigen Modus zeigt die Kante keinen Kontextgriff direkt** — nur
+   „Seiten" und „Werkzeuge". Redurs Auftrag sagt „wenige", der
+   Laptop-Stand hat null gewählt und test430 misst genau zwei Knöpfe. Ob
+   ein oder zwei Griffe je Ort (Lesen/Annotieren im Dokument, Neu im
+   Regal) direkt stehen sollen, ist offen.
+
+5. **Nicht auf einem echten Gerät geprüft** — wie L10: alles gemessen mit
+   Playwright im Telefon-Bildmass.

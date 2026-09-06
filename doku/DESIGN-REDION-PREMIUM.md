@@ -1,34 +1,111 @@
-# Redion Premium – Motion-Pass vom 6. September 2026
+# Redion Premium – die ruhige Studio-Schale
 
-Dieser Bericht beschreibt die ergänzten Animationen, nicht den Abschluss des gesamten Redesigns.
-Referenz ist das vom Nutzer erneut gelieferte `REDION_UI_HANDOFF_MIT_CODES.zip`.
-Die bereits isoliert archivierten Originale bleiben in der UI-Reserve; produktive Effekte sind Redion-Adaptionen.
+Stand 6. September 2026, nach dem Abschluss des Workspace-/Ruhe-Umbaus
+(E457). Dieser Bericht sagt, was sichtbar ist, wo die alten Wege liegen
+und was geprüft wurde — und was nicht.
 
-## Eingebaute Bewegungen
+## Was man sieht
 
-- Bibliothek: erste sechs Dokumentdeckel erscheinen beim tatsächlichen Ortswechsel leicht gestaffelt. Keine erneute Animation bei jedem Suchzeichen. Ordnerpapier hebt sich beim Überfahren; Fokus und Druck geben eine kleine Rückmeldung.
-- Baum: nur der gerade geöffnete Ast blendet kurz ein; Tastaturfokus und bestehender Öffnungszustand bleiben erhalten.
-- Navigation: Kontextlade kommt dezent von links, Sheets von unten. Aufklappbare Fenstersteuerung nutzt dieselbe Bewegungssprache.
-- PDF: Miniaturen, Inspector und mobile Ansichtsleiste erhalten kurze Einblendungen. Werkzeugbuttons reagieren beim Drücken. Papier und Canvas werden dabei nicht transformiert.
-- Zustand: zehn Segmente ersetzen den Halbkreis im gemeinsamen neutralen Busy-Zeichen. SVG-Kinder statt globaler Demo-Klassen oder IDs.
-- KI: drei Funken in einer eigenen Statuszeile während echter Chat-/Schreibanfragen. Antworttext wird weiterhin vom bestehenden Stream aktualisiert. Erfolg und Fehler entfernen die Statuszeile in `finally`. Die vorhandene Denkkugel wird nicht entfernt.
+**Am Rechner (≥ 761 px)** stehen vier Leisten, keine davon doppelt:
 
-## Regeln
+| Leiste | Inhalt |
+|---|---|
+| Studio-Kopf | Marke · Navigation ein/aus · Suchen & finden · Farbschema · PDF öffnen (nur ausserhalb des Regals) · Neu · Werkzeuge · Konto |
+| Kante links | Bibliothek · Notizhefte · Lernzentrum · Mehr Orte — darunter Seiten · Werkzeuge — unten Einstellungen |
+| Kopfzeile | Zurück · Vor · Krume · KI · (auf einer Seite: Favorit, Seitenmenü) |
+| Menüband | **nur auf Abruf**: der Werkzeug-Knopf im Studio-Kopf klappt es auf, Esc schliesst es und gibt den Fokus zurück |
 
-Vorhandene Tokens `--motion-instant`, `--motion-fast`, `--motion-normal`, `--ease`, `--ease-enter` und `--press-scale` gelten weiterhin. Die kleine Staffelung beträgt 24 ms, begrenzt auf sechs Deckel. Keine dauerhaften `will-change`-Flächen, keine neue Blur-Animation, keine neue Animation des Dokument-Canvas.
+Die drei Orte kommen aus `Register.navigation` (`haupt: true`, `hauptRang`);
+Heute, Elektrotechnik und Aufgaben tragen dort `ruhig: false` und liegen
+hinter „Mehr Orte". Wer auf einem davon steht, sieht es an „Mehr Orte"
+(`ist-hier`, `aria-current`). Ohne ruhigen Modus (Einstellungen →
+„Ruhige Leiste" aus) stehen alle sechs da.
 
-Reduced Motion unterbindet die neuen CSS-Effekte; der JavaScript-Ortsübergang wird nicht gestartet und laufende Übergänge werden beim Umschalten abgebrochen. Hintergrundwechsel beendet laufende JavaScript-Ortsanimationen. Die Funktion wartet niemals auf eine Animation.
+**Am Telefon (≤ 760 px)** bleibt der Aufbau aus E236: oben die Zeile mit
+Werkzeuge ⌄ · Suche · KI · Konto (das Band, zugeklappt), unten die fünf
+Wege Dokumente · Heute · Lernen · Termine · Mehr. Der Studio-Kopf gibt es
+dort nicht, deshalb darf das Band dort nie verschwinden — die Regel dafür
+ist auf ≥ 761 px beschränkt.
 
-Statusanimationen besitzen Text und bestehende Status-/Busy-Semantik. Sie behaupten keine Prozentwerte. SVG-Symbole sind dekorativ, ID-frei und erben `currentColor`.
+**Das Regal (Bibliothek)** hat einen Kopf für alle drei Darstellungen
+(Deckel, Regal, Liste): Titel, Neu, PDF importieren, Ort-Knopf mit allen
+Reitern, Ordner-&-Seiten-Baum (aufklappbar, merkt sich den Zustand),
+Schnellwege (Meine Ablage · Zuletzt geöffnet · Favoriten · Alle PDFs),
+Sammlungen ⌄, Suche, „Weiterarbeiten", Art-Filter (erst ab zwei Arten),
+Deckel, und ganz unten „Sicherung & Speicher" als eine Zeile, die den
+Sicherungsstand nennt und sich aufklappen lässt. Eine fehlende Sicherung
+steht in dieser Zeile, auch zugeklappt.
+
+**Das Dokument (PDF)** nimmt die ganze Fläche: Studio-Kopf, Kante, Band und
+Kopfzeile sind weg; das Papier beginnt am Rechner bei 116 von 900 px. Am
+Telefon liegen Lesen/Annotieren, Seitenwechsel und Zoom hinter dem
+Ansichts-Knopf ☷ in der Dokumentleiste.
+
+## Wo die ehemaligen Workspace-Funktionen sind
+
+| Früher | Jetzt | Adresse |
+|---|---|---|
+| Workspace · Übersicht / Seiten | Bibliothek → Sammlungen → **Seiten & Wissen** (mit „Offene Seiten & geteilte Ansicht" aufklappbar) | `#seiten-wissen` |
+| Workspace · Bibliothek / Dateien | Bibliothek → Sammlungen → **Dateien & PDFs** | `#dateien-pdfs` |
+| Workspace · Datenbanken | Bibliothek → Sammlungen → **Datenbanken** | `#datenbanken` |
+| Workspace · Whiteboards | Bibliothek → Sammlungen → **Whiteboards** | `#whiteboards` |
+| Workspace · Wiki | Bibliothek → Sammlungen → **Wissen & Verweise** | `#wissen-verweise` |
+| Workspace · Vorlagen | Bibliothek → Sammlungen → **Vorlagen** | `#vorlagen` |
+| Workspace · Aufgaben | eigener Ort **Aufgaben** (Mehr Orte) | `#aufgaben` |
+| Workspace · Kalender | eigener Ort **Kalender** (Mehr Orte) | `#kalender` |
+| „Alle Seiten" | Reiter „Alle" der Bibliothek (Mehr Orte → Alle Seiten) | `#alle-seiten` |
+
+Alte `#welt-workspace-…`-Verweise leiten weiter, auch während der Sitzung
+(Browser-Zurück eingeschlossen). `Produktwelten.workspace()` bleibt als
+Kompatibilitätsfunktion; `Bibliothek.aufgaben()` („Meine Aufgaben") und die
+Sammlung „Aufgaben" sind zwei verschiedene Ansichten und beide da. Die
+Konto-/Organisationsverwaltung „Arbeitsbereich" ist davon unberührt
+(Studio-Kopf → Konto, Mehr-Blatt → Arbeitsbereich).
+
+## Material und Bewegung
+
+Ein Token-System (`bausteine.css`, `studio.css`): `--motion-instant`,
+`--motion-fast`, `--motion-normal`, `--ease`, `--ease-enter`,
+`--press-scale`; Glas nur an kleinen schwebenden Bedienelementen
+(`--studio-glass`), Papier bleibt deckend; räumliche Effekte an
+Dokumentdeckeln und Miniaturen; violetter Akzent. Bewegungen sind kurz,
+und `prefers-reduced-motion` schaltet jede davon ab — test424, test429 und
+test430 messen das.
+
+Der Motion-Pass vom Laptop (Deckel-Staffelung, Baum-Einblendung, Kanten-
+Lade von links, Sheets von unten, Zehn-Segment-Zeichen, KI-Funken) bleibt
+wie in der Fassung vom 6. September beschrieben: an echte Vorgänge
+gebunden, ohne SVG-Kennungen, ohne Bewegung des Dokument-Canvas.
 
 ## Verifikation
 
-- test429: 16/16 – neutrale Segmente, KI-Funken, mehrere SVG-Instanzen, echte Controller mit Test-Promise bzw. abgefangener KI-Testantwort, Erfolg/Fehler, Tastatur, Reduced Motion und Konsole.
-- test427: 55/55 – gemeinsame Statusbuttons, Sperre gegen Mehrfachauslösung, reale Sicherungsdownloads, Öffnen, Kontrast, Tastatur und Reduced Motion.
-- test424: 50/50 – Studio/PDF-Ablauf, echte PDF-Testdatei, Navigation, Zoom, Persistenz und zehn Größen in Light/Dark.
-- `npm run typecheck`, `npm run bauen:ts` und `node bauen.mts`: erfolgreich; lokaler Dienststand v432.
-- KI-Test verwendet ausschließlich synthetischen Inhalt; kein echter KI-Dienst wurde angefragt.
+Grün nach dem Umbau (6. September, Container): test33, 40, 61, 87, 105,
+109, 114, 209, 222, 248, 272, 385, 386, 387, 390, 393, 396, 424, 428, 429,
+430; `npm run typecheck`, `npm run bauen:ts`, `node bauen.mts`.
+
+Umgeschrieben, nicht abgeschwächt: test387 (drei Orte + Mehr, und die alte
+Leiste ohne Ruhe), test390 (Markierung an „Mehr Orte"), test272 (Lade
+statt Leiste, Regler statt 54 px), test248/385 (Werkzeuggriff statt
+sichtbares Band), test33 (Ort-Menü statt Reiterzeile), test114 (Seiten &
+Wissen statt Workspace), test428 (Kennung statt Klasse, `collectionId`,
+Schale statt Inhalt), test424 (Flush vor dem Neuladen).
+
+Angesehen (§55): 45 Bilder unter `bilder/premium/` — Regal in 390, 430,
+820, 1366 und 1920 px, hell und dunkel; Baum, Sicherung, Mehr Orte,
+Werkzeuglade; PDF 1366 und 390 mit Ansichtsmenü; Seiten & Wissen, Alle
+Seiten, Heute, Lernen, Einstellungen, Mehr-Blatt; reduced motion. Die
+Abnahmebilder unter `doku/studio-abnahme/` stammen aus test424, test428
+und test430 mit `--screenshots`.
+
+Der Stand der Gesamtsuite steht unten.
 
 ## Offen
 
-Der umfangreiche Workspace-/Ruhe-Umbau aus dem vorigen Arbeitsschritt ist nicht vollständig abgeschlossen. Dieser Motion-Pass behauptet weder die vollständige Integration aller 50 Uiverse-Ideen noch eine grüne Gesamtsuite. Weitere ältere Ladeanzeigen sind noch nicht auf das gemeinsame Zeichen umgestellt. Nicht verifizierte Originale werden nicht als exakt übernommener Code ausgegeben.
+Siehe LUECKEN.md L117: die untere Telefonleiste hängt an fünf festen
+Knöpfen; „Dateien & PDFs" listet jeden Textblock; bei offener Werkzeuglade
+stehen Suche/KI/Konto doppelt; im ruhigen Modus steht kein Kontextgriff
+direkt in der Kante; nicht auf einem echten Gerät geprüft.
+
+## Gesamtsuite
+
+_(wird nach dem vollen Lauf am 6. September ergänzt)_

@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-436 Entscheidungen, E1 bis E456 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+437 Entscheidungen, E1 bis E457 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -500,6 +500,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E440** — Das Studio kommt auf den Zweig, und die UI-Reserve ist ein Archiv
 * **E441** — Eine Sprache für „läuft, fertig, Fehler", ein Knopf, der sie spricht, und die Weiter-Variante
 * **E456** — Eine Marke: das „N" links, der Kontokreis und das „R" im Willkommen weichen der Studio-Marke
+* **E457** — Die ruhige Studio-Schale: drei Orte, eine Werkzeuglade, ein Regal — und was dabei rot war
 
 ---
 
@@ -35816,3 +35817,114 @@ DATEIEN. src/schale/aufbau/menueband.ts, src/schale/aufbau/schale.ts
 premium.css, studio.css, bausteine.css (`.wk-zeichen`),
 pruefungen/lauf/test384.mts, test37.mts, test87.mts, test274.mts,
 test40.mts, sw.js, src/dienst/sw.ts, src/kern/einstellung/stand.ts.
+
+---
+
+E457 — Die ruhige Studio-Schale: drei Orte, eine Werkzeuglade, ein Regal — und was dabei rot war
+--------------------------------------------------------------------------
+
+ENTSCHEIDUNG. Sechs Dinge, alle am 6. September 2026, auf Redurs Satz
+„zu kompliziert, zu viele Bereiche gleichzeitig":
+
+(1) DREI ORTE IN DER KANTE, nicht fünf. Im ruhigen Modus (`Ruhig.an()`,
+Vorgabe) stehen links Bibliothek, Notizhefte und Lernzentrum
+(`hauptRang` 10/20/30 im Navigationsregister). Heute, Elektrotechnik und
+Aufgaben BLEIBEN Hauptwege (`haupt: true`), tragen `ruhig: false` und
+liegen hinter „Mehr Orte" — und wer dort steht, sieht es am Knopf, der
+dorthin führt: „Mehr Orte" trägt dann `ist-hier` und `aria-current`.
+`ortJetzt()` fragt dafür ALLE Hauptwege, `hauptOrte()` nur die gezeigten.
+Ohne ruhigen Modus (`Ruhig.setzen(false)`) stehen alle sechs da wie
+zuvor; test387 §5 und test390 §1 messen beide Fassungen.
+
+(2) DAS MENÜBAND IST AM RECHNER EINE WERKZEUGLADE. Zugeklappt zeigte es
+„Werkzeuge · Suche · KI · Konto", und genau die drei stehen seit dem
+Studio-Kopf schon darüber. Also ist es weg, bis `#studio-tools` es holt;
+Esc schliesst und gibt den Fokus zurück. `data-studio-tools` am body
+folgt bei JEDEM Zeichnen `zugeklappt()` — vorher setzten es nur zwei
+Klickwege, und ein Prüflauf, der den Merker anders setzte, bekam ein Band,
+das offen gemerkt und trotzdem nicht da war. Die Regel ist auf ≥ 761 px
+beschränkt: am Telefon ist das Band die einzige Zeile mit Suche, KI und
+Konto — ohne die Abfrage hatte 390 px keine Suche mehr (test40, test114,
+test248 rot).
+
+(3) DER WORKSPACE IST ALS SICHTBARER BEREICH AUFGELÖST — der Laptop-Stand
+`aa629027` (PR #57) hatte es begonnen, hier ist es fertig. Die Sammlungen
+wohnen in der Bibliothek (Seiten & Wissen, Dateien & PDFs, Datenbanken,
+Whiteboards, Wissen & Verweise, Vorlagen), Aufgaben und Kalender sind
+eigene Orte; `#welt-workspace-*` leitet auf `#seiten-wissen`,
+`#dateien-pdfs`, `#datenbanken`, `#whiteboards`, `#wissen-verweise`,
+`#vorlagen`, `#aufgaben`, `#kalender` weiter; `Produktwelten.workspace()`
+bleibt als Kompatibilitätsweg und öffnet keine Workspace-Schale mehr.
+Keine Daten wurden kopiert oder gewandert (test428 zählt die Blöcke vor
+und nach der Navigation).
+
+(4) „ALLE SEITEN" IST WIEDER EIN EIGENES ZIEL. `app-bib` rief wie
+`bibliothekOben` das Regal — zwei Wege zu einem Ziel, und die Zeile war
+damit aus „Mehr Orte" verschwunden (test33). Der Kontextgriff „Alle
+Seiten" rief sogar `Bibliothek.alleSeiten()`, den DATENHELFER: ein Knopf,
+der eine Liste zurückgab und nichts zeigte (§47). Jetzt öffnet
+`Bibliothek.alleZeigen()` den Reiter „Alle" — die flache Liste über den
+ganzen Bestand — unter `#alle-seiten`, und `SONDER_START` stellt ihn beim
+Neuladen wieder her. Der Zurück-Weg aus dem Dokument führt wieder über
+`bibliothekOben` ins Regal, nicht in die Liste.
+
+(5) EIN „PDF IMPORTIEREN", NICHT ZWEI. Solange die Seite selbst den Knopf
+trägt (`body:has(#page .bib-studio-import)`), ist der im Studio-Kopf weg;
+überall sonst — Dokument, Lernzentrum, Sammlungen — bleibt er der schnelle
+Weg. Und die Filterzeile nach Art erscheint erst, wenn es zwei Arten zu
+unterscheiden gibt: „Alle · Seiten" filtert nichts und kostete eine
+Zeile.
+
+(6) FÜNF REPARATUREN AUS DEM HINSEHEN UND MESSEN (§55): die Kanten-Lade
+beginnt unter dem Band statt darin (`grid-row: 3/-1`, sie deckte
+„Datei · Start · Einfügen" zu); das PDF-Papier beginnt am Rechner bei
+116 statt 141 px von 900 (Commandbar-Polster 3 px, Mitte 12 px); „Zurück"
+und „Vor" der Blattleiste decken wieder (die Studio-Regel
+`.document-studio button:disabled{opacity:.45}` traf auch sie — der
+Doppeldruck aus test393 war zurück); der Knick im Baum ist ein `span`
+statt eines 20 × 24-Knopfes (§37); „Dokumente" wird am Tablet nicht mehr
+zu „Dokume…"; Neu, Import und Suche im Regal messen 44 px.
+
+BEFUND. Nachgemessen im Container am Laptop-Stand: 8 von 23 gezielten
+Läufen rot. Getrennt nach Ursache — PRODUKT: keine Suche am Telefon
+(Band-Regel ohne Medienabfrage), durchsichtige Undo/Redo, Rundgang mit
+sechs von neun Schritten ohne Loch, Lade über dem Band, Papier zu tief.
+PRÜFUNG: test428 wartete auf `.aw-datenbanken-kopf` (eine Kennung, keine
+Klasse) und las `database.id` statt `collectionId`; test387/390/272/248/
+385/33/114 erwarteten fünf Orte, ein sichtbares Band, `.bib-reiter` oder
+`🧱 Workspace`. Die Prüfungen wurden auf die neue Leiste UMGESCHRIEBEN,
+nicht abgeschwächt: jede misst jetzt zusätzlich, dass die verborgenen
+Ziele erreichbar sind (Mehr Orte, Werkzeuglade, Ort-Menü).
+
+WARUM SO. Die Mengen sind gemessen: E218 zählte 52 Knöpfe auf dem
+Startbild. Mit drei Orten, einer Lade und einem Regal, das Filter,
+Sammlungen, Baum und Sicherung aufklappbar hält, stehen im Regal am
+Rechner Studio-Kopf (6), Kante (6) und Kopfzeile (4) — und der Inhalt
+beginnt bei 120 px. Register bleiben die Quelle (§8): `ruhig` und
+`hauptRang` sind Felder im Navigationsregister, keine zweite Liste.
+
+ALTERNATIVE. Alle sechs Orte weiter zeigen — bleibt als alte Leiste
+erhalten und wird gemessen. Das Band ganz entfernen — nein: es ist die
+einzige Stelle, an der alle Reiter stehen; die Lade kostet einen Klick.
+Die Band-Rechtsgruppe (Suche · KI · Konto) bei offener Lade ausblenden —
+nicht getan, weil dort Glocke und Wolkenpunkt wohnen; L117 Punkt 3.
+
+WAS ES KOSTET. „Heute" kostet am Rechner zwei Klicks (Mehr Orte → Heute);
+die Werkzeuge einen Klick mehr; die Bibliothek zeigt den Heft-Zähler
+(„3 Hefte · 12 Seiten") nicht mehr — der Ort-Knopf nennt die Dokumente.
+
+GEPRÜFT. Grün nach dem Umbau: test33, 40, 61, 87, 105, 109, 114, 209, 222,
+248, 272, 385, 386, 387, 390, 393, 396, 424, 428, 429, 430; `npm run
+typecheck`, `npm run bauen:ts`. Der Stand der Gesamtsuite steht in
+`doku/DESIGN-REDION-PREMIUM.md`. 45 Bilder unter `bilder/premium/`
+(nicht versioniert, §55.4) — angesehen: Regal 390/430/820/1366/1920 hell
+und dunkel, Baum, Sicherung, Mehr Orte, Werkzeuglade, PDF 1366/390,
+Seiten & Wissen, Alle Seiten, Heute, Einstellungen, Mehr-Blatt.
+
+DATEIEN. src/register/navigation.ts, src/register/menueband.ts,
+src/schale/aufbau/context-rail.ts, menueband.ts, schale.ts,
+src/schale/bedienung/baum.ts, src/bereiche/wissen/bibliothek.ts,
+src/bereiche/pdf/document-mode.ts, src/bereiche/hilfe/rundgang.ts,
+quell/schale/stil/studio.css, pdf-studio.css, bibliothek-studio.css,
+bausteine.css; pruefungen/lauf/test33, 114, 248, 272, 385, 387, 390, 424,
+428.
