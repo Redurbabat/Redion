@@ -214,7 +214,7 @@ rechtfertigt.
 
 ---
 
-### 7 · Der PDF-Teil wie GoodNotes — neunzehn Bögen (Redur, 7. September)
+### 7 · Der PDF-Teil wie GoodNotes — zwanzig Bögen (Redur, 7. September)
 
 Redur, mit dem GoodNotes-Dossier: „alles, was GoodNotes machen kann, 1:1 —
 nur beim PDF-Teil: wie die bearbeitet wird, importiert, die Stifte usw.",
@@ -315,6 +315,13 @@ der Zeichenschicht nicht zu drücken — und zwar schon vor diesen Bögen.
     Der Bogen fand zwei ältere Fehler: die Tupfer standen nach dem Wählen
     verkehrt herum, und `Dialog.wahl` schnitt bei vielen Knöpfen den
     letzten stumm ab. **Steht.**
+  · **G20 — Suche über mehrere Dokumente** (E487, test459): der Schalter
+    „📚" nimmt die anderen Dokumente dazu; ihre Seiten stehen als Klappe
+    unter der Suchleiste, und ein Tipp öffnet das Dokument auf DER Seite
+    und sucht dort weiter. Der Unterschied — Stelle im offenen Dokument,
+    Seite in fremden — steht am Knopf, statt behauptet zu werden. Zwei
+    Entwürfe der Klappe hat das BILD widerlegt, nicht der Prüflauf.
+    **Steht.**
 
 Was danach ehrlich offen bleibt, steht in **L133** (Audio mit Zeitbezug,
 Handschrift-zu-Text, Mathe, Elemente-Bibliothek, Präsentation, Wolke).

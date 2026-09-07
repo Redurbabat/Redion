@@ -6407,7 +6407,7 @@ Lauf, der der Presse nicht gehört. Derselbe Stand wie bei L119.
 
 ---
 
-L133 — Was am PDF-Teil gegenüber GoodNotes noch fehlt (Stand nach G19)
+L133 — Was am PDF-Teil gegenüber GoodNotes noch fehlt (Stand nach G20)
 --------------------------------------------------------------------------
 
 Redurs Auftrag vom 7. September (E465): der PDF-Teil 1:1 wie GoodNotes,
@@ -6508,8 +6508,18 @@ Offen bleibt:
     und bei einer gedrehten Seite misst man ihre Hülle), sondern IM
     Papier mit `inset:0`. Dort dreht sie mit — und liegt nebenbei auf dem
     Innenkasten, dort, wo auch das Seitenbild liegt. `test454 §3`.
-  · **Suche über mehrere Dokumente** — die Suche gilt dem offenen
-    Dokument; die Schalensuche (Strg P) findet Seiten, nicht Stellen.
+  · ~~**Suche über mehrere Dokumente**~~ — **GESCHLOSSEN mit E487.** Der
+    Schalter „📚" in der Suchleiste nimmt die anderen Dokumente dazu; ihre
+    Treffer stehen als Klappe unter der Leiste, mit Name, Seitenzahl und
+    Textausschnitt, und ein Tipp öffnet das Dokument auf DER Seite und
+    sucht dort weiter.
+    **Der Unterschied bleibt und steht am Knopf:** im offenen Dokument
+    findet die Suche die STELLE (Kästen im Papier), in fremden die SEITE —
+    denn die Stelle steht in der PDF-Textschicht, und die für jedes fremde
+    Dokument zu lesen macht das Suchfeld unbenutzbar. Der Sprung ist der
+    zweite Schritt, der die Stelle nachliefert.
+    Die Schalensuche (Strg P) findet weiterhin Seiten, nicht Stellen — sie
+    ist eine andere Suche, und das bleibt offen. `test459`.
   · ~~**Ziele der PDF innerhalb der Seite**~~ — **GESCHLOSSEN mit E481.**
     `/XYZ`, `/FitH` und `/FitR` nennen eine Höhe; sie steht seit dem
     Einlesen als `zielY` am Verweis, und der Sprung rollt dorthin. `/Fit`

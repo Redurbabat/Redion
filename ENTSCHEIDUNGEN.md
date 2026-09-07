@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-466 Entscheidungen, E1 bis E486 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+467 Entscheidungen, E1 bis E487 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -530,6 +530,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E484** — Treffer und Verweise sitzen genauer: gemessen statt gezählt, und ein Strich bekommt eine Trefffläche statt eines Kastens
 * **E485** — Der breite Lauf nach elf Bögen: ein Knopf lag unter der Zeichenschicht, und drei Prüfläufe kannten Anzahlen auswendig
 * **E486** — Farbsätze: die eigenen Farben unter einem Namen — und zwei alte Fehler, die dabei ans Licht kamen
+* **E487** — Die Suche über mehrere Dokumente: fremde Seiten in einer Klappe, und der Sprung sucht dort weiter
 
 ---
 
@@ -38740,3 +38741,96 @@ zweiten Knopf umgeworfen hat — sowie test87, test96, test100, test105,
 test109, test180, test343, test344, test356, test362, test365, test375,
 test438, test455, test456. Dazu `npm run typecheck`, `npm run bauen:ts`,
 `node bauen.mts`.
+
+
+---
+
+E487 — Die Suche über mehrere Dokumente: fremde Seiten in einer Klappe, und der Sprung sucht dort weiter
+--------------------------------------------------------------------------
+
+L133, unter „Suche und Verweise":
+
+> **Suche über mehrere Dokumente** — die Suche gilt dem offenen Dokument;
+> die Schalensuche (Strg P) findet Seiten, nicht Stellen.
+
+## Was entschieden wurde
+
+Ein Schalter in der Suchleiste des Studios („📚", `aria-pressed`, gemerkt
+in `meta`) nimmt die anderen Dokumente dazu. Ihre Treffer stehen nicht im
+Papier, sondern in einer **Klappe unter der Leiste**: Zeichen, Name,
+Seitenzahl, Textausschnitt. Ein Tipp öffnet das Dokument auf genau dieser
+Seite, mit der Suchleiste offen und demselben Wort darin.
+
+## Der Unterschied ist ehrlich zu nennen
+
+Im OFFENEN Dokument findet die Suche die **Stelle** — Kästen im Papier,
+gemessen mit `InkGeometry.textWidth` (E484). In fremden findet sie die
+**Seite**. Das ist kein halbes Ergebnis, sondern der Preis für eine Suche,
+die tippbar bleibt: die Stelle steht in der PDF-Textschicht, und die läge
+für jedes fremde Dokument einzeln zu lesen an. Ein Suchfeld, das dabei
+zehn Sekunden steht, benutzt niemand.
+
+Deshalb der Sprung: wer hinspringt, sucht dort mit derselben Frage weiter
+und bekommt auch dort die Stelle. Was der Nutzer will, bekommt er — nur in
+zwei Schritten statt in einem, und der zweite ist ein Tipp.
+
+Durchsucht wird darum, was ohnehin im Speicher liegt:
+
+    pdfseite    `suchtext` (E107), ersatzweise `ocrText`
+    blatt       Text- und Zettelmarken, dann der Text der Kinder
+
+## Die Grenzen werden GESAGT
+
+Höchstens 60 fremde Treffer, höchstens 4000 durchsuchte Blöcke. Greift
+eine der beiden, steht es in der Kopfzeile der Klappe („es sind mehr —
+Begriff eingrenzen"). Eine Liste, die stillschweigend aufhört, behauptet,
+es gebe nicht mehr (§35).
+
+## Der Sprung merkt sich nichts über die Sitzung hinaus
+
+`App.oeffne` baut den Studio-Aufbau neu; was der neue Aufbau vom Sprung
+wissen muss, steht so lange in einer modulweiten Veränderlichen. **Nicht in
+`meta`** — ein Wunsch, der einen Neustart überlebt, wäre ein Gespenst: man
+öffnet Redion am nächsten Tag, und die Suche geht von selbst auf. Und er
+wird gelöscht, BEVOR gesucht wird, sonst ginge die Leiste bei jedem
+weiteren Neuzeichnen dieser Seite wieder auf.
+
+## Zwei Entwürfe, die das BILD widerlegt hat (§55)
+
+Beide waren grün geprüft, und beide waren falsch.
+
+**1. `flex-basis:100%` in der Leiste.** Die Suchleiste steht auf
+`display:flex` OHNE `flex-wrap` — die 100 % breite Liste blieb also in
+derselben Zeile und drückte das Suchfeld auf **22 px**. Auf dem Bild sah
+man eine Suchleiste ohne Suchfeld; alle 29 Zusagen des Prüflaufs waren
+grün, weil sie den INHALT der Liste prüften und nicht ihre Lage.
+
+**2. Also `flex-wrap:wrap` dazu.** Am Telefon (390 px) riss der Umbruch
+dann die Knöpfe auseinander: „‹" stand am Ende der ersten Zeile, „›" und
+„✕" allein in der zweiten. Auch das sah nur das Bild.
+
+Jetzt steht die Liste GAR NICHT in der Zeile, sondern als Klappe darunter
+(`position:absolute`). Die Leiste ist auf jeder Breite wieder genau so
+lang wie vorher. Der Prüflauf misst seither die LAGE mit: Feldbreite über
+200 px, Listenoberkante unter der Feldunterkante — beides rot, wenn die
+Klappe zurück in die Zeile geht.
+
+**Und ein drittes, kleineres:** der Schalter trug zuerst „🗂". Auf dem Bild
+kam ein blasses Kästchen heraus — das Zeichen steht nicht in jeder
+Schrift. „📚" steht überall und meint dasselbe.
+
+## Nutzertext bleibt Text
+
+Der Ausschnitt kommt aus einer PDF und ist Fremdtext. Er wird mit
+`textContent` gesetzt, nicht mit `innerHTML` (§19). `test459 §4` legt eine
+Seite mit `<img src=x onerror=…>` im Namen UND im Text an und misst
+nach: kein Code gelaufen, kein Bild entstanden, die spitzen Klammern
+stehen als Text da. Das ist dieselbe Prüfung, die E112 nach dem echten
+Vorfall gefordert hat.
+
+GEPRÜFT. `test459` mit 31 Zusagen, vier Gegenproben rot gesehen (§55.2):
+ohne den Schalter, ohne die Ausnahme der offenen Seite (drei Funde statt
+zwei), ohne den Sprungwunsch, und mit der Liste zurück in der Zeile.
+Dazu test385, test441, test449, test457. Und `npm run typecheck`,
+`npm run bauen:ts`, `node bauen.mts`.
+Bild: `node bilder.mts dokumentsuche` — die Ansicht ist neu.

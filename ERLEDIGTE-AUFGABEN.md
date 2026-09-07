@@ -4208,8 +4208,24 @@ auswendig kannte. Sie misst jetzt, was §38 wirklich verlangt: dass sich
 die FORM ändert (`fill` von `none` auf `currentColor`), nicht nur die
 Farbe.
 
+**Die Suche über mehrere Dokumente (E487, test459).** Der Schalter „📚" in
+der Suchleiste nimmt die anderen Dokumente dazu; ihre Seiten stehen als
+Klappe unter der Leiste, mit Name, Seitenzahl und Textausschnitt, und ein
+Tipp öffnet das Dokument auf genau dieser Seite und sucht dort weiter. Der
+Unterschied ist am Knopf genannt statt verschwiegen: im offenen Dokument
+findet die Suche die Stelle, in fremden die Seite — denn die Stelle steht
+in der PDF-Textschicht, und die für jedes fremde Dokument zu lesen macht
+das Suchfeld unbenutzbar.
+
+Zwei Entwürfe der Klappe hat das BILD widerlegt, nicht der Prüflauf. Der
+erste liess die Liste in der Flex-Zeile stehen und drückte das Suchfeld
+auf 22 px — 29 grüne Zusagen, und auf dem Bildschirm eine Suchleiste ohne
+Suchfeld. Der zweite brach die Zeile um und riss am Telefon die Pfeile
+auseinander. Jetzt hängt sie als Klappe darunter, und der Prüflauf misst
+die Lage mit.
+
 **Was offen bleibt,** steht ehrlich in `LUECKEN.md` L133: Audio mit
 Zeitbezug, Handschrift zu Text, Elemente-Bibliothek, Präsentation — und
 die verbliebenen Reste (getippter Text im gesicherten Bild, Verbinder,
-Auswahl über mehrere Blätter, Suche über mehrere Dokumente, gesperrte
-Marken im Inspector).
+Auswahl über mehrere Blätter, gesperrte Marken im Inspector, die
+Schalensuche mit Stellen).

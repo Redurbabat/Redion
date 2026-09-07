@@ -2009,6 +2009,38 @@ const ANSICHTEN: Record<string, {
     }
   },
 
+  dokumentsuche: {
+    titel: 'Die Suche über mehrere Dokumente (E487)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      Store.setMeta('dokFindAlle', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const mach = (name: string, icon: string, texte: string[]) => {
+        const seite = Store.addPage(null, { text: name, icon });
+        texte.forEach((t, i) => Store.addBlock(seite.id, 'pdfseite',
+          { text: '', nr: i + 1, vonSeiten: texte.length, bw: 595, bh: 842,
+            quelleId: 'q-' + name, raumVersion: 1, suchtext: t }));
+        Store.updateBlock(seite.id, { dokumentModus: true });
+        return seite;
+      };
+      const offen = mach('Elektrotechnik — Skript', '📕', [
+        'Kapitel 3 — Das Ohmsche Gesetz beschreibt den Zusammenhang von Spannung, Strom und Widerstand.',
+        'Übungen zum Kapitel']);
+      mach('Mitschrift 12. Mai', '📗', ['Tafelbild',
+        'Der Lehrer hat das Ohmsche Gesetz an einem Beispiel gerechnet: U = R · I']);
+      mach('Prüfungsstoff', '📘', ['Ohmsches Gesetz, Kirchhoff, Leistung']);
+      mach('Laborbericht', '📙', ['Messreihe 1', 'Ohmsches Gesetz überprüft, Abweichung 2 %']);
+      App.oeffne(offen.id);
+      await new Promise(r => setTimeout(r, 1400));
+      document.querySelector<HTMLElement>('.document-find-button')?.click();
+      await new Promise(r => setTimeout(r, 300));
+      const feld = document.querySelector<HTMLInputElement>('[data-document-find]');
+      if (feld) { feld.value = 'Ohmsche'; feld.dispatchEvent(new Event('input', { bubbles: true })); }
+      await new Promise(r => setTimeout(r, 900));
+    }
+  },
+
   notizhefteFach: {
     titel: 'Ein offenes Fach in der Listenform (E265)',
     bauen: async () => {
