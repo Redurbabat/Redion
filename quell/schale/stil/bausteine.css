@@ -3678,6 +3678,18 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 /* Die Frage mit mehreren Antworten. Jeder Knopf trägt seinen Hinweis mit —
    bei einer Entscheidung, die Daten kostet, soll niemand raten müssen, was
    hinter der Beschriftung steckt. */
+/* DIE WAHL MIT VIELEN KNÖPFEN (E486). Nachgemessen mit elf Knöpfen: das
+   Fenster wurde 1019 px hoch in einem 900 px hohen Bildschirm, und weil
+   `.finder` abschneidet (`overflow:hidden`) und am Rechner keine Höhengrenze
+   hat, war der letzte Knopf — „Eigene Farben zurücksetzen" — nicht
+   anklickbar. Am Telefon greift `max-height:88vh`, und dann schnitt dieselbe
+   Zeile ab. Beides stumm.
+   `100%` und nicht `vh`: `.overlay` ist ein Flex-Behälter mit `inset:0` und
+   einem oberen Polster (14vh am Rechner, höchstens 72 px am Telefon), und
+   ein Prozentsatz rechnet gegen SEINEN Inhaltskasten — der das Polster
+   schon abzieht. Eine Zahl in `vh` hätte für jede der beiden Lagen eine
+   andere sein müssen, und eine davon wäre falsch gewesen. */
+.finder.wahl{max-height:calc(100% - 24px); overflow-y:auto}
 .wahl-knoepfe{display:flex; flex-direction:column; gap:8px; padding:4px 18px 18px}
 .wahl-knoepfe button{display:flex; flex-direction:column; align-items:flex-start; gap:3px;
                      text-align:left; padding:11px 14px; border:1px solid var(--line);

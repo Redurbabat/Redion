@@ -6407,7 +6407,7 @@ Lauf, der der Presse nicht gehört. Derselbe Stand wie bei L119.
 
 ---
 
-L133 — Was am PDF-Teil gegenüber GoodNotes noch fehlt (Stand nach G18)
+L133 — Was am PDF-Teil gegenüber GoodNotes noch fehlt (Stand nach G19)
 --------------------------------------------------------------------------
 
 Redurs Auftrag vom 7. September (E465): der PDF-Teil 1:1 wie GoodNotes,
@@ -6439,8 +6439,23 @@ Zeichnen (nach G1, E465):
     Redion kein Werkzeug, sondern ein Stil des Stifts (E375) — er stünde
     in einer Reihe mit Werkzeugen und meinte etwas anderes als sie.
     `test455 §2`.
-  · **Farbsets** speichern und zurücksetzen — heute sieben feste und vier
-    eigene Tupfer.
+  · ~~**Farbsets** speichern und zurücksetzen~~ — **GESCHLOSSEN mit E486.**
+    Ein Farbsatz ist die benannte Abschrift der vier eigenen Tupfer:
+    sichern, laden, löschen, zurücksetzen. Sie stehen hinter dem „+" der
+    Farbgruppe, zusammen mit dem Farbwähler — einen EIGENEN Knopf konnte
+    die Leiste nicht tragen: nachgemessen fasst ihre Zubehörzeile bei
+    596 px genau vierzehn, und sie war mit vierzehn voll. Das ist zugleich
+    der Weg, den GoodNotes geht (ein Farbknopf, ein Feld). Höchstens acht
+    Sätze, und der neunte bekommt eine Absage statt dass still der älteste
+    verschwindet. Die Sätze liegen in `meta` und
+    reisen damit in jeder Sicherung mit (`test458 §4`).
+    **Und die Zahl in dieser Zeile war falsch:** es sind FÜNF feste Farben,
+    nicht sieben — nachgezählt in `Marken.FARBEN`. E21 gilt auch für die
+    eigenen Notizen.
+    Der Bogen fand nebenbei zwei ältere Fehler: die Tupfer standen nach dem
+    Wählen verkehrt herum (ein `reverse()` zu viel, E351), und `Dialog.wahl`
+    schnitt bei elf Knöpfen den letzten ab, ohne es zu sagen. Beide behoben.
+    `test458`.
 
 Auswahl (nach G2, E466; Sperre nachgezogen in E473): Drehen,
 Ausschneiden, nach vorn und hinten, Sperren, Kritzel-Löschen und

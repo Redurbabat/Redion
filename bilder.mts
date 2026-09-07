@@ -1975,6 +1975,40 @@ const ANSICHTEN: Record<string, {
     }
   },
 
+  farbsaetze: {
+    titel: 'Farbsätze — die eigenen Farben unter einem Namen (E486)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      /* Drei gesicherte Sätze und vier eigene Tupfer — der Zustand, in dem
+         der Dialog etwas zu zeigen hat. */
+      Store.setMeta('zeichnen:farben', ['#8e44ad', '#16a085', '#e67e22', '#2c3e50']);
+      Store.setMeta('zeichnen:farbsaetze', [
+        { name: 'Korrektur', farben: ['#d81b60', '#8e24aa'] },
+        { name: 'Mitschrift', farben: ['#1e88e5', '#43a047', '#fb8c00'] },
+        { name: 'Zeichnung', farben: ['#455a64'] }
+      ]);
+      const s = Store.addPage(null, { text: 'Farben sortieren', icon: '🎨' });
+      const blatt = Store.addBlock(s.id, 'blatt', { text: '', papier: 'kariert' });
+      Store.addBlock(blatt.id, 'text', { text: 'Korrekturfarben getrennt von den Mitschriftfarben' });
+      Store.updateBlock(blatt.id, { marken: [
+        { id: 'a', art: 'stift', farbe: '#8e44ad', breite: 2.4, pts: [[70, 150], [230, 150]] },
+        { id: 'b', art: 'stift', farbe: '#16a085', breite: 2.4, pts: [[70, 185], [300, 185]] },
+        { id: 'c', art: 'marker', farbe: '#e67e22', breite: 16, pts: [[70, 230], [340, 230]] }
+      ] });
+      App.oeffne(s.id);
+      await new Promise(r => setTimeout(r, 900));
+      /* Erst der Stift — die Farbgruppe steht nur bei einem Werkzeug, das
+         färbt (E356). Dann das „+", das seit E486 zu allem führt, was Farbe
+         ist: Farbwähler und Farbsätze in einer Wahl. */
+      document.querySelector<HTMLElement>('.blatt-werk [data-wz="stift"]')?.click();
+      await new Promise(r => setTimeout(r, 250));
+      document.querySelector<HTMLElement>('.blatt-werk .blatt-farbe-neu')?.click();
+      await new Promise(r => setTimeout(r, 400));
+    }
+  },
+
   notizhefteFach: {
     titel: 'Ein offenes Fach in der Listenform (E265)',
     bauen: async () => {

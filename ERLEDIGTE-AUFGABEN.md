@@ -4174,8 +4174,42 @@ dreimal weitergedreht (es sind jetzt fünf), die Formen wurden abgezählt
 nachtragen. Die Lehre steht im Lauf daneben: wer eine Zahl erfragen kann,
 soll sie erfragen.
 
+**Farbsätze (E486, test458).** Der letzte Punkt unter „Zeichnen" in L133.
+Ein Farbsatz ist die benannte Abschrift der vier eigenen Tupfer — sichern,
+laden, löschen, zurücksetzen. Höchstens acht; der neunte bekommt eine
+Absage, statt dass still der älteste verschwindet.
+
+Sie bekamen KEINEN eigenen Knopf, und das hat die Messung entschieden:
+`test351` warf den ersten Entwurf um, weil die Zeichenleiste damit in drei
+Zeilen stand statt zwei. Nachgemessen fasst die Zubehörzeile bei 596 px
+genau vierzehn Knöpfe und war mit vierzehn voll — ein fünfzehnter passt
+bei keiner Breite. Also führt jetzt EIN Farbknopf zu allem, was Farbe ist,
+mit dem Farbwähler als erstem Eintrag. Das ist zugleich der Weg, den
+GoodNotes selbst geht. Die Sätze liegen in `meta` und reisen deshalb in
+jeder Sicherung mit, was der Lauf in der echten Sicherung nachsieht.
+
+Der Bogen fand dabei ZWEI ältere Fehler, und keinen davon fand das
+Nachdenken. Der erste kam aus dem Prüflauf: die eigenen Tupfer standen
+nach dem Wählen einer Farbe verkehrt herum — ein `reverse()` zu viel aus
+E351, mit der Folge, dass die soeben gewählte Farbe rechts stand und nach
+dem nächsten Neuzeichnen links. Der zweite kam aus dem Bild: mit acht
+Sätzen wurde die Wahl 1019 px hoch in einem 900 px hohen Bildschirm, und
+weil `.finder` abschneidet, war der letzte Knopf — ausgerechnet „Eigene
+Farben zurücksetzen" — nicht anklickbar. Die Wahl rollt jetzt.
+
+Und die Lückenzeile selbst war falsch: sie sprach von „sieben festen
+Farben", es sind fünf. Nachgezählt, nicht erinnert (E21).
+
+**Ein roter Lauf ausserhalb des Bogens (§46).** `test265` war rot und
+schon vor diesem Bogen: er las den Merker-Knopf als Textzeichen „★" —
+E460 hat daraus dasselbe SVG-Band gemacht, das die Kopfleiste führt, und
+seither ist der Text leer. Wieder eine Prüfung, die die alte Form
+auswendig kannte. Sie misst jetzt, was §38 wirklich verlangt: dass sich
+die FORM ändert (`fill` von `none` auf `currentColor`), nicht nur die
+Farbe.
+
 **Was offen bleibt,** steht ehrlich in `LUECKEN.md` L133: Audio mit
 Zeitbezug, Handschrift zu Text, Elemente-Bibliothek, Präsentation — und
-die verbliebenen Reste (getippter Text im gesicherten Bild, Farbsets,
-Verbinder, Auswahl über mehrere Blätter, Suche über mehrere Dokumente,
-gesperrte Marken im Inspector).
+die verbliebenen Reste (getippter Text im gesicherten Bild, Verbinder,
+Auswahl über mehrere Blätter, Suche über mehrere Dokumente, gesperrte
+Marken im Inspector).

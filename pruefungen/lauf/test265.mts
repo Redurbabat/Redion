@@ -341,11 +341,22 @@ console.log('\n5 · Der Stern sitzt an der Karte');
 /* Das Heft liegt im Fach — sein Stern also auch. */
 await seite.locator(`.bib-deckel[data-fach="${ids.fach}"]`).click();
 await seite.waitForTimeout(300);
+/* DIE FORM STECKT SEIT E460 IM SVG, NICHT MEHR IM ZEICHEN.
+   Diese Zusage las bis dahin `textContent` und erwartete „★". E460 hat
+   „★"/„☆" durch DASSELBE Merkzeichen ersetzt, das auch die Kopfleiste
+   führt — ein Band als SVG, gefüllt oder offen. Seither ist der Text des
+   Knopfes leer, und die Zusage fiel, ohne dass etwas kaputt war: sie
+   kannte die alte Form auswendig (dieselbe Sorte wie in E485).
+   Geprüft wird jetzt, was §38 wirklich verlangt — dass sich die FORM
+   ändert und nicht nur die Farbe: `fill="none"` vorher, `currentColor`
+   nachher. */
 const sternProbe = await seite.evaluate((a: any) => {
+  const fuellung = (k: Element | null): string =>
+    k?.querySelector('svg path')?.getAttribute('fill') ?? (k?.textContent || '').trim();
   const stern = document.querySelector<HTMLElement>(`[data-stern="${a.h1}"]`);
   const vorher = {
     da: !!stern, gedrueckt: stern?.getAttribute('aria-pressed'),
-    titel: stern?.title || ''
+    titel: stern?.title || '', form: fuellung(stern ?? null)
   };
   stern?.click();
   return new Promise(f => setTimeout(() => {
@@ -353,13 +364,14 @@ const sternProbe = await seite.evaluate((a: any) => {
     f({ vorher,
         favorit: !!Store.getBlock(a.h1)?.favorite,
         gedrueckt: nachher?.getAttribute('aria-pressed'),
-        glyph: (nachher?.textContent || '').trim() });
+        form: fuellung(nachher ?? null) });
   }, 400));
 }, ids);
-p('Klick auf ☆ setzt favorite, aria-pressed und die FORM ★ (§38 — nicht nur Farbe)',
+p('Klick auf den Merker setzt favorite, aria-pressed und die FORM (§38 — nicht nur Farbe)',
   (sternProbe as any).vorher.da && (sternProbe as any).vorher.gedrueckt === 'false' &&
   (sternProbe as any).favorit && (sternProbe as any).gedrueckt === 'true' &&
-  (sternProbe as any).glyph === '★', JSON.stringify(sternProbe));
+  (sternProbe as any).vorher.form !== (sternProbe as any).form &&
+  ['currentColor', '★'].includes((sternProbe as any).form), JSON.stringify(sternProbe));
 await seite.locator('[data-zurueck]').click();
 await seite.waitForTimeout(300);
 p('Der Favoriten-Reiter zählt ehrlich und zeigt genau die gesternten Hefte',

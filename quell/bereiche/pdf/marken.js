@@ -93,6 +93,19 @@ const Marken = (() => {
     ];
     const STIL_VORGABE = 'fueller';
     const HOECHSTENS_EIGENE_FARBEN = 4;
+    /* WIE VIELE FARBSAETZE (E486).
+  
+       Acht war zuerst geraten („passt schon in einen Dialog"), und das Bild
+       hat es widerlegt: mit acht Saetzen wurde die Wahl 1019 px hoch in einem
+       900 px hohen Fenster, und der letzte Knopf war nicht anklickbar. Das
+       war ein Fehler im Dialog, nicht in der Zahl — er ist behoben (die Wahl
+       rollt jetzt, siehe `dialog.ts`), und danach nachgemessen: acht Saetze
+       plus die drei festen Eintraege sind elf Knoepfe, das Fenster bleibt bei
+       750 px im Bild, und der letzte ist auf beiden Groessen erreichbar.
+  
+       Wer den NEUNTEN sichern will, bekommt es gesagt — nicht stillschweigend
+       den aeltesten weggeworfen (§35). */
+    const HOECHSTENS_FARBSAETZE = 8;
     /* DIE SCHRIFT AUF DEM BLATT (E360, L115 Punkt 6): dieselben fuenf Familien
        wie am Block (E101, Register.textstile), hier als Stapel fuer SVG —
        Attribute kennen keine CSS-Variablen, und der Druck liest sie roh.
@@ -2664,22 +2677,120 @@ const Marken = (() => {
             kritzelAn: () => kritzel };
         return steuerung;
     };
+    /* ────────────────────────────────────────────────────────────────────── *
+     * EINE STELLE, DIE DIE TUPFER PRÜFT (E486)
+     *
+     * Bis hierher schrieb nur `eigeneFarbeMerken` diese Liste — eine Tür,
+     * eine Prüfung. Mit den Farbsätzen kommen drei weitere dazu (sichern,
+     * laden, zurücksetzen), und jede hätte ihre eigene Prüfung mitgebracht.
+     * Drei Prüfungen für dasselbe laufen auseinander, und niemand sieht,
+     * welche gilt (§8). Also steht sie EINMAL hier.
+     *
+     * KLEINSCHREIBUNG IST KEIN SCHÖNHEITSSCHRITT. `data-c` wird zeichenweise
+     * mit der Farbe der Fläche verglichen (`node.dataset.c === farbe`), und
+     * die kommt vom Farbwähler immer klein. Ein Tupfer `#AABBCC` in einer
+     * eingespielten Sicherung leuchtete deshalb nie, obwohl er die Farbe war.
+     * ────────────────────────────────────────────────────────────────────── */
+    const farbenRein = (roh) => {
+        if (!Array.isArray(roh))
+            return [];
+        const rein = [];
+        for (const eintrag of roh) {
+            const wert = String(eintrag ?? '').toLowerCase();
+            if (!/^#[0-9a-f]{6}$/.test(wert))
+                continue;
+            /* Eine der fünf festen Farben wäre der zweite Knopf für dieselbe
+               Farbe — beide leuchteten, und einer wäre überflüssig. */
+            if (FARBEN.includes(wert))
+                continue;
+            if (rein.includes(wert))
+                continue;
+            rein.push(wert);
+            if (rein.length >= HOECHSTENS_EIGENE_FARBEN)
+                break;
+        }
+        return rein;
+    };
+    const farbenSetzen = (roh) => {
+        const rein = farbenRein(roh);
+        if (typeof Store !== 'undefined') {
+            try {
+                Store.setMeta('zeichnen:farben', rein);
+            }
+            catch { /* nur diese Sitzung */ }
+        }
+        return rein;
+    };
     /** Die zuletzt gewaehlten eigenen Farben — hoechstens vier, gemerkt als Meta. */
-    const eigeneFarben = () => {
+    const eigeneFarben = () => farbenRein(typeof Store === 'undefined' ? [] : Store.getMeta('zeichnen:farben'));
+    const eigeneFarbeMerken = (wert) => farbenSetzen([wert, ...eigeneFarben()]);
+    /** Ein Name, mit dem sich arbeiten lässt: ohne Rand, ohne Zeilenumbrüche, kurz. */
+    const satzName = (roh) => String(roh ?? '').replace(/\s+/g, ' ').trim().slice(0, 40);
+    const farbsaetze = () => {
         if (typeof Store === 'undefined')
             return [];
-        const roh = Store.getMeta('zeichnen:farben');
-        return Array.isArray(roh)
-            ? roh.map(String).filter(v => /^#[0-9a-f]{6}$/i.test(v)).slice(0, HOECHSTENS_EIGENE_FARBEN) : [];
+        const roh = Store.getMeta('zeichnen:farbsaetze');
+        if (!Array.isArray(roh))
+            return [];
+        const raus = [];
+        for (const eintrag of roh) {
+            const name = satzName(eintrag?.name);
+            if (!name)
+                continue;
+            if (raus.some(s => s.name.toLowerCase() === name.toLowerCase()))
+                continue;
+            raus.push({ name, farben: farbenRein(eintrag?.farben) });
+            if (raus.length >= HOECHSTENS_FARBSAETZE)
+                break;
+        }
+        return raus;
     };
-    const eigeneFarbeMerken = (wert) => {
-        const liste = [wert, ...eigeneFarben().filter(v => v.toLowerCase() !== wert.toLowerCase())]
-            .filter(v => !FARBEN.includes(v.toLowerCase()))
-            .slice(0, HOECHSTENS_EIGENE_FARBEN);
-        if (typeof Store !== 'undefined')
-            Store.setMeta('zeichnen:farben', liste);
-        return liste;
+    const farbsaetzeSchreiben = (liste) => {
+        const rein = liste.slice(0, HOECHSTENS_FARBSAETZE);
+        if (typeof Store !== 'undefined') {
+            try {
+                Store.setMeta('zeichnen:farbsaetze', rein);
+            }
+            catch { /* nur diese Sitzung */ }
+        }
+        return rein;
     };
+    /**
+     * Einen Satz ablegen. Gleicher Name ersetzt — DIE FRAGE DANACH STELLT DER
+     * AUFRUFER, nicht diese Funktion: eine Speicherfunktion, die manchmal
+     * fragt und manchmal nicht, ist an keiner Stelle vorhersehbar.
+     * Gibt `null` zurück, wenn die Liste voll ist und der Name neu wäre —
+     * damit der Aufrufer es SAGEN kann, statt dass hier still nichts geschieht.
+     */
+    const farbsatzSichern = (roh, farben = eigeneFarben()) => {
+        const name = satzName(roh);
+        if (!name)
+            return null;
+        const liste = farbsaetze();
+        const stelle = liste.findIndex(s => s.name.toLowerCase() === name.toLowerCase());
+        const satz = { name, farben: farbenRein(farben.slice()) };
+        if (stelle >= 0) {
+            liste[stelle] = satz;
+            return farbsaetzeSchreiben(liste);
+        }
+        if (liste.length >= HOECHSTENS_FARBSAETZE)
+            return null;
+        return farbsaetzeSchreiben([...liste, satz]);
+    };
+    const farbsatzLoeschen = (roh) => {
+        const name = satzName(roh).toLowerCase();
+        return farbsaetzeSchreiben(farbsaetze().filter(s => s.name.toLowerCase() !== name));
+    };
+    /** Die Farben eines Satzes zu den Tupfern machen. Unbekannter Name: nichts tut sich. */
+    const farbsatzLaden = (roh) => {
+        const name = satzName(roh).toLowerCase();
+        const satz = farbsaetze().find(s => s.name.toLowerCase() === name);
+        if (!satz)
+            return null;
+        return farbenSetzen(satz.farben);
+    };
+    /** Zurück auf den Auslieferungsstand: keine eigenen Tupfer. Die Sätze bleiben. */
+    const farbenZuruecksetzen = () => farbenSetzen([]);
     const leiste = (controls, extra = '') => {
         /* WELCHE FORM DER FORMEN-KNOPF FÜHRT (E375). Das ist Zustand der
            LEISTE, nicht der Fläche: die Fläche kennt nur `line` oder
@@ -2854,7 +2965,24 @@ const Marken = (() => {
                    dahinter der Weg zum Farbwaehler des Browsers. */
                 eigeneFarben().map(value => `<button class="blatt-farbe blatt-farbe-eigen" data-gruppe="farbe" ` +
                     `data-c="${value}" style="background:${value}" title="Eigene Farbe ${value}"></button>`).join('') +
-                '<button class="blatt-farbe-neu" data-act="farbe" data-gruppe="farbe" title="Andere Farbe wählen" aria-label="Andere Farbe wählen">+</button>' +
+                /* DAS „+" IST DIE TÜR ZU ALLEM, WAS FARBE IST (E486).
+          
+                   Zuerst stand hier ein ZWEITER Knopf für die Farbsätze. Nachgemessen
+                   bei 1360 px Fenster (die Leiste ist dann 596 px breit): die
+                   Zubehörzeile fasst genau vierzehn Knöpfe und war mit vierzehn voll —
+                   der fünfzehnte kippte sie in eine dritte Zeile, gegen E359 und
+                   `test351`. Auch schmaler ging es nicht: vierzehn Knöpfe und ihre
+                   Abstände füllen die 580 px vollständig aus.
+          
+                   Der Weg heraus ist der, den GoodNotes ohnehin geht: dort führt EIN
+                   Farbknopf in ein Feld, in dem sowohl der Farbwähler als auch die
+                   Paletten stehen. Also hier auch — „+" öffnet die Wahl, ihr erster
+                   Eintrag ist der Farbwähler. Ein Tipp mehr für eine eigene Farbe,
+                   kein Tipp mehr für die fünf festen und die eigenen Tupfer, und die
+                   Leiste bleibt bei zwei Zeilen. */
+                '<button class="blatt-farbe-neu" data-act="farbe" data-gruppe="farbe" ' +
+                'title="Farben — eine eigene wählen oder Farbsätze sichern, laden, zurücksetzen" ' +
+                'aria-label="Farben: eigene Farbe wählen oder Farbsätze">+</button>' +
                 '<span class="blatt-trenn" data-gruppe="breite"></span>' +
                 /* Doppelter Massstab wie im Menüband: mit der wahren Stärke sahen
                    „dünn" (1,2 px) und „mittel" (2,4 px) gleich aus, weil der Boden
@@ -2889,6 +3017,184 @@ const Marken = (() => {
            ist nur zu merken, dass GEROLLT wird `tools`, gezeichnet aber an
            `row` — deshalb `an: row`. */
         Rollrand.binde(tools, { art: 'mehr', an: row });
+        /* DIE EIGENEN TUPFER NEU SETZEN — EINE STELLE (E486).
+    
+           Es gibt jetzt zwei Wege hierher: der Farbwähler (E351) und das Laden
+           oder Zurücksetzen eines Farbsatzes. Der zweite kam mit E486 dazu, und
+           er hätte die zwölf Zeilen aus dem Farbwähler abgeschrieben. Zwei
+           Abschriften desselben Aufbaus laufen beim ersten neuen Attribut
+           auseinander — also steht er hier einmal.
+    
+           UND DABEI FIEL EIN ALTER FEHLER AUF (E351, gefunden von `test458`).
+           Der Farbwähler hängte die Tupfer RÜCKWÄRTS ein — `reverse()`, und
+           dann jeden vor das „+". Das ist einmal zu viel gedreht: `before()`
+           setzt jeden neuen direkt vor das „+", also hinter den vorigen; die
+           Liste kommt vorwärts heraus, wenn man sie vorwärts durchgeht.
+           Rückwärts kam sie rückwärts heraus — die soeben gewählte Farbe stand
+           ganz rechts, und nach dem nächsten Start (die erste Zeichnung der
+           Leiste dreht nicht) plötzlich ganz links. Zwei Anzeigen desselben
+           Zustands, und beide anders (E212). Also vorwärts. */
+        const tupferZeigen = (liste, aktiv) => {
+            tools.querySelectorAll('.blatt-farbe-eigen').forEach(node => node.remove());
+            const neuKnopf = tools.querySelector('.blatt-farbe-neu');
+            liste.forEach(farbe => {
+                const k = document.createElement('button');
+                k.className = 'blatt-farbe blatt-farbe-eigen';
+                k.dataset.gruppe = 'farbe';
+                k.dataset.c = farbe;
+                k.style.background = farbe;
+                k.title = 'Eigene Farbe ' + farbe;
+                neuKnopf?.before(k);
+            });
+            if (aktiv)
+                tools.querySelectorAll('.blatt-farbe').forEach(node => node.classList.toggle('on', node.dataset.c === aktiv));
+        };
+        /* DER DIALOG HINTER DEM „+" (E486).
+    
+           Sein erster Eintrag ist der Farbwähler — der Weg, den E351 gebaut hat
+           und der hier ein Tipp tiefer liegt als vorher. Der Grund steht oben am
+           Knopf: die Zubehörzeile fasst keinen fünfzehnten Knopf.
+    
+           DREI SACHEN AN IHM SIND ABSICHT:
+    
+           1. Er zeigt die Farben eines Satzes als HEXWERTE, nicht als Punkte.
+              `Dialog.wahl` escapt seinen Text — und das bleibt so, denn genau
+              dort sass die Lücke aus E112. Ein Satz „Rot, Blau" wäre gelogen
+              (welches Rot?), die Werte sind es nicht. Nebenbei ist es die Form,
+              die §38 verlangt: nicht nur über Farbe.
+           2. Laden ändert die TUPFER, nicht die Farbe, mit der gerade gezeichnet
+              wird. Wer mitten im Satz die Palette wechselt, will nicht, dass ihm
+              der nächste Strich die Farbe wechselt.
+           3. Zurücksetzen sagt hinterher, wenn die Farbe der Hand nicht mehr in
+              der Leiste steht. Sonst stünde plötzlich kein Tupfer hervorgehoben
+              da, und die Leiste sähe kaputt aus, obwohl alles stimmt (E212). */
+        /** Der Farbwähler des Browsers — kein eigener Regler. Der Wert kommt als
+         *  #rrggbb, genau das Format der Katalogfarben. */
+        const farbwaehlerOeffnen = () => {
+            const feld = document.createElement('input');
+            feld.type = 'color';
+            feld.value = Zeichenziel.farbeVon?.(controls) || FARBEN[0];
+            feld.style.position = 'fixed';
+            feld.style.opacity = '0';
+            feld.style.pointerEvents = 'none';
+            document.body.appendChild(feld);
+            const uebernehmen = () => {
+                const wert = String(feld.value || '').toLowerCase();
+                feld.remove();
+                if (!/^#[0-9a-f]{6}$/.test(wert))
+                    return;
+                const liste = eigeneFarbeMerken(wert);
+                controls.setzeFarbe(wert);
+                try {
+                    Zeichenziel.uebernehmeFarbe(controls, wert);
+                }
+                catch { /* egal */ }
+                tupferZeigen(liste, wert);
+            };
+            feld.addEventListener('change', uebernehmen, { once: true });
+            feld.addEventListener('cancel', () => feld.remove(), { once: true });
+            feld.click();
+        };
+        const farbenDialog = async () => {
+            /* OHNE DIALOG BLEIBT DER ALTE WEG. `Dialog` liegt in der Schale; ein
+               Prüflauf, der nur den Kern hochfährt, hätte sonst gar keinen
+               Farbwähler mehr — und E351 wäre stillschweigend weg. */
+            if (typeof Dialog === 'undefined') {
+                farbwaehlerOeffnen();
+                return;
+            }
+            const jetzt = eigeneFarben();
+            const saetze = farbsaetze();
+            const farbeJetzt = () => {
+                try {
+                    return String(Zeichenziel.farbeVon?.(controls) || FARBEN[0]);
+                }
+                catch {
+                    return FARBEN[0];
+                }
+            };
+            const zeigen = (liste) => liste.length ? liste.join(', ') : 'ohne eigene Farben';
+            const wahl = await Dialog.wahl({
+                titel: 'Farben',
+                text: 'Die fünf festen Farben stehen immer in der Leiste. Daneben stehen bis zu vier '
+                    + 'eigene — und ein Farbsatz ist eine benannte Abschrift genau dieser vier.\n\n'
+                    + 'Eigene Farben gerade: ' + zeigen(jetzt),
+                knoepfe: [
+                    { id: 'waehlen', text: 'Andere Farbe wählen',
+                        hinweis: 'Der Farbwähler des Systems — die gewählte Farbe kommt danach als Tupfer dazu' },
+                    ...saetze.map(satz => ({ id: 'laden:' + satz.name, text: satz.name, hinweis: zeigen(satz.farben) })),
+                    { id: 'sichern', text: 'Diese Farben sichern',
+                        hinweis: jetzt.length
+                            ? 'Legt die ' + jetzt.length + ' eigenen Farben unter einem Namen ab'
+                            : 'Legt einen leeren Satz ab — nur die fünf festen Farben' },
+                    ...(saetze.length ? [{ id: 'entfernen', text: 'Einen Satz löschen',
+                            hinweis: 'Die Farben selbst bleiben, nur der Name geht weg' }] : []),
+                    { id: 'zuruecksetzen', text: 'Eigene Farben zurücksetzen',
+                        hinweis: 'Leert die Tupfer. Die fünf festen Farben und alle gesicherten Sätze bleiben.' }
+                ]
+            });
+            if (!wahl)
+                return;
+            if (wahl === 'waehlen') {
+                farbwaehlerOeffnen();
+                return;
+            }
+            if (wahl.startsWith('laden:')) {
+                const liste = farbsatzLaden(wahl.slice(6));
+                if (liste)
+                    tupferZeigen(liste, farbeJetzt());
+                return;
+            }
+            if (wahl === 'sichern') {
+                const name = await Dialog.frage('Farbsatz sichern — unter welchem Namen?', '');
+                if (name === null)
+                    return;
+                if (!satzName(name)) {
+                    UI.toast('Ein Farbsatz braucht einen Namen.');
+                    return;
+                }
+                const schon = farbsaetze().some(s => s.name.toLowerCase() === satzName(name).toLowerCase());
+                if (schon) {
+                    const ersetzen = await Dialog.wahl({
+                        titel: 'Den Satz ersetzen?',
+                        text: 'Es gibt schon einen Farbsatz „' + satzName(name) + '".',
+                        knoepfe: [
+                            { id: 'ja', text: 'Ersetzen', hinweis: 'Die bisherigen Farben dieses Satzes gehen weg' },
+                            { id: 'nein', text: 'Abbrechen', hinweis: 'Nichts ändert sich' }
+                        ]
+                    });
+                    if (ersetzen !== 'ja')
+                        return;
+                }
+                /* `null` heisst: voll. Das wird GESAGT — ein still verschluckter
+                   Speicherbefehl ist schlimmer als eine Absage (§35). */
+                if (!farbsatzSichern(name)) {
+                    UI.toast('Es passen höchstens ' + HOECHSTENS_FARBSAETZE + ' Farbsätze — lösche zuerst einen.');
+                    return;
+                }
+                UI.toast('Farbsatz „' + satzName(name) + '" gesichert');
+                return;
+            }
+            if (wahl === 'entfernen') {
+                const welcher = await Dialog.wahl({
+                    titel: 'Welchen Satz löschen?',
+                    text: 'Die Farben bleiben in der Leiste stehen — nur der gesicherte Name geht weg.',
+                    knoepfe: saetze.map(satz => ({ id: 'weg:' + satz.name, text: satz.name, hinweis: zeigen(satz.farben) }))
+                });
+                if (!welcher.startsWith('weg:'))
+                    return;
+                farbsatzLoeschen(welcher.slice(4));
+                UI.toast('Farbsatz „' + satzName(welcher.slice(4)) + '" gelöscht');
+                return;
+            }
+            if (wahl === 'zuruecksetzen') {
+                const vorher = farbeJetzt();
+                tupferZeigen(farbenZuruecksetzen(), vorher);
+                if (!FARBEN.includes(vorher.toLowerCase())) {
+                    UI.toast('Eigene Farben zurückgesetzt — gezeichnet wird weiter in ' + vorher);
+                }
+            }
+        };
         const updateState = (next) => {
             const undo = tools.querySelector('[data-act="undo"]');
             const redo = tools.querySelector('[data-act="redo"]');
@@ -3229,42 +3535,7 @@ const Marken = (() => {
                     return;
                 }
                 if (target.dataset.act === 'farbe') {
-                    /* Der Farbwaehler des Browsers — kein eigener Regler. Der Wert
-                       kommt als #rrggbb, genau das Format der Katalogfarben. */
-                    const feld = document.createElement('input');
-                    feld.type = 'color';
-                    feld.value = Zeichenziel.farbeVon?.(controls) || FARBEN[0];
-                    feld.style.position = 'fixed';
-                    feld.style.opacity = '0';
-                    feld.style.pointerEvents = 'none';
-                    document.body.appendChild(feld);
-                    const uebernehmen = () => {
-                        const wert = String(feld.value || '').toLowerCase();
-                        feld.remove();
-                        if (!/^#[0-9a-f]{6}$/.test(wert))
-                            return;
-                        const liste = eigeneFarbeMerken(wert);
-                        controls.setzeFarbe(wert);
-                        try {
-                            Zeichenziel.uebernehmeFarbe(controls, wert);
-                        }
-                        catch { /* egal */ }
-                        tools.querySelectorAll('.blatt-farbe-eigen').forEach(node => node.remove());
-                        const neuKnopf = tools.querySelector('.blatt-farbe-neu');
-                        liste.slice().reverse().forEach(farbe => {
-                            const k = document.createElement('button');
-                            k.className = 'blatt-farbe blatt-farbe-eigen';
-                            k.dataset.gruppe = 'farbe';
-                            k.dataset.c = farbe;
-                            k.style.background = farbe;
-                            k.title = 'Eigene Farbe ' + farbe;
-                            neuKnopf?.before(k);
-                        });
-                        tools.querySelectorAll('.blatt-farbe').forEach(node => node.classList.toggle('on', node.dataset.c === wert));
-                    };
-                    feld.addEventListener('change', uebernehmen, { once: true });
-                    feld.addEventListener('cancel', () => feld.remove(), { once: true });
-                    feld.click();
+                    void farbenDialog();
                     return;
                 }
                 /* DIE SCHRIFT (E360): Familie im Kreis, Groesse eine Stufe, Fett
@@ -3409,6 +3680,13 @@ const Marken = (() => {
     if (typeof document !== 'undefined')
         document.addEventListener('keydown', kuerzel);
     return { schicht, leiste, zeichneMarke, FARBEN, BREITEN, STIFTE, FORMEN, druckFaktor, RADIERER, TASTEN,
+        /* DIE FARBSÄTZE NACH AUSSEN (E486). Nicht, damit jemand anders eine
+           zweite Leiste baut — sondern damit der Prüflauf an derselben Rechnung
+           misst, die die Leiste benutzt. Eine Prüfung, die die Meta-Liste selbst
+           zusammensetzt, prüft ihre eigene Abschrift. */
+        HOECHSTENS_EIGENE_FARBEN, HOECHSTENS_FARBSAETZE,
+        eigeneFarben, farbenSetzen, farbenZuruecksetzen,
+        farbsaetze, farbsatzSichern, farbsatzLaden, farbsatzLoeschen,
         zwischenablage: () => zwischenablage.map(mark => clone(mark)) };
 })();
 window.Marken = Marken;

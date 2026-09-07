@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-465 Entscheidungen, E1 bis E485 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+466 Entscheidungen, E1 bis E486 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -529,6 +529,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E483** — Die Kurve mit ihrem Griff: die erste Form mit drei Punkten — und ohne ein neues Feld
 * **E484** — Treffer und Verweise sitzen genauer: gemessen statt gezählt, und ein Strich bekommt eine Trefffläche statt eines Kastens
 * **E485** — Der breite Lauf nach elf Bögen: ein Knopf lag unter der Zeichenschicht, und drei Prüfläufe kannten Anzahlen auswendig
+* **E486** — Farbsätze: die eigenen Farben unter einem Namen — und zwei alte Fehler, die dabei ans Licht kamen
 
 ---
 
@@ -38575,4 +38576,167 @@ Reihe beginnt.
 GEPRÜFT. 68 Läufe in drei Stücken; danach die Bestätigung von test87,
 test96, test100, test105, test109, test180, test202, test344, test362,
 test365 — alle grün. Dazu `npm run typecheck`, `npm run bauen:ts`,
+`node bauen.mts`.
+
+
+---
+
+E486 — Farbsätze: die eigenen Farben unter einem Namen — und zwei alte Fehler, die dabei ans Licht kamen
+--------------------------------------------------------------------------
+
+Der letzte Punkt unter „Zeichnen" in L133, und der letzte offene aus
+Redurs GoodNotes-Auftrag, der ohne einen zweiten Blockrenderer oder einen
+PDF-Schreiber auskommt:
+
+> **Farbsets** speichern und zurücksetzen — heute sieben feste und vier
+> eigene Tupfer.
+
+(Es sind FÜNF feste, nicht sieben. Nachgezählt in `Marken.FARBEN`; die
+Zeile in `LUECKEN.md` ist mit diesem Bogen berichtigt. E21 gilt auch für
+die eigenen Notizen.)
+
+## Was entschieden wurde
+
+Ein Farbsatz ist eine **benannte Abschrift der vier eigenen Tupfer** —
+nichts weiter. Kein neues Farbmodell, kein zweiter Katalog (§8): die fünf
+festen Farben bleiben die festen und gehören keinem Satz an.
+
+    zeichnen:farben       die vier Tupfer, die JETZT in der Leiste stehen
+    zeichnen:farbsaetze   [{ name, farben }] — höchstens acht
+
+Vier Griffe:
+
+    sichern       die jetzigen Tupfer unter einem Namen ablegen
+    laden         die Tupfer eines Satzes zurückholen
+    löschen       einen Namen wegnehmen; die Farben bleiben stehen
+    zurücksetzen  die Tupfer leeren — Auslieferungsstand
+
+## Und sie bekamen KEINEN eigenen Knopf — das hat die Messung entschieden
+
+Zuerst stand in der Farbgruppe ein zweiter Knopf (🎨 „Sätze") hinter dem
+„+". Er lief eine Stunde, war grün, und `test351` warf ihn um: die
+Zeichenleiste stand in DREI Zeilen statt zwei, 120 px statt unter 100 —
+gegen E359 und L115 Punkt 9.
+
+Nachgemessen bei 1360 px Fenster (die Leiste ist dann 596 px breit):
+
+    Zeile 1   elf Werkzeuge                          11 × 36 px
+    Zeile 2   undo, redo, Formart, Kritzel, Stift,
+              fünf Farben, „+", drei Strichbreiten   14 × 36 px = 504 px
+              + dreizehn Abstände                              ≈  76 px
+                                                     ───────────────────
+                                                      580 px von 580 px
+
+Die Zeile war exakt voll. Ein fünfzehnter Knopf passt bei keiner Breite —
+auch ein schmalerer nicht, denn schon die vierzehn füllen sie aus.
+
+Der Weg heraus ist der, den GoodNotes ohnehin geht: dort führt EIN
+Farbknopf in ein Feld, in dem der Farbwähler UND die Paletten stehen. Also
+hier auch. Das „+" heisst jetzt „Farben" und öffnet die Wahl; ihr erster
+Eintrag ist der Farbwähler aus E351.
+
+Was das kostet: eine eigene Farbe zu wählen ist ein Tipp mehr als vorher.
+Was es einbringt: die fünf festen und die vier eigenen Tupfer bleiben ein
+Tipp entfernt (sie sind der häufige Weg), die Leiste bleibt bei zwei
+Zeilen, und die Sätze sind da, wo ein GoodNotes-Nutzer sie sucht.
+
+Die Reihenfolge in der Wahl ist deshalb keine Geschmacksfrage: „Andere
+Farbe wählen" steht ganz oben und ist der vorgewählte Knopf.
+
+## Die Alternative, und warum sie es nicht wurde
+
+GoodNotes hat mehrere Paletten NEBENEINANDER, mit einem Reiter je Palette.
+Das wäre in Redions Leiste ein zweiter Katalog von Farben neben `FARBEN`
+und ein Umschalter, der Platz braucht, den die Leiste nicht hat — bei
+390 px stehen von 21 Knöpfen schon 15 draussen (E140). Ein Satz, der die
+VORHANDENEN vier Tupfer benennt, macht dasselbe möglich und kostet die
+Leiste gar keinen Knopf.
+
+## Was es kostet
+
+Ein Satz ist eine Abschrift, keine Verbindung: wer die Tupfer ändert,
+ändert den gesicherten Satz NICHT mit. Das ist beabsichtigt — sonst könnte
+man einen Satz nicht als Ausgangspunkt benutzen — aber es heisst, dass ein
+Satz nach dem Laden und Weiterzeichnen neu gesichert werden will.
+
+## Wo er liegt, und dass er mitreist
+
+In `meta`, wie die Tupfer selbst. `meta` ist eines der Fächer der
+Sicherung (§9), also reist ein Farbsatz in `.json` und in `.redion` mit,
+ohne dass dafür etwas zu tun wäre. `test458 §4` sieht in der echten
+Sicherung nach, statt es zu behaupten.
+
+## Und die Grenze wird GESAGT
+
+Acht Sätze. Der neunte bekommt eine Absage (`farbsatzSichern` gibt `null`,
+die Leiste sagt es), statt dass still der älteste verschwindet. Ein
+verschluckter Speicherbefehl ist schlimmer als eine Absage (§35).
+
+## Zwei alte Fehler, die dabei ans Licht kamen
+
+Beide waren älter als dieser Bogen, und beide fand nicht das Nachdenken,
+sondern das Messen und das Hinsehen.
+
+**1. Die Tupfer standen nach dem Wählen verkehrt herum.** Der Farbwähler
+aus E351 hängte sie mit `reverse()` ein und dann jeden vor das „+" — das
+ist einmal zu viel gedreht: `before()` setzt jeden neuen direkt vor das
+„+", also HINTER den vorigen. Die Folge: die soeben gewählte Farbe stand
+ganz rechts, und nach dem nächsten Neuzeichnen der Leiste (die dreht
+nicht) plötzlich ganz links. Zwei Anzeigen desselben Zustands, und beide
+anders — dieselbe Sorte Fehler wie in E212, nur innerhalb einer Leiste.
+`test458 §3` misst jetzt beide Reihenfolgen gegeneinander.
+
+**2. Die Wahl mit vielen Knöpfen schnitt ab.** `Dialog.wahl` setzt sein
+Fenster als `.finder`, und das hat `overflow:hidden` und am Rechner keine
+Höhengrenze. Gemessen mit elf Knöpfen (acht Sätze plus die drei festen
+Einträge): 1019 px hoch in einem 900 px hohen Bildschirm, der LETZTE Knopf
+— „Eigene Farben zurücksetzen" — nicht anklickbar, ohne einen Hinweis,
+dass da noch etwas ist. Am Telefon greift `max-height:88vh`, und dann
+schnitt dieselbe Zeile ab.
+
+Die Wahl trägt jetzt eine eigene Klasse (`.finder.wahl`) mit einer
+Höhengrenze und `overflow-y:auto`; jeder andere `.finder` bleibt, wie er
+war. Die Grenze steht als `calc(100% - 24px)` und nicht in `vh`, weil
+`.overlay` ein Flex-Behälter mit `inset:0` und einem oberen Polster ist
+(14vh am Rechner, höchstens 72 px am Telefon) — ein Prozentsatz rechnet
+gegen dessen Inhaltskasten und zieht das Polster damit selbst ab. Eine
+Zahl in `vh` hätte für jede der beiden Lagen eine andere sein müssen.
+
+Bis hierher hatte kein Aufrufer so viele Knöpfe; der Fehler lag also
+still. Er wäre beim nächsten Dialog mit einer langen Liste aufgewacht.
+
+**Und ein drittes, kleineres:** die Prüfung der Tupfer stand nur an einer
+Tür (`eigeneFarbeMerken`). Mit den Sätzen kämen drei weitere dazu, jede
+mit ihrer eigenen Abschrift. Sie steht jetzt einmal (`farbenRein`) —
+kleingeschrieben, ohne Dubletten, ohne die festen Farben, höchstens vier.
+Die Kleinschreibung ist kein Schönheitsschritt: `data-c` wird zeichenweise
+mit der Farbe der Fläche verglichen, und ein Tupfer `#AABBCC` aus einer
+eingespielten Sicherung leuchtete nie, obwohl er die Farbe WAR.
+
+## Das Bild
+
+`node bilder.mts farbsaetze` — die Ansicht ist neu und zeigt die Wahl mit
+drei Sätzen, am Rechner und am Telefon. Sie hat die Begründung für die
+Acht widerlegt: sie stand als „passt schon in einen Dialog" da, und auf
+dem Bild stand die Liste schon bei drei Sätzen an der Unterkante. Nach dem
+Nachmessen und der Reparatur oben passt sie — aber die Zahl steht jetzt
+mit dem Messwert daneben, nicht mit einer Vermutung.
+
+## Ein roter Lauf ausserhalb dieses Bogens (§46)
+
+`test265` war rot und schon vor diesem Bogen: er las den Merker-Knopf als
+Textzeichen „★". **E460** hat daraus dasselbe SVG-Band gemacht, das die
+Kopfleiste führt, und seither ist der Text des Knopfes leer — die Prüfung
+kannte die alte Form auswendig, dieselbe Sorte wie in E485. Sie misst
+jetzt, was §38 wirklich verlangt: dass sich die FORM ändert (`fill` von
+`none` auf `currentColor`), nicht nur die Farbe. Gegenprobe: `fill` fest
+auf `none` — rot gesehen.
+
+GEPRÜFT. `test458` mit 54 Zusagen, fünf Gegenproben rot gesehen (§55.2):
+ohne `toLowerCase`, mit weggeworfenem ältesten Satz, ohne den Weg über die
+Wahl, mit wieder eingesetztem `reverse()`, ohne die Regel `.finder.wahl`.
+Dazu `test265` (mit eigener Gegenprobe), `test351` — der Lauf, der den
+zweiten Knopf umgeworfen hat — sowie test87, test96, test100, test105,
+test109, test180, test343, test344, test356, test362, test365, test375,
+test438, test455, test456. Dazu `npm run typecheck`, `npm run bauen:ts`,
 `node bauen.mts`.

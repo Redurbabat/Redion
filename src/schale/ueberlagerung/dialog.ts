@@ -125,7 +125,14 @@ const Dialog = (() => {
     const o = document.createElement('div');
     o.className = 'overlay';
     o.innerHTML =
-      '<div class="finder" style="width:min(540px,94vw)">' +
+      /* `wahl` STATT NUR `finder` (E486). Eine Wahl kann viele Knöpfe haben —
+         die Farbsätze bringen bis zu elf. `.finder` schneidet ab
+         (`overflow:hidden`) und hat am Rechner keine Höhengrenze: gemessen
+         wurde das Fenster 1019 px hoch in einem 900 px hohen Bildschirm, und
+         der LETZTE Knopf war nicht anklickbar. Ohne Hinweis, dass da noch
+         etwas ist. Die eigene Klasse gibt dieser einen Form eine Grenze und
+         eine Rolle; jeder andere `.finder` bleibt, wie er war. */
+      '<div class="finder wahl" style="width:min(540px,94vw)">' +
         `<div class="fh">${esc(titel)}</div>` +
         '<div style="padding:16px 18px; font-size:14px; line-height:1.6; white-space:pre-wrap">' +
           esc(text) + '</div>' +
