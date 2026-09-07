@@ -4103,7 +4103,24 @@ Nebenbei fiel ein §37-Fund an: der Schliessknopf der Klappen war 36 px
 BREIT. `test448` hatte ihn nicht gefunden, weil er nur die Höhe mass — er
 misst seither beide Richtungen.
 
+**Und die Verweise treffen die Stelle (E481, test454).** Ein PDF-Ziel
+nennt oft nicht nur die Seite, sondern den Punkt darauf (`/XYZ`, `/FitH`,
+`/FitR`); genommen wurde bisher nur die Seite, und ein Querverweis mitten
+in ein Kapitel landete an dessen Anfang. Die Höhe steht jetzt seit dem
+Einlesen am Verweis, und der Sprung rollt dorthin. `/Fit` nennt keine —
+und dann steht auch keine da, dieselbe Regel wie in E477.
+
+Dazu der zweite Rest: eine gedrehte Seite zeigte ihre Verweise gar nicht,
+und im Code stand eine Zeile, die genau das tat. Der Grund dahinter war
+die Bauweise — die Schicht lag NEBEN dem Papier und wurde ihm von Hand
+nachgemessen, und bei einer gedrehten Seite misst man ihre Hülle. Statt
+eine zweite Rechnung für den gedrehten Fall zu schreiben, ist die Schicht
+INS PAPIER gezogen: `inset:0`, dort liegt sie von selbst richtig und
+dreht mit. Weniger Code, ein Fall mehr, und nebenbei einen Rahmen
+genauer.
+
 **Was offen bleibt,** steht ehrlich in `LUECKEN.md` L133: Audio mit
 Zeitbezug, Handschrift zu Text, Elemente-Bibliothek, Präsentation — und
 die verbliebenen Reste (getippter Text im gesicherten Bild, Kamera als
-Seite, Farbsets, Kurve und Verbinder, Auswahl über mehrere Blätter).
+Seite, Farbsets, Kurve und Verbinder, Auswahl über mehrere Blätter,
+Suche über mehrere Dokumente).

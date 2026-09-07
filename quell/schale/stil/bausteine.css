@@ -4971,7 +4971,9 @@ body[data-dokument="an"] .document-stage:not([data-aktiv]) .blatt-reihe{
   box-shadow:0 0 0 1px rgba(200,140,0,.55)}
 .document-treffer.ist-aktiv{background:rgba(255,120,0,.55); box-shadow:0 0 0 2px rgba(220,90,0,.9)}
 .document-treffer.ist-seite{left:0; top:0; width:6px; height:100%; border-radius:0}
-.document-verweise{position:absolute; pointer-events:none; z-index:4}
+/* Seit E481 liegt sie IM Papier —  statt von Hand gerechneter
+   Kanten, und damit dreht sie mit einer gedrehten Seite mit. */
+.document-verweise{position:absolute; inset:0; pointer-events:none; z-index:4}
 .document-verweis{position:absolute; display:block; pointer-events:auto; border-radius:3px;
   background:rgba(47,126,216,.08); outline:1px dashed rgba(47,126,216,.55); cursor:pointer;
   padding:0; border:0; min-height:0; min-width:0}

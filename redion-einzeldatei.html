@@ -13008,7 +13008,9 @@ body[data-dokument="an"] .document-stage:not([data-aktiv]) .blatt-reihe{
   box-shadow:0 0 0 1px rgba(200,140,0,.55)}
 .document-treffer.ist-aktiv{background:rgba(255,120,0,.55); box-shadow:0 0 0 2px rgba(220,90,0,.9)}
 .document-treffer.ist-seite{left:0; top:0; width:6px; height:100%; border-radius:0}
-.document-verweise{position:absolute; pointer-events:none; z-index:4}
+/* Seit E481 liegt sie IM Papier —  statt von Hand gerechneter
+   Kanten, und damit dreht sie mit einer gedrehten Seite mit. */
+.document-verweise{position:absolute; inset:0; pointer-events:none; z-index:4}
 .document-verweis{position:absolute; display:block; pointer-events:auto; border-radius:3px;
   background:rgba(47,126,216,.08); outline:1px dashed rgba(47,126,216,.55); cursor:pointer;
   padding:0; border:0; min-height:0; min-width:0}
@@ -18809,7 +18811,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 569, inhalt: '55f8240ad7478631', gebaut: '2026-09-07T16:52:59.091Z' };
+const Stand = { fassung: 574, inhalt: 'f26707c6eb75e12b', gebaut: '2026-09-07T17:09:36.511Z' };
 window.Stand = Stand;
 
 </script>
@@ -55723,6 +55725,29 @@ const PdfLeser = (() => {
                         if (ref) {
                             try {
                                 eintrag.seite = (await doc.getPageIndex(ref)) + 1;
+                                /* DIE STELLE AUF DER SEITE (E481). Ein PDF-Ziel nennt oft
+                                   nicht nur die Seite, sondern den Punkt darauf:
+                
+                                     [ref, /XYZ, links, oben, zoom]   die genaue Stelle
+                                     [ref, /FitH, oben]               eine Hoehe
+                                     [ref, /FitR, l, u, r, o]         ein Rechteck
+                
+                                   Bis E481 wurde davon nur die Seite genommen, und ein
+                                   Querverweis mitten in ein Kapitel landete an dessen
+                                   Anfang. Die Zahl steht im Raum der ZIELSEITE (unten
+                                   links, y nach oben) — gerechnet wird sie mit deren
+                                   eigenem Sichtfeld, nicht mit dem der Seite, auf der
+                                   der Verweis steht. */
+                                const art = ziel[1] && typeof ziel[1] === 'object' ? String(ziel[1].name || '') : '';
+                                const oben = art === 'XYZ' ? ziel[3]
+                                    : art === 'FitH' || art === 'FitBH' ? ziel[2]
+                                        : art === 'FitR' ? ziel[5] : null;
+                                if (typeof oben === 'number' && Number.isFinite(oben)) {
+                                    const zielSeite = await doc.getPage(eintrag.seite);
+                                    const zielSicht = zielSeite.getViewport({ scale: 1 });
+                                    const [, zy] = zielSicht.convertToViewportPoint(0, oben);
+                                    eintrag.zielY = rund(Math.max(0, zy));
+                                }
                             }
                             catch { /* kein Ziel */ }
                         }
@@ -66338,20 +66363,26 @@ const DocumentMode = (() => {
            liegen, die beim Annotieren jeden Zeiger nimmt. Beim Annotieren ist
            die Schicht weg (CSS), sonst finge sie den Stift. Gedrehte Seiten
            bleiben ohne (L133): ihr Papier steht schief, die Schicht nicht. */
+        /**
+         * Die Verweisschicht neu vermessen.
+         *
+         * SIE LIEGT SEIT E481 IM PAPIER und nicht mehr daneben. Vorher wurde
+         * sie als Geschwister der Bühne von Hand über das Papier gelegt —
+         * Kante für Kante nachgerechnet, bei jedem Rollen und jeder
+         * Grössenänderung. Das war nicht nur Arbeit, es war auch der Grund,
+         * warum eine GEDREHTE Seite ihre Verweise gar nicht erst zeigte
+         * (L133): der gemessene Kasten einer gedrehten Seite ist ihre Hülle,
+         * nicht ihr Papier, und die Prozentwerte darin sind falsch.
+         *
+         * Im Papier liegt sie mit `inset:0` von selbst richtig und dreht mit
+         * ihm mit. Zu rechnen bleibt nur die Trefffläche (E475), die in
+         * Pixeln misst und darum von der Grösse abhängt.
+         */
         const verweiseLegen = (nur) => {
             staende.forEach((stand, k) => {
                 if (nur !== undefined && k !== nur)
                     return;
-                const schicht = stand.querySelector('.document-verweise');
-                const papier = stand.querySelector('.blatt-papier');
-                if (!schicht || !papier)
-                    return;
-                const p = papier.getBoundingClientRect(), s = stand.getBoundingClientRect();
-                schicht.style.left = (p.left - s.left) + 'px';
-                schicht.style.top = (p.top - s.top) + 'px';
-                schicht.style.width = p.width + 'px';
-                schicht.style.height = p.height + 'px';
-                verweisLuft(schicht);
+                stand.querySelectorAll('.document-verweise').forEach(verweisLuft);
             });
         };
         /**
@@ -66417,8 +66448,6 @@ const DocumentMode = (() => {
             const block = documents[i];
             if (!stand || !block || block.type !== 'pdfseite' || !block.quelleId)
                 return;
-            if (SheetSpace.gedrehtVon(block))
-                return;
             /* AUS DEM BLOCK, NICHT AUS DER DATEI (E473). Seit dem Einlesen stehen
                die Verweise am Block (`verweise`, einlesen.ts); das Ansehen einer
                Seite öffnet damit keine PDF mehr. Seiten, die vor E473 eingelesen
@@ -66427,6 +66456,11 @@ const DocumentMode = (() => {
             const l = Promise.resolve(Array.isArray(block.verweise) ? block.verweise : []);
             void l.then((liste) => {
                 if (!liste.length || !stand.isConnected)
+                    return;
+                /* INS PAPIER, nicht daneben (E481): dort liegt sie mit `inset:0`
+                   von selbst richtig — und dreht mit einer gedrehten Seite mit. */
+                const papier = stand.querySelector('.blatt-papier');
+                if (!papier)
                     return;
                 stand.querySelectorAll('.document-verweise').forEach(e => e.remove());
                 const schicht = document.createElement('div');
@@ -66456,6 +66490,16 @@ const DocumentMode = (() => {
                         k.dataset.documentIndex = String(ziel);
                         k.title = 'Zu Seite ' + (ziel + 1);
                         k.setAttribute('aria-label', 'Verweis zu Seite ' + (ziel + 1));
+                        /* DIE STELLE AUF DER SEITE (E481). Nennt das PDF-Ziel nicht
+                           nur die Seite, sondern den Punkt darauf, wird auch dorthin
+                           gerollt — ein Querverweis mitten in ein Kapitel landete
+                           sonst an dessen Anfang. Der Anteil, nicht die Punktzahl:
+                           wie hoch die Seite auf dem Bildschirm steht, weiss erst
+                           `springe`. */
+                        const zielBlock = documents[ziel];
+                        const zielHoehe = zielBlock ? blattMasse(zielBlock).bh : bh;
+                        if (typeof v.zielY === 'number' && Number.isFinite(v.zielY) && zielHoehe > 0)
+                            k.dataset.documentStelle = String(Math.max(0, Math.min(1, v.zielY / zielHoehe)));
                         el = k;
                     }
                     el.classList.add('document-verweis');
@@ -66467,7 +66511,7 @@ const DocumentMode = (() => {
                 });
                 if (!schicht.childElementCount)
                     return;
-                stand.appendChild(schicht);
+                papier.appendChild(schicht);
                 verweiseLegen(i);
             });
         };
@@ -67622,7 +67666,20 @@ const DocumentMode = (() => {
             }
             const thumb = element?.closest('[data-document-index]');
             if (thumb?.dataset.documentIndex) {
-                springe(Number(thumb.dataset.documentIndex) || 0);
+                const nr = Number(thumb.dataset.documentIndex) || 0;
+                springe(nr);
+                /* UND ZUR STELLE AUF DER SEITE (E481), wenn eine genannt ist.
+                   Nach `springe`, weil die Seite erst danach gezeichnet ist und
+                   ihre Höhe hat; ein Bild später, weil die weiche Rollbewegung
+                   von `springe` sonst gegen diese hier liefe. */
+                const anteil = Number(thumb.dataset.documentStelle);
+                if (Number.isFinite(anteil) && anteil > 0.02)
+                    requestAnimationFrame(() => {
+                        const stand = staende[nr];
+                        if (!stand)
+                            return;
+                        center.scrollTop = stand.offsetTop + stand.offsetHeight * anteil - 24;
+                    });
                 return;
             }
             const original = element?.closest('[data-document-original]');

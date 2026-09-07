@@ -221,7 +221,7 @@ await s.close();
 console.log('\n§5 Quellen');
 p('`verweisLuft` steht in `document-mode.ts` und wird beim Legen gerufen',
   /const verweisLuft = /.test(lies('src/bereiche/pdf/document-mode.ts'))
-  && /verweisLuft\(schicht\);/.test(lies('src/bereiche/pdf/document-mode.ts')));
+  && /forEach\(verweisLuft\)/.test(lies('src/bereiche/pdf/document-mode.ts')));
 p('Das erzeugte JS trägt es', /verweisLuft/.test(lies('quell/bereiche/pdf/document-mode.js')));
 p('Das Stilblatt kennt die Trefffläche und die Reglerhöhe',
   /\.document-verweis::before/.test(lies('quell/schale/stil/bausteine.css'))

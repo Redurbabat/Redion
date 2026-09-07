@@ -6407,7 +6407,7 @@ Lauf, der der Presse nicht gehört. Derselbe Stand wie bei L119.
 
 ---
 
-L133 — Was am PDF-Teil gegenüber GoodNotes noch fehlt (Stand nach G14)
+L133 — Was am PDF-Teil gegenüber GoodNotes noch fehlt (Stand nach G15)
 --------------------------------------------------------------------------
 
 Redurs Auftrag vom 7. September (E465): der PDF-Teil 1:1 wie GoodNotes,
@@ -6475,13 +6475,18 @@ Offen bleibt:
   · **Treffer-Kästen sind eine Näherung** — anteilig nach Zeichen im
     Stück der Textebene, nicht gemessen; bei sehr ungleichen Buchstaben
     („iiii" neben „WWWW") sitzt der Kasten ein paar Punkte daneben.
-  · **PDF-Verweise auf gedrehten Seiten** — die Schicht liegt über dem
-    ungedrehten Papier; eine um 90° gedrehte Seite zeigt ihre Verweise
-    nicht (die Suche findet dort weiter).
+  · ~~**PDF-Verweise auf gedrehten Seiten**~~ — **GESCHLOSSEN mit E481.**
+    Die Schicht liegt nicht mehr NEBEN dem Papier (von Hand nachgemessen,
+    und bei einer gedrehten Seite misst man ihre Hülle), sondern IM
+    Papier mit `inset:0`. Dort dreht sie mit — und liegt nebenbei auf dem
+    Innenkasten, dort, wo auch das Seitenbild liegt. `test454 §3`.
   · **Suche über mehrere Dokumente** — die Suche gilt dem offenen
     Dokument; die Schalensuche (Strg P) findet Seiten, nicht Stellen.
-  · **Ziele der PDF innerhalb der Seite** (`/XYZ` mit Koordinaten) —
-    der Sprung geht zur Seite, nicht zur Stelle darauf.
+  · ~~**Ziele der PDF innerhalb der Seite**~~ — **GESCHLOSSEN mit E481.**
+    `/XYZ`, `/FitH` und `/FitR` nennen eine Höhe; sie steht seit dem
+    Einlesen als `zielY` am Verweis, und der Sprung rollt dorthin. `/Fit`
+    nennt keine — und dann steht auch keine da (dieselbe Regel wie E477).
+    `test454 §1, §2`.
   · **Verweise auf Striche antippen** — ein Strich trägt seinen Verweis,
     ist aber dünn; ein Kasten um ihn ist der bessere Träger.
 

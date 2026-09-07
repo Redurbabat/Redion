@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-460 Entscheidungen, E1 bis E480 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+461 Entscheidungen, E1 bis E481 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -524,6 +524,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E478** — Ein Dreieck darf liegen, wie es gezogen wurde — und ein gleichseitiges bekommt die kleinste Drehung
 * **E479** — „Seite als Bild" nimmt die Fotos mit: `blob:` ist im SVG gesperrt, `data:` nicht, und `foreignObject` trübt die Leinwand
 * **E480** — Die Miniaturenleiste wie GoodNotes: ein Menü je Seite, das SEINE Seite meint, und Ziehen zum Umordnen
+* **E481** — Verweise treffen die Stelle, auch auf gedrehten Seiten — und die Schicht zieht ins Papier
 
 ---
 
@@ -38179,3 +38180,89 @@ GEPRÜFT. 15 Läufe grün: test87, test105, test109, test351, test424 (im
 zweiten Lauf, siehe den bekannten Wackler in E473), test437, test440–test445,
 test448, test452, test453; dazu `npm run typecheck`, `npm run bauen:ts`,
 `node bauen.mts`.
+
+---
+
+E481 — Verweise treffen die Stelle, auch auf gedrehten Seiten — und die Schicht zieht ins Papier
+--------------------------------------------------------------------------
+
+Zwei Reste aus der Verweis-Liste in L133, und der zweite hatte einen
+Grund, der zugleich die Lösung war.
+
+## 1. Die Stelle auf der Seite
+
+Ein PDF-Ziel nennt oft nicht nur die Seite, sondern den Punkt darauf:
+
+    [ref, /XYZ, links, oben, zoom]     die genaue Stelle
+    [ref, /FitH, oben]                 eine Höhe
+    [ref, /FitR, l, u, r, o]           ein Rechteck
+    [ref, /Fit]                        nur die Seite
+
+Bis hierher wurde davon nur die Seite genommen. Ein Querverweis mitten in
+ein Kapitel landete an dessen Anfang — bei einem Skript mit dreissig
+Seiten je Kapitel ist das der Unterschied zwischen „gefunden" und „such
+selbst".
+
+`leser.ts` liest die Höhe jetzt mit und gibt sie als `zielY` heraus:
+Punkte von der OBERKANTE der Zielseite. Gerechnet wird sie mit dem
+Sichtfeld der ZIELSEITE, nicht dem der Seite, auf der der Verweis steht —
+zwei Seiten können verschieden gross sein, und PDF zählt von unten.
+
+Am Knopf steht dann nicht die Punktzahl, sondern der ANTEIL
+(`data-document-stelle`): wie hoch die Seite auf dem Bildschirm steht,
+weiss erst `springe`. Gerollt wird ein Bild nach dem Sprung, sonst liefe
+die weiche Bewegung von `springe` dagegen.
+
+`/Fit` bekommt keine Stelle — und dann steht auch keine da. Das ist
+dieselbe Regel wie in E477: „nichts" und „nicht nachgesehen" müssen sich
+unterscheiden.
+
+## 2. Die Verweisschicht zieht ins Papier
+
+L133 sagte: „eine um 90° gedrehte Seite zeigt ihre Verweise nicht", und
+im Code stand dazu eine Zeile, die genau das tat:
+
+    if (SheetSpace.gedrehtVon(block)) return;
+
+Der Grund dahinter war die Bauweise: die Schicht lag NEBEN dem Papier,
+als Geschwister der Bühne, und wurde ihm von Hand nachgemessen — Kante für
+Kante, bei jedem Rollen und jeder Grössenänderung (`verweiseLegen`). Bei
+einer gedrehten Seite misst man damit ihre HÜLLE, nicht ihr Papier, und
+die Prozentwerte darin sind falsch. Statt eine zweite Rechnung für den
+gedrehten Fall zu schreiben, ist die Schicht INS PAPIER gezogen:
+
+    .document-verweise{ position:absolute; inset:0 }
+
+Dort liegt sie von selbst richtig und dreht mit. `verweiseLegen`
+schrumpft auf das, was wirklich von der Grösse abhängt: die Trefffläche
+aus E475, die in Pixeln misst.
+
+NEBENBEI WIRD ES GENAUER. `inset:0` legt sie auf den INNENKASTEN des
+Papiers — dorthin, wo auch das Seitenbild liegt. Vorher lag sie auf dem
+gemessenen Kasten, also einen Rahmen zu weit. Ein Pixel, aber in die
+richtige Richtung.
+
+## Wächter
+
+`test454` (neu, 20 Punkte), mit einer PDF, die auf einer Seite vier
+Verweise trägt — je einer der vier Zielarten: §1 der Leser (442, 542, 342,
+und bei `/Fit` gar nichts); §2 im Studio rollt ein Verweis mit Stelle
+dorthin, wo das Ziel steht, und deutlich weiter als einer ohne; §3 eine
+um 90° gedrehte Seite zeigt ihre vier Verweise, die Schicht liegt im
+Papier und deckt es; §4 die Quellen.
+
+Zwei Gegenproben, beide gelaufen und rot: den `oben`-Zweig im Leser
+auslassen (6 Punkte rot), die alte Zeile `if (gedrehtVon(block)) return;`
+wieder einsetzen (2 rot).
+
+`test441` trägt eine zusätzliche Zeile: die Schicht liegt IM Papier. Seine
+Deckungsprüfung misst seither gegen den Innenkasten, mit dem Rahmen als
+Versatz — mit Grund daneben.
+
+KEIN BILD (§55.3): die Verweise sehen aus wie vorher, sie treffen nur
+besser. Was man sehen könnte — die Trefffläche —, zeigt bereits
+`bilder/e475-verweise-trefflaeche.png`.
+
+GEPRÜFT. 14 Läufe grün: test87, test105, test109, test437, test440–test443,
+test445, test448, test450, test452, test453, test454; dazu
+`npm run typecheck`, `npm run bauen:ts`, `node bauen.mts`.

@@ -186,7 +186,10 @@ const PdfLeser = (() => {
        Was weder das eine noch das andere hat, faellt weg — ein Kasten ohne
        Ziel ist kein Verweis. Ob die Adresse harmlos ist, prueft der
        Aufrufer (§19, `Sanitize.url`); hier wird nur gelesen. */
-    type Verweis = { x: number; y: number; w: number; h: number; url?: string; seite?: number };
+    /** `zielY` ist der Abstand von der OBERKANTE der Zielseite in
+     *  Blattpunkten — nur bei Zielen, die eine Stelle nennen (E481). */
+    type Verweis = { x: number; y: number; w: number; h: number;
+      url?: string; seite?: number; zielY?: number };
     const verweise = async (nr: number): Promise<Verweis[]> => {
       try {
         const seite = await doc.getPage(nr);
@@ -203,7 +206,34 @@ const PdfLeser = (() => {
           else if (a.dest) {
             const ziel = typeof a.dest === 'string' ? await doc.getDestination(a.dest) : a.dest;
             const ref = Array.isArray(ziel) ? ziel[0] : null;
-            if (ref) { try { eintrag.seite = (await doc.getPageIndex(ref)) + 1; } catch { /* kein Ziel */ } }
+            if (ref) {
+              try {
+                eintrag.seite = (await doc.getPageIndex(ref)) + 1;
+                /* DIE STELLE AUF DER SEITE (E481). Ein PDF-Ziel nennt oft
+                   nicht nur die Seite, sondern den Punkt darauf:
+
+                     [ref, /XYZ, links, oben, zoom]   die genaue Stelle
+                     [ref, /FitH, oben]               eine Hoehe
+                     [ref, /FitR, l, u, r, o]         ein Rechteck
+
+                   Bis E481 wurde davon nur die Seite genommen, und ein
+                   Querverweis mitten in ein Kapitel landete an dessen
+                   Anfang. Die Zahl steht im Raum der ZIELSEITE (unten
+                   links, y nach oben) — gerechnet wird sie mit deren
+                   eigenem Sichtfeld, nicht mit dem der Seite, auf der
+                   der Verweis steht. */
+                const art = ziel[1] && typeof ziel[1] === 'object' ? String(ziel[1].name || '') : '';
+                const oben = art === 'XYZ' ? ziel[3]
+                  : art === 'FitH' || art === 'FitBH' ? ziel[2]
+                  : art === 'FitR' ? ziel[5] : null;
+                if (typeof oben === 'number' && Number.isFinite(oben)) {
+                  const zielSeite = await doc.getPage(eintrag.seite);
+                  const zielSicht = zielSeite.getViewport({ scale: 1 });
+                  const [, zy] = zielSicht.convertToViewportPoint(0, oben) as [number, number];
+                  eintrag.zielY = rund(Math.max(0, zy));
+                }
+              } catch { /* kein Ziel */ }
+            }
           }
           if (eintrag.url || eintrag.seite) aus.push(eintrag);
         }

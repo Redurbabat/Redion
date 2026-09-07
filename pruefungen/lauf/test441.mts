@@ -214,7 +214,16 @@ console.log('\n§3 Die Verweise der PDF');
     const sr = schicht?.getBoundingClientRect(), pr = papier?.getBoundingClientRect();
     return { da: !!schicht, anzahl: schicht?.querySelectorAll('.document-verweis').length,
       href: a?.getAttribute('href'), target: a?.target, rel: a?.rel, ziel: k?.dataset.documentIndex,
-      deckt: !!sr && !!pr && Math.abs(sr.left - pr.left) < 2 && Math.abs(sr.top - pr.top) < 2 && Math.abs(sr.width - pr.width) < 2,
+      /* SEIT E481 LIEGT SIE IM PAPIER, mit `inset:0` — also auf dessen
+         INNENKASTEN, nicht auf dem Rahmen darum. Das ist die richtigere
+         Deckung: das Seitenbild liegt auch im Innenkasten, und die
+         Prozentwerte der Verweise beziehen sich darauf. Gemessen wird
+         deshalb gegen `clientWidth` und den Rahmen als Versatz. */
+      deckt: !!sr && !!pr && !!papier
+        && Math.abs(sr.left - (pr.left + papier.clientLeft)) < 1.5
+        && Math.abs(sr.top - (pr.top + papier.clientTop)) < 1.5
+        && Math.abs(sr.width - papier.clientWidth) < 1.5,
+      imPapier: !!schicht && schicht.parentElement === papier,
       links: a?.style.left, oben: a?.style.top, display: schicht ? getComputedStyle(schicht).display : null,
       modus: document.querySelector<HTMLElement>('.document-workspace')?.dataset.documentTools };
   });
@@ -222,6 +231,7 @@ console.log('\n§3 Die Verweise der PDF');
   p('… der nach draussen als Link mit noopener', v.href === 'https://example.org/ohm' && v.target === '_blank' && /noopener/.test(String(v.rel)), JSON.stringify(v));
   gleich('… der ins Dokument als Sprung auf Seite 2', v.ziel, '1');
   p('Die Schicht deckt genau das Papier', v.deckt, JSON.stringify(v));
+  p('… und liegt IM Papier, nicht daneben (E481)', v.imPapier === true, JSON.stringify(v));
   p('Der Kasten sitzt bei x ≈ 8 %, oben ≈ 21 % (177 von 842)', Math.abs(parseFloat(String(v.links)) - 8.4) < 1 && Math.abs(parseFloat(String(v.oben)) - 21) < 1, JSON.stringify([v.links, v.oben]));
   p('Im Lesemodus ist sie da', v.modus === 'closed' && v.display !== 'none', JSON.stringify([v.modus, v.display]));
   await s.click('.document-stage[data-stand-nr="0"] button.document-verweis');

@@ -214,7 +214,7 @@ rechtfertigt.
 
 ---
 
-### 7 · Der PDF-Teil wie GoodNotes — vierzehn Bögen (Redur, 7. September)
+### 7 · Der PDF-Teil wie GoodNotes — fünfzehn Bögen (Redur, 7. September)
 
 Redur, mit dem GoodNotes-Dossier: „alles, was GoodNotes machen kann, 1:1 —
 nur beim PDF-Teil: wie die bearbeitet wird, importiert, die Stifte usw.",
@@ -281,6 +281,10 @@ Gegenprobe, Bild und Entscheidung:
     jetzt entgegen, wen sie meinen), und Ziehen zum Umordnen — mit der
     Maus nach acht Pixeln, mit dem Finger erst nach 350 ms Halten, damit
     die Leiste rollbar bleibt. **Steht.**
+  · **G15 — Verweise treffen die Stelle** (E481, test454): `/XYZ`,
+    `/FitH` und `/FitR` nennen eine Höhe auf der Zielseite — der Sprung
+    rollt jetzt dorthin. Und die Verweisschicht zog ins Papier: damit
+    zeigt auch eine gedrehte Seite ihre Verweise. **Steht.**
 
 Was danach ehrlich offen bleibt, steht in **L133** (Audio mit Zeitbezug,
 Handschrift-zu-Text, Mathe, Elemente-Bibliothek, Präsentation, Wolke).
