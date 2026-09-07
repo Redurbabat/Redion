@@ -218,7 +218,9 @@ let k = await klappe();
 gleich('Ein Knopf, zu, zeigt das Papier, das gilt (blanko); der feste Teil ist schmal', [k.knopf, k.offen, k.aria, k.vorschau, k.festBreite < 130], [true, false, 'false', 'blanko', true]);
 await pgP.click('.blatt-fest .blatt-papierknopf');
 k = await klappe();
-gleich('Tipp: die Klappe ist auf, fünf Vorlagen darin', [k.offen, k.aria, k.vorlagen], [true, 'true', 5]);
+/* Sieben seit E495 (Cornell und Notenlinien). Die Zusage dieses Punktes
+   ist die KLAPPE, nicht die Zahl — sie geht auf und trägt den Katalog. */
+gleich('Tipp: die Klappe ist auf, sieben Vorlagen darin', [k.offen, k.aria, k.vorlagen], [true, 'true', 7]);
 await pgP.click('.blatt-fest .blatt-papierwahl[data-papier="kariert"]');
 k = await klappe();
 gleich('Eine Vorlage gewählt: Papier umgestellt, Knopf zeigt sie, Klappe zu', [k.papier, k.vorschau, k.offen], ['kariert', 'kariert', false]);

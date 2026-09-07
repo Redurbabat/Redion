@@ -6496,9 +6496,20 @@ Lesezeichen und löschen stehen im Inspector. Offen bleibt:
     **Offen bleibt:** umgeordnet wird nur innerhalb derselben Eltern —
     liegen die Seiten eines Dokuments in mehreren Spalten, sagt es das,
     statt zu raten. `test453`.
-  · **Einfügen aus einer Vorlage mit Inhalt** — „Seite danach" kennt die
-    fünf Papiere; eine Vorlagenseite aus dem Vorlagenregister (mit Text
-    und Marken) ist ein eigener Bogen.
+  · **Einfügen aus einer Vorlage mit Inhalt** — bleibt offen, aber die
+    Zahl darin stimmt nicht mehr: „Seite danach" kennt seit **E495**
+    SIEBEN Papiere. Dazugekommen sind **Cornell-Notizen** und
+    **Notenlinien** — die zwei, an denen man GoodNotes' Vorlagenwähler
+    erkennt, und zugleich das, was er zum grössten Teil ist: Papiere, keine
+    Seiten mit Inhalt. Beide sind reine Darstellung (E100), beide stehen im
+    selben Katalog und damit auch im Wähler des Studios. `test465`.
+    Was offen bleibt, ist der Rest: eine Vorlagenseite aus dem
+    Vorlagenregister, MIT Text und Marken, ist ein eigener Bogen.
+    Nicht kommen wird **isometrisches Papier**, obwohl GoodNotes es hat:
+    ein schräger Verlauf misst seinen Abstand senkrecht zur Linie, und in
+    Prozent einer Fläche ändert der sich mit dem Seitenverhältnis — am
+    Telefon wären es andere Dreiecke als am Rechner (dieselbe Falle wie
+    E100). Das ginge nur mit einem gezeichneten Muster.
   · **Mehrseitige Notizhefte als EIN Block** — ein `blatt` wächst in die
     Höhe (E118); Seitengriffe gelten ihm als Ganzem. Ein Heft mit drei
     Blattseiten lässt sich nicht seitenweise drehen oder löschen.

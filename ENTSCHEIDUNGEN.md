@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-474 Entscheidungen, E1 bis E494 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+475 Entscheidungen, E1 bis E495 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -538,6 +538,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E492** — Was auf dieser Seite gesperrt ist: eine Liste, die den Rundlauf ohne Ausgang öffnet
 * **E493** — Präsentieren mit Laserpointer: der Punkt zeigt und schreibt nicht
 * **E494** — Die Elemente-Bibliothek: eine Auswahl wird ein Stempel, und der Stempel überlebt das Dokument
+* **E495** — Cornell und Notenlinien: zwei Papiere, und die Lehre, dass Prozent in einem Verlauf die Kachel meint
 
 ---
 
@@ -39508,3 +39509,98 @@ Nachtrag von E486), `test351` (zwölf Werkzeuge, neun Auswahlknöpfe),
 test109, test247, test344, test349, test386, test424, test461 — alle grün.
 Nicht geprüft: die Gesamtsuite.
 Bild: `node bilder.mts elemente` — die Bibliothek ist neu.
+
+---
+
+E495 — Cornell und Notenlinien: zwei Papiere, und was Prozent in einem Verlauf bedeutet
+--------------------------------------------------------------------------
+
+GoodNotes' Vorlagenwähler hat neben Blanko, Liniert, Kariert und Punktraster
+zwei Papiere, die Redion nicht hatte und die man an ihrer Form erkennt:
+**Cornell-Notizen** und **Notenlinien**. Beide sind in Redion, was alle
+Papiere sind — reine Darstellung (E100): ein Feld am Block, Verläufe im
+Stilblatt. Wer von Cornell auf blanko wechselt, verliert kein Wort und
+keinen Strich; `test465 §5` fährt fünf Wechsel und zählt danach nach.
+
+## Was gebaut wurde
+
+    Cornell    50 mm Spalte links, 30 mm Kopf, 50 mm Zusammenfassung
+               unten, dazwischen Zeilen — die Masse des Originals von
+               Walter Pauk, nicht geraten
+    Noten      fünf Linien im Abstand von 3 mm, dann 15 mm Luft: ein
+               Takt von 27 mm, elf Systeme auf A4
+
+Beide stehen im selben Katalog wie die fünf alten (`Blatt.PAPIERE`), und
+deshalb stehen sie ohne weiteres Zutun auch in der Klappe der Blattleiste
+UND im Wähler „Papier für neue Seiten" des PDF-Studios — der liest denselben
+Katalog (§8).
+
+## Der Fund, um den es hier wirklich geht
+
+Das erste Notenpapier zeigte **eine Linie je System statt fünf**. Der Grund
+ist ein Satz, den man einmal gelesen haben muss:
+
+> **Prozentzahlen IN einem Verlauf beziehen sich auf die KACHEL
+> (`background-size`), nicht auf das Element.**
+
+Die Notenabstände standen in Prozent des BLATTES: 3 mm sind dort rund 1 %,
+und 1 % einer 27 mm hohen Kachel ist ein viertel Millimeter. Alle fünf
+Linien fielen aufeinander. Auf dem Papier stand eine Linie, und sie sah aus
+wie liniertes Papier mit grossem Abstand — also wie etwas, das jemand so
+gewollt haben könnte.
+
+**Kein Prüflauf hätte das gemeldet.** Beide Fassungen zeichnen Linien; nur
+die falsche zeichnet die falschen. Das Bild hat es gefunden, in dreissig
+Sekunden (§55.1).
+
+Danach gibt es in `blatt.ts` drei Rechenwege mit drei Namen, und der Name
+sagt, worauf sich die Zahl bezieht:
+
+    seite(mm)            Anteil am ganzen Blatt   → background-size
+    inSeitenkachel(mm)   Anteil an EINER Seite    → Stopps bei Cornell
+    inKachel(mm, kachel) Anteil an der Kachel     → Stopps bei den Noten
+
+`test465 §2` hält sie auseinander, und zwar an der einzigen Stelle, an der
+sie sich unterscheiden: auf einem DREISEITIGEN Blatt. Bei einem einseitigen
+sind Blatt und Seite dasselbe, und der Fehler wäre unsichtbar geblieben.
+
+## Cornell braucht sechs Schichten, und ihre Reihenfolge ist die Lösung
+
+CSS kann keinen Verlauf, der nur in einem Ausschnitt gilt. Die senkrechte
+Spaltenlinie liefe also durch Kopf und Zusammenfassung. Sie läuft deshalb
+ganz durch und wird oben und unten mit zwei **Bändern in Papierfarbe**
+wieder zugedeckt; über den Bändern liegen die zwei kräftigen Querlinien:
+
+    1 Kopflinie · 2 Fusslinie · 3 Kopfband · 4 Fussband
+    5 Spaltenlinie · 6 Zeilen
+
+Die Bänder nehmen `var(--paper)` und nicht Weiss. Das Papier ist `#f8f8f5`;
+ein Band in reinem Weiss stünde als hellerer Streifen darauf, und niemand
+wüsste, warum.
+
+## Warum kein isometrisches Papier
+
+GoodNotes hat es, Redion bekommt es nicht — und der Grund ist derselbe wie
+in E100. Seine Linien laufen schräg, und ein schräger
+`repeating-linear-gradient` misst seinen Abstand SENKRECHT zur Linie. In
+Prozent einer Fläche heisst das: der Abstand ändert sich mit dem
+Seitenverhältnis. Am Telefon wären es andere Dreiecke als am Rechner. Das
+ginge nur mit einem gezeichneten Muster, und das ist ein eigener Bogen. Der
+Satz steht im Quelltext, damit niemand es „schnell noch dazu" macht.
+
+## Was L133 dazu weiter sagt
+
+Die Zeile „Einfügen aus einer Vorlage mit Inhalt" bleibt **offen**. Diese
+Papiere sind das, was GoodNotes' Vorlagenwähler zum grössten Teil ist —
+Papiere, keine Seiten mit Text und Marken. Eine Vorlagenseite aus dem
+Vorlagenregister ist weiterhin ein eigener Bogen, und das steht so da,
+statt die Zeile zu schliessen, weil zwei Drittel davon jetzt gehen.
+
+GEPRÜFT. `test465` mit 41 Zusagen, fünf Gegenproben rot gesehen (§55.2):
+ohne den Katalogeintrag, mit blattbezogenem Notenabstand (1,01 statt
+11,11 %), mit blattbezogenem Cornell-Kopf (3,37 statt 10,1 %), ohne die
+zwei Bänder, und mit einem Aufbau, der das gewählte Papier nicht mehr
+weiterreicht. Angepasst, weil sie zählen: `test207` (sieben statt fünf),
+`test351` (die Klappe trägt sieben). Dazu test87, test105, test109,
+test265 — alle grün. Nicht geprüft: die Gesamtsuite.
+Bilder: `node bilder.mts papiere` und `papierfuss` — beide Ansichten sind neu.

@@ -4334,3 +4334,27 @@ Und ein Fund ausserhalb: `test348 §5` war seit E486 rot, ohne dass es
 jemandem aufgefallen wäre. `test343` hatte den Nachtrag bekommen, `test348`
 nicht — ein Prüflauf, den niemand laufen lässt, meldet seinen Fund nicht
 von selbst.
+
+**Cornell und Notenlinien (E495, test465).** Zwei Papiere aus GoodNotes'
+Vorlagenwähler, und in Redion das, was jedes Papier ist: reine Darstellung
+(E100) — ein Feld am Block, Verläufe im Stilblatt. Fünf Wechsel hin und her
+lassen Text und Marken unangetastet, und der Prüflauf zählt danach nach.
+
+Cornell braucht sechs Schichten, weil CSS keinen Verlauf kennt, der nur in
+einem Ausschnitt gilt: die Spaltenlinie läuft ganz durch und wird oben und
+unten mit zwei Bändern in Papierfarbe wieder zugedeckt. Die Bänder nehmen
+`var(--paper)` und nicht Weiss — das Papier ist `#f8f8f5`, und ein weisses
+Band stünde als hellerer Streifen darauf.
+
+Der Fund des Bildes ist der Satz, um den es hier geht: **Prozentzahlen in
+einem Verlauf beziehen sich auf die Kachel, nicht auf das Element.** Die
+Notenabstände standen in Prozent des Blattes — 3 mm sind dort rund 1 %, und
+1 % einer 27-mm-Kachel ist ein viertel Millimeter. Alle fünf Linien fielen
+aufeinander, und auf dem Papier stand eine Linie je System. Kein Prüflauf
+hätte das gemeldet: beide Fassungen zeichnen Linien, nur die falsche
+zeichnet die falschen.
+
+Isometrisches Papier hat GoodNotes und Redion bekommt es nicht — mit
+geschriebenem Grund im Quelltext, damit niemand es „schnell noch dazu"
+macht: ein schräger Verlauf misst seinen Abstand senkrecht zur Linie, und
+in Prozent einer Fläche ändert der sich mit dem Seitenverhältnis.

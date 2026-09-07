@@ -2009,6 +2009,68 @@ const ANSICHTEN: Record<string, {
     }
   },
 
+  papiere: {
+    titel: 'Cornell-Notizen und Notenlinien — die zwei Papiere von GoodNotes (E495)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const s = Store.addPage(null, { text: 'Papiere', icon: '📐' });
+      const cornell = Store.addBlock(s.id, 'blatt', { text: '', papier: 'cornell' });
+      Store.addBlock(cornell.id, 'text', { text: '' });
+      Store.updateBlock(cornell.id, { marken: [
+        { id: 'c1', art: 'text', farbe: '#111111', breite: 2, point: [120, 52],
+          text: 'Ohmsches Gesetz', fontSize: 22 },
+        { id: 'c2', art: 'text', farbe: '#2f7ed8', breite: 2, point: [24, 150],
+          text: 'Was ist R?', fontSize: 13 },
+        { id: 'c3', art: 'text', farbe: '#111111', breite: 2, point: [160, 150],
+          text: 'U = R · I — der Widerstand ist der Quotient', fontSize: 13 },
+        { id: 'c4', art: 'text', farbe: '#2f7ed8', breite: 2, point: [24, 200],
+          text: 'Einheit?', fontSize: 13 },
+        { id: 'c5', art: 'text', farbe: '#111111', breite: 2, point: [160, 200],
+          text: 'Ohm (Ω) = Volt je Ampere', fontSize: 13 },
+        { id: 'c6', art: 'text', farbe: '#3aa757', breite: 2, point: [24, 700],
+          text: 'Zusammenfassung: Spannung, Strom und Widerstand hängen zusammen.', fontSize: 13 }
+      ] });
+      const noten = Store.addBlock(s.id, 'blatt', { text: '', papier: 'noten' });
+      Store.addBlock(noten.id, 'text', { text: '' });
+      App.oeffne(s.id);
+      await new Promise(r => setTimeout(r, 1100));
+    }
+  },
+
+  papierfuss: {
+    titel: 'Der Fuss des Cornell-Blatts und die Notenlinien (E495)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const s = Store.addPage(null, { text: 'Papiere unten', icon: '📐' });
+      const cornell = Store.addBlock(s.id, 'blatt', { text: '', papier: 'cornell' });
+      Store.addBlock(cornell.id, 'text', { text: '' });
+      Store.updateBlock(cornell.id, { marken: [
+        { id: 'f1', art: 'text', farbe: '#3aa757', breite: 2, point: [30, 760],
+          text: 'Zusammenfassung: U = R · I verknüpft alle drei Grössen.', fontSize: 13 }
+      ] });
+      const noten = Store.addBlock(s.id, 'blatt', { text: '', papier: 'noten' });
+      Store.addBlock(noten.id, 'text', { text: '' });
+      App.oeffne(s.id);
+      await new Promise(r => setTimeout(r, 1200));
+      /* Bis an den Fuss des ersten Blatts rollen — dort steht die
+         Zusammenfassungslinie, und gleich darunter fangen die Noten an. */
+      const zweites = document.querySelectorAll('.blatt-papier')[1];
+      zweites?.scrollIntoView({ block: 'start' });
+      await new Promise(r => setTimeout(r, 600));
+      /* `window.scrollBy` tut hier nichts — gerollt wird ein Kasten INNEN,
+         nicht das Fenster. Also den ersten Vorfahren suchen, der wirklich
+         rollt, und ihn zurücknehmen. */
+      let kasten = zweites?.parentElement as HTMLElement | null;
+      while (kasten && kasten.scrollHeight <= kasten.clientHeight + 2) kasten = kasten.parentElement;
+      if (kasten) kasten.scrollTop -= 620;
+      await new Promise(r => setTimeout(r, 400));
+    }
+  },
+
   elemente: {
     titel: 'Die Elemente-Bibliothek — gesicherte Marken stempeln (E494)',
     bauen: async () => {

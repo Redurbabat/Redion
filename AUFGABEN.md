@@ -214,7 +214,7 @@ rechtfertigt.
 
 ---
 
-### 7 · Der PDF-Teil wie GoodNotes — fünfundzwanzig Bögen (Redur, 7. September)
+### 7 · Der PDF-Teil wie GoodNotes — sechsundzwanzig Bögen (Redur, 7. September)
 
 Redur, mit dem GoodNotes-Dossier: „alles, was GoodNotes machen kann, 1:1 —
 nur beim PDF-Teil: wie die bearbeitet wird, importiert, die Stifte usw.",
@@ -355,7 +355,16 @@ der Zeichenschicht nicht zu drücken — und zwar schon vor diesen Bögen.
     Elemente, keines über 200 KB, und beide Grenzen werden gesagt.
     Nebenbei fiel auf, dass `test348 §5` seit E486 rot war. **Steht.**
 
-Der Auftrag heisst deshalb jetzt **fünfundzwanzig Bögen**; die Überschrift
+  · **G26 — Cornell und Notenlinien** (E495, test465): die zwei Papiere, an
+    denen man GoodNotes' Vorlagenwähler erkennt — 50 mm Spalte, 30 mm Kopf,
+    50 mm Zusammenfassung; fünf Linien im Abstand von 3 mm, dann 15 mm
+    Luft. Sie stehen im selben Katalog wie die fünf alten und damit auch im
+    Wähler des Studios. Das Bild fand, dass Prozentzahlen in einem Verlauf
+    die KACHEL meinen und nicht das Element: das erste Notenpapier zeigte
+    eine Linie je System statt fünf, und kein Prüflauf hätte das gemeldet.
+    **Steht.**
+
+Der Auftrag heisst deshalb jetzt **sechsundzwanzig Bögen**; die Überschrift
 zählt sie mit.
 
 Was danach ehrlich offen bleibt, steht in **L133** (Audio mit Zeitbezug,

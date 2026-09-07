@@ -12226,6 +12226,69 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
     var(--blatt-mm-zehn-quer) 100%, 100% var(--blatt-mm-zehn-hoch),
     var(--blatt-mm-quer) 100%,      100% var(--blatt-mm-hoch)}
 
+/* CORNELL-NOTIZEN (E495). Das Papier von Walter Pauk: links eine 50 mm
+   breite Spalte für Stichworte, oben 30 mm für den Titel, unten 50 mm für
+   die Zusammenfassung, dazwischen Zeilen.
+
+   FÜNF SCHICHTEN, UND IHRE REIHENFOLGE IST DIE GANZE LÖSUNG. CSS kann
+   keinen Verlauf, der nur in einem Ausschnitt gilt — die senkrechte
+   Spaltenlinie liefe also durch Kopf und Fuss. Also läuft sie ganz durch
+   und wird oben und unten mit zwei Bändern in Papierfarbe wieder
+   ZUGEDECKT; über den Bändern liegen die beiden kräftigen Querlinien.
+   Die erste Schicht ist die oberste.
+
+   Alle senkrechten Takte sind `--blatt-seite-hoch` — EINE Seite. Bei einem
+   dreiseitigen Blatt wiederholt sich der Aufbau also je Seite und nicht
+   dreimal gestaucht. */
+.blatt-papier[data-papier="cornell"]{
+  background-image:
+    /* 1 · die Kopflinie und die Fusslinie, je Seite */
+    linear-gradient(to bottom, transparent 0, transparent calc(var(--blatt-cornell-kopf) - 1px),
+                    var(--blatt-linie-stark) calc(var(--blatt-cornell-kopf) - 1px),
+                    var(--blatt-linie-stark) var(--blatt-cornell-kopf), transparent var(--blatt-cornell-kopf)),
+    linear-gradient(to top, transparent 0, transparent calc(var(--blatt-cornell-fuss) - 1px),
+                    var(--blatt-linie-stark) calc(var(--blatt-cornell-fuss) - 1px),
+                    var(--blatt-linie-stark) var(--blatt-cornell-fuss), transparent var(--blatt-cornell-fuss)),
+    /* 2 · zwei Bänder in Papierfarbe: sie decken Zeilen und Spaltenlinie
+           im Kopf und in der Zusammenfassung ab */
+    linear-gradient(to bottom, var(--paper,#fff) 0 var(--blatt-cornell-kopf), transparent var(--blatt-cornell-kopf)),
+    linear-gradient(to top,    var(--paper,#fff) 0 var(--blatt-cornell-fuss), transparent var(--blatt-cornell-fuss)),
+    /* 3 · die senkrechte Spalte — läuft durch und wird von den Bändern gedeckt */
+    linear-gradient(to right, transparent 0, transparent calc(var(--blatt-cornell-spalte) - 1px),
+                    var(--blatt-linie-stark) calc(var(--blatt-cornell-spalte) - 1px),
+                    var(--blatt-linie-stark) var(--blatt-cornell-spalte), transparent var(--blatt-cornell-spalte)),
+    /* 4 · die Zeilen im Notizfeld */
+    linear-gradient(to bottom, var(--blatt-linie) 0 1px, transparent 1px);
+  background-size:
+    100% var(--blatt-seite-hoch), 100% var(--blatt-seite-hoch),
+    100% var(--blatt-seite-hoch), 100% var(--blatt-seite-hoch),
+    100% var(--blatt-seite-hoch),
+    100% var(--blatt-zeile);
+  background-repeat:repeat-y}
+
+/* NOTENLINIEN (E495). Fünf Linien im Abstand von 3 mm, dann 15 mm Luft —
+   ein Takt von 27 mm, elf Systeme auf A4. Ein einziger Verlauf: die fünf
+   Linien stehen als Farbstopps darin, der Rest des Taktes ist durchsichtig.
+   `repeating-linear-gradient` wäre hier falsch — sein Takt wäre der Abstand
+   ZWEIER Linien, nicht der eines Systems. */
+.blatt-papier[data-papier="noten"]{
+  background-image:linear-gradient(to bottom,
+    var(--blatt-linie-stark) 0 1px, transparent 1px,
+    transparent calc(var(--blatt-noten-linie) - 1px),
+    var(--blatt-linie-stark) calc(var(--blatt-noten-linie) - 1px), var(--blatt-linie-stark) var(--blatt-noten-linie),
+    transparent var(--blatt-noten-linie),
+    transparent calc(var(--blatt-noten-linie) * 2 - 1px),
+    var(--blatt-linie-stark) calc(var(--blatt-noten-linie) * 2 - 1px), var(--blatt-linie-stark) calc(var(--blatt-noten-linie) * 2),
+    transparent calc(var(--blatt-noten-linie) * 2),
+    transparent calc(var(--blatt-noten-linie) * 3 - 1px),
+    var(--blatt-linie-stark) calc(var(--blatt-noten-linie) * 3 - 1px), var(--blatt-linie-stark) calc(var(--blatt-noten-linie) * 3),
+    transparent calc(var(--blatt-noten-linie) * 3),
+    transparent calc(var(--blatt-noten-satz) - 1px),
+    var(--blatt-linie-stark) calc(var(--blatt-noten-satz) - 1px), var(--blatt-linie-stark) var(--blatt-noten-satz),
+    transparent var(--blatt-noten-satz));
+  background-size:100% var(--blatt-noten-takt);
+  background-repeat:repeat-y}
+
 /* --- Der Wähler in der Werkzeugleiste --------------------------------------
    Jeder Knopf zeigt SEIN Papier, nicht ein Sinnbild dafür. Bei den
    Ausrichtungsknöpfen hat ein Sinnbild schon einmal wie eine Klammer
@@ -12264,6 +12327,25 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-papierwahl i[data-vorschau="punkte"], .blatt-papierknopf i[data-vorschau="punkte"]{
   background-image:radial-gradient(circle at center, #8ea3bd 0 1px, transparent 1.1px);
   background-size:4px 4px}
+/* Die Vorschau zeigt das Papier, nicht ein Sinnbild dafür — bei Cornell
+   also die Spalte mit der Kopflinie, bei den Noten fünf Linien. Diese
+   beiden rechnen in Pixeln, weil das Kästchen 26 px misst und kein Blatt
+   ist; die Muster auf dem Papier rechnen weiter in Prozent. */
+.blatt-papierwahl i[data-vorschau="cornell"], .blatt-papierknopf i[data-vorschau="cornell"]{
+  background-image:
+    linear-gradient(to bottom, #8ea3bd 0 1px, transparent 1px),
+    linear-gradient(to right, transparent 0 5px, #8ea3bd 5px 6px, transparent 6px),
+    linear-gradient(to bottom, var(--blatt-linie, #b9c6d8) 0 1px, transparent 1px);
+  background-size:100% 100%, 100% 100%, 100% 4px;
+  background-position:0 5px, 0 0, 0 7px;
+  background-repeat:no-repeat, no-repeat, repeat}
+.blatt-papierwahl i[data-vorschau="noten"], .blatt-papierknopf i[data-vorschau="noten"]{
+  background-image:linear-gradient(to bottom,
+    #8ea3bd 0 1px, transparent 1px 3px, #8ea3bd 3px 4px, transparent 4px 6px,
+    #8ea3bd 6px 7px, transparent 7px 9px, #8ea3bd 9px 10px, transparent 10px 12px,
+    #8ea3bd 12px 13px, transparent 13px);
+  background-size:100% 20px;
+  background-position:0 3px}
 .blatt-papierwahl i[data-vorschau="mm"], .blatt-papierknopf i[data-vorschau="mm"]{
   background-image:
     linear-gradient(to right,  #8ea3bd 0 1px, transparent 1px),
@@ -19012,7 +19094,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 659, inhalt: 'cacb0dca41f5af49', gebaut: '2026-09-07T22:04:07.085Z' };
+const Stand = { fassung: 661, inhalt: '0b4b572101cddd72', gebaut: '2026-09-07T22:49:20.975Z' };
 window.Stand = Stand;
 
 </script>
@@ -58580,23 +58662,77 @@ const Blatt = (() => {
      * Drittel so viel Prozent. Der Abstand auf dem Papier bleibt derselbe.
      * ========================================================================*/
     const MM = 2.8346457; /* ein Millimeter in Punkt (72/25,4) */
+    /* SIEBEN SEIT E495. Cornell und Notenlinien sind die zwei Papiere, die
+       GoodNotes' Vorlagenwähler hat und Redion nicht hatte — und sie sind
+       immer noch nur Darstellung: ein Feld am Block, Verläufe im Stilblatt.
+       Wer von Cornell auf blanko wechselt, verliert kein Wort und keinen
+       Strich.
+  
+       WARUM KEIN ISOMETRISCHES PAPIER, obwohl GoodNotes es hat: seine Linien
+       laufen schräg, und ein schräger `repeating-linear-gradient` misst seinen
+       Abstand SENKRECHT zur Linie — in Prozent der Fläche heisst das, dass
+       sich der Abstand mit dem Seitenverhältnis ändert. Am Telefon wären es
+       andere Dreiecke als am Rechner (dieselbe Falle wie E100). Das ginge nur
+       mit einem gezeichneten Muster, und das ist ein eigener Bogen. */
     const PAPIERE = [
         { id: 'blanko', name: 'Blanko' },
         { id: 'liniert', name: 'Liniert' },
         { id: 'kariert', name: 'Kariert' },
         { id: 'punkte', name: 'Punktraster' },
         { id: 'mm', name: 'Millimeterpapier' },
+        { id: 'cornell', name: 'Cornell-Notizen' },
+        { id: 'noten', name: 'Notenlinien' },
     ];
     /** Was am Block steht — und bei allem Unbekannten: blanko. */
     const papierVon = (block) => {
         const wert = String(block?.papier ?? 'blanko');
         return PAPIERE.some(x => x.id === wert) ? wert : 'blanko';
     };
-    /** Die Abstände als Prozentzahlen, damit CSS sie einsetzen kann. */
-    const masse = (breite, hoehe) => {
+    /**
+     * Die Abstände als Prozentzahlen, damit CSS sie einsetzen kann.
+     *
+     * `seitenHoehe` ist die Höhe EINER Seite (A4), `hoehe` die des ganzen
+     * Blatts. Bei einem einseitigen Blatt sind beide gleich; bei einem
+     * dreiseitigen ist `hoehe` dreimal so gross. Den Unterschied brauchen die
+     * Papiere, deren Muster sich je SEITE wiederholt statt je Zeile —
+     * Cornell hat eine Kopf- und eine Fusszeile, und die gehören auf jede
+     * Seite, nicht alle 8,75 mm.
+     */
+    const masse = (breite, hoehe, seitenHoehe = hoehe) => {
         const quer = (mm) => (mm * MM / breite * 100) + '%';
         const hoch = (mm) => (mm * MM / hoehe * 100) + '%';
+        /* Die Höhe einer SEITE, als Anteil des Blattes — der Takt, in dem sich
+           die Seitenmuster wiederholen (und die Kachelhöhe im Stilblatt). */
+        const seite = (mm) => (mm * MM / hoehe * 100) + '%';
+        /* EIN MASS INNERHALB EINER KACHEL, nicht innerhalb des Blattes.
+           ═══ Das ist der Unterschied, den das Bild gefunden hat (§55). ═══
+           Prozentzahlen IN einem Verlauf beziehen sich auf die KACHEL
+           (`background-size`), nicht auf das Element. Die Notenlinien standen
+           zuerst in Prozent des Blattes: 3 mm sind dort rund 1 %, und 1 % einer
+           27-mm-Kachel ist ein Viertelmillimeter — alle fünf Linien fielen
+           aufeinander, und auf dem Papier stand eine Linie je System statt
+           fünf. Kein Prüflauf hätte das gemeldet; beide Fassungen zeichnen
+           Linien, nur die falsche zeichnet die falschen. */
+        const inKachel = (mm, kachelMm) => (mm / kachelMm * 100) + '%';
+        const inSeitenkachel = (mm) => (mm * MM / seitenHoehe * 100) + '%';
         return {
+            /* EINE SEITE, in Prozent des Blattes — der Takt der Seitenmuster. */
+            '--blatt-seite-hoch': (seitenHoehe / hoehe * 100) + '%',
+            /* CORNELL (A4, 210 × 297 mm): die Spalte für die Stichworte ist 50 mm
+               breit, der Kopf 30 mm hoch, die Zusammenfassung unten 50 mm. Die
+               Zahlen sind die des Originals von Walter Pauk, nicht geraten.
+               Die Spalte misst quer — dort IST die Kachel so breit wie das Blatt,
+               also ist `quer` richtig. Kopf und Fuss messen längs, und dort ist
+               die Kachel eine SEITE. */
+            '--blatt-cornell-spalte': quer(50),
+            '--blatt-cornell-kopf': inSeitenkachel(30),
+            '--blatt-cornell-fuss': inSeitenkachel(50),
+            /* NOTENLINIEN: fünf Linien im Abstand von 3 mm (12 mm Systemhöhe),
+               danach 15 mm Luft — ein Takt von 27 mm, also elf Systeme je A4.
+               Die Kachel IST der Takt; darum 3/27 und 12/27. */
+            '--blatt-noten-linie': inKachel(3, 27),
+            '--blatt-noten-satz': inKachel(12, 27),
+            '--blatt-noten-takt': seite(27),
             /* Schulheft-Lineatur: 8,75 mm. */
             '--blatt-zeile': hoch(8.75),
             /* Karo: 5 mm, und quer wie hoch derselbe absolute Abstand. */
@@ -58648,7 +58784,7 @@ const Blatt = (() => {
            Blatt bei jeder Fensterbreite, ohne eine einzige gerechnete Zahl. */
         papier.style.setProperty('aspect-ratio', breite + ' / ' + hoehe);
         papier.dataset.papier = jetzt;
-        for (const [name, wert] of Object.entries(masse(breite, hoehe)))
+        for (const [name, wert] of Object.entries(masse(breite, hoehe, R.A4_HOEHE)))
             papier.style.setProperty(name, wert);
         /* Gedreht per Huelle (E467); ungedreht haengt das Papier wie immer
            unmittelbar in der Huelle. */
