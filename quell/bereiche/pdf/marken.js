@@ -34,7 +34,13 @@ const Marken = (() => {
         { id: 'line', name: 'Linie', zeichen: '╱', titel: 'Gerade Linie' },
         { id: 'arrow', name: 'Pfeil', zeichen: '→', titel: 'Pfeil' },
         { id: 'rectangle', name: 'Rechteck', zeichen: '□', titel: 'Rechteck' },
-        { id: 'ellipse', name: 'Ellipse', zeichen: '○', titel: 'Ellipse' }
+        { id: 'ellipse', name: 'Ellipse', zeichen: '○', titel: 'Ellipse' },
+        /* ZWEI MEHR, WIE GOODNOTES (E465): das Dreieck und das Rechteck mit
+           runden Ecken. Beide sind Zweipunkt-Formen wie die vier davor —
+           der Zeichner unterscheidet sie nur im Ergebnis. Neue Kennungen,
+           englisch wie die alten, weil sie so in der Marke stehen (§53.3). */
+        { id: 'triangle', name: 'Dreieck', zeichen: '△', titel: 'Dreieck' },
+        { id: 'roundrect', name: 'Rund', zeichen: '▢', titel: 'Rechteck mit runden Ecken' }
     ];
     const FORM_VORGABE = 'line';
     const formArtLesen = () => {
@@ -53,7 +59,13 @@ const Marken = (() => {
     const STIFTE = [
         { id: 'fueller', name: 'Füller', zeichen: '🖋' },
         { id: 'kugel', name: 'Kugelschreiber', zeichen: '🖊' },
-        { id: 'pinsel', name: 'Pinsel', zeichen: '🖌' }
+        { id: 'pinsel', name: 'Pinsel', zeichen: '🖌' },
+        /* DER BLEISTIFT (E465), wie GoodNotes' Pencil: duenn, leicht
+           durchscheinend, mit koerniger Kante — die Flaeche des Fuellers,
+           nur schmaler und mit 72 % Deckung. Er steht am Ende der Reihe,
+           damit der Wechsel Fueller → Kugel → Pinsel bleibt, wie test343 ihn
+           kennt. */
+        { id: 'bleistift', name: 'Bleistift', zeichen: '✏' }
     ];
     const STIL_VORGABE = 'fueller';
     const HOECHSTENS_EIGENE_FARBEN = 4;
@@ -90,8 +102,14 @@ const Marken = (() => {
         const d = Math.max(0.05, Math.min(1, Number.isFinite(p) ? p : 0.5));
         if (stil === 'pinsel')
             return 0.3 + d * 1.7;
+        /* Der Bleistift schwillt kaum — ein Graphitstift wird mit Druck
+           dunkler, nicht breiter; das Bisschen Breite hier ist der Winkel. */
+        if (stil === 'bleistift')
+            return 0.35 + d * 0.6;
         return 0.5 + d * 1.0;
     };
+    /** Die drei Stifte, die als FLAECHE gezeichnet werden (der Kugelschreiber ist die Linie). */
+    const FLAECHEN_STIFTE = new Set(['fueller', 'pinsel', 'bleistift']);
     const svg = (name, attributes = {}) => {
         const element = document.createElementNS(NS, name);
         Object.entries(attributes).forEach(([key, value]) => element.setAttribute(key, String(value)));
@@ -368,7 +386,21 @@ const Marken = (() => {
             element = svg('ellipse', { cx: box.x + box.width / 2, cy: box.y + box.height / 2,
                 rx: box.width / 2, ry: box.height / 2 });
         }
-        else if (art === 'stift' && (mark.stil === 'fueller' || mark.stil === 'pinsel') && points.length >= 3) {
+        else if (art === 'triangle' && points.length >= 2) {
+            /* DAS DREIECK (E465): Spitze oben in der Mitte, Grundseite unten —
+               im Kasten der zwei Punkte, wie Rechteck und Ellipse. */
+            const box = InkGeometry.rectangle(points[0], points[1]);
+            element = svg('polygon', { points: `${box.x + box.width / 2},${box.y} ${box.x},${box.y + box.height} ${box.x + box.width},${box.y + box.height}` });
+        }
+        else if (art === 'roundrect' && points.length >= 2) {
+            /* DAS RUNDE RECHTECK (E465): die Rundung ein Sechstel der kuerzeren
+               Seite — so bleibt ein schmales Kaestchen ein Kaestchen und kein
+               Kissen. */
+            const box = InkGeometry.rectangle(points[0], points[1]);
+            const rund = Math.max(2, Math.min(box.width, box.height) / 6);
+            element = svg('rect', { x: box.x, y: box.y, width: box.width, height: box.height, rx: rund, ry: rund });
+        }
+        else if (art === 'stift' && FLAECHEN_STIFTE.has(String(mark.stil)) && points.length >= 3) {
             /* DER STRICH ALS FLAECHE (E351): links und rechts der Mittellinie eine
                Kontur, deren Abstand dem Druck folgt. Ohne Druckwerte je Punkt
                (alter Bestand) bleibt es beim gleichmaessigen Strich unten. */
@@ -379,6 +411,15 @@ const Marken = (() => {
                 'stroke-width': 0.25, 'stroke-linejoin': 'round' });
             if (mark.stil === 'pinsel')
                 element.setAttribute('opacity', '0.92');
+            /* DIE KOERNUNG DES BLEISTIFTS (E465): ein gestrichelter Haarstrich
+               um die Flaeche — die Kante wird rau, wie Graphit auf Papier, und
+               die Flaeche bleibt durchscheinend. Kein Filter: ein `feTurbulence`
+               je Strich kostet auf einer vollen Seite ein Bild je Bild. */
+            if (mark.stil === 'bleistift') {
+                element.setAttribute('opacity', '0.72');
+                element.setAttribute('stroke-width', '0.7');
+                element.setAttribute('stroke-dasharray', '0.9 0.6');
+            }
             element.setAttribute('data-sid', idOf(mark));
             element.setAttribute('data-ink-art', art);
             element.setAttribute('data-ink-stil', String(mark.stil));
@@ -401,7 +442,7 @@ const Marken = (() => {
             }
             /* Geschlossene Formen lassen sich auch in ihrer Flaeche greifen. Die
                Flaeche bleibt optisch leer; `pointer-events` aendert nur den Treffer. */
-            if (art === 'rectangle' || art === 'ellipse')
+            if (art === 'rectangle' || art === 'ellipse' || art === 'triangle' || art === 'roundrect')
                 element.setAttribute('pointer-events', 'all');
         }
         element.setAttribute('data-sid', idOf(mark));
@@ -1073,7 +1114,7 @@ const Marken = (() => {
             if (!running || !feder || !runningNode)
                 return;
             const alsFlaeche = running.art === 'stift' &&
-                (running.stil === 'fueller' || running.stil === 'pinsel') && feder.laenge() >= 3;
+                FLAECHEN_STIFTE.has(String(running.stil)) && feder.laenge() >= 3;
             if (alsFlaeche !== nassFlaeche) {
                 /* Der Strich wechselt die Bauart — der Knoten wird einmal ganz neu
                    gebaut, danach genuegt wieder sein `d`. */
@@ -2218,7 +2259,13 @@ const Marken = (() => {
                    von 2 px den ersten hochzog. Das Verhältnis 1 : 2 : 4 bleibt. */
                 BREITEN.map((value, index) => `<button class="blatt-strich${index === 1 ? ' on' : ''}" data-gruppe="breite" ` +
                     `data-b="${value}" title="Strichbreite ${String(value).replace('.', ',')}">` +
-                    `<i style="height:${Math.max(2, value * 2)}px"></i></button>`).join('');
+                    `<i style="height:${Math.max(2, value * 2)}px"></i></button>`).join('') +
+                /* DIE FREIE STAERKE (E465), wie GoodNotes' Schieber: drei Stufen zum
+                   Antippen bleiben, der Regler dazwischen nimmt jeden Wert von 0,5
+                   bis 12. Sein Wert IST die Staerke — kein Zwischenzustand. */
+                '<label class="blatt-staerke" data-gruppe="breite" title="Strichstärke frei wählen">' +
+                '<input type="range" min="0.5" max="12" step="0.1" value="' + BREITEN[1] + '" aria-label="Strichstärke">' +
+                '<output aria-hidden="true">' + String(BREITEN[1]).replace('.', ',') + '</output></label>';
         /* SICHTBAR MACHEN, DASS DIE LEISTE ROLLT (E140, §55.1).
            Bei 390 px ist die Leiste 310 px breit und ihr Inhalt 1059 — von 21
            Knöpfen stehen 15 draussen, alle rechts. Gerollt werden kann sie
@@ -2302,7 +2349,34 @@ const Marken = (() => {
                 tools.querySelectorAll('.blatt-strich').forEach(node => {
                     node.classList.toggle('on', Number(node.dataset.b) === dicke);
                 });
+            if (dicke)
+                staerkeZeigen(dicke);
         };
+        /** Der Regler zeigt die Staerke, die gilt — auch nach einem Tipp auf eine Stufe. */
+        const staerkeZeigen = (wert) => {
+            const feld = tools.querySelector('.blatt-staerke input');
+            const zahl = tools.querySelector('.blatt-staerke output');
+            if (feld && Number(feld.value) !== wert)
+                feld.value = String(wert);
+            if (zahl)
+                zahl.textContent = String(Math.round(wert * 10) / 10).replace('.', ',');
+        };
+        /* Der Regler meldet jeden Wert sofort — ohne Klick, ohne Loslassen. */
+        tools.addEventListener('input', event => {
+            const feld = event.target;
+            if (!feld || !feld.matches('.blatt-staerke input'))
+                return;
+            const wert = Math.max(0.5, Math.min(12, Number(feld.value) || BREITEN[1]));
+            controls.setzeStrich(wert);
+            if (typeof Zeichenziel !== 'undefined') {
+                try {
+                    Zeichenziel.uebernehmeStrich(controls, wert);
+                }
+                catch { /* egal */ }
+            }
+            tools.querySelectorAll('.blatt-strich').forEach(node => node.classList.toggle('on', Number(node.dataset.b) === wert));
+            staerkeZeigen(wert);
+        });
         if (typeof Zeichenziel !== 'undefined' && typeof Zeichenziel.horche === 'function') {
             try {
                 Zeichenziel.horche(markiere);
@@ -2569,6 +2643,7 @@ const Marken = (() => {
                 }
                 tools.querySelectorAll('.blatt-strich').forEach(node => node.classList.remove('on'));
                 target.classList.add('on');
+                staerkeZeigen(Number(target.dataset.b));
             }
         });
         row.appendChild(tools);
@@ -2580,7 +2655,66 @@ const Marken = (() => {
         }
         return row;
     };
-    return { schicht, leiste, zeichneMarke, FARBEN, BREITEN, STIFTE, druckFaktor, RADIERER,
+    /* ---- TASTEN WIE GOODNOTES (E465) --------------------------------------
+     * P Stift · 2 Bleistift · H Marker · E Radierer · S Form · V Auswahl ·
+     * T Text · A Abdecken · N Haftnotiz · M Fachzeichen · R Lineal · I Bild.
+     * Ein Buchstabe ohne Strg — deshalb nur, wenn gerade NIEMAND tippt (kein
+     * Eingabefeld, nichts Editierbares im Fokus) und eine Zeichenflaeche
+     * ueberhaupt da ist. Die Liste steht auch in `register/tasten.ts`, damit
+     * die Uebersicht sie zeigt; test438 haelt beide zusammen.
+     * ---------------------------------------------------------------------- */
+    const TASTEN = {
+        p: 'stift', '2': 'bleistift', h: 'marker', e: 'radierer', s: 'formen', v: 'select',
+        t: 'text', a: 'abdeck', n: 'zettel', m: 'zeichen', r: 'lineal', i: 'bild'
+    };
+    const tippt = () => {
+        const a = document.activeElement;
+        if (!a)
+            return false;
+        const tag = a.tagName;
+        return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || a.isContentEditable;
+    };
+    /** Die Leiste der aktiven Flaeche — ueber sie laufen die Kuerzel, damit
+     *  Knopf und Zustand denselben Weg gehen wie beim Tippen mit der Hand. */
+    const aktiveLeiste = () => {
+        const s = typeof Zeichenziel !== 'undefined' ? Zeichenziel.aktive() : null;
+        const flaeche = s && s.flaeche;
+        const huelle = flaeche?.closest('.blatt-huelle, .document-stage, .blatt, .pdfs, .page') || document;
+        return huelle.querySelector('.blatt-werk') || document.querySelector('.blatt-werk');
+    };
+    const kuerzel = (event) => {
+        if (event.ctrlKey || event.metaKey || event.altKey || event.repeat)
+            return;
+        if (tippt())
+            return;
+        if (typeof Zeichenziel === 'undefined' || !Zeichenziel.da())
+            return;
+        const ziel = TASTEN[event.key.toLowerCase()];
+        if (!ziel)
+            return;
+        const leiste = aktiveLeiste();
+        if (!leiste)
+            return;
+        event.preventDefault();
+        if (ziel === 'bleistift') {
+            /* Der Bleistift ist ein Stift mit Stil: erst den Stift, dann so oft
+               wechseln, bis er fuehrt. */
+            const knopf = leiste.querySelector('[data-act="stil"]');
+            for (let n = 0; knopf && knopf.dataset.stil !== 'bleistift' && n < STIFTE.length; n++)
+                knopf.click();
+            if (Zeichenziel.jetzt() !== 'stift')
+                leiste.querySelector('[data-wz="stift"]')?.click();
+            return;
+        }
+        if (ziel === 'lineal') {
+            leiste.querySelector('[data-act="lineal"]')?.click();
+            return;
+        }
+        leiste.querySelector(`[data-wz="${ziel}"]`)?.click();
+    };
+    if (typeof document !== 'undefined')
+        document.addEventListener('keydown', kuerzel);
+    return { schicht, leiste, zeichneMarke, FARBEN, BREITEN, STIFTE, FORMEN, druckFaktor, RADIERER, TASTEN,
         zwischenablage: () => zwischenablage.map(mark => clone(mark)) };
 })();
 window.Marken = Marken;

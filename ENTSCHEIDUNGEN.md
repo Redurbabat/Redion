@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-444 Entscheidungen, E1 bis E464 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+445 Entscheidungen, E1 bis E465 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -508,6 +508,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E462** — Schalter, Staffelei, Textur, Symbolreihe: die Vorgabe liefert das Aussehen, Redion den Zustand
 * **E463** — Sichtbar und lustig: die Vorgaben kommen an die Wege, die man täglich geht
 * **E464** — Redurs Zweig `codex/pdf-schreibstudio` übernommen: Schreibtisch im Vollbild, Stiftmarken, Verlauf
+* **E465** — Zeichnen wie GoodNotes, erster Bogen: Dreieck, rundes Rechteck, Bleistift, freie Stärke, Buchstabentasten
 
 ---
 
@@ -36608,3 +36609,76 @@ test222, test228, test264, test266, test285, test292, test295, test306,
 test342, test346, test385, test386, test391, test393, test394);
 `npm run typecheck`, `npm run bauen:ts`, `node bauen.mts`. Bild
 angesehen: `bilder/dokument-rechner-hell.png`.
+
+---
+
+E465 — Zeichnen wie GoodNotes, erster Bogen: Dreieck, rundes Rechteck, Bleistift, freie Stärke, Buchstabentasten
+--------------------------------------------------------------------------
+
+REDURS AUFTRAG, 7. September 2026, mit dem GoodNotes-Dossier (32 Seiten,
+dasselbe wie zu E265): „Du musst wirklich ohne Pause arbeiten, bis du
+Redion alles aufgeräumt hast, dass es wie GoodNotes ist — wirklich alles,
+was GoodNotes machen kann, 1:1, nur beim PDF-Teil: wie die bearbeitet
+wird, importiert, die Stifte usw." Und dazu: „ohne eine Funktion zu
+löschen." Das ist die Regel für alle Bögen dieser Reihe: es kommt dazu,
+nichts fällt weg, jede Marke im Bestand bleibt lesbar (§53.3).
+
+DER PLAN, in `AUFGABEN.md` unter „7 · Der PDF-Teil wie GoodNotes": fünf
+Bögen — G1 Zeichnen, G2 Auswahl, G3 Seiten, G4 Suche und Links, G5 Import
+und Export — und am Ende eine ehrliche Restliste in `LUECKEN.md` (L133),
+denn Audio mit Zeitbezug, Handschrift-zu-Text, Mathe-Umwandlung und die
+Wolke sind keine Nachmittagsarbeit und werden hier nicht behauptet.
+
+ENTSCHEIDUNG (G1). Gegen das Dossier gelesen, was am Zeichnen fehlte, und
+gebaut, ohne ein Werkzeug zu ersetzen:
+
+  · ZWEI FORMEN MEHR: `triangle` und `roundrect` in `FORMEN` — GoodNotes'
+    Shape-Tool kennt Dreieck und abgerundetes Rechteck. Zweipunkt-Formen
+    wie die vier davor; der Zeichner unterscheidet sie im Ergebnis
+    (Polygon mit drei Ecken; Rechteck mit `rx` = ein Sechstel der kürzeren
+    Seite). In der Fläche greifbar wie Rechteck und Ellipse. Das Zubehör
+    zeigt sechs, die CSS-Gruppenregel (E356) kennt die zwei neuen —
+    ohne diese Zeile stand nach dem ersten Dreieck kein Zubehör mehr da
+    (test438 fand es beim ersten Lauf).
+  · DER BLEISTIFT als vierter Stift (`bleistift`): die Fläche des
+    Füllers, aber `0,35 + 0,6·d` statt `0,5 + d` — Graphit wird mit Druck
+    dunkler, nicht breiter —, 72 % Deckung und ein gestrichelter
+    Haarstrich (`0.9 0.6`) als raue Kante. Kein `feTurbulence` je Strich:
+    das kostete auf einer vollen Seite ein Bild je Bild. Er steht am ENDE
+    der Reihe, damit Füller → Kugel → Pinsel bleibt, wie test343 es hält.
+  · DIE FREIE STÄRKE: ein `<input type=range>` von 0,5 bis 12 neben den
+    drei Stufen (GoodNotes: drei Voreinstellungen und ein Schieber). Sein
+    Wert IST die Stärke; eine Stufe stellt ihn nach, er stellt die Stufen
+    ab. Über `setzeStrich` und `Zeichenziel.uebernehmeStrich`, derselbe
+    Weg wie ein Tipp auf eine Stufe.
+  · DIE BUCHSTABENTASTEN von GoodNotes: P Stift, 2 Bleistift, H Marker,
+    E Radierer, S Form, V Auswahl, T Text, A Abdecken, N Haftnotiz,
+    M Fachzeichen, R Lineal, I Bild. Ein Buchstabe ohne Strg — deshalb nur,
+    wenn niemand tippt (kein Eingabefeld, nichts Editierbares im Fokus)
+    und eine Zeichenfläche da ist (`Zeichenziel.da()`). Die Kürzel gehen
+    über die KNÖPFE der Leiste, nicht an der Leiste vorbei: derselbe Weg,
+    denselben Zustand. `register/tasten.ts` führt sie unter „Blatt und
+    PDF", und test438 §4 hält Griff und Übersicht zusammen.
+
+WAS NICHT GEBAUT WURDE, und warum: GoodNotes' Kurve (ein Bogen, dessen
+Mitte man nachträglich zieht) und die Verbinder zwischen Formen — beides
+braucht Griffe an einer fertigen Marke, das ist der Stoff von G2 (Drehen)
+und danach. Die Formerkennung (E355) kennt das Dreieck noch nicht; ein
+gehaltener Dreieckszug bleibt ein Strich. Steht in L133.
+
+GEGENPROBEN (§55.2), beide gelaufen und rot gesehen: der Zweig
+`art === 'triangle'` im Zeichner umbenannt → §1 „ein Polygon mit drei
+Ecken" rot. Der Tastengriff nie registriert → §4 rot, elf Punkte.
+
+BILDER ANGESEHEN: `bilder/zeichnen-rechner-hell.png` (Dreieck rot, rundes
+Rechteck blau, Bleistiftwelle grau-körnig über der schwarzen Füllerwelle,
+die Leiste mit Bleistift, Stufen und Regler „2,4"), `zeichnen-handy-dunkel`.
+
+DATEIEN. `src/bereiche/pdf/marken.ts`, `src/register/tasten.ts`,
+`quell/schale/stil/bausteine.css`, `bilder.mts`,
+`pruefungen/lauf/test438.mts` (neu), `test365.mts` (sechs Formen).
+
+GEPRÜFT. test438 (40 Punkte, neu), test343, test344, test345, test365,
+test201, test351, test174, test393, test386, test210, test437, test362,
+test290, test105, test109, test87, test247, test248, test272, test414;
+`npm run typecheck`, `npm run bauen:ts`, `node bauen.mts`.

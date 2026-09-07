@@ -108,7 +108,7 @@ console.log('\n3 · Im Zubehör wechselt man sie, und zeichnet sofort damit');
 
 const zubehoer = await pg.evaluate(() =>
   [...document.querySelectorAll<HTMLElement>('.blatt-werk [data-act="formart"]')].map(k => k.dataset.form));
-gleich('Vier Formen im Zubehör', zubehoer, ['line', 'arrow', 'rectangle', 'ellipse']);
+gleich('Sechs Formen im Zubehör (E465: Dreieck und Rund dazu)', zubehoer, ['line', 'arrow', 'rectangle', 'ellipse', 'triangle', 'roundrect']);
 
 await pg.click('.blatt-werk [data-act="formart"][data-form="rectangle"]');
 await pg.waitForTimeout(220);
@@ -188,7 +188,8 @@ const handy = await tel.evaluate(() => {
       .map(k => Math.round(k.getBoundingClientRect().top))).size,
   };
 });
-gleich('Vier Formen auch am Telefon', handy.wieviele, 4);
+/* SECHS SEIT E465: Dreieck und rundes Rechteck kamen dazu (Goodnotes' Shape-Tool). */
+gleich('Sechs Formen auch am Telefon', handy.wieviele, 6);
 p('Jede misst 44 px (§37)', handy.kleinsteHoehe >= 44 && handy.kleinsteBreite >= 44,
   handy.kleinsteBreite + '×' + handy.kleinsteHoehe);
 gleich('Und die Werkzeuge bleiben in EINER rollenden Zeile', handy.zeilen, 1);

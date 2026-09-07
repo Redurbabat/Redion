@@ -44,6 +44,16 @@ Register.tasten = (() => {
                 ['Strg Alt T', 'Alle Toggles auf/zu'], ['Strg Enter', 'Abhaken oder öffnen'],
                 ['Shift Enter', 'Zeilenumbruch im Block'], ['Esc', 'Block auswählen']
             ]],
+        /* AUF BLATT UND PDF-SEITE, wie in GoodNotes (E465): ein Buchstabe
+           wechselt das Werkzeug — nur, solange niemand tippt. Die Griffe
+           stehen in `marken.ts` (TASTEN); test438 haelt beide Listen zusammen. */
+        ['Blatt und PDF', [
+                ['P', 'Stift'], ['2', 'Bleistift'], ['H', 'Marker'], ['E', 'Radierer'],
+                ['S', 'Form'], ['V', 'Auswahl'], ['T', 'Text'], ['A', 'Abdecken'],
+                ['N', 'Haftnotiz'], ['M', 'Fachzeichen'], ['R', 'Lineal'], ['I', 'Bild'],
+                ['Strg Z', 'Zurück'], ['Strg Shift Z', 'Vor'], ['Strg C · Strg V', 'Auswahl kopieren, einsetzen'],
+                ['Entf', 'Auswahl löschen']
+            ]],
         ['Formatierung', [
                 ['Strg B', 'Fett'], ['Strg I', 'Kursiv'], ['Strg U', 'Unterstrichen'],
                 ['Strg Shift S', 'Durchgestrichen'], ['Strg E', 'Code'], ['Strg Shift H', 'Letzte Farbe'],

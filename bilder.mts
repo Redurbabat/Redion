@@ -2196,6 +2196,49 @@ ANSICHTEN['auge'] = {
   }
 };
 
+/* --- G1: Zeichnen wie GoodNotes (E465) -----------------------------------
+   Ein A4-Blatt mit Dreieck, rundem Rechteck, einem Bleistift- und einem
+   Fuellerstrich; darunter die Blattleiste mit dem Stift gewaehlt, damit
+   Stil, Farben, Stufen und der neue Staerke-Regler zu sehen sind. */
+ANSICHTEN['zeichnen'] = {
+  titel: 'Zeichnen wie GoodNotes: Dreieck, rundes Rechteck, Bleistift, freie Stärke (E465)',
+  bauen: async () => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelectorAll('.overlay').forEach(o => o.remove());
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+    document.getElementById('rg-willkommen')?.remove();
+    document.getElementById('rg-einladung')?.remove();
+    Store.setMeta('zeichnen:stift', 'bleistift');
+    const seite = Store.addPage(null, { text: 'Skizzen zur Reihenschaltung' });
+    const welle = (x0: number, y0: number, n: number, amp: number) => {
+      const pts: number[][] = [], druck: number[] = [];
+      for (let i = 0; i <= n; i++) {
+        pts.push([Math.round((x0 + i * 6) * 10) / 10, Math.round((y0 + Math.sin(i / 2.2) * amp) * 10) / 10]);
+        druck.push(Math.round((0.35 + 0.5 * Math.abs(Math.sin(i / 3))) * 100) / 100);
+      }
+      return { pts, druck };
+    };
+    const b = welle(70, 150, 60, 14), f = welle(70, 230, 60, 14);
+    Store.addBlock(seite.id, 'blatt', {
+      text: '', blattBreite: 595.28, blattHoehe: 841.89, raumVersion: 1,
+      marken: [
+        { id: 'g1-1', art: 'triangle', farbe: '#d64545', breite: 2.4, pts: [[60, 330], [220, 470]] },
+        { id: 'g1-2', art: 'roundrect', farbe: '#2f7ed8', breite: 2.4, pts: [[260, 330], [470, 470]] },
+        { id: 'g1-3', art: 'rectangle', farbe: '#3aa757', breite: 2.4, pts: [[60, 510], [220, 620]] },
+        { id: 'g1-4', art: 'ellipse', farbe: '#e0a419', breite: 2.4, pts: [[260, 510], [470, 620]] },
+        { id: 'g1-5', art: 'stift', stil: 'bleistift', farbe: '#111111', breite: 2.4, pts: b.pts, pressure: b.druck },
+        { id: 'g1-6', art: 'stift', stil: 'fueller', farbe: '#111111', breite: 2.4, pts: f.pts, pressure: f.druck },
+        { id: 'g1-7', art: 'text', farbe: '#111111', breite: 2.4, point: [70, 90], text: 'Bleistift oben, Füller darunter', fontSize: 16 }
+      ]
+    });
+    await Store.flush();
+    App.oeffne(seite.id);
+    await new Promise(r => setTimeout(r, 700));
+    document.querySelector<HTMLElement>('.blatt-werk [data-wz="stift"]')?.click();
+    await new Promise(r => setTimeout(r, 400));
+  }
+};
+
 ANSICHTEN['willkommen'] = {
   titel: 'Willkommen: Rauschtextur im Kopf (E462)',
   bauen: async () => {

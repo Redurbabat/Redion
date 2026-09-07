@@ -6396,3 +6396,51 @@ Ergebnis des Einlesens, nicht die Meldung währenddessen.
 WAS ES SCHLIESSEN WÜRDE: in einer dieser Suiten während des Einlesens
 nach `.ru-lader-schwebt .ru-lader-text` sehen — eine Zeile, aber in einem
 Lauf, der der Presse nicht gehört. Derselbe Stand wie bei L119.
+
+---
+
+L133 — Was am PDF-Teil gegenüber GoodNotes noch fehlt (Stand nach G1)
+--------------------------------------------------------------------------
+
+Redurs Auftrag vom 7. September (E465): der PDF-Teil 1:1 wie GoodNotes,
+ohne eine Funktion zu löschen. Diese Lücke ist die ehrliche Restliste —
+sie wird mit jedem Bogen (G2 bis G5 in `AUFGABEN.md` 7) kürzer, und was
+hier steht, ist NICHT gebaut, wie schön das Dossier es auch beschreibt.
+
+Zeichnen (nach G1, E465):
+
+  · **Kurve** und **Verbinder** des Shape-Tools — beides braucht Griffe an
+    einer fertigen Marke (die Mitte der Kurve nachziehen; ein Verbinder,
+    der an zwei Formen hängt). Kommt nach dem Drehgriff aus G2.
+  · **Formerkennung fürs Dreieck** — `InkShapes.recognize` kennt Linie,
+    Rechteck, Ellipse; ein gehaltener Dreieckszug bleibt ein Strich.
+  · **Radierer-Filter** nach Werkzeugart über Marker hinaus (GoodNotes:
+    Pen, Pencil, Highlighter, Tape einzeln) — heute Ganz, Teil, Marker.
+  · **Farbsets** speichern und zurücksetzen — heute sieben feste und vier
+    eigene Tupfer.
+
+Noch nicht angefangen (G2–G5, siehe `AUFGABEN.md`): Drehen, Ausschneiden,
+Reihenfolge, Sperren, Kritzel-Löschen, Kreis-Lasso; Seiten einfügen,
+löschen, verschieben, drehen, Lesezeichen; Suche in der Textschicht,
+PDF-Links, eigene Links; Bilder als Seiten, PDF in ein offenes Dokument,
+Seite als Bild, Zoom-Fenster.
+
+Was Redion auch nach G5 nicht haben wird, und warum:
+
+  · **Audio mit Zeitbezug zur Handschrift (Note Replay)** — ein eigener
+    Bereich (Aufnahme, Speicher in Stücken, Abspielen mit Marken-Zeit).
+    Es gibt „Besprechung" im KI-Fenster; die Kopplung an Striche ist ein
+    eigener Bogen mit eigener Entscheidung.
+  · **Handschrift → Text, Mathe → Formel** — braucht eine Erkennung, die
+    lokal läuft. Tesseract erkennt gedruckten Text (OCR-Auftrag), keine
+    Handschrift; eine Wolken-Erkennung widerspricht §21 ohne Frage.
+  · **Elemente-Bibliothek (Sticker, GIPHY)** — Redion hat die Fachzeichen;
+    eine allgemeine Sammlung wiederverwendbarer Marken wäre neu.
+  · **Präsentationsmodus mit Laserpointer**, **Wolken-Abgleich der
+    Dokumente**, **Freigabe-Links**, **Marketplace** — ausserhalb des
+    PDF-Teils oder ausserhalb von local-first (§22, §24).
+  · **DOCX/PPTX-Import** — GoodNotes wandelt sie zu PDF um (nur auf
+    Apple); im Browser ohne Bibliothek nicht möglich, und eine grosse
+    Abhängigkeit ist keine (§6).
+
+Gefunden beim Lesen des Dossiers gegen den Bestand, 7. September 2026.

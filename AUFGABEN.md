@@ -214,6 +214,36 @@ rechtfertigt.
 
 ---
 
+### 7 · Der PDF-Teil wie GoodNotes — fünf Bögen (Redur, 7. September)
+
+Redur, mit dem GoodNotes-Dossier: „alles, was GoodNotes machen kann, 1:1 —
+nur beim PDF-Teil: wie die bearbeitet wird, importiert, die Stifte usw.",
+und „ohne eine Funktion zu löschen". Gegen das Dossier gelesen, was steht
+(E351–E360, E375–E385, E464) und was fehlt. Fünf Bögen, jeder mit Prüflauf,
+Gegenprobe, Bild und Entscheidung:
+
+  · **G1 — Zeichnen** (E465, test438): Dreieck, rundes Rechteck, Bleistift,
+    freie Strichstärke, Buchstabentasten P/2/H/E/S/V/T/A/N/M/R/I. **Steht.**
+  · **G2 — Auswahl**: Drehen (Drehgriff), Ausschneiden (Strg X), nach vorn
+    und nach hinten, Sperren, Kritzel-Löschen, Kreis-Lasso (Umkreisen und
+    halten).
+  · **G3 — Seiten**: einfügen (leer, mit Vorlage, als Duplikat), löschen,
+    verschieben, drehen; Lesezeichen je Seite mit Liste im Inspector.
+  · **G4 — Suche und Links**: die Textschicht der PDF beim Einlesen ablegen
+    (`leser.text` gibt es), ein Suchfeld im Schreibtisch mit Treffern auf
+    der Seite; die Links der PDF (pdf.js `getAnnotations`) anklickbar;
+    eigene Links (extern, auf eine andere Seite).
+  · **G5 — Import und Export**: JPG/PNG als Seiten, PDF-Seiten in ein
+    offenes Dokument einfügen, eine Seite als Bild sichern, das
+    Zoom-Fenster (Lupe zum Kleinschreiben).
+
+Was danach ehrlich offen bleibt, steht in **L133** (Audio mit Zeitbezug,
+Handschrift-zu-Text, Mathe, Elemente-Bibliothek, Präsentation, Wolke).
+
+**Priorität** — hoch; es ist Redurs Auftrag vom 7. September.
+
+---
+
 ### 6 · Das UI-System aus dem Handoff — 50 Komponenten, sechs Phasen
 
 Redur hat am 6. September ein Handoff-Paket geschickt: 50 Uiverse-

@@ -4303,6 +4303,8 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-werk[data-tool="arrow"] > [data-gruppe="form"],
 .blatt-werk[data-tool="rectangle"] > [data-gruppe="form"],
 .blatt-werk[data-tool="ellipse"] > [data-gruppe="form"],
+.blatt-werk[data-tool="triangle"] > [data-gruppe="form"],
+.blatt-werk[data-tool="roundrect"] > [data-gruppe="form"],
 .blatt-werk[data-tool="line"] > [data-gruppe="lineal"],
 .blatt-werk[data-tool="line"] > [data-gruppe="farbe"],
 .blatt-werk[data-tool="line"] > [data-gruppe="breite"],
@@ -4313,6 +4315,11 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-werk[data-tool="rectangle"] > [data-gruppe="breite"],
 .blatt-werk[data-tool="ellipse"] > [data-gruppe="farbe"],
 .blatt-werk[data-tool="ellipse"] > [data-gruppe="breite"],
+/* Dreieck und rundes Rechteck (E465) — dasselbe Zubehör wie Rechteck und Ellipse. */
+.blatt-werk[data-tool="triangle"] > [data-gruppe="farbe"],
+.blatt-werk[data-tool="triangle"] > [data-gruppe="breite"],
+.blatt-werk[data-tool="roundrect"] > [data-gruppe="farbe"],
+.blatt-werk[data-tool="roundrect"] > [data-gruppe="breite"],
 .blatt-werk[data-tool="abdeck"] > [data-gruppe="farbe"],
 .blatt-werk[data-tool="zettel"] > [data-gruppe="farbe"],
 .blatt-werk[data-tool="text"] > [data-gruppe="schrift"],
@@ -4432,6 +4439,7 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
   .blatt-werk[data-tool="stift"]{--platz:30} .blatt-werk[data-tool="marker"]{--platz:40}
   .blatt-werk[data-tool="line"]{--platz:50} .blatt-werk[data-tool="arrow"]{--platz:60}
   .blatt-werk[data-tool="rectangle"]{--platz:70} .blatt-werk[data-tool="ellipse"]{--platz:80}
+  .blatt-werk[data-tool="triangle"]{--platz:70} .blatt-werk[data-tool="roundrect"]{--platz:70}
   .blatt-werk[data-tool="abdeck"]{--platz:90} .blatt-werk[data-tool="zettel"]{--platz:100}
   .blatt-werk[data-tool="text"]{--platz:110} .blatt-werk[data-tool="zeichen"]{--platz:120}
   .blatt-werk[data-tool="bild"]{--platz:125} .blatt-werk[data-tool="radierer"]{--platz:130}
@@ -7222,3 +7230,11 @@ html[data-theme="dark"] .ru-textur-grob{opacity:.12}
   .cover-textur .ru-textur{ animation:none }
   .bib-blick:hover .bib-blick-auge{ animation:none }
 }
+
+/* ---- Die freie Strichstärke (E465): ein Regler neben den drei Stufen ---- */
+.blatt-werk .blatt-staerke{
+  display:inline-flex; align-items:center; gap:6px; min-height:var(--touch-min);
+  padding:0 6px; color:var(--text-dim); font-size:11px
+}
+.blatt-werk .blatt-staerke input{ width:86px; margin:0; accent-color:var(--accent); cursor:pointer }
+.blatt-werk .blatt-staerke output{ min-width:2.2em; text-align:right; font-variant-numeric:tabular-nums }
