@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-469 Entscheidungen, E1 bis E489 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+470 Entscheidungen, E1 bis E490 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -533,6 +533,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E487** — Die Suche über mehrere Dokumente: fremde Seiten in einer Klappe, und der Sprung sucht dort weiter
 * **E488** — Ein eigener PDF-Schreiber: das ganze Dokument mit Marken, ohne die Bildbytes je zu lesen
 * **E489** — Der Radierer „Band“ radierte nichts: er verglich gegen eine Markenart, die es nicht gibt
+* **E490** — Der Stift wie GoodNotes: Halten gilt auch bei zitternder Hand, ein Schutzleiter grün-gelb, Zurück nach links
 
 ---
 
@@ -38999,3 +39000,130 @@ erraten (E21).
 
 GEPRÜFT. `test455` (18 Zusagen) mit der Gegenprobe rot gesehen; dazu
 test87, test105, test109, test344.
+
+
+---
+
+E490 — Der Stift wie GoodNotes: Halten gilt auch bei zitternder Hand, ein Schutzleiter grün-gelb, Zurück nach links
+--------------------------------------------------------------------------
+
+Redur am 7. September, drei Sätze und ein Bild:
+
+> „Könntest du den Stift verbessern — wenn ich eine Linie zeichne und mehr
+> als drei Sekunden gedrückt halte, sollte sie gerade werden. Dann brauche
+> ich eine spezielle Farbe, die ist Schutzleiterfarbe, so grün-gelb, und
+> Strich-Punkt-Strich-Punkt, es muss so sein. Und schau, wie ist der
+> GoodNotes-Stift, und bau es 1:1 so. Ich will das Zurücknehmen ungefähr
+> hier haben wie GoodNotes." — auf dem Bild ein Kasten links oben.
+
+## 1. Halten hat nie funktioniert, und der Grund war eine Zeile
+
+„Am Ende kurz halten, und der Strich wird eine Form" gibt es seit E355.
+Die Uhr dafür war:
+
+    running.bewegtUm = Date.now();     // bei JEDEM aufgezeichneten Punkt
+
+Ein Punkt kommt ab 0,6 Einheiten Abstand dazu. Eine Hand, die einen Stift
+ruhig hält, zittert um mehr als das — sie liefert also weiter Punkte, und
+die Uhr fing bei jedem von vorn an. Mit der MAUS ging es (die steht
+wirklich still), mit Finger und Stift so gut wie nie. Genau das hat Redur
+gemeldet, und er hat drei Sekunden gehalten, wo 450 Millisekunden reichen
+sollten.
+
+Zwei Fragen, die vorher eine waren:
+
+    Kommt ein neuer PUNKT in den Strich?   ab 0,6 Einheiten
+    Hat die HAND sich bewegt?              ab RUHE_RADIUS = 3 Einheiten
+
+Der Strich bekommt seinen Ruhepunkt; die Uhr läuft erst weiter, wenn der
+Zeiger ihn verlässt. Drei Einheiten sind rund zweieinhalb Bildschirmpixel
+bei 100 % — mehr als ein Zittern, weniger als eine Absicht. `test461 §1`
+fährt beides: ±2 Einheiten über 900 ms MUSS als Halten gelten, ±10 nicht.
+
+## 2. Die Erkennung war nicht das Problem — nachgemessen
+
+Bevor an `InkShapes` etwas gelockert wurde, wurde gemessen, wie krumm eine
+mit der Hand gezogene Linie sein darf, bis sie durchfällt:
+
+    Zittern (Einheiten)   0     4    12    18    25
+    heute erkannt        ja    ja    ja  NEIN  NEIN
+
+Bis ±12 auf 400 Einheiten Länge — das ist deutlich krummer, als eine Hand
+zieht. Die Schwellen bleiben also, wie sie sind. §36: erst messen, dann
+bauen; und was nach dem Messen keine Arbeit braucht, bekommt keine.
+`test461 §2` schreibt die Messung als Zusage fest.
+
+## 3. Der Schutzleiter
+
+Kein gewöhnlicher Stift, sondern die Leitung, die im Schaltplan grün-gelb
+und strichpunktiert gezeichnet wird. Redion ist eine App für einen
+Elektriker; das ist der eine Strich, den er täglich braucht.
+
+**Grün-gelb ist keine Mischfarbe, sondern zwei Farben.** Also wird
+derselbe Weg zweimal gezeichnet: unten das Grün (`#158a3a`), darüber das
+Gelb (`#f2d200`) als Strich-Punkt-Muster. Dazwischen scheint das Grün
+durch, und was man sieht, ist die Ader.
+
+Eine GRUPPE und nicht zwei Marken: es ist EIN Strich. Zwei Marken liessen
+sich einzeln verschieben, einzeln radieren, einzeln auswählen — und die
+eine Hälfte des Schutzleiters bliebe liegen. Die Geometrie steht
+weiterhin genau einmal da; nur das Bild ist doppelt.
+
+**Die Farbe der Leiste gilt für ihn nicht.** Ein Schutzleiter in Blau wäre
+keiner. Und er schwillt nicht mit dem Druck: eine Leitung hat eine Stärke,
+keine Handschrift.
+
+**Er überlebt das Geradeziehen.** Jeder andere Stil fällt weg, wenn ein
+gehaltener Strich zur Form wird (eine Form hat keine Handschrift) — beim
+Schutzleiter wäre genau die eine Sache, für die man ihn braucht, die
+Sache, bei der er vergeht: man zieht die Erdungsleitung, hält, und heraus
+kommt eine schwarze Linie.
+
+### Das Muster hat das Bild bestimmt, nicht die Rechnung
+
+Der erste Entwurf stand auf 4 / 2,2 / 0,35 / 2,2 Strichbreiten. Auf dem
+Bild war die Ader **gelb**. Der Grund: `stroke-linecap:round` setzt an
+jedes Strichende eine Halbkugel — jeder Strich wird um eine ganze
+Strichbreite länger und jede Lücke um dieselbe kürzer. Gezeichnet waren
+also 5 / 1,2 / 1,35 / 1,2, und das Gelb deckte drei Viertel.
+
+Zweiter Anlauf 2 / 4 / 0,1 / 4: grün-dominant, aber Strich und Punkt fast
+gleich lang — eine gestrichelte Linie, kein Strich-Punkt. Jetzt
+3,5 / 4 / 0,1 / 4, gezeichnet 4,5 / 3 / 1,1 / 3: das Grün liegt mit gut
+der Hälfte obenauf, und der Strich ist viermal so lang wie der Punkt.
+
+Zweimal hingesehen, zweimal etwas gefunden, das keine Rechnung gesagt
+hätte (§55).
+
+## 4. Zurück und Vor stehen links
+
+So steht es bei GoodNotes, und so zeigte es Redurs Bild. Vorher standen
+sie ganz rechts. `prepend` und nicht `appendChild`: die Reihenfolge im
+Baum ist auch die für die Tastatur, und wer mit Tab durch die Leiste geht,
+soll sie in derselben Folge treffen wie mit den Augen (§38). Die Mitte
+bleibt die Mitte — das besorgen zwei `auto`-Ränder im Stilblatt und nicht
+ein zweiter Kasten im Baum.
+
+## Was „1:1 wie GoodNotes" hier heisst
+
+Der GoodNotes-Stift kann: drei Stiftarten mit Druck, feste Stärken plus
+freien Regler, Farbfeld mit eigenen Farben, Halten für Formen, Zurück und
+Vor links. Redion hatte alles davon ausser dem letzten — und das Halten
+nur auf dem Papier. Beides steht jetzt. Was Redion DARÜBER hinaus hat, ist
+der Schutzleiter; GoodNotes kennt ihn nicht, und Redur braucht ihn.
+
+## Und ein roter Lauf, den E486 hinterlassen hat (§46)
+
+`test343 §6` klickte das „+" und erwartete sofort den Farbwähler des
+Systems. Seit E486 liegt der hinter der Farbwahl — dieselbe Prüfung, einen
+Tipp später. Nachgezogen mit dem Grund daneben; er war beim Bündel zu E486
+nicht dabei und ist erst hier aufgefallen. Genau dafür steht der breite
+Lauf aus E485.
+
+GEPRÜFT. `test461` mit 34 Zusagen, vier Gegenproben rot gesehen (§55.2):
+die Uhr wieder bei jedem Punkt zurückgesetzt (der gehaltene Strich bleibt
+krumm), ohne die Schutzleiter-Gruppe (ein Strich statt zwei), `stil` wieder
+ohne Ausnahme gelöscht (die gerade Leitung wird schwarz), und `prepend`
+zurück zu `appendChild` (Zurück steht rechts). Dazu test343, test347,
+test351, test355, test356, test362, test376.
+Bild: `node bilder.mts schutzleiter` — die Ansicht ist neu.

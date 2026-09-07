@@ -14,7 +14,8 @@
  *   4 · DREI STIFTE — der Knopf wechselt, der Kugelschreiber bleibt der alte
  *       Strich, der Pinsel schwillt stärker, die Wahl überlebt das Neuladen.
  *   5 · DER MARKER AM LINEAL ZIEHT GERADE.
- *   6 · EIGENE FARBEN — der Farbwähler des Browsers, gemerkt als Tupfer.
+ *   6 · EIGENE FARBEN — der Farbwähler des Browsers hinter der Farbwahl
+ *       (E486), gemerkt als Tupfer.
  *   7 · DER DRUCKWEG zeichnet den Füller genauso.
  *   8 · AM TELEFON sind die neuen Knöpfe Fingerknöpfe.
  *
@@ -261,9 +262,17 @@ p('Ohne Lineal bleibt der Marker Freihand', !!m && m.art === 'marker' && m.n > 2
 
 /* ======================================================================== */
 console.log('\n6 · Eigene Farben — der Farbwähler des Browsers, gemerkt als Tupfer');
+/* DER WEG GEHT SEIT E486 ÜBER EINE WAHL. Das „+" öffnet nicht mehr direkt
+   den Farbwähler des Systems, sondern ein Feld mit allem, was Farbe ist —
+   Farbwähler zuoberst, darunter die Farbsätze. Der Grund steht in E486:
+   die Zubehörzeile der Leiste fasst keinen fünfzehnten Knopf, und GoodNotes
+   geht denselben Weg. Diese Zusage prüft weiter dasselbe, nur einen Tipp
+   später. */
 const farbe = await pg.evaluate(async () => {
   document.querySelector<HTMLElement>('.blatt-werk [data-act="farbe"]')?.click();
-  await new Promise(f => setTimeout(f, 100));
+  await new Promise(f => setTimeout(f, 250));
+  document.querySelector<HTMLElement>('.overlay [data-w="waehlen"]')?.click();
+  await new Promise(f => setTimeout(f, 150));
   const feld = document.querySelector<HTMLInputElement>('input[type="color"]');
   if (!feld) return { feld: false };
   feld.value = '#8e44ad';

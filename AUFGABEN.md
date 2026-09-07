@@ -214,7 +214,7 @@ rechtfertigt.
 
 ---
 
-### 7 · Der PDF-Teil wie GoodNotes — einundzwanzig Bögen (Redur, 7. September)
+### 7 · Der PDF-Teil wie GoodNotes — zweiundzwanzig Bögen (Redur, 7. September)
 
 Redur, mit dem GoodNotes-Dossier: „alles, was GoodNotes machen kann, 1:1 —
 nur beim PDF-Teil: wie die bearbeitet wird, importiert, die Stifte usw.",
@@ -329,6 +329,13 @@ der Zeichenschicht nicht zu drücken — und zwar schon vor diesen Bögen.
     eigenen PDF-Leser hat einen Fehler gefunden, den kein Lesen des Codes
     gefunden hätte: das Bild der ersten Seite trug die Objektnummer des
     Katalogs. **Steht.**
+  · **G22 — Der Stift** (E490, test461): Redurs eigene Bitte. „Am Ende
+    halten" hat nie funktioniert, weil jeder aufgezeichnete Punkt die Uhr
+    zurücksetzte — eine ruhig gehaltene Hand zittert. Jetzt hat der Strich
+    einen Ruhepunkt. Dazu der **Schutzleiter**: grün-gelb und
+    Strich-Punkt, in EINER Marke, und er überlebt das Geradeziehen. Und
+    Zurück/Vor stehen links, wie bei GoodNotes und wie auf Redurs Bild.
+    **Steht.**
 
 Was danach ehrlich offen bleibt, steht in **L133** (Audio mit Zeitbezug,
 Handschrift-zu-Text, Mathe, Elemente-Bibliothek, Präsentation, Wolke).

@@ -4242,6 +4242,26 @@ dafür steht §13: schreiben, zurücklesen, vergleichen. Der Prüflauf macht
 das PDF mit Redions eigenem Leser wieder auf und misst einen Pixel dort,
 wo ein roter Strich liegen muss.
 
+**Der Stift, wie Redur ihn wollte (E490, test461).** Drei Sätze und ein
+Bild von ihm: die gehaltene Linie soll gerade werden, es braucht eine
+Schutzleiter-Farbe grün-gelb mit Strich-Punkt, und das Zurücknehmen gehört
+nach links wie bei GoodNotes.
+
+Der erste Punkt war ein echter Fehler, und zwar seit E355: „am Ende kurz
+halten" setzte die Uhr bei JEDEM aufgezeichneten Punkt zurück. Eine Hand,
+die einen Stift ruhig hält, zittert aber — mit der Maus ging es, mit
+Finger und Stift so gut wie nie. Der Strich hat jetzt einen Ruhepunkt;
+gezählt wird erst, wenn der Zeiger ihn verlässt.
+
+Bevor an der Formerkennung etwas gelockert wurde, wurde gemessen: eine
+Linie darf bis ±12 Einheiten zittern und wird trotzdem erkannt. Also blieb
+sie, wie sie war (§36).
+
+Der Schutzleiter ist zweimal derselbe Weg — unten grün, darüber gelb als
+Strich-Punkt —, und das Bild hat das Muster zweimal korrigiert: die runden
+Strichenden verlängern jeden Strich um eine Strichbreite, und der erste
+Entwurf war deshalb fast ganz gelb.
+
 **Ein Fund nebenbei (E489).** Beim Suchen nach Namen für die Markenarten
 kam heraus, dass der Radiermodus „Band" aus E482 **nie etwas radiert
 hat**: er verglich gegen `art: 'band'`, und das Abdeckband heisst als

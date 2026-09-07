@@ -2064,6 +2064,34 @@ const ANSICHTEN: Record<string, {
     }
   },
 
+  schutzleiter: {
+    titel: 'Der Schutzleiter-Stift: grün-gelb und Strich-Punkt (E490)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const p = Store.addPage(null, { text: 'Schaltplan mit Schutzleiter', icon: '⚡' });
+      const blatt = Store.addBlock(p.id, 'blatt', { text: '', papier: 'kariert' });
+      Store.addBlock(blatt.id, 'text', { text: 'Steckdose an L, N und PE — der Schutzleiter grün-gelb' });
+      Store.updateBlock(blatt.id, { marken: [
+        /* Zwei gewöhnliche Adern und darunter der Schutzleiter: gerade
+           gezogen (gehalten) und einmal von Hand. */
+        { id: 'l', art: 'line', farbe: '#111111', breite: 2.4, pts: [[70, 150], [430, 150]] },
+        { id: 'n', art: 'line', farbe: '#2f7ed8', breite: 2.4, pts: [[70, 190], [430, 190]] },
+        { id: 'pe1', art: 'line', stil: 'schutzleiter', breite: 3, pts: [[70, 230], [430, 230]] },
+        { id: 'pe2', art: 'stift', stil: 'schutzleiter', breite: 3,
+          pts: Array.from({ length: 40 }, (_, i) => {
+            const t = i / 39;
+            return [70 + t * 360, 300 + Math.sin(t * 6) * 26];
+          }) },
+        { id: 'z', art: 'zettel', farbe: '#e0a419', pts: [[70, 380], [400, 450]],
+          text: 'PE: gerade ziehen und halten — er bleibt grün-gelb' }
+      ] });
+      App.oeffne(p.id);
+      await new Promise(r => setTimeout(r, 900));
+    }
+  },
+
   notizhefteFach: {
     titel: 'Ein offenes Fach in der Listenform (E265)',
     bauen: async () => {

@@ -1245,12 +1245,22 @@ const DocumentMode = (() => {
         const moreTools = topButton('ink-options', '···', 'Alle Stiftoptionen und Bearbeitungsaktionen');
         moreTools.setAttribute('aria-expanded', 'false');
         drawingbar.appendChild(moreTools);
+        /* ZURÜCK UND VOR STEHEN LINKS (E490, Redurs Bild vom 7. September).
+           So steht es bei GoodNotes: ganz links in der Leiste, vor den
+           Werkzeugen — und die Hand sucht sie dort, weil sie dort immer waren.
+           Vorher standen sie ganz rechts.
+    
+           `prepend`, nicht `appendChild`: die Reihenfolge im Baum ist auch die
+           Reihenfolge für die Tastatur, und wer mit Tab durch die Leiste geht,
+           soll sie in derselben Folge treffen wie mit den Augen (§38). Die
+           Mitte bleibt die Mitte — das besorgen zwei `auto`-Ränder im
+           Stilblatt, nicht ein zweiter Kasten hier. */
         const history = document.createElement('div');
         history.className = 'document-ink-history';
         history.setAttribute('role', 'group');
         history.setAttribute('aria-label', 'Zeichenverlauf');
         history.append(topButton('ink-undo', '↶', 'Letzten Zeichenstrich rückgängig machen'), topButton('ink-redo', '↷', 'Zeichenstrich wiederholen'));
-        drawingbar.appendChild(history);
+        drawingbar.prepend(history);
         /* WELCHE SPALTEN ES GIBT, STEHT AM KASTEN (E296). Vorher war das Raster
            fest — 190 px links, 280 px rechts, bei jeder Fensterbreite ueber
            1100 px. Auf 1440 px blieben der Seite damit rund 900, obwohl beide
