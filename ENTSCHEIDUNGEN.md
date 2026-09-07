@@ -37529,3 +37529,17 @@ sechs Angriffe werden leer; der gebaute Text und der fertige Knoten tragen
 kein Ereignis-Attribut, und nichts läuft), §2 die sechs Türen einzeln, die
 Farbe weiterhin erlaubt, §3 die Quellen. Gegenproben: `Sanitize.farbe`
 weggelassen (§1 rot), eine Sperrprüfung entfernt (§2 rot).
+
+GEPRÜFT (breiter Lauf, 7. September). 33 Läufe, 31 grün beim ersten Mal;
+die zwei roten waren keiner der Funde: `test442 §6` las die Ausfuhr des
+Studios auf ein Zeichen genau (`seiteAlsBild }`) und stolperte über das
+neue `freigeben` daneben — jetzt prüft er den Namen, nicht seine Stelle.
+`test424` fiel an „PDF page position survives reload", dem bekannten
+Wackler dieses Laufs, und war beim zweiten Lauf grün.
+
+Die Läufe: test446 (neu), test445, test444, test443, test442, test441,
+test440, test439, test438, test437, test424, test242, test349, test320,
+test285, test395, test385, test386, test393, test177, test210, test228,
+test341, test351, test362, test290, test105, test109, test87, test426,
+test365, test174, test202; `npm run typecheck`, `npm run bauen:ts`,
+`node bauen.mts`.

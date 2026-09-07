@@ -247,7 +247,9 @@ await s.close();
 console.log('\n§6 Eingebunden');
 {
   p('Der Import kennt anStelle und Bilder als Seiten', /anStelle\?: \{ elternId: string; index: number \}/.test(lies('src/bereiche/pdf/einlesen.ts')) && /bilderAlsSeiten, bilderWaehlen/.test(lies('src/bereiche/pdf/einlesen.ts')));
-  p('Das Studio kennt Seite als Bild und das Zoom-Fenster', /seiteAlsBild \}/.test(lies('src/bereiche/pdf/document-mode.ts')) && /const lupeSetzen/.test(lies('src/bereiche/pdf/document-mode.ts')));
+  /* Die Ausfuhr trägt seit E473 auch `freigeben` — geprüft wird der Name,
+     nicht seine Stelle in der Zeile. */
+  p('Das Studio kennt Seite als Bild und das Zoom-Fenster', /seiteAlsBild[,\s}]/.test(lies('src/bereiche/pdf/document-mode.ts')) && /const lupeSetzen/.test(lies('src/bereiche/pdf/document-mode.ts')));
   p('Das Stilblatt kennt den Streifen', /\.document-lupe\{/.test(lies('quell/schale/stil/bausteine.css')) && /\.document-lupe-fenster\{/.test(lies('quell/schale/stil/bausteine.css')));
 }
 
