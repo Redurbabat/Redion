@@ -1,14 +1,19 @@
 # Redion
 
-Redion ist eine local-first Notiz-, Datenbank- und Wissens-App im Stil von Notion.  
+Redion ist eine Notiz-, Datenbank- und Wissens-App, die direkt im Browser läuft.
 
-Die App läuft direkt im Browser, speichert deine Daten zuerst auf deinem eigenen Gerät und kann optional mit einem Server/Cloudflare erweitert werden.
+Sie war einmal als Alternative zu Notion gedacht und ist darüber hinausgewachsen: das Schreibstudio für PDFs mit echtem Stift, Fachzeichen und Schutzleiter, die Lernwelt, die Prüfungsplanung, lokale KI, das vollständige `.redion`-Paket. Das gibt es dort nicht.
 
-Redion soll drei Dinge gleichzeitig können:
+**Redion läuft mit Server und ohne — beides vollständig.**
 
-1. Lokal arbeiten
-2. Offline sichern
-3. Optional mit Cloud/Server synchronisieren
+Ohne Server ist nichts abgeschnitten: Seiten, Datenbanken, Formeln, PDFs, Zeichnen, Suche, KI und Sicherung arbeiten offline auf deinem Gerät. Mit Server kommt dazu, was mehr als ein Gerät braucht — Abgleich, Konto, Rechte, Teilen.
+
+**Du entscheidest, wo deine Daten liegen:**
+
+1. Nur auf diesem Gerät (Vorgabe, ohne Konto)
+2. Zusätzlich in einem Ordner deiner Wahl, den Redion selbst sichert
+3. In deiner eigenen Wolke (Cloudflare, dein Konto, deine Datenbank)
+4. In deiner Hand — als `.redion`-Datei mit allem darin
 
 Das wichtigste Prinzip:
 
@@ -68,30 +73,31 @@ Roadmap
 
 Was ist Redion?
 
-Redion ist eine Notion-ähnliche App für:
+Redion ist ein Arbeitsbereich für:
 
 Notizen
 Seiten
 Datenbanken
+PDFs mit Stift, Marker und Fachzeichen
 Aufgaben
 Wikis
 Karteikarten
+Lernen und Prüfungsplanung
 Graph
 Dateien
 Kommentare
 Erwähnungen
 Automationen
-KI-Hilfe
-lokale Sicherungen
-optionale Cloud-Synchronisation
+KI-Hilfe, lokal
+Sicherungen als `.json` und als vollständiges `.redion`-Paket
+Abgleich über die eigene Wolke
 
-Redion ist local-first. Das bedeutet:
+Redion ist local-first, und das heisst nicht „eingeschränkt":
 
-Die App funktioniert zuerst lokal.
+Die App ist ohne Server VOLLSTÄNDIG. Nichts ist abgeschnitten.
 Deine Daten liegen zuerst auf deinem Gerät.
-Ein Server ist optional.
-Ein Konto ist optional.
-Cloud-Sync ist optional.
+Mit Server kommt dazu, was mehr als ein Gerät braucht — Abgleich, Konto, Rechte, Teilen.
+Wo die Daten liegen, entscheidest du: Gerät, eigener Ordner, eigene Wolke, `.redion`-Datei.
 Export und Offline-Sicherung sind Pflicht.
 
 Redion soll nicht nur eine Web-App sein, sondern ein persönlicher Arbeitsbereich, den man mitnehmen, sichern und später auch auf mehreren Geräten verwenden kann.
@@ -102,10 +108,11 @@ Ziele
 
 Hauptziele
 
-local-first
+local-first, und dabei vollständig
 offlinefähig
-Notion-ähnlicher Editor
-Notion-ähnliche Datenbanken
+ein Editor aus Blöcken
+Datenbanken mit zwölf Ansichten
+das Schreibstudio für PDFs
 vollständige Sicherung
 Anhänge sicher exportieren
 optional Cloudflare Sync
@@ -718,7 +725,7 @@ $a^2$
 
 Datenbanken
 
-Redion-Datenbanken sind ähnlich aufgebaut wie in Notion.
+Redion-Datenbanken sind so aufgebaut, wie man es aus Notion kennt — wer von dort kommt, findet sich sofort zurecht.
 
 Grundprinzip:
 
@@ -1746,7 +1753,7 @@ Formeln
 Server
 Tests
 
-Etappe 6: Notion-ähnliche Vollständigkeit
+Etappe 6: Vollständigkeit
 
 bessere Datenbankansichten
 Formulare

@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-470 Entscheidungen, E1 bis E490 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+471 Entscheidungen, E1 bis E491 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -534,6 +534,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E488** — Ein eigener PDF-Schreiber: das ganze Dokument mit Marken, ohne die Bildbytes je zu lesen
 * **E489** — Der Radierer „Band“ radierte nichts: er verglich gegen eine Markenart, die es nicht gibt
 * **E490** — Der Stift wie GoodNotes: Halten gilt auch bei zitternder Hand, ein Schutzleiter grün-gelb, Zurück nach links
+* **E491** — Redion ist keine Notion-Kopie mehr: mit Server und ohne, und der Nutzer entscheidet, wo seine Daten liegen
 
 ---
 
@@ -39127,3 +39128,69 @@ ohne Ausnahme gelöscht (die gerade Leitung wird schwarz), und `prepend`
 zurück zu `appendChild` (Zurück steht rechts). Dazu test343, test347,
 test351, test355, test356, test362, test376.
 Bild: `node bilder.mts schutzleiter` — die Ansicht ist neu.
+
+
+---
+
+E491 — Redion ist keine Notion-Kopie mehr: mit Server und ohne, und der Nutzer entscheidet, wo seine Daten liegen
+--------------------------------------------------------------------------
+
+Redur am 7. September:
+
+> „Also korrigiere es: es ist nicht mehr eine Kopie von Notion, es ist eine
+> bessere App als Notion, und sie braucht Server sowie ohne, und man kann
+> entscheiden, wo man die Daten haben will."
+
+## Was geändert wurde, und wo
+
+Vier Stellen beschrieben Redion als Nachbau:
+
+    CLAUDE.md §2       „eine lokale Notion-Alternative"
+    CLAUDE.md §52.17   „Notion-artige App"
+    README.md          „im Stil von Notion", „Notion-ähnliche App",
+                       „Notion-ähnlicher Editor", „Etappe 6: Notion-ähnliche
+                       Vollständigkeit"
+    index.html         `<meta name="description">`: „unser eigenes Notion"
+
+Sie sagen jetzt, was Redion ist: eine eigene App, die über diese
+Beschreibung hinausgewachsen ist. Das Schreibstudio für PDFs mit Stift,
+Fachzeichen und Schutzleiter, die Lernwelt, die Prüfungsplanung, das
+`.redion`-Paket — davon hat Notion nichts.
+
+## Zwei Sätze, die dabei geradegerückt wurden
+
+**„Optional" war das falsche Wort für den Server.** Es klang nach Normalfall
+und Zubehör. Richtig ist: **beides ist ein vollwertiger Weg.** Ohne Server
+ist Redion VOLLSTÄNDIG — Seiten, Datenbanken, Formeln, PDFs, Zeichnen,
+Suche, KI und Sicherung arbeiten auf dem Gerät. Mit Server kommt dazu, was
+mehr als ein Gerät braucht: Abgleich, Konto, Rechte, Teilen. §22 bleibt
+Wort für Wort, wie es ist — der Server darf keine Bedingung sein; nur die
+BESCHREIBUNG hörte sich an, als wäre die Wolke die eigentliche Fassung.
+
+**Und wo die Daten liegen, ist eine Wahl, keine Vorgabe.** Vier Wege, und
+alle vier gibt es wirklich:
+
+    nur auf diesem Gerät        Vorgabe, ohne Konto
+    im eigenen Ordner           Redion sichert selbst hinein (E270)
+    in der eigenen Wolke        eigenes Cloudflare-Konto, eigene Datenbank
+    in der Hand                 `.redion` mit allem darin
+
+Das stand schon in §24 als Regel; jetzt steht es auch dort, wo ein Mensch
+zuerst hinsieht.
+
+## Was NICHT geändert wurde, und warum
+
+Die rund dreissig Stellen im Quelltext, an denen „wie in Notion" steht
+(vor allem `editor.ts`), bleiben. Sie sind keine Herkunftsangabe, sondern
+eine Begründung: sie sagen dem nächsten Leser, WARUM eine Taste so belegt
+ist oder ein Menü so aufgebaut. Ein Kommentar, der eine bekannte Lösung
+nennt, ist besser als einer, der eine Entscheidung behauptet, die niemand
+mehr nachvollziehen kann (§45).
+
+Ebenso bleiben die zwei sachlichen Nennungen im README: die Formelsprache
+ist nach dem Vorbild von Notion Formulas 2.0 gebaut, und der Import liest
+Notions Export-ZIP. Beides ist wahr und beides nützt dem Leser.
+
+Und §2 bleibt §2. Umgeschrieben, nicht umnummeriert — die Nummern sind
+fest, weil `ENTSCHEIDUNGEN.md`, `LUECKEN.md` und die Prüfläufe darauf
+zeigen.
