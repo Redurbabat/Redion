@@ -214,7 +214,7 @@ rechtfertigt.
 
 ---
 
-### 7 · Der PDF-Teil wie GoodNotes — sechzehn Bögen (Redur, 7. September)
+### 7 · Der PDF-Teil wie GoodNotes — neunzehn Bögen (Redur, 7. September)
 
 Redur, mit dem GoodNotes-Dossier: „alles, was GoodNotes machen kann, 1:1 —
 nur beim PDF-Teil: wie die bearbeitet wird, importiert, die Stifte usw.",
@@ -289,6 +289,32 @@ Gegenprobe, Bild und Entscheidung:
     Seitenmenü und an der Miniatur (`capture="environment"`), und der
     Radierer kennt fünf Arten — Ganz und Teil sagen, wie viel weggeht,
     Stift, Marker und Band, wovon. **Steht.**
+  · **G17 — Die Kurve mit ihrem Griff** (E483, test456): die erste Form
+    mit drei Punkten — und ohne ein neues Feld, weil `pts` eine Liste ist
+    und `move`, `scale` und `rotate` ohnehin alle Punkte anfassen. Der
+    Verbinder bleibt offen: er ist eine Beziehung, kein Punkt. **Steht.**
+  · **G18 — Treffer und Verweise sitzen genauer** (E484, test457): der
+    Suchtreffer wird gemessen statt gezählt („iiii" ist kein halbes
+    „iiiiWWWW"), und ein Verweis an einem Strich bekommt eine
+    Trefffläche entlang des WEGES — nicht den Kasten, den L133
+    vorschlug, denn der finge die Nachbarn mit ein. **Steht.**
+
+Nach diesen achtzehn Bögen lief ein **breiter Lauf** über 68 Prüfungen
+(E485). Er fand einen echten Fehler, der ausserhalb aller Bündel lag: der
+Knopf „Aus dem Original zurückholen" auf einer Seite ohne Bild war unter
+der Zeichenschicht nicht zu drücken — und zwar schon vor diesen Bögen.
+
+  · **G19 — Farbsätze** (E486, test458): die vier eigenen Tupfer lassen
+    sich unter einem Namen sichern, wieder laden, löschen und auf den
+    Auslieferungsstand zurücksetzen — höchstens acht Sätze, und der
+    neunte bekommt eine Absage statt dass still der älteste verschwindet.
+    Sie liegen in `meta` und reisen in jeder Sicherung mit. Sie stehen
+    hinter dem „+" der Farbgruppe, zusammen mit dem Farbwähler: ein
+    eigener Knopf kippte die Leiste in eine dritte Zeile (`test351`), und
+    ein Farbknopf, der zu allem führt, ist ohnehin GoodNotes' eigener Weg.
+    Der Bogen fand zwei ältere Fehler: die Tupfer standen nach dem Wählen
+    verkehrt herum, und `Dialog.wahl` schnitt bei vielen Knöpfen den
+    letzten stumm ab. **Steht.**
 
 Was danach ehrlich offen bleibt, steht in **L133** (Audio mit Zeitbezug,
 Handschrift-zu-Text, Mathe, Elemente-Bibliothek, Präsentation, Wolke).

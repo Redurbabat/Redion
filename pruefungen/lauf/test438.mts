@@ -119,7 +119,7 @@ console.log('\n§1 Dreieck und rundes Rechteck');
 {
   const s = await mitBlatt();
   const zubehoer = await s.evaluate(`[...document.querySelectorAll('.blatt-werk [data-act="formart"]')].map(k => k.dataset.form)`) as string[];
-  gleich('Sechs Formen im Zubehör', zubehoer, ['line', 'arrow', 'rectangle', 'ellipse', 'triangle', 'roundrect']);
+  gleich('Sieben Formen im Zubehör (die Kurve kam mit E483 dazu)', zubehoer, ['line', 'arrow', 'rectangle', 'ellipse', 'triangle', 'roundrect', 'curve']);
   const bau = JSON.parse(await s.evaluate(`(() => {
     const d = Marken.zeichneMarke({ id: 't', art: 'triangle', farbe: '#d64545', breite: 2.4, pts: [[10, 10], [110, 90]] });
     const r = Marken.zeichneMarke({ id: 'r', art: 'roundrect', farbe: '#2f7ed8', breite: 2.4, pts: [[10, 10], [130, 70]] });

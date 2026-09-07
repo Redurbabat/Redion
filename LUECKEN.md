@@ -6407,7 +6407,7 @@ Lauf, der der Presse nicht gehört. Derselbe Stand wie bei L119.
 
 ---
 
-L133 — Was am PDF-Teil gegenüber GoodNotes noch fehlt (Stand nach G16)
+L133 — Was am PDF-Teil gegenüber GoodNotes noch fehlt (Stand nach G19)
 --------------------------------------------------------------------------
 
 Redurs Auftrag vom 7. September (E465): der PDF-Teil 1:1 wie GoodNotes,
@@ -6417,9 +6417,15 @@ was hier steht, ist NICHT gebaut, wie schön das Dossier es auch beschreibt.
 
 Zeichnen (nach G1, E465):
 
-  · **Kurve** und **Verbinder** des Shape-Tools — beides braucht Griffe an
-    einer fertigen Marke (die Mitte der Kurve nachziehen; ein Verbinder,
-    der an zwei Formen hängt). Kommt nach dem Drehgriff aus G2.
+  · ~~**Kurve**~~ des Shape-Tools — **GESCHLOSSEN mit E483.** Die erste
+    Form mit drei Punkten (Anfang, Ende, Griff), ohne ein neues Feld:
+    `pts` ist eine Liste, und `move`, `scale` und `rotate` fassen ohnehin
+    alle Punkte an. Der Griff steht auf dem Steuerpunkt und biegt in den
+    Achsen der Marke. `test456`.
+  · **Verbinder** des Shape-Tools — offen, und etwas anderes als die
+    Kurve: eine Marke, die an ZWEI anderen hängt und mitgeht, wenn eine
+    sich bewegt. Das braucht Anker an fremden Marken und ein Nachziehen
+    bei jeder Änderung — keinen dritten Punkt, sondern eine Beziehung.
   · ~~**Formerkennung für gedrehte Dreiecke**~~ — **GESCHLOSSEN mit E478.**
     Die Marke kann seit E466 schief stehen und seit E474 rechnet die
     Geometrie damit; also bekommt ein gedrehtes Dreieck jetzt seinen
@@ -6433,8 +6439,23 @@ Zeichnen (nach G1, E465):
     Redion kein Werkzeug, sondern ein Stil des Stifts (E375) — er stünde
     in einer Reihe mit Werkzeugen und meinte etwas anderes als sie.
     `test455 §2`.
-  · **Farbsets** speichern und zurücksetzen — heute sieben feste und vier
-    eigene Tupfer.
+  · ~~**Farbsets** speichern und zurücksetzen~~ — **GESCHLOSSEN mit E486.**
+    Ein Farbsatz ist die benannte Abschrift der vier eigenen Tupfer:
+    sichern, laden, löschen, zurücksetzen. Sie stehen hinter dem „+" der
+    Farbgruppe, zusammen mit dem Farbwähler — einen EIGENEN Knopf konnte
+    die Leiste nicht tragen: nachgemessen fasst ihre Zubehörzeile bei
+    596 px genau vierzehn, und sie war mit vierzehn voll. Das ist zugleich
+    der Weg, den GoodNotes geht (ein Farbknopf, ein Feld). Höchstens acht
+    Sätze, und der neunte bekommt eine Absage statt dass still der älteste
+    verschwindet. Die Sätze liegen in `meta` und
+    reisen damit in jeder Sicherung mit (`test458 §4`).
+    **Und die Zahl in dieser Zeile war falsch:** es sind FÜNF feste Farben,
+    nicht sieben — nachgezählt in `Marken.FARBEN`. E21 gilt auch für die
+    eigenen Notizen.
+    Der Bogen fand nebenbei zwei ältere Fehler: die Tupfer standen nach dem
+    Wählen verkehrt herum (ein `reverse()` zu viel, E351), und `Dialog.wahl`
+    schnitt bei elf Knöpfen den letzten ab, ohne es zu sagen. Beide behoben.
+    `test458`.
 
 Auswahl (nach G2, E466; Sperre nachgezogen in E473): Drehen,
 Ausschneiden, nach vorn und hinten, Sperren, Kritzel-Löschen und
@@ -6476,9 +6497,12 @@ Suche und Verweise (nach G4, E468): die Suche im Studio mit Treffern an
 der Stelle, die Verweise der PDF, eigene Verweise an Marken stehen.
 Offen bleibt:
 
-  · **Treffer-Kästen sind eine Näherung** — anteilig nach Zeichen im
-    Stück der Textebene, nicht gemessen; bei sehr ungleichen Buchstaben
-    („iiii" neben „WWWW") sitzt der Kasten ein paar Punkte daneben.
+  · ~~**Treffer-Kästen sind eine Näherung**~~ — **GESCHLOSSEN mit E484.**
+    Gemessen wird jetzt mit `InkGeometry.textWidth`, als Verhältnis
+    innerhalb des Stücks; dass die Messschrift nicht die der PDF ist,
+    fällt darin weitgehend heraus. Bei „iiiiWWWW" sitzt der Kasten für
+    „WWWW" gemessen bei 13,3 % statt gezählt bei 17,8 % — und 13,3 ist
+    richtig. `test457 §1`.
   · ~~**PDF-Verweise auf gedrehten Seiten**~~ — **GESCHLOSSEN mit E481.**
     Die Schicht liegt nicht mehr NEBEN dem Papier (von Hand nachgemessen,
     und bei einer gedrehten Seite misst man ihre Hülle), sondern IM
@@ -6491,8 +6515,13 @@ Offen bleibt:
     Einlesen als `zielY` am Verweis, und der Sprung rollt dorthin. `/Fit`
     nennt keine — und dann steht auch keine da (dieselbe Regel wie E477).
     `test454 §1, §2`.
-  · **Verweise auf Striche antippen** — ein Strich trägt seinen Verweis,
-    ist aber dünn; ein Kasten um ihn ist der bessere Träger.
+  · ~~**Verweise auf Striche antippen**~~ — **GESCHLOSSEN mit E484**, aber
+    NICHT mit dem Kasten, den diese Zeile vorschlug: ein Bogen über eine
+    halbe Seite hätte einen Kasten über die halbe Seite, und der finge
+    alles ein, was daneben steht (dieselbe Lehre wie E476). Stattdessen
+    derselbe WEG, nur breiter — eine durchsichtige Kopie des Pfades mit
+    24 Punkten Strich. Gemessen: zehn Punkte daneben trifft, zwanzig
+    nicht. `test457 §2`.
 
 Import und Export (nach G5, E469): Bilder als Seiten, PDF an einer Stelle,
 Seite als Bild, Zoom-Fenster stehen. Offen bleibt:

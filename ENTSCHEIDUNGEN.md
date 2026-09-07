@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-462 Entscheidungen, E1 bis E482 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+466 Entscheidungen, E1 bis E486 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -526,6 +526,10 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E480** — Die Miniaturenleiste wie GoodNotes: ein Menü je Seite, das SEINE Seite meint, und Ziehen zum Umordnen
 * **E481** — Verweise treffen die Stelle, auch auf gedrehten Seiten — und die Schicht zieht ins Papier
 * **E482** — Die Kamera macht eine Seite, und der Radierer nimmt nur, was er meint
+* **E483** — Die Kurve mit ihrem Griff: die erste Form mit drei Punkten — und ohne ein neues Feld
+* **E484** — Treffer und Verweise sitzen genauer: gemessen statt gezählt, und ein Strich bekommt eine Trefffläche statt eines Kastens
+* **E485** — Der breite Lauf nach elf Bögen: ein Knopf lag unter der Zeichenschicht, und drei Prüfläufe kannten Anzahlen auswendig
+* **E486** — Farbsätze: die eigenen Farben unter einem Namen — und zwei alte Fehler, die dabei ans Licht kamen
 
 ---
 
@@ -38340,3 +38344,399 @@ Messung, kein Anblick.
 GEPRÜFT. 11 Läufe grün: test87, test105, test109, test352, test367,
 test439, test440, test442, test445, test453, test455; dazu
 `npm run typecheck`, `npm run bauen:ts`, `node bauen.mts`.
+
+---
+
+E483 — Die Kurve mit ihrem Griff: die erste Form mit drei Punkten — und ohne ein neues Feld
+--------------------------------------------------------------------------
+
+L133 führte seit E465: „**Kurve** und **Verbinder** des Shape-Tools —
+beides braucht Griffe an einer fertigen Marke (die Mitte der Kurve
+nachziehen; ein Verbinder, der an zwei Formen hängt). Kommt nach dem
+Drehgriff aus G2."
+
+Der Drehgriff steht seit E466, die Griffe rechnen seit E474 richtig — die
+Kurve kann jetzt kommen.
+
+## Drei Punkte statt eines neuen Feldes
+
+Sie ist die erste Form mit DREI Punkten: Anfang, Ende und der Griff
+dazwischen, der sie biegt. Gezeichnet wird sie als quadratische Bézier
+(`M a Q g z`).
+
+Und das ist der ganze Aufwand am Datenmodell: `pts` IST eine Liste, und
+eine Liste verträgt einen dritten Eintrag, ohne dass eine einzige
+vorhandene Marke sich ändert (§53.3). Besser noch — `move`, `scale` und
+`rotate` fassen ohnehin ALLE Punkte an, also wandert, wächst und dreht
+sich die Kurve von selbst richtig, ohne dass an der Geometrie eine Zeile
+zu ändern war. `test456 §4` misst genau das.
+
+Gezogen wird sie wie eine Linie. Der dritte Punkt kommt beim ABSETZEN
+dazu und liegt in der Mitte — dann ist die Kurve eine Gerade, und der
+Griff steht bereit. Das ist auch der Grund, warum sie sich so anfühlt wie
+in GoodNotes: erst die Strecke, dann die Biegung.
+
+## Der Griff
+
+Er steht auf dem Steuerpunkt, nur bei EINER gewählten Kurve (bei zweien
+wäre nicht zu sehen, welche er biegt), und er ist grün — nicht nur an
+seiner Stelle zu erkennen (§38). Er sitzt in derselben gedrehten Gruppe
+wie die vier Ecken (E474), also stimmt seine Lage auch an einer schiefen
+Kurve.
+
+Und der Zug dahinter dreht den Zeiger in die Achsen der MARKE zurück,
+bevor er den Punkt schreibt: eine um 90° gedrehte Kurve, die man auf dem
+Blatt nach oben biegt, muss ihren gespeicherten Punkt nach LINKS bewegen.
+Ohne diese Rückdrehung bögen sich gedrehte Kurven in die falsche
+Richtung; `test456 §3` misst es, und die Gegenprobe zeigt es.
+
+Gesperrtes bleibt gesperrt (E466).
+
+## Was der Kasten kostet
+
+`boundsRoh` nimmt alle Punkte — also auch den Steuerpunkt, der bei einer
+Bézier AUSSERHALB der Kurve liegt. Der Rahmen ist damit etwas weiter als
+die gezeichnete Kurve. Das ist die sichere Richtung (kein Treffer geht
+verloren) und es kostet nichts ausser ein paar Punkten Luft; die genaue
+Hülle einer Bézier zu rechnen wäre eine eigene Formel für einen
+Unterschied, den man kaum sieht.
+
+## Der Verbinder bleibt offen
+
+Er ist etwas anderes: eine Marke, die an ZWEI anderen hängt und mitgeht,
+wenn eine davon sich bewegt. Das braucht Anker an fremden Marken und ein
+Nachziehen bei jeder Änderung — kein dritter Punkt, sondern eine
+Beziehung. Steht in L133.
+
+## Wächter
+
+`test456` (neu, 24 Punkte): §1 gezogen wie eine Linie, fertig mit drei
+Punkten, der dritte in der Mitte, der Knoten ein Q-Pfad; §2 der Griff
+biegt sie, Anfang und Ende bleiben, Zurück holt die Gerade zurück; §3 an
+einer um 90° gedrehten Kurve wandert der gespeicherte Punkt in x, nicht
+in y; §4 `move`, `scale`, `rotate` und der Kasten, in Node gerechnet;
+§5 gesperrt lässt sie sich nicht biegen; §6 die Quellen.
+
+Zwei Gegenproben, beide gelaufen und rot: den dritten Punkt nicht
+anhängen, und die Rückdrehung weglassen.
+
+`test438` zählte die Formen im Zubehör und trägt jetzt sieben statt sechs.
+
+BILD. `bilder/e483-kurven.png` — vier Kurven: eine gewählt mit ihrem
+grünen Griff, eine nach unten gebogen, eine um 35° gedreht, und eine mit
+dem Griff in der Mitte, die darum eine Gerade ist.
+
+GEPRÜFT. 11 Läufe grün: test87, test105, test109, test347, test438,
+test439, test445, test447, test451, test455, test456; dazu
+`npm run typecheck`, `npm run bauen:ts`, `node bauen.mts`.
+
+---
+
+E484 — Treffer und Verweise sitzen genauer: gemessen statt gezählt, und ein Strich bekommt eine Trefffläche statt eines Kastens
+--------------------------------------------------------------------------
+
+Zwei Näherungen aus L133. Beide standen dort als „stimmt ungefähr" — und
+ungefähr ist bei einem Treffer zu wenig.
+
+## 1. Der Trefferkasten wird gemessen
+
+Ein Suchtreffer bekam seinen Kasten ANTEILIG NACH DER ZAHL DER ZEICHEN im
+Textstück: die ersten vier von acht Zeichen galten als die linke Hälfte.
+Bei „iiiiWWWW" ist das falsch — „iiii" macht in Wirklichkeit ein Fünftel
+aus, nicht die Hälfte.
+
+Gemessen wird jetzt mit `InkGeometry.textWidth`, und zwar als
+VERHÄLTNIS: die Breite bis hierhin geteilt durch die Breite des ganzen
+Stücks. Dass die Schrift der Messung nicht die der PDF ist, fällt im
+Verhältnis weitgehend heraus — was bleibt, ist, dass ein „i" schmaler
+zählt als ein „W".
+
+In Zahlen, aus der Gegenprobe von `test457 §1`: bei „iiiiWWWW" sitzt der
+Kasten für „WWWW" gemessen bei 13,3 % der Seitenbreite und gezählt bei
+17,8 %. Die Wahrheit ist 13,3.
+
+## 2. Ein Verweis am Strich bekommt eine Trefffläche
+
+L133 schlug vor: „ein Kasten um ihn ist der bessere Träger." Der Kasten
+wäre aber falsch, und zwar aus demselben Grund wie in E476: ein Bogen über
+eine halbe Seite hat einen KASTEN über die halbe Seite, und der finge
+alles ein, was daneben steht.
+
+Also derselbe WEG, nur breiter: eine Kopie des Pfades (`cloneNode(false)`
+nimmt genau die Geometrie mit und sonst nichts), ohne Füllung, mit
+durchsichtiger Strichfarbe und 24 Punkten Breite, hinter dem sichtbaren
+Strich. Sie malt nichts und trifft alles, was rund zwölf Punkte um den
+Strich liegt. Gemessen: zehn Punkte daneben trifft, zwanzig nicht mehr.
+
+Damit steht ein Linienzug MIT Verweis in einer Gruppe, und die Kennung
+wandert an sie — wer `[data-sid]` sucht, soll das Ganze finden und nicht
+die Hälfte. Ohne Verweis bleibt alles, wie es war (ein Pfad, keine
+Gruppe): was niemand antippen soll, braucht auch kein Feld.
+
+Formen bekommen keins: Rechteck, Ellipse, Dreieck und rundes Rechteck
+sind seit E353 ohnehin in ihrer Fläche greifbar.
+
+## Wächter
+
+`test457` (neu, 23 Punkte): §1 mit einer PDF, die „iiiiWWWW" trägt — die
+Lage des Stücks wird vom Leser GEMESSEN statt hingeschrieben, damit die
+Prüfung richtig bleibt, wenn jemand die Schriftgrösse der Probe ändert;
+§2 der Bau der Gruppe (ein Feld, 24 breit, durchsichtig) und vier Tipps
+in wachsendem Abstand; §3 ohne Verweis bleibt es ein Pfad; §4 eine Form
+braucht kein Feld; §5 die Quellen.
+
+Zwei Gegenproben, beide gelaufen und rot.
+
+EINE ZAHL, DIE ABSICHTLICH NICHT BEHAUPTET WIRD: wo genau die Trefffläche
+endet. Zehn trifft, zwanzig nicht — die Grenze dazwischen hängt vom
+Rundungsverhalten des Browsers ab und läge auf dem nächsten Bildschirm
+anders. Eine Prüfung, die sie festnagelt, wäre irgendwann rot, ohne dass
+etwas kaputt ist.
+
+KEIN BILD (§55.3): ein Kasten, der vier Prozent weiter links sitzt, und
+eine Fläche, die man nicht sieht — beides ist eine Messung.
+
+GEPRÜFT. 15 Läufe grün: test87, test105, test109, test437, test438,
+test439, test441, test442, test445, test447, test451, test453, test455,
+test456, test457; dazu `npm run typecheck`, `npm run bauen:ts`,
+`node bauen.mts`.
+
+---
+
+E485 — Der breite Lauf nach elf Bögen: ein Knopf lag unter der Zeichenschicht, und drei Prüfläufe kannten Anzahlen auswendig
+--------------------------------------------------------------------------
+
+Nach E474 bis E484 — elf Bögen, alle mit eigenem Prüflauf und gezielten
+Bündeln — ein BREITER Lauf über alles, was `marken.ts`, `document-mode.ts`
+oder die Stilblätter anfasst: 68 Läufe in drei Stücken (§30).
+
+Er hat vier Dinge gefunden, und nur eines davon war ein Fehler im Produkt.
+Aber das eine war einer, den kein einzelner Bogen hätte finden können.
+
+## 1. Der Knopf lag unter der Zeichenschicht (der echte Fund)
+
+Eine PDF-Seite ohne Bild zeigt „Aus dem Original zurückholen" (E106). Der
+Hinweis mit dem Knopf steht auf `z-index:1`, die Zeichenschicht auf 2 —
+mit einem Zeichenwerkzeug in der Hand war der Knopf NICHT ZU DRÜCKEN. Die
+Seite bot einen Weg an, den es nicht gab; man musste erst auf die Hand
+umschalten, um ihn zu finden, und niemand kommt darauf.
+
+`test180` lief genau darauf in eine Zeitüberschreitung — und zwar SCHON
+VORHER: derselbe Lauf ist auf dem Stand vor diesen elf Bögen (`c449f980`,
+in einem eigenen Arbeitsbaum geprüft) genauso rot. Der Fehler ist also
+nicht neu; er lag nur ausserhalb jedes Bündels, das seither gefahren
+wurde.
+
+Der Hinweis geht jetzt HÖHER (`z-index:3`), bleibt aber durchlässig
+(`pointer-events:none`); nur der Knopf selbst fängt den Zeiger. Gezeichnet
+wird weiter auf der ganzen Seite — die Marken liegen in Blattpunkten
+(E100) und warten nicht auf ein Bild. Und der Knopf misst jetzt 44 px
+statt 36 (§37): er ist der einzige Weg auf dieser Seite.
+
+`test180` ist damit grün, 36 von 36.
+
+## 2. Drei Prüfläufe kannten eine Anzahl auswendig
+
+Sie fielen nicht, weil etwas kaputt war, sondern weil etwas dazugekommen
+ist — und das ist eine eigene Sorte Fehler, die im Prüflauf steckt:
+
+  · `test344` drehte den Radierermodus HÖCHSTENS DREIMAL weiter, weil es
+    drei Arten gab. Mit den fünf aus E482 erreichte er sein Ziel nicht
+    mehr und fiel an vier Stellen um, die mit dem Modus gar nichts zu tun
+    hatten. Er FRAGT die Zahl jetzt (`Marken.RADIERER.length`) und zählt
+    die Arten nicht mehr auf.
+  · `test365` und `test438` zählten die Formen im Zubehör. Sie tragen
+    jetzt sieben statt sechs (die Kurve aus E483).
+  · `test362` hält eine Decke über die rohen Pixelzahlen in den
+    Stilblättern (`marken-decke.json`, dieselbe Bauform wie
+    `js-bestand.json`). Zwei Zahlen sind gewachsen: ein `16px` und ein
+    `28px` aus dem Menü der Miniaturenleiste (E480) — eine Innenluft und
+    ein Schattenradius, beides keine Trefferfläche. Nachgetragen.
+
+Die Lehre steht in `test344` daneben geschrieben: eine Prüfung, die eine
+ANZAHL auswendig kennt, wird beim nächsten Eintrag rot, ohne dass etwas
+kaputt ist. Wer die Zahl erfragen kann, soll sie erfragen.
+
+## 3. Und ein Wackler, der keiner war
+
+`test202` fiel im Bündel und lief allein grün — beim zweiten Mal in beiden
+Bäumen. Er steht hier, damit die nächste Runde ihn nicht für einen Fund
+hält.
+
+## Was das über das Vorgehen sagt
+
+Elf Bögen mit je einem eigenen Prüflauf und einem Bündel von zehn bis
+zwanzig Läufen — und trotzdem lag ein Knopf ausserhalb aller Bündel. Das
+ist kein Argument gegen die Bündel (sie halten die Sitzung überhaupt erst
+am Laufen, §30) und keines für den vollen Lauf nach jedem Bogen (er dauert
+länger, als eine Sitzung sicher steht). Es ist ein Argument für DIESEN
+Schritt: nach einer Reihe von Bögen ein breiter Lauf, bevor die nächste
+Reihe beginnt.
+
+GEPRÜFT. 68 Läufe in drei Stücken; danach die Bestätigung von test87,
+test96, test100, test105, test109, test180, test202, test344, test362,
+test365 — alle grün. Dazu `npm run typecheck`, `npm run bauen:ts`,
+`node bauen.mts`.
+
+
+---
+
+E486 — Farbsätze: die eigenen Farben unter einem Namen — und zwei alte Fehler, die dabei ans Licht kamen
+--------------------------------------------------------------------------
+
+Der letzte Punkt unter „Zeichnen" in L133, und der letzte offene aus
+Redurs GoodNotes-Auftrag, der ohne einen zweiten Blockrenderer oder einen
+PDF-Schreiber auskommt:
+
+> **Farbsets** speichern und zurücksetzen — heute sieben feste und vier
+> eigene Tupfer.
+
+(Es sind FÜNF feste, nicht sieben. Nachgezählt in `Marken.FARBEN`; die
+Zeile in `LUECKEN.md` ist mit diesem Bogen berichtigt. E21 gilt auch für
+die eigenen Notizen.)
+
+## Was entschieden wurde
+
+Ein Farbsatz ist eine **benannte Abschrift der vier eigenen Tupfer** —
+nichts weiter. Kein neues Farbmodell, kein zweiter Katalog (§8): die fünf
+festen Farben bleiben die festen und gehören keinem Satz an.
+
+    zeichnen:farben       die vier Tupfer, die JETZT in der Leiste stehen
+    zeichnen:farbsaetze   [{ name, farben }] — höchstens acht
+
+Vier Griffe:
+
+    sichern       die jetzigen Tupfer unter einem Namen ablegen
+    laden         die Tupfer eines Satzes zurückholen
+    löschen       einen Namen wegnehmen; die Farben bleiben stehen
+    zurücksetzen  die Tupfer leeren — Auslieferungsstand
+
+## Und sie bekamen KEINEN eigenen Knopf — das hat die Messung entschieden
+
+Zuerst stand in der Farbgruppe ein zweiter Knopf (🎨 „Sätze") hinter dem
+„+". Er lief eine Stunde, war grün, und `test351` warf ihn um: die
+Zeichenleiste stand in DREI Zeilen statt zwei, 120 px statt unter 100 —
+gegen E359 und L115 Punkt 9.
+
+Nachgemessen bei 1360 px Fenster (die Leiste ist dann 596 px breit):
+
+    Zeile 1   elf Werkzeuge                          11 × 36 px
+    Zeile 2   undo, redo, Formart, Kritzel, Stift,
+              fünf Farben, „+", drei Strichbreiten   14 × 36 px = 504 px
+              + dreizehn Abstände                              ≈  76 px
+                                                     ───────────────────
+                                                      580 px von 580 px
+
+Die Zeile war exakt voll. Ein fünfzehnter Knopf passt bei keiner Breite —
+auch ein schmalerer nicht, denn schon die vierzehn füllen sie aus.
+
+Der Weg heraus ist der, den GoodNotes ohnehin geht: dort führt EIN
+Farbknopf in ein Feld, in dem der Farbwähler UND die Paletten stehen. Also
+hier auch. Das „+" heisst jetzt „Farben" und öffnet die Wahl; ihr erster
+Eintrag ist der Farbwähler aus E351.
+
+Was das kostet: eine eigene Farbe zu wählen ist ein Tipp mehr als vorher.
+Was es einbringt: die fünf festen und die vier eigenen Tupfer bleiben ein
+Tipp entfernt (sie sind der häufige Weg), die Leiste bleibt bei zwei
+Zeilen, und die Sätze sind da, wo ein GoodNotes-Nutzer sie sucht.
+
+Die Reihenfolge in der Wahl ist deshalb keine Geschmacksfrage: „Andere
+Farbe wählen" steht ganz oben und ist der vorgewählte Knopf.
+
+## Die Alternative, und warum sie es nicht wurde
+
+GoodNotes hat mehrere Paletten NEBENEINANDER, mit einem Reiter je Palette.
+Das wäre in Redions Leiste ein zweiter Katalog von Farben neben `FARBEN`
+und ein Umschalter, der Platz braucht, den die Leiste nicht hat — bei
+390 px stehen von 21 Knöpfen schon 15 draussen (E140). Ein Satz, der die
+VORHANDENEN vier Tupfer benennt, macht dasselbe möglich und kostet die
+Leiste gar keinen Knopf.
+
+## Was es kostet
+
+Ein Satz ist eine Abschrift, keine Verbindung: wer die Tupfer ändert,
+ändert den gesicherten Satz NICHT mit. Das ist beabsichtigt — sonst könnte
+man einen Satz nicht als Ausgangspunkt benutzen — aber es heisst, dass ein
+Satz nach dem Laden und Weiterzeichnen neu gesichert werden will.
+
+## Wo er liegt, und dass er mitreist
+
+In `meta`, wie die Tupfer selbst. `meta` ist eines der Fächer der
+Sicherung (§9), also reist ein Farbsatz in `.json` und in `.redion` mit,
+ohne dass dafür etwas zu tun wäre. `test458 §4` sieht in der echten
+Sicherung nach, statt es zu behaupten.
+
+## Und die Grenze wird GESAGT
+
+Acht Sätze. Der neunte bekommt eine Absage (`farbsatzSichern` gibt `null`,
+die Leiste sagt es), statt dass still der älteste verschwindet. Ein
+verschluckter Speicherbefehl ist schlimmer als eine Absage (§35).
+
+## Zwei alte Fehler, die dabei ans Licht kamen
+
+Beide waren älter als dieser Bogen, und beide fand nicht das Nachdenken,
+sondern das Messen und das Hinsehen.
+
+**1. Die Tupfer standen nach dem Wählen verkehrt herum.** Der Farbwähler
+aus E351 hängte sie mit `reverse()` ein und dann jeden vor das „+" — das
+ist einmal zu viel gedreht: `before()` setzt jeden neuen direkt vor das
+„+", also HINTER den vorigen. Die Folge: die soeben gewählte Farbe stand
+ganz rechts, und nach dem nächsten Neuzeichnen der Leiste (die dreht
+nicht) plötzlich ganz links. Zwei Anzeigen desselben Zustands, und beide
+anders — dieselbe Sorte Fehler wie in E212, nur innerhalb einer Leiste.
+`test458 §3` misst jetzt beide Reihenfolgen gegeneinander.
+
+**2. Die Wahl mit vielen Knöpfen schnitt ab.** `Dialog.wahl` setzt sein
+Fenster als `.finder`, und das hat `overflow:hidden` und am Rechner keine
+Höhengrenze. Gemessen mit elf Knöpfen (acht Sätze plus die drei festen
+Einträge): 1019 px hoch in einem 900 px hohen Bildschirm, der LETZTE Knopf
+— „Eigene Farben zurücksetzen" — nicht anklickbar, ohne einen Hinweis,
+dass da noch etwas ist. Am Telefon greift `max-height:88vh`, und dann
+schnitt dieselbe Zeile ab.
+
+Die Wahl trägt jetzt eine eigene Klasse (`.finder.wahl`) mit einer
+Höhengrenze und `overflow-y:auto`; jeder andere `.finder` bleibt, wie er
+war. Die Grenze steht als `calc(100% - 24px)` und nicht in `vh`, weil
+`.overlay` ein Flex-Behälter mit `inset:0` und einem oberen Polster ist
+(14vh am Rechner, höchstens 72 px am Telefon) — ein Prozentsatz rechnet
+gegen dessen Inhaltskasten und zieht das Polster damit selbst ab. Eine
+Zahl in `vh` hätte für jede der beiden Lagen eine andere sein müssen.
+
+Bis hierher hatte kein Aufrufer so viele Knöpfe; der Fehler lag also
+still. Er wäre beim nächsten Dialog mit einer langen Liste aufgewacht.
+
+**Und ein drittes, kleineres:** die Prüfung der Tupfer stand nur an einer
+Tür (`eigeneFarbeMerken`). Mit den Sätzen kämen drei weitere dazu, jede
+mit ihrer eigenen Abschrift. Sie steht jetzt einmal (`farbenRein`) —
+kleingeschrieben, ohne Dubletten, ohne die festen Farben, höchstens vier.
+Die Kleinschreibung ist kein Schönheitsschritt: `data-c` wird zeichenweise
+mit der Farbe der Fläche verglichen, und ein Tupfer `#AABBCC` aus einer
+eingespielten Sicherung leuchtete nie, obwohl er die Farbe WAR.
+
+## Das Bild
+
+`node bilder.mts farbsaetze` — die Ansicht ist neu und zeigt die Wahl mit
+drei Sätzen, am Rechner und am Telefon. Sie hat die Begründung für die
+Acht widerlegt: sie stand als „passt schon in einen Dialog" da, und auf
+dem Bild stand die Liste schon bei drei Sätzen an der Unterkante. Nach dem
+Nachmessen und der Reparatur oben passt sie — aber die Zahl steht jetzt
+mit dem Messwert daneben, nicht mit einer Vermutung.
+
+## Ein roter Lauf ausserhalb dieses Bogens (§46)
+
+`test265` war rot und schon vor diesem Bogen: er las den Merker-Knopf als
+Textzeichen „★". **E460** hat daraus dasselbe SVG-Band gemacht, das die
+Kopfleiste führt, und seither ist der Text des Knopfes leer — die Prüfung
+kannte die alte Form auswendig, dieselbe Sorte wie in E485. Sie misst
+jetzt, was §38 wirklich verlangt: dass sich die FORM ändert (`fill` von
+`none` auf `currentColor`), nicht nur die Farbe. Gegenprobe: `fill` fest
+auf `none` — rot gesehen.
+
+GEPRÜFT. `test458` mit 54 Zusagen, fünf Gegenproben rot gesehen (§55.2):
+ohne `toLowerCase`, mit weggeworfenem ältesten Satz, ohne den Weg über die
+Wahl, mit wieder eingesetztem `reverse()`, ohne die Regel `.finder.wahl`.
+Dazu `test265` (mit eigener Gegenprobe), `test351` — der Lauf, der den
+zweiten Knopf umgeworfen hat — sowie test87, test96, test100, test105,
+test109, test180, test343, test344, test356, test362, test365, test375,
+test438, test455, test456. Dazu `npm run typecheck`, `npm run bauen:ts`,
+`node bauen.mts`.
