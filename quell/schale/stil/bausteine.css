@@ -4805,7 +4805,10 @@ body[data-dokument="an"] #handy-oben{display:none}
 /* Der Schliessknopf war am Rechner ausgeblendet, weil die Spalten dort
    dauerhaft standen und es nichts zu schliessen gab. Jetzt holt man sie —
    und muss sie auch wieder weglegen koennen (§47). */
-.document-panel-header button,.document-inspector-heading button{display:block;width:36px;padding:0}
+/* §37: auch der Schliessknopf einer Klappe ist ein Hauptweg — 36 px waren
+   es, gemessen beim Bogen zur Miniaturenleiste (E480). */
+.document-panel-header button,.document-inspector-heading button{
+  display:block;width:var(--touch-min);height:var(--touch-min);padding:0}
 .document-thumbnail{width:100%; display:flex; flex-direction:column; gap:4px; padding:7px;
   margin-bottom:8px; border:1px solid transparent; border-radius:9px; background:transparent;
   color:var(--text); text-align:left; cursor:pointer}

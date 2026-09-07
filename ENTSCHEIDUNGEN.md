@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-459 Entscheidungen, E1 bis E479 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+460 Entscheidungen, E1 bis E480 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -523,6 +523,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E477** — Die Verweise alter Seiten kommen nach — und „keine" ist eine Antwort, „nie nachgesehen" nicht
 * **E478** — Ein Dreieck darf liegen, wie es gezogen wurde — und ein gleichseitiges bekommt die kleinste Drehung
 * **E479** — „Seite als Bild" nimmt die Fotos mit: `blob:` ist im SVG gesperrt, `data:` nicht, und `foreignObject` trübt die Leinwand
+* **E480** — Die Miniaturenleiste wie GoodNotes: ein Menü je Seite, das SEINE Seite meint, und Ziehen zum Umordnen
 
 ---
 
@@ -38078,3 +38079,103 @@ um 18° gedreht), Marker, Stiftstrich und Textmarke, als PNG gesichert.
 GEPRÜFT. 10 Läufe grün: test87, test105, test109, test442, test445,
 test447, test448, test449, test450, test452; dazu `npm run typecheck`,
 `npm run bauen:ts`, `node bauen.mts`.
+
+---
+
+E480 — Die Miniaturenleiste wie GoodNotes: ein Menü je Seite, das SEINE Seite meint, und Ziehen zum Umordnen
+--------------------------------------------------------------------------
+
+L133 führte seit dem 7. September: „Seiten ziehen in der Miniaturenleiste
+und ein Menü je Miniatur (GoodNotes' „…" an jeder Seite) — heute gehen
+alle Seitengriffe über den Inspector der Seite, die man ANSIEHT."
+
+## Das Neue ist nicht das Menü, sondern WEN es meint
+
+Dieselben acht Griffe wie im Inspector, kein zweiter Katalog (§8): die
+Einträge tragen dieselben `data-document-action`, und derselbe Klickgriff
+führt sie aus. Neu ist `data-document-ziel` — die Angabe, WELCHE Seite
+gemeint ist.
+
+Dafür nehmen `seiteEinfuegen`, `seiteDuplizieren`, `seiteLoeschen`,
+`seiteSchieben`, `seiteDrehen` und `lesezeichenWechseln` jetzt entgegen,
+wen sie meinen. Ohne Angabe bleibt es die angesehene Seite — der
+Inspector ändert sich damit um kein Zeichen, und `test444` misst ihn
+unverändert.
+
+Genau daran hängt `test453 §2`: die erste Seite steht auf der Bühne, das
+Menü der DRITTEN wird geöffnet, „Löschen" gedrückt — und weg ist die
+dritte. Die Gegenprobe (Ziel wieder verwerfen) löscht die erste.
+
+## Das Ziehen
+
+Zeigerereignisse, kein HTML-Drag: nur so trägt es den Finger (§37), und
+nur so lässt es sich prüfen. Die Frage ist nicht, WIE gezogen wird,
+sondern WANN das Ziehen beginnt — die Leiste muss sich rollen lassen, und
+ein Tipp muss ein Tipp bleiben:
+
+    Maus              nach acht Pixeln Bewegung. Gerollt wird dort mit dem Rad.
+    Finger und Stift  erst nach 350 ms Halten auf der Stelle, wie in
+                      GoodNotes. Vorher gehört jede Bewegung dem Rollen.
+
+Losgelassen wird VOR der Seite, deren Mitte unter dem Zeiger liegt; eine
+Marke zeigt die Stelle. Umgeordnet wird in der Inhaltsliste der Eltern —
+und NUR dort: liegen die Seiten eines Dokuments in mehreren Spalten (das
+kann `documentsIn` finden), gibt es keine eine Reihenfolge, in die man
+einsortieren könnte, und `seiteAnStelle` sagt das, statt heimlich etwas
+anderes zu tun.
+
+**Die Bühne springt dabei nicht.** Sie zeigt weiter dieselbe Seite — deren
+NUMMER sich ändert, weil sie ja gewandert ist. `test453 §4` prüft darum
+den Block und nicht die Zahl; das ist ein Unterschied, den man einmal
+falsch herum geschrieben haben muss, um ihn zu sehen.
+
+## Zwei Dinge, die das Bild und die Gegenprobe erledigt haben
+
+**1. DAS MENÜ HING LINKS AUS DER LEISTE.** Gebaut mit `min-width:12.5rem`
+und `right:8px` — und dann gemessen: die Leiste ist **200 px** breit, das
+Menü 200, also stand seine linke Kante bei −8. Auf dem ersten Bild war es
+sofort zu sehen. Jetzt kommt die Lage aus dem Code, in BEIDEN Richtungen
+geklammert: die Leiste steht am Rechner senkrecht und am Telefon
+waagerecht (E397), eine feste Seite wäre dort immer die falsche.
+
+**2. EIN KLICK-SCHLUCKER FLOG WIEDER HERAUS.** Nach einem Zug sollte der
+folgende Klick nicht mehr an den Miniaturknopf gehen. `test453` konnte ihn
+abschalten, ohne dass etwas rot wurde — und beim Nachdenken hält er auch
+nichts: hat der Zug wirklich umgeordnet, baut `neuMit` die ganze Leiste
+neu, und der Knopf, auf den der Klick zielte, ist nicht mehr im Baum; hat
+er nicht umgeordnet, landet der Klick auf der Seite, die man eben
+aufgehoben hat — also dort, wo man ohnehin hinwollte. Ein Wächter, der
+nicht rot werden kann, ist eine Behauptung (§55.2). Das ist derselbe
+Handgriff wie in E478, und es ist der zweite in zwei Bögen: wer eine
+Vorsichtsmassnahme einbaut, muss sie rot sehen, sonst baut er ein Gefühl
+ein.
+
+## Und ein §37-Fund nebenbei
+
+Der Schliessknopf der Klappen (`.document-panel-header button`) war
+**36 px breit**. `test448` hatte ihn nicht gefunden, weil er nur die HÖHE
+mass — und die stimmte. §37 spricht von der Grösse, nicht von einer Kante;
+`test448` misst seit E480 beide Richtungen.
+
+## Wächter
+
+`test453` (neu, 32 Punkte): §1 sechs Zeilen, sechs Knöpfe, 44 px in beide
+Richtungen, das Menü ganz in der Leiste; §2 das Menü meint seine Seite
+(löschen und Lesezeichen); §3 es geht zu bei Escape, Tipp auf die Bühne,
+Rollen und beim zweiten Tipp auf denselben Knopf; §4 Ziehen ordnet um —
+vor, zurück, ans Ende, auf die eigene Stelle nichts — und auf der Bühne
+steht dieselbe Seite; §5 mit dem Finger erst nach dem Halten; §6 ohne
+Bearbeitungsrecht keines von beidem; §7 die Quellen.
+
+Drei Gegenproben, alle gelaufen und rot: das Ziel verwerfen (§2), der
+Finger hebt sofort auf (§5), der Zielplatz um eins verschoben (§4).
+
+BILDER. `bilder/e480-miniaturen-menue.png` (Rechner) und
+`e480-miniaturen-telefon.png` — beide angesehen; das erste zeigte den
+Fehler mit der Breite, das zweite, dass das Menü am Telefon neben seiner
+Miniatur stehen muss und nicht am linken Rand.
+
+GEPRÜFT. 15 Läufe grün: test87, test105, test109, test351, test424 (im
+zweiten Lauf, siehe den bekannten Wackler in E473), test437, test440–test445,
+test448, test452, test453; dazu `npm run typecheck`, `npm run bauen:ts`,
+`node bauen.mts`.

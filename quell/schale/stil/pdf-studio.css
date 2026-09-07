@@ -159,3 +159,44 @@ body[data-dokument="an"] .document-studio .blatt-marken[data-tool="schreiben"]{t
    (nachgemessen: keiner darunter); der `select` hatte gar keine Regel und
    nahm die des Browsers. */
 .document-inspector select{ min-height:var(--touch-min); padding:0 8px }
+
+/* ════════════════════════════════════════════════════════════════════════
+   E480 · DIE MINIATURENLEISTE WIE GOODNOTES
+   Eine Zeile je Seite: die Miniatur und der Menüknopf „⋯" nebeneinander.
+   Gezogen wird mit dem Zeiger (siehe document-mode.ts), und die Marke
+   zeigt, wo die Seite landet.
+   ═══════════════════════════════════════════════════════════════════════ */
+.document-thumbnails{ position:relative }
+.document-thumb-zeile{ position:relative; display:flex; align-items:flex-start; gap:4px;
+  margin-bottom:8px; touch-action:pan-y }
+.document-thumb-zeile .document-thumbnail{ flex:1; min-width:0; margin-bottom:0 }
+/* §37: der Menüknopf ist ein Hauptweg — über ihn gehen alle Seitengriffe. */
+.document-thumb-menue-knopf{ flex:0 0 auto; width:var(--touch-min); height:var(--touch-min);
+  display:flex; align-items:center; justify-content:center; padding:0;
+  border:1px solid transparent; border-radius:9px; background:transparent;
+  color:var(--text-dim); font-size:18px; line-height:1; cursor:pointer }
+.document-thumb-menue-knopf:hover,.document-thumb-menue-knopf[aria-expanded="true"]{
+  border-color:var(--accent-text); background:var(--accent-soft); color:var(--text) }
+
+/* Das Menü selbst — im gerollten Kasten der Leiste, darum `absolute`. */
+/* Die Leiste ist schmal (gemessen: 200 px am Rechner) — das Menü füllt sie
+   deshalb, statt sich eine Breite zu nehmen, die links hinausragt. Ein zu
+   hohes Menü rollt in sich, statt aus der Leiste zu wachsen. */
+.document-thumb-menue{ position:absolute; width:min(16rem, calc(100% - 12px));
+  z-index:8; display:flex; flex-direction:column; padding:6px;
+  max-height:calc(100% - 16px); overflow-y:auto;
+  background:var(--bg-card); border:1px solid var(--line); border-radius:12px;
+  box-shadow:0 10px 28px rgba(0,0,0,.22) }
+.document-thumb-menue button{ display:flex; align-items:center; gap:10px;
+  min-height:var(--touch-min); padding:0 10px; border:0; border-radius:8px;
+  background:transparent; color:var(--text); font-size:13px; text-align:left; cursor:pointer }
+.document-thumb-menue button:hover,.document-thumb-menue button:focus-visible{
+  background:var(--accent-soft) }
+.document-thumb-menue-zeichen{ width:1.4em; text-align:center; font-size:15px }
+
+/* Beim Ziehen: die aufgehobene Zeile blasst ab, die Marke zeigt das Ziel. */
+.document-thumb-zeile.bereit .document-thumbnail{ outline:2px solid var(--accent); outline-offset:-2px }
+.document-thumb-zeile.zieht{ opacity:.42 }
+.document-thumbnails.zieht-gerade{ cursor:grabbing; user-select:none }
+.document-thumb-marke{ position:absolute; left:8px; right:8px; height:3px; margin-top:-2px;
+  border-radius:2px; background:var(--accent); pointer-events:none }

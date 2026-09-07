@@ -6407,7 +6407,7 @@ Lauf, der der Presse nicht gehört. Derselbe Stand wie bei L119.
 
 ---
 
-L133 — Was am PDF-Teil gegenüber GoodNotes noch fehlt (Stand nach G13)
+L133 — Was am PDF-Teil gegenüber GoodNotes noch fehlt (Stand nach G14)
 --------------------------------------------------------------------------
 
 Redurs Auftrag vom 7. September (E465): der PDF-Teil 1:1 wie GoodNotes,
@@ -6452,9 +6452,15 @@ Kreis-Lasso stehen. Offen bleibt:
 Seiten (nach G3, E467): einfügen, duplizieren, drehen, schieben,
 Lesezeichen und löschen stehen im Inspector. Offen bleibt:
 
-  · **Seiten ziehen in der Miniaturenleiste** und ein Menü je Miniatur
-    (GoodNotes' „…" an jeder Seite) — heute gehen alle Seitengriffe über
-    den Inspector der Seite, die man ansieht.
+  · ~~**Seiten ziehen in der Miniaturenleiste** und ein Menü je Miniatur~~
+    — **GESCHLOSSEN mit E480.** Jede Miniatur hat ihren „⋯"-Knopf mit
+    denselben acht Griffen wie der Inspector, die aber SEINE Seite meinen
+    (dafür nehmen alle Seitengriffe jetzt entgegen, wen sie meinen).
+    Gezogen wird mit dem Zeiger: mit der Maus nach acht Pixeln, mit dem
+    Finger erst nach 350 ms Halten, damit die Leiste rollbar bleibt.
+    **Offen bleibt:** umgeordnet wird nur innerhalb derselben Eltern —
+    liegen die Seiten eines Dokuments in mehreren Spalten, sagt es das,
+    statt zu raten. `test453`.
   · **Einfügen aus einer Vorlage mit Inhalt** — „Seite danach" kennt die
     fünf Papiere; eine Vorlagenseite aus dem Vorlagenregister (mit Text
     und Marken) ist ein eigener Bogen.

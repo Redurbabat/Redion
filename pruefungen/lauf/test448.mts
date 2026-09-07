@@ -121,11 +121,17 @@ console.log('\n§1 Die drei Masse am Telefon');
     return e ? Math.round(e.getBoundingClientRect().height) : 0;
   })()`));
   p('Die Papierauswahl misst 44 px (gemessen waren es 36)', papier >= 44, String(papier));
+  /* BEIDE RICHTUNGEN, nicht nur die Höhe. Bis E480 mass diese Prüfung
+     allein die Höhe — und übersah damit den Schliessknopf der Klappe, der
+     36 px BREIT war und dessen Höhe stimmte. §37 spricht von der Grösse,
+     nicht von einer Kante. */
   const zuKlein = JSON.parse(await s.evaluate(`(() => JSON.stringify(
     [...document.querySelectorAll('.document-inspector button, .document-inspector select')]
-      .map(b => ({ was: b.dataset.documentAction || b.tagName.toLowerCase(), h: Math.round(b.getBoundingClientRect().height) }))
-      .filter(k => k.h > 0 && k.h < 44)))()`) as string);
-  gleich('Und im ganzen Seitenmenü steht nichts mehr unter 44 px', zuKlein, []);
+      .map(b => { const r = b.getBoundingClientRect();
+        return { was: b.dataset.documentAction || b.tagName.toLowerCase(),
+                 h: Math.round(r.height), w: Math.round(r.width) }; })
+      .filter(k => k.h > 0 && k.w > 0 && (k.h < 44 || k.w < 44))))()`) as string);
+  gleich('Und im ganzen Seitenmenü steht nichts mehr unter 44 px — in BEIDE Richtungen', zuKlein, []);
 
   /* Der freistehende Verweis — im Lesemodus, sonst liegt die Schicht still.
      Und das Seitenmenü wieder zu: am Telefon deckt es die Seite. */

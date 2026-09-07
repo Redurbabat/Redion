@@ -214,7 +214,7 @@ rechtfertigt.
 
 ---
 
-### 7 · Der PDF-Teil wie GoodNotes — dreizehn Bögen (Redur, 7. September)
+### 7 · Der PDF-Teil wie GoodNotes — vierzehn Bögen (Redur, 7. September)
 
 Redur, mit dem GoodNotes-Dossier: „alles, was GoodNotes machen kann, 1:1 —
 nur beim PDF-Teil: wie die bearbeitet wird, importiert, die Stifte usw.",
@@ -276,6 +276,11 @@ Gegenprobe, Bild und Entscheidung:
     geht, `foreignObject` trübt), dann gebaut. Die Bildmarken kommen mit,
     auch gedrehte. Der getippte Text eines Blatts bleibt offen — mit
     geschlossenem Weg, siehe L133. **Steht.**
+  · **G14 — Die Miniaturenleiste wie GoodNotes** (E480, test453): ein
+    „⋯"-Menü je Seite, das SEINE Seite meint (alle Seitengriffe nehmen
+    jetzt entgegen, wen sie meinen), und Ziehen zum Umordnen — mit der
+    Maus nach acht Pixeln, mit dem Finger erst nach 350 ms Halten, damit
+    die Leiste rollbar bleibt. **Steht.**
 
 Was danach ehrlich offen bleibt, steht in **L133** (Audio mit Zeitbezug,
 Handschrift-zu-Text, Mathe, Elemente-Bibliothek, Präsentation, Wolke).

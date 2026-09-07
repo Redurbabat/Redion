@@ -4082,8 +4082,28 @@ Dazu kam ein zweiter Grund, den die Vermutung nicht kannte: `zeichneMarke`
 setzt das `<image>` erst nach, wenn die Adresse aus der Ablage da ist —
 `outerHTML` gleich danach hätte auch mit erlaubtem `blob:` nichts gehabt.
 
+**Und die Miniaturenleiste wie GoodNotes (E480, test453).** Ein
+„⋯"-Menü an jeder Seite und Ziehen zum Umordnen. Das Neue ist nicht das
+Menü — es zeigt dieselben acht Griffe wie der Inspector —, sondern dass
+sie eine ANDERE Seite meinen als die angesehene: dafür nehmen alle
+Seitengriffe jetzt entgegen, wen sie meinen. Gezogen wird mit dem Zeiger,
+und die Frage war nicht wie, sondern wann: mit der Maus nach acht Pixeln,
+mit dem Finger erst nach 350 ms Halten — sonst liesse sich die Leiste
+nicht mehr rollen.
+
+Zwei Dinge erledigten das Bild und die Gegenprobe. Das Bild: das Menü hing
+acht Pixel links aus der Leiste, weil es 200 px breit gebaut war und die
+Leiste gemessen 200 px misst. Die Gegenprobe: ein Klick-Schlucker liess
+sich abschalten, ohne dass etwas rot wurde — er flog wieder heraus, wie
+schon die Passprobe in E478. Zweimal in zwei Bögen dieselbe Lehre: wer
+eine Vorsichtsmassnahme einbaut, muss sie rot sehen, sonst baut er ein
+Gefühl ein.
+
+Nebenbei fiel ein §37-Fund an: der Schliessknopf der Klappen war 36 px
+BREIT. `test448` hatte ihn nicht gefunden, weil er nur die Höhe mass — er
+misst seither beide Richtungen.
+
 **Was offen bleibt,** steht ehrlich in `LUECKEN.md` L133: Audio mit
 Zeitbezug, Handschrift zu Text, Elemente-Bibliothek, Präsentation — und
 die verbliebenen Reste (getippter Text im gesicherten Bild, Kamera als
-Seite, Farbsets, Menü je Miniatur, Kurve und Verbinder, Auswahl über
-mehrere Blätter).
+Seite, Farbsets, Kurve und Verbinder, Auswahl über mehrere Blätter).

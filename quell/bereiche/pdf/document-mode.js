@@ -353,7 +353,20 @@ const DocumentMode = (() => {
         return source.blockId === documentBlock.id ||
             (!source.blockId && source.pageId === page.id);
     });
+    /**
+     * EINE MINIATUR — seit E480 in einer ZEILE mit ihrem Menüknopf.
+     *
+     * Warum eine Zeile und nicht ein Knopf im Knopf: ein `<button>` in einem
+     * `<button>` gibt es in HTML nicht, und ein `<div role="button">` daraus
+     * zu machen hiesse, Tastatur und Screenreader von Hand nachzubauen, was
+     * der echte Knopf mitbringt (§38). Also stehen beide nebeneinander, und
+     * `.document-thumbnail` bleibt, was es war — Prüfläufe und CSS finden
+     * es unverändert.
+     */
     const thumbnail = (documentBlock, index, selected) => {
+        const zeile = document.createElement('div');
+        zeile.className = 'document-thumb-zeile';
+        zeile.dataset.documentThumbZeile = String(index);
         const button = document.createElement('button');
         button.type = 'button';
         button.className = 'document-thumbnail' + (selected ? ' is-selected' : '');
@@ -397,7 +410,20 @@ const DocumentMode = (() => {
             preview.appendChild(mark);
         }
         button.append(preview, label);
-        return button;
+        /* DAS MENÜ AN DER SEITE (E480), GoodNotes' „…": dieselben Griffe wie im
+           Inspector, aber für DIESE Seite — nicht für die, die man gerade
+           ansieht. Der Knopf misst 44 px (§37) und sagt, wozu er gehört. */
+        const menue = document.createElement('button');
+        menue.type = 'button';
+        menue.className = 'document-thumb-menue-knopf';
+        menue.dataset.documentThumbMenue = String(index);
+        menue.setAttribute('aria-haspopup', 'menu');
+        menue.setAttribute('aria-expanded', 'false');
+        menue.setAttribute('aria-label', sourceLabel(documentBlock) + ': Menü');
+        menue.title = 'Was mit dieser Seite geschehen soll';
+        menue.textContent = '⋯';
+        zeile.append(button, menue);
+        return zeile;
     };
     /** Nur die sichtbare Handvoll Vorschaubilder aus IndexedDB holen. Ein
         geschlossenes mobiles Panel hat keinen sichtbaren Schnitt und loest
@@ -1955,8 +1981,14 @@ const DocumentMode = (() => {
             seiteMerken(page.id, state.index);
             rerender();
         };
-        const seiteEinfuegen = () => {
-            const block = jetzt();
+        /* ── WELCHE SEITE IST GEMEINT? (E480) ────────────────────────────────
+           Bis hierher galt jeder Seitengriff der Seite, die man ANSIEHT — der
+           Inspector kennt nur eine. Das Menü an der Miniatur meint aber die
+           Seite, an der es hängt, und die ist meist eine andere. Darum nehmen
+           alle Griffe jetzt entgegen, WEN sie meinen; ohne Angabe bleibt es
+           die angesehene, und der Inspector ändert sich um kein Zeichen. */
+        const seiteEinfuegen = (wen) => {
+            const block = wen || jetzt();
             const stelle = stelleVon(block);
             if (!stelle) {
                 UI.toast('Diese Seite hat keinen Platz, an dem sich etwas einfügen liesse.');
@@ -1974,8 +2006,8 @@ const DocumentMode = (() => {
             UI.toast('Leere Seite eingefügt');
             neuMit(neu.id);
         };
-        const seiteDuplizieren = () => {
-            const block = jetzt();
+        const seiteDuplizieren = (wen) => {
+            const block = wen || jetzt();
             const stelle = stelleVon(block);
             if (!stelle) {
                 UI.toast('Diese Seite lässt sich hier nicht verdoppeln.');
@@ -2024,8 +2056,8 @@ const DocumentMode = (() => {
             UI.toast('Seite verdoppelt');
             neuMit(neu.id);
         };
-        const seiteLoeschen = () => {
-            const block = jetzt();
+        const seiteLoeschen = (wen) => {
+            const block = wen || jetzt();
             const liste = documentsIn(page);
             if (liste.length < 2) {
                 UI.toast('Die letzte Seite bleibt — lösche lieber das Dokument.');
@@ -2037,8 +2069,8 @@ const DocumentMode = (() => {
             const naechste = liste[Math.min(liste.length - 1, i + 1 < liste.length ? i + 1 : i - 1)];
             neuMit(naechste && naechste.id !== block.id ? naechste.id : null);
         };
-        const seiteSchieben = (richtung) => {
-            const block = jetzt();
+        const seiteSchieben = (richtung, wen) => {
+            const block = wen || jetzt();
             const stelle = stelleVon(block);
             if (!stelle)
                 return;
@@ -2061,15 +2093,290 @@ const DocumentMode = (() => {
             Store.updateBlock(stelle.eltern.id, { content: inhalt });
             neuMit(block.id);
         };
-        const seiteDrehen = () => {
-            const block = jetzt();
+        /**
+         * EINE SEITE AN EINE BELIEBIGE STELLE (E480) — was das Ziehen in der
+         * Miniaturenleiste braucht. `seiteSchieben` tauscht mit dem Nachbarn;
+         * hier wird eingefügt, wo losgelassen wurde.
+         *
+         * `zielIndex` zählt in der SEITENLISTE (0 = ganz vorn, n = ganz
+         * hinten), nicht in der Inhaltsliste der Eltern — dazwischen können
+         * Textblöcke stehen, die keine Seiten sind.
+         *
+         * NUR IN DENSELBEN ELTERN. Liegen die Seiten eines Dokuments in
+         * mehreren Spalten (das kann `documentsIn` finden), gibt es keine eine
+         * Reihenfolge, in die man einsortieren könnte — dann sagt es das,
+         * statt heimlich etwas anderes zu tun.
+         */
+        const seiteAnStelle = (block, zielIndex) => {
+            const liste = documentsIn(page);
+            const eltern = new Set(liste.map(b => String(b.parentId || '')));
+            if (eltern.size !== 1) {
+                UI.toast('Die Seiten dieses Dokuments liegen in mehreren Spalten — ziehen geht dort nicht.');
+                return false;
+            }
+            const stelle = stelleVon(block);
+            if (!stelle)
+                return false;
+            const von = liste.findIndex(b => b.id === block.id);
+            if (von < 0 || zielIndex === von || zielIndex === von + 1)
+                return false;
+            const inhalt = [...stelle.eltern.content];
+            const nachId = liste[zielIndex]?.id ?? null;
+            const raus = inhalt.indexOf(block.id);
+            if (raus < 0)
+                return false;
+            inhalt.splice(raus, 1);
+            const ziel = nachId ? inhalt.indexOf(nachId) : -1;
+            inhalt.splice(ziel < 0 ? inhalt.length : ziel, 0, block.id);
+            Store.updateBlock(stelle.eltern.id, { content: inhalt });
+            UI.toast('Seite verschoben');
+            neuMit(block.id);
+            return true;
+        };
+        /* ══ DAS MENÜ AN DER MINIATUR (E480) ═══════════════════════════════════
+           Ein kleines Fenster neben der Zeile, mit denselben Griffen wie im
+           Inspector — nur mit der Seite dahinter, an der es hängt. Kein
+           zweiter Katalog (§8): die Einträge tragen dieselben
+           `data-document-action`, und der eine Klickgriff weiter unten führt
+           sie aus; neu ist nur `data-document-ziel`, das sagt, WELCHE Seite.
+    
+           Es geht zu bei Escape (E302), beim Tippen daneben, beim Rollen der
+           Leiste und bei jedem Neuaufbau. */
+        let menueOffen = null;
+        const menueSchliessen = () => {
+            if (!menueOffen)
+                return;
+            const knopf = menueOffen.dataset.fuer
+                ? thumbnails.querySelector('[data-document-thumb-menue="' + menueOffen.dataset.fuer + '"]')
+                : null;
+            knopf?.setAttribute('aria-expanded', 'false');
+            menueOffen.remove();
+            menueOffen = null;
+        };
+        const menueOeffnen = (knopf, index) => {
+            const schonOffen = menueOffen?.dataset.fuer === String(index);
+            menueSchliessen();
+            if (schonOffen)
+                return;
+            const block = documents[index];
+            if (!block)
+                return;
+            const kasten = document.createElement('div');
+            kasten.className = 'document-thumb-menue';
+            kasten.dataset.fuer = String(index);
+            kasten.setAttribute('role', 'menu');
+            kasten.setAttribute('aria-label', sourceLabel(block) + ': Menü');
+            const eintrag = (tat, zeichen, text) => {
+                const k = document.createElement('button');
+                k.type = 'button';
+                k.setAttribute('role', 'menuitem');
+                k.dataset.documentAction = tat;
+                k.dataset.documentZiel = String(index);
+                k.innerHTML = '';
+                const z = document.createElement('span');
+                z.className = 'document-thumb-menue-zeichen';
+                z.setAttribute('aria-hidden', 'true');
+                z.textContent = zeichen;
+                const t = document.createElement('span');
+                t.textContent = text;
+                k.append(z, t);
+                kasten.appendChild(k);
+            };
+            eintrag('page-add', '＋', 'Seite danach');
+            eintrag('page-duplicate', '⧉', 'Duplizieren');
+            eintrag('page-rotate', '⟳', 'Drehen');
+            eintrag('page-up', '↑', 'Nach oben');
+            eintrag('page-down', '↓', 'Nach unten');
+            eintrag('page-bookmark', '🔖', block.lesezeichen ? 'Lesezeichen weg' : 'Lesezeichen');
+            eintrag('page-export-image', '⬇', 'Als Bild sichern');
+            eintrag('page-delete', '🗑', 'Löschen');
+            thumbnails.appendChild(kasten);
+            /* An seinen Knopf legen — und zurückrücken, wo die Leiste zu Ende ist.
+               BEIDE Richtungen, denn die Leiste steht am Rechner senkrecht und am
+               Telefon waagerecht (E397): eine feste Seite wäre dort immer die
+               falsche. `position:absolute` misst im gerollten Kasten, also
+               gehört der Rollstand dazu — sonst wandert das Menü beim Rollen. */
+            const r = knopf.getBoundingClientRect(), s = thumbnails.getBoundingClientRect();
+            const hoch = kasten.offsetHeight || 300, breit = kasten.offsetWidth || 200;
+            let oben = r.top - s.top;
+            if (oben + hoch > s.height - 8)
+                oben = s.height - hoch - 8;
+            let links = r.left - s.left;
+            if (links + breit > s.width - 8)
+                links = s.width - breit - 8;
+            kasten.style.top = (Math.max(8, oben) + thumbnails.scrollTop) + 'px';
+            kasten.style.left = (Math.max(6, links) + thumbnails.scrollLeft) + 'px';
+            knopf.setAttribute('aria-expanded', 'true');
+            menueOffen = kasten;
+            kasten.querySelector('button')?.focus();
+        };
+        /* ══ SEITEN ZIEHEN (E480) ══════════════════════════════════════════════
+           GoodNotes ordnet Seiten durch Ziehen in der Übersicht. Hier dasselbe,
+           mit Zeigerereignissen statt HTML-Drag: nur so trägt es den Finger
+           (§37), und nur so lässt es sich prüfen.
+    
+           WANN BEGINNT DAS ZIEHEN? Nicht bei der ersten Bewegung — die Leiste
+           muss sich rollen lassen, und ein Tipp muss ein Tipp bleiben. Also:
+    
+             · Maus   — nach acht Pixeln Bewegung. Wer mit der Maus zieht,
+                        will ziehen; gerollt wird dort mit dem Rad.
+             · Finger und Stift — erst nach 350 ms Halten auf der Stelle, wie
+                        in GoodNotes. Vorher gehört die Bewegung dem Rollen.
+    
+           Losgelassen wird VOR der Seite, deren Mitte unter dem Zeiger liegt. */
+        let zug = null;
+        let marke = null;
+        const markeWeg = () => { marke?.remove(); marke = null; };
+        const zugEnde = () => {
+            if (zug) {
+                window.clearTimeout(zug.halten);
+                zug.zeile.classList.remove('zieht');
+            }
+            zug = null;
+            markeWeg();
+            thumbnails.classList.remove('zieht-gerade');
+        };
+        /** Vor welcher Seite würde jetzt eingefügt? */
+        const zielVon = (y) => {
+            const zeilen = [...thumbnails.querySelectorAll('.document-thumb-zeile')];
+            for (let i = 0; i < zeilen.length; i++) {
+                const r = zeilen[i].getBoundingClientRect();
+                if (y < r.top + r.height / 2)
+                    return i;
+            }
+            return zeilen.length;
+        };
+        const markeLegen = (ziel) => {
+            if (!marke) {
+                marke = document.createElement('div');
+                marke.className = 'document-thumb-marke';
+                marke.setAttribute('aria-hidden', 'true');
+                thumbnails.appendChild(marke);
+            }
+            const zeilen = [...thumbnails.querySelectorAll('.document-thumb-zeile')];
+            const s = thumbnails.getBoundingClientRect();
+            const vor = zeilen[ziel];
+            const y = vor ? vor.getBoundingClientRect().top - s.top
+                : (zeilen[zeilen.length - 1]?.getBoundingClientRect().bottom ?? s.top) - s.top;
+            marke.style.top = (y + thumbnails.scrollTop) + 'px';
+        };
+        thumbnails.addEventListener('pointerdown', (event) => {
+            const ziel = event.target;
+            if (!ziel || ziel.closest('.document-thumb-menue, .document-thumb-menue-knopf'))
+                return;
+            const zeile = ziel.closest('.document-thumb-zeile');
+            if (!zeile || !darfSeiten())
+                return;
+            const index = Number(zeile.dataset.documentThumbZeile);
+            const block = documents[index];
+            if (!block)
+                return;
+            zug = { id: block.id, index, x: event.clientX, y: event.clientY, zeile,
+                bereit: event.pointerType === 'mouse', laeuft: false, halten: 0 };
+            if (event.pointerType !== 'mouse') {
+                zug.halten = window.setTimeout(() => {
+                    if (!zug)
+                        return;
+                    zug.bereit = true;
+                    zug.zeile.classList.add('bereit');
+                    try {
+                        navigator.vibrate?.(12);
+                    }
+                    catch { /* nicht überall */ }
+                }, 350);
+            }
+        });
+        thumbnails.addEventListener('pointermove', (event) => {
+            if (!zug)
+                return;
+            const weit = Math.hypot(event.clientX - zug.x, event.clientY - zug.y);
+            if (!zug.bereit) {
+                /* Vor dem Aufheben zählt Bewegung als Rollen — und bricht das
+                   Halten ab, sonst hätte man nach dem Rollen eine Seite am Finger. */
+                if (weit > 8)
+                    zugEnde();
+                return;
+            }
+            if (!zug.laeuft) {
+                if (weit < 8)
+                    return;
+                zug.laeuft = true;
+                zug.zeile.classList.add('zieht');
+                thumbnails.classList.add('zieht-gerade');
+                try {
+                    thumbnails.setPointerCapture(event.pointerId);
+                }
+                catch { /* optional */ }
+            }
+            event.preventDefault();
+            markeLegen(zielVon(event.clientY));
+        });
+        /* DER KLICK NACH DEM ZUG BLEIBT UNANGETASTET, und das ist eine
+           Entscheidung, keine Lücke (E480).
+    
+           Hier stand ein Schlucker: nach einem Zug sollte der Klick, der auf
+           das Loslassen folgt, nicht mehr an den Miniaturknopf gehen. Er ist
+           wieder heraus, weil `test453` ihn ABSCHALTEN konnte, ohne dass
+           etwas rot wurde — und beim Nachdenken hält er auch nichts:
+    
+             · Hat der Zug WIRKLICH umgeordnet, baut `neuMit` die ganze Leiste
+               neu. Der Knopf, auf den der Klick zielte, ist dann nicht mehr im
+               Baum, und es kommt gar keiner an.
+             · Hat er NICHT umgeordnet (auf der eigenen Stelle losgelassen),
+               landet der Klick auf der Seite, die man eben aufgehoben hat —
+               also dort, wo man ohnehin hinwollte.
+    
+           Ein Wächter, der nicht rot werden kann, ist eine Behauptung
+           (§55.2). */
+        const zugLoslassen = (event) => {
+            if (!zug)
+                return;
+            const lief = zug.laeuft;
+            const block = Store.getBlock(zug.id);
+            const ziel = zielVon(event.clientY);
+            zugEnde();
+            if (!lief || !block)
+                return;
+            menueSchliessen();
+            seiteAnStelle(block, ziel);
+        };
+        thumbnails.addEventListener('pointerup', zugLoslassen);
+        thumbnails.addEventListener('pointercancel', () => zugEnde());
+        thumbnails.addEventListener('scroll', () => { menueSchliessen(); if (zug && !zug.laeuft)
+            zugEnde(); });
+        thumbnails.addEventListener('keydown', (event) => {
+            if (event.key !== 'Escape')
+                return;
+            if (zug) {
+                zugEnde();
+                event.stopPropagation();
+                return;
+            }
+            if (menueOffen) {
+                const fuer = menueOffen.dataset.fuer;
+                menueSchliessen();
+                thumbnails.querySelector('[data-document-thumb-menue="' + fuer + '"]')?.focus();
+                event.stopPropagation();
+            }
+        });
+        /* Ein Klick irgendwo sonst schliesst das Menü — auch auf der Bühne. */
+        workspace.addEventListener('pointerdown', (event) => {
+            if (!menueOffen)
+                return;
+            const z = event.target;
+            if (z && z.closest('.document-thumb-menue, .document-thumb-menue-knopf'))
+                return;
+            menueSchliessen();
+        }, true);
+        const seiteDrehen = (wen) => {
+            const block = wen || jetzt();
             const g = (SheetSpace.gedrehtVon(block) + 90) % 360;
             Store.updateBlock(block.id, { gedreht: g || 0 });
             UI.toast(g ? 'Seite um ' + g + '° gedreht' : 'Seite wieder aufrecht');
             neuMit(block.id);
         };
-        const lesezeichenWechseln = () => {
-            const block = jetzt();
+        const lesezeichenWechseln = (wen) => {
+            const block = wen || jetzt();
             const an = !block.lesezeichen;
             Store.updateBlock(block.id, { lesezeichen: an });
             UI.toast(an ? '🔖 Lesezeichen gesetzt' : 'Lesezeichen entfernt');
@@ -2243,7 +2550,25 @@ const DocumentMode = (() => {
                 }
                 return;
             }
-            const action = element?.closest('[data-document-action]')?.dataset.documentAction;
+            /* Der Menüknopf einer Miniatur (E480) — vor allen Tatnamen, denn er
+               trägt keinen. */
+            const menueKnopf = element?.closest('[data-document-thumb-menue]');
+            if (menueKnopf) {
+                if (!darfSeiten()) {
+                    UI.toast('Zum Ändern der Seiten brauchst du Bearbeitungsrechte und ein entsperrtes Dokument.');
+                    return;
+                }
+                menueOeffnen(menueKnopf, Number(menueKnopf.dataset.documentThumbMenue));
+                return;
+            }
+            const tatKnopf = element?.closest('[data-document-action]');
+            const action = tatKnopf?.dataset.documentAction;
+            /* WELCHE SEITE IST GEMEINT (E480): der Inspector meint die
+               angesehene und sagt nichts; das Menü an der Miniatur nennt sie. */
+            const zielNr = Number(tatKnopf?.dataset.documentZiel ?? NaN);
+            const zielSeite = Number.isInteger(zielNr) ? documents[zielNr] : undefined;
+            if (zielSeite)
+                menueSchliessen();
             if (!action)
                 return;
             if (action === 'ink-options') {
@@ -2306,7 +2631,7 @@ const DocumentMode = (() => {
                 return;
             }
             if (action === 'page-export-image') {
-                const block = jetzt();
+                const block = zielSeite || jetzt();
                 void seiteAlsBild(block).then(blob => {
                     if (!blob) {
                         UI.toast('Die Seite liess sich nicht als Bild zeichnen.');
@@ -2339,11 +2664,11 @@ const DocumentMode = (() => {
                     return;
                 }
                 if (action === 'page-bookmark')
-                    lesezeichenWechseln();
+                    lesezeichenWechseln(zielSeite);
                 if (action === 'page-add')
-                    seiteEinfuegen();
+                    seiteEinfuegen(zielSeite);
                 if (action === 'page-add-image' || action === 'page-add-pdf') {
-                    const stelle = stelleVon(jetzt());
+                    const stelle = stelleVon(zielSeite || jetzt());
                     const anStelle = stelle ? { elternId: stelle.eltern.id, index: stelle.index + 1 } : undefined;
                     if (action === 'page-add-image') {
                         void PdfEinlesen.bilderWaehlen(page.id, anStelle).then((ids) => { if (ids.length)
@@ -2355,15 +2680,15 @@ const DocumentMode = (() => {
                     }
                 }
                 if (action === 'page-duplicate')
-                    seiteDuplizieren();
+                    seiteDuplizieren(zielSeite);
                 if (action === 'page-delete')
-                    seiteLoeschen();
+                    seiteLoeschen(zielSeite);
                 if (action === 'page-up')
-                    seiteSchieben(-1);
+                    seiteSchieben(-1, zielSeite);
                 if (action === 'page-down')
-                    seiteSchieben(1);
+                    seiteSchieben(1, zielSeite);
                 if (action === 'page-rotate')
-                    seiteDrehen();
+                    seiteDrehen(zielSeite);
                 return;
             }
             if (action === 'thumbnails') {
