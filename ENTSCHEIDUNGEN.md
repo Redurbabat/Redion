@@ -37082,3 +37082,44 @@ Kasten bei 8 %/21 %, beim Annotieren weg), §4 eigene Verweise (Adresse,
 Knoten greifbar mit Titel, Tipp öffnet; [[Zielseite]], Tipp öffnet die
 Seite), §5 Sicherheit (javascript:, data: werden keine; leer nimmt weg),
 §6 Quellen.
+
+GEGENPROBEN (§55.2): §2 → jeder Treffer ohne Kasten (`rect: null`, mit
+einer Variante, die sauber baut) — drei Bänder am Rand statt drei
+Wortkästen, rot. §5 → `Sanitize.url` aus `verweisSetzen` genommen —
+`javascript:` und `data:` wurden Verweise, drei Punkte rot. Beide
+zurückgedreht, 41/41.
+
+NACHTRAG (7. September 2026, breiter Lauf). Von 26 Läufen waren vier
+rot, alle im Studio, keiner ein Datenfehler:
+
+  · `test385`: das Blatt begann 56 px tiefer — `display:flex` an der
+    Suchleiste schlug das `hidden`-Attribut, die zugeklappte Leiste stand
+    trotzdem. `.document-findbar[hidden]{display:none}` steht jetzt
+    daneben.
+  · `test285`: am Telefon blieben dem Titel 70 px statt hundert, weil die
+    Lupe im Kopf stand. Sie steht dort jetzt in der Ansichtsklappe
+    (`.document-find-klappe`), am Rechner im Kopf.
+  · `test424`, `test437` (beide E464): sie prüften den Lesemodus über
+    `inert` am Papier; seit „Lesen heisst Hand" prüfen sie die Hand an der
+    Schicht (`data-tool="schreiben"`). Dabei zwei echte Funde: der Klick,
+    mit dem „Lesen" die Schicht auf die Hand stellt, lief durch den
+    Verteiler und klappte die Ansichtsklappe zu, aus der „Lesen" gerade
+    kam (ein Klick in die Zeichenleiste schliesst sie jetzt nicht mehr);
+    und die Hand wurde als Stift gemerkt, sodass „Annotieren" wieder die
+    Hand brachte und die Zeichenleiste zu blieb (die Hand ist kein Stift:
+    dann der Stift).
+
+GEPRÜFT. test441 (41 Punkte, neu), test285, test395, test437, test177,
+test210, test386, test393, test353, test355, test351, test365, test362,
+test290, test105, test109, test87, test424, test341, test385, test438,
+test439, test440, test426, test202, test228, test174; `npm run typecheck`,
+`npm run bauen:ts`, `node bauen.mts`.
+
+BILDER ANGESEHEN: `bilder/suche-rechner-hell.png` (Suchleiste mit „1/3",
+drei Wortkästen „Ohm", die zwei Verweise der PDF als gestrichelte Kästen),
+`suche-handy-dunkel` (Lupe in der Ansichtsklappe, Treffer und Kästen).
+
+DATEIEN. `src/bereiche/pdf/leser.ts`, `src/bereiche/pdf/document-mode.ts`,
+`src/bereiche/pdf/marken.ts`, `quell/schale/stil/bausteine.css`,
+`bilder.mts`, `pruefungen/lauf/test441.mts` (neu), `test424.mts`,
+`test437.mts`, `test351.mts`.

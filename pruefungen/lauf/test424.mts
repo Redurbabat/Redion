@@ -98,7 +98,9 @@ try {
   await page.waitForTimeout(250);
   await page.locator('[data-document-action="read"]').click();
   check('Read mode hides drawing controls', !await page.locator('.document-stage[data-aktiv] .blatt-reihe').isVisible());
-  check('Read mode prevents accidental edits', await page.locator('.document-stage[data-aktiv] .blatt-papier').evaluate(e => (e as HTMLElement).inert));
+  // E468: Lesen heisst Hand — das Papier ist nicht mehr inert (Abdeckband und Verweise
+  // muessen antippbar bleiben), dafuer steht die Zeichenschicht auf „schreiben".
+  check('Read mode prevents accidental edits', await page.locator('.document-stage[data-aktiv] .blatt-werk').evaluate(e => (e as HTMLElement).dataset.tool === 'schreiben'));
   const countBefore = await page.evaluate('Object.keys(Store.cache.blocks).length');
   await page.locator('[data-document-action="annotate"]').click();
   check('Annotation restores original Ink controls', await page.locator('.document-stage[data-aktiv] .blatt-werk').isVisible());

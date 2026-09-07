@@ -759,7 +759,10 @@ const DocumentMode = (() => {
     annotateButton.disabled = !canAnnotate;
     if (!canAnnotate) annotateButton.title = 'Zum Annotieren brauchst du Bearbeitungsrechte und ein entsperrtes Dokument.';
     modes.append(readButton, annotateButton);
-    commandbar.append(modes, pagination, zoomGroup);
+    /* Am Telefon steht die Suche hier statt im Kopf (E468, siehe CSS). */
+    const findKlappe = topButton('find', '🔍 Suchen', 'Im Dokument suchen');
+    findKlappe.className = 'document-find-klappe';
+    commandbar.append(modes, pagination, zoomGroup, findKlappe);
 
     // One document-wide tool strip. Each action delegates to the existing page
     // controller; the original controls, undo stacks and mark objects stay intact.
@@ -867,7 +870,11 @@ const DocumentMode = (() => {
         Array.from(toolbar.querySelectorAll<HTMLButtonElement>('[data-c]')).find(b => b.dataset.c === penColor)?.click();
         Array.from(toolbar.querySelectorAll<HTMLButtonElement>('[data-b]')).find(b => Number(b.dataset.b) === penWidth)?.click();
       }
-      const key = drawingTools.some(([tool]) => tool === penTool) ? penTool : 'stift';
+      /* DIE HAND IST KEIN STIFT (E468): seit „Lesen" die Schicht auf die Hand
+         stellt, stuende sonst beim naechsten „Annotieren" wieder die Hand —
+         und die Zeichenleiste bliebe zu (sie zeigt sich nur bei einem
+         Zeichenwerkzeug). Dann lieber der Stift. */
+      const key = drawingTools.some(([tool]) => tool === penTool) && penTool !== 'schreiben' ? penTool : 'stift';
       if (toolbar?.dataset.tool === key) return;
       toolbar?.querySelector<HTMLButtonElement>('[data-wz="' + key + '"]')?.click();
     };
@@ -1699,7 +1706,11 @@ const DocumentMode = (() => {
         inkToolbar()?.querySelector<HTMLButtonElement>('[data-wz="' + tool + '"]')?.click();
         inkSync(); return;
       }
-      if (!element?.closest('.document-commandbar,[data-document-action="view"]')) {
+      /* Ein Klick in die Zeichenleiste schliesst die Ansichtsklappe nicht
+         (E468): „Lesen" stellt die Schicht per Klick auf die Hand, und der
+         Klick liefe sonst hier durch und klappte die Klappe zu, aus der
+         „Lesen" gerade kam. */
+      if (!element?.closest('.document-commandbar,[data-document-action="view"],.blatt-werk')) {
         workspace.dataset.documentView = 'closed';
         viewButton.setAttribute('aria-expanded', 'false');
       }

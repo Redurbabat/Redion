@@ -86,7 +86,8 @@ try{
   check('Escape schließt Zubehör mit Fokus-Rückgabe',await page.locator('[data-document-action="ink-options"]').evaluate(e=>e===document.activeElement));
   await page.locator('[data-document-action="view"]').click();
   await page.locator('[data-document-action="read"]').click();
-  check('Lesemodus schützt Arbeitskopie vor versehentlichen Strichen',await ink.evaluate(e=>(e.closest('.blatt-flur')||e.closest('.blatt-papier'))?.hasAttribute('inert')));
+  // E468: Lesen heisst Hand — das Papier ist nicht mehr inert (Abdeckband und Verweise bleiben antippbar), die Zeichenschicht steht auf „schreiben".
+  check('Lesemodus schützt Arbeitskopie vor versehentlichen Strichen',await ink.getAttribute('data-tool')==='schreiben');
   await page.locator('[data-document-tool="stift"]').click();
   for(const schema of ['hell','standard']){
     await page.evaluate(`Aussehen.setzen({schema:'${schema}'})`);

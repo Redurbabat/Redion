@@ -12985,6 +12985,14 @@ body[data-dokument="an"] .document-stage:not([data-aktiv]) .blatt-reihe{
    Annotieren weg, sonst finge sie den Stift. */
 .document-findbar{display:flex; align-items:center; gap:6px; padding:6px 10px;
   background:var(--bg-card); border-bottom:1px solid var(--line)}
+/* `hidden` muss gewinnen — `display:flex` allein schlug es (test385: das
+   Blatt begann 56 px tiefer, weil die zugeklappte Leiste doch stand). */
+.document-findbar[hidden]{display:none}
+/* Am Telefon steht die Lupe nicht im Kopf (dort blieben dem Titel 70 px,
+   test285 will hundert), sondern in der Ansichtsklappe. */
+@media (max-width:760px){ .document-topbar .document-find-button{display:none} }
+.document-commandbar .document-find-klappe{display:none}
+@media (max-width:760px){ .document-commandbar .document-find-klappe{display:inline-flex} }
 .document-findbar input{flex:1 1 12rem; min-width:0; min-height:var(--touch-min); padding:6px 10px;
   border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--text); font:inherit}
 .document-findbar button{min-height:var(--touch-min); min-width:var(--touch-min)}
@@ -18705,7 +18713,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 497, inhalt: 'acebf2f30a8623c8', gebaut: '2026-09-07T05:40:44.219Z' };
+const Stand = { fassung: 502, inhalt: '277435a06bf95775', gebaut: '2026-09-07T09:06:20.518Z' };
 window.Stand = Stand;
 
 </script>
@@ -65073,7 +65081,10 @@ const DocumentMode = (() => {
         if (!canAnnotate)
             annotateButton.title = 'Zum Annotieren brauchst du Bearbeitungsrechte und ein entsperrtes Dokument.';
         modes.append(readButton, annotateButton);
-        commandbar.append(modes, pagination, zoomGroup);
+        /* Am Telefon steht die Suche hier statt im Kopf (E468, siehe CSS). */
+        const findKlappe = topButton('find', '🔍 Suchen', 'Im Dokument suchen');
+        findKlappe.className = 'document-find-klappe';
+        commandbar.append(modes, pagination, zoomGroup, findKlappe);
         // One document-wide tool strip. Each action delegates to the existing page
         // controller; the original controls, undo stacks and mark objects stay intact.
         const drawingbar = document.createElement('div');
@@ -65182,7 +65193,11 @@ const DocumentMode = (() => {
                 Array.from(toolbar.querySelectorAll('[data-c]')).find(b => b.dataset.c === penColor)?.click();
                 Array.from(toolbar.querySelectorAll('[data-b]')).find(b => Number(b.dataset.b) === penWidth)?.click();
             }
-            const key = drawingTools.some(([tool]) => tool === penTool) ? penTool : 'stift';
+            /* DIE HAND IST KEIN STIFT (E468): seit „Lesen" die Schicht auf die Hand
+               stellt, stuende sonst beim naechsten „Annotieren" wieder die Hand —
+               und die Zeichenleiste bliebe zu (sie zeigt sich nur bei einem
+               Zeichenwerkzeug). Dann lieber der Stift. */
+            const key = drawingTools.some(([tool]) => tool === penTool) && penTool !== 'schreiben' ? penTool : 'stift';
             if (toolbar?.dataset.tool === key)
                 return;
             toolbar?.querySelector('[data-wz="' + key + '"]')?.click();
@@ -66136,7 +66151,11 @@ const DocumentMode = (() => {
                 inkSync();
                 return;
             }
-            if (!element?.closest('.document-commandbar,[data-document-action="view"]')) {
+            /* Ein Klick in die Zeichenleiste schliesst die Ansichtsklappe nicht
+               (E468): „Lesen" stellt die Schicht per Klick auf die Hand, und der
+               Klick liefe sonst hier durch und klappte die Klappe zu, aus der
+               „Lesen" gerade kam. */
+            if (!element?.closest('.document-commandbar,[data-document-action="view"],.blatt-werk')) {
                 workspace.dataset.documentView = 'closed';
                 viewButton.setAttribute('aria-expanded', 'false');
             }
