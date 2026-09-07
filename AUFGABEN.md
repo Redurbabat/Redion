@@ -214,7 +214,7 @@ rechtfertigt.
 
 ---
 
-### 7 · Der PDF-Teil wie GoodNotes — elf Bögen (Redur, 7. September)
+### 7 · Der PDF-Teil wie GoodNotes — zwölf Bögen (Redur, 7. September)
 
 Redur, mit dem GoodNotes-Dossier: „alles, was GoodNotes machen kann, 1:1 —
 nur beim PDF-Teil: wie die bearbeitet wird, importiert, die Stifte usw.",
@@ -266,6 +266,11 @@ Gegenprobe, Bild und Entscheidung:
     Anzeigeweg. Dabei fand der Prüflauf, dass E473 die LEERE Verweisliste
     gar nicht schrieb: „keine" und „nie nachgesehen" sahen gleich aus.
     **Steht.**
+  · **G12 — Ein Dreieck darf liegen, wie es gezogen wurde** (E478,
+    test451): die Ernte von G8 — weil die Geometrie `dreh` jetzt wirklich
+    kann, bekommt ein gedrehtes Dreieck seinen Winkel statt einer Absage.
+    Aufrecht bleibt aufrecht; ein gleichseitiges bekommt die kleinste der
+    drei möglichen Drehungen. **Steht.**
 
 Was danach ehrlich offen bleibt, steht in **L133** (Audio mit Zeitbezug,
 Handschrift-zu-Text, Mathe, Elemente-Bibliothek, Präsentation, Wolke).

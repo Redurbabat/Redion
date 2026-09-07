@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-457 Entscheidungen, E1 bis E477 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+458 Entscheidungen, E1 bis E478 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -521,6 +521,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E475** — Was der Finger trifft: sieben Pixel sind kein Ziel — und eine Trefffläche darf den Nachbarn nicht verschlucken
 * **E476** — Ein Kasten ist keine Wischspur: das Gekritzel nimmt, was es überquert; die Treffer der Suche nur ihre eigene Seite
 * **E477** — Die Verweise alter Seiten kommen nach — und „keine" ist eine Antwort, „nie nachgesehen" nicht
+* **E478** — Ein Dreieck darf liegen, wie es gezogen wurde — und ein gleichseitiges bekommt die kleinste Drehung
 
 ---
 
@@ -37902,3 +37903,106 @@ Verweise auf einer alten Seite — sieht danach aus wie auf jeder neuen, und
 GEPRÜFT. 16 Läufe grün: test87, test96, test100, test105, test109,
 test437, test441–test450; dazu `npm run typecheck`, `npm run bauen:ts`,
 `node bauen.mts`.
+
+---
+
+E478 — Ein Dreieck darf liegen, wie es gezogen wurde — und ein gleichseitiges bekommt die kleinste Drehung
+--------------------------------------------------------------------------
+
+E471 erkannte nur AUFRECHTE Dreiecke, und der Grund stand ehrlich in L133:
+die Marke `triangle` ist gleichschenklig mit der Spitze oben in der Mitte
+ihres Kastens — sie konnte gar keine andere Lage beschreiben. Ein auf den
+Kopf gezogenes Dreieck bekäme eine Spitze, die es nicht hat, also blieb es
+ein Strich.
+
+WARUM ES JETZT GEHT. Seit E466 trägt jede Marke `dreh`; seit **E474**
+rechnet die Geometrie damit, statt die Drehung nur anzuzeigen — Griff,
+Radierer, Auswahlrahmen und Kastenzug treffen eine schiefe Marke dort, wo
+sie steht. Erst damit ist ein gedrehtes Dreieck keine hübsche Lüge, die
+beim ersten Anfassen auffliegt, sondern eine Marke wie jede andere. Dieser
+Bogen ist die Ernte von E474, nicht ein neuer Einfall.
+
+## Die Rechnung
+
+Aus den drei gefundenen Ecken wird für JEDE die Lage gerechnet, die
+entstünde, wenn sie die Spitze wäre: Grundseite = die Gegenseite, Höhe =
+der Abstand der Spitze zu ihr, Winkel = der, der (0,−1) auf die Richtung
+Grundseite→Spitze dreht. Die gleichschenkligste gewinnt.
+
+Unter 4° Drehung wird kein `dreh` geschrieben: `dreh: 0.7` wäre dasselbe
+Bild mit einem Feld mehr in jeder Sicherung, und der aufrechte Fall bleibt
+damit Zeile für Zeile der von E471.
+
+## Zwei Dinge, die erst der Lauf und das Bild fanden
+
+**1. DIE REIHENFOLGE DER ZWEI ZWEIGE (der Prüflauf).** Im ersten Anlauf
+stand die alte Aufrecht-Probe vorn. Sie fragt die OBERSTE der drei Ecken —
+und bei 15°, 120° und −120° steht dort zufällig eine GRUNDECKE nahe genug
+an der Mitte. Das Dreieck galt als aufrecht, sein Winkel fiel weg: ein
+gedrehtes Dreieck, das gerade dasteht. Jetzt rechnet der gedrehte Zweig
+zuerst; er gibt selbst die aufrechte Form zurück, wenn der Winkel klein
+ist, und die alte Probe bleibt darunter als Auffangnetz.
+
+**2. DAS FAST GLEICHSEITIGE DREIECK (das Bild).** Bei einem gleichseitigen
+Dreieck sind alle drei Ecken gleich gute Spitzen — die Wahl entscheidet
+ein Hundertstel Längenunterschied, und die drei Antworten liegen 120°
+auseinander. Auf `bilder/e478-dreiecke.png` stand im ersten Durchgang ein
+AUFRECHT gezogenes Dreieck mit `dreh: −120`. Es sah gleich aus; genau
+darum konnte kein Prüflauf es finden, der die Form vergleicht, und genau
+darum ist es trotzdem falsch: es behauptet eine Drehung, die niemand
+gemacht hat, und beim nächsten Drehen um zehn Grad stünde die Zahl schief
+in der Welt.
+
+Gewählt wird deshalb unter den GLEICH GUTEN Spitzen (bis sechs Prozent
+Unterschied) die mit der KLEINSTEN DREHUNG. Dieselbe Figur, ein Feld
+weniger. Das ist der Grund, warum §1 des Prüflaufs ein SPITZES Dreieck
+misst (200 × 320, die Spitze eindeutig) und §1b ein gleichseitiges — dort
+ist die Frage nach „dem" Winkel falsch gestellt, und geprüft wird
+stattdessen: dieselbe Figur, und immer die kleinste der drei Drehungen.
+
+## Und ein Wächter, der wieder herausgeflogen ist
+
+Zwischendurch stand hier eine Passprobe: die drei Ecken der fertigen Marke
+gegen die drei gefundenen Ecken des Zuges, und bei mehr als einem Achtel
+der Diagonalen Abweichung kein Dreieck. `test451` hat sie ABGESCHALTET und
+blieb grün — sie hat nie etwas ausgesiebt. Der Grund liegt in der
+Rechnung: die Spitze wird an der gleichschenkligsten Ecke gewählt, also
+sitzt die Marke von selbst nahe am Gezogenen (nachgerechnet an drei
+absichtlich schiefen Dreiecken: höchstens fünf Prozent der Diagonalen,
+die Schwelle lag bei zwölfeinhalb).
+
+Sie ist wieder heraus. Ein Wächter, der nicht rot werden kann, ist eine
+Behauptung (§55.2) — und schlimmer als keiner, weil der nächste Leser den
+Fall für abgedeckt hält. Was wirklich aussiebt, sind die zwei Zeilen
+darüber, die seit E471 dort stehen: 82 % der Punkte an den drei Kanten und
+höchstens 62 % der Kastenfläche. Was das besteht, ist ein Dreieck — und
+ein Dreieck wird hier gleichschenklig, wie ein Rechteck rechtwinklig wird
+und ein Kreis rund.
+
+## Wächter
+
+`test451` (neu, 20 Punkte): §1 zwölf Lagen rundum an einem spitzen
+Dreieck — Winkel auf fünf Grad, die drei Ecken unter neun Punkten,
+Grundseite und Höhe erhalten; §1b das fast gleichseitige (aufrecht bleibt
+aufrecht, sechs Lagen ergeben dieselbe Figur mit der kleinsten Drehung);
+§2 aufrecht bleibt Zahl für Zahl wie E471, 2,5° zählt als aufrecht, 12°
+nicht; §3 zwei gerade Kanten und ein Bauch werden kein Dreieck, und Kreis,
+Rechteck und Linie kommen weiter dahinter an — der Zweig fällt durch,
+statt abzubrechen; §4 auf dem Blatt gezogen und gehalten, mit dem
+Auswahlrahmen aus E474; §5 die Quellen.
+
+Drei Gegenproben, alle gelaufen und rot: kein gedrehter Zweig (9 Punkte
+rot), die alte Reihenfolge der Zweige (3 rot), keine Fast-aufrecht-Grenze
+(2 rot).
+
+`test445` trägt die umgedrehte Zeile: „Ein Dreieck auf dem Kopf bleibt ein
+Strich (L133)" heisst dort jetzt „wird ein Dreieck mit dreh ≈ 180 (E478)",
+mit dem Grund daneben — gestrichen wird sie nicht, damit man findet, warum
+sie sich geändert hat (§35).
+
+BILD. `bilder/e478-dreiecke.png` — sechs Züge in sechs Lagen, sechs
+Dreiecke; das erste aufrecht und ohne Winkelfeld.
+
+GEPRÜFT. 9 Läufe grün: test87, test105, test109, test347, test438,
+test439, test445, test447, test451; dazu `npm run typecheck`,
+`npm run bauen:ts`, `node bauen.mts`.

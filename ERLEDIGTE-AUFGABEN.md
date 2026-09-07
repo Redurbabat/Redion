@@ -4049,7 +4049,26 @@ siebenundneunzig. Seitdem wird die leere Liste geschrieben: sechzehn
 Zeichen je Seite, und der Unterschied zwischen einer Antwort und einer
 Lücke.
 
+**Und ein Dreieck darf liegen, wie es gezogen wurde (E478, test451).**
+Die Ernte von E474: weil die Geometrie `dreh` jetzt wirklich kann — Griff,
+Radierer, Rahmen —, ist ein gedrehtes Dreieck keine hübsche Lüge mehr, die
+beim ersten Anfassen auffliegt. Es bekommt seinen Winkel statt einer
+Absage; aufrecht bleibt aufrecht (unter vier Grad kein Feld).
+
+Zwei Dinge fand nicht das Schreiben, sondern das Prüfen und das Hinsehen.
+Der Prüflauf: die alte Aufrecht-Probe stand vorn und griff bei 15°, 120°
+und −120° zufällig — ein gedrehtes Dreieck, das gerade dasteht. Das Bild:
+bei einem fast GLEICHSEITIGEN Dreieck sind alle drei Ecken gleich gute
+Spitzen, und ein aufrecht gezogenes kam mit `dreh: −120` heraus. Es sah
+gleich aus — genau darum konnte kein Prüflauf es finden, und genau darum
+war es trotzdem falsch. Gewählt wird jetzt unter den gleich guten Spitzen
+die mit der kleinsten Drehung.
+
+Und ein Wächter flog dabei wieder heraus: eine Passprobe, die `test451`
+abschalten konnte, ohne dass etwas rot wurde. Ein Wächter, der nicht rot
+werden kann, ist eine Behauptung (§55.2) — und schlimmer als keiner.
+
 **Was offen bleibt,** steht ehrlich in `LUECKEN.md` L133: Audio mit
 Zeitbezug, Handschrift zu Text, Elemente-Bibliothek, Präsentation — und
-die verbliebenen Reste (gedrehte Dreiecke, Kamera als Seite, Farbsets,
-Menü je Miniatur).
+die verbliebenen Reste (Kamera als Seite, Farbsets, Menü je Miniatur,
+Kurve und Verbinder, Auswahl über mehrere Blätter).

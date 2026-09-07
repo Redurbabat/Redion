@@ -1709,6 +1709,12 @@ const Marken = (() => {
                 if (form) {
                     mark.art = form.art;
                     mark.pts = form.pts;
+                    /* Ein gedrehtes Dreieck bringt seinen Winkel mit (E478); alles
+                       andere hat keinen, und dann darf auch keiner stehenbleiben. */
+                    if (form.dreh)
+                        mark.dreh = form.dreh;
+                    else
+                        delete mark.dreh;
                     delete mark.pressure;
                     delete mark.stil;
                     delete mark.zuletzt;

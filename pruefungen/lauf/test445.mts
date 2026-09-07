@@ -134,8 +134,15 @@ console.log('\n§1 Das Dreieck wird erkannt');
   p('Ein aufrechtes Dreieck wird ein Dreieck, mit dem Kasten seines Zugs',
     formen.auf?.art === 'triangle' && Math.abs(formen.auf.pts[0][0] - 50) < 6 && Math.abs(formen.auf.pts[1][1] - 260) < 6,
     JSON.stringify(formen.auf));
-  p('Ein Dreieck auf dem Kopf bleibt ein Strich — die Marke kann es nicht (L133)',
-    formen.um === null || formen.um.art !== 'triangle', JSON.stringify(formen.um));
+  /* BIS E478 STAND HIER: „Ein Dreieck auf dem Kopf bleibt ein Strich — die
+     Marke kann es nicht (L133)." Sie kann es seit E478: `dreh` steht an
+     jeder Marke (E466) und die Geometrie rechnet damit (E474), also
+     bekommt ein gedrehtes Dreieck seinen Winkel statt einer Absage. Die
+     Zeile ist nicht gestrichen, sondern umgedreht — wer sie sucht, soll
+     finden, warum sie sich geändert hat. */
+  p('Ein Dreieck auf dem Kopf wird ein Dreieck mit dreh ≈ 180 (E478)',
+    formen.um?.art === 'triangle' && Math.abs(Math.abs(formen.um.dreh) - 180) < 6,
+    JSON.stringify(formen.um));
   gleich('Ein Kreis bleibt eine Ellipse', formen.kreis?.art, 'ellipse');
   gleich('Ein Rechteck bleibt ein Rechteck', formen.rechteck?.art, 'rectangle');
   /* Und einmal der ganze Weg: auf dem Blatt gezogen und gehalten. */

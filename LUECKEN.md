@@ -6407,7 +6407,7 @@ Lauf, der der Presse nicht gehört. Derselbe Stand wie bei L119.
 
 ---
 
-L133 — Was am PDF-Teil gegenüber GoodNotes noch fehlt (Stand nach G11)
+L133 — Was am PDF-Teil gegenüber GoodNotes noch fehlt (Stand nach G12)
 --------------------------------------------------------------------------
 
 Redurs Auftrag vom 7. September (E465): der PDF-Teil 1:1 wie GoodNotes,
@@ -6420,10 +6420,13 @@ Zeichnen (nach G1, E465):
   · **Kurve** und **Verbinder** des Shape-Tools — beides braucht Griffe an
     einer fertigen Marke (die Mitte der Kurve nachziehen; ein Verbinder,
     der an zwei Formen hängt). Kommt nach dem Drehgriff aus G2.
-  · **Formerkennung für gedrehte Dreiecke** — seit E472 wird ein
-    AUFRECHTES Dreieck erkannt; eines auf dem Kopf oder auf der Seite
-    bleibt ein Strich, weil die Marke gleichschenklig mit der Spitze oben
-    ist und keine andere Lage beschreiben kann.
+  · ~~**Formerkennung für gedrehte Dreiecke**~~ — **GESCHLOSSEN mit E478.**
+    Die Marke kann seit E466 schief stehen und seit E474 rechnet die
+    Geometrie damit; also bekommt ein gedrehtes Dreieck jetzt seinen
+    Winkel statt einer Absage. Aufrecht bleibt aufrecht (unter 4° kein
+    Feld), und ein fast gleichseitiges bekommt die KLEINSTE der drei
+    möglichen Drehungen — das fand das Bild, nicht der Prüflauf.
+    `test451`.
   · **Radierer-Filter** nach Werkzeugart über Marker hinaus (GoodNotes:
     Pen, Pencil, Highlighter, Tape einzeln) — heute Ganz, Teil, Marker.
   · **Farbsets** speichern und zurücksetzen — heute sieben feste und vier
