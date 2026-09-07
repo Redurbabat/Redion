@@ -214,7 +214,7 @@ rechtfertigt.
 
 ---
 
-### 7 · Der PDF-Teil wie GoodNotes — neun Bögen (Redur, 7. September)
+### 7 · Der PDF-Teil wie GoodNotes — zehn Bögen (Redur, 7. September)
 
 Redur, mit dem GoodNotes-Dossier: „alles, was GoodNotes machen kann, 1:1 —
 nur beim PDF-Teil: wie die bearbeitet wird, importiert, die Stifte usw.",
@@ -255,6 +255,11 @@ Gegenprobe, Bild und Entscheidung:
     die bei der Hälfte des Nachbarabstands haltmacht; der Regler der
     Strichstärke misst 44 statt 16; die Papierauswahl 44 statt 36.
     **Steht.**
+  · **G10 — Ein Kasten ist keine Wischspur** (E476, test449): das
+    Kritzel-Löschen fragt den WEG des Gekritzels statt seinen Kasten (ein
+    schräger Zug löschte drei Marken statt einer — Datenverlust), und die
+    Treffer der Suche werden beim Nachziehen einer Seite nur für DIESE
+    Seite neu gemalt. **Steht.**
 
 Was danach ehrlich offen bleibt, steht in **L133** (Audio mit Zeitbezug,
 Handschrift-zu-Text, Mathe, Elemente-Bibliothek, Präsentation, Wolke).

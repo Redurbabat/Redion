@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-455 Entscheidungen, E1 bis E475 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+456 Entscheidungen, E1 bis E476 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -519,6 +519,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E473** — Was die Prüfung fand: eine Farbe kann Code sein, die Sperre hatte sechs Türen, pdf.js stand wieder im Anzeigeweg
 * **E474** — Das Gedrehte ist wirklich gedreht: der Griff läuft nicht mehr weg, der Radierer trifft die Marke statt ihren Kasten
 * **E475** — Was der Finger trifft: sieben Pixel sind kein Ziel — und eine Trefffläche darf den Nachbarn nicht verschlucken
+* **E476** — Ein Kasten ist keine Wischspur: das Gekritzel nimmt, was es überquert; die Treffer der Suche nur ihre eigene Seite
 
 ---
 
@@ -37743,3 +37744,82 @@ sein Quadrat), `e475-regler-telefon.png`, `e475-seitenmenue-telefon.png`.
 GEPRÜFT. 17 Läufe grün: test87, test105, test109, test341, test351,
 test395, test424, test437, test440–test448; dazu `npm run typecheck`,
 `npm run bauen:ts`, `node bauen.mts`.
+
+---
+
+E476 — Ein Kasten ist keine Wischspur: das Gekritzel nimmt, was es überquert; die Treffer der Suche nur ihre eigene Seite
+--------------------------------------------------------------------------
+
+Die letzten zwei der 25 ungeprüften Funde aus der Runde nach E473. Sie
+haben nichts miteinander zu tun ausser ihrer Herkunft — der erste ist
+Datenverlust, der zweite kostet nur Zeit.
+
+## 1. Das Gekritzel nahm mit, was daneben stand (§9, §51)
+
+`kritzelTrifft` fragte: liegt die Marke im KASTEN des Gekritzels?
+
+Ein Kasten ist aber keine Wischspur. Wer schräg über die Seite kritzelt —
+von links oben nach rechts unten, wie über eine Zeile, die quer steht —,
+spannt einen Kasten über die halbe Seite auf. Alles, dessen Mitte darin
+lag, war weg: auch was handbreit neben dem Zug stand und was der Mensch
+nie gesehen hat, während er kritzelte.
+
+Gemessen in der Gegenprobe: ein Zickzack von (100,100) nach (500,500) über
+einer einzigen Marke — mit der alten Regel blieben von drei Marken **null**
+übrig, mit der neuen die zwei, die der Zug nie berührt hat.
+
+Es fiel nie auf, weil ein kurzes Gekritzel über einem Wort einen kleinen
+Kasten hat und dort Kasten und Spur fast dasselbe sind. Genau darum stand
+es auch in keinem Prüflauf: `test439 §5` kritzelt waagerecht, und
+waagerecht ist der Kasten zwanzig Punkte hoch.
+
+GEFRAGT WIRD JETZT, WAS DER ZUG WIRKLICH ÜBERQUERT:
+
+  · ein Linienzug — mindestens die Hälfte seiner Punkte liegt näher als
+    sechs Punkte am WEG des Gekritzels. Das ist dieselbe Hälfte-Regel wie
+    zuvor, nur am Weg statt am Kasten gemessen; wer bisher etwas
+    weggekritzelt bekam, bekommt es weiter weg.
+  · alles mit Kasten — der Zug geht durch ihn hindurch (ein Punkt des Zuges
+    liegt in seinen vier Ecken, seit E474 auch bei einer gedrehten Marke)
+    oder er streift seine Mitte. Das Zweite für kleine Marken, zwischen
+    deren Grösse zwei Abtastpunkte des Zuges passen.
+
+Der Kasten bleibt als billiger VORFILTER: was ihn nicht schneidet, kann der
+Zug nicht überqueren. Bilder und Gesperrtes nie (E466).
+
+## 2. Die Treffer der Suche wurden bei jeder Seite alle neu gemalt (§36)
+
+`zeichneStand` ruft `trefferMalen`, sobald eine Seite beim Rollen
+nachgezogen wird — und rief es ohne Seitenangabe. Bei einem Skript mit
+hundert Seiten und einer laufenden Suche heisst das: die hundertste
+nachgezogene Seite reisst neunundneunzig fertige Trefferschichten ab und
+baut sie neu auf. Rollen durch eine Suche kostete quadratisch, und zwar
+genau dann, wenn der Mensch rollt.
+
+`trefferMalen(nur?)` malt jetzt eine Seite, wenn eine gemeint ist. Die
+Suche selbst (neuer Begriff, nächster Treffer) ruft weiter ohne Angabe:
+dort ändert sich wirklich jede Seite, und `ist-aktiv` sitzt nur an einer.
+
+## Wächter
+
+`test449` (neu, 16 Punkte): §1 der Fall, um den es geht — der Kasten ist
+über 350×350, beide unbeteiligten Marken liegen nachweislich darin, und
+nach dem Gekritzel stehen sie noch; §2 das Gewollte geht weiter (Strich
+weg, Kasten weg, Gesperrtes bleibt); §3 die Trefferschichten bekommen eine
+Marke am Knoten, es wird gerollt, und keine alte ist ersetzt worden; §4 die
+Quellen. Zwei Gegenproben, beide gelaufen und rot.
+
+Am Prüflauf selbst ist eine Zeile Arbeit, die man sonst übersieht: das
+Gekritzel muss ABGETASTET werden wie von Hand (vier Punkte je Zacke), weil
+der Stift glättet (E376). Ein Zickzack aus blossen Eckpunkten kommt
+geglättet als Bogen an, `istKritzel` sagt nein, und die Prüfung prüft
+etwas anderes, als sie behauptet. Nachgemessen mit den benutzten Zahlen
+(±18 Punkte alle zwölf): Weg 1716 gegen die Schwelle 1308, und die
+Diagonale liegt überall unter 3,2 Punkten vom Weg.
+
+KEIN BILD (§55.3). Beides ist ohne Bild: „drei Marken weg statt einer" ist
+eine Liste, kein Anblick, und ein Bildschirmfoto der Seite danach sieht
+richtig aus, gleich welche Regel gilt. Die Messung ist hier der Beweis.
+
+GEPRÜFT. 14 Läufe grün: test87, test105, test109, test439–test449; dazu
+`npm run typecheck`, `npm run bauen:ts`, `node bauen.mts`.

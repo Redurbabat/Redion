@@ -4012,7 +4012,25 @@ Drei Gegenproben rot gesehen. Und ein Bild, auf dem die Trefffläche rot
 gestrichelt zu sehen ist — man sieht darauf sofort, dass die zwei engen
 Verweise sich genau in der Mitte treffen.
 
+**Und ein Kasten ist keine Wischspur (E476, test449).** Die letzten zwei
+benannten Funde der Runde. Der erste war Datenverlust: `kritzelTrifft`
+fragte, ob eine Marke im KASTEN des Gekritzels liegt. Wer schräg über die
+Seite kritzelt, spannt aber einen Kasten über die halbe Seite auf — und
+alles darin war weg, auch was handbreit neben dem Zug stand. In der
+Gegenprobe gemessen: von drei Marken blieben mit der alten Regel **null**
+übrig, mit der neuen die zwei, die der Zug nie berührt hat. Es fiel nie
+auf, weil ein Gekritzel über einem Wort waagerecht läuft und dort Kasten
+und Spur fast dasselbe sind — und genau darum kritzelte auch `test439 §5`
+waagerecht. Der zweite kostete nur Zeit, aber quadratisch beim Rollen:
+`trefferMalen` malte bei jeder nachgezogenen Seite die Treffer ALLER
+Seiten neu; jetzt nur die der einen.
+
+Am Prüflauf steckt eine Zeile Arbeit, die man sonst übersieht: das
+Gekritzel muss abgetastet werden wie von Hand, weil der Stift glättet
+(E376) — ein Zickzack aus blossen Eckpunkten kommt als Bogen an, und die
+Prüfung prüfte dann etwas anderes, als sie behauptet.
+
 **Was offen bleibt,** steht ehrlich in `LUECKEN.md` L133: Audio mit
 Zeitbezug, Handschrift zu Text, Elemente-Bibliothek, Präsentation — und
 die verbliebenen Reste (gedrehte Dreiecke, Kamera als Seite, Farbsets,
-Menü je Miniatur, der Kasten beim Kritzel-Löschen, `trefferMalen`).
+Menü je Miniatur, Verweise auf Seiten, die vor E473 eingelesen wurden).

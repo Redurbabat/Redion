@@ -1042,8 +1042,26 @@ const DocumentMode = (() => {
             bw: Number(block.bw) || Number(block.blattBreite) || SheetSpace.A4_BREITE,
             bh: Number(block.bh) || Number(block.blattHoehe) || SheetSpace.A4_HOEHE
         });
-        const trefferMalen = () => {
+        /**
+         * Die Treffer der Suche malen. Ohne `nur` alle Seiten — mit `nur` genau
+         * eine.
+         *
+         * WARUM DAS NICHT GLEICHGÜLTIG IST (E476, L133). `zeichneStand` ruft
+         * das hier, sobald eine Seite beim Rollen nachgezogen wird — und rief
+         * es bis hierher OHNE `nur`. Bei einem Skript mit hundert Seiten und
+         * einer laufenden Suche heisst das: die hundertste nachgezogene Seite
+         * reisst neunundneunzig fertige Trefferschichten ab und baut sie neu
+         * auf. Rollen durch eine Suche kostete damit quadratisch, und zwar
+         * genau dann, wenn der Mensch rollt — also wenn es auffällt.
+         *
+         * Die Suche selbst (neuer Begriff, nächster Treffer) ruft weiter
+         * ohne `nur`: dort ändert sich wirklich jede Seite, und `ist-aktiv`
+         * sitzt nur an einer.
+         */
+        const trefferMalen = (nur) => {
             staende.forEach((stand, i) => {
+                if (nur !== undefined && i !== nur)
+                    return;
                 stand.querySelectorAll('.document-trefferschicht').forEach(e => e.remove());
                 const meine = treffer.map((t, n) => ({ t, n })).filter(x => x.t.index === i);
                 stand.classList.toggle('hat-treffer', meine.length > 0);
@@ -1242,7 +1260,7 @@ const DocumentMode = (() => {
             if (!state.toolsOpen)
                 stand.querySelector('.blatt-werk [data-wz="schreiben"]')?.click();
             if (treffer.length)
-                trefferMalen();
+                trefferMalen(i);
             verweiseMalen(i);
             stand.querySelectorAll('.blatt-papier').forEach(paper => {
                 /* NUR DER TEXT WIRD STILL, NICHT DAS PAPIER (E468). Bis hier war das

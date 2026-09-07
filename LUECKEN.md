@@ -6407,7 +6407,7 @@ Lauf, der der Presse nicht gehört. Derselbe Stand wie bei L119.
 
 ---
 
-L133 — Was am PDF-Teil gegenüber GoodNotes noch fehlt (Stand nach G9)
+L133 — Was am PDF-Teil gegenüber GoodNotes noch fehlt (Stand nach G10)
 --------------------------------------------------------------------------
 
 Redurs Auftrag vom 7. September (E465): der PDF-Teil 1:1 wie GoodNotes,
@@ -6506,10 +6506,13 @@ Aus der Prüfung nach den Bögen (E473) bleibt ehrlich stehen:
     §37-Stellen mit E475: gemessen waren es 6,9 px am PDF-Verweis, 16 am
     Regler der Strichstärke und 36 an der Papierauswahl — alle drei jetzt
     44, der Verweis über eine Trefffläche, die beim halben Nachbarabstand
-    haltmacht (`test448`). Offen bleiben darunter: Kritzel-Löschen greift
-    über den achsenparallelen Kasten des ganzen Gekritzels, und
-    `trefferMalen` zeichnet bei jeder nachgezogenen Seite die Treffer
-    aller Seiten neu.
+    haltmacht (`test448`). Mit E476 sind auch die letzten zwei benannten
+    erledigt: das Kritzel-Löschen greift jetzt am WEG des Gekritzels statt
+    an seinem Kasten (mit dem Kasten löschte ein schräger Zug drei Marken
+    statt einer), und `trefferMalen` malt beim Nachziehen nur noch die
+    eine Seite (`test449`). Was danach von den 25 bleibt, ist nicht mehr
+    benannt: es sind die Funde, die niemand aufgeschrieben hat, weil sie
+    keinen Satz wert schienen — wer sie sucht, liest die Bögen neu.
 
 Was Redion auch nach G5 nicht haben wird, und warum:
 

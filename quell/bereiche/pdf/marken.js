@@ -1518,24 +1518,54 @@ const Marken = (() => {
             }
             return wechsel >= 4 && laenge >= 2.2 * Math.hypot(b.width, b.height);
         };
-        /** Welche Marken das Gekritzel deckt: Linienzuege mit mindestens der
-         *  Haelfte ihrer Punkte im Kasten des Gekritzels, alles andere mit der
-         *  Mitte seines Kastens. Bilder und Gesperrtes nie. */
+        /**
+         * WELCHE MARKEN DAS GEKRITZEL WEGNIMMT.
+         *
+         * DER FUND (E476, L133). Bis hierher war die Frage: liegt die Marke im
+         * KASTEN des Gekritzels? Ein Kasten ist aber keine Wischspur. Wer von
+         * links oben nach rechts unten kritzelt — ein langer, schräger Zug,
+         * wie man ihn über eine Zeile macht, die quer steht —, spannt einen
+         * Kasten über die halbe Seite auf, und ALLES, dessen Mitte darin
+         * liegt, war weg. Auch was zwanzig Zentimeter neben dem Zug stand.
+         * Das ist Datenverlust ohne Absicht des Menschen (§9, §51), und es
+         * fiel nicht auf, weil ein kurzes Gekritzel einen kleinen Kasten hat.
+         *
+         * Gefragt wird jetzt, was das Gekritzel WIRKLICH ÜBERQUERT:
+         *
+         *   · ein Linienzug: mindestens die Hälfte seiner Punkte liegt nah
+         *     am Weg des Gekritzels (dieselbe Hälfte-Regel wie zuvor, nur am
+         *     Weg statt am Kasten gemessen);
+         *   · alles mit Kasten: der Zug geht durch ihn hindurch, oder er
+         *     streift seine Mitte — das Zweite fuer kleine Marken, zwischen
+         *     deren Groesse zwei Abtastpunkte des Zuges passen.
+         *
+         * Der Kasten bleibt als billiger VORFILTER: was ihn nicht schneidet,
+         * kann der Zug nicht ueberqueren. Bilder und Gesperrtes nie (E466).
+         */
+        const KRITZEL_NAH = 6;
         const kritzelTrifft = (roh) => {
-            const k = InkGeometry.bounds({ pts: roh, breite: 6 });
-            const drin = (p) => (p[0] ?? 0) >= k.x && (p[0] ?? 0) <= k.x + k.width && (p[1] ?? 0) >= k.y && (p[1] ?? 0) <= k.y + k.height;
+            const zug = InkGeometry.points(roh);
+            const k = InkGeometry.bounds({ pts: roh, breite: KRITZEL_NAH });
             const weg = new Set();
+            if (!zug.length)
+                return weg;
             for (const m of marks) {
                 if (m.art === 'bild' || m.gesperrt)
                     continue;
+                if (!InkGeometry.intersects(k, InkGeometry.bounds(m)))
+                    continue;
                 if (InkGeometry.LINIEN.has(String(m.art)) && Array.isArray(m.pts) && m.pts.length) {
-                    const n = m.pts.filter(drin).length;
-                    if (n * 2 >= m.pts.length)
+                    const punkte = InkGeometry.points(m.pts);
+                    const n = punkte.filter(q => InkGeometry.distanceToPolyline(zug, q) <= KRITZEL_NAH).length;
+                    if (n * 2 >= punkte.length)
                         weg.add(idOf(m));
                 }
                 else {
                     const b = InkGeometry.bounds(m);
-                    if (drin([b.x + b.width / 2, b.y + b.height / 2]))
+                    const mitte = [b.x + b.width / 2, b.y + b.height / 2];
+                    const ecken = InkGeometry.ecken(m);
+                    if (InkGeometry.distanceToPolyline(zug, mitte) <= KRITZEL_NAH
+                        || zug.some(q => InkGeometry.insidePolygon(q, ecken)))
                         weg.add(idOf(m));
                 }
             }
