@@ -267,7 +267,13 @@ const PdfEinlesen = (() => {
                        überhaupt eines ist, und das ist die Frage, die man beim
                        Wiederlesen stellt. */
                     herkunft: 'quelle',
-                    ...(seitenVerweise.length ? { verweise: seitenVerweise } : {})
+                    /* AUCH DIE LEERE LISTE WIRD GESCHRIEBEN (E477). Vorher stand das
+                       Feld nur an Seiten MIT Verweisen — damit sahen „keine
+                       Verweise" und „noch nie nachgesehen" gleich aus, und der
+                       Nachtrag für alte Seiten liefe bei jedem Öffnen über jede
+                       Seite ohne Verweise wieder los. Ein leeres Array je Seite
+                       kostet sechzehn Zeichen in der Sicherung. */
+                    verweise: Array.isArray(seitenVerweise) ? seitenVerweise : []
                 }, stelle >= 0 ? stelle++ : -1);
                 nachher();
                 const satz = await Dateien.ablegen(new File([bild], datei.name.replace(/\.pdf$/i, '') + '-s' + n + '.webp', { type: 'image/webp' }), { blockId: b.id, abgeleitet: true });
@@ -467,6 +473,26 @@ const PdfEinlesen = (() => {
      * `Store.auftragNehmen` gibt ihn nur einem.
      */
     const auftragsId = (quelleId) => 'pdfbild-' + quelleId;
+    /* ── DER NACHTRAG DER VERWEISE (E477, L133) ──────────────────────────────
+       E473 hat pdf.js aus dem ANZEIGEWEG genommen: die Verweise einer Seite
+       stehen seither am Block, geschrieben beim Einlesen. Alles, was VOR
+       E473 eingelesen wurde, hat das Feld nicht — und weil „keine Verweise"
+       und „noch nicht nachgesehen" beide wie nichts aussehen, zeigten diese
+       Seiten für immer keine Verweise mehr.
+  
+       Nachgetragen wird über dieselbe Maschine wie die Seitenbilder: EIN
+       Lauf je Original, im Hintergrund, mit Pacht und Abbrechen-Knopf. Das
+       ist der Unterschied zum Zustand vor E473 — dort hing die ganze PDF am
+       Ansehen JEDER Seite; hier wird sie einmal geöffnet, alle Seiten
+       bekommen ihr Feld, und danach nie wieder. */
+    const AUFTRAG_VERWEISE = 'pdf-verweise';
+    const verweisAuftragsId = (quelleId) => 'pdfverweise-' + quelleId;
+    /** Seiten einer Quelle, an denen das Feld `verweise` fehlt. Ein leeres
+     *  Feld zählt NICHT als fehlend — es ist die Antwort „nachgesehen, keine". */
+    const ohneVerweise = (quelleId) => Object.values(Store.cache.blocks)
+        .filter(b => b && b.alive !== false && b.type === 'pdfseite' &&
+        b.quelleId === quelleId && !Array.isArray(b.verweise))
+        .sort((a, b) => (Number(a.nr) || 0) - (Number(b.nr) || 0));
     /**
      * KEINE WIEDERHOLUNGEN. Der Vorgabewert der Maschine ist drei, und der
      * ist für Aufträge gedacht, die an einem Netz hängen. Hier ist KEIN
@@ -558,11 +584,86 @@ const PdfEinlesen = (() => {
                 griff.schliessen();
         }
     };
+    /**
+     * Der Läufer für die Verweise (E477). Wie `bilderLaeufer` gebaut, nur
+     * kürzer: er schreibt kein Bild, sondern ein Feld je Seite.
+     */
+    const verweiseLaeufer = async (auftrag, hilfe) => {
+        const quelleId = String(auftrag?.eingabe?.quelleId || '');
+        if (!quelleId)
+            throw new Error('Dem Auftrag fehlt die Kennung des Originals.');
+        const offen = ohneVerweise(quelleId);
+        if (!offen.length)
+            return { seiten: 0, grund: 'nichts offen' };
+        const roh = await Dateien.alsBlob(quelleId);
+        if (!roh)
+            throw new Error('Das Original fehlt in diesem Bestand — die Verweise ' +
+                'kommen zurück, sobald die PDF-Datei wieder da ist.');
+        const satzQuelle = await Store.dateiHolen(quelleId);
+        const name = String(satzQuelle?.name || 'dem Original');
+        let griff = null;
+        let fertig = 0;
+        try {
+            griff = await PdfLeser.oeffne(new Uint8Array(await roh.arrayBuffer()));
+            for (const b of offen) {
+                if (hilfe.abgebrochen())
+                    break;
+                const n = Number(b.nr) || 1;
+                /* AUCH DIE LEERE LISTE WIRD GESCHRIEBEN — und auch für eine Seite,
+                   die es im Original gar nicht mehr gibt. „Keine Verweise" und
+                   „noch nicht nachgesehen" müssen sich unterscheiden, sonst liefe
+                   dieser Nachtrag bei jedem Öffnen des Dokuments wieder los. */
+                const liste = n > griff.seiten ? [] : await griff.verweise(n);
+                Store.updateBlock(b.id, { verweise: Array.isArray(liste) ? liste : [] });
+                fertig++;
+                await hilfe.schritt({ quelleId, fertig }, '„' + name + '": Verweise werden nachgetragen — Seite ' + n + ' von ' +
+                    (Number(b.vonSeiten) || griff.seiten));
+                await new Promise(r => setTimeout(r, 0));
+            }
+            await Store.flush();
+            return { seiten: fertig, quelleId };
+        }
+        finally {
+            if (griff)
+                griff.schliessen();
+        }
+    };
+    /**
+     * Den Nachtrag anstossen — einmal je Original.
+     *
+     * OHNE ORIGINAL WIRD GAR NICHTS ANGELEGT. Eine `.json`-Sicherung kennt
+     * keine Anhänge (§11); ein Auftrag, der scheitert und dem Menschen eine
+     * Fehlermeldung wirft für etwas, das er nicht ändern kann, ist Lärm. Der
+     * Fall steht in L133 und bleibt dort stehen.
+     */
+    const verweiseNachtragen = async (quelleId) => {
+        if (typeof Auftraege === 'undefined' || !Auftraege.anlegen)
+            return { auftrag: null, grund: 'ohne Maschine' };
+        if (!quelleId)
+            return { auftrag: null, grund: 'ohne Quelle' };
+        const offen = ohneVerweise(quelleId);
+        if (!offen.length)
+            return { auftrag: null, seiten: 0, grund: 'nichts offen' };
+        const satzQuelle = await Store.dateiHolen(quelleId);
+        if (!satzQuelle || satzQuelle.zustand !== 'fertig')
+            return { auftrag: null, grund: 'ohne Original' };
+        const id = verweisAuftragsId(quelleId);
+        const schon = await Auftraege.einer(id);
+        if (schon && !JobModell.beendet(schon))
+            return { auftrag: schon, schon: true };
+        const auftrag = await Auftraege.anlegen(AUFTRAG_VERWEISE, { quelleId }, {
+            id, schritte: offen.length, maxVersuche: MAX_VERSUCHE,
+            text: '„' + String(satzQuelle.name || 'dem Original') + '": Verweise werden nachgetragen'
+        });
+        return { auftrag, seiten: offen.length };
+    };
     /* Anmelden, sobald das Modul geladen ist. Die Maschine steht in
        index.html vor diesem Bereich (Zeile 456 gegen 510), also ist sie hier
        immer da; der Wächter gilt Prüfläufen, die einzelne Dateien laden. */
-    if (typeof Auftraege !== 'undefined' && Auftraege.anmelden)
+    if (typeof Auftraege !== 'undefined' && Auftraege.anmelden) {
         Auftraege.anmelden(AUFTRAG_ART, bilderLaeufer, 'Seitenbilder zurückholen');
+        Auftraege.anmelden(AUFTRAG_VERWEISE, verweiseLaeufer, 'Verweise nachtragen');
+    }
     /* ── WAS DER MENSCH DAVON SIEHT ─────────────────────────────────────────
        Der Läufer schweigt (siehe oben). Angezeigt wird HIER, aus den
        Ereignissen — und zwar in jedem Tab, auch in dem, der nicht rechnet.
@@ -917,6 +1018,7 @@ const PdfEinlesen = (() => {
             input.click();
         });
     };
-    return { alsSeiten, waehlen, neuBerechnen, ohneBild, schaerfer, bilderAlsSeiten, bilderWaehlen, BREITE_MAX, OHNE_FRAGE, BILD_KANTE_MAX };
+    return { alsSeiten, waehlen, neuBerechnen, ohneBild, schaerfer, bilderAlsSeiten, bilderWaehlen,
+        verweiseNachtragen, ohneVerweise, AUFTRAG_VERWEISE, BREITE_MAX, OHNE_FRAGE, BILD_KANTE_MAX };
 })();
 window.PdfEinlesen = PdfEinlesen;

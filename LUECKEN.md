@@ -6407,7 +6407,7 @@ Lauf, der der Presse nicht gehört. Derselbe Stand wie bei L119.
 
 ---
 
-L133 — Was am PDF-Teil gegenüber GoodNotes noch fehlt (Stand nach G10)
+L133 — Was am PDF-Teil gegenüber GoodNotes noch fehlt (Stand nach G11)
 --------------------------------------------------------------------------
 
 Redurs Auftrag vom 7. September (E465): der PDF-Teil 1:1 wie GoodNotes,
@@ -6493,11 +6493,16 @@ Seite als Bild, Zoom-Fenster stehen. Offen bleibt:
 
 Aus der Prüfung nach den Bögen (E473) bleibt ehrlich stehen:
 
-  · **Verweise auf alten Seiten.** Die Links einer PDF stehen seit E473 am
-    Block (beim Einlesen mitgeschrieben, wie `suchtext`). Seiten, die
-    vorher eingelesen wurden, haben das Feld nicht und zeigen keine
-    Verweise, bis sie neu eingelesen werden. Ein Nachtrag über die
-    Auftragsmaschine (wie `bilderLaeufer`) wäre der Weg.
+  · ~~**Verweise auf alten Seiten.**~~ — **GESCHLOSSEN mit E477.** Der
+    Nachtrag über die Auftragsmaschine ist gebaut: beim Öffnen eines
+    Dokuments läuft je Original einmal `pdf-verweise`, schreibt jeder
+    Seite ihr Feld (auch die leere Liste) und malt die Verweise danach
+    ohne neues Öffnen. Ausserhalb des Anzeigewegs — `test450 §5` zählt
+    nach, dass beim Ansehen und Rollen keine PDF geöffnet wird. **Offen
+    bleibt nur der Fall ohne Original:** wer aus einer `.json`-Sicherung
+    kommt, hat die PDF-Datei nicht, und ohne sie gibt es nichts
+    nachzutragen — dort wird bewusst kein Auftrag angelegt, statt eine
+    Fehlermeldung für etwas zu werfen, das niemand ändern kann.
   · **Der Rest der 33 Funde.** Acht wurden adversarial geprüft, fünf haben
     gehalten und sind behoben; die übrigen 25 sind nicht widerlegt,
     sondern nur nicht geprüft. Einer davon ist seit E474 erledigt

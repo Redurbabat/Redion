@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-456 Entscheidungen, E1 bis E476 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+457 Entscheidungen, E1 bis E477 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -520,6 +520,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E474** — Das Gedrehte ist wirklich gedreht: der Griff läuft nicht mehr weg, der Radierer trifft die Marke statt ihren Kasten
 * **E475** — Was der Finger trifft: sieben Pixel sind kein Ziel — und eine Trefffläche darf den Nachbarn nicht verschlucken
 * **E476** — Ein Kasten ist keine Wischspur: das Gekritzel nimmt, was es überquert; die Treffer der Suche nur ihre eigene Seite
+* **E477** — Die Verweise alter Seiten kommen nach — und „keine" ist eine Antwort, „nie nachgesehen" nicht
 
 ---
 
@@ -37823,3 +37824,81 @@ richtig aus, gleich welche Regel gilt. Die Messung ist hier der Beweis.
 
 GEPRÜFT. 14 Läufe grün: test87, test105, test109, test439–test449; dazu
 `npm run typecheck`, `npm run bauen:ts`, `node bauen.mts`.
+
+---
+
+E477 — Die Verweise alter Seiten kommen nach — und „keine" ist eine Antwort, „nie nachgesehen" nicht
+--------------------------------------------------------------------------
+
+E473 hat pdf.js aus dem ANZEIGEWEG genommen: die Verweise einer PDF-Seite
+stehen seither als Feld am Block, geschrieben beim Einlesen. Der Preis
+stand ehrlich in L133: alles, was VOR E473 eingelesen wurde, hat das Feld
+nicht und zeigt keine Verweise mehr — bis es neu eingelesen wird. Das ist
+der letzte benannte Rest jener Runde, und hier wird er abgeräumt.
+
+## Der Nachtrag
+
+Nachgetragen wird über dieselbe Maschine wie die Seitenbilder (E327):
+`pdf-verweise`, EIN Lauf je Original, mit Pacht, Wiederaufsetzpunkt und
+Abbrechen-Knopf. Angestossen wird er beim Öffnen eines Dokuments, für jede
+Quelle, an der noch Seiten ohne Feld hängen; sein Ende malt die
+Verweisschichten neu, damit der Nachtrag nicht bis zum nächsten Öffnen
+unsichtbar bleibt.
+
+DAS IST NICHT DIE RÜCKKEHR DES FUNDES VON E473, und der Unterschied ist
+der ganze Punkt. Dort hing die ganze Original-PDF am ANSEHEN JEDER SEITE:
+Blob, ArrayBuffer, pdf.js — dreimal dieselben Bytes, bei jedem Blick, bei
+bis zu 500 MB je Datei. Hier wird sie EINMAL je Original geöffnet, im
+Hintergrund, ausserhalb des Anzeigewegs, und danach nie wieder. `test450
+§5` zählt mit: beim Ansehen und Rollen durch ein nachgetragenes Dokument
+wird `PdfLeser.oeffne` **null** Mal gerufen.
+
+OHNE ORIGINAL WIRD GAR NICHTS ANGELEGT. Eine `.json`-Sicherung kennt keine
+Anhänge (§11); ein Auftrag, der scheitert und dem Menschen eine
+Fehlermeldung wirft für etwas, das er nicht ändern kann, ist Lärm. Dieser
+Fall bleibt in L133 stehen, wo er hingehört.
+
+## Und der Fehler, den der Prüflauf beim ersten Lauf fand
+
+E473 schrieb das Feld nur an Seiten MIT Verweisen:
+
+    ...(seitenVerweise.length ? { verweise: seitenVerweise } : {})
+
+Damit sehen „keine Verweise" und „noch nie nachgesehen" gleich aus — und
+der Nachtrag oben liefe bei JEDEM Öffnen über jede Seite ohne Verweise
+wieder los. Bei einem Skript, in dem drei von hundert Seiten Links haben,
+hiesse das: siebenundneunzig Seiten, jedes Mal, für nichts.
+
+Der Prüflauf fand es in seiner ersten Zeile — §1 erwartete, dass eine
+frisch eingelesene PDF an BEIDEN Seiten ein Feld hat, und die zweite hatte
+keines. Seitdem wird die leere Liste geschrieben. Sie kostet sechzehn
+Zeichen je Seite in der Sicherung und ist der Unterschied zwischen einer
+Antwort und einer Lücke.
+
+Das ist dieselbe Lehre wie in §52.10 über `enthaelt`, `fehlt` und
+`hinweis`: eine Datenstruktur, die nicht sagt, was sie ausgelassen hat,
+zwingt jeden späteren Leser zum Raten.
+
+## Wächter
+
+`test450` (neu, 15 Punkte), mit einer echten PDF (zwei Seiten, zwei
+Link-Anmerkungen auf der ersten, keine auf der zweiten): §1 die Liste —
+frisch eingelesen haben beide Seiten ihr Feld, `ohneVerweise` findet
+nichts; dann wird das Feld weggenommen (`rohSetzen`), und beide sind
+offen. §2 der Nachtrag läuft beim Öffnen und schreibt beiden ihr Feld, die
+Verweisschicht erscheint ohne neues Öffnen. §3 ein zweiter Anstoss legt
+nichts an. §4 ohne Original wird nichts angelegt. §5 `PdfLeser.oeffne`
+wird beim Ansehen null Mal gerufen. §6 die Quellen.
+
+Zwei Gegenproben, beide gelaufen und rot: `nachtragAnstossen` als Leerlauf
+(die Felder bleiben fort), und die leere Liste NICHT geschrieben — dann
+zeigt der Lauf genau den Kreislauf, um den es geht: der Auftrag wird beim
+zweiten Anstoss wieder angelegt.
+
+KEIN BILD (§55.3): der Nachtrag hat kein Aussehen. Was man sehen könnte —
+Verweise auf einer alten Seite — sieht danach aus wie auf jeder neuen, und
+`bilder/e475-verweise-trefflaeche.png` zeigt das bereits.
+
+GEPRÜFT. 16 Läufe grün: test87, test96, test100, test105, test109,
+test437, test441–test450; dazu `npm run typecheck`, `npm run bauen:ts`,
+`node bauen.mts`.

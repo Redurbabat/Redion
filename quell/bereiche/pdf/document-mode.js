@@ -179,6 +179,57 @@ const DocumentMode = (() => {
         catch { /* egal */ } }); });
         griffe.clear();
     };
+    /* ── DER NACHTRAG DER VERWEISE (E477, L133) ──────────────────────────────
+       Seiten, die VOR E473 eingelesen wurden, tragen kein `verweise`-Feld.
+       Sie zeigen deshalb keine Verweise — und niemand sieht, warum: eine
+       Seite ohne Verweise und eine Seite, an der noch niemand nachgesehen
+       hat, sehen gleich aus.
+  
+       Beim Öffnen eines Dokuments wird darum je Original EINMAL ein Auftrag
+       angelegt (`PdfEinlesen.verweiseNachtragen`). Er läuft in der
+       Auftragsmaschine — im Hintergrund, mit Pacht und Abbrechen-Knopf —,
+       schreibt jeder Seite ihr Feld (auch die leere Liste) und ist danach
+       für immer erledigt.
+  
+       DAS IST NICHT DIE RÜCKKEHR VON E473. Dort hing die ganze
+       Original-PDF am ANSEHEN JEDER SEITE, dreimal dieselben Bytes je
+       Blick. Hier wird sie einmal je Original geöffnet, nie im Anzeigeweg,
+       und das Ansehen selbst liest weiter nur den Block. */
+    let verweisHorcher = [];
+    const verweisHorchenAus = () => {
+        verweisHorcher.forEach(f => { try {
+            f();
+        }
+        catch { /* egal */ } });
+        verweisHorcher = [];
+    };
+    const nachtragAnstossen = (bloecke, neuMalen) => {
+        if (typeof PdfEinlesen === 'undefined' || !PdfEinlesen.verweiseNachtragen)
+            return;
+        const quellen = new Set();
+        bloecke.forEach(b => {
+            if (b && b.type === 'pdfseite' && b.quelleId && !Array.isArray(b.verweise))
+                quellen.add(String(b.quelleId));
+        });
+        if (!quellen.size)
+            return;
+        verweisHorchenAus();
+        if (typeof Ereignisse !== 'undefined' && Ereignisse.horche) {
+            /* Das Ende malt die Verweisschichten neu — sonst stünde der Nachtrag
+               in der Ablage und auf dem Bildschirm bis zum nächsten Öffnen
+               nichts. Auch im Fehlerfall abmelden: ein Horcher, der auf ein
+               Ereignis wartet, das nie kommt, hängt am Dokument fest. */
+            const fertig = (d) => {
+                if (!d || d.art !== PdfEinlesen.AUFTRAG_VERWEISE)
+                    return;
+                verweisHorchenAus();
+                neuMalen();
+            };
+            verweisHorcher.push(Ereignisse.horche(ARTEN.auftragBeendet, fertig));
+            verweisHorcher.push(Ereignisse.horche(ARTEN.auftragFehler, fertig));
+        }
+        quellen.forEach(id => { void PdfEinlesen.verweiseNachtragen(id); });
+    };
     /** Dokumentbausteine auch innerhalb vorhandener Spalten finden. */
     const documentsIn = (page) => {
         if (!page?.id)
@@ -747,6 +798,7 @@ const DocumentMode = (() => {
         /* Die PDF-Quellen der letzten Suche loslassen (E468): ein neuer Aufbau
            oeffnet sie bei Bedarf wieder. */
         griffeSchliessen();
+        verweisHorchenAus();
         /* Das Zoom-Fenster ist Ansicht, kein Merker (E469) — und sein Papier
            haengt an DIESEM Aufbau. Ein neuer beginnt ohne (E470). */
         state.lupe = false;
@@ -2649,13 +2701,19 @@ const DocumentMode = (() => {
         };
         center.addEventListener('pointerup', fingerWeg, true);
         center.addEventListener('pointercancel', fingerWeg, true);
+        /* Ganz zum Schluss, wenn alles steht: fehlende Verweise nachtragen
+           (E477). Das Ende des Auftrags malt sie an jeder gezeichneten Seite. */
+        nachtragAnstossen(documents, () => {
+            staende.forEach((_stand, i) => { if (gezeichnet.has(i))
+                verweiseMalen(i); });
+        });
         return true;
     };
     /* `freigeben` lässt die offenen PDF-Quellen der Suche los (E473): jede
        Seitenzeichnung läuft durch `schale.ts`, und wer das Dokument verlässt,
        soll pdf.js nicht im Rücken behalten. */
     return { available, active, select, toggle, documentsIn, render, sourceLabel, seiteAlsBild,
-        freigeben: griffeSchliessen };
+        freigeben: () => { griffeSchliessen(); verweisHorchenAus(); } };
 })();
 window.DocumentMode = DocumentMode;
 /* ============================================================================

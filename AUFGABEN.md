@@ -214,7 +214,7 @@ rechtfertigt.
 
 ---
 
-### 7 · Der PDF-Teil wie GoodNotes — zehn Bögen (Redur, 7. September)
+### 7 · Der PDF-Teil wie GoodNotes — elf Bögen (Redur, 7. September)
 
 Redur, mit dem GoodNotes-Dossier: „alles, was GoodNotes machen kann, 1:1 —
 nur beim PDF-Teil: wie die bearbeitet wird, importiert, die Stifte usw.",
@@ -260,6 +260,12 @@ Gegenprobe, Bild und Entscheidung:
     schräger Zug löschte drei Marken statt einer — Datenverlust), und die
     Treffer der Suche werden beim Nachziehen einer Seite nur für DIESE
     Seite neu gemalt. **Steht.**
+  · **G11 — Die Verweise alter Seiten** (E477, test450): ein Nachtrag über
+    die Auftragsmaschine holt die Links von Seiten, die vor E473
+    eingelesen wurden — einmal je Original, im Hintergrund, nicht im
+    Anzeigeweg. Dabei fand der Prüflauf, dass E473 die LEERE Verweisliste
+    gar nicht schrieb: „keine" und „nie nachgesehen" sahen gleich aus.
+    **Steht.**
 
 Was danach ehrlich offen bleibt, steht in **L133** (Audio mit Zeitbezug,
 Handschrift-zu-Text, Mathe, Elemente-Bibliothek, Präsentation, Wolke).

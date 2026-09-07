@@ -4030,7 +4030,26 @@ Gekritzel muss abgetastet werden wie von Hand, weil der Stift glättet
 (E376) — ein Zickzack aus blossen Eckpunkten kommt als Bogen an, und die
 Prüfung prüfte dann etwas anderes, als sie behauptet.
 
+**Und die Verweise alter Seiten kommen nach (E477, test450).** Der letzte
+benannte Rest der Runde. E473 nahm pdf.js aus dem Anzeigeweg und schrieb
+die Links beim Einlesen an den Block — womit alles, was vorher eingelesen
+wurde, für immer ohne Links dastand. Jetzt läuft beim Öffnen eines
+Dokuments je Original einmal ein Auftrag `pdf-verweise` im Hintergrund;
+sein Ende malt die Verweise, ohne dass jemand neu öffnen muss. Das ist
+nicht die Rückkehr des Fundes von E473: dort hing die ganze PDF am
+Ansehen JEDER Seite, hier wird sie einmal je Original geöffnet — der
+Prüflauf zählt mit und findet beim Ansehen und Rollen **null** Öffnungen.
+
+**Und ein Fehler, den der Prüflauf in seiner ersten Zeile fand.** E473
+schrieb das Verweisfeld nur an Seiten MIT Verweisen. Damit sehen „keine
+Verweise" und „noch nie nachgesehen" gleich aus — und der neue Nachtrag
+liefe bei jedem Öffnen über jede Seite ohne Links wieder los; bei einem
+Skript, in dem drei von hundert Seiten Links haben, jedes Mal über
+siebenundneunzig. Seitdem wird die leere Liste geschrieben: sechzehn
+Zeichen je Seite, und der Unterschied zwischen einer Antwort und einer
+Lücke.
+
 **Was offen bleibt,** steht ehrlich in `LUECKEN.md` L133: Audio mit
 Zeitbezug, Handschrift zu Text, Elemente-Bibliothek, Präsentation — und
 die verbliebenen Reste (gedrehte Dreiecke, Kamera als Seite, Farbsets,
-Menü je Miniatur, Verweise auf Seiten, die vor E473 eingelesen wurden).
+Menü je Miniatur).
