@@ -241,7 +241,28 @@ const InkGeometry = (() => {
         return { x: point[0], y: point[1], width, height: pad * 2 + lines.length * fontSize * TEXT_ZEILE,
             pad, zeile: fontSize * TEXT_ZEILE, fontSize, family, bold, lines };
     };
+    /** Die Linienzuege — sie drehen ihre Punkte; alles andere hat einen Kasten. */
+    const LINIEN = new Set(['stift', 'marker', 'line', 'arrow']);
+    /* DER KASTEN EINER GEDREHTEN MARKE (E466): der Kasten der vier gedrehten
+       Ecken. Eine Marke mit `dreh` steht schief auf dem Blatt; ihr Rahmen und
+       ihr Griff muessen dorthin, wo man sie sieht, nicht dorthin, wo ihre
+       zwei Eckpunkte liegen. */
+    const gedreht = (b, grad) => {
+        const rad = (grad * Math.PI) / 180;
+        const cos = Math.cos(rad), sin = Math.sin(rad);
+        const cx = b.x + b.width / 2, cy = b.y + b.height / 2;
+        const roh = [[b.x, b.y], [b.x + b.width, b.y], [b.x, b.y + b.height], [b.x + b.width, b.y + b.height]];
+        const ecken = roh.map(([x, y]) => [cx + (x - cx) * cos - (y - cy) * sin, cy + (x - cx) * sin + (y - cy) * cos]);
+        const xs = ecken.map(p => p[0]), ys = ecken.map(p => p[1]);
+        const x0 = Math.min(...xs), y0 = Math.min(...ys);
+        return { x: x0, y: y0, width: Math.max(...xs) - x0, height: Math.max(...ys) - y0 };
+    };
     const bounds = (mark) => {
+        const roh = boundsRoh(mark);
+        const grad = finite(mark?.dreh);
+        return grad && !LINIEN.has(String(mark?.art || '')) ? gedreht(roh, grad) : roh;
+    };
+    const boundsRoh = (mark) => {
         if (mark?.art === 'text') {
             const layout = textLayout(mark);
             if (layout)
@@ -275,6 +296,48 @@ const InkGeometry = (() => {
             const point = points([mark.point])[0] || [0, 0];
             mark.point = [point[0] + finite(dx), point[1] + finite(dy)];
         }
+        return mark;
+    };
+    /**
+     * Um `pivot` drehen — `degrees` im Uhrzeigersinn, wie SVGs `rotate` (E466).
+     *
+     * Linienzuege drehen ihre PUNKTE: verlustfrei, kein neues Feld. Alles
+     * mit Kasten (Formen, Band, Zettel, Bild, Text, Zeichen) dreht seine
+     * Mitte um den Anker und merkt sich den Winkel in `dreh` — zwei
+     * Eckpunkte koennen keinen schiefen Kasten beschreiben, und die Ecken
+     * zu drehen hiesse, die Marke zu verzerren. Alte Marken ohne `dreh`
+     * bleiben, was sie sind (§53.3). Aendert die Marke selbst, wie `move`.
+     */
+    const rotate = (mark, pivot, degrees) => {
+        if (!mark || typeof mark !== 'object')
+            return mark;
+        const grad = finite(degrees);
+        if (!grad)
+            return mark;
+        const rad = (grad * Math.PI) / 180;
+        const cos = Math.cos(rad), sin = Math.sin(rad);
+        const r2 = (v) => Math.round(v * 100) / 100;
+        const um = (p) => [
+            r2(pivot[0] + (p[0] - pivot[0]) * cos - (p[1] - pivot[1]) * sin),
+            r2(pivot[1] + (p[0] - pivot[0]) * sin + (p[1] - pivot[1]) * cos)
+        ];
+        if (LINIEN.has(String(mark.art)) && Array.isArray(mark.pts)) {
+            mark.pts = points(mark.pts).map(um);
+            return mark;
+        }
+        const b = bounds(mark);
+        const mitte = [b.x + b.width / 2, b.y + b.height / 2];
+        const neu = um(mitte);
+        move(mark, neu[0] - mitte[0], neu[1] - mitte[1]);
+        let d = (finite(mark.dreh) + grad) % 360;
+        if (d > 180)
+            d -= 360;
+        if (d <= -180)
+            d += 360;
+        if (Math.abs(d) < 0.01)
+            delete mark.dreh;
+        else
+            mark.dreh = r2(d);
         return mark;
     };
     const intersects = (left, right) => left.x <= right.x + right.width && left.x + left.width >= right.x &&
@@ -508,7 +571,7 @@ const InkGeometry = (() => {
         return mark;
     };
     return { points, simplify, simplifyIndices, outline, path, rectangle, bounds, move, intersects,
-        distanceToPolyline, touchesCircle, splitByCircle, insidePolygon, polygonArea, union, scale,
-        textWidth, textLines, textLayout };
+        distanceToPolyline, touchesCircle, splitByCircle, insidePolygon, polygonArea, union, scale, rotate,
+        textWidth, textLines, textLayout, LINIEN };
 })();
 window.InkGeometry = InkGeometry;

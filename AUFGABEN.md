@@ -224,9 +224,9 @@ Gegenprobe, Bild und Entscheidung:
 
   · **G1 — Zeichnen** (E465, test438): Dreieck, rundes Rechteck, Bleistift,
     freie Strichstärke, Buchstabentasten P/2/H/E/S/V/T/A/N/M/R/I. **Steht.**
-  · **G2 — Auswahl**: Drehen (Drehgriff), Ausschneiden (Strg X), nach vorn
-    und nach hinten, Sperren, Kritzel-Löschen, Kreis-Lasso (Umkreisen und
-    halten).
+  · **G2 — Auswahl** (E466, test439): Drehen (Drehgriff), Ausschneiden
+    (Strg X), nach vorn und nach hinten, Sperren, Kritzel-Löschen,
+    Kreis-Lasso (Umkreisen und halten). **Steht.**
   · **G3 — Seiten**: einfügen (leer, mit Vorlage, als Duplikat), löschen,
     verschieben, drehen; Lesezeichen je Seite mit Liste im Inspector.
   · **G4 — Suche und Links**: die Textschicht der PDF beim Einlesen ablegen

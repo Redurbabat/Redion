@@ -12156,6 +12156,11 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
              vector-effect:non-scaling-stroke; pointer-events:none}
 .blatt-griff-feld{fill:transparent; pointer-events:all; cursor:nwse-resize}
 .blatt-griff-feld[data-griff="ne"], .blatt-griff-feld[data-griff="sw"]{cursor:nesw-resize}
+/* Der Drehgriff (E466) und das Schloss einer gesperrten Marke. */
+.blatt-griff-feld.blatt-griff-dreh{cursor:grab}
+.blatt-griff-dreh-punkt{fill:#2f7ed8}
+.blatt-auswahlrahmen-gesperrt{stroke:#8a8a8a; stroke-dasharray:2 3}
+.blatt-schloss{font-size:11px; pointer-events:none; user-select:none}
 /* Ein Bild, dessen Datei fehlt oder noch laedt (E357): ein gestrichelter
    Kasten in der Groesse der Marke — kein leerer Fleck, und greifbar bleibt
    er auch. Das Wort kommt erst, wenn die Ablage wirklich nichts hat. */
@@ -18637,7 +18642,7 @@ window.artKennt = artKennt;
  * dem sich der Inhalt zuletzt geändert hat. Die App zeigt es unter
  * „Über diese App", zusammen mit dem Weg, über den sie gerade läuft.
  * ==========================================================================*/
-const Stand = { fassung: 482, inhalt: '2f4c427d60440315', gebaut: '2026-09-07T04:37:50.889Z' };
+const Stand = { fassung: 486, inhalt: 'aeaf3ea59f2ee9b6', gebaut: '2026-09-07T04:44:33.491Z' };
 window.Stand = Stand;
 
 </script>
@@ -19669,7 +19674,28 @@ const InkGeometry = (() => {
         return { x: point[0], y: point[1], width, height: pad * 2 + lines.length * fontSize * TEXT_ZEILE,
             pad, zeile: fontSize * TEXT_ZEILE, fontSize, family, bold, lines };
     };
+    /** Die Linienzuege — sie drehen ihre Punkte; alles andere hat einen Kasten. */
+    const LINIEN = new Set(['stift', 'marker', 'line', 'arrow']);
+    /* DER KASTEN EINER GEDREHTEN MARKE (E466): der Kasten der vier gedrehten
+       Ecken. Eine Marke mit `dreh` steht schief auf dem Blatt; ihr Rahmen und
+       ihr Griff muessen dorthin, wo man sie sieht, nicht dorthin, wo ihre
+       zwei Eckpunkte liegen. */
+    const gedreht = (b, grad) => {
+        const rad = (grad * Math.PI) / 180;
+        const cos = Math.cos(rad), sin = Math.sin(rad);
+        const cx = b.x + b.width / 2, cy = b.y + b.height / 2;
+        const roh = [[b.x, b.y], [b.x + b.width, b.y], [b.x, b.y + b.height], [b.x + b.width, b.y + b.height]];
+        const ecken = roh.map(([x, y]) => [cx + (x - cx) * cos - (y - cy) * sin, cy + (x - cx) * sin + (y - cy) * cos]);
+        const xs = ecken.map(p => p[0]), ys = ecken.map(p => p[1]);
+        const x0 = Math.min(...xs), y0 = Math.min(...ys);
+        return { x: x0, y: y0, width: Math.max(...xs) - x0, height: Math.max(...ys) - y0 };
+    };
     const bounds = (mark) => {
+        const roh = boundsRoh(mark);
+        const grad = finite(mark?.dreh);
+        return grad && !LINIEN.has(String(mark?.art || '')) ? gedreht(roh, grad) : roh;
+    };
+    const boundsRoh = (mark) => {
         if (mark?.art === 'text') {
             const layout = textLayout(mark);
             if (layout)
@@ -19703,6 +19729,48 @@ const InkGeometry = (() => {
             const point = points([mark.point])[0] || [0, 0];
             mark.point = [point[0] + finite(dx), point[1] + finite(dy)];
         }
+        return mark;
+    };
+    /**
+     * Um `pivot` drehen — `degrees` im Uhrzeigersinn, wie SVGs `rotate` (E466).
+     *
+     * Linienzuege drehen ihre PUNKTE: verlustfrei, kein neues Feld. Alles
+     * mit Kasten (Formen, Band, Zettel, Bild, Text, Zeichen) dreht seine
+     * Mitte um den Anker und merkt sich den Winkel in `dreh` — zwei
+     * Eckpunkte koennen keinen schiefen Kasten beschreiben, und die Ecken
+     * zu drehen hiesse, die Marke zu verzerren. Alte Marken ohne `dreh`
+     * bleiben, was sie sind (§53.3). Aendert die Marke selbst, wie `move`.
+     */
+    const rotate = (mark, pivot, degrees) => {
+        if (!mark || typeof mark !== 'object')
+            return mark;
+        const grad = finite(degrees);
+        if (!grad)
+            return mark;
+        const rad = (grad * Math.PI) / 180;
+        const cos = Math.cos(rad), sin = Math.sin(rad);
+        const r2 = (v) => Math.round(v * 100) / 100;
+        const um = (p) => [
+            r2(pivot[0] + (p[0] - pivot[0]) * cos - (p[1] - pivot[1]) * sin),
+            r2(pivot[1] + (p[0] - pivot[0]) * sin + (p[1] - pivot[1]) * cos)
+        ];
+        if (LINIEN.has(String(mark.art)) && Array.isArray(mark.pts)) {
+            mark.pts = points(mark.pts).map(um);
+            return mark;
+        }
+        const b = bounds(mark);
+        const mitte = [b.x + b.width / 2, b.y + b.height / 2];
+        const neu = um(mitte);
+        move(mark, neu[0] - mitte[0], neu[1] - mitte[1]);
+        let d = (finite(mark.dreh) + grad) % 360;
+        if (d > 180)
+            d -= 360;
+        if (d <= -180)
+            d += 360;
+        if (Math.abs(d) < 0.01)
+            delete mark.dreh;
+        else
+            mark.dreh = r2(d);
         return mark;
     };
     const intersects = (left, right) => left.x <= right.x + right.width && left.x + left.width >= right.x &&
@@ -19936,8 +20004,8 @@ const InkGeometry = (() => {
         return mark;
     };
     return { points, simplify, simplifyIndices, outline, path, rectangle, bounds, move, intersects,
-        distanceToPolyline, touchesCircle, splitByCircle, insidePolygon, polygonArea, union, scale,
-        textWidth, textLines, textLayout };
+        distanceToPolyline, touchesCircle, splitByCircle, insidePolygon, polygonArea, union, scale, rotate,
+        textWidth, textLines, textLayout, LINIEN };
 })();
 window.InkGeometry = InkGeometry;
 
@@ -51791,7 +51859,22 @@ const Marken = (() => {
         }).catch(() => { });
     };
     /** Bildschirm, Druck und Praesentation rufen denselben Zeichner auf. */
+    /* DIE DREHUNG (E466) liegt als `transform` am fertigen Knoten — ein
+       Zweig fuer alle Bauarten, weil jede Bauart ihren eigenen Rueckweg
+       hat. Linienzuege tragen ihre Drehung in den Punkten, sie brauchen
+       keine. Die Mitte ist die Mitte des Kastens; `bounds` gibt bei
+       gedrehten Marken den Kasten der gedrehten Ecken, dessen Mitte
+       dieselbe ist. */
     const zeichneMarke = (mark) => {
+        const node = zeichneMarkeRoh(mark);
+        const grad = Number(mark?.dreh);
+        if (node && Number.isFinite(grad) && grad !== 0 && !InkGeometry.LINIEN.has(String(mark?.art || ''))) {
+            const b = InkGeometry.bounds(mark);
+            node.setAttribute('transform', `rotate(${grad} ${Math.round((b.x + b.width / 2) * 100) / 100} ${Math.round((b.y + b.height / 2) * 100) / 100})`);
+        }
+        return node;
+    };
+    const zeichneMarkeRoh = (mark) => {
         if (!mark || typeof mark !== 'object')
             return null;
         const art = String(mark.art || 'stift');
@@ -52086,6 +52169,11 @@ const Marken = (() => {
                 }
             });
             node.setAttribute('data-sid', fresh.getAttribute('data-sid') || '');
+            const drehung = fresh.getAttribute('transform');
+            if (drehung)
+                node.setAttribute('transform', drehung);
+            else
+                node.removeAttribute('transform');
             return node;
         }
         if (fresh.firstElementChild || node?.firstElementChild) {
@@ -52184,6 +52272,10 @@ const Marken = (() => {
            `zeichnen:formen`. */
         const HALTEN_MS = 450;
         let formen = typeof Store !== 'undefined' ? Store.getMeta('zeichnen:formen') !== false : true;
+        /* KRITZEL-LOESCHEN (E466), wie GoodNotes' Scribble to Erase: ein
+           Hin-und-her ueber einem Strich nimmt den Strich weg. Abschaltbar,
+           gemerkt in `zeichnen:kritzel`. */
+        let kritzel = typeof Store !== 'undefined' ? Store.getMeta('zeichnen:kritzel') !== false : true;
         let stiftZuletzt = 0;
         let stiftTimer = null;
         let aktiverZeiger = null;
@@ -52356,7 +52448,7 @@ const Marken = (() => {
             return neu;
         };
         const state = () => ({ undo: historyUndo.length > 0, redo: historyRedo.length > 0,
-            selected: selection.size, clipboard: zwischenablage.length > 0 });
+            selected: selection.size, clipboard: zwischenablage.length > 0, gesperrt: gesperrtGewaehlt() });
         const notifyState = () => stateListeners.forEach(listener => listener(state()));
         const save = () => Store.updateBlock(block.id, { marken: marks, raumVersion: R.RAUM_VERSION });
         /* ZWEI LISTEN VERGLEICHEN, OHNE SIE ZU SCHREIBEN (E378). Bis hierher
@@ -52477,7 +52569,14 @@ const Marken = (() => {
                 const box = InkGeometry.bounds(mark);
                 flaeche.appendChild(svg('rect', { x: box.x - 3, y: box.y - 3,
                     width: box.width + 6, height: box.height + 6,
-                    class: 'blatt-auswahlrahmen', 'data-ink-ui': 'selection' }));
+                    class: 'blatt-auswahlrahmen' + (mark.gesperrt ? ' blatt-auswahlrahmen-gesperrt' : ''),
+                    'data-ink-ui': 'selection' }));
+                /* Das Schloss sagt, warum sich die Marke nicht bewegt (E466). */
+                if (mark.gesperrt) {
+                    const schloss = svg('text', { x: box.x - 3, y: box.y - 6, class: 'blatt-schloss', 'data-ink-ui': 'selection' });
+                    schloss.textContent = '🔒';
+                    flaeche.appendChild(schloss);
+                }
             }
             /* DIE GRIFFE (E353): ein Kasten um alles Gewaehlte, an jeder Ecke ein
                Griff. Das Trefffeld ist groesser als der sichtbare Punkt — am
@@ -52495,6 +52594,13 @@ const Marken = (() => {
                     g.appendChild(svg('circle', { cx: x, cy: y, r: 22, class: 'blatt-griff-feld', 'data-griff': name }));
                     g.appendChild(svg('circle', { cx: x, cy: y, r: 5, class: 'blatt-griff' }));
                 }
+                /* DER DREHGRIFF (E466), wie in GoodNotes: an einer kurzen Leine
+                   ueber dem Kasten — oder darunter, wenn oben kein Platz ist. */
+                const ox = k.x + k.width / 2;
+                const oy = k.y < 40 ? k.y + k.height + 28 : k.y - 28;
+                g.appendChild(svg('line', { x1: ox, y1: k.y < 40 ? k.y + k.height : k.y, x2: ox, y2: oy, class: 'blatt-auswahlkasten' }));
+                g.appendChild(svg('circle', { cx: ox, cy: oy, r: 22, class: 'blatt-griff-feld blatt-griff-dreh', 'data-griff': 'dreh' }));
+                g.appendChild(svg('circle', { cx: ox, cy: oy, r: 5, class: 'blatt-griff blatt-griff-dreh-punkt' }));
                 flaeche.appendChild(g);
             }
             notifyState();
@@ -52515,11 +52621,68 @@ const Marken = (() => {
             if (!selection.size)
                 return;
             const before = snapshot();
+            /* GESPERRTES BLEIBT (E466): eine gesperrte Marke geht nicht mit dem
+               Entfernen-Knopf — erst entsperren, dann loeschen, wie in GoodNotes. */
             for (let index = marks.length - 1; index >= 0; index--)
-                if (selection.has(idOf(marks[index])))
+                if (selection.has(idOf(marks[index])) && !marks[index].gesperrt)
                     marks.splice(index, 1);
-            selection.clear();
+            selection = new Set([...selection].filter(id => marks.some(mark => idOf(mark) === id)));
             redraw();
+            commit(before);
+        };
+        /* AUSSCHNEIDEN (E466): Kopieren und Loeschen in einem — Strg X und ein Knopf. */
+        const cutSelection = () => {
+            const n = copySelection();
+            if (n)
+                deleteSelection();
+            return n;
+        };
+        /* NACH VORN UND NACH HINTEN (E466): die Reihenfolge in `marks` ist die
+           Stapelung auf dem Papier (E358) — nach vorn heisst ans Ende der
+           Liste, nach hinten an den Anfang. Kein Ebenenfenster, wie in
+           GoodNotes: Bring to Front, Send to Back. */
+        const nachVorn = () => {
+            if (!selection.size)
+                return;
+            const before = snapshot();
+            const drin = marks.filter(mark => selection.has(idOf(mark)));
+            const rest = marks.filter(mark => !selection.has(idOf(mark)));
+            marks.splice(0, marks.length, ...rest, ...drin);
+            redraw();
+            commit(before);
+        };
+        const nachHinten = () => {
+            if (!selection.size)
+                return;
+            const before = snapshot();
+            const drin = marks.filter(mark => selection.has(idOf(mark)));
+            const rest = marks.filter(mark => !selection.has(idOf(mark)));
+            marks.splice(0, marks.length, ...drin, ...rest);
+            redraw();
+            commit(before);
+        };
+        /* SPERREN (E466): eine gesperrte Marke laesst sich nicht schieben,
+           ziehen, drehen, loeschen oder radieren — fuer Bilder, Textkaesten
+           und Zettel, die als Vorlage dienen und ueber die man schreibt.
+           Umfaerben geht weiter: die Sperre gilt dem Ort, nicht der Farbe. */
+        const gesperrtGewaehlt = () => selection.size > 0 && [...selection].every(id => !!marks.find(mark => idOf(mark) === id)?.gesperrt);
+        const sperren = (an) => {
+            if (!selection.size)
+                return;
+            const before = snapshot();
+            const ziel = typeof an === 'boolean' ? an : !gesperrtGewaehlt();
+            for (let i = 0; i < marks.length; i++) {
+                if (!selection.has(idOf(marks[i])))
+                    continue;
+                const neu = { ...marks[i] };
+                if (ziel)
+                    neu.gesperrt = true;
+                else
+                    delete neu.gesperrt;
+                marks[i] = neu;
+                merke(neu);
+            }
+            renderSelection();
             commit(before);
         };
         /* KOPIEREN UND EINSETZEN (E353). Eingesetzt wird um sechzehn Einheiten
@@ -52579,6 +52742,9 @@ const Marken = (() => {
             /* Ein Bild radiert man nicht weg — wie in GoodNotes: der Radierer
                gilt der Tinte, ein Bild geht ueber die Auswahl (E357). */
             if (mark.art === 'bild')
+                return false;
+            /* Gesperrtes auch nicht (E466). */
+            if (mark.gesperrt)
                 return false;
             const id = idOf(mark);
             const teilbar = radierModus === 'teil' && (mark.art === 'stift' || mark.art === 'marker');
@@ -52882,6 +53048,68 @@ const Marken = (() => {
             input.addEventListener('cancel', auf);
             input.click();
         });
+        /** Ist der Zug ein Gekritzel? Mindestens vier Richtungswechsel entlang
+         *  der langen Seite seines Kastens, und ein Weg, der mehr als das
+         *  Doppelte der Diagonale misst — ein Hin-und-her, kein Bogen. */
+        const istKritzel = (roh) => {
+            const pts = InkGeometry.points(roh);
+            if (pts.length < 10)
+                return false;
+            const b = InkGeometry.bounds({ pts, breite: 0 });
+            const breit = b.width >= b.height;
+            let wechsel = 0, letzt = 0, laenge = 0;
+            for (let i = 1; i < pts.length; i++) {
+                const p = pts[i], q = pts[i - 1];
+                const d = breit ? p[0] - q[0] : p[1] - q[1];
+                laenge += Math.hypot(p[0] - q[0], p[1] - q[1]);
+                const s = d > 0.4 ? 1 : d < -0.4 ? -1 : 0;
+                if (s && letzt && s !== letzt)
+                    wechsel++;
+                if (s)
+                    letzt = s;
+            }
+            return wechsel >= 4 && laenge >= 2.2 * Math.hypot(b.width, b.height);
+        };
+        /** Welche Marken das Gekritzel deckt: Linienzuege mit mindestens der
+         *  Haelfte ihrer Punkte im Kasten des Gekritzels, alles andere mit der
+         *  Mitte seines Kastens. Bilder und Gesperrtes nie. */
+        const kritzelTrifft = (roh) => {
+            const k = InkGeometry.bounds({ pts: roh, breite: 6 });
+            const drin = (p) => (p[0] ?? 0) >= k.x && (p[0] ?? 0) <= k.x + k.width && (p[1] ?? 0) >= k.y && (p[1] ?? 0) <= k.y + k.height;
+            const weg = new Set();
+            for (const m of marks) {
+                if (m.art === 'bild' || m.gesperrt)
+                    continue;
+                if (InkGeometry.LINIEN.has(String(m.art)) && Array.isArray(m.pts) && m.pts.length) {
+                    const n = m.pts.filter(drin).length;
+                    if (n * 2 >= m.pts.length)
+                        weg.add(idOf(m));
+                }
+                else {
+                    const b = InkGeometry.bounds(m);
+                    if (drin([b.x + b.width / 2, b.y + b.height / 2]))
+                        weg.add(idOf(m));
+                }
+            }
+            return weg;
+        };
+        /** Ist der Zug eine geschlossene Schlinge? Dieselbe Frage wie in
+         *  `InkShapes.recognize`: Anfang und Ende nah, der Weg laenger als ein
+         *  Halbbogen. */
+        const istSchlinge = (roh) => {
+            const pts = InkGeometry.points(roh);
+            if (pts.length < 8)
+                return false;
+            const b = InkGeometry.bounds({ pts, breite: 0 });
+            const diag = Math.hypot(b.width, b.height);
+            if (diag < 12)
+                return false;
+            const a = pts[0], z = pts[pts.length - 1];
+            let laenge = 0;
+            for (let i = 1; i < pts.length; i++)
+                laenge += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
+            return Math.hypot(z[0] - a[0], z[1] - a[1]) <= 0.2 * diag && laenge >= 1.5 * diag;
+        };
         const finish = () => {
             aktiverZeiger = null;
             if (radierStrich) {
@@ -52898,7 +53126,7 @@ const Marken = (() => {
                 const drag = selectDrag;
                 selectDrag = null;
                 flaeche.querySelectorAll('[data-ink-ui="box"]').forEach(node => node.remove());
-                if ((drag.mode === 'move' || drag.mode === 'scale') && drag.moved) {
+                if ((drag.mode === 'move' || drag.mode === 'scale' || drag.mode === 'rotate') && drag.moved) {
                     commit(drag.before);
                     return true;
                 }
@@ -52946,6 +53174,44 @@ const Marken = (() => {
             delete mark.zeigerArt;
             const gehalten = Date.now() - (Number(mark.bewegtUm) || 0) >= HALTEN_MS;
             delete mark.bewegtUm;
+            /* KRITZEL-LOESCHEN (E466), wie GoodNotes' Scribble to Erase: ein
+               dichtes Hin-und-her ueber einem Strich nimmt den Strich weg, statt
+               ein neuer zu werden. Nur mit dem Stift, nie mit dem Marker, und
+               nur, wenn unter dem Gekritzel wirklich etwas liegt — sonst ist es
+               ein Strich wie jeder andere. Ein Schritt im Verlauf. */
+            if (mark.art === 'stift' && kritzel && istKritzel(mark.pts)) {
+                const weg = kritzelTrifft(mark.pts);
+                if (weg.size) {
+                    node?.remove();
+                    for (let i = marks.length - 1; i >= 0; i--)
+                        if (weg.has(idOf(marks[i])))
+                            marks.splice(i, 1);
+                    selection = new Set([...selection].filter(id => !weg.has(id)));
+                    redraw();
+                    commit(before);
+                    return true;
+                }
+            }
+            /* DAS KREIS-LASSO (E466), GoodNotes' Circle to Lasso: einen Bereich
+               mit dem Stift umkreisen und HALTEN — liegt etwas darin, ist es
+               gewaehlt, und der Strich wird keiner. Liegt nichts darin, gilt
+               weiter E355: der gehaltene Kreis wird ein Kreis. So bleibt beides. */
+            if (mark.art === 'stift' && gehalten && istSchlinge(mark.pts)) {
+                const drin = marks.filter(m => imLasso(m, mark.pts)).map(m => idOf(m));
+                if (drin.length) {
+                    node?.remove();
+                    setzeWerkzeug('select');
+                    if (typeof Zeichenziel !== 'undefined') {
+                        try {
+                            Zeichenziel.uebernehme(steuerung, 'select');
+                        }
+                        catch { /* egal */ }
+                    }
+                    selection = new Set(drin);
+                    renderSelection();
+                    return false;
+                }
+            }
             /* GEHALTEN UND EINE FORM (E355): der Stift wird zur Linie, zum Kreis
                oder zum Rechteck — als dieselbe Marke, mit Farbe und Breite; Druck
                und Stil hat eine Form nicht. Der Marker bleibt Marker: wer
@@ -53288,6 +53554,21 @@ const Marken = (() => {
                 /* EIN GRIFF AM RAHMEN SKALIERT DIE AUSWAHL (E353): die gegenueber-
                    liegende Ecke bleibt stehen, die Marken wachsen zum Zeiger hin. */
                 const griff = event.target?.closest?.('[data-griff]');
+                if (griff && selection.size && griff.getAttribute('data-griff') === 'dreh') {
+                    /* DREHEN (E466): um die Mitte des Kastens, der Winkel ist der
+                       Winkel des Zeigers zu ihr — mit Umschalt oder Lineal in
+                       15°-Schritten, wie Linie und Pfeil (E267). */
+                    const kasten = auswahlKasten();
+                    const mitte = [kasten.x + kasten.width / 2, kasten.y + kasten.height / 2];
+                    selectDrag = { mode: 'rotate', start: point, mitte, before: snapshot(), moved: false,
+                        winkel0: Math.atan2(point[1] - mitte[1], point[0] - mitte[0]),
+                        originals: new Map([...selection].map(id => [id, clone(marks.find(mark => idOf(mark) === id))])) };
+                    try {
+                        flaeche.setPointerCapture(event.pointerId);
+                    }
+                    catch { /* optional */ }
+                    return;
+                }
                 if (griff && selection.size) {
                     const kasten = auswahlKasten();
                     const ecke = String(griff.getAttribute('data-griff') || 'se');
@@ -53413,7 +53694,7 @@ const Marken = (() => {
                     for (const id of selection) {
                         const index = marks.findIndex(mark => idOf(mark) === id);
                         const original = selectDrag.originals.get(id);
-                        if (index < 0 || !original)
+                        if (index < 0 || !original || original.gesperrt)
                             continue;
                         marks[index] = InkGeometry.move(clone(original), dx, dy);
                         updateNode(nodeFor(id), marks[index]);
@@ -53442,9 +53723,26 @@ const Marken = (() => {
                     for (const id of selection) {
                         const index = marks.findIndex(mark => idOf(mark) === id);
                         const original = selectDrag.originals.get(id);
-                        if (index < 0 || !original)
+                        if (index < 0 || !original || original.gesperrt)
                             continue;
                         marks[index] = InkGeometry.scale(clone(original), [ax, ay], sx, sy);
+                        updateNode(nodeFor(id), marks[index]);
+                        merke(marks[index]);
+                    }
+                    renderSelection();
+                }
+                else if (selectDrag.mode === 'rotate') {
+                    const [mx, my] = selectDrag.mitte;
+                    let grad = (Math.atan2(point[1] - my, point[0] - mx) - selectDrag.winkel0) * 180 / Math.PI;
+                    if (lineal || event.shiftKey)
+                        grad = Math.round(grad / 15) * 15;
+                    selectDrag.moved = selectDrag.moved || Math.abs(grad) > 0.5;
+                    for (const id of selection) {
+                        const index = marks.findIndex(mark => idOf(mark) === id);
+                        const original = selectDrag.originals.get(id);
+                        if (index < 0 || !original || original.gesperrt)
+                            continue;
+                        marks[index] = InkGeometry.rotate(clone(original), [mx, my], grad);
                         updateNode(nodeFor(id), marks[index]);
                         merke(marks[index]);
                     }
@@ -53535,6 +53833,10 @@ const Marken = (() => {
             else if (strg && taste === 'z') {
                 event.preventDefault();
                 event.shiftKey ? redo() : undo();
+            }
+            else if (strg && taste === 'x' && selection.size) {
+                event.preventDefault();
+                cutSelection();
             }
             else if (strg && taste === 'c' && selection.size) {
                 event.preventDefault();
@@ -53683,7 +53985,19 @@ const Marken = (() => {
         const formenAn = () => formen;
         const steuerung = { flaeche, setzeWerkzeug, setzeFarbe, setzeStrich, setzeStil, stilVon, setzeRadierModus, radierModusVon, copySelection, paste, marken: marks,
             undo, redo, deleteSelection, beiAenderung, state, setzeLineal, linealAn, setzeFormen, formenAn, bildEinfuegen,
-            setzeSchrift, schriftVon };
+            setzeSchrift, schriftVon,
+            /* E466: Auswahl wie GoodNotes. */
+            cutSelection, nachVorn, nachHinten, sperren, gesperrtGewaehlt,
+            setzeKritzel: (an) => {
+                kritzel = !!an;
+                if (typeof Store !== 'undefined') {
+                    try {
+                        Store.setMeta('zeichnen:kritzel', kritzel);
+                    }
+                    catch { /* nur diese Sitzung */ }
+                }
+            },
+            kritzelAn: () => kritzel };
         return steuerung;
     };
     /** Die zuletzt gewaehlten eigenen Farben — hoechstens vier, gemerkt als Meta. */
@@ -53812,6 +54126,12 @@ const Marken = (() => {
                 /* KOPIEREN UND EINSETZEN (E353) — auch ohne Tastatur, am Telefon. */
                 '<button data-act="copy" data-gruppe="auswahl" title="Auswahl kopieren (Strg+C)" disabled><span class="zeichen" aria-hidden="true">⧉</span><span class="wort">Kopieren</span></button>' +
                 '<button data-act="paste" data-gruppe="auswahl" title="Kopiertes einsetzen (Strg+V)" disabled><span class="zeichen" aria-hidden="true">📋</span><span class="wort">Einsetzen</span></button>' +
+                /* AUSWAHL WIE GOODNOTES (E466): Ausschneiden, nach vorn, nach hinten,
+                   Sperren — alles an der Auswahl, alles ein Schritt im Verlauf. */
+                '<button data-act="cut" data-gruppe="auswahl" title="Auswahl ausschneiden (Strg+X)" disabled><span class="zeichen" aria-hidden="true">✂</span><span class="wort">Ausschneiden</span></button>' +
+                '<button data-act="vor" data-gruppe="auswahl" title="Auswahl nach vorn — über alles andere" disabled><span class="zeichen" aria-hidden="true">⤒</span><span class="wort">Nach vorn</span></button>' +
+                '<button data-act="hinten" data-gruppe="auswahl" title="Auswahl nach hinten — unter alles andere" disabled><span class="zeichen" aria-hidden="true">⤓</span><span class="wort">Nach hinten</span></button>' +
+                '<button data-act="sperren" data-gruppe="auswahl" aria-pressed="false" title="Auswahl sperren: nicht mehr schieben, ziehen, drehen, löschen oder radieren" disabled><span class="zeichen" aria-hidden="true">🔒</span><span class="wort">Sperren</span></button>' +
                 /* Das Lineal ist ein SCHALTER neben den Werkzeugen: solange es
                    anliegt, rasten Linie und Pfeil auf 15°-Schritte (E267). */
                 '<button data-act="lineal" data-gruppe="lineal" aria-pressed="false" ' +
@@ -53823,6 +54143,12 @@ const Marken = (() => {
                 `${controls.formenAn && controls.formenAn() ? ' class="on"' : ''} ` +
                 'title="Formen erkennen: einen Kreis, ein Rechteck oder eine Linie ziehen und am Ende kurz halten">' +
                 '<span class="zeichen" aria-hidden="true">◯</span><span class="wort">Formen</span></button>' +
+                /* KRITZELN LOESCHT (E466): ein Schalter wie „Formen" — an, und ein
+                   dichtes Hin-und-her ueber einem Strich nimmt ihn weg. */
+                `<button data-act="kritzel" data-gruppe="formen" aria-pressed="${controls.kritzelAn ? (controls.kritzelAn() ? 'true' : 'false') : 'true'}"` +
+                `${controls.kritzelAn && controls.kritzelAn() ? ' class="on"' : ''} ` +
+                'title="Kritzeln löscht: dicht über einen Strich hin und her fahren, und er ist weg">' +
+                '<span class="zeichen" aria-hidden="true">〰</span><span class="wort">Kritzeln</span></button>' +
                 /* DIE SCHRIFT (E360): Familie, Groesse, Fett, Rahmen — beim Text und
                    bei der Auswahl; wirkt auf Gewaehltes und auf den naechsten Text. */
                 (() => {
@@ -53913,6 +54239,16 @@ const Marken = (() => {
                 copy.disabled = !next.selected;
             if (paste)
                 paste.disabled = !next.clipboard;
+            for (const act of ['cut', 'vor', 'hinten', 'sperren']) {
+                const k = tools.querySelector(`[data-act="${act}"]`);
+                if (k)
+                    k.disabled = !next.selected;
+            }
+            const schloss = tools.querySelector('[data-act="sperren"]');
+            if (schloss) {
+                schloss.setAttribute('aria-pressed', next.gesperrt ? 'true' : 'false');
+                schloss.classList.toggle('on', !!next.gesperrt);
+            }
         };
         controls.beiAenderung?.(updateState);
         /* ZWEI ANSICHTEN DESSELBEN ZUSTANDS (E212, §55.1).
@@ -54125,6 +54461,23 @@ const Marken = (() => {
                     controls.copySelection();
                 if (target.dataset.act === 'paste' && controls.paste)
                     controls.paste();
+                if (target.dataset.act === 'cut' && controls.cutSelection)
+                    controls.cutSelection();
+                if (target.dataset.act === 'vor' && controls.nachVorn)
+                    controls.nachVorn();
+                if (target.dataset.act === 'hinten' && controls.nachHinten)
+                    controls.nachHinten();
+                if (target.dataset.act === 'sperren' && controls.sperren) {
+                    controls.sperren();
+                    return;
+                }
+                if (target.dataset.act === 'kritzel' && controls.setzeKritzel) {
+                    const an = !controls.kritzelAn?.();
+                    controls.setzeKritzel(an);
+                    target.setAttribute('aria-pressed', an ? 'true' : 'false');
+                    target.classList.toggle('on', an);
+                    return;
+                }
                 if (target.dataset.act === 'stil' && controls.setzeStil) {
                     const jetzt = STIFTE.findIndex(st => st.id === target.dataset.stil);
                     const naechster = STIFTE[(jetzt + 1) % STIFTE.length];

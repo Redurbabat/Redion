@@ -2249,6 +2249,54 @@ ANSICHTEN['staerke'] = {
   }
 };
 
+/* --- G2: Auswahl wie GoodNotes (E466) ------------------------------------
+   Ein gedrehtes rundes Rechteck, ein gesperrtes Bild-Ersatzkaestchen mit
+   Schloss, ein gewaehlter Strich mit Drehgriff — und die Auswahl-Leiste mit
+   Ausschneiden, nach vorn, nach hinten, Sperren. */
+ANSICHTEN['auswahl'] = {
+  titel: 'Auswahl wie GoodNotes: Drehgriff, Schloss, Ausschneiden, Reihenfolge (E466)',
+  bauen: async () => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelectorAll('.overlay').forEach(o => o.remove());
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+    document.getElementById('rg-willkommen')?.remove();
+    document.getElementById('rg-einladung')?.remove();
+    const seite = Store.addPage(null, { text: 'Schaltplan, Auswahl' });
+    const pts: number[][] = [], druck: number[] = [];
+    for (let i = 0; i <= 50; i++) { pts.push([80 + i * 7, 420 + Math.sin(i / 3) * 18]); druck.push(0.5 + 0.3 * Math.abs(Math.sin(i / 4))); }
+    Store.addBlock(seite.id, 'blatt', {
+      text: '', blattBreite: 595.28, blattHoehe: 841.89, raumVersion: 1,
+      marken: [
+        { id: 'g2-1', art: 'roundrect', farbe: '#2f7ed8', breite: 2.4, pts: [[90, 120], [300, 240]], dreh: -14 },
+        { id: 'g2-2', art: 'zettel', farbe: '#e0a419', breite: 2.4, pts: [[340, 110], [520, 220]], text: 'Gesperrt: die Vorlage bleibt liegen', gesperrt: true },
+        { id: 'g2-3', art: 'triangle', farbe: '#d64545', breite: 2.4, pts: [[120, 280], [260, 380]] },
+        { id: 'g2-4', art: 'stift', stil: 'fueller', farbe: '#111111', breite: 2.4, pts, pressure: druck }
+      ]
+    });
+    await Store.flush();
+    App.oeffne(seite.id);
+    await new Promise(r => setTimeout(r, 700));
+    document.querySelector<HTMLElement>('.blatt-werk [data-wz="select"]')?.click();
+    await new Promise(r => setTimeout(r, 200));
+    /* Das gedrehte Rechteck und den Zettel waehlen — dann stehen Griffe,
+       Drehgriff und Schloss im Bild. */
+    const f = document.querySelector<SVGSVGElement>('.blatt-marken');
+    const ctm = f?.getScreenCTM();
+    if (f && ctm) {
+      const tipp = (id: string, x: number, y: number, shift: boolean) => {
+        const pt = f.createSVGPoint(); pt.x = x; pt.y = y; const c = pt.matrixTransform(ctm);
+        const el = f.querySelector('[data-sid="' + id + '"]') || f;
+        const ev = (typ: string) => new PointerEvent(typ, { bubbles: true, cancelable: true, clientX: c.x, clientY: c.y,
+          pointerId: 7, pointerType: 'mouse', isPrimary: true, button: 0, buttons: typ === 'pointerup' ? 0 : 1, shiftKey: shift });
+        el.dispatchEvent(ev('pointerdown')); f.dispatchEvent(ev('pointerup'));
+      };
+      tipp('g2-1', 190, 180, false);
+      tipp('g2-2', 430, 165, true);
+    }
+    await new Promise(r => setTimeout(r, 400));
+  }
+};
+
 ANSICHTEN['willkommen'] = {
   titel: 'Willkommen: Rauschtextur im Kopf (E462)',
   bauen: async () => {

@@ -4119,6 +4119,11 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
              vector-effect:non-scaling-stroke; pointer-events:none}
 .blatt-griff-feld{fill:transparent; pointer-events:all; cursor:nwse-resize}
 .blatt-griff-feld[data-griff="ne"], .blatt-griff-feld[data-griff="sw"]{cursor:nesw-resize}
+/* Der Drehgriff (E466) und das Schloss einer gesperrten Marke. */
+.blatt-griff-feld.blatt-griff-dreh{cursor:grab}
+.blatt-griff-dreh-punkt{fill:#2f7ed8}
+.blatt-auswahlrahmen-gesperrt{stroke:#8a8a8a; stroke-dasharray:2 3}
+.blatt-schloss{font-size:11px; pointer-events:none; user-select:none}
 /* Ein Bild, dessen Datei fehlt oder noch laedt (E357): ein gestrichelter
    Kasten in der Groesse der Marke — kein leerer Fleck, und greifbar bleibt
    er auch. Das Wort kommt erst, wenn die Ablage wirklich nichts hat. */

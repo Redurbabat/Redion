@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-445 Entscheidungen, E1 bis E465 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+446 Entscheidungen, E1 bis E466 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -509,6 +509,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E463** — Sichtbar und lustig: die Vorgaben kommen an die Wege, die man täglich geht
 * **E464** — Redurs Zweig `codex/pdf-schreibstudio` übernommen: Schreibtisch im Vollbild, Stiftmarken, Verlauf
 * **E465** — Zeichnen wie GoodNotes, erster Bogen: Dreieck, rundes Rechteck, Bleistift, freie Stärke, Buchstabentasten
+* **E466** — Auswahl wie GoodNotes, zweiter Bogen: Drehen, Ausschneiden, Reihenfolge, Sperren, Kritzel-Löschen, Kreis-Lasso
 
 ---
 
@@ -36678,6 +36679,11 @@ DATEIEN. `src/bereiche/pdf/marken.ts`, `src/register/tasten.ts`,
 `quell/schale/stil/bausteine.css`, `bilder.mts`,
 `pruefungen/lauf/test438.mts` (neu), `test365.mts` (sechs Formen).
 
+GEPRÜFT. test438 (40 Punkte, neu), test343, test344, test345, test365,
+test201, test351, test174, test393, test386, test210, test437, test362,
+test290, test105, test109, test87, test247, test248, test272, test414;
+`npm run typecheck`, `npm run bauen:ts`, `node bauen.mts`.
+
 NACHTRAG (7. September 2026) — DER REGLER IST EINE KLAPPE, KEINE ZEILE.
 Der breite Lauf nach dem Landen fand `test351` rot: „Die Leiste ist unter
 100 px hoch — 132 px bei 596 px Breite". Hinter der dritten Stufe blieben
@@ -36714,7 +36720,100 @@ unter 100 px; Escape; anderes Werkzeug; §5 am Telefon in der Zeile,
 44 hoch. Bilder: `staerke-rechner-hell` (Klappe unter der mittleren Stufe),
 `staerke-handy-dunkel` (in der Zeile, links der Pfeile).
 
-GEPRÜFT. test438 (40 Punkte, neu), test343, test344, test345, test365,
-test201, test351, test174, test393, test386, test210, test437, test362,
-test290, test105, test109, test87, test247, test248, test272, test414;
-`npm run typecheck`, `npm run bauen:ts`, `node bauen.mts`.
+---
+
+E466 — Auswahl wie GoodNotes, zweiter Bogen: Drehen, Ausschneiden, Reihenfolge, Sperren, Kritzel-Löschen, Kreis-Lasso
+--------------------------------------------------------------------------
+
+Zweiter der fünf Bögen aus Redurs Auftrag vom 7. September (E465,
+`AUFGABEN.md` 7): das, was GoodNotes' Lasso und sein Objekt-Menü können
+und Redions Auswahl (E353, E358) noch nicht konnte. Sechs Dinge, alle
+additiv — kein Weg, den es gab, ist weg, und jede alte Marke bleibt, was
+sie war (§53.3: kein neues Pflichtfeld, `dreh` und `gesperrt` fehlen bei
+allem Alten und heissen dann „nicht gedreht", „nicht gesperrt").
+
+WAS ENTSCHIEDEN WURDE.
+
+  1. DREHEN — ein Griff an einer kurzen Leine über dem Auswahlkasten
+     (`data-griff="dreh"`; unter dem Kasten, wenn oben keine 40 px sind).
+     Der Winkel ist der Winkel des Zeigers zur Kastenmitte; mit Umschalt
+     oder Lineal in 15°-Schritten, wie Linie und Pfeil (E267). Zwei
+     Bauarten, ein Griff: LINIENZÜGE (Stift, Marker, Linie, Pfeil) drehen
+     ihre PUNKTE — verlustfrei, kein neues Feld. Alles mit KASTEN (Formen,
+     Band, Zettel, Bild, Text, Zeichen) dreht seine Mitte um den Anker und
+     merkt sich den Winkel in `dreh`; der Zeichner legt ihn als `transform`
+     an den fertigen Knoten. Zwei Eckpunkte können keinen schiefen Kasten
+     beschreiben, und die Ecken zu drehen hiesse, die Marke zu verzerren
+     — deshalb das Feld. `InkGeometry.bounds` gibt für gedrehte Marken den
+     Kasten der gedrehten Ecken, damit Rahmen und Griffe dort stehen, wo
+     man die Marke sieht.
+  2. AUSSCHNEIDEN — Strg X und ein Knopf: Kopieren und Löschen in einem;
+     Einsetzen bringt es zurück (mit neuer Kennung, versetzt, wie E358).
+  3. NACH VORN, NACH HINTEN — die Reihenfolge in `marken` IST die
+     Stapelung auf dem Papier (E358). Nach vorn heisst ans Ende der Liste,
+     nach hinten an den Anfang; die Knoten folgen. Kein Ebenenfenster —
+     GoodNotes hat auch keins.
+  4. SPERREN — `gesperrt: true` an der Marke. Gesperrt heisst: nicht
+     schieben, nicht ziehen, nicht drehen, nicht löschen, nicht radieren,
+     nicht kritzel-löschen. Umfärben geht weiter — die Sperre gilt dem
+     Ort, nicht der Farbe. Am Rahmen ein Schloss und ein gestrichelter
+     Rand (`.blatt-auswahlrahmen-gesperrt`), der Knopf sagt es mit
+     `aria-pressed`. Gedacht für Bilder, Textkästen und Zettel, die als
+     Vorlage liegen und über die man schreibt.
+  5. KRITZEL-LÖSCHEN (Scribble to Erase) — ein dichtes Hin-und-her über
+     einem Strich nimmt den Strich weg, statt ein neuer zu werden.
+     `istKritzel`: mindestens vier Richtungswechsel entlang der langen
+     Seite des Kastens und ein Weg von mehr als dem 2,2-fachen der
+     Diagonale — ein Hin-und-her, kein Bogen; eine Welle hat keine vier
+     Wechsel entlang ihrer langen Seite. `kritzelTrifft`: Linienzüge mit
+     mindestens der Hälfte ihrer Punkte im Kasten des Gekritzels, alles
+     andere mit seiner Mitte; Bilder und Gesperrtes nie. Nur mit dem
+     Stift, nie mit dem Marker; ein Schalter „Kritzeln" neben „Formen",
+     gemerkt in `zeichnen:kritzel`; ein Schritt im Verlauf. Liegt nichts
+     unter dem Gekritzel, ist es ein Strich wie jeder — sonst könnte man
+     nichts Dichtes mehr schraffieren.
+  6. KREIS-LASSO (Circle to Lasso) — einen Bereich mit dem Stift umkreisen
+     und HALTEN: liegt etwas darin, ist es gewählt, das Werkzeug wechselt
+     zur Auswahl, und der Strich wird keiner. Liegt nichts darin, gilt
+     weiter E355: der gehaltene Kreis wird ein Kreis. So bleibt beides,
+     und die Prüfung in `finish` steht VOR der Formerkennung.
+
+WARUM SO, UND NICHT ANDERS.
+
+  · Drehen über ein Feld statt über gedrehte Eckpunkte: ein Rechteck mit
+    vier gedrehten Ecken wäre kein Rechteck mehr im Modell (`pts` hat
+    zwei Punkte), und jede spätere Prüfung, jeder Export müsste raten. Ein
+    Winkel ist ein Wert, und ohne Winkel ist es das alte Rechteck.
+  · Linienzüge OHNE Feld: ihre Punkte sind schon die ganze Wahrheit; ein
+    `dreh` daran wäre ein zweiter Ort für dieselbe Sache — der Fehler, den
+    §8 an Registern verbietet, hier an Daten.
+  · Kritzel-Löschen mit Schalter, an als Vorgabe: GoodNotes hat es an,
+    und wer schraffiert, hat den Schalter. Ohne Schalter wäre dichte
+    Schraffur über einer Linie unmöglich.
+  · Kreis-Lasso nur mit Halten: ein Kreis um etwas herum ist ohne Halten
+    ein gezeichneter Kreis — die häufigere Absicht. Das Halten ist
+    dasselbe Halten wie bei der Formerkennung (E355, 450 ms), kein zweiter
+    Griff zum Lernen.
+  · Gesperrtes bleibt beim Entfernen-Knopf liegen statt zu fragen: die
+    Sperre ist die Antwort auf die Frage; wer löschen will, entsperrt.
+
+ALTERNATIVEN. Ein Ebenenfenster (verworfen: GoodNotes hat keins, und die
+Liste ist die Ebene). Drehen aller Marken über gedrehte Punkte (verworfen,
+siehe oben). Kritzel-Löschen ohne Schalter (verworfen, Schraffur).
+
+KOSTEN. Zwei neue optionale Felder an Marken (`dreh`, `gesperrt`), die
+`.json` und `.redion` unverändert mitnehmen (Marken sind Blockfelder,
+E353) — alte Fassungen von Redion zeigen ein gedrehtes Rechteck ungedreht
+und ein gesperrtes wie jedes andere, nichts geht verloren. Treffer auf
+gedrehten Kästen rechnen weiter mit den ungedrehten Eckpunkten (L133).
+Vier neue Knöpfe in der Gruppe „Auswahl", einer in „Formen".
+
+WÄCHTER. `test439` (neu, 34 Punkte): §1 Drehen (Griff über dem Kasten;
+Linie dreht ihre Punkte, Rechteck merkt sich ≈ 90° und sein Knoten hat
+`transform`; Zurück holt beides), §2 Ausschneiden (Strg X, Zwischenablage,
+Einsetzen), §3 Reihenfolge (Liste und Knoten; Zurück), §4 Sperren (Knopf,
+`aria-pressed`, Schloss am Rahmen; Schieben, Entfernen, Radierer wirken
+nicht; entsperrt wieder alles), §5 Kritzel-Löschen (Welle bleibt Strich,
+Gekritzel nimmt die Linie und wird keiner, Zurück, Schalter aus), §6
+Kreis-Lasso (wählt das Rechteck, Auswahl führt, kein Strich; leere
+Schlinge wird ein Kreis), §7 Quellen.

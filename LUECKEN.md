@@ -6399,7 +6399,7 @@ Lauf, der der Presse nicht gehört. Derselbe Stand wie bei L119.
 
 ---
 
-L133 — Was am PDF-Teil gegenüber GoodNotes noch fehlt (Stand nach G1)
+L133 — Was am PDF-Teil gegenüber GoodNotes noch fehlt (Stand nach G2)
 --------------------------------------------------------------------------
 
 Redurs Auftrag vom 7. September (E465): der PDF-Teil 1:1 wie GoodNotes,
@@ -6419,8 +6419,20 @@ Zeichnen (nach G1, E465):
   · **Farbsets** speichern und zurücksetzen — heute sieben feste und vier
     eigene Tupfer.
 
-Noch nicht angefangen (G2–G5, siehe `AUFGABEN.md`): Drehen, Ausschneiden,
-Reihenfolge, Sperren, Kritzel-Löschen, Kreis-Lasso; Seiten einfügen,
+Auswahl (nach G2, E466): Drehen, Ausschneiden, nach vorn und hinten,
+Sperren, Kritzel-Löschen und Kreis-Lasso stehen. Offen bleibt:
+
+  · **Treffer auf gedrehten Kästen** — ein gedrehter Kasten (Form, Text,
+    Zettel, Bild) steht als `transform` schief, aber Tipp, Lasso und
+    Radierer rechnen mit seinen zwei ungedrehten Eckpunkten. Bei kleinen
+    Winkeln merkt man nichts; ein um 45° gedrehtes langes Rechteck trifft
+    man neben seiner Kante und verfehlt es an der Ecke. Wählen geht immer
+    über den Kasten der gedrehten Ecken (`InkGeometry.bounds`).
+  · **Auswahl über mehrere Blätter** — das Lasso gilt je Blatt (E353).
+  · **Sperren im Inspector** — die Sperre sitzt am Knopf der Leiste; eine
+    Liste aller gesperrten Marken gibt es nicht.
+
+Noch nicht angefangen (G3–G5, siehe `AUFGABEN.md`): Seiten einfügen,
 löschen, verschieben, drehen, Lesezeichen; Suche in der Textschicht,
 PDF-Links, eigene Links; Bilder als Seiten, PDF in ein offenes Dokument,
 Seite als Bild, Zoom-Fenster.
