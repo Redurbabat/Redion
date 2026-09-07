@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-467 Entscheidungen, E1 bis E487 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+468 Entscheidungen, E1 bis E488 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -531,6 +531,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E485** — Der breite Lauf nach elf Bögen: ein Knopf lag unter der Zeichenschicht, und drei Prüfläufe kannten Anzahlen auswendig
 * **E486** — Farbsätze: die eigenen Farben unter einem Namen — und zwei alte Fehler, die dabei ans Licht kamen
 * **E487** — Die Suche über mehrere Dokumente: fremde Seiten in einer Klappe, und der Sprung sucht dort weiter
+* **E488** — Ein eigener PDF-Schreiber: das ganze Dokument mit Marken, ohne die Bildbytes je zu lesen
 
 ---
 
@@ -38834,3 +38835,110 @@ zwei), ohne den Sprungwunsch, und mit der Liste zurück in der Zeile.
 Dazu test385, test441, test449, test457. Und `npm run typecheck`,
 `npm run bauen:ts`, `node bauen.mts`.
 Bild: `node bilder.mts dokumentsuche` — die Ansicht ist neu.
+
+
+---
+
+E488 — Ein eigener PDF-Schreiber: das ganze Dokument mit Marken, ohne die Bildbytes je zu lesen
+--------------------------------------------------------------------------
+
+L133, unter „Import und Export": „**Ganzes Dokument als PDF mit Marken** —
+braucht einen PDF-Schreiber; Drucken über den Browser kann es heute."
+
+## Was entschieden wurde
+
+`src/core/export/pdfWriter.ts` — hundertfünfzig Zeilen, die fertige
+Seitenbilder als JPEG in ein PDF legen. Der Knopf „⬇ Als PDF sichern"
+steht im Inspector neben „＋ PDF hinzufügen": Ausfuhr neben Einfuhr, beide
+für das ganze DOKUMENT. „Als Bild sichern" bei den Seitengriffen meint
+weiter genau die eine Seite, die man ansieht.
+
+## Warum selbst geschrieben, und nicht eine Bibliothek
+
+Eine PDF-Bibliothek wiegt ein Vielfaches dieser Datei und käme als
+Abhängigkeit in eine App, die per Doppelklick startet (§6, §47). Redion
+schreibt seinen ZIP-Container aus demselben Grund selbst (E38) — und der
+war schwieriger als das hier.
+
+## Der Aufbau, und warum JPEG
+
+    %PDF-1.4
+    1  Catalog          → Pages
+    2  Pages            → Kids [...], Count N
+    je Seite drei Objekte: Page, Contents (ein „cm … Do"), Image
+    xref, trailer, startxref, %%EOF
+
+`DCTDecode` nimmt die JPEG-Bytes, **wie sie sind**. PNG bräuchte
+`FlateDecode` mit Prädiktoren und ein Umschreiben jedes Bildes — und genau
+das wäre der Punkt, an dem die Bytes doch durch den Arbeitsspeicher
+müssten.
+
+## Der Speicher: die Bildbytes werden NIE gelesen
+
+Das ist der Entwurfspunkt, an dem alles hängt (§9, §36). Ein Bild kommt
+als `Blob` herein; in die Rechnung geht nur seine `size`, und am Ende
+setzt `new Blob([...])` die Teile zusammen — der Browser darf sie auf die
+Platte auslagern. Kein `arrayBuffer()`, nirgends. Ein Dokument mit hundert
+Seiten kostet damit so viel Arbeitsspeicher wie eines mit einer.
+`test460 §6` prüft es an der Quelle nach: kommt `arrayBuffer()` im
+Schreiber vor, ist der Lauf rot.
+
+## Was das PDF NICHT kann, und warum es dasteht
+
+Es ist die **Abbildung** des Dokuments, nicht sein Text: der Text der
+ursprünglichen PDF ist darin nicht mehr durchsuchbar, und Schriften sind
+keine Schriften mehr. Das steht am Knopf (§33: keine falschen
+Versprechen), es steht in `LUECKEN.md`, und `test460 §5` prüft, dass es
+dort steht. Wer den Text braucht, behält das Original — Redion fasst es
+ohnehin nie an (E106).
+
+## Der Fehler, den nur der Rückweg gefunden hat
+
+Der erste Entwurf vergab die Objektnummern ab 1 — und das erste BILD
+bekam die 1. Am Ende schrieb der Schreiber den Katalog als Objekt 1 und
+überschrieb dessen Eintrag in der xref-Tabelle. Das Ergebnis:
+
+    · Das PDF ging auf.
+    · Die Seitenzahl stimmte.
+    · Die Seitenmasse stimmten.
+    · Und das Bild der ERSTEN Seite fehlte, weil „/Im0 1 0 R" auf den
+      Katalog zeigte.
+
+Gefunden hat es nicht das Lesen des Codes, sondern die Regel aus §13:
+schreiben, ZURÜCKLESEN, vergleichen. `test460` macht das PDF mit Redions
+eigenem Leser (pdf.js) wieder auf, rendert Seite 1 und Seite 2 und misst
+einen Pixel dort, wo ein roter Strich liegen muss.
+
+Und noch etwas hat die Gegenprobe gelehrt: die erste Fassung von §4 legte
+den Strich nur auf Seite 2 — und blieb bei zurückgedrehter Reservierung
+GRÜN, weil die Kollision nur die erste Seite trifft. Eine Gegenprobe, die
+nur eine der beiden Zusagen rot macht, sagt genau das: die andere deckt
+den Fehler nicht. Jetzt tragen Seite 1 UND Seite 2 einen Strich.
+
+## Zwei Dinge, die das Bild entschieden hat
+
+**Der Platz des Knopfes.** Zuerst stand er in der Gruppe ganz unten, unter
+„Mit dieser Seite verbunden" — auf dem Bildschirmfoto war er gar nicht zu
+sehen, weil der Inspector vorher endet. Jetzt steht er dort, wo die Einfuhr
+steht.
+
+**Die Zeile.** Ein- und Ausfuhr waren lose Knöpfe im Fluss; zu zweit
+standen sie eng aneinander und der Text stiess an den Rand. Jetzt eine
+eigene Zeile mit zwei gleichen Spalten, beide 44 px (§37). Und „⤓" wurde
+zu „⬇" — dasselbe Zeichen wie „Als Bild sichern", denn beides ist ein
+Herunterladen.
+
+## Eine Rechnung, zwei Aufrufer
+
+`seiteAlsBild` (E469/E479) und der PDF-Export brauchen dasselbe Bild, nur
+in verschiedenen Formaten und mit verschiedenen Angaben. Statt einer
+zweiten Stelle, die aus `bw`, `bh` und der Drehung Pixel rechnet, gibt es
+jetzt `seiteZeichnen(block, typ, guete)`; `seiteAlsBild` ist drei Zeilen
+darüber. `test460 §6` hält fest, dass es bei EINER bleibt (§8).
+
+GEPRÜFT. `test460` mit 38 Zusagen, drei Gegenproben rot gesehen (§55.2):
+ohne die Reservierung der Nummern 1 und 2 (Bild der ersten Seite weg),
+mit einer xref-Zeile von 19 statt 20 Bytes, und mit PNG statt JPEG (beide
+Seiten leer). Dazu test87, test105, test109. Und `npm run typecheck`,
+`npm run bauen:ts`, `node bauen.mts`, `npm run stand`.
+Bild: `node bilder.mts pdfausfuhr` — die Ansicht ist neu.

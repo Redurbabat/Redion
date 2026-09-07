@@ -107,7 +107,18 @@ const DocumentMode = (() => {
         i.onerror = () => nein(new Error('Bild nicht lesbar'));
         i.src = url;
     });
-    const seiteAlsBild = async (block) => {
+    /**
+     * Eine Seite auf eine Leinwand malen und als Bild herausgeben.
+     *
+     * ZWEI AUFRUFER, EINE RECHNUNG (E488). „Als Bild sichern" will nur den
+     * Blob, der PDF-Export braucht auch die Masse — und zwar dieselben. Eine
+     * zweite Stelle, die aus `bw`, `bh` und der Drehung Pixel rechnet, wäre
+     * die Sorte Abschrift, die irgendwann von der ersten abweicht (§8).
+     *
+     * `typ` und `guete` gehen an `toBlob`: PNG für ein einzelnes Bild
+     * (verlustfrei), JPEG für das PDF (weil `DCTDecode` genau das nimmt).
+     */
+    const seiteZeichnen = async (block, typ = 'image/png', guete = 0.92) => {
         if (!block)
             return null;
         const bw = Number(block.bw) || Number(block.blattBreite) || SheetSpace.A4_BREITE;
@@ -215,10 +226,51 @@ const DocumentMode = (() => {
                 URL.revokeObjectURL(url);
             }
         }
-        const blob = await new Promise(fertig => leinwand.toBlob(b => fertig(b), 'image/png'));
+        const pixelBreite = leinwand.width, pixelHoehe = leinwand.height;
+        const blob = await new Promise(fertig => leinwand.toBlob(b => fertig(b), typ, guete));
         leinwand.width = 0;
         leinwand.height = 0;
-        return blob;
+        if (!blob)
+            return null;
+        /* Die SEITE misst in PDF-Punkten, das BILD in Pixeln — hier doppelt so
+           viele, damit auch ein Ausdruck scharf bleibt. Bei einer gedrehten
+           Seite tauschen beide ihre Kanten, und zwar gemeinsam. */
+        return { blob, pixelBreite, pixelHoehe,
+            breite: quer ? bh : bw, hoehe: quer ? bw : bh };
+    };
+    const seiteAlsBild = async (block) => (await seiteZeichnen(block))?.blob ?? null;
+    /* ══ DAS GANZE DOKUMENT ALS PDF (E488, L133) ════════════════════════════
+       Jede Seite wird gemalt wie für „Als Bild sichern" — Seitenbild, Marken,
+       Drehung — und als JPEG in ein PDF gelegt (`PdfWriter`). Was dabei
+       entsteht, ist die ABBILDUNG des Dokuments mit allem darauf; der Text
+       der ursprünglichen PDF ist darin nicht mehr durchsuchbar. Das ist eine
+       Grenze und keine Schwäche des Wegs: das Original bleibt unangetastet
+       (E106), und wer den Text braucht, hat es noch.
+  
+       STÜCKWEISE, mit einem Rückruf für den Fortschritt: bei vierzig Seiten
+       dauert es Sekunden, und eine Oberfläche, die dabei nichts sagt, sieht
+       kaputt aus. Der Rückruf darf auch `false` sagen — dann bricht es ab
+       und gibt `null`, statt ein halbes Dokument zu liefern. */
+    const alsPdf = async (seiten, melden) => {
+        if (typeof PdfWriter === 'undefined' || !Array.isArray(seiten) || !seiten.length)
+            return null;
+        const schreiber = PdfWriter.neu();
+        for (let i = 0; i < seiten.length; i++) {
+            if (melden && melden(i, seiten.length) === false)
+                return null;
+            const bild = await seiteZeichnen(seiten[i], 'image/jpeg', 0.88);
+            if (!bild)
+                continue;
+            schreiber.seite({ bild: bild.blob, pixelBreite: bild.pixelBreite, pixelHoehe: bild.pixelHoehe,
+                breite: bild.breite, hoehe: bild.hoehe });
+        }
+        /* Keine einzige Seite hat sich malen lassen — dann ist ein PDF mit null
+           Seiten die falsche Antwort. Lieber gar keines und ein Wort dazu. */
+        if (!schreiber.seiten())
+            return null;
+        if (melden)
+            melden(seiten.length, seiten.length);
+        return schreiber.schliessen();
     };
     /** Ein Blob als Datei zum Speichern anbieten — ohne Server, ohne Fenster. */
     const herunterladen = (blob, name) => {
@@ -652,6 +704,24 @@ const DocumentMode = (() => {
             return button;
         };
         actions.append(makeAction('source-actions', '＋ Aus Inhalt'), makeAction('select-region', '⌗ Ausschnitt'), makeAction('recognize', '⌁ Erkennen'));
+        /* DER EXPORT GILT DEM DOKUMENT, nicht der Seite (E488).
+    
+           ER STEHT NEBEN „PDF hinzufügen", und das Bild hat den Platz gewählt:
+           im ersten Entwurf lag er in der Gruppe ganz unten, unter „Mit dieser
+           Seite verbunden" — auf dem Bildschirmfoto war er gar nicht zu sehen,
+           weil der Inspector vorher endet. Hier oben steht die Ausfuhr neben
+           der Einfuhr, direkt unter den Seitengriffen.
+    
+           „Als Bild sichern" dort unten meint weiterhin genau die eine Seite,
+           die man ansieht — deshalb sind es zwei Knöpfe und nicht einer mit
+           einer Frage. */
+        /* Dasselbe Zeichen wie „Als Bild sichern" darüber: beides ist ein
+           Herunterladen, und „⤓" kam auf dem Bild schmal und eng am Wort
+           heraus. Zwei Zeichen für dieselbe Sache wären eine Sprache zu viel. */
+        const pdfKnopf = makeAction('export-pdf', '⬇ Als PDF sichern');
+        pdfKnopf.className = 'document-import';
+        pdfKnopf.title = 'Das ganze Dokument mit allen Marken als PDF speichern — '
+            + 'jede Seite als Bild; der Text der ursprünglichen PDF ist darin nicht mehr durchsuchbar.';
         const importButton = makeAction('import', '＋ PDF hinzufügen');
         importButton.className = 'document-import';
         /* DIE KENNUNG, NICHT DAS OBJEKT (E471, L102 zum zweiten Mal). `darf`
@@ -841,7 +911,14 @@ const DocumentMode = (() => {
         lupeKnopf.textContent = lupeAn ? '🔍 Zoom-Fenster aus' : '🔍 Zoom-Fenster an';
         lupeKnopf.setAttribute('aria-pressed', lupeAn ? 'true' : 'false');
         lupeKnopf.title = 'Die Seite gross zum Kleinschreiben; unten die Übersicht mit dem Ausschnitt.';
-        container.append(importButton, viewTitle, randKnopf, lupeKnopf);
+        /* EIN- UND AUSFUHR IN EINER ZEILE (E488). Beide waren vorher lose
+           Knöpfe im Fluss; mit zweien standen sie eng aneinander und der Text
+           stiess an den Rand — auf dem Bild gut zu sehen. Eine eigene Zeile mit
+           zwei gleichen Spalten gibt jedem seine Breite und beiden 44 px. */
+        const datenZeile = document.createElement('div');
+        datenZeile.className = 'document-inspector-daten';
+        datenZeile.append(pdfKnopf, importButton);
+        container.append(datenZeile, viewTitle, randKnopf, lupeKnopf);
         if (laufKnopf)
             container.appendChild(laufKnopf);
         container.append(linkedTitle, actions, summary, list);
@@ -2894,6 +2971,45 @@ const DocumentMode = (() => {
                 });
                 return;
             }
+            if (action === 'export-pdf') {
+                const knopf = tatKnopf;
+                if (knopf?.disabled)
+                    return;
+                const seiten = documentsIn(page);
+                if (!seiten.length) {
+                    UI.toast('Dieses Dokument hat keine Seiten.');
+                    return;
+                }
+                /* DER KNOPF SAGT, WIE WEIT ES IST. Ohne das sieht eine Ausfuhr von
+                   vierzig Seiten aus wie eine App, die hängt — und der zweite Klick
+                   startet dann eine zweite (deshalb `disabled`). */
+                const wort = knopf?.textContent || '';
+                if (knopf)
+                    knopf.disabled = true;
+                void alsPdf(seiten, (fertig, gesamt) => {
+                    if (knopf)
+                        knopf.textContent = fertig >= gesamt
+                            ? '⤓ Wird gesichert …' : '⤓ Seite ' + (fertig + 1) + '/' + gesamt + ' …';
+                }).then(blob => {
+                    if (knopf) {
+                        knopf.disabled = false;
+                        knopf.textContent = wort;
+                    }
+                    if (!blob) {
+                        UI.toast('Das Dokument liess sich nicht als PDF schreiben.');
+                        return;
+                    }
+                    herunterladen(blob, String(page.text || 'Dokument').replace(/[\\/:*?"<>|]+/g, ' ').trim() + '.pdf');
+                    UI.toast(seiten.length + (seiten.length === 1 ? ' Seite' : ' Seiten') + ' als PDF gesichert');
+                }).catch(() => {
+                    if (knopf) {
+                        knopf.disabled = false;
+                        knopf.textContent = wort;
+                    }
+                    UI.toast('Das Dokument liess sich nicht als PDF schreiben.');
+                });
+                return;
+            }
             if (action === 'find-alle') {
                 findAlle = !findAlle;
                 try {
@@ -3384,7 +3500,7 @@ const DocumentMode = (() => {
     /* `freigeben` lässt die offenen PDF-Quellen der Suche los (E473): jede
        Seitenzeichnung läuft durch `schale.ts`, und wer das Dokument verlässt,
        soll pdf.js nicht im Rücken behalten. */
-    return { available, active, select, toggle, documentsIn, render, sourceLabel, seiteAlsBild,
+    return { available, active, select, toggle, documentsIn, render, sourceLabel, seiteAlsBild, alsPdf,
         freigeben: () => { griffeSchliessen(); verweisHorchenAus(); } };
 })();
 window.DocumentMode = DocumentMode;

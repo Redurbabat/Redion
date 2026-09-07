@@ -6407,7 +6407,7 @@ Lauf, der der Presse nicht gehört. Derselbe Stand wie bei L119.
 
 ---
 
-L133 — Was am PDF-Teil gegenüber GoodNotes noch fehlt (Stand nach G20)
+L133 — Was am PDF-Teil gegenüber GoodNotes noch fehlt (Stand nach G21)
 --------------------------------------------------------------------------
 
 Redurs Auftrag vom 7. September (E465): der PDF-Teil 1:1 wie GoodNotes,
@@ -6555,8 +6555,21 @@ Seite als Bild, Zoom-Fenster stehen. Offen bleibt:
     SVG-`<text>` nachzubauen — das ist ein zweiter Blockrenderer und
     ein eigener Bogen. `Drucken` (E117) hat beides und bleibt der Weg
     für eine vollständige Seite.
-  · **Ganzes Dokument als PDF mit Marken** — braucht einen PDF-Schreiber;
-    Drucken über den Browser kann es heute.
+  · ~~**Ganzes Dokument als PDF mit Marken**~~ — **GESCHLOSSEN mit E488.**
+    Den PDF-Schreiber gibt es jetzt: `src/core/export/pdfWriter.ts`, rund
+    hundertfünfzig Zeilen, jede Seite als JPEG in einem `DCTDecode`-Strom.
+    Er liest die Bildbytes NIE — nur ihre Grösse geht in die Rechnung —,
+    also kostet ein Dokument mit hundert Seiten so viel Arbeitsspeicher wie
+    eines mit einer.
+    **Was es NICHT kann, und das steht am Knopf:** es ist die Abbildung des
+    Dokuments, nicht sein Text. Der Text der ursprünglichen PDF ist darin
+    nicht mehr durchsuchbar, und Schriften sind keine Schriften mehr. Wer
+    ihn braucht, behält das Original — Redion fasst es nie an (E106).
+    Ein PDF mit echter Textschicht wäre ein eigener Bogen: er bräuchte
+    Schrifteinbettung und den Text jeder Marke als PDF-Text, und er läuft
+    in dieselbe Wand wie „getippter Text im gesicherten Bild" (unten).
+    `test460` schreibt, liest mit Redions eigenem Leser zurück und misst
+    einen Pixel dort, wo ein Strich liegen muss.
   · ~~**Fotografieren mit der Kamera** als Seite~~ — **GESCHLOSSEN mit
     E482.** „Foto aufnehmen" steht im Seitenmenü und im Menü an der
     Miniatur; der Wähler dahinter trägt `capture="environment"`. Am

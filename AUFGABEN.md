@@ -214,7 +214,7 @@ rechtfertigt.
 
 ---
 
-### 7 · Der PDF-Teil wie GoodNotes — zwanzig Bögen (Redur, 7. September)
+### 7 · Der PDF-Teil wie GoodNotes — einundzwanzig Bögen (Redur, 7. September)
 
 Redur, mit dem GoodNotes-Dossier: „alles, was GoodNotes machen kann, 1:1 —
 nur beim PDF-Teil: wie die bearbeitet wird, importiert, die Stifte usw.",
@@ -322,6 +322,13 @@ der Zeichenschicht nicht zu drücken — und zwar schon vor diesen Bögen.
     Seite in fremden — steht am Knopf, statt behauptet zu werden. Zwei
     Entwürfe der Klappe hat das BILD widerlegt, nicht der Prüflauf.
     **Steht.**
+  · **G21 — Das ganze Dokument als PDF** (E488, test460): ein eigener
+    PDF-Schreiber (`src/core/export/pdfWriter.ts`), jede Seite als JPEG,
+    ohne die Bildbytes je zu lesen. Was er nicht kann — eine echte
+    Textschicht — steht am Knopf und in L133. Der Rückweg über Redions
+    eigenen PDF-Leser hat einen Fehler gefunden, den kein Lesen des Codes
+    gefunden hätte: das Bild der ersten Seite trug die Objektnummer des
+    Katalogs. **Steht.**
 
 Was danach ehrlich offen bleibt, steht in **L133** (Audio mit Zeitbezug,
 Handschrift-zu-Text, Mathe, Elemente-Bibliothek, Präsentation, Wolke).

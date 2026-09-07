@@ -2041,6 +2041,29 @@ const ANSICHTEN: Record<string, {
     }
   },
 
+  pdfausfuhr: {
+    titel: 'Das ganze Dokument als PDF sichern (E488)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      const seite = Store.addPage(null, { text: 'Elektrotechnik — Skript', icon: '📕' });
+      for (let i = 1; i <= 4; i++)
+        Store.addBlock(seite.id, 'blatt', { text: '', blattBreite: 595.28, blattHoehe: 841.89,
+          raumVersion: 1, papier: 'kariert', marken: [
+            { id: 's' + i, art: 'stift', farbe: '#d64545', breite: 3,
+              pts: [[60, 120 + i * 10], [420, 120 + i * 10]] },
+            { id: 'z' + i, art: 'zettel', farbe: '#e0a419', pts: [[330, 220], [560, 300]],
+              text: 'Seite ' + i + ' — hier nachfragen' }
+          ] });
+      Store.updateBlock(seite.id, { dokumentModus: true });
+      App.oeffne(seite.id);
+      await new Promise(r => setTimeout(r, 1400));
+      document.querySelector<HTMLElement>('[data-document-action="inspector"]')?.click();
+      await new Promise(r => setTimeout(r, 600));
+    }
+  },
+
   notizhefteFach: {
     titel: 'Ein offenes Fach in der Listenform (E265)',
     bauen: async () => {

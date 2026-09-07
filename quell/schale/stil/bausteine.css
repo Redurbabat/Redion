@@ -5107,6 +5107,11 @@ body[data-dokument="an"] .document-lupe{padding-bottom:calc(var(--touch-min) + 2
 .document-inspector-source{font-size:13px;color:var(--text-dim);margin-bottom:10px}
 .document-inspector-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px}
 .document-inspector-actions button{padding:7px}.document-inspector-actions button:first-child{grid-column:1/-1}
+/* DIE EIN- UND DIE AUSFUHR DES DOKUMENTS (E488). Zwei gleich breite
+   Knöpfe in einer Zeile: „Als PDF sichern" und „PDF hinzufügen" gehören
+   zusammen, und getrennt untereinander sähen sie aus wie zwei Absätze. */
+.document-inspector-daten{display:grid; grid-template-columns:1fr 1fr; gap:6px; margin:12px 0}
+.document-inspector-daten button{min-height:var(--touch-min); padding:8px 10px}
 .document-inspector-summary{display:grid;gap:5px;padding:10px 0;border-block:1px solid var(--border)}
 .document-inspector-summary>div{display:flex;justify-content:space-between;gap:8px}
 .document-inspector-list{display:grid;gap:5px;margin-top:10px}
