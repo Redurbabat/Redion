@@ -4068,7 +4068,22 @@ Und ein Wächter flog dabei wieder heraus: eine Passprobe, die `test451`
 abschalten konnte, ohne dass etwas rot wurde. Ein Wächter, der nicht rot
 werden kann, ist eine Behauptung (§55.2) — und schlimmer als keiner.
 
+**Und „Seite als Bild" nimmt die Fotos mit (E479, test452).** L133 führte
+das seit E469 mit einer Vermutung als Begründung. Bevor etwas gebaut
+wurde, ist sie nachgemessen — und die Messung hat den Weg bestimmt:
+`blob:` ist in einem SVG, das über ein `<img>` auf die Leinwand kommt,
+gesperrt; `data:` geht und trübt nichts; `foreignObject` zeichnet zwar,
+TRÜBT aber die Leinwand, sodass `toBlob` danach fehlschlägt. Die dritte
+Zeile schliesst den naheliegenden Weg für den getippten Text: er würde ihn
+bringen und dafür die ganze Ausfuhr verlieren. Sie steht in L133, damit
+niemand die Tür ein zweites Mal aufdrückt.
+
+Dazu kam ein zweiter Grund, den die Vermutung nicht kannte: `zeichneMarke`
+setzt das `<image>` erst nach, wenn die Adresse aus der Ablage da ist —
+`outerHTML` gleich danach hätte auch mit erlaubtem `blob:` nichts gehabt.
+
 **Was offen bleibt,** steht ehrlich in `LUECKEN.md` L133: Audio mit
 Zeitbezug, Handschrift zu Text, Elemente-Bibliothek, Präsentation — und
-die verbliebenen Reste (Kamera als Seite, Farbsets, Menü je Miniatur,
-Kurve und Verbinder, Auswahl über mehrere Blätter).
+die verbliebenen Reste (getippter Text im gesicherten Bild, Kamera als
+Seite, Farbsets, Menü je Miniatur, Kurve und Verbinder, Auswahl über
+mehrere Blätter).

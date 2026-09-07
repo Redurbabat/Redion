@@ -143,7 +143,63 @@ const DocumentMode = (() => {
     }
     const marken = Array.isArray(block.marken) ? block.marken : [];
     if (marken.length && typeof Marken !== 'undefined') {
-      const innen = marken.map((m: any) => { try { return Marken.zeichneMarke(m)?.outerHTML || ''; } catch { return ''; } }).join('');
+      /* ── DIE BILDMARKEN (E479, L133) ────────────────────────────────────
+         Ein Foto auf der Seite fehlte auf dem gesicherten Bild. ZWEI
+         Gründe, beide gemessen und nicht geraten:
+
+         1. `zeichneMarke` setzt das `<image>` ERST NACH, wenn die Adresse
+            aus der Ablage da ist (`bildNachladen`) — `outerHTML` gleich
+            danach hat höchstens den Platzhalter.
+         2. Und selbst mit Adresse hilft es nichts: ein SVG, das über ein
+            `<img>` auf die Leinwand kommt, darf NICHTS nachladen. Eine
+            `blob:`-Adresse bleibt darin leer (nachgemessen: der Pixel ist
+            das Platzhalterblau 197/214/243 statt Rot).
+
+         Was GEHT, ist `data:` — dieselbe Messung, Pixel exakt rot, und
+         die Leinwand bleibt sauber (kein `SecurityError` beim Sichern).
+         Also werden die Bilder vorher gelesen und als Daten eingesetzt.
+
+         `foreignObject` (womit der getippte Text eines Blatts käme) ist
+         KEIN Weg: es zeichnet zwar, TRÜBT aber die Leinwand — `toBlob`
+         schlägt danach fehl, und das Sichern ginge gar nicht mehr. Das
+         steht so in L133, damit es niemand ein zweites Mal ausprobiert. */
+      const bildDaten = new Map<string, string>();
+      for (const m of marken) {
+        const id = m && m.art === 'bild' ? String(m.dateiId || '') : '';
+        if (!id || bildDaten.has(id) || typeof Dateien === 'undefined') continue;
+        try {
+          const url = await Dateien.adresse(id);
+          if (!url) continue;
+          const roh = await (await fetch(url)).blob();
+          bildDaten.set(id, await new Promise<string>((fertig, schief) => {
+            const leser = new FileReader();
+            leser.onload = () => fertig(String(leser.result));
+            leser.onerror = () => schief(new Error('lesen'));
+            leser.readAsDataURL(roh);
+          }));
+        } catch { /* dann bleibt der Platzhalter, wie bisher */ }
+      }
+      const att = (wert: unknown): string => String(wert ?? '')
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      const alsBildMarke = (m: any): string | null => {
+        const daten = bildDaten.get(String(m.dateiId || ''));
+        if (!daten) return null;
+        const pts = InkGeometry.points(m.pts);
+        if (pts.length < 2) return null;
+        const box = InkGeometry.rectangle(pts[0]!, pts[1]!);
+        const grad = InkGeometry.drehung(m);
+        const dreh = grad ? ' transform="rotate(' + att(grad) + ' ' +
+          att(box.x + box.width / 2) + ' ' + att(box.y + box.height / 2) + ')"' : '';
+        return '<image x="' + att(box.x) + '" y="' + att(box.y) + '" width="' + att(box.width) +
+               '" height="' + att(box.height) + '" preserveAspectRatio="none"' + dreh +
+               ' href="' + att(daten) + '"/>';
+      };
+      const innen = marken.map((m: any) => {
+        try {
+          if (m && m.art === 'bild') { const eigen = alsBildMarke(m); if (eigen) return eigen; }
+          return Marken.zeichneMarke(m)?.outerHTML || '';
+        } catch { return ''; }
+      }).join('');
       const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + bw + ' ' + bh + '" width="' + W + '" height="' + H + '">' + innen + '</svg>';
       const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }));
       try { stift.drawImage(await bildLaden(url), 0, 0, W, H); }

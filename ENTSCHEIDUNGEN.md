@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-458 Entscheidungen, E1 bis E478 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+459 Entscheidungen, E1 bis E479 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -522,6 +522,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E476** — Ein Kasten ist keine Wischspur: das Gekritzel nimmt, was es überquert; die Treffer der Suche nur ihre eigene Seite
 * **E477** — Die Verweise alter Seiten kommen nach — und „keine" ist eine Antwort, „nie nachgesehen" nicht
 * **E478** — Ein Dreieck darf liegen, wie es gezogen wurde — und ein gleichseitiges bekommt die kleinste Drehung
+* **E479** — „Seite als Bild" nimmt die Fotos mit: `blob:` ist im SVG gesperrt, `data:` nicht, und `foreignObject` trübt die Leinwand
 
 ---
 
@@ -38005,4 +38006,75 @@ Dreiecke; das erste aufrecht und ohne Winkelfeld.
 
 GEPRÜFT. 9 Läufe grün: test87, test105, test109, test347, test438,
 test439, test445, test447, test451; dazu `npm run typecheck`,
+`npm run bauen:ts`, `node bauen.mts`.
+
+---
+
+E479 — „Seite als Bild" nimmt die Fotos mit: `blob:` ist im SVG gesperrt, `data:` nicht, und `foreignObject` trübt die Leinwand
+--------------------------------------------------------------------------
+
+Ein Foto auf der Seite fehlte auf dem gesicherten PNG. L133 hat das seit
+E469 geführt, mit einer Vermutung als Begründung („ein `<img>` im SVG darf
+die Leinwand nicht anfassen"). Bevor hier etwas gebaut wurde, ist sie
+NACHGEMESSEN (§36, §45) — und die Messung hat den Weg bestimmt, nicht die
+Vermutung.
+
+## Die drei Messungen
+
+Ein rotes Quadrat, einmal als `blob:` und einmal als `data:`, in ein SVG
+gesetzt, das SVG über ein `<img>` auf eine Leinwand gezeichnet, danach der
+Pixel gelesen und geprüft, ob die Leinwand noch sauber ist:
+
+    blob: im SVG      Pixel 197/214/243 — das Platzhalterblau. GESPERRT.
+    data: im SVG      Pixel 255/0/0 exakt, Leinwand sauber. GEHT.
+    foreignObject     zeichnet — und TRÜBT die Leinwand.
+
+Die dritte Zeile ist die wichtigste, weil sie eine Tür schliesst, durch
+die man sonst gegangen wäre: mit `foreignObject` käme der getippte Text
+eines Blatts mit — aber danach schlägt `toBlob` fehl, und das Sichern
+ginge GAR NICHT MEHR. Ein Weg, der eine fehlende Sache holt und dafür die
+ganze Ausfuhr verliert, ist keiner. Er steht jetzt in L133, damit ihn
+niemand ein zweites Mal probiert.
+
+## Zwei Gründe, nicht einer
+
+Beim Bauen kam ein zweiter Grund heraus, den die Vermutung nicht kannte:
+`zeichneMarke` setzt das `<image>` **erst nach**, wenn die Adresse aus der
+Ablage da ist (`bildNachladen`). `outerHTML` gleich danach hat höchstens
+den Platzhalter — auch wenn `blob:` erlaubt wäre, stünde dort nichts.
+
+`seiteAlsBild` baut die Bildmarken deshalb selbst: Datei lesen, als
+`data:`-Adresse einsetzen, Kasten aus den zwei Punkten, und bei `dreh`
+(E466/E474) ein `rotate(...)` daran. Alles andere geht weiter durch
+`zeichneMarke`, in derselben Reihenfolge — die Stapelung bleibt.
+
+## Was das nicht löst
+
+Der getippte Text eines Blatts fehlt weiter auf dem gesicherten Bild. Das
+ist nach der dritten Messung kein Versehen mehr, sondern eine bekannte
+Grenze mit einem geschlossenen Weg: `foreignObject` scheidet aus, und
+Text als SVG-`<text>` nachzubauen hiesse, einen zweiten Blockrenderer zu
+schreiben. `Drucken` (E117) hat beides und bleibt der Weg für eine
+vollständige Seite. Steht so in L133.
+
+## Wächter
+
+`test452` (neu, 14 Punkte): §1 die drei Messungen am Browser selbst — und
+zwar wird nur die TRAGENDE behauptet (`data:` kommt an, trübt nicht); die
+zwei anderen werden gezeigt, nicht behauptet. Wenn ein Browser `blob:`
+eines Tages doch erlaubt, ist der Umweg überflüssig, aber nichts kaputt —
+dafür soll kein Prüflauf rot werden. §2 ein echtes Foto in der Ablage, an
+drei Stellen des gesicherten PNG die Farbe gemessen (Foto grün, Papier
+weiss, Strich blau); §3 dasselbe um 45° gedreht: Mitte grün, die Ecke des
+UNGEDREHTEN Kastens frei — es steht wirklich schief; §4 eine PDF-Seite
+ohne Bildmarke sichert sich weiter; §5 die Quellen.
+
+Gegenprobe: `alsBildMarke` immer null — drei Punkte rot, das Foto fehlt
+wieder. Gelaufen.
+
+BILD. `bilder/e479-seite-als-bild.png` — eine Seite mit zwei Fotos (eines
+um 18° gedreht), Marker, Stiftstrich und Textmarke, als PNG gesichert.
+
+GEPRÜFT. 10 Läufe grün: test87, test105, test109, test442, test445,
+test447, test448, test449, test450, test452; dazu `npm run typecheck`,
 `npm run bauen:ts`, `node bauen.mts`.

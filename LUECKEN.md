@@ -6407,7 +6407,7 @@ Lauf, der der Presse nicht gehört. Derselbe Stand wie bei L119.
 
 ---
 
-L133 — Was am PDF-Teil gegenüber GoodNotes noch fehlt (Stand nach G12)
+L133 — Was am PDF-Teil gegenüber GoodNotes noch fehlt (Stand nach G13)
 --------------------------------------------------------------------------
 
 Redurs Auftrag vom 7. September (E465): der PDF-Teil 1:1 wie GoodNotes,
@@ -6486,9 +6486,21 @@ Seite als Bild, Zoom-Fenster stehen. Offen bleibt:
     mit der ganzen Seite darüber — und mit EINER Zeichenfläche (das Papier
     zieht um); seit E472 rückt es am rechten Rand von selbst weiter. Was
     noch fehlt: „Ausschnitt" und „Erkennen" ruhen, solange es offen ist.
-  · **Seite als Bild** lässt die Textblöcke eines Blatts (getippter Text)
-    und Bildmarken aus — ein `<img>` im SVG darf die Leinwand nicht
-    anfassen. Drucken (E117) hat beides.
+  · **Seite als Bild** lässt den getippten Text eines Blatts aus. Die
+    BILDMARKEN kommen seit **E479** mit; dabei wurde nachgemessen, was
+    ein SVG auf der Leinwand darf, und das Ergebnis gehört hierher, damit
+    niemand die geschlossenen Türen ein zweites Mal aufdrückt:
+
+        blob: im SVG      gesperrt (Pixel bleibt Platzhalterblau)
+        data: im SVG      geht, und trübt die Leinwand nicht
+        foreignObject     zeichnet — TRÜBT aber die Leinwand
+
+    Die dritte Zeile schliesst den naheliegenden Weg für den Text:
+    `foreignObject` würde ihn bringen und dafür die ganze Ausfuhr
+    verlieren (`toBlob` schlägt danach fehl). Bliebe, den Text als
+    SVG-`<text>` nachzubauen — das ist ein zweiter Blockrenderer und
+    ein eigener Bogen. `Drucken` (E117) hat beides und bleibt der Weg
+    für eine vollständige Seite.
   · **Ganzes Dokument als PDF mit Marken** — braucht einen PDF-Schreiber;
     Drucken über den Browser kann es heute.
   · **Fotografieren mit der Kamera** als Seite — Strg V aus der

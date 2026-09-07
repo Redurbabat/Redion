@@ -214,7 +214,7 @@ rechtfertigt.
 
 ---
 
-### 7 · Der PDF-Teil wie GoodNotes — zwölf Bögen (Redur, 7. September)
+### 7 · Der PDF-Teil wie GoodNotes — dreizehn Bögen (Redur, 7. September)
 
 Redur, mit dem GoodNotes-Dossier: „alles, was GoodNotes machen kann, 1:1 —
 nur beim PDF-Teil: wie die bearbeitet wird, importiert, die Stifte usw.",
@@ -271,6 +271,11 @@ Gegenprobe, Bild und Entscheidung:
     kann, bekommt ein gedrehtes Dreieck seinen Winkel statt einer Absage.
     Aufrecht bleibt aufrecht; ein gleichseitiges bekommt die kleinste der
     drei möglichen Drehungen. **Steht.**
+  · **G13 — „Seite als Bild" nimmt die Fotos mit** (E479, test452): erst
+    gemessen, was ein SVG auf der Leinwand darf (`blob:` gesperrt, `data:`
+    geht, `foreignObject` trübt), dann gebaut. Die Bildmarken kommen mit,
+    auch gedrehte. Der getippte Text eines Blatts bleibt offen — mit
+    geschlossenem Weg, siehe L133. **Steht.**
 
 Was danach ehrlich offen bleibt, steht in **L133** (Audio mit Zeitbezug,
 Handschrift-zu-Text, Mathe, Elemente-Bibliothek, Präsentation, Wolke).
