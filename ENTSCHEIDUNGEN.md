@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-462 Entscheidungen, E1 bis E482 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+463 Entscheidungen, E1 bis E483 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -526,6 +526,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E480** — Die Miniaturenleiste wie GoodNotes: ein Menü je Seite, das SEINE Seite meint, und Ziehen zum Umordnen
 * **E481** — Verweise treffen die Stelle, auch auf gedrehten Seiten — und die Schicht zieht ins Papier
 * **E482** — Die Kamera macht eine Seite, und der Radierer nimmt nur, was er meint
+* **E483** — Die Kurve mit ihrem Griff: die erste Form mit drei Punkten — und ohne ein neues Feld
 
 ---
 
@@ -38339,4 +38340,89 @@ Messung, kein Anblick.
 
 GEPRÜFT. 11 Läufe grün: test87, test105, test109, test352, test367,
 test439, test440, test442, test445, test453, test455; dazu
+`npm run typecheck`, `npm run bauen:ts`, `node bauen.mts`.
+
+---
+
+E483 — Die Kurve mit ihrem Griff: die erste Form mit drei Punkten — und ohne ein neues Feld
+--------------------------------------------------------------------------
+
+L133 führte seit E465: „**Kurve** und **Verbinder** des Shape-Tools —
+beides braucht Griffe an einer fertigen Marke (die Mitte der Kurve
+nachziehen; ein Verbinder, der an zwei Formen hängt). Kommt nach dem
+Drehgriff aus G2."
+
+Der Drehgriff steht seit E466, die Griffe rechnen seit E474 richtig — die
+Kurve kann jetzt kommen.
+
+## Drei Punkte statt eines neuen Feldes
+
+Sie ist die erste Form mit DREI Punkten: Anfang, Ende und der Griff
+dazwischen, der sie biegt. Gezeichnet wird sie als quadratische Bézier
+(`M a Q g z`).
+
+Und das ist der ganze Aufwand am Datenmodell: `pts` IST eine Liste, und
+eine Liste verträgt einen dritten Eintrag, ohne dass eine einzige
+vorhandene Marke sich ändert (§53.3). Besser noch — `move`, `scale` und
+`rotate` fassen ohnehin ALLE Punkte an, also wandert, wächst und dreht
+sich die Kurve von selbst richtig, ohne dass an der Geometrie eine Zeile
+zu ändern war. `test456 §4` misst genau das.
+
+Gezogen wird sie wie eine Linie. Der dritte Punkt kommt beim ABSETZEN
+dazu und liegt in der Mitte — dann ist die Kurve eine Gerade, und der
+Griff steht bereit. Das ist auch der Grund, warum sie sich so anfühlt wie
+in GoodNotes: erst die Strecke, dann die Biegung.
+
+## Der Griff
+
+Er steht auf dem Steuerpunkt, nur bei EINER gewählten Kurve (bei zweien
+wäre nicht zu sehen, welche er biegt), und er ist grün — nicht nur an
+seiner Stelle zu erkennen (§38). Er sitzt in derselben gedrehten Gruppe
+wie die vier Ecken (E474), also stimmt seine Lage auch an einer schiefen
+Kurve.
+
+Und der Zug dahinter dreht den Zeiger in die Achsen der MARKE zurück,
+bevor er den Punkt schreibt: eine um 90° gedrehte Kurve, die man auf dem
+Blatt nach oben biegt, muss ihren gespeicherten Punkt nach LINKS bewegen.
+Ohne diese Rückdrehung bögen sich gedrehte Kurven in die falsche
+Richtung; `test456 §3` misst es, und die Gegenprobe zeigt es.
+
+Gesperrtes bleibt gesperrt (E466).
+
+## Was der Kasten kostet
+
+`boundsRoh` nimmt alle Punkte — also auch den Steuerpunkt, der bei einer
+Bézier AUSSERHALB der Kurve liegt. Der Rahmen ist damit etwas weiter als
+die gezeichnete Kurve. Das ist die sichere Richtung (kein Treffer geht
+verloren) und es kostet nichts ausser ein paar Punkten Luft; die genaue
+Hülle einer Bézier zu rechnen wäre eine eigene Formel für einen
+Unterschied, den man kaum sieht.
+
+## Der Verbinder bleibt offen
+
+Er ist etwas anderes: eine Marke, die an ZWEI anderen hängt und mitgeht,
+wenn eine davon sich bewegt. Das braucht Anker an fremden Marken und ein
+Nachziehen bei jeder Änderung — kein dritter Punkt, sondern eine
+Beziehung. Steht in L133.
+
+## Wächter
+
+`test456` (neu, 24 Punkte): §1 gezogen wie eine Linie, fertig mit drei
+Punkten, der dritte in der Mitte, der Knoten ein Q-Pfad; §2 der Griff
+biegt sie, Anfang und Ende bleiben, Zurück holt die Gerade zurück; §3 an
+einer um 90° gedrehten Kurve wandert der gespeicherte Punkt in x, nicht
+in y; §4 `move`, `scale`, `rotate` und der Kasten, in Node gerechnet;
+§5 gesperrt lässt sie sich nicht biegen; §6 die Quellen.
+
+Zwei Gegenproben, beide gelaufen und rot: den dritten Punkt nicht
+anhängen, und die Rückdrehung weglassen.
+
+`test438` zählte die Formen im Zubehör und trägt jetzt sieben statt sechs.
+
+BILD. `bilder/e483-kurven.png` — vier Kurven: eine gewählt mit ihrem
+grünen Griff, eine nach unten gebogen, eine um 35° gedreht, und eine mit
+dem Griff in der Mitte, die darum eine Gerade ist.
+
+GEPRÜFT. 11 Läufe grün: test87, test105, test109, test347, test438,
+test439, test445, test447, test451, test455, test456; dazu
 `npm run typecheck`, `npm run bauen:ts`, `node bauen.mts`.

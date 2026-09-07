@@ -214,7 +214,7 @@ rechtfertigt.
 
 ---
 
-### 7 · Der PDF-Teil wie GoodNotes — sechzehn Bögen (Redur, 7. September)
+### 7 · Der PDF-Teil wie GoodNotes — siebzehn Bögen (Redur, 7. September)
 
 Redur, mit dem GoodNotes-Dossier: „alles, was GoodNotes machen kann, 1:1 —
 nur beim PDF-Teil: wie die bearbeitet wird, importiert, die Stifte usw.",
@@ -289,6 +289,10 @@ Gegenprobe, Bild und Entscheidung:
     Seitenmenü und an der Miniatur (`capture="environment"`), und der
     Radierer kennt fünf Arten — Ganz und Teil sagen, wie viel weggeht,
     Stift, Marker und Band, wovon. **Steht.**
+  · **G17 — Die Kurve mit ihrem Griff** (E483, test456): die erste Form
+    mit drei Punkten — und ohne ein neues Feld, weil `pts` eine Liste ist
+    und `move`, `scale` und `rotate` ohnehin alle Punkte anfassen. Der
+    Verbinder bleibt offen: er ist eine Beziehung, kein Punkt. **Steht.**
 
 Was danach ehrlich offen bleibt, steht in **L133** (Audio mit Zeitbezug,
 Handschrift-zu-Text, Mathe, Elemente-Bibliothek, Präsentation, Wolke).

@@ -4122,6 +4122,10 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 /* Der Drehgriff (E466) und das Schloss einer gesperrten Marke. */
 .blatt-griff-feld.blatt-griff-dreh{cursor:grab}
 .blatt-griff-dreh-punkt{fill:#2f7ed8}
+/* Der Griff, der eine Kurve biegt (E483) — grün, damit er sich vom
+   Drehgriff und von den vier Ecken unterscheidet, und nicht nur durch
+   seine Lage (§38: keine Auskunft allein über die Stelle). */
+.blatt-griff-kurve{fill:#3aa757; stroke:#3aa757}
 .blatt-auswahlrahmen-gesperrt{stroke:#8a8a8a; stroke-dasharray:2 3}
 .blatt-schloss{font-size:11px; pointer-events:none; user-select:none}
 /* Ein Bild, dessen Datei fehlt oder noch laedt (E357): ein gestrichelter

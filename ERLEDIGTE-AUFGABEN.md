@@ -4127,8 +4127,21 @@ kennt jetzt fünf Arten: Ganz und Teil sagen, wie viel weggeht, Stift,
 Marker und Band, wovon. „Nur Bleistift" bleibt bewusst aus — der
 Bleistift ist in Redion kein Werkzeug, sondern ein Stil des Stifts.
 
+**Und die Kurve mit ihrem Griff (E483, test456).** Die erste Form mit
+drei Punkten — und sie kostete am Datenmodell keine Zeile: `pts` ist eine
+Liste, und `move`, `scale` und `rotate` fassen ohnehin alle Punkte an,
+also wandert, wächst und dreht sie sich von selbst richtig. Gezogen wird
+sie wie eine Linie; der dritte Punkt kommt beim Absetzen dazu und liegt
+in der Mitte, womit die Kurve als Gerade beginnt und der Griff bereitsteht
+— genau die Reihenfolge, die man aus GoodNotes kennt. Der Zug am Griff
+dreht den Zeiger in die Achsen der Marke zurück, sonst bögen sich gedrehte
+Kurven falsch herum.
+
+Der Verbinder bleibt offen, und zwar begründet: er ist keine dritte
+Koordinate, sondern eine Beziehung zu zwei anderen Marken.
+
 **Was offen bleibt,** steht ehrlich in `LUECKEN.md` L133: Audio mit
 Zeitbezug, Handschrift zu Text, Elemente-Bibliothek, Präsentation — und
 die verbliebenen Reste (getippter Text im gesicherten Bild, Farbsets,
-Kurve und Verbinder, Auswahl über mehrere Blätter, Suche über mehrere
-Dokumente, gesperrte Marken im Inspector).
+Verbinder, Auswahl über mehrere Blätter, Suche über mehrere Dokumente,
+gesperrte Marken im Inspector).

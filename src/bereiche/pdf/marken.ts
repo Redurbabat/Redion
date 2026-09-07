@@ -55,7 +55,18 @@ const Marken = (() => {
        der Zeichner unterscheidet sie nur im Ergebnis. Neue Kennungen,
        englisch wie die alten, weil sie so in der Marke stehen (§53.3). */
     { id: 'triangle', name: 'Dreieck', zeichen: '△', titel: 'Dreieck' },
-    { id: 'roundrect', name: 'Rund', zeichen: '▢', titel: 'Rechteck mit runden Ecken' }
+    { id: 'roundrect', name: 'Rund', zeichen: '▢', titel: 'Rechteck mit runden Ecken' },
+    /* DIE KURVE (E483, L133). Sie ist die erste Form mit DREI Punkten:
+       Anfang, Ende und der Griff dazwischen, der sie biegt. Gezogen wird
+       sie wie eine Linie; danach steht am Rahmen ein zusaetzlicher Griff
+       auf dem Mittelpunkt, und wer ihn zieht, biegt die Kurve.
+
+       Warum drei Punkte und kein neues Feld: `pts` ist eine Liste, und
+       eine Liste vertraegt einen dritten Eintrag, ohne dass eine einzige
+       vorhandene Marke sich aendert (§53.3). `move`, `scale` und `rotate`
+       fassen ohnehin ALLE Punkte an — die Kurve wandert, waechst und
+       dreht sich damit von selbst richtig. */
+    { id: 'curve', name: 'Kurve', zeichen: '⌒', titel: 'Kurve — nach dem Ziehen biegt der Griff in der Mitte sie' }
   ] as const;
   const FORM_VORGABE = 'line';
   const formArtLesen = (): string => {
@@ -418,6 +429,13 @@ const Marken = (() => {
       const box = InkGeometry.rectangle(points[0]!, points[1]!);
       element = svg('polygon', { points:
         `${box.x + box.width / 2},${box.y} ${box.x},${box.y + box.height} ${box.x + box.width},${box.y + box.height}` });
+    } else if (art === 'curve' && points.length >= 2) {
+      /* EINE QUADRATISCHE BEZIER (E483): Anfang, Griff, Ende. Ohne dritten
+         Punkt liegt der Griff in der Mitte — dann ist es eine Gerade, und
+         genau so beginnt jede Kurve. */
+      const a = points[0]!, z = points[1]!;
+      const g = points[2] || [(a[0] + z[0]) / 2, (a[1] + z[1]) / 2];
+      element = svg('path', { d: `M${a[0]} ${a[1]} Q${g[0]} ${g[1]} ${z[0]} ${z[1]}`, fill: 'none' });
     } else if (art === 'roundrect' && points.length >= 2) {
       /* DAS RUNDE RECHTECK (E465): die Rundung ein Sechstel der kuerzeren
          Seite — so bleibt ein schmales Kaestchen ein Kaestchen und kein
@@ -916,6 +934,18 @@ const Marken = (() => {
         for (const [name, x, y] of ecken) {
           g.appendChild(svg('circle', { cx: x, cy: y, r: 22, class: 'blatt-griff-feld', 'data-griff': name }));
           g.appendChild(svg('circle', { cx: x, cy: y, r: 5, class: 'blatt-griff' }));
+        }
+        /* DER GRIFF DER KURVE (E483): auf ihrem Steuerpunkt, und nur bei
+           EINER gewaehlten Kurve — bei zweien waere nicht zu sehen, welche
+           er biegt. Er steht in derselben gedrehten Gruppe wie die Ecken,
+           also stimmt seine Lage auch an einer schiefen Kurve. */
+        if (selection.size === 1) {
+          const nur = marks.find(item => idOf(item) === [...selection][0]);
+          const cp = nur && nur.art === 'curve' ? InkGeometry.points(nur.pts)[2] : null;
+          if (cp) {
+            g.appendChild(svg('circle', { cx: cp[0], cy: cp[1], r: 22, class: 'blatt-griff-feld', 'data-griff': 'kurve' }));
+            g.appendChild(svg('circle', { cx: cp[0], cy: cp[1], r: 5, class: 'blatt-griff blatt-griff-kurve' }));
+          }
         }
         /* DER DREHGRIFF (E466), wie in GoodNotes: an einer kurzen Leine
            ueber dem Kasten — oder darunter, wenn oben kein Platz ist. */
@@ -1463,7 +1493,7 @@ const Marken = (() => {
         const drag = selectDrag;
         selectDrag = null;
         flaeche.querySelectorAll('[data-ink-ui="box"]').forEach(node => node.remove());
-        if ((drag.mode === 'move' || drag.mode === 'scale' || drag.mode === 'rotate') && drag.moved) { commit(drag.before); return true; }
+        if ((drag.mode === 'move' || drag.mode === 'scale' || drag.mode === 'rotate' || drag.mode === 'kurve') && drag.moved) { commit(drag.before); return true; }
         if (drag.mode === 'lasso') {
           const pts = drag.pts as number[][];
           if (!drag.add) selection.clear();
@@ -1507,6 +1537,14 @@ const Marken = (() => {
       delete mark.zeigerArt;
       const gehalten = Date.now() - (Number(mark.bewegtUm) || 0) >= HALTEN_MS;
       delete mark.bewegtUm;
+      /* EINE FERTIGE KURVE HAT DREI PUNKTE (E483). Beim Ziehen sind es
+         zwei; der dritte kommt beim Absetzen dazu und liegt in der Mitte
+         — dann ist die Kurve eine Gerade, und der Griff steht bereit. */
+      if (mark.art === 'curve' && Array.isArray(mark.pts) && mark.pts.length === 2) {
+        const a = InkGeometry.points(mark.pts)[0]!, z = InkGeometry.points(mark.pts)[1]!;
+        mark.pts = [mark.pts[0], mark.pts[1],
+          [Math.round((a[0] + z[0]) / 2 * 100) / 100, Math.round((a[1] + z[1]) / 2 * 100) / 100]];
+      }
       /* KRITZEL-LOESCHEN (E466), wie GoodNotes' Scribble to Erase: ein
          dichtes Hin-und-her ueber einem Strich nimmt den Strich weg, statt
          ein neuer zu werden. Nur mit dem Stift, nie mit dem Marker, und
@@ -1853,6 +1891,14 @@ const Marken = (() => {
           try { flaeche.setPointerCapture(event.pointerId); } catch { /* optional */ }
           return;
         }
+        /* DIE KURVE BIEGEN (E483): ein eigener Zug, weil er einen PUNKT
+           bewegt und nicht den Kasten. */
+        if (griff && selection.size === 1 && griff.getAttribute('data-griff') === 'kurve') {
+          selectDrag = { mode: 'kurve', start: point, before: snapshot(), moved: false,
+            originals: new Map([...selection].map(id => [id, clone(marks.find(mark => idOf(mark) === id))])) };
+          try { flaeche.setPointerCapture(event.pointerId); } catch { /* optional */ }
+          return;
+        }
         if (griff && selection.size) {
           const kasten = auswahlKasten();
           const achse = auswahlAchse();
@@ -1999,6 +2045,26 @@ const Marken = (() => {
             merke(marks[index]);
           }
           renderSelection();
+        } else if (selectDrag.mode === 'kurve') {
+          const id = String([...selection][0] ?? '');
+          const index = marks.findIndex(mark => idOf(mark) === id);
+          const original = selectDrag.originals.get(id);
+          if (index >= 0 && original && !original.gesperrt) {
+            /* Der Steuerpunkt steht in den Achsen der MARKE (E474): eine
+               gedrehte Kurve wird sonst in die falsche Richtung gebogen. */
+            const grad = InkGeometry.drehung(original);
+            const b = InkGeometry.boundsLokal(original);
+            const mitte: [number, number] = [b.x + b.width / 2, b.y + b.height / 2];
+            const lokal = grad ? InkGeometry.drehePunkte([[point[0], point[1]]], mitte, -grad)[0]! : point;
+            const neu = clone(original);
+            const pts = InkGeometry.points(neu.pts);
+            neu.pts = [pts[0], pts[1], [Math.round(lokal[0]! * 100) / 100, Math.round(lokal[1]! * 100) / 100]];
+            marks[index] = neu;
+            selectDrag.moved = true;
+            updateNode(nodeFor(id), neu);
+            merke(neu);
+            renderSelection();
+          }
         } else if (selectDrag.mode === 'rotate') {
           const [mx, my] = selectDrag.mitte as [number, number];
           let grad = (Math.atan2(point[1] - my, point[0] - mx) - selectDrag.winkel0) * 180 / Math.PI;
