@@ -99,6 +99,60 @@ const Marken = (() => {
            kennt. */
         { id: 'bleistift', name: 'Bleistift', zeichen: '✏' }
     ];
+    /* ══ DIE WERKZEUGE, EINMAL AUFGESCHRIEBEN (E490) ════════════════════════
+       Bis hierher standen Kennung, Zeichen, Wort und Beschreibung jedes
+       Werkzeugs als Aufruf in der Zeile, die die Leiste baut — nirgends
+       sonst. Wer sie woanders brauchte (die Liste der gesperrten Marken im
+       Inspector braucht genau diese Wörter), hätte sie abgeschrieben, und
+       eine Abschrift läuft weg (§8).
+  
+       DIE KENNUNG IST DIE MARKENART. `art: tool` beim Zeichnen macht aus dem
+       Werkzeug `abdeck` die Marke `abdeck` — deshalb steht hier auch das
+       Wort für eine fertige Marke. Was E489 gekostet hat, ist genau der
+       Unterschied zwischen dieser Kennung und der eines Radiermodus.
+  
+       `formen` ist kein Werkzeug, sondern ein Knopf für sieben (E375). Er
+       steht in der Reihenfolge mit, damit die Leiste an EINER Liste hängt,
+       und wird beim Bauen eigens behandelt; die Formen selbst stehen in
+       `FORMEN`. */
+    const WERKZEUGE = [
+        { id: 'schreiben', zeichen: '✎', name: 'Schreiben', titel: 'Schreiben — die Zeichenschicht ist durchlässig' },
+        { id: 'select', zeichen: '⌖', name: 'Auswahl', titel: 'Marken auswählen, gemeinsam bewegen oder löschen' },
+        { id: 'stift', zeichen: '🖍', name: 'Stift', titel: 'Freihand mit geglätteter Linie' },
+        { id: 'marker', zeichen: '▰', name: 'Marker', titel: 'Transparenter Marker' },
+        { id: 'formen', zeichen: '□', name: 'Form', titel: 'Formen — welche, steht darunter' },
+        { id: 'abdeck', zeichen: '▬', name: 'Abdeckband',
+            titel: 'Abdeckband über Lösungen ziehen — Antippen im Schreiben-Modus deckt auf' },
+        { id: 'zettel', zeichen: '🗒', name: 'Haftnotiz',
+            titel: 'Einen Zettel aufziehen und beschriften; Antippen mit dem Werkzeug bearbeitet ihn' },
+        { id: 'text', zeichen: 'T', name: 'Text', titel: 'Textanmerkung' },
+        { id: 'zeichen', zeichen: '⚡', name: 'Fachzeichen', titel: 'Ein elektrotechnisches Symbol auf die Seite setzen' },
+        { id: 'bild', zeichen: '🖼', name: 'Bild',
+            titel: 'Ein Foto oder Bild auf das Blatt legen — danach verschieben und ziehen wie jede Marke' },
+        { id: 'radierer', zeichen: '⌫', name: 'Radieren',
+            titel: 'Radieren — über Marken streichen; der Knopf daneben wählt Ganz, Teil oder Marker' }
+    ];
+    /**
+     * Wie eine Marke heisst, für einen Menschen.
+     *
+     * Erst die Formen (sie sind genauer: „Pfeil" statt „Form"), dann die
+     * Werkzeuge. Was beide nicht kennen, behält seine Kennung — eine Marke
+     * aus einer neueren Fassung soll sich nennen können, statt „unbekannt"
+     * zu heissen (§18: unbekannte Blocktypen nicht löschen, hier sinngemäss).
+     */
+    const artWort = (art) => {
+        const id = String(art ?? '');
+        return FORMEN.find(f => f.id === id)?.name
+            ?? WERKZEUGE.find(w => w.id === id)?.name
+            ?? (id || 'Marke');
+    };
+    /** Das Zeichen zur Art — dieselbe Reihenfolge, dieselbe Quelle. */
+    const artZeichen = (art) => {
+        const id = String(art ?? '');
+        return FORMEN.find(f => f.id === id)?.zeichen
+            ?? WERKZEUGE.find(w => w.id === id)?.zeichen
+            ?? '•';
+    };
     const STIL_VORGABE = 'fueller';
     const HOECHSTENS_EIGENE_FARBEN = 4;
     /* WIE VIELE FARBSAETZE (E486).
@@ -2857,14 +2911,17 @@ const Marken = (() => {
     
            2. Welches Werkzeug GILT, stand nur in einer CSS-Klasse. Eine Klasse
               ist für ein Vorleseprogramm nicht da. `aria-pressed` sagt es. */
-        const button = (tool, icon, word, title) => `<button data-wz="${tool}"${tool === 'schreiben' ? ' class="on"' : ''} ` +
-            `aria-pressed="${tool === 'schreiben' ? 'true' : 'false'}" title="${title}">` +
-            `<span class="zeichen" aria-hidden="true">${icon}</span><span class="wort">${word}</span></button>`;
+        const button = (tool) => {
+            const w = WERKZEUGE.find(x => x.id === tool);
+            return `<button data-wz="${w.id}"${w.id === 'schreiben' ? ' class="on"' : ''} ` +
+                `aria-pressed="${w.id === 'schreiben' ? 'true' : 'false'}" title="${w.titel}">` +
+                `<span class="zeichen" aria-hidden="true">${w.zeichen}</span><span class="wort">${w.name}</span></button>`;
+        };
         tools.innerHTML =
-            button('schreiben', '✎', 'Schreiben', 'Schreiben — die Zeichenschicht ist durchlässig') +
-                button('select', '⌖', 'Auswahl', 'Marken auswählen, gemeinsam bewegen oder löschen') +
-                button('stift', '🖍', 'Stift', 'Freihand mit geglätteter Linie') +
-                button('marker', '▰', 'Marker', 'Transparenter Marker') +
+            button('schreiben') +
+                button('select') +
+                button('stift') +
+                button('marker') +
                 /* VIER WERKZEUGE WURDEN EINES (E375, L115 Punkt 9, Rest).
                    Linie, Pfeil, Rechteck und Ellipse standen als vier Knöpfe
                    nebeneinander — vierzehn Werkzeuge in einer Leiste, die am Telefon
@@ -2878,14 +2935,14 @@ const Marken = (() => {
                         `title="${jetzt.titel} — die Form wählst du darunter">` +
                         `<span class="zeichen" aria-hidden="true">${jetzt.zeichen}</span><span class="wort">Form</span></button>`;
                 })() +
-                button('abdeck', '▬', 'Abdecken', 'Abdeckband über Lösungen ziehen — Antippen im Schreiben-Modus deckt auf') +
-                button('zettel', '🗒', 'Haftnotiz', 'Einen Zettel aufziehen und beschriften; Antippen mit dem Werkzeug bearbeitet ihn') +
-                button('text', 'T', 'Text', 'Textanmerkung') +
-                button('zeichen', '⚡', 'Fachzeichen', 'Ein elektrotechnisches Symbol auf die Seite setzen') +
+                button('abdeck') +
+                button('zettel') +
+                button('text') +
+                button('zeichen') +
                 /* DAS BILD (E357): kein Werkzeug, das man haelt, sondern ein Weg —
                    ein Tipp oeffnet den Waehler, danach fuehrt die Auswahl. */
-                button('bild', '🖼', 'Bild', 'Ein Foto oder Bild auf das Blatt legen — danach verschieben und ziehen wie jede Marke') +
-                button('radierer', '⌫', 'Radieren', 'Radieren — über Marken streichen; der Knopf daneben wählt Ganz, Teil oder Marker') +
+                button('bild') +
+                button('radierer') +
                 /* DER ZEILENBRUCH (E359): am Rechner stehen die Werkzeuge in einer
                    Zeile und ihr Zubehoer darunter; dieses leere Element mit voller
                    Breite ist der Umbruch. Am Telefon und in der Spalte blendet das
@@ -3687,7 +3744,8 @@ const Marken = (() => {
     };
     if (typeof document !== 'undefined')
         document.addEventListener('keydown', kuerzel);
-    return { schicht, leiste, zeichneMarke, FARBEN, BREITEN, STIFTE, FORMEN, druckFaktor, RADIERER, TASTEN,
+    return { schicht, leiste, zeichneMarke, FARBEN, BREITEN, STIFTE, FORMEN, WERKZEUGE, artWort, artZeichen,
+        druckFaktor, RADIERER, TASTEN,
         /* DIE FARBSÄTZE NACH AUSSEN (E486). Nicht, damit jemand anders eine
            zweite Leiste baut — sondern damit der Prüflauf an derselben Rechnung
            misst, die die Leiste benutzt. Eine Prüfung, die die Meta-Liste selbst
