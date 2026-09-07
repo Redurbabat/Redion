@@ -173,6 +173,9 @@ console.log('\n2 · Der Knopf ist da, und er rechnet wirklich feiner');
 const knopfDa = await seite.evaluate((bid: string) =>
   !!document.querySelector(`[data-bid="${bid}"] [data-a="feiner"]`), vorher.id);
 p('An der Seite steht ein Knopf zum feiner Rechnen', knopfDa);
+/* SEIT E464 liegt die feste Leiste der Seite im Schreibstudio hinter „···". */
+await seite.evaluate(() => (document.querySelector('[data-document-action="ink-options"]') as HTMLElement | null)?.click());
+await seite.waitForTimeout(250);
 
 await seite.click(`[data-bid="${vorher.id}"] [data-a="feiner"]`);
 await seite.waitForFunction(

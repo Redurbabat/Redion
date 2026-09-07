@@ -36587,6 +36587,8 @@ gesehen; nach dem Zusammenführen waren elf Läufe rot. Drei Sorten:
                die Finger selbst (`fingerPan`).
       test202, test424  Lesen, ‹ ›, Zoom liegen hinter „☷ Ansicht"; die
                Läufe klappen es vorher auf, wie sein test437.
+      test177, test228  Die Blattleiste zeigt Werkzeuge und feste Knöpfe
+               im Studio erst hinter „···"; die Läufe klappen es auf.
   · UND EINER, DER ZWEI URSACHEN HATTE. `test424` fiel bei E462 an
     „Library fits 1920x1080 light" — die Sprechblase, siehe oben — und auf
     `main` gelegentlich an „PDF page position survives reload" (flatterte
