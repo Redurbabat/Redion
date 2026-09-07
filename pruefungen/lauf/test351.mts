@@ -143,9 +143,13 @@ await werkzeug(pg, 'stift');
 let z = await leiste(pg);
 /* ELF, NICHT MEHR VIERZEHN (E375): Linie, Pfeil, Rechteck und Ellipse
    stehen jetzt unter einem Knopf „Form". Die Zusage dieses Punktes ist
-   dieselbe geblieben — alle auf EINER Höhe —, nur ist die Zeile kürzer. */
-gleich('Alle elf Werkzeuge auf EINER Höhe', z.werkzeugZeilen, 1);
-gleich('Und es sind wirklich elf', z.werkzeuge, 11);
+   dieselbe geblieben — alle auf EINER Höhe —, nur ist die Zeile kürzer.
+   SEIT E494 SIND ES ZWÖLF: die Elemente-Bibliothek kam dazu. Vor dem
+   Einbau nachgemessen, ob die Zeile sie trägt: bei 1360 px Fenster belegen
+   die Werkzeuge 437 px von 596, mit Wörtern bei 1600 px 919 von 1184 —
+   eine Zeile bleibt eine, und die Leiste rollt am Rechner nicht. */
+gleich('Alle zwölf Werkzeuge auf EINER Höhe', z.werkzeugZeilen, 1);
+gleich('Und es sind wirklich zwölf', z.werkzeuge, 12);
 p('Das Zubehör steht unter den Werkzeugen', z.zubehoerUnterhalb && z.zubehoerSichtbar > 0, JSON.stringify(z));
 p('Die Leiste ist unter 100 px hoch (vorher fünf Zeilen, rund 220)', z.hoehe < 100, `${z.hoehe} px bei ${z.breite} px Breite`);
 p('Der Zeilenbruch ist da und wirkt (volle Breite, keine Höhe)', z.bruch.da && z.bruch.sichtbar && (z.bruch as any).breite > z.breite * 0.8, JSON.stringify(z.bruch));
@@ -163,10 +167,12 @@ z = await leiste(pg);
 gleich('Radierer: sein Modus und der Verlauf, sonst nichts', [z.gruppen.radierer, z.gruppen.verlauf, z.gruppen.farbe, z.gruppen.stil, z.gruppen.breite], [1, 2, 0, 0, 0]);
 await werkzeug(pg, 'select');
 z = await leiste(pg);
-/* ACHT IN DER GRUPPE „AUSWAHL": Löschen, Kopieren, Einsetzen; dazu seit
-   E466 Ausschneiden, nach vorn, nach hinten, Sperren — und seit E468 der
-   Verweis. */
-gleich('Auswahl: Löschen, Kopieren, Einsetzen, Ausschneiden, Vor, Hinten, Sperren, Verweis, Farben, Breiten', [z.gruppen.auswahl, z.gruppen.farbe >= 6, z.gruppen.breite, z.gruppen.stil], [8, true, 3, 0]);
+/* NEUN IN DER GRUPPE „AUSWAHL": Löschen, Kopieren, Einsetzen; dazu seit
+   E466 Ausschneiden, nach vorn, nach hinten, Sperren; seit E468 der
+   Verweis — und seit E494 „Als Element", der einzige Weg in die
+   Elemente-Bibliothek. Nachgemessen: der neunte Knopf ändert die Höhe der
+   Leiste nicht (120 px vorher wie nachher, bei 596 px und bei 1184 px). */
+gleich('Auswahl: Löschen, Kopieren, Einsetzen, Ausschneiden, Vor, Hinten, Sperren, Verweis, Als Element, Farben, Breiten', [z.gruppen.auswahl, z.gruppen.farbe >= 6, z.gruppen.breite, z.gruppen.stil], [9, true, 3, 0]);
 gleich('… und immer noch eine Werkzeugzeile', z.werkzeugZeilen, 1);
 await werkzeug(pg, 'line');
 z = await leiste(pg);
@@ -189,7 +195,7 @@ p('Volle Breite bei 1360 px Fenster: die Leiste hat rund 1070 px — noch keine 
 await pg.setViewportSize({ width: 1600, height: 950 });
 await pg.waitForTimeout(400);
 z = await leiste(pg);
-p('Bei 1600 px Fenster (Leiste über 1150 px) stehen die elf Wörter', z.woerter === 11 && z.breite > 1150, `${z.woerter} Wörter bei ${z.breite} px`);
+p('Bei 1600 px Fenster (Leiste über 1150 px) stehen die zwölf Wörter', z.woerter === 12 && z.breite > 1150, `${z.woerter} Wörter bei ${z.breite} px`);
 gleich('… in einer Werkzeugzeile, das Zubehör darunter', [z.werkzeugZeilen, z.zubehoerUnterhalb], [1, true]);
 p('… und die Leiste bleibt unter 100 px', z.hoehe < 100, `${z.hoehe} px`);
 await ktx.close();

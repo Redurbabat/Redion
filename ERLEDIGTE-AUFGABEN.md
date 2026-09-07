@@ -4302,7 +4302,35 @@ Art. Ein Prüflauf, der seinen Bestand selbst baut, muss ihn bauen wie die
 App; sonst prüft er eine Erfindung.
 
 **Was offen bleibt,** steht ehrlich in `LUECKEN.md` L133: Audio mit
-Zeitbezug, Handschrift zu Text, Elemente-Bibliothek, Präsentation — und
+Zeitbezug, Handschrift zu Text, GIPHY, DOCX/PPTX, Wolke — und
 die verbliebenen Reste (getippter Text im gesicherten Bild und ein PDF mit
-echter Textschicht, Verbinder, Auswahl über mehrere Blätter, gesperrte
-Marken im Inspector, die Schalensuche mit Stellen).
+echter Textschicht, Verbinder, Auswahl über mehrere Blätter, das Umordnen
+über mehrere Spalten, die Vorlagenseite mit Inhalt, mehrseitige Notizhefte
+als EIN Block, „Ausschnitt" und „Erkennen" im Zoom-Fenster, die
+Schalensuche mit Stellen).
+
+**Die Elemente-Bibliothek (E494, test464).** Und dieselbe Lehre wie beim
+Präsentieren, zwei Bögen später: die Zeile in `LUECKEN.md`, die sie unter
+„wird Redion nicht haben" führte, begründete das mit „wäre neu". Das ist
+keine Begründung, sondern eine Beschreibung — neu ist jede Funktion, bevor
+sie da ist. Wiederverwendbare Marken sind in Redion ausserdem nichts Neues:
+es sind dieselben, die die Zwischenablage seit E353 kopiert, nur überleben
+sie das Dokument.
+
+Gebaut: das zwölfte Werkzeug ⭐, „Als Element" bei der Auswahl als einziger
+Weg hinein, ein Feld von Kacheln mit dem Bild jedes Elements, und der
+Stempel mittig unter dem Zeiger — der erste Tipp öffnet die Bibliothek,
+jeder weitere setzt dasselbe wieder. Sie liegt in `meta` und reist damit in
+jeder Sicherung mit, ohne dass am Sicherungscode etwas zu tun war.
+
+Vier Funde, und keiner kam vom Lesen: der Typ hiess `Element` und verdeckte
+damit die DOM-Klasse (achtzehn Fehler in Zeilen, die niemand angefasst
+hatte); `--danger` und `--bg-2` gibt es nicht (§39, viertes Mal); der Kasten
+einer Marke beginnt nicht an ihrem ersten Punkt, sondern eine halbe
+Strichbreite davor; und ein Knopf mass 43,34 px, weil das Fenster beim
+Messen noch einfuhr.
+
+Und ein Fund ausserhalb: `test348 §5` war seit E486 rot, ohne dass es
+jemandem aufgefallen wäre. `test343` hatte den Nachtrag bekommen, `test348`
+nicht — ein Prüflauf, den niemand laufen lässt, meldet seinen Fund nicht
+von selbst.

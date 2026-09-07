@@ -214,7 +214,7 @@ rechtfertigt.
 
 ---
 
-### 7 · Der PDF-Teil wie GoodNotes — vierundzwanzig Bögen (Redur, 7. September)
+### 7 · Der PDF-Teil wie GoodNotes — fünfundzwanzig Bögen (Redur, 7. September)
 
 Redur, mit dem GoodNotes-Dossier: „alles, was GoodNotes machen kann, 1:1 —
 nur beim PDF-Teil: wie die bearbeitet wird, importiert, die Stifte usw.",
@@ -346,9 +346,25 @@ der Zeichenschicht nicht zu drücken — und zwar schon vor diesen Bögen.
     der zeigt und nicht schreibt. Die L133-Zeile, die das für „ausserhalb
     des PDF-Teils" erklärte, war falsch — es braucht weder Server noch
     Konto. **Steht.**
+  · **G25 — Die Elemente-Bibliothek** (E494, test464): eine Auswahl wird
+    unter einem Namen zum Stempel und überlebt das Dokument — das zwölfte
+    Werkzeug ⭐, „Als Element" bei der Auswahl, ein Feld von Kacheln mit
+    dem Bild jedes Elements, gesetzt mittig unter dem Zeiger. Auch hier
+    war die L133-Begründung keine: „wäre neu" ist eine Beschreibung. Die
+    Bibliothek liegt in `meta` und reist in jeder Sicherung mit; sechzig
+    Elemente, keines über 200 KB, und beide Grenzen werden gesagt.
+    Nebenbei fiel auf, dass `test348 §5` seit E486 rot war. **Steht.**
+
+Der Auftrag heisst deshalb jetzt **fünfundzwanzig Bögen**; die Überschrift
+zählt sie mit.
 
 Was danach ehrlich offen bleibt, steht in **L133** (Audio mit Zeitbezug,
-Handschrift-zu-Text, Mathe, Elemente-Bibliothek, Präsentation, Wolke).
+Handschrift-zu-Text, Mathe, GIPHY, Wolke, DOCX/PPTX) — und dazu die
+benannten Reste: der Verbinder des Shape-Tools, die Auswahl über mehrere
+Blätter, das Umordnen über mehrere Spalten, die Vorlagenseite mit Inhalt,
+mehrseitige Notizhefte als EIN Block, „Ausschnitt" und „Erkennen" im
+Zoom-Fenster, der getippte Text im gesicherten Bild und die Schalensuche
+mit Stellen.
 
 **Priorität** — hoch; es ist Redurs Auftrag vom 7. September.
 

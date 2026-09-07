@@ -2009,6 +2009,49 @@ const ANSICHTEN: Record<string, {
     }
   },
 
+  elemente: {
+    titel: 'Die Elemente-Bibliothek — gesicherte Marken stempeln (E494)',
+    bauen: async () => {
+      Store.setMeta('rundgangGesehen', true);
+      document.querySelector('.produkt-onboarding-lage')?.remove();
+      document.getElementById('rg-willkommen')?.remove();
+      /* Vier Elemente, wie sie nach ein paar Wochen Arbeit dastünden:
+         ein Häkchen, ein Kreuz, ein Rahmen, eine Unterschrift. */
+      Store.setMeta('zeichnen:elemente', [
+        { id: 'el-haken', name: 'Häkchen', breite: 60, hoehe: 52, marken: [
+          { art: 'stift', farbe: '#3aa757', breite: 5, pts: [[2, 28], [22, 50], [58, 2]] }] },
+        { id: 'el-kreuz', name: 'Kreuz rot', breite: 48, hoehe: 48, marken: [
+          { art: 'stift', farbe: '#d64545', breite: 5, pts: [[2, 2], [46, 46]] },
+          { art: 'stift', farbe: '#d64545', breite: 5, pts: [[46, 2], [2, 46]] }] },
+        { id: 'el-rahmen', name: 'Merkkasten', breite: 150, hoehe: 70, marken: [
+          { art: 'rectangle', farbe: '#e0a419', breite: 2.4, pts: [[0, 0], [150, 70]] },
+          { art: 'marker', farbe: '#e0a419', breite: 16, pts: [[10, 35], [140, 35]] }] },
+        { id: 'el-name', name: 'Unterschrift', breite: 160, hoehe: 54, marken: [
+          { art: 'stift', farbe: '#2f7ed8', breite: 2.4, stil: 'pinsel', pts: [
+            [2, 40], [16, 8], [30, 44], [46, 10], [62, 42], [86, 16], [110, 40],
+            [132, 12], [158, 34]] }] }
+      ]);
+      const s = Store.addPage(null, { text: 'Hefte durchsehen', icon: '⭐' });
+      const blatt = Store.addBlock(s.id, 'blatt', { text: '', papier: 'liniert' });
+      Store.addBlock(blatt.id, 'text', { text: 'Aufgabe 3 — Reihenschaltung' });
+      /* Gestempelt: zweimal das Häkchen, einmal das Kreuz. */
+      Store.updateBlock(blatt.id, { marken: [
+        { id: 's1', art: 'stift', farbe: '#3aa757', breite: 5, pts: [[92, 118], [112, 140], [148, 92]] },
+        { id: 's2', art: 'stift', farbe: '#3aa757', breite: 5, pts: [[92, 208], [112, 230], [148, 182]] },
+        { id: 's3', art: 'stift', farbe: '#d64545', breite: 5, pts: [[96, 282], [140, 326]] },
+        { id: 's4', art: 'stift', farbe: '#d64545', breite: 5, pts: [[140, 282], [96, 326]] }
+      ] });
+      App.oeffne(s.id);
+      await new Promise(r => setTimeout(r, 900));
+      /* Das Werkzeug wählen — dann steht sein Knopf in der Zubehörzeile —
+         und die Bibliothek öffnen. */
+      document.querySelector<HTMLElement>('.blatt-werk [data-wz="elemente"]')?.click();
+      await new Promise(r => setTimeout(r, 250));
+      document.querySelector<HTMLElement>('.blatt-werk [data-act="elemente"]')?.click();
+      await new Promise(r => setTimeout(r, 500));
+    }
+  },
+
   dokumentsuche: {
     titel: 'Die Suche über mehrere Dokumente (E487)',
     bauen: async () => {

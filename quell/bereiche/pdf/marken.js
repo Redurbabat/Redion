@@ -163,6 +163,11 @@ const Marken = (() => {
             titel: 'Einen Zettel aufziehen und beschriften; Antippen mit dem Werkzeug bearbeitet ihn' },
         { id: 'text', zeichen: 'T', name: 'Text', titel: 'Textanmerkung' },
         { id: 'zeichen', zeichen: '⚡', name: 'Fachzeichen', titel: 'Ein elektrotechnisches Symbol auf die Seite setzen' },
+        /* DIE ELEMENTE (E494): dieselbe Bewegung wie beim Fachzeichen — ein Tipp
+           setzt etwas Fertiges —, nur kommt es nicht aus dem Register, sondern
+           aus dem, was der Nutzer selbst gezeichnet und gesichert hat. */
+        { id: 'elemente', zeichen: '⭐', name: 'Elemente',
+            titel: 'Ein gesichertes Element setzen — sichern über die Auswahl («Als Element»)' },
         { id: 'bild', zeichen: '🖼', name: 'Bild',
             titel: 'Ein Foto oder Bild auf das Blatt legen — danach verschieben und ziehen wie jede Marke' },
         { id: 'radierer', zeichen: '⌫', name: 'Radieren',
@@ -204,6 +209,20 @@ const Marken = (() => {
        Wer den NEUNTEN sichern will, bekommt es gesagt — nicht stillschweigend
        den aeltesten weggeworfen (§35). */
     const HOECHSTENS_FARBSAETZE = 8;
+    /* WIE VIELE ELEMENTE (E494).
+  
+       Die Bibliothek liegt in `meta` — im selben Fach wie die Farbsaetze, und
+       damit in jeder Sicherung (§9). Das ist ihr Vorteil (sie reist mit) und
+       ihre Grenze: `meta` haelt Einstellungen, keine Anhaenge. Ein Element ist
+       eine Handvoll Marken, kein Bild von zwei Megabyte.
+  
+       Zwei Zahlen halten das fest, und beide SAGEN es, statt still etwas
+       wegzuwerfen (§35): hoechstens sechzig Elemente, und keines ueber
+       `HOECHSTENS_ELEMENT_BYTES`. Gemessen ist ein voller handschriftlicher
+       Absatz (rund vierzig Striche) etwa 30 KB — sechzig davon waeren 1,8 MB
+       in `meta`, und das ist die Obergrenze, die hier bewusst steht. */
+    const HOECHSTENS_ELEMENTE = 60;
+    const HOECHSTENS_ELEMENT_BYTES = 200 * 1024;
     /* DIE SCHRIFT AUF DEM BLATT (E360, L115 Punkt 6): dieselben fuenf Familien
        wie am Block (E101, Register.textstile), hier als Stapel fuer SVG —
        Attribute kennen keine CSS-Variablen, und der Druck liest sie roh.
@@ -1016,7 +1035,10 @@ const Marken = (() => {
             return neu;
         };
         const state = () => ({ undo: historyUndo.length > 0, redo: historyRedo.length > 0,
-            selected: selection.size, clipboard: zwischenablage.length > 0, gesperrt: gesperrtGewaehlt() });
+            selected: selection.size, clipboard: zwischenablage.length > 0, gesperrt: gesperrtGewaehlt(),
+            /* E494: welches Element der nächste Tipp setzt — die Leiste schreibt
+               es an ihren Knopf, damit die gemerkte Wahl sichtbar ist. */
+            element: letztesElement });
         const notifyState = () => stateListeners.forEach(listener => listener(state()));
         const save = () => Store.updateBlock(block.id, { marken: marks, raumVersion: R.RAUM_VERSION });
         /* ZWEI LISTEN VERGLEICHEN, OHNE SIE ZU SCHREIBEN (E378). Bis hierher
@@ -2158,6 +2180,44 @@ const Marken = (() => {
             redraw();
             commit(before);
         };
+        /**
+         * Ein Element setzen (E494) — der Stempel der Elemente-Bibliothek.
+         *
+         * Beim ERSTEN Tipp öffnet sich die Bibliothek, danach setzt jeder
+         * weitere Tipp dasselbe Element. Das ist der Weg von GoodNotes und der
+         * Grund, warum die Wahl gemerkt wird: wer zwanzig Häkchen setzt, will
+         * die Bibliothek nicht zwanzigmal durchsuchen. Die Leiste zeigt dabei,
+         * WELCHES Element der nächste Tipp setzt — sonst wäre der gemerkte
+         * Zustand unsichtbar (§38).
+         */
+        const setzeElement = async (point) => {
+            if (!letztesElement || !elementHolen(letztesElement)) {
+                const gewaehlt = await elementWaehlen();
+                if (!gewaehlt)
+                    return;
+                letztesElement = gewaehlt;
+                notifyState();
+            }
+            const neue = elementMarken(letztesElement, point[0] ?? 0, point[1] ?? 0);
+            if (!neue.length) {
+                letztesElement = '';
+                notifyState();
+                UI.toast('Dieses Element gibt es nicht mehr.');
+                return;
+            }
+            const before = snapshot();
+            marks.push(...neue);
+            neue.forEach(mark => {
+                const node = zeichneMarke(mark);
+                if (node) {
+                    flaeche.appendChild(node);
+                    merke(mark);
+                }
+            });
+            commit(before);
+        };
+        /** Die Auswahl als Element ablegen. Der Name kommt von der Leiste. */
+        const elementAusAuswahl = (name) => elementSichern(name, marks.filter(mark => selection.has(idOf(mark))));
         let letztesZeichen = '';
         let letzteGroesse = 64;
         const zeichenWaehlen = () => new Promise(fertig => {
@@ -2318,6 +2378,11 @@ const Marken = (() => {
             }
             if (tool === 'zeichen') {
                 void setzeZeichen(point, targetId);
+                return;
+            }
+            /* Die Elemente-Bibliothek (E494): ein Tipp stempelt, wie beim Fachzeichen. */
+            if (tool === 'elemente') {
+                void setzeElement(point);
                 return;
             }
             /* Mit dem Bild-Werkzeug (ueber `Zeichenziel.setze`) oeffnet der Tipp
@@ -2826,6 +2891,17 @@ const Marken = (() => {
             cutSelection, nachVorn, nachHinten, sperren, gesperrtGewaehlt,
             /* E468: ein Verweis an der Auswahl. */
             verweisSetzen,
+            /* E494: die Elemente-Bibliothek — sichern aus der Auswahl, setzen per Tipp. */
+            elementAusAuswahl,
+            elementGewaehlt: () => letztesElement,
+            elementWaehlen: async () => {
+                const gewaehlt = await elementWaehlen();
+                if (gewaehlt) {
+                    letztesElement = gewaehlt;
+                    notifyState();
+                }
+                return gewaehlt;
+            },
             setzeKritzel: (an) => {
                 kritzel = !!an;
                 if (typeof Store !== 'undefined') {
@@ -2952,6 +3028,239 @@ const Marken = (() => {
     };
     /** Zurück auf den Auslieferungsstand: keine eigenen Tupfer. Die Sätze bleiben. */
     const farbenZuruecksetzen = () => farbenSetzen([]);
+    const kurzeId = () => typeof Ids !== 'undefined' ? Ids.short(8) : 'e' + Math.random().toString(36).slice(2, 10);
+    /** Der Name eines Elements — dieselbe Regel wie beim Farbsatz. */
+    const elementName = (roh) => satzName(roh);
+    const elemente = () => {
+        if (typeof Store === 'undefined')
+            return [];
+        const roh = Store.getMeta('zeichnen:elemente');
+        if (!Array.isArray(roh))
+            return [];
+        const raus = [];
+        for (const eintrag of roh) {
+            const name = elementName(eintrag?.name);
+            const marken = eintrag?.marken;
+            if (!name || !Array.isArray(marken) || !marken.length)
+                continue;
+            raus.push({
+                id: String(eintrag?.id || kurzeId()),
+                name,
+                marken: marken.map(m => clone(m)),
+                breite: Math.max(1, Number(eintrag?.breite) || 1),
+                hoehe: Math.max(1, Number(eintrag?.hoehe) || 1)
+            });
+            if (raus.length >= HOECHSTENS_ELEMENTE)
+                break;
+        }
+        return raus;
+    };
+    const elementeSchreiben = (liste) => {
+        const rein = liste.slice(0, HOECHSTENS_ELEMENTE);
+        if (typeof Store !== 'undefined') {
+            try {
+                Store.setMeta('zeichnen:elemente', rein);
+            }
+            catch { /* nur diese Sitzung */ }
+        }
+        return rein;
+    };
+    /**
+     * Marken zu einem Element machen: auf den Nullpunkt gerückt, ohne Auswahl-
+     * zustand, ohne Sperre.
+     *
+     * DIE SPERRE FÄLLT WEG, und das ist Absicht: sie gehört zu einer Marke auf
+     * EINER Seite („diese hier nicht mehr anfassen"), nicht zur Vorlage. Ein
+     * Element, das gesperrt ankommt, liesse sich nach dem Setzen nicht mehr
+     * verschieben — und E492 hat gezeigt, wie teuer eine Sperre ist, die man
+     * nicht mehr löst.
+     */
+    const elementNormieren = (roh) => {
+        const marken = (roh || []).filter(m => m && typeof m === 'object').map(m => clone(m));
+        if (!marken.length)
+            return null;
+        const kasten = InkGeometry.union(marken.map(m => InkGeometry.bounds(m)));
+        const verschoben = marken.map(m => {
+            const kopie = InkGeometry.move(m, -kasten.x, -kasten.y);
+            delete kopie.gesperrt;
+            delete kopie.id;
+            return kopie;
+        });
+        return { marken: verschoben, breite: Math.max(1, kasten.width), hoehe: Math.max(1, kasten.height) };
+    };
+    /**
+     * Ein Element ablegen.
+     *
+     * Gibt einen Grund zurück statt `null`, weil es drei verschiedene Gründe
+     * gibt, und „es ging nicht" ist bei jedem von ihnen die falsche Auskunft:
+     * nichts gewählt, die Bibliothek voll, das Element zu gross. Wer es
+     * anzeigt, kann dann sagen, WAS zu tun ist.
+     */
+    const elementSichern = (roh, marken) => {
+        const name = elementName(roh);
+        if (!name)
+            return { ok: false, grund: 'Ein Element braucht einen Namen.' };
+        const teil = elementNormieren(marken);
+        if (!teil)
+            return { ok: false, grund: 'Es ist nichts ausgewählt, das ein Element werden könnte.' };
+        let gross = 0;
+        try {
+            gross = JSON.stringify(teil.marken).length;
+        }
+        catch {
+            gross = HOECHSTENS_ELEMENT_BYTES + 1;
+        }
+        if (gross > HOECHSTENS_ELEMENT_BYTES) {
+            return { ok: false, grund: 'Dieses Element ist zu gross (' + Math.round(gross / 1024) + ' KB von höchstens '
+                    + Math.round(HOECHSTENS_ELEMENT_BYTES / 1024) + '). Elemente liegen bei den Einstellungen und reisen mit jeder Sicherung — wähle weniger Striche.' };
+        }
+        const liste = elemente();
+        const element = { id: kurzeId(), name, ...teil };
+        const stelle = liste.findIndex(e => e.name.toLowerCase() === name.toLowerCase());
+        if (stelle >= 0) {
+            element.id = liste[stelle].id;
+            liste[stelle] = element;
+            return { ok: true, liste: elementeSchreiben(liste), element };
+        }
+        if (liste.length >= HOECHSTENS_ELEMENTE) {
+            return { ok: false, grund: 'Es passen höchstens ' + HOECHSTENS_ELEMENTE + ' Elemente — lösche zuerst eines.' };
+        }
+        return { ok: true, liste: elementeSchreiben([...liste, element]), element };
+    };
+    const elementLoeschen = (id) => elementeSchreiben(elemente().filter(e => e.id !== String(id ?? '')));
+    const elementHolen = (id) => elemente().find(e => e.id === String(id ?? '')) || null;
+    /**
+     * Die Marken eines Elements, gesetzt an eine Stelle — MITTIG unter dem
+     * Zeiger, nicht mit der Ecke daran.
+     *
+     * Ein Stempel liegt dort, wo man hintippt; bei einem Element von 200 px
+     * Breite läge er sonst um hundert Pixel daneben, und man müsste jedes
+     * gesetzte Element hinterher verschieben.
+     */
+    const elementMarken = (id, x, y) => {
+        const element = elementHolen(id);
+        if (!element)
+            return [];
+        return element.marken.map(m => InkGeometry.move({ ...clone(m), id: kurzeId() }, x - element.breite / 2, y - element.hoehe / 2));
+    };
+    /** Welches Element der nächste Tipp setzt. Nur diese Sitzung — die
+        Bibliothek überlebt, die Wahl darin nicht. */
+    let letztesElement = '';
+    /**
+     * Ein kleines Bild eines Elements — GEZEICHNET MIT `zeichneMarke`, nicht
+     * mit einem zweiten Zeichner.
+     *
+     * Das ist derselbe Grund wie bei der Palette der Fachzeichen: zwei
+     * Zeichner für dieselben Marken laufen auseinander, und die Vorschau
+     * zeigte dann etwas anderes als die Seite (§8).
+     */
+    const elementBild = (element, kante = 74) => {
+        const box = document.createElementNS(NS, 'svg');
+        /* Ein Rand von vier Einheiten, damit ein dicker Strich am Kastenrand
+           nicht halb abgeschnitten dasteht. */
+        const rand = 4;
+        box.setAttribute('viewBox', `${-rand} ${-rand} ${element.breite + rand * 2} ${element.hoehe + rand * 2}`);
+        box.setAttribute('width', String(kante));
+        box.setAttribute('height', String(kante));
+        box.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+        box.setAttribute('aria-hidden', 'true');
+        for (const mark of element.marken) {
+            const node = zeichneMarke({ ...mark, id: kurzeId() });
+            if (node)
+                box.appendChild(node);
+        }
+        return box;
+    };
+    /**
+     * Die Bibliothek zeigen. Gibt die Kennung des gewählten Elements zurück,
+     * `''` bei Abbruch. Löschen geschieht im Dialog und schliesst ihn nicht —
+     * wer aufräumt, räumt meistens mehr als eines weg.
+     */
+    const elementWaehlen = () => new Promise(fertig => {
+        const o = document.createElement('div');
+        o.className = 'overlay';
+        const finder = document.createElement('div');
+        finder.className = 'finder';
+        finder.style.width = 'min(680px,94vw)';
+        const kopf = document.createElement('div');
+        kopf.className = 'fh';
+        kopf.textContent = 'Elemente';
+        const zu = document.createElement('button');
+        zu.className = 'icon-btn';
+        zu.dataset.a = 'zu';
+        zu.setAttribute('aria-label', 'Schliessen');
+        zu.textContent = '✕';
+        kopf.appendChild(zu);
+        finder.appendChild(kopf);
+        const liste = document.createElement('div');
+        liste.className = 'mz-liste elemente-liste';
+        finder.appendChild(liste);
+        o.appendChild(finder);
+        const schliessen = (wert) => {
+            o.remove();
+            document.removeEventListener('keydown', beiTaste);
+            fertig(wert);
+        };
+        const beiTaste = (e) => { if (e.key === 'Escape')
+            schliessen(''); };
+        const malen = () => {
+            liste.textContent = '';
+            const alle = elemente();
+            if (!alle.length) {
+                const leer = document.createElement('p');
+                leer.className = 'elemente-leer';
+                /* KEIN LEERER KASTEN OHNE WEG HINAUS. Wer die Bibliothek zum ersten
+                   Mal öffnet, sieht hier, WIE etwas hineinkommt — sonst sieht er
+                   nichts und schliesst wieder. */
+                leer.textContent = 'Noch kein Element. Wähle auf dem Blatt etwas aus '
+                    + '(Werkzeug «Auswahl») und tippe dort auf «Als Element».';
+                liste.appendChild(leer);
+                return;
+            }
+            for (const element of alle) {
+                const fach = document.createElement('div');
+                fach.className = 'elemente-fach';
+                const kachel = document.createElement('button');
+                kachel.className = 'elemente-kachel';
+                kachel.dataset.el = element.id;
+                kachel.title = element.name + ' setzen';
+                kachel.appendChild(elementBild(element));
+                const wort = document.createElement('i');
+                wort.textContent = element.name;
+                kachel.appendChild(wort);
+                const weg = document.createElement('button');
+                weg.className = 'elemente-weg';
+                weg.dataset.weg = element.id;
+                weg.setAttribute('aria-label', 'Element „' + element.name + '" löschen');
+                weg.title = 'Element „' + element.name + '" löschen';
+                weg.textContent = '🗑';
+                fach.append(kachel, weg);
+                liste.appendChild(fach);
+            }
+        };
+        malen();
+        o.addEventListener('click', e => {
+            const ziel = e.target instanceof Element ? e.target : null;
+            if (!ziel || ziel === o || ziel.closest('[data-a="zu"]')) {
+                schliessen('');
+                return;
+            }
+            const weg = ziel.closest('[data-weg]');
+            if (weg) {
+                elementLoeschen(weg.dataset.weg);
+                if (letztesElement === weg.dataset.weg)
+                    letztesElement = '';
+                malen();
+                return;
+            }
+            const kachel = ziel.closest('[data-el]');
+            if (kachel)
+                schliessen(String(kachel.dataset.el || ''));
+        });
+        document.addEventListener('keydown', beiTaste);
+        document.body.appendChild(o);
+        zu.focus();
+    });
     const leiste = (controls, extra = '') => {
         /* WELCHE FORM DER FORMEN-KNOPF FÜHRT (E375). Das ist Zustand der
            LEISTE, nicht der Fläche: die Fläche kennt nur `line` oder
@@ -3038,6 +3347,11 @@ const Marken = (() => {
                 button('zettel') +
                 button('text') +
                 button('zeichen') +
+                /* DIE ELEMENTE (E494): steht neben dem Fachzeichen, weil es dieselbe
+                   Bewegung ist — ein Tipp setzt etwas Fertiges. Nachgemessen passt der
+                   zwoelfte Knopf: bei 1360 px Fenster belegen die Werkzeuge 437 px von
+                   596, mit Woertern bei 1600 px 919 von 1184 — eine Zeile bleibt eine. */
+                button('elemente') +
                 /* DAS BILD (E357): kein Werkzeug, das man haelt, sondern ein Weg —
                    ein Tipp oeffnet den Waehler, danach fuehrt die Auswahl. */
                 button('bild') +
@@ -3073,6 +3387,12 @@ const Marken = (() => {
                 '<button data-act="sperren" data-gruppe="auswahl" aria-pressed="false" title="Auswahl sperren: nicht mehr schieben, ziehen, drehen, löschen oder radieren" disabled><span class="zeichen" aria-hidden="true">🔒</span><span class="wort">Sperren</span></button>' +
                 /* EIN VERWEIS (E468): der Auswahl eine Adresse oder eine Seite geben. */
                 '<button data-act="verweis" data-gruppe="auswahl" title="Der Auswahl einen Verweis geben: eine Adresse (https://…) oder eine Seite ([[Name]]) — im Lesemodus antippen" disabled><span class="zeichen" aria-hidden="true">🔗</span><span class="wort">Verweis</span></button>' +
+                /* ALS ELEMENT SICHERN (E494): der einzige Weg IN die Bibliothek. Er
+                   steht bei der Auswahl, weil ein Element eine Auswahl ist. */
+                '<button data-act="element-sichern" data-gruppe="auswahl" title="Die Auswahl als Element sichern — danach mit dem Werkzeug «Elemente» auf jede Seite setzen" disabled><span class="zeichen" aria-hidden="true">⭐</span><span class="wort">Als Element</span></button>' +
+                /* DAS ZUBEHÖR DER ELEMENTE: ein Knopf, der die Bibliothek öffnet und
+                   sagt, welches Element der nächste Tipp setzt. */
+                '<button data-act="elemente" data-gruppe="elemente" title="Elemente-Bibliothek öffnen und wählen, was der nächste Tipp setzt"><span class="zeichen" aria-hidden="true">⭐</span><span class="wort">Elemente</span></button>' +
                 /* Das Lineal ist ein SCHALTER neben den Werkzeugen: solange es
                    anliegt, rasten Linie und Pfeil auf 15°-Schritte (E267). */
                 '<button data-act="lineal" data-gruppe="lineal" aria-pressed="false" ' +
@@ -3259,6 +3579,45 @@ const Marken = (() => {
             feld.addEventListener('cancel', () => feld.remove(), { once: true });
             feld.click();
         };
+        /**
+         * Die Auswahl als Element ablegen (E494).
+         *
+         * Der Weg ist derselbe wie beim Farbsatz: nach dem Namen fragen, bei
+         * gleichem Namen NACHFRAGEN, und eine Absage aussprechen statt sie zu
+         * verschlucken (§35). Die drei Absagegründe kommen aus `elementSichern`
+         * im Klartext — „es ging nicht" wäre bei jedem von ihnen die falsche
+         * Auskunft.
+         */
+        const elementSichernDialog = async () => {
+            if (typeof Dialog === 'undefined')
+                return;
+            const name = await Dialog.frage('Als Element sichern — unter welchem Namen?', '');
+            if (name === null)
+                return;
+            if (!satzName(name)) {
+                UI.toast('Ein Element braucht einen Namen.');
+                return;
+            }
+            const schon = elemente().some(e => e.name.toLowerCase() === satzName(name).toLowerCase());
+            if (schon) {
+                const ersetzen = await Dialog.wahl({
+                    titel: 'Das Element ersetzen?',
+                    text: 'Es gibt schon ein Element „' + satzName(name) + '".',
+                    knoepfe: [
+                        { id: 'ja', text: 'Ersetzen', hinweis: 'Die bisherige Zeichnung dieses Elements geht weg' },
+                        { id: 'nein', text: 'Abbrechen', hinweis: 'Nichts ändert sich' }
+                    ]
+                });
+                if (ersetzen !== 'ja')
+                    return;
+            }
+            const ergebnis = controls.elementAusAuswahl(name);
+            if (!ergebnis.ok) {
+                UI.toast(ergebnis.grund);
+                return;
+            }
+            UI.toast('Element „' + ergebnis.element.name + '" gesichert — Werkzeug «Elemente» setzt es');
+        };
         const farbenDialog = async () => {
             /* OHNE DIALOG BLEIBT DER ALTE WEG. `Dialog` liegt in der Schale; ein
                Prüflauf, der nur den Kern hochfährt, hätte sonst gar keinen
@@ -3375,7 +3734,7 @@ const Marken = (() => {
                 copy.disabled = !next.selected;
             if (paste)
                 paste.disabled = !next.clipboard;
-            for (const act of ['cut', 'vor', 'hinten', 'sperren', 'verweis']) {
+            for (const act of ['cut', 'vor', 'hinten', 'sperren', 'verweis', 'element-sichern']) {
                 const k = tools.querySelector(`[data-act="${act}"]`);
                 if (k)
                     k.disabled = !next.selected;
@@ -3385,6 +3744,22 @@ const Marken = (() => {
                 schloss.setAttribute('aria-pressed', next.gesperrt ? 'true' : 'false');
                 schloss.classList.toggle('on', !!next.gesperrt);
             }
+            elementKnopfMalen(next.element);
+        };
+        /* WELCHES ELEMENT DER NÄCHSTE TIPP SETZT (E494). `textContent`, nicht
+           `innerHTML` — der Name kommt vom Nutzer (§19). */
+        const elementKnopfMalen = (id) => {
+            const knopf = tools.querySelector('[data-act="elemente"]');
+            if (!knopf)
+                return;
+            const gewaehlt = id ? elementHolen(id) : null;
+            const wort = knopf.querySelector('.wort');
+            if (wort)
+                wort.textContent = gewaehlt ? gewaehlt.name : 'Elemente';
+            knopf.title = gewaehlt
+                ? 'Der nächste Tipp setzt „' + gewaehlt.name + '" — antippen wählt ein anderes'
+                : 'Elemente-Bibliothek öffnen und wählen, was der nächste Tipp setzt';
+            knopf.classList.toggle('on', !!gewaehlt);
         };
         controls.beiAenderung?.(updateState);
         /* ZWEI ANSICHTEN DESSELBEN ZUSTANDS (E212, §55.1).
@@ -3609,6 +3984,15 @@ const Marken = (() => {
                 }
                 if (target.dataset.act === 'verweis' && controls.verweisSetzen) {
                     void controls.verweisSetzen();
+                    return;
+                }
+                /* E494: die Bibliothek öffnen, und die Auswahl hineinlegen. */
+                if (target.dataset.act === 'elemente' && controls.elementWaehlen) {
+                    void controls.elementWaehlen().then(() => elementKnopfMalen(controls.elementGewaehlt?.()));
+                    return;
+                }
+                if (target.dataset.act === 'element-sichern' && controls.elementAusAuswahl) {
+                    void elementSichernDialog();
                     return;
                 }
                 if (target.dataset.act === 'kritzel' && controls.setzeKritzel) {
@@ -3852,6 +4236,11 @@ const Marken = (() => {
         HOECHSTENS_EIGENE_FARBEN, HOECHSTENS_FARBSAETZE,
         eigeneFarben, farbenSetzen, farbenZuruecksetzen,
         farbsaetze, farbsatzSichern, farbsatzLaden, farbsatzLoeschen,
+        /* DIE ELEMENTE-BIBLIOTHEK NACH AUSSEN (E494) — aus demselben Grund:
+           der Prüflauf soll an DIESER Rechnung messen, nicht an einer eigenen
+           Abschrift der Meta-Liste. */
+        HOECHSTENS_ELEMENTE, HOECHSTENS_ELEMENT_BYTES,
+        elemente, elementSichern, elementLoeschen, elementHolen, elementMarken,
         zwischenablage: () => zwischenablage.map(mark => clone(mark)) };
 })();
 window.Marken = Marken;

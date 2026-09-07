@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-473 Entscheidungen, E1 bis E493 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+474 Entscheidungen, E1 bis E494 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -537,6 +537,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E491** — Redion ist keine Notion-Kopie mehr: mit Server und ohne, und der Nutzer entscheidet, wo seine Daten liegen
 * **E492** — Was auf dieser Seite gesperrt ist: eine Liste, die den Rundlauf ohne Ausgang öffnet
 * **E493** — Präsentieren mit Laserpointer: der Punkt zeigt und schreibt nicht
+* **E494** — Die Elemente-Bibliothek: eine Auswahl wird ein Stempel, und der Stempel überlebt das Dokument
 
 ---
 
@@ -39375,3 +39376,135 @@ ist der Knopf im Kopf weg, in der Klappe da, 44 px gross und beschriftet,
 und der Titel behält seine 100 px. Dazu test87, test105, test109, test285,
 test351.
 Bild: `node bilder.mts praesentieren` — die Ansicht ist neu.
+
+---
+
+E494 — Die Elemente-Bibliothek: eine Auswahl wird ein Stempel
+--------------------------------------------------------------------------
+
+L133 führte GoodNotes' „Elements" unter dem, was Redion nicht haben wird, mit
+dieser Begründung:
+
+> „**Elemente-Bibliothek (Sticker, GIPHY)** — Redion hat die Fachzeichen;
+> eine allgemeine Sammlung wiederverwendbarer Marken wäre neu."
+
+**Der zweite Halbsatz ist kein Grund, sondern eine Beschreibung.** Neu ist
+jede Funktion, bevor sie da ist. Und „wiederverwendbare Marken" sind in
+Redion nichts Neues: es sind dieselben Marken, die die Zwischenablage seit
+E353 kopiert — nur überleben sie das Dokument und den Neustart.
+
+(Was an der Zeile stimmt, ist die Klammer: **GIPHY kommt nicht.** Eine
+Bildersuche im Netz widerspricht §21 und §22 und bringt fremde Inhalte in
+eine App, die ohne Netz vollständig sein soll. Die Bibliothek hält, was der
+Nutzer selbst gezeichnet hat.)
+
+## Was gebaut wurde
+
+    ⭐ Elemente        das zwölfte Werkzeug, neben dem Fachzeichen — beides
+                      setzt mit einem Tipp etwas Fertiges
+    ⭐ Als Element     der einzige Weg HINEIN, bei der Auswahl: was gewählt
+                      ist, wird unter einem Namen abgelegt
+    die Bibliothek    ein Feld von Kacheln, jede mit dem Bild ihres Elements,
+                      seinem Namen und einem Papierkorb
+    stempeln          der erste Tipp öffnet die Bibliothek, jeder weitere
+                      setzt dasselbe wieder — mittig unter dem Zeiger
+    im Studio         das Werkzeug steht auch in der Zeichenleiste des
+                      PDF-Studios, dort wird gestempelt
+
+## Warum es KEIN neues Zeichenmodell ist
+
+Ein Element ist eine Liste Marken, auf den Nullpunkt gerückt. Kein neues
+Format, kein zweiter Katalog (§8), keine eigene Zeichenroutine: die Vorschau
+in der Kachel entsteht mit `zeichneMarke`, derselben Funktion, die auch die
+Seite malt. Zwei Zeichner für dieselben Marken laufen auseinander, und dann
+zeigt die Vorschau etwas anderes als das Blatt.
+
+Dieselbe Sparsamkeit beim Speicher: die Bibliothek liegt in `meta`, wie die
+Farbsätze aus E486. Damit reist sie in `.json` und in `.redion` mit, ohne
+dass am Sicherungscode etwas zu tun war (§9, §11).
+
+## Die Sperre reist nicht mit
+
+`elementNormieren` wirft `gesperrt` weg, und das ist Absicht. Eine Sperre
+gehört zu einer Marke auf EINER Seite („diese hier nicht mehr anfassen"),
+nicht zu einer Vorlage. Ein Element, das gesperrt ankommt, liesse sich nach
+dem Setzen nicht mehr verschieben — und E492 hat gerade erst gezeigt, was
+eine Sperre kostet, die man nicht mehr löst.
+
+## Zwei Zahlen, und beide sagen es
+
+`meta` hält Einstellungen, keine Anhänge. Darum sechzig Elemente und keines
+über 200 KB. Beides wird **gesagt**, nicht still gemacht (§35): wer das
+einundsechzigste sichern will, bekommt eine Absage statt dass das erste
+verschwindet, und wer zu viel wählt, liest die Zahl in KB.
+
+`elementSichern` gibt deshalb keinen `null`-Wert zurück, sondern einen
+Grund. Es gibt drei — nichts gewählt, voll, zu gross —, und „es ging nicht"
+wäre bei jedem von ihnen die falsche Auskunft.
+
+## Was die Bibliothek NICHT kann, und es steht in `LUECKEN.md`
+
+Ein Element mit einer BILDMARKE trägt die Kennung der Datei, nicht die Datei.
+Wer es aus einer `.json`-Sicherung zurückholt (die keine Anhänge kennt, §11),
+hat das Element und nicht sein Bild. Die Marke bleibt trotzdem stehen und
+zeigt ihren Platzhalter — sie wird nicht stillschweigend gelöscht (§18).
+
+Und kein Tastenkürzel: GoodNotes hat für „Elements" auch keines, und die
+Kürzelliste steht an zwei Stellen (`marken.ts` und `register/tasten.ts`,
+zusammengehalten von `test438`). Eines nur der Vollständigkeit halber wäre
+ein zweiter Ort mehr für denselben Zustand.
+
+## Vier Funde, und keiner kam vom Lesen
+
+**Der Typ hiess `Element`.** Das ist die DOM-Klasse. Ein Typ dieses Namens
+verdeckt sie in der ganzen Datei, und `npm run typecheck` meldete danach an
+achtzehn Stellen „Property 'closest' does not exist on type 'Element'" — in
+Zeilen, die niemand angefasst hatte. Jetzt `LibraryElement`.
+
+**`--danger` und `--bg-2` gibt es nicht.** Beide waren im ersten Wurf des
+Stilblatts, beide wären unsichtbar geblieben statt rot zu werden. Die echten
+heissen `--gefahr` und `--bg-hover` (§39, und es ist das vierte Mal).
+
+**Der Kasten beginnt nicht am Punkt.** `InkGeometry.bounds` rechnet die halbe
+Strichbreite mit; ein Element aus einem 5er Strich misst 61 × 61 statt
+56 × 56, und sein erster Punkt liegt bei 2,5. Das ist richtig so — ein
+Stempel, dessen Punkte auf 0 lägen, hätte die halbe Linie ausserhalb seines
+Kastens. Die erste Fassung des Prüflaufs behauptete das Gegenteil.
+
+**Der Knopf mass 43,34 px.** Nachgemessen, während `.finder` mit der
+Animation `studio-arrive` einfuhr: dort steht das Fenster auf
+`matrix(0.985, …)`. Der Knopf ist 44 px und war es immer; gemessen wurde die
+Animation. Der Prüflauf wartet jetzt, bis das Fenster angekommen ist.
+
+## Und ein Fund ausserhalb dieses Bogens
+
+`test348 §5` war seit **E486** rot, ohne dass es jemandem aufgefallen wäre:
+das „+" der Farbgruppe führt seither erst in eine Wahl, und der Prüflauf
+suchte den Farbwähler direkt dahinter. `test343` hatte den Nachtrag damals
+bekommen, `test348` nicht. Behoben, denselben Weg.
+
+Die Lehre steht schon in §46 und ist hier zum zweiten Mal fällig: ein
+Prüflauf, den niemand laufen lässt, meldet seinen Fund nicht von selbst.
+
+## Was vorher gemessen wurde (§36)
+
+Ein zwölftes Werkzeug und ein neunter Auswahlknopf hätten die Leiste brechen
+können. Nachgemessen, bevor sie gebaut wurden:
+
+    1360 px Fenster   Leiste 596 px, Werkzeuge belegen 437 px
+    1600 px, breit    Leiste 1184 px, mit Wörtern 919 px
+    Auswahlzeile      120 px hoch mit acht Knöpfen, 120 px mit neun
+    Telefon           die Zeile rollt ohnehin, wie seit E356
+
+Eine Zeile bleibt eine Zeile. Wäre sie es nicht geworden, wäre das Werkzeug
+wie die Farbsätze hinter einen vorhandenen Knopf gewandert (E486).
+
+GEPRÜFT. `test464` mit 62 Zusagen, fünf Gegenproben rot gesehen (§55.2):
+ohne den Knopf in der Leiste, ohne `delete kopie.gesperrt`, mit stillem
+Wegwerfen des ältesten, mit der Ecke statt der Mitte, ohne den Zweig in
+`pointerdown`. Angepasst, weil sie zählen: `test348` (elf Gruppen, und der
+Nachtrag von E486), `test351` (zwölf Werkzeuge, neun Auswahlknöpfe),
+`test365` (zwölf), `test437` (zwölf im Studio). Dazu test87, test105,
+test109, test247, test344, test349, test386, test424, test461 — alle grün.
+Nicht geprüft: die Gesamtsuite.
+Bild: `node bilder.mts elemente` — die Bibliothek ist neu.

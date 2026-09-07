@@ -1352,7 +1352,11 @@ const DocumentMode = (() => {
             ['stift', 'pencil', 'Stift'], ['marker', 'inkMarker', 'Marker'],
             ['radierer', 'inkEraser', 'Radierer'], ['text', 'inkText', 'Text'],
             ['formen', 'inkShapes', 'Formen'], ['zettel', 'comment', 'Haftnotiz'],
-            ['bild', 'image', 'Bild'], ['zeichen', 'bolt', 'Fachzeichen'], ['abdeck', 'eye', 'Abdecken']
+            ['bild', 'image', 'Bild'], ['zeichen', 'bolt', 'Fachzeichen'], ['abdeck', 'eye', 'Abdecken'],
+            /* DIE ELEMENTE (E494): im Studio steht das Werkzeug mit in der Leiste,
+               weil das Studio der Ort ist, an dem gestempelt wird — ein Häkchen
+               auf zwanzig Seiten, eine Unterschrift, ein Kastenrahmen. */
+            ['elemente', 'star', 'Elemente']
         ];
         drawingTools.forEach(([tool, icon, label]) => {
             const button = document.createElement('button');

@@ -4346,7 +4346,11 @@ tr.vs-luft td{padding:0 !important; border:0 !important}
 .blatt-werk[data-tool="text"] > [data-gruppe="schrift"],
 .blatt-werk[data-tool="select"] > [data-gruppe="schrift"],
 .blatt-werk[data-tool="text"] > [data-gruppe="farbe"],
-.blatt-werk[data-tool="zeichen"] > [data-gruppe="farbe"]{display:inline-flex}
+.blatt-werk[data-tool="zeichen"] > [data-gruppe="farbe"],
+/* DIE ELEMENTE (E494): nur ihr eigener Knopf. KEINE Farbgruppe — ein
+   Element bringt die Farben mit, in denen es gezeichnet wurde; eine
+   Farbwahl daneben verspräche etwas, das der Stempel nicht tut. */
+.blatt-werk[data-tool="elemente"] > [data-gruppe="elemente"]{display:inline-flex}
 .blatt-werk[data-tool] > span.blatt-trenn[data-gruppe]{display:none}
 
 /* ── Am Rechner ZWEI Zeilen: oben die Werkzeuge, darunter ihr Zubehör (E359).
@@ -6216,6 +6220,33 @@ body.hat-demo{ padding-top:var(--demo-hoehe, 42px) }
 .mz-zuletzt button svg{width:30px; height:30px}
 .mz-zuletzt i{font-style:normal}
 .mz-liste{max-height:min(46vh, 420px); overflow-y:auto; padding:10px 16px 16px}
+
+/* ── DIE ELEMENTE-BIBLIOTHEK (E494) ───────────────────────────────────────
+   Ein Raster von Kacheln: das Bild des Elements, sein Name, und ein
+   Papierkorb daneben. Die Kachel ist 44 px hoch und breit genug für zwei
+   Wörter — sie ist ein Hauptweg (§37), der Papierkorb steht daneben und
+   ist es auch: wer aufräumt, trifft ihn sonst nicht. */
+.elemente-liste{display:grid; grid-template-columns:repeat(auto-fill, minmax(132px, 1fr));
+  gap:10px}
+.elemente-fach{position:relative; display:flex}
+.elemente-kachel{flex:1; display:flex; flex-direction:column; align-items:center;
+  gap:6px; padding:10px 8px; min-height:112px; border:1px solid var(--line);
+  border-radius:11px; background:var(--bg-card); color:var(--text);
+  cursor:pointer; font-size:12.5px; text-align:center}
+.elemente-kachel:hover, .elemente-kachel:focus-visible{border-color:var(--accent)}
+.elemente-kachel svg{width:74px; height:74px; flex:none; color:var(--text)}
+.elemente-kachel i{font-style:normal; overflow-wrap:anywhere; line-height:1.25}
+.elemente-weg{position:absolute; top:4px; right:4px; width:44px; height:44px;
+  display:flex; align-items:center; justify-content:center; border:0;
+  border-radius:9px; background:transparent; color:var(--text-dim);
+  cursor:pointer; font-size:15px; opacity:.65}
+/* `--gefahr` und `--bg-hover`, nicht `--danger` und `--bg-2`: die beiden
+   letzten gibt es nicht, und ein erfundenes Token ist unsichtbar statt rot
+   (§39 — dreimal ist genau das hier schon passiert). */
+.elemente-weg:hover, .elemente-weg:focus-visible{opacity:1; color:var(--gefahr);
+  background:var(--bg-hover)}
+.elemente-leer{margin:0; padding:26px 8px; text-align:center; color:var(--text-dim);
+  font-size:13px; line-height:1.5}
 
 /* Ein gesetztes Fachzeichen auf der Seite. Der Zeiger sagt, dass man es
    anfassen kann — ein Tipp dreht es um 90°. */

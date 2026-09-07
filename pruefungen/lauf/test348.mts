@@ -126,8 +126,10 @@ gleich('Die Gruppen heissen, wie sie heissen', await pgH.evaluate(() =>
      Ellipse zu EINEM Werkzeug „Formen" zusammen; dessen Formenwahl ist eine
      eigene Gruppe `form` — der Trenner und die vier Formknöpfe tragen sie.
      `formen` (mit n) ist der SCHALTER „Formen erkennen", `form` die Wahl der
-     Form. Zwei Gruppen, zwei Aufgaben, ähnliche Namen. */
-  ['auswahl', 'breite', 'farbe', 'form', 'formen', 'lineal', 'radierer', 'schrift', 'stil', 'verlauf']);
+     Form. Zwei Gruppen, zwei Aufgaben, ähnliche Namen.
+     ELF SEIT E494: `elemente` ist die Gruppe des einen Knopfes, mit dem die
+     Elemente-Bibliothek aufgeht — sie steht nur beim Werkzeug `elemente`. */
+  ['auswahl', 'breite', 'elemente', 'farbe', 'form', 'formen', 'lineal', 'radierer', 'schrift', 'stil', 'verlauf']);
 
 /* ======================================================================== */
 console.log('\n2 · Am Telefon zeigt jedes Werkzeug seine Gruppen — und die Leiste ist kürzer');
@@ -218,10 +220,17 @@ gleich('Der Modus-Knopf lässt die Leiste beim Radierer', (await leiste(pgH))!.t
 /* ======================================================================== */
 console.log('\n5 · Eine eigene Farbe, später angelegt, gehört zur Gruppe Farbe');
 await werkzeug(pgH, 'stift');
+/* SEIT E486 FÜHRT DAS „+" ZUERST IN EINE WAHL — Farbwähler zuoberst,
+   darunter die Farbsätze. Diese Zusage prüft weiter dasselbe, nur einen
+   Tipp später (derselbe Nachtrag wie in test343). Sie war seit E486 rot und
+   ist beim Bogen E494 aufgefallen: ein Prüflauf, den niemand laufen lässt,
+   meldet seinen Fund nicht von selbst. */
 const eigene = await pgH.evaluate(async () => {
   const knopf = document.querySelector<HTMLButtonElement>('.blatt-werk [data-act="farbe"]')!;
   knopf.click();
-  await new Promise(f => setTimeout(f, 50));
+  await new Promise(f => setTimeout(f, 250));
+  document.querySelector<HTMLElement>('.overlay [data-w="waehlen"]')?.click();
+  await new Promise(f => setTimeout(f, 150));
   const feld = [...document.querySelectorAll<HTMLInputElement>('input[type=color]')].pop();
   if (!feld) return null;
   feld.value = '#8844cc';

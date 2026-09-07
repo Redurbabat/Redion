@@ -79,12 +79,15 @@ const blatt = async (breite: number, hoehe: number, handy = false) => {
 };
 
 /* ========================================================================= */
-console.log('\n1 · Elf statt vierzehn');
+console.log('\n1 · Zwölf statt vierzehn');
 
 const { s: pg, id: blattId } = await blatt(1360, 900);
 const werkzeuge = await pg.evaluate(() =>
   [...document.querySelectorAll<HTMLElement>('.blatt-werk [data-wz]')].map(k => k.dataset.wz));
-gleich('Elf Werkzeuge', werkzeuge.length, 11);
+/* ELF WAREN ES NACH E375; SEIT E494 SIND ES ZWÖLF (die Elemente-
+   Bibliothek). Die Zusage dieses Punktes bleibt dieselbe: die vier alten
+   Form-Knöpfe sind weg, sie stehen unter einem. */
+gleich('Zwölf Werkzeuge', werkzeuge.length, 12);
 gleich('Die vier alten Form-Knöpfe sind weg',
   ['line', 'arrow', 'rectangle', 'ellipse'].filter(w => werkzeuge.includes(w)), []);
 p('Und einer heisst „formen"', werkzeuge.includes('formen'), werkzeuge.join(' '));

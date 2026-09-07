@@ -6623,8 +6623,25 @@ Was Redion auch nach G5 nicht haben wird, und warum:
   · **Handschrift → Text, Mathe → Formel** — braucht eine Erkennung, die
     lokal läuft. Tesseract erkennt gedruckten Text (OCR-Auftrag), keine
     Handschrift; eine Wolken-Erkennung widerspricht §21 ohne Frage.
-  · **Elemente-Bibliothek (Sticker, GIPHY)** — Redion hat die Fachzeichen;
-    eine allgemeine Sammlung wiederverwendbarer Marken wäre neu.
+  · ~~**Elemente-Bibliothek (Sticker)**~~ — **GESCHLOSSEN mit E494, und die
+    Begründung dieser Zeile war keine.** „Wäre neu" ist eine Beschreibung,
+    kein Grund; und wiederverwendbare Marken sind in Redion nichts Neues —
+    es sind dieselben, die die Zwischenablage seit E353 kopiert, nur
+    überleben sie das Dokument.
+    Gebaut: das zwölfte Werkzeug ⭐, „Als Element" bei der Auswahl als
+    einziger Weg hinein, ein Feld von Kacheln mit dem Bild jedes Elements
+    (gezeichnet mit `zeichneMarke`, nicht mit einem zweiten Zeichner), und
+    der Stempel mittig unter dem Zeiger — der erste Tipp öffnet die
+    Bibliothek, jeder weitere setzt dasselbe wieder.
+    Sie liegt in `meta` und reist damit in jeder Sicherung mit (§9, §11).
+    **Offen bleibt der Anhang:** ein Element mit einer BILDMARKE trägt die
+    Kennung der Datei, nicht die Datei. Wer es aus einer `.json`-Sicherung
+    zurückholt (die keine Anhänge kennt), hat das Element und nicht sein
+    Bild; die Marke bleibt stehen und zeigt ihren Platzhalter, statt still
+    gelöscht zu werden (§18). `test464`.
+  · **GIPHY** bleibt draussen, und das ist der Teil der Zeile, der stimmt:
+    eine Bildersuche im Netz widerspricht §21 und §22 und brächte fremde
+    Inhalte in eine App, die ohne Netz vollständig sein soll.
   · ~~**Präsentationsmodus mit Laserpointer**~~ — **GESCHLOSSEN mit E493,
     und diese Zeile war falsch.** Präsentieren ist nicht ausserhalb des
     PDF-Teils: es ist das Zeigen des Dokuments, und es braucht weder
