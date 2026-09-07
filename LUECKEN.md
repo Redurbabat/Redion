@@ -6429,8 +6429,9 @@ Zeichnen (nach G1, E465):
   · **Farbsets** speichern und zurücksetzen — heute sieben feste und vier
     eigene Tupfer.
 
-Auswahl (nach G2, E466): Drehen, Ausschneiden, nach vorn und hinten,
-Sperren, Kritzel-Löschen und Kreis-Lasso stehen. Offen bleibt:
+Auswahl (nach G2, E466; Sperre nachgezogen in E473): Drehen,
+Ausschneiden, nach vorn und hinten, Sperren, Kritzel-Löschen und
+Kreis-Lasso stehen. Offen bleibt:
 
   · **Treffer auf gedrehten Kästen** — ein gedrehter Kasten (Form, Text,
     Zettel, Bild) steht als `transform` schief, aber Tipp, Lasso und
@@ -6486,6 +6487,23 @@ Seite als Bild, Zoom-Fenster stehen. Offen bleibt:
     Drucken über den Browser kann es heute.
   · **Fotografieren mit der Kamera** als Seite — Strg V aus der
     Zwischenablage geht seit E472, der Wähler nimmt Dateien.
+
+Aus der Prüfung nach den Bögen (E473) bleibt ehrlich stehen:
+
+  · **Verweise auf alten Seiten.** Die Links einer PDF stehen seit E473 am
+    Block (beim Einlesen mitgeschrieben, wie `suchtext`). Seiten, die
+    vorher eingelesen wurden, haben das Feld nicht und zeigen keine
+    Verweise, bis sie neu eingelesen werden. Ein Nachtrag über die
+    Auftragsmaschine (wie `bilderLaeufer`) wäre der Weg.
+  · **Der Rest der 33 Funde.** Acht wurden adversarial geprüft, fünf haben
+    gehalten und sind behoben; die übrigen 25 sind nicht widerlegt,
+    sondern nur nicht geprüft — darunter: Kritzel-Löschen greift über den
+    achsenparallelen Kasten des ganzen Gekritzels, `InkGeometry.scale`
+    kennt das Feld `dreh` nicht (eine gedrehte Marke verzerrt beim Ziehen
+    am Eckgriff), `trefferMalen` zeichnet bei jeder nachgezogenen Seite
+    die Treffer aller Seiten neu, die Trefferfläche der PDF-Verweise ist
+    am Telefon rund 7 px hoch, der Ziehbereich des Stärke-Reglers rund 20,
+    und die Papierauswahl im Seitenmenü misst 36 statt 44 px (§37).
 
 Was Redion auch nach G5 nicht haben wird, und warum:
 

@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-452 Entscheidungen, E1 bis E472 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+453 Entscheidungen, E1 bis E473 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -516,6 +516,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E470** — Das Zoom-Fenster ist dieselbe Fläche: gross schreiben, ganze Seite sehen
 * **E471** — Die Rechte im Dokument galten nicht: eine Kennung statt eines Objekts (L102 zum zweiten Mal)
 * **E472** — Die kleinen GoodNotes-Reste: Dreieck erkennen, Bild aus der Ablage, mehrere PDFs, Rand-Vorschub
+* **E473** — Was die Prüfung fand: eine Farbe kann Code sein, die Sperre hatte sechs Türen, pdf.js stand wieder im Anzeigeweg
 
 ---
 
@@ -37449,3 +37450,82 @@ WÄCHTER. `test445` (neu, 19 Punkte): §1 vier Züge gegen die Erkennung und
 einer auf dem Blatt, §2 Bild und Text in der Ablage, §3 zwei PDFs mit
 einer Frage, §4 drei Fälle am Rand. Gegenproben: die Dreieckprüfung
 übersprungen (§1 rot) und der Rand-Vorschub abgeklemmt (§4 rot).
+
+---
+
+E473 — Was die Prüfung fand: eine Farbe kann Code sein, die Sperre hatte sechs Türen, und pdf.js stand wieder im Anzeigeweg
+--------------------------------------------------------------------------
+
+Nach den sieben Bögen (E465–E472) lief eine adversariale Prüfung über den
+ganzen Block: fünf Leser mit je einer Dimension (Daten, Sicherheit,
+Rechte, Architektur, Telefon), ihre Funde danach von Skeptikern
+widerlegt, die ausdrücklich den Auftrag hatten, sie zu zerlegen. 33 Funde,
+acht adversarial geprüft, fünf haben gehalten. Vier davon stehen hier;
+der fünfte war der Rechte-Fehler und steht in E471.
+
+  1. EINE FARBE KANN CODE SEIN (§19, hoch). `Register.fachzeichen.alsSvg`
+     BAUT seinen SVG-Text (`stroke="${farbe}"`), und `marken.ts` setzt ihn
+     bei einer Fachzeichen-Marke mit `innerHTML` ein. Die Farbe kommt aus
+     `mark.farbe`, also aus einem Block, und ein Block kommt aus einer
+     `.redion` — die jemand anders geschrieben haben kann. Ein Wert wie
+     `#000" onload="…` schliesst das Attribut und hängt ein Ereignis an,
+     das beim Einsetzen feuert.
+
+     Neu ist `Sanitize.farbe`: erlaubt sind Hex-Werte, die Farbfunktionen
+     mit Zahlen darin und blosse Wörter (die benannten Farben,
+     `currentColor`, `transparent`, `none`); alles andere gibt ''.
+     Ausserdem escapt `alsSvg` jetzt JEDEN eingesetzten Wert — auch die
+     aus dem eigenen Register, weil eine Funktion, die Text baut, nicht
+     davon leben soll, wer sie aufruft.
+
+  2. DIE SPERRE HATTE SECHS TÜREN (§26, mittel bis klein, aber sechsmal).
+     E466 verspricht: nicht schieben, ziehen, drehen, löschen, radieren.
+     Sie hielt gegen diese fünf — aber Strichstärke, Schriftgrösse,
+     Reihenfolge, Verweis, das Bearbeiten eines Textes oder einer
+     Haftnotiz und das Drehen eines Fachzeichens gingen daran vorbei. Alle
+     sechs sind zu. Die FARBE darf weiter: das steht so in E466, und die
+     Sperre gilt dem Ort, nicht der Farbe.
+
+  3. pdf.js STAND WIEDER IM ANZEIGEWEG (§36, hoch). E468 holte die
+     Verweise einer Seite beim ANSEHEN — und zog dafür die ganze
+     Original-PDF in den Arbeitsspeicher (Blob, ArrayBuffer, pdf.js:
+     dreimal dieselben Bytes, bei bis zu 500 MB je Datei). `leser.ts`
+     hatte im Kopf ausdrücklich festgehalten: „Läge die Bibliothek
+     dauerhaft im Anzeigeweg, hinge jede angesehene Seite an ihr. So läuft
+     sie einmal je Dokument." Genau das war gebrochen.
+
+     Jetzt kommen die Verweise beim EINLESEN mit und stehen als Feld am
+     Block — wie `suchtext` (E107), ein paar Rechtecke je Seite. Das
+     Ansehen einer Seite öffnet keine PDF mehr. Seiten, die vor E473
+     eingelesen wurden, haben das Feld nicht und zeigen keine Verweise,
+     bis sie neu eingelesen werden (L133).
+
+  4. UND DIE GRIFFE BLIEBEN LIEGEN. Die Suche im Studio hält je Quelle ein
+     offenes pdf.js-Dokument; beim Verlassen des Dokumentmodus wurde
+     keines geschlossen. `DocumentMode.freigeben` tut es jetzt, gerufen in
+     `schale.ts` — dort läuft jede Seitenzeichnung durch, also jeder Weg
+     hinaus.
+
+  5. AM TELEFON LAG DIE SUCHLEISTE UNTER DER ANSICHTSKLAPPE. Wer 🔍 oder
+     Strg F drückte, tippte blind. Die Klappe geht jetzt zu, sobald die
+     Suche aufgeht — an einer Stelle, damit jeder Zugang davon lebt.
+
+DAZU ZWEI KORREKTUREN AN EIGENEN BÖGEN. Das Kennzeichen `abgeleitet` einer
+duplizierten Seite erbt jetzt von der Quelldatei statt von der Herkunft zu
+raten (der Skeptiker hatte den besseren Vorschlag). Und das Lesezeichen
+(E467) geht durch dieselbe Rechteprüfung wie jeder andere Seitengriff: die
+Begründung „es ändert die Seite nicht" war falsch — es schreibt in den
+Block, und der geht in den Abgleich und in jede Sicherung.
+
+WAS DIE RUNDE ÜBER DAS PRÜFEN SAGT. Alle fünf Funde standen im Code, seit
+die Bögen gebaut wurden; die Prüfläufe waren grün, die Bilder sahen
+richtig aus. Gefunden hat sie erst ein Leser, der NICHTS bauen wollte und
+nur eine Frage hatte („wo bricht das?"), und gehalten haben sie erst,
+nachdem ein zweiter Leser sie zu widerlegen versuchte — drei von acht
+fielen dabei. Das ist billiger als jeder der Fehler.
+
+WÄCHTER. `test446` (neu, 22 Punkte): §1 die Farbe (acht echte gehen durch,
+sechs Angriffe werden leer; der gebaute Text und der fertige Knoten tragen
+kein Ereignis-Attribut, und nichts läuft), §2 die sechs Türen einzeln, die
+Farbe weiterhin erlaubt, §3 die Quellen. Gegenproben: `Sanitize.farbe`
+weggelassen (§1 rot), eine Sperrprüfung entfernt (§2 rot).

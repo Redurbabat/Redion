@@ -164,8 +164,10 @@ console.log('\n§2 PDF an einer Stelle');
     await Store.flush();
   }, [seiteId, PDF64] as [string, string]);
   const r = await reihe(seiteId);
+  /* SIEBEN, NICHT SECHS: §1 hat die erste Bildseite verdoppelt (der
+     Prüfpunkt für E471), also stehen vier Bildseiten dahinter. */
   p('Die zwei Seiten stehen hinter Seite 1, vor den Bildern, mit eigener Quelle',
-    r.length === 6 && r[0] === 'pdf:1@q1' && r[1]!.startsWith('pdf:1@') && r[2]!.startsWith('pdf:2@') && r[1] !== 'pdf:1@q1' && r[3] === 'bild:1', JSON.stringify(r));
+    r.length === 7 && r[0] === 'pdf:1@q1' && r[1]!.startsWith('pdf:1@') && r[2]!.startsWith('pdf:2@') && r[1] !== 'pdf:1@q1' && r[3]!.startsWith('bild:'), JSON.stringify(r));
   const merk = await s.evaluate(() => ({ regel: Store.getMeta('pdfAnordnung'), overlays: document.querySelectorAll('.overlay').length }));
   p('Untereinander, ohne Rückfrage — die Merkregel blieb unberührt', (merk.regel === undefined || merk.regel === null) && merk.overlays === 0, JSON.stringify(merk));
   p('Das Original liegt als Anhang oben auf der Seite', await s.evaluate((id: string) => { const c = Store.getBlock(id).content.map((x: string) => Store.getBlock(x)); return c[0]?.type === 'file' && c[0]?.original === true; }, seiteId));

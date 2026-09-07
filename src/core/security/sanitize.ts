@@ -260,8 +260,35 @@ const Sanitize = (() => {
     .replace(/^\.+/, '')
     .slice(0, 120) || 'ohne-namen';
 
+  /**
+   * EINE FARBE, DIE IN EINEN STRING DARF (E473).
+   *
+   * Der Fund, der sie nötig machte: `Register.fachzeichen.alsSvg` BAUT
+   * seinen SVG-Text (`stroke="${farbe}"`) und `marken.ts` setzt ihn mit
+   * `innerHTML` ein. Die Farbe kommt aus `mark.farbe` — also aus einem
+   * Block, und ein Block kommt aus einer `.redion`, die jemand anders
+   * geschrieben haben kann. Ein Wert wie `#000" onload="…` schliesst das
+   * Attribut und hängt ein Ereignis an; bei `innerHTML` feuert es.
+   *
+   * Erlaubt ist deshalb nur, was wie eine Farbe aussieht: ein Hex-Wert,
+   * eine der Funktionen mit Zahlen darin, oder ein blosses Wort (die
+   * benannten Farben, `currentColor`, `transparent`, `none`). Alles andere
+   * gibt '' — der Aufrufer nimmt dann seinen Rückfall.
+   *
+   * Wer eine Farbe per `setAttribute` oder `style` setzt, braucht das
+   * nicht: dort ist sie ein Wert und kein Text.
+   */
+  const farbe = (wert: unknown): string => {
+    const w = String(wert ?? '').trim();
+    if (!w || w.length > 64) return '';
+    if (/^#[0-9a-f]{3,8}$/i.test(w)) return w;
+    if (/^(rgb|rgba|hsl|hsla)\(\s*[-0-9.,%\s/]+\)$/i.test(w)) return w;
+    if (/^[a-z]+$/i.test(w)) return w;
+    return '';
+  };
+
   return { html, textOnly, escapeText, escapeAttribute, url, urlOk,
-           attachmentUrl, frameUrl, fileName,
+           attachmentUrl, frameUrl, fileName, farbe,
            TAGS, DROP_WITH_CONTENT, ATTRIBUTES };
 })();
 

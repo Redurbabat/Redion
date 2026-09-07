@@ -993,6 +993,12 @@ const App = (() => {
       kiAmDokumentAnpassen(true);
       DocumentMode.render(wrap, p);
     } else {
+      /* WER DAS DOKUMENT VERLAESST, LAESST pdf.js LOS (E473, Fund der
+         Prüfung). Die Suche im Studio haelt je Quelle ein offenes
+         pdf.js-Dokument; ohne diese Zeile blieben sie samt Arbeiter
+         liegen, bis der Tab zuging. Jede Seitenzeichnung laeuft hier
+         durch — Regal, „Normale Seite", ein anderer Ort. */
+      DocumentMode.freigeben?.();
       Inhaltsflaeche.zeichne(wrap, p);
     }
 

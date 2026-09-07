@@ -265,7 +265,10 @@ console.log('\n§7 Rechte');
   await s.click('[data-document-action="inspector"]').catch(() => {});
   await s.waitForTimeout(300);
   const r = await s.evaluate(() => [...document.querySelectorAll('.document-seite-knoepfe button')].map(b => (b as HTMLButtonElement).disabled));
-  gleich('Gesperrt: alles aus ausser Lesezeichen und Sichern (E469)', r, [true, true, true, true, true, false, true, true, true, false]);
+  /* SEIT E473 IST AUCH DAS LESEZEICHEN GESPERRT: es schreibt in den Block,
+     also gilt dieselbe Prüfung wie für jeden anderen Seitengriff (§26).
+     „Als Bild sichern" bleibt an — es ändert nichts. */
+  gleich('Gesperrt: alles aus ausser Sichern', r, [true, true, true, true, true, true, true, true, true, false]);
   await s.evaluate(() => { const k = document.querySelector<HTMLButtonElement>('.document-inspector [data-document-action="page-add"]'); if (k) { k.disabled = false; k.click(); } });
   await s.waitForTimeout(500);
   gleich('… und ein erzwungener Tipp ändert nichts', await reihe(s, seiteId), ['pdf1', 'blatt:kariert', 'pdf2', 'pdf3']);

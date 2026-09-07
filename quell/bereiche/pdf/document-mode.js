@@ -519,11 +519,11 @@ const DocumentMode = (() => {
         const sichernKnopf = knoepfe.querySelector('[data-document-action="page-export-image"]');
         if (sichernKnopf)
             sichernKnopf.disabled = false;
-        /* Das Lesezeichen darf jeder setzen, der lesen darf: es aendert die
-           Seite nicht, nur die eigene Ansicht auf sie. */
-        const lesezeichenKnopf = knoepfe.querySelector('[data-document-action="page-bookmark"]');
-        if (lesezeichenKnopf)
-            lesezeichenKnopf.disabled = false;
+        /* DAS LESEZEICHEN BRAUCHT DASSELBE RECHT WIE ALLES ANDERE (E473).
+           E467 hatte es freigegeben mit dem Satz „es aendert die Seite nicht" —
+           das stimmt nicht: es schreibt `lesezeichen` in den Seitenblock, und
+           der geht in den Abgleich und in jede Sicherung. Auf einer fremden
+           Seite mit Leserecht ist das eine Aenderung wie jede andere (§26). */
         const papierZeile = document.createElement('label');
         papierZeile.className = 'document-seite-papier';
         const papierWort = document.createElement('span');
@@ -1005,7 +1005,6 @@ const DocumentMode = (() => {
         let trefferNr = -1;
         let suchLauf = 0;
         const lagen = new Map();
-        const verweisLagen = new Map();
         const griffVon = (quelleId) => {
             let g = griffe.get(quelleId);
             if (!g) {
@@ -1105,11 +1104,12 @@ const DocumentMode = (() => {
                 return;
             if (SheetSpace.gedrehtVon(block))
                 return;
-            let l = verweisLagen.get(block.id);
-            if (!l) {
-                l = griffVon(String(block.quelleId)).then(g => (g ? g.verweise(Number(block.nr) || 1) : [])).catch(() => []);
-                verweisLagen.set(block.id, l);
-            }
+            /* AUS DEM BLOCK, NICHT AUS DER DATEI (E473). Seit dem Einlesen stehen
+               die Verweise am Block (`verweise`, einlesen.ts); das Ansehen einer
+               Seite öffnet damit keine PDF mehr. Seiten, die vor E473 eingelesen
+               wurden, haben das Feld nicht — sie zeigen keine Verweise, bis sie
+               neu eingelesen werden (L133). */
+            const l = Promise.resolve(Array.isArray(block.verweise) ? block.verweise : []);
             void l.then((liste) => {
                 if (!liste.length || !stand.isConnected)
                     return;
@@ -1721,6 +1721,13 @@ const DocumentMode = (() => {
             findButton.setAttribute('aria-expanded', String(an));
             findButton.classList.toggle('an', an);
             if (an) {
+                /* AM TELEFON LAG DIE SUCHLEISTE UNTER DER ANSICHTSKLAPPE (E473,
+                   Fund der Prüfung) — man tippte blind. Die Klappe geht zu, sobald
+                   gesucht wird, und zwar hier, damit auch Strg F davon lebt. */
+                if (workspace.dataset.documentView === 'open') {
+                    workspace.dataset.documentView = 'closed';
+                    viewButton.setAttribute('aria-expanded', 'false');
+                }
                 findFeld.focus();
                 if (findFeld.value.trim())
                     void suchen(findFeld.value);
@@ -1809,7 +1816,12 @@ const DocumentMode = (() => {
                            BILD-Seite (E469) hat keine Quelle: ihr Bild IST die
                            Nutzerdatei, und mit `abgeleitet: true` waere die Kopie nach
                            dem Einspielen einer `.redion` leer gewesen (§11, §14). */
-                        const kopie = await Dateien.ablegen(new File([blob], String(satz?.name || 'seite.webp'), { type: blob.type || 'image/webp' }), { blockId: neu.id, abgeleitet: block.herkunft !== 'bild' });
+                        const kopie = await Dateien.ablegen(new File([blob], String(satz?.name || 'seite.webp'), { type: blob.type || 'image/webp' }), 
+                        /* DAS MERKMAL ERBT VON DER QUELLDATEI (E473): eine gerasterte
+                           PDF-Seite bleibt abgeleitet, eine Bild-Seite bleibt
+                           Nutzerdatei. `herkunft` ist nur der Rückfall, wenn der
+                           Dateisatz fehlt. */
+                        { blockId: neu.id, abgeleitet: satz ? !!satz.abgeleitet : block.herkunft !== 'bild' });
                         Store.updateBlock(neu.id, { bildDateiId: kopie.id });
                     }
                     catch (e) {
@@ -2127,17 +2139,15 @@ const DocumentMode = (() => {
                 findButton.focus();
                 return;
             }
-            /* Seiten wie GoodNotes (E467). Das Lesezeichen braucht keine
-               Bearbeitungsrechte, alles andere schon. */
-            if (action === 'page-bookmark') {
-                lesezeichenWechseln();
-                return;
-            }
+            /* Seiten wie GoodNotes (E467). Das Lesezeichen geht seit E473 durch
+               dieselbe Prüfung wie alles andere — es schreibt in den Block. */
             if (action?.startsWith('page-')) {
                 if (!darfSeiten()) {
                     UI.toast('Zum Ändern der Seiten brauchst du Bearbeitungsrechte und ein entsperrtes Dokument.');
                     return;
                 }
+                if (action === 'page-bookmark')
+                    lesezeichenWechseln();
                 if (action === 'page-add')
                     seiteEinfuegen();
                 if (action === 'page-add-image' || action === 'page-add-pdf') {
@@ -2564,7 +2574,11 @@ const DocumentMode = (() => {
         center.addEventListener('pointercancel', fingerWeg, true);
         return true;
     };
-    return { available, active, select, toggle, documentsIn, render, sourceLabel, seiteAlsBild };
+    /* `freigeben` lässt die offenen PDF-Quellen der Suche los (E473): jede
+       Seitenzeichnung läuft durch `schale.ts`, und wer das Dokument verlässt,
+       soll pdf.js nicht im Rücken behalten. */
+    return { available, active, select, toggle, documentsIn, render, sourceLabel, seiteAlsBild,
+        freigeben: griffeSchliessen };
 })();
 window.DocumentMode = DocumentMode;
 /* ============================================================================

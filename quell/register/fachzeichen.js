@@ -1069,7 +1069,12 @@ Register.fachzeichen = (() => {
         const z = holen(id);
         if (!z)
             return '';
-        const farbe = opt.farbe || 'currentColor';
+        /* DIE FARBE WIRD HIER GETEXTET, nicht gesetzt — also muss sie geprüft
+           werden (E473, §19). Sie kommt bei Fachzeichen-Marken aus dem Block
+           und damit möglicherweise aus einer fremden `.redion`; ein Wert wie
+           `#000" onload="…` schlösse das Attribut und hinge ein Ereignis an,
+           das beim `innerHTML` des Aufrufers feuert. */
+        const farbe = (typeof Sanitize !== 'undefined' ? Sanitize.farbe(opt.farbe) : String(opt.farbe || '')) || 'currentColor';
         const strich = opt.strich || 2;
         const text = opt.zeigeText !== false;
         const dreh = Number(opt.drehung) || 0;
@@ -1078,12 +1083,19 @@ Register.fachzeichen = (() => {
             dreh ? `rotate(${dreh} ${mitte})` : '',
             opt.gespiegelt ? `translate(${z.w} 0) scale(-1 1)` : ''
         ].filter(Boolean).join(' ');
+        /* JEDER EINGESETZTE WERT WIRD GETEXTET, ALSO GEESCAPT (E473, §19).
+           Der Aufrufer setzt das Ergebnis mit `innerHTML` ein; ein Wert mit
+           einem Anführungszeichen schlösse das Attribut. Die Zeichen kommen
+           zwar aus dem eigenen Register, aber die Farbe kommt aus einer Marke
+           — und die aus einer fremden `.redion`. */
+        const att = (w) => typeof Sanitize !== 'undefined'
+            ? Sanitize.escapeAttribute(w) : String(w ?? '').replace(/[<>"'&]/g, '');
         const teile = [];
-        z.pfad.forEach(p => teile.push(`<path d="${p}"/>`));
+        z.pfad.forEach(p => teile.push(`<path d="${att(p)}"/>`));
         (z.kreise || []).forEach(k => teile.push(`<circle cx="${k.cx}" cy="${k.cy}" r="${k.r}"${k.voll ? ' fill="' + farbe + '"' : ''}/>`));
         if (text)
-            (z.beschriftung || []).forEach(b => teile.push(`<text x="${b.x}" y="${b.y}" text-anchor="middle" fill="${farbe}" stroke="none" ` +
-                `font-size="${b.gross ? 18 : 11}" font-family="inherit">${b.t}</text>`));
+            (z.beschriftung || []).forEach(b => teile.push(`<text x="${att(b.x)}" y="${att(b.y)}" text-anchor="middle" fill="${farbe}" stroke="none" ` +
+                `font-size="${b.gross ? 18 : 11}" font-family="inherit">${att(b.t)}</text>`));
         if (opt.zeigeAnschluesse)
             z.anschluesse.forEach(a => teile.push(`<circle cx="${a.x}" cy="${a.y}" r="3" fill="${farbe}" stroke="none" opacity=".55"/>`));
         return `<svg viewBox="0 0 ${z.w} ${z.h}" width="${z.w}" height="${z.h}" ` +

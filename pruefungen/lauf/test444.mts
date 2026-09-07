@@ -153,8 +153,10 @@ const oeffne = (nurLesen: boolean) => s.evaluate(async (nurLesen: boolean) => {
   p('… und es sagte ja, solange es das Objekt bekam — das war der Fehler', z.darfObjekt === true, JSON.stringify(z));
   gleich('Annotieren, Einlesen und die Seitengriffe sind aus',
     [z.annotieren, z.einlesen, z.seiteDanach, z.loeschen], [true, true, true, true]);
-  gleich('Lesezeichen und Sichern bleiben an — sie ändern die Seite nicht',
-    [z.lesezeichen, z.sichern], [false, false]);
+  /* Das Lesezeichen SCHREIBT in den Block (E473) — mit Leserecht geht es
+     nicht. „Als Bild sichern" ändert nichts und bleibt an. */
+  gleich('Das Lesezeichen ist aus, Sichern bleibt an',
+    [z.lesezeichen, z.sichern], [true, false]);
   gleich('Die Zeichenwerkzeuge sind eingeklappt', z.werkzeuge, 'closed');
   await s.evaluate(() => { document.querySelector<HTMLElement>('.document-inspector [data-document-action="lupe"]')?.click(); });
   await s.waitForTimeout(400);

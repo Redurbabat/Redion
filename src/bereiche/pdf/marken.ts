@@ -908,16 +908,17 @@ const Marken = (() => {
     const nachVorn = (): void => {
       if (!selection.size) return;
       const before = snapshot();
-      const drin = marks.filter(mark => selection.has(idOf(mark)));
-      const rest = marks.filter(mark => !selection.has(idOf(mark)));
+      /* Gesperrtes behaelt seinen Platz im Stapel (E473). */
+      const drin = marks.filter(mark => selection.has(idOf(mark)) && !mark.gesperrt);
+      const rest = marks.filter(mark => !selection.has(idOf(mark)) || mark.gesperrt);
       marks.splice(0, marks.length, ...rest, ...drin);
       redraw(); commit(before);
     };
     const nachHinten = (): void => {
       if (!selection.size) return;
       const before = snapshot();
-      const drin = marks.filter(mark => selection.has(idOf(mark)));
-      const rest = marks.filter(mark => !selection.has(idOf(mark)));
+      const drin = marks.filter(mark => selection.has(idOf(mark)) && !mark.gesperrt);
+      const rest = marks.filter(mark => !selection.has(idOf(mark)) || mark.gesperrt);
       marks.splice(0, marks.length, ...drin, ...rest);
       redraw(); commit(before);
     };
@@ -941,7 +942,7 @@ const Marken = (() => {
       const wert = antwort.trim();
       const setze = (patch: Record<string, unknown>, weg: string[]): void => {
         for (let i = 0; i < marks.length; i++) {
-          if (!selection.has(idOf(marks[i]))) continue;
+          if (!selection.has(idOf(marks[i])) || marks[i].gesperrt) continue;
           const neu: any = { ...marks[i], ...patch };
           for (const f of weg) delete neu[f];
           marks[i] = neu;
@@ -1523,6 +1524,7 @@ const Marken = (() => {
     const zettelText = async (targetId: string, frisch = false): Promise<void> => {
       const zettel = marks.find(mark => idOf(mark) === targetId && mark.art === 'zettel');
       if (!zettel) return;
+      if (zettel.gesperrt) { UI.toast('Diese Haftnotiz ist gesperrt — erst entsperren.'); return; }
       const antwort = await Dialog.mehrzeilig('Haftnotiz', String(zettel.text || ''));
       const before = snapshot();
       if (antwort === null || !antwort.trim()) {
@@ -1544,6 +1546,9 @@ const Marken = (() => {
        leer gemacht heisst weg. Alte einzeilige Marken bleiben einzeilig. */
     const editText = async (point: number[], targetId = ''): Promise<void> => {
       const current = targetId ? marks.find(mark => idOf(mark) === targetId && mark.art === 'text') : null;
+      /* Eine gesperrte Marke bleibt, wie sie ist — auch ihr Text (E473).
+         Ohne diese Zeile hiess „leer machen" auch bei ihr „weg". */
+      if (current?.gesperrt) { UI.toast('Diese Marke ist gesperrt — erst entsperren.'); return; }
       const answer = await Dialog.mehrzeilig(current ? 'Text bearbeiten' : 'Text',
         current ? String(current.text || '') : '');
       if (answer === null || (!current && !answer.trim())) return;
@@ -1579,6 +1584,7 @@ const Marken = (() => {
          setzen, nur um einen Schalter aufrecht zu stellen. */
       const vorhanden = targetId
         ? marks.find(mark => idOf(mark) === targetId && mark.art === 'zeichen') : null;
+      if (vorhanden?.gesperrt) { UI.toast('Dieses Zeichen ist gesperrt — erst entsperren.'); return; }
       if (vorhanden) {
         const before = snapshot();
         /* Ersetzen statt aendern (E378) — der Merkzettel oben teilt sich die
@@ -2018,7 +2024,10 @@ const Marken = (() => {
       const before = snapshot();
       for (let i = 0; i < marks.length; i++) {
         const alt = marks[i];
-        if (!selection.has(idOf(alt)) || alt.breite === undefined) continue;
+        /* GESPERRT HEISST AUCH: NICHT DICKER (E473). Die Sperre schuetzt
+           Form, Ort, Groesse, Drehung, Reihenfolge, Text und Bestand; die
+           FARBE bleibt erlaubt, das steht so in E466. */
+        if (!selection.has(idOf(alt)) || alt.breite === undefined || alt.gesperrt) continue;
         const neu = { ...alt, breite: next };
         marks[i] = neu;
         updateNode(nodeFor(idOf(neu)), neu);
@@ -2052,7 +2061,7 @@ const Marken = (() => {
       let geaendert = false;
       for (let i = 0; i < marks.length; i++) {
         const alt = marks[i];
-        if (!selection.has(idOf(alt)) || alt.art !== 'text') continue;
+        if (!selection.has(idOf(alt)) || alt.art !== 'text' || alt.gesperrt) continue;
         const neu: any = { ...alt };
         if (schritt) neu.fontSize = naechsteStufe(Math.max(8, Number(alt.fontSize) || 18), schritt);
         else if (aenderung.groesse !== undefined) neu.fontSize = schrift.groesse;

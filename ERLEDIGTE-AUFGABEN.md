@@ -3932,9 +3932,35 @@ Fehler aus L102, den §26 seitdem beim Namen nennt — und er kam wieder,
 weil es keinen Wächter gab. Jetzt gibt es einen (`test444 §1`), und zwar
 über die ganze Quelle: jede Rechtefrage muss erkennbar eine Kennung
 übergeben. Er fand sofort drei weitere Stellen, die richtig waren, aber
-`current` und `unter` hiessen. Dazu ein zweiter Fund derselben Runde: eine
-verdoppelte BILD-Seite legte ihr Bild als „abgeleitet" ab — nach dem
-Einspielen einer Sicherung wäre die Kopie leer gewesen.
+`current` und `unter` hiessen.
+
+**Und vier weitere, die gehalten haben (E473).** Von 33 Funden wurden acht
+adversarial geprüft, fünf haben gehalten:
+
+* **Eine Farbe kann Code sein.** `alsSvg` baut seinen SVG-Text
+  (`stroke="${farbe}"`), `marken.ts` setzt ihn mit `innerHTML` ein — und
+  die Farbe kommt aus einer Marke, also möglicherweise aus einer fremden
+  `.redion`. `#000" onload="…` schloss das Attribut. Neu ist
+  `Sanitize.farbe`, und `alsSvg` escapt jeden eingesetzten Wert.
+* **Die Sperre hatte sechs Türen.** Strichstärke, Schriftgrösse,
+  Reihenfolge, Verweis, Text bearbeiten und das Drehen eines Fachzeichens
+  gingen an ihr vorbei. Alle sechs sind zu; die Farbe darf weiter (E466).
+* **pdf.js stand wieder im Anzeigeweg.** Die Verweise einer Seite wurden
+  beim ANSEHEN geholt und zogen die ganze Original-PDF in den RAM — gegen
+  die Zusage in `leser.ts` und gegen §36. Jetzt kommen sie beim Einlesen
+  mit und stehen am Block, wie `suchtext`.
+* **Die offenen PDF-Griffe blieben liegen**, wenn man das Dokument
+  verliess; und am Telefon lag die Suchleiste unter der Ansichtsklappe.
+
+Dazu ein Fund derselben Runde: eine verdoppelte BILD-Seite legte ihr Bild
+als „abgeleitet" ab — nach dem Einspielen einer Sicherung wäre die Kopie
+leer gewesen.
+
+**Was die Runde über das Prüfen sagt.** Alle Funde standen im Code, seit
+die Bögen gebaut wurden; die Prüfläufe waren grün, die Bilder sahen
+richtig aus. Gefunden hat sie erst ein Leser, der nichts bauen wollte und
+nur eine Frage hatte, und gehalten haben sie erst, nachdem ein zweiter
+Leser sie zu widerlegen versuchte — drei von acht fielen dabei.
 
 **Was offen bleibt,** steht ehrlich in `LUECKEN.md` L133: Audio mit
 Zeitbezug, Handschrift zu Text, Elemente-Bibliothek, Präsentation — und

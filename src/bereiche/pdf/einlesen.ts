@@ -260,6 +260,13 @@ const PdfEinlesen = (() => {
            klein, und ohne ihn wäre ein eingespieltes Skript stumm, bis
            jemand alle Seiten neu rechnet. */
         const seitenText = await griff.text(n);
+        /* DIE VERWEISE DER SEITE KOMMEN GLEICH MIT (E473, Fund der Prüfung).
+           E468 holte sie beim ANSEHEN und zog dafür die ganze Original-PDF
+           in den Arbeitsspeicher — pdf.js stand damit wieder im Anzeigeweg,
+           gegen `leser.ts` („So läuft sie einmal je Dokument") und gegen §36.
+           Hier ist der Griff ohnehin offen; ein paar Rechtecke je Seite sind
+           klein und wandern wie `suchtext` (E107) in die Sicherung. */
+        const seitenVerweise = await griff.verweise(n);
 
         const b = Store.addBlock(wohin, 'pdfseite', {
           text: '', suchtext: seitenText, nr: n, vonSeiten: gesamt,
@@ -269,7 +276,8 @@ const PdfEinlesen = (() => {
              `quelleId` sagt schon, WELCHES — `herkunft` sagt, dass es
              überhaupt eines ist, und das ist die Frage, die man beim
              Wiederlesen stellt. */
-          herkunft: 'quelle'
+          herkunft: 'quelle',
+          ...(seitenVerweise.length ? { verweise: seitenVerweise } : {})
         }, stelle >= 0 ? stelle++ : -1);
         nachher();
         const satz = await Dateien.ablegen(
