@@ -7231,10 +7231,41 @@ html[data-theme="dark"] .ru-textur-grob{opacity:.12}
   .bib-blick:hover .bib-blick-auge{ animation:none }
 }
 
-/* ---- Die freie Strichstärke (E465): ein Regler neben den drei Stufen ---- */
-.blatt-werk .blatt-staerke{
-  display:inline-flex; align-items:center; gap:6px; min-height:var(--touch-min);
-  padding:0 6px; color:var(--text-dim); font-size:11px
+/* ---- Die freie Strichstärke (E465): ein Regler unter den drei Stufen ----
+   ALS KLAPPE, NICHT IN DER ZEILE (E465 Nachtrag, test351): In der Zeile
+   brach der Regler bei 596 px Leiste in eine dritte Reihe (132 px statt
+   zwei Zeilen unter 100). GoodNotes zeigt ihn ohnehin erst, wenn man die
+   gewählte Stufe ein zweites Mal antippt — `.auf` setzt der Zeichner dann,
+   und `--staerke-x` ist die Lage dieser Stufe. Am Rechner hängt die Klappe
+   unter der Leiste; wo die Zeile rollt (Telefon, Spalte, Schreibstudio mit
+   `overflow-x:auto`, das alles darunter abschneidet) steht sie in der
+   Zeile selbst. Ein Element, zwei Lagen — nicht zwei Regler. */
+.blatt-werk{position:relative}
+/* Die Gruppenregel oben (`[data-tool="stift"] > [data-gruppe="breite"]`,
+   drei Klassenstufen) würde die Klappe sonst mit anzeigen — darum hier
+   `[data-tool]` und `:not(.auf)` dazu, vier Stufen, und zu bleibt zu. */
+.blatt-werk > label.blatt-staerke,
+.blatt-werk[data-tool] > label.blatt-staerke:not(.auf){
+  display:none; align-items:center; gap:6px; min-height:var(--touch-min);
+  padding:0 10px; color:var(--text-dim); font-size:11px
 }
-.blatt-werk .blatt-staerke input{ width:86px; margin:0; accent-color:var(--accent); cursor:pointer }
-.blatt-werk .blatt-staerke output{ min-width:2.2em; text-align:right; font-variant-numeric:tabular-nums }
+.blatt-werk > label.blatt-staerke.auf{
+  display:inline-flex; position:absolute; z-index:6;
+  left:min(var(--staerke-x, 8px), calc(100% - 13rem)); top:calc(100% - 6px);
+  background:var(--bg-card); border:1px solid var(--line); border-radius:10px;
+  box-shadow:0 8px 24px rgba(0,0,0,.18)
+}
+/* Wo die Zeile rollt, kleben „Zurück" und „Vor" rechts (E396). Beim Nachrollen
+   zur Klappe muss sie LINKS davon zu stehen kommen, nicht darunter — das
+   Bild vom Telefon zeigte die zwei Pfeile durch den Regler hindurch. */
+.blatt-werk > label.blatt-staerke{ scroll-margin-inline-end:calc(var(--touch-min) * 2 + 12px) }
+.blatt-werk > label.blatt-staerke input{ width:7rem; margin:0; accent-color:var(--accent); cursor:pointer }
+.blatt-werk > label.blatt-staerke output{ min-width:2.2em; text-align:right; font-variant-numeric:tabular-nums }
+.spalte .blatt-werk > label.blatt-staerke.auf,
+body[data-dokument="an"] .blatt-werk > label.blatt-staerke.auf{
+  position:static; box-shadow:none; border:0; background:none; padding:0 6px; color:inherit
+}
+@media (max-width:760px){
+  .blatt-werk > label.blatt-staerke.auf{ position:static; box-shadow:none; border:0; background:none; padding:0 6px }
+  .blatt-werk > label.blatt-staerke input{ width:6rem }
+}

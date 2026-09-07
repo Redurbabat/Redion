@@ -127,7 +127,8 @@ body[data-dokument="an"] .document-studio .blatt-werk .on:not(.blatt-farbe){back
 .document-studio:not([data-ink-options="open"]) .blatt-werk>:is([data-wz],.blatt-trenn,[data-gruppe="verlauf"],[data-gruppe="auswahl"],[data-gruppe="lineal"],[data-gruppe="formen"],[data-gruppe="schrift"],[data-gruppe="form"]){display:none!important}
 .document-studio:not([data-ink-options="open"]) .blatt-werk[data-tool="schreiben"]{display:none}
 .document-studio[data-ink-options="open"] .blatt-werk{max-height:240px;flex-wrap:wrap!important;overflow:auto;width:min(850px,calc(100vw - 32px))}
-.document-studio[data-ink-options="open"] .blatt-werk>[data-gruppe]{display:inline-flex!important}
+/* Die Klappe der freien Staerke (E465 Nachtrag) bleibt auch hier zu, bis die gewaehlte Stufe ein zweites Mal getippt wird — `.auf` zeigt sie dann in der Zeile. */
+.document-studio[data-ink-options="open"] .blatt-werk>[data-gruppe]:not(.blatt-staerke){display:inline-flex!important}
 body[data-dokument="an"] .document-studio .blatt-marken[data-stift="an"]{touch-action:none}
 body[data-dokument="an"] .document-studio .blatt-marken[data-tool="schreiben"]{touch-action:pan-x pan-y pinch-zoom}
 @media(max-width:760px){

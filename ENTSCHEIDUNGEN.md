@@ -36678,6 +36678,42 @@ DATEIEN. `src/bereiche/pdf/marken.ts`, `src/register/tasten.ts`,
 `quell/schale/stil/bausteine.css`, `bilder.mts`,
 `pruefungen/lauf/test438.mts` (neu), `test365.mts` (sechs Formen).
 
+NACHTRAG (7. September 2026) — DER REGLER IST EINE KLAPPE, KEINE ZEILE.
+Der breite Lauf nach dem Landen fand `test351` rot: „Die Leiste ist unter
+100 px hoch — 132 px bei 596 px Breite". Hinter der dritten Stufe blieben
+in dieser Breite 60 px frei, der Regler brauchte 128 und brach in eine
+dritte Zeile. Ein schmalerer Regler (Grundlage 4rem, Wachstum bis 12rem)
+half nicht — 64 sind mehr als 60 —, und ein Regler von 40 px ist keiner.
+
+Entschieden wie GoodNotes selbst: die drei Stufen stehen in der Zeile, und
+wer die GEWÄHLTE Stufe ein zweites Mal antippt, bekommt die Klappe mit dem
+Regler (`.blatt-staerke.auf`). Am Rechner hängt sie unter der Leiste,
+unter der Stufe (`--staerke-x`, rechts auf `100% - 13rem` begrenzt); wo
+die Zeile rollt — Telefon, Spalte, Schreibstudio, alle mit
+`overflow-x:auto`, das eine hängende Klappe abschnitte — steht sie in der
+Zeile selbst (`position:static`). Zu geht sie mit Escape (verbraucht, damit
+nicht zugleich das nächste Fenster zugeht, E302), mit dem Fokus, der die
+Klappe verlässt (ein Tipp ins Blatt), und mit jedem anderen Werkzeug. Beim
+Öffnen rollt die Zeile nach (`scrollIntoView`, `scroll-margin-inline-end`
+zwei Knopfbreiten, damit sie nicht unter den klebenden „Zurück"/„Vor"
+landet — das erste Telefonbild zeigte die Pfeile durch den Regler).
+
+Die Alternative — die Klappe in der Zeile lassen und `test351` auf drei
+Zeilen lockern — hätte E359 zurückgenommen: die Leiste war fünf Zeilen
+hoch und ist mit Absicht zwei. Kosten: ein zweiter Tipp bis zum Regler,
+genau der Weg, den GoodNotes' Nutzer kennen; die Stufen sagen es im
+`title`.
+
+Die Gruppenregel `[data-tool="stift"] > [data-gruppe="breite"]` (drei
+Klassenstufen) hätte die Klappe mitgezeigt — die Zu-Regel hat deshalb vier
+(`.blatt-werk[data-tool] > label.blatt-staerke:not(.auf)`), und im Studio
+nimmt `pdf-studio.css` die Klappe aus seiner `!important`-Anzeige aller
+Gruppen heraus. `test351` zählt weiter drei in der Gruppe „Breite";
+`test438 §3` prüft zu → zweiter Tipp → offen, unter der Leiste, Leiste
+unter 100 px; Escape; anderes Werkzeug; §5 am Telefon in der Zeile,
+44 hoch. Bilder: `staerke-rechner-hell` (Klappe unter der mittleren Stufe),
+`staerke-handy-dunkel` (in der Zeile, links der Pfeile).
+
 GEPRÜFT. test438 (40 Punkte, neu), test343, test344, test345, test365,
 test201, test351, test174, test393, test386, test210, test437, test362,
 test290, test105, test109, test87, test247, test248, test272, test414;

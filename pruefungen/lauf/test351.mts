@@ -152,6 +152,9 @@ p('Der Zeilenbruch ist da und wirkt (volle Breite, keine Höhe)', z.bruch.da && 
 
 /* ======================================================================== */
 console.log('\n2 · Nur das Zubehör des Werkzeugs — auch am Rechner');
+/* DREI IN DER GRUPPE „BREITE" — auch seit E465: der Regler der freien
+   Stärke ist eine Klappe (`display:none`, bis die gewählte Stufe ein
+   zweites Mal getippt wird) und zählt zu, wie der Trenner ohne Rechteck. */
 gleich('Stift: Stil, Formen, Farben, Breiten, Verlauf — kein Radiermodus, keine Auswahlknöpfe, kein Lineal',
   [z.gruppen.stil > 0, z.gruppen.formen > 0, z.gruppen.farbe >= 6, z.gruppen.breite === 3, z.gruppen.verlauf === 2, z.gruppen.radierer, z.gruppen.auswahl, z.gruppen.lineal],
   [true, true, true, true, true, 0, 0, 0]);

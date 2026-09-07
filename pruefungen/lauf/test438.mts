@@ -10,7 +10,7 @@
  *   §2 DER BLEISTIFT: vierter Stift, schwillt weniger als der Füller,
  *      zeichnet eine durchscheinende Fläche mit rauer Kante — und der
  *      Wechsel Füller → Kugel → Pinsel bleibt, wie test343 ihn kennt.
- *   §3 DIE FREIE STÄRKE: ein Regler neben den drei Stufen; sein Wert ist
+ *   §3 DIE FREIE STÄRKE: ein Regler in einer Klappe unter den drei Stufen; sein Wert ist
  *      die Stärke des nächsten Strichs, und eine Stufe stellt ihn nach.
  *   §4 DIE TASTEN: P, 2, H, E, S, V, T, A, N, M, R wechseln das Werkzeug —
  *      nur, solange niemand tippt; die Übersicht (`register/tasten`) nennt
@@ -192,14 +192,24 @@ console.log('\n§3 Die freie Stärke');
 {
   const s = await mitBlatt();
   await s.click('.blatt-werk [data-wz="stift"]');
-  const regler = JSON.parse(await s.evaluate(`(() => {
+  const REGLER = `(() => {
     const l = document.querySelector('.blatt-werk .blatt-staerke');
     const i = l && l.querySelector('input');
     const r = l && l.getBoundingClientRect();
-    return JSON.stringify(i ? { da: true, gruppe: l.dataset.gruppe, min: i.min, max: i.max, wert: i.value, sichtbar: r.width > 0 && r.height > 0, name: i.getAttribute('aria-label') } : { da: false });
-  })()`) as string);
-  p('Neben den drei Stufen steht ein Regler von 0,5 bis 12, mit Vorlesenamen',
-    regler.da && regler.gruppe === 'breite' && regler.min === '0.5' && regler.max === '12' && regler.sichtbar && !!regler.name, JSON.stringify(regler));
+    const w = document.querySelector('.blatt-werk').getBoundingClientRect();
+    return JSON.stringify(i ? { da: true, gruppe: l.dataset.gruppe, min: i.min, max: i.max, wert: i.value, sichtbar: r.width > 0 && r.height > 0,
+      name: i.getAttribute('aria-label'), lage: getComputedStyle(l).position, unterhalb: r.top >= w.bottom - 8, leiste: Math.round(w.height) } : { da: false });
+  })()`;
+  /* DIE KLAPPE (E465 Nachtrag): zu, bis die gewaehlte Stufe ein zweites
+     Mal getippt wird — wie in GoodNotes. In der Zeile hatte der Regler die
+     Leiste bei 596 px auf drei Reihen gehoben (test351). */
+  let regler = JSON.parse(await s.evaluate(REGLER) as string);
+  p('Der Regler ist da, aber zu — die Leiste bleibt zwei Zeilen',
+    regler.da && regler.gruppe === 'breite' && !regler.sichtbar && regler.leiste < 100, JSON.stringify(regler));
+  await s.click('.blatt-werk .blatt-strich.on');
+  regler = JSON.parse(await s.evaluate(REGLER) as string);
+  p('Die gewählte Stufe nochmal getippt: der Regler von 0,5 bis 12 hängt unter der Leiste, mit Vorlesenamen',
+    regler.da && regler.min === '0.5' && regler.max === '12' && regler.sichtbar && !!regler.name && regler.lage === 'absolute' && regler.unterhalb && regler.leiste < 100, JSON.stringify(regler));
   await s.evaluate(`(() => { const i = document.querySelector('.blatt-werk .blatt-staerke input'); i.value = '7.5'; i.dispatchEvent(new Event('input', { bubbles: true })); })()`);
   gleich('Der Regler setzt die Stärke sofort', await s.evaluate(`Zeichenziel.jetztDicke()`), 7.5);
   gleich('… keine Stufe ist mehr markiert', await s.evaluate(`document.querySelectorAll('.blatt-werk .blatt-strich.on').length`), 0);
@@ -209,6 +219,11 @@ console.log('\n§3 Die freie Stärke');
   gleich('Der nächste Strich hat genau diese Stärke', marken[0]?.breite, 7.5);
   await s.click('.blatt-werk .blatt-strich[data-b="5"]');
   gleich('Eine Stufe stellt den Regler nach', await s.evaluate(`document.querySelector('.blatt-werk .blatt-staerke input').value`), '5');
+  await s.evaluate(`document.querySelector('.blatt-werk .blatt-staerke input').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))`);
+  gleich('Escape schliesst die Klappe', await s.evaluate(`getComputedStyle(document.querySelector('.blatt-werk .blatt-staerke')).display`), 'none');
+  await s.click('.blatt-werk .blatt-strich.on');
+  await s.click('.blatt-werk [data-wz="marker"]');
+  gleich('Ein anderes Werkzeug schliesst sie auch', await s.evaluate(`document.querySelectorAll('.blatt-werk .blatt-staerke.auf').length`), 0);
   await s.close();
 }
 
@@ -258,12 +273,16 @@ console.log('\n§5 Am Telefon');
   const s = await mitBlatt(true);
   await s.evaluate(`document.querySelector('.blatt-werk [data-wz="stift"]').click()`);
   await s.waitForTimeout(300);
+  await s.evaluate(`document.querySelector('.blatt-werk .blatt-strich.on').click()`);
+  await s.waitForTimeout(200);
   const mass = JSON.parse(await s.evaluate(`(() => {
     const l = document.querySelector('.blatt-werk .blatt-staerke');
     const r = l.getBoundingClientRect();
-    return JSON.stringify({ hoch: Math.round(r.height), da: r.width > 0, gruppeSichtbar: getComputedStyle(l).display !== 'none' });
+    return JSON.stringify({ hoch: Math.round(r.height), da: r.width > 0, gruppeSichtbar: getComputedStyle(l).display !== 'none', lage: getComputedStyle(l).position });
   })()`) as string);
-  p('Der Regler steht beim Stift auch am Telefon, 44 hoch (§37)', mass.da && mass.gruppeSichtbar && mass.hoch >= 44, JSON.stringify(mass));
+  /* AM TELEFON IN DER ZEILE, NICHT DARUNTER: die Zeile rollt (`overflow-x:auto`)
+     und schnitte eine haengende Klappe ab. */
+  p('Der Regler steht beim Stift auch am Telefon in der Zeile, 44 hoch (§37)', mass.da && mass.gruppeSichtbar && mass.hoch >= 44 && mass.lage === 'static', JSON.stringify(mass));
   await s.close();
 }
 

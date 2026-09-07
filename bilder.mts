@@ -2239,6 +2239,16 @@ ANSICHTEN['zeichnen'] = {
   }
 };
 
+/* Derselbe Aufbau wie `zeichnen`, ein anderer Zustand: die Klappe offen. */
+ANSICHTEN['staerke'] = {
+  titel: 'Die Klappe mit dem Regler der freien Stärke (E465 Nachtrag)',
+  bauen: ANSICHTEN['zeichnen']!.bauen,
+  dann: async () => {
+    document.querySelector<HTMLElement>('.blatt-werk .blatt-strich.on')?.click();
+    await new Promise(r => setTimeout(r, 300));
+  }
+};
+
 ANSICHTEN['willkommen'] = {
   titel: 'Willkommen: Rauschtextur im Kopf (E462)',
   bauen: async () => {

@@ -2001,11 +2001,15 @@ const Marken = (() => {
          „dünn" (1,2 px) und „mittel" (2,4 px) gleich aus, weil der Boden
          von 2 px den ersten hochzog. Das Verhältnis 1 : 2 : 4 bleibt. */
       BREITEN.map((value, index) => `<button class="blatt-strich${index === 1 ? ' on' : ''}" data-gruppe="breite" ` +
-        `data-b="${value}" title="Strichbreite ${String(value).replace('.', ',')}">` +
+        `data-b="${value}" title="Strichbreite ${String(value).replace('.', ',')} — die gewählte nochmal antippen: Stärke frei wählen">` +
         `<i style="height:${Math.max(2, value * 2)}px"></i></button>`).join('') +
       /* DIE FREIE STAERKE (E465), wie GoodNotes' Schieber: drei Stufen zum
          Antippen bleiben, der Regler dazwischen nimmt jeden Wert von 0,5
-         bis 12. Sein Wert IST die Staerke — kein Zwischenzustand. */
+         bis 12. Sein Wert IST die Staerke — kein Zwischenzustand.
+         ALS KLAPPE, NICHT IN DER ZEILE (E465 Nachtrag): GoodNotes zeigt den
+         Regler erst, wenn man die gewaehlte Stufe ein zweites Mal antippt.
+         So auch hier — in der Zeile brach er bei 596 px in eine dritte
+         Reihe (test351, 132 px Leiste). Die Klasse `auf` oeffnet ihn. */
       '<label class="blatt-staerke" data-gruppe="breite" title="Strichstärke frei wählen">' +
       '<input type="range" min="0.5" max="12" step="0.1" value="' + BREITEN[1] + '" aria-label="Strichstärke">' +
       '<output aria-hidden="true">' + String(BREITEN[1]).replace('.', ',') + '</output></label>';
@@ -2084,6 +2088,27 @@ const Marken = (() => {
       });
       if (dicke) staerkeZeigen(dicke);
     };
+    /** Ist die Klappe mit dem Regler offen? */
+    const staerkeOffen = (): boolean => !!tools.querySelector('.blatt-staerke.auf');
+    /** Klappe auf oder zu. Offen steht sie unter der gewaehlten Stufe (`--staerke-x`);
+        am Telefon, in der Spalte und im Schreibstudio steht sie in der rollenden Zeile. */
+    const staerkeAuf = (auf: boolean): void => {
+      const label = tools.querySelector<HTMLElement>('.blatt-staerke');
+      if (!label) return;
+      if (auf) {
+        const stufe = tools.querySelector<HTMLElement>('.blatt-strich.on') || tools.querySelector<HTMLElement>('.blatt-strich');
+        if (stufe) label.style.setProperty('--staerke-x', `${stufe.offsetLeft}px`);
+        label.classList.add('auf');
+        const feld = label.querySelector<HTMLInputElement>('input');
+        try { feld?.focus({ preventScroll: true }); } catch { /* egal */ }
+        /* In der rollenden Zeile (Telefon, Spalte, Studio) steht die Klappe
+           rechts der Stufen — und die koennen am Rand stehen. Nachrollen,
+           sonst geht etwas auf, das niemand sieht. */
+        try { label.scrollIntoView({ block: 'nearest', inline: 'nearest' }); } catch { /* egal */ }
+      } else {
+        label.classList.remove('auf');
+      }
+    };
     /** Der Regler zeigt die Staerke, die gilt — auch nach einem Tipp auf eine Stufe. */
     const staerkeZeigen = (wert: number): void => {
       const feld = tools.querySelector<HTMLInputElement>('.blatt-staerke input');
@@ -2104,6 +2129,21 @@ const Marken = (() => {
         node.classList.toggle('on', Number(node.dataset.b) === wert));
       staerkeZeigen(wert);
     });
+    /* Die Klappe geht zu, wenn der Blick woandershin geht: Escape, ein
+       Tipp ins Blatt (der Regler verliert den Fokus) oder ein anderes
+       Werkzeug. Escape wird hier verbraucht, damit nicht zugleich das
+       naechste Fenster zugeht (E302: ein Griff, eine Ebene). */
+    tools.addEventListener('keydown', event => {
+      if (event.key !== 'Escape' || !staerkeOffen()) return;
+      staerkeAuf(false); event.stopPropagation();
+    });
+    tools.addEventListener('focusout', event => {
+      const label = tools.querySelector<HTMLElement>('.blatt-staerke.auf');
+      if (!label) return;
+      const zu = event.relatedTarget as HTMLElement | null;
+      if (zu && (label.contains(zu) || zu.matches?.('.blatt-strich'))) return;
+      staerkeAuf(false);
+    });
     if (typeof Zeichenziel !== 'undefined' && typeof Zeichenziel.horche === 'function') {
       try { Zeichenziel.horche(markiere); } catch { /* dann eben nur die Leiste */ }
     }
@@ -2123,6 +2163,7 @@ const Marken = (() => {
       /* DER BILD-KNOPF SCHALTET NICHT UM (E357): er oeffnet den
          Dateiwaehler; das gewaehlte Werkzeug bleibt, bis das Bild da ist —
          wer abbricht, hat nichts verloren. Danach fuehrt die Auswahl. */
+      if (target.dataset.wz && !target.matches('.blatt-strich')) staerkeAuf(false);
       if (target.dataset.wz === 'bild') {
         if (controls.bildEinfuegen) void controls.bildEinfuegen();
         return;
@@ -2311,6 +2352,9 @@ const Marken = (() => {
         return;
       }
       if (target.dataset.b) {
+        /* Die gewaehlte Stufe ein zweites Mal: Klappe mit dem Regler auf
+           (oder wieder zu) — der Weg von GoodNotes (E465 Nachtrag). */
+        if (target.classList.contains('on')) { staerkeAuf(!staerkeOffen()); return; }
         controls.setzeStrich(Number(target.dataset.b));
         if (typeof Zeichenziel !== 'undefined') {
           try { Zeichenziel.uebernehmeStrich(controls, Number(target.dataset.b)); } catch { /* egal */ }
