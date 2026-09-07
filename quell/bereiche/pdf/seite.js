@@ -135,10 +135,12 @@ const PdfSeite = (() => {
             randfeld.className = 'blatt-randfeld';
             flur.appendChild(papier);
             flur.appendChild(randfeld);
-            w.appendChild(flur);
+            /* Gedreht wird die ganze Flaeche samt Rand (E467); ungedreht ist
+               `drehHuelle` der Flur selbst — kein neuer Knoten. */
+            w.appendChild(SheetSpace.drehHuelle(block, flur));
         }
         else {
-            w.appendChild(papier);
+            w.appendChild(SheetSpace.drehHuelle(block, papier));
         }
         /* Das Bild: Adresse beim Zeichnen aus der Kennung holen, nie speichern
            (E98). Fehlt sie noch, steht ein Satz da statt eines leeren Kastens. */

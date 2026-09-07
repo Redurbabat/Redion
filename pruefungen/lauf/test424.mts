@@ -93,9 +93,14 @@ try {
   const id = await page.locator('.document-workspace').getAttribute('data-page-id');
   check('Direct PDF import opens real document', !!id);
   check('Imported PDF has two canonical pages', await page.locator('.document-stage').count() === 2);
+  /* SEIT E464 liegt „Lesen" hinter „☷ Ansicht" — erst aufklappen. */
+  await page.locator('[data-document-action="view"]').click();
+  await page.waitForTimeout(250);
   await page.locator('[data-document-action="read"]').click();
   check('Read mode hides drawing controls', !await page.locator('.document-stage[data-aktiv] .blatt-reihe').isVisible());
-  check('Read mode prevents accidental edits', await page.locator('.document-stage[data-aktiv] .blatt-papier').evaluate(e => (e as HTMLElement).inert));
+  // E468: Lesen heisst Hand — das Papier ist nicht mehr inert (Abdeckband und Verweise
+  // muessen antippbar bleiben), dafuer steht die Zeichenschicht auf „schreiben".
+  check('Read mode prevents accidental edits', await page.locator('.document-stage[data-aktiv] .blatt-werk').evaluate(e => (e as HTMLElement).dataset.tool === 'schreiben'));
   const countBefore = await page.evaluate('Object.keys(Store.cache.blocks).length');
   await page.locator('[data-document-action="annotate"]').click();
   check('Annotation restores original Ink controls', await page.locator('.document-stage[data-aktiv] .blatt-werk').isVisible());
@@ -103,11 +108,16 @@ try {
   await page.locator('[data-document-action="thumbnails"]').click();
   check('Side panel does not rebuild the editor', await page.locator('.document-stage').first().getAttribute('data-probe') === 'retained');
   check('Thumbnails panel is visible', await page.locator('.document-thumbnails').isVisible());
+  /* Das Ansichtsmenü ist nach dem Seitenpanel wieder zu — vor ‹ › und „Einpassen" erneut öffnen (E464). */
+  await page.locator('[data-document-action="view"]').click();
   await page.locator('[data-document-action="next"]').click();
   check('Page navigation changes actual active page', await page.locator('.document-stage[data-aktiv]').getAttribute('data-stand-nr') === '1');
   check('Accessible current thumbnail follows page', await page.locator('[data-document-index="1"]').getAttribute('aria-current') === 'page');
+  if (!await page.locator('[data-document-action="fit"]').isVisible()) await page.locator('[data-document-action="view"]').click();
   await page.locator('[data-document-action="fit"]').click();
   check('Fit restores real zoom control', await page.locator('[data-document-zoom]').inputValue() === '100');
+  /* Steht das Ansichtsmenü noch offen, nimmt Escape erst dieses (E464) — dann das Panel. */
+  if (await page.locator('.document-studio[data-document-view="open"]').count()) await page.keyboard.press('Escape');
   await page.keyboard.press('Escape');
   check('Escape closes panel and restores focus', await page.locator('[data-document-action="thumbnails"]').evaluate(e => e === document.activeElement));
   check('UI changes do not duplicate content', await page.evaluate('Object.keys(Store.cache.blocks).length') === countBefore);
@@ -140,6 +150,7 @@ try {
   await page.evaluate(`App.oeffne(${JSON.stringify(id)})`);
   await page.emulateMedia({ reducedMotion: 'reduce' });
   check('Reduced-motion disables Studio transitions', await page.locator('body').evaluate(e => getComputedStyle(e).getPropertyValue('--motion-normal').trim() === '1ms'));
+  await page.locator('[data-document-action="view"]').click();   /* „Lesen" liegt hinter „☷ Ansicht" (E464) */
   await page.locator('[data-document-action="read"]').click();
   /* Flush vor dem Neuladen, wie oben (E440): `Store.setMeta` schreibt
      asynchron, und unter Last (drei Läufe parallel) kam das Neuladen dem

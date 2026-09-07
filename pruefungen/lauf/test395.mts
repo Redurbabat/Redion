@@ -415,7 +415,12 @@ const gez0 = (await pc.evaluate(LAGE) as any).gezeichnet;
    gezeichnete ihre Werkzeugleiste mitträgt und die andere nicht. */
 const echt = h0[0] ?? 0;
 const platz = h0.slice(1);
-p('Nur eine Seite ist gezeichnet — E299 ist unberührt', gez0 === 1, `gezeichnet ${gez0}`);
+/* HÖCHSTENS ZWEI, NICHT GENAU EINE (E467, nachgemessen am 7. September):
+   seit die Seite auf 980 px gedeckelt ist (E299 `passen`), ist eine A4-Seite
+   1387 px hoch, und die zweite beginnt bei 1441 — innerhalb der einen
+   Bildhöhe (2 × 746) nach unten, die `nachziehen` mitzeichnet. Die Zusage
+   bleibt dieselbe: nicht alle sechs, nur die in Reichweite. */
+p('Nur die Seiten in Reichweite sind gezeichnet — E299 ist unberührt', gez0 >= 1 && gez0 <= 2, `gezeichnet ${gez0}`);
 p('Jeder Platzhalter ist so hoch wie die Seite werden wird',
   platz.length === 5 && platz.every(h => h > echt * 0.85 && h < echt * 1.15),
   `gezeichnet ${echt}, Platzhalter ${JSON.stringify(platz)}`);

@@ -214,6 +214,89 @@ rechtfertigt.
 
 ---
 
+### 7 · Der PDF-Teil wie GoodNotes — sechzehn Bögen (Redur, 7. September)
+
+Redur, mit dem GoodNotes-Dossier: „alles, was GoodNotes machen kann, 1:1 —
+nur beim PDF-Teil: wie die bearbeitet wird, importiert, die Stifte usw.",
+und „ohne eine Funktion zu löschen". Gegen das Dossier gelesen, was steht
+(E351–E360, E375–E385, E464) und was fehlt. Fünf Bögen, jeder mit Prüflauf,
+Gegenprobe, Bild und Entscheidung:
+
+  · **G1 — Zeichnen** (E465, test438): Dreieck, rundes Rechteck, Bleistift,
+    freie Strichstärke, Buchstabentasten P/2/H/E/S/V/T/A/N/M/R/I. **Steht.**
+  · **G2 — Auswahl** (E466, test439): Drehen (Drehgriff), Ausschneiden
+    (Strg X), nach vorn und nach hinten, Sperren, Kritzel-Löschen,
+    Kreis-Lasso (Umkreisen und halten). **Steht.**
+  · **G3 — Seiten** (E467, test440): einfügen (leer, mit Papier, als
+    Duplikat), löschen, verschieben, drehen; Lesezeichen je Seite mit
+    Liste im Inspector. **Steht.**
+  · **G4 — Suche und Verweise** (E468, test441): die Textschicht mit
+    Lage aus der Quelle (nicht gespeichert), ein Suchfeld im Studio mit
+    Treffern an der Stelle; die Verweise der PDF (pdf.js `getAnnotations`)
+    antippbar; eigene Verweise an Marken (Adresse oder [[Seite]]).
+    **Steht.**
+  · **G5 — Import und Export** (E469, test442): JPG/PNG als Seiten,
+    PDF-Seiten an einer Stelle einfügen, eine Seite als Bild sichern, das
+    Zoom-Fenster (Seite gross, Übersicht mit Band). **Steht.**
+  · **G6 — Das Zoom-Fenster als Schreibfläche** (E470, test443): das Papier
+    zieht in einen vergrösserten Streifen um, in der Bühne bleibt ein
+    stilles Abbild mit dem Rahmen; eine Zeichenfläche, kein Spiegel.
+    **Steht.**
+  · **G7 — Die kleinen Reste** (E472, test445): Dreieck erkennen, Bild aus
+    der Zwischenablage, mehrere PDFs auf einmal, Rand-Vorschub im
+    Zoom-Fenster. **Steht.**
+  · **G8 — Das Gedrehte ist wirklich gedreht** (E474, test447): die
+    Geometrie kennt `dreh` — der Auswahlrahmen liegt auf der schiefen
+    Marke statt weit um sie herum, der Griff läuft beim Ziehen nicht mehr
+    weg, der Radierer trifft die Marke statt ihren Kasten, der Kastenzug
+    fängt nicht ein, was in der leeren Ecke steht. **Steht.**
+  · **G9 — Was der Finger trifft** (E475, test448): die drei §37-Stellen
+    aus L133 — der PDF-Verweis (gemessen 6,9 px) bekommt eine Trefffläche,
+    die bei der Hälfte des Nachbarabstands haltmacht; der Regler der
+    Strichstärke misst 44 statt 16; die Papierauswahl 44 statt 36.
+    **Steht.**
+  · **G10 — Ein Kasten ist keine Wischspur** (E476, test449): das
+    Kritzel-Löschen fragt den WEG des Gekritzels statt seinen Kasten (ein
+    schräger Zug löschte drei Marken statt einer — Datenverlust), und die
+    Treffer der Suche werden beim Nachziehen einer Seite nur für DIESE
+    Seite neu gemalt. **Steht.**
+  · **G11 — Die Verweise alter Seiten** (E477, test450): ein Nachtrag über
+    die Auftragsmaschine holt die Links von Seiten, die vor E473
+    eingelesen wurden — einmal je Original, im Hintergrund, nicht im
+    Anzeigeweg. Dabei fand der Prüflauf, dass E473 die LEERE Verweisliste
+    gar nicht schrieb: „keine" und „nie nachgesehen" sahen gleich aus.
+    **Steht.**
+  · **G12 — Ein Dreieck darf liegen, wie es gezogen wurde** (E478,
+    test451): die Ernte von G8 — weil die Geometrie `dreh` jetzt wirklich
+    kann, bekommt ein gedrehtes Dreieck seinen Winkel statt einer Absage.
+    Aufrecht bleibt aufrecht; ein gleichseitiges bekommt die kleinste der
+    drei möglichen Drehungen. **Steht.**
+  · **G13 — „Seite als Bild" nimmt die Fotos mit** (E479, test452): erst
+    gemessen, was ein SVG auf der Leinwand darf (`blob:` gesperrt, `data:`
+    geht, `foreignObject` trübt), dann gebaut. Die Bildmarken kommen mit,
+    auch gedrehte. Der getippte Text eines Blatts bleibt offen — mit
+    geschlossenem Weg, siehe L133. **Steht.**
+  · **G14 — Die Miniaturenleiste wie GoodNotes** (E480, test453): ein
+    „⋯"-Menü je Seite, das SEINE Seite meint (alle Seitengriffe nehmen
+    jetzt entgegen, wen sie meinen), und Ziehen zum Umordnen — mit der
+    Maus nach acht Pixeln, mit dem Finger erst nach 350 ms Halten, damit
+    die Leiste rollbar bleibt. **Steht.**
+  · **G15 — Verweise treffen die Stelle** (E481, test454): `/XYZ`,
+    `/FitH` und `/FitR` nennen eine Höhe auf der Zielseite — der Sprung
+    rollt jetzt dorthin. Und die Verweisschicht zog ins Papier: damit
+    zeigt auch eine gedrehte Seite ihre Verweise. **Steht.**
+  · **G16 — Kamera und Radierer** (E482, test455): „Foto aufnehmen" im
+    Seitenmenü und an der Miniatur (`capture="environment"`), und der
+    Radierer kennt fünf Arten — Ganz und Teil sagen, wie viel weggeht,
+    Stift, Marker und Band, wovon. **Steht.**
+
+Was danach ehrlich offen bleibt, steht in **L133** (Audio mit Zeitbezug,
+Handschrift-zu-Text, Mathe, Elemente-Bibliothek, Präsentation, Wolke).
+
+**Priorität** — hoch; es ist Redurs Auftrag vom 7. September.
+
+---
+
 ### 6 · Das UI-System aus dem Handoff — 50 Komponenten, sechs Phasen
 
 Redur hat am 6. September ein Handoff-Paket geschickt: 50 Uiverse-
@@ -238,6 +321,12 @@ und Zugänglichkeit.
     „R" im Willkommen sind weg — nur „R redion STUDIO" bleibt.
   · Die Karte in `doku/UI-KOMPONENTEN.md`: je Komponente Quelle-Status,
     Redion-Status, Ort, ob gebaut.
+  · Redurs vierzehn Vorgaben vom 6. September (E458–E463, test431–436):
+    Drucker-Karte (Nr. 28), Ordnerkarte (Nr. 29) mit dem Auge am
+    Ordnerdeckel, Merkzeichen, vier Lader (Ring, Sterne, Wort, Presse),
+    Schalter, Staffelei, Textur, Symbolreihe, die tippende Hand (Nr. 09) im
+    Rundgang und der Funkel-Knopf. Seit E463 stehen sie an den Wegen, die
+    man täglich geht — Studio-Kopf, PDF-Einlesen, Start, Cover-Wahl.
 
 **Was offen ist**, in der Reihenfolge des Auftrags (Phase B bis F):
 
@@ -245,13 +334,15 @@ und Zugänglichkeit.
     Redur) und ein kleiner Rest: der Sicherungsknopf des Start-Bildschirms
     (E57, `.hs-kreisel`) auf den Zustandsknopf umstellen, test114 §19 dazu.
   · C — Bibliothek: Baumansicht (Nr. 38, höchste Priorität), grosser
-    Datei-Browser (16), Ordnerkarte (29), Upload-Status (41).
+    Datei-Browser (16), Upload-Status (41). Die Ordnerkarte (29) steht (E459).
   · D — KI: Generate→Generating (26), Spark-Effekt in die Denkkugel (45),
     Circuit (43), Orb-Optionszeile (31), KI-Schalter nur bei echtem Zustand (25).
-  · E — PDF/Sync/Wissen/Elektro: Drucker-Prozess (28), Server/Daten-SVG (11),
-    Zahnrad (46), Pixel (50), Orbit (48), Analyseindikator (37), Gerätesteuerung (34).
+  · E — PDF/Sync/Wissen/Elektro: Server/Daten-SVG (11), Zahnrad (46),
+    Pixel (50), Orbit (48), Analyseindikator (37), Gerätesteuerung (34).
+    Der Drucker-Prozess (28) steht (E458).
   · F — Lernwelt: Aurora-Start (15), Workflow-Karten (24), Karussell (21),
-    Gestenhand (09), Teilen-Menü (35), Schnellaktionen (27).
+    Teilen-Menü (35), Schnellaktionen (27). Die Gestenhand (09) steht — im
+    Rundgang statt in der Lernwelt (E463).
 
 Jede Komponente: bestehenden Bereich lesen, an echten Zustand anschliessen,
 Prüflauf mit Gegenprobe, Bild. Für die 30 ohne Originalcode gilt: nur die

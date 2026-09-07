@@ -69,6 +69,12 @@ const StudioSchale = (() => {
             Ansichten.posteingang();
         }
         catch { /* ohne Posteingang bleibt der Kopf */ } });
+        /* Die Sterne (E463): sie stehen nur, solange ein Auftrag läuft, und
+           öffnen dasselbe Fenster wie der Knopf im Menüband. */
+        an('studio-auftraege', () => {
+            if (typeof AuftragsAnzeige !== 'undefined')
+                AuftragsAnzeige.oeffnen();
+        });
         an('studio-tools', () => {
             if (document.body.dataset.studioTools === 'offen')
                 Menueband.schliessen();

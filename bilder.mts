@@ -2041,6 +2041,430 @@ const ANSICHTEN: Record<string, {
   }
 };
 
+/* --- Willkommen mit Textur, Schalter und Symbolreihe (E462) ---------------
+   Drei Vorgaben auf einem Bild: die Rauschtextur im Kopf des
+   Begrüssungsschirms, der eingeschaltete Schalter mit seinem Verlauf und
+   die Beschriftung an einem Symbol der Studio-Reihe. */
+/* --- E463: sichtbar und lustig ------------------------------------------
+   Acht Ansichten für die Runde, in der die Vorgaben an die Wege kamen, die
+   man täglich sieht. Jede zeigt genau EIN Bauteil an seinem echten Ort.
+   Das Aufräumen steht in jeder einzeln — `bauen` läuft in der Seite, und
+   eine Node-Konstante ist dort nicht erreichbar (E398, oben). */
+/* Der Vorhang ist nach dem Start weg — für das Bild wird er noch einmal
+   zugezogen. Die Notbremse (6 s) wird abgeschaltet, sonst ist er beim
+   Fotografieren schon wieder auf. */
+ANSICHTEN['vorhang'] = {
+  titel: 'Der Vorhang beim Start: „Redion" geht Buchstabe für Buchstabe an (E463)',
+  bauen: async () => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelectorAll('.overlay').forEach(o => o.remove());
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+    document.getElementById('rg-willkommen')?.remove();
+    document.getElementById('rg-einladung')?.remove();
+    /* Der Start versteckt ihn 600 ms nach seinem Ende — erst danach wieder
+       zuziehen, sonst zieht der Start ihn gleich noch einmal auf. */
+    await new Promise(r => setTimeout(r, 900));
+    const v = document.getElementById('ru-vorhang');
+    if (v) { v.hidden = false; v.style.animation = 'none'; v.classList.remove('ru-vorhang-weg'); }
+    await new Promise(r => setTimeout(r, 700));
+  }
+};
+
+ANSICHTEN['hand'] = {
+  titel: 'Die Hand im Rundgang: sie tippt auf das, was der Kasten erklärt (E463)',
+  bauen: async () => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelectorAll('.overlay').forEach(o => o.remove());
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+    document.getElementById('rg-willkommen')?.remove();
+    document.getElementById('rg-einladung')?.remove();
+    (window as any).Rundgang.start();
+    await new Promise(r => setTimeout(r, 900));
+  }
+};
+
+ANSICHTEN['pdfpresse'] = {
+  titel: 'Die Presse beim PDF-Einlesen: Seite für Seite, unten rechts (E463)',
+  bauen: async () => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelectorAll('.overlay').forEach(o => o.remove());
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+    document.getElementById('rg-willkommen')?.remove();
+    document.getElementById('rg-einladung')?.remove();
+    Store.addPage(null, { text: 'Skript Elektrotechnik' });
+    await Store.flush();
+    Bibliothek.oeffne();
+    await new Promise(r => setTimeout(r, 500));
+    const w = window as any;
+    /* Dieselbe Karte, die `einlesen.ts` baut — nur ohne echte PDF, die ein
+       Bildschirmfoto nicht braucht. Text und Zahl sind die aus dem Lauf. */
+    w.UI.toast('Seite 7 von 12 …', 120000);
+    w.Lader.schweben({ art: 'presse', text: 'Seite 7 von 12 …' });
+    await new Promise(r => setTimeout(r, 600));
+  }
+};
+
+ANSICHTEN['sterne'] = {
+  titel: 'Die Sterne im Studio-Kopf: zwei Aufträge laufen (E463)',
+  bauen: async () => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelectorAll('.overlay').forEach(o => o.remove());
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+    document.getElementById('rg-willkommen')?.remove();
+    document.getElementById('rg-einladung')?.remove();
+    const w = window as any;
+    await w.Auftraege.anlegen('ocr', { seiten: 80 }, { schritte: 80, text: 'Seite 34 von 80' });
+    await w.Auftraege.anlegen('embeddings', { texte: 1200 }, { schritte: 0, text: 'Gedächtnis wird gebaut' });
+    await w.AuftragsAnzeige.knopfFrisch();
+    Bibliothek.oeffne();
+    await new Promise(r => setTimeout(r, 600));
+  }
+};
+
+ANSICHTEN['funkel'] = {
+  titel: 'Die zwei Bau-Knöpfe im KI-Fenster glimmen (E463)',
+  bauen: async () => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelectorAll('.overlay').forEach(o => o.remove());
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+    document.getElementById('rg-willkommen')?.remove();
+    document.getElementById('rg-einladung')?.remove();
+    const seite = Store.addPage(null, { text: 'Projektplan' });
+    await Store.flush();
+    App.oeffne(seite.id);
+    await new Promise(r => setTimeout(r, 400));
+    App.kiPanel();
+    await new Promise(r => setTimeout(r, 900));
+  }
+};
+
+ANSICHTEN['lernstart'] = {
+  titel: '„Lernen starten" in der Lernwelt glimmt (E463)',
+  bauen: async () => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelectorAll('.overlay').forEach(o => o.remove());
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+    document.getElementById('rg-willkommen')?.remove();
+    document.getElementById('rg-einladung')?.remove();
+    const fach = Store.addPage(null, { text: 'Elektrotechnik' });
+    for (const q of ['Ohmsches Gesetz :: U = R · I', 'Leistung :: P = U · I',
+                     'Arbeit :: W = P · t', 'Reihenschaltung :: R = R1 + R2'])
+      Store.addBlock(fach.id, 'flashcard', { text: q });
+    await Store.flush();
+    (window as any).Produktwelten.lernen('heute');
+    await new Promise(r => setTimeout(r, 900));
+  }
+};
+
+ANSICHTEN['covertextur'] = {
+  titel: 'Das Rauschen als Cover einer Seite (E463)',
+  bauen: async () => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelectorAll('.overlay').forEach(o => o.remove());
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+    document.getElementById('rg-willkommen')?.remove();
+    document.getElementById('rg-einladung')?.remove();
+    const seite = Store.addPage(null, { text: 'Nachtschicht', icon: '🌙' });
+    Store.updateBlock(seite.id, { cover: 'textur:nacht' });
+    Store.addBlock(seite.id, 'text', { text: 'Was heute noch zu tun ist.' });
+    await Store.flush();
+    App.oeffne(seite.id);
+    await new Promise(r => setTimeout(r, 900));
+  }
+};
+
+ANSICHTEN['auge'] = {
+  titel: 'Das Auge am Ordnerdeckel — und der Blick hinein (E463)',
+  bauen: async () => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelectorAll('.overlay').forEach(o => o.remove());
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+    document.getElementById('rg-willkommen')?.remove();
+    document.getElementById('rg-einladung')?.remove();
+    const fach = Store.addPage(null, { text: 'Elektrotechnik', icon: '⚡' });
+    Store.updateBlock(fach.id, { heftArt: 'fach' });
+    ['Kapitel 2 — Spannung und Strom', 'Formelsammlung', 'Prüfung Februar',
+     'Messprotokoll 14.03.'].forEach(t => Store.addPage(fach.id, { text: t }));
+    Store.addPage(null, { text: 'Lose Notiz' });
+    await Store.flush();
+    Bibliothek.oeffne();
+    await new Promise(r => setTimeout(r, 700));
+  },
+  dann: async () => {
+    document.querySelector<HTMLElement>('.bib-blick[data-blick]')?.click();
+    await new Promise(r => setTimeout(r, 900));
+  }
+};
+
+/* --- G1: Zeichnen wie GoodNotes (E465) -----------------------------------
+   Ein A4-Blatt mit Dreieck, rundem Rechteck, einem Bleistift- und einem
+   Fuellerstrich; darunter die Blattleiste mit dem Stift gewaehlt, damit
+   Stil, Farben, Stufen und der neue Staerke-Regler zu sehen sind. */
+ANSICHTEN['zeichnen'] = {
+  titel: 'Zeichnen wie GoodNotes: Dreieck, rundes Rechteck, Bleistift, freie Stärke (E465)',
+  bauen: async () => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelectorAll('.overlay').forEach(o => o.remove());
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+    document.getElementById('rg-willkommen')?.remove();
+    document.getElementById('rg-einladung')?.remove();
+    Store.setMeta('zeichnen:stift', 'bleistift');
+    const seite = Store.addPage(null, { text: 'Skizzen zur Reihenschaltung' });
+    const welle = (x0: number, y0: number, n: number, amp: number) => {
+      const pts: number[][] = [], druck: number[] = [];
+      for (let i = 0; i <= n; i++) {
+        pts.push([Math.round((x0 + i * 6) * 10) / 10, Math.round((y0 + Math.sin(i / 2.2) * amp) * 10) / 10]);
+        druck.push(Math.round((0.35 + 0.5 * Math.abs(Math.sin(i / 3))) * 100) / 100);
+      }
+      return { pts, druck };
+    };
+    const b = welle(70, 150, 60, 14), f = welle(70, 230, 60, 14);
+    Store.addBlock(seite.id, 'blatt', {
+      text: '', blattBreite: 595.28, blattHoehe: 841.89, raumVersion: 1,
+      marken: [
+        { id: 'g1-1', art: 'triangle', farbe: '#d64545', breite: 2.4, pts: [[60, 330], [220, 470]] },
+        { id: 'g1-2', art: 'roundrect', farbe: '#2f7ed8', breite: 2.4, pts: [[260, 330], [470, 470]] },
+        { id: 'g1-3', art: 'rectangle', farbe: '#3aa757', breite: 2.4, pts: [[60, 510], [220, 620]] },
+        { id: 'g1-4', art: 'ellipse', farbe: '#e0a419', breite: 2.4, pts: [[260, 510], [470, 620]] },
+        { id: 'g1-5', art: 'stift', stil: 'bleistift', farbe: '#111111', breite: 2.4, pts: b.pts, pressure: b.druck },
+        { id: 'g1-6', art: 'stift', stil: 'fueller', farbe: '#111111', breite: 2.4, pts: f.pts, pressure: f.druck },
+        { id: 'g1-7', art: 'text', farbe: '#111111', breite: 2.4, point: [70, 90], text: 'Bleistift oben, Füller darunter', fontSize: 16 }
+      ]
+    });
+    await Store.flush();
+    App.oeffne(seite.id);
+    await new Promise(r => setTimeout(r, 700));
+    document.querySelector<HTMLElement>('.blatt-werk [data-wz="stift"]')?.click();
+    await new Promise(r => setTimeout(r, 400));
+  }
+};
+
+/* Derselbe Aufbau wie `zeichnen`, ein anderer Zustand: die Klappe offen. */
+ANSICHTEN['staerke'] = {
+  titel: 'Die Klappe mit dem Regler der freien Stärke (E465 Nachtrag)',
+  bauen: ANSICHTEN['zeichnen']!.bauen,
+  dann: async () => {
+    document.querySelector<HTMLElement>('.blatt-werk .blatt-strich.on')?.click();
+    await new Promise(r => setTimeout(r, 300));
+  }
+};
+
+/* --- G2: Auswahl wie GoodNotes (E466) ------------------------------------
+   Ein gedrehtes rundes Rechteck, ein gesperrtes Bild-Ersatzkaestchen mit
+   Schloss, ein gewaehlter Strich mit Drehgriff — und die Auswahl-Leiste mit
+   Ausschneiden, nach vorn, nach hinten, Sperren. */
+ANSICHTEN['auswahl'] = {
+  titel: 'Auswahl wie GoodNotes: Drehgriff, Schloss, Ausschneiden, Reihenfolge (E466)',
+  bauen: async () => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelectorAll('.overlay').forEach(o => o.remove());
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+    document.getElementById('rg-willkommen')?.remove();
+    document.getElementById('rg-einladung')?.remove();
+    const seite = Store.addPage(null, { text: 'Schaltplan, Auswahl' });
+    const pts: number[][] = [], druck: number[] = [];
+    for (let i = 0; i <= 50; i++) { pts.push([80 + i * 7, 420 + Math.sin(i / 3) * 18]); druck.push(0.5 + 0.3 * Math.abs(Math.sin(i / 4))); }
+    Store.addBlock(seite.id, 'blatt', {
+      text: '', blattBreite: 595.28, blattHoehe: 841.89, raumVersion: 1,
+      marken: [
+        { id: 'g2-1', art: 'roundrect', farbe: '#2f7ed8', breite: 2.4, pts: [[90, 120], [300, 240]], dreh: -14 },
+        { id: 'g2-2', art: 'zettel', farbe: '#e0a419', breite: 2.4, pts: [[340, 110], [520, 220]], text: 'Gesperrt: die Vorlage bleibt liegen', gesperrt: true },
+        { id: 'g2-3', art: 'triangle', farbe: '#d64545', breite: 2.4, pts: [[120, 280], [260, 380]] },
+        { id: 'g2-4', art: 'stift', stil: 'fueller', farbe: '#111111', breite: 2.4, pts, pressure: druck }
+      ]
+    });
+    await Store.flush();
+    App.oeffne(seite.id);
+    await new Promise(r => setTimeout(r, 700));
+    document.querySelector<HTMLElement>('.blatt-werk [data-wz="select"]')?.click();
+    await new Promise(r => setTimeout(r, 200));
+    /* Das gedrehte Rechteck und den Zettel waehlen — dann stehen Griffe,
+       Drehgriff und Schloss im Bild. */
+    const f = document.querySelector<SVGSVGElement>('.blatt-marken');
+    const ctm = f?.getScreenCTM();
+    if (f && ctm) {
+      const tipp = (id: string, x: number, y: number, shift: boolean) => {
+        const pt = f.createSVGPoint(); pt.x = x; pt.y = y; const c = pt.matrixTransform(ctm);
+        const el = f.querySelector('[data-sid="' + id + '"]') || f;
+        const ev = (typ: string) => new PointerEvent(typ, { bubbles: true, cancelable: true, clientX: c.x, clientY: c.y,
+          pointerId: 7, pointerType: 'mouse', isPrimary: true, button: 0, buttons: typ === 'pointerup' ? 0 : 1, shiftKey: shift });
+        el.dispatchEvent(ev('pointerdown')); f.dispatchEvent(ev('pointerup'));
+      };
+      tipp('g2-1', 190, 180, false);
+      tipp('g2-2', 430, 165, true);
+    }
+    await new Promise(r => setTimeout(r, 400));
+  }
+};
+
+ANSICHTEN['seiten'] = {
+  titel: 'Seiten wie GoodNotes: Seitenmenü, gedrehte Seite, Lesezeichen (E467)',
+  bauen: async () => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelectorAll('.overlay').forEach(o => o.remove());
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+    document.getElementById('rg-willkommen')?.remove();
+    document.getElementById('rg-einladung')?.remove();
+    const seite = Store.addPage(null, { text: 'Physik, Kapitel 3', icon: '📕' });
+    const welle = (y: number) => { const pts: number[][] = []; for (let i = 0; i <= 40; i++) pts.push([90 + i * 10, y + Math.sin(i / 2.5) * 12]); return pts; };
+    Store.addBlock(seite.id, 'blatt', { text: '', papier: 'liniert', blattBreite: 595.28, blattHoehe: 841.89, raumVersion: 1,
+      marken: [{ id: 's1', art: 'text', farbe: '#111111', breite: 2.4, point: [80, 90], text: 'Reihenschaltung: R = R1 + R2', fontSize: 18 },
+               { id: 's2', art: 'stift', stil: 'fueller', farbe: '#2f7ed8', breite: 2.4, pts: welle(200) }] });
+    const quer = Store.addBlock(seite.id, 'blatt', { text: '', papier: 'kariert', blattBreite: 595.28, blattHoehe: 841.89, raumVersion: 1, gedreht: 90, lesezeichen: true,
+      marken: [{ id: 's3', art: 'rectangle', farbe: '#d64545', breite: 2.4, pts: [[80, 120], [520, 300]] },
+               { id: 's4', art: 'text', farbe: '#111111', breite: 2.4, point: [100, 160], text: 'Quer: Schaltplan', fontSize: 20 }] });
+    Store.addBlock(quer.id, 'text', { text: '' });
+    Store.addBlock(seite.id, 'blatt', { text: '', papier: 'blanko', blattBreite: 595.28, blattHoehe: 841.89, raumVersion: 1, marken: [] });
+    Store.updateBlock(seite.id, { dokumentModus: true });
+    await Store.flush();
+    App.oeffne(seite.id);
+    await new Promise(r => setTimeout(r, 1200));
+    document.querySelector<HTMLElement>('[data-document-action="inspector"]')?.click();
+    document.querySelector<HTMLElement>('[data-document-action="thumbnails"]')?.click();
+    await new Promise(r => setTimeout(r, 300));
+    document.querySelector<HTMLElement>('.document-thumbnails [data-document-index="1"]')?.click();
+    await new Promise(r => setTimeout(r, 900));
+  }
+};
+
+ANSICHTEN['suche'] = {
+  titel: 'Suchen im Dokument und die Verweise der PDF (E468)',
+  bauen: async () => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelectorAll('.overlay').forEach(o => o.remove());
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+    document.getElementById('rg-willkommen')?.remove();
+    document.getElementById('rg-einladung')?.remove();
+    /* Dieselbe kleine PDF wie in test441: Text, ein Verweis nach draussen,
+       einer auf Seite 2 — von Hand gebaut, ohne Bibliothek. */
+    const objs: string[] = [];
+    objs.push('<< /Type /Pages /Count 2 /Kids [4 0 R 6 0 R] >>');
+    objs.push('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>');
+    const s1 = 'BT /F1 24 Tf 50 770 Td (Reihenschaltung: R = R1 + R2) Tj ET\n' +
+               'BT /F1 14 Tf 50 720 Td (Der Widerstand in Ohm addiert sich. Ohm ist die Einheit,) Tj ET\n' +
+               'BT /F1 14 Tf 50 700 Td (benannt nach Georg Simon Ohm.) Tj ET\n' +
+               'BT /F1 12 Tf 50 650 Td (Weiter zu Seite 2  |  Mehr im Netz) Tj ET\n';
+    objs.push('<< /Length ' + s1.length + ' >>\nstream\n' + s1 + 'endstream');
+    objs.push('<< /Type /Page /Parent 1 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 2 0 R >> >> /Contents 3 0 R /Annots [7 0 R 8 0 R] >>');
+    const s2 = 'BT /F1 24 Tf 50 770 Td (Kapitel 2: Parallelschaltung) Tj ET\n';
+    objs.push('<< /Length ' + s2.length + ' >>\nstream\n' + s2 + 'endstream');
+    objs.push('<< /Type /Page /Parent 1 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 2 0 R >> >> /Contents 5 0 R >>');
+    objs.push('<< /Type /Annot /Subtype /Link /Rect [160 640 250 665] /Border [0 0 0] /A << /S /URI /URI (https://example.org/ohm) >> >>');
+    objs.push('<< /Type /Annot /Subtype /Link /Rect [50 640 150 665] /Border [0 0 0] /Dest [6 0 R /XYZ 0 842 0] >>');
+    objs.push('<< /Type /Catalog /Pages 1 0 R >>');
+    let text = '%PDF-1.4\n'; const offsets: number[] = [];
+    objs.forEach((obj, i) => { offsets.push(text.length); text += (i + 1) + ' 0 obj\n' + obj + '\nendobj\n'; });
+    const xref = text.length;
+    text += 'xref\n0 ' + (objs.length + 1) + '\n0000000000 65535 f \n' + offsets.map(n => String(n).padStart(10, '0') + ' 00000 n \n').join('');
+    text += 'trailer\n<< /Size ' + (objs.length + 1) + ' /Root ' + objs.length + ' 0 R >>\nstartxref\n' + xref + '\n%%EOF';
+    const bytes = new TextEncoder().encode(text);
+    const seite = Store.addPage(null, { text: 'Elektrotechnik, Skript', icon: '📕' });
+    await PdfEinlesen.alsSeiten(new File([bytes], 'skript.pdf', { type: 'application/pdf' }), seite.id, { anordnung: 'untereinander', ueberGrenze: 'alle' });
+    Store.updateBlock(seite.id, { dokumentModus: true });
+    await Store.flush();
+    App.oeffne(seite.id);
+    await new Promise(r => setTimeout(r, 1500));
+    document.querySelector<HTMLElement>('[data-document-action="read"]')?.click();
+    document.querySelector<HTMLElement>('[data-document-action="find"]')?.click();
+    await new Promise(r => setTimeout(r, 200));
+    const feld = document.querySelector<HTMLInputElement>('.document-findbar input');
+    if (feld) {
+      feld.value = 'ohm';
+      feld.dispatchEvent(new Event('input', { bubbles: true }));
+      await new Promise(r => setTimeout(r, 900));
+      feld.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      await new Promise(r => setTimeout(r, 500));
+    }
+  }
+};
+
+ANSICHTEN['lupe'] = {
+  titel: 'Das Zoom-Fenster: die Seite gross, unten die Übersicht mit dem Band (E469)',
+  bauen: async () => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelectorAll('.overlay').forEach(o => o.remove());
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+    document.getElementById('rg-willkommen')?.remove();
+    document.getElementById('rg-einladung')?.remove();
+    const seite = Store.addPage(null, { text: 'Mathe, Übungsblatt', icon: '📕' });
+    const welle = (y: number) => { const pts: number[][] = []; for (let i = 0; i <= 40; i++) pts.push([90 + i * 10, y + Math.sin(i / 2.5) * 10]); return pts; };
+    Store.addBlock(seite.id, 'blatt', { text: '', papier: 'kariert', blattBreite: 595.28, blattHoehe: 841.89, raumVersion: 1,
+      marken: [{ id: 'l1', art: 'text', farbe: '#111111', breite: 2.4, point: [70, 80], text: 'Aufgabe 3: Löse die Gleichung 2x + 5 = 17', fontSize: 16 },
+               { id: 'l2', art: 'stift', stil: 'fueller', farbe: '#2f7ed8', breite: 2.4, pts: welle(160) },
+               { id: 'l3', art: 'stift', stil: 'fueller', farbe: '#2f7ed8', breite: 2.4, pts: welle(200) },
+               { id: 'l4', art: 'rectangle', farbe: '#d64545', breite: 2.4, pts: [[80, 250], [300, 300]] }] });
+    Store.updateBlock(seite.id, { dokumentModus: true });
+    await Store.flush();
+    App.oeffne(seite.id);
+    await new Promise(r => setTimeout(r, 1200));
+    document.querySelector<HTMLElement>('[data-document-action="annotate"]')?.click();
+    await new Promise(r => setTimeout(r, 200));
+    document.querySelector<HTMLElement>('[data-document-action="inspector"]')?.click();
+    await new Promise(r => setTimeout(r, 300));
+    document.querySelector<HTMLElement>('.document-inspector [data-document-action="lupe"]')?.click();
+    await new Promise(r => setTimeout(r, 900));
+    /* Ein Strich IM STREIFEN, damit auf dem Bild zu sehen ist, dass dort
+       wirklich geschrieben wird — und dass er oben im Abbild ankommt. */
+    const f = document.querySelector<HTMLElement>('.document-lupe-fenster');
+    const flaeche = f?.querySelector<SVGElement>('svg.blatt-marken');
+    if (f && flaeche) {
+      const r = f.getBoundingClientRect();
+      const ev = (typ: string, x: number, y: number, tasten: number) =>
+        new PointerEvent(typ, { bubbles: true, cancelable: true, clientX: x, clientY: y,
+          pointerId: 12, pointerType: 'mouse', isPrimary: true, button: 0, buttons: tasten, pressure: 0.6 });
+      const y0 = r.top + r.height * 0.55;
+      flaeche.dispatchEvent(ev('pointerdown', r.left + 60, y0, 1));
+      for (let i = 1; i <= 24; i++)
+        flaeche.dispatchEvent(ev('pointermove', r.left + 60 + i * 18, y0 + Math.sin(i / 2.2) * 16, 1));
+      flaeche.dispatchEvent(ev('pointerup', r.left + 60 + 24 * 18, y0, 0));
+      await new Promise(r2 => setTimeout(r2, 600));
+    }
+  }
+};
+
+ANSICHTEN['willkommen'] = {
+  titel: 'Willkommen: Rauschtextur im Kopf (E462)',
+  bauen: async () => {
+    Store.setMeta('rundgangGesehen', false);
+    document.querySelectorAll('.overlay').forEach(o => o.remove());
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+    Rundgang.willkommen();
+    await new Promise(r => setTimeout(r, 700));
+  }
+};
+
+ANSICHTEN['staffelei'] = {
+  titel: 'Die Staffelei: hell und dunkel als Bild (E462)',
+  bauen: async () => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelectorAll('.overlay').forEach(o => o.remove());
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+    document.getElementById('rg-willkommen')?.remove();
+    document.getElementById('rg-einladung')?.remove();
+    Aussehen.dialog();
+    await new Promise(r => setTimeout(r, 900));
+  },
+  /* Einmal drücken: dann steht die Skizze (Tag) da, und der Pinsel ist
+     zurückgefahren. Das erste Bild zeigte nur die Nacht. */
+  dann: async () => {
+    document.querySelector<HTMLElement>('.ru-staff')?.click();
+    await new Promise(r => setTimeout(r, 900));
+  }
+};
+
+ANSICHTEN['schalter'] = {
+  titel: 'Der Schalter mit dem Verlauf der Vorgabe (E462)',
+  bauen: async () => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelectorAll('.overlay').forEach(o => o.remove());
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+    document.getElementById('rg-willkommen')?.remove();
+    document.getElementById('rg-einladung')?.remove();
+    Einstellungen.oeffne();
+    await new Promise(r => setTimeout(r, 900));
+  }
+};
+
 /* --- Die vier Lader (E461) -----------------------------------------------
    Zu sehen sind alle vier nebeneinander, mit echten Werten: der flüssige
    Ring bei 42 %, die Sterne, das Wort „Abgleich", die Presse. Ihre echten

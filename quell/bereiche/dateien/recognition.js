@@ -38,9 +38,12 @@ const Recognition = (() => {
         if (!pageId) {
             if (subject)
                 return false;
-            const current = typeof App !== 'undefined' && App.aktuelleSeite
+            /* Der Name sagt, was es ist: eine KENNUNG. `darf` schlaegt damit in
+               `Store.getBlock` nach — ein Objekt faende dort nichts und liesse
+               alles durch (E471, L102). Der Waechter in test444 haelt es fest. */
+            const aktuelleSeitenId = typeof App !== 'undefined' && App.aktuelleSeite
                 ? App.aktuelleSeite() : null;
-            return current ? Konten.darf(action, current) : true;
+            return aktuelleSeitenId ? Konten.darf(action, aktuelleSeitenId) : true;
         }
         return Konten.darf(action, pageId);
     };

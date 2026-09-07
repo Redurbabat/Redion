@@ -36,8 +36,24 @@ const App = (() => {
   const setzeSeite = (id: string | null) => { seiteId = id; };
 
   /* --- Navigationsverlauf (Strg + [ und Strg + ]) ------------------------ */
-  const rueck: any[] = [], vor: any[] = [];
+  type Navigationsort = { seite: string } | { titel: string; zeichner: any; hash: string };
+  const rueck: Navigationsort[] = [], vor: Navigationsort[] = [];
   let navSperre = false;
+  const navOrt = (): Navigationsort | null => seiteId ? { seite: String(seiteId) }
+    : sonder ? { titel: sonder.titel, zeichner: sonder.zeichner, hash: location.hash } : null;
+  const navMerken = (): void => {
+    if (navSperre) return;
+    const ort = navOrt();
+    if (ort) { rueck.push(ort); if (rueck.length > 100) rueck.shift(); }
+    vor.length = 0;
+  };
+  const navOeffnen = (ort: Navigationsort): void => {
+    navSperre = true;
+    try {
+      if ('seite' in ort) oeffne(ort.seite);
+      else { zeigeSonder(ort.titel, ort.zeichner); location.hash = ort.hash; }
+    } finally { navSperre = false; navKnoepfeStellen(); }
+  };
 
   /* DIE KNÖPFE SAGEN VORHER, OB SIE KÖNNEN (Audit F15).
      Vorher waren `‹` und `›` immer anklickbar und meldeten erst NACH dem
@@ -59,23 +75,33 @@ const App = (() => {
         : (id === 'btn-back' ? 'Zurück — kein Schritt vorhanden'
                              : 'Vorwärts — kein Schritt vorhanden');
     };
-    setz('btn-back', rueck.length > 0);
+    setz('btn-back', rueck.length > 0 || !!seiteId);
+    if (!rueck.length && seiteId) {
+      const back = document.getElementById('btn-back');
+      if (back) back.title = 'Zur Dokumentübersicht (Strg + [)';
+    }
     setz('btn-fwd', vor.length > 0);
   };
 
   const zurueck = () => {
-    if (!rueck.length) { UI.toast('Kein Schritt zurück'); return; }
-    const id = rueck.pop();
-    if (seiteId) vor.push(seiteId);
-    navSperre = true; oeffne(id); navSperre = false;
-    navKnoepfeStellen();
+    const ziel = rueck.pop();
+    const jetzt = navOrt();
+    if (!ziel && !seiteId) { UI.toast('Kein Schritt zurück'); return; }
+    if (jetzt) vor.push(jetzt);
+    if (ziel) navOeffnen(ziel);
+    else {
+      // A directly opened or restored page still needs a way out.
+      navSperre = true;
+      try { Register.navigation.eines('bibliothekOben')?.tun?.(); }
+      finally { navSperre = false; navKnoepfeStellen(); }
+    }
   };
   const vorwaerts = () => {
     if (!vor.length) { UI.toast('Kein Schritt vorwärts'); return; }
-    const id = vor.pop();
-    if (seiteId) rueck.push(seiteId);
-    navSperre = true; oeffne(id); navSperre = false;
-    navKnoepfeStellen();
+    const ziel = vor.pop()!;
+    const jetzt = navOrt();
+    if (jetzt) rueck.push(jetzt);
+    navOeffnen(ziel);
   };
 
   /* ------------------------------------------------------------------------
@@ -804,8 +830,10 @@ const App = (() => {
   };
 
   const zeigeSonder = (titel: string, zeichner: any) => {
+    if (seiteId || !sonder || sonder.titel !== titel) navMerken();
     sonder = { titel, zeichner };
     seiteId = null;
+    navKnoepfeStellen();
     const ort = titel.toLowerCase().replace(/[^a-z]+/g, '-');
     location.hash = '#' + ort;
     /* WO MAN WAR, NICHT NUR WAS ZULETZT OFFEN WAR (E349). `letzte` zeigt
@@ -821,11 +849,11 @@ const App = (() => {
   };
 
   const oeffne = (id?: string | null) => {
+    if (sonder || seiteId !== id) navMerken();
     sonder = null;
-    if (seiteId && seiteId !== id && !navSperre) { rueck.push(seiteId); vor.length = 0; }
-    navKnoepfeStellen();   /* F15 — der Verlauf hat sich gerade geändert */
     if (seiteId && seiteId !== id) Werkzeuge.versionAutomatisch(seiteId);
     seiteId = id;
+    navKnoepfeStellen();
     if (id) {
       const p = Store.getBlock(id);
       if (p) Store.updateBlock(id, { aufrufe: (p.aufrufe || 0) + 1, zuletztGeoeffnet: Store.now() });
@@ -965,6 +993,12 @@ const App = (() => {
       kiAmDokumentAnpassen(true);
       DocumentMode.render(wrap, p);
     } else {
+      /* WER DAS DOKUMENT VERLAESST, LAESST pdf.js LOS (E473, Fund der
+         Prüfung). Die Suche im Studio haelt je Quelle ein offenes
+         pdf.js-Dokument; ohne diese Zeile blieben sie samt Arbeiter
+         liegen, bis der Tab zuging. Jede Seitenzeichnung laeuft hier
+         durch — Regal, „Normale Seite", ein anderer Ort. */
+      DocumentMode.freigeben?.();
       Inhaltsflaeche.zeichne(wrap, p);
     }
 
@@ -3210,6 +3244,22 @@ const App = (() => {
     },
   };
 
+  /* DER VORHANG GEHT AUF (E463). `index.html` legt ihn als Text über die
+     Seite, bevor das erste Skript läuft — die Sekunde, in der sonst leere
+     Kästchen und halbe Leisten stünden. Hier geht er auf: nach dem Start,
+     und auch nach einem gescheiterten Start, denn ein Vorhang vor einem
+     Fehlerbanner wäre ein stiller Absturz (§7). Das Stilblatt zieht ihn
+     ausserdem nach sechs Sekunden von selbst auf, falls diese Zeile nie
+     erreicht wird. */
+  const vorhangWeg = (): void => {
+    const v = document.getElementById('ru-vorhang');
+    if (!v || v.hidden) return;
+    v.classList.add('ru-vorhang-weg');
+    /* Erst nach der Blende verstecken — und nur, wenn ihn niemand in der
+       Zwischenzeit wieder zugezogen hat (`bilder.mts` tut das fürs Bild). */
+    setTimeout(() => { if (v.classList.contains('ru-vorhang-weg')) v.hidden = true; }, 600);
+  };
+
   const start = async () => {
     /* DIE ZEICHEN DER OBERFLÄCHE ZUERST (E200).
        `index.html` schreibt nur die Stellen — `<span data-sym="search">` —,
@@ -3470,7 +3520,9 @@ const App = (() => {
 
     try {
       await starteWirklich();
+      vorhangWeg();
     } catch (err) {
+      vorhangWeg();
       UI.banner('Die App konnte nicht starten: ' +
         (err instanceof Error ? err.message : String(err)), 'fehler');
       throw err;

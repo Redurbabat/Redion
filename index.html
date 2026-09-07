@@ -114,6 +114,15 @@
 <!-- Für die Tastatur: der kürzeste Weg an der Seitenleiste vorbei -->
 <a href="#page" id="zum-inhalt">Zum Inhalt springen</a>
 
+<!-- DER VORHANG (E463). Steht hier als Text, nicht als Skript, damit er
+     VOR dem ersten Skript da ist — genau die Sekunde, in der sonst leere
+     Kästchen und halbe Leisten zu sehen wären. `App.start` zieht ihn am
+     Ende auf; falls der Start hängt, zieht ihn das Stilblatt nach sechs
+     Sekunden von selbst auf (kein stiller Absturz, §7). Er nimmt keine
+     Klicks an und sagt dem Vorleser nichts: der Buchstabenlauf ist das
+     Bild des Wort-Laders aus E461, hier mit dem Namen der App. -->
+<div id="ru-vorhang" aria-hidden="true"><div class="ru-lader" data-art="wort"><div class="ru-lader-bild ru-lader-wort"><i class="ru-lader-ring"></i><span class="ru-lader-buchstaben"><span class="ru-lader-buchstabe" style="--ru-schritt:0">R</span><span class="ru-lader-buchstabe" style="--ru-schritt:1">e</span><span class="ru-lader-buchstabe" style="--ru-schritt:2">d</span><span class="ru-lader-buchstabe" style="--ru-schritt:3">i</span><span class="ru-lader-buchstabe" style="--ru-schritt:4">o</span><span class="ru-lader-buchstabe" style="--ru-schritt:5">n</span></span></div></div></div>
+
 <!-- =========================================================================
      SEITENLEISTE
      ====================================================================== -->
@@ -318,6 +327,9 @@
          `menueband.ts` hält beide Stellen gemeinsam frisch (glockeFrisch,
          wolkeFrisch); die Glocke steht erst mit Ungelesenem da. -->
     <button id="studio-glocke" class="studio-icon" hidden aria-label="Posteingang" title="Posteingang"><span data-sym="bell"></span><b class="glocke-zahl" hidden aria-hidden="true"></b></button>
+    <!-- DIE STERNE (E463): nur da, solange ein Auftrag läuft. `auftraege.ts`
+         hält sie mit `#mb-auftraege` gemeinsam frisch (knopfFrisch). -->
+    <button id="studio-auftraege" class="studio-icon ru-auftrag" hidden aria-label="Aufträge" title="Aufträge"><span class="ru-auftrag-sterne" aria-hidden="true"><i class="ru-lader-stern"></i><i class="ru-lader-stern"></i><i class="ru-lader-stern"></i></span><b class="glocke-zahl" hidden aria-hidden="true"></b></button>
     <button id="studio-account" class="studio-icon" aria-label="Konto und Arbeitsbereich" title="Konto und Arbeitsbereich"><span data-sym="workspace"></span><i class="wolke-punkt" hidden></i></button>
   </header>
   <div id="studio-divider" role="separator" aria-label="Navigationsbreite" aria-orientation="vertical" aria-valuemin="148" aria-valuemax="260" aria-valuenow="184" tabindex="0"></div>
@@ -532,6 +544,10 @@
 <script src="quell/schale/bedienung/ordnerkarte.js" defer></script>
 <script src="quell/schale/bedienung/merkzeichen.js" defer></script>
 <script src="quell/schale/bedienung/lader.js" defer></script>
+<script src="quell/schale/bedienung/textur.js" defer></script>
+<script src="quell/schale/bedienung/staffelei.js" defer></script>
+<script src="quell/schale/bedienung/geste.js" defer></script>
+<script src="quell/schale/bedienung/funkel.js" defer></script>
 <script src="quell/schale/ueberlagerung/dialog.js" defer></script>
 <script src="quell/schale/ueberlagerung/fokus.js" defer></script>
 <script src="quell/schale/ueberlagerung/ui.js" defer></script>

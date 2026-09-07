@@ -135,6 +135,37 @@
 .schalter.an{background:var(--accent)}
 .schalter.an i{transform:translateX(16px); background:#fff}
 
+/* ---- Der Verlauf im eingeschalteten Schalter (E462, Vorgabe 6. September)
+   Redurs `.gradient-btn` legt zwei gedrehte Verläufe übereinander und
+   mischt sie. Die Redion-Fassung nimmt davon EINEN und legt ihn IN die
+   Bahn des Schalters — die Markierung selbst (Fläche voll, Knebel rechts)
+   bleibt unverändert, denn sie ist es, die den Zustand sagt (§38).
+
+   KEIN NEUES MARKUP. Der Schalter wird an 18 Stellen als Zeichenkette
+   gebaut (`schalter()` und `haken()` in einstellungen/ansicht/seite.ts);
+   zwei Verlaufsschichten hineinzuflechten hiesse, 18 Aufrufer und ihre
+   Prüfläufe anzufassen. `::before` reicht — und es kann nichts brechen,
+   was es nicht selbst mitbringt. */
+.schalter{overflow:hidden; isolation:isolate}
+.schalter::before{
+  content:""; position:absolute; left:50%; top:50%;
+  width:220%; aspect-ratio:1; transform:translate(-50%,-50%);
+  border-radius:50%; opacity:0; pointer-events:none; z-index:0;
+  background:conic-gradient(from 0deg,
+    var(--accent), var(--accent-text), var(--accent),
+    var(--accent-text), var(--accent));
+  transition:opacity var(--motion-normal) var(--ease)
+}
+.schalter.an::before{opacity:.85; animation:ez-schalter-dreh 7s linear infinite}
+.schalter i{z-index:1}
+@keyframes ez-schalter-dreh{to{transform:translate(-50%,-50%) rotate(360deg)}}
+/* Die Trefferfläche liegt VOR dem Verlauf — sie darf nicht überdeckt
+   werden, und `overflow:hidden` würde sie sonst beschneiden. */
+.schalter::after{z-index:2}
+@media (prefers-reduced-motion: reduce){
+  .schalter.an::before{animation:none}
+}
+
 .ez-plan{
   background:var(--bg-card); border-radius:9px; padding:16px 18px; margin:6px 0 18px;
 }
@@ -682,3 +713,5 @@ tr.mail-jetzt > td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
   td.td-aus input.zeilen-aus{display:inline}
   .stab-griff{opacity:.75}
 }
+/* Die Staffelei über den Schema-Karten (E462) */
+.au-staffelei{display:flex; justify-content:center; margin:4px 0 18px}

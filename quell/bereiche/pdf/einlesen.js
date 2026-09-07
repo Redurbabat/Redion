@@ -63,10 +63,27 @@ const PdfEinlesen = (() => {
         const kopf = new Uint8Array(await datei.slice(0, PDF_KOPF.length).arrayBuffer());
         if (PDF_KOPF.some((b, i) => kopf[i] !== b))
             throw new Error('Das ist keine PDF-Datei.');
-        const melder = UI.toast('„' + datei.name + '" wird gelesen …', 120000);
+        /* DIE PRESSE STATT DES TOASTS (E463). Ein Toast ist zwei Zeilen Grau,
+           und beim zwölften „Seite 7 von 12" sieht ihn niemand mehr an. Die
+           Karte unten rechts zeigt Bogen für Bogen, wie aus der Datei Seiten
+           werden, und schreibt dieselbe Zahl daneben — als `role="status"`,
+           also hört der Vorleser denselben Satz wie vorher. Beides zugleich
+           wäre der Satz zweimal. Ohne `Lader` (alte Einzeldatei, Prüflauf ohne
+           Schale) bleibt es beim Toast. */
+        const presse = typeof Lader !== 'undefined'
+            ? Lader.schweben({ art: 'presse', text: '„' + datei.name + '" wird gelesen …' })
+            : null;
+        const melder = presse ? null : UI.toast('„' + datei.name + '" wird gelesen …', 120000);
         const sageAn = (t) => {
-            if (melder && melder.textContent !== undefined)
+            if (melder)
                 melder.textContent = t;
+            presse?.setzen({ text: t });
+        };
+        /* Toast oder Karte gehen auf JEDEM Weg hinaus weg — eine Presse, die
+           nach dem Fehler weiterläuft, wäre eine Behauptung. */
+        const wegMelden = () => {
+            melder?.remove();
+            presse?.entfernen();
         };
         let griff = null;
         /* DAS ORIGINAL ZUERST — es ist das, was zählt. Geht danach etwas schief,
@@ -79,7 +96,7 @@ const PdfEinlesen = (() => {
             quelle = await Dateien.ablegen(datei, { blockId: elternId });
         }
         catch (e) {
-            melder.remove();
+            wegMelden();
             throw e;
         }
         /**
@@ -112,7 +129,7 @@ const PdfEinlesen = (() => {
             griff = await PdfLeser.oeffne(bytes, async (nochmal) => {
                 if (typeof Dialog === 'undefined')
                     return null;
-                melder.textContent = '„' + datei.name + '" ist geschützt.';
+                sageAn('„' + datei.name + '" ist geschützt.');
                 return await Dialog.frage(nochmal ? 'Das Passwort stimmte nicht — noch einmal'
                     : 'Passwort für „' + datei.name + '"', '', 'passwort');
             });
@@ -134,24 +151,25 @@ const PdfEinlesen = (() => {
                er fragt einmal oder gar nicht und reicht die Antwort herein. Die
                Merkregel `pdfAnordnung` bleibt dann unberührt — sie gehört dem
                Menschen, nicht dem Massenimport. */
-            const anordnung = vorgabe && vorgabe.anordnung ? vorgabe.anordnung
-                : typeof Dialog !== 'undefined'
-                    ? await Dialog.wahl({
-                        titel: datei.name,
-                        text: 'Wie soll „' + datei.name + '" auf der Seite liegen?',
-                        knoepfe: [
-                            ...(zuletzt === 'untereinander' ? [knopfNur, knopfSeite]
-                                : [knopfSeite, knopfNur]),
-                            { id: '', text: 'Abbrechen',
-                                hinweis: 'Die Datei bleibt als Anhang liegen' }
-                        ]
-                    })
-                    : zuletzt;
+            const anordnung = vorgabe && vorgabe.anStelle ? 'untereinander'
+                : vorgabe && vorgabe.anordnung ? vorgabe.anordnung
+                    : typeof Dialog !== 'undefined'
+                        ? await Dialog.wahl({
+                            titel: datei.name,
+                            text: 'Wie soll „' + datei.name + '" auf der Seite liegen?',
+                            knoepfe: [
+                                ...(zuletzt === 'untereinander' ? [knopfNur, knopfSeite]
+                                    : [knopfSeite, knopfNur]),
+                                { id: '', text: 'Abbrechen',
+                                    hinweis: 'Die Datei bleibt als Anhang liegen' }
+                            ]
+                        })
+                        : zuletzt;
             if (!anordnung) {
-                melder.remove();
+                wegMelden();
                 return nurAnhaengen('liegt als Anhang auf der Seite.');
             }
-            if (!(vorgabe && vorgabe.anordnung))
+            if (!(vorgabe && (vorgabe.anordnung || vorgabe.anStelle)))
                 Store.setMeta('pdfAnordnung', anordnung);
             const daneben = anordnung === 'nebeneinander';
             let bis = gesamt;
@@ -177,12 +195,14 @@ const PdfEinlesen = (() => {
                         })
                         : 'alle';
                 if (!antwort) {
-                    melder.remove();
+                    wegMelden();
                     return nurAnhaengen('liegt als Anhang auf der Seite.');
                 }
                 bis = antwort === 'erste' ? OHNE_FRAGE : gesamt;
             }
             const gemacht = [];
+            /* Die Stelle wandert mit jeder Seite eine weiter (E469). */
+            let stelle = vorgabe && vorgabe.anStelle ? vorgabe.anStelle.index : -1;
             for (let n = 1; n <= bis; n++) {
                 sageAn('Seite ' + n + ' von ' + bis + ' …');
                 const geo = await griff.geometrie(n);
@@ -191,7 +211,7 @@ const PdfEinlesen = (() => {
                    die von Hand angelegten Spalten (E102) — columns → spalte →
                    Inhalt. Eine eigene Bauform wäre eine zweite Wahrheit über
                    dasselbe Ding. */
-                let wohin = elternId;
+                let wohin = vorgabe && vorgabe.anStelle ? vorgabe.anStelle.elternId : elternId;
                 let nachher = () => { };
                 if (daneben) {
                     const sp = Store.addBlock(elternId, 'columns', { text: '', spalten: 2 });
@@ -231,6 +251,13 @@ const PdfEinlesen = (() => {
                    klein, und ohne ihn wäre ein eingespieltes Skript stumm, bis
                    jemand alle Seiten neu rechnet. */
                 const seitenText = await griff.text(n);
+                /* DIE VERWEISE DER SEITE KOMMEN GLEICH MIT (E473, Fund der Prüfung).
+                   E468 holte sie beim ANSEHEN und zog dafür die ganze Original-PDF
+                   in den Arbeitsspeicher — pdf.js stand damit wieder im Anzeigeweg,
+                   gegen `leser.ts` („So läuft sie einmal je Dokument") und gegen §36.
+                   Hier ist der Griff ohnehin offen; ein paar Rechtecke je Seite sind
+                   klein und wandern wie `suchtext` (E107) in die Sicherung. */
+                const seitenVerweise = await griff.verweise(n);
                 const b = Store.addBlock(wohin, 'pdfseite', {
                     text: '', suchtext: seitenText, nr: n, vonSeiten: gesamt,
                     bw: geo.bw, bh: geo.bh, dreh: geo.dreh,
@@ -239,8 +266,15 @@ const PdfEinlesen = (() => {
                        `quelleId` sagt schon, WELCHES — `herkunft` sagt, dass es
                        überhaupt eines ist, und das ist die Frage, die man beim
                        Wiederlesen stellt. */
-                    herkunft: 'quelle'
-                });
+                    herkunft: 'quelle',
+                    /* AUCH DIE LEERE LISTE WIRD GESCHRIEBEN (E477). Vorher stand das
+                       Feld nur an Seiten MIT Verweisen — damit sahen „keine
+                       Verweise" und „noch nie nachgesehen" gleich aus, und der
+                       Nachtrag für alte Seiten liefe bei jedem Öffnen über jede
+                       Seite ohne Verweise wieder los. Ein leeres Array je Seite
+                       kostet sechzehn Zeichen in der Sicherung. */
+                    verweise: Array.isArray(seitenVerweise) ? seitenVerweise : []
+                }, stelle >= 0 ? stelle++ : -1);
                 nachher();
                 const satz = await Dateien.ablegen(new File([bild], datei.name.replace(/\.pdf$/i, '') + '-s' + n + '.webp', { type: 'image/webp' }), { blockId: b.id, abgeleitet: true });
                 Store.updateBlock(b.id, { bildDateiId: satz.id });
@@ -248,8 +282,7 @@ const PdfEinlesen = (() => {
                 /* Dem Browser Luft lassen — sonst steht die Oberfläche still. */
                 await new Promise(r => setTimeout(r, 0));
             }
-            if (melder && melder.remove)
-                melder.remove();
+            wegMelden();
             /* ══ DAS ORIGINAL BLEIBT OBEN STEHEN (E299) ═══════════════════════════
                Redur: „ganz oben sollte immer die orginale pdf dort stehen und die
                anderen als eien kopier dort ausdrucken". Genau so macht es OneNote:
@@ -331,7 +364,7 @@ const PdfEinlesen = (() => {
             return { seiten: bis, gesamt, quelle, bloecke: gemacht, anhang };
         }
         catch (e) {
-            melder.remove();
+            wegMelden();
             const text = e instanceof Error ? e.message : String(e);
             /* Verschlüsselte Dateien sind der häufigste Fall — und der einzige,
                bei dem eine allgemeine Meldung ratlos machen würde. */
@@ -440,6 +473,26 @@ const PdfEinlesen = (() => {
      * `Store.auftragNehmen` gibt ihn nur einem.
      */
     const auftragsId = (quelleId) => 'pdfbild-' + quelleId;
+    /* ── DER NACHTRAG DER VERWEISE (E477, L133) ──────────────────────────────
+       E473 hat pdf.js aus dem ANZEIGEWEG genommen: die Verweise einer Seite
+       stehen seither am Block, geschrieben beim Einlesen. Alles, was VOR
+       E473 eingelesen wurde, hat das Feld nicht — und weil „keine Verweise"
+       und „noch nicht nachgesehen" beide wie nichts aussehen, zeigten diese
+       Seiten für immer keine Verweise mehr.
+  
+       Nachgetragen wird über dieselbe Maschine wie die Seitenbilder: EIN
+       Lauf je Original, im Hintergrund, mit Pacht und Abbrechen-Knopf. Das
+       ist der Unterschied zum Zustand vor E473 — dort hing die ganze PDF am
+       Ansehen JEDER Seite; hier wird sie einmal geöffnet, alle Seiten
+       bekommen ihr Feld, und danach nie wieder. */
+    const AUFTRAG_VERWEISE = 'pdf-verweise';
+    const verweisAuftragsId = (quelleId) => 'pdfverweise-' + quelleId;
+    /** Seiten einer Quelle, an denen das Feld `verweise` fehlt. Ein leeres
+     *  Feld zählt NICHT als fehlend — es ist die Antwort „nachgesehen, keine". */
+    const ohneVerweise = (quelleId) => Object.values(Store.cache.blocks)
+        .filter(b => b && b.alive !== false && b.type === 'pdfseite' &&
+        b.quelleId === quelleId && !Array.isArray(b.verweise))
+        .sort((a, b) => (Number(a.nr) || 0) - (Number(b.nr) || 0));
     /**
      * KEINE WIEDERHOLUNGEN. Der Vorgabewert der Maschine ist drei, und der
      * ist für Aufträge gedacht, die an einem Netz hängen. Hier ist KEIN
@@ -531,11 +584,86 @@ const PdfEinlesen = (() => {
                 griff.schliessen();
         }
     };
+    /**
+     * Der Läufer für die Verweise (E477). Wie `bilderLaeufer` gebaut, nur
+     * kürzer: er schreibt kein Bild, sondern ein Feld je Seite.
+     */
+    const verweiseLaeufer = async (auftrag, hilfe) => {
+        const quelleId = String(auftrag?.eingabe?.quelleId || '');
+        if (!quelleId)
+            throw new Error('Dem Auftrag fehlt die Kennung des Originals.');
+        const offen = ohneVerweise(quelleId);
+        if (!offen.length)
+            return { seiten: 0, grund: 'nichts offen' };
+        const roh = await Dateien.alsBlob(quelleId);
+        if (!roh)
+            throw new Error('Das Original fehlt in diesem Bestand — die Verweise ' +
+                'kommen zurück, sobald die PDF-Datei wieder da ist.');
+        const satzQuelle = await Store.dateiHolen(quelleId);
+        const name = String(satzQuelle?.name || 'dem Original');
+        let griff = null;
+        let fertig = 0;
+        try {
+            griff = await PdfLeser.oeffne(new Uint8Array(await roh.arrayBuffer()));
+            for (const b of offen) {
+                if (hilfe.abgebrochen())
+                    break;
+                const n = Number(b.nr) || 1;
+                /* AUCH DIE LEERE LISTE WIRD GESCHRIEBEN — und auch für eine Seite,
+                   die es im Original gar nicht mehr gibt. „Keine Verweise" und
+                   „noch nicht nachgesehen" müssen sich unterscheiden, sonst liefe
+                   dieser Nachtrag bei jedem Öffnen des Dokuments wieder los. */
+                const liste = n > griff.seiten ? [] : await griff.verweise(n);
+                Store.updateBlock(b.id, { verweise: Array.isArray(liste) ? liste : [] });
+                fertig++;
+                await hilfe.schritt({ quelleId, fertig }, '„' + name + '": Verweise werden nachgetragen — Seite ' + n + ' von ' +
+                    (Number(b.vonSeiten) || griff.seiten));
+                await new Promise(r => setTimeout(r, 0));
+            }
+            await Store.flush();
+            return { seiten: fertig, quelleId };
+        }
+        finally {
+            if (griff)
+                griff.schliessen();
+        }
+    };
+    /**
+     * Den Nachtrag anstossen — einmal je Original.
+     *
+     * OHNE ORIGINAL WIRD GAR NICHTS ANGELEGT. Eine `.json`-Sicherung kennt
+     * keine Anhänge (§11); ein Auftrag, der scheitert und dem Menschen eine
+     * Fehlermeldung wirft für etwas, das er nicht ändern kann, ist Lärm. Der
+     * Fall steht in L133 und bleibt dort stehen.
+     */
+    const verweiseNachtragen = async (quelleId) => {
+        if (typeof Auftraege === 'undefined' || !Auftraege.anlegen)
+            return { auftrag: null, grund: 'ohne Maschine' };
+        if (!quelleId)
+            return { auftrag: null, grund: 'ohne Quelle' };
+        const offen = ohneVerweise(quelleId);
+        if (!offen.length)
+            return { auftrag: null, seiten: 0, grund: 'nichts offen' };
+        const satzQuelle = await Store.dateiHolen(quelleId);
+        if (!satzQuelle || satzQuelle.zustand !== 'fertig')
+            return { auftrag: null, grund: 'ohne Original' };
+        const id = verweisAuftragsId(quelleId);
+        const schon = await Auftraege.einer(id);
+        if (schon && !JobModell.beendet(schon))
+            return { auftrag: schon, schon: true };
+        const auftrag = await Auftraege.anlegen(AUFTRAG_VERWEISE, { quelleId }, {
+            id, schritte: offen.length, maxVersuche: MAX_VERSUCHE,
+            text: '„' + String(satzQuelle.name || 'dem Original') + '": Verweise werden nachgetragen'
+        });
+        return { auftrag, seiten: offen.length };
+    };
     /* Anmelden, sobald das Modul geladen ist. Die Maschine steht in
        index.html vor diesem Bereich (Zeile 456 gegen 510), also ist sie hier
        immer da; der Wächter gilt Prüfläufen, die einzelne Dateien laden. */
-    if (typeof Auftraege !== 'undefined' && Auftraege.anmelden)
+    if (typeof Auftraege !== 'undefined' && Auftraege.anmelden) {
         Auftraege.anmelden(AUFTRAG_ART, bilderLaeufer, 'Seitenbilder zurückholen');
+        Auftraege.anmelden(AUFTRAG_VERWEISE, verweiseLaeufer, 'Verweise nachtragen');
+    }
     /* ── WAS DER MENSCH DAVON SIEHT ─────────────────────────────────────────
        Der Läufer schweigt (siehe oben). Angezeigt wird HIER, aus den
        Ereignissen — und zwar in jedem Tab, auch in dem, der nicht rechnet.
@@ -713,7 +841,7 @@ const PdfEinlesen = (() => {
      * einem Elternblock an; ohne den wüsste niemand, wohin. Ein Knopf, der
      * still nichts tut, ist schlimmer als einer, der sagt warum.
      */
-    const waehlen = async (elternId) => {
+    const waehlen = async (elternId, vorgabe) => {
         const ziel = elternId || (typeof App !== 'undefined' ? App.aktuelleSeite() : '');
         if (!ziel) {
             UI.toast('Erst eine Seite öffnen — dorthin kommen die PDF-Seiten.');
@@ -722,6 +850,11 @@ const PdfEinlesen = (() => {
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = 'application/pdf,.pdf';
+        /* MEHRERE AUF EINMAL (E471): wer ein Semester einliest, hat selten eine
+           Datei. Gefragt wird nur bei der ERSTEN nach der Anordnung; die
+           uebrigen folgen ihr, sonst staende der Mensch vor zehn gleichen
+           Fragen. Mit `anStelle` wird ohnehin nicht gefragt. */
+        input.multiple = true;
         /* Der Wähler hängt im Dokument. In Chromium öffnet er sich auch ohne
            das — nachgemessen mit der Gegenprobe zu test247 §13. Es bleibt
            trotzdem stehen, weil andere Browser hier bekanntermassen
@@ -736,14 +869,20 @@ const PdfEinlesen = (() => {
                 if (entschieden)
                     return;
                 entschieden = true;
-                const datei = input.files?.[0];
+                const dateien = input.files ? Array.from(input.files) : [];
                 input.remove();
-                if (!datei) {
+                if (!dateien.length) {
                     fertig(null);
                     return;
                 }
                 try {
-                    fertig(await alsSeiten(datei, ziel));
+                    let ergebnis = await alsSeiten(dateien[0], ziel, vorgabe);
+                    for (let k = 1; k < dateien.length; k++) {
+                        const wie = vorgabe && vorgabe.anordnung ? vorgabe.anordnung
+                            : String(Store.getMeta('pdfAnordnung', 'untereinander'));
+                        ergebnis = await alsSeiten(dateien[k], ziel, { ...(vorgabe || {}), anordnung: wie, ueberGrenze: (vorgabe && vorgabe.ueberGrenze) || 'alle' });
+                    }
+                    fertig(ergebnis);
                 }
                 catch (e) {
                     UI.toast('Die PDF liess sich nicht einlesen: ' +
@@ -765,6 +904,160 @@ const PdfEinlesen = (() => {
             input.click();
         });
     };
-    return { alsSeiten, waehlen, neuBerechnen, ohneBild, schaerfer, BREITE_MAX, OHNE_FRAGE };
+    /* ══ BILDER ALS SEITEN (E469) ══════════════════════════════════════════════
+       Ein Foto, ein Scan, eine PNG-Grafik wird eine SEITE des Dokuments — wie
+       in GoodNotes „Bild als Seite einfügen". Dieselbe Bauart wie eine
+       PDF-Seite (`pdfseite` mit `bildDateiId`, `bw`, `bh`), nur ohne
+       `quelleId`: es gibt kein Original, aus dem sich etwas neu rechnen
+       liesse, und `herkunft: 'bild'` sagt es. Das Bild ist NUTZERDATEN, kein
+       abgeleitetes Seitenbild — darum `abgeleitet: false`, damit es in jede
+       `.redion`-Sicherung kommt (§11, §14).
+  
+       Die Seite ist A4-breit; ihre Hoehe folgt dem Bild. Riesige Fotos werden
+       auf 2480 px Kantenlaenge gebracht (300 dpi bei A4): mehr sieht niemand,
+       und ein 12-Megapixel-Foto je Seite spraengte das Telefon (§36). */
+    const BILD_KANTE_MAX = 2480;
+    const bildMass = (blob) => new Promise((ok, nein) => {
+        const url = URL.createObjectURL(blob);
+        const img = new Image();
+        img.onload = () => { URL.revokeObjectURL(url); ok({ w: img.naturalWidth, h: img.naturalHeight }); };
+        img.onerror = () => { URL.revokeObjectURL(url); nein(new Error('Das Bild liess sich nicht lesen.')); };
+        img.src = url;
+    });
+    const bildVerkleinern = async (datei) => {
+        const { w, h } = await bildMass(datei);
+        if (!w || !h)
+            throw new Error('Das Bild hat keine Masse.');
+        if (Math.max(w, h) <= BILD_KANTE_MAX)
+            return { blob: datei, w, h };
+        const f = BILD_KANTE_MAX / Math.max(w, h);
+        const zw = Math.max(1, Math.round(w * f)), zh = Math.max(1, Math.round(h * f));
+        const url = URL.createObjectURL(datei);
+        try {
+            const img = await new Promise((ok, nein) => {
+                const i = new Image();
+                i.onload = () => ok(i);
+                i.onerror = () => nein(new Error('Das Bild liess sich nicht lesen.'));
+                i.src = url;
+            });
+            const leinwand = document.createElement('canvas');
+            leinwand.width = zw;
+            leinwand.height = zh;
+            const stift = leinwand.getContext('2d');
+            if (!stift)
+                throw new Error('Der Browser gibt keine Zeichenfläche her.');
+            stift.drawImage(img, 0, 0, zw, zh);
+            const blob = await new Promise(fertig => leinwand.toBlob(b => fertig(b), 'image/webp', 0.85));
+            leinwand.width = 0;
+            leinwand.height = 0;
+            if (!blob)
+                throw new Error('Das Bild liess sich nicht verkleinern.');
+            return { blob, w: zw, h: zh };
+        }
+        finally {
+            URL.revokeObjectURL(url);
+        }
+    };
+    const bilderAlsSeiten = async (dateien, elternId, anStelle) => {
+        const bilder = Array.from(dateien).filter(d => /^image\//i.test(d.type));
+        if (!bilder.length) {
+            UI.toast('Keine Bilddatei dabei — es gehen PNG, JPG, WebP, GIF.');
+            return [];
+        }
+        const wohin = anStelle ? anStelle.elternId : elternId;
+        let stelle = anStelle ? anStelle.index : -1;
+        const ids = [];
+        for (let k = 0; k < bilder.length; k++) {
+            const datei = bilder[k];
+            try {
+                const { blob, w, h } = await bildVerkleinern(datei);
+                const bw = SheetSpace.A4_BREITE;
+                const bh = SheetSpace.rund(bw * h / w);
+                const b = Store.addBlock(wohin, 'pdfseite', {
+                    text: '', nr: k + 1, vonSeiten: bilder.length, bw, bh,
+                    raumVersion: SheetSpace.RAUM_VERSION, herkunft: 'bild', bildName: datei.name
+                }, stelle >= 0 ? stelle++ : -1);
+                const name = blob === datei ? datei.name : datei.name.replace(/\.[a-z0-9]+$/i, '') + '.webp';
+                const satz = await Dateien.ablegen(new File([blob], name, { type: blob.type || datei.type }), { blockId: b.id, abgeleitet: false });
+                Store.updateBlock(b.id, { bildDateiId: satz.id, bildBreite: w });
+                ids.push(b.id);
+            }
+            catch (e) {
+                UI.toast('„' + datei.name + '" liess sich nicht als Seite ablegen: ' + (e instanceof Error ? e.message : String(e)));
+            }
+            await new Promise(r => setTimeout(r, 0));
+        }
+        await Store.flush();
+        if (ids.length)
+            UI.toast(ids.length === 1 ? 'Ein Bild ist jetzt eine Seite' : ids.length + ' Bilder sind jetzt Seiten');
+        return ids;
+    };
+    const bilderWaehlen = (elternId, anStelle) => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.multiple = true;
+        input.style.display = 'none';
+        document.body.appendChild(input);
+        return new Promise(fertig => {
+            let entschieden = false;
+            input.addEventListener('change', () => {
+                if (entschieden)
+                    return;
+                entschieden = true;
+                const dateien = input.files ? Array.from(input.files) : [];
+                input.remove();
+                if (!dateien.length) {
+                    fertig([]);
+                    return;
+                }
+                bilderAlsSeiten(dateien, elternId, anStelle).then(fertig, () => fertig([]));
+            });
+            input.addEventListener('cancel', () => { if (entschieden)
+                return; entschieden = true; input.remove(); fertig([]); });
+            input.click();
+        });
+    };
+    /**
+     * MIT DER KAMERA EINE SEITE MACHEN (E482, L133).
+     *
+     * GoodNotes hat „Foto aufnehmen"; Redion hatte nur den Dateiwähler.
+     * Der Unterschied ist EIN Attribut: `capture` sagt dem Telefon, dass es
+     * die Kamera aufmachen soll statt der Galerie. Am Rechner ohne Kamera
+     * tut es nichts — dort kommt der gewohnte Wähler, und das ist die
+     * richtige Antwort und kein Fehler.
+     *
+     * `multiple` bleibt aus: eine Aufnahme ist eine Seite. Alles Weitere —
+     * Grösse, Einpassen, Anlegen — macht `bilderAlsSeiten`, dieselbe
+     * Stelle wie beim Wähler (kein zweiter Weg für dasselbe Ziel).
+     */
+    const kameraWaehlen = (elternId, anStelle) => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.setAttribute('capture', 'environment');
+        input.style.display = 'none';
+        document.body.appendChild(input);
+        return new Promise(fertig => {
+            let entschieden = false;
+            input.addEventListener('change', () => {
+                if (entschieden)
+                    return;
+                entschieden = true;
+                const dateien = input.files ? Array.from(input.files) : [];
+                input.remove();
+                if (!dateien.length) {
+                    fertig([]);
+                    return;
+                }
+                bilderAlsSeiten(dateien, elternId, anStelle).then(fertig, () => fertig([]));
+            });
+            input.addEventListener('cancel', () => { if (entschieden)
+                return; entschieden = true; input.remove(); fertig([]); });
+            input.click();
+        });
+    };
+    return { alsSeiten, waehlen, neuBerechnen, ohneBild, schaerfer, bilderAlsSeiten, bilderWaehlen, kameraWaehlen,
+        verweiseNachtragen, ohneVerweise, AUFTRAG_VERWEISE, BREITE_MAX, OHNE_FRAGE, BILD_KANTE_MAX };
 })();
 window.PdfEinlesen = PdfEinlesen;

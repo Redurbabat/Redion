@@ -136,6 +136,7 @@ const zeile = () => pc.evaluate(() => {
     liste: (Fenster.reiter() || []).map((t: any) => (Store.getBlock(t.id)?.text) || '?'),
     aktiv: Fenster.aktiv(),
     sichtbar: !!el && getComputedStyle(el).display !== 'none' && (r?.height || 0) > 4,
+    studio: document.body.dataset.dokument === 'an',
     knoepfe: [...(el?.querySelectorAll('.rt-tab') || [])]
       .map(t => (t.querySelector('span')?.textContent || '').trim()),
     hoch: Math.round(r?.height || 0)
@@ -154,8 +155,12 @@ console.log('\n1 · Zwei Dokumente, zwei Reiter');
 
 const vorher = await zeile();
 gleich('Ein Dokument allein ergibt einen Reiter', vorher.liste.length, 1);
-p('Und die Zeile bleibt dabei verborgen — es gibt nichts zu wechseln',
-  !vorher.sichtbar, `${vorher.hoch} px`);
+/* SEIT E464 STEHT DIE ZEILE IM SCHREIBSTUDIO IMMER — mit dem „+" für das
+   nächste Dokument, wie die Reiter eines Browsers (Redurs test437: „Echte
+   Dokument-Tabs sichtbar"). Ausserhalb des Studios gilt E300 weiter: eine
+   Zeile mit einem Reiter ist eine Zeile Luft. */
+p('Und die Zeile bleibt dabei verborgen — ausser im Schreibstudio, wo sie das „+" trägt',
+  !vorher.sichtbar || vorher.studio, `${vorher.hoch} px, Studio: ${vorher.studio}`);
 
 await oeffne(ids.b);
 const zwei = await zeile();

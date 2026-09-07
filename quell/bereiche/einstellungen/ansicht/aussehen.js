@@ -259,7 +259,12 @@ const Aussehen = (() => {
             const s = einstellung();
             if (reiter === 'farbe') {
                 inhalt.innerHTML =
-                    '<div class="au-titel">Farbschema</div>' +
+                    /* DIE STAFFELEI (E462) steht über den Karten: sie wechselt den
+                       GRUNDTON, die Karten wählen das Schema darunter. Der Platz
+                       wird unten mit dem Bauteil gefüllt — ein Umschalter ist ein
+                       Element mit Zustand, keine Zeichenkette. */
+                    '<div class="au-staffelei" id="au-staffelei"></div>' +
+                        '<div class="au-titel">Farbschema</div>' +
                         '<div class="au-schemata">' + SCHEMATA.map(x => {
                         const bg = x.werte['--bg'] || (x.grund === 'light' ? '#ffffff' : '#191919');
                         const side = x.werte['--bg-side'] || (x.grund === 'light' ? '#fbfbfa' : '#202020');
@@ -287,6 +292,32 @@ const Aussehen = (() => {
                         'title="Eigene Farbe wählen">' +
                         '<button data-akz="" class="au-zurueck">wie im Schema</button>' +
                         '</div>';
+                const platz = inhalt.querySelector('#au-staffelei');
+                if (platz && typeof Staffelei !== 'undefined') {
+                    const grund = SCHEMATA.find(x => x.id === s.schema)?.grund || 'dark';
+                    platz.append(Staffelei.bauen({
+                        hell: grund === 'light',
+                        beiWechsel: () => {
+                            /* DIESELBE REGEL WIE IM STUDIO-KOPF (studio.ts): das zuletzt
+                               benutzte Schema des Ziel-Grundtons, sonst Hell bzw.
+                               Standard. Zwei Umschalter, eine Regel (§8).
+              
+                               VON WO, sagt das GESPEICHERTE Schema — nicht der Knopf.
+                               Der kann hinterherhinken, wenn anderswo gewechselt wurde;
+                               dann stünde das dunkle Schema unter dem hellen Schlüssel,
+                               und der nächste Wechsel liefe ins Leere. */
+                            const jetzt = einstellung();
+                            const jetztGrund = SCHEMATA.find(x => x.id === jetzt.schema)?.grund || 'dark';
+                            const hell = jetztGrund === 'dark';
+                            const von = jetztGrund, zu = hell ? 'light' : 'dark';
+                            Store.setMeta('studio:schema-' + von, jetzt.schema);
+                            const gemerkt = Store.getMeta('studio:schema-' + zu, hell ? 'hell' : 'standard');
+                            const ziel = SCHEMATA.find(x => x.id === gemerkt && x.grund === zu);
+                            setzen({ schema: ziel?.id || (hell ? 'hell' : 'standard'), akzent: '' });
+                            zeichne();
+                        }
+                    }).element);
+                }
             }
             if (reiter === 'schrift') {
                 inhalt.innerHTML =

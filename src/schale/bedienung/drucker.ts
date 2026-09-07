@@ -15,7 +15,7 @@
  *
  * WOHER. Uiverse-Eintrag Nr. 28 „Printer Process Card" von spotift_5948
  * (UI-Reserve, E440; das Original liegt unverändert unter
- * quell/entwicklung/ui-reserve/komponenten/28-printer-process-card/).
+ * Katalog-Eintrag 28 im Entwicklungs-Archiv, printer-process-card).
  * Das Original lässt einen Drucker in einer Schleife von 6,4 s ein Blatt
  * einziehen, bedrucken und ausgeben — und schreibt dazu „Ready, Feeding,
  * Printing, Ejecting, Done" AUS EINEM ZEITGEBER. Genau das darf die

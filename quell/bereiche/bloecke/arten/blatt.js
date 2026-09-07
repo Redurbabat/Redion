@@ -111,7 +111,9 @@ const Blatt = (() => {
         papier.dataset.papier = jetzt;
         for (const [name, wert] of Object.entries(masse(breite, hoehe)))
             papier.style.setProperty(name, wert);
-        w.appendChild(papier);
+        /* Gedreht per Huelle (E467); ungedreht haengt das Papier wie immer
+           unmittelbar in der Huelle. */
+        w.appendChild(R.drehHuelle(block, papier));
         /* Die Klappe: auf, zu, zu bei Tipp daneben, zu bei Escape (§38). Der
            Tipp daneben wird beim Aufmachen angemeldet und beim Zumachen wieder
            abgemeldet — kein Dauerhorcher am Dokument je Blatt. Gehorcht wird

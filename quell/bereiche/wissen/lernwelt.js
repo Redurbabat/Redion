@@ -2401,6 +2401,11 @@ const Lernwelt = (() => {
         if (typeof Register !== 'undefined' && Register.symbole) {
             Register.symbole.fuelle(root);
         }
+        /* „Lernen starten" glimmt (E463) — der eine Knopf je Ansicht, der
+           etwas ANFÄNGT, nicht nur wechselt. Die Zeichen werden bei jedem
+           Zeichnen neu zerlegt, weil `innerHTML` sie neu schreibt. */
+        if (typeof Funkel !== 'undefined')
+            Funkel.alle(root, '.is-primary[data-lw-train], .is-primary[data-lw-nav="lernen"]');
         if (zustand.simulation && !zustand.simulation.fertig)
             timerStarten();
         else

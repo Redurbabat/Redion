@@ -113,6 +113,7 @@ const Rundgang = (() => {
     document.getElementById('rg-schleier')?.remove();
     kasten = null; loch = null;
     removeEventListener('resize', stellen);
+    if (typeof Geste !== 'undefined') Geste.weg();
   };
 
   /**
@@ -184,7 +185,13 @@ const Rundgang = (() => {
       if (oben + kb.height > innerHeight - 12) oben = Math.max(12, innerHeight - kb.height - 12);
       kasten.style.left = links + 'px';
       kasten.style.top  = oben + 'px';
+      /* DIE HAND TIPPT AUF DAS ZIEL (E463). Loch und Kasten sagen wo und
+         was; die Hand sagt, dass man da hintippen kann. Sie hängt am
+         echten Ziel, nicht an einer Stelle — beim Grösserziehen des
+         Fensters wandert sie mit, weil `stellen` sie neu stellt. */
+      if (typeof Geste !== 'undefined') Geste.zeigen(el);
     } else {
+      if (typeof Geste !== 'undefined') Geste.weg();
       loch.style.display = 'none';
       const kb = kasten.getBoundingClientRect();
       kasten.style.left = ((innerWidth - kb.width) / 2) + 'px';
@@ -488,6 +495,13 @@ const Rundgang = (() => {
         '<p class="wk-fuss">Deine Daten liegen im Speicher dieses Browsers. ' +
         'Sichere sie ab und zu — unter „Mehr" steht, wie.</p>' +
       '</div>';
+
+    /* DIE TEXTUR IN DEN KOPF (E462). Sie ist Schmuck, und der Kopf ist die
+       eine Fläche in Redion, die keine Auskunft trägt — seit E456 steht
+       dort nicht einmal mehr eine Marke. Fehlt das Bauteil, fehlt nur der
+       Schmuck. */
+    const wkKopf = d.querySelector<HTMLElement>('.wk-kopf');
+    if (wkKopf && typeof Textur !== 'undefined') Textur.legen(wkKopf);
 
     d.addEventListener('click', e => {
       const b = elVon(e)?.closest<HTMLElement>('[data-a]');

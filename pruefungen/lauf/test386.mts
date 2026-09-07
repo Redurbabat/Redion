@@ -189,10 +189,14 @@ p('Das Wort ist am Telefon unsichtbar …', namen && namen.wortSichtbar === 0,
   'sichtbar: ' + namen?.wortSichtbar);
 p('… steht aber im Baum', (namen?.wortDa ?? 0) >= 10, String(namen?.wortDa));
 gleich('Kein Zeichen steht offen im Baum', namen?.zeichenOffen, 0);
-gleich('Genau ein Werkzeug meldet sich als gedrückt', namen?.gedrueckt, ['schreiben']);
+/* SEIT E464 beginnt das Schreibstudio mit dem STIFT — „schreiben" ist dort
+   die Hand zum Verschieben, und wer eine PDF aufmacht, will zeichnen, nicht
+   schieben (`dokStift:` in `document-mode.ts`, Vorgabe 'stift'). */
+gleich('Genau ein Werkzeug meldet sich als gedrückt', namen?.gedrueckt, ['stift']);
 
-/* Und der Zustand wandert mit. */
-await handy.click('.blatt-werk [data-wz="stift"]');
+/* Und der Zustand wandert mit. Seit E464 steht der Werkzeugknopf in der
+   Zeichenleiste des Schreibtischs; die Blattleiste hält nur die Optionen. */
+await handy.click('.document-drawingbar [data-document-tool="stift"], .blatt-werk [data-wz="stift"]');
 await handy.waitForTimeout(400);
 const nachher = await handy.evaluate(`(() => {
   const leiste = document.querySelector('.blatt-werk');
@@ -346,9 +350,14 @@ const knopfStand = async (): Promise<any> => await pc.evaluate(`(() => {
            backTitel: b?.title || '', fwdTitel: f?.title || '' };
 })()`);
 let st = await knopfStand();
-p('Nach dem Neuladen ist Zurück aus', st.backAus, JSON.stringify(st));
-p('Und Vorwärts auch', st.fwdAus, JSON.stringify(st));
-p('Der Grund steht in der Sprechblase', /kein Schritt/i.test(st.backTitel), st.backTitel);
+/* SEIT E464 FÜHRT ZURÜCK AUF EINER SEITE IMMER IRGENDWOHIN: ohne Verlauf zur
+   Dokumentübersicht (Redurs Navigationsort in `schale.ts`). Aus ist der
+   Knopf nur, wenn es weder Verlauf noch Seite gibt — und dann sagt die
+   Sprechblase weiter, warum. */
+p('Nach dem Neuladen ist Zurück aus — oder es führt zur Dokumentübersicht (E464)',
+  st.backAus || /Dokumentübersicht/.test(st.backTitel), JSON.stringify(st));
+p('Und Vorwärts ist aus', st.fwdAus, JSON.stringify(st));
+p('Der Grund steht in der Sprechblase', /kein Schritt|Dokumentübersicht/i.test(st.backTitel), st.backTitel);
 
 /* ZWEI GEWÖHNLICHE SEITEN, keine Dokumente. Beim ersten Versuch standen
    hier die beiden PDFs aus §4 — und der Klick lief in einen Timeout, weil

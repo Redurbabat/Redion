@@ -4033,6 +4033,14 @@ Gefunden am 31. August 2026 (E284, bei der gemessenen Bestandsaufnahme).
 L102 — Was die Bestandsaufnahme vom 31. August sonst noch fand
 ================================================================================
 
+**DER RECHTE-FEHLER KAM ZUM ZWEITEN MAL (7. September 2026, E471).** Im
+Dokumentmodus wurde `Konten.darf` an sechs Stellen mit dem Seiten-OBJEKT
+statt seiner Kennung gerufen; `rolleAuf` fand damit nichts und fiel auf die
+Standardrolle „voll" zurück — jede Rechtefrage im PDF-Teil sagte ja. Behoben
+und mit `test444` bewacht, diesmal über die ganze Quelle: jeder Aufruf muss
+erkennbar eine Kennung übergeben. Wer L102 liest, liest damit auch, dass
+eine Regel ohne Wächter zweimal gebrochen wird.
+
 **PUNKT 1 GESCHLOSSEN am 31. August 2026 durch E290** (`core/calendar/
 wiederholung.ts` liest BYDAY, BYMONTHDAY, BYMONTH, BYSETPOS, WKST, EXDATE,
 RDATE; `test284`, 49 Punkte).
@@ -6375,3 +6383,191 @@ Funktion aus `dienst.ts` heraus oder überschreibbar werden — und das ist
 eine Änderung am KI-Kern für einen Prüflauf, also eine eigene
 Entscheidung. Für das Wort: die Server-Suite um einen Abgleichfall
 erweitern.
+
+---
+
+L120 — Die Presse beim PDF-Einlesen läuft im Prüflauf nicht an einer echten PDF
+--------------------------------------------------------------------------
+
+E463 hängt die Presse (E461) an `PdfEinlesen.einlesen`: eine schwebende
+Karte, die „Seite n von m" schreibt, während die Schleife läuft. `test436`
+§3 prüft die Karte selbst mit echten Bytes im DOM — bauen, setzen,
+entfernen, Lage am Telefon — und die VERDRAHTUNG in `einlesen.ts` als Text:
+`Lader.schweben`, kein Toast daneben, fünfmal `wegMelden()`.
+
+Was er nicht tut: eine PDF durch die Schleife schicken und dabei zusehen,
+wie die Karte „Seite 3 von 12" sagt. Dafür bräuchte der Lauf eine
+PDF-Datei und den PDF-Leser im Browser; die Suiten, die das haben
+(test177, test180, test189, test192, test228, test285, test320), prüfen das
+Ergebnis des Einlesens, nicht die Meldung währenddessen.
+
+WAS ES SCHLIESSEN WÜRDE: in einer dieser Suiten während des Einlesens
+nach `.ru-lader-schwebt .ru-lader-text` sehen — eine Zeile, aber in einem
+Lauf, der der Presse nicht gehört. Derselbe Stand wie bei L119.
+
+---
+
+L133 — Was am PDF-Teil gegenüber GoodNotes noch fehlt (Stand nach G16)
+--------------------------------------------------------------------------
+
+Redurs Auftrag vom 7. September (E465): der PDF-Teil 1:1 wie GoodNotes,
+ohne eine Funktion zu löschen. Die fünf Bögen (G1–G5, E465–E469,
+`AUFGABEN.md` 7) sind gebaut; diese Lücke ist die ehrliche Restliste, und
+was hier steht, ist NICHT gebaut, wie schön das Dossier es auch beschreibt.
+
+Zeichnen (nach G1, E465):
+
+  · **Kurve** und **Verbinder** des Shape-Tools — beides braucht Griffe an
+    einer fertigen Marke (die Mitte der Kurve nachziehen; ein Verbinder,
+    der an zwei Formen hängt). Kommt nach dem Drehgriff aus G2.
+  · ~~**Formerkennung für gedrehte Dreiecke**~~ — **GESCHLOSSEN mit E478.**
+    Die Marke kann seit E466 schief stehen und seit E474 rechnet die
+    Geometrie damit; also bekommt ein gedrehtes Dreieck jetzt seinen
+    Winkel statt einer Absage. Aufrecht bleibt aufrecht (unter 4° kein
+    Feld), und ein fast gleichseitiges bekommt die KLEINSTE der drei
+    möglichen Drehungen — das fand das Bild, nicht der Prüflauf.
+    `test451`.
+  · ~~**Radierer-Filter** nach Werkzeugart~~ — **GESCHLOSSEN mit E482.**
+    Fünf Arten: Ganz und Teil sagen, wie viel weggeht; Stift, Marker und
+    Band, wovon. **Offen bleibt „nur Bleistift":** der Bleistift ist in
+    Redion kein Werkzeug, sondern ein Stil des Stifts (E375) — er stünde
+    in einer Reihe mit Werkzeugen und meinte etwas anderes als sie.
+    `test455 §2`.
+  · **Farbsets** speichern und zurücksetzen — heute sieben feste und vier
+    eigene Tupfer.
+
+Auswahl (nach G2, E466; Sperre nachgezogen in E473): Drehen,
+Ausschneiden, nach vorn und hinten, Sperren, Kritzel-Löschen und
+Kreis-Lasso stehen. Offen bleibt:
+
+  · ~~**Treffer auf gedrehten Kästen**~~ — **GESCHLOSSEN mit E474.** Die
+    Geometrie kennt seit `ecken`, `drehung` und `overlapConvex` die
+    wirklichen vier Ecken einer schiefen Marke: der Radierer misst an
+    ihnen (an 3000 Stellen gegen die genaue Rechnung geprüft, vorher 1013
+    falsche Antworten), der Kastenzug fängt nicht mehr ein, was in der
+    leeren Ecke steht, der Auswahlrahmen liegt auf der Marke statt weit um
+    sie herum, und das Ziehen am Griff verzerrt sie nicht mehr. Der Tipp
+    ging schon immer über den gezeichneten Knoten, das Lasso über die
+    Mitte des Kastens — die ist beim Drehen dieselbe. `test447`.
+  · **Auswahl über mehrere Blätter** — das Lasso gilt je Blatt (E353).
+  · **Sperren im Inspector** — die Sperre sitzt am Knopf der Leiste; eine
+    Liste aller gesperrten Marken gibt es nicht.
+
+Seiten (nach G3, E467): einfügen, duplizieren, drehen, schieben,
+Lesezeichen und löschen stehen im Inspector. Offen bleibt:
+
+  · ~~**Seiten ziehen in der Miniaturenleiste** und ein Menü je Miniatur~~
+    — **GESCHLOSSEN mit E480.** Jede Miniatur hat ihren „⋯"-Knopf mit
+    denselben acht Griffen wie der Inspector, die aber SEINE Seite meinen
+    (dafür nehmen alle Seitengriffe jetzt entgegen, wen sie meinen).
+    Gezogen wird mit dem Zeiger: mit der Maus nach acht Pixeln, mit dem
+    Finger erst nach 350 ms Halten, damit die Leiste rollbar bleibt.
+    **Offen bleibt:** umgeordnet wird nur innerhalb derselben Eltern —
+    liegen die Seiten eines Dokuments in mehreren Spalten, sagt es das,
+    statt zu raten. `test453`.
+  · **Einfügen aus einer Vorlage mit Inhalt** — „Seite danach" kennt die
+    fünf Papiere; eine Vorlagenseite aus dem Vorlagenregister (mit Text
+    und Marken) ist ein eigener Bogen.
+  · **Mehrseitige Notizhefte als EIN Block** — ein `blatt` wächst in die
+    Höhe (E118); Seitengriffe gelten ihm als Ganzem. Ein Heft mit drei
+    Blattseiten lässt sich nicht seitenweise drehen oder löschen.
+
+Suche und Verweise (nach G4, E468): die Suche im Studio mit Treffern an
+der Stelle, die Verweise der PDF, eigene Verweise an Marken stehen.
+Offen bleibt:
+
+  · **Treffer-Kästen sind eine Näherung** — anteilig nach Zeichen im
+    Stück der Textebene, nicht gemessen; bei sehr ungleichen Buchstaben
+    („iiii" neben „WWWW") sitzt der Kasten ein paar Punkte daneben.
+  · ~~**PDF-Verweise auf gedrehten Seiten**~~ — **GESCHLOSSEN mit E481.**
+    Die Schicht liegt nicht mehr NEBEN dem Papier (von Hand nachgemessen,
+    und bei einer gedrehten Seite misst man ihre Hülle), sondern IM
+    Papier mit `inset:0`. Dort dreht sie mit — und liegt nebenbei auf dem
+    Innenkasten, dort, wo auch das Seitenbild liegt. `test454 §3`.
+  · **Suche über mehrere Dokumente** — die Suche gilt dem offenen
+    Dokument; die Schalensuche (Strg P) findet Seiten, nicht Stellen.
+  · ~~**Ziele der PDF innerhalb der Seite**~~ — **GESCHLOSSEN mit E481.**
+    `/XYZ`, `/FitH` und `/FitR` nennen eine Höhe; sie steht seit dem
+    Einlesen als `zielY` am Verweis, und der Sprung rollt dorthin. `/Fit`
+    nennt keine — und dann steht auch keine da (dieselbe Regel wie E477).
+    `test454 §1, §2`.
+  · **Verweise auf Striche antippen** — ein Strich trägt seinen Verweis,
+    ist aber dünn; ein Kasten um ihn ist der bessere Träger.
+
+Import und Export (nach G5, E469): Bilder als Seiten, PDF an einer Stelle,
+Seite als Bild, Zoom-Fenster stehen. Offen bleibt:
+
+  · **Das Zoom-Fenster** ist seit E470 der Streifen, in den man schreibt,
+    mit der ganzen Seite darüber — und mit EINER Zeichenfläche (das Papier
+    zieht um); seit E472 rückt es am rechten Rand von selbst weiter. Was
+    noch fehlt: „Ausschnitt" und „Erkennen" ruhen, solange es offen ist.
+  · **Seite als Bild** lässt den getippten Text eines Blatts aus. Die
+    BILDMARKEN kommen seit **E479** mit; dabei wurde nachgemessen, was
+    ein SVG auf der Leinwand darf, und das Ergebnis gehört hierher, damit
+    niemand die geschlossenen Türen ein zweites Mal aufdrückt:
+
+        blob: im SVG      gesperrt (Pixel bleibt Platzhalterblau)
+        data: im SVG      geht, und trübt die Leinwand nicht
+        foreignObject     zeichnet — TRÜBT aber die Leinwand
+
+    Die dritte Zeile schliesst den naheliegenden Weg für den Text:
+    `foreignObject` würde ihn bringen und dafür die ganze Ausfuhr
+    verlieren (`toBlob` schlägt danach fehl). Bliebe, den Text als
+    SVG-`<text>` nachzubauen — das ist ein zweiter Blockrenderer und
+    ein eigener Bogen. `Drucken` (E117) hat beides und bleibt der Weg
+    für eine vollständige Seite.
+  · **Ganzes Dokument als PDF mit Marken** — braucht einen PDF-Schreiber;
+    Drucken über den Browser kann es heute.
+  · ~~**Fotografieren mit der Kamera** als Seite~~ — **GESCHLOSSEN mit
+    E482.** „Foto aufnehmen" steht im Seitenmenü und im Menü an der
+    Miniatur; der Wähler dahinter trägt `capture="environment"`. Am
+    Rechner ohne Kamera öffnet sich der gewohnte Dateiwähler, und der
+    Hinweis am Knopf sagt das. `test455 §1`.
+
+Aus der Prüfung nach den Bögen (E473) bleibt ehrlich stehen:
+
+  · ~~**Verweise auf alten Seiten.**~~ — **GESCHLOSSEN mit E477.** Der
+    Nachtrag über die Auftragsmaschine ist gebaut: beim Öffnen eines
+    Dokuments läuft je Original einmal `pdf-verweise`, schreibt jeder
+    Seite ihr Feld (auch die leere Liste) und malt die Verweise danach
+    ohne neues Öffnen. Ausserhalb des Anzeigewegs — `test450 §5` zählt
+    nach, dass beim Ansehen und Rollen keine PDF geöffnet wird. **Offen
+    bleibt nur der Fall ohne Original:** wer aus einer `.json`-Sicherung
+    kommt, hat die PDF-Datei nicht, und ohne sie gibt es nichts
+    nachzutragen — dort wird bewusst kein Auftrag angelegt, statt eine
+    Fehlermeldung für etwas zu werfen, das niemand ändern kann.
+  · **Der Rest der 33 Funde.** Acht wurden adversarial geprüft, fünf haben
+    gehalten und sind behoben; die übrigen 25 sind nicht widerlegt,
+    sondern nur nicht geprüft. Einer davon ist seit E474 erledigt
+    (`InkGeometry.scale` kannte `dreh` nicht — eine gedrehte Marke
+    verzerrte beim Ziehen am Eckgriff). Erledigt sind ausserdem die drei
+    §37-Stellen mit E475: gemessen waren es 6,9 px am PDF-Verweis, 16 am
+    Regler der Strichstärke und 36 an der Papierauswahl — alle drei jetzt
+    44, der Verweis über eine Trefffläche, die beim halben Nachbarabstand
+    haltmacht (`test448`). Mit E476 sind auch die letzten zwei benannten
+    erledigt: das Kritzel-Löschen greift jetzt am WEG des Gekritzels statt
+    an seinem Kasten (mit dem Kasten löschte ein schräger Zug drei Marken
+    statt einer), und `trefferMalen` malt beim Nachziehen nur noch die
+    eine Seite (`test449`). Was danach von den 25 bleibt, ist nicht mehr
+    benannt: es sind die Funde, die niemand aufgeschrieben hat, weil sie
+    keinen Satz wert schienen — wer sie sucht, liest die Bögen neu.
+
+Was Redion auch nach G5 nicht haben wird, und warum:
+
+  · **Audio mit Zeitbezug zur Handschrift (Note Replay)** — ein eigener
+    Bereich (Aufnahme, Speicher in Stücken, Abspielen mit Marken-Zeit).
+    Es gibt „Besprechung" im KI-Fenster; die Kopplung an Striche ist ein
+    eigener Bogen mit eigener Entscheidung.
+  · **Handschrift → Text, Mathe → Formel** — braucht eine Erkennung, die
+    lokal läuft. Tesseract erkennt gedruckten Text (OCR-Auftrag), keine
+    Handschrift; eine Wolken-Erkennung widerspricht §21 ohne Frage.
+  · **Elemente-Bibliothek (Sticker, GIPHY)** — Redion hat die Fachzeichen;
+    eine allgemeine Sammlung wiederverwendbarer Marken wäre neu.
+  · **Präsentationsmodus mit Laserpointer**, **Wolken-Abgleich der
+    Dokumente**, **Freigabe-Links**, **Marketplace** — ausserhalb des
+    PDF-Teils oder ausserhalb von local-first (§22, §24).
+  · **DOCX/PPTX-Import** — GoodNotes wandelt sie zu PDF um (nur auf
+    Apple); im Browser ohne Bibliothek nicht möglich, und eine grosse
+    Abhängigkeit ist keine (§6).
+
+Gefunden beim Lesen des Dossiers gegen den Bestand, 7. September 2026.

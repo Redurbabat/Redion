@@ -137,7 +137,9 @@ const marken = (pg: Seite, blattId: string) => pg.evaluate((id: string) => {
 }, blattId);
 const auswahl = (pg: Seite) => pg.evaluate(() => ({
   rahmen: document.querySelectorAll('.blatt-marken .blatt-auswahlrahmen').length,
-  griffe: document.querySelectorAll('.blatt-marken [data-griff]').length,
+  /* NUR DIE ECKEN (E466): der Drehgriff darüber hat auch `data-griff`. */
+  griffe: document.querySelectorAll('.blatt-marken [data-griff]:not([data-griff="dreh"])').length,
+  drehgriff: document.querySelectorAll('.blatt-marken [data-griff="dreh"]').length,
   kasten: (() => { const k = document.querySelector('.blatt-marken .blatt-auswahlkasten');
     return k ? { x: Number(k.getAttribute('x')), y: Number(k.getAttribute('y')),
       w: Number(k.getAttribute('width')), h: Number(k.getAttribute('height')) } : null; })(),
@@ -170,6 +172,7 @@ let a = await auswahl(pg);
 gleich('Genau ein Strich ist gewählt', a.rahmen, 1);
 p('… nämlich A, der in der Schlinge liegt', a.rahmenX[0] !== undefined && a.rahmenX[0] < 100, JSON.stringify(a.rahmenX));
 gleich('Vier Griffe stehen an den Ecken', a.griffe, 4);
+gleich('… und einer zum Drehen darüber (E466)', a.drehgriff, 1);
 p('Der Kasten umschliesst A (x um 97, Breite um 106)', !!a.kasten && Math.abs(a.kasten.x - 97) < 3 && Math.abs(a.kasten.w - 106) < 6, JSON.stringify(a.kasten));
 p('InkGeometry.insidePolygon kennt den Unterschied', await pg.evaluate(() => {
   const l = [[80, 80], [420, 80], [420, 90], [220, 90], [220, 120], [80, 120]];

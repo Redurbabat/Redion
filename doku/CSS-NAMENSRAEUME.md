@@ -23,7 +23,7 @@ L90 hält seither fest, dass das nicht die Lücke ist:
 > ins Leere, und der Fehler sieht wieder nicht wie ein Fehler aus — er sieht
 > aus wie ein Stil, den man nicht bestellt hat.
 
-Es sind nicht vierzig. Es sind 143.
+Es sind nicht vierzig. Es sind 144 (seit E464 auch `do`, die Original-Karte des Dokumentmodus).
 
 ## Zwei Sorten Präfix, und die zweite sieht nicht danach aus
 
@@ -109,6 +109,7 @@ db       41  bausteine.css
 dd        4  bausteine.css
 dk        8  bausteine.css
 dl       17  bausteine.css
+do        6  bausteine.css
 dz        7  bausteine.css
 ea      129  bausteine.css
 eg       21  bausteine.css

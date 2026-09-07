@@ -3861,3 +3861,274 @@ fehlendes Semikolon machte vier CSS-Regeln ungültig, ohne dass irgendetwas
 gemeckert hätte.
 
 **Prüfung.** `test402`, ohne Browser und ohne Port. Mutation rot gesehen.
+
+## Der PDF-Teil wie GoodNotes — sechs Bögen (E465–E470)
+
+**Auftrag.** Redur am 7. September, mit einem 32-seitigen GoodNotes-Dossier:
+„alles, was GoodNotes machen kann, 1:1 — nur beim PDF-Teil: wie die
+bearbeitet wird, importiert, die Stifte usw.", und „ohne eine Funktion zu
+löschen". Das Dossier wurde gegen den Bestand gelesen (E351–E360,
+E375–E385, E464); daraus wurden sechs Bögen, jeder mit Prüflauf,
+Gegenprobe, Bild und Entscheidung.
+
+**Bau.**
+
+* **G1 · Zeichnen (E465, test438).** Dreieck und rundes Rechteck als
+  Formen, der Bleistift als vierter Stift mit eigener Druckkurve, die
+  freie Strichstärke als Klappe an der gewählten Stufe (der Regler in der
+  Zeile hob die Leiste auf drei Reihen), Buchstabentasten
+  P/2/H/E/S/V/T/A/N/M/R/I.
+* **G2 · Auswahl (E466, test439).** Drehgriff — Linienzüge drehen ihre
+  Punkte, Kästen merken sich `dreh` —, Ausschneiden, nach vorn und hinten,
+  Sperren mit Schloss, Kritzel-Löschen und Kreis-Lasso.
+* **G3 · Seiten (E467, test440).** Das Seitenmenü im Inspector: einfügen
+  mit Papierwahl, duplizieren mit eigenem Seitenbild (eine geteilte Datei
+  wäre mit dem Original gestorben), drehen, schieben, Lesezeichen mit
+  Liste, löschen in den Papierkorb.
+* **G4 · Suche und Verweise (E468, test441).** Die Textschicht der PDF mit
+  Lage aus pdf.js, eine Suchleiste im Studio mit Treffern über den
+  getroffenen Zeichen, die Links der PDF als eigene Schicht, eigene
+  Verweise als Feld an jeder Marke.
+* **G5 · Import und Export (E469, test442).** Bilder als Seiten, PDF an
+  einer Stelle einfügen, Seite als PNG sichern, Zoom-Fenster.
+* **G6 · Das Zoom-Fenster als Schreibfläche (E470, test443).** Das Papier
+  zieht in einen vergrösserten Streifen um, in der Bühne bleibt ein
+  stilles Abbild mit dem Rahmen. EINE Zeichenfläche: zwei Schichten auf
+  demselben Block hielten zwei Kopien der Marken (§51).
+
+**Was dabei nebenbei gefunden wurde.** „Lesen" liess im Studio das
+Werkzeug der Zeichenschicht stehen und machte das ganze Papier `inert` —
+das Abdeckband (E266) ging dort nie auf, und die neuen Verweise hätten es
+auch nicht getan. Jetzt wird nur der Text still, und Lesen heisst Hand.
+Zwei weitere Funde hingen daran: der Klick, mit dem „Lesen" umschaltet,
+klappte die Ansichtsklappe zu, aus der er kam; und die Hand wurde als
+Stift gemerkt, sodass „Annotieren" wieder die Hand brachte.
+
+**Prüfung.** Sechs neue Läufe (test438–test443, zusammen 210 Punkte), je
+zwei Gegenproben rot gesehen, sieben ältere Studio-Läufe angepasst — jeder
+mit geschriebenem Grund. Bilder angesehen: `zeichnen`, `staerke`,
+`auswahl`, `seiten`, `suche`, `lupe`, je am Rechner und am Telefon. Drei
+Fehler fanden nur die Augen: der Regler brach in eine dritte Zeile, die
+Treffer der Suche deckten die ganze Zeile statt des Wortes, und das
+Abbild der Seite war flachgedrückt, weil der Klon sein `style` verlor.
+
+* **G7 · Die kleinen Reste (E472, test445).** Die Formerkennung kennt das
+  Dreieck (nur aufrecht — die Marke kann keine andere Lage), ein Bild aus
+  der Zwischenablage wird mit Strg V eine Seite, der Dateiwähler nimmt
+  mehrere PDFs mit einer einzigen Frage nach der Anordnung, und der
+  Streifen des Zoom-Fensters rückt weiter, wenn man bis an seinen rechten
+  Rand schreibt.
+
+**Und ein Fehler, den erst die Prüfung fand (E471).** Eine adversariale
+Runde über die fünf Bögen — fünf Leser mit je einer Dimension, ihre Funde
+danach von Skeptikern widerlegt — brachte einen Rechte-Fehler ans Licht,
+der nichts mit GoodNotes zu tun hat: `Konten.darf` wurde im Dokumentmodus
+an sechs Stellen mit dem Seiten-OBJEKT statt seiner Kennung gerufen. Ein
+Objekt ist truthy, `rolleAuf` findet damit nichts, läuft die
+Freigabenkette nie ab und endet bei der Standardrolle „voll". **Jede
+Rechtefrage im PDF-Teil sagte ja**, gleich welche Freigabe an der Seite
+hing. Vier der sechs Stellen sind älter als die Bögen. Es ist wörtlich der
+Fehler aus L102, den §26 seitdem beim Namen nennt — und er kam wieder,
+weil es keinen Wächter gab. Jetzt gibt es einen (`test444 §1`), und zwar
+über die ganze Quelle: jede Rechtefrage muss erkennbar eine Kennung
+übergeben. Er fand sofort drei weitere Stellen, die richtig waren, aber
+`current` und `unter` hiessen.
+
+**Und vier weitere, die gehalten haben (E473).** Von 33 Funden wurden acht
+adversarial geprüft, fünf haben gehalten:
+
+* **Eine Farbe kann Code sein.** `alsSvg` baut seinen SVG-Text
+  (`stroke="${farbe}"`), `marken.ts` setzt ihn mit `innerHTML` ein — und
+  die Farbe kommt aus einer Marke, also möglicherweise aus einer fremden
+  `.redion`. `#000" onload="…` schloss das Attribut. Neu ist
+  `Sanitize.farbe`, und `alsSvg` escapt jeden eingesetzten Wert.
+* **Die Sperre hatte sechs Türen.** Strichstärke, Schriftgrösse,
+  Reihenfolge, Verweis, Text bearbeiten und das Drehen eines Fachzeichens
+  gingen an ihr vorbei. Alle sechs sind zu; die Farbe darf weiter (E466).
+* **pdf.js stand wieder im Anzeigeweg.** Die Verweise einer Seite wurden
+  beim ANSEHEN geholt und zogen die ganze Original-PDF in den RAM — gegen
+  die Zusage in `leser.ts` und gegen §36. Jetzt kommen sie beim Einlesen
+  mit und stehen am Block, wie `suchtext`.
+* **Die offenen PDF-Griffe blieben liegen**, wenn man das Dokument
+  verliess; und am Telefon lag die Suchleiste unter der Ansichtsklappe.
+
+Dazu ein Fund derselben Runde: eine verdoppelte BILD-Seite legte ihr Bild
+als „abgeleitet" ab — nach dem Einspielen einer Sicherung wäre die Kopie
+leer gewesen.
+
+**Was die Runde über das Prüfen sagt.** Alle Funde standen im Code, seit
+die Bögen gebaut wurden; die Prüfläufe waren grün, die Bilder sahen
+richtig aus. Gefunden hat sie erst ein Leser, der nichts bauen wollte und
+nur eine Frage hatte, und gehalten haben sie erst, nachdem ein zweiter
+Leser sie zu widerlegen versuchte — drei von acht fielen dabei.
+
+**Und der Bogen danach: das Gedrehte ist wirklich gedreht (E474,
+test447).** Zwei der 25 ungeprüften Funde aus derselben Runde hatten
+dieselbe Wurzel — `dreh` war seit E466 eine reine Anzeigesache. Wer eine
+schiefe Marke am Eckgriff zog, zog sie in eine andere Richtung, als seine
+Hand ging (ein Rechteck auf der Seite wurde beim Breiterziehen HÖHER); wer
+neben ihr radierte, löschte sie trotzdem, weil der Radierer den aufrechten
+Kasten UM sie mass — bei einem langen Rechteck auf 45° hundertfünfzig
+Punkte daneben, an 3000 Stellen gemessen 1013 falsche Antworten. Und der
+Auswahlrahmen war derselbe zu grosse Kasten.
+
+Die Geometrie kennt jetzt `ecken`, `drehung`, `boundsLokal`,
+`drehePunkte` und einen Trennachsen-Test. `bounds` bleibt, was es war —
+die richtige Antwort auf „könnte es hier überhaupt sein", und überall der
+billige Vorfilter; falsch war nur, es auch als Antwort auf „ist es hier"
+zu nehmen. Der Rahmen steht jetzt schief wie die Marke, die Griffe sitzen
+auf ihren Ecken, und der gehaltene Punkt bleibt auf die Hundertstel
+stehen. Was NICHT geht und in E474 begründet steht: eine gedrehte Marke
+ungleichmässig zusammen mit anderen ziehen wäre eine Scherung, und die
+kann das Datenmodell nicht beschreiben — statt ein drittes Feld an jeder
+gespeicherten Marke einzuführen (§53.3), nimmt `scale` dort die
+Hauptdiagonale der gedrehten Streckung: exakt bei rechten Winkeln, exakt
+bei gleichmässiger Streckung, nie verzerrend.
+
+Vier Gegenproben, alle rot gesehen. Und ein Prüfpunkt, der nicht in den
+Code gehört, sondern in die Prüfung: §1.1 misst an 400 Fällen, dass eine
+Marke OHNE Drehung Zahl für Zahl streckt wie vorher — eine Änderung, die
+alte Marken um ein Hundertstel verschiebt, sieht niemand.
+
+**Und was der Finger trifft (E475, test448).** §37 ist hart im Kern —
+44 px auf den Hauptwegen —, und L133 führte drei Stellen, die es nicht
+waren. Erst gemessen (§36), dann gebaut; am Telefon 390×780, die Seite
+344×487 gerendert: der Verweis einer PDF **6,9 px** hoch, der Regler der
+Strichstärke **16** (die Klappe darum mass 44 — getroffen werden muss der
+Regler), die Papierauswahl **36**.
+
+Zwei davon sind eine Zeile CSS. Der Verweis nicht: ihn selbst zu
+vergrössern hiesse, eine Textseite mit dreissig Verweisen unter dreissig
+blaue Kästen zu legen. Also bleibt der sichtbare Verweis, was er ist, und
+nur seine Trefffläche wächst — **aber nie über die Hälfte des Abstands zum
+nächsten Verweis**. Eine Fläche, die den Nachbarn verschluckt, tauscht
+„nicht getroffen" gegen „das Falsche getroffen", und in einem
+Inhaltsverzeichnis wäre das ein Sprung in ein fremdes Dokument. So gehört
+jeder Punkt dem nächstgelegenen Verweis: keine tote Zone dazwischen, keine
+Überdeckung. Gemessen: der freistehende wächst von 6 auf 44×45, zwei mit
+26 Punkten Zeilenabstand auf je 15.
+
+Drei Gegenproben rot gesehen. Und ein Bild, auf dem die Trefffläche rot
+gestrichelt zu sehen ist — man sieht darauf sofort, dass die zwei engen
+Verweise sich genau in der Mitte treffen.
+
+**Und ein Kasten ist keine Wischspur (E476, test449).** Die letzten zwei
+benannten Funde der Runde. Der erste war Datenverlust: `kritzelTrifft`
+fragte, ob eine Marke im KASTEN des Gekritzels liegt. Wer schräg über die
+Seite kritzelt, spannt aber einen Kasten über die halbe Seite auf — und
+alles darin war weg, auch was handbreit neben dem Zug stand. In der
+Gegenprobe gemessen: von drei Marken blieben mit der alten Regel **null**
+übrig, mit der neuen die zwei, die der Zug nie berührt hat. Es fiel nie
+auf, weil ein Gekritzel über einem Wort waagerecht läuft und dort Kasten
+und Spur fast dasselbe sind — und genau darum kritzelte auch `test439 §5`
+waagerecht. Der zweite kostete nur Zeit, aber quadratisch beim Rollen:
+`trefferMalen` malte bei jeder nachgezogenen Seite die Treffer ALLER
+Seiten neu; jetzt nur die der einen.
+
+Am Prüflauf steckt eine Zeile Arbeit, die man sonst übersieht: das
+Gekritzel muss abgetastet werden wie von Hand, weil der Stift glättet
+(E376) — ein Zickzack aus blossen Eckpunkten kommt als Bogen an, und die
+Prüfung prüfte dann etwas anderes, als sie behauptet.
+
+**Und die Verweise alter Seiten kommen nach (E477, test450).** Der letzte
+benannte Rest der Runde. E473 nahm pdf.js aus dem Anzeigeweg und schrieb
+die Links beim Einlesen an den Block — womit alles, was vorher eingelesen
+wurde, für immer ohne Links dastand. Jetzt läuft beim Öffnen eines
+Dokuments je Original einmal ein Auftrag `pdf-verweise` im Hintergrund;
+sein Ende malt die Verweise, ohne dass jemand neu öffnen muss. Das ist
+nicht die Rückkehr des Fundes von E473: dort hing die ganze PDF am
+Ansehen JEDER Seite, hier wird sie einmal je Original geöffnet — der
+Prüflauf zählt mit und findet beim Ansehen und Rollen **null** Öffnungen.
+
+**Und ein Fehler, den der Prüflauf in seiner ersten Zeile fand.** E473
+schrieb das Verweisfeld nur an Seiten MIT Verweisen. Damit sehen „keine
+Verweise" und „noch nie nachgesehen" gleich aus — und der neue Nachtrag
+liefe bei jedem Öffnen über jede Seite ohne Links wieder los; bei einem
+Skript, in dem drei von hundert Seiten Links haben, jedes Mal über
+siebenundneunzig. Seitdem wird die leere Liste geschrieben: sechzehn
+Zeichen je Seite, und der Unterschied zwischen einer Antwort und einer
+Lücke.
+
+**Und ein Dreieck darf liegen, wie es gezogen wurde (E478, test451).**
+Die Ernte von E474: weil die Geometrie `dreh` jetzt wirklich kann — Griff,
+Radierer, Rahmen —, ist ein gedrehtes Dreieck keine hübsche Lüge mehr, die
+beim ersten Anfassen auffliegt. Es bekommt seinen Winkel statt einer
+Absage; aufrecht bleibt aufrecht (unter vier Grad kein Feld).
+
+Zwei Dinge fand nicht das Schreiben, sondern das Prüfen und das Hinsehen.
+Der Prüflauf: die alte Aufrecht-Probe stand vorn und griff bei 15°, 120°
+und −120° zufällig — ein gedrehtes Dreieck, das gerade dasteht. Das Bild:
+bei einem fast GLEICHSEITIGEN Dreieck sind alle drei Ecken gleich gute
+Spitzen, und ein aufrecht gezogenes kam mit `dreh: −120` heraus. Es sah
+gleich aus — genau darum konnte kein Prüflauf es finden, und genau darum
+war es trotzdem falsch. Gewählt wird jetzt unter den gleich guten Spitzen
+die mit der kleinsten Drehung.
+
+Und ein Wächter flog dabei wieder heraus: eine Passprobe, die `test451`
+abschalten konnte, ohne dass etwas rot wurde. Ein Wächter, der nicht rot
+werden kann, ist eine Behauptung (§55.2) — und schlimmer als keiner.
+
+**Und „Seite als Bild" nimmt die Fotos mit (E479, test452).** L133 führte
+das seit E469 mit einer Vermutung als Begründung. Bevor etwas gebaut
+wurde, ist sie nachgemessen — und die Messung hat den Weg bestimmt:
+`blob:` ist in einem SVG, das über ein `<img>` auf die Leinwand kommt,
+gesperrt; `data:` geht und trübt nichts; `foreignObject` zeichnet zwar,
+TRÜBT aber die Leinwand, sodass `toBlob` danach fehlschlägt. Die dritte
+Zeile schliesst den naheliegenden Weg für den getippten Text: er würde ihn
+bringen und dafür die ganze Ausfuhr verlieren. Sie steht in L133, damit
+niemand die Tür ein zweites Mal aufdrückt.
+
+Dazu kam ein zweiter Grund, den die Vermutung nicht kannte: `zeichneMarke`
+setzt das `<image>` erst nach, wenn die Adresse aus der Ablage da ist —
+`outerHTML` gleich danach hätte auch mit erlaubtem `blob:` nichts gehabt.
+
+**Und die Miniaturenleiste wie GoodNotes (E480, test453).** Ein
+„⋯"-Menü an jeder Seite und Ziehen zum Umordnen. Das Neue ist nicht das
+Menü — es zeigt dieselben acht Griffe wie der Inspector —, sondern dass
+sie eine ANDERE Seite meinen als die angesehene: dafür nehmen alle
+Seitengriffe jetzt entgegen, wen sie meinen. Gezogen wird mit dem Zeiger,
+und die Frage war nicht wie, sondern wann: mit der Maus nach acht Pixeln,
+mit dem Finger erst nach 350 ms Halten — sonst liesse sich die Leiste
+nicht mehr rollen.
+
+Zwei Dinge erledigten das Bild und die Gegenprobe. Das Bild: das Menü hing
+acht Pixel links aus der Leiste, weil es 200 px breit gebaut war und die
+Leiste gemessen 200 px misst. Die Gegenprobe: ein Klick-Schlucker liess
+sich abschalten, ohne dass etwas rot wurde — er flog wieder heraus, wie
+schon die Passprobe in E478. Zweimal in zwei Bögen dieselbe Lehre: wer
+eine Vorsichtsmassnahme einbaut, muss sie rot sehen, sonst baut er ein
+Gefühl ein.
+
+Nebenbei fiel ein §37-Fund an: der Schliessknopf der Klappen war 36 px
+BREIT. `test448` hatte ihn nicht gefunden, weil er nur die Höhe mass — er
+misst seither beide Richtungen.
+
+**Und die Verweise treffen die Stelle (E481, test454).** Ein PDF-Ziel
+nennt oft nicht nur die Seite, sondern den Punkt darauf (`/XYZ`, `/FitH`,
+`/FitR`); genommen wurde bisher nur die Seite, und ein Querverweis mitten
+in ein Kapitel landete an dessen Anfang. Die Höhe steht jetzt seit dem
+Einlesen am Verweis, und der Sprung rollt dorthin. `/Fit` nennt keine —
+und dann steht auch keine da, dieselbe Regel wie in E477.
+
+Dazu der zweite Rest: eine gedrehte Seite zeigte ihre Verweise gar nicht,
+und im Code stand eine Zeile, die genau das tat. Der Grund dahinter war
+die Bauweise — die Schicht lag NEBEN dem Papier und wurde ihm von Hand
+nachgemessen, und bei einer gedrehten Seite misst man ihre Hülle. Statt
+eine zweite Rechnung für den gedrehten Fall zu schreiben, ist die Schicht
+INS PAPIER gezogen: `inset:0`, dort liegt sie von selbst richtig und
+dreht mit. Weniger Code, ein Fall mehr, und nebenbei einen Rahmen
+genauer.
+
+**Und die Kamera macht eine Seite (E482, test455).** Zwei kleine
+GoodNotes-Griffe: „Foto aufnehmen" — der Unterschied zum Dateiwähler ist
+ein Attribut (`capture="environment"`), und am Rechner ohne Kamera kommt
+der gewohnte Wähler, was der Hinweis am Knopf auch sagt. Und der Radierer
+kennt jetzt fünf Arten: Ganz und Teil sagen, wie viel weggeht, Stift,
+Marker und Band, wovon. „Nur Bleistift" bleibt bewusst aus — der
+Bleistift ist in Redion kein Werkzeug, sondern ein Stil des Stifts.
+
+**Was offen bleibt,** steht ehrlich in `LUECKEN.md` L133: Audio mit
+Zeitbezug, Handschrift zu Text, Elemente-Bibliothek, Präsentation — und
+die verbliebenen Reste (getippter Text im gesicherten Bild, Farbsets,
+Kurve und Verbinder, Auswahl über mehrere Blätter, Suche über mehrere
+Dokumente, gesperrte Marken im Inspector).

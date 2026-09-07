@@ -26,7 +26,7 @@
  *            sagt die echte Zahl.
  *
  * WOHER. Vier Vorgaben von Redur vom 6. September 2026 aus
- * `../ui-reserve/vorgaben/loader-sammlung.css`: der flüssige Ring, die
+ * `loader-sammlung.css` im Vorgaben-Archiv: der flüssige Ring, die
  * fünf Sterne, der Buchstabenring und die isometrische Druckpresse.
  *
  * DIE REGEL, DIE ÜBER ALLEN VIER STEHT. Ein Lader ist ein Bild und keine
@@ -202,6 +202,25 @@ const Lader = (() => {
         return { element: wurzel, setzen, anteil: () => anteil,
             entfernen: () => wurzel.remove() };
     };
-    return { SAETZE, bauen };
+    /**
+     * Ein Lader als SCHWEBENDE KARTE unten rechts — dort, wo auch die
+     * Drucker-Karte (E458) steht. Für Vorgänge, die keinen eigenen Ort
+     * haben: das Einlesen einer PDF läuft über dem Regal, über einer Seite,
+     * über allem, und ein Toast dafür war zwei Zeilen Text, die man nach
+     * der dritten Seite nicht mehr ansah (E463).
+     *
+     * Die Karte hängt sich selbst an `<body>` und nimmt sich mit `entfernen`
+     * wieder weg. Sie hat `pointer-events:none`: sie meldet, sie bedient
+     * nichts — wer darunter arbeiten will, klickt durch sie hindurch.
+     */
+    const schweben = (auftrag) => {
+        const griff = bauen(auftrag);
+        const karte = el('div', 'ru-lader-karte ru-lader-schwebt');
+        karte.append(griff.element);
+        document.body.append(karte);
+        return { element: karte, setzen: griff.setzen, anteil: griff.anteil,
+            entfernen: () => karte.remove() };
+    };
+    return { SAETZE, bauen, schweben };
 })();
 window.Lader = Lader;

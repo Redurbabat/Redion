@@ -418,6 +418,9 @@ p('Gegenprobe: ein verändertes PDF hätte eine andere Summe',
  * ========================================================================*/
 console.log('\n4 · Ein Strich liegt bei jeder Breite an derselben Stelle');
 
+/* SEIT E464 zeigt die Blattleiste im Schreibstudio ihre Werkzeuge erst hinter
+   „···" (die Zeichenleiste darüber führt sie). Erst aufklappen, dann warten. */
+await seite.evaluate(() => (document.querySelector('[data-document-action="ink-options"]') as HTMLElement | null)?.click());
 await seite.waitForSelector('.pdfs .blatt-werk [data-wz="stift"]', { timeout: 15000 });
 await seite.evaluate(() => {
   const knopf = document.querySelector('.pdfs .blatt-werk [data-wz="stift"]') as HTMLElement;

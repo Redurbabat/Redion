@@ -18,7 +18,7 @@
  * WOHER, und warum es EIN Zeichen ist und nicht zwei. Redur hat am
  * 6. September 2026 zwei Vorgaben geschickt: das Lesezeichen mit dem
  * Funkenkranz (`.ui-bookmark`) und das Herz mit dem rollenden Punkt
- * (`.love-heart`, beide in `../ui-reserve/vorgaben/loader-sammlung.css`).
+ * (`.love-heart`, beide in `loader-sammlung.css` im Vorgaben-Archiv).
  * Beide zeichnen denselben Vorgang: etwas anhaken, das man wiederfinden
  * will. Zwei Symbole für dasselbe Feld wären zwei Sprachen für eine Sache
  * (§8) — jemand, der in der Kopfleiste ein Herz und im Heft einen Stern

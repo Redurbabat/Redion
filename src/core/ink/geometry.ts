@@ -225,7 +225,64 @@ const InkGeometry = (() => {
       pad, zeile: fontSize * TEXT_ZEILE, fontSize, family, bold, lines };
   };
 
+  /** Die Linienzuege — sie drehen ihre Punkte; alles andere hat einen Kasten. */
+  const LINIEN = new Set(['stift', 'marker', 'line', 'arrow']);
+
+  /**
+   * Punkte um einen Anker drehen — `grad` im Uhrzeigersinn, wie SVGs
+   * `rotate` (E466). Die eine Drehformel des Hauses: `ecken`, `bounds`,
+   * `rotate`, `touchesCircle` und `scale` rechnen alle mit ihr, statt sie
+   * je einmal hinzuschreiben (E474).
+   */
+  const drehePunkte = (pts: InkPoint[], anker: InkPoint, grad: number): InkPoint[] => {
+    const rad = (grad * Math.PI) / 180;
+    const cos = Math.cos(rad), sin = Math.sin(rad);
+    return pts.map(([x, y]) => [
+      anker[0] + (x - anker[0]) * cos - (y - anker[1]) * sin,
+      anker[1] + (x - anker[0]) * sin + (y - anker[1]) * cos] as InkPoint);
+  };
+
+  const umschliessend = (pts: InkPoint[]): InkBounds => {
+    const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+    const x0 = Math.min(...xs), y0 = Math.min(...ys);
+    return { x: x0, y: y0, width: Math.max(...xs) - x0, height: Math.max(...ys) - y0 };
+  };
+
+  /** Der Winkel, um den eine Marke schief steht — Linienzuege stehen nie
+   *  schief, sie drehen ihre Punkte (E466). */
+  const drehung = (mark: any): number =>
+    LINIEN.has(String(mark?.art || '')) ? 0 : finite(mark?.dreh);
+
+  /**
+   * DIE VIER ECKEN EINER MARKE (E474) — im Blattraum, im Umlauf
+   * nw, ne, se, sw, also als Weg um ihre Flaeche herum. Bei `dreh` sind
+   * es die WIRKLICH gedrehten Ecken: dieselben vier Punkte, die man auf
+   * dem Blatt sieht.
+   *
+   * Das ist der Unterschied zu `bounds`: `bounds` gibt den aufrechten
+   * Kasten UM diese Ecken. Der ist bei 45° fast doppelt so gross wie die
+   * Marke selbst — richtig, um zu fragen „koennte es hier ueberhaupt
+   * sein", falsch, um zu fragen „ist es hier".
+   */
+  const ecken = (mark: any): InkPoint[] => {
+    const b = boundsRoh(mark);
+    const roh: InkPoint[] = [[b.x, b.y], [b.x + b.width, b.y],
+      [b.x + b.width, b.y + b.height], [b.x, b.y + b.height]];
+    const grad = drehung(mark);
+    return grad ? drehePunkte(roh, [b.x + b.width / 2, b.y + b.height / 2], grad) : roh;
+  };
+
   const bounds = (mark: any): InkBounds => {
+    const roh = boundsRoh(mark);
+    const grad = drehung(mark);
+    if (!grad) return roh;
+    return umschliessend(drehePunkte(
+      [[roh.x, roh.y], [roh.x + roh.width, roh.y],
+       [roh.x, roh.y + roh.height], [roh.x + roh.width, roh.y + roh.height]],
+      [roh.x + roh.width / 2, roh.y + roh.height / 2], grad));
+  };
+
+  const boundsRoh = (mark: any): InkBounds => {
     if (mark?.art === 'text') {
       const layout = textLayout(mark);
       if (layout) return { x: layout.x, y: layout.y, width: layout.width, height: layout.height };
@@ -258,6 +315,70 @@ const InkGeometry = (() => {
     }
     return mark;
   };
+
+  /**
+   * Um `pivot` drehen — `degrees` im Uhrzeigersinn, wie SVGs `rotate` (E466).
+   *
+   * Linienzuege drehen ihre PUNKTE: verlustfrei, kein neues Feld. Alles
+   * mit Kasten (Formen, Band, Zettel, Bild, Text, Zeichen) dreht seine
+   * Mitte um den Anker und merkt sich den Winkel in `dreh` — zwei
+   * Eckpunkte koennen keinen schiefen Kasten beschreiben, und die Ecken
+   * zu drehen hiesse, die Marke zu verzerren. Alte Marken ohne `dreh`
+   * bleiben, was sie sind (§53.3). Aendert die Marke selbst, wie `move`.
+   */
+  const rotate = (mark: any, pivot: InkPoint, degrees: number): any => {
+    if (!mark || typeof mark !== 'object') return mark;
+    const grad = finite(degrees);
+    if (!grad) return mark;
+    const r2 = (v: number): number => Math.round(v * 100) / 100;
+    const um = (p: InkPoint): InkPoint => {
+      const q = drehePunkte([p], pivot, grad)[0]!;
+      return [r2(q[0]), r2(q[1])];
+    };
+    if (LINIEN.has(String(mark.art)) && Array.isArray(mark.pts)) {
+      mark.pts = points(mark.pts).map(um);
+      return mark;
+    }
+    const b = bounds(mark);
+    const mitte: InkPoint = [b.x + b.width / 2, b.y + b.height / 2];
+    const neu = um(mitte);
+    move(mark, neu[0] - mitte[0], neu[1] - mitte[1]);
+    let d = (finite(mark.dreh) + grad) % 360;
+    if (d > 180) d -= 360;
+    if (d <= -180) d += 360;
+    if (Math.abs(d) < 0.01) delete mark.dreh; else mark.dreh = r2(d);
+    return mark;
+  };
+
+  /**
+   * ÜBERLAPPEN ZWEI KONVEXE VIELECKE? Trennachsen-Test (E474): gibt es
+   * eine Gerade, auf der die Schatten der beiden auseinanderfallen, dann
+   * beruehren sie sich nicht. Als Achsen genuegen die Normalen der Kanten
+   * — bei zwei Vierecken also acht Proben.
+   *
+   * Gebraucht fuer den Kastenzug ueber eine GEDREHTE Marke: `intersects`
+   * vergleicht zwei aufrechte Kaesten und sagt bei 45° ja, wo die Marke
+   * gar nicht steht. `intersects` bleibt der billige Vorfilter, das hier
+   * die Antwort.
+   */
+  const overlapConvex = (a: InkPoint[], b: InkPoint[]): boolean => {
+    for (const poly of [a, b]) {
+      for (let i = 0; i < poly.length; i++) {
+        const von = poly[i]!, bis = poly[(i + 1) % poly.length]!;
+        const nx = -(bis[1] - von[1]), ny = bis[0] - von[0];
+        if (!nx && !ny) continue;
+        let aMin = Infinity, aMax = -Infinity, bMin = Infinity, bMax = -Infinity;
+        for (const q of a) { const v = q[0] * nx + q[1] * ny; if (v < aMin) aMin = v; if (v > aMax) aMax = v; }
+        for (const q of b) { const v = q[0] * nx + q[1] * ny; if (v < bMin) bMin = v; if (v > bMax) bMax = v; }
+        if (aMax < bMin || bMax < aMin) return false;
+      }
+    }
+    return true;
+  };
+
+  /** Die vier Ecken eines aufrechten Kastens, im Umlauf. */
+  const kastenEcken = (b: InkBounds): InkPoint[] =>
+    [[b.x, b.y], [b.x + b.width, b.y], [b.x + b.width, b.y + b.height], [b.x, b.y + b.height]];
 
   const intersects = (left: InkBounds, right: InkBounds): boolean =>
     left.x <= right.x + right.width && left.x + left.width >= right.x &&
@@ -321,7 +442,7 @@ const InkGeometry = (() => {
       if (bx * bx + by * by > reichweite * reichweite) return false;
       return distanceToPolyline(mark.pts, center) <= reichweite;
     }
-    const box = bounds(mark);
+    const box = boundsRoh(mark);
     /* EINE MARKE OHNE PUNKTE HAT KEINEN ORT (E377, von test367 §2 gefunden).
        `bounds()` gibt ihr ersatzweise einen Kasten der Groesse null bei
        (0,0) — das ist eine Notloesung, kein Ort. Ohne diese Zeile
@@ -330,8 +451,19 @@ const InkGeometry = (() => {
        bekommt in `bounds()` immer mindestens den Rand von zwei Pixeln
        (bei Text die Zeilenhoehe), also nie Breite UND Hoehe null. */
     if (!box.x && !box.y && !box.width && !box.height) return false;
-    const dx = Math.max(box.x - center[0], 0, center[0] - (box.x + box.width));
-    const dy = Math.max(box.y - center[1], 0, center[1] - (box.y + box.height));
+    /* DER RADIERER AUF EINER GEDREHTEN MARKE (E474). Bis hierher wurde der
+       AUFRECHTE Kasten um die gedrehte Marke gemessen. Der ist bei 45°
+       fast doppelt so gross wie sie: der Radierer nahm sie neben ihrer
+       Kante mit, wo nichts steht, und verfehlte sie an der langen Ecke.
+       Ein Kreis bleibt beim Drehen ein Kreis — also wird nicht die Marke
+       aufgerichtet, sondern der MITTELPUNKT in ihren Rahmen gedreht.
+       Danach ist es Zeile fuer Zeile dieselbe genaue Rechnung wie zuvor. */
+    const grad = drehung(mark);
+    const mitte: InkPoint = grad
+      ? drehePunkte([center], [box.x + box.width / 2, box.y + box.height / 2], -grad)[0]!
+      : center;
+    const dx = Math.max(box.x - mitte[0], 0, mitte[0] - (box.x + box.width));
+    const dy = Math.max(box.y - mitte[1], 0, mitte[1] - (box.y + box.height));
     return dx * dx + dy * dy <= radius * radius;
   };
 
@@ -452,31 +584,95 @@ const InkGeometry = (() => {
    * Schriftzug nicht mit haarduennem Strich dasteht. Aendert die Marke
    * selbst und gibt sie zurueck, wie `move`.
    */
-  const scale = (mark: any, anchor: InkPoint, sx: number, sy: number): any => {
+  /**
+   * GROESSE AENDERN — und zwar so, dass eine GEDREHTE Marke dabei nicht
+   * verzerrt (E474).
+   *
+   * `sx` und `sy` gelten in den Achsen von `achse` (Grad, 0 = die Achsen
+   * des Blattes). Eine Marke mit `dreh` steht darin schief: ihre zwei
+   * Eckpunkte beschreiben einen aufrechten Kasten, den `dreh` erst dreht.
+   * Wer die Faktoren dann einfach auf die Punkte legt — so war es bis
+   * hierher —, streckt den KASTEN in seinen eigenen Achsen und dreht das
+   * Ergebnis: die Marke waechst in eine andere Richtung, als der Mensch
+   * zieht, und ihre Ecke laeuft unter dem Griff weg.
+   *
+   * Ganz richtig waere eine Scherung, und die kann dieses Datenmodell
+   * nicht: zwei Punkte und ein Winkel beschreiben keinen schiefen Kasten
+   * (E466). Ein drittes Feld dafuer waere eine Datenaenderung an jeder
+   * vorhandenen Marke (§53.3). Also wird das getan, was ohne neues Feld
+   * genau bleibt, wo es genau sein kann:
+   *
+   *   · Die MITTE geht dorthin, wo die Streckung sie hinlegt. Immer
+   *     genau, auch schief — das ist die Lage in der Gruppe.
+   *   · Die GROESSE waechst in den Achsen der MARKE, mit den Faktoren,
+   *     die dort ankommen:
+   *
+   *         d   = dreh − achse
+   *         sxL = sx·cos²d + sy·sin²d
+   *         syL = sx·sin²d + sy·cos²d
+   *
+   *     Das ist die Hauptdiagonale der gedrehten Streckung; die Scherung
+   *     daneben faellt weg. GENAU ist das, wenn d ein Vielfaches von 90°
+   *     ist — dann tauschen die beiden Faktoren, wie es sein muss — oder
+   *     wenn sx = sy ist, denn eine gleichmaessige Streckung ist in jeder
+   *     Lage dieselbe. Am schiefsten steht es bei 45°: dort werden beide
+   *     Faktoren gleich, und die Marke waechst in der Mitte zwischen den
+   *     zwei Richtungen, statt sich zu scheren.
+   *
+   * Steht die Auswahl auf EINER gedrehten Marke, gibt `marken.ts` ihren
+   * eigenen Winkel als `achse` mit. Dann ist d = 0, und die Rechnung ist
+   * nicht genaehert, sondern exakt: der Griff, den man haelt, bleibt auf
+   * den Punkt stehen, an dem er war.
+   */
+  const scale = (mark: any, anchor: InkPoint, sx: number, sy: number, achse = 0): any => {
     if (!mark || typeof mark !== 'object') return mark;
     const r2 = (v: number): number => Math.round(v * 100) / 100;
     const fx = Number.isFinite(sx) ? sx : 1;
     const fy = Number.isFinite(sy) ? sy : 1;
-    const f = (p: InkPoint): InkPoint =>
+    const ax = Number.isFinite(achse) ? Number(achse) : 0;
+    const grad = drehung(mark);
+    let lx = fx, ly = fy;
+    let f = (p: InkPoint): InkPoint =>
       [r2(anchor[0] + (p[0] - anchor[0]) * fx), r2(anchor[1] + (p[1] - anchor[1]) * fy)];
+    if (grad || ax) {
+      const d = ((grad - ax) * Math.PI) / 180;
+      const c2 = Math.cos(d) * Math.cos(d), s2 = Math.sin(d) * Math.sin(d);
+      lx = fx * c2 + fy * s2;
+      ly = fx * s2 + fy * c2;
+      const roh = boundsRoh(mark);
+      const mitte: InkPoint = [roh.x + roh.width / 2, roh.y + roh.height / 2];
+      /* Die Mitte in die Achsen der Streckung drehen, dort strecken, zurueck. */
+      const inAchse = ax ? drehePunkte([mitte], anchor, -ax)[0]! : mitte;
+      const gestreckt: InkPoint = [anchor[0] + (inAchse[0] - anchor[0]) * fx,
+                                   anchor[1] + (inAchse[1] - anchor[1]) * fy];
+      const neu = ax ? drehePunkte([gestreckt], anchor, ax)[0]! : gestreckt;
+      const vx = neu[0] - mitte[0], vy = neu[1] - mitte[1];
+      f = (p: InkPoint): InkPoint => [
+        r2(mitte[0] + (p[0] - mitte[0]) * lx + vx),
+        r2(mitte[1] + (p[1] - mitte[1]) * ly + vy)];
+    }
     if (Array.isArray(mark.pts)) mark.pts = points(mark.pts).map(f);
     if (Array.isArray(mark.point)) mark.point = f(points([mark.point])[0] || [0, 0]);
-    const mittel = Math.sqrt(Math.abs(fx * fy)) || 1;
+    const mittel = Math.sqrt(Math.abs(lx * ly)) || 1;
     if (mark.breite !== undefined && Number.isFinite(Number(mark.breite)))
       mark.breite = Math.max(0.3, r2(Number(mark.breite) * mittel));
     if (mark.fontSize !== undefined && Number.isFinite(Number(mark.fontSize)))
       mark.fontSize = Math.max(6, r2(Number(mark.fontSize) * mittel));
     if (mark.groesse !== undefined && Number.isFinite(Number(mark.groesse)))
       mark.groesse = Math.max(12, r2(Number(mark.groesse) * mittel));
-    /* Der Textkasten (E360) waechst in der Breite mit — die Schrift mit dem Mittel. */
+    /* Der Textkasten (E360) waechst in der Breite mit — die Schrift mit dem
+       Mittel. `lx` und nicht `fx`: die Breite ist die Breite der MARKE. */
     if (mark.breiteBox !== undefined && Number.isFinite(Number(mark.breiteBox)))
-      mark.breiteBox = Math.max(24, r2(Number(mark.breiteBox) * Math.abs(fx)));
+      mark.breiteBox = Math.max(24, r2(Number(mark.breiteBox) * Math.abs(lx)));
     return mark;
   };
 
   return { points, simplify, simplifyIndices, outline, path, rectangle, bounds, move, intersects,
-    distanceToPolyline, touchesCircle, splitByCircle, insidePolygon, polygonArea, union, scale,
-    textWidth, textLines, textLayout };
+    distanceToPolyline, touchesCircle, splitByCircle, insidePolygon, polygonArea, union, scale, rotate,
+    textWidth, textLines, textLayout, LINIEN,
+    /* Seit E474: der aufrechte Kasten der Marke OHNE ihre Drehung, ihre
+       vier wirklichen Ecken, ihr Winkel und die eine Drehformel. */
+    boundsLokal: boundsRoh, ecken, drehung, drehePunkte, overlapConvex, kastenEcken };
 })();
 
 (window as any).InkGeometry = InkGeometry;

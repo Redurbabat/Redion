@@ -219,7 +219,8 @@ const zwei = await pc.evaluate(() => {
     papierHoch: Math.round(papier?.getBoundingClientRect().height || 0),
     papierBreit: Math.round(papier?.getBoundingClientRect().width || 0),
     leisteHoch: Math.round(leiste?.getBoundingClientRect().height || 0),
-    original: (document.querySelector('.document-original')?.textContent || '').trim()
+    original: (document.querySelector('.document-original')?.textContent || '').trim(),
+    lesemass: parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--pdf-paper-max')) || 0
   };
 });
 
@@ -231,9 +232,12 @@ p('Es gibt ein Blatt mit echter Ausdehnung',
 p('Das Seitenverhältnis stimmt noch (A4)',
   Math.abs(zwei.papierBreit / zwei.papierHoch - 595 / 842) < 0.02,
   `${zwei.papierBreit}/${zwei.papierHoch}`);
-p('Die BREITE gibt das Mass — das Blatt füllt die Mitte fast ganz',
-  zwei.papierBreit >= zwei.mitteBreit - 60,
-  `${zwei.papierBreit} px von ${zwei.mitteBreit} px`);
+/* SEIT E464 HAT DAS BLATT EIN LESEMASS: Redurs Schreibtisch hält es bei
+   `--pdf-paper-max` (980 px) — breiter als ein Buch liest sich kein Text.
+   Die Mitte füllt es nur, wenn die Mitte schmaler ist als das Mass. */
+p('Die BREITE gibt das Mass — das Blatt füllt die Mitte bis zum Lesemass',
+  zwei.papierBreit >= Math.min(zwei.mitteBreit - 60, zwei.lesemass || Infinity),
+  `${zwei.papierBreit} px von ${zwei.mitteBreit} px, Lesemass ${zwei.lesemass}`);
 p('Und man rollt wirklich: die Rolle ist höher als das Fenster',
   zwei.rollHoch > zwei.mitteHoch * 2,
   `Inhalt ${zwei.rollHoch}, sichtbar ${zwei.mitteHoch}`);
