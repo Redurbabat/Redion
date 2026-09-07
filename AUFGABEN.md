@@ -227,8 +227,9 @@ Gegenprobe, Bild und Entscheidung:
   · **G2 — Auswahl** (E466, test439): Drehen (Drehgriff), Ausschneiden
     (Strg X), nach vorn und nach hinten, Sperren, Kritzel-Löschen,
     Kreis-Lasso (Umkreisen und halten). **Steht.**
-  · **G3 — Seiten**: einfügen (leer, mit Vorlage, als Duplikat), löschen,
-    verschieben, drehen; Lesezeichen je Seite mit Liste im Inspector.
+  · **G3 — Seiten** (E467, test440): einfügen (leer, mit Papier, als
+    Duplikat), löschen, verschieben, drehen; Lesezeichen je Seite mit
+    Liste im Inspector. **Steht.**
   · **G4 — Suche und Links**: die Textschicht der PDF beim Einlesen ablegen
     (`leser.text` gibt es), ein Suchfeld im Schreibtisch mit Treffern auf
     der Seite; die Links der PDF (pdf.js `getAnnotations`) anklickbar;

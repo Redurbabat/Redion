@@ -21,7 +21,7 @@ Notion. Die wichtigsten Ziele sind:
 
 ## Inhaltsverzeichnis
 
-446 Entscheidungen, E1 bis E466 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
+447 Entscheidungen, E1 bis E467 (E442 bis E455 sind den Gruppen der Phasen C–F vergeben und folgen, sobald sie landen). Die Nummer ist die Ordnung: eine Entscheidung
 wird nie gelöscht und nie umnummeriert — sie wird höchstens von einer
 späteren widerrufen, und dann steht das in beiden.
 
@@ -510,6 +510,7 @@ Entscheidung ergänzt, trägt sie hier mit einer Zeile nach.
 * **E464** — Redurs Zweig `codex/pdf-schreibstudio` übernommen: Schreibtisch im Vollbild, Stiftmarken, Verlauf
 * **E465** — Zeichnen wie GoodNotes, erster Bogen: Dreieck, rundes Rechteck, Bleistift, freie Stärke, Buchstabentasten
 * **E466** — Auswahl wie GoodNotes, zweiter Bogen: Drehen, Ausschneiden, Reihenfolge, Sperren, Kritzel-Löschen, Kreis-Lasso
+* **E467** — Seiten wie GoodNotes, dritter Bogen: einfügen, duplizieren, drehen, schieben, Lesezeichen, löschen
 
 ---
 
@@ -36842,3 +36843,136 @@ DATEIEN. `src/core/ink/geometry.ts` (`rotate`, `bounds` gedreht, `LINIEN`),
 `src/bereiche/pdf/marken.ts`, `quell/schale/stil/bausteine.css`,
 `bilder.mts` (Ansicht `auswahl`), `pruefungen/lauf/test439.mts` (neu),
 `test345.mts`, `test351.mts`.
+
+---
+
+E467 — Seiten wie GoodNotes, dritter Bogen: einfügen, duplizieren, drehen, schieben, Lesezeichen, löschen
+--------------------------------------------------------------------------
+
+Dritter der fünf Bögen aus Redurs Auftrag vom 7. September (E465,
+`AUFGABEN.md` 7): das Seitenmenü, das GoodNotes an jeder Seite hat. Es
+steht im Inspector des Schreibstudios (E384 hat dort schon Randstreifen
+und Einzelseite versammelt) unter „Seite N von M": sieben Griffe, 44 px
+hoch, Wort neben Zeichen, dazu die Papierwahl für neue Seiten und — wenn
+es welche gibt — die Liste der Lesezeichen.
+
+WAS ENTSCHIEDEN WURDE.
+
+  1. EINFÜGEN — „Seite danach" legt ein leeres A4-Blatt HINTER die Seite,
+     die man ansieht, mit dem Papier aus der Auswahl (`heft:papier`,
+     derselbe Merker wie für neue Hefte, E264) und einer Zeile darauf
+     (E118). Eingefügt wird in den `content` der Eltern an der Stelle
+     hinter dem Block — auch in einer Spalte bleibt die Seite in ihrer
+     Spalte.
+  2. DUPLIZIEREN — `Store.baum` + `Store.baumEinfuegen` (frische
+     Kennungen), dahinter. Die Marken kommen mit, das Lesezeichen nicht.
+     DAS SEITENBILD WIRD KOPIERT, NICHT GETEILT: `purgeBlock` nimmt die
+     Anhänge seines Blocks mit (`indexdb.ts` 573–577) — teilten sich
+     Original und Kopie eine `bildDateiId`, verlöre die Kopie ihr Bild,
+     sobald das Original aus dem Papierkorb fällt. Bis die Kopie da ist,
+     zeigt die neue Seite das alte Bild; danach ihr eigenes.
+  3. DREHEN — in 90°-Schritten im Uhrzeigersinn, im Feld `gedreht` an der
+     Seite (0 heisst: kein Feld). NICHT `dreh`: das ist der /Rotate-Eintrag
+     der PDF, den `leser.ts` liest und den das gerasterte Bild schon
+     enthält — beides zusammenzuwerfen hiesse, eine eingelesene Querseite
+     beim Öffnen noch einmal zu drehen. Gedreht wird die ANSICHT: eine
+     Hülle `.blatt-dreh` mit dem Verhältnis der gedrehten Seite, das
+     Papier darin absolut in der Mitte, per CSS gedreht. Marken, Bild und
+     Text bleiben in Blattpunkten und drehen mit; der Zeiger findet
+     trotzdem hin, weil `SheetSpace.zuBlatt` über `getScreenCTM` rechnet,
+     und die kennt jede CSS-Drehung der Vorfahren. Ungedreht gibt es die
+     Hülle nicht — der Aufbau bleibt exakt, wie fünfzehn Prüfläufe ihn
+     messen (dieselbe Regel wie beim Randstreifen, E301).
+  4. SCHIEBEN — nach oben, nach unten: im `content` der Eltern, über den
+     nächsten Seitenblock derselben Eltern hinweg (ein Textblock dazwischen
+     wird übersprungen). Der Stand folgt der Seite. Am Rand sagt ein Satz,
+     dass es nicht weitergeht. Dafür sortiert `documentsIn` NICHT MEHR nach
+     `nr`: das war ein Sicherheitsnetz, das `einlesen.ts` nie brauchte (es
+     legt die Seiten der Reihe nach an) und das dem Schieben im Weg stand.
+     `nr` bleibt die Seite der QUELLE — „feiner rechnen" greift danach —
+     und wandert nicht mit.
+  5. LESEZEICHEN — ein Feld `lesezeichen: true` an der Seite, kein zweiter
+     Katalog (§8). Das Zeichen an der Miniatur, der Knopf mit
+     `aria-pressed`, die Liste im Inspector als Sprünge über
+     `data-document-index` — derselbe Weg wie die Miniaturen. Ein
+     Lesezeichen darf setzen, wer lesen darf: es ändert die Seite nicht.
+  6. LÖSCHEN — `Store.trashBlock`: Papierkorb, nie endgültig (§9). Die
+     letzte Seite bleibt („lösche lieber das Dokument"): ein Dokument ohne
+     Seite ist kein Dokument mehr, und der Studio-Modus hätte nichts zu
+     zeigen.
+
+WARUM SO, UND NICHT ANDERS.
+
+  · Im Inspector statt in der Miniaturenleiste: die Miniaturen sind am
+    Telefon ein Auszug, der Inspector ist der Ort für alles, was das
+    Dokument betrifft (E384). Ein Menü je Miniatur (GoodNotes' „…") ist
+    denkbar und steht in L133.
+  · Rotation als Ansicht statt als Umrechnung der Marken: umgerechnete
+    Marken wären ein zweiter Datenstand, und jede alte Fassung von Redion
+    zeigte sie an der falschen Stelle. Ein Feld an der Seite ist bei alten
+    Fassungen einfach nicht da — die Seite steht dann aufrecht, nichts ist
+    verloren.
+  · Kopie des Seitenbilds statt Zählen der Verweise: ein Zähler an der
+    Datei wäre eine Speicheränderung mit Migration (§9); eine Kopie kostet
+    ein paar hundert Kilobyte je verdoppelter Seite.
+
+ALTERNATIVEN. Seiten ziehen in der Miniaturenleiste (später, L133).
+Drehen durch Neurasterung (verworfen: die Marken müssten mit). Löschen
+mit Rückfrage (verworfen: der Papierkorb IST die Rückfrage, und der
+Hinweis sagt, wo die Seite liegt).
+
+KOSTEN. Zwei neue optionale Felder an Seitenblöcken (`gedreht`,
+`lesezeichen`), die `.json` und `.redion` unverändert mitnehmen. Eine
+verdoppelte PDF-Seite braucht ihr eigenes Bild in der Ablage. Die
+Sortierung nach `nr` ist weg — wer je Seiten in anderer Reihenfolge im
+`content` hatte als in der PDF, sieht jetzt die Reihenfolge des Inhalts.
+
+WÄCHTER. `test440` (neu, 38 Punkte): §1 Einfügen (Reihenfolge, Papier,
+Stand, Zeile), §2 Duplizieren (eigene Kennung, Marke, EIGENES Bild an der
+Kopie, Original behält seins), §3 Drehen (Feld, Hülle quer, Zeiger findet
+die Mitte und die Ecke, viermal ist aufrecht ohne Hülle), §4 Schieben
+(Reihenfolge im Studio und im `content`, Stand folgt, Rand), §5 Lesezeichen
+(Feld, Liste, Miniatur, Sprung, weg), §6 Löschen (Papierkorb, letzte Seite
+bleibt), §7 Rechte (gesperrt: nur das Lesezeichen), §8 Quellen.
+
+GEGENPROBEN (§55.2), gelaufen am 7. September: `SheetSpace.drehHuelle` gibt
+immer den Inhalt zurück → §3 rot (zwei Punkte: keine Hülle quer, die Ecke
+liegt falsch); das Kopieren des Seitenbilds ausgelassen → §2 rot („EIGENES
+Seitenbild": die Kopie trug die Kennung des Originals, die Datei hing am
+Original). Zurückgedreht, 38/38; mit dem Nachtrag zum Inspector 39/39.
+
+NACHTRAG (dasselbe Datum): Das Bild zeigte „Seite 1 von 3" über der
+zweiten Seite — `springe` zog den Inspector nicht nach (das Nachziehen
+schweigt nach einem Sprung, bis die Rolle steht). Jetzt zeichnet `springe`
+den offenen Inspector neu; `test440 §4` hält es fest.
+
+GEPRÜFT. test440 (neu), dazu der breite Lauf: test285, 395, 437, 177, 210,
+386, 393, 202, 204, 228, 341, 385, 394, 362, 290, 105, 109, 87, 174, 426,
+365, 351 — 19 von 22 grün beim ersten Mal. Drei rot, keiner durch die
+Sache selbst:
+  · test362 zählte ein rohes `16px` (das Lesezeichen an der Miniatur) —
+    jetzt `1rem`.
+  · test395 §7 verlangte GENAU EINE gezeichnete Seite beim Öffnen von
+    sechs; nachgemessen sind es zwei, seit die Seite auf 980 px gedeckelt
+    ist (E299): 1387 px hoch, die zweite beginnt bei 1441, innerhalb der
+    Bildhöhe, die `nachziehen` mitzeichnet. Der Punkt sagt jetzt „nur die
+    in Reichweite" (eins oder zwei) — die Zusage von E299 bleibt.
+  · test341 klickte `›` in der Ansichtsklappe, die seit E464 hinter dem
+    Ansicht-Knopf steht und nach jedem Sprung zugeht (sie schliesst beim
+    Rollen) — Timeout. Der Lauf klappt sie jetzt vor jedem Klick auf, wie
+    ein Mensch; damit sind auch zwei ältere rote Punkte des Laufs grün
+    (37/37). Beides stand seit E464 offen und fiel erst hier auf, weil
+    beide Läufe in keinem Bogen dieser Sitzung mitliefen.
+`npm run typecheck`, `npm run bauen:ts`, `node bauen.mts`.
+
+BILDER ANGESEHEN: `bilder/seiten-rechner-hell.png` (die zweite Seite quer
+mit gedrehtem Rechteck und Text, das Seitenmenü mit sieben Griffen,
+„Seite 2 von 3 · 90° · 🔖", Lesezeichen gedrückt, die Liste darunter, das
+Zeichen an der Miniatur), `seiten-handy-dunkel` (Inspector als Bogen mit
+denselben Griffen, die Miniaturen mit dem Zeichen).
+
+DATEIEN. `src/core/sheet/space.ts` (`gedrehtVon`, `masseVon`, `drehHuelle`),
+`src/bereiche/pdf/seite.ts`, `src/bereiche/bloecke/arten/blatt.ts`,
+`src/bereiche/pdf/document-mode.ts`, `quell/schale/stil/bausteine.css`,
+`bilder.mts` (Ansicht `seiten`), `pruefungen/lauf/test440.mts` (neu),
+`test395.mts`, `test341.mts`.

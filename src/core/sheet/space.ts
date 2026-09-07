@@ -69,7 +69,59 @@ const SheetSpace = (() => {
   const seiten = (hoehe: unknown): number =>
     Math.max(1, Math.ceil((Number(hoehe) || A4_HOEHE) / A4_HOEHE));
 
-  return { A4_BREITE, A4_HOEHE, RAND, RAUM_VERSION, rund, zuBlatt, seiten };
+  /* ══ DIE GEDREHTE SEITE (E467) ═══════════════════════════════════════════
+     `gedreht` ist die Drehung, die ein MENSCH einer Seite gegeben hat — 0,
+     90, 180 oder 270, im Uhrzeigersinn. Sie ist NICHT `dreh`: das ist der
+     /Rotate-Eintrag der PDF, den `leser.ts` beim Einlesen liest und den
+     das gerasterte Bild schon enthaelt (`bw`/`bh` sind dafuer getauscht).
+     Beides zusammenzuwerfen hiesse, eine eingelesene Querseite beim ersten
+     Oeffnen noch einmal zu drehen.
+
+     Die Drehung ist eine Sache der ANSICHT: Marken, Bild und Text bleiben
+     in Blattpunkten, wo sie sind, und drehen sich mit — wie in GoodNotes,
+     wo ein gedrehtes Blatt seine Notizen mitnimmt. Der Zeiger findet
+     trotzdem hin: `zuBlatt` rechnet ueber `getScreenCTM`, und die kennt
+     jede CSS-Drehung der Vorfahren. Eine alte Seite ohne das Feld ist
+     „nicht gedreht" (§53.3). */
+  const gedrehtVon = (block: any): 0 | 90 | 180 | 270 => {
+    const g = ((Math.round((Number(block?.gedreht) || 0) / 90) * 90) % 360 + 360) % 360;
+    return g === 90 || g === 180 || g === 270 ? g : 0;
+  };
+
+  /** Breite und Hoehe, wie sie auf dem Bildschirm STEHEN — bei 90 und 270
+      getauscht. Fuer Platzhalter und Miniaturen, nicht fuer Marken. */
+  const masseVon = (block: any): { bw: number; bh: number } => {
+    const bw = Number(block?.bw) || Number(block?.blattBreite) || A4_BREITE;
+    const bh = Number(block?.bh) || Number(block?.blattHoehe) || A4_HOEHE;
+    const g = gedrehtVon(block);
+    return g === 90 || g === 270 ? { bw: bh, bh: bw } : { bw, bh };
+  };
+
+  /**
+   * Die Huelle, die eine Seite dreht — oder die Seite selbst, wenn sie
+   * nicht gedreht ist. Dann bleibt der Aufbau EXAKT, wie er war: fuenfzehn
+   * Pruefläufe nehmen ihre Masse am Papier, und die Millionen ungedrehten
+   * Seiten sollen keinen neuen Knoten bekommen (dieselbe Regel wie beim
+   * Randstreifen, E301). Gedreht wird per CSS (`.blatt-dreh`): die Huelle
+   * hat das Seitenverhaeltnis der GEDREHTEN Seite, das Papier darin liegt
+   * absolut in der Mitte und dreht sich um sie.
+   */
+  const drehHuelle = (block: any, inhalt: HTMLElement): HTMLElement => {
+    const g = gedrehtVon(block);
+    if (!g) return inhalt;
+    const bw = Number(block?.bw) || Number(block?.blattBreite) || A4_BREITE;
+    const bh = Number(block?.bh) || Number(block?.blattHoehe) || A4_HOEHE;
+    const huelle = document.createElement('div');
+    huelle.className = 'blatt-dreh';
+    huelle.dataset.gedreht = String(g);
+    huelle.style.setProperty('--bw', String(bw));
+    huelle.style.setProperty('--bh', String(bh));
+    huelle.style.setProperty('--dreh', g + 'deg');
+    huelle.appendChild(inhalt);
+    return huelle;
+  };
+
+  return { A4_BREITE, A4_HOEHE, RAND, RAUM_VERSION, rund, zuBlatt, seiten, gedrehtVon, masseVon, drehHuelle };
 })();
 
 (window as any).SheetSpace = SheetSpace;

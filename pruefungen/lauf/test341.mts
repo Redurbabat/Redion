@@ -166,8 +166,18 @@ console.log('\n1 · Die PDF kommt zurück — ohne Adresse, in der Dokumentansic
   let z = await zustand(pg);
   p('Vorbereitung: die PDF ist offen und in der Dokumentansicht', z.dokument && z.hash === '#' + id, JSON.stringify(z));
   gleich('Vorbereitung: sie beginnt auf Seite 1', z.position, 'Seite 1/3');
-  /* Zwei Seiten weiter, über die echten Knöpfe der Werkzeugzeile. */
+  /* Zwei Seiten weiter, über die echten Knöpfe der Werkzeugzeile. SEIT E464
+     stehen ‹ › hinter dem Ansicht-Knopf (`data-document-view`), und die
+     Klappe geht nach jedem Sprung wieder zu (sie schliesst beim Rollen).
+     Also vor JEDEM Klick aufklappen, wie ein Mensch es tut. */
+  const ansichtAuf = () => pg.evaluate(() => {
+    const w = document.querySelector<HTMLElement>('.document-workspace');
+    if (w && w.dataset.documentView !== 'open')
+      document.querySelector<HTMLElement>('[data-document-action="view"]')?.click();
+  });
   for (let i = 0; i < 2; i++) {
+    await ansichtAuf();
+    await pg.waitForSelector('.document-page [data-document-action="next"]', { state: 'visible', timeout: 5000 });
     await pg.click('.document-page [data-document-action="next"]');
     await pg.waitForTimeout(500);
   }

@@ -123,11 +123,14 @@ const DocumentMode = (() => {
       });
     };
     visit(page.id, 0);
-    return found.sort((left, right) => {
-      if (left.quelleId && left.quelleId === right.quelleId)
-        return (Number(left.nr) || 0) - (Number(right.nr) || 0);
-      return 0;
-    });
+    /* IN DER REIHENFOLGE DES INHALTS, nicht nach `nr` (E467). Bis E466
+       wurden Seiten derselben Quelle nach ihrer PDF-Seitenzahl sortiert —
+       ein Sicherheitsnetz, das `einlesen.ts` nie brauchte (es legt die
+       Seiten der Reihe nach an) und das seit E467 im Weg steht: wer eine
+       Seite nach oben schiebt, schiebt sie im `content` der Eltern, und
+       genau das soll man sehen. `nr` bleibt, was es ist — die Seite der
+       QUELLE, nach der „feiner rechnen" greift —, und darf nicht wandern. */
+    return found;
   };
 
   const available = (page: any): boolean => documentsIn(page).length > 0;
@@ -191,6 +194,18 @@ const DocumentMode = (() => {
     const label = document.createElement('span');
     label.className = 'document-thumbnail-label';
     label.textContent = sourceLabel(documentBlock);
+    /* Lesezeichen und Drehung (E467): das Zeichen an der Ecke, die Drehung
+       am Bild — das Vorschaubild ist das ungedrehte Raster. */
+    const g = SheetSpace.gedrehtVon(documentBlock);
+    if (g) { button.dataset.gedreht = String(g); preview.style.setProperty('--dreh', g + 'deg'); }
+    if (documentBlock.lesezeichen) {
+      button.classList.add('hat-lesezeichen');
+      const mark = document.createElement('span');
+      mark.className = 'document-thumbnail-mark';
+      mark.textContent = '🔖';
+      mark.setAttribute('aria-label', 'Lesezeichen');
+      preview.appendChild(mark);
+    }
     button.append(preview, label);
     return button;
   };
@@ -379,9 +394,89 @@ const DocumentMode = (() => {
       return knopf;
     })() : null;
 
+    /* ══ DIE SEITE SELBST (E467) — GoodNotes' Seitenmenue ═══════════════════
+       Einfuegen (leer, mit dem Papier aus der Auswahl darunter), Duplizieren,
+       Drehen, nach oben, nach unten, Lesezeichen, Loeschen. Alles an der
+       Seite, die man ansieht; alles ueber `data-document-action`, damit der
+       eine Verteiler unten es findet. Ein Lesezeichen ist ein Feld an der
+       Seite (`lesezeichen`) und keine zweite Liste (§8). */
+    const seiten = documentsIn(page);
+    const seitenIndex = Math.max(0, seiten.findIndex(block => block.id === documentBlock.id));
+    const darfSeiten = !page.gesperrt && (typeof Konten === 'undefined' || Konten.darf('bearbeiten', page));
+    const seite = document.createElement('div');
+    seite.className = 'document-inspector-seite';
+    const seiteTitel = document.createElement('h3');
+    seiteTitel.className = 'document-section-title';
+    seiteTitel.textContent = 'Seite ' + (seitenIndex + 1) + ' von ' + seiten.length +
+      (SheetSpace.gedrehtVon(documentBlock) ? ' · ' + SheetSpace.gedrehtVon(documentBlock) + '°' : '') +
+      (documentBlock.lesezeichen ? ' · 🔖' : '');
+    const knoepfe = document.createElement('div');
+    knoepfe.className = 'document-seite-knoepfe';
+    const seitenKnopf = (action: string, zeichen: string, wort: string, titel: string, an?: boolean): HTMLButtonElement => {
+      const knopf = document.createElement('button');
+      knopf.type = 'button';
+      knopf.dataset.documentAction = action;
+      const z = document.createElement('span'); z.className = 'zeichen'; z.setAttribute('aria-hidden', 'true'); z.textContent = zeichen;
+      const w = document.createElement('span'); w.className = 'wort'; w.textContent = wort;
+      knopf.append(z, w);
+      knopf.title = titel;
+      knopf.disabled = !darfSeiten;
+      if (typeof an === 'boolean') { knopf.setAttribute('aria-pressed', an ? 'true' : 'false'); knopf.classList.toggle('an', an); }
+      return knopf;
+    };
+    knoepfe.append(
+      seitenKnopf('page-add', '＋', 'Seite danach', 'Eine leere Seite hinter dieser einfügen — mit dem Papier aus der Auswahl darunter'),
+      seitenKnopf('page-duplicate', '⧉', 'Duplizieren', 'Diese Seite mit allem darauf verdoppeln'),
+      seitenKnopf('page-rotate', '⟳', 'Drehen', 'Diese Seite um 90° im Uhrzeigersinn drehen'),
+      seitenKnopf('page-up', '↑', 'Nach oben', 'Diese Seite eine Stelle nach vorn'),
+      seitenKnopf('page-down', '↓', 'Nach unten', 'Diese Seite eine Stelle nach hinten'),
+      seitenKnopf('page-bookmark', '🔖', 'Lesezeichen', documentBlock.lesezeichen ? 'Lesezeichen entfernen' : 'Diese Seite mit einem Lesezeichen merken', !!documentBlock.lesezeichen),
+      seitenKnopf('page-delete', '🗑', 'Löschen', 'Diese Seite in den Papierkorb legen — von dort kommt sie zurück')
+    );
+    /* Das Lesezeichen darf jeder setzen, der lesen darf: es aendert die
+       Seite nicht, nur die eigene Ansicht auf sie. */
+    const lesezeichenKnopf = knoepfe.querySelector<HTMLButtonElement>('[data-document-action="page-bookmark"]');
+    if (lesezeichenKnopf) lesezeichenKnopf.disabled = false;
+    const papierZeile = document.createElement('label');
+    papierZeile.className = 'document-seite-papier';
+    const papierWort = document.createElement('span'); papierWort.textContent = 'Papier für neue Seiten';
+    const papierWahl = document.createElement('select');
+    papierWahl.dataset.documentPapier = '';
+    papierWahl.setAttribute('aria-label', 'Papier für neue Seiten');
+    const papiere: ReadonlyArray<{ id: string; name: string }> =
+      (typeof Blatt !== 'undefined' && Array.isArray((Blatt as any).PAPIERE)) ? (Blatt as any).PAPIERE : [{ id: 'blanko', name: 'Blanko' }];
+    const gemerkt = String(Store.getMeta('heft:papier', 'blanko'));
+    papiere.forEach(p => {
+      const o = document.createElement('option'); o.value = p.id; o.textContent = p.name;
+      if (p.id === gemerkt) o.selected = true;
+      papierWahl.appendChild(o);
+    });
+    papierWahl.addEventListener('change', () => Store.setMeta('heft:papier', papierWahl.value));
+    papierZeile.append(papierWort, papierWahl);
+    seite.append(seiteTitel, knoepfe, papierZeile);
+    /* Die Liste der Lesezeichen — nur, wenn es welche gibt. Jedes ist ein
+       Sprung (`data-document-index`, derselbe Weg wie die Miniaturen). */
+    const gemerkte = seiten.map((block, i) => ({ block, i })).filter(x => x.block.lesezeichen);
+    if (gemerkte.length) {
+      const liste = document.createElement('div');
+      liste.className = 'document-lesezeichen';
+      const kopf = document.createElement('strong'); kopf.textContent = 'Lesezeichen';
+      liste.appendChild(kopf);
+      gemerkte.forEach(({ block, i }) => {
+        const knopf = document.createElement('button');
+        knopf.type = 'button';
+        knopf.dataset.documentIndex = String(i);
+        knopf.textContent = '🔖 Seite ' + (i + 1) + ' · ' + sourceLabel(block);
+        if (i === seitenIndex) knopf.setAttribute('aria-current', 'page');
+        liste.appendChild(knopf);
+      });
+      seite.appendChild(liste);
+    }
+
     const original = originalKnopf(page, documentBlock);
     container.append(heading, source);
     if (original) container.appendChild(original);
+    container.appendChild(seite);
     const linkedTitle = document.createElement('h3');
     linkedTitle.className = 'document-section-title';
     linkedTitle.textContent = 'Mit dieser Seite verbunden';
@@ -785,8 +880,8 @@ const DocumentMode = (() => {
       }, true);
       /* Der Platzhalter in der richtigen Hoehe. Ohne ihn springt der
          Rollbalken bei jeder nachgezeichneten Seite. */
-      const bw = Number(block.bw) || Number(block.blattBreite) || SheetSpace.A4_BREITE;
-      const bh = Number(block.bh) || Number(block.blattHoehe) || SheetSpace.A4_HOEHE;
+      /* Gedreht heisst quer: die Masse, wie sie stehen (E467). */
+      const { bw, bh } = SheetSpace.masseVon(block);
       /* EIN GROBER PLATZHALTER, damit nichts auf null zusammenfaellt. Das
          RICHTIGE Mass setzt `passen()` gleich darauf — hier kann es noch gar
          nicht stimmen, siehe `platzhalterSetzen`. */
@@ -934,8 +1029,7 @@ const DocumentMode = (() => {
         if (gezeichnet.has(i)) return;
         const block = documents[i];
         if (!block) return;
-        const bw = Number(block.bw) || Number(block.blattBreite) || SheetSpace.A4_BREITE;
-        const bh = Number(block.bh) || Number(block.blattHoehe) || SheetSpace.A4_HOEHE;
+        const { bw, bh } = SheetSpace.masseVon(block);
         if (bw > 0 && bh > 0) stand.style.height = Math.round(breit * (bh / bw)) + 'px';
       });
       inkSync();
@@ -1089,10 +1183,131 @@ const DocumentMode = (() => {
         .forEach(el => el.classList.remove('is-selected'));
       thumbnails.querySelector('[data-document-index="' + nr + '"]')
         ?.classList.add('is-selected');
+      /* AUCH NACH EINEM SPRUNG (E467): der Inspector traegt jetzt das
+         Seitenmenue („Seite 2 von 5", Lesezeichen gedrueckt oder nicht),
+         und das Nachziehen schweigt nach einem Sprung, bis die Rolle
+         steht — auf dem Bild stand „Seite 1 von 3" ueber der zweiten. */
+      if (state.inspectorOpen) renderInspector(inspector, page, jetzt());
       passen();
     };
 
     const rerender = (): void => App.zeichneSeite();
+
+    /* ══ SEITEN WIE GOODNOTES (E467) ═════════════════════════════════════════
+       Alles hier arbeitet am `content` der Eltern — der Reihenfolge, die
+       auch der gewoehnliche Editor zeigt — und mit den Griffen, die der Kern
+       hat: `addBlock` mit Stelle, `baum`/`baumEinfuegen` (frische
+       Kennungen), `trashBlock` (Papierkorb, nie endgueltig). Kein zweiter
+       Katalog fuer Seiten (§8), kein Loeschen ohne Rueckweg (§9). */
+    const darfSeiten = (): boolean =>
+      !page.gesperrt && (typeof Konten === 'undefined' || Konten.darf('bearbeiten', page));
+    /** Die Stelle des Blocks im `content` seiner Eltern. */
+    const stelleVon = (block: any): { eltern: any; index: number } | null => {
+      const eltern = block?.parentId ? Store.getBlock(block.parentId) : null;
+      if (!eltern || !Array.isArray(eltern.content)) return null;
+      const index = eltern.content.indexOf(block.id);
+      return index < 0 ? null : { eltern, index };
+    };
+    /** Nach einer Aenderung: Stand auf die Seite mit dieser Kennung setzen und neu bauen. */
+    const neuMit = (blockId: string | null): void => {
+      const liste = documentsIn(page);
+      const i = blockId ? liste.findIndex(block => block.id === blockId) : -1;
+      state.index = Math.max(0, Math.min(liste.length - 1, i >= 0 ? i : state.index));
+      seiteMerken(page.id, state.index);
+      rerender();
+    };
+    const seiteEinfuegen = (): void => {
+      const block = jetzt();
+      const stelle = stelleVon(block);
+      if (!stelle) { UI.toast('Diese Seite hat keinen Platz, an dem sich etwas einfügen liesse.'); return; }
+      /* Das Papier aus der Auswahl im Inspector — dieselbe Vorgabe wie fuer
+         neue Hefte (E264), darum derselbe Merker. */
+      const papier = String(Store.getMeta('heft:papier', 'blanko'));
+      const neu = Store.addBlock(stelle.eltern.id, 'blatt', {
+        text: '', papier, blattBreite: SheetSpace.A4_BREITE, blattHoehe: SheetSpace.A4_HOEHE,
+        raumVersion: SheetSpace.RAUM_VERSION }, stelle.index + 1);
+      /* Eine Zeile muss da sein (E118) — sonst ist das Papier nur Malgrund. */
+      Store.addBlock(neu.id, 'text', { text: '' });
+      UI.toast('Leere Seite eingefügt');
+      neuMit(neu.id);
+    };
+    const seiteDuplizieren = (): void => {
+      const block = jetzt();
+      const stelle = stelleVon(block);
+      if (!stelle) { UI.toast('Diese Seite lässt sich hier nicht verdoppeln.'); return; }
+      const daten = Store.baum(block.id);
+      if (!daten) return;
+      /* Das Lesezeichen bleibt am Original: zwei Zeichen fuer dieselbe
+         Stelle waeren eines zu viel. */
+      delete daten.lesezeichen;
+      const neu = Store.baumEinfuegen(daten, stelle.eltern.id, stelle.index + 1);
+      if (!neu) return;
+      /* DAS SEITENBILD WIRD KOPIERT, NICHT GETEILT (E467). `purgeBlock` nimmt
+         die Anhaenge seines Blocks mit — teilten sich Original und Kopie
+         eine `bildDateiId`, verloere die Kopie ihr Bild, sobald das Original
+         aus dem Papierkorb faellt. Bis die Kopie da ist, zeigt die neue
+         Seite das alte Bild; danach ihr eigenes. */
+      if (block.type === 'pdfseite' && block.bildDateiId && typeof Dateien !== 'undefined') {
+        const alt = String(block.bildDateiId);
+        void (async () => {
+          try {
+            const [blob, satz] = await Promise.all([Dateien.alsBlob(alt), Store.dateiHolen(alt)]);
+            if (!blob) return;
+            const kopie = await Dateien.ablegen(
+              new File([blob], String(satz?.name || 'seite.webp'), { type: blob.type || 'image/webp' }),
+              { blockId: neu.id, abgeleitet: true });
+            Store.updateBlock(neu.id, { bildDateiId: kopie.id });
+          } catch (e: unknown) {
+            UI.toast('Das Seitenbild liess sich nicht mitkopieren: ' + (e instanceof Error ? e.message : String(e)));
+          }
+        })();
+      }
+      UI.toast('Seite verdoppelt');
+      neuMit(neu.id);
+    };
+    const seiteLoeschen = (): void => {
+      const block = jetzt();
+      const liste = documentsIn(page);
+      if (liste.length < 2) { UI.toast('Die letzte Seite bleibt — lösche lieber das Dokument.'); return; }
+      const i = liste.findIndex(x => x.id === block.id);
+      Store.trashBlock(block.id);
+      UI.toast('Seite im Papierkorb — von dort kommt sie zurück');
+      const naechste = liste[Math.min(liste.length - 1, i + 1 < liste.length ? i + 1 : i - 1)];
+      neuMit(naechste && naechste.id !== block.id ? naechste.id : null);
+    };
+    const seiteSchieben = (richtung: -1 | 1): void => {
+      const block = jetzt();
+      const stelle = stelleVon(block);
+      if (!stelle) return;
+      const inhalt = [...stelle.eltern.content] as string[];
+      /* Der Nachbar ist die naechste SEITE in denselben Eltern — ein
+         Textblock dazwischen zaehlt nicht als Seite, wird aber uebersprungen. */
+      let ziel = stelle.index + richtung;
+      while (ziel >= 0 && ziel < inhalt.length) {
+        const kandidat = Store.getBlock(inhalt[ziel]!);
+        if (kandidat && kandidat.alive !== false && (kandidat.type === 'pdfseite' || kandidat.type === 'blatt')) break;
+        ziel += richtung;
+      }
+      if (ziel < 0 || ziel >= inhalt.length) { UI.toast(richtung < 0 ? 'Schon die erste Seite.' : 'Schon die letzte Seite.'); return; }
+      inhalt.splice(stelle.index, 1);
+      inhalt.splice(ziel, 0, block.id);
+      Store.updateBlock(stelle.eltern.id, { content: inhalt });
+      neuMit(block.id);
+    };
+    const seiteDrehen = (): void => {
+      const block = jetzt();
+      const g = (SheetSpace.gedrehtVon(block) + 90) % 360;
+      Store.updateBlock(block.id, { gedreht: g || 0 });
+      UI.toast(g ? 'Seite um ' + g + '° gedreht' : 'Seite wieder aufrecht');
+      neuMit(block.id);
+    };
+    const lesezeichenWechseln = (): void => {
+      const block = jetzt();
+      const an = !block.lesezeichen;
+      Store.updateBlock(block.id, { lesezeichen: an });
+      UI.toast(an ? '🔖 Lesezeichen gesetzt' : 'Lesezeichen entfernt');
+      neuMit(block.id);
+    };
     const toolsSetzen = (an: boolean): void => {
       state.toolsOpen = an;
       Store.setMeta('dokWerkzeuge:' + page.id, an);
@@ -1203,6 +1418,19 @@ const DocumentMode = (() => {
       }
       if (action === 'previous') springe(state.index - 1);
       if (action === 'next') springe(state.index + 1);
+      /* Seiten wie GoodNotes (E467). Das Lesezeichen braucht keine
+         Bearbeitungsrechte, alles andere schon. */
+      if (action === 'page-bookmark') { lesezeichenWechseln(); return; }
+      if (action?.startsWith('page-')) {
+        if (!darfSeiten()) { UI.toast('Zum Ändern der Seiten brauchst du Bearbeitungsrechte und ein entsperrtes Dokument.'); return; }
+        if (action === 'page-add') seiteEinfuegen();
+        if (action === 'page-duplicate') seiteDuplizieren();
+        if (action === 'page-delete') seiteLoeschen();
+        if (action === 'page-up') seiteSchieben(-1);
+        if (action === 'page-down') seiteSchieben(1);
+        if (action === 'page-rotate') seiteDrehen();
+        return;
+      }
       if (action === 'thumbnails') { state.thumbnailsOpen = !state.thumbnailsOpen; panelsSetzen(); }
       if (action === 'thumbnails-close') { state.thumbnailsOpen = false; panelsSetzen(); thumbnailButton.focus(); }
       if (action === 'inspector') { state.inspectorOpen = !state.inspectorOpen; panelsSetzen(); }

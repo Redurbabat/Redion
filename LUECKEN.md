@@ -6399,7 +6399,7 @@ Lauf, der der Presse nicht gehört. Derselbe Stand wie bei L119.
 
 ---
 
-L133 — Was am PDF-Teil gegenüber GoodNotes noch fehlt (Stand nach G2)
+L133 — Was am PDF-Teil gegenüber GoodNotes noch fehlt (Stand nach G3)
 --------------------------------------------------------------------------
 
 Redurs Auftrag vom 7. September (E465): der PDF-Teil 1:1 wie GoodNotes,
@@ -6432,10 +6432,22 @@ Sperren, Kritzel-Löschen und Kreis-Lasso stehen. Offen bleibt:
   · **Sperren im Inspector** — die Sperre sitzt am Knopf der Leiste; eine
     Liste aller gesperrten Marken gibt es nicht.
 
-Noch nicht angefangen (G3–G5, siehe `AUFGABEN.md`): Seiten einfügen,
-löschen, verschieben, drehen, Lesezeichen; Suche in der Textschicht,
-PDF-Links, eigene Links; Bilder als Seiten, PDF in ein offenes Dokument,
-Seite als Bild, Zoom-Fenster.
+Seiten (nach G3, E467): einfügen, duplizieren, drehen, schieben,
+Lesezeichen und löschen stehen im Inspector. Offen bleibt:
+
+  · **Seiten ziehen in der Miniaturenleiste** und ein Menü je Miniatur
+    (GoodNotes' „…" an jeder Seite) — heute gehen alle Seitengriffe über
+    den Inspector der Seite, die man ansieht.
+  · **Einfügen aus einer Vorlage mit Inhalt** — „Seite danach" kennt die
+    fünf Papiere; eine Vorlagenseite aus dem Vorlagenregister (mit Text
+    und Marken) ist ein eigener Bogen.
+  · **Mehrseitige Notizhefte als EIN Block** — ein `blatt` wächst in die
+    Höhe (E118); Seitengriffe gelten ihm als Ganzem. Ein Heft mit drei
+    Blattseiten lässt sich nicht seitenweise drehen oder löschen.
+
+Noch nicht angefangen (G4–G5, siehe `AUFGABEN.md`): Suche in der
+Textschicht, PDF-Links, eigene Links; Bilder als Seiten, PDF in ein offenes
+Dokument, Seite als Bild, Zoom-Fenster.
 
 Was Redion auch nach G5 nicht haben wird, und warum:
 

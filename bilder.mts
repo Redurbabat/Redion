@@ -2297,6 +2297,36 @@ ANSICHTEN['auswahl'] = {
   }
 };
 
+ANSICHTEN['seiten'] = {
+  titel: 'Seiten wie GoodNotes: Seitenmenü, gedrehte Seite, Lesezeichen (E467)',
+  bauen: async () => {
+    Store.setMeta('rundgangGesehen', true);
+    document.querySelectorAll('.overlay').forEach(o => o.remove());
+    document.querySelector('.produkt-onboarding-lage')?.remove();
+    document.getElementById('rg-willkommen')?.remove();
+    document.getElementById('rg-einladung')?.remove();
+    const seite = Store.addPage(null, { text: 'Physik, Kapitel 3', icon: '📕' });
+    const welle = (y: number) => { const pts: number[][] = []; for (let i = 0; i <= 40; i++) pts.push([90 + i * 10, y + Math.sin(i / 2.5) * 12]); return pts; };
+    Store.addBlock(seite.id, 'blatt', { text: '', papier: 'liniert', blattBreite: 595.28, blattHoehe: 841.89, raumVersion: 1,
+      marken: [{ id: 's1', art: 'text', farbe: '#111111', breite: 2.4, point: [80, 90], text: 'Reihenschaltung: R = R1 + R2', fontSize: 18 },
+               { id: 's2', art: 'stift', stil: 'fueller', farbe: '#2f7ed8', breite: 2.4, pts: welle(200) }] });
+    const quer = Store.addBlock(seite.id, 'blatt', { text: '', papier: 'kariert', blattBreite: 595.28, blattHoehe: 841.89, raumVersion: 1, gedreht: 90, lesezeichen: true,
+      marken: [{ id: 's3', art: 'rectangle', farbe: '#d64545', breite: 2.4, pts: [[80, 120], [520, 300]] },
+               { id: 's4', art: 'text', farbe: '#111111', breite: 2.4, point: [100, 160], text: 'Quer: Schaltplan', fontSize: 20 }] });
+    Store.addBlock(quer.id, 'text', { text: '' });
+    Store.addBlock(seite.id, 'blatt', { text: '', papier: 'blanko', blattBreite: 595.28, blattHoehe: 841.89, raumVersion: 1, marken: [] });
+    Store.updateBlock(seite.id, { dokumentModus: true });
+    await Store.flush();
+    App.oeffne(seite.id);
+    await new Promise(r => setTimeout(r, 1200));
+    document.querySelector<HTMLElement>('[data-document-action="inspector"]')?.click();
+    document.querySelector<HTMLElement>('[data-document-action="thumbnails"]')?.click();
+    await new Promise(r => setTimeout(r, 300));
+    document.querySelector<HTMLElement>('.document-thumbnails [data-document-index="1"]')?.click();
+    await new Promise(r => setTimeout(r, 900));
+  }
+};
+
 ANSICHTEN['willkommen'] = {
   titel: 'Willkommen: Rauschtextur im Kopf (E462)',
   bauen: async () => {
